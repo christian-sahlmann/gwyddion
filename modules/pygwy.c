@@ -36,6 +36,7 @@
 #include <string.h>
 #include <glib.h>
 #include <glib/gstdio.h>
+#include <gtk/gtk.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwymacros.h>
 #include <libprocess/datafield.h>
@@ -129,17 +130,6 @@ pygwy_initialize(void)
     }
 }
 
-static PyObject *
-create_environment() {
-    return PyDict_Copy(PyModule_GetDict(s_main_module));
-}
-
-static void
-destroy_environment(PyObject *d) {
-    PyDict_Clear(d);
-    Py_DECREF(d);
-}
-
 static PyObject*
 pygwy_run_string(char *cmd, int type, PyObject *g, PyObject *l) {
     PyObject *ret = PyRun_String(cmd, type, g, l);
@@ -148,6 +138,109 @@ pygwy_run_string(char *cmd, int type, PyObject *g, PyObject *l) {
     }
     return ret;
 }
+
+static void
+pygwy_show_stderr(gchar *str)
+{
+    GtkWidget *dlg, *scroll, *frame, *b_close, *text;
+
+    dlg = gtk_dialog_new();
+    gtk_window_set_default_size(GTK_WINDOW(dlg), 500, 300);
+    gtk_window_set_position (GTK_WINDOW (dlg), GTK_WIN_POS_CENTER_ON_PARENT);
+    gtk_window_set_title(GTK_WINDOW(dlg), "Python interpreter result");
+
+    frame = gtk_frame_new(NULL);
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dlg)->vbox), frame, TRUE, TRUE, 0);
+
+    scroll = gtk_scrolled_window_new(NULL, NULL);
+    gtk_container_add(GTK_CONTAINER(frame), scroll);
+
+    text = gtk_text_view_new();
+    gtk_container_add(GTK_CONTAINER(scroll), text);
+    gtk_text_view_set_editable(GTK_TEXT_VIEW(text), FALSE);
+    gtk_text_buffer_set_text(gtk_text_view_get_buffer(GTK_TEXT_VIEW(text)), 
+                             str, 
+                             -1);
+
+    b_close = gtk_button_new_from_stock("gtk-close");
+    gtk_dialog_add_action_widget(GTK_DIALOG(dlg), b_close, 0);
+
+    gtk_widget_show_all(dlg);
+    gtk_dialog_run(GTK_DIALOG(dlg));
+    gtk_widget_destroy(dlg);
+}
+
+static void
+pygwy_initialize_stderr_redirect(PyObject *d)
+{
+    // redirect stderr to temporary file
+    pygwy_run_string("import sys, tempfile\n"
+                     "stderr_redir = tempfile.TemporaryFile()\n"
+                     "sys.stderr = stderr_redir\n",
+                     //"sys.stdout = stderr_redir", 
+                     Py_file_input, 
+                     d, 
+                     d);
+}
+
+static void
+pygwy_finalize_stderr_redirect(PyObject *d)
+{
+    PyObject *py_stderr;
+    FILE *c_py_stderr;
+    gchar *buf;
+    GString *msg;
+    int i;
+
+    // write python stderr
+    py_stderr = PyDict_GetItemString(d, "stderr_redir");
+    if (py_stderr && PyFile_Check(py_stderr)) {
+        gwy_debug("Reading content of temp file to get redirected stderr");
+        c_py_stderr = PyFile_AsFile(py_stderr);
+        rewind(c_py_stderr);
+        msg = g_string_new("");
+        buf = malloc(500);
+        // read the stderr file to string msg
+        while ((i = fread(buf, sizeof(gchar), 499, c_py_stderr)) > 0) {
+            gwy_debug("stderr characters readed: %d", i);
+            buf[i] = '\0';
+            msg = g_string_append(msg, buf);
+        }
+        if (msg->len > 1) {
+            pygwy_show_stderr(msg->str);
+        }
+        g_string_free(msg, TRUE);
+        g_free(buf);
+    }
+    pygwy_run_string("stderr_redir.close()", Py_file_input, d, d);
+}
+
+static PyObject *
+create_environment(const gchar *filename) {
+    PyObject *d, *plugin_filename;
+    char *argv[1];
+    argv[0] = NULL;
+
+    d = PyDict_Copy(PyModule_GetDict(s_main_module));
+    // set __file__ variable for clearer error reporting
+    plugin_filename = Py_BuildValue("s", filename);
+    PyDict_SetItemString(d, "__file__", plugin_filename);
+    PySys_SetArgv(0, argv);
+    
+    // redirect stderr and stdout of python script to temporary file
+    pygwy_initialize_stderr_redirect(d);
+    return d;
+}
+
+static void
+destroy_environment(PyObject *d) {
+    // show content of temporary file which contains stderr and stdout of python
+    // script and close it
+    pygwy_finalize_stderr_redirect(d);
+    PyDict_Clear(d);
+    Py_DECREF(d);
+}
+
 
 static gchar*
 pygwy_read_val_from_dict(PyObject *d, char *v, const gchar *f) 
@@ -179,7 +272,7 @@ pygwy_get_plugin_metadata(const gchar *filename,
                           PygwyPluginType *type)
 {
     gchar *plugin_file_content, *type_str;
-    PyObject *code_obj, *plugin_module, *d, *plugin_dict;
+    PyObject *code_obj = NULL, *plugin_module = NULL, *d, *plugin_dict;
     GError *err = NULL;
 
     *code = NULL; *name = NULL; *menu_path = NULL; *type = PYGWY_UNDEFINED;
@@ -191,7 +284,7 @@ pygwy_get_plugin_metadata(const gchar *filename,
         g_warning("Cannot read content of file '%s'", filename);
         return;
     }
-    d = create_environment();
+    d = create_environment(filename);
     if (!d) {
         g_warning("Cannot create copy of Python dictionary.");
         PyErr_Print();
@@ -262,10 +355,10 @@ static gboolean
 pygwy_register_file_plugin(gchar *filename, 
                            PyObject *code, 
                            gchar *name, 
-                           gchar*desc)
+                           gchar *desc)
 {
     PygwyPluginInfo *info;
-
+    gwy_debug("%s, %s, %s", filename, name, desc);
     if (!code) {
         g_warning("Cannot create code object for file '%s'", filename);
         return FALSE;
@@ -291,9 +384,12 @@ pygwy_register_file_plugin(gchar *filename,
                                (GwyFileSaveFunc)&pygwy_file_save_run)) {
         s_pygwy_plugins = g_list_append(s_pygwy_plugins, info);
     } else {
-        g_free(info->name);
-        g_free(info->filename);
-        g_free(info);
+        gwy_debug("Free: %s %s", info->name, info->filename);
+        // FIXME: Terminated by glib free(): invalid pointer: blabla 
+        // when inserting duplicate module
+        // g_free(info->name);
+        // g_free(info->filename);
+        // g_free(info);
         g_warning("Cannot register plugin '%s'", filename);
         return FALSE;
     }
@@ -335,9 +431,11 @@ pygwy_register_proc_plugin(gchar *filename,
         // append plugin to list of plugins
         s_pygwy_plugins = g_list_append(s_pygwy_plugins, info);
     } else {
-        g_free(info->name);
-        g_free(info->filename);
-        g_free(info);
+        // FIXME: Terminated by glib free(): invalid pointer: blabla
+        // when inserting duplicate module
+        // g_free(info->name);
+        // g_free(info->filename);
+        // g_free(info);
         g_warning("Cannot register plugin '%s'", filename);
         return FALSE;
     }
@@ -353,7 +451,7 @@ pygwy_register_plugins(void)
     GDir *plugin_dir;
     const gchar *plugin_filename;
     gchar *plugin_menu_path, *plugin_fullpath_filename;
-    gchar *plugin_dir_name, *plugin_name, *plugin_desc;
+    gchar *plugin_dir_name, *plugin_name, *plugin_desc = NULL;
     PygwyPluginType plugin_type = PYGWY_UNDEFINED;
     GError *err = NULL;
     PyObject *plugin_code;
@@ -406,21 +504,43 @@ pygwy_register_plugins(void)
             switch(plugin_type) 
             {
                 case PYGWY_PROCESS:
-                    pygwy_register_proc_plugin(plugin_fullpath_filename,
-                                               plugin_code,
-                                               plugin_name,
-                                               plugin_menu_path);
+                    if (plugin_code != NULL 
+                        && plugin_name != NULL 
+                        && plugin_menu_path != NULL) 
+                    {
+                        pygwy_register_proc_plugin(plugin_fullpath_filename,
+                                                   plugin_code,
+                                                   plugin_name,
+                                                   plugin_menu_path);
+                    } else {
+                        g_warning("Could not register process: "
+                                  "variables plugin_menu, "
+                                  "plugin_type and plugin_name not defined.");
+
+                    }
                     break;
                 case PYGWY_FILE:
+                    if (plugin_code != NULL 
+                        && plugin_name != NULL 
+                        && plugin_desc != NULL)
+                    {
                     pygwy_register_file_plugin(plugin_fullpath_filename, 
                                                plugin_code, 
                                                plugin_name, 
                                                plugin_desc);
+                    } else {
+                        g_warning("Could not register process:"
+                                  " variables plugin_desc, plugin_type"
+                                  " and plugin_name not defined.");
+                    }
                     break;
                 case PYGWY_UNDEFINED:
-                    g_warning("Cannot register plugin without defined 'plugin_type' variable  ('%s')", 
+                    g_warning("Cannot register plugin without defined "
+                              "'plugin_type' variable  ('%s')", 
                               plugin_fullpath_filename);
                     break;
+                default:
+                    g_warning("Not yet implemented"); //TODO: PYGWY_GRAPH, PYGWY_LAYER
             }
         } else { // if (check suffix)
             gwy_debug("wrong extension for file: %s", plugin_filename);
@@ -497,7 +617,6 @@ pygwy_check_func(PyObject *m, gchar *name, gchar *filename)
     return ret;
 }
 
-
 static void
 pygwy_proc_run(GwyContainer *data, GwyRunType run, const gchar *name)
 {
@@ -515,7 +634,7 @@ pygwy_proc_run(GwyContainer *data, GwyRunType run, const gchar *name)
               info->filename);
 
     // create new environment   
-    d = create_environment();
+    d = create_environment(info->filename);
     if (!d) {
         g_warning("Cannot create copy of Python dictionary.");
         return;
@@ -539,10 +658,15 @@ pygwy_proc_run(GwyContainer *data, GwyRunType run, const gchar *name)
         g_warning("Variable 'gwy.data' was not inicialized.");
     }
     PyDict_SetItemString(s_pygwy_dict, "data", py_container);
+
     // import module using precompiled code and run its 'run()' function
-    cmd = g_strdup_printf("import %s\n%s.run()", info->name, info->name);
+    cmd = g_strdup_printf("import %s\n"
+                          "%s.run()", 
+                          info->name, 
+                          info->name);
     pygwy_run_string(cmd, Py_file_input, d, d);
     g_free(cmd);
+
     Py_DECREF(module);
     Py_DECREF(py_container); //FIXME
     destroy_environment(d);
@@ -555,7 +679,8 @@ pygwy_file_save_run(GwyContainer *data,
                     GError **error, 
                     const gchar *name)
 {
-    PyObject *py_container, *py_filename, *module, *py_res, *d;
+    PyObject *py_filename, *module, *py_res, *d;
+    PyObject *py_container;
     PygwyPluginInfo *info;
     gchar *cmd;
     gboolean res;
@@ -569,7 +694,7 @@ pygwy_file_save_run(GwyContainer *data,
               info->name, 
               info->filename);
     // create new environment   
-    d = create_environment();
+    d = create_environment(info->filename);
     if (!d) {
         g_warning("Cannot create copy of Python dictionary.");
         return FALSE;
@@ -580,12 +705,13 @@ pygwy_file_save_run(GwyContainer *data,
     // import module using precompiled code and check for 'save()'
     module = PyImport_ExecCodeModule(info->name, info->code);
     // check if load function is defined
-    if (!pygwy_check_func(module, "load", info->filename)) {
+    if (!pygwy_check_func(module, "save", info->filename)) {
         destroy_environment(d);
         return FALSE;
     }
     // create input container and put it into __main__ module dictionary
     py_container = pygobject_new((GObject*)data);
+    //py_container->obj = GOBJECT(data);
     PyDict_SetItemString(d, "data", py_container);
 
     // create filename variable and put it into __main__ module dictionary
@@ -593,7 +719,8 @@ pygwy_file_save_run(GwyContainer *data,
     PyDict_SetItemString(d, "filename", py_filename);
 
     // import and execute the 'save' method
-    cmd = g_strdup_printf("import %s\nresult = %s.save(data, filename)", 
+    cmd = g_strdup_printf("import %s\n"
+                          "result = %s.save(data, filename)", 
                           info->name, 
                           info->name);
     pygwy_run_string(cmd, Py_file_input, d, d);
@@ -625,7 +752,7 @@ pygwy_file_load_run(const gchar *filename,
                     const gchar *name)
 {
     GwyContainer *res = NULL;
-    PyObject *o, *module, *type, *py_res, *d, *class_name;
+    PyObject *o, *module = NULL, *type = NULL, *py_res, *d, *class_name = NULL;
     PyGObject *pyg_res;
     PygwyPluginInfo *info;
     gchar *cmd, *class_str;
@@ -640,7 +767,7 @@ pygwy_file_load_run(const gchar *filename,
               info->filename);
 
     // create new environment   
-    d = create_environment();
+    d = create_environment(info->filename);
     if (!d) {
         g_warning("Cannot create copy of Python dictionary.");
         goto error;
@@ -661,7 +788,8 @@ pygwy_file_load_run(const gchar *filename,
     if (!o)
         goto error;
     PyDict_SetItemString(d, "filename", o);
-    cmd = g_strdup_printf("import %s\nresult = %s.load(\"test\")\nprint result",
+    cmd = g_strdup_printf("import %s\n"
+                          "result = %s.load(\"test\")\nprint result",
                           info->name, 
                           info->name);
     pygwy_run_string(cmd, Py_file_input, d, d);
@@ -711,7 +839,7 @@ pygwy_file_detect_run(const GwyFileDetectInfo *fileinfo,
               info->name, 
               info->filename);
     // create new environment   
-    d = create_environment();
+    d = create_environment(info->filename);
     if (!d) {
         g_warning("Cannot create copy of Python dictionary.");
         return FALSE;
@@ -748,11 +876,13 @@ pygwy_file_detect_run(const GwyFileDetectInfo *fileinfo,
 
     // import and execute the 'save' method
     if (only_name) {
-        cmd = g_strdup_printf("import %s\nresult = %s.detect_by_name(filename)",
+        cmd = g_strdup_printf("import %s\n"
+                              "result = %s.detect_by_name(filename)",
                               info->name, 
                               info->name);
     } else {
-        cmd = g_strdup_printf("import %s\nresult = %s.detect_by_content(filename, head, tail, filesize)", 
+        cmd = g_strdup_printf("import %s\n"
+                              "result = %s.detect_by_content(filename, head, tail, filesize)", 
                               info->name, 
                               info->name); 
     }
