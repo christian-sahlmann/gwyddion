@@ -867,7 +867,7 @@ gwy_tool_roughness_apply(GwyToolRoughness *tool)
     gwy_graph_model_add_curve(graphmodel, graphcmodel);
     g_object_unref(graphcmodel);
     g_object_get(graphcmodel, "description", &s, NULL);
-    g_object_set(graphcmodel, "title", s, NULL);
+    g_object_set(graphmodel, "title", s, NULL);
     g_free(s);
     gwy_app_data_browser_add_graph_model(graphmodel, plain_tool->container,
                                          TRUE);
