@@ -836,12 +836,124 @@ gwy_tool_mask_editor_shrink(GwyToolMaskEditor *tool)
 }
 
 static void
-line_fill(GwyDataField *dfield,
-          gint col, gint row,
-          gint width, gint height,
-          gdouble value)
+gwy_data_field_linear_area_fill(GwyDataField *dfield,
+                                gint col, gint row,
+                                gint width, gint height,
+                                gdouble value)
 {
-    g_printerr("Implement me!\n");
+    gint i, q, xres;
+    gdouble *d;
+
+    xres = gwy_data_field_get_xres(dfield);
+    d = gwy_data_field_get_data(dfield);
+    if (ABS(height) >= width) {
+        q = width/2;
+        if (height > 0) {
+            for (i = 0; i < height; i++) {
+                d[(row + i)*xres + col + q/height] = value;
+                q += width;
+            }
+        }
+        else {
+            height = ABS(height);
+            for (i = 0; i < height; i++) {
+                d[(row - i)*xres + col + q/height] = value;
+                q += width;
+            }
+        }
+    }
+    else {
+        q = height/2;
+        for (i = 0; i < width; i++) {
+            d[(row + q/width)*xres + col + i] = value;
+            q += height;
+        }
+    }
+    gwy_data_field_invalidate(dfield);
+}
+
+static gint
+gwy_data_field_get_linear_area_size(gint width, gint height)
+{
+    return MAX(width, ABS(height));
+}
+
+static gint
+gwy_data_field_linear_area_extract(GwyDataField *dfield,
+                                   gint col, gint row,
+                                   gint width, gint height,
+                                   gdouble *data)
+{
+    gint i, n, q, xres;
+    gdouble *d;
+
+    /* FIXME: We do not handle lines sticking out, nor wide lines */
+    xres = gwy_data_field_get_xres(dfield);
+    d = gwy_data_field_get_data(dfield);
+    n = 0;
+    if (ABS(height) >= width) {
+        q = width/2;
+        if (height > 0) {
+            for (i = 0; i < height; i++) {
+                data[n++] = d[(row + i)*xres + col + q/height];
+                q += width;
+            }
+        }
+        else {
+            height = ABS(height);
+            for (i = 0; i < height; i++) {
+                data[n++] = d[(row - i)*xres + col + q/height];
+                q += width;
+            }
+        }
+    }
+    else {
+        q = height/2;
+        for (i = 0; i < width; i++) {
+            data[n++] = d[(row + q/width)*xres + col + i];
+            q += height;
+        }
+    }
+
+    return n;
+}
+
+static void
+gwy_data_field_linear_area_unextract(GwyDataField *dfield,
+                                     gint col, gint row,
+                                     gint width, gint height,
+                                     gdouble *data)
+{
+    gint i, n, q, xres;
+    gdouble *d;
+
+    /* FIXME: We do not handle lines sticking out, nor wide lines */
+    xres = gwy_data_field_get_xres(dfield);
+    d = gwy_data_field_get_data(dfield);
+    n = 0;
+    if (ABS(height) >= width) {
+        q = width/2;
+        if (height > 0) {
+            for (i = 0; i < height; i++) {
+                d[(row + i)*xres + col + q/height] = data[n++];
+                q += width;
+            }
+        }
+        else {
+            height = ABS(height);
+            for (i = 0; i < height; i++) {
+                d[(row - i)*xres + col + q/height] = data[n++];
+                q += width;
+            }
+        }
+    }
+    else {
+        q = height/2;
+        for (i = 0; i < width; i++) {
+            d[(row + q/width)*xres + col + i] = data[n++];
+            q += height;
+        }
+    }
 }
 
 static void
@@ -864,10 +976,18 @@ gwy_tool_mask_editor_selection_finished(GwyPlainTool *plain_tool)
     isel[1] = gwy_data_field_rtoi(plain_tool->data_field, sel[1]);
     isel[2] = gwy_data_field_rtoj(plain_tool->data_field, sel[2]);
     isel[3] = gwy_data_field_rtoi(plain_tool->data_field, sel[3]);
-    if (isel[2] < isel[0])
-        GWY_SWAP(gdouble, isel[0], isel[2]);
-    if (isel[3] < isel[1])
-        GWY_SWAP(gdouble, isel[1], isel[3]);
+    if (tool->args.shape == MASK_SHAPE_LINE) {
+        if (isel[2] < isel[0]) {
+            GWY_SWAP(gdouble, isel[0], isel[2]);
+            GWY_SWAP(gdouble, isel[1], isel[3]);
+        }
+    }
+    else {
+        if (isel[2] < isel[0])
+            GWY_SWAP(gdouble, isel[0], isel[2]);
+        if (isel[3] < isel[1])
+            GWY_SWAP(gdouble, isel[1], isel[3]);
+    }
     gwy_debug("(%d,%d) (%d,%d)", isel[0], isel[1], isel[2], isel[3]);
     isel[2] -= isel[0] - 1;
     isel[3] -= isel[1] - 1;
@@ -882,7 +1002,7 @@ gwy_tool_mask_editor_selection_finished(GwyPlainTool *plain_tool)
         break;
 
         case MASK_SHAPE_LINE:
-        fill_func = (FieldFillFunc)&line_fill;
+        fill_func = (FieldFillFunc)&gwy_data_field_linear_area_fill;
         break;
 
         default:
@@ -949,7 +1069,19 @@ gwy_tool_mask_editor_selection_finished(GwyPlainTool *plain_tool)
                 break;
 
                 case MASK_SHAPE_LINE:
-                g_printerr("Implement me!\n");
+                n = gwy_data_field_get_linear_area_size(isel[2], isel[3]);
+                data = g_new(gdouble, n);
+                gwy_data_field_linear_area_extract(mfield,
+                                                   isel[0], isel[1],
+                                                   isel[2], isel[3],
+                                                   data);
+                while (n)
+                    data[--n] += 1.0;
+                gwy_data_field_linear_area_unextract(mfield,
+                                                     isel[0], isel[1],
+                                                     isel[2], isel[3],
+                                                     data);
+                g_free(data);
                 break;
 
                 default:
