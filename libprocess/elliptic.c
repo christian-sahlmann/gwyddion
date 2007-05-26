@@ -209,6 +209,8 @@ gwy_data_field_elliptic_area_unextract(GwyDataField *data_field,
             count += to - from + 1;
         }
     }
+
+    gwy_data_field_invalidate(data_field);
 }
 
 /**
@@ -304,6 +306,8 @@ gwy_data_field_circular_area_fill(GwyDataField *data_field,
             d[(row + i)*xres + col + j] = value;
         count += MAX(jto - jfrom + 1, 0);
     }
+
+    gwy_data_field_invalidate(data_field);
 
     return count;
 }
@@ -505,6 +509,8 @@ gwy_data_field_circular_area_unextract(GwyDataField *data_field,
             count += jto - jfrom + 1;
         }
     }
+
+    gwy_data_field_invalidate(data_field);
 }
 
 /**
@@ -549,10 +555,10 @@ gwy_data_field_get_circular_area_size(gdouble radius)
  * Method for extraction and putting back data from/to elliptic and circular
  * areas can be used to implement sample-wise operations, that is operations
  * that depend only on sample value not on its position, on these areas:
- * <informalexample><programlisting>
- * gdouble *data;
+ *
+ * |[gdouble *data;
  * gint n, i;
- * <!-- Hello, gtk-doc! -->
+ *
  * data = g_new(gdouble, width*height);
  * n = gwy_data_field_elliptic_area_extract(data_field,
  *                                          col, row, width, height,
@@ -562,16 +568,15 @@ gwy_data_field_get_circular_area_size(gdouble radius)
  * }
  * gwy_data_field_elliptic_area_unextract(data_field,
  *                                        col, row, width, height,
- *                                        data);
- * </programlisting></informalexample>
+ *                                        data);]|
  *
  * Another possibility is to use #GwyDataLine methods on the extracted data
  * (in practice one would use the same data line repeatedly, of course):
- * <informalexample><programlisting>
- * GwyDataLine *data_line;
+ *
+ * |[GwyDataLine *data_line;
  * gdouble *data;
  * gint n;
- * <!-- Hello, gtk-doc! -->
+ *
  * n = gwy_data_field_get_elliptic_area_size(data_field, width, height);
  * data_line = gwy_data_line_new(n, 1.0, FALSE);
  * data = gwy_data_line_get_data(data_line);
@@ -582,8 +587,7 @@ gwy_data_field_get_circular_area_size(gdouble radius)
  * gwy_data_field_elliptic_area_unextract(data_field,
  *                                        col, row, width, height,
  *                                        data);
- * g_object_unref(data_line);
- * </programlisting></informalexample>
+ * g_object_unref(data_line);]|
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
