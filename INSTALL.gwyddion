@@ -5,7 +5,8 @@ Contents:
 2. From sources -- MS Windows
 3. From sources -- Mac OS X
 4. From Subversion (Linux/Unix only)
-5. Modules and plug-ins
+5. Pygwy under MS Windows
+6. Modules and plug-ins
 
 ===[ 0. Prebuilt binaries ]==================================================
 
@@ -42,7 +43,7 @@ Recommended though optional, for `remote control':
 Optional, for SPML file support:
 - LibXML2, including development files
 
-Optional, for Python scripting interface (experimental):
+Optional, for Python scripting interface pygwy (experimental):
 - PyGTK2, including codegen, and all its dependencies
 
 Optional, for development of plug-in in various languages:
@@ -183,7 +184,58 @@ or
 will work as expected.
 
 
-===[ 5. Modules and plug-ins ]===============================================
+===[ 5. Pygwy under MS Windows ]=============================================
+
+1. Python 2.4.X
+   Get Python sources
+   Unpack it for example to D:\
+   Open workspace $PYTHON_DIR\PC\VC6\pcbuild.dsw in Visual Studio 6
+   Set 'pythoncore' as active project
+   Choose Release configuration using Build/Set Active Configuration menu
+   Build python24.dll
+
+2. Pygobject 2.12.X
+   If GTK is not installed, install its development version.
+   In MSVC 6 check and possibly add in Tools/Options/Directories
+   following Include files directories (GTK directories should already be
+   set in case you allowed the GTK installer to do it):
+        D:\GTK\INCLUDE
+        D:\GTK\INCLUDE\GTK-2.0
+        D:\GTK\INCLUDE\GLIB-2.0
+        D:\GTK\INCLUDE\PANGO-1.0
+        D:\GTK\INCLUDE\CAIRO
+        D:\GTK\INCLUDE\ATK-1.0
+        D:\GTK\INCLUDE\GTKGLEXT-1.0
+        D:\GTK\LIB\GTK-2.0\INCLUDE
+        D:\GTK\LIB\GTK-2.0\INCLUDE
+        D:\GTK\LIB\GLIB-2.0\INCLUDE
+        D:\GTK\LIB\GTKGLEXT-1.0\INCLUDE
+        D:\GTK\INCLUDE\LIBGLADE-2.0
+        D:\GTK\INCLUDE\LIBXML2
+        D:\PYTHON-2.4.4\INCLUDE
+        D:\PYTHON-2.4.4\PC
+   Library files:
+        D:\GTK\LIB
+        D:\PYTHON-2.4.4\PC\VC6
+   Note: Don't forget to use your own path to GTK and Python directories.
+   Get pygobject sources
+   Unpack it for example to D:\
+   Use provided workspace and project file (pygobject.dsp, pygobject.dsw)
+   and put them into pygobject directory.
+   Open workspace $PYGOBJECT_DIR\pygobject.dsw in Visual Studio 6
+   Choose Release configuration using Build/Set Active Configuration menu
+   Build pygobject.dll
+
+3. Gwyddion
+   Set path variables (PYTHON_TOP, PYGOBJECT_TOP) in make.msc to coresponding
+   values and enable pygwy by uncommenting ENABLE_PYGWY variable.
+   Compile & install
+
+Note: to see messages printed by Python interpreter to stdou you can add
+/subsystem:console to LDFLAGS in make.msc and recompile&reinstall Gwyddion.
+
+
+===[ 6. Modules and plug-ins ]===============================================
 
 To be written.
 

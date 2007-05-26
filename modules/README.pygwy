@@ -1,0 +1,121 @@
+Pygwy - Python binding for Gwyddion
+-----------------------------------
+
+The Python modules are stored int Gwyddion user directory (~/.gwyddion/pygwy
+or %USER_DIRECTORY%/gwyddion/pygwy). The 'pygwy' directory is automatically 
+created when it does not exist.
+
+
+Currently there are two types of Python modules:
+
+Process module
+==============
+Process module is used to manipulate with datafields. Only the one function
+must be defined:
+- run()
+  return value: not important
+The process module can use predefined variable gwy.data which contains
+the current data container.
+
+
+File module
+===========
+File module is used to import and export data. Complete module implements
+following functions:
+- detect_by_name(filename)
+  filename: string containing full path to file
+  return value: return score <0,100> where value 0 reflects unknown type, 
+                value 100 reflects known type
+
+- detect_by_content(filename, head, tail, filesize)
+  filename: string containing full path to file)
+  head: string containing few bytes from beginning of the file
+  tail: string containing few bytes from end of the file
+  filesize: lenght of file in bytes
+  return value: return score <0,100> where value 0 reflects unknown type, 
+                value 100 reflects known type
+
+- load(filename)
+  filename: string containing full path to file
+  return value: container of imported data
+
+- save(data, filename)
+  data: container of data used for export
+  filename: full path to output file
+  return value: True when export is successful, False otherwise 
+
+Module variables
+================
+Every module must have defined variables which are used to determine 
+the module name, type, location in menu and description.
+
+Required variables for file type module (example):
+plugin_type = "FILE"
+plugin_name = "FileImport" # the plugin_name must be valid module name, 
+                           # so no spaces are allowed
+plugin_desc = "High definition stable format store (.hdsf)" 
+
+Required variables for process type module (example):
+plugin_menu = "/Poodle" # the plugin will be located in Data Process/Poodle
+plugin_type = "PROCESS"
+plugin_name = "Poodle"  # the plugin_name must be valid module name, 
+                        # so no spaces are allowed
+
+Module debuging
+===============
+Currently there is not much options to perform module debugging. 
+Only Python exceptions are written to standard output.
+
+Example process module
+======================
+import gwy
+
+plugin_menu = "/Correct Data/Invert"
+plugin_type = "PROCESS"
+plugin_name = "Invert"
+
+def run():
+   # create undo point
+   key = gwy.gwy_app_data_browser_get_current_key()
+   gwy.gwy_app_undo_qcheckpointv(gwy.data, key)
+
+   # get current datafield
+   d = gwy.gwy_app_data_browser_get_current_datafield()
+
+   # call invert function
+   d.invert(0, 0, 1)
+
+   # report data change to Gwyddion
+   d.data_changed()
+
+Example file module
+===================
+import gwy, sys
+
+plugin_menu = "/None"
+plugin_type = "FILE"
+plugin_name = "FileImport"
+plugin_desc = "High definition stable format store (.hdsf)"
+
+def detect_by_name(filename):
+   if (filename.endswith(".hdsf")):
+      return 100
+   else:
+      return 0
+
+def detect_by_content(filename, head, tail, filesize):
+   if (head.startswith("HDSF:")):
+      return 100
+   else:
+      return 0
+
+def load(filename):
+   c = gwy.Container()
+   d = gwy.DataField(100, 100, 100, 100, 1)
+   for i in range(100):
+      for j in range(100):
+         d.set_val(i, j, i) # create linear gradient
+   c.set_object_by_name("/0/data", d)
+   return c
+
+def save(data, filename):
