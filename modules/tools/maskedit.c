@@ -51,7 +51,9 @@ typedef enum {
 
 typedef enum {
     MASK_SHAPE_RECTANGLE = 0,
-    MASK_SHAPE_ELLIPSE   = 1
+    MASK_SHAPE_ELLIPSE   = 1,
+    MASK_SHAPE_LINE      = 2,
+    MASK_NSHAPES
 } MaskEditShape;
 
 typedef struct _GwyToolMaskEditor      GwyToolMaskEditor;
@@ -81,8 +83,7 @@ struct _GwyToolMaskEditor {
     GtkWidget *prevent_merge;
 
     /* potential class data */
-    GType layer_type_rect;
-    GType layer_type_ell;
+    GType layer_types[MASK_NSHAPES];
 };
 
 struct _GwyToolMaskEditorClass {
@@ -99,6 +100,7 @@ static void  gwy_tool_mask_editor_data_switched      (GwyTool *gwytool,
 static void  gwy_tool_mask_editor_mask_changed       (GwyPlainTool *plain_tool);
 static void  gwy_tool_mask_editor_mode_changed       (GwyToolMaskEditor *tool);
 static void  gwy_tool_mask_editor_shape_changed      (GwyToolMaskEditor *tool);
+static void  gwy_tool_mask_editor_setup_layer        (GwyToolMaskEditor *tool);
 static void  gwy_tool_mask_editor_gsamount_changed   (GtkAdjustment *adj,
                                                       GwyToolMaskEditor *tool);
 static void  gwy_tool_mask_editor_from_border_changed(GtkToggleButton *toggle,
@@ -118,9 +120,13 @@ static GwyModuleInfo module_info = {
     N_("Mask editor tool, allows to interactively add or remove parts "
        "of mask."),
     "Yeti <yeti@gwyddion.net>",
-    "2.3",
+    "2.4",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
+};
+
+static const gchar *const shape_selection_names[MASK_NSHAPES] = {
+    "rectangle", "ellipse", "line",
 };
 
 static const gchar mode_key[]          = "/module/maskeditor/mode";
@@ -194,19 +200,22 @@ gwy_tool_mask_editor_finalize(GObject *object)
 static void
 gwy_tool_mask_editor_init(GwyToolMaskEditor *tool)
 {
+    static const gchar *const shape_layer_types[MASK_NSHAPES] = {
+        "GwyLayerRectangle", "GwyLayerEllipse", "GwyLayerLine",
+    };
+
     GwyPlainTool *plain_tool;
     GwyContainer *settings;
+    guint i;
 
     plain_tool = GWY_PLAIN_TOOL(tool);
-    tool->layer_type_rect = gwy_plain_tool_check_layer_type(plain_tool,
-                                                           "GwyLayerRectangle");
-    if (!tool->layer_type_rect)
-        return;
-
-    tool->layer_type_ell = gwy_plain_tool_check_layer_type(plain_tool,
-                                                           "GwyLayerEllipse");
-    if (!tool->layer_type_ell)
-        return;
+    for (i = 0; i < MASK_NSHAPES; i++) {
+        tool->layer_types[i]
+            = gwy_plain_tool_check_layer_type(plain_tool,
+                                              shape_layer_types[i]);
+        if (!tool->layer_types[i])
+            return;
+    }
 
     settings = gwy_app_settings_get();
     tool->args = default_args;
@@ -221,21 +230,10 @@ gwy_tool_mask_editor_init(GwyToolMaskEditor *tool)
     gwy_container_gis_boolean_by_name(settings, prevent_merge_key,
                                       &tool->args.prevent_merge);
 
-    switch (tool->args.shape) {
-        case MASK_SHAPE_RECTANGLE:
-        gwy_plain_tool_connect_selection(plain_tool, tool->layer_type_rect,
-                                         "rectangle");
-        break;
-
-        case MASK_SHAPE_ELLIPSE:
-        gwy_plain_tool_connect_selection(plain_tool, tool->layer_type_ell,
-                                         "ellipse");
-        break;
-
-        default:
-        g_return_if_reached();
-        break;
-    }
+    tool->args.shape = MIN(tool->args.shape, MASK_NSHAPES-1);
+    gwy_plain_tool_connect_selection(plain_tool,
+                                     tool->layer_types[tool->args.shape],
+                                     shape_selection_names[tool->args.shape]);
 
     gwy_tool_mask_editor_init_dialog(tool);
 }
@@ -280,6 +278,11 @@ gwy_tool_mask_editor_init_dialog(GwyToolMaskEditor *tool)
             MASK_SHAPE_ELLIPSE,
             GWY_STOCK_MASK_CIRCLE,
             N_("Elliptic shapes"),
+        },
+        {
+            MASK_SHAPE_LINE,
+            GWY_STOCK_MASK_LINE,
+            N_("Lines"),
         },
     };
 
@@ -481,7 +484,6 @@ gwy_tool_mask_editor_data_switched(GwyTool *gwytool,
 {
     GwyPlainTool *plain_tool;
     GwyToolMaskEditor *tool;
-    GType layer_type;
 
     GWY_TOOL_CLASS(gwy_tool_mask_editor_parent_class)->data_switched(gwytool,
                                                                      data_view);
@@ -490,19 +492,7 @@ gwy_tool_mask_editor_data_switched(GwyTool *gwytool,
         return;
 
     tool = GWY_TOOL_MASK_EDITOR(gwytool);
-    if (data_view) {
-        if (tool->args.shape == MASK_SHAPE_RECTANGLE)
-            layer_type = tool->layer_type_rect;
-        else
-            layer_type = tool->layer_type_ell;
-        gwy_object_set_or_reset(plain_tool->layer,
-                                layer_type,
-                                "editable", TRUE,
-                                "focus", -1,
-                                NULL);
-        gwy_selection_set_max_objects(plain_tool->selection, 1);
-    }
-
+    gwy_tool_mask_editor_setup_layer(tool);
     gwy_sensitivity_group_set_state(tool->sensgroup, SENS_DATA,
                                     data_view ? SENS_DATA : 0);
     gwy_tool_mask_editor_mask_changed(plain_tool);
@@ -537,7 +527,6 @@ gwy_tool_mask_editor_mode_changed(GwyToolMaskEditor *tool)
 static void
 gwy_tool_mask_editor_shape_changed(GwyToolMaskEditor *tool)
 {
-    GwyPlainTool *plain_tool;
     MaskEditShape shape;
 
     shape = gwy_radio_buttons_get_current(tool->shape);
@@ -545,22 +534,29 @@ gwy_tool_mask_editor_shape_changed(GwyToolMaskEditor *tool)
         return;
     tool->args.shape = shape;
 
+    gwy_plain_tool_connect_selection(GWY_PLAIN_TOOL(tool),
+                                     tool->layer_types[tool->args.shape],
+                                     shape_selection_names[tool->args.shape]);
+    gwy_tool_mask_editor_setup_layer(tool);
+}
+
+static void
+gwy_tool_mask_editor_setup_layer(GwyToolMaskEditor *tool)
+{
+    GwyPlainTool *plain_tool;
+
     plain_tool = GWY_PLAIN_TOOL(tool);
-    switch (tool->args.shape) {
-        case MASK_SHAPE_RECTANGLE:
-        gwy_plain_tool_connect_selection(plain_tool, tool->layer_type_rect,
-                                         "rectangle");
-        break;
+    if (!plain_tool->data_view)
+        return;
 
-        case MASK_SHAPE_ELLIPSE:
-        gwy_plain_tool_connect_selection(plain_tool, tool->layer_type_ell,
-                                         "ellipse");
-        break;
-
-        default:
-        g_return_if_reached();
-        break;
-    }
+    gwy_object_set_or_reset(plain_tool->layer,
+                            tool->layer_types[tool->args.shape],
+                            "editable", TRUE,
+                            "focus", -1,
+                            NULL);
+    if (tool->args.shape == MASK_SHAPE_LINE)
+        g_object_set(plain_tool->layer, "line-numbers", FALSE, NULL);
+    gwy_selection_set_max_objects(plain_tool->selection, 1);
 }
 
 static void
@@ -840,6 +836,15 @@ gwy_tool_mask_editor_shrink(GwyToolMaskEditor *tool)
 }
 
 static void
+line_fill(GwyDataField *dfield,
+          gint col, gint row,
+          gint width, gint height,
+          gdouble value)
+{
+    g_printerr("Implement me!\n");
+}
+
+static void
 gwy_tool_mask_editor_selection_finished(GwyPlainTool *plain_tool)
 {
     GwyToolMaskEditor *tool;
@@ -876,6 +881,10 @@ gwy_tool_mask_editor_selection_finished(GwyPlainTool *plain_tool)
         fill_func = (FieldFillFunc)&gwy_data_field_elliptic_area_fill;
         break;
 
+        case MASK_SHAPE_LINE:
+        fill_func = (FieldFillFunc)&line_fill;
+        break;
+
         default:
         g_return_if_reached();
         break;
@@ -910,13 +919,20 @@ gwy_tool_mask_editor_selection_finished(GwyPlainTool *plain_tool)
 
         case MASK_EDIT_INTERSECT:
         if (plain_tool->mask_field) {
+            gdouble *data;
+            gint n;
+
             gwy_app_undo_qcheckpointv(plain_tool->container, 1, &quark);
             mfield = plain_tool->mask_field;
             gwy_data_field_clamp(mfield, 0.0, 1.0);
-            if (tool->args.shape == MASK_SHAPE_ELLIPSE) {
-                gdouble *data;
-                gint n;
+            switch (tool->args.shape) {
+                case MASK_SHAPE_RECTANGLE:
+                gwy_data_field_area_add(mfield,
+                                        isel[0], isel[1], isel[2], isel[3],
+                                        1.0);
+                break;
 
+                case MASK_SHAPE_ELLIPSE:
                 n = gwy_data_field_get_elliptic_area_size(isel[2], isel[3]);
                 data = g_new(gdouble, n);
                 gwy_data_field_elliptic_area_extract(mfield,
@@ -930,11 +946,14 @@ gwy_tool_mask_editor_selection_finished(GwyPlainTool *plain_tool)
                                                        isel[2], isel[3],
                                                        data);
                 g_free(data);
-            }
-            else {
-                gwy_data_field_area_add(mfield,
-                                        isel[0], isel[1], isel[2], isel[3],
-                                        1.0);
+                break;
+
+                case MASK_SHAPE_LINE:
+                g_printerr("Implement me!\n");
+                break;
+
+                default:
+                break;
             }
             gwy_data_field_add(mfield, -1.0);
             gwy_data_field_clamp(mfield, 0.0, 1.0);
