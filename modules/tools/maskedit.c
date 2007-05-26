@@ -26,6 +26,7 @@
 #include <libprocess/elliptic.h>
 #include <libprocess/stats.h>
 #include <libprocess/filters.h>
+#include <libprocess/grains.h>
 #include <libgwydgets/gwystock.h>
 #include <libgwydgets/gwyradiobuttons.h>
 #include <libgwydgets/gwydgetutils.h>
@@ -63,6 +64,7 @@ typedef struct {
     MaskEditShape shape;
     gint32 gsamount;
     gboolean from_border;
+    gboolean prevent_merge;
 } ToolArgs;
 
 struct _GwyToolMaskEditor {
@@ -76,6 +78,7 @@ struct _GwyToolMaskEditor {
 
     GtkObject *gsamount;
     GtkWidget *from_border;
+    GtkWidget *prevent_merge;
 
     /* potential class data */
     GType layer_type_rect;
@@ -100,6 +103,8 @@ static void  gwy_tool_mask_editor_gsamount_changed   (GtkAdjustment *adj,
                                                       GwyToolMaskEditor *tool);
 static void  gwy_tool_mask_editor_from_border_changed(GtkToggleButton *toggle,
                                                       GwyToolMaskEditor *tool);
+static void  gwy_tool_mask_editor_prevent_merge_changed(GtkToggleButton *toggle,
+                                                       GwyToolMaskEditor *tool);
 static void  gwy_tool_mask_editor_invert             (GwyToolMaskEditor *tool);
 static void  gwy_tool_mask_editor_remove             (GwyToolMaskEditor *tool);
 static void  gwy_tool_mask_editor_fill               (GwyToolMaskEditor *tool);
@@ -113,21 +118,23 @@ static GwyModuleInfo module_info = {
     N_("Mask editor tool, allows to interactively add or remove parts "
        "of mask."),
     "Yeti <yeti@gwyddion.net>",
-    "2.2",
+    "2.3",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
 
-static const gchar mode_key[]        = "/module/maskeditor/mode";
-static const gchar shape_key[]       = "/module/maskeditor/shape";
-static const gchar gsamount_key[]    = "/module/maskeditor/gsamount";
-static const gchar from_border_key[] = "/module/maskeditor/from_border";
+static const gchar mode_key[]          = "/module/maskeditor/mode";
+static const gchar shape_key[]         = "/module/maskeditor/shape";
+static const gchar gsamount_key[]      = "/module/maskeditor/gsamount";
+static const gchar from_border_key[]   = "/module/maskeditor/from_border";
+static const gchar prevent_merge_key[] = "/module/maskeditor/prevent_merge";
 
 static const ToolArgs default_args = {
     MASK_EDIT_SET,
     MASK_SHAPE_RECTANGLE,
     1,
     FALSE,
+    TRUE,
 };
 
 GWY_MODULE_QUERY(module_info)
@@ -178,6 +185,8 @@ gwy_tool_mask_editor_finalize(GObject *object)
                                     tool->args.gsamount);
     gwy_container_set_boolean_by_name(settings, from_border_key,
                                       tool->args.from_border);
+    gwy_container_set_boolean_by_name(settings, prevent_merge_key,
+                                      tool->args.prevent_merge);
 
     G_OBJECT_CLASS(gwy_tool_mask_editor_parent_class)->finalize(object);
 }
@@ -209,6 +218,8 @@ gwy_tool_mask_editor_init(GwyToolMaskEditor *tool)
                                     &tool->args.gsamount);
     gwy_container_gis_boolean_by_name(settings, from_border_key,
                                       &tool->args.from_border);
+    gwy_container_gis_boolean_by_name(settings, prevent_merge_key,
+                                      &tool->args.prevent_merge);
 
     switch (tool->args.shape) {
         case MASK_SHAPE_RECTANGLE:
@@ -286,7 +297,7 @@ gwy_tool_mask_editor_init_dialog(GwyToolMaskEditor *tool)
     sizegroup = gtk_size_group_new(GTK_SIZE_GROUP_HORIZONTAL);
     tool->sensgroup = gwy_sensitivity_group_new();
 
-    table = GTK_TABLE(gtk_table_new(9, 4, FALSE));
+    table = GTK_TABLE(gtk_table_new(10, 4, FALSE));
     gtk_table_set_col_spacings(table, 6);
     gtk_table_set_row_spacings(table, 2);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
@@ -443,6 +454,19 @@ gwy_tool_mask_editor_init_dialog(GwyToolMaskEditor *tool)
     g_signal_connect(tool->from_border, "toggled",
                      G_CALLBACK(gwy_tool_mask_editor_from_border_changed),
                      tool);
+    row++;
+
+    tool->prevent_merge
+        = gtk_check_button_new_with_mnemonic(_("_Prevent grain merging "
+                                               "by growing"));
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(tool->prevent_merge),
+                                 tool->args.prevent_merge);
+    gtk_table_attach(table, tool->prevent_merge,
+                     0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    g_signal_connect(tool->prevent_merge, "toggled",
+                     G_CALLBACK(gwy_tool_mask_editor_prevent_merge_changed),
+                     tool);
+    row++;
 
     gwy_tool_add_hide_button(GWY_TOOL(tool), TRUE);
 
@@ -553,6 +577,13 @@ gwy_tool_mask_editor_from_border_changed(GtkToggleButton *toggle,
     tool->args.from_border = gtk_toggle_button_get_active(toggle);
 }
 
+static void
+gwy_tool_mask_editor_prevent_merge_changed(GtkToggleButton *toggle,
+                                           GwyToolMaskEditor *tool)
+{
+    tool->args.prevent_merge = gtk_toggle_button_get_active(toggle);
+}
+
 static GwyDataField*
 gwy_tool_mask_editor_maybe_add_mask(GwyPlainTool *plain_tool,
                                     GQuark quark)
@@ -620,9 +651,10 @@ gwy_tool_mask_editor_grow(GwyToolMaskEditor *tool)
     GwyPlainTool *plain_tool;
     GQuark quark;
     gdouble *data, *buffer, *prow;
-    gdouble min, q1, q2;
-    gint xres, yres, rowstride;
+    gdouble min, max, q1, q2;
+    gint xres, yres, rowstride, ngrains;
     gint i, j, iter;
+    gint *grains = NULL;
 
     plain_tool = GWY_PLAIN_TOOL(tool);
     g_return_if_fail(plain_tool->mask_field);
@@ -630,9 +662,18 @@ gwy_tool_mask_editor_grow(GwyToolMaskEditor *tool)
     quark = gwy_app_get_mask_key_for_id(plain_tool->id);
     gwy_app_undo_qcheckpointv(plain_tool->container, 1, &quark);
 
+    if (tool->args.gsamount > 1)
+        max = gwy_data_field_get_max(plain_tool->mask_field);
+    else
+        max = 1.0;
     xres = gwy_data_field_get_xres(plain_tool->mask_field);
     yres = gwy_data_field_get_yres(plain_tool->mask_field);
     data = gwy_data_field_get_data(plain_tool->mask_field);
+
+    if (tool->args.prevent_merge) {
+        grains = g_new0(gint, xres*yres);
+        ngrains = gwy_data_field_number_grains(plain_tool->mask_field, grains);
+    }
 
     buffer = g_new(gdouble, xres);
     prow = g_new(gdouble, xres);
@@ -670,11 +711,47 @@ gwy_tool_mask_editor_grow(GwyToolMaskEditor *tool)
             if (i < yres-1)
                 memcpy(buffer, data + (i+1)*xres, xres*sizeof(gdouble));
         }
-        if (min >= 1.0)
+        if (tool->args.prevent_merge) {
+            /* We know in the last iteration the grains did not touch.
+             * Therefore we examine pixels that are in mask now but were not
+             * in the last iteration, i.e. grains[k] == 0 but mask[k] != 0 */
+            for (i = 0; i < yres; i++) {
+                for (j = 0; j < xres; j++) {
+                    gint g1, g2, g3, g4;
+                    gint k = i*xres + j;
+
+                    if (grains[k] || data[k] <= 0.0)
+                        continue;
+
+                    g1 = i > 0      ? grains[k-xres] : 0;
+                    g2 = j > 0      ? grains[k-1]    : 0;
+                    g3 = j < xres-1 ? grains[k+1]    : 0;
+                    g4 = i < yres-1 ? grains[k+xres] : 0;
+                    if ((!g1 || !g2 || g1 == g2)
+                        && (!g2 || !g3 || g2 == g3)
+                        && (!g3 || !g4 || g3 == g4)
+                        && (!g4 || !g1 || g4 == g1)
+                        && (!g3 || !g1 || g3 == g1)
+                        && (!g4 || !g2 || g4 == g2)) {
+                        /* All are equal or zeroes, therefore bitwise or
+                         * gives the nonzero value sought. */
+                        grains[k] = g1 | g2 | g3 | g4;
+                        continue;
+                    }
+                    else {
+                        /* Now we have a conflict and it has to be resolved.
+                         * We just get rid of this pixel. */
+                        data[k] = 0.0;
+                    }
+                }
+            }
+        }
+        if (min == max)
             break;
     }
     g_free(buffer);
     g_free(prow);
+    g_free(grains);
 
     gwy_data_field_data_changed(plain_tool->mask_field);
 }
@@ -685,7 +762,7 @@ gwy_tool_mask_editor_shrink(GwyToolMaskEditor *tool)
     GwyPlainTool *plain_tool;
     GQuark quark;
     gdouble *data, *buffer, *prow;
-    gdouble q1, q2, max;
+    gdouble min, max, q1, q2;
     gint xres, yres, rowstride;
     gint i, j, iter;
 
@@ -695,6 +772,10 @@ gwy_tool_mask_editor_shrink(GwyToolMaskEditor *tool)
     quark = gwy_app_get_mask_key_for_id(plain_tool->id);
     gwy_app_undo_qcheckpointv(plain_tool->container, 1, &quark);
 
+    if (tool->args.gsamount > 1)
+        min = gwy_data_field_get_min(plain_tool->mask_field);
+    else
+        min = 0.0;
     xres = gwy_data_field_get_xres(plain_tool->mask_field);
     yres = gwy_data_field_get_yres(plain_tool->mask_field);
     data = gwy_data_field_get_data(plain_tool->mask_field);
@@ -749,7 +830,7 @@ gwy_tool_mask_editor_shrink(GwyToolMaskEditor *tool)
                                       0, yres-1, xres, 1);
         }
 
-        if (max <= 0.0)
+        if (max == min)
             break;
     }
     g_free(buffer);
