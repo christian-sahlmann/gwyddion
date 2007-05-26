@@ -93,6 +93,7 @@ G_BEGIN_DECLS
 #define GWY_STOCK_MASK_GROW             "gwy_mask_grow"
 #define GWY_STOCK_MASK_INTERSECT        "gwy_mask_intersect"
 #define GWY_STOCK_MASK_INVERT           "gwy_mask_invert"
+#define GWY_STOCK_MASK_LINE             "gwy_mask_line"
 #define GWY_STOCK_MASK_RECT_EXCLUSIVE   "gwy_mask_rect_exclusive"
 #define GWY_STOCK_MASK_RECT_INCLUSIVE   "gwy_mask_rect_inclusive"
 #define GWY_STOCK_MASK_REMOVE           "gwy_mask_remove"

@@ -772,6 +772,15 @@ free_the_icon_factory(void)
  **/
 
 /**
+ * GWY_STOCK_MASK_LINE
+ *
+ * The "Mask-Line" stock icon.
+ * <inlinegraphic fileref="gwy_mask_line-24.png" format="PNG"/>
+ *
+ * Since: 2.6
+ **/
+
+/**
  * GWY_STOCK_MASK_RECT_EXCLUSIVE
  *
  * The "Mask-Rect-Exclusive" stock icon.
