@@ -1,4 +1,4 @@
-2.5.20070505
+2.5.20070526
 
 2.6 (0000-00-00)
 Application:
@@ -51,6 +51,8 @@ Modules:
 - Spectro tool (new): Visualize and extract single point spectra.
 - Grain measure tool (new): Calculate characteristics of individual grains.
 - Rougness tool (new): ISO roughness parameters evaluation.
+- Cut Graph (new): Extracts parts of graph curves.
+- FD Curve Fit (new): Fits force data curvers.
 - Pixmap import: It is possible to set arbitrary units, the preview is bigger.
 - Pixmap export: Text size can be set independently, zoom can be specified by
   desired width and height, cases of wrong preview scaling were fixed.
@@ -81,9 +83,11 @@ Modules:
 - Color Range tool: It is possible to set default color mapping type applied
   when none is specifically set. Manual range setting was enabled.
 - Statistical functions tool: Radial PSDF was added.
+- Mask editor tool: New option to prevent merging of grains by growing mask.
 - Read Value: Can shift data values to make the currently selected point lie
   on the zero plane.
 - Level3: New option to make the fitted plane the zero value plane.
+- Mask editor tool: Thin lines were added to the set of possible shapes.
 - Symbol of theta which often rendered wrong on Win32 was replaced with
   another glyph.
 - Read Value: It no longer displays 123456 as the x pixel coordinate when no
@@ -91,6 +95,9 @@ Modules:
 - Nanoscope: Can loads files with `Scan Size' in place of `Scan size' field.
 - 2D FFT filter: Exchanged lateral resolutions and units of FFT output and
   filtered image were corrected.
+- Graph level: Emits curve data change notification so that the graph can
+  redraw itself properly.
+- RHK SM2 and SM3: Horizontally flipped images were corrected.
 
 Other:
 - Freedesktop MIME types conflicting with existing types were removed or
