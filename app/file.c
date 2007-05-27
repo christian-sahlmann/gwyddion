@@ -132,7 +132,8 @@ gwy_app_file_load(const gchar *filename_utf8,
     data = gwy_app_file_load_real(filename_utf8, filename_sys, name, TRUE);
     /* gwy_app_file_add_loaded() takes a reference therefore we can release
      * the initial one */
-    g_object_unref(data);
+    if (data)
+        g_object_unref(data);
 
     return data;
 }
