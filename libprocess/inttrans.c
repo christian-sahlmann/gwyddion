@@ -24,6 +24,7 @@
 #include <fftw3.h>
 #endif
 
+#include <string.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libprocess/arithmetic.h>
@@ -975,7 +976,7 @@ gwy_data_field_2dfft_real_do(GwyDataField *rin,
 #else
     gint k, j;
 
-    for (k = 0; k < rin->yres; k += 2) {
+    for (k = 0; k+1 < rin->yres; k += 2) {
         gdouble *re, *im, *r0, *r1, *i0, *i1;
 
         re = rout->data + k*rin->xres;
@@ -998,6 +999,16 @@ gwy_data_field_2dfft_real_do(GwyDataField *rin,
             r1[j] = (im[j] + im[rin->xres - j])/2.0;
             i1[j] = (-re[j] + re[rin->xres - j])/2.0;
         }
+    }
+    /* XXX: Maybe this is paranoid here as in 2D FFT also the other dimension
+     * has to be a nice number -- power of 2 here */
+    if (rin->yres % 2) {
+        k = rin->xres * (rin->yres - 1);
+        memset(ibuf->data, 0, rin->xres*sizeof(gdouble));
+        gwy_fft_simple(direction, rin->xres,
+                       1, rin->data + k, ibuf->data,
+                       1, rout->data + k, iout->data + k);
+
     }
     for (k = 0; k < rin->xres; k++)
         gwy_fft_simple(direction, rin->yres,
@@ -1591,7 +1602,7 @@ gwy_data_field_xfft_real_do(GwyDataField *rin,
 #else
     gint j, k;
 
-    for (k = 0; k < rin->yres; k += 2) {
+    for (k = 0; k+1 < rin->yres; k += 2) {
         gdouble *re, *im, *r0, *r1, *i0, *i1;
 
         re = ibuf->data + k*rin->xres;
@@ -1617,6 +1628,14 @@ gwy_data_field_xfft_real_do(GwyDataField *rin,
             r1[j] = (im[j] + im[rin->xres - j])/2.0;
             i1[j] = (-re[j] + re[rin->xres - j])/2.0;
         }
+    }
+    if (rin->yres % 2) {
+        k = rin->xres * (rin->yres - 1);
+        memset(ibuf->data, 0, rin->xres*sizeof(gdouble));
+        gwy_fft_simple(direction, rin->xres,
+                       1, rin->data + k, ibuf->data,
+                       1, rout->data + k, iout->data + k);
+
     }
 #endif
     gwy_data_field_invalidate(rout);
@@ -1887,7 +1906,7 @@ gwy_data_field_yfft_real_do(GwyDataField *rin,
 #else
     gint j, k;
 
-    for (k = 0; k < rin->xres; k += 2) {
+    for (k = 0; k+1 < rin->xres; k += 2) {
         gdouble *re, *im, *r0, *r1, *i0, *i1;
 
         re = ibuf->data + k;
@@ -1911,15 +1930,22 @@ gwy_data_field_yfft_real_do(GwyDataField *rin,
         r1[0] = im[0];
         i1[0] = 0.0;
         for (j = 1; j < rin->yres; j++) {
-            r0[rin->xres*j] = (re[rin->xres*j]
-                               + re[rin->xres*(rin->yres - j)])/2.0;
-            i0[rin->xres*j] = (im[rin->xres*j]
-                               - im[rin->xres*(rin->yres - j)])/2.0;
-            r1[rin->xres*j] = (im[rin->xres*j]
-                               + im[rin->xres*(rin->yres - j)])/2.0;
-            i1[rin->xres*j] = (-re[rin->xres*j]
-                               + re[rin->xres*(rin->yres - j)])/2.0;
+            gint n = rin->xres*rin->yres, kj = rin->xres*j;
+
+            r0[rin->xres*j] = (re[kj] + re[n - kj])/2.0;
+            i0[rin->xres*j] = (im[kj] - im[n - kj])/2.0;
+            r1[rin->xres*j] = (im[kj] + im[n - kj])/2.0;
+            i1[rin->xres*j] = (-re[kj] + re[n - kj])/2.0;
         }
+    }
+    if (rin->xres % 2) {
+        k = rin->xres - 1;
+        for (j = 0; j < rin->yres; j++)
+            ibuf->data[j*rin->xres + k] = 0.0;
+        gwy_fft_simple(direction, rin->yres,
+                       rin->xres, rin->data + k, ibuf->data + k,
+                       rin->xres, rout->data + k, iout->data + k);
+
     }
 #endif
     gwy_data_field_invalidate(rout);
