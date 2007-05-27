@@ -476,7 +476,6 @@ gwy_data_line_fft_raw(GwyDataLine *rsrc,
     gint newres;
 
     g_return_if_fail(GWY_IS_DATA_LINE(rsrc));
-    g_return_if_fail(GWY_IS_DATA_LINE(isrc));
     g_return_if_fail(!isrc || GWY_IS_DATA_LINE(isrc));
     if (isrc)
         g_return_if_fail(!gwy_data_line_check_compatibility
