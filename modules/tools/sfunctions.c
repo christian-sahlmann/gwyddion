@@ -537,7 +537,6 @@ gwy_tool_sfunctions_update_curve(GwyToolSFunctions *tool)
     if (plain_tool->data_field) {
         if (!plain_tool->selection
             || !gwy_selection_get_object(plain_tool->selection, 0, sel)) {
-            nsel = 1;
             isel[0] = isel[1] = 0;
             w = gwy_data_field_get_xres(plain_tool->data_field);
             h = gwy_data_field_get_yres(plain_tool->data_field);
@@ -552,9 +551,9 @@ gwy_tool_sfunctions_update_curve(GwyToolSFunctions *tool)
             h = ABS(isel[3] - isel[1]) + 1;
             isel[0] = MIN(isel[0], isel[2]);
             isel[1] = MIN(isel[1], isel[3]);
-            if (w >= 4 && h >= 4)
-                nsel = 1;
         }
+        if (w >= 4 && h >= 4)
+            nsel = 1;
     }
 
     gtk_widget_set_sensitive(tool->apply, nsel > 0);
