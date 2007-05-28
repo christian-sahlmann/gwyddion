@@ -271,7 +271,7 @@ pygwy_get_plugin_metadata(const gchar *filename,
                           gchar **menu_path,
                           PygwyPluginType *type)
 {
-    gchar *plugin_file_content, *type_str;
+    gchar *plugin_file_content, *type_str, *suffix;
     PyObject *code_obj = NULL, *plugin_module = NULL, *d, *plugin_dict;
     GError *err = NULL;
 
@@ -311,7 +311,10 @@ pygwy_get_plugin_metadata(const gchar *filename,
     }
     plugin_dict = PyModule_GetDict(plugin_module);
     // Get parameters from dict
-    *name = pygwy_read_val_from_dict(plugin_dict, "plugin_name", filename);
+    *name = g_path_get_basename(filename);
+    suffix = g_strrstr(*name, ".");
+    suffix[0] = '\0';
+    gwy_debug("plugin name: %s", *name);
     *desc = pygwy_read_val_from_dict(plugin_dict, "plugin_desc", filename);
     *menu_path = pygwy_read_val_from_dict(plugin_dict, "plugin_menu", filename);
     type_str = pygwy_read_val_from_dict(plugin_dict, "plugin_type", filename);
@@ -540,7 +543,7 @@ pygwy_register_plugins(void)
                               plugin_fullpath_filename);
                     break;
                 default:
-                    g_warning("Not yet implemented"); //TODO: PYGWY_GRAPH, PYGWY_LAYER
+                    g_warning("Rest of plugin types not yet implemented"); //TODO: PYGWY_GRAPH, PYGWY_LAYER
             }
         } else { // if (check suffix)
             gwy_debug("wrong extension for file: %s", plugin_filename);

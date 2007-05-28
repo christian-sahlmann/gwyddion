@@ -12,7 +12,7 @@ headers
 #include <libgwymodule/gwymodule-process.h>
 // ##include "pywrap.h"
 %%
-modulename gwyddion
+modulename gwy
 %%
 import gobject.GObject as PyGObject_Type
 // import glib.GQuark as PyGQuark_Type
@@ -23,6 +23,7 @@ ignore-glob
   gwy_data_field_get_drift_from_isotropy
   gwy_data_field_get_data
   gwy_data_line_get_data
+  gwy_container_set_string
   *get_string 
 %%
 ignore-type 
@@ -127,6 +128,7 @@ _wrap_gwy_app_undo_qcheckpointv(PyObject *self, PyObject *args, PyObject *kwargs
    Py_INCREF(Py_None);
    return Py_None;
 }
+
 %%
 define GwyDataField.get_data noargs
 static PyObject *
@@ -153,6 +155,7 @@ _wrap_gwy_data_field_get_data(PyGObject *self)
 
    return tuple;
 }
+
 %%
 define GwyDataLine.get_data noargs
 static PyObject *
@@ -273,6 +276,137 @@ _wrap_gwy_container_set_object_by_name(PyGObject *self, PyObject *args, PyObject
    return Py_None;
 
 }
+
+%%
+define GwyContainer.set_string kwargs
+static PyObject *
+_wrap_gwy_container_set_string(PyGObject *self, PyObject *args, PyObject *kwargs)
+{
+    static char *kwlist[] = { "key", "value", NULL };
+    int key, value_len;
+    guchar *value;
+    gchar *dup_value;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs,"is#:GwyContainer.set_string", kwlist, &key, &value, &value_len))
+        return NULL;
+    
+    dup_value = g_strndup(value, value_len);
+    gwy_container_set_string(GWY_CONTAINER(self->obj), key, dup_value);
+    
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
+
+%%
+define GwyContainer.get_object_by_name kwargs
+static PyObject *
+_wrap_gwy_container_get_object_by_name(PyGObject *self, PyObject *args, PyObject *kwargs) 
+{
+   static char *kwlist[] = {"name", NULL};
+   gchar *name;
+   gpointer obj;
+   
+   if (!PyArg_ParseTupleAndKeywords(args, kwargs,"s:gwy_container_get_object_by_name", kwlist, &name))
+      return NULL;
+   obj = gwy_container_get_object_by_name((GWY_CONTAINER(self->obj)), name);
+   if (obj && (GWY_IS_DATA_FIELD(obj) || GWY_IS_DATA_LINE(obj) || GWY_IS_RESOURCE(obj) || GWY_IS_SI_UNIT(obj))) {
+      return pygobject_new((GObject *)obj);
+   } else {
+      Py_INCREF(Py_None);
+      return Py_None;
+   }
+}
+%%
+define GwyContainer.get_object kwargs
+static PyObject *
+_wrap_gwy_container_get_object(PyGObject *self, PyObject *args, PyObject *kwargs) 
+{
+   static char *kwlist[] = {"key", NULL};
+   gint key;
+   gpointer obj;
+   
+   if (!PyArg_ParseTupleAndKeywords(args, kwargs,"i:gwy_container_get_object", kwlist, &key))
+      return NULL;
+   obj = gwy_container_get_object((GWY_CONTAINER(self->obj)), key);
+   if (obj && (GWY_IS_DATA_FIELD(obj) || GWY_IS_DATA_LINE(obj) || GWY_IS_RESOURCE(obj) || GWY_IS_SI_UNIT(obj))) {
+      return pygobject_new((GObject *)obj);
+   } else {
+      Py_INCREF(Py_None);
+      return Py_None;
+   }
+}
+
+%%
+define GwyContainer.keys noargs
+static PyObject *
+_wrap_gwy_container_keys(PyGObject *self) 
+{
+   gint i;
+   GQuark *keys;
+   PyObject *tuple;
+   
+   keys = gwy_container_keys(GWY_CONTAINER(self->obj));
+   tuple = PyTuple_New(gwy_container_get_n_items(GWY_CONTAINER(self->obj)));
+   if (!tuple)
+      return NULL;
+   // fill tuple with keys
+   for (i = 0 ; i < gwy_container_get_n_items(GWY_CONTAINER(self->obj)); i++) {
+      PyTuple_SetItem(tuple, i, PyInt_FromLong(keys[i]));
+   }
+   g_free(keys);
+   return tuple;
+}
+
+%%
+define GwyContainer.keys_by_name noargs
+static PyObject *
+_wrap_gwy_container_keys_by_name(PyGObject *self) 
+{
+   gint i;
+   gchar **keys;
+   PyObject *tuple;
+   
+   keys = gwy_container_keys_by_name(GWY_CONTAINER(self->obj));
+   tuple = PyTuple_New(gwy_container_get_n_items(GWY_CONTAINER(self->obj)));
+   if (!tuple)
+      return NULL;
+   // fill tuple with keys
+   for (i = 0 ; i < gwy_container_get_n_items(GWY_CONTAINER(self->obj)); i++) { 
+      PyTuple_SetItem(tuple, i, PyString_FromString(keys[i]));
+   }
+   g_free(keys);
+   return tuple;
+}
+
+%%
+/*
+define GwyContainer.get_value kwargs
+static PyObject *
+_wrap_gwy_container_get_value(PyGObject *self, PyObject *args, PyObject *kwargs)
+{
+    static char *kwlist[] = {"key", NULL};
+    GwyContainer *c;
+    GQuark key;
+    GValue v;
+
+    printf("semjo\n");
+    if (!PyArg_ParseTupleAndKeywords(args,
+                                     kwargs,
+                                     "i:GwyContainer.get_value",
+                                     kwlist,
+                                     &key)) {
+        printf("tak sem\n");
+        return NULL;
+    }
+    printf('key %d\n', key);
+    c = GWY_CONTAINER(self->obj);
+    v = gwy_container_get_value(c, key);
+    printf("get_value: %s\n", g_strdup_value_contents(&v));
+    return Py_None;
+}
+*/
+
 /*
 
 define gwy_load_datafield kwargs
