@@ -9,6 +9,9 @@
 GTK_TOP = C:\Gtk
 GTKGLEXT_TOP = $(GTK_TOP)
 LIBXML2_TOP = $(GTK_TOP)
+#ENABLE_PYGWY = 1
+PYTHON_TOP = D:\Python-2.4.4
+PYGOBJECT_TOP = D:\pygobject-2.12.3
 #GTKGLEXT_TOP = C:\GtkGLExt\1.0
 #LIBXML2_TOP = C:\libxml2
 MSC_TOP = C:\Program Files\Microsoft Visual Studio\VC98
