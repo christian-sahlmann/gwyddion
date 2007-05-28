@@ -108,6 +108,12 @@ static gboolean hash_remove_prefix_func          (gpointer hkey,
 static void     hash_foreach_func                (gpointer hkey,
                                                   gpointer hvalue,
                                                   gpointer hdata);
+static void     keys_foreach_func                (gpointer hkey,
+                                                  gpointer hvalue,
+                                                  gpointer hdata);
+static void     keys_by_name_foreach_func        (gpointer hkey,
+                                                  gpointer hvalue,
+                                                  gpointer hdata);
 static GObject* gwy_container_duplicate_real     (GObject *object);
 static void     gwy_container_clone_real         (GObject *source,
                                                   GObject *copy);
@@ -473,6 +479,95 @@ hash_foreach_func(gpointer hkey, gpointer hvalue, gpointer hdata)
 
     pfdata->func(hkey, value, pfdata->user_data);
     pfdata->count++;
+}
+
+/**
+ * gwy_container_keys:
+ * @container: A container.
+ *
+ * Gets all quark keys of a container.
+ *
+ * Returns: A newly allocated array with quark keys of all @container items,
+ *          in no particular order.  The number of items can be obtained
+ *          with gwy_container_get_n_items().  If there are no items, %NULL
+ *          is returned.
+ *
+ * Since: 2.6
+ **/
+GQuark*
+gwy_container_keys(GwyContainer *container)
+{
+    GArray *array;
+    GQuark *keys;
+    guint n;
+
+    g_return_val_if_fail(GWY_IS_CONTAINER(container), NULL);
+    n = g_hash_table_size(container->values);
+    if (!n)
+        return NULL;
+
+    array = g_array_sized_new(FALSE, FALSE, sizeof(GQuark), n);
+    g_hash_table_foreach(container->values, keys_foreach_func, array);
+    keys = (GQuark*)array->data;
+    g_array_free(array, FALSE);
+
+    return keys;
+}
+
+static void
+keys_foreach_func(gpointer hkey,
+                  G_GNUC_UNUSED gpointer hvalue,
+                  gpointer hdata)
+{
+    GQuark key = GPOINTER_TO_UINT(hkey);
+    GArray *array = (GArray*)hdata;
+
+    g_array_append_val(array, key);
+}
+
+/**
+ * gwy_container_keys_by_name:
+ * @container: A container.
+ *
+ * Gets all string keys of a container.
+ *
+ * Returns: A newly allocated array with string keys of all @container items,
+ *          in no particular order.  The number of items can be obtained
+ *          with gwy_container_get_n_items().  If there are no items, %NULL
+ *          is returned.  Unlike the array the strings are owned by GLib and
+ *          must not be freed.
+ *
+ * Since: 2.6
+ **/
+const gchar**
+gwy_container_keys_by_name(GwyContainer *container)
+{
+    GPtrArray *array;
+    const gchar **keys;
+    guint n;
+
+    g_return_val_if_fail(GWY_IS_CONTAINER(container), NULL);
+    n = g_hash_table_size(container->values);
+    if (!n)
+        return NULL;
+
+    array = g_ptr_array_sized_new(n);
+    g_hash_table_foreach(container->values, keys_by_name_foreach_func, array);
+    keys = (const gchar**)array->pdata;
+    g_ptr_array_free(array, FALSE);
+
+    return keys;
+}
+
+static void
+keys_by_name_foreach_func(gpointer hkey,
+                          G_GNUC_UNUSED gpointer hvalue,
+                          gpointer hdata)
+{
+    GQuark key = GPOINTER_TO_UINT(hkey);
+    GPtrArray *array = (GPtrArray*)hdata;
+
+    g_ptr_array_add(array, (gpointer)g_quark_to_string(key));
 }
 
 /**

@@ -96,6 +96,8 @@ guint         gwy_container_foreach               (GwyContainer *container,
                                                    const gchar *prefix,
                                                    GHFunc function,
                                                    gpointer user_data);
+GQuark*       gwy_container_keys                  (GwyContainer *container);
+const gchar** gwy_container_keys_by_name          (GwyContainer *container);
 void          gwy_container_set_boolean           (GwyContainer *container,
                                                    GQuark key,
                                                    gboolean value);
