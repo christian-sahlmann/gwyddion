@@ -165,7 +165,9 @@ typedef enum {
     GWY_GRAIN_VALUE_CENTER_Y             = 17,
     GWY_GRAIN_VALUE_VOLUME_0             = 18,
     GWY_GRAIN_VALUE_VOLUME_MIN           = 19,
-    GWY_GRAIN_VALUE_VOLUME_LAPLACE       = 20
+    GWY_GRAIN_VALUE_VOLUME_LAPLACE       = 20,
+    GWY_GRAIN_VALUE_SLOPE_THETA          = 23,
+    GWY_GRAIN_VALUE_SLOPE_PHI            = 24,
 } GwyGrainQuantity;
 
 typedef enum {

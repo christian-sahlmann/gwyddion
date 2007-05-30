@@ -752,6 +752,8 @@ gwy_data_field_grains_get_distribution(GwyDataField *data_field,
 
         case GWY_GRAIN_VALUE_MINIMUM_BOUND_ANGLE:
         case GWY_GRAIN_VALUE_MAXIMUM_BOUND_ANGLE:
+        case GWY_GRAIN_VALUE_SLOPE_THETA:
+        case GWY_GRAIN_VALUE_SLOPE_PHI:
         gwy_si_unit_set_from_string(lineunit, NULL);
         break;
 
@@ -1511,6 +1513,56 @@ gwy_data_field_grains_get_values(GwyDataField *data_field,
                                                    i, pos + 4*i);
         }
         g_free(pos);
+        break;
+
+        case GWY_GRAIN_VALUE_SLOPE_THETA:
+        case GWY_GRAIN_VALUE_SLOPE_PHI:
+        sizes = g_new0(gint, ngrains + 1);
+        tmp = g_new0(gdouble, 8*(ngrains + 1));
+        values[0] = 0.0;
+        for (i = 0; i < yres; i++) {
+            for (j = 0; j < yres; j++) {
+                gint gno = grains[i*xres + j];
+
+                if (gno) {
+                    gdouble *t = tmp + 8*gno;
+                    gdouble z;
+
+                    sizes[gno]++;
+                    z = d[i*xres + j];
+                    *(t++) += j;
+                    *(t++) += i;
+                    *(t++) += z;
+                    *(t++) += j*j;
+                    *(t++) += j*i;
+                    *(t++) += i*i;
+                    *(t++) += j*z;
+                    *(t++) += i*z;
+                }
+            }
+        }
+        for (i = 1; i <= ngrains; i++) {
+            gdouble x, y, z, xx, yy, xy, xz, yz, det, bx, by;
+            gdouble *t = tmp + 8*i;
+
+            x = t[0]/sizes[i];
+            y = t[1]/sizes[i];
+            z = t[2]/sizes[i];
+            xx = t[3]/sizes[i];
+            xy = t[4]/sizes[i];
+            yy = t[5]/sizes[i];
+            xz = t[6]/sizes[i];
+            yz = t[7]/sizes[i];
+            det = xx*yy + 2*x*y*xy - xx*y*y - x*x*yy - xy*xy;
+            bx = (xz*yy + y*xy*z + x*y*yz - y*y*xz - x*yy*z - xy*yz)/(qh*det);
+            by = (yz*xx + x*xy*z + x*y*xz - x*x*yz - xx*y*z - xy*xz)/(qv*det);
+            if (quantity == GWY_GRAIN_VALUE_SLOPE_THETA)
+                values[i] = atan(hypot(bx, by));
+            else
+                values[i] = atan2(by, -bx);
+        }
+        g_free(tmp);
+        g_free(sizes);
         break;
 
         default:

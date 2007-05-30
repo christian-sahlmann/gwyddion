@@ -348,6 +348,10 @@ gwy_correlation_type_get_enum(void)
  * @GWY_GRAIN_VALUE_VOLUME_LAPLACE: Grain volume calculated with grain basis
  *                                  calculated by laplacian interpolation of
  *                                  surrounding values.  (Since: 2.3)
+ * @GWY_GRAIN_VALUE_SLOPE_THETA: Spherical angle theta of grain normal (0 is
+ *                               upwards). (Since: 2.6)
+ * @GWY_GRAIN_VALUE_SLOPE_PHI: Spherical angle phi of grain normal (0 is
+ *                             in positive x direction). (Since: 2.6)
  *
  * Grain quantity to request from gwy_data_field_grains_get_distribution()
  * and similar functions.
