@@ -119,6 +119,8 @@ static const QuantityInfo quantities[] = {
     { GWY_GRAIN_VALUE_MINIMUM_BOUND_ANGLE,  N_("Minimum bounding direction:"), UNITS_ANGLE,  FALSE, },
     { GWY_GRAIN_VALUE_MAXIMUM_BOUND_SIZE,   N_("Maximum bounding size:"),      UNITS_COORDS, FALSE, },
     { GWY_GRAIN_VALUE_MAXIMUM_BOUND_ANGLE,  N_("Maximum bounding direction:"), UNITS_ANGLE,  FALSE, },
+    { GWY_GRAIN_VALUE_SLOPE_THETA,          N_("Inclination θ:"),              UNITS_ANGLE,  TRUE, },
+    { GWY_GRAIN_VALUE_SLOPE_PHI,            N_("Inclination φ:"),              UNITS_ANGLE,  TRUE, },
 };
 
 static GwyModuleInfo module_info = {
@@ -275,6 +277,10 @@ gwy_tool_grain_measure_init_dialog(GwyToolGrainMeasure *tool)
                                      GWY_GRAIN_VALUE_VOLUME_0,
                                      GWY_GRAIN_VALUE_VOLUME_MIN,
                                      GWY_GRAIN_VALUE_VOLUME_LAPLACE,
+                                     -1);
+    gwy_tool_grain_measure_add_group(tool, table, &row, _("Slope"),
+                                     GWY_GRAIN_VALUE_SLOPE_THETA,
+                                     GWY_GRAIN_VALUE_SLOPE_PHI,
                                      -1);
 
     gwy_plain_tool_add_clear_button(GWY_PLAIN_TOOL(tool));
