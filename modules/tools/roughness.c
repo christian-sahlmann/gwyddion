@@ -265,48 +265,339 @@ static void     gwy_tool_roughness_graph_brc         (GwyRoughnessProfiles *prof
 static void     gwy_tool_roughness_graph_pc          (GwyRoughnessProfiles *profiles);
 
 static const GwyRoughnessParameterInfo parameters[] = {
-    { -1,            ROUGHNESS_SET_AMPLITUDE,  NULL,                                          N_("Amplitude"),                                                0,            FALSE, },
-    { PARAM_RA,      ROUGHNESS_SET_AMPLITUDE,  "<i>R</i><sub>a</sub>",                        N_("Roughness average"),                                        UNITS_VALUE,  FALSE, },
-    { PARAM_RQ,      ROUGHNESS_SET_AMPLITUDE,  "<i>R</i><sub>q</sub>",                        N_("Root mean square roughness"),                               UNITS_VALUE,  FALSE, },
-    { PARAM_RT,      ROUGHNESS_SET_AMPLITUDE,  "<i>R</i><sub>t</sub>",                        N_("Maximum height of the roughness"),                          UNITS_VALUE,  FALSE, },
-    { PARAM_RV,      ROUGHNESS_SET_AMPLITUDE,  "<i>R</i><sub>v</sub>",                        N_("Maximum roughness valley depth"),                           UNITS_VALUE,  FALSE, },
-    { PARAM_RP,      ROUGHNESS_SET_AMPLITUDE,  "<i>R</i><sub>p</sub>",                        N_("Maximum roughness peak height"),                            UNITS_VALUE,  FALSE, },
-    { PARAM_RTM,     ROUGHNESS_SET_AMPLITUDE,  "<i>R</i><sub>tm</sub>",                       N_("Average maximum height of the roughness"),                  UNITS_VALUE,  FALSE, },
-    { PARAM_RVM,     ROUGHNESS_SET_AMPLITUDE,  "<i>R</i><sub>vm</sub>",                       N_("Average maximum roughness valley depth"),                   UNITS_VALUE,  FALSE, },
-    { PARAM_RPM,     ROUGHNESS_SET_AMPLITUDE,  "<i>R</i><sub>pm</sub>",                       N_("Average maximum roughness peak height"),                    UNITS_VALUE,  FALSE, },
-    { PARAM_R3Z,     ROUGHNESS_SET_AMPLITUDE,  "<i>R</i><sub>3z</sub>",                       N_("Average third highest peak to third lowest valley height"), UNITS_VALUE,  FALSE, },
-    { PARAM_R3Z_ISO, ROUGHNESS_SET_AMPLITUDE,  "<i>R</i><sub>3z ISO</sub>",                   N_("Average third highest peak to third lowest valley height"), UNITS_VALUE,  FALSE, },
-    { PARAM_RZ,      ROUGHNESS_SET_AMPLITUDE,  "<i>R</i><sub>z</sub>",                        N_("Average maximum height of the profile"),                    UNITS_VALUE,  FALSE, },
-    { PARAM_RZ_ISO,  ROUGHNESS_SET_AMPLITUDE,  "<i>R</i><sub>z ISO</sub>",                    N_("Average maximum height of the roughness"),                  UNITS_VALUE,  FALSE, },
-    { PARAM_RSK,     ROUGHNESS_SET_AMPLITUDE,  "<i>R</i><sub>sk</sub>",                       N_("Skewness"),                                                 UNITS_NONE,   FALSE, },
-    { PARAM_RKU,     ROUGHNESS_SET_AMPLITUDE,  "<i>R</i><sub>ku</sub>",                       N_("Kurtosis"),                                                 UNITS_NONE,   FALSE, },
-    { PARAM_WA,      ROUGHNESS_SET_AMPLITUDE,  "<i>W</i><sub>a</sub>",                        N_("Waviness average"),                                         UNITS_VALUE,  FALSE, },
-    { PARAM_WQ,      ROUGHNESS_SET_AMPLITUDE,  "<i>W</i><sub>q</sub>",                        N_("Root mean square waviness"),                                UNITS_VALUE,  FALSE, },
-    { PARAM_WY,      ROUGHNESS_SET_AMPLITUDE,  "<i>W</i><sub>y</sub>=<i>W</i><sub>max</sub>", N_("Waviness maximum height"),                                  UNITS_VALUE,  FALSE, },
-    { PARAM_PT,      ROUGHNESS_SET_AMPLITUDE,  "<i>P</i><sub>t</sub>",                        N_("Maximum height of the profile"),                            UNITS_VALUE,  FALSE, },
-    { -1,            ROUGHNESS_SET_SPATIAL,    NULL,                                          N_("Spatial"),                                                  0,            FALSE, },
-  /*{ PARAM_S,       ROUGHNESS_SET_SPATIAL,    "<i>S</i>",                                    N_("Mean spacing of local peaks of the profile"),               UNITS_COORDS, FALSE, },
-    { PARAM_SM,      ROUGHNESS_SET_SPATIAL,    "<i>S</i><sub>m</sub>",                        N_("Mean spacing of profile irregularities"),                   UNITS_COORDS, FALSE, },
-    { PARAM_D,       ROUGHNESS_SET_SPATIAL,    "<i>D</i>",                                    N_("Profile peak density"),                                     UNITS_COORDS, FALSE, },
-    { PARAM_PC,      ROUGHNESS_SET_SPATIAL,    "<i>P</i><sub>c</sub>",                        N_("Peak count (peak density)"),                                UNITS_NONE,   FALSE, },
-    { PARAM_HSC,     ROUGHNESS_SET_SPATIAL,    "HSC",                                         N_("Hight spot count"),                                         UNITS_NONE,   FALSE, },
-  */{ PARAM_LA,      ROUGHNESS_SET_SPATIAL,    "λ<sub>a</sub>",                               N_("Average wavelength of the profile"),                        UNITS_COORDS, FALSE, },
-    { PARAM_LQ,      ROUGHNESS_SET_SPATIAL,    "λ<sub>q</sub>",                               N_("Root mean square (RMS) wavelength of the profile"),         UNITS_COORDS, FALSE, },
-    { -1,            ROUGHNESS_SET_HYBRID,     NULL,                                          N_("Hybrid"),                                                   0,            FALSE, },
-    { PARAM_DA,      ROUGHNESS_SET_HYBRID,     "Δ<sub>a</sub>",                               N_("Average absolute slope"),                                   UNITS_SLOPE,  FALSE, },
-    { PARAM_DQ,      ROUGHNESS_SET_HYBRID,     "Δ<sub>q</sub>",                               N_("Root mean square (RMS) slope"),                             UNITS_SLOPE,  FALSE, },
-    { PARAM_L,       ROUGHNESS_SET_HYBRID,     "<i>L</i>",                                    N_("Length"),                                                   UNITS_COORDS, TRUE,  },
-    { PARAM_L0,      ROUGHNESS_SET_HYBRID,     "L<sub>0</sub>",                               N_("Developed profile length"),                                 UNITS_COORDS, TRUE,  },
-    { PARAM_LR,      ROUGHNESS_SET_HYBRID,     "<i>l</i><sub>r</sub>",                        N_("Profile length ratio"),                                     UNITS_NONE,   TRUE,  },
-  /*{ -1,            ROUGHNESS_SET_FUNCTIONAL, NULL,                                          N_("Functional"),                                               0,            FALSE, },
-    { PARAM_H,       ROUGHNESS_SET_FUNCTIONAL, "<i>H</i>",                                    N_("Swedish height"),                                           UNITS_COORDS, FALSE, },
-    { PARAM_HTP,     ROUGHNESS_SET_FUNCTIONAL, "<i>H</i><sub>tp</sub>",                       N_("Profile section height difference"),                        UNITS_COORDS, FALSE, },
-    { PARAM_RK,      ROUGHNESS_SET_FUNCTIONAL, "<i>R</i><sub>k</sub>",                        N_("Core roughness depth"),                                     UNITS_COORDS, FALSE, },
-    { PARAM_RKP,     ROUGHNESS_SET_FUNCTIONAL, "<i>R</i><sub>pk</sub>",                       N_("Reduced peak height"),                                      UNITS_COORDS, FALSE, },
-    { PARAM_RVK,     ROUGHNESS_SET_FUNCTIONAL, "<i>R</i><sub>vk</sub>",                       N_("Reduced valley depth"),                                     UNITS_COORDS, FALSE, },
-    { PARAM_MR1,     ROUGHNESS_SET_FUNCTIONAL, "<i>M</i><sub>r1</sub>",                       N_("Material portion "),                                        UNITS_COORDS, FALSE, },
-    { PARAM_MR2,     ROUGHNESS_SET_FUNCTIONAL, "<i>M</i><sub>r2</sub>",                       N_("Material portion "),                                        UNITS_COORDS, FALSE, },
-*/};
+    {
+        -1,
+        ROUGHNESS_SET_AMPLITUDE,
+        NULL,
+        N_("Amplitude"),
+        0,
+        FALSE,
+    },
+    {
+        PARAM_RA,
+        ROUGHNESS_SET_AMPLITUDE,
+        "<i>R</i><sub>a</sub>",
+        N_("Roughness average"),
+        UNITS_VALUE,
+        FALSE,
+    },
+    {
+        PARAM_RQ,
+        ROUGHNESS_SET_AMPLITUDE,
+        "<i>R</i><sub>q</sub>",
+        N_("Root mean square roughness"),
+        UNITS_VALUE,
+        FALSE,
+    },
+    {
+        PARAM_RT,
+        ROUGHNESS_SET_AMPLITUDE,
+        "<i>R</i><sub>t</sub>",
+        N_("Maximum height of the roughness"),
+        UNITS_VALUE,
+        FALSE,
+    },
+    {
+        PARAM_RV,
+        ROUGHNESS_SET_AMPLITUDE,
+        "<i>R</i><sub>v</sub>",
+        N_("Maximum roughness valley depth"),
+        UNITS_VALUE,
+        FALSE,
+    },
+    {
+        PARAM_RP,
+        ROUGHNESS_SET_AMPLITUDE,
+        "<i>R</i><sub>p</sub>",
+        N_("Maximum roughness peak height"),
+        UNITS_VALUE,
+        FALSE,
+    },
+    {
+        PARAM_RTM,
+        ROUGHNESS_SET_AMPLITUDE,
+        "<i>R</i><sub>tm</sub>",
+        N_("Average maximum height of the roughness"),
+        UNITS_VALUE,
+        FALSE,
+    },
+    {
+        PARAM_RVM,
+        ROUGHNESS_SET_AMPLITUDE,
+        "<i>R</i><sub>vm</sub>",
+        N_("Average maximum roughness valley depth"),
+        UNITS_VALUE,
+        FALSE,
+    },
+    {
+        PARAM_RPM,
+        ROUGHNESS_SET_AMPLITUDE,
+        "<i>R</i><sub>pm</sub>",
+        N_("Average maximum roughness peak height"),
+        UNITS_VALUE,
+        FALSE,
+    },
+    {
+        PARAM_R3Z,
+        ROUGHNESS_SET_AMPLITUDE,
+        "<i>R</i><sub>3z</sub>",
+        N_("Average third highest peak to third lowest valley height"),
+        UNITS_VALUE,
+        FALSE,
+    },
+    {
+        PARAM_R3Z_ISO,
+        ROUGHNESS_SET_AMPLITUDE,
+        "<i>R</i><sub>3z ISO</sub>",
+        N_("Average third highest peak to third lowest valley height"),
+        UNITS_VALUE,
+        FALSE,
+    },
+    {
+        PARAM_RZ,
+        ROUGHNESS_SET_AMPLITUDE,
+        "<i>R</i><sub>z</sub>",
+        N_("Average maximum height of the profile"),
+        UNITS_VALUE,
+        FALSE,
+    },
+    {
+        PARAM_RZ_ISO,
+        ROUGHNESS_SET_AMPLITUDE,
+        "<i>R</i><sub>z ISO</sub>",
+        N_("Average maximum height of the roughness"),
+        UNITS_VALUE,
+        FALSE,
+    },
+    {
+        PARAM_RSK,
+        ROUGHNESS_SET_AMPLITUDE,
+        "<i>R</i><sub>sk</sub>",
+        N_("Skewness"),
+        UNITS_NONE,
+        FALSE,
+    },
+    {
+        PARAM_RKU,
+        ROUGHNESS_SET_AMPLITUDE,
+        "<i>R</i><sub>ku</sub>",
+        N_("Kurtosis"),
+        UNITS_NONE,
+        FALSE,
+    },
+    {
+        PARAM_WA,
+        ROUGHNESS_SET_AMPLITUDE,
+        "<i>W</i><sub>a</sub>",
+        N_("Waviness average"),
+        UNITS_VALUE,
+        FALSE,
+    },
+    {
+        PARAM_WQ,
+        ROUGHNESS_SET_AMPLITUDE,
+        "<i>W</i><sub>q</sub>",
+        N_("Root mean square waviness"),
+        UNITS_VALUE,
+        FALSE,
+    },
+    {
+        PARAM_WY,
+        ROUGHNESS_SET_AMPLITUDE,
+        "<i>W</i><sub>y</sub>=<i>W</i><sub>max</sub>",
+        N_("Waviness maximum height"),
+        UNITS_VALUE,
+        FALSE,
+    },
+    {
+        PARAM_PT,
+        ROUGHNESS_SET_AMPLITUDE,
+        "<i>P</i><sub>t</sub>",
+        N_("Maximum height of the profile"),
+        UNITS_VALUE,
+        FALSE,
+    },
+    {
+        -1,
+        ROUGHNESS_SET_SPATIAL,
+        NULL,
+        N_("Spatial"),
+        0,
+        FALSE,
+    },
+    /*
+    {
+        PARAM_S,
+        ROUGHNESS_SET_SPATIAL,
+        "<i>S</i>",
+        N_("Mean spacing of local peaks of the profile"),
+        UNITS_COORDS,
+        FALSE,
+    },
+    {
+        PARAM_SM,
+        ROUGHNESS_SET_SPATIAL,
+        "<i>S</i><sub>m</sub>",
+        N_("Mean spacing of profile irregularities"),
+        UNITS_COORDS,
+        FALSE,
+    },
+    {
+        PARAM_D,
+        ROUGHNESS_SET_SPATIAL,
+        "<i>D</i>",
+        N_("Profile peak density"),
+        UNITS_COORDS,
+        FALSE,
+    },
+    {
+        PARAM_PC,
+        ROUGHNESS_SET_SPATIAL,
+        "<i>P</i><sub>c</sub>",
+        N_("Peak count (peak density)"),
+        UNITS_NONE,
+        FALSE,
+    },
+    {
+        PARAM_HSC,
+        ROUGHNESS_SET_SPATIAL,
+        "HSC",
+        N_("Hight spot count"),
+        UNITS_NONE,
+        FALSE,
+    },
+    */
+    {
+        PARAM_LA,
+        ROUGHNESS_SET_SPATIAL,
+        "λ<sub>a</sub>",
+        N_("Average wavelength of the profile"),
+        UNITS_COORDS,
+        FALSE,
+    },
+    {
+        PARAM_LQ,
+        ROUGHNESS_SET_SPATIAL,
+        "λ<sub>q</sub>",
+        N_("Root mean square (RMS) wavelength of the profile"),
+        UNITS_COORDS,
+        FALSE,
+    },
+    {
+        -1,
+        ROUGHNESS_SET_HYBRID,
+        NULL,
+        N_("Hybrid"),
+        0,
+        FALSE,
+    },
+    {
+        PARAM_DA,
+        ROUGHNESS_SET_HYBRID,
+        "Δ<sub>a</sub>",
+        N_("Average absolute slope"),
+        UNITS_SLOPE,
+        FALSE,
+    },
+    {
+        PARAM_DQ,
+        ROUGHNESS_SET_HYBRID,
+        "Δ<sub>q</sub>",
+        N_("Root mean square (RMS) slope"),
+        UNITS_SLOPE,
+        FALSE,
+    },
+    {
+        PARAM_L,
+        ROUGHNESS_SET_HYBRID,
+        "<i>L</i>",
+        N_("Length"),
+        UNITS_COORDS,
+        TRUE,
+    },
+    {
+        PARAM_L0,
+        ROUGHNESS_SET_HYBRID,
+        "L<sub>0</sub>",
+        N_("Developed profile length"),
+        UNITS_COORDS,
+        TRUE,
+    },
+    {
+        PARAM_LR,
+        ROUGHNESS_SET_HYBRID,
+        "<i>l</i><sub>r</sub>",
+        N_("Profile length ratio"),
+        UNITS_NONE,
+        TRUE,
+    },
+    /*
+    {
+        -1,
+        ROUGHNESS_SET_FUNCTIONAL,
+        NULL,
+        N_("Functional"),
+        0,
+        FALSE,
+    },
+    {
+        PARAM_H,
+        ROUGHNESS_SET_FUNCTIONAL,
+        "<i>H</i>",
+        N_("Swedish height"),
+        UNITS_COORDS,
+        FALSE,
+    },
+    {
+        PARAM_HTP,
+        ROUGHNESS_SET_FUNCTIONAL,
+        "<i>H</i><sub>tp</sub>",
+        N_("Profile section height difference"),
+        UNITS_COORDS,
+        FALSE,
+    },
+    {
+        PARAM_RK,
+        ROUGHNESS_SET_FUNCTIONAL,
+        "<i>R</i><sub>k</sub>",
+        N_("Core roughness depth"),
+        UNITS_COORDS,
+        FALSE,
+    },
+    {
+        PARAM_RKP,
+        ROUGHNESS_SET_FUNCTIONAL,
+        "<i>R</i><sub>pk</sub>",
+        N_("Reduced peak height"),
+        UNITS_COORDS,
+        FALSE,
+    },
+    {
+        PARAM_RVK,
+        ROUGHNESS_SET_FUNCTIONAL,
+        "<i>R</i><sub>vk</sub>",
+        N_("Reduced valley depth"),
+        UNITS_COORDS,
+        FALSE,
+    },
+    {
+        PARAM_MR1,
+        ROUGHNESS_SET_FUNCTIONAL,
+        "<i>M</i><sub>r1</sub>",
+        N_("Material portion "),
+        UNITS_COORDS,
+        FALSE,
+    },
+    {
+        PARAM_MR2,
+        ROUGHNESS_SET_FUNCTIONAL,
+        "<i>M</i><sub>r2</sub>",
+        N_("Material portion "),
+        UNITS_COORDS,
+        FALSE,
+    },
+    */
+};
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -1025,22 +1316,21 @@ gwy_tool_roughness_update_graphs(GwyToolRoughness *tool)
                  "title", _("Surface Profiles"),
                  NULL);
     gwy_graph_model_set_units_from_data_line(tool->graphmodel_profile,
-                                             tool->dataline);          
-    for(i=0; i<G_N_ELEMENTS(graph_profile); i++)
-    {
-        preset_color = *gwy_graph_get_preset_color(i);	
+                                             tool->dataline);
+    for (i = 0; i < G_N_ELEMENTS(graph_profile); i++) {
+        preset_color = *gwy_graph_get_preset_color(i);
         gcmodel = gwy_graph_curve_model_new();
-		g_object_set(gcmodel,
-					 "mode", GWY_GRAPH_CURVE_LINE,
-					 "color", &preset_color,
-					 "description", graph_profile[i].title,
-					 NULL);
+        g_object_set(gcmodel,
+                     "mode", GWY_GRAPH_CURVE_LINE,
+                     "color", &preset_color,
+                     "description", graph_profile[i].title,
+                     NULL);
 
-		gwy_graph_curve_model_set_data_from_dataline(gcmodel,
-													 graph_profile[i].dataline,
-													 0, 0);
-		gwy_graph_model_add_curve(tool->graphmodel_profile, gcmodel);
-	    g_object_unref(gcmodel);
+        gwy_graph_curve_model_set_data_from_dataline(gcmodel,
+                                                     graph_profile[i].dataline,
+                                                     0, 0);
+        gwy_graph_model_add_curve(tool->graphmodel_profile, gcmodel);
+        g_object_unref(gcmodel);
     }
 
     preset_color = *gwy_graph_get_preset_color(0);
@@ -1049,15 +1339,15 @@ gwy_tool_roughness_update_graphs(GwyToolRoughness *tool)
                  "mode", GWY_GRAPH_CURVE_LINE,
                  "color", &preset_color,
                  NULL);
-	g_object_set(tool->graphmodel,
-				 "title", graph_all[tool->graph_type].title,
-				 "si-unit-x", gwy_data_line_get_si_unit_x(graph_all[tool->graph_type].dataline),
-				 "si-unit-y", gwy_data_line_get_si_unit_y(graph_all[tool->graph_type].dataline),
-				 NULL);
-	g_object_set(gcmodel, "description",  graph_all[tool->graph_type].description, NULL);
-	gwy_graph_curve_model_set_data_from_dataline(gcmodel,
-												 graph_all[tool->graph_type].dataline,
-												 0, 0);
+    g_object_set(tool->graphmodel,
+                 "title", graph_all[tool->graph_type].title,
+                 "si-unit-x", gwy_data_line_get_si_unit_x(graph_all[tool->graph_type].dataline),
+                 "si-unit-y", gwy_data_line_get_si_unit_y(graph_all[tool->graph_type].dataline),
+                 NULL);
+    g_object_set(gcmodel, "description",  graph_all[tool->graph_type].description, NULL);
+    gwy_graph_curve_model_set_data_from_dataline(gcmodel,
+                                                 graph_all[tool->graph_type].dataline,
+                                                 0, 0);
     gwy_graph_model_add_curve(tool->graphmodel, gcmodel);
     g_object_unref(gcmodel);
 }
@@ -1079,8 +1369,7 @@ gwy_data_line_data_discrete(gdouble *x, gdouble *y, gint res,
     gwy_data_line_set_val(dline, 0, y[0]);
     //gwy_data_line_set_val(dline, n - 1, y[res - 1]);
     j = 0;
-    for (i = 1; i < n; i++)
-    {
+    for (i = 1; i < n; i++) {
         val = i*ratio;
         while (x[j] < val && j < res)
           j++;
@@ -1104,7 +1393,8 @@ gwy_math_quicksort(gdouble *array, gint *ind, gint low, gint high)
 
     while(l < r)
     {
-        if (array[l] <= pivot) l++;
+        if (array[l] <= pivot)
+            l++;
         else
         {
             r--;
@@ -1257,7 +1547,7 @@ static void
 gwy_data_line_balance(GwyDataLine *dline)
 {
 	  gdouble av, bv;
-	
+
 	  gwy_data_line_get_line_coeffs(dline, &av, &bv);
     bv = bv/(gwy_data_line_get_real(dline)/(gwy_data_line_get_res(dline)-1));
     gwy_data_line_add(dline, -av);
