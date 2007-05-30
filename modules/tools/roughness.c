@@ -139,13 +139,6 @@ typedef struct {
     guint expanded;
 } ToolArgs;
 
-static const ToolArgs default_args = {
-    1,
-    0.9,
-    GWY_INTERPOLATION_LINEAR,
-    0,
-};
-
 typedef struct _GwyToolRoughness      GwyToolRoughness;
 typedef struct _GwyToolRoughnessClass GwyToolRoughnessClass;
 
@@ -599,6 +592,13 @@ static const GwyRoughnessParameterInfo parameters[] = {
     */
 };
 
+static const ToolArgs default_args = {
+    1,
+    0.9,
+    GWY_INTERPOLATION_LINEAR,
+    0,
+};
+
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
@@ -615,6 +615,7 @@ static const gchar thickness_key[]     = "/module/roughness/thickness";
 static const gchar expanded_key[]      = "/module/roughness/expanded";
 
 GWY_MODULE_QUERY(module_info)
+
 G_DEFINE_TYPE(GwyToolRoughness, gwy_tool_roughness, GWY_TYPE_PLAIN_TOOL)
 
 static gboolean
