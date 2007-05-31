@@ -573,77 +573,13 @@ render_value(G_GNUC_UNUSED GtkTreeViewColumn *column,
         g_return_if_reached();
         break;
     }
-    g_snprintf(buf, sizeof(buf), "%.*f", vf->precision, value/vf->magnitude);
-    g_object_set(renderer, "text", buf, NULL);
+    g_snprintf(buf, sizeof(buf), "%.*f%s%s",
+               vf->precision, value/vf->magnitude,
+               *vf->units ? " " : "", vf->units);
+    g_object_set(renderer, "markup", buf, NULL);
 
     if (tvf)
         gwy_si_unit_value_format_free(tvf);
-}
-
-static void
-render_units(G_GNUC_UNUSED GtkTreeViewColumn *column,
-             GtkCellRenderer *renderer,
-             GtkTreeModel *model,
-             GtkTreeIter *iter,
-             gpointer user_data)
-{
-    GwyToolGrainMeasure *tool = (GwyToolGrainMeasure*)user_data;
-    const QuantityInfo *qinfo;
-    GwySIValueFormat *tvf;
-    gdouble value;
-
-    gtk_tree_model_get(model, iter, 0, &qinfo, -1);
-    if (qinfo->quantity == -1 || tool->gno <= 0) {
-        g_object_set(renderer, "text", "", NULL);
-        return;
-    }
-    if (qinfo->same_units && !tool->same_units) {
-        g_object_set(renderer, "text", "", NULL);
-        return;
-    }
-    if (qinfo->quantity == GRAIN_QUANTITY_ID) {
-        g_object_set(renderer, "text", "", NULL);
-        return;
-    }
-
-    value = g_array_index(tool->values[qinfo->quantity], gdouble, tool->gno);
-    switch (qinfo->units) {
-        case UNITS_COORDS:
-        g_object_set(renderer,
-                     "markup", GWY_PLAIN_TOOL(tool)->coord_format->units,
-                     NULL);
-        break;
-
-        case UNITS_VALUE:
-        g_object_set(renderer,
-                     "markup", GWY_PLAIN_TOOL(tool)->value_format->units,
-                     NULL);
-        break;
-
-        case UNITS_ANGLE:
-        g_object_set(renderer, "markup", tool->angle_format->units, NULL);
-        break;
-
-        case UNITS_AREA:
-        tvf = gwy_si_unit_get_format_with_digits(tool->area_unit,
-                                                 GWY_SI_UNIT_FORMAT_VFMARKUP,
-                                                 value, 3, NULL);
-        g_object_set(renderer, "markup", tvf->units, NULL);
-        gwy_si_unit_value_format_free(tvf);
-        break;
-
-        case UNITS_VOLUME:
-        tvf = gwy_si_unit_get_format_with_digits(tool->volume_unit,
-                                                 GWY_SI_UNIT_FORMAT_VFMARKUP,
-                                                 value, 3, NULL);
-        g_object_set(renderer, "markup", tvf->units, NULL);
-        gwy_si_unit_value_format_free(tvf);
-        break;
-
-        default:
-        g_return_if_reached();
-        break;
-    }
 }
 
 static void
@@ -698,15 +634,6 @@ gwy_tool_grain_measure_param_view_new(GwyToolGrainMeasure *tool)
     gtk_tree_view_column_pack_start(column, renderer, TRUE);
     gtk_tree_view_column_set_cell_data_func(column, renderer,
                                             render_value, tool, NULL);
-
-    column = gtk_tree_view_column_new();
-    gtk_tree_view_column_set_sizing(column, GTK_TREE_VIEW_COLUMN_AUTOSIZE);
-    gtk_tree_view_append_column(GTK_TREE_VIEW(treeview), column);
-    renderer = gtk_cell_renderer_text_new();
-    g_object_set(renderer, "xalign", 0.0, NULL);
-    gtk_tree_view_column_pack_start(column, renderer, TRUE);
-    gtk_tree_view_column_set_cell_data_func(column, renderer,
-                                            render_units, tool, NULL);
 
     /* Restore set visibility state */
     if (gtk_tree_model_get_iter_first(model, &iter)) {

@@ -1004,7 +1004,7 @@ gwy_tool_roughness_param_view_new(GwyToolRoughness *tool)
     gtk_tree_view_column_set_sizing(column, GTK_TREE_VIEW_COLUMN_AUTOSIZE);
     gtk_tree_view_append_column(GTK_TREE_VIEW(treeview), column);
     renderer = gtk_cell_renderer_text_new();
-    g_object_set(renderer, "xalign", 0.0, NULL);
+    g_object_set(renderer, "xalign", 1.0, NULL);
     gtk_tree_view_column_pack_start(column, renderer, TRUE);
     gtk_tree_view_column_set_cell_data_func(column, renderer,
                                             render_value, tool, NULL);
