@@ -45,14 +45,6 @@ typedef struct _GwyToolGrainMeasure      GwyToolGrainMeasure;
 typedef struct _GwyToolGrainMeasureClass GwyToolGrainMeasureClass;
 
 typedef enum {
-    UNITS_COORDS,
-    UNITS_VALUE,
-    UNITS_ANGLE,
-    UNITS_AREA,
-    UNITS_VOLUME
-} UnitsType;
-
-typedef enum {
    GRAIN_QUANTITY_SET_ID,
    GRAIN_QUANTITY_SET_POSITION,
    GRAIN_QUANTITY_SET_VALUE,
@@ -67,8 +59,6 @@ typedef struct {
     GwyGrainQuantity quantity;
     GrainQuantitySet set;
     const gchar *name;
-    UnitsType units;
-    gboolean same_units;
 } QuantityInfo;
 
 typedef struct {
@@ -87,14 +77,10 @@ struct _GwyToolGrainMeasure {
     GArray *values[MAX_STATS];
 
     gboolean same_units;
-    GwySIUnit *area_unit;
-    GwySIUnit *volume_unit;
-
-    GtkWidget *gno_label;
-    GtkWidget *value_labels[MAX_STATS];
+    GwySIUnit *siunit;
+    GwySIValueFormat *vf;
 
     /* potential class data */
-    GwySIValueFormat *angle_format;
     GType layer_type_point;
     gint map[MAX_STATS];   /* GwyGrainQuantity -> index in quantities + 1 */
 };
@@ -125,197 +111,141 @@ static const QuantityInfo quantities[] = {
         -1,
         GRAIN_QUANTITY_SET_ID,
         N_("Id"),
-        0,
-        FALSE,
     },
     {
         GRAIN_QUANTITY_ID,
         GRAIN_QUANTITY_SET_ID,
         N_("Grain number"),
-        0,
-        FALSE,
     },
     {
         -1,
         GRAIN_QUANTITY_SET_POSITION,
         N_("Position"),
-        0,
-        FALSE,
     },
     {
         GWY_GRAIN_VALUE_CENTER_X,
         GRAIN_QUANTITY_SET_POSITION,
         N_("Center x:"),
-        UNITS_COORDS,
-        FALSE,
     },
     {
         GWY_GRAIN_VALUE_CENTER_Y,
         GRAIN_QUANTITY_SET_POSITION,
         N_("Center y:"),
-        UNITS_COORDS,
-        FALSE,
     },
     {
         -1,
         GRAIN_QUANTITY_SET_VALUE,
         N_("Value"),
-        0,
-        FALSE,
     },
     {
         GWY_GRAIN_VALUE_MINIMUM,
         GRAIN_QUANTITY_SET_VALUE,
         N_("Minimum:"),
-        UNITS_VALUE,
-        FALSE,
     },
     {
         GWY_GRAIN_VALUE_MAXIMUM,
         GRAIN_QUANTITY_SET_VALUE,
         N_("Maximum:"),
-        UNITS_VALUE,
-        FALSE,
     },
     {
         GWY_GRAIN_VALUE_MEAN,
         GRAIN_QUANTITY_SET_VALUE,
         N_("Mean:"),
-        UNITS_VALUE,
-        FALSE,
     },
     {
         GWY_GRAIN_VALUE_MEDIAN,
         GRAIN_QUANTITY_SET_VALUE,
         N_("Median:"),
-        UNITS_VALUE,
-        FALSE,
     },
     {
         -1,
         GRAIN_QUANTITY_SET_AREA,
         N_("Area"),
-        0,
-        FALSE,
     },
     {
         GWY_GRAIN_VALUE_PROJECTED_AREA,
         GRAIN_QUANTITY_SET_AREA,
         N_("Projected area:"),
-        UNITS_AREA,
-        FALSE,
     },
     {
         GWY_GRAIN_VALUE_SURFACE_AREA,
         GRAIN_QUANTITY_SET_AREA,
         N_("Surface area:"),
-        UNITS_AREA,
-        TRUE,
     },
     {
         GWY_GRAIN_VALUE_EQUIV_SQUARE_SIDE,
         GRAIN_QUANTITY_SET_AREA,
         N_("Equivalent square side:"),
-        UNITS_COORDS,
-        FALSE,
     },
     {
         GWY_GRAIN_VALUE_EQUIV_DISC_RADIUS,
         GRAIN_QUANTITY_SET_AREA,
         N_("Equivalent disc radius:"),
-        UNITS_COORDS,
-        FALSE,
     },
     {
         -1,
         GRAIN_QUANTITY_SET_VOLUME,
         N_("Volume"),
-        0,
-        FALSE,
     },
     {
         GWY_GRAIN_VALUE_VOLUME_0,
         GRAIN_QUANTITY_SET_VOLUME,
         N_("Zero basis:"),
-        UNITS_VOLUME,
-        FALSE,
     },
     {
         GWY_GRAIN_VALUE_VOLUME_MIN,
         GRAIN_QUANTITY_SET_VOLUME,
         N_("Grain minimum basis:"),
-        UNITS_VOLUME,
-        FALSE,
     },
     {
         GWY_GRAIN_VALUE_VOLUME_LAPLACE,
         GRAIN_QUANTITY_SET_VOLUME,
         N_("Laplacian background basis:"),
-        UNITS_VOLUME,
-        FALSE,
     },
     {
         -1,
         GRAIN_QUANTITY_SET_BOUNDARY,
         N_("Boundary"),
-        0,
-        FALSE,
     },
     {
         GWY_GRAIN_VALUE_FLAT_BOUNDARY_LENGTH,
         GRAIN_QUANTITY_SET_BOUNDARY,
         N_("Projected boundary length:"),
-        UNITS_COORDS,
-        FALSE,
     },
     {
         GWY_GRAIN_VALUE_MINIMUM_BOUND_SIZE,
         GRAIN_QUANTITY_SET_BOUNDARY,
         N_("Minimum bounding size:"),
-        UNITS_COORDS,
-        FALSE,
     },
     {
         GWY_GRAIN_VALUE_MINIMUM_BOUND_ANGLE,
         GRAIN_QUANTITY_SET_BOUNDARY,
         N_("Minimum bounding direction:"),
-        UNITS_ANGLE,
-        FALSE,
     },
     {
         GWY_GRAIN_VALUE_MAXIMUM_BOUND_SIZE,
         GRAIN_QUANTITY_SET_BOUNDARY,
         N_("Maximum bounding size:"),
-        UNITS_COORDS,
-        FALSE,
     },
     {
         GWY_GRAIN_VALUE_MAXIMUM_BOUND_ANGLE,
         GRAIN_QUANTITY_SET_BOUNDARY,
         N_("Maximum bounding direction:"),
-        UNITS_ANGLE,
-        FALSE,
     },
     {
         -1,
         GRAIN_QUANTITY_SET_SLOPE,
         N_("Slope"),
-        0,
-        FALSE,
     },
     {
         GWY_GRAIN_VALUE_SLOPE_THETA,
         GRAIN_QUANTITY_SET_SLOPE,
         N_("Inclination θ:"),
-        UNITS_ANGLE,
-        TRUE,
     },
     {
         GWY_GRAIN_VALUE_SLOPE_PHI,
         GRAIN_QUANTITY_SET_SLOPE,
         N_("Inclination φ:"),
-        UNITS_ANGLE,
-        TRUE,
     },
 };
 
@@ -386,16 +316,15 @@ gwy_tool_grain_measure_finalize(GObject *object)
 
     g_free(tool->grains);
     gwy_object_unref(tool->store);
-    g_object_unref(tool->area_unit);
-    g_object_unref(tool->volume_unit);
+    gwy_object_unref(tool->siunit);
     for (i = 0; i < MAX_STATS; i++) {
         if (tool->values[i]) {
             g_array_free(tool->values[i], TRUE);
             tool->values[i] = NULL;
         }
     }
-    if (tool->angle_format)
-        gwy_si_unit_value_format_free(tool->angle_format);
+    if (tool->vf)
+        gwy_si_unit_value_format_free(tool->vf);
 
     G_OBJECT_CLASS(gwy_tool_grain_measure_parent_class)->finalize(object);
 }
@@ -413,7 +342,6 @@ gwy_tool_grain_measure_init(GwyToolGrainMeasure *tool)
     if (!tool->layer_type_point)
         return;
 
-    plain_tool->unit_style = GWY_SI_UNIT_FORMAT_VFMARKUP;
     plain_tool->lazy_updates = TRUE;
 
     settings = gwy_app_settings_get();
@@ -423,14 +351,6 @@ gwy_tool_grain_measure_init(GwyToolGrainMeasure *tool)
 
     gwy_plain_tool_connect_selection(plain_tool, tool->layer_type_point,
                                      "pointer");
-
-    tool->area_unit = gwy_si_unit_new(NULL);
-    tool->volume_unit = gwy_si_unit_new(NULL);
-
-    tool->angle_format = g_new0(GwySIValueFormat, 1);
-    tool->angle_format->magnitude = 1.0;
-    tool->angle_format->precision = 1;
-    gwy_si_unit_value_format_set_units(tool->angle_format, "deg");
 
     for (i = 0; i < G_N_ELEMENTS(quantities); i++) {
         if (quantities[i].quantity != -1)
@@ -519,10 +439,15 @@ render_value(G_GNUC_UNUSED GtkTreeViewColumn *column,
              GtkTreeIter *iter,
              gpointer user_data)
 {
+    enum {
+        angle_units = ((1 << GWY_GRAIN_VALUE_MINIMUM_BOUND_ANGLE)
+                       | (1 << GWY_GRAIN_VALUE_MAXIMUM_BOUND_ANGLE)
+                       | (1 << GWY_GRAIN_VALUE_SLOPE_PHI)
+                       | (1 << GWY_GRAIN_VALUE_SLOPE_THETA))
+    };
+
     GwyToolGrainMeasure *tool = (GwyToolGrainMeasure*)user_data;
     const QuantityInfo *qinfo;
-    GwySIValueFormat *tvf = NULL;
-    const GwySIValueFormat *vf;
     gdouble value;
     gchar buf[64];
 
@@ -531,10 +456,13 @@ render_value(G_GNUC_UNUSED GtkTreeViewColumn *column,
         g_object_set(renderer, "text", "", NULL);
         return;
     }
-    if (qinfo->same_units && !tool->same_units) {
+
+    if (gwy_grain_quantity_needs_same_units(qinfo->quantity)
+        && !tool->same_units) {
         g_object_set(renderer, "text", _("N.A."), NULL);
         return;
     }
+
     if (qinfo->quantity == GRAIN_QUANTITY_ID) {
         g_snprintf(buf, sizeof(buf), "%d", tool->gno);
         g_object_set(renderer, "text", buf, NULL);
@@ -542,44 +470,28 @@ render_value(G_GNUC_UNUSED GtkTreeViewColumn *column,
     }
 
     value = g_array_index(tool->values[qinfo->quantity], gdouble, tool->gno);
-    switch (qinfo->units) {
-        case UNITS_COORDS:
-        vf = GWY_PLAIN_TOOL(tool)->coord_format;
-        break;
-
-        case UNITS_VALUE:
-        vf = GWY_PLAIN_TOOL(tool)->value_format;
-        break;
-
-        case UNITS_ANGLE:
-        vf = tool->angle_format;
-        break;
-
-        case UNITS_AREA:
-        tvf = gwy_si_unit_get_format_with_digits(tool->area_unit,
-                                                 GWY_SI_UNIT_FORMAT_VFMARKUP,
-                                                 value, 3, NULL);
-        vf = tvf;
-        break;
-
-        case UNITS_VOLUME:
-        tvf = gwy_si_unit_get_format_with_digits(tool->volume_unit,
-                                                 GWY_SI_UNIT_FORMAT_VFMARKUP,
-                                                 value, 3, NULL);
-        vf = tvf;
-        break;
-
-        default:
-        g_return_if_reached();
-        break;
+    if ((1 << qinfo->quantity) & angle_units) {
+        g_snprintf(buf, sizeof(buf), "%.1f deg", 180.0/G_PI*value);
+        g_object_set(renderer, "text", buf, NULL);
     }
-    g_snprintf(buf, sizeof(buf), "%.*f%s%s",
-               vf->precision, value/vf->magnitude,
-               *vf->units ? " " : "", vf->units);
-    g_object_set(renderer, "markup", buf, NULL);
+    else {
+        GwySIUnit *siunitxy, *siunitz;
+        GwyDataField *dfield;
+        GwySIUnitFormatStyle style = GWY_SI_UNIT_FORMAT_VFMARKUP;
 
-    if (tvf)
-        gwy_si_unit_value_format_free(tvf);
+        dfield = GWY_PLAIN_TOOL(tool)->data_field;
+        siunitxy = gwy_data_field_get_si_unit_xy(dfield);
+        siunitz = gwy_data_field_get_si_unit_z(dfield);
+        tool->siunit = gwy_grain_quantity_get_units(qinfo->quantity,
+                                                    siunitxy, siunitz,
+                                                    tool->siunit);
+        tool->vf = gwy_si_unit_get_format_with_digits(tool->siunit, style,
+                                                      value, 3, tool->vf);
+        g_snprintf(buf, sizeof(buf), "%.*f%s%s",
+                   tool->vf->precision, value/tool->vf->magnitude,
+                   *tool->vf->units ? " " : "", tool->vf->units);
+        g_object_set(renderer, "markup", buf, NULL);
+    }
 }
 
 static void
@@ -759,15 +671,13 @@ gwy_tool_grain_measure_invalidate(GwyToolGrainMeasure *tool)
 static void
 gwy_tool_grain_measure_update_units(GwyToolGrainMeasure *tool)
 {
-    GwyPlainTool *plain_tool;
+    GwyDataField *dfield;
     GwySIUnit *siunitxy, *siunitz;
 
-    plain_tool = GWY_PLAIN_TOOL(tool);
-    siunitxy = gwy_data_field_get_si_unit_xy(plain_tool->data_field);
-    siunitz = gwy_data_field_get_si_unit_z(plain_tool->data_field);
+    dfield = GWY_PLAIN_TOOL(tool)->data_field;
+    siunitxy = gwy_data_field_get_si_unit_xy(dfield);
+    siunitz = gwy_data_field_get_si_unit_z(dfield);
     tool->same_units = gwy_si_unit_equal(siunitxy, siunitz);
-    gwy_si_unit_power(siunitxy, 2, tool->area_unit);
-    gwy_si_unit_multiply(tool->area_unit, siunitz, tool->volume_unit);
 }
 
 static void
@@ -775,7 +685,7 @@ gwy_tool_grain_measure_recalculate(GwyToolGrainMeasure *tool)
 {
     GwyPlainTool *plain_tool;
     GwyDataField *dfield, *mask;
-    guint i, j;
+    guint i;
 
     plain_tool = GWY_PLAIN_TOOL(tool);
     dfield = plain_tool->data_field;
@@ -798,10 +708,6 @@ gwy_tool_grain_measure_recalculate(GwyToolGrainMeasure *tool)
         gwy_data_field_grains_get_values(dfield,
                                          (gdouble*)tool->values[i]->data,
                                          tool->ngrains, tool->grains, i);
-        if (quantities[tool->map[i]-1].units == UNITS_ANGLE) {
-            for (j = 1; j < tool->ngrains; j++)
-                g_array_index(tool->values[i], gdouble, j) *= 180.0/G_PI;
-        }
     }
 }
 
