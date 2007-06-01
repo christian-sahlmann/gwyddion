@@ -91,7 +91,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Nanonis SXM data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.4",
+    "0.5",
     "David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
@@ -416,6 +416,7 @@ sxm_load(const gchar *filename,
     gchar *header, *hp, *s, *endptr;
     gchar **columns;
     gboolean rotated = FALSE;
+    gint version;
     guint i;
 
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
@@ -472,6 +473,15 @@ sxm_load(const gchar *filename,
         }
     }
 
+    /* Version */
+    if ((s = g_hash_table_lookup(sxmfile.meta, "NANONIS_VERSION")))
+        version = atoi(s);
+    else {
+        g_warning("Version is missing, assuming old files.  "
+                  "How it can happen, anyway?");
+        version = 0;
+    }
+
     /* Data type */
     if (sxmfile.ok) {
         if ((s = g_hash_table_lookup(sxmfile.meta, "SCANIT_TYPE"))) {
@@ -506,7 +516,10 @@ sxm_load(const gchar *filename,
     /* Pixel sizes */
     if (sxmfile.ok) {
         if ((s = g_hash_table_lookup(sxmfile.meta, "SCAN_PIXELS"))) {
-            if (sscanf(s, "%d %d", &sxmfile.yres, &sxmfile.xres) == 2) {
+            if (sscanf(s, "%d %d", &sxmfile.xres, &sxmfile.yres) == 2) {
+                /* Version 1 files have y and x swapped just for fun. */
+                if (version < 2)
+                    GWY_SWAP(gint, sxmfile.xres, sxmfile.yres);
                 size1 *= sxmfile.xres * sxmfile.yres;
                 gwy_debug("xres: %d, yres: %d", sxmfile.xres, sxmfile.yres);
                 gwy_debug("size1: %u", (guint)size1);
