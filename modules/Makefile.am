@@ -1,6 +1,6 @@
 # @(#) $Id$
 
-PYGWY_H_FILES = ../libprocess/*.h ../libgwyddion/gwysiunit.h ../libgwyddion/gwyenum.h ../libgwyddion/gwyresource.h ../app/data-browser.h ../libgwyddion/gwycontainer.h ../app/undo.h
+PYGWY_H_FILES = ../libprocess/*.h ../libgwyddion/gwysiunit.h ../libgwyddion/gwyenum.h ../libgwyddion/gwyresource.h ../app/data-browser.h ../libgwyddion/gwycontainer.h ../app/undo.h ../libdraw/gwyselection.h
 
 SUBDIRS = \
 	file \

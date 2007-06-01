@@ -24,7 +24,7 @@ ignore-glob
   gwy_data_field_get_data
   gwy_data_line_get_data
   gwy_container_set_string
-  *get_string 
+  gwy_container_get_string
 %%
 ignore-type 
   GwyCDLine
@@ -89,6 +89,7 @@ _wrap_gwy_app_data_browser_get_current_showfield(PyGObject *self)
    gwy_app_data_browser_get_current(GWY_APP_SHOW_FIELD, &sfield, NULL);
    return pygobject_new((GObject *)sfield);
 }
+
 %%
 define gwy_app_data_browser_get_current_container noargs
 static PyObject *
@@ -100,6 +101,7 @@ _wrap_gwy_app_data_browser_get_current_container(PyGObject *self)
    gwy_app_data_browser_get_current(GWY_APP_CONTAINER, &c, NULL);
    return pygobject_new((GObject *)c);
 }
+
 %%
 define GwyDataField.duplicate noargs
 static PyObject *
@@ -223,6 +225,7 @@ _wrap_gwy_container_set_object_by_name(PyGObject *self, PyObject *args, PyObject
    GwyContainer *container;   
    gchar *key, *class_str;
    PyObject *obj, *type;
+   GValue *gval;
 
    container = GWY_CONTAINER(self->obj);
    if (!PyArg_ParseTupleAndKeywords(args, 
@@ -232,49 +235,14 @@ _wrap_gwy_container_set_object_by_name(PyGObject *self, PyObject *args, PyObject
                                     &key, 
                                     &obj))
         return NULL;
-   // convert obj into right C type
-   type = PyObject_GetAttrString(obj, "__class__");
-   if (type) {
-      PyObject *name = PyObject_GetAttrString(type, "__name__");
-      //Py_DECREF(type);
-      if (name) {
-         class_str = PyString_AsString(name);
-         if (!strcmp(class_str, "DataField")) {
-            PyGObject* d;
-
-            if (!PyArg_ParseTupleAndKeywords(args, 
-                                             kwargs,
-                                             "sO!:GwyContainer.set_object_by_name", 
-                                             kwlist, 
-                                             &key, 
-                                             &PyGwyDataField_Type, 
-                                             &d)) {
-               return NULL;
-            }            
-            gwy_container_set_object_by_name(container, key, GWY_DATA_FIELD(d->obj));
-            g_object_unref(GWY_DATA_FIELD(d->obj));
-         } else if (!strcmp(class_str, "Container")) {
-            PyGObject* d;
-
-            if (!PyArg_ParseTupleAndKeywords(args, 
-                                             kwargs,
-                                             "sO!:GwyContainer.set_object_by_name", 
-                                             kwlist, 
-                                             &key, 
-                                             &PyGwyContainer_Type, 
-                                             &d)) {
-               return NULL;
-            }
-            gwy_container_set_object_by_name(container, key, GWY_CONTAINER(d->obj));
-         }
-             
-         //Py_DECREF(name);
-      }
-   }
+   // try to convert to GValue
+   gval = convert_pyobject_to_gvalue(obj);
+   if (!gval)
+      return NULL;
+   gwy_container_set_value_by_name(container, key, gval, 0);
    
    Py_INCREF(Py_None);
    return Py_None;
-
 }
 
 %%
@@ -297,6 +265,24 @@ _wrap_gwy_container_set_string(PyGObject *self, PyObject *args, PyObject *kwargs
     return Py_None;
 }
 
+%%
+define GwyContainer.get_string kwargs
+static PyObject *
+_wrap_gwy_container_get_string(PyGObject *self, PyObject *args, PyObject *kwargs)
+{
+    static char *kwlist[] = { "key", NULL };
+    int key;
+    const guchar *value;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs,"i:GwyContainer.set_string", kwlist, &key))
+        return NULL;
+    
+    value = gwy_container_get_string(GWY_CONTAINER(self->obj), key);
+    if (value)
+        return PyString_FromString(value);
+    else 
+        return NULL;
+}
 
 %%
 define GwyContainer.get_object_by_name kwargs
@@ -364,7 +350,7 @@ static PyObject *
 _wrap_gwy_container_keys_by_name(PyGObject *self) 
 {
    gint i;
-   gchar **keys;
+   const gchar **keys;
    PyObject *tuple;
    
    keys = gwy_container_keys_by_name(GWY_CONTAINER(self->obj));

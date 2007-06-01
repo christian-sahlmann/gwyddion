@@ -45,6 +45,9 @@
 #include <libgwymodule/gwymodule-process.h>
 #include <libgwymodule/gwymodule-file.h>
 #include <app/gwyapp.h>
+
+static GValue* convert_pyobject_to_gvalue(PyObject *o);
+
 #include "pygwywrap.c"
 #line 48 "pygwy.c"
 
@@ -927,6 +930,130 @@ pygwy_find_plugin(const gchar* name)
         return NULL;
     }
     return (PygwyPluginInfo*)l->data;
+}
+
+static PyObject*
+convert_gvalue_to_pyobject(GValue *value)
+{
+    GType type;
+    PyObject *o = NULL;
+
+    if (!value) {
+        g_warning("Value undefined.");
+        return NULL;
+    }
+    type = G_VALUE_TYPE(value);
+
+    switch (type) {
+        case G_TYPE_CHAR:
+            o = PyInt_FromLong(g_value_get_char(value));
+            break;
+        case G_TYPE_UCHAR:
+            o = PyInt_FromLong(g_value_get_uchar(value));
+            break;
+        case G_TYPE_BOOLEAN:
+            o = PyBool_FromLong(g_value_get_boolean(value));
+            break;
+        case G_TYPE_INT:
+            o = PyInt_FromLong(g_value_get_int(value));
+            break;
+        case G_TYPE_UINT:
+            o = PyInt_FromLong(g_value_get_uint(value));
+            break;
+        case G_TYPE_LONG:
+            o = PyLong_FromLong(g_value_get_long(value));
+            break;
+        case G_TYPE_ULONG:
+            o = PyLong_FromLong(g_value_get_ulong(value));
+            break;
+        case G_TYPE_INT64:
+            o = PyLong_FromLong(g_value_get_int64(value));
+            break;
+        case G_TYPE_UINT64:
+            o = PyLong_FromLong(g_value_get_uint64(value));
+            break;
+        case G_TYPE_FLOAT:
+            o = PyFloat_FromDouble(g_value_get_float(value));
+            break;
+        case G_TYPE_DOUBLE:
+            o = PyFloat_FromDouble(g_value_get_double(value));
+            break;
+        case G_TYPE_STRING:
+            o = PyString_FromString(g_value_get_string(value));
+            break;
+        case G_TYPE_OBJECT:
+            o = pygobject_new((GObject *) g_value_get_object(value));
+/*
+        case G_TYPE_POINTER:
+        case G_TYPE_ENUM:
+        case G_TYPE_FLAGS:
+        case G_TYPE_INVALID:
+        case G_TYPE_NONE:
+        case G_TYPE_INTERFACE:
+        case G_TYPE_BOXED:
+        case G_TYPE_PARAM:
+        case G_TYPE_GTYPE:
+*/        
+    }
+    return o;
+
+}
+
+static GValue*
+convert_pyobject_to_gvalue(PyObject *o)
+{
+    GValue *g_value;
+
+    if (!o) {
+        g_warning("PyObject undefined.");
+        return NULL;
+    }
+
+    g_value = g_malloc0(sizeof(GValue));
+    //PyObject_Type()??
+    if (PyBool_Check(o)) {
+        g_value_init(g_value, G_TYPE_BOOLEAN);
+        g_value_set_boolean(g_value, PyInt_AsLong(o));
+    }
+    else if (PyFloat_CheckExact(o)) {
+        g_value_init(g_value, G_TYPE_DOUBLE);
+        g_value_set_double(g_value, PyFloat_AsDouble(o));
+    }
+    else if (PyInt_CheckExact(o)) {
+        g_value_init(g_value, G_TYPE_INT);
+        g_value_set_int(g_value, (int) PyInt_AsLong(o));
+    }
+    else if (PyLong_CheckExact(o)) {
+        g_value_init(g_value, G_TYPE_LONG);
+        g_value_set_long(g_value, PyLong_AsLong(o));
+    }
+    else if (PyString_CheckExact(o)) {
+        g_value_init(g_value, G_TYPE_STRING);
+        g_value_set_string(g_value, PyString_AsString(o));
+    }
+    else if (PyTuple_CheckExact(o)) {
+        // FIXME: what to do with tuples?
+        g_free(g_value);
+        g_value = NULL'
+    }
+    else if (o->ob_type == &PyGwyContainer_Type 
+             || o->ob_type == &PyGwyDataField_Type
+             || o->ob_type == &PyGwyDataLine_Type
+             || o->ob_type == &PyGwyResource_Type
+             || o->ob_type == &PyGwySIUnit_Type
+             || o->ob_type == &PyGwySelection_Type
+             || o->ob_type == &PyGwySpectra_Type) {
+        GObject *d;
+        
+        d = G_OBJECT(((PyGObject *) (o))->obj);
+        g_value_init(g_value, G_TYPE_FROM_INSTANCE(d));
+        g_value_set_object(g_value, d);
+    } else {
+        g_free(g_value);
+        g_value = NULL'
+    }
+
+    return g_value;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
