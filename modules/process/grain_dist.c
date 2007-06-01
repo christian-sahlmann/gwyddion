@@ -112,7 +112,7 @@ static GwyModuleInfo module_info = {
     N_("Evaluates distribution of grains (continuous parts of mask)."),
     "Petr Klapetek <petr@klapetek.cz>, Sven Neumann <neumann@jpk.com>, "
         "Yeti <yeti@gwyddion.net>",
-    "2.5",
+    "2.6",
     "David Nečas (Yeti) & Petr Klapetek & Sven Neumann",
     "2003-2007",
 };
@@ -161,7 +161,9 @@ grain_dist(GwyContainer *data, GwyRunType run)
     args.units_equal = gwy_si_unit_equal(siunitxy, siunitz);
     args.bitmask = 0xffffffffU;
     if (!args.units_equal)
-        args.bitmask ^= 1 << GWY_GRAIN_VALUE_SURFACE_AREA;
+        args.bitmask ^= (1 << GWY_GRAIN_VALUE_SURFACE_AREA)
+                         | (1 << GWY_GRAIN_VALUE_SLOPE_THETA)
+                         | (1 << GWY_GRAIN_VALUE_SLOPE_PHI);
 
     if (run == GWY_RUN_IMMEDIATE)
         grain_dist_run(&args, data, dfield, mfield);
@@ -195,14 +197,15 @@ append_checkbox_list(GtkTable *table,
 
     for (i = 0; i < nchoices; i++) {
         bit = 1 << choices[i].value;
-        if (!(bit & bitmask))
-            continue;
-
         check = gtk_check_button_new_with_mnemonic(_(choices[i].name));
         gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(check), state & bit);
         g_object_set_data(G_OBJECT(check), "bit", GUINT_TO_POINTER(bit));
         gtk_box_pack_start(vbox, check, FALSE, FALSE, 0);
         list = g_slist_prepend(list, check);
+        if (!(bit & bitmask)) {
+            gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(check), FALSE);
+            gtk_widget_set_sensitive(check, FALSE);
+        }
     }
 
     return list;
@@ -246,6 +249,10 @@ grain_dist_dialog(GrainDistArgs *args,
     static const GwyEnum quantities_position[] = {
         { N_("Center x _position"), GWY_GRAIN_VALUE_CENTER_X, },
         { N_("Center _y position"), GWY_GRAIN_VALUE_CENTER_Y, },
+    };
+    static const GwyEnum quantities_slope[] = {
+        { N_("Inclination θ"), GWY_GRAIN_VALUE_SLOPE_THETA, },
+        { N_("Inclination φ"), GWY_GRAIN_VALUE_SLOPE_PHI,   },
     };
     static const GwyEnum modes[] = {
         { N_("_Export raw data"), MODE_RAW,   },
@@ -300,10 +307,16 @@ grain_dist_dialog(GrainDistArgs *args,
                                           quantities_volume,
                                           args->selected,
                                           args->bitmask);
-    controls.qlist = append_checkbox_list(table, 2, 1, _("Position"),
+    controls.qlist = append_checkbox_list(table, 2, 0, _("Position"),
                                           controls.qlist,
                                           G_N_ELEMENTS(quantities_position),
                                           quantities_position,
+                                          args->selected,
+                                          args->bitmask);
+    controls.qlist = append_checkbox_list(table, 2, 1, _("Slope"),
+                                          controls.qlist,
+                                          G_N_ELEMENTS(quantities_slope),
+                                          quantities_slope,
                                           args->selected,
                                           args->bitmask);
 
