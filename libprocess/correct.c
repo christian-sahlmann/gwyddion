@@ -27,6 +27,10 @@
 #include <libprocess/correct.h>
 #include <libprocess/interpolation.h>
 
+#ifdef SPARSE_LAPLACE
+#include <libprocess/grains.h>
+#endif
+
 static gdouble      unrotate_refine_correction   (GwyDataLine *derdist,
                                                   guint m,
                                                   gdouble phi);
@@ -35,6 +39,134 @@ static void         compute_fourier_coeffs       (gint nder,
                                                   guint symmetry,
                                                   gdouble *st,
                                                   gdouble *ct);
+
+#ifdef SPARSE_LAPLACE
+typedef struct {
+    gint pos;
+    gint len;
+} RLEGrain;
+
+typedef struct {
+    gint ngrains;
+    gint *idx;
+    RLEGrain *grains;
+} RLEGrains;
+
+/* Laplace iterator */
+typedef struct {
+    GwyComputationState cs;
+    GwyDataField *data_field;
+    GwyDataField *mask_field;
+    gdouble corrfactor;
+    gdouble max_error;
+    gint gno;
+    gdouble work_done;
+    gdouble total_work;
+    RLEGrains rleg;
+    GwyDataField *buffer_field;
+} GwyLaplaceState;
+
+static void
+rle_grains(GwyDataField *mask_field,
+           RLEGrains *rleg)
+{
+    gint *grains, *row;
+    gint xres, yres, gno, n, start, i, j;
+
+    xres = mask_field->xres;
+    yres = mask_field->yres;
+    grains = g_new0(gint, xres*yres);
+    rleg->ngrains = gwy_data_field_number_grains(mask_field, grains);
+
+    /* Scan grains to calculate how large structures we need */
+    rleg->idx = g_new0(gint, rleg->ngrains+1);
+    for (i = 0; i < yres; i++) {
+        row = grains + i*xres;
+        for (j = 0, gno = 0; ; ) {
+            while (j < xres && row[j] == gno)
+                j++;
+            if (j == xres)
+                break;
+            gno = row[j];
+            rleg->idx[gno]++;
+        }
+    }
+    rleg->idx[0] = 0;
+    for (gno = 1; gno <= rleg->ngrains; gno++)
+        rleg->idx[gno] += rleg->idx[gno-1];
+    n = rleg->idx[rleg->ngrains];
+    g_printerr("n: %d\n", n);
+    for (gno = rleg->ngrains; gno > 0; gno--)
+        rleg->idx[gno] = rleg->idx[gno-1];
+
+    /* Actually build the RLE grain data */
+    rleg->grains = g_new(RLEGrain, n);
+    for (i = 0; i < yres; i++) {
+        row = grains + i*xres;
+        start = 0*sizeof("Die, die, GCC!");
+        for (j = 0, gno = 0; ; ) {
+            while (j < xres && row[j] == gno)
+                j++;
+            if (gno) {
+                rleg->grains[rleg->idx[gno]].len = j - start;
+                rleg->idx[gno]++;
+            }
+            if (j == xres)
+                break;
+            start = j;
+            if ((gno = row[j]))
+                rleg->grains[rleg->idx[gno]].pos = i*xres + j;
+        }
+    }
+
+    g_free(grains);
+}
+
+GwyComputationState*
+gwy_data_field_laplace_correct_init(GwyDataField *data_field,
+                                    GwyDataField *mask_field,
+                                    gdouble corrfactor,
+                                    gdouble max_error)
+{
+    GwyWatershedState *state;
+
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), NULL);
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(mask_field), NULL);
+
+    state = g_new0(GwyWatershedState, 1);
+
+    state->cs.state = GWY_COMPUTATION_STATE_INIT;
+    state->cs.fraction = 0.0;
+    state->data_field = g_object_ref(data_field);
+    state->mask_field = g_object_ref(mask_field);
+    state->corrfactor = corrfactor;
+    state->max_error = max_error;
+    state->total_work = 0.0;
+    state->work_done = 0.0;
+    state->gno = 0;
+
+    return (GwyComputationState*)state;
+}
+
+void
+gwy_data_field_laplace_correct_iteration(GwyComputationState *cstate)
+{
+    GwyLaplaceState *state = (GwyLaplaceState*)cstate;
+    gint i, j, n;
+
+    if (state->cs.state == GWY_COMPUTATION_STATE_INIT) {
+        state->buffer_field = gwy_data_field_new_alike(state->data_field,
+                                                       FALSE);
+        rle_grains(state->mask_field, &state->rleg);
+        for (i = 1; i <= state->rleg.ngrains; i++) {
+            n = 0;
+            for (j = state->rleg.idx[i-1]; j < state->rleg.idx[i]; j++)
+                n += state->rleg.grains[j].len;
+            state->total_work += (gdouble)n*n;
+        }
+    }
+}
+#endif
 
 /**
  * gwy_data_field_correct_laplace_iteration:
