@@ -1575,11 +1575,126 @@ gwy_data_field_grains_get_values(GwyDataField *data_field,
 }
 
 /**
+ * gwy_grain_quantity_needs_same_units:
+ * @quantity: A grain quantity.
+ *
+ * Tests whether a grain quantity is defined only when lateral and value
+ * units match.
+ *
+ * Returns: %TRUE if @quantity is meaningless when lateral and value units
+ *          differ, %FALSE if it is always defined.
+ *
+ * Since: 2.6
+ **/
+gboolean
+gwy_grain_quantity_needs_same_units(GwyGrainQuantity quantity)
+{
+    enum {
+        no_same_units = ((1 << GWY_GRAIN_VALUE_PROJECTED_AREA)
+                         | (1 << GWY_GRAIN_VALUE_EQUIV_SQUARE_SIDE)
+                         | (1 << GWY_GRAIN_VALUE_EQUIV_DISC_RADIUS)
+                         | (1 << GWY_GRAIN_VALUE_MAXIMUM)
+                         | (1 << GWY_GRAIN_VALUE_MINIMUM)
+                         | (1 << GWY_GRAIN_VALUE_MEAN)
+                         | (1 << GWY_GRAIN_VALUE_MEDIAN)
+                         | (1 << GWY_GRAIN_VALUE_FLAT_BOUNDARY_LENGTH)
+                         | (1 << GWY_GRAIN_VALUE_MINIMUM_BOUND_SIZE)
+                         | (1 << GWY_GRAIN_VALUE_MINIMUM_BOUND_ANGLE)
+                         | (1 << GWY_GRAIN_VALUE_MAXIMUM_BOUND_SIZE)
+                         | (1 << GWY_GRAIN_VALUE_MAXIMUM_BOUND_ANGLE)
+                         | (1 << GWY_GRAIN_VALUE_CENTER_X)
+                         | (1 << GWY_GRAIN_VALUE_CENTER_Y)
+                         | (1 << GWY_GRAIN_VALUE_VOLUME_0)
+                         | (1 << GWY_GRAIN_VALUE_VOLUME_MIN)
+                         | (1 << GWY_GRAIN_VALUE_VOLUME_LAPLACE)
+                         | (1 << GWY_GRAIN_VALUE_SLOPE_PHI)),
+        same_units = ((1 << GWY_GRAIN_VALUE_SLOPE_THETA)
+                      | (1 << GWY_GRAIN_VALUE_SURFACE_AREA))
+    };
+
+    if ((1 << quantity) & no_same_units)
+        return FALSE;
+    if ((1 << quantity) & same_units)
+        return TRUE;
+    g_return_val_if_reached(FALSE);
+}
+
+/**
+ * gwy_grain_quantity_get_units:
+ * @quantity: A grain quantity.
+ * @siunitxy: Lateral SI unit of data.
+ * @siunityz: Value SI unit of data.
+ * @result: An SI unit to set to the units of @quantity.
+ *          It can be %NULL, a new SI unit is created then and returned.
+ *
+ * Calculates the units of a grain quantity.
+ *
+ * Returns: When @result is %NULL, a newly creates SI unit that has to be
+ *          dereferenced when no longer used later.  Otherwise @result itself
+ *          is simply returned, its reference count is NOT increased.
+ *
+ * Since: 2.6
+ **/
+GwySIUnit*
+gwy_grain_quantity_get_units(GwyGrainQuantity quantity,
+                             GwySIUnit *siunitxy,
+                             GwySIUnit *siunitz,
+                             GwySIUnit *result)
+{
+    enum {
+        coord_units = ((1 << GWY_GRAIN_VALUE_EQUIV_SQUARE_SIDE)
+                       | (1 << GWY_GRAIN_VALUE_EQUIV_DISC_RADIUS)
+                       | (1 << GWY_GRAIN_VALUE_FLAT_BOUNDARY_LENGTH)
+                       | (1 << GWY_GRAIN_VALUE_MINIMUM_BOUND_SIZE)
+                       | (1 << GWY_GRAIN_VALUE_MAXIMUM_BOUND_SIZE)
+                       | (1 << GWY_GRAIN_VALUE_CENTER_X)
+                       | (1 << GWY_GRAIN_VALUE_CENTER_Y)),
+        value_units = ((1 << GWY_GRAIN_VALUE_MAXIMUM)
+                       | (1 << GWY_GRAIN_VALUE_MINIMUM)
+                       | (1 << GWY_GRAIN_VALUE_MEAN)
+                       | (1 << GWY_GRAIN_VALUE_MEDIAN)),
+        area_units = ((1 << GWY_GRAIN_VALUE_PROJECTED_AREA)
+                      | (1 << GWY_GRAIN_VALUE_SURFACE_AREA)),
+        volume_units = ((1 << GWY_GRAIN_VALUE_VOLUME_0)
+                        | (1 << GWY_GRAIN_VALUE_VOLUME_MIN)
+                        | (1 << GWY_GRAIN_VALUE_VOLUME_LAPLACE)),
+        angle_units = ((1 << GWY_GRAIN_VALUE_MINIMUM_BOUND_ANGLE)
+                       | (1 << GWY_GRAIN_VALUE_MAXIMUM_BOUND_ANGLE)
+                       | (1 << GWY_GRAIN_VALUE_SLOPE_PHI)
+                       | (1 << GWY_GRAIN_VALUE_SLOPE_THETA)),
+    };
+
+    g_return_val_if_fail(GWY_IS_SI_UNIT(siunitxy), NULL);
+    g_return_val_if_fail(GWY_IS_SI_UNIT(siunitz), NULL);
+
+    if ((1 << quantity) & coord_units)
+        return gwy_si_unit_power(siunitxy, 1, result);
+    if ((1 << quantity) & value_units)
+        return gwy_si_unit_power(siunitz, 1, result);
+    if ((1 << quantity) & area_units)
+        return gwy_si_unit_power(siunitxy, 2, result);
+    if ((1 << quantity) & area_units)
+        return gwy_si_unit_power_multiply(siunitxy, 2, siunitz, 1, result);
+    if ((1 << quantity) & angle_units) {
+        if (!result)
+            return gwy_si_unit_new(NULL);
+        gwy_si_unit_set_from_string(result, NULL);
+        return result;
+    }
+
+    g_return_val_if_reached(NULL);
+}
+
+/**
  * gwy_data_field_grains_add:
  * @grain_field: Field of marked grains (mask).
  * @add_field: Field of marked grains (mask) to be added.
  *
  * Adds @add_field grains to @grain_field.
+ *
+ * Note: This function is equivalent to
+ * <literal>gwy_data_field_max_of_fields(grain_field, grain_field, add_field);</literal>
+ * and it will be probably removed someday.
  **/
 void
 gwy_data_field_grains_add(GwyDataField *grain_field, GwyDataField *add_field)
@@ -1594,6 +1709,10 @@ gwy_data_field_grains_add(GwyDataField *grain_field, GwyDataField *add_field)
  *
  * Performs intersection betweet two grain fields,
  * result is stored in @grain_field.
+ *
+ * Note: This function is equivalent to
+ * <literal>gwy_data_field_min_of_fields(grain_field, grain_field, intersect_field);</literal>
+ * and it will be probably removed someday.
  **/
 void
 gwy_data_field_grains_intersect(GwyDataField *grain_field,

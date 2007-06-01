@@ -98,12 +98,16 @@ GwyDataLine* gwy_data_field_grains_get_distribution(GwyDataField *data_field,
                                                     const gint *grains,
                                                     GwyGrainQuantity quantity,
                                                     gint nstats);
-
-gdouble* gwy_data_field_grains_get_values(GwyDataField *data_field,
-                                          gdouble *values,
-                                          gint ngrains,
-                                          const gint *grains,
-                                          GwyGrainQuantity quantity);
+gdouble*     gwy_data_field_grains_get_values      (GwyDataField *data_field,
+                                                    gdouble *values,
+                                                    gint ngrains,
+                                                    const gint *grains,
+                                                    GwyGrainQuantity quantity);
+gboolean     gwy_grain_quantity_needs_same_units   (GwyGrainQuantity quantity);
+GwySIUnit*   gwy_grain_quantity_get_units          (GwyGrainQuantity quantity,
+                                                    GwySIUnit *siunitxy,
+                                                    GwySIUnit *siunitz,
+                                                    GwySIUnit *result);
 
 void gwy_data_field_area_grains_tgnd(GwyDataField *data_field,
                                      GwyDataLine *target_line,
