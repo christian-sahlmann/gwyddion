@@ -23,10 +23,11 @@ AC_CONFIG_FILES(\
   libprocess/Makefile \
   modules/Makefile \
   modules/file/Makefile \
-  modules/process/Makefile \
   modules/graph/Makefile \
-  modules/tools/Makefile \
   modules/layer/Makefile \
+  modules/process/Makefile \
+  modules/pygwy/Makefile \
+  modules/tools/Makefile \
   plugins/Makefile \
   plugins/file/Makefile \
   plugins/process/Makefile \

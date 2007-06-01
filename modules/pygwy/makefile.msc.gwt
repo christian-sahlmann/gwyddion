@@ -1,13 +1,31 @@
 # @(#) $Id$
 
+!INCLUDE $(TOP_SRCDIR)\make.msc
+
 plugin_proxy_module = plugin-proxy.la
+!IFDEF ENABLE_PYGWY
+pygwy_module = pygwy.la
+!ENDIF
 
 <[[:SELF:]]>
 <[[:MODULES:]]>
+SUBDIRS = file graph layer process tools
 
-!INCLUDE $(TOP_SRCDIR)\make.msc
 
-SUBDIRS = file graph layer process tools pygwy
+!IFDEF ENABLE_PYGWY
+PYGWY_LIBS = \
+	python24.lib \
+	pygobject.lib 
+	
+PYGWY_CFLAGS = \
+	-I $(PYTHON_TOP)\Include \
+	-I $(PYTHON_TOP)\PC \
+	-I $(PYGOBJECT_TOP)\gobject 
+
+PYGWY_LDFLAGS = \
+	/libpath:$(PYTHON_TOP)\PC\VC6 \
+	/libpath:$(PYGOBJECT_TOP)\lib
+!ENDIF
 
 MOD_CFLAGS = \
 	-I . -I $(TOP_SRCDIR) $(COMMON_CFLAGS) $(MOD_CRUNTIME) \

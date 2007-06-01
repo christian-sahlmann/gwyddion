@@ -19,11 +19,11 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-/* Only one interpreter is created. After initialization of '__main__' 
+/* Only one interpreter is created. After initialization of '__main__'
  * and 'gwy' module the directory is copied every time the independent
- * pseudo-sub-interpreter is needed. So every plugin is called with 
+ * pseudo-sub-interpreter is needed. So every plugin is called with
  * own copy of main dictionary created by create_environment() function
- * and destroyed by destroy_environment() which deallocate created copy. 
+ * and destroyed by destroy_environment() which deallocate created copy.
  */
 
 #define DEBUG 1
@@ -49,7 +49,7 @@
 static GValue* convert_pyobject_to_gvalue(PyObject *o);
 
 #include "pygwywrap.c"
-#line 48 "pygwy.c"
+#line 53 "pygwy.c"
 
 typedef struct {
     gchar *name;
@@ -71,14 +71,14 @@ static PygwyPluginInfo* pygwy_find_plugin     (const gchar* name);
 static gboolean         pygwy_file_save_run   (GwyContainer *data,
                                                const gchar *filename,
                                                GwyRunType mode,
-                                               GError **error, 
+                                               GError **error,
                                                const gchar *name);
 static GwyContainer*    pygwy_file_load_run   (const gchar *filename,
                                                G_GNUC_UNUSED GwyRunType mode,
                                                GError **error,
                                                const gchar *name);
 static gint             pygwy_file_detect_run (const GwyFileDetectInfo
-                                               *fileinfo, 
+                                               *fileinfo,
                                                gboolean only_name,
                                                gchar *name);
 
@@ -86,7 +86,7 @@ static GList *s_pygwy_plugins = NULL;
 static PyObject *s_pygwy_dict;
 static PyObject *s_main_module;
 
-static const GwyModuleInfo module_info = {
+static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Pygwy, the Gwyddion Python wrapper."),
@@ -161,8 +161,8 @@ pygwy_show_stderr(gchar *str)
     text = gtk_text_view_new();
     gtk_container_add(GTK_CONTAINER(scroll), text);
     gtk_text_view_set_editable(GTK_TEXT_VIEW(text), FALSE);
-    gtk_text_buffer_set_text(gtk_text_view_get_buffer(GTK_TEXT_VIEW(text)), 
-                             str, 
+    gtk_text_buffer_set_text(gtk_text_view_get_buffer(GTK_TEXT_VIEW(text)),
+                             str,
                              -1);
 
     b_close = gtk_button_new_from_stock("gtk-close");
@@ -180,9 +180,9 @@ pygwy_initialize_stderr_redirect(PyObject *d)
     pygwy_run_string("import sys, tempfile\n"
                      "stderr_redir = tempfile.TemporaryFile()\n"
                      "sys.stderr = stderr_redir\n",
-                     //"sys.stdout = stderr_redir", 
-                     Py_file_input, 
-                     d, 
+                     //"sys.stdout = stderr_redir",
+                     Py_file_input,
+                     d,
                      d);
 }
 
@@ -229,7 +229,7 @@ create_environment(const gchar *filename) {
     plugin_filename = Py_BuildValue("s", filename);
     PyDict_SetItemString(d, "__file__", plugin_filename);
     PySys_SetArgv(0, argv);
-    
+
     // redirect stderr and stdout of python script to temporary file
     pygwy_initialize_stderr_redirect(d);
     return d;
@@ -246,7 +246,7 @@ destroy_environment(PyObject *d) {
 
 
 static gchar*
-pygwy_read_val_from_dict(PyObject *d, char *v, const gchar *f) 
+pygwy_read_val_from_dict(PyObject *d, char *v, const gchar *f)
 {
     char *ret = NULL;
     PyObject *py_str;
@@ -265,11 +265,11 @@ pygwy_read_val_from_dict(PyObject *d, char *v, const gchar *f)
     return ret;
 }
 
-static void 
-pygwy_get_plugin_metadata(const gchar *filename, 
-                          const gchar *module, 
+static void
+pygwy_get_plugin_metadata(const gchar *filename,
+                          const gchar *module,
                           PyObject **code,
-                          gchar **name, 
+                          gchar **name,
                           gchar **desc,
                           gchar **menu_path,
                           PygwyPluginType *type)
@@ -280,9 +280,9 @@ pygwy_get_plugin_metadata(const gchar *filename,
 
     *code = NULL; *name = NULL; *menu_path = NULL; *type = PYGWY_UNDEFINED;
 
-    if (!g_file_get_contents(filename, 
-                            &plugin_file_content, 
-                            NULL, 
+    if (!g_file_get_contents(filename,
+                            &plugin_file_content,
+                            NULL,
                             &err)) {
         g_warning("Cannot read content of file '%s'", filename);
         return;
@@ -295,8 +295,8 @@ pygwy_get_plugin_metadata(const gchar *filename,
         return;
     }
     // compile file of given filename to module
-    code_obj = Py_CompileString((char *)plugin_file_content, 
-                                module, 
+    code_obj = Py_CompileString((char *)plugin_file_content,
+                                module,
                                 Py_file_input); // new ref
     if (!code_obj) {
         g_warning("Cannot compile plugin file '%s'", filename);
@@ -322,7 +322,7 @@ pygwy_get_plugin_metadata(const gchar *filename,
     *menu_path = pygwy_read_val_from_dict(plugin_dict, "plugin_menu", filename);
     type_str = pygwy_read_val_from_dict(plugin_dict, "plugin_type", filename);
     // FIXME: move string somewhere else
-    if (g_ascii_strcasecmp ("PROCESS", type_str) == 0) { 
+    if (g_ascii_strcasecmp ("PROCESS", type_str) == 0) {
         *type = PYGWY_PROCESS;
     } else if (g_ascii_strcasecmp ("FILE", type_str) == 0) {
         *type = PYGWY_FILE;
@@ -334,7 +334,7 @@ pygwy_get_plugin_metadata(const gchar *filename,
     }
 
 error:
-    if (!(*code)) { 
+    if (!(*code)) {
         Py_XDECREF(code_obj);
     }
     Py_XDECREF(plugin_module);
@@ -358,9 +358,9 @@ pygwy_create_plugin_info(gchar *filename, gchar *name, PyObject *code)
 }
 
 static gboolean
-pygwy_register_file_plugin(gchar *filename, 
-                           PyObject *code, 
-                           gchar *name, 
+pygwy_register_file_plugin(gchar *filename,
+                           PyObject *code,
+                           gchar *name,
                            gchar *desc)
 {
     PygwyPluginInfo *info;
@@ -370,12 +370,12 @@ pygwy_register_file_plugin(gchar *filename,
         return FALSE;
     }
     if (!name) {
-        g_warning("Cannot register. Undefined 'plugin_name' variable in '%s'", 
+        g_warning("Cannot register. Undefined 'plugin_name' variable in '%s'",
                   filename);
         return FALSE;
     }
-    if (!desc) { 
-        g_warning("Cannot register. Undefined 'plugin_desc' variable in '%s'", 
+    if (!desc) {
+        g_warning("Cannot register. Undefined 'plugin_desc' variable in '%s'",
                   filename);
         return FALSE;
     }
@@ -391,7 +391,7 @@ pygwy_register_file_plugin(gchar *filename,
         s_pygwy_plugins = g_list_append(s_pygwy_plugins, info);
     } else {
         gwy_debug("Free: %s %s", info->name, info->filename);
-        // FIXME: Terminated by glib free(): invalid pointer: blabla 
+        // FIXME: Terminated by glib free(): invalid pointer: blabla
         // when inserting duplicate module
         // g_free(info->name);
         // g_free(info->filename);
@@ -403,9 +403,9 @@ pygwy_register_file_plugin(gchar *filename,
 }
 
 static gboolean
-pygwy_register_proc_plugin(gchar *filename, 
-                           PyObject *code, 
-                           gchar *name, 
+pygwy_register_proc_plugin(gchar *filename,
+                           PyObject *code,
+                           gchar *name,
                            gchar *menu_path)
 {
     PygwyPluginInfo *info;
@@ -415,12 +415,12 @@ pygwy_register_proc_plugin(gchar *filename,
         return FALSE;
     }
     if (!name) {
-        g_warning("Cannot register. Undefined 'plugin_name' variable in '%s'", 
+        g_warning("Cannot register. Undefined 'plugin_name' variable in '%s'",
                   filename);
         return FALSE;
     }
-    if (!menu_path) { 
-        g_warning("Cannot register. Undefined 'plugin_desc' variable in '%s'", 
+    if (!menu_path) {
+        g_warning("Cannot register. Undefined 'plugin_desc' variable in '%s'",
                   filename);
         return FALSE;
     }
@@ -462,24 +462,24 @@ pygwy_register_plugins(void)
     GError *err = NULL;
     PyObject *plugin_code;
 
-    plugin_dir_name = g_build_filename(gwy_get_user_dir(), 
-                                       pygwy_plugin_dir_name, 
+    plugin_dir_name = g_build_filename(gwy_get_user_dir(),
+                                       pygwy_plugin_dir_name,
                                        NULL);
     gwy_debug("Plugin path: %s", plugin_dir_name);
 
     plugin_dir = g_dir_open(plugin_dir_name, 0, &err);
     if (plugin_dir == NULL && err) {
-        if (err->code == G_FILE_ERROR_NOENT) { 
+        if (err->code == G_FILE_ERROR_NOENT) {
             // directory not found/does not exist
             if (g_mkdir(plugin_dir_name, 0700)) {
-                g_warning("Cannot create pygwy plugin directory %s", 
+                g_warning("Cannot create pygwy plugin directory %s",
                           plugin_dir_name);
             } else {
                 gwy_debug("Pygwy directory created: %s", plugin_dir_name);
             }
         } else {
-            g_warning("Cannot open pygwy directory: %s, reason: %s", 
-                      plugin_dir_name, 
+            g_warning("Cannot open pygwy directory: %s, reason: %s",
+                      plugin_dir_name,
                       err->message);
         }
         g_free(plugin_dir_name);
@@ -495,24 +495,24 @@ pygwy_register_plugins(void)
            || g_str_has_suffix(plugin_filename, ".PY")
            || g_str_has_suffix(plugin_filename, ".Py") ) {
             // Read content of plugin file
-            plugin_fullpath_filename = g_build_filename(plugin_dir_name, 
-                                                        plugin_filename, 
+            plugin_fullpath_filename = g_build_filename(plugin_dir_name,
+                                                        plugin_filename,
                                                         NULL);
             // get plugin's metadata
-            pygwy_get_plugin_metadata(plugin_fullpath_filename, 
-                                      plugin_filename, 
+            pygwy_get_plugin_metadata(plugin_fullpath_filename,
+                                      plugin_filename,
                                       &plugin_code,
                                       &plugin_name,
                                       &plugin_desc,
                                       &plugin_menu_path,
                                       &plugin_type);
             printf("plugin_type: %d\n", plugin_type);
-            switch(plugin_type) 
+            switch(plugin_type)
             {
                 case PYGWY_PROCESS:
-                    if (plugin_code != NULL 
-                        && plugin_name != NULL 
-                        && plugin_menu_path != NULL) 
+                    if (plugin_code != NULL
+                        && plugin_name != NULL
+                        && plugin_menu_path != NULL)
                     {
                         pygwy_register_proc_plugin(plugin_fullpath_filename,
                                                    plugin_code,
@@ -526,13 +526,13 @@ pygwy_register_plugins(void)
                     }
                     break;
                 case PYGWY_FILE:
-                    if (plugin_code != NULL 
-                        && plugin_name != NULL 
+                    if (plugin_code != NULL
+                        && plugin_name != NULL
                         && plugin_desc != NULL)
                     {
-                    pygwy_register_file_plugin(plugin_fullpath_filename, 
-                                               plugin_code, 
-                                               plugin_name, 
+                    pygwy_register_file_plugin(plugin_fullpath_filename,
+                                               plugin_code,
+                                               plugin_name,
                                                plugin_desc);
                     } else {
                         g_warning("Could not register process:"
@@ -542,7 +542,7 @@ pygwy_register_plugins(void)
                     break;
                 case PYGWY_UNDEFINED:
                     g_warning("Cannot register plugin without defined "
-                              "'plugin_type' variable  ('%s')", 
+                              "'plugin_type' variable  ('%s')",
                               plugin_fullpath_filename);
                     break;
                 default:
@@ -567,20 +567,20 @@ pygwy_reload_code(PygwyPluginInfo **info)
     gwy_debug("Reloading code from '%s'", (*info)->filename);
     if (!g_stat((*info)->filename, &file_stat)) {
         if (file_stat.st_mtime != (*info)->m_time) {
-            gwy_debug("File '%s' has been changed. Re-reading file.", 
+            gwy_debug("File '%s' has been changed. Re-reading file.",
                       (*info)->filename);
-            if (!g_file_get_contents((*info)->filename, 
-                                    &plugin_file_content, 
-                                    NULL, 
+            if (!g_file_get_contents((*info)->filename,
+                                    &plugin_file_content,
+                                    NULL,
                                     &err)) {
-                g_warning("Cannot read content of file '%s'", 
+                g_warning("Cannot read content of file '%s'",
                           (*info)->filename);
             }
-            code_obj = Py_CompileString((char *)plugin_file_content, 
-                                        (*info)->name, 
+            code_obj = Py_CompileString((char *)plugin_file_content,
+                                        (*info)->name,
                                         Py_file_input); // new ref
             if (!code_obj) {
-                g_warning("Cannot create code object for file '%s'", 
+                g_warning("Cannot create code object for file '%s'",
                           (*info)->filename);
                 PyErr_Print();
                 return;
@@ -591,14 +591,14 @@ pygwy_reload_code(PygwyPluginInfo **info)
             g_debug("No changes in '%s' since last run.", (*info)->filename);
         }
     } else {
-        g_warning("Cannot get last modification time for file '%s'", 
+        g_warning("Cannot get last modification time for file '%s'",
                   (*info)->filename);
     }
 
 }
 
 static gboolean
-pygwy_check_func(PyObject *m, gchar *name, gchar *filename) 
+pygwy_check_func(PyObject *m, gchar *name, gchar *filename)
 {
     gboolean ret;
     PyObject *func;
@@ -635,18 +635,18 @@ pygwy_proc_run(GwyContainer *data, GwyRunType run, const gchar *name)
         g_warning("Cannot find plugin '%s'.", name);
         return;
     }
-    gwy_debug("Running plugin '%s', filename '%s'", 
-              info->name, 
+    gwy_debug("Running plugin '%s', filename '%s'",
+              info->name,
               info->filename);
 
-    // create new environment   
+    // create new environment
     d = create_environment(info->filename);
     if (!d) {
         g_warning("Cannot create copy of Python dictionary.");
         return;
     }
 
-    // check last and current file modification time and override 
+    // check last and current file modification time and override
     // the code if required
     pygwy_reload_code(&info);
     gwy_debug("Import module and check for 'run' func");
@@ -667,8 +667,8 @@ pygwy_proc_run(GwyContainer *data, GwyRunType run, const gchar *name)
 
     // import module using precompiled code and run its 'run()' function
     cmd = g_strdup_printf("import %s\n"
-                          "%s.run()", 
-                          info->name, 
+                          "%s.run()",
+                          info->name,
                           info->name);
     pygwy_run_string(cmd, Py_file_input, d, d);
     g_free(cmd);
@@ -679,10 +679,10 @@ pygwy_proc_run(GwyContainer *data, GwyRunType run, const gchar *name)
 }
 
 static gboolean
-pygwy_file_save_run(GwyContainer *data, 
-                    const gchar *filename, 
-                    GwyRunType mode, 
-                    GError **error, 
+pygwy_file_save_run(GwyContainer *data,
+                    const gchar *filename,
+                    GwyRunType mode,
+                    GError **error,
                     const gchar *name)
 {
     PyObject *py_filename, *module, *py_res, *d;
@@ -696,16 +696,16 @@ pygwy_file_save_run(GwyContainer *data,
         g_warning("Cannot find plugin '%s'.", name);
         return FALSE;
     }
-    gwy_debug("Running plugin '%s', filename '%s'", 
-              info->name, 
+    gwy_debug("Running plugin '%s', filename '%s'",
+              info->name,
               info->filename);
-    // create new environment   
+    // create new environment
     d = create_environment(info->filename);
     if (!d) {
         g_warning("Cannot create copy of Python dictionary.");
         return FALSE;
     }
-    // check last and current file modification time and override 
+    // check last and current file modification time and override
     // the code if required
     pygwy_reload_code(&info);
     // import module using precompiled code and check for 'save()'
@@ -726,8 +726,8 @@ pygwy_file_save_run(GwyContainer *data,
 
     // import and execute the 'save' method
     cmd = g_strdup_printf("import %s\n"
-                          "result = %s.save(data, filename)", 
-                          info->name, 
+                          "result = %s.save(data, filename)",
+                          info->name,
                           info->name);
     pygwy_run_string(cmd, Py_file_input, d, d);
     g_free(cmd);
@@ -737,8 +737,8 @@ pygwy_file_save_run(GwyContainer *data,
         res = TRUE;
     } else {
         // FIXME: show python traceback
-        g_set_error(error, 
-                    GWY_MODULE_FILE_ERROR, 
+        g_set_error(error,
+                    GWY_MODULE_FILE_ERROR,
                     GWY_MODULE_FILE_ERROR_IO,
                     _("Pygwy plugin: %s (%s)\nExport failed."),
                      info->name, info->filename);
@@ -746,7 +746,7 @@ pygwy_file_save_run(GwyContainer *data,
     }
     Py_XDECREF(module);
     Py_XDECREF(py_container); //FIXME
-    Py_XDECREF(py_filename);    
+    Py_XDECREF(py_filename);
     destroy_environment(d);
     return res;
 }
@@ -754,7 +754,7 @@ pygwy_file_save_run(GwyContainer *data,
 static GwyContainer*
 pygwy_file_load_run(const gchar *filename,
                     G_GNUC_UNUSED GwyRunType mode,
-                    GError **error, 
+                    GError **error,
                     const gchar *name)
 {
     GwyContainer *res = NULL;
@@ -762,23 +762,23 @@ pygwy_file_load_run(const gchar *filename,
     PyGObject *pyg_res;
     PygwyPluginInfo *info;
     gchar *cmd, *class_str;
-    
+
     // find plugin
     if (!(info = pygwy_find_plugin(name))) {
         g_warning("Cannot find plugin '%s'.", name);
         return NULL;
     }
-    gwy_debug("Running plugin '%s', filename '%s'", 
-              info->name, 
+    gwy_debug("Running plugin '%s', filename '%s'",
+              info->name,
               info->filename);
 
-    // create new environment   
+    // create new environment
     d = create_environment(info->filename);
     if (!d) {
         g_warning("Cannot create copy of Python dictionary.");
         goto error;
     }
-    // check last and current file modification time and override 
+    // check last and current file modification time and override
     // the code if required
     pygwy_reload_code(&info);
 
@@ -788,7 +788,7 @@ pygwy_file_load_run(const gchar *filename,
     if (!pygwy_check_func(module, "load", info->filename)) {
         goto error;
     }
-    
+
     // create filename variable and put it into __main__ module dictionary
     o = Py_BuildValue("s", filename);
     if (!o)
@@ -796,7 +796,7 @@ pygwy_file_load_run(const gchar *filename,
     PyDict_SetItemString(d, "filename", o);
     cmd = g_strdup_printf("import %s\n"
                           "result = %s.load(\"test\")\nprint result",
-                          info->name, 
+                          info->name,
                           info->name);
     pygwy_run_string(cmd, Py_file_input, d, d);
     g_free(cmd);
@@ -820,15 +820,15 @@ error:
     Py_XDECREF(class_name);
     Py_XDECREF(type);
     Py_XDECREF(module);
-    
+
     destroy_environment(d);
     gwy_debug("Return value %p", res);
     return res;
 }
 
 static gint
-pygwy_file_detect_run(const GwyFileDetectInfo *fileinfo, 
-                      gboolean only_name, 
+pygwy_file_detect_run(const GwyFileDetectInfo *fileinfo,
+                      gboolean only_name,
                       gchar *name)
 {
     PyObject *module, *py_res, *d, *o;
@@ -841,16 +841,16 @@ pygwy_file_detect_run(const GwyFileDetectInfo *fileinfo,
         g_warning("Cannot find plugin '%s'.", name);
         return FALSE;
     }
-    gwy_debug("Running plugin '%s', filename '%s'", 
-              info->name, 
+    gwy_debug("Running plugin '%s', filename '%s'",
+              info->name,
               info->filename);
-    // create new environment   
+    // create new environment
     d = create_environment(info->filename);
     if (!d) {
         g_warning("Cannot create copy of Python dictionary.");
         return FALSE;
     }
-    // check last and current file modification time and override 
+    // check last and current file modification time and override
     // the code if required
     pygwy_reload_code(&info);
     // import module using precompiled code and check for 'detect_by_name()'
@@ -862,7 +862,7 @@ pygwy_file_detect_run(const GwyFileDetectInfo *fileinfo,
         destroy_environment(d);
         return FALSE;
     }
-    
+
     // create filename variable and put it into __main__ module dictionary
     if (only_name) {
         o = Py_BuildValue("s", fileinfo->name);
@@ -884,13 +884,13 @@ pygwy_file_detect_run(const GwyFileDetectInfo *fileinfo,
     if (only_name) {
         cmd = g_strdup_printf("import %s\n"
                               "result = %s.detect_by_name(filename)",
-                              info->name, 
+                              info->name,
                               info->name);
     } else {
         cmd = g_strdup_printf("import %s\n"
-                              "result = %s.detect_by_content(filename, head, tail, filesize)", 
-                              info->name, 
-                              info->name); 
+                              "result = %s.detect_by_content(filename, head, tail, filesize)",
+                              info->name,
+                              info->name);
     }
     pygwy_run_string(cmd, Py_file_input, d, d);
     g_free(cmd);
@@ -901,16 +901,16 @@ pygwy_file_detect_run(const GwyFileDetectInfo *fileinfo,
     } else {
         res = 0;
     }
-    gwy_debug("Score for %s is %d (fileplugin %s)", 
-              fileinfo->name, 
-              res, 
+    gwy_debug("Score for %s is %d (fileplugin %s)",
+              fileinfo->name,
+              res,
               info->name);
     Py_DECREF(module);
     destroy_environment(d);
     return res;
 
 }
- 
+
 static PygwyPluginInfo*
 pygwy_find_plugin(const gchar* name)
 {
@@ -993,7 +993,7 @@ convert_gvalue_to_pyobject(GValue *value)
         case G_TYPE_BOXED:
         case G_TYPE_PARAM:
         case G_TYPE_GTYPE:
-*/        
+*/
     }
     return o;
 
@@ -1034,9 +1034,9 @@ convert_pyobject_to_gvalue(PyObject *o)
     else if (PyTuple_CheckExact(o)) {
         // FIXME: what to do with tuples?
         g_free(g_value);
-        g_value = NULL'
+        g_value = NULL;
     }
-    else if (o->ob_type == &PyGwyContainer_Type 
+    else if (o->ob_type == &PyGwyContainer_Type
              || o->ob_type == &PyGwyDataField_Type
              || o->ob_type == &PyGwyDataLine_Type
              || o->ob_type == &PyGwyResource_Type
@@ -1044,13 +1044,13 @@ convert_pyobject_to_gvalue(PyObject *o)
              || o->ob_type == &PyGwySelection_Type
              || o->ob_type == &PyGwySpectra_Type) {
         GObject *d;
-        
+
         d = G_OBJECT(((PyGObject *) (o))->obj);
         g_value_init(g_value, G_TYPE_FROM_INSTANCE(d));
         g_value_set_object(g_value, d);
     } else {
         g_free(g_value);
-        g_value = NULL'
+        g_value = NULL;
     }
 
     return g_value;
