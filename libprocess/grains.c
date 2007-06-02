@@ -727,47 +727,7 @@ gwy_data_field_grains_get_distribution(GwyDataField *data_field,
     xyunit = gwy_data_field_get_si_unit_xy(data_field);
     zunit = gwy_data_field_get_si_unit_z(data_field);
     lineunit = gwy_data_line_get_si_unit_x(distribution);
-    switch (quantity) {
-        case GWY_GRAIN_VALUE_PROJECTED_AREA:
-        case GWY_GRAIN_VALUE_SURFACE_AREA:
-        gwy_si_unit_power(xyunit, 2, lineunit);
-        break;
-
-        case GWY_GRAIN_VALUE_EQUIV_SQUARE_SIDE:
-        case GWY_GRAIN_VALUE_EQUIV_DISC_RADIUS:
-        case GWY_GRAIN_VALUE_FLAT_BOUNDARY_LENGTH:
-        case GWY_GRAIN_VALUE_MINIMUM_BOUND_SIZE:
-        case GWY_GRAIN_VALUE_MAXIMUM_BOUND_SIZE:
-        case GWY_GRAIN_VALUE_CENTER_X:
-        case GWY_GRAIN_VALUE_CENTER_Y:
-        gwy_serializable_clone(G_OBJECT(xyunit), G_OBJECT(lineunit));
-        break;
-
-        case GWY_GRAIN_VALUE_MINIMUM:
-        case GWY_GRAIN_VALUE_MAXIMUM:
-        case GWY_GRAIN_VALUE_MEAN:
-        case GWY_GRAIN_VALUE_MEDIAN:
-        gwy_serializable_clone(G_OBJECT(zunit), G_OBJECT(lineunit));
-        break;
-
-        case GWY_GRAIN_VALUE_MINIMUM_BOUND_ANGLE:
-        case GWY_GRAIN_VALUE_MAXIMUM_BOUND_ANGLE:
-        case GWY_GRAIN_VALUE_SLOPE_THETA:
-        case GWY_GRAIN_VALUE_SLOPE_PHI:
-        gwy_si_unit_set_from_string(lineunit, NULL);
-        break;
-
-        case GWY_GRAIN_VALUE_VOLUME_0:
-        case GWY_GRAIN_VALUE_VOLUME_MIN:
-        case GWY_GRAIN_VALUE_VOLUME_LAPLACE:
-        gwy_si_unit_power(xyunit, 2, lineunit);
-        gwy_si_unit_multiply(lineunit, zunit, lineunit);
-        break;
-
-        default:
-        g_warning("Wrong grain quantity %d", (gint)quantity);
-        break;
-    }
+    gwy_grain_quantity_get_units(quantity, xyunit, zunit, lineunit);
     lineunit = gwy_data_line_get_si_unit_y(distribution);
     gwy_si_unit_set_from_string(lineunit, NULL);
 
