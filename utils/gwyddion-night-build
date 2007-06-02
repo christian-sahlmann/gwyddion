@@ -84,9 +84,9 @@ function build_project() {
 function build_pygwy() {
   # Rebuild pygwy.  This is mainly useful for getting separate logs.  It would
   # be nice to exclude it from build_project.
-  cd ./modules
+  cd ./modules/pygwy
   rm -f pygwywrap.c
-  make SUBDIRS=
+  make -k all
 }
 
 
