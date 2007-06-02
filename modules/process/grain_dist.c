@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003-2006 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003-2007 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -39,9 +39,29 @@ enum {
 };
 
 typedef enum {
+   GRAIN_QUANTITY_SET_ID,  /* Unused here */
+   GRAIN_QUANTITY_SET_POSITION,
+   GRAIN_QUANTITY_SET_VALUE,
+   GRAIN_QUANTITY_SET_AREA,
+   GRAIN_QUANTITY_SET_BOUNDARY,
+   GRAIN_QUANTITY_SET_VOLUME,
+   GRAIN_QUANTITY_SET_SLOPE,
+   GRAIN_QUANTITY_NSETS
+} GrainQuantitySet;
+
+typedef enum {
     MODE_GRAPH,
     MODE_RAW
 } GrainDistMode;
+
+typedef struct {
+    GwyGrainQuantity quantity;
+    GrainQuantitySet set;
+    const gchar *label;
+    const gchar *symbol;
+    const gchar *gtitle;
+    const gchar *cdesc;
+} QuantityInfo;
 
 typedef struct {
     GrainDistMode mode;
@@ -90,7 +110,7 @@ static void grain_dist_run                      (GrainDistArgs *args,
                                                  GwyContainer *data,
                                                  GwyDataField *dfield,
                                                  GwyDataField *mfield);
-static gchar*   grain_dist_export_create        (gpointer user_data,
+static gchar* grain_dist_export_create          (gpointer user_data,
                                                  gssize *data_len);
 static void grain_dist_load_args                (GwyContainer *container,
                                                  GrainDistArgs *args);
@@ -115,6 +135,217 @@ static GwyModuleInfo module_info = {
     "2.6",
     "David Nečas (Yeti) & Petr Klapetek & Sven Neumann",
     "2003-2007",
+};
+
+static const QuantityInfo quantities[] = {
+    {
+        -1,
+        GRAIN_QUANTITY_SET_POSITION,
+        N_("Position"),
+        NULL,
+        NULL,
+        NULL,
+    },
+    {
+        GWY_GRAIN_VALUE_CENTER_X,
+        GRAIN_QUANTITY_SET_POSITION,
+        N_("Center x _position"),
+        "<i>x</i><sub>c</sub>",
+        N_("Grain Center X Histogram"),
+        N_("Grain center x positions"),
+    },
+    {
+        GWY_GRAIN_VALUE_CENTER_Y,
+        GRAIN_QUANTITY_SET_POSITION,
+        N_("Center _y position"),
+        "<i>x</i><sub>c</sub>",
+        N_("Grain Center Y Histogram"),
+        N_("Grain center y positions"),
+    },
+    {
+        -1,
+        GRAIN_QUANTITY_SET_VALUE,
+        N_("Value"),
+        NULL,
+        NULL,
+        NULL,
+    },
+    {
+        GWY_GRAIN_VALUE_MINIMUM,
+        GRAIN_QUANTITY_SET_VALUE,
+        N_("M_inimum"),
+        "<i>z</i><sub>min</sub>",
+        N_("Grain Minimum Value Histogram"),
+        N_("Grain min. values"),
+    },
+    {
+        GWY_GRAIN_VALUE_MAXIMUM,
+        GRAIN_QUANTITY_SET_VALUE,
+        N_("Ma_ximum"),
+        "<i>z</i><sub>max</sub>",
+        N_("Grain Maximum Value Histogram"),
+        N_("Grain max. values"),
+    },
+    {
+        GWY_GRAIN_VALUE_MEAN,
+        GRAIN_QUANTITY_SET_VALUE,
+        N_("_Mean"),
+        "<i>z̅</i>",
+        N_("Grain Mean Value Histogram"),
+        N_("Grain mean values"),
+    },
+    {
+        GWY_GRAIN_VALUE_MEDIAN,
+        GRAIN_QUANTITY_SET_VALUE,
+        N_("Me_dian"),
+        "<i>z</i><sub>med</sub>",
+        N_("Grain Median Value Histogram"),
+        N_("Grain median values"),
+    },
+    {
+        -1,
+        GRAIN_QUANTITY_SET_AREA,
+        N_("Area"),
+        NULL,
+        NULL,
+        NULL,
+    },
+    {
+        GWY_GRAIN_VALUE_PROJECTED_AREA,
+        GRAIN_QUANTITY_SET_AREA,
+        N_("_Projected area"),
+        "<i>A</i><sub>0</sub>",
+        N_("Grain Projected Area Histogram"),
+        N_("Grain proj. areas"),
+    },
+    {
+        GWY_GRAIN_VALUE_SURFACE_AREA,
+        GRAIN_QUANTITY_SET_AREA,
+        N_("S_urface area"),
+        "<i>A</i><sub>s</sub>",
+        N_("Grain Surface Area Histogram"),
+        N_("Grain surf. areas"),
+    },
+    {
+        GWY_GRAIN_VALUE_EQUIV_SQUARE_SIDE,
+        GRAIN_QUANTITY_SET_AREA,
+        N_("Equivalent _square side"),
+        "<i>a</i><sub>eq</sub>",
+        N_("Grain Equivalent Square Side Histogram"),
+        N_("Grain equiv. square sides"),
+    },
+    {
+        GWY_GRAIN_VALUE_EQUIV_DISC_RADIUS,
+        GRAIN_QUANTITY_SET_AREA,
+        N_("Equivalent disc _radius"),
+        "<i>r</i><sub>eq</sub>",
+        N_("Grain Equivalent Disc Radius Histogram"),
+        N_("Grain equiv. disc radii"),
+    },
+    {
+        -1,
+        GRAIN_QUANTITY_SET_VOLUME,
+        N_("Volume"),
+        NULL,
+        NULL,
+        NULL,
+    },
+    {
+        GWY_GRAIN_VALUE_VOLUME_0,
+        GRAIN_QUANTITY_SET_VOLUME,
+        N_("_Zero basis"),
+        "<i>V</i><sub>0</sub>",
+        N_("Grain Volume (Zero) Histogram"),
+        N_("Grain volumes (zero)"),
+    },
+    {
+        GWY_GRAIN_VALUE_VOLUME_MIN,
+        GRAIN_QUANTITY_SET_VOLUME,
+        N_("_Grain minimum basis"),
+        "<i>V</i><sub>min</sub>",
+        N_("Grain Volume (Minimum) Histogram"),
+        N_("Grain volumes (minimum)"),
+    },
+    {
+        GWY_GRAIN_VALUE_VOLUME_LAPLACE,
+        GRAIN_QUANTITY_SET_VOLUME,
+        N_("_Laplacian background basis"),
+        "<i>V</i><sub>L</sub>",
+        N_("Grain Volume (Laplacian) Histogram"),
+        N_("Grain volumes (laplacian)"),
+    },
+    {
+        -1,
+        GRAIN_QUANTITY_SET_BOUNDARY,
+        N_("Boundary"),
+        NULL,
+        NULL,
+        NULL,
+    },
+    {
+        GWY_GRAIN_VALUE_FLAT_BOUNDARY_LENGTH,
+        GRAIN_QUANTITY_SET_BOUNDARY,
+        N_("Projected _boundary length"),
+        "<i>L</i><sub>b0</sub>",
+        N_("Grain Projected Boundary Length Histogram"),
+        N_("Grain proj. boundary lengths"),
+    },
+    {
+        GWY_GRAIN_VALUE_MINIMUM_BOUND_SIZE,
+        GRAIN_QUANTITY_SET_BOUNDARY,
+        N_("Minimum bounding size"),
+        "<i>D</i><sub>min</sub>",
+        N_("Grain Minimum Bounding Size Histogram"),
+        N_("Grain min. bound. sizes"),
+    },
+    {
+        GWY_GRAIN_VALUE_MINIMUM_BOUND_ANGLE,
+        GRAIN_QUANTITY_SET_BOUNDARY,
+        N_("Minimum bounding direction"),
+        "<i>φ</i><sub>min</sub>",
+        N_("Grain Minimum Bounding Direction Histogram"),
+        N_("Grain min. bound. directions"),
+    },
+    {
+        GWY_GRAIN_VALUE_MAXIMUM_BOUND_SIZE,
+        GRAIN_QUANTITY_SET_BOUNDARY,
+        N_("Maximum bounding size"),
+        "<i>D</i><sub>max</sub>",
+        N_("Grain Maximum Bounding Size Histogram"),
+        N_("Grain max. bound. sizes"),
+    },
+    {
+        GWY_GRAIN_VALUE_MAXIMUM_BOUND_ANGLE,
+        GRAIN_QUANTITY_SET_BOUNDARY,
+        N_("Maximum bounding direction"),
+        "<i>φ</i><sub>max</sub>",
+        N_("Grain Maximum Bounding Direction Histogram"),
+        N_("Grain max. bound. directions"),
+    },
+    {
+        -1,
+        GRAIN_QUANTITY_SET_SLOPE,
+        N_("Slope"),
+        NULL,
+        NULL,
+        NULL,
+    },
+    {
+        GWY_GRAIN_VALUE_SLOPE_THETA,
+        GRAIN_QUANTITY_SET_SLOPE,
+        N_("Inclination θ"),
+        "<i>θ</i>",
+        N_("Grain Inclination θ Histogram"),
+        N_("Grain incl. θ"),
+    },
+    {
+        GWY_GRAIN_VALUE_SLOPE_PHI,
+        GRAIN_QUANTITY_SET_SLOPE,
+        N_("Inclination φ"),
+        "<i>φ</i>",
+        N_("Grain Inclination φ Histogram"),
+        N_("Grain incl. φ"),
+    },
 };
 
 GWY_MODULE_QUERY(module_info)
@@ -160,6 +391,7 @@ grain_dist(GwyContainer *data, GwyRunType run)
     siunitz = gwy_data_field_get_si_unit_z(dfield);
     args.units_equal = gwy_si_unit_equal(siunitxy, siunitz);
     args.bitmask = 0xffffffffU;
+    /* FIXME: Do this generically with gwy_grain_quantity_needs_same_units() */
     if (!args.units_equal)
         args.bitmask ^= ((1 << GWY_GRAIN_VALUE_SURFACE_AREA)
                          | (1 << GWY_GRAIN_VALUE_SLOPE_THETA));
@@ -176,16 +408,23 @@ static GSList*
 append_checkbox_list(GtkTable *table,
                      gint row,
                      gint col,
-                     const gchar *title,
                      GSList *list,
-                     guint nchoices,
-                     const GwyEnum *choices,
+                     GrainQuantitySet set,
                      guint state,
                      guint bitmask)
 {
     GtkWidget *label, *check;
+    const gchar *title;
     GtkBox *vbox;
     guint i, bit;
+
+    for (i = 0, title = NULL; i < G_N_ELEMENTS(quantities); i++) {
+        if (quantities[i].set == set && quantities[i].quantity == -1) {
+            title = quantities[i].label;
+            break;
+        }
+    }
+    g_return_val_if_fail(title, list);
 
     vbox = GTK_BOX(gtk_vbox_new(FALSE, 2));
     gtk_table_attach(table, GTK_WIDGET(vbox),
@@ -194,9 +433,12 @@ append_checkbox_list(GtkTable *table,
     label = gwy_label_new_header(title);
     gtk_box_pack_start(vbox, label, FALSE, FALSE, 0);
 
-    for (i = 0; i < nchoices; i++) {
-        bit = 1 << choices[i].value;
-        check = gtk_check_button_new_with_mnemonic(_(choices[i].name));
+    for (i = 0; i < G_N_ELEMENTS(quantities); i++) {
+        if (quantities[i].set != set || quantities[i].quantity == -1)
+            continue;
+
+        bit = 1 << quantities[i].quantity;
+        check = gtk_check_button_new_with_mnemonic(_(quantities[i].label));
         gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(check), state & bit);
         g_object_set_data(G_OBJECT(check), "bit", GUINT_TO_POINTER(bit));
         gtk_box_pack_start(vbox, check, FALSE, FALSE, 0);
@@ -216,43 +458,6 @@ grain_dist_dialog(GrainDistArgs *args,
                   GwyDataField *dfield,
                   GwyDataField *mfield)
 {
-    static const GwyEnum quantities_area[] = {
-        { N_("_Projected area"),         GWY_GRAIN_VALUE_PROJECTED_AREA,    },
-        { N_("Equivalent _square side"), GWY_GRAIN_VALUE_EQUIV_SQUARE_SIDE, },
-        { N_("Equivalent disc _radius"), GWY_GRAIN_VALUE_EQUIV_DISC_RADIUS, },
-        { N_("S_urface area"),           GWY_GRAIN_VALUE_SURFACE_AREA,      },
-    };
-    static const GwyEnum quantities_value[] = {
-        { N_("Ma_ximum"), GWY_GRAIN_VALUE_MAXIMUM, },
-        { N_("M_inimum"), GWY_GRAIN_VALUE_MINIMUM, },
-        { N_("_Mean"),    GWY_GRAIN_VALUE_MEAN,    },
-        { N_("Me_dian"),  GWY_GRAIN_VALUE_MEDIAN,  },
-    };
-    static const GwyEnum quantities_boundary[] = {
-        { N_("Projected _boundary length"),
-            GWY_GRAIN_VALUE_FLAT_BOUNDARY_LENGTH, },
-        { N_("Minimum bounding size"),
-            GWY_GRAIN_VALUE_MINIMUM_BOUND_SIZE, },
-        { N_("Minimum bounding direction"),
-            GWY_GRAIN_VALUE_MINIMUM_BOUND_ANGLE, },
-        { N_("Maximum bounding size"),
-            GWY_GRAIN_VALUE_MAXIMUM_BOUND_SIZE, },
-        { N_("Maximum bounding direction"),
-            GWY_GRAIN_VALUE_MAXIMUM_BOUND_ANGLE, },
-    };
-    static const GwyEnum quantities_volume[] = {
-        { N_("_Zero basis"),                 GWY_GRAIN_VALUE_VOLUME_0,       },
-        { N_("_Grain minimum basis"),        GWY_GRAIN_VALUE_VOLUME_MIN,     },
-        { N_("_Laplacian background basis"), GWY_GRAIN_VALUE_VOLUME_LAPLACE, },
-    };
-    static const GwyEnum quantities_position[] = {
-        { N_("Center x _position"), GWY_GRAIN_VALUE_CENTER_X, },
-        { N_("Center _y position"), GWY_GRAIN_VALUE_CENTER_Y, },
-    };
-    static const GwyEnum quantities_slope[] = {
-        { N_("Inclination θ"), GWY_GRAIN_VALUE_SLOPE_THETA, },
-        { N_("Inclination φ"), GWY_GRAIN_VALUE_SLOPE_PHI,   },
-    };
     static const GwyEnum modes[] = {
         { N_("_Export raw data"), MODE_RAW,   },
         { N_("Plot _graphs"),     MODE_GRAPH, },
@@ -282,42 +487,24 @@ grain_dist_dialog(GrainDistArgs *args,
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), GTK_WIDGET(table),
                        FALSE, FALSE, 0);
 
-    controls.qlist = append_checkbox_list(table, 0, 0, _("Value"),
-                                          NULL,
-                                          G_N_ELEMENTS(quantities_value),
-                                          quantities_value,
-                                          args->selected,
-                                          args->bitmask);
-    controls.qlist = append_checkbox_list(table, 1, 0, _("Area"),
-                                          controls.qlist,
-                                          G_N_ELEMENTS(quantities_area),
-                                          quantities_area,
-                                          args->selected,
-                                          args->bitmask);
-    controls.qlist = append_checkbox_list(table, 0, 1, _("Boundary"),
-                                          controls.qlist,
-                                          G_N_ELEMENTS(quantities_boundary),
-                                          quantities_boundary,
-                                          args->selected,
-                                          args->bitmask);
-    controls.qlist = append_checkbox_list(table, 1, 1, _("Volume"),
-                                          controls.qlist,
-                                          G_N_ELEMENTS(quantities_volume),
-                                          quantities_volume,
-                                          args->selected,
-                                          args->bitmask);
-    controls.qlist = append_checkbox_list(table, 2, 0, _("Position"),
-                                          controls.qlist,
-                                          G_N_ELEMENTS(quantities_position),
-                                          quantities_position,
-                                          args->selected,
-                                          args->bitmask);
-    controls.qlist = append_checkbox_list(table, 2, 1, _("Slope"),
-                                          controls.qlist,
-                                          G_N_ELEMENTS(quantities_slope),
-                                          quantities_slope,
-                                          args->selected,
-                                          args->bitmask);
+    controls.qlist = append_checkbox_list(table, 0, 0, NULL,
+                                          GRAIN_QUANTITY_SET_VALUE,
+                                          args->selected, args->bitmask);
+    controls.qlist = append_checkbox_list(table, 1, 0, controls.qlist,
+                                          GRAIN_QUANTITY_SET_AREA,
+                                          args->selected, args->bitmask);
+    controls.qlist = append_checkbox_list(table, 0, 1, controls.qlist,
+                                          GRAIN_QUANTITY_SET_BOUNDARY,
+                                          args->selected, args->bitmask);
+    controls.qlist = append_checkbox_list(table, 1, 1, controls.qlist,
+                                          GRAIN_QUANTITY_SET_VOLUME,
+                                          args->selected, args->bitmask);
+    controls.qlist = append_checkbox_list(table, 2, 0, controls.qlist,
+                                          GRAIN_QUANTITY_SET_POSITION,
+                                          args->selected, args->bitmask);
+    controls.qlist = append_checkbox_list(table, 2, 1, controls.qlist,
+                                          GRAIN_QUANTITY_SET_SLOPE,
+                                          args->selected, args->bitmask);
 
     for (l = controls.qlist; l; l = g_slist_next(l))
         g_signal_connect_swapped(l->data, "toggled",
@@ -446,6 +633,18 @@ grain_dist_dialog_update_sensitivity(GrainDistControls *controls,
     gtk_widget_set_sensitive(controls->ok, args->selected & args->bitmask);
 }
 
+static const QuantityInfo*
+find_quantity_info(GwyGrainQuantity quantity)
+{
+    guint i;
+
+    for (i = 0; i < G_N_ELEMENTS(quantities); i++) {
+        if (quantities[i].quantity == quantity)
+            return quantities + i;
+    }
+    g_return_val_if_reached(NULL);
+}
+
 static void
 add_one_distribution(GwyContainer *container,
                      GwyDataField *dfield,
@@ -454,94 +653,10 @@ add_one_distribution(GwyContainer *container,
                      GwyGrainQuantity quantity,
                      gint resolution)
 {
-    static const GwyEnum titles[] = {
-        { N_("Grain Projected Area Histogram"),
-            GWY_GRAIN_VALUE_PROJECTED_AREA, },
-        { N_("Grain Equivalent Square Side Histogram"),
-            GWY_GRAIN_VALUE_EQUIV_SQUARE_SIDE, },
-        { N_("Grain Equivalent Disc Radius Histogram"),
-            GWY_GRAIN_VALUE_EQUIV_DISC_RADIUS, },
-        { N_("Grain Surface Area Histogram"),
-            GWY_GRAIN_VALUE_SURFACE_AREA, },
-        { N_("Grain Maximum Value Histogram"),
-            GWY_GRAIN_VALUE_MAXIMUM, },
-        { N_("Grain Minimum Value Histogram"),
-            GWY_GRAIN_VALUE_MINIMUM, },
-        { N_("Grain Mean Value Histogram"),
-            GWY_GRAIN_VALUE_MEAN, },
-        { N_("Grain Median Value Histogram"),
-            GWY_GRAIN_VALUE_MEDIAN, },
-        { N_("Grain Projected Boundary Length Histogram"),
-            GWY_GRAIN_VALUE_FLAT_BOUNDARY_LENGTH, },
-        { N_("Grain Minimum Bounding Size Histogram"),
-            GWY_GRAIN_VALUE_MINIMUM_BOUND_SIZE, },
-        { N_("Grain Minimum Bounding Direction Histogram"),
-            GWY_GRAIN_VALUE_MINIMUM_BOUND_ANGLE, },
-        { N_("Grain Maximum Bounding Size Histogram"),
-            GWY_GRAIN_VALUE_MAXIMUM_BOUND_SIZE, },
-        { N_("Grain Maximum Bounding Direction Histogram"),
-            GWY_GRAIN_VALUE_MAXIMUM_BOUND_ANGLE, },
-        { N_("Grain Center X Histogram"),
-            GWY_GRAIN_VALUE_CENTER_X, },
-        { N_("Grain Center Y Histogram"),
-            GWY_GRAIN_VALUE_CENTER_Y, },
-        { N_("Grain Inclination θ Histogram"),
-            GWY_GRAIN_VALUE_SLOPE_THETA, },
-        { N_("Grain Inclination φ Histogram"),
-            GWY_GRAIN_VALUE_SLOPE_PHI, },
-        { N_("Grain Volume (Zero) Histogram"),
-            GWY_GRAIN_VALUE_VOLUME_0, },
-        { N_("Grain Volume (Minimum) Histogram"),
-            GWY_GRAIN_VALUE_VOLUME_MIN, },
-        { N_("Grain Volume (Laplacian) Histogram"),
-            GWY_GRAIN_VALUE_VOLUME_LAPLACE, },
-    };
-    static const GwyEnum descriptions[] = {
-        { N_("Grain proj. areas"),
-            GWY_GRAIN_VALUE_PROJECTED_AREA, },
-        { N_("Grain equiv. square sides"),
-            GWY_GRAIN_VALUE_EQUIV_SQUARE_SIDE, },
-        { N_("Grain equiv. disc radii"),
-            GWY_GRAIN_VALUE_EQUIV_DISC_RADIUS, },
-        { N_("Grain surf. areas"),
-            GWY_GRAIN_VALUE_SURFACE_AREA, },
-        { N_("Grain max. values"),
-            GWY_GRAIN_VALUE_MAXIMUM, },
-        { N_("Grain min. values"),
-            GWY_GRAIN_VALUE_MINIMUM, },
-        { N_("Grain mean values"),
-            GWY_GRAIN_VALUE_MEAN, },
-        { N_("Grain median values"),
-            GWY_GRAIN_VALUE_MEDIAN, },
-        { N_("Grain proj. boundary lengths"),
-            GWY_GRAIN_VALUE_FLAT_BOUNDARY_LENGTH, },
-        { N_("Grain min. bound. sizes"),
-            GWY_GRAIN_VALUE_MINIMUM_BOUND_SIZE, },
-        { N_("Grain min. bound. directions"),
-            GWY_GRAIN_VALUE_MINIMUM_BOUND_ANGLE, },
-        { N_("Grain max. bound. sizes"),
-            GWY_GRAIN_VALUE_MAXIMUM_BOUND_SIZE, },
-        { N_("Grain max. bound. directions"),
-            GWY_GRAIN_VALUE_MAXIMUM_BOUND_ANGLE, },
-        { N_("Grain center x positions"),
-            GWY_GRAIN_VALUE_CENTER_X, },
-        { N_("Grain center y positions"),
-            GWY_GRAIN_VALUE_CENTER_Y, },
-        { N_("Grain incl. θ"),
-            GWY_GRAIN_VALUE_SLOPE_THETA, },
-        { N_("Grain incl. φ"),
-            GWY_GRAIN_VALUE_SLOPE_PHI, },
-        { N_("Grain volumes (zero)"),
-            GWY_GRAIN_VALUE_VOLUME_0, },
-        { N_("Grain volumes (minimum)"),
-            GWY_GRAIN_VALUE_VOLUME_MIN, },
-        { N_("Grain volumes (laplacian)"),
-            GWY_GRAIN_VALUE_VOLUME_LAPLACE, },
-    };
     GwyGraphCurveModel *cmodel;
     GwyGraphModel *gmodel;
     GwyDataLine *dataline;
-    const gchar *s;
+    const QuantityInfo *qinfo;
 
     dataline = gwy_data_field_grains_get_distribution(dfield, NULL, NULL,
                                                       ngrains, grains, quantity,
@@ -551,14 +666,14 @@ add_one_distribution(GwyContainer *container,
     gwy_graph_model_add_curve(gmodel, cmodel);
     g_object_unref(cmodel);
 
-    s = gwy_enum_to_string(quantity, titles, G_N_ELEMENTS(titles));
+    qinfo = find_quantity_info(quantity);
     g_object_set(gmodel,
-                 "title", _(s),
+                 "title", _(qinfo->gtitle),
                  "axis-label-left", _("count"),
+                 "axis-label-bottom", qinfo->symbol,
                  NULL);
     gwy_graph_model_set_units_from_data_line(gmodel, dataline);
-    s = gwy_enum_to_string(quantity, descriptions, G_N_ELEMENTS(descriptions));
-    g_object_set(cmodel, "description", s, NULL);
+    g_object_set(cmodel, "description", _(qinfo->cdesc), NULL);
     gwy_graph_curve_model_set_data_from_dataline(cmodel, dataline, 0, 0);
     g_object_unref(dataline);
 
