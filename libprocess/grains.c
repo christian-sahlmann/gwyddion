@@ -1623,7 +1623,7 @@ gwy_grain_quantity_needs_same_units(GwyGrainQuantity quantity)
  * gwy_grain_quantity_get_units:
  * @quantity: A grain quantity.
  * @siunitxy: Lateral SI unit of data.
- * @siunityz: Value SI unit of data.
+ * @siunitz: Value SI unit of data.
  * @result: An SI unit to set to the units of @quantity.
  *          It can be %NULL, a new SI unit is created then and returned.
  *
@@ -1664,8 +1664,8 @@ gwy_grain_quantity_get_units(GwyGrainQuantity quantity,
                        | (1 << GWY_GRAIN_VALUE_SLOPE_THETA)),
     };
 
-    g_return_val_if_fail(GWY_IS_SI_UNIT(siunitxy), NULL);
-    g_return_val_if_fail(GWY_IS_SI_UNIT(siunitz), NULL);
+    g_return_val_if_fail(GWY_IS_SI_UNIT(siunitxy), result);
+    g_return_val_if_fail(GWY_IS_SI_UNIT(siunitz), result);
 
     if ((1 << quantity) & coord_units)
         return gwy_si_unit_power(siunitxy, 1, result);
@@ -1682,7 +1682,7 @@ gwy_grain_quantity_get_units(GwyGrainQuantity quantity,
         return result;
     }
 
-    g_return_val_if_reached(NULL);
+    g_return_val_if_reached(result);
 }
 
 /**
