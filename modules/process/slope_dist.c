@@ -482,13 +482,13 @@ slope_do_graph_theta(GwyDataField *dfield,
 
         itheta = floor(args->size*xd[i]/max);
         itheta = CLAMP(itheta, 0, args->size-1);
-        data[itheta] += n/max;
+        data[itheta] += args->size/(n*max);
     }
     g_object_unref(xder);
 
     gmodel = gwy_graph_model_new();
     siunitx = gwy_si_unit_new("deg");
-    siunity = gwy_si_unit_new(NULL);
+    siunity = gwy_si_unit_new("deg^-1");
     g_object_set(gmodel,
                  "title", _("Inclination Distribution"),
                  "si-unit-x", siunitx,
