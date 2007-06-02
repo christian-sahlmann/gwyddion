@@ -161,9 +161,8 @@ grain_dist(GwyContainer *data, GwyRunType run)
     args.units_equal = gwy_si_unit_equal(siunitxy, siunitz);
     args.bitmask = 0xffffffffU;
     if (!args.units_equal)
-        args.bitmask ^= (1 << GWY_GRAIN_VALUE_SURFACE_AREA)
-                         | (1 << GWY_GRAIN_VALUE_SLOPE_THETA)
-                         | (1 << GWY_GRAIN_VALUE_SLOPE_PHI);
+        args.bitmask ^= ((1 << GWY_GRAIN_VALUE_SURFACE_AREA)
+                         | (1 << GWY_GRAIN_VALUE_SLOPE_THETA));
 
     if (run == GWY_RUN_IMMEDIATE)
         grain_dist_run(&args, data, dfield, mfield);
@@ -486,6 +485,10 @@ add_one_distribution(GwyContainer *container,
             GWY_GRAIN_VALUE_CENTER_X, },
         { N_("Grain Center Y Histogram"),
             GWY_GRAIN_VALUE_CENTER_Y, },
+        { N_("Grain Inclination θ Histogram"),
+            GWY_GRAIN_VALUE_SLOPE_THETA, },
+        { N_("Grain Inclination φ Histogram"),
+            GWY_GRAIN_VALUE_SLOPE_PHI, },
         { N_("Grain Volume (Zero) Histogram"),
             GWY_GRAIN_VALUE_VOLUME_0, },
         { N_("Grain Volume (Minimum) Histogram"),
@@ -524,6 +527,10 @@ add_one_distribution(GwyContainer *container,
             GWY_GRAIN_VALUE_CENTER_X, },
         { N_("Grain center y positions"),
             GWY_GRAIN_VALUE_CENTER_Y, },
+        { N_("Grain incl. θ"),
+            GWY_GRAIN_VALUE_SLOPE_THETA, },
+        { N_("Grain incl. φ"),
+            GWY_GRAIN_VALUE_SLOPE_PHI, },
         { N_("Grain volumes (zero)"),
             GWY_GRAIN_VALUE_VOLUME_0, },
         { N_("Grain volumes (minimum)"),
