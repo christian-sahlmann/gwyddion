@@ -1633,7 +1633,7 @@ gwy_grain_quantity_get_units(GwyGrainQuantity quantity,
         return gwy_si_unit_power(siunitz, 1, result);
     if ((1 << quantity) & area_units)
         return gwy_si_unit_power(siunitxy, 2, result);
-    if ((1 << quantity) & area_units)
+    if ((1 << quantity) & volume_units)
         return gwy_si_unit_power_multiply(siunitxy, 2, siunitz, 1, result);
     if ((1 << quantity) & angle_units) {
         if (!result)
