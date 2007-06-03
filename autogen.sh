@@ -62,7 +62,10 @@ echo "$*" | grep --quiet -- '--quiet\>\|--silent\>' && QUIET=">/dev/null"
 # The world is cruel.
 if test -z "$NO_AUTOCONF"; then
   AC_VERSION=`$AUTOCONF --version | sed -e '2,$ d' -e 's/ *([^()]*)$//' -e 's/.* \(.*\)/\1/' -e 's/-p[0-9]\+//'`
-  if test "$AC_VERSION" '<' "2.59"; then
+  AC_VERSION_MAJOR=`echo $AC_VERSION | sed -e 's/\..*//'`
+  AC_VERSION_MINOR=`echo $AC_VERSION | sed -e 's/^[0-9]\+\.\([0-9]*\).*/\1/'`
+  if test "$AC_VERSION_MAJOR" -lt 2 \
+     || test "$AC_VERSION_MAJOR" = 2 -a  "$AC_VERSION_MINOR" -lt 59; then
     echo
     echo "**ERROR**: You need at least autoconf-2.59 installed to re-generate"
     echo "all the $PROJECT Makefiles."
@@ -76,7 +79,10 @@ fi
 
 if test -z "$NO_AUTOMAKE"; then
   AM_VERSION=`$AUTOMAKE --version | sed -e '2,$ d' -e 's/ *([^()]*)$//' -e 's/.* \(.*\)/\1/' -e 's/-p[0-9]\+//'`
-  if test "$AM_VERSION" '<' "1.7"; then
+  AM_VERSION_MAJOR=`echo $AM_VERSION | sed -e 's/\..*//'`
+  AM_VERSION_MINOR=`echo $AM_VERSION | sed -e 's/^[0-9]\+\.\([0-9]*\).*/\1/'`
+  if test "$AM_VERSION_MAJOR" -lt 1 \
+     || test "$AM_VERSION_MAJOR" = 1 -a  "$AM_VERSION_MINOR" -lt 7; then
     echo
     echo "**ERROR**: You need at least automake-1.7 installed to re-generate"
     echo "all the $PROJECT Makefiles."
@@ -100,7 +106,10 @@ test -n "$NO_AUTOMAKE" || ($ACLOCAL --version) < /dev/null > /dev/null 2>&1 || {
 
 if test -z "$NO_LIBTOOL"; then
   LT_VERSION=`$LIBTOOLIZE --version | grep libtool | sed 's/.* \([0-9.]*\)[-a-z0-9]*$/\1/'`
-  if test "$LT_VERSION" '<' "1.4"; then
+  LT_VERSION_MAJOR=`echo $LT_VERSION | sed -e 's/\..*//'`
+  LT_VERSION_MINOR=`echo $LT_VERSION | sed -e 's/^[0-9]\+\.\([0-9]*\).*/\1/'`
+  if test "$LT_VERSION_MAJOR" -lt 1 \
+     || test "$LT_VERSION_MAJOR" = 1 -a  "$LT_VERSION_MINOR" -lt 4; then
     echo
     echo "**ERROR**: You need at least libtool-1.4 installed to re-generate"
     echo "all the $PROJECT Makefiles."
@@ -123,7 +132,10 @@ esac
 
 if test -z "$NO_GETTEXTIZE"; then
   GT_VERSION=`$GETTEXTIZE --version | grep gettextize | sed 's/.* \([0-9.]*\)[-a-z0-9]*$/\1/'`
-  if test "$GT_VERSION" '<' "0.12"; then
+  GT_VERSION_MAJOR=`echo $GT_VERSION | sed -e 's/\..*//'`
+  GT_VERSION_MINOR=`echo $GT_VERSION | sed -e 's/^[0-9]\+\.\([0-9]*\).*/\1/'`
+  if test "$GT_VERSION_MAJOR" -lt 0 \
+     || test "$GT_VERSION_MAJOR" = 0 -a  "$GT_VERSION_MINOR" -lt 12; then
     echo
     echo "**ERROR**: You need at least gettext-0.12 installed to re-generate"
     echo "all the $PROJECT Makefiles."
