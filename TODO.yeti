@@ -3,7 +3,6 @@
   - fore/back detection, connected area splitting
   - polynomial leveling with disjoint z0
   - profiles along arbitrary curves
-  - explicit range in color range
   - nanoindentation
   - 2D autocorrelation
   - isotropic autocorrelation
@@ -27,7 +26,6 @@
   libgwydgets: GwyGraphStatusType, GwyGraphPointType, GwyGraphLabelPosition
 - Check whether we always emit notification when object properties change
 - Add preview to: artithmetic
-- It should be possible to export measurement from Distance tool
 - Invent some initialization for Laplace solver so that it can only converge
   for near final state
 - Write a Postscript export module based on JP's work -- or wait for Cairo?
