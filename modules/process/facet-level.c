@@ -68,7 +68,7 @@ facet_level(GwyContainer *data, GwyRunType run)
     GwyDataField *dfield, *old;
     GQuark quark;
     gdouble c, bx, by, b2;
-    gdouble p, progress, maxb2 = 666, eps = 1e-8;
+    gdouble p, progress, maxb2 = 666, eps = 1e-6;
     gint i, id;
     gboolean cancelled = FALSE;
 
@@ -106,6 +106,8 @@ facet_level(GwyContainer *data, GwyRunType run)
     while (i < 100) {
         facet_level_coeffs(dfield, &bx, &by);
         b2 = bx*bx + by*by;
+        bx *= gwy_data_field_get_xmeasure(dfield);
+        by *= gwy_data_field_get_ymeasure(dfield);
         if (!i)
             maxb2 = MAX(b2, eps);
         c = -0.5*(bx*gwy_data_field_get_xres(dfield)
@@ -147,8 +149,8 @@ facet_level_coeffs(GwyDataField *dfield, gdouble *bx, gdouble *by)
         *bx = *by = 0;
         return;
     }
-    xr = gwy_data_field_get_xreal(dfield)/xres;
-    yr = gwy_data_field_get_yreal(dfield)/yres;
+    xr = gwy_data_field_get_xmeasure(dfield);
+    yr = gwy_data_field_get_ymeasure(dfield);
 
     data = gwy_data_field_get_data(dfield);
     sumvx = sumvy = sumvz = 0.0;
@@ -166,12 +168,12 @@ facet_level_coeffs(GwyDataField *dfield, gdouble *bx, gdouble *by)
             q = exp(20.0*(vx*vx + vy*vy));
             sumvx += vx/q;
             sumvy += vy/q;
-            sumvz -= 1.0/q;
+            sumvz += 1.0/q;
         }
     }
-    q = sumvz/-1.0;
-    *bx = sumvx/q*xr;
-    *by = sumvy/q*yr;
+    q = sumvz;
+    *bx = sumvx/q;
+    *by = sumvy/q;
     gwy_debug("(%g, %g, %g) %g (%g, %g)", sumvx, sumvy, sumvz, q, *bx, *by);
 }
 
