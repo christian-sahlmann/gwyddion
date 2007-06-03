@@ -21,12 +21,16 @@
 #include "config.h"
 #include <string.h>
 #include <stdlib.h>
+#include <time.h>
+#include <stdio.h>
+#include <glib/gstdio.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwyutils.h>
 #include <libgwyddion/gwymath.h>
 #include <libprocess/datafield.h>
 #include <libgwymodule/gwymodule-file.h>
 #include <app/gwymoduleutils-file.h>
+#include <app/gwyapp.h>
 
 #include "err.h"
 #include "get.h"
@@ -89,6 +93,10 @@ static GwyContainer* sdfile_load_bin        (const gchar *filename,
 static GwyContainer* sdfile_load_text       (const gchar *filename,
                                              GwyRunType mode,
                                              GError **error);
+static gboolean      sdfile_export_text     (GwyContainer *data,
+                                             const gchar *filename,
+                                             GwyRunType mode,
+                                             GError **error);
 static GwyContainer* micromap_load          (const gchar *filename,
                                              GwyRunType mode,
                                              GError **error);
@@ -115,7 +123,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Surfstand group SDF (Surface Data File) files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.8",
+    "0.9",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -138,7 +146,7 @@ module_register(void)
                            (GwyFileDetectFunc)&sdfile_detect_text,
                            (GwyFileLoadFunc)&sdfile_load_text,
                            NULL,
-                           NULL);
+                           (GwyFileSaveFunc)&sdfile_export_text);
     gwy_file_func_register("micromap",
                            N_("Micromap SDF files (.sdfa)"),
                            (GwyFileDetectFunc)&micromap_detect,
@@ -334,6 +342,75 @@ sdfile_load_text(const gchar *filename,
         g_hash_table_destroy(sdfile.extras);
 
     return container;
+}
+
+static gboolean
+sdfile_export_text(G_GNUC_UNUSED GwyContainer *data,
+                   const gchar *filename,
+                   G_GNUC_UNUSED GwyRunType mode,
+                   GError **error)
+{
+    enum { SCALE = 65535 };
+    static const gchar header_format[] =
+        "aBCR-0.0\n"
+        "ManufacID   = Gwyddion\n"
+        "CreateDate  = %02u%02u%04u%02u%02u\n"
+        "ModDate     = %02u%02u%04u%02u%02u\n"
+        "NumPoints   = %d\n"
+        "NumProfiles = %d\n"
+        "Xscale      = %e\n"
+        "Yscale      = %e\n"
+        "Zscale      = %e\n"
+        "Zresolution = -1\n"  /* FIXME: Dunno */
+        "Compression = 0\n"
+        "DataType    = %d\n"
+        "CheckType   = 0\n"
+        "NumDataSet  = 1\n"
+        "NanPresent  = 0\n"
+        "*\n";
+
+    GwyDataField *dfield;
+    const gdouble *d;
+    gint xres, yres, i;
+    const struct tm *ttm;
+    gchar buf[24];
+    time_t t;
+    FILE *fh;
+
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield, 0);
+    if (!dfield) {
+        err_NO_CHANNEL_EXPORT(error);
+        return FALSE;
+    }
+
+    if (!(fh = g_fopen(filename, "w"))) {
+        err_OPEN_WRITE(error);
+        return FALSE;
+    }
+
+    d = gwy_data_field_get_data_const(dfield);
+    xres = gwy_data_field_get_xres(dfield);
+    yres = gwy_data_field_get_yres(dfield);
+
+    /* We do not keep date information, just use the current time */
+    time(&t);
+    ttm = localtime(&t);
+    fprintf(fh, header_format,
+            ttm->tm_mday, ttm->tm_mon, ttm->tm_year, ttm->tm_hour, ttm->tm_min,
+            ttm->tm_mday, ttm->tm_mon, ttm->tm_year, ttm->tm_hour, ttm->tm_min,
+            xres, yres,
+            gwy_data_field_get_xmeasure(dfield),
+            gwy_data_field_get_ymeasure(dfield),
+            1.0,
+            SDF_FLOAT);
+    for (i = 0; i < xres*yres; i++) {
+        g_ascii_formatd(buf, sizeof(buf), "%g", d[i]);
+        fputs(buf, fh);
+        fputc('\n', fh);
+    }
+    fclose(fh);
+
+    return TRUE;
 }
 
 #define GET_MICROMAP_PARAM(hash, key, val, error, var) \
@@ -780,4 +857,3 @@ sdfile_read_data_text(SDFile *sdfile,
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
-
