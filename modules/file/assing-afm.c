@@ -65,7 +65,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Assing AFM data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.15",
+    "0.16",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -211,6 +211,10 @@ aafm_export(G_GNUC_UNUSED GwyContainer *data,
     gboolean ok = TRUE;
 
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield, 0);
+    if (!dfield) {
+        err_NO_CHANNEL_EXPORT(error);
+        return FALSE;
+    }
 
     if (!(fh = g_fopen(filename, "wb"))) {
         err_OPEN_WRITE(error);

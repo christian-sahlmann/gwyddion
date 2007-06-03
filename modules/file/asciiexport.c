@@ -65,7 +65,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Exports data as simple ASCII matrix."),
     "Yeti <yeti@gwyddion.net>",
-    "1.1",
+    "1.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -108,6 +108,10 @@ asciiexport_export(G_GNUC_UNUSED GwyContainer *data,
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
                                      GWY_APP_DATA_FIELD_ID, &id,
                                      0);
+    if (!dfield) {
+        err_NO_CHANNEL_EXPORT(error);
+        return FALSE;
+    }
 
     asciiexport_load_args(gwy_app_settings_get(), &args);
     if (mode == GWY_RUN_INTERACTIVE) {

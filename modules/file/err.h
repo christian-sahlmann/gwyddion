@@ -134,6 +134,13 @@ err_NO_DATA(GError **error)
                 _("File contains no (importable) data."));
 }
 
+static inline void
+err_NO_CHANNEL_EXPORT(GError **error)
+{
+    g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                _("File contains no exportable channel."));
+}
+
 /* Cancelled */
 static inline void
 err_CANCELLED(GError **error)

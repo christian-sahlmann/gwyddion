@@ -324,7 +324,7 @@ static GwyModuleInfo module_info = {
        "TARGA. "
        "Import support relies on GDK and thus may be installation-dependent."),
     "Yeti <yeti@gwyddion.net>",
-    "6.0",
+    "6.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -1582,8 +1582,10 @@ pixmap_draw_pixbuf(GwyContainer *data,
     gwy_app_data_browser_get_current(GWY_APP_DATA_VIEW, &args.data_view,
                                      GWY_APP_DATA_FIELD, &args.dfield,
                                      0);
-    g_return_val_if_fail(GWY_IS_DATA_VIEW(args.data_view), NULL);
-    g_return_val_if_fail(GWY_IS_DATA_FIELD(args.dfield), NULL);
+    if (!args.dfield || !args.data_view) {
+        err_NO_CHANNEL_EXPORT(error);
+        return FALSE;
+    }
     key = gwy_data_view_get_data_prefix(args.data_view);
     buf = g_strconcat(key, "/realsquare", NULL);
     gwy_container_gis_boolean_by_name(data, buf, &args.realsquare);
