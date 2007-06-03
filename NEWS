@@ -1,4 +1,4 @@
-2.5.20070526
+2.5.20070602
 
 2.6 (0000-00-00)
 Application:
@@ -30,7 +30,8 @@ Libraries:
   drawn the `wrong' direction was fixed.
 - libgwydgets: Invisible graph label (key) getting in the way of selection was
   fixed.
-- libprocess: New grain distribution quantities x and y centre position.
+- libprocess: New grain distribution quantities x and y centre position,
+  inclination theta and phi.
 - libgwydgets: GwyLayerBasic has a new "default-range-type" property for color
   range mapping type used when none is set in the data.
 - libgwyprocess: Wrong type assertions in gwy_data_line_fft_raw() were fixed.
@@ -45,6 +46,8 @@ Libraries:
 - libgwydgets: GwyGraph's model is registered as property "model".
 - libgwydgets: GwyGraphWindow `logarithmic scale' buttons initial state
   is set properly and it reflects graph model changes.
+- libgwyprocess: Elliptic area functions invalidate data field properly.
+- libgwyddion: GwyContainer has methods to obtain all keys.
 
 Modules:
 - Path level tool (new): Levels rows along arbitrary lines.
@@ -64,9 +67,12 @@ Modules:
 - ASCII export: It has options to enforce dot as the decimal separator and to
   add a comment header with some channel information.
 - Nanoscope: Supports Nanoscope III STM files.
+- Nanonis: Supports version 2 files.
 - WSxM: Flipped data was fixed.
 - Polynomial distortion: GtkEntry errors when instant update took too long
   were fixed.
+- Grain distributions: New Correlate function to plot one grain quantity as
+  a function of another.
 - Convolution filter: Divisor value is actually used for normalization
   instead of being ignored.
 - Point layer: Radius indicator scales properly when the layer is scaled.
@@ -75,7 +81,8 @@ Modules:
   user interface labels were fixed.
 - File modules: Some sanity checks were added.
 - Distance tool: It is possibile to save the table.
-- Grain distributions: Grain positions were added.
+- Grain distributions: Grain positions and inclinations were added.
+- Slope distribution: Inclination theta distribution was added.
 - 2D FFT filter: Resampled vertical resolution is displayed properly (instead
   of displaying horizontal resolution again).
 - Read Value, Level3: Show selection check button initial state is set
@@ -108,6 +115,7 @@ Other:
   documentation (Gtk+, GLib, ...) instead of random local locations.
   Packagers are recommended to rebuild the documentation to obtain local
   links appropriate for their systems.
+- API documentation look and feel matches gwyddion.net, more or less.
 
 
 2.5 (2007-03-10)
