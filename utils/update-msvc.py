@@ -301,8 +301,9 @@ def fill_templates(makefile):
     templates = fix_suffixes(templates, '.gwt')
     for templ in templates:
         text = orig = get_file(templ + '.gwt')
-        text = re_rcsid.sub('# This file was GENERATED from %s.gwt by %s.'
-                            % (templ, me), text)
+        # Keep the string obfuscated to prevent generated file match
+        text = re_rcsid.sub('# This is a %s file: from %s.gwt by %s.'
+                            % ('GENERATED', templ, me), text)
         m = re_template.search(text)
         while m:
             text = text[:m.start()] \

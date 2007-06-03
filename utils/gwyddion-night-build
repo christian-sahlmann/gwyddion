@@ -100,7 +100,8 @@ function build_documentation() {
 
 function check_coding_style() {
   # Source coding style
-  grep -r --include '*.[ch]' -L ' This is a GENERATED file ' . \
+  # Keep the `GENERATED' string quoted to prevent match here
+  grep -r --include '*.[ch]' -L ' This is a 'GENERATED' file\>' . \
     | grep -Ev '^\./gwyddion-|/(main|test|wtest)\.c' \
     | xargs ./utils/check-coding-style.py \
     | cat --squeeze-blank >$logdir/coding-style.log

@@ -38,8 +38,9 @@ BUILT_SOURCES += $(mkenum_built_sources)
 $(MKENUM_NAME).h: $(MKENUM_NAME).h.stamp
 	@true
 
+# Keep the `GENERATED' string quoted to prevent match here
 $(MKENUM_NAME).h.stamp: $(MKENUM_HFILES) $(MKENUM_NAME).h.template $(mkenum_self)
-	echo '/* This is a GENERATED file */' >$(MKENUM_NAME).h.xgen \
+	echo '/* This is a 'GENERATED' file. */' >$(MKENUM_NAME).h.xgen \
 	&& $(GLIB_MKENUMS) --template $(srcdir)/$(MKENUM_NAME).h.template \
 		$(srcdir)/$(MKENUM_HFILES) \
 		| sed -e 's/_\([123]\)_D/_\1D_/g' \
@@ -49,8 +50,9 @@ $(MKENUM_NAME).h.stamp: $(MKENUM_HFILES) $(MKENUM_NAME).h.template $(mkenum_self
 	&& rm -f $(MKENUM_NAME).h.xgen \
 	&& echo timestamp >$(MKENUM_NAME).h.stamp
 
+# Keep the `GENERATED' string quoted to prevent match here
 $(MKENUM_NAME).c: $(MKENUM_HFILES) $(MKENUM_NAME).c.template $(mkenum_self)
-	echo '/* This is a GENERATED file */' >$(MKENUM_NAME).c.xgen \
+	echo '/* This is a 'GENERATED' file. */' >$(MKENUM_NAME).c.xgen \
 	&& $(GLIB_MKENUMS) --template $(srcdir)/$(MKENUM_NAME).c.template \
 		$(srcdir)/$(MKENUM_HFILES) \
 		| sed -e 's/_\([123]\)_D/_\1D_/g' \

@@ -39,8 +39,9 @@ $(GENMARSHAL_NAME).h: $(GENMARSHAL_NAME).h.stamp
 
 # XXX: Add G_GNUC_INTERNAL manually, glib-genmarshal can do it, but too new
 # version is required (2.13+)
+# Keep the `GENERATED' string quoted to prevent match here
 $(GENMARSHAL_NAME).h.stamp: $(GENMARSHAL_NAME).list $(genmarshal_self)
-	echo '/* This is a GENERATED file */' >$(GENMARSHAL_NAME).h.xgen \
+	echo '/* This is a 'GENERATED' file */' >$(GENMARSHAL_NAME).h.xgen \
 	&& $(GLIB_GENMARSHAL) --header --prefix=$(GENMARSHAL_PREFIX) \
 		$(srcdir)/$(GENMARSHAL_NAME).list \
 		| sed -e 's/^extern /G_GNUC_INTERNAL /' \
@@ -50,8 +51,9 @@ $(GENMARSHAL_NAME).h.stamp: $(GENMARSHAL_NAME).list $(genmarshal_self)
 	&& rm -f $(GENMARSHAL_NAME).h.xgen \
 	&& echo timestamp >$(GENMARSHAL_NAME).h.stamp
 
+# Keep the `GENERATED' string quoted to prevent match here
 $(GENMARSHAL_NAME).c: $(GENMARSHAL_NAME).list $(genmarshal_self)
-	echo '/* This is a GENERATED file */' >$(GENMARSHAL_NAME).c.xgen \
+	echo '/* This is a 'GENERATED' file */' >$(GENMARSHAL_NAME).c.xgen \
 	&& echo '#include "$(GENMARSHAL_NAME).h"' >>$(GENMARSHAL_NAME).c.xgen \
 	&& $(GLIB_GENMARSHAL) --body --prefix=$(GENMARSHAL_PREFIX) \
 		$(srcdir)/$(GENMARSHAL_NAME).list \

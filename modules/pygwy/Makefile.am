@@ -61,11 +61,14 @@ pygwy.defs: $(PYGWY_H_FILES)
 	$(PYTHON) $(PYGTK_CODEGENDIR)/h2def.py $(PYGWY_H_FILES) >pygwy.defs
 
 # The sed fixes pygwy_add_constants() and pygwy_register_classes() to static
-# functions.
+# functions, and standardized `generated' line for automated exclusions of
+# generated files.
+# Keep the `GENERATED' string quoted to prevent match here
 pygwywrap.c: pygwy-codegen.py pygwy.defs pygwy.override
 	$(PYTHON) ./pygwy-codegen.py --codegendir $(PYGTK_CODEGENDIR) \
 	  --override pygwy.override --prefix pygwy pygwy.defs \
-	  | sed -e 's/^void$$/static void/' >pygwywrap.c
+	  | sed -e 's/^void$$/static void/' \
+	        -e '1s#.*#/* This is a 'GENERATED' file */#' >pygwywrap.c
 endif
 
 MAINTAINERCLEANFILES = makefile.msc
