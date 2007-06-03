@@ -19,6 +19,7 @@
  */
 
 #include "config.h"
+#include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libprocess/level.h>
@@ -40,7 +41,7 @@ static GwyModuleInfo module_info = {
     N_("Automatic facet-orientation based levelling. "
        "Levels data to make facets point up."),
     "Yeti <yeti@gwyddion.net>",
-    "1.2",
+    "1.3",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -77,6 +78,22 @@ facet_level(GwyContainer *data, GwyRunType run)
                                      GWY_APP_DATA_FIELD_ID, &id,
                                      0);
     g_return_if_fail(dfield && quark);
+
+    if (!gwy_si_unit_equal(gwy_data_field_get_si_unit_xy(dfield),
+                           gwy_data_field_get_si_unit_z(dfield))) {
+        GtkWidget *dialog;
+
+        dialog = gtk_message_dialog_new
+                        (gwy_app_find_window_for_channel(data, id),
+                         GTK_DIALOG_DESTROY_WITH_PARENT,
+                         GTK_MESSAGE_ERROR,
+                         GTK_BUTTONS_OK,
+                         _("Facet level: Lateral and value units must match."));
+        gtk_dialog_run(GTK_DIALOG(dialog));
+        gtk_widget_destroy(dialog);
+        return;
+    }
+
     old = dfield;
     dfield = gwy_data_field_duplicate(dfield);
 
