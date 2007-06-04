@@ -442,8 +442,8 @@ gwy_data_field_circular_area_extract_with_pos(GwyDataField *data_field,
             memcpy(data + count, d + (row + i)*xres + col + jfrom,
                    (jto - jfrom + 1)*sizeof(gdouble));
             for (j = jfrom; j <= jto; j++) {
-                xpos[count] = j - col;
-                ypos[count] = i - row;
+                xpos[count] = j;
+                ypos[count] = i;
                 count++;
             }
         }
