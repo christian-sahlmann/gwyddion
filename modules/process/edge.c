@@ -161,7 +161,7 @@ module_register(void)
                               NULL,
                               EDGE_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
-                              N_("Laplacian of Gaussian edge detection "
+                              N_("Laplacian of Gaussian step detection "
                                  "presentation"));
     gwy_process_func_register("edge_canny",
                               (GwyProcessFunc)&edge,
@@ -176,7 +176,7 @@ module_register(void)
                               NULL,
                               EDGE_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
-                              N_("Local RMS value based edge detection "
+                              N_("Local RMS value based step detection "
                                  "presentation"));
     gwy_process_func_register("edge_rms_edge",
                               (GwyProcessFunc)&edge,
@@ -184,7 +184,7 @@ module_register(void)
                               NULL,
                               EDGE_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
-                              N_("Local RMS value based edge detection "
+                              N_("Local RMS value based step detection "
                                  "with postprocessing"));
     gwy_process_func_register("edge_nonlinearity",
                               (GwyProcessFunc)&edge,
@@ -216,7 +216,7 @@ module_register(void)
                               NULL,
                               EDGE_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
-                              N_("Local inclination based edge detection "
+                              N_("Local inclination visualization "
                                  "presentation"));
     /*
     gwy_process_func_register("edge_local_maxima",
@@ -233,7 +233,7 @@ module_register(void)
                               NULL,
                               EDGE_UI_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
-                              N_("Zero crossing edge detection presentation"));
+                              N_("Zero crossing step detection presentation"));
 
     return TRUE;
 }
@@ -591,7 +591,7 @@ zero_crossing_dialog(ZeroCrossingArgs *args,
     controls.args = args;
     controls.in_init = TRUE;
 
-    dialog = gtk_dialog_new_with_buttons(_("Zero Crossing Edge Detection"),
+    dialog = gtk_dialog_new_with_buttons(_("Zero Crossing Step Detection"),
                                          NULL, 0, NULL);
     gtk_dialog_add_action_widget(GTK_DIALOG(dialog),
                                  gwy_stock_like_button_new(_("_Update"),
@@ -667,7 +667,7 @@ zero_crossing_dialog(ZeroCrossingArgs *args,
                                     &controls, DISPLAY_DATA,
                                     _("Original _image"), DISPLAY_DATA,
                                     _("_LoG convolved"), DISPLAY_LOG,
-                                    _("Detected _edges"), DISPLAY_SHOW,
+                                    _("Detected st_ep"), DISPLAY_SHOW,
                                     NULL);
     row = gwy_radio_buttons_attach_to_table(controls.display_group,
                                             GTK_TABLE(table), 3, row);
