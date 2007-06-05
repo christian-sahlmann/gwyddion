@@ -1,4 +1,4 @@
-2.5.20070602
+2.5.20070605
 
 2.6 (0000-00-00)
 Application:
@@ -48,6 +48,8 @@ Libraries:
   is set properly and it reflects graph model changes.
 - libgwyprocess: Elliptic area functions invalidate data field properly.
 - libgwyddion: GwyContainer has methods to obtain all keys.
+- libgwyprocess: gwy_data_field_circular_area_extract_with_pos() actually
+  extracts positions with origin in the central pixel.
 
 Modules:
 - Path level tool (new): Levels rows along arbitrary lines.
@@ -56,9 +58,17 @@ Modules:
 - Rougness tool (new): ISO roughness parameters evaluation.
 - Cut Graph (new): Extracts parts of graph curves.
 - FD Curve Fit (new): Fits force data curvers.
+- Pygwy: Scripts much closer to first-class data processing and file modules
+  are possible now if the script is written a Python module exporting
+  appropriate interface.
+- Pygwy: It is possible to build on MS Windows (not enabled by default, the
+  module status is still experimental).
+- Pygwy: Various changes to how the Python interpreter is embedded, more
+  not automatically generated functions were added.
 - Pixmap import: It is possible to set arbitrary units, the preview is bigger.
 - Pixmap export: Text size can be set independently, zoom can be specified by
   desired width and height, cases of wrong preview scaling were fixed.
+- Edge: New Step step detection function.
 - Omicron: Imports single point spectra.
 - PSIA: It does not require libTIFF any more, crashes due to PSIA files not
   being proper TIFF files were fixed.
@@ -66,11 +76,14 @@ Modules:
 - Gwyfile: It does not remap channel and graph ids upon load and save.
 - ASCII export: It has options to enforce dot as the decimal separator and to
   add a comment header with some channel information.
+- SDfile: Can export too (text format only).
 - Nanoscope: Supports Nanoscope III STM files.
 - Nanonis: Supports version 2 files.
 - WSxM: Flipped data was fixed.
 - Polynomial distortion: GtkEntry errors when instant update took too long
   were fixed.
+- Facet level: Data with undefined inclinations due to incompatible units are
+  rejected now, convergence test was corrected.
 - Grain distributions: New Correlate function to plot one grain quantity as
   a function of another.
 - Convolution filter: Divisor value is actually used for normalization
@@ -99,6 +112,8 @@ Modules:
   another glyph.
 - Read Value: It no longer displays 123456 as the x pixel coordinate when no
   data is loaded.
+- Edge: Local Nonlinearity and Inclination output is less blocky as the
+  calculations use circular neighbourhoods now.
 - Nanoscope: Can loads files with `Scan Size' in place of `Scan size' field.
 - 2D FFT filter: Exchanged lateral resolutions and units of FFT output and
   filtered image were corrected.
