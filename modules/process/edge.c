@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003-2007 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -97,6 +97,8 @@ static void     harris_do      (GwyDataField *dfield,
                                 GwyDataField *show);
 static void     inclination_do (GwyDataField *dfield,
                                 GwyDataField *show);
+static void     step_do        (GwyDataField *dfield,
+                                GwyDataField *show);
 
 static void zero_crossing                      (GwyContainer *data,
                                                 GwyRunType run);
@@ -145,7 +147,7 @@ static GwyModuleInfo module_info = {
     N_("Several edge detection methods (Laplacian of Gaussian, Canny, "
        "and some experimental), creates presentation."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.9",
+    "1.10",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -218,6 +220,13 @@ module_register(void)
                               GWY_MENU_FLAG_DATA,
                               N_("Local inclination visualization "
                                  "presentation"));
+    gwy_process_func_register("edge_step",
+                              (GwyProcessFunc)&edge,
+                              N_("/_Presentation/_Edge Detection/_Step"),
+                              NULL,
+                              EDGE_RUN_MODES,
+                              GWY_MENU_FLAG_DATA,
+                              N_("Fine step detection presentation"));
     /*
     gwy_process_func_register("edge_local_maxima",
                               (GwyProcessFunc)&edge,
@@ -254,6 +263,7 @@ edge(GwyContainer *data, GwyRunType run, const gchar *name)
         { "edge_nonlinearity",  nonlinearity_do,  },
         { "edge_rms",           rms_do,           },
         { "edge_rms_edge",      rms_edge_do,      },
+        { "edge_step",          step_do,          },
     };
     GwyDataField *dfield, *showfield;
     GQuark dquark, squark;
@@ -461,6 +471,32 @@ inclination_do(GwyDataField *dfield, GwyDataField *show)
         }
     }
     g_free(xp);
+    g_free(z);
+}
+
+static void
+step_do(GwyDataField *dfield, GwyDataField *show)
+{
+    static const gdouble r = 2.5;
+    gint xres, yres, i, j, size, rr;
+    gdouble *d, *z;
+
+    xres = gwy_data_field_get_xres(dfield);
+    yres = gwy_data_field_get_yres(dfield);
+    d = gwy_data_field_get_data(show);
+    rr = (gint)ceil(r);
+
+    size = gwy_data_field_get_circular_area_size(r);
+    z = g_new(gdouble, size);
+    for (i = 0; i < yres; i++) {
+        for (j = 0; j < xres; j++) {
+            gint n;
+
+            n = gwy_data_field_circular_area_extract(dfield, j, i, r, z);
+            gwy_math_sort(n, z);
+            d[i*xres + j] = sqrt(fabs(z[n-1 - n/3] - z[n/3]));
+        }
+    }
     g_free(z);
 }
 
