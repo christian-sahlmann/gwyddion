@@ -1,18 +1,16 @@
 # @(#) $Id$
 
-!INCLUDE $(TOP_SRCDIR)\make.msc
-
-plugin_proxy_module = plugin-proxy.la
-!IFDEF ENABLE_PYGWY
-pygwy_module = pygwy.la
-!ENDIF
 
 <[[:SELF:]]>
 <[[:MODULES:]]>
+!INCLUDE $(TOP_SRCDIR)\make.msc
+!IFDEF ENABLE_PYGWY
+
 SUBDIRS = file graph layer process tools
 
+pygwy_module = pygwy.la
 
-!IFDEF ENABLE_PYGWY
+
 PYGWY_LIBS = \
 	python24.lib \
 	pygobject.lib 
@@ -25,7 +23,6 @@ PYGWY_CFLAGS = \
 PYGWY_LDFLAGS = \
 	/libpath:$(PYTHON_TOP)\PC\VC6 \
 	/libpath:$(PYGOBJECT_TOP)\lib
-!ENDIF
 
 MOD_CFLAGS = \
 	-I . -I $(TOP_SRCDIR) $(COMMON_CFLAGS) $(MOD_CRUNTIME) \
@@ -40,18 +37,21 @@ MOD_LINK = \
 
 
 ## targets
-all: mod sub-all
+all: mod
 
 mod: $(MODULES)
 
-install: install-mod sub-install
+install: install-mod
 
-clean:: sub-clean
+clean::
 
 !INCLUDE $(TOP_SRCDIR)\rules.msc
 
 <[[:MOD_OBJ_RULES:]]>
 
 <[[:MOD_DLL_RULES:]]>
-
+!ELSE
+all:
+clean::
+!ENDIF
 # vim: ft=make
