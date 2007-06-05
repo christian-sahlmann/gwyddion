@@ -494,7 +494,7 @@ step_do(GwyDataField *dfield, GwyDataField *show)
 
             n = gwy_data_field_circular_area_extract(dfield, j, i, r, z);
             gwy_math_sort(n, z);
-            d[i*xres + j] = sqrt(fabs(z[n-1 - n/3] - z[n/3]));
+            d[i*xres + j] = sqrt(z[n-1 - n/3] - z[n/3]);
         }
     }
     g_free(z);
