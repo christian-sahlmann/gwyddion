@@ -28,6 +28,7 @@
 #include <libprocess/hough.h>
 #include <libprocess/level.h>
 #include <libprocess/grains.h>
+#include <libprocess/elliptic.h>
 #include <libgwydgets/gwydataview.h>
 #include <libgwydgets/gwylayer-basic.h>
 #include <libgwydgets/gwyradiobuttons.h>
@@ -144,7 +145,7 @@ static GwyModuleInfo module_info = {
     N_("Several edge detection methods (Laplacian of Gaussian, Canny, "
        "and some experimental), creates presentation."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.8",
+    "1.9",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -217,6 +218,15 @@ module_register(void)
                               GWY_MENU_FLAG_DATA,
                               N_("Local inclination based edge detection "
                                  "presentation"));
+    /*
+    gwy_process_func_register("edge_local_maxima",
+                              (GwyProcessFunc)&edge,
+                              N_("/_Presentation/_Edge Detection/Local _Maxima"),
+                              NULL,
+                              EDGE_RUN_MODES,
+                              GWY_MENU_FLAG_DATA,
+                              N_("Local maxima presentation presentation"));
+                              */
     gwy_process_func_register("edge_zero_crossing",
                               (GwyProcessFunc)&zero_crossing,
                               N_("/_Presentation/_Edge Detection/_Zero Crossing..."),
@@ -346,47 +356,112 @@ rms_edge_do(GwyDataField *dfield, GwyDataField *show)
     g_object_unref(tmp);
 }
 
+static gdouble
+fit_local_plane_by_pos(gint n,
+                       const gint *xp, const gint *yp, const gdouble *z,
+                       gdouble *bx, gdouble *by)
+{
+    gdouble m[12], b[4];
+    gint i;
+
+    memset(m, 0, 6*sizeof(gdouble));
+    memset(b, 0, 4*sizeof(gdouble));
+    for (i = 0; i < n; i++) {
+        m[1] += xp[i];
+        m[2] += xp[i]*xp[i];
+        m[3] += yp[i];
+        m[4] += xp[i]*yp[i];
+        m[5] += yp[i]*yp[i];
+        b[0] += z[i];
+        b[1] += xp[i]*z[i];
+        b[2] += yp[i]*z[i];
+        b[3] += z[i]*z[i];
+    }
+    m[0] = n;
+    memcpy(m + 6, m, 6*sizeof(gdouble));
+    if (gwy_math_choleski_decompose(3, m))
+        gwy_math_choleski_solve(3, m, b);
+    else
+        b[0] = b[1] = b[2] = 0.0;
+
+    *bx = b[1];
+    *by = b[2];
+    return (b[3] - (b[0]*b[0]*m[6+0] + b[1]*b[1]*m[6+2] + b[2]*b[2]*m[6+5])
+            - 2.0*(b[0]*b[1]*m[6+1] + b[0]*b[2]*m[6+3] + b[1]*b[2]*m[6+4]));
+}
+
 static void
 nonlinearity_do(GwyDataField *dfield, GwyDataField *show)
 {
-    gint xres, yres, i;
-    gdouble *data;
+    static const gdouble r = 2.5;
+    gint xres, yres, i, j, size, rr;
+    gdouble qx, qy;
+    gint *xp, *yp;
+    gdouble *d, *z;
 
-    xres = gwy_data_field_get_xres(show);
-    yres = gwy_data_field_get_yres(show);
-    gwy_data_field_local_plane_quantity(dfield, 5, GWY_PLANE_FIT_S0_REDUCED,
-                                        show);
-    data = gwy_data_field_get_data(show);
-    for (i = 0; i < xres*yres; i++)
-        data[i] = sqrt(data[i]);
+    xres = gwy_data_field_get_xres(dfield);
+    yres = gwy_data_field_get_yres(dfield);
+    d = gwy_data_field_get_data(show);
+    rr = (gint)ceil(r);
+    qx = gwy_data_field_get_xmeasure(dfield);
+    qy = gwy_data_field_get_xmeasure(dfield);
+
+    size = gwy_data_field_get_circular_area_size(r);
+    z = g_new(gdouble, size);
+    xp = g_new(gint, 2*size);
+    yp = xp + size;
+    for (i = 0; i < yres; i++) {
+        for (j = 0; j < xres; j++) {
+            gdouble bx, by, s0r;
+            gint n;
+
+            n = gwy_data_field_circular_area_extract_with_pos(dfield, j, i, r,
+                                                              z, xp, yp);
+            s0r = fit_local_plane_by_pos(n, xp, yp, z, &bx, &by);
+            bx /= qx;
+            by /= qy;
+            d[i*xres + j] = sqrt(MAX(s0r, 0.0)/(1.0 + bx*bx + by*by));
+        }
+    }
+    g_free(xp);
+    g_free(z);
 }
 
 static void
 inclination_do(GwyDataField *dfield, GwyDataField *show)
 {
-    GwyPlaneFitQuantity quantites[] = {
-        GWY_PLANE_FIT_BX, GWY_PLANE_FIT_BY
-    };
-    GwyDataField *fields[2];
-    gint xres, yres, i;
-    gdouble *data, *xdata;
+    static const gdouble r = 2.5;
+    gint xres, yres, i, j, size, rr;
     gdouble qx, qy;
+    gint *xp, *yp;
+    gdouble *d, *z;
 
     xres = gwy_data_field_get_xres(dfield);
     yres = gwy_data_field_get_yres(dfield);
+    d = gwy_data_field_get_data(show);
+    rr = (gint)ceil(r);
     qx = gwy_data_field_get_xmeasure(dfield);
-    qy = gwy_data_field_get_ymeasure(dfield);
+    qy = gwy_data_field_get_xmeasure(dfield);
 
-    fields[0] = gwy_data_field_new_alike(dfield, FALSE);
-    fields[1] = show;
-    gwy_data_field_fit_local_planes(dfield, 3, 2, quantites, fields);
+    size = gwy_data_field_get_circular_area_size(r);
+    z = g_new(gdouble, size);
+    xp = g_new(gint, 2*size);
+    yp = xp + size;
+    for (i = 0; i < yres; i++) {
+        for (j = 0; j < xres; j++) {
+            gdouble bx, by, s0r;
+            gint n;
 
-    data = gwy_data_field_get_data(show);
-    xdata = gwy_data_field_get_data(fields[0]);
-    for (i = 0; i < xres*yres; i++)
-        data[i] = atan(hypot(xdata[i]/qx, data[i]/qy));
-
-    g_object_unref(fields[0]);
+            n = gwy_data_field_circular_area_extract_with_pos(dfield, j, i, r,
+                                                              z, xp, yp);
+            s0r = fit_local_plane_by_pos(n, xp, yp, z, &bx, &by);
+            bx /= qx;
+            by /= qy;
+            d[i*xres + j] = atan(hypot(bx, by));
+        }
+    }
+    g_free(xp);
+    g_free(z);
 }
 
 static void
@@ -422,6 +497,55 @@ harris_do(GwyDataField *dfield, GwyDataField *show)
                        0.05*(gwy_data_field_get_max(ble) - gwy_data_field_get_min(ble)));
 */
 }
+
+/*
+static void
+local_maxima_do(GwyDataField *dfield, GwyDataField *show)
+{
+    static const gdouble r = 3.5;
+    gint xres, yres, i, j, size, rr;
+    gint *xp, *yp;
+    gdouble *d, *z;
+
+    xres = gwy_data_field_get_xres(dfield);
+    yres = gwy_data_field_get_yres(dfield);
+    d = gwy_data_field_get_data(show);
+    rr = (gint)ceil(r);
+
+    size = gwy_data_field_get_circular_area_size(r);
+    z = g_new(gdouble, size);
+    xp = g_new(gint, 2*size);
+    yp = xp + size;
+    for (i = 0; i < yres; i++) {
+        for (j = 0; j < xres; j++) {
+            gdouble s1, s2, s3, x;
+            gint k, n;
+
+            if (j < rr || j + rr > xres || i < rr || i + rr > yres) {
+                d[i*xres + j] = 0.0;
+                continue;
+            }
+
+            n = gwy_data_field_circular_area_extract_with_pos(dfield, j, i, r,
+                                                              z, xp, yp);
+            s1 = s2 = s3 = 0.0;
+            for (k = 0; k < n; k++) {
+                x = 2.0*xp[k];
+                s1 += z[k]*(1.0 - x*x);
+                x = xp[k] + GWY_SQRT3*yp[k];
+                s2 += z[k]*(1.0 - x*x);
+                x = xp[k] - GWY_SQRT3*yp[k];
+                s3 += z[k]*(1.0 - x*x);
+            }
+            x = s1 + s2 + s3;
+            x = (s1*s1 + s2*s2 + s3*s3) - x*x/3.0;
+            d[i*xres + j] = sqrt(x);
+        }
+    }
+    g_free(xp);
+    g_free(z);
+}
+*/
 
 static void
 zero_crossing(GwyContainer *data, GwyRunType run)
