@@ -178,9 +178,9 @@ pygwy_initialize_stderr_redirect(PyObject *d)
 {
     // redirect stderr to temporary file
     pygwy_run_string("import sys, tempfile\n"
-                     "stderr_redir = tempfile.TemporaryFile()\n"
-                     "sys.stderr = stderr_redir\n",
-                     //"sys.stdout = stderr_redir",
+                     "_stderr_redir = tempfile.TemporaryFile()\n"
+                     "sys.stderr = _stderr_redir\n",
+                     //"sys.stdout = _stderr_redir",
                      Py_file_input,
                      d,
                      d);
@@ -194,28 +194,20 @@ pygwy_finalize_stderr_redirect(PyObject *d)
     gchar *buf;
     GString *msg;
     int i;
-
-    // write python stderr
-    py_stderr = PyDict_GetItemString(d, "stderr_redir");
-    if (py_stderr && PyFile_Check(py_stderr)) {
-        gwy_debug("Reading content of temp file to get redirected stderr");
-        c_py_stderr = PyFile_AsFile(py_stderr);
-        rewind(c_py_stderr);
-        msg = g_string_new("");
-        buf = malloc(500);
-        // read the stderr file to string msg
-        while ((i = fread(buf, sizeof(gchar), 499, c_py_stderr)) > 0) {
-            gwy_debug("stderr characters readed: %d", i);
-            buf[i] = '\0';
-            msg = g_string_append(msg, buf);
-        }
-        if (msg->len > 1) {
-            pygwy_show_stderr(msg->str);
-        }
-        g_string_free(msg, TRUE);
-        g_free(buf);
+    // rewind redirected stderr file, read its content and display it in error window
+    pygwy_run_string("_stderr_redir.seek(0)\n"
+                     "_stderr_str = _stderr_redir.read()\n"
+                     "_stderr_redir.close()",
+                     Py_file_input,
+                     d,
+                     d);
+    py_stderr = PyDict_GetItemString(d, "_stderr_str");
+    if (py_stderr && PyString_Check(py_stderr)) {
+        buf = PyString_AsString(py_stderr);
+        gwy_debug("Pygwy plugin stderr output:\n%s", buf);
+        if (buf[0] != '\0') // show stderr only when it is not empty string
+            pygwy_show_stderr(buf);
     }
-    pygwy_run_string("stderr_redir.close()", Py_file_input, d, d);
 }
 
 static PyObject *
