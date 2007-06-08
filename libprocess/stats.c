@@ -803,8 +803,8 @@ gwy_data_field_get_autorange(GwyDataField *data_field,
         n = data_field->xres*data_field->yres;
         memset(dh, 0, AR_NDH*sizeof(guint));
         for (i = n, p = data_field->data; i; i--, p++) {
-            j = (*p - min)*q;    /* rounding toward zero is ok here */
-            dh[j]++;
+            j = (*p - min)*q;
+            dh[CLAMP(j, 0, AR_NDH-1)]++;
         }
 
         j = 0;
