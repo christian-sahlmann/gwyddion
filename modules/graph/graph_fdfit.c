@@ -246,7 +246,7 @@ fit_dialog(FitArgs *args)
                                              NULL);
     g_object_unref(siunit);
 
-    dialog = gtk_dialog_new_with_buttons(_("Fit FD curve"), NULL, 0, NULL);
+    dialog = gtk_dialog_new_with_buttons(_("Fit FD Curve"), NULL, 0, NULL);
     controls.dialog = dialog;
     gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
     gtk_dialog_add_action_widget(GTK_DIALOG(dialog),
