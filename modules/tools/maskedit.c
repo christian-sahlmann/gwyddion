@@ -282,7 +282,7 @@ gwy_tool_mask_editor_init_dialog(GwyToolMaskEditor *tool)
         {
             MASK_SHAPE_LINE,
             GWY_STOCK_MASK_LINE,
-            N_("Lines"),
+            N_("Thin lines"),
         },
     };
 
