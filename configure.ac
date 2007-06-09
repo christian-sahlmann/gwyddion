@@ -2,7 +2,7 @@
 dnl Process this file with autoconf to produce a configure script.
 m4_define([gwy_version_major],[2])
 m4_define([gwy_version_minor],[5])
-m4_define([gwy_version_string],[gwy_version_major.gwy_version_minor.20070327])
+m4_define([gwy_version_string],[gwy_version_major.gwy_version_minor.20070609])
 AC_INIT([Gwyddion], [gwy_version_string], [klapetek@gwyddion.net])
 # Use -release for unstable version libs instead of -version-info, because
 # we *do* break compatibility each version
@@ -435,7 +435,6 @@ AC_CHECK_HEADERS( \
 #############################################################################
 # Check for typedefs, structures, and compiler characteristics.
 AC_C_INLINE
-AC_STRUCT_TM
 
 #############################################################################
 # Check for library functions.
@@ -482,6 +481,11 @@ AC_SUBST(PACKAGE_URL)
 # Generate gwyconfig
 #
 # NB: When you add definitions here, add them to data/gwyconfig.h.win32 too.
+#
+# FIXME: #define-ing symbols from libc is quite arrogant, even if they are
+# missing on the system.  It can conflict with other packages.  Define
+# something like gwy_foo() and use it instead of foo() in the source code,
+# or, alternatively, make these definitions private.
 #
 AC_CONFIG_COMMANDS([gwyconfig.h],
 [
