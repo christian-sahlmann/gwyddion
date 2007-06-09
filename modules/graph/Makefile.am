@@ -43,7 +43,6 @@ graph_fit_la_SOURCES = graph_fit.c
 graph_cd_la_SOURCES = graph_cd.c
 graph_cut_la_SOURCES = graph_cut.c
 graph_level_la_SOURCES = graph_level.c
-#graph_stats_la_SOURCES = graph_stats.c
 
 MAINTAINERCLEANFILES = makefile.msc
 
