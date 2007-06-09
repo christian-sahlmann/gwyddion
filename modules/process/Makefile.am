@@ -85,7 +85,6 @@ cwt_la_SOURCES = cwt.c
 drift_la_SOURCES = drift.c
 dwt_la_SOURCES = dwt.c
 dwtanisotropy_la_SOURCES = dwtanisotropy.c
-#dwtdenoise_la_SOURCES = dwtdenoise.c
 edge_la_SOURCES = edge.c
 facet_analysis_la_SOURCES = facet_analysis.c
 facet_level_la_SOURCES = facet-level.c
