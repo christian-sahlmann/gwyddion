@@ -761,12 +761,14 @@ process_metadata(MIFile *mifile,
         g_warning("Missing or invalid x length");
         xLength = 1e-9;
     }
+    if (xLength <= 0.0) xLength = 1.0; /* Needed for 0-d calibration images */
     gwy_data_field_set_xreal(dfield, xLength);
 
     if (!mifile_get_double(mifile->meta, "yLength", &yLength)) {
         g_warning("Missing or invalid y length");
         yLength = 1e-9;
     }
+    if (yLength <= 0.0) yLength = 1.0; /* Needed for 0-d calibration images */
     gwy_data_field_set_yreal(dfield, yLength);
 
     /* Store Metadata */
