@@ -2,7 +2,7 @@
 dnl Process this file with autoconf to produce a configure script.
 m4_define([gwy_version_major],[2])
 m4_define([gwy_version_minor],[5])
-m4_define([gwy_version_string],[gwy_version_major.gwy_version_minor.20070609])
+m4_define([gwy_version_string],[gwy_version_major.gwy_version_minor.20070617])
 AC_INIT([Gwyddion], [gwy_version_string], [klapetek@gwyddion.net])
 # Use -release for unstable version libs instead of -version-info, because
 # we *do* break compatibility each version
@@ -445,6 +445,8 @@ AC_CHECK_FUNC([pow10], [gwy_have_pow10=yes], [gwy_have_pow10=no])
 AC_CHECK_FUNC([acosh], [gwy_have_acosh=yes], [gwy_have_acosh=no])
 AC_CHECK_FUNC([asinh], [gwy_have_asinh=yes], [gwy_have_asinh=no])
 AC_CHECK_FUNC([atanh], [gwy_have_atanh=yes], [gwy_have_atanh=no])
+AC_CHECK_FUNC([atanh], [gwy_have_atanh=yes], [gwy_have_atanh=no])
+AC_CHECK_FUNCS([sincos])
 
 #############################################################################
 # I18n
