@@ -604,13 +604,18 @@ static const GwyNLFitParam hsphhertz_params[] = {
 
 static const GwyNLFitPresetBuiltin fitting_presets[] = {
     /*FIXME vdw FDcurve fitting presets start here*/
-    {
+   /* {
         "vdW: parametric",
         "<i>f</i>(<i>x</i>) "
-            "= (H R<sup>2</sup>(1 - sin(gamma))(R sin(gamma)  - (x-xc) sin(gamma) - R - (x-xc))) "
-            "/(6 (x-xc)<sup>2</sup>((x-xc) + R - R sin(gamma))<sup>2</sup>)"
-            " - (H tan(gamma) ((x-xc) sin(gamma) + R sin(gamma) + R cos(2 gamma)))"
-            ".../(6*cos(gamma)*((x-xc) + R - R sin(gamma))<sup>2</sup>)",
+            "= (<i>HR</i><sup>2</sup>(1 - sin(<i>γ</i>))(<i>R</i>" 
+            "sin(<i>γ</i>)  - (<i>x</i>-<i>x<sub>c</sub></i>) sin(<i>γ</i>)"
+            " - <i>R</i> - (<i>x</i>-<i>x<sub>c</sub></i>))) "
+            "/(6(<i>x</i>-<i>x<sub>c</sub></i>)<sup>2</sup>((<i>x</i>-<i>x<sub>c</sub></i>)"
+            " + <i>R</i> - <i>R</i>sin(<i>γ</i>))<sup>2</sup>)"
+            " - (<i>H</i>tan(<i>γ</i>)((<i>x</i>-<i>x<sub>c</sub></i>)"
+            "sin(<i>γ</i>) + <i>R</i>sin(<i>γ</i>) + <i>R</i>cos(2<i>γ</i>)))"
+            ".../(6*cos(<i>γ</i>)*((<i>x</i>-<i>x<sub>c</sub></i>) + <i>R</i>"
+            " - <i>R</i>sin(<i>γ</i>))<sup>2</sup>)",
         &argento_func,
         NULL,
         &argento_guess,
@@ -619,13 +624,13 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
         NULL,
         G_N_ELEMENTS(argento_params),
         argento_params,
-    },
+    },*/
 /*    {
         "parzanette",
         "<i>f</i>(<i>x</i>) "
         "=  -(H/6)((h1<sup>2</sup>(3 R (x-xc) + R*h1 - (x-xc) h1))/((x-xc)<sup>2</sup> ((x-xc)+h1)<sup>3</sup>)"
             "+ (L*L)/(((x-xc)+h1)**3) "
-            "+ (4*tan(gamma))/(3.141593)*(L+tan(gamma)*((x-xc)+h1))/(((x-xc)+h1)**2))",
+            "+ (4*tan(γ))/(3.141593)*(L+tan(γ)*((x-xc)+h1))/(((x-xc)+h1)**2))",
         &parzanette_func,
         NULL,
         &parzanette_guess,
@@ -638,7 +643,9 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
     {
         "vdW: semisphere",
         "<i>f</i>(<i>x</i>) "
-        "= -H/6 (R<sup>3</sup>(R+2(x-xc)))/((x-xc)<sup>2</sup> * ((x-xc) + R)<sup>3</sup>)",
+        "= -<i>H</i>/6 (<i>R</i><sup>3</sup>(<i>R</i>+2(<i>x</i>-<i>x<sub>c</sub></i>)))"
+        "/((<i>x</i>-<i>x<sub>c</sub></i>)<sup>2</sup>((<i>x</i>-<i>x<sub>c</sub></i>)"
+        " + <i>R</i>)<sup>3</sup>)",
         &sszanette_func,
         NULL,
         &sszanette_guess,
@@ -651,7 +658,7 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
      {
         "vdW: pyramide",
         "<i>f</i>(<i>x</i>) "
-        "= -2H (tan(gamma) tan(gamma))/3/Pi/(x-xc) ",
+        "= -2<i>H</i> (tan(<i>γ</i>)<sup>2</sup>)/3/Pi/(<i>x</i>-<i>x<sub>c</sub></i>) ",
         &pyrzanette_func,
         NULL,
         &pyrzanette_guess,
@@ -664,7 +671,7 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
 /*     {
         "tpyrzanette",
         "<i>f</i>(<i>x</i>) "
-        "= -2HL<sup>2</sup>/(x-xc)<sup>3</sup> * (1 + (tan(gamma)(x-xc))/L + (tan(gamma)(x-xc))<sup>2</sup>)/L<sup>2</sup>)",
+        "= -2HL<sup>2</sup>/(x-xc)<sup>3</sup> * (1 + (tan(γ)(x-xc))/L + (tan(γ)(x-xc))<sup>2</sup>)/L<sup>2</sup>)",
         &tpyrzanette_func,
         NULL,
         &tpyrzanette_guess,
@@ -677,7 +684,7 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
      {
         "vdW: sphere",
         "<i>f</i>(<i>x</i>) "
-        "= -H R/6/(x-xc)<sup>2</sup> ",
+        "= -<i>HR</i>/6/(<i>x</i>-<i>x<sub>c</sub></i>)<sup>2</sup> ",
         &sphcapella_func,
         NULL,
         &sphcapella_guess,
@@ -688,9 +695,9 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
         sphcapella_params,
     },
      {
-        "vdW: sphere2",
+        "vdW: offset sphere",
         "<i>f</i>(<i>x</i>) "
-        "= -HR/6/((x-xc)-xi)<sup>2</sup>",
+        "= -<i>HR</i>/6/((<i>x</i>-<i>x<sub>c</sub></i>)-<i>ξ</i>)<sup>2</sup>",
         &sphtiptap_func,
         NULL,
         &sphtiptap_guess,
@@ -700,10 +707,11 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
         G_N_ELEMENTS(sphtiptap_params),
         sphtiptap_params,
     },
-     {
+ /*    {
         "vdW: sphere3",
         "<i>f</i>(<i>x</i>) "
-        "= -HR/12 (1/(x-xc)<sup>2</sup> - 1/15 sigma<sup>6</sup>/(x-xc)<sup>8</sup>) ",
+        "= -<i>HR</i>/12 (1/(<i>x</i>-<i>x<sub>c</sub></i>)<sup>2</sup>"
+        " - 1/15 <i>σ</i><sup>6</sup>/(<i>x</i>-<i>x<sub>c</sub></i>)<sup>8</sup>) ",
         &sphxu_func,
         NULL,
         &sphxu_guess,
@@ -712,11 +720,11 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
         NULL,
         G_N_ELEMENTS(sphxu_params),
         sphxu_params,
-    },
+    },*/
 /*      {
         "sphcappakarinen",
         "<i>f</i>(<i>x</i>) "
-        "= -2 gamma Pi R (cos(theta1) + cos(theta2))",
+        "= -2 γ Pi R (cos(theta1) + cos(theta2))",
         &sphcappakarinen_func,
         NULL,
         &sphcappakarinen_guess,
@@ -729,7 +737,7 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
       {
         "sphcapeastman",
         "<i>f</i>(<i>x</i>) "
-        "= -2 gamma Pi R cos(theta)/(1+(x-xc)/d)",
+        "= -2 γ Pi R cos(theta)/(1+(x-xc)/d)",
         &sphcapeastman_func,
         NULL,
         &sphcapeastman_guess,
@@ -742,7 +750,7 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
       {
         "sphcapheinz",
         "<i>f</i>(<i>x</i>) "
-        "= -4 gamma Pi R cos(theta)",
+        "= -4 γ Pi R cos(theta)",
         &sphcapheinz_func,
         NULL,
         &sphcapheinz_guess,
@@ -755,7 +763,7 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
       {
         "sphesheinz",
         "<i>f</i>(<i>x</i>) "
-        "= -4 Pi R lambda sigma1 sigma2/epsilon exp(-(x-xc)/debye)",
+        "= -4 Pi R lambda σ1 σ2/epsilon exp(-(x-xc)/debye)",
         &sphesheinz_func,
         NULL,
         &sphesheinz_guess,
