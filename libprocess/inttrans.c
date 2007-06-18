@@ -155,14 +155,14 @@ static void  gwy_preserve_rms_simple       (gint nsrc,
                                             gdouble *data1,
                                             gdouble *data2);
 
-#ifdef HAVE_FFTW3
-/* Good FFTW array sizes for extended and resampled arrays.
+/* Good FFT array sizes for extended and resampled arrays.
  *
  * Since extending and resampling always involves an O(N) part -- N being the
  * extended array size -- that may even be dominant, it isn't wise to use the
  * fastest possible FFT if it requires considerably larger array.  Following
  * numbers represent a reasonable compromise tested on a few platforms */
-static const guint nice_fftw_num[] = {
+static const guint nice_fft_num[] = {
+#ifdef HAVE_FFTW3
         16,     18,     20,     21,     22,     24,     25,     27,     28,
         32,     33,     35,     36,     40,     42,     44,     45,     48,
         49,     50,     54,     55,     56,     60,     64,     66,     70,
@@ -243,13 +243,53 @@ static const guint nice_fftw_num[] = {
     110592, 110880, 111132, 112000, 112500, 112896, 113400, 114048, 114688,
     115200, 115248, 115500, 116640, 117600, 118272, 118800, 120000, 120960,
     122880, 124416, 131072,
+#else
+          4,      5,      6,      8,      9,     10,     12,     15,     16,
+         18,     20,     24,     25,     27,     30,     32,     36,     40,
+         45,     48,     50,     54,     60,     64,     72,     75,     80,
+         81,     90,     96,    100,    108,    120,    125,    128,    135,
+        144,    150,    160,    162,    180,    192,    200,    216,    225,
+        240,    243,    250,    256,    270,    288,    300,    320,    324,
+        360,    375,    384,    400,    405,    432,    450,    480,    486,
+        500,    512,    540,    576,    600,    625,    640,    648,    675,
+        720,    729,    750,    768,    800,    810,    864,    900,    960,
+        972,   1000,   1024,   1080,   1125,   1152,   1200,   1215,   1250,
+       1280,   1296,   1350,   1440,   1458,   1500,   1536,   1600,   1620,
+       1728,   1800,   1875,   1920,   1944,   2000,   2025,   2048,   2160,
+       2187,   2250,   2304,   2400,   2430,   2500,   2560,   2592,   2700,
+       2880,   2916,   3000,   3072,   3125,   3200,   3240,   3375,   3456,
+       3600,   3645,   3750,   3840,   3888,   4000,   4050,   4096,   4320,
+       4374,   4500,   4608,   4800,   4860,   5000,   5120,   5184,   5400,
+       5625,   5760,   5832,   6000,   6075,   6144,   6250,   6400,   6480,
+       6561,   6750,   6912,   7200,   7290,   7500,   7680,   7776,   8000,
+       8100,   8192,   8640,   8748,   9000,   9216,   9375,   9600,   9720,
+      10000,  10125,  10240,  10368,  10800,  10935,  11250,  11520,  11664,
+      12000,  12150,  12288,  12500,  12800,  12960,  13122,  13500,  13824,
+      14400,  14580,  15000,  15360,  15552,  15625,  16000,  16200,  16384,
+      16875,  17280,  17496,  18000,  18225,  18432,  18750,  19200,  19440,
+      19683,  20000,  20250,  20480,  20736,  21600,  21870,  22500,  23040,
+      23328,  24000,  24300,  24576,  25000,  25600,  25920,  26244,  27000,
+      27648,  28125,  28800,  29160,  30000,  30375,  30720,  31104,  31250,
+      32000,  32400,  32768,  32805,  33750,  34560,  34992,  36000,  36450,
+      36864,  37500,  38400,  38880,  39366,  40000,  40500,  40960,  41472,
+      43200,  43740,  45000,  46080,  46656,  46875,  48000,  48600,  49152,
+      50000,  50625,  51200,  51840,  52488,  54000,  54675,  55296,  56250,
+      57600,  58320,  59049,  60000,  60750,  61440,  62208,  62500,  64000,
+      64800,  65536,  65610,  67500,  69120,  69984,  72000,  72900,  73728,
+      75000,  76800,  77760,  78125,  78732,  80000,  81000,  81920,  82944,
+      84375,  86400,  87480,  90000,  91125,  92160,  93312,  93750,  96000,
+      97200,  98304,  98415, 100000, 101250, 102400, 103680, 104976, 108000,
+     109350, 110592, 112500, 115200, 116640, 118098, 120000, 121500, 122880,
+     124416, 125000, 128000, 129600, 131072,
+#endif
 };
 
 static const struct {
     guint i;
     gdouble c;
 }
-nice_fftw_num_2n[] = {
+nice_fft_num_2n[] = {
+#ifdef HAVE_FFTW3
     { 0,   2.526680,  },
     { 9,   4.111173,  },
     { 24,  5.140072,  },
@@ -264,6 +304,24 @@ nice_fftw_num_2n[] = {
     { 478, 41.963688, },
     { 596, 67.514051, },
     { 713, 0.000000,  },
+#else
+    { 0,   1.760000,  },
+    { 3,   2.184739,  },
+    { 8,   -0.098383, },
+    { 15,  0.593979,  },
+    { 23,  1.986276,  },
+    { 34,  0.313803,  },
+    { 48,  -0.100574, },
+    { 64,  3.571373,  },
+    { 83,  3.721657,  },
+    { 106, 2.795363,  },
+    { 133, 2.974021,  },
+    { 163, 5.863530,  },
+    { 197, 9.190945,  },
+    { 236, 8.474542,  },
+    { 280, 12.646675, },
+    { 328, 0.000000,  },
+#endif
 };
 
 /**
@@ -288,43 +346,29 @@ gwy_fft_find_nice_size(gint size)
     gdouble p;
 
     /* All numbers smaller than 16 are nice */
-    if (size <= nice_fftw_num[0])
+    if (size <= nice_fft_num[0])
         return size;
-    g_return_val_if_fail(size <= nice_fftw_num[G_N_ELEMENTS(nice_fftw_num)-1],
+    g_return_val_if_fail(size <= nice_fft_num[G_N_ELEMENTS(nice_fft_num)-1],
                          size);
     /* Find the nearest smaller-or-equal power of 2 */
-    for (i = 0, i0 = nice_fftw_num[0]; 2*i0 <= size; i++, i0 *= 2)
+    for (i = 0, i0 = nice_fft_num[0]; 2*i0 <= size; i++, i0 *= 2)
         ;
     /* Return exact powers of 2 immediately */
     if (i0 == size)
         return size;
     /* Interpolate in the [i0, 2*i0] interval */
-    p0 = nice_fftw_num_2n[i].i;
-    p1 = nice_fftw_num_2n[i+1].i;
+    p0 = nice_fft_num_2n[i].i;
+    p1 = nice_fft_num_2n[i+1].i;
     p = (size - i0)/(gdouble)i0;
-    i = (gint)(p0 + (p1 - p0)*p + nice_fftw_num_2n[i].c*(1 - p)*p + 0.5);
+    i = (gint)(p0 + (p1 - p0)*p + nice_fft_num_2n[i].c*(1 - p)*p + 0.5);
     /* Correct the estimated position as we often miss by a number or two */
-    while (nice_fftw_num[i] < size)
+    while (nice_fft_num[i] < size)
         i++;
-    while (nice_fftw_num[i-1] >= size)
+    while (nice_fft_num[i-1] >= size)
         i--;
 
-    return nice_fftw_num[i];
+    return nice_fft_num[i];
 }
-#else  /* HAVE_FFTW3 */
-gint
-gwy_fft_find_nice_size(gint size)
-{
-    gint p2;
-
-    g_return_val_if_fail(size <= 0x40000000, 0x40000000);
-
-    for (p2 = 1; p2 < size; p2 = p2 << 1)
-        ;
-
-    return p2;
-}
-#endif  /* HAVE_FFTW3 */
 
 /**
  * gwy_data_line_fft:

@@ -30,11 +30,11 @@ G_BEGIN_DECLS
 void gwy_fft_simple(GwyTransformDirection dir,
                     gint n,
                     gint istride,
-                    const gdouble *re_in,
-                    const gdouble *im_in,
+                    const gdouble *in_re,
+                    const gdouble *in_im,
                     gint ostride,
-                    gdouble *re_out,
-                    gdouble *im_out);
+                    gdouble *out_re,
+                    gdouble *out_im);
 
 void gwy_fft_window(gint n,
                     gdouble *data,

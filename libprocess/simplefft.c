@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003-2007 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -22,8 +22,26 @@
 #include <libgwyddion/gwymath.h>
 #include <libprocess/simplefft.h>
 
-typedef gdouble (*GwyFFTWindowingFunc)(gint i, gint n);
+#define GWY_C15 .30901699437494742410229341718281905886015458990289
+#define GWY_S15 .95105651629515357211643933337938214340569863412574
+#define GWY_S25 .58778525229247312916870595463907276859765243764316
+#define GWY_C25 -.80901699437494742410229341718281905886015458990286
 
+#ifdef HAVE_SINCOS
+#define _gwy_sincos sincos
+#else
+static inline void
+_gwy_sincos(gdouble x, gdouble *s, gdouble *c)
+{
+    *s = sin(x);
+    *c = cos(x);
+}
+#endif
+
+typedef void (*ButterflyFunc)(guint gn,
+                              guint stride, gdouble *re, gdouble *im);
+
+typedef gdouble (*GwyFFTWindowingFunc)(gint i, gint n);
 
 static gdouble gwy_fft_window_hann     (gint i, gint n);
 static gdouble gwy_fft_window_hamming  (gint i, gint n);
@@ -49,26 +67,346 @@ static const GwyFFTWindowingFunc windowings[] = {
     &gwy_fft_window_kaiser25,
 };
 
+static void
+shuffle_and_twiddle(guint gn, guint gm, guint p,
+                    guint istride, const gdouble *in_re, const gdouble *in_im,
+                    guint ostride, gdouble *out_re, gdouble *out_im)
+{
+    gdouble *ff_re, *ff_im;
+    guint m, k2, n1;
+
+    /* k2 == 0, twiddle factors are 1 */
+    for (m = 0; m < gn/gm; m++) {
+        const gdouble *inb_re = in_re + istride*m;
+        const gdouble *inb_im = in_im + istride*m;
+        gdouble *outb_re = out_re + ostride*m;
+        gdouble *outb_im = out_im + ostride*m;
+
+        for (n1 = 0; n1 < p; n1++) {
+            guint li = gn/gm*istride*n1;
+            guint lo = gn/p*ostride*n1;
+
+            outb_re[lo] = inb_re[li];
+            outb_im[lo] = inb_im[li];
+        }
+    }
+    if (gm == p)
+        return;
+
+    /* Other twiddle factors have to be calculated,
+       but for n1 == 0 they are always 1 */
+    ff_re = g_newa(gdouble, p);
+    ff_im = g_newa(gdouble, p);
+    for (k2 = 1; k2 < gm/p; k2++) {
+        for (n1 = 1; n1 < p; n1++)
+            _gwy_sincos(2.0*G_PI*n1*k2/gm, ff_im + n1, ff_re + n1);
+        for (m = 0; m < gn/gm; m++) {
+            const gdouble *inb_re = in_re + istride*(m + gn*p/gm*k2);
+            const gdouble *inb_im = in_im + istride*(m + gn*p/gm*k2);
+            gdouble *outb_re = out_re + ostride*(m + gn/gm*k2);
+            gdouble *outb_im = out_im + ostride*(m + gn/gm*k2);
+
+            outb_re[0] = inb_re[0];
+            outb_im[0] = inb_im[0];
+            for (n1 = 1; n1 < p; n1++) {
+                guint li = gn/gm*istride*n1;
+                guint lo = gn/p*ostride*n1;
+
+                outb_re[lo] = ff_re[n1]*inb_re[li] - ff_im[n1]*inb_im[li];
+                outb_im[lo] = ff_re[n1]*inb_im[li] + ff_im[n1]*inb_re[li];
+            }
+        }
+    }
+}
+
+static void
+pass2(guint gn, guint stride, gdouble *re, gdouble *im)
+{
+    guint m;
+
+    gn /= 2;
+    if (stride == 1) {
+        for (m = 0; m < gn; m++) {
+            gdouble w;
+
+            w = re[m] - re[gn + m];
+            re[m] += re[gn + m];
+            re[gn + m] = w;
+
+            w = im[m] - im[gn + m];
+            im[m] += im[gn + m];
+            im[gn + m] = w;
+        }
+    }
+    else {
+        for (m = 0; m < gn; m++) {
+            gdouble w;
+
+            w = re[stride*m] - re[stride*(gn + m)];
+            re[stride*m] += re[stride*(gn + m)];
+            re[stride*(gn + m)] = w;
+
+            w = im[stride*m] - im[stride*(gn + m)];
+            im[stride*m] += im[stride*(gn + m)];
+            im[stride*(gn + m)] = w;
+        }
+    }
+}
+
+static void
+pass3(guint gn, guint stride, gdouble *re, gdouble *im)
+{
+    guint m;
+
+    gn /= 3;
+    if (stride == 1) {
+        for (m = 0; m < gn; m++) {
+            gdouble w1re, w1im, w2re, w2im;
+
+            w1re = (re[gn + m] + re[2*gn + m]);
+            w1im = (im[gn + m] + im[2*gn + m]);
+            /* Multiplication by i */
+            w2re = (im[2*gn + m] - im[gn + m])*0.5*GWY_SQRT3;
+            w2im = (re[gn + m] - re[2*gn + m])*0.5*GWY_SQRT3;
+            re[2*gn + m] = re[m] - (w2re + 0.5*w1re);
+            im[2*gn + m] = im[m] - (w2im + 0.5*w1im);
+            re[gn + m] = re[m] + (w2re - 0.5*w1re);
+            im[gn + m] = im[m] + (w2im - 0.5*w1im);
+            re[m] += w1re;
+            im[m] += w1im;
+        }
+    }
+    else {
+        for (m = 0; m < gn; m++) {
+            gdouble w1re, w1im, w2re, w2im;
+
+            w1re = (re[stride*(gn + m)] + re[stride*(2*gn + m)]);
+            w1im = (im[stride*(gn + m)] + im[stride*(2*gn + m)]);
+            /* Multiplication by i */
+            w2re = (im[stride*(2*gn + m)] - im[stride*(gn + m)])*0.5*GWY_SQRT3;
+            w2im = (re[stride*(gn + m)] - re[stride*(2*gn + m)])*0.5*GWY_SQRT3;
+            re[stride*(2*gn + m)] = re[stride*m] - (w2re + 0.5*w1re);
+            im[stride*(2*gn + m)] = im[stride*m] - (w2im + 0.5*w1im);
+            re[stride*(gn + m)] = re[stride*m] + (w2re - 0.5*w1re);
+            im[stride*(gn + m)] = im[stride*m] + (w2im - 0.5*w1im);
+            re[stride*m] += w1re;
+            im[stride*m] += w1im;
+        }
+    }
+}
+
+/* Hopefully the compiler will optimize out the excessibe assigments to
+   temporary variables */
+static void
+pass4(guint gn, guint stride, gdouble *re, gdouble *im)
+{
+    guint m;
+
+    gn /= 4;
+    if (stride == 1) {
+        for (m = 0; m < gn; m++) {
+            gdouble w, w1re, w1im;
+
+            /* Level 0 */
+            w = re[m] - re[2*gn + m];
+            re[m] += re[2*gn + m];
+            re[2*gn + m] = w;
+
+            w = im[m] - im[2*gn + m];
+            im[m] += im[2*gn + m];
+            im[2*gn + m] = w;
+
+            w = re[gn + m] - re[3*gn + m];
+            re[gn + m] += re[3*gn + m];
+            re[3*gn + m] = w;
+
+            w = im[gn + m] - im[3*gn + m];
+            im[gn + m] += im[3*gn + m];
+            im[3*gn + m] = w;
+
+            /* Level 1 */
+            w = re[m] - re[gn + m];
+            re[m] += re[gn + m];
+            re[gn + m] = w;
+
+            w = im[m] - im[gn + m];
+            im[m] += im[gn + m];
+            im[gn + m] = w;
+
+            /* Multiplication by i */
+            w1re = -im[3*gn + m];
+            w1im = re[3*gn + m];
+            re[3*gn + m] = re[2*gn + m] - w1re;
+            im[3*gn + m] = im[2*gn + m] - w1im;
+            re[2*gn + m] += w1re;
+            im[2*gn + m] += w1im;
+
+            /* Fix bit-reversal */
+            w = re[gn + m];
+            re[gn + m] = re[2*gn + m];
+            re[2*gn + m] = w;
+
+            w = im[gn + m];
+            im[gn + m] = im[2*gn + m];
+            im[2*gn + m] = w;
+        }
+    }
+    else {
+        for (m = 0; m < gn; m++) {
+            gdouble w, w1re, w1im;
+
+            /* Level 0 */
+            w = re[stride*m] - re[stride*(2*gn + m)];
+            re[stride*m] += re[stride*(2*gn + m)];
+            re[stride*(2*gn + m)] = w;
+
+            w = im[stride*m] - im[stride*(2*gn + m)];
+            im[stride*m] += im[stride*(2*gn + m)];
+            im[stride*(2*gn + m)] = w;
+
+            w = re[stride*(gn + m)] - re[stride*(3*gn + m)];
+            re[stride*(gn + m)] += re[stride*(3*gn + m)];
+            re[stride*(3*gn + m)] = w;
+
+            w = im[stride*(gn + m)] - im[stride*(3*gn + m)];
+            im[stride*(gn + m)] += im[stride*(3*gn + m)];
+            im[stride*(3*gn + m)] = w;
+
+            /* Level 1 */
+            w = re[stride*m] - re[stride*(gn + m)];
+            re[stride*m] += re[stride*(gn + m)];
+            re[stride*(gn + m)] = w;
+
+            w = im[stride*m] - im[stride*(gn + m)];
+            im[stride*m] += im[stride*(gn + m)];
+            im[stride*(gn + m)] = w;
+
+            /* Multiplication by i */
+            w1re = -im[stride*(3*gn + m)];
+            w1im = re[stride*(3*gn + m)];
+            re[stride*(3*gn + m)] = re[stride*(2*gn + m)] - w1re;
+            im[stride*(3*gn + m)] = im[stride*(2*gn + m)] - w1im;
+            re[stride*(2*gn + m)] += w1re;
+            im[stride*(2*gn + m)] += w1im;
+
+            /* Fix bit-reversal */
+            w = re[stride*(gn + m)];
+            re[stride*(gn + m)] = re[stride*(2*gn + m)];
+            re[stride*(2*gn + m)] = w;
+
+            w = im[stride*(gn + m)];
+            im[stride*(gn + m)] = im[stride*(2*gn + m)];
+            im[stride*(2*gn + m)] = w;
+        }
+    }
+}
+
+/* Hopefully the compiler will optimize out the excessibe assigments to
+   temporary variables */
+static void
+pass5(guint gn, guint stride, gdouble *re, gdouble *im)
+{
+    guint m;
+
+    gn /= 5;
+    if (stride == 1) {
+        for (m = 0; m < gn; m++) {
+            gdouble w0re, w0im, w1re, w1im, w2re, w2im, w3re, w3im;
+            gdouble z0re, z0im, z1re, z1im, z2re, z2im, z3re, z3im;
+
+            z0re = re[gn + m] + re[4*gn + m];
+            z0im = im[gn + m] + im[4*gn + m];
+            z1re = re[gn + m] - re[4*gn + m];
+            z1im = im[gn + m] - im[4*gn + m];
+            z2re = re[2*gn + m] + re[3*gn + m];
+            z2im = im[2*gn + m] + im[3*gn + m];
+            z3re = re[2*gn + m] - re[3*gn + m];
+            z3im = im[2*gn + m] - im[3*gn + m];
+
+            w0re = GWY_C15*z0re + GWY_C25*z2re;
+            w0im = GWY_C15*z0im + GWY_C25*z2im;
+            w1re = GWY_C25*z0re + GWY_C15*z2re;
+            w1im = GWY_C25*z0im + GWY_C15*z2im;
+            /* Multiplication by i */
+            w2re = -GWY_S15*z1im - GWY_S25*z3im;
+            w2im = GWY_S15*z1re + GWY_S25*z3re;
+            w3re = -GWY_S25*z1im + GWY_S15*z3im;
+            w3im = GWY_S25*z1re - GWY_S15*z3re;
+
+            re[gn + m] = re[m] + w0re + w2re;
+            im[gn + m] = im[m] + w0im + w2im;
+            re[2*gn + m] = re[m] + w1re + w3re;
+            im[2*gn + m] = im[m] + w1im + w3im;
+            re[3*gn + m] = re[m] + w1re - w3re;
+            im[3*gn + m] = im[m] + w1im - w3im;
+            re[4*gn + m] = re[m] + w0re - w2re;
+            im[4*gn + m] = im[m] + w0im - w2im;
+            re[m] += z0re + z2re;
+            im[m] += z0im + z2im;
+        }
+    }
+    else {
+        for (m = 0; m < gn; m++) {
+            gdouble w0re, w0im, w1re, w1im, w2re, w2im, w3re, w3im;
+            gdouble z0re, z0im, z1re, z1im, z2re, z2im, z3re, z3im;
+
+            z0re = re[stride*(gn + m)] + re[stride*(4*gn + m)];
+            z0im = im[stride*(gn + m)] + im[stride*(4*gn + m)];
+            z1re = re[stride*(gn + m)] - re[stride*(4*gn + m)];
+            z1im = im[stride*(gn + m)] - im[stride*(4*gn + m)];
+            z2re = re[stride*(2*gn + m)] + re[stride*(3*gn + m)];
+            z2im = im[stride*(2*gn + m)] + im[stride*(3*gn + m)];
+            z3re = re[stride*(2*gn + m)] - re[stride*(3*gn + m)];
+            z3im = im[stride*(2*gn + m)] - im[stride*(3*gn + m)];
+
+            w0re = GWY_C15*z0re + GWY_C25*z2re;
+            w0im = GWY_C15*z0im + GWY_C25*z2im;
+            w1re = GWY_C25*z0re + GWY_C15*z2re;
+            w1im = GWY_C25*z0im + GWY_C15*z2im;
+            /* Multiplication by i */
+            w2re = -GWY_S15*z1im - GWY_S25*z3im;
+            w2im = GWY_S15*z1re + GWY_S25*z3re;
+            w3re = -GWY_S25*z1im + GWY_S15*z3im;
+            w3im = GWY_S25*z1re - GWY_S15*z3re;
+
+            re[stride*(gn + m)] = re[stride*m] + w0re + w2re;
+            im[stride*(gn + m)] = im[stride*m] + w0im + w2im;
+            re[stride*(2*gn + m)] = re[stride*m] + w1re + w3re;
+            im[stride*(2*gn + m)] = im[stride*m] + w1im + w3im;
+            re[stride*(3*gn + m)] = re[stride*m] + w1re - w3re;
+            im[stride*(3*gn + m)] = im[stride*m] + w1im - w3im;
+            re[stride*(4*gn + m)] = re[stride*m] + w0re - w2re;
+            im[stride*(4*gn + m)] = im[stride*m] + w0im - w2im;
+            re[stride*m] += z0re + z2re;
+            im[stride*m] += z0im + z2im;
+        }
+    }
+}
+
 /**
  * gwy_fft_simple:
  * @dir: Transformation direction.
- * @n: Number of data points.  It must be a power of 2.
+ * @n: Number of data points. Note only certain transform sizes are
+ *     implemented.  If gwy_fft_simple() is the current FFT backend, then
+ *     gwy_fft_find_nice_size() can provide accepted transform sizes.
+ *     If gwy_fft_simple() is not the current FFT backend, you should not
+ *     use it.
  * @istride: Input data stride.
- * @re_in: Real part of input data.
- * @im_in: Imaginary part of input data.
+ * @in_re: Real part of input data.
+ * @in_im: Imaginary part of input data.
  * @ostride: Output data stride.
- * @re_out: Real part of output data.
- * @im_out: Imaginary part of output data.
+ * @out_re: Real part of output data.
+ * @out_im: Imaginary part of output data.
  *
- * Performs FST algorithm.
+ * Performs a DFT algorithm.
  *
- * This is low-level function used by other FFT functions when no better
+ * This is a low-level function used by other FFT functions when no better
  * backend is available.
  *
  * Strides are distances between samples in input and output arrays.  Use 1
  * for normal `dense' arrays.  To use gwy_fft_simple() with interleaved arrays,
  * that is with alternating real and imaginary data, call it with
- * @istride=2, @re_in=@complex_array, @im_in=@complex_array+1 (and similarly
+ * @istride=2, @in_re=@complex_array, @in_im=@complex_array+1 (and similarly
  * for output arrays).
  *
  * The output is symmetrically normalized by square root of @n for both
@@ -79,53 +417,91 @@ void
 gwy_fft_simple(GwyTransformDirection dir,
                gint n,
                gint istride,
-               const gdouble *re_in,
-               const gdouble *im_in,
+               const gdouble *in_re,
+               const gdouble *in_im,
                gint ostride,
-               gdouble *re_out,
-               gdouble *im_out)
+               gdouble *out_re,
+               gdouble *out_im)
 {
-    gdouble rc, ic, rt, it, fact;
-    gint m, l, i, j, is;
-    gdouble imlt;
+    static GArray *buffer = NULL;
 
-    imlt = (gint)dir * G_PI;
-    fact = 1.0/sqrt(n);
-    j = 1;
-    for (i = 1; i <= n; i++) {
-        if (i <= j) {
-            rt = fact * re_in[(i-1)*istride];
-            it = fact * im_in[(i-1)*istride];
-            re_out[(i-1)*ostride] = fact * re_in[(j-1)*istride];
-            im_out[(i-1)*ostride] = fact * im_in[(j-1)*istride];
-            re_out[(j-1)*ostride] = rt;
-            im_out[(j-1)*ostride] = it;
-        }
-        m = n >> 1;
-        while (j > m && m) {
-            j -=m;
-            m >>= 1;
-        }
-        j += m;
+    ButterflyFunc butterfly;
+    gdouble *buf_re, *buf_im;
+    guint m, p, k, bstride;
+    gdouble norm_fact;
+    gboolean swapped;
 
+    if (dir != GWY_TRANSFORM_DIRECTION_BACKWARD) {
+        GWY_SWAP(const gdouble*, in_re, in_im);
+        GWY_SWAP(gdouble*, out_re, out_im);
     }
 
-    l = 1;
-    while (l < n) {
-        is = l << 1;
-        for (m = 1; m <= l; m++) {
-            rc = cos(imlt * (m - 1)/l);
-            ic = sin(imlt * (m - 1)/l);
-            for (i = m; i <= n; i += is) {
-                rt = rc*re_out[(i+l-1)*ostride] - ic*im_out[(i+l-1)*ostride];
-                it = rc*im_out[(i+l-1)*ostride] + ic*re_out[(i+l-1)*ostride];
-                re_out[(i+l-1)*ostride] = re_out[(i-1)*ostride] - rt;
-                im_out[(i+l-1)*ostride] = im_out[(i-1)*ostride] - it;
-                re_out[(i-1)*ostride] += rt;
-                im_out[(i-1)*ostride] += it;
-            }
+    swapped = TRUE;
+    for (m = 1; m < n; m *= p) {
+        k = n/m;
+        if (k % 5 == 0)
+            p = 5;
+        else if (k % 3 == 0)
+            p = 3;
+        else if (k % 4 == 0)
+            p = 4;
+        else if (k % 2 == 0)
+            p = 2;
+        else {
+            g_critical("%d (%d) contains unimplemented primes", k, n);
+            return;
         }
-        l = is;
+        swapped = !swapped;
+    }
+
+    /* XXX: This is never freed. */
+    if (!buffer)
+        buffer = g_array_new(FALSE, FALSE, 2*sizeof(gdouble));
+    g_array_set_size(buffer, n);
+    buf_re = (gdouble*)buffer->data;
+    buf_im = buf_re + n;
+    bstride = 1;
+
+    if (swapped && n > 1) {
+        GWY_SWAP(gdouble*, buf_re, out_re);
+        GWY_SWAP(gdouble*, buf_im, out_im);
+        GWY_SWAP(guint, bstride, ostride);
+    }
+
+    norm_fact = 1.0/sqrt(n);
+    for (m = 0; m < n; m++) {
+        out_re[ostride*m] = norm_fact*in_re[istride*m];
+        out_im[ostride*m] = norm_fact*in_im[istride*m];
+    }
+
+    for (m = 1; m < n; m *= p) {
+        k = n/m;
+        if (k % 4 == 0) {
+            p = 4;
+            butterfly = pass4;
+        }
+        else if (k % 2 == 0) {
+            p = 2;
+            butterfly = pass2;
+        }
+        else if (k % 3 == 0) {
+            p = 3;
+            butterfly = pass3;
+        }
+        else {
+            p = 5;
+            butterfly = pass5;
+        }
+
+        if (m > 1)
+            shuffle_and_twiddle(n, m*p, p,
+                                bstride, buf_re, buf_im,
+                                ostride, out_re, out_im);
+
+        butterfly(n, ostride, out_re, out_im);
+        GWY_SWAP(gdouble*, buf_re, out_re);
+        GWY_SWAP(gdouble*, buf_im, out_im);
+        GWY_SWAP(guint, bstride, ostride);
     }
 }
 
