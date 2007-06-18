@@ -450,8 +450,7 @@ gwy_data_line_resize(GwyDataLine *a, gint from, gint to)
     if (to < from)
         GWY_SWAP(gint, from, to);
     g_return_if_fail(from >= 0 && to <= a->res);
-
-    a->real *= (to - from)/a->res;
+    a->real *= (to - from)/((double)a->res);
     a->res = to - from;
     memmove(a->data, a->data + from, a->res*sizeof(gdouble));
     a->data = g_renew(gdouble, a->data, a->res*sizeof(gdouble));
@@ -1316,6 +1315,7 @@ gwy_data_line_line_rotate(GwyDataLine *a,
         dy[i] = radius*sin(as + angle);
     }
 
+
     k = 0;
     maxi = 0;
     for (i = 1; i < a->res; i++) {
@@ -1336,17 +1336,22 @@ gwy_data_line_line_rotate(GwyDataLine *a,
         yl2 = dy[k];
 
         if (interpolation == GWY_INTERPOLATION_ROUND
-            || interpolation == GWY_INTERPOLATION_LINEAR)
+            || interpolation == GWY_INTERPOLATION_LINEAR) {
             a->data[i] = gwy_interpolation_get_dval(x, xl1, yl1, xl2, yl2,
                                                     interpolation);
+        }
         else
             g_warning("Interpolation not implemented yet.\n");
     }
-    if (maxi != 0)
-        gwy_data_line_resize(a, 0, maxi);
+    if (maxi != 0) {
+        a->real *= maxi/((double)a->res);
+        a->res = maxi;
+        a->data = g_renew(gdouble, a->data, a->res*sizeof(gdouble));
+    }
 
     if (a->res != res)
         gwy_data_line_resample(a, res, interpolation);
+
 
     g_free(dx);
     g_free(dy);
