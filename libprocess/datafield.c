@@ -244,9 +244,8 @@ gwy_data_field_serialize(GObject *obj,
                          GByteArray *buffer)
 {
     GwyDataField *data_field;
-    guint32 datasize, cachesize;
+    guint32 datasize;
     gdouble *pxoff, *pyoff;
-    gdouble *cache;
 
     gwy_debug("");
     g_return_val_if_fail(GWY_IS_DATA_FIELD(obj), NULL);
@@ -257,8 +256,6 @@ gwy_data_field_serialize(GObject *obj,
     if (!data_field->si_unit_z)
         data_field->si_unit_z = gwy_si_unit_new("");
     datasize = data_field->xres*data_field->yres;
-    cachesize = GWY_DATA_FIELD_CACHE_SIZE;
-    cache = data_field->cache;
     pxoff = data_field->xoff ? &data_field->xoff : NULL;
     pyoff = data_field->yoff ? &data_field->yoff : NULL;
     {
@@ -272,8 +269,6 @@ gwy_data_field_serialize(GObject *obj,
             { 'o', "si_unit_xy", &data_field->si_unit_xy, NULL, },
             { 'o', "si_unit_z", &data_field->si_unit_z, NULL, },
             { 'D', "data", &data_field->data, &datasize, },
-            { 'i', "cache_bits", &data_field->cached, NULL, },
-            { 'D', "cache_data", &cache, &cachesize, },
         };
         return gwy_serialize_pack_object_struct(buffer,
                                                 GWY_DATA_FIELD_TYPE_NAME,
@@ -285,8 +280,7 @@ static gsize
 gwy_data_field_get_size(GObject *obj)
 {
     GwyDataField *data_field;
-    guint32 datasize, cachesize;
-    gdouble *cache;
+    guint32 datasize;
 
     gwy_debug("");
     g_return_val_if_fail(GWY_IS_DATA_FIELD(obj), 0);
@@ -297,8 +291,6 @@ gwy_data_field_get_size(GObject *obj)
     if (!data_field->si_unit_z)
         data_field->si_unit_z = gwy_si_unit_new("");
     datasize = data_field->xres*data_field->yres;
-    cache = data_field->cache;
-    cachesize = GWY_DATA_FIELD_CACHE_SIZE;
     {
         GwySerializeSpec spec[] = {
             { 'i', "xres", &data_field->xres, NULL, },
@@ -310,8 +302,6 @@ gwy_data_field_get_size(GObject *obj)
             { 'o', "si_unit_xy", &data_field->si_unit_xy, NULL, },
             { 'o', "si_unit_z", &data_field->si_unit_z, NULL, },
             { 'D', "data", &data_field->data, &datasize, },
-            { 'i', "cache_bits", &data_field->cached, NULL, },
-            { 'D', "cache_data", &cache, &cachesize, },
         };
         return gwy_serialize_get_struct_size(GWY_DATA_FIELD_TYPE_NAME,
                                              G_N_ELEMENTS(spec), spec);
@@ -323,9 +313,9 @@ gwy_data_field_deserialize(const guchar *buffer,
                            gsize size,
                            gsize *position)
 {
-    guint32 datasize, cachesize = 0, cachebits = 0;
+    guint32 datasize;
     gint xres, yres;
-    gdouble xreal, yreal, xoff = 0.0, yoff = 0.0, *data = NULL, *cache = NULL;
+    gdouble xreal, yreal, xoff = 0.0, yoff = 0.0, *data = NULL;
     GwySIUnit *si_unit_xy = NULL, *si_unit_z = NULL;
     GwyDataField *data_field;
     GwySerializeSpec spec[] = {
@@ -338,8 +328,9 @@ gwy_data_field_deserialize(const guchar *buffer,
         { 'o', "si_unit_xy", &si_unit_xy, NULL, },
         { 'o', "si_unit_z", &si_unit_z, NULL, },
         { 'D', "data", &data, &datasize, },
-        { 'i', "cache_bits", &cachebits, NULL, },
-        { 'D', "cache_data", &cache, &cachesize, },
+        /* Ignored */
+        { 'i', "cache_bits", NULL, NULL, },
+        { 'D', "cache_data", NULL, NULL, },
     };
 
     gwy_debug("");
@@ -350,7 +341,6 @@ gwy_data_field_deserialize(const guchar *buffer,
                                             GWY_DATA_FIELD_TYPE_NAME,
                                             G_N_ELEMENTS(spec), spec)) {
         g_free(data);
-        g_free(cache);
         gwy_object_unref(si_unit_xy);
         gwy_object_unref(si_unit_z);
         return NULL;
@@ -359,7 +349,6 @@ gwy_data_field_deserialize(const guchar *buffer,
         g_critical("Serialized %s size mismatch %u != %u",
                    GWY_DATA_FIELD_TYPE_NAME, datasize, xres*yres);
         g_free(data);
-        g_free(cache);
         gwy_object_unref(si_unit_xy);
         gwy_object_unref(si_unit_z);
         return NULL;
@@ -381,18 +370,6 @@ gwy_data_field_deserialize(const guchar *buffer,
         gwy_object_unref(data_field->si_unit_xy);
         data_field->si_unit_xy = si_unit_xy;
     }
-
-    /* Copy what we can from deserialized cache, it may be longer, it may be
-     * shorter, it maybe whatever. */
-    cachesize = MIN(cachesize, GWY_DATA_FIELD_CACHE_SIZE);
-    if (cache && cachebits && cachesize) {
-        gwy_debug("deserialized cache bits: %08x, size = %u",
-                  cachebits, cachesize);
-        memcpy(data_field->cache, cache, cachesize*sizeof(gdouble));
-        data_field->cached = cachebits;
-        data_field->cached &= G_MAXUINT32 ^ (G_MAXUINT32 << cachesize);
-    }
-    g_free(cache);
 
     return (GObject*)data_field;
 }
