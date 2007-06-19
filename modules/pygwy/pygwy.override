@@ -31,6 +31,13 @@ ignore-type
   
 %%
 define gwy_app_data_browser_get_current_key noargs
+/**
+ *  gwy_app_data_browser_get_current_key: 
+ *
+ *  Get current key.
+ *
+ *  Returns: A numeric value representing the current key
+**/   
 static PyObject *
 _wrap_gwy_app_data_browser_get_current_key(PyGObject *self)
 {
@@ -41,6 +48,13 @@ _wrap_gwy_app_data_browser_get_current_key(PyGObject *self)
 }
 %%
 define gwy_app_data_browser_get_current_datafield noargs
+/**
+ *  gwy_app_data_browser_get_current_datafield:
+ *
+ *  Get current datafield.
+ *
+ *  Returns: reference to current datafield as L{DataField} object
+**/   
 static PyObject *
 _wrap_gwy_app_data_browser_get_current_datafield(PyGObject *self)
 {
@@ -51,6 +65,13 @@ _wrap_gwy_app_data_browser_get_current_datafield(PyGObject *self)
 }
 %%
 define gwy_app_data_browser_get_current_mask noargs
+/**
+ *  gwy_app_data_browser_get_current_mask:
+ *
+ *  Get current mask.
+ *
+ *  Returns: reference to current mask as L{DataField} object
+**/   
 static PyObject *
 _wrap_gwy_app_data_browser_get_current_mask(PyGObject *self)
 {
@@ -61,6 +82,13 @@ _wrap_gwy_app_data_browser_get_current_mask(PyGObject *self)
 }
 %%
 define gwy_app_data_browser_get_current_datafield_id noargs
+/**
+ * gwy_app_data_browser_get_current_datafield_id:
+ *
+ * Get current datafield's id.
+ *
+ * Returns: A numeric value representing the current datafield id
+**/   
 static PyObject *
 _wrap_gwy_app_data_browser_get_current_datafield_id(PyGObject *self)
 {
@@ -71,6 +99,13 @@ _wrap_gwy_app_data_browser_get_current_datafield_id(PyGObject *self)
 }
 %%
 define gwy_app_data_browser_get_current_showfield_key noargs
+/**
+ *  gwy_app_data_browser_get_current_showfield_key:
+ *
+ *  Get current showfield's key.
+ *
+ *  Returns: A numeric value representing the current showfield's key
+**/
 static PyObject *
 _wrap_gwy_app_data_browser_get_current_showfield_key(PyGObject *self)
 {
@@ -81,6 +116,13 @@ _wrap_gwy_app_data_browser_get_current_showfield_key(PyGObject *self)
 }
 %%
 define gwy_app_data_browser_get_current_showfield noargs
+/**
+ * gwy_app_data_browser_get_current_showfield:
+ *
+ * Get current showfield.
+ *
+ * Returns: reference to current showfield as L{DataField} object
+**/   
 static PyObject *
 _wrap_gwy_app_data_browser_get_current_showfield(PyGObject *self)
 {
@@ -92,6 +134,13 @@ _wrap_gwy_app_data_browser_get_current_showfield(PyGObject *self)
 
 %%
 define gwy_app_data_browser_get_current_container noargs
+/**
+ *  gwy_app_data_browser_get_current_container:
+ *
+ *  Get current container.
+ *
+ *  Returns: reference to current container as L{Container} object
+**/
 static PyObject *
 _wrap_gwy_app_data_browser_get_current_container(PyGObject *self)
 
@@ -104,6 +153,13 @@ _wrap_gwy_app_data_browser_get_current_container(PyGObject *self)
 
 %%
 define GwyDataField.duplicate noargs
+/**
+ * gwy_data_field_duplicate:
+ *
+ * Duplicate datafield
+ *
+ * Returns: duplicated datafield
+**/
 static PyObject *
 _wrap_gwy_data_field_duplicate(PyGObject *self)
 {   
@@ -133,6 +189,13 @@ _wrap_gwy_app_undo_qcheckpointv(PyObject *self, PyObject *args, PyObject *kwargs
 
 %%
 define GwyDataField.get_data noargs
+/**
+ * gwy_data_field_get_data:
+ *
+ * Create a tuple of data which the datafield contains. Content of the tuple is NOT reference to original datafield but its copy.
+ *
+ * Returns: tuple of raw numeric data from DataField
+**/
 static PyObject *
 _wrap_gwy_data_field_get_data(PyGObject *self)
 {   
@@ -184,6 +247,15 @@ _wrap_gwy_data_line_get_data(PyGObject *self)
 }
 %%
 override gwy_app_data_browser_get_data_ids kwargs
+/**
+ *  gwy_app_data_browser_get_data_ids:
+ *  @container: A data container.
+ *
+ *  Gets the list of all channels in a data container.
+ *  The container must be known to the data browser.
+ *
+ *  Returns: A tuple with ids
+**/
 static PyObject *
 _wrap_gwy_app_data_browser_get_data_ids(PyObject *self, PyObject *args, PyObject *kwargs) 
 {
@@ -218,13 +290,20 @@ _wrap_gwy_app_data_browser_get_data_ids(PyObject *self, PyObject *args, PyObject
 
 %%
 define GwyContainer.set_object_by_name kwargs
+/**
+ * gwy_container_set_object_by_name:
+ * @name: name of object to store
+ * @object: object to store
+ *
+ * Store object into container, not tested.
+**/      
 static PyObject *
 _wrap_gwy_container_set_object_by_name(PyGObject *self, PyObject *args, PyObject *kwargs) 
 {
    static char *kwlist[] = {"name", "obj",  NULL};
    GwyContainer *container;   
    gchar *key, *class_str;
-   PyObject *obj, *type;
+   PyObject *obj;
    GValue *gval;
 
    container = GWY_CONTAINER(self->obj);
@@ -246,7 +325,65 @@ _wrap_gwy_container_set_object_by_name(PyGObject *self, PyObject *args, PyObject
 }
 
 %%
+define GwyContainer.get_object_by_name kwargs
+/**
+ * gwy_container_get_object_by_name:
+ * @name: name of object
+ *
+ * Get object of given name from container.
+ *
+ * Returns: object of given name
+**/
+static PyObject *
+_wrap_gwy_container_get_object_by_name(PyGObject *self, PyObject *args, PyObject *kwargs) 
+{
+   static char *kwlist[] = {"name",  NULL};
+   gchar *key;
+   PyObject *obj;
+   GValue gval;
+
+   if (!PyArg_ParseTupleAndKeywords(args, 
+                                    kwargs,
+                                    "s:GwyContainer.get_object_by_name2", 
+                                    kwlist, 
+                                    &key))
+        return NULL;
+   gval = gwy_container_get_value_by_name(GWY_CONTAINER(self->obj), key);
+
+   obj = convert_gvalue_to_pyobject(&gval);
+   return obj;
+}
+
+%%
+define GwyContainer.contains_by_name kwargs
+static PyObject *
+_wrap_gwy_container_contains_by_name(PyGObject *self, PyObject *args, PyObject *kwargs) 
+{
+   static char *kwlist[] = {"name",  NULL};
+   gchar *key;
+   gboolean res;
+
+   if (!PyArg_ParseTupleAndKeywords(args, 
+                                    kwargs,
+                                    "s:GwyContainer.contains_by_name", 
+                                    kwlist, 
+                                    &key))
+        return NULL;
+   res = gwy_container_contains_by_name(GWY_CONTAINER(self->obj), key);
+
+   return PyBool_FromLong((long) res);
+}
+
+%%
 define GwyContainer.set_string kwargs
+/**
+ * gwy_container_set_string: 
+ * @key: an object key
+ * @value: new string
+ *
+ * Set string for key to given value
+ *
+ **/
 static PyObject *
 _wrap_gwy_container_set_string(PyGObject *self, PyObject *args, PyObject *kwargs)
 {
@@ -285,26 +422,15 @@ _wrap_gwy_container_get_string(PyGObject *self, PyObject *args, PyObject *kwargs
 }
 
 %%
-define GwyContainer.get_object_by_name kwargs
-static PyObject *
-_wrap_gwy_container_get_object_by_name(PyGObject *self, PyObject *args, PyObject *kwargs) 
-{
-   static char *kwlist[] = {"name", NULL};
-   gchar *name;
-   gpointer obj;
-   
-   if (!PyArg_ParseTupleAndKeywords(args, kwargs,"s:gwy_container_get_object_by_name", kwlist, &name))
-      return NULL;
-   obj = gwy_container_get_object_by_name((GWY_CONTAINER(self->obj)), name);
-   if (obj && (GWY_IS_DATA_FIELD(obj) || GWY_IS_DATA_LINE(obj) || GWY_IS_RESOURCE(obj) || GWY_IS_SI_UNIT(obj))) {
-      return pygobject_new((GObject *)obj);
-   } else {
-      Py_INCREF(Py_None);
-      return Py_None;
-   }
-}
-%%
 define GwyContainer.get_object kwargs
+/**
+ * gwy_container_get_object:
+ * @key: key of object.
+ *
+ * Get object of given key from container.
+ *
+ * Returns: object of given key
+**/
 static PyObject *
 _wrap_gwy_container_get_object(PyGObject *self, PyObject *args, PyObject *kwargs) 
 {
@@ -366,6 +492,54 @@ _wrap_gwy_container_keys_by_name(PyGObject *self)
 }
 
 %%
+define gwy_file_open kwargs
+/**
+ * gwy_file_open:
+ * @filename: Filename of file to open
+ *
+ * Open specified file
+ *  
+ * Returns: A main GwyContainer of opened file
+**/
+static PyObject *
+_wrap_gwy_file_open(PyObject *self, PyObject *args, PyObject *kwargs) 
+{
+   static char *kwlist[] = {"filename", NULL};
+
+   gchar *filename;
+   GwyContainer *c;
+
+   if (!PyArg_ParseTupleAndKeywords(args, kwargs,"s:gwy_file_open", kwlist, &filename))
+        return NULL;
+   c = gwy_app_file_load(NULL, filename, NULL);
+   return pygobject_new((GObject *)c);
+}
+
+%%
+define GwyContainer.save_to_file kwargs
+/**
+  * gwy_container_save_to_file:
+  * @filename: filename to save
+  * 
+  * Save content of container to specified file. The file format is determined by filename extension.
+  *
+  * Returns: #True when file is successfully saved, #False otherwise
+**/
+static PyObject *
+_wrap_gwy_container_save_to_file(PyObject *self, PyObject *args, PyObject *kwargs) 
+{
+   static char *kwlist[] = {"filename", NULL};
+   gchar *filename;
+
+   if (!PyArg_ParseTupleAndKeywords(args, kwargs,"s:GwyContainer.save_to_file", kwlist, &filename))
+        return NULL;
+   if (!gwy_app_file_write(GWY_CONTAINER( ((PyGObject *)self)->obj ), filename, NULL, NULL)) {
+       Py_RETURN_FALSE;
+   }
+   Py_RETURN_TRUE;
+}
+
+%%
 /*
 define GwyContainer.get_value kwargs
 static PyObject *
@@ -419,6 +593,26 @@ _wrap_gwy_load_datafield(PyGObject *self, PyObject *args, PyObject *kwargs)
    return Py_None;
 
 }
-*/
+
+define GwyContainer.get_object_by_name kwargs
+static PyObject *
+_wrap_gwy_container_get_object_by_name(PyGObject *self, PyObject *args, PyObject *kwargs) 
+{
+   static char *kwlist[] = {"name", NULL};
+   gchar *name;
+   gpointer obj;
+   
+   if (!PyArg_ParseTupleAndKeywords(args, kwargs,"s:gwy_container_get_object_by_name", kwlist, &name))
+      return NULL;
+   obj = gwy_container_get_object_by_name((GWY_CONTAINER(self->obj)), name);
+   if (obj && (GWY_IS_DATA_FIELD(obj) || GWY_IS_DATA_LINE(obj) || GWY_IS_RESOURCE(obj) || GWY_IS_SI_UNIT(obj))) {
+      return pygobject_new((GObject *)obj);
+   } else {
+      Py_INCREF(Py_None);
+      return Py_None;
+   }
+}
+    
+ */
 // TODO: use G_OBJECT_TYPE_NAME instead of string values in set_object_by_name
-/* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
+/* vim: set cin et ts=4 sw=4 cino=>1s syntax=c,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

@@ -10,7 +10,7 @@ PYGWY_H_FILES = \
 	$(top_srcdir)/app/data-browser.h \
 	$(top_srcdir)/libgwyddion/gwycontainer.h \
 	$(top_srcdir)/app/undo.h \
-	$(top_srcdir)/libdraw/gwyselection.h
+	$(top_srcdir)/libdraw/gwyselection.h 
 
 if ENABLE_PYGWY
 pygwy_module = pygwy.la
@@ -28,6 +28,7 @@ EXTRA_DIST = \
 	README.pygwy \
 	pygwy.override \
 	pygwy-codegen.py \
+	pygwy-generate-doc.py \
 	makefile.msc \
 	makefile.msc.gwt
 
@@ -69,11 +70,19 @@ pygwywrap.c: pygwy-codegen.py pygwy.defs pygwy.override
 	  --override pygwy.override --prefix pygwy pygwy.defs \
 	  | sed -e 's/^void$$/static void/' \
 	        -e '1s#.*#/* This is a 'GENERATED' file */#' >pygwywrap.c
+
+pygwy-doc: pygwy.defs pygwywrap.c
+	$(PYTHON) ./pygwy-generate-doc.py --codegendir $(PYGTK_CODEGENDIR) > gwy.py
+	epydoc -o pygwy-doc gwy.py
+
 endif
 
 MAINTAINERCLEANFILES = makefile.msc
 
 DISTCLEANFILES = pygwy.defs pygwywrap.c
 
+
 clean-local:
 	rm -f core.* *~
+	rm -rf pygwy-doc/
+	rm -f gwy.py gwy.pyc

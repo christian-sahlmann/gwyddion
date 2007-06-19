@@ -46,7 +46,8 @@
 #include <libgwymodule/gwymodule-file.h>
 #include <app/gwyapp.h>
 
-static GValue* convert_pyobject_to_gvalue(PyObject *o);
+static GValue*    convert_pyobject_to_gvalue  (PyObject *o);
+static PyObject*  convert_gvalue_to_pyobject  (GValue *value);
 
 #include "pygwywrap.c"
 #line 53 "pygwy.c"
@@ -190,10 +191,8 @@ static void
 pygwy_finalize_stderr_redirect(PyObject *d)
 {
     PyObject *py_stderr;
-    FILE *c_py_stderr;
     gchar *buf;
-    GString *msg;
-    int i;
+    
     // rewind redirected stderr file, read its content and display it in error window
     pygwy_run_string("_stderr_redir.seek(0)\n"
                      "_stderr_str = _stderr_redir.read()\n"
@@ -498,7 +497,7 @@ pygwy_register_plugins(void)
                                       &plugin_desc,
                                       &plugin_menu_path,
                                       &plugin_type);
-            printf("plugin_type: %d\n", plugin_type);
+            gwy_debug("plugin_type: %d", plugin_type);
             switch(plugin_type)
             {
                 case PYGWY_PROCESS:
@@ -935,7 +934,7 @@ convert_gvalue_to_pyobject(GValue *value)
         return NULL;
     }
     type = G_VALUE_TYPE(value);
-
+    gwy_debug("gvalue TYPE: %s\n", g_type_name(type));
     switch (type) {
         case G_TYPE_CHAR:
             o = PyInt_FromLong(g_value_get_char(value));
@@ -950,6 +949,7 @@ convert_gvalue_to_pyobject(GValue *value)
             o = PyInt_FromLong(g_value_get_int(value));
             break;
         case G_TYPE_UINT:
+
             o = PyInt_FromLong(g_value_get_uint(value));
             break;
         case G_TYPE_LONG:
