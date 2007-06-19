@@ -1281,33 +1281,33 @@ gwy_tool_roughness_update_parameters(GwyToolRoughness *tool)
 static void
 gwy_tool_roughness_update_graphs(GwyToolRoughness *tool)
 {
+    typedef struct {
+        const gchar *title;
+        GwyDataLine *dataline;
+    } Graph;
+
     GwyGraphCurveModel *gcmodel;
-    GwyRGBA preset_color;
+    Graph *graph;
     gint i;
 
-    typedef struct
-    {
-        const gchar *title;
-        const gchar *description;
-        GwyDataLine *dataline;
-    } Graphs;
-
-    Graphs graph_profile[] =  {
-        { N_("Texture"),   "",  tool->profiles.texture,   },
-        { N_("Waviness"),  "",  tool->profiles.waviness,  },
-        { N_("Roughness"), "",  tool->profiles.roughness, },
+    /* XXX: This array is indexed by GwyRoughnessGraph values */
+    Graph graphs[] =  {
+        { N_("Texture"),                         tool->profiles.texture,   },
+        { N_("Waviness"),                        tool->profiles.waviness,  },
+        { N_("Roughness"),                       tool->profiles.roughness, },
+        { N_("Amplitude Distribution Function"), tool->profiles.adf,       },
+        { N_("The Bearing Ratio Curve"),         tool->profiles.brc,       },
+        { N_("Peak Count"),                      tool->profiles.pc,        },
+    };
+    /* Subset to show in profile graphs */
+    static const guint profile_graphs[] = {
+        GWY_ROUGHNESS_GRAPH_TEXTURE,
+        GWY_ROUGHNESS_GRAPH_WAVINESS,
+        GWY_ROUGHNESS_GRAPH_ROUGHNESS,
     };
 
-    Graphs graph_all[] =  {
-        { N_("Texture"),   "",  tool->profiles.texture,   },
-        { N_("Waviness"),  "",  tool->profiles.waviness,  },
-        { N_("Roughness"), "",  tool->profiles.roughness, },
-        { N_("The Amplitude Distribution Function"),  N_("The Amplitude Distribution Function"),  tool->profiles.adf,  },
-        { N_("The Bearing Ratio Curve"),  N_("The Bearing Ratio Curve"),  tool->profiles.brc,  },
-        { N_("Peak Count"),  N_("Peak Count"),  tool->profiles.pc,  },
-
-    };
-
+    /* XXX: This is wrong, the set of curves does not change, so we should
+     * just update the data. */
     gwy_graph_model_remove_all_curves(tool->graphmodel);
     gwy_graph_model_remove_all_curves(tool->graphmodel_profile);
     if (!tool->have_data)
@@ -1318,36 +1318,30 @@ gwy_tool_roughness_update_graphs(GwyToolRoughness *tool)
                  NULL);
     gwy_graph_model_set_units_from_data_line(tool->graphmodel_profile,
                                              tool->dataline);
-    for (i = 0; i < G_N_ELEMENTS(graph_profile); i++) {
-        preset_color = *gwy_graph_get_preset_color(i);
+    for (i = 0; i < G_N_ELEMENTS(profile_graphs); i++) {
+        graph = graphs + profile_graphs[i];
         gcmodel = gwy_graph_curve_model_new();
         g_object_set(gcmodel,
                      "mode", GWY_GRAPH_CURVE_LINE,
-                     "color", &preset_color,
-                     "description", graph_profile[i].title,
+                     "color", gwy_graph_get_preset_color(i),
+                     "description", graph->title,
                      NULL);
-
-        gwy_graph_curve_model_set_data_from_dataline(gcmodel,
-                                                     graph_profile[i].dataline,
+        gwy_graph_curve_model_set_data_from_dataline(gcmodel, graph->dataline,
                                                      0, 0);
         gwy_graph_model_add_curve(tool->graphmodel_profile, gcmodel);
         g_object_unref(gcmodel);
     }
 
-    preset_color = *gwy_graph_get_preset_color(0);
+    graph = graphs + tool->graph_type;
     gcmodel = gwy_graph_curve_model_new();
     g_object_set(gcmodel,
                  "mode", GWY_GRAPH_CURVE_LINE,
-                 "color", &preset_color,
+                 "color", gwy_graph_get_preset_color(0),
+                 "description", graph->title,
                  NULL);
-    g_object_set(tool->graphmodel,
-                 "title", graph_all[tool->graph_type].title,
-                 "si-unit-x", gwy_data_line_get_si_unit_x(graph_all[tool->graph_type].dataline),
-                 "si-unit-y", gwy_data_line_get_si_unit_y(graph_all[tool->graph_type].dataline),
-                 NULL);
-    g_object_set(gcmodel, "description",  graph_all[tool->graph_type].description, NULL);
-    gwy_graph_curve_model_set_data_from_dataline(gcmodel,
-                                                 graph_all[tool->graph_type].dataline,
+    g_object_set(tool->graphmodel, "title", graph->title, NULL);
+    gwy_graph_model_set_units_from_data_line(tool->graphmodel, graph->dataline);
+    gwy_graph_curve_model_set_data_from_dataline(gcmodel, graph->dataline,
                                                  0, 0);
     gwy_graph_model_add_curve(tool->graphmodel, gcmodel);
     g_object_unref(gcmodel);
