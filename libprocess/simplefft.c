@@ -22,22 +22,25 @@
 #include <libgwyddion/gwymath.h>
 #include <libprocess/simplefft.h>
 
-#define C10_1 .80901699437494742410229341718281905886015458990288
-#define C10_2 .30901699437494742410229341718281905886015458990289
-#define S10_1 .58778525229247312916870595463907276859765243764313
-#define S10_2 .95105651629515357211643933337938214340569863412574
+#define C3_1 0.5
+#define S3_1 0.86602540378443864676372317075293618347140262690518
+
+#define C10_1 0.80901699437494742410229341718281905886015458990288
+#define C10_2 0.30901699437494742410229341718281905886015458990289
+#define S10_1 0.58778525229247312916870595463907276859765243764313
+#define S10_2 0.95105651629515357211643933337938214340569863412574
 
 #define C5_1 C10_2
 #define C5_2 -C10_1
 #define S5_1 S10_2
 #define S5_2 S10_1
 
-#define C7_1 .62348980185873353052500488400423981063227473089641
-#define C7_2 -.22252093395631440428890256449679475946635556876452
-#define C7_3 -.90096886790241912623610231950744505116591916213184
-#define S7_1 .78183148246802980870844452667405775023233451870867
-#define S7_2 .97492791218182360701813168299393121723278580062000
-#define S7_3 .43388373911755812047576833284835875460999072778748
+#define C7_1 0.62348980185873353052500488400423981063227473089641
+#define C7_2 -0.22252093395631440428890256449679475946635556876452
+#define C7_3 -0.90096886790241912623610231950744505116591916213184
+#define S7_1 0.78183148246802980870844452667405775023233451870867
+#define S7_2 0.97492791218182360701813168299393121723278580062000
+#define S7_3 0.43388373911755812047576833284835875460999072778748
 
 #ifdef HAVE_SINCOS
 #define _gwy_sincos sincos
@@ -87,6 +90,7 @@ static const GwyFFTWindowingFunc windowings[] = {
  * numbers represent a reasonable compromise tested on a few platforms */
 static const guint nice_fft_num[] = {
 #ifdef HAVE_FFTW3
+    /* {{{ Nice transform sizes for FFTW3 */
          16,     18,     20,     21,     22,     24,     25,     27,     28,
          32,     33,     35,     36,     40,     42,     44,     45,     48,
          49,     50,     54,     55,     56,     60,     64,     66,     70,
@@ -167,7 +171,9 @@ static const guint nice_fft_num[] = {
      110250, 110592, 110880, 111132, 112000, 112500, 112896, 113400, 114048,
      114688, 115200, 115248, 115500, 116640, 117600, 118272, 118800, 120000,
      120960, 122880, 124416, 131072,
+     /* }}} */
 #else
+    /* {{{ Nice transform sizes for simplefft */
           8,      9,     10,     12,     14,     15,     16,     18,     20,
          21,     24,     25,     27,     28,     30,     32,     35,     36,
          40,     42,     45,     48,     50,     54,     56,     60,     63,
@@ -228,6 +234,7 @@ static const guint nice_fft_num[] = {
      113400, 114688, 115200, 116640, 118098, 118125, 120000, 120960, 121500,
      122472, 122880, 124416, 125000, 126000, 127575, 128000, 129024, 129600,
      131072,
+     /* }}} */
 #endif
 };
 
@@ -369,39 +376,25 @@ shuffle_and_twiddle(guint gn, guint gm, guint p,
     }
 }
 
+/* Butterflies. {{{
+ * Hopefully the compiler will optimize out the excessibe assigments to
+ * temporary variables. */
 static void
 pass2(guint gn, guint stride, gdouble *re, gdouble *im)
 {
     guint m;
 
     gn /= 2;
-    if (stride == 1) {
-        for (m = 0; m < gn; m++) {
-            gdouble *rem = re + m;
-            gdouble *imm = im + m;
-            gdouble z;
+    for (m = 0; m < gn; m++) {
+        gdouble z;
 
-            z = rem[0] - rem[gn];
-            rem[0] += rem[gn];
-            rem[gn] = z;
+        z = re[stride*m] - re[stride*(gn + m)];
+        re[stride*m] += re[stride*(gn + m)];
+        re[stride*(gn + m)] = z;
 
-            z = imm[0] - imm[gn];
-            imm[0] += imm[gn];
-            imm[gn] = z;
-        }
-    }
-    else {
-        for (m = 0; m < gn; m++) {
-            gdouble z;
-
-            z = re[stride*m] - re[stride*(gn + m)];
-            re[stride*m] += re[stride*(gn + m)];
-            re[stride*(gn + m)] = z;
-
-            z = im[stride*m] - im[stride*(gn + m)];
-            im[stride*m] += im[stride*(gn + m)];
-            im[stride*(gn + m)] = z;
-        }
+        z = im[stride*m] - im[stride*(gn + m)];
+        im[stride*m] += im[stride*(gn + m)];
+        im[stride*(gn + m)] = z;
     }
 }
 
@@ -411,233 +404,176 @@ pass3(guint gn, guint stride, gdouble *re, gdouble *im)
     guint m;
 
     gn /= 3;
-    if (stride == 1) {
-        for (m = 0; m < gn; m++) {
-            gdouble *rem = re + m;
-            gdouble *imm = im + m;
-            gdouble z1re, z1im, z2re, z2im;
+    for (m = 0; m < gn; m++) {
+        gdouble z1re, z1im, z2re, z2im;
 
-            z1re = rem[gn] + rem[2*gn];
-            z1im = imm[gn] + imm[2*gn];
-            /* Multiplication by i */
-            z2re = (imm[2*gn] - imm[gn])*0.5*GWY_SQRT3;
-            z2im = (rem[gn] - rem[2*gn])*0.5*GWY_SQRT3;
-            rem[2*gn] = rem[0] - (z2re + 0.5*z1re);
-            imm[2*gn] = imm[0] - (z2im + 0.5*z1im);
-            rem[gn] = rem[0] + (z2re - 0.5*z1re);
-            imm[gn] = imm[0] + (z2im - 0.5*z1im);
-            rem[0] += z1re;
-            imm[0] += z1im;
-        }
-    }
-    else {
-        for (m = 0; m < gn; m++) {
-            gdouble z1re, z1im, z2re, z2im;
-
-            z1re = re[stride*(gn + m)] + re[stride*(2*gn + m)];
-            z1im = im[stride*(gn + m)] + im[stride*(2*gn + m)];
-            /* Multiplication by i */
-            z2re = (im[stride*(2*gn + m)] - im[stride*(gn + m)])*0.5*GWY_SQRT3;
-            z2im = (re[stride*(gn + m)] - re[stride*(2*gn + m)])*0.5*GWY_SQRT3;
-            re[stride*(2*gn + m)] = re[stride*m] - (z2re + 0.5*z1re);
-            im[stride*(2*gn + m)] = im[stride*m] - (z2im + 0.5*z1im);
-            re[stride*(gn + m)] = re[stride*m] + (z2re - 0.5*z1re);
-            im[stride*(gn + m)] = im[stride*m] + (z2im - 0.5*z1im);
-            re[stride*m] += z1re;
-            im[stride*m] += z1im;
-        }
+        z1re = re[stride*(gn + m)] + re[stride*(2*gn + m)];
+        z1im = im[stride*(gn + m)] + im[stride*(2*gn + m)];
+        /* Multiplication by i */
+        z2re = (im[stride*(2*gn + m)] - im[stride*(gn + m)])*S3_1;
+        z2im = (re[stride*(gn + m)] - re[stride*(2*gn + m)])*S3_1;
+        re[stride*(2*gn + m)] = re[stride*m] - (z2re + 0.5*z1re);
+        im[stride*(2*gn + m)] = im[stride*m] - (z2im + 0.5*z1im);
+        re[stride*(gn + m)] = re[stride*m] + (z2re - 0.5*z1re);
+        im[stride*(gn + m)] = im[stride*m] + (z2im - 0.5*z1im);
+        re[stride*m] += z1re;
+        im[stride*m] += z1im;
     }
 }
 
-/* Hopefully the compiler will optimize out the excessibe assigments to
-   temporary variables */
 static void
 pass4(guint gn, guint stride, gdouble *re, gdouble *im)
 {
     guint m;
 
     gn /= 4;
-    if (stride == 1) {
-        for (m = 0; m < gn; m++) {
-            gdouble *rem = re + m;
-            gdouble *imm = im + m;
-            gdouble z, z1re, z1im;
+    for (m = 0; m < gn; m++) {
+        gdouble z, z1re, z1im;
 
-            /* Level 0 */
-            z = rem[0] - rem[2*gn];
-            rem[0] += rem[2*gn];
-            rem[2*gn] = z;
+        /* Level 0 */
+        z = re[stride*m] - re[stride*(2*gn + m)];
+        re[stride*m] += re[stride*(2*gn + m)];
+        re[stride*(2*gn + m)] = z;
 
-            z = imm[0] - imm[2*gn];
-            imm[0] += imm[2*gn];
-            imm[2*gn] = z;
+        z = im[stride*m] - im[stride*(2*gn + m)];
+        im[stride*m] += im[stride*(2*gn + m)];
+        im[stride*(2*gn + m)] = z;
 
-            z = rem[gn] - rem[3*gn];
-            rem[gn] += rem[3*gn];
-            rem[3*gn] = z;
+        z = re[stride*(gn + m)] - re[stride*(3*gn + m)];
+        re[stride*(gn + m)] += re[stride*(3*gn + m)];
+        re[stride*(3*gn + m)] = z;
 
-            z = imm[gn] - imm[3*gn];
-            imm[gn] += imm[3*gn];
-            imm[3*gn] = z;
+        z = im[stride*(gn + m)] - im[stride*(3*gn + m)];
+        im[stride*(gn + m)] += im[stride*(3*gn + m)];
+        im[stride*(3*gn + m)] = z;
 
-            /* Level 1 */
-            z = rem[0] - rem[gn];
-            rem[0] += rem[gn];
-            rem[gn] = z;
+        /* Level 1 */
+        z = re[stride*m] - re[stride*(gn + m)];
+        re[stride*m] += re[stride*(gn + m)];
+        re[stride*(gn + m)] = z;
 
-            z = imm[0] - imm[gn];
-            imm[0] += imm[gn];
-            imm[gn] = z;
+        z = im[stride*m] - im[stride*(gn + m)];
+        im[stride*m] += im[stride*(gn + m)];
+        im[stride*(gn + m)] = z;
 
-            /* Multiplication by i */
-            z1re = -imm[3*gn];
-            z1im = rem[3*gn];
-            rem[3*gn] = rem[2*gn] - z1re;
-            imm[3*gn] = imm[2*gn] - z1im;
-            rem[2*gn] += z1re;
-            imm[2*gn] += z1im;
+        /* Multiplication by i */
+        z1re = -im[stride*(3*gn + m)];
+        z1im = re[stride*(3*gn + m)];
+        re[stride*(3*gn + m)] = re[stride*(2*gn + m)] - z1re;
+        im[stride*(3*gn + m)] = im[stride*(2*gn + m)] - z1im;
+        re[stride*(2*gn + m)] += z1re;
+        im[stride*(2*gn + m)] += z1im;
 
-            /* Fix bit-reversal */
-            z = rem[gn];
-            rem[gn] = rem[2*gn];
-            rem[2*gn] = z;
+        /* Fix bit-reversal */
+        z = re[stride*(gn + m)];
+        re[stride*(gn + m)] = re[stride*(2*gn + m)];
+        re[stride*(2*gn + m)] = z;
 
-            z = imm[gn];
-            imm[gn] = imm[2*gn];
-            imm[2*gn] = z;
-        }
-    }
-    else {
-        for (m = 0; m < gn; m++) {
-            gdouble z, z1re, z1im;
-
-            /* Level 0 */
-            z = re[stride*m] - re[stride*(2*gn + m)];
-            re[stride*m] += re[stride*(2*gn + m)];
-            re[stride*(2*gn + m)] = z;
-
-            z = im[stride*m] - im[stride*(2*gn + m)];
-            im[stride*m] += im[stride*(2*gn + m)];
-            im[stride*(2*gn + m)] = z;
-
-            z = re[stride*(gn + m)] - re[stride*(3*gn + m)];
-            re[stride*(gn + m)] += re[stride*(3*gn + m)];
-            re[stride*(3*gn + m)] = z;
-
-            z = im[stride*(gn + m)] - im[stride*(3*gn + m)];
-            im[stride*(gn + m)] += im[stride*(3*gn + m)];
-            im[stride*(3*gn + m)] = z;
-
-            /* Level 1 */
-            z = re[stride*m] - re[stride*(gn + m)];
-            re[stride*m] += re[stride*(gn + m)];
-            re[stride*(gn + m)] = z;
-
-            z = im[stride*m] - im[stride*(gn + m)];
-            im[stride*m] += im[stride*(gn + m)];
-            im[stride*(gn + m)] = z;
-
-            /* Multiplication by i */
-            z1re = -im[stride*(3*gn + m)];
-            z1im = re[stride*(3*gn + m)];
-            re[stride*(3*gn + m)] = re[stride*(2*gn + m)] - z1re;
-            im[stride*(3*gn + m)] = im[stride*(2*gn + m)] - z1im;
-            re[stride*(2*gn + m)] += z1re;
-            im[stride*(2*gn + m)] += z1im;
-
-            /* Fix bit-reversal */
-            z = re[stride*(gn + m)];
-            re[stride*(gn + m)] = re[stride*(2*gn + m)];
-            re[stride*(2*gn + m)] = z;
-
-            z = im[stride*(gn + m)];
-            im[stride*(gn + m)] = im[stride*(2*gn + m)];
-            im[stride*(2*gn + m)] = z;
-        }
+        z = im[stride*(gn + m)];
+        im[stride*(gn + m)] = im[stride*(2*gn + m)];
+        im[stride*(2*gn + m)] = z;
     }
 }
 
-/* Hopefully the compiler will optimize out the excessibe assigments to
-   temporary variables */
 static void
 pass5(guint gn, guint stride, gdouble *re, gdouble *im)
 {
     guint m;
 
     gn /= 5;
-    if (stride == 1) {
-        for (m = 0; m < gn; m++) {
-            gdouble *rem = re + m;
-            gdouble *imm = im + m;
-            gdouble w0re, w0im, w1re, w1im, w2re, w2im, w3re, w3im;
-            gdouble z0re, z0im, z1re, z1im, z2re, z2im, z3re, z3im;
+    for (m = 0; m < gn; m++) {
+        gdouble w0re, w0im, w1re, w1im, w2re, w2im, w3re, w3im;
+        gdouble z0re, z0im, z1re, z1im, z2re, z2im, z3re, z3im;
 
-            z0re = rem[gn] + rem[4*gn];
-            z0im = imm[gn] + imm[4*gn];
-            z1re = rem[gn] - rem[4*gn];
-            z1im = imm[gn] - imm[4*gn];
-            z2re = rem[2*gn] + rem[3*gn];
-            z2im = imm[2*gn] + imm[3*gn];
-            z3re = rem[2*gn] - rem[3*gn];
-            z3im = imm[2*gn] - imm[3*gn];
+        /* Level 0 */
+        z0re = re[stride*(gn + m)] + re[stride*(4*gn + m)];
+        z0im = im[stride*(gn + m)] + im[stride*(4*gn + m)];
+        z1re = re[stride*(gn + m)] - re[stride*(4*gn + m)];
+        z1im = im[stride*(gn + m)] - im[stride*(4*gn + m)];
+        z2re = re[stride*(2*gn + m)] + re[stride*(3*gn + m)];
+        z2im = im[stride*(2*gn + m)] + im[stride*(3*gn + m)];
+        z3re = re[stride*(2*gn + m)] - re[stride*(3*gn + m)];
+        z3im = im[stride*(2*gn + m)] - im[stride*(3*gn + m)];
 
-            w0re = rem[0] + C5_1*z0re + C5_2*z2re;
-            w0im = imm[0] + C5_1*z0im + C5_2*z2im;
-            w1re = rem[0] + C5_2*z0re + C5_1*z2re;
-            w1im = imm[0] + C5_2*z0im + C5_1*z2im;
-            /* Multiplication by i */
-            w2re = -S5_1*z1im - S5_2*z3im;
-            w2im = S5_1*z1re + S5_2*z3re;
-            w3re = -S5_2*z1im + S5_1*z3im;
-            w3im = S5_2*z1re - S5_1*z3re;
+        /* Level 1 */
+        w0re = re[stride*m] + C5_1*z0re + C5_2*z2re;
+        w0im = im[stride*m] + C5_1*z0im + C5_2*z2im;
+        w1re = re[stride*m] + C5_2*z0re + C5_1*z2re;
+        w1im = im[stride*m] + C5_2*z0im + C5_1*z2im;
+        /* Multiplication by i */
+        w2re = -S5_1*z1im - S5_2*z3im;
+        w2im = S5_1*z1re + S5_2*z3re;
+        w3re = -S5_2*z1im + S5_1*z3im;
+        w3im = S5_2*z1re - S5_1*z3re;
 
-            rem[0] += z0re + z2re;
-            imm[0] += z0im + z2im;
-            rem[gn] = w0re + w2re;
-            imm[gn] = w0im + w2im;
-            rem[2*gn] = w1re + w3re;
-            imm[2*gn] = w1im + w3im;
-            rem[3*gn] = w1re - w3re;
-            imm[3*gn] = w1im - w3im;
-            rem[4*gn] = w0re - w2re;
-            imm[4*gn] = w0im - w2im;
-        }
+        /* Level 2 */
+        re[stride*m] += z0re + z2re;
+        im[stride*m] += z0im + z2im;
+        re[stride*(gn + m)] = w0re + w2re;
+        im[stride*(gn + m)] = w0im + w2im;
+        re[stride*(2*gn + m)] = w1re + w3re;
+        im[stride*(2*gn + m)] = w1im + w3im;
+        re[stride*(3*gn + m)] = w1re - w3re;
+        im[stride*(3*gn + m)] = w1im - w3im;
+        re[stride*(4*gn + m)] = w0re - w2re;
+        im[stride*(4*gn + m)] = w0im - w2im;
     }
-    else {
-        for (m = 0; m < gn; m++) {
-            gdouble w0re, w0im, w1re, w1im, w2re, w2im, w3re, w3im;
-            gdouble z0re, z0im, z1re, z1im, z2re, z2im, z3re, z3im;
+}
 
-            z0re = re[stride*(gn + m)] + re[stride*(4*gn + m)];
-            z0im = im[stride*(gn + m)] + im[stride*(4*gn + m)];
-            z1re = re[stride*(gn + m)] - re[stride*(4*gn + m)];
-            z1im = im[stride*(gn + m)] - im[stride*(4*gn + m)];
-            z2re = re[stride*(2*gn + m)] + re[stride*(3*gn + m)];
-            z2im = im[stride*(2*gn + m)] + im[stride*(3*gn + m)];
-            z3re = re[stride*(2*gn + m)] - re[stride*(3*gn + m)];
-            z3im = im[stride*(2*gn + m)] - im[stride*(3*gn + m)];
+static void
+pass6(guint gn, guint stride, gdouble *re, gdouble *im)
+{
+    guint m;
 
-            w0re = re[stride*m] + C5_1*z0re + C5_2*z2re;
-            w0im = im[stride*m] + C5_1*z0im + C5_2*z2im;
-            w1re = re[stride*m] + C5_2*z0re + C5_1*z2re;
-            w1im = im[stride*m] + C5_2*z0im + C5_1*z2im;
-            /* Multiplication by i */
-            w2re = -S5_1*z1im - S5_2*z3im;
-            w2im = S5_1*z1re + S5_2*z3re;
-            w3re = -S5_2*z1im + S5_1*z3im;
-            w3im = S5_2*z1re - S5_1*z3re;
+    gn /= 6;
+    for (m = 0; m < gn; m++) {
+        gdouble w1re, w1im, w2re, w2im;
+        gdouble w4re, w4im, w5re, w5im;
+        gdouble z0re, z0im, z1re, z1im, z2re, z2im;
+        gdouble z3re, z3im, z4re, z4im, z5re, z5im;
 
-            re[stride*m] += z0re + z2re;
-            im[stride*m] += z0im + z2im;
-            re[stride*(gn + m)] = w0re + w2re;
-            im[stride*(gn + m)] = w0im + w2im;
-            re[stride*(2*gn + m)] = w1re + w3re;
-            im[stride*(2*gn + m)] = w1im + w3im;
-            re[stride*(3*gn + m)] = w1re - w3re;
-            im[stride*(3*gn + m)] = w1im - w3im;
-            re[stride*(4*gn + m)] = w0re - w2re;
-            im[stride*(4*gn + m)] = w0im - w2im;
-        }
+        /* Level 0 */
+        z0re = re[stride*m] + re[stride*(3*gn + m)];
+        z0im = im[stride*m] + im[stride*(3*gn + m)];
+        z3re = re[stride*m] - re[stride*(3*gn + m)];
+        z3im = im[stride*m] - im[stride*(3*gn + m)];
+        z1re = re[stride*(gn + m)] + re[stride*(5*gn + m)];
+        z1im = im[stride*(gn + m)] + im[stride*(5*gn + m)];
+        z5re = re[stride*(gn + m)] - re[stride*(5*gn + m)];
+        z5im = im[stride*(gn + m)] - im[stride*(5*gn + m)];
+        z2re = re[stride*(2*gn + m)] + re[stride*(4*gn + m)];
+        z2im = im[stride*(2*gn + m)] + im[stride*(4*gn + m)];
+        z4re = re[stride*(2*gn + m)] - re[stride*(4*gn + m)];
+        z4im = im[stride*(2*gn + m)] - im[stride*(4*gn + m)];
+
+        /* Level 1 and Level 2 for indices 0 and 3 */
+        w1re = z1re + z2re;
+        w1im = z1im + z2im;
+        w2re = z1re - z2re;
+        w2im = z1im - z2im;
+        re[stride*m] = z0re + w1re;
+        im[stride*m] = z0im + w1im;
+        re[stride*(3*gn + m)] = z3re - w2re;
+        im[stride*(3*gn + m)] = z3im - w2im;
+        w1re *= C3_1;
+        w1im *= C3_1;
+        w2re *= C3_1;
+        w2im *= C3_1;
+        /* Multiplication by i */
+        w4re = -S3_1*(z4im + z5im);
+        w4im = S3_1*(z4re + z5re);
+        w5re = -S3_1*(z4im - z5im);
+        w5im = S3_1*(z4re - z5re);
+
+        /* Level 2 */
+        re[stride*(gn + m)] = z3re + w2re + w4re;
+        im[stride*(gn + m)] = z3im + w2im + w4im;
+        re[stride*(2*gn + m)] = z0re - w1re - w5re;
+        im[stride*(2*gn + m)] = z0im - w1im - w5im;
+        re[stride*(4*gn + m)] = z0re - w1re + w5re;
+        im[stride*(4*gn + m)] = z0im - w1im + w5im;
+        re[stride*(5*gn + m)] = z3re + w2re - w4re;
+        im[stride*(5*gn + m)] = z3im + w2im - w4im;
     }
 }
 
@@ -647,291 +583,154 @@ pass7(guint gn, guint stride, gdouble *re, gdouble *im)
     guint m;
 
     gn /= 7;
-    if (stride == 1) {
-        for (m = 0; m < gn; m++) {
-            gdouble *rem = re + m;
-            gdouble *imm = im + m;
-            gdouble w1re, w1im, w2re, w2im, w3re, w3im;
-            gdouble w4re, w4im, w5re, w5im, w6re, w6im;
-            gdouble z1re, z1im, z2re, z2im, z3re, z3im;
-            gdouble z4re, z4im, z5re, z5im, z6re, z6im;
+    for (m = 0; m < gn; m++) {
+        gdouble w1re, w1im, w2re, w2im, w3re, w3im;
+        gdouble w4re, w4im, w5re, w5im, w6re, w6im;
+        gdouble z1re, z1im, z2re, z2im, z3re, z3im;
+        gdouble z4re, z4im, z5re, z5im, z6re, z6im;
 
-            z1re = rem[gn] + rem[6*gn];
-            z1im = imm[gn] + imm[6*gn];
-            z6re = rem[gn] - rem[6*gn];
-            z6im = imm[gn] - imm[6*gn];
-            z2re = rem[2*gn] + rem[5*gn];
-            z2im = imm[2*gn] + imm[5*gn];
-            z5re = rem[2*gn] - rem[5*gn];
-            z5im = imm[2*gn] - imm[5*gn];
-            z3re = rem[3*gn] + rem[4*gn];
-            z3im = imm[3*gn] + imm[4*gn];
-            z4re = rem[3*gn] - rem[4*gn];
-            z4im = imm[3*gn] - imm[4*gn];
+        /* Level 0 */
+        z1re = re[stride*(gn + m)] + re[stride*(6*gn + m)];
+        z1im = im[stride*(gn + m)] + im[stride*(6*gn + m)];
+        z6re = re[stride*(gn + m)] - re[stride*(6*gn + m)];
+        z6im = im[stride*(gn + m)] - im[stride*(6*gn + m)];
+        z2re = re[stride*(2*gn + m)] + re[stride*(5*gn + m)];
+        z2im = im[stride*(2*gn + m)] + im[stride*(5*gn + m)];
+        z5re = re[stride*(2*gn + m)] - re[stride*(5*gn + m)];
+        z5im = im[stride*(2*gn + m)] - im[stride*(5*gn + m)];
+        z3re = re[stride*(3*gn + m)] + re[stride*(4*gn + m)];
+        z3im = im[stride*(3*gn + m)] + im[stride*(4*gn + m)];
+        z4re = re[stride*(3*gn + m)] - re[stride*(4*gn + m)];
+        z4im = im[stride*(3*gn + m)] - im[stride*(4*gn + m)];
 
-            w1re = rem[0] + C7_1*z1re + C7_2*z2re + C7_3*z3re;
-            w1im = imm[0] + C7_1*z1im + C7_2*z2im + C7_3*z3im;
-            w2re = rem[0] + C7_2*z1re + C7_3*z2re + C7_1*z3re;
-            w2im = imm[0] + C7_2*z1im + C7_3*z2im + C7_1*z3im;
-            w3re = rem[0] + C7_3*z1re + C7_1*z2re + C7_2*z3re;
-            w3im = imm[0] + C7_3*z1im + C7_1*z2im + C7_2*z3im;
-            /* Multiplication by i */
-            w4re = -S7_2*z4im + S7_1*z5im - S7_3*z6im;
-            w4im = S7_2*z4re - S7_1*z5re + S7_3*z6re;
-            w5re = S7_1*z4im + S7_3*z5im - S7_2*z6im;
-            w5im = -S7_1*z4re - S7_3*z5re + S7_2*z6re;
-            w6re = -S7_3*z4im - S7_2*z5im - S7_1*z6im;
-            w6im = S7_3*z4re + S7_2*z5re + S7_1*z6re;
+        /* Level 2 */
+        w1re = re[stride*m] + C7_1*z1re + C7_2*z2re + C7_3*z3re;
+        w1im = im[stride*m] + C7_1*z1im + C7_2*z2im + C7_3*z3im;
+        w2re = re[stride*m] + C7_2*z1re + C7_3*z2re + C7_1*z3re;
+        w2im = im[stride*m] + C7_2*z1im + C7_3*z2im + C7_1*z3im;
+        w3re = re[stride*m] + C7_3*z1re + C7_1*z2re + C7_2*z3re;
+        w3im = im[stride*m] + C7_3*z1im + C7_1*z2im + C7_2*z3im;
+        /* Multiplication by i */
+        w4re = -S7_2*z4im + S7_1*z5im - S7_3*z6im;
+        w4im = S7_2*z4re - S7_1*z5re + S7_3*z6re;
+        w5re = S7_1*z4im + S7_3*z5im - S7_2*z6im;
+        w5im = -S7_1*z4re - S7_3*z5re + S7_2*z6re;
+        w6re = -S7_3*z4im - S7_2*z5im - S7_1*z6im;
+        w6im = S7_3*z4re + S7_2*z5re + S7_1*z6re;
 
-            rem[0] += z1re + z2re + z3re;
-            imm[0] += z1im + z2im + z3im;
-            rem[gn] = w1re + w6re;
-            imm[gn] = w1im + w6im;
-            rem[2*gn] = w2re + w5re;
-            imm[2*gn] = w2im + w5im;
-            rem[3*gn] = w3re + w4re;
-            imm[3*gn] = w3im + w4im;
-            rem[4*gn] = w3re - w4re;
-            imm[4*gn] = w3im - w4im;
-            rem[5*gn] = w2re - w5re;
-            imm[5*gn] = w2im - w5im;
-            rem[6*gn] = w1re - w6re;
-            imm[6*gn] = w1im - w6im;
-        }
-    }
-    else {
-        for (m = 0; m < gn; m++) {
-            gdouble w1re, w1im, w2re, w2im, w3re, w3im;
-            gdouble w4re, w4im, w5re, w5im, w6re, w6im;
-            gdouble z1re, z1im, z2re, z2im, z3re, z3im;
-            gdouble z4re, z4im, z5re, z5im, z6re, z6im;
-
-            z1re = re[stride*(gn + m)] + re[stride*(6*gn + m)];
-            z1im = im[stride*(gn + m)] + im[stride*(6*gn + m)];
-            z6re = re[stride*(gn + m)] - re[stride*(6*gn + m)];
-            z6im = im[stride*(gn + m)] - im[stride*(6*gn + m)];
-            z2re = re[stride*(2*gn + m)] + re[stride*(5*gn + m)];
-            z2im = im[stride*(2*gn + m)] + im[stride*(5*gn + m)];
-            z5re = re[stride*(2*gn + m)] - re[stride*(5*gn + m)];
-            z5im = im[stride*(2*gn + m)] - im[stride*(5*gn + m)];
-            z3re = re[stride*(3*gn + m)] + re[stride*(4*gn + m)];
-            z3im = im[stride*(3*gn + m)] + im[stride*(4*gn + m)];
-            z4re = re[stride*(3*gn + m)] - re[stride*(4*gn + m)];
-            z4im = im[stride*(3*gn + m)] - im[stride*(4*gn + m)];
-
-            w1re = re[stride*m] + C7_1*z1re + C7_2*z2re + C7_3*z3re;
-            w1im = im[stride*m] + C7_1*z1im + C7_2*z2im + C7_3*z3im;
-            w2re = re[stride*m] + C7_2*z1re + C7_3*z2re + C7_1*z3re;
-            w2im = im[stride*m] + C7_2*z1im + C7_3*z2im + C7_1*z3im;
-            w3re = re[stride*m] + C7_3*z1re + C7_1*z2re + C7_2*z3re;
-            w3im = im[stride*m] + C7_3*z1im + C7_1*z2im + C7_2*z3im;
-            /* Multiplication by i */
-            w4re = -S7_2*z4im + S7_1*z5im - S7_3*z6im;
-            w4im = S7_2*z4re - S7_1*z5re + S7_3*z6re;
-            w5re = S7_1*z4im + S7_3*z5im - S7_2*z6im;
-            w5im = -S7_1*z4re - S7_3*z5re + S7_2*z6re;
-            w6re = -S7_3*z4im - S7_2*z5im - S7_1*z6im;
-            w6im = S7_3*z4re + S7_2*z5re + S7_1*z6re;
-
-            re[stride*m] += z1re + z2re + z3re;
-            im[stride*m] += z1im + z2im + z3im;
-            re[stride*(gn + m)] = w1re + w6re;
-            im[stride*(gn + m)] = w1im + w6im;
-            re[stride*(2*gn + m)] = w2re + w5re;
-            im[stride*(2*gn + m)] = w2im + w5im;
-            re[stride*(3*gn + m)] = w3re + w4re;
-            im[stride*(3*gn + m)] = w3im + w4im;
-            re[stride*(4*gn + m)] = w3re - w4re;
-            im[stride*(4*gn + m)] = w3im - w4im;
-            re[stride*(5*gn + m)] = w2re - w5re;
-            im[stride*(5*gn + m)] = w2im - w5im;
-            re[stride*(6*gn + m)] = w1re - w6re;
-            im[stride*(6*gn + m)] = w1im - w6im;
-        }
+        /* Level 3 */
+        re[stride*m] += z1re + z2re + z3re;
+        im[stride*m] += z1im + z2im + z3im;
+        re[stride*(gn + m)] = w1re + w6re;
+        im[stride*(gn + m)] = w1im + w6im;
+        re[stride*(2*gn + m)] = w2re + w5re;
+        im[stride*(2*gn + m)] = w2im + w5im;
+        re[stride*(3*gn + m)] = w3re + w4re;
+        im[stride*(3*gn + m)] = w3im + w4im;
+        re[stride*(4*gn + m)] = w3re - w4re;
+        im[stride*(4*gn + m)] = w3im - w4im;
+        re[stride*(5*gn + m)] = w2re - w5re;
+        im[stride*(5*gn + m)] = w2im - w5im;
+        re[stride*(6*gn + m)] = w1re - w6re;
+        im[stride*(6*gn + m)] = w1im - w6im;
     }
 }
 
-/* Hopefully the compiler will optimize out the excessibe assigments to
-   temporary variables */
 static void
 pass10(guint gn, guint stride, gdouble *re, gdouble *im)
 {
     guint m;
 
     gn /= 10;
-    if (FALSE && stride == 1) {
-        for (m = 0; m < gn; m++) {
-            gdouble *rem = re + m;
-            gdouble *imm = im + m;
-            gdouble z0re, z0im, z1re, z1im, z2re, z2im, z3re, z3im, z4re, z4im;
-            gdouble z5re, z5im, z6re, z6im, z7re, z7im, z8re, z8im, z9re, z9im;
-            gdouble w1re, w1im, w2re, w2im, w3re, w3im, w4re, w4im;
-            gdouble w6re, w6im, w7re, w7im, w8re, w8im, w9re, w9im;
+    for (m = 0; m < gn; m++) {
+        gdouble z0re, z0im, z1re, z1im, z2re, z2im, z3re, z3im, z4re, z4im;
+        gdouble z5re, z5im, z6re, z6im, z7re, z7im, z8re, z8im, z9re, z9im;
+        gdouble w1re, w1im, w2re, w2im, w3re, w3im, w4re, w4im;
+        gdouble w6re, w6im, w7re, w7im, w8re, w8im, w9re, w9im;
 
-            z0re = rem[0] + rem[5*gn];
-            z0im = imm[0] + imm[5*gn];
-            z5re = rem[0] - rem[5*gn];
-            z5im = imm[0] - imm[5*gn];
-            z1re = rem[gn] + rem[9*gn];
-            z1im = imm[gn] + imm[9*gn];
-            z9re = rem[gn] - rem[9*gn];
-            z9im = imm[gn] - imm[9*gn];
-            z2re = rem[2*gn] + rem[8*gn];
-            z2im = imm[2*gn] + imm[8*gn];
-            z8re = rem[2*gn] - rem[8*gn];
-            z8im = imm[2*gn] - imm[8*gn];
-            z3re = rem[3*gn] + rem[7*gn];
-            z3im = imm[3*gn] + imm[7*gn];
-            z7re = rem[3*gn] - rem[7*gn];
-            z7im = imm[3*gn] - imm[7*gn];
-            z4re = rem[4*gn] + rem[6*gn];
-            z4im = imm[4*gn] + imm[6*gn];
-            z6re = rem[4*gn] - rem[6*gn];
-            z6im = imm[4*gn] - imm[6*gn];
+        /* Level 0 */
+        z0re = re[stride*m] + re[stride*(5*gn + m)];
+        z0im = im[stride*m] + im[stride*(5*gn + m)];
+        z5re = re[stride*m] - re[stride*(5*gn + m)];
+        z5im = im[stride*m] - im[stride*(5*gn + m)];
+        z1re = re[stride*(gn + m)] + re[stride*(9*gn + m)];
+        z1im = im[stride*(gn + m)] + im[stride*(9*gn + m)];
+        z9re = re[stride*(gn + m)] - re[stride*(9*gn + m)];
+        z9im = im[stride*(gn + m)] - im[stride*(9*gn + m)];
+        z2re = re[stride*(2*gn + m)] + re[stride*(8*gn + m)];
+        z2im = im[stride*(2*gn + m)] + im[stride*(8*gn + m)];
+        z8re = re[stride*(2*gn + m)] - re[stride*(8*gn + m)];
+        z8im = im[stride*(2*gn + m)] - im[stride*(8*gn + m)];
+        z3re = re[stride*(3*gn + m)] + re[stride*(7*gn + m)];
+        z3im = im[stride*(3*gn + m)] + im[stride*(7*gn + m)];
+        z7re = re[stride*(3*gn + m)] - re[stride*(7*gn + m)];
+        z7im = im[stride*(3*gn + m)] - im[stride*(7*gn + m)];
+        z4re = re[stride*(4*gn + m)] + re[stride*(6*gn + m)];
+        z4im = im[stride*(4*gn + m)] + im[stride*(6*gn + m)];
+        z6re = re[stride*(4*gn + m)] - re[stride*(6*gn + m)];
+        z6im = im[stride*(4*gn + m)] - im[stride*(6*gn + m)];
 
-            w1re = z1re + z4re;
-            w1im = z1im + z4im;
-            w2re = z2re + z3re;
-            w2im = z2im + z3im;
-            w3re = z2re - z3re;
-            w3im = z2im - z3im;
-            w4re = z1re - z4re;
-            w4im = z1im - z4im;
-            w6re = z6re + z9re;
-            w6im = z6im + z9im;
-            w7re = z7re + z8re;
-            w7im = z7im + z8im;
-            w8re = z7re - z8re;
-            w8im = z7im - z8im;
-            w9re = z6re - z9re;
-            w9im = z6im - z9im;
+        /* Level 1 */
+        w1re = z1re + z4re;
+        w1im = z1im + z4im;
+        w2re = z2re + z3re;
+        w2im = z2im + z3im;
+        w3re = z2re - z3re;
+        w3im = z2im - z3im;
+        w4re = z1re - z4re;
+        w4im = z1im - z4im;
+        w6re = z6re + z9re;
+        w6im = z6im + z9im;
+        w7re = z7re + z8re;
+        w7im = z7im + z8im;
+        w8re = z7re - z8re;
+        w8im = z7im - z8im;
+        w9re = z6re - z9re;
+        w9im = z6im - z9im;
 
-            z1re = z5re + C10_1*w4re + C10_2*w3re;
-            z1im = z5im + C10_1*w4im + C10_2*w3im;
-            z2re = z0re + C10_2*w1re - C10_1*w2re;
-            z2im = z0im + C10_2*w1im - C10_1*w2im;
-            z3re = z5re - C10_2*w4re - C10_1*w3re;
-            z3im = z5im - C10_2*w4im - C10_1*w3im;
-            z4re = z0re - C10_1*w1re + C10_2*w2re;
-            z4im = z0im - C10_1*w1im + C10_2*w2im;
-            /* Multiplication by i */
-            z6re = S10_1*w9im - S10_2*w8im;
-            z6im = -S10_1*w9re + S10_2*w8re;
-            z7re = -S10_2*w6im + S10_1*w7im;
-            z7im = S10_2*w6re - S10_1*w7re;
-            z8re = S10_2*w9im + S10_1*w8im;
-            z8im = -S10_2*w9re - S10_1*w8re;
-            z9re = -S10_1*w6im - S10_2*w7im;
-            z9im = S10_1*w6re + S10_2*w7re;
+        /* Level 2 (recycling z, except for z0 and z5) */
+        z1re = z5re + C10_1*w4re + C10_2*w3re;
+        z1im = z5im + C10_1*w4im + C10_2*w3im;
+        z2re = z0re + C10_2*w1re - C10_1*w2re;
+        z2im = z0im + C10_2*w1im - C10_1*w2im;
+        z3re = z5re - C10_2*w4re - C10_1*w3re;
+        z3im = z5im - C10_2*w4im - C10_1*w3im;
+        z4re = z0re - C10_1*w1re + C10_2*w2re;
+        z4im = z0im - C10_1*w1im + C10_2*w2im;
+        /* Multiplication by i */
+        z6re = S10_1*w9im - S10_2*w8im;
+        z6im = -S10_1*w9re + S10_2*w8re;
+        z7re = -S10_2*w6im + S10_1*w7im;
+        z7im = S10_2*w6re - S10_1*w7re;
+        z8re = S10_2*w9im + S10_1*w8im;
+        z8im = -S10_2*w9re - S10_1*w8re;
+        z9re = -S10_1*w6im - S10_2*w7im;
+        z9im = S10_1*w6re + S10_2*w7re;
 
-            rem[0] = z0re + w1re + w2re;
-            imm[0] = z0im + w1im + w2im;
-            rem[gn] = z1re + z9re;
-            imm[gn] = z1im + z9im;
-            rem[2*gn] = z2re + z8re;
-            imm[2*gn] = z2im + z8im;
-            rem[3*gn] = z3re + z7re;
-            imm[3*gn] = z3im + z7im;
-            rem[4*gn] = z4re + z6re;
-            imm[4*gn] = z4im + z6im;
-            rem[5*gn] = z5re + w3re - w4re;
-            imm[5*gn] = z5im + w3im - w4im;
-            rem[6*gn] = z4re - z6re;
-            imm[6*gn] = z4im - z6im;
-            rem[7*gn] = z3re - z7re;
-            imm[7*gn] = z3im - z7im;
-            rem[8*gn] = z2re - z8re;
-            imm[8*gn] = z2im - z8im;
-            rem[9*gn] = z1re - z9re;
-            imm[9*gn] = z1im - z9im;
-        }
-    }
-    else {
-        for (m = 0; m < gn; m++) {
-            gdouble z0re, z0im, z1re, z1im, z2re, z2im, z3re, z3im, z4re, z4im;
-            gdouble z5re, z5im, z6re, z6im, z7re, z7im, z8re, z8im, z9re, z9im;
-            gdouble w1re, w1im, w2re, w2im, w3re, w3im, w4re, w4im;
-            gdouble w6re, w6im, w7re, w7im, w8re, w8im, w9re, w9im;
-
-            z0re = re[stride*m] + re[stride*(5*gn + m)];
-            z0im = im[stride*m] + im[stride*(5*gn + m)];
-            z5re = re[stride*m] - re[stride*(5*gn + m)];
-            z5im = im[stride*m] - im[stride*(5*gn + m)];
-            z1re = re[stride*(gn + m)] + re[stride*(9*gn + m)];
-            z1im = im[stride*(gn + m)] + im[stride*(9*gn + m)];
-            z9re = re[stride*(gn + m)] - re[stride*(9*gn + m)];
-            z9im = im[stride*(gn + m)] - im[stride*(9*gn + m)];
-            z2re = re[stride*(2*gn + m)] + re[stride*(8*gn + m)];
-            z2im = im[stride*(2*gn + m)] + im[stride*(8*gn + m)];
-            z8re = re[stride*(2*gn + m)] - re[stride*(8*gn + m)];
-            z8im = im[stride*(2*gn + m)] - im[stride*(8*gn + m)];
-            z3re = re[stride*(3*gn + m)] + re[stride*(7*gn + m)];
-            z3im = im[stride*(3*gn + m)] + im[stride*(7*gn + m)];
-            z7re = re[stride*(3*gn + m)] - re[stride*(7*gn + m)];
-            z7im = im[stride*(3*gn + m)] - im[stride*(7*gn + m)];
-            z4re = re[stride*(4*gn + m)] + re[stride*(6*gn + m)];
-            z4im = im[stride*(4*gn + m)] + im[stride*(6*gn + m)];
-            z6re = re[stride*(4*gn + m)] - re[stride*(6*gn + m)];
-            z6im = im[stride*(4*gn + m)] - im[stride*(6*gn + m)];
-
-            w1re = z1re + z4re;
-            w1im = z1im + z4im;
-            w2re = z2re + z3re;
-            w2im = z2im + z3im;
-            w3re = z2re - z3re;
-            w3im = z2im - z3im;
-            w4re = z1re - z4re;
-            w4im = z1im - z4im;
-            w6re = z6re + z9re;
-            w6im = z6im + z9im;
-            w7re = z7re + z8re;
-            w7im = z7im + z8im;
-            w8re = z7re - z8re;
-            w8im = z7im - z8im;
-            w9re = z6re - z9re;
-            w9im = z6im - z9im;
-
-            z1re = z5re + C10_1*w4re + C10_2*w3re;
-            z1im = z5im + C10_1*w4im + C10_2*w3im;
-            z2re = z0re + C10_2*w1re - C10_1*w2re;
-            z2im = z0im + C10_2*w1im - C10_1*w2im;
-            z3re = z5re - C10_2*w4re - C10_1*w3re;
-            z3im = z5im - C10_2*w4im - C10_1*w3im;
-            z4re = z0re - C10_1*w1re + C10_2*w2re;
-            z4im = z0im - C10_1*w1im + C10_2*w2im;
-            /* Multiplication by i */
-            z6re = S10_1*w9im - S10_2*w8im;
-            z6im = -S10_1*w9re + S10_2*w8re;
-            z7re = -S10_2*w6im + S10_1*w7im;
-            z7im = S10_2*w6re - S10_1*w7re;
-            z8re = S10_2*w9im + S10_1*w8im;
-            z8im = -S10_2*w9re - S10_1*w8re;
-            z9re = -S10_1*w6im - S10_2*w7im;
-            z9im = S10_1*w6re + S10_2*w7re;
-
-            re[stride*m] = z0re + w1re + w2re;
-            im[stride*m] = z0im + w1im + w2im;
-            re[stride*(gn + m)] = z1re + z9re;
-            im[stride*(gn + m)] = z1im + z9im;
-            re[stride*(2*gn + m)] = z2re + z8re;
-            im[stride*(2*gn + m)] = z2im + z8im;
-            re[stride*(3*gn + m)] = z3re + z7re;
-            im[stride*(3*gn + m)] = z3im + z7im;
-            re[stride*(4*gn + m)] = z4re + z6re;
-            im[stride*(4*gn + m)] = z4im + z6im;
-            re[stride*(5*gn + m)] = z5re + w3re - w4re;
-            im[stride*(5*gn + m)] = z5im + w3im - w4im;
-            re[stride*(6*gn + m)] = z4re - z6re;
-            im[stride*(6*gn + m)] = z4im - z6im;
-            re[stride*(7*gn + m)] = z3re - z7re;
-            im[stride*(7*gn + m)] = z3im - z7im;
-            re[stride*(8*gn + m)] = z2re - z8re;
-            im[stride*(8*gn + m)] = z2im - z8im;
-            re[stride*(9*gn + m)] = z1re - z9re;
-            im[stride*(9*gn + m)] = z1im - z9im;
-        }
+        /* Level 3 */
+        re[stride*m] = z0re + w1re + w2re;
+        im[stride*m] = z0im + w1im + w2im;
+        re[stride*(gn + m)] = z1re + z9re;
+        im[stride*(gn + m)] = z1im + z9im;
+        re[stride*(2*gn + m)] = z2re + z8re;
+        im[stride*(2*gn + m)] = z2im + z8im;
+        re[stride*(3*gn + m)] = z3re + z7re;
+        im[stride*(3*gn + m)] = z3im + z7im;
+        re[stride*(4*gn + m)] = z4re + z6re;
+        im[stride*(4*gn + m)] = z4im + z6im;
+        re[stride*(5*gn + m)] = z5re + w3re - w4re;
+        im[stride*(5*gn + m)] = z5im + w3im - w4im;
+        re[stride*(6*gn + m)] = z4re - z6re;
+        im[stride*(6*gn + m)] = z4im - z6im;
+        re[stride*(7*gn + m)] = z3re - z7re;
+        im[stride*(7*gn + m)] = z3im - z7im;
+        re[stride*(8*gn + m)] = z2re - z8re;
+        im[stride*(8*gn + m)] = z2im - z8im;
+        re[stride*(9*gn + m)] = z1re - z9re;
+        im[stride*(9*gn + m)] = z1im - z9im;
     }
 }
+/* }}} */
 
 /**
  * gwy_fft_simple:
@@ -991,6 +790,8 @@ gwy_fft_simple(GwyTransformDirection dir,
         k = n/m;
         if (k % 10 == 0)
             p = 10;
+        else if (k % 6 == 0)
+            p = 6;
         else if (k % 4 == 0)
             p = 4;
         else if (k % 5 == 0)
@@ -1033,6 +834,10 @@ gwy_fft_simple(GwyTransformDirection dir,
         if (k % 10 == 0) {
             p = 10;
             butterfly = pass10;
+        }
+        else if (k % 6 == 0) {
+            p = 6;
+            butterfly = pass6;
         }
         else if (k % 4 == 0) {
             p = 4;
