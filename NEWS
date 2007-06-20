@@ -1,4 +1,4 @@
-2.5.20070605
+2.5.20070620
 
 2.6 (0000-00-00)
 Application:
@@ -15,6 +15,8 @@ Libraries:
 - libprocess: New GwySpectra object representing single point spectra.
 - libgwyddion: New class of curve fitting presets: GwyFDCurvePreset.
 - libgwyddion: New math function to test whether a point is inside a polygon.
+- libprocess: gwy_fft_simple() FFT backend can handle transform sizes of form
+  2^n 3^m 5^k.
 - libgwydgets: 3D view shows value units in z labels (instead of lateral).
 - libgwyprocess: Bogus complex 2D FFT transform in the case of
   gwy_fft_simple() backend was fixed.
@@ -50,6 +52,10 @@ Libraries:
 - libgwyddion: GwyContainer has methods to obtain all keys.
 - libgwyprocess: gwy_data_field_circular_area_extract_with_pos() actually
   extracts positions with origin in the central pixel.
+- libgwyprocess: Possible array bad memory access in
+  gwy_data_field_get_autorange() was fixed.
+- libgwyprocess: DataField cache is not serialized any more and serialized
+  caches are ignored on deserialization.
 
 Modules:
 - Path level tool (new): Levels rows along arbitrary lines.
@@ -77,6 +83,8 @@ Modules:
 - ASCII export: It has options to enforce dot as the decimal separator and to
   add a comment header with some channel information.
 - SDfile: Can export too (text format only).
+- Nanoscope: The z-scale of imported version 4.x files was corrected and
+  their channel types are used for channel titles now.
 - Nanoscope: Supports Nanoscope III STM files.
 - Nanonis: Supports version 2 files.
 - WSxM: Flipped data was fixed.
