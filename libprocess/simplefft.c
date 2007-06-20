@@ -27,6 +27,13 @@
 #define GWY_S25 .58778525229247312916870595463907276859765243764316
 #define GWY_C25 -.80901699437494742410229341718281905886015458990286
 
+#define GWY_C17 .62348980185873353052500488400423981063227473089641
+#define GWY_C27 -.22252093395631440428890256449679475946635556876452
+#define GWY_C37 -.90096886790241912623610231950744505116591916213184
+#define GWY_S17 .78183148246802980870844452667405775023233451870867
+#define GWY_S27 .97492791218182360701813168299393121723278580062000
+#define GWY_S37 .43388373911755812047576833284835875460999072778748
+
 #ifdef HAVE_SINCOS
 #define _gwy_sincos sincos
 #else
@@ -127,15 +134,17 @@ pass2(guint gn, guint stride, gdouble *re, gdouble *im)
     gn /= 2;
     if (stride == 1) {
         for (m = 0; m < gn; m++) {
+            gdouble *rem = re + m;
+            gdouble *imm = im + m;
             gdouble w;
 
-            w = re[m] - re[gn + m];
-            re[m] += re[gn + m];
-            re[gn + m] = w;
+            w = rem[0] - rem[gn];
+            rem[0] += rem[gn];
+            rem[gn] = w;
 
-            w = im[m] - im[gn + m];
-            im[m] += im[gn + m];
-            im[gn + m] = w;
+            w = imm[0] - imm[gn];
+            imm[0] += imm[gn];
+            imm[gn] = w;
         }
     }
     else {
@@ -161,27 +170,29 @@ pass3(guint gn, guint stride, gdouble *re, gdouble *im)
     gn /= 3;
     if (stride == 1) {
         for (m = 0; m < gn; m++) {
+            gdouble *rem = re + m;
+            gdouble *imm = im + m;
             gdouble w1re, w1im, w2re, w2im;
 
-            w1re = (re[gn + m] + re[2*gn + m]);
-            w1im = (im[gn + m] + im[2*gn + m]);
+            w1re = rem[gn] + rem[2*gn];
+            w1im = imm[gn] + imm[2*gn];
             /* Multiplication by i */
-            w2re = (im[2*gn + m] - im[gn + m])*0.5*GWY_SQRT3;
-            w2im = (re[gn + m] - re[2*gn + m])*0.5*GWY_SQRT3;
-            re[2*gn + m] = re[m] - (w2re + 0.5*w1re);
-            im[2*gn + m] = im[m] - (w2im + 0.5*w1im);
-            re[gn + m] = re[m] + (w2re - 0.5*w1re);
-            im[gn + m] = im[m] + (w2im - 0.5*w1im);
-            re[m] += w1re;
-            im[m] += w1im;
+            w2re = (imm[2*gn] - imm[gn])*0.5*GWY_SQRT3;
+            w2im = (rem[gn] - rem[2*gn])*0.5*GWY_SQRT3;
+            rem[2*gn] = rem[0] - (w2re + 0.5*w1re);
+            imm[2*gn] = imm[0] - (w2im + 0.5*w1im);
+            rem[gn] = rem[0] + (w2re - 0.5*w1re);
+            imm[gn] = imm[0] + (w2im - 0.5*w1im);
+            rem[0] += w1re;
+            imm[0] += w1im;
         }
     }
     else {
         for (m = 0; m < gn; m++) {
             gdouble w1re, w1im, w2re, w2im;
 
-            w1re = (re[stride*(gn + m)] + re[stride*(2*gn + m)]);
-            w1im = (im[stride*(gn + m)] + im[stride*(2*gn + m)]);
+            w1re = re[stride*(gn + m)] + re[stride*(2*gn + m)];
+            w1im = im[stride*(gn + m)] + im[stride*(2*gn + m)];
             /* Multiplication by i */
             w2re = (im[stride*(2*gn + m)] - im[stride*(gn + m)])*0.5*GWY_SQRT3;
             w2im = (re[stride*(gn + m)] - re[stride*(2*gn + m)])*0.5*GWY_SQRT3;
@@ -205,50 +216,52 @@ pass4(guint gn, guint stride, gdouble *re, gdouble *im)
     gn /= 4;
     if (stride == 1) {
         for (m = 0; m < gn; m++) {
+            gdouble *rem = re + m;
+            gdouble *imm = im + m;
             gdouble w, w1re, w1im;
 
             /* Level 0 */
-            w = re[m] - re[2*gn + m];
-            re[m] += re[2*gn + m];
-            re[2*gn + m] = w;
+            w = rem[0] - rem[2*gn];
+            rem[0] += rem[2*gn];
+            rem[2*gn] = w;
 
-            w = im[m] - im[2*gn + m];
-            im[m] += im[2*gn + m];
-            im[2*gn + m] = w;
+            w = imm[0] - imm[2*gn];
+            imm[0] += imm[2*gn];
+            imm[2*gn] = w;
 
-            w = re[gn + m] - re[3*gn + m];
-            re[gn + m] += re[3*gn + m];
-            re[3*gn + m] = w;
+            w = rem[gn] - rem[3*gn];
+            rem[gn] += rem[3*gn];
+            rem[3*gn] = w;
 
-            w = im[gn + m] - im[3*gn + m];
-            im[gn + m] += im[3*gn + m];
-            im[3*gn + m] = w;
+            w = imm[gn] - imm[3*gn];
+            imm[gn] += imm[3*gn];
+            imm[3*gn] = w;
 
             /* Level 1 */
-            w = re[m] - re[gn + m];
-            re[m] += re[gn + m];
-            re[gn + m] = w;
+            w = rem[0] - rem[gn];
+            rem[0] += rem[gn];
+            rem[gn] = w;
 
-            w = im[m] - im[gn + m];
-            im[m] += im[gn + m];
-            im[gn + m] = w;
+            w = imm[0] - imm[gn];
+            imm[0] += imm[gn];
+            imm[gn] = w;
 
             /* Multiplication by i */
-            w1re = -im[3*gn + m];
-            w1im = re[3*gn + m];
-            re[3*gn + m] = re[2*gn + m] - w1re;
-            im[3*gn + m] = im[2*gn + m] - w1im;
-            re[2*gn + m] += w1re;
-            im[2*gn + m] += w1im;
+            w1re = -imm[3*gn];
+            w1im = rem[3*gn];
+            rem[3*gn] = rem[2*gn] - w1re;
+            imm[3*gn] = imm[2*gn] - w1im;
+            rem[2*gn] += w1re;
+            imm[2*gn] += w1im;
 
             /* Fix bit-reversal */
-            w = re[gn + m];
-            re[gn + m] = re[2*gn + m];
-            re[2*gn + m] = w;
+            w = rem[gn];
+            rem[gn] = rem[2*gn];
+            rem[2*gn] = w;
 
-            w = im[gn + m];
-            im[gn + m] = im[2*gn + m];
-            im[2*gn + m] = w;
+            w = imm[gn];
+            imm[gn] = imm[2*gn];
+            imm[2*gn] = w;
         }
     }
     else {
@@ -311,38 +324,40 @@ pass5(guint gn, guint stride, gdouble *re, gdouble *im)
     gn /= 5;
     if (stride == 1) {
         for (m = 0; m < gn; m++) {
+            gdouble *rem = re + m;
+            gdouble *imm = im + m;
             gdouble w0re, w0im, w1re, w1im, w2re, w2im, w3re, w3im;
             gdouble z0re, z0im, z1re, z1im, z2re, z2im, z3re, z3im;
 
-            z0re = re[gn + m] + re[4*gn + m];
-            z0im = im[gn + m] + im[4*gn + m];
-            z1re = re[gn + m] - re[4*gn + m];
-            z1im = im[gn + m] - im[4*gn + m];
-            z2re = re[2*gn + m] + re[3*gn + m];
-            z2im = im[2*gn + m] + im[3*gn + m];
-            z3re = re[2*gn + m] - re[3*gn + m];
-            z3im = im[2*gn + m] - im[3*gn + m];
+            z0re = rem[gn] + rem[4*gn];
+            z0im = imm[gn] + imm[4*gn];
+            z1re = rem[gn] - rem[4*gn];
+            z1im = imm[gn] - imm[4*gn];
+            z2re = rem[2*gn] + rem[3*gn];
+            z2im = imm[2*gn] + imm[3*gn];
+            z3re = rem[2*gn] - rem[3*gn];
+            z3im = imm[2*gn] - imm[3*gn];
 
-            w0re = GWY_C15*z0re + GWY_C25*z2re;
-            w0im = GWY_C15*z0im + GWY_C25*z2im;
-            w1re = GWY_C25*z0re + GWY_C15*z2re;
-            w1im = GWY_C25*z0im + GWY_C15*z2im;
+            w0re = rem[0] + GWY_C15*z0re + GWY_C25*z2re;
+            w0im = imm[0] + GWY_C15*z0im + GWY_C25*z2im;
+            w1re = rem[0] + GWY_C25*z0re + GWY_C15*z2re;
+            w1im = imm[0] + GWY_C25*z0im + GWY_C15*z2im;
             /* Multiplication by i */
             w2re = -GWY_S15*z1im - GWY_S25*z3im;
             w2im = GWY_S15*z1re + GWY_S25*z3re;
             w3re = -GWY_S25*z1im + GWY_S15*z3im;
             w3im = GWY_S25*z1re - GWY_S15*z3re;
 
-            re[gn + m] = re[m] + w0re + w2re;
-            im[gn + m] = im[m] + w0im + w2im;
-            re[2*gn + m] = re[m] + w1re + w3re;
-            im[2*gn + m] = im[m] + w1im + w3im;
-            re[3*gn + m] = re[m] + w1re - w3re;
-            im[3*gn + m] = im[m] + w1im - w3im;
-            re[4*gn + m] = re[m] + w0re - w2re;
-            im[4*gn + m] = im[m] + w0im - w2im;
-            re[m] += z0re + z2re;
-            im[m] += z0im + z2im;
+            rem[gn] = w0re + w2re;
+            imm[gn] = w0im + w2im;
+            rem[2*gn] = w1re + w3re;
+            imm[2*gn] = w1im + w3im;
+            rem[3*gn] = w1re - w3re;
+            imm[3*gn] = w1im - w3im;
+            rem[4*gn] = w0re - w2re;
+            imm[4*gn] = w0im - w2im;
+            rem[0] += z0re + z2re;
+            imm[0] += z0im + z2im;
         }
     }
     else {
@@ -359,26 +374,136 @@ pass5(guint gn, guint stride, gdouble *re, gdouble *im)
             z3re = re[stride*(2*gn + m)] - re[stride*(3*gn + m)];
             z3im = im[stride*(2*gn + m)] - im[stride*(3*gn + m)];
 
-            w0re = GWY_C15*z0re + GWY_C25*z2re;
-            w0im = GWY_C15*z0im + GWY_C25*z2im;
-            w1re = GWY_C25*z0re + GWY_C15*z2re;
-            w1im = GWY_C25*z0im + GWY_C15*z2im;
+            w0re = re[stride*m] + GWY_C15*z0re + GWY_C25*z2re;
+            w0im = im[stride*m] + GWY_C15*z0im + GWY_C25*z2im;
+            w1re = re[stride*m] + GWY_C25*z0re + GWY_C15*z2re;
+            w1im = im[stride*m] + GWY_C25*z0im + GWY_C15*z2im;
             /* Multiplication by i */
             w2re = -GWY_S15*z1im - GWY_S25*z3im;
             w2im = GWY_S15*z1re + GWY_S25*z3re;
             w3re = -GWY_S25*z1im + GWY_S15*z3im;
             w3im = GWY_S25*z1re - GWY_S15*z3re;
 
-            re[stride*(gn + m)] = re[stride*m] + w0re + w2re;
-            im[stride*(gn + m)] = im[stride*m] + w0im + w2im;
-            re[stride*(2*gn + m)] = re[stride*m] + w1re + w3re;
-            im[stride*(2*gn + m)] = im[stride*m] + w1im + w3im;
-            re[stride*(3*gn + m)] = re[stride*m] + w1re - w3re;
-            im[stride*(3*gn + m)] = im[stride*m] + w1im - w3im;
-            re[stride*(4*gn + m)] = re[stride*m] + w0re - w2re;
-            im[stride*(4*gn + m)] = im[stride*m] + w0im - w2im;
+            re[stride*(gn + m)] = w0re + w2re;
+            im[stride*(gn + m)] = w0im + w2im;
+            re[stride*(2*gn + m)] = w1re + w3re;
+            im[stride*(2*gn + m)] = w1im + w3im;
+            re[stride*(3*gn + m)] = w1re - w3re;
+            im[stride*(3*gn + m)] = w1im - w3im;
+            re[stride*(4*gn + m)] = w0re - w2re;
+            im[stride*(4*gn + m)] = w0im - w2im;
             re[stride*m] += z0re + z2re;
             im[stride*m] += z0im + z2im;
+        }
+    }
+}
+
+static void
+pass7(guint gn, guint stride, gdouble *re, gdouble *im)
+{
+    guint m;
+
+    gn /= 7;
+    if (stride == 1) {
+        for (m = 0; m < gn; m++) {
+            gdouble *rem = re + m;
+            gdouble *imm = im + m;
+            gdouble w1re, w1im, w2re, w2im, w3re, w3im;
+            gdouble w4re, w4im, w5re, w5im, w6re, w6im;
+            gdouble z1re, z1im, z2re, z2im, z3re, z3im;
+            gdouble z4re, z4im, z5re, z5im, z6re, z6im;
+
+            z1re = rem[gn] + rem[6*gn];
+            z1im = imm[gn] + imm[6*gn];
+            z6re = rem[gn] - rem[6*gn];
+            z6im = imm[gn] - imm[6*gn];
+            z2re = rem[2*gn] + rem[5*gn];
+            z2im = imm[2*gn] + imm[5*gn];
+            z5re = rem[2*gn] - rem[5*gn];
+            z5im = imm[2*gn] - imm[5*gn];
+            z3re = rem[3*gn] + rem[4*gn];
+            z3im = imm[3*gn] + imm[4*gn];
+            z4re = rem[3*gn] - rem[4*gn];
+            z4im = imm[3*gn] - imm[4*gn];
+
+            w1re = rem[0] + GWY_C17*z1re + GWY_C27*z2re + GWY_C37*z3re;
+            w1im = imm[0] + GWY_C17*z1im + GWY_C27*z2im + GWY_C37*z3im;
+            w2re = rem[0] + GWY_C27*z1re + GWY_C37*z2re + GWY_C17*z3re;
+            w2im = imm[0] + GWY_C27*z1im + GWY_C37*z2im + GWY_C17*z3im;
+            w3re = rem[0] + GWY_C37*z1re + GWY_C17*z2re + GWY_C27*z3re;
+            w3im = imm[0] + GWY_C37*z1im + GWY_C17*z2im + GWY_C27*z3im;
+            /* Multiplication by i */
+            w4re = -GWY_S27*z4im + GWY_S17*z5im - GWY_S37*z6im;
+            w4im = GWY_S27*z4re - GWY_S17*z5re + GWY_S37*z6re;
+            w5re = GWY_S17*z4im + GWY_S37*z5im - GWY_S27*z6im;
+            w5im = -GWY_S17*z4re - GWY_S37*z5re + GWY_S27*z6re;
+            w6re = -GWY_S37*z4im - GWY_S27*z5im - GWY_S17*z6im;
+            w6im = GWY_S37*z4re + GWY_S27*z5re + GWY_S17*z6re;
+
+            rem[gn] = w1re + w6re;
+            imm[gn] = w1im + w6im;
+            rem[2*gn] = w2re + w5re;
+            imm[2*gn] = w2im + w5im;
+            rem[3*gn] = w3re + w4re;
+            imm[3*gn] = w3im + w4im;
+            rem[4*gn] = w3re - w4re;
+            imm[4*gn] = w3im - w4im;
+            rem[5*gn] = w2re - w5re;
+            imm[5*gn] = w2im - w5im;
+            rem[6*gn] = w1re - w6re;
+            imm[6*gn] = w1im - w6im;
+            rem[0] += z1re + z2re + z3re;
+            imm[0] += z1im + z2im + z3im;
+        }
+    }
+    else {
+        for (m = 0; m < gn; m++) {
+            gdouble w1re, w1im, w2re, w2im, w3re, w3im;
+            gdouble w4re, w4im, w5re, w5im, w6re, w6im;
+            gdouble z1re, z1im, z2re, z2im, z3re, z3im;
+            gdouble z4re, z4im, z5re, z5im, z6re, z6im;
+
+            z1re = re[stride*(gn + m)] + re[stride*(6*gn + m)];
+            z1im = im[stride*(gn + m)] + im[stride*(6*gn + m)];
+            z6re = re[stride*(gn + m)] - re[stride*(6*gn + m)];
+            z6im = im[stride*(gn + m)] - im[stride*(6*gn + m)];
+            z2re = re[stride*(2*gn + m)] + re[stride*(5*gn + m)];
+            z2im = im[stride*(2*gn + m)] + im[stride*(5*gn + m)];
+            z5re = re[stride*(2*gn + m)] - re[stride*(5*gn + m)];
+            z5im = im[stride*(2*gn + m)] - im[stride*(5*gn + m)];
+            z3re = re[stride*(3*gn + m)] + re[stride*(4*gn + m)];
+            z3im = im[stride*(3*gn + m)] + im[stride*(4*gn + m)];
+            z4re = re[stride*(3*gn + m)] - re[stride*(4*gn + m)];
+            z4im = im[stride*(3*gn + m)] - im[stride*(4*gn + m)];
+
+            w1re = re[stride*m] + GWY_C17*z1re + GWY_C27*z2re + GWY_C37*z3re;
+            w1im = im[stride*m] + GWY_C17*z1im + GWY_C27*z2im + GWY_C37*z3im;
+            w2re = re[stride*m] + GWY_C27*z1re + GWY_C37*z2re + GWY_C17*z3re;
+            w2im = im[stride*m] + GWY_C27*z1im + GWY_C37*z2im + GWY_C17*z3im;
+            w3re = re[stride*m] + GWY_C37*z1re + GWY_C17*z2re + GWY_C27*z3re;
+            w3im = im[stride*m] + GWY_C37*z1im + GWY_C17*z2im + GWY_C27*z3im;
+            /* Multiplication by i */
+            w4re = -GWY_S27*z4im + GWY_S17*z5im - GWY_S37*z6im;
+            w4im = GWY_S27*z4re - GWY_S17*z5re + GWY_S37*z6re;
+            w5re = GWY_S17*z4im + GWY_S37*z5im - GWY_S27*z6im;
+            w5im = -GWY_S17*z4re - GWY_S37*z5re + GWY_S27*z6re;
+            w6re = -GWY_S37*z4im - GWY_S27*z5im - GWY_S17*z6im;
+            w6im = GWY_S37*z4re + GWY_S27*z5re + GWY_S17*z6re;
+
+            re[stride*(gn + m)] = w1re + w6re;
+            im[stride*(gn + m)] = w1im + w6im;
+            re[stride*(2*gn + m)] = w2re + w5re;
+            im[stride*(2*gn + m)] = w2im + w5im;
+            re[stride*(3*gn + m)] = w3re + w4re;
+            im[stride*(3*gn + m)] = w3im + w4im;
+            re[stride*(4*gn + m)] = w3re - w4re;
+            im[stride*(4*gn + m)] = w3im - w4im;
+            re[stride*(5*gn + m)] = w2re - w5re;
+            im[stride*(5*gn + m)] = w2im - w5im;
+            re[stride*(6*gn + m)] = w1re - w6re;
+            im[stride*(6*gn + m)] = w1im - w6im;
+            re[stride*m] += z1re + z2re + z3re;
+            im[stride*m] += z1im + z2im + z3im;
         }
     }
 }
@@ -439,14 +564,16 @@ gwy_fft_simple(GwyTransformDirection dir,
     swapped = TRUE;
     for (m = 1; m < n; m *= p) {
         k = n/m;
-        if (k % 5 == 0)
-            p = 5;
-        else if (k % 3 == 0)
-            p = 3;
-        else if (k % 4 == 0)
+        if (k % 4 == 0)
             p = 4;
+        else if (k % 5 == 0)
+            p = 5;
         else if (k % 2 == 0)
             p = 2;
+        else if (k % 3 == 0)
+            p = 3;
+        else if (k % 7 == 0)
+            p = 7;
         else {
             g_critical("%d (%d) contains unimplemented primes", k, n);
             return;
@@ -480,6 +607,10 @@ gwy_fft_simple(GwyTransformDirection dir,
             p = 4;
             butterfly = pass4;
         }
+        else if (k % 5 == 0) {
+            p = 5;
+            butterfly = pass5;
+        }
         else if (k % 2 == 0) {
             p = 2;
             butterfly = pass2;
@@ -489,8 +620,8 @@ gwy_fft_simple(GwyTransformDirection dir,
             butterfly = pass3;
         }
         else {
-            p = 5;
-            butterfly = pass5;
+            p = 7;
+            butterfly = pass7;
         }
 
         if (m > 1)
