@@ -22,17 +22,22 @@
 #include <libgwyddion/gwymath.h>
 #include <libprocess/simplefft.h>
 
-#define GWY_C15 .30901699437494742410229341718281905886015458990289
-#define GWY_S15 .95105651629515357211643933337938214340569863412574
-#define GWY_S25 .58778525229247312916870595463907276859765243764316
-#define GWY_C25 -.80901699437494742410229341718281905886015458990286
+#define C10_1 .80901699437494742410229341718281905886015458990288
+#define C10_2 .30901699437494742410229341718281905886015458990289
+#define S10_1 .58778525229247312916870595463907276859765243764313
+#define S10_2 .95105651629515357211643933337938214340569863412574
 
-#define GWY_C17 .62348980185873353052500488400423981063227473089641
-#define GWY_C27 -.22252093395631440428890256449679475946635556876452
-#define GWY_C37 -.90096886790241912623610231950744505116591916213184
-#define GWY_S17 .78183148246802980870844452667405775023233451870867
-#define GWY_S27 .97492791218182360701813168299393121723278580062000
-#define GWY_S37 .43388373911755812047576833284835875460999072778748
+#define C5_1 C10_2
+#define C5_2 -C10_1
+#define S5_1 S10_2
+#define S5_2 S10_1
+
+#define C7_1 .62348980185873353052500488400423981063227473089641
+#define C7_2 -.22252093395631440428890256449679475946635556876452
+#define C7_3 -.90096886790241912623610231950744505116591916213184
+#define S7_1 .78183148246802980870844452667405775023233451870867
+#define S7_2 .97492791218182360701813168299393121723278580062000
+#define S7_3 .43388373911755812047576833284835875460999072778748
 
 #ifdef HAVE_SINCOS
 #define _gwy_sincos sincos
@@ -338,16 +343,18 @@ pass5(guint gn, guint stride, gdouble *re, gdouble *im)
             z3re = rem[2*gn] - rem[3*gn];
             z3im = imm[2*gn] - imm[3*gn];
 
-            w0re = rem[0] + GWY_C15*z0re + GWY_C25*z2re;
-            w0im = imm[0] + GWY_C15*z0im + GWY_C25*z2im;
-            w1re = rem[0] + GWY_C25*z0re + GWY_C15*z2re;
-            w1im = imm[0] + GWY_C25*z0im + GWY_C15*z2im;
+            w0re = rem[0] + C5_1*z0re + C5_2*z2re;
+            w0im = imm[0] + C5_1*z0im + C5_2*z2im;
+            w1re = rem[0] + C5_2*z0re + C5_1*z2re;
+            w1im = imm[0] + C5_2*z0im + C5_1*z2im;
             /* Multiplication by i */
-            w2re = -GWY_S15*z1im - GWY_S25*z3im;
-            w2im = GWY_S15*z1re + GWY_S25*z3re;
-            w3re = -GWY_S25*z1im + GWY_S15*z3im;
-            w3im = GWY_S25*z1re - GWY_S15*z3re;
+            w2re = -S5_1*z1im - S5_2*z3im;
+            w2im = S5_1*z1re + S5_2*z3re;
+            w3re = -S5_2*z1im + S5_1*z3im;
+            w3im = S5_2*z1re - S5_1*z3re;
 
+            rem[0] += z0re + z2re;
+            imm[0] += z0im + z2im;
             rem[gn] = w0re + w2re;
             imm[gn] = w0im + w2im;
             rem[2*gn] = w1re + w3re;
@@ -356,8 +363,6 @@ pass5(guint gn, guint stride, gdouble *re, gdouble *im)
             imm[3*gn] = w1im - w3im;
             rem[4*gn] = w0re - w2re;
             imm[4*gn] = w0im - w2im;
-            rem[0] += z0re + z2re;
-            imm[0] += z0im + z2im;
         }
     }
     else {
@@ -374,16 +379,18 @@ pass5(guint gn, guint stride, gdouble *re, gdouble *im)
             z3re = re[stride*(2*gn + m)] - re[stride*(3*gn + m)];
             z3im = im[stride*(2*gn + m)] - im[stride*(3*gn + m)];
 
-            w0re = re[stride*m] + GWY_C15*z0re + GWY_C25*z2re;
-            w0im = im[stride*m] + GWY_C15*z0im + GWY_C25*z2im;
-            w1re = re[stride*m] + GWY_C25*z0re + GWY_C15*z2re;
-            w1im = im[stride*m] + GWY_C25*z0im + GWY_C15*z2im;
+            w0re = re[stride*m] + C5_1*z0re + C5_2*z2re;
+            w0im = im[stride*m] + C5_1*z0im + C5_2*z2im;
+            w1re = re[stride*m] + C5_2*z0re + C5_1*z2re;
+            w1im = im[stride*m] + C5_2*z0im + C5_1*z2im;
             /* Multiplication by i */
-            w2re = -GWY_S15*z1im - GWY_S25*z3im;
-            w2im = GWY_S15*z1re + GWY_S25*z3re;
-            w3re = -GWY_S25*z1im + GWY_S15*z3im;
-            w3im = GWY_S25*z1re - GWY_S15*z3re;
+            w2re = -S5_1*z1im - S5_2*z3im;
+            w2im = S5_1*z1re + S5_2*z3re;
+            w3re = -S5_2*z1im + S5_1*z3im;
+            w3im = S5_2*z1re - S5_1*z3re;
 
+            re[stride*m] += z0re + z2re;
+            im[stride*m] += z0im + z2im;
             re[stride*(gn + m)] = w0re + w2re;
             im[stride*(gn + m)] = w0im + w2im;
             re[stride*(2*gn + m)] = w1re + w3re;
@@ -392,8 +399,6 @@ pass5(guint gn, guint stride, gdouble *re, gdouble *im)
             im[stride*(3*gn + m)] = w1im - w3im;
             re[stride*(4*gn + m)] = w0re - w2re;
             im[stride*(4*gn + m)] = w0im - w2im;
-            re[stride*m] += z0re + z2re;
-            im[stride*m] += z0im + z2im;
         }
     }
 }
@@ -426,20 +431,22 @@ pass7(guint gn, guint stride, gdouble *re, gdouble *im)
             z4re = rem[3*gn] - rem[4*gn];
             z4im = imm[3*gn] - imm[4*gn];
 
-            w1re = rem[0] + GWY_C17*z1re + GWY_C27*z2re + GWY_C37*z3re;
-            w1im = imm[0] + GWY_C17*z1im + GWY_C27*z2im + GWY_C37*z3im;
-            w2re = rem[0] + GWY_C27*z1re + GWY_C37*z2re + GWY_C17*z3re;
-            w2im = imm[0] + GWY_C27*z1im + GWY_C37*z2im + GWY_C17*z3im;
-            w3re = rem[0] + GWY_C37*z1re + GWY_C17*z2re + GWY_C27*z3re;
-            w3im = imm[0] + GWY_C37*z1im + GWY_C17*z2im + GWY_C27*z3im;
+            w1re = rem[0] + C7_1*z1re + C7_2*z2re + C7_3*z3re;
+            w1im = imm[0] + C7_1*z1im + C7_2*z2im + C7_3*z3im;
+            w2re = rem[0] + C7_2*z1re + C7_3*z2re + C7_1*z3re;
+            w2im = imm[0] + C7_2*z1im + C7_3*z2im + C7_1*z3im;
+            w3re = rem[0] + C7_3*z1re + C7_1*z2re + C7_2*z3re;
+            w3im = imm[0] + C7_3*z1im + C7_1*z2im + C7_2*z3im;
             /* Multiplication by i */
-            w4re = -GWY_S27*z4im + GWY_S17*z5im - GWY_S37*z6im;
-            w4im = GWY_S27*z4re - GWY_S17*z5re + GWY_S37*z6re;
-            w5re = GWY_S17*z4im + GWY_S37*z5im - GWY_S27*z6im;
-            w5im = -GWY_S17*z4re - GWY_S37*z5re + GWY_S27*z6re;
-            w6re = -GWY_S37*z4im - GWY_S27*z5im - GWY_S17*z6im;
-            w6im = GWY_S37*z4re + GWY_S27*z5re + GWY_S17*z6re;
+            w4re = -S7_2*z4im + S7_1*z5im - S7_3*z6im;
+            w4im = S7_2*z4re - S7_1*z5re + S7_3*z6re;
+            w5re = S7_1*z4im + S7_3*z5im - S7_2*z6im;
+            w5im = -S7_1*z4re - S7_3*z5re + S7_2*z6re;
+            w6re = -S7_3*z4im - S7_2*z5im - S7_1*z6im;
+            w6im = S7_3*z4re + S7_2*z5re + S7_1*z6re;
 
+            rem[0] += z1re + z2re + z3re;
+            imm[0] += z1im + z2im + z3im;
             rem[gn] = w1re + w6re;
             imm[gn] = w1im + w6im;
             rem[2*gn] = w2re + w5re;
@@ -452,8 +459,6 @@ pass7(guint gn, guint stride, gdouble *re, gdouble *im)
             imm[5*gn] = w2im - w5im;
             rem[6*gn] = w1re - w6re;
             imm[6*gn] = w1im - w6im;
-            rem[0] += z1re + z2re + z3re;
-            imm[0] += z1im + z2im + z3im;
         }
     }
     else {
@@ -476,20 +481,22 @@ pass7(guint gn, guint stride, gdouble *re, gdouble *im)
             z4re = re[stride*(3*gn + m)] - re[stride*(4*gn + m)];
             z4im = im[stride*(3*gn + m)] - im[stride*(4*gn + m)];
 
-            w1re = re[stride*m] + GWY_C17*z1re + GWY_C27*z2re + GWY_C37*z3re;
-            w1im = im[stride*m] + GWY_C17*z1im + GWY_C27*z2im + GWY_C37*z3im;
-            w2re = re[stride*m] + GWY_C27*z1re + GWY_C37*z2re + GWY_C17*z3re;
-            w2im = im[stride*m] + GWY_C27*z1im + GWY_C37*z2im + GWY_C17*z3im;
-            w3re = re[stride*m] + GWY_C37*z1re + GWY_C17*z2re + GWY_C27*z3re;
-            w3im = im[stride*m] + GWY_C37*z1im + GWY_C17*z2im + GWY_C27*z3im;
+            w1re = re[stride*m] + C7_1*z1re + C7_2*z2re + C7_3*z3re;
+            w1im = im[stride*m] + C7_1*z1im + C7_2*z2im + C7_3*z3im;
+            w2re = re[stride*m] + C7_2*z1re + C7_3*z2re + C7_1*z3re;
+            w2im = im[stride*m] + C7_2*z1im + C7_3*z2im + C7_1*z3im;
+            w3re = re[stride*m] + C7_3*z1re + C7_1*z2re + C7_2*z3re;
+            w3im = im[stride*m] + C7_3*z1im + C7_1*z2im + C7_2*z3im;
             /* Multiplication by i */
-            w4re = -GWY_S27*z4im + GWY_S17*z5im - GWY_S37*z6im;
-            w4im = GWY_S27*z4re - GWY_S17*z5re + GWY_S37*z6re;
-            w5re = GWY_S17*z4im + GWY_S37*z5im - GWY_S27*z6im;
-            w5im = -GWY_S17*z4re - GWY_S37*z5re + GWY_S27*z6re;
-            w6re = -GWY_S37*z4im - GWY_S27*z5im - GWY_S17*z6im;
-            w6im = GWY_S37*z4re + GWY_S27*z5re + GWY_S17*z6re;
+            w4re = -S7_2*z4im + S7_1*z5im - S7_3*z6im;
+            w4im = S7_2*z4re - S7_1*z5re + S7_3*z6re;
+            w5re = S7_1*z4im + S7_3*z5im - S7_2*z6im;
+            w5im = -S7_1*z4re - S7_3*z5re + S7_2*z6re;
+            w6re = -S7_3*z4im - S7_2*z5im - S7_1*z6im;
+            w6im = S7_3*z4re + S7_2*z5re + S7_1*z6re;
 
+            re[stride*m] += z1re + z2re + z3re;
+            im[stride*m] += z1im + z2im + z3im;
             re[stride*(gn + m)] = w1re + w6re;
             im[stride*(gn + m)] = w1im + w6im;
             re[stride*(2*gn + m)] = w2re + w5re;
@@ -502,8 +509,188 @@ pass7(guint gn, guint stride, gdouble *re, gdouble *im)
             im[stride*(5*gn + m)] = w2im - w5im;
             re[stride*(6*gn + m)] = w1re - w6re;
             im[stride*(6*gn + m)] = w1im - w6im;
-            re[stride*m] += z1re + z2re + z3re;
-            im[stride*m] += z1im + z2im + z3im;
+        }
+    }
+}
+
+/* Hopefully the compiler will optimize out the excessibe assigments to
+   temporary variables */
+static void
+pass10(guint gn, guint stride, gdouble *re, gdouble *im)
+{
+    guint m;
+
+    gn /= 10;
+    if (FALSE && stride == 1) {
+        for (m = 0; m < gn; m++) {
+            gdouble *rem = re + m;
+            gdouble *imm = im + m;
+            gdouble z0re, z0im, z1re, z1im, z2re, z2im, z3re, z3im, z4re, z4im;
+            gdouble z5re, z5im, z6re, z6im, z7re, z7im, z8re, z8im, z9re, z9im;
+            gdouble w1re, w1im, w2re, w2im, w3re, w3im, w4re, w4im;
+            gdouble w6re, w6im, w7re, w7im, w8re, w8im, w9re, w9im;
+
+            z0re = rem[0] + rem[5*gn];
+            z0im = imm[0] + imm[5*gn];
+            z5re = rem[0] - rem[5*gn];
+            z5im = imm[0] - imm[5*gn];
+            z1re = rem[gn] + rem[9*gn];
+            z1im = imm[gn] + imm[9*gn];
+            z9re = rem[gn] - rem[9*gn];
+            z9im = imm[gn] - imm[9*gn];
+            z2re = rem[2*gn] + rem[8*gn];
+            z2im = imm[2*gn] + imm[8*gn];
+            z8re = rem[2*gn] - rem[8*gn];
+            z8im = imm[2*gn] - imm[8*gn];
+            z3re = rem[3*gn] + rem[7*gn];
+            z3im = imm[3*gn] + imm[7*gn];
+            z7re = rem[3*gn] - rem[7*gn];
+            z7im = imm[3*gn] - imm[7*gn];
+            z4re = rem[4*gn] + rem[6*gn];
+            z4im = imm[4*gn] + imm[6*gn];
+            z6re = rem[4*gn] - rem[6*gn];
+            z6im = imm[4*gn] - imm[6*gn];
+
+            w1re = z1re + z4re;
+            w1im = z1im + z4im;
+            w2re = z2re + z3re;
+            w2im = z2im + z3im;
+            w3re = z2re - z3re;
+            w3im = z2im - z3im;
+            w4re = z1re - z4re;
+            w4im = z1im - z4im;
+            w6re = z6re + z9re;
+            w6im = z6im + z9im;
+            w7re = z7re + z8re;
+            w7im = z7im + z8im;
+            w8re = z7re - z8re;
+            w8im = z7im - z8im;
+            w9re = z6re - z9re;
+            w9im = z6im - z9im;
+
+            z1re = z5re + C10_1*w4re + C10_2*w3re;
+            z1im = z5im + C10_1*w4im + C10_2*w3im;
+            z2re = z0re + C10_2*w1re - C10_1*w2re;
+            z2im = z0im + C10_2*w1im - C10_1*w2im;
+            z3re = z5re - C10_2*w4re - C10_1*w3re;
+            z3im = z5im - C10_2*w4im - C10_1*w3im;
+            z4re = z0re - C10_1*w1re + C10_2*w2re;
+            z4im = z0im - C10_1*w1im + C10_2*w2im;
+            /* Multiplication by i */
+            z6re = S10_1*w9im - S10_2*w8im;
+            z6im = -S10_1*w9re + S10_2*w8re;
+            z7re = -S10_2*w6im + S10_1*w7im;
+            z7im = S10_2*w6re - S10_1*w7re;
+            z8re = S10_2*w9im + S10_1*w8im;
+            z8im = -S10_2*w9re - S10_1*w8re;
+            z9re = -S10_1*w6im - S10_2*w7im;
+            z9im = S10_1*w6re + S10_2*w7re;
+
+            rem[0] = z0re + w1re + w2re;
+            imm[0] = z0im + w1im + w2im;
+            rem[gn] = z1re + z9re;
+            imm[gn] = z1im + z9im;
+            rem[2*gn] = z2re + z8re;
+            imm[2*gn] = z2im + z8im;
+            rem[3*gn] = z3re + z7re;
+            imm[3*gn] = z3im + z7im;
+            rem[4*gn] = z4re + z6re;
+            imm[4*gn] = z4im + z6im;
+            rem[5*gn] = z5re + w3re - w4re;
+            imm[5*gn] = z5im + w3im - w4im;
+            rem[6*gn] = z4re - z6re;
+            imm[6*gn] = z4im - z6im;
+            rem[7*gn] = z3re - z7re;
+            imm[7*gn] = z3im - z7im;
+            rem[8*gn] = z2re - z8re;
+            imm[8*gn] = z2im - z8im;
+            rem[9*gn] = z1re - z9re;
+            imm[9*gn] = z1im - z9im;
+        }
+    }
+    else {
+        for (m = 0; m < gn; m++) {
+            gdouble z0re, z0im, z1re, z1im, z2re, z2im, z3re, z3im, z4re, z4im;
+            gdouble z5re, z5im, z6re, z6im, z7re, z7im, z8re, z8im, z9re, z9im;
+            gdouble w1re, w1im, w2re, w2im, w3re, w3im, w4re, w4im;
+            gdouble w6re, w6im, w7re, w7im, w8re, w8im, w9re, w9im;
+
+            z0re = re[stride*m] + re[stride*(5*gn + m)];
+            z0im = im[stride*m] + im[stride*(5*gn + m)];
+            z5re = re[stride*m] - re[stride*(5*gn + m)];
+            z5im = im[stride*m] - im[stride*(5*gn + m)];
+            z1re = re[stride*(gn + m)] + re[stride*(9*gn + m)];
+            z1im = im[stride*(gn + m)] + im[stride*(9*gn + m)];
+            z9re = re[stride*(gn + m)] - re[stride*(9*gn + m)];
+            z9im = im[stride*(gn + m)] - im[stride*(9*gn + m)];
+            z2re = re[stride*(2*gn + m)] + re[stride*(8*gn + m)];
+            z2im = im[stride*(2*gn + m)] + im[stride*(8*gn + m)];
+            z8re = re[stride*(2*gn + m)] - re[stride*(8*gn + m)];
+            z8im = im[stride*(2*gn + m)] - im[stride*(8*gn + m)];
+            z3re = re[stride*(3*gn + m)] + re[stride*(7*gn + m)];
+            z3im = im[stride*(3*gn + m)] + im[stride*(7*gn + m)];
+            z7re = re[stride*(3*gn + m)] - re[stride*(7*gn + m)];
+            z7im = im[stride*(3*gn + m)] - im[stride*(7*gn + m)];
+            z4re = re[stride*(4*gn + m)] + re[stride*(6*gn + m)];
+            z4im = im[stride*(4*gn + m)] + im[stride*(6*gn + m)];
+            z6re = re[stride*(4*gn + m)] - re[stride*(6*gn + m)];
+            z6im = im[stride*(4*gn + m)] - im[stride*(6*gn + m)];
+
+            w1re = z1re + z4re;
+            w1im = z1im + z4im;
+            w2re = z2re + z3re;
+            w2im = z2im + z3im;
+            w3re = z2re - z3re;
+            w3im = z2im - z3im;
+            w4re = z1re - z4re;
+            w4im = z1im - z4im;
+            w6re = z6re + z9re;
+            w6im = z6im + z9im;
+            w7re = z7re + z8re;
+            w7im = z7im + z8im;
+            w8re = z7re - z8re;
+            w8im = z7im - z8im;
+            w9re = z6re - z9re;
+            w9im = z6im - z9im;
+
+            z1re = z5re + C10_1*w4re + C10_2*w3re;
+            z1im = z5im + C10_1*w4im + C10_2*w3im;
+            z2re = z0re + C10_2*w1re - C10_1*w2re;
+            z2im = z0im + C10_2*w1im - C10_1*w2im;
+            z3re = z5re - C10_2*w4re - C10_1*w3re;
+            z3im = z5im - C10_2*w4im - C10_1*w3im;
+            z4re = z0re - C10_1*w1re + C10_2*w2re;
+            z4im = z0im - C10_1*w1im + C10_2*w2im;
+            /* Multiplication by i */
+            z6re = S10_1*w9im - S10_2*w8im;
+            z6im = -S10_1*w9re + S10_2*w8re;
+            z7re = -S10_2*w6im + S10_1*w7im;
+            z7im = S10_2*w6re - S10_1*w7re;
+            z8re = S10_2*w9im + S10_1*w8im;
+            z8im = -S10_2*w9re - S10_1*w8re;
+            z9re = -S10_1*w6im - S10_2*w7im;
+            z9im = S10_1*w6re + S10_2*w7re;
+
+            re[stride*m] = z0re + w1re + w2re;
+            im[stride*m] = z0im + w1im + w2im;
+            re[stride*(gn + m)] = z1re + z9re;
+            im[stride*(gn + m)] = z1im + z9im;
+            re[stride*(2*gn + m)] = z2re + z8re;
+            im[stride*(2*gn + m)] = z2im + z8im;
+            re[stride*(3*gn + m)] = z3re + z7re;
+            im[stride*(3*gn + m)] = z3im + z7im;
+            re[stride*(4*gn + m)] = z4re + z6re;
+            im[stride*(4*gn + m)] = z4im + z6im;
+            re[stride*(5*gn + m)] = z5re + w3re - w4re;
+            im[stride*(5*gn + m)] = z5im + w3im - w4im;
+            re[stride*(6*gn + m)] = z4re - z6re;
+            im[stride*(6*gn + m)] = z4im - z6im;
+            re[stride*(7*gn + m)] = z3re - z7re;
+            im[stride*(7*gn + m)] = z3im - z7im;
+            re[stride*(8*gn + m)] = z2re - z8re;
+            im[stride*(8*gn + m)] = z2im - z8im;
+            re[stride*(9*gn + m)] = z1re - z9re;
+            im[stride*(9*gn + m)] = z1im - z9im;
         }
     }
 }
@@ -564,7 +751,9 @@ gwy_fft_simple(GwyTransformDirection dir,
     swapped = TRUE;
     for (m = 1; m < n; m *= p) {
         k = n/m;
-        if (k % 4 == 0)
+        if (k % 10 == 0)
+            p = 10;
+        else if (k % 4 == 0)
             p = 4;
         else if (k % 5 == 0)
             p = 5;
@@ -603,7 +792,11 @@ gwy_fft_simple(GwyTransformDirection dir,
 
     for (m = 1; m < n; m *= p) {
         k = n/m;
-        if (k % 4 == 0) {
+        if (k % 10 == 0) {
+            p = 10;
+            butterfly = pass10;
+        }
+        else if (k % 4 == 0) {
             p = 4;
             butterfly = pass4;
         }
