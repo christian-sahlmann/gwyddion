@@ -772,41 +772,39 @@ gwy_fft_simple(GwyTransformDirection dir,
                gdouble *out_re,
                gdouble *out_im)
 {
-    static GArray *buffer = NULL;
+    static const ButterflyFunc butterflies[] = {
+        NULL, NULL, pass2, pass3, pass4,
+        pass5, pass6, pass7, NULL, NULL,
+        pass10
+    };
 
-    ButterflyFunc butterfly;
+    static GArray *buffer = NULL;
+    static guint pp[32];
+
     gdouble *buf_re, *buf_im;
-    guint m, p, k, bstride;
+    guint m, np, p, k, bstride;
     gdouble norm_fact;
-    gboolean swapped;
 
     if (dir != GWY_TRANSFORM_DIRECTION_BACKWARD) {
         GWY_SWAP(const gdouble*, in_re, in_im);
         GWY_SWAP(gdouble*, out_re, out_im);
     }
 
-    swapped = TRUE;
-    for (m = 1; m < n; m *= p) {
+    for (m = 1, np = 0; m < n; m *= p, np++) {
         k = n/m;
-        if (k % 10 == 0)
-            p = 10;
-        else if (k % 6 == 0)
-            p = 6;
-        else if (k % 4 == 0)
-            p = 4;
-        else if (k % 5 == 0)
-            p = 5;
-        else if (k % 2 == 0)
-            p = 2;
+        if (k % 5 == 0)
+            p = (k % 2 == 0) ? 10 : 5;
         else if (k % 3 == 0)
-            p = 3;
+            p = (k % 2 == 0) ? 6 : 3;
+        else if (k % 2 == 0)
+            p = (k % 4 == 0) ? 4 : 2;
         else if (k % 7 == 0)
             p = 7;
         else {
             g_critical("%d (%d) contains unimplemented primes", k, n);
             return;
         }
-        swapped = !swapped;
+        pp[np] = p;
     }
 
     /* XXX: This is never freed. */
@@ -817,7 +815,7 @@ gwy_fft_simple(GwyTransformDirection dir,
     buf_im = buf_re + n;
     bstride = 1;
 
-    if (swapped && n > 1) {
+    if (np % 2 == 0 && n > 1) {
         GWY_SWAP(gdouble*, buf_re, out_re);
         GWY_SWAP(gdouble*, buf_im, out_im);
         GWY_SWAP(guint, bstride, ostride);
@@ -829,43 +827,13 @@ gwy_fft_simple(GwyTransformDirection dir,
         out_im[ostride*m] = norm_fact*in_im[istride*m];
     }
 
-    for (m = 1; m < n; m *= p) {
-        k = n/m;
-        if (k % 10 == 0) {
-            p = 10;
-            butterfly = pass10;
-        }
-        else if (k % 6 == 0) {
-            p = 6;
-            butterfly = pass6;
-        }
-        else if (k % 4 == 0) {
-            p = 4;
-            butterfly = pass4;
-        }
-        else if (k % 5 == 0) {
-            p = 5;
-            butterfly = pass5;
-        }
-        else if (k % 2 == 0) {
-            p = 2;
-            butterfly = pass2;
-        }
-        else if (k % 3 == 0) {
-            p = 3;
-            butterfly = pass3;
-        }
-        else {
-            p = 7;
-            butterfly = pass7;
-        }
-
+    for (k = 0, m = 1; k < np; k++, m *= p) {
+        p = pp[k];
         if (m > 1)
             shuffle_and_twiddle(n, m*p, p,
                                 bstride, buf_re, buf_im,
                                 ostride, out_re, out_im);
-
-        butterfly(n, ostride, out_re, out_im);
+        butterflies[p](n, ostride, out_re, out_im);
         GWY_SWAP(gdouble*, buf_re, out_re);
         GWY_SWAP(gdouble*, buf_im, out_im);
         GWY_SWAP(guint, bstride, ostride);
