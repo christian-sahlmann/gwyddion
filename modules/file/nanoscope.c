@@ -276,12 +276,14 @@ nanoscope_load(const gchar *filename,
                 g_snprintf(key, sizeof(key), "/%d/data", i);
                 gwy_container_set_object_by_name(container, key,
                                                  ndata->data_field);
+                g_snprintf(key, sizeof(key), "/%d/data/title", i);
                 if ((val = g_hash_table_lookup(ndata->hash, "@2:Image Data"))
-                    && val->soft_scale) {
-                    g_snprintf(key, sizeof(key), "/%d/data/title", i);
+                    && val->soft_scale)
                     gwy_container_set_string_by_name(container, key,
                                                      g_strdup(val->soft_scale));
-                }
+                else if ((val = g_hash_table_lookup(ndata->hash, "Image data")))
+                    gwy_container_set_string_by_name(container, key,
+                                                     g_strdup(val->hard_value_str));
 
                 meta = nanoscope_get_metadata(ndata->hash, list);
                 g_snprintf(key, sizeof(key), "/%d/meta", i);
