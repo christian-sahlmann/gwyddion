@@ -137,7 +137,7 @@ static GwyModuleInfo module_info = {
     N_("Imports Veeco (Digital Instruments) Nanoscope data files, "
        "version 3 or newer."),
     "Yeti <yeti@gwyddion.net>",
-    "0.19",
+    "0.20",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -567,7 +567,7 @@ get_physical_scale(GHashTable *hash,
     gchar *key;
     gint q;
 
-    /* Very old style scales (files with Version field) */
+    /* Very old style scales (files without Version field) */
     if (!has_version) {
         if (!(val = g_hash_table_lookup(hash, "Z magnify image"))) {
             err_MISSING_FIELD(error, "Z magnify image");
@@ -594,8 +594,6 @@ get_physical_scale(GHashTable *hash,
         /* Old style scales */
         siunit = gwy_si_unit_new_parse(val->hard_value_units, &q);
         *scale = val->hard_value * pow10(q);
-        if (val->hard_scale)
-            *scale *= 65536.0/val->hard_scale;
         return siunit;
     }
 
