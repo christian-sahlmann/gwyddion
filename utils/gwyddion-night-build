@@ -86,7 +86,7 @@ function build_pygwy() {
   # be nice to exclude it from build_project.
   cd ./modules/pygwy
   rm -f pygwywrap.c
-  make -k all
+  make -k all pygwy-doc
 }
 
 
