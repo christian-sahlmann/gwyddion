@@ -832,12 +832,14 @@ gwy_tool_roughness_init_dialog(GwyToolRoughness *tool)
 
     tool->graphmodel_profile = gwy_graph_model_new();
     tool->graph_profile = gwy_graph_new(tool->graphmodel_profile);
+    g_object_unref(tool->graphmodel_profile);
     gtk_widget_set_size_request(tool->graph_profile, 300, 250);
     gwy_graph_enable_user_input(GWY_GRAPH(tool->graph_profile), FALSE);
     gtk_box_pack_start(GTK_BOX(vbox_right), tool->graph_profile, TRUE, TRUE, 0);
 
     tool->graphmodel = gwy_graph_model_new();
     tool->graph = gwy_graph_new(tool->graphmodel);
+    g_object_unref(tool->graphmodel);
     gtk_widget_set_size_request(tool->graph, 300, 250);
     gwy_graph_enable_user_input(GWY_GRAPH(tool->graph), FALSE);
     gtk_box_pack_start(GTK_BOX(vbox_right), tool->graph, TRUE, TRUE, 0);
@@ -1299,9 +1301,12 @@ gwy_tool_roughness_update_graphs(GwyToolRoughness *tool)
         GwyDataLine *dataline;
     } Graph;
 
-    GwyGraphCurveModel *gcmodel;
-    Graph *graph;
-    gint i;
+    /* Subset to show in profile graphs */
+    static const guint profile_graphs[] = {
+        GWY_ROUGHNESS_GRAPH_TEXTURE,
+        GWY_ROUGHNESS_GRAPH_WAVINESS,
+        GWY_ROUGHNESS_GRAPH_ROUGHNESS,
+    };
 
     /* XXX: This array is indexed by GwyRoughnessGraph values */
     Graph graphs[] =  {
@@ -1312,51 +1317,59 @@ gwy_tool_roughness_update_graphs(GwyToolRoughness *tool)
         { N_("The Bearing Ratio Curve"),         tool->profiles.brc,       },
         { N_("Peak Count"),                      tool->profiles.pc,        },
     };
-    /* Subset to show in profile graphs */
-    static const guint profile_graphs[] = {
-        GWY_ROUGHNESS_GRAPH_TEXTURE,
-        GWY_ROUGHNESS_GRAPH_WAVINESS,
-        GWY_ROUGHNESS_GRAPH_ROUGHNESS,
-    };
 
-    /* XXX: This is wrong, the set of curves does not change, so we should
-     * just update the data. */
-    gwy_graph_model_remove_all_curves(tool->graphmodel);
-    gwy_graph_model_remove_all_curves(tool->graphmodel_profile);
-    if (!tool->have_data)
+    GwyGraphCurveModel *gcmodel;
+    GwyGraphModel *gmodel;
+    Graph *graph;
+    gint i;
+
+    if (!tool->have_data) {
+        gwy_graph_model_remove_all_curves(tool->graphmodel);
+        gwy_graph_model_remove_all_curves(tool->graphmodel_profile);
         return;
+    }
 
-    g_object_set(tool->graphmodel_profile,
-                 "title", _("Surface Profiles"),
-                 NULL);
-    gwy_graph_model_set_units_from_data_line(tool->graphmodel_profile,
-                                             tool->dataline);
+    gmodel = tool->graphmodel_profile;
     for (i = 0; i < G_N_ELEMENTS(profile_graphs); i++) {
         graph = graphs + profile_graphs[i];
-        gcmodel = gwy_graph_curve_model_new();
-        g_object_set(gcmodel,
-                     "mode", GWY_GRAPH_CURVE_LINE,
-                     "color", gwy_graph_get_preset_color(i),
-                     "description", graph->title,
-                     NULL);
+        if (i < gwy_graph_model_get_n_curves(gmodel))
+            gcmodel = gwy_graph_model_get_curve(gmodel, i);
+        else {
+            gcmodel = gwy_graph_curve_model_new();
+            g_object_set(gcmodel,
+                         "mode", GWY_GRAPH_CURVE_LINE,
+                         "color", gwy_graph_get_preset_color(i),
+                         "description", graph->title,
+                         NULL);
+            gwy_graph_model_add_curve(gmodel, gcmodel);
+            g_object_unref(gcmodel);
+        }
         if (graph->dataline)
             gwy_graph_curve_model_set_data_from_dataline(gcmodel,
                                                          graph->dataline, 0, 0);
 
-        gwy_graph_model_add_curve(tool->graphmodel_profile, gcmodel);
-        g_object_unref(gcmodel);
     }
+    g_object_set(gmodel, "title", _("Surface Profiles"), NULL);
+    gwy_graph_model_set_units_from_data_line(gmodel, tool->dataline);
 
     graph = graphs + tool->graph_type;
-    gcmodel = gwy_graph_curve_model_new();
-    g_object_set(gcmodel,
-                 "mode", GWY_GRAPH_CURVE_LINE,
-                 "color", gwy_graph_get_preset_color(0),
-                 "description", graph->title,
-                 NULL);
-    g_object_set(tool->graphmodel, "title", graph->title, NULL);
+    gmodel = tool->graphmodel;
+    i = 0;
+    if (gwy_graph_model_get_n_curves(gmodel))
+        gcmodel = gwy_graph_model_get_curve(gmodel, i);
+    else {
+        gcmodel = gwy_graph_curve_model_new();
+        g_object_set(gcmodel,
+                     "mode", GWY_GRAPH_CURVE_LINE,
+                     "color", gwy_graph_get_preset_color(i),
+                     NULL);
+        gwy_graph_model_add_curve(gmodel, gcmodel);
+        g_object_unref(gcmodel);
+    }
+    g_object_set(gcmodel, "description", graph->title, NULL);
+    g_object_set(gmodel, "title", graph->title, NULL);
     if (graph->dataline) {
-        gwy_graph_model_set_units_from_data_line(tool->graphmodel,
+        gwy_graph_model_set_units_from_data_line(gmodel,
                                                  graph->dataline);
         gwy_graph_curve_model_set_data_from_dataline(gcmodel,
                                                      graph->dataline, 0, 0);
@@ -1366,8 +1379,6 @@ gwy_tool_roughness_update_graphs(GwyToolRoughness *tool)
                    gwy_data_line_get_min(graph->dataline),
                    gwy_data_line_get_max(graph->dataline));
     }
-    gwy_graph_model_add_curve(tool->graphmodel, gcmodel);
-    g_object_unref(gcmodel);
 }
 
 static void
