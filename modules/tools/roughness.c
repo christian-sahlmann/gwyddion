@@ -1376,6 +1376,7 @@ gwy_data_line_data_discrete(gdouble *x, gdouble *y,
                             GwyDataLine *dline)
 {
     gdouble val, ratio;
+    gdouble *data;
     gint i, j, n;
 
     g_return_if_fail(GWY_IS_DATA_LINE(dline));
@@ -1383,17 +1384,23 @@ gwy_data_line_data_discrete(gdouble *x, gdouble *y,
 
     n = gwy_data_line_get_res(dline);
     ratio = gwy_data_line_get_real(dline)/(n - 1);
+    data = gwy_data_line_get_data(dline);
 
     gwy_data_line_set_val(dline, 0, y[0]);
     //gwy_data_line_set_val(dline, n - 1, y[res - 1]);
     j = 0;
     for (i = 1; i < n; i++) {
+        /* FIXME: This is wrong.  Who in hell invented this res-1 madness? */
         val = i*ratio;
-        while (x[j] < val && j < res)
+        while (j < res && x[j] < val)
           j++;
-        gwy_data_line_set_val(dline, i,
-                              y[j-1]
-                              + (val - x[j-1])*(y[j] - y[j-1])/(x[j] - x[j-1]));
+
+        if (j >= res)
+            data[i] = y[j-1];
+        else if (j <= 0)
+            data[i] = y[0];
+        else
+            data[i] = y[j-1] + (val - x[j-1])*(y[j] - y[j-1])/(x[j] - x[j-1]);
     }
 
     return;
