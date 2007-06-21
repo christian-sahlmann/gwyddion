@@ -1730,7 +1730,7 @@ gwy_tool_roughness_Xa(GwyDataLine *data_line)
     res = gwy_data_line_get_res(data_line);
     data = gwy_data_line_get_data_const(data_line);
 
-    for (i = 0; i <= res; i++)
+    for (i = 0; i < res; i++)
         Xa += fabs(data[i]);
 
     return Xa/res;
