@@ -42,6 +42,8 @@
 #define S7_2 0.97492791218182360701813168299393121723278580062000
 #define S7_3 0.43388373911755812047576833284835875460999072778748
 
+#define S8_1 .70710678118654752440084436210484903928483593768846
+
 #ifdef HAVE_SINCOS
 #define _gwy_sincos sincos
 #else
@@ -428,50 +430,29 @@ pass4(guint gn, guint stride, gdouble *re, gdouble *im)
 
     gn /= 4;
     for (m = 0; m < gn; m++) {
-        gdouble z, z1re, z1im;
+        gdouble z0re, z0im, z1re, z1im, z2re, z2im, z3re, z3im;
 
         /* Level 0 */
-        z = re[stride*m] - re[stride*(2*gn + m)];
-        re[stride*m] += re[stride*(2*gn + m)];
-        re[stride*(2*gn + m)] = z;
-
-        z = im[stride*m] - im[stride*(2*gn + m)];
-        im[stride*m] += im[stride*(2*gn + m)];
-        im[stride*(2*gn + m)] = z;
-
-        z = re[stride*(gn + m)] - re[stride*(3*gn + m)];
-        re[stride*(gn + m)] += re[stride*(3*gn + m)];
-        re[stride*(3*gn + m)] = z;
-
-        z = im[stride*(gn + m)] - im[stride*(3*gn + m)];
-        im[stride*(gn + m)] += im[stride*(3*gn + m)];
-        im[stride*(3*gn + m)] = z;
+        z0re = re[stride*m] + re[stride*(2*gn + m)];
+        z0im = im[stride*m] + im[stride*(2*gn + m)];
+        z1re = re[stride*(gn + m)] + re[stride*(3*gn + m)];
+        z1im = im[stride*(gn + m)] + im[stride*(3*gn + m)];
+        z2re = re[stride*m] - re[stride*(2*gn + m)];
+        z2im = im[stride*m] - im[stride*(2*gn + m)];
+        z3re = re[stride*(gn + m)] - re[stride*(3*gn + m)];
+        z3im = im[stride*(gn + m)] - im[stride*(3*gn + m)];
 
         /* Level 1 */
-        z = re[stride*m] - re[stride*(gn + m)];
-        re[stride*m] += re[stride*(gn + m)];
-        re[stride*(gn + m)] = z;
-
-        z = im[stride*m] - im[stride*(gn + m)];
-        im[stride*m] += im[stride*(gn + m)];
-        im[stride*(gn + m)] = z;
-
+        re[stride*m] = z0re + z1re;
+        im[stride*m] = z0im + z1im;
         /* Multiplication by i */
-        z1re = -im[stride*(3*gn + m)];
-        z1im = re[stride*(3*gn + m)];
-        re[stride*(3*gn + m)] = re[stride*(2*gn + m)] - z1re;
-        im[stride*(3*gn + m)] = im[stride*(2*gn + m)] - z1im;
-        re[stride*(2*gn + m)] += z1re;
-        im[stride*(2*gn + m)] += z1im;
-
-        /* Fix bit-reversal */
-        z = re[stride*(gn + m)];
-        re[stride*(gn + m)] = re[stride*(2*gn + m)];
-        re[stride*(2*gn + m)] = z;
-
-        z = im[stride*(gn + m)];
-        im[stride*(gn + m)] = im[stride*(2*gn + m)];
-        im[stride*(2*gn + m)] = z;
+        re[stride*(gn + m)] = z2re - z3im;
+        im[stride*(gn + m)] = z2im + z3re;
+        re[stride*(2*gn + m)] = z0re - z1re;
+        im[stride*(2*gn + m)] = z0im - z1im;
+        /* Multiplication by i */
+        re[stride*(3*gn + m)] = z2re + z3im;
+        im[stride*(3*gn + m)] = z2im - z3re;
     }
 }
 
@@ -637,6 +618,83 @@ pass7(guint gn, guint stride, gdouble *re, gdouble *im)
 }
 
 static void
+pass8(guint gn, guint stride, gdouble *re, gdouble *im)
+{
+    guint m;
+
+    gn /= 8;
+    for (m = 0; m < gn; m++) {
+        gdouble z0re, z0im, z1re, z1im, z2re, z2im, z3re, z3im;
+        gdouble z4re, z4im, z5re, z5im, z6re, z6im, z7re, z7im;
+        gdouble w0re, w0im, w1re, w1im, w2re, w2im, w3re, w3im;
+        gdouble w4re, w4im, w5re, w5im, w6re, w6im, w7re, w7im;
+
+        /* Level 0 */
+        z0re = re[stride*m] + re[stride*(4*gn + m)];
+        z0im = im[stride*m] + im[stride*(4*gn + m)];
+        z1re = re[stride*(gn + m)] + re[stride*(5*gn + m)];
+        z1im = im[stride*(gn + m)] + im[stride*(5*gn + m)];
+        z2re = re[stride*(2*gn + m)] + re[stride*(6*gn + m)];
+        z2im = im[stride*(2*gn + m)] + im[stride*(6*gn + m)];
+        z3re = re[stride*(3*gn + m)] + re[stride*(7*gn + m)];
+        z3im = im[stride*(3*gn + m)] + im[stride*(7*gn + m)];
+        z4re = re[stride*m] - re[stride*(4*gn + m)];
+        z4im = im[stride*m] - im[stride*(4*gn + m)];
+        z5re = re[stride*(gn + m)] - re[stride*(5*gn + m)];
+        z5im = im[stride*(gn + m)] - im[stride*(5*gn + m)];
+        z6re = re[stride*(2*gn + m)] - re[stride*(6*gn + m)];
+        z6im = im[stride*(2*gn + m)] - im[stride*(6*gn + m)];
+        z7re = re[stride*(3*gn + m)] - re[stride*(7*gn + m)];
+        z7im = im[stride*(3*gn + m)] - im[stride*(7*gn + m)];
+
+        /* Level 1 */
+        w0re = z0re + z2re;
+        w0im = z0im + z2im;
+        w1re = z1re + z3re;
+        w1im = z1im + z3im;
+        w2re = z0re - z2re;
+        w2im = z0im - z2im;
+        w3re = z1re - z3re;
+        w3im = z1im - z3im;
+        /* Multiplication by i */
+        w4re = z4re - z6im;
+        w4im = z4im + z6re;
+        /* Multiplication by i */
+        w5re = -(z5im + z7im);
+        w5im = z5re + z7re;
+        /* Multiplication by i */
+        w6re = z4re + z6im;
+        w6im = z4im - z6re;
+        w7re = z5re - z7re;
+        w7im = z5im - z7im;
+
+        /* Level 2 and 3 */
+        z5re = S8_1*(w5re + w7re);
+        z5im = S8_1*(w5im + w7im);
+        z7re = S8_1*(w5re - w7re);
+        z7im = S8_1*(w5im - w7im);
+        re[stride*m] = w0re + w1re;
+        im[stride*m] = w0im + w1im;
+        re[stride*(gn + m)] = w4re + z5re;
+        im[stride*(gn + m)] = w4im + z5im;
+        /* Multiplication by i */
+        re[stride*(2*gn + m)] = w2re - w3im;
+        im[stride*(2*gn + m)] = w2im + w3re;
+        re[stride*(3*gn + m)] = w6re + z7re;
+        im[stride*(3*gn + m)] = w6im + z7im;
+        re[stride*(4*gn + m)] = w0re - w1re;
+        im[stride*(4*gn + m)] = w0im - w1im;
+        re[stride*(5*gn + m)] = w4re - z5re;
+        im[stride*(5*gn + m)] = w4im - z5im;
+        /* Multiplication by i */
+        re[stride*(6*gn + m)] = w2re + w3im;
+        im[stride*(6*gn + m)] = w2im - w3re;
+        re[stride*(7*gn + m)] = w6re - z7re;
+        im[stride*(7*gn + m)] = w6im - z7im;
+    }
+}
+
+static void
 pass10(guint gn, guint stride, gdouble *re, gdouble *im)
 {
     guint m;
@@ -774,12 +832,12 @@ gwy_fft_simple(GwyTransformDirection dir,
 {
     static const ButterflyFunc butterflies[] = {
         NULL, NULL, pass2, pass3, pass4,
-        pass5, pass6, pass7, NULL, NULL,
+        pass5, pass6, pass7, pass8, NULL,
         pass10
     };
 
     static GArray *buffer = NULL;
-    static guint pp[32];
+    static guint pp[20];  /* 3^21 > G_MAXUINT */
 
     gdouble *buf_re, *buf_im;
     guint m, np, p, k, bstride;
@@ -797,7 +855,7 @@ gwy_fft_simple(GwyTransformDirection dir,
         else if (k % 3 == 0)
             p = (k % 2 == 0) ? 6 : 3;
         else if (k % 2 == 0)
-            p = (k % 4 == 0) ? 4 : 2;
+            p = (k % 4 == 0) ? ((k % 8 == 0 && k != 16) ? 8 : 4) : 2;
         else if (k % 7 == 0)
             p = 7;
         else {
