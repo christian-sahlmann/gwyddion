@@ -72,17 +72,16 @@ pygwywrap.c: pygwy-codegen.py pygwy.defs pygwy.override
 	        -e '1s#.*#/* This is a 'GENERATED' file */#' >pygwywrap.c
 
 pygwy-doc: pygwy.defs pygwywrap.c
-	$(PYTHON) ./pygwy-generate-doc.py --codegendir $(PYGTK_CODEGENDIR) > gwy.py
-	epydoc -o pygwy-doc gwy.py
-
+	$(PYTHON) ./pygwy-generate-doc.py --codegendir $(PYGTK_CODEGENDIR) >gwy.py
+	$(EPYDOC) -o pygwy-doc gwy.py
 endif
 
-MAINTAINERCLEANFILES = makefile.msc
+CLEANFILES = gwy.py gwy.pyc
 
 DISTCLEANFILES = pygwy.defs pygwywrap.c
 
+MAINTAINERCLEANFILES = makefile.msc
 
 clean-local:
 	rm -f core.* *~
 	rm -rf pygwy-doc/
-	rm -f gwy.py gwy.pyc
