@@ -1323,7 +1323,7 @@ gwy_data_line_line_rotate(GwyDataLine *a,
         k = 0;
         do {
             k++;
-        } while (dx[k] < x && k < a->res);
+        } while (k < a->res && dx[k] < x);
 
         if (k >= a->res-1) {
             maxi = i;
