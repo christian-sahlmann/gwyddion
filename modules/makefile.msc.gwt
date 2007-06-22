@@ -10,7 +10,7 @@ plugin_proxy_module = plugin-proxy.la
 SUBDIRS = file graph layer process tools pygwy
 
 MOD_CFLAGS = \
-	-I . -I $(TOP_SRCDIR) $(COMMON_CFLAGS) $(MOD_CRUNTIME) \
+	-I . -I $(TOP_SRCDIR) $(COMMON_CFLAGS) $(MOD_CFLAGS) \
 	$(APP_CFLAGS) \
 	-DG_LOG_DOMAIN=\"Module\"
 

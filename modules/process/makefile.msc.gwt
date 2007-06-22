@@ -7,7 +7,7 @@ MOD_TYPE = process
 !INCLUDE $(TOP_SRCDIR)\make.msc
 
 MOD_CFLAGS = \
-	-I . -I $(TOP_SRCDIR) $(COMMON_CFLAGS) $(MOD_CRUNTIME) \
+	-I . -I $(TOP_SRCDIR) $(COMMON_CFLAGS) $(MOD_CFLAGS) \
 	$(APP_CFLAGS) \
 	-DG_LOG_DOMAIN=\"Module\"
 

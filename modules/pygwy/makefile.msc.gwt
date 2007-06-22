@@ -1,31 +1,28 @@
 # @(#) $Id$
 
+pygwy_module = pygwy.la
 
 <[[:SELF:]]>
 <[[:MODULES:]]>
+
 !INCLUDE $(TOP_SRCDIR)\make.msc
+
 !IFDEF ENABLE_PYGWY
-
-SUBDIRS = file graph layer process tools
-
-pygwy_module = pygwy.la
-
-
 PYGWY_LIBS = \
 	python24.lib \
-	pygobject.lib 
-	
+	pygobject.lib
+
 PYGWY_CFLAGS = \
 	-I $(PYTHON_TOP)\Include \
 	-I $(PYTHON_TOP)\PC \
-	-I $(PYGOBJECT_TOP)\gobject 
+	-I $(PYGOBJECT_TOP)\gobject
 
 PYGWY_LDFLAGS = \
 	/libpath:$(PYTHON_TOP)\PC\VC6 \
 	/libpath:$(PYGOBJECT_TOP)\lib
 
 MOD_CFLAGS = \
-	-I . -I $(TOP_SRCDIR) $(COMMON_CFLAGS) $(MOD_CRUNTIME) \
+	-I . -I $(TOP_SRCDIR) $(COMMON_CFLAGS) $(MOD_CFLAGS) \
 	$(APP_CFLAGS) \
 	$(PYGWY_CFLAGS) \
 	-DG_LOG_DOMAIN=\"Module\"
@@ -33,7 +30,7 @@ MOD_CFLAGS = \
 MOD_LINK = \
 	$(MOD_LINK) \
 	$(PYGWY_LDFLAGS) \
-	$(PYGWY_LIBS) 
+	$(PYGWY_LIBS)
 
 
 ## targets
@@ -43,8 +40,6 @@ mod: $(MODULES)
 
 install: install-mod
 
-clean::
-
 !INCLUDE $(TOP_SRCDIR)\rules.msc
 
 <[[:MOD_OBJ_RULES:]]>
@@ -52,6 +47,7 @@ clean::
 <[[:MOD_DLL_RULES:]]>
 !ELSE
 all:
-clean::
+install:
 !ENDIF
+
 # vim: ft=make
