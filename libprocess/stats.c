@@ -33,6 +33,7 @@
 #include <libprocess/linestats.h>
 #include <libprocess/grains.h>
 #include <libprocess/inttrans.h>
+#include <libprocess/simplefft.h>
 #include "gwyprocessinternal.h"
 
 /**
@@ -2170,6 +2171,131 @@ gwy_data_field_rpsdf(GwyDataField *data_field,
     gwy_data_field_area_rpsdf(data_field, target_line,
                               0, 0, data_field->xres, data_field->yres,
                               interpolation, windowing, nstats);
+}
+
+void
+gwy_data_field_area_2dacf(GwyDataField *data_field,
+                          GwyDataField *target_field,
+                          gint col, gint row,
+                          gint width, gint height,
+                          gint xrange, gint yrange)
+{
+#ifdef HAVE_FFTW3
+    fftw_plan plan;
+#endif
+    GwyDataField *re_in, *re_out, *im_out, *ibuf;
+    /* GwySIUnit *xyunit, *zunit; */
+    gdouble *src, *dst;
+    gint i, j, xres, yres, xsize, ysize;
+    gdouble xreal, yreal;
+
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    g_return_if_fail(GWY_IS_DATA_FIELD(target_field));
+    xres = data_field->xres;
+    yres = data_field->yres;
+    g_return_if_fail(col >= 0 && row >= 0
+                     && width >= 4 && height >= 4
+                     && col + width <= xres
+                     && row + height <= yres);
+    if (xrange <= 0)
+        xrange = width;
+    if (yrange <= 0)
+        yrange = height;
+    g_return_if_fail(xrange <= width && yrange <= height);
+    xreal = data_field->xreal;
+    yreal = data_field->yreal;
+
+    xsize = gwy_fft_find_nice_size(width + xrange);
+    ysize = gwy_fft_find_nice_size(height + yrange);
+
+    re_in = gwy_data_field_new(xsize, height, 1.0, 1.0, TRUE);
+    re_out = gwy_data_field_new_alike(re_in, FALSE);
+    im_out = gwy_data_field_new_alike(re_in, FALSE);
+    ibuf = gwy_data_field_new_alike(re_in, FALSE);
+
+    /* Stage 1: Row-wise FFT, with zero-padded columns.
+     * No need to transform the padding rows as zero rises from zeroes. */
+    gwy_data_field_area_copy(data_field, re_in, col, row, width, height, 0, 0);
+    gwy_data_field_1dfft_raw(re_in, NULL, re_out, im_out,
+                             GWY_ORIENTATION_HORIZONTAL,
+                             GWY_TRANSFORM_DIRECTION_FORWARD);
+
+    /* Stage 2: Column-wise FFT, taking the norm and another column-wise FTT.
+     * We take the advantage of the fact that the order of the row- and
+     * column-wise transforms is arbitrary and that taking the norm is a
+     * local operation. */
+    /* Use interleaved arrays, this enables us to foist them as `complex'
+     * to FFTW. */
+    src = g_new(gdouble, 4*ysize);
+    dst = src + 2*ysize;
+#ifdef HAVE_FFTW3
+    plan = fftw_plan_dft_1d(ysize, (fftw_complex*)src, (fftw_complex*)dst,
+                            FFTW_FORWARD, _GWY_FFTW_PATIENCE);
+#endif
+    for (j = 0; j < xsize; j++) {
+        for (i = 0; i < height; i++) {
+            src[2*i + 0] = re_out->data[i*xsize + j];
+            src[2*i + 1] = im_out->data[i*xsize + j];
+        }
+        memset(src + 2*height, 0, 2*(ysize - height)*sizeof(gdouble));
+#ifdef HAVE_FFTW3
+        fftw_execute(plan);
+#else
+        gwy_fft_simple(GWY_TRANSFORM_DIRECTION_FORWARD, ysize,
+                       2, src, src + 1,
+                       2, dst, dst + 1);
+#endif
+        for (i = 0; i < ysize; i++) {
+            src[2*i] = dst[2*i]*dst[2*i] + dst[2*i + 1]*dst[2*i + 1];
+            src[2*i + 1] = 0.0;
+        }
+#ifdef HAVE_FFTW3
+        fftw_execute(plan);
+#else
+        gwy_fft_simple(GWY_TRANSFORM_DIRECTION_FORWARD, ysize,
+                       2, src, src + 1,
+                       2, dst, dst + 1);
+#endif
+        for (i = 0; i < height; i++) {
+            re_in->data[i*xsize + j] = dst[2*i + 0];
+            ibuf->data[i*xsize + j]  = dst[2*i + 1];
+        }
+    }
+#ifdef HAVE_FFTW3
+    fftw_destroy_plan(plan);
+#endif
+    g_free(src);
+
+    /* Stage 3: The final row-wise FFT. */
+    gwy_data_field_1dfft_raw(re_in, ibuf, re_out, im_out,
+                             GWY_ORIENTATION_HORIZONTAL,
+                             GWY_TRANSFORM_DIRECTION_FORWARD);
+
+    g_object_unref(ibuf);
+    g_object_unref(re_in);
+    g_object_unref(im_out);
+
+    gwy_data_field_resample(target_field, xrange, yrange,
+                            GWY_INTERPOLATION_NONE);
+    for (i = 0; i < yrange; i++) {
+        src = re_out->data + i*xsize;
+        dst = target_field->data + i*xrange;
+        for (j = 0; j < xrange; j++) {
+            dst[j] = src[j]/(height - i)/(width - j);
+        }
+    }
+    g_object_unref(re_out);
+}
+
+void
+gwy_data_field_2dacf(GwyDataField *data_field,
+                     GwyDataField *target_field)
+{
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+
+    gwy_data_field_area_2dacf(data_field, target_field,
+                              0, 0, data_field->xres, data_field->yres,
+                              data_field->xres/2, data_field->yres/2);
 }
 
 /**
