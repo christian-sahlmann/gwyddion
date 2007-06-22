@@ -766,8 +766,8 @@ gwy_app_menu_recent_files_set_thumbnail(GtkWidget *item,
     guint32 pixel;
 
     gtk_icon_size_lookup(GTK_ICON_SIZE_MENU, &width, &height);
-    width = 4*width/3;
-    height = 4*height/3;
+    width = 3*width/2;
+    height = 3*height/2;
 
     thumbnail = gwy_app_recent_file_get_thumbnail(filename_utf8);
     w = gdk_pixbuf_get_width(thumbnail);
