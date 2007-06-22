@@ -77,6 +77,13 @@ typedef struct {
     GwyDataLine *adf;
     GwyDataLine *brc;
     GwyDataLine *pc;
+
+    /* Temporary lines */
+    GwyDataLine *extline;
+    GwyDataLine *tmp;
+    GwyDataLine *iin;
+    GwyDataLine *rout;
+    GwyDataLine *iout;
 } GwyRoughnessProfiles;
 
 typedef enum {
@@ -590,7 +597,7 @@ static const GwyRoughnessParameterInfo parameters[] = {
 
 static const ToolArgs default_args = {
     1,
-    0.9,
+    0.05,
     GWY_INTERPOLATION_LINEAR,
     0,
 };
@@ -673,6 +680,11 @@ gwy_tool_roughness_finalize(GObject *object)
     gwy_object_unref(tool->profiles.adf);
     gwy_object_unref(tool->profiles.brc);
     gwy_object_unref(tool->profiles.pc);
+    gwy_object_unref(tool->profiles.extline);
+    gwy_object_unref(tool->profiles.iin);
+    gwy_object_unref(tool->profiles.tmp);
+    gwy_object_unref(tool->profiles.rout);
+    gwy_object_unref(tool->profiles.iout);
 
     /* TODO: Free various graph models, here or elsewhere */
 
@@ -1072,6 +1084,7 @@ gwy_tool_roughness_data_switched(GwyTool *gwytool,
     if (data_view) {
         gwy_object_set_or_reset(plain_tool->layer,
                                 tool->layer_type_line,
+                                "line-numbers", FALSE,
                                 "editable", TRUE,
                                 "focus", -1,
                                 NULL);
@@ -1373,11 +1386,6 @@ gwy_tool_roughness_update_graphs(GwyToolRoughness *tool)
                                                  graph->dataline);
         gwy_graph_curve_model_set_data_from_dataline(gcmodel,
                                                      graph->dataline, 0, 0);
-        g_printerr("%g %g, %g %g\n",
-                   gwy_data_line_get_real(graph->dataline),
-                   gwy_data_line_get_offset(graph->dataline),
-                   gwy_data_line_get_min(graph->dataline),
-                   gwy_data_line_get_max(graph->dataline));
     }
 }
 
@@ -1428,12 +1436,10 @@ gwy_math_quicksort(gdouble *array, gint *ind, gint low, gint high)
     l = low + 1;
     r = high;
 
-    while(l < r)
-    {
+    while (l < r) {
         if (array[l] <= pivot)
             l++;
-        else
-        {
+        else {
             r--;
 
             temp = array[l];
@@ -1503,14 +1509,14 @@ gwy_data_line_rotate2(GwyDataLine *dline,
     j = ind[0];
     dy_sort[0] = dy[j];
     k = 1;
-    for (i = 1; i < n; i++)
-        if (ind[i] > j)
-        {
-        	  dx_sort[k] = dx[i];
-        	  j = ind[i];
-        	  dy_sort[k] = dy[j];
-        	  k++;
+    for (i = 1; i < n; i++) {
+        if (ind[i] > j) {
+            dx_sort[k] = dx[i];
+            j = ind[i];
+            dy_sort[k] = dy[j];
+            k++;
         }
+    }
 
     gwy_data_line_set_offset(dline, min);
     gwy_data_line_set_real(dline, dx[n-1]);
@@ -1594,7 +1600,6 @@ gwy_tool_roughness_set_data_from_profile(GwyRoughnessProfiles *profiles,
                                          GwyDataLine *dline,
                                          gdouble cutoff)
 {
-    GwyDataLine *extline, *iin, *rout, *iout, *tmp;
     gint n, next, i;
     gdouble *re, *im, *wdata, *rdata;
     const gdouble *tdata, *data;
@@ -1614,20 +1619,29 @@ gwy_tool_roughness_set_data_from_profile(GwyRoughnessProfiles *profiles,
         profiles->texture = gwy_data_line_duplicate(dline);
         profiles->waviness = gwy_data_line_new_alike(dline, FALSE);
         profiles->roughness = gwy_data_line_new_alike(dline, FALSE);
+        profiles->extline = gwy_data_line_new_alike(dline, FALSE);
     }
 
-    extline = gwy_data_line_new(1, 1.0, FALSE);
-    next = gwy_data_line_extend(dline, extline);
-    iin = gwy_data_line_new_alike(extline, TRUE);
-    tmp = gwy_data_line_new_alike(extline, FALSE);
-    rout = gwy_data_line_new_alike(extline, FALSE);
-    iout = gwy_data_line_new_alike(extline, FALSE);
+    next = gwy_data_line_extend(dline, profiles->extline);
+    if (profiles->iin) {
+        gwy_data_line_resample(profiles->iin, next, GWY_INTERPOLATION_NONE);
+        gwy_data_line_resample(profiles->tmp, next, GWY_INTERPOLATION_NONE);
+        gwy_data_line_resample(profiles->rout, next, GWY_INTERPOLATION_NONE);
+        gwy_data_line_resample(profiles->iout, next, GWY_INTERPOLATION_NONE);
+    }
+    else {
+        profiles->iin = gwy_data_line_new_alike(profiles->extline, TRUE);
+        profiles->tmp = gwy_data_line_new_alike(profiles->extline, FALSE);
+        profiles->rout = gwy_data_line_new_alike(profiles->extline, FALSE);
+        profiles->iout = gwy_data_line_new_alike(profiles->extline, FALSE);
+    }
 
-    gwy_data_line_fft_raw(extline, iin, rout, iout,
+    gwy_data_line_fft_raw(profiles->extline, profiles->iin,
+                          profiles->rout, profiles->iout,
                           GWY_TRANSFORM_DIRECTION_FORWARD);
 
-    re = gwy_data_line_get_data(rout);
-    im = gwy_data_line_get_data(iout);
+    re = gwy_data_line_get_data(profiles->rout);
+    im = gwy_data_line_get_data(profiles->iout);
     for (i = 0; i < next; i++) {
         gdouble f;
 
@@ -1636,23 +1650,18 @@ gwy_tool_roughness_set_data_from_profile(GwyRoughnessProfiles *profiles,
             re[i] = im[i] = 0.0;
     }
 
-    gwy_data_line_fft_raw(rout, iout, tmp, iin,
+    gwy_data_line_fft_raw(profiles->rout, profiles->iout,
+                          profiles->tmp, profiles->iin,
                           GWY_TRANSFORM_DIRECTION_BACKWARD);
 
-    data = gwy_data_line_get_data_const(extline);
-    tdata = gwy_data_line_get_data_const(tmp);
+    data = gwy_data_line_get_data_const(profiles->extline);
+    tdata = gwy_data_line_get_data_const(profiles->tmp);
     wdata = gwy_data_line_get_data(profiles->waviness);
     rdata = gwy_data_line_get_data(profiles->roughness);
     for (i = 0; i < n; i++) {
         wdata[i] = tdata[i];
         rdata[i] = data[i] - tdata[i];
     }
-
-    g_object_unref(iin);
-    g_object_unref(tmp);
-    g_object_unref(rout);
-    g_object_unref(iout);
-    g_object_unref(extline);
 
     gwy_data_line_balance(profiles->waviness);
     gwy_data_line_balance(profiles->roughness);
@@ -1756,7 +1765,6 @@ gwy_tool_roughness_Xa(GwyDataLine *data_line)
 
 /**
  * Root Mean Square (RMS) Roughness - Rq, Pq, Wq
- *
  */
 static gdouble
 gwy_tool_roughness_Xq(GwyDataLine *data_line)
@@ -1779,7 +1787,6 @@ gwy_tool_roughness_Xq(GwyDataLine *data_line)
 /**
  * Average Maximum Profile Peak Height - Rpm
  * Maximum Profile Peak Height - Rp, Pp, Wp = Rpm for m=1
- *
  */
 static gdouble
 gwy_tool_roughness_Xpm(GwyDataLine *data_line, gint m, gint k)
