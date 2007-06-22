@@ -1222,7 +1222,7 @@ gwy_tool_roughness_update(GwyToolRoughness *tool)
     yl2 = (gint)gwy_data_field_rtoi(plain_tool->data_field, line[3]);
 
     lineres = ROUND(hypot(xl1 - xl2, yl1 - yl2));
-    if (lineres < 10)
+    if (lineres < 8)
         return;
 
     tool->have_data = TRUE;
@@ -1590,7 +1590,8 @@ gwy_data_line_balance(GwyDataLine *dline)
     gdouble av, bv;
 
     gwy_data_line_get_line_coeffs(dline, &av, &bv);
-    bv = bv/(gwy_data_line_get_real(dline)/(gwy_data_line_get_res(dline)-1));
+    bv /= gwy_data_line_get_real(dline)/gwy_data_line_get_res(dline);
+    bv = atan(bv);
     gwy_data_line_add(dline, -av);
     gwy_data_line_rotate2(dline, -bv);
 }
@@ -1617,8 +1618,11 @@ gwy_tool_roughness_set_data_from_profile(GwyRoughnessProfiles *profiles,
     }
     else {
         profiles->texture = gwy_data_line_duplicate(dline);
+        g_object_set_data(G_OBJECT(profiles->texture), "name", "texture");
         profiles->waviness = gwy_data_line_new_alike(dline, FALSE);
+        g_object_set_data(G_OBJECT(profiles->waviness), "name", "waviness");
         profiles->roughness = gwy_data_line_new_alike(dline, FALSE);
+        g_object_set_data(G_OBJECT(profiles->roughness), "name", "roughness");
         profiles->extline = gwy_data_line_new_alike(dline, FALSE);
     }
 
@@ -1630,12 +1634,13 @@ gwy_tool_roughness_set_data_from_profile(GwyRoughnessProfiles *profiles,
         gwy_data_line_resample(profiles->iout, next, GWY_INTERPOLATION_NONE);
     }
     else {
-        profiles->iin = gwy_data_line_new_alike(profiles->extline, TRUE);
+        profiles->iin = gwy_data_line_new_alike(profiles->extline, FALSE);
         profiles->tmp = gwy_data_line_new_alike(profiles->extline, FALSE);
         profiles->rout = gwy_data_line_new_alike(profiles->extline, FALSE);
         profiles->iout = gwy_data_line_new_alike(profiles->extline, FALSE);
     }
 
+    gwy_data_line_clear(profiles->iin);
     gwy_data_line_fft_raw(profiles->extline, profiles->iin,
                           profiles->rout, profiles->iout,
                           GWY_TRANSFORM_DIRECTION_FORWARD);
