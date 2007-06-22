@@ -1238,8 +1238,8 @@ gwy_data_line_get_line_coeffs(GwyDataLine *a, gdouble *av, gdouble *bv)
     g_return_if_fail(GWY_IS_DATA_LINE(a));
 
     /* These are already averages, not sums */
-    sumxi = (n-1)/2;
-    sumxixi = (2*n-1)*(n-1)/6;
+    sumxi = (n-1)/2.0;
+    sumxixi = (2*n-1)*(n-1)/6.0;
 
     for (i = 0; i < a->res; i++) {
         sumsi += a->data[i];
@@ -1249,9 +1249,9 @@ gwy_data_line_get_line_coeffs(GwyDataLine *a, gdouble *av, gdouble *bv)
     sumsixi /= n;
 
     if (bv)
-        *bv = (sumsixi - sumsi*sumxi) / (sumxixi - sumxi*sumxi);
+        *bv = (sumsixi - sumsi*sumxi)/(sumxixi - sumxi*sumxi);
     if (av)
-        *av = (sumsi*sumxixi - sumxi*sumsixi) / (sumxixi - sumxi*sumxi);
+        *av = (sumsi*sumxixi - sumxi*sumsixi)/(sumxixi - sumxi*sumxi);
 }
 
 /**
