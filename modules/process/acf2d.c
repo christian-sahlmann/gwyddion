@@ -69,7 +69,7 @@ acf2d(GwyContainer *data, GwyRunType run)
     result = gwy_data_field_new_alike(dfield, FALSE);
     xres = gwy_data_field_get_xres(dfield);
     yres = gwy_data_field_get_yres(dfield);
-    gwy_data_field_area_2dacf(dfield, result, 0, 0, xres, yres, xres, yres);
+    gwy_data_field_2dacf(dfield, result);
     id = gwy_app_data_browser_add_data_field(result, data, TRUE);
     g_object_unref(result);
     gwy_app_set_data_field_title(data, id, _("2D ACF"));
