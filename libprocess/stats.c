@@ -2184,8 +2184,8 @@ gwy_data_field_area_2dacf(GwyDataField *data_field,
     fftw_plan plan;
 #endif
     GwyDataField *re_in, *re_out, *im_out, *ibuf;
-    /* GwySIUnit *xyunit, *zunit; */
-    gdouble *src, *dst;
+    GwySIUnit *xyunit, *zunit, *unit;
+    gdouble *src, *dst, *dstm;
     gint i, j, xres, yres, xsize, ysize;
     gdouble xreal, yreal;
 
@@ -2198,9 +2198,9 @@ gwy_data_field_area_2dacf(GwyDataField *data_field,
                      && col + width <= xres
                      && row + height <= yres);
     if (xrange <= 0)
-        xrange = width;
+        xrange = width/2;
     if (yrange <= 0)
-        yrange = height;
+        yrange = height/2;
     g_return_if_fail(xrange <= width && yrange <= height);
     xreal = data_field->xreal;
     yreal = data_field->yreal;
@@ -2275,16 +2275,38 @@ gwy_data_field_area_2dacf(GwyDataField *data_field,
     g_object_unref(re_in);
     g_object_unref(im_out);
 
-    gwy_data_field_resample(target_field, xrange, yrange,
+    gwy_data_field_resample(target_field, 2*xrange - 1, 2*yrange - 1,
                             GWY_INTERPOLATION_NONE);
     for (i = 0; i < yrange; i++) {
         src = re_out->data + i*xsize;
-        dst = target_field->data + i*xrange;
+        dst = target_field->data + (yrange-1 + i)*target_field->xres;
+        dstm = target_field->data + (yrange-1 - i)*target_field->xres;
         for (j = 0; j < xrange; j++) {
-            dst[j] = src[j]/(height - i)/(width - j);
+            gdouble v;
+
+            if (j > 0) {
+                v = src[xsize - j]/(height - i)/(width - j);
+                if (i > 0)
+                    dstm[xrange-1 + j] = v;
+                dst[xrange-1 - j] = v;
+            }
+            v = src[j]/(height - i)/(width - j);
+            if (i > 0)
+                dstm[xrange-1 - j] = v;
+            dst[xrange-1 + j] = v;
         }
     }
     g_object_unref(re_out);
+
+    xyunit = gwy_data_field_get_si_unit_xy(data_field);
+    unit = gwy_data_field_get_si_unit_xy(target_field);
+    gwy_serializable_clone(G_OBJECT(xyunit), G_OBJECT(unit));
+    target_field->xreal = xreal*target_field->xres/xres;
+    target_field->yreal = yreal*target_field->yres/yres;
+    target_field->xoff = -0.5*target_field->xreal;
+    target_field->yoff = -0.5*target_field->yreal;
+
+    gwy_data_field_invalidate(target_field);
 }
 
 void
@@ -2294,8 +2316,7 @@ gwy_data_field_2dacf(GwyDataField *data_field,
     g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
 
     gwy_data_field_area_2dacf(data_field, target_field,
-                              0, 0, data_field->xres, data_field->yres,
-                              data_field->xres/2, data_field->yres/2);
+                              0, 0, data_field->xres, data_field->yres, 0, 0);
 }
 
 /**
