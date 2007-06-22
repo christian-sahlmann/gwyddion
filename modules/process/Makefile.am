@@ -3,6 +3,7 @@
 processdir = $(pkglibdir)/modules/process
 
 process_LTLIBRARIES = \
+	acf2d.la \
 	angle_dist.la \
 	arithmetic.la \
 	basicops.la \
@@ -75,6 +76,7 @@ module_libadd = \
 	@GTK_LIBS@
 endif
 
+acf2d_la_SOURCES = acf2d.c
 angle_dist_la_SOURCES = angle_dist.c
 arithmetic_la_SOURCES = arithmetic.c
 basicops_la_SOURCES = basicops.c

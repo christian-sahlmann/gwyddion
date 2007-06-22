@@ -19,7 +19,6 @@
  */
 
 #include "config.h"
-#include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwymacros.h>
 #include <libprocess/datafield.h>
 #include <libprocess/fractals.h>
