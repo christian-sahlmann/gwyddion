@@ -12,14 +12,7 @@ SUBDIRS = file graph layer process tools pygwy
 MOD_CFLAGS = \
 	-I . -I $(TOP_SRCDIR) $(COMMON_CFLAGS) $(MOD_CRUNTIME) \
 	$(APP_CFLAGS) \
-	$(PYGWY_CFLAGS) \
 	-DG_LOG_DOMAIN=\"Module\"
-
-MOD_LINK = \
-	$(MOD_LINK) \
-	$(PYGWY_LDFLAGS) \
-	$(PYGWY_LIBS) 
-
 
 ## targets
 all: mod sub-all
