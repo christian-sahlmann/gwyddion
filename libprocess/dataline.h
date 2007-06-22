@@ -161,9 +161,14 @@ void           gwy_data_line_get_line_coeffs       (GwyDataLine *data_line,
 void           gwy_data_line_line_level            (GwyDataLine *data_line,
                                                     gdouble av,
                                                     gdouble bv);
+void           gwy_data_line_rotate                (GwyDataLine *data_line,
+                                                    gdouble angle,
+                                                    GwyInterpolationType interpolation);
+#ifndef GWY_DISABLE_DEPRECATED
 void           gwy_data_line_line_rotate           (GwyDataLine *data_line,
                                                     gdouble angle,
                                                     gint interpolation);
+#endif
 gdouble        gwy_data_line_get_der               (GwyDataLine *data_line,
                                                     gint i);
 gdouble*       gwy_data_line_part_fit_polynom      (GwyDataLine *data_line,
@@ -182,7 +187,7 @@ void           gwy_data_line_part_subtract_polynom (GwyDataLine *data_line,
 void           gwy_data_line_subtract_polynom      (GwyDataLine *data_line,
                                                     gint n,
                                                     const gdouble *coeffs);
-void           gwy_data_line_cumulate      (GwyDataLine *data_line);
+void           gwy_data_line_cumulate              (GwyDataLine *data_line);
 
 
 G_END_DECLS

@@ -1283,34 +1283,56 @@ gwy_data_line_line_level(GwyDataLine *a, gdouble av, gdouble bv)
  *
  * Performs line rotation.
  *
- * This is operation similar to leveling, but it does not change the angles
- * between line segments.
+ * Use gwy_data_line_rotate() instead.
  **/
 void
 gwy_data_line_line_rotate(GwyDataLine *a,
                           gdouble angle,
                           gint interpolation)
 {
+    gwy_data_line_rotate(a, angle, interpolation);
+}
+
+/**
+ * gwy_data_line_rotate:
+ * @data_line: A data line.
+ * @angle: Angle of rotation (in radians), counterclockwise.
+ * @interpolation: Interpolation method to use (can be only of two-point type).
+ *
+ * Performs line rotation.
+ *
+ * This is operation similar to leveling, but it does not change the angles
+ * between line segments (on the other hand it introduces other deformations
+ * due to discretization).
+ *
+ * Since: 2.6
+ **/
+void
+gwy_data_line_rotate(GwyDataLine *data_line,
+                     gdouble angle,
+                     GwyInterpolationType interpolation)
+{
     gint i, k, maxi, res;
     gdouble ratio, x, as, radius, xl1, xl2, yl1, yl2;
     gdouble *dx, *dy;
 
-    g_return_if_fail(GWY_IS_DATA_LINE(a));
-    if (angle == 0)
+    g_return_if_fail(GWY_IS_DATA_LINE(data_line));
+
+    if (angle == 0.0 || data_line->res < 2)
         return;
 
     /* INTERPOLATION: not checked, I'm not sure how this all relates to
      * interpolation */
-    res = a->res;
-    dx = g_new(gdouble, a->res);
-    dy = g_new(gdouble, a->res);
+    res = data_line->res;
+    dx = g_new(gdouble, data_line->res);
+    dy = g_new(gdouble, data_line->res);
 
-    ratio = a->real/a->res;
+    ratio = data_line->real/data_line->res;
     dx[0] = 0;
-    dy[0] = a->data[0];
-    for (i = 1; i < a->res; i++) {
-        as = atan2(a->data[i], i*ratio);
-        radius = hypot(i*ratio, a->data[i]);
+    dy[0] = data_line->data[0];
+    for (i = 1; i < data_line->res; i++) {
+        as = atan2(data_line->data[i], i*ratio);
+        radius = hypot(i*ratio, data_line->data[i]);
         dx[i] = radius*cos(as + angle);
         dy[i] = radius*sin(as + angle);
     }
@@ -1318,14 +1340,14 @@ gwy_data_line_line_rotate(GwyDataLine *a,
 
     k = 0;
     maxi = 0;
-    for (i = 1; i < a->res; i++) {
+    for (i = 1; i < data_line->res; i++) {
         x = i*ratio;
         k = 0;
         do {
             k++;
-        } while (k < a->res && dx[k] < x);
+        } while (k < data_line->res && dx[k] < x);
 
-        if (k >= a->res-1) {
+        if (k >= data_line->res-1) {
             maxi = i;
             break;
         }
@@ -1337,20 +1359,22 @@ gwy_data_line_line_rotate(GwyDataLine *a,
 
         if (interpolation == GWY_INTERPOLATION_ROUND
             || interpolation == GWY_INTERPOLATION_LINEAR) {
-            a->data[i] = gwy_interpolation_get_dval(x, xl1, yl1, xl2, yl2,
-                                                    interpolation);
+            data_line->data[i] = gwy_interpolation_get_dval(x,
+                                                            xl1, yl1, xl2, yl2,
+                                                            interpolation);
         }
         else
             g_warning("Interpolation not implemented yet.\n");
     }
     if (maxi != 0) {
-        a->real *= maxi/((double)a->res);
-        a->res = maxi;
-        a->data = g_renew(gdouble, a->data, a->res*sizeof(gdouble));
+        data_line->real *= maxi/((double)data_line->res);
+        data_line->res = maxi;
+        data_line->data = g_renew(gdouble, data_line->data,
+                                  data_line->res*sizeof(gdouble));
     }
 
-    if (a->res != res)
-        gwy_data_line_resample(a, res, interpolation);
+    if (data_line->res != res)
+        gwy_data_line_resample(data_line, res, interpolation);
 
 
     g_free(dx);
