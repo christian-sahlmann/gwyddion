@@ -47,7 +47,7 @@ module_register(void)
 {
     gwy_process_func_register("acf2d",
                               (GwyProcessFunc)&acf2d,
-                              N_("/_Statistics/2D Auto_correlation"),
+                              N_("/_Integral Transforms/2D Autoco_rrelation"),
                               NULL,
                               ACF2D_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
