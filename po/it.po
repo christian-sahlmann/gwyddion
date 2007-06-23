@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: it\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2007-06-23 03:41+0200\n"
+"POT-Creation-Date: 2007-06-23 18:31+0200\n"
 "PO-Revision-Date: 2007-06-23 12:26+0200\n"
 "Last-Translator: hyperlink <hyperlink@katamail.com>\n"
 "Language-Team:  <it@li.org>\n"
@@ -627,7 +627,7 @@ msgstr "Punta in una direzione qualunque"
 
 #: libgwydgets/gwygraphwindowmeasuredialog.c:279
 #: libgwydgets/gwygraphwindowmeasuredialog.c:431 modules/tools/linestats.c:153
-#: modules/tools/roughness.c:510
+#: modules/tools/roughness.c:528
 msgid "Length"
 msgstr "Lunghezza"
 
@@ -2825,7 +2825,7 @@ msgstr ""
 #: modules/graph/graph_cd.c:669 modules/graph/graph_fdfit.c:782
 #: modules/graph/graph_fit.c:777 modules/tools/grainmeasure.c:462
 #: modules/tools/readvalue.c:501 modules/tools/readvalue.c:502
-#: modules/tools/roughness.c:931 modules/tools/stats.c:540
+#: modules/tools/roughness.c:950 modules/tools/stats.c:540
 #: modules/tools/stats.c:549 modules/tools/stats.c:550
 #: modules/tools/stats.c:789 modules/tools/stats.c:796
 #: modules/tools/stats.c:798
@@ -3172,7 +3172,8 @@ msgstr ""
 "tutte le direzioni"
 
 #: modules/process/angle_dist.c:114
-msgid "/_Statistics/_Angle Distribution..."
+#, fuzzy
+msgid "/_Statistics/An_gle Distribution..."
 msgstr "/_Statistica/_Distribuzione angolo..."
 
 #: modules/process/angle_dist.c:118
@@ -3565,7 +3566,7 @@ msgstr "Mantieni dimensioni (non riproporzionare secondo potenze di 2)"
 #: modules/process/polydistort.c:258 modules/process/rotate.c:282
 #: modules/process/scale.c:248 modules/process/unrotate.c:281
 #: modules/tools/linestats.c:374 modules/tools/profile.c:380
-#: modules/tools/roughness.c:841 modules/tools/sfunctions.c:392
+#: modules/tools/roughness.c:860 modules/tools/sfunctions.c:392
 msgid "_Interpolation type:"
 msgstr "Tipo di interpolazione:"
 
@@ -6444,7 +6445,7 @@ msgid "Level rows using intersections with given lines"
 msgstr "Livella righe dati usando intersezioni con linee assegnate"
 
 #: modules/tools/pathlevel.c:254 modules/tools/profile.c:342
-#: modules/tools/roughness.c:831
+#: modules/tools/roughness.c:850
 msgid "_Thickness:"
 msgstr "_Spessore:"
 
@@ -6537,159 +6538,186 @@ msgstr ""
 msgid "Show _selection"
 msgstr "Mostra selezione"
 
-#: modules/tools/roughness.c:268
+#: modules/tools/roughness.c:286
 msgid "Amplitude"
 msgstr "Ampiezza"
 
-#: modules/tools/roughness.c:276
+#: modules/tools/roughness.c:294
 msgid "Roughness average"
 msgstr "Rugosità media"
 
-#: modules/tools/roughness.c:284
+#: modules/tools/roughness.c:302
 msgid "Root mean square roughness"
 msgstr "Radice quadratica media rugosità"
 
-#: modules/tools/roughness.c:292
+#: modules/tools/roughness.c:310
 msgid "Maximum height of the roughness"
 msgstr "Altezza massima rugosita'"
 
-#: modules/tools/roughness.c:300
+#: modules/tools/roughness.c:318
 msgid "Maximum roughness valley depth"
 msgstr "Massima profondità di valle rugosita'"
 
-#: modules/tools/roughness.c:308
+#: modules/tools/roughness.c:326
 msgid "Maximum roughness peak height"
 msgstr "Altezza picco massima rugosità"
 
-#: modules/tools/roughness.c:316 modules/tools/roughness.c:364
+#: modules/tools/roughness.c:334 modules/tools/roughness.c:382
 msgid "Average maximum height of the roughness"
 msgstr "Media altezza massima rugosità"
 
-#: modules/tools/roughness.c:324
+#: modules/tools/roughness.c:342
 msgid "Average maximum roughness valley depth"
 msgstr "Media profondità di valle massima della rugosità"
 
-#: modules/tools/roughness.c:332
+#: modules/tools/roughness.c:350
 msgid "Average maximum roughness peak height"
 msgstr ""
 
-#: modules/tools/roughness.c:340 modules/tools/roughness.c:348
+#: modules/tools/roughness.c:358 modules/tools/roughness.c:366
 msgid "Average third highest peak to third lowest valley height"
 msgstr ""
 
-#: modules/tools/roughness.c:356
+#: modules/tools/roughness.c:374
 msgid "Average maximum height of the profile"
 msgstr "Altezza massima media profilo"
 
-#: modules/tools/roughness.c:372
+#: modules/tools/roughness.c:390
 msgid "Skewness"
 msgstr "Skewness"
 
-#: modules/tools/roughness.c:380
+#: modules/tools/roughness.c:398
 msgid "Kurtosis"
 msgstr "curtosi"
 
-#: modules/tools/roughness.c:388
+#: modules/tools/roughness.c:406
 msgid "Waviness average"
 msgstr "Media ondulazione"
 
-#: modules/tools/roughness.c:396
+#: modules/tools/roughness.c:414
 msgid "Root mean square waviness"
 msgstr ""
 
-#: modules/tools/roughness.c:404
+#: modules/tools/roughness.c:422
 msgid "Waviness maximum height"
 msgstr ""
 
-#: modules/tools/roughness.c:412
+#: modules/tools/roughness.c:430
 msgid "Maximum height of the profile"
 msgstr ""
 
-#: modules/tools/roughness.c:420
+#: modules/tools/roughness.c:438
 msgid "Spatial"
 msgstr ""
 
-#: modules/tools/roughness.c:470
+#: modules/tools/roughness.c:488
 msgid "Average wavelength of the profile"
 msgstr "Lunghezza onda media profilo"
 
-#: modules/tools/roughness.c:478
+#: modules/tools/roughness.c:496
 msgid "Root mean square (RMS) wavelength of the profile"
 msgstr "Radice quadratica media lunghezza onda profilo"
 
-#: modules/tools/roughness.c:486
+#: modules/tools/roughness.c:504
 msgid "Hybrid"
 msgstr "Ibrido"
 
-#: modules/tools/roughness.c:494
+#: modules/tools/roughness.c:512
 msgid "Average absolute slope"
 msgstr "Pendenza assoluta media"
 
-#: modules/tools/roughness.c:502
+#: modules/tools/roughness.c:520
 msgid "Root mean square (RMS) slope"
 msgstr "Radice quadratica media pendenza"
 
-#: modules/tools/roughness.c:518
+#: modules/tools/roughness.c:536
 msgid "Developed profile length"
 msgstr ""
 
-#: modules/tools/roughness.c:526
+#: modules/tools/roughness.c:544
 #, fuzzy
 msgid "Profile length ratio"
 msgstr "Rapporto lunghezza profilo"
 
-#: modules/tools/roughness.c:608
+#: modules/tools/roughness.c:626
 msgid "Calculate surface profile parameters."
 msgstr "Calcolo parametri profilo superficie."
 
-#: modules/tools/roughness.c:641 modules/tools/roughness.c:770
-#: modules/tools/roughness.c:1328
+#: modules/tools/roughness.c:660 modules/tools/roughness.c:789
+#: modules/tools/roughness.c:1345
 msgid "Roughness"
 msgstr "Rugosità"
 
-#: modules/tools/roughness.c:642
+#: modules/tools/roughness.c:661
 msgid "Calculate roughness parameters."
 msgstr "Calcolo parametri rugosità."
 
-#: modules/tools/roughness.c:768 modules/tools/roughness.c:1326
+#: modules/tools/roughness.c:787 modules/tools/roughness.c:1343
 msgid "Texture"
 msgstr "Struttura"
 
-#: modules/tools/roughness.c:769 modules/tools/roughness.c:1327
+#: modules/tools/roughness.c:788 modules/tools/roughness.c:1344
 msgid "Waviness"
 msgstr "Ondulazione"
 
-#: modules/tools/roughness.c:771
+#: modules/tools/roughness.c:790
 msgid "ADF"
 msgstr "ADF"
 
-#: modules/tools/roughness.c:772
+#: modules/tools/roughness.c:791
 msgid "BRC"
 msgstr "BRC"
 
-#: modules/tools/roughness.c:773 modules/tools/roughness.c:1331
+#: modules/tools/roughness.c:792 modules/tools/roughness.c:1348
 msgid "Peak Count"
 msgstr "Conta picchi"
 
-#: modules/tools/roughness.c:816
+#: modules/tools/roughness.c:835
 msgid "_Graph:"
 msgstr "_Grafico:"
 
-#: modules/tools/roughness.c:823
+#: modules/tools/roughness.c:842
 msgid "C_ut-off:"
 msgstr ""
 
-#: modules/tools/roughness.c:1329
+#: modules/tools/roughness.c:1346
 msgid "Amplitude Distribution Function"
 msgstr "Funzione Distribuzione Ampiezza (ADF)"
 
-#: modules/tools/roughness.c:1330
+#: modules/tools/roughness.c:1347
 msgid "The Bearing Ratio Curve"
 msgstr "Bearing Ratio Curve (BRC)"
 
-#: modules/tools/roughness.c:1365
+#: modules/tools/roughness.c:1382
 msgid "Surface Profiles"
 msgstr "Profili superficie"
+
+#: modules/tools/roughness.c:2097
+#, fuzzy
+msgid "Save Roughness Parameters"
+msgstr "Calcolo parametri rugosità."
+
+#: modules/tools/roughness.c:2121
+#, fuzzy
+msgid "Roughness Parameters"
+msgstr "Rugosità media"
+
+#: modules/tools/roughness.c:2127 modules/tools/stats.c:738
+#, c-format
+msgid "File:              %s\n"
+msgstr "File:              %s\n"
+
+#: modules/tools/roughness.c:2131 modules/tools/stats.c:742
+#, c-format
+msgid "Data channel:      %s\n"
+msgstr "Canale dati:      %s\n"
+
+#: modules/tools/roughness.c:2162
+#, c-format
+msgid ""
+"Selected line:     (%s, %s) to (%s, %s) px\n"
+"                   (%s, %s) to (%s, %s) %s\n"
+msgstr ""
 
 #: modules/tools/sfunctions.c:135
 msgid ""
@@ -6845,16 +6873,6 @@ msgstr "Parametri"
 msgid "Save Statistical Quantities"
 msgstr "Salva Quantità Statistiche"
 
-#: modules/tools/stats.c:738
-#, c-format
-msgid "File:              %s\n"
-msgstr "File:              %s\n"
-
-#: modules/tools/stats.c:742
-#, c-format
-msgid "Data channel:      %s\n"
-msgstr "Canale dati:      %s\n"
-
 #: modules/tools/stats.c:764
 msgid "Yes"
 msgstr "Si"
@@ -6901,294 +6919,294 @@ msgstr ""
 "Inclinazione φ:   %s\n"
 
 #, fuzzy
-msgid "Graph statistics."
-msgstr "Statistiche Grani"
+#~ msgid "Graph statistics."
+#~ msgstr "Statistiche Grani"
 
 #, fuzzy
-msgid "/_Graph statistics"
-msgstr "Statistiche Grani"
+#~ msgid "/_Graph statistics"
+#~ msgstr "Statistiche Grani"
 
 #, fuzzy
-msgid "Calculate graph data statistics"
-msgstr "Calcolo funzioni statistiche1D "
+#~ msgid "Calculate graph data statistics"
+#~ msgstr "Calcolo funzioni statistiche1D "
 
 #, fuzzy
-msgid "Profile 1"
-msgstr "Profilo %d"
+#~ msgid "Profile 1"
+#~ msgstr "Profilo %d"
 
 #, fuzzy
-msgid "Profile 2"
-msgstr "Profilo %d"
+#~ msgid "Profile 2"
+#~ msgstr "Profilo %d"
 
 #, fuzzy
-msgid "Profile 3"
-msgstr "Profilo %d"
+#~ msgid "Profile 3"
+#~ msgstr "Profilo %d"
 
 #, fuzzy
-msgid "Profile 4"
-msgstr "Profilo %d"
+#~ msgid "Profile 4"
+#~ msgstr "Profilo %d"
 
 #, fuzzy
-msgid "Graph statistics"
-msgstr "Statistiche Grani"
+#~ msgid "Graph statistics"
+#~ msgstr "Statistiche Grani"
 
 #, fuzzy
-msgid "2D DWT denoising module"
-msgstr "Registrazione moduli"
+#~ msgid "2D DWT denoising module"
+#~ msgstr "Registrazione moduli"
 
 #, fuzzy
-msgid "/_Integral Transforms/DWT De_noise..."
-msgstr "/Trasformate _Integrali/DWT _Anisotropa..."
+#~ msgid "/_Integral Transforms/DWT De_noise..."
+#~ msgstr "/Trasformate _Integrali/DWT _Anisotropa..."
 
-msgid "Perform 2D DWT denoising"
-msgstr "Esegui 2D DWT denoising"
+#~ msgid "Perform 2D DWT denoising"
+#~ msgstr "Esegui 2D DWT denoising"
 
-msgid "DWT Denoise"
-msgstr "DWT Denoise"
+#~ msgid "DWT Denoise"
+#~ msgstr "DWT Denoise"
 
-msgid "DWT denoised"
-msgstr "DWT denoised"
-
-#, fuzzy
-msgid "2D DWT Denoise"
-msgstr "2D DWT Anisotropa"
+#~ msgid "DWT denoised"
+#~ msgstr "DWT denoised"
 
 #, fuzzy
-msgid "ρ:"
-msgstr "φ:"
+#~ msgid "2D DWT Denoise"
+#~ msgstr "2D DWT Anisotropa"
 
 #, fuzzy
-msgid "Se_arch width:"
-msgstr "Ricerca Dimensioni"
+#~ msgid "ρ:"
+#~ msgstr "φ:"
 
 #, fuzzy
-msgid "Sea_rch height:"
-msgstr "Nuova Altezza:"
+#~ msgid "Se_arch width:"
+#~ msgstr "Ricerca Dimensioni"
 
 #, fuzzy
-msgid "Creates mask of evaluator_run."
-msgstr "Crea maschera di outliers."
-
-msgid "/_Evaluator/Run"
-msgstr "/_Valutazione/Esegui"
-
-msgid "Run evaluator from stored preset"
-msgstr "Esegui valutazione da predefinito salvato"
-
-msgid "/_Evaluator/Run Automatically"
-msgstr "/_Valutazione/Esegui Automaticamente"
-
-msgid "Run evaluator from stored preset automatically"
-msgstr "Esegui automaticamente valutazione da predefinito salvato"
+#~ msgid "Sea_rch height:"
+#~ msgstr "Nuova Altezza:"
 
 #, fuzzy
-msgid ""
-"Cannot save report to %s.\n"
-"%s\n"
-msgstr "Impossibile leggere file temporaneo: %s. "
+#~ msgid "Creates mask of evaluator_run."
+#~ msgstr "Crea maschera di outliers."
+
+#~ msgid "/_Evaluator/Run"
+#~ msgstr "/_Valutazione/Esegui"
+
+#~ msgid "Run evaluator from stored preset"
+#~ msgstr "Esegui valutazione da predefinito salvato"
+
+#~ msgid "/_Evaluator/Run Automatically"
+#~ msgstr "/_Valutazione/Esegui Automaticamente"
+
+#~ msgid "Run evaluator from stored preset automatically"
+#~ msgstr "Esegui automaticamente valutazione da predefinito salvato"
 
 #, fuzzy
-msgid "Save Evaluator Report"
-msgstr "Salva il Fit Report"
+#~ msgid ""
+#~ "Cannot save report to %s.\n"
+#~ "%s\n"
+#~ msgstr "Impossibile leggere file temporaneo: %s. "
 
 #, fuzzy
-msgid "Evaluator results"
-msgstr "Risultati del Fit"
-
-msgid "Automatic evaluator setup."
-msgstr "Regolazione parametri valutazione automatica."
+#~ msgid "Save Evaluator Report"
+#~ msgstr "Salva il Fit Report"
 
 #, fuzzy
-msgid "Detected points"
-msgstr "Trovata"
+#~ msgid "Evaluator results"
+#~ msgstr "Risultati del Fit"
+
+#~ msgid "Automatic evaluator setup."
+#~ msgstr "Regolazione parametri valutazione automatica."
 
 #, fuzzy
-msgid "Detected lines"
-msgstr "Trovata"
+#~ msgid "Detected points"
+#~ msgstr "Trovata"
 
 #, fuzzy
-msgid "Selected points"
-msgstr "Modifica oggetto selezionato"
+#~ msgid "Detected lines"
+#~ msgstr "Trovata"
 
 #, fuzzy
-msgid "Selected lines"
-msgstr "Apri file selezionato"
+#~ msgid "Selected points"
+#~ msgstr "Modifica oggetto selezionato"
 
 #, fuzzy
-msgid "Relative points"
-msgstr "Rimuovi macchie"
-
-msgid "Relative lines"
-msgstr "Linee relative"
+#~ msgid "Selected lines"
+#~ msgstr "Apri file selezionato"
 
 #, fuzzy
-msgid "Correlation points"
-msgstr "Correlazione"
+#~ msgid "Relative points"
+#~ msgstr "Rimuovi macchie"
 
-msgid "Evaluator setup"
-msgstr "Evaluator setup"
-
-#, fuzzy
-msgid "<b>Display</b>"
-msgstr "<b>File</b>"
+#~ msgid "Relative lines"
+#~ msgstr "Linee relative"
 
 #, fuzzy
-msgid "_Display:"
-msgstr "Mostra"
+#~ msgid "Correlation points"
+#~ msgstr "Correlazione"
 
-msgid "<b>Selected features</b>"
-msgstr "<b>Caratteristiche selezionate</b>"
-
-msgid "Line minimum value (line ID)"
-msgstr "Valore minimo linea (ID linea)"
-
-msgid "Line maximum value (line ID)"
-msgstr "Valore massimo linea (ID linea)"
-
-msgid "Line average value (line ID)"
-msgstr "Valore medio linea (ID linea)"
-
-msgid "Line RMS (line ID)"
-msgstr "Linea RMS (ID linea)"
-
-msgid "Point value (point ID)"
-msgstr "Valore punto (ID punto)"
-
-msgid "Point average (point ID, pixel radius"
-msgstr "Punto medio (ID punto, raggio pixel)"
-
-msgid "Point neural judge (point ID, network file)"
-msgstr "Punto neural judge  (ID punto, network file)"
-
-msgid "X intersection of lines (line ID, line ID)"
-msgstr "X intersezione di linee (ID linea, ID linea)"
-
-msgid "Y intersection of lines (line ID, line ID)"
-msgstr "Y intersezione di linee (ID linea, ID linea)"
-
-msgid "Angle between lines (line ID, line ID)"
-msgstr "Angolo tra linee (ID linea, ID linea)"
-
-msgid "Point - line distance(line ID, point ID)"
-msgstr "Distanza punto-linea (ID linea, ID punto)"
-
-msgid "Bigger than"
-msgstr "Maggiore di"
+#~ msgid "Evaluator setup"
+#~ msgstr "Evaluator setup"
 
 #, fuzzy
-msgid "Smaller than"
-msgstr "Ridimensiona dati"
-
-msgid "Equal to"
-msgstr "Uguale a"
+#~ msgid "<b>Display</b>"
+#~ msgstr "<b>File</b>"
 
 #, fuzzy
-msgid "In interval"
-msgstr "Iniziale"
+#~ msgid "_Display:"
+#~ msgstr "Mostra"
+
+#~ msgid "<b>Selected features</b>"
+#~ msgstr "<b>Caratteristiche selezionate</b>"
+
+#~ msgid "Line minimum value (line ID)"
+#~ msgstr "Valore minimo linea (ID linea)"
+
+#~ msgid "Line maximum value (line ID)"
+#~ msgstr "Valore massimo linea (ID linea)"
+
+#~ msgid "Line average value (line ID)"
+#~ msgstr "Valore medio linea (ID linea)"
+
+#~ msgid "Line RMS (line ID)"
+#~ msgstr "Linea RMS (ID linea)"
+
+#~ msgid "Point value (point ID)"
+#~ msgstr "Valore punto (ID punto)"
+
+#~ msgid "Point average (point ID, pixel radius"
+#~ msgstr "Punto medio (ID punto, raggio pixel)"
+
+#~ msgid "Point neural judge (point ID, network file)"
+#~ msgstr "Punto neural judge  (ID punto, network file)"
+
+#~ msgid "X intersection of lines (line ID, line ID)"
+#~ msgstr "X intersezione di linee (ID linea, ID linea)"
+
+#~ msgid "Y intersection of lines (line ID, line ID)"
+#~ msgstr "Y intersezione di linee (ID linea, ID linea)"
+
+#~ msgid "Angle between lines (line ID, line ID)"
+#~ msgstr "Angolo tra linee (ID linea, ID linea)"
+
+#~ msgid "Point - line distance(line ID, point ID)"
+#~ msgstr "Distanza punto-linea (ID linea, ID punto)"
+
+#~ msgid "Bigger than"
+#~ msgstr "Maggiore di"
 
 #, fuzzy
-msgid "_Function:"
-msgstr "F_unzione:"
+#~ msgid "Smaller than"
+#~ msgstr "Ridimensiona dati"
+
+#~ msgid "Equal to"
+#~ msgstr "Uguale a"
 
 #, fuzzy
-msgid "_Operator:"
-msgstr "Operandi:"
+#~ msgid "In interval"
+#~ msgstr "Iniziale"
 
 #, fuzzy
-msgid "LineMin()"
-msgstr "Linea"
+#~ msgid "_Function:"
+#~ msgstr "F_unzione:"
 
 #, fuzzy
-msgid "LineMax()"
-msgstr "Lineare"
+#~ msgid "_Operator:"
+#~ msgstr "Operandi:"
 
 #, fuzzy
-msgid "LineAvg()"
-msgstr "Linea"
+#~ msgid "LineMin()"
+#~ msgstr "Linea"
 
 #, fuzzy
-msgid "LineRMS()"
-msgstr "Linea"
-
-msgid "PointValue()"
-msgstr "ValorePunto()"
+#~ msgid "LineMax()"
+#~ msgstr "Lineare"
 
 #, fuzzy
-msgid "PointAvg()"
-msgstr "Punti"
-
-msgid "PointNeural()"
-msgstr "NeuralPunto()"
+#~ msgid "LineAvg()"
+#~ msgstr "Linea"
 
 #, fuzzy
-msgid "IntersectX()"
-msgstr "Intersezione"
+#~ msgid "LineRMS()"
+#~ msgstr "Linea"
+
+#~ msgid "PointValue()"
+#~ msgstr "ValorePunto()"
 
 #, fuzzy
-msgid "IntersectY()"
-msgstr "Intersezione"
+#~ msgid "PointAvg()"
+#~ msgstr "Punti"
+
+#~ msgid "PointNeural()"
+#~ msgstr "NeuralPunto()"
 
 #, fuzzy
-msgid "Angle()"
-msgstr "Angolo"
+#~ msgid "IntersectX()"
+#~ msgstr "Intersezione"
 
 #, fuzzy
-msgid "PLDistance()"
-msgstr "Distanza"
+#~ msgid "IntersectY()"
+#~ msgstr "Intersezione"
 
 #, fuzzy
-msgid "CorrelationScore()"
-msgstr "Percentuale di Correlazione "
-
-msgid "> "
-msgstr "> "
-
-msgid "< "
-msgstr "< "
-
-msgid "= "
-msgstr "= "
-
-msgid "Interval()"
-msgstr "Intervallo()"
+#~ msgid "Angle()"
+#~ msgstr "Angolo"
 
 #, fuzzy
-msgid "Lines"
-msgstr "Linea"
+#~ msgid "PLDistance()"
+#~ msgstr "Distanza"
 
 #, fuzzy
-msgid "/_Presentation/_Edge Detection/Local _Maxima"
-msgstr "/_Presentazione/_Determinazione Bordi/Nonlinearità locale"
+#~ msgid "CorrelationScore()"
+#~ msgstr "Percentuale di Correlazione "
+
+#~ msgid "> "
+#~ msgstr "> "
+
+#~ msgid "< "
+#~ msgstr "< "
+
+#~ msgid "= "
+#~ msgstr "= "
+
+#~ msgid "Interval()"
+#~ msgstr "Intervallo()"
 
 #, fuzzy
-msgid "Local maxima presentation presentation"
-msgstr "Inclinazione "
+#~ msgid "Lines"
+#~ msgstr "Linea"
 
 #, fuzzy
-msgid "Per-angle _graph"
-msgstr "Disegna grafici"
-
-msgid "Mean spacing of profile irregularities"
-msgstr "Spaziatura media irregolarità di profilo"
+#~ msgid "/_Presentation/_Edge Detection/Local _Maxima"
+#~ msgstr "/_Presentazione/_Determinazione Bordi/Nonlinearità locale"
 
 #, fuzzy
-msgid "Profile peak density"
-msgstr "Profilo %d"
-
-msgid "Peak count (peak density)"
-msgstr "Conta picchi (Densità picchi)"
-
-msgid "XXX"
-msgstr "XXX"
+#~ msgid "Local maxima presentation presentation"
+#~ msgstr "Inclinazione "
 
 #, fuzzy
-msgid "Cut graph with function"
-msgstr "Adatta il grafico con la funzione"
+#~ msgid "Per-angle _graph"
+#~ msgstr "Disegna grafici"
+
+#~ msgid "Mean spacing of profile irregularities"
+#~ msgstr "Spaziatura media irregolarità di profilo"
 
 #, fuzzy
-msgid "Surface area"
-msgstr "Area superficie"
+#~ msgid "Profile peak density"
+#~ msgstr "Profilo %d"
+
+#~ msgid "Peak count (peak density)"
+#~ msgstr "Conta picchi (Densità picchi)"
+
+#~ msgid "XXX"
+#~ msgstr "XXX"
 
 #, fuzzy
-msgid "Projected area"
-msgstr "_Area proiettata"
+#~ msgid "Cut graph with function"
+#~ msgstr "Adatta il grafico con la funzione"
+
+#, fuzzy
+#~ msgid "Surface area"
+#~ msgstr "Area superficie"
+
+#, fuzzy
+#~ msgid "Projected area"
+#~ msgstr "_Area proiettata"
