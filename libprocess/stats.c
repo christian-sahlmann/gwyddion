@@ -2173,6 +2173,32 @@ gwy_data_field_rpsdf(GwyDataField *data_field,
                               interpolation, windowing, nstats);
 }
 
+/**
+ * gwy_data_field_area_2dacf:
+ * @data_field: A data field.
+ * @target_field: A data field to store the result to.  It will be resampled
+ *                to (2@xrange-1)x(2@yrange-1).
+ * @col: Upper-left column coordinate.
+ * @row: Upper-left row coordinate.
+ * @width: Area width (number of columns).
+ * @height: Area height (number of rows).
+ * @xrange: Horizontal correlation range.  Non-positive value means
+ *          the default range of half of @data_field width will be used.
+ * @yrange: Vertical correlation range.  Non-positive value means
+ *          the default range of half of @data_field height will be used.
+ *
+ * Calculates two-dimensional autocorrelation function of a data field area.
+ *
+ * The resulting data field has the correlation corresponding to (0,0) in the
+ * centre.
+ *
+ * The maximum possible values of @xrange and @yrange are @data_field
+ * width and height, respectively.  However, as the values for longer
+ * distances are calculated from smaller number of data points they become
+ * increasingly bogus, therefore the default range is half of the size.
+ *
+ * Since: 2.6
+ **/
 void
 gwy_data_field_area_2dacf(GwyDataField *data_field,
                           GwyDataField *target_field,
@@ -2316,6 +2342,18 @@ gwy_data_field_area_2dacf(GwyDataField *data_field,
     gwy_data_field_invalidate(target_field);
 }
 
+/**
+ * gwy_data_field_2dacf:
+ * @data_field: A data field.
+ * @target_field: A data field to store the result to.
+ *
+ * Calculates two-dimensional autocorrelation function of a data field.
+ *
+ * See gwy_data_field_area_2dacf() for details.  Parameters missing (not
+ * adjustable) in this function are set to their default values.
+ *
+ * Since: 2.6
+ **/
 void
 gwy_data_field_2dacf(GwyDataField *data_field,
                      GwyDataField *target_field)
