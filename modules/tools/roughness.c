@@ -658,7 +658,7 @@ gwy_tool_roughness_class_init(GwyToolRoughnessClass *klass)
 
     tool_class->stock_id = GWY_STOCK_ISO_ROUGHNESS;
     tool_class->title = _("Roughness");
-    tool_class->tooltip = _("Calculate roughness parameters.");
+    tool_class->tooltip = _("Calculate roughness parameters");
     tool_class->prefix = "/module/roughness";
     tool_class->default_width = 400;
     tool_class->default_height = 400;
