@@ -76,7 +76,7 @@ pygwy-doc: pygwy.defs pygwywrap.c
 	$(EPYDOC) -o pygwy-doc gwy.py
 endif
 
-CLEANFILES = gwy.py gwy.pyc
+CLEANFILES = gwy.py gwy.pyc gwy.pyo
 
 DISTCLEANFILES = pygwy.defs pygwywrap.c
 
