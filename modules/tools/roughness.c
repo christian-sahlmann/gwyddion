@@ -1,7 +1,7 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2007 David Necas (Yeti), Petr Klapetek.
- *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
+ *  Copyright (C) 2006-2007 Martin Hason, David Necas (Yeti), Petr Klapetek.
+ *  E-mail: hasonm@physics.muni.cz, yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -30,6 +30,7 @@
 #include <libgwydgets/gwydgetutils.h>
 #include <libgwymodule/gwymodule-tool.h>
 #include <app/gwyapp.h>
+#include <app/gwymoduleutils.h>
 
 #define GWY_TYPE_TOOL_ROUGHNESS           (gwy_tool_roughness_get_type())
 #define GWY_TOOL_ROUGHNESS(obj)           (G_TYPE_CHECK_INSTANCE_CAST((obj), \
@@ -68,23 +69,6 @@ typedef enum {
     GWY_ROUGHNESS_GRAPH_BRC       = 4,
     GWY_ROUGHNESS_GRAPH_PC        = 5
 } GwyRoughnessGraph;
-
-typedef struct {
-    GwyDataLine *texture;
-    GwyDataLine *roughness;
-    GwyDataLine *waviness;
-
-    GwyDataLine *adf;
-    GwyDataLine *brc;
-    GwyDataLine *pc;
-
-    /* Temporary lines */
-    GwyDataLine *extline;
-    GwyDataLine *tmp;
-    GwyDataLine *iin;
-    GwyDataLine *rout;
-    GwyDataLine *iout;
-} GwyRoughnessProfiles;
 
 typedef enum {
     PARAM_RA,
@@ -127,6 +111,26 @@ typedef enum {
     ROUGHNESS_NPARAMS
 } GwyRoughnessParameter;
 
+typedef struct _GwyToolRoughness      GwyToolRoughness;
+typedef struct _GwyToolRoughnessClass GwyToolRoughnessClass;
+
+typedef struct {
+    GwyDataLine *texture;
+    GwyDataLine *roughness;
+    GwyDataLine *waviness;
+
+    GwyDataLine *adf;
+    GwyDataLine *brc;
+    GwyDataLine *pc;
+
+    /* Temporary lines */
+    GwyDataLine *extline;
+    GwyDataLine *tmp;
+    GwyDataLine *iin;
+    GwyDataLine *rout;
+    GwyDataLine *iout;
+} GwyRoughnessProfiles;
+
 typedef struct {
     GwyRoughnessParameter param;
     GwyRoughnessSet set;
@@ -143,8 +147,16 @@ typedef struct {
     guint expanded;
 } ToolArgs;
 
-typedef struct _GwyToolRoughness      GwyToolRoughness;
-typedef struct _GwyToolRoughnessClass GwyToolRoughnessClass;
+typedef struct {
+    ToolArgs args;
+    gdouble *params;
+    gdouble line[4];
+    GwySIValueFormat *none_format;
+    gboolean same_units;
+    GwyContainer *container;
+    GwyDataField *data_field;
+    gint id;
+} ToolReportData;
 
 struct _GwyToolRoughness {
     GwyPlainTool parent_instance;
@@ -230,35 +242,41 @@ static gint     gwy_data_line_extend                 (GwyDataLine *dline,
 static void gwy_tool_roughness_set_data_from_profile(GwyRoughnessProfiles *profiles,
                                                      GwyDataLine *dline,
                                                      gdouble cutoff);
-static gint  gwy_tool_roughness_peaks                (GwyDataLine *data_line,
-                                                      gdouble *peaks,
-                                                      gint from,
-                                                      gint to,
-                                                      gdouble threshold,
-                                                      gint k,
-                                                      gboolean symmetrical);
-static gdouble  gwy_tool_roughness_Xa                (GwyDataLine *data_line);
-static gdouble  gwy_tool_roughness_Xq                (GwyDataLine *data_line);
-static gdouble  gwy_tool_roughness_Xvm               (GwyDataLine *data_line,
-                                                      gint m, gint k);
-static gdouble  gwy_tool_roughness_Xpm               (GwyDataLine *data_line,
-                                                      gint m, gint k);
-static gdouble  gwy_tool_roughness_Xtm               (GwyDataLine *data_line,
-                                                      gint m, gint k);
-static gdouble  gwy_tool_roughness_Xz                (GwyDataLine *data_line);
-static gdouble  gwy_tool_roughness_Xsk               (GwyDataLine *data_line);
-static gdouble  gwy_tool_roughness_Xku               (GwyDataLine *data_line);
-static gdouble  gwy_tool_roughness_Pc                (GwyDataLine *data_line,
-                                                      gdouble threshold);
-static gdouble  gwy_tool_roughness_Da                (GwyDataLine *data_line);
-static gdouble  gwy_tool_roughness_Dq                (GwyDataLine *data_line);
-static gdouble  gwy_tool_roughness_l0                (GwyDataLine *data_line);
-static gdouble  gwy_tool_roughness_lr                (GwyDataLine *data_line);
-
-static void     gwy_tool_roughness_distribution   (GwyDataLine *data_line, GwyDataLine *distr);
-static void     gwy_tool_roughness_graph_adf         (GwyRoughnessProfiles *profiles);
-static void     gwy_tool_roughness_graph_brc         (GwyRoughnessProfiles *profiles);
-static void     gwy_tool_roughness_graph_pc          (GwyRoughnessProfiles *profiles);
+static gint    gwy_tool_roughness_peaks        (GwyDataLine *data_line,
+                                                gdouble *peaks,
+                                                gint from,
+                                                gint to,
+                                                gdouble threshold,
+                                                gint k,
+                                                gboolean symmetrical);
+static gdouble gwy_tool_roughness_Xa           (GwyDataLine *data_line);
+static gdouble gwy_tool_roughness_Xq           (GwyDataLine *data_line);
+static gdouble gwy_tool_roughness_Xvm          (GwyDataLine *data_line,
+                                                gint m,
+                                                gint k);
+static gdouble gwy_tool_roughness_Xpm          (GwyDataLine *data_line,
+                                                gint m,
+                                                gint k);
+static gdouble gwy_tool_roughness_Xtm          (GwyDataLine *data_line,
+                                                gint m,
+                                                gint k);
+static gdouble gwy_tool_roughness_Xz           (GwyDataLine *data_line);
+static gdouble gwy_tool_roughness_Xsk          (GwyDataLine *data_line);
+static gdouble gwy_tool_roughness_Xku          (GwyDataLine *data_line);
+static gdouble gwy_tool_roughness_Pc           (GwyDataLine *data_line,
+                                                gdouble threshold);
+static gdouble gwy_tool_roughness_Da           (GwyDataLine *data_line);
+static gdouble gwy_tool_roughness_Dq           (GwyDataLine *data_line);
+static gdouble gwy_tool_roughness_l0           (GwyDataLine *data_line);
+static gdouble gwy_tool_roughness_lr           (GwyDataLine *data_line);
+static void    gwy_tool_roughness_distribution (GwyDataLine *data_line,
+                                                GwyDataLine *distr);
+static void    gwy_tool_roughness_graph_adf    (GwyRoughnessProfiles *profiles);
+static void    gwy_tool_roughness_graph_brc    (GwyRoughnessProfiles *profiles);
+static void    gwy_tool_roughness_graph_pc     (GwyRoughnessProfiles *profiles);
+static void    gwy_tool_roughness_save         (GwyToolRoughness *tool);
+static gchar*  gwy_tool_roughness_report_create(gpointer user_data,
+                                                gssize *data_len);
 
 static const GwyRoughnessParameterInfo parameters[] = {
     {
@@ -606,9 +624,10 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Calculate surface profile parameters."),
-    "Martin Hasoň <hasonm@physics.muni.cz>",
+    "Martin Hasoň <hasonm@physics.muni.cz>, "
+        "Yeti <yeti@gwyddion.net>",
     "1.0",
-    "Martin Hasoň",
+    "Martin Hasoň & David Nečas (Yeti)",
     "2006",
 };
 
@@ -1060,10 +1079,8 @@ gwy_tool_roughness_response(GwyTool *tool,
 
     if (response_id == GTK_RESPONSE_APPLY)
         gwy_tool_roughness_apply(GWY_TOOL_ROUGHNESS(tool));
-    /*
     if (response_id == RESPONSE_SAVE)
         gwy_tool_roughness_save(GWY_TOOL_ROUGHNESS(tool));
-        */
 }
 
 static void
@@ -2054,6 +2071,199 @@ gwy_tool_roughness_graph_pc(GwyRoughnessProfiles *profiles)
                               gwy_tool_roughness_Pc(profiles->roughness,
                                                     threshold));
     }
+}
+
+static void
+gwy_tool_roughness_save(GwyToolRoughness *tool)
+{
+    GwyPlainTool *plain_tool;
+    ToolReportData report_data;
+
+    g_return_if_fail(tool->dataline);
+    plain_tool = GWY_PLAIN_TOOL(tool);
+
+    /* Copy everything as user can switch data during the Save dialog (though
+     * he cannot destroy them, so references are not necessary) */
+    report_data.args = tool->args;
+    report_data.params = g_memdup(tool->params,
+                                  ROUGHNESS_NPARAMS*sizeof(gdouble));
+    gwy_selection_get_object(plain_tool->selection, 0, report_data.line);
+    report_data.none_format = tool->none_format;
+    report_data.same_units = tool->same_units;
+    report_data.container = plain_tool->container;
+    report_data.data_field = plain_tool->data_field;
+    report_data.id = plain_tool->id;
+
+    gwy_save_auxiliary_with_callback(_("Save Roughness Parameters"),
+                                     GTK_WINDOW(GWY_TOOL(tool)->dialog),
+                                     &gwy_tool_roughness_report_create,
+                                     (GwySaveAuxiliaryDestroy)g_free,
+                                     &report_data);
+}
+
+static gchar*
+gwy_tool_roughness_report_create(gpointer user_data,
+                                 gssize *data_len)
+{
+    const ToolReportData *report_data = (const ToolReportData*)user_data;
+    GwySIUnit *siunitxy, *siunitz, *siunitslope;
+    gdouble x, xoff, yoff;
+    gchar *linepx[4], *liner[4];
+    gchar *key, *retval, *spacer;
+    GwySIValueFormat *vfxy, *vfz, *tvf;
+    const guchar *title;
+    gint i, k, max_sym, max_name;
+    GString *report;
+
+    *data_len = -1;
+    report = g_string_sized_new(4096);
+
+    g_string_append(report, _("Roughness Parameters"));
+    g_string_append(report, "\n\n");
+
+    /* Channel information */
+    if (gwy_container_gis_string_by_name(report_data->container,
+                                         "/filename", &title))
+        g_string_append_printf(report, _("File:              %s\n"), title);
+
+    key = g_strdup_printf("/%d/data/title", report_data->id);
+    if (gwy_container_gis_string_by_name(report_data->container, key, &title))
+        g_string_append_printf(report, _("Data channel:      %s\n"), title);
+    g_free(key);
+
+    g_string_append_c(report, '\n');
+
+    siunitxy = gwy_data_field_get_si_unit_xy(report_data->data_field);
+    siunitz = gwy_data_field_get_si_unit_z(report_data->data_field);
+    siunitslope = gwy_si_unit_divide(siunitz, siunitxy, NULL);
+    vfxy = gwy_data_field_get_value_format_xy(report_data->data_field,
+                                              GWY_SI_UNIT_FORMAT_PLAIN, NULL);
+    vfz = gwy_data_field_get_value_format_z(report_data->data_field,
+                                            GWY_SI_UNIT_FORMAT_PLAIN, NULL);
+    xoff = gwy_data_field_get_xoffset(report_data->data_field);
+    yoff = gwy_data_field_get_xoffset(report_data->data_field);
+
+    for (i = 0; i < 4; i++) {
+        if (i % 2 == 0) {
+            k = (gint)gwy_data_field_rtoj(report_data->data_field,
+                                          report_data->line[i]);
+            x = report_data->line[i] + xoff;
+        }
+        else {
+            k = (gint)gwy_data_field_rtoi(report_data->data_field,
+                                          report_data->line[i]);
+            x = report_data->line[i] + yoff;
+        }
+        linepx[i] = g_strdup_printf("%d", k);
+        liner[i] = g_strdup_printf("%.*f", vfxy->precision, x/vfxy->magnitude);
+    }
+
+    g_string_append_printf(report,
+                           _("Selected line:     (%s, %s) to (%s, %s) px\n"
+                             "                   (%s, %s) to (%s, %s) %s\n"),
+                           linepx[0], linepx[1], linepx[2], linepx[3],
+                           liner[0], liner[1], liner[2], liner[3],
+                           vfxy->units);
+
+    for (i = 0; i < 4; i++) {
+        g_free(linepx[i]);
+        g_free(liner[i]);
+    }
+
+    max_name = max_sym = 0;
+    for (i = 0; i < G_N_ELEMENTS(parameters); i++) {
+        const GwyRoughnessParameterInfo *pinfo = parameters + i;
+        gint l;
+        gchar *sym;
+
+        if (pinfo->param == -1)
+            continue;
+
+        l = g_utf8_strlen(gettext(pinfo->name), -1);
+        max_name = MAX(max_name, l);
+
+        if (!pango_parse_markup(pinfo->symbol, -1, 0, NULL, &sym, NULL, NULL))
+            continue;
+
+        l = g_utf8_strlen(sym, -1);
+        max_sym = MAX(max_sym, l);
+        g_free(sym);
+    }
+    i = MAX(max_name, max_sym);
+    spacer = g_new(gchar, i+1);
+    memset(spacer, ' ', i);
+    spacer[i] = '\0';
+
+    tvf = NULL;
+    for (i = 0; i < G_N_ELEMENTS(parameters); i++) {
+        const GwyRoughnessParameterInfo *pinfo = parameters + i;
+        GwySIValueFormat *vf;
+        gdouble value;
+        gint pad_name, pad_sym;
+        gchar *sym;
+
+        if (pinfo->param == -1) {
+            g_string_append_printf(report, "\n%s\n", pinfo->name);
+            continue;
+        }
+
+        if (pinfo->same_units && !report_data->same_units)
+            continue;
+
+        if (!pango_parse_markup(pinfo->symbol, -1, 0, NULL, &sym, NULL, NULL)) {
+            g_warning("Cannot parse symbol: `%s'", pinfo->symbol);
+            continue;
+        }
+
+        value = report_data->params[pinfo->param];
+        switch (pinfo->units) {
+            case UNITS_NONE:
+            vf = report_data->none_format;
+            break;
+
+            case UNITS_COORDS:
+            vf = vfxy;
+            break;
+
+            case UNITS_VALUE:
+            vf = vfz;
+            break;
+
+            case UNITS_SLOPE:
+            tvf = gwy_si_unit_get_format_with_digits(siunitslope,
+                                                     GWY_SI_UNIT_FORMAT_PLAIN,
+                                                     value, 3, tvf);
+            vf = tvf;
+            break;
+
+            default:
+            g_warning("Invalid units type %d", pinfo->units);
+            vf = report_data->none_format;
+            break;
+        }
+
+        /* We cannot rely on printf() to aling UTF-8 properly. */
+        pad_name = max_name - g_utf8_strlen(gettext(pinfo->name), -1);
+        pad_sym = max_sym - g_utf8_strlen(sym, -1);
+        /* FIXME: This is probably inappropriate for non-Latin languages. */
+        g_string_append_printf(report, "%s%.*s (%s):%.*s %.*f%s%s\n",
+                               gettext(pinfo->name), pad_name, spacer,
+                               sym, pad_sym, spacer,
+                               vf->precision, value/vf->magnitude,
+                               *vf->units ? " " : "", vf->units);
+        g_free(sym);
+    }
+    g_free(spacer);
+
+    gwy_si_unit_value_format_free(vfxy);
+    gwy_si_unit_value_format_free(vfz);
+    if (tvf)
+        gwy_si_unit_value_format_free(tvf);
+
+    retval = report->str;
+    g_string_free(report, FALSE);
+
+    return retval;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
