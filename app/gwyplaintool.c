@@ -888,7 +888,7 @@ gwy_plain_tool_delete_selection_object(GtkTreeView *treeview,
  * Enables deletion of selection objects by presssing Delete in a tree view
  * diplaying them.
  *
- * Since: 2.6
+ * Since: 2.7
  **/
 void
 gwy_plain_tool_enable_object_deletion(GwyPlainTool *plain_tool,

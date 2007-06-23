@@ -225,9 +225,9 @@ gwy_interpolation_type_get_enum(void)
  * @GWY_WINDOWING_LANCZOS: Lanczos window.
  * @GWY_WINDOWING_WELCH: Welch window.
  * @GWY_WINDOWING_RECT: Rectangular window.
- * @GWY_WINDOWING_NUTTALL: Nuttall window (Since: 2.6).
- * @GWY_WINDOWING_FLAT_TOP: Flat-top window (Since: 2.6).
- * @GWY_WINDOWING_KAISER25: Kaiser window with &beta;=2.5 (Since: 2.6).
+ * @GWY_WINDOWING_NUTTALL: Nuttall window (Since: 2.7).
+ * @GWY_WINDOWING_FLAT_TOP: Flat-top window (Since: 2.7).
+ * @GWY_WINDOWING_KAISER25: Kaiser window with &beta;=2.5 (Since: 2.7).
  *
  * Frequency windowing type.
  **/
@@ -335,10 +335,10 @@ gwy_correlation_type_get_enum(void)
  *                                       maximum is not unique).
  * @GWY_GRAIN_VALUE_CENTER_X: Grain centre horizontal position,
  *                            i.e. the mean value of its pixel x-coordinates.
- *                            (Since: 2.6)
+ *                            (Since: 2.7)
  * @GWY_GRAIN_VALUE_CENTER_Y: Grain centre vertical position,
  *                            i.e. the mean value of its pixel y-coordinates.
- *                            (Since: 2.6)
+ *                            (Since: 2.7)
  * @GWY_GRAIN_VALUE_VOLUME_0: Grain volume calculated with grain basis at
  *                            z=0 (therefore it is just an integral it can be
  *                            negative).  (Since: 2.3)
@@ -349,9 +349,9 @@ gwy_correlation_type_get_enum(void)
  *                                  calculated by laplacian interpolation of
  *                                  surrounding values.  (Since: 2.3)
  * @GWY_GRAIN_VALUE_SLOPE_THETA: Spherical angle theta of grain normal (0 is
- *                               upwards). (Since: 2.6)
+ *                               upwards). (Since: 2.7)
  * @GWY_GRAIN_VALUE_SLOPE_PHI: Spherical angle phi of grain normal (0 is
- *                             in positive x direction). (Since: 2.6)
+ *                             in positive x direction). (Since: 2.7)
  *
  * Grain quantity to request from gwy_data_field_grains_get_distribution()
  * and similar functions.

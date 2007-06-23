@@ -1305,7 +1305,7 @@ gwy_data_line_line_rotate(GwyDataLine *a,
  * between line segments (on the other hand it introduces other deformations
  * due to discretization).
  *
- * Since: 2.6
+ * Since: 2.7
  **/
 void
 gwy_data_line_rotate(GwyDataLine *data_line,

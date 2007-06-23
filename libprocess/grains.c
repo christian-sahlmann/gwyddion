@@ -1544,7 +1544,7 @@ gwy_data_field_grains_get_values(GwyDataField *data_field,
  * Returns: %TRUE if @quantity is meaningless when lateral and value units
  *          differ, %FALSE if it is always defined.
  *
- * Since: 2.6
+ * Since: 2.7
  **/
 gboolean
 gwy_grain_quantity_needs_same_units(GwyGrainQuantity quantity)
@@ -1593,7 +1593,7 @@ gwy_grain_quantity_needs_same_units(GwyGrainQuantity quantity)
  *          dereferenced when no longer used later.  Otherwise @result itself
  *          is simply returned, its reference count is NOT increased.
  *
- * Since: 2.6
+ * Since: 2.7
  **/
 GwySIUnit*
 gwy_grain_quantity_get_units(GwyGrainQuantity quantity,

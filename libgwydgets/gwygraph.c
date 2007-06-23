@@ -76,7 +76,7 @@ gwy_graph_class_init(GwyGraphClass *klass)
          PROP_MODEL,
          g_param_spec_object("model",
                              "Model",
-                             "The graph model of the graph. (Since: 2.6)",
+                             "The graph model of the graph. (Since: 2.7)",
                              GWY_TYPE_GRAPH_MODEL,
                              G_PARAM_READWRITE));
 

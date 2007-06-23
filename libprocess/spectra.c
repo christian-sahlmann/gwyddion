@@ -204,7 +204,7 @@ gwy_spectra_get_property(GObject*object,
  *
  * Returns: A newly created spectra.
  *
- * Since: 2.6
+ * Since: 2.7
  **/
 GwySpectra*
 gwy_spectra_new(void)
@@ -229,7 +229,7 @@ gwy_spectra_new(void)
  *
  * Returns: A newly created Spectra object.
  *
- * Since: 2.6
+ * Since: 2.7
  **/
 GwySpectra*
 gwy_spectra_new_alike(GwySpectra *model)
@@ -523,7 +523,7 @@ gwy_spectra_clone_real(GObject *source, GObject *copy)
  *
  * Emits signal "data_changed" on a spectra object.
  *
- * Since: 2.6
+ * Since: 2.7
  **/
 void
 gwy_spectra_data_changed(GwySpectra *spectra)
@@ -540,7 +540,7 @@ gwy_spectra_data_changed(GwySpectra *spectra)
  * Returns: SI unit corresponding to the  the location co-ordinates of spectra
  *          object. Its reference count is not incremented.
  *
- * Since: 2.6
+ * Since: 2.7
  **/
 GwySIUnit*
 gwy_spectra_get_si_unit_xy(GwySpectra *spectra)
@@ -564,7 +564,7 @@ gwy_spectra_get_si_unit_xy(GwySpectra *spectra)
  * It does not assume a reference on @si_unit, instead it adds its own
  * reference.
  *
- * Since: 2.6
+ * Since: 2.7
  **/
 void
 gwy_spectra_set_si_unit_xy(GwySpectra *spectra,
@@ -589,7 +589,7 @@ gwy_spectra_set_si_unit_xy(GwySpectra *spectra,
  *
  * Gets the coordinates of one spectrum.
  *
- * Since: 2.6
+ * Since: 2.7
  **/
 void
 gwy_spectra_itoxy(GwySpectra *spectra,
@@ -621,7 +621,7 @@ gwy_spectra_itoxy(GwySpectra *spectra,
  * Returns: The index of the nearest spectrum.  If there are no curves in the
  *          spectra, -1 is returned.
  *
- * Since: 2.6
+ * Since: 2.7
  **/
 gint
 gwy_spectra_xytoi(GwySpectra *spectra, gdouble x, gdouble y)
@@ -667,7 +667,7 @@ compare_coord_pos(gconstpointer a, gconstpointer b)
  *
  * List positions
  *
- * Since: 2.6
+ * Since: 2.7
  **/
 void
 gwy_spectra_find_nearest(GwySpectra *spectra,
@@ -754,7 +754,7 @@ gwy_spectra_find_nearest(GwySpectra *spectra,
  *
  * Sets the location coordinates of a spectrum.
  *
- * Since: 2.6
+ * Since: 2.7
  **/
 void
 gwy_spectra_setpos(GwySpectra *spectra,
@@ -780,7 +780,7 @@ gwy_spectra_setpos(GwySpectra *spectra,
  *
  * Returns: A #GwyDataLine containing the spectrum, owned by @spectra.
  *
- * Since: 2.6
+ * Since: 2.7
  **/
 GwyDataLine*
 gwy_spectra_get_spectrum(GwySpectra *spectra, gint i)
@@ -805,7 +805,7 @@ gwy_spectra_get_spectrum(GwySpectra *spectra, gint i)
  * supplied spectrum, new_spectrum. It takes its own reference
  * to the New_Spectrum dataline.
  *
- * Since: 2.6
+ * Since: 2.7
  **/
 void
 gwy_spectra_set_spectrum(GwySpectra *spectra,
@@ -834,7 +834,7 @@ gwy_spectra_set_spectrum(GwySpectra *spectra,
  *
  * Sets selected state of a spectrum in a spectra object.
  *
- * Since: 2.6
+ * Since: 2.7
  **/
 void
 gwy_spectra_set_spectrum_selected(GwySpectra *spectra,
@@ -862,7 +862,7 @@ gwy_spectra_set_spectrum_selected(GwySpectra *spectra,
  *
  * Returns: %TRUE if spectrum is selected.
  *
- * Since: 2.6
+ * Since: 2.7
  **/
 gboolean
 gwy_spectra_get_spectrum_selected(GwySpectra *spectra,
@@ -882,7 +882,7 @@ gwy_spectra_get_spectrum_selected(GwySpectra *spectra,
  *
  * Returns: The number of spectra.
  *
- * Since: 2.6
+ * Since: 2.7
  **/
 guint
 gwy_spectra_get_n_spectra(GwySpectra *spectra)
@@ -902,7 +902,7 @@ gwy_spectra_get_n_spectra(GwySpectra *spectra)
  * Appends a new_spectrum to the spectra collection with a position of x, y.
  * gwy_spectra_add takes a refference to the supplied spectrum.
  *
- * Since: 2.6
+ * Since: 2.7
  **/
 void
 gwy_spectra_add_spectrum(GwySpectra *spectra,
@@ -930,7 +930,7 @@ gwy_spectra_add_spectrum(GwySpectra *spectra,
  * Removes the ith spectrum from the Spectra collection. The subsequent
  * spectra are moved down one place.
  *
- * Since: 2.6
+ * Since: 2.7
  **/
 void
 gwy_spectra_remove_spectrum(GwySpectra *spectra,
@@ -1023,7 +1023,7 @@ gwy_spectra_get_spectra_interp(GwySpectra *spectra,
  *
  * Returns: A pointer to the title string (owned by the spectra object).
  *
- * Since: 2.6
+ * Since: 2.7
  **/
 const gchar*
 gwy_spectra_get_title(GwySpectra *spectra)
@@ -1039,7 +1039,7 @@ gwy_spectra_get_title(GwySpectra *spectra)
  *
  * Sets the title of the spectra collection.
  *
- * Since: 2.6
+ * Since: 2.7
  **/
 void
 gwy_spectra_set_title(GwySpectra *spectra,
@@ -1062,7 +1062,7 @@ gwy_spectra_set_title(GwySpectra *spectra,
  *
  * Removes all spectra from the collection.
  *
- * Since: 2.6
+ * Since: 2.7
  **/
 void
 gwy_spectra_clear(GwySpectra *spectra)
@@ -1096,7 +1096,7 @@ gwy_spectra_clear(GwySpectra *spectra)
  * The #GwySpectra struct contains private data only and should be accessed
  * using the functions below.
  *
- * Since: 2.6
+ * Since: 2.7
  **/
 
 /**
@@ -1106,7 +1106,7 @@ gwy_spectra_clear(GwySpectra *spectra)
  * Convenience macro doing gwy_serializable_duplicate() with all the necessary
  * typecasting.
  *
- * Since: 2.6
+ * Since: 2.7
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

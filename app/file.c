@@ -238,7 +238,7 @@ gwy_app_file_open(void)
  *
  * Merges a user-selected file (very high-level app function).
  *
- * Since: 2.6
+ * Since: 2.7
  **/
 void
 gwy_app_file_merge(void)

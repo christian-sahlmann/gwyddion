@@ -108,7 +108,7 @@ gwy_math_humanize_numbers(gdouble unit,
  *
  * Returns: TRUE if the test point is inside poly and FALSE otherwise.
  *
- * Since: 2.6
+ * Since: 2.7
  **/
 /* This neat little check algorithm  was found at
    http://alienryderflex.com/polygon and has been adapted*/

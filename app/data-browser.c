@@ -3736,7 +3736,7 @@ gwy_app_data_browser_select_graph2(GwyGraph *graph)
  * container than those of the currently active channel, so do not try that
  * for now.
  *
- * Since: 2.6
+ * Since: 2.7
  **/
 void
 gwy_app_data_browser_select_spectra(GwySpectra *spectra)
@@ -4305,7 +4305,7 @@ compare_int(gconstpointer a,
  *
  * Merges the data from a data container to the current one.
  *
- * Since: 2.6
+ * Since: 2.7
  **/
 void
 gwy_app_data_browser_merge(GwyContainer *container)
@@ -4509,7 +4509,7 @@ gwy_app_data_browser_add_graph_model(GwyGraphModel *gmodel,
  *
  * Returns: The id of the spectra object in the container.
  *
- * Since: 2.6
+ * Since: 2.7
  **/
 gint
 gwy_app_data_browser_add_spectra(GwySpectra *spectra,
@@ -4635,7 +4635,7 @@ gwy_app_get_show_key_for_id(gint id)
  *
  * Returns: The quark key identifying graph model number @id.
  *
- * Since: 2.6
+ * Since: 2.7
  **/
 GQuark
 gwy_app_get_graph_key_for_id(gint id)
@@ -4654,7 +4654,7 @@ gwy_app_get_graph_key_for_id(gint id)
  *
  * Returns: The quark key identifying spectra number @id.
  *
- * Since: 2.6
+ * Since: 2.7
  **/
 GQuark
 gwy_app_get_spectra_key_for_id(gint id)
@@ -5074,7 +5074,7 @@ gwy_app_data_browser_get_graph_ids(GwyContainer *data)
  *
  * Returns: A newly allocated array with spectrum ids, -1 terminated.
  *
- * Since: 2.6
+ * Since: 2.7
  **/
 gint*
 gwy_app_data_browser_get_spectra_ids(GwyContainer *data)

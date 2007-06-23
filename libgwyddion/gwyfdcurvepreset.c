@@ -850,7 +850,7 @@ _gwy_fd_curve_preset_class_setup_presets(void)
  *
  * Returns: FD curve preset inventory.
  *
- * Since: 2.6
+ * Since: 2.7
  **/
 GwyInventory*
 gwy_fd_curve_presets(void)

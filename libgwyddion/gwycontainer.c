@@ -492,7 +492,7 @@ hash_foreach_func(gpointer hkey, gpointer hvalue, gpointer hdata)
  *          with gwy_container_get_n_items().  If there are no items, %NULL
  *          is returned.
  *
- * Since: 2.6
+ * Since: 2.7
  **/
 GQuark*
 gwy_container_keys(GwyContainer *container)
@@ -537,7 +537,7 @@ keys_foreach_func(gpointer hkey,
  *          is returned.  Unlike the array the strings are owned by GLib and
  *          must not be freed.
  *
- * Since: 2.6
+ * Since: 2.7
  **/
 const gchar**
 gwy_container_keys_by_name(GwyContainer *container)

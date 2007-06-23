@@ -808,7 +808,7 @@ gwy_baseline_alignment_label_destroyed(G_GNUC_UNUSED GtkLabel *label,
  *
  * Returns:
  *
- * Since: 2.6
+ * Since: 2.7
  **/
 GtkWidget*
 gwy_baseline_alignment_wrap_label(GtkLabel *label)

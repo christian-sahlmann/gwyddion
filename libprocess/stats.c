@@ -2045,7 +2045,7 @@ gwy_data_field_psdf(GwyDataField *data_field,
  * Calculates radial power spectrum density function of a rectangular
  * part of a data field.
  *
- * Since: 2.6
+ * Since: 2.7
  **/
 void
 gwy_data_field_area_rpsdf(GwyDataField *data_field,
@@ -2158,7 +2158,7 @@ gwy_data_field_area_rpsdf(GwyDataField *data_field,
  *
  * Calculates radial power spectrum density function of a data field.
  *
- * Since: 2.6
+ * Since: 2.7
  **/
 void
 gwy_data_field_rpsdf(GwyDataField *data_field,
@@ -2197,7 +2197,7 @@ gwy_data_field_rpsdf(GwyDataField *data_field,
  * distances are calculated from smaller number of data points they become
  * increasingly bogus, therefore the default range is half of the size.
  *
- * Since: 2.6
+ * Since: 2.7
  **/
 void
 gwy_data_field_area_2dacf(GwyDataField *data_field,
@@ -2352,7 +2352,7 @@ gwy_data_field_area_2dacf(GwyDataField *data_field,
  * See gwy_data_field_area_2dacf() for details.  Parameters missing (not
  * adjustable) in this function are set to their default values.
  *
- * Since: 2.6
+ * Since: 2.7
  **/
 void
 gwy_data_field_2dacf(GwyDataField *data_field,

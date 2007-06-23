@@ -152,7 +152,7 @@ gwy_layer_basic_class_init(GwyLayerBasicClass *klass)
      * The :default-range-type-key property determines the color mapping range
      * type used when the type is unset in the container.
      *
-     * Since: 2.6
+     * Since: 2.7
      **/
     g_object_class_install_property
         (gobject_class,
@@ -640,7 +640,7 @@ gwy_layer_basic_get_range(GwyLayerBasic *basic_layer,
  *
  * Returns: The current color mapping mode.
  *
- * Since: 2.6
+ * Since: 2.7
  **/
 GwyLayerBasicRangeType
 gwy_layer_basic_get_range_type(GwyLayerBasic *basic_layer)

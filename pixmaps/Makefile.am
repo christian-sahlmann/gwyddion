@@ -4,9 +4,9 @@ pixmapdatadir = $(pkgdatadir)/pixmaps
 icondatadir = $(datadir)/icons/hicolor/48x48/apps
 
 # Since 2.3: arithmetic data_measure drift immerse merge
-# Since 2.6: path_level spectrum iso_roughness grains_measure gl_material
-# Since 2.6: color_range_auto color_range_full color_range_fixed
-# Since 2.6: color_range_adaptive mask_line
+# Since 2.7: path_level spectrum iso_roughness grains_measure gl_material
+# Since 2.7: color_range_auto color_range_full color_range_fixed
+# Since 2.7: color_range_adaptive mask_line
 
 # If you add new stock icons here, add them to a `Since' line above and run
 # ./utils/stockgen.py from the top-level directory to update source code

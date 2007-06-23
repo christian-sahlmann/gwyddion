@@ -195,7 +195,7 @@ gwy_data_line_fft(GwyDataLine *rsrc, GwyDataLine *isrc,
 /**
  * gwy_data_line_part_fft:
  * @rsrc: Real input data line.
- * @isrc: Imaginary input data line. Since 2.6 it can be %NULL for
+ * @isrc: Imaginary input data line. Since 2.7 it can be %NULL for
  *        real-to-complex transforms.
  * @rdest: Real output data line, it will be resized to @len.
  * @idest: Imaginary output data line, it will be resized to @len.
@@ -280,7 +280,7 @@ gwy_data_line_part_fft(GwyDataLine *rsrc, GwyDataLine *isrc,
 /**
  * gwy_data_line_fft_raw:
  * @rsrc: Real input data line.
- * @isrc: Imaginary input data line.  Since 2.6 it can be %NULL for
+ * @isrc: Imaginary input data line.  Since 2.7 it can be %NULL for
  *        real-to-complex transform.
  * @rdest: Real output data line.  It will be resized to the size of the input
  *         data line.

@@ -327,7 +327,7 @@ gwy_tool_data_switched(GwyTool *tool,
  * Bad things may happen when the spectra does not belong to the same container
  * as the currently active channel.
  *
- * Since: 2.6
+ * Since: 2.7
  **/
 void
 gwy_tool_spectra_switched(GwyTool *tool,
