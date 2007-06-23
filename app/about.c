@@ -195,8 +195,6 @@ fill_credits(GtkTextBuffer *buffer)
                                "weight", PANGO_WEIGHT_BOLD,
                                NULL);
 
-    add_credits_block(buffer, _("Core Developers"),
-                      G_N_ELEMENTS(core_developers), core_developers);
     add_credits_block(buffer, _("Developers"),
                       G_N_ELEMENTS(developers), developers);
     add_credits_block(buffer, _("Translators"),
