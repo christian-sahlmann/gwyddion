@@ -111,7 +111,7 @@ module_register(void)
 {
     gwy_process_func_register("angle_dist",
                               (GwyProcessFunc)&angle_dist,
-                              N_("/_Statistics/_Angle Distribution..."),
+                              N_("/_Statistics/An_gle Distribution..."),
                               NULL,
                               ANGLE_DIST_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
