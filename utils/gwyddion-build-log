@@ -19,6 +19,7 @@ cat >autostuff.ignore <<':'
 cat >build_project_nopygwy.ignore <<':'
 ^TRANSLATION [a-z]
 ^[0-9]\+ translated messages
+\.\.\. done
 ':'
 :
 
@@ -87,7 +88,7 @@ function printerr() {
 
 function exclude_pygwy_from_project() {
   # Exclude the block of lines that match pygwy build from build_project
-  difffmt='--old-line-format=%L --new-line-format=!%L --unchanged-line-format='
+  difffmt='--old-line-format=%L --new-line-format= --unchanged-line-format='
   diff $difffmt build_project.err build_pygwy.err >build_project_nopygwy.err
   diff $difffmt build_project.log build_pygwy.log >build_project_nopygwy.log
 }
