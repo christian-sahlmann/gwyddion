@@ -47,7 +47,7 @@ module_register(void)
 {
     gwy_process_func_register("acf2d",
                               (GwyProcessFunc)&acf2d,
-                              N_("/_Integral Transforms/2D Autoco_rrelation"),
+                              N_("/_Statistics/2D Auto_correlation"),
                               NULL,
                               ACF2D_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
@@ -66,7 +66,7 @@ acf2d(GwyContainer *data, GwyRunType run)
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield, 0);
     g_return_if_fail(dfield);
 
-    result = gwy_data_field_new_alike(dfield, FALSE);
+    result = gwy_data_field_new(1, 1, 1.0, 1.0, FALSE);
     xres = gwy_data_field_get_xres(dfield);
     yres = gwy_data_field_get_yres(dfield);
     gwy_data_field_2dacf(dfield, result);
