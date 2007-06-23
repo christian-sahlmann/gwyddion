@@ -1,4 +1,4 @@
-2.5.20070620
+2.5.20070623
 
 2.6 (0000-00-00)
 Application:
@@ -56,6 +56,7 @@ Libraries:
   gwy_data_field_get_autorange() was fixed.
 - libgwyprocess: DataField cache is not serialized any more and serialized
   caches are ignored on deserialization.
+- libgwyprocess: New methods to calculate 2D autocorrelation function.
 
 Modules:
 - Path level tool (new): Levels rows along arbitrary lines.
@@ -64,6 +65,7 @@ Modules:
 - Rougness tool (new): ISO roughness parameters evaluation.
 - Cut Graph (new): Extracts parts of graph curves.
 - FD Curve Fit (new): Fits force data curvers.
+- ACF 2D (new): Calculates two-dimensional autocorrelation function.
 - Pygwy: Scripts much closer to first-class data processing and file modules
   are possible now if the script is written a Python module exporting
   appropriate interface.
