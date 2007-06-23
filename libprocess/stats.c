@@ -2228,11 +2228,12 @@ gwy_data_field_area_2dacf(GwyDataField *data_field,
      * to FFTW. */
     src = g_new(gdouble, 4*ysize);
     dst = src + 2*ysize;
-    q = 1.0;
 #ifdef HAVE_FFTW3
-    q /= ysize;
+    q = 1.0/ysize;
     plan = fftw_plan_dft_1d(ysize, (fftw_complex*)src, (fftw_complex*)dst,
                             FFTW_FORWARD, _GWY_FFTW_PATIENCE);
+#else
+    q = sqrt(ysize);
 #endif
     for (j = 0; j < xsize; j++) {
         for (i = 0; i < height; i++) {
