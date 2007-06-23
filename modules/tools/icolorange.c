@@ -566,7 +566,7 @@ gwy_tool_color_range_xsel_changed(GwySelection *selection,
         gwy_tool_color_range_set_min_max(tool);
 
         /* when user begins a selection on the histogram, the selection on the
-        image is now invalid, and should be removed. */
+           image is now invalid, and should be removed. */
         tool->programmatic_update = TRUE;
         gwy_selection_clear(plain_tool->selection);
         tool->programmatic_update = FALSE;
@@ -759,18 +759,22 @@ gwy_tool_color_range_set_min_max(GwyToolColorRange *tool)
         gwy_container_set_double(plain_tool->container, tool->key_max, sel[1]);
     }
 
-    vf = plain_tool->value_format;
-    g_snprintf(buf, sizeof(buf), "%s%s",
-               *vf->units ? " " : "", vf->units);
-    gtk_label_set_markup(tool->min, buf);
-    gtk_spin_button_set_value(GTK_SPIN_BUTTON(tool->spinmin),
-                              sel[0]/vf->magnitude);
+    if (!tool->programmatic_update) {
+        tool->programmatic_update = TRUE;
+        vf = plain_tool->value_format;
+        g_snprintf(buf, sizeof(buf), "%s%s",
+                   *vf->units ? " " : "", vf->units);
+        gtk_label_set_markup(tool->min, buf);
+        gtk_spin_button_set_value(GTK_SPIN_BUTTON(tool->spinmin),
+                                  sel[0]/vf->magnitude);
 
-    g_snprintf(buf, sizeof(buf), "%s%s",
-               *vf->units ? " " : "", vf->units);
-    gtk_label_set_markup(tool->max, buf);
-    gtk_spin_button_set_value(GTK_SPIN_BUTTON(tool->spinmax),
-                              sel[1]/vf->magnitude);
+        g_snprintf(buf, sizeof(buf), "%s%s",
+                   *vf->units ? " " : "", vf->units);
+        gtk_label_set_markup(tool->max, buf);
+        gtk_spin_button_set_value(GTK_SPIN_BUTTON(tool->spinmax),
+                                  sel[1]/vf->magnitude);
+        tool->programmatic_update = FALSE;
+    }
 }
 
 static void
@@ -828,6 +832,9 @@ gwy_tool_color_range_spin_changed(GwyToolColorRange *tool)
     gdouble sel[2];
     const GwySIValueFormat *vf;
 
+    if (tool->programmatic_update)
+        return;
+
     plain_tool = GWY_PLAIN_TOOL(tool);
     vf = plain_tool->value_format;
 
@@ -841,7 +848,9 @@ gwy_tool_color_range_spin_changed(GwyToolColorRange *tool)
     gwy_container_set_double(plain_tool->container,
                              tool->key_max, sel[1]);
 
+    tool->programmatic_update = TRUE;
     gwy_selection_set_data(tool->graph_selection, 1, sel);
+    tool->programmatic_update = FALSE;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
