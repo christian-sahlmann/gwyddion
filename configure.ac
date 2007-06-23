@@ -2,7 +2,7 @@
 dnl Process this file with autoconf to produce a configure script.
 m4_define([gwy_version_major],[2])
 m4_define([gwy_version_minor],[5])
-m4_define([gwy_version_string],[gwy_version_major.gwy_version_minor.20070621])
+m4_define([gwy_version_string],[gwy_version_major.gwy_version_minor.20070623])
 AC_INIT([Gwyddion], [gwy_version_string], [klapetek@gwyddion.net])
 # Use -release for unstable version libs instead of -version-info, because
 # we *do* break compatibility each version
