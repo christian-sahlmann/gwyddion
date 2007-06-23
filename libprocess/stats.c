@@ -2187,7 +2187,7 @@ gwy_data_field_area_2dacf(GwyDataField *data_field,
     GwySIUnit *xyunit, *zunit, *unit;
     gdouble *src, *dst, *dstm;
     gint i, j, xres, yres, xsize, ysize;
-    gdouble xreal, yreal;
+    gdouble xreal, yreal, v, q;
 
     g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
     g_return_if_fail(GWY_IS_DATA_FIELD(target_field));
@@ -2228,7 +2228,9 @@ gwy_data_field_area_2dacf(GwyDataField *data_field,
      * to FFTW. */
     src = g_new(gdouble, 4*ysize);
     dst = src + 2*ysize;
+    q = 1.0;
 #ifdef HAVE_FFTW3
+    q /= ysize;
     plan = fftw_plan_dft_1d(ysize, (fftw_complex*)src, (fftw_complex*)dst,
                             FFTW_FORWARD, _GWY_FFTW_PATIENCE);
 #endif
@@ -2277,20 +2279,20 @@ gwy_data_field_area_2dacf(GwyDataField *data_field,
 
     gwy_data_field_resample(target_field, 2*xrange - 1, 2*yrange - 1,
                             GWY_INTERPOLATION_NONE);
+    /* Extract the correlation data and reshuflle it to human-undestandable
+     * positions with 0.0 at the centre. */
     for (i = 0; i < yrange; i++) {
         src = re_out->data + i*xsize;
         dst = target_field->data + (yrange-1 + i)*target_field->xres;
         dstm = target_field->data + (yrange-1 - i)*target_field->xres;
         for (j = 0; j < xrange; j++) {
-            gdouble v;
-
             if (j > 0) {
-                v = src[xsize - j]/(height - i)/(width - j);
+                v = q*src[xsize - j]/(height - i)/(width - j);
                 if (i > 0)
                     dstm[xrange-1 + j] = v;
                 dst[xrange-1 - j] = v;
             }
-            v = src[j]/(height - i)/(width - j);
+            v = q*src[j]/(height - i)/(width - j);
             if (i > 0)
                 dstm[xrange-1 - j] = v;
             dst[xrange-1 + j] = v;
@@ -2298,13 +2300,17 @@ gwy_data_field_area_2dacf(GwyDataField *data_field,
     }
     g_object_unref(re_out);
 
-    xyunit = gwy_data_field_get_si_unit_xy(data_field);
-    unit = gwy_data_field_get_si_unit_xy(target_field);
-    gwy_serializable_clone(G_OBJECT(xyunit), G_OBJECT(unit));
     target_field->xreal = xreal*target_field->xres/xres;
     target_field->yreal = yreal*target_field->yres/yres;
     target_field->xoff = -0.5*target_field->xreal;
     target_field->yoff = -0.5*target_field->yreal;
+
+    xyunit = gwy_data_field_get_si_unit_xy(data_field);
+    zunit = gwy_data_field_get_si_unit_z(data_field);
+    unit = gwy_data_field_get_si_unit_xy(target_field);
+    gwy_serializable_clone(G_OBJECT(xyunit), G_OBJECT(unit));
+    unit = gwy_data_field_get_si_unit_z(target_field);
+    gwy_si_unit_power(zunit, 2, unit);
 
     gwy_data_field_invalidate(target_field);
 }
