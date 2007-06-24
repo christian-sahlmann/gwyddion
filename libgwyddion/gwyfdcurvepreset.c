@@ -30,6 +30,7 @@ gwy_fd_curve_preset_new_static(const GwyNLFitPresetBuiltin *data);
 
 G_DEFINE_TYPE(GwyFDCurvePreset, gwy_fd_curve_preset, GWY_TYPE_NLFIT_PRESET)
 
+#if 0
 /******************* argento ********************************/
 static gdouble
 argento_func(gdouble x,
@@ -71,7 +72,6 @@ argento_guess(gint n_dat,
     *fres = TRUE;
 }
 
-#if 0
 /******************* parzanette ********************************/
 static gdouble
 parzanette_func(gdouble x,
@@ -299,6 +299,7 @@ sphtiptap_guess(gint n_dat,
     *fres = TRUE;
 }
 
+#if 0
 /******************* sphxu ********************************/
 static gdouble
 sphxu_func(gdouble x,
@@ -336,7 +337,6 @@ sphxu_guess(gint n_dat,
     *fres = TRUE;
 }
 
-#if 0
 /******************* sphcappakarinen ********************************/
 static gdouble
 sphcappakarinen_func(gdouble x,
