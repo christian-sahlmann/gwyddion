@@ -37,10 +37,10 @@ static void       update_module_info_cb           (GtkWidget *tree,
                                                    GtkWidget *parent);
 
 enum {
-    MODULE_NAME,
-    MODULE_VERSION,
-    MODULE_AUTHOR,
-    MODULE_LAST
+    MODEL_NAME,
+    MODEL_INFO,
+    MODEL_FAILED,
+    MODEL_LAST
 };
 
 static GtkWidget* window = NULL;
@@ -90,23 +90,68 @@ gwy_module_browser_store_module(const gchar *name,
     GtkTreeIter iter;
 
     gtk_list_store_insert_with_values(store, &iter, G_MAXINT,
-                                      MODULE_NAME, name,
-                                      MODULE_VERSION, mod_info->version,
-                                      MODULE_AUTHOR, mod_info->author,
+                                      MODEL_NAME, name,
+                                      MODEL_INFO, mod_info,
+                                      MODEL_FAILED, FALSE,
                                       -1);
 }
+
+static void
+gwy_module_browser_render(G_GNUC_UNUSED GtkTreeViewColumn *column,
+                          GtkCellRenderer *renderer,
+                          GtkTreeModel *model,
+                          GtkTreeIter *iter,
+                          gpointer userdata)
+{
+    const gchar *name;
+    const GwyModuleInfo *mod_info;
+    gboolean failed;
+    const gchar *text;
+
+    gtk_tree_model_get(model, iter,
+                       MODEL_NAME, &name,
+                       MODEL_INFO, &mod_info,
+                       MODEL_FAILED, &failed,
+                       -1);
+    switch (GPOINTER_TO_UINT(userdata)) {
+        case 0:
+        text = name;
+        break;
+
+        case 1:
+        text = mod_info->version;
+        break;
+
+        case 2:
+        text = mod_info->author;
+        break;
+
+        default:
+        g_return_if_reached();
+        break;
+    }
+    g_object_set(renderer, "text", text, NULL);
+}
+
+gint
+compare_modules(GtkTreeModel *model,
+                GtkTreeIter *a,
+                GtkTreeIter *b,
+                G_GNUC_UNUSED gpointer user_data)
+{
+    const gchar *namea, *nameb;
+
+    gtk_tree_model_get(model, a, MODEL_NAME, &namea, -1);
+    gtk_tree_model_get(model, b, MODEL_NAME, &nameb, -1);
+    return strcmp(namea, nameb);
+}
+
 
 static GtkWidget*
 gwy_module_browser_construct(GtkWidget *parent)
 {
-    static const struct {
-        const gchar *title;
-        const guint id;
-    }
-    columns[] = {
-        { N_("Module"), MODULE_NAME },
-        { N_("Version"), MODULE_VERSION },
-        { N_("Author"), MODULE_AUTHOR },
+    static const gchar *columns[] = {
+        N_("Module"), N_("Version"), N_("Author"),
     };
 
     GtkWidget *tree;
@@ -116,13 +161,15 @@ gwy_module_browser_construct(GtkWidget *parent)
     GtkTreeViewColumn *column;
     gsize i;
 
-    store = gtk_list_store_new(MODULE_LAST,
-                               G_TYPE_STRING,
-                               G_TYPE_STRING,
-                               G_TYPE_STRING);
+    store = gtk_list_store_new(MODEL_LAST,
+                               G_TYPE_POINTER,
+                               G_TYPE_POINTER,
+                               G_TYPE_BOOLEAN);
     gwy_module_foreach((GHFunc)gwy_module_browser_store_module, store);
-    gtk_tree_sortable_set_sort_column_id(GTK_TREE_SORTABLE(store),
-                                         MODULE_NAME, GTK_SORT_ASCENDING);
+    gtk_tree_sortable_set_sort_func(GTK_TREE_SORTABLE(store),
+                                    MODEL_NAME, compare_modules, NULL, NULL);
+    gtk_tree_sortable_set_sort_column_id(GTK_TREE_SORTABLE(store), MODEL_NAME,
+                                         GTK_SORT_ASCENDING);
 
     tree = gtk_tree_view_new_with_model(GTK_TREE_MODEL(store));
     gtk_tree_view_set_rules_hint(GTK_TREE_VIEW(tree), TRUE);
@@ -130,11 +177,11 @@ gwy_module_browser_construct(GtkWidget *parent)
 
     for (i = 0; i < G_N_ELEMENTS(columns); i++) {
         renderer = gtk_cell_renderer_text_new();
-        column = gtk_tree_view_column_new_with_attributes(_(columns[i].title),
-                                                          renderer,
-                                                          "text",
-                                                          columns[i].id,
-                                                          NULL);
+        column = gtk_tree_view_column_new_with_attributes(_(columns[i]),
+                                                          renderer, NULL);
+        gtk_tree_view_column_set_cell_data_func(column, renderer,
+                                                gwy_module_browser_render,
+                                                GUINT_TO_POINTER(i), NULL);
         gtk_tree_view_append_column(GTK_TREE_VIEW(tree), column);
     }
 
@@ -180,9 +227,11 @@ update_module_info_cb(GtkWidget *tree,
     GtkTreeModel *store;
     GtkTreeSelection *selection;
     const GwyModuleInfo *mod_info;
+    const gchar *name;
+    gboolean failed;
     GtkTreeIter iter;
     GSList *l;
-    gchar *s, *name;
+    gchar *s;
     gsize n;
 
     selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(tree));
@@ -190,8 +239,11 @@ update_module_info_cb(GtkWidget *tree,
     if (!gtk_tree_selection_get_selected(selection, &store, &iter))
         return;
 
-    gtk_tree_model_get(GTK_TREE_MODEL(store), &iter, MODULE_NAME, &name, -1);
-    mod_info = gwy_module_lookup(name);
+    gtk_tree_model_get(GTK_TREE_MODEL(store), &iter,
+                       MODEL_NAME, &name,
+                       MODEL_INFO, &mod_info,
+                       MODEL_FAILED, &failed,
+                       -1);
     label = GTK_LABEL(g_object_get_data(G_OBJECT(parent), "name-version"));
     s = g_strconcat(name, "-", mod_info->version, NULL);
     gtk_label_set_text(label, s);
@@ -230,8 +282,6 @@ update_module_info_cb(GtkWidget *tree,
         gtk_label_set_text(label, s);
         g_free(s);
     }
-
-    g_free(name);
 }
 
 static void

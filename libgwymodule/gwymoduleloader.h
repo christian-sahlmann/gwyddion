@@ -44,6 +44,7 @@ typedef enum {
     GWY_MODULE_ERROR_REGISTER
 } GwyModuleError;
 
+/* FIXME: This is a public structure, remove the underscore indirection. */
 typedef struct _GwyModuleInfo GwyModuleInfo;
 
 typedef gboolean       (*GwyModuleRegisterFunc) (void);
