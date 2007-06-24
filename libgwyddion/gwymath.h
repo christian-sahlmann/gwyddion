@@ -39,7 +39,7 @@ G_BEGIN_DECLS
 gdouble  gwy_math_humanize_numbers     (gdouble unit,
                                         gdouble maximum,
                                         gint *precision);
-gboolean gwy_math_is_in_poly           (gdouble x,
+gboolean gwy_math_is_in_polygon        (gdouble x,
                                         gdouble y,
                                         const gdouble* poly,
                                         guint n);

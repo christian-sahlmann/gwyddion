@@ -92,7 +92,7 @@ gwy_math_humanize_numbers(gdouble unit,
 }
 
 /**
- * gwy_math_is_in_poly:
+ * gwy_math_is_in_polygon:
  * @x: The x coordinate of the test point.
  * @y: The y coordinate of the test point.
  * @poly: An array of coordinate pairs (points) that define a
@@ -113,10 +113,10 @@ gwy_math_humanize_numbers(gdouble unit,
 /* This neat little check algorithm  was found at
    http://alienryderflex.com/polygon and has been adapted*/
 gboolean
-gwy_math_is_in_poly(gdouble x,
-                    gdouble y,
-                    const gdouble *poly,
-                    guint n)
+gwy_math_is_in_polygon(gdouble x,
+                       gdouble y,
+                       const gdouble *poly,
+                       guint n)
 {
     guint i, j = 0;
     gboolean inside = FALSE;
