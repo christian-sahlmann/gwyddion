@@ -183,13 +183,14 @@ gwy_math_nlfit_fit_full(GwyNLFitter *nlfit,
     gboolean step1 = TRUE;
     gboolean end = FALSE;
 
+    g_free(nlfit->covar);
+    nlfit->covar = NULL;
+    nlfit->dispersion = -1.0;
+
     g_return_val_if_fail(nlfit, -1.0);
     g_return_val_if_fail(n_param > 0, -1.0);
     /*g_return_val_if_fail(n_dat > n_param, -1.0);*/
     g_return_val_if_fail(x && y && param, -1.0);
-
-    g_free(nlfit->covar);
-    nlfit->covar = NULL;
 
     /* Use defaults for param specials, if not specified */
     if (!weight) {
@@ -440,7 +441,6 @@ gwy_math_nlfit_fit_full(GwyNLFitter *nlfit,
     return sumr;
 }
 
-
 /**
  * gwy_math_nlfit_derive:
  * @x: The value to compute the derivation at.
@@ -544,6 +544,32 @@ gwy_math_nlfit_set_max_iterations(GwyNLFitter *nlfit,
     nlfit->maxiter = maxiter;
 }
 
+/**
+ * gwy_math_nlfit_succeeded:
+ * @nlfit: A Marquardt-Levenberg nonlinear fitter.
+ *
+ * Obtains the status of the last fitting.
+ *
+ * Fitting failure can be (and usually should be) also determined by checking
+ * for negative return value of gwy_math_nlfit_fit() or
+ * gwy_math_nlfit_fit_full().  This function allows to test it later.
+ *
+ * Returns: %TRUE if the last fitting suceeded, %FALSE if it failed.
+ *
+ * Since: 2.7
+ **/
+gboolean
+gwy_math_nlfit_succeeded(GwyNLFitter *nlfit)
+{
+    if ((!nlfit->covar && nlfit->dispersion >= 0.0)
+        || (nlfit->covar && nlfit->dispersion < 0.0)) {
+        g_warning("Covar and dispersion do not agree on whether the fit "
+                  "was successful.");
+        return FALSE;
+    }
+
+    return nlfit->covar != NULL;
+}
 
 /**
  * gwy_math_nlfit_get_sigma:
@@ -570,7 +596,7 @@ gwy_math_nlfit_get_sigma(GwyNLFitter *nlfit, gint par)
  *
  * Returns the residual sum divided by the number of degrees of freedom.
  *
- * This function makes sense only after a successful fit.
+ * This function can be used only after a successful fit.
  *
  * Returns: The dispersion.
  **/
@@ -589,7 +615,7 @@ gwy_math_nlfit_get_dispersion(GwyNLFitter *nlfit)
  *
  * Returns the correlation coefficient between @par1-th and @par2-th parameter.
  *
- * This function makes sense only after a successful fit.
+ * This function can be used only after a successful fit.
  *
  * Returns: The correlation coefficient.
  **/
