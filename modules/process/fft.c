@@ -66,8 +66,8 @@ static void     fft_create_output  (GwyContainer *data,
                                     const gchar *window_name);
 static void     humanize_offsets   (GwyDataField *dfield);
 static gboolean fft_dialog         (FFTArgs *args,
-                                    gint oldsize,
-                                    gint newsize);
+                                    gint xres,
+                                    gint yres);
 static void     preserve_changed_cb(GtkToggleButton *button,
                                     FFTArgs *args);
 static void     zeromean_changed_cb(GtkToggleButton *button,
@@ -99,7 +99,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Two-dimensional FFT (Fast Fourier Transform)."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.7",
+    "1.8",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -123,13 +123,11 @@ module_register(void)
 static void
 fft(GwyContainer *data, GwyRunType run)
 {
-    GtkWidget *dialog;
     GwyDataField *dfield, *tmp, *raout, *ipout;
     GwySIUnit *xyunit;
     FFTArgs args;
     gboolean ok;
-    gint xsize, ysize, newsize, id;
-    gdouble newreals;
+    gint xres, yres, newxres, newyres, id;
 
     g_return_if_fail(run & FFT_RUN_MODES);
 
@@ -138,30 +136,20 @@ fft(GwyContainer *data, GwyRunType run)
                                      0);
     g_return_if_fail(dfield);
 
-    xsize = gwy_data_field_get_xres(dfield);
-    ysize = gwy_data_field_get_yres(dfield);
-    if (xsize != ysize) {
-        dialog = gtk_message_dialog_new
-            (gwy_app_find_window_for_channel(data, id),
-             GTK_DIALOG_DESTROY_WITH_PARENT,
-             GTK_MESSAGE_ERROR,
-             GTK_BUTTONS_OK,
-             _("%s: Data must be square."), "FFT");
-        gtk_dialog_run(GTK_DIALOG(dialog));
-        gtk_widget_destroy(dialog);
-        return;
-    }
+    xres = gwy_data_field_get_xres(dfield);
+    yres = gwy_data_field_get_yres(dfield);
 
     fft_load_args(gwy_app_settings_get(), &args);
-    newsize = gwy_fft_find_nice_size(xsize);
     if (run == GWY_RUN_INTERACTIVE) {
-        ok = fft_dialog(&args, newsize, xsize);
+        ok = fft_dialog(&args, xres, yres);
         fft_save_args(gwy_app_settings_get(), &args);
         if (!ok)
             return;
     }
 
-    dfield = gwy_data_field_new_resampled(dfield, newsize, newsize,
+    newxres = gwy_fft_find_nice_size(xres);
+    newyres = gwy_fft_find_nice_size(yres);
+    dfield = gwy_data_field_new_resampled(dfield, newxres, newyres,
                                           args.interp);
     xyunit = gwy_data_field_get_si_unit_xy(dfield);
     gwy_si_unit_power(xyunit, -1, xyunit);
@@ -180,29 +168,26 @@ fft(GwyContainer *data, GwyRunType run)
     gwy_data_field_2dfft_humanize(raout);
     gwy_data_field_2dfft_humanize(ipout);
 
-    newreals = ((gdouble)gwy_data_field_get_xres(dfield))
-               /gwy_data_field_get_xreal(dfield);
-
-    gwy_data_field_set_xreal(dfield, newreals);
-    gwy_data_field_set_yreal(dfield, newreals);
+    gwy_data_field_set_xreal(dfield, 1.0/gwy_data_field_get_xmeasure(dfield));
+    gwy_data_field_set_yreal(dfield, 1.0/gwy_data_field_get_ymeasure(dfield));
     humanize_offsets(dfield);
 
     if (args.preserve) {
-        gwy_data_field_resample(dfield, xsize, ysize, args.interp);
-        gwy_data_field_resample(raout, xsize, ysize, args.interp);
-        gwy_data_field_resample(ipout, xsize, ysize, args.interp);
+        gwy_data_field_resample(dfield, xres, yres, args.interp);
+        gwy_data_field_resample(raout, xres, yres, args.interp);
+        gwy_data_field_resample(ipout, xres, yres, args.interp);
     }
 
     if (args.out == GWY_FFT_OUTPUT_REAL_IMG
         || args.out == GWY_FFT_OUTPUT_REAL) {
         tmp = gwy_data_field_new_alike(dfield, FALSE);
-        gwy_data_field_area_copy(raout, tmp, 0, 0, xsize, ysize, 0, 0);
+        gwy_data_field_area_copy(raout, tmp, 0, 0, xres, yres, 0, 0);
         fft_create_output(data, tmp, _("FFT Real"));
     }
     if (args.out == GWY_FFT_OUTPUT_REAL_IMG
         || args.out == GWY_FFT_OUTPUT_IMG) {
         tmp = gwy_data_field_new_alike(dfield, FALSE);
-        gwy_data_field_area_copy(ipout, tmp, 0, 0, xsize, ysize, 0, 0);
+        gwy_data_field_area_copy(ipout, tmp, 0, 0, xres, yres, 0, 0);
         fft_create_output(data, tmp, _("FFT Imag"));
     }
     if (args.out == GWY_FFT_OUTPUT_MOD_PHASE
@@ -298,8 +283,7 @@ set_dfield_phase(GwyDataField *re, GwyDataField *im,
 
 static gboolean
 fft_dialog(FFTArgs *args,
-           gint oldsize,
-           gint newsize)
+           gint xres, gint yres)
 {
     enum { RESPONSE_RESET = 1 };
     static const GwyEnum fft_outputs[] = {
@@ -312,6 +296,7 @@ fft_dialog(FFTArgs *args,
     };
     GtkWidget *dialog, *table;
     FFTControls controls;
+    gint newxres, newyres;
     gint response, row;
     gchar *s;
 
@@ -355,15 +340,17 @@ fft_dialog(FFTArgs *args,
                          controls.out);
     row++;
 
+    newxres = gwy_fft_find_nice_size(xres);
+    newyres = gwy_fft_find_nice_size(yres);
     s = g_strdup_printf(_("_Preserve size (don't resize to %d × %d)"),
-                        newsize, newsize);
+                        newxres, newyres);
     controls.preserve = gtk_check_button_new_with_mnemonic(s);
     g_free(s);
     gtk_table_attach(GTK_TABLE(table), controls.preserve,
                      0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.preserve),
                                  args->preserve);
-    if (newsize == oldsize)
+    if (newxres == xres && newyres == yres)
         gtk_widget_set_sensitive(controls.preserve, FALSE);
     else
         g_signal_connect(controls.preserve, "toggled",
