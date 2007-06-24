@@ -44,15 +44,15 @@ gwy_data_field_sum_fields(GwyDataField *result,
     gint xres, yres, i;
 
     g_return_if_fail(GWY_IS_DATA_FIELD(result));
-    g_return_if_fail(GWY_IS_DATA_FIELD(operand1));
-    g_return_if_fail(GWY_IS_DATA_FIELD(operand2));
-    xres = gwy_data_field_get_xres(result);
-    yres = gwy_data_field_get_yres(result);
-    g_return_if_fail(xres == gwy_data_field_get_xres(operand1));
-    g_return_if_fail(yres == gwy_data_field_get_yres(operand1));
-    g_return_if_fail(xres == gwy_data_field_get_xres(operand2));
-    g_return_if_fail(yres == gwy_data_field_get_yres(operand2));
+    g_return_if_fail
+        (!gwy_data_field_check_compatibility(result, operand1,
+                                            GWY_DATA_COMPATIBILITY_RES));
+    g_return_if_fail
+        (!gwy_data_field_check_compatibility(result, operand2,
+                                            GWY_DATA_COMPATIBILITY_RES));
 
+    xres = result->xres;
+    yres = result->yres;
     r = result->data;
     p = operand1->data;
     q = operand2->data;
@@ -85,15 +85,15 @@ gwy_data_field_subtract_fields(GwyDataField *result,
     gint xres, yres, i;
 
     g_return_if_fail(GWY_IS_DATA_FIELD(result));
-    g_return_if_fail(GWY_IS_DATA_FIELD(operand1));
-    g_return_if_fail(GWY_IS_DATA_FIELD(operand2));
-    xres = gwy_data_field_get_xres(result);
-    yres = gwy_data_field_get_yres(result);
-    g_return_if_fail(xres == gwy_data_field_get_xres(operand1));
-    g_return_if_fail(yres == gwy_data_field_get_yres(operand1));
-    g_return_if_fail(xres == gwy_data_field_get_xres(operand2));
-    g_return_if_fail(yres == gwy_data_field_get_yres(operand2));
+    g_return_if_fail
+        (!gwy_data_field_check_compatibility(result, operand1,
+                                            GWY_DATA_COMPATIBILITY_RES));
+    g_return_if_fail
+        (!gwy_data_field_check_compatibility(result, operand2,
+                                            GWY_DATA_COMPATIBILITY_RES));
 
+    xres = result->xres;
+    yres = result->yres;
     r = result->data;
     p = operand1->data;
     q = operand2->data;
@@ -126,15 +126,15 @@ gwy_data_field_multiply_fields(GwyDataField *result,
     gint xres, yres, i;
 
     g_return_if_fail(GWY_IS_DATA_FIELD(result));
-    g_return_if_fail(GWY_IS_DATA_FIELD(operand1));
-    g_return_if_fail(GWY_IS_DATA_FIELD(operand2));
-    xres = gwy_data_field_get_xres(result);
-    yres = gwy_data_field_get_yres(result);
-    g_return_if_fail(xres == gwy_data_field_get_xres(operand1));
-    g_return_if_fail(yres == gwy_data_field_get_yres(operand1));
-    g_return_if_fail(xres == gwy_data_field_get_xres(operand2));
-    g_return_if_fail(yres == gwy_data_field_get_yres(operand2));
+    g_return_if_fail
+        (!gwy_data_field_check_compatibility(result, operand1,
+                                            GWY_DATA_COMPATIBILITY_RES));
+    g_return_if_fail
+        (!gwy_data_field_check_compatibility(result, operand2,
+                                            GWY_DATA_COMPATIBILITY_RES));
 
+    xres = result->xres;
+    yres = result->yres;
     r = result->data;
     p = operand1->data;
     q = operand2->data;
@@ -162,15 +162,15 @@ gwy_data_field_divide_fields(GwyDataField *result,
     gint xres, yres, i;
 
     g_return_if_fail(GWY_IS_DATA_FIELD(result));
-    g_return_if_fail(GWY_IS_DATA_FIELD(operand1));
-    g_return_if_fail(GWY_IS_DATA_FIELD(operand2));
-    xres = gwy_data_field_get_xres(result);
-    yres = gwy_data_field_get_yres(result);
-    g_return_if_fail(xres == gwy_data_field_get_xres(operand1));
-    g_return_if_fail(yres == gwy_data_field_get_yres(operand1));
-    g_return_if_fail(xres == gwy_data_field_get_xres(operand2));
-    g_return_if_fail(yres == gwy_data_field_get_yres(operand2));
+    g_return_if_fail
+        (!gwy_data_field_check_compatibility(result, operand1,
+                                            GWY_DATA_COMPATIBILITY_RES));
+    g_return_if_fail
+        (!gwy_data_field_check_compatibility(result, operand2,
+                                            GWY_DATA_COMPATIBILITY_RES));
 
+    xres = result->xres;
+    yres = result->yres;
     r = result->data;
     p = operand1->data;
     q = operand2->data;
@@ -198,15 +198,15 @@ gwy_data_field_min_of_fields(GwyDataField *result,
     gint xres, yres, i;
 
     g_return_if_fail(GWY_IS_DATA_FIELD(result));
-    g_return_if_fail(GWY_IS_DATA_FIELD(operand1));
-    g_return_if_fail(GWY_IS_DATA_FIELD(operand2));
-    xres = gwy_data_field_get_xres(result);
-    yres = gwy_data_field_get_yres(result);
-    g_return_if_fail(xres == gwy_data_field_get_xres(operand1));
-    g_return_if_fail(yres == gwy_data_field_get_yres(operand1));
-    g_return_if_fail(xres == gwy_data_field_get_xres(operand2));
-    g_return_if_fail(yres == gwy_data_field_get_yres(operand2));
+    g_return_if_fail
+        (!gwy_data_field_check_compatibility(result, operand1,
+                                            GWY_DATA_COMPATIBILITY_RES));
+    g_return_if_fail
+        (!gwy_data_field_check_compatibility(result, operand2,
+                                            GWY_DATA_COMPATIBILITY_RES));
 
+    xres = result->xres;
+    yres = result->yres;
     r = result->data;
     p = operand1->data;
     q = operand2->data;
@@ -239,15 +239,15 @@ gwy_data_field_max_of_fields(GwyDataField *result,
     gint xres, yres, i;
 
     g_return_if_fail(GWY_IS_DATA_FIELD(result));
-    g_return_if_fail(GWY_IS_DATA_FIELD(operand1));
-    g_return_if_fail(GWY_IS_DATA_FIELD(operand2));
-    xres = gwy_data_field_get_xres(result);
-    yres = gwy_data_field_get_yres(result);
-    g_return_if_fail(xres == gwy_data_field_get_xres(operand1));
-    g_return_if_fail(yres == gwy_data_field_get_yres(operand1));
-    g_return_if_fail(xres == gwy_data_field_get_xres(operand2));
-    g_return_if_fail(yres == gwy_data_field_get_yres(operand2));
+    g_return_if_fail
+        (!gwy_data_field_check_compatibility(result, operand1,
+                                            GWY_DATA_COMPATIBILITY_RES));
+    g_return_if_fail
+        (!gwy_data_field_check_compatibility(result, operand2,
+                                            GWY_DATA_COMPATIBILITY_RES));
 
+    xres = result->xres;
+    yres = result->yres;
     r = result->data;
     p = operand1->data;
     q = operand2->data;
@@ -412,6 +412,15 @@ gwy_data_line_check_compatibility(GwyDataLine *data_line1,
  * SECTION:arithmetic
  * @title: arithmetic
  * @short_description: Arithmetic opetations on data fields
+ *
+ * Data arithmetic functions perform simple operations combining several data
+ * fields.  Their sizes have to be size-compatible, i.e.
+ * gwy_data_field_check_compatibility(operand1, operand2, GWY_DATA_COMPATIBILITY_RES)
+ * must pass and the same must hold for the data field to store the result to.
+ *
+ * Functions gwy_data_field_check_compatibility() and
+ * gwy_data_line_check_compatibility() simplify testing compatibility of data
+ * fields and lines, respectively.
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
