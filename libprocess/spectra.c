@@ -1082,12 +1082,12 @@ gwy_spectra_clear(GwySpectra *spectra)
 /************************** Documentation ****************************/
 
 /**
- * SECTION:Spectra
+ * SECTION:spectra
  * @title: GwySpectra
  * @short_description: Collection of dataline representing point spectra.
  *
  * #GwySpectra contains an array of #GwyDataLine<!-- -->s and coordinates
- * representing where in a datafield the spectrum was aquired.
+ * representing where in a data field the spectrum was acquired.
  **/
 
 /**
