@@ -20,7 +20,6 @@ process_LTLIBRARIES = \
 	fft.la \
 	fft_filter_1d.la \
 	fft_filter_2d.la \
-	fft_synth.la \
 	fit_2d.la \
 	fraccor.la \
 	fractal.la \
@@ -94,7 +93,7 @@ facet_level_la_SOURCES = facet-level.c
 fft_filter_1d_la_SOURCES = fft_filter_1d.c
 fft_filter_2d_la_SOURCES = fft_filter_2d.c
 fft_la_SOURCES = fft.c
-fft_synth_la_SOURCES = fft_synth.c
+#fft_synth_la_SOURCES = fft_synth.c
 fit_2d_la_SOURCES = fit_2d.c
 fractal_la_SOURCES = fractal.c
 fraccor_la_SOURCES = fraccor.c
