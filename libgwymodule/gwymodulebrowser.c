@@ -23,11 +23,12 @@
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwyutils.h>
-
-#include "gwymodulebrowser.h"
+#include <libgwymodule/gwymodulebrowser.h>
+#include "gwymoduleinternal.h"
 
 static GtkWidget* gwy_module_browser_construct    (GtkWidget *parent);
 static GtkWidget* gwy_module_browser_info_table   (GtkWidget *parent);
+static GtkWidget* gwy_module_browser_failure_table(GtkWidget *parent);
 static void       attach_info_line                (GtkWidget *table,
                                                    gint row,
                                                    const gchar *name,
@@ -53,7 +54,7 @@ static GtkWidget* window = NULL;
 void
 gwy_module_browser(void)
 {
-    GtkWidget *browser, *scroll, *paned, *info;
+    GtkWidget *browser, *scroll, *info, *vbox;
 
     if (window) {
         gtk_window_present(GTK_WINDOW(window));
@@ -63,18 +64,25 @@ gwy_module_browser(void)
     window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_window_set_default_size(GTK_WINDOW(window), 480, 480);
     gtk_window_set_title(GTK_WINDOW(window), _("Module Browser"));
-    gtk_window_set_wmclass(GTK_WINDOW(window), "browser_module",
-                           g_get_application_name());
-    paned = gtk_vpaned_new();
-    gtk_container_add(GTK_CONTAINER(window), paned);
+    vbox = gtk_vbox_new(FALSE, 0);
+    gtk_container_add(GTK_CONTAINER(window), vbox);
     scroll = gtk_scrolled_window_new(NULL, NULL);
     gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scroll),
                                    GTK_POLICY_AUTOMATIC, GTK_POLICY_ALWAYS);
-    gtk_paned_pack1(GTK_PANED(paned), scroll, TRUE, FALSE);
+
+    gtk_box_pack_start(GTK_BOX(vbox), scroll, TRUE, TRUE, 0);
     browser = gwy_module_browser_construct(window);
     gtk_container_add(GTK_CONTAINER(scroll), browser);
+
     info = gwy_module_browser_info_table(window);
-    gtk_paned_pack2(GTK_PANED(paned), info, FALSE, FALSE);
+    g_object_set_data(G_OBJECT(window), "mod-info", info);
+    gtk_box_pack_start(GTK_BOX(vbox), info, FALSE, FALSE, 0);
+
+    info = gwy_module_browser_failure_table(window);
+    gtk_widget_set_no_show_all(info, TRUE);
+    gtk_widget_hide(info);
+    g_object_set_data(G_OBJECT(window), "fail-info", info);
+    gtk_box_pack_start(GTK_BOX(vbox), info, FALSE, FALSE, 0);
 
     g_signal_connect(window, "destroy", G_CALLBACK(gtk_widget_destroy), NULL);
     g_signal_connect_swapped(window, "destroy",
@@ -88,11 +96,24 @@ gwy_module_browser_store_module(const gchar *name,
                                 GtkListStore *store)
 {
     GtkTreeIter iter;
-
     gtk_list_store_insert_with_values(store, &iter, G_MAXINT,
                                       MODEL_NAME, name,
                                       MODEL_INFO, mod_info,
                                       MODEL_FAILED, FALSE,
+                                      -1);
+}
+
+static void
+gwy_module_browser_store_failure(G_GNUC_UNUSED const gchar *filename,
+                                 _GwyModuleFailureInfo *fail_info,
+                                 GtkListStore *store)
+{
+    GtkTreeIter iter;
+
+    gtk_list_store_insert_with_values(store, &iter, G_MAXINT,
+                                      MODEL_NAME, fail_info->modname,
+                                      MODEL_INFO, fail_info,
+                                      MODEL_FAILED, TRUE,
                                       -1);
 }
 
@@ -105,32 +126,40 @@ gwy_module_browser_render(G_GNUC_UNUSED GtkTreeViewColumn *column,
 {
     const gchar *name;
     const GwyModuleInfo *mod_info;
+    const _GwyModuleFailureInfo *fail_info;
     gboolean failed;
     const gchar *text;
 
     gtk_tree_model_get(model, iter,
                        MODEL_NAME, &name,
+                       /* We do not actually access the other one */
                        MODEL_INFO, &mod_info,
+                       MODEL_INFO, &fail_info,
                        MODEL_FAILED, &failed,
                        -1);
+
     switch (GPOINTER_TO_UINT(userdata)) {
         case 0:
         text = name;
         break;
 
         case 1:
-        text = mod_info->version;
+        text = failed ? "" : mod_info->version;
         break;
 
         case 2:
-        text = mod_info->author;
+        text = failed ? "" : mod_info->author;
         break;
 
         default:
         g_return_if_reached();
         break;
     }
-    g_object_set(renderer, "text", text, NULL);
+    g_object_set(renderer,
+                 "text", text,
+                 "foreground", failed ? "red" : "black",
+                 "foreground-set", failed,
+                 NULL);
 }
 
 gint
@@ -140,9 +169,15 @@ compare_modules(GtkTreeModel *model,
                 G_GNUC_UNUSED gpointer user_data)
 {
     const gchar *namea, *nameb;
+    gboolean faila, failb;
 
-    gtk_tree_model_get(model, a, MODEL_NAME, &namea, -1);
-    gtk_tree_model_get(model, b, MODEL_NAME, &nameb, -1);
+    gtk_tree_model_get(model, a, MODEL_NAME, &namea, MODEL_FAILED, &faila, -1);
+    gtk_tree_model_get(model, b, MODEL_NAME, &nameb, MODEL_FAILED, &failb, -1);
+    if (faila && !failb)
+        return -1;
+    if (failb && !faila)
+        return 1;
+
     return strcmp(namea, nameb);
 }
 
@@ -166,6 +201,8 @@ gwy_module_browser_construct(GtkWidget *parent)
                                G_TYPE_POINTER,
                                G_TYPE_BOOLEAN);
     gwy_module_foreach((GHFunc)gwy_module_browser_store_module, store);
+    _gwy_module_failure_foreach((GHFunc)gwy_module_browser_store_failure,
+                                store);
     gtk_tree_sortable_set_sort_func(GTK_TREE_SORTABLE(store),
                                     MODEL_NAME, compare_modules, NULL, NULL);
     gtk_tree_sortable_set_sort_column_id(GTK_TREE_SORTABLE(store), MODEL_NAME,
@@ -197,7 +234,7 @@ gwy_module_browser_construct(GtkWidget *parent)
 static GtkWidget*
 gwy_module_browser_info_table(GtkWidget *parent)
 {
-    GtkWidget *table, *align;
+    GtkWidget *table;
     gint i;
 
     table = gtk_table_new(7, 1, FALSE);
@@ -212,21 +249,40 @@ gwy_module_browser_info_table(GtkWidget *parent)
     attach_info_line(table, i++, _("Copyright:"), parent, "copy");
     attach_info_line(table, i++, _("Date:"), parent, "date");
     attach_info_line(table, i++, _("Description:"), parent, "desc");
+    gtk_widget_show_all(table);
 
-    align = gtk_alignment_new(0.0, 0.5, 0.0, 0.0);
-    gtk_container_add(GTK_CONTAINER(align), table);
+    return table;
+}
 
-    return align;
+static GtkWidget*
+gwy_module_browser_failure_table(GtkWidget *parent)
+{
+    GtkWidget *table;
+    gint i;
+
+    table = gtk_table_new(3, 1, FALSE);
+    gtk_table_set_row_spacings(GTK_TABLE(table), 2);
+    gtk_table_set_col_spacings(GTK_TABLE(table), 6);
+    gtk_container_set_border_width(GTK_CONTAINER(table), 8);
+    i = 0;
+    attach_info_line(table, i++, _("Name:"), parent, "fail-name");
+    attach_info_line(table, i++, _("File:"), parent, "fail-file");
+    attach_info_line(table, i++, _("Failure:"), parent, "failure");
+    gtk_widget_show_all(table);
+
+    return table;
 }
 
 static void
 update_module_info_cb(GtkWidget *tree,
                       GtkWidget *parent)
 {
+    GtkWidget *failed_widget, *module_widget;
     GtkLabel *label;
     GtkTreeModel *store;
     GtkTreeSelection *selection;
     const GwyModuleInfo *mod_info;
+    const _GwyModuleFailureInfo *fail_info;
     const gchar *name;
     gboolean failed;
     GtkTreeIter iter;
@@ -241,9 +297,33 @@ update_module_info_cb(GtkWidget *tree,
 
     gtk_tree_model_get(GTK_TREE_MODEL(store), &iter,
                        MODEL_NAME, &name,
+                       /* We do not actually access the other one */
                        MODEL_INFO, &mod_info,
+                       MODEL_INFO, &fail_info,
                        MODEL_FAILED, &failed,
                        -1);
+
+    module_widget = g_object_get_data(G_OBJECT(parent), "mod-info");
+    failed_widget = g_object_get_data(G_OBJECT(parent), "fail-info");
+    if (failed) {
+        gtk_widget_hide(module_widget);
+        gtk_widget_show(failed_widget);
+
+        label = GTK_LABEL(g_object_get_data(G_OBJECT(parent), "fail-name"));
+        gtk_label_set_text(label, name);
+
+        label = GTK_LABEL(g_object_get_data(G_OBJECT(parent), "fail-file"));
+        gtk_label_set_text(label, fail_info->filename);
+
+        label = GTK_LABEL(g_object_get_data(G_OBJECT(parent), "failure"));
+        gtk_label_set_text(label, fail_info->message);
+
+        return;
+    }
+
+    gtk_widget_hide(failed_widget);
+    gtk_widget_show(module_widget);
+
     label = GTK_LABEL(g_object_get_data(G_OBJECT(parent), "name-version"));
     s = g_strconcat(name, "-", mod_info->version, NULL);
     gtk_label_set_text(label, s);
@@ -294,7 +374,9 @@ attach_info_line(GtkWidget *table,
     GtkWidget *label;
     gboolean multiline;
 
-    multiline = gwy_strequal(key, "desc") || gwy_strequal(key, "funcs");
+    multiline = (gwy_strequal(key, "desc")
+                 || gwy_strequal(key, "funcs")
+                 || gwy_strequal(key, "failure"));
     label = gtk_label_new(name);
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, multiline ? 0.0 : 0.5);
     gtk_table_attach_defaults(GTK_TABLE(table), label, 0, 1, row, row+1);
