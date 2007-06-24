@@ -1584,8 +1584,8 @@ gwy_nlfit_preset_get_nparams(GwyNLFitPreset* preset)
  * Performs initial parameter estimate for a NL fitter.
  *
  * The initial estimate method depends on the function used.  There is no
- * absolute guarantee of quality, however if the data point approximately match
- * the fitted function the fit would typically converge from the returned
+ * absolute guarantee of quality, however if the data points approximately
+ * match the fitted function the fit will typically converge from the returned
  * estimate.
  **/
 void
@@ -1719,8 +1719,67 @@ gwy_nlfit_presets(void)
 /**
  * SECTION:gwynlfitpreset
  * @title: GwyNLFitPreset
- * @short_description: NL fitter presets
+ * @short_description: NL fitter preset functions
  * @see_also: #GwyNLFitter
+ *
+ * <link linkend="GwyNLFitter">Non-linear fitter</link> presets are predefined
+ * fitting functions, with guessing, weighting, etc. to ease fitting of
+ * common functions.  Most of those currently implemented are related to
+ * one-dimensional statistical characteristics of randomly rough surfaces,
+ * however, several general-purpose fitting functions are also available.
+ *
+ * The presets are identified by name and can be obtained from the
+ * corresponding #GwyInventory, see gwy_nlfit_presets().  All their properties
+ * can be queried with methods such as gwy_nlfit_preset_get_nparams() or
+ * gwy_nlfit_preset_get_formula().  A generic method to derive units of
+ * fitting parameters from units of fitted data is also available:
+ * gwy_nlfit_preset_get_param_units().
+ *
+ * As of version 2.7 the defined functions include:
+ * <simplelist type='vert'>
+ * <member><literal>"Gaussian"</literal></member>
+ * <member><literal>"Gaussian (PSDF)"</literal></member>
+ * <member><literal>"Gaussian (ACF)"</literal></member>
+ * <member><literal>"Gaussian (HHCF)"</literal></member>
+ * <member><literal>"Gaussian (RPSDF)"</literal></member>
+ * <member><literal>"Exponential"</literal></member>
+ * <member><literal>"Exponential (PSDF)"</literal></member>
+ * <member><literal>"Exponential (ACF)"</literal></member>
+ * <member><literal>"Exponential (HHCF)"</literal></member>
+ * <member><literal>"Exponential (RPSDF)"</literal></member>
+ * <member><literal>"Polynomial (order 0)"</literal></member>
+ * <member><literal>"Polynomial (order 1)"</literal></member>
+ * <member><literal>"Polynomial (order 2)"</literal></member>
+ * <member><literal>"Polynomial (order 3)"</literal></member>
+ * <member><literal>"Square wave"</literal></member>
+ * <member><literal>"Power"</literal></member>
+ * <member><literal>"Lorentzian"</literal></member>
+ * <member><literal>"Sinc"</literal></member>
+ * </simplelist>
+ *
+ * The result of the fitting is stored in a normal #GwyNLFitter, therefore the
+ * typical use is:
+ *
+ * |[
+ * GwyNLFitPreset *preset;
+ * GwyNLFitter *fitter;
+ * gdouble *params, *errors;
+ *
+ * preset = gwy_inventory_get_item(gwy_nlfit_presets(), "Gaussian");
+ * params = g_new(gdouble, gwy_nlfit_preset_get_nparams(preset));
+ * errors = g_new(gdouble, gwy_nlfit_preset_get_nparams(preset));
+ * /&ast; Use a priori parameter value information, or: &ast;/
+ * gwy_nlfit_preset_guess(preset, ndata, xdata, ydata, params, &ok);
+ * fitter = gwy_nlfit_preset_fit(preset, NULL,
+ *                               ndata, xdata, ydata, params, 
+ *                               params, errors, NULL);
+ *
+ * /&ast; Examine fitting status, parameters and errors... &ast;/
+ *
+ * g_free(params);
+ * g_free(errors);
+ * gwy_math_nlfit_free(fitter);
+ * ]|
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
