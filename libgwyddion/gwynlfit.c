@@ -56,9 +56,9 @@ static gboolean gwy_math_sym_matrix_invert(gint n,
 /**
  * gwy_math_nlfit_new:
  * @ff: The fitted function.
- * @df: The derivation of fitted function. You can use gwy_math_nlfit_derive()
- *      computing the derivation numerically, when you don't know the
- *      derivation explicitely.
+ * @df: The derivative of fitted function. You can use gwy_math_nlfit_derive()
+ *      computing the derivative numerically, when you don't know the
+ *      derivative explicitely.
  *
  * Creates a new Marquardt-Levenberg nonlinear fitter for function @ff.
  *
@@ -107,7 +107,7 @@ gwy_math_nlfit_free(GwyNLFitter *nlfit)
  * @n_param: The nuber of parameters.
  * @param: Array of parameters (of size @n_param).  Note the parameters must
  *         be initialized to reasonably near values.
- * @user_data: Any pointer that will be passed to the function and derivation
+ * @user_data: Any pointer that will be passed to the function and derivative
  *             as @user_data.
  *
  * Performs a nonlinear fit of @nlfit function on (@x,@y) data.
@@ -146,7 +146,7 @@ gwy_math_nlfit_fit(GwyNLFitter *nlfit,
  *            parameter for each parameter (for independent parameters set
  *            @link_map[i] == i).   May be %NULL if all parameter are
  *            independent.
- * @user_data: Any pointer that will be passed to the function and derivation
+ * @user_data: Any pointer that will be passed to the function and derivative
  *
  * Performs a nonlinear fit of @nlfit function on (@x,@y) data, allowing
  * some fixed parameters.
@@ -294,7 +294,7 @@ gwy_math_nlfit_fit_full(GwyNLFitter *nlfit,
                 if (!nlfit->eval)
                     break;
 
-                /* acummulate derivations by slave parameters in master */
+                /* acummulate derivatives by slave parameters in master */
                 for (j = 0; j < n_param; j++) {
                     if (link_map[j] != j)
                         der[link_map[j]] += der[j];
@@ -443,7 +443,7 @@ gwy_math_nlfit_fit_full(GwyNLFitter *nlfit,
 
 /**
  * gwy_math_nlfit_derive:
- * @x: The value to compute the derivation at.
+ * @x: The value to compute the derivative at.
  * @n_param: The nuber of parameters.
  * @param: Array of parameters (of size @n_param).
  * @fixed_param: Which parameters should be treated as fixed (corresponding
@@ -453,7 +453,7 @@ gwy_math_nlfit_fit_full(GwyNLFitter *nlfit,
  * @deriv: Array where the put the result to.
  * @dres: Set to %TRUE if succeeds, %FALSE on failure.
  *
- * Numerically computes the partial derivations of @ff
+ * Numerically computes the partial derivative of a fitting function.
  **/
 void
 gwy_math_nlfit_derive(gdouble x,
@@ -693,14 +693,14 @@ gwy_math_sym_matrix_invert(gint n, gdouble *a)
  *
  * A new Marquardt-Levenberg nonlinear least square fitter can be created with
  * gwy_math_nlfit_new(), specifying the function to fit (as #GwyNLFitFunc) and
- * its derivation (as #GwyNLFitDerFunc). For functions for whose analytic
- * derivation is not available or very impractical, gwy_math_nlfit_derive()
- * (computing the derivation numerically) can be used instead.
+ * its derivative (as #GwyNLFitDerFunc). For functions for whose analytic
+ * derivative is not available or very impractical, gwy_math_nlfit_derive()
+ * (computing the derivative numerically) can be used instead.
  *
  * A fitter can be then repeatedly used on different data either in
- * gwy_math_nlfit_fit(), or gwy_math_nlfit_fit_with_fixed() when there are some
- * fixed parameters. Arbitrary additional (non-fitting) parameters can be
- * passed to the fited function in <parameter>user_data</parameter>.
+ * gwy_math_nlfit_fit(), or gwy_math_nlfit_fit_full() when there are some
+ * fixed or linked parameters.  Arbitrary additional (non-fitting) parameters
+ * can be passed to the fited function in @user_data.
  *
  * After a successfull fit additional fit information can be obtained with
  * gwy_math_nlfit_get_dispersion(), gwy_math_nlfit_get_correlations(),
@@ -709,12 +709,7 @@ gwy_math_sym_matrix_invert(gint n, gdouble *a)
  * gwy_math_nlfit_free().
  *
  * Several common functions are also available as fitting presets that can be
- * fitted with gwy_math_nlfit_fit_preset(). Each one can be identified by a
- * unique name or a numeric id (the latter one may however change between
- * releases) the number of presets can be obtained with
- * gwy_math_nlfit_get_npresets(). Preset properties can be obtained with
- * functions like gwy_math_nlfit_get_preset_nparams() or
- * gwy_math_nlfit_get_preset_formula().
+ * fitted with gwy_nlfit_preset_fit().  See #GwyNLFitPreset for details.
  **/
 
 /**
@@ -737,13 +732,13 @@ gwy_math_sym_matrix_invert(gint n, gdouble *a)
  * @param: Parameters.
  * @fixed_param: Which parameters should be treated as fixed (corresponding
  *               entries are set to %TRUE).
- * @deriv: Array where the @n_param partial derivations by each parameter are
+ * @deriv: Array where the @n_param partial derivatives by each parameter are
  *         to be stored.
  * @fmarq: The fitting function.
  * @user_data: User data as passed to gwy_math_nlfit_fit().
  * @dres: Set to %TRUE if succeeds, %FALSE on failure.
  *
- * Fitting function partial derivation type.
+ * Fitting function partial derivative type.
  */
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
