@@ -80,6 +80,7 @@ gdouble         gwy_math_nlfit_fit_full          (GwyNLFitter *nlfit,
 gint            gwy_math_nlfit_get_max_iterations(GwyNLFitter *nlfit);
 void            gwy_math_nlfit_set_max_iterations(GwyNLFitter *nlfit,
                                                   gint maxiter);
+gboolean        gwy_math_nlfit_succeeded         (GwyNLFitter *nlfit);
 gdouble         gwy_math_nlfit_get_dispersion    (GwyNLFitter *nlfit);
 gdouble         gwy_math_nlfit_get_correlations  (GwyNLFitter *nlfit,
                                                   gint par1,
