@@ -1,4 +1,3 @@
-2.5.20070624
 
 2.7 (0000-00-00)
 Application:
@@ -79,6 +78,7 @@ Modules:
 - Pixmap export: Text size can be set independently, zoom can be specified by
   desired width and height, cases of wrong preview scaling were fixed.
 - Edge: New Step step detection function.
+- 2D FFT: The rectangular images limitation was removed.
 - Omicron: Imports single point spectra.
 - PSIA: It does not require libTIFF any more, crashes due to PSIA files not
   being proper TIFF files were fixed.
