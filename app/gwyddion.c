@@ -446,7 +446,8 @@ gwy_app_init(int *argc,
              char ***argv)
 {
     gwy_widgets_type_init();
-    g_log_set_always_fatal(G_LOG_LEVEL_CRITICAL);
+    if (sizeof(GWY_VERSION_STRING) > 9)
+        g_log_set_always_fatal(G_LOG_LEVEL_CRITICAL);
     g_set_application_name(PACKAGE_NAME);
     gwy_app_gl_init(argc, argv);
     /* XXX: These reference are never released. */
