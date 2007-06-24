@@ -102,7 +102,7 @@ sed -i -e '1s/env *//' plugins/process/*.{py,rb,pl}
 
 
 %build
-%configure --disable-pascal --disable-desktop-file-update
+%configure --disable-pascal --disable-desktop-file-update --disable-pygwy
 make %{?_smp_mflags}
 
 
