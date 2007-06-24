@@ -48,8 +48,17 @@ struct _GwySpectra {
     GwySIUnit   *si_unit_xy;
 
     gdouble     double1;
+    gdouble     double2;
+    gdouble     double3;
+    gdouble     double4;
     gpointer    reserved1;
+    gpointer    reserved2;
+    gpointer    reserved3;
+    gpointer    reserved4;
     gint        int1;
+    gint        int2;
+    gint        int3;
+    gint        int4;
 };
 
 struct _GwySpectraClass {
@@ -57,6 +66,8 @@ struct _GwySpectraClass {
 
     void (*data_changed)(GwySpectra *spectra);
     void (*reserved1)(void);
+    void (*reserved2)(void);
+    void (*reserved3)(void);
 };
 
 #define gwy_spectra_duplicate(spectra) \
