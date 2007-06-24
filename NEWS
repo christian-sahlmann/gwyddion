@@ -1,6 +1,6 @@
-2.5.20070623
+2.5.20070624
 
-2.6 (0000-00-00)
+2.7 (0000-00-00)
 Application:
 - Metadata browser:  It is possibile to save the metadata.
 - Infinite startup notification after remote file opening was fixed.
@@ -57,6 +57,8 @@ Libraries:
 - libgwyprocess: DataField cache is not serialized any more and serialized
   caches are ignored on deserialization.
 - libgwyprocess: New methods to calculate 2D autocorrelation function.
+- libgwymodule: Module browser displays also modules that failed to load,
+  with the failure reason.
 
 Modules:
 - Path level tool (new): Levels rows along arbitrary lines.
