@@ -17,7 +17,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
-
+#define DEBUG 1
 #include "config.h"
 #include <gtk/gtkmain.h>
 #include <gtk/gtksignal.h>
@@ -648,6 +648,16 @@ gwy_data_view_expose(GtkWidget *widget,
 
     if (!data_view->xres || !data_view->yres)
         return FALSE;
+
+    /* This means we requested new size, but received no allocation -- because
+     * the new size was identical to the old one.  BUT we had a reason for
+     * that.  Typically this happens after a rotation of realsquare-displayed
+     * data: the new widget size is the same, but the the stretched dimension
+     * is now the other one and thus pixmap sizes have to be recalculated. */
+    if (data_view->size_requested) {
+        gwy_data_view_make_pixmap(data_view);
+        data_view->size_requested = FALSE;
+    }
 
     gdk_region_get_clipbox(event->region, &rect);
     gwy_debug("bbox = %dx%d  at (%d,%d)",
