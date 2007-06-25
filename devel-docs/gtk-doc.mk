@@ -87,7 +87,7 @@ scan-build.stamp: $(HFILE_GLOB) $(CFILE_GLOB) ${top_srcdir}/devel-docs/add-objec
 	    done \
 	fi
 	if test -s $(srcdir)/$(DOC_MODULE).hierarchy; then \
-	    $(PYTHON) $(top_srcdir)/devel-docs/add-objects.py $(srcdir)/$(DOC_MODULE)-sections.txt $(srcdir)/$(DOC_MODULE).hierarchy; \
+	    $(PYTHON) $(top_srcdir)/devel-docs/add-objects.py $(srcdir)/$(DOC_MODULE)-sections.txt $(srcdir)/$(DOC_MODULE).hierarchy $(ADDOBJECTS_OPTIONS); \
 	fi
 	touch scan-build.stamp
 

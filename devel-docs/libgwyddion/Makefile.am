@@ -22,6 +22,9 @@ DOC_SOURCE_DIR = ${top_srcdir}/$(DOC_DIRNAME)
 # Extra options to pass to gtkdoc-scangobj. Not normally needed.
 SCANGOBJ_OPTIONS =
 
+# Extra options to pass to add-objects.py
+ADDOBJECTS_OPTIONS = --standard-files=gwyddiontypes
+
 # Extra options to supply to gtkdoc-scan.
 # e.g. SCAN_OPTIONS=--deprecated-guards="GTK_DISABLE_DEPRECATED" 
 SCAN_OPTIONS =
