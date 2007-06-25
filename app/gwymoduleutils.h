@@ -18,10 +18,11 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-#ifndef __GWY_MODULEUTILS_H__
-#define __GWY_MODULEUTILS_H__
+#ifndef __GWY_MODULE_UTILS_H__
+#define __GWY_MODULE_UTILS_H__
 
 #include <gtk/gtkwindow.h>
+#include <libgwydgets/gwydataview.h>
 
 G_BEGIN_DECLS
 
@@ -43,8 +44,12 @@ gwy_save_auxiliary_with_callback(const gchar *title,
                                  GwySaveAuxiliaryDestroy destroy,
                                  gpointer user_data);
 
+void
+gwy_set_data_preview_size(GwyDataView *data_view,
+                          gint max_size);
+
 G_END_DECLS
 
-#endif /* __GWY_MODULEUTILS_H__ */
+#endif /* __GWY_MODULE_UTILS_H__ */
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
