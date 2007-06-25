@@ -11,7 +11,8 @@ libgwymodule2include_HEADERS = \
 	gwymodule-tool.h \
 	gwymodulebrowser.h \
 	gwymoduleenums.h \
-	gwymoduleloader.h
+	gwymoduleloader.h \
+	gwymoduletypes.h
 
 noinst_HEADERS = \
 	gwymoduleinternal.h
@@ -51,7 +52,8 @@ libgwymodule2_la_SOURCES = \
 	gwymodule-process.c \
 	gwymodule-tool.c \
 	gwymodulebrowser.c \
-	gwymoduleloader.c
+	gwymoduleloader.c \
+	gwymoduletypes.c
 
 clean-local:
 	rm -f core.* *~
