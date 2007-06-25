@@ -33,6 +33,7 @@
 #include <libgwydgets/gwycombobox.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <libgwymodule/gwymodule-process.h>
+#include <app/gwymoduleutils.h>
 #include <app/gwyapp.h>
 
 #define FFTF_1D_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
@@ -53,13 +54,6 @@ enum {
 };
 
 typedef struct {
-    /*
-    GwyContainer *data;
-    GwyContainer *original;
-    GwyContainer *result;
-    GwyContainer *original_vdata;
-    GwyContainer *result_vdata;
-    */
     GwyFftf1dSuppressType suppress;
     GwyFftf1dViewType view_type;
     GwyInterpolationType interpolation;
@@ -192,8 +186,9 @@ fftf_1d_dialog(Fftf1dArgs *args,
     GwyGraphArea *area;
     GwySelection *selection;
     GwyPixmapLayer *layer;
-    gdouble zoomval;
+    GQuark quark;
     gint response, row;
+    gchar *key;
 
     dialog = gtk_dialog_new_with_buttons(_("1D FFT filter"), NULL, 0, NULL);
     gtk_dialog_add_action_widget(GTK_DIALOG(dialog),
@@ -225,6 +220,7 @@ fftf_1d_dialog(Fftf1dArgs *args,
     gwy_app_sync_data_items(data, controls.result_data, id, 0, FALSE,
                             GWY_DATA_ITEM_GRADIENT,
                             GWY_DATA_ITEM_RANGE,
+                            GWY_DATA_ITEM_REAL_SQUARE,
                             0);
     g_object_unref(result_field);
 
@@ -234,15 +230,16 @@ fftf_1d_dialog(Fftf1dArgs *args,
     /*set up rescaled image of the surface*/
     controls.view_original = gwy_data_view_new(controls.original_data);
     layer = gwy_layer_basic_new();
-    gwy_pixmap_layer_set_data_key(layer, g_quark_to_string(gwy_app_get_data_key_for_id(id)));
-    gwy_layer_basic_set_gradient_key(GWY_LAYER_BASIC(layer), "/0/base/palette");
+    quark = gwy_app_get_data_key_for_id(id);
+    gwy_pixmap_layer_set_data_key(layer, g_quark_to_string(quark));
+    key = g_strdup_printf("/%d/base/palette", id);
+    gwy_layer_basic_set_gradient_key(GWY_LAYER_BASIC(layer), key);
+    g_free(key);
     gwy_data_view_set_data_prefix(GWY_DATA_VIEW(controls.view_original),
-                                  "/0/data");
+                                  g_quark_to_string(quark));
     gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view_original), layer);
-    zoomval = PREVIEW_SIZE/(gdouble)MAX(gwy_data_field_get_xres(dfield),
-                            gwy_data_field_get_yres(dfield));
-    gwy_data_view_set_zoom(GWY_DATA_VIEW(controls.view_original), zoomval);
-
+    gwy_set_data_preview_size(GWY_DATA_VIEW(controls.view_original),
+                              PREVIEW_SIZE);
 
     /*set up fit controls*/
     gtk_box_pack_start(GTK_BOX(vbox), controls.view_original, FALSE, FALSE, 4);
@@ -255,8 +252,8 @@ fftf_1d_dialog(Fftf1dArgs *args,
     gwy_data_view_set_data_prefix(GWY_DATA_VIEW(controls.view_result),
                                   "/0/data");
     gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view_result), layer);
-    gwy_data_view_set_zoom(GWY_DATA_VIEW(controls.view_result), zoomval);
-
+    gwy_set_data_preview_size(GWY_DATA_VIEW(controls.view_result),
+                              PREVIEW_SIZE);
 
     gtk_box_pack_start(GTK_BOX(vbox), controls.view_result, FALSE, FALSE, 4);
     gtk_box_pack_start(GTK_BOX(hbox), vbox, FALSE, FALSE, 4);
@@ -390,9 +387,7 @@ update_view(Fftf1dControls *controls,
     GwyDataField *rfield;
 
     gwy_debug("args->update = %d", args->update);
-    rfield
-        = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->result_data,
-                                                          "/0/data"));
+    rfield = gwy_container_get_object_by_name(controls->result_data, "/0/data");
     gwy_data_field_fft_filter_1d(controls->original_field, rfield,
                                  controls->weights, args->direction,
                                  args->interpolation);
@@ -421,7 +416,6 @@ restore_ps(Fftf1dControls *controls, Fftf1dArgs *args)
     gwy_data_line_resample(dline, MAX_PREV, args->interpolation);
 
     gwy_data_line_multiply(dline, 1.0/gwy_data_line_get_max(dline));
-
 
     gwy_graph_model_remove_all_curves(controls->gmodel);
 
@@ -485,7 +479,8 @@ graph_selected(GwySelection* selection,
                     gwy_data_line_part_fill(controls->weights,
                                             fill_from, fill_to, 0.3);
             }
-            if (controls->args->update) update_view(controls, controls->args);
+            if (controls->args->update)
+                update_view(controls, controls->args);
         }
         if (controls->args->view_type == GWY_FFTF_1D_VIEW_MARKED) {
             gwy_data_line_fill(controls->weights, 0);
@@ -525,13 +520,9 @@ fftf_1d_do(Fftf1dControls *controls)
     GwyDataField *rfield;
     gint newid;
 
-    rfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->result_data,
-                            "/0/data"));
-    newid = gwy_app_data_browser_add_data_field(rfield, controls->original_data, TRUE);
-    gwy_app_sync_data_items(controls->result_data, controls->original_data,
-                            0, newid,
-                            GWY_DATA_ITEM_GRADIENT,
-                            0);
+    rfield = gwy_container_get_object_by_name(controls->result_data, "/0/data");
+    newid = gwy_app_data_browser_add_data_field(rfield, controls->original_data,
+                                                TRUE);
     gwy_app_set_data_field_title(controls->original_data, newid,
                                  _("1D FFT Filtered Data"));
 }

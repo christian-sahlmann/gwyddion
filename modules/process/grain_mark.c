@@ -30,6 +30,7 @@
 #include <libgwydgets/gwydgetutils.h>
 #include <libgwydgets/gwystock.h>
 #include <libgwymodule/gwymodule-process.h>
+#include <app/gwymoduleutils.h>
 #include <app/gwyapp.h>
 
 #define MARK_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
@@ -239,7 +240,6 @@ mark_dialog(MarkArgs *args,
     GtkWidget *dialog, *table, *hbox;
     MarkControls controls;
     gint response;
-    gdouble zoomval;
     GwyPixmapLayer *layer;
     GwyDataField *mfield;
     gint row;
@@ -286,9 +286,7 @@ mark_dialog(MarkArgs *args,
                  NULL);
     gwy_data_view_set_data_prefix(GWY_DATA_VIEW(controls.view), "/0/data");
     gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view), layer);
-    zoomval = PREVIEW_SIZE/(gdouble)MAX(gwy_data_field_get_xres(dfield),
-                                        gwy_data_field_get_yres(dfield));
-    gwy_data_view_set_zoom(GWY_DATA_VIEW(controls.view), zoomval);
+    gwy_set_data_preview_size(GWY_DATA_VIEW(controls.view), PREVIEW_SIZE);
 
     gtk_box_pack_start(GTK_BOX(hbox), controls.view, FALSE, FALSE, 4);
 

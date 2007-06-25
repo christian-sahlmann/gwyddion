@@ -253,6 +253,9 @@ run_main(GwyContainer *data, GwyRunType run)
     /* Setup the mydata container */
     controls.mydata = gwy_container_new();
     gwy_container_set_object_by_name(controls.mydata, "/0/data", fft);
+    gwy_app_sync_data_items(data, controls.mydata, id, 0, FALSE,
+                            GWY_DATA_ITEM_REAL_SQUARE,
+                            0);
     g_object_unref(fft);
     gwy_container_set_string_by_name(controls.mydata,
                                      "/0/base/palette",

@@ -30,6 +30,7 @@
 #include <libgwydgets/gwydgetutils.h>
 #include <libgwydgets/gwycombobox.h>
 #include <libgwymodule/gwymodule-process.h>
+#include <app/gwymoduleutils.h>
 #include <app/gwyapp.h>
 
 #define REMOVE_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
@@ -197,7 +198,6 @@ remove_dialog(RemoveArgs *args,
     GtkWidget *dialog, *table, *spin, *hbox;
     RemoveControls controls;
     gint response;
-    gdouble zoomval;
     GwyPixmapLayer *layer;
     GwyDataField *mfield2;
     gint row;
@@ -252,9 +252,7 @@ remove_dialog(RemoveArgs *args,
     gwy_pixmap_layer_set_data_key(layer, "/0/mask");
     gwy_layer_mask_set_color_key(GWY_LAYER_MASK(layer), "/0/mask");
     gwy_data_view_set_alpha_layer(GWY_DATA_VIEW(controls.view), layer);
-    zoomval = PREVIEW_SIZE/(gdouble)MAX(gwy_data_field_get_xres(dfield),
-                                        gwy_data_field_get_yres(dfield));
-    gwy_data_view_set_zoom(GWY_DATA_VIEW(controls.view), zoomval);
+    gwy_set_data_preview_size(GWY_DATA_VIEW(controls.view), PREVIEW_SIZE);
 
     gtk_box_pack_start(GTK_BOX(hbox), controls.view, FALSE, FALSE, 4);
 

@@ -34,6 +34,7 @@
 #include <libgwydgets/gwylayer-mask.h>
 #include <libgwydgets/gwycombobox.h>
 #include <libgwydgets/gwystock.h>
+#include <app/gwymoduleutils.h>
 #include <app/gwyapp.h>
 
 #define DRIFT_RUN_MODES (GWY_RUN_INTERACTIVE | GWY_RUN_IMMEDIATE)
@@ -207,7 +208,6 @@ drift_dialog(DriftArgs *args,
     GtkWidget *dialog, *table, *hbox, *spin, *label;
     DriftControls controls;
     gint response;
-    gdouble zoomval;
     GwyPixmapLayer *layer;
     gint row;
 
@@ -243,9 +243,6 @@ drift_dialog(DriftArgs *args,
                             0);
     controls.view = gwy_data_view_new(controls.mydata);
     g_object_unref(controls.mydata);
-    zoomval = PREVIEW_SIZE/(gdouble)MAX(gwy_data_field_get_xres(dfield),
-                                        gwy_data_field_get_yres(dfield));
-    gwy_data_view_set_zoom(GWY_DATA_VIEW(controls.view), zoomval);
 
     layer = gwy_layer_basic_new();
     g_object_set(layer,
@@ -256,6 +253,7 @@ drift_dialog(DriftArgs *args,
                  NULL);
     gwy_data_view_set_data_prefix(GWY_DATA_VIEW(controls.view), "/0/data");
     gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view), layer);
+    gwy_set_data_preview_size(GWY_DATA_VIEW(controls.view), PREVIEW_SIZE);
 
     layer = gwy_layer_mask_new();
     gwy_pixmap_layer_set_data_key(layer, "/0/mask");

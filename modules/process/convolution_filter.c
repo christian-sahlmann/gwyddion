@@ -35,6 +35,7 @@
 #include <libgwydgets/gwyradiobuttons.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <libgwymodule/gwymodule-process.h>
+#include <app/gwymoduleutils.h>
 #include <app/gwyapp.h>
 #include "convolutionfilterpreset.h"
 
@@ -230,7 +231,6 @@ convolution_filter_dialog(ConvolutionArgs *args,
     GwyPixmapLayer *layer;
     GtkWidget *dialog, *hbox, *vbox, *notebook, *label;
     GtkWidget *align;
-    gdouble zoomval;
     gint response;
 
     controls.args = args;
@@ -271,9 +271,7 @@ convolution_filter_dialog(ConvolutionArgs *args,
     gwy_layer_basic_set_gradient_key(GWY_LAYER_BASIC(layer), "/0/base/palette");
     gwy_data_view_set_data_prefix(GWY_DATA_VIEW(controls.view), "/0/data");
     gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view), layer);
-    zoomval = PREVIEW_SIZE/(gdouble)MAX(gwy_data_field_get_xres(dfield),
-                                        gwy_data_field_get_yres(dfield));
-    gwy_data_view_set_zoom(GWY_DATA_VIEW(controls.view), zoomval);
+    gwy_set_data_preview_size(GWY_DATA_VIEW(controls.view), PREVIEW_SIZE);
     gtk_container_add(GTK_CONTAINER(align), controls.view);
 
     notebook = gtk_notebook_new();

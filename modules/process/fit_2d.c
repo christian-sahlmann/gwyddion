@@ -170,7 +170,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("2D fitting"),
     "Petr Klapetek <petr@klapetek.cz>",
-    "1.3",
+    "1.4",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -222,7 +222,6 @@ fit_2d_dialog(Fit2DArgs *args,
 {
     GtkWidget *dialog, *table, *hbox, *vbox, *hbox2, *alignment;
     Fit2DControls controls;
-    gdouble zoomval;
     enum {
         RESPONSE_FIT = 1,
         RESPONSE_INITS = 2,
@@ -270,9 +269,7 @@ fit_2d_dialog(Fit2DArgs *args,
     gwy_pixmap_layer_set_data_key(layer, "/0/data");
     gwy_layer_basic_set_gradient_key(GWY_LAYER_BASIC(layer), "/0/base/palette");
     gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view), layer);
-    zoomval = PREVIEW_SIZE/(gdouble)MAX(gwy_data_field_get_xres(dfield),
-                                        gwy_data_field_get_yres(dfield));
-    gwy_data_view_set_zoom(GWY_DATA_VIEW(controls.view), zoomval);
+    gwy_set_data_preview_size(GWY_DATA_VIEW(controls.view), PREVIEW_SIZE);
 
     alignment = GTK_WIDGET(gtk_alignment_new(0.5, 0, 0, 0));
     gtk_container_add(GTK_CONTAINER(alignment), controls.view);
