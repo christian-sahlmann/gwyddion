@@ -146,29 +146,4 @@ _gwy_tool_func_remove(const gchar *name)
  * Information about one tool use function.
  **/
 
-/**
- * GwyToolUseFunc:
- * @data_window: A data window the tool should be set for.
- * @event: The tool change event.
- *
- * The type of tool use function.
- *
- * This function is called to set a tool for a data window, either when
- * the user changes the active tool or switches to another window; the
- * detailed event is given in event.
- *
- * Returns: Whether the tool switch succeeded.  Under normal circumstances
- *          it should always return %TRUE.
- **/
-
-/**
- * GwyToolSwitchEvent:
- * @GWY_TOOL_SWITCH_WINDOW: The tool should be set for the data window
- *                          because the user switched windows.
- * @GWY_TOOL_SWITCH_TOOL: The tool should be set for the data window
- *                        because the user switched tools.
- *
- * Tool switch events.
- **/
-
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

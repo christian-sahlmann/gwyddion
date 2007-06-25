@@ -33,11 +33,12 @@ typedef enum {
     GWY_FILE_OPERATION_MASK   = 0x0f
 } GwyFileOperationType;
 
-/* FIXME: remove, more detailed interface needed */
+#ifndef GWY_DISABLE_DEPRECATED
 typedef enum {
     GWY_TOOL_SWITCH_WINDOW = 1,
     GWY_TOOL_SWITCH_TOOL
 } GwyToolSwitchEvent;
+#endif
 
 typedef enum {
     GWY_RUN_NONE           = 0,
