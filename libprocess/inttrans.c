@@ -1986,6 +1986,34 @@ gwy_data_field_cwt(GwyDataField *data_field,
     gwy_data_field_invalidate(data_field);
 }
 
+static void
+flip_xy(GwyDataField *source, GwyDataField *dest, gboolean minor)
+{
+    gint xres, yres, i, j;
+    gdouble *dd;
+    const gdouble *sd;
+
+    xres = gwy_data_field_get_xres(source);
+    yres = gwy_data_field_get_yres(source);
+    gwy_data_field_resample(dest, yres, xres, GWY_INTERPOLATION_NONE);
+    sd = gwy_data_field_get_data_const(source);
+    dd = gwy_data_field_get_data(dest);
+    if (minor) {
+        for (i = 0; i < xres; i++) {
+            for (j = 0; j < yres; j++) {
+                dd[i*yres + j] = sd[j*xres + (xres - 1 - i)];
+            }
+        }
+    }
+    else {
+        for (i = 0; i < xres; i++) {
+            for (j = 0; j < yres; j++) {
+                dd[i*yres + (yres - 1 - j)] = sd[j*xres + i];
+            }
+        }
+    }
+}
+
 /**
  * gwy_data_field_fft_filter_1d:
  * @data_field: A data field to filter.
@@ -2008,18 +2036,25 @@ gwy_data_field_fft_filter_1d(GwyDataField *data_field,
 {
     GwyDataField *buffer, *iresult_field, *hlp_rdfield, *hlp_idfield;
     GwyDataLine *w;
-    gint i, j, size, yres;
+    gint i, j, size, xres, yres;
+
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    g_return_if_fail(GWY_IS_DATA_FIELD(result_field));
+    g_return_if_fail(GWY_IS_DATA_LINE(weights));
 
     buffer = gwy_data_field_new_alike(data_field, FALSE);
-    gwy_data_field_copy(data_field, buffer, FALSE);
+    gwy_data_field_resample(result_field, data_field->xres, data_field->yres,
+                            GWY_INTERPOLATION_NONE);
 
     if (orientation == GWY_ORIENTATION_VERTICAL)
-        gwy_data_field_rotate(buffer, G_PI/2, interpolation);
+        flip_xy(data_field, buffer, FALSE);
+    else
+        gwy_data_field_copy(data_field, buffer, FALSE);
 
     yres = buffer->yres;
-    size = gwy_fft_find_nice_size(gwy_data_field_get_xres(buffer));
+    xres = buffer->xres;
+    size = gwy_fft_find_nice_size(xres);
     gwy_data_field_resample(buffer, size, yres, interpolation);
-    gwy_data_field_resample(result_field, size, yres, GWY_INTERPOLATION_NONE);
 
     hlp_rdfield = gwy_data_field_new_alike(buffer, TRUE);
     hlp_idfield = gwy_data_field_new_alike(buffer, TRUE);
@@ -2049,19 +2084,19 @@ gwy_data_field_fft_filter_1d(GwyDataField *data_field,
     g_object_unref(w);
 
     gwy_data_field_1dfft_raw(hlp_rdfield, hlp_idfield,
-                             result_field, iresult_field,
+                             buffer, iresult_field,
                              GWY_ORIENTATION_HORIZONTAL,
                              GWY_TRANSFORM_DIRECTION_BACKWARD);
-
-    gwy_data_field_resample(result_field, data_field->xres, data_field->yres,
-                            interpolation);
-
-    if (orientation == GWY_ORIENTATION_VERTICAL)
-        gwy_data_field_rotate(result_field, -G_PI/2, interpolation);
-
+    g_object_unref(iresult_field);
     g_object_unref(hlp_rdfield);
     g_object_unref(hlp_idfield);
-    g_object_unref(iresult_field);
+
+    gwy_data_field_resample(buffer, xres, yres, interpolation);
+    if (orientation == GWY_ORIENTATION_VERTICAL)
+        flip_xy(buffer, result_field, TRUE);
+    else
+        gwy_data_field_copy(buffer, result_field, FALSE);
+
     g_object_unref(buffer);
 }
 
