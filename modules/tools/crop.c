@@ -80,7 +80,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Crop tool, crops data to smaller size."),
     "Yeti <yeti@gwyddion.net>",
-    "2.4",
+    "2.5",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -385,6 +385,7 @@ gwy_tool_crop_apply(GwyToolCrop *tool)
                                 GWY_DATA_ITEM_GRADIENT,
                                 GWY_DATA_ITEM_RANGE_TYPE,
                                 GWY_DATA_ITEM_MASK_COLOR,
+                                GWY_DATA_ITEM_REAL_SQUARE,
                                 0);
         gwy_app_set_data_field_title(container, id, _("Detail"));
 
