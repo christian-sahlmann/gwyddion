@@ -275,11 +275,9 @@ create_preview_data(GwyContainer *data,
 
     gwy_app_sync_data_items(data, pdata, id, 0, FALSE,
                             GWY_DATA_ITEM_GRADIENT,
-                            GWY_DATA_ITEM_REAL_SQUARE,
                             0);
     gwy_app_sync_data_items(data, pdata, id, 1, FALSE,
                             GWY_DATA_ITEM_GRADIENT,
-                            GWY_DATA_ITEM_REAL_SQUARE,
                             0);
 
     return pdata;
