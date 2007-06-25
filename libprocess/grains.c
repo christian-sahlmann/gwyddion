@@ -1381,7 +1381,7 @@ gwy_data_field_grains_get_values(GwyDataField *data_field,
         sizes = g_new0(gint, ngrains + 1);
         memset(values, 0, (ngrains + 1)*sizeof(gdouble));
         for (i = 0; i < yres; i++) {
-            for (j = 0; j < yres; j++) {
+            for (j = 0; j < xres; j++) {
                 gint gno = grains[i*xres + j];
 
                 values[gno] += j;
@@ -1398,7 +1398,7 @@ gwy_data_field_grains_get_values(GwyDataField *data_field,
         sizes = g_new0(gint, ngrains + 1);
         memset(values, 0, (ngrains + 1)*sizeof(gdouble));
         for (i = 0; i < yres; i++) {
-            for (j = 0; j < yres; j++) {
+            for (j = 0; j < xres; j++) {
                 gint gno = grains[i*xres + j];
 
                 values[gno] += i;
@@ -1481,7 +1481,7 @@ gwy_data_field_grains_get_values(GwyDataField *data_field,
         tmp = g_new0(gdouble, 8*(ngrains + 1));
         values[0] = 0.0;
         for (i = 0; i < yres; i++) {
-            for (j = 0; j < yres; j++) {
+            for (j = 0; j < xres; j++) {
                 gint gno = grains[i*xres + j];
 
                 if (gno) {
