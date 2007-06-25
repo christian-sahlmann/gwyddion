@@ -108,7 +108,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Subtracts polynomial background."),
     "Yeti <yeti@gwyddion.net>",
-    "2.2",
+    "2.3",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -273,9 +273,13 @@ create_preview_data(GwyContainer *data,
     g_object_unref(pfield);
 
     gwy_app_sync_data_items(data, pdata, id, 0, FALSE,
-                            GWY_DATA_ITEM_GRADIENT, 0);
+                            GWY_DATA_ITEM_GRADIENT,
+                            GWY_DATA_ITEM_REAL_SQUARE,
+                            0);
     gwy_app_sync_data_items(data, pdata, id, 1, FALSE,
-                            GWY_DATA_ITEM_GRADIENT, 0);
+                            GWY_DATA_ITEM_GRADIENT,
+                            GWY_DATA_ITEM_REAL_SQUARE,
+                            0);
 
     return pdata;
 }
@@ -325,6 +329,8 @@ poly_level_dialog(PolyLevelArgs *args,
     layer = gwy_layer_basic_new();
     gwy_pixmap_layer_set_data_key(layer, "/0/data");
     gwy_layer_basic_set_gradient_key(GWY_LAYER_BASIC(layer), "/0/base/palette");
+    gwy_data_view_set_data_prefix(GWY_DATA_VIEW(controls.leveled_view),
+                                  "/0/data");
     gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.leveled_view), layer);
     gtk_table_attach(GTK_TABLE(table), controls.leveled_view,
                      0, 1, row, row+1, 0, 0, 0, 0);
@@ -333,6 +339,7 @@ poly_level_dialog(PolyLevelArgs *args,
     layer = gwy_layer_basic_new();
     gwy_pixmap_layer_set_data_key(layer, "/1/data");
     gwy_layer_basic_set_gradient_key(GWY_LAYER_BASIC(layer), "/1/base/palette");
+    gwy_data_view_set_data_prefix(GWY_DATA_VIEW(controls.bg_view), "/1/data");
     gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.bg_view), layer);
     gtk_table_attach(GTK_TABLE(table), controls.bg_view,
                      1, 2, row, row+1, 0, 0, 0, 0);

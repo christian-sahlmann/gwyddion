@@ -128,7 +128,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Removes grains by thresholding (height, size)."),
     "Petr Klapetek <petr@klapetek.cz>",
-    "1.12",
+    "1.13",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -236,6 +236,7 @@ remove_dialog(RemoveArgs *args,
                             GWY_DATA_ITEM_PALETTE,
                             GWY_DATA_ITEM_MASK_COLOR,
                             GWY_DATA_ITEM_RANGE,
+                            GWY_DATA_ITEM_REAL_SQUARE,
                             0);
     controls.view = gwy_data_view_new(controls.mydata);
     layer = gwy_layer_basic_new();
@@ -245,6 +246,7 @@ remove_dialog(RemoveArgs *args,
                  "range-type-key", "/0/base/range-type",
                  "min-max-key", "/0/base",
                  NULL);
+    gwy_data_view_set_data_prefix(GWY_DATA_VIEW(controls.view), "/0/data");
     gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view), layer);
     layer = gwy_layer_mask_new();
     gwy_pixmap_layer_set_data_key(layer, "/0/mask");

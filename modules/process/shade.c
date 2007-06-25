@@ -96,7 +96,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Creates a shaded presentation of data."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "2.3",
+    "2.4",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -187,7 +187,9 @@ create_preview_data(GwyContainer *data,
     gwy_container_set_object_by_name(pdata, "/0/show", pfield);
     g_object_unref(pfield);
     gwy_app_sync_data_items(data, pdata, id, 0, FALSE,
-                            GWY_DATA_ITEM_GRADIENT, 0);
+                            GWY_DATA_ITEM_GRADIENT,
+                            GWY_DATA_ITEM_REAL_SQUARE,
+                            0);
 
     return pdata;
 }
@@ -276,6 +278,7 @@ shade_dialog(ShadeArgs *args,
     layer = gwy_layer_basic_new();
     gwy_pixmap_layer_set_data_key(layer, "/0/show");
     gwy_layer_basic_set_gradient_key(GWY_LAYER_BASIC(layer), "/0/base/palette");
+    gwy_data_view_set_data_prefix(GWY_DATA_VIEW(controls.data_view), "/0/data");
     gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.data_view), layer);
     gtk_box_pack_start(GTK_BOX(hbox), controls.data_view, FALSE, FALSE, 8);
 

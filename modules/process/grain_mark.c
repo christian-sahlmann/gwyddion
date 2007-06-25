@@ -136,7 +136,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Marks grains by thresholding (height, slope, curvature)."),
     "Petr Klapetek <petr@klapetek.cz>",
-    "1.13",
+    "1.14",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -274,6 +274,7 @@ mark_dialog(MarkArgs *args,
                             GWY_DATA_ITEM_PALETTE,
                             GWY_DATA_ITEM_MASK_COLOR,
                             GWY_DATA_ITEM_RANGE,
+                            GWY_DATA_ITEM_REAL_SQUARE,
                             0);
     controls.view = gwy_data_view_new(controls.mydata);
     layer = gwy_layer_basic_new();
@@ -283,6 +284,7 @@ mark_dialog(MarkArgs *args,
                  "range-type-key", "/0/base/range-type",
                  "min-max-key", "/0/base",
                  NULL);
+    gwy_data_view_set_data_prefix(GWY_DATA_VIEW(controls.view), "/0/data");
     gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view), layer);
     zoomval = PREVIEW_SIZE/(gdouble)MAX(gwy_data_field_get_xres(dfield),
                                         gwy_data_field_get_yres(dfield));

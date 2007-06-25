@@ -271,6 +271,7 @@ run_main(GwyContainer *data, GwyRunType run)
                             GWY_DATA_ITEM_GRADIENT,
                             GWY_DATA_ITEM_MASK_COLOR,
                             GWY_DATA_ITEM_RANGE,
+                            GWY_DATA_ITEM_REAL_SQUARE,
                             0);
 
     gwy_container_set_object_by_name(controls.mydata, "/2/data",
@@ -281,6 +282,7 @@ run_main(GwyContainer *data, GwyRunType run)
                             GWY_DATA_ITEM_MASK_COLOR,
                             /* GWY_DATA_ITEM_RANGE, */
                             GWY_DATA_ITEM_RANGE_TYPE,
+                            GWY_DATA_ITEM_REAL_SQUARE,
                             0);
 
     gwy_container_set_object_by_name(controls.mydata, "/3/data",
@@ -289,6 +291,7 @@ run_main(GwyContainer *data, GwyRunType run)
     gwy_app_sync_data_items(data, controls.mydata, id, 3, FALSE,
                             GWY_DATA_ITEM_GRADIENT,
                             GWY_DATA_ITEM_MASK_COLOR,
+                            GWY_DATA_ITEM_REAL_SQUARE,
                             0);
 
     /* Run the dialog */
@@ -314,6 +317,7 @@ run_main(GwyContainer *data, GwyRunType run)
                                     GWY_DATA_ITEM_MASK_COLOR,
                                     GWY_DATA_ITEM_RANGE,
                                     GWY_DATA_ITEM_RANGE_TYPE,
+                                    GWY_DATA_ITEM_REAL_SQUARE,
                                     0);
             gwy_app_set_data_field_title(data, newid, _("Filtered Data"));
         }
@@ -325,6 +329,7 @@ run_main(GwyContainer *data, GwyRunType run)
                                     GWY_DATA_ITEM_MASK_COLOR,
                                     GWY_DATA_ITEM_RANGE,
                                     GWY_DATA_ITEM_RANGE_TYPE,
+                                    GWY_DATA_ITEM_REAL_SQUARE,
                                     0);
             gwy_app_set_data_field_title(data, newid, _("Filtered FFT"));
         }
@@ -441,6 +446,7 @@ run_dialog(ControlsType *controls)
     controls->view = gwy_data_view_new(controls->mydata);
     layer = gwy_layer_basic_new();
     set_layer_channel(layer, 0);
+    gwy_data_view_set_data_prefix(GWY_DATA_VIEW(controls->view), "/0/data");
     gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls->view), layer);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
                                                              "/1/data"));

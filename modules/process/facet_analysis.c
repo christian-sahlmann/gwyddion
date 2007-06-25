@@ -159,7 +159,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Visualizes, marks and measures facet orientation."),
     "Yeti <yeti@gwyddion.net>",
-    "1.6",
+    "1.7",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -285,6 +285,7 @@ facets_dialog(FacetsArgs *args,
                             GWY_DATA_ITEM_PALETTE,
                             GWY_DATA_ITEM_RANGE,
                             GWY_DATA_ITEM_MASK_COLOR,
+                            GWY_DATA_ITEM_REAL_SQUARE,
                             0);
 
     hbox = gtk_hbox_new(FALSE, 2);
@@ -299,6 +300,7 @@ facets_dialog(FacetsArgs *args,
                  "range-type-key", "/0/base/range-type",
                  "min-max-key", "/0/base",
                  NULL);
+    gwy_data_view_set_data_prefix(GWY_DATA_VIEW(controls.view), "/0/data");
     gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view), layer);
 
     zoomval = PREVIEW_SIZE/(gdouble)MAX(gwy_data_field_get_xres(dfield),

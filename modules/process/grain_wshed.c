@@ -109,7 +109,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Marks grains by watershed algorithm."),
     "Petr Klapetek <petr@klapetek.cz>",
-    "1.15",
+    "1.16",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -199,6 +199,7 @@ wshed_dialog(WshedArgs *args,
                             GWY_DATA_ITEM_PALETTE,
                             GWY_DATA_ITEM_MASK_COLOR,
                             GWY_DATA_ITEM_RANGE,
+                            GWY_DATA_ITEM_REAL_SQUARE,
                             0);
     controls.view = gwy_data_view_new(controls.mydata);
     layer = gwy_layer_basic_new();
@@ -208,6 +209,7 @@ wshed_dialog(WshedArgs *args,
                  "range-type-key", "/0/base/range-type",
                  "min-max-key", "/0/base",
                  NULL);
+    gwy_data_view_set_data_prefix(GWY_DATA_VIEW(controls.view), "/0/data");
     gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view), layer);
     zoomval = PREVIEW_SIZE/(gdouble)MAX(gwy_data_field_get_xres(dfield),
                                         gwy_data_field_get_yres(dfield));

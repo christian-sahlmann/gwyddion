@@ -129,7 +129,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Apllies polynomial distortion in the horizontal plane."),
     "Yeti <yeti@gwyddion.net>",
-    "1.1",
+    "1.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2007",
 };
@@ -226,6 +226,7 @@ distort_dialog(DistortArgs *args,
                             GWY_DATA_ITEM_PALETTE,
                             GWY_DATA_ITEM_MASK_COLOR,
                             GWY_DATA_ITEM_RANGE,
+                            GWY_DATA_ITEM_REAL_SQUARE,
                             0);
     controls.view = gwy_data_view_new(controls.mydata);
     g_object_unref(controls.mydata);
@@ -240,6 +241,7 @@ distort_dialog(DistortArgs *args,
                  "range-type-key", "/0/base/range-type",
                  "min-max-key", "/0/base",
                  NULL);
+    gwy_data_view_set_data_prefix(GWY_DATA_VIEW(controls.view), "/0/data");
     gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view), layer);
 
     gtk_box_pack_start(GTK_BOX(hbox), controls.view, FALSE, FALSE, 4);

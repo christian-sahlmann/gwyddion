@@ -239,6 +239,7 @@ drift_dialog(DriftArgs *args,
                             GWY_DATA_ITEM_PALETTE,
                             GWY_DATA_ITEM_MASK_COLOR,
                             GWY_DATA_ITEM_RANGE,
+                            GWY_DATA_ITEM_REAL_SQUARE,
                             0);
     controls.view = gwy_data_view_new(controls.mydata);
     g_object_unref(controls.mydata);
@@ -253,6 +254,7 @@ drift_dialog(DriftArgs *args,
                  "range-type-key", "/0/base/range-type",
                  "min-max-key", "/0/base",
                  NULL);
+    gwy_data_view_set_data_prefix(GWY_DATA_VIEW(controls.view), "/0/data");
     gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view), layer);
 
     layer = gwy_layer_mask_new();

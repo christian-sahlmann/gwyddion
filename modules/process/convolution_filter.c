@@ -135,7 +135,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Generic convolution filter with a user-defined matrix."),
     "Yeti <yeti@gwyddion.net>",
-    "1.2",
+    "1.3",
     "David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
@@ -263,11 +263,13 @@ convolution_filter_dialog(ConvolutionArgs *args,
     gwy_container_set_object_by_name(controls.mydata, "/0/data", dfield);
     gwy_app_sync_data_items(data, controls.mydata, id, 0, FALSE,
                             GWY_DATA_ITEM_PALETTE,
+                            GWY_DATA_ITEM_REAL_SQUARE,
                             0);
     controls.view = gwy_data_view_new(controls.mydata);
     layer = gwy_layer_basic_new();
     gwy_pixmap_layer_set_data_key(layer, "/0/data");
     gwy_layer_basic_set_gradient_key(GWY_LAYER_BASIC(layer), "/0/base/palette");
+    gwy_data_view_set_data_prefix(GWY_DATA_VIEW(controls.view), "/0/data");
     gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view), layer);
     zoomval = PREVIEW_SIZE/(gdouble)MAX(gwy_data_field_get_xres(dfield),
                                         gwy_data_field_get_yres(dfield));
