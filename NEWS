@@ -58,6 +58,8 @@ Libraries:
 - libgwyprocess: New methods to calculate 2D autocorrelation function.
 - libgwymodule: Module browser displays also modules that failed to load,
   with the failure reason.
+- libgwydgets: Strage display when physically but not pixelwise square data
+  were rotated by 90 degrees in physically square display mode was corrected.
 
 Modules:
 - Path level tool (new): Levels rows along arbitrary lines.
@@ -132,6 +134,9 @@ Modules:
 - Graph level: Emits curve data change notification so that the graph can
   redraw itself properly.
 - RHK SM2 and SM3: Horizontally flipped images were corrected.
+- Basicops: Square samples function uses Round interpolation for masks now.
+- Drift compensation: Garbage mask that was briefly displayed on the first
+  update do not appear any more.
 
 Other:
 - Freedesktop MIME types conflicting with existing types were removed or
