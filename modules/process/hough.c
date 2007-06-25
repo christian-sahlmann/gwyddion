@@ -71,7 +71,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Hough transform."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.0",
+    "1.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
@@ -119,8 +119,6 @@ hough(GwyContainer *data, GwyRunType run)
     siunit = gwy_si_unit_new(NULL);
     gwy_data_field_set_si_unit_z(result, siunit);
     g_object_unref(siunit);
-    newid = gwy_app_data_browser_add_data_field(result, data, TRUE);
-    g_object_unref(result);
 
     edgefield = gwy_data_field_duplicate(dfield);
 
@@ -148,6 +146,9 @@ hough(GwyContainer *data, GwyRunType run)
                                     result,
                                     args.circle_size);
     }
+
+    newid = gwy_app_data_browser_add_data_field(result, data, TRUE);
+    g_object_unref(result);
 
     gwy_app_set_data_field_title(data, newid, title);
     gwy_data_field_data_changed(result);
