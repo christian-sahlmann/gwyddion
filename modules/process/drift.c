@@ -149,7 +149,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Evaluates and/or correct thermal drift in fast scan axis."),
     "Petr Klapetek <petr@klapetek.cz>, Yeti <yeti@gwyddion.net>",
-    "2.1",
+    "2.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2007",
 };
@@ -551,7 +551,7 @@ create_mask_field(GwyDataField *dfield)
     GwyDataField *mfield;
     GwySIUnit *siunit;
 
-    mfield = gwy_data_field_new_alike(dfield, FALSE);
+    mfield = gwy_data_field_new_alike(dfield, TRUE);
     siunit = gwy_si_unit_new(NULL);
     gwy_data_field_set_si_unit_z(mfield, siunit);
     g_object_unref(siunit);
