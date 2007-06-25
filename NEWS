@@ -1,5 +1,5 @@
 
-2.7 (0000-00-00)
+2.7 (2007-06-26)
 Application:
 - Metadata browser:  It is possibile to save the metadata.
 - Infinite startup notification after remote file opening was fixed.
@@ -80,7 +80,7 @@ Modules:
 - Pixmap export: Text size can be set independently, zoom can be specified by
   desired width and height, cases of wrong preview scaling were fixed.
 - Edge: New Step step detection function.
-- 2D FFT: The rectangular images limitation was removed.
+- 2D FFT: Limitation to rectangular images was removed.
 - Omicron: Imports single point spectra.
 - PSIA: It does not require libTIFF any more, crashes due to PSIA files not
   being proper TIFF files were fixed.
@@ -137,6 +137,11 @@ Modules:
 - Basicops: Square samples function uses Round interpolation for masks now.
 - Drift compensation: Garbage mask that was briefly displayed on the first
   update do not appear any more.
+- Crop: Physically square display mode is honoured on the new cut channel.
+- Grain mark, watershed, scars, drift correction, polynomial distortion,
+  FFT filters: physically square display mode is honoured in previews.
+- 1D FFT filter: Various odd effects of the vertical filter on non-square data
+  were corrected.
 
 Other:
 - Freedesktop MIME types conflicting with existing types were removed or
