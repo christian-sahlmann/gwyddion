@@ -22,7 +22,7 @@
 #define __GWY_MODULE_H__
 
 #include <libgwymodule/gwymoduleenums.h>
-
+#include <libgwymodule/gwymoduletypes.h>
 #include <libgwymodule/gwymoduleloader.h>
 #include <libgwymodule/gwymodule-file.h>
 #include <libgwymodule/gwymodule-graph.h>

@@ -13,6 +13,9 @@ libgwymodule2include_HEADERS = \
 	gwymoduleenums.h \
 	gwymoduleloader.h
 
+noinst_HEADERS = \
+	gwymoduleinternal.h
+
 lib_LTLIBRARIES = libgwymodule2.la
 
 EXTRA_DIST = \
@@ -20,8 +23,16 @@ EXTRA_DIST = \
 	makefile.msc.gwt \
 	libgwymodule2.def
 
-noinst_HEADERS = \
-	gwymoduleinternal.h
+# Must init
+CLEANFILES =
+MAINTAINERCLEANFILES = \
+	makefile.msc \
+	libgwymodule2.def
+BUILT_SOURCES =
+
+MKENUM_NAME = gwymoduletypes
+MKENUM_HFILES = gwymoduleenums.h
+include $(top_srcdir)/utils/mkenum.mk
 
 AM_CFLAGS = @COMMON_CFLAGS@
 AM_CPPFLAGS = -I$(top_builddir) -DG_LOG_DOMAIN=\"GwyModule\"
@@ -31,7 +42,7 @@ AM_CPPFLAGS = -I$(top_builddir) -DG_LOG_DOMAIN=\"GwyModule\"
 # Any iface change    C++: 0:   A
 # Adding ifaces       C:   R:   A++
 # Changing ifaces     C:   R:   0
-libgwymodule2_la_LDFLAGS = @GMODULE_LIBS@ @GTK_LIBS@ @BASIC_LIBS@ -version-info 0:3:0
+libgwymodule2_la_LDFLAGS = @GMODULE_LIBS@ @GTK_LIBS@ @BASIC_LIBS@ -version-info 1:0:1
 #libgwymodule2_la_LDFLAGS = @GMODULE_LIBS@ @GTK_LIBS@ @BASIC_LIBS@ -release @LIBRARY_RELEASE@
 libgwymodule2_la_SOURCES = \
 	gwymodule-file.c \
@@ -41,10 +52,6 @@ libgwymodule2_la_SOURCES = \
 	gwymodule-tool.c \
 	gwymodulebrowser.c \
 	gwymoduleloader.c
-
-MAINTAINERCLEANFILES = \
-	makefile.msc \
-	libgwymodule2.def
 
 clean-local:
 	rm -f core.* *~
