@@ -1826,7 +1826,7 @@ gwy_tool_roughness_Xpm(GwyDataLine *data_line, gint m, gint k)
     gwy_data_line_copy(data_line, dl);
 
     if (m > 1) {
-        samp = floor(dl->res/m);
+        samp = dl->res/m;
         gwy_data_line_resample(dl, m*samp, GWY_INTERPOLATION_LINEAR);
     }
     else
