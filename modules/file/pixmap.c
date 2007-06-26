@@ -324,7 +324,7 @@ static GwyModuleInfo module_info = {
        "TARGA. "
        "Import support relies on GDK and thus may be installation-dependent."),
     "Yeti <yeti@gwyddion.net>",
-    "6.1",
+    "6.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -1570,28 +1570,28 @@ pixmap_draw_pixbuf(GwyContainer *data,
     const gchar *key;
     gchar *buf;
 
-    if (mode != GWY_RUN_INTERACTIVE) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR,
-                    GWY_MODULE_FILE_ERROR_INTERACTIVE,
-                    _("Pixmap image export must be run as interactive."));
-        return FALSE;
-    }
-
     settings = gwy_app_settings_get();
     pixmap_save_load_args(settings, &args);
     gwy_app_data_browser_get_current(GWY_APP_DATA_VIEW, &args.data_view,
                                      GWY_APP_DATA_FIELD, &args.dfield,
                                      0);
-    if (!args.dfield || !args.data_view) {
+    if (!args.dfield) {
         err_NO_CHANNEL_EXPORT(error);
         return FALSE;
+    }
+    if (!args.data_view) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR,
+                    GWY_MODULE_FILE_ERROR_SPECIFIC,
+                    _("Data must be displayed in a window for pixmap export."));
+
     }
     key = gwy_data_view_get_data_prefix(args.data_view);
     buf = g_strconcat(key, "/realsquare", NULL);
     gwy_container_gis_boolean_by_name(data, buf, &args.realsquare);
     g_free(buf);
 
-    if (!pixmap_save_dialog(data, &args, format_name)) {
+    if (mode == GWY_RUN_INTERACTIVE
+        && !pixmap_save_dialog(data, &args, format_name)) {
         err_CANCELLED(error);
         return NULL;
     }
