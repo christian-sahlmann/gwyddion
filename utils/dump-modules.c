@@ -32,6 +32,11 @@ typedef struct {
     const GwyModuleInfo *info;
 } ModInfo;
 
+typedef struct {
+    gchar *target;
+    guint use_count;
+} MapInfo;
+
 static GHashTable *user_guide = NULL;
 static GSList *tag_stack = NULL;
 
@@ -43,14 +48,16 @@ read_user_guide(const gchar *filename)
     g_file_get_contents(filename, &buf, NULL, NULL);
     user_guide = g_hash_table_new(g_str_hash, g_str_equal);
     while (buf && *buf) {
+        MapInfo *minfo;
         gchar *key = gwy_str_next_line(&buf);
         gchar *val = strchr(key, ' ');
 
         if (!val)
             continue;
         *val = '\0';
-        val++;
-        g_hash_table_insert(user_guide, key, val);
+        minfo = g_new0(MapInfo, 1);
+        minfo->target = val+1;
+        g_hash_table_insert(user_guide, key, minfo);
     };
 }
 
@@ -170,6 +177,14 @@ add_info(const gchar *name,
     *list = g_slist_prepend(*list, i);
 }
 
+static void
+warn_unused(const gchar *name,
+            const MapInfo *minfo)
+{
+    if (!minfo->use_count)
+        fprintf(stderr, "Unused map entry %s -> %s\n", name, minfo->target);
+}
+
 /* Main */
 int
 main(int argc,
@@ -178,6 +193,10 @@ main(int argc,
     /* modules we know we don't like to see in the list (XXX: hack) */
     const gchar *filter_modules[] = {
         "threshold-example",
+    };
+    /* modules we know we don't want to see functions of (XXX: hack) */
+    const gchar *no_func_modules[] = {
+        "plugin-proxy", "pygwy",
     };
 
     gchar **module_dirs;
@@ -212,6 +231,7 @@ main(int argc,
     for (m = modules; m; m = g_slist_next(m)) {
         ModInfo *info = (ModInfo*)m->data;
         GSList *f = gwy_module_get_functions(info->name);
+        MapInfo *minfo;
         gchar *s;
 
         tag_open("module");
@@ -222,12 +242,18 @@ main(int argc,
         g_free(s);
         tag_print("copyright", info->info->copyright);
         tag_print("date", info->info->date);
-        if ((s = g_hash_table_lookup(user_guide, info->name)))
-            tag_print("userguide", s);
+        if ((minfo = g_hash_table_lookup(user_guide, info->name))) {
+            tag_print("userguide", minfo->target);
+            minfo->use_count++;
+        }
+        else
+            fprintf(stderr, "No user guide entry for %s\n", info->name);
         tag_print("description", info->info->blurb);
-        /* don't print plugin-proxy's stolen functions (XXX: hack) */
-        if (gwy_strequal(info->name, "plugin-proxy")
-            || gwy_strequal(info->name, "pygwy")) {
+        for (i = 0; i < G_N_ELEMENTS(no_func_modules); i++) {
+            if (gwy_strequal(info->name, no_func_modules[i]))
+                break;
+        }
+        if (i < G_N_ELEMENTS(no_func_modules)) {
             tag_print("funclist", NULL);
             tag_close();
             continue;
@@ -267,6 +293,8 @@ main(int argc,
         tag_close();
     }
     tag_close();
+
+    g_hash_table_foreach(user_guide, (GHFunc)warn_unused, NULL);
 
     g_slist_free(modules);
     g_strfreev(module_dirs);
