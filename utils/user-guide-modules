@@ -1,66 +1,72 @@
-angle_dist	features-stats	angle-distribution
+acf2d	statistical-analysis	autocorrelation-2d
+angle_dist	statistical-analysis	angle-distribution
 apefile	managing-files
-arithmetic	multidata	arithmetic
+arithmetic	multidata	data-arithmetic
 asciiexport	managing-files
 assing-afm	managing-files
 axis	selections
-basicops	features-basic	features-basic
+basicops	basic-operations	modules-basic
 bcrfile	managing-files
 burleigh	managing-files
-calibrate	features-basic
-convolution_filter	features-filters	convolution-filter
+calibrate	basic-operations	calibrate
+convolution_filter	filters-presentations	convolution-filter
 createc	managing-files
-crop	modules-tools	tool-crop
+crop	basic-operations	crop
 crosscor	multidata	cross-correlation
-cwt	features-inttrans	cwt
-distance	features-basic	distance
+cwt	integral-transforms	cwt
+distance	basic-operations	distance
 dmefile	managing-files
 drift	edit-extended	drift-compensation
-dwt	features-inttrans	dwt
-dwtanisotropy	features-inttrans	dwt
+dwt	integral-transforms	dwt
+dwtanisotropy	integral-transforms	dwt
 ecsfile	managing-files
-edge	features-filters	edge
+edge	filters-presentations	edge
 ellipse	selections
 ezdfile	managing-files
-facet-level	features-leveling	facet-level
-facet_analysis	features-stats	facet-analysis
-fft	features-inttrans	fft
+facet-level	leveling-and-background	facet-level
+facet_analysis	statistical-analysis	facet-analysis
+fit_2d	leveling-and-background	fit-sphere
+fft	integral-transforms	fft
 fft_filter_1d	edit-extended	fft-filter-1d
 fft_filter_2d	edit-extended	fft-filter-2d
-filter	features-filters	basic-filters
-fraccor	features-edit	fractal-correction
-fractal	features-fractal	fractal-dimension
-gradient	features-filters	gradient
-grain_dist	features-grains	grain-distributions
-grain_mark	features-grains	grain-threshold
-grain_rem_threshold	features-grains	grain-remove-threshold
-grain_wshed	features-grains	grain-watershed
-grainremover	features-edit
-graph_cd	features-graph	graph-cd
-graph_export_ascii	features-graph
-graph_export_bitmap	features-graph
-graph_export_vector	features-graph
-graph_fit	features-graph	graph-fit
-graph_level	features-graph
-graph_stats	features-graph
+filter	filters-presentations	basic-filters
+fraccor	editing-correction	fractal-correction
+fractal	fractal-analysis	fractal-dimension
+gradient	filters-presentations	gradient
+grain_dist	grain-analysis	grain-distributions
+grain_mark	grain-analysis	grain-threshold
+grain_rem_threshold	grain-analysis	grain-remove-threshold
+grain_wshed	grain-analysis	grain-watershed
+grainremover	editing-correction
+graph_cd	graph-analysis	graph-critical-dimension
+graph_cut	graph-analysis
+graph_fdfit	graph-analysis
+graph_export_ascii	graph-analysis
+graph_export_bitmap	graph-analysis
+graph_export_vector	graph-analysis
+graph_fit	graph-analysis	graph-fit
+graph_level	graph-analysis
+graph_stats	graph-analysis
 gwyfile	managing-files
 hdf4file	managing-files
 hitachi-afm	managing-files
-hough	features-inttrans
-immerse	multidata-immerse
+hough	integral-transforms
+icolorange	color-map	color-range
+immerse	multidata-immerse	immerse
 intematix	managing-files
+jeol	managing-files
 jpkscan	managing-files
-laplace	features-edit	remove-data-under-mask
-level	features-leveling	plane-level
-level3	features-leveling	three-point-level
+laplace	editing-correction	remove-data-under-mask
+level	leveling-and-background	plane-level
+level3	leveling-and-background	three-point-level
 line	selections
-linecorrect	features-edit	line-correction
-linestats	features-stats	line-stats
-local_contrast	features-filters	local-contrast
+linecorrect	editing-correction	line-correction
+linestats	statistical-analysis	line-stats
+local_contrast	filters-presentations	local-contrast
 maskcor	multidata	mask-by-correlation
 maskedit	modules-tools	tool-mask-editor
 maskops	presentations-masks
-median-bg	features-leveling	median-background
+median-bg	leveling-and-background	median-background
 merge	multidata	merge
 metropro	managing-files
 microprof	managing-files
@@ -72,42 +78,48 @@ nanotop	managing-files
 netcdf	managing-files
 nt-mdt	managing-files
 omicron	managing-files
-outliers	features-edit	mask-of-outliers
+outliers	editing-correction	mask-of-outliers
+pathlevel	leveling-and-background	path-level
 pixmap	managing-files
 plugin-proxy	plugins
 pnifile	managing-files
+polydistort	edit-extended	polynomial-distort
 point	selections
-polylevel	features-leveling	polynomial-level
-polynom	modules-tools	tool-polynom
-presentationops	features-filters	presentationops
-profile	features-basic	profile
+polylevel	leveling-and-background	polynomial-level
+polynom	editing-correction	line-polynomial
+presentationops	filters-presentations	presentationops
+profile	basic-operations	profile
 psia	managing-files
 rawfile	raw-file-import
+readvalue	basic-operations	read-value
 rectangle	selections
+roughness	statistical-analysis	roughness-iso
 rhk-sm3	managing-files
 rhk-spm32	managing-files
-rotate	features-basic	rotate
-scale	features-basic	scale
-scars	features-edit	remove-scars
+rotate	basic-operations	rotate
+scale	basic-operations	scale
+scars	editing-correction	remove-scars
 sdfile	managing-files
 seiko	managing-files
-sfunctions	features-stats	sfunctions
-shade	features-filters	shade
+sfunctions	statistical-analysis	sfunctions
+shade	filters-presentations	shade
 sis	managing-files
-slope_dist	features-stats	slope-distribution
-sphere-revolve	features-leveling	revolve-arc
+slope_dist	statistical-analysis	slope-distribution
+spectro	single-point-spectra
+sphere-revolve	leveling-and-background	revolve-arc
 spml	managing-files
 spmlab	managing-files
-spotremove	features-edit	remove-spots
-stats	features-stats	stats
+spotremove	editing-correction	remove-spots
+stats	statistical-analysis	stat-quantities
 stmprg	managing-files
 stpfile	managing-files
 surffile	managing-files
-tip_blind	features-tip	tip-blind-estimate
-tip_model	features-tip	tip-model
-tipops	features-tip	tip-operations
+tip_blind	tip-convolution-artefacts	tip-blind-estimate
+tip_model	tip-convolution-artefacts	tip-model
+tipops	tip-convolution-artefacts	tip-operations
 unisoku	managing-files
-unrotate	features-edit	unrotate
+unrotate	editing-correction	unrotate
 witfile	managing-files
 wsxmfile	managing-files
-# vim: set ts=24 :
+grainmeasure	grain-analysis	grain-measure
+# vim: set ts=28 :
