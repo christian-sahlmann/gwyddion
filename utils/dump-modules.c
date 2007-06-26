@@ -226,7 +226,8 @@ main(int argc,
             tag_print("userguide", s);
         tag_print("description", info->info->blurb);
         /* don't print plugin-proxy's stolen functions (XXX: hack) */
-        if (gwy_strequal(info->name, "plugin-proxy")) {
+        if (gwy_strequal(info->name, "plugin-proxy")
+            || gwy_strequal(info->name, "pygwy")) {
             tag_print("funclist", NULL);
             tag_close();
             continue;
