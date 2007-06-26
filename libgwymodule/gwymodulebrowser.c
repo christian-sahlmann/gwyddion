@@ -162,7 +162,7 @@ gwy_module_browser_render(G_GNUC_UNUSED GtkTreeViewColumn *column,
                  NULL);
 }
 
-gint
+static gint
 compare_modules(GtkTreeModel *model,
                 GtkTreeIter *a,
                 GtkTreeIter *b,
