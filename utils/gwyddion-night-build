@@ -3,7 +3,7 @@
 disabled=
 pkgname=gwyddion
 basever=2.7
-dont_update_version=bloody_no
+dont_update_version=
 projectdir=$HOME/Projects/Gwyddion/$pkgname
 logdir=$HOME/Projects/Gwyddion/buildlog
 installprefix=$HOME/opt/gwyddion
