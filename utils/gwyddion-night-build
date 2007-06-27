@@ -105,6 +105,9 @@ function check_coding_style() {
     | grep -Ev '^\./gwyddion-|/(main|test|wtest)\.c' \
     | xargs ./utils/check-coding-style.py \
     | cat --squeeze-blank >$logdir/coding-style.log
+
+  grep -r --include '*.c' '^ *# *define \+DEBUG\>' . \
+    | sed -e 's/^/Debugging is on in: /' 1>&2
 }
 
 
