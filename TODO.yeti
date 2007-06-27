@@ -1,3 +1,5 @@
+- Spectro tool somehow loses the selection upon data switch.  Maybe data
+  browser is to blame.
 - Modules:
   - implement sparse laplacian data interpolation
   - fore/back detection, connected area splitting
