@@ -166,6 +166,7 @@ static void  gwy_preserve_rms_simple       (gint nsrc,
  * @windowing: Windowing mode.
  * @direction: FFT direction.
  * @interpolation: Interpolation type.
+ *                 Ignored since 2.8 as no reampling is performed.
  * @preserverms: %TRUE to preserve RMS value while windowing.
  * @level: 0 to perform no leveling, 1 to subtract mean value, 2 to subtract
  *         line (the number can be interpreted as the first polynomial degree
@@ -204,6 +205,7 @@ gwy_data_line_fft(GwyDataLine *rsrc, GwyDataLine *isrc,
  * @windowing: Windowing mode.
  * @direction: FFT direction.
  * @interpolation: Interpolation type.
+ *                 Ignored since 2.8 as no reampling is performed.
  * @preserverms: %TRUE to preserve RMS value while windowing.
  * @level: 0 to perform no leveling, 1 to subtract mean value, 2 to subtract
  *         line (the number can be interpreted as the first polynomial degree
@@ -219,11 +221,10 @@ gwy_data_line_part_fft(GwyDataLine *rsrc, GwyDataLine *isrc,
                        gint from, gint len,
                        GwyWindowingType windowing,
                        GwyTransformDirection direction,
-                       GwyInterpolationType interpolation,
+                       G_GNUC_UNUSED GwyInterpolationType interpolation,
                        gboolean preserverms,
                        gint level)
 {
-    gint newres;
     GwyDataLine *rbuf, *ibuf;
 
     g_return_if_fail(GWY_IS_DATA_LINE(rsrc));
@@ -235,29 +236,25 @@ gwy_data_line_part_fft(GwyDataLine *rsrc, GwyDataLine *isrc,
     g_return_if_fail(GWY_IS_DATA_LINE(idest));
     g_return_if_fail(level >= 0 && level <= 2);
     g_return_if_fail(from >= 0
-                     && len >= 4
+                     && len >= 2
                      && from + len <= rsrc->res);
 
-    newres = gwy_fft_find_nice_size(rsrc->res);
-
-    gwy_data_line_resample(rdest, newres, GWY_INTERPOLATION_NONE);
-    gwy_data_line_resample(idest, newres, GWY_INTERPOLATION_NONE);
+    gwy_data_line_resample(rdest, len, GWY_INTERPOLATION_NONE);
+    gwy_data_line_resample(idest, len, GWY_INTERPOLATION_NONE);
 
     rbuf = gwy_data_line_part_extract(rsrc, from, len);
     gwy_level_simple(len, 1, rbuf->data, level);
     gwy_fft_window(len, rbuf->data, windowing);
-    gwy_data_line_resample(rbuf, newres, interpolation);
 
     if (isrc) {
         ibuf = gwy_data_line_part_extract(isrc, from, len);
         gwy_level_simple(len, 1, ibuf->data, level);
         gwy_fft_window(len, ibuf->data, windowing);
-        gwy_data_line_resample(ibuf, newres, interpolation);
         gwy_data_line_fft_do(rbuf, ibuf, rdest, idest, direction);
         if (preserverms)
             gwy_preserve_rms_simple(len, 1,
                                     rsrc->data + from, isrc->data + from,
-                                    newres, 1,
+                                    len, 1,
                                     rdest->data, idest->data);
     }
     else {
@@ -266,12 +263,9 @@ gwy_data_line_part_fft(GwyDataLine *rsrc, GwyDataLine *isrc,
         if (preserverms)
             gwy_preserve_rms_simple(len, 1,
                                     rsrc->data + from, NULL,
-                                    newres, 1,
+                                    len, 1,
                                     rdest->data, idest->data);
     }
-
-    gwy_data_line_resample(rdest, len, interpolation);
-    gwy_data_line_resample(idest, len, interpolation);
 
     g_object_unref(rbuf);
     g_object_unref(ibuf);
