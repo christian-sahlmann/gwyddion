@@ -13,9 +13,7 @@ M4TESTS = \
 	gtk-doc.m4 \
 	iconv.m4 \
 	intmax.m4 \
-	isc-posix.m4 \
 	lcmessage.m4 \
-	longdouble.m4 \
 	longlong.m4 \
 	nls.m4 \
 	pkg.m4 \
@@ -24,7 +22,6 @@ M4TESTS = \
 	progtest.m4 \
 	signed.m4 \
 	size_max.m4 \
-	tools.m4 \
 	wchar_t.m4 \
 	wint_t.m4 \
 	xsize.m4

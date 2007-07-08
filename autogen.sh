@@ -65,9 +65,9 @@ if test -z "$NO_AUTOCONF"; then
   AC_VERSION_MAJOR=`echo $AC_VERSION | sed -e 's/\..*//'`
   AC_VERSION_MINOR=`echo $AC_VERSION | sed -e 's/^[0-9]*\.\([0-9]*\).*/\1/'`
   if test "$AC_VERSION_MAJOR" -lt 2 \
-     || test "$AC_VERSION_MAJOR" = 2 -a  "$AC_VERSION_MINOR" -lt 59; then
+     || test "$AC_VERSION_MAJOR" = 2 -a  "$AC_VERSION_MINOR" -lt 60; then
     echo
-    echo "**ERROR**: You need at least autoconf-2.59 installed to re-generate"
+    echo "**ERROR**: You need at least autoconf-2.60 installed to re-generate"
     echo "all the $PROJECT Makefiles."
     echo "Download the appropriate package for your distribution,"
     echo "or get the source tarball at ftp://ftp.gnu.org/pub/gnu/autoconf/."

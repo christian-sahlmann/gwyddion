@@ -2,13 +2,13 @@
 dnl Process this file with autoconf to produce a configure script.
 m4_define([gwy_version_major],[2])
 m4_define([gwy_version_minor],[7])
-m4_define([gwy_version_string],[gwy_version_major.gwy_version_minor])
+m4_define([gwy_version_string],[gwy_version_major.gwy_version_minor.20070708])
 AC_INIT([Gwyddion], [gwy_version_string], [klapetek@gwyddion.net])
 # Use -release for unstable version libs instead of -version-info, because
 # we *do* break compatibility each version
 #LIBRARY_RELEASE=1.99.9
 PACKAGE_URL="http://gwyddion.net/"
-AC_PREREQ(2.59)
+AC_PREREQ(2.60)
 AC_CONFIG_SRCDIR(app/app.c)
 AC_CONFIG_MACRO_DIR(m4)
 AC_CONFIG_FILES(\

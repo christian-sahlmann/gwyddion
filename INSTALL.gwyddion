@@ -153,7 +153,7 @@ nightly snapshot tarballs available at
 
 Prerequisities:
 - everything needed for compilation from tarballs
-- GNU autoconf 2.59 or newer
+- GNU autoconf 2.60 or newer
 - GNU automake 1.7 or newer
 - GNU libtool 1.4 or newer
 - Python-2.2 or newer
