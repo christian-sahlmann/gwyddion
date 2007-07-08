@@ -252,7 +252,7 @@ jpkscan_load_tiff(const gchar *filename, GError **error)
             continue;
         }
 
-        if (!err_DIMENSION(NULL, ilen) || err_DIMENSION(NULL, jlen)) {
+        if (err_DIMENSION(NULL, ilen) || err_DIMENSION(NULL, jlen)) {
             g_warning("Invalid dimensions, skipping");
             continue;
         }
