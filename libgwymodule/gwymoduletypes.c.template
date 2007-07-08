@@ -1,6 +1,8 @@
 /*** BEGIN file-header ***/
 #include "gwymoduletypes.h"
 #include "gwymoduleenums.h"
+#include "gwymoduleloader.h"
+#include "gwymodule-file.h"
 
 /*** END file-header ***/
 
