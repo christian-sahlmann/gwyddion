@@ -1,7 +1,9 @@
 /*** BEGIN file-header ***/
-#include "gwyapptypes.h"
+#include "gwyapp.h"
 #include "data-browser.h"
 #include "menu.h"
+#include "gwyplaintool.h"
+#include "settings.h"
 
 /*** END file-header ***/
 

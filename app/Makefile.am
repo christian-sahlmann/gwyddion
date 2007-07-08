@@ -55,7 +55,7 @@ MAINTAINERCLEANFILES = \
 	authors.h
 
 MKENUM_NAME = gwyapptypes
-MKENUM_HFILES = data-browser.h menu.h
+MKENUM_HFILES = data-browser.h menu.h gwyplaintool.h settings.h
 include $(top_srcdir)/utils/mkenum.mk
 
 AM_CFLAGS = @COMMON_CFLAGS@
