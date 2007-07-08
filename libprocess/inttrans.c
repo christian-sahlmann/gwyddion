@@ -1763,6 +1763,8 @@ gwy_level_simple(gint n,
     gdouble *pdata;
     gint i;
 
+    level = MIN(level, n);
+
     if (!level)
         return;
 
