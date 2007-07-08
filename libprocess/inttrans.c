@@ -290,9 +290,10 @@ gwy_data_line_part_fft(GwyDataLine *rsrc, GwyDataLine *isrc,
  *
  * Calculates Fast Fourier Transform of a data line.
  *
- * The resolutions of @rsrc and @isrc have to be from the set
- * of sizes returned by gwy_fft_find_nice_size().  No leveling, windowing nor
- * scaling is performed.
+ * No leveling, windowing nor scaling is performed.
+ *
+ * Since 2.8 the dimensions need not to be from the set of sizes returned
+ * by gwy_fft_find_nice_size().
  *
  * Since: 2.1
  **/
@@ -303,8 +304,6 @@ gwy_data_line_fft_raw(GwyDataLine *rsrc,
                       GwyDataLine *idest,
                       GwyTransformDirection direction)
 {
-    gint newres;
-
     g_return_if_fail(GWY_IS_DATA_LINE(rsrc));
     g_return_if_fail(!isrc || GWY_IS_DATA_LINE(isrc));
     if (isrc)
@@ -312,11 +311,9 @@ gwy_data_line_fft_raw(GwyDataLine *rsrc,
                                      (rsrc, isrc, GWY_DATA_COMPATIBILITY_RES));
     g_return_if_fail(GWY_IS_DATA_LINE(rdest));
     g_return_if_fail(GWY_IS_DATA_LINE(idest));
-    newres = gwy_fft_find_nice_size(rsrc->res);
-    g_return_if_fail(rsrc->res == newres);
 
-    gwy_data_line_resample(rdest, newres, GWY_INTERPOLATION_NONE);
-    gwy_data_line_resample(idest, newres, GWY_INTERPOLATION_NONE);
+    gwy_data_line_resample(rdest, rsrc->res, GWY_INTERPOLATION_NONE);
+    gwy_data_line_resample(idest, rsrc->res, GWY_INTERPOLATION_NONE);
 
     if (isrc)
         g_object_ref(isrc);
@@ -559,9 +556,10 @@ gwy_data_field_area_2dfft(GwyDataField *rin, GwyDataField *iin,
  *
  * Calculates 2D Fast Fourier Transform of a data field.
  *
- * The resolutions of @rin and @iin have to be from the set
- * of sizes returned by gwy_fft_find_nice_size().  No leveling, windowing nor
- * scaling is performed.
+ * No leveling, windowing nor scaling is performed.
+ *
+ * Since 2.8 the dimensions need not to be from the set of sizes returned
+ * by gwy_fft_find_nice_size().
  *
  * Since: 2.1
  **/
@@ -572,8 +570,6 @@ gwy_data_field_2dfft_raw(GwyDataField *rin,
                          GwyDataField *iout,
                          GwyTransformDirection direction)
 {
-    gint newxres, newyres;
-
     g_return_if_fail(GWY_IS_DATA_FIELD(rin));
     g_return_if_fail(!iin || GWY_IS_DATA_FIELD(iin));
     if (iin)
@@ -581,13 +577,9 @@ gwy_data_field_2dfft_raw(GwyDataField *rin,
                                        (rin, iin, GWY_DATA_COMPATIBILITY_RES));
     g_return_if_fail(GWY_IS_DATA_FIELD(rout));
     g_return_if_fail(GWY_IS_DATA_FIELD(iout));
-    newxres = gwy_fft_find_nice_size(rin->xres);
-    g_return_if_fail(rin->xres == newxres);
-    newyres = gwy_fft_find_nice_size(rin->yres);
-    g_return_if_fail(rin->yres == newyres);
 
-    gwy_data_field_resample(rout, newxres, newyres, GWY_INTERPOLATION_NONE);
-    gwy_data_field_resample(iout, newxres, newyres, GWY_INTERPOLATION_NONE);
+    gwy_data_field_resample(rout, rin->xres, rin->yres, GWY_INTERPOLATION_NONE);
+    gwy_data_field_resample(iout, rin->xres, rin->yres, GWY_INTERPOLATION_NONE);
 
     if (iin)
         gwy_data_field_2dfft_do(rin, iin, rout, iout, direction);
@@ -1101,9 +1093,10 @@ gwy_data_field_1dfft(GwyDataField *rin, GwyDataField *iin,
  *
  * Transforms all rows or columns in a data field with Fast Fourier Transform.
  *
- * The resolution of @rin and @iin in the transformed direction has to be from
- * the set of sizes returned by gwy_fft_find_nice_size().  No leveling,
- * windowing nor scaling is performed.
+ * No leveling, windowing nor scaling is performed.
+ *
+ * Since 2.8 the dimensions need not to be from the set of sizes returned
+ * by gwy_fft_find_nice_size().
  *
  * Since: 2.1
  **/
@@ -1115,8 +1108,6 @@ gwy_data_field_1dfft_raw(GwyDataField *rin,
                          GwyOrientation orientation,
                          GwyTransformDirection direction)
 {
-    gint newres;
-
     g_return_if_fail(GWY_IS_DATA_FIELD(rin));
     g_return_if_fail(!iin || GWY_IS_DATA_FIELD(iin));
     if (iin)
@@ -1124,16 +1115,11 @@ gwy_data_field_1dfft_raw(GwyDataField *rin,
                                        (rin, iin, GWY_DATA_COMPATIBILITY_RES));
     g_return_if_fail(GWY_IS_DATA_FIELD(rout));
     g_return_if_fail(GWY_IS_DATA_FIELD(iout));
+
+    gwy_data_field_resample(rout, rin->xres, rin->yres, GWY_INTERPOLATION_NONE);
+    gwy_data_field_resample(iout, rin->xres, rin->yres, GWY_INTERPOLATION_NONE);
     switch (orientation) {
         case GWY_ORIENTATION_HORIZONTAL:
-        newres = gwy_fft_find_nice_size(rin->xres);
-        g_return_if_fail(rin->xres == newres);
-
-        gwy_data_field_resample(rout, newres, rin->yres,
-                                GWY_INTERPOLATION_NONE);
-        gwy_data_field_resample(iout, newres, rin->yres,
-                                GWY_INTERPOLATION_NONE);
-
         if (iin)
             gwy_data_field_xfft_do(rin, iin, rout, iout, direction);
         else {
@@ -1144,14 +1130,6 @@ gwy_data_field_1dfft_raw(GwyDataField *rin,
         break;
 
         case GWY_ORIENTATION_VERTICAL:
-        newres = gwy_fft_find_nice_size(rin->yres);
-        g_return_if_fail(rin->yres == newres);
-
-        gwy_data_field_resample(rout, rin->xres, newres,
-                                GWY_INTERPOLATION_NONE);
-        gwy_data_field_resample(iout, rin->xres, newres,
-                                GWY_INTERPOLATION_NONE);
-
         if (iin)
             gwy_data_field_yfft_do(rin, iin, rout, iout, direction);
         else {
@@ -2116,11 +2094,10 @@ gwy_data_field_fft_filter_1d(GwyDataField *data_field,
  * and other statistical characteristics.
  *
  * Low-level functions have <literal>raw</literal> appended to their name:
- * gwy_data_field_2dfft_raw(), gwy_data_line_fft_raw().  They expect data
- * of a size returned by gwy_fft_find_nice_size() and perform no other
- * operations on the data beside the transform itself.  This makes them
- * suitable for applications where both forward and inverse transform is
- * performed.
+ * gwy_data_field_2dfft_raw(), gwy_data_line_fft_raw().  They
+ * perform no other operations on the data beside the transform itself.
+ * This makes them suitable for applications where both forward and inverse
+ * transform is performed.
  *
  * Both types of functions wrap a Fourier transform backend which can be
  * currently either gwy_fft_simple(), available always, or
