@@ -46,7 +46,7 @@ MAINTAINERCLEANFILES = \
 BUILT_SOURCES =
 
 MKENUM_NAME = gwyddiontypes
-MKENUM_HFILES = gwyddionenums.h
+MKENUM_HFILES = gwyddionenums.h gwyexpr.h
 include $(top_srcdir)/utils/mkenum.mk
 
 AM_CFLAGS = @COMMON_CFLAGS@

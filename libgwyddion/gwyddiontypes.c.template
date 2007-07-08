@@ -1,6 +1,7 @@
 /*** BEGIN file-header ***/
 #include "gwyddiontypes.h"
 #include "gwyddionenums.h"
+#include "gwyexpr.h"
 
 /*** END file-header ***/
 
