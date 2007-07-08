@@ -18,7 +18,38 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
+/*
+ * How this all works.
+ *
+ * There are four main components:
+ *
+ * - shuffle_and_twiddle() reorganizes data from one buffer to another,
+ *   to the order expected by the pass functions below (which is always
+ *   maximized stride n/p, unfortunately) and applied twiddle factors
+ *
+ * - pass2(), ..., pass10() perform subtransforms with sizes p=2-10 on
+ *   arrays of size n, i.e. they perform n/p identical transforms with
+ *   stride n/p, these are hand-coded
+ *
+ * - gpass() performs a general small-prime subtransform of size p, it is
+ *   O(p^2), however it makes use of some general block symmetries and thus
+ *   it outperforms bluestein() on smaller prime sizes
+ *
+ * - bluestein() is a Bluestein's arbitrary-size O(n log(n)) transform
+ *   algorithm that re-expresses it via a cyclic convolution of larger
+ *   but more factorable size, it recursively calls gwy_fft_simple() and it
+ *   is currently only used in on big step for everything that remains
+ *   after chopping off factors that passP() and gpass() can handle
+ *
+ * The driver routine gwy_fft_simple() decides whether a bluestein() pass is
+ * necessary, performs it as the first step if it is, and then continues
+ * with interleaved passP()/gpass() and shuffle_and_twiddle() for the
+ * individual factors, using a temporary storage buffer with stride 1 (that
+ * is never freed).
+ */
+
 #include "config.h"
+#include <string.h>
 #include <libgwyddion/gwymath.h>
 #include <libprocess/simplefft.h>
 
@@ -175,7 +206,7 @@ static const guint nice_fft_num[] = {
      120960, 122880, 124416, 131072,
      /* }}} */
 #else
-    /* {{{ Nice transform sizes for simplefft */
+    /* {{{ Nice transform sizes for simpleFFT */
           8,      9,     10,     12,     14,     15,     16,     18,     20,
          21,     24,     25,     27,     28,     30,     32,     35,     36,
          40,     42,     45,     48,     50,     54,     56,     60,     63,
@@ -301,7 +332,7 @@ gwy_fft_find_nice_size(gint size)
     gint i0, i, p0, p1;
     gdouble p;
 
-    /* All numbers smaller than 16 are nice */
+    /* All numbers smaller than nice_fft_num[0] are nice */
     if (size <= nice_fft_num[0])
         return size;
     g_return_val_if_fail(size <= nice_fft_num[G_N_ELEMENTS(nice_fft_num)-1],
@@ -326,6 +357,92 @@ gwy_fft_find_nice_size(gint size)
     return nice_fft_num[i];
 }
 
+/***** Scratch buffers {{{ **********************************************/
+/* We don't like GArray because it ensures the data will stay there when the
+ * array size changes, which is a waste of time if it includes copying.
+ * Also, we'd like to have plain gdouble* arrays, the administrative stuff
+ * should not be visible. */
+#define _GWY_SCRATCH_BUFFER_ALIGNMENT 16
+#define _GWY_SCRATCH_BUFFER_BLOCK 16
+
+#define _GWY_SCRATCH_BUFFER_GET(b) \
+    ((_GwyScratchBuffer*)(((guchar*)(b))-_GWY_SCRATCH_BUFFER_ALIGNMENT))
+
+#define _GWY_SCRATCH_BUFFER_ALIGN(n, l) ((MAX((n), 1) + (l)-1)/(l)*(l))
+
+#if (GLIB_MAJOR_VERSION > 2 \
+     || (GLIB_MAJOR_VERSION == 2 && GLIB_MINOR_VERSION >= 10))
+#define _gwy_scratch_buffer_free_backend(b, l) \
+    g_slice_free1((l)*sizeof(gdouble), (b))
+#define _gwy_scratch_buffer_alloc_backend(l) \
+    g_slice_alloc((l)*sizeof(gdouble) + sizeof(_GwyScratchBufferHead))
+#else
+#define _gwy_scratch_buffer_free_backend(b, l) \
+    g_free(b)
+#define _gwy_scratch_buffer_alloc_backend(b, l) \
+    g_malloc((l)*sizeof(gdouble) + sizeof(_GwyScratchBufferHead))
+#endif
+
+typedef union {
+    struct {
+        gsize alloc_len;
+    } info;
+    guchar keep_memory_nicely_aligned[_GWY_SCRATCH_BUFFER_ALIGNMENT];
+} _GwyScratchBufferHead;
+
+typedef struct {
+    _GwyScratchBufferHead head;
+    gdouble data[1];  /* Don't tempt compilers even more. */
+} _GwyScratchBuffer;
+
+static inline void
+_gwy_scratch_buffer_free(gdouble *buffer)
+{
+    _GwyScratchBuffer *buf;
+
+    if (buffer) {
+        buf = _GWY_SCRATCH_BUFFER_GET(buffer);
+        _gwy_scratch_buffer_free_backend(buf, buf->head.info.alloc_len);
+    }
+}
+
+static inline gdouble*
+_gwy_scratch_buffer_ensure(gdouble *buffer, guint n)
+{
+    _GwyScratchBuffer *buf;
+
+    if (buffer) {
+        buf = _GWY_SCRATCH_BUFFER_GET(buffer);
+        if (n <= buf->head.info.alloc_len)
+            return buffer;
+
+        _gwy_scratch_buffer_free_backend(buf, buf->head.info.alloc_len);
+    }
+
+    n = _GWY_SCRATCH_BUFFER_ALIGN(n, _GWY_SCRATCH_BUFFER_ALIGNMENT);
+    buf = _gwy_scratch_buffer_alloc_backend(n);
+    buf->head.info.alloc_len = n;
+    return &buf->data[0];
+}
+/***** }}} **************************************************************/
+
+
+/**
+ * shuffle_and_twiddle:
+ * @gn: The total array size.
+ * @gm: The next already transformed size, i.e. the product of all factors
+ *      we have already handled, including @p.
+ * @p: The factor we want to handle now.
+ * @istride: Input data stride.
+ * @in_re: Real part of input data.
+ * @in_im: Imaginary part of input data.
+ * @ostride: Output data stride.
+ * @out_re: Real part of output data.
+ * @out_im: Imaginary part of output data.
+ *
+ * Move data between two buffers, ensuring the result will have stride @gn/@p
+ * and applying twiddle factors.
+ **/
 static void
 shuffle_and_twiddle(guint gn, guint gm, guint p,
                     guint istride, const gdouble *in_re, const gdouble *in_im,
@@ -791,6 +908,293 @@ pass10(guint gn, guint stride, gdouble *re, gdouble *im)
 /* }}} */
 
 /**
+ * smooth_upper_bound:
+ * @n: A number.
+ *
+ * Finds a smooth (highly factorable) number larger or equal to @n.
+ *
+ * Returns: A smooth number larger or equal to @n.
+ **/
+static guint
+smooth_upper_bound(guint n)
+{
+    static const guint primes[] = { 2, 3, 5, 7 };
+
+    guint j, p, r;
+
+    for (r = 1; ; ) {
+        /* the factorable part */
+        for (j = 0; j < G_N_ELEMENTS(primes); j++) {
+            p = primes[j];
+            while (n % p == 0) {
+                n /= p;
+                r *= p;
+            }
+        }
+
+        if (n == 1)
+            return r;
+
+        /* gosh... make it factorable again */
+        n++;
+    }
+}
+
+/**
+ * bluestein:
+ * @n: The transform size and the array size (unlike passP() and gpass(),
+ *     this function performs only a single transform).
+ * @istride: Input data stride.
+ * @in_re: Real part of input data.
+ * @in_im: Imaginary part of input data.
+ * @ostride: Output data stride.
+ * @out_re: Real part of output data.
+ * @out_im: Imaginary part of output data.
+ *
+ * Performs Bluestein's arbitrary-size FFT.
+ *
+ * Note it calls gwy_fft_simple().
+ **/
+static void
+bluestein(guint n,
+          guint istride, const gdouble *in_re, const gdouble *in_im,
+          guint ostride, gdouble *out_re, gdouble *out_im)
+{
+    static gdouble *bre = NULL;
+    static guint bn = 0;
+    static gdouble *are = NULL;
+
+    gdouble *aim, *bim;
+    gdouble q;
+    guint j, nfft;
+
+    nfft = smooth_upper_bound(2*n - 1);
+
+    /* Calculate chirp b, Fb */
+    if (bn != n) {
+        bre = _gwy_scratch_buffer_ensure(bre, 4*nfft);
+        bn = n;
+
+        bim = bre + nfft;
+        bre[0] = 1.0;
+        bim[0] = 0.0;
+        for (j = 1; j < (n + 1)/2; j++) {
+            _gwy_sincos(G_PI*j*j/n, bim + j, bre + j);
+            bre[nfft - j]   = bre[j];
+            bim[nfft - j]   = bim[j];
+            bre[nfft-n + j] = bre[n - j] = -bre[j];
+            bim[nfft-n + j] = bim[n - j] = -bim[j];
+        }
+
+        for (j = n; j <= nfft-n; j++)
+            bre[j] = bim[j] = 0.0;
+
+        gwy_fft_simple(GWY_TRANSFORM_DIRECTION_FORWARD, nfft,
+                       1, bre, bim, 1, bre + 2*nfft, bim + 2*nfft);
+    }
+    else
+        bim = bre + nfft;
+
+    /* Build zero-extended premultiplied a, Fa */
+    are = _gwy_scratch_buffer_ensure(are, 4*nfft);
+    aim = are + nfft;
+
+    for (j = 0; j < n; j++) {
+        are[j] = bre[j]*in_re[istride*j] + bim[j]*in_im[istride*j];
+        aim[j] = bre[j]*in_im[istride*j] - bim[j]*in_re[istride*j];
+    }
+    memset(are + n, 0, sizeof(gdouble)*(nfft - n));
+    memset(aim + n, 0, sizeof(gdouble)*(nfft - n));
+    gwy_fft_simple(GWY_TRANSFORM_DIRECTION_FORWARD, nfft,
+                   1, are, aim, 1, are + 2*nfft, aim + 2*nfft);
+
+    /* Multiply Fa*Fb into Fa and transform back */
+    are += 2*nfft;
+    aim += 2*nfft;
+    bre += 2*nfft;
+    bim += 2*nfft;
+    for (j = 0; j < nfft; j++) {
+        gdouble x = are[j];
+
+        are[j] = bre[j]*are[j] - bim[j]*aim[j];
+        aim[j] = bre[j]*aim[j] + bim[j]*x;
+    }
+    are -= 2*nfft;
+    aim -= 2*nfft;
+    bre -= 2*nfft;
+    bim -= 2*nfft;
+    gwy_fft_simple(GWY_TRANSFORM_DIRECTION_BACKWARD, nfft,
+                   1, are + 2*nfft, aim + 2*nfft, 1, are, aim);
+
+    /* Store result into out */
+    q = sqrt((gdouble)nfft/n);
+    for (j = 0; j < n; j++) {
+        out_re[ostride*j] = q*(are[j]*bre[j] + aim[j]*bim[j]);
+        out_im[ostride*j] = q*(aim[j]*bre[j] - are[j]*bim[j]);
+    }
+}
+
+/**
+ * gpass:
+ * @p: The factor we want to handle now.
+ * @gn: The total array size.
+ * @stride: Array stride.
+ * @re: Real data.
+ * @im: Imaginary data.
+ *
+ * Performs a general prime-sized butterfly pass.
+ *
+ * This is a rather naive O(N^2) method.
+ *
+ * All memory is stack-allocated, do not pass large @p values!
+ **/
+static void
+gpass(guint p, guint gn,
+      guint stride, gdouble *re, gdouble *im)
+{
+    gdouble *fc, *fs, *wer, *wor, *wei, *woi;
+    gdouble ucr, uci, usr, usi;
+    gint *idx;
+    guint q, m, n, j;
+    gint k;
+
+    gn /= p;
+    q = (p - 1)/2;
+    fc = g_newa(gdouble, 2*q);
+    fs = fc + q;
+    for (j = 0; j < q; j++)
+        _gwy_sincos(2*G_PI*(j + 1)/p, fs + j, fc + j);
+
+    idx = g_newa(gint, q*q);
+    for (n = 0; n < q; n++) {
+        for (j = 0; j < q; j++) {
+            k = (n + 1)*(j + 1) % p;
+            idx[n*q + j] = (k > (gint)q) ? k-(gint)p : k;
+        }
+    }
+
+    wer = g_newa(gdouble, 4*q);
+    wei = wer + q;
+    wor = wer + 2*q;
+    woi = wor + q;
+    for (m = 0; m < gn; m++) {
+        /* even/odd blocks */
+        for (j = 1; j <= q; j++) {
+            wer[j-1] = re[stride*(j*gn + m)] + re[stride*((p - j)*gn + m)];
+            wor[j-1] = re[stride*(j*gn + m)] - re[stride*((p - j)*gn + m)];
+            wei[j-1] = im[stride*(j*gn + m)] + im[stride*((p - j)*gn + m)];
+            woi[j-1] = im[stride*(j*gn + m)] - im[stride*((p - j)*gn + m)];
+        }
+        /* block sums */
+        for (n = 0; n < q; n++) {
+            ucr = re[stride*m];
+            uci = im[stride*m];
+            usr = 0.0;
+            usi = 0.0;
+            for (j = 0; j < q; j++) {
+                if ((k = idx[n*q + j]) > 0) {
+                    ucr += fc[k-1]*wer[j];
+                    uci += fc[k-1]*wei[j];
+                    usr += fs[k-1]*wor[j];
+                    usi += fs[k-1]*woi[j];
+                }
+                else {
+                    ucr += fc[-k-1]*wer[j];
+                    uci += fc[-k-1]*wei[j];
+                    usr -= fs[-k-1]*wor[j];
+                    usi -= fs[-k-1]*woi[j];
+                }
+            }
+            re[stride*((n + 1)*gn + m)] = ucr - usi;
+            im[stride*((n + 1)*gn + m)] = uci + usr;
+            re[stride*((p-1 - n)*gn + m)] = ucr + usi;
+            im[stride*((p-1 - n)*gn + m)] = uci - usr;
+        }
+        /* first row */
+        for (j = 0; j < q; j++) {
+            re[stride*m] += wer[j];
+            im[stride*m] += wei[j];
+        }
+    }
+}
+
+/**
+ * analyse_size:
+ * @n: A number (transform size).
+ * @pp: An array to put its factors to.  The caller is responsible for it
+ *      being large enough.
+ *
+ * Factors a transform size into suitable subtransform sizes.
+ *
+ * The factors are not necessarily primes, they are either factors we have
+ * passP() routine for (and larger compound factors are preferred then), or
+ * they are prime factors handled by gpass().  If anything remains, it is
+ * put to the last item and the return value is negated.
+ *
+ * Returns: The number of factors put into @pp, negated if the last factor
+ *          is a Big Ugly Number(TM).
+ **/
+static gint
+analyse_size(guint n, guint *pp)
+{
+    guint m, p, k;
+    gint np;
+
+    for (m = 1, np = 0; m < n; m *= p, np++) {
+        k = n/m;
+        if (k % 5 == 0)
+            p = (k % 2 == 0) ? 10 : 5;
+        else if (k % 3 == 0)
+            p = (k % 2 == 0) ? 6 : 3;
+        else if (k % 2 == 0)
+            p = (k % 4 == 0) ? ((k % 8 == 0 && k != 16) ? 8 : 4) : 2;
+        else if (k % 7 == 0)
+            p = 7;
+        /* Out of luck with nice factors.  Try the less nice ones. */
+        else {
+            /* gpass() ceases to be competitive with bluestein() around 70.
+             * Also, the required stack space exceeds 1kB. */
+            static const guint primes[] = {
+                11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67
+            };
+
+            for (m = 0; m < G_N_ELEMENTS(primes); m++) {
+                p = primes[m];
+                while (k % p == 0) {
+                    pp[np] = p;
+                    np++;
+                    k /= p;
+                }
+                if (k == 1)
+                    return np;
+            }
+            /* Ugly large prime factors still remain.
+             * Indicate them by a negative return value. */
+            pp[np] = k;
+            np++;
+
+            return -np;
+        }
+        pp[np] = p;
+    }
+
+    return np;
+}
+
+static void
+normalize(guint n, gdouble norm_fact,
+          guint istride, const gdouble *in_re, const gdouble *in_im,
+          guint ostride, gdouble *out_re, gdouble *out_im)
+{
+    guint j;
+
+    for (j = 0; j < n; j++) {
+        out_re[ostride*j] = norm_fact*in_re[istride*j];
+        out_im[ostride*j] = norm_fact*in_im[istride*j];
+    }
+}
+
+/**
  * gwy_fft_simple:
  * @dir: Transformation direction.
  * @n: Number of data points. Note only certain transform sizes are
@@ -836,62 +1240,103 @@ gwy_fft_simple(GwyTransformDirection dir,
         pass10
     };
 
-    static GArray *buffer = NULL;
-    static guint pp[20];  /* 3^21 > G_MAXUINT */
+    static gdouble *buffer = NULL;
 
+    guint *pp;
     gdouble *buf_re, *buf_im;
-    guint m, np, p, k, bstride;
+    guint m, j, p, k, bstride;
+    gint np;
     gdouble norm_fact;
 
+    /* The subroutines are written for +i in the exponent.  Shoot me. */
     if (dir != GWY_TRANSFORM_DIRECTION_BACKWARD) {
         GWY_SWAP(const gdouble*, in_re, in_im);
         GWY_SWAP(gdouble*, out_re, out_im);
     }
 
-    for (m = 1, np = 0; m < n; m *= p, np++) {
+    m = 1;
+    pp = g_newa(guint, 21);
+    np = analyse_size(n, pp);
+#ifdef DEBUG
+    {
+        GString *str;
+
+        str = g_string_new(NULL);
+        g_string_append_printf(str, "%u:", n);
+        for (j = 0; j < (guint)ABS(np); j++)
+            g_string_append_printf(str, " %u", pp[j]);
+        if (np < 0)
+            g_string_append(str, "(!)");
+        gwy_debug("factorization: %s", str->str);
+        g_string_free(str, TRUE);
+    }
+#endif
+    /* This is exteremely simplistic.  Although we do not have codelets for
+     * the factors, we could still factorize it and use much smaller transform
+     * sizes in bluestein(). */
+    if (np < 0) {
+        /* bluestein() calls recursively gwy_fft_simple() and the contents of
+         * buf[] is overwriten. */
+        np = -np-1;
+        m = pp[np];
         k = n/m;
-        if (k % 5 == 0)
-            p = (k % 2 == 0) ? 10 : 5;
-        else if (k % 3 == 0)
-            p = (k % 2 == 0) ? 6 : 3;
-        else if (k % 2 == 0)
-            p = (k % 4 == 0) ? ((k % 8 == 0 && k != 16) ? 8 : 4) : 2;
-        else if (k % 7 == 0)
-            p = 7;
-        else {
-            g_critical("%d (%d) contains unimplemented primes", k, n);
+        /* FIXME: This has a terrible memory access pattern.
+         * The swapped arrays are all right, bluestein() uses a normal
+         * sign convention, unlike everything else here. */
+        for (j = 0; j < k; j++)
+            bluestein(m,
+                      k*istride, in_im + j, in_re + j,
+                      k*ostride, out_im + j, out_re + j);
+        if (k == 1)
             return;
-        }
-        pp[np] = p;
     }
 
     /* XXX: This is never freed. */
-    if (!buffer)
-        buffer = g_array_new(FALSE, FALSE, 2*sizeof(gdouble));
-    g_array_set_size(buffer, n);
-    buf_re = (gdouble*)buffer->data;
+    buf_re = buffer = _gwy_scratch_buffer_ensure(buffer, 2*n);
     buf_im = buf_re + n;
     bstride = 1;
 
-    if (np % 2 == 0 && n > 1) {
-        GWY_SWAP(gdouble*, buf_re, out_re);
-        GWY_SWAP(gdouble*, buf_im, out_im);
-        GWY_SWAP(guint, bstride, ostride);
+    /* Here it gets hairy.
+     * We can have the data either in out or in in.
+     * And we may want them either in out or in buf. */
+    norm_fact = sqrt((gdouble)m/n);
+    if (m > 1) {
+        if (np % 2 == 0) {
+            normalize(n, norm_fact,
+                      ostride, out_re, out_im, ostride, out_re, out_im);
+
+            GWY_SWAP(gdouble*, buf_re, out_re);
+            GWY_SWAP(gdouble*, buf_im, out_im);
+            GWY_SWAP(guint, bstride, ostride);
+        }
+        else {
+            normalize(n, norm_fact,
+                      ostride, out_re, out_im, bstride, buf_re, buf_im);
+        }
+    }
+    else {
+        if (np % 2 == 0 && n > 1) {
+            GWY_SWAP(gdouble*, buf_re, out_re);
+            GWY_SWAP(gdouble*, buf_im, out_im);
+            GWY_SWAP(guint, bstride, ostride);
+        }
+        normalize(n, norm_fact,
+                  istride, in_re, in_im, ostride, out_re, out_im);
     }
 
-    norm_fact = 1.0/sqrt(n);
-    for (m = 0; m < n; m++) {
-        out_re[ostride*m] = norm_fact*in_re[istride*m];
-        out_im[ostride*m] = norm_fact*in_im[istride*m];
-    }
-
-    for (k = 0, m = 1; k < np; k++, m *= p) {
+    /* Cooley-Tukey */
+    for (k = 0; k < (guint)np; k++, m *= p) {
         p = pp[k];
         if (m > 1)
             shuffle_and_twiddle(n, m*p, p,
                                 bstride, buf_re, buf_im,
                                 ostride, out_re, out_im);
-        butterflies[p](n, ostride, out_re, out_im);
+
+        if (p < G_N_ELEMENTS(butterflies))
+            butterflies[p](n, ostride, out_re, out_im);
+        else
+            gpass(p, n, ostride, out_re, out_im);
+
         GWY_SWAP(gdouble*, buf_re, out_re);
         GWY_SWAP(gdouble*, buf_im, out_im);
         GWY_SWAP(guint, bstride, ostride);
@@ -1085,14 +1530,22 @@ gwy_fft_window_data_field(GwyDataField *dfield,
 
 /**
  * SECTION:simplefft
- * @title: simplefft
+ * @title: simpleFFT
  * @short_description: Simple FFT algorithm
+ * @see_also: <link linkend="libgwyprocess-inttrans">inttrans</link>
+ *            -- high-level integral transform functions
  *
  * The simple one-dimensional FFT algorithm gwy_fft_simple() is used as
- * a fallback by other functions when better implementation (FFTW3) is not
+ * a fallback by other functions when a better implementation (FFTW3) is not
  * available.
  *
- * It works only on data sizes that are powers of 2.
+ * You should not use it directly, as it is a waste of resources
+ * if FFTW3 backed is in use, neither you should feel any need to, as
+ * high-level functions such as gwy_data_field_2dfft() are available.
+ *
+ * Up to version 2.7 simpleFFT works only with certain tranform sizes, mostly
+ * powers of 2.  Since 2.8 it can handle arbitrary tranform sizes, although
+ * sizes with large prime factors can be quite slow (still O(n*log(n)) though).
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
