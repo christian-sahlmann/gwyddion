@@ -52,6 +52,7 @@ include $(top_srcdir)/utils/mkenum.mk
 AM_CFLAGS = @COMMON_CFLAGS@
 AM_CPPFLAGS = \
 	-I$(top_builddir) \
+	-I$(top_srcdir) \
 	-DG_LOG_DOMAIN=\"Gwyddion\" \
 	-DGWY_LIBDIR=\"$(libdir)\" \
 	-DGWY_LIBEXECDIR=\"$(libexecdir)\" \

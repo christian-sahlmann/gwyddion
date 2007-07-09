@@ -36,7 +36,7 @@ MKENUM_HFILES = gwymoduleenums.h gwymoduleloader.h gwymodule-file.h
 include $(top_srcdir)/utils/mkenum.mk
 
 AM_CFLAGS = @COMMON_CFLAGS@
-AM_CPPFLAGS = -I$(top_builddir) -DG_LOG_DOMAIN=\"GwyModule\"
+AM_CPPFLAGS = -I$(top_builddir) -I$(top_srcdir) -DG_LOG_DOMAIN=\"GwyModule\"
 
 # In following order do:
 # Any code change     C:   R++: A

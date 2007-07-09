@@ -20,7 +20,7 @@ if OS_WIN32
 no_undefined = -no-undefined
 endif
 
-AM_CPPFLAGS = -I$(top_buildir) -DG_LOG_DOMAIN=\"Module\"
+AM_CPPFLAGS = -I$(top_buildir) -I$(top_srcdir) -DG_LOG_DOMAIN=\"Module\"
 AM_CFLAGS = @COMMON_CFLAGS@
 AM_LDFLAGS = -avoid-version -module $(no_undefined) $(module_libadd)
 
