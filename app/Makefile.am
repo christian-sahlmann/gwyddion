@@ -59,7 +59,7 @@ MKENUM_HFILES = data-browser.h menu.h gwyplaintool.h settings.h
 include $(top_srcdir)/utils/mkenum.mk
 
 AM_CFLAGS = @COMMON_CFLAGS@
-AM_CPPFLAGS = -I$(top_builddir) -I$(top_srcdir)
+AM_CPPFLAGS = -I$(top_srcdir)
 
 # In following order do:
 # Any code change     C:   R++: A

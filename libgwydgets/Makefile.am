@@ -84,7 +84,7 @@ GENMARSHAL_PREFIX = _gwydget_marshal
 include $(top_srcdir)/utils/genmarshal.mk
 
 AM_CFLAGS = @COMMON_CFLAGS@
-AM_CPPFLAGS = -I$(top_builddir) -I$(top_srcdir) -DG_LOG_DOMAIN=\"Gwydgets\"
+AM_CPPFLAGS = -I$(top_srcdir) -DG_LOG_DOMAIN=\"Gwydgets\"
 
 # In following order do:
 # Any code change     C:   R++: A

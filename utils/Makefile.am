@@ -29,7 +29,7 @@ noinst_PROGRAMS = \
 dump_modules_SOURCES = \
 	dump-modules.c
 
-AM_CPPFLAGS = -I$(top_builddir)
+AM_CPPFLAGS =
 AM_CFLAGS = @COMMON_CFLAGS@
 
 dump_modules_LDADD = @GTKGLEXT_LIBS@ @BASIC_LIBS@ $(LIBTIFF) \
