@@ -125,7 +125,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Omicron data files (two-part .par + .tf*, .tb*, .sf*, .sb*)."),
     "Yeti <yeti@gwyddion.net>",
-    "0.4",
+    "0.5",
     "David Nečas (Yeti) & Petr Klapetek & Markus Pristovsek",
     "2006",
 };
@@ -280,6 +280,12 @@ omicron_load(const gchar *filename,
                 if (!spectra) {
                     gwy_object_unref(container);
                     goto fail;
+                }
+
+                if (!gwy_spectra_get_n_spectra(spectra)) {
+                    gwy_debug("Spectra %u is empty, ignoring", i);
+                    g_object_unref(spectra);
+                    continue;
                 }
 
                 /* FIXME */
@@ -740,7 +746,6 @@ omicron_read_cs_data(OmicronFile *ofile,
     scale = channel->resolution; /* can also be extracted from min&max
                                     raw and phys settings */
     while ((line = gwy_str_next_line(&buffer))) {
-
         if (strstr(line, ";n_curves")) {
             /* Find number of curves this should appear first in file */
             ncurves = g_ascii_strtod(strchr(line, ':')+1, NULL);
@@ -808,7 +813,8 @@ omicron_read_cs_data(OmicronFile *ofile,
             if ((channel->param[0] == 'V') || (channel->param[0] == 'E')) {
                 siunit = gwy_si_unit_new("V");
                 power10 = 0;
-            } else if (channel->param[0] == 'I')
+            }
+            else if (channel->param[0] == 'I')
                 siunit = gwy_si_unit_new_parse("nA", &power10);
             else if (channel->param[0] == 'Z')
                 siunit = gwy_si_unit_new_parse("nm", &power10);
@@ -845,6 +851,9 @@ omicron_read_cs_data(OmicronFile *ofile,
             g_ptr_array_add(spectrum, dline);
         }
     }
+    if (!spectrum)
+        spectrum = g_ptr_array_new();
+
     if (spectrum->len < ncurves) {
         gwy_debug("Less actual spectra than ncurves");
         ncurves = spectrum->len;
@@ -863,13 +872,11 @@ omicron_read_cs_data(OmicronFile *ofile,
             ncurves++;
         }
     }
-    if (!(spectra = gwy_spectra_new())) {
-        g_critical("Could not allocates new spectra object");
-        return NULL;
+    spectra = gwy_spectra_new();
+    if (coord_unit) {
+        gwy_spectra_set_si_unit_xy(spectra, coord_unit);
+        g_object_unref(coord_unit);
     }
-
-    gwy_spectra_set_si_unit_xy(spectra, coord_unit);
-    g_object_unref(coord_unit);
 
     for (i = 0; i < ncurves; i++) {
         dline = g_ptr_array_index(spectrum, i);
