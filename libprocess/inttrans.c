@@ -1955,7 +1955,7 @@ gwy_data_field_fft_filter_1d(GwyDataField *data_field,
 {
     GwyDataField *buffer, *iresult_field, *hlp_rdfield, *hlp_idfield;
     GwyDataLine *w;
-    gint i, j, size, xres, yres;
+    gint i, j, xres, yres;
 
     g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
     g_return_if_fail(GWY_IS_DATA_FIELD(result_field));
@@ -1972,8 +1972,6 @@ gwy_data_field_fft_filter_1d(GwyDataField *data_field,
 
     yres = buffer->yres;
     xres = buffer->xres;
-    size = gwy_fft_find_nice_size(xres);
-    gwy_data_field_resample(buffer, size, yres, interpolation);
 
     hlp_rdfield = gwy_data_field_new_alike(buffer, TRUE);
     hlp_idfield = gwy_data_field_new_alike(buffer, TRUE);
@@ -1984,20 +1982,20 @@ gwy_data_field_fft_filter_1d(GwyDataField *data_field,
                              GWY_ORIENTATION_HORIZONTAL,
                              GWY_TRANSFORM_DIRECTION_FORWARD);
 
-    w = gwy_data_line_new_resampled(weights, (size + 1)/2, interpolation);
+    w = gwy_data_line_new_resampled(weights, (xres + 1)/2, interpolation);
     for (i = 0; i < yres; i++) {
-        gdouble *rrow = hlp_rdfield->data + i*size;
-        gdouble *irow = hlp_idfield->data + i*size;
+        gdouble *rrow = hlp_rdfield->data + i*xres;
+        gdouble *irow = hlp_idfield->data + i*xres;
 
-        for (j = 0; j < size/2; j++) {
+        for (j = 0; j < xres/2; j++) {
             rrow[j] *= w->data[j];
-            rrow[size-1 - j] *= w->data[j];
+            rrow[xres-1 - j] *= w->data[j];
             irow[j] *= w->data[j];
-            irow[size-1 - j] *= w->data[j];
+            irow[xres-1 - j] *= w->data[j];
         }
-        if (w->res != size/2) {
-            rrow[size/2] *= w->data[size/2];
-            irow[size/2] *= w->data[size/2];
+        if (w->res != xres/2) {
+            rrow[xres/2] *= w->data[xres/2];
+            irow[xres/2] *= w->data[xres/2];
         }
     }
     g_object_unref(w);
@@ -2010,7 +2008,6 @@ gwy_data_field_fft_filter_1d(GwyDataField *data_field,
     g_object_unref(hlp_rdfield);
     g_object_unref(hlp_idfield);
 
-    gwy_data_field_resample(buffer, xres, yres, interpolation);
     if (orientation == GWY_ORIENTATION_VERTICAL)
         flip_xy(buffer, result_field, TRUE);
     else
@@ -2029,9 +2026,8 @@ gwy_data_field_fft_filter_1d(GwyDataField *data_field,
  * There are two main groups of FFT functions.
  *
  * High-level functions such as gwy_data_field_2dfft(), gwy_data_line_fft()
- * can perform windowing, leveling and other pre- and postprocessing.  They
- * also automatically resample data to a size supported by the current FFT
- * backend.  This makes them suitable for calculation of spectral densities
+ * can perform windowing, leveling and other pre- and postprocessing.
+ * This makes them suitable for calculation of spectral densities
  * and other statistical characteristics.
  *
  * Low-level functions have <literal>raw</literal> appended to their name:
