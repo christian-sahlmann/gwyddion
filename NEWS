@@ -1,3 +1,17 @@
+2.7.20070709
+
+2.8 (0000-00-00)
+Libraries:
+- libgwyprocess: gwy_fft_simple() can handle transforms of arbitrary size.
+
+Modules:
+- JPK: A typo causing failure to load any file was fixed.
+- Omicron: Empty spectroscopy files are ignored instead of crashing on them.
+
+Other:
+- Autoconf 2.60 is required to build from svn checkout and/or for development.
+- It should build with builddir != srcdir.
+
 
 2.7 (2007-06-26)
 Application:
