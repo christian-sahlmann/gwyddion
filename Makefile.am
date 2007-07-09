@@ -29,6 +29,12 @@ EXTRA_DIST = \
 
 DISTCLEANFILES = gwyconfig.h
 
+DISTCHECK_CONFIGURE_FLAGS = \
+	--enable-gtk-doc \
+	--enable-pygwy \
+	--enable-maintainer-mode \
+	--disable-desktop-file-update
+
 ACLOCAL_AMFLAGS = -I m4
 
 if MAINTAINER_MODE
