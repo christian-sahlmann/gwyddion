@@ -1953,7 +1953,7 @@ gwy_data_field_fft_filter_1d(GwyDataField *data_field,
                              GwyOrientation orientation,
                              GwyInterpolationType interpolation)
 {
-    GwyDataField *buffer, *iresult_field, *hlp_rdfield, *hlp_idfield;
+    GwyDataField *source, *target, *iresult_field, *hlp_rdfield, *hlp_idfield;
     GwyDataLine *w;
     gint i, j, xres, yres;
 
@@ -1961,23 +1961,26 @@ gwy_data_field_fft_filter_1d(GwyDataField *data_field,
     g_return_if_fail(GWY_IS_DATA_FIELD(result_field));
     g_return_if_fail(GWY_IS_DATA_LINE(weights));
 
-    buffer = gwy_data_field_new_alike(data_field, FALSE);
     gwy_data_field_resample(result_field, data_field->xres, data_field->yres,
                             GWY_INTERPOLATION_NONE);
 
-    if (orientation == GWY_ORIENTATION_VERTICAL)
-        flip_xy(data_field, buffer, FALSE);
-    else
-        gwy_data_field_copy(data_field, buffer, FALSE);
+    if (orientation == GWY_ORIENTATION_VERTICAL) {
+        source = target = gwy_data_field_new_alike(data_field, FALSE);
+        flip_xy(data_field, source, FALSE);
+    }
+    else {
+        source = data_field;
+        target = result_field;
+    }
 
-    yres = buffer->yres;
-    xres = buffer->xres;
+    yres = source->yres;
+    xres = source->xres;
 
-    hlp_rdfield = gwy_data_field_new_alike(buffer, TRUE);
-    hlp_idfield = gwy_data_field_new_alike(buffer, TRUE);
-    iresult_field = gwy_data_field_new_alike(buffer, TRUE);
+    hlp_rdfield = gwy_data_field_new_alike(source, TRUE);
+    hlp_idfield = gwy_data_field_new_alike(source, TRUE);
+    iresult_field = gwy_data_field_new_alike(source, TRUE);
 
-    gwy_data_field_1dfft_raw(buffer, NULL,
+    gwy_data_field_1dfft_raw(source, NULL,
                              hlp_rdfield, hlp_idfield,
                              GWY_ORIENTATION_HORIZONTAL,
                              GWY_TRANSFORM_DIRECTION_FORWARD);
@@ -2001,19 +2004,17 @@ gwy_data_field_fft_filter_1d(GwyDataField *data_field,
     g_object_unref(w);
 
     gwy_data_field_1dfft_raw(hlp_rdfield, hlp_idfield,
-                             buffer, iresult_field,
+                             target, iresult_field,
                              GWY_ORIENTATION_HORIZONTAL,
                              GWY_TRANSFORM_DIRECTION_BACKWARD);
     g_object_unref(iresult_field);
     g_object_unref(hlp_rdfield);
     g_object_unref(hlp_idfield);
 
-    if (orientation == GWY_ORIENTATION_VERTICAL)
-        flip_xy(buffer, result_field, TRUE);
-    else
-        gwy_data_field_copy(buffer, result_field, FALSE);
-
-    g_object_unref(buffer);
+    if (orientation == GWY_ORIENTATION_VERTICAL) {
+        flip_xy(target, result_field, TRUE);
+        g_object_unref(target);
+    }
 }
 
 /************************** Documentation ****************************/
