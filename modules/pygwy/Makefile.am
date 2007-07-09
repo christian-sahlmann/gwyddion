@@ -65,9 +65,9 @@ pygwy.defs: $(PYGWY_H_FILES)
 # functions, and standardized `generated' line for automated exclusions of
 # generated files.
 # Keep the `GENERATED' string quoted to prevent match here
-pygwywrap.c: pygwy-codegen.py pygwy.defs pygwy.override
-	$(PYTHON) ./pygwy-codegen.py --codegendir $(PYGTK_CODEGENDIR) \
-	  --override pygwy.override --prefix pygwy pygwy.defs \
+pygwywrap.c: $(srcdir)/pygwy-codegen.py pygwy.defs $(srcdir)/pygwy.override
+	$(PYTHON) $(srcdir)/pygwy-codegen.py --codegendir $(PYGTK_CODEGENDIR) \
+	  --override $(srcdir)/pygwy.override --prefix pygwy pygwy.defs \
 	  | sed -e 's/^void$$/static void/' \
 	        -e '1s#.*#/* This is a 'GENERATED' file */#' >pygwywrap.c
 
