@@ -21,7 +21,7 @@ all-local: man3.stamp
 man3.stamp: $(Gwyddion_PERL)
 	for i in $(man3_pages); do \
 	    pm=`echo $$i | sed -e 's#::#/#g' -e 's/3pm$$/pm/'`; \
-	    $(POD2MAN) $(POD2MAN_FLAGS) $$pm $$i; \
+	    $(POD2MAN) $(POD2MAN_FLAGS) $(srcdir)/$$pm $$i; \
 	done
 	@touch man3.stamp
 
