@@ -133,7 +133,7 @@ dwt(GwyContainer *data, GwyRunType run)
     }
 
     dfield = gwy_data_field_new_resampled(dfield, newsize, newsize,
-                                          GWY_INTERPOLATION_BILINEAR);
+                                          args.interp);
     gwy_data_field_add(dfield, -gwy_data_field_get_avg(dfield));
 
     wtcoefs = GWY_DATA_LINE(gwy_data_line_new(10, 10, TRUE));

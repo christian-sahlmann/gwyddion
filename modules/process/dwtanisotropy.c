@@ -77,7 +77,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("2D DWT anisotropy detection based on X/Y components ratio."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.4",
+    "1.5",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -141,11 +141,12 @@ dwt_anisotropy(GwyContainer *data, GwyRunType run)
             return;
     }
 
-    newsize = gwy_fft_find_nice_size(xsize);
-    dfield = gwy_data_field_duplicate(dfield);
+    for (newsize = 1, i = xsize-1; i; i >>= 1, newsize <<= 1)
+        ;
+
+    dfield = gwy_data_field_new_resampled(dfield, newsize, newsize,
+                                          args.interp);
     gwy_data_field_add(dfield, -gwy_data_field_get_avg(dfield));
-    gwy_data_field_resample(dfield, newsize, newsize,
-                            GWY_INTERPOLATION_BILINEAR);
 
     gwy_app_undo_qcheckpoint(data, dquark, mquark, 0);
     if (!mask) {
