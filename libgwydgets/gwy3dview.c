@@ -2387,7 +2387,7 @@ gwy_3d_view_assign_lists(Gwy3DView *gwy3dview)
  * gwy_3d_view_release_lists:
  * @gwy3dview: A 3D data view widget.
  *
- * Returns OpenGL lists in use by this 3D view back to the pool.
+ * Release OpenGL lists in use by this 3D view back to the pool.
  **/
 static void
 gwy_3d_view_release_lists(Gwy3DView *gwy3dview)
