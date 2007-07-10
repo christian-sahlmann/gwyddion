@@ -107,7 +107,7 @@ dwt_anisotropy(GwyContainer *data, GwyRunType run)
     GwyDataLine *wtcoefs;
     DWTAnisotropyArgs args;
     gboolean ok;
-    gint xsize, ysize, newsize, limit, id;
+    gint xsize, ysize, newsize, limit, id, i;
 
     g_return_if_fail(run & DWT_ANISOTROPY_RUN_MODES);
 
