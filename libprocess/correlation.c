@@ -288,7 +288,7 @@ gwy_data_field_correlate(GwyDataField *data_field, GwyDataField *kernel_field,
                          GwyDataField *score, GwyCorrelationType method)
 {
 
-    gint xres, yres, kxres, kyres, i, j, k, fftxres, fftyres;
+    gint xres, yres, kxres, kyres, i, j, k;
     GwyDataField *data_in_re, *data_out_re, *data_out_im;
     GwyDataField *kernel_in_re, *kernel_out_re, *kernel_out_im;
     gdouble norm;
@@ -353,19 +353,13 @@ gwy_data_field_correlate(GwyDataField *data_field, GwyDataField *kernel_field,
 
         case GWY_CORRELATION_FFT:
         case GWY_CORRELATION_POC:
-        fftxres = gwy_fft_find_nice_size(xres);
-        fftyres = gwy_fft_find_nice_size(yres);
-        data_in_re = gwy_data_field_new_resampled(data_field,
-                                                  fftxres, fftyres,
-                                                  GWY_INTERPOLATION_BILINEAR);
+        data_in_re = gwy_data_field_duplicate(data_field);
         kernel_in_re = gwy_data_field_new_alike(data_field, TRUE);
         gwy_data_field_area_copy(kernel_field, kernel_in_re,
                                  0, 0, kernel_field->xres, kernel_field->yres,
                                  kernel_in_re->xres/2 - kernel_field->xres/2,
                                  kernel_in_re->yres/2 - kernel_field->yres/2);
-        gwy_data_field_resample(kernel_in_re, fftxres, fftyres,
-                                GWY_INTERPOLATION_BILINEAR);
-        gwy_data_field_resample(score, fftxres, fftyres,
+        gwy_data_field_resample(score, xres, yres,
                                 GWY_INTERPOLATION_NONE);
 
         data_out_re = gwy_data_field_new_alike(data_in_re, TRUE);
@@ -382,7 +376,7 @@ gwy_data_field_correlate(GwyDataField *data_field, GwyDataField *kernel_field,
                              GWY_TRANSFORM_DIRECTION_FORWARD,
                              GWY_INTERPOLATION_BILINEAR, FALSE, FALSE);
 
-        for (i = 0; i < fftxres*fftyres; i++) {
+        for (i = 0; i < xres*yres; i++) {
             /*NOTE: now we construct new "complex field" from data
              * and kernel fields, just to save memory*/
             data_in_re->data[i] = data_out_re->data[i]*kernel_out_re->data[i]
