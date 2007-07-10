@@ -1,16 +1,27 @@
-2.7.20070709
+2.7.20070710
 
 2.8 (0000-00-00)
 Libraries:
 - libgwyprocess: gwy_fft_simple() can handle transforms of arbitrary size.
+- libgwyprocess: Resampling was removed from integral transform functions as
+  all sizes are always transformable directly now.
 
 Modules:
-- JPK: A typo causing failure to load any file was fixed.
+- JPK: A typo causing failure to load any JPK file was fixed.
 - Omicron: Empty spectroscopy files are ignored instead of crashing on them.
+- FFT, CWT, FFT filters: Data are no longer resampled, images of all
+  dimensions are transformed as they are.
+- DWT, DWT anisotropy: Possibly bogus output on data with dimensions not
+  being powers of 2 was fixed.  They honour the selected interpolation type
+  instead of always using linear.
+- DWT: The output resampling option was removed.
 
 Other:
 - Autoconf 2.60 is required to build from svn checkout and/or for development.
 - It should build with builddir != srcdir.
+- Configure option --enable-library-bloat, enforcing linking of libraries
+  (including modules) with all their dependencies, was added.
+- Some more build system clean-ups.
 
 
 2.7 (2007-06-26)
