@@ -184,10 +184,8 @@ gwy_dwt_denoise_type_get_enum(void)
  *                              interpolation of arbitrary dimension.  Use
  *                              %GWY_INTERPOLATION_LINEAR instead.
  * @GWY_INTERPOLATION_KEY: Cubic Key's interpolation (with a=-1/2).
- * @GWY_INTERPOLATION_BSPLINE: B-spline interpolation. This interpolation type
- *                             is misimplemented and should not be used.
- * @GWY_INTERPOLATION_OMOMS: Omoms interpolation. This interpolation type
- *                           is misimplemented and should not be used.
+ * @GWY_INTERPOLATION_BSPLINE: B-spline interpolation.
+ * @GWY_INTERPOLATION_OMOMS: Omoms interpolation.
  * @GWY_INTERPOLATION_NNA: Nearest neighbour approximation.
  * @GWY_INTERPOLATION_SCHAUM: Cubic Schaum interpolation.
  *
