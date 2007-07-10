@@ -32,16 +32,12 @@
 #define CWT_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
 typedef struct {
-    gboolean preserve;
     gdouble scale;
-    GwyInterpolationType interp;
     Gwy2DCWTWaveletType wavelet;
 } CWTArgs;
 
 typedef struct {
-    GtkWidget *preserve;
     GtkObject *scale;
-    GtkWidget *interp;
     GtkWidget *wavelet;
 } CWTControls;
 
@@ -49,8 +45,6 @@ static gboolean    module_register            (void);
 static void        cwt                        (GwyContainer *data,
                                                GwyRunType run);
 static gboolean    cwt_dialog                 (CWTArgs *args);
-static void        preserve_changed_cb        (GtkToggleButton *button,
-                                               CWTArgs *args);
 static void        cwt_load_args              (GwyContainer *container,
                                                CWTArgs *args);
 static void        cwt_save_args              (GwyContainer *container,
@@ -59,9 +53,7 @@ static void        cwt_dialog_update          (CWTControls *controls,
                                                CWTArgs *args);
 
 static const CWTArgs cwt_defaults = {
-    1,
     10,
-    GWY_INTERPOLATION_LINEAR,
     GWY_2DCWT_GAUSS,
 };
 
@@ -70,7 +62,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Two-dimensional CWT (Continuous Wavelet Transform)."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.3",
+    "1.4",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -94,12 +86,9 @@ module_register(void)
 static void
 cwt(GwyContainer *data, GwyRunType run)
 {
-    GtkWidget *dialog;
     GwyDataField *dfield;
     CWTArgs args;
     gboolean ok;
-    gint xsize, ysize;
-    gint newsize;
     gint oldid, newid;
 
     g_return_if_fail(run & CWT_RUN_MODES);
@@ -107,21 +96,6 @@ cwt(GwyContainer *data, GwyRunType run)
                                      GWY_APP_DATA_FIELD_ID, &oldid,
                                      0);
     g_return_if_fail(dfield);
-
-    xsize = gwy_data_field_get_xres(dfield);
-    ysize = gwy_data_field_get_yres(dfield);
-
-    if (xsize != ysize) {
-        dialog = gtk_message_dialog_new
-            (gwy_app_find_window_for_channel(data, oldid),
-             GTK_DIALOG_DESTROY_WITH_PARENT,
-             GTK_MESSAGE_ERROR,
-             GTK_BUTTONS_OK,
-             _("%s: Data must be square."), "CWT");
-        gtk_dialog_run(GTK_DIALOG(dialog));
-        gtk_widget_destroy(dialog);
-        return;
-    }
 
     cwt_load_args(gwy_app_settings_get(), &args);
     if (run == GWY_RUN_INTERACTIVE) {
@@ -132,18 +106,9 @@ cwt(GwyContainer *data, GwyRunType run)
     }
 
     dfield = gwy_data_field_duplicate(dfield);
-    newsize = gwy_fft_find_nice_size(xsize);
-    gwy_data_field_resample(dfield, newsize, newsize, args.interp);
-
     gwy_data_field_cwt(dfield,
-                       args.interp,
-                       args.scale,
-                       args.wavelet);
-
-    if (args.preserve)
-        gwy_data_field_resample(dfield, xsize, ysize, args.interp);
-
-
+                       GWY_INTERPOLATION_LINEAR,  /* ignored */
+                       args.scale, args.wavelet);
 
     newid = gwy_app_data_browser_add_data_field(dfield, data, TRUE);
     gwy_app_sync_data_items(data, data, oldid, newid, FALSE,
@@ -154,7 +119,6 @@ cwt(GwyContainer *data, GwyRunType run)
     g_object_unref(dfield);
     gwy_app_set_data_field_title(data, newid, _("CWT"));
 }
-
 
 static gboolean
 cwt_dialog(CWTArgs *args)
@@ -184,22 +148,6 @@ cwt_dialog(CWTArgs *args)
     gwy_table_attach_spinbutton(table, 1, _("_Scale:"), _("pixels"),
                                 controls.scale);
 
-    controls.preserve
-        = gtk_check_button_new_with_mnemonic(_("_Preserve size (don't "
-                                               "resize to power of 2)"));
-    gtk_table_attach(GTK_TABLE(table), controls.preserve,
-                     0, 3, 0, 1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.preserve),
-                                 args->preserve);
-    g_signal_connect(controls.preserve, "toggled",
-                     G_CALLBACK(preserve_changed_cb), args);
-
-    controls.interp
-        = gwy_enum_combo_box_new(gwy_interpolation_type_get_enum(), -1,
-                                 G_CALLBACK(gwy_enum_combo_box_update_int),
-                                 &args->interp, args->interp, TRUE);
-    gwy_table_attach_row(table, 2, _("_Interpolation type:"), "",
-                         controls.interp);
     controls.wavelet
         = gwy_enum_combo_box_new(gwy_2d_cwt_wavelet_type_get_enum(), -1,
                                  G_CALLBACK(gwy_enum_combo_box_update_int),
@@ -241,34 +189,21 @@ cwt_dialog(CWTArgs *args)
 }
 
 static void
-preserve_changed_cb(GtkToggleButton *button, CWTArgs *args)
-{
-    args->preserve = gtk_toggle_button_get_active(button);
-}
-
-static void
 cwt_dialog_update(CWTControls *controls,
                   CWTArgs *args)
 {
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->scale),
                              args->scale);
-    gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->interp),
-                                  args->interp);
     gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->wavelet),
                                   args->wavelet);
 }
 
-static const gchar preserve_key[] = "/module/cwt/preserve";
-static const gchar interp_key[]   = "/module/cwt/interp";
 static const gchar wavelet_key[]  = "/module/cwt/wavelet";
 static const gchar scale_key[]    = "/module/cwt/scale";
 
 static void
 cwt_sanitize_args(CWTArgs *args)
 {
-    args->preserve = !!args->preserve;
-    args->interp = gwy_enum_sanitize_value(args->interp,
-                                           GWY_TYPE_INTERPOLATION_TYPE);
     args->wavelet = gwy_enum_sanitize_value(args->wavelet,
                                             GWY_TYPE_2D_CWT_WAVELET_TYPE);
     args->scale = CLAMP(args->scale, 0.0, 1000.0);
@@ -280,8 +215,6 @@ cwt_load_args(GwyContainer *container,
 {
     *args = cwt_defaults;
 
-    gwy_container_gis_boolean_by_name(container, preserve_key, &args->preserve);
-    gwy_container_gis_enum_by_name(container, interp_key, &args->interp);
     gwy_container_gis_enum_by_name(container, wavelet_key, &args->wavelet);
     gwy_container_gis_double_by_name(container, scale_key, &args->scale);
     cwt_sanitize_args(args);
@@ -291,8 +224,6 @@ static void
 cwt_save_args(GwyContainer *container,
               CWTArgs *args)
 {
-    gwy_container_set_boolean_by_name(container, preserve_key, args->preserve);
-    gwy_container_set_enum_by_name(container, interp_key, args->interp);
     gwy_container_set_enum_by_name(container, wavelet_key, args->wavelet);
     gwy_container_set_double_by_name(container, scale_key, args->scale);
 }
