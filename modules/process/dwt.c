@@ -36,13 +36,11 @@
 #define DWT_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
 typedef struct {
-    gboolean preserve;
     GwyInterpolationType interp;
     GwyDWTType wavelet;
 } DWTArgs;
 
 typedef struct {
-    GtkWidget *preserve;
     GtkWidget *wavelet;
     GtkWidget *interp;
 } DWTControls;
@@ -50,9 +48,9 @@ typedef struct {
 static gboolean module_register    (void);
 static void     dwt                (GwyContainer *data,
                                     GwyRunType run);
-static gboolean dwt_dialog         (DWTArgs *args);
-static void     preserve_changed_cb(GtkToggleButton *button,
-                                    DWTArgs *args);
+static gboolean dwt_dialog         (DWTArgs *args,
+                                    gint size,
+                                    gint newsize);
 static void     dwt_dialog_update  (DWTControls *controls,
                                     DWTArgs *args);
 static void     dwt_load_args      (GwyContainer *container,
@@ -63,7 +61,6 @@ static void     dwt_sanitize_args  (DWTArgs *args);
 
 
 static const DWTArgs dwt_defaults = {
-    0,
     GWY_INTERPOLATION_LINEAR,
     GWY_DWT_DAUB12,
 };
@@ -73,7 +70,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Two-dimensional DWT (Discrete Wavelet Transform)."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.5",
+    "1.6",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -102,7 +99,7 @@ dwt(GwyContainer *data, GwyRunType run)
     GwyDataLine *wtcoefs;
     DWTArgs args;
     gboolean ok;
-    gint xsize, ysize, newsize, newid, oldid;
+    gint xsize, ysize, newsize, newid, oldid, i;
 
     g_return_if_fail(run & DWT_RUN_MODES);
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
@@ -124,15 +121,17 @@ dwt(GwyContainer *data, GwyRunType run)
         return;
     }
 
+    for (newsize = 1, i = xsize-1; i; i >>= 1, newsize <<= 1)
+        ;
+
     dwt_load_args(gwy_app_settings_get(), &args);
     if (run == GWY_RUN_INTERACTIVE) {
-        ok = dwt_dialog(&args);
+        ok = dwt_dialog(&args, xsize, newsize);
         dwt_save_args(gwy_app_settings_get(), &args);
         if (!ok)
             return;
     }
 
-    newsize = gwy_fft_find_nice_size(xsize);
     dfield = gwy_data_field_new_resampled(dfield, newsize, newsize,
                                           GWY_INTERPOLATION_BILINEAR);
     gwy_data_field_add(dfield, -gwy_data_field_get_avg(dfield));
@@ -140,10 +139,6 @@ dwt(GwyContainer *data, GwyRunType run)
     wtcoefs = GWY_DATA_LINE(gwy_data_line_new(10, 10, TRUE));
     wtcoefs = gwy_dwt_set_coefficients(wtcoefs, args.wavelet);
     gwy_data_field_dwt(dfield, wtcoefs, 1, 4);
-
-    if (args.preserve)
-        gwy_data_field_resample(dfield, xsize, ysize, args.interp);
-
 
     newid = gwy_app_data_browser_add_data_field(dfield, data, TRUE);
     g_object_unref(dfield);
@@ -156,18 +151,21 @@ dwt(GwyContainer *data, GwyRunType run)
 
 
 static gboolean
-dwt_dialog(DWTArgs *args)
+dwt_dialog(DWTArgs *args,
+           gint size, gint newsize)
 {
-    GtkWidget *dialog, *table;
-    DWTControls controls;
     enum { RESPONSE_RESET = 1 };
-    gint response;
+    GtkWidget *dialog, *table, *label;
+    DWTControls controls;
+    gint row, response;
+    gchar *s;
 
     dialog = gtk_dialog_new_with_buttons(_("2D DWT"), NULL, 0,
                                          _("_Reset"), RESPONSE_RESET,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);
+    gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
 
     table = gtk_table_new(2, 4, FALSE);
@@ -176,30 +174,38 @@ dwt_dialog(DWTArgs *args)
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table,
                        FALSE, FALSE, 4);
-
-    controls.preserve
-        = gtk_check_button_new_with_mnemonic(_("_Preserve size (don't "
-                                               "resize to power of 2)"));
-    gtk_table_attach(GTK_TABLE(table), controls.preserve,
-                     0, 3, 0, 1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.preserve),
-                                 args->preserve);
-    g_signal_connect(controls.preserve, "toggled",
-                     G_CALLBACK(preserve_changed_cb), args);
-
-    controls.interp
-        = gwy_enum_combo_box_new(gwy_interpolation_type_get_enum(), -1,
-                                 G_CALLBACK(gwy_enum_combo_box_update_int),
-                                 &args->interp, args->interp, TRUE);
-    gwy_table_attach_row(table, 1, _("_Interpolation type:"), "",
-                         controls.interp);
+    row = 0;
 
     controls.wavelet
         = gwy_enum_combo_box_new(gwy_dwt_type_get_enum(), -1,
                                  G_CALLBACK(gwy_enum_combo_box_update_int),
                                  &args->wavelet, args->wavelet, TRUE);
-    gwy_table_attach_row(table, 2, _("_Wavelet type:"), "",
+    gwy_table_attach_row(table, row, _("_Wavelet type:"), NULL,
                          controls.wavelet);
+    row++;
+
+    if (size != newsize) {
+        gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
+        s = g_strdup_printf(_("Size %d is not a power of 2,\n"
+                              "data will be resampled to %d×%d for DWT."),
+                            size, newsize, newsize);
+        label = gtk_label_new(s);
+        gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+        gtk_table_attach(GTK_TABLE(table), label,
+                         0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+        g_free(s);
+        row++;
+    }
+
+    controls.interp
+        = gwy_enum_combo_box_new(gwy_interpolation_type_get_enum(), -1,
+                                 G_CALLBACK(gwy_enum_combo_box_update_int),
+                                 &args->interp, args->interp, TRUE);
+    gwy_table_attach_row(table, row, _("_Interpolation type:"), NULL,
+                         controls.interp);
+    gwy_table_hscale_set_sensitive(GTK_OBJECT(controls.interp),
+                                   size != newsize);
+    row++;
 
     gtk_widget_show_all(dialog);
     do {
@@ -232,12 +238,6 @@ dwt_dialog(DWTArgs *args)
 }
 
 static void
-preserve_changed_cb(GtkToggleButton *button, DWTArgs *args)
-{
-    args->preserve = gtk_toggle_button_get_active(button);
-}
-
-static void
 dwt_dialog_update(DWTControls *controls,
                   DWTArgs *args)
 {
@@ -245,19 +245,15 @@ dwt_dialog_update(DWTControls *controls,
                                   args->interp);
     gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->wavelet),
                                   args->wavelet);
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->preserve),
-                                 args->preserve);
 }
 
 
-static const gchar preserve_key[] = "/module/dwt/preserve";
 static const gchar interp_key[]   = "/module/dwt/interp";
 static const gchar wavelet_key[]  = "/module/dwt/window";
 
 static void
 dwt_sanitize_args(DWTArgs *args)
 {
-    args->preserve = !!args->preserve;
     args->interp = gwy_enum_sanitize_value(args->interp,
                                            GWY_TYPE_INTERPOLATION_TYPE);
     args->wavelet = gwy_enum_sanitize_value(args->wavelet, GWY_TYPE_DWT_TYPE);
@@ -269,7 +265,6 @@ dwt_load_args(GwyContainer *container,
 {
     *args = dwt_defaults;
 
-    gwy_container_gis_boolean_by_name(container, preserve_key, &args->preserve);
     gwy_container_gis_enum_by_name(container, interp_key, &args->interp);
     gwy_container_gis_enum_by_name(container, wavelet_key, &args->wavelet);
     dwt_sanitize_args(args);
@@ -279,7 +274,6 @@ static void
 dwt_save_args(GwyContainer *container,
               DWTArgs *args)
 {
-    gwy_container_set_boolean_by_name(container, preserve_key, args->preserve);
     gwy_container_set_enum_by_name(container, interp_key, args->interp);
     gwy_container_set_enum_by_name(container, wavelet_key, args->wavelet);
 }
