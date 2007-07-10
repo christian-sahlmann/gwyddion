@@ -274,7 +274,8 @@ PKG_CHECK_MODULES(GOBJECT, [gobject-2.0])
 PKG_CHECK_MODULES(GMODULE, [gmodule-2.0])
 
 ORIG_LIBS="$LIBS"
-AC_CHECK_LIB(m,sqrt,,[])
+AC_CHECK_LIBM
+LIBS="$LIBS $LIBM"
 
 #############################################################################
 # FFTW3
@@ -449,7 +450,7 @@ AC_SUBST(GETTEXT_PACKAGE)
 
 #############################################################################
 # Libs
-BASIC_LIBS="$GOBJECT_LIBS $INTLLIBS"
+BASIC_LIBS="$GOBJECT_LIBS $INTLLIBS $LIBM"
 LIBS="$ORIG_LIBS"
 AC_SUBST(BASIC_LIBS)
 COMMON_LDFLAGS="$HOST_LDFLAGS"
