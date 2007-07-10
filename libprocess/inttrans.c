@@ -1857,6 +1857,7 @@ gwy_data_field_mult_wav(GwyDataField *real_field,
  * gwy_data_field_cwt:
  * @data_field: A data field.
  * @interpolation: Interpolation type.
+ *                 Ignored since 2.8 as no reampling is performed.
  * @scale: Wavelet scale.
  * @wtype: Wavelet type.
  *
@@ -1883,7 +1884,7 @@ gwy_data_field_cwt(GwyDataField *data_field,
                          hlp_i,
                          GWY_WINDOWING_RECT,
                          GWY_TRANSFORM_DIRECTION_FORWARD,
-                         interpolation,
+                         interpolation,  /* ignored */
                          FALSE,
                          FALSE);
     gwy_data_field_mult_wav(hlp_r, hlp_i, scale, wtype);
@@ -1894,7 +1895,7 @@ gwy_data_field_cwt(GwyDataField *data_field,
                          imag_field,
                          GWY_WINDOWING_RECT,
                          GWY_TRANSFORM_DIRECTION_BACKWARD,
-                         interpolation,
+                         interpolation,  /* ignored */
                          FALSE,
                          FALSE);
 
