@@ -118,7 +118,16 @@ AM_CONDITIONAL([OS_WIN32],[test "$os_win32" = "yes"])
 # We try not to link modules with libraries and let symbols resolve through
 # app, because it means faster app startup and much faster compilation.  But
 # on some systems that isn't possible.
-AM_CONDITIONAL([MODULE_DEPENDENCIES],[test "x$allow_undefined_flag" = xunsupported])
+AC_ARG_ENABLE(library-bloat,
+              AC_HELP_STRING([--enable-library-bloat],
+                             [Make linking very slow]),
+                             [],
+                             [enable_library_bloat=no])
+if test "x$enable_library_bloat" != xyes \
+   && test "x$allow_undefined_flag" = xunsupported; then
+  enable_library_bloat=yes
+fi
+AM_CONDITIONAL([MODULE_DEPENDENCIES],[test "x$enable_library_bloat" = xyes])
 
 #############################################################################
 # XDG stuff
@@ -136,7 +145,7 @@ AM_PATH_PYTHON(2.2,,:)
 AM_CONDITIONAL([HAVE_PYTHON], [test "$PYTHON" != : -a "$enable_python" != no])
 
 AC_ARG_ENABLE(pygwy, AC_HELP_STRING([--enable-pygwy],
-                                    [build python wrapper to Gwyddion]),[],
+                                    [Build Python wrapper to Gwyddion]),[],
                                     [enable_pygwy=no])
 
 if test "x$enable_pygwy" != xno; then
