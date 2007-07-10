@@ -9,6 +9,7 @@ PROJECT=Gwyddion
 # When runnig autogen.sh one normally wants this.
 CONF_FLAGS="--enable-maintainer-mode"
 AUTOCONF=${AUTOCONF:-autoconf}
+AUTOM4TE=${AUTOM4TE:-autom4te}
 LIBTOOLIZE=${LIBTOOLIZE:-libtoolize}
 AUTOMAKE=${AUTOMAKE:-automake}
 ACLOCAL=${ACLOCAL:-aclocal}
