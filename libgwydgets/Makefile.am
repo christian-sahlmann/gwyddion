@@ -1,6 +1,17 @@
 # @(#) $Id$
 
+libgwyddion = $(top_builddir)/libgwyddion/libgwyddion2.la
+libgwyprocess = $(top_builddir)/libprocess/libgwyprocess2.la
+libgwydraw = $(top_builddir)/libdraw/libgwydraw2.la
+
 libgwydgets2includedir = $(pkgincludedir)/libgwydgets
+
+if MODULE_DEPENDENCIES
+libgwydgets_libadd = \
+	$(libgwydraw) \
+	$(libgwyprocess) \
+	$(libgwyddion)
+endif
 
 libgwydgets2include_HEADERS = \
 	gwy3dlabel.h \
@@ -93,6 +104,8 @@ AM_CPPFLAGS = -I$(top_srcdir) -DG_LOG_DOMAIN=\"Gwydgets\"
 # Changing ifaces     C:   R:   0
 libgwydgets2_la_LDFLAGS = @GTKGLEXT_LIBS@ @BASIC_LIBS@ -version-info 4:0:4
 #libgwydgets2_la_LDFLAGS = @GTKGLEXT_LIBS@ @BASIC_LIBS@ -release @LIBRARY_RELEASE@
+libgwydgets2_la_LIBADD = $(libgwydgets_libadd)
+
 libgwydgets2_la_SOURCES = \
 	gwy3dlabel.c \
 	gwy3dsetup.c \

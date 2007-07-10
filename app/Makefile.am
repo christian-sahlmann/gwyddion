@@ -8,6 +8,15 @@ libgwydgets = $(top_builddir)/libgwydgets/libgwydgets2.la
 
 libgwyapp2includedir = $(pkgincludedir)/app
 
+if MODULE_DEPENDENCIES
+libgwyapp_libadd = \
+	$(libgwymodule) \
+	$(libgwydgets) \
+	$(libgwydraw) \
+	$(libgwyprocess) \
+	$(libgwyddion)
+endif
+
 libgwyapp2include_HEADERS = \
 	app.h \
 	data-browser.h \
@@ -69,6 +78,7 @@ AM_CPPFLAGS = -I$(top_srcdir)
 libgwyapp2_la_LDFLAGS = @GTKGLEXT_LIBS@ @BASIC_LIBS@ -version-info 3:0:3
 #libgwyapp2_la_LDFLAGS = @GTKGLEXT_LIBS@ @BASIC_LIBS@ -release @LIBRARY_RELEASE@
 libgwyapp2_la_CPPFLAGS = -DG_LOG_DOMAIN=\"GwyApp\" $(AM_CPPFLAGS)
+libgwyapp2_la_LIBADD = $(libgwyapp_libadd)
 
 libgwyapp2_la_SOURCES = \
 	app.c \

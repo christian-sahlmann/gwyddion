@@ -1,6 +1,15 @@
 # @(#) $Id$
 
+libgwyddion = $(top_builddir)/libgwyddion/libgwyddion2.la
+libgwyprocess = $(top_builddir)/libprocess/libgwyprocess2.la
+
 libgwydraw2includedir = $(pkgincludedir)/libdraw
+
+if MODULE_DEPENDENCIES
+libgwydraw_libadd = \
+	$(libgwyprocess) \
+	$(libgwyddion)
+endif
 
 libgwydraw2include_HEADERS = \
 	gwydraw.h \
@@ -31,6 +40,8 @@ AM_CPPFLAGS = -I$(top_srcdir) -DG_LOG_DOMAIN=\"GwyDraw\"
 # Changing ifaces     C:   R:   0
 libgwydraw2_la_LDFLAGS = @GTK_LIBS@ @BASIC_LIBS@ -version-info 0:1:0
 #libgwydraw2_la_LDFLAGS = @GTK_LIBS@ @BASIC_LIBS@ -release @LIBRARY_RELEASE@
+libgwydraw2_la_LIBADD = $(libgwydraw_libadd)
+
 libgwydraw2_la_SOURCES = \
 	gwydraw.c \
 	gwyglmaterial.c \

@@ -1,6 +1,13 @@
 # @(#) $Id$
 
+libgwyddion = $(top_builddir)/libgwyddion/libgwyddion2.la
+
 libgwyprocess2includedir = $(pkgincludedir)/libprocess
+
+if MODULE_DEPENDENCIES
+libgwyprocess_libadd = \
+	$(libgwyddion)
+endif
 
 libgwyprocess2include_HEADERS = \
 	arithmetic.h \
@@ -60,6 +67,8 @@ AM_CPPFLAGS = -I$(top_srcdir) -DG_LOG_DOMAIN=\"GwyProcess\"
 # Changing ifaces     C:   R:   0
 libgwyprocess2_la_LDFLAGS = @BASIC_LIBS@ @FFTW3_LIBS@ -version-info 5:0:5
 #libgwyprocess2_la_LDFLAGS = @BASIC_LIBS@ @FFTW3_LIBS@ -release @LIBRARY_RELEASE@
+libgwyprocess2_la_LIBADD = $(libgwyprocess_libadd)
+
 libgwyprocess2_la_SOURCES = \
 	arithmetic.c \
 	cdline.c \

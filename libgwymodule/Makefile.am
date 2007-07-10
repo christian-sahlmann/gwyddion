@@ -1,6 +1,19 @@
 # @(#) $Id$
 
+libgwyddion = $(top_builddir)/libgwyddion/libgwyddion2.la
+libgwyprocess = $(top_builddir)/libprocess/libgwyprocess2.la
+libgwydraw = $(top_builddir)/libdraw/libgwydraw2.la
+libgwydgets = $(top_builddir)/libgwydgets/libgwydgets2.la
+
 libgwymodule2includedir = $(pkgincludedir)/libgwymodule
+
+if MODULE_DEPENDENCIES
+libgwymodule_libadd = \
+	$(libgwydgets) \
+	$(libgwydraw) \
+	$(libgwyprocess) \
+	$(libgwyddion)
+endif
 
 libgwymodule2include_HEADERS = \
 	gwymodule.h \
@@ -45,6 +58,8 @@ AM_CPPFLAGS = -I$(top_srcdir) -DG_LOG_DOMAIN=\"GwyModule\"
 # Changing ifaces     C:   R:   0
 libgwymodule2_la_LDFLAGS = @GMODULE_LIBS@ @GTK_LIBS@ @BASIC_LIBS@ -version-info 1:0:1
 #libgwymodule2_la_LDFLAGS = @GMODULE_LIBS@ @GTK_LIBS@ @BASIC_LIBS@ -release @LIBRARY_RELEASE@
+libgwymodule2_la_LIBADD = $(libgwymodule_libadd)
+
 libgwymodule2_la_SOURCES = \
 	gwymodule-file.c \
 	gwymodule-graph.c \
