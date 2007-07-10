@@ -1830,25 +1830,25 @@ gwy_data_field_mult_wav(GwyDataField *real_field,
     xresh = xres/2;
     yresh = yres/2;
 
-    for (i = 0; i < xres; i++) {
-        for (j = 0; j < yres; j++) {
+    for (i = 0; i < yres; i++) {
+        for (j = 0; j < xres; j++) {
             val = 1;
-            if (i < xresh) {
-                if (j < yresh)
-                    mval = hypot(i, j);
+            if (j < xresh) {
+                if (i < yresh)
+                    mval = hypot(j, i);
                 else
-                    mval = hypot(i, yres - j);
+                    mval = hypot(j, yres - i);
             }
             else {
-                if (j < yresh)
-                    mval = hypot(xres - i, j);
+                if (i < yresh)
+                    mval = hypot(xres - j, i);
                 else
-                    mval = hypot(xres - i, yres - j);
+                    mval = hypot(xres - j, yres - i);
             }
             val = gwy_cwt_wfunc_2d(scale, mval, xres, wtype);
 
-            real_field->data[i + j * xres] *= val;
-            imag_field->data[i + j * xres] *= val;
+            real_field->data[j + i*xres] *= val;
+            imag_field->data[j + i*xres] *= val;
         }
     }
 }
