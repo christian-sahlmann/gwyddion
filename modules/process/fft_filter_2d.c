@@ -93,11 +93,6 @@ typedef struct {
     guint           prev_mode;
     GSList          *pmode;
 
-    gint            origxres;
-    gint            origyres;
-    gint            newxres;
-    gint            newyres;
-
     gboolean        snap;
     gboolean        zoom;
     guint           out_mode;
@@ -150,7 +145,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("2D FFT Filtering"),
     "Chris Anderson <sidewinder.asu@gmail.com>",
-    "1.4",
+    "1.5",
     "Chris Anderson, Molecular Imaging Corp.",
     "2005",
 };
@@ -205,31 +200,6 @@ run_main(GwyContainer *data, GwyRunType run)
                                      0);
 
     g_return_if_fail(GWY_IS_DATA_FIELD(dfield));
-    /* Calculate nice resolutions for FFT.
-     * FIXME: They must be even because either humanize or humanize together
-     * with mask editting breaks lower frequencies on odd sizes. */
-    controls.origxres = gwy_data_field_get_xres(dfield);
-    controls.newxres = controls.origxres - 1;
-    do {
-        controls.newxres = gwy_fft_find_nice_size(controls.newxres + 1);
-    } while (controls.newxres % 2);
-
-    controls.origyres = gwy_data_field_get_yres(dfield);
-    controls.newyres = controls.origyres - 1;
-    do {
-        controls.newyres = gwy_fft_find_nice_size(controls.newyres + 1);
-    } while (controls.newyres % 2);
-
-    /* Create datafields */
-    if (controls.newxres == controls.origxres
-        && controls.newyres == controls.origyres)
-        g_object_ref(dfield);
-    else
-        dfield = gwy_data_field_new_resampled(dfield,
-                                              controls.newxres,
-                                              controls.newyres,
-                                              GWY_INTERPOLATION_NNA);
-
     fft = gwy_data_field_new_alike(dfield, FALSE);
     do_fft(dfield, fft);
 
@@ -337,7 +307,6 @@ run_main(GwyContainer *data, GwyRunType run)
             gwy_app_set_data_field_title(data, newid, _("Filtered FFT"));
         }
     }
-    g_object_unref(dfield);
 }
 
 static GwyDataField*
@@ -435,8 +404,6 @@ run_dialog(ControlsType *controls)
     hash_tips = g_hash_table_new_full(g_str_hash, g_str_equal, NULL, NULL);
     build_tooltips(hash_tips);
     tips = gtk_tooltips_new();
-    g_object_ref(tips);
-    gtk_object_sink(GTK_OBJECT(tips));
 
     /* Setup sensitvity group */
     controls->sensgroup = gwy_sensitivity_group_new();
@@ -513,16 +480,16 @@ run_dialog(ControlsType *controls)
     button = gwy_stock_like_button_new(_("_Undo"), GTK_STOCK_UNDO);
     gwy_sensitivity_group_add_widget(controls->sensgroup, button,
                                      SENS_EDIT | SENS_UNDO);
-    gtk_tooltips_set_tip(GTK_TOOLTIPS(tips), button,
-                         g_hash_table_lookup(hash_tips, "undo"), "");
+    gtk_tooltips_set_tip(tips, button,
+                         g_hash_table_lookup(hash_tips, "undo"), NULL);
     gtk_container_add(GTK_CONTAINER(hbox2), button);
     g_signal_connect_swapped(button, "clicked",
                              G_CALLBACK(undo_cb), controls);
 
     button = gwy_stock_like_button_new(_("_Remove"), GWY_STOCK_MASK_REMOVE);
     gwy_sensitivity_group_add_widget(controls->sensgroup, button, SENS_EDIT);
-    gtk_tooltips_set_tip(GTK_TOOLTIPS(tips), button,
-                         g_hash_table_lookup(hash_tips, "remove_all"), "");
+    gtk_tooltips_set_tip(tips, button,
+                         g_hash_table_lookup(hash_tips, "remove_all"), NULL);
     gtk_container_add(GTK_CONTAINER(hbox2), button);
     g_signal_connect_swapped(button, "clicked",
                              G_CALLBACK(remove_all_cb), controls);
@@ -531,8 +498,8 @@ run_dialog(ControlsType *controls)
 
     button = gtk_check_button_new_with_mnemonic(_("_Snap to origin"));
     gwy_sensitivity_group_add_widget(controls->sensgroup, button, SENS_EDIT);
-    gtk_tooltips_set_tip(GTK_TOOLTIPS(tips), button,
-                         g_hash_table_lookup(hash_tips, "origin"), "");
+    gtk_tooltips_set_tip(tips, button,
+                         g_hash_table_lookup(hash_tips, "origin"), NULL);
     gtk_table_attach(GTK_TABLE(table), button, 0, 2, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
     set_toggled(button, controls->snap);
@@ -604,22 +571,6 @@ run_dialog(ControlsType *controls)
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
     row++;
 
-    label = gtk_label_new(NULL);
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    if (controls->origxres != controls->newxres
-        || controls->origyres != controls->newyres) {
-        gchar *s;
-
-        s = g_strdup_printf(_("<small>Resampled from %dx%d to %dx%d "
-                              "for FFT</small>"),
-                            controls->origxres, controls->origyres,
-                            controls->newxres, controls->newyres);
-        gtk_label_set_markup(GTK_LABEL(label), s);
-        g_free(s);
-    }
-    gtk_table_attach(GTK_TABLE(table), label,
-                     0, 3, row, row+1, GTK_FILL, 0, 0, 0);
-
     gwy_sensitivity_group_set_state(controls->sensgroup, SENS_EDIT, SENS_EDIT);
     g_object_unref(controls->sensgroup);
 
@@ -650,7 +601,6 @@ run_dialog(ControlsType *controls)
 
     /* Finalize */
     gtk_widget_destroy(dialog);
-    g_object_unref(tips);
     g_hash_table_destroy(hash_tips);
 
     return TRUE;
@@ -1079,8 +1029,8 @@ fft_filter_2d(GwyDataField *input,
         gwy_data_field_multiply_fields(output_fft, output_fft, mask);
 
     /* Run the inverse FFT */
-    gwy_data_field_2dfft_humanize(r_out);
-    gwy_data_field_2dfft_humanize(i_out);
+    gwy_data_field_2dfft_dehumanize(r_out);
+    gwy_data_field_2dfft_dehumanize(i_out);
     gwy_data_field_2dfft_raw(r_out, i_out, r_in, i_in,
                              GWY_TRANSFORM_DIRECTION_BACKWARD);
 
