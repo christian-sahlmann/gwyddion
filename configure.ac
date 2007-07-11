@@ -2,7 +2,7 @@
 dnl Process this file with autoconf to produce a configure script.
 m4_define([gwy_version_major],[2])
 m4_define([gwy_version_minor],[7])
-m4_define([gwy_version_string],[gwy_version_major.gwy_version_minor.20070710])
+m4_define([gwy_version_string],[gwy_version_major.gwy_version_minor.20070711])
 AC_INIT([Gwyddion], [gwy_version_string], [klapetek@gwyddion.net])
 # Use -release for unstable version libs instead of -version-info, because
 # we *do* break compatibility each version
@@ -152,6 +152,16 @@ if test "x$enable_pygwy" != xno; then
   if test "$PYTHON" = : -o "x$enable_python" = no; then
     enable_pygwy=no
     PYGWY_WARN=" (needs python)"
+  fi
+fi
+
+if test "x$enable_pygwy" != xno; then
+  GWY_PYTHON_SYSCFG_VAR([BASECFLAGS],,[enable_pygwy=no])
+  GWY_PYTHON_SYSCFG_VAR([LDFLAGS],,[enable_pygwy=no])
+  GWY_PYTHON_SYSCFG_VAR([CCSHARED],,[enable_pygwy=no])
+  GWY_PYTHON_SYSCFG_VAR([LINKFORSHARED],,[enable_pygwy=no])
+  if test "x$enable_pygwy" = xno; then
+    PYGWY_WARN=" (failed to obtain Python flags)"
   fi
 fi
 

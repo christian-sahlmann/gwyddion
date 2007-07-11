@@ -11,6 +11,7 @@ M4TESTS = \
 	gtk-doc.m4 \
 	gwy-cc-options.m4 \
 	gwy-enable.m4 \
+	gwy-python.m4 \
 	iconv.m4 \
 	intmax.m4 \
 	lcmessage.m4 \
