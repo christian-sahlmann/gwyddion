@@ -165,6 +165,14 @@ if test "x$enable_pygwy" != xno; then
   fi
 fi
 
+# To use AC_CHECK_LIB() on libpython$PYTHON_VERSION we have to use the proper
+# flags.  Otherwise we can for instance get undefined pthread symbols on
+# FreeBSD.
+PYGWY_ORIG_CFLAGS="$CFLAGS"
+PYGWY_ORIG_LDFLAGS="$LDFLAGS"
+CFLAGS="$CFLAGS $BASECFLAGS $CCSHARED"
+LDFLAGS="$LDFLAGS $LDFLAGS $LINKFORSHARED"
+
 if test "x$enable_pygwy" != xno; then
   AC_CHECK_LIB(python$PYTHON_VERSION, main,
                [PYTHON_LIBS=-lpython$PYTHON_VERSION],
@@ -186,6 +194,9 @@ if test "x$enable_pygwy" != xno; then
   AC_SUBST(PYGTK_CODEGENDIR)
 fi
 AM_CONDITIONAL([ENABLE_PYGWY], [test "x$enable_pygwy" != xno])
+
+CFLAGS="$PYGWY_ORIG_CFLAGS"
+LDFLAGS="$PYGWY_ORIG_LDFLAGS"
 
 #############################################################################
 # Check for Perl
