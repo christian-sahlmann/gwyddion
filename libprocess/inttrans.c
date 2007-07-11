@@ -855,52 +855,118 @@ gwy_data_field_2dfft(GwyDataField *rin, GwyDataField *iin,
 }
 
 /**
- * gwy_data_field_2dfft_humanize:
- * @data_field: A data field.
+ * gwy_data_field_2dfft_humanize_in_place:
+ * @data_field: A data field to (de)humanize.
  *
- * Rearranges 2D FFT output to a human-friendly form.
+ * (De)humanizes a data field with Fourier coefficients in-place.
  *
- * Top-left, top-right, bottom-left and bottom-right sub-squares are swapped
- * to obtain a humanized 2D FFT output with (0,0) in the center.
+ * This method can be only used for even-sized data fields and then
+ * it is an involutory operation.
  **/
-void
-gwy_data_field_2dfft_humanize(GwyDataField *data_field)
+static void
+gwy_data_field_2dfft_humanize_in_place(GwyDataField *data_field)
 {
-    GwyDataField *tmp;
     gint i, j, im, jm, xres, yres;
     gdouble *data;
 
+    data = data_field->data;
     im = data_field->yres/2;
     jm = data_field->xres/2;
     xres = data_field->xres;
     yres = data_field->yres;
 
-    /* When both dimensions are even, we can simply swap the data without
-     * allocation of temporary buffers. */
-    if (xres == 2*jm && yres == 2*im) {
-        data = data_field->data;
-
-        for (i = 0; i < im; i++) {
-            for (j = 0; j < jm; j++) {
-                GWY_SWAP(gdouble,
-                         data[j + i*xres], data[(j + jm) + (i + im)*xres]);
-                GWY_SWAP(gdouble,
-                         data[j + (i + im)*xres], data[(j + jm) + i*xres]);
-            }
+    for (i = 0; i < im; i++) {
+        for (j = 0; j < jm; j++) {
+            GWY_SWAP(gdouble,
+                     data[j + i*xres], data[(j + jm) + (i + im)*xres]);
+            GWY_SWAP(gdouble,
+                     data[j + (i + im)*xres], data[(j + jm) + i*xres]);
         }
-        gwy_data_field_invalidate(data_field);
+    }
 
+    gwy_data_field_invalidate(data_field);
+}
+
+/**
+ * gwy_data_field_2dfft_humanize:
+ * @data_field: A data field.
+ *
+ * Rearranges 2D FFT output to a human-friendly form.
+ *
+ * Top-left, top-right, bottom-left and bottom-right sub-rectangles are swapped
+ * to obtain a humanized 2D FFT output with (0,0) in the centre.
+ *
+ * More precisely, for even field dimensions the equally-sized blocks starting
+ * with the Nyquist frequency and with the zero frequency (constant component)
+ * will exchange places.  For odd field dimensions, the block containing the
+ * zero frequency is one item larger and the constant component will actually
+ * end up in the exact centre.
+ *
+ * Also note if both dimensions are even, this function is involutory and
+ * identical to gwy_data_field_2dfft_dehumanize().  However, if any dimension
+ * is odd, gwy_data_field_2dfft_humanize() and
+ * gwy_data_field_2dfft_dehumanize() are different, therefore they must be
+ * paired properly.
+ **/
+void
+gwy_data_field_2dfft_humanize(GwyDataField *data_field)
+{
+    GwyDataField *tmp;
+    gint im, jm, xres, yres;
+
+    xres = data_field->xres;
+    yres = data_field->yres;
+    jm = data_field->xres/2;
+    im = data_field->yres/2;
+
+    if (xres == 2*jm && yres == 2*im) {
+        gwy_data_field_2dfft_humanize_in_place(data_field);
         return;
     }
 
     tmp = gwy_data_field_new_alike(data_field, FALSE);
-    /* FIXME: this had looked like using the new gwy_data_field_area_copy()
-     * argument convention *before* I changed it.  So either it was buggy
-     * or it is buggy now. */
     gwy_data_field_area_copy(data_field, tmp, 0, 0, xres-jm, yres-im, jm, im);
     gwy_data_field_area_copy(data_field, tmp, xres-jm, 0, jm, yres-im, 0, im);
     gwy_data_field_area_copy(data_field, tmp, 0, yres-im, xres-jm, im, jm, 0);
     gwy_data_field_area_copy(data_field, tmp, xres-jm, yres-im, jm, im, 0, 0);
+    gwy_data_field_copy(tmp, data_field, FALSE);
+    g_object_unref(tmp);
+}
+
+/**
+ * gwy_data_field_2dfft_dehumanize:
+ * @data_field: A data field.
+ *
+ * Rearranges 2D FFT output back from the human-friendly form.
+ *
+ * Top-left, top-right, bottom-left and bottom-right sub-rectangles are swapped
+ * to reshuffle a humanized 2D FFT output back into the natural positions.
+ *
+ * See gwy_data_field_2dfft_humanize() for discussion.
+ *
+ * Since: 2.8
+ **/
+void
+gwy_data_field_2dfft_dehumanize(GwyDataField *data_field)
+{
+    GwyDataField *tmp;
+    gint im, jm, xres, yres;
+
+    xres = data_field->xres;
+    yres = data_field->yres;
+    jm = data_field->xres/2;
+    im = data_field->yres/2;
+
+    if (xres == 2*jm && yres == 2*im) {
+        gwy_data_field_2dfft_humanize_in_place(data_field);
+        return;
+    }
+
+    tmp = gwy_data_field_new_alike(data_field, FALSE);
+    gwy_data_field_area_copy(data_field, tmp, 0, 0, jm, im, xres-jm, yres-im);
+    gwy_data_field_area_copy(data_field, tmp, jm, 0, xres-jm, im, 0, yres-im);
+    gwy_data_field_area_copy(data_field, tmp, 0, im, jm, yres-im, xres-jm, 0);
+    gwy_data_field_area_copy(data_field, tmp, jm, im, xres-jm, yres-im, 0, 0);
     gwy_data_field_copy(tmp, data_field, FALSE);
     g_object_unref(tmp);
 }
