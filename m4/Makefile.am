@@ -5,12 +5,12 @@ noinst_DATA = $(M4TESTS)
 EXTRA_DIST = $(M4TESTS)
 
 M4TESTS = \
-	cc-options.m4 \
 	codeset.m4 \
-	enable.m4 \
 	gettext.m4 \
 	glibc21.m4 \
 	gtk-doc.m4 \
+	gwy-cc-options.m4 \
+	gwy-enable.m4 \
 	iconv.m4 \
 	intmax.m4 \
 	lcmessage.m4 \
