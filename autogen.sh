@@ -70,8 +70,8 @@ check_tool() {
     echo "ERROR: $name at least $reqmajor.$reqminor is required to bootstrap $PROJECT."
     case $diewhy in
       version) echo "       You have only version $ver of $name installed.";;
-      othercmd) echo "       It should also install command $othercmd which is missing.";;
-      otherversion) echo "       The version of $othercmd differs from $cmd: $otherver != $ver";;
+      othercmd) echo "       It should also install command \`$othercmd' which is missing.";;
+      otherversion) echo "       The version of \`$othercmd' differs from $cmd: $otherver != $ver.";;
       cmd) ;;
       *) echo "       *** If you see this, shoot the $PROJECT maintainer! ***";;
     esac
