@@ -2919,6 +2919,7 @@ gwy_app_data_browser_spectra_selected(GtkTreeSelection *selection,
     gint i, id;
 
     gwy_app_data_browser_get_current(GWY_APP_SPECTRA, &aspectra,
+                                     GWY_APP_SPECTRA_ID, &id,
                                      GWY_APP_DATA_FIELD_ID, &i,
                                      0);
     if (gtk_tree_selection_get_selected(selection, &model, &iter)) {
@@ -2929,8 +2930,24 @@ gwy_app_data_browser_spectra_selected(GtkTreeSelection *selection,
         tspectra = NULL;
 
     gwy_debug("tspectra: %p, aspectra: %p", tspectra, aspectra);
-    if (aspectra == tspectra)
+    if (aspectra == tspectra) {
+        /* Ensure the selection is remembered. A spectra item is selected by
+         * default even if the user has not specifically selected anything,
+         * therefore we can get here even if sps-id is not set in the
+         * container.
+         * Since GwyContainer is intelligent and does not emit "item-changed"
+         * when the value does not actually change, we won't recurse to
+         * death here. */
+        if (aspectra) {
+            gchar key[40];
+
+            data = g_object_get_qdata(G_OBJECT(aspectra), container_quark);
+            g_return_if_fail(data == browser->current->container);
+            g_snprintf(key, sizeof(key), "/%d/data/sps-id", i);
+            gwy_container_set_int32_by_name(data, key, id);
+        }
         return;
+    }
 
     if (tspectra) {
         data = g_object_get_qdata(G_OBJECT(tspectra), container_quark);
