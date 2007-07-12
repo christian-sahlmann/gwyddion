@@ -164,21 +164,15 @@ about_close(void)
 static void
 add_credits_block(GtkTextBuffer *buffer,
                   const gchar *title,
-                  guint n,
-                  const gchar **list)
+                  const gchar *list)
 {
     GtkTextIter iter;
-    guint i;
 
     gtk_text_buffer_get_end_iter(buffer, &iter);
     gtk_text_buffer_insert_with_tags_by_name(buffer, &iter, title, -1,
                                              "b", NULL);
     gtk_text_buffer_insert(buffer, &iter, "\n", 1);
-
-    for (i = 0; i < n; i++) {
-        gtk_text_buffer_insert(buffer, &iter, list[i], -1);
-        gtk_text_buffer_insert(buffer, &iter, "\n", 1);
-    }
+    gtk_text_buffer_insert(buffer, &iter, list, -1);
     gtk_text_buffer_insert(buffer, &iter, "\n", 1);
 }
 
@@ -195,10 +189,8 @@ fill_credits(GtkTextBuffer *buffer)
                                "weight", PANGO_WEIGHT_BOLD,
                                NULL);
 
-    add_credits_block(buffer, _("Developers"),
-                      G_N_ELEMENTS(developers), developers);
-    add_credits_block(buffer, _("Translators"),
-                      G_N_ELEMENTS(translators), translators);
+    add_credits_block(buffer, _("Developers"), developers);
+    add_credits_block(buffer, _("Translators"), translators);
 
     gtk_text_buffer_get_end_iter(buffer, &iter);
     gtk_text_buffer_insert(buffer, &iter,

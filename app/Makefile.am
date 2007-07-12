@@ -122,18 +122,18 @@ authors.h: ${top_srcdir}/AUTHORS
 	{ \
 		echo '/* This is a GENERATED file */'; \
 		echo '/*< private_header >*/'; \
-		echo 'static const gchar *developers[] = {'; \
+		echo 'static const gchar developers[] ='; \
 		sed -n -e '/=== Developers ===/,/^$$/{' \
 			-e 's/^[ =].*//' -e t -e 's/^$$//' -e t \
-			-e 's/ *<.*//' -e 's/.*/    "&",/' -e p -e '}' \
+			-e 's/ *<.*//' -e 's/.*/    "&\\n"/' -e p -e '}' \
 			${top_srcdir}/AUTHORS; \
-		echo '};'; \
-		echo 'static const gchar *translators[] = {'; \
+		echo ';'; \
+		echo 'static const gchar translators[] ='; \
 		sed -n -e '/=== Translators ===/,/^$$/{' \
 			-e 's/^[ =].*//' -e t -e 's/^$$//' -e t \
-			-e 's/ *<.*//' -e 's/.*/    "&",/' -e p -e '}' \
+			-e 's/ *<.*//' -e 's/.*/    "&\\n"/' -e p -e '}' \
 			${top_srcdir}/AUTHORS; \
-		echo '};'; \
+		echo ';'; \
 	} >authors.h
 
 clean-local:
