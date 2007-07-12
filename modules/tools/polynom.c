@@ -92,7 +92,7 @@ static GwyModuleInfo module_info = {
     N_("Polynomial line level tool, fits polynomials to X or Y profiles and "
        "subtracts them."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "2.1",
+    "2.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -290,11 +290,15 @@ gwy_tool_polynom_data_switched(GwyTool *gwytool,
 {
     GwyPlainTool *plain_tool;
     GwyToolPolynom *tool;
+    gboolean ignore;
+
+    plain_tool = GWY_PLAIN_TOOL(gwytool);
+    ignore = (data_view == plain_tool->data_view);
 
     GWY_TOOL_CLASS(gwy_tool_polynom_parent_class)->data_switched(gwytool,
-                                                                data_view);
-    plain_tool = GWY_PLAIN_TOOL(gwytool);
-    if (plain_tool->init_failed)
+                                                                 data_view);
+
+    if (ignore || plain_tool->init_failed)
         return;
 
     tool = GWY_TOOL_POLYNOM(gwytool);

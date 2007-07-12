@@ -29,7 +29,6 @@
 #include <app/gwyapp.h>
 #include <app/gwymoduleutils.h>
 
-
 #define GWY_TYPE_TOOL_DISTANCE            (gwy_tool_distance_get_type())
 #define GWY_TOOL_DISTANCE(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_TOOL_DISTANCE, GwyToolDistance))
 #define GWY_IS_TOOL_DISTANCE(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj), GWY_TYPE_TOOL_DISTANCE))
@@ -90,7 +89,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Distance measurement tool, measures distances and angles."),
     "Nenad Ocelic <ocelic@biochem.mpg.de>",
-    "2.6",
+    "2.7",
     "Nenad Ocelic & David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -229,13 +228,15 @@ gwy_tool_distance_data_switched(GwyTool *gwytool,
 {
     GwyPlainTool *plain_tool;
     GwyToolDistance *tool;
+    gboolean ignore;
+
+    plain_tool = GWY_PLAIN_TOOL(gwytool);
+    ignore = (data_view == plain_tool->data_view);
 
     GWY_TOOL_CLASS(gwy_tool_distance_parent_class)->data_switched(gwytool,
                                                                   data_view);
 
-    plain_tool = GWY_PLAIN_TOOL(gwytool);
-
-    if (plain_tool->init_failed)
+    if (ignore || plain_tool->init_failed)
         return;
 
     tool = GWY_TOOL_DISTANCE(gwytool);

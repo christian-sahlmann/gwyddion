@@ -259,7 +259,7 @@ static GwyModuleInfo module_info = {
     N_("Grain measurement tool, calculates characteristics of selected "
        "countinous parts of mask."),
     "Yeti <yeti@gwyddion.net>",
-    "1.0",
+    "1.1",
     "David Nečas (Yeti)",
     "2007",
 };
@@ -577,14 +577,19 @@ gwy_tool_grain_measure_data_switched(GwyTool *gwytool,
 {
     GwyPlainTool *plain_tool;
     GwyToolGrainMeasure *tool;
+    gboolean ignore;
 
     tool = GWY_TOOL_GRAIN_MEASURE(gwytool);
-    gwy_tool_grain_measure_invalidate(tool);
+    plain_tool = GWY_PLAIN_TOOL(gwytool);
+    ignore = (data_view == plain_tool->data_view);
+
+    if (!ignore)
+        gwy_tool_grain_measure_invalidate(tool);
 
     GWY_TOOL_CLASS(gwy_tool_grain_measure_parent_class)->data_switched(gwytool,
                                                                     data_view);
-    plain_tool = GWY_PLAIN_TOOL(gwytool);
-    if (plain_tool->init_failed)
+
+    if (ignore || plain_tool->init_failed)
         return;
 
     if (data_view) {

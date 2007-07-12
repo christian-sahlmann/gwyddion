@@ -412,12 +412,15 @@ gwy_tool_line_stats_data_switched(GwyTool *gwytool,
 {
     GwyPlainTool *plain_tool;
     GwyToolLineStats *tool;
+    gboolean ignore;
+
+    plain_tool = GWY_PLAIN_TOOL(gwytool);
+    ignore = (data_view == plain_tool->data_view);
 
     GWY_TOOL_CLASS(gwy_tool_line_stats_parent_class)->data_switched(gwytool,
                                                                  data_view);
 
-    plain_tool = GWY_PLAIN_TOOL(gwytool);
-    if (plain_tool->init_failed)
+    if (ignore || plain_tool->init_failed)
         return;
 
     tool = GWY_TOOL_LINE_STATS(gwytool);

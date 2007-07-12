@@ -108,7 +108,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Pointer tool, reads value under pointer."),
     "Yeti <yeti@gwyddion.net>",
-    "2.7",
+    "2.8",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -354,11 +354,15 @@ gwy_tool_read_value_data_switched(GwyTool *gwytool,
 {
     GwyPlainTool *plain_tool;
     GwyToolReadValue *tool;
+    gboolean ignore;
+
+    plain_tool = GWY_PLAIN_TOOL(gwytool);
+    ignore = (data_view == plain_tool->data_view);
 
     GWY_TOOL_CLASS(gwy_tool_read_value_parent_class)->data_switched(gwytool,
                                                                     data_view);
-    plain_tool = GWY_PLAIN_TOOL(gwytool);
-    if (plain_tool->init_failed)
+
+    if (ignore || plain_tool->init_failed)
         return;
 
     tool = GWY_TOOL_READ_VALUE(gwytool);

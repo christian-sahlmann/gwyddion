@@ -98,7 +98,7 @@ static GwyModuleInfo module_info = {
     N_("Filter tool, processes selected part of data with a filter "
        "(conservative denoise, mean, median. Kuwahara, minimum, maximum)."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "3.4",
+    "3.5",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -272,11 +272,15 @@ gwy_tool_filter_data_switched(GwyTool *gwytool,
 {
     GwyPlainTool *plain_tool;
     GwyToolFilter *tool;
+    gboolean ignore;
+
+    plain_tool = GWY_PLAIN_TOOL(gwytool);
+    ignore = (data_view == plain_tool->data_view);
 
     GWY_TOOL_CLASS(gwy_tool_filter_parent_class)->data_switched(gwytool,
                                                                 data_view);
-    plain_tool = GWY_PLAIN_TOOL(gwytool);
-    if (plain_tool->init_failed)
+
+    if (ignore || plain_tool->init_failed)
         return;
 
     tool = GWY_TOOL_FILTER(gwytool);

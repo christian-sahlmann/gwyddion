@@ -149,7 +149,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Statistics tool."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "2.6",
+    "2.7",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -382,17 +382,20 @@ gwy_tool_stats_data_switched(GwyTool *gwytool,
 {
     GwyPlainTool *plain_tool;
     GwyToolStats *tool;
+    gboolean ignore;
 
+    plain_tool = GWY_PLAIN_TOOL(gwytool);
     tool = GWY_TOOL_STATS(gwytool);
-    if (tool->area_format) {
+    ignore = (data_view == plain_tool->data_view);
+
+    if (!ignore && tool->area_format) {
         gwy_si_unit_value_format_free(tool->area_format);
         tool->area_format = NULL;
     }
 
     GWY_TOOL_CLASS(gwy_tool_stats_parent_class)->data_switched(gwytool,
                                                                data_view);
-    plain_tool = GWY_PLAIN_TOOL(gwytool);
-    if (plain_tool->init_failed)
+    if (ignore || plain_tool->init_failed)
         return;
 
     if (data_view) {

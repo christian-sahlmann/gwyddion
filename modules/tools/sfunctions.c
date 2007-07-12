@@ -136,7 +136,7 @@ static GwyModuleInfo module_info = {
        "functions (height distribution, correlations, PSDF, Minkowski "
        "functionals) of selected part of data."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "2.5",
+    "2.6",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -430,12 +430,14 @@ gwy_tool_sfunctions_data_switched(GwyTool *gwytool,
 {
     GwyPlainTool *plain_tool;
     GwyToolSFunctions *tool;
-
-    GWY_TOOL_CLASS(gwy_tool_sfunctions_parent_class)->data_switched(gwytool,
-                                                                 data_view);
+    gboolean ignore;
 
     plain_tool = GWY_PLAIN_TOOL(gwytool);
-    if (plain_tool->init_failed)
+    ignore = (data_view == plain_tool->data_view);
+    GWY_TOOL_CLASS(gwy_tool_sfunctions_parent_class)->data_switched(gwytool,
+                                                                    data_view);
+
+    if (ignore || plain_tool->init_failed)
         return;
 
     tool = GWY_TOOL_SFUNCTIONS(gwytool);

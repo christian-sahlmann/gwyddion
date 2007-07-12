@@ -104,7 +104,7 @@ static GwyModuleInfo module_info = {
     N_("Three-point level tool, levels data by subtracting a plane fitted "
        "through three selected points."),
     "Yeti <yeti@gwyddion.net>",
-    "2.2",
+    "2.3",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -283,11 +283,15 @@ gwy_tool_level3_data_switched(GwyTool *gwytool,
 {
     GwyPlainTool *plain_tool;
     GwyToolLevel3 *tool;
+    gboolean ignore;
+
+    plain_tool = GWY_PLAIN_TOOL(gwytool);
+    ignore = (data_view == plain_tool->data_view);
 
     GWY_TOOL_CLASS(gwy_tool_level3_parent_class)->data_switched(gwytool,
                                                                 data_view);
-    plain_tool = GWY_PLAIN_TOOL(gwytool);
-    if (plain_tool->init_failed)
+
+    if (ignore || plain_tool->init_failed)
         return;
 
     if (data_view) {

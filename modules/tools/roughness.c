@@ -626,7 +626,7 @@ static GwyModuleInfo module_info = {
     N_("Calculate surface profile parameters."),
     "Martin Hasoň <hasonm@physics.muni.cz>, "
         "Yeti <yeti@gwyddion.net>",
-    "1.0",
+    "1.1",
     "Martin Hasoň & David Nečas (Yeti)",
     "2006",
 };
@@ -1089,12 +1089,15 @@ gwy_tool_roughness_data_switched(GwyTool *gwytool,
 {
     GwyPlainTool *plain_tool;
     GwyToolRoughness *tool;
+    gboolean ignore;
+
+    plain_tool = GWY_PLAIN_TOOL(gwytool);
+    ignore = (data_view == plain_tool->data_view);
 
     GWY_TOOL_CLASS(gwy_tool_roughness_parent_class)->data_switched(gwytool,
                                                                    data_view);
 
-    plain_tool = GWY_PLAIN_TOOL(gwytool);
-    if (plain_tool->init_failed)
+    if (ignore || plain_tool->init_failed)
         return;
 
     tool = GWY_TOOL_ROUGHNESS(gwytool);
