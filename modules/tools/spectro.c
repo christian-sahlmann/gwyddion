@@ -125,7 +125,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Point Spectrum, extracts point spectra to a graph."),
     "Owain Davies <owain.davies@blueyonder.co.uk>",
-    "0.1",
+    "0.2",
     "Owain Davies, David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
@@ -178,6 +178,9 @@ gwy_tool_spectro_finalize(GObject *object)
 
     plain_tool = GWY_PLAIN_TOOL(object);
     tool = GWY_TOOL_SPECTRO(object);
+
+    /* Prevent bad things in the selection callback */
+    tool->ignore_tree_selection = TRUE;
 
     settings = gwy_app_settings_get();
     gwy_container_set_boolean_by_name(settings, options_visible_key,
@@ -337,28 +340,27 @@ gwy_tool_spectro_data_switched(GwyTool *gwytool,
 {
     GwyPlainTool *plain_tool;
     GwyToolSpectro *tool;
+    gboolean ignore;
 
     plain_tool = GWY_PLAIN_TOOL(gwytool);
     tool = GWY_TOOL_SPECTRO(gwytool);
+    ignore = (data_view == plain_tool->data_view);
 
     if (plain_tool->init_failed)
         return;
 
-    /*
-    if(data_view==plain_tool->data_view) {
-        GWY_TOOL_CLASS(gwy_tool_spectro_parent_class)->data_switched(gwytool,
-                                                                     data_view);
-        return;
+    if (!ignore) {
+        gwy_debug("disconect obj-chosen handler: %u",
+                  (guint)tool->layer_object_chosen_id);
+        gwy_signal_handler_disconnect(plain_tool->layer,
+                                      tool->layer_object_chosen_id);
     }
-    */
-
-    gwy_debug("disconect obj-chosen handler: %u",
-              (guint)tool->layer_object_chosen_id);
-    gwy_signal_handler_disconnect(plain_tool->layer,
-                                  tool->layer_object_chosen_id);
 
     GWY_TOOL_CLASS(gwy_tool_spectro_parent_class)->data_switched(gwytool,
                                                                  data_view);
+    if (ignore)
+        return;
+
     if (plain_tool->layer) {
         gwy_object_set_or_reset(plain_tool->layer,
                                 tool->layer_type,
