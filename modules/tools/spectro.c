@@ -395,8 +395,6 @@ gwy_tool_spectro_spectra_switched(GwyTool *gwytool,
 
     tool = GWY_TOOL_SPECTRO(gwytool);
     plain_tool = GWY_PLAIN_TOOL(gwytool);
-    if (spectra == tool->spectra)
-        return;
 
     store = GWY_NULL_STORE(tool->model);
     selection = gtk_tree_view_get_selection(tool->treeview);
