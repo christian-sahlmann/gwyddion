@@ -64,7 +64,7 @@ def map1(m):
     d = m.group('dir')
     if not docmap.has_key(d):
         if not unknowndoc.has_key(d):
-            sys.stderr.write(d + 'documentation location is unknown.\n')
+            sys.stderr.write(d + ' documentation location is unknown.\n')
             unknowndoc[d] = 'have seen this one'
         d = 'gtk'
     return m.group('a') + docmap[d] + m.group('file')
