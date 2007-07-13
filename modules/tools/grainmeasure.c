@@ -183,6 +183,11 @@ static const QuantityInfo quantities[] = {
         N_("Equivalent disc radius:"),
     },
     {
+        GWY_GRAIN_VALUE_HALF_HEIGHT_AREA,
+        GRAIN_QUANTITY_SET_AREA,
+        N_("Half-height area:"),
+    },
+    {
         -1,
         GRAIN_QUANTITY_SET_VOLUME,
         N_("Volume"),
@@ -259,7 +264,7 @@ static GwyModuleInfo module_info = {
     N_("Grain measurement tool, calculates characteristics of selected "
        "countinous parts of mask."),
     "Yeti <yeti@gwyddion.net>",
-    "1.1",
+    "1.2",
     "David Nečas (Yeti)",
     "2007",
 };
