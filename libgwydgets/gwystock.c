@@ -28,18 +28,17 @@
 #include <libgwyddion/gwyutils.h>
 #include "gwystock.h"
 
-static void           register_toolbox_icons    (const gchar *pixmap_path,
-                                                 GtkIconFactory *icon_factory);
-static gchar*         guess_pixmap_path         (void);
-static void           slurp_icon_directory      (const gchar *path,
-                                                 GHashTable *icons);
-static void           register_icon_set_list_cb (const gchar *id,
-                                                 GList *list,
-                                                 GtkIconFactory *factory);
-static GtkIconSource* file_to_icon_source       (const gchar *path,
-                                                 const gchar *filename,
-                                                 gchar **id);
-static void           free_the_icon_factory     (void);
+static void           register_icons           (const gchar **pixmap_paths,
+                                                GtkIconFactory *icon_factory);
+static void           slurp_icon_directory     (const gchar *path,
+                                                GHashTable *icons);
+static void           register_icon_set_list_cb(const gchar *id,
+                                                GList *list,
+                                                GtkIconFactory *factory);
+static GtkIconSource* file_to_icon_source      (const gchar *path,
+                                                const gchar *filename,
+                                                gchar **id);
+static void           free_the_icon_factory    (void);
 
 static GtkIconFactory *the_icon_factory = NULL;
 
@@ -53,47 +52,41 @@ static GtkIconFactory *the_icon_factory = NULL;
 void
 gwy_stock_register_stock_items(void)
 {
-    gchar *pixmap_path;
+    gchar *pixmap_paths[3];
 
     g_return_if_fail(!the_icon_factory);
     gtk_icon_size_register(GWY_ICON_SIZE_ABOUT, 60, 60);
-    pixmap_path = guess_pixmap_path();
-    if (!pixmap_path) {
-        g_warning("Cannot find directory with stock icons.");
-        return;
+    pixmap_paths[0] = gwy_find_self_dir("pixmaps");
+    pixmap_paths[1] = g_build_filename(gwy_get_user_dir(), "pixmaps", NULL);
+    if (!g_file_test(pixmap_paths[1], G_FILE_TEST_IS_DIR)) {
+        g_free(pixmap_paths[1]);
+        pixmap_paths[1] = NULL;
     }
+    pixmap_paths[2] = NULL;
+
     the_icon_factory = gtk_icon_factory_new();
-    register_toolbox_icons(pixmap_path, the_icon_factory);
+    register_icons((const gchar**)pixmap_paths, the_icon_factory);
+
+    g_free(pixmap_paths[0]);
+    g_free(pixmap_paths[1]);
     gtk_icon_factory_add_default(the_icon_factory);
-    g_free(pixmap_path);
     g_atexit(free_the_icon_factory);
 }
 
 static void
-register_toolbox_icons(const gchar *pixmap_path,
-                       GtkIconFactory *icon_factory)
+register_icons(const gchar **pixmap_paths,
+               GtkIconFactory *icon_factory)
 {
     GHashTable *icons;
 
     icons = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
-    slurp_icon_directory(pixmap_path, icons);
+    while (*pixmap_paths) {
+        slurp_icon_directory(*pixmap_paths, icons);
+        pixmap_paths++;
+    }
     g_hash_table_foreach(icons, (GHFunc)register_icon_set_list_cb,
                          icon_factory);
     g_hash_table_destroy(icons);
-}
-
-static gchar*
-guess_pixmap_path(void)
-{
-    gchar *p;
-
-    p = gwy_find_self_dir("pixmaps");
-    if (g_file_test(p, G_FILE_TEST_IS_DIR)) {
-        gwy_debug("Icon path: %s", p);
-        return p;
-    }
-
-    return NULL;
 }
 
 /* XXX: not only registers the icons but also frees the list */
