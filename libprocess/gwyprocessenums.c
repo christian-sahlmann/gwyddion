@@ -313,6 +313,10 @@ gwy_correlation_type_get_enum(void)
  * @GWY_GRAIN_VALUE_MINIMUM: Maximum value.
  * @GWY_GRAIN_VALUE_MEAN: Mean value.
  * @GWY_GRAIN_VALUE_MEDIAN: Median value.
+ * @GWY_GRAIN_VALUE_HALF_HEIGHT_AREA: Projected area of the part of grain
+ *                                    that is above the half-height, i.e.
+ *                                    the height between the minimum and
+ *                                    maximum (Since: 2.8).
  * @GWY_GRAIN_VALUE_FLAT_BOUNDARY_LENGTH: Length of projected grain boundary.
  *                                        Note for grains not topologically
  *                                        equivalent to disc, only the length

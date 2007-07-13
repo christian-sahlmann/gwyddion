@@ -1127,7 +1127,7 @@ gwy_data_field_grains_get_values(GwyDataField *data_field,
     gdouble *tmp;
     gint *sizes, *pos;
     gdouble q, qh, qv;
-    gint xres, yres, i, j, nn;
+    gint xres, yres, i, j, nn, gno;
     GArray *vertices;
 
     g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), NULL);
@@ -1174,12 +1174,43 @@ gwy_data_field_grains_get_values(GwyDataField *data_field,
         g_free(sizes);
         break;
 
+        case GWY_GRAIN_VALUE_HALF_HEIGHT_AREA:
+        /* Find the grain half-heights, i.e. (z_min + z_max)/2, first */
+        tmp = g_new(gdouble, 2*(ngrains + 1));
+        for (i = 0; i <= ngrains; i++) {
+            tmp[2*i] = G_MAXDOUBLE;
+            tmp[2*i+1] = -G_MAXDOUBLE;
+        }
+        for (i = 0; i < nn; i++) {
+            gno = grains[i];
+            if (d[i] < tmp[2*gno])
+                tmp[2*gno] = d[i];
+            if (d[i] > tmp[2*gno+1])
+                tmp[2*gno+1] = d[i];
+        }
+        for (i = 0; i <= ngrains; i++)
+            tmp[i] = (tmp[2*i] + tmp[2*i+1])/2.0;
+        /* Then calculate the area of pixels above the half-heights */
+        sizes = g_new0(gint, ngrains + 1);
+        for (i = 0; i < nn; i++) {
+            gno = grains[i];
+            if (d[i] >= tmp[gno])
+                sizes[gno]++;
+        }
+        g_free(tmp);
+        q = qh*qv;
+        for (i = 0; i <= ngrains; i++)
+            values[i] = q*sizes[i];
+        g_free(sizes);
+        break;
+
         case GWY_GRAIN_VALUE_MINIMUM:
         for (i = 0; i <= ngrains; i++)
             values[i] = G_MAXDOUBLE;
         for (i = 0; i < nn; i++) {
-            if (d[i] < values[grains[i]])
-                values[grains[i]] = d[i];
+            gno = grains[i];
+            if (d[i] < values[gno])
+                values[gno] = d[i];
         }
         break;
 
@@ -1187,8 +1218,9 @@ gwy_data_field_grains_get_values(GwyDataField *data_field,
         for (i = 0; i <= ngrains; i++)
             values[i] = -G_MAXDOUBLE;
         for (i = 0; i < nn; i++) {
-            if (d[i] > values[grains[i]])
-                values[grains[i]] = d[i];
+            gno = grains[i];
+            if (d[i] > values[gno])
+                values[gno] = d[i];
         }
         break;
 
@@ -1196,8 +1228,9 @@ gwy_data_field_grains_get_values(GwyDataField *data_field,
         sizes = g_new0(gint, ngrains + 1);
         memset(values, 0, (ngrains + 1)*sizeof(gdouble));
         for (i = 0; i < nn; i++) {
-            values[grains[i]] += d[i];
-            sizes[grains[i]]++;
+            gno = grains[i];
+            values[gno] += d[i];
+            sizes[gno]++;
         }
         for (i = 0; i <= ngrains; i++)
             values[i] /= sizes[i];
@@ -1286,7 +1319,7 @@ gwy_data_field_grains_get_values(GwyDataField *data_field,
          * participating to a particular triangle */
         for (i = 0; i < yres; i++) {
             for (j = 0; j < xres; j++) {
-                gint ix, ipx, imx, jp, jm, gno;
+                gint ix, ipx, imx, jp, jm;
                 gdouble c;
 
                 ix = i*xres;
@@ -1382,8 +1415,7 @@ gwy_data_field_grains_get_values(GwyDataField *data_field,
         memset(values, 0, (ngrains + 1)*sizeof(gdouble));
         for (i = 0; i < yres; i++) {
             for (j = 0; j < xres; j++) {
-                gint gno = grains[i*xres + j];
-
+                gno = grains[i*xres + j];
                 values[gno] += j;
                 sizes[gno]++;
             }
@@ -1399,8 +1431,7 @@ gwy_data_field_grains_get_values(GwyDataField *data_field,
         memset(values, 0, (ngrains + 1)*sizeof(gdouble));
         for (i = 0; i < yres; i++) {
             for (j = 0; j < xres; j++) {
-                gint gno = grains[i*xres + j];
-
+                gno = grains[i*xres + j];
                 values[gno] += i;
                 sizes[gno]++;
             }
@@ -1425,7 +1456,7 @@ gwy_data_field_grains_get_values(GwyDataField *data_field,
         memset(values, 0, (ngrains + 1)*sizeof(gdouble));
         for (i = 0; i < yres; i++) {
             for (j = 0; j < xres; j++) {
-                gint ix, ipx, imx, jp, jm, gno;
+                gint ix, ipx, imx, jp, jm;
 
                 ix = i*xres;
                 if (!(gno = grains[ix + j]))
@@ -1482,8 +1513,7 @@ gwy_data_field_grains_get_values(GwyDataField *data_field,
         values[0] = 0.0;
         for (i = 0; i < yres; i++) {
             for (j = 0; j < xres; j++) {
-                gint gno = grains[i*xres + j];
-
+                gno = grains[i*xres + j];
                 if (gno) {
                     gdouble *t = tmp + 8*gno;
                     gdouble z;
@@ -1557,6 +1587,7 @@ gwy_grain_quantity_needs_same_units(GwyGrainQuantity quantity)
                          | (1 << GWY_GRAIN_VALUE_MINIMUM)
                          | (1 << GWY_GRAIN_VALUE_MEAN)
                          | (1 << GWY_GRAIN_VALUE_MEDIAN)
+                         | (1 << GWY_GRAIN_VALUE_HALF_HEIGHT_AREA)
                          | (1 << GWY_GRAIN_VALUE_FLAT_BOUNDARY_LENGTH)
                          | (1 << GWY_GRAIN_VALUE_MINIMUM_BOUND_SIZE)
                          | (1 << GWY_GRAIN_VALUE_MINIMUM_BOUND_ANGLE)
@@ -1614,6 +1645,7 @@ gwy_grain_quantity_get_units(GwyGrainQuantity quantity,
                        | (1 << GWY_GRAIN_VALUE_MEAN)
                        | (1 << GWY_GRAIN_VALUE_MEDIAN)),
         area_units = ((1 << GWY_GRAIN_VALUE_PROJECTED_AREA)
+                      | (1 << GWY_GRAIN_VALUE_HALF_HEIGHT_AREA)
                       | (1 << GWY_GRAIN_VALUE_SURFACE_AREA)),
         volume_units = ((1 << GWY_GRAIN_VALUE_VOLUME_0)
                         | (1 << GWY_GRAIN_VALUE_VOLUME_MIN)
