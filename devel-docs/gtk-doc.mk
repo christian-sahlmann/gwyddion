@@ -148,16 +148,23 @@ maintainer-clean-local:
 	rm -rf html
 
 install-data-local:
-	installfiles=`echo html/*`; \
-	if test "$$installfiles" = 'html/*'; \
-	then echo 'gtk-doc: Nothing to install' ; \
+	d=; \
+	if test -s html/index.sgml; then \
+		echo 'gtk-doc: Installing HTML from builddir'; \
+		d=html; \
+	elif test -s $(srcdir)/html/index.sgml; then \
+		echo 'gtk-doc: Installing HTML from srcdir'; \
+		d=$(srcdir)/html; \
 	else \
-	  $(mkdir_p) $(DESTDIR)$(TARGET_DIR); \
-	  for i in $$installfiles; do \
-	    echo 'gtk-doc: Installing '$$i ; \
-	    $(INSTALL_DATA) $$i $(DESTDIR)$(TARGET_DIR); \
-	  done; \
-	fi
+		echo 'gtk-doc: Nothing to install'; \
+	fi; \
+	if test -n "$$d"; then \
+		$(mkdir_p) $(DESTDIR)$(TARGET_DIR); \
+		for i in $$d/*; do \
+			$(INSTALL_DATA) $$i $(DESTDIR)$(TARGET_DIR); \
+		done; \
+	fi; \
+	test -n "$$d"
 
 uninstall-local:
 	rm -f $(DESTDIR)$(TARGET_DIR)/*
@@ -178,7 +185,8 @@ endif
 
 dist-hook: dist-check-gtkdoc dist-hook-local
 	mkdir $(distdir)/html
-	-cp html/* $(distdir)/html
+	if test -s html/index.sgml; then d=html; else d=$(srcdir)/html; fi; \
+	-cp $$d/html/* $(distdir)/html
 	$(PYTHON) $(top_srcdir)/devel-docs/ncrosslinks.py $(distdir)/html/*.html </dev/null
 
 .PHONY: docs dist-hook-local
