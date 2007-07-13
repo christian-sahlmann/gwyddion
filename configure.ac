@@ -2,7 +2,7 @@
 dnl Process this file with autoconf to produce a configure script.
 m4_define([gwy_version_major],[2])
 m4_define([gwy_version_minor],[7])
-m4_define([gwy_version_string],[gwy_version_major.gwy_version_minor.20070711])
+m4_define([gwy_version_string],[gwy_version_major.gwy_version_minor.20070713])
 AC_INIT([Gwyddion], [gwy_version_string], [klapetek@gwyddion.net])
 # Use -release for unstable version libs instead of -version-info, because
 # we *do* break compatibility each version
@@ -43,11 +43,17 @@ AC_CONFIG_FILES(\
   utils/gwywin32.bat \
   devel-docs/Makefile \
   devel-docs/libgwyapp/Makefile \
+  devel-docs/libgwyapp/releaseinfo.xml \
   devel-docs/libgwyddion/Makefile \
+  devel-docs/libgwyddion/releaseinfo.xml \
   devel-docs/libgwydgets/Makefile \
+  devel-docs/libgwydgets/releaseinfo.xml \
   devel-docs/libgwydraw/Makefile \
+  devel-docs/libgwydraw/releaseinfo.xml \
   devel-docs/libgwymodule/Makefile \
+  devel-docs/libgwymodule/releaseinfo.xml \
   devel-docs/libgwyprocess/Makefile \
+  devel-docs/libgwyprocess/releaseinfo.xml \
   gwyddion.spec:data/gwyddion.spec.in \
   data/gwyddion.iss \
   data/gwyddion-devel.iss \

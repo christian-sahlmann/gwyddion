@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
+               "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
+<releaseinfo>
+  For Gwyddion @PACKAGE_VERSION@.
+  The latest version of this document can be found on-line at
+  <ulink role="online-location"
+         url="http://gwyddion.net/documentation/libgwymodule/index.php">http://gwyddion.net/documentation/libgwymodule/</ulink>.
+</releaseinfo>

@@ -33,6 +33,7 @@ TARGET_DIR=$(HTML_DIR)/$(DOC_MODULE)
 EXTRA_DIST = \
 	$(content_files) \
 	makefile.msc \
+	releaseinfo.xml.in \
 	$(HTML_IMAGES) \
 	$(DOC_MAIN_SGML_FILE) \
 	$(DOC_MODULE)-overrides.txt
@@ -125,7 +126,7 @@ sgml.stamp: sgml-build.stamp
 
 #### html ####
 
-html-build.stamp: sgml.stamp $(DOC_MAIN_SGML_FILE) $(content_files)
+html-build.stamp: sgml.stamp $(DOC_MAIN_SGML_FILE) $(content_files) releaseinfo.xml
 	@echo 'gtk-doc: Building HTML'
 	@-chmod -R u+w $(srcdir)
 	rm -rf $(srcdir)/html

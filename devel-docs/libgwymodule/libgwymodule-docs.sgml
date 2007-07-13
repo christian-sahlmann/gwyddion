@@ -4,6 +4,7 @@
 <book id="index" xmlns:xi="http://www.w3.org/2001/XInclude">
   <bookinfo>
     <title>Gwyddion Module Library Reference Manual</title>
+    <xi:include href="releaseinfo.xml"/>
   </bookinfo>
 
   <chapter id="ModuleLibrary">
