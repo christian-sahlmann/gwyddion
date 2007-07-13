@@ -55,7 +55,8 @@ typedef struct {
 
 typedef enum {
     GWY_APP_FUNC_TYPE_NONE = -1,
-    GWY_APP_FUNC_TYPE_BUILTIN = 1,
+    GWY_APP_FUNC_TYPE_PLACEHOLDER = 0,
+    GWY_APP_FUNC_TYPE_BUILTIN,
     GWY_APP_FUNC_TYPE_PROC,
     GWY_APP_FUNC_TYPE_GRAPH,
     GWY_APP_FUNC_TYPE_TOOL
@@ -298,6 +299,7 @@ toolbox_ui_start_item(GwyAppToolboxBuilder *builder,
                       const gchar **attribute_values)
 {
     static const GwyEnum types[] = {
+        { "empty",   GWY_APP_FUNC_TYPE_PLACEHOLDER, },
         { "builtin", GWY_APP_FUNC_TYPE_BUILTIN, },
         { "proc",    GWY_APP_FUNC_TYPE_PROC,    },
         { "graph",   GWY_APP_FUNC_TYPE_GRAPH,   },
@@ -338,6 +340,11 @@ toolbox_ui_start_item(GwyAppToolboxBuilder *builder,
     switch (type) {
         case GWY_APP_FUNC_TYPE_NONE:
         g_warning("Ignoring item with invalid type");
+        return;
+        break;
+
+        case GWY_APP_FUNC_TYPE_PLACEHOLDER:
+        builder->pos++;
         return;
         break;
 
@@ -413,8 +420,20 @@ toolbox_ui_start_item(GwyAppToolboxBuilder *builder,
 
     if (!button)
         button = gtk_button_new();
-    if (!action.stock_id)
-        action.stock_id = icon ? icon : GTK_STOCK_MISSING_IMAGE;
+    if (icon)
+        action.stock_id = icon;
+
+    if (!action.stock_id) {
+        g_warning("Function %s::%s has not icon set",
+                  gwy_enum_to_string(type, types, G_N_ELEMENTS(types)), func);
+        action.stock_id = GTK_STOCK_MISSING_IMAGE;
+    }
+    else if (!gtk_icon_factory_lookup_default(action.stock_id)) {
+        g_warning("Function %s::%s icon %s not found",
+                  gwy_enum_to_string(type, types, G_N_ELEMENTS(types)), func,
+                  action.stock_id);
+        action.stock_id = GTK_STOCK_MISSING_IMAGE;
+    }
 
     gtk_button_set_relief(GTK_BUTTON(button), GTK_RELIEF_NONE);
     gtk_table_attach_defaults(GTK_TABLE(builder->group), button,
