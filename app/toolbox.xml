@@ -1,0 +1,51 @@
+<?xml version="1.0"?>
+<toolbox width='4'>
+  <group id='view' title='View'>
+    <item type='builtin' function='zoom_in'/>
+    <item type='builtin' function='zoom_1_1'/>
+    <item type='builtin' function='zoom_out'/>
+    <item type='builtin' function='display_3d'/>
+  </group>
+  <group id='proc' title='Data Process'>
+    <item type='proc' function='fix_zero'/>
+    <item type='proc' function='scale'/>
+    <item type='proc' function='rotate'/>
+    <item type='proc' function='unrotate'/>
+    <item type='proc' function='level'/>
+    <item type='proc' function='facet-level'/>
+    <item type='proc' function='line_correct_median'/>
+    <item type='proc' function='scars_remove'/>
+    <item type='proc' function='grain_mark'/>
+    <item type='proc' function='grain_wshed'/>
+    <item type='proc' function='grain_rem_threshold'/>
+    <item type='proc' function='grain_dist'/>
+    <item type='proc' function='shade'/>
+    <item type='proc' function='polylevel'/>
+    <item type='proc' function='laplace'/>
+  </group>
+  <group id='graph' title='Graph'>
+    <item type='graph' function='graph_cd'/>
+    <item type='graph' function='graph_fit'/>
+  </group>
+  <group id='tool' title='Tools'>
+    <item type='tool' function='GwyToolReadValue'/>
+    <item type='tool' function='GwyToolDistance'/>
+    <item type='tool' function='GwyToolProfile'/>
+    <item type='tool' function='GwyToolSpectro'/>
+    <item type='tool' function='GwyToolStats'/>
+    <item type='tool' function='GwyToolSFunctions'/>
+    <item type='tool' function='GwyToolLineStats'/>
+    <item type='tool' function='GwyToolRoughness'/>
+    <item type='tool' function='GwyToolLevel3'/>
+    <item type='tool' function='GwyToolPathLevel'/>
+    <item type='tool' function='GwyToolPolynom'/>
+    <item type='tool' function='GwyToolCrop'/>
+    <item type='tool' function='GwyToolMaskEditor'/>
+    <item type='tool' function='GwyToolGrainMeasure'/>
+    <item type='tool' function='GwyToolGrainRemover'/>
+    <item type='tool' function='GwyToolSpotRemover'/>
+    <item type='tool' function='GwyToolColorRange'/>
+    <item type='tool' function='GwyToolFilter'/>
+    <item type='tool'/>
+  </group>
+</toolbox>
