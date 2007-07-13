@@ -7,6 +7,7 @@ libgwydraw = $(top_builddir)/libdraw/libgwydraw2.la
 libgwydgets = $(top_builddir)/libgwydgets/libgwydgets2.la
 
 libgwyapp2includedir = $(pkgincludedir)/app
+uidatadir = $(pkgdatadir)/ui
 
 if MODULE_DEPENDENCIES
 libgwyapp_libadd = \
@@ -44,6 +45,8 @@ noinst_HEADERS = \
 	gwyappinternal.h \
 	gwyddion.h
 
+uidata_DATA = toolbox.xml
+
 bin_PROGRAMS = gwyddion
 lib_LTLIBRARIES = libgwyapp2.la
 
@@ -51,7 +54,8 @@ EXTRA_DIST = \
 	makefile.msc \
 	makefile.msc.gwt \
 	libgwyapp2.def \
-	README.objdata
+	README.objdata \
+	toolbox.xml
 
 BUILT_SOURCES = \
 	authors.h

@@ -149,9 +149,11 @@ update-desktop-database &>/dev/null || :
 %{pkgdatadir}/pixmaps/*.ico
 %{pkgdatadir}/gradients/*
 %{pkgdatadir}/glmaterials/*
+%{pkgdatadir}/ui/*
 %dir %{pkgdatadir}/pixmaps
 %dir %{pkgdatadir}/gradients
 %dir %{pkgdatadir}/glmaterials
+%dir %{pkgdatadir}/ui
 %dir %{pkgdatadir}
 %{_mandir}/man1/%{name}.1*
 %{_datadir}/icons/hicolor/48x48/apps/%{name}.png

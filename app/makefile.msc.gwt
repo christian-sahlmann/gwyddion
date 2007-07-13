@@ -2,6 +2,7 @@
 
 <[[:SELF:]]>
 
+DATA_TYPE = ui
 LIB_VER = $(LIBGWYAPP_VER)
 PROGRAM = gwyddion
 
@@ -54,14 +55,18 @@ PRG_LINK = \
 
 <[[:PRG_OBJECTS:]]>
 
+<[[:DATA:]]>
+
 ## targets
-all: lib prg
+all: lib prg data
+
+data: $(DATA)
 
 lib: $(LIBRARY)-$(LIB_VER).dll
 
 prg: $(PROGRAM).exe
 
-install: install-lib install-prg
+install: install-lib install-prg install-data
 
 !INCLUDE $(TOP_SRCDIR)\rules.msc
 

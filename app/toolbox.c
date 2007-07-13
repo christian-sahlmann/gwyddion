@@ -37,10 +37,6 @@
 #include <shlobj.h>
 #endif
 
-/* (x) breaks string concatenation */
-#undef N_
-#define N_(x) x
-
 enum {
     DND_TARGET_STRING = 1,
 };
@@ -109,57 +105,9 @@ static GtkTargetEntry dnd_target_table[] = {
     { "text/uri-list", 0, DND_TARGET_STRING, },
 };
 
-static const gchar toolbox_ui[] =
-    "<toolbox width='4'>\n"
-    "  <group id='view' title='" N_("View") "'>\n"
-    "    <item type='builtin' function='zoom_in'/>\n"
-    "    <item type='builtin' function='zoom_1_1'/>\n"
-    "    <item type='builtin' function='zoom_out'/>\n"
-    "    <item type='builtin' function='display_3d'/>\n"
-    "  </group>\n"
-    "  <group id='proc' title='" N_("Data Process") "'>\n"
-    "    <item type='proc' function='fix_zero'/>\n"
-    "    <item type='proc' function='scale'/>\n"
-    "    <item type='proc' function='rotate'/>\n"
-    "    <item type='proc' function='unrotate'/>\n"
-    "    <item type='proc' function='level'/>\n"
-    "    <item type='proc' function='facet-level'/>\n"
-    "    <item type='proc' function='line_correct_median'/>\n"
-    "    <item type='proc' function='scars_remove'/>\n"
-    "    <item type='proc' function='grain_mark'/>\n"
-    "    <item type='proc' function='grain_wshed'/>\n"
-    "    <item type='proc' function='grain_rem_threshold'/>\n"
-    "    <item type='proc' function='grain_dist'/>\n"
-    "    <item type='proc' function='shade'/>\n"
-    "    <item type='proc' function='polylevel'/>\n"
-    "    <item type='proc' function='laplace'/>\n"
-    "  </group>\n"
-    "  <group id='graph' title='" N_("Graph") "'>\n"
-    "    <item type='graph' function='graph_cd'/>\n"
-    "    <item type='graph' function='graph_fit'/>\n"
-    "  </group>\n"
-    "  <group id='tool' title='" N_("Tools") "'>\n"
-    "    <item type='tool' function='GwyToolReadValue'/>\n"
-    "    <item type='tool' function='GwyToolDistance'/>\n"
-    "    <item type='tool' function='GwyToolProfile'/>\n"
-    "    <item type='tool' function='GwyToolSpectro'/>\n"
-    "    <item type='tool' function='GwyToolStats'/>\n"
-    "    <item type='tool' function='GwyToolSFunctions'/>\n"
-    "    <item type='tool' function='GwyToolLineStats'/>\n"
-    "    <item type='tool' function='GwyToolRoughness'/>\n"
-    "    <item type='tool' function='GwyToolLevel3'/>\n"
-    "    <item type='tool' function='GwyToolPathLevel'/>\n"
-    "    <item type='tool' function='GwyToolPolynom'/>\n"
-    "    <item type='tool' function='GwyToolCrop'/>\n"
-    "    <item type='tool' function='GwyToolMaskEditor'/>\n"
-    "    <item type='tool' function='GwyToolGrainMeasure'/>\n"
-    "    <item type='tool' function='GwyToolGrainRemover'/>\n"
-    "    <item type='tool' function='GwyToolSpotRemover'/>\n"
-    "    <item type='tool' function='GwyToolColorRange'/>\n"
-    "    <item type='tool' function='GwyToolFilter'/>\n"
-    "    <item type='tool'/>\n"
-    "  </group>\n"
-    "</toolbox>\n";
+/* Translatability hack, intltool seems overkill at this point. */
+#define IGNORE(x) /* */
+IGNORE((_("View"), _("Data Process"), _("Graph"), _("Tools")))
 
 /* FIXME: A temporary hack. */
 static void
@@ -559,9 +507,7 @@ gather_tools(const gchar *name,
 
 static void
 gwy_app_toolbox_build(GtkBox *vbox,
-                      GtkTooltips *tips,
-                      const gchar *ui,
-                      gssize ui_len)
+                      GtkTooltips *tips)
 {
     static const GMarkupParser parser = {
         toolbox_ui_start_element,
@@ -574,6 +520,21 @@ gwy_app_toolbox_build(GtkBox *vbox,
     GwyAppToolboxBuilder builder;
     GMarkupParseContext *context;
     GError *err = NULL;
+    gchar *p, *q, *ui;
+    gsize ui_len;
+
+    p = g_build_filename(gwy_get_user_dir(), "ui", "toolbox.xml", NULL);
+    if (!g_file_get_contents(p, &ui, &ui_len, NULL)) {
+        g_free(p);
+        q = gwy_find_self_dir("data");
+        p = g_build_filename(q, "ui", "toolbox.xml", NULL);
+        g_free(q);
+        if (!g_file_get_contents(p, &ui, &ui_len, NULL)) {
+            g_critical("Cannot find toolbox user interface %s", p);
+            exit(1);
+        }
+    }
+    g_free(p);
 
     memset(&builder, 0, sizeof(GwyAppToolboxBuilder));
     builder.width = 4;
@@ -586,7 +547,7 @@ gwy_app_toolbox_build(GtkBox *vbox,
 
     context = g_markup_parse_context_new(&parser, 0, &builder, NULL);
     if (!g_markup_parse_context_parse(context, ui, ui_len, &err)) {
-        g_printerr("Parsing failed: %s\n", err->message);
+        g_printerr("Toolbox parsing failed: %s\n", err->message);
         g_clear_error(&err);
     }
     g_markup_parse_context_free(context);
@@ -641,7 +602,7 @@ gwy_app_toolbox_create(void)
 
     /***************************************************************/
 
-    gwy_app_toolbox_build(vbox, tooltips, toolbox_ui, sizeof(toolbox_ui)-1);
+    gwy_app_toolbox_build(vbox, tooltips);
 
     /***************************************************************/
     gtk_drag_dest_set(toolbox, GTK_DEST_DEFAULT_ALL,
