@@ -52,7 +52,7 @@ static void     tipops           (GwyContainer *data,
 static gboolean tipops_dialog    (TipOpsArgs *args,
                                   TipOperation op);
 static void     tipops_tip_cb    (GwyDataChooser *chooser,
-                                  GwyDataObjectId *object);
+                                  TipOpsArgs *args);
 static gboolean tipops_tip_filter(GwyContainer *data,
                                   gint id,
                                   gpointer user_data);
@@ -65,7 +65,7 @@ static GwyModuleInfo module_info = {
     N_("Tip operations: dilation (convolution), erosion (reconstruction) "
        "and certainty map."),
     "Petr Klapetek <klapetek@gwyddion.net>, Yeti <yeti@gwyddion.net>",
-    "1.0",
+    "1.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
@@ -149,7 +149,7 @@ tipops_dialog(TipOpsArgs *args,
     gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
 
-    table = gtk_table_new(1, 2, FALSE);
+    table = gtk_table_new(2, 2, FALSE);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
@@ -166,12 +166,18 @@ tipops_dialog(TipOpsArgs *args,
     g_object_set_data(G_OBJECT(chooser), "dialog", dialog);
     gwy_data_chooser_set_filter(GWY_DATA_CHOOSER(chooser),
                                 tipops_tip_filter, &args->target, NULL);
-    g_signal_connect(chooser, "changed", G_CALLBACK(tipops_tip_cb), &args->tip);
-    tipops_tip_cb(GWY_DATA_CHOOSER(chooser), &args->tip);
+    g_signal_connect(chooser, "changed", G_CALLBACK(tipops_tip_cb), args);
     gtk_table_attach_defaults(GTK_TABLE(table), chooser, 1, 2, row, row+1);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), chooser);
     row++;
 
+    label = gtk_label_new(NULL);
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), label,
+                     0, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    g_object_set_data(G_OBJECT(chooser), "warning-label", label);
+
+    tipops_tip_cb(GWY_DATA_CHOOSER(chooser), args);
     gtk_widget_show_all(dialog);
 
     do {
@@ -200,17 +206,52 @@ tipops_dialog(TipOpsArgs *args,
 
 static void
 tipops_tip_cb(GwyDataChooser *chooser,
-              GwyDataObjectId *object)
+              TipOpsArgs *args)
 {
-    GtkWidget *dialog;
+    GtkWidget *dialog, *label;
+    GwyDataField *tip, *target;
+    gint xres, yres;
+    GQuark quark;
+    gchar *s;
 
-    object->data = gwy_data_chooser_get_active(chooser, &object->id);
-    gwy_debug("tip: %p %d", object->data, object->id);
+    args->tip.data = gwy_data_chooser_get_active(chooser, &args->tip.id);
+    gwy_debug("tip: %p %d", args->tip.data, args->tip.id);
 
     dialog = g_object_get_data(G_OBJECT(chooser), "dialog");
     g_assert(GTK_IS_DIALOG(dialog));
     gtk_dialog_set_response_sensitive(GTK_DIALOG(dialog), GTK_RESPONSE_OK,
-                                      object->data != NULL);
+                                      args->tip.data != NULL);
+    if (!args->tip.data)
+        return;
+
+    label = g_object_get_data(G_OBJECT(chooser), "warning-label");
+
+    quark = gwy_app_get_data_key_for_id(args->tip.id);
+    tip = GWY_DATA_FIELD(gwy_container_get_object(args->tip.data, quark));
+
+    quark = gwy_app_get_data_key_for_id(args->target.id);
+    target = GWY_DATA_FIELD(gwy_container_get_object(args->target.data, quark));
+
+    if (!gwy_data_field_check_compatibility(tip, target,
+                                            GWY_DATA_COMPATIBILITY_MEASURE)) {
+        gtk_label_set_text(GTK_LABEL(label), "");
+        return;
+    }
+
+    xres = GWY_ROUND(gwy_data_field_get_xreal(tip)
+                     /gwy_data_field_get_xmeasure(target));
+    xres = MAX(xres, 1);
+    yres = GWY_ROUND(gwy_data_field_get_yreal(tip)
+                     /gwy_data_field_get_ymeasure(target));
+    yres = MAX(yres, 1);
+
+    s = g_strdup_printf(_("Tip measure does not match data.\n"
+                          "It will be resampled from %d×%d to %d×%d."),
+                        gwy_data_field_get_xres(tip),
+                        gwy_data_field_get_yres(tip),
+                        xres, yres);
+    gtk_label_set_text(GTK_LABEL(label), s);
+    g_free(s);
 }
 
 static gboolean
@@ -231,8 +272,7 @@ tipops_tip_filter(GwyContainer *data,
     if (gwy_data_field_get_xreal(tip) <= gwy_data_field_get_xreal(target)/4
         && gwy_data_field_get_yreal(tip) <= gwy_data_field_get_yreal(target)/4
         && !gwy_data_field_check_compatibility(tip, target,
-                                               GWY_DATA_COMPATIBILITY_MEASURE
-                                               | GWY_DATA_COMPATIBILITY_LATERAL
+                                               GWY_DATA_COMPATIBILITY_LATERAL
                                                | GWY_DATA_COMPATIBILITY_VALUE))
         return TRUE;
 
@@ -248,6 +288,7 @@ tipops_do(TipOpsArgs *args,
         N_("Surface reconstruction"),
     };
     GwyDataField *dfield, *tip, *target;
+    gint xres, yres;
     GQuark quark;
     gboolean ok;
     gint newid;
@@ -265,6 +306,15 @@ tipops_do(TipOpsArgs *args,
     gwy_app_wait_start(gwy_app_find_window_for_channel(args->target.data,
                                                        args->target.id),
                        _("Initializing"));
+
+    xres = GWY_ROUND(gwy_data_field_get_xreal(tip)
+                     /gwy_data_field_get_xmeasure(target));
+    xres = MAX(xres, 1);
+    yres = GWY_ROUND(gwy_data_field_get_yreal(tip)
+                     /gwy_data_field_get_ymeasure(target));
+    yres = MAX(yres, 1);
+    tip = gwy_data_field_new_resampled(tip, xres, yres,
+                                       GWY_INTERPOLATION_BSPLINE);
 
     if (op == DILATION || op == EROSION) {
         if (op == DILATION)
@@ -300,6 +350,7 @@ tipops_do(TipOpsArgs *args,
             gwy_container_set_object(args->target.data, quark, dfield);
         }
     }
+    g_object_unref(tip);
     g_object_unref(dfield);
 }
 
