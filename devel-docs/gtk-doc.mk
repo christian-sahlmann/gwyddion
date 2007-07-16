@@ -186,7 +186,7 @@ endif
 dist-hook: dist-check-gtkdoc dist-hook-local
 	mkdir $(distdir)/html
 	if test -s html/index.sgml; then d=html; else d=$(srcdir)/html; fi; \
-	cp $$d/html/* $(distdir)/html
+	cp $$d/* $(distdir)/html
 	$(PYTHON) $(top_srcdir)/devel-docs/ncrosslinks.py $(distdir)/html/*.html </dev/null
 
 .PHONY: docs dist-hook-local
