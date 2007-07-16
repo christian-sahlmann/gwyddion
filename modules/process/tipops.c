@@ -288,7 +288,6 @@ tipops_do(TipOpsArgs *args,
         N_("Surface reconstruction"),
     };
     GwyDataField *dfield, *tip, *target;
-    gint xres, yres;
     GQuark quark;
     gboolean ok;
     gint newid;
@@ -306,15 +305,6 @@ tipops_do(TipOpsArgs *args,
     gwy_app_wait_start(gwy_app_find_window_for_channel(args->target.data,
                                                        args->target.id),
                        _("Initializing"));
-
-    xres = GWY_ROUND(gwy_data_field_get_xreal(tip)
-                     /gwy_data_field_get_xmeasure(target));
-    xres = MAX(xres, 1);
-    yres = GWY_ROUND(gwy_data_field_get_yreal(tip)
-                     /gwy_data_field_get_ymeasure(target));
-    yres = MAX(yres, 1);
-    tip = gwy_data_field_new_resampled(tip, xres, yres,
-                                       GWY_INTERPOLATION_BSPLINE);
 
     if (op == DILATION || op == EROSION) {
         if (op == DILATION)
@@ -350,7 +340,6 @@ tipops_do(TipOpsArgs *args,
             gwy_container_set_object(args->target.data, quark, dfield);
         }
     }
-    g_object_unref(tip);
     g_object_unref(dfield);
 }
 
