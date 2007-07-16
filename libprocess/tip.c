@@ -512,28 +512,15 @@ static GwyDataField*
 get_right_tip_field(GwyDataField *tip,
                     GwyDataField *surface)
 {
-    gdouble tipxstep, tipystep;
-    gdouble surfxstep, surfystep;
+    gint xres, yres;
 
-    tipxstep = tip->xreal/tip->xres;
-    surfxstep = surface->xreal/surface->xres;
-    tipystep = tip->yreal/tip->yres;
-    surfystep = surface->yreal/surface->yres;
+    xres = GWY_ROUND(tip->xreal/surface->xreal*surface->xres);
+    xres = MAX(xres, 1);
+    yres = GWY_ROUND(tip->yreal/surface->yreal*surface->yres);
+    yres = MAX(yres, 1);
 
-    /* XXX: This is gross. */
-    if (fabs(tipxstep/surfxstep - 1.0) > 0.01
-        || fabs(tipystep/surfystep - 1.0) > 0.01) {
-        gint xres, yres;
-
-        xres = GWY_ROUND(tip->xres/surfxstep*tipxstep);
-        yres = GWY_ROUND(tip->xres/surfxstep*tipxstep);
-        tip = gwy_data_field_new_resampled(tip, xres, yres,
-                                           GWY_INTERPOLATION_BSPLINE);
-    }
-    else
-        tip = gwy_data_field_duplicate(tip);
-
-    return tip;
+    return gwy_data_field_new_resampled(tip, xres, yres,
+                                        GWY_INTERPOLATION_BSPLINE);
 }
 
 /**
