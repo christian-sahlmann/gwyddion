@@ -14,16 +14,14 @@ gint **_gwy_morph_lib_iallocmatrix(gint ysiz,
                                    gint xsiz);
 
 G_GNUC_INTERNAL
-void _gwy_morph_lib_ifreematrix(gint **mptr,
-                                gint ysiz);
+void _gwy_morph_lib_ifreematrix(gint **mptr);
 
 G_GNUC_INTERNAL
 gdouble **_gwy_morph_lib_dallocmatrix(gint ysiz,
                                       gint xsiz);
 
 G_GNUC_INTERNAL
-void _gwy_morph_lib_dfreematrix(gdouble **mptr,
-                                gint ysiz);
+void _gwy_morph_lib_dfreematrix(gdouble **mptr);
 
 /*simple routines - integer arithmetics*/
 G_GNUC_INTERNAL

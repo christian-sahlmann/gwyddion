@@ -26,10 +26,11 @@
 
 #include "config.h"
 #include <glib.h>
-#include <libgwyddion/gwymacros.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <math.h>
+#include <libgwyddion/gwymacros.h>
 #include "morph_lib.h"
 
 
@@ -65,41 +66,41 @@ itip_estimate_point(gint ixp, gint jxp, gint **image,
  * of pointers to rows. ysiz is the number of rows. xsiz is the number
  * of columns.
  *
+ * Warning: The argument order is y, x.
+ *
  * Returns: Alocated matrix.
  **/
 gint**
 _gwy_morph_lib_iallocmatrix(gint ysiz, gint xsiz)
 {
     gint **mptr;                /* points to allocated matrix */
+    gint *mem;
     gint i;                     /* counter */
 
-    /* Allocate pointers to rows */
+    /* The actual storage */
+    mem = g_new(gint, xsiz*ysiz);
+
+    /* The pointers to rows */
     mptr = g_new(gint*, ysiz);
-
-    /* Allocate rows */
     for (i = 0; i < ysiz; i++)
-        mptr[i] = g_new(gint, xsiz);
+        mptr[i] = mem + i*xsiz;
 
-    /* Done. Return result. */
     return mptr;
 }
 
 /**
  * _gwy_morph_lib_ifreematrix:
  * @mptr: Pointer to matrix.
- * @ysiz: Number of rows.
  *
  * Frees memory allocated with allocmatrix.
  **/
 void
-_gwy_morph_lib_ifreematrix(gint **mptr, gint ysiz)
+_gwy_morph_lib_ifreematrix(gint **mptr)
 {
-    gint i;
-
     if (!mptr)
         return;
-    for (i = 0; i < ysiz; i++)
-        g_free(mptr[i]);
+
+    g_free(mptr[0]);
     g_free(mptr);
 }
 
@@ -189,7 +190,7 @@ _gwy_morph_lib_idilation(gint **surface, gint surf_xsiz, gint surf_ysiz,
             result[j][i] = max;
         }
         if (set_fraction && !set_fraction((gdouble)j/surf_ysiz)) {
-            _gwy_morph_lib_ifreematrix(result, surf_ysiz);
+            _gwy_morph_lib_ifreematrix(result);
             return NULL;
         }
     }
@@ -243,6 +244,7 @@ _gwy_morph_lib_ierosion(gint **image, gint im_xsiz, gint im_ysiz,
         for (i = 0; i < im_xsiz; i++) {
             /* Compute allowed range of px. This may be different from
                the full range of the tip due to edge overlaps. */
+            fprintf(stderr, "%d %d\n", i, j);
             pxmin = MAX(-xc, -i);
             pxmax = MIN(tip_xsiz - xc, im_xsiz - i) - 1;
             min = image[j + pymin][i + pxmin] - tip[pymin + yc][pxmin + xc];
@@ -255,7 +257,7 @@ _gwy_morph_lib_ierosion(gint **image, gint im_xsiz, gint im_ysiz,
             result[j][i] = min;
         }
         if (set_fraction && !set_fraction((gdouble)j/im_ysiz)) {
-            _gwy_morph_lib_ifreematrix(result, im_ysiz);
+            _gwy_morph_lib_ifreematrix(result);
             return NULL;
         }
     }
@@ -336,7 +338,7 @@ _gwy_morph_lib_icmap(gint **image, gint im_xsiz, gint im_ysiz,
         }
         if (set_fraction
             && !set_fraction((gdouble)imy/(im_ysiz+ryc-tip_ysiz))) {
-            _gwy_morph_lib_ifreematrix(cmap, im_ysiz);
+            _gwy_morph_lib_ifreematrix(cmap);
             return NULL;
         }
     }
@@ -356,22 +358,25 @@ _gwy_morph_lib_icmap(gint **image, gint im_xsiz, gint im_ysiz,
  * of pointers to rows. ysiz is the number of rows. xsiz is the number
  * of columns.
  *
+ * Warning: The argument order is y, x.
+ *
  * Returns: Alocated matrix.
  **/
 gdouble**
 _gwy_morph_lib_dallocmatrix(gint ysiz, gint xsiz)
 {
     gdouble **mptr;                /* points to allocated matrix */
+    gdouble *mem;
     gint i;                     /* counter */
 
-    /* Allocate pointers to rows */
+    /* The actual storage */
+    mem = g_new(gdouble, xsiz*ysiz);
+
+    /* The pointers to rows */
     mptr = g_new(gdouble*, ysiz);
-
-    /* Allocate rows */
     for (i = 0; i < ysiz; i++)
-        mptr[i] = g_new(gdouble, xsiz);
+        mptr[i] = mem + i*xsiz;
 
-    /* Done. Return result. */
     return mptr;
 }
 
@@ -383,14 +388,12 @@ _gwy_morph_lib_dallocmatrix(gint ysiz, gint xsiz)
  * Frees memory allocated with dallocmatrix.
  **/
 void
-_gwy_morph_lib_dfreematrix(gdouble **mptr, gint ysiz)
+_gwy_morph_lib_dfreematrix(gdouble **mptr)
 {
-    gint i;
-
     if (!mptr)
         return;
-    for (i = 0; i < ysiz; i++)
-        g_free(mptr[i]);
+
+    g_free(mptr[0]);
     g_free(mptr);
 }
 
@@ -479,7 +482,7 @@ _gwy_morph_lib_ddilation(gdouble **surface, gint surf_xsiz, gint surf_ysiz,
             result[j][i] = max;
         }
         if (set_fraction && !set_fraction((gdouble)j/surf_ysiz)) {
-            _gwy_morph_lib_dfreematrix(result, surf_ysiz);
+            _gwy_morph_lib_dfreematrix(result);
             return NULL;
         }
     }
@@ -545,7 +548,7 @@ _gwy_morph_lib_derosion(gdouble **image, gint im_xsiz, gint im_ysiz,
             result[j][i] = min;
         }
         if (set_fraction && !set_fraction((gdouble)j/im_ysiz)) {
-            _gwy_morph_lib_dfreematrix(result, im_ysiz);
+            _gwy_morph_lib_dfreematrix(result);
             return NULL;
         }
     }
@@ -570,7 +573,7 @@ iopen(gint **image, gint im_xsiz, gint im_ysiz, gint **tip,
     result = _gwy_morph_lib_idilation(eros, im_xsiz, im_ysiz, tip,
                                       tip_xsiz, tip_ysiz,
                                       tip_xsiz/2, tip_ysiz/2, NULL, NULL);
-    _gwy_morph_lib_ifreematrix(eros, im_ysiz);  /* free intermediate result */
+    _gwy_morph_lib_ifreematrix(eros);  /* free intermediate result */
 
     return result;
 }
@@ -659,13 +662,13 @@ itip_estimate_iter(gint **image, gint im_xsiz, gint im_ysiz, gint tip_xsiz,
                                           - (tip_ysiz - 1 - yc));
                     fraction = MAX(fraction, 0);
                     if (set_fraction && !set_fraction(fraction)) {
-                        _gwy_morph_lib_ifreematrix(open, im_ysiz);
+                        _gwy_morph_lib_ifreematrix(open);
                         return -1;
                     }
                 }
         }
     }
-    _gwy_morph_lib_ifreematrix(open, im_ysiz);
+    _gwy_morph_lib_ifreematrix(open);
 
     return count;
 }
