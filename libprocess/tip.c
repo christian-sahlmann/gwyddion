@@ -372,9 +372,9 @@ datafield_to_field(GwyDataField *datafield, gboolean maxzero)
     max = maxzero ? gwy_data_field_get_max(datafield) : 0.0;
 
     ret = _gwy_morph_lib_dallocmatrix(datafield->xres, datafield->yres);
-    for (col = 0; col < datafield->xres; col++) {
-        for (row = 0; row < datafield->yres; row++) {
-            ret[col][row] = datafield->data[col + datafield->xres*row] - max;
+    for (row = 0; row < datafield->yres; row++) {
+        for (col = 0; col < datafield->xres; col++) {
+            ret[row][col] = datafield->data[col + datafield->xres*row] - max;
         }
     }
     return ret;
@@ -384,9 +384,9 @@ static GwyDataField*
 field_to_datafield(gdouble **field, GwyDataField *ret)
 {
     gint col, row;
-    for (col = 0; col < ret->xres; col++) {
-        for (row = 0; row < ret->yres; row++) {
-            ret->data[col  + ret->xres*row] = field[col][row];
+    for (row = 0; row < ret->yres; row++) {
+        for (col = 0; col < ret->xres; col++) {
+            ret->data[col  + ret->xres*row] = field[row][col];
         }
     }
 
@@ -406,10 +406,10 @@ i_datafield_to_field(GwyDataField *datafield,
 
     max = maxzero ? gwy_data_field_get_max(datafield) : 0.0;
 
-    ret = _gwy_morph_lib_iallocmatrix(datafield->xres, datafield->yres);
-    for (col = 0; col < datafield->xres; col++) {
-        for (row = 0; row < datafield->yres; row++) {
-            ret[col][row] = (gint)(((datafield->data[col
+    ret = _gwy_morph_lib_iallocmatrix(datafield->yres, datafield->xres);
+    for (row = 0; row < datafield->yres; row++) {
+        for (col = 0; col < datafield->xres; col++) {
+            ret[row][col] = (gint)(((datafield->data[col
                                      + datafield->xres*row] - max) - min)/step);
         }
     }
@@ -424,9 +424,9 @@ i_field_to_datafield(gint **field,
 {
     gint col, row;
 
-    for (col = 0; col < ret->xres; col++) {
-        for (row = 0; row < ret->yres; row++) {
-            ret->data[col + ret->xres*row] = (gdouble)field[col][row]*step
+    for (row = 0; row < ret->yres; row++) {
+        for (col = 0; col < ret->xres; col++) {
+            ret->data[col + ret->xres*row] = (gdouble)field[row][col]*step
                                              + min;
         }
     }
@@ -453,18 +453,18 @@ i_datafield_to_largefield(GwyDataField *datafield,
     txr2 = tipfield->xres/2;
     tyr2 = tipfield->yres/2;
 
-    ret = _gwy_morph_lib_iallocmatrix(xnew, ynew);
-    for (col = 0; col < xnew; col++) {
-        for (row = 0; row < ynew; row++) {
+    ret = _gwy_morph_lib_iallocmatrix(ynew, xnew);
+    for (row = 0; row < ynew; row++) {
+        for (col = 0; col < xnew; col++) {
             if (col >= txr2
                 && col < (datafield->xres + txr2)
                 && row >= tyr2
                 && row < (datafield->yres + tyr2))
-            ret[col][row] = (gint)(((datafield->data[col - txr2
+            ret[row][col] = (gint)(((datafield->data[col - txr2
                                      + datafield->xres*(row - tyr2)]) - min)
                                    /step);
             else
-                ret[col][row] = minimum;
+                ret[row][col] = minimum;
         }
     }
 
@@ -487,14 +487,14 @@ i_largefield_to_datafield(gint **field,
     txr2 = tipfield->xres/2;
     tyr2 = tipfield->yres/2;
 
-    for (col = 0; col < xnew; col++) {
-        for (row = 0; row < ynew; row++) {
+    for (row = 0; row < ynew; row++) {
+        for (col = 0; col < xnew; col++) {
             if (col >= txr2
                 && col < (ret->xres + txr2)
                 && row >= tyr2
                 && row < (ret->yres + tyr2)) {
                 ret->data[col - txr2 + ret->xres*(row - tyr2)]
-                    = field[col][row]*step + min;
+                    = field[row][col]*step + min;
             }
         }
     }
