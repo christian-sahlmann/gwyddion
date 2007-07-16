@@ -505,30 +505,28 @@ i_largefield_to_datafield(gint **field,
 
 static GwyDataField*
 get_right_tip_field(GwyDataField *tip,
-                    GwyDataField *surface,
-                    gboolean *freetip)
+                    GwyDataField *surface)
 {
-    GwyDataField *buffer;
     gdouble tipxstep, tipystep;
     gdouble surfxstep, surfystep;
 
-    *freetip = FALSE;
     tipxstep = tip->xreal/tip->xres;
     surfxstep = surface->xreal/surface->xres;
     tipystep = tip->yreal/tip->yres;
     surfystep = surface->yreal/surface->yres;
 
+    /* XXX: This is gross. */
     if (fabs(tipxstep/surfxstep - 1.0) > 0.01
         || fabs(tipystep/surfystep - 1.0) > 0.01) {
-        buffer = gwy_data_field_new_resampled(tip,
-                                              tip->xres/surfxstep*tipxstep,
-                                              tip->yres/surfystep*tipystep,
-                                              GWY_INTERPOLATION_BILINEAR);
-        *freetip = TRUE;
-        return buffer;
+        tip = gwy_data_field_new_resampled(tip,
+                                           tip->xres/surfxstep*tipxstep,
+                                           tip->yres/surfystep*tipystep,
+                                           GWY_INTERPOLATION_BSPLINE);
     }
     else
-        return tip;
+        tip = gwy_data_field_duplicate(tip);
+
+    return tip;
 }
 
 /**
@@ -557,10 +555,9 @@ gwy_tip_dilation(GwyDataField *tip,
     gdouble **fsurface;
     gdouble **fresult;
     GwyDataField *buffertip;
-    gboolean freetip;
 
     /*if tip and surface have different spacings, make new, resampled tip*/
-    buffertip = get_right_tip_field(tip, surface, &freetip);
+    buffertip = get_right_tip_field(tip, surface);
     /*invert tip (as necessary by dilation algorithm)*/
     gwy_data_field_invert(buffertip, TRUE, TRUE, FALSE);
 
@@ -582,14 +579,11 @@ gwy_tip_dilation(GwyDataField *tip,
     else
         result = NULL;
     /*free auxiliary data arrays*/
+    g_object_unref(buffertip);
     _gwy_morph_lib_dfreematrix(ftip, buffertip->xres);
     _gwy_morph_lib_dfreematrix(fsurface, surface->xres);
     if (fresult)
         _gwy_morph_lib_dfreematrix(fresult, result->xres);
-    if (freetip)
-        g_object_unref(buffertip);
-    else
-        gwy_data_field_invert(buffertip, TRUE, TRUE, FALSE);
 
     return result;
 }
@@ -621,10 +615,9 @@ gwy_tip_erosion(GwyDataField *tip,
     gdouble **fsurface;
     gdouble **fresult;
     GwyDataField *buffertip;
-    gboolean freetip;
 
     /*if tip and surface have different spacings, make new, resampled tip*/
-    buffertip = get_right_tip_field(tip, surface, &freetip);
+    buffertip = get_right_tip_field(tip, surface);
     /*invert tip (as necessary by dilation algorithm)*/
     gwy_data_field_invert(buffertip, TRUE, TRUE, FALSE);
 
@@ -647,14 +640,11 @@ gwy_tip_erosion(GwyDataField *tip,
         result = NULL;
 
     /*free auxiliary data arrays*/
+    g_object_unref(buffertip);
     _gwy_morph_lib_dfreematrix(ftip, buffertip->xres);
     _gwy_morph_lib_dfreematrix(fsurface, surface->xres);
     if (fresult)
         _gwy_morph_lib_dfreematrix(fresult, result->xres);
-    if (freetip)
-        g_object_unref(buffertip);
-    else
-        gwy_data_field_invert(buffertip, TRUE, TRUE, FALSE);
 
     return result;
 }
@@ -690,13 +680,12 @@ gwy_tip_cmap(GwyDataField *tip,
     gint newx, newy;
     gdouble tipmin, surfacemin, step;
     GwyDataField *buffertip;
-    gboolean freetip;
 
     newx = surface->xres + tip->xres;
     newy = surface->yres + tip->yres;
 
     /*if tip and surface have different spacings, make new, resampled tip*/
-    buffertip = get_right_tip_field(tip, surface, &freetip);
+    buffertip = get_right_tip_field(tip, surface);
     /*invert tip (as necessary by dilation algorithm)*/
     gwy_data_field_invert(buffertip, TRUE, TRUE, FALSE);
 
@@ -716,8 +705,7 @@ gwy_tip_cmap(GwyDataField *tip,
     if (!rsurface) {
         _gwy_morph_lib_ifreematrix(ftip, buffertip->xres);
         _gwy_morph_lib_ifreematrix(fsurface, newx);
-       if (freetip)
-           g_object_unref(buffertip);
+        g_object_unref(buffertip);
        return NULL;
     }
 
@@ -742,15 +730,12 @@ gwy_tip_cmap(GwyDataField *tip,
     else
         result = NULL;
 
+    g_object_unref(buffertip);
     _gwy_morph_lib_ifreematrix(ftip, buffertip->xres);
     _gwy_morph_lib_ifreematrix(fsurface, newx);
     _gwy_morph_lib_ifreematrix(rsurface, newx);
     if (fresult)
         _gwy_morph_lib_ifreematrix(fresult, result->xres);
-    if (freetip)
-        g_object_unref(buffertip);
-    else
-        gwy_data_field_invert(buffertip, TRUE, TRUE, FALSE);
 
     return result;
 }
