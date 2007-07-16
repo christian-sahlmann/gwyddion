@@ -445,26 +445,29 @@ i_datafield_to_largefield(GwyDataField *datafield,
 {
     gint **ret;
     gint col, row;
-    gint xnew, ynew;
+    gint xres, yres, xnew, ynew;
     gint txr2, tyr2;
     gint minimum;
+    gdouble *data;
 
     minimum = (gint)((gwy_data_field_get_min(datafield) - min)/step);
-    xnew = datafield->xres + tipfield->xres;
-    ynew = datafield->yres + tipfield->yres;
+    xres = datafield->xres;
+    yres = datafield->yres;
+    xnew = xres + tipfield->xres;
+    ynew = yres + tipfield->yres;
     txr2 = tipfield->xres/2;
     tyr2 = tipfield->yres/2;
 
+    data = datafield->data;
     ret = _gwy_morph_lib_iallocmatrix(ynew, xnew);
     for (row = 0; row < ynew; row++) {
         for (col = 0; col < xnew; col++) {
             if (col >= txr2
-                && col < (datafield->xres + txr2)
+                && col < xres + txr2
                 && row >= tyr2
-                && row < (datafield->yres + tyr2))
-            ret[row][col] = (gint)(((datafield->data[col - txr2
-                                     + datafield->xres*(row - tyr2)]) - min)
-                                   /step);
+                && row < yres + tyr2)
+                ret[row][col] = (gint)(((data[col - txr2 + xres*(row - tyr2)])
+                                        - min) /step);
             else
                 ret[row][col] = minimum;
         }
@@ -520,9 +523,11 @@ get_right_tip_field(GwyDataField *tip,
     /* XXX: This is gross. */
     if (fabs(tipxstep/surfxstep - 1.0) > 0.01
         || fabs(tipystep/surfystep - 1.0) > 0.01) {
-        tip = gwy_data_field_new_resampled(tip,
-                                           tip->xres/surfxstep*tipxstep,
-                                           tip->yres/surfystep*tipystep,
+        gint xres, yres;
+
+        xres = GWY_ROUND(tip->xres/surfxstep*tipxstep);
+        yres = GWY_ROUND(tip->xres/surfxstep*tipxstep);
+        tip = gwy_data_field_new_resampled(tip, xres, yres,
                                            GWY_INTERPOLATION_BSPLINE);
     }
     else
@@ -683,13 +688,13 @@ gwy_tip_cmap(GwyDataField *tip,
     gdouble tipmin, surfacemin, step;
     GwyDataField *buffertip;
 
-    newx = surface->xres + tip->xres;
-    newy = surface->yres + tip->yres;
-
     /*if tip and surface have different spacings, make new, resampled tip*/
     buffertip = get_right_tip_field(tip, surface);
     /*invert tip (as necessary by dilation algorithm)*/
     gwy_data_field_invert(buffertip, TRUE, TRUE, FALSE);
+
+    newx = surface->xres + buffertip->xres;
+    newy = surface->yres + buffertip->yres;
 
     /*convert fields to integer arrays*/
     tipmin = gwy_data_field_get_min(buffertip);

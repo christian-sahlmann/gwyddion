@@ -28,7 +28,6 @@
 #include <glib.h>
 #include <string.h>
 #include <stdlib.h>
-#include <stdio.h>
 #include <math.h>
 #include <libgwyddion/gwymacros.h>
 #include "morph_lib.h"
@@ -236,6 +235,7 @@ _gwy_morph_lib_ierosion(gint **image, gint im_xsiz, gint im_ysiz,
         set_message(N_("Erosion"));
     if (set_fraction)
         set_fraction(0.0);
+
     for (j = 0; j < im_ysiz; j++) {   /* Loop over all points in output array */
         /* Compute allowed range of py. This may be different from
            the full range of the tip due to edge overlaps. */
@@ -244,14 +244,14 @@ _gwy_morph_lib_ierosion(gint **image, gint im_xsiz, gint im_ysiz,
         for (i = 0; i < im_xsiz; i++) {
             /* Compute allowed range of px. This may be different from
                the full range of the tip due to edge overlaps. */
-            fprintf(stderr, "%d %d\n", i, j);
             pxmin = MAX(-xc, -i);
             pxmax = MIN(tip_xsiz - xc, im_xsiz - i) - 1;
             min = image[j + pymin][i + pxmin] - tip[pymin + yc][pxmin + xc];
-            for (px = pxmin; px <= pxmax; px++) { /* Loop over points in tip */
-                for (py = pymin; py <= pymax; py++) {
+            for (py = pymin; py <= pymax; py++) { /* Loop over points in tip */
+                for (px = pxmin; px <= pxmax; px++) {
                     temp = image[j + py][i + px] - tip[py + yc][px + xc];
-                    min = MIN(temp, min);
+                    if (min < temp)
+                        min = temp;
                 }
             }
             result[j][i] = min;
@@ -407,7 +407,7 @@ _gwy_morph_lib_dfreematrix(gdouble **mptr)
  *
  * Returns: Reflected array.
  **/
-gdouble **
+gdouble**
 _gwy_morph_lib_dreflect(gdouble **surface, gint surf_xsiz, gint surf_ysiz)
 {
     gdouble **result;
@@ -442,7 +442,7 @@ _gwy_morph_lib_dreflect(gdouble **surface, gint surf_xsiz, gint surf_ysiz)
  *
  * Returns: Dilated data (newly allocated).  May return %NULL if aborted.
  **/
-gdouble **
+gdouble**
 _gwy_morph_lib_ddilation(gdouble **surface, gint surf_xsiz, gint surf_ysiz,
                          gdouble **tip, gint tip_xsiz, gint tip_ysiz,
                          gint xc, gint yc,
@@ -509,7 +509,7 @@ _gwy_morph_lib_ddilation(gdouble **surface, gint surf_xsiz, gint surf_ysiz,
  *
  * Returns: Eroded data (newly allocated).  May return %NULL if aborted.
  **/
-gdouble **
+gdouble**
 _gwy_morph_lib_derosion(gdouble **image, gint im_xsiz, gint im_ysiz,
                         gdouble **tip, gint tip_xsiz, gint tip_ysiz,
                         gint xc, gint yc,
@@ -559,7 +559,7 @@ _gwy_morph_lib_derosion(gdouble **image, gint im_xsiz, gint im_ysiz,
 }
 
 
-static gint **
+static gint**
 iopen(gint **image, gint im_xsiz, gint im_ysiz, gint **tip,
       gint tip_xsiz, gint tip_ysiz)
 {
