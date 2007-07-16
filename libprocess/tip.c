@@ -371,7 +371,7 @@ datafield_to_field(GwyDataField *datafield, gboolean maxzero)
 
     max = maxzero ? gwy_data_field_get_max(datafield) : 0.0;
 
-    ret = _gwy_morph_lib_dallocmatrix(datafield->xres, datafield->yres);
+    ret = _gwy_morph_lib_dallocmatrix(datafield->yres, datafield->xres);
     for (row = 0; row < datafield->yres; row++) {
         for (col = 0; col < datafield->xres; col++) {
             ret[row][col] = datafield->data[col + datafield->xres*row] - max;
@@ -585,6 +585,7 @@ gwy_tip_dilation(GwyDataField *tip,
     }
     else
         result = NULL;
+
     /*free auxiliary data arrays*/
     g_object_unref(buffertip);
     _gwy_morph_lib_dfreematrix(ftip);
