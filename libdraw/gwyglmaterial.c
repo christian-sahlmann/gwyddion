@@ -31,6 +31,7 @@
 #define MAX_CVAL (0.99999999*(1 << (BITS_PER_SAMPLE)))
 
 static gpointer       gwy_gl_material_copy       (gpointer);
+static void           gwy_gl_material_do_reset   (GwyGLMaterial *gl_material);
 static void           gwy_gl_material_changed    (GwyGLMaterial *gl_material);
 static GwyGLMaterial* gwy_gl_material_new        (const gchar *name,
                                                   const GwyRGBA *ambient,
@@ -296,7 +297,13 @@ void
 gwy_gl_material_reset(GwyGLMaterial *gl_material)
 {
     g_return_if_fail(GWY_IS_GL_MATERIAL(gl_material));
+    gwy_gl_material_do_reset(gl_material);
+    gwy_gl_material_changed(gl_material);
+}
 
+static void
+gwy_gl_material_do_reset(GwyGLMaterial *gl_material)
+{
     gl_material->ambient = opengl_default_ambient;
     gl_material->diffuse = opengl_default_diffuse;
     gl_material->specular = opengl_default_specular;
