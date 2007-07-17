@@ -153,6 +153,7 @@ gwy_gl_material_set_ambient(GwyGLMaterial *gl_material,
                             const GwyRGBA *ambient)
 {
     g_return_if_fail(GWY_IS_GL_MATERIAL(gl_material));
+    g_return_if_fail(!GWY_RESOURCE(gl_material)->is_const);
     if (gwy_gl_material_set_rgba(ambient, &gl_material->ambient))
         gwy_gl_material_changed(gl_material);
 }
@@ -185,6 +186,7 @@ gwy_gl_material_set_diffuse(GwyGLMaterial *gl_material,
                             const GwyRGBA *diffuse)
 {
     g_return_if_fail(GWY_IS_GL_MATERIAL(gl_material));
+    g_return_if_fail(!GWY_RESOURCE(gl_material)->is_const);
     if (gwy_gl_material_set_rgba(diffuse, &gl_material->diffuse))
         gwy_gl_material_changed(gl_material);
 }
@@ -217,6 +219,7 @@ gwy_gl_material_set_specular(GwyGLMaterial *gl_material,
                              const GwyRGBA *specular)
 {
     g_return_if_fail(GWY_IS_GL_MATERIAL(gl_material));
+    g_return_if_fail(!GWY_RESOURCE(gl_material)->is_const);
     if (gwy_gl_material_set_rgba(specular, &gl_material->specular))
         gwy_gl_material_changed(gl_material);
 }
@@ -249,6 +252,7 @@ gwy_gl_material_set_emission(GwyGLMaterial *gl_material,
                              const GwyRGBA *emission)
 {
     g_return_if_fail(GWY_IS_GL_MATERIAL(gl_material));
+    g_return_if_fail(!GWY_RESOURCE(gl_material)->is_const);
     if (gwy_gl_material_set_rgba(emission, &gl_material->emission))
         gwy_gl_material_changed(gl_material);
 }
@@ -280,6 +284,7 @@ gwy_gl_material_set_shininess(GwyGLMaterial *gl_material,
                               gdouble shininess)
 {
     g_return_if_fail(GWY_IS_GL_MATERIAL(gl_material));
+    g_return_if_fail(!GWY_RESOURCE(gl_material)->is_const);
     shininess = CLAMP(shininess, 0.0, 1.0);
     if (shininess != gl_material->shininess) {
         gl_material->shininess = shininess;
@@ -297,6 +302,7 @@ void
 gwy_gl_material_reset(GwyGLMaterial *gl_material)
 {
     g_return_if_fail(GWY_IS_GL_MATERIAL(gl_material));
+    g_return_if_fail(!GWY_RESOURCE(gl_material)->is_const);
     gwy_gl_material_do_reset(gl_material);
     gwy_gl_material_changed(gl_material);
 }
