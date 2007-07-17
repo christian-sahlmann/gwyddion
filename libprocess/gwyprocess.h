@@ -36,6 +36,7 @@
 #include <libprocess/filters.h>
 #include <libprocess/fractals.h>
 #include <libprocess/grains.h>
+#include <libprocess/gwygrainvalue.h>
 #include <libprocess/interpolation.h>
 #include <libprocess/simplefft.h>
 #include <libprocess/spectra.h>

@@ -22,6 +22,7 @@ libgwyprocess2include_HEADERS = \
 	filters.h \
 	fractals.h \
 	grains.h \
+	gwygrainvalue.h \
 	gwyprocess.h \
 	gwyprocessenums.h \
 	gwyprocesstypes.h \
@@ -82,6 +83,7 @@ libgwyprocess2_la_SOURCES = \
 	filters.c \
 	fractals.c \
 	grains.c \
+	gwygrainvalue.c \
 	gwyprocess.c \
 	gwyprocessenums.c \
 	gwyprocesstypes.c \

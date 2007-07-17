@@ -67,6 +67,7 @@ gwy_process_type_init(void)
     types_initialized = TRUE;
 
     _gwy_cdline_class_setup_presets();
+    _gwy_grain_value_class_setup_presets();
     gwy_process_import_fftw_wisdom();
 }
 
