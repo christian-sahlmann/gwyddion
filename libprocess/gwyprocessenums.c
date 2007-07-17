@@ -306,8 +306,18 @@ gwy_correlation_type_get_enum(void)
  * @GWY_GRAIN_VALUE_PROJECTED_AREA: Projected (flat) grain area.
  * @GWY_GRAIN_VALUE_EQUIV_SQUARE_SIDE: Side of a square with the same area
  *                                     as the grain.
+ *                                     Future changes:
+ *                                     This quantity can be trivially
+ *                                     calculated from
+ *                                     @GWY_GRAIN_VALUE_PROJECTED_AREA
+ *                                     and will be likely removed in 3.0.
  * @GWY_GRAIN_VALUE_EQUIV_DISC_RADIUS: Radius of a disc with the same area
  *                                     as the grain.
+ *                                     Future changes:
+ *                                     This quantity can be trivially
+ *                                     calculated from
+ *                                     @GWY_GRAIN_VALUE_PROJECTED_AREA
+ *                                     and will be likely removed in 3.0.
  * @GWY_GRAIN_VALUE_SURFACE_AREA: Surface area.
  * @GWY_GRAIN_VALUE_MAXIMUM: Minimum value.
  * @GWY_GRAIN_VALUE_MINIMUM: Maximum value.
@@ -347,6 +357,12 @@ gwy_correlation_type_get_enum(void)
  * @GWY_GRAIN_VALUE_VOLUME_MIN: Grain volume calculated with grain basis at
  *                              grain minimum value.  This value is a lower
  *                              bound.  (Since: 2.3)
+ *                              Future changes:
+ *                              This quantity can be trivially calculated from
+ *                              @GWY_GRAIN_VALUE_VOLUME_0,
+ *                              @GWY_GRAIN_VALUE_PROJECTED_AREA
+ *                              and @GWY_GRAIN_VALUE_MINIMUM
+ *                              and will be likely removed in 3.0.
  * @GWY_GRAIN_VALUE_VOLUME_LAPLACE: Grain volume calculated with grain basis
  *                                  calculated by laplacian interpolation of
  *                                  surrounding values.  (Since: 2.3)
