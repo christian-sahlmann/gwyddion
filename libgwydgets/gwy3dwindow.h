@@ -74,7 +74,7 @@ struct _Gwy3DWindow {
     GtkWidget *widget5;
 
     gboolean in_update;
-    guint whatever2;
+    guint controls_full;  /* should be boolean, keep ABI */
 
     gpointer reserved1;
     gpointer reserved2;

@@ -435,6 +435,24 @@ gwy_3d_window_key_pressed(GtkWidget *widget,
         return TRUE;
     }
 
+    if (!gwy3dwindow->controls_full && !state) {
+        Gwy3DMovement movement = GWY_3D_MOVEMENT_NONE;
+
+        if (key == GDK_R || key == GDK_r)
+            movement = GWY_3D_MOVEMENT_ROTATION;
+        else if (key == GDK_S || key == GDK_s)
+            movement = GWY_3D_MOVEMENT_SCALE;
+        else if (key == GDK_V || key == GDK_v)
+            movement = GWY_3D_MOVEMENT_DEFORMATION;
+        else if (key == GDK_L || key == GDK_l)
+            movement = GWY_3D_MOVEMENT_LIGHT;
+
+        if (movement != GWY_3D_MOVEMENT_NONE) {
+            gtk_button_clicked(GTK_BUTTON(gwy3dwindow->buttons[movement]));
+            return TRUE;
+        }
+    }
+
     method = GTK_WIDGET_CLASS(gwy_3d_window_parent_class)->key_press_event;
     return method ? method(widget, event) : FALSE;
 }
@@ -474,22 +492,22 @@ gwy_3d_window_pack_buttons(Gwy3DWindow *gwy3dwindow,
         {
             GWY_3D_MOVEMENT_ROTATION,
             GWY_STOCK_ROTATE,
-            N_("Rotate view")
+            N_("Rotate view (R)")
         },
         {
             GWY_3D_MOVEMENT_SCALE,
             GWY_STOCK_SCALE,
-            N_("Scale view as a whole")
+            N_("Scale view as a whole (S)")
         },
         {
             GWY_3D_MOVEMENT_DEFORMATION,
             GWY_STOCK_SCALE_VERTICALLY,
-            N_("Scale value range")
+            N_("Scale value range (V)")
         },
         {
             GWY_3D_MOVEMENT_LIGHT,
             GWY_STOCK_LIGHT_ROTATE,
-            N_("Move light source")
+            N_("Move light source (L)")
         },
     };
     GtkWidget *button;
@@ -1205,6 +1223,7 @@ gwy_3d_window_select_controls(gpointer data, GtkWidget *button)
 
     show = data ? gwy3dwindow->vbox_small : gwy3dwindow->vbox_large;
     hide = data ? gwy3dwindow->vbox_large : gwy3dwindow->vbox_small;
+    gwy3dwindow->controls_full = !data;
     gtk_widget_hide(hide);
     gtk_widget_set_no_show_all(hide, TRUE);
     gtk_widget_set_no_show_all(show, FALSE);
