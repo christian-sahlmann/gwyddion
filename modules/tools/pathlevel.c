@@ -275,8 +275,8 @@ gwy_tool_path_level_data_switched(GwyTool *gwytool,
     GwyToolPathLevel *tool;
     gboolean ignore;
 
-    ignore = (data_view == plain_tool->data_view);
     plain_tool = GWY_PLAIN_TOOL(gwytool);
+    ignore = (data_view == plain_tool->data_view);
 
     GWY_TOOL_CLASS(gwy_tool_path_level_parent_class)->data_switched(gwytool,
                                                                     data_view);
