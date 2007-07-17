@@ -197,6 +197,8 @@ gwy_debug_objects_clear(void)
  * do nothing.  Note all Gwyddion data-like objects (i.e., not widgets) already
  * call gwy_debug_objects_creation() so to debug their lifetime rules, just
  * enable it.
+ *
+ * Future changes: This functionality will be removed in 3.0.  Use RefDbg.
  **/
 
 /**
