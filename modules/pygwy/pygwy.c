@@ -26,7 +26,7 @@
  * and destroyed by destroy_environment() which deallocate created copy.
  */
 
-#define DEBUG 1
+/*#define DEBUG 1*/
 
 #include "config.h"
 
@@ -39,8 +39,7 @@
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwymacros.h>
-#include <libprocess/datafield.h>
-#include <libprocess/fractals.h>
+#include <libprocess/gwyprocess.h>
 #include <libgwymodule/gwymodule.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <libgwymodule/gwymodule-file.h>
