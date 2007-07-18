@@ -1,6 +1,7 @@
 /*** BEGIN file-header ***/
 #include "gwyprocesstypes.h"
 #include "gwyprocessenums.h"
+#include "gwygrainvalue.h"
 
 /*** END file-header ***/
 

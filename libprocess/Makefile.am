@@ -55,7 +55,7 @@ MAINTAINERCLEANFILES = \
 BUILT_SOURCES =
 
 MKENUM_NAME = gwyprocesstypes
-MKENUM_HFILES = gwyprocessenums.h
+MKENUM_HFILES = gwyprocessenums.h gwygrainvalue.h
 include $(top_srcdir)/utils/mkenum.mk
 
 AM_CFLAGS = @COMMON_CFLAGS@
