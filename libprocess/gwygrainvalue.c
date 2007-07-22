@@ -27,6 +27,11 @@
 #include <libprocess/gwygrainvalue.h>
 #include "gwyprocessinternal.h"
 
+/* We know they are usable as bits */
+enum {
+    MAXBUILTINS = 32
+};
+
 static void           gwy_grain_value_finalize (GObject *object);
 static void           gwy_grain_value_data_copy(const GwyGrainValueData *src,
                                                 GwyGrainValueData *dest);
@@ -400,15 +405,37 @@ gwy_grain_value_dump(GwyResource *resource,
 }
 
 static gboolean
-gwy_grain_value_check_expression(const gchar *expression)
+gwy_grain_value_resolve_expression(const gchar *expression,
+                                   guint *vars)
 {
+    static gchar **names = NULL;
+
     if (!expression)
         return FALSE;
 
     if (!expr)
         expr = gwy_expr_new();
 
-    return gwy_expr_compile(expr, expression, NULL);
+    if (!gwy_expr_compile(expr, expression, NULL))
+        return FALSE;
+
+    if (!vars)
+        vars = g_newa(guint, MAXBUILTINS);
+
+    if (!names) {
+        GwyGrainValue *gvalue;
+        guint i;
+
+        for (i = 0; i < MAXBUILTINS; i++) {
+            if ((gvalue = gwy_grain_values_get_builtin_grain_value(i)))
+                names[i] = gvalue->data.symbol_plain;
+            else
+                names[i] = "";  /* Impossible variable name */
+        }
+    }
+
+    return !gwy_expr_resolve_variables(expr, MAXBUILTINS,
+                                       (const gchar* const*)names, vars);
 }
 
 static GwyResource*
@@ -464,7 +491,7 @@ gwy_grain_value_parse(const gchar *text,
     }
 
 
-    if (data.symbol && !gwy_grain_value_check_expression(expression)) {
+    if (data.symbol && !gwy_grain_value_resolve_expression(expression, NULL)) {
         gvalue = gwy_grain_value_new("", &data, is_const);
         gwy_grain_value_data_sanitize(&gvalue->data);
         gvalue->expression = g_strdup(expression);
@@ -660,6 +687,86 @@ gwy_grain_values_get_grain_value_by_symbol(const gchar *symbol_plain)
     return gwy_inventory_find(gwy_grain_values(),
                               find_grain_value_by_symbol,
                               (gpointer)symbol_plain);
+}
+
+void
+gwy_grain_values_calculate(gint nvalues,
+                           GwyGrainValue **gvalues,
+                           gdouble **results,
+                           GwyDataField *data_field,
+                           gint ngrains,
+                           const gint *grains)
+{
+    GwyGrainValue *gvalue;
+    guint vars[MAXBUILTINS];
+    gdouble **quantities, **mapped;
+    GwyGrainQuantity q;  /* can take invalid enum values too */
+    gint i;
+
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    if (!nvalues)
+        return;
+
+    /* Find out what builtin quantities are necessary to calculate and
+     * calculate them. */
+    quantities = g_new0(gdouble*, 2*MAXBUILTINS + 1);
+    mapped = quantities + MAXBUILTINS;
+    for (i = 0; i < nvalues; i++) {
+        gboolean resolved;
+
+        gvalue = gvalues[i];
+        g_return_if_fail(GWY_IS_GRAIN_VALUE(gvalue));
+
+        /* Builtins */
+        if (gvalue->data.group != GWY_GRAIN_VALUE_GROUP_USER) {
+            q = gvalue->builtin;
+            if (!quantities[q])
+                quantities[q]
+                    = gwy_data_field_grains_get_values(data_field, NULL,
+                                                       ngrains, grains, q);
+            continue;
+        }
+
+        /* Expressions */
+        resolved = gwy_grain_value_resolve_expression(gvalue->expression, vars);
+        g_return_if_fail(resolved);
+        for (q = 0; q < MAXBUILTINS; q++) {
+            if (vars[q] && !quantities[q])
+                quantities[q]
+                    = gwy_data_field_grains_get_values(data_field, NULL,
+                                                       ngrains, grains, q);
+        }
+    }
+
+    /* Calculate the requested quantities */
+    for (i = 0; i < nvalues; i++) {
+        gvalue = gvalues[i];
+
+        /* Builtins */
+        if (gvalue->data.group != GWY_GRAIN_VALUE_GROUP_USER) {
+            g_assert(quantities[gvalue->builtin]);
+            memcpy(results[i], quantities[gvalue->builtin],
+                   (ngrains + 1)*sizeof(gdouble));
+            continue;
+        }
+
+        /* Expressions */
+        gwy_grain_value_resolve_expression(gvalue->expression, vars);
+        memset(mapped, 0, (MAXBUILTINS + 1)*sizeof(gdouble*));
+        for (q = 0; q < MAXBUILTINS; q++) {
+            if (vars[q]) {
+                g_assert(quantities[q]);
+                mapped[vars[q]] = quantities[q];
+            }
+        }
+        gwy_expr_vector_execute(expr, ngrains+1, (const gdouble**)mapped,
+                                results[i]);
+    }
+
+    /* Free */
+    for (q = 0; q < MAXBUILTINS; q++)
+        g_free(quantities[q]);
+    g_free(quantities);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

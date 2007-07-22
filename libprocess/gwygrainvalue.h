@@ -88,13 +88,18 @@ void               gwy_grain_value_set_power_z     (GwyGrainValue *gvalue,
 gboolean           gwy_grain_value_get_same_units  (GwyGrainValue *gvalue);
 void               gwy_grain_value_set_same_units  (GwyGrainValue *gvalue,
                                                     gboolean same_units);
-/* TODO: Evaluation methods */
-
 const gchar*   gwy_grain_value_group_name                (GwyGrainValueGroup group);
 GwyInventory*  gwy_grain_values                          (void);
 GwyGrainValue* gwy_grain_values_get_grain_value          (const gchar *name);
 GwyGrainValue* gwy_grain_values_get_builtin_grain_value  (GwyGrainQuantity quantity);
 GwyGrainValue* gwy_grain_values_get_grain_value_by_symbol(const gchar *symbol_plain);
+
+void gwy_grain_values_calculate(gint nvalues,
+                                GwyGrainValue **gvalues,
+                                gdouble **results,
+                                GwyDataField *data_field,
+                                gint ngrains,
+                                const gint *grains);
 
 #endif /*__GWY_GRAIN_VALUE_H__*/
 
