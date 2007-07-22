@@ -666,6 +666,8 @@ gwy_resource_editor_save(GwyResourceEditor *editor,
     fclose(fh);
     g_string_free(str, TRUE);
 
+    gwy_resource_data_saved(resource);
+
     return TRUE;
 }
 
