@@ -46,6 +46,203 @@ static const GwyGrainValueData grainvaluedata_default = {
 
 static GwyExpr *expr = NULL;
 
+static const struct {
+    const gchar* name;
+    GwyGrainQuantity quantity;
+    GwyGrainValueData data;
+}
+grain_values[] = {
+    {
+        N_("Center x position"),
+        GWY_GRAIN_VALUE_CENTER_X,
+        {
+            GWY_GRAIN_VALUE_GROUP_POSITION,
+            "<i>x</i><sub>c</sub>", "x_c",
+            1, 0, FALSE,
+        }
+    },
+    {
+        N_("Center y position"),
+        GWY_GRAIN_VALUE_CENTER_Y,
+        {
+            GWY_GRAIN_VALUE_GROUP_POSITION,
+            "<i>y</i><sub>c</sub>", "y_c",
+            1, 0, FALSE,
+        }
+    },
+    {
+        N_("Minimum value"),
+        GWY_GRAIN_VALUE_MINIMUM,
+        {
+            GWY_GRAIN_VALUE_GROUP_VALUE,
+            "<i>z</i><sub>min</sub>", "z_min",
+            0, 1, FALSE,
+        }
+    },
+    {
+        N_("Maximum value"),
+        GWY_GRAIN_VALUE_MAXIMUM,
+        {
+            GWY_GRAIN_VALUE_GROUP_VALUE,
+            "<i>z</i><sub>max</sub>", "z_max",
+            0, 1, FALSE,
+        }
+    },
+    {
+        N_("Mean value"),
+        GWY_GRAIN_VALUE_MEAN,
+        {
+            GWY_GRAIN_VALUE_GROUP_VALUE,
+            "<i>z̅</i>", "z_m",
+            0, 1, FALSE,
+        }
+    },
+    {
+        N_("Median value"),
+        GWY_GRAIN_VALUE_MEDIAN,
+        {
+            GWY_GRAIN_VALUE_GROUP_VALUE,
+            "<i>z</i><sub>med</sub>", "z_med",
+            0, 1, FALSE,
+        }
+    },
+    {
+        N_("Projected area"),
+        GWY_GRAIN_VALUE_PROJECTED_AREA,
+        {
+            GWY_GRAIN_VALUE_GROUP_AREA,
+            "<i>A</i><sub>0</sub>", "A_0",
+            2, 0, FALSE,
+        }
+    },
+    {
+        N_("Surface area"),
+        GWY_GRAIN_VALUE_SURFACE_AREA,
+        {
+            GWY_GRAIN_VALUE_GROUP_AREA,
+            "<i>A</i><sub>s</sub>", "A_s",
+            2, 0, TRUE,
+        }
+    },
+    {
+        N_("Equivalent square side"),
+        GWY_GRAIN_VALUE_EQUIV_SQUARE_SIDE,
+        {
+            GWY_GRAIN_VALUE_GROUP_AREA,
+            "<i>a</i><sub>eq</sub>", "a_eq",
+            1, 0, FALSE,
+        }
+    },
+    {
+        N_("Equivalent disc radius"),
+        GWY_GRAIN_VALUE_EQUIV_DISC_RADIUS,
+        {
+            GWY_GRAIN_VALUE_GROUP_AREA,
+            "<i>r</i><sub>eq</sub>", "r_eq",
+            1, 0, FALSE,
+        }
+    },
+    {
+        N_("Area above half-height"),
+        GWY_GRAIN_VALUE_HALF_HEIGHT_AREA,
+        {
+            GWY_GRAIN_VALUE_GROUP_AREA,
+            "<i>A</i><sub>h</sub>", "A_h",
+            2, 0, FALSE,
+        }
+    },
+    {
+        N_("Zero basis volume"),
+        GWY_GRAIN_VALUE_VOLUME_0,
+        {
+            GWY_GRAIN_VALUE_GROUP_VOLUME,
+            "<i>V</i><sub>0</sub>", "V_0",
+            2, 1, FALSE,
+        }
+    },
+    {
+        N_("Grain minimum basis volume"),
+        GWY_GRAIN_VALUE_VOLUME_MIN,
+        {
+            GWY_GRAIN_VALUE_GROUP_VOLUME,
+            "<i>V</i><sub>min</sub>", "V_min",
+            2, 1, FALSE,
+        }
+    },
+    {
+        N_("Laplacian background basis volume"),
+        GWY_GRAIN_VALUE_VOLUME_LAPLACE,
+        {
+            GWY_GRAIN_VALUE_GROUP_VOLUME,
+            "<i>V</i><sub>L</sub>", "V_L",
+            2, 1, FALSE,
+        }
+    },
+    {
+        N_("Projected boundary length"),
+        GWY_GRAIN_VALUE_FLAT_BOUNDARY_LENGTH,
+        {
+            GWY_GRAIN_VALUE_GROUP_BOUNDARY,
+            "<i>L</i><sub>b0</sub>", "L_b0",
+            1, 0, FALSE,
+        }
+    },
+    {
+        N_("Minimum bounding size"),
+        GWY_GRAIN_VALUE_MINIMUM_BOUND_SIZE,
+        {
+            GWY_GRAIN_VALUE_GROUP_BOUNDARY,
+            "<i>D</i><sub>min</sub>", "D_min",
+            1, 0, FALSE,
+        }
+    },
+    {
+        N_("Minimum bounding direction"),
+        GWY_GRAIN_VALUE_MINIMUM_BOUND_ANGLE,
+        {
+            GWY_GRAIN_VALUE_GROUP_BOUNDARY,
+            "<i>φ</i><sub>min</sub>", "phi_min",
+            0, 0, FALSE,
+        }
+    },
+    {
+        N_("Maximum bounding size"),
+        GWY_GRAIN_VALUE_MAXIMUM_BOUND_SIZE,
+        {
+            GWY_GRAIN_VALUE_GROUP_BOUNDARY,
+            "<i>D</i><sub>max</sub>", "D_max",
+            1, 0, FALSE,
+        }
+    },
+    {
+        N_("Maximum bounding direction"),
+        GWY_GRAIN_VALUE_MAXIMUM_BOUND_ANGLE,
+        {
+            GWY_GRAIN_VALUE_GROUP_BOUNDARY,
+            "<i>φ</i><sub>max</sub>", "phi_max",
+            0, 0, FALSE,
+        }
+    },
+    {
+        N_("Inclination θ"),
+        GWY_GRAIN_VALUE_SLOPE_THETA,
+        {
+            GWY_GRAIN_VALUE_GROUP_SLOPE,
+            "<i>θ</i>", "theta",
+            0, 0, TRUE,
+        }
+    },
+    {
+        N_("Inclination φ"),
+        GWY_GRAIN_VALUE_SLOPE_PHI,
+        {
+            GWY_GRAIN_VALUE_GROUP_SLOPE,
+            "<i>φ</i>", "phi",
+            0, 0, FALSE,
+        }
+    },
+};
+
 G_DEFINE_TYPE(GwyGrainValue, gwy_grain_value, GWY_TYPE_RESOURCE)
 
 static void
@@ -72,19 +269,21 @@ void
 _gwy_grain_value_class_setup_presets(void)
 {
     GwyResourceClass *klass;
-    /* GwyGrainValue *gvalue; */
+    GwyGrainValue *gvalue;
+    guint i;
 
     /* Force class instantiation, this function is called before it's first
      * referenced. */
     klass = g_type_class_ref(GWY_TYPE_GRAIN_VALUE);
 
-    /* TODO: Insert builtin quantities */
-    /*
-    gvalue = gwy_grain_value_new(GWY_GRAIN_VALUE_DEFAULT,
-                                 &grainvaluedata_default, TRUE);
-    gwy_inventory_insert_item(klass->inventory, gvalue);
-    g_object_unref(gvalue);
-    */
+    for (i = 0; i < G_N_ELEMENTS(grain_values); i++) {
+        gvalue = gwy_grain_value_new(grain_values[i].name,
+                                     &grain_values[i].data,
+                                     TRUE);
+        gvalue->builtin = grain_values[i].quantity;
+        gwy_inventory_insert_item(klass->inventory, gvalue);
+        g_object_unref(gvalue);
+    }
 
     /* The gvalue added a reference so we can safely unref it again */
     g_type_class_unref(klass);
