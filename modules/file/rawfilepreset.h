@@ -202,6 +202,7 @@ static void
 gwy_raw_file_preset_data_copy(const GwyRawFilePresetData *src,
                               GwyRawFilePresetData *dest)
 {
+    g_return_if_fail(src != (const GwyRawFilePresetData*)dest);
     g_free(dest->delimiter);
     g_free(dest->xyunit);
     g_free(dest->zunit);
@@ -421,6 +422,8 @@ gwy_raw_file_preset_parse(const gchar *text,
     gwy_raw_file_preset_data_sanitize(&preset->data);
     g_free(str);
     g_free(data.delimiter);
+    g_free(data.xyunit);
+    g_free(data.zunit);
 
     return (GwyResource*)preset;
 }
