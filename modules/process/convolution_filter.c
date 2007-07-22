@@ -760,6 +760,8 @@ convolution_filter_preset_save(GwyConvolutionFilterPreset *preset)
     fclose(fh);
     g_string_free(str, TRUE);
 
+    gwy_resource_data_saved(resource);
+
     return TRUE;
 }
 
