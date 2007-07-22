@@ -53,8 +53,10 @@ struct _GwyResource {
 };
 
 struct _GwyResourceClass {
+    /*< private >*/
     GObjectClass parent_class;
 
+    /*< public >*/
     GwyInventory *inventory;
     const gchar *name;
 
@@ -72,6 +74,7 @@ struct _GwyResourceClass {
     GwyResource* (*parse)(const gchar *text,
                           gboolean is_const);
 
+    /*< private >*/
     void (*reserved1)(void);
     void (*reserved2)(void);
 };

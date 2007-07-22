@@ -51,8 +51,10 @@ typedef GObject* (*GwyDeserializeFunc)(const guchar *buffer,
                                        gsize *position);
 
 struct _GwySerializableIface {
+    /*< private >*/
     GTypeInterface parent_class;
 
+    /*< public >*/
     GwySerializeFunc serialize;
     GwyDeserializeFunc deserialize;
     void (*clone)(GObject *source, GObject *copy);
