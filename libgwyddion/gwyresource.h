@@ -98,6 +98,7 @@ GwyResource*      gwy_resource_parse                 (const gchar *text,
                                                       GType expected_type);
 void              gwy_resource_class_load            (GwyResourceClass *klass);
 gboolean          gwy_resource_class_mkdir           (GwyResourceClass *klass);
+void              gwy_resource_classes_finalize      (void);
 
 G_END_DECLS
 

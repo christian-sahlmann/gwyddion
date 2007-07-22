@@ -96,6 +96,8 @@ static void         gwy_resource_class_load_dir (const gchar *path,
 
 static guint resource_signals[LAST_SIGNAL] = { 0 };
 
+static GSList *all_resources = NULL;
+
 static const GwyInventoryItemType gwy_resource_item_type = {
     0,
     "data-changed",
@@ -624,12 +626,17 @@ gwy_resource_modified(GwyResource *resource)
 void
 gwy_resource_class_load(GwyResourceClass *klass)
 {
+    gpointer type;
     gchar *path, *datadir;
 
     g_return_if_fail(GWY_IS_RESOURCE_CLASS(klass));
     g_return_if_fail(klass->inventory);
 
     gwy_inventory_forget_order(klass->inventory);
+
+    type = GSIZE_TO_POINTER(G_TYPE_FROM_CLASS(klass));
+    if (!g_slist_find(all_resources, type))
+        all_resources = g_slist_prepend(all_resources, type);
 
     datadir = gwy_find_self_dir("data");
     path = g_build_filename(datadir, klass->name, NULL);
@@ -745,6 +752,34 @@ gwy_resource_class_mkdir(GwyResourceClass *klass)
     g_free(path);
 
     return ok;
+}
+
+/**
+ * gwy_resource_classes_finalize:
+ *
+ * Destroys the inventories of all resource classes.
+ *
+ * This function makes the affected resource classes unusable.  Its purpose is
+ * to faciliate reference leak debugging by destroying a large number of
+ * objects that normally live forever.
+ *
+ * Note static resource classes that never called gwy_resource_class_load()
+ * are excluded.
+ *
+ * Since: 2.8
+ **/
+void
+gwy_resource_classes_finalize(void)
+{
+    while (all_resources) {
+        GSList *next = all_resources->next;
+        GwyResourceClass *klass;
+        GwyInventory *inventory;
+
+        klass = g_type_class_ref((GType)GPOINTER_TO_SIZE(all_resources->data));
+        gwy_object_unref(klass->inventory);
+        all_resources = all_resources->next;
+    }
 }
 
 /************************** Documentation ****************************/

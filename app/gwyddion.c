@@ -177,6 +177,7 @@ main(int argc, char *argv[])
     gwy_app_process_func_save_use();
     debug_time(timer, "save funcuse");
     gwy_app_settings_free();
+    /*gwy_resource_classes_finalize();*/
     gwy_debug_objects_dump_to_file(stderr, 0);
     gwy_debug_objects_clear();
     debug_time(timer, "dump debug-objects");
@@ -184,8 +185,6 @@ main(int argc, char *argv[])
     /* XXX: EXIT-CLEAN-UP */
     /* Finalize all gradients.  Useless, but makes --debug-objects happy.
      * Remove in production version. */
-    g_object_unref(gwy_gradients());
-    g_object_unref(gwy_gl_materials());
     g_free(recent_file_file);
     g_free(settings_file);
     g_strfreev(module_dirs);
