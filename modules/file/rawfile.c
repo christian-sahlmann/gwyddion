@@ -1499,6 +1499,8 @@ preset_store_cb(RawFileControls *controls)
     fclose(fh);
     g_string_free(str, TRUE);
 
+    gwy_resource_data_saved(GWY_RESOURCE(preset));
+
     model = gtk_tree_view_get_model(GTK_TREE_VIEW(controls->presetlist));
     tselect = gtk_tree_view_get_selection(GTK_TREE_VIEW(controls->presetlist));
     gwy_inventory_store_get_iter(GWY_INVENTORY_STORE(model), name, &iter);
