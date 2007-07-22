@@ -419,6 +419,7 @@ gwy_raw_file_preset_parse(const gchar *text,
     }
 
     preset = gwy_raw_file_preset_new("", &data, is_const);
+    GWY_RESOURCE(preset)->is_modified = FALSE;
     gwy_raw_file_preset_data_sanitize(&preset->data);
     g_free(str);
     g_free(data.delimiter);
