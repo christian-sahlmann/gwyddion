@@ -278,23 +278,111 @@ gwy_grain_value_parse(const gchar *text,
     return (GwyResource*)gvalue;
 }
 
-/* TODO */
-GwyGrainValueGroup gwy_grain_value_get_group       (GwyGrainValue *gvalue);
-const gchar*       gwy_grain_value_get_symbol      (GwyGrainValue *gvalue);
-const gchar*       gwy_grain_value_get_symbol_plain(GwyGrainValue *gvalue);
-void               gwy_grain_value_set_symbol      (GwyGrainValue *gvalue,
-                                                    const gchar *symbol);
-void               gwy_grain_value_set_symbol_plain(GwyGrainValue *gvalue,
-                                                    const gchar *symbol);
-gint               gwy_grain_value_get_power_xy    (GwyGrainValue *gvalue);
-void               gwy_grain_value_set_power_xy    (GwyGrainValue *gvalue,
-                                                    gint power_xy);
-gint               gwy_grain_value_get_power_z     (GwyGrainValue *gvalue);
-void               gwy_grain_value_set_power_z     (GwyGrainValue *gvalue,
-                                                    gint power_z);
-gboolean           gwy_grain_value_get_same_units  (GwyGrainValue *gvalue);
-void               gwy_grain_value_set_same_units  (GwyGrainValue *gvalue,
-                                                    gboolean same_units);
+GwyGrainValueGroup
+gwy_grain_value_get_group(GwyGrainValue *gvalue)
+{
+    g_return_val_if_fail(GWY_IS_GRAIN_VALUE(gvalue), 0);
+    return gvalue->data.group;
+}
+
+const gchar*
+gwy_grain_value_get_symbol(GwyGrainValue *gvalue)
+{
+    g_return_val_if_fail(GWY_IS_GRAIN_VALUE(gvalue), NULL);
+    return gvalue->data.symbol;
+}
+
+void
+gwy_grain_value_set_symbol(GwyGrainValue *gvalue,
+                           const gchar *symbol)
+{
+    g_return_if_fail(GWY_IS_GRAIN_VALUE(gvalue));
+    if (gvalue->data.symbol == symbol
+        || (gvalue->data.symbol
+            && symbol
+            && gwy_strequal(gvalue->data.symbol, symbol)))
+        return;
+
+    g_free(gvalue->data.symbol);
+    gvalue->data.symbol = g_strdup(symbol);
+}
+
+const gchar*
+gwy_grain_value_get_symbol_plain(GwyGrainValue *gvalue)
+{
+    g_return_val_if_fail(GWY_IS_GRAIN_VALUE(gvalue), NULL);
+    return gvalue->data.symbol_plain;
+}
+
+void
+gwy_grain_value_set_symbol_plain(GwyGrainValue *gvalue,
+                                 const gchar *symbol)
+{
+    g_return_if_fail(GWY_IS_GRAIN_VALUE(gvalue));
+    if (gvalue->data.symbol_plain == symbol
+        || (gvalue->data.symbol_plain
+            && symbol
+            && gwy_strequal(gvalue->data.symbol_plain, symbol)))
+        return;
+
+    g_free(gvalue->data.symbol_plain);
+    gvalue->data.symbol_plain = g_strdup(symbol);
+}
+
+gint
+gwy_grain_value_get_power_xy(GwyGrainValue *gvalue)
+{
+    g_return_val_if_fail(GWY_IS_GRAIN_VALUE(gvalue), 0);
+    return gvalue->data.power_xy;
+}
+
+void
+gwy_grain_value_set_power_xy(GwyGrainValue *gvalue,
+                             gint power_xy)
+{
+    g_return_if_fail(GWY_IS_GRAIN_VALUE(gvalue));
+    if (gvalue->data.power_xy == power_xy)
+        return;
+
+    gvalue->data.power_xy = power_xy;
+}
+
+gint
+gwy_grain_value_get_power_z(GwyGrainValue *gvalue)
+{
+    g_return_val_if_fail(GWY_IS_GRAIN_VALUE(gvalue), 0);
+    return gvalue->data.power_z;
+}
+
+void
+gwy_grain_value_set_power_z(GwyGrainValue *gvalue,
+                            gint power_z)
+{
+    g_return_if_fail(GWY_IS_GRAIN_VALUE(gvalue));
+    if (gvalue->data.power_z == power_z)
+        return;
+
+    gvalue->data.power_z = power_z;
+}
+
+gboolean
+gwy_grain_value_get_same_units(GwyGrainValue *gvalue)
+{
+    g_return_val_if_fail(GWY_IS_GRAIN_VALUE(gvalue), FALSE);
+    return gvalue->data.same_units;
+}
+
+void
+gwy_grain_value_set_same_units(GwyGrainValue *gvalue,
+                               gboolean same_units)
+{
+    g_return_if_fail(GWY_IS_GRAIN_VALUE(gvalue));
+    same_units = !!same_units;
+    if (gvalue->data.same_units == same_units)
+        return;
+
+    gvalue->data.same_units = same_units;
+}
 
 GwyInventory*
 gwy_grain_values(void)
