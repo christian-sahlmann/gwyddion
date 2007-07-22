@@ -312,6 +312,7 @@ toolbox_ui_start_item(GwyAppToolboxBuilder *builder,
     GType gtype;
     GtkWidget *button = NULL;
     Action action;
+    gchar *s;
     guint i;
 
     if (!builder->group
@@ -445,8 +446,9 @@ toolbox_ui_start_item(GwyAppToolboxBuilder *builder,
                       gtk_image_new_from_stock(action.stock_id,
                                                GTK_ICON_SIZE_LARGE_TOOLBAR));
     /* XXX: We have already a const string identical to func somewhere. */
-    g_signal_connect_swapped(button, "clicked",
-                             action.callback, g_strdup(func));
+    s = g_strdup(func);
+    g_signal_connect_swapped(button, "clicked", action.callback, s);
+    g_signal_connect_swapped(button, "destroy", G_CALLBACK(g_free), s);
     gtk_tooltips_set_tip(builder->tips, button, _(action.tooltip), NULL);
 
     if (action.sens != -1)
@@ -573,6 +575,7 @@ gwy_app_toolbox_build(GtkBox *vbox,
 
     g_ptr_array_free(builder.unseen_tools, TRUE);
     g_string_free(builder.path, TRUE);
+    g_free(ui);
 }
 
 GtkWidget*
