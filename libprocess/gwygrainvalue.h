@@ -36,7 +36,6 @@ typedef struct _GwyGrainValueClass GwyGrainValueClass;
 
 typedef enum {
     GWY_GRAIN_VALUE_GROUP_USER = 0,
-    GWY_GRAIN_VALUE_GROUP_ID,
     GWY_GRAIN_VALUE_GROUP_POSITION,
     GWY_GRAIN_VALUE_GROUP_VALUE,
     GWY_GRAIN_VALUE_GROUP_AREA,
@@ -91,8 +90,11 @@ void               gwy_grain_value_set_same_units  (GwyGrainValue *gvalue,
                                                     gboolean same_units);
 /* TODO: Evaluation methods */
 
-GwyInventory*      gwy_grain_values                (void);
-GwyGrainValue*     gwy_grain_values_get_grain_value(const gchar *name);
+const gchar*   gwy_grain_value_group_name                (GwyGrainValueGroup group);
+GwyInventory*  gwy_grain_values                          (void);
+GwyGrainValue* gwy_grain_values_get_grain_value          (const gchar *name);
+GwyGrainValue* gwy_grain_values_get_builtin_grain_value  (GwyGrainQuantity quantity);
+GwyGrainValue* gwy_grain_values_get_grain_value_by_symbol(const gchar *symbol_plain);
 
 #endif /*__GWY_GRAIN_VALUE_H__*/
 

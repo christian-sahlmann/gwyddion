@@ -583,6 +583,31 @@ gwy_grain_value_set_same_units(GwyGrainValue *gvalue,
     gvalue->data.same_units = same_units;
 }
 
+GwyGrainQuantity
+gwy_grain_value_get_quantity(GwyGrainValue *gvalue)
+{
+    g_return_val_if_fail(GWY_IS_GRAIN_VALUE(gvalue), -1);
+    g_return_val_if_fail(gvalue->data.group != GWY_GRAIN_VALUE_GROUP_USER, -1);
+    return gvalue->builtin;
+}
+
+const gchar*
+gwy_grain_value_group_name(GwyGrainValueGroup group)
+{
+    static const gchar *group_names[] = {
+        N_("User"),
+        N_("Position"),
+        N_("Value"),
+        N_("Area"),
+        N_("Volume"),
+        N_("Boundary"),
+        N_("Slope"),
+    };
+
+    g_return_val_if_fail(group < G_N_ELEMENTS(group_names), NULL);
+    return group_names[group];
+}
+
 GwyInventory*
 gwy_grain_values(void)
 {
@@ -597,6 +622,44 @@ gwy_grain_values_get_grain_value(const gchar *name)
 
     i = GWY_RESOURCE_CLASS(g_type_class_peek(GWY_TYPE_GRAIN_VALUE))->inventory;
     return (GwyGrainValue*)gwy_inventory_get_item_or_default(i, name);
+}
+
+static gboolean
+find_grain_value_by_quantity(G_GNUC_UNUSED gpointer key,
+                             gpointer value,
+                             gpointer user_data)
+{
+    GwyGrainValue *gvalue = (GwyGrainValue*)value;
+
+    return (gvalue->data.group != GWY_GRAIN_VALUE_GROUP_USER
+            && gvalue->builtin == GPOINTER_TO_UINT(user_data));
+}
+
+GwyGrainValue*
+gwy_grain_values_get_builtin_grain_value(GwyGrainQuantity quantity)
+{
+    return gwy_inventory_find(gwy_grain_values(),
+                              find_grain_value_by_quantity,
+                              GUINT_TO_POINTER(quantity));
+}
+
+static gboolean
+find_grain_value_by_symbol(G_GNUC_UNUSED gpointer key,
+                           gpointer value,
+                           gpointer user_data)
+{
+    GwyGrainValue *gvalue = (GwyGrainValue*)value;
+
+    return (gvalue->data.symbol_plain
+            && gwy_strequal(gvalue->data.symbol_plain, (gchar*)user_data));
+}
+
+GwyGrainValue*
+gwy_grain_values_get_grain_value_by_symbol(const gchar *symbol_plain)
+{
+    return gwy_inventory_find(gwy_grain_values(),
+                              find_grain_value_by_symbol,
+                              (gpointer)symbol_plain);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
