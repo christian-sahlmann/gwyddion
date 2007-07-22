@@ -597,6 +597,9 @@ gwy_resource_parse_real(const gchar *text,
  *
  * Emits signal "data-changed" on a resource.
  *
+ * It can be called only on non-constant resources.  The default handler
+ * sets @is_modified flag on the resource.
+ *
  * Mostly useful in resource implementation.
  **/
 void
@@ -612,6 +615,23 @@ gwy_resource_modified(GwyResource *resource)
     if (resource->is_const)
         g_warning("Constant resource was modified");
     resource->is_modified = TRUE;
+}
+
+/**
+ * gwy_resource_data_saved:
+ * @resource: A resource.
+ *
+ * Clears @is_modified flag of a resource.
+ *
+ * Since: 2.8
+ **/
+void
+gwy_resource_data_saved(GwyResource *resource)
+{
+    g_return_if_fail(GWY_IS_RESOURCE(resource));
+    if (resource->is_const)
+        g_warning("Constant resource being passed to data_saved()");
+    resource->is_modified = FALSE;
 }
 
 /**
@@ -771,15 +791,17 @@ gwy_resource_class_mkdir(GwyResourceClass *klass)
 void
 gwy_resource_classes_finalize(void)
 {
-    while (all_resources) {
-        GSList *next = all_resources->next;
+    GSList *l;
+
+    for (l = all_resources; l; l = g_slist_next(l)) {
         GwyResourceClass *klass;
-        GwyInventory *inventory;
 
         klass = g_type_class_ref((GType)GPOINTER_TO_SIZE(all_resources->data));
         gwy_object_unref(klass->inventory);
-        all_resources = all_resources->next;
     }
+
+    g_slist_free(all_resources);
+    all_resources = NULL;
 }
 
 /************************** Documentation ****************************/
