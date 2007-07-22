@@ -308,7 +308,7 @@ gwy_grain_value_finalize(GObject *object)
 
     gvalue = GWY_GRAIN_VALUE(object);
     g_free(gvalue->data.symbol);
-    g_free(gvalue->data.symbol_plain);
+    g_free(gvalue->data.symbol_markup);
 
     G_OBJECT_CLASS(gwy_grain_value_parent_class)->finalize(object);
 }
@@ -337,10 +337,10 @@ gwy_grain_value_data_copy(const GwyGrainValueData *src,
                           GwyGrainValueData *dest)
 {
     g_free(dest->symbol);
-    g_free(dest->symbol_plain);
+    g_free(dest->symbol_markup);
     *dest = *src;
     dest->symbol = g_strdup(src->symbol ? src->symbol: "");
-    dest->symbol_plain = g_strdup(src->symbol_plain ? src->symbol_plain: "");
+    dest->symbol_markup = g_strdup(src->symbol_markup ? src->symbol_markup: "");
 }
 
 gpointer
@@ -391,13 +391,13 @@ gwy_grain_value_dump(GwyResource *resource,
     /* Information */
     g_string_append_printf(str,
                            "symbol %s\n"
-                           "symbol_plain %s\n"
+                           "symbol_markup %s\n"
                            "power_xy %d\n"
                            "power_z %d\n"
                            "same_units %d\n"
                            "expression %s\n",
                            data->symbol,
-                           data->symbol_plain,
+                           data->symbol_markup,
                            data->power_xy,
                            data->power_z,
                            data->same_units,
@@ -428,7 +428,7 @@ gwy_grain_value_resolve_expression(const gchar *expression,
 
         for (i = 0; i < MAXBUILTINS; i++) {
             if ((gvalue = gwy_grain_values_get_builtin_grain_value(i)))
-                names[i] = gvalue->data.symbol_plain;
+                names[i] = gvalue->data.symbol;
             else
                 names[i] = "";  /* Impossible variable name */
         }
@@ -474,9 +474,9 @@ gwy_grain_value_parse(const gchar *text,
             g_free(data.symbol);
             data.symbol = g_strdup(value);
         }
-        else if (gwy_strequal(key, "symbol_plain")) {
-            g_free(data.symbol);
-            data.symbol = g_strdup(value);
+        else if (gwy_strequal(key, "symbol_markup")) {
+            g_free(data.symbol_markup);
+            data.symbol_markup = g_strdup(value);
         }
         else if (gwy_strequal(key, "power_xy"))
             data.power_xy = atoi(value);
@@ -498,12 +498,25 @@ gwy_grain_value_parse(const gchar *text,
     }
 
     g_free(data.symbol);
-    g_free(data.symbol_plain);
+    g_free(data.symbol_markup);
     g_free(str);
 
     return (GwyResource*)gvalue;
 }
 
+/**
+ * gwy_grain_value_get_group:
+ * @gvalue: A grain value object.
+ *
+ * Gets the group of a grain value.
+ *
+ * All user-defined grain values belong to %GWY_GRAIN_VALUE_GROUP_USER group,
+ * built-in grain values belong to other groups.
+ *
+ * Returns: The group of @gvalue.
+ *
+ * Since: 2.8
+ **/
 GwyGrainValueGroup
 gwy_grain_value_get_group(GwyGrainValue *gvalue)
 {
@@ -511,6 +524,67 @@ gwy_grain_value_get_group(GwyGrainValue *gvalue)
     return gvalue->data.group;
 }
 
+/**
+ * gwy_grain_value_get_symbol_markup:
+ * @gvalue: A grain value object.
+ *
+ * Gets the rich text symbol representing a grain value.
+ *
+ * The returned value can contain Pango markup and is suitable for instance
+ * for graph axis labels.
+ *
+ * Returns: Rich text symbol of @gvalue.
+ *
+ * Since: 2.8
+ **/
+const gchar*
+gwy_grain_value_get_symbol_markup(GwyGrainValue *gvalue)
+{
+    g_return_val_if_fail(GWY_IS_GRAIN_VALUE(gvalue), NULL);
+    return gvalue->data.symbol_markup;
+}
+
+/**
+ * gwy_grain_value_set_symbol_markup:
+ * @gvalue: A grain value object.
+ * @symbol: The new symbol.
+ *
+ * Sets the rich text symbol representing a grain value.
+ *
+ * See gwy_grain_value_get_symbol_markup() for details.
+ *
+ * Since: 2.8
+ **/
+void
+gwy_grain_value_set_symbol_markup(GwyGrainValue *gvalue,
+                                  const gchar *symbol)
+{
+    g_return_if_fail(GWY_IS_GRAIN_VALUE(gvalue));
+    if (gvalue->data.symbol_markup == symbol
+        || (gvalue->data.symbol_markup
+            && symbol
+            && gwy_strequal(gvalue->data.symbol_markup, symbol)))
+        return;
+
+    g_free(gvalue->data.symbol_markup);
+    gvalue->data.symbol_markup = g_strdup(symbol);
+}
+
+/**
+ * gwy_grain_value_get_symbol:
+ * @gvalue: A grain value object.
+ *
+ * Gets the plain symbol representing a grain value.
+ *
+ * The plain symbol is used in expressions.  It has to be a valid
+ * identifier and it should be easy to type.  (Note currently it is not
+ * possible to use user-defined grain quantities in expressions for other
+ * user-defined grain quantities.)
+ *
+ * Returns: Plain symbol of @gvalue.
+ *
+ * Since: 2.8
+ **/
 const gchar*
 gwy_grain_value_get_symbol(GwyGrainValue *gvalue)
 {
@@ -518,11 +592,23 @@ gwy_grain_value_get_symbol(GwyGrainValue *gvalue)
     return gvalue->data.symbol;
 }
 
+/**
+ * gwy_grain_value_set_symbol:
+ * @gvalue: A grain value object.
+ * @symbol: The new symbol.
+ *
+ * Sets the plain symbol representing a grain value.
+ *
+ * See gwy_grain_value_get_symbol() for details.
+ *
+ * Since: 2.8
+ **/
 void
 gwy_grain_value_set_symbol(GwyGrainValue *gvalue,
                            const gchar *symbol)
 {
     g_return_if_fail(GWY_IS_GRAIN_VALUE(gvalue));
+    g_return_if_fail(!symbol || !*symbol || gwy_strisident(symbol, "_", NULL));
     if (gvalue->data.symbol == symbol
         || (gvalue->data.symbol
             && symbol
@@ -533,28 +619,21 @@ gwy_grain_value_set_symbol(GwyGrainValue *gvalue,
     gvalue->data.symbol = g_strdup(symbol);
 }
 
-const gchar*
-gwy_grain_value_get_symbol_plain(GwyGrainValue *gvalue)
-{
-    g_return_val_if_fail(GWY_IS_GRAIN_VALUE(gvalue), NULL);
-    return gvalue->data.symbol_plain;
-}
-
-void
-gwy_grain_value_set_symbol_plain(GwyGrainValue *gvalue,
-                                 const gchar *symbol)
-{
-    g_return_if_fail(GWY_IS_GRAIN_VALUE(gvalue));
-    if (gvalue->data.symbol_plain == symbol
-        || (gvalue->data.symbol_plain
-            && symbol
-            && gwy_strequal(gvalue->data.symbol_plain, symbol)))
-        return;
-
-    g_free(gvalue->data.symbol_plain);
-    gvalue->data.symbol_plain = g_strdup(symbol);
-}
-
+/**
+ * gwy_grain_value_get_power_xy:
+ * @gvalue: A grain value object.
+ *
+ * Gets the power of lateral dimensions in a grain value.
+ *
+ * The units of a grain value are determined as the product of lateral units
+ * and value units, raised to certain powers.  For instance lengths in the
+ * horizontal plane have xy power of 1 and areas have 2, whereas volumes have
+ * xy power of 2 and value power of 1.
+ *
+ * Returns: The power of lateral dimensions.
+ *
+ * Since: 2.8
+ **/
 gint
 gwy_grain_value_get_power_xy(GwyGrainValue *gvalue)
 {
@@ -562,6 +641,15 @@ gwy_grain_value_get_power_xy(GwyGrainValue *gvalue)
     return gvalue->data.power_xy;
 }
 
+/**
+ * gwy_grain_value_set_power_xy:
+ * @gvalue: A grain value object.
+ * @power_xy: The new lateral dimensions power.
+ *
+ * Sets the power of lateral dimensions in a grain value.
+ *
+ * Since: 2.8
+ **/
 void
 gwy_grain_value_set_power_xy(GwyGrainValue *gvalue,
                              gint power_xy)
@@ -573,6 +661,18 @@ gwy_grain_value_set_power_xy(GwyGrainValue *gvalue,
     gvalue->data.power_xy = power_xy;
 }
 
+/**
+ * gwy_grain_value_get_power_z:
+ * @gvalue: A grain value object.
+ *
+ * Gets the power of value (height) in a grain value.
+ *
+ * See gwy_grain_value_get_power_xy() for details.
+ *
+ * Returns: The power of value (height).
+ *
+ * Since: 2.8
+ **/
 gint
 gwy_grain_value_get_power_z(GwyGrainValue *gvalue)
 {
@@ -580,6 +680,15 @@ gwy_grain_value_get_power_z(GwyGrainValue *gvalue)
     return gvalue->data.power_z;
 }
 
+/**
+ * gwy_grain_value_set_power_z:
+ * @gvalue: A grain value object.
+ * @power_z: The new value (height) power.
+ *
+ * Sets the power of value (height) in a grain value.
+ *
+ * Since: 2.8
+ **/
 void
 gwy_grain_value_set_power_z(GwyGrainValue *gvalue,
                             gint power_z)
@@ -677,16 +786,15 @@ find_grain_value_by_symbol(G_GNUC_UNUSED gpointer key,
 {
     GwyGrainValue *gvalue = (GwyGrainValue*)value;
 
-    return (gvalue->data.symbol_plain
-            && gwy_strequal(gvalue->data.symbol_plain, (gchar*)user_data));
+    return (gvalue->data.symbol
+            && gwy_strequal(gvalue->data.symbol, (gchar*)user_data));
 }
 
 GwyGrainValue*
-gwy_grain_values_get_grain_value_by_symbol(const gchar *symbol_plain)
+gwy_grain_values_get_grain_value_by_symbol(const gchar *symbol)
 {
     return gwy_inventory_find(gwy_grain_values(),
-                              find_grain_value_by_symbol,
-                              (gpointer)symbol_plain);
+                              find_grain_value_by_symbol, (gpointer)symbol);
 }
 
 void
@@ -768,5 +876,13 @@ gwy_grain_values_calculate(gint nvalues,
         g_free(quantities[q]);
     g_free(quantities);
 }
+
+/************************** Documentation ****************************/
+
+/**
+ * SECTION:gwygrainvalue
+ * @title: GwyGrainValue
+ * @short_description: Grain value resource type
+ **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

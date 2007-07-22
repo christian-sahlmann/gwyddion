@@ -47,7 +47,7 @@ typedef enum {
 typedef struct {
     GwyGrainValueGroup group;
     gchar *symbol;
-    gchar *symbol_plain;
+    gchar *symbol_markup;
     gint power_xy;
     gint power_z;
     gboolean same_units;
@@ -71,24 +71,25 @@ struct _GwyGrainValueClass {
     void (*reserved2)(void);
 };
 
-GType              gwy_grain_value_get_type        (void) G_GNUC_CONST;
-GwyGrainValueGroup gwy_grain_value_get_group       (GwyGrainValue *gvalue);
-const gchar*       gwy_grain_value_get_symbol      (GwyGrainValue *gvalue);
-const gchar*       gwy_grain_value_get_symbol_plain(GwyGrainValue *gvalue);
-void               gwy_grain_value_set_symbol      (GwyGrainValue *gvalue,
-                                                    const gchar *symbol);
-void               gwy_grain_value_set_symbol_plain(GwyGrainValue *gvalue,
-                                                    const gchar *symbol);
-gint               gwy_grain_value_get_power_xy    (GwyGrainValue *gvalue);
-void               gwy_grain_value_set_power_xy    (GwyGrainValue *gvalue,
-                                                    gint power_xy);
-gint               gwy_grain_value_get_power_z     (GwyGrainValue *gvalue);
-void               gwy_grain_value_set_power_z     (GwyGrainValue *gvalue,
-                                                    gint power_z);
-gboolean           gwy_grain_value_get_same_units  (GwyGrainValue *gvalue);
-void               gwy_grain_value_set_same_units  (GwyGrainValue *gvalue,
-                                                    gboolean same_units);
-const gchar*   gwy_grain_value_group_name                (GwyGrainValueGroup group);
+GType              gwy_grain_value_get_type         (void) G_GNUC_CONST;
+GwyGrainValueGroup gwy_grain_value_get_group        (GwyGrainValue *gvalue);
+const gchar*       gwy_grain_value_get_symbol       (GwyGrainValue *gvalue);
+void               gwy_grain_value_set_symbol       (GwyGrainValue *gvalue,
+                                                     const gchar *symbol);
+const gchar*       gwy_grain_value_get_symbol_markup(GwyGrainValue *gvalue);
+void               gwy_grain_value_set_symbol_markup(GwyGrainValue *gvalue,
+                                                     const gchar *symbol);
+gint               gwy_grain_value_get_power_xy     (GwyGrainValue *gvalue);
+void               gwy_grain_value_set_power_xy     (GwyGrainValue *gvalue,
+                                                     gint power_xy);
+gint               gwy_grain_value_get_power_z      (GwyGrainValue *gvalue);
+void               gwy_grain_value_set_power_z      (GwyGrainValue *gvalue,
+                                                     gint power_z);
+gboolean           gwy_grain_value_get_same_units   (GwyGrainValue *gvalue);
+void               gwy_grain_value_set_same_units   (GwyGrainValue *gvalue,
+                                                     gboolean same_units);
+const gchar*       gwy_grain_value_group_name       (GwyGrainValueGroup group);
+
 GwyInventory*  gwy_grain_values                          (void);
 GwyGrainValue* gwy_grain_values_get_grain_value          (const gchar *name);
 GwyGrainValue* gwy_grain_values_get_builtin_grain_value  (GwyGrainQuantity quantity);
