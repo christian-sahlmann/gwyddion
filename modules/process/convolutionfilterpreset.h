@@ -457,6 +457,7 @@ gwy_convolution_filter_preset_parse(const gchar *text,
     }
 
     preset = gwy_convolution_filter_preset_new("", &data, is_const);
+    GWY_RESOURCE(preset)->is_modified = FALSE;
     gwy_convolution_filter_preset_data_sanitize(&preset->data);
 
     g_free(data.matrix);
