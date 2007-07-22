@@ -533,7 +533,7 @@ gwy_grain_value_get_group(GwyGrainValue *gvalue)
  * The returned value can contain Pango markup and is suitable for instance
  * for graph axis labels.
  *
- * Returns: Rich text symbol of @gvalue.
+ * Returns: Rich text symbol of @gvalue, owned by @gvalue.
  *
  * Since: 2.8
  **/
@@ -581,7 +581,7 @@ gwy_grain_value_set_symbol_markup(GwyGrainValue *gvalue,
  * possible to use user-defined grain quantities in expressions for other
  * user-defined grain quantities.)
  *
- * Returns: Plain symbol of @gvalue.
+ * Returns: Plain symbol of @gvalue, owned by @gvalue.
  *
  * Since: 2.8
  **/
@@ -700,6 +700,22 @@ gwy_grain_value_set_power_z(GwyGrainValue *gvalue,
     gvalue->data.power_z = power_z;
 }
 
+/**
+ * gwy_grain_value_get_same_units:
+ * @gvalue: A grain value object.
+ *
+ * Tests whether a grain value requires identical lateral and value (height)
+ * units.
+ *
+ * Certain grain quantities, such as the surface area or absolute inclination,
+ * are only meaningful if value (height) is the same physical quantity as
+ * lateral dimensions.
+ *
+ * Returns: %TRUE if @gvalue requires the same lateral and value (height)
+ *          units, %FALSE if it is defined always.
+ *
+ * Since: 2.8
+ **/
 gboolean
 gwy_grain_value_get_same_units(GwyGrainValue *gvalue)
 {
@@ -707,6 +723,19 @@ gwy_grain_value_get_same_units(GwyGrainValue *gvalue)
     return gvalue->data.same_units;
 }
 
+/**
+ * gwy_grain_value_set_same_units:
+ * @gvalue: A grain value object.
+ * @same_units: %TRUE to make @gvalue require same units, %FALSE to make it
+ *              defined always.
+ *
+ * Sets the requirement of identical lateral and value (height) units for a
+ * grain value.
+ *
+ * See gwy_grain_value_get_same_units() for details.
+ *
+ * Since: 2.8
+ **/
 void
 gwy_grain_value_set_same_units(GwyGrainValue *gvalue,
                                gboolean same_units)
@@ -719,6 +748,17 @@ gwy_grain_value_set_same_units(GwyGrainValue *gvalue,
     gvalue->data.same_units = same_units;
 }
 
+/**
+ * gwy_grain_value_get_quantity:
+ * @gvalue: A grain value object.
+ *
+ * Gets the built-in grain quantity corresponding to a grain value.
+ *
+ * Returns: The corresponding built-in #GwyGrainQuantity if @gvalue is a
+ *          built-it grain value, -1 if @gvalue is an user-defined grain value.
+ *
+ * Since: 2.8
+ **/
 GwyGrainQuantity
 gwy_grain_value_get_quantity(GwyGrainValue *gvalue)
 {
@@ -727,6 +767,17 @@ gwy_grain_value_get_quantity(GwyGrainValue *gvalue)
     return gvalue->builtin;
 }
 
+/**
+ * gwy_grain_value_group_name:
+ * @group: Grain value group.
+ *
+ * Obtains the name of a grain value group.
+ *
+ * Returns: The grain value group name as a constant untranslated string,
+ *          owned by the library.
+ *
+ * Since: 2.8
+ **/
 const gchar*
 gwy_grain_value_group_name(GwyGrainValueGroup group)
 {
@@ -744,6 +795,15 @@ gwy_grain_value_group_name(GwyGrainValueGroup group)
     return group_names[group];
 }
 
+/**
+ * gwy_grain_values:
+ *
+ * Gets the inventory with all the grain values.
+ *
+ * Returns: Grain value inventory.
+ *
+ * Since: 2.8
+ **/
 GwyInventory*
 gwy_grain_values(void)
 {
@@ -751,13 +811,25 @@ gwy_grain_values(void)
                               (GWY_TYPE_GRAIN_VALUE))->inventory;
 }
 
+/**
+ * gwy_grain_values_get_grain_value:
+ * @name: Grain quantity name.
+ *
+ * Convenience function to get a grain quantity from gwy_grain_values() by
+ * name.
+ *
+ * Returns: Grain quantity identified by @name or %NULL if there is no such
+ *          grain quantity.
+ *
+ * Since: 2.8
+ **/
 GwyGrainValue*
 gwy_grain_values_get_grain_value(const gchar *name)
 {
     GwyInventory *i;
 
     i = GWY_RESOURCE_CLASS(g_type_class_peek(GWY_TYPE_GRAIN_VALUE))->inventory;
-    return (GwyGrainValue*)gwy_inventory_get_item_or_default(i, name);
+    return (GwyGrainValue*)gwy_inventory_get_item(i, name);
 }
 
 static gboolean
@@ -771,6 +843,17 @@ find_grain_value_by_quantity(G_GNUC_UNUSED gpointer key,
             && gvalue->builtin == GPOINTER_TO_UINT(user_data));
 }
 
+/**
+ * gwy_grain_values_get_builtin_grain_value:
+ * @quantity: A #GwyGrainQuantity value.
+ *
+ * Obtains the built-in grain value corresponding to given enum value.
+ *
+ * Returns: The built-in grain value corresponding to @quantity, %NULL if there
+ *          is no such grain value.
+ *
+ * Since: 2.8
+ **/
 GwyGrainValue*
 gwy_grain_values_get_builtin_grain_value(GwyGrainQuantity quantity)
 {
@@ -779,24 +862,26 @@ gwy_grain_values_get_builtin_grain_value(GwyGrainQuantity quantity)
                               GUINT_TO_POINTER(quantity));
 }
 
-static gboolean
-find_grain_value_by_symbol(G_GNUC_UNUSED gpointer key,
-                           gpointer value,
-                           gpointer user_data)
-{
-    GwyGrainValue *gvalue = (GwyGrainValue*)value;
-
-    return (gvalue->data.symbol
-            && gwy_strequal(gvalue->data.symbol, (gchar*)user_data));
-}
-
-GwyGrainValue*
-gwy_grain_values_get_grain_value_by_symbol(const gchar *symbol)
-{
-    return gwy_inventory_find(gwy_grain_values(),
-                              find_grain_value_by_symbol, (gpointer)symbol);
-}
-
+/**
+ * gwy_grain_values_calculate:
+ * @nvalues: Number of items in @gvalues.
+ * @gvalues: Array of grain value objects.
+ * @results: Array of length @nvalues of arrays of length @ngrains+1 of doubles
+ *           to put the calculated values to.
+ * @data_field: Data field used for marking.  For some values its values
+ *              are not used, but its dimensions determine the dimensions of
+ *              @grains.
+ * @grains: Grain numbers filled with gwy_data_field_number_grains().
+ * @ngrains: The number of grains as returned by
+ *           gwy_data_field_number_grains().
+ *
+ * Calculates a set of grain values.
+ *
+ * See also gwy_data_field_grains_get_values() for a simplier function
+ * for built-in grain values.
+ *
+ * Since: 2.8
+ **/
 void
 gwy_grain_values_calculate(gint nvalues,
                            GwyGrainValue **gvalues,
