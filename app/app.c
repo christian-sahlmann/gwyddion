@@ -26,6 +26,7 @@
 
 #include <libgwyddion/gwymacros.h>
 #include <libprocess/datafield.h>
+#include <libprocess/gwygrainvalue.h>
 #include <libgwymodule/gwymodule.h>
 #include <libgwydgets/gwydgets.h>
 #include <libgwydgets/gwygraphwindow.h>
@@ -1241,6 +1242,7 @@ gwy_app_init_common(GError **error,
     gwy_stock_register_stock_items();
     gwy_resource_class_load(g_type_class_peek(GWY_TYPE_GRADIENT));
     gwy_resource_class_load(g_type_class_peek(GWY_TYPE_GL_MATERIAL));
+    gwy_resource_class_load(g_type_class_peek(GWY_TYPE_GRAIN_VALUE));
 
     /* Load settings */
     settings_file = gwy_app_settings_get_settings_filename();

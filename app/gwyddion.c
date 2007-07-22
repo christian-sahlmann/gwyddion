@@ -27,6 +27,7 @@
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwyversion.h>
 #include <libgwyddion/gwydebugobjects.h>
+#include <libprocess/gwygrainvalue.h>
 #include <libgwymodule/gwymoduleloader.h>
 #include <libgwydgets/gwydgets.h>
 #include <app/gwyapp.h>
@@ -125,6 +126,8 @@ main(int argc, char *argv[])
     gwy_resource_class_load(g_type_class_peek(GWY_TYPE_GRADIENT));
     gwy_app_splash_set_message(_("GL materials"));
     gwy_resource_class_load(g_type_class_peek(GWY_TYPE_GL_MATERIAL));
+    gwy_app_splash_set_message(_("grain quantities"));
+    gwy_resource_class_load(g_type_class_peek(GWY_TYPE_GRAIN_VALUE));
     gwy_app_splash_set_message_prefix(NULL);
     debug_time(timer, "load resources");
 
