@@ -406,7 +406,8 @@ gwy_grain_value_dump(GwyResource *resource,
 
 static gboolean
 gwy_grain_value_resolve_expression(const gchar *expression,
-                                   guint *vars)
+                                   guint *vars,
+                                   GError **error)
 {
     static gchar **names = NULL;
 
@@ -416,7 +417,7 @@ gwy_grain_value_resolve_expression(const gchar *expression,
     if (!expr)
         expr = gwy_expr_new();
 
-    if (!gwy_expr_compile(expr, expression, NULL))
+    if (!gwy_expr_compile(expr, expression, error))
         return FALSE;
 
     if (!vars)
@@ -491,7 +492,8 @@ gwy_grain_value_parse(const gchar *text,
     }
 
 
-    if (data.symbol && !gwy_grain_value_resolve_expression(expression, NULL)) {
+    if (data.symbol && !gwy_grain_value_resolve_expression(expression,
+                                                           NULL, NULL)) {
         gvalue = gwy_grain_value_new("", &data, is_const);
         gwy_grain_value_data_sanitize(&gvalue->data);
         gvalue->expression = g_strdup(expression);
@@ -560,6 +562,9 @@ gwy_grain_value_set_symbol_markup(GwyGrainValue *gvalue,
                                   const gchar *symbol)
 {
     g_return_if_fail(GWY_IS_GRAIN_VALUE(gvalue));
+    g_return_if_fail(gvalue->data.group == GWY_GRAIN_VALUE_GROUP_USER);
+    g_return_if_fail(gwy_resource_get_is_modifiable(GWY_RESOURCE(gvalue)));
+
     if (gvalue->data.symbol_markup == symbol
         || (gvalue->data.symbol_markup
             && symbol
@@ -608,7 +613,10 @@ gwy_grain_value_set_symbol(GwyGrainValue *gvalue,
                            const gchar *symbol)
 {
     g_return_if_fail(GWY_IS_GRAIN_VALUE(gvalue));
+    g_return_if_fail(gvalue->data.group == GWY_GRAIN_VALUE_GROUP_USER);
+    g_return_if_fail(gwy_resource_get_is_modifiable(GWY_RESOURCE(gvalue)));
     g_return_if_fail(!symbol || !*symbol || gwy_strisident(symbol, "_", NULL));
+
     if (gvalue->data.symbol == symbol
         || (gvalue->data.symbol
             && symbol
@@ -655,6 +663,9 @@ gwy_grain_value_set_power_xy(GwyGrainValue *gvalue,
                              gint power_xy)
 {
     g_return_if_fail(GWY_IS_GRAIN_VALUE(gvalue));
+    g_return_if_fail(gvalue->data.group == GWY_GRAIN_VALUE_GROUP_USER);
+    g_return_if_fail(gwy_resource_get_is_modifiable(GWY_RESOURCE(gvalue)));
+
     if (gvalue->data.power_xy == power_xy)
         return;
 
@@ -694,6 +705,9 @@ gwy_grain_value_set_power_z(GwyGrainValue *gvalue,
                             gint power_z)
 {
     g_return_if_fail(GWY_IS_GRAIN_VALUE(gvalue));
+    g_return_if_fail(gvalue->data.group == GWY_GRAIN_VALUE_GROUP_USER);
+    g_return_if_fail(gwy_resource_get_is_modifiable(GWY_RESOURCE(gvalue)));
+
     if (gvalue->data.power_z == power_z)
         return;
 
@@ -741,6 +755,9 @@ gwy_grain_value_set_same_units(GwyGrainValue *gvalue,
                                gboolean same_units)
 {
     g_return_if_fail(GWY_IS_GRAIN_VALUE(gvalue));
+    g_return_if_fail(gvalue->data.group == GWY_GRAIN_VALUE_GROUP_USER);
+    g_return_if_fail(gwy_resource_get_is_modifiable(GWY_RESOURCE(gvalue)));
+
     same_units = !!same_units;
     if (gvalue->data.same_units == same_units)
         return;
@@ -763,8 +780,79 @@ GwyGrainQuantity
 gwy_grain_value_get_quantity(GwyGrainValue *gvalue)
 {
     g_return_val_if_fail(GWY_IS_GRAIN_VALUE(gvalue), -1);
-    g_return_val_if_fail(gvalue->data.group != GWY_GRAIN_VALUE_GROUP_USER, -1);
+
+    if (gvalue->data.group == GWY_GRAIN_VALUE_GROUP_USER)
+        return -1;
     return gvalue->builtin;
+}
+
+/**
+ * gwy_grain_value_get_expression:
+ * @gvalue: A grain value object.
+ *
+ * Gets the expression of a user-defined grain value.
+ *
+ * Returns: The expression as a string owned by @gvalue, %NULL if @gvalue
+ *          is a built-in grain value.
+ *
+ * Since: 2.8
+ **/
+const gchar*
+gwy_grain_value_get_expression(GwyGrainValue *gvalue)
+{
+    g_return_val_if_fail(GWY_IS_GRAIN_VALUE(gvalue), NULL);
+
+    if (gvalue->data.group != GWY_GRAIN_VALUE_GROUP_USER)
+        return NULL;
+    return gvalue->expression;
+}
+
+/**
+ * gwy_grain_value_set_expression:
+ * @gvalue: A grain value object.
+ * @expression: New grain value expression.
+ * @error: Return location for the error, or %NULL to ignore errors.
+ *
+ * Sets the expression of a user-defined grain value.
+ *
+ * It is an error to call this function on a built-in quantity.
+ *
+ * Returns: %TRUE if the expression is compilable and references only known
+ *          grain quantities.  %FALSE is the expression is not calculable,
+ *          in this case the @gvalue's expression is unchanged.
+ *
+ * Since: 2.8
+ **/
+gboolean
+gwy_grain_value_set_expression(GwyGrainValue *gvalue,
+                               const gchar *expression,
+                               GError **error)
+{
+    GError *err = NULL;
+
+    g_return_val_if_fail(GWY_IS_GRAIN_VALUE(gvalue), FALSE);
+    g_return_val_if_fail(gvalue->data.group == GWY_GRAIN_VALUE_GROUP_USER,
+                         FALSE);
+    g_return_val_if_fail(gwy_resource_get_is_modifiable(GWY_RESOURCE(gvalue)),
+                         FALSE);
+
+    if (expression == gvalue->expression)
+        return TRUE;
+
+    if (!gwy_grain_value_resolve_expression(expression, NULL, &err)) {
+        if (err)
+            g_propagate_error(error, err);
+        else
+            g_set_error(error,
+                        GWY_EXPR_ERROR, GWY_EXPR_ERROR_UNRESOLVED_IDENTIFIERS,
+                        "Unresolved identifiers");
+        return FALSE;
+    }
+
+    g_free(gvalue->expression);
+    gvalue->expression = g_strdup(expression);
+
+    return TRUE;
 }
 
 /**
@@ -921,7 +1009,8 @@ gwy_grain_values_calculate(gint nvalues,
         }
 
         /* Expressions */
-        resolved = gwy_grain_value_resolve_expression(gvalue->expression, vars);
+        resolved = gwy_grain_value_resolve_expression(gvalue->expression, vars,
+                                                      NULL);
         g_return_if_fail(resolved);
         for (q = 0; q < MAXBUILTINS; q++) {
             if (vars[q] && !quantities[q])
@@ -944,7 +1033,7 @@ gwy_grain_values_calculate(gint nvalues,
         }
 
         /* Expressions */
-        gwy_grain_value_resolve_expression(gvalue->expression, vars);
+        gwy_grain_value_resolve_expression(gvalue->expression, vars, NULL);
         memset(mapped, 0, (MAXBUILTINS + 1)*sizeof(gdouble*));
         for (q = 0; q < MAXBUILTINS; q++) {
             if (vars[q]) {

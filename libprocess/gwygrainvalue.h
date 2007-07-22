@@ -88,6 +88,11 @@ void               gwy_grain_value_set_power_z      (GwyGrainValue *gvalue,
 gboolean           gwy_grain_value_get_same_units   (GwyGrainValue *gvalue);
 void               gwy_grain_value_set_same_units   (GwyGrainValue *gvalue,
                                                      gboolean same_units);
+GwyGrainQuantity   gwy_grain_value_get_quantity     (GwyGrainValue *gvalue);
+const gchar*       gwy_grain_value_get_expression   (GwyGrainValue *gvalue);
+gboolean           gwy_grain_value_set_expression   (GwyGrainValue *gvalue,
+                                                     const gchar *expression,
+                                                     GError **error);
 const gchar*       gwy_grain_value_group_name       (GwyGrainValueGroup group);
 
 GwyInventory*  gwy_grain_values                          (void);
