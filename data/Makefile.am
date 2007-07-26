@@ -8,7 +8,7 @@ pkgconfigdatadir = $(libdir)/pkgconfig
 gwyddionappdir = $(datadir)/applications
 gwyddionmimedir = $(datadir)/mime/packages
 
-docsrc = $(top_srcdir)/devel-docs
+docsrc = $(top_builddir)/devel-docs
 vim_syn_gen = $(top_srcdir)/utils/vim-syn-gen.py
 gwyddion_vim_cfg = $(top_srcdir)/data/gwyddion-cfg.py
 
@@ -53,7 +53,7 @@ MAINTAINERCLEANFILES = \
 if MAINTAINER_MODE
 gwyddion.vim: $(gwyddion_vim_sources) $(gwyddion_vim_cfg) $(vim_syn_gen)
 	cd $(top_builddir); \
-	$(PYTHON) utils/vim-syn-gen.py data/gwyddion-cfg.py >data/gwyddion.vim
+	$(PYTHON) $(vim_syn_gen) $(gwyddion_vim_cfg) >data/gwyddion.vim
 
 # Desktop files
 gwyddion.xml: $(top_srcdir)/utils/extract-file-magic.py $(file_magic_sources)
