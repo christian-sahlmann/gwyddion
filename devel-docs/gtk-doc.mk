@@ -141,7 +141,7 @@ html-build.stamp: sgml.stamp $(srcdir)/$(DOC_MAIN_SGML_FILE) $(content_files) re
 	@echo 'gtk-doc: Building HTML'
 	rm -rf html
 	mkdir html
-	test -f Makefile.am || cp $(srcdir)/$(DOC_MAIN_SGML_FILE) .
+	test -f Makefile.am || cp -f $(srcdir)/$(DOC_MAIN_SGML_FILE) .
 	test ! -f html/index.sgml || rm -f html/index.sgml
 	cd html \
 		&& /usr/bin/xsltproc --path $(abs_srcdir) --nonet --xinclude \
@@ -152,10 +152,10 @@ html-build.stamp: sgml.stamp $(srcdir)/$(DOC_MAIN_SGML_FILE) $(content_files) re
 	@echo 'gtk-doc: Copying styles and images'
 	cd $(gtkdocdir) && cp -f *.png *.css $(abs_builddir)/html/
 	test "x$(HTML_IMAGES)" = "x" \
-		|| ( cd $(srcdir)/html && cp $(HTML_IMAGES) $(abs_builddir)/html/ )
+		|| ( cd $(srcdir)/html && cp -f $(HTML_IMAGES) $(abs_builddir)/html/ )
 	@echo 'gtk-doc: Fixing cross-references'
 	gtkdoc-fixxref --module-dir=html --html-dir=$(HTML_DIR) $(FIXXREF_OPTIONS)
-	cd $(top_srcdir)/devel-docs && cp style.css $(abs_builddir)/html/
+	cd $(top_srcdir)/devel-docs && cp -f style.css $(abs_builddir)/html/
 	touch html-build.stamp
 else
 docs:
@@ -212,7 +212,7 @@ endif
 dist-hook: dist-check-gtkdoc dist-hook-local
 	mkdir $(distdir)/html
 	if test -s html/index.sgml; then d=html; else d=$(srcdir)/html; fi; \
-	cp $$d/* $(distdir)/html
+	cp -f $$d/* $(distdir)/html
 	$(PYTHON) $(top_srcdir)/devel-docs/ncrosslinks.py $(distdir)/html/*.html </dev/null
 
 .PHONY: docs dist-hook-local
