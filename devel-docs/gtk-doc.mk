@@ -62,12 +62,13 @@ CLEANFILES = $(SCANOBJ_FILES) $(DOC_MODULE)-unused.txt $(DOC_STAMPS)
 DISTCLEANFILES = \
 	$(DOC_MODULE)-sections.txt \
 	$(DOC_MODULE)-undocumented.txt \
+	$(DOC_MODULE)-undeclared.txt \
 	$(DOC_MODULE)-decl-list.txt \
 	$(DOC_MODULE)-decl.txt \
 	$(DOC_MODULE).types
 
-HFILE_GLOB = $(DOC_SOURCE_DIR)/*.h $(ADDITIONAL_HFILES)
-CFILE_GLOB = $(DOC_SOURCE_DIR)/*.c
+HFILE_GLOB = $(top_srcdir)/$(DOC_SOURCE_DIR)/*.h $(MORE_HFILES)
+CFILE_GLOB = $(top_srcdir)/$(DOC_SOURCE_DIR)/*.c $(MORE_CFILES)
 
 if ENABLE_GTK_DOC
 # XXX: Uncomment following line to rebuild docs automatically
@@ -79,7 +80,10 @@ docs: html-build.stamp
 
 scan-build.stamp: $(HFILE_GLOB) $(CFILE_GLOB) $(ADD_OBJECTS)
 	@echo 'gtk-doc: Scanning header files'
-	gtkdoc-scan --module=$(DOC_MODULE) --source-dir=$(DOC_SOURCE_DIR) $(GWY_SCAN_OPTIONS) $(SCAN_OPTIONS) $(EXTRA_HFILES)
+	gtkdoc-scan --module=$(DOC_MODULE) \
+	            --source-dir=$(top_srcdir)/$(DOC_SOURCE_DIR) \
+	            --source-dir=$(top_builddir)/$(DOC_SOURCE_DIR) \
+	            $(GWY_SCAN_OPTIONS) $(SCAN_OPTIONS)
 	if grep -l '^..*$$' $(DOC_MODULE).types >/dev/null 2>&1 ; then \
 		CC="$(GTKDOC_CC)" LD="$(GTKDOC_LD)" gtkdoc-scangobj $(SCANGOBJ_OPTIONS) --module=$(DOC_MODULE) --output-dir=$(builddir); \
 	else \
@@ -116,7 +120,9 @@ tmpl.stamp: tmpl-build.stamp
 sgml-build.stamp: tmpl.stamp $(CFILE_GLOB) $(expand_content_files)
 	@echo 'gtk-doc: Building XML'
 	gtkdoc-mkdb --module=$(DOC_MODULE) --tmpl-dir=template \
-	            --source-dir=$(DOC_SOURCE_DIR) --sgml-mode --output-format=xml \
+	            --source-dir=$(top_srcdir)/$(DOC_SOURCE_DIR) \
+	            --source-dir=$(top_builddir)/$(DOC_SOURCE_DIR) \
+	            --sgml-mode --output-format=xml \
 	            --expand-content-files="$(expand_content_files)" \
 	            --main-sgml-file=$(DOC_MAIN_SGML_FILE) $(MKDB_OPTIONS)
 	touch sgml-build.stamp
@@ -162,6 +168,7 @@ clean-local:
 
 distclean-local:
 	rm -rf xml template
+	test -f Makefile.am || rm -f $(DOC_MAIN_SGML_FILE)
 
 maintainer-clean-local:
 	rm -rf html

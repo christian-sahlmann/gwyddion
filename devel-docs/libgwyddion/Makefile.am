@@ -7,20 +7,18 @@
 
 # The name of the module, e.g. 'glib'.
 DOC_MODULE = libgwyddion
-# A misguided directory name...
-DOC_DIRNAME = $(DOC_MODULE)
+
+# The directory containing the source code. Relative to $(top_srcdir).
+# gtk-doc will search all .c & .h files beneath here for inline comments
+# documenting the functions and macros.
+DOC_SOURCE_DIR = $(DOC_MODULE)
+
+# Files not matched by $(top_srcdir)/$(DOC_SOURCE_DIR)/*.h, for instance
+# files in builddir.
+MORE_HFILES = $(top_builddir)/$(DOC_SOURCE_DIR)/*.h
 
 # The top-level SGML file. You can change this if you want to.
 DOC_MAIN_SGML_FILE = $(DOC_MODULE)-docs.sgml
-
-# The directory containing the source code. Relative to $(srcdir).
-# gtk-doc will search all .c & .h files beneath here for inline comments
-# documenting the functions and macros.
-# e.g. DOC_SOURCE_DIR=../../../gtk
-DOC_SOURCE_DIR = ${top_srcdir}/$(DOC_DIRNAME)
-
-# Files other than $(DOC_SOURCE_DIR)/*., for instance builddir files.
-ADDITIONAL_HFILES = $(top_builddir)/$(DOC_DIRNAME)/gwyversion.h
 
 # Extra options to pass to gtkdoc-scangobj. Not normally needed.
 SCANGOBJ_OPTIONS =

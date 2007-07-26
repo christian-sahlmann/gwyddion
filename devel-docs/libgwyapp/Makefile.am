@@ -7,17 +7,14 @@
 
 # The name of the module, e.g. 'glib'.
 DOC_MODULE = libgwyapp
-# A misguided directory name...
-DOC_DIRNAME = app
+
+# The directory containing the source code. Relative to $(top_srcdir).
+# gtk-doc will search all .c & .h files beneath here for inline comments
+# documenting the functions and macros.
+DOC_SOURCE_DIR = app
 
 # The top-level SGML file. You can change this if you want to.
 DOC_MAIN_SGML_FILE = $(DOC_MODULE)-docs.sgml
-
-# The directory containing the source code. Relative to $(srcdir).
-# gtk-doc will search all .c & .h files beneath here for inline comments
-# documenting the functions and macros.
-# e.g. DOC_SOURCE_DIR=../../../gtk
-DOC_SOURCE_DIR = ${top_srcdir}/$(DOC_DIRNAME)
 
 # Extra options to pass to gtkdoc-scangobj. Not normally needed.
 SCANGOBJ_OPTIONS =
