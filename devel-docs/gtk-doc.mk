@@ -138,7 +138,7 @@ html-build.stamp: sgml.stamp $(srcdir)/$(DOC_MAIN_SGML_FILE) $(content_files) re
 	test -f Makefile.am || cp $(srcdir)/$(DOC_MAIN_SGML_FILE) .
 	test ! -f html/index.sgml || rm -f html/index.sgml
 	cd html \
-		&& /usr/bin/xsltproc --nonet --xinclude \
+		&& /usr/bin/xsltproc --path $(abs_srcdir) --nonet --xinclude \
 		                     --stringparam gtkdoc.bookname $(DOC_MODULE) \
 		                     --stringparam gtkdoc.version "1.8" \
 		                     $(gtkdocdir)/gtk-doc.xsl \
