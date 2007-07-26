@@ -19,6 +19,9 @@ DOC_MAIN_SGML_FILE = $(DOC_MODULE)-docs.sgml
 # e.g. DOC_SOURCE_DIR=../../../gtk
 DOC_SOURCE_DIR = ${top_srcdir}/$(DOC_DIRNAME)
 
+# Files other than $(DOC_SOURCE_DIR)/*., for instance builddir files.
+ADDITIONAL_HFILES = $(top_builddir)/$(DOC_DIRNAME)/gwyversion.h
+
 # Extra options to pass to gtkdoc-scangobj. Not normally needed.
 SCANGOBJ_OPTIONS =
 

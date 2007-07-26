@@ -3,6 +3,8 @@
 # Included in all API-docs Makefile.am's, if you change anything here, it's
 # affects all subdirs.
 
+gtkdocdir = /usr/share/gtk-doc/data
+
 GWY_DOC_CFLAGS = -I$(top_srcdir) -I$(top_builddir) @COMMON_CFLAGS@
 GWY_DOC_LIBS = \
 	$(top_builddir)/app/libgwyapp2.la \
@@ -64,7 +66,7 @@ DISTCLEANFILES = \
 	$(DOC_MODULE)-decl.txt \
 	$(DOC_MODULE).types
 
-HFILE_GLOB = $(DOC_SOURCE_DIR)/*.h
+HFILE_GLOB = $(DOC_SOURCE_DIR)/*.h $(ADDITIONAL_HFILES)
 CFILE_GLOB = $(DOC_SOURCE_DIR)/*.c
 
 if ENABLE_GTK_DOC
@@ -79,14 +81,14 @@ scan-build.stamp: $(HFILE_GLOB) $(CFILE_GLOB) $(ADD_OBJECTS)
 	@echo 'gtk-doc: Scanning header files'
 	gtkdoc-scan --module=$(DOC_MODULE) --source-dir=$(DOC_SOURCE_DIR) $(GWY_SCAN_OPTIONS) $(SCAN_OPTIONS) $(EXTRA_HFILES)
 	if grep -l '^..*$$' $(DOC_MODULE).types >/dev/null 2>&1 ; then \
-	    CC="$(GTKDOC_CC)" LD="$(GTKDOC_LD)" gtkdoc-scangobj $(SCANGOBJ_OPTIONS) --module=$(DOC_MODULE) --output-dir=$(builddir); \
+		CC="$(GTKDOC_CC)" LD="$(GTKDOC_LD)" gtkdoc-scangobj $(SCANGOBJ_OPTIONS) --module=$(DOC_MODULE) --output-dir=$(builddir); \
 	else \
-	    for i in $(SCANOBJ_FILES); do \
-               test -f $$i || touch $$i ; \
-	    done \
+		for i in $(SCANOBJ_FILES); do \
+			test -f $$i || touch $$i ; \
+		done \
 	fi
 	if test -s $(DOC_MODULE).hierarchy; then \
-	    $(PYTHON) $(ADD_OBJECTS) $(DOC_MODULE)-sections.txt $(DOC_MODULE).hierarchy $(ADDOBJECTS_OPTIONS); \
+		$(PYTHON) $(ADD_OBJECTS) $(DOC_MODULE)-sections.txt $(DOC_MODULE).hierarchy $(ADDOBJECTS_OPTIONS); \
 	fi
 	touch scan-build.stamp
 
@@ -99,10 +101,10 @@ tmpl-build.stamp: $(DOC_MODULE)-decl.txt $(SCANOBJ_FILES) $(DOC_MODULE)-override
 	@echo 'gtk-doc: Rebuilding template files'
 	gtkdoc-mktmpl --module=$(DOC_MODULE) --output-dir=template $(MKTMPL_OPTIONS)
 	for i in template/*.sgml; do \
-	  sed '2s/.*//' "$$i" >$(DOC_MODULE).rstmpl; \
-	    diff "$$i" $(DOC_MODULE).rstmpl >/dev/null 2>&1 || \
-	      cat $(DOC_MODULE).rstmpl >"$$i"; \
-	  done; \
+		sed '2s/.*//' "$$i" >$(DOC_MODULE).rstmpl; \
+		diff "$$i" $(DOC_MODULE).rstmpl >/dev/null 2>&1 \
+			|| cat $(DOC_MODULE).rstmpl >"$$i"; \
+	done; \
 	rm -f $(DOC_MODULE).rstmpl; \
 	touch tmpl-build.stamp
 
@@ -113,7 +115,10 @@ tmpl.stamp: tmpl-build.stamp
 
 sgml-build.stamp: tmpl.stamp $(CFILE_GLOB) $(expand_content_files)
 	@echo 'gtk-doc: Building XML'
-	gtkdoc-mkdb --module=$(DOC_MODULE) --tmpl-dir=template --source-dir=$(DOC_SOURCE_DIR) --sgml-mode --output-format=xml --expand-content-files="$(expand_content_files)" --main-sgml-file=$(DOC_MAIN_SGML_FILE) $(MKDB_OPTIONS)
+	gtkdoc-mkdb --module=$(DOC_MODULE) --tmpl-dir=template \
+	            --source-dir=$(DOC_SOURCE_DIR) --sgml-mode --output-format=xml \
+	            --expand-content-files="$(expand_content_files)" \
+	            --main-sgml-file=$(DOC_MAIN_SGML_FILE) $(MKDB_OPTIONS)
 	touch sgml-build.stamp
 
 sgml.stamp: sgml-build.stamp
@@ -121,13 +126,27 @@ sgml.stamp: sgml-build.stamp
 
 #### html ####
 
-html-build.stamp: sgml.stamp $(DOC_MAIN_SGML_FILE) $(content_files) releaseinfo.xml
+# Note the test for Makefile.am is a desperate measure to detect VPATH
+# builds.  Comparing srcdir and builddir is not safe as different strings
+# can resolve to the same directory.  Giving xsltproc directly
+# $(DOC_MAIN_SGML_FILE) in source directory apparently totally messes paths
+# so we can't do this.
+html-build.stamp: sgml.stamp $(srcdir)/$(DOC_MAIN_SGML_FILE) $(content_files) releaseinfo.xml
 	@echo 'gtk-doc: Building HTML'
 	rm -rf html
 	mkdir html
-	cd html && gtkdoc-mkhtml $(DOC_MODULE) ../$(DOC_MAIN_SGML_FILE)
+	test -f Makefile.am || cp $(srcdir)/$(DOC_MAIN_SGML_FILE) .
+	test ! -f html/index.sgml || rm -f html/index.sgml
+	cd html \
+		&& /usr/bin/xsltproc --nonet --xinclude \
+		                     --stringparam gtkdoc.bookname $(DOC_MODULE) \
+		                     --stringparam gtkdoc.version "1.8" \
+		                     $(gtkdocdir)/gtk-doc.xsl \
+		                     ../$(DOC_MAIN_SGML_FILE)
+	@echo 'gtk-doc: Copying styles and images'
+	cd $(gtkdocdir) && cp -f *.png *.css $(abs_builddir)/html/
 	test "x$(HTML_IMAGES)" = "x" \
-		|| ( cd $(srcdir) && cp $(HTML_IMAGES) $(abs_builddir)/html/ )
+		|| ( cd $(srcdir)/html && cp $(HTML_IMAGES) $(abs_builddir)/html/ )
 	@echo 'gtk-doc: Fixing cross-references'
 	gtkdoc-fixxref --module-dir=html --html-dir=$(HTML_DIR) $(FIXXREF_OPTIONS)
 	cd $(top_srcdir)/devel-docs && cp style.css $(abs_builddir)/html/
