@@ -80,9 +80,13 @@ docs: html-build.stamp
 
 scan-build.stamp: $(HFILE_GLOB) $(CFILE_GLOB) $(ADD_OBJECTS)
 	@echo 'gtk-doc: Scanning header files'
+	if test -f Makefile.am; then \
+		x=; \
+	else \
+		x=--source-dir=$(top_builddir)/$(DOC_SOURCE_DIR); \
+	fi; \
 	gtkdoc-scan --module=$(DOC_MODULE) \
-	            --source-dir=$(top_srcdir)/$(DOC_SOURCE_DIR) \
-	            --source-dir=$(top_builddir)/$(DOC_SOURCE_DIR) \
+	            --source-dir=$(top_srcdir)/$(DOC_SOURCE_DIR) $x \
 	            $(GWY_SCAN_OPTIONS) $(SCAN_OPTIONS)
 	if grep -l '^..*$$' $(DOC_MODULE).types >/dev/null 2>&1 ; then \
 		CC="$(GTKDOC_CC)" LD="$(GTKDOC_LD)" gtkdoc-scangobj $(SCANGOBJ_OPTIONS) --module=$(DOC_MODULE) --output-dir=$(builddir); \
@@ -119,9 +123,13 @@ tmpl.stamp: tmpl-build.stamp
 
 sgml-build.stamp: tmpl.stamp $(CFILE_GLOB) $(expand_content_files)
 	@echo 'gtk-doc: Building XML'
+	if test -f Makefile.am; then \
+		x=; \
+	else \
+		x=--source-dir=$(top_builddir)/$(DOC_SOURCE_DIR); \
+	fi; \
 	gtkdoc-mkdb --module=$(DOC_MODULE) --tmpl-dir=template \
-	            --source-dir=$(top_srcdir)/$(DOC_SOURCE_DIR) \
-	            --source-dir=$(top_builddir)/$(DOC_SOURCE_DIR) \
+	            --source-dir=$(top_srcdir)/$(DOC_SOURCE_DIR) $x \
 	            --sgml-mode --output-format=xml \
 	            --expand-content-files="$(expand_content_files)" \
 	            --main-sgml-file=$(DOC_MAIN_SGML_FILE) $(MKDB_OPTIONS)
@@ -151,8 +159,7 @@ html-build.stamp: sgml.stamp $(srcdir)/$(DOC_MAIN_SGML_FILE) $(content_files) re
 		                     ../$(DOC_MAIN_SGML_FILE)
 	@echo 'gtk-doc: Copying styles and images'
 	cd $(gtkdocdir) && cp -f *.png *.css $(abs_builddir)/html/
-	test "x$(HTML_IMAGES)" = "x" \
-		|| ( cd $(srcdir)/html && cp -f $(HTML_IMAGES) $(abs_builddir)/html/ )
+	test "x$(HTML_IMAGES)" = "x" || cp -f $(HTML_IMAGES) html/
 	@echo 'gtk-doc: Fixing cross-references'
 	gtkdoc-fixxref --module-dir=html --html-dir=$(HTML_DIR) $(FIXXREF_OPTIONS)
 	cd $(top_srcdir)/devel-docs && cp -f style.css $(abs_builddir)/html/
