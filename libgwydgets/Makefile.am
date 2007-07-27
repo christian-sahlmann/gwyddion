@@ -30,6 +30,7 @@ libgwydgets2include_HEADERS = \
 	gwydgets.h \
 	gwydgettypes.h \
 	gwydgetutils.h \
+	gwygrainvaluemenu.h \
 	gwygraph.h \
 	gwygrapharea.h \
 	gwygraphbasics.h \
@@ -126,6 +127,7 @@ libgwydgets2_la_SOURCES = \
 	gwydgets.c \
 	gwydgettypes.c \
 	gwydgetutils.c \
+	gwygrainvaluemenu.c \
 	gwygraph.c \
 	gwygrapharea.c \
 	gwygraphareadialog.c \
