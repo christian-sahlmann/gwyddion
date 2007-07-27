@@ -986,8 +986,7 @@ gwy_inventory_restore_order(GwyInventory *inventory)
 
     g_return_if_fail(GWY_IS_INVENTORY(inventory));
     g_return_if_fail(!inventory->is_const);
-    g_return_if_fail(inventory->item_type.compare);
-    if (inventory->is_sorted)
+    if (inventory->is_sorted || !inventory->item_type.compare)
         return;
 
     /* Make sure old order is remembered in @idx */
@@ -1399,7 +1398,7 @@ gwy_inventory_invent_name(GwyInventory *inventory,
  *            function is obligatory.
  * @compare: Item comparation function for sorting.
  *           If %NULL, inventory never attempts to keep any item order
- *           and gwy_inventory_restore_order() is not allowed.
+ *           and gwy_inventory_restore_order() does nothing.
  *           Otherwise inventory is sorted unless sorting is (temporarily)
  *           disabled with gwy_inventory_forget_order() or it was created
  *           with gwy_inventory_new_filled() and the initial array was
