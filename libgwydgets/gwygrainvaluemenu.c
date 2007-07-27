@@ -74,8 +74,7 @@ typedef struct {
 } GrainValueStorePrivate;
 
 GtkWidget*
-gwy_grain_value_tree_view_new(gboolean selectable,
-                              const gchar *first_column,
+gwy_grain_value_tree_view_new(const gchar *first_column,
                               ...)
 {
     GtkTreeView *treeview;
@@ -154,13 +153,9 @@ gwy_grain_value_tree_view_new(gboolean selectable,
     va_end(ap);
 
     selection = gtk_tree_view_get_selection(treeview);
-    if (selectable) {
-        gtk_tree_selection_set_mode(selection, GTK_SELECTION_BROWSE);
-        gtk_tree_selection_set_select_function(selection,
-                                               selection_allowed, NULL, NULL);
-    }
-    else
-        gtk_tree_selection_set_mode(selection, GTK_SELECTION_NONE);
+    gtk_tree_selection_set_mode(selection, GTK_SELECTION_BROWSE);
+    gtk_tree_selection_set_select_function(selection,
+                                           selection_allowed, NULL, NULL);
 
     return widget;
 }
@@ -192,10 +187,11 @@ render_name(G_GNUC_UNUSED GtkTreeViewColumn *column,
     }
     else
         name = gettext(gwy_grain_value_group_name(group));
+
     g_object_set(renderer,
                  "ellipsize", ellipsize,
                  "weight", weight,
-                 "makrup", name,
+                 "markup", name,
                  NULL);
 }
 
@@ -213,7 +209,7 @@ render_symbol_markup(G_GNUC_UNUSED GtkTreeViewColumn *column,
                        -1);
     if (gvalue) {
         g_object_set(renderer,
-                     "makrup", gwy_grain_value_get_symbol_markup(gvalue),
+                     "markup", gwy_grain_value_get_symbol_markup(gvalue),
                      NULL);
         g_object_unref(gvalue);
     }
@@ -294,24 +290,23 @@ gwy_grain_value_tree_model_new(void)
                 priv->user_group_iter = siter;
                 priv->user_start_pos = i;
             }
+            lastgroup = group;
             j = 0;
         }
-        else {
-            gtk_tree_store_insert_after(store, &iter, &siter, j ? &iter : NULL);
-            gtk_tree_store_set(store, &iter,
-                               GWY_GRAIN_VALUE_STORE_COLUMN_ITEM, gvalue,
-                               GWY_GRAIN_VALUE_STORE_COLUMN_GROUP, group,
-                               -1);
-            j++;
-        }
+        gtk_tree_store_insert_after(store, &iter, &siter, j ? &iter : NULL);
+        gtk_tree_store_set(store, &iter,
+                           GWY_GRAIN_VALUE_STORE_COLUMN_ITEM, gvalue,
+                           GWY_GRAIN_VALUE_STORE_COLUMN_GROUP, group,
+                           -1);
+        j++;
     }
 
     /* Ensure User branch is present, even if empty */
-    if (!priv->user_start_pos) {
+    if (lastgroup != GWY_GRAIN_VALUE_GROUP_USER) {
+        group = GWY_GRAIN_VALUE_GROUP_USER;
         gtk_tree_store_insert_after(store, &siter, NULL, i ? &siter : NULL);
         gtk_tree_store_set(store, &siter,
-                           GWY_GRAIN_VALUE_STORE_COLUMN_GROUP,
-                           GWY_GRAIN_VALUE_GROUP_USER,
+                           GWY_GRAIN_VALUE_STORE_COLUMN_GROUP, group,
                            -1);
         priv->user_group_iter = siter;
         priv->user_start_pos = i;

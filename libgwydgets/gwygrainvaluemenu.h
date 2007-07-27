@@ -25,9 +25,9 @@
 
 G_BEGIN_DECLS
 
-GtkWidget* gwy_grain_value_tree_view_new      (gboolean selectable,
-                                               const gchar *first_column,
+GtkWidget* gwy_grain_value_tree_view_new      (const gchar *first_column,
                                                ...);
+
 G_END_DECLS
 
 #endif /* __GWY_GRAIN_VALUE_MENU_H__ */
