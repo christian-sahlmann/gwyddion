@@ -386,7 +386,8 @@ gwy_grain_value_tree_model_new(gboolean show_id)
             continue;
 
         if (group != lastgroup) {
-            gtk_tree_store_insert_after(store, &siter, NULL, i ? &siter : NULL);
+            gtk_tree_store_insert_after(store, &siter, NULL,
+                                        lastgroup != -1 ? &siter : NULL);
             gtk_tree_store_set(store, &siter,
                                GWY_GRAIN_VALUE_STORE_COLUMN_GROUP, group,
                                -1);
@@ -520,7 +521,7 @@ find_grain_value(GtkTreeModel *model,
         gtk_tree_model_get(model, iter,
                            GWY_GRAIN_VALUE_STORE_COLUMN_ITEM, &igvalue,
                            -1);
-        g_object_unref(gvalue);
+        g_object_unref(igvalue);
         if (gvalue == igvalue)
             return TRUE;
 
