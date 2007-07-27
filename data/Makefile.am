@@ -10,7 +10,7 @@ gwyddionmimedir = $(datadir)/mime/packages
 
 docsrc = $(top_builddir)/devel-docs
 vim_syn_gen = $(abs_top_srcdir)/utils/vim-syn-gen.py
-gwyddion_vim_cfg = $(top_srcdir)/data/gwyddion-cfg.py
+gwyddion_vim_cfg = $(abs_srcdir)/gwyddion-cfg.py
 
 pkgconfigdata_DATA = gwyddion.pc
 gwyddionapp_DATA = gwyddion.desktop
