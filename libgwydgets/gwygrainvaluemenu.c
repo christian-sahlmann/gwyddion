@@ -251,11 +251,13 @@ gwy_grain_value_tree_view_select(GtkTreeView *treeview,
         return;
     }
 
-    selection = gtk_tree_view_get_selection(treeview);
-    gtk_tree_selection_select_iter(selection, &iter);
     path = gtk_tree_model_get_path(model, &iter);
+    gtk_tree_view_expand_to_path(treeview, path);
     gtk_tree_view_scroll_to_cell(treeview, path, NULL, FALSE, 0.0, 0.0);
     gtk_tree_path_free(path);
+
+    selection = gtk_tree_view_get_selection(treeview);
+    gtk_tree_selection_select_iter(selection, &iter);
 }
 
 static void
