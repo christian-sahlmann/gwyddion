@@ -45,7 +45,10 @@ MAINTAINERCLEANFILES = \
 BUILT_SOURCES =
 
 MKENUM_NAME = gwymoduletypes
-MKENUM_HFILES = gwymoduleenums.h gwymoduleloader.h gwymodule-file.h
+MKENUM_HFILES = \
+	$(srcdir)/gwymoduleenums.h \
+	$(srcdir)/gwymoduleloader.h \
+	$(srcdir)/gwymodule-file.h
 include $(top_srcdir)/utils/mkenum.mk
 
 AM_CFLAGS = @COMMON_CFLAGS@

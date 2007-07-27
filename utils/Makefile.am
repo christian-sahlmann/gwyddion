@@ -14,6 +14,7 @@ EXTRA_DIST = \
 	extract-file-magic.py \
 	genmarshal.mk \
 	gwywin32.bat.in \
+	mkenum.c.template \
 	mkenum.mk \
 	modules-web.xsl \
 	update-msvc.py \

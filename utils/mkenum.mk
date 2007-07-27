@@ -20,7 +20,6 @@ mkenum_built_sources = \
 
 EXTRA_DIST += \
 	$(mkenum_built_sources) \
-	$(MKENUM_NAME).c.template \
 	$(MKENUM_NAME).h.template
 
 CLEANFILES += \
@@ -30,6 +29,7 @@ CLEANFILES += \
 if MAINTAINER_MODE
 mkenum_stamp_files = $(MKENUM_NAME).h.stamp
 mkenum_self = $(top_srcdir)/utils/mkenum.mk
+mkenum_c_template = $(top_srcdir)/utils/mkenum.c.template
 
 MAINTAINERCLEANFILES += $(mkenum_built_sources) $(mkenum_stamp_files)
 
@@ -42,7 +42,7 @@ $(MKENUM_NAME).h: $(MKENUM_NAME).h.stamp
 $(MKENUM_NAME).h.stamp: $(MKENUM_HFILES) $(MKENUM_NAME).h.template $(mkenum_self)
 	echo '/* This is a 'GENERATED' file. */' >$(MKENUM_NAME).h.xgen \
 	&& $(GLIB_MKENUMS) --template $(srcdir)/$(MKENUM_NAME).h.template \
-		$(srcdir)/$(MKENUM_HFILES) \
+		$(MKENUM_HFILES) \
 		| sed -e 's/_\([123]\)_D/_\1D_/g' \
 		>>$(MKENUM_NAME).h.xgen \
 	&& ( cmp -s $(MKENUM_NAME).h.xgen $(MKENUM_NAME).h \
@@ -51,10 +51,10 @@ $(MKENUM_NAME).h.stamp: $(MKENUM_HFILES) $(MKENUM_NAME).h.template $(mkenum_self
 	&& echo timestamp >$(MKENUM_NAME).h.stamp
 
 # Keep the `GENERATED' string quoted to prevent match here
-$(MKENUM_NAME).c: $(MKENUM_HFILES) $(MKENUM_NAME).c.template $(mkenum_self)
+$(MKENUM_NAME).c: $(MKENUM_HFILES) $(mkenum_c_template) $(mkenum_self)
 	echo '/* This is a 'GENERATED' file. */' >$(MKENUM_NAME).c.xgen \
-	&& $(GLIB_MKENUMS) --template $(srcdir)/$(MKENUM_NAME).c.template \
-		$(srcdir)/$(MKENUM_HFILES) \
+	&& $(GLIB_MKENUMS) --template $(mkenum_c_template) \
+		$(MKENUM_HFILES) \
 		| sed -e 's/_\([123]\)_D/_\1D_/g' \
 		>>$(MKENUM_NAME).c.xgen \
 	&& cp $(MKENUM_NAME).c.xgen $(MKENUM_NAME).c  \

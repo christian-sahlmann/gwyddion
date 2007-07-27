@@ -1,10 +1,12 @@
 /*** BEGIN file-header ***/
-#include "gwymoduletypes.h"
-#include "gwymoduleenums.h"
-#include "gwymoduleloader.h"
-#include "gwymodule-file.h"
+#include <glib-object.h>
 
 /*** END file-header ***/
+
+/*** BEGIN file-production ***/
+#include "@filename@"
+
+/*** END file-production ***/
 
 /*** BEGIN value-header ***/
 GType
