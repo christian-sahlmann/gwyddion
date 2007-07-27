@@ -58,6 +58,15 @@ static const struct {
 }
 grain_values[] = {
     {
+        N_("Id"),
+        0,
+        {
+            GWY_GRAIN_VALUE_GROUP_ID,
+            "id", "",
+            0, 0, FALSE,
+        }
+    },
+    {
         N_("Center x position"),
         GWY_GRAIN_VALUE_CENTER_X,
         {
@@ -573,6 +582,7 @@ gwy_grain_value_set_symbol_markup(GwyGrainValue *gvalue,
 
     g_free(gvalue->data.symbol_markup);
     gvalue->data.symbol_markup = g_strdup(symbol);
+    gwy_resource_data_changed(GWY_RESOURCE(gvalue));
 }
 
 /**
@@ -625,6 +635,7 @@ gwy_grain_value_set_symbol(GwyGrainValue *gvalue,
 
     g_free(gvalue->data.symbol);
     gvalue->data.symbol = g_strdup(symbol);
+    gwy_resource_data_changed(GWY_RESOURCE(gvalue));
 }
 
 /**
@@ -670,6 +681,7 @@ gwy_grain_value_set_power_xy(GwyGrainValue *gvalue,
         return;
 
     gvalue->data.power_xy = power_xy;
+    gwy_resource_data_changed(GWY_RESOURCE(gvalue));
 }
 
 /**
@@ -712,6 +724,7 @@ gwy_grain_value_set_power_z(GwyGrainValue *gvalue,
         return;
 
     gvalue->data.power_z = power_z;
+    gwy_resource_data_changed(GWY_RESOURCE(gvalue));
 }
 
 /**
@@ -763,6 +776,7 @@ gwy_grain_value_set_same_units(GwyGrainValue *gvalue,
         return;
 
     gvalue->data.same_units = same_units;
+    gwy_resource_data_changed(GWY_RESOURCE(gvalue));
 }
 
 /**
@@ -781,7 +795,8 @@ gwy_grain_value_get_quantity(GwyGrainValue *gvalue)
 {
     g_return_val_if_fail(GWY_IS_GRAIN_VALUE(gvalue), -1);
 
-    if (gvalue->data.group == GWY_GRAIN_VALUE_GROUP_USER)
+    if (gvalue->data.group == GWY_GRAIN_VALUE_GROUP_USER
+        || gvalue->data.group == GWY_GRAIN_VALUE_GROUP_ID)
         return -1;
     return gvalue->builtin;
 }
@@ -851,6 +866,7 @@ gwy_grain_value_set_expression(GwyGrainValue *gvalue,
 
     g_free(gvalue->expression);
     gvalue->expression = g_strdup(expression);
+    gwy_resource_data_changed(GWY_RESOURCE(gvalue));
 
     return TRUE;
 }
@@ -870,7 +886,7 @@ const gchar*
 gwy_grain_value_group_name(GwyGrainValueGroup group)
 {
     static const gchar *group_names[] = {
-        N_("User"),
+        N_("Id"),
         N_("Position"),
         N_("Value"),
         N_("Area"),
@@ -878,6 +894,9 @@ gwy_grain_value_group_name(GwyGrainValueGroup group)
         N_("Boundary"),
         N_("Slope"),
     };
+
+    if (group == GWY_GRAIN_VALUE_GROUP_USER)
+        return N_("User");
 
     g_return_val_if_fail(group < G_N_ELEMENTS(group_names), NULL);
     return group_names[group];

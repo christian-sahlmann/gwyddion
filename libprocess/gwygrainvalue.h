@@ -35,13 +35,14 @@ typedef struct _GwyGrainValue      GwyGrainValue;
 typedef struct _GwyGrainValueClass GwyGrainValueClass;
 
 typedef enum {
-    GWY_GRAIN_VALUE_GROUP_USER = 0,
+    GWY_GRAIN_VALUE_GROUP_ID = 0,
     GWY_GRAIN_VALUE_GROUP_POSITION,
     GWY_GRAIN_VALUE_GROUP_VALUE,
     GWY_GRAIN_VALUE_GROUP_AREA,
     GWY_GRAIN_VALUE_GROUP_VOLUME,
     GWY_GRAIN_VALUE_GROUP_BOUNDARY,
-    GWY_GRAIN_VALUE_GROUP_SLOPE
+    GWY_GRAIN_VALUE_GROUP_SLOPE,
+    GWY_GRAIN_VALUE_GROUP_USER = 30
 } GwyGrainValueGroup;
 
 typedef struct {
