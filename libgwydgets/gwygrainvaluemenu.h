@@ -21,12 +21,15 @@
 #ifndef __GWY_GRAIN_VALUE_MENU_H__
 #define __GWY_GRAIN_VALUE_MENU_H__
 
-#include <gtk/gtkwidget.h>
+#include <gtk/gtktreeview.h>
 
 G_BEGIN_DECLS
 
-GtkWidget* gwy_grain_value_tree_view_new      (const gchar *first_column,
-                                               ...);
+GtkWidget* gwy_grain_value_tree_view_new                (const gchar *first_column,
+                                                         ...);
+void       gwy_grain_value_tree_view_set_expanded_groups(GtkTreeView *treeview,
+                                                         guint expanded_bits);
+guint      gwy_grain_value_tree_view_get_expanded_groups(GtkTreeView *treeview);
 
 G_END_DECLS
 

@@ -73,6 +73,8 @@ typedef struct {
     guint user_start_pos;
 } GrainValueStorePrivate;
 
+static GQuark priv_quark = 0;
+
 GtkWidget*
 gwy_grain_value_tree_view_new(const gchar *first_column,
                               ...)
@@ -87,6 +89,9 @@ gwy_grain_value_tree_view_new(const gchar *first_column,
     widget = gtk_tree_view_new_with_model(model);
     treeview = GTK_TREE_VIEW(widget);
     g_object_unref(model);
+
+    /* No data (yet), just a marker */
+    g_object_set_qdata(G_OBJECT(treeview), priv_quark, GUINT_TO_POINTER(1));
 
     va_start(ap, first_column);
     while (first_column) {
@@ -158,6 +163,73 @@ gwy_grain_value_tree_view_new(const gchar *first_column,
                                            selection_allowed, NULL, NULL);
 
     return widget;
+}
+
+void
+gwy_grain_value_tree_view_set_expanded_groups(GtkTreeView *treeview,
+                                              guint expanded_bits)
+{
+    GtkTreeModel *model;
+    GtkTreeIter siter;
+
+    g_return_if_fail(GTK_IS_TREE_VIEW(treeview));
+    g_return_if_fail(priv_quark
+                     && g_object_get_qdata(G_OBJECT(treeview), priv_quark));
+
+    model = gtk_tree_view_get_model(treeview);
+    if (!gtk_tree_model_get_iter_first(model, &siter)) {
+        g_warning("Grain value tree view is empty?!");
+        return;
+    }
+
+    do {
+        GtkTreePath *path;
+        GwyGrainValueGroup group;
+
+        gtk_tree_model_get(model, &siter,
+                           GWY_GRAIN_VALUE_STORE_COLUMN_GROUP, &group,
+                           -1);
+        path = gtk_tree_model_get_path(model, &siter);
+        if (expanded_bits & (1 << group))
+            gtk_tree_view_expand_row(treeview, path, TRUE);
+        else
+            gtk_tree_view_collapse_row(treeview, path);
+        gtk_tree_path_free(path);
+    } while (gtk_tree_model_iter_next(model, &siter));
+}
+
+guint
+gwy_grain_value_tree_view_get_expanded_groups(GtkTreeView *treeview)
+{
+    GtkTreeModel *model;
+    GtkTreeIter siter;
+    guint expanded_bits = 0;
+
+    g_return_val_if_fail(GTK_IS_TREE_VIEW(treeview), 0);
+    g_return_val_if_fail(priv_quark
+                         && g_object_get_qdata(G_OBJECT(treeview), priv_quark),
+                         0);
+
+    model = gtk_tree_view_get_model(treeview);
+    if (!gtk_tree_model_get_iter_first(model, &siter)) {
+        g_warning("Grain value tree view is empty?!");
+        return 0;
+    }
+
+    do {
+        GwyGrainValueGroup group;
+        GtkTreePath *path;
+
+        gtk_tree_model_get(model, &siter,
+                           GWY_GRAIN_VALUE_STORE_COLUMN_GROUP, &group,
+                           -1);
+        path = gtk_tree_model_get_path(model, &siter);
+        if (gtk_tree_view_row_expanded(treeview, path))
+            expanded_bits |= (1 << group);
+        gtk_tree_path_free(path);
+    } while (gtk_tree_model_iter_next(model, &siter));
+
+    return expanded_bits;
 }
 
 static void
@@ -268,12 +340,15 @@ gwy_grain_value_tree_model_new(void)
     GwyGrainValueGroup group, lastgroup;
     guint i, j, n;
 
+    if (!priv_quark)
+        priv_quark = g_quark_from_static_string("gwy-grain-value-chooser-data");
+
     priv = g_new0(GrainValueStorePrivate, 1);
     store = gtk_tree_store_new(3,
                                GWY_TYPE_GRAIN_VALUE,
                                GWY_TYPE_GRAIN_VALUE_GROUP,
                                G_TYPE_BOOLEAN);
-    g_object_set_data(G_OBJECT(store), "gwy-grain-value-store-data", priv);
+    g_object_set_qdata(G_OBJECT(store), priv_quark, priv);
 
     inventory = gwy_grain_values();
     n = gwy_inventory_get_n_items(inventory);
@@ -333,7 +408,7 @@ inventory_item_updated(G_GNUC_UNUSED GwyInventory *inventory,
     GtkTreeIter siter, iter;
     GtkTreePath *path;
 
-    priv = g_object_get_data(G_OBJECT(store), "gwy-grain-value-store-data");
+    priv = g_object_get_qdata(G_OBJECT(store), priv_quark);
     g_return_if_fail(pos >= priv->user_start_pos);
     siter = priv->user_group_iter;
 
@@ -355,7 +430,7 @@ inventory_item_inserted(GwyInventory *inventory,
     GwyGrainValueGroup group;
     GtkTreeIter siter, iter;
 
-    priv = g_object_get_data(G_OBJECT(store), "gwy-grain-value-store-data");
+    priv = g_object_get_qdata(G_OBJECT(store), priv_quark);
     g_return_if_fail(pos >= priv->user_start_pos);
     siter = priv->user_group_iter;
 
@@ -379,7 +454,7 @@ inventory_item_deleted(G_GNUC_UNUSED GwyInventory *inventory,
     GrainValueStorePrivate *priv;
     GtkTreeIter siter, iter;
 
-    priv = g_object_get_data(G_OBJECT(store), "gwy-grain-value-store-data");
+    priv = g_object_get_qdata(G_OBJECT(store), priv_quark);
     g_return_if_fail(pos >= priv->user_start_pos);
     siter = priv->user_group_iter;
 
@@ -397,7 +472,7 @@ find_user_grain_value(GtkTreeModel *model,
     GwyGrainValue *igvalue;
     GtkTreeIter siter;
 
-    priv = g_object_get_data(G_OBJECT(model), "gwy-grain-value-store-data");
+    priv = g_object_get_qdata(G_OBJECT(model), priv_quark);
     siter = priv->user_group_iter;
 
     if (!gtk_tree_model_iter_children(model, iter, &siter))
