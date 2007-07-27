@@ -71,8 +71,7 @@ HFILE_GLOB = $(top_srcdir)/$(DOC_SOURCE_DIR)/*.h $(MORE_HFILES)
 CFILE_GLOB = $(top_srcdir)/$(DOC_SOURCE_DIR)/*.c $(MORE_CFILES)
 
 if ENABLE_GTK_DOC
-# XXX: Uncomment following line to rebuild docs automatically
-#all-local: docs
+all-local: docs
 
 docs: html-build.stamp
 
