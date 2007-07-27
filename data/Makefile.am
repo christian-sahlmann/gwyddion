@@ -9,7 +9,7 @@ gwyddionappdir = $(datadir)/applications
 gwyddionmimedir = $(datadir)/mime/packages
 
 docsrc = $(top_builddir)/devel-docs
-vim_syn_gen = $(top_srcdir)/utils/vim-syn-gen.py
+vim_syn_gen = $(abs_top_srcdir)/utils/vim-syn-gen.py
 gwyddion_vim_cfg = $(top_srcdir)/data/gwyddion-cfg.py
 
 pkgconfigdata_DATA = gwyddion.pc
