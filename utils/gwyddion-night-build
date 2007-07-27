@@ -59,12 +59,15 @@ function autostuff() {
     --config-cache \
     --disable-desktop-file-update \
     --enable-pygwy \
+    --enable-gtk-doc \
     --prefix=$installprefix
   make -C po gwyddion.pot
 }
 
 
 function build_project() {
+  # Exclude documentation to get a separate log
+  sed -i -e '/^SUBDIRS =/,/[^\]$/s:^:###NIGHT-BUILD###:' devel-docs/Makefile
   make -k clean
   make -k all
   make -k ctags
@@ -93,6 +96,7 @@ function build_pygwy() {
 function build_documentation() {
   # Note this need build_project() to pass
   cd ./devel-docs
+  sed -i -e 's:^###NIGHT-BUILD###::' Makefile
   make -k clean >/dev/null
   make -k docs
 }
