@@ -44,7 +44,7 @@ static gboolean      selection_allowed             (GtkTreeSelection *selection,
                                                     GtkTreePath *path,
                                                     gboolean path_currently_selected,
                                                     gpointer user_data);
-static GtkTreeModel* gwy_grain_value_tree_model_new(void);
+static GtkTreeModel* gwy_grain_value_tree_model_new(gboolean show_id);
 static void          inventory_item_updated        (GwyInventory *inventory,
                                                     guint pos,
                                                     GtkTreeStore *store);
@@ -54,11 +54,9 @@ static void          inventory_item_inserted       (GwyInventory *inventory,
 static void          inventory_item_deleted        (GwyInventory *inventory,
                                                     guint pos,
                                                     GtkTreeStore *store);
-/*
-static gboolean      find_user_grain_value         (GtkTreeModel *model,
+static gboolean      find_grain_value              (GtkTreeModel *model,
                                                     GwyGrainValue *gvalue,
                                                     GtkTreeIter *iter);
-                                                    */
 static void          grain_value_store_finalized   (gpointer inventory,
                                                     GObject *store);
 
@@ -76,7 +74,8 @@ typedef struct {
 static GQuark priv_quark = 0;
 
 GtkWidget*
-gwy_grain_value_tree_view_new(const gchar *first_column,
+gwy_grain_value_tree_view_new(gboolean show_id,
+                              const gchar *first_column,
                               ...)
 {
     GtkTreeView *treeview;
@@ -85,7 +84,7 @@ gwy_grain_value_tree_view_new(const gchar *first_column,
     GtkTreeModel *model;
     va_list ap;
 
-    model = gwy_grain_value_tree_model_new();
+    model = gwy_grain_value_tree_model_new(show_id);
     widget = gtk_tree_view_new_with_model(model);
     treeview = GTK_TREE_VIEW(widget);
     g_object_unref(model);
@@ -232,6 +231,33 @@ gwy_grain_value_tree_view_get_expanded_groups(GtkTreeView *treeview)
     return expanded_bits;
 }
 
+void
+gwy_grain_value_tree_view_select(GtkTreeView *treeview,
+                                 GwyGrainValue *gvalue)
+{
+    GtkTreeSelection *selection;
+    GtkTreeModel *model;
+    GtkTreePath *path;
+    GtkTreeIter iter;
+
+    g_return_if_fail(GTK_IS_TREE_VIEW(treeview));
+    g_return_if_fail(GWY_IS_GRAIN_VALUE(gvalue));
+    g_return_if_fail(priv_quark
+                     && g_object_get_qdata(G_OBJECT(treeview), priv_quark));
+
+    model = gtk_tree_view_get_model(treeview);
+    if (!find_grain_value(model, gvalue, &iter)) {
+        g_warning("Grain value not in tree model.");
+        return;
+    }
+
+    selection = gtk_tree_view_get_selection(treeview);
+    gtk_tree_selection_select_iter(selection, &iter);
+    path = gtk_tree_model_get_path(model, &iter);
+    gtk_tree_view_scroll_to_cell(treeview, path, NULL, FALSE, 0.0, 0.0);
+    gtk_tree_path_free(path);
+}
+
 static void
 render_name(G_GNUC_UNUSED GtkTreeViewColumn *column,
             GtkCellRenderer *renderer,
@@ -330,7 +356,7 @@ selection_allowed(G_GNUC_UNUSED GtkTreeSelection *selection,
 }
 
 static GtkTreeModel*
-gwy_grain_value_tree_model_new(void)
+gwy_grain_value_tree_model_new(gboolean show_id)
 {
     GrainValueStorePrivate *priv;
     GwyInventory *inventory;
@@ -356,6 +382,9 @@ gwy_grain_value_tree_model_new(void)
     for (i = j = 0; i < n; i++) {
         gvalue = gwy_inventory_get_nth_item(inventory, i);
         group = gwy_grain_value_get_group(gvalue);
+        if (!show_id && group == GWY_GRAIN_VALUE_GROUP_ID)
+            continue;
+
         if (group != lastgroup) {
             gtk_tree_store_insert_after(store, &siter, NULL, i ? &siter : NULL);
             gtk_tree_store_set(store, &siter,
@@ -462,34 +491,43 @@ inventory_item_deleted(G_GNUC_UNUSED GwyInventory *inventory,
     gtk_tree_store_remove(store, &iter);
 }
 
-/*
 static gboolean
-find_user_grain_value(GtkTreeModel *model,
-                      GwyGrainValue *gvalue,
-                      GtkTreeIter *iter)
+find_grain_value(GtkTreeModel *model,
+                 GwyGrainValue *gvalue,
+                 GtkTreeIter *iter)
 {
-    GrainValueStorePrivate *priv;
+    GwyGrainValueGroup group, igroup;
     GwyGrainValue *igvalue;
     GtkTreeIter siter;
 
-    priv = g_object_get_qdata(G_OBJECT(model), priv_quark);
-    siter = priv->user_group_iter;
+    if (!gtk_tree_model_get_iter_first(model, &siter))
+        return FALSE;
 
-    if (!gtk_tree_model_iter_children(model, iter, &siter))
+    group = gwy_grain_value_get_group(gvalue);
+    do {
+        gtk_tree_model_get(model, &siter,
+                           GWY_GRAIN_VALUE_STORE_COLUMN_GROUP, &igroup,
+                           -1);
+        if (igroup == group)
+            break;
+    } while (gtk_tree_model_iter_next(model, &siter));
+
+    if (igroup != group
+        || !gtk_tree_model_iter_children(model, iter, &siter))
         return FALSE;
 
     do {
         gtk_tree_model_get(model, iter,
                            GWY_GRAIN_VALUE_STORE_COLUMN_ITEM, &igvalue,
                            -1);
-        g_object_unref(igvalue);
-        if (igvalue == gvalue)
+        g_object_unref(gvalue);
+        if (gvalue == igvalue)
             return TRUE;
+
     } while (gtk_tree_model_iter_next(model, iter));
 
     return FALSE;
 }
-*/
 
 static void
 grain_value_store_finalized(gpointer inventory,
