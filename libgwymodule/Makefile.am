@@ -45,6 +45,7 @@ MAINTAINERCLEANFILES = \
 BUILT_SOURCES =
 
 MKENUM_NAME = gwymoduletypes
+MKENUM_ID = GWY_MODULE_TYPES
 MKENUM_HFILES = \
 	$(srcdir)/gwymoduleenums.h \
 	$(srcdir)/gwymoduleloader.h \

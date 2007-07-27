@@ -1,6 +1,6 @@
 /*** BEGIN file-header ***/
-#ifndef __GWYPROCESS_TYPES_H__
-#define __GWYPROCESS_TYPES_H__
+#ifndef __@ID@_H__
+#define __@ID@_H__
 
 #include <glib-object.h>
 
@@ -17,7 +17,7 @@ GType @enum_name@_get_type(void) G_GNUC_CONST;
 /*** BEGIN file-tail ***/
 G_END_DECLS
 
-#endif /* __GWYPROCESS_TYPES_H__ */
+#endif /* __@ID@_H__ */
 /*** END file-tail ***/
 
 /* vim: set ft=cpp : */

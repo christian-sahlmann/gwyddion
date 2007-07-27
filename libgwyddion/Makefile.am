@@ -46,6 +46,7 @@ MAINTAINERCLEANFILES = \
 BUILT_SOURCES =
 
 MKENUM_NAME = gwyddiontypes
+MKENUM_ID = GWYDDION_TYPES
 MKENUM_HFILES = \
 	$(srcdir)/gwyddionenums.h \
 	$(srcdir)/gwyexpr.h

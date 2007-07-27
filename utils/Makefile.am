@@ -15,6 +15,7 @@ EXTRA_DIST = \
 	genmarshal.mk \
 	gwywin32.bat.in \
 	mkenum.c.template \
+	mkenum.h.template \
 	mkenum.mk \
 	modules-web.xsl \
 	update-msvc.py \

@@ -55,6 +55,7 @@ MAINTAINERCLEANFILES = \
 BUILT_SOURCES =
 
 MKENUM_NAME = gwyprocesstypes
+MKENUM_ID = GWY_PROCESS_TYPES
 MKENUM_HFILES = \
 	$(srcdir)/gwyprocessenums.h \
 	$(srcdir)/gwygrainvalue.h

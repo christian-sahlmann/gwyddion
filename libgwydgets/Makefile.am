@@ -87,6 +87,7 @@ MAINTAINERCLEANFILES = \
 BUILT_SOURCES =
 
 MKENUM_NAME = gwydgettypes
+MKENUM_ID = GWYDGET_TYPES
 MKENUM_HFILES = $(srcdir)/gwydgetenums.h
 include $(top_srcdir)/utils/mkenum.mk
 
