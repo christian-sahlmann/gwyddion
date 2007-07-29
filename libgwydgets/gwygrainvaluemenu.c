@@ -36,6 +36,14 @@ static void          render_symbol_markup          (GtkTreeViewColumn *column,
                                                     GtkTreeModel *model,
                                                     GtkTreeIter *iter,
                                                     gpointer user_data);
+static void          text_color                    (GtkTreeView *treeview,
+                                                    GwyGrainValue *gvalue,
+                                                    GdkColor *color);
+static void          render_enabled                (GtkTreeViewColumn *column,
+                                                    GtkCellRenderer *renderer,
+                                                    GtkTreeModel *model,
+                                                    GtkTreeIter *iter,
+                                                    gpointer user_data);
 static void          enabled_activated             (GtkCellRendererToggle *renderer,
                                                     gchar *strpath,
                                                     GtkTreeModel *model);
@@ -44,6 +52,8 @@ static gboolean      selection_allowed             (GtkTreeSelection *selection,
                                                     GtkTreePath *path,
                                                     gboolean path_currently_selected,
                                                     gpointer user_data);
+static gboolean      units_are_good                (GtkTreeView *treeview,
+                                                    GwyGrainValue *gvalue);
 static GtkTreeModel* gwy_grain_value_tree_model_new(gboolean show_id);
 static void          inventory_item_updated        (GwyInventory *inventory,
                                                     guint pos,
@@ -67,6 +77,10 @@ enum {
 };
 
 typedef struct {
+    gboolean same_units;
+} GrainValueViewPrivate;
+
+typedef struct {
     GtkTreeIter user_group_iter;
     guint user_start_pos;
 } GrainValueStorePrivate;
@@ -78,6 +92,7 @@ gwy_grain_value_tree_view_new(gboolean show_id,
                               const gchar *first_column,
                               ...)
 {
+    GrainValueViewPrivate *priv;
     GtkTreeView *treeview;
     GtkTreeSelection *selection;
     GtkWidget *widget;
@@ -89,8 +104,8 @@ gwy_grain_value_tree_view_new(gboolean show_id,
     treeview = GTK_TREE_VIEW(widget);
     g_object_unref(model);
 
-    /* No data (yet), just a marker */
-    g_object_set_qdata(G_OBJECT(treeview), priv_quark, GUINT_TO_POINTER(1));
+    priv = g_new0(GrainValueViewPrivate, 1);
+    g_object_set_qdata_full(G_OBJECT(treeview), priv_quark, priv, g_free);
 
     va_start(ap, first_column);
     while (first_column) {
@@ -107,9 +122,10 @@ gwy_grain_value_tree_view_new(gboolean show_id,
             g_object_set(renderer,
                          "ellipsize-set", TRUE,
                          "weight-set", TRUE,
+                         "foreground-set", TRUE,
                          NULL);
             gtk_tree_view_column_set_cell_data_func(column, renderer,
-                                                    render_name, NULL,
+                                                    render_name, treeview,
                                                     NULL);
             title = _("Quantity");
             expand = TRUE;
@@ -118,7 +134,8 @@ gwy_grain_value_tree_view_new(gboolean show_id,
             renderer = gtk_cell_renderer_text_new();
             gtk_tree_view_column_pack_start(column, renderer, TRUE);
             gtk_tree_view_column_set_cell_data_func(column, renderer,
-                                                    render_symbol_markup, NULL,
+                                                    render_symbol_markup,
+                                                    treeview,
                                                     NULL);
             title =_("Symbol");
         }
@@ -135,10 +152,9 @@ gwy_grain_value_tree_view_new(gboolean show_id,
         else if (gwy_strequal(first_column, "enabled")) {
             renderer = gtk_cell_renderer_toggle_new();
             gtk_tree_view_column_pack_start(column, renderer, TRUE);
-            g_object_set(renderer, "activatable", TRUE, NULL);
-            gtk_tree_view_column_add_attribute
-                                       (column, renderer, "active",
-                                        GWY_GRAIN_VALUE_STORE_COLUMN_ENABLED);
+            gtk_tree_view_column_set_cell_data_func(column, renderer,
+                                                    render_enabled, treeview,
+                                                    NULL);
             g_signal_connect(renderer, "activated",
                              G_CALLBACK(enabled_activated), model);
             title = _("Enabled");
@@ -159,7 +175,7 @@ gwy_grain_value_tree_view_new(gboolean show_id,
     selection = gtk_tree_view_get_selection(treeview);
     gtk_tree_selection_set_mode(selection, GTK_SELECTION_BROWSE);
     gtk_tree_selection_set_select_function(selection,
-                                           selection_allowed, NULL, NULL);
+                                           selection_allowed, treeview, NULL);
 
     return widget;
 }
@@ -260,18 +276,40 @@ gwy_grain_value_tree_view_select(GtkTreeView *treeview,
     gtk_tree_selection_select_iter(selection, &iter);
 }
 
+void
+gwy_grain_value_tree_view_set_same_units(GtkTreeView *treeview,
+                                         gboolean same_units)
+{
+    GrainValueViewPrivate *priv;
+
+    g_return_if_fail(GTK_IS_TREE_VIEW(treeview));
+    g_return_if_fail(priv_quark);
+    priv = g_object_get_qdata(G_OBJECT(treeview), priv_quark);
+    g_return_if_fail(priv);
+
+    same_units = !!same_units;
+    if (same_units == priv->same_units)
+        return;
+
+    priv->same_units = same_units;
+    if (GTK_WIDGET_DRAWABLE(treeview))
+        gtk_widget_queue_draw(GTK_WIDGET(treeview));
+}
+
 static void
 render_name(G_GNUC_UNUSED GtkTreeViewColumn *column,
             GtkCellRenderer *renderer,
             GtkTreeModel *model,
             GtkTreeIter *iter,
-            G_GNUC_UNUSED gpointer user_data)
+            gpointer user_data)
 {
+    GtkTreeView *treeview = (GtkTreeView*)user_data;
     PangoEllipsizeMode ellipsize;
     PangoWeight weight;
     GwyGrainValue *gvalue;
     GwyGrainValueGroup group;
     const gchar *name;
+    GdkColor color;
 
     gtk_tree_model_get(model, iter,
                        GWY_GRAIN_VALUE_STORE_COLUMN_ITEM, &gvalue,
@@ -279,6 +317,7 @@ render_name(G_GNUC_UNUSED GtkTreeViewColumn *column,
                        -1);
     ellipsize = gvalue ? PANGO_ELLIPSIZE_END : PANGO_ELLIPSIZE_NONE;
     weight = gvalue ? PANGO_WEIGHT_NORMAL : PANGO_WEIGHT_BOLD;
+    text_color(treeview, gvalue, &color);
     if (gvalue) {
         name = gwy_resource_get_name(GWY_RESOURCE(gvalue));
         if (group != GWY_GRAIN_VALUE_GROUP_USER)
@@ -292,6 +331,7 @@ render_name(G_GNUC_UNUSED GtkTreeViewColumn *column,
                  "ellipsize", ellipsize,
                  "weight", weight,
                  "markup", name,
+                 "foreground-gdk", &color,
                  NULL);
 }
 
@@ -300,21 +340,66 @@ render_symbol_markup(G_GNUC_UNUSED GtkTreeViewColumn *column,
                      GtkCellRenderer *renderer,
                      GtkTreeModel *model,
                      GtkTreeIter *iter,
-                     G_GNUC_UNUSED gpointer user_data)
+                     gpointer user_data)
 {
+    GtkTreeView *treeview = (GtkTreeView*)user_data;
     GwyGrainValue *gvalue;
+    GdkColor color;
 
     gtk_tree_model_get(model, iter,
                        GWY_GRAIN_VALUE_STORE_COLUMN_ITEM, &gvalue,
                        -1);
+
     if (gvalue) {
+        text_color(treeview, gvalue, &color);
         g_object_set(renderer,
                      "markup", gwy_grain_value_get_symbol_markup(gvalue),
+                     "foreground-gdk", &color,
                      NULL);
         g_object_unref(gvalue);
     }
     else
         g_object_set(renderer, "text", "", NULL);
+}
+
+static void
+text_color(GtkTreeView *treeview,
+           GwyGrainValue *gvalue,
+           GdkColor *color)
+{
+    GtkStateType state;
+    gboolean good_units;
+
+    good_units = !gvalue || units_are_good(treeview, gvalue);
+    state = good_units ? GTK_STATE_NORMAL : GTK_STATE_INSENSITIVE;
+    *color = GTK_WIDGET(treeview)->style->text[state];
+}
+
+static void
+render_enabled(G_GNUC_UNUSED GtkTreeViewColumn *column,
+               GtkCellRenderer *renderer,
+               GtkTreeModel *model,
+               GtkTreeIter *iter,
+               gpointer user_data)
+{
+    GtkTreeView *treeview = (GtkTreeView*)user_data;
+    GwyGrainValue *gvalue;
+    gboolean enabled, good_units;
+
+    gtk_tree_model_get(model, iter,
+                       GWY_GRAIN_VALUE_STORE_COLUMN_ITEM, &gvalue,
+                       GWY_GRAIN_VALUE_STORE_COLUMN_ENABLED, &enabled,
+                       -1);
+    if (!gvalue)
+        return;
+
+    good_units = units_are_good(treeview, gvalue);
+    g_object_set(renderer,
+                 "active", enabled,
+                 "activatable", good_units,
+                 "inconsistent", !good_units,
+                 NULL);
+    g_object_unref(gvalue);
 }
 
 static void
@@ -341,8 +426,9 @@ selection_allowed(G_GNUC_UNUSED GtkTreeSelection *selection,
                   GtkTreeModel *model,
                   GtkTreePath *path,
                   G_GNUC_UNUSED gboolean path_currently_selected,
-                  G_GNUC_UNUSED gpointer user_data)
+                  gpointer user_data)
 {
+    GtkTreeView *treeview = (GtkTreeView*)user_data;
     GtkTreeIter iter;
     GwyGrainValue *gvalue;
 
@@ -354,7 +440,18 @@ selection_allowed(G_GNUC_UNUSED GtkTreeSelection *selection,
         return FALSE;
 
     g_object_unref(gvalue);
-    return TRUE;
+
+    return units_are_good(treeview, gvalue);
+}
+
+static gboolean
+units_are_good(GtkTreeView *treeview,
+               GwyGrainValue *gvalue)
+{
+    GrainValueViewPrivate *priv;
+
+    priv = g_object_get_qdata(G_OBJECT(treeview), priv_quark);
+    return priv->same_units || !gwy_grain_value_get_same_units(gvalue);
 }
 
 static GtkTreeModel*
@@ -376,7 +473,7 @@ gwy_grain_value_tree_model_new(gboolean show_id)
                                GWY_TYPE_GRAIN_VALUE,
                                GWY_TYPE_GRAIN_VALUE_GROUP,
                                G_TYPE_BOOLEAN);
-    g_object_set_qdata(G_OBJECT(store), priv_quark, priv);
+    g_object_set_qdata_full(G_OBJECT(store), priv_quark, priv, g_free);
 
     inventory = gwy_grain_values();
     n = gwy_inventory_get_n_items(inventory);
