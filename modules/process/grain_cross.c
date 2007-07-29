@@ -103,10 +103,12 @@ grain_cross(GwyContainer *data, GwyRunType run)
     GrainCrossArgs args;
     GwyDataField *dfield;
     GwyDataField *mfield;
+    gint id;
 
     g_return_if_fail(run & DIST_RUN_MODES);
     grain_cross_load_args(gwy_app_settings_get(), &args);
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
+                                     GWY_APP_DATA_FIELD_ID, &id,
                                      GWY_APP_MASK_FIELD, &mfield,
                                      0);
     g_return_if_fail(dfield && mfield);
@@ -114,6 +116,29 @@ grain_cross(GwyContainer *data, GwyRunType run)
     siunitxy = gwy_data_field_get_si_unit_xy(dfield);
     siunitz = gwy_data_field_get_si_unit_z(dfield);
     args.units_equal = gwy_si_unit_equal(siunitxy, siunitz);
+    if (!args.units_equal) {
+        GwyGrainValue *abscissa, *ordinate;
+
+        abscissa = gwy_grain_values_get_grain_value(args.abscissa);
+        ordinate = gwy_grain_values_get_grain_value(args.ordinate);
+        if (gwy_grain_value_get_same_units(abscissa)
+            || gwy_grain_value_get_same_units(ordinate)) {
+            GtkWidget *dialog;
+
+            dialog = gtk_message_dialog_new
+                                    (gwy_app_find_window_for_channel(data, id),
+                                     GTK_DIALOG_DESTROY_WITH_PARENT,
+                                     GTK_MESSAGE_ERROR,
+                                     GTK_BUTTONS_OK,
+                                     _("Grain correlation: Lateral dimensions "
+                                       "and value must be the same physical "
+                                       "quantity for the selected grain "
+                                       "properties."));
+            gtk_dialog_run(GTK_DIALOG(dialog));
+            gtk_widget_destroy(dialog);
+            return;
+        }
+    }
     if (run == GWY_RUN_IMMEDIATE)
         grain_cross_run(&args, data, dfield, mfield);
     else {
@@ -175,6 +200,7 @@ attach_axis_list(GtkTable *table,
     widget = gwy_grain_value_tree_view_new(FALSE, "name", NULL);
     list = GTK_TREE_VIEW(widget);
     gtk_tree_view_set_headers_visible(list, FALSE);
+    gwy_grain_value_tree_view_set_same_units(list, controls->args->units_equal);
     gwy_grain_value_tree_view_set_expanded_groups(list, expanded);
     if ((gvalue = gwy_grain_values_get_grain_value(selected)))
         gwy_grain_value_tree_view_select(list, gvalue);
@@ -210,7 +236,7 @@ grain_cross_dialog(GrainCrossArgs *args,
     controls.dialog = GTK_DIALOG(dialog);
     gtk_dialog_set_has_separator(controls.dialog, FALSE);
     gtk_dialog_set_default_response(controls.dialog, GTK_RESPONSE_OK);
-    gtk_window_set_default_size(GTK_WINDOW(dialog), 360, 480);
+    gtk_window_set_default_size(GTK_WINDOW(dialog), 400, 480);
 
     table = GTK_TABLE(gtk_table_new(2, 2, FALSE));
     gtk_table_set_row_spacings(table, 2);
