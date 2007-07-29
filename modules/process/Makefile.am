@@ -24,6 +24,7 @@ process_LTLIBRARIES = \
 	fraccor.la \
 	fractal.la \
 	gradient.la \
+	grain_cross.la \
 	grain_dist.la \
 	grain_mark.la \
 	grain_rem_threshold.la \
@@ -101,6 +102,7 @@ gradient_la_SOURCES = gradient.c
 grain_mark_la_SOURCES = grain_mark.c
 grain_rem_threshold_la_SOURCES = grain_rem_threshold.c
 grain_wshed_la_SOURCES = grain_wshed.c
+grain_cross_la_SOURCES = grain_cross.c
 grain_dist_la_SOURCES = grain_dist.c
 hough_la_SOURCES = hough.c
 immerse_la_SOURCES = immerse.c
