@@ -87,6 +87,26 @@ typedef struct {
 
 static GQuark priv_quark = 0;
 
+/**
+ * gwy_grain_value_tree_view_new:
+ * @show_id: %TRUE to include grain id number among the values, %FALSE to
+ *           exclude it.
+ * @first_column: The first column to show (may be %NULL for no columns).
+ * @...: %NULL-terminated list of columns to show.
+ *
+ * Creates a new tree view selector of grain values.
+ *
+ * Possible column names are <literal>"name"</literal> for the grain value
+ * name, <literal>"symbol_markup"</literal> for the symbol and
+ * <literal>"enabled"</literal> for a checkbox column.
+ *
+ * The tree view selection is set to %GTK_SELECTION_BROWSE mode and it is
+ * allowed only on leaves.
+ *
+ * Returns: A new tree view with grain values.
+ *
+ * Since: 2.8
+ **/
 GtkWidget*
 gwy_grain_value_tree_view_new(gboolean show_id,
                               const gchar *first_column,
@@ -180,6 +200,18 @@ gwy_grain_value_tree_view_new(gboolean show_id,
     return widget;
 }
 
+/**
+ * gwy_grain_value_tree_view_set_expanded_groups:
+ * @treeview: A tree view with grain values.
+ * @expanded_bits: Integer with bits of #GwyGrainValueGroup set if the
+ *                 corresponding group should be expanded.  Typically this
+ *                 is either zero or a value previously obtained from
+ *                 gwy_grain_value_tree_view_get_expanded_groups().
+ *
+ * Restores a grain value tree view group expansion state.
+ *
+ * Since: 2.8
+ **/
 void
 gwy_grain_value_tree_view_set_expanded_groups(GtkTreeView *treeview,
                                               guint expanded_bits)
@@ -213,6 +245,17 @@ gwy_grain_value_tree_view_set_expanded_groups(GtkTreeView *treeview,
     } while (gtk_tree_model_iter_next(model, &siter));
 }
 
+/**
+ * gwy_grain_value_tree_view_get_expanded_groups:
+ * @treeview: A tree view with grain values.
+ *
+ * Obtains the group expansion state of a grain value tree view.
+ *
+ * Returns: The expansion state, see
+ *          gwy_grain_value_tree_view_set_expanded_groups() for details.
+ *
+ * Since: 2.8
+ **/
 guint
 gwy_grain_value_tree_view_get_expanded_groups(GtkTreeView *treeview)
 {
@@ -247,6 +290,18 @@ gwy_grain_value_tree_view_get_expanded_groups(GtkTreeView *treeview)
     return expanded_bits;
 }
 
+/**
+ * gwy_grain_value_tree_view_select:
+ * @treeview: A tree view with grain values.
+ * @gvalue: The grain value to select.
+ *
+ * Selects a particular grain value in a grain value tree view.
+ *
+ * If the @gvalue group is currently unexpanded, it will be expanded to
+ * show it, and the tree view may scroll to make it visible.
+ *
+ * Since: 2.8
+ **/
 void
 gwy_grain_value_tree_view_select(GtkTreeView *treeview,
                                  GwyGrainValue *gvalue)
@@ -276,6 +331,24 @@ gwy_grain_value_tree_view_select(GtkTreeView *treeview,
     gtk_tree_selection_select_iter(selection, &iter);
 }
 
+/**
+ * gwy_grain_value_tree_view_set_same_units:
+ * @treeview: A tree view with grain values.
+ * @same_units: %TRUE if the lateral and value units match and therefore all
+ *              grain values are calculable, %FALSE if they don't match and
+ *              values that require same units are disabled.
+ *
+ * Sets the availability of grain values that require the same lateral and
+ * value units.
+ *
+ * This @same_units is %FALSE, grain values requiring matching units will be
+ * disabled.  This means they will not be selectable, names and symbols will
+ * be displayed greyed out, checkboxes will be made non-activatable (if they
+ * are currently checked, they will not be unchecked but they will be displayed
+ * as inconsistent).
+ *
+ * Since: 2.8
+ **/
 void
 gwy_grain_value_tree_view_set_same_units(GtkTreeView *treeview,
                                          gboolean same_units)
@@ -294,6 +367,9 @@ gwy_grain_value_tree_view_set_same_units(GtkTreeView *treeview,
     priv->same_units = same_units;
     if (GTK_WIDGET_DRAWABLE(treeview))
         gtk_widget_queue_draw(GTK_WIDGET(treeview));
+
+    /* FIXME: What about if selection becomes disallowed, does GtkTreeView
+     * handle this itself? */
 }
 
 static void
@@ -397,7 +473,7 @@ render_enabled(G_GNUC_UNUSED GtkTreeViewColumn *column,
     g_object_set(renderer,
                  "active", enabled,
                  "activatable", good_units,
-                 "inconsistent", !good_units,
+                 "inconsistent", enabled && !good_units,
                  NULL);
     g_object_unref(gvalue);
 }
@@ -641,5 +717,12 @@ grain_value_store_finalized(gpointer inventory,
                                          inventory_item_deleted, store);
 }
 
-/* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
+/************************** Documentation ****************************/
 
+/**
+ * SECTION:gwygrainvaluemenu
+ * @title: gwygrainvaluemenu
+ * @short_description: Grain value display/selector
+ **/
+
+/* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
