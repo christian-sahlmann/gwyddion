@@ -267,7 +267,7 @@ gwy_container_get_n_items(GwyContainer *container)
  *
  * Returns the type of value in @container identified by @key.
  *
- * Returns: The value type as #GType.
+ * Returns: The value type as #GType; 0 if there is no such value.
  **/
 GType
 gwy_container_value_type(GwyContainer *container, GQuark key)
@@ -278,8 +278,8 @@ gwy_container_value_type(GwyContainer *container, GQuark key)
     g_return_val_if_fail(GWY_IS_CONTAINER(container), 0);
     p = (GValue*)g_hash_table_lookup(container->values,
                                      GUINT_TO_POINTER(key));
-    g_return_val_if_fail(p, 0);
-    return G_VALUE_TYPE(p);
+
+    return p ? G_VALUE_TYPE(p) : 0;
 }
 
 /**
