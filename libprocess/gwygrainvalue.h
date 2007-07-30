@@ -47,8 +47,8 @@ typedef enum {
 
 typedef struct {
     GwyGrainValueGroup group;
-    gchar *symbol;
     gchar *symbol_markup;
+    gchar *symbol;
     gint power_xy;
     gint power_z;
     gboolean same_units;

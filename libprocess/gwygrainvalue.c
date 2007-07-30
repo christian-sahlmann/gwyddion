@@ -107,7 +107,7 @@ grain_values[] = {
         GWY_GRAIN_VALUE_MEAN,
         {
             GWY_GRAIN_VALUE_GROUP_VALUE,
-            "<i>z̅</i>", "z_m",
+            "<i>z</i><sub>m</sub>", "z_m",
             0, 1, FALSE,
         }
     },
