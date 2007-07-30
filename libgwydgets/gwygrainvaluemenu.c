@@ -26,6 +26,21 @@
 #include <libprocess/gwygrainvalue.h>
 #include <libgwydgets/gwygrainvaluemenu.h>
 
+static void
+gwy_grain_value_tree_view_expand_enabled(GtkTreeView *treeview);
+
+static gboolean      gather_enabled                (GtkTreeModel *model,
+                                                    GtkTreePath *path,
+                                                    GtkTreeIter *iter,
+                                                    gpointer user_data);
+static gboolean      restore_enabled               (GtkTreeModel *model,
+                                                    GtkTreePath *path,
+                                                    GtkTreeIter *iter,
+                                                    gpointer user_data);
+static gboolean      expand_enabled                (GtkTreeModel *model,
+                                                    GtkTreePath *path,
+                                                    GtkTreeIter *iter,
+                                                    gpointer user_data);
 static void          render_name                   (GtkTreeViewColumn *column,
                                                     GtkCellRenderer *renderer,
                                                     GtkTreeModel *model,
@@ -288,6 +303,135 @@ gwy_grain_value_tree_view_get_expanded_groups(GtkTreeView *treeview)
     } while (gtk_tree_model_iter_next(model, &siter));
 
     return expanded_bits;
+}
+
+const gchar**
+gwy_grain_value_tree_view_get_enabled(GtkTreeView *treeview)
+{
+    GtkTreeModel *model;
+    GPtrArray *names;
+    const gchar **retval;
+
+    g_return_val_if_fail(GTK_IS_TREE_VIEW(treeview), NULL);
+    g_return_val_if_fail(priv_quark
+                         && g_object_get_qdata(G_OBJECT(treeview), priv_quark),
+                         NULL);
+
+    model = gtk_tree_view_get_model(treeview);
+    names = g_ptr_array_new();
+    gtk_tree_model_foreach(model, gather_enabled, names);
+    g_ptr_array_add(names, NULL);
+    retval = (const gchar**)names->pdata;
+    g_ptr_array_free(names, FALSE);
+
+    return retval;
+}
+
+static gboolean
+gather_enabled(GtkTreeModel *model,
+               G_GNUC_UNUSED GtkTreePath *path,
+               GtkTreeIter *iter,
+               gpointer user_data)
+{
+    GPtrArray *names = (GPtrArray*)user_data;
+    GwyGrainValue *gvalue;
+    gboolean enabled;
+
+    gtk_tree_model_get(model, iter,
+                       GWY_GRAIN_VALUE_STORE_COLUMN_ITEM, &gvalue,
+                       GWY_GRAIN_VALUE_STORE_COLUMN_ENABLED, &enabled,
+                       -1);
+
+    if (gvalue) {
+        if (enabled) {
+            const gchar *name = gwy_resource_get_name(GWY_RESOURCE(gvalue));
+
+            g_ptr_array_add(names, (gpointer)name);
+        }
+        g_object_unref(gvalue);
+    }
+
+    return FALSE;
+}
+
+void
+gwy_grain_value_tree_view_set_enabled(GtkTreeView *treeview,
+                                      gchar **names)
+{
+    GtkTreeModel *model;
+
+    g_return_if_fail(GTK_IS_TREE_VIEW(treeview));
+    g_return_if_fail(priv_quark
+                     && g_object_get_qdata(G_OBJECT(treeview), priv_quark));
+
+    model = gtk_tree_view_get_model(treeview);
+    gtk_tree_model_foreach(model, restore_enabled, names);
+    gwy_grain_value_tree_view_expand_enabled(treeview);
+}
+
+static gboolean
+restore_enabled(GtkTreeModel *model,
+                G_GNUC_UNUSED GtkTreePath *path,
+                GtkTreeIter *iter,
+                gpointer user_data)
+{
+    const gchar **names = (const gchar**)user_data;
+    GwyGrainValue *gvalue;
+
+    gtk_tree_model_get(model, iter,
+                       GWY_GRAIN_VALUE_STORE_COLUMN_ITEM, &gvalue,
+                       -1);
+    if (gvalue) {
+        const gchar *name = gwy_resource_get_name(GWY_RESOURCE(gvalue));
+
+        while (*names && !gwy_strequal(name, *names))
+            names++;
+
+        gtk_tree_store_set(GTK_TREE_STORE(model), iter,
+                           GWY_GRAIN_VALUE_STORE_COLUMN_ENABLED, !!*names,
+                           -1);
+        g_object_unref(gvalue);
+    }
+
+    return FALSE;
+}
+
+/* This was meant to be public, but we would prefer to inhibit the expansion of
+ * enabled groups altogether. */
+static void
+gwy_grain_value_tree_view_expand_enabled(GtkTreeView *treeview)
+{
+    GtkTreeModel *model;
+
+    g_return_if_fail(GTK_IS_TREE_VIEW(treeview));
+    g_return_if_fail(priv_quark
+                     && g_object_get_qdata(G_OBJECT(treeview), priv_quark));
+
+    model = gtk_tree_view_get_model(treeview);
+    gtk_tree_model_foreach(model, expand_enabled, treeview);
+}
+
+static gboolean
+expand_enabled(GtkTreeModel *model,
+               GtkTreePath *path,
+               G_GNUC_UNUSED GtkTreeIter *iter,
+               gpointer user_data)
+{
+    GtkTreeView *treeview = (GtkTreeView*)user_data;
+    GwyGrainValue *gvalue;
+    gboolean enabled;
+
+    gtk_tree_model_get(model, iter,
+                       GWY_GRAIN_VALUE_STORE_COLUMN_ITEM, &gvalue,
+                       GWY_GRAIN_VALUE_STORE_COLUMN_ENABLED, &enabled,
+                       -1);
+    if (gvalue) {
+        if (enabled)
+            gtk_tree_view_expand_to_path(treeview, path);
+        g_object_unref(gvalue);
+    }
+
+    return FALSE;
 }
 
 /**
@@ -723,6 +867,11 @@ grain_value_store_finalized(gpointer inventory,
  * SECTION:gwygrainvaluemenu
  * @title: gwygrainvaluemenu
  * @short_description: Grain value display/selector
+ *
+ * The tree model columns are: the grain value (#GwyGrainValue, %NULL for
+ * non-leaves), the group (#GwyGrainValueGroup, used namely for non-leaves)
+ * and enabled (#gboolean, meaning for non-leaves is undefined and reserved
+ * for future use).
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

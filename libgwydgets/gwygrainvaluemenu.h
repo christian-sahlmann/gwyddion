@@ -26,16 +26,19 @@
 
 G_BEGIN_DECLS
 
-GtkWidget* gwy_grain_value_tree_view_new                (gboolean show_id,
-                                                         const gchar *first_column,
-                                                         ...);
-void       gwy_grain_value_tree_view_set_expanded_groups(GtkTreeView *treeview,
-                                                         guint expanded_bits);
-guint      gwy_grain_value_tree_view_get_expanded_groups(GtkTreeView *treeview);
-void       gwy_grain_value_tree_view_select             (GtkTreeView *treeview,
-                                                         GwyGrainValue *gvalue);
-void       gwy_grain_value_tree_view_set_same_units     (GtkTreeView *treeview,
-                                                         gboolean same_units);
+GtkWidget*    gwy_grain_value_tree_view_new                (gboolean show_id,
+                                                            const gchar *first_column,
+                                                            ...);
+void          gwy_grain_value_tree_view_set_expanded_groups(GtkTreeView *treeview,
+                                                            guint expanded_bits);
+guint         gwy_grain_value_tree_view_get_expanded_groups(GtkTreeView *treeview);
+const gchar** gwy_grain_value_tree_view_get_enabled        (GtkTreeView *treeview);
+void          gwy_grain_value_tree_view_set_enabled        (GtkTreeView *treeview,
+                                                            gchar **names);
+void          gwy_grain_value_tree_view_select             (GtkTreeView *treeview,
+                                                            GwyGrainValue *gvalue);
+void          gwy_grain_value_tree_view_set_same_units     (GtkTreeView *treeview,
+                                                            gboolean same_units);
 
 G_END_DECLS
 
