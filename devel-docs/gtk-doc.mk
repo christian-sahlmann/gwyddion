@@ -3,7 +3,9 @@
 # Included in all API-docs Makefile.am's, if you change anything here, it's
 # affects all subdirs.
 
-gtkdocdir = /usr/share/gtk-doc/data
+# Some combinations of the tools do not give these us automatically.
+abs_builddir = @abs_builddir@
+abs_srcdir = @abs_srcdir@
 
 GWY_DOC_CFLAGS = -I$(top_srcdir) -I$(top_builddir) @COMMON_CFLAGS@
 GWY_DOC_LIBS = \

@@ -1,5 +1,9 @@
 # @(#) $Id$
 
+# Some combinations of the tools do not give these us automatically.
+abs_top_srcdir = @abs_top_srcdir@
+abs_srcdir = @abs_srcdir@
+
 SUBDIRS = \
 	glmaterials \
 	gradients
