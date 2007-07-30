@@ -140,6 +140,7 @@ gwy_grain_value_tree_view_new(gboolean show_id,
     g_object_unref(model);
 
     priv = g_new0(GrainValueViewPrivate, 1);
+    priv->same_units = TRUE;
     g_object_set_qdata_full(G_OBJECT(treeview), priv_quark, priv, g_free);
 
     va_start(ap, first_column);
@@ -490,6 +491,8 @@ gwy_grain_value_tree_view_select(GtkTreeView *treeview,
  * be displayed greyed out, checkboxes will be made non-activatable (if they
  * are currently checked, they will not be unchecked but they will be displayed
  * as inconsistent).
+ *
+ * By default @same_units is %TRUE.
  *
  * Since: 2.8
  **/
