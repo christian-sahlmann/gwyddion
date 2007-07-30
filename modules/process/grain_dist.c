@@ -68,7 +68,8 @@ typedef struct {
 
 typedef struct {
     GrainDistMode mode;
-    guint selected;
+    const gchar *selected;
+    gint expanded;
     gboolean fixres;
     gint resolution;
 
@@ -79,7 +80,7 @@ typedef struct {
 
 typedef struct {
     GrainDistArgs *args;
-    GSList *qlist;
+    GtkWidget *values;
     GSList *mode;
     GtkWidget *fixres;
     GtkObject *resolution;
@@ -88,6 +89,7 @@ typedef struct {
 
 typedef struct {
     GrainDistArgs *args;
+    gchar **names;
     GwyDataField *dfield;
     gint ngrains;
     gint *grains;
@@ -122,7 +124,8 @@ static void grain_dist_save_args                (GwyContainer *container,
 
 static const GrainDistArgs grain_dist_defaults = {
     MODE_GRAPH,
-    1 << GWY_GRAIN_VALUE_EQUIV_DISC_RADIUS,
+    "Equivalent disc radius",
+    0,
     FALSE,
     120,
     FALSE,
@@ -140,212 +143,11 @@ static GwyModuleInfo module_info = {
     "2003-2007",
 };
 
-static const QuantityInfo quantities[] = {
-    {
-        -1,
-        GRAIN_QUANTITY_SET_POSITION,
-        N_("Position"),
-        NULL, NULL, NULL, NULL,
-    },
-    {
-        GWY_GRAIN_VALUE_CENTER_X,
-        GRAIN_QUANTITY_SET_POSITION,
-        N_("Center x _position"),
-        "<i>x</i><sub>c</sub>", "x_c",
-        N_("Grain Center X Histogram"),
-        N_("Grain center x positions"),
-    },
-    {
-        GWY_GRAIN_VALUE_CENTER_Y,
-        GRAIN_QUANTITY_SET_POSITION,
-        N_("Center _y position"),
-        "<i>y</i><sub>c</sub>", "y_c",
-        N_("Grain Center Y Histogram"),
-        N_("Grain center y positions"),
-    },
-    {
-        -1,
-        GRAIN_QUANTITY_SET_VALUE,
-        N_("Value"),
-        NULL, NULL, NULL, NULL,
-    },
-    {
-        GWY_GRAIN_VALUE_MINIMUM,
-        GRAIN_QUANTITY_SET_VALUE,
-        N_("M_inimum"),
-        "<i>z</i><sub>min</sub>", "z_min",
-        N_("Grain Minimum Value Histogram"),
-        N_("Grain min. values"),
-    },
-    {
-        GWY_GRAIN_VALUE_MAXIMUM,
-        GRAIN_QUANTITY_SET_VALUE,
-        N_("Ma_ximum"),
-        "<i>z</i><sub>max</sub>", "z_max",
-        N_("Grain Maximum Value Histogram"),
-        N_("Grain max. values"),
-    },
-    {
-        GWY_GRAIN_VALUE_MEAN,
-        GRAIN_QUANTITY_SET_VALUE,
-        N_("_Mean"),
-        "<i>z̅</i>", "z_m",
-        N_("Grain Mean Value Histogram"),
-        N_("Grain mean values"),
-    },
-    {
-        GWY_GRAIN_VALUE_MEDIAN,
-        GRAIN_QUANTITY_SET_VALUE,
-        N_("Me_dian"),
-        "<i>z</i><sub>med</sub>", "z_med",
-        N_("Grain Median Value Histogram"),
-        N_("Grain median values"),
-    },
-    {
-        -1,
-        GRAIN_QUANTITY_SET_AREA,
-        N_("Area"),
-        NULL, NULL, NULL, NULL,
-    },
-    {
-        GWY_GRAIN_VALUE_PROJECTED_AREA,
-        GRAIN_QUANTITY_SET_AREA,
-        N_("_Projected area"),
-        "<i>A</i><sub>0</sub>", "A_0",
-        N_("Grain Projected Area Histogram"),
-        N_("Grain proj. areas"),
-    },
-    {
-        GWY_GRAIN_VALUE_SURFACE_AREA,
-        GRAIN_QUANTITY_SET_AREA,
-        N_("S_urface area"),
-        "<i>A</i><sub>s</sub>", "A_s",
-        N_("Grain Surface Area Histogram"),
-        N_("Grain surf. areas"),
-    },
-    {
-        GWY_GRAIN_VALUE_EQUIV_SQUARE_SIDE,
-        GRAIN_QUANTITY_SET_AREA,
-        N_("Equivalent _square side"),
-        "<i>a</i><sub>eq</sub>", "a_eq",
-        N_("Grain Equivalent Square Side Histogram"),
-        N_("Grain equiv. square sides"),
-    },
-    {
-        GWY_GRAIN_VALUE_EQUIV_DISC_RADIUS,
-        GRAIN_QUANTITY_SET_AREA,
-        N_("Equivalent disc _radius"),
-        "<i>r</i><sub>eq</sub>", "r_eq",
-        N_("Grain Equivalent Disc Radius Histogram"),
-        N_("Grain equiv. disc radii"),
-    },
-    {
-        GWY_GRAIN_VALUE_HALF_HEIGHT_AREA,
-        GRAIN_QUANTITY_SET_AREA,
-        N_("Area above half-height"),
-        "<i>A</i><sub>h</sub>", "A_h",
-        N_("Grain Half-Height Area Histogram"),
-        N_("Grain half-height areas"),
-    },
-    {
-        -1,
-        GRAIN_QUANTITY_SET_VOLUME,
-        N_("Volume"),
-        NULL, NULL, NULL, NULL,
-    },
-    {
-        GWY_GRAIN_VALUE_VOLUME_0,
-        GRAIN_QUANTITY_SET_VOLUME,
-        N_("_Zero basis"),
-        "<i>V</i><sub>0</sub>", "V_0",
-        N_("Grain Volume (Zero) Histogram"),
-        N_("Grain volumes (zero)"),
-    },
-    {
-        GWY_GRAIN_VALUE_VOLUME_MIN,
-        GRAIN_QUANTITY_SET_VOLUME,
-        N_("_Grain minimum basis"),
-        "<i>V</i><sub>min</sub>", "V_min",
-        N_("Grain Volume (Minimum) Histogram"),
-        N_("Grain volumes (minimum)"),
-    },
-    {
-        GWY_GRAIN_VALUE_VOLUME_LAPLACE,
-        GRAIN_QUANTITY_SET_VOLUME,
-        N_("_Laplacian background basis"),
-        "<i>V</i><sub>L</sub>", "V_L",
-        N_("Grain Volume (Laplacian) Histogram"),
-        N_("Grain volumes (laplacian)"),
-    },
-    {
-        -1,
-        GRAIN_QUANTITY_SET_BOUNDARY,
-        N_("Boundary"),
-        NULL, NULL, NULL, NULL,
-    },
-    {
-        GWY_GRAIN_VALUE_FLAT_BOUNDARY_LENGTH,
-        GRAIN_QUANTITY_SET_BOUNDARY,
-        N_("Projected _boundary length"),
-        "<i>L</i><sub>b0</sub>", "L_b0",
-        N_("Grain Projected Boundary Length Histogram"),
-        N_("Grain proj. boundary lengths"),
-    },
-    {
-        GWY_GRAIN_VALUE_MINIMUM_BOUND_SIZE,
-        GRAIN_QUANTITY_SET_BOUNDARY,
-        N_("Minimum bounding size"),
-        "<i>D</i><sub>min</sub>", "D_min",
-        N_("Grain Minimum Bounding Size Histogram"),
-        N_("Grain min. bound. sizes"),
-    },
-    {
-        GWY_GRAIN_VALUE_MINIMUM_BOUND_ANGLE,
-        GRAIN_QUANTITY_SET_BOUNDARY,
-        N_("Minimum bounding direction"),
-        "<i>φ</i><sub>min</sub>", "phi_min",
-        N_("Grain Minimum Bounding Direction Histogram"),
-        N_("Grain min. bound. directions"),
-    },
-    {
-        GWY_GRAIN_VALUE_MAXIMUM_BOUND_SIZE,
-        GRAIN_QUANTITY_SET_BOUNDARY,
-        N_("Maximum bounding size"),
-        "<i>D</i><sub>max</sub>", "D_max",
-        N_("Grain Maximum Bounding Size Histogram"),
-        N_("Grain max. bound. sizes"),
-    },
-    {
-        GWY_GRAIN_VALUE_MAXIMUM_BOUND_ANGLE,
-        GRAIN_QUANTITY_SET_BOUNDARY,
-        N_("Maximum bounding direction"),
-        "<i>φ</i><sub>max</sub>", "phi_max",
-        N_("Grain Maximum Bounding Direction Histogram"),
-        N_("Grain max. bound. directions"),
-    },
-    {
-        -1,
-        GRAIN_QUANTITY_SET_SLOPE,
-        N_("Slope"),
-        NULL, NULL, NULL, NULL,
-    },
-    {
-        GWY_GRAIN_VALUE_SLOPE_THETA,
-        GRAIN_QUANTITY_SET_SLOPE,
-        N_("Inclination θ"),
-        "<i>θ</i>", "theta",
-        N_("Grain Inclination θ Histogram"),
-        N_("Grain incl. θ"),
-    },
-    {
-        GWY_GRAIN_VALUE_SLOPE_PHI,
-        GRAIN_QUANTITY_SET_SLOPE,
-        N_("Inclination φ"),
-        "<i>φ</i>", "phi",
-        N_("Grain Inclination φ Histogram"),
-        N_("Grain incl. φ"),
-    },
-};
+static const gchar fixres_key[]     = "/module/grain_dist/fixres";
+static const gchar mode_key[]       = "/module/grain_dist/mode";
+static const gchar resolution_key[] = "/module/grain_dist/resolution";
+static const gchar selected_key[]   = "/module/grain_dist/selected";
+static const gchar expanded_key[]   = "/module/grain_dist/expanded";
 
 GWY_MODULE_QUERY(module_info)
 
@@ -403,54 +205,6 @@ grain_dist(GwyContainer *data, GwyRunType run)
     }
 }
 
-static GSList*
-append_checkbox_list(GtkTable *table,
-                     gint row,
-                     gint col,
-                     GSList *list,
-                     GrainQuantitySet set,
-                     guint state,
-                     guint bitmask)
-{
-    GtkWidget *label, *check;
-    const gchar *title;
-    GtkBox *vbox;
-    guint i, bit;
-
-    for (i = 0, title = NULL; i < G_N_ELEMENTS(quantities); i++) {
-        if (quantities[i].set == set && quantities[i].quantity == -1) {
-            title = quantities[i].label;
-            break;
-        }
-    }
-    g_return_val_if_fail(title, list);
-
-    vbox = GTK_BOX(gtk_vbox_new(FALSE, 2));
-    gtk_table_attach(table, GTK_WIDGET(vbox),
-                     col, col + 1, row, row + 1, GTK_FILL, GTK_FILL, 0, 0);
-
-    label = gwy_label_new_header(title);
-    gtk_box_pack_start(vbox, label, FALSE, FALSE, 0);
-
-    for (i = 0; i < G_N_ELEMENTS(quantities); i++) {
-        if (quantities[i].set != set || quantities[i].quantity == -1)
-            continue;
-
-        bit = 1 << quantities[i].quantity;
-        check = gtk_check_button_new_with_mnemonic(_(quantities[i].label));
-        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(check), state & bit);
-        g_object_set_data(G_OBJECT(check), "bit", GUINT_TO_POINTER(bit));
-        gtk_box_pack_start(vbox, check, FALSE, FALSE, 0);
-        list = g_slist_prepend(list, check);
-        if (!(bit & bitmask)) {
-            gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(check), FALSE);
-            gtk_widget_set_sensitive(check, FALSE);
-        }
-    }
-
-    return list;
-}
-
 static void
 grain_dist_dialog(GrainDistArgs *args,
                   GwyContainer *data,
@@ -464,9 +218,10 @@ grain_dist_dialog(GrainDistArgs *args,
 
     GrainDistControls controls;
     GtkWidget *dialog;
+    GtkTreeView *treeview;
+    GtkTreeSelection *selection;
     GtkTable *table;
     gint row, response;
-    GSList *l;
 
     controls.args = args;
 
@@ -477,37 +232,30 @@ grain_dist_dialog(GrainDistArgs *args,
                                         GTK_STOCK_OK, GTK_RESPONSE_OK);
     gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
+    gtk_window_set_default_size(GTK_WINDOW(dialog), -1, 480);
 
-    /* Output type */
-    table = GTK_TABLE(gtk_table_new(2, 3, FALSE));
-    gtk_table_set_row_spacings(table, 8);
-    gtk_table_set_col_spacings(table, 12);
-    gtk_container_set_border_width(GTK_CONTAINER(table), 4);
-    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), GTK_WIDGET(table),
-                       FALSE, FALSE, 0);
+    controls.values = gwy_grain_value_tree_view_new(FALSE,
+                                                    "name",
+                                                    "symbol_markup",
+                                                    "enabled",
+                                                    NULL);
+    treeview = GTK_TREE_VIEW(controls.values);
+    gtk_tree_view_set_headers_visible(treeview, FALSE);
+    selection = gtk_tree_view_get_selection(treeview);
+    gtk_tree_selection_set_mode(selection, GTK_SELECTION_NONE);
+    gwy_grain_value_tree_view_set_same_units(treeview, args->units_equal);
+    gwy_grain_value_tree_view_set_expanded_groups(treeview, args->expanded);
+    if (args->selected) {
+        gchar **names;
 
-    controls.qlist = append_checkbox_list(table, 0, 0, NULL,
-                                          GRAIN_QUANTITY_SET_VALUE,
-                                          args->selected, args->bitmask);
-    controls.qlist = append_checkbox_list(table, 1, 0, controls.qlist,
-                                          GRAIN_QUANTITY_SET_AREA,
-                                          args->selected, args->bitmask);
-    controls.qlist = append_checkbox_list(table, 0, 1, controls.qlist,
-                                          GRAIN_QUANTITY_SET_BOUNDARY,
-                                          args->selected, args->bitmask);
-    controls.qlist = append_checkbox_list(table, 1, 1, controls.qlist,
-                                          GRAIN_QUANTITY_SET_VOLUME,
-                                          args->selected, args->bitmask);
-    controls.qlist = append_checkbox_list(table, 2, 0, controls.qlist,
-                                          GRAIN_QUANTITY_SET_POSITION,
-                                          args->selected, args->bitmask);
-    controls.qlist = append_checkbox_list(table, 2, 1, controls.qlist,
-                                          GRAIN_QUANTITY_SET_SLOPE,
-                                          args->selected, args->bitmask);
-
-    for (l = controls.qlist; l; l = g_slist_next(l))
-        g_signal_connect_swapped(l->data, "toggled",
-                                 G_CALLBACK(selected_changed_cb), &controls);
+        names = g_strsplit(args->selected, "\n", 0);
+        gwy_grain_value_tree_view_set_enabled(treeview, names);
+        g_strfreev(names);
+    }
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), controls.values,
+                       TRUE, TRUE, 0);
+    g_signal_connect_swapped(treeview, "row-changed",
+                             G_CALLBACK(selected_changed_cb), &controls);
 
     /* Options */
     table = GTK_TABLE(gtk_table_new(4, 4, FALSE));
@@ -586,15 +334,19 @@ static void
 grain_dist_dialog_update_values(GrainDistControls *controls,
                                 GrainDistArgs *args)
 {
-    GSList *l;
-    guint bit;
+    GwyContainer *settings;
+    GtkTreeView *treeview;
+    const gchar **names;
+    gchar *s;
 
-    args->selected = 0;
-    for (l = controls->qlist; l; l = g_slist_next(l)) {
-        bit = GPOINTER_TO_UINT(g_object_get_data(G_OBJECT(l->data), "bit"));
-        if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(l->data)))
-            args->selected |= bit;
-    }
+    settings = gwy_app_settings_get();
+    treeview = GTK_TREE_VIEW(controls->values);
+    names = gwy_grain_value_tree_view_get_enabled(treeview);
+    s = g_strjoinv("\n", (gchar**)names);
+    g_free(names);
+    gwy_container_set_string_by_name(settings, selected_key, s);
+    /* Ensures args->selected is never owned by us. */
+    args->selected = gwy_container_get_string_by_name(settings, selected_key);
 
     args->mode = gwy_radio_buttons_get_current(controls->mode);
     args->resolution = gwy_adjustment_get_int(controls->resolution);
@@ -606,6 +358,7 @@ static void
 grain_dist_dialog_update_sensitivity(GrainDistControls *controls,
                                      GrainDistArgs *args)
 {
+    GtkTreeView *treeview;
     GtkWidget *check, *w;
 
     check = gwy_table_hscale_get_check(controls->resolution);
@@ -629,19 +382,9 @@ grain_dist_dialog_update_sensitivity(GrainDistControls *controls,
         break;
     }
 
-    gtk_widget_set_sensitive(controls->ok, args->selected & args->bitmask);
-}
-
-static const QuantityInfo*
-find_quantity_info(GwyGrainQuantity quantity)
-{
-    guint i;
-
-    for (i = 0; i < G_N_ELEMENTS(quantities); i++) {
-        if (quantities[i].quantity == quantity)
-            return quantities + i;
-    }
-    g_return_val_if_reached(NULL);
+    treeview = GTK_TREE_VIEW(controls->values);
+    gtk_widget_set_sensitive(controls->ok,
+                             gwy_grain_value_tree_view_n_enabled(treeview));
 }
 
 static void
@@ -649,30 +392,32 @@ add_one_distribution(GwyContainer *container,
                      GwyDataField *dfield,
                      gint ngrains,
                      const gint *grains,
-                     GwyGrainQuantity quantity,
+                     GwyGrainValue *gvalue,
+                     const gchar *name,
                      gint resolution)
 {
     GwyGraphCurveModel *cmodel;
     GwyGraphModel *gmodel;
     GwyDataLine *dataline;
-    const QuantityInfo *qinfo;
 
+    /* TODO
     dataline = gwy_data_field_grains_get_distribution(dfield, NULL, NULL,
                                                       ngrains, grains, quantity,
                                                       resolution);
+                                                      */
     gmodel = gwy_graph_model_new();
     cmodel = gwy_graph_curve_model_new();
     gwy_graph_model_add_curve(gmodel, cmodel);
     g_object_unref(cmodel);
 
-    qinfo = find_quantity_info(quantity);
+    name = gettext(name);
     g_object_set(gmodel,
-                 "title", _(qinfo->gtitle),
-                 "axis-label-left", _("count"),
-                 "axis-label-bottom", qinfo->symbol,
+                 "title", name,
+                 "axis-label-left", gwy_sgettext("noun|count"),
+                 "axis-label-bottom", gwy_grain_value_get_symbol_markup(gvalue),
                  NULL);
     gwy_graph_model_set_units_from_data_line(gmodel, dataline);
-    g_object_set(cmodel, "description", _(qinfo->cdesc), NULL);
+    g_object_set(cmodel, "description", name, NULL);
     gwy_graph_curve_model_set_data_from_dataline(cmodel, dataline, 0, 0);
     g_object_unref(dataline);
 
@@ -687,26 +432,34 @@ grain_dist_run(GrainDistArgs *args,
                GwyDataField *mfield)
 {
     GrainDistExportData expdata;
+    GwyGrainValue *gvalue;
+    gchar **names;
     gint *grains;
-    guint i, bits;
+    guint i;
     gint res, ngrains;
 
     res = gwy_data_field_get_xres(mfield)*gwy_data_field_get_yres(mfield);
     grains = g_new0(gint, res);
     ngrains = gwy_data_field_number_grains(mfield, grains);
 
+    names = g_strsplit(args->selected, "\n", 0);
+
     switch (args->mode) {
         case MODE_GRAPH:
         res = args->fixres ? args->resolution : 0;
-        bits = args->selected & args->bitmask;
-        for (i = 0; bits; i++, bits /= 2) {
-            if (bits & 1)
-                add_one_distribution(data, dfield, ngrains, grains, i, res);
+        for (i = 0; names[i]; i++) {
+            gvalue = gwy_grain_values_get_grain_value(names[i]);
+            if (!gvalue)
+                continue;
+
+            add_one_distribution(data, dfield, ngrains, grains,
+                                 gvalue, names[i], res);
         }
         break;
 
         case MODE_RAW:
         expdata.args = args;
+        expdata.names = names;
         expdata.dfield = dfield;
         expdata.ngrains = ngrains;
         expdata.grains = grains;
@@ -721,6 +474,7 @@ grain_dist_run(GrainDistArgs *args,
         break;
     }
 
+    g_strfreev(names);
     g_free(grains);
 }
 
@@ -729,45 +483,47 @@ grain_dist_export_create(gpointer user_data,
                          gssize *data_len)
 {
     const GrainDistExportData *expdata = (const GrainDistExportData*)user_data;
-    const GrainDistArgs *args;
     GString *report;
-    gdouble *values[32];
     gchar buffer[32];
-    gint res, gno, ncols;
-    guint i, bits;
+    gint gno;
+    guint i, nvalues;
+    GwyGrainValue **gvalues;
+    GwyGrainValue *gvalue;
+    gdouble **results;
+    gdouble *all_results;
     gchar *retval;
 
-    memset(values, 0, sizeof(values));
-    args = expdata->args;
-    res = args->fixres ? args->resolution : 0;
-    bits = args->selected;
-    ncols = 0;
-    for (i = 0; bits; i++, bits /= 2) {
-        if (bits & 1) {
-            values[i] = gwy_data_field_grains_get_values(expdata->dfield, NULL,
-                                                         expdata->ngrains,
-                                                         expdata->grains, i);
-            ncols++;
+    nvalues = g_strv_length(expdata->names);
+    gvalues = g_new(GwyGrainValue*, nvalues);
+    for (nvalues = i = 0; expdata->names[i]; i++) {
+        gvalue = gwy_grain_values_get_grain_value(expdata->names[nvalues]);
+        if (gvalue) {
+            gvalues[nvalues] = gvalue;
+            nvalues++;
         }
     }
 
-    report = g_string_sized_new(12*expdata->ngrains*ncols);
+    all_results = g_new(gdouble, nvalues*(expdata->ngrains + 1));
+    results = g_new(gdouble*, nvalues);
+    for (i = 0; i < nvalues; i++)
+        results[i] = all_results + i*(expdata->ngrains + 1);
+
+    gwy_grain_values_calculate(nvalues, gvalues, results,
+                               expdata->dfield,
+                               expdata->ngrains, expdata->grains);
+    g_free(gvalues);
+
+    report = g_string_sized_new(12*expdata->ngrains*nvalues);
     for (gno = 1; gno <= expdata->ngrains; gno++) {
-        bits = args->selected;
-        for (i = 0; bits; i++, bits /= 2) {
-            if (bits & 1) {
-                g_ascii_formatd(buffer, sizeof(buffer), "%g", values[i][gno]);
-                g_string_append(report, buffer);
-                g_string_append_c(report, bits == 1 ? '\n' : '\t');
-            }
+        for (i = 0; i < nvalues; i++) {
+            g_ascii_formatd(buffer, sizeof(buffer), "%g", results[i][gno]);
+            g_string_append(report, buffer);
+            g_string_append_c(report, i == nvalues-1 ? '\n' : '\t');
         }
     }
 
-    bits = args->selected;
-    for (i = 0; bits; i++, bits /= 2) {
-        if (bits & 1)
-            g_free(values[i]);
-    }
+    g_free(all_results);
+    g_free(results);
 
     retval = report->str;
     g_string_free(report, FALSE);
@@ -921,11 +677,6 @@ grain_stat(G_GNUC_UNUSED GwyContainer *data, GwyRunType run)
     gtk_widget_destroy(dialog);
 }
 
-static const gchar fixres_key[]     = "/module/grain_dist/fixres";
-static const gchar mode_key[]       = "/module/grain_dist/mode";
-static const gchar resolution_key[] = "/module/grain_dist/resolution";
-static const gchar selected_key[]   = "/module/grain_dist/selected";
-
 static void
 grain_dist_sanitize_args(GrainDistArgs *args)
 {
@@ -941,7 +692,10 @@ grain_dist_load_args(GwyContainer *container,
     *args = grain_dist_defaults;
 
     gwy_container_gis_boolean_by_name(container, fixres_key, &args->fixres);
-    gwy_container_gis_int32_by_name(container, selected_key, &args->selected);
+    if (gwy_container_value_type_by_name(container, selected_key) != G_TYPE_INT)
+        gwy_container_gis_string_by_name(container, selected_key,
+                                         (const guchar**)&args->selected);
+    gwy_container_gis_int32_by_name(container, expanded_key, &args->expanded);
     gwy_container_gis_int32_by_name(container, resolution_key,
                                     &args->resolution);
     gwy_container_gis_enum_by_name(container, mode_key, &args->mode);
@@ -953,7 +707,8 @@ grain_dist_save_args(GwyContainer *container,
                      GrainDistArgs *args)
 {
     gwy_container_set_boolean_by_name(container, fixres_key, args->fixres);
-    gwy_container_set_int32_by_name(container, selected_key, args->selected);
+    /* args->selected is updated immediately in settings */
+    gwy_container_set_int32_by_name(container, expanded_key, args->expanded);
     gwy_container_set_int32_by_name(container, resolution_key,
                                     args->resolution);
     gwy_container_set_enum_by_name(container, mode_key, args->mode);
