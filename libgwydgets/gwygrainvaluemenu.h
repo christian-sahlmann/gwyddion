@@ -32,6 +32,7 @@ GtkWidget*    gwy_grain_value_tree_view_new                (gboolean show_id,
 void          gwy_grain_value_tree_view_set_expanded_groups(GtkTreeView *treeview,
                                                             guint expanded_bits);
 guint         gwy_grain_value_tree_view_get_expanded_groups(GtkTreeView *treeview);
+gint          gwy_grain_value_tree_view_n_enabled          (GtkTreeView *treeview);
 const gchar** gwy_grain_value_tree_view_get_enabled        (GtkTreeView *treeview);
 void          gwy_grain_value_tree_view_set_enabled        (GtkTreeView *treeview,
                                                             gchar **names);

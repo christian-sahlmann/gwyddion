@@ -29,6 +29,10 @@
 static void
 gwy_grain_value_tree_view_expand_enabled(GtkTreeView *treeview);
 
+static gboolean      count_enabled                 (GtkTreeModel *model,
+                                                    GtkTreePath *path,
+                                                    GtkTreeIter *iter,
+                                                    gpointer user_data);
 static gboolean      gather_enabled                (GtkTreeModel *model,
                                                     GtkTreePath *path,
                                                     GtkTreeIter *iter,
@@ -304,6 +308,48 @@ gwy_grain_value_tree_view_get_expanded_groups(GtkTreeView *treeview)
     } while (gtk_tree_model_iter_next(model, &siter));
 
     return expanded_bits;
+}
+
+gint
+gwy_grain_value_tree_view_n_enabled(GtkTreeView *treeview)
+{
+    GtkTreeModel *model;
+    gint retval;
+
+    g_return_val_if_fail(GTK_IS_TREE_VIEW(treeview), 0);
+    g_return_val_if_fail(priv_quark
+                         && g_object_get_qdata(G_OBJECT(treeview), priv_quark),
+                         0);
+
+    model = gtk_tree_view_get_model(treeview);
+    retval = 0;
+    gtk_tree_model_foreach(model, count_enabled, &retval);
+
+    return retval;
+}
+
+static gboolean
+count_enabled(GtkTreeModel *model,
+              G_GNUC_UNUSED GtkTreePath *path,
+              GtkTreeIter *iter,
+              gpointer user_data)
+{
+    gint *count = (gint*)user_data;
+    GwyGrainValue *gvalue;
+    gboolean enabled;
+
+    gtk_tree_model_get(model, iter,
+                       GWY_GRAIN_VALUE_STORE_COLUMN_ITEM, &gvalue,
+                       GWY_GRAIN_VALUE_STORE_COLUMN_ENABLED, &enabled,
+                       -1);
+
+    if (gvalue) {
+        if (enabled)
+            (*count)++;
+        g_object_unref(gvalue);
+    }
+
+    return FALSE;
 }
 
 const gchar**
