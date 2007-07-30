@@ -392,12 +392,15 @@ grain_cross_load_args(GwyContainer *container,
 {
     *args = grain_cross_defaults;
 
-    gwy_container_gis_string_by_name(container, abscissa_key,
-                                     (const guchar**)&args->abscissa);
+    if (gwy_container_value_type_by_name(container, abscissa_key) != G_TYPE_INT)
+        gwy_container_gis_string_by_name(container, abscissa_key,
+                                         (const guchar**)&args->abscissa);
+    if (gwy_container_value_type_by_name(container, ordinate_key) != G_TYPE_INT)
+        gwy_container_gis_string_by_name(container, ordinate_key,
+                                         (const guchar**)&args->ordinate);
+
     gwy_container_gis_boolean_by_name(container, abscissa_expanded_key,
                                       &args->abscissa_expanded);
-    gwy_container_gis_string_by_name(container, ordinate_key,
-                                     (const guchar**)&args->ordinate);
     gwy_container_gis_boolean_by_name(container, ordinate_expanded_key,
                                       &args->ordinate_expanded);
     grain_cross_sanitize_args(args);
