@@ -97,6 +97,7 @@ enum {
 
 typedef struct {
     gboolean same_units;
+    gint count;  /* temporary counter */
 } GrainValueViewPrivate;
 
 typedef struct {
@@ -314,18 +315,19 @@ gint
 gwy_grain_value_tree_view_n_enabled(GtkTreeView *treeview)
 {
     GtkTreeModel *model;
-    gint retval;
+    GrainValueViewPrivate *priv;
 
     g_return_val_if_fail(GTK_IS_TREE_VIEW(treeview), 0);
     g_return_val_if_fail(priv_quark
                          && g_object_get_qdata(G_OBJECT(treeview), priv_quark),
                          0);
 
+    priv = g_object_get_qdata(G_OBJECT(treeview), priv_quark);
     model = gtk_tree_view_get_model(treeview);
-    retval = 0;
-    gtk_tree_model_foreach(model, count_enabled, &retval);
+    priv->count = 0;
+    gtk_tree_model_foreach(model, count_enabled, treeview);
 
-    return retval;
+    return priv->count;
 }
 
 static gboolean
@@ -334,7 +336,7 @@ count_enabled(GtkTreeModel *model,
               GtkTreeIter *iter,
               gpointer user_data)
 {
-    gint *count = (gint*)user_data;
+    GtkTreeView *treeview = (GtkTreeView*)user_data;
     GwyGrainValue *gvalue;
     gboolean enabled;
 
@@ -344,8 +346,13 @@ count_enabled(GtkTreeModel *model,
                        -1);
 
     if (gvalue) {
-        if (enabled)
-            (*count)++;
+        if (enabled) {
+            GrainValueViewPrivate *priv;
+
+            priv = g_object_get_qdata(G_OBJECT(treeview), priv_quark);
+            if (units_are_good(treeview, gvalue))
+                priv->count++;
+        }
         g_object_unref(gvalue);
     }
 
