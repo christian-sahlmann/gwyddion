@@ -196,7 +196,7 @@ gwy_grain_value_tree_view_new(gboolean show_id,
             gtk_tree_view_column_set_cell_data_func(column, renderer,
                                                     render_enabled, treeview,
                                                     NULL);
-            g_signal_connect(renderer, "activated",
+            g_signal_connect(renderer, "toggled",
                              G_CALLBACK(enabled_activated), model);
             title = _("Enabled");
         }
@@ -666,12 +666,16 @@ render_enabled(G_GNUC_UNUSED GtkTreeViewColumn *column,
                        GWY_GRAIN_VALUE_STORE_COLUMN_ITEM, &gvalue,
                        GWY_GRAIN_VALUE_STORE_COLUMN_ENABLED, &enabled,
                        -1);
-    if (!gvalue)
+    if (!gvalue) {
+        g_object_set(renderer, "visible", FALSE, "activatable", FALSE, NULL);
         return;
+    }
 
     good_units = units_are_good(treeview, gvalue);
     g_object_set(renderer,
+                 "visible", TRUE,
                  "active", enabled,
+                 "sensitive", good_units,
                  "activatable", good_units,
                  "inconsistent", enabled && !good_units,
                  NULL);
