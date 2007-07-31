@@ -1,4 +1,4 @@
-2.7.20070713
+2.7.20070731
 
 2.8 (0000-00-00)
 Application:
@@ -12,6 +12,11 @@ Libraries:
 - libgwyprocess: New grain quantity area at grain half-height.
 - libgwydgets: Icons in Gwyddion user directory (~/.gwyddion/pixmaps) are
   registered, allowing to install modules with new icons to home.
+- libgwydgets: When basic Gwy3DWindow controls are shown, it is possible to
+  select the mode with keys R(otation), S(scale), V(alue scale), L(ight).
+- libgwyprocess: New class GwyGrainValue represnting built-in and
+  user-defined grain properties.
+- libgwydgets: Functions to display and operate with a grain value tree view.
 
 Modules:
 - JPK: A typo causing failure to load any JPK file was fixed.
@@ -24,19 +29,24 @@ Modules:
 - DWT: The output resampling option was removed.
 - Grain measure, Grain distributions, Grain correlations: Grain area at
   half-height was added.
+- Grain correlations, Grain distributions: the selectors now use tree views.
+- Tip operations: Tips with non-matching measures are offered too, with a
+  resampling notice.
 
 Other:
 - Autoconf 2.60 is required to build from svn checkout and/or for development.
-- It builds with builddir != srcdir, except API documentation.
+- It builds with builddir != srcdir.
 - libpython should be properly detected on FreeBSD now.
 - Configure option --enable-library-bloat, enforcing linking of libraries
   (including modules) with all their dependencies, was added.
+- Configure option --enable-gtk-doc behaves as is usual in other packages
+  (enabling build documentation as a part of `all' target).
 - Some more build system clean-ups.
 
 
 2.7 (2007-06-26)
 Application:
-- Metadata browser:  It is possibile to save the metadata.
+- Metadata browser:  It is possible to save the metadata.
 - Infinite startup notification after remote file opening was fixed.
 - The Tools toolbox was reorganized from a more or less chronological tool
   order to functionality-based groups.
