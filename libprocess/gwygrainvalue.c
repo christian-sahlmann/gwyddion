@@ -29,7 +29,8 @@
 
 /* We know they are usable as bits */
 enum {
-    MAXBUILTINS = 32
+    MAXBUILTINS = 33,
+    GWY_GRAIN_QUANTITY_ID = MAXBUILTINS-1
 };
 
 static void           gwy_grain_value_finalize (GObject *object);
@@ -58,8 +59,8 @@ static const struct {
 }
 grain_values[] = {
     {
-        N_("Id"),
-        0,
+        N_("Grain number"),
+        GWY_GRAIN_QUANTITY_ID,  /* Does not correspond to any bit */
         {
             GWY_GRAIN_VALUE_GROUP_ID,
             "id", "",
@@ -970,6 +971,30 @@ gwy_grain_values_get_builtin_grain_value(GwyGrainQuantity quantity)
                               GUINT_TO_POINTER(quantity));
 }
 
+static void
+ensure_grain_quantity(gdouble **quantities,
+                      GwyDataField *data_field,
+                      gint ngrains,
+                      const gint *grains,
+                      GwyGrainQuantity q)
+{
+    if (quantities[q])
+        return;
+
+    if (q == GWY_GRAIN_QUANTITY_ID) {
+        gint i;
+
+        quantities[q] = g_new(gdouble, ngrains+1);
+        for (i = 0; i <= ngrains; i++)
+            quantities[q][i] = i;
+
+        return;
+    }
+
+    quantities[q] = gwy_data_field_grains_get_values(data_field, NULL,
+                                                     ngrains, grains, q);
+}
+
 /**
  * gwy_grain_values_calculate:
  * @nvalues: Number of items in @gvalues.
@@ -1021,10 +1046,7 @@ gwy_grain_values_calculate(gint nvalues,
         /* Builtins */
         if (gvalue->data.group != GWY_GRAIN_VALUE_GROUP_USER) {
             q = gvalue->builtin;
-            if (!quantities[q])
-                quantities[q]
-                    = gwy_data_field_grains_get_values(data_field, NULL,
-                                                       ngrains, grains, q);
+            ensure_grain_quantity(quantities, data_field, ngrains, grains, q);
             continue;
         }
 
@@ -1033,10 +1055,10 @@ gwy_grain_values_calculate(gint nvalues,
                                                       NULL);
         g_return_if_fail(resolved);
         for (q = 0; q < MAXBUILTINS; q++) {
-            if (vars[q] && !quantities[q])
-                quantities[q]
-                    = gwy_data_field_grains_get_values(data_field, NULL,
-                                                       ngrains, grains, q);
+            if (!vars[q])
+                continue;
+
+            ensure_grain_quantity(quantities, data_field, ngrains, grains, q);
         }
     }
 
