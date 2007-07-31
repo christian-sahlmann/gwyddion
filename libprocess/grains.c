@@ -651,10 +651,7 @@ gwy_data_field_grains_get_distribution(GwyDataField *data_field,
                                        gint nstats)
 {
     GwyDataLine *values;
-    GwySIUnit *xyunit, *zunit, *lineunit;
-    gint i, j;
     gint *mygrains = NULL;
-    gdouble min, max, s;
 
     g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), FALSE);
     g_return_val_if_fail(grains || GWY_IS_DATA_FIELD(grain_field), FALSE);
@@ -679,57 +676,10 @@ gwy_data_field_grains_get_distribution(GwyDataField *data_field,
                                      ngrains, grains, quantity);
     g_free(mygrains);
 
-    /* Find reasonable binning */
-    min = gwy_data_line_part_get_min(values, 1, ngrains + 1);
-    max = gwy_data_line_part_get_max(values, 1, ngrains + 1);
-    if (min > 0.0 && min <= 0.1*max)
-        min = 0.0;
-    else if (max < 0.0 && max >= 0.1*min)
-        max = 0.0;
-    if (nstats < 1) {
-        nstats = floor(3.49*cbrt(ngrains) + 0.5);
-        nstats = MAX(nstats, 2);
-    }
-    gwy_debug("min: %g, max: %g, nstats: %d", min, max, nstats);
-    s = (max - min)/(nstats - 1e-9);
+    if (!distribution)
+        distribution = gwy_data_line_new(1, 1.0, FALSE);
 
-    /* Fill histogram */
-    if (distribution) {
-        gwy_data_line_resample(distribution, nstats, GWY_INTERPOLATION_NONE);
-        gwy_data_line_clear(distribution);
-    }
-    else
-        distribution = gwy_data_line_new(nstats, 1.0, TRUE);
-
-    if (max > min) {
-        for (i = 1; i <= ngrains; i++) {
-            j = (gint)((values->data[i] - min)/s);
-            j = GWY_CLAMP(j, 0, nstats-1);
-            distribution->data[j]++;
-        }
-    }
-    else {
-        if (max)
-            s = fabs(max)/2.0;
-        else
-            s = 1.0;  /* whatever */
-
-        max += s;
-        min -= s;
-        distribution->data[nstats/2] = ngrains;
-    }
-    g_object_unref(values);
-
-    /* Set proper units and scales */
-    gwy_data_line_set_real(distribution, max - min);
-    gwy_data_line_set_offset(distribution, min);
-
-    xyunit = gwy_data_field_get_si_unit_xy(data_field);
-    zunit = gwy_data_field_get_si_unit_z(data_field);
-    lineunit = gwy_data_line_get_si_unit_x(distribution);
-    gwy_grain_quantity_get_units(quantity, xyunit, zunit, lineunit);
-    lineunit = gwy_data_line_get_si_unit_y(distribution);
-    gwy_si_unit_set_from_string(lineunit, NULL);
+    gwy_data_line_distribution(values, distribution, 0.0, 0.0, FALSE, nstats);
 
     return distribution;
 }

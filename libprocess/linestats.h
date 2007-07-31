@@ -64,6 +64,7 @@ void    gwy_data_line_distribution      (GwyDataLine *data_line,
                                          GwyDataLine *distribution,
                                          gdouble ymin,
                                          gdouble ymax,
+                                         gboolean normalize_to_unity,
                                          gint nstats);
 void    gwy_data_line_dh                (GwyDataLine *data_line,
                                          GwyDataLine *target_line,

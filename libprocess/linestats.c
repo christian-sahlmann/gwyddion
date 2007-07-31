@@ -467,6 +467,10 @@ gwy_data_line_psdf(GwyDataLine *data_line,
  *                chosen number of bins).
  * @ymin: Start of value range, pass @ymin = @ymax = 0.0 for the full range.
  * @ymax: End of value range.
+ * @normalize_to_unity: %TRUE to normalize the integral to unity (including
+ *                      setting y-units of output to the inverse of x-units),
+ *                      %FALSE to keep plain counts in the output (and set
+ *                      y-units to none).
  * @nstats: The requested number of histogram bins, pass a non-positive number
  *          to automatically choose a suitable number of bins.
  *
@@ -487,6 +491,7 @@ gwy_data_line_distribution(GwyDataLine *data_line,
                            GwyDataLine *distribution,
                            gdouble ymin,
                            gdouble ymax,
+                           gboolean normalize_to_unity,
                            gint nstats)
 {
     GwySIUnit *yunit, *lineunit;
@@ -558,13 +563,17 @@ gwy_data_line_distribution(GwyDataLine *data_line,
     /* Set proper units and scales */
     distribution->real = ymax - ymin;
     distribution->off = ymin;
-    gwy_data_line_multiply(distribution, 1.0/(ndata*s));
 
     yunit = gwy_data_line_get_si_unit_y(data_line);
     lineunit = gwy_data_line_get_si_unit_x(distribution);
     gwy_si_unit_power(yunit, 1, lineunit);
     lineunit = gwy_data_line_get_si_unit_y(distribution);
-    gwy_si_unit_power(yunit, -1, lineunit);
+    if (normalize_to_unity) {
+        gwy_data_line_multiply(distribution, 1.0/(ndata*s));
+        gwy_si_unit_power(yunit, -1, lineunit);
+    }
+    else
+        gwy_si_unit_set_from_string(lineunit, NULL);
 }
 
 /**
