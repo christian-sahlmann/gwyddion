@@ -217,28 +217,33 @@ grain_dist_dialog(GrainDistArgs *args,
     };
 
     GrainDistControls controls;
-    GtkWidget *dialog;
+    GtkWidget *scwin;
+    GtkDialog *dialog;
     GtkTreeView *treeview;
     GtkTreeSelection *selection;
+    GtkTreeModel *model;
     GtkTable *table;
     gint row, response;
 
     controls.args = args;
 
-    dialog = gtk_dialog_new_with_buttons(_("Grain Distributions"), NULL, 0,
-                                         GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-                                         NULL);
-    controls.ok = gtk_dialog_add_button(GTK_DIALOG(dialog),
-                                        GTK_STOCK_OK, GTK_RESPONSE_OK);
-    gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
-    gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
-    gtk_window_set_default_size(GTK_WINDOW(dialog), -1, 480);
+    dialog = GTK_DIALOG(gtk_dialog_new_with_buttons(_("Grain Distributions"),
+                                                    NULL, 0,
+                                                    GTK_STOCK_CANCEL,
+                                                    GTK_RESPONSE_CANCEL,
+                                                    NULL));
+    controls.ok = gtk_dialog_add_button(dialog, GTK_STOCK_OK, GTK_RESPONSE_OK);
+    gtk_dialog_set_has_separator(dialog, FALSE);
+    gtk_dialog_set_default_response(dialog, GTK_RESPONSE_OK);
+    gtk_window_set_default_size(GTK_WINDOW(dialog), 240, 520);
+
+    scwin = gtk_scrolled_window_new(NULL, NULL);
+    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scwin),
+                                   GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
+    gtk_box_pack_start(GTK_BOX(dialog->vbox), scwin, TRUE, TRUE, 0);
 
     controls.values = gwy_grain_value_tree_view_new(FALSE,
-                                                    "name",
-                                                    "symbol_markup",
-                                                    "enabled",
-                                                    NULL);
+                                                    "name", "enabled", NULL);
     treeview = GTK_TREE_VIEW(controls.values);
     gtk_tree_view_set_headers_visible(treeview, FALSE);
     selection = gtk_tree_view_get_selection(treeview);
@@ -252,9 +257,10 @@ grain_dist_dialog(GrainDistArgs *args,
         gwy_grain_value_tree_view_set_enabled(treeview, names);
         g_strfreev(names);
     }
-    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), controls.values,
-                       TRUE, TRUE, 0);
-    g_signal_connect_swapped(treeview, "row-changed",
+    gtk_container_add(GTK_CONTAINER(scwin), controls.values);
+
+    model = gtk_tree_view_get_model(treeview);
+    g_signal_connect_swapped(model, "row-changed",
                              G_CALLBACK(selected_changed_cb), &controls);
 
     /* Options */
@@ -262,7 +268,7 @@ grain_dist_dialog(GrainDistArgs *args,
     gtk_table_set_row_spacings(table, 2);
     gtk_table_set_col_spacings(table, 6);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
-    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), GTK_WIDGET(table),
+    gtk_box_pack_start(GTK_BOX(dialog->vbox), GTK_WIDGET(table),
                        FALSE, FALSE, 0);
     row = 0;
 
@@ -286,16 +292,16 @@ grain_dist_dialog(GrainDistArgs *args,
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.fixres),
                                  args->fixres);
 
-    gtk_widget_show_all(dialog);
+    gtk_widget_show_all(GTK_WIDGET(dialog));
     grain_dist_dialog_update_sensitivity(&controls, args);
 
     do {
-        response = gtk_dialog_run(GTK_DIALOG(dialog));
+        response = gtk_dialog_run(dialog);
         switch (response) {
             case GTK_RESPONSE_CANCEL:
             case GTK_RESPONSE_DELETE_EVENT:
             grain_dist_dialog_update_values(&controls, args);
-            gtk_widget_destroy(dialog);
+            gtk_widget_destroy(GTK_WIDGET(dialog));
             case GTK_RESPONSE_NONE:
             return;
             break;
@@ -310,7 +316,7 @@ grain_dist_dialog(GrainDistArgs *args,
     } while (response != GTK_RESPONSE_OK);
 
     grain_dist_dialog_update_values(&controls, args);
-    gtk_widget_destroy(dialog);
+    gtk_widget_destroy(GTK_WIDGET(dialog));
 
     grain_dist_run(args, data, dfield, mfield);
 }

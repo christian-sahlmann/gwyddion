@@ -190,12 +190,19 @@ attach_axis_list(GtkTable *table,
     GwyGrainValue *gvalue;
     GtkTreeSelection *selection;
     GtkTreeView *list;
-    GtkWidget *label, *widget;
+    GtkWidget *label, *widget, *scwin;
 
     label = gtk_label_new_with_mnemonic(name);
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(table, label,
                      column, column+1, 0, 1, GTK_FILL, GTK_FILL, 0, 0);
+
+    scwin = gtk_scrolled_window_new(NULL, NULL);
+    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scwin),
+                                   GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
+    gtk_table_attach(table, scwin,
+                     column, column+1, 1, 2,
+                     GTK_EXPAND | GTK_FILL, GTK_EXPAND | GTK_FILL, 0, 0);
 
     widget = gwy_grain_value_tree_view_new(FALSE, "name", NULL);
     list = GTK_TREE_VIEW(widget);
@@ -205,9 +212,7 @@ attach_axis_list(GtkTable *table,
     if ((gvalue = gwy_grain_values_get_grain_value(selected)))
         gwy_grain_value_tree_view_select(list, gvalue);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), widget);
-    gtk_table_attach(table, widget,
-                     column, column+1, 1, 2,
-                     GTK_EXPAND | GTK_FILL, GTK_EXPAND | GTK_FILL, 0, 0);
+    gtk_container_add(GTK_CONTAINER(scwin), widget);
 
     selection = gtk_tree_view_get_selection(list);
     g_signal_connect_swapped(selection, "changed",
@@ -236,7 +241,7 @@ grain_cross_dialog(GrainCrossArgs *args,
     controls.dialog = GTK_DIALOG(dialog);
     gtk_dialog_set_has_separator(controls.dialog, FALSE);
     gtk_dialog_set_default_response(controls.dialog, GTK_RESPONSE_OK);
-    gtk_window_set_default_size(GTK_WINDOW(dialog), 400, 480);
+    gtk_window_set_default_size(GTK_WINDOW(dialog), 440, 520);
 
     table = GTK_TABLE(gtk_table_new(2, 2, FALSE));
     gtk_table_set_row_spacings(table, 2);
