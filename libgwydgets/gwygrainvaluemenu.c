@@ -444,6 +444,13 @@ restore_enabled(GtkTreeModel *model,
     const gchar **names = (const gchar**)user_data;
     GwyGrainValue *gvalue;
 
+    if (!names) {
+        gtk_tree_store_set(GTK_TREE_STORE(model), iter,
+                           GWY_GRAIN_VALUE_STORE_COLUMN_ENABLED, FALSE,
+                           -1);
+        return FALSE;
+    }
+
     gtk_tree_model_get(model, iter,
                        GWY_GRAIN_VALUE_STORE_COLUMN_ITEM, &gvalue,
                        -1);
