@@ -274,8 +274,10 @@ gwy_container_value_type(GwyContainer *container, GQuark key)
 {
     GValue *p;
 
-    g_return_val_if_fail(key, 0);
     g_return_val_if_fail(GWY_IS_CONTAINER(container), 0);
+    if (!key)
+        return 0;
+
     p = (GValue*)g_hash_table_lookup(container->values,
                                      GUINT_TO_POINTER(key));
 
