@@ -400,7 +400,7 @@ gwy_data_line_hhcf(GwyDataLine *data_line, GwyDataLine *target_line)
 
 /**
  * gwy_data_line_psdf:
- * @data_line: A data line.  Its contents is destroyes and even its size
+ * @data_line: A data line.  Its contents is destroyed and even its size
  *             may change.
  * @target_line: Data line to store power spectral density function to.
  *               It will be resized to @data_line size.
@@ -457,6 +457,114 @@ gwy_data_line_psdf(GwyDataLine *data_line,
     g_object_unref(rout);
     g_object_unref(iin);
     g_object_unref(iout);
+}
+
+/**
+ * gwy_data_line_distribution:
+ * @data_line: A data line.
+ * @distribution: Data line to put the distribution of @data_line values to.
+ *                It will be resampled to @nstats samples (or the automatically
+ *                chosen number of bins).
+ * @ymin: Start of value range, pass @ymin = @ymax = 0.0 for the full range.
+ * @ymax: End of value range.
+ * @nstats: The requested number of histogram bins, pass a non-positive number
+ *          to automatically choose a suitable number of bins.
+ *
+ * Calculates the distribution of data line values.
+ *
+ * This function is quite similar to gwy_data_line_dh(), the differences are:
+ * output normalization (chosen to make the integral unity), output units
+ * (again set to make the integral unity), automated binning.
+ *
+ * If all values are equal and @ymin, @ymax are not explictly specified, the
+ * range is chosen as [@v-|@v|/2,@v+|@v/2] where @v is the unique value,
+ * except when @v=0, in which case the range is set to [-1,1].
+ *
+ * Since: 2.8
+ **/
+void
+gwy_data_line_distribution(GwyDataLine *data_line,
+                           GwyDataLine *distribution,
+                           gdouble ymin,
+                           gdouble ymax,
+                           gint nstats)
+{
+    GwySIUnit *yunit, *lineunit;
+    const gdouble *data;
+    gint i, j, res, ndata;
+    gdouble s;
+
+    g_return_if_fail(GWY_IS_DATA_LINE(data_line));
+    g_return_if_fail(GWY_IS_DATA_LINE(distribution));
+
+    /* Find reasonable binning */
+    if (ymin > ymax)
+        GWY_SWAP(gdouble, ymin, ymax);
+
+    /* if ymin == ymax == 0 use the full range */
+    if (!ymin && !ymax) {
+        ymin = gwy_data_line_get_min(data_line);
+        ymax = gwy_data_line_get_max(data_line);
+        if (ymin > 0.0 && ymin <= 0.1*ymax)
+            ymin = 0.0;
+        else if (ymax < 0.0 && ymax >= 0.1*ymin)
+            ymax = 0.0;
+    }
+    if (ymin == ymax) {
+        if (ymax) {
+            ymin -= 0.5*fabs(ymin);
+            ymax += 0.5*fabs(ymax);
+        }
+        else {
+            ymin = -1.0;
+            ymax = 1.0;
+        }
+    }
+
+    res = data_line->res;
+    data = data_line->data;
+    if (nstats < 1) {
+        ndata = 0;
+        for (i = 0; i < res; i++) {
+            if (data[i] >= ymin && data[i] <= ymax)
+                ndata++;
+        }
+        nstats = floor(3.49*cbrt(ndata) + 0.5);
+        nstats = MAX(nstats, 2);
+    }
+
+    gwy_debug("min: %g, max: %g, nstats: %d", min, max, nstats);
+    s = (ymax - ymin)/(nstats - 1e-9);
+
+    /* Fill histogram */
+    gwy_data_line_resample(distribution, nstats, GWY_INTERPOLATION_NONE);
+    gwy_data_line_clear(distribution);
+
+    ndata = 0;
+    for (i = 0; i < res; i++) {
+        if (data[i] == ymax) {
+            distribution->data[nstats-1] += 1.0;
+            ndata++;
+        }
+        else {
+            j = (gint)((data[i] - ymin)/s);
+            if (j >= 0 && j < nstats) {
+                distribution->data[j] += 1.0;
+                ndata++;
+            }
+        }
+    }
+
+    /* Set proper units and scales */
+    distribution->real = ymax - ymin;
+    distribution->off = ymin;
+    gwy_data_line_multiply(distribution, 1.0/(ndata*s));
+
+    yunit = gwy_data_line_get_si_unit_y(data_line);
+    lineunit = gwy_data_line_get_si_unit_x(distribution);
+    gwy_si_unit_power(yunit, 1, lineunit);
+    lineunit = gwy_data_line_get_si_unit_y(distribution);
+    gwy_si_unit_power(yunit, -1, lineunit);
 }
 
 /**
