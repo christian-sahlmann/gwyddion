@@ -471,7 +471,7 @@ grain_dist_run(GrainDistArgs *args,
             continue;
 
         expdata.gvalues[nvalues] = gvalue;
-        dline = gwy_data_line_new(ngrains, 1.0, FALSE);
+        dline = gwy_data_line_new(ngrains+1, 1.0, FALSE);
         expdata.rawvalues[nvalues] = dline;
         results[nvalues] = gwy_data_line_get_data(dline);
         nvalues++;
