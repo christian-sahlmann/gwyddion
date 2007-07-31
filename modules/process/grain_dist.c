@@ -312,7 +312,7 @@ grain_dist_dialog(GrainDistArgs *args,
             case RESPONSE_CLEAR:
             g_signal_handlers_block_by_func(model,
                                             selected_changed_cb, &controls);
-            gwy_grain_value_tree_view_set_expanded_groups(treeview, 0);
+            gwy_grain_value_tree_view_set_enabled(treeview, NULL);
             g_signal_handlers_unblock_by_func(model,
                                               selected_changed_cb, &controls);
             selected_changed_cb(&controls);
