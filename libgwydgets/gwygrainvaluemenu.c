@@ -94,12 +94,6 @@ static gboolean      find_grain_value              (GtkTreeModel *model,
 static void          grain_value_store_finalized   (gpointer inventory,
                                                     GObject *store);
 
-enum {
-    GWY_GRAIN_VALUE_STORE_COLUMN_ITEM,
-    GWY_GRAIN_VALUE_STORE_COLUMN_GROUP,
-    GWY_GRAIN_VALUE_STORE_COLUMN_ENABLED
-};
-
 typedef struct {
     gboolean same_units;
     gint count;  /* temporary counter */
@@ -976,11 +970,27 @@ grain_value_store_finalized(gpointer inventory,
  * SECTION:gwygrainvaluemenu
  * @title: gwygrainvaluemenu
  * @short_description: Grain value display/selector
+ **/
+
+/**
+ * GwyGrainValueStoreColumn:
+ * @GWY_GRAIN_VALUE_STORE_COLUMN_ITEM: Grain value itself (%NULL for
+ *                                     non-leaves), the column type is
+ *                                     #GwyGrainValue.
+ * @GWY_GRAIN_VALUE_STORE_COLUMN_GROUP: Grain value group, useful namely for
+ *                                      non-leaves (identical to the value
+ *                                      group for leaves), the column type is
+ *                                      #GwyGrainValueGroup.
+ * @GWY_GRAIN_VALUE_STORE_COLUMN_ENABLED: Enabled/disabled state (meaning is
+ *                                        undefined for non-leaves and
+ *                                        reserved for future use), the column
+ *                                        type is #gboolean.
  *
- * The tree model columns are: the grain value (#GwyGrainValue, %NULL for
- * non-leaves), the group (#GwyGrainValueGroup, used namely for non-leaves)
- * and enabled (#gboolean, meaning for non-leaves is undefined and reserved
- * for future use).
+ * Columns of the grain value tree view #GtkTreeStore model.
+ *
+ * It must not be assumed these are the only columns in the tree store.
+ *
+ * Since: 2.8
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

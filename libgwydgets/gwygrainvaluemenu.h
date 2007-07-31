@@ -26,6 +26,12 @@
 
 G_BEGIN_DECLS
 
+typedef enum {
+    GWY_GRAIN_VALUE_STORE_COLUMN_ITEM,
+    GWY_GRAIN_VALUE_STORE_COLUMN_GROUP,
+    GWY_GRAIN_VALUE_STORE_COLUMN_ENABLED
+} GwyGrainValueStoreColumn;
+
 GtkWidget*    gwy_grain_value_tree_view_new                (gboolean show_id,
                                                             const gchar *first_column,
                                                             ...);

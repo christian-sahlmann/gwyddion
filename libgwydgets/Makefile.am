@@ -89,7 +89,9 @@ BUILT_SOURCES =
 
 MKENUM_NAME = gwydgettypes
 MKENUM_ID = GWYDGET_TYPES
-MKENUM_HFILES = $(srcdir)/gwydgetenums.h
+MKENUM_HFILES = \
+		$(srcdir)/gwydgetenums.h \
+		$(srcdir)/gwygrainvaluemenu.h
 include $(top_srcdir)/utils/mkenum.mk
 
 GENMARSHAL_NAME = gwydgetmarshals
