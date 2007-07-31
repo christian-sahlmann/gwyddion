@@ -24,6 +24,7 @@
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libprocess/grains.h>
+#include <libprocess/linestats.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <libgwydgets/gwyradiobuttons.h>
 #include <libgwydgets/gwygrainvaluemenu.h>
@@ -89,10 +90,9 @@ typedef struct {
 
 typedef struct {
     GrainDistArgs *args;
-    gchar **names;
-    GwyDataField *dfield;
-    gint ngrains;
-    gint *grains;
+    guint nvalues;
+    GwyGrainValue **gvalues;
+    GwyDataLine **rawvalues;
 } GrainDistExportData;
 
 static gboolean module_register                 (void);
@@ -395,37 +395,44 @@ grain_dist_dialog_update_sensitivity(GrainDistControls *controls,
 
 static void
 add_one_distribution(GwyContainer *container,
-                     GwyDataField *dfield,
-                     gint ngrains,
-                     const gint *grains,
-                     GwyGrainValue *gvalue,
-                     const gchar *name,
-                     gint resolution)
+                     GrainDistExportData *expdata,
+                     guint i)
 {
     GwyGraphCurveModel *cmodel;
     GwyGraphModel *gmodel;
-    GwyDataLine *dataline;
+    GwyDataLine *dline, *distribution;
+    GwyGrainValue *gvalue;
+    gdouble *data;
+    gint res, ngrains;
+    const gchar *name;
 
-    /* TODO
-    dataline = gwy_data_field_grains_get_distribution(dfield, NULL, NULL,
-                                                      ngrains, grains, quantity,
-                                                      resolution);
-                                                      */
+    dline = expdata->rawvalues[i];
+    gvalue = expdata->gvalues[i];
+
+    res = expdata->args->fixres ? expdata->args->resolution : 0;
+    distribution = gwy_data_line_new(res ? res : 1, 1.0, FALSE);
+    data = gwy_data_line_get_data(dline);
+    ngrains = gwy_data_line_get_res(dline) - 1;
+    data[0] = data[ngrains];
+    /* FIXME: Direct access. */
+    dline->res = ngrains;
+    gwy_data_line_distribution(dline, distribution, 0.0, 0.0, FALSE, res);
+
     gmodel = gwy_graph_model_new();
     cmodel = gwy_graph_curve_model_new();
     gwy_graph_model_add_curve(gmodel, cmodel);
     g_object_unref(cmodel);
 
-    name = gettext(name);
+    name = gettext(gwy_resource_get_name(GWY_RESOURCE(gvalue)));
     g_object_set(gmodel,
                  "title", name,
                  "axis-label-left", gwy_sgettext("noun|count"),
                  "axis-label-bottom", gwy_grain_value_get_symbol_markup(gvalue),
                  NULL);
-    gwy_graph_model_set_units_from_data_line(gmodel, dataline);
+    gwy_graph_model_set_units_from_data_line(gmodel, distribution);
     g_object_set(cmodel, "description", name, NULL);
-    gwy_graph_curve_model_set_data_from_dataline(cmodel, dataline, 0, 0);
-    g_object_unref(dataline);
+    gwy_graph_curve_model_set_data_from_dataline(cmodel, distribution, 0, 0);
+    g_object_unref(distribution);
 
     gwy_app_data_browser_add_graph_model(gmodel, container, TRUE);
     g_object_unref(gmodel);
@@ -439,36 +446,52 @@ grain_dist_run(GrainDistArgs *args,
 {
     GrainDistExportData expdata;
     GwyGrainValue *gvalue;
+    GwyDataLine *dline;
     gchar **names;
     gint *grains;
-    guint i;
-    gint res, ngrains;
+    guint i, nvalues;
+    gint ngrains;
+    gdouble **results;
 
-    res = gwy_data_field_get_xres(mfield)*gwy_data_field_get_yres(mfield);
-    grains = g_new0(gint, res);
+    grains = g_new0(gint, gwy_data_field_get_xres(mfield)
+                          *gwy_data_field_get_yres(mfield));
     ngrains = gwy_data_field_number_grains(mfield, grains);
 
     names = g_strsplit(args->selected, "\n", 0);
+    nvalues = g_strv_length(names);
+    expdata.gvalues = g_new(GwyGrainValue*, nvalues);
+    expdata.rawvalues = g_new(GwyDataLine*, nvalues);
+    results = g_new(gdouble*, nvalues);
+    for (nvalues = i = 0; names[i]; i++) {
+        gvalue = gwy_grain_values_get_grain_value(names[nvalues]);
+        if (!gvalue)
+            continue;
+
+        if (!args->units_equal && gwy_grain_value_get_same_units(gvalue))
+            continue;
+
+        expdata.gvalues[nvalues] = gvalue;
+        dline = gwy_data_line_new(ngrains, 1.0, FALSE);
+        expdata.rawvalues[nvalues] = dline;
+        results[nvalues] = gwy_data_line_get_data(dline);
+        nvalues++;
+    }
+    expdata.nvalues = nvalues;
+    g_strfreev(names);
+
+    gwy_grain_values_calculate(nvalues, expdata.gvalues, results,
+                               dfield, ngrains, grains);
+    g_free(grains);
+    g_free(results);
 
     switch (args->mode) {
         case MODE_GRAPH:
-        res = args->fixres ? args->resolution : 0;
-        for (i = 0; names[i]; i++) {
-            gvalue = gwy_grain_values_get_grain_value(names[i]);
-            if (!gvalue)
-                continue;
-
-            add_one_distribution(data, dfield, ngrains, grains,
-                                 gvalue, names[i], res);
-        }
+        for (i = 0; i < expdata.nvalues; i++)
+            add_one_distribution(data, &expdata, i);
         break;
 
         case MODE_RAW:
         expdata.args = args;
-        expdata.names = names;
-        expdata.dfield = dfield;
-        expdata.ngrains = ngrains;
-        expdata.grains = grains;
         gwy_save_auxiliary_with_callback(_("Export Raw Grain Values"), NULL,
                                          grain_dist_export_create,
                                          (GwySaveAuxiliaryDestroy)g_free,
@@ -480,8 +503,10 @@ grain_dist_run(GrainDistArgs *args,
         break;
     }
 
-    g_strfreev(names);
-    g_free(grains);
+    for (i = 0; i < expdata.nvalues; i++)
+        g_object_unref(expdata.rawvalues[i]);
+    g_free(expdata.rawvalues);
+    g_free(expdata.gvalues);
 }
 
 static gchar*
@@ -492,44 +517,22 @@ grain_dist_export_create(gpointer user_data,
     GString *report;
     gchar buffer[32];
     gint gno;
-    guint i, nvalues;
-    GwyGrainValue **gvalues;
-    GwyGrainValue *gvalue;
-    gdouble **results;
-    gdouble *all_results;
     gchar *retval;
+    guint i, ngrains = 0;
+    gdouble val;
 
-    nvalues = g_strv_length(expdata->names);
-    gvalues = g_new(GwyGrainValue*, nvalues);
-    for (nvalues = i = 0; expdata->names[i]; i++) {
-        gvalue = gwy_grain_values_get_grain_value(expdata->names[nvalues]);
-        if (gvalue) {
-            gvalues[nvalues] = gvalue;
-            nvalues++;
-        }
-    }
+    if (expdata->nvalues)
+        ngrains = gwy_data_line_get_res(expdata->rawvalues[0]) - 1;
 
-    all_results = g_new(gdouble, nvalues*(expdata->ngrains + 1));
-    results = g_new(gdouble*, nvalues);
-    for (i = 0; i < nvalues; i++)
-        results[i] = all_results + i*(expdata->ngrains + 1);
-
-    gwy_grain_values_calculate(nvalues, gvalues, results,
-                               expdata->dfield,
-                               expdata->ngrains, expdata->grains);
-    g_free(gvalues);
-
-    report = g_string_sized_new(12*expdata->ngrains*nvalues);
-    for (gno = 1; gno <= expdata->ngrains; gno++) {
-        for (i = 0; i < nvalues; i++) {
-            g_ascii_formatd(buffer, sizeof(buffer), "%g", results[i][gno]);
+    report = g_string_sized_new(12*ngrains*expdata->nvalues);
+    for (gno = 1; gno < ngrains; gno++) {
+        for (i = 0; i < expdata->nvalues; i++) {
+            val = gwy_data_line_get_val(expdata->rawvalues[i], gno);
+            g_ascii_formatd(buffer, sizeof(buffer), "%g", val);
             g_string_append(report, buffer);
-            g_string_append_c(report, i == nvalues-1 ? '\n' : '\t');
+            g_string_append_c(report, i == expdata->nvalues-1 ? '\n' : '\t');
         }
     }
-
-    g_free(all_results);
-    g_free(results);
 
     retval = report->str;
     g_string_free(report, FALSE);
