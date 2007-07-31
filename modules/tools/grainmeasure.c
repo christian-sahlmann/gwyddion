@@ -25,16 +25,10 @@
 #include <libgwyddion/gwymath.h>
 #include <libgwymodule/gwymodule-tool.h>
 #include <libprocess/grains.h>
+#include <libgwydgets/gwygrainvaluemenu.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <libgwydgets/gwystock.h>
 #include <app/gwyapp.h>
-
-enum {
-    /* Integers are 32bit */
-    MAX_STATS = 33,
-    /* Must not be a bit position */
-    GRAIN_QUANTITY_ID = MAX_STATS-1
-};
 
 #define GWY_TYPE_TOOL_GRAIN_MEASURE            (gwy_tool_grain_measure_get_type())
 #define GWY_TOOL_GRAIN_MEASURE(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_TOOL_GRAIN_MEASURE, GwyToolGrainMeasure))
@@ -43,23 +37,6 @@ enum {
 
 typedef struct _GwyToolGrainMeasure      GwyToolGrainMeasure;
 typedef struct _GwyToolGrainMeasureClass GwyToolGrainMeasureClass;
-
-typedef enum {
-   GRAIN_QUANTITY_SET_ID,
-   GRAIN_QUANTITY_SET_POSITION,
-   GRAIN_QUANTITY_SET_VALUE,
-   GRAIN_QUANTITY_SET_AREA,
-   GRAIN_QUANTITY_SET_BOUNDARY,
-   GRAIN_QUANTITY_SET_VOLUME,
-   GRAIN_QUANTITY_SET_SLOPE,
-   GRAIN_QUANTITY_NSETS
-} GrainQuantitySet;
-
-typedef struct {
-    GwyGrainQuantity quantity;
-    GrainQuantitySet set;
-    const gchar *name;
-} QuantityInfo;
 
 typedef struct {
     guint expanded;
@@ -70,11 +47,12 @@ struct _GwyToolGrainMeasure {
 
     ToolArgs args;
 
-    GtkTreeStore *store;
+    GtkTreeView *treeview;
+    GPtrArray *values;
+    gint value_col;
     gint ngrains;
     gint *grains;
     gint gno;
-    GArray *values[MAX_STATS];
 
     gboolean same_units;
     GwySIUnit *siunit;
@@ -82,7 +60,6 @@ struct _GwyToolGrainMeasure {
 
     /* potential class data */
     GType layer_type_point;
-    gint map[MAX_STATS];   /* GwyGrainQuantity -> index in quantities + 1 */
 };
 
 struct _GwyToolGrainMeasureClass {
@@ -93,9 +70,7 @@ static gboolean module_register(void);
 
 static GType gwy_tool_grain_measure_get_type        (void) G_GNUC_CONST;
 static void gwy_tool_grain_measure_finalize         (GObject *object);
-static void gwy_tool_grain_measure_init_quantities  (GwyToolGrainMeasure *tool);
 static void gwy_tool_grain_measure_init_dialog      (GwyToolGrainMeasure *tool);
-static GtkWidget* gwy_tool_grain_measure_param_view_new(GwyToolGrainMeasure *tool);
 static void gwy_tool_grain_measure_data_switched    (GwyTool *gwytool,
                                                      GwyDataView *data_view);
 static void gwy_tool_grain_measure_data_changed     (GwyPlainTool *plain_tool);
@@ -105,154 +80,6 @@ static void gwy_tool_grain_measure_selection_changed(GwyPlainTool *plain_tool,
 static void gwy_tool_grain_measure_invalidate       (GwyToolGrainMeasure *tool);
 static void gwy_tool_grain_measure_update_units     (GwyToolGrainMeasure *tool);
 static void gwy_tool_grain_measure_recalculate      (GwyToolGrainMeasure *tool);
-
-static const QuantityInfo quantities[] = {
-    {
-        -1,
-        GRAIN_QUANTITY_SET_ID,
-        N_("Id"),
-    },
-    {
-        GRAIN_QUANTITY_ID,
-        GRAIN_QUANTITY_SET_ID,
-        N_("Grain number"),
-    },
-    {
-        -1,
-        GRAIN_QUANTITY_SET_POSITION,
-        N_("Position"),
-    },
-    {
-        GWY_GRAIN_VALUE_CENTER_X,
-        GRAIN_QUANTITY_SET_POSITION,
-        N_("Center x:"),
-    },
-    {
-        GWY_GRAIN_VALUE_CENTER_Y,
-        GRAIN_QUANTITY_SET_POSITION,
-        N_("Center y:"),
-    },
-    {
-        -1,
-        GRAIN_QUANTITY_SET_VALUE,
-        N_("Value"),
-    },
-    {
-        GWY_GRAIN_VALUE_MINIMUM,
-        GRAIN_QUANTITY_SET_VALUE,
-        N_("Minimum:"),
-    },
-    {
-        GWY_GRAIN_VALUE_MAXIMUM,
-        GRAIN_QUANTITY_SET_VALUE,
-        N_("Maximum:"),
-    },
-    {
-        GWY_GRAIN_VALUE_MEAN,
-        GRAIN_QUANTITY_SET_VALUE,
-        N_("Mean:"),
-    },
-    {
-        GWY_GRAIN_VALUE_MEDIAN,
-        GRAIN_QUANTITY_SET_VALUE,
-        N_("Median:"),
-    },
-    {
-        -1,
-        GRAIN_QUANTITY_SET_AREA,
-        N_("Area"),
-    },
-    {
-        GWY_GRAIN_VALUE_PROJECTED_AREA,
-        GRAIN_QUANTITY_SET_AREA,
-        N_("Projected area:"),
-    },
-    {
-        GWY_GRAIN_VALUE_SURFACE_AREA,
-        GRAIN_QUANTITY_SET_AREA,
-        N_("Surface area:"),
-    },
-    {
-        GWY_GRAIN_VALUE_EQUIV_SQUARE_SIDE,
-        GRAIN_QUANTITY_SET_AREA,
-        N_("Equivalent square side:"),
-    },
-    {
-        GWY_GRAIN_VALUE_EQUIV_DISC_RADIUS,
-        GRAIN_QUANTITY_SET_AREA,
-        N_("Equivalent disc radius:"),
-    },
-    {
-        GWY_GRAIN_VALUE_HALF_HEIGHT_AREA,
-        GRAIN_QUANTITY_SET_AREA,
-        N_("Half-height area:"),
-    },
-    {
-        -1,
-        GRAIN_QUANTITY_SET_VOLUME,
-        N_("Volume"),
-    },
-    {
-        GWY_GRAIN_VALUE_VOLUME_0,
-        GRAIN_QUANTITY_SET_VOLUME,
-        N_("Zero basis:"),
-    },
-    {
-        GWY_GRAIN_VALUE_VOLUME_MIN,
-        GRAIN_QUANTITY_SET_VOLUME,
-        N_("Grain minimum basis:"),
-    },
-    {
-        GWY_GRAIN_VALUE_VOLUME_LAPLACE,
-        GRAIN_QUANTITY_SET_VOLUME,
-        N_("Laplacian background basis:"),
-    },
-    {
-        -1,
-        GRAIN_QUANTITY_SET_BOUNDARY,
-        N_("Boundary"),
-    },
-    {
-        GWY_GRAIN_VALUE_FLAT_BOUNDARY_LENGTH,
-        GRAIN_QUANTITY_SET_BOUNDARY,
-        N_("Projected boundary length:"),
-    },
-    {
-        GWY_GRAIN_VALUE_MINIMUM_BOUND_SIZE,
-        GRAIN_QUANTITY_SET_BOUNDARY,
-        N_("Minimum bounding size:"),
-    },
-    {
-        GWY_GRAIN_VALUE_MINIMUM_BOUND_ANGLE,
-        GRAIN_QUANTITY_SET_BOUNDARY,
-        N_("Minimum bounding direction:"),
-    },
-    {
-        GWY_GRAIN_VALUE_MAXIMUM_BOUND_SIZE,
-        GRAIN_QUANTITY_SET_BOUNDARY,
-        N_("Maximum bounding size:"),
-    },
-    {
-        GWY_GRAIN_VALUE_MAXIMUM_BOUND_ANGLE,
-        GRAIN_QUANTITY_SET_BOUNDARY,
-        N_("Maximum bounding direction:"),
-    },
-    {
-        -1,
-        GRAIN_QUANTITY_SET_SLOPE,
-        N_("Slope"),
-    },
-    {
-        GWY_GRAIN_VALUE_SLOPE_THETA,
-        GRAIN_QUANTITY_SET_SLOPE,
-        N_("Inclination θ:"),
-    },
-    {
-        GWY_GRAIN_VALUE_SLOPE_PHI,
-        GRAIN_QUANTITY_SET_SLOPE,
-        N_("Inclination φ:"),
-    },
-};
 
 static const ToolArgs default_args = {
     0,
@@ -264,7 +91,7 @@ static GwyModuleInfo module_info = {
     N_("Grain measurement tool, calculates characteristics of selected "
        "countinous parts of mask."),
     "Yeti <yeti@gwyddion.net>",
-    "1.2",
+    "1.3",
     "David Nečas (Yeti)",
     "2007",
 };
@@ -320,13 +147,11 @@ gwy_tool_grain_measure_finalize(GObject *object)
                                     tool->args.expanded);
 
     g_free(tool->grains);
-    gwy_object_unref(tool->store);
     gwy_object_unref(tool->siunit);
-    for (i = 0; i < MAX_STATS; i++) {
-        if (tool->values[i]) {
-            g_array_free(tool->values[i], TRUE);
-            tool->values[i] = NULL;
-        }
+    if (tool->values) {
+        for (i = 0; i < tool->values->len; i++)
+            g_free(tool->values->pdata[i]);
+        g_ptr_array_free(tool->values, TRUE);
     }
     if (tool->vf)
         gwy_si_unit_value_format_free(tool->vf);
@@ -339,7 +164,6 @@ gwy_tool_grain_measure_init(GwyToolGrainMeasure *tool)
 {
     GwyPlainTool *plain_tool;
     GwyContainer *settings;
-    guint i;
 
     plain_tool = GWY_PLAIN_TOOL(tool);
     tool->layer_type_point = gwy_plain_tool_check_layer_type(plain_tool,
@@ -357,84 +181,7 @@ gwy_tool_grain_measure_init(GwyToolGrainMeasure *tool)
     gwy_plain_tool_connect_selection(plain_tool, tool->layer_type_point,
                                      "pointer");
 
-    for (i = 0; i < G_N_ELEMENTS(quantities); i++) {
-        if (quantities[i].quantity != -1)
-            tool->map[quantities[i].quantity] = i+1;
-    }
-
-    gwy_tool_grain_measure_init_quantities(tool);
     gwy_tool_grain_measure_init_dialog(tool);
-}
-
-static void
-gwy_tool_grain_measure_init_quantities(GwyToolGrainMeasure *tool)
-{
-    const QuantityInfo *qinfo;
-    GtkTreeIter siter, iter;
-    guint i, j;
-
-    tool->store = gtk_tree_store_new(1, G_TYPE_POINTER);
-
-    for (i = j = 0; i < G_N_ELEMENTS(quantities); i++) {
-        qinfo = quantities + i;
-        if (qinfo->quantity == -1) {
-            if (!i)
-                gtk_tree_store_insert_after(tool->store, &siter, NULL, NULL);
-            else
-                gtk_tree_store_insert_after(tool->store, &siter, NULL, &siter);
-            gtk_tree_store_set(tool->store, &siter, 0, qinfo, -1);
-            j = 0;
-        }
-        else {
-            if (!j)
-                gtk_tree_store_insert_after(tool->store, &iter, &siter, NULL);
-            else
-                gtk_tree_store_insert_after(tool->store, &iter, &siter, &iter);
-            gtk_tree_store_set(tool->store, &iter, 0, qinfo, -1);
-            j++;
-        }
-    }
-}
-
-static void
-gwy_tool_grain_measure_init_dialog(GwyToolGrainMeasure *tool)
-{
-    GtkWidget *scwin, *treeview;
-    GtkDialog *dialog;
-
-    dialog = GTK_DIALOG(GWY_TOOL(tool)->dialog);
-
-    scwin = gtk_scrolled_window_new(NULL, NULL);
-    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scwin),
-                                   GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
-    gtk_box_pack_start(GTK_BOX(dialog->vbox), scwin, TRUE, TRUE, 0);
-
-    treeview = gwy_tool_grain_measure_param_view_new(tool);
-    gtk_container_add(GTK_CONTAINER(scwin), treeview);
-
-    gwy_plain_tool_add_clear_button(GWY_PLAIN_TOOL(tool));
-    gwy_tool_add_hide_button(GWY_TOOL(tool), TRUE);
-
-    gtk_widget_show_all(dialog->vbox);
-}
-
-static void
-render_name(G_GNUC_UNUSED GtkTreeViewColumn *column,
-            GtkCellRenderer *renderer,
-            GtkTreeModel *model,
-            GtkTreeIter *iter,
-            G_GNUC_UNUSED gpointer user_data)
-{
-    const QuantityInfo *qinfo;
-    gboolean header;
-
-    gtk_tree_model_get(model, iter, 0, &qinfo, -1);
-    header = (qinfo->quantity == -1);
-    g_object_set(renderer,
-                 "ellipsize", header ? PANGO_ELLIPSIZE_NONE : PANGO_ELLIPSIZE_END ,
-                 "weight", header ? PANGO_WEIGHT_BOLD : PANGO_WEIGHT_NORMAL,
-                 "text", qinfo->name,
-                 NULL);
 }
 
 static void
@@ -452,30 +199,47 @@ render_value(G_GNUC_UNUSED GtkTreeViewColumn *column,
     };
 
     GwyToolGrainMeasure *tool = (GwyToolGrainMeasure*)user_data;
-    const QuantityInfo *qinfo;
+    GwyGrainValue *gvalue;
     gdouble value;
+    const gdouble *values;
     gchar buf[64];
+    const gchar *name;
+    gint i;
 
-    gtk_tree_model_get(model, iter, 0, &qinfo, -1);
-    if (qinfo->quantity == -1 || tool->gno <= 0) {
+    gtk_tree_model_get(model, iter,
+                       GWY_GRAIN_VALUE_STORE_COLUMN_ITEM, &gvalue,
+                       -1);
+    if (tool->gno <= 0 || !gvalue) {
         g_object_set(renderer, "text", "", NULL);
         return;
     }
 
-    if (gwy_grain_quantity_needs_same_units(qinfo->quantity)
-        && !tool->same_units) {
+    g_object_unref(gvalue);
+    if (!tool->same_units
+        && (gwy_grain_value_get_flags(gvalue) & GWY_GRAIN_VALUE_SAME_UNITS)) {
         g_object_set(renderer, "text", _("N.A."), NULL);
         return;
     }
 
-    if (qinfo->quantity == GRAIN_QUANTITY_ID) {
+    /* FIXME: Magic number, see top of gwygrainvalue.c */
+    if (gwy_grain_value_get_quantity(gvalue) > 31) {
         g_snprintf(buf, sizeof(buf), "%d", tool->gno);
         g_object_set(renderer, "text", buf, NULL);
         return;
     }
 
-    value = g_array_index(tool->values[qinfo->quantity], gdouble, tool->gno);
-    if ((1 << qinfo->quantity) & angle_units) {
+    name = gwy_resource_get_name(GWY_RESOURCE(gvalue));
+    i = gwy_inventory_get_item_position(gwy_grain_values(), name);
+    if (i < 0) {
+        g_warning("Grain value not present in inventory.");
+        g_object_set(renderer, "text", "", NULL);
+        return;
+    }
+
+    values = g_ptr_array_index(tool->values, i);
+    value = values[tool->gno];
+
+    if (gwy_grain_value_get_flags(gvalue) & GWY_GRAIN_VALUE_IS_ANGLE) {
         g_snprintf(buf, sizeof(buf), "%.1f deg", 180.0/G_PI*value);
         g_object_set(renderer, "text", buf, NULL);
     }
@@ -487,9 +251,12 @@ render_value(G_GNUC_UNUSED GtkTreeViewColumn *column,
         dfield = GWY_PLAIN_TOOL(tool)->data_field;
         siunitxy = gwy_data_field_get_si_unit_xy(dfield);
         siunitz = gwy_data_field_get_si_unit_z(dfield);
-        tool->siunit = gwy_grain_quantity_get_units(qinfo->quantity,
-                                                    siunitxy, siunitz,
-                                                    tool->siunit);
+        tool->siunit
+            = gwy_si_unit_power_multiply(siunitxy,
+                                         gwy_grain_value_get_power_xy(gvalue),
+                                         siunitz,
+                                         gwy_grain_value_get_power_z(gvalue),
+                                         tool->siunit);
         tool->vf = gwy_si_unit_get_format_with_digits(tool->siunit, style,
                                                       value, 3, tool->vf);
         g_snprintf(buf, sizeof(buf), "%.*f%s%s",
@@ -500,80 +267,55 @@ render_value(G_GNUC_UNUSED GtkTreeViewColumn *column,
 }
 
 static void
-param_row_expanded_collapsed(GtkTreeView *treeview,
-                             GtkTreeIter *iter,
-                             GtkTreePath *path,
-                             GwyToolGrainMeasure *tool)
+save_expanded_state(GtkTreeView *treeview,
+                    ToolArgs *args)
 {
-    const QuantityInfo *qinfo;
-
-    gtk_tree_model_get(gtk_tree_view_get_model(treeview), iter, 0, &qinfo, -1);
-    if (gtk_tree_view_row_expanded(treeview, path))
-        tool->args.expanded |= 1 << qinfo->set;
-    else
-        tool->args.expanded &= ~(1 << qinfo->set);
+    args->expanded = gwy_grain_value_tree_view_get_expanded_groups(treeview);
 }
 
-static GtkWidget*
-gwy_tool_grain_measure_param_view_new(GwyToolGrainMeasure *tool)
+static void
+gwy_tool_grain_measure_init_dialog(GwyToolGrainMeasure *tool)
 {
-    GtkWidget *treeview;
-    GtkTreeModel *model;
+    GtkDialog *dialog;
+    GtkWidget *treeview, *scwin;
     GtkTreeSelection *selection;
     GtkTreeViewColumn *column;
     GtkCellRenderer *renderer;
-    GtkTreeIter iter;
 
-    model = GTK_TREE_MODEL(tool->store);
-    treeview = gtk_tree_view_new_with_model(model);
-    gtk_tree_view_set_headers_visible(GTK_TREE_VIEW(treeview), FALSE);
+    dialog = GTK_DIALOG(GWY_TOOL(tool)->dialog);
 
-    selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(treeview));
-    gtk_tree_selection_set_mode(selection, GTK_SELECTION_NONE);
+    scwin = gtk_scrolled_window_new(NULL, NULL);
+    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scwin),
+                                   GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
+    gtk_box_pack_start(GTK_BOX(dialog->vbox), scwin, TRUE, TRUE, 0);
 
-    column = gtk_tree_view_column_new();
-    gtk_tree_view_column_set_expand(column, TRUE);
-    gtk_tree_view_append_column(GTK_TREE_VIEW(treeview), column);
-    renderer = gtk_cell_renderer_text_new();
-    g_object_set(renderer,
-                 "weight-set", TRUE,
-                 "ellipsize-set", TRUE,
-                 NULL);
-    gtk_tree_view_column_pack_start(column, renderer, TRUE);
-    gtk_tree_view_column_set_cell_data_func(column, renderer,
-                                            render_name, tool, NULL);
+    treeview = gwy_grain_value_tree_view_new(TRUE,
+                                             "name", "symbol_markup", NULL);
+    tool->treeview = GTK_TREE_VIEW(treeview);
+    gtk_tree_view_set_headers_visible(tool->treeview, FALSE);
+    gtk_container_add(GTK_CONTAINER(scwin), treeview);
 
     column = gtk_tree_view_column_new();
     gtk_tree_view_column_set_sizing(column, GTK_TREE_VIEW_COLUMN_AUTOSIZE);
-    gtk_tree_view_append_column(GTK_TREE_VIEW(treeview), column);
+    gtk_tree_view_append_column(tool->treeview, column);
     renderer = gtk_cell_renderer_text_new();
     g_object_set(renderer, "xalign", 1.0, NULL);
     gtk_tree_view_column_pack_start(column, renderer, TRUE);
     gtk_tree_view_column_set_cell_data_func(column, renderer,
                                             render_value, tool, NULL);
 
-    /* Restore set visibility state */
-    if (gtk_tree_model_get_iter_first(model, &iter)) {
-        do {
-            const QuantityInfo *qinfo;
+    selection = gtk_tree_view_get_selection(tool->treeview);
+    gtk_tree_selection_set_mode(selection, GTK_SELECTION_NONE);
 
-            gtk_tree_model_get(model, &iter, 0, &qinfo, -1);
-            if (qinfo->quantity == -1
-                && (tool->args.expanded & (1 << qinfo->set))) {
-                GtkTreePath *path;
+    gwy_grain_value_tree_view_set_expanded_groups(tool->treeview,
+                                                  tool->args.expanded);
+    g_signal_connect(treeview, "unrealize",
+                     G_CALLBACK(save_expanded_state), &tool->args);
 
-                path = gtk_tree_model_get_path(model, &iter);
-                gtk_tree_view_expand_row(GTK_TREE_VIEW(treeview), path, TRUE);
-                gtk_tree_path_free(path);
-            }
-        } while (gtk_tree_model_iter_next(model, &iter));
-    }
-    g_signal_connect(treeview, "row-collapsed",
-                     G_CALLBACK(param_row_expanded_collapsed), tool);
-    g_signal_connect(treeview, "row-expanded",
-                     G_CALLBACK(param_row_expanded_collapsed), tool);
+    gwy_plain_tool_add_clear_button(GWY_PLAIN_TOOL(tool));
+    gwy_tool_add_hide_button(GWY_TOOL(tool), TRUE);
 
-    return treeview;
+    gtk_widget_show_all(dialog->vbox);
 }
 
 static void
@@ -664,9 +406,12 @@ gwy_tool_grain_measure_selection_changed(GwyPlainTool *plain_tool,
             tool->gno = 0;
     }
 
-    if (tool->gno != oldgno)
-        gtk_tree_model_foreach(GTK_TREE_MODEL(tool->store),
-                               emit_row_changed, NULL);
+    if (tool->gno != oldgno) {
+        GtkTreeModel *model;
+
+        model = gtk_tree_view_get_model(tool->treeview);
+        gtk_tree_model_foreach(model, emit_row_changed, NULL);
+    }
 }
 
 static void
@@ -695,7 +440,9 @@ gwy_tool_grain_measure_recalculate(GwyToolGrainMeasure *tool)
 {
     GwyPlainTool *plain_tool;
     GwyDataField *dfield, *mask;
-    guint i;
+    GwyInventory *inventory;
+    GwyGrainValue **gvalues;
+    guint n, i;
 
     plain_tool = GWY_PLAIN_TOOL(tool);
     dfield = plain_tool->data_field;
@@ -708,17 +455,25 @@ gwy_tool_grain_measure_recalculate(GwyToolGrainMeasure *tool)
         tool->ngrains = gwy_data_field_number_grains(mask, tool->grains);
     }
 
-    for (i = 0; i < MAX_STATS; i++) {
-        if (!tool->map[i] || i == GRAIN_QUANTITY_ID)
-            continue;
+    inventory = gwy_grain_values();
+    n = gwy_inventory_get_n_items(inventory);
 
-        if (!tool->values[i])
-            tool->values[i] = g_array_new(FALSE, FALSE, sizeof(gdouble));
-        g_array_set_size(tool->values[i], tool->ngrains + 1);
-        gwy_data_field_grains_get_values(dfield,
-                                         (gdouble*)tool->values[i]->data,
-                                         tool->ngrains, tool->grains, i);
+    if (!tool->values) {
+        tool->values = g_ptr_array_new();
+        g_ptr_array_set_size(tool->values, n);
     }
+
+    gvalues = g_new(GwyGrainValue*, n);
+    for (i = 0; i < n; i++) {
+        gvalues[i] = gwy_inventory_get_nth_item(inventory, i);
+        g_ptr_array_index(tool->values, i)
+             = g_renew(gdouble, g_ptr_array_index(tool->values, i),
+                       tool->ngrains);
+    }
+
+    gwy_grain_values_calculate(n, gvalues, (gdouble**)tool->values->pdata,
+                               dfield, tool->ngrains, tool->grains);
+    g_free(gvalues);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
