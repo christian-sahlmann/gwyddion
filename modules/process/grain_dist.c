@@ -395,6 +395,7 @@ grain_dist_dialog_update_sensitivity(GrainDistControls *controls,
 
 static void
 add_one_distribution(GwyContainer *container,
+                     GwyDataField *dfield,
                      GrainDistExportData *expdata,
                      guint i)
 {
@@ -402,17 +403,25 @@ add_one_distribution(GwyContainer *container,
     GwyGraphModel *gmodel;
     GwyDataLine *dline, *distribution;
     GwyGrainValue *gvalue;
+    GwySIUnit *xyunit, *zunit, *lineunit;
     gdouble *data;
     gint res, ngrains;
     const gchar *name;
 
     dline = expdata->rawvalues[i];
     gvalue = expdata->gvalues[i];
+    xyunit = gwy_data_field_get_si_unit_xy(dfield);
+    zunit = gwy_data_field_get_si_unit_z(dfield);
+    lineunit = gwy_data_line_get_si_unit_y(dline);
+    gwy_si_unit_power_multiply(xyunit, gwy_grain_value_get_power_xy(gvalue),
+                               zunit, gwy_grain_value_get_power_z(gvalue),
+                               lineunit);
 
     res = expdata->args->fixres ? expdata->args->resolution : 0;
     distribution = gwy_data_line_new(res ? res : 1, 1.0, FALSE);
     data = gwy_data_line_get_data(dline);
     ngrains = gwy_data_line_get_res(dline) - 1;
+    /* Get rid of the zeroth bogus item corresponding to no grain. */
     data[0] = data[ngrains];
     /* FIXME: Direct access. */
     dline->res = ngrains;
@@ -487,7 +496,7 @@ grain_dist_run(GrainDistArgs *args,
     switch (args->mode) {
         case MODE_GRAPH:
         for (i = 0; i < expdata.nvalues; i++)
-            add_one_distribution(data, &expdata, i);
+            add_one_distribution(data, dfield, &expdata, i);
         break;
 
         case MODE_RAW:
