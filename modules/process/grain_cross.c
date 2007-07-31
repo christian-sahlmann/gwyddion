@@ -161,8 +161,9 @@ axis_quantity_changed(GrainCrossControls *controls)
 
     selection = gtk_tree_view_get_selection(controls->abscissa);
     if (gtk_tree_selection_get_selected(selection, &model, &iter)) {
-        /* XXX XXX XXX: Model columns */
-        gtk_tree_model_get(model, &iter, 0, &gvalue, -1);
+        gtk_tree_model_get(model, &iter,
+                           GWY_GRAIN_VALUE_STORE_COLUMN_ITEM, &gvalue,
+                           -1);
         controls->args->abscissa = gwy_resource_get_name(GWY_RESOURCE(gvalue));
     }
     else
@@ -170,8 +171,9 @@ axis_quantity_changed(GrainCrossControls *controls)
 
     selection = gtk_tree_view_get_selection(controls->ordinate);
     if (gtk_tree_selection_get_selected(selection, &model, &iter)) {
-        /* XXX XXX XXX: Model columns */
-        gtk_tree_model_get(model, &iter, 0, &gvalue, -1);
+        gtk_tree_model_get(model, &iter,
+                           GWY_GRAIN_VALUE_STORE_COLUMN_ITEM, &gvalue,
+                           -1);
         controls->args->ordinate = gwy_resource_get_name(GWY_RESOURCE(gvalue));
     }
     else
