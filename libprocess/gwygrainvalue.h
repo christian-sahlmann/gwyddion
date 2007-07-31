@@ -45,13 +45,18 @@ typedef enum {
     GWY_GRAIN_VALUE_GROUP_USER = 30
 } GwyGrainValueGroup;
 
+typedef enum {
+    GWY_GRAIN_VALUE_SAME_UNITS = 1 << 0,
+    GWY_GRAIN_VALUE_IS_ANGLE   = 1 << 1
+} GwyGrainValueFlags;
+
 typedef struct {
     GwyGrainValueGroup group;
     gchar *symbol_markup;
     gchar *symbol;
     gint power_xy;
     gint power_z;
-    gboolean same_units;
+    guint flags;
 } GwyGrainValueData;
 
 struct _GwyGrainValue {
@@ -86,9 +91,9 @@ void               gwy_grain_value_set_power_xy     (GwyGrainValue *gvalue,
 gint               gwy_grain_value_get_power_z      (GwyGrainValue *gvalue);
 void               gwy_grain_value_set_power_z      (GwyGrainValue *gvalue,
                                                      gint power_z);
-gboolean           gwy_grain_value_get_same_units   (GwyGrainValue *gvalue);
-void               gwy_grain_value_set_same_units   (GwyGrainValue *gvalue,
-                                                     gboolean same_units);
+GwyGrainValueFlags gwy_grain_value_get_flags        (GwyGrainValue *gvalue);
+void               gwy_grain_value_set_flags        (GwyGrainValue *gvalue,
+                                                     GwyGrainValueFlags flags);
 GwyGrainQuantity   gwy_grain_value_get_quantity     (GwyGrainValue *gvalue);
 const gchar*       gwy_grain_value_get_expression   (GwyGrainValue *gvalue);
 gboolean           gwy_grain_value_set_expression   (GwyGrainValue *gvalue,

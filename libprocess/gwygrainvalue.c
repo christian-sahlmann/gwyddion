@@ -64,7 +64,7 @@ grain_values[] = {
         {
             GWY_GRAIN_VALUE_GROUP_ID,
             "id", "",
-            0, 0, FALSE,
+            0, 0, 0,
         }
     },
     {
@@ -73,7 +73,7 @@ grain_values[] = {
         {
             GWY_GRAIN_VALUE_GROUP_POSITION,
             "<i>x</i><sub>c</sub>", "x_c",
-            1, 0, FALSE,
+            1, 0, 0,
         }
     },
     {
@@ -82,7 +82,7 @@ grain_values[] = {
         {
             GWY_GRAIN_VALUE_GROUP_POSITION,
             "<i>y</i><sub>c</sub>", "y_c",
-            1, 0, FALSE,
+            1, 0, 0,
         }
     },
     {
@@ -91,7 +91,7 @@ grain_values[] = {
         {
             GWY_GRAIN_VALUE_GROUP_VALUE,
             "<i>z</i><sub>min</sub>", "z_min",
-            0, 1, FALSE,
+            0, 1, 0,
         }
     },
     {
@@ -100,7 +100,7 @@ grain_values[] = {
         {
             GWY_GRAIN_VALUE_GROUP_VALUE,
             "<i>z</i><sub>max</sub>", "z_max",
-            0, 1, FALSE,
+            0, 1, 0,
         }
     },
     {
@@ -109,7 +109,7 @@ grain_values[] = {
         {
             GWY_GRAIN_VALUE_GROUP_VALUE,
             "<i>z</i><sub>m</sub>", "z_m",
-            0, 1, FALSE,
+            0, 1, 0,
         }
     },
     {
@@ -118,7 +118,7 @@ grain_values[] = {
         {
             GWY_GRAIN_VALUE_GROUP_VALUE,
             "<i>z</i><sub>med</sub>", "z_med",
-            0, 1, FALSE,
+            0, 1, 0,
         }
     },
     {
@@ -127,7 +127,7 @@ grain_values[] = {
         {
             GWY_GRAIN_VALUE_GROUP_AREA,
             "<i>A</i><sub>0</sub>", "A_0",
-            2, 0, FALSE,
+            2, 0, 0,
         }
     },
     {
@@ -136,7 +136,7 @@ grain_values[] = {
         {
             GWY_GRAIN_VALUE_GROUP_AREA,
             "<i>A</i><sub>s</sub>", "A_s",
-            2, 0, TRUE,
+            2, 0, GWY_GRAIN_VALUE_SAME_UNITS,
         }
     },
     {
@@ -145,7 +145,7 @@ grain_values[] = {
         {
             GWY_GRAIN_VALUE_GROUP_AREA,
             "<i>a</i><sub>eq</sub>", "a_eq",
-            1, 0, FALSE,
+            1, 0, 0,
         }
     },
     {
@@ -154,7 +154,7 @@ grain_values[] = {
         {
             GWY_GRAIN_VALUE_GROUP_AREA,
             "<i>r</i><sub>eq</sub>", "r_eq",
-            1, 0, FALSE,
+            1, 0, 0,
         }
     },
     {
@@ -163,7 +163,7 @@ grain_values[] = {
         {
             GWY_GRAIN_VALUE_GROUP_AREA,
             "<i>A</i><sub>h</sub>", "A_h",
-            2, 0, FALSE,
+            2, 0, 0,
         }
     },
     {
@@ -172,7 +172,7 @@ grain_values[] = {
         {
             GWY_GRAIN_VALUE_GROUP_VOLUME,
             "<i>V</i><sub>0</sub>", "V_0",
-            2, 1, FALSE,
+            2, 1, 0,
         }
     },
     {
@@ -181,7 +181,7 @@ grain_values[] = {
         {
             GWY_GRAIN_VALUE_GROUP_VOLUME,
             "<i>V</i><sub>min</sub>", "V_min",
-            2, 1, FALSE,
+            2, 1, 0,
         }
     },
     {
@@ -190,7 +190,7 @@ grain_values[] = {
         {
             GWY_GRAIN_VALUE_GROUP_VOLUME,
             "<i>V</i><sub>L</sub>", "V_L",
-            2, 1, FALSE,
+            2, 1, 0,
         }
     },
     {
@@ -199,7 +199,7 @@ grain_values[] = {
         {
             GWY_GRAIN_VALUE_GROUP_BOUNDARY,
             "<i>L</i><sub>b0</sub>", "L_b0",
-            1, 0, FALSE,
+            1, 0, 0,
         }
     },
     {
@@ -208,7 +208,7 @@ grain_values[] = {
         {
             GWY_GRAIN_VALUE_GROUP_BOUNDARY,
             "<i>D</i><sub>min</sub>", "D_min",
-            1, 0, FALSE,
+            1, 0, 0,
         }
     },
     {
@@ -217,7 +217,7 @@ grain_values[] = {
         {
             GWY_GRAIN_VALUE_GROUP_BOUNDARY,
             "<i>φ</i><sub>min</sub>", "phi_min",
-            0, 0, FALSE,
+            0, 0, GWY_GRAIN_VALUE_IS_ANGLE,
         }
     },
     {
@@ -226,7 +226,7 @@ grain_values[] = {
         {
             GWY_GRAIN_VALUE_GROUP_BOUNDARY,
             "<i>D</i><sub>max</sub>", "D_max",
-            1, 0, FALSE,
+            1, 0, 0,
         }
     },
     {
@@ -235,7 +235,7 @@ grain_values[] = {
         {
             GWY_GRAIN_VALUE_GROUP_BOUNDARY,
             "<i>φ</i><sub>max</sub>", "phi_max",
-            0, 0, FALSE,
+            0, 0, GWY_GRAIN_VALUE_IS_ANGLE,
         }
     },
     {
@@ -244,7 +244,7 @@ grain_values[] = {
         {
             GWY_GRAIN_VALUE_GROUP_SLOPE,
             "<i>θ</i>", "theta",
-            0, 0, TRUE,
+            0, 0, GWY_GRAIN_VALUE_SAME_UNITS | GWY_GRAIN_VALUE_IS_ANGLE,
         }
     },
     {
@@ -253,7 +253,7 @@ grain_values[] = {
         {
             GWY_GRAIN_VALUE_GROUP_SLOPE,
             "<i>φ</i>", "phi",
-            0, 0, FALSE,
+            0, 0, GWY_GRAIN_VALUE_IS_ANGLE,
         }
     },
 };
@@ -405,13 +405,17 @@ gwy_grain_value_dump(GwyResource *resource,
                            "symbol_markup %s\n"
                            "power_xy %d\n"
                            "power_z %d\n"
-                           "same_units %d\n"
+                           "%s"
+                           "%s"
                            "expression %s\n",
                            data->symbol,
                            data->symbol_markup,
                            data->power_xy,
                            data->power_z,
-                           data->same_units,
+                           (data->flags & GWY_GRAIN_VALUE_SAME_UNITS)
+                                ? "same_units 1\n" : "",
+                           (data->flags & GWY_GRAIN_VALUE_IS_ANGLE)
+                                ? "is_angle 1\n" : "",
                            gvalue->expression);
 }
 
@@ -495,7 +499,9 @@ gwy_grain_value_parse(const gchar *text,
         else if (gwy_strequal(key, "power_z"))
             data.power_z = atoi(value);
         else if (gwy_strequal(key, "same_units"))
-            data.same_units = !!atoi(value);
+            data.flags |= GWY_GRAIN_VALUE_SAME_UNITS*(!!atoi(value));
+        else if (gwy_strequal(key, "is_angle"))
+            data.flags |= GWY_GRAIN_VALUE_IS_ANGLE*(!!atoi(value));
         else if (gwy_strequal(key, "expression"))
             expression = value;
         else
@@ -730,54 +736,48 @@ gwy_grain_value_set_power_z(GwyGrainValue *gvalue,
 }
 
 /**
- * gwy_grain_value_get_same_units:
+ * gwy_grain_value_get_flags:
  * @gvalue: A grain value object.
  *
- * Tests whether a grain value requires identical lateral and value (height)
- * units.
+ * Obtains the special attributes of a grain quantity.
  *
- * Certain grain quantities, such as the surface area or absolute inclination,
- * are only meaningful if value (height) is the same physical quantity as
- * lateral dimensions.
- *
- * Returns: %TRUE if @gvalue requires the same lateral and value (height)
- *          units, %FALSE if it is defined always.
+ * Returns: The special attribute flags set on @gvalue.  See
+ *          #GwyGrainValueFlags for their description.
  *
  * Since: 2.8
  **/
-gboolean
-gwy_grain_value_get_same_units(GwyGrainValue *gvalue)
+GwyGrainValueFlags
+gwy_grain_value_get_flags(GwyGrainValue *gvalue)
 {
-    g_return_val_if_fail(GWY_IS_GRAIN_VALUE(gvalue), FALSE);
-    return gvalue->data.same_units;
+    g_return_val_if_fail(GWY_IS_GRAIN_VALUE(gvalue), 0);
+    return gvalue->data.flags;
 }
 
 /**
- * gwy_grain_value_set_same_units:
+ * gwy_grain_value_set_flags:
  * @gvalue: A grain value object.
- * @same_units: %TRUE to make @gvalue require same units, %FALSE to make it
- *              defined always.
+ * @flags: The special attributes to set on @gvalue.
  *
- * Sets the requirement of identical lateral and value (height) units for a
- * grain value.
+ * Sets the special attributes of a grain quantity.
  *
- * See gwy_grain_value_get_same_units() for details.
+ * The value of @flags determines the complete new set of flags.  To set
+ * individual flags, obtain the current set with gwy_grain_value_get_flags()
+ * first and then set/unset individual flags.
  *
  * Since: 2.8
  **/
 void
-gwy_grain_value_set_same_units(GwyGrainValue *gvalue,
-                               gboolean same_units)
+gwy_grain_value_set_flags(GwyGrainValue *gvalue,
+                          GwyGrainValueFlags flags)
 {
     g_return_if_fail(GWY_IS_GRAIN_VALUE(gvalue));
     g_return_if_fail(gvalue->data.group == GWY_GRAIN_VALUE_GROUP_USER);
     g_return_if_fail(gwy_resource_get_is_modifiable(GWY_RESOURCE(gvalue)));
 
-    same_units = !!same_units;
-    if (gvalue->data.same_units == same_units)
+    if (gvalue->data.flags == flags)
         return;
 
-    gvalue->data.same_units = same_units;
+    gvalue->data.flags = flags;
     gwy_resource_data_changed(GWY_RESOURCE(gvalue));
 }
 
@@ -1099,6 +1099,24 @@ gwy_grain_values_calculate(gint nvalues,
  * SECTION:gwygrainvalue
  * @title: GwyGrainValue
  * @short_description: Grain value resource type
+ **/
+
+/**
+ * GwyGrainValueFlags:
+ * @GWY_GRAIN_VALUE_SAME_UNITS: Certain grain quantities, such as the surface
+ *                              area or absolute inclination, are only
+ *                              meaningful if value (height) is the same
+ *                              physical quantity as lateral dimensions.  These
+ *                              have this flag set to %TRUE.
+ * @GWY_GRAIN_VALUE_IS_ANGLE: Angular quantities are internally always
+ *                            calculated in radians, however they can be
+ *                            presented in degrees in the user interface.
+ *                            To enable such special handling, set this
+ *                            flag to %TRUE.
+ *
+ * Special attributes of grain values.
+ *
+ * Since: 2.8
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

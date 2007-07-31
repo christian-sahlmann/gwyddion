@@ -121,8 +121,9 @@ grain_cross(GwyContainer *data, GwyRunType run)
 
         abscissa = gwy_grain_values_get_grain_value(args.abscissa);
         ordinate = gwy_grain_values_get_grain_value(args.ordinate);
-        if (gwy_grain_value_get_same_units(abscissa)
-            || gwy_grain_value_get_same_units(ordinate)) {
+        if ((gwy_grain_value_get_flags(abscissa)
+             | gwy_grain_value_get_flags(ordinate))
+            & GWY_GRAIN_VALUE_SAME_UNITS) {
             GtkWidget *dialog;
 
             dialog = gtk_message_dialog_new

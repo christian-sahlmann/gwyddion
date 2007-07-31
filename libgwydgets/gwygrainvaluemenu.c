@@ -777,7 +777,10 @@ units_are_good(GtkTreeView *treeview,
     GrainValueViewPrivate *priv;
 
     priv = g_object_get_qdata(G_OBJECT(treeview), priv_quark);
-    return priv->same_units || !gwy_grain_value_get_same_units(gvalue);
+    if (priv->same_units)
+        return TRUE;
+
+    return !(gwy_grain_value_get_flags(gvalue) & GWY_GRAIN_VALUE_SAME_UNITS);
 }
 
 static GtkTreeModel*

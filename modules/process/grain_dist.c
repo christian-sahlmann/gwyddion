@@ -488,7 +488,8 @@ grain_dist_run(GrainDistArgs *args,
         if (!gvalue)
             continue;
 
-        if (!args->units_equal && gwy_grain_value_get_same_units(gvalue))
+        if (!args->units_equal
+            && (gwy_grain_value_get_flags(gvalue) & GWY_GRAIN_VALUE_SAME_UNITS))
             continue;
 
         expdata.gvalues[nvalues] = gvalue;
