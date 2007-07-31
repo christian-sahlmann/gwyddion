@@ -50,6 +50,11 @@ static void          render_name                   (GtkTreeViewColumn *column,
                                                     GtkTreeModel *model,
                                                     GtkTreeIter *iter,
                                                     gpointer user_data);
+static void          render_symbol                 (GtkTreeViewColumn *column,
+                                                    GtkCellRenderer *renderer,
+                                                    GtkTreeModel *model,
+                                                    GtkTreeIter *iter,
+                                                    gpointer user_data);
 static void          render_symbol_markup          (GtkTreeViewColumn *column,
                                                     GtkCellRenderer *renderer,
                                                     GtkTreeModel *model,
@@ -117,7 +122,8 @@ static GQuark priv_quark = 0;
  * Creates a new tree view selector of grain values.
  *
  * Possible column names are <literal>"name"</literal> for the grain value
- * name, <literal>"symbol_markup"</literal> for the symbol and
+ * name, <literal>"symbol_markup"</literal> for the rich text symbol,
+ * <literal>"symbol"</literal> for identifier-style symbol and
  * <literal>"enabled"</literal> for a checkbox column.
  *
  * The tree view selection is set to %GTK_SELECTION_BROWSE mode and it is
@@ -180,18 +186,24 @@ gwy_grain_value_tree_view_new(gboolean show_id,
                                                     NULL);
             title =_("Symbol");
         }
-        /*
         else if (gwy_strequal(first_column, "symbol")) {
             renderer = gtk_cell_renderer_text_new();
+            g_object_set(renderer,
+                         "family", "monospace",
+                         "family-set", TRUE,
+                         "foreground-set", TRUE,
+                         NULL);
             gtk_tree_view_column_pack_start(column, renderer, TRUE);
             gtk_tree_view_column_set_cell_data_func(column, renderer,
                                                     render_symbol, NULL,
                                                     NULL);
             title = _("Symbol");
         }
-        */
         else if (gwy_strequal(first_column, "enabled")) {
             renderer = gtk_cell_renderer_toggle_new();
+            g_object_set(renderer,
+                         "foreground-set", TRUE,
+                         NULL);
             gtk_tree_view_column_pack_start(column, renderer, TRUE);
             gtk_tree_view_column_set_cell_data_func(column, renderer,
                                                     render_enabled, treeview,
@@ -609,6 +621,33 @@ render_name(G_GNUC_UNUSED GtkTreeViewColumn *column,
                  "markup", name,
                  "foreground-gdk", &color,
                  NULL);
+}
+
+static void
+render_symbol(G_GNUC_UNUSED GtkTreeViewColumn *column,
+              GtkCellRenderer *renderer,
+              GtkTreeModel *model,
+              GtkTreeIter *iter,
+              gpointer user_data)
+{
+    GtkTreeView *treeview = (GtkTreeView*)user_data;
+    GwyGrainValue *gvalue;
+    GdkColor color;
+
+    gtk_tree_model_get(model, iter,
+                       GWY_GRAIN_VALUE_STORE_COLUMN_ITEM, &gvalue,
+                       -1);
+
+    if (gvalue) {
+        text_color(treeview, gvalue, &color);
+        g_object_set(renderer,
+                     "text", gwy_grain_value_get_symbol(gvalue),
+                     "foreground-gdk", &color,
+                     NULL);
+        g_object_unref(gvalue);
+    }
+    else
+        g_object_set(renderer, "text", "", NULL);
 }
 
 static void
