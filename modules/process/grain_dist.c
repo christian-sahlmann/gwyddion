@@ -38,7 +38,8 @@
 
 enum {
     MIN_RESOLUTION = 4,
-    MAX_RESOLUTION = 1024
+    MAX_RESOLUTION = 1024,
+    RESPONSE_CLEAR = 2
 };
 
 typedef enum {
@@ -229,13 +230,15 @@ grain_dist_dialog(GrainDistArgs *args,
 
     dialog = GTK_DIALOG(gtk_dialog_new_with_buttons(_("Grain Distributions"),
                                                     NULL, 0,
+                                                    GTK_STOCK_CLEAR,
+                                                    RESPONSE_CLEAR,
                                                     GTK_STOCK_CANCEL,
                                                     GTK_RESPONSE_CANCEL,
                                                     NULL));
     controls.ok = gtk_dialog_add_button(dialog, GTK_STOCK_OK, GTK_RESPONSE_OK);
     gtk_dialog_set_has_separator(dialog, FALSE);
     gtk_dialog_set_default_response(dialog, GTK_RESPONSE_OK);
-    gtk_window_set_default_size(GTK_WINDOW(dialog), 240, 520);
+    gtk_window_set_default_size(GTK_WINDOW(dialog), -1, 520);
 
     scwin = gtk_scrolled_window_new(NULL, NULL);
     gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scwin),
@@ -304,6 +307,15 @@ grain_dist_dialog(GrainDistArgs *args,
             gtk_widget_destroy(GTK_WIDGET(dialog));
             case GTK_RESPONSE_NONE:
             return;
+            break;
+
+            case RESPONSE_CLEAR:
+            g_signal_handlers_block_by_func(model,
+                                            selected_changed_cb, &controls);
+            gwy_grain_value_tree_view_set_expanded_groups(treeview, 0);
+            g_signal_handlers_unblock_by_func(model,
+                                              selected_changed_cb, &controls);
+            selected_changed_cb(&controls);
             break;
 
             case GTK_RESPONSE_OK:
