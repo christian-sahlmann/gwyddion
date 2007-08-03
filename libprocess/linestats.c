@@ -538,7 +538,7 @@ gwy_data_line_distribution(GwyDataLine *data_line,
         nstats = MAX(nstats, 2);
     }
 
-    gwy_debug("min: %g, max: %g, nstats: %d", min, max, nstats);
+    gwy_debug("min: %g, max: %g, nstats: %d", ymin, ymax, nstats);
     s = (ymax - ymin)/(nstats - 1e-9);
 
     /* Fill histogram */
