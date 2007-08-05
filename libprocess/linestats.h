@@ -90,6 +90,8 @@ void    gwy_data_line_acf               (GwyDataLine *data_line,
                                          GwyDataLine *target_line);
 void    gwy_data_line_hhcf              (GwyDataLine *data_line,
                                          GwyDataLine *target_line);
+/* XXX: Fix the crappy arguments to enums, cannot do it now as the type differs
+ * so it would be an API breakage. */
 void    gwy_data_line_psdf              (GwyDataLine *data_line,
                                          GwyDataLine *target_line,
                                          gint windowing,

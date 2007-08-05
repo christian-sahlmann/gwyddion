@@ -400,15 +400,17 @@ gwy_data_line_hhcf(GwyDataLine *data_line, GwyDataLine *target_line)
 
 /**
  * gwy_data_line_psdf:
- * @data_line: A data line.  Its contents is destroyed and even its size
- *             may change.
+ * @data_line: A data line.
  * @target_line: Data line to store power spectral density function to.
  *               It will be resized to @data_line size.
  * @windowing: Windowing method to use.
- * @interpolation: Interpolation method to use.
+ * @interpolation: Interpolation type.
+ *                 Ignored since 2.8 as no reampling is performed.
  *
- * Copmutes power spectral density function and stores the values in
- * @target_line.
+ * Calculates the power spectral density function of a data line.
+ *
+ * Up to version 2.7 it destroyed the input data and did not set the output
+ * units properly.
  **/
 void
 gwy_data_line_psdf(GwyDataLine *data_line,
@@ -417,22 +419,19 @@ gwy_data_line_psdf(GwyDataLine *data_line,
                    gint interpolation)
 {
     GwyDataLine *iin, *rout, *iout;
-    gint i, order, newres, oldres;
+    GwySIUnit *xunit, *yunit, *lineunit;
+    gdouble *data, *rdata, *idata;
+    gdouble q;
+    gint i, res;
 
     g_return_if_fail(GWY_IS_DATA_LINE(data_line));
     g_return_if_fail(GWY_IS_DATA_LINE(target_line));
 
-    oldres = data_line->res;
-    order = GWY_ROUND(log(data_line->res)/G_LN2);
-    newres = (gint)pow(2, order);
-
-    iin = gwy_data_line_new(newres, data_line->real, TRUE);
-    rout = gwy_data_line_new(newres, data_line->real, TRUE);
-    iout = gwy_data_line_new(newres, data_line->real, TRUE);
-
-    /* resample to 2^N (this could be done within FFT, but with loss of
-     * precision)*/
-    gwy_data_line_resample(data_line, newres, interpolation);
+    res = data_line->res;
+    iin = gwy_data_line_new_alike(data_line, TRUE);
+    rout = gwy_data_line_new_alike(data_line, FALSE);
+    iout = gwy_data_line_new_alike(data_line, FALSE);
+    gwy_data_line_resample(target_line, res/2, GWY_INTERPOLATION_NONE);
 
     gwy_data_line_fft(data_line, iin, rout, iout,
                       windowing,
@@ -440,23 +439,30 @@ gwy_data_line_psdf(GwyDataLine *data_line,
                       interpolation,
                       TRUE, 2);
 
-    gwy_data_line_resample(target_line, newres/2.0, GWY_INTERPOLATION_NONE);
+    data = data_line->data;
+    rdata = rout->data;
+    idata = iout->data;
+    q = data_line->real/(res*res*2.0*G_PI);
 
-    /*compute module*/
-    for (i = 0; i < newres/2; i++) {
-        target_line->data[i] = (rout->data[i]*rout->data[i]
-                                + iout->data[i]*iout->data[i])
-                               *data_line->real/(newres*newres*2*G_PI);
-    }
+    /* Calculate modulus */
+    for (i = 0; i < res/2; i++)
+        data[i] = q*(rdata[i]*rdata[i] + idata[i]*idata[i]);
+
     target_line->real = 2*G_PI*target_line->res/data_line->real;
     target_line->off = 0.0;
-
-    /*resample to given output size*/
-    gwy_data_line_resample(target_line, oldres/2.0, interpolation);
 
     g_object_unref(rout);
     g_object_unref(iin);
     g_object_unref(iout);
+
+    /* Set proper units */
+    xunit = gwy_data_line_get_si_unit_x(data_line);
+    yunit = gwy_data_line_get_si_unit_y(data_line);
+    lineunit = gwy_data_line_get_si_unit_x(target_line);
+    gwy_si_unit_power(xunit, -1, lineunit);
+    lineunit = gwy_data_line_get_si_unit_y(target_line);
+    gwy_si_unit_power(yunit, 2, lineunit);
+    gwy_si_unit_multiply(lineunit, xunit, lineunit);
 }
 
 /**
