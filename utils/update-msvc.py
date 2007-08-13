@@ -198,7 +198,7 @@ def expand_template(makefile, name, supplementary=None):
             s.append('LIBRARY = ' + l)
         return '\n'.join(s)
     elif name == 'DATA':
-        lst = get_list(makefile, '\w+_DATA')
+        lst = get_list(makefile, r'\w+_DATA')
         list_part = name + ' =' + format_list(lst)
         inst_part = [('$(INSTALL) %s "$(DEST_DIR)\$(DATA_TYPE)"' % x)
                      for x in lst]
