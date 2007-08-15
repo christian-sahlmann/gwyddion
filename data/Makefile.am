@@ -66,7 +66,7 @@ gwyddion.xml: $(top_srcdir)/utils/extract-file-magic.py $(file_magic_sources)
 endif
 
 # Desktop file installation
-# FIME: Maybe not according to current standards
+# FIXME: Maybe not according to current standards
 if DESKTOP_FILE_UPDATE
 install-data-hook:
 	$(UPDATE_DESKTOP_DATABASE) $(DESTDIR)$(datadir)/applications
