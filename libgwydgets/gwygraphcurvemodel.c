@@ -21,6 +21,7 @@
 #include "config.h"
 #include <string.h>
 #include <gtk/gtk.h>
+#include <libgwyddion/gwymath.h>
 #include <libdraw/gwyrgba.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwydebugobjects.h>
@@ -35,11 +36,21 @@
 #define CBIT(b)          (1 << GWY_GRAPH_CURVE_MODEL_CACHE_##b)
 #define CTEST(cmodel, b) ((cmodel)->cached & CBIT(b))
 
+/* Cache2 operations, we use the same bitfield  but a different array */
+#define CVAL2(cmodel, b)  ((cmodel)->cache2[GWY_GRAPH_CURVE_MODEL_CACHE2_##b \
+                           - GWY_GRAPH_CURVE_MODEL_CACHE2_OFFSET])
+#define CBIT2(b)          (1 << GWY_GRAPH_CURVE_MODEL_CACHE2_##b)
+#define CTEST2(cmodel, b) ((cmodel)->cached & CBIT2(b))
+
 typedef enum {
     GWY_GRAPH_CURVE_MODEL_CACHE_XMIN = 0,
     GWY_GRAPH_CURVE_MODEL_CACHE_XMAX,
     GWY_GRAPH_CURVE_MODEL_CACHE_YMIN,
-    GWY_GRAPH_CURVE_MODEL_CACHE_YMAX
+    GWY_GRAPH_CURVE_MODEL_CACHE_YMAX,
+    GWY_GRAPH_CURVE_MODEL_CACHE2_OFFSET,
+    GWY_GRAPH_CURVE_MODEL_CACHE2_XMIN_POS = GWY_GRAPH_CURVE_MODEL_CACHE2_OFFSET,
+    GWY_GRAPH_CURVE_MODEL_CACHE2_YMIN_ABS,
+    GWY_GRAPH_CURVE_MODEL_CACHE2_LAST,
 } GwyGraphCurveModelCached;
 
 static void     gwy_graph_curve_model_finalize         (GObject *object);
@@ -279,7 +290,6 @@ gwy_graph_curve_model_get_property(GObject*object,
     }
 }
 
-
 static void
 gwy_graph_curve_model_init(GwyGraphCurveModel *gcmodel)
 {
@@ -339,14 +349,14 @@ gwy_graph_curve_model_new_alike(GwyGraphCurveModel *gcmodel)
     gwy_debug("");
 
     duplicate = gwy_graph_curve_model_new();
-    duplicate->description = g_string_new(gcmodel->description->str); 
+    duplicate->description = g_string_new(gcmodel->description->str);
     duplicate->color = gcmodel->color;
     duplicate->mode = gcmodel->mode;
     duplicate->point_type = gcmodel->point_type;
     duplicate->point_size = gcmodel->point_size;
     duplicate->line_style = gcmodel->line_style;
     duplicate->line_width = gcmodel->line_width;
-    
+
     return duplicate;
 }
 
@@ -361,6 +371,7 @@ gwy_graph_curve_model_finalize(GObject *object)
     g_string_free(gcmodel->description, TRUE);
     g_free(gcmodel->xdata);
     g_free(gcmodel->ydata);
+    g_free(gcmodel->cache2);
     G_OBJECT_CLASS(gwy_graph_curve_model_parent_class)->finalize(object);
 }
 
@@ -697,6 +708,7 @@ gwy_graph_curve_model_get_x_range(GwyGraphCurveModel *gcmodel,
 
     CVAL(gcmodel, XMIN) = xmin;
     CVAL(gcmodel, XMAX) = xmax;
+    gcmodel->cached |= CBIT(XMIN) | CBIT(XMAX);
 
     if (x_min)
         *x_min = xmin;
@@ -763,12 +775,147 @@ gwy_graph_curve_model_get_y_range(GwyGraphCurveModel *gcmodel,
 
     CVAL(gcmodel, YMIN) = ymin;
     CVAL(gcmodel, YMAX) = ymax;
+    gcmodel->cached |= CBIT(YMIN) | CBIT(YMAX);
 
     if (y_min)
         *y_min = ymin;
     if (y_max)
         *y_max = ymax;
 
+    return TRUE;
+}
+
+/**
+ * gwy_graph_curve_model_get_abs_y_min:
+ * @gcmodel: A graph curve model.
+ * @abs_y_min: Location to store minimum positive absolute ordinate value to.
+ *
+ * Gets the log-scale suitable ordinate minimum of a graph curve.
+ *
+ * This is the minimum of absolute @y values that are greater from zero.
+ * The expectation is that ordinate values are displayed in their absolute
+ * value in the logscale mode.
+ *
+ * The return value is cached in the curve model therefore repeated calls to
+ * this function (with unchanged data) are cheap.
+ *
+ * If there are no non-zero @y values in the curve, @abs_y_min is untouched
+ * and the function returns %FALSE.
+ *
+ * Returns: %TRUE if @abs_y_min was set.
+ *
+ * Since: 2.8
+ **/
+gboolean
+gwy_graph_curve_model_get_abs_y_min(GwyGraphCurveModel *gcmodel,
+                                    gdouble *abs_y_min)
+{
+    gdouble yamin;
+    gint i;
+
+    g_return_val_if_fail(GWY_IS_GRAPH_CURVE_MODEL(gcmodel), FALSE);
+
+    if (!gcmodel->n)
+        return FALSE;
+
+    if (!abs_y_min)
+        return TRUE;
+
+    if (!gcmodel->cache2)
+        gcmodel->cache2 = g_new0(gdouble,
+                                 GWY_GRAPH_CURVE_MODEL_CACHE2_LAST
+                                 - GWY_GRAPH_CURVE_MODEL_CACHE2_OFFSET);
+
+    else if (CTEST2(gcmodel, YMIN_ABS)) {
+        yamin = CVAL2(gcmodel, YMIN_ABS);
+        /* Cached non-existence of positive values */
+        if (yamin < 0.0)
+            return FALSE;
+        *abs_y_min = yamin;
+        return TRUE;
+    }
+
+    yamin = G_MAXDOUBLE;
+    for (i = 0; i < gcmodel->n; i++) {
+        gdouble v = fabs(gcmodel->ydata[i]);
+
+        if (v > 0.0 && v < yamin)
+            yamin = v;
+    }
+
+    gcmodel->cached |= CBIT2(YMIN_ABS);
+    if (yamin == G_MAXDOUBLE) {
+        *abs_y_min = CVAL2(gcmodel, YMIN_ABS) = -1.0;
+        return FALSE;
+    }
+
+    *abs_y_min = CVAL2(gcmodel, YMIN_ABS) = yamin;
+    return TRUE;
+}
+
+/**
+ * gwy_graph_curve_model_get_pos_x_min:
+ * @gcmodel: A graph curve model.
+ * @pos_x_min: Location to store minimum positive abscissa value to.
+ *
+ * This is the minimum of @x values that are greater from zero.
+ * The expectation is that the abscissa is limited to positive values
+ * value in the logscale mode.
+ *
+ * The return value is cached in the curve model therefore repeated calls to
+ * this function (with unchanged data) are cheap.
+ *
+ * If there are no positive @x values in the curve, @pos_x_min is untouched
+ * and the function returns %FALSE.
+ *
+ * Returns: %TRUE if @pos_x_min was set.
+ *
+ * Since: 2.8
+ **/
+gboolean
+gwy_graph_curve_model_get_pos_x_min(GwyGraphCurveModel *gcmodel,
+                                    gdouble *pos_x_min)
+{
+    gdouble xpmin;
+    gint i;
+
+    g_return_val_if_fail(GWY_IS_GRAPH_CURVE_MODEL(gcmodel), FALSE);
+
+    if (!gcmodel->n)
+        return FALSE;
+
+    if (!pos_x_min)
+        return TRUE;
+
+    if (!gcmodel->cache2)
+        gcmodel->cache2 = g_new0(gdouble,
+                                 GWY_GRAPH_CURVE_MODEL_CACHE2_LAST
+                                 - GWY_GRAPH_CURVE_MODEL_CACHE2_OFFSET);
+
+    else if (CTEST2(gcmodel, XMIN_POS)) {
+        xpmin = CVAL2(gcmodel, XMIN_POS);
+        /* Cached non-existence of positive values */
+        if (xpmin < 0.0)
+            return FALSE;
+        *pos_x_min = xpmin;
+        return TRUE;
+    }
+
+    xpmin = G_MAXDOUBLE;
+    for (i = 0; i < gcmodel->n; i++) {
+        gdouble v = gcmodel->xdata[i];
+
+        if (v > 0.0 && v < xpmin)
+            xpmin = v;
+    }
+
+    gcmodel->cached |= CBIT2(XMIN_POS);
+    if (xpmin == G_MAXDOUBLE) {
+        *pos_x_min = CVAL2(gcmodel, XMIN_POS) = -1.0;
+        return FALSE;
+    }
+
+    *pos_x_min = CVAL2(gcmodel, XMIN_POS) = xpmin;
     return TRUE;
 }
 
