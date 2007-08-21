@@ -98,19 +98,20 @@ void     gwy_graph_curve_model_set_data_from_dataline(GwyGraphCurveModel *gcmode
                                                       GwyDataLine *dline,
                                                       gint from_index,
                                                       gint to_index);
-const gdouble*   gwy_graph_curve_model_get_xdata  (GwyGraphCurveModel *gcmodel);
-const gdouble*   gwy_graph_curve_model_get_ydata  (GwyGraphCurveModel *gcmodel);
-gint             gwy_graph_curve_model_get_ndata  (GwyGraphCurveModel *gcmodel);
-gboolean         gwy_graph_curve_model_get_x_range(GwyGraphCurveModel *gcmodel,
-                                                   gdouble *x_min,
-                                                   gdouble *x_max);
-gboolean         gwy_graph_curve_model_get_y_range(GwyGraphCurveModel *gcmodel,
-                                                   gdouble *y_min,
-                                                   gdouble *y_max);
-gboolean       gwy_graph_curve_model_get_abs_y_min(GwyGraphCurveModel *gcmodel,
-                                                   gdouble *abs_y_min);
-gboolean       gwy_graph_curve_model_get_pos_x_min(GwyGraphCurveModel *gcmodel,
-                                                   gdouble *pos_x_min);
+const gdouble* gwy_graph_curve_model_get_xdata  (GwyGraphCurveModel *gcmodel);
+const gdouble* gwy_graph_curve_model_get_ydata  (GwyGraphCurveModel *gcmodel);
+gint           gwy_graph_curve_model_get_ndata  (GwyGraphCurveModel *gcmodel);
+gboolean       gwy_graph_curve_model_get_x_range(GwyGraphCurveModel *gcmodel,
+                                                 gdouble *x_min,
+                                                 gdouble *x_max);
+gboolean       gwy_graph_curve_model_get_y_range(GwyGraphCurveModel *gcmodel,
+                                                 gdouble *y_min,
+                                                 gdouble *y_max);
+gboolean       gwy_graph_curve_model_get_min_log(GwyGraphCurveModel *gcmodel,
+                                                 gboolean x_logscale,
+                                                 gboolean y_logscale,
+                                                 gdouble *x_min,
+                                                 gdouble *y_min);
 
 G_END_DECLS
 
