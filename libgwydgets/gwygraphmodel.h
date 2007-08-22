@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2004 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2004-2007 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -139,6 +139,11 @@ gboolean       gwy_graph_model_get_x_range              (GwyGraphModel *gmodel,
 gboolean       gwy_graph_model_get_y_range              (GwyGraphModel *gmodel,
                                                          gdouble *y_min,
                                                          gdouble *y_max);
+gboolean       gwy_graph_model_get_min_log              (GwyGraphModel *gmodel,
+                                                         gboolean x_logscale,
+                                                         gboolean y_logscale,
+                                                         gdouble *x_min,
+                                                         gdouble *y_min);
 GString*       gwy_graph_model_export_ascii             (GwyGraphModel *model,
                                                          gboolean export_units,
                                                          gboolean export_labels,

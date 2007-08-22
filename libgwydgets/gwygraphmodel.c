@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2004-2007 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -21,6 +21,7 @@
 #include "config.h"
 #include <string.h>
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwydebugobjects.h>
 #include <libgwydgets/gwydgettypes.h>
 #include <libgwydgets/gwygraphcurvemodel.h>
@@ -1432,6 +1433,69 @@ gwy_graph_model_get_y_range(GwyGraphModel *gmodel,
         *y_max = ymax;
 
     return (ymin_ok || !y_min) && (ymax_ok || !y_max);
+}
+
+/**
+ * gwy_graph_model_get_min_log:
+ * @gmodel: A graph model.
+ * @x_logscale: %TRUE if logarithmical scale is intended for the abscissa.
+ * @y_logscale: %TRUE if logarithmical scale is intended for the ordinate.
+ * @x_min: Location to store minimum abscissa value, or %NULL.
+ * @y_min: Location to store minimum ordinate value, or %NULL.
+ *
+ * Gets the log-scale suitable range minima of a graph curve.
+ *
+ * See gwy_graph_curve_model_get_min_log() for discussion.
+ *
+ * Returns: %TRUE if @x_min and @y_min were set.
+ *
+ * Since: 2.8
+ **/
+gboolean
+gwy_graph_model_get_min_log(GwyGraphModel *gmodel,
+                            gboolean x_logscale,
+                            gboolean y_logscale,
+                            gdouble *x_min,
+                            gdouble *y_min)
+{
+    GwyGraphCurveModel *gcmodel;
+    gdouble xmin, ymin, cxmin, cymin;
+    gboolean ymin_ok, xmin_ok;
+    guint i;
+
+    g_return_val_if_fail(GWY_IS_GRAPH_MODEL(gmodel), FALSE);
+
+    xmin = G_MAXDOUBLE;
+    ymin = G_MAXDOUBLE;
+    ymin_ok = xmin_ok = FALSE;
+    for (i = 0; i < gmodel->curves->len; i++) {
+        gcmodel = g_ptr_array_index(gmodel->curves, i);
+        if (gwy_graph_curve_model_get_min_log(gcmodel, x_logscale, y_logscale,
+                                              &cxmin, &cymin)) {
+            xmin_ok = TRUE;
+            if (cxmin < xmin)
+                xmin = cxmin;
+            ymin_ok = TRUE;
+            if (cymin < cymin)
+                cymin = cymin;
+        }
+    }
+
+    if (gmodel->x_min_set && gmodel->x_min > 0.0) {
+        xmin = gmodel->x_min;
+        xmin_ok = TRUE;
+    }
+    if (gmodel->y_min_set && fabs(gmodel->y_min) > 0.0) {
+        ymin = fabs(gmodel->y_min);
+        ymin_ok = TRUE;
+    }
+
+    if (x_min && xmin_ok)
+        *x_min = xmin;
+    if (y_min && ymin_ok)
+        *y_min = ymin;
+
+    return (ymin_ok || !y_min) && (xmin_ok || !x_min);
 }
 
 /**
