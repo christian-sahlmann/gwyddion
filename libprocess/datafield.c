@@ -2139,8 +2139,13 @@ gwy_data_field_get_xder(GwyDataField *data_field,
  *
  * On border points, one-side derivative is returned.
  *
+ * Note the derivative is for legacy reasons calulcated for the opposite
+ * y direction than is usual elsewhere in Gwyddion, i.e. if values increase
+ * with increasing row number, the returned value is negative.
+ *
  * Returns: Derivative in Y direction
  **/
+/* XXX XXX XXX */
 gdouble
 gwy_data_field_get_yder(GwyDataField *data_field,
                         gint col, gint row)
