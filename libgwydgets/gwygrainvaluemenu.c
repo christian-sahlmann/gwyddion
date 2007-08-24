@@ -195,9 +195,6 @@ gwy_grain_value_tree_view_new(gboolean show_id,
         }
         else if (gwy_strequal(first_column, "enabled")) {
             renderer = gtk_cell_renderer_toggle_new();
-            g_object_set(renderer,
-                         "foreground-set", TRUE,
-                         NULL);
             gtk_tree_view_column_pack_start(column, renderer, TRUE);
             gtk_tree_view_column_set_cell_data_func(column, renderer,
                                                     render_enabled, treeview,
