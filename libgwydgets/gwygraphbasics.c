@@ -57,29 +57,35 @@ static gint
 x_data_to_pixel(GwyGraphActiveAreaSpecs *specs, gdouble data)
 {
    if (!specs->log_x)
-       return specs->xmin
-            + (gint)((data - specs->real_xmin)
-                     /(specs->real_width)*(specs->width - 1.0));
+       return (specs->xmin
+               + GWY_ROUND((data - specs->real_xmin)
+                           /(specs->real_width)*(specs->width - 1.0)));
 
-   return specs->xmin
-       + (gint)((log10(data) - log10(specs->real_xmin))
-                /((log10(specs->real_xmin + specs->real_width)
-                   - log10(specs->real_xmin)))*(specs->width - 1.0));
+   if (data <= 0.0)
+        return G_MAXINT;    /* Force sticking out of the drawable area */
 
+   return (specs->xmin
+           + GWY_ROUND((log10(data) - log10(specs->real_xmin))
+                       /((log10(specs->real_xmin + specs->real_width)
+                          - log10(specs->real_xmin)))*(specs->width - 1.0)));
 }
 
 static gint
 y_data_to_pixel(GwyGraphActiveAreaSpecs *specs, gdouble data)
 {
     if (!specs->log_y)
-        return specs->ymin + specs->height
-            - (gint)((data - specs->real_ymin)
-                     /(specs->real_height)*(specs->height - 1.0));
+        return (specs->ymin + specs->height
+                - GWY_ROUND((data - specs->real_ymin)
+                            /(specs->real_height)*(specs->height - 1.0)));
 
-    return specs->ymin + specs->height
-        - (gint)((log10(data) - log10(specs->real_ymin))
-                /((log10(specs->real_ymin + specs->real_height)
-                   - log10(specs->real_ymin)))*(specs->height - 1.0));
+    data = fabs(data);
+    if (data == 0.0)
+        return G_MAXINT;    /* Force sticking out of the drawable area */
+
+    return (specs->ymin + specs->height
+            - GWY_ROUND((log10(fabs(data)) - log10(specs->real_ymin))
+                        /((log10(specs->real_ymin + specs->real_height)
+                           - log10(specs->real_ymin)))*(specs->height - 1.0)));
 }
 
 static void

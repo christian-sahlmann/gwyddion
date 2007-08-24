@@ -1255,8 +1255,8 @@ gwy_axis_normalscale(GwyAxis *a)
 
     range = fabs(reqmax - reqmin); /* total range of the field */
 
-    if (range > 1e40 || range < -1e40) {
-        g_warning("Axis with extreme range (>1e40)!");
+    if (range > G_MAXDOUBLE/100.0 || range < -G_MAXDOUBLE/100.0) {
+        g_warning("Axis with extreme range!");
         return TRUE;
     }
 

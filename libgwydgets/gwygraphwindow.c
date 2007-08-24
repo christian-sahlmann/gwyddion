@@ -212,9 +212,6 @@ gwy_graph_window_new(GwyGraph *graph)
                              G_CALLBACK(gwy_graph_window_x_log),
                              graphwindow);
 
-    gtk_widget_set_sensitive(graphwindow->button_x_log,
-                gwy_graph_model_x_data_can_be_logarithmed(graph->graph_model));
-
     graphwindow->button_y_log = gtk_toggle_button_new();
     gtk_container_add(GTK_CONTAINER(graphwindow->button_y_log),
                       gtk_image_new_from_stock(GWY_STOCK_LOGSCALE_VERTICAL,
@@ -226,9 +223,6 @@ gwy_graph_window_new(GwyGraph *graph)
     g_signal_connect_swapped(graphwindow->button_y_log, "clicked",
                              G_CALLBACK(gwy_graph_window_y_log),
                              graphwindow);
-
-    gtk_widget_set_sensitive(graphwindow->button_y_log,
-                gwy_graph_model_y_data_can_be_logarithmed(graph->graph_model));
 
     graphwindow->statusbar = gwy_statusbar_new();
     gtk_widget_set_name(graphwindow->statusbar, "gwyflatstatusbar");

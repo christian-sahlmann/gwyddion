@@ -1476,8 +1476,8 @@ gwy_graph_model_get_min_log(GwyGraphModel *gmodel,
             if (cxmin < xmin)
                 xmin = cxmin;
             ymin_ok = TRUE;
-            if (cymin < cymin)
-                cymin = cymin;
+            if (cymin < ymin)
+                ymin = cymin;
         }
     }
 

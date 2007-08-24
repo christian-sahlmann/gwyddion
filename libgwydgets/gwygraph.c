@@ -48,8 +48,7 @@ static void gwy_graph_model_notify      (GwyGraph *graph,
                                          GwyGraphModel *gmodel);
 static void gwy_graph_curve_data_changed(GwyGraph *graph,
                                          gint i);
-static void gwy_graph_refresh_x_range   (GwyGraph *graph);
-static void gwy_graph_refresh_y_range   (GwyGraph *graph);
+static void gwy_graph_refresh_ranges    (GwyGraph *graph);
 static void gwy_graph_axis_rescaled     (GwyAxis *axis,
                                          GwyGraph *graph);
 static void gwy_graph_zoomed            (GwyGraph *graph);
@@ -262,8 +261,7 @@ gwy_graph_refresh_all(GwyGraph *graph)
         gwy_axis_set_label(graph->axis[i], label);
     }
 
-    gwy_graph_refresh_x_range(graph);
-    gwy_graph_refresh_y_range(graph);
+    gwy_graph_refresh_ranges(graph);
 }
 
 /**
@@ -370,12 +368,9 @@ gwy_graph_model_notify(GwyGraph *graph,
     }
 
     /* Ranges */
-    if (g_str_has_prefix(pspec->name, "x-")) {
-        gwy_graph_refresh_x_range(graph);
-        return;
-    }
-    if (g_str_has_prefix(pspec->name, "y-")) {
-        gwy_graph_refresh_y_range(graph);
+    if (g_str_has_prefix(pspec->name, "x-")
+        || g_str_has_prefix(pspec->name, "y-")) {
+        gwy_graph_refresh_ranges(graph);
         return;
     }
 
@@ -392,53 +387,43 @@ static void
 gwy_graph_curve_data_changed(GwyGraph *graph,
                              G_GNUC_UNUSED gint i)
 {
-    gwy_graph_refresh_x_range(graph);
-    gwy_graph_refresh_y_range(graph);
+    gwy_graph_refresh_ranges(graph);
 }
 
 static void
-gwy_graph_refresh_x_range(GwyGraph *graph)
+gwy_graph_refresh_ranges(GwyGraph *graph)
 {
     GwyGraphModel *gmodel = graph->graph_model;
-    gdouble min, max;
-    gboolean lg;
+    gdouble xmin, xmax, ymin, ymax;
+    gboolean xlg, ylg;
 
-    g_object_get(gmodel, "x-logarithmic", &lg, NULL);
-    gwy_axis_set_logarithmic(graph->axis[GTK_POS_BOTTOM], lg);
-    gwy_axis_set_logarithmic(graph->axis[GTK_POS_TOP], lg);
-
-    /* Request range */
-    if (!gwy_graph_model_get_x_range(gmodel, &min, &max)) {
-        min = 0.0;
-        max = 1.0;
-    }
-    gwy_debug("%p: req: %g, %g", graph, min, max);
-
-    gwy_axis_request_range(graph->axis[GTK_POS_BOTTOM], min, max);
-    gwy_axis_request_range(graph->axis[GTK_POS_TOP], min, max);  /* XXX */
-    /* The range propagation happens in "rescaled" handler. */
-}
-
-static void
-gwy_graph_refresh_y_range(GwyGraph *graph)
-{
-    GwyGraphModel *gmodel = graph->graph_model;
-    gdouble min, max;
-    gboolean lg;
-
-    g_object_get(gmodel, "y-logarithmic", &lg, NULL);
-    gwy_axis_set_logarithmic(graph->axis[GTK_POS_LEFT], lg);
-    gwy_axis_set_logarithmic(graph->axis[GTK_POS_RIGHT], lg);
+    g_object_get(gmodel,
+                 "x-logarithmic", &xlg,
+                 "y-logarithmic", &ylg,
+                 NULL);
+    gwy_axis_set_logarithmic(graph->axis[GTK_POS_BOTTOM], xlg);
+    gwy_axis_set_logarithmic(graph->axis[GTK_POS_TOP], xlg);
+    gwy_axis_set_logarithmic(graph->axis[GTK_POS_LEFT], ylg);
+    gwy_axis_set_logarithmic(graph->axis[GTK_POS_RIGHT], ylg);
 
     /* Request range */
-    if (!gwy_graph_model_get_y_range(gmodel, &min, &max)) {
-        min = 0.0;
-        max = 1.0;
+    xmin = xlg ? 0.1 : 0.0;
+    ymin = ylg ? 0.1 : 0.0;
+    xmax = ymax = 1.0;
+    gwy_graph_model_get_x_range(gmodel, &xmin, &xmax);
+    gwy_graph_model_get_y_range(gmodel, &ymin, &ymax);
+    if (xlg || ylg) {
+        if (!gwy_graph_model_get_min_log(gmodel, xlg, ylg, &xmin, &ymin)) {
+            xmin = ymin = 0.1;
+            xmax = ymax = 1.0;
+        }
     }
-    gwy_debug("%p: req: %g, %g", graph, min, max);
+    gwy_debug("%p: req x:(%g,%g) y:(%g,%g)", graph, xmin, xmax, ymin, ymax);
 
-    gwy_axis_request_range(graph->axis[GTK_POS_LEFT], min, max);
-    gwy_axis_request_range(graph->axis[GTK_POS_RIGHT], min, max);  /* XXX */
+    gwy_axis_request_range(graph->axis[GTK_POS_BOTTOM], xmin, xmax);
+    gwy_axis_request_range(graph->axis[GTK_POS_TOP], xmin, xmax);  /* XXX */
+    gwy_axis_request_range(graph->axis[GTK_POS_LEFT], ymin, ymax);
+    gwy_axis_request_range(graph->axis[GTK_POS_RIGHT], ymin, ymax);  /* XXX */
     /* The range propagation happens in "rescaled" handler. */
 }
 
