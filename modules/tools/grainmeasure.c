@@ -191,13 +191,6 @@ render_value(G_GNUC_UNUSED GtkTreeViewColumn *column,
              GtkTreeIter *iter,
              gpointer user_data)
 {
-    enum {
-        angle_units = ((1 << GWY_GRAIN_VALUE_MINIMUM_BOUND_ANGLE)
-                       | (1 << GWY_GRAIN_VALUE_MAXIMUM_BOUND_ANGLE)
-                       | (1 << GWY_GRAIN_VALUE_SLOPE_PHI)
-                       | (1 << GWY_GRAIN_VALUE_SLOPE_THETA))
-    };
-
     GwyToolGrainMeasure *tool = (GwyToolGrainMeasure*)user_data;
     GwyGrainValue *gvalue;
     gdouble value;
@@ -222,7 +215,7 @@ render_value(G_GNUC_UNUSED GtkTreeViewColumn *column,
     }
 
     /* FIXME: Magic number, see top of gwygrainvalue.c */
-    if (gwy_grain_value_get_quantity(gvalue) > 31) {
+    if ((gint)gwy_grain_value_get_quantity(gvalue) > 31) {
         g_snprintf(buf, sizeof(buf), "%d", tool->gno);
         g_object_set(renderer, "text", buf, NULL);
         return;
@@ -468,7 +461,7 @@ gwy_tool_grain_measure_recalculate(GwyToolGrainMeasure *tool)
         gvalues[i] = gwy_inventory_get_nth_item(inventory, i);
         g_ptr_array_index(tool->values, i)
              = g_renew(gdouble, g_ptr_array_index(tool->values, i),
-                       tool->ngrains);
+                       tool->ngrains+1);
     }
 
     gwy_grain_values_calculate(n, gvalues, (gdouble**)tool->values->pdata,
