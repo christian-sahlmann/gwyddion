@@ -201,7 +201,7 @@ remove_dialog(RemoveArgs *args,
               gint id,
               GQuark mquark)
 {
-    GtkWidget *dialog, *table, *spin, *hbox, *label;
+    GtkWidget *dialog, *table, *spin, *hbox, *label, *pivot;
     RemoveControls controls;
     gint response;
     GwyPixmapLayer *layer;
@@ -284,6 +284,7 @@ remove_dialog(RemoveArgs *args,
                              G_CALLBACK(remove_invalidate), &controls);
     g_signal_connect_swapped(controls.is_height, "toggled",
                              G_CALLBACK(remove_invalidate), &controls);
+    pivot = gwy_table_hscale_get_scale(controls.threshold_height);
     row++;
 
     controls.value_height = gtk_label_new(NULL);
@@ -292,6 +293,7 @@ remove_dialog(RemoveArgs *args,
                      2, 3, row, row+1, GTK_FILL, 0, 0, 0);
     g_signal_connect_swapped(controls.threshold_height, "value-changed",
                              G_CALLBACK(update_threshold_value), &controls);
+    gwy_widget_sync_sensitivity(pivot, controls.value_height);
 
     controls.format_height
         = gwy_data_field_get_value_format_z(dfield, GWY_SI_UNIT_FORMAT_VFMARKUP,
@@ -301,6 +303,7 @@ remove_dialog(RemoveArgs *args,
     gtk_label_set_markup(GTK_LABEL(label), controls.format_height->units);
     gtk_table_attach(GTK_TABLE(table), label,
                      3, 4, row, row+1, GTK_FILL, 0, 0, 0);
+    gwy_widget_sync_sensitivity(pivot, label);
 
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
     row++;

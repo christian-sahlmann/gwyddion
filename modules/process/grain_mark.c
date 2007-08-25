@@ -243,7 +243,7 @@ mark_dialog(MarkArgs *args,
             gint id,
             GQuark mquark)
 {
-    GtkWidget *dialog, *table, *hbox, *label;
+    GtkWidget *dialog, *table, *hbox, *label, *pivot;
     MarkControls controls;
     gint response;
     GwyPixmapLayer *layer;
@@ -312,6 +312,7 @@ mark_dialog(MarkArgs *args,
     table_attach_threshold(table, &row, _("_Height:"),
                            &controls.threshold_height, args->height,
                            &controls.is_height, &controls);
+    pivot = gwy_table_hscale_get_scale(controls.threshold_height);
 
     controls.value_height = gtk_label_new(NULL);
     gtk_misc_set_alignment(GTK_MISC(controls.value_height), 1.0, 0.5);
@@ -319,6 +320,7 @@ mark_dialog(MarkArgs *args,
                      2, 3, row, row+1, GTK_FILL, 0, 0, 0);
     g_signal_connect_swapped(controls.threshold_height, "value-changed",
                              G_CALLBACK(update_threshold_value), &controls);
+    gwy_widget_sync_sensitivity(pivot, controls.value_height);
 
     controls.format_height
         = gwy_data_field_get_value_format_z(dfield, GWY_SI_UNIT_FORMAT_VFMARKUP,
@@ -328,6 +330,7 @@ mark_dialog(MarkArgs *args,
     gtk_label_set_markup(GTK_LABEL(label), controls.format_height->units);
     gtk_table_attach(GTK_TABLE(table), label,
                      3, 4, row, row+1, GTK_FILL, 0, 0, 0);
+    gwy_widget_sync_sensitivity(pivot, label);
 
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
     row++;
