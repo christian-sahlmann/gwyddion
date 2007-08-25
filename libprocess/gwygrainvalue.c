@@ -275,7 +275,7 @@ gwy_grain_value_class_init(GwyGrainValueClass *klass)
     res_class->item_type.copy = gwy_grain_value_copy;
     res_class->item_type.compare = NULL;
 
-    res_class->name = "grainvalue";
+    res_class->name = "grainvalues";
     res_class->inventory = gwy_inventory_new(&res_class->item_type);
     res_class->dump = gwy_grain_value_dump;
     res_class->parse = gwy_grain_value_parse;
