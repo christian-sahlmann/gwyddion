@@ -1,4 +1,4 @@
-2.7.20070731
+2.7.20070824
 
 2.8 (0000-00-00)
 Application:
@@ -17,6 +17,9 @@ Libraries:
 - libgwyprocess: New class GwyGrainValue represnting built-in and
   user-defined grain properties.
 - libgwydgets: Functions to display and operate with a grain value tree view.
+- libgwydgets: Graph axes can be set to logarithmic regardless of the data.
+  For the abscissa, display is limited to positive values.  For the ordinate,
+  the absolute value is plotted.
 
 Modules:
 - JPK: A typo causing failure to load any JPK file was fixed.
