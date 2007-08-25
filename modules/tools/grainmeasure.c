@@ -143,6 +143,8 @@ gwy_tool_grain_measure_finalize(GObject *object)
     tool = GWY_TOOL_GRAIN_MEASURE(object);
 
     settings = gwy_app_settings_get();
+    tool->args.expanded
+        = gwy_grain_value_tree_view_get_expanded_groups(tool->treeview);
     gwy_container_set_int32_by_name(settings, expanded_key,
                                     tool->args.expanded);
 
@@ -260,13 +262,6 @@ render_value(G_GNUC_UNUSED GtkTreeViewColumn *column,
 }
 
 static void
-save_expanded_state(GtkTreeView *treeview,
-                    ToolArgs *args)
-{
-    args->expanded = gwy_grain_value_tree_view_get_expanded_groups(treeview);
-}
-
-static void
 gwy_tool_grain_measure_init_dialog(GwyToolGrainMeasure *tool)
 {
     GtkDialog *dialog;
@@ -302,8 +297,6 @@ gwy_tool_grain_measure_init_dialog(GwyToolGrainMeasure *tool)
 
     gwy_grain_value_tree_view_set_expanded_groups(tool->treeview,
                                                   tool->args.expanded);
-    g_signal_connect(treeview, "unrealize",
-                     G_CALLBACK(save_expanded_state), &tool->args);
 
     gwy_plain_tool_add_clear_button(GWY_PLAIN_TOOL(tool));
     gwy_tool_add_hide_button(GWY_TOOL(tool), TRUE);
