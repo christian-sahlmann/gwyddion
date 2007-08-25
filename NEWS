@@ -20,6 +20,8 @@ Libraries:
 - libgwydgets: Graph axes can be set to logarithmic regardless of the data.
   For the abscissa, display is limited to positive values.  For the ordinate,
   the absolute value is plotted.
+- Grain mark by threshold and remove by threshold: Also display the real
+  threshold height next to the percentage.
 
 Modules:
 - JPK: A typo causing failure to load any JPK file was fixed.
