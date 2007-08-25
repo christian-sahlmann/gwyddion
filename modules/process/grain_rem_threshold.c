@@ -23,6 +23,7 @@
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libprocess/grains.h>
+#include <libprocess/stats.h>
 #include <libgwydgets/gwydataview.h>
 #include <libgwydgets/gwylayer-basic.h>
 #include <libgwydgets/gwylayer-mask.h>
@@ -62,6 +63,8 @@ typedef struct {
     GtkWidget *is_height;
     GtkWidget *is_area;
     GtkObject *threshold_height;
+    GtkWidget *value_height;
+    GwySIValueFormat *format_height;
     GtkObject *threshold_area;
     GtkWidget *merge;
     GtkWidget *color_button;
@@ -70,6 +73,8 @@ typedef struct {
     RemoveArgs *args;
     GwyDataField *mask;
     gboolean in_init;
+    gdouble min_height;
+    gdouble max_height;
 } RemoveControls;
 
 static gboolean    module_register               (void);
@@ -94,6 +99,7 @@ static void        remove_dialog_update_controls (RemoveControls *controls,
                                                   RemoveArgs *args);
 static void        remove_dialog_update_values   (RemoveControls *controls,
                                                   RemoveArgs *args);
+static void        update_threshold_value        (RemoveControls *controls);
 static void        update_change_cb              (RemoveControls *controls);
 static void        remove_invalidate             (RemoveControls *controls);
 static void        remove_invalidate2            (gpointer whatever,
@@ -129,7 +135,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Removes grains by thresholding (height, size)."),
     "Petr Klapetek <petr@klapetek.cz>",
-    "1.13",
+    "1.14",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -195,7 +201,7 @@ remove_dialog(RemoveArgs *args,
               gint id,
               GQuark mquark)
 {
-    GtkWidget *dialog, *table, *spin, *hbox;
+    GtkWidget *dialog, *table, *spin, *hbox, *label;
     RemoveControls controls;
     gint response;
     GwyPixmapLayer *layer;
@@ -206,6 +212,8 @@ remove_dialog(RemoveArgs *args,
     controls.args = args;
     controls.mask = mfield;
     controls.in_init = TRUE;
+    gwy_data_field_get_min_max(dfield,
+                               &controls.min_height, &controls.max_height);
 
     dialog = gtk_dialog_new_with_buttons(_("Remove Grains by Threshold"),
                                          NULL, 0, NULL);
@@ -278,6 +286,25 @@ remove_dialog(RemoveArgs *args,
                              G_CALLBACK(remove_invalidate), &controls);
     row++;
 
+    controls.value_height = gtk_label_new(NULL);
+    gtk_misc_set_alignment(GTK_MISC(controls.value_height), 1.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), controls.value_height,
+                     2, 3, row, row+1, GTK_FILL, 0, 0, 0);
+    g_signal_connect_swapped(controls.threshold_height, "value-changed",
+                             G_CALLBACK(update_threshold_value), &controls);
+
+    controls.format_height
+        = gwy_data_field_get_value_format_z(dfield, GWY_SI_UNIT_FORMAT_VFMARKUP,
+                                            NULL);
+    label = gtk_label_new(NULL);
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_label_set_markup(GTK_LABEL(label), controls.format_height->units);
+    gtk_table_attach(GTK_TABLE(table), label,
+                     3, 4, row, row+1, GTK_FILL, 0, 0, 0);
+
+    gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
+    row++;
+
     controls.threshold_area = gtk_adjustment_new(args->area,
                                                  0.0, 16384.0, 1, 10, 0);
     spin = gwy_table_attach_hscale(table, row, _("_Area:"), "px<sup>2</sup>",
@@ -346,6 +373,7 @@ remove_dialog(RemoveArgs *args,
 
     /* finished initializing, allow instant updates */
     controls.in_init = FALSE;
+    update_threshold_value(&controls);
 
     /* show initial preview if instant updates are on */
     if (args->update) {
@@ -447,6 +475,21 @@ remove_dialog_update_values(RemoveControls *controls,
         = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->update));
     args->merge_type
         = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(controls->merge));
+}
+
+static void
+update_threshold_value(RemoveControls *controls)
+{
+    gdouble v;
+    gchar *s;
+
+    v = GTK_ADJUSTMENT(controls->threshold_height)->value/100.0;
+    v = (1.0 - v)*controls->min_height + v*controls->max_height;
+    s = g_strdup_printf("%.*f",
+                        controls->format_height->precision,
+                        v/controls->format_height->magnitude);
+    gtk_label_set_markup(GTK_LABEL(controls->value_height), s);
+    g_free(s);
 }
 
 static void

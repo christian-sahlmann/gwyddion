@@ -23,6 +23,7 @@
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libprocess/grains.h>
+#include <libprocess/stats.h>
 #include <libgwydgets/gwydataview.h>
 #include <libgwydgets/gwylayer-basic.h>
 #include <libgwydgets/gwylayer-mask.h>
@@ -73,6 +74,8 @@ typedef struct {
     GtkWidget *is_slope;
     GtkWidget *is_lap;
     GtkObject *threshold_height;
+    GtkWidget *value_height;
+    GwySIValueFormat *format_height;
     GtkObject *threshold_slope;
     GtkObject *threshold_lap;
     GtkWidget *merge;
@@ -81,6 +84,8 @@ typedef struct {
     GwyContainer *mydata;
     MarkArgs *args;
     gboolean in_init;
+    gdouble min_height;
+    gdouble max_height;
 } MarkControls;
 
 static gboolean    module_register            (void);
@@ -103,6 +108,7 @@ static void        mark_dialog_update_controls(MarkControls *controls,
                                                MarkArgs *args);
 static void        mark_dialog_update_values  (MarkControls *controls,
                                                MarkArgs *args);
+static void        update_threshold_value     (MarkControls *controls);
 static void        update_change_cb           (MarkControls *controls);
 static void        mark_invalidate            (MarkControls *controls);
 static void        mark_invalidate2           (gpointer whatever,
@@ -137,7 +143,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Marks grains by thresholding (height, slope, curvature)."),
     "Petr Klapetek <petr@klapetek.cz>",
-    "1.14",
+    "1.15",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -237,7 +243,7 @@ mark_dialog(MarkArgs *args,
             gint id,
             GQuark mquark)
 {
-    GtkWidget *dialog, *table, *hbox;
+    GtkWidget *dialog, *table, *hbox, *label;
     MarkControls controls;
     gint response;
     GwyPixmapLayer *layer;
@@ -247,6 +253,8 @@ mark_dialog(MarkArgs *args,
 
     controls.args = args;
     controls.in_init = TRUE;
+    gwy_data_field_get_min_max(dfield,
+                               &controls.min_height, &controls.max_height);
 
     dialog = gtk_dialog_new_with_buttons(_("Mark Grains by Threshold"), NULL, 0,
                                          NULL);
@@ -304,6 +312,25 @@ mark_dialog(MarkArgs *args,
     table_attach_threshold(table, &row, _("_Height:"),
                            &controls.threshold_height, args->height,
                            &controls.is_height, &controls);
+
+    controls.value_height = gtk_label_new(NULL);
+    gtk_misc_set_alignment(GTK_MISC(controls.value_height), 1.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), controls.value_height,
+                     2, 3, row, row+1, GTK_FILL, 0, 0, 0);
+    g_signal_connect_swapped(controls.threshold_height, "value-changed",
+                             G_CALLBACK(update_threshold_value), &controls);
+
+    controls.format_height
+        = gwy_data_field_get_value_format_z(dfield, GWY_SI_UNIT_FORMAT_VFMARKUP,
+                                            NULL);
+    label = gtk_label_new(NULL);
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_label_set_markup(GTK_LABEL(label), controls.format_height->units);
+    gtk_table_attach(GTK_TABLE(table), label,
+                     3, 4, row, row+1, GTK_FILL, 0, 0, 0);
+
+    gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
+    row++;
 
     table_attach_threshold(table, &row, _("_Slope:"),
                            &controls.threshold_slope, args->slope,
@@ -373,6 +400,7 @@ mark_dialog(MarkArgs *args,
 
     /* finished initializing, allow instant updates */
     controls.in_init = FALSE;
+    update_threshold_value(&controls);
 
     /* show initial preview if instant updates are on */
     if (args->update) {
@@ -391,6 +419,7 @@ mark_dialog(MarkArgs *args,
             gtk_widget_destroy(dialog);
             case GTK_RESPONSE_NONE:
             g_object_unref(controls.mydata);
+            gwy_si_unit_value_format_free(controls.format_height);
             return;
             break;
 
@@ -423,6 +452,7 @@ mark_dialog(MarkArgs *args,
                             GWY_DATA_ITEM_MASK_COLOR,
                             0);
     gtk_widget_destroy(dialog);
+    gwy_si_unit_value_format_free(controls.format_height);
 
     if (args->computed) {
         mfield = gwy_container_get_object_by_name(controls.mydata, "/0/mask");
@@ -494,6 +524,21 @@ mark_invalidate(MarkControls *controls)
         mark_dialog_update_values(controls, controls->args);
         preview(controls, controls->args);
     }
+}
+
+static void
+update_threshold_value(MarkControls *controls)
+{
+    gdouble v;
+    gchar *s;
+
+    v = GTK_ADJUSTMENT(controls->threshold_height)->value/100.0;
+    v = (1.0 - v)*controls->min_height + v*controls->max_height;
+    s = g_strdup_printf("%.*f",
+                        controls->format_height->precision,
+                        v/controls->format_height->magnitude);
+    gtk_label_set_markup(GTK_LABEL(controls->value_height), s);
+    g_free(s);
 }
 
 static void
