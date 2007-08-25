@@ -671,6 +671,8 @@ gwy_graph_curve_model_set_data_from_dataline(GwyGraphCurveModel *gcmodel,
  * If there are no data points in the curve, @x_min and @x_max are untouched
  * and the function returns %FALSE.
  *
+ * See also gwy_graph_curve_model_get_ranges() for a more high-level function.
+ *
  * Returns: %TRUE if there are any data points in the curve and @x_min, @x_max
  *          were set.
  **/
@@ -739,6 +741,8 @@ gwy_graph_curve_model_get_x_range(GwyGraphCurveModel *gcmodel,
  * If there are no data points in the curve, @x_min and @x_max are untouched
  * and the function returns %FALSE.
  *
+ * See also gwy_graph_curve_model_get_ranges() for a more high-level function.
+ *
  * Returns: %TRUE if there are any data points in the curve and @x_min, @x_max
  *          were set.
  **/
@@ -798,7 +802,9 @@ gwy_graph_curve_model_get_y_range(GwyGraphCurveModel *gcmodel,
  * @x_logscale: %TRUE if logarithmical scale is intended for the abscissa.
  * @y_logscale: %TRUE if logarithmical scale is intended for the ordinate.
  * @x_min: Location to store the minimum abscissa value to, or %NULL.
+ * @x_max: Location to store the maximum abscissa value to, or %NULL.
  * @y_min: Location to store the minimum ordinate value to, or %NULL.
+ * @y_max: Location to store the maximum ordinate value to, or %NULL.
  *
  * Gets the log-scale suitable range minima of a graph curve.
  *
@@ -813,19 +819,21 @@ gwy_graph_curve_model_get_y_range(GwyGraphCurveModel *gcmodel,
  * this function (with unchanged data) are cheap.
  *
  * If there are no data points that would be displayable with the intended
- * logarithmical scale setup, @x_min and @y_min are untouched and %FALSE is
+ * logarithmical scale setup, the output arguments are untouched and %FALSE is
  * returned.
  *
- * Returns: %TRUE if @x_min and @y_min were set.
+ * Returns: %TRUE if the output arguments were filled with the ranges.
  *
  * Since: 2.8
  **/
 gboolean
-gwy_graph_curve_model_get_min_log(GwyGraphCurveModel *gcmodel,
-                                  gboolean x_logscale,
-                                  gboolean y_logscale,
-                                  gdouble *x_min,
-                                  gdouble *y_min)
+gwy_graph_curve_model_get_ranges(GwyGraphCurveModel *gcmodel,
+                                 gboolean x_logscale,
+                                 gboolean y_logscale,
+                                 gdouble *x_min,
+                                 gdouble *x_max,
+                                 gdouble *y_min,
+                                 gdouble *y_max)
 {
     gdouble xmin_xpos, ymin_xpos, ya0min, ya0min_xpos;
     gdouble xret = 0.0, yret = 0.0;
@@ -834,11 +842,12 @@ gwy_graph_curve_model_get_min_log(GwyGraphCurveModel *gcmodel,
 
     g_return_val_if_fail(GWY_IS_GRAPH_CURVE_MODEL(gcmodel), FALSE);
 
+    if (!x_logscale && !y_logscale)
+        return gwy_graph_curve_model_get_x_range(gcmodel, x_min, x_max)
+               && gwy_graph_curve_model_get_y_range(gcmodel, y_min, y_max);
+
     if (!gcmodel->n)
         return FALSE;
-
-    if (!y_min && !y_min)
-        return TRUE;
 
     if (!gcmodel->cache2)
         gcmodel->cache2 = g_new0(gdouble,
@@ -918,10 +927,27 @@ gwy_graph_curve_model_get_min_log(GwyGraphCurveModel *gcmodel,
         }
     }
 
-    if (x_min)
-        *x_min = xret;
-    if (y_min)
-        *y_min = yret;
+    if (ok) {
+        if (x_min)
+            *x_min = xret;
+        if (y_min)
+            *y_min = yret;
+
+        /* If ok is TRUE, minimum is positive so maximum is always safe. */
+        if (x_max)
+            gwy_graph_curve_model_get_x_range(gcmodel, NULL, x_max);
+
+        if (y_max) {
+            if (y_logscale) {
+                gdouble ym, yp;
+
+                gwy_graph_curve_model_get_y_range(gcmodel, &ym, &yp);
+                *y_max = MAX(fabs(ym), fabs(yp));
+            }
+            else
+                gwy_graph_curve_model_get_y_range(gcmodel, NULL, y_max);
+        }
+    }
 
     return ok;
 }

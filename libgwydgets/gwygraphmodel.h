@@ -139,11 +139,13 @@ gboolean       gwy_graph_model_get_x_range              (GwyGraphModel *gmodel,
 gboolean       gwy_graph_model_get_y_range              (GwyGraphModel *gmodel,
                                                          gdouble *y_min,
                                                          gdouble *y_max);
-gboolean       gwy_graph_model_get_min_log              (GwyGraphModel *gmodel,
+gboolean       gwy_graph_model_get_ranges               (GwyGraphModel *gmodel,
                                                          gboolean x_logscale,
                                                          gboolean y_logscale,
                                                          gdouble *x_min,
-                                                         gdouble *y_min);
+                                                         gdouble *x_max,
+                                                         gdouble *y_min,
+                                                         gdouble *y_max);
 GString*       gwy_graph_model_export_ascii             (GwyGraphModel *model,
                                                          gboolean export_units,
                                                          gboolean export_labels,

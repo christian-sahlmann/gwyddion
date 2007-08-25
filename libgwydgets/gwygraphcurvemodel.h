@@ -107,11 +107,13 @@ gboolean       gwy_graph_curve_model_get_x_range(GwyGraphCurveModel *gcmodel,
 gboolean       gwy_graph_curve_model_get_y_range(GwyGraphCurveModel *gcmodel,
                                                  gdouble *y_min,
                                                  gdouble *y_max);
-gboolean       gwy_graph_curve_model_get_min_log(GwyGraphCurveModel *gcmodel,
-                                                 gboolean x_logscale,
-                                                 gboolean y_logscale,
-                                                 gdouble *x_min,
-                                                 gdouble *y_min);
+gboolean       gwy_graph_curve_model_get_ranges(GwyGraphCurveModel *gcmodel,
+                                                gboolean x_logscale,
+                                                gboolean y_logscale,
+                                                gdouble *x_min,
+                                                gdouble *x_max,
+                                                gdouble *y_min,
+                                                gdouble *y_max);
 
 G_END_DECLS
 

@@ -1324,8 +1324,8 @@ gwy_graph_model_set_axis_label(GwyGraphModel *model,
 /**
  * gwy_graph_model_get_x_range:
  * @gmodel: A graph model.
- * @x_min: Location to store minimum abscissa value, or %NULL.
- * @x_max: Location to store maximum abscissa value, or %NULL.
+ * @x_min: Location to store the minimum abscissa value, or %NULL.
+ * @x_max: Location to store the maximum abscissa value, or %NULL.
  *
  * Gets the abscissa range of a graph.
  *
@@ -1381,8 +1381,8 @@ gwy_graph_model_get_x_range(GwyGraphModel *gmodel,
 /**
  * gwy_graph_model_get_y_range:
  * @gmodel: A graph model.
- * @y_min: Location to store minimum ordinate value, or %NULL.
- * @y_max: Location to store maximum ordinate value, or %NULL.
+ * @y_min: Location to store the minimum ordinate value, or %NULL.
+ * @y_max: Location to store the maximum ordinate value, or %NULL.
  *
  * Gets the ordinate range of a graph.
  *
@@ -1436,66 +1436,88 @@ gwy_graph_model_get_y_range(GwyGraphModel *gmodel,
 }
 
 /**
- * gwy_graph_model_get_min_log:
+ * gwy_graph_model_get_ranges:
  * @gmodel: A graph model.
  * @x_logscale: %TRUE if logarithmical scale is intended for the abscissa.
  * @y_logscale: %TRUE if logarithmical scale is intended for the ordinate.
- * @x_min: Location to store minimum abscissa value, or %NULL.
- * @y_min: Location to store minimum ordinate value, or %NULL.
+ * @x_min: Location to store the minimum abscissa value, or %NULL.
+ * @x_max: Location to store the maximum abscissa value, or %NULL.
+ * @y_min: Location to store the minimum ordinate value, or %NULL.
+ * @y_max: Location to store the maximum ordinate value, or %NULL.
  *
  * Gets the log-scale suitable range minima of a graph curve.
  *
- * See gwy_graph_curve_model_get_min_log() for discussion.
+ * See gwy_graph_curve_model_get_ranges() for discussion.
  *
- * Returns: %TRUE if @x_min and @y_min were set.
+ * Returns: %TRUE if all requested output arguments were filled with the
+ *          ranges.
  *
  * Since: 2.8
  **/
 gboolean
-gwy_graph_model_get_min_log(GwyGraphModel *gmodel,
-                            gboolean x_logscale,
-                            gboolean y_logscale,
-                            gdouble *x_min,
-                            gdouble *y_min)
+gwy_graph_model_get_ranges(GwyGraphModel *gmodel,
+                           gboolean x_logscale,
+                           gboolean y_logscale,
+                           gdouble *x_min,
+                           gdouble *x_max,
+                           gdouble *y_min,
+                           gdouble *y_max)
 {
+    enum { XMIN = 1, XMAX = 2, YMIN = 4, YMAX = 8, ALL = 15 };
     GwyGraphCurveModel *gcmodel;
-    gdouble xmin, ymin, cxmin, cymin;
-    gboolean ymin_ok, xmin_ok;
+    gdouble xmin, ymin, xmax, ymax, cxmin, cymin, cxmax, cymax;
+    guint req, ok = 0;
     guint i;
 
     g_return_val_if_fail(GWY_IS_GRAPH_MODEL(gmodel), FALSE);
 
-    xmin = G_MAXDOUBLE;
-    ymin = G_MAXDOUBLE;
-    ymin_ok = xmin_ok = FALSE;
+    req = ((x_min ? XMIN : 0) | (x_max ? XMAX : 0)
+           | (y_min ? YMIN : 0) | (y_max ? YMAX : 0));
+
+    if (!req)
+        return TRUE;
+
+    xmin = ymin = G_MAXDOUBLE;
+    xmax = ymax = -G_MAXDOUBLE;
     for (i = 0; i < gmodel->curves->len; i++) {
         gcmodel = g_ptr_array_index(gmodel->curves, i);
-        if (gwy_graph_curve_model_get_min_log(gcmodel, x_logscale, y_logscale,
-                                              &cxmin, &cymin)) {
-            xmin_ok = TRUE;
-            if (cxmin < xmin)
-                xmin = cxmin;
-            ymin_ok = TRUE;
-            if (cymin < ymin)
-                ymin = cymin;
+        if (gwy_graph_curve_model_get_ranges(gcmodel, x_logscale, y_logscale,
+                                             &cxmin, &cxmax, &cymin, &cymax)) {
+            ok |= ALL;
+            xmin = MIN(cxmin, xmin);
+            xmax = MAX(cxmax, xmax);
+            ymin = MIN(cymin, ymin);
+            ymax = MAX(cymax, ymax);
         }
     }
 
     if (gmodel->x_min_set && gmodel->x_min > 0.0) {
         xmin = gmodel->x_min;
-        xmin_ok = TRUE;
+        ok |= XMIN;
+    }
+    if (gmodel->x_max_set && gmodel->x_max > 0.0) {
+        xmax = gmodel->x_max;
+        ok |= XMAX;
     }
     if (gmodel->y_min_set && fabs(gmodel->y_min) > 0.0) {
         ymin = fabs(gmodel->y_min);
-        ymin_ok = TRUE;
+        ok |= YMIN;
+    }
+    if (gmodel->y_max_set && gmodel->y_max > 0.0) {
+        ymax = gmodel->y_max;
+        ok |= YMIN;
     }
 
-    if (x_min && xmin_ok)
+    if (x_min && (ok & XMIN))
         *x_min = xmin;
-    if (y_min && ymin_ok)
+    if (x_max && (ok & XMAX))
+        *x_max = xmax;
+    if (y_min && (ok & YMIN))
         *y_min = ymin;
+    if (y_max && (ok & YMAX))
+        *y_max = ymax;
 
-    return (ymin_ok || !y_min) && (xmin_ok || !x_min);
+    return (req & ok) == req;
 }
 
 /**

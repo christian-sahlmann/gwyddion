@@ -407,17 +407,13 @@ gwy_graph_refresh_ranges(GwyGraph *graph)
     gwy_axis_set_logarithmic(graph->axis[GTK_POS_RIGHT], ylg);
 
     /* Request range */
-    xmin = xlg ? 0.1 : 0.0;
-    ymin = ylg ? 0.1 : 0.0;
-    xmax = ymax = 1.0;
-    gwy_graph_model_get_x_range(gmodel, &xmin, &xmax);
-    gwy_graph_model_get_y_range(gmodel, &ymin, &ymax);
-    if (xlg || ylg) {
-        if (!gwy_graph_model_get_min_log(gmodel, xlg, ylg, &xmin, &ymin)) {
-            xmin = ymin = 0.1;
-            xmax = ymax = 1.0;
-        }
+    if (!gwy_graph_model_get_ranges(gmodel, xlg, ylg,
+                                    &xmin, &xmax, &ymin, &ymax)) {
+        xmin = xlg ? 0.1 : 0.0;
+        ymin = ylg ? 0.1 : 0.0;
+        xmax = ymax = 1.0;
     }
+
     gwy_debug("%p: req x:(%g,%g) y:(%g,%g)", graph, xmin, xmax, ymin, ymax);
 
     gwy_axis_request_range(graph->axis[GTK_POS_BOTTOM], xmin, xmax);
