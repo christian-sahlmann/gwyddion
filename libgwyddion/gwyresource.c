@@ -575,7 +575,8 @@ gwy_resource_parse_real(const gchar *text,
     if (!type
         || (expected_type && type != expected_type)
         || !g_type_is_a(type, GWY_TYPE_RESOURCE)
-        || !G_TYPE_IS_INSTANTIATABLE(type)) {
+        || !G_TYPE_IS_INSTANTIATABLE(type)
+        || G_TYPE_IS_ABSTRACT(type)) {
         g_warning("Wrong resource type `%s'", name);
         g_free(name);
         return NULL;
