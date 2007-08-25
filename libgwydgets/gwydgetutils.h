@@ -88,6 +88,8 @@ GtkWidget*    gwy_tool_like_button_new          (const gchar *label_text,
 gboolean      gwy_widget_get_activate_on_unfocus(GtkWidget *widget);
 void          gwy_widget_set_activate_on_unfocus(GtkWidget *widget,
                                                  gboolean activate);
+void          gwy_widget_sync_sensitivity       (GtkWidget *master,
+                                                 GtkWidget *slave);
 PangoFontMap* gwy_get_pango_ft2_font_map        (gboolean unref);
 
 G_END_DECLS

@@ -33,14 +33,18 @@ enum {
     GWY_HSCALE_WIDTH = 96
 };
 
-static void  gwy_hscale_update_log  (GtkAdjustment *adj,
-                                     GtkAdjustment *slave);
-static void  gwy_hscale_update_exp  (GtkAdjustment *adj,
-                                     GtkAdjustment *slave);
-static void  gwy_hscale_update_sqrt (GtkAdjustment *adj,
-                                     GtkAdjustment *slave);
-static void  gwy_hscale_update_sq   (GtkAdjustment *adj,
-                                     GtkAdjustment *slave);
+static void gwy_hscale_update_log (GtkAdjustment *adj,
+                                   GtkAdjustment *slave);
+static void gwy_hscale_update_exp (GtkAdjustment *adj,
+                                   GtkAdjustment *slave);
+static void gwy_hscale_update_sqrt(GtkAdjustment *adj,
+                                   GtkAdjustment *slave);
+static void gwy_hscale_update_sq  (GtkAdjustment *adj,
+                                   GtkAdjustment *slave);
+static void disconnect_slave      (GtkWidget *slave,
+                                   GtkWidget *master);
+static void disconnect_master     (GtkWidget *master,
+                                   GtkWidget *slave);
 
 /************************** Table attaching ****************************/
 
@@ -949,6 +953,54 @@ gwy_tool_like_button_new(const gchar *label_text,
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), button);
 
     return button;
+}
+
+static void
+sync_sensitivity(GtkWidget *master,
+                 G_GNUC_UNUSED GtkStateType state,
+                 GtkWidget *slave)
+{
+    gtk_widget_set_sensitive(slave, GTK_WIDGET_IS_SENSITIVE(master));
+}
+
+static void
+disconnect_slave(GtkWidget *slave,
+                 GtkWidget *master)
+{
+    g_signal_handlers_disconnect_by_func(master, sync_sensitivity, slave);
+    g_signal_handlers_disconnect_by_func(master, disconnect_master, slave);
+}
+
+static void
+disconnect_master(GtkWidget *master,
+                  GtkWidget *slave)
+{
+    g_signal_handlers_disconnect_by_func(master, disconnect_slave, slave);
+}
+
+/**
+ * gwy_widget_sync_sensitivity:
+ * @master: Master widget.
+ * @slave: Slave widget.
+ *
+ * Make widget's sensitivity follow the sensitivity of another widget.
+ *
+ * The sensitivity of @slave is set according to @master's effective
+ * sensitivity (as returned by GTK_WIDGET_IS_SENSITIVE()), i.e. it does not
+ * just synchronize GtkWidget:sensitive property.
+ *
+ * Since: 2.8
+ **/
+void
+gwy_widget_sync_sensitivity(GtkWidget *master,
+                            GtkWidget *slave)
+{
+    g_signal_connect(master, "state-changed",
+                     G_CALLBACK(sync_sensitivity), slave);
+    g_signal_connect(slave, "destroy",
+                     G_CALLBACK(disconnect_slave), master);
+    g_signal_connect(master, "destroy",
+                     G_CALLBACK(disconnect_master), slave);
 }
 
 /**
