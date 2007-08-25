@@ -442,6 +442,7 @@ gwy_grain_value_resolve_expression(const gchar *expression,
         GwyGrainValue *gvalue;
         guint i;
 
+        names = g_new(gchar*, MAXBUILTINS);
         for (i = 0; i < MAXBUILTINS; i++) {
             if ((gvalue = gwy_grain_values_get_builtin_grain_value(i)))
                 names[i] = gvalue->data.symbol;
@@ -508,9 +509,8 @@ gwy_grain_value_parse(const gchar *text,
             g_warning("Unknown field `%s'.", key);
     }
 
-
-    if (data.symbol && !gwy_grain_value_resolve_expression(expression,
-                                                           NULL, NULL)) {
+    if (data.symbol && gwy_grain_value_resolve_expression(expression,
+                                                          NULL, NULL)) {
         gvalue = gwy_grain_value_new("", &data, is_const);
         gwy_grain_value_data_sanitize(&gvalue->data);
         gvalue->expression = g_strdup(expression);
@@ -797,9 +797,12 @@ gwy_grain_value_get_quantity(GwyGrainValue *gvalue)
 {
     g_return_val_if_fail(GWY_IS_GRAIN_VALUE(gvalue), -1);
 
-    if (gvalue->data.group == GWY_GRAIN_VALUE_GROUP_USER
-        || gvalue->data.group == GWY_GRAIN_VALUE_GROUP_ID)
+    if (gvalue->data.group == GWY_GRAIN_VALUE_GROUP_USER)
         return -1;
+
+    if (gvalue->data.group == GWY_GRAIN_VALUE_GROUP_ID)
+        return GWY_GRAIN_QUANTITY_ID;
+
     return gvalue->builtin;
 }
 
