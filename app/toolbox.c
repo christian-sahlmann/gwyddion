@@ -107,8 +107,8 @@ static GtkTargetEntry dnd_target_table[] = {
 };
 
 /* Translatability hack, intltool seems overkill at this point. */
-#define IGNORE(x) /* */
-IGNORE((_("View"), _("Data Process"), _("Graph"), _("Tools")))
+#define GWY_TOOLBOX_IGNORE(x) /* */
+GWY_TOOLBOX_IGNORE((_("View"), _("Data Process"), _("Graph"), _("Tools")))
 
 /* FIXME: A temporary hack. */
 static void
