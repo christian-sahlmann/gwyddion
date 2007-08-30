@@ -6,10 +6,10 @@ dnl          failure
 dnl ACTION-ON-SUCCESS is executed when the value of VARIABLE was successfully
 dnl                   obtained
 dnl ACTION-ON-FAILURE is executed on any kind of failure (can't run Python
-dnl                   or anything
+dnl                   or anything)
 dnl
-dnl Requires: AM_PATH_PYTHON, since you want a particular minimum Python
-dnl           version, call it yourself before
+dnl Requires: AM_PATH_PYTHON, as you probably want a particular minimum Python
+dnl           version, call it yourself beforehand
 AC_DEFUN([GWY_PYTHON_SYSCFG_VAR],
 [
 AC_REQUIRE([AM_PATH_PYTHON])dnl
@@ -19,7 +19,7 @@ cat >conftest.py <<\_______EOF
 import sys, distutils.sysconfig
 x = sys.argv[[1]].strip()
 v = distutils.sysconfig.get_config_var(x)
-if type(v) != type('abcd'):
+if not isinstance(v, str):
     sys.stderr.write('Value of %s is not a string' % x)
     sys.exit(1)
 print 'PYTHON_SYSCFG_%s="%s"' % (x, v)
