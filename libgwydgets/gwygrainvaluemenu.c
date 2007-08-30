@@ -314,6 +314,19 @@ gwy_grain_value_tree_view_get_expanded_groups(GtkTreeView *treeview)
     return expanded_bits;
 }
 
+/**
+ * gwy_grain_value_tree_view_n_enabled:
+ * @treeview: A tree view with grain values.
+ *
+ * Gets the number of enabled values in a grain value tree view.
+ *
+ * Enabled values are those with %GWY_GRAIN_VALUE_STORE_COLUMN_ENABLED column
+ * set to %TRUE in the model.
+ *
+ * Returns: The number of enabled values.
+ *
+ * Since: 2.8
+ **/
 gint
 gwy_grain_value_tree_view_n_enabled(GtkTreeView *treeview)
 {
@@ -362,6 +375,18 @@ count_enabled(GtkTreeModel *model,
     return FALSE;
 }
 
+/**
+ * gwy_grain_value_tree_view_get_enabled:
+ * @treeview: A tree view with grain values.
+ *
+ * Obtains the list of enabled values in a grain value tree view.
+ *
+ * Returns: The list of grain value names.  The list must be freed by the
+ *          caller, the strings are however owned by the individual grain
+ *          values and must not be freed.
+ *
+ * Since: 2.8
+ **/
 const gchar**
 gwy_grain_value_tree_view_get_enabled(GtkTreeView *treeview)
 {
@@ -411,6 +436,18 @@ gather_enabled(GtkTreeModel *model,
     return FALSE;
 }
 
+/**
+ * gwy_grain_value_tree_view_set_enabled:
+ * @treeview: A tree view with grain values.
+ * @names: Array of grain value names to enables.  All grain values not present
+ *         here are disabled.
+ *
+ * Sets the set of enabled values in a grain value tree view.
+ *
+ * The tree is possibly expanded so that all enabled values are visible.
+ *
+ * Since: 2.8
+ **/
 void
 gwy_grain_value_tree_view_set_enabled(GtkTreeView *treeview,
                                       gchar **names)
