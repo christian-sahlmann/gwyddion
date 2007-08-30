@@ -67,7 +67,7 @@ AM_CPPFLAGS = \
 # Any iface change    C++: 0:   A
 # Adding ifaces       C:   R:   A++
 # Changing ifaces     C:   R:   0
-libgwyddion2_la_LDFLAGS = @BASIC_LIBS@ -version-info 3:0:3
+libgwyddion2_la_LDFLAGS = @BASIC_LIBS@ -version-info 3:1:3
 #libgwyddion2_la_LDFLAGS = @BASIC_LIBS@ -release @LIBRARY_RELEASE@
 libgwyddion2_la_SOURCES = \
 	gwycontainer.c \
