@@ -145,7 +145,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("2D FFT Filtering"),
     "Chris Anderson <sidewinder.asu@gmail.com>",
-    "1.5",
+    "1.6",
     "Chris Anderson, Molecular Imaging Corp.",
     "2005",
 };
@@ -535,7 +535,7 @@ run_dialog(ControlsType *controls)
     group = NULL;
     for (i = 0; i < G_N_ELEMENTS(prev_modes); i++) {
         button = gtk_radio_button_new_with_mnemonic_from_widget(group,
-                                                            prev_modes[i].text);
+                                                   gettext(prev_modes[i].text));
         gwy_radio_button_set_value(button, prev_modes[i].prev_mode);
         gtk_box_pack_start(GTK_BOX(hbox2), button, FALSE, FALSE, 0);
         g_signal_connect_swapped(button, "clicked",
