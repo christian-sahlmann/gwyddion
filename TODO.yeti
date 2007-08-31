@@ -9,9 +9,6 @@
   - isotropic autocorrelation
 - Graph minor and major ticks are misaligned
 - Selection on logarithmic graphs doesn't work
-- When a graph is set to logscale and then a curve with negative values is
-  added to it, it gets stuck on logscale because GraphWindow makes the
-  toggle insensitive
 - Fix facet level to do nothing instead of dumping NaNs on bad data.
 - Ruler:
   - When range is all negative, units are not placed anywhere
