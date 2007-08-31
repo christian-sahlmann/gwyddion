@@ -47,7 +47,7 @@ static GwyResource*   gwy_grain_value_parse    (const gchar *text,
 
 /* This is zero-filled memory, albeit typecasted to misc types. */
 static const GwyGrainValueData grainvaluedata_default = {
-    GWY_GRAIN_VALUE_GROUP_USER, NULL, NULL, 0, 0, FALSE,
+    GWY_GRAIN_VALUE_GROUP_USER, NULL, NULL, NULL, 0, 0, 0, 0,
 };
 
 static GwyExpr *expr = NULL;
@@ -63,8 +63,8 @@ grain_values[] = {
         GWY_GRAIN_QUANTITY_ID,  /* Does not correspond to any bit */
         {
             GWY_GRAIN_VALUE_GROUP_ID,
-            "id", "",
-            0, 0, 0,
+            "id", "", NULL,
+            0, 0, 0, 0,
         }
     },
     {
@@ -72,8 +72,8 @@ grain_values[] = {
         GWY_GRAIN_VALUE_CENTER_X,
         {
             GWY_GRAIN_VALUE_GROUP_POSITION,
-            "<i>x</i><sub>c</sub>", "x_c",
-            1, 0, 0,
+            "<i>x</i><sub>c</sub>", "x_c", NULL,
+            1, 0, 0, 0,
         }
     },
     {
@@ -81,8 +81,8 @@ grain_values[] = {
         GWY_GRAIN_VALUE_CENTER_Y,
         {
             GWY_GRAIN_VALUE_GROUP_POSITION,
-            "<i>y</i><sub>c</sub>", "y_c",
-            1, 0, 0,
+            "<i>y</i><sub>c</sub>", "y_c", NULL,
+            1, 0, 0, 0,
         }
     },
     {
@@ -90,8 +90,8 @@ grain_values[] = {
         GWY_GRAIN_VALUE_MINIMUM,
         {
             GWY_GRAIN_VALUE_GROUP_VALUE,
-            "<i>z</i><sub>min</sub>", "z_min",
-            0, 1, 0,
+            "<i>z</i><sub>min</sub>", "z_min", NULL,
+            0, 1, 0, 0,
         }
     },
     {
@@ -99,8 +99,8 @@ grain_values[] = {
         GWY_GRAIN_VALUE_MAXIMUM,
         {
             GWY_GRAIN_VALUE_GROUP_VALUE,
-            "<i>z</i><sub>max</sub>", "z_max",
-            0, 1, 0,
+            "<i>z</i><sub>max</sub>", "z_max", NULL,
+            0, 1, 0, 0,
         }
     },
     {
@@ -108,8 +108,8 @@ grain_values[] = {
         GWY_GRAIN_VALUE_MEAN,
         {
             GWY_GRAIN_VALUE_GROUP_VALUE,
-            "<i>z</i><sub>m</sub>", "z_m",
-            0, 1, 0,
+            "<i>z</i><sub>m</sub>", "z_m", NULL,
+            0, 1, 0, 0,
         }
     },
     {
@@ -117,8 +117,8 @@ grain_values[] = {
         GWY_GRAIN_VALUE_MEDIAN,
         {
             GWY_GRAIN_VALUE_GROUP_VALUE,
-            "<i>z</i><sub>med</sub>", "z_med",
-            0, 1, 0,
+            "<i>z</i><sub>med</sub>", "z_med", NULL,
+            0, 1, 0, 0,
         }
     },
     {
@@ -126,8 +126,8 @@ grain_values[] = {
         GWY_GRAIN_VALUE_PROJECTED_AREA,
         {
             GWY_GRAIN_VALUE_GROUP_AREA,
-            "<i>A</i><sub>0</sub>", "A_0",
-            2, 0, 0,
+            "<i>A</i><sub>0</sub>", "A_0", NULL,
+            2, 0, 0, 0,
         }
     },
     {
@@ -135,8 +135,8 @@ grain_values[] = {
         GWY_GRAIN_VALUE_SURFACE_AREA,
         {
             GWY_GRAIN_VALUE_GROUP_AREA,
-            "<i>A</i><sub>s</sub>", "A_s",
-            2, 0, GWY_GRAIN_VALUE_SAME_UNITS,
+            "<i>A</i><sub>s</sub>", "A_s", NULL,
+            2, 0, GWY_GRAIN_VALUE_SAME_UNITS, 0,
         }
     },
     {
@@ -144,8 +144,8 @@ grain_values[] = {
         GWY_GRAIN_VALUE_EQUIV_SQUARE_SIDE,
         {
             GWY_GRAIN_VALUE_GROUP_AREA,
-            "<i>a</i><sub>eq</sub>", "a_eq",
-            1, 0, 0,
+            "<i>a</i><sub>eq</sub>", "a_eq", NULL,
+            1, 0, 0, 0,
         }
     },
     {
@@ -153,8 +153,8 @@ grain_values[] = {
         GWY_GRAIN_VALUE_EQUIV_DISC_RADIUS,
         {
             GWY_GRAIN_VALUE_GROUP_AREA,
-            "<i>r</i><sub>eq</sub>", "r_eq",
-            1, 0, 0,
+            "<i>r</i><sub>eq</sub>", "r_eq", NULL,
+            1, 0, 0, 0,
         }
     },
     {
@@ -162,8 +162,8 @@ grain_values[] = {
         GWY_GRAIN_VALUE_HALF_HEIGHT_AREA,
         {
             GWY_GRAIN_VALUE_GROUP_AREA,
-            "<i>A</i><sub>h</sub>", "A_h",
-            2, 0, 0,
+            "<i>A</i><sub>h</sub>", "A_h", NULL,
+            2, 0, 0, 0,
         }
     },
     {
@@ -171,8 +171,8 @@ grain_values[] = {
         GWY_GRAIN_VALUE_VOLUME_0,
         {
             GWY_GRAIN_VALUE_GROUP_VOLUME,
-            "<i>V</i><sub>0</sub>", "V_0",
-            2, 1, 0,
+            "<i>V</i><sub>0</sub>", "V_0", NULL,
+            2, 1, 0, 0,
         }
     },
     {
@@ -180,8 +180,8 @@ grain_values[] = {
         GWY_GRAIN_VALUE_VOLUME_MIN,
         {
             GWY_GRAIN_VALUE_GROUP_VOLUME,
-            "<i>V</i><sub>min</sub>", "V_min",
-            2, 1, 0,
+            "<i>V</i><sub>min</sub>", "V_min", NULL,
+            2, 1, 0, 0,
         }
     },
     {
@@ -189,8 +189,8 @@ grain_values[] = {
         GWY_GRAIN_VALUE_VOLUME_LAPLACE,
         {
             GWY_GRAIN_VALUE_GROUP_VOLUME,
-            "<i>V</i><sub>L</sub>", "V_L",
-            2, 1, 0,
+            "<i>V</i><sub>L</sub>", "V_L", NULL,
+            2, 1, 0, 0,
         }
     },
     {
@@ -198,8 +198,8 @@ grain_values[] = {
         GWY_GRAIN_VALUE_FLAT_BOUNDARY_LENGTH,
         {
             GWY_GRAIN_VALUE_GROUP_BOUNDARY,
-            "<i>L</i><sub>b0</sub>", "L_b0",
-            1, 0, 0,
+            "<i>L</i><sub>b0</sub>", "L_b0", NULL,
+            1, 0, 0, 0,
         }
     },
     {
@@ -207,8 +207,8 @@ grain_values[] = {
         GWY_GRAIN_VALUE_MINIMUM_BOUND_SIZE,
         {
             GWY_GRAIN_VALUE_GROUP_BOUNDARY,
-            "<i>D</i><sub>min</sub>", "D_min",
-            1, 0, 0,
+            "<i>D</i><sub>min</sub>", "D_min", NULL,
+            1, 0, 0, 0,
         }
     },
     {
@@ -216,8 +216,8 @@ grain_values[] = {
         GWY_GRAIN_VALUE_MINIMUM_BOUND_ANGLE,
         {
             GWY_GRAIN_VALUE_GROUP_BOUNDARY,
-            "<i>φ</i><sub>min</sub>", "phi_min",
-            0, 0, GWY_GRAIN_VALUE_IS_ANGLE,
+            "<i>φ</i><sub>min</sub>", "phi_min", NULL,
+            0, 0, GWY_GRAIN_VALUE_IS_ANGLE, 0,
         }
     },
     {
@@ -225,8 +225,8 @@ grain_values[] = {
         GWY_GRAIN_VALUE_MAXIMUM_BOUND_SIZE,
         {
             GWY_GRAIN_VALUE_GROUP_BOUNDARY,
-            "<i>D</i><sub>max</sub>", "D_max",
-            1, 0, 0,
+            "<i>D</i><sub>max</sub>", "D_max", NULL,
+            1, 0, 0, 0,
         }
     },
     {
@@ -234,8 +234,8 @@ grain_values[] = {
         GWY_GRAIN_VALUE_MAXIMUM_BOUND_ANGLE,
         {
             GWY_GRAIN_VALUE_GROUP_BOUNDARY,
-            "<i>φ</i><sub>max</sub>", "phi_max",
-            0, 0, GWY_GRAIN_VALUE_IS_ANGLE,
+            "<i>φ</i><sub>max</sub>", "phi_max", NULL,
+            0, 0, GWY_GRAIN_VALUE_IS_ANGLE, 0,
         }
     },
     {
@@ -243,8 +243,8 @@ grain_values[] = {
         GWY_GRAIN_VALUE_SLOPE_THETA,
         {
             GWY_GRAIN_VALUE_GROUP_SLOPE,
-            "<i>θ</i>", "theta",
-            0, 0, GWY_GRAIN_VALUE_SAME_UNITS | GWY_GRAIN_VALUE_IS_ANGLE,
+            "<i>θ</i>", "theta", NULL,
+            0, 0, GWY_GRAIN_VALUE_SAME_UNITS | GWY_GRAIN_VALUE_IS_ANGLE, 0,
         }
     },
     {
@@ -252,8 +252,8 @@ grain_values[] = {
         GWY_GRAIN_VALUE_SLOPE_PHI,
         {
             GWY_GRAIN_VALUE_GROUP_SLOPE,
-            "<i>φ</i>", "phi",
-            0, 0, GWY_GRAIN_VALUE_IS_ANGLE,
+            "<i>φ</i>", "phi", NULL,
+            0, 0, GWY_GRAIN_VALUE_IS_ANGLE, 0,
         }
     },
 };

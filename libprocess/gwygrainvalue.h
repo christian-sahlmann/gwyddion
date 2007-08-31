@@ -54,9 +54,11 @@ typedef struct {
     GwyGrainValueGroup group;
     gchar *symbol_markup;
     gchar *symbol;
+    gchar *reserveds;
     gint power_xy;
     gint power_z;
     guint flags;
+    gint reservedi;
 } GwyGrainValueData;
 
 struct _GwyGrainValue {
