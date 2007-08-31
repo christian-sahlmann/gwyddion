@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: it\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2007-06-26 11:06+0200\n"
+"POT-Creation-Date: 2007-08-27 03:36+0200\n"
 "PO-Revision-Date: 2007-06-23 12:26+0200\n"
 "Last-Translator: hyperlink <hyperlink@katamail.com>\n"
 "Language-Team:  <it@li.org>\n"
@@ -19,12 +19,146 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: KBabel 1.11.4\n"
 
-#: libgwyddion/gwyinventory.c:1311 libgwydgets/gwygraphwindow.c:609
+#: libgwyddion/gwyinventory.c:1310 libgwydgets/gwygraphwindow.c:603
 #: app/data-browser.c:1344 app/data-browser.c:2024 app/data-browser.c:2739
-#: app/data-browser.c:2898 app/data-browser.c:4687 app/resource-editor.c:365
+#: app/data-browser.c:2898 app/data-browser.c:4704 app/resource-editor.c:365
 #: modules/process/convolution_filter.c:700
 msgid "Untitled"
 msgstr "Senza titolo"
+
+#: libprocess/gwygrainvalue.c:62
+msgid "Grain number"
+msgstr "Numero grani"
+
+#: libprocess/gwygrainvalue.c:71
+#, fuzzy
+msgid "Center x position"
+msgstr " "
+
+#: libprocess/gwygrainvalue.c:80
+#, fuzzy
+msgid "Center y position"
+msgstr " "
+
+#: libprocess/gwygrainvalue.c:89
+#, fuzzy
+msgid "Minimum value"
+msgstr "Valore minimo z"
+
+#: libprocess/gwygrainvalue.c:98
+#, fuzzy
+msgid "Maximum value"
+msgstr "Valore massimo z"
+
+#: libprocess/gwygrainvalue.c:107 modules/tools/filter.c:205
+msgid "Mean value"
+msgstr "Valore medio"
+
+#: libprocess/gwygrainvalue.c:116 modules/tools/filter.c:206
+msgid "Median value"
+msgstr "Valore mediano"
+
+#: libprocess/gwygrainvalue.c:125
+#, fuzzy
+msgid "Projected area"
+msgstr "_Area proiettata"
+
+#: libprocess/gwygrainvalue.c:134
+#, fuzzy
+msgid "Surface area"
+msgstr "Area superficie"
+
+#: libprocess/gwygrainvalue.c:143
+#, fuzzy
+msgid "Equivalent square side"
+msgstr "Lato quadrato equivalente"
+
+#: libprocess/gwygrainvalue.c:152
+#, fuzzy
+msgid "Equivalent disc radius"
+msgstr "Raggio cerchio equivalente"
+
+#: libprocess/gwygrainvalue.c:161
+msgid "Area above half-height"
+msgstr ""
+
+#: libprocess/gwygrainvalue.c:170
+#, fuzzy
+msgid "Zero basis volume"
+msgstr "_Base zero"
+
+#: libprocess/gwygrainvalue.c:179
+#, fuzzy
+msgid "Grain minimum basis volume"
+msgstr "Base minima grani"
+
+#: libprocess/gwygrainvalue.c:188
+#, fuzzy
+msgid "Laplacian background basis volume"
+msgstr "Base sottofondo Laplaciano"
+
+#: libprocess/gwygrainvalue.c:197
+#, fuzzy
+msgid "Projected boundary length"
+msgstr "Lunghezza contorno proiettato"
+
+#: libprocess/gwygrainvalue.c:206
+msgid "Minimum bounding size"
+msgstr "Dimensioni legame minimo"
+
+#: libprocess/gwygrainvalue.c:215
+msgid "Minimum bounding direction"
+msgstr "Direzione legame minimo"
+
+#: libprocess/gwygrainvalue.c:224
+msgid "Maximum bounding size"
+msgstr "Dimensione legame massimo"
+
+#: libprocess/gwygrainvalue.c:233
+msgid "Maximum bounding direction"
+msgstr "Direzione legame massimo"
+
+#: libprocess/gwygrainvalue.c:242 modules/tools/readvalue.c:297
+msgid "Inclination θ"
+msgstr "Inclinazione θ"
+
+#: libprocess/gwygrainvalue.c:251 modules/tools/readvalue.c:307
+msgid "Inclination φ"
+msgstr "Inclinazione φ"
+
+#: libprocess/gwygrainvalue.c:894
+msgid "Id"
+msgstr ""
+
+#: libprocess/gwygrainvalue.c:895 modules/tools/readvalue.c:232
+msgid "Position"
+msgstr "Posizione"
+
+#: libprocess/gwygrainvalue.c:896 app/meta.c:284 modules/tools/level3.c:460
+#: modules/tools/readvalue.c:267
+msgid "Value"
+msgstr "Valore"
+
+#: libprocess/gwygrainvalue.c:897
+msgid "Area"
+msgstr "Area"
+
+#: libprocess/gwygrainvalue.c:898
+msgid "Volume"
+msgstr "Volume"
+
+#: libprocess/gwygrainvalue.c:899
+msgid "Boundary"
+msgstr "Confine"
+
+#: libprocess/gwygrainvalue.c:900 modules/tools/linestats.c:154
+msgid "Slope"
+msgstr "Pendenza"
+
+#: libprocess/gwygrainvalue.c:904
+#, fuzzy
+msgid "User"
+msgstr "Uso"
 
 #: libprocess/gwyprocessenums.c:43
 msgid "Union"
@@ -110,283 +244,287 @@ msgstr "Scala adattata"
 msgid "Scale and space adaptive"
 msgstr "Scala e spazio adattati"
 
-#: libprocess/gwyprocessenums.c:207
+#: libprocess/gwyprocessenums.c:205
 msgid "Round"
 msgstr "Esatta"
 
-#: libprocess/gwyprocessenums.c:208
+#: libprocess/gwyprocessenums.c:206
 msgid "Linear"
 msgstr "Lineare"
 
-#: libprocess/gwyprocessenums.c:209
+#: libprocess/gwyprocessenums.c:207
 msgid "Key"
 msgstr "Chiave"
 
-#: libprocess/gwyprocessenums.c:210
+#: libprocess/gwyprocessenums.c:208
 msgid "BSpline"
 msgstr "BSpline"
 
-#: libprocess/gwyprocessenums.c:211
+#: libprocess/gwyprocessenums.c:209
 msgid "OMOMS"
 msgstr "OMOMS"
 
-#: libprocess/gwyprocessenums.c:212
+#: libprocess/gwyprocessenums.c:210
 msgid "NNA"
 msgstr "NNA"
 
-#: libprocess/gwyprocessenums.c:213
+#: libprocess/gwyprocessenums.c:211
 msgid "Schaum"
 msgstr "Schaum"
 
-#: libprocess/gwyprocessenums.c:245 app/datachooser.c:170
+#: libprocess/gwyprocessenums.c:243 app/datachooser.c:170
 #: app/datachooser.c:372 modules/process/convolution_filter.c:129
 #: modules/process/merge.c:135
 msgid "None"
 msgstr "Nessuno"
 
-#: libprocess/gwyprocessenums.c:246
+#: libprocess/gwyprocessenums.c:244
 msgid "Hann"
 msgstr "Hann"
 
-#: libprocess/gwyprocessenums.c:247
+#: libprocess/gwyprocessenums.c:245
 msgid "Hamming"
 msgstr "Hamming"
 
-#: libprocess/gwyprocessenums.c:248
+#: libprocess/gwyprocessenums.c:246
 msgid "Blackman"
 msgstr "Blackman"
 
-#: libprocess/gwyprocessenums.c:249
+#: libprocess/gwyprocessenums.c:247
 msgid "Lanzcos"
 msgstr "Lanzcos"
 
-#: libprocess/gwyprocessenums.c:250
+#: libprocess/gwyprocessenums.c:248
 msgid "Welch"
 msgstr "Welch"
 
-#: libprocess/gwyprocessenums.c:251
+#: libprocess/gwyprocessenums.c:249
 msgid "Rect"
 msgstr "Rett"
 
-#: libprocess/gwyprocessenums.c:252
+#: libprocess/gwyprocessenums.c:250
 msgid "Nuttall"
 msgstr "Nuttall"
 
-#: libprocess/gwyprocessenums.c:253
+#: libprocess/gwyprocessenums.c:251
 msgid "Flat-top"
 msgstr ""
 
-#: libprocess/gwyprocessenums.c:254
+#: libprocess/gwyprocessenums.c:252
 msgid "Kaiser 2.5"
 msgstr ""
 
-#: libprocess/gwyprocessenums.c:264
+#: libprocess/gwyprocessenums.c:262
 msgid "Normal"
 msgstr "Normale"
 
-#: libprocess/gwyprocessenums.c:265
+#: libprocess/gwyprocessenums.c:263
 msgid "FFT"
 msgstr "FFT"
 
-#: libprocess/gwyprocessenums.c:266
+#: libprocess/gwyprocessenums.c:264
 msgid "Phase only"
 msgstr "Solo Fase"
 
-#: libprocess/morph_lib.c:169 libprocess/morph_lib.c:458
+#: libprocess/morph_lib.c:169 libprocess/morph_lib.c:461
 msgid "Dilation"
 msgstr "Espansione"
 
-#: libprocess/morph_lib.c:235 libprocess/morph_lib.c:525
+#: libprocess/morph_lib.c:235 libprocess/morph_lib.c:528
 msgid "Erosion"
 msgstr "Erosione"
 
-#: libprocess/morph_lib.c:303
+#: libprocess/morph_lib.c:305
 msgid "Certainty map"
 msgstr "Mappa di certezza"
 
-#: libprocess/morph_lib.c:613 libprocess/morph_lib.c:755
+#: libprocess/morph_lib.c:616 libprocess/morph_lib.c:758
 #, c-format
 msgid "Iterating estimate (iteration %d)"
 msgstr "Stima Iterativa (Iterazione %d)"
 
-#: libprocess/morph_lib.c:621 libprocess/morph_lib.c:775
+#: libprocess/morph_lib.c:624 libprocess/morph_lib.c:778
 #, c-format
 msgid "%d image locations produced refinement"
 msgstr "Raffinamento immagine su %d punti"
 
-#: libprocess/morph_lib.c:719
+#: libprocess/morph_lib.c:722
 msgid "Searching for local maxima"
 msgstr "Ricerca massimi locali"
 
-#: libprocess/morph_lib.c:741
+#: libprocess/morph_lib.c:744
 #, c-format
 msgid "Found %d internal local maxima"
 msgstr "Trovati %d massimi locali interni"
 
-#: libprocess/tip.c:793 libprocess/tip.c:821 libprocess/tip.c:870
-#: libprocess/tip.c:897
+#: libprocess/tip.c:773 libprocess/tip.c:801 libprocess/tip.c:850
+#: libprocess/tip.c:877
 msgid "Converting fields"
 msgstr "Conversione campi"
 
-#: libprocess/tip.c:803
+#: libprocess/tip.c:783
 msgid "Starting partial estimation"
 msgstr "Inizio stima parziale"
 
-#: libprocess/tip.c:880
+#: libprocess/tip.c:860
 msgid "Starting full estimation"
 msgstr "Inizio stima totale "
 
-#: libgwydgets/gwy3dwindow.c:477
-msgid "Rotate view"
+#: libgwydgets/gwy3dwindow.c:495
+#, fuzzy
+msgid "Rotate view (R)"
 msgstr "Ruota vista"
 
-#: libgwydgets/gwy3dwindow.c:482
-msgid "Scale view as a whole"
+#: libgwydgets/gwy3dwindow.c:500
+#, fuzzy
+msgid "Scale view as a whole (S)"
 msgstr "Ridimensiona vista d'insieme"
 
-#: libgwydgets/gwy3dwindow.c:487
-msgid "Scale value range"
+#: libgwydgets/gwy3dwindow.c:505
+#, fuzzy
+msgid "Scale value range (V)"
 msgstr "Ridimensiona intervallo valori"
 
-#: libgwydgets/gwy3dwindow.c:492
-msgid "Move light source"
+#: libgwydgets/gwy3dwindow.c:510
+#, fuzzy
+msgid "Move light source (L)"
 msgstr "Movimento sorgente luce"
 
-#: libgwydgets/gwy3dwindow.c:574
+#: libgwydgets/gwy3dwindow.c:592
 msgid "Show full controls"
 msgstr "Mostra comandi completi"
 
-#: libgwydgets/gwy3dwindow.c:601
+#: libgwydgets/gwy3dwindow.c:619
 msgid "Hide full controls"
 msgstr "Nascondi comandi completi"
 
-#: libgwydgets/gwy3dwindow.c:616
+#: libgwydgets/gwy3dwindow.c:634
 msgid "Basic"
 msgstr "Basilare"
 
-#: libgwydgets/gwy3dwindow.c:621
+#: libgwydgets/gwy3dwindow.c:639
 msgid "Light & Material"
 msgstr "Illuminazione e materiali"
 
-#: libgwydgets/gwy3dwindow.c:626
+#: libgwydgets/gwy3dwindow.c:644
 msgid "Labels"
 msgstr "Etichette"
 
-#: libgwydgets/gwy3dwindow.c:739 modules/process/facet_analysis.c:354
+#: libgwydgets/gwy3dwindow.c:757 modules/process/facet_analysis.c:354
 #: modules/process/facet_analysis.c:370 modules/process/shade.c:251
 msgid "φ:"
 msgstr "φ:"
 
-#: libgwydgets/gwy3dwindow.c:739 libgwydgets/gwy3dwindow.c:745
-#: libgwydgets/gwy3dwindow.c:857 libgwydgets/gwy3dwindow.c:865
+#: libgwydgets/gwy3dwindow.c:757 libgwydgets/gwy3dwindow.c:763
+#: libgwydgets/gwy3dwindow.c:875 libgwydgets/gwy3dwindow.c:883
 #: modules/process/rotate.c:273 modules/process/tip_model.c:234
 #: modules/process/tip_model.c:240 modules/process/unrotate.c:344
 msgid "deg"
 msgstr "°gra"
 
-#: libgwydgets/gwy3dwindow.c:745 modules/process/facet_analysis.c:353
+#: libgwydgets/gwy3dwindow.c:763 modules/process/facet_analysis.c:353
 #: modules/process/facet_analysis.c:369 modules/process/shade.c:243
 msgid "θ:"
 msgstr "θ:"
 
-#: libgwydgets/gwy3dwindow.c:750 modules/process/cwt.c:184
+#: libgwydgets/gwy3dwindow.c:768 modules/process/cwt.c:148
 msgid "_Scale:"
 msgstr "_Scala:"
 
-#: libgwydgets/gwy3dwindow.c:757
+#: libgwydgets/gwy3dwindow.c:775
 msgid "_Value scale:"
 msgstr "_Valore scala:"
 
-#: libgwydgets/gwy3dwindow.c:760
+#: libgwydgets/gwy3dwindow.c:778
 msgid "Show _axes"
 msgstr "Mostra _assi"
 
-#: libgwydgets/gwy3dwindow.c:769
+#: libgwydgets/gwy3dwindow.c:787
 msgid "Show _labels"
 msgstr "Mostra _etichette"
 
-#: libgwydgets/gwy3dwindow.c:778
+#: libgwydgets/gwy3dwindow.c:796
 msgid "_Ortographic projection"
 msgstr "_Proiezione ortogonale"
 
-#: libgwydgets/gwy3dwindow.c:794
+#: libgwydgets/gwy3dwindow.c:812
 msgid "_Lighting"
 msgstr "_Illuminazione"
 
-#: libgwydgets/gwy3dwindow.c:795
+#: libgwydgets/gwy3dwindow.c:813
 msgid "_Gradient"
 msgstr "_Gradiente"
 
-#: libgwydgets/gwy3dwindow.c:834
+#: libgwydgets/gwy3dwindow.c:852
 msgid "_Material:"
 msgstr "_Materiale:"
 
-#: libgwydgets/gwy3dwindow.c:857
+#: libgwydgets/gwy3dwindow.c:875
 msgid "_Light φ:"
 msgstr "_Luce φ:"
 
-#: libgwydgets/gwy3dwindow.c:865
+#: libgwydgets/gwy3dwindow.c:883
 msgid "L_ight θ:"
 msgstr "L_uce θ:"
 
-#: libgwydgets/gwy3dwindow.c:902
+#: libgwydgets/gwy3dwindow.c:920
 msgid "X-axis"
 msgstr "asse X"
 
-#: libgwydgets/gwy3dwindow.c:903
+#: libgwydgets/gwy3dwindow.c:921
 msgid "Y-axis"
 msgstr "asse Y"
 
-#: libgwydgets/gwy3dwindow.c:904
+#: libgwydgets/gwy3dwindow.c:922
 msgid "Minimum z value"
 msgstr "Valore minimo z"
 
-#: libgwydgets/gwy3dwindow.c:905
+#: libgwydgets/gwy3dwindow.c:923
 msgid "Maximum z value"
 msgstr "Valore massimo z"
 
-#: libgwydgets/gwy3dwindow.c:928
+#: libgwydgets/gwy3dwindow.c:946
 msgid "_Label:"
 msgstr "_Etichetta:"
 
-#: libgwydgets/gwy3dwindow.c:933
+#: libgwydgets/gwy3dwindow.c:951
 msgid "_Text:"
 msgstr "_Testo:"
 
-#: libgwydgets/gwy3dwindow.c:953
+#: libgwydgets/gwy3dwindow.c:971
 msgid "Move label"
 msgstr "Sposta etichetta"
 
-#: libgwydgets/gwy3dwindow.c:962
+#: libgwydgets/gwy3dwindow.c:980
 msgid "_Horizontally:"
 msgstr "_Orizzontale:"
 
-#: libgwydgets/gwy3dwindow.c:972
+#: libgwydgets/gwy3dwindow.c:990
 msgid "_Vertically:"
 msgstr "_Verticale:"
 
-#: libgwydgets/gwy3dwindow.c:980
+#: libgwydgets/gwy3dwindow.c:998
 msgid "Scale size _automatically"
 msgstr "Ridimensiona _automaticamente"
 
-#: libgwydgets/gwy3dwindow.c:992 modules/tools/filter.c:252
+#: libgwydgets/gwy3dwindow.c:1010 modules/tools/filter.c:252
 msgid "Si_ze:"
 msgstr "Dimensione:"
 
-#: libgwydgets/gwy3dwindow.c:992 modules/process/cwt.c:184
+#: libgwydgets/gwy3dwindow.c:1010 modules/process/cwt.c:148
 #: modules/process/hough.c:208
 msgid "pixels"
 msgstr "pixel"
 
-#: libgwydgets/gwy3dwindow.c:1000 modules/file/pixmap.c:793
+#: libgwydgets/gwy3dwindow.c:1018 modules/file/pixmap.c:793
 #: modules/file/pixmap.c:1952 modules/file/rawfile.c:379
 #: modules/process/angle_dist.c:170 modules/process/calibrate.c:253
-#: modules/process/cwt.c:168 modules/process/drift.c:222
-#: modules/process/dwt.c:167 modules/process/dwtanisotropy.c:182
+#: modules/process/cwt.c:132 modules/process/drift.c:222
+#: modules/process/dwt.c:164 modules/process/dwtanisotropy.c:183
 #: modules/process/edge.c:636 modules/process/facet_analysis.c:272
-#: modules/process/fft.c:304 modules/process/fft_filter_2d.c:427
+#: modules/process/fft.c:272 modules/process/fft_filter_2d.c:396
 #: modules/process/fft_synth.c:212 modules/process/fractal.c:206
-#: modules/process/grain_mark.c:257 modules/process/grain_rem_threshold.c:216
+#: modules/process/grain_mark.c:265 modules/process/grain_rem_threshold.c:224
 #: modules/process/grain_wshed.c:182 modules/process/hough.c:175
 #: modules/process/level.c:266 modules/process/local_contrast.c:126
 #: modules/process/median-bg.c:176 modules/process/polydistort.c:209
@@ -398,11 +536,11 @@ msgstr "pixel"
 msgid "_Reset"
 msgstr "_Ripristina"
 
-#: libgwydgets/gwy3dwindow.c:1409
+#: libgwydgets/gwy3dwindow.c:1428
 msgid "S_witch to Lighting Mode"
 msgstr "Visualizzazione Illuminazione"
 
-#: libgwydgets/gwy3dwindow.c:1417
+#: libgwydgets/gwy3dwindow.c:1436
 msgid "S_witch to Color Gradient Mode"
 msgstr "Visualizzazione Gradiente di Colore"
 
@@ -442,9 +580,22 @@ msgstr "Linea"
 msgid "Line + points"
 msgstr "Linea + punti"
 
-#: libgwydgets/gwydgetutils.c:557
+#: libgwydgets/gwydgetutils.c:561
 msgid "Change Mask Color"
 msgstr "Cambia colore maschera"
+
+#: libgwydgets/gwygrainvaluemenu.c:171
+msgid "Quantity"
+msgstr ""
+
+#: libgwydgets/gwygrainvaluemenu.c:181 libgwydgets/gwygrainvaluemenu.c:194
+#, fuzzy
+msgid "Symbol"
+msgstr "HSym"
+
+#: libgwydgets/gwygrainvaluemenu.c:204
+msgid "Enabled"
+msgstr ""
 
 #: libgwydgets/gwygraphareadialog.c:96
 msgid "Curve Properties"
@@ -586,7 +737,7 @@ msgstr "Spessore cornice:"
 msgid "_Reversed layout"
 msgstr "Disposizione invertita"
 
-#: libgwydgets/gwygraphwindow.c:140 app/toolbox.c:292
+#: libgwydgets/gwygraphwindow.c:140 app/toolbox.c:111
 msgid "Graph"
 msgstr "Grafico"
 
@@ -614,7 +765,7 @@ msgstr "Ridimensiona a curva intera"
 msgid "Toggle logarithmic x axis"
 msgstr "Cambia scala asse X in logaritmica"
 
-#: libgwydgets/gwygraphwindow.c:225
+#: libgwydgets/gwygraphwindow.c:222
 msgid "Toggle logarithmic y axis"
 msgstr "Cambia scala asse Y in logaritmica"
 
@@ -713,7 +864,7 @@ msgstr "Nessun modulo può salvare in questo formato."
 msgid "Module Browser"
 msgstr "Navigatore dei Moduli"
 
-#: libgwymodule/gwymodulebrowser.c:189 modules/process/fft.c:294
+#: libgwymodule/gwymodulebrowser.c:189 modules/process/fft.c:264
 msgid "Module"
 msgstr "Modulo"
 
@@ -792,20 +943,20 @@ msgstr ""
 "versione 2 o (a scelta) ogni versione successiva. Per il testo completo "
 "della licenza vedi il file COPYING incluso nel pacchetto sorgente</small>"
 
-#: app/about.c:198
+#: app/about.c:192
 msgid "Developers"
 msgstr "Altri sviluppatori"
 
-#: app/about.c:200
+#: app/about.c:193
 msgid "Translators"
 msgstr "Traduttori"
 
-#: app/about.c:205
+#: app/about.c:197
 msgid "Development is supported by the Czech Metrology Institute: "
 msgstr ""
 "Lo sviluppo del programma e' sostenuto dall'Istituto di Metrologia Ceco:"
 
-#: app/app.c:234
+#: app/app.c:235
 #, c-format
 msgid ""
 "Some data are unsaved:\n"
@@ -816,80 +967,80 @@ msgstr ""
 "%s\n"
 "Uscire ugualmente?"
 
-#: app/app.c:412
+#: app/app.c:413
 msgid "Export"
 msgstr "Esporta"
 
-#: app/app.c:414 app/app.c:418
+#: app/app.c:415 app/app.c:419
 msgid "Export 3D view to PNG image"
 msgstr "Esporta veduta 3D come immagine PNG"
 
-#: app/app.c:424
+#: app/app.c:425
 msgid "Set as Default"
 msgstr "Salva come predefinito"
 
-#: app/app.c:426
+#: app/app.c:427
 msgid "Set the current view setup as the default"
 msgstr "Salva la vista corrente come predefinita"
 
-#: app/app.c:458
+#: app/app.c:459
 #, c-format
 msgid "Saving of 3D view to `%s' failed"
 msgstr "Salvataggio di vista 3D come `%s' fallito"
 
-#: app/app.c:501
+#: app/app.c:502
 msgid "Export 3D View"
 msgstr "Esporta vista 3D"
 
-#: app/app.c:661
+#: app/app.c:662
 msgid "Mask _Color..."
 msgstr "Colore_Maschera..."
 
-#: app/app.c:677
+#: app/app.c:678
 msgid "Zoom _1:1"
 msgstr "Ingrandimento _1:1"
 
-#: app/app.c:874
+#: app/app.c:875
 msgid "Pi_xelwise Square"
 msgstr "Dimensioni pixel quadrati"
 
-#: app/app.c:884
+#: app/app.c:885
 msgid "_Physically Square"
 msgstr "Dimensioni reali quadrate"
 
-#: app/data-browser.c:3340
+#: app/data-browser.c:3357
 msgid "Extract to a new file"
 msgstr "Estrazione in nuovo file"
 
-#: app/data-browser.c:3341
+#: app/data-browser.c:3358
 msgid "Duplicate"
 msgstr "Duplica"
 
-#: app/data-browser.c:3342
+#: app/data-browser.c:3359
 msgid "Delete"
 msgstr "Elimina"
 
-#: app/data-browser.c:3386
+#: app/data-browser.c:3403
 msgid "Data Browser"
 msgstr "Navigatore dati"
 
-#: app/data-browser.c:3408
+#: app/data-browser.c:3425
 msgid "Close file"
 msgstr "Chiudi file"
 
-#: app/data-browser.c:3421
+#: app/data-browser.c:3438
 msgid "Channels"
 msgstr "Canali"
 
-#: app/data-browser.c:3435
+#: app/data-browser.c:3452
 msgid "Graphs"
 msgstr "Grafici"
 
-#: app/data-browser.c:3449
+#: app/data-browser.c:3466
 msgid "Spectra"
 msgstr "Spettri"
 
-#: app/data-browser.c:4725
+#: app/data-browser.c:4742
 #, c-format
 msgid "Unknown channel %d"
 msgstr "Canale sconosciuto %d"
@@ -1037,43 +1188,48 @@ msgstr "…"
 msgid "Cannot preview"
 msgstr "Impossibile visualizzare anteprima"
 
-#: app/gwyddion.c:114
+#: app/gwyddion.c:115
 msgid "Loading document history"
 msgstr "Carica cronologia"
 
-#: app/gwyddion.c:119
+#: app/gwyddion.c:120
 msgid "Registering "
 msgstr "Registrazione "
 
-#: app/gwyddion.c:120
+#: app/gwyddion.c:121
 msgid "stock items"
 msgstr ""
 
-#: app/gwyddion.c:124
+#: app/gwyddion.c:125
 msgid "color gradients"
 msgstr "Gradienti colore"
 
-#: app/gwyddion.c:126
+#: app/gwyddion.c:127
 msgid "GL materials"
 msgstr "Materiali GL"
 
-#: app/gwyddion.c:131
+#: app/gwyddion.c:129
+#, fuzzy
+msgid "grain quantities"
+msgstr "Statistiche Grani"
+
+#: app/gwyddion.c:134
 msgid "Loading settings"
 msgstr "Caricamento preferenze"
 
-#: app/gwyddion.c:138
+#: app/gwyddion.c:141
 msgid "Registering modules"
 msgstr "Registrazione moduli"
 
-#: app/gwyddion.c:143
+#: app/gwyddion.c:146
 msgid "Initializing GUI"
 msgstr "Inizializzazione GUI"
 
-#: app/gwyddion.c:327
+#: app/gwyddion.c:329
 msgid "Could not read settings."
 msgstr "Impossibile leggere le preferenze."
 
-#: app/gwyddion.c:330
+#: app/gwyddion.c:332
 #, c-format
 msgid ""
 "Settings file `%s' cannot be read: %s\n"
@@ -1123,11 +1279,11 @@ msgstr "Larghezza"
 msgid "Hide"
 msgstr "Nascondi"
 
-#: app/menu.c:492 app/toolbox.c:271
+#: app/menu.c:492 app/toolbox.c:616
 msgid "_Data Process"
 msgstr "_Elaborazione Dati"
 
-#: app/menu.c:535 app/toolbox.c:275
+#: app/menu.c:535 app/toolbox.c:620
 msgid "_Graph"
 msgstr "_Grafico"
 
@@ -1171,12 +1327,6 @@ msgstr "_Esci"
 #, c-format
 msgid "Metadata of %s (%s)"
 msgstr "Metadata di %s (%s)"
-
-#: app/meta.c:284 modules/process/grain_dist.c:197
-#: modules/tools/grainmeasure.c:138 modules/tools/level3.c:456
-#: modules/tools/readvalue.c:267
-msgid "Value"
-msgstr "Valore"
 
 #: app/meta.c:487
 msgid "New item"
@@ -1246,115 +1396,115 @@ msgstr "Inizio"
 msgid " is free software released under GNU GPL."
 msgstr " è un software libero rilasciato sotto GNU GPL."
 
-#: app/toolbox.c:215
-msgid "Zoom in"
-msgstr "Ingrandisci"
-
-#: app/toolbox.c:221
-msgid "Zoom 1:1"
-msgstr "Ingrandimento 1:1"
-
-#: app/toolbox.c:227
-msgid "Zoom out"
-msgstr "Rimpicciolisci"
-
-#: app/toolbox.c:233
-msgid "Display a 3D view of data"
-msgstr "Vista 3D "
-
-#: app/toolbox.c:264
-msgid "_File"
-msgstr "_File"
-
-#: app/toolbox.c:266
-msgid "_Edit"
-msgstr "_Modifica"
-
-#: app/toolbox.c:278
-msgid "_Meta"
-msgstr "_Meta"
-
-#: app/toolbox.c:286
+#: app/toolbox.c:111
 msgid "View"
 msgstr "Vista"
 
-#: app/toolbox.c:289
+#: app/toolbox.c:111
 msgid "Data Process"
 msgstr "Elaborazione Dati"
 
-#: app/toolbox.c:295
+#: app/toolbox.c:111
 msgid "Tools"
 msgstr "Strumenti"
 
-#: app/toolbox.c:494
+#: app/toolbox.c:167
+msgid "Display a 3D view of data"
+msgstr "Vista 3D "
+
+#: app/toolbox.c:174
+msgid "Zoom in"
+msgstr "Ingrandisci"
+
+#: app/toolbox.c:178
+msgid "Zoom 1:1"
+msgstr "Ingrandimento 1:1"
+
+#: app/toolbox.c:182
+msgid "Zoom out"
+msgstr "Rimpicciolisci"
+
+#: app/toolbox.c:609
+msgid "_File"
+msgstr "_File"
+
+#: app/toolbox.c:611
+msgid "_Edit"
+msgstr "_Modifica"
+
+#: app/toolbox.c:623
+msgid "_Meta"
+msgstr "_Meta"
+
+#: app/toolbox.c:675
 msgid "/Show _Data Browser"
 msgstr "/Mostra _Navigatore dati"
 
-#: app/toolbox.c:502
+#: app/toolbox.c:683
 msgid "/_Metadata Browser"
 msgstr "/Navigatore _Metadata"
 
-#: app/toolbox.c:510
+#: app/toolbox.c:691
 msgid "/Module _Browser"
 msgstr "/Navigatore Moduli"
 
-#: app/toolbox.c:525
+#: app/toolbox.c:706
 msgid "/_About Gwyddion"
 msgstr "/Informazioni su Gwyddion"
 
-#: app/toolbox.c:564
+#: app/toolbox.c:745
 msgid "/_Open..."
 msgstr "/_Apri..."
 
-#: app/toolbox.c:572
+#: app/toolbox.c:753
 msgid "/_Merge..."
 msgstr "/_Fondi..."
 
-#: app/toolbox.c:580
+#: app/toolbox.c:761
 msgid "/Open _Recent"
 msgstr "/Apri _Recenti"
 
-#: app/toolbox.c:588
+#: app/toolbox.c:769
 msgid "/_Save"
 msgstr "/_Salva"
 
-#: app/toolbox.c:596
+#: app/toolbox.c:777
 msgid "/Save _As..."
 msgstr "/Salva con nome..."
 
-#: app/toolbox.c:612
+#: app/toolbox.c:793
 msgid "/_Quit"
 msgstr "/Esci"
 
-#: app/toolbox.c:658
+#: app/toolbox.c:839
 msgid "/_Undo"
 msgstr "/Annulla"
 
-#: app/toolbox.c:666
+#: app/toolbox.c:847
 msgid "/_Redo"
 msgstr "/_Ripeti"
 
-#: app/toolbox.c:682
+#: app/toolbox.c:863
 msgid "/Default Mask _Color..."
 msgstr "/Maschera Colore _Predefinita..."
 
-#: app/toolbox.c:690
+#: app/toolbox.c:871
 msgid "/Color _Gradients..."
 msgstr "/Gradient_Colore..."
 
-#: app/toolbox.c:698
+#: app/toolbox.c:879
 msgid "/G_L Materials..."
 msgstr "/Materiali G_L..."
 
-#: app/toolbox.c:939
+#: app/toolbox.c:1120
 msgid "Change Default Mask Color"
 msgstr "Cambia Colore Predefinito Maschera"
 
-#: app/toolbox.c:967
+#: app/toolbox.c:1148
 msgid "OpenGL 3D graphics not available"
 msgstr "Grafica 3D OpenGL non disponibile"
 
-#: app/toolbox.c:974
+#: app/toolbox.c:1155
 msgid ""
 "Initialization of OpenGL failed.  Check output of <tt>glxinfo</tt> and "
 "warning messages printed to console during Gwyddion startup."
@@ -1362,7 +1512,7 @@ msgstr ""
 "Inizializzazione OpenGL fallita. Controllare l'otput di <tt>glxinfo</tt> ed "
 "eventuali messaggi di errore stampati sulla console all'avvio di Gwyddion."
 
-#: app/toolbox.c:978
+#: app/toolbox.c:1159
 msgid "This version of Gwyddion was built without OpenGL support."
 msgstr "Questa versione di Gwyddion non ha il supporto OpenGL."
 
@@ -1407,8 +1557,8 @@ msgid "Export Text"
 msgstr "Esporta Testo"
 
 #: modules/file/asciiexport.c:210 modules/file/rawfile.c:701
-#: modules/process/fft_filter_1d.c:292 modules/process/grain_dist.c:563
-#: modules/process/grain_mark.c:317 modules/process/grain_rem_threshold.c:294
+#: modules/process/fft_filter_1d.c:292 modules/process/grain_dist.c:283
+#: modules/process/grain_mark.c:347 modules/process/grain_rem_threshold.c:324
 #: modules/process/grain_wshed.c:278 modules/tools/spotremove.c:319
 #: modules/tools/stats.c:313
 msgid "Options"
@@ -1767,7 +1917,7 @@ msgstr "Importa file dati Nanonis SXM."
 msgid "Nanonis SXM files (.sxm)"
 msgstr "File Nanonis SXM (.sxm)"
 
-#: modules/file/nanonis.c:146 modules/file/omicron.c:426
+#: modules/file/nanonis.c:146 modules/file/omicron.c:432
 #: modules/file/unisoku.c:253
 msgid "File header ended unexpectedly."
 msgstr "Intestazione file terminata inaspettatamente."
@@ -1826,7 +1976,7 @@ msgstr "Dati invalidi dopo dati campione #%d."
 msgid "Truncated header line."
 msgstr "Linea intestazione troncata."
 
-#: modules/file/nanoscope.c:750 modules/file/omicron.c:338
+#: modules/file/nanoscope.c:750 modules/file/omicron.c:344
 msgid "Missing colon in header line."
 msgstr "\":\" mancanti nel file intestazione."
 
@@ -1914,15 +2064,15 @@ msgstr "Importa file dati omicron (file divisi .par + .tf*, .tb*, .sf*, .sb*)."
 msgid "Omicron files (.par + data)"
 msgstr "File Omicron (.par + data)"
 
-#: modules/file/omicron.c:344
+#: modules/file/omicron.c:350
 msgid "Header line starts with a colon."
 msgstr "Linea intestazione inizia con \":\""
 
-#: modules/file/omicron.c:435
+#: modules/file/omicron.c:441
 msgid "Channel information ended unexpectedly."
 msgstr "Informazione di canale interrotta inaspettatamente."
 
-#: modules/file/omicron.c:642
+#: modules/file/omicron.c:648
 #, c-format
 msgid "No data file corresponding to `%s' was found."
 msgstr "Nessun file dati corrispondente a  `%s'  trovato"
@@ -2090,8 +2240,8 @@ msgstr "Ingrandisci:"
 msgid "_Width:"
 msgstr "Larghezza:"
 
-#: modules/file/pixmap.c:2000 modules/process/grain_mark.c:304
-#: modules/process/grain_rem_threshold.c:272 modules/process/tip_blind.c:271
+#: modules/file/pixmap.c:2000 modules/process/grain_mark.c:312
+#: modules/process/grain_rem_threshold.c:280 modules/process/tip_blind.c:271
 msgid "_Height:"
 msgstr "Altezza:"
 
@@ -2236,7 +2386,7 @@ msgstr "Predefiniti"
 #: modules/file/rawfile.c:522 modules/process/convolution_filter.c:243
 #: modules/process/drift.c:219 modules/process/edge.c:633
 #: modules/process/fft_filter_1d.c:195 modules/process/fft_synth.c:209
-#: modules/process/grain_mark.c:254 modules/process/grain_rem_threshold.c:213
+#: modules/process/grain_mark.c:262 modules/process/grain_rem_threshold.c:221
 #: modules/process/grain_wshed.c:179 modules/process/polydistort.c:206
 #: modules/process/scars.c:466 modules/process/tip_model.c:167
 #: modules/tools/linestats.c:394 modules/tools/sfunctions.c:412
@@ -2406,45 +2556,45 @@ msgstr ""
 "<b>Parsing fallito</b>\n"
 "Il contenuto di `%s'non corrisponde al formato: %s."
 
-#: modules/file/rawfile.c:1589
+#: modules/file/rawfile.c:1591
 #, c-format
 msgid "The name `%s' is invalid."
 msgstr "Nome `%s' non valido"
 
-#: modules/file/rawfile.c:2058
+#: modules/file/rawfile.c:2060
 #, c-format
 msgid "Not enough lines (%d) for offset (%d)"
 msgstr "Non abbastanza linee (%d) per l'offset (%d)"
 
-#: modules/file/rawfile.c:2083
+#: modules/file/rawfile.c:2085
 #, c-format
 msgid "Expected whitespace to skip more fields in row %u, got `%.16s'"
 msgstr ""
 "Mi aspettavo uno spazio per saltare più campi in fila  %u, ottenuto `%.16s'"
 
-#: modules/file/rawfile.c:2097
+#: modules/file/rawfile.c:2099
 #, c-format
 msgid "Expected `%c' to skip more fields in row %u, got `%.16s'"
 msgstr "Mi aspettavo `%c' per saltare più campi in fila  %u, ottenuto `%.16s'"
 
-#: modules/file/rawfile.c:2111
+#: modules/file/rawfile.c:2113
 #, c-format
 msgid "Expected `%s' to skip more fields in row %u, got `%.16s'"
 msgstr "Mi aspettavo `%s' per saltare più campi in fila  %u, ottenuto `%.16s'"
 
-#: modules/file/rawfile.c:2128 modules/file/rawfile.c:2142
-#: modules/file/rawfile.c:2168
+#: modules/file/rawfile.c:2130 modules/file/rawfile.c:2144
+#: modules/file/rawfile.c:2170
 #, c-format
 msgid "Garbage `%.16s' in row %u, column %u"
 msgstr "Dati invalidi`%.16s' nella riga %u, colonna %u"
 
-#: modules/file/rawfile.c:2154
+#: modules/file/rawfile.c:2156
 #, c-format
 msgid "Expected delimiter `%c' after data in row %u, column %u, got `%c'"
 msgstr ""
 "Delimitatore aspettato`%c' dopo dati in fila %u, colonna %u, ottenuto`%c'"
 
-#: modules/file/rawfile.c:2180
+#: modules/file/rawfile.c:2182
 #, c-format
 msgid "Expected delimiter `%s' after data in row %u, column %u, got `%.16s'"
 msgstr ""
@@ -2831,12 +2981,12 @@ msgstr ""
 "libero."
 
 #: modules/graph/graph_cd.c:669 modules/graph/graph_fdfit.c:782
-#: modules/graph/graph_fit.c:777 modules/tools/grainmeasure.c:462
-#: modules/tools/readvalue.c:501 modules/tools/readvalue.c:502
-#: modules/tools/roughness.c:950 modules/tools/stats.c:540
-#: modules/tools/stats.c:549 modules/tools/stats.c:550
-#: modules/tools/stats.c:789 modules/tools/stats.c:796
-#: modules/tools/stats.c:798
+#: modules/graph/graph_fit.c:777 modules/tools/grainmeasure.c:215
+#: modules/tools/readvalue.c:505 modules/tools/readvalue.c:506
+#: modules/tools/roughness.c:950 modules/tools/stats.c:543
+#: modules/tools/stats.c:552 modules/tools/stats.c:553
+#: modules/tools/stats.c:792 modules/tools/stats.c:799
+#: modules/tools/stats.c:801
 msgid "N.A."
 msgstr "N.A."
 
@@ -3498,8 +3648,8 @@ msgstr "Distanza X"
 msgid "Y Distance"
 msgstr "Distanza Y"
 
-#: modules/process/crosscor.c:236 modules/process/fft.c:339
-#: modules/process/fft_filter_2d.c:598 modules/process/maskcor.c:175
+#: modules/process/crosscor.c:236 modules/process/fft.c:299
+#: modules/process/fft_filter_2d.c:565 modules/process/maskcor.c:175
 msgid "Output _type:"
 msgstr "Tipo Output:"
 
@@ -3537,49 +3687,28 @@ msgstr "Differenza Y"
 msgid "Direction difference"
 msgstr "Differenza direzione"
 
-#: modules/process/cwt.c:71
+#: modules/process/cwt.c:63
 msgid "Two-dimensional CWT (Continuous Wavelet Transform)."
 msgstr "CWT (Continuous Wavelet Transform) bidimensionale."
 
-#: modules/process/cwt.c:85
+#: modules/process/cwt.c:77
 msgid "/_Integral Transforms/2D _CWT..."
 msgstr "/_Trasformate Integrali/2D _CWT..."
 
-#: modules/process/cwt.c:89
+#: modules/process/cwt.c:81
 msgid "Compute continuous wavelet transform"
 msgstr "Calcolo continuous wavelet transform"
 
-#: modules/process/cwt.c:120 modules/process/dwt.c:121
-#: modules/process/dwtanisotropy.c:130
-#, c-format
-msgid "%s: Data must be square."
-msgstr "%s: I Dati devono essere quadrati"
-
-#: modules/process/cwt.c:155
+#: modules/process/cwt.c:120
 msgid "CWT"
 msgstr "CWT"
 
-#: modules/process/cwt.c:167
+#: modules/process/cwt.c:131
 msgid "2D CWT"
 msgstr "2D CWT"
 
-#: modules/process/cwt.c:188 modules/process/dwt.c:181
-msgid "_Preserve size (don't resize to power of 2)"
-msgstr "Mantieni dimensioni (non riproporzionare secondo potenze di 2)"
-
-#: modules/process/cwt.c:201 modules/process/drift.c:283
-#: modules/process/dwt.c:194 modules/process/dwtanisotropy.c:200
-#: modules/process/fft.c:323 modules/process/fft_filter_1d.c:325
-#: modules/process/fractal.c:228 modules/process/nanoindent_adjust.c:228
-#: modules/process/polydistort.c:258 modules/process/rotate.c:282
-#: modules/process/scale.c:248 modules/process/unrotate.c:282
-#: modules/tools/linestats.c:374 modules/tools/profile.c:380
-#: modules/tools/roughness.c:860 modules/tools/sfunctions.c:392
-msgid "_Interpolation type:"
-msgstr "Tipo di interpolazione:"
-
-#: modules/process/cwt.c:207 modules/process/dwt.c:201
-#: modules/process/dwtanisotropy.c:207
+#: modules/process/cwt.c:155 modules/process/dwt.c:183
+#: modules/process/dwtanisotropy.c:208
 msgid "_Wavelet type:"
 msgstr "Tipo _Wavelet:"
 
@@ -3598,6 +3727,16 @@ msgstr "Stima e/o correzione della deriva termica in scansioni veloci"
 #: modules/process/drift.c:217
 msgid "Compensate Drift"
 msgstr "Compensazione deriva"
+
+#: modules/process/drift.c:283 modules/process/dwt.c:204
+#: modules/process/dwtanisotropy.c:201 modules/process/fft_filter_1d.c:325
+#: modules/process/fractal.c:228 modules/process/nanoindent_adjust.c:228
+#: modules/process/polydistort.c:258 modules/process/rotate.c:282
+#: modules/process/scale.c:248 modules/process/unrotate.c:282
+#: modules/tools/linestats.c:374 modules/tools/profile.c:380
+#: modules/tools/roughness.c:860 modules/tools/sfunctions.c:392
+msgid "_Interpolation type:"
+msgstr "Tipo di interpolazione:"
 
 #: modules/process/drift.c:290
 msgid "Plot drift _graph"
@@ -3624,7 +3763,7 @@ msgid "Drift _lines"
 msgstr "Linee deriva"
 
 #: modules/process/drift.c:341 modules/process/facet_analysis.c:409
-#: modules/process/grain_mark.c:343 modules/process/grain_rem_threshold.c:320
+#: modules/process/grain_mark.c:373 modules/process/grain_rem_threshold.c:350
 #: modules/process/grain_wshed.c:296 modules/process/scars.c:568
 msgid "_Mask color:"
 msgstr "Colore _Maschera:"
@@ -3645,25 +3784,37 @@ msgstr "Deriva"
 msgid "x-axis drift"
 msgstr "Deriva sull'asse X"
 
-#: modules/process/dwt.c:74
+#: modules/process/dwt.c:71
 msgid "Two-dimensional DWT (Discrete Wavelet Transform)."
 msgstr "DWT (Discrete Wavelet Transform) in due dimensioni."
 
-#: modules/process/dwt.c:88
+#: modules/process/dwt.c:85
 msgid "/_Integral Transforms/2D _DWT..."
 msgstr "/_Trasformate Integrali/2D _DWT..."
 
-#: modules/process/dwt.c:92
+#: modules/process/dwt.c:89
 msgid "Compute Discrete Wavelet Transform"
 msgstr "Calcolo Discrete Wavelet Transform "
 
-#: modules/process/dwt.c:150
+#: modules/process/dwt.c:118 modules/process/dwtanisotropy.c:130
+#, c-format
+msgid "%s: Data must be square."
+msgstr "%s: I Dati devono essere quadrati"
+
+#: modules/process/dwt.c:145
 msgid "DWT"
 msgstr "DWT"
 
-#: modules/process/dwt.c:166
+#: modules/process/dwt.c:163
 msgid "2D DWT"
 msgstr "2D DWT"
+
+#: modules/process/dwt.c:189
+#, c-format
+msgid ""
+"Size %d is not a power of 2,\n"
+"data will be resampled to %d×%d for DWT."
+msgstr ""
 
 #: modules/process/dwtanisotropy.c:78
 msgid "2D DWT anisotropy detection based on X/Y components ratio."
@@ -3682,15 +3833,15 @@ msgstr "Determinazione anisotropia DWT"
 msgid "DWT Anisotropy"
 msgstr "DWT Anisotropa"
 
-#: modules/process/dwtanisotropy.c:181
+#: modules/process/dwtanisotropy.c:182
 msgid "2D DWT Anisotropy"
 msgstr "2D DWT Anisotropa"
 
-#: modules/process/dwtanisotropy.c:212
+#: modules/process/dwtanisotropy.c:213
 msgid "X/Y ratio threshold:"
 msgstr "X/Y rapporto soglia:"
 
-#: modules/process/dwtanisotropy.c:220
+#: modules/process/dwtanisotropy.c:221
 msgid "Low level exclude limit:"
 msgstr "Limite di esclusione inferiore:"
 
@@ -3804,11 +3955,11 @@ msgstr "Soglia"
 msgid "NRMS"
 msgstr "NRMS"
 
-#: modules/process/edge.c:697 modules/process/fft_filter_2d.c:558
+#: modules/process/edge.c:697 modules/process/fft_filter_2d.c:525
 msgid "Display"
 msgstr "Mostra"
 
-#: modules/process/edge.c:706 modules/process/fft_filter_2d.c:399
+#: modules/process/edge.c:706 modules/process/fft_filter_2d.c:368
 msgid "Original _image"
 msgstr "Immagine originale"
 
@@ -3821,8 +3972,8 @@ msgid "Detected st_ep"
 msgstr "Passi determinati"
 
 #: modules/process/edge.c:714 modules/process/fft_filter_1d.c:330
-#: modules/process/fft_synth.c:355 modules/process/grain_mark.c:350
-#: modules/process/grain_rem_threshold.c:327 modules/process/polydistort.c:324
+#: modules/process/fft_synth.c:355 modules/process/grain_mark.c:380
+#: modules/process/grain_rem_threshold.c:357 modules/process/polydistort.c:324
 #: modules/process/scars.c:575
 msgid "I_nstant updates"
 msgstr "_Aggiornamento immediato"
@@ -3844,10 +3995,12 @@ msgid "Level data to make facets point upward"
 msgstr "Livella i dati orientando le facce verso l'alto"
 
 #: modules/process/facet-level.c:91
-msgid "Facet level: Lateral and value units must match."
-msgstr ""
+#, fuzzy
+msgid ""
+"Facet level: Lateral dimensions and value must be the same physical quantity."
+msgstr "Le dimensioni laterali sono quantità fisiche differenti"
 
-#: modules/process/facet-level.c:105
+#: modules/process/facet-level.c:106
 msgid "Facet-leveling"
 msgstr "Facet-leveling"
 
@@ -3899,68 +4052,63 @@ msgstr ""
 "Avvertenza: Le unità dei valori e laterali sono differenti. Gli angoli non "
 "hanno significato fisico."
 
-#: modules/process/fft.c:100
+#: modules/process/fft.c:90
 msgid "Two-dimensional FFT (Fast Fourier Transform)."
 msgstr "FFT (Fast Fourier Transform) in due dimensioni"
 
-#: modules/process/fft.c:114
+#: modules/process/fft.c:104
 msgid "/_Integral Transforms/2D _FFT..."
 msgstr "/Trasformate Integrali/2D _FFT..."
 
-#: modules/process/fft.c:118
+#: modules/process/fft.c:108
 msgid "Compute Fast Fourier Transform"
 msgstr "Calcolo FFT"
 
-#: modules/process/fft.c:185
+#: modules/process/fft.c:152
 msgid "FFT Real"
 msgstr "FFT Reale"
 
-#: modules/process/fft.c:191
+#: modules/process/fft.c:155
 msgid "FFT Imag"
 msgstr "FFT Immag"
 
-#: modules/process/fft.c:197
+#: modules/process/fft.c:160
 msgid "FFT Modulus"
 msgstr "FFT Modulo"
 
-#: modules/process/fft.c:203
+#: modules/process/fft.c:166
 msgid "FFT Phase"
 msgstr "FFT Fase"
 
-#: modules/process/fft.c:290
+#: modules/process/fft.c:260
 msgid "Real + Imaginary"
 msgstr "Reale + Immaginario"
 
-#: modules/process/fft.c:291
+#: modules/process/fft.c:261
 msgid "Module + Phase"
 msgstr "Modulo + Fase"
 
-#: modules/process/fft.c:292
+#: modules/process/fft.c:262
 msgid "Real"
 msgstr "Reale"
 
-#: modules/process/fft.c:293
+#: modules/process/fft.c:263
 msgid "Imaginary"
 msgstr "Immaginario"
 
-#: modules/process/fft.c:295
+#: modules/process/fft.c:265
 msgid "Phase"
 msgstr "Fase"
 
-#: modules/process/fft.c:303
+#: modules/process/fft.c:271
 msgid "2D FFT"
 msgstr "2D FFT"
 
-#: modules/process/fft.c:331
+#: modules/process/fft.c:291
 msgid "_Windowing type:"
 msgstr "Tipo finestra:"
 
-#: modules/process/fft.c:345
-#, c-format
-msgid "_Preserve size (don't resize to %d × %d)"
-msgstr "_Mantieni dimensioni (non ridimensionare a %d × %d)"
-
-#: modules/process/fft.c:361
+#: modules/process/fft.c:304
 msgid "Subtract mean _value beforehand"
 msgstr "Sottrazione preliminare valore medio "
 
@@ -4012,116 +4160,111 @@ msgstr "_Tipo Filtro:"
 msgid "1D FFT Filtered Data"
 msgstr "Dati filtrati 1D FFT"
 
-#: modules/process/fft_filter_2d.c:151 modules/process/fft_filter_2d.c:426
+#: modules/process/fft_filter_2d.c:146 modules/process/fft_filter_2d.c:395
 msgid "2D FFT Filtering"
 msgstr "Filtro 2D FFT"
 
-#: modules/process/fft_filter_2d.c:165
+#: modules/process/fft_filter_2d.c:160
 msgid "/_Correct Data/_2D FFT filtering..."
 msgstr "/_Correzione Dati/_filtro 2D FFT ..."
 
-#: modules/process/fft_filter_2d.c:169
+#: modules/process/fft_filter_2d.c:164
 msgid "Two-dimensional FFT filtering"
 msgstr "Filtro FFT bidimensionale"
 
-#: modules/process/fft_filter_2d.c:325
+#: modules/process/fft_filter_2d.c:295
 msgid "Filtered Data"
 msgstr "Dati filtrati"
 
-#: modules/process/fft_filter_2d.c:337 modules/process/fft_filter_2d.c:591
+#: modules/process/fft_filter_2d.c:307 modules/process/fft_filter_2d.c:558
 msgid "Filtered FFT"
 msgstr "FFT filtrata"
 
-#: modules/process/fft_filter_2d.c:369
+#: modules/process/fft_filter_2d.c:338
 msgid "Add an ellipse to the FFT mask"
 msgstr "Aggiunta ellisse a maschera FFT "
 
-#: modules/process/fft_filter_2d.c:374
+#: modules/process/fft_filter_2d.c:343
 msgid "Add a rectangle to the FFT mask"
 msgstr "Aggiunta rettangolo a maschera FFT "
 
-#: modules/process/fft_filter_2d.c:379
+#: modules/process/fft_filter_2d.c:348
 msgid "Subtract an ellipse from the FFT mask"
 msgstr "Sottrazione ellisse a maschera FFT"
 
-#: modules/process/fft_filter_2d.c:384
+#: modules/process/fft_filter_2d.c:353
 msgid "Subtract a rectange from the FFT mask"
 msgstr "Sottrazione rettangolo a maschera FFT"
 
-#: modules/process/fft_filter_2d.c:395
+#: modules/process/fft_filter_2d.c:364
 msgid "_FFT editor"
 msgstr "Editor FFT "
 
-#: modules/process/fft_filter_2d.c:403
+#: modules/process/fft_filter_2d.c:372
 msgid "_Filtered image"
 msgstr "Immagine filtrata"
 
-#: modules/process/fft_filter_2d.c:407
+#: modules/process/fft_filter_2d.c:376
 msgid "Image _difference"
 msgstr "Immagine differenza"
 
-#: modules/process/fft_filter_2d.c:478
+#: modules/process/fft_filter_2d.c:445
 msgid "Filter Mask"
 msgstr "Maschera Filtro"
 
-#: modules/process/fft_filter_2d.c:513
+#: modules/process/fft_filter_2d.c:480
 msgid "_Undo"
 msgstr "_Annulla"
 
-#: modules/process/fft_filter_2d.c:522 modules/tools/maskedit.c:392
+#: modules/process/fft_filter_2d.c:489 modules/tools/maskedit.c:392
 msgid "_Remove"
 msgstr "_Rimuovi"
 
-#: modules/process/fft_filter_2d.c:532
+#: modules/process/fft_filter_2d.c:499
 msgid "_Snap to origin"
 msgstr ""
 
-#: modules/process/fft_filter_2d.c:544
+#: modules/process/fft_filter_2d.c:511
 msgid "Preview Options"
 msgstr "Anteprima Opzioni"
 
-#: modules/process/fft_filter_2d.c:584
+#: modules/process/fft_filter_2d.c:551
 msgid "Output Options"
 msgstr "Opzioni Output"
 
-#: modules/process/fft_filter_2d.c:590
+#: modules/process/fft_filter_2d.c:557
 msgid "Filtered Image"
 msgstr "Immagine filtrata"
 
-#: modules/process/fft_filter_2d.c:592 modules/process/scars.c:450
+#: modules/process/fft_filter_2d.c:559 modules/process/scars.c:450
 msgid "Both"
 msgstr "Entrambe"
 
-#: modules/process/fft_filter_2d.c:613
-#, c-format
-msgid "<small>Resampled from %dx%d to %dx%d for FFT</small>"
-msgstr "<small>Ricampionamento da %dx%d a %dx%d per FFT</small>"
-
-#: modules/process/fft_filter_2d.c:1132
+#: modules/process/fft_filter_2d.c:1082
 msgid "Draw a new inclusive circle marker"
 msgstr "Disegna un nuovo segnale circolare inclusivo"
 
-#: modules/process/fft_filter_2d.c:1134
+#: modules/process/fft_filter_2d.c:1084
 msgid "Draw a new inclusive rectangle marker"
 msgstr "Disegna un nuovo segnale rettangolare inclusivo"
 
-#: modules/process/fft_filter_2d.c:1136
+#: modules/process/fft_filter_2d.c:1086
 msgid "Draw a new exclusive circle marker"
 msgstr "Disegna un nuovo segnale circolare esclusivo"
 
-#: modules/process/fft_filter_2d.c:1138
+#: modules/process/fft_filter_2d.c:1088
 msgid "Draw a new exclusive rectangle marker"
 msgstr "Disegna un nuovo segnale rettangolare esclusivo"
 
-#: modules/process/fft_filter_2d.c:1140
+#: modules/process/fft_filter_2d.c:1090
 msgid "Undo the last change to the filter mask"
 msgstr "Annulla ultima modifica maschera filtro"
 
-#: modules/process/fft_filter_2d.c:1142
+#: modules/process/fft_filter_2d.c:1092
 msgid "Removes the entire filter mask"
 msgstr "Rimuove intera maschera filtro"
 
-#: modules/process/fft_filter_2d.c:1144
+#: modules/process/fft_filter_2d.c:1094
 msgid "Forces new markers to center around the origin"
 msgstr "Forza i nuovi marker a centrarsi attorno all'origine"
 
@@ -4461,435 +4604,181 @@ msgstr "/_Presentazione/_Gradiente/_Prewitt (verticale)"
 msgid "Vertical Prewitt gradient presentation"
 msgstr "Presentazione gradiente Prewitt verticale"
 
-#: modules/process/grain_dist.c:161
-msgid "Evaluates distribution of grains (continuous parts of mask)."
-msgstr "Stima la distribuzione  grana (parte continua della maschera)"
-
-#: modules/process/grain_dist.c:173 modules/tools/grainmeasure.c:123
-#: modules/tools/readvalue.c:232
-msgid "Position"
-msgstr "Posizione"
-
-#: modules/process/grain_dist.c:181
-msgid "Center x _position"
+#: modules/process/grain_cross.c:76
+msgid "Plots one grain quantity as a function of another."
 msgstr ""
 
-#: modules/process/grain_dist.c:183
-msgid "Grain Center X Histogram"
-msgstr " "
-
-#: modules/process/grain_dist.c:184
-msgid "Grain center x positions"
-msgstr " "
-
-#: modules/process/grain_dist.c:189
-msgid "Center _y position"
-msgstr ""
-
-#: modules/process/grain_dist.c:191
-msgid "Grain Center Y Histogram"
-msgstr " "
-
-#: modules/process/grain_dist.c:192
-msgid "Grain center y positions"
-msgstr " "
-
-#: modules/process/grain_dist.c:205
-msgid "M_inimum"
-msgstr "M_inimo"
-
-#: modules/process/grain_dist.c:207
-msgid "Grain Minimum Value Histogram"
-msgstr "Istogramma minimo valore grani"
-
-#: modules/process/grain_dist.c:208
-msgid "Grain min. values"
-msgstr "Valori min. grani"
-
-#: modules/process/grain_dist.c:213
-msgid "Ma_ximum"
-msgstr "Ma_ssimo"
-
-#: modules/process/grain_dist.c:215
-msgid "Grain Maximum Value Histogram"
-msgstr "Istogramma massimo valore grani"
-
-#: modules/process/grain_dist.c:216
-msgid "Grain max. values"
-msgstr "Valori max. grani"
-
-#: modules/process/grain_dist.c:221
-msgid "_Mean"
-msgstr "_Media"
-
-#: modules/process/grain_dist.c:223
-msgid "Grain Mean Value Histogram"
-msgstr "Istogramma valore medio grani"
-
-#: modules/process/grain_dist.c:224
-msgid "Grain mean values"
-msgstr "Valori medi grani"
-
-#: modules/process/grain_dist.c:229
-msgid "Me_dian"
-msgstr "Me_diana"
-
-#: modules/process/grain_dist.c:231
-msgid "Grain Median Value Histogram"
-msgstr "Istogramma valore mediano grani"
-
-#: modules/process/grain_dist.c:232
-msgid "Grain median values"
-msgstr "Valori mediani grani"
-
-#: modules/process/grain_dist.c:237 modules/tools/grainmeasure.c:163
-msgid "Area"
-msgstr "Area"
-
-#: modules/process/grain_dist.c:245
-msgid "_Projected area"
-msgstr "_Area proiettata"
-
-#: modules/process/grain_dist.c:247
-msgid "Grain Projected Area Histogram"
-msgstr "Istogramma area proiettata grani"
-
-#: modules/process/grain_dist.c:248
-msgid "Grain proj. areas"
-msgstr "Area Proiet. Grani"
-
-#: modules/process/grain_dist.c:253
-msgid "S_urface area"
-msgstr "Area superficie"
-
-#: modules/process/grain_dist.c:255
-msgid "Grain Surface Area Histogram"
-msgstr "Istogramma area superficie grani"
-
-#: modules/process/grain_dist.c:256
-msgid "Grain surf. areas"
-msgstr "Aree sup. grani"
-
-#: modules/process/grain_dist.c:261
-msgid "Equivalent _square side"
-msgstr "Lato quadrato equivalente"
-
-#: modules/process/grain_dist.c:263
-msgid "Grain Equivalent Square Side Histogram"
-msgstr "Istogramma lato quadrato equivalente grani"
-
-#: modules/process/grain_dist.c:264
-msgid "Grain equiv. square sides"
-msgstr "lati quadrato equiv. grani"
-
-#: modules/process/grain_dist.c:269
-msgid "Equivalent disc _radius"
-msgstr "Raggio cerchio equivalente"
-
-#: modules/process/grain_dist.c:271
-msgid "Grain Equivalent Disc Radius Histogram"
-msgstr "Istogramma raggio cerchio equivalente grani"
-
-#: modules/process/grain_dist.c:272
-msgid "Grain equiv. disc radii"
-msgstr "Raggi cerchi equiv. grani"
-
-#: modules/process/grain_dist.c:277 modules/tools/grainmeasure.c:188
-msgid "Volume"
-msgstr "Volume"
-
-#: modules/process/grain_dist.c:285
-msgid "_Zero basis"
-msgstr "_Base zero"
-
-#: modules/process/grain_dist.c:287
-msgid "Grain Volume (Zero) Histogram"
-msgstr "Istogramma Volume Grani (zero)"
-
-#: modules/process/grain_dist.c:288
-msgid "Grain volumes (zero)"
-msgstr "Volume Grani (zero)"
-
-#: modules/process/grain_dist.c:293
-msgid "_Grain minimum basis"
-msgstr "Base minima grani"
-
-#: modules/process/grain_dist.c:295
-msgid "Grain Volume (Minimum) Histogram"
-msgstr "Istogramma Volume Grani (Minimo)"
-
-#: modules/process/grain_dist.c:296
-msgid "Grain volumes (minimum)"
-msgstr "Volume Grani (minimo)"
-
-#: modules/process/grain_dist.c:301
-msgid "_Laplacian background basis"
-msgstr "Base sottofondo Laplaciano"
-
-#: modules/process/grain_dist.c:303
-msgid "Grain Volume (Laplacian) Histogram"
-msgstr "Istogramma Volume Grani (Laplaciano)"
-
-#: modules/process/grain_dist.c:304
-msgid "Grain volumes (laplacian)"
-msgstr "Volume Grani (Laplaciano)"
-
-#: modules/process/grain_dist.c:309 modules/tools/grainmeasure.c:208
-msgid "Boundary"
-msgstr "Confine"
-
-#: modules/process/grain_dist.c:317
-msgid "Projected _boundary length"
-msgstr "Lunghezza contorno proiettato"
-
-#: modules/process/grain_dist.c:319
-msgid "Grain Projected Boundary Length Histogram"
-msgstr "Istogramma lunghezza proiettata contorno grani"
-
-#: modules/process/grain_dist.c:320
-msgid "Grain proj. boundary lengths"
-msgstr "Lunghezze contorni proiett. grani"
-
-#: modules/process/grain_dist.c:325
-msgid "Minimum bounding size"
-msgstr "Dimensioni legame minimo"
-
-#: modules/process/grain_dist.c:327
-msgid "Grain Minimum Bounding Size Histogram"
-msgstr ""
-
-#: modules/process/grain_dist.c:328
-msgid "Grain min. bound. sizes"
-msgstr "Grain min. bound. sizes"
-
-#: modules/process/grain_dist.c:333
-msgid "Minimum bounding direction"
-msgstr "Direzione legame minimo"
-
-#: modules/process/grain_dist.c:335
-msgid "Grain Minimum Bounding Direction Histogram"
-msgstr ""
-
-#: modules/process/grain_dist.c:336
-msgid "Grain min. bound. directions"
-msgstr "Grain min. bound. directions"
-
-#: modules/process/grain_dist.c:341
-msgid "Maximum bounding size"
-msgstr "Dimensione legame massimo"
-
-#: modules/process/grain_dist.c:343
-msgid "Grain Maximum Bounding Size Histogram"
-msgstr ""
-
-#: modules/process/grain_dist.c:344
-msgid "Grain max. bound. sizes"
-msgstr "Grain max. bound. sizes"
-
-#: modules/process/grain_dist.c:349
-msgid "Maximum bounding direction"
-msgstr "Direzione legame massimo"
-
-#: modules/process/grain_dist.c:351
-msgid "Grain Maximum Bounding Direction Histogram"
-msgstr ""
-
-#: modules/process/grain_dist.c:352
-msgid "Grain max. bound. directions"
-msgstr "Grain max. bound. directions"
-
-#: modules/process/grain_dist.c:357 modules/tools/grainmeasure.c:238
-#: modules/tools/linestats.c:154
-msgid "Slope"
-msgstr "Pendenza"
-
-#: modules/process/grain_dist.c:365 modules/tools/readvalue.c:297
-msgid "Inclination θ"
-msgstr "Inclinazione θ"
-
-#: modules/process/grain_dist.c:367
-#, fuzzy
-msgid "Grain Inclination θ Histogram"
-msgstr " "
-
-#: modules/process/grain_dist.c:368
-#, fuzzy
-msgid "Grain incl. θ"
-msgstr "Valori min. grani"
-
-#: modules/process/grain_dist.c:373 modules/tools/readvalue.c:307
-msgid "Inclination φ"
-msgstr "Inclinazione φ"
-
-#: modules/process/grain_dist.c:375
-#, fuzzy
-msgid "Grain Inclination φ Histogram"
-msgstr " "
-
-#: modules/process/grain_dist.c:376
-#, fuzzy
-msgid "Grain incl. φ"
-msgstr "Valori min. grani"
-
-#: modules/process/grain_dist.c:387
-msgid "/_Grains/_Distributions..."
-msgstr "/_Grani/_Distribuzioni..."
-
-#: modules/process/grain_dist.c:391
-msgid "Distributions of various grain characteristics"
-msgstr "Distribuzione di varie caratteristiche di grani"
-
-#: modules/process/grain_dist.c:395
-msgid "/_Grains/S_tatistics..."
-msgstr "/_Grani/S_tatistiche.."
-
-#: modules/process/grain_dist.c:399
-msgid "Simple grain statistics"
-msgstr "Statistiche grani semplici"
-
-#: modules/process/grain_dist.c:402
+#: modules/process/grain_cross.c:90
 #, fuzzy
 msgid "/_Grains/_Correlate..."
 msgstr "/_Grani/S_tatistiche.."
 
-#: modules/process/grain_dist.c:406
+#: modules/process/grain_cross.c:94
 #, fuzzy
 msgid "Correlate grain characteristics"
 msgstr "Statistiche grani semplici"
 
-#: modules/process/grain_dist.c:498
-msgid "_Export raw data"
-msgstr "_Esporta dati raw"
+#: modules/process/grain_cross.c:134
+msgid ""
+"Grain correlation: Lateral dimensions and value must be the same physical "
+"quantity for the selected grain properties."
+msgstr ""
 
-#: modules/process/grain_dist.c:499
-msgid "Plot _graphs"
-msgstr "Disegna grafici"
-
-#: modules/process/grain_dist.c:510
-msgid "Grain Distributions"
-msgstr "Distribuzioni Grani"
-
-#: modules/process/grain_dist.c:572 modules/tools/linestats.c:349
-#: modules/tools/profile.c:352 modules/tools/sfunctions.c:367
-msgid "_Fix res.:"
-msgstr "_Fix res.:"
-
-#: modules/process/grain_dist.c:708
-msgid "count"
-msgstr "conto"
-
-#: modules/process/grain_dist.c:750
-msgid "Export Raw Grain Values"
-msgstr "Esporta Valori Raw Grani"
-
-#: modules/process/grain_dist.c:894
-msgid "Grain Statistics"
-msgstr "Statistiche Grani"
-
-#: modules/process/grain_dist.c:906
-msgid "Number of grains:"
-msgstr "Numero grani:"
-
-#: modules/process/grain_dist.c:914
-msgid "Total projected area (abs.):"
-msgstr "Area proiettata totale (Ass.):"
-
-#: modules/process/grain_dist.c:918
-msgid "Total projected area (rel.):"
-msgstr "Area totale proiettata (rel.):"
-
-#: modules/process/grain_dist.c:924
-msgid "Mean grain area:"
-msgstr "Area media grani:"
-
-#: modules/process/grain_dist.c:929
-msgid "Mean grain size:"
-msgstr "Dimensioni medie grani:"
-
-#: modules/process/grain_dist.c:937
-msgid "Total grain volume (zero):"
-msgstr "Volume totale grani (zero):"
-
-#: modules/process/grain_dist.c:943
-msgid "Total grain volume (minimum):"
-msgstr "Volume totale grani (minimo):"
-
-#: modules/process/grain_dist.c:949
-msgid "Total grain volume (laplacian):"
-msgstr "Volume totale grani (laplaciano):"
-
-#: modules/process/grain_dist.c:1124
+#: modules/process/grain_cross.c:240
 #, fuzzy
 msgid "Grain Correlations"
 msgstr "Correlazione"
 
-#: modules/process/grain_dist.c:1141
-msgid "_Abscissa:"
+#: modules/process/grain_cross.c:256
+#, fuzzy
+msgid "_Abscissa"
 msgstr "_Ascissa:"
 
-#: modules/process/grain_dist.c:1143
+#: modules/process/grain_cross.c:260
 #, fuzzy
-msgid "O_rdinate:"
+msgid "O_rdinate"
 msgstr "_Gradiente"
 
-#: modules/process/grain_mark.c:138
+#: modules/process/grain_dist.c:139
+msgid "Evaluates distribution of grains (continuous parts of mask)."
+msgstr "Stima la distribuzione  grana (parte continua della maschera)"
+
+#: modules/process/grain_dist.c:160
+msgid "/_Grains/_Distributions..."
+msgstr "/_Grani/_Distribuzioni..."
+
+#: modules/process/grain_dist.c:164
+msgid "Distributions of various grain characteristics"
+msgstr "Distribuzione di varie caratteristiche di grani"
+
+#: modules/process/grain_dist.c:168
+msgid "/_Grains/S_tatistics..."
+msgstr "/_Grani/S_tatistiche.."
+
+#: modules/process/grain_dist.c:172
+msgid "Simple grain statistics"
+msgstr "Statistiche grani semplici"
+
+#: modules/process/grain_dist.c:216
+msgid "_Export raw data"
+msgstr "_Esporta dati raw"
+
+#: modules/process/grain_dist.c:217
+msgid "Plot _graphs"
+msgstr "Disegna grafici"
+
+#: modules/process/grain_dist.c:231
+msgid "Grain Distributions"
+msgstr "Distribuzioni Grani"
+
+#: modules/process/grain_dist.c:292 modules/tools/linestats.c:349
+#: modules/tools/profile.c:352 modules/tools/sfunctions.c:367
+msgid "_Fix res.:"
+msgstr "_Fix res.:"
+
+#: modules/process/grain_dist.c:450
+#, fuzzy
+msgid "noun|count"
+msgstr "adatta"
+
+#: modules/process/grain_dist.c:517
+msgid "Export Raw Grain Values"
+msgstr "Esporta Valori Raw Grani"
+
+#: modules/process/grain_dist.c:644
+msgid "Grain Statistics"
+msgstr "Statistiche Grani"
+
+#: modules/process/grain_dist.c:656
+msgid "Number of grains:"
+msgstr "Numero grani:"
+
+#: modules/process/grain_dist.c:664
+msgid "Total projected area (abs.):"
+msgstr "Area proiettata totale (Ass.):"
+
+#: modules/process/grain_dist.c:668
+msgid "Total projected area (rel.):"
+msgstr "Area totale proiettata (rel.):"
+
+#: modules/process/grain_dist.c:674
+msgid "Mean grain area:"
+msgstr "Area media grani:"
+
+#: modules/process/grain_dist.c:679
+msgid "Mean grain size:"
+msgstr "Dimensioni medie grani:"
+
+#: modules/process/grain_dist.c:687
+msgid "Total grain volume (zero):"
+msgstr "Volume totale grani (zero):"
+
+#: modules/process/grain_dist.c:693
+msgid "Total grain volume (minimum):"
+msgstr "Volume totale grani (minimo):"
+
+#: modules/process/grain_dist.c:699
+msgid "Total grain volume (laplacian):"
+msgstr "Volume totale grani (laplaciano):"
+
+#: modules/process/grain_mark.c:144
 msgid "Marks grains by thresholding (height, slope, curvature)."
 msgstr "Segna grani per soglia (altezza, pendenza, curvatura)"
 
-#: modules/process/grain_mark.c:152
+#: modules/process/grain_mark.c:158
 msgid "/_Grains/_Mark by Threshold..."
 msgstr "/_Grani/Segna per soglia"
 
-#: modules/process/grain_mark.c:156
+#: modules/process/grain_mark.c:162
 msgid "Mark grains by threshold"
 msgstr "Segna grani per soglia"
 
-#: modules/process/grain_mark.c:251
+#: modules/process/grain_mark.c:259
 msgid "Mark Grains by Threshold"
 msgstr "Segna Grani per Soglia"
 
-#: modules/process/grain_mark.c:300 modules/process/grain_rem_threshold.c:266
+#: modules/process/grain_mark.c:308 modules/process/grain_rem_threshold.c:274
 msgid "Threshold by"
 msgstr "Soglia:"
 
-#: modules/process/grain_mark.c:308
+#: modules/process/grain_mark.c:338
 msgid "_Slope:"
 msgstr "_Pendenza:"
 
-#: modules/process/grain_mark.c:312
+#: modules/process/grain_mark.c:342
 msgid "_Curvature:"
 msgstr "_Curvatura:"
 
-#: modules/process/grain_mark.c:321 modules/process/grain_rem_threshold.c:298
+#: modules/process/grain_mark.c:351 modules/process/grain_rem_threshold.c:328
 #: modules/process/grain_wshed.c:282
 msgid "_Invert height"
 msgstr "_Inverti altezza"
 
-#: modules/process/grain_mark.c:334
+#: modules/process/grain_mark.c:364
 msgid "Mer_ge mode:"
 msgstr "_Modo Fusione:"
 
-#: modules/process/grain_rem_threshold.c:130
+#: modules/process/grain_rem_threshold.c:136
 msgid "Removes grains by thresholding (height, size)."
 msgstr "Rimuove grani per soglia (altezza, dimensioni)"
 
-#: modules/process/grain_rem_threshold.c:144
+#: modules/process/grain_rem_threshold.c:150
 msgid "/_Grains/_Remove by Threshold..."
 msgstr "/_Grani/_Rimozione per soglia..."
 
-#: modules/process/grain_rem_threshold.c:148
+#: modules/process/grain_rem_threshold.c:154
 msgid "Remove grains by threshold"
 msgstr "Rimozione grani per soglia"
 
-#: modules/process/grain_rem_threshold.c:210
+#: modules/process/grain_rem_threshold.c:218
 msgid "Remove Grains by Threshold"
 msgstr "Rimozione Grani per Soglia"
 
-#: modules/process/grain_rem_threshold.c:283
+#: modules/process/grain_rem_threshold.c:313
 msgid "_Area:"
 msgstr "_Area:"
 
-#: modules/process/grain_rem_threshold.c:311
+#: modules/process/grain_rem_threshold.c:341
 msgid "_Selection mode:"
 msgstr "_Seleziona modo:"
 
@@ -4931,7 +4820,7 @@ msgstr "Dimensioni Goccia:"
 
 #: modules/process/grain_wshed.c:501 modules/process/maskcor.c:327
 #: modules/process/merge.c:686 modules/process/tip_blind.c:558
-#: modules/process/tipops.c:267
+#: modules/process/tipops.c:307
 msgid "Initializing"
 msgstr "Inizializzazione"
 
@@ -6004,11 +5893,18 @@ msgstr "Analisi Mappa di Certezza"
 msgid "_Tip morphology:"
 msgstr "Morfologia Punta:"
 
-#: modules/process/tipops.c:247
+#: modules/process/tipops.c:248
+#, c-format
+msgid ""
+"Tip measure does not match data.\n"
+"It will be resampled from %d×%d to %d×%d."
+msgstr ""
+
+#: modules/process/tipops.c:287
 msgid "Dilated data"
 msgstr "Dati espansi"
 
-#: modules/process/tipops.c:248
+#: modules/process/tipops.c:288
 msgid "Surface reconstruction"
 msgstr "Ricostruzione superficie"
 
@@ -6081,23 +5977,23 @@ msgstr "Mantieni offset laterali"
 msgid "Create new channel"
 msgstr "Crea nuovo canale"
 
-#: modules/tools/crop.c:390
+#: modules/tools/crop.c:393
 msgid "Detail"
 msgstr "Dettaglio"
 
-#: modules/tools/distance.c:91
+#: modules/tools/distance.c:90
 msgid "Distance measurement tool, measures distances and angles."
 msgstr "Strumento misura distanze, misura distanze ed angoli."
 
-#: modules/tools/distance.c:120
+#: modules/tools/distance.c:119
 msgid "Distance"
 msgstr "Distanza"
 
-#: modules/tools/distance.c:121
+#: modules/tools/distance.c:120
 msgid "Measure distances and directions between points"
 msgstr "Misura distanze e direzioni tra punti"
 
-#: modules/tools/distance.c:483
+#: modules/tools/distance.c:484
 msgid "Save Table"
 msgstr "Salva tavola"
 
@@ -6112,14 +6008,6 @@ msgstr ""
 #: modules/tools/filter.c:137
 msgid "Basic filters: mean, median, denoise, …"
 msgstr "Filtri base: medio, mediano, denoise, ...."
-
-#: modules/tools/filter.c:205
-msgid "Mean value"
-msgstr "Valore medio"
-
-#: modules/tools/filter.c:206
-msgid "Median value"
-msgstr "Valore mediano"
 
 #: modules/tools/filter.c:207
 msgid "Conservative denoise"
@@ -6142,95 +6030,7 @@ msgstr "Dechecker"
 msgid "_Type:"
 msgstr "_Tipo:"
 
-#: modules/tools/grainmeasure.c:113
-msgid "Id"
-msgstr ""
-
-#: modules/tools/grainmeasure.c:118
-msgid "Grain number"
-msgstr "Numero grani"
-
-#: modules/tools/grainmeasure.c:128
-msgid "Center x:"
-msgstr ""
-
-#: modules/tools/grainmeasure.c:133
-msgid "Center y:"
-msgstr ""
-
-#: modules/tools/grainmeasure.c:143 modules/tools/stats.c:273
-msgid "Minimum:"
-msgstr "Minimo:"
-
-#: modules/tools/grainmeasure.c:148 modules/tools/stats.c:274
-msgid "Maximum:"
-msgstr "Massimo:"
-
-#: modules/tools/grainmeasure.c:153
-msgid "Mean:"
-msgstr "Media:"
-
-#: modules/tools/grainmeasure.c:158 modules/tools/stats.c:275
-msgid "Median:"
-msgstr "Mediana:"
-
-#: modules/tools/grainmeasure.c:168 modules/tools/stats.c:281
-msgid "Projected area:"
-msgstr "Proiezione area:"
-
-#: modules/tools/grainmeasure.c:173 modules/tools/stats.c:280
-msgid "Surface area:"
-msgstr "Area superficie:"
-
-#: modules/tools/grainmeasure.c:178
-msgid "Equivalent square side:"
-msgstr "Lato quadrato equivalente:"
-
-#: modules/tools/grainmeasure.c:183
-msgid "Equivalent disc radius:"
-msgstr "Raggio cerchio equivalente:"
-
-#: modules/tools/grainmeasure.c:193
-msgid "Zero basis:"
-msgstr "Base zero:"
-
-#: modules/tools/grainmeasure.c:198
-msgid "Grain minimum basis:"
-msgstr "Base minima grani:"
-
-#: modules/tools/grainmeasure.c:203
-msgid "Laplacian background basis:"
-msgstr "Base sottofondo Laplaciano:"
-
-#: modules/tools/grainmeasure.c:213
-msgid "Projected boundary length:"
-msgstr "Lunghezza contorno proiettato:"
-
-#: modules/tools/grainmeasure.c:218
-msgid "Minimum bounding size:"
-msgstr "Dimensioni legame minimo:"
-
-#: modules/tools/grainmeasure.c:223
-msgid "Minimum bounding direction:"
-msgstr "Direzione legame minimo:"
-
-#: modules/tools/grainmeasure.c:228
-msgid "Maximum bounding size:"
-msgstr "Dimensione legame massimo:"
-
-#: modules/tools/grainmeasure.c:233
-msgid "Maximum bounding direction:"
-msgstr "Direzione legame massimo:"
-
-#: modules/tools/grainmeasure.c:243 modules/tools/stats.c:282
-msgid "Inclination θ:"
-msgstr "Inclinazione θ:"
-
-#: modules/tools/grainmeasure.c:248 modules/tools/stats.c:283
-msgid "Inclination φ:"
-msgstr "Inclinazione φ:"
-
-#: modules/tools/grainmeasure.c:259
+#: modules/tools/grainmeasure.c:91
 msgid ""
 "Grain measurement tool, calculates characteristics of selected countinous "
 "parts of mask."
@@ -6238,11 +6038,11 @@ msgstr ""
 "Strumento di misura grani, calcola le caratteristiche di maschere continue "
 "selezionate."
 
-#: modules/tools/grainmeasure.c:291
+#: modules/tools/grainmeasure.c:123
 msgid "Grain Measure"
 msgstr "Misura grani"
 
-#: modules/tools/grainmeasure.c:292
+#: modules/tools/grainmeasure.c:124
 msgid "Measure individual grains (continuous parts of mask)"
 msgstr "Misura grani singoli (parti continue di maschera)"
 
@@ -6411,7 +6211,7 @@ msgid "Co_lumns"
 msgstr "Colonne"
 
 #: modules/tools/linestats.c:320 modules/tools/profile.c:325
-#: modules/tools/sfunctions.c:338 modules/tools/spectro.c:290
+#: modules/tools/sfunctions.c:338 modules/tools/spectro.c:292
 msgid "<b>Options</b>"
 msgstr "<b>Opzioni</b>"
 
@@ -6589,7 +6389,7 @@ msgstr "Estrai profili"
 msgid "_Separate profiles"
 msgstr "_Separa Profili"
 
-#: modules/tools/profile.c:542
+#: modules/tools/profile.c:545
 #, c-format
 msgid "Profile %d"
 msgstr "Profilo %d"
@@ -6724,7 +6524,7 @@ msgid "Calculate surface profile parameters."
 msgstr "Calcolo parametri profilo superficie."
 
 #: modules/tools/roughness.c:660 modules/tools/roughness.c:789
-#: modules/tools/roughness.c:1345
+#: modules/tools/roughness.c:1348
 msgid "Roughness"
 msgstr "Rugosità"
 
@@ -6733,11 +6533,11 @@ msgstr "Rugosità"
 msgid "Calculate roughness parameters"
 msgstr "Calcolo parametri rugosità."
 
-#: modules/tools/roughness.c:787 modules/tools/roughness.c:1343
+#: modules/tools/roughness.c:787 modules/tools/roughness.c:1346
 msgid "Texture"
 msgstr "Struttura"
 
-#: modules/tools/roughness.c:788 modules/tools/roughness.c:1344
+#: modules/tools/roughness.c:788 modules/tools/roughness.c:1347
 msgid "Waviness"
 msgstr "Ondulazione"
 
@@ -6749,7 +6549,7 @@ msgstr "ADF"
 msgid "BRC"
 msgstr "BRC"
 
-#: modules/tools/roughness.c:792 modules/tools/roughness.c:1348
+#: modules/tools/roughness.c:792 modules/tools/roughness.c:1351
 msgid "Peak Count"
 msgstr "Conta picchi"
 
@@ -6761,39 +6561,39 @@ msgstr "_Grafico:"
 msgid "C_ut-off:"
 msgstr ""
 
-#: modules/tools/roughness.c:1346
+#: modules/tools/roughness.c:1349
 msgid "Amplitude Distribution Function"
 msgstr "Funzione Distribuzione Ampiezza (ADF)"
 
-#: modules/tools/roughness.c:1347
+#: modules/tools/roughness.c:1350
 msgid "The Bearing Ratio Curve"
 msgstr "Bearing Ratio Curve (BRC)"
 
-#: modules/tools/roughness.c:1382
+#: modules/tools/roughness.c:1385
 msgid "Surface Profiles"
 msgstr "Profili superficie"
 
-#: modules/tools/roughness.c:2097
+#: modules/tools/roughness.c:2100
 #, fuzzy
 msgid "Save Roughness Parameters"
 msgstr "Calcolo parametri rugosità."
 
-#: modules/tools/roughness.c:2121
+#: modules/tools/roughness.c:2124
 #, fuzzy
 msgid "Roughness Parameters"
 msgstr "Rugosità media"
 
-#: modules/tools/roughness.c:2127 modules/tools/stats.c:738
+#: modules/tools/roughness.c:2130 modules/tools/stats.c:741
 #, c-format
 msgid "File:              %s\n"
 msgstr "File:              %s\n"
 
-#: modules/tools/roughness.c:2131 modules/tools/stats.c:742
+#: modules/tools/roughness.c:2134 modules/tools/stats.c:745
 #, c-format
 msgid "Data channel:      %s\n"
 msgstr "Canale dati:      %s\n"
 
-#: modules/tools/roughness.c:2162
+#: modules/tools/roughness.c:2165
 #, c-format
 msgid ""
 "Selected line:     (%s, %s) to (%s, %s) px\n"
@@ -6862,23 +6662,23 @@ msgstr "Funzioni Statistiche"
 msgid "Calculate 1D statistical functions"
 msgstr "Calcolo funzioni statistiche1D "
 
-#: modules/tools/spectro.c:127
+#: modules/tools/spectro.c:126
 msgid "Point Spectrum, extracts point spectra to a graph."
 msgstr "Point Spectrum, estrae gli spettri puntuali in un grafico."
 
-#: modules/tools/spectro.c:163
+#: modules/tools/spectro.c:162
 msgid "Point Spectroscopy"
 msgstr "Spettroscopia puntuale"
 
-#: modules/tools/spectro.c:164
+#: modules/tools/spectro.c:163
 msgid "Extract and view point spectroscopy data"
 msgstr "Estrai e visualizza dati spettroscopici"
 
-#: modules/tools/spectro.c:306
+#: modules/tools/spectro.c:308
 msgid "_Separate spectra"
 msgstr "_Separa spettri"
 
-#: modules/tools/spectro.c:419
+#: modules/tools/spectro.c:418
 msgid "Spectroscopy"
 msgstr "Spettroscopia"
 
@@ -6914,7 +6714,7 @@ msgstr "Interpolazione frattale"
 msgid "Statistics tool."
 msgstr "Strumenti statistici"
 
-#: modules/tools/stats.c:187 modules/tools/stats.c:732
+#: modules/tools/stats.c:187 modules/tools/stats.c:735
 msgid "Statistical Quantities"
 msgstr "Quantità statistiche"
 
@@ -6925,6 +6725,18 @@ msgstr "Quantità statistiche."
 #: modules/tools/stats.c:272
 msgid "Average value:"
 msgstr "Valore medio:"
+
+#: modules/tools/stats.c:273
+msgid "Minimum:"
+msgstr "Minimo:"
+
+#: modules/tools/stats.c:274
+msgid "Maximum:"
+msgstr "Massimo:"
+
+#: modules/tools/stats.c:275
+msgid "Median:"
+msgstr "Mediana:"
 
 #: modules/tools/stats.c:276
 msgid "Ra:"
@@ -6942,6 +6754,22 @@ msgstr "Skew:"
 msgid "Kurtosis:"
 msgstr "Curtosi:"
 
+#: modules/tools/stats.c:280
+msgid "Surface area:"
+msgstr "Area superficie:"
+
+#: modules/tools/stats.c:281
+msgid "Projected area:"
+msgstr "Proiezione area:"
+
+#: modules/tools/stats.c:282
+msgid "Inclination θ:"
+msgstr "Inclinazione θ:"
+
+#: modules/tools/stats.c:283
+msgid "Inclination φ:"
+msgstr "Inclinazione φ:"
+
 #: modules/tools/stats.c:318
 msgid "Use _mask"
 msgstr "Usa _maschera"
@@ -6950,19 +6778,19 @@ msgstr "Usa _maschera"
 msgid "Parameters"
 msgstr "Parametri"
 
-#: modules/tools/stats.c:702
+#: modules/tools/stats.c:705
 msgid "Save Statistical Quantities"
 msgstr "Salva Quantità Statistiche"
 
-#: modules/tools/stats.c:764
+#: modules/tools/stats.c:767
 msgid "Yes"
 msgstr "Si"
 
-#: modules/tools/stats.c:764
+#: modules/tools/stats.c:767
 msgid "No"
 msgstr "No"
 
-#: modules/tools/stats.c:801
+#: modules/tools/stats.c:804
 #, c-format
 msgid ""
 "Selected area:     %s × %s at (%s, %s) px\n"
@@ -6998,6 +6826,207 @@ msgstr ""
 "Area Proiettata:    %s\n"
 "Inclinazione  θ:   %s\n"
 "Inclinazione φ:   %s\n"
+
+#~ msgid "Mean:"
+#~ msgstr "Media:"
+
+#~ msgid "Equivalent square side:"
+#~ msgstr "Lato quadrato equivalente:"
+
+#~ msgid "Equivalent disc radius:"
+#~ msgstr "Raggio cerchio equivalente:"
+
+#~ msgid "Zero basis:"
+#~ msgstr "Base zero:"
+
+#~ msgid "Grain minimum basis:"
+#~ msgstr "Base minima grani:"
+
+#~ msgid "Laplacian background basis:"
+#~ msgstr "Base sottofondo Laplaciano:"
+
+#~ msgid "Projected boundary length:"
+#~ msgstr "Lunghezza contorno proiettato:"
+
+#~ msgid "Minimum bounding size:"
+#~ msgstr "Dimensioni legame minimo:"
+
+#~ msgid "Minimum bounding direction:"
+#~ msgstr "Direzione legame minimo:"
+
+#~ msgid "Maximum bounding size:"
+#~ msgstr "Dimensione legame massimo:"
+
+#~ msgid "Maximum bounding direction:"
+#~ msgstr "Direzione legame massimo:"
+
+#~ msgid "Grain Center X Histogram"
+#~ msgstr " "
+
+#~ msgid "Grain center x positions"
+#~ msgstr " "
+
+#~ msgid "Grain Center Y Histogram"
+#~ msgstr " "
+
+#~ msgid "Grain center y positions"
+#~ msgstr " "
+
+#~ msgid "M_inimum"
+#~ msgstr "M_inimo"
+
+#~ msgid "Grain Minimum Value Histogram"
+#~ msgstr "Istogramma minimo valore grani"
+
+#~ msgid "Grain min. values"
+#~ msgstr "Valori min. grani"
+
+#~ msgid "Ma_ximum"
+#~ msgstr "Ma_ssimo"
+
+#~ msgid "Grain Maximum Value Histogram"
+#~ msgstr "Istogramma massimo valore grani"
+
+#~ msgid "Grain max. values"
+#~ msgstr "Valori max. grani"
+
+#~ msgid "_Mean"
+#~ msgstr "_Media"
+
+#~ msgid "Grain Mean Value Histogram"
+#~ msgstr "Istogramma valore medio grani"
+
+#~ msgid "Grain mean values"
+#~ msgstr "Valori medi grani"
+
+#~ msgid "Me_dian"
+#~ msgstr "Me_diana"
+
+#~ msgid "Grain Median Value Histogram"
+#~ msgstr "Istogramma valore mediano grani"
+
+#~ msgid "Grain median values"
+#~ msgstr "Valori mediani grani"
+
+#~ msgid "_Projected area"
+#~ msgstr "_Area proiettata"
+
+#~ msgid "Grain Projected Area Histogram"
+#~ msgstr "Istogramma area proiettata grani"
+
+#~ msgid "Grain proj. areas"
+#~ msgstr "Area Proiet. Grani"
+
+#~ msgid "S_urface area"
+#~ msgstr "Area superficie"
+
+#~ msgid "Grain Surface Area Histogram"
+#~ msgstr "Istogramma area superficie grani"
+
+#~ msgid "Grain surf. areas"
+#~ msgstr "Aree sup. grani"
+
+#~ msgid "Equivalent _square side"
+#~ msgstr "Lato quadrato equivalente"
+
+#~ msgid "Grain Equivalent Square Side Histogram"
+#~ msgstr "Istogramma lato quadrato equivalente grani"
+
+#~ msgid "Grain equiv. square sides"
+#~ msgstr "lati quadrato equiv. grani"
+
+#~ msgid "Equivalent disc _radius"
+#~ msgstr "Raggio cerchio equivalente"
+
+#~ msgid "Grain Equivalent Disc Radius Histogram"
+#~ msgstr "Istogramma raggio cerchio equivalente grani"
+
+#~ msgid "Grain equiv. disc radii"
+#~ msgstr "Raggi cerchi equiv. grani"
+
+#, fuzzy
+#~ msgid "Grain Half-Height Area Histogram"
+#~ msgstr "Istogramma area superficie grani"
+
+#, fuzzy
+#~ msgid "Grain half-height areas"
+#~ msgstr "Aree sup. grani"
+
+#~ msgid "_Zero basis"
+#~ msgstr "_Base zero"
+
+#~ msgid "Grain Volume (Zero) Histogram"
+#~ msgstr "Istogramma Volume Grani (zero)"
+
+#~ msgid "Grain volumes (zero)"
+#~ msgstr "Volume Grani (zero)"
+
+#~ msgid "_Grain minimum basis"
+#~ msgstr "Base minima grani"
+
+#~ msgid "Grain Volume (Minimum) Histogram"
+#~ msgstr "Istogramma Volume Grani (Minimo)"
+
+#~ msgid "Grain volumes (minimum)"
+#~ msgstr "Volume Grani (minimo)"
+
+#~ msgid "_Laplacian background basis"
+#~ msgstr "Base sottofondo Laplaciano"
+
+#~ msgid "Grain Volume (Laplacian) Histogram"
+#~ msgstr "Istogramma Volume Grani (Laplaciano)"
+
+#~ msgid "Grain volumes (laplacian)"
+#~ msgstr "Volume Grani (Laplaciano)"
+
+#~ msgid "Projected _boundary length"
+#~ msgstr "Lunghezza contorno proiettato"
+
+#~ msgid "Grain Projected Boundary Length Histogram"
+#~ msgstr "Istogramma lunghezza proiettata contorno grani"
+
+#~ msgid "Grain proj. boundary lengths"
+#~ msgstr "Lunghezze contorni proiett. grani"
+
+#~ msgid "Grain min. bound. sizes"
+#~ msgstr "Grain min. bound. sizes"
+
+#~ msgid "Grain min. bound. directions"
+#~ msgstr "Grain min. bound. directions"
+
+#~ msgid "Grain max. bound. sizes"
+#~ msgstr "Grain max. bound. sizes"
+
+#~ msgid "Grain max. bound. directions"
+#~ msgstr "Grain max. bound. directions"
+
+#, fuzzy
+#~ msgid "Grain Inclination θ Histogram"
+#~ msgstr " "
+
+#, fuzzy
+#~ msgid "Grain incl. θ"
+#~ msgstr "Valori min. grani"
+
+#, fuzzy
+#~ msgid "Grain Inclination φ Histogram"
+#~ msgstr " "
+
+#, fuzzy
+#~ msgid "Grain incl. φ"
+#~ msgstr "Valori min. grani"
+
+#~ msgid "count"
+#~ msgstr "conto"
+
+#~ msgid "<small>Resampled from %dx%d to %dx%d for FFT</small>"
+#~ msgstr "<small>Ricampionamento da %dx%d a %dx%d per FFT</small>"
+
+#~ msgid "_Preserve size (don't resize to power of 2)"
+#~ msgstr "Mantieni dimensioni (non riproporzionare secondo potenze di 2)"
+
+#~ msgid "_Preserve size (don't resize to %d × %d)"
+#~ msgstr "_Mantieni dimensioni (non ridimensionare a %d × %d)"
 
 #~ msgid "Pixmap image export must be run as interactive."
 #~ msgstr "L'immagine Pixmap deve essere esportata in modo interattivo."
@@ -7289,11 +7318,3 @@ msgstr ""
 #, fuzzy
 #~ msgid "Cut graph with function"
 #~ msgstr "Adatta il grafico con la funzione"
-
-#, fuzzy
-#~ msgid "Surface area"
-#~ msgstr "Area superficie"
-
-#, fuzzy
-#~ msgid "Projected area"
-#~ msgstr "_Area proiettata"

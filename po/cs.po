@@ -4582,8 +4582,8 @@ msgid ""
 "Grain correlation: Lateral dimensions and value must be the same physical "
 "quantity for the selected grain properties."
 msgstr ""
-"Korelace parametrů zrn: Pro vybrané vlastnosti zrn musejí být rozměry "
-"a hodnoty dat tytéž fyzikální veličiny."
+"Korelace parametrů zrn: Pro vybrané vlastnosti zrn musejí být rozměry a "
+"hodnoty dat tytéž fyzikální veličiny."
 
 #: modules/process/grain_cross.c:240
 msgid "Grain Correlations"
