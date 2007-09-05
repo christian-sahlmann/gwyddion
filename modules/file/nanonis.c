@@ -91,7 +91,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Nanonis SXM data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.5",
+    "0.6",
     "David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
@@ -489,8 +489,11 @@ sxm_load(const gchar *filename,
             columns = split_line_in_place(s, ' ');
             if (g_strv_length(columns) == 2
                 && gwy_strequal(columns[0], "FLOAT")
-                && gwy_strequal(columns[1], "LSBFIRST"))
+                /* XXX: No matter what they say, the files seems to be BE */
+                && (gwy_strequal(columns[1], "LSBFIRST")
+                    || gwy_strequal(columns[1], "MSBFIRST"))) {
                 size1 = sizeof(gfloat);
+            }
             else {
                 err_UNSUPPORTED(error, "SCANIT_TYPE");
                 sxmfile.ok = FALSE;
