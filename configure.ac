@@ -295,7 +295,9 @@ AC_PATH_XTRA
 test "x$x_includes" = "x" || CPPFLAGS="$CPPFLAGS -I$x_includes"
 test "x$x_libraries" = "x" || LDFLAGS="$LDFLAGS -L$x_libraries"
 
-PKG_CHECK_MODULES(GTK, [pangocairo gtk+-2.0 >= 2.8.0])
+# XXX: We do not need pangoft2, but we export a deprecated function to obtain
+# Pango FT2 context.  Get rid of this once possible.
+PKG_CHECK_MODULES(GTK, [pangoft2 pangocairo gtk+-2.0 >= 2.8.0])
 PKG_CHECK_MODULES(GOBJECT, [gobject-2.0])
 PKG_CHECK_MODULES(GMODULE, [gmodule-2.0])
 
