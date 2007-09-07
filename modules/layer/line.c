@@ -452,7 +452,7 @@ gwy_layer_line_render_string_bw(GwyLayerLine *layer,
     wstride = (wwidth + 31)/32*4;
     wwidth = wstride*8;
     wheight = GWY_ROUND(1.5*zoom*layer->digit_height);
-    gwy_debug("w-layout size: %d %d\n", wwidth, wheight);
+    gwy_debug("w-layout size: %d %d", wwidth, wheight);
 
     data = g_new0(guchar, wstride*wheight);
     surface = cairo_image_surface_create_for_data(data, CAIRO_FORMAT_A1,
@@ -466,7 +466,7 @@ gwy_layer_line_render_string_bw(GwyLayerLine *layer,
     pango_layout_get_pixel_size(layout, &cwidth, &cheight);
     pango_cairo_show_layout(cr, layout);
 
-    gwy_debug("c-layout size: %d %d\n", cwidth, cheight);
+    gwy_debug("c-layout size: %d %d", cwidth, cheight);
     if (cwidth > wwidth || cheight > wheight) {
         g_warning("Cairo image surface is not large enough for text");
         cwidth = MIN(cwidth, wwidth);
