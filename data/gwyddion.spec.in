@@ -16,10 +16,10 @@ BuildRoot:     %{_tmppath}/%{name}-%{version}-%{release}-root-%(id -un)
 Requires(pre): /sbin/ldconfig
 Requires(postun): /sbin/ldconfig
 
-BuildRequires: gtk2-devel >= 2.6
-BuildRequires: glib2-devel >= 2.6
+BuildRequires: gtk2-devel >= 2.8
+BuildRequires: glib2-devel >= 2.8
 BuildRequires: libtiff-devel >= 3.6
-BuildRequires: pango-devel >= 1.8
+BuildRequires: pango-devel >= 1.10
 BuildRequires: libxml2-devel
 BuildRequires: python >= 2.2
 BuildRequires: ruby >= 1.8
