@@ -28,6 +28,7 @@
 #include <gdk/gdkevents.h>
 #include <gtk/gtkmain.h>
 #include <gtk/gtksignal.h>
+#include <pango/pangocairo.h>
 
 #ifdef HAVE_GTKGLEXT
 #include <gtk/gtkgl.h>
@@ -41,8 +42,6 @@
 #ifdef HAVE_GTKGLEXT
 #include <GL/gl.h>
 #endif
-
-#include <pango/pangoft2.h>
 
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
@@ -178,7 +177,6 @@ static void     gwy_3d_view_label_changed        (Gwy3DView *gwy3dview);
 static void     gwy_3d_view_timeout_start        (Gwy3DView *gwy3dview,
                                                   gboolean invalidate_now);
 static gboolean gwy_3d_view_timeout_func         (gpointer user_data);
-static void     gwy_3d_pango_ft2_render_layout   (PangoLayout *layout);
 static void     gwy_3d_print_text                (Gwy3DView *gwy3dview,
                                                   Gwy3DViewLabel id,
                                                   GLfloat raster_x,
@@ -436,8 +434,6 @@ gwy_3d_view_unrealize(GtkWidget *widget)
     gwy3dview = GWY_3D_VIEW(widget);
 
     gwy_3d_view_release_lists(gwy3dview);
-    g_object_unref(gwy3dview->ft2_context);
-    g_object_unref(gwy3dview->ft2_font_map);
     gwy_object_unref(gwy3dview->downsampled);
 
     if (GTK_WIDGET_CLASS(gwy_3d_view_parent_class)->unrealize)
@@ -1411,12 +1407,6 @@ gwy_3d_view_realize(GtkWidget *widget)
     gwy_3d_view_downsample_data(gwy3dview);
     gwy_3d_view_send_configure(gwy3dview);
     gwy_3d_view_realize_gl(gwy3dview);
-
-    /* Get PangoFT2 context. */
-    gwy3dview->ft2_font_map = gwy_get_pango_ft2_font_map(FALSE);
-    g_object_ref(gwy3dview->ft2_font_map);
-    gwy3dview->ft2_context = pango_ft2_font_map_create_context
-                                 (PANGO_FT2_FONT_MAP(gwy3dview->ft2_font_map));
 }
 
 static gboolean
@@ -2149,34 +2139,82 @@ gwy_3d_set_projection(Gwy3DView *gwy3dview)
     glMatrixMode(GL_MODELVIEW);
 }
 
-static void
-gwy_3d_pango_ft2_render_layout(PangoLayout *layout)
+static guchar*
+gwy_3d_view_render_string(GtkWidget *widget,
+                          gdouble size,
+                          const gchar *text,
+                          gint *width,
+                          gint *height,
+                          gint *stride)
 {
-    PangoRectangle logical_rect;
-    FT_Bitmap bitmap;
-    GLvoid *pixels;
-    guint32 *p;
+    PangoLayout *wlayout, *clayout;
+    PangoFontDescription *wfontdesc, *cfontdesc;
+    PangoContext *context;
+    gint wwidth, wheight;
+    cairo_t *cr;
+    cairo_surface_t *surface;
+    guchar *alpha;
+
+    context = gtk_widget_get_pango_context(widget);
+    wfontdesc = pango_context_get_font_description(context);
+    cfontdesc = pango_font_description_copy_static(wfontdesc);
+    /* 0.8 is a random constant to keep the sizes comparable to the old ones */
+    pango_font_description_set_size(cfontdesc,
+                                    GWY_ROUND(0.8*size*PANGO_SCALE));
+    wlayout = pango_layout_new(context);
+    pango_layout_set_font_description(wlayout, cfontdesc);
+    pango_layout_set_text(wlayout, text, -1);
+    pango_layout_get_pixel_size(wlayout, &wwidth, &wheight);
+    g_object_unref(wlayout);
+
+    gwy_debug("w-layout size: %d %d", wwidth, wheight);
+    wwidth = 3*wwidth/2;
+    wwidth = (wwidth + 3)/4*4;
+    wheight = 3*wheight/2;
+    gwy_debug("xw-layout size: %d %d", wwidth, wheight);
+
+    alpha = g_new0(guchar, wwidth*wheight);
+    surface = cairo_image_surface_create_for_data(alpha, CAIRO_FORMAT_A8,
+                                                  wwidth, wheight, wwidth);
+    cr = cairo_create(surface);
+    cairo_set_source_rgba(cr, 0.0, 0.0, 0.0, 1.0);
+
+    clayout = pango_cairo_create_layout(cr);
+    pango_layout_set_font_description(clayout, cfontdesc);
+    pango_layout_set_text(clayout, text, -1);
+    pango_layout_get_pixel_size(clayout, width, height);
+    pango_cairo_show_layout(cr, clayout);
+
+    gwy_debug("c-layout size: %d %d", *width, *height);
+    if (*width > wwidth || *height > wheight) {
+        g_warning("Cairo image surface is not large enough for text");
+        *width = MIN(*width, wwidth);
+        *height = MIN(*height, wheight);
+    }
+    *stride = wwidth;
+
+    g_object_unref(clayout);
+    pango_font_description_free(cfontdesc);
+    cairo_destroy(cr);
+    cairo_surface_destroy(surface);
+
+    return alpha;
+}
+
+static void
+gwy_3d_view_render_bitmap(gint width,
+                          gint height,
+                          gint stride,
+                          const guchar *alpha)
+{
+    guint32 *p, *pixels;
     GLfloat color[4];
     guint32 rgb;
     GLfloat a;
-    guint8 *row, *row_end;
+    const guchar *row;
     int i;
 
-    pango_layout_get_pixel_extents(layout, NULL, &logical_rect);
-    if (logical_rect.width == 0 || logical_rect.height == 0)
-        return;
-
-    bitmap.rows = logical_rect.height;
-    bitmap.width = logical_rect.width;
-    bitmap.pitch = bitmap.width;
-    bitmap.pixel_mode = FT_PIXEL_MODE_GRAY;
-    bitmap.num_grays = 256;
-    bitmap.buffer = g_malloc0(bitmap.rows * bitmap.pitch);
-
-    pango_ft2_render_layout(&bitmap, layout, -logical_rect.x, 0);
-
-    pixels = g_malloc(bitmap.rows * bitmap.width * 4);
-    p = (guint32 *)pixels;
+    p = pixels = g_new(guint32, width*height);
 
     glGetFloatv(GL_CURRENT_COLOR, color);
 #if !defined(GL_VERSION_1_2) && G_BYTE_ORDER == G_LITTLE_ENDIAN
@@ -2190,32 +2228,31 @@ gwy_3d_pango_ft2_render_layout(PangoLayout *layout)
 #endif
     a = color[3];
 
-    row = bitmap.buffer + bitmap.rows * bitmap.width; /* past-the-end */
-    row_end = bitmap.buffer;      /* beginning */
+    row = alpha + height*stride; /* past-the-end */
 
     if (a == 1.0) {
         do {
-            row -= bitmap.width;
-            for (i = 0; i < bitmap.width; i++)
+            row -= stride;
+            for (i = 0; i < width; i++)
 #if !defined(GL_VERSION_1_2) && G_BYTE_ORDER == G_LITTLE_ENDIAN
                 *p++ = rgb | (((guint32) row[i]) << 24);
 #else
             *p++ = rgb | ((guint32) row[i]);
 #endif
         }
-        while (row != row_end);
+        while (row != alpha);
     }
     else {
         do {
-            row -= bitmap.width;
-            for (i = 0; i < bitmap.width; i++)
+            row -= stride;
+            for (i = 0; i < width; i++)
 #if !defined(GL_VERSION_1_2) && G_BYTE_ORDER == G_LITTLE_ENDIAN
                 *p++ = rgb | (((guint32) (a * row[i])) << 24);
 #else
             *p++ = rgb | ((guint32) (a * row[i]));
 #endif
         }
-        while (row != row_end);
+        while (row != alpha);
     }
 
     glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
@@ -2224,18 +2261,17 @@ gwy_3d_pango_ft2_render_layout(PangoLayout *layout)
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 #if !defined(GL_VERSION_1_2)
-    glDrawPixels(bitmap.width, bitmap.rows,
+    glDrawPixels(width, height,
                  GL_RGBA, GL_UNSIGNED_BYTE,
                  pixels);
 #else
-    glDrawPixels(bitmap.width, bitmap.rows,
+    glDrawPixels(width, height,
                  GL_RGBA, GL_UNSIGNED_INT_8_8_8_8,
                  pixels);
 #endif
 
     glDisable(GL_BLEND);
 
-    g_free(bitmap.buffer);
     g_free(pixels);
 }
 
@@ -2249,40 +2285,27 @@ gwy_3d_print_text(Gwy3DView     *gwy3dview,
                   gint           vjustify,
                   gint           hjustify)
 {
-    PangoContext *widget_context;
-    PangoFontDescription *font_desc;
-    PangoLayout *layout;
-    PangoRectangle logical_rect;
     GLfloat text_w, text_h;
     guint hlp = 0;
     Gwy3DLabel *label;
-    gint displacement_x, displacement_y;
+    gint width, height, stride, displacement_x, displacement_y;
+    guchar *alpha;
     gchar *text;
 
+    /* Render the label into an off-screen buffer */
     label = gwy3dview->labels[id];
-    text = gwy_3d_label_expand_text(label, gwy3dview->variables);
-    size = gwy_3d_label_user_size(label, size);
     displacement_x = GWY_ROUND(label->delta_x);
     displacement_y = GWY_ROUND(label->delta_y);
-
-    /* Font */
-    /* FIXME: is it possible for pango to write on trasnparent background? */
-    widget_context = gtk_widget_get_pango_context(GTK_WIDGET(gwy3dview));
-    font_desc = pango_context_get_font_description(widget_context);
-    pango_font_description_set_size(font_desc, size * PANGO_SCALE);
-    pango_context_set_font_description(gwy3dview->ft2_context, font_desc);
-
-    /* Text layout */
-    layout = pango_layout_new(gwy3dview->ft2_context);
-    pango_layout_set_width(layout, -1);
-    pango_layout_set_alignment(layout, PANGO_ALIGN_LEFT);
-    pango_layout_set_markup(layout, text, -1);
+    text = gwy_3d_label_expand_text(label, gwy3dview->variables);
+    size = gwy_3d_label_user_size(label, size);
     /* TODO: use Pango to rotate text, after Pango is capable doing it */
+    alpha = gwy_3d_view_render_string(GTK_WIDGET(gwy3dview), size,
+                                      text, &width, &height, &stride);
+    g_free(text);
 
     /* Text position */
-    pango_layout_get_pixel_extents(layout, NULL, &logical_rect);
-    text_w = logical_rect.width;
-    text_h = logical_rect.height;
+    text_w = width;
+    text_h = height;
 
     glRasterPos3f(raster_x, raster_y, raster_z);
     glBitmap(0, 0, 0, 0, displacement_x, displacement_y, (GLubyte *)&hlp);
@@ -2310,12 +2333,9 @@ gwy_3d_print_text(Gwy3DView     *gwy3dview,
        glBitmap(0, 0, 0, 0, -text_w, 0, (GLubyte *)&hlp);
     }
 
-    /* Render text */
-    gwy_3d_pango_ft2_render_layout(layout);
-
-    g_object_unref(G_OBJECT(layout));
-
-    return ;
+    /* Render text with GL */
+    gwy_3d_view_render_bitmap(width, height, stride, alpha);
+    g_free(alpha);
 }
 
 /**
