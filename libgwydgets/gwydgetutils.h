@@ -90,7 +90,9 @@ void          gwy_widget_set_activate_on_unfocus(GtkWidget *widget,
                                                  gboolean activate);
 void          gwy_widget_sync_sensitivity       (GtkWidget *master,
                                                  GtkWidget *slave);
+#ifndef GWY_DISABLE_DEPRECATED
 PangoFontMap* gwy_get_pango_ft2_font_map        (gboolean unref);
+#endif
 
 G_END_DECLS
 

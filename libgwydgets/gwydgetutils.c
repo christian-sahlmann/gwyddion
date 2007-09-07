@@ -1009,6 +1009,8 @@ gwy_widget_sync_sensitivity(GtkWidget *master,
  *
  * Returns global Pango FT2 font map, eventually creating it.
  *
+ * FT2 portability to Win32 is questionable, use PangoCairo instead.
+ *
  * Returns: Pango FT2 font map.  Add your own reference if you want it to
  *          never go away.
  **/
