@@ -102,6 +102,7 @@ struct _Gwy3DView {
 
     guint timeout_id;             /* Full size redraw timeout id */
 
+    /* Unused */
     PangoContext *ft2_context;    /* For text rendering */
     PangoFontMap *ft2_font_map;   /* Font map for text rendering */
 
