@@ -2,7 +2,7 @@
 dnl Process this file with autoconf to produce a configure script.
 m4_define([gwy_version_major],[2])
 m4_define([gwy_version_minor],[8])
-m4_define([gwy_version_string],[gwy_version_major.gwy_version_minor])
+m4_define([gwy_version_string],[gwy_version_major.gwy_version_minor.20070907])
 AC_INIT([Gwyddion], [gwy_version_string], [klapetek@gwyddion.net])
 # Use -release for unstable version libs instead of -version-info, because
 # we *do* break compatibility each version
@@ -295,7 +295,7 @@ AC_PATH_XTRA
 test "x$x_includes" = "x" || CPPFLAGS="$CPPFLAGS -I$x_includes"
 test "x$x_libraries" = "x" || LDFLAGS="$LDFLAGS -L$x_libraries"
 
-PKG_CHECK_MODULES(GTK, [pangoft2 gtk+-2.0 >= 2.6.0])
+PKG_CHECK_MODULES(GTK, [pangoft2 pangocairo gtk+-2.0 >= 2.8.0])
 PKG_CHECK_MODULES(GOBJECT, [gobject-2.0])
 PKG_CHECK_MODULES(GMODULE, [gmodule-2.0])
 

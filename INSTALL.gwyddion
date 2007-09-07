@@ -24,7 +24,7 @@ Prerequisities:
 - a C compiler, linker, make, etc. capable of Gtk+ compilation (you don't have
   to compile Gtk+, but what is good enough for Gtk+ should be good enough for
   Gwyddion), GNU toolchain is the prefered one
-- GLib-2.6 and Gtk+-2.6 or newer, including development files
+- Gtk+-2.8 or newer, including development files
 - pkg-config 0.16 or newer
 
 Recommended though optional, for 3D data view:
@@ -72,8 +72,7 @@ and as root run:
 Prerequisities:
 - MSVC 6 or newer (it may build with Cygwin or MinGW toolchain, but MSVC is
   the tested one)
-- GLib-2.8 and Gtk+-2.8, including development files (it is possible to
-  compile with 2.6 too, but the build system is set up for 2.8)
+- Gtk+-2.8, including development files
 - GtkGLExt-1.0 or newer, including development files
 - LibXML2, including development files
 The prefered way to get all these is to install Gtk+ all-in-one package from
