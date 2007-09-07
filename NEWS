@@ -1,3 +1,18 @@
+2.8.20070907
+
+2.9 (2000-00-00)
+Application:
+- Gtk+ 2.8 and Pango with Cairo rendering support is now required.
+
+Libraries:
+- libgwydgets: Gwy3DView uses PangoCairo instead of Pango FT2 for label
+  rendering now.
+
+Modules:
+- Nanonis: Version 2 files claiming to be MSBFIRST are imported.
+- Line layer: Crashes on Win32 while drawing line numbers were fixed, it
+  uses PangoCairo instead of Pango FT2 now.
+
 
 2.8 (2007-08-31)
 Application:
