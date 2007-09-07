@@ -621,11 +621,6 @@ gwy_app_file_chooser_add_preview(GwyAppFileChooser *chooser)
     GtkWidget *scwin, *vbox;
     gint w;
 
-    if (gtk_check_version(2, 8, 0)) {
-        g_warning("File previews require Gtk+ 2.8");
-        return;
-    }
-
     scwin = gtk_scrolled_window_new(NULL, NULL);
     gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scwin),
                                    GTK_POLICY_NEVER, GTK_POLICY_ALWAYS);
