@@ -338,15 +338,14 @@ gwy_graph_curve_model_new(void)
 }
 
 /**
- * gwy_graph_model_new_alike:
- * @gmodel: A graph model.
+ * gwy_graph_curve_model_new_alike:
+ * @gcmodel: A graph curve model.
  *
- * Creates new graph model object that has the same settings as @gmodel.
+ * Creates new graph curve model object that has the same settings as @gcmodel.
  *
- * This includes axis/label visibility, actual plotting range, etc.
- * Curves are not duplicated or referenced.
+ * Curve data are not duplicated.
  *
- * Returns: New graph model.
+ * Returns: New graph curve model.
  **/
 GwyGraphCurveModel*
 gwy_graph_curve_model_new_alike(GwyGraphCurveModel *gcmodel)
