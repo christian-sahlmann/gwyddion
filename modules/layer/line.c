@@ -480,7 +480,7 @@ gwy_layer_line_render_string_bw(GwyLayerLine *layer,
 
     for (i = 0; i < cheight; i++) {
         const guint32 *crow = (const guint32*)(data + wstride*i);
-        guchar *prow = pixels + pstride*i + 3;
+        guchar *prow = pixels + pstride*i;
         guint32 bit;
 
         bit = 1;
