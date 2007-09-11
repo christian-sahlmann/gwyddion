@@ -109,12 +109,6 @@ $(DOC_MODULE)-decl.txt $(SCANOBJ_FILES): scan-build.stamp
 tmpl-build.stamp: $(DOC_MODULE)-decl.txt $(SCANOBJ_FILES) $(DOC_MODULE)-overrides.txt
 	@echo 'gtk-doc: Rebuilding template files'
 	gtkdoc-mktmpl --module=$(DOC_MODULE) --output-dir=template $(MKTMPL_OPTIONS)
-	for i in template/*.sgml; do \
-		sed '2s/.*//' "$$i" >$(DOC_MODULE).rstmpl; \
-		diff "$$i" $(DOC_MODULE).rstmpl >/dev/null 2>&1 \
-			|| cat $(DOC_MODULE).rstmpl >"$$i"; \
-	done; \
-	rm -f $(DOC_MODULE).rstmpl; \
 	touch tmpl-build.stamp
 
 tmpl.stamp: tmpl-build.stamp
