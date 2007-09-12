@@ -36,6 +36,7 @@ Source: "modules\tool\*.*"; DestDir: "{app}\modules\tool"
 Source: "plugins\file\*.*"; DestDir: "{app}\plugins\file"
 Source: "locale\cs\LC_MESSAGES\*.*"; DestDir: "{app}\locale\cs\LC_MESSAGES"
 Source: "locale\de\LC_MESSAGES\*.*"; DestDir: "{app}\locale\de\LC_MESSAGES"
+Source: "locale\fr\LC_MESSAGES\*.*"; DestDir: "{app}\locale\fr\LC_MESSAGES"
 Source: "locale\it\LC_MESSAGES\*.*"; DestDir: "{app}\locale\it\LC_MESSAGES"
 
 [Icons]
