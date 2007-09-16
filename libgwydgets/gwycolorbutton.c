@@ -370,7 +370,7 @@ gwy_color_button_finalize(GObject *object)
  * the new color when the user finishes.
  *
  * Returns: a new color button.
- */
+ **/
 GtkWidget *
 gwy_color_button_new (void)
 {
@@ -384,7 +384,7 @@ gwy_color_button_new (void)
  * Creates a new color button.
  *
  * Returns: a new color button.
- */
+ **/
 GtkWidget *
 gwy_color_button_new_with_color(GwyRGBA *color)
 {
@@ -440,7 +440,7 @@ gwy_color_button_get_color(GwyColorButton *color_button,
  * @use_alpha: %TRUE if color button should use alpha channel, %FALSE if not.
  *
  * Sets whether or not the color button should use the alpha channel.
- */
+ **/
 void
 gwy_color_button_set_use_alpha(GwyColorButton *color_button,
                                gboolean        use_alpha)
@@ -465,7 +465,7 @@ gwy_color_button_set_use_alpha(GwyColorButton *color_button,
  * Does the color selection dialog use the alpha channel?
  *
  * Returns: %TRUE if the color sample uses alpha channel, %FALSE if not.
- */
+ **/
 gboolean
 gwy_color_button_get_use_alpha(GwyColorButton *color_button)
 {
