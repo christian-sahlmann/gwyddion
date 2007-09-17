@@ -39,6 +39,7 @@
 #include <libgwyddion/gwymath.h>
 #include <libprocess/datafield.h>
 #include <libgwymodule/gwymodule-file.h>
+#include <app/data-browser.h>
 #include <app/gwymoduleutils-file.h>
 
 #include "err.h"
@@ -56,27 +57,28 @@ static gint          shimadzu_detect      (const GwyFileDetectInfo *fileinfo,
 static GwyContainer* shimadzu_load        (const gchar *filename,
                                            GwyRunType mode,
                                            GError **error);
-static gboolean      read_ascii_data      (gint n,
-                                           gdouble *data,
-                                           gchar **buffer,
-                                           gint bpp,
+static GwyDataField* read_binary_data     (const gchar *buffer,
+                                           gsize size,
+                                           GHashTable *hash,
                                            GError **error);
-static gboolean      read_binary_data     (gint n,
-                                           gdouble *data,
-                                           gchar *buffer,
-                                           gint bpp,
+static GwyDataField* read_text_data       (const gchar *buffer,
+                                           gint text_data_start,
+                                           GHashTable *hash,
                                            GError **error);
 static GHashTable*   read_hash            (gchar *buffer,
                                            gint *text_data_start,
                                            GError **error);
-static void          get_scan_list_res    (GHashTable *hash,
+static gboolean      get_scales           (GHashTable *hash,
                                            gint *xres,
-                                           gint *yres);
-static GwySIUnit*    get_physical_scale   (GHashTable *hash,
-                                           GHashTable *scannerlist,
-                                           GHashTable *scanlist,
-                                           gboolean has_version,
-                                           gdouble *scale,
+                                           gint *yres,
+                                           gdouble *xreal,
+                                           gdouble *yreal,
+                                           gdouble *xoff,
+                                           gdouble *yoff,
+                                           GwySIUnit *si_unit_xy,
+                                           gdouble *zscale,
+                                           gdouble *zoff,
+                                           GwySIUnit *si_unit_z,
                                            GError **error);
 static GwyContainer* shimadzu_get_metadata(GHashTable *hash,
                                            GList *list);
@@ -132,15 +134,16 @@ shimadzu_load(const gchar *filename,
               GError **error)
 {
     GwyContainer *meta, *container = NULL;
+    GwyDataField *dfield = NULL;
     GError *err = NULL;
-    guchar *buffer = NULL;
+    gchar *buffer = NULL;
     GHashTable *hash;
     gchar *head;
     gsize size = 0;
     gboolean ok;
     gint text_data_start;
 
-    if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
+    if (!g_file_get_contents(filename, &buffer, &size, &err)) {
         err_GET_FILE_CONTENTS(error, &err);
         return NULL;
     }
@@ -150,25 +153,133 @@ shimadzu_load(const gchar *filename,
     }
     if (memcmp(buffer, MAGIC, MAGIC_SIZE) != 0) {
         err_FILE_TYPE(error, "Shimadzu");
-        gwy_file_abandon_contents(buffer, size, NULL);
+        g_free(buffer);
         return NULL;
     }
 
     head = g_memdup(buffer, HEADER_SIZE+1);
     head[HEADER_SIZE] = '\0';
 
+    /* text_data_start is set to nonzero if data are text */
     hash = read_hash(head, &text_data_start, error);
-    ok = require_keys(hash, error, "SizeX", "SizeY", NULL);
+    ok = !!hash;
+    if (ok) {
+        if (text_data_start)
+            dfield = read_text_data(buffer, text_data_start, hash, error);
+        else
+            dfield = read_binary_data(buffer, size, hash, error);
+
+        ok = !!dfield;
+    }
+
+    if (ok) {
+        GQuark quark;
+
+        container = gwy_container_new();
+        quark = gwy_app_get_data_key_for_id(0);
+        gwy_container_set_object(container, quark, dfield);
+        g_object_unref(dfield);
+    }
 
     g_free(head);
-    gwy_file_abandon_contents(buffer, size, NULL);
-
-    if (!container && ok)
-        err_NO_DATA(error);
-
+    g_free(buffer);
     g_hash_table_destroy(hash);
 
     return container;
+}
+
+static GwyDataField*
+read_binary_data(const gchar *buffer,
+                 gsize size,
+                 GHashTable *hash,
+                 GError **error)
+{
+    gint xres, yres, i;
+    guint expected;
+    gdouble xreal, yreal, zscale, xoff, yoff, zoff;
+    GwySIUnit *unitxy, *unitz;
+    GwyDataField *dfield = NULL;
+    const gint16 *d16;
+    gdouble *d;
+
+    unitxy = gwy_si_unit_new(NULL);
+    unitz = gwy_si_unit_new(NULL);
+
+    if (!get_scales(hash, &xres, &yres, &xreal, &yreal, &xoff, &yoff, unitxy,
+                    &zscale, &zoff, unitz, error))
+        goto fail;
+
+    expected = 2*xres*yres + HEADER_SIZE;
+    if (err_SIZE_MISMATCH(error, expected, size, TRUE))
+        goto fail;
+
+    dfield = gwy_data_field_new(xres, yres, xreal, yreal, FALSE);
+    gwy_data_field_set_xoffset(dfield, xoff);
+    gwy_data_field_set_xoffset(dfield, yoff);
+    gwy_data_field_set_si_unit_xy(dfield, unitxy);
+    gwy_data_field_set_si_unit_z(dfield, unitz);
+    d = gwy_data_field_get_data(dfield);
+    d16 = (const gint16*)(buffer + HEADER_SIZE);
+
+    for (i = 0; i < xres*yres; i++)
+        d[i] = zscale*GINT16_FROM_LE(d16[i]) + zoff;
+
+fail:
+    g_object_unref(unitxy);
+    g_object_unref(unitz);
+    return dfield;
+}
+
+static GwyDataField*
+read_text_data(const gchar *buffer,
+               gint text_data_start,
+               GHashTable *hash,
+               GError **error)
+{
+    const gchar *p;
+    gchar *end;
+    gint xres, yres, i, power10;
+    gdouble xreal, yreal, zscale, xoff, yoff, zoff;
+    GwySIUnit *unitxy, *unitz;
+    GwyDataField *dfield = NULL;
+    gdouble *d;
+
+    unitxy = gwy_si_unit_new(NULL);
+    unitz = gwy_si_unit_new(NULL);
+
+    if (!get_scales(hash, &xres, &yres, &xreal, &yreal, &xoff, &yoff, unitxy,
+                    &zscale, &zoff, unitz, error))
+        goto fail;
+
+    p = g_hash_table_lookup(hash, "DATA Unit");
+    gwy_si_unit_set_from_string_parse(unitz, p, &power10);
+    zscale = pow10(power10);
+
+    dfield = gwy_data_field_new(xres, yres, xreal, yreal, FALSE);
+    gwy_data_field_set_xoffset(dfield, xoff);
+    gwy_data_field_set_xoffset(dfield, yoff);
+    gwy_data_field_set_si_unit_xy(dfield, unitxy);
+    gwy_data_field_set_si_unit_z(dfield, unitz);
+    d = gwy_data_field_get_data(dfield);
+
+    p = (const gchar*)buffer + text_data_start;
+    for (i = 0; i < xres*yres; i++) {
+        d[i] = zscale*g_ascii_strtod(p, &end) + zoff;
+        if (end == p) {
+            g_set_error(error, GWY_MODULE_FILE_ERROR,
+                        GWY_MODULE_FILE_ERROR_DATA,
+                        _("Cannot parse data values after %d of %d."),
+                        i, xres*yres);
+            gwy_object_unref(dfield);
+            goto fail;
+        }
+        p = end + (*end == ',');
+    }
+
+fail:
+    g_object_unref(unitxy);
+    g_object_unref(unitz);
+    return dfield;
 }
 
 static GHashTable*
@@ -176,51 +287,79 @@ read_hash(gchar *buffer,
           gint *text_data_start,
           GError **error)
 {
+    enum {
+        WHATEVER = 0,
+        PROCESS_PROFILE,
+        COMMENT,
+    } next_is;
     GHashTable *hash;
-    gchar *line, *value;
-    gboolean next_is_process_profile = FALSE;
+    gchar *p, *line, *value;
 
+    *text_data_start = 0;
+    p = buffer;
     hash = g_hash_table_new(g_str_hash, g_str_equal);
-    line = gwy_str_next_line(&buffer);
+    line = gwy_str_next_line(&p);
 
     g_hash_table_insert(hash, "Version", line + MAGIC_SIZE-2);
-    while ((line = gwy_str_next_line(&buffer))) {
+    next_is = WHATEVER;
+    while ((line = gwy_str_next_line(&p))) {
         gint llen;
-
-        if (gwy_strequal(line, "hap 2"))
-            break;
+        gchar *rb;
 
         if (line[0] == '/')
             line++;
 
+        if (line[0] == '\x1a') {
+            /* Apparently a binary data marker */
+            *text_data_start = 0;
+            break;
+        }
+
         g_strstrip(line);
         llen = strlen(line);
         /* sections */
-        if (line[0] == '[' && line[llen-1] == ']') {
-            line[llen-1] = '\0';
+        if (line[0] == '[' && (rb = strchr(line, ']'))) {
+            *rb = '\0';
             line++;
             g_strstrip(line);
             gwy_debug("section %s", line);
             if (gwy_strequal(line, "PROCESS PROFILE")) {
-                next_is_process_profile = TRUE;
+                next_is = PROCESS_PROFILE;
                 continue;
             }
-            next_is_process_profile = FALSE;
+            if (gwy_strequal(line, "COMMENT")) {
+                next_is = COMMENT;
+                continue;
+            }
+            if (g_str_has_prefix(line, "DATA ")) {
+                line += strlen("DATA");
+                *text_data_start = p - buffer;
+                break;
+            }
+            next_is = WHATEVER;
             /* Other sectioning seems too be uninteresting. */
             continue;
         }
 
-        if (next_is_process_profile) {
+        if (next_is == PROCESS_PROFILE) {
             g_hash_table_insert(hash, "Process Profile", line);
-            next_is_process_profile = FALSE;
+            next_is = WHATEVER;
+            continue;
+        }
+        if (next_is == COMMENT) {
+            g_hash_table_insert(hash, "Comment", line);
+            next_is = WHATEVER;
             continue;
         }
 
-        next_is_process_profile = FALSE;
+        next_is = WHATEVER;
         value = strchr(line, ':');
         if (!value) {
-            g_printerr("Cannot parse: %s\n", line);
-            continue;
+            g_set_error(error, GWY_MODULE_FILE_ERROR,
+                        GWY_MODULE_FILE_ERROR_DATA,
+                        _("Missing colon in header line."));
+            g_hash_table_destroy(hash);
+            return NULL;
         }
         *value = '\0';
         value++;
@@ -230,153 +369,125 @@ read_hash(gchar *buffer,
         g_hash_table_insert(hash, line, value);
     }
 
+    if (*text_data_start) {
+        g_strstrip(line);
+        if (!g_str_has_prefix(line, "Unit(") || !g_str_has_suffix(line, ")")) {
+            g_warning("Cannot parse DATA unit: %s", line);
+            g_hash_table_insert(hash, "DATA Unit", "1");
+        }
+        else {
+            line += strlen("Unit(");
+            line[strlen(line)-1] = '\0';
+            g_hash_table_insert(hash, "DATA Unit", line);
+        }
+    }
+
     return hash;
-
-fail:
-    g_hash_table_destroy(hash);
-    return NULL;
 }
 
-#if 0
-/* General parameter line parser */
-static ShimadzuValue*
-parse_value(const gchar *key, gchar *line)
+static gboolean
+get_scales(GHashTable *hash,
+           gint *xres, gint *yres,
+           gdouble *xreal, gdouble *yreal,
+           gdouble *xoff, gdouble *yoff,
+           GwySIUnit *si_unit_xy,
+           gdouble *zscale,
+           gdouble *zoff,
+           GwySIUnit *si_unit_z,
+           GError **error)
 {
-    ShimadzuValue *val;
-    gchar *p, *q;
+    GwySIUnit *unit;
+    gint power10, zp;
+    gchar *p;
 
-    val = g_new0(ShimadzuValue, 1);
+    /* Dimensions are mandatory. */
+    if (!require_keys(hash, error,
+                      "PixelsX", "PixelsY", "PixelsZ",
+                      "SizeX", "SizeY", "SizeZ",
+                      NULL))
+        return FALSE;
 
-    /* old-style values */
-    if (key[0] != '@') {
-        val->hard_value = g_ascii_strtod(line, &p);
-        if (p-line > 0 && *p == ' ') {
-            do {
-                p++;
-            } while (g_ascii_isspace(*p));
-            if ((q = strchr(p, '('))) {
-                *q = '\0';
-                q++;
-                val->hard_scale = g_ascii_strtod(q, &q);
-                if (*q != ')')
-                    val->hard_scale = 0.0;
-            }
-            val->hard_value_units = p;
-        }
-        val->hard_value_str = line;
-        return val;
+    *xres = atoi(g_hash_table_lookup(hash, "PixelsX"));
+    if (err_DIMENSION(error, *xres))
+        return FALSE;
+    *yres = atoi(g_hash_table_lookup(hash, "PixelsY"));
+    if (err_DIMENSION(error, *yres))
+        return FALSE;
+
+    unit = gwy_si_unit_new(NULL);
+
+    p = g_hash_table_lookup(hash, "SizeX");
+    *xreal = fabs(g_ascii_strtod(p, &p));
+    if (!*xreal) {
+        g_warning("Real x size is 0.0, fixing to 1.0");
+        *xreal = 1.0;
+    }
+    gwy_si_unit_set_from_string_parse(si_unit_xy, p, &power10);
+    *xreal *= pow10(power10);
+
+    p = g_hash_table_lookup(hash, "SizeY");
+    *yreal = fabs(g_ascii_strtod(p, &p));
+    if (!*yreal) {
+        g_warning("Real y size is 0.0, fixing to 1.0");
+        *yreal = 1.0;
+    }
+    gwy_si_unit_set_from_string_parse(unit, p, &power10);
+    *yreal *= pow10(power10);
+    if (!gwy_si_unit_equal(unit, si_unit_xy)) {
+        g_warning("X and Y units differ, using X");
     }
 
-    /* type */
-    switch (line[0]) {
-        case 'V':
-        val->type = SHIMADZU_VALUE_VALUE;
-        break;
+    zp = atoi(g_hash_table_lookup(hash, "PixelsZ"));
+    if (!zp) {
+        g_warning("Z pixels is 0, fixing to 1");
+        zp = 1;
+    }
+    p = g_hash_table_lookup(hash, "SizeZ");
+    *zscale = g_ascii_strtod(p, &p);
+    gwy_si_unit_set_from_string_parse(si_unit_z, p, &power10);
+    *zscale *= pow10(power10)/zp;
 
-        case 'S':
-        val->type = SHIMADZU_VALUE_SELECT;
-        break;
-
-        case 'C':
-        val->type = SHIMADZU_VALUE_SCALE;
-        break;
-
-        default:
-        g_warning("Cannot parse value type <%s> for key <%s>", line, key);
-        g_free(val);
-        return NULL;
-        break;
+    /* Offsets are optional. */
+    *xoff = 0.0;
+    if ((p = g_hash_table_lookup(hash, "OffsetX"))) {
+        *xoff = g_ascii_strtod(p, &p);
+        gwy_si_unit_set_from_string_parse(unit, p, &power10);
+        if (gwy_si_unit_equal(unit, si_unit_xy))
+            *xoff *= pow10(power10);
+        else {
+            g_warning("X offset units differ from X size units, ignoring.");
+            *xoff = 0.0;
+        }
     }
 
-    line++;
-    if (line[0] != ' ') {
-        g_warning("Cannot parse value type <%s> for key <%s>", line, key);
-        g_free(val);
-        return NULL;
-    }
-    do {
-        line++;
-    } while (g_ascii_isspace(*line));
-
-    /* softscale */
-    if (line[0] == '[') {
-        if (!(p = strchr(line, ']'))) {
-            g_warning("Cannot parse soft scale <%s> for key <%s>", line, key);
-            g_free(val);
-            return NULL;
+    *yoff = 0.0;
+    if ((p = g_hash_table_lookup(hash, "OffsetY"))) {
+        *yoff = g_ascii_strtod(p, &p);
+        gwy_si_unit_set_from_string_parse(unit, p, &power10);
+        if (gwy_si_unit_equal(unit, si_unit_xy))
+            *yoff *= pow10(power10);
+        else {
+            g_warning("Y offset units differ from Y size units, ignoring.");
+            *yoff = 0.0;
         }
-        if (p-line-1 > 0) {
-            *p = '\0';
-            val->soft_scale = line+1;
-        }
-        line = p+1;
-        if (line[0] != ' ') {
-            g_warning("Cannot parse soft scale <%s> for key <%s>", line, key);
-            g_free(val);
-            return NULL;
-        }
-        do {
-            line++;
-        } while (g_ascii_isspace(*line));
     }
 
-    /* hardscale (probably useless) */
-    if (line[0] == '(') {
-        do {
-            line++;
-        } while (g_ascii_isspace(*line));
-        if (!(p = strchr(line, ')'))) {
-            g_warning("Cannot parse hard scale <%s> for key <%s>", line, key);
-            g_free(val);
-            return NULL;
+    *zoff = 0.0;
+    if ((p = g_hash_table_lookup(hash, "OffsetZ"))) {
+        *zoff = g_ascii_strtod(p, &p);
+        gwy_si_unit_set_from_string_parse(unit, p, &power10);
+        if (!gwy_si_unit_equal(unit, si_unit_z))
+            *zoff *= pow10(power10);
+        else {
+            g_warning("Z offset units differ from Z size units, ignoring.");
+            *zoff = 0.0;
         }
-        val->hard_scale = g_ascii_strtod(line, &q);
-        while (g_ascii_isspace(*q))
-            q++;
-        if (p-q > 0) {
-            *p = '\0';
-            val->hard_scale_units = q;
-        }
-        line = p+1;
-        if (line[0] != ' ') {
-            g_warning("Cannot parse hard scale <%s> for key <%s>", line, key);
-            g_free(val);
-            return NULL;
-        }
-        do {
-            line++;
-        } while (g_ascii_isspace(*line));
     }
 
-    /* hard value (everything else) */
-    switch (val->type) {
-        case SHIMADZU_VALUE_SELECT:
-        val->hard_value_str = line;
-        break;
+    g_object_unref(unit);
 
-        case SHIMADZU_VALUE_SCALE:
-        val->hard_value = g_ascii_strtod(line, &p);
-        break;
-
-        case SHIMADZU_VALUE_VALUE:
-        val->hard_value = g_ascii_strtod(line, &p);
-        if (p-line > 0 && *p == ' ' && !strchr(p+1, ' ')) {
-            do {
-                p++;
-            } while (g_ascii_isspace(*p));
-            val->hard_value_units = p;
-        }
-        val->hard_value_str = line;
-        break;
-
-        default:
-        g_assert_not_reached();
-        break;
-    }
-
-    return val;
+    return TRUE;
 }
-#endif
 
 static gboolean
 require_keys(GHashTable *hash,
