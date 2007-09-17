@@ -1,5 +1,5 @@
 /*
- *  @(#) $Id: shimadzu.c 8177 2007-06-20 08:40:20Z yeti-dn $
+ *  @(#) $Id$
  *  Copyright (C) 2007 David Necas (Yeti).
  *  E-mail: yeti@gwyddion.net.
  *
