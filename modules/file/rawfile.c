@@ -215,7 +215,7 @@ static GwyModuleInfo module_info = {
     N_("Imports raw data files, both ASCII and binary, according to "
        "user-specified format."),
     "Yeti <yeti@gwyddion.net>",
-    "2.3",
+    "2.3.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -1180,6 +1180,8 @@ delimiter_changed_cb(GtkWidget *combo,
 
     delim = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
     gtk_widget_set_sensitive(controls->delimiter, delim == RAW_DELIM_OTHER);
+    gtk_widget_set_sensitive(controls->otherdelim_label,
+                             delim == RAW_DELIM_OTHER);
     if (delim != RAW_DELIM_OTHER)
         g_free(controls->args->p.delimiter);
     if (delim == RAW_DELIM_TAB)
