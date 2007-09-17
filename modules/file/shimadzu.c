@@ -80,8 +80,7 @@ static gboolean      get_scales           (GHashTable *hash,
                                            gdouble *zoff,
                                            GwySIUnit *si_unit_z,
                                            GError **error);
-static GwyContainer* shimadzu_get_metadata(GHashTable *hash,
-                                           GList *list);
+static GwyContainer* shimadzu_get_metadata(GHashTable *hash);
 static gboolean      require_keys         (GHashTable *hash,
                                            GError **error,
                                            ...);
@@ -174,11 +173,23 @@ shimadzu_load(const gchar *filename,
 
     if (ok) {
         GQuark quark;
+        const gchar *title;
 
         container = gwy_container_new();
         quark = gwy_app_get_data_key_for_id(0);
         gwy_container_set_object(container, quark, dfield);
         g_object_unref(dfield);
+
+        meta = shimadzu_get_metadata(hash);
+        gwy_container_set_object_by_name(container, "/0/meta", meta);
+        g_object_unref(meta);
+
+        title = g_hash_table_lookup(hash, "Channel");
+        if (title && *title)
+            gwy_container_set_string_by_name(container, "/0/data/title",
+                                             g_strdup(title));
+        else
+            gwy_app_channel_title_fall_back(container, 0);
     }
 
     g_free(head);
@@ -342,7 +353,7 @@ read_hash(gchar *buffer,
         }
 
         if (next_is == PROCESS_PROFILE) {
-            g_hash_table_insert(hash, "Process Profile", line);
+            g_hash_table_insert(hash, "ProcessProfile", line);
             next_is = WHATEVER;
             continue;
         }
@@ -489,6 +500,34 @@ get_scales(GHashTable *hash,
     return TRUE;
 }
 
+/* FIXME: This is rough, we should fix/special-case some values.
+ * Avoid Name and Microscope, apparently contain crap. */
+static GwyContainer*
+shimadzu_get_metadata(GHashTable *hash)
+{
+    static const gchar keys[] =
+        "DataName\0GroupName\0CurrentRange\0Angle\0Rate\0Comment\0"
+        "Direction\0OperatingPoint\0IntegralGain\0ProportionalGain\0"
+        "SamplingFrequency\0Mode\0Channel\0Version\0ProcessProfile\0"
+        "VoltageRangeX\0VoltageRangeY\0VoltageRangeZ\0"
+        "MaxRangeX\0MaxRangeY\0MaxRangeZ\0"
+        "SensitivityX\0SensitivityY\0SensitivityZ\0"
+        "SizeGainX\0SizeGainY\0SizeGainZ\0";
+
+    GwyContainer *meta;
+    const gchar *k, *v;
+
+    meta = gwy_container_new();
+
+    for (k = keys; *k; k += strlen(k)+1) {
+        v = g_hash_table_lookup(hash, k);
+        if (v && *v)
+            gwy_container_set_string_by_name(meta, k, g_strdup(v));
+    }
+
+    return meta;
+}
+
 static gboolean
 require_keys(GHashTable *hash,
              GError **error,
@@ -511,4 +550,3 @@ require_keys(GHashTable *hash,
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
-
