@@ -226,7 +226,7 @@ read_binary_data(const gchar *buffer,
 
     dfield = gwy_data_field_new(xres, yres, xreal, yreal, FALSE);
     gwy_data_field_set_xoffset(dfield, xoff);
-    gwy_data_field_set_xoffset(dfield, yoff);
+    gwy_data_field_set_yoffset(dfield, yoff);
     gwy_data_field_set_si_unit_xy(dfield, unitxy);
     gwy_data_field_set_si_unit_z(dfield, unitz);
     d = gwy_data_field_get_data(dfield);
@@ -268,7 +268,7 @@ read_text_data(const gchar *buffer,
 
     dfield = gwy_data_field_new(xres, yres, xreal, yreal, FALSE);
     gwy_data_field_set_xoffset(dfield, xoff);
-    gwy_data_field_set_xoffset(dfield, yoff);
+    gwy_data_field_set_yoffset(dfield, yoff);
     gwy_data_field_set_si_unit_xy(dfield, unitxy);
     gwy_data_field_set_si_unit_z(dfield, unitz);
     d = gwy_data_field_get_data(dfield);
