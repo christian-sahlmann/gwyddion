@@ -102,7 +102,7 @@ static GwyDataField*   hash_to_data_field    (GHashTable *hash,
                                               gint gyres,
                                               gchar **p,
                                               GError **error);
-static gboolean        read_ascii_data       (gint n,
+static gboolean        read_text_data        (gint n,
                                               gdouble *data,
                                               gchar **buffer,
                                               gint bpp,
@@ -528,7 +528,7 @@ hash_to_data_field(GHashTable *hash,
     data = gwy_data_field_get_data(dfield);
     switch (file_type) {
         case NANOSCOPE_FILE_TYPE_TXT:
-        if (!read_ascii_data(xres*yres, data, p, bpp, error)) {
+        if (!read_text_data(xres*yres, data, p, bpp, error)) {
             g_object_unref(dfield);
             return NULL;
         }
@@ -636,10 +636,10 @@ get_physical_scale(GHashTable *hash,
 }
 
 static gboolean
-read_ascii_data(gint n, gdouble *data,
-                gchar **buffer,
-                gint bpp,
-                GError **error)
+read_text_data(gint n, gdouble *data,
+               gchar **buffer,
+               gint bpp,
+               GError **error)
 {
     gint i;
     gdouble q;
