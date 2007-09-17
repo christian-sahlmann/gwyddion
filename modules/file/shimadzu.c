@@ -29,13 +29,10 @@
  **/
 #define DEBUG 1
 #include "config.h"
-#include <errno.h>
 #include <string.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
 #include <libgwyddion/gwymacros.h>
-#include <libgwyddion/gwyutils.h>
 #include <libgwyddion/gwymath.h>
 #include <libprocess/datafield.h>
 #include <libgwymodule/gwymodule-file.h>
