@@ -390,7 +390,7 @@ witec_image_to_data_field(WITecFile *witfile,
 
     if (strncmp(witfile->range_options.unit_x, witfile->range_options.unit_y,
                 sizeof(witfile->range_options.unit_x)) != 0) {
-        g_warning("X and Y units differ, ignoring Y");
+        g_warning("X and Y units differ, using X");
     }
     unit[sizeof(unit)-1] = 0;
     memcpy(unit, witfile->range_options.unit_x,

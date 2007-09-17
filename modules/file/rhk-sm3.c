@@ -476,7 +476,7 @@ rhk_sm3_page_to_data_field(const RHKPage *page)
         && page->strings[RHK_STRING_Y_UNITS]) {
         if (!gwy_strequal(page->strings[RHK_STRING_X_UNITS],
                           page->strings[RHK_STRING_Y_UNITS]))
-            g_warning("X and Y units are different, using X");
+            g_warning("X and Y units differ, using X");
         unit = page->strings[RHK_STRING_X_UNITS];
     }
     else if (page->strings[RHK_STRING_X_UNITS])
