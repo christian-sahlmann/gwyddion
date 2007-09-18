@@ -51,6 +51,147 @@
 #define MAGIC_TXT "MPAR"
 #define MAGIC_SIZE (sizeof(MAGIC_TXT)-1)
 
+typedef enum {
+    STMPRG_CHANNEL_OFF  = 0,
+    STMPRG_CHANNEL_Z    = 1,
+    STMPRG_CHANNEL_I    = 2,
+    STMPRG_CHANNEL_I_I0 = 3,
+    STMPRG_CHANNEL_EXT1 = 4,
+    STMPRG_CHANNEL_EXT2 = 5,
+    STMPRG_CHANNEL_U0   = 6,
+    STMPRG_CHANNEL_I0   = 7
+} StmprgChannelType;
+
+typedef enum {
+    STMPRG_SPECTRO_CHANNEL_OFF    = 0,
+    STMPRG_SPECTRO_CHANNEL_IZ     = 1,
+    STMPRG_SPECTRO_CHANNEL_IU0    = 2,
+    STMPRG_SPECTRO_CHANNEL_EXT1Z  = 3,
+    STMPRG_SPECTRO_CHANNEL_EXT1U0 = 4,
+    STMPRG_SPECTRO_CHANNEL_EXT1I0 = 5
+} StmprgSpectroChannelType;
+
+enum {
+    MAINFIELD_SIZE     = 60,
+    CONTROL_SIZE       = 224,
+    OTHER_CONTROL_SIZE = 268,
+    PARAM_SIZE         = MAGIC_SIZE + MAINFIELD_SIZE + CONTROL_SIZE
+                         + OTHER_CONTROL_SIZE
+};
+
+typedef struct {
+   gdouble start_x; /* zeropoint of measurment piece coordinates */
+   gdouble start_y;
+   gdouble field_x; /* length of field for scanning in Angstrom */
+   gdouble field_y;
+   gdouble inc_x; /* increment steps for point and line (x and y) */
+   gdouble inc_y; /* in Angstrom */
+   gint points;
+   gint lines;
+   gdouble angle; /* angle of field in start system */
+   gdouble sol_x; /* resolution of x,y,z in Angstrom per Bit */
+   gdouble sol_y;
+   gdouble sol_z;
+   gdouble sol_ext1; /* Ext input 1 */
+   gdouble sol_ext2; /* Ext input 2 */
+   gdouble sol_h; /* resolution dh for z(i) spectroscopy */
+} StmprgMainfield;
+
+typedef struct {
+   guint mode; /* on/off bits: 3: Spectr, 4-6: Loop1-3 */
+   StmprgChannelType channel1;
+   StmprgChannelType channel2;
+   StmprgChannelType channel3;
+   StmprgSpectroChannelType spectr;
+   gint cfree;
+   gint type; /* E = 0 or D != 0 - scanning */
+   gint steps_x; /* number of steps per increment */
+   gint steps_y;
+   gint dac_speed; /* slewrate of DAC */
+   gdouble poi_inc; /* increment per step in x/y-direction for lines/points */
+   gdouble lin_inc; /* in piezo coordinates */
+   gint ad1_reads; /* Number of ADC 1 average */
+   gint ad2_reads; /* Number of ADC 2 average */
+   gint ad3_reads; /* ditto ADC 3 */
+   gint analog_ave; /* analogous averaging */
+   gint speed; /* speed for z-scan */
+   gdouble voltage; /* normal tunnel voltage */
+   gdouble voltage_l; /* voltage for scanning left */
+   gdouble voltage_r; /* voltage for scanning right */
+   gint volt_flag; /* 0 = internal, 1 = remote */
+   gint volt_region; /* region */
+   gdouble current; /* normal tunnel current */
+   gdouble current_l; /* current for scanning left */
+   gdouble current_r; /* current for scanning right */
+   gint curr_flag; /* 0 = internal, 1 = remote */
+   gint curr_region; /* region */
+   gdouble spec_lstart; /* V 3.0: for all spectroscopy modes! */
+   gdouble spec_lend;
+   gdouble spec_linc;
+   guint32 spec_lsteps;
+   gdouble spec_rstart;
+   gdouble spec_rend;
+   gdouble spec_rinc;
+   guint32 spec_rsteps;
+   gdouble version; /* height offstes used in version 3.0 */
+   gdouble free_lend;
+   gdouble free_linc;
+   guint32 free_lsteps;
+   gdouble free_rstart;
+   gdouble free_rend;
+   gdouble free_rinc;
+   guint32 free_rsteps;
+   guint32 timer1; /* timers */
+   guint32 timer2;
+   guint32 timer3;
+   guint32 timer4;
+   guint32 m_time; /* time of measurement */
+   gdouble u_divider; /* divider for gap voltage */
+   gint fb_control;
+   gint fb_delay;
+   gint point_time; /* time per data point (1/2 set, 1/2 measure) */
+   gint spec_time; /* acquisition time spectroscopy point */
+   gint spec_delay; /* delay for spectroscopy */
+   gint fm; /* fastmode screen imaging */
+   gint fm_prgmode;
+   gint fm_channel1; /* input channel for fm -> */
+   gint fm_channel2; /* input channel for fm <- */
+   gint fm_wait; /* wait in ms between frames */
+   gint fm_frames; /* number of frames */
+   gint fm_delay; /* delay time in 10 us between points */
+   gint spectr_edit;
+   gint fm_speed; /* speed faktor */
+   gint fm_reads; /* 2 exponent of ad-reads */
+} StmprgControl;
+
+typedef struct {
+   gdouble version;
+   gint adc_data_l; /* macro adc values scanning left */
+   gint adc_data_r; /* right */
+   gint first_zp; /* first z-point before and after scan */
+   gint last_zp;
+   gdouble zdrift; /* drift in Agstrom (fld.sol_z*(last-first)) */
+   gint savememory; /* store one or two directions with D-scan */
+   gchar date[20]; /* date of measurement */
+   gchar comment[50]; /* comment */
+   gchar username[20]; /* login name */
+   gchar macro_file[50]; /* macro file used, complete name */
+   gchar cext_a[40]; /* 4 bytes for sol_ext1 text, 4 for sol_ext2 text */
+   gchar cext_b[40];
+   gint contscan; /* CCM continuous scan */
+   gint spec_loop;
+   gint ext_c;
+   gdouble fm_zlift; /* lift z while scanning fast mode */
+   gint ext_a;
+   gdouble vme_release; /* version of vme-program used for scan */
+} StmprgOtherControl;
+
+typedef struct {
+    StmprgMainfield mainfield;
+    StmprgControl control;
+    StmprgOtherControl other_control;
+} StmprgFile;
+
 static gboolean      module_register     (void);
 static gint          stmprg_detect       (const GwyFileDetectInfo *fileinfo,
                                           gboolean only_name);
@@ -62,19 +203,13 @@ static gboolean      read_binary_ubedata (gint n,
                                           guchar *buffer,
                                           gint bpp);
 
-/* Parameters are stored in global variables */
-/* FIXME: Eliminate this */
-struct STMPRG_MAINFIELD mainfield;
-struct STMPRG_CONTROL control;
-struct STMPRG_OTHER_CTRL other_ctrl;
-
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Imports Omicron STMPRG data files (tp ta)."),
-    "Rok Zitko <rok.zitko@ijs.si>",
+    "Rok Zitko <rok.zitko@ijs.si>, Yeti <yeti@gwyddion.net>",
     "0.9",
-    "Rok Zitko",
+    "Rok Zitko & David Nečas (Yeti)",
     "2004",
 };
 
@@ -110,25 +245,105 @@ stmprg_detect(const GwyFileDetectInfo *fileinfo,
 }
 
 static gboolean
-read_parameters(gchar *buffer, guint size)
+read_parameters(const guchar *buffer,
+                guint size,
+                StmprgFile *stmprgfile)
 {
-    gchar *ptr = buffer + 4;    /* 4 for MPAR */
+    const guchar *p = buffer + MAGIC_SIZE;
+    StmprgMainfield *mainfield;
+    StmprgControl *control;
+    StmprgOtherControl *other_control;
 
-    gwy_debug("tp file size = %i, should be %i\n", size, (guint)L_SIZE);
-    if (size < L_SIZE)
+    gwy_debug("tp file size = %u, should be %u\n", size, PARAM_SIZE);
+    if (size < PARAM_SIZE)
         return FALSE;
 
-    memcpy(&mainfield, ptr, L_MAINFIELD);
+    /* mainfield */
+    mainfield = &stmprgfile->mainfield;
+    mainfield->start_x = gwy_get_gfloat_be(&p);
+    mainfield->start_y = gwy_get_gfloat_be(&p);
+    mainfield->field_x = gwy_get_gfloat_be(&p);
+    mainfield->field_y = gwy_get_gfloat_be(&p);
+    mainfield->inc_x = gwy_get_gfloat_be(&p);
+    mainfield->inc_y = gwy_get_gfloat_be(&p);
+    mainfield->points = gwy_get_gint32_be(&p);
+    mainfield->lines = gwy_get_gint32_be(&p);
+    mainfield->angle = gwy_get_gfloat_be(&p);
+    mainfield->sol_x = gwy_get_gfloat_be(&p);
+    mainfield->sol_y = gwy_get_gfloat_be(&p);
+    mainfield->sol_z = gwy_get_gfloat_be(&p);
+    mainfield->sol_ext1 = gwy_get_gfloat_be(&p);
+    mainfield->sol_ext2 = gwy_get_gfloat_be(&p);
+    mainfield->sol_h = gwy_get_gfloat_be(&p);
+    g_assert(p - buffer == MAGIC_SIZE + MAINFIELD_SIZE);
 
-    ptr += L_MAINFIELD;
-    memcpy(&control, ptr, L_CONTROL);
+    /* control */
+    control = &stmprgfile->control;
+    control->mode = *(p++);
+    control->channel1 = *(p++);
+    control->channel2 = *(p++);
+    control->channel3 = *(p++);
+    control->spectr = *(p++);
+    control->cfree = *(p++);
+    control->type = gwy_get_gint16_be(&p);
+    control->steps_x = gwy_get_gint32_be(&p);
+    control->steps_y = gwy_get_gint32_be(&p);
+    control->dac_speed = gwy_get_gint32_be(&p);
+    control->poi_inc = gwy_get_gfloat_be(&p);
+    control->lin_inc = gwy_get_gfloat_be(&p);
+    control->ad1_reads = gwy_get_gint32_be(&p);
+    control->ad2_reads = gwy_get_gint32_be(&p);
+    control->ad3_reads = gwy_get_gint32_be(&p);
+    control->analog_ave = gwy_get_gint32_be(&p);
+    control->speed = gwy_get_gint32_be(&p);
+    control->voltage = gwy_get_gfloat_be(&p);
+    control->voltage_l = gwy_get_gfloat_be(&p);
+    control->voltage_r = gwy_get_gfloat_be(&p);
+    control->curr_flag = gwy_get_gint32_be(&p);
+    control->curr_region = gwy_get_gint32_be(&p);
+    control->spec_lstart = gwy_get_gfloat_be(&p);
+    control->spec_lend = gwy_get_gfloat_be(&p);
+    control->spec_linc = gwy_get_gfloat_be(&p);
+    control->spec_lsteps = gwy_get_gint32_be(&p);
+    control->spec_rstart = gwy_get_gfloat_be(&p);
+    control->spec_rend = gwy_get_gfloat_be(&p);
+    control->spec_rinc = gwy_get_gfloat_be(&p);
+    control->spec_rsteps = gwy_get_gint32_be(&p);
+    control->version = gwy_get_gfloat_be(&p);
+    control->free_lend = gwy_get_gfloat_be(&p);
+    control->free_linc = gwy_get_gfloat_be(&p);
+    control->free_rsteps = gwy_get_gint32_be(&p);
+    control->timer1 = gwy_get_gint32_be(&p);
+    control->timer2 = gwy_get_gint32_be(&p);
+    control->timer3 = gwy_get_gint32_be(&p);
+    control->timer4 = gwy_get_gint32_be(&p);
+    control->m_time = gwy_get_gint32_be(&p);
+    control->u_divider = gwy_get_gfloat_be(&p);
+    control->fb_control = gwy_get_gint32_be(&p);
+    control->fb_delay = gwy_get_gint32_be(&p);
+    control->point_time = gwy_get_gint32_be(&p);
+    control->spec_time = gwy_get_gint32_be(&p);
+    control->spec_delay = gwy_get_gint32_be(&p);
+    control->fm = gwy_get_gint16_be(&p);
+    control->fm_prgmode = gwy_get_gint16_be(&p);
+    control->fm_channel1 = gwy_get_gint32_be(&p);
+    control->fm_channel2 = gwy_get_gint32_be(&p);
+    control->fm_wait = gwy_get_gint32_be(&p);
+    control->fm_frames = gwy_get_gint32_be(&p);
+    control->fm_delay = gwy_get_gint16_be(&p);
+    control->spectr_edit = gwy_get_gint16_be(&p);
+    control->fm_speed = gwy_get_gint16_be(&p);
+    control->fm_reads = gwy_get_gint16_be(&p);
+    g_assert(p - buffer == MAGIC_SIZE + MAINFIELD_SIZE + CONTROL_SIZE);
 
-    ptr += L_CONTROL;
-    memcpy(&other_ctrl, ptr, L_OTHER_CTRL);
+    /* other_control */
+    other_control = &stmprgfile->other_control;
+    /* TODO */
 
     return TRUE;
 }
 
+#if 0
 static GwyDataField*
 read_datafield(gchar *buffer, guint size, GError **error)
 {
@@ -185,8 +400,8 @@ read_datafield(gchar *buffer, guint size, GError **error)
         unit = gwy_si_unit_new("A");
         break;
 
-        case STMPRG_CHANNEL_ext1:
-        case STMPRG_CHANNEL_ext2:
+        case STMPRG_CHANNEL_EXT1:
+        case STMPRG_CHANNEL_EXT2:
         case STMPRG_CHANNEL_U0:
         unit = gwy_si_unit_new("V");
         break;
@@ -199,14 +414,6 @@ read_datafield(gchar *buffer, guint size, GError **error)
     g_object_unref(unit);
 
     return dfield;
-}
-
-static float
-FLOAT_FROM_BE(float f)
-{
-    const guchar *p = (const guchar*)&f;
-
-    return gwy_get_gfloat_be(&p);
 }
 
 static void
@@ -418,6 +625,7 @@ stmprg_get_metadata(void)
 
     return meta;
 }
+#endif
 
 static GwyContainer*
 stmprg_load(const gchar *filename,
@@ -425,6 +633,7 @@ stmprg_load(const gchar *filename,
             GError **error)
 {
     GwyContainer *meta, *container = NULL;
+    StmprgFile stmprgfile;
     gchar *buffer = NULL;
     gsize size = 0;
     GError *err = NULL;
@@ -441,7 +650,7 @@ stmprg_load(const gchar *filename,
         return NULL;
     }
 
-    if (!read_parameters(buffer, size)) {
+    if (!read_parameters(buffer, size, &stmprgfile)) {
         g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
                     _("Parameter file is too short."));
         g_free(buffer);
@@ -449,7 +658,7 @@ stmprg_load(const gchar *filename,
     }
 
     g_free(buffer);
-    byteswap_and_dump_parameters();
+    // byteswap_and_dump_parameters();
 
     filename_ta = g_strdup(filename);
     ptr = filename_ta + strlen(filename_ta) - 1;
@@ -463,7 +672,7 @@ stmprg_load(const gchar *filename,
         return NULL;
     }
 
-    dfield = read_datafield(buffer, size, error);
+    // dfield = read_datafield(buffer, size, error);
     if (!dfield)
         return NULL;
 
@@ -473,7 +682,7 @@ stmprg_load(const gchar *filename,
     /* FIXME: with documentation, we could perhaps do better */
     gwy_app_channel_title_fall_back(container, 0);
 
-    meta = stmprg_get_metadata();
+    // meta = stmprg_get_metadata();
     gwy_container_set_object_by_name(container, "/0/meta", meta);
     g_object_unref(meta);
 

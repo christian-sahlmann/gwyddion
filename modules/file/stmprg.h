@@ -140,26 +140,6 @@ struct STMPRG_OTHER_CTRL
 
 #define L_OTHER_CTRL (sizeof(struct STMPRG_OTHER_CTRL))
 
-enum {
-    STMPRG_CHANNEL_OFF  = 0,
-    STMPRG_CHANNEL_Z    = 1,
-    STMPRG_CHANNEL_I    = 2,
-    STMPRG_CHANNEL_I_I0 = 3,
-    STMPRG_CHANNEL_ext1 = 4,
-    STMPRG_CHANNEL_ext2 = 5,
-    STMPRG_CHANNEL_U0   = 6,
-    STMPRG_CHANNEL_I0   = 7
-};
-
-enum {
-    STMPRG_SPECTRO_CHANNEL_OFF    = 0,
-    STMPRG_SPECTRO_CHANNEL_IZ     = 1,
-    STMPRG_SPECTRO_CHANNEL_IU0    = 2,
-    STMPRG_SPECTRO_CHANNEL_ext1Z  = 3,
-    STMPRG_SPECTRO_CHANNEL_ext1U0 = 4,
-    STMPRG_SPECTRO_CHANNEL_ext1I0 = 5
-};
-
 #define L_SIZE (L_MAINFIELD + L_CONTROL + L_OTHER_CTRL + 4)
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
