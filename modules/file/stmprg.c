@@ -28,13 +28,8 @@
  * - store both directions
  * - other channels
  * - height vs. current, sol_z vs. sol_h etc.
- *
- * (Yeti):
- * FIXME: I do not have the specs.
- * XXX Fix the dependency on struct field alignment. XXX
- * Eliminate global variables.
  */
-
+#define DEBUG 1
 #include "config.h"
 #include <string.h>
 #include <libgwyddion/gwymacros.h>
@@ -207,7 +202,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Omicron STMPRG data files (tp ta)."),
     "Rok Zitko <rok.zitko@ijs.si>, Yeti <yeti@gwyddion.net>",
-    "0.9",
+    "0.10",
     "Rok Zitko & David Nečas (Yeti)",
     "2004",
 };
@@ -253,7 +248,7 @@ read_parameters(const guchar *buffer,
     StmprgControl *control;
     StmprgOtherControl *other_control;
 
-    gwy_debug("tp file size = %u, should be %u\n", size, PARAM_SIZE);
+    gwy_debug("tp file size is %u, expecting %u\n", size, PARAM_SIZE);
     if (size < PARAM_SIZE)
         return FALSE;
 
@@ -275,6 +270,21 @@ read_parameters(const guchar *buffer,
     mainfield->sol_ext2 = gwy_get_gfloat_be(&p);
     mainfield->sol_h = gwy_get_gfloat_be(&p);
     g_assert(p - buffer == MAGIC_SIZE + MAINFIELD_SIZE);
+    gwy_debug("start_X = %g", mainfield->start_x);
+    gwy_debug("start_Y = %g", mainfield->start_y);
+    gwy_debug("field_x = %g", mainfield->field_x);
+    gwy_debug("field_y = %g", mainfield->field_y);
+    gwy_debug("inc_x = %g", mainfield->inc_x);
+    gwy_debug("inc_y = %g", mainfield->inc_y);
+    gwy_debug("points = %d", mainfield->points);
+    gwy_debug("lines = %d", mainfield->lines);
+    gwy_debug("angle = %g", mainfield->angle);
+    gwy_debug("sol_x = %g", mainfield->sol_x);
+    gwy_debug("sol_y = %g", mainfield->sol_y);
+    gwy_debug("sol_z = %g", mainfield->sol_z);
+    gwy_debug("sol_ext1 = %g", mainfield->sol_ext1);
+    gwy_debug("sol_ext2 = %g", mainfield->sol_ext2);
+    gwy_debug("sol_h = %g", mainfield->sol_h);
 
     /* control */
     control = &stmprgfile->control;
@@ -343,6 +353,64 @@ read_parameters(const guchar *buffer,
     control->fm_speed = gwy_get_gint16_be(&p);
     control->fm_reads = gwy_get_gint16_be(&p);
     g_assert(p - buffer == MAGIC_SIZE + MAINFIELD_SIZE + CONTROL_SIZE);
+    gwy_debug("type = %d", control->type);
+    gwy_debug("steps_x = %d", control->steps_x);
+    gwy_debug("steps_y = %d", control->steps_y);
+    gwy_debug("dac_speed = %d", control->dac_speed);
+    gwy_debug("poi_inc = %g", control->poi_inc);
+    gwy_debug("lin_inc = %g", control->lin_inc);
+    gwy_debug("ad1_reads = %d", control->ad1_reads);
+    gwy_debug("ad2_reads = %d", control->ad2_reads);
+    gwy_debug("ad3_reads = %d", control->ad3_reads);
+    gwy_debug("analog_ave = %d", control->analog_ave);
+    gwy_debug("speed = %d", control->speed);
+    gwy_debug("voltage = %g", control->voltage);
+    gwy_debug("voltage_l = %g", control->voltage_l);
+    gwy_debug("voltage_r = %g", control->voltage_r);
+    gwy_debug("volt_flag = %d", control->volt_flag);
+    gwy_debug("volt_region = %d", control->volt_region);
+    gwy_debug("current = %g", control->current);
+    gwy_debug("current_l = %g", control->current_l);
+    gwy_debug("current_r = %g", control->current_r);
+    gwy_debug("curr_flag = %d", control->curr_flag);
+    gwy_debug("curr_region = %d", control->curr_region);
+    gwy_debug("spec_lstart = %g", control->spec_lstart);
+    gwy_debug("spec_lend = %g", control->spec_lend);
+    gwy_debug("spec_linc = %g", control->spec_linc);
+    gwy_debug("spec_lsteps = %u", control->spec_lsteps);
+    gwy_debug("spec_rstart = %g", control->spec_rstart);
+    gwy_debug("spec_rend = %g", control->spec_rend);
+    gwy_debug("spec_rinc = %g", control->spec_rinc);
+    gwy_debug("spec_rsteps = %u", control->spec_rsteps);
+    gwy_debug("version = %g", control->version);
+    gwy_debug("free_lend = %g", control->free_lend);
+    gwy_debug("free_linc = %g", control->free_linc);
+    gwy_debug("free_lsteps = %u", control->free_lsteps);
+    gwy_debug("free_rstart = %g", control->free_rstart);
+    gwy_debug("free_rend = %g", control->free_rend);
+    gwy_debug("free_rinc = %g", control->free_rinc);
+    gwy_debug("free_rsteps = %u", control->free_rsteps);
+    gwy_debug("timer1 = %u", control->timer1);
+    gwy_debug("timer2 = %u", control->timer2);
+    gwy_debug("timer3 = %u", control->timer3);
+    gwy_debug("timer4 = %u", control->timer4);
+    gwy_debug("m_time = %u", control->m_time);
+    gwy_debug("u_divider = %g", control->u_divider);
+    gwy_debug("fb_control = %d", control->fb_control);
+    gwy_debug("fb_delay = %d", control->fb_delay);
+    gwy_debug("point_time = %d", control->point_time);
+    gwy_debug("spec_time = %d", control->spec_time);
+    gwy_debug("spec_delay = %d", control->spec_delay);
+    gwy_debug("fm = %d", control->fm);
+    gwy_debug("fm_prgmode = %d", control->fm_prgmode);
+    gwy_debug("fm_channel1 = %d", control->fm_channel1);
+    gwy_debug("fm_channel2 = %d", control->fm_channel2);
+    gwy_debug("fm_wait = %d", control->fm_wait);
+    gwy_debug("fm_frames = %d", control->fm_frames);
+    gwy_debug("fm_delay = %d", control->fm_delay);
+    gwy_debug("spectr_edit = %d", control->spectr_edit);
+    gwy_debug("fm_speed = %d", control->fm_speed);
+    gwy_debug("fm_reads = %d", control->fm_reads);
 
     /* other_control */
     other_control = &stmprgfile->other_control;
@@ -366,6 +434,25 @@ read_parameters(const guchar *buffer,
     other_control->ext_a = gwy_get_gint32_be(&p);
     other_control->vme_release = gwy_get_gfloat_be(&p);
     g_assert(p - buffer == PARAM_SIZE);
+    gwy_debug("version = %g", other_control->version);
+    gwy_debug("adc_data_l = %d", other_control->adc_data_l);
+    gwy_debug("adc_data_r = %d", other_control->adc_data_r);
+    gwy_debug("first_zp = %d", other_control->first_zp);
+    gwy_debug("last_zp = %d", other_control->last_zp);
+    gwy_debug("zdrift = %g", other_control->zdrift);
+    gwy_debug("savememory = %d", other_control->savememory);
+    gwy_debug("date = %s", other_control->date);
+    gwy_debug("comment = %s", other_control->comment);
+    gwy_debug("username = %s", other_control->username);
+    gwy_debug("macro_file = %s", other_control->macro_file);
+    gwy_debug("cext_a = %s", other_control->cext_a);
+    gwy_debug("cext_b = %s", other_control->cext_b);
+    gwy_debug("contscan = %d", other_control->contscan);
+    gwy_debug("spec_loop = %d", other_control->spec_loop);
+    gwy_debug("ext_c = %d", other_control->ext_c);
+    gwy_debug("fm_zlift = %g", other_control->fm_zlift);
+    gwy_debug("ext_a = %d", other_control->ext_a);
+    gwy_debug("vme_release = %g", other_control->vme_release);
 
     return TRUE;
 }
@@ -441,183 +528,6 @@ read_datafield(gchar *buffer, guint size, GError **error)
     g_object_unref(unit);
 
     return dfield;
-}
-
-static void
-byteswap_and_dump_parameters()
-{                               /* below we insert the output from conv.pl ! */
-    mainfield.start_X = FLOAT_FROM_BE(mainfield.start_X);
-    gwy_debug("start_X=%f\n", mainfield.start_X);
-    mainfield.start_Y = FLOAT_FROM_BE(mainfield.start_Y);
-    gwy_debug("start_Y=%f\n", mainfield.start_Y);
-    mainfield.field_x = FLOAT_FROM_BE(mainfield.field_x);
-    gwy_debug("field_x=%f\n", mainfield.field_x);
-    mainfield.field_y = FLOAT_FROM_BE(mainfield.field_y);
-    gwy_debug("field_y=%f\n", mainfield.field_y);
-    mainfield.inc_x = FLOAT_FROM_BE(mainfield.inc_x);
-    gwy_debug("inc_x=%f\n", mainfield.inc_x);
-    mainfield.inc_y = FLOAT_FROM_BE(mainfield.inc_y);
-    gwy_debug("inc_y=%f\n", mainfield.inc_y);
-    mainfield.points = GINT32_FROM_BE(mainfield.points);
-    gwy_debug("points=%i\n", mainfield.points);
-    mainfield.lines = GINT32_FROM_BE(mainfield.lines);
-    gwy_debug("lines=%i\n", mainfield.lines);
-    mainfield.angle = FLOAT_FROM_BE(mainfield.angle);
-    gwy_debug("angle=%f\n", mainfield.angle);
-    mainfield.sol_x = FLOAT_FROM_BE(mainfield.sol_x);
-    gwy_debug("sol_x=%f\n", mainfield.sol_x);
-    mainfield.sol_y = FLOAT_FROM_BE(mainfield.sol_y);
-    gwy_debug("sol_y=%f\n", mainfield.sol_y);
-    mainfield.sol_z = FLOAT_FROM_BE(mainfield.sol_z);
-    gwy_debug("sol_z=%f\n", mainfield.sol_z);
-    mainfield.sol_ext1 = FLOAT_FROM_BE(mainfield.sol_ext1);
-    gwy_debug("sol_ext1=%f\n", mainfield.sol_ext1);
-    mainfield.sol_ext2 = FLOAT_FROM_BE(mainfield.sol_ext2);
-    gwy_debug("sol_ext2=%f\n", mainfield.sol_ext2);
-    mainfield.sol_h = FLOAT_FROM_BE(mainfield.sol_h);
-    gwy_debug("sol_h=%f\n", mainfield.sol_h);
-    control.type = GINT16_FROM_BE(control.type);
-    gwy_debug("type=%i\n", control.type);
-    control.steps_x = GINT32_FROM_BE(control.steps_x);
-    gwy_debug("steps_x=%i\n", control.steps_x);
-    control.steps_y = GINT32_FROM_BE(control.steps_y);
-    gwy_debug("steps_y=%i\n", control.steps_y);
-    control.dac_speed = GINT32_FROM_BE(control.dac_speed);
-    gwy_debug("dac_speed=%i\n", control.dac_speed);
-    control.poi_inc = FLOAT_FROM_BE(control.poi_inc);
-    gwy_debug("poi_inc=%f\n", control.poi_inc);
-    control.lin_inc = FLOAT_FROM_BE(control.lin_inc);
-    gwy_debug("lin_inc=%f\n", control.lin_inc);
-    control.ad1_reads = GINT32_FROM_BE(control.ad1_reads);
-    gwy_debug("ad1_reads=%i\n", control.ad1_reads);
-    control.ad2_reads = GINT32_FROM_BE(control.ad2_reads);
-    gwy_debug("ad2_reads=%i\n", control.ad2_reads);
-    control.ad3_reads = GINT32_FROM_BE(control.ad3_reads);
-    gwy_debug("ad3_reads=%i\n", control.ad3_reads);
-    control.analog_ave = GINT32_FROM_BE(control.analog_ave);
-    gwy_debug("analog_ave=%i\n", control.analog_ave);
-    control.speed = GINT32_FROM_BE(control.speed);
-    gwy_debug("speed=%i\n", control.speed);
-    control.voltage = FLOAT_FROM_BE(control.voltage);
-    gwy_debug("voltage=%f\n", control.voltage);
-    control.voltage_l = FLOAT_FROM_BE(control.voltage_l);
-    gwy_debug("voltage_l=%f\n", control.voltage_l);
-    control.voltage_r = FLOAT_FROM_BE(control.voltage_r);
-    gwy_debug("voltage_r=%f\n", control.voltage_r);
-    control.volt_flag = GINT32_FROM_BE(control.volt_flag);
-    gwy_debug("volt_flag=%i\n", control.volt_flag);
-    control.volt_region = GINT32_FROM_BE(control.volt_region);
-    gwy_debug("volt_region=%i\n", control.volt_region);
-    control.current = FLOAT_FROM_BE(control.current);
-    gwy_debug("current=%f\n", control.current);
-    control.current_l = FLOAT_FROM_BE(control.current_l);
-    gwy_debug("current_l=%f\n", control.current_l);
-    control.current_r = FLOAT_FROM_BE(control.current_r);
-    gwy_debug("current_r=%f\n", control.current_r);
-    control.curr_flag = GINT32_FROM_BE(control.curr_flag);
-    gwy_debug("curr_flag=%i\n", control.curr_flag);
-    control.curr_region = GINT32_FROM_BE(control.curr_region);
-    gwy_debug("curr_region=%i\n", control.curr_region);
-    control.spec_lstart = FLOAT_FROM_BE(control.spec_lstart);
-    gwy_debug("spec_lstart=%f\n", control.spec_lstart);
-    control.spec_lend = FLOAT_FROM_BE(control.spec_lend);
-    gwy_debug("spec_lend=%f\n", control.spec_lend);
-    control.spec_linc = FLOAT_FROM_BE(control.spec_linc);
-    gwy_debug("spec_linc=%f\n", control.spec_linc);
-    control.spec_lsteps = GUINT32_FROM_BE(control.spec_lsteps);
-    gwy_debug("spec_lsteps=%li\n", control.spec_lsteps);
-    control.spec_rstart = FLOAT_FROM_BE(control.spec_rstart);
-    gwy_debug("spec_rstart=%f\n", control.spec_rstart);
-    control.spec_rend = FLOAT_FROM_BE(control.spec_rend);
-    gwy_debug("spec_rend=%f\n", control.spec_rend);
-    control.spec_rinc = FLOAT_FROM_BE(control.spec_rinc);
-    gwy_debug("spec_rinc=%f\n", control.spec_rinc);
-    control.spec_rsteps = GUINT32_FROM_BE(control.spec_rsteps);
-    gwy_debug("spec_rsteps=%li\n", control.spec_rsteps);
-    control.version = FLOAT_FROM_BE(control.version);
-    gwy_debug("version=%f\n", control.version);
-    control.free_lend = FLOAT_FROM_BE(control.free_lend);
-    gwy_debug("free_lend=%f\n", control.free_lend);
-    control.free_linc = FLOAT_FROM_BE(control.free_linc);
-    gwy_debug("free_linc=%f\n", control.free_linc);
-    control.free_lsteps = GUINT32_FROM_BE(control.free_lsteps);
-    gwy_debug("free_lsteps=%li\n", control.free_lsteps);
-    control.free_rstart = FLOAT_FROM_BE(control.free_rstart);
-    gwy_debug("free_rstart=%f\n", control.free_rstart);
-    control.free_rend = FLOAT_FROM_BE(control.free_rend);
-    gwy_debug("free_rend=%f\n", control.free_rend);
-    control.free_rinc = FLOAT_FROM_BE(control.free_rinc);
-    gwy_debug("free_rinc=%f\n", control.free_rinc);
-    control.free_rsteps = GUINT32_FROM_BE(control.free_rsteps);
-    gwy_debug("free_rsteps=%li\n", control.free_rsteps);
-    control.timer1 = GUINT32_FROM_BE(control.timer1);
-    gwy_debug("timer1=%li\n", control.timer1);
-    control.timer2 = GUINT32_FROM_BE(control.timer2);
-    gwy_debug("timer2=%li\n", control.timer2);
-    control.timer3 = GUINT32_FROM_BE(control.timer3);
-    gwy_debug("timer3=%li\n", control.timer3);
-    control.timer4 = GUINT32_FROM_BE(control.timer4);
-    gwy_debug("timer4=%li\n", control.timer4);
-    control.m_time = GUINT32_FROM_BE(control.m_time);
-    gwy_debug("m_time=%li\n", control.m_time);
-    control.u_divider = FLOAT_FROM_BE(control.u_divider);
-    gwy_debug("u_divider=%f\n", control.u_divider);
-    control.fb_control = GINT32_FROM_BE(control.fb_control);
-    gwy_debug("fb_control=%i\n", control.fb_control);
-    control.fb_delay = GINT32_FROM_BE(control.fb_delay);
-    gwy_debug("fb_delay=%i\n", control.fb_delay);
-    control.point_time = GINT32_FROM_BE(control.point_time);
-    gwy_debug("point_time=%i\n", control.point_time);
-    control.spec_time = GINT32_FROM_BE(control.spec_time);
-    gwy_debug("spec_time=%i\n", control.spec_time);
-    control.spec_delay = GINT32_FROM_BE(control.spec_delay);
-    gwy_debug("spec_delay=%i\n", control.spec_delay);
-    control.fm = GINT16_FROM_BE(control.fm);
-    gwy_debug("fm=%i\n", control.fm);
-    control.fm_prgmode = GINT16_FROM_BE(control.fm_prgmode);
-    gwy_debug("fm_prgmode=%i\n", control.fm_prgmode);
-    control.fm_channel1 = GINT32_FROM_BE(control.fm_channel1);
-    gwy_debug("fm_channel1=%i\n", control.fm_channel1);
-    control.fm_channel2 = GINT32_FROM_BE(control.fm_channel2);
-    gwy_debug("fm_channel2=%i\n", control.fm_channel2);
-    control.fm_wait = GINT32_FROM_BE(control.fm_wait);
-    gwy_debug("fm_wait=%i\n", control.fm_wait);
-    control.fm_frames = GINT32_FROM_BE(control.fm_frames);
-    gwy_debug("fm_frames=%i\n", control.fm_frames);
-    control.fm_delay = GINT16_FROM_BE(control.fm_delay);
-    gwy_debug("fm_delay=%i\n", control.fm_delay);
-    control.spectr_edit = GINT16_FROM_BE(control.spectr_edit);
-    gwy_debug("spectr_edit=%i\n", control.spectr_edit);
-    control.fm_speed = GINT16_FROM_BE(control.fm_speed);
-    gwy_debug("fm_speed=%i\n", control.fm_speed);
-    control.fm_reads = GINT16_FROM_BE(control.fm_reads);
-    gwy_debug("fm_reads=%i\n", control.fm_reads);
-    other_ctrl.version = FLOAT_FROM_BE(other_ctrl.version);
-    gwy_debug("version=%f\n", other_ctrl.version);
-    other_ctrl.adc_data_l = GINT32_FROM_BE(other_ctrl.adc_data_l);
-    gwy_debug("adc_data_l=%i\n", other_ctrl.adc_data_l);
-    other_ctrl.adc_data_r = GINT32_FROM_BE(other_ctrl.adc_data_r);
-    gwy_debug("adc_data_r=%i\n", other_ctrl.adc_data_r);
-    other_ctrl.first_zp = GUINT16_FROM_BE(other_ctrl.first_zp);
-    gwy_debug("first_zp=%i\n", other_ctrl.first_zp);
-    other_ctrl.last_zp = GUINT16_FROM_BE(other_ctrl.last_zp);
-    gwy_debug("last_zp=%i\n", other_ctrl.last_zp);
-    other_ctrl.zdrift = FLOAT_FROM_BE(other_ctrl.zdrift);
-    gwy_debug("zdrift=%f\n", other_ctrl.zdrift);
-    other_ctrl.savememory = GINT32_FROM_BE(other_ctrl.savememory);
-    gwy_debug("savememory=%i\n", other_ctrl.savememory);
-    other_ctrl.contscan = GINT32_FROM_BE(other_ctrl.contscan);
-    gwy_debug("contscan=%i\n", other_ctrl.contscan);
-    other_ctrl.spec_loop = GINT32_FROM_BE(other_ctrl.spec_loop);
-    gwy_debug("spec_loop=%i\n", other_ctrl.spec_loop);
-    other_ctrl.ext_c = GINT32_FROM_BE(other_ctrl.ext_c);
-    gwy_debug("ext_c=%i\n", other_ctrl.ext_c);
-    other_ctrl.fm_zlift = FLOAT_FROM_BE(other_ctrl.fm_zlift);
-    gwy_debug("fm_zlift=%f\n", other_ctrl.fm_zlift);
-    other_ctrl.ext_a = GINT32_FROM_BE(other_ctrl.ext_a);
-    gwy_debug("ext_a=%i\n", other_ctrl.ext_a);
-    other_ctrl.vme_release = FLOAT_FROM_BE(other_ctrl.vme_release);
-    gwy_debug("vme_release=%f\n", other_ctrl.vme_release);
 }
 
 /* Macros for storing meta data */
