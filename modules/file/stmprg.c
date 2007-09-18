@@ -29,7 +29,7 @@
  * - other channels
  * - height vs. current, sol_z vs. sol_h etc.
  */
-#define DEBUG 1
+
 #include "config.h"
 #include <string.h>
 #include <libgwyddion/gwymacros.h>
@@ -44,6 +44,8 @@
 
 #define MAGIC_TXT "MPAR"
 #define MAGIC_SIZE (sizeof(MAGIC_TXT)-1)
+
+#define Angstrom (1e-10)
 
 typedef enum {
     STMPRG_CHANNEL_OFF  = 0,
@@ -194,7 +196,7 @@ static GwyContainer* stmprg_load         (const gchar *filename,
                                           GError **error);
 static gboolean      read_binary_ubedata (gint n,
                                           gdouble *data,
-                                          guchar *buffer,
+                                          const guchar *buffer,
                                           gint bpp);
 
 static GwyModuleInfo module_info = {
@@ -241,16 +243,20 @@ stmprg_detect(const GwyFileDetectInfo *fileinfo,
 static gboolean
 read_parameters(const guchar *buffer,
                 guint size,
-                StmprgFile *stmprgfile)
+                StmprgFile *stmprgfile,
+                GError **error)
 {
     const guchar *p = buffer + MAGIC_SIZE;
     StmprgMainfield *mainfield;
     StmprgControl *control;
     StmprgOtherControl *other_control;
 
-    gwy_debug("tp file size is %u, expecting %u\n", size, PARAM_SIZE);
-    if (size < PARAM_SIZE)
+    gwy_debug("tp file size is %u, expecting %u", size, PARAM_SIZE);
+    if (size < PARAM_SIZE) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Parameter file is too short."));
         return FALSE;
+    }
 
     /* mainfield */
     mainfield = &stmprgfile->mainfield;
@@ -270,8 +276,8 @@ read_parameters(const guchar *buffer,
     mainfield->sol_ext2 = gwy_get_gfloat_be(&p);
     mainfield->sol_h = gwy_get_gfloat_be(&p);
     g_assert(p - buffer == MAGIC_SIZE + MAINFIELD_SIZE);
-    gwy_debug("start_X = %g", mainfield->start_x);
-    gwy_debug("start_Y = %g", mainfield->start_y);
+    gwy_debug("start_x = %g", mainfield->start_x);
+    gwy_debug("start_y = %g", mainfield->start_y);
     gwy_debug("field_x = %g", mainfield->field_x);
     gwy_debug("field_y = %g", mainfield->field_y);
     gwy_debug("inc_x = %g", mainfield->inc_x);
@@ -285,6 +291,10 @@ read_parameters(const guchar *buffer,
     gwy_debug("sol_ext1 = %g", mainfield->sol_ext1);
     gwy_debug("sol_ext2 = %g", mainfield->sol_ext2);
     gwy_debug("sol_h = %g", mainfield->sol_h);
+
+    if (err_DIMENSION(error, mainfield->points)
+        || err_DIMENSION(error, mainfield->lines))
+        return FALSE;
 
     /* control */
     control = &stmprgfile->control;
@@ -457,9 +467,11 @@ read_parameters(const guchar *buffer,
     return TRUE;
 }
 
-#if 0
 static GwyDataField*
-read_datafield(gchar *buffer, guint size, GError **error)
+read_datafield(const guchar *buffer,
+               guint size,
+               const StmprgFile *stmprgfile,
+               GError **error)
 {
     gint xres, yres, bpp;
     gdouble xreal, yreal, q;
@@ -469,17 +481,13 @@ read_datafield(gchar *buffer, guint size, GError **error)
 
     bpp = 2;                    /* words, always */
 
-    xres = mainfield.points;
-    yres = mainfield.lines;
-    xreal = mainfield.field_x * 1.0e-10;        /* real size in angstroms */
-    yreal = mainfield.field_y * 1.0e-10;
-    q = mainfield.sol_z * 1.0e-5;       /* 5 ?? */
+    xres = stmprgfile->mainfield.points;
+    yres = stmprgfile->mainfield.lines;
+    xreal = Angstrom * stmprgfile->mainfield.field_x;
+    yreal = Angstrom * stmprgfile->mainfield.field_y;
+    q = stmprgfile->mainfield.sol_z * 1.0e-5;       /* 5 ?? */
     /* resolution of z value in angstrom/bit, 1.0e-10 */
 
-    if (size != bpp * xres * yres) {
-        gwy_debug("Broken ta file. size = %i, should be %i\n", size,
-                  bpp * xres * yres);
-    }
     if (err_SIZE_MISMATCH(error, bpp*xres*yres, size, FALSE))
         return NULL;
 
@@ -498,7 +506,7 @@ read_datafield(gchar *buffer, guint size, GError **error)
     g_object_unref(unit);
 
     /* Assuming we are reading channel1... */
-    switch (control.channel1) {
+    switch (stmprgfile->control.channel1) {
         case STMPRG_CHANNEL_OFF:
         g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
                     _("First channel is switched off."));
@@ -533,8 +541,8 @@ read_datafield(gchar *buffer, guint size, GError **error)
 /* Macros for storing meta data */
 
 #define HASH_STORE(format, keystr, val) \
-    value = g_strdup_printf(format, val); \
-    gwy_debug("key = %s, val = %s\n", keystr, value); \
+    value = g_strdup_printf(format, stmprgfile->val); \
+    gwy_debug("key = %s, val = %s", keystr, value); \
     gwy_container_set_string_by_name(meta, keystr, value);
 
 #define HASH_STORE_F(keystr, valf) HASH_STORE("%f", keystr, valf)
@@ -542,7 +550,7 @@ read_datafield(gchar *buffer, guint size, GError **error)
 #define HASH_STORE_I(keystr, vali) HASH_STORE("%i", keystr, vali)
 
 static GwyContainer*
-stmprg_get_metadata(void)
+stmprg_get_metadata(const StmprgFile *stmprgfile)
 {
     GwyContainer *meta;
     gchar *value;
@@ -556,13 +564,12 @@ stmprg_get_metadata(void)
     HASH_STORE_F("voltage", control.voltage);
     HASH_STORE_F("current", control.current);
     HASH_STORE_I("point_time", control.point_time);
-    HASH_STORE_S("date", other_ctrl.date);
-    HASH_STORE_S("comment", other_ctrl.comment);
-    HASH_STORE_S("username", other_ctrl.username);
+    HASH_STORE_S("date", other_control.date);
+    HASH_STORE_S("comment", other_control.comment);
+    HASH_STORE_S("username", other_control.username);
 
     return meta;
 }
-#endif
 
 static GwyContainer*
 stmprg_load(const gchar *filename,
@@ -571,62 +578,66 @@ stmprg_load(const gchar *filename,
 {
     GwyContainer *meta, *container = NULL;
     StmprgFile stmprgfile;
-    gchar *buffer = NULL;
+    guchar *buffer = NULL;
     gsize size = 0;
     GError *err = NULL;
     GwyDataField *dfield;
     char *filename_ta, *ptr;
+    gboolean ok;
 
-    if (!g_file_get_contents(filename, &buffer, &size, &err)) {
+    if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
         err_GET_FILE_CONTENTS(error, &err);
         return NULL;
     }
     if (size < MAGIC_SIZE || memcmp(buffer, MAGIC_TXT, MAGIC_SIZE) != 0) {
         err_FILE_TYPE(error, "Omicron STMPRG");
-        g_free(buffer);
+        gwy_file_abandon_contents(buffer, size, NULL);
         return NULL;
     }
 
     memset(&stmprgfile, 0, sizeof(StmprgFile));
-    if (!read_parameters(buffer, size, &stmprgfile)) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                    _("Parameter file is too short."));
-        g_free(buffer);
+    ok = read_parameters(buffer, size, &stmprgfile, error);
+    gwy_file_abandon_contents(buffer, size, NULL);
+    if (!ok)
         return NULL;
-    }
-
-    g_free(buffer);
-    // byteswap_and_dump_parameters();
 
     filename_ta = g_strdup(filename);
     ptr = filename_ta + strlen(filename_ta) - 1;
     while (g_ascii_isdigit(*ptr) && ptr > filename_ta+1)
         ptr--;
-    if (*ptr == 'p' && *(ptr - 1) == 't')
-        *ptr = 'a';
 
-    if (!g_file_get_contents(filename_ta, &buffer, &size, &err)) {
-        err_GET_FILE_CONTENTS(error, &err);
+    if (ptr == filename_ta+1) {
+        err_DATA_PART(error, filename);
+        g_free(filename_ta);
         return NULL;
     }
 
-    // dfield = read_datafield(buffer, size, error);
-    dfield = NULL;
-    if (!dfield)
+    /* Accept lowercase and uppercase and try the same case for data file */
+    if (*ptr == 'p' && *(ptr - 1) == 't')
+        *ptr = 'a';
+    if (*ptr == 'P' && *(ptr - 1) == 'T')
+        *ptr = 'A';
+
+    if (!gwy_file_get_contents(filename_ta, &buffer, &size, &err)) {
+        g_free(filename_ta);
+        err_GET_FILE_CONTENTS(error, &err);
         return NULL;
-
-    container = gwy_container_new();
-    gwy_container_set_object_by_name(container, "/0/data", dfield);
-    g_object_unref(dfield);
-    /* FIXME: with documentation, we could perhaps do better */
-    gwy_app_channel_title_fall_back(container, 0);
-
-    // meta = stmprg_get_metadata();
-    gwy_container_set_object_by_name(container, "/0/meta", meta);
-    g_object_unref(meta);
-
+    }
     g_free(filename_ta);
-    g_free(buffer);
+
+    dfield = read_datafield(buffer, size, &stmprgfile, error);
+    if (dfield) {
+        container = gwy_container_new();
+        gwy_container_set_object_by_name(container, "/0/data", dfield);
+        g_object_unref(dfield);
+        /* FIXME: with documentation, we could perhaps do better */
+        gwy_app_channel_title_fall_back(container, 0);
+
+        meta = stmprg_get_metadata(&stmprgfile);
+        gwy_container_set_object_by_name(container, "/0/meta", meta);
+        g_object_unref(meta);
+    }
+    gwy_file_abandon_contents(buffer, size, NULL);
 
     return container;
 }
@@ -635,7 +646,10 @@ stmprg_load(const gchar *filename,
  * Warning: read_binary_ubedata reads UNSIGNED BIGENDIAN data.
  */
 static gboolean
-read_binary_ubedata(gint n, gdouble *data, guchar *buffer, gint bpp)
+read_binary_ubedata(gint n,
+                    gdouble *data,
+                    const guchar *buffer,
+                    gint bpp)
 {
     gint i;
     gdouble q;
