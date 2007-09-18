@@ -46,7 +46,6 @@
 
 #include "get.h"
 #include "err.h"
-#include "stmprg.h"
 
 #define MAGIC_TXT "MPAR"
 #define MAGIC_SIZE (sizeof(MAGIC_TXT)-1)
@@ -299,25 +298,34 @@ read_parameters(const guchar *buffer,
     control->voltage = gwy_get_gfloat_be(&p);
     control->voltage_l = gwy_get_gfloat_be(&p);
     control->voltage_r = gwy_get_gfloat_be(&p);
+    control->volt_flag = gwy_get_gint32_be(&p);
+    control->volt_region = gwy_get_gint32_be(&p);
+    control->current = gwy_get_gfloat_be(&p);
+    control->current_l = gwy_get_gfloat_be(&p);
+    control->current_r = gwy_get_gfloat_be(&p);
     control->curr_flag = gwy_get_gint32_be(&p);
     control->curr_region = gwy_get_gint32_be(&p);
     control->spec_lstart = gwy_get_gfloat_be(&p);
     control->spec_lend = gwy_get_gfloat_be(&p);
     control->spec_linc = gwy_get_gfloat_be(&p);
-    control->spec_lsteps = gwy_get_gint32_be(&p);
+    control->spec_lsteps = gwy_get_guint32_be(&p);
     control->spec_rstart = gwy_get_gfloat_be(&p);
     control->spec_rend = gwy_get_gfloat_be(&p);
     control->spec_rinc = gwy_get_gfloat_be(&p);
-    control->spec_rsteps = gwy_get_gint32_be(&p);
+    control->spec_rsteps = gwy_get_guint32_be(&p);
     control->version = gwy_get_gfloat_be(&p);
     control->free_lend = gwy_get_gfloat_be(&p);
     control->free_linc = gwy_get_gfloat_be(&p);
-    control->free_rsteps = gwy_get_gint32_be(&p);
-    control->timer1 = gwy_get_gint32_be(&p);
-    control->timer2 = gwy_get_gint32_be(&p);
-    control->timer3 = gwy_get_gint32_be(&p);
-    control->timer4 = gwy_get_gint32_be(&p);
-    control->m_time = gwy_get_gint32_be(&p);
+    control->free_lsteps = gwy_get_guint32_be(&p);
+    control->free_rstart = gwy_get_gfloat_be(&p);
+    control->free_rend = gwy_get_gfloat_be(&p);
+    control->free_rinc = gwy_get_gfloat_be(&p);
+    control->free_rsteps = gwy_get_guint32_be(&p);
+    control->timer1 = gwy_get_guint32_be(&p);
+    control->timer2 = gwy_get_guint32_be(&p);
+    control->timer3 = gwy_get_guint32_be(&p);
+    control->timer4 = gwy_get_guint32_be(&p);
+    control->m_time = gwy_get_guint32_be(&p);
     control->u_divider = gwy_get_gfloat_be(&p);
     control->fb_control = gwy_get_gint32_be(&p);
     control->fb_delay = gwy_get_gint32_be(&p);
@@ -338,7 +346,26 @@ read_parameters(const guchar *buffer,
 
     /* other_control */
     other_control = &stmprgfile->other_control;
-    /* TODO */
+    other_control->version = gwy_get_gfloat_be(&p);
+    other_control->adc_data_l = gwy_get_gint32_be(&p);
+    other_control->adc_data_r = gwy_get_gint32_be(&p);
+    other_control->first_zp = gwy_get_gint16_be(&p);
+    other_control->last_zp = gwy_get_gint16_be(&p);
+    other_control->zdrift = gwy_get_gfloat_be(&p);
+    other_control->savememory = gwy_get_gint32_be(&p);
+    get_CHARARRAY0(other_control->date, &p);
+    get_CHARARRAY0(other_control->comment, &p);
+    get_CHARARRAY0(other_control->username, &p);
+    get_CHARARRAY0(other_control->macro_file, &p);
+    get_CHARARRAY0(other_control->cext_a, &p);
+    get_CHARARRAY0(other_control->cext_b, &p);
+    other_control->contscan = gwy_get_gint32_be(&p);
+    other_control->spec_loop = gwy_get_gint32_be(&p);
+    other_control->ext_c = gwy_get_gint32_be(&p);
+    other_control->fm_zlift = gwy_get_gfloat_be(&p);
+    other_control->ext_a = gwy_get_gint32_be(&p);
+    other_control->vme_release = gwy_get_gfloat_be(&p);
+    g_assert(p - buffer == PARAM_SIZE);
 
     return TRUE;
 }
@@ -650,6 +677,7 @@ stmprg_load(const gchar *filename,
         return NULL;
     }
 
+    memset(&stmprgfile, 0, sizeof(StmprgFile));
     if (!read_parameters(buffer, size, &stmprgfile)) {
         g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
                     _("Parameter file is too short."));
@@ -673,6 +701,7 @@ stmprg_load(const gchar *filename,
     }
 
     // dfield = read_datafield(buffer, size, error);
+    dfield = NULL;
     if (!dfield)
         return NULL;
 
