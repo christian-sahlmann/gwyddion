@@ -644,8 +644,8 @@ omicron_fix_file_name(const gchar *parname,
         return filename;
 
     g_free(filename);
-    g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_IO,
-                _("No data file corresponding to `%s' was found."), orig);
+    err_DATA_PART(error, orig);
+
     return NULL;
 }
 

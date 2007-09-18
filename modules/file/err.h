@@ -46,6 +46,14 @@ err_WRITE(GError **error)
                 _("Cannot write to file: %s."), g_strerror(errno));
 }
 
+/* Multipart errors */
+static inline void
+err_DATA_PART(GError **error, const gchar *name)
+{
+    g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_SPECIFIC,
+                _("No data file corresponding to `%s' was found."), name);
+}
+
 /* Data format errors */
 static inline void
 err_TOO_SHORT(GError **error)
