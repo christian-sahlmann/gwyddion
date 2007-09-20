@@ -300,7 +300,7 @@ gwy_app_widget_queue_manage(GtkWidget *widget, gboolean remv)
 }
 
 /**
- * _gwy_app_data_proxy_analyse_key:
+ * _gwy_app_analyse_data_key:
  * @strkey: String container key.
  * @type: Location to store data type to.
  * @len: Location to store the length of common prefix or %NULL.
@@ -318,9 +318,9 @@ gwy_app_widget_queue_manage(GtkWidget *widget, gboolean remv)
  *          object.  Note -1 is also returned for %KEY_IS_FILENAME type.
  **/
 gint
-_gwy_app_data_proxy_analyse_key(const gchar *strkey,
-                                GwyAppKeyType *type,
-                                guint *len)
+_gwy_app_analyse_data_key(const gchar *strkey,
+                          GwyAppKeyType *type,
+                          guint *len)
 {
     const gchar *s;
     gint i;
@@ -615,7 +615,7 @@ gwy_app_data_proxy_graph_changed(GwyGraphModel *graph,
     if (!(quark = GPOINTER_TO_UINT(g_object_get_qdata(G_OBJECT(graph),
                                                       own_key_quark))))
         return;
-    id = _gwy_app_data_proxy_analyse_key(g_quark_to_string(quark), &type, NULL);
+    id = _gwy_app_analyse_data_key(g_quark_to_string(quark), &type, NULL);
     g_return_if_fail(type == KEY_IS_GRAPH);
     if (!gwy_app_data_proxy_find_object(proxy->lists[PAGE_GRAPHS].store, id,
                                         &iter))
@@ -728,7 +728,7 @@ gwy_app_data_proxy_spectra_changed(GwySpectra *spectra,
     if (!(quark = GPOINTER_TO_UINT(g_object_get_qdata(G_OBJECT(spectra),
                                                       own_key_quark))))
         return;
-    id = _gwy_app_data_proxy_analyse_key(g_quark_to_string(quark), &type, NULL);
+    id = _gwy_app_analyse_data_key(g_quark_to_string(quark), &type, NULL);
     g_return_if_fail(type == KEY_IS_SPECTRA);
     if (!gwy_app_data_proxy_find_object(proxy->lists[PAGE_SPECTRA].store, id,
                                         &iter))
@@ -846,7 +846,7 @@ gwy_app_data_proxy_scan_data(gpointer key,
     gint i;
 
     strkey = g_quark_to_string(quark);
-    i = _gwy_app_data_proxy_analyse_key(strkey, &type, NULL);
+    i = _gwy_app_analyse_data_key(strkey, &type, NULL);
     if (i < 0)
         return;
 
@@ -1016,7 +1016,7 @@ gwy_app_data_proxy_item_changed(GwyContainer *data,
     gint i;
 
     strkey = g_quark_to_string(quark);
-    i = _gwy_app_data_proxy_analyse_key(strkey, &type, NULL);
+    i = _gwy_app_analyse_data_key(strkey, &type, NULL);
     if (i < 0) {
         if (type == KEY_IS_FILENAME) {
             gwy_app_data_browser_update_filename(proxy);
@@ -1601,7 +1601,7 @@ gwy_app_data_browser_channel_deleted(GwyDataWindow *data_window)
     g_return_val_if_fail(data && quark, TRUE);
     object = gwy_container_get_object(data, quark);
 
-    i = _gwy_app_data_proxy_analyse_key(strkey, &type, NULL);
+    i = _gwy_app_analyse_data_key(strkey, &type, NULL);
     g_return_val_if_fail(i >= 0 && type == KEY_IS_DATA, TRUE);
 
     browser = gwy_app_get_data_browser();
@@ -1808,7 +1808,7 @@ gwy_app_data_browser_sync_mask(GwyContainer *data,
 
     if (has_dfield && !has_layer) {
         strkey = g_quark_to_string(quark);
-        i = _gwy_app_data_proxy_analyse_key(strkey, &type, NULL);
+        i = _gwy_app_analyse_data_key(strkey, &type, NULL);
         g_return_if_fail(i >= 0 && type == KEY_IS_MASK);
         gwy_app_data_proxy_setup_mask(data, i);
         layer = gwy_layer_mask_new();
@@ -2520,7 +2520,7 @@ gwy_app_data_browser_graph_deleted(GwyGraphWindow *graph_window)
     g_return_val_if_fail(data && quark, TRUE);
 
     strkey = g_quark_to_string(quark);
-    i = _gwy_app_data_proxy_analyse_key(strkey, &type, NULL);
+    i = _gwy_app_analyse_data_key(strkey, &type, NULL);
     g_return_val_if_fail(i >= 0 && type == KEY_IS_GRAPH, TRUE);
 
     browser = gwy_app_get_data_browser();
@@ -2931,7 +2931,7 @@ gwy_app_data_browser_spectra_selected(GtkTreeSelection *selection,
         quark = GPOINTER_TO_UINT(g_object_get_qdata(G_OBJECT(tspectra),
                                                     own_key_quark));
         strkey = g_quark_to_string(quark);
-        id = _gwy_app_data_proxy_analyse_key(strkey, &type, NULL);
+        id = _gwy_app_analyse_data_key(strkey, &type, NULL);
         g_return_if_fail(i >= 0 && type == KEY_IS_SPECTRA);
         browser->current->lists[PAGE_SPECTRA].active = id;
     }
@@ -3608,7 +3608,7 @@ gwy_app_data_browser_select_data_view(GwyDataView *data_view)
 
     layer = gwy_data_view_get_base_layer(data_view);
     strkey = gwy_pixmap_layer_get_data_key(layer);
-    i = _gwy_app_data_proxy_analyse_key(strkey, &type, NULL);
+    i = _gwy_app_analyse_data_key(strkey, &type, NULL);
     g_return_if_fail(i >= 0 && type == KEY_IS_DATA);
     proxy->lists[PAGE_CHANNELS].active = i;
 
@@ -3702,7 +3702,7 @@ gwy_app_data_browser_select_graph(GwyGraph *graph)
     quark = GPOINTER_TO_UINT(g_object_get_qdata(G_OBJECT(gmodel),
                                                 own_key_quark));
     strkey = g_quark_to_string(quark);
-    i = _gwy_app_data_proxy_analyse_key(strkey, &type, NULL);
+    i = _gwy_app_analyse_data_key(strkey, &type, NULL);
     g_return_if_fail(i >= 0 && type == KEY_IS_GRAPH);
     proxy->lists[PAGE_GRAPHS].active = i;
 
@@ -3753,7 +3753,7 @@ gwy_app_data_browser_select_spectra(GwySpectra *spectra)
     quark = GPOINTER_TO_UINT(g_object_get_qdata(G_OBJECT(spectra),
                                                 own_key_quark));
     strkey = g_quark_to_string(quark);
-    i = _gwy_app_data_proxy_analyse_key(strkey, &type, NULL);
+    i = _gwy_app_analyse_data_key(strkey, &type, NULL);
     g_return_if_fail(i >= 0 && type == KEY_IS_SPECTRA);
     proxy->lists[PAGE_SPECTRA].active = i;
 
@@ -4020,7 +4020,7 @@ gwy_app_data_merge_gather(gpointer key,
     GwyAppKeyType type;
     gint id, pageno;
 
-    id = _gwy_app_data_proxy_analyse_key(g_quark_to_string(quark), &type, NULL);
+    id = _gwy_app_analyse_data_key(g_quark_to_string(quark), &type, NULL);
     switch (type) {
         case KEY_IS_DATA:
         pageno = PAGE_CHANNELS;
@@ -4054,7 +4054,7 @@ gwy_app_data_merge_copy_1(gpointer key,
     gpointer idp, id2p;
     gint id;
 
-    id = _gwy_app_data_proxy_analyse_key(g_quark_to_string(quark), &type, NULL);
+    id = _gwy_app_analyse_data_key(g_quark_to_string(quark), &type, NULL);
     idp = GINT_TO_POINTER(id);
     switch (type) {
         case KEY_IS_DATA:
@@ -4114,12 +4114,12 @@ gwy_app_data_merge_copy_2(gpointer key,
         gchar *vstrkey;
 
         vstrkey = g_strndup(strkey, strlen(strkey) - strlen("/visible"));
-        id = _gwy_app_data_proxy_analyse_key(vstrkey, &type, &len);
+        id = _gwy_app_analyse_data_key(vstrkey, &type, &len);
         g_free(vstrkey);
         visibility = TRUE;
     }
     else
-        id = _gwy_app_data_proxy_analyse_key(strkey, &type, &len);
+        id = _gwy_app_analyse_data_key(strkey, &type, &len);
 
     if (type == KEY_IS_FILENAME)
         return;

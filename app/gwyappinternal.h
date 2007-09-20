@@ -24,6 +24,7 @@
 #define __GWY_APP_INTERNAL_H__
 
 #include <gdk-pixbuf/gdk-pixbuf.h>
+#include <libprocess/spectra.h>
 #include <libgwydgets/gwydatawindow.h>
 #include <libgwydgets/gwy3dwindow.h>
 #include <libgwydgets/gwygraphwindow.h>
@@ -89,7 +90,7 @@ void       _gwy_app_recent_file_write_thumbnail(const gchar *filename_sys,
                                                 GdkPixbuf *pixbuf);
 
 G_GNUC_INTERNAL
-gint       _gwy_app_data_proxy_analyse_key     (const gchar *strkey,
+gint       _gwy_app_analyse_data_key           (const gchar *strkey,
                                                 GwyAppKeyType *type,
                                                 guint *len);
 /* XXX */
