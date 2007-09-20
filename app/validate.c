@@ -42,7 +42,7 @@ gwy_data_validation_failure_new(GwyDataError type,
         va_list ap;
 
         va_start(ap, fmt);
-        failure->msg = g_strdup_vprintf(fmt, ap);
+        failure->details = g_strdup_vprintf(fmt, ap);
         va_end(ap);
     }
 
@@ -52,7 +52,7 @@ gwy_data_validation_failure_new(GwyDataError type,
 static void
 gwy_data_validation_failure_free(GwyDataValidationFailure *failure)
 {
-    g_free(failure->msg);
+    g_free(failure->details);
     g_free(failure);
 }
 
@@ -232,6 +232,25 @@ gwy_data_validate(GwyContainer *data,
     errors = g_slist_reverse(errors);
 
     return errors;
+}
+
+const gchar*
+gwy_data_error_desrcibe(GwyDataError error)
+{
+    static const gchar *errors[] = {
+        "",
+        N_("Invalid item key format"),
+        N_("Item key contains invalid characters"),
+        N_("Item key does not belong to any known data"),
+        N_("Wrong data item id"),
+        N_("Unexpected data item type"),
+        N_("String value is not valid UTF-8"),
+    };
+
+    if (error < 1 || error >= G_N_ELEMENTS(errors))
+        return "";
+
+    return errors[error];
 }
 
 /************************** Documentation ****************************/

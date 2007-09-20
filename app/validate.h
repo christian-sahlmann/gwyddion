@@ -26,9 +26,9 @@
 G_BEGIN_DECLS
 
 typedef enum {
-    GWY_DATA_ERROR_KEY_FORMAT,
+    GWY_DATA_ERROR_KEY_FORMAT = 1,
     GWY_DATA_ERROR_KEY_CHARACTERS,
-    GWY_DATA_ERROR_KEY_UNKNOWN,
+    GWY_DATA_ERROR_KEY_UNKNOWN,    /* XXX: This should not be fatal/noisy */
     GWY_DATA_ERROR_KEY_ID,
     GWY_DATA_ERROR_UNEXPECTED_TYPE,
     GWY_DATA_ERROR_NON_UTF8_STRING,
@@ -41,15 +41,13 @@ typedef enum {
 typedef struct {
     GwyDataError error;
     GQuark key;
-    gchar *msg;
+    gchar *details;
 } GwyDataValidationFailure;
 
-GSList*
-gwy_data_validate(GwyContainer *data,
-                  GwyDataValidateFlags flags);
-
-void
-gwy_data_validation_failure_list_free(GSList *list);
+GSList*      gwy_data_validate                    (GwyContainer *data,
+                                                   GwyDataValidateFlags flags);
+const gchar* gwy_data_error_desrcibe              (GwyDataError error);
+void         gwy_data_validation_failure_list_free(GSList *list);
 
 G_END_DECLS
 
