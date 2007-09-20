@@ -34,6 +34,8 @@ static GwyContainer* gwy_app_file_load_real    (const gchar *filename_utf8,
 static void          gwy_app_file_add_loaded   (GwyContainer *data,
                                                 const gchar *filename_utf8,
                                                 const gchar *filename_sys);
+static void          validate_data             (GwyContainer *data,
+                                                const gchar *filename_utf8);
 static void          gwy_app_file_open_or_merge(gboolean merge);
 
 static gchar *current_dir = NULL;
@@ -173,6 +175,7 @@ gwy_app_file_load_real(const gchar *filename_utf8,
         data = gwy_file_load(filename_sys, GWY_RUN_INTERACTIVE, &err);
 
     if (data) {
+        validate_data(data, filename_utf8);
         if (do_add_loaded)
             gwy_app_file_add_loaded(data, filename_utf8, filename_sys);
     }
@@ -220,6 +223,27 @@ gwy_app_file_add_loaded(GwyContainer *data,
     if (filename_utf8)
         gwy_app_recent_file_list_update(data, filename_utf8, filename_sys, 0);
     gwy_app_set_current_directory(filename_sys);
+}
+
+static void
+validate_data(GwyContainer *data,
+              const gchar *filename_utf8)
+{
+    GSList *errors, *l;
+
+    errors = gwy_data_validate(data, GWY_DATA_VALIDATE_REF_COUNT);
+    /* Just dump it to console for testing */
+    for (l = errors; l; l = g_slist_next(l)) {
+        GwyDataValidationFailure *failure = (GwyDataValidationFailure*)l->data;
+
+        g_printerr("VALIDATION: %s, key %s",
+                   gwy_data_error_desrcibe(failure->error),
+                   g_quark_to_string(failure->key));
+        if (failure->details)
+            g_printerr(" (%s)", failure->details);
+        g_printerr("\n");
+    }
+    gwy_data_validation_failure_list_free(errors);
 }
 
 /**

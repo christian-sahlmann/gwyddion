@@ -110,17 +110,37 @@ check_type(GValue *gvalue,
            GQuark key,
            GSList **errors)
 {
-    if (G_LIKELY(G_VALUE_HOLDS(gvalue, type))) {
-        if (type == G_TYPE_STRING)
-            return check_utf8(g_value_get_string(gvalue), key, errors);
-        return TRUE;
+    GType vtype;
+
+    /* Simple types */
+    if (!g_type_is_a(type, G_TYPE_OBJECT)) {
+        if (G_LIKELY(G_VALUE_HOLDS(gvalue, type))) {
+            if (type == G_TYPE_STRING)
+                return check_utf8(g_value_get_string(gvalue), key, errors);
+            return TRUE;
+        }
     }
+
+    /* Expecting object but found a simple type */
+    if (G_UNLIKELY(!G_VALUE_HOLDS(gvalue, G_TYPE_OBJECT))) {
+        *errors = g_slist_prepend(*errors,
+                                  FAIL(GWY_DATA_ERROR_UNEXPECTED_TYPE, key,
+                                       _("%s instead of %s"),
+                                       g_type_name(G_VALUE_TYPE(gvalue)),
+                                       g_type_name(type)));
+        return FALSE;
+    }
+
+    /* Object types, check thoroughly */
+    vtype = G_TYPE_FROM_INSTANCE(g_value_get_object(gvalue));
+    if (G_LIKELY(g_type_is_a(vtype, type)))
+        return TRUE;
 
     *errors = g_slist_prepend(*errors,
                               FAIL(GWY_DATA_ERROR_UNEXPECTED_TYPE, key,
                                    _("%s instead of %s"),
-                                   g_type_name(type),
-                                   g_type_name(G_VALUE_TYPE(gvalue))));
+                                   g_type_name(G_VALUE_TYPE(gvalue)),
+                                   g_type_name(type)));
     return FALSE;
 }
 
