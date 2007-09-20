@@ -33,6 +33,30 @@
 
 G_BEGIN_DECLS
 
+/* Data types interesting keys can correspond to */
+typedef enum {
+    KEY_IS_NONE = 0,
+    KEY_IS_DATA,
+    KEY_IS_MASK,
+    KEY_IS_SHOW,
+    KEY_IS_GRAPH,
+    KEY_IS_SPECTRA,
+    KEY_IS_META,
+    KEY_IS_TITLE,
+    KEY_IS_SELECT,
+    KEY_IS_RANGE_TYPE,
+    KEY_IS_RANGE,
+    KEY_IS_PALETTE,
+    KEY_IS_MASK_COLOR,
+    KEY_IS_REAL_SQUARE,
+    KEY_IS_3D_SETUP,
+    KEY_IS_3D_PALETTE,
+    KEY_IS_3D_MATERIAL,
+    KEY_IS_3D_LABEL,
+    KEY_IS_SPS_REF,
+    KEY_IS_FILENAME
+} GwyAppKeyType;
+
 G_GNUC_INTERNAL
 gint     _gwy_app_get_n_recent_files          (void);
 
@@ -64,6 +88,10 @@ void       _gwy_app_recent_file_write_thumbnail(const gchar *filename_sys,
                                                 gint id,
                                                 GdkPixbuf *pixbuf);
 
+G_GNUC_INTERNAL
+gint       _gwy_app_data_proxy_analyse_key     (const gchar *strkey,
+                                                GwyAppKeyType *type,
+                                                guint *len);
 /* XXX */
 void     gwy_app_main_window_set              (GtkWidget *window);
 
