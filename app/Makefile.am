@@ -37,6 +37,7 @@ libgwyapp2include_HEADERS = \
 	resource-editor.h \
 	settings.h \
 	undo.h \
+	validate.h \
 	wait.h
 
 noinst_HEADERS = \
@@ -108,6 +109,7 @@ libgwyapp2_la_SOURCES = \
 	settings.c \
 	resource-editor.c \
 	undo.c \
+	validate.c \
 	wait.c
 
 gwyddion_SOURCES = \
