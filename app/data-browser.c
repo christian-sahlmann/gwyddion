@@ -344,10 +344,17 @@ _gwy_app_analyse_data_key(const gchar *strkey,
         /* Do not use strtol, it allows queer stuff like spaces */
         for (i = 0; g_ascii_isdigit(s[i]); i++)
             ;
-        if (!i || s[i])
+        if (!i || (s[i] && s[i] != GWY_CONTAINER_PATHSEP))
             return -1;
 
-        *type = KEY_IS_GRAPH;
+        if (gwy_strequal(s + i, "/visible")) {
+            *type = KEY_IS_GRAPH_VISIBLE;
+        }
+        else if (!s[i])
+            *type = KEY_IS_GRAPH;
+        else
+            return -1;
+
         if (len)
             *len = (s + i) - strkey;
 
@@ -360,10 +367,17 @@ _gwy_app_analyse_data_key(const gchar *strkey,
         /* Do not use strtol, it allows queer stuff like spaces */
         for (i = 0; g_ascii_isdigit(s[i]); i++)
             ;
-        if (!i || s[i])
+        if (!i || (s[i] && s[i] != GWY_CONTAINER_PATHSEP))
             return -1;
 
-        *type = KEY_IS_SPECTRA;
+        if (gwy_strequal(s + i, "/visible")) {
+            *type = KEY_IS_SPECTRA_VISIBLE;
+        }
+        else if (!s[i])
+            *type = KEY_IS_SPECTRA;
+        else
+            return -1;
+
         if (len)
             *len = (s + i) - strkey;
 
@@ -393,6 +407,8 @@ _gwy_app_analyse_data_key(const gchar *strkey,
         *type = KEY_IS_SELECT;
         n += strlen("select/");
     }
+    else if (gwy_strequal(s, "data/visible"))
+        *type = KEY_IS_DATA_VISIBLE;
     else if (gwy_strequal(s, "data/title")
              || gwy_strequal(s, "data/untitled")) {
         *type = KEY_IS_TITLE;

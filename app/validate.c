@@ -224,6 +224,9 @@ validate_item(gpointer hash_key,
         break;
 
         case KEY_IS_REAL_SQUARE:
+        case KEY_IS_DATA_VISIBLE:
+        case KEY_IS_GRAPH_VISIBLE:
+        case KEY_IS_SPECTRA_VISIBLE:
         check_type(gvalue, G_TYPE_BOOLEAN, key, errors);
         break;
 
