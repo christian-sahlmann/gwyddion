@@ -220,8 +220,8 @@ selection_updated_cb(GwySelection *selection,
     gboolean ret = TRUE, prevret = TRUE;
     GwySIUnit *xunit;
     GwySIUnit *yunit;
-    GwySIValueFormat *xformat = NULL;
-    GwySIValueFormat *yformat = NULL;
+    GwySIValueFormat *xformat;
+    GwySIValueFormat *yformat;
     gdouble xmin, xmax, xrange, xresolution;
     gdouble ymin, ymax, yrange, yresolution;
     guint width, height;
@@ -266,12 +266,12 @@ selection_updated_cb(GwySelection *selection,
                                                      GWY_SI_UNIT_FORMAT_PLAIN,
                                                      xrange,
                                                      xresolution/6,
-                                                     xformat);
+                                                     NULL);
     yformat = gwy_si_unit_get_format_with_resolution(yunit,
                                                      GWY_SI_UNIT_FORMAT_PLAIN,
                                                      yrange,
                                                      yresolution/6,
-                                                     yformat);
+                                                     NULL);
 
     /* set up header labels */
     header_label_update(GTK_LABEL(dialog->header_x), "X",
@@ -315,7 +315,7 @@ selection_updated_cb(GwySelection *selection,
 
             label = g_ptr_array_index(dialog->distx, i);
             value_label(label, (x - xp)/xformat->magnitude,
-                        yformat->precision, str);
+                        xformat->precision, str);
 
 
             label = g_ptr_array_index(dialog->disty, i);
