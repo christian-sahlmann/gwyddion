@@ -61,7 +61,7 @@ MKENUM_HFILES = \
 	$(srcdir)/gwygrainvalue.h
 include $(top_srcdir)/utils/mkenum.mk
 
-AM_CFLAGS = @COMMON_CFLAGS@
+AM_CFLAGS = @COMMON_CFLAGS@ @FFTW3_CFLAGS@
 AM_CPPFLAGS = -I$(top_srcdir) -DG_LOG_DOMAIN=\"GwyProcess\"
 
 # In following order do:
