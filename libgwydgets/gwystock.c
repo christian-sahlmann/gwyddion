@@ -157,9 +157,9 @@ slurp_icon_directory(const gchar *path,
     g_dir_close(gdir);
 }
 
-/**
+/*
  * Filename format: <gwy_foobar>-<size>[.<state>].png
- **/
+ */
 static GtkIconSource*
 file_to_icon_source(const gchar *path,
                     const gchar *filename,
@@ -276,7 +276,7 @@ free_the_icon_factory(void)
  **/
 
 /**
- * GWY_ICON_SIZE_ABOUT
+ * GWY_ICON_SIZE_ABOUT:
  *
  * The icon size name for about dialog icon size.
  *
