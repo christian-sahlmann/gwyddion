@@ -88,7 +88,7 @@ def update_documentation(images, sinces):
     # is.
     cfile = base + '.c'
     template = ('/**\n'
-                ' * GWY_STOCK_%s\n'
+                ' * GWY_STOCK_%s:\n'
                 ' *\n'
                 ' * The "%s" stock icon.\n'
                 ' * <inlinegraphic fileref="gwy_%s-%d.png" format="PNG"/>\n'
