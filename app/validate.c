@@ -215,6 +215,7 @@ validate_item(gpointer hash_key,
 
         case KEY_IS_RANGE_TYPE:
         case KEY_IS_SPS_REF:
+        case KEY_IS_GRAPH_LASTID:
         check_type(gvalue, G_TYPE_INT, key, errors);
         break;
 

@@ -58,7 +58,8 @@ typedef enum {
     KEY_IS_3D_MATERIAL,
     KEY_IS_3D_LABEL,
     KEY_IS_SPS_REF,
-    KEY_IS_FILENAME
+    KEY_IS_FILENAME,
+    KEY_IS_GRAPH_LASTID
 } GwyAppKeyType;
 
 G_GNUC_INTERNAL

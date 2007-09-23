@@ -331,13 +331,6 @@ _gwy_app_analyse_data_key(const gchar *strkey,
     if (strkey[0] != GWY_CONTAINER_PATHSEP)
         return -1;
 
-    if (gwy_strequal(strkey, "/filename")) {
-        if (len)
-            *len = 0;
-        *type = KEY_IS_FILENAME;
-        return -1;
-    }
-
     /* Graph */
     if (g_str_has_prefix(strkey, GRAPH_PREFIX GWY_CONTAINER_PATHSEP_STR)) {
         s = strkey + sizeof(GRAPH_PREFIX);
@@ -382,6 +375,20 @@ _gwy_app_analyse_data_key(const gchar *strkey,
             *len = (s + i) - strkey;
 
         return atoi(s);
+    }
+
+    /* Non-id */
+    if (gwy_strequal(strkey, "/filename")) {
+        if (len)
+            *len = 0;
+        *type = KEY_IS_FILENAME;
+        return -1;
+    }
+    if (gwy_strequal(strkey, "/0/graph/lastid")) {
+        if (len)
+            *len = 0;
+        *type = KEY_IS_GRAPH_LASTID;
+        return -1;
     }
 
     /* Other data */
