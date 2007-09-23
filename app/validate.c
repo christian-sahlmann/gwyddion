@@ -352,6 +352,20 @@ validate_item_pass2(gpointer hash_key,
     }
 }
 
+static void
+gwy_data_correct(GwyContainer *data,
+                 GSList *failures)
+{
+    GwyDataValidationFailure *failure;
+    GSList *l;
+
+    for (l = failures; l; l = g_slist_next(l)) {
+        failure = (GwyDataValidationFailure*)l->data;
+        /* All failures that we detect at this moment are correctable by
+         * removal of the offending data. */
+        gwy_container_remove(data, failure->key);
+    }
+}
 
 GSList*
 gwy_data_validate(GwyContainer *data,
@@ -368,6 +382,9 @@ gwy_data_validate(GwyContainer *data,
 
     gwy_container_foreach(data, NULL, &validate_item_pass1, &info);
     gwy_container_foreach(data, NULL, &validate_item_pass2, &info);
+
+    if (flags & GWY_DATA_VALIDATE_CORRECT)
+        gwy_data_correct(data, info.errors);
 
     /* Note this renders info.errors unusable */
     errors = g_slist_reverse(info.errors);
