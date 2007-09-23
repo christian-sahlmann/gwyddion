@@ -32,6 +32,7 @@ typedef enum {
     GWY_DATA_ERROR_KEY_ID,
     GWY_DATA_ERROR_UNEXPECTED_TYPE,
     GWY_DATA_ERROR_NON_UTF8_STRING,
+    GWY_DATA_ERROR_STRAY_SUBDATA,
 } GwyDataError;
 
 typedef enum {

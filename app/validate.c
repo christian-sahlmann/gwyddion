@@ -266,6 +266,88 @@ validate_item_pass1(gpointer hash_key,
     }
 }
 
+static inline gboolean
+in_array(GArray *array,
+         gint i)
+{
+    guint j;
+
+    for (j = 0; j < array->len; j++) {
+        if (g_array_index(array, gint, j) == i)
+            return TRUE;
+    }
+
+    return FALSE;
+}
+
+static void
+validate_item_pass2(gpointer hash_key,
+                    gpointer hash_value,
+                    gpointer user_data)
+{
+    GQuark key = GPOINTER_TO_UINT(hash_key);
+    GValue *gvalue = (GValue*)hash_value;
+    GwyDataValidationInfo *info = (GwyDataValidationInfo*)user_data;
+    GSList **errors;
+    const gchar *strkey;
+    gint id;
+    guint len;
+    GwyAppKeyType type;
+
+    errors = &info->errors;
+    strkey = g_quark_to_string(key);
+    id = _gwy_app_analyse_data_key(strkey, &type, &len);
+    if (id < 0 || id >= (1 << 20))
+        return;
+
+    /* Types */
+    switch (type) {
+        case KEY_IS_MASK:
+        case KEY_IS_SHOW:
+        case KEY_IS_META:
+        case KEY_IS_TITLE:
+        case KEY_IS_PALETTE:
+        case KEY_IS_3D_PALETTE:
+        case KEY_IS_3D_MATERIAL:
+        case KEY_IS_SELECT:
+        case KEY_IS_RANGE_TYPE:
+        case KEY_IS_SPS_REF:
+        case KEY_IS_RANGE:
+        case KEY_IS_MASK_COLOR:
+        case KEY_IS_REAL_SQUARE:
+        case KEY_IS_DATA_VISIBLE:
+        case KEY_IS_3D_SETUP:
+        case KEY_IS_3D_LABEL:
+        if (!in_array(info->channels, id))
+            *errors = g_slist_prepend(*errors,
+                                      FAIL(GWY_DATA_ERROR_STRAY_SUBDATA, key,
+                                           _("no channel %d exists for %s"),
+                                           id, strkey));
+        break;
+
+        case KEY_IS_GRAPH_VISIBLE:
+        if (!in_array(info->graphs, id))
+            *errors = g_slist_prepend(*errors,
+                                      FAIL(GWY_DATA_ERROR_STRAY_SUBDATA, key,
+                                           _("no graph %d exists for %s"),
+                                           id, strkey));
+        break;
+
+        case KEY_IS_SPECTRA_VISIBLE:
+        check_type(gvalue, G_TYPE_BOOLEAN, key, errors);
+        if (!in_array(info->spectra, id))
+            *errors = g_slist_prepend(*errors,
+                                      FAIL(GWY_DATA_ERROR_STRAY_SUBDATA, key,
+                                           _("no spectra %d exists for %s"),
+                                           id, strkey));
+        break;
+
+        default:
+        break;
+    }
+}
+
+
 GSList*
 gwy_data_validate(GwyContainer *data,
                   GwyDataValidateFlags flags)
@@ -280,6 +362,7 @@ gwy_data_validate(GwyContainer *data,
     info.spectra = g_array_new(FALSE, FALSE, sizeof(gint));
 
     gwy_container_foreach(data, NULL, &validate_item_pass1, &info);
+    gwy_container_foreach(data, NULL, &validate_item_pass2, &info);
 
     /* Note this renders info.errors unusable */
     errors = g_slist_reverse(info.errors);
@@ -302,6 +385,7 @@ gwy_data_error_desrcibe(GwyDataError error)
         N_("Wrong data item id"),
         N_("Unexpected data item type"),
         N_("String value is not valid UTF-8"),
+        N_("Secondary data item has no primary data"),
     };
 
     if (error < 1 || error >= G_N_ELEMENTS(errors))
