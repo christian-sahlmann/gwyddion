@@ -42,8 +42,9 @@
 
 typedef struct {
     gboolean no_splash;
-    gboolean objects;
-    gboolean startup;
+    gboolean debug_objects;
+    gboolean startup_time;
+    gboolean check;
     GwyAppRemoteType remote;
 } GwyAppOptions;
 
@@ -72,7 +73,7 @@ static void       gwy_app_set_window_icon  (void);
 static void       gwy_app_check_version    (void);
 
 static GwyAppOptions app_options = {
-    FALSE, FALSE, FALSE, GWY_APP_REMOTE_NONE,
+    FALSE, FALSE, FALSE, FALSE, GWY_APP_REMOTE_NONE,
 };
 
 int
@@ -88,7 +89,7 @@ main(int argc, char *argv[])
     timer = g_timer_new();
     gwy_app_check_version();
     process_preinit_options(&argc, &argv, &app_options);
-    gwy_debug_objects_enable(app_options.objects);
+    gwy_debug_objects_enable(app_options.debug_objects);
     /* TODO: handle failure */
     gwy_app_settings_create_config_dir(NULL);
     /* FIXME: somewhat late, actually even gwy_find_self_set_argv0() which MUST
@@ -245,11 +246,15 @@ process_preinit_options(int *argc,
                 continue;
             }
             if (gwy_strequal((*argv)[i], "--debug-objects")) {
-                options->objects = TRUE;
+                options->debug_objects = TRUE;
                 continue;
             }
             if (gwy_strequal((*argv)[i], "--startup-time")) {
-                options->startup = TRUE;
+                options->startup_time = TRUE;
+                continue;
+            }
+            if (gwy_strequal((*argv)[i], "--check")) {
+                options->check = TRUE;
                 continue;
             }
         }
@@ -265,7 +270,7 @@ print_help(void)
 {
     puts(
 "Usage: gwyddion [OPTIONS...] FILES...\n"
-"An SPM data analysis framework, written in Gtk+.\n"
+"An SPM data visualization and analysis tool, written with Gtk+.\n"
         );
     puts(
 "Gwyddion options:\n"
@@ -275,6 +280,7 @@ print_help(void)
 "     --remote-query         Check if a Gwyddion instance is already running.\n"
 "     --remote-new           Load FILES to a running instance or run a new one.\n"
 "     --remote-existing      Load FILES to a running instance or fail.\n"
+"     --check                Check FILES, print problems and terminate.\n"
 "     --debug-objects        Catch leaking objects (devel only).\n"
 "     --startup-time         Measure time of startup tasks.\n"
         );
@@ -300,7 +306,7 @@ debug_time(GTimer *timer,
 
     gdouble t;
 
-    if (!app_options.startup || app_options.remote)
+    if (!app_options.startup_time || app_options.remote)
         return;
 
     if (timer) {
