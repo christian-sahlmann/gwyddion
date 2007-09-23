@@ -19,12 +19,21 @@
  */
 
 #include "config.h"
+#include <string.h>
 #include <stdarg.h>
 #include <libgwyddion/gwymacros.h>
 #include <app/validate.h>
 #include "gwyappinternal.h"
 
 #define FAIL gwy_data_validation_failure_new
+
+typedef struct {
+    GwyDataValidateFlags flags;
+    GSList *errors;
+    GArray *channels;
+    GArray *graphs;
+    GArray *spectra;
+} GwyDataValidationInfo;
 
 static GwyDataValidationFailure*
 gwy_data_validation_failure_new(GwyDataError type,
@@ -145,18 +154,20 @@ check_type(GValue *gvalue,
 }
 
 static void
-validate_item(gpointer hash_key,
-              gpointer hash_value,
-              gpointer user_data)
+validate_item_pass1(gpointer hash_key,
+                    gpointer hash_value,
+                    gpointer user_data)
 {
     GQuark key = GPOINTER_TO_UINT(hash_key);
     GValue *gvalue = (GValue*)hash_value;
-    GSList **errors = (GSList**)user_data;
+    GwyDataValidationInfo *info = (GwyDataValidationInfo*)user_data;
+    GSList **errors;
     const gchar *strkey;
     gint id;
     guint len;
     GwyAppKeyType type;
 
+    errors = &info->errors;
     strkey = g_quark_to_string(key);
     check_ascii_key(strkey, key, errors);
     if (strkey[0] != GWY_CONTAINER_PATHSEP)
@@ -164,38 +175,48 @@ validate_item(gpointer hash_key,
                                   FAIL(GWY_DATA_ERROR_KEY_FORMAT, key, NULL));
 
     id = _gwy_app_analyse_data_key(strkey, &type, &len);
+    if (type == KEY_IS_NONE) {
+        *errors = g_slist_prepend(*errors,
+                                  FAIL(GWY_DATA_ERROR_KEY_UNKNOWN, key, NULL));
+        return;
+    }
 
     /* Non-id items */
     if (type == KEY_IS_FILENAME) {
         check_type(gvalue, G_TYPE_STRING, key, errors);
         return;
     }
+    if (type == KEY_IS_GRAPH_LASTID) {
+        check_type(gvalue, G_TYPE_INT, key, errors);
+        return;
+    }
 
     /* Items that must have data id.  While ids above 2^20 are technically
      * valid, they indicate a bug or malice. */
-    if (id < 0) {
-        *errors = g_slist_prepend(*errors,
-                                  FAIL(GWY_DATA_ERROR_KEY_UNKNOWN, key, NULL));
-        return;
-    }
-    else if (id < 0 || id >= (1 << 20))
+    if (id < 0 || id >= (1 << 20))
         *errors = g_slist_prepend(*errors,
                                   FAIL(GWY_DATA_ERROR_KEY_ID, key, NULL));
 
     /* Types */
     switch (type) {
         case KEY_IS_DATA:
+        if (check_type(gvalue, GWY_TYPE_DATA_FIELD, key, errors))
+            g_array_append_val(info->channels, id);
+        break;
+
         case KEY_IS_MASK:
         case KEY_IS_SHOW:
         check_type(gvalue, GWY_TYPE_DATA_FIELD, key, errors);
         break;
 
         case KEY_IS_GRAPH:
-        check_type(gvalue, GWY_TYPE_GRAPH_MODEL, key, errors);
+        if (check_type(gvalue, GWY_TYPE_GRAPH_MODEL, key, errors))
+            g_array_append_val(info->graphs, id);
         break;
 
         case KEY_IS_SPECTRA:
-        check_type(gvalue, GWY_TYPE_SPECTRA, key, errors);
+        if (check_type(gvalue, GWY_TYPE_SPECTRA, key, errors))
+            g_array_append_val(info->spectra, id);
         break;
 
         case KEY_IS_META:
@@ -215,7 +236,6 @@ validate_item(gpointer hash_key,
 
         case KEY_IS_RANGE_TYPE:
         case KEY_IS_SPS_REF:
-        case KEY_IS_GRAPH_LASTID:
         check_type(gvalue, G_TYPE_INT, key, errors);
         break;
 
@@ -250,10 +270,23 @@ GSList*
 gwy_data_validate(GwyContainer *data,
                   GwyDataValidateFlags flags)
 {
-    GSList *errors = NULL;
+    GwyDataValidationInfo info;
+    GSList *errors;
 
-    gwy_container_foreach(data, NULL, &validate_item, &errors);
-    errors = g_slist_reverse(errors);
+    memset(&info, 0, sizeof(GwyDataValidationInfo));
+    info.flags = flags;
+    info.channels = g_array_new(FALSE, FALSE, sizeof(gint));
+    info.graphs = g_array_new(FALSE, FALSE, sizeof(gint));
+    info.spectra = g_array_new(FALSE, FALSE, sizeof(gint));
+
+    gwy_container_foreach(data, NULL, &validate_item_pass1, &info);
+
+    /* Note this renders info.errors unusable */
+    errors = g_slist_reverse(info.errors);
+
+    g_array_free(info.channels, TRUE);
+    g_array_free(info.graphs, TRUE);
+    g_array_free(info.spectra, TRUE);
 
     return errors;
 }
