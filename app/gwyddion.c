@@ -29,6 +29,7 @@
 #include <libgwyddion/gwydebugobjects.h>
 #include <libprocess/gwygrainvalue.h>
 #include <libgwymodule/gwymoduleloader.h>
+#include <libgwymodule/gwymodule-file.h>
 #include <libgwydgets/gwydgets.h>
 #include <app/gwyapp.h>
 #include "gwyappinternal.h"
@@ -57,6 +58,8 @@ static void logger       (const gchar *log_domain,
 #endif  /* LOG_TO_FILE */
 
 static void       open_command_line_files  (gint n,
+                                            gchar **args);
+static gint       check_command_line_files (gint n,
                                             gchar **args);
 static void       print_help               (void);
 static void       process_preinit_options  (int *argc,
@@ -110,7 +113,7 @@ main(int argc, char *argv[])
     gwy_debug("Text settings file is `%s'. Do we have it: %s",
               settings_file, has_settings ? "TRUE" : "FALSE");
 
-    gwy_app_splash_start(!app_options.no_splash);
+    gwy_app_splash_start(!app_options.no_splash && !app_options.check);
     debug_time(timer, "create splash");
 
     gwy_app_splash_set_message(_("Loading document history"));
@@ -143,6 +146,18 @@ main(int argc, char *argv[])
     module_dirs = gwy_app_settings_get_module_dirs();
     gwy_module_register_modules((const gchar**)module_dirs);
     debug_time(timer, "register modules");
+
+    if (app_options.check) {
+        gint nfailures;
+
+        gwy_app_splash_finish();
+        debug_time(timer, "destroy splash");
+
+        nfailures = check_command_line_files(argc - 1, argv + 1);
+        debug_time(timer, "check files");
+
+        return !nfailures;
+    }
 
     gwy_app_splash_set_message(_("Initializing GUI"));
     toolbox = gwy_app_toolbox_create();
@@ -430,6 +445,54 @@ open_command_line_files(gint n, gchar **args)
         g_free(filename);
     }
     g_free(cwd);
+}
+
+static gint
+check_command_line_files(gint n,
+                         gchar **args)
+{
+    gint i, nfailures;
+
+    /* FIXME: cwd is in GLib encoding. And args? */
+    for (i = nfailures = 0; i < n; i++) {
+        const gchar *filename = args[i];
+        const gchar *name = NULL;
+        GwyContainer *data;
+        GError *error = NULL;
+        GSList *failures, *f;
+
+        if (!(data = gwy_file_load(filename, GWY_RUN_NONINTERACTIVE, &error))) {
+            if (!error)
+                g_printerr("%s: Loader failed to report error properly!\n",
+                           filename);
+            else {
+                g_printerr("%s: %s\n", filename, error->message);
+                g_clear_error(&error);
+            }
+            continue;
+        }
+
+        failures = gwy_data_validate(data, GWY_DATA_VALIDATE_ALL);
+        gwy_file_get_data_info(data, &name, NULL);
+        g_assert(name);
+        for (f = failures; f; f = g_slist_next(f)) {
+            GwyDataValidationFailure *failure;
+
+            failure = (GwyDataValidationFailure*)f->data;
+            g_printerr("%s: %s, %s: %s",
+                       filename, name,
+                       g_quark_to_string(failure->key),
+                       gwy_data_error_desrcibe(failure->error));
+            if (failure->details)
+                g_printerr(" (%s)", failure->details);
+            g_printerr("\n");
+
+            nfailures++;
+        }
+        gwy_data_validation_failure_list_free(failures);
+    }
+
+    return nfailures;
 }
 
 /**

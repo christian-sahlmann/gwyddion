@@ -36,7 +36,10 @@ typedef enum {
 } GwyDataError;
 
 typedef enum {
-    GWY_DATA_VALIDATE_REF_COUNT = 1 << 0,
+    GWY_DATA_VALIDATE_CORRECT   = 1 << 0,
+    GWY_DATA_VALIDATE_UNKNOWN   = 1 << 1,
+    GWY_DATA_VALIDATE_REF_COUNT = 1 << 2,
+    GWY_DATA_VALIDATE_ALL       = 0x0006,
 } GwyDataValidateFlags;
 
 typedef struct {
