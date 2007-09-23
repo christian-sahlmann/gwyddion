@@ -90,7 +90,8 @@ gwy_app_about(void)
     gtk_misc_set_alignment(GTK_MISC(widget), 0.0, 0.5);
     gtk_misc_set_padding(GTK_MISC(widget), 2, 6);
     gtk_box_pack_start(GTK_BOX(vbox), widget, FALSE, FALSE, 0);
-    s = g_strdup_printf("<i>%s</i>", PACKAGE_URL);
+    s = g_strdup_printf(_("<i>%s</i>\nReport bugs to: <i>%s</i>"),
+                        PACKAGE_URL, PACKAGE_BUGREPORT);
     gtk_label_set_markup(GTK_LABEL(widget), s);
     g_free(s);
     gtk_label_set_selectable(GTK_LABEL(widget), TRUE);
