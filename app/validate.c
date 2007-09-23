@@ -176,8 +176,10 @@ validate_item_pass1(gpointer hash_key,
 
     id = _gwy_app_analyse_data_key(strkey, &type, &len);
     if (type == KEY_IS_NONE) {
-        *errors = g_slist_prepend(*errors,
-                                  FAIL(GWY_DATA_ERROR_KEY_UNKNOWN, key, NULL));
+        if (info->flags & GWY_DATA_VALIDATE_UNKNOWN)
+            *errors = g_slist_prepend(*errors,
+                                      FAIL(GWY_DATA_ERROR_KEY_UNKNOWN,
+                                           key, NULL));
         return;
     }
 
@@ -320,7 +322,8 @@ validate_item_pass2(gpointer hash_key,
         case KEY_IS_3D_LABEL:
         if (!in_array(info->channels, id))
             *errors = g_slist_prepend(*errors,
-                                      FAIL(GWY_DATA_ERROR_STRAY_SUBDATA, key,
+                                      FAIL(GWY_DATA_ERROR_STRAY_SECONDARY_DATA,
+                                           key,
                                            _("no channel %d exists for %s"),
                                            id, strkey));
         break;
@@ -328,7 +331,8 @@ validate_item_pass2(gpointer hash_key,
         case KEY_IS_GRAPH_VISIBLE:
         if (!in_array(info->graphs, id))
             *errors = g_slist_prepend(*errors,
-                                      FAIL(GWY_DATA_ERROR_STRAY_SUBDATA, key,
+                                      FAIL(GWY_DATA_ERROR_STRAY_SECONDARY_DATA,
+                                           key,
                                            _("no graph %d exists for %s"),
                                            id, strkey));
         break;
@@ -337,7 +341,8 @@ validate_item_pass2(gpointer hash_key,
         check_type(gvalue, G_TYPE_BOOLEAN, key, errors);
         if (!in_array(info->spectra, id))
             *errors = g_slist_prepend(*errors,
-                                      FAIL(GWY_DATA_ERROR_STRAY_SUBDATA, key,
+                                      FAIL(GWY_DATA_ERROR_STRAY_SECONDARY_DATA,
+                                           key,
                                            _("no spectra %d exists for %s"),
                                            id, strkey));
         break;
