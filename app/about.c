@@ -80,7 +80,8 @@ gwy_app_about(void)
     gtk_box_pack_start(GTK_BOX(vbox), widget, FALSE, FALSE, 0);
     s2 = g_strdup_printf("<big><b>%s</b> %s</big>\n",
                          g_get_application_name(), GWY_VERSION_STRING);
-    s = g_strconcat(s2, _("An SPM data analysis framework."), NULL);
+    s = g_strconcat(s2, _("An SPM data visualization and analysis tool."),
+                    NULL);
     gtk_label_set_markup(GTK_LABEL(widget), s);
     g_free(s);
     g_free(s2);
