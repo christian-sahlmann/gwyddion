@@ -30,6 +30,9 @@
 typedef struct {
     GwyDataValidateFlags flags;
     GSList *errors;
+    /* For reference count check */
+    GSList *stack;
+    /* For stray secondary data check */
     GArray *channels;
     GArray *graphs;
     GArray *spectra;
@@ -352,6 +355,102 @@ validate_item_pass2(gpointer hash_key,
     }
 }
 
+static gboolean
+check_ref_count(GObject *object,
+                GQuark key,
+                GSList **stack,
+                GSList **errors)
+{
+    GSList *l;
+    GString *str;
+
+    if (!object || object->ref_count == 1)
+        return TRUE;
+
+    str = g_string_new(NULL);
+    g_string_printf(str, _("ref_count is %d for %s"),
+                    object->ref_count, G_OBJECT_TYPE_NAME(object));
+
+    for (l = *stack; l; l = g_slist_next(l)) {
+        g_string_append(str, " <- ");
+        g_string_append(str, (const gchar*)(l->data));
+    }
+    *errors = g_slist_prepend(*errors,
+                              FAIL(GWY_DATA_ERROR_REF_COUNT, key,
+                                   "%s", str->str));
+    g_string_free(str, TRUE);
+
+    return FALSE;
+}
+
+#define PUSH(s, x) *(s) = g_slist_prepend(*(s), (gpointer)(x))
+#define POP(s) *(s) = g_slist_delete_link(*(s), *(s))
+#define CRFC(field, name) \
+    if ((child = (GObject*)field)) { \
+        PUSH(stack, name); \
+        check_ref_count(child, key, stack, errors); \
+        POP(stack); \
+    }
+
+static void
+validate_item_pass3(gpointer hash_key,
+                    gpointer hash_value,
+                    gpointer user_data)
+{
+    GValue *gvalue = (GValue*)hash_value;
+    GQuark key = GPOINTER_TO_UINT(hash_key);
+    GwyDataValidationInfo *info = (GwyDataValidationInfo*)user_data;
+    GSList **errors, **stack;
+    GObject *object, *child;
+    const gchar *typename;
+    gint n, i;
+
+    if (!G_VALUE_HOLDS_OBJECT(gvalue))
+        return;
+
+    errors = &info->errors;
+    stack = &info->stack;
+    object = g_value_get_object(gvalue);
+    typename = G_OBJECT_TYPE_NAME(object);
+
+    check_ref_count(object, key, stack, errors);
+
+    PUSH(stack, typename);
+    if (GWY_IS_CONTAINER(object)) {
+        /* TODO
+        gwy_file_load_check_container_refs((GwyContainer*)object, stack);
+        */
+    }
+    else if (GWY_IS_DATA_FIELD(object)) {
+        GwyDataField *data_field = (GwyDataField*)object;
+
+        CRFC(data_field->si_unit_xy, "si-unit-xy")
+        CRFC(data_field->si_unit_z, "si-unit-z")
+    }
+    else if (GWY_IS_DATA_LINE(object)) {
+        GwyDataLine *data_line = (GwyDataLine*)object;
+
+        CRFC(data_line->si_unit_x, "si-unit-x")
+        CRFC(data_line->si_unit_y, "si-unit-y")
+    }
+    else if (GWY_IS_GRAPH_MODEL(object)) {
+        GwyGraphModel *graph_model = (GwyGraphModel*)object;
+
+        CRFC(graph_model->x_unit, "si-unit-x")
+        CRFC(graph_model->y_unit, "si-unit-y")
+
+        PUSH(stack, "curve");
+        n = gwy_graph_model_get_n_curves(graph_model);
+        for (i = 0; i < n; i++) {
+            child = (GObject*)gwy_graph_model_get_curve(graph_model, i);
+            check_ref_count(child, key, stack, errors);
+        }
+        POP(stack);
+    }
+    /* TODO: Spectra */
+    POP(stack);
+}
+
 static void
 gwy_data_correct(GwyContainer *data,
                  GSList *failures)
@@ -361,8 +460,11 @@ gwy_data_correct(GwyContainer *data,
 
     for (l = failures; l; l = g_slist_next(l)) {
         failure = (GwyDataValidationFailure*)l->data;
-        /* All failures that we detect at this moment are correctable by
-         * removal of the offending data. */
+        /* Cannot handle this properly */
+        if (failure->error == GWY_DATA_ERROR_REF_COUNT)
+            continue;
+
+        /* Everything else can be fixed by removal of the offending items. */
         gwy_container_remove(data, failure->key);
     }
 }
@@ -382,6 +484,7 @@ gwy_data_validate(GwyContainer *data,
 
     gwy_container_foreach(data, NULL, &validate_item_pass1, &info);
     gwy_container_foreach(data, NULL, &validate_item_pass2, &info);
+    gwy_container_foreach(data, NULL, &validate_item_pass3, &info);
 
     if (flags & GWY_DATA_VALIDATE_CORRECT)
         gwy_data_correct(data, info.errors);
@@ -407,6 +510,7 @@ gwy_data_error_desrcibe(GwyDataError error)
         N_("Wrong data item id"),
         N_("Unexpected data item type"),
         N_("String value is not valid UTF-8"),
+        N_("Object has several references"),
         N_("Secondary data item has no primary data"),
     };
 
