@@ -23,5 +23,6 @@
   <xi:include href="xml/gwyplaintool.xml"/>
   <xi:include href="xml/gwymoduleutils.xml"/>
   <xi:include href="xml/gwymoduleutils-file.xml"/>
+  <xi:include href="xml/validate.xml"/>
   <xi:include href="xml/wait.xml"/>
 </book>
