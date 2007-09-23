@@ -484,7 +484,8 @@ gwy_data_validate(GwyContainer *data,
 
     gwy_container_foreach(data, NULL, &validate_item_pass1, &info);
     gwy_container_foreach(data, NULL, &validate_item_pass2, &info);
-    gwy_container_foreach(data, NULL, &validate_item_pass3, &info);
+    if (flags & GWY_DATA_VALIDATE_REF_COUNT)
+        gwy_container_foreach(data, NULL, &validate_item_pass3, &info);
 
     if (flags & GWY_DATA_VALIDATE_CORRECT)
         gwy_data_correct(data, info.errors);
@@ -521,5 +522,11 @@ gwy_data_error_desrcibe(GwyDataError error)
 }
 
 /************************** Documentation ****************************/
+
+/**
+ * SECTION:validate
+ * @title: Validate
+ * @short_description: Check data sanity and consistency
+ **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
