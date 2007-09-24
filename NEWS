@@ -1,4 +1,4 @@
-2.8.20070917
+2.8.20070924
 
 2.9 (2000-00-00)
 Application:
@@ -8,12 +8,20 @@ Application:
 Libraries:
 - libgwydgets: Gwy3DView uses PangoCairo instead of Pango FT2 for label
   rendering now.
+- libgwydgets: Zoom of negative parts of graphs (broken in 2.8) works again.
+- libgwydgets: Graph distance measuring dialog uses the correct precision
+  for x-distances (instead of y-precision).
 
 Modules:
 - Shimadzu (new): Shimadzu SPM file version 2 file import.
 - Nanonis: Version 2 files claiming to be MSBFIRST are imported.
 - Line layer: Crashes on Win32 while drawing line numbers were fixed, it
   uses PangoCairo instead of Pango FT2 now.
+
+Other:
+- Compilation failure with GLib older than 2.10 (introduced in 2.8) was
+  fixed.
+- Compilation failure with FFTW3 in a non-standard location was fixed.
 
 
 2.8 (2007-08-31)
