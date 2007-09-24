@@ -1491,19 +1491,22 @@ gwy_graph_model_get_ranges(GwyGraphModel *gmodel,
         }
     }
 
-    if (gmodel->x_min_set && gmodel->x_min > 0.0) {
+    if (gmodel->x_min_set && (!x_logscale || gmodel->x_min > 0.0)) {
         xmin = gmodel->x_min;
         ok |= XMIN;
     }
-    if (gmodel->x_max_set && gmodel->x_max > 0.0) {
+    if (gmodel->x_max_set && (!x_logscale || gmodel->x_max > 0.0)) {
         xmax = gmodel->x_max;
         ok |= XMAX;
     }
-    if (gmodel->y_min_set && fabs(gmodel->y_min) > 0.0) {
-        ymin = fabs(gmodel->y_min);
+    if (gmodel->y_min_set && (!y_logscale || fabs(gmodel->y_min) > 0.0)) {
+        if (y_logscale)
+            ymin = fabs(gmodel->y_min);
+        else
+            ymin = gmodel->y_min;
         ok |= YMIN;
     }
-    if (gmodel->y_max_set && gmodel->y_max > 0.0) {
+    if (gmodel->y_max_set && (!y_logscale || gmodel->y_max > 0.0)) {
         ymax = gmodel->y_max;
         ok |= YMIN;
     }
