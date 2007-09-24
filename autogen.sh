@@ -134,7 +134,7 @@ sh utils/update-potfiles.sh
   && eval $QUIET $AUTOCONF) \
   || {
     echo "ERROR: Re-generating failed."
-    echo"        See above errors and complain to $PROJECT maintainer."
+    echo "       See above errors and complain to $PROJECT maintainer."
     exit 1
   }
 
