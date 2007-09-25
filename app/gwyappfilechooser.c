@@ -29,6 +29,7 @@
 #include <app/settings.h>
 #include <app/filelist.h>
 #include <app/data-browser.h>
+#include <app/validate.h>
 #include "gwyappinternal.h"
 
 enum {
@@ -895,6 +896,9 @@ gwy_app_file_chooser_do_full_preview(gpointer user_data)
 
         return FALSE;
     }
+
+    gwy_data_validate(chooser->preview_data,
+                      GWY_DATA_VALIDATE_CORRECT | GWY_DATA_VALIDATE_NO_REPORT);
 
     memset(&filedata, 0, sizeof(FileInfoData));
     gwy_container_foreach(chooser->preview_data, NULL,
