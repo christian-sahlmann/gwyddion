@@ -68,6 +68,14 @@ gwy_data_validation_failure_free(GwyDataValidationFailure *failure)
     g_free(failure);
 }
 
+/**
+ * gwy_data_validation_failure_list_free:
+ * @list: Failure list returned by gwy_data_validate().
+ *
+ * Frees a data validation failure list.
+ *
+ * Since: 2.9
+ **/
 void
 gwy_data_validation_failure_list_free(GSList *list)
 {
@@ -136,7 +144,7 @@ check_type(GValue *gvalue,
     /* Expecting object but found a simple type */
     if (G_UNLIKELY(!G_VALUE_HOLDS(gvalue, G_TYPE_OBJECT))) {
         *errors = g_slist_prepend(*errors,
-                                  FAIL(GWY_DATA_ERROR_UNEXPECTED_TYPE, key,
+                                  FAIL(GWY_DATA_ERROR_ITEM_TYPE, key,
                                        _("%s instead of %s"),
                                        g_type_name(G_VALUE_TYPE(gvalue)),
                                        g_type_name(type)));
@@ -149,7 +157,7 @@ check_type(GValue *gvalue,
         return TRUE;
 
     *errors = g_slist_prepend(*errors,
-                              FAIL(GWY_DATA_ERROR_UNEXPECTED_TYPE, key,
+                              FAIL(GWY_DATA_ERROR_ITEM_TYPE, key,
                                    _("%s instead of %s"),
                                    g_type_name(G_VALUE_TYPE(gvalue)),
                                    g_type_name(type)));
@@ -484,6 +492,31 @@ gwy_data_correct(GwyContainer *data,
     }
 }
 
+/**
+ * gwy_data_validate:
+ * @data: Data container.  It should not be managed by the data browser (yet)
+ *        if flags contain %GWY_DATA_VALIDATE_CORRECT (because things can
+ *        in principle break during the correction) or
+ *        %GWY_DATA_VALIDATE_REF_COUNT (because the application took some
+ *        references).
+ * @flags: Validation flags.  Some influence what is checked, some determine
+ *         what to do when problems are found.
+ * @returns: List of errors found, free
+ *           with gwy_data_validation_failure_list_free().
+ *           The list is independent on whether %GWY_DATA_VALIDATE_CORRECT is
+ *           given in flags, even though the offending items may be no longer
+ *           exist in the container after correction.  If
+ *           %GWY_DATA_VALIDATE_NO_REPORT is present in flags, %NULL is always
+ *           returned.
+ *
+ * Checks the contents of a data file.
+ *
+ * If %GWY_DATA_VALIDATE_CORRECT is given in @flags, correctable problems are
+ * corrected.  At present correctable problems are those that can be fixed
+ * by removal of the offending data.
+ *
+ * Since: 2.9
+ **/
 GSList*
 gwy_data_validate(GwyContainer *data,
                   GwyDataValidateFlags flags)
@@ -527,6 +560,16 @@ gwy_data_validate(GwyContainer *data,
     return errors;
 }
 
+/**
+ * gwy_data_error_desrcibe:
+ * @error: Data validation error type.
+ * @returns: Error description as an untranslated string owned by the
+ *           library.
+ *
+ * Describes a data validation error type.
+ *
+ * Since: 2.9
+ **/
 const gchar*
 gwy_data_error_desrcibe(GwyDataError error)
 {
@@ -554,6 +597,74 @@ gwy_data_error_desrcibe(GwyDataError error)
  * SECTION:validate
  * @title: Validate
  * @short_description: Check data sanity and consistency
+ *
+ * A #GwyContainer can be used to represent all sorts of data.  However,
+ * Gwyddion, the application, follows certain conventions in data organization.
+ * Function gwy_data_validate() checks whether the data actually follows them.
+ * This includes but is not limited to representability of keys in ASCII,
+ * conformance to the key naming convention, types of objects and other items
+ * corresponding to expectation, string values being valid UTF-8 and no stray
+ * secondary data.
+ **/
+
+/**
+ * GwyDataValidationFailure:
+ * @error: Error type.
+ * @key: Key of the problematic data item.
+ * @details: Error details, may be %NULL for some types of @error.  This is
+ *           a dynamically allocated string owned by the caller, however, he
+ *           normally frees the complete errors lists with
+ *           gwy_data_validation_failure_list_free() which frees these fields
+ *           too.
+ *
+ * Information about one data validate error.
+ *
+ * Since: 2.9
+ **/
+
+/**
+ * GwyDataError:
+ * @GWY_DATA_ERROR_KEY_FORMAT: Key format is invalid (e.g. does not start
+ *                             with %GWY_CONTAINER_PATHSEP).
+ * @GWY_DATA_ERROR_KEY_CHARACTERS: Key contains unprintable characters or
+ *                                 characters not representable in ASCII.
+ * @GWY_DATA_ERROR_KEY_UNKNOWN: Key does not correspond to any data item known
+ *                              to this version of Gwyddion.
+ * @GWY_DATA_ERROR_KEY_ID: Key corresponds to a data item with bogus id number.
+ * @GWY_DATA_ERROR_ITEM_TYPE: Wrong item type (for instance an integer at key
+ *                            <literal>"/0/data"</literal>).
+ * @GWY_DATA_ERROR_NON_UTF8_STRING: String value is not valid UTF-8.
+ * @GWY_DATA_ERROR_REF_COUNT: Reference count is higher than 1.
+ * @GWY_DATA_ERROR_STRAY_SECONDARY_DATA: Secondary data item (e.g. mask,
+ *                                       selection or visibility) without a
+ *                                       corresponding valid primary data item.
+ *
+ * Type of data validation errors.
+ *
+ * Since: 2.9
+ **/
+
+/**
+ * GwyDataValidateFlags:
+ * @GWY_DATA_VALIDATE_UNKNOWN: Report all unknown keys as
+ *                             %GWY_DATA_ERROR_KEY_UNKNOWN errors.  Note while
+ *                             a data item unknown to the current version of
+ *                             Gwyddion can come from a newer version therefore
+ *                             it can be in certain sense valid.
+ * @GWY_DATA_VALIDATE_REF_COUNT: Report all object items with reference count
+ *                               higher than 1 as %GWY_DATA_ERROR_REF_COUNT
+ *                               errors.  Obviously this makes sense only with
+ *                               `fresh' data containers.
+ * @GWY_DATA_VALIDATE_ALL: All above flags combined.
+ * @GWY_DATA_VALIDATE_CORRECT: Attempt to correct problems.
+ * @GWY_DATA_VALIDATE_NO_REPORT: Do not report problems.
+ *
+ * Flags controlling gwy_data_validate() behaviour.
+ *
+ * Note passing @GWY_DATA_VALIDATE_NO_REPORT is allowed only if
+ * @GWY_DATA_VALIDATE_CORRECT is present too.
+ *
+ * Since: 2.9
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
