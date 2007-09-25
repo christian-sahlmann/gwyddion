@@ -491,6 +491,13 @@ gwy_data_validate(GwyContainer *data,
     GwyDataValidationInfo info;
     GSList *errors;
 
+    if ((flags & GWY_DATA_VALIDATE_NO_REPORT)
+        && !(flags & GWY_DATA_VALIDATE_CORRECT)) {
+        g_warning("Neither report no correction asked for, "
+                  "validation is useless.");
+        return NULL;
+    }
+
     memset(&info, 0, sizeof(GwyDataValidationInfo));
     info.flags = flags;
     info.channels = g_array_new(FALSE, FALSE, sizeof(gint));
@@ -511,6 +518,11 @@ gwy_data_validate(GwyContainer *data,
     g_array_free(info.channels, TRUE);
     g_array_free(info.graphs, TRUE);
     g_array_free(info.spectra, TRUE);
+
+    if (flags & GWY_DATA_VALIDATE_NO_REPORT) {
+        gwy_data_validation_failure_list_free(errors);
+        errors = NULL;
+    }
 
     return errors;
 }
