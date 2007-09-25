@@ -390,7 +390,9 @@ check_ref_count(GObject *object,
         PUSH(stack, name); \
         check_ref_count(child, key, stack, errors); \
         POP(stack); \
-    }
+    } \
+    else \
+        while (FALSE)
 
 static void
 validate_item_pass3(gpointer hash_key,
@@ -417,27 +419,26 @@ validate_item_pass3(gpointer hash_key,
 
     PUSH(stack, typename);
     if (GWY_IS_CONTAINER(object)) {
-        /* TODO
-        gwy_file_load_check_container_refs((GwyContainer*)object, stack);
-        */
+        gwy_container_foreach((GwyContainer*)object, NULL,
+                              &validate_item_pass3, info);
     }
     else if (GWY_IS_DATA_FIELD(object)) {
         GwyDataField *data_field = (GwyDataField*)object;
 
-        CRFC(data_field->si_unit_xy, "si-unit-xy")
-        CRFC(data_field->si_unit_z, "si-unit-z")
+        CRFC(data_field->si_unit_xy, "si-unit-xy");
+        CRFC(data_field->si_unit_z, "si-unit-z");
     }
     else if (GWY_IS_DATA_LINE(object)) {
         GwyDataLine *data_line = (GwyDataLine*)object;
 
-        CRFC(data_line->si_unit_x, "si-unit-x")
-        CRFC(data_line->si_unit_y, "si-unit-y")
+        CRFC(data_line->si_unit_x, "si-unit-x");
+        CRFC(data_line->si_unit_y, "si-unit-y");
     }
     else if (GWY_IS_GRAPH_MODEL(object)) {
         GwyGraphModel *graph_model = (GwyGraphModel*)object;
 
-        CRFC(graph_model->x_unit, "si-unit-x")
-        CRFC(graph_model->y_unit, "si-unit-y")
+        CRFC(graph_model->x_unit, "si-unit-x");
+        CRFC(graph_model->y_unit, "si-unit-y");
 
         PUSH(stack, "curve");
         n = gwy_graph_model_get_n_curves(graph_model);
@@ -447,7 +448,21 @@ validate_item_pass3(gpointer hash_key,
         }
         POP(stack);
     }
-    /* TODO: Spectra */
+    else if (GWY_IS_SPECTRA(object)) {
+        GwySpectra *spectra = (GwySpectra*)object;
+
+        CRFC(spectra->si_unit_xy, "si-unit-xy");
+
+        PUSH(stack, "spectrum");
+        n = gwy_spectra_get_n_spectra(spectra);
+        for (i = 0; i < n; i++) {
+            GwyDataLine *data_line = gwy_spectra_get_spectrum(spectra, i);
+
+            CRFC(data_line->si_unit_x, "si-unit-x");
+            CRFC(data_line->si_unit_y, "si-unit-y");
+        }
+        POP(stack);
+    }
     POP(stack);
 }
 
