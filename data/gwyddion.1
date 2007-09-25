@@ -1,4 +1,4 @@
-.TH "gwyddion" "1" "Aug 2006" " " " "
+.TH "gwyddion" "1" "Sep 2007" " " " "
 .\" @(#) $Id$
 .SH NAME
 .PP
@@ -49,6 +49,11 @@ Gwyddion on the display.  Fails if none is running.
 Succeeds if an instance of Gwyddion is already running on the display and
 prints its window id.  Fails if none is running.
 .TP
+\fB--check\fR
+Instead of running the user interface and opening \fIFILE\fRs, loads the
+files, performs a sanity check on them (printing errors to standard error
+output) and terminates.
+.TP
 \fB--debug-objects\fR
 Prints list of objects created during run time, with creation and
 desctruction times or reference counts on program exit.  Useful only for
@@ -95,6 +100,15 @@ User directories with various resources (OpenGL materials, color gradients, ...)
 .TP
 \fB$GWYDDION_DATADIR/gwyddion/glmaterials\fR, ...
 The same for system-wide resources.
+.
+.TP
+.B ~/.gwyddion/pixmaps
+Directory to place user icons to.  This is mainly useful for installation of
+modules to home.
+.
+.TP
+.B $GWYDDION_DATADIR/gwyddion/pixmaps
+The same for system-wide pixmaps.
 .
 .TP
 .B ~/.gwyddion/modules
