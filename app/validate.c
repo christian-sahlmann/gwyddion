@@ -28,6 +28,13 @@
 #define FAIL gwy_data_validation_failure_new
 
 typedef struct {
+    GwyDataError error;
+    GQuark key;
+    gchar *details;
+    gpointer object;
+} _GwyDataValidationFailure;
+
+typedef struct {
     GwyDataValidateFlags flags;
     GSList *errors;
     /* For reference count check */
@@ -44,9 +51,9 @@ gwy_data_validation_failure_new(GwyDataError type,
                                 const gchar *fmt,
                                 ...)
 {
-    GwyDataValidationFailure *failure;
+    _GwyDataValidationFailure *failure;
 
-    failure = g_new0(GwyDataValidationFailure, 1);
+    failure = g_new0(_GwyDataValidationFailure, 1);
     failure->error = type;
     failure->key = key;
 
@@ -58,12 +65,13 @@ gwy_data_validation_failure_new(GwyDataError type,
         va_end(ap);
     }
 
-    return failure;
+    return (GwyDataValidationFailure*)failure;
 }
 
 static void
-gwy_data_validation_failure_free(GwyDataValidationFailure *failure)
+gwy_data_validation_failure_free(_GwyDataValidationFailure *failure)
 {
+    gwy_object_unref(failure->object);
     g_free(failure->details);
     g_free(failure);
 }
@@ -618,6 +626,8 @@ gwy_data_error_desrcibe(GwyDataError error)
  *           too.
  *
  * Information about one data validate error.
+ *
+ * Note the structure may contain more private fields.
  *
  * Since: 2.9
  **/
