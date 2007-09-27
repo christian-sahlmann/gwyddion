@@ -371,44 +371,57 @@ validate_item_pass2(gpointer hash_key,
     }
 }
 
+static gchar*
+format_stack(GObject *object,
+             GSList *stack)
+{
+    GString *str;
+    gchar *retval;
+
+    str = g_string_new(NULL);
+    g_string_append(str, G_OBJECT_TYPE_NAME(object));
+    while (stack) {
+        g_string_append(str, " <- ");
+        g_string_append(str, (const gchar*)(stack->data));
+        stack = stack->next;
+    }
+    retval = str->str;
+    g_string_free(str, FALSE);
+
+    return retval;
+}
+
+#define PUSH(s, x) s = g_slist_prepend(s, (gpointer)(x))
+#define POP(s) s = g_slist_delete_link(s, s)
+#define CRFC(field, name) \
+    if ((child = (GObject*)field)) { \
+        PUSH(info->stack, name); \
+        check_ref_count(child, key, info->stack, errors); \
+        POP(info->stack); \
+    } \
+    else \
+        while (FALSE)
+
 static gboolean
 check_ref_count(GObject *object,
                 GQuark key,
-                GSList **stack,
+                GSList *stack,
                 GSList **errors)
 {
-    GSList *l;
-    GString *str;
+    gchar *s;
 
     if (!object || object->ref_count == 1)
         return TRUE;
 
-    str = g_string_new(NULL);
-    g_string_printf(str, _("ref_count is %d for %s"),
-                    object->ref_count, G_OBJECT_TYPE_NAME(object));
-
-    for (l = *stack; l; l = g_slist_next(l)) {
-        g_string_append(str, " <- ");
-        g_string_append(str, (const gchar*)(l->data));
-    }
+    s = format_stack(object, stack);
     *errors = g_slist_prepend(*errors,
                               FAIL(GWY_DATA_ERROR_REF_COUNT, key,
-                                   "%s", str->str));
-    g_string_free(str, TRUE);
+                                   _("ref_count is %d for %s"),
+                                   object->ref_count, s));
+    g_free(s);
 
     return FALSE;
 }
-
-#define PUSH(s, x) *(s) = g_slist_prepend(*(s), (gpointer)(x))
-#define POP(s) *(s) = g_slist_delete_link(*(s), *(s))
-#define CRFC(field, name) \
-    if ((child = (GObject*)field)) { \
-        PUSH(stack, name); \
-        check_ref_count(child, key, stack, errors); \
-        POP(stack); \
-    } \
-    else \
-        while (FALSE)
 
 static void
 validate_item_pass3(gpointer hash_key,
@@ -418,7 +431,7 @@ validate_item_pass3(gpointer hash_key,
     GValue *gvalue = (GValue*)hash_value;
     GQuark key = GPOINTER_TO_UINT(hash_key);
     GwyDataValidationInfo *info = (GwyDataValidationInfo*)user_data;
-    GSList **errors, **stack;
+    GSList **errors;
     GObject *object, *child;
     const gchar *typename;
     gint n, i;
@@ -427,13 +440,12 @@ validate_item_pass3(gpointer hash_key,
         return;
 
     errors = &info->errors;
-    stack = &info->stack;
     object = g_value_get_object(gvalue);
     typename = G_OBJECT_TYPE_NAME(object);
 
-    check_ref_count(object, key, stack, errors);
+    check_ref_count(object, key, info->stack, errors);
 
-    PUSH(stack, typename);
+    PUSH(info->stack, typename);
     if (GWY_IS_CONTAINER(object)) {
         gwy_container_foreach((GwyContainer*)object, NULL,
                               &validate_item_pass3, info);
@@ -456,20 +468,20 @@ validate_item_pass3(gpointer hash_key,
         CRFC(graph_model->x_unit, "si-unit-x");
         CRFC(graph_model->y_unit, "si-unit-y");
 
-        PUSH(stack, "curve");
+        PUSH(info->stack, "curve");
         n = gwy_graph_model_get_n_curves(graph_model);
         for (i = 0; i < n; i++) {
             child = (GObject*)gwy_graph_model_get_curve(graph_model, i);
-            check_ref_count(child, key, stack, errors);
+            check_ref_count(child, key, info->stack, errors);
         }
-        POP(stack);
+        POP(info->stack);
     }
     else if (GWY_IS_SPECTRA(object)) {
         GwySpectra *spectra = (GwySpectra*)object;
 
         CRFC(spectra->si_unit_xy, "si-unit-xy");
 
-        PUSH(stack, "spectrum");
+        PUSH(info->stack, "spectrum");
         n = gwy_spectra_get_n_spectra(spectra);
         for (i = 0; i < n; i++) {
             GwyDataLine *data_line = gwy_spectra_get_spectrum(spectra, i);
@@ -477,9 +489,9 @@ validate_item_pass3(gpointer hash_key,
             CRFC(data_line->si_unit_x, "si-unit-x");
             CRFC(data_line->si_unit_y, "si-unit-y");
         }
-        POP(stack);
+        POP(info->stack);
     }
-    POP(stack);
+    POP(info->stack);
 }
 
 static void
