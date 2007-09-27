@@ -111,7 +111,7 @@ check_ascii_key(const guchar *strkey,
     const guchar *end;
 
     for (end = strkey; *end; end++) {
-        if (G_UNLIKELY(*end >= 127U || !g_ascii_isprint(*end)))
+        if (G_UNLIKELY(*end >= 127U || !g_ascii_isgraph(*end)))
             goto fail;
     }
     return TRUE;
