@@ -100,7 +100,6 @@ gwy_data_field_finalize(GObject *object)
 {
     GwyDataField *data_field = (GwyDataField*)object;
 
-    gwy_debug("%p is dying!", data_field);
     gwy_object_unref(data_field->si_unit_xy);
     gwy_object_unref(data_field->si_unit_z);
     g_free(data_field->data);
@@ -352,6 +351,21 @@ gwy_data_field_deserialize(const guchar *buffer,
         gwy_object_unref(si_unit_xy);
         gwy_object_unref(si_unit_z);
         return NULL;
+    }
+
+    if (xreal <= 0.0) {
+        g_warning("Non-positive xreal (%g)", xreal);
+        if (xreal)
+            xreal = fabs(xreal);
+        else
+            xreal = 1.0;  /* Does not matter, just make it sane. */
+    }
+    if (yreal <= 0.0) {
+        g_warning("Non-positive xreal (%g)", xreal);
+        if (yreal)
+            yreal = fabs(yreal);
+        else
+            yreal = 1.0;  /* Does not matter, just make it sane. */
     }
 
     /* don't allocate large amount of memory just to immediately free it */
