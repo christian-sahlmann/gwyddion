@@ -17,6 +17,7 @@ libgwyddion2include_HEADERS = \
 	gwyinventory.h \
 	gwymacros.h \
 	gwymath.h \
+	gwymathfallback.h \
 	gwymd5.h \
 	gwynlfit.h \
 	gwynlfitpreset.h \

@@ -25,6 +25,11 @@
 #include <libgwyddion/gwymacros.h>
 #include <math.h>
 
+/* TODO: Remove in 3.0.  This is kept included only because we have
+ * traditionally defined unprefix cbrt() et al. if the platform did not
+ * provide it. */
+#include <libgwyddion/gwymathfallback.h>
+
 G_BEGIN_DECLS
 
 #ifndef GWY_DISABLE_DEPRECATED
@@ -82,19 +87,6 @@ gdouble  gwy_math_median               (gsize n,
                                         gdouble *array);
 void     gwy_math_sort                 (gsize n,
                                         gdouble *array);
-
-/* Replacements for missing math functions.  Do NOT use directly. */
-static inline double
-_gwy_math_hypot(double x, double y) { return sqrt(x*x + y*y); }
-
-static inline double
-_gwy_math_acosh(double x) { return log(x + sqrt(x*x - 1.0)); }
-
-static inline double
-_gwy_math_asinh(double x) { return log(x + sqrt(x*x + 1.0)); }
-
-static inline double
-_gwy_math_atanh(double x) { return log((1.0 + x)/(1.0 - x)); }
 
 G_END_DECLS
 

@@ -2,7 +2,7 @@
 dnl Process this file with autoconf to produce a configure script.
 m4_define([gwy_version_major],[2])
 m4_define([gwy_version_minor],[8])
-m4_define([gwy_version_string],[gwy_version_major.gwy_version_minor.20070907])
+m4_define([gwy_version_string],[gwy_version_major.gwy_version_minor.20070929])
 AC_INIT([Gwyddion], [gwy_version_string], [klapetek@gwyddion.net])
 # Use -release for unstable version libs instead of -version-info, because
 # we *do* break compatibility each version
@@ -300,10 +300,7 @@ test "x$x_libraries" = "x" || LDFLAGS="$LDFLAGS -L$x_libraries"
 PKG_CHECK_MODULES(GTK, [pangoft2 pangocairo gtk+-2.0 >= 2.8.0])
 PKG_CHECK_MODULES(GOBJECT, [gobject-2.0])
 PKG_CHECK_MODULES(GMODULE, [gmodule-2.0])
-
-ORIG_LIBS="$LIBS"
-AC_CHECK_LIBM
-LIBS="$LIBS $LIBM"
+GWY_CHECK_LIBM
 
 #############################################################################
 # FFTW3
@@ -456,18 +453,15 @@ AC_CHECK_HEADERS( \
 
 #############################################################################
 # Check for typedefs, structures, and compiler characteristics.
+# XXX: Remove this.  We expect working inline, at least with the gutils.h
+# magic applied.
 AC_C_INLINE
 
 #############################################################################
 # Check for library functions.
 AC_FUNC_MMAP
-AC_CHECK_FUNC([cbrt], [gwy_have_cbrt=yes], [gwy_have_cbrt=no])
-AC_CHECK_FUNC([hypot], [gwy_have_hypot=yes], [gwy_have_hypot=no])
-AC_CHECK_FUNC([pow10], [gwy_have_pow10=yes], [gwy_have_pow10=no])
-AC_CHECK_FUNC([acosh], [gwy_have_acosh=yes], [gwy_have_acosh=no])
-AC_CHECK_FUNC([asinh], [gwy_have_asinh=yes], [gwy_have_asinh=no])
-AC_CHECK_FUNC([atanh], [gwy_have_atanh=yes], [gwy_have_atanh=no])
-AC_CHECK_FUNCS([sincos])
+GWY_CHECK_MATH_FUNCS([cbrt hypot pow10 acosh asinh atanh])
+AC_CHECK_FUNCS([sincos fpclassify _fpclass])
 
 #############################################################################
 # I18n
@@ -532,43 +526,10 @@ _______EOF
   fi
   echo >>$outfile
 
-  echo '/* Math functions become available when gwymath.h is included. */' >>$outfile
-  if test x$gwy_have_pow10 = xno; then
-    echo '#define pow10(x) pow(10.0, (x))' >>$outfile
-  else
-    echo '/* pow10() is defined */' >>$outfile
-  fi
+  echo '/* Math functions become available when gwymathfallback.h is included. */' >>$outfile
+  echo '/* In 2.x also when gwymath.h is included. */' >>$outfile
 
-  if test x$gwy_have_hypot = xno; then
-    echo '#define hypot(x,y) _gwy_math_hypot((x),(y))' >>$outfile
-  else
-    echo '/* hypot() is defined */' >>$outfile
-  fi
-
-  if test x$gwy_have_cbrt = xno; then
-    echo '#define cbrt(x) pow((x), 1.0/3.0)' >>$outfile
-  else
-    echo '/* cbrt() is defined */' >>$outfile
-  fi
-
-  if test x$gwy_have_acosh = xno; then
-    echo '#define acosh(x) _gwy_math_acosh(x)' >>$outfile
-  else
-    echo '/* acosh() is defined */' >>$outfile
-  fi
-
-  if test x$gwy_have_asinh = xno; then
-    echo '#define asinh(x) _gwy_math_asinh(x)' >>$outfile
-  else
-    echo '/* asinh() is defined */' >>$outfile
-  fi
-
-  if test x$gwy_have_atanh = xno; then
-    echo '#define atanh(x) _gwy_math_atanh(x)' >>$outfile
-  else
-    echo '/* atanh() is defined */' >>$outfile
-  fi
-
+GWY_OUTPUT_MATH_FUNCS([cbrt hypot pow10 acosh asinh atanh], [$outfile])
   cat >>$outfile <<_______EOF
 
 #endif /* __GWY_CONFIG_H__ */
@@ -584,12 +545,12 @@ _______EOF
 ],
 [
   enable_gl=$enable_gl
-  gwy_have_pow10=$gwy_have_pow10
-  gwy_have_hypot=$gwy_have_hypot
-  gwy_have_cbrt=$gwy_have_cbrt
-  gwy_have_acosh=$gwy_have_acosh
-  gwy_have_asinh=$gwy_have_asinh
-  gwy_have_atanh=$gwy_have_atanh
+  gwy_math_pow10=$gwy_math_pow10
+  gwy_math_hypot=$gwy_math_hypot
+  gwy_math_cbrt=$gwy_math_cbrt
+  gwy_math_acosh=$gwy_math_acosh
+  gwy_math_asinh=$gwy_math_asinh
+  gwy_math_atanh=$gwy_math_atanh
 ])
 
 AC_OUTPUT
