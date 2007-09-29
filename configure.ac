@@ -453,9 +453,6 @@ AC_CHECK_HEADERS( \
 
 #############################################################################
 # Check for typedefs, structures, and compiler characteristics.
-# XXX: Remove this.  We expect working inline, at least with the gutils.h
-# magic applied.
-AC_C_INLINE
 
 #############################################################################
 # Check for library functions.
