@@ -889,9 +889,11 @@ jump_over: ;
 
 /**
  * SECTION:gwymath
- * @title: gwymath
+ * @title: Math
  * @short_description: Mathematical utility functions
- * @see_also: #GwyNLFitter, non-linear least square fitter
+ * @see_also: #GwyNLFitter, non-linear least square fitter;
+ *            <link linkend="gwymathfallback">Math Fallback</link>,
+ *            fallback mathematical functions
  *
  * Functions gwy_math_SI_prefix() and gwy_math_humanize_numbers() deal with
  * number representation.
@@ -930,6 +932,75 @@ jump_over: ;
  * GWY_SQRT_PI:
  *
  * The square root of pi.
+ **/
+
+/**
+ * SECTION:gwymathfallback
+ * @title: Math Fallback
+ * @short_description: Fallback implementations of standard mathematical
+ *                     functions
+ * @include: libgwyddion/gwymathfallback.h
+ *
+ * Fallback functions
+ * <function>gwy_math_fallback_<replaceable>foo</replaceable></function> are
+ * defined for mathematical functions
+ * <function><replaceable>foo</replaceable></function> that might not be
+ * implemented on all platforms and are commonly used in Gwyddion.  These
+ * functions are always defined (as <literal>static inline</literal>), however,
+ * you should not use them as they can be less efficient or precise than the
+ * standard functions.
+ *
+ * For each unavailable function (and only for those), this header file defines
+ * a replacement macro expanding to the name of the fallback function.
+ * Therefore after including it, you can use for instance
+ * <function>cbrt</function> regardless if the platform provides it or not.
+ * Note this header has to be included explicitly to avoid possible inadvertent
+ * clashes with other definitions of <function>cbrt</function>.
+ *
+ * Since all replacement macros expand to names of functions, it is possible
+ * to take the address of any of them.
+ **/
+
+/**
+ * cbrt:
+ *
+ * Macro defined to gwy_math_callback_cbrt() if the platform does not provide
+ * <function>cbrt</function>.
+ **/
+
+/**
+ * pow10:
+ *
+ * Macro defined to gwy_math_callback_pow10() if the platform does not provide
+ * <function>pow10</function>.
+ **/
+
+/**
+ * hypot:
+ *
+ * Macro defined to gwy_math_callback_hypot() if the platform does not provide
+ * <function>hypot</function>.
+ **/
+
+/**
+ * acosh:
+ *
+ * Macro defined to gwy_math_callback_acosh() if the platform does not provide
+ * <function>acosh</function>.
+ **/
+
+/**
+ * asinh:
+ *
+ * Macro defined to gwy_math_callback_asinh() if the platform does not provide
+ * <function>asinh</function>.
+ **/
+
+/**
+ * atanh:
+ *
+ * Macro defined to gwy_math_callback_atanh() if the platform does not provide
+ * <function>atanh</function>.
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
