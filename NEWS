@@ -1,4 +1,4 @@
-2.8.20070924
+2.8.20070929
 
 2.9 (2000-00-00)
 Application:
@@ -11,6 +11,19 @@ Libraries:
 - libgwydgets: Zoom of negative parts of graphs (broken in 2.8) works again.
 - libgwydgets: Graph distance measuring dialog uses the correct precision
   for x-distances (instead of y-precision).
+- libgwyapp: A new set of functions for checking the consistency of a data
+  file (not thorough at this moment).
+- libgwyddion: libgwyddion/gwymathfallback.h is the preferred header to
+  define the math fallback functions now, for compatibility
+  libgwyddion/gwymath.h works too.
+- libgwyddion: All the math fallback functions are public inline functions (not
+  macros) named gwy_math_fallback_foo(), so it's possible to take their
+  addresses if necessary.
+- libgwyddion: Defining GWY_MATH_NAMESPACE_CLEAN before including
+  gwymathfallback.h prevents the definition of unprefixed aliases such as
+  cbrt for math functions not provided by the platform
+  (gwy_math_fallback_cbrt() remains available).  Use in the case of possible
+  name clash.
 
 Modules:
 - Shimadzu (new): Shimadzu SPM file version 2 file import.
