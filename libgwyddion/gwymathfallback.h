@@ -21,28 +21,59 @@
 #ifndef __GWY_MATH_FALLBACK_H__
 #define __GWY_MATH_FALLBACK_H__
 
+#include <math.h>
 #include <glib/gutils.h>
 #include <gwyconfig.h>
 
 G_BEGIN_DECLS
 
-static inline double
-gwy_math_fallback_pow10(double x) { return pow(10.0, x); }
+/* This is necessary to fool gtk-doc that ignores static inline functions */
+#define _GWY_STATIC_INLINE static inline
+
+_GWY_STATIC_INLINE double gwy_math_fallback_pow10(double x);
+_GWY_STATIC_INLINE double gwy_math_fallback_cbrt (double x);
+_GWY_STATIC_INLINE double gwy_math_fallback_hypot(double x, double y);
+_GWY_STATIC_INLINE double gwy_math_fallback_acosh(double x);
+_GWY_STATIC_INLINE double gwy_math_fallback_asinh(double x);
+_GWY_STATIC_INLINE double gwy_math_fallback_atanh(double x);
+
+#undef _GWY_STATIC_INLINE
 
 static inline double
-gwy_math_fallback_cbrt(double x) { return pow(x, 1.0/3.0); }
+gwy_math_fallback_pow10(double x)
+{
+    return pow(10.0, x);
+}
 
 static inline double
-gwy_math_fallback_hypot(double x, double y) { return sqrt(x*x + y*y); }
+gwy_math_fallback_cbrt(double x)
+{
+    return pow(x, 1.0/3.0);
+}
 
 static inline double
-gwy_math_fallback_acosh(double x) { return log(x + sqrt(x*x - 1.0)); }
+gwy_math_fallback_hypot(double x, double y)
+{
+    return sqrt(x*x + y*y);
+}
 
 static inline double
-gwy_math_fallback_asinh(double x) { return log(x + sqrt(x*x + 1.0)); }
+gwy_math_fallback_acosh(double x)
+{
+    return log(x + sqrt(x*x - 1.0));
+}
 
 static inline double
-gwy_math_fallback_atanh(double x) { return log((1.0 + x)/(1.0 - x)); }
+gwy_math_fallback_asinh(double x)
+{
+    return log(x + sqrt(x*x + 1.0));
+}
+
+static inline double
+gwy_math_fallback_atanh(double x)
+{
+    return log((1.0 + x)/(1.0 - x));
+}
 
 #ifndef GWY_MATH_NAMESPACE_CLEAN
 

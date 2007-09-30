@@ -962,10 +962,32 @@ jump_over: ;
  **/
 
 /**
+ * gwy_math_fallback_cbrt:
+ * @x: Floating point number.
+ * @returns: Cubic root of @x.
+ *
+ * Fallback for the standard mathematical function
+ * <function>cbrt</function>.
+ *
+ * Since: 2.9
+ **/
+
+/**
  * cbrt:
  *
  * Macro defined to gwy_math_callback_cbrt() if the platform does not provide
  * <function>cbrt</function>.
+ **/
+
+/**
+ * gwy_math_fallback_pow10:
+ * @x: Floating point number.
+ * @returns: 10 raised to @x.
+ *
+ * Fallback for the standard mathematical function
+ * <function>pow10</function>.
+ *
+ * Since: 2.9
  **/
 
 /**
@@ -976,10 +998,34 @@ jump_over: ;
  **/
 
 /**
+ * gwy_math_fallback_hypot:
+ * @x: Floating point number.
+ * @y: Floating point number.
+ * @returns: Length of hypotenuse of a right-angle triangle with sides of
+ *           lengths @x and @y.
+ *
+ * Fallback for the standard mathematical function
+ * <function>hypot</function>.
+ *
+ * Since: 2.9
+ **/
+
+/**
  * hypot:
  *
  * Macro defined to gwy_math_callback_hypot() if the platform does not provide
  * <function>hypot</function>.
+ **/
+
+/**
+ * gwy_math_fallback_acosh:
+ * @x: Floating point number greater or equal to 1.0.
+ * @returns: Inverse hyperbolic cosine of @x.
+ *
+ * Fallback for the standard mathematical function
+ * <function>acosh</function>.
+ *
+ * Since: 2.9
  **/
 
 /**
@@ -990,10 +1036,32 @@ jump_over: ;
  **/
 
 /**
+ * gwy_math_fallback_asinh:
+ * @x: Floating point number.
+ * @returns: Inverse hyperbolic sine of @x.
+ *
+ * Fallback for the standard mathematical function
+ * <function>asinh</function>.
+ *
+ * Since: 2.9
+ **/
+
+/**
  * asinh:
  *
  * Macro defined to gwy_math_callback_asinh() if the platform does not provide
  * <function>asinh</function>.
+ **/
+
+/**
+ * gwy_math_fallback_atanh:
+ * @x: Floating point number in the range [-1, 1].
+ * @returns: Inverse hyperbolic tangent of @x.
+ *
+ * Fallback for the standard mathematical function
+ * <function>atanh</function>.
+ *
+ * Since: 2.9
  **/
 
 /**
