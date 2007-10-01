@@ -39,40 +39,43 @@ _GWY_STATIC_INLINE double gwy_math_fallback_atanh(double x);
 
 #undef _GWY_STATIC_INLINE
 
+/* The empty comments fix gtk-doc.
+ * See http://bugzilla.gnome.org/show_bug.cgi?id=481811
+ */
 static inline double
 gwy_math_fallback_pow10(double x)
 {
-    return pow(10.0, x);
+    return /**/ pow(10.0, x);
 }
 
 static inline double
 gwy_math_fallback_cbrt(double x)
 {
-    return pow(x, 1.0/3.0);
+    return /**/ pow(x, 1.0/3.0);
 }
 
 static inline double
 gwy_math_fallback_hypot(double x, double y)
 {
-    return sqrt(x*x + y*y);
+    return /**/ sqrt(x*x + y*y);
 }
 
 static inline double
 gwy_math_fallback_acosh(double x)
 {
-    return log(x + sqrt(x*x - 1.0));
+    return /**/ log(x + sqrt(x*x - 1.0));
 }
 
 static inline double
 gwy_math_fallback_asinh(double x)
 {
-    return log(x + sqrt(x*x + 1.0));
+    return /**/ log(x + sqrt(x*x + 1.0));
 }
 
 static inline double
 gwy_math_fallback_atanh(double x)
 {
-    return log((1.0 + x)/(1.0 - x));
+    return /**/ log((1.0 + x)/(1.0 - x));
 }
 
 #ifndef GWY_MATH_NAMESPACE_CLEAN
