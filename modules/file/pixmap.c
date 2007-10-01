@@ -466,37 +466,43 @@ pixmap_detect(const GwyFileDetectInfo *fileinfo,
 
     /* FIXME: GdkPixbuf doesn't good a good job regarding detection
      * we do some sanity check ourselves */
-    if (gwy_strequal(name, "png")
-        && memcmp(fileinfo->head, "\x89PNG\r\n\x1a\n", 8) != 0)
+    if (gwy_strequal(name, "png")) {
+        if (memcmp(fileinfo->head, "\x89PNG\r\n\x1a\n", 8) != 0)
+            return 0;
+    }
+    else if (gwy_strequal(name, "bmp")) {
+        if (strncmp(fileinfo->head, "BM", 2) != 0)
+            return 0;
+    }
+    else if (gwy_strequal(name, "pnm")) {
+        if (fileinfo->head[0] != 'P' || !g_ascii_isdigit(fileinfo->head[1]))
+            return 0;
+    }
+    else if (gwy_strequal(name, "xpm")) {
+        if (strncmp(fileinfo->head, "/* XPM */", 9) != 0)
+            return 0;
+    }
+    else if (gwy_strequal(name, "tiff")) {
+        if (memcmp(fileinfo->head, "MM\x00\x2a", 4) != 0
+            && memcmp(fileinfo->head, "II\x2a\x00", 4) != 0)
         return 0;
-    if (gwy_strequal(name, "bmp")
-        && strncmp(fileinfo->head, "BM", 2) != 0)
-        return 0;
-    if (gwy_strequal(name, "pnm")
-        && (fileinfo->head[0] != 'P' || !g_ascii_isdigit(fileinfo->head[1])))
-        return 0;
-    if (gwy_strequal(name, "xpm")
-        && strncmp(fileinfo->head, "/* XPM */", 9) != 0)
-        return 0;
-    if (gwy_strequal(name, "tiff")
-        && memcmp(fileinfo->head, "MM\x00\x2a", 4) != 0
-        && memcmp(fileinfo->head, "II\x2a\x00", 4) != 0)
-        return 0;
-    if (gwy_strequal(name, "jpeg")
-        && memcmp(fileinfo->head, "\xff\xd8", 2) != 0)
-        return 0;
-    if (gwy_strequal(name, "pcx")
-        && (fileinfo->head[0] != '\x0a' || fileinfo->head[1] > 0x05))
-        return 0;
-    if (gwy_strequal(name, "gif")
-        && strncmp(fileinfo->head, "GIF8", 4) != 0)
-        return 0;
-    if (gwy_strequal(name, "svg")
-        && strncmp(fileinfo->head, "<?xml", 5) != 0)
-        return 0;
-    if (gwy_strequal(name, "ras")
-        && memcmp(fileinfo->head, "\x59\xa6\x6a\x95", 4) != 0)
-        return 0;
+    }
+    else if (gwy_strequal(name, "jpeg")) {
+        if (memcmp(fileinfo->head, "\xff\xd8", 2) != 0)
+            return 0;
+    }
+    else if (gwy_strequal(name, "pcx")) {
+        if (fileinfo->head[0] != '\x0a' || fileinfo->head[1] > 0x05)
+            return 0;
+    }
+    else if (gwy_strequal(name, "gif")) {
+        if (strncmp(fileinfo->head, "GIF8", 4) != 0)
+            return 0;
+    }
+    else if (gwy_strequal(name, "ras")) {
+        if (memcmp(fileinfo->head, "\x59\xa6\x6a\x95", 4) != 0)
+            return 0;
+    }
     /* FIXME: cannot detect targa, must try loader */
 
     loader = gdk_pixbuf_loader_new_with_type(name, NULL);
