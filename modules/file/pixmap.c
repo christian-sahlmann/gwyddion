@@ -324,7 +324,7 @@ static GwyModuleInfo module_info = {
        "TARGA. "
        "Import support relies on GDK and thus may be installation-dependent."),
     "Yeti <yeti@gwyddion.net>",
-    "6.2",
+    "6.3",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -503,7 +503,21 @@ pixmap_detect(const GwyFileDetectInfo *fileinfo,
         if (memcmp(fileinfo->head, "\x59\xa6\x6a\x95", 4) != 0)
             return 0;
     }
-    /* FIXME: cannot detect targa, must try loader */
+    else if (gwy_strequal(name, "tga")) {
+        guint8 cmtype = fileinfo->head[1];
+        guint8 dtype = fileinfo->head[2];
+
+        if (dtype == 1 || dtype == 9 || dtype == 32 || dtype == 33) {
+            if (cmtype != 1)
+                return 0;
+        }
+        else if (dtype == 2 || dtype == 3 || dtype == 10 || dtype == 11) {
+            if (cmtype != 0)
+                return 0;
+        }
+        else
+            return 0;
+    }
 
     loader = gdk_pixbuf_loader_new_with_type(name, NULL);
     if (!loader)
