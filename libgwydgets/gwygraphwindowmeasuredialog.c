@@ -326,9 +326,13 @@ selection_updated_cb(GwySelection *selection,
                 gtk_label_set_text(GTK_LABEL(label), NULL);
 
             label = g_ptr_array_index(dialog->slope, i);
-            if (ret && prevret)
-                value_label(label, 180.0/G_PI*atan2((y - yp), (x - xp)),
+            if (ret && prevret) {
+                if (gwy_si_unit_equal (xunit, yunit))
+                    value_label(label, 180.0/G_PI*atan2((y - yp), (x - xp)),
                             2, str);
+                else
+                    gtk_label_set_text(GTK_LABEL(label), "N.A.");
+            }
             else
                 gtk_label_set_text(GTK_LABEL(label), NULL);
         }
