@@ -263,12 +263,12 @@ selection_updated_cb(GwySelection *selection,
     xresolution = xrange / width;
     yresolution = yrange / height;
     xformat = gwy_si_unit_get_format_with_resolution(xunit,
-                                                     GWY_SI_UNIT_FORMAT_PLAIN,
+                                                     GWY_SI_UNIT_FORMAT_MARKUP,
                                                      xrange,
                                                      xresolution/6,
                                                      NULL);
     yformat = gwy_si_unit_get_format_with_resolution(yunit,
-                                                     GWY_SI_UNIT_FORMAT_PLAIN,
+                                                     GWY_SI_UNIT_FORMAT_MARKUP,
                                                      yrange,
                                                      yresolution/6,
                                                      NULL);
