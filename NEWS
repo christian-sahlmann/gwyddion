@@ -1,4 +1,4 @@
-2.8.20070929
+2.8.20071008
 
 2.9 (2000-00-00)
 Application:
@@ -10,7 +10,8 @@ Libraries:
   rendering now.
 - libgwydgets: Zoom of negative parts of graphs (broken in 2.8) works again.
 - libgwydgets: Graph distance measuring dialog uses the correct precision
-  for x-distances (instead of y-precision).
+  for x-distances (instead of y-precision) and no longer displays (bogus)
+  angles when x and y are different physical quantities.
 - libgwyapp: A new set of functions for checking the consistency of a data
   file (not thorough at this moment).
 - libgwyddion: libgwyddion/gwymathfallback.h is the preferred header to
@@ -30,6 +31,8 @@ Modules:
 - Nanonis: Version 2 files claiming to be MSBFIRST are imported.
 - Line layer: Crashes on Win32 while drawing line numbers were fixed, it
   uses PangoCairo instead of Pango FT2 now.
+- Basic operations: Function to null horizontal offsets, moving the origin
+  to the upper left corner, was added.
 
 Other:
 - Compilation failure with GLib older than 2.10 (introduced in 2.8) was
