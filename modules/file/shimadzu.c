@@ -27,7 +27,7 @@
  *   </magic>
  * </mime-type>
  **/
-#define DEBUG 1
+
 #include "config.h"
 #include <string.h>
 #include <stdlib.h>
@@ -44,6 +44,12 @@
 enum {
     HEADER_SIZE = 32768
 };
+
+/* These are used as type sizes, too */
+typedef enum {
+    SHIMADZU_SHORT = 2,
+    SHIMADZU_FLOAT = 4
+} ShimadzuDataType;
 
 #define MAGIC "Shimadzu SPM File Format Version 2."
 #define MAGIC_SIZE (sizeof(MAGIC)-1)
@@ -87,7 +93,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Shimadzu SPM data files, version 2."),
     "Yeti <yeti@gwyddion.net>",
-    "0.1",
+    "0.2",
     "David Nečas (Yeti)",
     "2007",
 };
@@ -172,6 +178,8 @@ shimadzu_load(const gchar *filename,
         GQuark quark;
         const gchar *title;
 
+        gwy_data_field_invert(dfield, TRUE, FALSE, FALSE);
+
         container = gwy_container_new();
         quark = gwy_app_get_data_key_for_id(0);
         gwy_container_set_object(container, quark, dfield);
@@ -202,13 +210,28 @@ read_binary_data(const gchar *buffer,
                  GHashTable *hash,
                  GError **error)
 {
+    ShimadzuDataType data_type;
     gint xres, yres, i;
     guint expected;
     gdouble xreal, yreal, zscale, xoff, yoff, zoff;
     GwySIUnit *unitxy, *unitz;
     GwyDataField *dfield = NULL;
-    const gint16 *d16;
     gdouble *d;
+    const gchar *s;
+
+    if (!(s = g_hash_table_lookup(hash, "DataType"))) {
+        err_MISSING_FIELD(error, "DataType");
+        return NULL;
+    }
+
+    if (g_ascii_strcasecmp(s, "short") == 0)
+        data_type = SHIMADZU_SHORT;
+    else if (g_ascii_strcasecmp(s, "float") == 0)
+        data_type = SHIMADZU_FLOAT;
+    else {
+        err_UNSUPPORTED(error, "DataType");
+        return NULL;
+    }
 
     unitxy = gwy_si_unit_new(NULL);
     unitz = gwy_si_unit_new(NULL);
@@ -217,8 +240,8 @@ read_binary_data(const gchar *buffer,
                     &zscale, &zoff, unitz, error))
         goto fail;
 
-    expected = 2*xres*yres + HEADER_SIZE;
-    if (err_SIZE_MISMATCH(error, expected, size, TRUE))
+    expected = data_type*xres*yres + HEADER_SIZE;
+    if (err_SIZE_MISMATCH(error, expected, size, FALSE))
         goto fail;
 
     dfield = gwy_data_field_new(xres, yres, xreal, yreal, FALSE);
@@ -227,10 +250,22 @@ read_binary_data(const gchar *buffer,
     gwy_data_field_set_si_unit_xy(dfield, unitxy);
     gwy_data_field_set_si_unit_z(dfield, unitz);
     d = gwy_data_field_get_data(dfield);
-    d16 = (const gint16*)(buffer + HEADER_SIZE);
 
-    for (i = 0; i < xres*yres; i++)
-        d[i] = zscale*GINT16_FROM_LE(d16[i]) + zoff;
+    if (data_type == SHIMADZU_SHORT) {
+        const gint16 *d16 = (const gint16*)(buffer + HEADER_SIZE);
+
+        for (i = 0; i < xres*yres; i++)
+            d[i] = zscale*GINT16_FROM_LE(d16[i]) + zoff;
+    }
+    else if (data_type == SHIMADZU_FLOAT) {
+        const guchar *p = buffer + HEADER_SIZE;
+
+        for (i = 0; i < xres*yres; i++)
+            d[i] = zscale*gwy_get_gfloat_le(&p) + zoff;
+    }
+    else {
+        g_assert_not_reached();
+    }
 
 fail:
     g_object_unref(unitxy);
