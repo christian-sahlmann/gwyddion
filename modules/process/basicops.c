@@ -43,6 +43,8 @@ static void     rotate_180                (GwyContainer *data,
                                            GwyRunType run);
 static void     square_samples            (GwyContainer *data,
                                            GwyRunType run);
+static void     null_offsets              (GwyContainer *data,
+                                           GwyRunType run);
 static void     flip_xy                   (GwyDataField *source,
                                            GwyDataField *dest,
                                            gboolean minor);
@@ -53,7 +55,7 @@ static GwyModuleInfo module_info = {
     N_("Basic operations like flipping, value inversion, and rotation "
        "by multiples of 90 degrees."),
     "Yeti <yeti@gwyddion.net>",
-    "1.6",
+    "1.7",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -113,6 +115,14 @@ module_register(void)
                               GWY_MENU_FLAG_DATA,
                               N_("Resample data with non-1:1 aspect ratio to "
                                  "square samples"));
+    gwy_process_func_register("null_offsets",
+                              (GwyProcessFunc)&null_offsets,
+                              N_("/_Basic Operations/_Null Offsets"),
+                              NULL,
+                              BASICOPS_RUN_MODES,
+                              GWY_MENU_FLAG_DATA,
+                              N_("Null horizontall offsets, moving the origin "
+                                 "to the upper left corner"));
 
     return TRUE;
 }
@@ -384,6 +394,46 @@ square_samples(GwyContainer *data, GwyRunType run)
         quark = gwy_app_get_show_key_for_id(newid);
         gwy_container_set_object(data, quark, dfields[2]);
         g_object_unref(dfields[2]);
+    }
+}
+
+static void
+null_offsets(GwyContainer *data,
+             GwyRunType run)
+{
+    GwyDataField *dfields[3];
+    GQuark quarks[3];
+    guint i;
+
+    g_return_if_fail(run & BASICOPS_RUN_MODES);
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, dfields + 0,
+                                     GWY_APP_MASK_FIELD, dfields + 1,
+                                     GWY_APP_SHOW_FIELD, dfields + 2,
+                                     GWY_APP_DATA_FIELD_KEY, quarks + 0,
+                                     GWY_APP_MASK_FIELD_KEY, quarks + 1,
+                                     GWY_APP_SHOW_FIELD_KEY, quarks + 2,
+                                     0);
+    clean_quarks(G_N_ELEMENTS(quarks), quarks, dfields);
+
+    for (i = 0; i < G_N_ELEMENTS(dfields); i++) {
+        if (dfields[i]
+            && !gwy_data_field_get_xoffset(dfields[i])
+            && !gwy_data_field_get_yoffset(dfields[i])) {
+            quarks[i] = 0;
+            dfields[i] = NULL;
+        }
+    }
+
+    if (!dfields[0] && !dfields[1] && !dfields[2])
+        return;
+
+    gwy_app_undo_qcheckpointv(data, G_N_ELEMENTS(quarks), quarks);
+    for (i = 0; i < G_N_ELEMENTS(dfields); i++) {
+        if (dfields[i]) {
+            gwy_data_field_set_xoffset(dfields[i], 0.0);
+            gwy_data_field_set_yoffset(dfields[i], 0.0);
+            gwy_data_field_data_changed(dfields[i]);
+        }
     }
 }
 
