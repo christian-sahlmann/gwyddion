@@ -235,7 +235,7 @@ gwy_layer_basic_set_property(GObject *object,
 
         case PROP_PRESENTATION_KEY:
         gwy_layer_basic_set_presentation_key(basic_layer,
-                                         g_value_get_string(value));
+                                             g_value_get_string(value));
         break;
 
         case PROP_RANGE_TYPE_KEY:
@@ -344,10 +344,24 @@ gwy_layer_basic_paint(GwyPixmapLayer *layer)
         gwy_pixbuf_draw_data_field_adaptive(layer->pixbuf, data_field,
                                             basic_layer->gradient);
     else {
-        gwy_layer_basic_get_range(basic_layer, &min, &max);
-        gwy_pixbuf_draw_data_field_with_range(layer->pixbuf, data_field,
-                                              basic_layer->gradient,
-                                              min, max);
+        if (basic_layer->show_field) {
+            /* Ignore fixed range in for presentations. */
+            if (range_type == GWY_LAYER_BASIC_RANGE_FIXED)
+                gwy_pixbuf_draw_data_field(layer->pixbuf, data_field,
+                                           basic_layer->gradient);
+            else {
+                gwy_data_field_get_autorange(data_field, &min, &max);
+                gwy_pixbuf_draw_data_field_with_range(layer->pixbuf, data_field,
+                                                      basic_layer->gradient,
+                                                      min, max);
+            }
+        }
+        else {
+            gwy_layer_basic_get_range(basic_layer, &min, &max);
+            gwy_pixbuf_draw_data_field_with_range(layer->pixbuf, data_field,
+                                                  basic_layer->gradient,
+                                                  min, max);
+        }
     }
 
     return layer->pixbuf;
@@ -588,6 +602,10 @@ gwy_layer_basic_get_min_max_key(GwyLayerBasic *basic_layer)
  * @max: Location to store range maximum to.
  *
  * Gets the range colors are mapped from in current mode.
+ *
+ * This function does not take presentations into account.  It always returns
+ * ther range corresponding to the underlying data even if a presentation is
+ * shown instead.
  **/
 void
 gwy_layer_basic_get_range(GwyLayerBasic *basic_layer,
@@ -599,7 +617,6 @@ gwy_layer_basic_get_range(GwyLayerBasic *basic_layer,
     GwyDataField *data_field;
     gdouble rmin, rmax;
 
-    /* FIXME: Should we return something else for presentations? */
     g_return_if_fail(GWY_IS_LAYER_BASIC(basic_layer));
     data = GWY_DATA_VIEW_LAYER(basic_layer)->data;
     pixmap_layer = GWY_PIXMAP_LAYER(basic_layer);
