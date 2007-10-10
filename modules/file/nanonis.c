@@ -53,7 +53,7 @@
 typedef enum {
     DIR_FORWARD  = 1 << 0,
     DIR_BACKWARD = 1 << 1,
-    DIR_BOTH     = (DIR_FORWARD || DIR_BACKWARD)
+    DIR_BOTH     = (DIR_FORWARD | DIR_BACKWARD)
 } SXMDirection;
 
 typedef struct {
