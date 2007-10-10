@@ -1,4 +1,4 @@
-2.8.20071008
+2.8.20071010
 
 2.9 (2000-00-00)
 Application:
@@ -25,10 +25,13 @@ Libraries:
   cbrt for math functions not provided by the platform
   (gwy_math_fallback_cbrt() remains available).  Use in the case of possible
   name clash.
+- libgwydgets: Automatic range (distribution tails cut off) works with
+  presentations, fixed range is ignored for presentations.
 
 Modules:
 - Shimadzu (new): Shimadzu SPM file version 2 file import.
 - Nanonis: Version 2 files claiming to be MSBFIRST are imported.
+- Nanonis: Slices extracted from 3D data are imported.
 - Line layer: Crashes on Win32 while drawing line numbers were fixed, it
   uses PangoCairo instead of Pango FT2 now.
 - Basic operations: Function to null horizontal offsets, moving the origin
