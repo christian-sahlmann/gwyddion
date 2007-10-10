@@ -23,6 +23,20 @@
  * do not contain tags in ascending tag number order which chokes libTIFF.
  */
 
+/**
+ * [FILE-MAGIC-FREEDESKTOP]
+ * <mime-type type="application/x-intematix-spm">
+ *   <comment>Intematix SPM data</comment>
+ *   <magic priority="30">
+ *     <match type="string" offset="0" value="II\x2a\x00">
+ *       <match type="string" offset="8:160" value="Intematix"/>
+ *     </match>
+ *   </magic>
+ *   <glob pattern="*.sdf"/>
+ *   <glob pattern="*.SDF"/>
+ * </mime-type>
+ **/
+
 #include "config.h"
 #include <string.h>
 #include <stdio.h>

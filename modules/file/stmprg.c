@@ -24,6 +24,18 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
+/**
+ * [FILE-MAGIC-FREEDESKTOP]
+ * <mime-type type="application/x-stmprg-spm">
+ *   <comment>Omicron STMPRG data parameters</comment>
+ *   <magic priority="50">
+ *     <match type="string" offset="0" value="MPAR"/>
+ *   </magic>
+ *   <glob pattern="tp*"/>
+ *   <glob pattern="TP*"/>
+ * </mime-type>
+ **/
+
 /* TODO
  * - store both directions
  * - other channels

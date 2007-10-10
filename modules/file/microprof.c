@@ -18,6 +18,18 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
+/**
+ * [FILE-MAGIC-FREEDESKTOP]
+ * <mime-type type="application/x-microprof">
+ *   <comment>MicroProf FRT data</comment>
+ *   <magic priority="40">
+ *     <match type="string" offset="0" value="HeaderLines"/>
+ *   </magic>
+ *   <glob pattern="*.txt"/>
+ *   <glob pattern="*.TXT"/>
+ * </mime-type>
+ **/
+
 #include "config.h"
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwyutils.h>

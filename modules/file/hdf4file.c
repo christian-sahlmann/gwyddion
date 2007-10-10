@@ -72,7 +72,8 @@
 
 /**
  * XXX: Disabled, it conflicts with MIME types installed by other packages
- * way too often.
+ * way too often.  (It is this comment that disables the magic, do not remove
+ * it.)
  * [FILE-MAGIC-FREEDESKTOP]
  * <mime-type type="application/x-hdf">
  *   <comment>Hierarchical Data Format</comment>

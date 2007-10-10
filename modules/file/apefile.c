@@ -22,6 +22,18 @@
 
 /* TODO: channel types */
 
+/**
+ * [FILE-MAGIC-FREEDESKTOP]
+ * <mime-type type="application/x-ape-spm">
+ *   <comment>APE SPM data</comment>
+ *   <magic priority="50">
+ *     <match type="string" offset="234" value="APERES"/>
+ *   </magic>
+ *   <glob pattern="*.dat"/>
+ *   <glob pattern="*.DAT"/>
+ * </mime-type>
+ **/
+
 #include <string.h>
 #include <time.h>
 #include "config.h"

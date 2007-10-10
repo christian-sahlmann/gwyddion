@@ -22,6 +22,15 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
+/**
+ * [FILE-MAGIC-FREEDESKTOP]
+ * <mime-type type="application/x-nanotop-spm">
+ *   <comment>Nanotop SPM data</comment>
+ *   <glob pattern="*.spm"/>
+ *   <glob pattern="*.SPM"/>
+ * </mime-type>
+ **/
+
 #include "config.h"
 #include <string.h>
 #include <libgwyddion/gwymacros.h>

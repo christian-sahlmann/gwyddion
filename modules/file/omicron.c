@@ -19,6 +19,18 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
+/**
+ * [FILE-MAGIC-FREEDESKTOP]
+ * <mime-type type="application/x-omicron-spm">
+ *   <comment>Omicron SCALA data parameters</comment>
+ *   <magic priority="50">
+ *     <match type="string" offset="0:160" value="Omicron SPM Control"/>
+ *   </magic>
+ *   <glob pattern="*.par"/>
+ *   <glob pattern="*.PAR"/>
+ * </mime-type>
+ **/
+
 /* TODO: metadata */
 
 #include "config.h"

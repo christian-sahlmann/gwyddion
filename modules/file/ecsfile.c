@@ -19,6 +19,18 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
+/**
+ * [FILE-MAGIC-FREEDESKTOP]
+ * <mime-type type="application/x-ecs-spm">
+ *   <comment>ECS SPM data</comment>
+ *   <magic priority="40">
+ *     <match type="string" offset="0" value="\xa0\x00"/>
+ *   </magic>
+ *   <glob pattern="*.img"/>
+ *   <glob pattern="*.IMG"/>
+ * </mime-type>
+ **/
+
 #include "config.h"
 #include <string.h>
 #include <stdio.h>

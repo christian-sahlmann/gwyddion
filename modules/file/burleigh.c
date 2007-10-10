@@ -29,6 +29,18 @@
  * for description of an unspecified version which is NOT implemented.
  */
 
+/**
+ * [FILE-MAGIC-FREEDESKTOP]
+ * <mime-type type="application/x-burleigh-spm">
+ *   <comment>Burleigh SPM data</comment>
+ *   <magic priority="50">
+ *     <match type="string" offset="0" value="\xff\x06@\x00"/>
+ *   </magic>
+ *   <glob pattern="*.img"/>
+ *   <glob pattern="*.IMG"/>
+ * </mime-type>
+ **/
+
 #include "config.h"
 #include <string.h>
 #include <libgwyddion/gwymacros.h>

@@ -18,6 +18,24 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
+/**
+ * [FILE-MAGIC-FREEDESKTOP]
+ * <mime-type type="application/x-sdf-spm">
+ *   <comment>Surfstand SDF data</comment>
+ *   <glob pattern="*.sdf"/>
+ *   <glob pattern="*.SDF"/>
+ * </mime-type>
+ **/
+
+/**
+ * [FILE-MAGIC-FREEDESKTOP]
+ * <mime-type type="application/x-micromap-spm">
+ *   <comment>Micromap SDF data</comment>
+ *   <glob pattern="*.sdfa"/>
+ *   <glob pattern="*.SDFA"/>
+ * </mime-type>
+ **/
+
 #include "config.h"
 #include <string.h>
 #include <stdlib.h>

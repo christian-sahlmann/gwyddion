@@ -18,6 +18,21 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
+/**
+ * [FILE-MAGIC-FREEDESKTOP]
+ * <mime-type type="application/x-jeol-spm">
+ *   <comment>JEOL SPM data</comment>
+ *   <magic priority="50">
+ *     <match type="string" offset="0" value="II\x2a\x00\xd4\x17\x00\x00\x00\x04">
+ *       <match type="string" offset="160" value="Measured by"/>
+ *       <match type="string" offset="160" value="Mesuared by"/>
+ *     </match>
+ *   </magic>
+ *   <glob pattern="*.tif"/>
+ *   <glob pattern="*.TIF"/>
+ * </mime-type>
+ **/
+
 #include "config.h"
 #include <string.h>
 #include <stdarg.h>
