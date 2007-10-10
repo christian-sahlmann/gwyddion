@@ -3,6 +3,7 @@
 headers
 #include <Python.h>
 #include <pygobject.h>
+#include <pygtk/pygtk.h>
 #include <libprocess/gwyprocess.h>
 #include <libgwyddion/gwyddion.h>
 #include <libprocess/cdline.h>
@@ -10,26 +11,114 @@ headers
 #include <libprocess/tip.h>
 #include <libgwymodule/gwymodule.h>
 #include <libgwymodule/gwymodule-process.h>
+#include <libdraw/gwygradient.h>
+#include <libdraw/gwyglmaterial.h>
+#include <libdraw/gwypixfield.h>
+#include <libdraw/gwydraw.h>
+#include <libgwydgets/gwy3dlabel.h>
+#include <libgwydgets/gwy3dsetup.h>
+#include <libgwydgets/gwy3dview.h>
+#include <libgwydgets/gwy3dwindow.h>
+#include <libgwydgets/gwyaxisdialog.h>
+#include <libgwydgets/gwyaxis.h>
+#include <libgwydgets/gwycoloraxis.h>
+#include <libgwydgets/gwycolorbutton.h>
+#include <libgwydgets/gwycombobox.h>
+#include <libgwydgets/gwycurve.h>
+#include <libgwydgets/gwydataview.h>
+#include <libgwydgets/gwydataviewlayer.h>
+#include <libgwydgets/gwydatawindow.h>
+#include <libgwydgets/gwydgetenums.h>
+#include <libgwydgets/gwydgetmarshals.h>
+#include <libgwydgets/gwydgets.h>
+#include <libgwydgets/gwydgettypes.h>
+#include <libgwydgets/gwydgetutils.h>
+#include <libgwydgets/gwygraphareadialog.h>
+#include <libgwydgets/gwygrapharea.h>
+#include <libgwydgets/gwygraphbasics.h>
+#include <libgwydgets/gwygraphcorner.h>
+#include <libgwydgets/gwygraphcurvemodel.h>
+#include <libgwydgets/gwygraphcurves.h>
+#include <libgwydgets/gwygraphdata.h>
+#include <libgwydgets/gwygraph.h>
+#include <libgwydgets/gwygraphlabeldialog.h>
+#include <libgwydgets/gwygraphlabel.h>
+#include <libgwydgets/gwygraphmodel.h>
+#include <libgwydgets/gwygraphselections.h>
+#include <libgwydgets/gwygraphwindow.h>
+#include <libgwydgets/gwygraphwindowmeasuredialog.h>
+#include <libgwydgets/gwyhmarkerbox.h>
+#include <libgwydgets/gwyhruler.h>
+#include <libgwydgets/gwyinventorystore.h>
+#include <libgwydgets/gwylayer-basic.h>
+#include <libgwydgets/gwylayer-mask.h>
+#include <libgwydgets/gwymarkerbox.h>
+#include <libgwydgets/gwynullstore.h>
+#include <libgwydgets/gwyoptionmenus.h>
+#include <libgwydgets/gwypixmaplayer.h>
+#include <libgwydgets/gwyradiobuttons.h>
+#include <libgwydgets/gwyruler.h>
+#include <libgwydgets/gwyscitext.h>
+#include <libgwydgets/gwyselectiongraph1darea.h>
+#include <libgwydgets/gwyselectiongrapharea.h>
+#include <libgwydgets/gwyselectiongraphline.h>
+#include <libgwydgets/gwyselectiongraphpoint.h>
+#include <libgwydgets/gwyselectiongraphzoom.h>
+#include <libgwydgets/gwysensitivitygroup.h>
+#include <libgwydgets/gwyshader.h>
+#include <libgwydgets/gwystatusbar.h>
+#include <libgwydgets/gwystock.h>
+#include <libgwydgets/gwyvectorlayer.h>
+#include <libgwydgets/gwyvruler.h>
+#include <app/gwymoduleutils-file.h>
+#include <app/gwymoduleutils.h>
+
+typedef gdouble ArrayOfGDoubleNullTerminated;
+typedef gint GIntValue;
+typedef gdouble GDoubleValue;
+typedef gdouble GDoubleArray;
+
 // ##include "pywrap.h"
 %%
 modulename gwy
 %%
 import gobject.GObject as PyGObject_Type
 import gtk.Table as PyGtkTable_Type
-// import glib.GQuark as PyGQuark_Type
+import gtk.Widget as PyGtkWidget_Type
+import gtk.Dialog as PyGtkDialog_Type
+import gtk.Button as PyGtkButton_Type
+import gtk.DrawingArea as PyGtkDrawingArea_Type
+import gtk.Object as PyGtkObject_Type
+import gtk.Window as PyGtkWindow_Type
+import gtk.Layout as PyGtkLayout_Type
+import gtk.TreeView as PyGtkTreeView_Type
+import gtk.VBox as PyGtkVBox_Type
+import gtk.Statusbar as PyGtkStatusbar_Type
+import gtk.ComboBox as PyGtkComboBox_Type
+import gtk.Tooltips as PyGtkTooltips_Type
+import gtk.Orientation as PyGtkOrientation_Type
+import gtk.PositionType as PyGtkPositionType_Type
+import gtk.TreeIter as PyGtkTreeIter_Type
+import gtk.ListStore as PyGtkListStore_Type
+import gtk.UpdateType as PyGtkUpdateType_Type
+import gtk.gdk.Drawable as PyGdkDrawable_Type
+import gtk.gdk.Pixbuf as PyGdkPixbuf_Type
+import gtk.gdk.GC as PyGdkGC_Type
+import gtk.gdk.LineStyle as PyGdkLineStyle_Type
 %%
 ignore-glob
   *_get_type                            
-  gwy_data_field_get_drift_from_sample
-  gwy_data_field_get_drift_from_isotropy
-  gwy_data_field_get_data
-  gwy_data_line_get_data
-  gwy_container_set_string
   gwy_container_get_string
+  gwy_gradient_sample
+  gwy_vector_layer_button*
+  gwy_vector_layer_motion_notify
+  gwy_vector_layer_key*
+  gwy_md5_get_digest
+  gwy_graph_draw_line
+  gwy_gradient_get_samples
 %%
 ignore-type 
-  GwyCDLine
-  
+  GwyPlainTool
 %%
 define gwy_app_data_browser_get_current_key noargs
 /**
@@ -189,7 +278,7 @@ _wrap_gwy_app_undo_qcheckpointv(PyObject *self, PyObject *args, PyObject *kwargs
 }
 
 %%
-define GwyDataField.get_data noargs
+override GwyDataField.get_data noargs
 /**
  * gwy_data_field_get_data:
  *
@@ -223,7 +312,7 @@ _wrap_gwy_data_field_get_data(PyGObject *self)
 }
 
 %%
-define GwyDataLine.get_data noargs
+override GwyDataLine.get_data noargs
 static PyObject *
 _wrap_gwy_data_line_get_data(PyGObject *self)
 {   
@@ -345,13 +434,15 @@ _wrap_gwy_container_get_object_by_name(PyGObject *self, PyObject *args, PyObject
 
    if (!PyArg_ParseTupleAndKeywords(args, 
                                     kwargs,
-                                    "s:GwyContainer.get_object_by_name2", 
+                                    "s:GwyContainer.get_object_by_name", 
                                     kwlist, 
                                     &key))
         return NULL;
    gval = gwy_container_get_value_by_name(GWY_CONTAINER(self->obj), key);
+   printf("get obj: %d\n", gval);
 
    obj = convert_gvalue_to_pyobject(&gval);
+   printf(" obj: %d\n", obj);
    return obj;
 }
 
@@ -376,7 +467,7 @@ _wrap_gwy_container_contains_by_name(PyGObject *self, PyObject *args, PyObject *
 }
 
 %%
-define GwyContainer.set_string kwargs
+override GwyContainer.set_string kwargs
 /**
  * gwy_container_set_string: 
  * @key: an object key

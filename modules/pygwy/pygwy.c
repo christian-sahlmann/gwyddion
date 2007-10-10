@@ -26,8 +26,6 @@
  * and destroyed by destroy_environment() which deallocate created copy.
  */
 
-/*#define DEBUG 1*/
-
 #include "config.h"
 
 /* include this first, before NO_IMPORT_PYGOBJECT is defined */
@@ -61,6 +59,7 @@ typedef struct {
 typedef enum {
     PYGWY_PROCESS, PYGWY_FILE, PYGWY_GRAPH, PYGWY_LAYER, PYGWY_UNDEFINED
 } PygwyPluginType;
+
 
 static gboolean         module_register       (void);
 static void             pygwy_proc_run        (GwyContainer *data,
@@ -184,6 +183,7 @@ pygwy_initialize_stderr_redirect(PyObject *d)
                      Py_file_input,
                      d,
                      d);
+    
 }
 
 static void
@@ -932,8 +932,9 @@ convert_gvalue_to_pyobject(GValue *value)
         g_warning("Value undefined.");
         return NULL;
     }
-    type = G_VALUE_TYPE(value);
-    gwy_debug("gvalue TYPE: %s\n", g_type_name(type));
+    type = G_TYPE_FUNDAMENTAL(G_VALUE_TYPE(value));
+    gwy_debug("gvalue fundamental type: %s, original type: %s", g_type_name(type), g_type_name(G_VALUE_TYPE(value)));
+    // g_value_type returns concete object type like GwyDataField (GWY_TYPE_DATA_FIELD)
     switch (type) {
         case G_TYPE_CHAR:
             o = PyInt_FromLong(g_value_get_char(value));

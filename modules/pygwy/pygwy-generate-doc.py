@@ -39,7 +39,9 @@ def replace_special(s):
    s = re.sub(p, rep_location, s)
    for c_class in c_class_list:
       s = s.replace(c_class+"_", get_python_name(c_class)+'.')
+   s = s.replace("Gwyddion", "ABCgwyddion")
    s = s.replace("Gwy", "")
+   s = s.replace("ABCgwyddion", "Gwyddion")
    s = s.replace("GWY_", "")
    #p = re.compile("(gwy\.[a-zA-Z\._]+)")
    #s = re.sub(p, rep_location, s)
@@ -72,6 +74,8 @@ def print_functions(spaces, method, docs, enums, level=1):
 
    for i in range(len(method.params)):
       # from is a keyword in Python
+      method.params[i].pname = method.params[i].pname.replace('[', '')
+      method.params[i].pname = method.params[i].pname.replace(']', '')
       if method.params[i].pname == "from":
          method.params[i].pname = "_from"
       if i+1 == len(method.params): 
@@ -190,17 +194,33 @@ print "# This is dummy GENERATED file used for generation of documentation"
 #objects/classes
 
 for obj in p.objects:
+   class_written = False
    if wrap_file_cont.find(obj.name) == -1:
       sys.stderr.write("class "+obj.c_name+" not found.\n")
       continue
    #print dir(obj)
-   print "class", obj.name+":"
+   methods = p.find_methods(obj)
+   if not methods:
+      continue
    constructor = p.find_constructor(obj, override)
    if constructor:
+      if not class_written:
+         print "class", obj.name+":"
+         if docs.has_key(obj.c_name):
+            print "     \"\"\""
+            printdoc(docs[obj.c_name].name)
+            printdoc(docs[obj.c_name].description)
+            for param in docs[obj.c_name].params:
+               print param
+               printdoc(docs[obj.c_name].get_param_description(param))
+            printdoc(docs[obj.c_name].ret)
+            print "     \"\"\""
+            #print dir(docs[obj.c_name])
+            #exit()
+         class_written = True
       ignore_functions.append(constructor.name)
       constructor.name = "__init__"
       print_functions("     ", constructor, docs, p.enums)
-   methods = p.find_methods(obj)
    for method in methods:
       # skip methods beginning with number
       if method.name[0] in ['0', '1','2', '3', '4', '5', '6', '7', '8', '9']:
@@ -210,7 +230,14 @@ for obj in p.objects:
          continue
       if wrap_file_cont.find(method.c_name) == -1 and override_file_cont.find(method.c_name) == -1:
          sys.stderr.write("method "+method.c_name+" not found.\n")
-         continue
+         method.name = "UNIMPLEMENTED_"+method.name
+      if not class_written:
+         print "class", obj.name+":"         
+         if docs.has_key(obj.c_name):
+            print "     \"\"\""
+            printdoc(docs[obj.c_name].description)
+            print "     \"\"\""
+         class_written = True
       print_functions("     ", method, docs, p.enums)
    
 # functions
@@ -230,6 +257,6 @@ for func in p.functions:
       continue
    if wrap_file_cont.find(func.c_name) == -1 and override_file_cont.find(method.c_name):
       sys.stderr.write("Func "+func.c_name+" not found.\n")
-      continue
+      func.name = "UNIMPLEMENTED_"+func.name
    print_functions("     ", func, docs, p.enums, 0)
 
