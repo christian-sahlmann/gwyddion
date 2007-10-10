@@ -33,6 +33,7 @@ filter	filters-presentations	basic-filters
 fraccor	editing-correction	fractal-correction
 fractal	fractal-analysis	fractal-dimension
 gradient	filters-presentations	gradient
+grain_cross	grain-analysis	grain-correlation
 grain_dist	grain-analysis	grain-distributions
 grain_mark	grain-analysis	grain-threshold
 grain_rem_threshold	grain-analysis	grain-remove-threshold
@@ -103,6 +104,7 @@ sdfile	managing-files
 seiko	managing-files
 sfunctions	statistical-analysis	sfunctions
 shade	filters-presentations	shade
+shimadzu	managing-files
 sis	managing-files
 slope_dist	statistical-analysis	slope-distribution
 spectro	single-point-spectra
