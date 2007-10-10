@@ -107,7 +107,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports APE (Applied Physics and Engineering) data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.7",
+    "0.8",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -150,7 +150,7 @@ apefile_detect(const GwyFileDetectInfo *fileinfo,
         && vbtype == 7) {
         score = 60;
         /* This works for new file format only */
-        if (!strncmp(buffer + 234, "APERES", 6))
+        if (!strncmp(fileinfo->head + 234, "APERES", 6))
             score = 100;
     }
 
