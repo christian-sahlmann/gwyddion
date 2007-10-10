@@ -32,7 +32,7 @@ if magic.has_key('header'):
     output.append(magic['header'])
 
 # Keep the `GENERATED' string split to prevent match here
-output.append(magic['comment'] % 'This is a ' + 'GENERATED' + ' file.')
+output.append(magic['comment'] % ('This is a ' + 'GENERATED' + ' file.'))
 
 for filename in sys.argv[2:]:
     base = os.path.basename(filename)
