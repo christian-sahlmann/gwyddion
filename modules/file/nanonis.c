@@ -77,6 +77,10 @@ typedef struct {
     gint yres;
     gdouble xreal;
     gdouble yreal;
+    /* Set if the times are set to N/A or NaN, this seems to be done in slice
+     * files of 3D data.  We cannot trust direction filed then as it's set to
+     * `both' although the file contains one direction only. */
+    gboolean bogus_scan_time;
 } SXMFile;
 
 static gboolean      module_register(void);
@@ -91,7 +95,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Nanonis SXM data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.6",
+    "0.7",
     "David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
@@ -575,6 +579,16 @@ sxm_load(const gchar *filename,
         }
     }
 
+    /* Scan times, check for bogus values indicating generated slice files. */
+    if (sxmfile.ok) {
+        if ((s = g_hash_table_lookup(sxmfile.meta, "ACQ_TIME"))
+            && gwy_strequal(s, "N/A"))
+            sxmfile.bogus_scan_time = TRUE;
+        else if ((s = g_hash_table_lookup(sxmfile.meta, "SCAN_TIME"))
+                 && strncmp(s, "NaN", 3) == 0)
+            sxmfile.bogus_scan_time = TRUE;
+    }
+
     /* Check file size */
     if (sxmfile.ok) {
         gsize expected_size;
@@ -583,8 +597,16 @@ sxm_load(const gchar *filename,
         for (i = 0; i < sxmfile.ndata; i++) {
             guint d = sxmfile.data_info[i].direction;
 
-            if (d == DIR_BOTH)
-                expected_size += 2*size1;
+            if (d == DIR_BOTH) {
+                /* XXX: Assume generated files lie about the direction and
+                 * they are always unidirectional. */
+                if (sxmfile.bogus_scan_time) {
+                    sxmfile.data_info[i].direction = DIR_FORWARD;
+                    expected_size += size1;
+                }
+                else
+                    expected_size += 2*size1;
+            }
             else if (d == DIR_FORWARD || d == DIR_BACKWARD)
                 expected_size += size1;
             else {
