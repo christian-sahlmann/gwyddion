@@ -137,7 +137,7 @@ static GwyModuleInfo module_info = {
     N_("Imports Veeco (Digital Instruments) Nanoscope data files, "
        "version 3 or newer."),
     "Yeti <yeti@gwyddion.net>",
-    "0.20",
+    "0.21",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -273,17 +273,37 @@ nanoscope_load(const gchar *filename,
         for (l = list; l; l = g_list_next(l)) {
             ndata = (NanoscopeData*)l->data;
             if (ndata->data_field) {
+                const gchar *name;
+
                 g_snprintf(key, sizeof(key), "/%d/data", i);
                 gwy_container_set_object_by_name(container, key,
                                                  ndata->data_field);
                 g_snprintf(key, sizeof(key), "/%d/data/title", i);
-                if ((val = g_hash_table_lookup(ndata->hash, "@2:Image Data"))
-                    && val->soft_scale)
-                    gwy_container_set_string_by_name(container, key,
-                                                     g_strdup(val->soft_scale));
+                name = NULL;
+                if ((val = g_hash_table_lookup(ndata->hash,
+                                               "@2:Image Data"))
+                    || (val = g_hash_table_lookup(ndata->hash,
+                                                  "@3:Image Data"))) {
+                    if (val->soft_scale)
+                        name = val->soft_scale;
+                    else if (val->hard_value_str)
+                        name = val->hard_value_str;
+                }
                 else if ((val = g_hash_table_lookup(ndata->hash, "Image data")))
-                    gwy_container_set_string_by_name(container, key,
-                                                     g_strdup(val->hard_value_str));
+                    name = val->hard_value_str;
+
+                if (name) {
+                    gsize nlen = strlen(name);
+
+                    /* Unquote name if it's quoted. */
+                    if (name[0] == '"' && name[nlen-1] == '"')
+                        gwy_container_set_string_by_name(container, key,
+                                                         g_strndup(name+1,
+                                                                   nlen-2));
+                    else
+                        gwy_container_set_string_by_name(container, key,
+                                                         g_strdup(name));
+                }
 
                 meta = nanoscope_get_metadata(ndata->hash, list);
                 g_snprintf(key, sizeof(key), "/%d/meta", i);
@@ -599,38 +619,48 @@ get_physical_scale(GHashTable *hash,
         return siunit;
     }
 
-    key = g_strdup_printf("@%s", val->soft_scale);
+    /* Resolve reference to a soft scale */
+    if (val->soft_scale) {
+        key = g_strdup_printf("@%s", val->soft_scale);
 
-    if (!(sval = g_hash_table_lookup(scannerlist, key))
-        && (!scanlist || !(sval = g_hash_table_lookup(scanlist, key)))) {
-        g_warning("`%s' not found", key);
+        if (!(sval = g_hash_table_lookup(scannerlist, key))
+            && (!scanlist || !(sval = g_hash_table_lookup(scanlist, key)))) {
+            g_warning("`%s' not found", key);
+            g_free(key);
+            /* XXX */
+            *scale = val->hard_value;
+            return gwy_si_unit_new("");
+        }
+
+        *scale = val->hard_value*sval->hard_value;
+
+        if (!sval->hard_value_units || !*sval->hard_value_units) {
+            if (gwy_strequal(val->soft_scale, "Sens. Phase"))
+                siunit = gwy_si_unit_new("deg");
+            else
+                siunit = gwy_si_unit_new("V");
+        }
+        else {
+            siunit = gwy_si_unit_new_parse(sval->hard_value_units, &q);
+            siunit2 = gwy_si_unit_new("V");
+            gwy_si_unit_multiply(siunit, siunit2, siunit);
+            gwy_debug("Scale1 = %g V/LSB", val->hard_value);
+            gwy_debug("Scale2 = %g %s",
+                      sval->hard_value, sval->hard_value_units);
+            *scale *= pow10(q);
+            gwy_debug("Total scale = %g %s/LSB",
+                    *scale, gwy_si_unit_get_string(siunit,
+                                                    GWY_SI_UNIT_FORMAT_PLAIN));
+            g_object_unref(siunit2);
+        }
         g_free(key);
-        /* XXX */
-        *scale = val->hard_value;
-        return gwy_si_unit_new("");
-    }
-
-    *scale = val->hard_value*sval->hard_value;
-
-    if (!sval->hard_value_units || !*sval->hard_value_units) {
-        if (gwy_strequal(val->soft_scale, "Sens. Phase"))
-            siunit = gwy_si_unit_new("deg");
-        else
-            siunit = gwy_si_unit_new("V");
     }
     else {
-        siunit = gwy_si_unit_new_parse(sval->hard_value_units, &q);
-        siunit2 = gwy_si_unit_new("V");
-        gwy_si_unit_multiply(siunit, siunit2, siunit);
-        gwy_debug("Scale1 = %g V/LSB", val->hard_value);
-        gwy_debug("Scale2 = %g %s", sval->hard_value, sval->hard_value_units);
-        *scale *= pow10(q);
-        gwy_debug("Total scale = %g %s/LSB",
-                  *scale, gwy_si_unit_get_string(siunit,
-                                                 GWY_SI_UNIT_FORMAT_PLAIN));
-        g_object_unref(siunit2);
+        /* We have '@2:Z scale' but the reference to soft scale is missing,
+         * the quantity is something in the hard units (seen for Potential). */
+        siunit = gwy_si_unit_new_parse(val->hard_value_units, &q);
+        *scale = val->hard_value * pow10(q);
     }
-    g_free(key);
 
     return siunit;
 }
