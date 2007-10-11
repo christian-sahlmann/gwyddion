@@ -2,7 +2,7 @@
 dnl Process this file with autoconf to produce a configure script.
 m4_define([gwy_version_major],[2])
 m4_define([gwy_version_minor],[8])
-m4_define([gwy_version_string],[gwy_version_major.gwy_version_minor.20070929])
+m4_define([gwy_version_string],[gwy_version_major.gwy_version_minor.20071011])
 AC_INIT([Gwyddion], [gwy_version_string], [klapetek@gwyddion.net])
 # Use -release for unstable version libs instead of -version-info, because
 # we *do* break compatibility each version
@@ -81,6 +81,8 @@ m4_defun([_LT_AC_LANG_CXX_CONFIG],[:])
 m4_defun([_LT_AC_LANG_F77_CONFIG],[:])
 AC_DISABLE_STATIC
 AC_PROG_CC
+dnl FIXME: Can't do this, see math section below
+dnl AC_PROG_CC_C99
 AC_AIX
 AC_GNU_SOURCE
 AC_LIBTOOL_WIN32_DLL
@@ -275,15 +277,15 @@ if test "$GCC" = yes; then
   # FIXME: We would like an error, but gcc can't make one w/o -std, which is
   # too much.
   GWY_PROG_CC_OPTION([WMIXED_DECL],[-Wdeclaration-after-statement],,)
+  GWY_PROG_CC_OPTION([WREDUNDANT_DECLS],[-Wredundant-decls],,)
   GWY_PROG_CC_OPTION([FNO_TRAP_MATH],[-fno-trapping-math],,)
   GWY_PROG_CC_OPTION([FNO_MATH_ERRNO],[-fno-math-errno],,)
   GWY_PROG_CC_OPTION([FNO_STRICT_ALIAS],[-fno-strict-aliasing],,)
   # Flags we can't use:
-  # -Wredundant-decls makes glib.h + gstdio.h noisy
   # -Wstrict-protoypes makes gtkitemfactory.h noisy, but they have a
   #    comment there they can't fix it due to compatibility
   # -Wwrite-strings because it makes all struct initializations very noisy
-  WARNING_CFLAGS="-Wall -W -Wshadow -Wpointer-arith -Wno-sign-compare -Wundef $PROG_CC_ERR_IFD $PROG_CC_WNO_SYS_HEADERS $PROG_CC_WNO_POINTER_SIGN $PROG_CC_WNO_EMPTY_FMT $PROG_CC_WMIXED_DECL"
+  WARNING_CFLAGS="-Wall -W -Wshadow -Wpointer-arith -Wno-sign-compare -Wundef $PROG_CC_ERR_IFD $PROG_CC_WNO_SYS_HEADERS $PROG_CC_WNO_POINTER_SIGN $PROG_CC_WNO_EMPTY_FMT $PROG_CC_WMIXED_DECL $PROG_CC_WREDUNDANT_DECLS"
   WARNING_NOUNUSED_PAR="$PROG_CC_WNO_UNUSED_PAR"
   PREMISE_CFLAGS="$PROG_CC_FNO_TRAP_MATH $PROG_CC_FNO_MATH_ERRNO $PROG_CC_FNO_STRICT_ALIAS"
 fi
@@ -458,7 +460,11 @@ AC_CHECK_HEADERS( \
 # Check for library functions.
 AC_FUNC_MMAP
 GWY_CHECK_MATH_FUNCS([cbrt hypot pow10 acosh asinh atanh])
-AC_CHECK_FUNCS([sincos fpclassify _fpclass])
+AC_CHECK_FUNCS([sincos _fpclass])
+dnl FIXME: We need C99 for this.  But we must be able to switch off its
+dnl aliasing rules which at this moment we can do for GCC only.  That's too
+dnl limited.
+dnl GWY_CHECK_FPCLASSIFY
 
 #############################################################################
 # I18n
