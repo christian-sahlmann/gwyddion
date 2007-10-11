@@ -224,9 +224,10 @@ gwy_data_line_part_fft(GwyDataLine *rsrc, GwyDataLine *isrc,
 
     g_return_if_fail(GWY_IS_DATA_LINE(rsrc));
     g_return_if_fail(!isrc || GWY_IS_DATA_LINE(isrc));
-    if (isrc)
+    if (isrc) {
         g_return_if_fail(!gwy_data_line_check_compatibility
                                      (rsrc, isrc, GWY_DATA_COMPATIBILITY_RES));
+    }
     g_return_if_fail(GWY_IS_DATA_LINE(rdest));
     g_return_if_fail(GWY_IS_DATA_LINE(idest));
     g_return_if_fail(level >= 0 && level <= 2);
@@ -295,9 +296,10 @@ gwy_data_line_fft_raw(GwyDataLine *rsrc,
 {
     g_return_if_fail(GWY_IS_DATA_LINE(rsrc));
     g_return_if_fail(!isrc || GWY_IS_DATA_LINE(isrc));
-    if (isrc)
+    if (isrc) {
         g_return_if_fail(!gwy_data_line_check_compatibility
                                      (rsrc, isrc, GWY_DATA_COMPATIBILITY_RES));
+    }
     g_return_if_fail(GWY_IS_DATA_LINE(rdest));
     g_return_if_fail(GWY_IS_DATA_LINE(idest));
 
@@ -554,9 +556,10 @@ gwy_data_field_2dfft_raw(GwyDataField *rin,
 {
     g_return_if_fail(GWY_IS_DATA_FIELD(rin));
     g_return_if_fail(!iin || GWY_IS_DATA_FIELD(iin));
-    if (iin)
+    if (iin) {
         g_return_if_fail(!gwy_data_field_check_compatibility
                                        (rin, iin, GWY_DATA_COMPATIBILITY_RES));
+    }
     g_return_if_fail(GWY_IS_DATA_FIELD(rout));
     g_return_if_fail(GWY_IS_DATA_FIELD(iout));
 
@@ -1149,9 +1152,10 @@ gwy_data_field_1dfft_raw(GwyDataField *rin,
 {
     g_return_if_fail(GWY_IS_DATA_FIELD(rin));
     g_return_if_fail(!iin || GWY_IS_DATA_FIELD(iin));
-    if (iin)
+    if (iin) {
         g_return_if_fail(!gwy_data_field_check_compatibility
                                        (rin, iin, GWY_DATA_COMPATIBILITY_RES));
+    }
     g_return_if_fail(GWY_IS_DATA_FIELD(rout));
     g_return_if_fail(GWY_IS_DATA_FIELD(iout));
 
