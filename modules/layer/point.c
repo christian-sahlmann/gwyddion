@@ -78,7 +78,6 @@ struct _GwySelectionPointClass {
 static gboolean module_register                  (void);
 static GType    gwy_layer_point_get_type         (void) G_GNUC_CONST;
 static GType    gwy_selection_point_get_type     (void) G_GNUC_CONST;
-static void     gwy_layer_point_class_init       (GwyLayerPointClass *klass);
 static void     gwy_layer_point_set_property     (GObject *object,
                                                   guint prop_id,
                                                   const GValue *value,
