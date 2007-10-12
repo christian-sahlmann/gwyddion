@@ -1,5 +1,5 @@
 /*** BEGIN file-header ***/
-#include <glib-object.h>
+#include "@OWN_HEADER@"
 
 /*** END file-header ***/
 

@@ -28,6 +28,7 @@ mkenum_h_template = $(top_srcdir)/utils/mkenum.h.template
 mkenum_fix_output = \
 	| sed -e 's/_\([123]\)_D/_\1D_/g' \
 	      -e "s/@ID@/$(MKENUM_ID)/g" \
+	      -e "s/@OWN_HEADER@/$(MKENUM_NAME).h/g" \
 	      -e '1s:.*:/* This is a 'GENERATED' file. */:'
 
 MAINTAINERCLEANFILES += $(mkenum_built_sources) $(mkenum_stamp_files)
