@@ -82,6 +82,7 @@ typedef struct {
     gdouble zoom;
     PixmapOutput xytype;
     PixmapOutput ztype;
+    GwyRGBA inset_color;
     gboolean draw_mask;
     gboolean draw_selection;
     gboolean scale_font;
@@ -111,8 +112,10 @@ typedef struct {
 
 typedef struct {
     PixmapSaveArgs *args;
+    GtkWidget *dialog;
     GSList *xytypes;
     GSList *ztypes;
+    GtkWidget *inset_color;
     GtkObject *zoom;
     GtkObject *width;
     GtkObject *height;
@@ -238,7 +241,7 @@ static GdkPixbuf*        fmscale                   (gint size,
 static GdkPixbuf*        scalebar                  (gint size,
                                                     gdouble real,
                                                     gdouble zoom,
-                                                    const guchar *color,
+                                                    const GwyRGBA *color,
                                                     GwySIUnit *siunit);
 static GdkDrawable*      prepare_drawable          (gint width,
                                                     gint height,
@@ -309,7 +312,7 @@ saveable_formats[] = {
 static GSList *pixmap_formats = NULL;
 
 static const PixmapSaveArgs pixmap_save_defaults = {
-    1.0, PIXMAP_RULERS, PIXMAP_FMSCALE,
+    1.0, PIXMAP_RULERS, PIXMAP_FMSCALE, { 1.0, 1.0, 1.0, 1.0 },
     TRUE, TRUE, FONT_SIZE, TRUE,
     /* Interface only */
     NULL, NULL, 0, 0, FALSE,
@@ -1620,6 +1623,7 @@ pixmap_draw_pixbuf(GwyContainer *data,
 
     if (mode == GWY_RUN_INTERACTIVE
         && !pixmap_save_dialog(data, &args, format_name)) {
+        pixmap_save_save_args(settings, &args);
         err_CANCELLED(error);
         return NULL;
     }
@@ -1684,11 +1688,10 @@ pixmap_real_draw_pixbuf(GwyContainer *data,
 
     if (args->xytype == PIXMAP_SCALEBAR) {
         GdkPixbuf *sbpixbuf;
-        guchar color[3] = { 0xff, 0xff, 0xff };
         gint sbw, sbh;
 
         sbpixbuf = scalebar(zwidth, gwy_data_field_get_xreal(args->dfield),
-                            fontzoom, color, siunit_xy);
+                            fontzoom, &args->inset_color, siunit_xy);
         sbw = gdk_pixbuf_get_width(sbpixbuf);
         sbh = gdk_pixbuf_get_height(sbpixbuf);
         gdk_pixbuf_composite(sbpixbuf, datapixbuf,
@@ -1880,12 +1883,14 @@ save_xytype_changed(GtkWidget *button,
         return;
 
     controls->args->xytype = gwy_radio_buttons_get_current(controls->xytypes);
+    gtk_widget_set_sensitive(controls->inset_color,
+                             controls->args->xytype == PIXMAP_SCALEBAR);
     update_preview(controls);
 }
 
 static void
 save_ztype_changed(GtkWidget *button,
-                    PixmapSaveControls *controls)
+                   PixmapSaveControls *controls)
 {
     if (!gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(button)))
         return;
@@ -1999,6 +2004,45 @@ font_size_changed(GtkAdjustment *adj,
     update_preview(controls);
 }
 
+static void
+select_inset_color(GwyColorButton *button,
+                   PixmapSaveControls *controls)
+{
+    GtkWindow *parent;
+    GtkWidget *dialog, *selector;
+    GdkColor gdkcolor;
+    gint response;
+
+    gwy_rgba_to_gdk_color(&controls->args->inset_color, &gdkcolor);
+
+    dialog = gtk_color_selection_dialog_new(_("Change Inset Color"));
+    if (gtk_major_version == 2 && gtk_minor_version < 10)
+        gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
+
+    selector = GTK_COLOR_SELECTION_DIALOG(dialog)->colorsel;
+    gtk_color_selection_set_current_color(GTK_COLOR_SELECTION(selector),
+                                          &gdkcolor);
+    gtk_color_selection_set_has_palette(GTK_COLOR_SELECTION(selector), FALSE);
+    gtk_color_selection_set_has_opacity_control(GTK_COLOR_SELECTION(selector),
+                                                FALSE);
+
+    parent = GTK_WINDOW(controls->dialog);
+    gtk_window_set_transient_for(GTK_WINDOW(dialog), parent);
+    gtk_window_set_modal(parent, FALSE);
+    response = gtk_dialog_run(GTK_DIALOG(dialog));
+    gtk_color_selection_get_current_color(GTK_COLOR_SELECTION(selector),
+                                          &gdkcolor);
+    gtk_widget_destroy(dialog);
+    gtk_window_set_modal(parent, TRUE);
+
+    if (response != GTK_RESPONSE_OK)
+        return;
+
+    gwy_rgba_from_gdk_color(&controls->args->inset_color, &gdkcolor);
+    gwy_color_button_set_color(button, &controls->args->inset_color);
+    update_preview(controls);
+}
+
 static gboolean
 pixmap_save_dialog(GwyContainer *data,
                    PixmapSaveArgs *args,
@@ -2030,6 +2074,7 @@ pixmap_save_dialog(GwyContainer *data,
     gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
     g_free(title);
+    controls.dialog = dialog;
 
     hbox = gtk_hbox_new(FALSE, 20);
     gtk_container_set_border_width(GTK_CONTAINER(hbox), 4);
@@ -2123,7 +2168,17 @@ pixmap_save_dialog(GwyContainer *data,
                                     _("_Inset scale bar"), PIXMAP_SCALEBAR,
                                     NULL);
     row = gwy_radio_buttons_attach_to_table(controls.xytypes,
-                                            GTK_TABLE(table), 3, row);
+                                            GTK_TABLE(table), 2, row);
+
+    controls.inset_color = gwy_color_button_new_with_color(&args->inset_color);
+    gwy_color_button_set_use_alpha(GWY_COLOR_BUTTON(controls.inset_color),
+                                   FALSE);
+    gtk_widget_set_sensitive(controls.inset_color,
+                             args->xytype == PIXMAP_SCALEBAR);
+    gtk_table_attach(GTK_TABLE(table), controls.inset_color,
+                     2, 3, row-1, row, 0, 0, 0, 0);
+    g_signal_connect(controls.inset_color, "clicked",
+                     G_CALLBACK(select_inset_color), &controls);
     gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
 
     label = gtk_label_new(_("Value scale:"));
@@ -2495,7 +2550,7 @@ static GdkPixbuf*
 scalebar(gint size,
          gdouble real,
          gdouble zoom,
-         const guchar *color,
+         const GwyRGBA *color,
          GwySIUnit *siunit)
 {
     static const double sizes[] = {
@@ -2503,6 +2558,7 @@ scalebar(gint size,
         10.0, 20.0, 30.0, 40.0, 50.0,
         100.0, 200.0, 300.0, 400.0, 500.0,
     };
+    guchar color_bytes[3];
     PangoRectangle logical;
     PangoLayout *layout;
     GdkDrawable *drawable;
@@ -2561,6 +2617,10 @@ scalebar(gint size,
     g_object_unref(layout);
     g_string_free(s, TRUE);
 
+    color_bytes[0] = floor(255.999999*color->r);
+    color_bytes[1] = floor(255.999999*color->g);
+    color_bytes[2] = floor(255.999999*color->b);
+
     rowstride = gdk_pixbuf_get_rowstride(pixbuf);
     pixels = gdk_pixbuf_get_pixels(pixbuf);
     for (i = 0; i < (guint)height; i++) {
@@ -2568,9 +2628,9 @@ scalebar(gint size,
 
         for (j = 0; j < (guint)width; j++) {
             if (row[4*j] < 120) {
-                row[4*j] = color[0];
-                row[4*j + 1] = color[1];
-                row[4*j + 2] = color[2];
+                row[4*j] = color_bytes[0];
+                row[4*j + 1] = color_bytes[1];
+                row[4*j + 2] = color_bytes[2];
             }
             else
                 row[4*j + 3] = 0;
@@ -2660,6 +2720,7 @@ static const gchar draw_selection_key[] = "/module/pixmap/draw_selection";
 static const gchar font_size_key[]      = "/module/pixmap/font_size";
 static const gchar xytype_key[]         = "/module/pixmap/xytype";
 static const gchar ztype_key[]          = "/module/pixmap/ztype";
+static const gchar inset_color_key[]    = "/module/pixmap/inset_color";
 static const gchar scale_font_key[]     = "/module/pixmap/scale_font";
 static const gchar zoom_key[]           = "/module/pixmap/zoom";
 
@@ -2668,6 +2729,7 @@ pixmap_save_sanitize_args(PixmapSaveArgs *args)
 {
     args->xytype = MIN(args->xytype, PIXMAP_SCALEBAR);
     args->ztype = MIN(args->ztype, PIXMAP_FMSCALE);
+    args->inset_color.a = 1.0;
     args->zoom = CLAMP(args->zoom, 0.06, 16.0);
     args->draw_mask = !!args->draw_mask;
     args->draw_selection = !!args->draw_selection;
@@ -2684,6 +2746,7 @@ pixmap_save_load_args(GwyContainer *container,
     gwy_container_gis_double_by_name(container, zoom_key, &args->zoom);
     gwy_container_gis_enum_by_name(container, xytype_key, &args->xytype);
     gwy_container_gis_enum_by_name(container, ztype_key, &args->ztype);
+    gwy_rgba_get_from_container(&args->inset_color, container, inset_color_key);
     gwy_container_gis_boolean_by_name(container, draw_mask_key,
                                       &args->draw_mask);
     gwy_container_gis_boolean_by_name(container, draw_selection_key,
@@ -2702,6 +2765,7 @@ pixmap_save_save_args(GwyContainer *container,
     gwy_container_set_double_by_name(container, zoom_key, args->zoom);
     gwy_container_set_enum_by_name(container, xytype_key, args->xytype);
     gwy_container_set_enum_by_name(container, ztype_key, args->ztype);
+    gwy_rgba_store_to_container(&args->inset_color, container, inset_color_key);
     gwy_container_set_boolean_by_name(container, draw_mask_key,
                                       args->draw_mask);
     gwy_container_set_boolean_by_name(container, draw_selection_key,
