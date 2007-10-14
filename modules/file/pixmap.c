@@ -1695,9 +1695,9 @@ pixmap_real_draw_pixbuf(GwyContainer *data,
         sbw = gdk_pixbuf_get_width(sbpixbuf);
         sbh = gdk_pixbuf_get_height(sbpixbuf);
         gdk_pixbuf_composite(sbpixbuf, datapixbuf,
-                             zwidth - sbw - gap, zheight - sbh - gap,
+                             zwidth - sbw - gap/2, zheight - sbh - gap/2,
                              sbw, sbh,
-                             zwidth - sbw - gap, zheight - sbh - gap,
+                             zwidth - sbw - gap/2, zheight - sbh - gap/2,
                              1.0, 1.0,
                              GDK_INTERP_TILES, 0xff);
         g_object_unref(sbpixbuf);
@@ -1985,8 +1985,8 @@ scale_font_changed(GtkToggleButton *check,
                                   zoom*FONT_SIZE);
         controls->in_update = FALSE;
     }
-    else if (controls->args->xytype != PIXMAP_NONE
-             || controls->args->ztype != PIXMAP_NONE)
+    if (controls->args->xytype != PIXMAP_NONE
+        || controls->args->ztype != PIXMAP_NONE)
         update_preview(controls);
 }
 
