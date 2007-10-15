@@ -1,6 +1,23 @@
 Pygwy - Python binding for Gwyddion
 -----------------------------------
 
+Requirements
+============
+Python >= 2.4 
+Pygtk >= 2.10, PyGObject >= 2.12: http://www.pygtk.org/
+
+Compilation
+===========
+By configure script:
+  ./configure --enable-pygwy
+
+MSVC - set following variables in make.msc:
+  ENABLE_PYGWY = 1
+  PYTHON_TOP = Python installation directory (like C:\Python24)
+  PYTHON_LIBRARY = Python linking library (like python24.lib)
+
+Script location
+================
 The Python modules are stored in a Gwyddion user directory (~/.gwyddion/pygwy
 or %USER_DIRECTORY%/gwyddion/pygwy). The 'pygwy' directory is automatically 
 created when it does not exist.

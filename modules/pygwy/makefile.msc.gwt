@@ -9,17 +9,14 @@ pygwy_module = pygwy.la
 
 !IFDEF ENABLE_PYGWY
 PYGWY_LIBS = \
-	python24.lib \
-	pygobject.lib
+	$(PYTHON_LIBRARY) 
 
 PYGWY_CFLAGS = \
 	-I $(PYTHON_TOP)\Include \
-	-I $(PYTHON_TOP)\PC \
-	-I $(PYGOBJECT_TOP)\gobject
+	-I $(PYTHON_TOP)\Include\pygtk-2.0
 
 PYGWY_LDFLAGS = \
-	/libpath:$(PYTHON_TOP)\PC\VC6 \
-	/libpath:$(PYGOBJECT_TOP)\lib
+	/libpath:$(PYTHON_TOP)\libs
 
 MOD_CFLAGS = \
 	-I . -I $(TOP_SRCDIR) $(COMMON_CFLAGS) $(MOD_CFLAGS) \

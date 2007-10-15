@@ -154,6 +154,23 @@ _wrap_gwy_app_data_browser_get_current_datafield(PyGObject *self)
    return pygobject_new((GObject *)dfield);
 }
 %%
+define gwy_app_data_browser_get_current_dataview noargs
+/**
+ *  gwy_app_data_browser_get_current_dataview:
+ *
+ *  Get current dataview.
+ *
+ *  Returns: reference to current dataview as L{DataView} object
+**/   
+static PyObject *
+_wrap_gwy_app_data_browser_get_current_dataview(PyGObject *self)
+{
+   GwyDataField *dview;
+
+   gwy_app_data_browser_get_current(GWY_APP_DATA_VIEW, &dview, NULL);
+   return pygobject_new((GObject *)dview);
+}
+%%
 define gwy_app_data_browser_get_current_mask noargs
 /**
  *  gwy_app_data_browser_get_current_mask:
