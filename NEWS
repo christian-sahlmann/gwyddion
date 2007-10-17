@@ -36,6 +36,8 @@ Modules:
 - Nanonis: Slices extracted from 3D data are imported.
 - NetCDF: GXSM files that use `var_unit' instead of `unit' for the unit string
   are imported with correct scales.
+- Nanoscope: Crash on data channels that do not refer to any soft scale in
+  their ZScale and use the raw hard scale was fixed.
 - Line layer: Crashes on Win32 while drawing line numbers were fixed, it
   uses PangoCairo instead of Pango FT2 now.
 - Basic operations: Function to null horizontal offsets, moving the origin
