@@ -20,8 +20,8 @@
  */
 /*
  *  The list of HDF tags is covered by the following license (it was taken
- *  from libHDF4 header files, mainly due to my laziness), the rest of the
- *  HDF code is a clean-room implementation:
+ *  from libHDF4 header files, mainly due to me being too lazy to retype them),
+ *  the rest of the HDF code was implementated from scratch:
  *
  *  Copyright Notice and Statement for NCSA Hierarchical Data Format (HDF)
  *  Software Library and Utilities
