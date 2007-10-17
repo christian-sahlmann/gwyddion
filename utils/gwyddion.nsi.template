@@ -1,0 +1,169 @@
+; gwyddion.nsi
+;
+;--------------------------------
+; Include header for Modern UI
+!include "MUI.nsh"
+
+; The name of the installer
+Name "Gwyddion"
+
+; The file to write
+OutFile "gwyddion-%VERSION%.exe"
+
+; The default installation directory
+InstallDir $PROGRAMFILES\Gwyddion
+
+; Registry key to check for directory (so if you install again, it will 
+; overwrite the old one automatically)
+InstallDirRegKey HKLM "Software\Gwyddion" "Install_Dir"
+
+;--------------------------------
+
+; Pages
+  !insertmacro MUI_PAGE_LICENSE "..\COPYING"
+  !insertmacro MUI_PAGE_COMPONENTS
+  !insertmacro MUI_PAGE_DIRECTORY
+  !insertmacro MUI_PAGE_INSTFILES
+  
+  !insertmacro MUI_UNPAGE_CONFIRM
+  !insertmacro MUI_UNPAGE_INSTFILES
+  
+
+;--------------------------------
+;Languages
+ 
+  !insertmacro MUI_LANGUAGE "English"
+
+;--------------------------------
+;Installer Sections
+
+
+;--------------------------------
+
+; The stuff to install
+Section "Gwyddion (required)" gwyddion
+
+  SectionIn RO
+  
+  ; Set output path to the installation directory.
+  SetOutPath $INSTDIR
+  
+  ; Put file there
+%GWYDDION_INSTALL%
+    
+  ; Write the installation path into the registry
+  WriteRegStr HKLM SOFTWARE\Gwyddion "Install_Dir" "$INSTDIR"
+  
+  ; Write the uninstall keys for Windows
+  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Gwyddion" "DisplayName" "Gwyddion"
+  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Gwyddion" "UninstallString" '"$INSTDIR\uninstall.exe"'
+  WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Gwyddion" "NoModify" 1
+  WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Gwyddion" "NoRepair" 1
+  WriteUninstaller "uninstall.exe"
+  
+SectionEnd
+
+; Optional section (can be disabled by the user)
+
+Section "GTK runtime libraries (required when no GTK runtime enviroment is installed)" gtk
+  SetOutPath $INSTDIR
+%GTK_INSTALL%
+SectionEnd
+
+Section "Python wrapper (Pygwy module)" pygwy
+  SetOutPath $INSTDIR\modules
+%PYGWY_INSTALL%
+  Var /GLOBAL PYTHON_PATH
+  ClearErrors
+  DetailPrint "Checking Python..."
+  ReadRegStr $PYTHON_PATH HKLM "software\Python\PythonCore\2.4\InstallPath" ""  
+  IfErrors 0 NoError
+  ReadRegStr $PYTHON_PATH HKLM "software\Python\PythonCore\2.5\InstallPath" ""
+  IfErrors 0 NoError  
+    MessageBox MB_OK "Python not installed, please install Python >= 2.4 for Pygwy module."      
+  NoError:
+  DetailPrint "  Python location: $PYTHON_PATH"
+  
+  DetailPrint "Checking PyGTK..."
+	nsExec::Exec '"$PYTHON_PATH\python.exe" -c "import pygtk"'
+	Pop $0 # return value/error/timeout	
+	IntCmp 0 $0 have_pygtk
+	  DetailPrint "   PyGTK not found. "
+	  MessageBox MB_OK "PyGTK not installed, please install PyGTK >= 2.10 ($PYTHON_PATH)."
+	have_pygtk:
+	
+  DetailPrint "Checking PyGObject..."
+	nsExec::Exec '"$PYTHON_PATH\python.exe" -c "import gobject"'
+	Pop $0 # return value/error/timeout	
+	IntCmp 0 $0 have_pygobject
+	  DetailPrint "   PyGObject not found. "
+	  MessageBox MB_OK "PyGObject not installed, please install PyGObject >= 2.12 for Python ($PYTHON_PATH)."	  
+	have_pygobject:	
+	
+  DetailPrint "Checking PyCairo..."
+	nsExec::Exec '"$PYTHON_PATH\python.exe" -c "import cairo"'
+	Pop $0 # return value/error/timeout	
+	IntCmp 0 $0 have_pycairo
+	  DetailPrint "   PyCairo not found. "
+	  MessageBox MB_OK "PyCairo not installed, please install PyCairo >= 1.2 for Python ($PYTHON_PATH)."	  
+	have_pycairo:	
+SectionEnd
+
+Section "Start Menu Shortcuts" startmenu
+  SetOutPath $INSTDIR
+  CreateDirectory "$SMPROGRAMS\Gwyddion"
+  CreateShortCut "$SMPROGRAMS\Gwyddion\Uninstall.lnk" "$INSTDIR\uninstall.exe" "" "$INSTDIR\uninstall.exe" 0
+  CreateShortCut "$SMPROGRAMS\Gwyddion\Gwyddion.lnk" "$INSTDIR\gwyddion.exe" "" "$INSTDIR\pixmaps\gwyddion.ico"
+  
+SectionEnd
+
+
+;--------------------------------
+;--------------------------------
+;Descriptions
+
+  ;Language strings
+  LangString DESC_pygwy ${LANG_ENGLISH} "Python wrapper module. Required: Python>=2.4, PyGTK>=2.10, PyGObject>=2.12"
+  LangString DESC_gtk ${LANG_ENGLISH} "GTK runtime libraries are required when no GTK runtime environment is installed."
+  LangString DESC_startmenu ${LANG_ENGLISH} ""
+  LangString DESC_gwyddion ${LANG_ENGLISH} ""
+
+  ;Assign language strings to sections
+  !insertmacro MUI_FUNCTION_DESCRIPTION_BEGIN
+    !insertmacro MUI_DESCRIPTION_TEXT ${pygwy} $(DESC_pygwy)
+    !insertmacro MUI_DESCRIPTION_TEXT ${gtk} $(DESC_gtk)
+    !insertmacro MUI_DESCRIPTION_TEXT ${gwyddion} $(DESC_gwyddion)
+    !insertmacro MUI_DESCRIPTION_TEXT ${startmenu} $(DESC_startmenu)
+  !insertmacro MUI_FUNCTION_DESCRIPTION_END
+
+;--------------------------------
+
+
+; Uninstaller
+
+Section "Uninstall"
+  
+  ; Remove registry keys
+  DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Gwyddion"
+  DeleteRegKey HKLM SOFTWARE\Gwyddion
+
+  ; Pygwy uninstall
+%PYGWY_UNINSTALL%
+
+  ; GTK uninstall  
+%GTK_UNINSTALL%
+
+  ; Gwyddion uninstall
+%GWYDDION_UNINSTALL%
+
+
+  
+  ; Remove shortcuts, if any
+  Delete "$SMPROGRAMS\Gwyddion\*.*"
+
+  ; Remove directories used
+  RMDir "$SMPROGRAMS\Gwyddion"
+  RMDir "$INSTDIR"
+
+SectionEnd
+  
