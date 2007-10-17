@@ -1,9 +1,10 @@
-2.8.20071010
+2.8.20071017
 
 2.9 (2000-00-00)
 Application:
 - Gtk+ 2.8 and Pango with Cairo rendering support is now required.
 - New translation: French.
+- Translations updated: Czech, Italian.
 
 Libraries:
 - libgwydgets: Gwy3DView uses PangoCairo instead of Pango FT2 for label
@@ -27,15 +28,19 @@ Libraries:
   name clash.
 - libgwydgets: Automatic range (distribution tails cut off) works with
   presentations, fixed range is ignored for presentations.
+- libgwyddion: GwySIUnit recognizes `Ang' as an Angstroem abbreviation.
 
 Modules:
 - Shimadzu (new): Shimadzu SPM file version 2 file import.
 - Nanonis: Version 2 files claiming to be MSBFIRST are imported.
 - Nanonis: Slices extracted from 3D data are imported.
+- NetCDF: GXSM files that use `var_unit' instead of `unit' for the unit string
+  are imported with correct scales.
 - Line layer: Crashes on Win32 while drawing line numbers were fixed, it
   uses PangoCairo instead of Pango FT2 now.
 - Basic operations: Function to null horizontal offsets, moving the origin
   to the upper left corner, was added.
+- Pixmap export: Can draw an inset scale bar.
 
 Other:
 - Compilation failure with GLib older than 2.10 (introduced in 2.8) was
