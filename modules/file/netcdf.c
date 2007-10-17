@@ -20,7 +20,8 @@
 
 /**
  * XXX: Disabled, it conflicts with MIME types installed by other packages
- * way too often.
+ * way too often.  (It is this comment that disables the magic, do not remove
+ * it.)
  * [FILE-MAGIC-FREEDESKTOP]
  * <mime-type type="application/x-netcdf">
  *   <comment>NetCDF data</comment>
@@ -166,7 +167,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports network Common Data Form (netCDF) files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.2",
+    "0.3",
     "David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
@@ -348,9 +349,27 @@ read_real_size(const NetCDF *cdffile,
     if (!(var = cdffile_get_var(cdffile, name)))
         return NULL;
 
-    attr = cdffile_get_attr(var->attrs, var->nattrs, "unit");
-    if (!attr || attr->type != NC_CHAR)
-        return NULL;
+    /*
+     * Warning: Madness ahead.
+     *
+     * Older GXSM files contain "AA" in "unit", that makes sense, as the units
+     * are Angstroems.
+     *
+     * Newer GXSM files contain "nm" in "unit" though, in spite of the units
+     * being still Angstroems.  They seem to contain the real units in
+     * "var_unit".  The info field reads:
+     *
+     *   This number is alwalys stored in Angstroem. Unit is used for user
+     *   display only.
+     *
+     * In addition they invented yet another Angstroem abbreviation: Ang.
+     */
+    attr = cdffile_get_attr(var->attrs, var->nattrs, "var_unit");
+    if (!attr || attr->type != NC_CHAR) {
+        attr = cdffile_get_attr(var->attrs, var->nattrs, "unit");
+        if (!attr || attr->type != NC_CHAR)
+            return NULL;
+    }
 
     if (!attr->nelems)
         s = NULL;
