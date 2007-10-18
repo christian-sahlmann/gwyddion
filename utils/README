@@ -50,6 +50,20 @@ mkenum.mk
     libraries' makefiles.
 
 
+mkenum.c.template
+mkenum.h.template
+
+    Universal glib-mkenum templates, they require some additional
+    substitutions that glib-mkenum cannot do to work universally, see
+    mkenum.mk.
+
+
+genmarshal.mk
+
+    An include file with common glib-genmarshal make rules.  It is included
+    in libraries' makefiles (if they define new signal prototypes).
+
+
 modules-web.xsl
 modules-web-nocss.xsl
 
@@ -84,4 +98,11 @@ vim-syn-gen.py
     which contains configuration for Gwyddion.  See
 
     http://trific.ath.cx/resources/vim/scripts/#vim-syn-gen
+
+
+extract-file-magic.py TYPE SOURCE-FILES... >OUTPUT
+
+    Extracts file type matching magic from file modules, used in ../data.
+    Known types are FREEDESKTOP and FILE (at the time of writing this
+    modules only contain FREEDESKTOP magic).
 
