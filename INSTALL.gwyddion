@@ -164,16 +164,15 @@ Prerequisities:
 First of all run
   ./autogen.sh
 with any options you'd give to ./configure, note it always adds
---enable-maintainer-mode.
+--enable-maintainer-mode.  You should add at least --enable-gtk-doc to
+build the API documentation (tarballs cannot be made without it).
 
 You should be able to build executables then with
   make
-There are other things to generate, however.  They can be created only after
-a successful project build.
-- Documentation:
-    make docs
-- MSVC files (makefiles, .def files):
-    ./utils/update-msvc.py
+A few other things remain to generate, however, namely MSVC files (makefiles,
+.def files).  They can be built only after a successful project build.  Run
+  ./utils/update-msvc.py
+to generate them.
 
 At this point that all files that are included in source tarball should be
 created, and
