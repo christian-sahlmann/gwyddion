@@ -54,7 +54,6 @@ function update_version() {
 
 
 function autostuff() {
-  make -j 1 -k maintainer-clean
   CONFIG_SHELL=/bin/sh ./autogen.sh \
     --config-cache \
     --disable-desktop-file-update \
@@ -68,7 +67,6 @@ function autostuff() {
 function build_project() {
   # Exclude documentation to get a separate log
   sed -i -e '/^SUBDIRS =/,/[^\]$/s:^:###NIGHT-BUILD###:' devel-docs/Makefile
-  make -k clean
   make -k all
   make -k ctags
   pushd po
@@ -97,7 +95,6 @@ function build_documentation() {
   # Note this need build_project() to pass
   cd ./devel-docs
   sed -i -e 's:^###NIGHT-BUILD###::' Makefile
-  make -k clean >/dev/null
   make -k docs
 }
 
