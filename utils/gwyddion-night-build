@@ -11,7 +11,6 @@ gtkdocdirs=(/usr /usr/local /opt/gnome $installprefix $HOME)
 gnainsindex=$HOME/lib/gtk.gnains
 
 source $HOME/.bashrc
-source $HOME/.ssh/current-ssh-agent
 export LC_ALL=C
 export CFLAGS="-ggdb -O2"
 PATH="$HOME/bin:$PATH"
