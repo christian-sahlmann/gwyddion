@@ -4,7 +4,7 @@ Pygwy - Python binding for Gwyddion
 Requirements
 ============
 Python >= 2.4 
-Pygtk >= 2.10, PyGObject >= 2.12: http://www.pygtk.org/
+Pygtk >= 2.10, PyGObject >= 2.12, PyCairo >= 1.2: http://www.pygtk.org/
 
 Compilation
 ===========
