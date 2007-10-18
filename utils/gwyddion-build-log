@@ -13,6 +13,10 @@ cat >autostuff.ignore <<':'
 ^  run info '(automake)Extending aclocal'
 ^  or see http://sources\.redhat\.com/automake/automake.html#Extending%20aclocal
 ^  or see http://sources\.redhat\.com/automake/automake.html#Extending-aclocal
+^configure.ac[:0-9]* installing `./missing'
+^configure.ac[:0-9]* installing `./install-sh'
+^app/Makefile.am[:0-9]* installing `./depcomp'
+^python/Makefile.am[:0-9]* installing `./py-compile'
 ':'
 :
 
