@@ -3,7 +3,6 @@
 disabled=
 pkgname=gwyddion
 basever=2.8
-dont_update_version=
 projectdir=$HOME/Projects/Gwyddion/$pkgname-trunk
 logdir=$HOME/Projects/Gwyddion/buildlog
 installprefix=$HOME/opt/gwyddion
@@ -43,7 +42,6 @@ function getlist() {
 # =====[ components ]========================================================
 function update_version() {
   version=$basever
-  test -n "$dont_update_version" && return
   xver=.$(date +%Y%m%d)
   version=$version$xver
   cp -fv NEWS NEWS~
@@ -213,8 +211,6 @@ function help() {
 # =====[ main ]==============================================================
 cd $projectdir
 test -d $logdir || mkdir $logdir
-# Set version from Makefile if we don't do update_version
-eval $(grep ^VERSION Makefile | tr -d ' ' | tr '[A-Z]' '[a-z]')
 
 if test -n "$1"; then
   if test "$1" == help; then
