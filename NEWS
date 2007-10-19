@@ -1,6 +1,5 @@
-2.8.20071017
 
-2.9 (2000-00-00)
+2.9 (2007-10-19)
 Application:
 - Gtk+ 2.8 and Pango with Cairo rendering support is now required.
 - New translation: French.
@@ -32,6 +31,8 @@ Libraries:
 
 Modules:
 - Shimadzu (new): Shimadzu SPM file version 2 file import.
+- Pygwy: Widgets and more data types are supported, miscellaneous bugs were
+  fixed.
 - Nanonis: Version 2 files claiming to be MSBFIRST are imported.
 - Nanonis: Slices extracted from 3D data are imported.
 - NetCDF: GXSM files that use `var_unit' instead of `unit' for the unit string
