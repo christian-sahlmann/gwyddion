@@ -1,4 +1,10 @@
 
+2.10 (2000-00-00)
+Modules:
+- Grain distributions: Possible crashes or bogus resolutions in graph
+  plotting mode were fixed.
+
+
 2.9 (2007-10-19)
 Application:
 - Gtk+ 2.8 and Pango with Cairo rendering support is now required.

@@ -139,7 +139,7 @@ static GwyModuleInfo module_info = {
     N_("Evaluates distribution of grains (continuous parts of mask)."),
     "Petr Klapetek <petr@klapetek.cz>, Sven Neumann <neumann@jpk.com>, "
         "Yeti <yeti@gwyddion.net>",
-    "3.2",
+    "3.3",
     "David Nečas (Yeti) & Petr Klapetek & Sven Neumann",
     "2003-2007",
 };
@@ -506,6 +506,7 @@ grain_dist_run(GrainDistArgs *args,
     g_free(grains);
     g_free(results);
 
+    expdata.args = args;
     switch (args->mode) {
         case MODE_GRAPH:
         for (i = 0; i < expdata.nvalues; i++)
@@ -513,7 +514,6 @@ grain_dist_run(GrainDistArgs *args,
         break;
 
         case MODE_RAW:
-        expdata.args = args;
         gwy_save_auxiliary_with_callback(_("Export Raw Grain Values"), NULL,
                                          grain_dist_export_create,
                                          (GwySaveAuxiliaryDestroy)g_free,
