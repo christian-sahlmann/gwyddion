@@ -40,6 +40,8 @@
 #include <libprocess/stats.h>
 #include <libgwymodule/gwymodule-file.h>
 #include <app/gwymoduleutils-file.h>
+#include <libprocess/spectra.h>
+#include <app/data-browser.h>
 
 #include "err.h"
 
@@ -48,6 +50,8 @@
 #define MAGIC "STiMage 3.1"
 #define MAGIC_SIZE (sizeof(MAGIC) - 1)
 #define EXTENSION ".sm2"
+
+#define GRAPH_PREFIX "/0/graph/graph"
 
 typedef enum {
     RHK_TYPE_IMAGE =            0,
@@ -133,29 +137,31 @@ typedef struct {
     const guchar *buffer;
 } RHKPage;
 
-static gboolean      module_register         (void);
-static gint          rhkspm32_detect         (const GwyFileDetectInfo *fileinfo,
+static gboolean       module_register         (void);
+static gint           rhkspm32_detect         (const GwyFileDetectInfo *fileinfo,
                                               gboolean only_name);
-static GwyContainer* rhkspm32_load           (const gchar *filename,
+static GwyContainer*  rhkspm32_load           (const gchar *filename,
                                               GwyRunType mode,
                                               GError **error);
-static gboolean      rhkspm32_read_header    (RHKPage *rhkpage,
+static gboolean       rhkspm32_read_header    (RHKPage *rhkpage,
                                               GError **error);
-static gboolean      rhkspm32_read_range     (const gchar *buffer,
+static gboolean       rhkspm32_read_range     (const gchar *buffer,
                                               const gchar *name,
                                               RHKRange *range);
-static void          rhkspm32_free           (RHKPage *rhkpage);
-static GwyContainer* rhkspm32_get_metadata   (RHKPage *rhkpage);
-static GwyDataField* rhkspm32_read_data      (RHKPage *rhkpage);
+static void           rhkspm32_free           (RHKPage *rhkpage);
+static GwyContainer*  rhkspm32_get_metadata   (RHKPage *rhkpage);
+static GwyDataField*  rhkspm32_read_data      (RHKPage *rhkpage);
+static GwySpectra*    rhkspm32_read_spectra   (RHKPage *rhkpage);
+static GwyGraphModel* spectra_to_graph        (GwySpectra *spectra);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Imports RHK Technology SPM32 data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.8",
-    "David Nečas (Yeti) & Petr Klapetek",
-    "2005",
+    "0.9",
+    "David Nečas (Yeti) & Petr Klapetek, mod by Niv Levy",
+    "2007",
 };
 
 static const GwyEnum scan_directions[] = {
@@ -211,7 +217,7 @@ rhkspm32_load(const gchar *filename,
     gsize totalpos, pagesize;
     GString *key;
     guint i;
-
+    
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
         err_GET_FILE_CONTENTS(error, &err);
         return NULL;
@@ -222,14 +228,15 @@ rhkspm32_load(const gchar *filename,
         return NULL;
     }
 
-    rhkfile = g_array_new(FALSE, TRUE, sizeof(RHKPage));
+    rhkfile = g_array_new(FALSE, TRUE, sizeof(RHKPage)); // niv - rhkfile is an array of rhkpage's, but buffer is where the actual raw file data is stored
     totalpos = 0;
 
     while (totalpos < size) {
         g_array_set_size(rhkfile, rhkfile->len + 1);
         rhkpage = &g_array_index(rhkfile, RHKPage, rhkfile->len - 1);
         rhkpage->buffer = buffer + totalpos;
-        if (!rhkspm32_read_header(rhkpage, &err)) {
+        if (!rhkspm32_read_header(rhkpage, &err)) { // niv - if the header seems illegal, skip all the next ones as well (and cancel the element addition to the g_array)
+            printf("failed to read rhk header after %u\n",rhkfile->len) ;
             g_array_set_size(rhkfile, rhkfile->len - 1);
             break;
         }
@@ -263,27 +270,57 @@ rhkspm32_load(const gchar *filename,
     for (i = 0; i < rhkfile->len; i++) {
         const gchar *cs;
         gchar *s;
-
+        
+        gwy_debug("rhk-spm32: processing page %d of %d\n",i+1,rhkfile->len) ;
         rhkpage = &g_array_index(rhkfile, RHKPage, i);
-        dfield = rhkspm32_read_data(rhkpage);
-        g_string_printf(key, "/%d/data", i);
-        gwy_container_set_object_by_name(container, key->str, dfield);
-        g_object_unref(dfield);
-        g_string_append(key, "/title");
-        cs = gwy_enum_to_string(rhkpage->scan,
-                                scan_directions, G_N_ELEMENTS(scan_directions));
-        if (rhkpage->label) {
-            if (cs)
-                s = g_strdup_printf("%s [%s]", rhkpage->label, cs);
+        if (rhkpage->type == RHK_TYPE_IMAGE) { // niv - just leaving this alone
+            dfield = rhkspm32_read_data(rhkpage);
+            g_string_printf(key, "/%d/data", i);
+            gwy_container_set_object_by_name(container, key->str, dfield);
+            g_object_unref(dfield);
+            g_string_append(key, "/title");
+            cs = gwy_enum_to_string(rhkpage->scan,
+                                    scan_directions, G_N_ELEMENTS(scan_directions));
+            if (rhkpage->label) {
+                if (cs)
+                    s = g_strdup_printf("%s [%s]", rhkpage->label, cs);
+                else
+                    s = g_strdup(rhkpage->label);
+                gwy_container_set_string_by_name(container, key->str, s);
+            }
             else
-                s = g_strdup(rhkpage->label);
-            gwy_container_set_string_by_name(container, key->str, s);
+                gwy_app_channel_title_fall_back(container, i);
         }
-        else
-            gwy_app_channel_title_fall_back(container, i);
-
+        else if (rhkpage->type == RHK_TYPE_LINE) { // niv - after omicron.c
+            
+            GwySpectra* spectra ;
+            GwyGraphModel *gmodel ;
+            
+            spectra = rhkspm32_read_spectra(rhkpage) ;
+            /* converting to graphs, as there is no point in leaving these as sps -
+             no xy coordinates , so the spectro tool is kinda clueless */
+            gwy_debug("processing graph in page %d\n",i);
+            if ((gmodel = spectra_to_graph(spectra))!=NULL) { 
+                gchar *container_key = NULL;
+                /* add gmodel to container */
+                container_key = g_strdup_printf("%s/%d", GRAPH_PREFIX, i);
+                gwy_container_set_object_by_name(container, container_key,
+                                                gmodel);
+                g_free(container_key);
+            }
+            g_object_unref(gmodel);
+            g_object_unref(spectra);
+        }
+        gwy_debug("rhk-spm32: finished parsing page %d \n", i);
         meta = rhkspm32_get_metadata(rhkpage);
-        g_string_printf(key, "/%d/meta", i);
+        if (rhkpage->type == RHK_TYPE_IMAGE) { 
+        /* this doesn't really work, but at least the meta data stays
+         with the graph, even if the metadata viewer won't show it*/
+            g_string_printf(key, "/%d/meta", i);
+        }
+        else if (rhkpage->type == RHK_TYPE_LINE) {
+            g_string_printf(key, "%s/%d/meta",GRAPH_PREFIX, i);
+        }
         gwy_container_set_object_by_name(container, key->str, meta);
         g_object_unref(meta);
     }
@@ -325,20 +362,29 @@ rhkspm32_read_header(RHKPage *rhkpage,
     if (err_DIMENSION(error, rhkpage->xres)
         || err_DIMENSION(error, rhkpage->yres))
         return FALSE;
-
-    if (rhkpage->type != RHK_TYPE_IMAGE) {
+// niv - commenting this out, i think the real changes are in the parent function - this just forces an exit, but the data processing for the header doesn't actually change between cases, so i'm just commenting out the error condition
+    /*if (rhkpage->type != RHK_TYPE_IMAGE) {
         g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
                     _("Non-image files are not supported."));
         return FALSE;
-    }
+    }*/
     /* FIXME */
-    if (rhkpage->data_type != RHK_DATA_INT16) {
+    // niv - commenting this one out as well - i really should still check for a possible error, but the allowed data types depend on whether it is an image or spectra, so a bit more code is needed.
+    /*if (rhkpage->data_type != RHK_DATA_INT16) {
         g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
                     _("Unsupported or invalid data type %d."),
                     rhkpage->data_type);
         return FALSE;
-    }
-    rhkpage->item_size = 2;
+    }*/
+    //rhkpage->item_size = 2; //  the parent uses it to calculate offsets - no good reason for it to be hardcoded - the header contains the info in rhkpage->data_type
+    if (((rhkpage->data_type) == RHK_DATA_SIGNLE) || ((rhkpage->data_type) == RHK_DATA_INT8))
+        rhkpage->item_size = 1 ; //  niv - need to check that single means 1 byte FIXME
+    else if ((rhkpage->data_type) == RHK_DATA_INT16)
+        rhkpage->item_size = 2 ;
+    else if ((rhkpage->data_type) == RHK_DATA_INT32)
+        rhkpage->item_size = 4 ;
+    
+    //rhkpage->item_size = rhkpage->data_type ; // niv
 
     if (!rhkspm32_read_range(buffer + 0x40, "X", &rhkpage->x)
         || !rhkspm32_read_range(buffer + 0x60, "Y", &rhkpage->y)
@@ -346,16 +392,18 @@ rhkspm32_read_header(RHKPage *rhkpage,
         err_INVALID(error, _("data ranges"));
         return FALSE;
     }
+
     /* Use negated positive conditions to catch NaNs */
-    if (!((rhkpage->x.scale = fabs(rhkpage->x.scale)) > 0)) {
+    // niv - modifying this - otherwise it messes with the spectra  (but i don;t really understand it)
+    if (!((fabs(rhkpage->x.scale)) > 0)) {
         g_warning("Real x scale is 0.0, fixing to 1.0");
         rhkpage->x.scale = 1.0;
     }
-    if (!((rhkpage->y.scale = fabs(rhkpage->y.scale)) > 0)) {
+    if  (!((fabs(rhkpage->y.scale)) > 0)){
         g_warning("Real y scale is 0.0, fixing to 1.0");
         rhkpage->y.scale = 1.0;
     }
-
+    
     if (!g_str_has_prefix(buffer + 0xa0, "XY ")) {
         err_MISSING_FIELD(error, "XY");
         return FALSE;
@@ -369,6 +417,9 @@ rhkspm32_read_header(RHKPage *rhkpage,
     pos = (end - buffer) + 2;
     /* Don't check failure, it seems the value is optional */
     rhkpage->alpha = g_ascii_strtod(buffer + pos, &end);
+    if (end == buffer + pos) { // not failing but setting to 999 - just some ridiculous number - this happens for spectra, but otherwise i want to add this to the metadata 
+        rhkpage->alpha = 999.0 ;
+    }
 
     if (!rhkspm32_read_range(buffer + 0xc0, "IV", &rhkpage->iv)) {
         err_INVALID(error, "IV");
@@ -426,7 +477,8 @@ rhkspm32_read_range(const gchar *buffer,
         return FALSE;
     pos = strlen(name) + 1;
 
-    range->scale = fabs(g_ascii_strtod(buffer + pos, &end));
+    //range->scale = fabs(g_ascii_strtod(buffer + pos, &end)); // this is a bad idea - for spectra it's perfectly reasonable to have negative scales (e.g. progress from positive to negative bias)
+    range->scale = g_ascii_strtod(buffer + pos, &end);
     if (end == buffer + pos || pos > 0x20)
         return FALSE;
     pos = end - buffer;
@@ -486,6 +538,12 @@ rhkspm32_get_metadata(RHKPage *rhkpage)
                            scan_directions, G_N_ELEMENTS(scan_directions));
     if (s && *s)
         gwy_container_set_string_by_name(meta, "Image type", g_strdup(s));
+        
+    if ((rhkpage->alpha)!=999.0) // 999 means there was no value - likely a spectra
+    // FIXME - seems one can read 0 for spectra as well, but maybe it's not that important - it should be clear that this is a nonsense value
+        gwy_container_set_string_by_name(meta, "Angle",
+                                     g_strdup_printf("%g deg",
+                                                     rhkpage->alpha));
 
     return meta;
 }
@@ -505,8 +563,9 @@ rhkspm32_read_data(RHKPage *rhkpage)
     p = (const guint16*)(rhkpage->buffer + rhkpage->data_offset);
     xres = rhkpage->xres;
     yres = rhkpage->yres;
+    // the scales are no longer gurunteed to be positive, so they must be "fixed" here (to enable spectra)
     dfield = gwy_data_field_new(xres, yres,
-                                xres*rhkpage->x.scale, yres*rhkpage->y.scale,
+                                xres*fabs(rhkpage->x.scale), yres*fabs(rhkpage->y.scale),
                                 FALSE);
 
     data = gwy_data_field_get_data(dfield);
@@ -531,11 +590,115 @@ rhkspm32_read_data(RHKPage *rhkpage)
     gwy_si_unit_set_from_string_parse(siunit, s, &power10);
     q = pow10(power10);
 
-    gwy_data_field_multiply(dfield, q*rhkpage->z.scale);
+    gwy_data_field_multiply(dfield, q*fabs(rhkpage->z.scale));
     gwy_data_field_add(dfield, q*rhkpage->z.offset);
 
     return dfield;
 }
 
+static GwySpectra*
+rhkspm32_read_spectra(RHKPage *rhkpage)
+{
+    guint i,j ;
+    const guint16 *p;
+    gdouble *data ;
+    GwySIUnit *siunit = NULL ;
+    GwyDataLine *dline;
+    GwySpectra *spectra = NULL;
+    GPtrArray *spectrum = NULL;
+// niv - modeled after the respective function in omicron.c
+// note that for now this only works for "non fft" spectra
+
+// i'm leaving this alone, though it probably doesn't make sense, and i should just create graphs straight away - but in case of future use, i'll just convert the data later to graphs 
+
+    p = (const guint16*)(rhkpage->buffer + rhkpage->data_offset);
+    // xres stores number of data points per spectra, yres stores the number of spectra
+    
+    // reading data
+    gwy_debug("rhk-spm32: %d spectra in this page\n",(guint16)(rhkpage->yres));
+    for (i = 0 ; i < (guint16)(rhkpage->yres) ; i++) {
+        dline = gwy_data_line_new(rhkpage->xres, rhkpage->x.scale, FALSE);
+        gwy_data_line_set_offset(dline, (rhkpage->x.offset));
+        data = gwy_data_line_get_data(dline); 
+        for (j = 0 ; j < (guint16)(rhkpage->xres) ; j++){
+            // store line data in physical units - which are the z values, not y
+            data[j] = GINT16_FROM_LE(p[i*(rhkpage->xres) + j])*(rhkpage->z.scale)+(rhkpage->z.offset);
+        }
+        siunit = gwy_si_unit_new(rhkpage->x.units);
+        gwy_data_line_set_si_unit_x(dline, gwy_si_unit_new(rhkpage->x.units));
+        // the y units (and data) for a 1D graph are stored in Z in the rhk spm32 format !
+        gwy_data_line_set_si_unit_y(dline, gwy_si_unit_new(rhkpage->z.units)); 
+        if (!spectrum)
+            spectrum = g_ptr_array_sized_new(rhkpage->yres);
+        g_ptr_array_add(spectrum, dline);
+    }
+    gwy_debug("rhk-spm32: finished parsing sps data\n");
+    spectra = gwy_spectra_new();
+
+    for (i = 0; i < rhkpage->yres; i++) {
+        dline = g_ptr_array_index(spectrum, i);
+        // since RHK spm32 does not record where it took the spectra, i'm setting these to zero
+        gwy_spectra_add_spectrum(spectra, dline, 0, 0);
+        g_object_unref(dline);
+    }
+    gwy_spectra_set_title(spectra, rhkpage->label);
+    
+    g_ptr_array_free(spectrum, TRUE);
+
+    return spectra;
+}
+
+static GwyGraphModel* 
+        spectra_to_graph(GwySpectra *spectra)
+{
+    GwyGraphModel *gmodel ;
+    const gchar* graph_title ;
+    GwyGraphCurveModel *cmodel;
+    gchar *curve_title = NULL;
+    guint j, k, n_spectra, n_points;
+    GwyDataLine *dline;
+    gdouble *data, *xdata, *ydata , x_offset, x_realsize;
+    GwySIUnit *x_si_unit, *y_si_unit ;
+    
+    if (!(n_spectra = gwy_spectra_get_n_spectra (spectra))) {
+        gwy_debug("rhk-spm32:  no spectra in rhkpage - something is odd\n") ;
+        return NULL;
+    }
+    dline=gwy_spectra_get_spectrum(spectra,0); 
+    n_points = gwy_data_line_get_res (dline);
+    x_si_unit = gwy_data_line_get_si_unit_x (dline);
+    y_si_unit = gwy_data_line_get_si_unit_y (dline);
+    xdata = g_new0(gdouble, n_points); 
+    ydata = g_new0(gdouble, n_points);
+    x_offset = gwy_data_line_get_offset(dline);
+    x_realsize = gwy_data_line_get_real(dline);
+    for (j=0 ; j < n_points; j++) {
+        xdata[j] = x_offset+j*x_realsize; 
+    }
+    gmodel = gwy_graph_model_new ();
+    g_object_set(gmodel,"si-unit-x",x_si_unit,"si-unit-y",y_si_unit,NULL);
+    graph_title=gwy_spectra_get_title(spectra);
+    g_object_set(gmodel,"title",graph_title, NULL);
+    //g_object_set(gmodel,"label-visible",FALSE,NULL) ; // tends to obstruct the curves - if there are more than a few - not good - makes it hard to grab curves?
+    for (k = 1;  k <= n_spectra; k++) {
+        dline = gwy_spectra_get_spectrum(spectra, k-1);
+        data = gwy_data_line_get_data (dline);
+        for (j = 0; j < n_points; j++) {
+            ydata[j] = data [j];
+        }
+        cmodel = gwy_graph_curve_model_new();
+        gwy_graph_model_add_curve(gmodel, cmodel);
+        g_object_unref(cmodel);
+        curve_title = g_strdup_printf("%s %d", graph_title, k);
+        g_object_set(cmodel, "description", curve_title,
+                "mode", GWY_GRAPH_CURVE_LINE,
+                "color", gwy_graph_get_preset_color(k),
+                NULL);
+        gwy_graph_curve_model_set_data(cmodel, xdata, ydata, n_points);
+    }
+    g_free(ydata) ;
+    g_free(xdata) ;
+    return gmodel;
+}
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
 
