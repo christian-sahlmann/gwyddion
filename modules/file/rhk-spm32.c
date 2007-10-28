@@ -416,7 +416,9 @@ rhkspm32_read_header(RHKPage *rhkpage,
         rhkpage->x.scale = 1.0;
     }
     if (!((fabs(rhkpage->y.scale)) > 0)) {
-        g_warning("Real y scale is 0.0, fixing to 1.0");
+        /* The y scale seem unused for non-image data */
+        if (rhkpage->type == RHK_TYPE_IMAGE)
+            g_warning("Real y scale is 0.0, fixing to 1.0");
         rhkpage->y.scale = 1.0;
     }
 
