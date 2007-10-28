@@ -67,7 +67,7 @@ typedef enum {
 } RHKScanType;
 
 typedef enum {
-    RHK_DATA_SIGNLE    = 0,
+    RHK_DATA_SINGLE    = 0,
     RHK_DATA_INT16     = 1,
     RHK_DATA_INT32     = 2,
     RHK_DATA_INT8      = 3
@@ -126,6 +126,7 @@ typedef struct {
     RHKRange z;
     gdouble xyskew;
     gdouble alpha;
+    gboolean e_alpha;
     RHKRange iv;
     guint scan;
     gdouble period;
@@ -236,7 +237,7 @@ rhkspm32_load(const gchar *filename,
         rhkpage = &g_array_index(rhkfile, RHKPage, rhkfile->len - 1);
         rhkpage->buffer = buffer + totalpos;
         if (!rhkspm32_read_header(rhkpage, &err)) { // niv - if the header seems illegal, skip all the next ones as well (and cancel the element addition to the g_array)
-            printf("failed to read rhk header after %u\n",rhkfile->len) ;
+            g_warning("failed to read rhk header after %u",rhkfile->len) ;
             g_array_set_size(rhkfile, rhkfile->len - 1);
             break;
         }
@@ -362,26 +363,33 @@ rhkspm32_read_header(RHKPage *rhkpage,
     if (err_DIMENSION(error, rhkpage->xres)
         || err_DIMENSION(error, rhkpage->yres))
         return FALSE;
-// niv - commenting this out, i think the real changes are in the parent function - this just forces an exit, but the data processing for the header doesn't actually change between cases, so i'm just commenting out the error condition
-    /*if (rhkpage->type != RHK_TYPE_IMAGE) {
+    if ( ! ((rhkpage->type == RHK_TYPE_IMAGE) || (rhkpage->type == RHK_TYPE_LINE))) {
         g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                    _("Non-image files are not supported."));
+                    _("Only image and line files are supported."));
         return FALSE;
-    }*/
-    /* FIXME */
-    // niv - commenting this one out as well - i really should still check for a possible error, but the allowed data types depend on whether it is an image or spectra, so a bit more code is needed.
-    /*if (rhkpage->data_type != RHK_DATA_INT16) {
+    }
+    if ( (rhkpage->type == RHK_TYPE_IMAGE) && 
+          (rhkpage->data_type != RHK_DATA_INT16 )) {
         g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                    _("Unsupported or invalid data type %d."),
+                    _("rhk=spm32: invalid data type %d for image data."),
                     rhkpage->data_type);
         return FALSE;
-    }*/
-    //rhkpage->item_size = 2; //  the parent uses it to calculate offsets - no good reason for it to be hardcoded - the header contains the info in rhkpage->data_type
-    if (((rhkpage->data_type) == RHK_DATA_SIGNLE) || ((rhkpage->data_type) == RHK_DATA_INT8))
-        rhkpage->item_size = 1 ; //  niv - need to check that single means 1 byte FIXME
+    }
+    if ( (rhkpage->type == RHK_TYPE_LINE) && 
+          !((rhkpage->data_type == RHK_DATA_INT16 ) || (rhkpage->data_type == RHK_DATA_SINGLE) ) ) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("rhk=spm32: invalid data type %d for line data."),
+                    rhkpage->data_type);
+        return FALSE;
+    }
+    
+    if ((rhkpage->data_type) == RHK_DATA_INT8)
+        rhkpage->item_size = 1 ;
     else if ((rhkpage->data_type) == RHK_DATA_INT16)
         rhkpage->item_size = 2 ;
     else if ((rhkpage->data_type) == RHK_DATA_INT32)
+        rhkpage->item_size = 4 ;
+    else if ((rhkpage->data_type) == RHK_DATA_SINGLE)
         rhkpage->item_size = 4 ;
     
     //rhkpage->item_size = rhkpage->data_type ; // niv
@@ -417,10 +425,11 @@ rhkspm32_read_header(RHKPage *rhkpage,
     pos = (end - buffer) + 2;
     /* Don't check failure, it seems the value is optional */
     rhkpage->alpha = g_ascii_strtod(buffer + pos, &end);
-    if (end == buffer + pos) { // not failing but setting to 999 - just some ridiculous number - this happens for spectra, but otherwise i want to add this to the metadata 
-        rhkpage->alpha = 999.0 ;
-    }
-
+    if (end == buffer + pos)  // not failing, but setting an existance flag, this happens for spectra, but otherwise i want to add this to the metadata 
+        rhkpage->e_alpha = FALSE;
+    else 
+        rhkpage->e_alpha=TRUE;
+    
     if (!rhkspm32_read_range(buffer + 0xc0, "IV", &rhkpage->iv)) {
         err_INVALID(error, "IV");
         return FALSE;
@@ -487,7 +496,7 @@ rhkspm32_read_range(const gchar *buffer,
     if (end == buffer + pos || pos > 0x20)
         return FALSE;
     pos = end - buffer;
-
+    
     range->units = g_strstrip(g_strndup(buffer + pos, 0x20 - pos));
     gwy_debug("<%s> %g %g <%s>",
               name, range->scale, range->offset, range->units);
@@ -539,7 +548,7 @@ rhkspm32_get_metadata(RHKPage *rhkpage)
     if (s && *s)
         gwy_container_set_string_by_name(meta, "Image type", g_strdup(s));
         
-    if ((rhkpage->alpha)!=999.0) // 999 means there was no value - likely a spectra
+    if (rhkpage->e_alpha) // 999 means there was no value - likely a spectra
     // FIXME - seems one can read 0 for spectra as well, but maybe it's not that important - it should be clear that this is a nonsense value
         gwy_container_set_string_by_name(meta, "Angle",
                                      g_strdup_printf("%g deg",
@@ -600,29 +609,35 @@ static GwySpectra*
 rhkspm32_read_spectra(RHKPage *rhkpage)
 {
     guint i,j ;
-    const guint16 *p;
     gdouble *data ;
     GwySIUnit *siunit = NULL ;
     GwyDataLine *dline;
     GwySpectra *spectra = NULL;
     GPtrArray *spectrum = NULL;
-// niv - modeled after the respective function in omicron.c
-// note that for now this only works for "non fft" spectra
-
-// i'm leaving this alone, though it probably doesn't make sense, and i should just create graphs straight away - but in case of future use, i'll just convert the data later to graphs 
-
-    p = (const guint16*)(rhkpage->buffer + rhkpage->data_offset);
+    // i'm leaving this alone, though it probably doesn't make sense, and i should just create graphs straight away - but in case of future use, i'll just convert the data later to graphs 
+    
     // xres stores number of data points per spectra, yres stores the number of spectra
     
     // reading data
     gwy_debug("rhk-spm32: %d spectra in this page\n",(guint16)(rhkpage->yres));
     for (i = 0 ; i < (guint16)(rhkpage->yres) ; i++) {
-        dline = gwy_data_line_new(rhkpage->xres, rhkpage->x.scale, FALSE);
+        dline = gwy_data_line_new(rhkpage->xres, rhkpage->x.scale, FALSE); 
         gwy_data_line_set_offset(dline, (rhkpage->x.offset));
         data = gwy_data_line_get_data(dline); 
-        for (j = 0 ; j < (guint16)(rhkpage->xres) ; j++){
-            // store line data in physical units - which are the z values, not y
-            data[j] = GINT16_FROM_LE(p[i*(rhkpage->xres) + j])*(rhkpage->z.scale)+(rhkpage->z.offset);
+        // store line data in physical units - which are the z values, not y
+        if ((rhkpage->data_type) == RHK_DATA_INT16) {
+                const guint16 *p = (const guint16*)(rhkpage->buffer + rhkpage->data_offset);
+                for (j = 0 ; j < (guint16)(rhkpage->xres) ; j++) {
+                    data[j] = GINT16_FROM_LE(p[i*(rhkpage->xres) + j])
+                            *(rhkpage->z.scale)+(rhkpage->z.offset);
+                }
+        }
+        else if ((rhkpage->data_type) == RHK_DATA_SINGLE) {
+                const guchar *ps = (const guchar*)(rhkpage->buffer + rhkpage->data_offset);
+                for (j = 0 ; j < (guint16)(rhkpage->xres) ; j++) {
+                    data[j] = gwy_get_gfloat_le(&ps)
+                            *(rhkpage->z.scale)+(rhkpage->z.offset);
+                }
         }
         siunit = gwy_si_unit_new(rhkpage->x.units);
         gwy_data_line_set_si_unit_x(dline, gwy_si_unit_new(rhkpage->x.units));
