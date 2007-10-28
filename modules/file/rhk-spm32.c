@@ -651,18 +651,32 @@ rhkspm32_read_spectra(RHKPage *rhkpage)
                 }
         }
         else if ((rhkpage->data_type) == RHK_DATA_SINGLE) {
-                const guchar *ps = (const guchar*)(rhkpage->buffer
-                                                   + rhkpage->data_offset);
+                const guchar *p = (const guchar*)(rhkpage->buffer
+                                                  + rhkpage->data_offset);
                 for (j = 0; j < rhkpage->xres; j++) {
-                    data[j] = gwy_get_gfloat_le(&ps)*rhkpage->z.scale
+                    data[j] = gwy_get_gfloat_le(&p)*rhkpage->z.scale
                               + rhkpage->z.offset;
                 }
         }
         siunit = gwy_si_unit_new(rhkpage->x.units);
-        gwy_data_line_set_si_unit_x(dline, gwy_si_unit_new(rhkpage->x.units));
+        gwy_data_line_set_si_unit_x(dline, siunit);
+        g_object_unref(siunit);
+
         // the y units (and data) for a 1D graph are stored in Z in the rhk
-        // spm32 format !
-        gwy_data_line_set_si_unit_y(dline, gwy_si_unit_new(rhkpage->z.units));
+        // spm32 format!
+        /* Fix "/\xfbHz" to "/Hz".
+         * XXX: It might be still wrong as the strange character might mean
+         * sqrt. */
+        if (g_str_has_suffix(rhkpage->z.units, "/\xfbHz")) {
+            gchar *s = gwy_strkill(g_strdup(rhkpage->z.units), "\xfb");
+            siunit = gwy_si_unit_new(s);
+            g_free(s);
+        }
+        else
+            siunit = gwy_si_unit_new(rhkpage->z.units);
+        gwy_data_line_set_si_unit_y(dline, siunit);
+        g_object_unref(siunit);
+
         if (!spectrum)
             spectrum = g_ptr_array_sized_new(rhkpage->yres);
         g_ptr_array_add(spectrum, dline);
@@ -679,13 +693,14 @@ rhkspm32_read_spectra(RHKPage *rhkpage)
     }
     gwy_spectra_set_title(spectra, rhkpage->label);
 
-    g_ptr_array_free(spectrum, TRUE);
+    if (spectrum)
+        g_ptr_array_free(spectrum, TRUE);
 
     return spectra;
 }
 
 static GwyGraphModel*
-        spectra_to_graph(GwySpectra *spectra)
+spectra_to_graph(GwySpectra *spectra)
 {
     GwyGraphModel *gmodel;
     const gchar* graph_title;
