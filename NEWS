@@ -3,6 +3,9 @@
 Modules:
 - Grain distributions: Possible crashes or bogus resolutions in graph
   plotting mode were fixed.
+- Graph fitting: It is possible to plot the curve over the full range even
+  when only a subrange is fitted.
+- RHK SPM32 (SM2): Support for spectra was added.
 
 
 2.9 (2007-10-19)
