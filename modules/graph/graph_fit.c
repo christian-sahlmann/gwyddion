@@ -66,6 +66,7 @@ typedef struct {
     gboolean is_fitted;
     gboolean auto_estimate;
     gboolean auto_plot;
+    gboolean plot_full;
     GwyGraphModel *graph_model;
     GwyDataLine *xdata;
     GwyDataLine *ydata;
@@ -102,6 +103,7 @@ typedef struct {
     GArray *param;
     GtkWidget *auto_estimate;
     GtkWidget *auto_plot;
+    GtkWidget *plot_full;
     gboolean in_update;
 } FitControls;
 
@@ -122,6 +124,8 @@ static void        curve_changed             (GtkComboBox *combo,
 static void        auto_estimate_changed     (GtkToggleButton *check,
                                               FitControls *controls);
 static void        auto_plot_changed         (GtkToggleButton *check,
+                                              FitControls *controls);
+static void        plot_full_changed         (GtkToggleButton *check,
                                               FitControls *controls);
 static void        function_changed          (GtkComboBox *combo,
                                               FitControls *controls);
@@ -168,7 +172,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Fit graph with function"),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "2.3",
+    "2.4",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -198,6 +202,7 @@ fit(GwyGraph *graph)
 
     args.auto_estimate = TRUE;
     args.auto_plot = TRUE;
+    args.plot_full = FALSE;
     args.parent_graph = graph;
     args.xdata = gwy_data_line_new(1, 1.0, FALSE);
     args.ydata = gwy_data_line_new(1, 1.0, FALSE);
@@ -268,7 +273,7 @@ fit_dialog(FitArgs *args)
     hbox = gtk_hbox_new(FALSE, 2);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox, TRUE, TRUE, 0);
 
-    table = gtk_table_new(7, 2, FALSE);
+    table = gtk_table_new(8, 2, FALSE);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_box_pack_start(GTK_BOX(hbox), table, FALSE, FALSE, 0);
@@ -406,6 +411,16 @@ fit_dialog(FitArgs *args)
     gtk_label_set_markup(GTK_LABEL(label), args->abscissa_vf->units);
     gtk_box_pack_start(GTK_BOX(hbox2), label, FALSE, FALSE, 0);
 
+    controls.plot_full
+        = gtk_check_button_new_with_mnemonic(_("Plot full range"));
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.plot_full),
+                                 args->plot_full);
+    gtk_table_attach(GTK_TABLE(table), controls.plot_full,
+                     0, 2, row, row+1, GTK_FILL, 0, 0, 0);
+    g_signal_connect(controls.plot_full, "toggled",
+                     G_CALLBACK(plot_full_changed), &controls);
+    row++;
+
     /* Auto-update */
     hbox2 = gtk_hbox_new(FALSE, 6);
     gtk_table_attach(GTK_TABLE(table), hbox2,
@@ -415,14 +430,14 @@ fit_dialog(FitArgs *args)
     label = gtk_label_new(_("Instant:"));
     gtk_box_pack_start(GTK_BOX(hbox2), label, FALSE, FALSE, 0);
 
-    controls.auto_estimate = gtk_check_button_new_with_mnemonic("e_stimate");
+    controls.auto_estimate = gtk_check_button_new_with_mnemonic(_("e_stimate"));
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.auto_estimate),
                                  args->auto_estimate);
     gtk_box_pack_start(GTK_BOX(hbox2), controls.auto_estimate, FALSE, FALSE, 0);
     g_signal_connect(controls.auto_estimate, "toggled",
                      G_CALLBACK(auto_estimate_changed), &controls);
 
-    controls.auto_plot = gtk_check_button_new_with_mnemonic("p_lot");
+    controls.auto_plot = gtk_check_button_new_with_mnemonic(_("p_lot"));
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.auto_plot),
                                  args->auto_plot);
     gtk_box_pack_start(GTK_BOX(hbox2), controls.auto_plot, FALSE, FALSE, 0);
@@ -662,10 +677,24 @@ fit_plot_curve(FitArgs *args)
         param[i] = initial ? arg->init : arg->value;
     }
 
-    n = gwy_data_line_get_res(args->xdata);
-    g_return_if_fail(n == gwy_data_line_get_res(args->ydata));
-    xd = gwy_data_line_get_data(args->xdata);
-    yd = gwy_data_line_get_data(args->ydata);
+    if (args->plot_full) {
+        const gdouble *curvexd;
+
+        cmodel = gwy_graph_model_get_curve(args->graph_model, 0);
+        n = gwy_graph_curve_model_get_ndata(cmodel);
+        gwy_data_line_resample(args->xdata, n, GWY_INTERPOLATION_NONE);
+        gwy_data_line_resample(args->ydata, n, GWY_INTERPOLATION_NONE);
+        curvexd = gwy_graph_curve_model_get_xdata(cmodel);
+        xd = gwy_data_line_get_data(args->xdata);
+        memcpy(xd, curvexd, n*sizeof(gdouble));
+        yd = gwy_data_line_get_data(args->ydata);
+    }
+    else {
+        n = gwy_data_line_get_res(args->xdata);
+        g_return_if_fail(n == gwy_data_line_get_res(args->ydata));
+        xd = gwy_data_line_get_data(args->xdata);
+        yd = gwy_data_line_get_data(args->ydata);
+    }
 
     for (i = 0; i < n; i++)
         yd[i] = gwy_nlfit_preset_get_value(args->fitfunc, xd[i], param, &ok);
@@ -816,6 +845,20 @@ auto_plot_changed(GtkToggleButton *check,
     controls->args->auto_plot = gtk_toggle_button_get_active(check);
     if (controls->args->auto_plot && !controls->args->is_fitted)
         fit_plot_curve(controls->args);
+}
+
+static void
+plot_full_changed(GtkToggleButton *check,
+                  FitControls *controls)
+{
+    controls->args->plot_full = gtk_toggle_button_get_active(check);
+    if ((controls->args->auto_plot && !controls->args->is_fitted)
+        || controls->args->is_fitted)
+        fit_plot_curve(controls->args);
+    else if (controls->args->auto_estimate
+             && !controls->args->is_fitted
+             && !controls->args->is_estimated)
+        fit_estimate(controls);
 }
 
 static void
@@ -1273,6 +1316,7 @@ normalize_data(FitArgs *args)
 static const gchar preset_key[]        = "/module/graph_fit/preset";
 static const gchar auto_estimate_key[] = "/module/graph_fit/auto_estimate";
 static const gchar auto_plot_key[]     = "/module/graph_fit/auto_plot";
+static const gchar plot_full_key[]     = "/module/graph_fit/plot_full";
 
 static void
 load_args(GwyContainer *container,
@@ -1290,6 +1334,8 @@ load_args(GwyContainer *container,
                                       &args->auto_estimate);
     gwy_container_gis_boolean_by_name(container, auto_plot_key,
                                       &args->auto_plot);
+    gwy_container_gis_boolean_by_name(container, plot_full_key,
+                                      &args->plot_full);
 }
 
 static void
@@ -1306,6 +1352,8 @@ save_args(GwyContainer *container,
                                       args->auto_estimate);
     gwy_container_set_boolean_by_name(container, auto_plot_key,
                                       args->auto_plot);
+    gwy_container_set_boolean_by_name(container, plot_full_key,
+                                      args->plot_full);
 }
 
 /************************* fit report *****************************/
