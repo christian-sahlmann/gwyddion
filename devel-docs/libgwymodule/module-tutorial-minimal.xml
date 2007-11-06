@@ -139,7 +139,7 @@ static void     my_invert_value(GwyContainer *data,
       detail in the <link linkend="gwymodule-tutorial-process">section about
       data processing modules</link>.  At this point it suffices to say
       %GWY_RUN_IMMEDIATE means the function is non-interactive, executed
-      %mmediately.
+      immediately.
     </para>
   </refsect1>
 
