@@ -70,7 +70,7 @@ my_invert_value(GwyContainer *data,
     GwyDataField *dfield;
     GQuark quark;
 
-    g_return_val_if_fail(run & INVERT_VALUE_RUN_MODES);
+    g_return_if_fail(run & INVERT_VALUE_RUN_MODES);
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
                                      GWY_APP_DATA_FIELD_KEY, &quark,
                                      0);
@@ -275,7 +275,7 @@ my_invert_value(GwyContainer *data,
     GwyDataField *dfield;
     GQuark quark;
 
-    g_return_val_if_fail(run & INVERT_VALUE_RUN_MODES);
+    g_return_if_fail(run & INVERT_VALUE_RUN_MODES);
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
                                      GWY_APP_DATA_FIELD_KEY, &quark,
                                      0);
