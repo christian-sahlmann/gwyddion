@@ -262,6 +262,82 @@ sphcapella_guess(gint n_dat,
     *fres = TRUE;
 }
 
+/******************* sphsphcapella ********************************/
+static gdouble
+sphsphcapella_func(gdouble x,
+                G_GNUC_UNUSED gint n_param,
+                const gdouble *b,
+                G_GNUC_UNUSED gpointer user_data,
+                gboolean *fres)
+{
+    /*xc, R, H */
+    *fres = TRUE;
+    return b[1] -b[4]*b[3]*b[2]/6/(x-b[0])/(x-b[0])/(b[2]+b[3]) ;
+}
+
+static void
+sphsphcapella_guess(gint n_dat,
+                 const gdouble *x,
+                 const gdouble *y,
+                 gdouble *param,
+                 gboolean *fres)
+{
+    gint i;
+    gdouble xmin = x[0], xmax = x[n_dat - 1];
+
+    param[1] = y[0]/n_dat;
+
+    for (i = 1; i < n_dat; i++) {
+        if (x[i] < xmin) xmin = x[i];
+        if (x[i] > xmax) xmax = x[i];
+        param[1] += y[i]/n_dat;
+    }
+    param[0] = xmin - (xmax-xmin)/20;
+    param[2] = 20e-9;
+    param[3] = 20e-9;
+    param[4] = 2e-21;
+
+    *fres = TRUE;
+}
+
+/******************* conecapella ********************************/
+static gdouble
+conecapella_func(gdouble x,
+                G_GNUC_UNUSED gint n_param,
+                const gdouble *b,
+                G_GNUC_UNUSED gpointer user_data,
+                gboolean *fres)
+{
+    /*xc, R, H */
+    *fres = TRUE;
+    return b[1] -tan(b[2])*tan(b[2])*b[3]/6/(x-b[0]) ;
+}
+
+static void
+conecapella_guess(gint n_dat,
+                 const gdouble *x,
+                 const gdouble *y,
+                 gdouble *param,
+                 gboolean *fres)
+{
+    gint i;
+    gdouble xmin = x[0], xmax = x[n_dat - 1];
+
+    param[1] = y[0]/n_dat;
+
+    for (i = 1; i < n_dat; i++) {
+        if (x[i] < xmin) xmin = x[i];
+        if (x[i] > xmax) xmax = x[i];
+        param[1] += y[i]/n_dat;
+    }
+    param[0] = xmin - (xmax-xmin)/20;
+    param[2] = 0.5;
+    param[3] = 200e-21;
+
+    *fres = TRUE;
+}
+
+
 /******************* sphtiptap ********************************/
 static gdouble
 sphtiptap_func(gdouble x,
@@ -540,6 +616,22 @@ static const GwyNLFitParam sphcapella_params[] = {
     { "H", 1, 1, },
 };
 
+static const GwyNLFitParam sphsphcapella_params[] = {
+    { "xc", 1, 0, },
+    { "yc", 0, 1, },
+    { "R1", 1, 0, },
+    { "R2", 1, 0, },
+    { "H", 1, 1, },
+};
+
+static const GwyNLFitParam conecapella_params[] = {
+    { "xc", 1, 0, },
+    { "yc", 0, 1, },
+    { "theta", 0, 0, },
+    { "H", 1, 1, },
+};
+
+
 static const GwyNLFitParam sphtiptap_params[] = {
     { "xc", 1, 0, },
     { "yc", 0, 1, },
@@ -707,7 +799,33 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
         G_N_ELEMENTS(sphtiptap_params),
         sphtiptap_params,
     },
- /*    {
+     {
+        "vdW: two spheres",
+        "<i>f</i>(<i>x</i>) "
+        "= -<i>HR<sub>1</sub>R<sub>2</sub></i>/6/(<i>x</i>-<i>x<sub>c</sub></i>)(R<sub>1</sub> + R<sub>2</sub>)<sup>2</sup> ",
+        &sphsphcapella_func,
+        NULL,
+        &sphsphcapella_guess,
+        NULL,
+        NULL,
+        NULL,
+        G_N_ELEMENTS(sphsphcapella_params),
+        sphsphcapella_params,
+    },
+     {
+        "vdW: cone",
+        "<i>f</i>(<i>x</i>) "
+        "= -<i>H tan<sup>2</sup>(theta)</i>/6/(<i>x</i>-<i>x<sub>c</sub></i>)",
+        &conecapella_func,
+        NULL,
+        &conecapella_guess,
+        NULL,
+        NULL,
+        NULL,
+        G_N_ELEMENTS(conecapella_params),
+        conecapella_params,
+    },
+   /*    {
         "vdW: sphere3",
         "<i>f</i>(<i>x</i>) "
         "= -<i>HR</i>/12 (1/(<i>x</i>-<i>x<sub>c</sub></i>)<sup>2</sup>"
