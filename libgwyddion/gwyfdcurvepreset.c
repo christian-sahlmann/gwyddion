@@ -374,6 +374,45 @@ cylindercapella_guess(gint n_dat,
     *fres = TRUE;
 }
 
+/******************* paraboloidcapella ********************************/
+static gdouble
+parcapella_func(gdouble x,
+                G_GNUC_UNUSED gint n_param,
+                const gdouble *b,
+                G_GNUC_UNUSED gpointer user_data,
+                gboolean *fres)
+{
+    /*xc, R, H */
+    *fres = TRUE;
+    return b[1] -b[4]*b[2]*b[2]/b[3]/12/(x-b[0])/(x-b[0]) ;
+}
+
+static void
+parcapella_guess(gint n_dat,
+                 const gdouble *x,
+                 const gdouble *y,
+                 gdouble *param,
+                 gboolean *fres)
+{
+    gint i;
+    gdouble xmin = x[0], xmax = x[n_dat - 1];
+
+    param[1] = y[0]/n_dat;
+
+    for (i = 1; i < n_dat; i++) {
+        if (x[i] < xmin) xmin = x[i];
+        if (x[i] > xmax) xmax = x[i];
+        param[1] += y[i]/n_dat;
+    }
+    param[0] = xmin - (xmax-xmin)/20;
+    param[2] = 20e-9;
+    param[3] = 150e-9;
+    param[4] = 2e-21;
+
+    *fres = TRUE;
+}
+
+
 
 /******************* sphtiptap ********************************/
 static gdouble
@@ -668,6 +707,15 @@ static const GwyNLFitParam conecapella_params[] = {
     { "H", 1, 1, },
 };
 
+static const GwyNLFitParam parcapella_params[] = {
+    { "xc", 1, 0, },
+    { "yc", 0, 1, },
+    { "l_xy", 1, 0, },
+    { "l_z", 1, 0, },
+    { "H", 1, 1, },
+};
+
+
 
 static const GwyNLFitParam sphtiptap_params[] = {
     { "xc", 1, 0, },
@@ -875,7 +923,20 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
         G_N_ELEMENTS(sphcapella_params),
         sphcapella_params,
     },
-    /*    {
+     {
+        "vdW: paraboloid",
+        "<i>f</i>(<i>x</i>) "
+        "= -<i>Hl<sub>xy</sub><sup>2</sup></i>/12/(<i>x</i>-<i>x<sub>c</sub></i>)<sup>2</sup> ",
+        &parcapella_func,
+        NULL,
+        &parcapella_guess,
+        NULL,
+        NULL,
+        NULL,
+        G_N_ELEMENTS(parcapella_params),
+        parcapella_params,
+    },
+     /*    {
         "vdW: sphere3",
         "<i>f</i>(<i>x</i>) "
         "= -<i>HR</i>/12 (1/(<i>x</i>-<i>x<sub>c</sub></i>)<sup>2</sup>"
