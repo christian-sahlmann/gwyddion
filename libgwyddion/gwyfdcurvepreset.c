@@ -337,6 +337,43 @@ conecapella_guess(gint n_dat,
     *fres = TRUE;
 }
 
+/******************* cylindercapella ********************************/
+static gdouble
+cylindercapella_func(gdouble x,
+                G_GNUC_UNUSED gint n_param,
+                const gdouble *b,
+                G_GNUC_UNUSED gpointer user_data,
+                gboolean *fres)
+{
+    /*xc, R, H */
+    *fres = TRUE;
+    return b[1] -b[3]*b[2]*b[2]/6/(x-b[0])/(x-b[0])/(x-b[0]) ;
+}
+
+static void
+cylindercapella_guess(gint n_dat,
+                 const gdouble *x,
+                 const gdouble *y,
+                 gdouble *param,
+                 gboolean *fres)
+{
+    gint i;
+    gdouble xmin = x[0], xmax = x[n_dat - 1];
+
+    param[1] = y[0]/n_dat;
+
+    for (i = 1; i < n_dat; i++) {
+        if (x[i] < xmin) xmin = x[i];
+        if (x[i] > xmax) xmax = x[i];
+        param[1] += y[i]/n_dat;
+    }
+    param[0] = xmin - (xmax-xmin)/20;
+    param[2] = 20e-9;
+    param[3] = 2e-23;
+
+    *fres = TRUE;
+}
+
 
 /******************* sphtiptap ********************************/
 static gdouble
@@ -825,7 +862,20 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
         G_N_ELEMENTS(conecapella_params),
         conecapella_params,
     },
-   /*    {
+     {
+        "vdW: cylinder",
+        "<i>f</i>(<i>x</i>) "
+        "= -<i>HR<sup>2</sup></i>/6/(<i>x</i>-<i>x<sub>c</sub></i>)<sup>3</sup> ",
+        &cylindercapella_func,
+        NULL,
+        &cylindercapella_guess,
+        NULL,
+        NULL,
+        NULL,
+        G_N_ELEMENTS(sphcapella_params),
+        sphcapella_params,
+    },
+    /*    {
         "vdW: sphere3",
         "<i>f</i>(<i>x</i>) "
         "= -<i>HR</i>/12 (1/(<i>x</i>-<i>x<sub>c</sub></i>)<sup>2</sup>"
