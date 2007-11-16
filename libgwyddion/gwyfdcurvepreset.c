@@ -30,86 +30,6 @@ gwy_fd_curve_preset_new_static(const GwyNLFitPresetBuiltin *data);
 
 G_DEFINE_TYPE(GwyFDCurvePreset, gwy_fd_curve_preset, GWY_TYPE_NLFIT_PRESET)
 
-#if 0
-/******************* argento ********************************/
-static gdouble
-argento_func(gdouble x,
-             G_GNUC_UNUSED gint n_param,
-             const gdouble *b,
-             G_GNUC_UNUSED gpointer user_data,
-             gboolean *fres)
-{
-    /*xc, R, H, gamma*/
-    *fres = TRUE;
-    return b[1] + (b[3]*b[2]*b[2]*(1 - sin(b[4]))*(b[2]*sin(b[4]) - (x-b[0])*sin(b[4]) - b[2] - (x-b[0])))
-                            /(6*(x-b[0])*(x-b[0])*((x-b[0]) + b[2] - b[2]*sin(b[4]))*((x-b[0]) + b[2] - b[2]*sin(b[4])))
-                                      - (b[3]*tan(b[4])*((x-b[0])*sin(b[4]) + b[2]*sin(b[4]) + b[2]*cos(2*b[4])))
-                                      /(6*cos(b[4])*((x-b[0]) + b[2] - b[2]*sin(b[4]))*(((x-b[0]) + b[2] - b[2]*sin(b[4]))));
-}
-
-static void
-argento_guess(gint n_dat,
-              const gdouble *x,
-              const gdouble *y,
-              gdouble *param,
-              gboolean *fres)
-{
-    gint i;
-    gdouble xmin = x[0], xmax = x[n_dat - 1];
-
-    param[1] = y[0]/n_dat;
-
-    for (i = 1; i < n_dat; i++) {
-        if (x[i] < xmin) xmin = x[i];
-        if (x[i] > xmax) xmax = x[i];
-        param[1] += y[i]/n_dat;
-    }
-    param[0] = xmin - (xmax-xmin)/100;
-    param[2] = 20e-9;
-    param[3] = 2e-20;
-    param[4] = 1;
-
-    *fres = TRUE;
-}
-
-/******************* parzanette ********************************/
-static gdouble
-parzanette_func(gdouble x,
-                G_GNUC_UNUSED gint n_param,
-                const gdouble *b,
-                G_GNUC_UNUSED gpointer user_data,
-                gboolean *fres)
-{
-    /*xc, R, H, gamma, h1, L*/
-    *fres = TRUE;
-    return b[1] -(b[3]/6)*((b[5]*b[5]*(3*b[2]*(x-b[0]) + b[2]*b[5] - (x-b[0])*b[5]))/((x-b[0])*(x-b[0])*pow(((x-b[0])+b[5]), 3))
-            + (b[6]*b[6])/(pow(((x-b[0])+b[5]), 3))
-            + (4*tan(b[4]))/(G_PI)*(b[6]+tan(b[4])*((x-b[0])+b[5]))/(pow(((x-b[0])+b[5]), 2)));
-}
-
-static void
-parzanette_guess(gint n_dat,
-                 const gdouble *x,
-                 const gdouble *y,
-                 gdouble *param,
-                 gboolean *fres)
-{
-    gint i;
-    gdouble xmin = x[0], xmax = x[n_dat - 1];
-
-    param[1] = y[0]/n_dat;
-
-    for (i = 1; i < n_dat; i++) {
-        if (x[i] < xmin) xmin = x[i];
-        if (x[i] > xmax) xmax = x[i];
-        param[1] += y[i]/n_dat;
-    }
-    param[0] = xmin - (xmax-xmin)/20;
-    param[2] = 20e-9;
-    param[3] = 2e-21;
-}
-#endif
-
 
 /******************* sszanette ********************************/
 static gdouble
@@ -157,7 +77,7 @@ pyrzanette_func(gdouble x,
 {
     /*xc, R, H, gamma*/
     *fres = TRUE;
-    return b[1] -2*b[3]*(tan(b[4])*tan(b[4]))/3/G_PI/(x-b[0]);
+    return b[1] -2*b[2]*(tan(b[3])*tan(b[3]))/3/G_PI/(x-b[0]);
 }
 
 static void
@@ -178,13 +98,12 @@ pyrzanette_guess(gint n_dat,
         param[1] += y[i]/n_dat;
     }
     param[0] = xmin - (xmax-xmin)/100;
-    param[2] = 20e-9;
-    param[3] = 2e-20;
-    param[4] = 1;
+    param[2] = 2e-20;
+    param[3] = 0.5;
     *fres = TRUE;
 }
 
-#if 0
+
 /******************* tpyrzanette ********************************/
 static gdouble
 tpyrzanette_func(gdouble x,
@@ -195,9 +114,9 @@ tpyrzanette_func(gdouble x,
 {
     /*xc, R, H, gamma, L, */
     *fres = TRUE;
-    return b[1] - 2*b[3]*b[5]*b[5]/(x-b[0])*(x-b[0])*(x-b[0])
-           * (1 + (tan(b[4])*(x-b[0]))/b[5] +
-           (tan(b[4])*(x-b[0])*tan(b[4])*(x-b[0]))/b[5]/b[5]);
+    return b[1] - 2*b[2]*b[4]*b[4]/(x-b[0])*(x-b[0])*(x-b[0])
+           * (1 + (tan(b[3])*(x-b[0]))/b[4] +
+           (tan(b[3])*(x-b[0])*tan(b[3])*(x-b[0]))/b[4]/b[4]);
 }
 
 static void
@@ -218,12 +137,12 @@ tpyrzanette_guess(gint n_dat,
         param[1] += y[i]/n_dat;
     }
     param[0] = xmin - (xmax-xmin)/100;
-    param[2] = 20e-9;
-    param[3] = 2e-20;
-    param[4] = 1;
-    param[5] = 20e-9;
+    param[2] = 2e-20;
+    param[3] = 0.5;
+    param[4] = 20e-9;
+    *fres = TRUE;
 }
-#endif
+
 
 /******************* sphcapella ********************************/
 static gdouble
@@ -637,6 +556,43 @@ hsphhertz_guess(gint n_dat,
 }
 #endif
 
+/******************* electrostatic sphere capella ********************************/
+/*static gdouble
+esphcapella_func(gdouble x,
+                G_GNUC_UNUSED gint n_param,
+                const gdouble *b,
+                G_GNUC_UNUSED gpointer user_data,
+                gboolean *fres)
+{
+    *fres = TRUE;
+    return b[1] -G_PI*8.8541878176e-12*b[2]*b[2]*b[3]*b[3]/(x-b[0])/(x-b[0] + b[2]) ;
+}
+
+static void
+esphcapella_guess(gint n_dat,
+                 const gdouble *x,
+                 const gdouble *y,
+                 gdouble *param,
+                 gboolean *fres)
+{
+    gint i;
+    gdouble xmin = x[0], xmax = x[n_dat - 1];
+
+    param[1] = y[0]/n_dat;
+
+    for (i = 1; i < n_dat; i++) {
+        if (x[i] < xmin) xmin = x[i];
+        if (x[i] > xmax) xmax = x[i];
+        param[1] += y[i]/n_dat;
+    }
+    param[0] = xmin - (xmax-xmin)/20;
+    param[2] = 20e-9;
+    param[3] = 1;
+
+    *fres = TRUE;
+}
+*/
+
 /************************** presets ****************************/
 
 
@@ -671,7 +627,6 @@ static const GwyNLFitParam sszanette_params[] = {
 static const GwyNLFitParam pyrzanette_params[] = {
     { "xc", 1, 0, },
     { "yc", 0, 1, },
-    { "R", 1, 0, },
     { "H", 1, 1, },
     { "gamma", 0, 0, },
 };
@@ -679,10 +634,9 @@ static const GwyNLFitParam pyrzanette_params[] = {
 static const GwyNLFitParam tpyrzanette_params[] = {
     { "xc", 1, 0, },
     { "yc", 0, 1, },
-    { "R", 1, 0, },
     { "H", 1, 1, },
     { "gamma", 0, 0, },
-    { "L", 1, 0, },
+    { "L", 1, 1, },
 };
 
 static const GwyNLFitParam sphcapella_params[] = {
@@ -769,6 +723,13 @@ static const GwyNLFitParam sphesheinz_params[] = {
     { "lambda", 1, 0, },
 };
 
+static const GwyNLFitParam esphcapella_params[] = {
+    { "xc", 1, 0, },
+    { "yc", 0, 1, },
+    { "R", 1, 0, },
+    { "V", 1, 0, },
+};
+
 static const GwyNLFitParam hsphhertz_params[] = {
     { "xc", 0, 1, },
     { "yc", 0, 1, },
@@ -780,43 +741,6 @@ static const GwyNLFitParam hsphhertz_params[] = {
 
 
 static const GwyNLFitPresetBuiltin fitting_presets[] = {
-    /*FIXME vdw FDcurve fitting presets start here*/
-   /* {
-        "vdW: parametric",
-        "<i>f</i>(<i>x</i>) "
-            "= (<i>HR</i><sup>2</sup>(1 - sin(<i>γ</i>))(<i>R</i>" 
-            "sin(<i>γ</i>)  - (<i>x</i>-<i>x<sub>c</sub></i>) sin(<i>γ</i>)"
-            " - <i>R</i> - (<i>x</i>-<i>x<sub>c</sub></i>))) "
-            "/(6(<i>x</i>-<i>x<sub>c</sub></i>)<sup>2</sup>((<i>x</i>-<i>x<sub>c</sub></i>)"
-            " + <i>R</i> - <i>R</i>sin(<i>γ</i>))<sup>2</sup>)"
-            " - (<i>H</i>tan(<i>γ</i>)((<i>x</i>-<i>x<sub>c</sub></i>)"
-            "sin(<i>γ</i>) + <i>R</i>sin(<i>γ</i>) + <i>R</i>cos(2<i>γ</i>)))"
-            ".../(6*cos(<i>γ</i>)*((<i>x</i>-<i>x<sub>c</sub></i>) + <i>R</i>"
-            " - <i>R</i>sin(<i>γ</i>))<sup>2</sup>)",
-        &argento_func,
-        NULL,
-        &argento_guess,
-        NULL,
-        NULL,
-        NULL,
-        G_N_ELEMENTS(argento_params),
-        argento_params,
-    },*/
-/*    {
-        "parzanette",
-        "<i>f</i>(<i>x</i>) "
-        "=  -(H/6)((h1<sup>2</sup>(3 R (x-xc) + R*h1 - (x-xc) h1))/((x-xc)<sup>2</sup> ((x-xc)+h1)<sup>3</sup>)"
-            "+ (L*L)/(((x-xc)+h1)**3) "
-            "+ (4*tan(γ))/(3.141593)*(L+tan(γ)*((x-xc)+h1))/(((x-xc)+h1)**2))",
-        &parzanette_func,
-        NULL,
-        &parzanette_guess,
-        NULL,
-        NULL,
-        NULL,
-        G_N_ELEMENTS(parzanette_params),
-        parzanette_params,
-    },*/
     {
         "vdW: semisphere",
         "<i>f</i>(<i>x</i>) "
@@ -845,8 +769,8 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
         G_N_ELEMENTS(pyrzanette_params),
         pyrzanette_params,
     },
-/*     {
-        "tpyrzanette",
+     {
+        "vdW: truncated pyramid",
         "<i>f</i>(<i>x</i>) "
         "= -2HL<sup>2</sup>/(x-xc)<sup>3</sup> * (1 + (tan(γ)(x-xc))/L + (tan(γ)(x-xc))<sup>2</sup>)/L<sup>2</sup>)",
         &tpyrzanette_func,
@@ -857,7 +781,7 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
         NULL,
         G_N_ELEMENTS(tpyrzanette_params),
         tpyrzanette_params,
-    },*/
+    },
      {
         "vdW: sphere",
         "<i>f</i>(<i>x</i>) "
@@ -1001,8 +925,21 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
         NULL,
         G_N_ELEMENTS(sphesheinz_params),
         sphesheinz_params,
-    },
-     {
+    },*/
+    /* {
+        "electrostatic: sphere",
+        "<i>f</i>(<i>x</i>) "
+        "= -<i>Pi e<sub>0</sub>(VR)<sup>2</sup></i>/(<i>x</i>-<i>x<sub>c</sub></i>)/(<i>x</i>-<i>x<sub>c</sub></i> + R) ",
+        &esphcapella_func,
+        NULL,
+        &esphcapella_guess,
+        NULL,
+        NULL,
+        NULL,
+        G_N_ELEMENTS(esphcapella_params),
+        esphcapella_params,
+    },*/
+/*      {
         "hsphhertz",
         "<i>f</i>(<i>x</i>) "
         "= (xc - x)<sup>3/2</sup>2 E sqrt(R)/(3 (1-nu<sup>2</sup>))",
