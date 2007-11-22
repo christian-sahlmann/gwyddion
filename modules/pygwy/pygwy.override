@@ -116,6 +116,9 @@ ignore-glob
   gwy_md5_get_digest
   gwy_graph_draw_line
   gwy_gradient_get_samples
+  gwy_data_field_get_data
+  gwy_data_line_get_data
+  gwy_container_set_string
 %%
 ignore-type 
   GwyPlainTool
@@ -295,7 +298,7 @@ _wrap_gwy_app_undo_qcheckpointv(PyObject *self, PyObject *args, PyObject *kwargs
 }
 
 %%
-override GwyDataField.get_data noargs
+define GwyDataField.get_data noargs
 /**
  * gwy_data_field_get_data:
  *
@@ -329,7 +332,7 @@ _wrap_gwy_data_field_get_data(PyGObject *self)
 }
 
 %%
-override GwyDataLine.get_data noargs
+define GwyDataLine.get_data noargs
 static PyObject *
 _wrap_gwy_data_line_get_data(PyGObject *self)
 {   
@@ -484,7 +487,7 @@ _wrap_gwy_container_contains_by_name(PyGObject *self, PyObject *args, PyObject *
 }
 
 %%
-override GwyContainer.set_string kwargs
+define GwyContainer.set_string kwargs
 /**
  * gwy_container_set_string: 
  * @key: an object key

@@ -196,7 +196,8 @@ pygwy_la_LIBADD = $(module_libadd) $(PYTHON_LIBS) $(PYGTK_LIBS)
 
 pygwy.defs: $(PYGWY_H_FILES) Makefile.am
 	$(PYTHON) $(PYGTK_CODEGENDIR)/h2def.py $(PYGWY_H_FILES) \
-	| sed -e 's/GWY_TYPE_SELECTION_GRAPH1_DAREA/GWY_TYPE_SELECTION_GRAPH_1DAREA/' -e 's/GWY_TYPE_NL_FIT_PRESET/GWY_TYPE_NLFIT_PRESET/' -e 's/GWY_TYPE_CD_LINE/GWY_TYPE_CDLINE/' > pygwy.defs
+	| sed -e 's/define-object Serializable/define-interface Serializable/'-e 's/GWY_TYPE_SELECTION_GRAPH1_DAREA/GWY_TYPE_SELECTION_GRAPH_1DAREA/' -e 's/GWY_TYPE_NL_FIT_PRESET/GWY_TYPE_NLFIT_PRESET/' -e 's/GWY_TYPE_CD_LINE/GWY_TYPE_CDLINE/' > pygwy.defs
+#	| sed -e 's/GWY_TYPE_SELECTION_GRAPH1_DAREA/GWY_TYPE_SELECTION_GRAPH_1DAREA/' -e 's/define-object/define-interface/' -e 's/GWY_TYPE_NL_FIT_PRESET/GWY_TYPE_NLFIT_PRESET/' -e 's/GWY_TYPE_CD_LINE/GWY_TYPE_CDLINE/' > pygwy.defs
 
 # The sed fixes pygwy_add_constants() and pygwy_register_classes() to static
 # functions, and standardized `generated' line for automated exclusions of

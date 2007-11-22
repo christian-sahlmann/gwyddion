@@ -255,7 +255,7 @@ for func in p.functions:
    # skip ignore functions
    if func.name in ignore_functions:
       continue
-   if wrap_file_cont.find(func.c_name) == -1 and override_file_cont.find(method.c_name):
+   if wrap_file_cont.find(func.c_name) == -1 and override_file_cont.find(func.c_name):
       sys.stderr.write("Func "+func.c_name+" not found.\n")
       func.name = "UNIMPLEMENTED_"+func.name
    print_functions("     ", func, docs, p.enums, 0)

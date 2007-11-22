@@ -183,7 +183,6 @@ pygwy_initialize_stderr_redirect(PyObject *d)
                      Py_file_input,
                      d,
                      d);
-    
 }
 
 static void
@@ -191,7 +190,6 @@ pygwy_finalize_stderr_redirect(PyObject *d)
 {
     PyObject *py_stderr;
     gchar *buf;
-    
     // rewind redirected stderr file, read its content and display it in error window
     pygwy_run_string("_stderr_redir.seek(0)\n"
                      "_stderr_str = _stderr_redir.read()\n"
