@@ -19,47 +19,47 @@ and analysis program, using Gtk+.
 .SH OPTIONS
 .PP
 The program accepts all standard Gtk+, Gdk, and GtkGLExt options like
-\fB--display\fR or \fB--sync\fR.  Please see documentation of these
+\fB\-\-display\fR or \fB\-\-sync\fR.  Please see documentation of these
 packages for description of toolkit options.
 .PP
-The behaviour of the \fB--remote-*\fR commands is undefined when more than
+The behaviour of the \fB\-\-remote\-*\fR commands is undefined when more than
 one instance of Gwyddion is running on the display.  They can choose
 arbitrary of them to interact with.
 .PP
 Gwyddion options:
 .TP
-\fB-h\fR, \fB--help\fR
+\fB\-h\fR, \fB\-\-help\fR
 Prints a brief help and terminates.
 .TP
-\fB-v\fR, \fB--version\fR
+\fB\-v\fR, \fB\-\-version\fR
 Prints version information and terminates.
 .TP
-\fB--no-splash\fR
+\fB\-\-no\-splash\fR
 Disables splash screen on program startup.
 .TP
-\fB--remote-new\fR
+\fB\-\-remote\-new\fR
 Opens files given on the command line in an already running instance of
 Gwyddion on the display.  Runs a new instance if none is running.
 .TP
-\fB--remote-existing\fR
+\fB\-\-remote\-existing\fR
 Opens files given on the command line in an already running instance of
 Gwyddion on the display.  Fails if none is running.
 .TP
-\fB--remote-query\fR
+\fB\-\-remote\-query\fR
 Succeeds if an instance of Gwyddion is already running on the display and
 prints its window id.  Fails if none is running.
 .TP
-\fB--check\fR
+\fB\-\-check\fR
 Instead of running the user interface and opening \fIFILE\fRs, loads the
 files, performs a sanity check on them (printing errors to standard error
 output) and terminates.
 .TP
-\fB--debug-objects\fR
+\fB\-\-debug\-objects\fR
 Prints list of objects created during run time, with creation and
 desctruction times or reference counts on program exit.  Useful only for
 developers.
 .TP
-\fB--startup-time\fR
+\fB\-\-startup\-time\fR
 Prints wall-clock time taken by various startup (and shutdown) tasks.
 Useful only for developers and people going to complain about too slow
 startup.
