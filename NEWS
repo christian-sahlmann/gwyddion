@@ -6,6 +6,7 @@ Modules:
 - Graph fitting: It is possible to plot the curve over the full range even
   when only a subrange is fitted.
 - RHK SPM32 (SM2): Support for spectra was added.
+- MI file: Reading of ASCII image files was actually implemented.
 
 
 2.9 (2007-10-19)
