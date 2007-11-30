@@ -126,8 +126,12 @@ static guint        image_file_read_header  (MIFile *mifile,
 static guint        spect_file_read_header  (MISpectFile *mifile,
                                              gchar *buffer,
                                              GError **error);
-static void         read_data_field         (GwyDataField *dfield,
+static void         read_data_field_bin     (GwyDataField *dfield,
                                              MIData *midata,
+                                             gint xres, gint yres);
+static void         read_data_field_text    (GwyDataField *dfield,
+                                             const guchar *buffer,
+                                             guint *pos,
                                              gint xres, gint yres);
 static void         image_file_free         (MIFile *mifile);
 static void         spect_file_free         (MISpectFile *mifile);
@@ -144,7 +148,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Molecular Imaging MI data files."),
     "Chris Anderson <sidewinder.asu@gmail.com>",
-    "0.10",
+    "0.11",
     "Chris Anderson, Molecular Imaging Corp.",
     "2006",
 };
@@ -270,21 +274,27 @@ mifile_load(const gchar *filename,
         return NULL;
     }
 
+    /* create a container */
+    container = gwy_container_new();
+
     /* Load the image data or spectroscopy data */
     if (isimage) {
         /* Load image data: */
         pos = header_size;
         for (i = 0; i < mifile->n; i++) {
-            mifile->buffers[i].data = (const gint16*)(buffer + pos);
-            pos += 2*mifile->xres * mifile->yres;
-
             dfield = gwy_data_field_new(mifile->xres, mifile->yres,
                                         1.0, 1.0, FALSE);
-            read_data_field(dfield, mifile->buffers + i,
-                            mifile->xres, mifile->yres);
 
-            if (!container)
-                container = gwy_container_new();
+            if (isbinary) {
+                mifile->buffers[i].data = (const gint16*)(buffer + pos);
+                pos += 2*mifile->xres * mifile->yres;
+                read_data_field_bin(dfield, mifile->buffers + i,
+                                    mifile->xres, mifile->yres);
+            }
+            else {
+                read_data_field_text(dfield, buffer, &pos,
+                                     mifile->xres, mifile->yres);
+            }
 
             container_key = g_strdup_printf("/%i/data", i);
             gwy_container_set_object_by_name(container, container_key,
@@ -299,9 +309,6 @@ mifile_load(const gchar *filename,
     else {
         const guchar *pp;
         /* Load spectroscopy data: */
-
-        /* create a container */
-        container = gwy_container_new();
 
         /* create a dummy dfield and add to container
            XXX: This is a temporary cheap hack */
@@ -498,9 +505,9 @@ spect_file_read_header(MISpectFile *mifile, gchar *buffer, GError **error)
 }
 
 static void
-read_data_field(GwyDataField *dfield,
-                MIData *midata,
-                gint xres, gint yres)
+read_data_field_bin(GwyDataField *dfield,
+                    MIData *midata,
+                    gint xres, gint yres)
 {
     gdouble *data;
     const gint16 *row;
@@ -513,7 +520,26 @@ read_data_field(GwyDataField *dfield,
         for (j = 0; j < xres; j++)
             data[i*xres + j] = GINT16_FROM_LE(row[j]);
     }
-    gwy_data_field_data_changed(dfield);
+}
+
+static void
+read_data_field_text(GwyDataField *dfield,
+                     const guchar *buffer,
+                     guint *pos,
+                     gint xres, gint yres)
+{
+    const gchar *buf = (const gchar*)buffer;
+    gdouble *data;
+    gint i;
+
+    gwy_data_field_resample(dfield, xres, yres, GWY_INTERPOLATION_NONE);
+    data = gwy_data_field_get_data(dfield);
+    for (i = 0; i < xres*yres; i++) {
+        gchar *end;
+
+        data[i] = strtol(buf + *pos, &end, 10);
+        *pos = (const gchar*)end - buf;
+    }
 }
 
 static void
