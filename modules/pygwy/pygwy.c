@@ -56,6 +56,12 @@ typedef struct {
     time_t m_time;
 } PygwyPluginInfo;
 
+typedef struct {
+   PyObject *std_err;
+   PyObject *dictionary;
+   GtkWidget *console_output;
+} PygwyConsoleSetup;
+
 typedef enum {
     PYGWY_PROCESS, PYGWY_FILE, PYGWY_GRAPH, PYGWY_LAYER, PYGWY_UNDEFINED
 } PygwyPluginType;
@@ -65,7 +71,11 @@ static gboolean         module_register       (void);
 static void             pygwy_proc_run        (GwyContainer *data,
                                                GwyRunType run,
                                                const gchar *name);
+static void             pygwy_console_run     (GwyContainer *data,
+                                               GwyRunType run,
+                                               const gchar *name);
 static void             pygwy_register_plugins(void);
+static void             pygwy_register_console(void);
 static PygwyPluginInfo* pygwy_find_plugin     (const gchar* name);
 static gboolean         pygwy_file_save_run   (GwyContainer *data,
                                                const gchar *filename,
@@ -80,8 +90,14 @@ static gint             pygwy_file_detect_run (const GwyFileDetectInfo
                                                *fileinfo,
                                                gboolean only_name,
                                                gchar *name);
+static void             pygwy_on_console_command_execute(GtkEntry *entry, 
+                                                         gpointer user_data);
 
+static gboolean         pygwy_on_console_close(GtkWidget *widget, 
+                                               GdkEvent *event, 
+                                               gpointer user_data);
 static GList *s_pygwy_plugins = NULL;
+static PygwyConsoleSetup *s_console_setup = NULL;
 static PyObject *s_pygwy_dict;
 static PyObject *s_main_module;
 
@@ -101,8 +117,10 @@ static gboolean
 module_register(void)
 {
     pygwy_register_plugins();
+    pygwy_register_console();
     return TRUE;
 }
+
 
 static void
 pygwy_initialize(void)
@@ -207,7 +225,7 @@ pygwy_finalize_stderr_redirect(PyObject *d)
 }
 
 static PyObject *
-create_environment(const gchar *filename) {
+create_environment(const gchar *filename, gboolean show_errors) {
     PyObject *d, *plugin_filename;
     char *argv[1];
     argv[0] = NULL;
@@ -219,15 +237,17 @@ create_environment(const gchar *filename) {
     PySys_SetArgv(0, argv);
 
     // redirect stderr and stdout of python script to temporary file
-    pygwy_initialize_stderr_redirect(d);
+    if (show_errors)
+      pygwy_initialize_stderr_redirect(d);
     return d;
 }
 
 static void
-destroy_environment(PyObject *d) {
+destroy_environment(PyObject *d, gboolean show_errors) {
     // show content of temporary file which contains stderr and stdout of python
     // script and close it
-    pygwy_finalize_stderr_redirect(d);
+    if (show_errors)
+      pygwy_finalize_stderr_redirect(d);
     PyDict_Clear(d);
     Py_DECREF(d);
 }
@@ -275,7 +295,7 @@ pygwy_get_plugin_metadata(const gchar *filename,
         g_warning("Cannot read content of file '%s'", filename);
         return;
     }
-    d = create_environment(filename);
+    d = create_environment(filename, TRUE);
     if (!d) {
         g_warning("Cannot create copy of Python dictionary.");
         PyErr_Print();
@@ -327,7 +347,7 @@ error:
     }
     Py_XDECREF(plugin_module);
     g_free(plugin_file_content);
-    destroy_environment(d);
+    destroy_environment(d, TRUE);
 }
 
 static PygwyPluginInfo*
@@ -628,7 +648,7 @@ pygwy_proc_run(GwyContainer *data, GwyRunType run, const gchar *name)
               info->filename);
 
     // create new environment
-    d = create_environment(info->filename);
+    d = create_environment(info->filename, TRUE);
     if (!d) {
         g_warning("Cannot create copy of Python dictionary.");
         return;
@@ -641,7 +661,7 @@ pygwy_proc_run(GwyContainer *data, GwyRunType run, const gchar *name)
     // import, execute the module and check for 'run' func
     module = PyImport_ExecCodeModule(info->name, info->code);
     if (!pygwy_check_func(module, "run", info->filename)) {
-        destroy_environment(d);
+        destroy_environment(d, TRUE);
         return;
     }
 
@@ -663,7 +683,7 @@ pygwy_proc_run(GwyContainer *data, GwyRunType run, const gchar *name)
 
     Py_DECREF(module);
     Py_DECREF(py_container); //FIXME
-    destroy_environment(d);
+    destroy_environment(d, TRUE);
 }
 
 static gboolean
@@ -688,7 +708,7 @@ pygwy_file_save_run(GwyContainer *data,
               info->name,
               info->filename);
     // create new environment
-    d = create_environment(info->filename);
+    d = create_environment(info->filename, TRUE);
     if (!d) {
         g_warning("Cannot create copy of Python dictionary.");
         return FALSE;
@@ -700,7 +720,7 @@ pygwy_file_save_run(GwyContainer *data,
     module = PyImport_ExecCodeModule(info->name, info->code);
     // check if load function is defined
     if (!pygwy_check_func(module, "save", info->filename)) {
-        destroy_environment(d);
+        destroy_environment(d, TRUE);
         return FALSE;
     }
     // create input container and put it into __main__ module dictionary
@@ -735,7 +755,7 @@ pygwy_file_save_run(GwyContainer *data,
     Py_XDECREF(module);
     Py_XDECREF(py_container); //FIXME
     Py_XDECREF(py_filename);
-    destroy_environment(d);
+    destroy_environment(d, TRUE);
     return res;
 }
 
@@ -761,7 +781,7 @@ pygwy_file_load_run(const gchar *filename,
               info->filename);
 
     // create new environment
-    d = create_environment(info->filename);
+    d = create_environment(info->filename, TRUE);
     if (!d) {
         g_warning("Cannot create copy of Python dictionary.");
         goto error;
@@ -809,7 +829,7 @@ error:
     Py_XDECREF(type);
     Py_XDECREF(module);
 
-    destroy_environment(d);
+    destroy_environment(d, TRUE);
     gwy_debug("Return value %p", res);
     return res;
 }
@@ -833,7 +853,7 @@ pygwy_file_detect_run(const GwyFileDetectInfo *fileinfo,
               info->name,
               info->filename);
     // create new environment
-    d = create_environment(info->filename);
+    d = create_environment(info->filename, TRUE);
     if (!d) {
         g_warning("Cannot create copy of Python dictionary.");
         return FALSE;
@@ -847,7 +867,7 @@ pygwy_file_detect_run(const GwyFileDetectInfo *fileinfo,
     // check if load function is defined
     if (!pygwy_check_func(module, "detect_by_name", info->filename)
        || !pygwy_check_func(module, "detect_by_content", info->filename)) {
-        destroy_environment(d);
+        destroy_environment(d, TRUE);
         return FALSE;
     }
 
@@ -894,7 +914,7 @@ pygwy_file_detect_run(const GwyFileDetectInfo *fileinfo,
               res,
               info->name);
     Py_DECREF(module);
-    destroy_environment(d);
+    destroy_environment(d, TRUE);
     return res;
 
 }
@@ -1046,4 +1066,156 @@ convert_pyobject_to_gvalue(PyObject *o)
     return g_value;
 }
 
+static void
+pygwy_register_console()
+{
+
+    if (gwy_process_func_register(N_("Pygwy console"),
+                                  pygwy_console_run,
+                                  N_("/Pygwy console"),
+                                  NULL,
+                                  GWY_RUN_IMMEDIATE,
+                                  GWY_MENU_FLAG_DATA,
+                                  N_("Python wrapper console")) ) {
+
+    }
+}
+
+static void
+pygwy_console_run(GwyContainer *data, GwyRunType run, const gchar *name)
+{
+    PyObject *std_err, *d, *py_container;
+    GtkWidget *console_win;
+    GtkWidget *vbox1;
+    GtkWidget *console_scrolledwin;
+    GtkWidget *textview_output;
+    GtkWidget *entry_input;
+
+    // create GUI
+    console_win = gtk_window_new (GTK_WINDOW_TOPLEVEL);
+    gtk_window_set_title (GTK_WINDOW (console_win), "Pygwy Console");
+
+    vbox1 = gtk_vbox_new (FALSE, 0);
+    gtk_widget_show (vbox1);
+    gtk_container_add (GTK_CONTAINER (console_win), vbox1);
+
+    console_scrolledwin = gtk_scrolled_window_new (NULL, NULL);
+    gtk_widget_show (console_scrolledwin);
+    gtk_box_pack_start (GTK_BOX (vbox1), console_scrolledwin, TRUE, TRUE, 0);
+    gtk_scrolled_window_set_shadow_type (GTK_SCROLLED_WINDOW (console_scrolledwin), GTK_SHADOW_IN);
+
+    textview_output = gtk_text_view_new ();
+    gtk_widget_show (textview_output);
+    gtk_container_add (GTK_CONTAINER (console_scrolledwin), textview_output);
+    gtk_text_view_set_editable (GTK_TEXT_VIEW (textview_output), FALSE);
+
+    entry_input = gtk_entry_new ();
+    gtk_widget_show (entry_input);
+    gtk_box_pack_start (GTK_BOX (vbox1), entry_input, FALSE, FALSE, 0);
+    gtk_entry_set_invisible_char (GTK_ENTRY (entry_input), 9679);
+    gtk_widget_grab_focus(GTK_WIDGET(entry_input));
+
+    // entry widget on ENTER
+    g_signal_connect ((gpointer) entry_input, "activate",
+                      G_CALLBACK (pygwy_on_console_command_execute),
+                      NULL);
+     
+     // connect on window close()
+    g_signal_connect ((gpointer) console_win, "delete_event",
+                      G_CALLBACK (pygwy_on_console_close),
+                      NULL);
+    gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(textview_output), GTK_WRAP_WORD_CHAR);
+    gtk_window_resize(GTK_WINDOW(console_win), 600, 500);
+    gtk_widget_show(console_win);
+    // create new environment    
+    d = create_environment("__console__", FALSE);
+    if (!d) {
+        g_warning("Cannot create copy of Python dictionary.");
+        return;
+    }
+
+    gwy_debug("Running plugin '%s', filename '%s'", info->name, info->filename);
+    // create container named 'data' to allow access the container from python
+    py_container = pygobject_new((GObject*)data);
+    if (!py_container) {
+        g_warning("Variable 'gwy.data' was not inicialized.");
+    }
+    PyDict_SetItemString(s_pygwy_dict, "data", py_container);
+    
+    pygwy_run_string("import sys, tempfile\n"
+                     "_stderr_redir = tempfile.TemporaryFile()\n"
+                     "sys.stderr = _stderr_redir\n"
+                     "_stdout_redir = _stderr_redir\n"
+                     "sys.stdout = _stdout_redir\n"
+                     "_stdin_redir = tempfile.TemporaryFile()\n"
+                     "sys.stdin = _stdin_redir\n",
+                     Py_file_input,
+                     d,
+                     d);
+    
+    // store values for closing console
+    s_console_setup = g_malloc(sizeof(PygwyConsoleSetup));
+    s_console_setup->std_err = PyDict_GetItemString(d, "_stderr_redir");
+    Py_INCREF(s_console_setup->std_err);
+    s_console_setup->dictionary = d;
+    s_console_setup->console_output = textview_output;
+}
+
+static void
+pygwy_on_console_command_execute(GtkEntry *entry, gpointer user_data)
+{
+    PyObject *py_output;
+    GtkTextIter start_iter, end_iter;
+    GString *console_output, *python_output;
+    gchar *output, *input_line;
+    GtkTextBuffer *console_buf;
+    GtkTextMark *end_mark;
+
+    // store _stderr_redir location
+    pygwy_run_string("_stderr_redir_pos = _stderr_redir.tell()", 
+          Py_file_input, 
+          s_console_setup->dictionary,
+          s_console_setup->dictionary);
+    pygwy_run_string(gtk_entry_get_text(entry), 
+          Py_single_input, 
+          s_console_setup->dictionary, 
+          s_console_setup->dictionary);
+    pygwy_run_string("_stderr_redir.seek(_stderr_redir_pos)", 
+          Py_file_input, 
+          s_console_setup->dictionary,
+          s_console_setup->dictionary);
+    console_buf = gtk_text_view_get_buffer(GTK_TEXT_VIEW(s_console_setup->console_output));
+    gtk_text_buffer_get_bounds(console_buf, &start_iter, &end_iter);
+    console_output = g_string_new (gtk_text_buffer_get_text(console_buf, &start_iter, &end_iter, FALSE));
+    input_line = g_strconcat(">>> ", gtk_entry_get_text(entry), "\n", NULL);
+    python_output = g_string_new(input_line);
+    g_free(input_line);
+    do {
+        py_output = PyFile_GetLine(s_console_setup->std_err, 0);
+        output = PyString_AS_STRING(py_output);
+        python_output = g_string_append(python_output, output);
+        Py_DECREF(py_output);
+    } while (*output != '\0');
+    console_output = g_string_append(console_output, python_output->str);
+    g_string_free(python_output, TRUE);
+    gtk_text_buffer_set_text (GTK_TEXT_BUFFER (console_buf), console_output->str, -1);
+    g_string_free(console_output, TRUE);
+    gtk_text_buffer_get_end_iter(GTK_TEXT_BUFFER(console_buf), &end_iter);
+    end_mark = gtk_text_buffer_create_mark(console_buf, "cursor", &end_iter, FALSE);
+    g_object_ref(end_mark);
+    gtk_text_view_scroll_to_mark(GTK_TEXT_VIEW(s_console_setup->console_output), end_mark, 0.0, FALSE, 0.0, 0.0);
+    g_object_unref(end_mark);
+    gtk_editable_select_region(GTK_EDITABLE(entry), 0, -1);
+}
+
+static gboolean
+pygwy_on_console_close(GtkWidget *widget, GdkEvent *event, gpointer user_data)
+{
+    //Py_DECREF(module);
+    //Py_DECREF(py_container); //FIXME
+    Py_DECREF(s_console_setup->std_err);
+    destroy_environment(s_console_setup->dictionary, FALSE);
+    g_free(s_console_setup);
+    return FALSE;
+}
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
