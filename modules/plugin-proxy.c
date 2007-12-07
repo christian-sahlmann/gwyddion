@@ -1402,7 +1402,7 @@ text_dump_import(gchar *buffer,
         memcpy(d, pos, n);
 #else
         gwy_byteswapped_copy(pos, (guint8*)d,
-                             sizeof(gdouble), n, sizeof(gdouble)-1);
+                             sizeof(gdouble), xres*yres, sizeof(gdouble)-1);
 #endif
         pos += n;
         val = gwy_str_next_line(&pos);

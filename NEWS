@@ -7,6 +7,7 @@ Modules:
   when only a subrange is fitted.
 - RHK SPM32 (SM2): Support for spectra was added.
 - MI file: Reading of ASCII image files was actually implemented.
+- Plugin-proxy: Memory overflow in dump file reading was fixed.
 
 
 2.9 (2007-10-19)
