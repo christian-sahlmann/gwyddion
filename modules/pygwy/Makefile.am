@@ -205,7 +205,7 @@ pygwy.defs: $(PYGWY_H_FILES) Makefile.am
 pygwywrap.c: $(srcdir)/pygwy-codegen.py pygwy.defs $(srcdir)/pygwy.override
 	$(PYTHON) $(srcdir)/pygwy-codegen.py --codegendir $(PYGTK_CODEGENDIR) \
 	  --override $(srcdir)/pygwy.override --prefix pygwy pygwy.defs \
-	  | sed -e 's/^void$$/static void/' \
+	  | sed -e 's/^void$$/static void/' -e 's/pygwy\.c/pygwywrap\.c/' \
 	        -e '1s#.*#/* This is a 'GENERATED' file */#' >pygwywrap.c
 
 pygwy-doc: pygwy.defs pygwywrap.c

@@ -262,6 +262,25 @@ _wrap_gwy_app_data_browser_get_current_container(PyGObject *self)
 }
 
 %%
+define gwy_app_data_browser_get_containers noargs
+/**
+ *  gwy_app_data_browser_get_containers:
+ *
+ *  Get list of containers of current data browser.
+ *
+ *  Returns: list of containers L{Container} object
+**/   
+static PyObject *
+_wrap_gwy_app_data_browser_get_containers(PyGObject *self)
+{
+   PyObject *list = NULL;
+
+   list = PyList_New(0);
+   gwy_app_data_browser_foreach(pygwy_create_py_list_of_containers, (gpointer) list);
+   return list;
+}
+
+%%
 define GwyDataField.duplicate noargs
 /**
  * gwy_data_field_duplicate:
@@ -412,7 +431,7 @@ _wrap_gwy_container_set_object_by_name(PyGObject *self, PyObject *args, PyObject
 {
    static char *kwlist[] = {"name", "obj",  NULL};
    GwyContainer *container;   
-   gchar *key, *class_str;
+   gchar *key;
    PyObject *obj;
    GValue *gval;
 
@@ -459,10 +478,7 @@ _wrap_gwy_container_get_object_by_name(PyGObject *self, PyObject *args, PyObject
                                     &key))
         return NULL;
    gval = gwy_container_get_value_by_name(GWY_CONTAINER(self->obj), key);
-   printf("get obj: %d\n", gval);
-
    obj = convert_gvalue_to_pyobject(&gval);
-   printf(" obj: %d\n", obj);
    return obj;
 }
 

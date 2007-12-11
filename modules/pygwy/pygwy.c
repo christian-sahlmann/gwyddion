@@ -1,4 +1,3 @@
-#line 1 "pygwy.c"
 /*
  *  @(#) $Id$
  *  Copyright (C) 2004 David Necas (Yeti), Petr Klapetek.
@@ -45,9 +44,10 @@
 
 static GValue*    convert_pyobject_to_gvalue  (PyObject *o);
 static PyObject*  convert_gvalue_to_pyobject  (GValue *value);
+static void       pygwy_create_py_list_of_containers (GwyContainer *data, gpointer list);
 
 #include "pygwywrap.c"
-#line 53 "pygwy.c"
+#line 51 "pygwy.c"
 
 typedef struct {
     gchar *name;
@@ -151,7 +151,7 @@ pygwy_initialize(void)
 }
 
 static PyObject*
-pygwy_run_string(char *cmd, int type, PyObject *g, PyObject *l) {
+pygwy_run_string(const char *cmd, int type, PyObject *g, PyObject *l) {
     PyObject *ret = PyRun_String(cmd, type, g, l);
     if (!ret) {
         PyErr_Print();
@@ -1084,7 +1084,7 @@ pygwy_register_console()
 static void
 pygwy_console_run(GwyContainer *data, GwyRunType run, const gchar *name)
 {
-    PyObject *std_err, *d, *py_container;
+    PyObject *d, *py_container;
     GtkWidget *console_win;
     GtkWidget *vbox1;
     GtkWidget *console_scrolledwin;
@@ -1217,5 +1217,14 @@ pygwy_on_console_close(GtkWidget *widget, GdkEvent *event, gpointer user_data)
     destroy_environment(s_console_setup->dictionary, FALSE);
     g_free(s_console_setup);
     return FALSE;
+}
+static void
+pygwy_create_py_list_of_containers(GwyContainer *data, gpointer list)
+{
+
+   if (PyList_Append((PyObject *) list, pygobject_new((GObject *)data)) < 0) {
+      g_warning("Could not append container to python list of containers.");
+   }
+   
 }
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
