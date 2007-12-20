@@ -1,0 +1,24 @@
+Pygwy - Python binding for Gwyddion
+-----------------------------------
+
+NEWS:
+
+2007/12/20
+==========
+Added
+  gwy_app_data_browser_get_containers  - returns list of all gwyddion's opened containers
+  functions in wrap_calls.h, conversion of array of gdouble to GArray. Will be expanded.
+
+Removed:
+  gwy_app_data_browser_get_current_key
+  gwy_app_data_browser_get_current_datafield
+  gwy_app_data_browser_get_current_dataview
+  gwy_app_data_browser_get_current_mask
+  gwy_app_data_browser_get_current_datafield_id
+  gwy_app_data_browser_get_current_showfield_key
+  gwy_app_data_browser_get_current_showfield
+  gwy_app_data_browser_get_current_container
+  Replaced by gwy_app_data_browser_get_current(gwy.APP_...) (see docs)
+
+Fixed:
+  Better documentation generating
