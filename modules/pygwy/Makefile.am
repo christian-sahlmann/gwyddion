@@ -2,6 +2,7 @@
 
 moduledir = $(pkglibdir)/modules
 
+CC = ccache gcc
 PYGWY_H_FILES = \
 	$(top_srcdir)/libprocess/arithmetic.h \
 	$(top_srcdir)/libprocess/cdline.h \
@@ -131,7 +132,8 @@ PYGWY_H_FILES = \
 	$(top_srcdir)/libgwydgets/gwystatusbar.h \
 	$(top_srcdir)/libgwydgets/gwystock.h \
 	$(top_srcdir)/libgwydgets/gwyvectorlayer.h \
-	$(top_srcdir)/libgwydgets/gwyvruler.h 
+	$(top_srcdir)/libgwydgets/gwyvruler.h \
+   wrap_calls.h	
 
 #	$(top_srcdir)/app/gwytool.h 
 #	$(top_srcdir)/libgwyddion/gwydebugobjects.h 
@@ -165,7 +167,9 @@ EXTRA_DIST = \
 	pygwy.override \
 	pygwy-codegen.py \
 	pygwy-generate-doc.py \
+	pygwy-fix-defs.py \
 	makefile.msc \
+	wrap_calls.h \
 	makefile.msc.gwt
 
 if OS_WIN32
@@ -190,13 +194,15 @@ endif
 
 if ENABLE_PYGWY
 BUILT_SOURCES = pygwywrap.c
-pygwy_la_SOURCES = pygwy.c
+pygwy_la_SOURCES = pygwy.c wrap_calls.c
 pygwy_la_CFLAGS = @COMMON_CFLAGS@ @WARNING_NOUNUSED_PAR@ $(PYTHON_INCLUDES) $(PYGTK_CFLAGS)
 pygwy_la_LIBADD = $(module_libadd) $(PYTHON_LIBS) $(PYGTK_LIBS)
 
-pygwy.defs: $(PYGWY_H_FILES) Makefile.am
+pygwy.defs: $(PYGWY_H_FILES) Makefile.am pygwy-fix-defs.py
 	$(PYTHON) $(PYGTK_CODEGENDIR)/h2def.py $(PYGWY_H_FILES) \
-	| sed -e 's/define-object Serializable/define-interface Serializable/' -e 's/GWY_TYPE_SELECTION_GRAPH1_DAREA/GWY_TYPE_SELECTION_GRAPH_1DAREA/' -e 's/GWY_TYPE_NL_FIT_PRESET/GWY_TYPE_NLFIT_PRESET/' -e 's/GWY_TYPE_CD_LINE/GWY_TYPE_CDLINE/' > pygwy.defs
+	| sed -e 's/define-object Serializable/define-interface Serializable/' -e 's/GWY_TYPE_SELECTION_GRAPH1_DAREA/GWY_TYPE_SELECTION_GRAPH_1DAREA/' -e 's/GWY_TYPE_NL_FIT_PRESET/GWY_TYPE_NLFIT_PRESET/' -e 's/GWY_TYPE_CD_LINE/GWY_TYPE_CDLINE/' > pygwy.defs.tmp
+	$(PYTHON) $(srcdir)/pygwy-fix-defs.py >pygwy.defs
+	rm pygwy.defs.tmp
 
 # The sed fixes pygwy_add_constants() and pygwy_register_classes() to static
 # functions, and standardized `generated' line for automated exclusions of
@@ -221,4 +227,4 @@ MAINTAINERCLEANFILES = makefile.msc
 
 clean-local:
 	rm -f core.* *~
-	rm -rf pygwy-doc/
+	rm -rf pygwy-doc/	

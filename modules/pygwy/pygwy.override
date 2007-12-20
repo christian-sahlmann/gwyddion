@@ -77,6 +77,7 @@ typedef gdouble ArrayOfGDoubleNullTerminated;
 typedef gint GIntValue;
 typedef gdouble GDoubleValue;
 typedef gdouble GDoubleArray;
+typedef gdouble GDoubleArrayToFill;
 
 // ##include "pywrap.h"
 %%
@@ -119,146 +120,72 @@ ignore-glob
   gwy_data_field_get_data
   gwy_data_line_get_data
   gwy_container_set_string
+  gwy_math_median
+  gwy_math_sort
 %%
 ignore-type 
   GwyPlainTool
 %%
-define gwy_app_data_browser_get_current_key noargs
+define gwy_app_data_browser_get_current kwargs
 /**
- *  gwy_app_data_browser_get_current_key: 
+ *  gwy_app_data_browser_get_current:
+ *  @obj_type: object type, expected values: C{B{APP_DATA_FIELD_ID, APP_GRAPH_MODEL_ID, 
+ *  APP_SPECTRA_ID, APP_DATA_FIELD_KEY, APP_MASK_FIELD_KEY, APP_SHOW_FIELD_KEY, 
+ *  APP_GRAPH_MODEL_KEY, APP_SPECTRA_KEY, APP_CONTAINER, APP_DATA_VIEW, APP_GRAPH, 
+ *  APP_DATA_FIELD, APP_MASK_FIELD, APP_SHOW_FIELD, APP_GRAPH_MODEL, APP_SPECTRA}}
  *
- *  Get current key.
+ *  Get current object of given type.
  *
- *  Returns: A numeric value representing the current key
-**/   
-static PyObject *
-_wrap_gwy_app_data_browser_get_current_key(PyGObject *self)
-{
-   GQuark key;
-
-   gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_KEY, &key, NULL);
-   return PyInt_FromLong(key);
-}
-%%
-define gwy_app_data_browser_get_current_datafield noargs
-/**
- *  gwy_app_data_browser_get_current_datafield:
- *
- *  Get current datafield.
- *
- *  Returns: reference to current datafield as L{DataField} object
-**/   
-static PyObject *
-_wrap_gwy_app_data_browser_get_current_datafield(PyGObject *self)
-{
-   GwyDataField *dfield;
-
-   gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield, NULL);
-   return pygobject_new((GObject *)dfield);
-}
-%%
-define gwy_app_data_browser_get_current_dataview noargs
-/**
- *  gwy_app_data_browser_get_current_dataview:
- *
- *  Get current dataview.
- *
- *  Returns: reference to current dataview as L{DataView} object
-**/   
-static PyObject *
-_wrap_gwy_app_data_browser_get_current_dataview(PyGObject *self)
-{
-   GwyDataField *dview;
-
-   gwy_app_data_browser_get_current(GWY_APP_DATA_VIEW, &dview, NULL);
-   return pygobject_new((GObject *)dview);
-}
-%%
-define gwy_app_data_browser_get_current_mask noargs
-/**
- *  gwy_app_data_browser_get_current_mask:
- *
- *  Get current mask.
- *
- *  Returns: reference to current mask as L{DataField} object
-**/   
-static PyObject *
-_wrap_gwy_app_data_browser_get_current_mask(PyGObject *self)
-{
-   GwyDataField *dmask;
-
-   gwy_app_data_browser_get_current(GWY_APP_MASK_FIELD, &dmask, NULL);
-   return pygobject_new((GObject *)dmask);
-}
-%%
-define gwy_app_data_browser_get_current_datafield_id noargs
-/**
- * gwy_app_data_browser_get_current_datafield_id:
- *
- * Get current datafield's id.
- *
- * Returns: A numeric value representing the current datafield id
-**/   
-static PyObject *
-_wrap_gwy_app_data_browser_get_current_datafield_id(PyGObject *self)
-{
-   gint id;
-
-   gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_ID, &id, NULL);
-   return PyInt_FromLong(id);
-}
-%%
-define gwy_app_data_browser_get_current_showfield_key noargs
-/**
- *  gwy_app_data_browser_get_current_showfield_key:
- *
- *  Get current showfield's key.
- *
- *  Returns: A numeric value representing the current showfield's key
+ *  Returns: reference to current object or None.
 **/
 static PyObject *
-_wrap_gwy_app_data_browser_get_current_showfield_key(PyGObject *self)
+_wrap_gwy_app_data_browser_get_current(PyObject *self, PyObject *args, PyObject *kwargs) 
 {
-   GQuark key;
+   static char *kwlist[] = {"obj_type", NULL};
+   GObject *gobj;
+   PyObject *py_obj_type = NULL;
+   GwyAppWhat obj_type;
+   gint iobj;
+   GQuark qobj;
 
-   gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_ID, &key, NULL);
-   return PyInt_FromLong(key);
-}
-%%
-define gwy_app_data_browser_get_current_showfield noargs
-/**
- * gwy_app_data_browser_get_current_showfield:
- *
- * Get current showfield.
- *
- * Returns: reference to current showfield as L{DataField} object
-**/   
-static PyObject *
-_wrap_gwy_app_data_browser_get_current_showfield(PyGObject *self)
-{
-   GwyDataField *sfield;
-
-   gwy_app_data_browser_get_current(GWY_APP_SHOW_FIELD, &sfield, NULL);
-   return pygobject_new((GObject *)sfield);
-}
-
-%%
-define gwy_app_data_browser_get_current_container noargs
-/**
- *  gwy_app_data_browser_get_current_container:
- *
- *  Get current container.
- *
- *  Returns: reference to current container as L{Container} object
-**/
-static PyObject *
-_wrap_gwy_app_data_browser_get_current_container(PyGObject *self)
-
-{
-   GwyContainer *c;
-
-   gwy_app_data_browser_get_current(GWY_APP_CONTAINER, &c, NULL);
-   return pygobject_new((GObject *)c);
+   if (!PyArg_ParseTupleAndKeywords(args, kwargs,"O:gwy_app_data_browser_get_current", kwlist, &py_obj_type))
+       return NULL;
+   if (pyg_enum_get_value(GWY_TYPE_APP_WHAT, py_obj_type, (gpointer)&obj_type))
+       return NULL;
+   switch (obj_type) {
+      case GWY_APP_DATA_FIELD_ID:
+      case GWY_APP_GRAPH_MODEL_ID:
+      case GWY_APP_SPECTRA_ID:
+         // integer
+         gwy_app_data_browser_get_current(obj_type, &iobj, NULL);
+         return PyInt_FromLong(iobj);
+         break;
+      case GWY_APP_DATA_FIELD_KEY:
+      case GWY_APP_MASK_FIELD_KEY:
+      case GWY_APP_SHOW_FIELD_KEY:
+      case GWY_APP_GRAPH_MODEL_KEY:
+      case GWY_APP_SPECTRA_KEY:
+         // quark
+         gwy_app_data_browser_get_current(obj_type, &qobj, NULL);
+         return PyLong_FromLong(qobj);
+         break;
+      case GWY_APP_CONTAINER:
+      case GWY_APP_DATA_VIEW:
+      case GWY_APP_GRAPH:
+      case GWY_APP_DATA_FIELD:
+      case GWY_APP_MASK_FIELD:
+      case GWY_APP_SHOW_FIELD:
+      case GWY_APP_GRAPH_MODEL:
+      case GWY_APP_SPECTRA:
+         // gobject
+         gwy_app_data_browser_get_current(obj_type, &gobj, NULL);
+         return pygobject_new(gobj);
+         break;
+      default:
+         PyErr_SetString(PyExc_NotImplementedError, "Cannot recognize object type for conversion.");
+         return NULL;
+         break;
+   }
 }
 
 %%
@@ -445,8 +372,10 @@ _wrap_gwy_container_set_object_by_name(PyGObject *self, PyObject *args, PyObject
         return NULL;
    // try to convert to GValue
    gval = convert_pyobject_to_gvalue(obj);
-   if (!gval)
+   if (!gval) {
+      PyErr_SetString(PyExc_TypeError, "could not convert Python object to GObject");
       return NULL;
+   }
    gwy_container_set_value_by_name(container, key, gval, 0);
    
    Py_INCREF(Py_None);

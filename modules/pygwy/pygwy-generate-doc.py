@@ -95,6 +95,8 @@ def print_functions(spaces, method, docs, enums, level=1):
       print spaces+spaces2+"\"\"\""
       printdoc(docs[method.c_name].description),
       for param in docs[method.c_name].params:
+         if level == 1:
+            continue
          #if level == 1 and param == docs[method.c_name].params[0]:
          #   continue
          if param[0] == "from":
@@ -152,13 +154,14 @@ if codegendir:
 del codegendir
 
 # Load it
-import docextract, defsparser, override, definitions
+import docextract, defsparser, override, definitions, string
 
-doc_dirs = ["../../", "."]
+doc_dirs = string.split("../../app ../../libdraw ../../libgwyddion ../../libgwydgets ../../libgwymodule ../../libprocess .")
+
 
 defs_file = "pygwy.defs"
 wrap_file = "pygwywrap.c"
-ignore_functions = []
+ignore_functions = ["static"]
 
 docs = docextract.extract(doc_dirs)
 

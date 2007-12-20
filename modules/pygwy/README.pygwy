@@ -91,11 +91,11 @@ plugin_type = "PROCESS"
 
 def run():
    # create undo point
-   key = gwy.gwy_app_data_browser_get_current_key()
+   key = gwy.gwy_app_data_browser_get_current(gwy.APP_DATA_FIELD_KEY)
    gwy.gwy_app_undo_qcheckpointv(gwy.data, key)
 
    # get current datafield
-   d = gwy.gwy_app_data_browser_get_current_datafield()
+   d = gwy.gwy_app_data_browser_get_current(gwy.APP_DATA_FIELD)
 
    # call invert function
    d.invert(0, 0, 1)

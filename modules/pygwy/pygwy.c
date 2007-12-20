@@ -41,6 +41,7 @@
 #include <libgwymodule/gwymodule-process.h>
 #include <libgwymodule/gwymodule-file.h>
 #include <app/gwyapp.h>
+#include "wrap_calls.h"
 
 static GValue*    convert_pyobject_to_gvalue  (PyObject *o);
 static PyObject*  convert_gvalue_to_pyobject  (GValue *value);
@@ -1050,8 +1051,51 @@ convert_pyobject_to_gvalue(PyObject *o)
              || o->ob_type == &PyGwyDataField_Type
              || o->ob_type == &PyGwyDataLine_Type
              || o->ob_type == &PyGwyResource_Type
-             || o->ob_type == &PyGwySIUnit_Type
              || o->ob_type == &PyGwySelection_Type
+             || o->ob_type == &PyGwyAxis_Type
+             || o->ob_type == &PyGwyColorButton_Type
+             || o->ob_type == &PyGwyContainer_Type
+             || o->ob_type == &PyGwyCurve_Type
+             || o->ob_type == &PyGwyDataView_Type
+             || o->ob_type == &PyGwyDataViewLayer_Type
+             || o->ob_type == &PyGwyDataWindow_Type
+             || o->ob_type == &PyGwyGraph_Type
+             || o->ob_type == &PyGwyGraphArea_Type
+             || o->ob_type == &PyGwyGraphCorner_Type
+             || o->ob_type == &PyGwyGraphCurveModel_Type
+             || o->ob_type == &PyGwyGraphCurves_Type
+             || o->ob_type == &PyGwyGraphData_Type
+             || o->ob_type == &PyGwyGraphLabel_Type
+             || o->ob_type == &PyGwyGraphModel_Type
+             || o->ob_type == &PyGwyGraphWindow_Type
+             || o->ob_type == &PyGwyInventory_Type
+             || o->ob_type == &PyGwyMarkerBox_Type
+             || o->ob_type == &PyGwyNullStore_Type
+             || o->ob_type == &PyGwyPixmapLayer_Type
+             || o->ob_type == &PyGwyLayerBasic_Type
+             || o->ob_type == &PyGwyLayerMask_Type
+             || o->ob_type == &PyGwyHMarkerBox_Type
+             || o->ob_type == &PyGwyResource_Type
+             || o->ob_type == &PyGwyNLFitPreset_Type
+             || o->ob_type == &PyGwyFDCurvePreset_Type
+             || o->ob_type == &PyGwyGLMaterial_Type
+             || o->ob_type == &PyGwyCDLine_Type
+             || o->ob_type == &PyGwyRuler_Type
+             || o->ob_type == &PyGwyHRuler_Type
+             || o->ob_type == &PyGwySIUnit_Type
+             || o->ob_type == &PyGwySciText_Type
+             || o->ob_type == &PyGwySpectra_Type
+             || o->ob_type == &PyGwySelectionGraph1DArea_Type
+             || o->ob_type == &PyGwySelectionGraphArea_Type
+             || o->ob_type == &PyGwySelectionGraphLine_Type
+             || o->ob_type == &PyGwySelectionGraphPoint_Type
+             || o->ob_type == &PyGwySelectionGraphZoom_Type
+             || o->ob_type == &PyGwySensitivityGroup_Type
+             || o->ob_type == &PyGwyShader_Type
+             || o->ob_type == &PyGwyStatusbar_Type
+             || o->ob_type == &PyGwyStringList_Type
+             || o->ob_type == &PyGwyVRuler_Type
+             || o->ob_type == &PyGwyVectorLayer_Type
              || o->ob_type == &PyGwySpectra_Type) {
         GObject *d;
 
@@ -1218,6 +1262,8 @@ pygwy_on_console_close(GtkWidget *widget, GdkEvent *event, gpointer user_data)
     g_free(s_console_setup);
     return FALSE;
 }
+
+// function to fill list of containers, for  gwy_app_data_browser_get_containers
 static void
 pygwy_create_py_list_of_containers(GwyContainer *data, gpointer list)
 {
