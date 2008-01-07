@@ -2,7 +2,6 @@
 
 moduledir = $(pkglibdir)/modules
 
-CC = ccache gcc
 PYGWY_H_FILES = \
 	$(top_srcdir)/libprocess/arithmetic.h \
 	$(top_srcdir)/libprocess/cdline.h \

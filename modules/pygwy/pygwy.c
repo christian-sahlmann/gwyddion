@@ -1178,7 +1178,6 @@ pygwy_console_run(GwyContainer *data, GwyRunType run, const gchar *name)
         return;
     }
 
-    gwy_debug("Running plugin '%s', filename '%s'", info->name, info->filename);
     // create container named 'data' to allow access the container from python
     py_container = pygobject_new((GObject*)data);
     if (!py_container) {
