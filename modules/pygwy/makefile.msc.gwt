@@ -42,6 +42,10 @@ install: install-mod
 <[[:MOD_OBJ_RULES:]]>
 
 <[[:MOD_DLL_RULES:]]>
+
+pygwywrap.c: pygwywrap.c.win32
+	copy pygwywrap.c.win32 pygwywrap.c
+
 !ELSE
 all:
 install:
