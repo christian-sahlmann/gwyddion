@@ -90,7 +90,6 @@ content_nsi = content_nsi.replace("%GWYDDION_INSTALL%", gwyddion_install_files)
 content_nsi = content_nsi.replace("%GTK_INSTALL%", gtk_install_files)
 content_nsi = content_nsi.replace("%GWYDDION_UNINSTALL%", gwyddion_uninstall_files)
 content_nsi = content_nsi.replace("%GTK_UNINSTALL%", gtk_uninstall_files)
-GWYDDION_PATH = "d:\\gwyddion-2.8\\inst\\"
 content_nsi = content_nsi.replace("%PYGWY_INSTALL%", '   File "'+GWYDDION_PATH+'modules\\pygwy.dll"')
 content_nsi = content_nsi.replace("%PYGWY_UNINSTALL%", '   Delete "$INSTDIR\\modules\\pygwy.dll"')
 
