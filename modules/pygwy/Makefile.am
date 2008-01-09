@@ -2,6 +2,9 @@
 
 moduledir = $(pkglibdir)/modules
 
+EXTRA_DIST = \
+	pygwywrap.c.win32
+
 PYGWY_H_FILES = \
 	$(top_srcdir)/libprocess/arithmetic.h \
 	$(top_srcdir)/libprocess/cdline.h \
