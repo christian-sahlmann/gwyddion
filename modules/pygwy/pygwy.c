@@ -1187,11 +1187,7 @@ pygwy_console_run(GwyContainer *data, GwyRunType run, const gchar *name)
     
     pygwy_run_string("import sys, tempfile\n"
                      "_stderr_redir = tempfile.TemporaryFile()\n"
-                     "sys.stderr = _stderr_redir\n"
-                     "_stdout_redir = _stderr_redir\n"
-                     "sys.stdout = _stdout_redir\n"
-                     "_stdin_redir = tempfile.TemporaryFile()\n"
-                     "sys.stdin = _stdin_redir\n",
+                     "sys.stderr = sys.stdout = _stderr_redir\n",
                      Py_file_input,
                      d,
                      d);
@@ -1207,42 +1203,56 @@ pygwy_console_run(GwyContainer *data, GwyRunType run, const gchar *name)
 static void
 pygwy_on_console_command_execute(GtkEntry *entry, gpointer user_data)
 {
-    PyObject *py_output;
     GtkTextIter start_iter, end_iter;
-    GString *console_output, *python_output;
-    gchar *output, *input_line;
+    GString *console_output;
+    gchar *input_line;
     GtkTextBuffer *console_buf;
     GtkTextMark *end_mark;
 
     // store _stderr_redir location
-    pygwy_run_string("_stderr_redir_pos = _stderr_redir.tell()", 
-          Py_file_input, 
-          s_console_setup->dictionary,
-          s_console_setup->dictionary);
     pygwy_run_string(gtk_entry_get_text(entry), 
           Py_single_input, 
           s_console_setup->dictionary, 
           s_console_setup->dictionary);
-    pygwy_run_string("_stderr_redir.seek(_stderr_redir_pos)", 
+    pygwy_run_string("_stderr_redir_pos = _stderr_redir.tell()", 
           Py_file_input, 
           s_console_setup->dictionary,
           s_console_setup->dictionary);
+    pygwy_run_string("_stderr_redir.seek(0)", 
+          Py_file_input, 
+          s_console_setup->dictionary,
+          s_console_setup->dictionary);
+    pygwy_run_string("_stderr_redir_string = _stderr_redir.read(_stderr_redir_pos)", 
+          Py_file_input, 
+          s_console_setup->dictionary,
+          s_console_setup->dictionary);
+    pygwy_run_string("_stderr_redir.seek(0)", 
+          Py_file_input, 
+          s_console_setup->dictionary,
+          s_console_setup->dictionary);
+    // read string which contain last command output
     console_buf = gtk_text_view_get_buffer(GTK_TEXT_VIEW(s_console_setup->console_output));
     gtk_text_buffer_get_bounds(console_buf, &start_iter, &end_iter);
+    // get console_output widget content
     console_output = g_string_new (gtk_text_buffer_get_text(console_buf, &start_iter, &end_iter, FALSE));
+    // concat input line
     input_line = g_strconcat(">>> ", gtk_entry_get_text(entry), "\n", NULL);
-    python_output = g_string_new(input_line);
+    // append input line
+    console_output = g_string_append(console_output, input_line);
     g_free(input_line);
-    do {
-        py_output = PyFile_GetLine(s_console_setup->std_err, 0);
-        output = PyString_AS_STRING(py_output);
-        python_output = g_string_append(python_output, output);
-        Py_DECREF(py_output);
-    } while (*output != '\0');
-    console_output = g_string_append(console_output, python_output->str);
-    g_string_free(python_output, TRUE);
+    
+    // append Python's output to console_output
+    console_output = g_string_append(console_output, 
+          PyString_AsString(
+             PyDict_GetItemString(
+                s_console_setup->dictionary, 
+                "_stderr_redir_string")
+             )
+          );
+    // set console output widget content
     gtk_text_buffer_set_text (GTK_TEXT_BUFFER (console_buf), console_output->str, -1);
     g_string_free(console_output, TRUE);
+    // scroll to end of console output widget content
     gtk_text_buffer_get_end_iter(GTK_TEXT_BUFFER(console_buf), &end_iter);
     end_mark = gtk_text_buffer_create_mark(console_buf, "cursor", &end_iter, FALSE);
     g_object_ref(end_mark);
