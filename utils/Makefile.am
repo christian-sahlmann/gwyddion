@@ -21,7 +21,9 @@ EXTRA_DIST = \
 	update-msvc.py \
 	update-potfiles.sh \
 	$(GUIDE_MAP) \
-	vim-syn-gen.py
+	vim-syn-gen.py \
+	gwyddion.nsi.template \
+	generate-gwyddion-nsi.py
 
 module-list: modules.xml module-list.html module-list-nocss.html
 

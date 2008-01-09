@@ -1,8 +1,9 @@
 import os, tempfile
 
-GTK_PATH = "../gtk/"
-GWYDDION_PATH = "../inst/"
-GWYDDION_CONFIG_H = "../config.h"
+GTK_PATH = "../gtk-mini/"
+GWYDDION_PATH = "inst/"
+GWYDDION_CONFIG_H = "config.h"
+GWYDDION_NSI_TEMPLATE = "utils/gwyddion.nsi.template"
 
 
 
@@ -79,7 +80,7 @@ for f in gwyddion_files:
     gwyddion_uninstall_files += get_uninstall_line(f, GWYDDION_PATH)
 
 
-nsi_template = file("gwyddion.nsi.template" ,"r")
+nsi_template = file(GWYDDION_NSI_TEMPLATE ,"r")
 content_nsi = nsi_template.read()
 nsi_template.close()
 
