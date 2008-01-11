@@ -24,7 +24,15 @@ call upload.bat /public_html/logs make_log2
 call upload.bat /public_html/logs install_log2
 
 rem pygwy build
-rem nmake -f makefile.msc -x make_pygwy_log ENABLE_PYGWY=1 > make_pygwy_log2
-rem nmake -f makefile.msc install -x install_pygwy_log ENABLE_PYGWY=1 > install_pygwy_log2
-rem "c:\Python25\python.exe" "utils\generate-gwyddion-nsi.py" 
-rem "C:\Program Files\NSIS\makensis.exe" "gwyddion.nsi"
+nmake -f makefile.msc -x make_pygwy_log ENABLE_PYGWY=1 > make_pygwy_log2
+nmake -f makefile.msc install -x install_pygwy_log ENABLE_PYGWY=1 > install_pygwy_log2
+"c:\Python25\python.exe" "utils\generate-gwyddion-nsi.py" 
+"C:\Program Files\NSIS\makensis.exe" "gwyddion.nsi"
+rename "gwyddion-@VERSION@-pygwy.exe" gwyddion-head-pygwy.exe
+
+call upload.bat /public_html/download/test inst\gwyddion-head-pygwy.exe
+call upload.bat /public_html/logs make_pygwy_log
+call upload.bat /public_html/logs install_pygwy_log
+call upload.bat /public_html/logs make_pygwy_log2
+call upload.bat /public_html/logs install_pygwy_log2
+
