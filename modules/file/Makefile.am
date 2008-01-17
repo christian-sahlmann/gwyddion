@@ -57,7 +57,9 @@ file_LTLIBRARIES = \
 	rhk-spm32.la \
 	sdfile.la \
 	seiko.la \
+	sensofar.la \
 	shimadzu.la \
+	sicmfile.la \
 	sis.la \
 	$(spml_module) \
 	spmlab.la \
@@ -132,7 +134,9 @@ rhk_sm3_la_SOURCES      = rhk-sm3.c
 rhk_spm32_la_SOURCES    = rhk-spm32.c
 sdfile_la_SOURCES       = sdfile.c
 seiko_la_SOURCES        = seiko.c
+sensofar_la_SOURCES     = sensofar.c
 shimadzu_la_SOURCES     = shimadzu.c
+sicmfile_la_SOURCES     = sicmfile.c
 sis_la_SOURCES          = sis.c
 spmlab_la_SOURCES       = spmlab.c
 stmprg_la_SOURCES       = stmprg.c
