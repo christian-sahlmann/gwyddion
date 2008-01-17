@@ -2,9 +2,6 @@
 
 moduledir = $(pkglibdir)/modules
 
-EXTRA_DIST = \
-	pygwywrap.c.win32
-
 PYGWY_H_FILES = \
 	$(top_srcdir)/libprocess/arithmetic.h \
 	$(top_srcdir)/libprocess/cdline.h \
@@ -172,7 +169,8 @@ EXTRA_DIST = \
 	pygwy-fix-defs.py \
 	makefile.msc \
 	wrap_calls.h \
-	makefile.msc.gwt
+	makefile.msc.gwt \
+	pygwywrap.c.win32
 
 if OS_WIN32
 no_undefined = -no-undefined
