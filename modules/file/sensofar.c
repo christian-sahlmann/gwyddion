@@ -186,11 +186,14 @@ sensofar_load(const gchar *filename,
    // A little dirty, set pointer to data description structure to start of buffer
    // to avoid copying, reading from buffer and writing to data structure.
    data_desc = (tDataDesc*) buffer;
-   gwy_debug("\nFile date: %s\nData type: %d \nData width: %d\nData height: %d", 
+   gwy_debug("\nFile date: %s\nData type: %d \nData width: %d\nData height: %d\nVersion: %d", 
          data_desc->date.S, 
          data_desc->measure_config.tipus, 
          data_desc->measure_config.N, 
-         data_desc->measure_config.M);
+         data_desc->measure_config.M,
+         data_desc->measure_config.version);
+
+
    switch (data_desc->measure_config.tipus) 
    {
       case MES_TOPO:
@@ -211,6 +214,10 @@ sensofar_load(const gchar *filename,
          gwy_data_field_set_si_unit_z(d, units);
          for (i = 0; i < cols; i++) {
             for (j = 0; j < rows; j++) {
+               // FIXME: lost pixel, such value makes problem to gwyddion,
+               // setting to 0.0f, undefined value would be better though.
+               if (*data_start == 1000001.0) 
+                  *data_start = 0.0f;
                gwy_data_field_set_val(d, j, i, *data_start*pow10(power10));
                data_start++;
             }
