@@ -83,9 +83,10 @@ gwy_graph_corner_realize(GtkWidget *widget)
     attributes.height = widget->allocation.height;
     attributes.wclass = GDK_INPUT_OUTPUT;
     attributes.window_type = GDK_WINDOW_CHILD;
-    attributes.event_mask = gtk_widget_get_events(widget);
     attributes.visual = gtk_widget_get_visual(widget);
     attributes.colormap = gtk_widget_get_colormap(widget);
+    attributes.event_mask = gtk_widget_get_events(widget);
+    attributes.event_mask |= GDK_EXPOSURE_MASK;
 
     attributes_mask = GDK_WA_X | GDK_WA_Y | GDK_WA_VISUAL | GDK_WA_COLORMAP;
     widget->window = gdk_window_new(widget->parent->window,
