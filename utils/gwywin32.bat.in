@@ -30,7 +30,7 @@ nmake -f makefile.msc install -x install_pygwy_log ENABLE_PYGWY=1 > install_pygw
 "C:\Program Files\NSIS\makensis.exe" "gwyddion.nsi"
 rename "gwyddion-@VERSION@-pygwy.exe" gwyddion-head-pygwy.exe
 
-call upload.bat /public_html/download/test inst\gwyddion-head-pygwy.exe
+call upload.bat /public_html/download/test gwyddion-head-pygwy.exe
 call upload.bat /public_html/logs make_pygwy_log
 call upload.bat /public_html/logs install_pygwy_log
 call upload.bat /public_html/logs make_pygwy_log2
