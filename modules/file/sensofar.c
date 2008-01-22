@@ -142,13 +142,23 @@ sensofar_detect(const GwyFileDetectInfo *fileinfo,
 {
     gint score = 0;
     struct tm tm;
+    char day_name[4], month_name[4];
+    int month_day, hour, min, sec, year;
 
     if (only_name)
         return 0;
     // File starts with date, try to parse it.
     // FIXME: this is stupid
     if (fileinfo->buffer_len > sizeof(tData)) {
-       if (strptime(fileinfo->head, "%a %b %e %T %Y", &tm) != NULL) {
+       if (sscanf(fileinfo->head, "%3s %3s %u %u:%u:%u %u", 
+             day_name, 
+             month_name, 
+             &month_day, 
+             &hour, 
+             &min, 
+             &sec, 
+             &year) == 7) 
+       {
           score = 100;
        }
 
