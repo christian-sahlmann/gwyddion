@@ -1,5 +1,5 @@
 /*
- *  @(#) $Id: nanoscope.c 8632 2007-10-11 07:59:01Z yeti-dn $
+ *  @(#) $Id: sensofar.c 8632 2007-10-11 07:59:01Z yeti-dn $
  *  Copyright (C) 2004-2007 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *

@@ -22,12 +22,13 @@ endif
 
 filedir = $(pkglibdir)/modules/file
 
-file_LTLIBRARIES = \
+ file_LTLIBRARIES = \
 	assing-afm.la \
 	apefile.la \
 	asciiexport.la \
 	bcrfile.la \
 	burleigh.la \
+	burleigh_bii.la \
 	burleigh_exp.la \
 	createc.la \
 	dmefile.la \
@@ -107,6 +108,7 @@ apefile_la_SOURCES      = apefile.c
 assing_afm_la_SOURCES   = assing-afm.c
 bcrfile_la_SOURCES      = bcrfile.c
 burleigh_la_SOURCES     = burleigh.c
+burleigh_bii_la_SOURCES = burleigh_bii.c
 burleigh_exp_la_SOURCES = burleigh_exp.c
 createc_la_SOURCES      = createc.c
 dmefile_la_SOURCES      = dmefile.c
