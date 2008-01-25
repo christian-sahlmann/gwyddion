@@ -42,7 +42,7 @@ enum {
 };
 
 enum {
-    COLUMN_I, COLUMN_Y0, COLUMN_Y1, NLCOLUMNS
+    COLUMN_I, COLUMN_X0, COLUMN_Y0, COLUMN_X1, COLUMN_Y1, NLCOLUMNS
 };
 
 typedef struct _GwyToolPathLevel      GwyToolPathLevel;
@@ -108,7 +108,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Path level tool, performs row leveling along on user-set lines."),
     "Yeti <yeti@gwyddion.net>",
-    "1.1",
+    "1.2",
     "David Nečas (Yeti)",
     "2007",
 };
@@ -199,7 +199,11 @@ static void
 gwy_tool_path_level_init_dialog(GwyToolPathLevel *tool)
 {
     static const gchar *lcolumns[] = {
-        "<b>n</b>", "<b>y<sub>1</sub></b>", "<b>y<sub>2</sub></b>",
+        "<b>n</b>",
+        "<b>x<sub>1</sub></b>",
+        "<b>y<sub>1</sub></b>",
+        "<b>x<sub>2</sub></b>",
+        "<b>y<sub>2</sub></b>",
     };
     GtkTreeViewColumn *column;
     GtkCellRenderer *renderer;
@@ -371,8 +375,16 @@ gwy_tool_path_level_render_cell(GtkCellLayout *layout,
 
     gwy_tool_path_level_sel_to_isel(tool, idx, isel);
     switch (id) {
+        case COLUMN_X0:
+        g_snprintf(buf, sizeof(buf), "%d", isel[0]);
+        break;
+
         case COLUMN_Y0:
         g_snprintf(buf, sizeof(buf), "%d", isel[1]);
+        break;
+
+        case COLUMN_X1:
+        g_snprintf(buf, sizeof(buf), "%d", isel[2]);
         break;
 
         case COLUMN_Y1:
