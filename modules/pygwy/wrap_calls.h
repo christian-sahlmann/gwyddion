@@ -1,3 +1,5 @@
+#ifndef _WRAP_CALLS_H
+#define _WRAP_CALLS_H
 #include <libprocess/gwyprocess.h>
 #include <libdraw/gwyselection.h>
 #include <libgwyddion/gwyddion.h>
@@ -34,4 +36,5 @@ GArray* gwy_data_field_circular_area_extract_wrap(
       gdouble radius);
 
 GArrayInt* gwy_app_data_browser_get_data_ids_wrap(GwyContainer *data);
+#endif
 
