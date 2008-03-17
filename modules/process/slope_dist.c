@@ -107,7 +107,7 @@ static GwyModuleInfo module_info = {
     N_("Calculates one- or two-dimensional distribution of slopes "
        "or graph of their angular distribution."),
     "Yeti <yeti@gwyddion.net>",
-    "1.10",
+    "1.11",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -421,8 +421,8 @@ slope_do_graph_phi(GwyDataField *dfield,
 
     gmodel = gwy_graph_model_new();
     siunitx = gwy_si_unit_new("deg");
-    siunity = gwy_si_unit_multiply(gwy_data_field_get_si_unit_xy(dfield),
-                                   gwy_data_field_get_si_unit_z(dfield), NULL);
+    siunity = gwy_si_unit_divide(gwy_data_field_get_si_unit_z(dfield),
+                                 gwy_data_field_get_si_unit_xy(dfield), NULL);
     gwy_si_unit_power(siunity, 2, siunity);
     g_object_set(gmodel,
                  "title", _("Angular Slope Distribution"),
