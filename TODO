@@ -24,21 +24,25 @@ Unimplemented stuff:
 Release checklist:
 - must build on Linux from tarballs
 - must build on MS Windows
-- update translation(s)
+- update translations (make update-po in po; remember to commit and tag the
+  really final versions, making dists in general updates po again)
 - make sure global library headers (libfoo.h) include all other public
   headers
 - update library versions, if something changed
 - make sure gwyddion.iss.in contains all translations (XXX: automate this)
 - update version in configure.ac
 - update version in gwyddion-night-build
-- switch segfault on critical messages off (stable only)
-- check and update NEWS, generate HTML version
-- generate on-line module list
-- generate stable API docs for gwyddion.net and upload them
+- check full rebuild
+- check and update NEWS, generate HTML version (utils/gen-news.py)
+- generate on-line module list (make module-list in utils, may need manual
+  filtering of non-released modules)
+- generate stable API docs for gwyddion.net (using gwyddion.net-doc-build SVN
+  module) and upload them
 - tag SVN:
   svn copy https://gwyddion.svn.sourceforge.net/svnroot/gwyddion/trunk/gwyddion https://gwyddion.svn.sourceforge.net/svnroot/gwyddion/tags/gwyddion-0.0
 - build and upload packages
 - sign packages and upload signatures
 - update gwyddion main page
 - publish files on Freshmeat, GnomeFiles, SourceForge
+- send e-mail to the mailing lists
 
