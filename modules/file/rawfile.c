@@ -215,7 +215,7 @@ static GwyModuleInfo module_info = {
     N_("Imports raw data files, both ASCII and binary, according to "
        "user-specified format."),
     "Yeti <yeti@gwyddion.net>",
-    "2.3.1",
+    "2.4",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -1057,10 +1057,10 @@ rawfile_read_data_field(RawFileControls *controls,
     dfield = gwy_data_field_new(args->p.xres, args->p.yres,
                                 m*args->p.xreal, m*args->p.yreal,
                                 FALSE);
-    siunit = gwy_si_unit_new("m");
+    siunit = gwy_si_unit_new(args->p.xyunit);
     gwy_data_field_set_si_unit_xy(dfield, siunit);
     g_object_unref(siunit);
-    siunit = gwy_si_unit_duplicate(siunit);
+    siunit = gwy_si_unit_new(args->p.zunit);
     gwy_data_field_set_si_unit_z(dfield, siunit);
     g_object_unref(siunit);
 
