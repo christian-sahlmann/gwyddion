@@ -19,6 +19,9 @@
  */
 
 #include "config.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <gtk/gtk.h>
@@ -52,6 +55,10 @@ typedef struct {
     gint zorigexp;
     gint xres;
     gint yres;
+    gchar *xyunit;
+    gchar *xyunitorig;
+    gchar *zunit;
+    gchar *zunitorig;
 } CalibrateArgs;
 
 typedef struct {
@@ -71,6 +78,8 @@ typedef struct {
     GtkObject *x0;
     GtkObject *y0;
     gboolean in_update;
+    GtkWidget *xyunits;
+    GtkWidget *zunits;
 } CalibrateControls;
 
 static gboolean    module_register           (void);
@@ -109,6 +118,10 @@ static void        calibrate_load_args       (GwyContainer *container,
                                               CalibrateArgs *args);
 static void        calibrate_save_args       (GwyContainer *container,
                                               CalibrateArgs *args);
+static void        units_change_cb           (GtkWidget *button,
+                                              CalibrateControls *controls);
+static void        set_combo_from_unit       (GtkWidget *combo,
+                                              const gchar *str);
 
 static const CalibrateArgs calibrate_defaults = {
     1.0,
@@ -117,7 +130,8 @@ static const CalibrateArgs calibrate_defaults = {
     -6,
     -6,
     TRUE,
-    0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
+    0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+    "m", "m", "m", "m"
 };
 
 static GwyModuleInfo module_info = {
@@ -125,7 +139,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Recalibrates scan lateral dimensions or value range."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "2.5",
+    "2.6",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -154,6 +168,7 @@ calibrate(GwyContainer *data, GwyRunType run)
     gint oldid, newid;
     CalibrateArgs args;
     gboolean ok;
+    GwySIUnit *siunitxy, *siunitz;
 
     g_return_if_fail(run & CALIBRATE_RUN_MODES);
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, dfields + 0,
@@ -181,6 +196,12 @@ calibrate(GwyContainer *data, GwyRunType run)
     args.zexponent = 3*floor(log10(args.zreal)/3);
     args.x0 = args.x0orig;
     args.y0 = args.y0orig;
+    siunitxy = gwy_data_field_get_si_unit_xy(dfields[0]);
+    args.xyunitorig = gwy_si_unit_get_string(siunitxy, GWY_SI_UNIT_FORMAT_VFMARKUP);
+    args.xyunit = args.xyunitorig;
+    siunitz = gwy_data_field_get_si_unit_z(dfields[0]);
+    args.zunitorig = gwy_si_unit_get_string(siunitz, GWY_SI_UNIT_FORMAT_VFMARKUP);
+    args.zunit = args.zunitorig;
 
     if (run == GWY_RUN_INTERACTIVE) {
         ok = calibrate_dialog(&args, dfields[0]);
@@ -201,6 +222,14 @@ calibrate(GwyContainer *data, GwyRunType run)
         gwy_data_field_set_xoffset(dfields[0], args.x0);
     if (args.y0 != args.y0orig)
         gwy_data_field_set_yoffset(dfields[0], args.y0);
+    if (args.xyunit != args.xyunitorig) {
+        gwy_si_unit_set_from_string(siunitxy, args.xyunit);
+        gwy_data_field_set_si_unit_xy(dfields[0], siunitxy);
+    }
+    if (args.zunit != args.zunitorig) {
+      gwy_si_unit_set_from_string(siunitz, args.zunit);
+      gwy_data_field_set_si_unit_z(dfields[0], siunitz);
+    }
 
     if (dfields[1]) {
         dfields[1] = gwy_data_field_duplicate(dfields[1]);
@@ -244,7 +273,7 @@ calibrate_dialog(CalibrateArgs *args,
                  GwyDataField *dfield)
 {
     enum { RESPONSE_RESET = 1 };
-    GtkWidget *dialog, *spin, *table, *label, *align;
+    GtkWidget *dialog, *spin, *table, *label;
     GwySIUnit *unit;
     CalibrateControls controls;
     gint row, response;
@@ -260,7 +289,7 @@ calibrate_dialog(CalibrateArgs *args,
     controls.args = args;
     controls.in_update = TRUE;
 
-    table = gtk_table_new(12, 3, FALSE);
+    table = gtk_table_new(13, 3, FALSE);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
@@ -285,14 +314,12 @@ calibrate_dialog(CalibrateArgs *args,
     gtk_table_attach(GTK_TABLE(table), spin,
                      1, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
-    align = gtk_alignment_new(0.0, 0.5, 0.0, 0.0);
     unit = gwy_data_field_get_si_unit_xy(dfield);
     controls.xyexponent
         = gwy_combo_box_metric_unit_new(G_CALLBACK(xyexponent_changed_cb),
                                         &controls, -15, 6, unit,
                                         args->xyexponent);
-    gtk_container_add(GTK_CONTAINER(align), controls.xyexponent);
-    gtk_table_attach(GTK_TABLE(table), align, 2, 3, row, row+2,
+    gtk_table_attach(GTK_TABLE(table), controls.xyexponent, 2, 3, row, row+1,
                      GTK_EXPAND | GTK_FILL | GTK_SHRINK, 0, 0, 0);
     row++;
 
@@ -307,6 +334,10 @@ calibrate_dialog(CalibrateArgs *args,
     gtk_spin_button_set_numeric(GTK_SPIN_BUTTON(spin), TRUE);
     gtk_table_attach(GTK_TABLE(table), spin,
                      1, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    controls.xyunits = gtk_button_new_with_label(_("Change"));
+    g_object_set_data(G_OBJECT(controls.xyunits), "id", (gpointer)"xy");
+    gtk_table_attach(GTK_TABLE(table), controls.xyunits,
+                     2, 3, row, row+1, GTK_EXPAND | GTK_FILL | GTK_SHRINK, 0, 0, 0);
     row++;
 
     controls.square
@@ -358,7 +389,7 @@ calibrate_dialog(CalibrateArgs *args,
     spin = gtk_spin_button_new(GTK_ADJUSTMENT(controls.zreal), 1, 2);
     gtk_spin_button_set_numeric(GTK_SPIN_BUTTON(spin), TRUE);
     gtk_table_attach(GTK_TABLE(table), spin,
-                     1, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+                     1, 2, row, row+2, GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
     unit = gwy_data_field_get_si_unit_z(dfield);
     controls.zexponent
@@ -367,8 +398,13 @@ calibrate_dialog(CalibrateArgs *args,
                                         args->zexponent);
     gtk_table_attach(GTK_TABLE(table), controls.zexponent, 2, 3, row, row+1,
                      GTK_EXPAND | GTK_FILL | GTK_SHRINK, 0, 0, 0);
+    row++;
 
-    gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
+    controls.zunits = gtk_button_new_with_label(_("Change"));
+    g_object_set_data(G_OBJECT(controls.zunits), "id", (gpointer)"z");
+    gtk_table_attach(GTK_TABLE(table), controls.zunits,
+                     2, 3, row, row+1, GTK_EXPAND | GTK_FILL | GTK_SHRINK, 0, 0, 0);
+
     row++;
 
     /***** Calibration Coefficients *****/
@@ -405,6 +441,10 @@ calibrate_dialog(CalibrateArgs *args,
                      G_CALLBACK(xreal_changed_cb), &controls);
     g_signal_connect(controls.yreal, "value-changed",
                      G_CALLBACK(yreal_changed_cb), &controls);
+    g_signal_connect(controls.xyunits, "clicked",
+                     G_CALLBACK(units_change_cb), &controls);
+    g_signal_connect(controls.zunits, "clicked",
+                     G_CALLBACK(units_change_cb), &controls);
     g_signal_connect(controls.x0, "value-changed",
                      G_CALLBACK(x0_changed_cb), &controls);
     g_signal_connect(controls.y0, "value-changed",
@@ -462,6 +502,7 @@ dialog_reset(CalibrateControls *controls,
     gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->xyexponent),
                                   args->xyorigexp);
     args->xyexponent = args->xyorigexp;
+    set_combo_from_unit(controls->xyexponent, args->xyunitorig);
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->yratio),
                              calibrate_defaults.yratio);
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->xratio),
@@ -469,6 +510,7 @@ dialog_reset(CalibrateControls *controls,
     gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->zexponent),
                                   args->zorigexp);
     args->zexponent = args->zorigexp;
+    set_combo_from_unit(controls->zexponent, args->zunitorig);
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->zratio),
                              calibrate_defaults.zratio);
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->x0),
@@ -691,6 +733,77 @@ zexponent_changed_cb(GtkWidget *combo,
     args->zratio = args->zreal/args->zorig;
     calibrate_dialog_update(controls, args);
     controls->in_update = FALSE;
+}
+
+static void
+units_change_cb(GtkWidget *button,
+                CalibrateControls *controls)
+{
+  GtkWidget *dialog, *hbox, *label, *entry;
+  const gchar *id, *unit;
+  gint response;
+  CalibrateArgs *args = controls->args;
+
+  if (controls->in_update)
+    return;
+
+  controls->in_update = TRUE;
+
+  id = g_object_get_data(G_OBJECT(button), "id");
+  dialog = gtk_dialog_new_with_buttons(_("Change Units"),
+                                       NULL,
+                                           GTK_DIALOG_MODAL
+                                               | GTK_DIALOG_NO_SEPARATOR,
+                                               GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
+                                               GTK_STOCK_OK, GTK_RESPONSE_OK,
+                                               NULL);
+  gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
+
+  hbox = gtk_hbox_new(FALSE, 6);
+  gtk_container_set_border_width(GTK_CONTAINER(hbox), 4);
+  gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox,
+                     FALSE, FALSE, 0);
+
+  label = gtk_label_new_with_mnemonic(_("New _units:"));
+  gtk_box_pack_start(GTK_BOX(hbox), label, TRUE, TRUE, 0);
+
+  entry = gtk_entry_new();
+  gtk_box_pack_start(GTK_BOX(hbox), entry, TRUE, TRUE, 0);
+
+  gtk_widget_show_all(dialog);
+  response = gtk_dialog_run(GTK_DIALOG(dialog));
+  if (response != GTK_RESPONSE_OK) {
+    gtk_widget_destroy(dialog);
+    return;
+  }
+
+  unit = gtk_entry_get_text(GTK_ENTRY(entry));
+  if (gwy_strequal(id, "xy")) {
+    set_combo_from_unit(controls->xyexponent, unit);
+    controls->args->xyunit = g_strdup(unit);
+  }
+  else if (gwy_strequal(id, "z")) {
+    set_combo_from_unit(controls->zexponent, unit);
+    controls->args->zunit = g_strdup(unit);
+  }
+
+  gtk_widget_destroy(dialog);
+
+  calibrate_dialog_update(controls, args);
+  controls->in_update = FALSE;
+}
+
+static void
+set_combo_from_unit(GtkWidget *combo,
+                    const gchar *str)
+{
+  GwySIUnit *unit;
+  gint power10;
+
+  unit = gwy_si_unit_new_parse(str, &power10);
+  gwy_combo_box_metric_unit_set_unit(GTK_COMBO_BOX(combo),
+                                     power10 - 6, power10 + 6, unit);
+  g_object_unref(unit);
 }
 
 static void
