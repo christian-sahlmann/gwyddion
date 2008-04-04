@@ -18,6 +18,7 @@ SourceDir=.
 OutputDir=.
 OutputBaseFilename=@PACKAGE_NAME@-@PACKAGE_VERSION@
 ChangesAssociations=yes
+PrivilegesRequired=none
 
 [Files]
 Source: "*.dll"; DestDir: "{app}"

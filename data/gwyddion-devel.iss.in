@@ -17,6 +17,7 @@ SourceDir=.
 ; this means inst too
 OutputDir=.
 OutputBaseFilename=@PACKAGE_NAME@-Development-@PACKAGE_VERSION@
+PrivilegesRequired=none
 
 [Files]
 Source: "lib\*.*"; DestDir: "{app}\lib"
