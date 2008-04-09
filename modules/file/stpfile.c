@@ -102,12 +102,21 @@ static void          process_metadata      (STPFile *stpfile,
 static const GwyEnum channels[] = {
     { N_("Topography"),                           1  },
     { N_("Current or Deflection or Amplitude"),   2  },
-    { N_("Electrochemical voltage"),              8  },
+    { N_("Electrochemical Voltage (Vec)"),        8  },
     { N_("Topography and SPS"),                   9  },
-    { N_("Topography and SPS scripted"),          10 },
-    { N_("Electrochemical current"),              12 },
+    { N_("Topography and SPS (scripted)"),        10 },
+    { N_("Electrochemical Current (Iec)"),        12 },
     { N_("Friction or Phase"),                    13 },
     { N_("AUX in BNC"),                           14 },
+    { N_("AUX in 3 (Sum)"),                       16 },
+    { N_("AUX in 4 (Raw Deflection)"),            17 },
+    { N_("AUX in 5 (PicoPlus Aux BNC)"),           18 },
+    { N_("AUX in 6 (Surface Potential)"),          19 },
+    { N_("AUX in 7"),                             20 },
+    { N_("AUX in 8"),                             21 },
+    { N_("AUX in 9"),                             22 },
+    { N_("AUX in 10"),                            23 },
+    { N_("Topography and Flexgrid"),              24 },
     { N_("External"),                             99 },
 };
 
@@ -384,9 +393,11 @@ process_metadata(STPFile *stpfile,
 
     /* Fix value scale */
     switch (mode) {
+        /* Topography */
         case 1:
         case 9:
         case 10:
+        case 24:
         siunit = gwy_si_unit_new("m");
         gwy_data_field_set_si_unit_z(dfield, siunit);
         g_object_unref(siunit);
@@ -399,19 +410,7 @@ process_metadata(STPFile *stpfile,
             gwy_data_field_multiply(dfield, Angstrom/32768);
         break;
 
-        case 2:    /* this channel is converted to nm by orig soft, but it
-                      doesn't make much sense */
-        case 8:
-        case 12:
-        case 13:
-        case 14:
-        gwy_data_field_add(dfield, -32768.0);
-        gwy_data_field_multiply(dfield, 10.0/32768.0);
-        siunit = gwy_si_unit_new("V");
-        gwy_data_field_set_si_unit_z(dfield, siunit);
-        g_object_unref(siunit);
-        break;
-
+        /* External */
         case 99:
         if (stpfile_get_double(data->meta, "ExSourceZFact", &q)) {
             s = g_hash_table_lookup(data->meta, "ExSourceZBip");
@@ -428,9 +427,13 @@ process_metadata(STPFile *stpfile,
         }
         break;
 
+        /* Current, Deflection, Vec, Iec, Friction, and Auxes */
         default:
-        g_warning("Unknown mode %u", mode);
-        gwy_data_field_multiply(dfield, Angstrom/32768);
+        gwy_data_field_add(dfield, -32768.0);
+        gwy_data_field_multiply(dfield, 10.0/32768.0);
+        siunit = gwy_si_unit_new("V");
+        gwy_data_field_set_si_unit_z(dfield, siunit);
+        g_object_unref(siunit);
         break;
     }
 
