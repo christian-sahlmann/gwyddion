@@ -45,4 +45,5 @@ Release checklist:
 - update gwyddion main page
 - publish files on Freshmeat, GnomeFiles, SourceForge
 - send e-mail to the mailing lists
-
+- update the list of supported file formats on gwyddion.net and in the user
+  guide (at least occasionally)
