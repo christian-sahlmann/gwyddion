@@ -594,5 +594,58 @@ _wrap_gwy_app_file_write(PyObject *self, PyObject *args, PyObject *kwargs)
 
 }
 %%
+define GwyContainer.datafields noargs
+static PyObject *
+_wrap_gwy_container_datafields(PyGObject *self) 
+{
+   gint i;
+   GQuark *keys;
+   PyObject *py_list;
+   gpointer value;
+
+   py_list = PyList_New(0);
+   if (!py_list) {
+      return NULL;
+   }
+
+   keys = gwy_container_keys(GWY_CONTAINER(self->obj));
+   for (i = 0 ; i < gwy_container_get_n_items(GWY_CONTAINER(self->obj)); i++) 
+   {
+      if (gwy_container_gis_object(GWY_CONTAINER(self->obj),  keys[i], &value) 
+          && GWY_IS_DATA_FIELD(value)) 
+      {
+         PyList_Append(py_list, pygobject_new((GObject*)value));
+      }
+   }
+   g_free(keys);
+   return py_list;
+}
+%%
+define GwyContainer.graph_models noargs
+static PyObject *
+_wrap_gwy_container_graph_models(PyGObject *self) 
+{
+   gint i;
+   GQuark *keys;
+   PyObject *py_list;
+   gpointer value;
+
+   py_list = PyList_New(0);
+   if (!py_list) {
+      return NULL;
+   }
+
+   keys = gwy_container_keys(GWY_CONTAINER(self->obj));
+   for (i = 0 ; i < gwy_container_get_n_items(GWY_CONTAINER(self->obj)); i++) 
+   {
+      if (gwy_container_gis_object(GWY_CONTAINER(self->obj),  keys[i], &value) 
+          && GWY_IS_GRAPH_MODEL(value)) 
+      {
+         PyList_Append(py_list, pygobject_new((GObject*)value));
+      }
+   }
+   g_free(keys);
+   return py_list;
+}
 // TODO: use G_OBJECT_TYPE_NAME instead of string values in set_object_by_name
 /* vim: set cin et ts=4 sw=4 cino=>1s syntax=c,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

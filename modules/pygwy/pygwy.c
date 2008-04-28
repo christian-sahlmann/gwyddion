@@ -43,10 +43,9 @@
 #include <app/gwyapp.h>
 #include "wrap_calls.h"
 
-static GValue*    convert_pyobject_to_gvalue  (PyObject *o);
-static PyObject*  convert_gvalue_to_pyobject  (GValue *value);
+static GValue*    convert_pyobject_to_gvalue         (PyObject *o);
+static PyObject*  convert_gvalue_to_pyobject         (GValue *value);
 static void       pygwy_create_py_list_of_containers (GwyContainer *data, gpointer list);
-
 #include "pygwywrap.c"
 #line 52 "pygwy.c"
 
@@ -1536,4 +1535,6 @@ pygwy_create_py_list_of_containers(GwyContainer *data, gpointer list)
    }
    
 }
+
+
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
