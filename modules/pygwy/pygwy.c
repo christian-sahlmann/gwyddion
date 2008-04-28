@@ -73,6 +73,8 @@ static gboolean         module_register       (void);
 static void             pygwy_proc_run        (GwyContainer *data,
                                                GwyRunType run,
                                                const gchar *name);
+static void             pygwy_graph_run       (GwyGraph *graph,
+                                               const gchar *name);
 static void             pygwy_console_run     (GwyContainer *data,
                                                GwyRunType run,
                                                const gchar *name);
@@ -339,6 +341,8 @@ pygwy_get_plugin_metadata(const gchar *filename,
         *type = PYGWY_FILE;
     } else if (g_ascii_strcasecmp ("GRAPH", type_str) == 0) {
         *type = PYGWY_GRAPH;
+    } else if (g_ascii_strcasecmp ("LAYER", type_str) == 0) {
+        *type = PYGWY_LAYER;
     } else {
         g_warning("Unknown type '%s' in '%s'", type_str, filename);
         *type = PYGWY_UNDEFINED;
@@ -460,6 +464,52 @@ pygwy_register_proc_plugin(gchar *filename,
 
 }
 
+static gboolean
+pygwy_register_graph_plugin(gchar *filename,
+                            PyObject *code,
+                            gchar *name,
+                            gchar *menu_path)
+{
+    PygwyPluginInfo *info;
+
+    if (!code) {
+        g_warning("Cannot create code object for file '%s'", filename);
+        return FALSE;
+    }
+    if (!name) {
+        g_warning("Cannot register. Undefined 'plugin_name' variable in '%s'",
+                  filename);
+        return FALSE;
+    }
+    if (!menu_path) {
+        g_warning("Cannot register. Undefined 'plugin_desc' variable in '%s'",
+                  filename);
+        return FALSE;
+    }
+    info = pygwy_create_plugin_info(filename, name, code);
+
+    gwy_debug("Registering proc func.");
+    if (gwy_graph_func_register(info->name,
+                                pygwy_graph_run,
+                                menu_path,
+                                GWY_STOCK_GRAPH_FUNCTION,
+                                GWY_MENU_FLAG_GRAPH, // TODO: determine correct flag
+                                N_("Graph function written in Python")) ) { // not very descriptive
+        // append plugin to list of plugins
+        s_pygwy_plugins = g_list_append(s_pygwy_plugins, info);
+    } else {
+        // FIXME: Terminated by glib free(): invalid pointer: blabla
+        // when inserting duplicate module
+        // g_free(info->name);
+        // g_free(info->filename);
+        // g_free(info);
+        g_warning("Cannot register plugin '%s'", filename);
+        return FALSE;
+    }
+    return TRUE;
+
+}
+
 static void
 pygwy_register_plugins(void)
 {
@@ -554,6 +604,21 @@ pygwy_register_plugins(void)
                     g_warning("Cannot register plugin without defined "
                               "'plugin_type' variable  ('%s')",
                               plugin_fullpath_filename);
+                    break;
+                case PYGWY_GRAPH:
+                    printf("%s %s\n", plugin_name, plugin_desc);
+                    if (plugin_code && plugin_name && plugin_desc) {
+                    pygwy_register_graph_plugin(plugin_fullpath_filename,
+                                                plugin_code,
+                                                plugin_name,
+                                                plugin_desc);
+
+                    } else {
+                        g_warning("Could not register graph module:"
+                                  " variables plugin_desc, plugin_type"
+                                  " and plugin_name not defined.");
+                    }
+
                     break;
                 default:
                     g_warning("Rest of plugin types not yet implemented"); //TODO: PYGWY_GRAPH, PYGWY_LAYER
@@ -687,6 +752,62 @@ pygwy_proc_run(GwyContainer *data, GwyRunType run, const gchar *name)
     Py_DECREF(py_container); //FIXME
     destroy_environment(d, TRUE);
 }
+
+static void
+pygwy_graph_run(GwyGraph *graph, const gchar *name)
+{
+    PygwyPluginInfo *info;
+    PyObject *py_graph, *module, *d;
+    gchar *cmd;
+
+    // find plugin
+    if (!(info = pygwy_find_plugin(name))) {
+        g_warning("Cannot find plugin '%s'.", name);
+        return;
+    }
+    gwy_debug("Running plugin '%s', filename '%s'",
+              info->name,
+              info->filename);
+
+    // create new environment
+    d = create_environment(info->filename, TRUE);
+    if (!d) {
+        g_warning("Cannot create copy of Python dictionary.");
+        return;
+    }
+
+    // check last and current file modification time and override
+    // the code if required
+    pygwy_reload_code(&info);
+    gwy_debug("Import module and check for 'run' func");
+    // import, execute the module and check for 'run' func
+    module = PyImport_ExecCodeModule(info->name, info->code);
+    if (!pygwy_check_func(module, "run", info->filename)) {
+        destroy_environment(d, TRUE);
+        return;
+    }
+
+    gwy_debug("Running plugin '%s', filename '%s'", info->name, info->filename);
+    // create graph named 'graph' to allow access the graph object from python
+    py_graph = pygobject_new((GObject*)graph);
+    if (!py_graph) {
+        g_warning("Variable 'gwy.data' was not inicialized.");
+    }
+    PyDict_SetItemString(s_pygwy_dict, "graph", py_graph);
+
+    // import module using precompiled code and run its 'run()' function
+    cmd = g_strdup_printf("import %s\n"
+                          "%s.run()",
+                          info->name,
+                          info->name);
+    pygwy_run_string(cmd, Py_file_input, d, d);
+    g_free(cmd);
+
+    Py_DECREF(module);
+    Py_DECREF(py_graph); //FIXME
+    destroy_environment(d, TRUE);
+}
+
 
 static gboolean
 pygwy_file_save_run(GwyContainer *data,
@@ -1203,7 +1324,7 @@ pygwy_on_console_run_file(GtkToolButton *btn, gpointer user_data)
    GtkTextBuffer *console_file_buf = 
       gtk_text_view_get_buffer(GTK_TEXT_VIEW(s_console_setup->console_file_content));
 
-   file_info_line = g_strdup_printf(">>> Running file content of below textfield");
+   file_info_line = g_strdup_printf(">>> Running file content of below textfield\n");
 
    pygwy_console_append(file_info_line);
 
@@ -1262,77 +1383,83 @@ pygwy_on_console_open_file(GtkToolButton *btn, gpointer user_data)
    gtk_widget_destroy (file_chooser);
 }
    
+static void 
+pygwy_console_create_gui()
+{
+   GtkWidget *console_win, *vbox1, *console_scrolledwin, *file_scrolledwin;
+   GtkWidget *entry_input, *button_bar, *button_open, *button_run;
+
+   // create static structure;
+   s_console_setup = g_malloc(sizeof(PygwyConsoleSetup));
+   // create GUI
+   console_win = gtk_window_new (GTK_WINDOW_TOPLEVEL);
+   gtk_window_set_title (GTK_WINDOW (console_win), "Pygwy Console");
+
+   vbox1 = gtk_vbox_new (FALSE, 0);
+   gtk_container_add (GTK_CONTAINER (console_win), vbox1);
+
+   // buttons
+   button_open = gtk_tool_button_new_from_stock(GTK_STOCK_OPEN);
+   button_run = gtk_tool_button_new_from_stock(GTK_STOCK_EXECUTE);
+   button_bar = gtk_toolbar_new();
+   gtk_toolbar_insert(GTK_TOOLBAR(button_bar), button_open, 0);
+   gtk_toolbar_insert(GTK_TOOLBAR(button_bar), button_run, 0);
+   gtk_box_pack_start(GTK_BOX(vbox1), button_bar, FALSE, FALSE, 0);
+
+   // window
+   file_scrolledwin = gtk_scrolled_window_new (NULL, NULL);
+   gtk_box_pack_start (GTK_BOX (vbox1), file_scrolledwin, TRUE, TRUE, 0);
+   gtk_scrolled_window_set_shadow_type (GTK_SCROLLED_WINDOW (file_scrolledwin), GTK_SHADOW_IN);
+
+   console_scrolledwin = gtk_scrolled_window_new (NULL, NULL);
+   gtk_box_pack_start (GTK_BOX (vbox1), console_scrolledwin, TRUE, TRUE, 0);
+   gtk_scrolled_window_set_shadow_type (GTK_SCROLLED_WINDOW (console_scrolledwin), GTK_SHADOW_IN);
+
+
+   // console output
+   s_console_setup->console_output = gtk_text_view_new ();
+   gtk_container_add (GTK_CONTAINER (console_scrolledwin), s_console_setup->console_output);
+   gtk_text_view_set_editable (GTK_TEXT_VIEW (s_console_setup->console_output), FALSE);
+
+   // file buffer
+   s_console_setup->console_file_content = gtk_text_view_new();
+   gtk_container_add (GTK_CONTAINER (file_scrolledwin), s_console_setup->console_file_content);
+   gtk_text_view_set_editable (GTK_TEXT_VIEW (s_console_setup->console_file_content), TRUE);
+
+   entry_input = gtk_entry_new ();
+   gtk_box_pack_start (GTK_BOX (vbox1), entry_input, FALSE, FALSE, 0);
+   gtk_entry_set_invisible_char (GTK_ENTRY (entry_input), 9679);
+   gtk_widget_grab_focus(GTK_WIDGET(entry_input));
+
+   // entry widget on ENTER
+   g_signal_connect ((gpointer) entry_input, "activate",
+         G_CALLBACK (pygwy_on_console_command_execute),
+         NULL);
+   // open script signal connect
+   g_signal_connect ((gpointer) button_open, "clicked",
+         G_CALLBACK (pygwy_on_console_open_file),
+         NULL);
+   g_signal_connect ((gpointer) button_run, "clicked",
+         G_CALLBACK (pygwy_on_console_run_file),
+         NULL);
+
+   // connect on window close()
+   g_signal_connect ((gpointer) console_win, "delete_event",
+         G_CALLBACK (pygwy_on_console_close),
+         NULL);
+   gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(s_console_setup->console_output), GTK_WRAP_WORD_CHAR);
+   gtk_window_resize(GTK_WINDOW(console_win), 600, 500);
+   gtk_widget_show_all(console_win);
+}
+
 static void
 pygwy_console_run(GwyContainer *data, GwyRunType run, const gchar *name)
 {
     PyObject *d, *py_container;
-    GtkWidget *console_win, *vbox1, *console_scrolledwin, *file_scrolledwin;
-    GtkWidget *entry_input, *button_bar, *button_open, *button_run;
     gchar *plugin_dir_name = NULL, *sys_path_append;
-
-    // create static structure;
-    s_console_setup = g_malloc(sizeof(PygwyConsoleSetup));
-    // create GUI
-    console_win = gtk_window_new (GTK_WINDOW_TOPLEVEL);
-    gtk_window_set_title (GTK_WINDOW (console_win), "Pygwy Console");
-
-    vbox1 = gtk_vbox_new (FALSE, 0);
-    gtk_container_add (GTK_CONTAINER (console_win), vbox1);
-
-    // buttons
     
-    button_open = gtk_tool_button_new_from_stock(GTK_STOCK_OPEN);
-    button_run = gtk_tool_button_new_from_stock(GTK_STOCK_EXECUTE);
-    button_bar = gtk_toolbar_new();
-    gtk_toolbar_insert(GTK_TOOLBAR(button_bar), button_open, 0);
-    gtk_toolbar_insert(GTK_TOOLBAR(button_bar), button_run, 0);
-    gtk_box_pack_start(GTK_BOX(vbox1), button_bar, FALSE, FALSE, 0);
-
-    // window
-
-    file_scrolledwin = gtk_scrolled_window_new (NULL, NULL);
-    gtk_box_pack_start (GTK_BOX (vbox1), file_scrolledwin, TRUE, TRUE, 0);
-    gtk_scrolled_window_set_shadow_type (GTK_SCROLLED_WINDOW (file_scrolledwin), GTK_SHADOW_IN);
-
-    console_scrolledwin = gtk_scrolled_window_new (NULL, NULL);
-    gtk_box_pack_start (GTK_BOX (vbox1), console_scrolledwin, TRUE, TRUE, 0);
-    gtk_scrolled_window_set_shadow_type (GTK_SCROLLED_WINDOW (console_scrolledwin), GTK_SHADOW_IN);
-    
-    
-    // console output
-    s_console_setup->console_output = gtk_text_view_new ();
-    gtk_container_add (GTK_CONTAINER (console_scrolledwin), s_console_setup->console_output);
-    gtk_text_view_set_editable (GTK_TEXT_VIEW (s_console_setup->console_output), FALSE);
-
-    // file buffer
-    s_console_setup->console_file_content = gtk_text_view_new();
-    gtk_container_add (GTK_CONTAINER (file_scrolledwin), s_console_setup->console_file_content);
-    gtk_text_view_set_editable (GTK_TEXT_VIEW (s_console_setup->console_file_content), TRUE);
-
-    entry_input = gtk_entry_new ();
-    gtk_box_pack_start (GTK_BOX (vbox1), entry_input, FALSE, FALSE, 0);
-    gtk_entry_set_invisible_char (GTK_ENTRY (entry_input), 9679);
-    gtk_widget_grab_focus(GTK_WIDGET(entry_input));
-
-    // entry widget on ENTER
-    g_signal_connect ((gpointer) entry_input, "activate",
-                      G_CALLBACK (pygwy_on_console_command_execute),
-                      NULL);
-    // open script signal connect
-    g_signal_connect ((gpointer) button_open, "clicked",
-                      G_CALLBACK (pygwy_on_console_open_file),
-                      NULL);
-    g_signal_connect ((gpointer) button_run, "clicked",
-                      G_CALLBACK (pygwy_on_console_run_file),
-                      NULL);
-     
-    // connect on window close()
-    g_signal_connect ((gpointer) console_win, "delete_event",
-                      G_CALLBACK (pygwy_on_console_close),
-                      NULL);
-    gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(s_console_setup->console_output), GTK_WRAP_WORD_CHAR);
-    gtk_window_resize(GTK_WINDOW(console_win), 600, 500);
-    gtk_widget_show_all(console_win);
+    pygwy_initialize();      
+    pygwy_console_create_gui();
     // create new environment    
     d = create_environment("__console__", FALSE);
     if (!d) {
