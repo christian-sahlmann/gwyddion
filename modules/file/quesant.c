@@ -31,6 +31,7 @@
 // TODO: not sure about picture orientation
 
 #include "config.h"
+#include <stdio.h>
 #include <libgwyddion/gwymath.h>
 #include <libprocess/datafield.h>
 #include <app/gwymoduleutils-file.h>
@@ -206,7 +207,8 @@ quesant_load(const gchar *filename,
    val = (guint16*) (buffer + info.image_loc);
    for (row = 0; row < info.img_size; row++)
       for (col = info.img_size-1; col >= 0; col--) {
-         gwy_data_field_set_val(dfield, row, col, ((*val)++) * multiplier);
+         gwy_data_field_set_val(dfield, row, col, (*val) * multiplier);
+         val++;
       }
    // create container
    container = gwy_container_new();
