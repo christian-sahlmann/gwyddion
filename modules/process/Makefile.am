@@ -31,6 +31,7 @@ process_LTLIBRARIES = \
 	grain_wshed.la \
 	hough.la \
 	immerse.la \
+	indent_analyze.la \
 	laplace.la \
 	level.la \
 	linecorrect.la \
@@ -115,6 +116,7 @@ grain_cross_la_SOURCES = grain_cross.c
 grain_dist_la_SOURCES = grain_dist.c
 hough_la_SOURCES = hough.c
 immerse_la_SOURCES = immerse.c
+indent_analyze_la_SOURCES = indent_analyze.c
 laplace_la_SOURCES = laplace.c
 level_la_SOURCES = level.c
 linecorrect_la_SOURCES = linecorrect.c
