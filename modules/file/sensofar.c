@@ -30,16 +30,9 @@
  **/
 
 #include "config.h"
-#include <errno.h>
-#include <string.h>
 #include <stdio.h>
-#include <stdlib.h>
-#include <stdarg.h>
-#include <libgwyddion/gwymacros.h>
-#include <libgwyddion/gwyutils.h>
 #include <libgwyddion/gwymath.h>
 #include <libprocess/datafield.h>
-#include <libgwymodule/gwymodule-file.h>
 #include <app/gwymoduleutils-file.h>
 
 #include "err.h"
@@ -141,7 +134,6 @@ sensofar_detect(const GwyFileDetectInfo *fileinfo,
                  gboolean only_name)
 {
     gint score = 0;
-    struct tm tm;
     char day_name[4], month_name[4];
     int month_day, hour, min, sec, year;
 
@@ -208,6 +200,7 @@ sensofar_load(const gchar *filename,
    {
       case MES_TOPO:
       case MES_IMATGE:
+      case MES_MULTIPERFIL:
          memcpy(&cols, buffer + sizeof(tDataDesc), 4);
          memcpy(&rows, buffer + sizeof(tDataDesc)+4, 4);
          gwy_debug("Data size: %dx%d", rows, cols);

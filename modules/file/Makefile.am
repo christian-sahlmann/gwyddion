@@ -53,6 +53,7 @@ filedir = $(pkglibdir)/modules/file
 	pixmap.la \
 	pnifile.la \
 	psia.la \
+	quesant.la \
 	rawfile.la \
 	rhk-sm3.la \
 	rhk-spm32.la \
@@ -131,6 +132,7 @@ nt_mdt_la_SOURCES       = nt-mdt.c
 omicron_la_SOURCES      = omicron.c
 pnifile_la_SOURCES      = pnifile.c
 psia_la_SOURCES         = psia.c gwytiff.h
+quesant_la_SOURCES      = quesant.c
 rawfile_la_SOURCES      = rawfile.c rawfilepreset.h
 rhk_sm3_la_SOURCES      = rhk-sm3.c
 rhk_spm32_la_SOURCES    = rhk-spm32.c

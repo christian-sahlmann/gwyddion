@@ -3,13 +3,8 @@
 ----------------------------------------------------------------------------*/
 
 #include "config.h"
-#include <string.h>
-#include <stdio.h>
-#include <glib/gstdio.h>
-#include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libprocess/stats.h>
-#include <libgwymodule/gwymodule-file.h>
 #include <app/gwymoduleutils-file.h>
 
 #include "err.h"
@@ -591,3 +586,4 @@ static GwyContainer* sicm_load ( const gchar *filename,
 
     return container;
 }
+
