@@ -322,7 +322,9 @@ module_register(void)
                               NULL,
                               INDENT_ANALYZE_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
-                              N_(""));
+                              /* XXX: Make it translatable once there's some
+                               * actual tooltip text. */
+                              "");
 
     return TRUE;
 }
