@@ -1495,7 +1495,7 @@ static void
 update_data_labels(IndentAnalyzeControls *c)
 {
     const int str_len = 50;
-    gchar str[str_len];
+    gchar str[50];
     GwyDataField *dfield =
         GWY_DATA_FIELD(gwy_container_get_object_by_name(c->mydata, "/0/data"));
     GwySIValueFormat *siformat =
@@ -1504,15 +1504,15 @@ update_data_labels(IndentAnalyzeControls *c)
 
     compute_expected_indent(c);
 
-    snprintf(str, str_len, "[%d, %d]px: %lf", c->args->minx, c->args->miny,
+    g_snprintf(str, str_len, "[%d, %d]px: %lf", c->args->minx, c->args->miny,
             c->args->min_val/mag);
     gtk_label_set_text(GTK_LABEL(c->w_min_xy), str);
 
-    snprintf(str, str_len, "[%d, %d]px: %lf", c->args->maxx, c->args->maxy,
+    g_snprintf(str, str_len, "[%d, %d]px: %lf", c->args->maxx, c->args->maxy,
             c->args->max_val/mag);
     gtk_label_set_text(GTK_LABEL(c->w_max_xy), str);
 
-    snprintf(str, str_len, "%lf", (c->args->max_val - c->args->min_val)/mag);
+    g_snprintf(str, str_len, "%lf", (c->args->max_val - c->args->min_val)/mag);
     gtk_label_set_text(GTK_LABEL(c->w_minmax), str);
 /*
     sprintf (str, "%g (%.1lf %%)", c->args->area_above/mag/mag, 100.*(c->args->area_above/sxy));
@@ -1532,29 +1532,29 @@ update_data_labels(IndentAnalyzeControls *c)
     sprintf (str, "%g", c->args->volume_below/mag/mag/mag);
     gtk_label_set_text(c->w_volume_below, str);
 */
-    snprintf(str, str_len, "%g",
+    g_snprintf(str, str_len, "%g",
             (c->args->volume_above - c->args->volume_below)/mag/mag/mag);
     gtk_label_set_text(GTK_LABEL(c->w_volume_dif), str);
 
-    snprintf(str, str_len, "%g", c->args->volume_indent/mag/mag/mag);
+    g_snprintf(str, str_len, "%g", c->args->volume_indent/mag/mag/mag);
     gtk_label_set_text(GTK_LABEL(c->w_volume_indent), str);
-    snprintf(str, str_len, "%g", c->args->surface_indent/mag/mag);
+    g_snprintf(str, str_len, "%g", c->args->surface_indent/mag/mag);
     gtk_label_set_text(GTK_LABEL(c->w_surface_indent), str);
-    snprintf(str, str_len, "%g", (c->args->area_indent)/mag/mag);
+    g_snprintf(str, str_len, "%g", (c->args->area_indent)/mag/mag);
     gtk_label_set_text(GTK_LABEL(c->w_area_indent), str);
 
-    snprintf(str, str_len, "%g", c->args->surface_indent_exp/mag/mag);
+    g_snprintf(str, str_len, "%g", c->args->surface_indent_exp/mag/mag);
     gtk_label_set_text(GTK_LABEL(c->w_surface_indent_exp), str);
-    snprintf(str, str_len, "%g", (c->args->area_indent_exp)/mag/mag);
+    g_snprintf(str, str_len, "%g", (c->args->area_indent_exp)/mag/mag);
     gtk_label_set_text(GTK_LABEL(c->w_area_indent_exp), str);
 
-    snprintf(str, str_len, "%g", c->args->surface_innerpileup/mag/mag);
+    g_snprintf(str, str_len, "%g", c->args->surface_innerpileup/mag/mag);
     gtk_label_set_text(GTK_LABEL(c->w_surface_innerpileup), str);
-    snprintf(str, str_len, "%g", (c->args->area_innerpileup)/mag/mag);
+    g_snprintf(str, str_len, "%g", (c->args->area_innerpileup)/mag/mag);
     gtk_label_set_text(GTK_LABEL(c->w_area_innerpileup), str);
-    snprintf(str, str_len, "%g", c->args->surface_outerpileup/mag/mag);
+    g_snprintf(str, str_len, "%g", c->args->surface_outerpileup/mag/mag);
     gtk_label_set_text(GTK_LABEL(c->w_surface_outerpileup), str);
-    snprintf(str, str_len, "%g", (c->args->area_outerpileup)/mag/mag);
+    g_snprintf(str, str_len, "%g", (c->args->area_outerpileup)/mag/mag);
     gtk_label_set_text(GTK_LABEL(c->w_area_outerpileup), str);
 }
 
