@@ -25,6 +25,7 @@
 #include <libprocess/cdline.h>
 #include <libgwyddion/gwydebugobjects.h>
 #include "gwyprocessinternal.h"
+#include <libgwyddion/gwynlfit.h>
 
 typedef gdouble (*GwyCDLineFitFunc)(gdouble x,
                                     gint n_param,
@@ -334,6 +335,139 @@ func_stepheight(gdouble x,
         return param[1];
 }
 
+static gdouble
+    func_circle_down(gdouble x,
+                G_GNUC_UNUSED gint n_param,
+                const gdouble *param,
+                G_GNUC_UNUSED gpointer user_data,
+                G_GNUC_UNUSED gboolean *fres)
+{
+  if ( (param[0]*param[0] - (x-param[1])*(x-param[1])) > 0.0)
+     return param[2] - sqrt(param[0]*param[0] - (x-param[1])*(x-param[1]));
+  else
+     return param[2];
+}
+
+static void
+cd_circle_down(const gdouble *x,
+               const gdouble *y,
+               gint n_dat,
+               gdouble *param,
+               gdouble *err,
+               G_GNUC_UNUSED gpointer user_data,
+               gboolean *fres)
+{
+  gdouble x1, x2, x3, y11, y2, y3, rx, ry, res; /* y1 already used somewhere... */
+  gint i, m;
+  GwyNLFitter *fitter;
+  GwyNLFitFunc ff;
+  gdouble par_init[3];
+  gdouble par_res[3];
+  gboolean par_fix[3];
+
+  m = n_dat/2;
+  if (x[0] != x[n_dat-1]){
+     x1 = x[0]; y11 = y[0];
+     x2 = x[m]; y2 = y[m];
+     x3 = x[n_dat-1]; y3 = y[n_dat-1];
+  }
+  else{
+     x1 = x[m]; y11 = y[m];
+     x2 = x[n_dat-1]; y2 = y[n_dat-1];
+     x3 = x[0]; y3 = y[0];
+  }
+  ry = ( (x1-x3)*((x2-x1)*(x2-x1)+(y2-y11)*(y2-y11)) + (x2-x1)*((x3-x1)*(x3-x1)+(y3-y11)*(y3-y11)) )/
+      ( 2*((x2-x1)*(y3-y11)-(x3-x1)*(y2-y11)) );
+  rx = ( (x3-x1)*(x3-x1)+(y3-y11)*(y3-y11)+2*ry*(y3-y11) )/(-2*(x3-x1));
+  par_init[0] = sqrt(rx*rx+ry*ry); /*r*/
+  par_init[1] = x1-rx; /*x0*/
+  par_init[2] = y11+ry; /*y0*/
+  for (i=0;i<3;i++){
+      par_fix[i] = FALSE;
+      par_res[i] = par_init[i];
+  }
+  ff = func_circle_down;
+  fitter = gwy_math_nlfit_new(ff, gwy_math_nlfit_derive);
+  res = gwy_math_nlfit_fit_full(fitter, n_dat, x, y, NULL, 3, par_res, par_fix, NULL, NULL);
+  if (res > 0.0){
+    if (par_res[0] < 0.0)
+       par_res[0] *= -1;
+    for (i=0;i<3;i++){
+      param[i] = par_res[i];
+      err[i] = gwy_math_nlfit_get_sigma(fitter, i);
+    }
+    *fres = TRUE;
+  }
+  else
+    *fres = FALSE;
+}
+
+static gdouble
+    func_circle_up(gdouble x,
+                   G_GNUC_UNUSED gint n_param,
+                   const gdouble *param,
+                   G_GNUC_UNUSED gpointer user_data,
+                   G_GNUC_UNUSED gboolean *fres)
+{
+  if ( (param[0]*param[0] - (x-param[1])*(x-param[1])) > 0.0)
+    return param[2] + sqrt(param[0]*param[0] - (x-param[1])*(x-param[1]));
+  else
+    return param[2];
+}
+
+static void
+cd_circle_up(const gdouble *x,
+             const gdouble *y,
+             gint n_dat,
+             gdouble *param,
+             gdouble *err,
+             G_GNUC_UNUSED gpointer user_data,
+             gboolean *fres)
+{
+  gdouble x1, x2, x3, y11, y2, y3, rx, ry, res;
+  gint i, m;
+  GwyNLFitter *fitter;
+  GwyNLFitFunc ff;
+  gdouble par_init[3];
+  gdouble par_res[3];
+  gboolean par_fix[3];
+
+  m = n_dat/2;
+  if (x[0] != x[n_dat-1]){
+      x1 = x[0]; y11 = y[0];
+      x2 = x[m]; y2 = y[m];
+      x3 = x[n_dat-1]; y3 = y[n_dat-1];
+  }
+  else{
+    x1 = x[m]; y11 = y[m];
+    x2 = x[n_dat-1]; y2 = y[n_dat-1];
+    x3 = x[0]; y3 = y[0];
+  }
+
+  ry = ( (x1-x3)*((x2-x1)*(x2-x1)+(y2-y11)*(y2-y11)) + (x2-x1)*((x3-x1)*(x3-x1)+(y3-y11)*(y3-y11)) )/
+        ( 2*((x2-x1)*(y3-y11)-(x3-x1)*(y2-y11)) );
+  rx = ( (x3-x1)*(x3-x1)+(y3-y11)*(y3-y11)+2*ry*(y3-y11) )/(-2*(x3-x1));
+  par_init[0] = sqrt(rx*rx+ry*ry); /*r*/
+  par_init[1] = x1-rx; /*x0*/
+  par_init[2] = y11+ry; /*y0*/
+  for (i=0;i<3;i++){
+    par_fix[i] = FALSE;
+    par_res[i] = par_init[i];
+  }
+  ff = func_circle_up;
+  fitter = gwy_math_nlfit_new(ff, gwy_math_nlfit_derive);
+  res = gwy_math_nlfit_fit_full(fitter, n_dat, x, y, NULL, 3, par_res, par_fix, NULL, NULL);
+  if (res > 0.0){
+    for (i=0;i<3;i++){
+      param[i] = par_res[i];
+      err[i] = gwy_math_nlfit_get_sigma(fitter, i);
+    }
+    *fres = TRUE;
+  }
+  else
+    *fres = FALSE;
+}
+
 /************************** cdlines ****************************/
 
 static const GwyCDLineParam stepheight_pars[] = {
@@ -349,6 +483,12 @@ static const GwyCDLineParam edgeheight_pars[] = {
    { "x",             1, 0, 2, },
    { "y<sub>1</sub>", 0, 1, 2, },
    { "y<sub>2</sub>", 0, 1, 2, },
+};
+
+static const GwyCDLineParam circle_pars[] = {
+  { "r",             0, 1, 1, },
+  { "x<sub>0</sub>", 1, 0, 2, },
+  { "y<sub>0</sub>", 0, 1, 2, },
 };
 
 static const GwyCDLineBuiltin cdlines[] = {
@@ -387,6 +527,24 @@ static const GwyCDLineBuiltin cdlines[] = {
         &cd_rstepheight,
         G_N_ELEMENTS(stepheight_pars),
         stepheight_pars
+    },
+    {
+        "Circle (down)",
+        "Circle",
+        "circle_down.png",
+        &func_circle_down,
+        &cd_circle_down,
+        G_N_ELEMENTS(circle_pars),
+        circle_pars
+    },
+    {
+        "Circle (up)",
+        "Circle",
+        "circle_up.png",
+        &func_circle_up,
+        &cd_circle_up,
+        G_N_ELEMENTS(circle_pars),
+        circle_pars
     },
 };
 

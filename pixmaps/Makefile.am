@@ -16,6 +16,8 @@ pixmapdata_DATA = \
 	cd_rline.png \
 	cd_rstep.png \
 	cd_step.png \
+	circle_down.png \
+	circle_up.png \
 	gwy_3d_base-24.png \
 	gwy_arithmetic-24.png \
 	gwy_bold-20.png \
