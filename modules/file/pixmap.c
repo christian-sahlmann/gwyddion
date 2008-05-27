@@ -335,7 +335,7 @@ static GwyModuleInfo module_info = {
        "TARGA. "
        "Import support relies on GDK and thus may be installation-dependent."),
     "Yeti <yeti@gwyddion.net>",
-    "6.4",
+    "6.4.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -2138,7 +2138,7 @@ pixmap_save_dialog(GwyContainer *data,
         args->font_size = FONT_SIZE*args->zoom;
     adj = gtk_adjustment_new(args->font_size,
                              FONT_SIZE*minzoom, FONT_SIZE*maxzoom,
-                             0.01, 1.0, 0);
+                             0.1, 1.0, 0);
     controls.font_size = gwy_table_attach_spinbutton(table, row,
                                                      _("_Font size:"), NULL,
                                                      adj);
