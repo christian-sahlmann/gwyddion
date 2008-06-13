@@ -128,14 +128,21 @@ rotate_datafield(GwyDataField *dfield,
     xborder -= xres/2;
     yborder = fabs(yres/2.0 * cos(phi)) + fabs(xres/2.0 * sin(phi));
     yborder -= yres/2;
-    df = gwy_data_field_new(xres + 2*xborder, yres + 2*yborder, 1.0, 1.0,
+    df = gwy_data_field_new(xres + fabs(2*xborder), yres + fabs(2*yborder), 1.0, 1.0,
                             FALSE);
     gwy_data_field_fill(df, min);
-    gwy_data_field_area_copy(dfield, df, 0, 0, xres, yres, xborder, yborder);
+    gwy_data_field_area_copy(dfield, df, 0, 0, xres, yres, fabs(xborder), fabs(yborder));
     gwy_data_field_rotate(df, args->angle, args->interp);
     gwy_data_field_resample(dfield, xres + 2*xborder, yres + 2*yborder,
                             GWY_INTERPOLATION_NONE);
-    gwy_data_field_copy(df, dfield, FALSE);
+    if (xborder <= 0)
+        gwy_data_field_area_copy(df, dfield, fabs(2*xborder), 0, xres + 2*xborder, yres + 2*yborder, 0, 0);
+    else {
+          if (yborder <= 0)
+              gwy_data_field_area_copy(df, dfield, 0, fabs(2*yborder), xres + 2*xborder, yres + 2*yborder, 0, 0);
+          else
+            gwy_data_field_area_copy(df, dfield, 0, 0, xres + 2*xborder, yres + 2*yborder, 0, 0);
+    }
     gwy_data_field_set_xreal(dfield, xreal*(xres + 2.0*xborder)/xres);
     gwy_data_field_set_yreal(dfield, yreal*(yres + 2.0*yborder)/yres);
     g_object_unref(df);
