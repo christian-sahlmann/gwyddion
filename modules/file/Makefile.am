@@ -50,6 +50,7 @@ filedir = $(pkglibdir)/modules/file
 	netcdf.la \
 	nt-mdt.la \
 	omicron.la \
+	ols.la \
 	pixmap.la \
 	pnifile.la \
 	psia.la \
@@ -129,6 +130,7 @@ nanonis_la_SOURCES      = nanonis.c
 nanotop_la_SOURCES      = nanotop.c
 netcdf_la_SOURCES       = netcdf.c
 nt_mdt_la_SOURCES       = nt-mdt.c
+ols_la_SOURCES		= ols.c
 omicron_la_SOURCES      = omicron.c
 pnifile_la_SOURCES      = pnifile.c
 psia_la_SOURCES         = psia.c gwytiff.h

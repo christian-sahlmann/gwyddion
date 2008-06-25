@@ -115,7 +115,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Nanosurf EZD and NID data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.6",
+    "0.7",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
