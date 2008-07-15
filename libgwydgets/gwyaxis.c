@@ -1593,7 +1593,7 @@ gwy_axis_calculate_format(GwyAxis *axis,
         pmjt = &g_array_index(axis->mjticks, GwyAxisLabeledTick, 0);
         g_string_printf(u1, "%.*f",
                         format->precision, pmjt->t.value/format->magnitude);
-        for (i = 1; i < MIN(axis->mjticks->len, 6); i++) {
+        for (i = 1; i < 6; i++) {
             pmjt = &g_array_index(axis->mjticks, GwyAxisLabeledTick, i);
             g_string_printf(u2, "%.*f",
                             format->precision, pmjt->t.value/format->magnitude);
