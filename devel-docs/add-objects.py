@@ -1,4 +1,5 @@
 #!/usr/bin/python
+# Written by Yeti <yeti@gwyddion.net>. Public domain.
 from __future__ import generators
 import sys, re
 

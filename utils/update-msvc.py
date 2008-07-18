@@ -1,4 +1,5 @@
 #!/usr/bin/python
+# Written by Yeti <yeti@gwyddion.net>. Public domain.
 # @(#) $Id$
 import re, os, sys, shutil, glob, time
 
