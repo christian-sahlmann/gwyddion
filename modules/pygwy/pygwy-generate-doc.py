@@ -192,7 +192,8 @@ for enum in p.enums:
    print enum.values[len(enum.values)-1][1].replace("GWY_", ""), " = range(", len(enum.values), ")"
 """   
 
-print "# This is dummy GENERATED file used for generation of documentation"
+# Keep GENERATED seprarated so that this file is not marked generated.
+print "# This is dummy " . "GENERATED" . " file used for generation of documentation"
 
 #objects/classes
 
