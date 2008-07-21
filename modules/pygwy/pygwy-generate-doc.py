@@ -1,4 +1,7 @@
 #!/usr/bin/python
+# Script for generation of gwy.py dummy file. The file contains empty function bodies with comments.
+# Used for generation of documentation by using epydoc.
+# Public domain
 
 import re, sys
 

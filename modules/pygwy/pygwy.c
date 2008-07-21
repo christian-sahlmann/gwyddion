@@ -1235,7 +1235,7 @@ static void
 pygwy_register_console()
 {
 
-    if (gwy_process_func_register(N_("Pygwy console"),
+    if (gwy_process_func_register(N_("pygwy_console"),
                                   pygwy_console_run,
                                   N_("/Pygwy console"),
                                   NULL,

@@ -1,4 +1,7 @@
 #!/usr/bin/python
+# Runtime for pygtk module codegen.py and overriden functions for Gwyddion data types.
+# Public domain
+
 import sys
 
 # Add codegen path to our import path
