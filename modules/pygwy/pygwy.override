@@ -397,7 +397,11 @@ _wrap_gwy_container_set_object_by_name(PyGObject *self, PyObject *args, PyObject
       PyErr_SetString(PyExc_TypeError, "could not convert Python object to GObject");
       return NULL;
    }
-   gwy_container_set_value_by_name(container, key, gval, 0);
+   if (!G_VALUE_HOLDS(gval, G_TYPE_OBJECT)) {
+      PyErr_SetString(PyExc_TypeError, "the second parameter is not an object");
+      return NULL;   
+   } 
+   gwy_container_set_object_by_name(container, key, g_value_peek_pointer(gval));
    
    Py_INCREF(Py_None);
    return Py_None;
