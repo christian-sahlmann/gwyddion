@@ -329,6 +329,26 @@ fi
 AC_SUBST([FFTW3_DEPENDENCY])
 
 #############################################################################
+# GtkSourceView
+# Optional.
+if test "x$enable_pygwy" != xno; then
+  GWY_WITH([gtksourceview],,[Better Pygwy console user interface])
+  if test "x$enable_gtksourceview" != "xno"; then
+    PKG_CHECK_MODULES(GTKSOURCEVIEW,[gtksourceview-2.0],
+                      [AC_DEFINE(HAVE_GTKSOURCEVIEW,1,
+                                 [Define if we have the GtkSourceView package.])],
+                      enable_gtksourceview=no; GL_WARN=" (needs GtkSourceView)")
+  fi
+  if test "x$enable_gtksourceview" != "xno"; then
+    GTKSOURCEVIEW_DEPENDENCY=gtksourceview-2.0
+  else
+    GTKSOURCEVIEW_DEPENDENCY=
+    GTKSOURCEVIEW_CFLAGS="$GTK_CFLAGS"
+    GTKSOURCEVIEW_LIBS="$GTK_LIBS"
+  fi
+  AC_SUBST([GTKSOURCEVIEW_DEPENDENCY])
+fi
+#############################################################################
 # GtkGLExt
 # Optional.
 GWY_WITH([gl],,[OpenGL 3D view widgets])

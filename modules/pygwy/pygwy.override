@@ -99,6 +99,8 @@ typedef gint GIntValue;
 typedef gdouble GDoubleValue;
 typedef gdouble GDoubleArray;
 typedef gdouble GDoubleArrayToFill;
+typedef gchar keep_gchar;       // do not delete when returning
+typedef gchar pass_owner_gchar; // do not delete in wrapped function
 
 // ##include "pywrap.h"
 %%
@@ -363,97 +365,6 @@ _wrap_gwy_app_data_browser_get_data_ids(PyObject *self, PyObject *args, PyObject
    }
    g_free(ids);
    return tuple;
-}
-
-%%
-define GwyContainer.set_object_by_name kwargs
-/**
- * gwy_container_set_object_by_name:
- * @name: name of object to store
- * @object: object to store
- *
- * Store object into container, not tested.
-**/      
-static PyObject *
-_wrap_gwy_container_set_object_by_name(PyGObject *self, PyObject *args, PyObject *kwargs) 
-{
-   static char *kwlist[] = {"name", "obj",  NULL};
-   GwyContainer *container;   
-   gchar *key;
-   PyObject *obj;
-   GValue *gval;
-
-   container = GWY_CONTAINER(self->obj);
-   if (!PyArg_ParseTupleAndKeywords(args, 
-                                    kwargs,
-                                    "sO:GwyContainer.set_object_by_name", 
-                                    kwlist, 
-                                    &key, 
-                                    &obj))
-        return NULL;
-   // try to convert to GValue
-   gval = convert_pyobject_to_gvalue(obj);
-   if (!gval) {
-      PyErr_SetString(PyExc_TypeError, "could not convert Python object to GObject");
-      return NULL;
-   }
-   if (!G_VALUE_HOLDS(gval, G_TYPE_OBJECT)) {
-      PyErr_SetString(PyExc_TypeError, "the second parameter is not an object");
-      return NULL;   
-   } 
-   gwy_container_set_object_by_name(container, key, g_value_peek_pointer(gval));
-   
-   Py_INCREF(Py_None);
-   return Py_None;
-}
-
-%%
-define GwyContainer.get_object_by_name kwargs
-/**
- * gwy_container_get_object_by_name:
- * @name: name of object
- *
- * Get object of given name from container.
- *
- * Returns: object of given name
-**/
-static PyObject *
-_wrap_gwy_container_get_object_by_name(PyGObject *self, PyObject *args, PyObject *kwargs) 
-{
-   static char *kwlist[] = {"name",  NULL};
-   gchar *key;
-   PyObject *obj;
-   GValue gval;
-
-   if (!PyArg_ParseTupleAndKeywords(args, 
-                                    kwargs,
-                                    "s:GwyContainer.get_object_by_name", 
-                                    kwlist, 
-                                    &key))
-        return NULL;
-   gval = gwy_container_get_value_by_name(GWY_CONTAINER(self->obj), key);
-   obj = convert_gvalue_to_pyobject(&gval);
-   return obj;
-}
-
-%%
-define GwyContainer.contains_by_name kwargs
-static PyObject *
-_wrap_gwy_container_contains_by_name(PyGObject *self, PyObject *args, PyObject *kwargs) 
-{
-   static char *kwlist[] = {"name",  NULL};
-   gchar *key;
-   gboolean res;
-
-   if (!PyArg_ParseTupleAndKeywords(args, 
-                                    kwargs,
-                                    "s:GwyContainer.contains_by_name", 
-                                    kwlist, 
-                                    &key))
-        return NULL;
-   res = gwy_container_contains_by_name(GWY_CONTAINER(self->obj), key);
-
-   return PyBool_FromLong((long) res);
 }
 
 %%

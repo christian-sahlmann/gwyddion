@@ -6,6 +6,7 @@
 import re, sys
 
 
+
 def get_python_name(c_name):
    py_name = c_name.capitalize()
    letters = list(re.findall("_[a-z]", c_name))
@@ -68,7 +69,43 @@ def printdoc(s):
 
    print replace_special(s)
 
+def replace_datatype(s):   
+   datatype = {}
+   datatype['gdouble'] = "float"
+   datatype['GDoubleValue'] = "float"
+   datatype['gboolean'] = "bool"
+   datatype['const-gchar*'] = "string"   
+   datatype['const-guchar*'] = "string"   
+   datatype['gint'] = "int" 
+   datatype['guint'] = "int" 
+   datatype['gint32'] = "int" 
+   datatype['GIntValue'] = "int"
+   datatype['GwyRGBA*'] = "L{RGBA}"
+   datatype['GQuark'] = "int"
+   datatype['GwyContainer*'] = "L{Container}"
+   datatype['GwyDataField*'] = "L{DataField}"
+   datatype['GwyDataLine*'] = "L{DataLine}"
+   datatype['GwyGraphModel*'] = "L{GraphModel}"
+   datatype['GwySIUnit*'] = "L{SIUnit}"
+   datatype['GwyGraph*'] = "L{Graph}"
+   datatype['GwySpectra*'] = "L{Spectra}"
+   datatype['GwyDataView*'] = "L{DataView}"
+   datatype['GtkWidget*'] = "L{gtk.Widget}"
+   datatype['GObject*'] = "L{gobject.GObject}"
+   datatype['GtkWindow*'] = "L{gtk.Window}"
+   datatype['GtkTooltips*'] = "L{gtk.Tooltips}"
+   datatype['GtkAccelGroup*'] = "L{gtk.AccelGroup}"
+   datatype['GtkComboBox*'] = "L{gtk.ComboBox}"
+   #datatype[''] = ""
+   #datatype[''] = ""
+   #datatype[''] = ""
+   if datatype.has_key(s):
+      return datatype[s]
+   else:
+      return s
+
 def print_functions(spaces, method, docs, enums, level=1):
+   ignored_params = []
    enum_str = dict()
    spaces2 = spaces
    if level == 0:
@@ -76,15 +113,20 @@ def print_functions(spaces, method, docs, enums, level=1):
    print spaces+"def", method.name+"(",
 
    for i in range(len(method.params)):
+      if method.params[i].ptype.startswith("GError"):
+         ignored_params.append(method.params[i].pname)
+         continue
+      if i > 0:
+         print ',',
       # from is a keyword in Python
       method.params[i].pname = method.params[i].pname.replace('[', '')
       method.params[i].pname = method.params[i].pname.replace(']', '')
       if method.params[i].pname == "from":
          method.params[i].pname = "_from"
-      if i+1 == len(method.params): 
-         print method.params[i].pname,
-      else:
-         print method.params[i].pname+',',
+      #if i+1 == len(method.params): 
+      print method.params[i].pname,
+      #else:
+      #   print method.params[i].pname+',',
       for enum in enums:
          if enum.c_name == method.params[i].ptype and docs.has_key(enum.c_name):
             enum_list = ""
@@ -98,19 +140,27 @@ def print_functions(spaces, method, docs, enums, level=1):
       print spaces+spaces2+"\"\"\""
       printdoc(docs[method.c_name].description),
       for param in docs[method.c_name].params:
-         if level == 1:
+         if param[0] in ignored_params:
             continue
-         #if level == 1 and param == docs[method.c_name].params[0]:
+         #if level == 1:
          #   continue
+         if level == 1 and param == docs[method.c_name].params[0]:
+            continue
          if param[0] == "from":
             param_name = "_from"
          else:
             param_name = param[0]
-         if enum_str.has_key(param[0]):
-            printdoc('@param '+param_name+': '+param[1]+ "Expected values: "+enum_str[param[0]])
-         else:
-            printdoc('@param '+param_name+': '+param[1])
+         # find original datatype
+         ptype = ""
+         for p in method.params:
+            if p.pname == param_name:
+               ptype = " I{("+ replace_datatype(p.ptype)+")} "
+               break
          # check for enum
+         if enum_str.has_key(param[0]):
+            printdoc('@param '+param_name+': '+param[1].rstrip()+ "Expected values: "+enum_str[param[0]].rstrip()+ptype)
+         else:
+            printdoc('@param '+param_name+': '+param[1].rstrip()+ptype)
       if len(docs[method.c_name].ret) > 0:
          printdoc("@return:"+docs[method.c_name].ret)
       print spaces+spaces2+"\"\"\""
@@ -137,6 +187,9 @@ def add_override_methods(parser):
       else:
          # add as functions    
          parser.define_function(d, ('c-name', d), tuple(params)) 
+
+def func_cmp(x, y):
+   return cmp(x.name, y.name)
    
 # Add codegen path to our import path
 i = 1
@@ -164,7 +217,7 @@ doc_dirs = string.split("../../app ../../libdraw ../../libgwyddion ../../libgwyd
 
 defs_file = "pygwy.defs"
 wrap_file = "pygwywrap.c"
-ignore_functions = ["static"]
+ignore_functions = ["static", "typedef", "be", "parameter", ]
 
 docs = docextract.extract(doc_dirs)
 
@@ -196,7 +249,7 @@ for enum in p.enums:
 """   
 
 # Keep GENERATED seprarated so that this file is not marked generated.
-print "# This is dummy " . "GENERATED" . " file used for generation of documentation"
+print "# This is dummy " + "GENERATED" + " file used for generation of documentation"
 
 #objects/classes
 
@@ -248,6 +301,7 @@ for obj in p.objects:
       print_functions("     ", method, docs, p.enums)
    
 # functions
+p.functions.sort(func_cmp)
 for func in p.functions:
    if isinstance(func, definitions.MethodDef):
       continue
@@ -264,6 +318,6 @@ for func in p.functions:
       continue
    if wrap_file_cont.find(func.c_name) == -1 and override_file_cont.find(func.c_name):
       sys.stderr.write("Func "+func.c_name+" not found.\n")
-      func.name = "UNIMPLEMENTED_"+func.name
+      func.name = "z_UNIMPLEMENTED_"+func.name
    print_functions("     ", func, docs, p.enums, 0)
 

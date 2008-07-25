@@ -146,6 +146,40 @@ class GArrayInt(argtypes.ArgType):
       info.codeafter.append('    g_array_free(ret, TRUE);\n')
       info.codeafter.append('    return py_ret;\n')
 
+class StringPassArg(argtypes.ArgType):
+    def write_param(self, ptype, pname, pdflt, pnull, info):
+        if pdflt != None:
+            if pdflt != 'NULL': pdflt = '"' + pdflt + '"'
+            info.varlist.add('char', '*' + pname + ' = ' + pdflt)
+        else:
+            info.varlist.add('char', '*' + pname)
+        info.arglist.append(pname+'_dup')
+        if pnull:
+            info.add_parselist('z', ['&' + pname], [pname])
+        else:
+            info.add_parselist('s', ['&' + pname], [pname])
+        info.varlist.add('char', '*' + pname+"_dup")
+        info.codebefore.append('    '+pname+'_dup = g_strdup('+pname+');\n')
+
+    def write_return(self, ptype, ownsreturn, info):
+        if ownsreturn:
+            # have to free result ...
+            info.varlist.add('gchar', '*ret')
+            info.codeafter.append('    if (ret) {\n' +
+                                  '        PyObject *py_ret = PyString_FromString(ret);\n' +
+                                  '        g_free(ret);\n' +
+                                  '        return py_ret;\n' +
+                                  '    }\n' +
+                                  '    Py_INCREF(Py_None);\n' +
+                                  '    return Py_None;')
+        else:
+            info.varlist.add('const gchar', '*ret')
+            info.codeafter.append('    if (ret)\n' +
+                                  '        return PyString_FromString(ret);\n'+
+                                  '    Py_INCREF(Py_None);\n' +
+                                  '    return Py_None;')
+
+
 
       
 # Extend argtypes
@@ -182,6 +216,13 @@ arg = GConstDoubleArray()
 argtypes.matcher.register('const-gdouble*', arg)
 del arg
 
+arg = argtypes.StringArg()
+argtypes.matcher.register('keep_gchar*', arg)
+del arg
+
+arg = StringPassArg()
+argtypes.matcher.register('pass_owner_gchar*', arg)
+del arg
 
 arg = argtypes.EnumArg("GtkOrientation", 'GTK_TYPE_ORIENTATION')
 argtypes.matcher.register("GtkOrientation", arg)

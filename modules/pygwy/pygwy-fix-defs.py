@@ -1,5 +1,36 @@
 # alter defs, fix parameters and return types
-import sys
+import sys, re
+
+def get_python_name(c_name):
+   py_name = c_name.capitalize()
+   letters = list(re.findall("_[a-z]", c_name))
+   for match in letters:
+      py_name = py_name.replace(match, match.upper()[1])
+   return py_name.replace("_", "")
+
+#for macro functions
+new_methods = []
+
+new_methods.append([ "gwy_container", "contains_by_name", [("gchar*", "name")], "gboolean" ])
+new_methods.append([ "gwy_container", "remove_by_name", [("gchar*", "name")], "none" ])
+new_methods.append([ "gwy_container", "rename_by_name", [("gchar*", "name"), ("gchar*", "new_name"), ("gboolean", "delete")], "none" ])
+new_methods.append([ "gwy_container", "set_boolean_by_name", [("gchar*", "name"), ("gboolean", "value")], "none" ])
+new_methods.append([ "gwy_container", "set_double_by_name", [("gchar*", "name"), ("gdouble", "value")], "none" ])
+new_methods.append([ "gwy_container", "set_enum_by_name", [("gchar*", "name"), ("guint", "value")], "none" ])
+new_methods.append([ "gwy_container", "set_int32_by_name", [("gchar*", "name"), ("gint32", "value")], "none" ])
+new_methods.append([ "gwy_container", "set_int64_by_name", [("gchar*", "name"), ("gint64", "value")], "none" ])
+new_methods.append([ "gwy_container", "set_object_by_name", [("gchar*", "name"), ("GObject*", "value")], "none" ])
+new_methods.append([ "gwy_container", "set_uchar_by_name", [("gchar*", "name"), ("guchar", "value")], "none" ])
+new_methods.append([ "gwy_container", "set_string_by_name", [("gchar*", "name"), ("pass_owner_gchar*", "value")], "none" ])
+new_methods.append([ "gwy_container", "get_boolean_by_name", [("gchar*", "name")], "gboolean" ])
+new_methods.append([ "gwy_container", "get_double_by_name", [("gchar*", "name")], "double" ])
+new_methods.append([ "gwy_container", "get_enum_by_name", [("gchar*", "name")], "guint" ])
+new_methods.append([ "gwy_container", "get_int32_by_name", [("gchar*", "name")], "gint32" ])
+new_methods.append([ "gwy_container", "get_int64_by_name", [("gchar*", "name")], "gint64" ])
+new_methods.append([ "gwy_container", "get_object_by_name", [("gchar*", "name")], "GObject*" ])
+new_methods.append([ "gwy_container", "get_uchar_by_name", [("gchar*", "name")], "guchar" ])
+new_methods.append([ "gwy_container", "get_value_by_name", [("gchar*", "name")], "GValue" ])
+new_methods.append([ "gwy_container", "get_string_by_name", [("gchar*", "name")], "keep_gchar*" ])
 
 extra_method_type = {}
 extra_method_type['gwy_data_field_get_normal_coeffs'] = [['nx', 'ny', 'nz'], ['GDoubleValue', 'GDoubleValue', 'GDoubleValue']]
@@ -88,5 +119,15 @@ for f in parser.functions:
          for i in range(len(extended_parameters[f.c_name][0])):
             if p.pname == extended_parameters[f.c_name][0][i]:
                p.pname = extended_parameters[f.c_name][1][i]
+#print dir(parser.methods)
+for m in new_methods:
+   args = list()
+   args.append( ("of-object", get_python_name(m[0]) ) )
+   args.append( ("c-name", m[0]+"_"+m[1]) ) 
+   args.append( ("return-type", m[3]) ) 
+   for p in m[2]:  
+      args.append( ("parameters", (p)) )
+   parser.define_method(m[1], *args)
+
 parser.write_defs()
 

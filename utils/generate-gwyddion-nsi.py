@@ -1,3 +1,7 @@
+# This script generates file for Nullsoft scriptable install system (NSIS)
+# which is used for creation of installation executable file for Win32
+# with optional installation of GTK runtime and pygwy.
+# Author: Jan Horak (xhorak@gmail.com), public domain
 import os, tempfile
 
 GTK_PATH = "../gtk-mini/"

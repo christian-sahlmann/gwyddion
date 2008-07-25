@@ -195,8 +195,8 @@ endif
 if ENABLE_PYGWY
 BUILT_SOURCES = pygwywrap.c
 pygwy_la_SOURCES = pygwy.c wrap_calls.c
-pygwy_la_CFLAGS = @COMMON_CFLAGS@ @WARNING_NOUNUSED_PAR@ $(PYTHON_INCLUDES) $(PYGTK_CFLAGS)
-pygwy_la_LIBADD = $(module_libadd) $(PYTHON_LIBS) $(PYGTK_LIBS)
+pygwy_la_CFLAGS = @COMMON_CFLAGS@ @WARNING_NOUNUSED_PAR@ @GTKSOURCEVIEW_CFLAGS@ $(PYTHON_INCLUDES) $(PYGTK_CFLAGS)
+pygwy_la_LIBADD = $(module_libadd) $(PYTHON_LIBS) $(PYGTK_LIBS) @GTKSOURCEVIEW_LIBS@
 
 pygwy.defs: $(PYGWY_H_FILES) Makefile.am pygwy-fix-defs.py
 	$(PYTHON) $(PYGTK_CODEGENDIR)/h2def.py $(PYGWY_H_FILES) \
@@ -214,9 +214,10 @@ pygwywrap.c: $(srcdir)/pygwy-codegen.py pygwy.defs $(srcdir)/pygwy.override
 	  | sed -e 's/^void$$/static void/' -e 's/pygwy\.c/pygwywrap\.c/' \
 	        -e '1s#.*#/* This is a 'GENERATED' file */#' >pygwywrap.c
 
-pygwy-doc: pygwy.defs pygwywrap.c
+gwy.py: pygwy.defs pygwywrap.c 
 	$(PYTHON) ./pygwy-generate-doc.py --codegendir $(PYGTK_CODEGENDIR) >gwy.py
-	$(EPYDOC) -o pygwy-doc gwy.py
+pygwy-doc: gwy.py
+	$(EPYDOC) -v -o pygwy-doc gwy.py
 endif
 
 CLEANFILES = gwy.py gwy.pyc gwy.pyo
