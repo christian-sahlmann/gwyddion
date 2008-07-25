@@ -1447,6 +1447,9 @@ pygwy_console_create_gui()
    GtkWidget *entry_input, *button_bar, *button_open, *button_run, *button_save, *button_save_as;
    PangoFontDescription *font_desc;
    GtkAccelGroup *accel_group;
+   GtkTooltips *button_bar_tips;
+   
+
 
 
 #ifdef HAVE_GTKSOURCEVIEW     
@@ -1467,9 +1470,13 @@ pygwy_console_create_gui()
    button_save = gtk_tool_button_new_from_stock(GTK_STOCK_SAVE);
    button_save_as = gtk_tool_button_new_from_stock(GTK_STOCK_SAVE_AS);
    button_run = gtk_tool_button_new_from_stock(GTK_STOCK_EXECUTE);
-   gtk_widget_set_tooltip_text(button_open, N_("Open script in Python language (Ctrl-O)"));
-   gtk_widget_set_tooltip_text(button_save, N_("Save script (Ctrl-S)"));
-   gtk_widget_set_tooltip_text(button_run, N_("Execute script (Ctrl-E)"));
+   button_bar_tips = gtk_tooltips_new ();
+   gtk_tooltips_set_tip (GTK_TOOLTIPS (button_bar_tips), 
+                         button_open, N_("Open script in Python language (Ctrl-O)"), "");
+   gtk_tooltips_set_tip (GTK_TOOLTIPS (button_bar_tips), 
+                         button_save, N_("Save script (Ctrl-S)"), "");
+   gtk_tooltips_set_tip (GTK_TOOLTIPS (button_bar_tips), 
+                         button_run, N_("Execute script (Ctrl-E)"), "");
    accel_group = gtk_accel_group_new ();
    gtk_widget_add_accelerator (button_run, "clicked", accel_group,
                               GDK_E, (GdkModifierType) GDK_CONTROL_MASK,
