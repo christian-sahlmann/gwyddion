@@ -39,15 +39,15 @@ grain_mark	grain-analysis	grain-threshold
 grain_rem_threshold	grain-analysis	grain-remove-threshold
 grain_wshed	grain-analysis	grain-watershed
 grainremover	editing-correction
-graph_cd	graph-analysis	graph-critical-dimension
-graph_cut	graph-analysis
-graph_fdfit	graph-analysis
-graph_export_ascii	graph-analysis
-graph_export_bitmap	graph-analysis
-graph_export_vector	graph-analysis
-graph_fit	graph-analysis	graph-fit
-graph_level	graph-analysis
-graph_stats	graph-analysis
+graph_cd	graph-processing	graph-critical-dimension
+graph_cut	graph-processing
+graph_fdfit	graph-processing
+graph_export_ascii	graph-processing
+graph_export_bitmap	graph-processing
+graph_export_vector	graph-processing
+graph_fit	graph-processing	graph-fit
+graph_level	graph-processing
+graph_stats	graph-processing
 gwyfile	managing-files
 hdf4file	managing-files
 hitachi-afm	managing-files
