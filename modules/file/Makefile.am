@@ -50,6 +50,7 @@ filedir = $(pkglibdir)/modules/file
 	netcdf.la \
 	nt-mdt.la \
 	omicron.la \
+	omicronmatrix.la \
 	ols.la \
 	pixmap.la \
 	pnifile.la \
@@ -105,52 +106,53 @@ else
 MODULE_LIBTIFF =
 endif
 
-asciiexport_la_SOURCES  = asciiexport.c
-apefile_la_SOURCES      = apefile.c
-assing_afm_la_SOURCES   = assing-afm.c
-bcrfile_la_SOURCES      = bcrfile.c
-burleigh_la_SOURCES     = burleigh.c
-burleigh_bii_la_SOURCES = burleigh_bii.c
-burleigh_exp_la_SOURCES = burleigh_exp.c
-createc_la_SOURCES      = createc.c
-dmefile_la_SOURCES      = dmefile.c
-ecsfile_la_SOURCES      = ecsfile.c
-ezdfile_la_SOURCES      = ezdfile.c
-gwyfile_la_SOURCES      = gwyfile.c
-hdf4file_la_SOURCES     = hdf4file.c
-hitachi_afm_la_SOURCES  = hitachi-afm.c
-intematix_la_SOURCES    = intematix.c gwytiff.h
-jeol_la_SOURCES         = jeol.c
-metropro_la_SOURCES     = metropro.c
-microprof_la_SOURCES    = microprof.c
-mifile_la_SOURCES       = mifile.c
-nanoscope_ii_la_SOURCES = nanoscope-ii.c
-nanoscope_la_SOURCES    = nanoscope.c
-nanonis_la_SOURCES      = nanonis.c
-nanotop_la_SOURCES      = nanotop.c
-netcdf_la_SOURCES       = netcdf.c
-nt_mdt_la_SOURCES       = nt-mdt.c
-ols_la_SOURCES		= ols.c
-omicron_la_SOURCES      = omicron.c
-pnifile_la_SOURCES      = pnifile.c
-psia_la_SOURCES         = psia.c gwytiff.h
-quesant_la_SOURCES      = quesant.c
-rawfile_la_SOURCES      = rawfile.c rawfilepreset.h
-rhk_sm3_la_SOURCES      = rhk-sm3.c
-rhk_spm32_la_SOURCES    = rhk-spm32.c
-sdfile_la_SOURCES       = sdfile.c
-seiko_la_SOURCES        = seiko.c
-sensofar_la_SOURCES     = sensofar.c
-shimadzu_la_SOURCES     = shimadzu.c
-sicmfile_la_SOURCES     = sicmfile.c
-sis_la_SOURCES          = sis.c
-spmlab_la_SOURCES       = spmlab.c
-stmprg_la_SOURCES       = stmprg.c
-stpfile_la_SOURCES      = stpfile.c
-surffile_la_SOURCES     = surffile.c
-unisoku_la_SOURCES      = unisoku.c
-witfile_la_SOURCES      = witfile.c
-wsxmfile_la_SOURCES     = wsxmfile.c
+asciiexport_la_SOURCES   = asciiexport.c
+apefile_la_SOURCES       = apefile.c
+assing_afm_la_SOURCES    = assing-afm.c
+bcrfile_la_SOURCES       = bcrfile.c
+burleigh_la_SOURCES      = burleigh.c
+burleigh_bii_la_SOURCES  = burleigh_bii.c
+burleigh_exp_la_SOURCES  = burleigh_exp.c
+createc_la_SOURCES       = createc.c
+dmefile_la_SOURCES       = dmefile.c
+ecsfile_la_SOURCES       = ecsfile.c
+ezdfile_la_SOURCES       = ezdfile.c
+gwyfile_la_SOURCES       = gwyfile.c
+hdf4file_la_SOURCES      = hdf4file.c
+hitachi_afm_la_SOURCES   = hitachi-afm.c
+intematix_la_SOURCES     = intematix.c gwytiff.h
+jeol_la_SOURCES          = jeol.c
+metropro_la_SOURCES      = metropro.c
+microprof_la_SOURCES     = microprof.c
+mifile_la_SOURCES        = mifile.c
+nanoscope_ii_la_SOURCES  = nanoscope-ii.c
+nanoscope_la_SOURCES     = nanoscope.c
+nanonis_la_SOURCES       = nanonis.c
+nanotop_la_SOURCES       = nanotop.c
+netcdf_la_SOURCES        = netcdf.c
+nt_mdt_la_SOURCES        = nt-mdt.c
+ols_la_SOURCES           = ols.c
+omicron_la_SOURCES       = omicron.c
+omicronmatrix_la_SOURCES = omicronmatrix.c
+pnifile_la_SOURCES       = pnifile.c
+psia_la_SOURCES          = psia.c gwytiff.h
+quesant_la_SOURCES       = quesant.c
+rawfile_la_SOURCES       = rawfile.c rawfilepreset.h
+rhk_sm3_la_SOURCES       = rhk-sm3.c
+rhk_spm32_la_SOURCES     = rhk-spm32.c
+sdfile_la_SOURCES        = sdfile.c
+seiko_la_SOURCES         = seiko.c
+sensofar_la_SOURCES      = sensofar.c
+shimadzu_la_SOURCES      = shimadzu.c
+sicmfile_la_SOURCES      = sicmfile.c
+sis_la_SOURCES           = sis.c
+spmlab_la_SOURCES        = spmlab.c
+stmprg_la_SOURCES        = stmprg.c
+stpfile_la_SOURCES       = stpfile.c
+surffile_la_SOURCES      = surffile.c
+unisoku_la_SOURCES       = unisoku.c
+witfile_la_SOURCES       = witfile.c
+wsxmfile_la_SOURCES      = wsxmfile.c
 
 # pixmap is built always, the source code branches on TIFF availability
 pixmap_la_SOURCES       = pixmap.c
