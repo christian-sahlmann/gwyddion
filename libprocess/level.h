@@ -129,6 +129,31 @@ void gwy_data_field_area_subtract_poly_max(GwyDataField *data_field,
                                            gint max_degree,
                                            const gdouble *coeffs);
 
+gdouble* gwy_data_field_fit_poly(GwyDataField *data_field,
+                                 GwyDataField *mask_field,
+                                 gint nterms,
+                                 const gint *term_powers,
+                                 gdouble *coeffs);
+gdouble* gwy_data_field_area_fit_poly(GwyDataField *data_field,
+                                      GwyDataField *mask_field,
+                                      gint col, gint row,
+                                      gint width, gint height,
+                                      gint nterms,
+                                      const gint *term_powers,
+                                      gdouble *coeffs);
+
+void gwy_data_field_subtract_poly(GwyDataField *data_field,
+                                  gint nterms,
+                                  const gint *term_powers,
+                                  const gdouble *coeffs);
+void gwy_data_field_area_subtract_poly(GwyDataField *data_field,
+                                       gint col, gint row,
+                                       gint width, gint height,
+                                       gint nterms,
+                                       const gint *term_powers,
+                                       const gdouble *coeffs);
+
+
 GwyDataField** gwy_data_field_area_fit_local_planes(GwyDataField *data_field,
                                                     gint size,
                                                     gint col, gint row,

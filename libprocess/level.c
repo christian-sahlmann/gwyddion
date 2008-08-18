@@ -1261,6 +1261,244 @@ gwy_data_field_subtract_poly_max(GwyDataField *data_field,
                                           max_degree, coeffs);
 }
 
+/* Calculate integer powers by repeated squaring */
+static gdouble
+pow_int(gdouble x, guint n)
+{
+    gdouble v = 1.0;
+
+    while (n) {
+        if (n & 1)
+            v *= x;
+        x *= x;
+        n >>= 1;
+    }
+
+    return v;
+}
+
+/**
+ * gwy_data_field_area_fit_poly:
+ * @data_field: A data field.
+ * @mask_field: Mask of values to take values into account, or %NULL for full
+ *        @data_field.  Values equal to 0.0 and below cause corresponding
+ *        @data_field samples to be ignored, values equal to 1.0 and above
+ *        cause inclusion of corresponding @data_field samples.  The behaviour
+ *        for values inside (0.0, 1.0) is undefined (it may be specified
+ *        in the future).
+ * @col: Upper-left column coordinate.
+ * @row: Upper-left row coordinate.
+ * @width: Area width (number of columns).
+ * @height: Area height (number of rows).
+ * @nterms: The number of polynomial terms to take into account (twice the
+ *          number of items in @term_powers).
+ * @term_powers: Array of size 2*@nterms describing the terms to fit.  Each
+ *               terms is described by a couple of powers (powerx, powery).
+ * @coeffs: Array of size @nterms to store the coefficients to, or %NULL to
+ *          allocate a new array.
+ *
+ * Fit a given set of polynomial terms to a rectangular part of a data field.
+ *
+ * Returns: Either @coeffs if it was not %NULL, or a newly allocated array
+ *          with coefficients.
+ *
+ * Since: 2.11
+ **/
+gdouble*
+gwy_data_field_area_fit_poly(GwyDataField *data_field,
+                             GwyDataField *mask_field,
+                             gint col, gint row,
+                             gint width, gint height,
+                             gint nterms,
+                             const gint *term_powers,
+                             gdouble *coeffs)
+{
+    const gdouble *data, *mask;
+    gint xres, yres, r, c, i, j;
+    gdouble *m, *p;
+
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), NULL);
+    g_return_val_if_fail(nterms >= 0, NULL);
+    g_return_val_if_fail(col >= 0 && row >= 0
+                         && col + width <= data_field->xres
+                         && row + height <= data_field->yres,
+                         NULL);
+    if (mask_field) {
+        g_return_val_if_fail(GWY_IS_DATA_FIELD(mask_field), NULL);
+        g_return_val_if_fail(mask_field->xres == data_field->xres
+                             && mask_field->yres == data_field->yres, NULL);
+    }
+
+    if (!nterms)
+        return coeffs;
+
+    data = data_field->data;
+    mask = mask_field ? mask_field->data : NULL;
+    xres = data_field->xres;
+    yres = data_field->yres;
+
+    if (!coeffs)
+        coeffs = g_new0(gdouble, nterms);
+
+    p = g_new(gdouble, nterms);
+    m = g_new(gdouble, nterms*(nterms + 1)/2);
+
+    for (r = 0; r < height; r++) {
+        gdouble y = 2*r/(height - 1.0) - 1.0;
+        for (c = 0; c < width; c++) {
+            gdouble x = 2*c/(width - 1.0) - 1.0;
+            gdouble z = data[(row + r)*xres + (col + c)];
+            gdouble w = mask[(row + r)*xres + (col + c)];
+
+            if (w <= 0.0)
+                continue;
+            if (w >= 1.0)
+                w = 1.0;
+
+            for (i = 0; i < nterms; i++) {
+                p[i] = pow_int(x, term_powers[2*i])
+                       * pow_int(y, term_powers[2*i + 1]);
+            }
+
+            for (i = 0; i < nterms; i++) {
+                for (j = 0; j <= i; j++)
+                    m[i*nterms + j] += w*p[i]*p[j];
+                coeffs[i] += z*w*p[i];
+            }
+        }
+    }
+
+    if (!gwy_math_choleski_decompose(nterms, m))
+        memset(coeffs, 0, nterms*sizeof(gdouble));
+    else
+        gwy_math_choleski_solve(nterms, m, coeffs);
+
+    g_free(p);
+    g_free(m);
+
+    return coeffs;
+}
+
+/**
+ * gwy_data_field_fit_poly:
+ * @data_field: A data field.
+ * @mask_field: Mask of values to take values into account, or %NULL for full
+ *        @data_field.  Values equal to 0.0 and below cause corresponding
+ *        @data_field samples to be ignored, values equal to 1.0 and above
+ *        cause inclusion of corresponding @data_field samples.  The behaviour
+ *        for values inside (0.0, 1.0) is undefined (it may be specified
+ *        in the future).
+ * @nterms: The number of polynomial terms to take into account (twice the
+ *          number of items in @term_powers).
+ * @term_powers: Array of size 2*@nterms describing the terms to fit.  Each
+ *               terms is described by a couple of powers (powerx, powery).
+ * @coeffs: Array of size @nterms to store the coefficients to, or %NULL to
+ *          allocate a new array.
+ *
+ * Fit a given set of polynomial terms to a data field.
+ *
+ * Returns: Either @coeffs if it was not %NULL, or a newly allocated array
+ *          with coefficients.
+ *
+ * Since: 2.11
+ **/
+gdouble*
+gwy_data_field_fit_poly(GwyDataField *data_field,
+                        GwyDataField *mask_field,
+                        gint nterms,
+                        const gint *term_powers,
+                        gdouble *coeffs)
+{
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), NULL);
+    return gwy_data_field_area_fit_poly(data_field, mask_field,
+                                        0, 0,
+                                        data_field->xres, data_field->yres,
+                                        nterms, term_powers, coeffs);
+}
+
+/**
+ * gwy_data_field_area_subtract_poly:
+ * @data_field: A data field.
+ * @col: Upper-left column coordinate.
+ * @row: Upper-left row coordinate.
+ * @width: Area width (number of columns).
+ * @height: Area height (number of rows).
+ * @nterms: The number of polynomial terms to take into account (twice the
+ *          number of items in @term_powers).
+ * @term_powers: Array of size 2*@nterms describing the fitted terms.  Each
+ *               terms is described by a couple of powers (powerx, powery).
+ * @coeffs: Array of size @nterms to store with the coefficients.
+ *
+ * Subtract a given set of polynomial terms from a rectangular part of a data
+ * field.
+ *
+ * Since: 2.11
+ **/
+void
+gwy_data_field_area_subtract_poly(GwyDataField *data_field,
+                                  gint col, gint row,
+                                  gint width, gint height,
+                                  gint nterms,
+                                  const gint *term_powers,
+                                  const gdouble *coeffs)
+{
+    gdouble *data;
+    gint xres, yres, r, c, i;
+
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    g_return_if_fail(nterms >= 0);
+    g_return_if_fail(coeffs);
+    g_return_if_fail(col >= 0 && row >= 0
+                     && col + width <= data_field->xres
+                     && row + height <= data_field->yres);
+
+    if (!nterms)
+        return;
+
+    data = data_field->data;
+    xres = data_field->xres;
+    yres = data_field->yres;
+
+    for (r = 0; r < height; r++) {
+        gdouble y = 2*r/(height - 1.0) - 1.0;
+        for (c = 0; c < width; c++) {
+            gdouble x = 2*c/(width - 1.0) - 1.0;
+            gdouble z = data[(row + r)*xres + (col + c)];
+
+            for (i = 0; i < nterms; i++) {
+                z -= coeffs[i] * pow_int(x, term_powers[2*i])
+                     * pow_int(y, term_powers[2*i + 1]);
+            }
+        }
+    }
+}
+
+/**
+ * gwy_data_field_area_subtract_poly:
+ * @data_field: A data field.
+ * @nterms: The number of polynomial terms to take into account (twice the
+ *          number of items in @term_powers).
+ * @term_powers: Array of size 2*@nterms describing the fitter terms.  Each
+ *               terms is described by a couple of powers (powerx, powery).
+ * @coeffs: Array of size @nterms to store with the coefficients.
+ *
+ * Subtract a given set of polynomial terms from a data field.
+ *
+ * Since: 2.11
+ **/
+void
+gwy_data_field_subtract_poly(GwyDataField *data_field,
+                             gint nterms,
+                             const gint *term_powers,
+                             const gdouble *coeffs)
+{
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    gwy_data_field_area_subtract_poly(data_field,
+                                      0, 0,
+                                      data_field->xres, data_field->yres,
+                                      nterms, term_powers, coeffs);
+}
+
 /**
  * gwy_data_field_area_fit_local_planes:
  * @data_field: A data field.
