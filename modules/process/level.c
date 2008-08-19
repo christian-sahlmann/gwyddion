@@ -35,7 +35,7 @@
 typedef enum {
     LEVEL_EXCLUDE,
     LEVEL_INCLUDE,
-    LEVEL_NORMAL,
+    LEVEL_IGNORE,
 } LevelMaskingType;
 
 typedef enum {
@@ -84,7 +84,7 @@ static GwyModuleInfo module_info = {
     N_("Levels data by simple plane subtraction or by rotation, "
        "and fixes minimal or mean value to zero."),
     "Yeti <yeti@gwyddion.net>",
-    "1.5",
+    "1.5.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -166,9 +166,9 @@ do_level(GwyContainer *data,
             return;
     }
     else
-        args.level_mode = LEVEL_NORMAL;
+        args.level_mode = LEVEL_IGNORE;
 
-    if (args.level_mode == LEVEL_NORMAL)
+    if (args.level_mode == LEVEL_IGNORE)
         mfield = NULL;
     if (mfield)
         mfield = gwy_data_field_duplicate(mfield);
@@ -253,7 +253,7 @@ level_dialog(LevelArgs *args,
     static const GwyEnum modes[] = {
         { N_("_Exclude region under mask"),      LEVEL_EXCLUDE, },
         { N_("Exclude region _outside mask"),    LEVEL_INCLUDE, },
-        { N_("Use entire _image (ignore mask)"), LEVEL_NORMAL,  },
+        { N_("Use entire _image (ignore mask)"), LEVEL_IGNORE,  },
     };
 
     GtkWidget *dialog, *label, *table;
