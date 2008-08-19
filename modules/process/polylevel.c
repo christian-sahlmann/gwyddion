@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2004 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2004,2008 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -39,6 +39,12 @@ enum {
     MAX_DEGREE = 12
 };
 
+typedef enum {
+    LEVEL_EXCLUDE,
+    LEVEL_INCLUDE,
+    LEVEL_IGNORE,
+} LevelMaskingType;
+
 typedef struct {
     gint col_degree;
     gint row_degree;
@@ -46,6 +52,7 @@ typedef struct {
     gboolean do_extract;
     gboolean same_degree;
     gboolean independent;
+    LevelMaskingType masking;
 } PolyLevelArgs;
 
 typedef struct {
@@ -56,6 +63,7 @@ typedef struct {
     GSList *type_group;
     GtkWidget *same_degree;
     GtkWidget *independent;
+    GSList *masking_group;
     GtkWidget *do_extract;
     GtkWidget *leveled_view;
     GtkWidget *bg_view;
@@ -68,12 +76,14 @@ static void     poly_level                       (GwyContainer *data,
                                                   GwyRunType run);
 static void     poly_level_do                    (GwyContainer *data,
                                                   GwyDataField *dfield,
+                                                  GwyDataField *mfield,
                                                   GQuark quark,
                                                   gint oldid,
-                                                  PolyLevelArgs *args);
+                                                  const PolyLevelArgs *args);
 static gboolean poly_level_dialog                (PolyLevelArgs *args,
                                                   GwyContainer *data,
                                                   GwyDataField *dfield,
+                                                  GwyDataField *mfield,
                                                   gint id);
 static void     poly_level_dialog_update         (PolyLevelControls *controls,
                                                   PolyLevelArgs *args);
@@ -86,6 +96,8 @@ static void     poly_level_same_degree_changed   (GtkWidget *button,
 static void     poly_level_degree_changed        (GtkObject *spin,
                                                   PolyLevelControls *controls);
 static void     poly_level_max_degree_changed    (GtkObject *spin,
+                                                  PolyLevelControls *controls);
+static void     poly_level_masking_changed       (GtkToggleButton *button,
                                                   PolyLevelControls *controls);
 static void     poly_level_update_preview        (PolyLevelControls *controls,
                                                   PolyLevelArgs *args);
@@ -102,6 +114,7 @@ static const PolyLevelArgs poly_level_defaults = {
     FALSE,
     TRUE,
     TRUE,
+    LEVEL_IGNORE,
 };
 
 static GwyModuleInfo module_info = {
@@ -109,7 +122,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Subtracts polynomial background."),
     "Yeti <yeti@gwyddion.net>",
-    "2.3",
+    "2.4",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -133,7 +146,7 @@ module_register(void)
 static void
 poly_level(GwyContainer *data, GwyRunType run)
 {
-    GwyDataField *dfield;
+    GwyDataField *dfield, *mfield;
     GQuark quark;
     PolyLevelArgs args;
     gboolean ok;
@@ -142,18 +155,19 @@ poly_level(GwyContainer *data, GwyRunType run)
     g_return_if_fail(run & POLYLEVEL_RUN_MODES);
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_KEY, &quark,
                                      GWY_APP_DATA_FIELD, &dfield,
+                                     GWY_APP_MASK_FIELD, &mfield,
                                      GWY_APP_DATA_FIELD_ID, &id,
                                      0);
     g_return_if_fail(dfield && quark);
 
     load_args(gwy_app_settings_get(), &args);
     if (run == GWY_RUN_INTERACTIVE) {
-        ok = poly_level_dialog(&args, data, dfield, id);
+        ok = poly_level_dialog(&args, data, dfield, mfield, id);
         save_args(gwy_app_settings_get(), &args);
         if (!ok)
             return;
     }
-    poly_level_do(data, dfield, quark, id, &args);
+    poly_level_do(data, dfield, mfield, quark, id, &args);
 }
 
 static void
@@ -162,11 +176,9 @@ poly_level_do_independent(GwyDataField *dfield,
                           GwyDataField *bg,
                           gint col_degree, gint row_degree)
 {
-    gint xres, yres, i;
+    gint i;
     gdouble *coeffs;
 
-    xres = gwy_data_field_get_xres(dfield);
-    yres = gwy_data_field_get_yres(dfield);
     coeffs = gwy_data_field_fit_legendre(dfield, col_degree, row_degree, NULL);
     gwy_data_field_subtract_legendre(result, col_degree, row_degree, coeffs);
     gwy_data_field_data_changed(result);
@@ -188,11 +200,9 @@ poly_level_do_maximum(GwyDataField *dfield,
                       GwyDataField *bg,
                       gint max_degree)
 {
-    gint xres, yres, i;
+    gint i;
     gdouble *coeffs;
 
-    xres = gwy_data_field_get_xres(dfield);
-    yres = gwy_data_field_get_yres(dfield);
     coeffs = gwy_data_field_fit_poly_max(dfield, max_degree, NULL);
     gwy_data_field_subtract_poly_max(result, max_degree, coeffs);
     gwy_data_field_data_changed(result);
@@ -209,11 +219,64 @@ poly_level_do_maximum(GwyDataField *dfield,
 }
 
 static void
+poly_level_do_with_mask(GwyDataField *dfield,
+                        GwyDataField *mask,
+                        GwyDataField *result,
+                        GwyDataField *bg,
+                        const PolyLevelArgs *args)
+{
+    gint *term_powers;
+    gdouble *coeffs;
+    gint nterms, i, j, k;
+
+    k = 0;
+    if (args->independent) {
+        nterms = (args->col_degree + 1)*(args->row_degree + 1);
+        term_powers = g_new(gint, 2*nterms);
+        for (i = 0; i <= args->col_degree; i++) {
+            for (j = 0; j <= args->row_degree; j++) {
+                term_powers[k++] = i;
+                term_powers[k++] = j;
+            }
+        }
+    }
+    else {
+        nterms = (args->max_degree + 1)*(args->max_degree + 2)/2;
+        term_powers = g_new(gint, 2*nterms);
+        for (i = 0; i <= args->max_degree; i++) {
+            for (j = 0; j <= args->max_degree - i; j++) {
+                g_printerr("[%d] (%d %d)\n", k/2, i, j);
+                term_powers[k++] = i;
+                term_powers[k++] = j;
+            }
+        }
+    }
+
+    /* TODO: implement the mask-excluding mode. */
+    coeffs = gwy_data_field_fit_poly(dfield, mask, nterms, term_powers, NULL);
+    gwy_data_field_subtract_poly(result, nterms, term_powers, coeffs);
+    gwy_data_field_data_changed(result);
+
+    if (bg) {
+        for (i = 0; i < nterms; i++) {
+            g_printerr("[%d] %g\n", i, coeffs[i]);
+            coeffs[i] = -coeffs[i];
+        }
+        gwy_data_field_subtract_poly(bg, nterms, term_powers, coeffs);
+        gwy_data_field_data_changed(bg);
+    }
+
+    g_free(coeffs);
+    g_free(term_powers);
+}
+
+static void
 poly_level_do(GwyContainer *data,
               GwyDataField *dfield,
+              GwyDataField *mfield,
               GQuark quark,
               gint oldid,
-              PolyLevelArgs *args)
+              const PolyLevelArgs *args)
 {
     GwyDataField *bg = NULL;
     gint newid;
@@ -222,7 +285,9 @@ poly_level_do(GwyContainer *data,
     if (args->do_extract)
         bg = gwy_data_field_new_alike(dfield, TRUE);
 
-    if (args->independent)
+    if (mfield && args->masking != LEVEL_IGNORE)
+        poly_level_do_with_mask(dfield, mfield, dfield, bg, args);
+    else if (args->independent)
         poly_level_do_independent(dfield, dfield, bg,
                                   args->col_degree, args->row_degree);
     else
@@ -243,6 +308,7 @@ poly_level_do(GwyContainer *data,
 static GwyContainer*
 create_preview_data(GwyContainer *data,
                     GwyDataField *dfield,
+                    GwyDataField *mfield,
                     gint id)
 {
     GwyContainer *pdata;
@@ -262,6 +328,14 @@ create_preview_data(GwyContainer *data,
                                           GWY_INTERPOLATION_ROUND);
     gwy_container_set_object_by_name(pdata, "/source", pfield);
     g_object_unref(pfield);
+
+    /* Mask */
+    if (mfield) {
+        pfield = gwy_data_field_new_resampled(mfield, xres, yres,
+                                              GWY_INTERPOLATION_ROUND);
+        gwy_container_set_object_by_name(pdata, "/mask", pfield);
+        g_object_unref(pfield);
+    }
 
     /* Leveled */
     pfield = gwy_data_field_new_alike(pfield, FALSE);
@@ -287,6 +361,7 @@ static gboolean
 poly_level_dialog(PolyLevelArgs *args,
                   GwyContainer *data,
                   GwyDataField *dfield,
+                  GwyDataField *mfield,
                   gint id)
 {
     enum { RESPONSE_RESET = 1 };
@@ -302,7 +377,7 @@ poly_level_dialog(PolyLevelArgs *args,
 
     controls.args = args;
     controls.in_update = TRUE;
-    controls.data = create_preview_data(data, dfield, id);
+    controls.data = create_preview_data(data, dfield, mfield, id);
 
     dialog = gtk_dialog_new_with_buttons(_("Remove Polynomial Background"),
                                          NULL, 0,
@@ -357,7 +432,7 @@ poly_level_dialog(PolyLevelArgs *args,
                      GTK_EXPAND | GTK_FILL, GTK_EXPAND | GTK_FILL, 0, 0);
     row++;
 
-    table = gtk_table_new(7, 4, FALSE);
+    table = gtk_table_new(7 + (mfield ? 4 : 0), 4, FALSE);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
@@ -421,7 +496,30 @@ poly_level_dialog(PolyLevelArgs *args,
                      0, 4, row, row+1, GTK_FILL, 0, 0, 0);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.do_extract),
                                  args->do_extract);
+    gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
     row++;
+
+    if (mfield) {
+        label = gwy_label_new_header(_("Masking"));
+        gtk_table_attach(GTK_TABLE(table), label,
+                        0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+        row++;
+
+        controls.masking_group
+            = gwy_radio_buttons_createl(G_CALLBACK(poly_level_masking_changed),
+                                        &controls, args->masking,
+                                        _("_Exclude region under mask"),
+                                        LEVEL_EXCLUDE,
+                                        _("Exclude region _outside mask"),
+                                        LEVEL_INCLUDE,
+                                        _("Use entire _image (ignore mask)"),
+                                        LEVEL_IGNORE,
+                                        NULL);
+        row = gwy_radio_buttons_attach_to_table(controls.masking_group,
+                                                GTK_TABLE(table), 3, row);
+    }
+    else
+        controls.masking_group = NULL;
 
     controls.in_update = FALSE;
     gtk_widget_set_sensitive(controls.same_degree, args->independent);
@@ -477,6 +575,8 @@ poly_level_dialog_update(PolyLevelControls *controls,
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->same_degree),
                                  args->same_degree);
     gwy_radio_buttons_set_current(controls->type_group, args->independent);
+    if (controls->masking_group)
+        gwy_radio_buttons_set_current(controls->masking_group, args->masking);
 }
 
 static void
@@ -491,6 +591,8 @@ poly_level_update_values(PolyLevelControls *controls,
     args->same_degree
         = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->same_degree));
     args->independent = gwy_radio_buttons_get_current(controls->type_group);
+    if (controls->masking_group)
+        args->masking = gwy_radio_buttons_get_current(controls->masking_group);
 }
 
 static void
@@ -604,19 +706,36 @@ poly_level_max_degree_changed(GtkObject *spin,
 }
 
 static void
+poly_level_masking_changed(GtkToggleButton *button,
+                           PolyLevelControls *controls)
+{
+    PolyLevelArgs *args;
+
+    if (!gtk_toggle_button_get_active(button))
+        return;
+
+    args = controls->args;
+    args->masking = gwy_radio_buttons_get_current(controls->masking_group);
+    poly_level_update_preview(controls, args);
+}
+
+static void
 poly_level_update_preview(PolyLevelControls *controls,
                           PolyLevelArgs *args)
 {
-    GwyDataField *source, *leveled, *bg;
+    GwyDataField *source, *leveled, *bg, *mask;
 
     gwy_container_gis_object_by_name(controls->data, "/source", &source);
+    gwy_container_gis_object_by_name(controls->data, "/mask", &mask);
     gwy_container_gis_object_by_name(controls->data, "/0/data", &leveled);
     gwy_container_gis_object_by_name(controls->data, "/1/data", &bg);
 
     gwy_data_field_copy(source, leveled, FALSE);
     gwy_data_field_clear(bg);
 
-    if (args->independent)
+    if (mask && args->masking != LEVEL_IGNORE)
+        poly_level_do_with_mask(source, mask, leveled, bg, args);
+    else if (args->independent)
         poly_level_do_independent(source, leveled, bg,
                                   args->col_degree, args->row_degree);
     else
