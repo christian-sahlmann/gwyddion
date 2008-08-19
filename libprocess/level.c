@@ -1474,7 +1474,7 @@ gwy_data_field_area_subtract_poly(GwyDataField *data_field,
 }
 
 /**
- * gwy_data_field_area_subtract_poly:
+ * gwy_data_field_subtract_poly:
  * @data_field: A data field.
  * @nterms: The number of polynomial terms to take into account (twice the
  *          number of items in @term_powers).
