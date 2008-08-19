@@ -1294,6 +1294,7 @@ pow_int(gdouble x, guint n)
  *          number of items in @term_powers).
  * @term_powers: Array of size 2*@nterms describing the terms to fit.  Each
  *               terms is described by a couple of powers (powerx, powery).
+ * @exclude: Interpret values @w in the mask as 1.0-@w.
  * @coeffs: Array of size @nterms to store the coefficients to, or %NULL to
  *          allocate a new array.
  *
@@ -1311,6 +1312,7 @@ gwy_data_field_area_fit_poly(GwyDataField *data_field,
                              gint width, gint height,
                              gint nterms,
                              const gint *term_powers,
+                             gboolean exclude,
                              gdouble *coeffs)
 {
     const gdouble *data, *mask;
@@ -1341,7 +1343,7 @@ gwy_data_field_area_fit_poly(GwyDataField *data_field,
         coeffs = g_new0(gdouble, nterms);
 
     p = g_new(gdouble, nterms);
-    m = g_new(gdouble, nterms*(nterms + 1)/2);
+    m = g_new0(gdouble, nterms*(nterms + 1)/2);
 
     for (r = 0; r < height; r++) {
         gdouble y = 2*r/(height - 1.0) - 1.0;
@@ -1349,6 +1351,9 @@ gwy_data_field_area_fit_poly(GwyDataField *data_field,
             gdouble x = 2*c/(width - 1.0) - 1.0;
             gdouble z = data[(row + r)*xres + (col + c)];
             gdouble w = mask[(row + r)*xres + (col + c)];
+
+            if (exclude)
+                w = 1.0-w;
 
             if (w <= 0.0)
                 continue;
@@ -1393,6 +1398,7 @@ gwy_data_field_area_fit_poly(GwyDataField *data_field,
  *          number of items in @term_powers).
  * @term_powers: Array of size 2*@nterms describing the terms to fit.  Each
  *               terms is described by a couple of powers (powerx, powery).
+ * @exclude: Interpret values @w in the mask as 1.0-@w.
  * @coeffs: Array of size @nterms to store the coefficients to, or %NULL to
  *          allocate a new array.
  *
@@ -1408,13 +1414,15 @@ gwy_data_field_fit_poly(GwyDataField *data_field,
                         GwyDataField *mask_field,
                         gint nterms,
                         const gint *term_powers,
+                        gboolean exclude,
                         gdouble *coeffs)
 {
     g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), NULL);
     return gwy_data_field_area_fit_poly(data_field, mask_field,
                                         0, 0,
                                         data_field->xres, data_field->yres,
-                                        nterms, term_powers, coeffs);
+                                        nterms, term_powers, exclude,
+                                        coeffs);
 }
 
 /**

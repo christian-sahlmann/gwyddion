@@ -252,8 +252,8 @@ poly_level_do_with_mask(GwyDataField *dfield,
         }
     }
 
-    /* TODO: implement the mask-excluding mode. */
-    coeffs = gwy_data_field_fit_poly(dfield, mask, nterms, term_powers, NULL);
+    coeffs = gwy_data_field_fit_poly(dfield, mask, nterms, term_powers,
+                                     args->masking == LEVEL_EXCLUDE, NULL);
     gwy_data_field_subtract_poly(result, nterms, term_powers, coeffs);
     gwy_data_field_data_changed(result);
 
