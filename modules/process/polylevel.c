@@ -40,9 +40,9 @@ enum {
 };
 
 typedef enum {
+    LEVEL_IGNORE = 0,
     LEVEL_EXCLUDE,
     LEVEL_INCLUDE,
-    LEVEL_IGNORE,
 } LevelMaskingType;
 
 typedef struct {
@@ -245,7 +245,6 @@ poly_level_do_with_mask(GwyDataField *dfield,
         term_powers = g_new(gint, 2*nterms);
         for (i = 0; i <= args->max_degree; i++) {
             for (j = 0; j <= args->max_degree - i; j++) {
-                g_printerr("[%d] (%d %d)\n", k/2, i, j);
                 term_powers[k++] = i;
                 term_powers[k++] = j;
             }
@@ -259,7 +258,6 @@ poly_level_do_with_mask(GwyDataField *dfield,
 
     if (bg) {
         for (i = 0; i < nterms; i++) {
-            g_printerr("[%d] %g\n", i, coeffs[i]);
             coeffs[i] = -coeffs[i];
         }
         gwy_data_field_subtract_poly(bg, nterms, term_powers, coeffs);
@@ -748,6 +746,7 @@ static const gchar max_degree_key[]  = "/module/polylevel/max_degree";
 static const gchar do_extract_key[]  = "/module/polylevel/do_extract";
 static const gchar same_degree_key[] = "/module/polylevel/same_degree";
 static const gchar independent_key[] = "/module/polylevel/independent";
+static const gchar masking_key[]     = "/module/polylevel/masking";
 
 static void
 sanitize_args(PolyLevelArgs *args)
@@ -755,6 +754,7 @@ sanitize_args(PolyLevelArgs *args)
     args->col_degree = CLAMP(args->col_degree, 0, MAX_DEGREE);
     args->row_degree = CLAMP(args->row_degree, 0, MAX_DEGREE);
     args->max_degree = CLAMP(args->max_degree, 0, MAX_DEGREE);
+    args->masking = MIN(args->masking, LEVEL_INCLUDE);
     args->do_extract = !!args->do_extract;
     args->independent = !!args->independent;
     args->same_degree = !!args->same_degree;
@@ -774,6 +774,8 @@ load_args(GwyContainer *container,
                                     &args->row_degree);
     gwy_container_gis_int32_by_name(container, max_degree_key,
                                     &args->max_degree);
+    gwy_container_gis_enum_by_name(container, masking_key,
+                                   &args->masking);
     gwy_container_gis_boolean_by_name(container, do_extract_key,
                                       &args->do_extract);
     gwy_container_gis_boolean_by_name(container, same_degree_key,
@@ -793,6 +795,8 @@ save_args(GwyContainer *container,
                                     args->row_degree);
     gwy_container_set_int32_by_name(container, max_degree_key,
                                     args->max_degree);
+    gwy_container_set_enum_by_name(container, masking_key,
+                                   args->masking);
     gwy_container_set_boolean_by_name(container, do_extract_key,
                                       args->do_extract);
     gwy_container_set_boolean_by_name(container, same_degree_key,
