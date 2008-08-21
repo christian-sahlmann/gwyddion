@@ -2,6 +2,7 @@
 Modules:
 - Omicron MATRIX (new): Omicron MATRIX file import support.
 - Polynomial level: Can exclude/include mask when fitting the data.
+- Grain statistics: Exports the (previously omitted) last grain too.
 
 
 2.10 (2008-06-26)
