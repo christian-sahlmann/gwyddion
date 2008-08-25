@@ -32,11 +32,13 @@ MOD_LINK = \
 
 
 ## targets
-all: wrap_calls.obj mod
+all: wrap_calls.obj mod data
 
 mod: $(MODULES)
 
-install: install-mod
+data: $(DATA)
+
+install: install-mod install data
 
 !INCLUDE $(TOP_SRCDIR)\rules.msc
 
@@ -46,6 +48,9 @@ install: install-mod
 
 pygwywrap.c: pygwywrap.c.win32
 	copy pygwywrap.c.win32 pygwywrap.c
+
+DATA_TYPE = pygwy
+<[[:DATA:]]>
 
 !ELSE
 all:

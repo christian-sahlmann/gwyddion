@@ -2,6 +2,21 @@ Pygwy - Python binding for Gwyddion
 -----------------------------------
 
 NEWS:
+2008/08/25
+==========
+Added
+  gwyutils module used as simpler interface to gwy module
+  fixed documentation generation
+  gwy_tip_* function
+
+
+2008/07/25
+==========
+Added
+  better console user interface
+  support for syntax highlighting (by using optional libgtksourceview)
+  wrapping for gwy_container_*_by_name functions
+  
 
 2007/12/20
 ==========

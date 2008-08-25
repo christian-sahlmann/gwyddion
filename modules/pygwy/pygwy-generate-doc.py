@@ -3,8 +3,18 @@
 # Used for generation of documentation by using epydoc.
 # Public domain
 
-import re, sys
-
+import re, sys, string
+# interesting variables
+doc_dirs = string.split("../../app ../../libdraw ../../libgwyddion ../../libgwydgets ../../libgwymodule ../../libprocess .")
+defs_file = "pygwy.defs"
+wrap_file = "pygwywrap.c"
+ignore_functions = ["static", "typedef", "be", "parameter"]
+ignore_endswith = ["_wrap"]
+datatype = {'gdouble': "float", 'GDoubleValue': "float", 'gboolean': "bool", 'const-gchar*': "string", 'const-guchar*': "string", \
+   'gint': "int", 'guint': "int", 'gint32': "int", 'GIntValue': "int", 'GwyRGBA*': "L{RGBA}", 'GQuark': "int", 'GwyContainer*': "L{Container}", \
+   'GwyDataField*': "L{DataField}", 'GwyDataLine*': "L{DataLine}", 'GwyGraphModel*': "L{GraphModel}", 'GwySIUnit*': "L{SIUnit}", 'GwyGraph*': "L{Graph}", \
+   'GwySpectra*': "L{Spectra}", 'GwyDataView*': "L{DataView}", 'GtkWidget*': "L{gtk.Widget}", 'GObject*': "L{gobject.GObject}", 'GtkWindow*': "L{gtk.Window}", \
+   'GtkTooltips*': "L{gtk.Tooltips}", 'GtkAccelGroup*': "L{gtk.AccelGroup}", 'GtkComboBox*': "L{gtk.ComboBox}"}
 
 
 def get_python_name(c_name):
@@ -70,35 +80,6 @@ def printdoc(s):
    print replace_special(s)
 
 def replace_datatype(s):   
-   datatype = {}
-   datatype['gdouble'] = "float"
-   datatype['GDoubleValue'] = "float"
-   datatype['gboolean'] = "bool"
-   datatype['const-gchar*'] = "string"   
-   datatype['const-guchar*'] = "string"   
-   datatype['gint'] = "int" 
-   datatype['guint'] = "int" 
-   datatype['gint32'] = "int" 
-   datatype['GIntValue'] = "int"
-   datatype['GwyRGBA*'] = "L{RGBA}"
-   datatype['GQuark'] = "int"
-   datatype['GwyContainer*'] = "L{Container}"
-   datatype['GwyDataField*'] = "L{DataField}"
-   datatype['GwyDataLine*'] = "L{DataLine}"
-   datatype['GwyGraphModel*'] = "L{GraphModel}"
-   datatype['GwySIUnit*'] = "L{SIUnit}"
-   datatype['GwyGraph*'] = "L{Graph}"
-   datatype['GwySpectra*'] = "L{Spectra}"
-   datatype['GwyDataView*'] = "L{DataView}"
-   datatype['GtkWidget*'] = "L{gtk.Widget}"
-   datatype['GObject*'] = "L{gobject.GObject}"
-   datatype['GtkWindow*'] = "L{gtk.Window}"
-   datatype['GtkTooltips*'] = "L{gtk.Tooltips}"
-   datatype['GtkAccelGroup*'] = "L{gtk.AccelGroup}"
-   datatype['GtkComboBox*'] = "L{gtk.ComboBox}"
-   #datatype[''] = ""
-   #datatype[''] = ""
-   #datatype[''] = ""
    if datatype.has_key(s):
       return datatype[s]
    else:
@@ -212,12 +193,6 @@ del codegendir
 # Load it
 import docextract, defsparser, override, definitions, string
 
-doc_dirs = string.split("../../app ../../libdraw ../../libgwyddion ../../libgwydgets ../../libgwymodule ../../libprocess .")
-
-
-defs_file = "pygwy.defs"
-wrap_file = "pygwywrap.c"
-ignore_functions = ["static", "typedef", "be", "parameter", ]
 
 docs = docextract.extract(doc_dirs)
 
@@ -259,6 +234,7 @@ for obj in p.objects:
       sys.stderr.write("class "+obj.c_name+" not found.\n")
       continue
    #print dir(obj)
+   
    methods = p.find_methods(obj)
    if not methods:
       continue
@@ -288,6 +264,15 @@ for obj in p.objects:
          continue
       if method.varargs:
          continue
+      # skip ignore suffix
+      to_ignore = False
+      for end in ignore_endswith:
+         if method.name.endswith(end):
+            to_ignore = True
+            break
+      if to_ignore:
+         continue
+         
       if wrap_file_cont.find(method.c_name) == -1 and override_file_cont.find(method.c_name) == -1:
          sys.stderr.write("method "+method.c_name+" not found.\n")
          method.name = "UNIMPLEMENTED_"+method.name
@@ -316,6 +301,15 @@ for func in p.functions:
    # skip ignore functions
    if func.name in ignore_functions:
       continue
+   # skip ignore suffix
+   to_ignore = False
+   for end in ignore_endswith:
+      if func.name.endswith(end):
+         to_ignore = True
+         break
+   if to_ignore:
+      continue
+   # check if function is used in pygwywrap.c file
    if wrap_file_cont.find(func.c_name) == -1 and override_file_cont.find(func.c_name):
       sys.stderr.write("Func "+func.c_name+" not found.\n")
       func.name = "z_UNIMPLEMENTED_"+func.name

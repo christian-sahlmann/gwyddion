@@ -24,6 +24,7 @@
 #include <libgwymodule/gwymodule-file.h>
 #include <app/settings.h>
 #include <stdio.h>
+#include <libprocess/tip.h>
 
 /* What is present on the exported image */
 typedef enum {
@@ -236,39 +237,6 @@ gwy_app_data_browser_get_data_ids_wrap(GwyContainer *data)
    return create_array(ids, c, sizeof(gint), TRUE);
 }
 
-void
-gwy_file_save_png(GwyContainer *data, gchar *filename, double zoom, double scale) 
-{
-   GError *err = NULL;
-   GwyContainer *settings = gwy_app_settings_get();
-   
-   if (!settings) {
-      g_warning("Cannot read settings");
-      return;
-   }
-   gwy_container_set_double_by_name(settings, "/module/pixmap/scale_font", scale);
-   gwy_container_set_double_by_name(settings, "/module/pixmap/zoom", zoom);
-/*
-  gwy_container_set_double_by_name(settings, "/module/pixmap/xreal", xreal);
-   gwy_container_set_double_by_name(settings, "/module/pixmap/yreal", yreal);
-   gwy_container_set_int32_by_name(settings, xyexponent_key,
-                                   args->xyexponent);
-   gwy_container_set_double_by_name(settings, "/module/pixmap/zreal", zreal);
-   gwy_container_set_enum_by_name(settings, "/module/pixmap/maptype", maptype);
-   
-   gwy_container_set_int32_by_name(container, zexponent_key,
-                                   args->zexponent);
-   gwy_container_set_enum_by_name(container, maptype_key, args->maptype);
-   gwy_container_set_boolean_by_name(container, xymeasureeq_key,
-                                     args->xymeasureeq);
-   gwy_container_set_string_by_name(container, xyunit_key,
-                                    g_strdup(args->xyunit));
-   gwy_container_set_string_by_name(container, zunit_key,
-                                    g_strdup(args->zunit));
-   */
-   gwy_file_save(data, filename, GWY_RUN_NONINTERACTIVE, &err);
-}
-
 /**
  * gwy_get_key_from_name_wrap:
  * @name: string representation of key.
@@ -283,3 +251,50 @@ gwy_get_key_from_name(const gchar *name)
    return g_quark_from_string(name);
 }
 
+GwyDataField* 
+gwy_tip_dilation_wrap(GwyDataField *tip, GwyDataField *surface)
+{
+   GwyDataField *r;
+   return gwy_tip_dilation(tip, surface, r, NULL, NULL);
+}
+
+GwyDataField* 
+gwy_tip_erosion_wrap(GwyDataField *tip, GwyDataField *surface)
+{
+   GwyDataField *r;
+   return gwy_tip_erosion(tip, surface, r, NULL, NULL);
+}
+
+GwyDataField* 
+gwy_tip_cmap_wrap(GwyDataField *tip, GwyDataField *surface)
+{
+   GwyDataField *r;
+   return gwy_tip_cmap(tip, surface, r, NULL, NULL);
+}
+
+GwyDataField* 
+gwy_tip_estimate_partial_wrap(GwyDataField *tip, GwyDataField *surface, 
+                              gdouble threshold, gboolean use_edges)
+{
+   gint v;
+
+   return gwy_tip_estimate_partial(tip, surface, threshold, use_edges, &v, NULL, NULL);
+}
+
+GwyDataField* 
+gwy_tip_estimate_full_wrap(GwyDataField *tip, GwyDataField *surface, 
+                              gdouble threshold, gboolean use_edges)
+{
+   gint v;
+
+   return gwy_tip_estimate_full(tip, surface, threshold, use_edges, &v, NULL, NULL);
+}
+
+GwyDataField*
+gwy_data_field_create_full_mask(GwyDataField *d)
+{
+   GwyDataField *m;
+   m = gwy_data_field_new_alike(d, TRUE);
+   gwy_data_field_add(m, 1.0);
+   return m;
+}

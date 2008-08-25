@@ -149,12 +149,20 @@ PYGWY_H_FILES = \
 #	$(top_srcdir)/app/undo.h 
 
 
+
 if ENABLE_PYGWY
 pygwy_module = pygwy.la
 pygwy_sources =
+
+pygwyutildir = $(pkgdatadir)/pygwy
+pygwyutil_DATA = \
+	gwyutils.py
+
 else
+pygwyutildir = 
+pygwyutil_DATA = 
 pygwy_module =
-pygwy_sources = pygwy.c
+pygwy_sources = pygwy.c pygwy-console.c wrap_calls.c
 endif
 
 module_LTLIBRARIES = \
@@ -162,6 +170,7 @@ module_LTLIBRARIES = \
 
 EXTRA_DIST = \
 	$(pygwy_sources) \
+	$(pygwyutil_DATA) \
 	README.pygwy \
 	pygwy.override \
 	pygwy-codegen.py \
@@ -194,7 +203,7 @@ endif
 
 if ENABLE_PYGWY
 BUILT_SOURCES = pygwywrap.c
-pygwy_la_SOURCES = pygwy.c wrap_calls.c
+pygwy_la_SOURCES = pygwy.c wrap_calls.c pygwy-console.c
 pygwy_la_CFLAGS = @COMMON_CFLAGS@ @WARNING_NOUNUSED_PAR@ @GTKSOURCEVIEW_CFLAGS@ $(PYTHON_INCLUDES) $(PYGTK_CFLAGS)
 pygwy_la_LIBADD = $(module_libadd) $(PYTHON_LIBS) $(PYGTK_LIBS) @GTKSOURCEVIEW_LIBS@
 
@@ -217,7 +226,7 @@ pygwywrap.c: $(srcdir)/pygwy-codegen.py pygwy.defs $(srcdir)/pygwy.override
 gwy.py: pygwy.defs pygwywrap.c 
 	$(PYTHON) ./pygwy-generate-doc.py --codegendir $(PYGTK_CODEGENDIR) >gwy.py
 pygwy-doc: gwy.py
-	$(EPYDOC) -v -o pygwy-doc gwy.py
+	$(EPYDOC) -v -o pygwy-doc gwy.py gwyutils.py
 endif
 
 CLEANFILES = gwy.py gwy.pyc gwy.pyo

@@ -68,6 +68,14 @@ void gwy_file_save_png(
       double scale
       );
 
-gint gwy_get_key_from_name(const gchar *name);
+gint          gwy_get_key_from_name        (const gchar *name);
+GwyDataField* gwy_tip_dilation_wrap        (GwyDataField *tip, GwyDataField *surface);
+GwyDataField* gwy_tip_erosion_wrap         (GwyDataField *tip, GwyDataField *surface);
+GwyDataField* gwy_tip_cmap_wrap            (GwyDataField *tip, GwyDataField *surface);
+GwyDataField* gwy_tip_estimate_partial_wrap(GwyDataField *tip, GwyDataField *surface, 
+                                            gdouble threshold, gboolean use_edges);
+GwyDataField* gwy_tip_estimate_full_wrap   (GwyDataField *tip, GwyDataField *surface, 
+                                            gdouble threshold, gboolean use_edges);
+GwyDataField* gwy_data_field_create_full_mask     (GwyDataField *d);
 #endif
 
