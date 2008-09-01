@@ -37,7 +37,7 @@ typedef enum {
 
 /* function-helper to short array creation */
 static GArray*
-create_array(gpointer *data, guint len, guint type_size, gboolean free_data)
+create_array(gpointer data, guint len, guint type_size, gboolean free_data)
 {
    GArray *ret;
 
@@ -254,22 +254,37 @@ gwy_get_key_from_name(const gchar *name)
 GwyDataField* 
 gwy_tip_dilation_wrap(GwyDataField *tip, GwyDataField *surface)
 {
-   GwyDataField *r;
-   return gwy_tip_dilation(tip, surface, r, NULL, NULL);
+   GwyDataField *r = gwy_data_field_new_alike(surface, FALSE);
+
+   if (!gwy_tip_dilation(tip, surface, r, NULL, NULL)) {
+      g_object_unref(r);
+      return NULL;
+   }
+   return r;
 }
 
 GwyDataField* 
 gwy_tip_erosion_wrap(GwyDataField *tip, GwyDataField *surface)
 {
-   GwyDataField *r;
-   return gwy_tip_erosion(tip, surface, r, NULL, NULL);
+   GwyDataField *r = gwy_data_field_new_alike(surface, FALSE);
+
+   if (!gwy_tip_erosion(tip, surface, r, NULL, NULL)) {
+      g_object_unref(r);
+      return NULL;
+   }
+   return r;
 }
 
 GwyDataField* 
 gwy_tip_cmap_wrap(GwyDataField *tip, GwyDataField *surface)
 {
-   GwyDataField *r;
-   return gwy_tip_cmap(tip, surface, r, NULL, NULL);
+   GwyDataField *r = gwy_data_field_new_alike(surface, FALSE);
+
+   if (!gwy_tip_cmap(tip, surface, r, NULL, NULL)) {
+      g_object_unref(r);
+      return NULL;      
+   }
+   return r;
 }
 
 GwyDataField* 
