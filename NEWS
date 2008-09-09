@@ -1,4 +1,7 @@
 2.11 (0000-00-00)
+Application:
+- Translations updated: French.
+
 Modules:
 - Omicron MATRIX (new): Omicron MATRIX file import support.
 - Polynomial level: Can exclude/include mask when fitting the data.
