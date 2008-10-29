@@ -17,7 +17,7 @@
  *  Software Foundation, Inc., 59 Temple Place, Suite 330,
  *  Boston, MA 02111 USA
  */
-/* Version 0.8, 05.08.2008 */
+/* Version 0.81, 17.10.2008 */
 #include <stdlib.h>
 #include <string.h>
 #include <libgwyddion/gwymacros.h>
@@ -26,6 +26,7 @@
 #include <app/gwymoduleutils-file.h>
 #include <libprocess/datafield.h>
 #include "err.h"
+
 
 #define FILEIDENT "ONTMATRX0101"
 #define FILEIDENT_SIZE (sizeof(FILEIDENT)-1)
@@ -45,7 +46,7 @@
  * inverts all df data and multiplies with 5.464 
  * you shouldn't use this unless you know what you are doing
  */
-#define OSNAVERSION 0
+//#define OSNAVERSION 1
 
 /** Stores data for quick access. 
  *  All supplement data is stored in a GwyContainer called meta
@@ -163,9 +164,9 @@ static GwyModuleInfo module_info = {
     N_("Omicron MATRIX (param.mtrx & data.mtrx)"),
     "Philipp Rahe <hquerquadrat@gmail.com>",
 #ifdef OSNAVERSION
-    "0.8-Osnabruck",
+    "0.81-Osnabruck",
 #else
-    "0.8",
+    "0.81",
 #endif
     "Philipp Rahe",
     "2008",
@@ -1166,6 +1167,7 @@ static guint32 matrix_scanimagefile(const guchar** fp,
             yres = (guint32)floor(sqrt(matrixdata->proc_intended_no/4.));
             width = 1;
             height = 1;
+            matrixdata->gridmode = 0;
             g_warning("omicronmatrix::matrix_scanimagefile:"
                       " image sizes probably incorrect");
         }
@@ -1219,61 +1221,71 @@ static guint32 matrix_scanimagefile(const guchar** fp,
             avail = matrixdata->proc_available_no;
 
         }
-        // Get correct scaling factor
-        zscale.channelname = matrixdata->channelname;
-        // look for correct Z/I/Df/.... scaling
-        gwy_container_foreach(container, "/channels/", 
-                                matrix_foreach, &zscale);
-        gwy_debug("omiconmatrix::matrix_loadimagefile:"
-                  " Channel found, getting the data");
-        g_snprintf(key, sizeof(key), "/channels/%u/", zscale.cnumber);
-        if(0 == strcmp((gchar*)gwy_container_get_string_by_name(
-                       container, g_strconcat(key, "tff", NULL)), 
-           TFF_LINEAR1D_NAME)) {
-          // TFF_LINEAR1D is used          
-          zscale.tfftype = TFF_LINEAR1D;
-          zscale.factor_1 = gwy_container_get_double_by_name(container,
-                           g_strconcat(key, "Factor", NULL));
-          zscale.offset_1 = gwy_container_get_double_by_name(container,
-                           g_strconcat(key, "Offset", NULL));
-        } else if(0 == strcmp((gchar*)
-                    gwy_container_get_string_by_name(container,
-                   g_strconcat(key, "tff", NULL)),
-                 TFF_MULTILINEAR1D_NAME)) {
-          // TFF_MULTILINEAR1D is used
-          zscale.tfftype = TFF_MULTILINEAR1D;
-          zscale.neutralfactor_2= gwy_container_get_double_by_name(
-                   container, g_strconcat(key, "NeutralFactor", NULL));
-          zscale.offset_2       = gwy_container_get_double_by_name(
-                   container, g_strconcat(key, "Offset", NULL));
-          zscale.prefactor_2    = gwy_container_get_double_by_name(
-                   container, g_strconcat(key, "PreFactor", NULL));
-          zscale.preoffset_2    = gwy_container_get_double_by_name(
-                   container, g_strconcat(key, "PreOffset", NULL));
-          zscale.raw1_2         = gwy_container_get_double_by_name(
-                   container, g_strconcat(key, "Raw_1", NULL));
-          zscale.whole_2        = (zscale.raw1_2 - zscale.preoffset_2)/
-                   (zscale.neutralfactor_2*zscale.prefactor_2);
+        if(useparamfile) {
+            // Get correct scaling factor
+            zscale.channelname = matrixdata->channelname;
+            // look for correct Z/I/Df/.... scaling
+            gwy_container_foreach(container, "/channels/", 
+                                    matrix_foreach, &zscale);
+            gwy_debug("omiconmatrix::matrix_loadimagefile:"
+                      " Channel found, getting the data");
+            g_snprintf(key, sizeof(key), "/channels/%u/", zscale.cnumber);
+            if(0 == strcmp((gchar*)gwy_container_get_string_by_name(
+                           container, g_strconcat(key, "tff", NULL)), 
+               TFF_LINEAR1D_NAME)) {
+              // TFF_LINEAR1D is used          
+              zscale.tfftype = TFF_LINEAR1D;
+              zscale.factor_1 = gwy_container_get_double_by_name(container,
+                               g_strconcat(key, "Factor", NULL));
+              zscale.offset_1 = gwy_container_get_double_by_name(container,
+                               g_strconcat(key, "Offset", NULL));
+            } else if(0 == strcmp((gchar*)
+                        gwy_container_get_string_by_name(container,
+                       g_strconcat(key, "tff", NULL)),
+                     TFF_MULTILINEAR1D_NAME)) {
+              // TFF_MULTILINEAR1D is used
+              zscale.tfftype = TFF_MULTILINEAR1D;
+              zscale.neutralfactor_2= gwy_container_get_double_by_name(
+                       container, g_strconcat(key, "NeutralFactor", NULL));
+              zscale.offset_2       = gwy_container_get_double_by_name(
+                       container, g_strconcat(key, "Offset", NULL));
+              zscale.prefactor_2    = gwy_container_get_double_by_name(
+                       container, g_strconcat(key, "PreFactor", NULL));
+              zscale.preoffset_2    = gwy_container_get_double_by_name(
+                       container, g_strconcat(key, "PreOffset", NULL));
+              zscale.raw1_2         = gwy_container_get_double_by_name(
+                       container, g_strconcat(key, "Raw_1", NULL));
+              zscale.whole_2        = (zscale.raw1_2 - zscale.preoffset_2)/
+                       (zscale.neutralfactor_2*zscale.prefactor_2);
+            } else {
+              // UNKNOWN Transfer Function is used
+              // setting factor to 1.0 to obtain unscaled data
+              g_warning("omicronmatrix::matrix_loadimagefile:"
+                       " unknown transferfunction, scaling will be wrong");
+              zscale.tfftype = TFF_LINEAR1D;
+              zscale.factor_1 = 1.0;
+              zscale.offset_1 = 0.0;
+            }
+            sunit = (gchar*)gwy_container_get_string_by_name(container,
+                         g_strconcat(key, "unit", NULL));
+#ifdef OSNAVERSION
+            if(0 == strcmp(zscale.channelname, "Df")) {
+              fac = -1.0/5.464;
+              g_snprintf(inverted, sizeof(inverted), " (x 1/-5.464)"); 
+            }
+#endif
         } else {
-          // UNKNOWN Transfer Function is used
-          // setting factor to 1.0 to obtain unscaled data
-          g_warning("omicronmatrix::matrix_loadimagefile:"
-                   " unknown transferfunction, scaling will be wrong");
-          zscale.tfftype = TFF_LINEAR1D;
-          zscale.factor_1 = 1.0;
-          zscale.offset_1 = 0.0;
+            // parameter file is not available, use the plain values
+            zscale.tfftype = TFF_LINEAR1D;
+            zscale.factor_1 = 1.0;
+            zscale.offset_1 = 0.0;
+            sunit = NULL;
+            g_snprintf(inverted, sizeof(inverted), " (unscaled)"); 
         }
+
 
         gwy_debug(g_strconcat("omicronmatrix::matrix_loadimagefile ",
                               msg, NULL)); 
-        sunit = (gchar*)gwy_container_get_string_by_name(container,
-                         g_strconcat(key, "unit", NULL));
-#ifdef OSNAVERSION
-        if(0 == strcmp(zscale.channelname, "Df")) {
-          fac = -1.0/5.464;
-          g_snprintf(inverted, sizeof(inverted), " (x 1/-5.464)"); 
-        }
-#endif
         if(matrixdata->gridmode == 2 ) {
             // Constraint Point
             // parse data, data is encoded as Integer, 32Bit
@@ -1536,6 +1548,7 @@ static GwyContainer* matrix_load(const gchar* filename,
         return NULL;
     }
     /******* Image file is existing and seems to be valid, ********/
+    gwy_debug("Now check parameter file: %s", filename);
 
     /* now check parameter file to get correct sizes */
     fsplit = g_strsplit(filename, "--", 2);
@@ -1576,6 +1589,7 @@ static GwyContainer* matrix_load(const gchar* filename,
       /* Parse image filename to obtain numbers and channel 
          default_.....--1_1.Df_mtrx  
             (*fsplit)    (*fsplit+1)    */
+      // Convert necessary due to differences in MATRIX V1.0 and V2.1  
       lastpart = g_strdelimit(*(fsplit+1), delimiter, newdelimiter);
       ifsplit1 = g_strsplit(lastpart, "_", 4);
       /* sess_trace_channel_mtrx 
@@ -1617,6 +1631,8 @@ static GwyContainer* matrix_load(const gchar* filename,
                   "are incorrect, parameterfile is not available.");
         matrixdata.width = 1;
         matrixdata.height = 1;
+        matrixdata.xpoints = 0;
+        matrixdata.ypoints = 0;
         matrixdata.zoom = 1;  
         // get xpoints, ypoints via scan_image!
         wrongscaling = TRUE;
