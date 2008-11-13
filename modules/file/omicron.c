@@ -137,7 +137,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Omicron data files (two-part .par + .tf*, .tb*, .sf*, .sb*)."),
     "Yeti <yeti@gwyddion.net>",
-    "0.5",
+    "0.6",
     "David Nečas (Yeti) & Petr Klapetek & Markus Pristovsek",
     "2006",
 };
@@ -892,7 +892,8 @@ omicron_read_cs_data(OmicronFile *ofile,
 
     for (i = 0; i < ncurves; i++) {
         dline = g_ptr_array_index(spectrum, i);
-        gwy_spectra_add_spectrum(spectra, dline, coords[i*2], coords[i*2+1]);
+        gwy_spectra_add_spectrum(spectra, dline,
+                                 coords[i*2], ofile->yreal - coords[i*2+1]);
         g_object_unref(dline);
     }
 
