@@ -337,7 +337,7 @@ if test "x$enable_pygwy" != xno; then
     PKG_CHECK_MODULES(GTKSOURCEVIEW,[gtksourceview-2.0],
                       [AC_DEFINE(HAVE_GTKSOURCEVIEW,1,
                                  [Define if we have the GtkSourceView package.])],
-                      enable_gtksourceview=no; GL_WARN=" (needs GtkSourceView)")
+                      enable_gtksourceview=no; PYGWY_WARN=" (needs GtkSourceView)")
   fi
   if test "x$enable_gtksourceview" != "xno"; then
     GTKSOURCEVIEW_DEPENDENCY=gtksourceview-2.0
