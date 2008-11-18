@@ -61,13 +61,15 @@ static GHashTable*   read_hash      (gchar *buffer);
 static gboolean      require_keys   (GHashTable *hash,
                                      GError **error,
                                      ...);
+static GwyContainer* add_metadata   (GHashTable *hash,
+                                     ...);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Imports SPMLab floating-point files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.1",
+    "0.2",
     "David Nečas (Yeti)",
     "2008",
 };
@@ -106,7 +108,7 @@ slf_load(const gchar *filename,
          G_GNUC_UNUSED GwyRunType mode,
          GError **error)
 {
-    GwyContainer *meta, *container = NULL;
+    GwyContainer *meta = NULL, *container = NULL;
     GHashTable *hash = NULL;
     guchar *buffer = NULL;
     gsize size = 0;
@@ -114,10 +116,11 @@ slf_load(const gchar *filename,
     GwyDataField *dfield = NULL;
     GwySIUnit *siunitx, *siunity, *siunitz, *siunit;
     const guchar *p;
+    const gchar *val;
     gchar *header, *end, *s;
     gdouble *data, *row;
     guint data_offset, xres, yres, i, j;
-    gdouble xreal, yreal, q;
+    gdouble xreal, yreal, q, off;
     gint power10;
     const gfloat *pdata;
 
@@ -204,6 +207,28 @@ slf_load(const gchar *filename,
             row[j] = q*gwy_get_gfloat_le(&p);
     }
 
+    val = g_hash_table_lookup(hash, "OffsetX");
+    if (val) {
+        off = strtod(val, &end);
+        siunit = gwy_si_unit_new_parse(end, &power10);
+        off *= pow10(power10);
+        if (!gwy_si_unit_equal(siunitx, siunit))
+            g_warning("Incompatible x and x-offset units");
+        gwy_data_field_set_xoffset(dfield, off);
+        g_object_unref(siunit);
+    }
+
+    val = g_hash_table_lookup(hash, "OffsetY");
+    if (val) {
+        off = strtod(val, &end);
+        siunit = gwy_si_unit_new_parse(end, &power10);
+        off *= pow10(power10);
+        if (!gwy_si_unit_equal(siunitx, siunit))
+            g_warning("Incompatible y and y-offset units");
+        gwy_data_field_set_yoffset(dfield, off);
+        g_object_unref(siunit);
+    }
+
     if (!gwy_si_unit_equal(siunitx, siunity))
         g_warning("Incompatible x and y units");
 
@@ -223,20 +248,22 @@ slf_load(const gchar *filename,
     else
         gwy_app_channel_title_fall_back(container, 0);
 
-    /* TODO: metadata */
-#if 0
-    meta = gwy_container_new();
-
-    ...
-
-    if (gwy_container_get_n_items(meta))
+    if ((meta = add_metadata(hash,
+                             "CreationTime", "DataID", "ScanningRate",
+                             "ScanDirection", "Leveling", "Mode", "SetPoint",
+                             "X Transfer Coefficient", "Y Transfer Coefficient",
+                             "Z Transfer Coefficient", "Rotation",
+                             "GainP", "GainI", "GainD",
+                             "XLinGainP", "XLinGainI", "XLinGainD",
+                             "YLinGainP", "YLinGainI", "YLinGainD",
+                             "DriveFrequency", "DriveAmplitude", "DrivePhase",
+                             "InputGainSelector", NULL)))
         gwy_container_set_object_by_name(container, "/0/meta", meta);
-    g_object_unref(meta);
-#endif
 
 fail:
     if (hash)
         g_hash_table_destroy(hash);
+    gwy_object_unref(meta);
     gwy_object_unref(dfield);
     gwy_file_abandon_contents(buffer, size, NULL);
 
@@ -293,6 +320,30 @@ require_keys(GHashTable *hash,
     va_end(ap);
 
     return TRUE;
+}
+
+static GwyContainer*
+add_metadata(GHashTable *hash,
+             ...)
+{
+    va_list ap;
+    const gchar *key, *value;
+    gchar *v;
+    GwyContainer *meta = NULL;
+
+    va_start(ap, hash);
+    while ((key = va_arg(ap, const gchar *))) {
+        if ((value = g_hash_table_lookup(hash, key))) {
+            if (!meta)
+                meta = gwy_container_new();
+            v = g_convert(value, -1, "iso-8859-1", "utf-8", NULL, NULL, NULL);
+            if (v)
+                gwy_container_set_string_by_name(meta, key, v);
+        }
+    }
+    va_end(ap);
+
+    return meta;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
