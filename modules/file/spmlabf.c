@@ -172,7 +172,7 @@ slf_load(const gchar *filename,
     if (err_SIZE_MISMATCH(error, data_offset + 4*xres*yres, size, TRUE))
         goto fail;
 
-    xreal = strtod(g_hash_table_lookup(hash, "ScanRangeX"), &end);
+    xreal = g_ascii_strtod(g_hash_table_lookup(hash, "ScanRangeX"), &end);
     siunitx = gwy_si_unit_new_parse(end, &power10);
     xreal *= pow10(power10);
     /* Use negated positive conditions to catch NaNs */
@@ -181,7 +181,7 @@ slf_load(const gchar *filename,
         xreal = 1.0;
     }
 
-    yreal = strtod(g_hash_table_lookup(hash, "ScanRangeY"), &end);
+    yreal = g_ascii_strtod(g_hash_table_lookup(hash, "ScanRangeY"), &end);
     siunity = gwy_si_unit_new_parse(end, &power10);
     yreal *= pow10(power10);
     /* Use negated positive conditions to catch NaNs */
@@ -190,7 +190,7 @@ slf_load(const gchar *filename,
         yreal = 1.0;
     }
 
-    q = strtod(g_hash_table_lookup(hash, "ZTransferCoefficient"), &end);
+    q = g_ascii_strtod(g_hash_table_lookup(hash, "ZTransferCoefficient"), &end);
     siunitz = gwy_si_unit_new_parse(end, &power10);
     q *= pow10(power10);
 
@@ -209,7 +209,7 @@ slf_load(const gchar *filename,
 
     val = g_hash_table_lookup(hash, "OffsetX");
     if (val) {
-        off = strtod(val, &end);
+        off = g_ascii_strtod(val, &end);
         siunit = gwy_si_unit_new_parse(end, &power10);
         off *= pow10(power10);
         if (!gwy_si_unit_equal(siunitx, siunit))
@@ -220,7 +220,7 @@ slf_load(const gchar *filename,
 
     val = g_hash_table_lookup(hash, "OffsetY");
     if (val) {
-        off = strtod(val, &end);
+        off = g_ascii_strtod(val, &end);
         siunit = gwy_si_unit_new_parse(end, &power10);
         off *= pow10(power10);
         if (!gwy_si_unit_equal(siunitx, siunit))
