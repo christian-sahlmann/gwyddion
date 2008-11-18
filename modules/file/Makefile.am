@@ -56,6 +56,7 @@ filedir = $(pkglibdir)/modules/file
 	omicron.la \
 	omicronmatrix.la \
 	$(ols_module) \
+	opdfile.la \
 	pixmap.la \
 	pnifile.la \
 	psia.la \
@@ -139,6 +140,7 @@ netcdf_la_SOURCES        = netcdf.c
 nt_mdt_la_SOURCES        = nt-mdt.c
 omicron_la_SOURCES       = omicron.c
 omicronmatrix_la_SOURCES = omicronmatrix.c
+opdfile_la_SOURCES       = opdfile.c
 pnifile_la_SOURCES       = pnifile.c
 psia_la_SOURCES          = psia.c gwytiff.h
 quesant_la_SOURCES       = quesant.c
