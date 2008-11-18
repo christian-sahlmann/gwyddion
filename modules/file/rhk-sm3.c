@@ -29,7 +29,7 @@
  *   <glob pattern="*.SM3"/>
  * </mime-type>
  **/
-
+#define DEBUG 1
 #include "config.h"
 #include <string.h>
 #include <libgwyddion/gwymacros.h>
@@ -394,7 +394,7 @@ rhk_sm3_read_page(const guchar **buffer,
     for (i = 0; i < page->string_count; i++) {
         gchar *s;
 
-        gwy_debug("position %04x", p - *buffer);
+        gwy_debug("position %04x", (guint)(p - *buffer));
         s = rhk_sm3_read_string(&p, *len - (p - *buffer));
         if (!s) {
             g_set_error(error, GWY_MODULE_FILE_ERROR,
@@ -533,12 +533,12 @@ rhk_sm3_load(const gchar *filename,
 
     p = buffer;
     count = 0;
-    gwy_debug("position %04x", p - buffer);
+    gwy_debug("position %04x", (guint)(p - buffer));
     while ((rhkpage = rhk_sm3_read_page(&p, &size, &err))) {
         gwy_debug("Page #%u read OK", count);
         count++;
         rhkpage->pageno = count;
-        gwy_debug("position %04x", p - buffer);
+        gwy_debug("position %04x", (guint)(p - buffer));
         if (rhkpage->type != RHK_TYPE_IMAGE) {
             gwy_debug("Page is not IMAGE, skipping");
             rhk_sm3_page_free(rhkpage);

@@ -270,7 +270,7 @@ read_data_field(const guchar *buffer,
     for (i = 0; i < yres; i++) {
         row = data + (yres-1 - i)*xres;
         for (j = 0; j < xres; j++)
-            row[j] = GUINT16_TO_LE(pdata[i*xres + j])*q;
+            row[j] = GUINT16_FROM_LE(pdata[i*xres + j])*q;
     }
 
     siunit = gwy_si_unit_new("m");
@@ -341,7 +341,7 @@ read_data_field_old(const guchar *buffer,
     for (i = 0; i < yres; i++) {
         row = data + i*xres;
         for (j = 0; j < xres; j++)
-            row[j] = GUINT16_TO_LE(pdata[i*xres + j])*q;
+            row[j] = GUINT16_FROM_LE(pdata[i*xres + j])*q;
     }
 
     siunit = gwy_si_unit_new("m");

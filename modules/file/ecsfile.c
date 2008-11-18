@@ -205,7 +205,7 @@ ecs_load(const gchar *filename,
     for (i = 0; i < yres; i++) {
         row = data + (yres-1 - i)*xres;
         for (j = 0; j < xres; j++)
-            row[j] = GINT16_TO_LE(pdata[i*xres + j])*q;
+            row[j] = GINT16_FROM_LE(pdata[i*xres + j])*q;
     }
 
     siunit = gwy_si_unit_new("m");
