@@ -25,7 +25,7 @@
  * and destroyed by destroy_environment() which deallocate created copy.
  */
 #include "config.h"
-#define DEBUG 1
+
 
 /* include this first, before NO_IMPORT_PYGOBJECT is defined */
 #include <pygtk-2.0/pygobject.h>
