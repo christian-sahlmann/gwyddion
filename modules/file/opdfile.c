@@ -56,19 +56,24 @@ enum {
 /* XXX: Just guessing from what I've seen in the files. */
 enum {
     OPD_DIRECTORY = 1,
-    OPD_DATA = 3,
+    OPD_ARRAY = 3,
     OPD_TEXT = 5,
-    OPD_BOOLEAN = 6,
+    OPD_SHORT = 6,
     OPD_FLOAT = 7,
-    OPD_UNKNOWN_1 = 12, /* SecArr_ID_0 */
+    OPD_DOUBLE = 8,
+    OPD_LONG = 12,
 } OPDDataType;
 
 /* The header consists of a sequence of these creatures. */
 typedef struct {
+    /* This is in the file */
     char name[BLOCK_NAME_SIZE + 1];
     guint type;
     guint size;
     guint flags;
+    /* Derived info */
+    guint pos;
+    const guchar *data;
 } OPDBlock;
 
 static gboolean      module_register(void);
@@ -77,10 +82,16 @@ static gint          opd_detect     (const GwyFileDetectInfo *fileinfo,
 static GwyContainer* opd_load       (const gchar *filename,
                                      GwyRunType mode,
                                      GError **error);
-static gboolean require_keys(OPDBlock *header,
-                             guint nblocks,
-                             GError **error,
-                             ...);
+static gboolean      require_keys   (OPDBlock *header,
+                                     guint nblocks,
+                                     GError **error,
+                                     ...);
+static gboolean      check_sizes    (OPDBlock *header,
+                                     guint nblocks,
+                                     GError **error);
+static guint         find_block     (OPDBlock *header,
+                                     guint nblocks,
+                                     const gchar *name);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -148,7 +159,7 @@ opd_load(const gchar *filename,
     const guchar *p;
     gchar *end, *s;
     gdouble *data, *row;
-    guint nblocks, data_offset, xres, yres, i, j;
+    guint nblocks, offset, xres, yres, i, j;
     gdouble xreal, yreal, q;
     gint power10;
     const gfloat *pdata;
@@ -165,8 +176,10 @@ opd_load(const gchar *filename,
 
     p = buffer + 2;
     get_block(&directory_block, &p);
-    gwy_debug("<%s> size=%u, type=%u, flags=%04x",
-              directory_block.name, directory_block.size,
+    directory_block.pos = 2;
+    directory_block.data = buffer + 2;
+    gwy_debug("<%s> size=0x%08x, pos=0x%08x, type=%u, flags=0x%04x",
+              directory_block.name, directory_block.size, directory_block.pos,
               directory_block.type, directory_block.flags);
     /* This check may need to be relieved a bit */
     if (!gwy_strequal(directory_block.name, "Directory")
@@ -186,21 +199,40 @@ opd_load(const gchar *filename,
     /* We already read the directory, do not count it */
     nblocks--;
     header = g_new(OPDBlock, nblocks);
+    offset = directory_block.pos + directory_block.size;
     for (i = j = 0; i < nblocks; i++) {
         get_block(header + j, &p);
-        gwy_debug("<%s> size=%u, type=%u, flags=%04x",
-                  header[j].name, header[j].size,
-                  header[j].type, header[j].flags);
+        header[j].pos = offset;
+        header[j].data = buffer + offset;
+        offset += header[j].size;
         /* Skip void header blocks */
-        if (header[j].type && header[j].size && header[j].name[0])
+        if (header[j].size) {
+            gwy_debug("<%s> size=0x%08x, pos=0x%08x, type=%u, flags=0x%04x",
+                      header[j].name, header[j].size, header[j].pos,
+                      header[j].type, header[j].flags);
             j++;
+        }
+        if (offset > size) {
+            g_set_error(error, GWY_MODULE_FILE_ERROR,
+                        GWY_MODULE_FILE_ERROR_DATA,
+                        _("Item `%s' is beyond the end of the file."),
+                        header[i].name);
+            goto fail;
+        }
     }
     nblocks = j;
 
     if (!require_keys(header, nblocks, error,
-                      "Pixel_size", "Wavelength",
-                      NULL))
+                      "Pixel_size", OPD_FLOAT,
+                      "Wavelength", OPD_FLOAT,
+                      NULL)
+        || !check_sizes(header, nblocks, error))
         goto fail;
+
+    i = find_block(header, nblocks, "Pixel_size");
+    p = header[i].data;
+    xreal = gwy_get_gfloat_le(&p);
+    gwy_debug("xreal = %g", xreal);
 
 #if 0
     p += DATA_MAGIC_SIZE;
@@ -300,23 +332,76 @@ require_keys(OPDBlock *header,
 {
     va_list ap;
     const gchar *key;
-    unsigned int i;
+    guint i, type;
 
     va_start(ap, error);
-    while ((key = va_arg(ap, const gchar *))) {
-        for (i = 0; i < nblocks; i++) {
-            if (gwy_strequal(header[i].name, key))
-                break;
-        }
-        if (i == nblocks) {
+    while ((key = va_arg(ap, const gchar*))) {
+        type = va_arg(ap, guint);
+        if ((i = find_block(header, nblocks, key)) == nblocks) {
             err_MISSING_FIELD(error, key);
             va_end(ap);
             return FALSE;
         }
+        if (header[i].type != type)
+            err_INVALID(error, header[i].name);
     }
     va_end(ap);
 
     return TRUE;
+}
+
+static gboolean
+check_sizes(OPDBlock *header,
+            guint nblocks,
+            GError **error)
+{
+    /*                             0  1  2  3  4  5  6  7  8  9 10 11 12 */
+    static const guint sizes[] = { 0, 0, 0, 0, 0, 0, 2, 4, 8, 0, 0, 0, 4 };
+
+    guint i, type;
+
+    for (i = 0; i < nblocks; i++) {
+        type = header[i].type;
+        if (type < G_N_ELEMENTS(sizes)) {
+            if (sizes[type]) {
+                if (header[i].size != sizes[type]) {
+                    err_INVALID(error, header[i].name);
+                    return FALSE;
+                }
+            }
+            else if (type == OPD_DIRECTORY) {
+                g_set_error(error, GWY_MODULE_FILE_ERROR,
+                            GWY_MODULE_FILE_ERROR_DATA,
+                            _("Nested directories found"));
+                return FALSE;
+            }
+            else if (type == OPD_ARRAY) {
+                /* TODO */
+            }
+            else if (type == OPD_TEXT) {
+                /* TODO */
+            }
+            else {
+                g_warning("Unknown item type %u", type);
+            }
+        }
+    }
+
+    return TRUE;
+}
+
+static guint
+find_block(OPDBlock *header,
+           guint nblocks,
+           const gchar *name)
+{
+    unsigned int i;
+
+    for (i = 0; i < nblocks; i++) {
+        if (gwy_strequal(header[i].name, name))
+            return i;
+    }
+    return nblocks;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
