@@ -1,5 +1,5 @@
 /*
- *  $Id: ecsfile.c 8625 2007-10-10 20:03:12Z yeti-dn $
+ *  $Id$
  *  Copyright (C) 2008 David Necas (Yeti).
  *
  *  This program is free software; you can redistribute it and/or modify
