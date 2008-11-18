@@ -68,13 +68,17 @@ static gint          ecs_detect     (const GwyFileDetectInfo *fileinfo,
 static GwyContainer* ecs_load       (const gchar *filename,
                                      GwyRunType mode,
                                      GError **error);
+static gboolean      get_scan_size  (const gchar *s,
+                                     gdouble *xreal,
+                                     gdouble *q,
+                                     guchar *c);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Imports ECS IMG files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.5",
+    "0.6",
     "David Nečas (Yeti) & Petr Klapetek & Markus Pristovsek",
     "2006",
 };
@@ -171,8 +175,7 @@ ecs_load(const gchar *filename,
         err_FILE_TYPE(error, "ECS");
         goto fail;
     }
-    if (sscanf(s + strlen("Scan Size: "), "%lf %lf%c", &xreal, &q, &c)
-        != 3) {
+    if (!get_scan_size(s + strlen("Scan Size: "), &xreal, &q, &c)) {
         err_INVALID(error, "Scan Size");
         goto fail;
     }
@@ -264,6 +267,26 @@ fail:
     gwy_file_abandon_contents(buffer, size, NULL);
 
     return container;
+}
+
+static gboolean
+get_scan_size(const gchar *s,
+              gdouble *xreal, gdouble *q, guchar *c)
+{
+    gchar *end;
+
+    *xreal = g_ascii_strtod(s, &end);
+    if (end == s)
+        return FALSE;
+    s = end;
+    *q = g_ascii_strtod(s, &end);
+    if (end == s)
+        return FALSE;
+    s = end;
+    if (!s[0])
+        return FALSE;
+    *c = s[0];
+    return TRUE;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
