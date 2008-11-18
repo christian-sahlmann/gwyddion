@@ -29,6 +29,7 @@
  *     <match type="string" offset="0" value="#R4"/>
  *     <match type="string" offset="0" value="#R5"/>
  *     <match type="string" offset="0" value="#R6"/>
+ *     <match type="string" offset="0" value="#R7"/>
  *   </magic>
  *   <glob pattern="*.zfp"/>
  *   <glob pattern="*.zrp"/>
@@ -80,7 +81,7 @@
  *   <glob pattern="*.2RR"/>
  * </mime-type>
  **/
-
+#define DEBUG 1
 #include "config.h"
 #include <string.h>
 #include <libgwyddion/gwymacros.h>
@@ -107,9 +108,9 @@ static GwyDataField* read_data_field    (const guchar *buffer,
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    N_("Imports Thermicroscopes SpmLab R4, R5, and R6 data files."),
+    N_("Imports Thermicroscopes SpmLab R3 to R7 data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.8",
+    "0.9",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -160,7 +161,7 @@ spmlab_detect(const GwyFileDetectInfo *fileinfo,
         && fileinfo->head[0] == '#'
         && fileinfo->head[1] == 'R'
         && fileinfo->head[2] >= '3'
-        && fileinfo->head[2] <= '6'
+        && fileinfo->head[2] <= '7'
         && memchr(fileinfo->head+1, '#', 11))
         score = 15;   /* XXX: must be below plug-in score to allow overriding */
 
@@ -201,6 +202,7 @@ spmlab_load(const gchar *filename,
         case '4':
         case '5':
         case '6':
+        case '7':
         dfield = read_data_field(buffer, size, buffer[2], &type, error);
         break;
 
@@ -270,6 +272,10 @@ read_data_field(const guchar *buffer,
     const guint offsets56[] = {
         0x0104, 0x025c, 0x0268, 0x0288, 0x02a0, 0x0708
     };
+    const guint offsets7[] = {
+                                                /* XXX: guess, needs files */
+        0x0104, 0x029c, 0x02a8, 0x02c8, 0x02e0, 0x0748
+    };
     gint xres, yres, doffset, i, power10, dir;
     gdouble xreal, yreal, q, z0;
     GwyDataField *dfield;
@@ -280,7 +286,7 @@ read_data_field(const guchar *buffer,
     /* get floats in single precision from r4 but double from r5+ */
     gdouble (*getflt)(const guchar**);
 
-    if (version == '5' || version == '6') {
+    if (version == '5' || version == '6' || version == '7') {
         /* There are more headers in r5,
          * try to find something that looks like #R5. */
         last = r = buffer;
@@ -293,7 +299,7 @@ read_data_field(const guchar *buffer,
             else
                 r = p + 1;
         }
-        offset = &offsets56[0];
+        offset = (version == '7') ? &offsets7[0] : &offsets56[0];
         buffer = last;
         getflt = &gwy_get_gdouble_le;
     }
