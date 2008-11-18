@@ -67,6 +67,7 @@ filedir = $(pkglibdir)/modules/file
 	sis.la \
 	$(spml_module) \
 	spmlab.la \
+	spmlabf.la \
 	stmprg.la \
 	stpfile.la \
 	surffile.la \
@@ -147,6 +148,7 @@ shimadzu_la_SOURCES      = shimadzu.c
 sicmfile_la_SOURCES      = sicmfile.c
 sis_la_SOURCES           = sis.c
 spmlab_la_SOURCES        = spmlab.c
+spmlabf_la_SOURCES       = spmlabf.c
 stmprg_la_SOURCES        = stmprg.c
 stpfile_la_SOURCES       = stpfile.c
 surffile_la_SOURCES      = surffile.c

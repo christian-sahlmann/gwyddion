@@ -4,6 +4,7 @@ Application:
 
 Modules:
 - Omicron MATRIX (new): Omicron MATRIX file import support.
+- SPMLab F (new): SPMLab floating-point format (.flt) import support.
 - Omicron: Flipped spectra y-coordinates were fixed.
 - Polynomial level: Can exclude/include mask when fitting the data.
 - Grain statistics: Exports the (previously omitted) last grain too.
