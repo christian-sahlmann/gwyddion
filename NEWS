@@ -4,7 +4,9 @@ Application:
 
 Modules:
 - Omicron MATRIX (new): Omicron MATRIX file import support.
-- SPMLab F (new): SPMLab floating-point format (.flt) import support.
+- SPMLabF (new): SPMLab floating-point format (.flt) import support.
+- OPD (new): Wyko Vision OPD file import support.
+- SPMLab: Can import R7 files now.
 - ECS file: Import works also in locales that use decimal comma.
 - Omicron: Flipped spectra y-coordinates were fixed.
 - Polynomial level: Can exclude/include mask when fitting the data.
