@@ -19,13 +19,25 @@
 
 /**
  * [FILE-MAGIC-FREEDESKTOP]
- * <mime-type type="application/x-opd-spm">
- *   <comment>OPD SPM data</comment>
+ * <mime-type type="application/x-wyko-opd">
+ *   <comment>Wyko OPD data</comment>
  *   <magic priority="50">
  *     <match type="string" offset="0" value="\x01\x00Directory"/>
  *   </magic>
  *   <glob pattern="*.opd"/>
  *   <glob pattern="*.OPD"/>
+ * </mime-type>
+ **/
+
+/**
+ * [FILE-MAGIC-FREEDESKTOP]
+ * <mime-type type="application/x-wyko-asc">
+ *   <comment>Wyko ASCII data</comment>
+ *   <magic priority="50">
+ *     <match type="string" offset="0" value="Wyko ASCII Data File Format 0\t0\t1"/>
+ *   </magic>
+ *   <glob pattern="*.asc"/>
+ *   <glob pattern="*.ASC"/>
  * </mime-type>
  **/
 
@@ -45,12 +57,16 @@
 /* Not a real magic header, but should catch the stuff */
 #define MAGIC "\x01\x00" "Directory"
 #define MAGIC_SIZE (sizeof(MAGIC)-1)
-
 #define EXTENSION ".opd"
+
+#define MAGIC_ASC "Wyko ASCII Data File Format 0\t0\t1"
+#define MAGIC_ASC_SIZE (sizeof(MAGIC_ASC)-1)
+#define EXTENSION_ASC ".asc"
 
 #define Nanometer (1e-9)
 #define OPD_BAD_FLOAT 1e38
 #define OPD_BAD_INT16 32766
+#define OPD_BAD_ASC "Bad"
 
 enum {
     BLOCK_SIZE = 24,
@@ -88,7 +104,12 @@ typedef struct {
 static gboolean      module_register (void);
 static gint          opd_detect      (const GwyFileDetectInfo *fileinfo,
                                       gboolean only_name);
+static gint          opd_asc_detect  (const GwyFileDetectInfo *fileinfo,
+                                      gboolean only_name);
 static GwyContainer* opd_load        (const gchar *filename,
+                                      GwyRunType mode,
+                                      GError **error);
+static GwyContainer* opd_asc_load    (const gchar *filename,
                                       GwyRunType mode,
                                       GError **error);
 static void          get_block       (OPDBlock *block,
@@ -112,9 +133,9 @@ static const guchar* get_array_params(const guchar *p,
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    N_("Imports Wyko OPD files."),
+    N_("Imports Wyko OPD and ASC files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.1",
+    "0.2",
     "David Nečas (Yeti)",
     "2008",
 };
@@ -131,8 +152,17 @@ module_register(void)
                            NULL,
                            NULL);
 
+    gwy_file_func_register("opdfile-asc",
+                           N_("Wyko ASCII export files (.asc)"),
+                           (GwyFileDetectFunc)&opd_asc_detect,
+                           (GwyFileLoadFunc)&opd_asc_load,
+                           NULL,
+                           NULL);
+
     return TRUE;
 }
+
+/***** Native binary OPD file *********************************************/
 
 static gint
 opd_detect(const GwyFileDetectInfo *fileinfo,
@@ -168,7 +198,6 @@ opd_load(const gchar *filename,
 
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
         err_GET_FILE_CONTENTS(error, &err);
-        g_clear_error(&err);
         return NULL;
     }
     if (size < BLOCK_SIZE + 2) {
@@ -466,5 +495,74 @@ find_block(const OPDBlock *header,
     return nblocks;
 }
 
-/* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
+/***** ASCII data *********************************************************/
 
+static gint
+opd_asc_detect(const GwyFileDetectInfo *fileinfo,
+               gboolean only_name)
+{
+    if (only_name)
+        return g_str_has_suffix(fileinfo->name_lowercase,
+                                EXTENSION_ASC) ? 10 : 0;
+
+    if (fileinfo->file_size < MAGIC_ASC_SIZE + 2
+        || memcmp(fileinfo->head, MAGIC_ASC, MAGIC_ASC_SIZE) != 0)
+        return 0;
+
+    return 100;
+}
+
+static GwyContainer*
+opd_asc_load(const gchar *filename,
+             G_GNUC_UNUSED GwyRunType mode,
+             GError **error)
+{
+    GwyContainer *container = NULL;
+    gchar *line, *p, *s, *buffer = NULL;
+    guint xres, yres;
+    gsize size;
+    GError *err = NULL;
+
+    if (!g_file_get_contents(filename, &buffer, &size, &err)) {
+        err_GET_FILE_CONTENTS(error, &err);
+        goto fail;
+    }
+
+    p = buffer;
+    line = gwy_str_next_line(&p);
+    if (!gwy_strequal(line, MAGIC_ASC)) {
+        err_FILE_TYPE(error, "Wyko ASC data");
+        goto fail;
+    }
+
+    while ((line = gwy_str_next_line(&p))) {
+        s = strchr(line, '\t');
+        /* XXX: make noise */
+        if (!s)
+            continue;
+
+        *s = '\0';
+        s++;
+
+        if (gwy_strequal(line, "X Size")) {
+            xres = atoi(s);
+            gwy_debug("xres=%u", xres);
+            continue;
+        }
+        if (gwy_strequal(line, "Y Size")) {
+            yres = atoi(s);
+            gwy_debug("yres=%u", yres);
+            continue;
+        }
+    }
+
+    err_NO_DATA(error);
+
+fail:
+
+    g_free(buffer);
+
+    return container;
+}
+
+/* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
