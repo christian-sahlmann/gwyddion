@@ -270,7 +270,7 @@ opd_load(const gchar *filename,
             for (j = 0; j < xres; j++) {
                 gdouble v = gwy_get_gfloat_le(&p);
                 if (v < OPD_BAD_FLOAT)
-                    drow[j] = wavelength*mult*v;
+                    drow[j] = wavelength/mult*v;
                 else
                     mrow[j] = 0.0;
             }
@@ -279,7 +279,7 @@ opd_load(const gchar *filename,
             for (j = 0; j < xres; j++) {
                 guint v = gwy_get_guint16_le(&p);
                 if (v < OPD_BAD_INT16)
-                    drow[j] = wavelength*mult*v;
+                    drow[j] = wavelength/mult*v;
                 else
                     mrow[j] = 0.0;
             }
@@ -287,7 +287,7 @@ opd_load(const gchar *filename,
         else if (datatype == OPD_ARRAY_BYTE) {
             /* FIXME: Bad data? */
             for (j = 0; j < xres; j++) {
-                drow[j] = wavelength*mult*(*(p++));
+                drow[j] = wavelength/mult*(*(p++));
                 mrow[j] = 0.0;
             }
         }
