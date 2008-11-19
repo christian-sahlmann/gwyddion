@@ -28,7 +28,7 @@
  *   <glob pattern="*.OPD"/>
  * </mime-type>
  **/
-#define DEBUG
+
 #include "config.h"
 #include <string.h>
 #include <stdio.h>
@@ -36,7 +36,7 @@
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwyutils.h>
-#include <libprocess/datafield.h>
+#include <libprocess/stats.h>
 #include <libgwymodule/gwymodule-file.h>
 #include <app/gwymoduleutils-file.h>
 
@@ -48,12 +48,15 @@
 
 #define EXTENSION ".opd"
 
+#define Nanometer (1e-9)
+#define OPD_BAD_FLOAT 1e38
+#define OPD_BAD_INT16 32766
+
 enum {
     BLOCK_SIZE = 24,
     BLOCK_NAME_SIZE = 16,
 };
 
-/* XXX: Just guessing from what I've seen in the files. */
 enum {
     OPD_DIRECTORY = 1,
     OPD_ARRAY = 3,
@@ -63,6 +66,12 @@ enum {
     OPD_DOUBLE = 8,
     OPD_LONG = 12,
 } OPDDataType;
+
+typedef enum {
+    OPD_ARRAY_FLOAT = 4,
+    OPD_ARRAY_INT16 = 2,
+    OPD_ARRAY_BYTE = 1,
+} OPDArrayType;
 
 /* The header consists of a sequence of these creatures. */
 typedef struct {
@@ -76,22 +85,29 @@ typedef struct {
     const guchar *data;
 } OPDBlock;
 
-static gboolean      module_register(void);
-static gint          opd_detect     (const GwyFileDetectInfo *fileinfo,
-                                     gboolean only_name);
-static GwyContainer* opd_load       (const gchar *filename,
-                                     GwyRunType mode,
-                                     GError **error);
-static gboolean      require_keys   (OPDBlock *header,
-                                     guint nblocks,
-                                     GError **error,
-                                     ...);
-static gboolean      check_sizes    (OPDBlock *header,
-                                     guint nblocks,
-                                     GError **error);
-static guint         find_block     (OPDBlock *header,
-                                     guint nblocks,
-                                     const gchar *name);
+static gboolean      module_register (void);
+static gint          opd_detect      (const GwyFileDetectInfo *fileinfo,
+                                      gboolean only_name);
+static GwyContainer* opd_load        (const gchar *filename,
+                                      GwyRunType mode,
+                                      GError **error);
+static void          get_block       (OPDBlock *block,
+                                      const guchar **p);
+static gboolean      get_float       (const OPDBlock *header,
+                                      guint nblocks,
+                                      const gchar *name,
+                                      gdouble *value,
+                                      GError **error);
+static gboolean      check_sizes     (const OPDBlock *header,
+                                      guint nblocks,
+                                      GError **error);
+static guint         find_block      (const OPDBlock *header,
+                                      guint nblocks,
+                                      const gchar *name);
+static const guchar* get_array_params(const guchar *p,
+                                      guint *xres,
+                                      guint *yres,
+                                      OPDArrayType *type);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -132,18 +148,6 @@ opd_detect(const GwyFileDetectInfo *fileinfo,
     return 100;
 }
 
-static void
-get_block(OPDBlock *block, const guchar **p)
-{
-    memset(block->name, 0, BLOCK_NAME_SIZE + 1);
-    strncpy(block->name, *p, BLOCK_NAME_SIZE);
-    *p += BLOCK_NAME_SIZE;
-    g_strstrip(block->name);
-    block->type = gwy_get_guint16_le(p);
-    block->size = gwy_get_guint32_le(p);
-    block->flags = gwy_get_guint16_le(p);
-}
-
 static GwyContainer*
 opd_load(const gchar *filename,
          G_GNUC_UNUSED GwyRunType mode,
@@ -154,15 +158,13 @@ opd_load(const gchar *filename,
     OPDBlock directory_block, *header = NULL;
     gsize size = 0;
     GError *err = NULL;
-    GwyDataField *dfield = NULL;
-    GwySIUnit *siunitx, *siunity, *siunitz, *siunit;
+    GwyDataField *dfield = NULL, *mfield = NULL;
+    GwySIUnit *siunit;
     const guchar *p;
-    gchar *end, *s;
-    gdouble *data, *row;
-    guint nblocks, offset, xres, yres, i, j;
-    gdouble xreal, yreal, q;
-    gint power10;
-    const gfloat *pdata;
+    gdouble *data, *drow, *mdata, *mrow;
+    guint nblocks, idata, offset, mcount, xres, yres, i, j;
+    gdouble pixel_size, wavelength, mult, aspect, avg;
+    OPDArrayType datatype;
 
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
         err_GET_FILE_CONTENTS(error, &err);
@@ -196,7 +198,7 @@ opd_load(const gchar *filename,
         goto fail;
     }
 
-    /* We already read the directory, do not count it */
+    /* Read info block.  We've already read the directory, do not count it */
     nblocks--;
     header = g_new(OPDBlock, nblocks);
     offset = directory_block.pos + directory_block.size;
@@ -222,136 +224,162 @@ opd_load(const gchar *filename,
     }
     nblocks = j;
 
-    if (!require_keys(header, nblocks, error,
-                      "Pixel_size", OPD_FLOAT,
-                      "Wavelength", OPD_FLOAT,
-                      NULL)
-        || !check_sizes(header, nblocks, error))
+    if (!check_sizes(header, nblocks, error))
         goto fail;
 
-    i = find_block(header, nblocks, "Pixel_size");
-    p = header[i].data;
-    xreal = gwy_get_gfloat_le(&p);
-    gwy_debug("xreal = %g", xreal);
-
-#if 0
-    p += DATA_MAGIC_SIZE;
-    data_offset = atoi(g_hash_table_lookup(hash, "DataOffset"));
-    if (p - buffer != data_offset) {
-        g_warning("DataOffset %d differs from end of [Data] %u",
-                  data_offset, (unsigned int)(p - buffer));
-        p = buffer + data_offset;
+    /* Find data */
+    idata = find_block(header, nblocks, "OPD");
+    if (idata == nblocks)
+        idata = find_block(header, nblocks, "SAMPLE_DATA");
+    if (idata == nblocks)
+        idata = find_block(header, nblocks, "RAW_DATA");
+    if (idata == nblocks)
+        idata = find_block(header, nblocks, "RAW DATA");
+    if (idata == nblocks) {
+        err_NO_DATA(error);
+        goto fail;
+    }
+    if (header[idata].type != OPD_ARRAY) {
+        err_DATA_TYPE(error, header[idata].type);
+        goto fail;
     }
 
-    xres = atoi(g_hash_table_lookup(hash, "ResolutionX"));
-    yres = atoi(g_hash_table_lookup(hash, "ResolutionY"));
-    if (err_DIMENSION(error, xres) || err_DIMENSION(error, yres))
+    /* Physical scales */
+    if (!get_float(header, nblocks, "Pixel_size", &pixel_size, error)
+        || !get_float(header, nblocks, "Wavelength", &wavelength, error))
         goto fail;
 
-    if (err_SIZE_MISMATCH(error, data_offset + 4*xres*yres, size, TRUE))
-        goto fail;
+    wavelength *= Nanometer;
+    mult = aspect = 1.0;
+    get_float(header, nblocks, "Mult", &mult, NULL);
+    get_float(header, nblocks, "Aspect", &aspect, NULL);
 
-    xreal = strtod(g_hash_table_lookup(hash, "ScanRangeX"), &end);
-    siunitx = gwy_si_unit_new_parse(end, &power10);
-    xreal *= pow10(power10);
-    /* Use negated positive conditions to catch NaNs */
-    if (!((xreal = fabs(xreal)) > 0)) {
-        g_warning("Real x size is 0.0, fixing to 1.0");
-        xreal = 1.0;
+    /* Read the data */
+    p = get_array_params(header[idata].data, &xres, &yres, &datatype);
+    dfield = gwy_data_field_new(xres, yres,
+                                xres*pixel_size, yres*pixel_size, FALSE);
+    mfield = gwy_data_field_new(xres, yres,
+                                xres*pixel_size, yres*pixel_size, FALSE);
+    gwy_data_field_fill(mfield, 1.0);
+    data = gwy_data_field_get_data(dfield);
+    mdata = gwy_data_field_get_data(mfield);
+    for (i = 0; i < yres; i++) {
+        drow = data + (yres-1 - i)*xres;
+        mrow = mdata + (yres-1 - i)*xres;
+        if (datatype == OPD_ARRAY_FLOAT) {
+            for (j = 0; j < xres; j++) {
+                gdouble v = gwy_get_gfloat_le(&p);
+                if (v < OPD_BAD_FLOAT)
+                    drow[j] = wavelength*mult*v;
+                else
+                    mrow[j] = 0.0;
+            }
+        }
+        else if (datatype == OPD_ARRAY_INT16) {
+            for (j = 0; j < xres; j++) {
+                guint v = gwy_get_guint16_le(&p);
+                if (v < OPD_BAD_INT16)
+                    drow[j] = wavelength*mult*v;
+                else
+                    mrow[j] = 0.0;
+            }
+        }
+        else if (datatype == OPD_ARRAY_BYTE) {
+            /* FIXME: Bad data? */
+            for (j = 0; j < xres; j++) {
+                drow[j] = wavelength*mult*(*(p++));
+                mrow[j] = 0.0;
+            }
+        }
+        else {
+            err_DATA_TYPE(error, datatype);
+            goto fail;
+        }
     }
 
-    yreal = strtod(g_hash_table_lookup(hash, "ScanRangeY"), &end);
-    siunity = gwy_si_unit_new_parse(end, &power10);
-    yreal *= pow10(power10);
-    /* Use negated positive conditions to catch NaNs */
-    if (!((yreal = fabs(yreal)) > 0)) {
-        g_warning("Real y size is 0.0, fixing to 1.0");
-        yreal = 1.0;
+    /* Apply the bad data mask */
+    avg = gwy_data_field_area_get_avg(dfield, mfield, 0, 0, xres, yres);
+    mcount = 0;
+    for (i = 0; i < yres; i++) {
+        mrow = mdata + i*xres;
+        drow = data + i*xres;
+        for (j = 0; j < xres; j++) {
+            if (!mrow[j]) {
+                drow[j] = avg;
+                mcount++;
+            }
+            mrow[j] = 1.0 - mrow[j];
+        }
     }
 
-    q = strtod(g_hash_table_lookup(hash, "ZTransferCoefficient"), &end);
-    siunitz = gwy_si_unit_new_parse(end, &power10);
-    q *= pow10(power10);
-
-    siunit = gwy_si_unit_new("V");
-    gwy_si_unit_multiply(siunit, siunitz, siunitz);
+    siunit = gwy_si_unit_new("m");
+    gwy_data_field_set_si_unit_xy(dfield, siunit);
     g_object_unref(siunit);
 
-    dfield = gwy_data_field_new(xres, yres, xreal, yreal, FALSE);
-    data = gwy_data_field_get_data(dfield);
-    pdata = (const gfloat*)p;
-    for (i = 0; i < yres; i++) {
-        row = data + (yres-1 - i)*xres;
-        for (j = 0; j < xres; j++)
-            row[j] = q*gwy_get_gfloat_le(&p);
-    }
-
-    if (!gwy_si_unit_equal(siunitx, siunity))
-        g_warning("Incompatible x and y units");
-
-    gwy_data_field_set_si_unit_xy(dfield, siunitx);
-    g_object_unref(siunitx);
-    g_object_unref(siunity);
-
-    gwy_data_field_set_si_unit_z(dfield, siunitz);
-    g_object_unref(siunitz);
+    siunit = gwy_si_unit_new("m");
+    gwy_data_field_set_si_unit_z(dfield, siunit);
+    g_object_unref(siunit);
 
     container = gwy_container_new();
     gwy_container_set_object_by_name(container, "/0/data", dfield);
+    if (mcount)
+        gwy_container_set_object_by_name(container, "/0/mask", mfield);
 
-    if ((s = g_hash_table_lookup(hash, "DataName")))
+    if ((i = find_block(header, nblocks, "Title")) != nblocks)
         gwy_container_set_string_by_name(container, "/0/data/title",
-                                         g_strdup(s));
+                                         g_strndup(header[i].data,
+                                                   header[i].size));
     else
         gwy_app_channel_title_fall_back(container, 0);
-
-    meta = gwy_container_new();
-
-    ...
-
-    if (gwy_container_get_n_items(meta))
-        gwy_container_set_object_by_name(container, "/0/meta", meta);
-    g_object_unref(meta);
-#endif
-
-    err_NO_DATA(error);
 
 fail:
     g_free(header);
     gwy_object_unref(dfield);
+    gwy_object_unref(mfield);
     gwy_file_abandon_contents(buffer, size, NULL);
 
     return container;
 }
 
-static gboolean
-require_keys(OPDBlock *header,
-             guint nblocks,
-             GError **error,
-             ...)
+static void
+get_block(OPDBlock *block, const guchar **p)
 {
-    va_list ap;
-    const gchar *key;
-    guint i, type;
-
-    va_start(ap, error);
-    while ((key = va_arg(ap, const gchar*))) {
-        type = va_arg(ap, guint);
-        if ((i = find_block(header, nblocks, key)) == nblocks) {
-            err_MISSING_FIELD(error, key);
-            va_end(ap);
-            return FALSE;
-        }
-        if (header[i].type != type)
-            err_INVALID(error, header[i].name);
-    }
-    va_end(ap);
-
-    return TRUE;
+    memset(block->name, 0, BLOCK_NAME_SIZE + 1);
+    strncpy(block->name, *p, BLOCK_NAME_SIZE);
+    *p += BLOCK_NAME_SIZE;
+    g_strstrip(block->name);
+    block->type = gwy_get_guint16_le(p);
+    block->size = gwy_get_guint32_le(p);
+    block->flags = gwy_get_guint16_le(p);
 }
 
 static gboolean
-check_sizes(OPDBlock *header,
+get_float(const OPDBlock *header,
+          guint nblocks,
+          const gchar *name,
+          gdouble *value,
+          GError **error)
+{
+    const guchar *p;
+    guint i;
+
+    if ((i = find_block(header, nblocks, name)) == nblocks) {
+        err_MISSING_FIELD(error, name);
+        return FALSE;
+    }
+    if (header[i].type != OPD_FLOAT) {
+        err_INVALID(error, name);
+        return FALSE;
+    }
+    p = header[i].data;
+    *value = gwy_get_gfloat_le(&p);
+    gwy_debug("%s = %g", name, *value);
+    return TRUE;
+}
+
+/* TODO: Improve error messages */
+static gboolean
+check_sizes(const OPDBlock *header,
             guint nblocks,
             GError **error)
 {
@@ -376,10 +404,24 @@ check_sizes(OPDBlock *header,
                 return FALSE;
             }
             else if (type == OPD_ARRAY) {
-                /* TODO */
+                guint xres, yres;
+
+                /* array params */
+                if (header[i].size < 3*2) {
+                    err_INVALID(error, header[i].name);
+                    return FALSE;
+                }
+                /* array contents */
+                get_array_params(header[i].data, &xres, &yres, &type);
+                gwy_debug("%s xres=%u yres=%u type=%u size=%u",
+                          header[i].name, xres, yres, type, header[i].size);
+                if (header[i].size < 3*2 + xres*yres*type) {
+                    err_INVALID(error, header[i].name);
+                    return FALSE;
+                }
             }
             else if (type == OPD_TEXT) {
-                /* TODO */
+                /* Nothing to do here, text can fill the field completely */
             }
             else {
                 g_warning("Unknown item type %u", type);
@@ -390,8 +432,28 @@ check_sizes(OPDBlock *header,
     return TRUE;
 }
 
+static const guchar*
+get_array_params(const guchar *p, guint *xres, guint *yres, OPDArrayType *type)
+{
+    *yres = gwy_get_guint16_le(&p);
+    *xres = gwy_get_guint16_le(&p);
+    *type = gwy_get_guint16_le(&p);
+    switch (*type) {
+        case OPD_ARRAY_FLOAT:
+        case OPD_ARRAY_INT16:
+        case OPD_ARRAY_BYTE:
+        break;
+
+        default:
+        g_warning("Unknown array type %u", *type);
+        break;
+    }
+
+    return p;
+}
+
 static guint
-find_block(OPDBlock *header,
+find_block(const OPDBlock *header,
            guint nblocks,
            const gchar *name)
 {
