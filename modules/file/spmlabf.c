@@ -122,7 +122,6 @@ slf_load(const gchar *filename,
     guint data_offset, xres, yres, i, j;
     gdouble xreal, yreal, q, off;
     gint power10;
-    const gfloat *pdata;
 
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
         err_GET_FILE_CONTENTS(error, &err);
@@ -208,7 +207,6 @@ slf_load(const gchar *filename,
 
     dfield = gwy_data_field_new(xres, yres, xreal, yreal, FALSE);
     data = gwy_data_field_get_data(dfield);
-    pdata = (const gfloat*)p;
     for (i = 0; i < yres; i++) {
         row = data + (yres-1 - i)*xres;
         for (j = 0; j < xres; j++)
