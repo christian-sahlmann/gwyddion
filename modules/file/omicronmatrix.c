@@ -1538,7 +1538,6 @@ static GwyContainer* matrix_load(const gchar* filename,
     /* start with the image file */
     if(!gwy_file_get_contents(filename, &imgbuffer, &imgsize, &err)) {
         err_GET_FILE_CONTENTS(error, &err);
-        g_clear_error(&err);
         return NULL;
     }
     if(imgsize >= IMGFILEIDENT_SIZE &&

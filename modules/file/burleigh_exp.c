@@ -122,7 +122,6 @@ burleigh_exp_load(const gchar *filename,
 
     if (!g_file_get_contents(filename, &buffer, &size, &err)) {
         err_GET_FILE_CONTENTS(error, &err);
-        g_clear_error(&err);
         return NULL;
     }
     if (size < MIN_FILE_SIZE + 2) {
