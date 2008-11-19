@@ -158,11 +158,10 @@ slf_load(const gchar *filename,
 
     p += DATA_MAGIC_SIZE;
     data_offset = atoi(g_hash_table_lookup(hash, "DataOffset"));
-    if (p - buffer != data_offset) {
-        g_warning("DataOffset %d differs from end of [Data] %u",
+    if (p - buffer > data_offset)
+        g_warning("DataOffset %d points before end of [Data] at %u",
                   data_offset, (unsigned int)(p - buffer));
-        p = buffer + data_offset;
-    }
+    p = buffer + data_offset;
 
     xres = atoi(g_hash_table_lookup(hash, "ResolutionX"));
     yres = atoi(g_hash_table_lookup(hash, "ResolutionY"));
@@ -173,7 +172,10 @@ slf_load(const gchar *filename,
         goto fail;
 
     xreal = g_ascii_strtod(g_hash_table_lookup(hash, "ScanRangeX"), &end);
-    siunitx = gwy_si_unit_new_parse(end, &power10);
+    if ((s = g_hash_table_lookup(hash, "XYUnit")))
+        siunitx = gwy_si_unit_new_parse(s, &power10);
+    else
+        siunitx = gwy_si_unit_new_parse(end, &power10);
     xreal *= pow10(power10);
     /* Use negated positive conditions to catch NaNs */
     if (!((xreal = fabs(xreal)) > 0)) {
@@ -182,7 +184,10 @@ slf_load(const gchar *filename,
     }
 
     yreal = g_ascii_strtod(g_hash_table_lookup(hash, "ScanRangeY"), &end);
-    siunity = gwy_si_unit_new_parse(end, &power10);
+    if ((s = g_hash_table_lookup(hash, "XYUnit")))
+        siunity = gwy_si_unit_new_parse(s, &power10);
+    else
+        siunity = gwy_si_unit_new_parse(end, &power10);
     yreal *= pow10(power10);
     /* Use negated positive conditions to catch NaNs */
     if (!((yreal = fabs(yreal)) > 0)) {
@@ -191,12 +196,15 @@ slf_load(const gchar *filename,
     }
 
     q = g_ascii_strtod(g_hash_table_lookup(hash, "ZTransferCoefficient"), &end);
-    siunitz = gwy_si_unit_new_parse(end, &power10);
+    if ((s = g_hash_table_lookup(hash, "ZUnit")))
+        siunitz = gwy_si_unit_new_parse(s, &power10);
+    else {
+        siunitz = gwy_si_unit_new_parse(end, &power10);
+        siunit = gwy_si_unit_new("V");
+        gwy_si_unit_multiply(siunit, siunitz, siunitz);
+        g_object_unref(siunit);
+    }
     q *= pow10(power10);
-
-    siunit = gwy_si_unit_new("V");
-    gwy_si_unit_multiply(siunit, siunitz, siunitz);
-    g_object_unref(siunit);
 
     dfield = gwy_data_field_new(xres, yres, xreal, yreal, FALSE);
     data = gwy_data_field_get_data(dfield);
