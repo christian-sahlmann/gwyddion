@@ -93,17 +93,19 @@
 
 #include "err.h"
 
-static gboolean      module_register    (void);
-static gint          spmlab_detect      (const GwyFileDetectInfo *fileinfo,
-                                         gboolean only_name);
-static GwyContainer* spmlab_load        (const gchar *filename,
-                                         GwyRunType mode,
-                                         GError **error);
-static GwyDataField* read_data_field    (const guchar *buffer,
-                                         guint size,
-                                         guchar version,
-                                         gint *type,
-                                         GError **error);
+static gboolean      module_register(void);
+static gint          spmlab_detect  (const GwyFileDetectInfo *fileinfo,
+                                     gboolean only_name);
+static GwyContainer* spmlab_load    (const gchar *filename,
+                                     GwyRunType mode,
+                                     GError **error);
+static GwyDataField* read_data_field(const guchar *buffer,
+                                     guint size,
+                                     guchar version,
+                                     gchar **title,
+                                     gint *direction,
+                                     GError **error);
+static gchar*        type_to_title  (guint type);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -178,8 +180,8 @@ spmlab_load(const gchar *filename,
     gsize size = 0;
     GError *err = NULL;
     GwyDataField *dfield = NULL;
-    const gchar *title;
-    gint type;
+    gchar *title;
+    gint dir;
 
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
         err_GET_FILE_CONTENTS(error, &err);
@@ -203,7 +205,7 @@ spmlab_load(const gchar *filename,
         case '5':
         case '6':
         case '7':
-        dfield = read_data_field(buffer, size, buffer[2], &type, error);
+        dfield = read_data_field(buffer, size, buffer[2], &title, &dir, error);
         break;
 
         default:
@@ -220,25 +222,13 @@ spmlab_load(const gchar *filename,
     gwy_container_set_object_by_name(container, "/0/data", dfield);
     g_object_unref(dfield);
 
-    title = gwy_enuml_to_string(type,
-                               "Height", 0,
-                               "Current", 1,
-                               "FFM", 2,
-                               "Spect", 3,
-                               "SpectV", 4,
-                               "ADC1", 5,
-                               "ADC2", 6,
-                               "TipV", 7,
-                               "DAC1", 8,
-                               "DAC2", 9,
-                               "ZPiezo", 10,
-                               "Height error", 11,
-                               "Linearized Z", 12,
-                               "Feedback", 13,
-                               NULL);
-    if (*title)
+    if (title)
         gwy_container_set_string_by_name(container, "/0/data/title",
                                          g_strdup(title));
+    else
+        gwy_app_channel_title_fall_back(container, 0);
+
+    /* TODO: Store direction to metadata, if known */
 
     return container;
 }
@@ -253,7 +243,8 @@ static GwyDataField*
 read_data_field(const guchar *buffer,
                 guint size,
                 guchar version,
-                gint *type,
+                gchar **title,
+                gint *direction,
                 GError **error)
 {
     enum { MIN_REMAINDER = 2620 };
@@ -264,19 +255,19 @@ read_data_field(const guchar *buffer,
      * physical dimensions,
      * value multiplier,
      * unit string,
-     * data type
+     * data type,       (if zero, use channel title)
+     * channel title    (if zero, use data type)
      */
     const guint offsets34[] = {
-        0x0104, 0x0196, 0x01a2, 0x01b2, 0x01c2, 0x0400
+        0x0104, 0x0196, 0x01a2, 0x01b2, 0x01c2, 0x0400, 0x0000
     };
     const guint offsets56[] = {
-        0x0104, 0x025c, 0x0268, 0x0288, 0x02a0, 0x0708
+        0x0104, 0x025c, 0x0268, 0x0288, 0x02a0, 0x0708, 0x0000
     };
     const guint offsets7[] = {
-                                                /* XXX: guess, needs files */
-        0x0104, 0x029c, 0x02a8, 0x02c8, 0x02e0, 0x0748
+        0x0104, 0x029c, 0x02a8, 0x02c8, 0x02e0, 0x0000, 0x0b90
     };
-    gint xres, yres, doffset, i, power10, dir;
+    gint xres, yres, doffset, i, power10, type;
     gdouble xreal, yreal, q, z0;
     GwyDataField *dfield;
     GwySIUnit *unitxy, *unitz;
@@ -285,6 +276,9 @@ read_data_field(const guchar *buffer,
     const guchar *p, *r, *last;
     /* get floats in single precision from r4 but double from r5+ */
     gdouble (*getflt)(const guchar**);
+
+    *title = NULL;
+    *direction = -1;
 
     if (version == '5' || version == '6' || version == '7') {
         /* There are more headers in r5,
@@ -347,10 +341,22 @@ read_data_field(const guchar *buffer,
               xres, yres, xreal, yreal, q, z0);
     gwy_debug("unitxy = %s, unitz = %s", p, p + 10);
 
-    p = buffer + *(offset++);
-    *type = gwy_get_guint16_le(&p);
-    dir = gwy_get_guint16_le(&p);
-    gwy_debug("type = %d, dir = %d", *type, dir);
+    if (offset[1]) {
+        /* We know channel title */
+        offset++;
+        p = buffer + *(offset++);
+        *title = g_strndup(p, size - (p - buffer));
+        gwy_debug("title = <%s>", *title);
+    }
+    else {
+        /* We know data type */
+        p = buffer + *(offset++);
+        type = gwy_get_guint16_le(&p);
+        *direction = gwy_get_guint16_le(&p);
+        gwy_debug("type = %d, dir = %d", type, *direction);
+        offset++;
+        *title = type_to_title(type);
+    }
 
     p = buffer + doffset;
     if (err_SIZE_MISMATCH(error, 2*xres*yres, size - (p - buffer), FALSE))
@@ -366,6 +372,33 @@ read_data_field(const guchar *buffer,
         data[i] = (p[2*i] + 256.0*p[2*i + 1])*q + z0;
 
     return dfield;
+}
+
+static gchar*
+type_to_title(guint type)
+{
+    const gchar *title;
+
+    title = gwy_enuml_to_string(type,
+                                "Height", 0,
+                                "Current", 1,
+                                "FFM", 2,
+                                "Spect", 3,
+                                "SpectV", 4,
+                                "ADC1", 5,
+                                "ADC2", 6,
+                                "TipV", 7,
+                                "DAC1", 8,
+                                "DAC2", 9,
+                                "ZPiezo", 10,
+                                "Height error", 11,
+                                "Linearized Z", 12,
+                                "Feedback", 13,
+                                NULL);
+    if (*title)
+        return g_strdup(title);
+
+    return NULL;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
