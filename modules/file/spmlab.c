@@ -81,7 +81,7 @@
  *   <glob pattern="*.2RR"/>
  * </mime-type>
  **/
-#define DEBUG 1
+
 #include "config.h"
 #include <string.h>
 #include <libgwyddion/gwymacros.h>
