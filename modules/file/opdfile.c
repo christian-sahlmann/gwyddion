@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
-
+#define DEBUG
 /**
  * [FILE-MAGIC-FREEDESKTOP]
  * <mime-type type="application/x-wyko-opd">
@@ -129,6 +129,8 @@ static const guchar* get_array_params(const guchar *p,
                                       guint *xres,
                                       guint *yres,
                                       OPDArrayType *type);
+static guint         remove_bad_data (GwyDataField *dfield,
+                                      GwyDataField *mfield);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -193,7 +195,7 @@ opd_load(const gchar *filename,
     const guchar *p;
     gdouble *data, *drow, *mdata, *mrow;
     guint nblocks, idata, offset, mcount, xres, yres, i, j;
-    gdouble pixel_size, wavelength, mult, aspect, avg;
+    gdouble pixel_size, wavelength, mult = 1.0, aspect = 1.0;
     OPDArrayType datatype;
 
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
@@ -279,7 +281,6 @@ opd_load(const gchar *filename,
         goto fail;
 
     wavelength *= Nanometer;
-    mult = aspect = 1.0;
     get_float(header, nblocks, "Mult", &mult, NULL);
     get_float(header, nblocks, "Aspect", &aspect, NULL);
 
@@ -287,9 +288,18 @@ opd_load(const gchar *filename,
     p = get_array_params(header[idata].data, &xres, &yres, &datatype);
     dfield = gwy_data_field_new(xres, yres,
                                 xres*pixel_size, yres*pixel_size, FALSE);
-    mfield = gwy_data_field_new(xres, yres,
-                                xres*pixel_size, yres*pixel_size, FALSE);
+
+    siunit = gwy_si_unit_new("m");
+    gwy_data_field_set_si_unit_xy(dfield, siunit);
+    g_object_unref(siunit);
+
+    siunit = gwy_si_unit_new("m");
+    gwy_data_field_set_si_unit_z(dfield, siunit);
+    g_object_unref(siunit);
+
+    mfield = gwy_data_field_new_alike(dfield, FALSE);
     gwy_data_field_fill(mfield, 1.0);
+
     data = gwy_data_field_get_data(dfield);
     mdata = gwy_data_field_get_data(mfield);
     for (i = 0; i < yres; i++) {
@@ -325,29 +335,7 @@ opd_load(const gchar *filename,
             goto fail;
         }
     }
-
-    /* Apply the bad data mask */
-    avg = gwy_data_field_area_get_avg(dfield, mfield, 0, 0, xres, yres);
-    mcount = 0;
-    for (i = 0; i < yres; i++) {
-        mrow = mdata + i*xres;
-        drow = data + i*xres;
-        for (j = 0; j < xres; j++) {
-            if (!mrow[j]) {
-                drow[j] = avg;
-                mcount++;
-            }
-            mrow[j] = 1.0 - mrow[j];
-        }
-    }
-
-    siunit = gwy_si_unit_new("m");
-    gwy_data_field_set_si_unit_xy(dfield, siunit);
-    g_object_unref(siunit);
-
-    siunit = gwy_si_unit_new("m");
-    gwy_data_field_set_si_unit_z(dfield, siunit);
-    g_object_unref(siunit);
+    mcount = remove_bad_data(dfield, mfield);
 
     container = gwy_container_new();
     gwy_container_set_object_by_name(container, "/0/data", dfield);
@@ -518,8 +506,13 @@ opd_asc_load(const gchar *filename,
              GError **error)
 {
     GwyContainer *container = NULL;
+    GwyDataField *dfield = NULL, *mfield = NULL;
+    GwySIUnit *siunit;
     gchar *line, *p, *s, *buffer = NULL;
-    guint xres, yres;
+    GHashTable *hash = NULL;
+    guint xres = 0, yres = 0, in_data = 0, ignoring = 0;
+    gdouble pixel_size, wavelength = 0.0, mult = 1.0, aspect = 1.0;
+    gdouble *data = NULL, *drow, *mdata = NULL, *mrow;
     gsize size;
     GError *err = NULL;
 
@@ -535,10 +528,31 @@ opd_asc_load(const gchar *filename,
         goto fail;
     }
 
-    while ((line = gwy_str_next_line(&p))) {
-        s = strchr(line, '\t');
+    hash = g_hash_table_new(g_str_hash, g_str_equal);
+    while ((s = line = gwy_str_next_line(&p))) {
+        if (ignoring) {
+            ignoring--;
+            continue;
+        }
+
+        if (in_data) {
+            gchar *end;
+            guint i;
+
+            in_data--;
+            drow = data + in_data*xres;
+            mrow = mdata + in_data*xres;
+            for (i = 0, end = s; i < xres; i++) {
+                if (strncmp(end, "Bad", 3) == 0)
+                    mrow[i] = 0.0;
+                else
+                    drow[i] = g_ascii_strtod(end, &end)*wavelength/mult;
+            }
+            continue;
+        }
+
         /* XXX: make noise */
-        if (!s)
+        if (!(s = strchr(s, '\t')))
             continue;
 
         *s = '\0';
@@ -554,15 +568,115 @@ opd_asc_load(const gchar *filename,
             gwy_debug("yres=%u", yres);
             continue;
         }
+
+        /* Skip type and length, they seem useless in the ASCII file */
+        /* XXX: make noise */
+        if (!(s = strchr(s, '\t')))
+            continue;
+        if (!(s = strchr(s, '\t')))
+            continue;
+
+        if (gwy_strequal(line, "RAW DATA")
+            || gwy_strequal(line, "RAW_DATA")
+            || gwy_strequal(line, "SAMPLE_DATA")
+            || gwy_strequal(line, "OPD")
+            || gwy_strequal(line, "Intensity")) {
+            if (!xres) {
+                err_MISSING_FIELD(error, "X Size");
+                goto fail;
+            }
+            if (!yres) {
+                err_MISSING_FIELD(error, "Y Size");
+                goto fail;
+            }
+
+            if (!(s = g_hash_table_lookup(hash, "Pixel_size"))
+                || !(pixel_size = fabs(g_ascii_strtod(s, NULL)))) {
+                err_MISSING_FIELD(error, "Pixel_size");
+                goto fail;
+            }
+            if (!(s = g_hash_table_lookup(hash, "Wavelength"))
+                || !(wavelength = fabs(g_ascii_strtod(s, NULL)))) {
+                err_MISSING_FIELD(error, "Wavelength");
+                goto fail;
+            }
+            wavelength *= Nanometer;
+
+            if (dfield) {
+                ignoring = yres;
+            }
+            else {
+                in_data = yres;
+                dfield = gwy_data_field_new(xres, yres,
+                                            xres*pixel_size, yres*pixel_size,
+                                            FALSE);
+
+                siunit = gwy_si_unit_new("m");
+                gwy_data_field_set_si_unit_xy(dfield, siunit);
+                g_object_unref(siunit);
+
+                siunit = gwy_si_unit_new("m");
+                gwy_data_field_set_si_unit_z(dfield, siunit);
+                g_object_unref(siunit);
+
+                mfield = gwy_data_field_new_alike(dfield, FALSE);
+                gwy_data_field_fill(mfield, 1.0);
+
+                data = gwy_data_field_get_data(dfield);
+                mdata = gwy_data_field_get_data(mfield);
+            }
+            continue;
+        }
+
+        if (gwy_strequal(line, "Block Name"))
+            continue;
+
+        gwy_debug("<%s> = <%s>", line, s);
+
+        g_hash_table_insert(hash, line, s);
     }
 
     err_NO_DATA(error);
 
 fail:
 
+    gwy_object_unref(dfield);
+    gwy_object_unref(mfield);
     g_free(buffer);
+    if (hash)
+        g_hash_table_destroy(hash);
 
     return container;
+}
+
+/***** Common *************************************************************/
+
+static guint
+remove_bad_data(GwyDataField *dfield, GwyDataField *mfield)
+{
+    gdouble *data = gwy_data_field_get_data(dfield);
+    gdouble *mdata = gwy_data_field_get_data(mfield);
+    gdouble *drow, *mrow;
+    gdouble avg;
+    guint i, j, mcount, xres, yres;
+
+    xres = gwy_data_field_get_xres(dfield);
+    yres = gwy_data_field_get_yres(dfield);
+    avg = gwy_data_field_area_get_avg(dfield, mfield, 0, 0, xres, yres);
+    mcount = 0;
+    for (i = 0; i < yres; i++) {
+        mrow = mdata + i*xres;
+        drow = data + i*xres;
+        for (j = 0; j < xres; j++) {
+            if (!mrow[j]) {
+                drow[j] = avg;
+                mcount++;
+            }
+            mrow[j] = 1.0 - mrow[j];
+        }
+    }
+
+    return mcount;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
