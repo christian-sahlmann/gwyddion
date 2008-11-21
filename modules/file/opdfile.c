@@ -138,7 +138,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Wyko OPD and ASC files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.2",
+    "0.3",
     "David Nečas (Yeti)",
     "2008",
 };
@@ -506,6 +506,7 @@ opd_asc_detect(const GwyFileDetectInfo *fileinfo,
     return 100;
 }
 
+/* FIXME: This is woefuly confusing spaghetti. */
 static GwyContainer*
 opd_asc_load(const gchar *filename,
              G_GNUC_UNUSED GwyRunType mode,
@@ -516,7 +517,7 @@ opd_asc_load(const gchar *filename,
     GwySIUnit *siunit;
     gchar *line, *p, *s, *buffer = NULL;
     GHashTable *hash = NULL;
-    guint xres = 0, yres = 0, in_data = 0, ignoring = 0;
+    guint mcount, xres = 0, yres = 0, in_data = 0, ignoring = 0;
     gdouble pixel_size, wavelength = 0.0, mult = 1.0, aspect = 1.0;
     gdouble *data = NULL, *drow, *mdata = NULL, *mrow;
     gsize size;
@@ -542,17 +543,21 @@ opd_asc_load(const gchar *filename,
         }
 
         if (in_data) {
-            gchar *end;
             guint i;
 
             in_data--;
             drow = data + in_data*xres;
             mrow = mdata + in_data*xres;
-            for (i = 0, end = s; i < xres; i++) {
-                if (strncmp(end, "Bad", 3) == 0)
+            for (i = 0; i < xres; i++) {
+                if (strncmp(s, "Bad", 3) == 0) {
                     mrow[i] = 0.0;
+                    s += 3;
+                }
                 else
-                    drow[i] = g_ascii_strtod(end, &end)*wavelength/mult;
+                    drow[i] = g_ascii_strtod(s, &s)*wavelength/mult;
+
+                while (g_ascii_isspace(*s))
+                    s++;
             }
             continue;
         }
@@ -564,12 +569,12 @@ opd_asc_load(const gchar *filename,
         *s = '\0';
         s++;
 
-        if (gwy_strequal(line, "X Size")) {
+        if (gwy_strequal(line, "Y Size")) {
             xres = atoi(s);
             gwy_debug("xres=%u", xres);
             continue;
         }
-        if (gwy_strequal(line, "Y Size")) {
+        if (gwy_strequal(line, "X Size")) {
             yres = atoi(s);
             gwy_debug("yres=%u", yres);
             continue;
@@ -579,8 +584,10 @@ opd_asc_load(const gchar *filename,
         /* XXX: make noise */
         if (!(s = strchr(s, '\t')))
             continue;
+        s++;
         if (!(s = strchr(s, '\t')))
             continue;
+        s++;
 
         if (gwy_strequal(line, "RAW DATA")
             || gwy_strequal(line, "RAW_DATA")
@@ -588,11 +595,11 @@ opd_asc_load(const gchar *filename,
             || gwy_strequal(line, "OPD")
             || gwy_strequal(line, "Intensity")) {
             if (!xres) {
-                err_MISSING_FIELD(error, "X Size");
+                err_MISSING_FIELD(error, "Y Size");
                 goto fail;
             }
             if (!yres) {
-                err_MISSING_FIELD(error, "Y Size");
+                err_MISSING_FIELD(error, "X Size");
                 goto fail;
             }
 
@@ -601,20 +608,27 @@ opd_asc_load(const gchar *filename,
                 err_MISSING_FIELD(error, "Pixel_size");
                 goto fail;
             }
+            gwy_debug("pixel_size = %g", pixel_size);
             if (!(s = g_hash_table_lookup(hash, "Wavelength"))
                 || !(wavelength = fabs(g_ascii_strtod(s, NULL)))) {
                 err_MISSING_FIELD(error, "Wavelength");
                 goto fail;
             }
+            gwy_debug("wavelength = %g", wavelength);
+
             wavelength *= Nanometer;
+            pixel_size *= Milimeter;
 
             if (dfield) {
                 ignoring = yres;
+                gwy_debug("Ignoring the following %u lines", ignoring);
             }
             else {
                 in_data = yres;
+                gwy_debug("Reading the following %u lines as data", in_data);
                 dfield = gwy_data_field_new(xres, yres,
-                                            xres*pixel_size, yres*pixel_size,
+                                            aspect*xres*pixel_size,
+                                            yres*pixel_size,
                                             FALSE);
 
                 siunit = gwy_si_unit_new("m");
@@ -642,7 +656,26 @@ opd_asc_load(const gchar *filename,
         g_hash_table_insert(hash, line, s);
     }
 
-    err_NO_DATA(error);
+    if (!dfield) {
+        err_NO_DATA(error);
+        goto fail;
+    }
+
+    mcount = remove_bad_data(dfield, mfield);
+    container = gwy_container_new();
+    gwy_container_set_object_by_name(container, "/0/data", dfield);
+    if (mcount)
+        gwy_container_set_object_by_name(container, "/0/mask", mfield);
+
+    if ((s = g_hash_table_lookup(hash, "Title")))
+        gwy_container_set_string_by_name(container, "/0/data/title",
+                                         g_strdup(s));
+    else
+        gwy_app_channel_title_fall_back(container, 0);
+
+    if (aspect != 1.0)
+        gwy_container_set_boolean_by_name(container, "/0/data/realsquare",
+                                          TRUE);
 
 fail:
 
@@ -681,6 +714,8 @@ remove_bad_data(GwyDataField *dfield, GwyDataField *mfield)
             mrow[j] = 1.0 - mrow[j];
         }
     }
+
+    gwy_debug("mcount = %u", mcount);
 
     return mcount;
 }
