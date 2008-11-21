@@ -64,6 +64,7 @@
 #define EXTENSION_ASC ".asc"
 
 #define Nanometer (1e-9)
+#define Milimeter (1e-3)
 #define OPD_BAD_FLOAT 1e38
 #define OPD_BAD_INT16 32766
 #define OPD_BAD_ASC "Bad"
@@ -281,13 +282,14 @@ opd_load(const gchar *filename,
         goto fail;
 
     wavelength *= Nanometer;
+    pixel_size *= Milimeter;
     get_float(header, nblocks, "Mult", &mult, NULL);
     get_float(header, nblocks, "Aspect", &aspect, NULL);
 
     /* Read the data */
     p = get_array_params(header[idata].data, &xres, &yres, &datatype);
     dfield = gwy_data_field_new(xres, yres,
-                                xres*pixel_size, yres*pixel_size, FALSE);
+                                aspect*xres*pixel_size, yres*pixel_size, FALSE);
 
     siunit = gwy_si_unit_new("m");
     gwy_data_field_set_si_unit_xy(dfield, siunit);
@@ -348,6 +350,10 @@ opd_load(const gchar *filename,
                                                    header[i].size));
     else
         gwy_app_channel_title_fall_back(container, 0);
+
+    if (aspect != 1.0)
+        gwy_container_set_boolean_by_name(container, "/0/data/realsquare",
+                                          TRUE);
 
 fail:
     g_free(header);
