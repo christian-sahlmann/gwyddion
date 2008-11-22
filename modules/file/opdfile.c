@@ -51,6 +51,7 @@
 #include <libprocess/stats.h>
 #include <libgwymodule/gwymodule-file.h>
 #include <app/gwymoduleutils-file.h>
+#include <app/data-browser.h>
 
 #include "err.h"
 
@@ -198,7 +199,7 @@ opd_load(const gchar *filename,
     GError *err = NULL;
     GwyDataField *dfield = NULL, *mfield = NULL;
     const guchar *p;
-    guint nblocks, idata, offset, i, j;
+    guint nblocks, offset, i, j, k;
     gdouble pixel_size, wavelength, mult = 1.0, aspect = 1.0;
 
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
@@ -261,23 +262,6 @@ opd_load(const gchar *filename,
     if (!check_sizes(header, nblocks, error))
         goto fail;
 
-    /* Find data */
-    idata = find_block(header, nblocks, "OPD");
-    if (idata == nblocks)
-        idata = find_block(header, nblocks, "SAMPLE_DATA");
-    if (idata == nblocks)
-        idata = find_block(header, nblocks, "RAW_DATA");
-    if (idata == nblocks)
-        idata = find_block(header, nblocks, "RAW DATA");
-    if (idata == nblocks) {
-        err_NO_DATA(error);
-        goto fail;
-    }
-    if (header[idata].type != OPD_ARRAY) {
-        err_DATA_TYPE(error, header[idata].type);
-        goto fail;
-    }
-
     /* Physical scales */
     if (!get_float(header, nblocks, "Pixel_size", &pixel_size, error)
         || !get_float(header, nblocks, "Wavelength", &wavelength, error))
@@ -287,28 +271,73 @@ opd_load(const gchar *filename,
     pixel_size *= Milimeter;
     get_float(header, nblocks, "Mult", &mult, NULL);
     get_float(header, nblocks, "Aspect", &aspect, NULL);
-
-    /* Read the data */
-    if (!(dfield = get_data_field(header + idata,
-                                  pixel_size, aspect, wavelength/mult, "m",
-                                  &mfield, error)))
-        goto fail;
+    wavelength /= mult;
 
     container = gwy_container_new();
-    gwy_container_set_object_by_name(container, "/0/data", dfield);
-    if (mfield)
-        gwy_container_set_object_by_name(container, "/0/mask", mfield);
 
-    if ((i = find_block(header, nblocks, "Title")) != nblocks)
-        gwy_container_set_string_by_name(container, "/0/data/title",
-                                         g_strndup(header[i].data,
-                                                   header[i].size));
-    else
-        gwy_app_channel_title_fall_back(container, 0);
+    /* Read the data */
+    for (i = j = 0; i < nblocks; i++) {
+        gboolean intensity;
+        gchar *s;
 
-    if (aspect != 1.0)
-        gwy_container_set_boolean_by_name(container, "/0/data/realsquare",
-                                          TRUE);
+        if (!gwy_stramong(header[i].name,
+                          "OPD", "SAMPLE_DATA", "RAW_DATA", "RAW DATA",
+                          "Image", "SecArr_0", NULL))
+            continue;
+
+        if (header[i].type != OPD_ARRAY) {
+            g_warning("Block %s is not of array type", header[i].name);
+            continue;
+        }
+
+        dfield = mfield = NULL;
+        intensity = gwy_stramong(header[i].name, "Image", "SecArr_0", NULL);
+        if (intensity) {
+            if (!(dfield = get_data_field(header + i,
+                                          pixel_size, aspect, 1.0, NULL,
+                                          NULL, error)))
+                goto fail;
+        }
+        else {
+            if (!(dfield = get_data_field(header + i,
+                                          pixel_size, aspect, wavelength, "m",
+                                          &mfield, error)))
+                goto fail;
+        }
+
+        gwy_container_set_object(container, gwy_app_get_data_key_for_id(j),
+                                 dfield);
+        if (mfield)
+            gwy_container_set_object(container, gwy_app_get_mask_key_for_id(j),
+                                     mfield);
+
+        s = g_strdup_printf("%s/title",
+                            g_quark_to_string(gwy_app_get_data_key_for_id(j)));
+        if (intensity) {
+            gwy_container_set_string_by_name(container, s,
+                                             g_strdup(header[i].name));
+        }
+        else if ((k = find_block(header, nblocks, "Title")) != nblocks) {
+            gwy_container_set_string_by_name(container, s,
+                                             g_strndup(header[k].data,
+                                                       header[k].size));
+        }
+        else
+            gwy_app_channel_title_fall_back(container, j);
+        g_free(s);
+
+        s = g_strdup_printf("%s/realsquare",
+                            g_quark_to_string(gwy_app_get_data_key_for_id(j)));
+        gwy_container_set_boolean_by_name(container, s, TRUE);
+        g_free(s);
+
+        j++;
+    }
+
+    if (!j) {
+        gwy_object_unref(container);
+        err_NO_DATA(error);
+    }
 
 fail:
     g_free(header);
@@ -413,7 +442,6 @@ get_data_field(const OPDBlock *datablock,
             /* FIXME: Bad data? */
             for (j = yres; j; j--) {
                 data[(j - 1)*xres + i] = wavelength*(*(p++));
-                mdata[(j - 1)*xres + i] = 0.0;
             }
         }
         else {
