@@ -137,7 +137,7 @@ static GwyModuleInfo module_info = {
     N_("Imports Veeco (Digital Instruments) Nanoscope data files, "
        "version 3 or newer."),
     "Yeti <yeti@gwyddion.net>",
-    "0.21",
+    "0.22",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -244,17 +244,13 @@ nanoscope_load(const gchar *filename,
             gwy_debug("has Version: %d", has_version);
             continue;
         }
-        if (gwy_strequal(self, "Ciao scan list")
-            || gwy_strequal(self, "Afm list")
-            || gwy_strequal(self, "Stm list")
-            || gwy_strequal(self, "NC Afm list")) {
+        if (gwy_stramong(self, "Ciao scan list", "Afm list", "Stm list",
+                         "NC Afm list", NULL)) {
             get_scan_list_res(hash, &xres, &yres);
             scanlist = hash;
         }
-        if (!gwy_strequal(self, "Ciao image list")
-            && !gwy_strequal(self, "AFM image list")
-            && !gwy_strequal(self, "STM image list")
-            && !gwy_strequal(self, "NCAFM image list"))
+        if (!gwy_stramong(self, "Ciao image list", "AFM image list",
+                          "STM image list", "NCAFM image list", NULL))
             continue;
 
         ndata->data_field = hash_to_data_field(hash, scannerlist, scanlist,
