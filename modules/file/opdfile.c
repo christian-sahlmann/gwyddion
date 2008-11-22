@@ -103,48 +103,58 @@ typedef struct {
     const guchar *data;
 } OPDBlock;
 
-static gboolean      module_register (void);
-static gint          opd_detect      (const GwyFileDetectInfo *fileinfo,
-                                      gboolean only_name);
-static gint          opd_asc_detect  (const GwyFileDetectInfo *fileinfo,
-                                      gboolean only_name);
-static GwyContainer* opd_load        (const gchar *filename,
-                                      GwyRunType mode,
-                                      GError **error);
-static GwyContainer* opd_asc_load    (const gchar *filename,
-                                      GwyRunType mode,
-                                      GError **error);
-static void          get_block       (OPDBlock *block,
-                                      const guchar **p);
-static gboolean      get_float       (const OPDBlock *header,
-                                      guint nblocks,
-                                      const gchar *name,
-                                      gdouble *value,
-                                      GError **error);
-static GwyDataField* get_data_field(const OPDBlock *datablock,
-               gdouble pixel_size, gdouble aspect, gdouble wavelength,
-               const gchar *zunits,
-               GwyDataField **maskfield,
-               GError **error);
-static gboolean      check_sizes     (const OPDBlock *header,
-                                      guint nblocks,
-                                      GError **error);
-static guint         find_block      (const OPDBlock *header,
-                                      guint nblocks,
-                                      const gchar *name);
-static const guchar* get_array_params(const guchar *p,
-                                      guint *xres,
-                                      guint *yres,
-                                      OPDArrayType *type);
-static guint         remove_bad_data (GwyDataField *dfield,
-                                      GwyDataField *mfield);
+static gboolean      module_register   (void);
+static gint          opd_detect        (const GwyFileDetectInfo *fileinfo,
+                                        gboolean only_name);
+static gint          opd_asc_detect    (const GwyFileDetectInfo *fileinfo,
+                                        gboolean only_name);
+static GwyContainer* opd_load          (const gchar *filename,
+                                        GwyRunType mode,
+                                        GError **error);
+static GwyContainer* opd_asc_load      (const gchar *filename,
+                                        GwyRunType mode,
+                                        GError **error);
+static void          get_block         (OPDBlock *block,
+                                        const guchar **p);
+static gboolean      get_float         (const OPDBlock *header,
+                                        guint nblocks,
+                                        const gchar *name,
+                                        gdouble *value,
+                                        GError **error);
+static GwyDataField* get_data_field    (const OPDBlock *datablock,
+                                        gdouble pixel_size,
+                                        gdouble aspect,
+                                        gdouble wavelength,
+                                        const gchar *zunits,
+                                        GwyDataField **maskfield,
+                                        GError **error);
+static GwyDataField* get_asc_data_field(gchar **p,
+                                        guint xres,
+                                        guint yres,
+                                        gdouble pixel_size,
+                                        gdouble aspect,
+                                        gdouble wavelength,
+                                        const gchar *zunits,
+                                        GwyDataField **maskfield);
+static gboolean      check_sizes       (const OPDBlock *header,
+                                        guint nblocks,
+                                        GError **error);
+static guint         find_block        (const OPDBlock *header,
+                                        guint nblocks,
+                                        const gchar *name);
+static const guchar* get_array_params  (const guchar *p,
+                                        guint *xres,
+                                        guint *yres,
+                                        OPDArrayType *type);
+static guint         remove_bad_data   (GwyDataField *dfield,
+                                        GwyDataField *mfield);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Imports Wyko OPD and ASC files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.3",
+    "0.4",
     "David Nečas (Yeti)",
     "2008",
 };
@@ -282,7 +292,7 @@ opd_load(const gchar *filename,
 
         if (!gwy_stramong(header[i].name,
                           "OPD", "SAMPLE_DATA", "RAW_DATA", "RAW DATA",
-                          "Image", "SecArr_0", NULL))
+                          "Image", "Intensity", "SecArr_0", NULL))
             continue;
 
         if (header[i].type != OPD_ARRAY) {
@@ -291,7 +301,8 @@ opd_load(const gchar *filename,
         }
 
         dfield = mfield = NULL;
-        intensity = gwy_stramong(header[i].name, "Image", "SecArr_0", NULL);
+        intensity = gwy_stramong(header[i].name,
+                                 "Image", "Intensity", "SecArr_0", NULL);
         if (intensity) {
             if (!(dfield = get_data_field(header + i,
                                           pixel_size, aspect, 1.0, NULL,
@@ -335,7 +346,7 @@ opd_load(const gchar *filename,
     }
 
     if (!j) {
-        gwy_object_unref(container);
+        g_object_unref(container);
         err_NO_DATA(error);
     }
 
@@ -575,12 +586,9 @@ opd_asc_load(const gchar *filename,
 {
     GwyContainer *container = NULL;
     GwyDataField *dfield = NULL, *mfield = NULL;
-    GwySIUnit *siunit;
     gchar *line, *p, *s, *buffer = NULL;
     GHashTable *hash = NULL;
-    guint mcount, xres = 0, yres = 0, in_data = 0, ignoring = 0;
-    gdouble pixel_size, wavelength = 0.0, mult = 1.0, aspect = 1.0;
-    gdouble *data = NULL, *drow, *mdata = NULL, *mrow;
+    guint j, xres = 0, yres = 0;
     gsize size;
     GError *err = NULL;
 
@@ -596,33 +604,10 @@ opd_asc_load(const gchar *filename,
         goto fail;
     }
 
+    container = gwy_container_new();
     hash = g_hash_table_new(g_str_hash, g_str_equal);
+    j = 0;
     while ((s = line = gwy_str_next_line(&p))) {
-        if (ignoring) {
-            ignoring--;
-            continue;
-        }
-
-        if (in_data) {
-            guint i;
-
-            in_data--;
-            drow = data + in_data*xres;
-            mrow = mdata + in_data*xres;
-            for (i = 0; i < xres; i++) {
-                if (strncmp(s, "Bad", 3) == 0) {
-                    mrow[i] = 0.0;
-                    s += 3;
-                }
-                else
-                    drow[i] = g_ascii_strtod(s, &s)*wavelength/mult;
-
-                while (g_ascii_isspace(*s))
-                    s++;
-            }
-            continue;
-        }
-
         /* XXX: make noise */
         if (!(s = strchr(s, '\t')))
             continue;
@@ -630,12 +615,12 @@ opd_asc_load(const gchar *filename,
         *s = '\0';
         s++;
 
-        if (gwy_strequal(line, "Y Size")) {
+        if (gwy_strequal(line, "X Size")) {
             xres = atoi(s);
             gwy_debug("xres=%u", xres);
             continue;
         }
-        if (gwy_strequal(line, "X Size")) {
+        if (gwy_strequal(line, "Y Size")) {
             yres = atoi(s);
             gwy_debug("yres=%u", yres);
             continue;
@@ -650,11 +635,12 @@ opd_asc_load(const gchar *filename,
             continue;
         s++;
 
-        if (gwy_strequal(line, "RAW DATA")
-            || gwy_strequal(line, "RAW_DATA")
-            || gwy_strequal(line, "SAMPLE_DATA")
-            || gwy_strequal(line, "OPD")
-            || gwy_strequal(line, "Intensity")) {
+        if (gwy_stramong(line, "OPD", "SAMPLE_DATA", "RAW_DATA", "RAW DATA",
+                         "Image", "Intensity", "SecArr_0", NULL)) {
+            gdouble pixel_size, wavelength, mult = 1.0, aspect = 1.0;
+            gboolean intensity;
+            gchar *k;
+
             if (!xres) {
                 err_MISSING_FIELD(error, "Y Size");
                 goto fail;
@@ -677,35 +663,55 @@ opd_asc_load(const gchar *filename,
             }
             gwy_debug("wavelength = %g", wavelength);
 
+            if ((s = g_hash_table_lookup(hash, "Aspect")))
+                aspect = g_ascii_strtod(s, NULL);
+            if ((s = g_hash_table_lookup(hash, "Mult")))
+                mult = g_ascii_strtod(s, NULL);
+
+            /* TODO: mult, aspect */
+
             wavelength *= Nanometer;
             pixel_size *= Milimeter;
+            wavelength /= mult;
 
-            if (dfield) {
-                ignoring = yres;
-                gwy_debug("Ignoring the following %u lines", ignoring);
+            dfield = mfield = NULL;
+            intensity = gwy_stramong(line,
+                                     "Image", "Intensity", "SecArr_0", NULL);
+            dfield = get_asc_data_field(&p, xres, yres,
+                                        pixel_size, aspect,
+                                        intensity ? 1.0 : wavelength,
+                                        intensity ? "" : "m",
+                                        intensity ? NULL : &mfield);
+            if (!dfield) {
+                g_set_error(error, GWY_MODULE_FILE_ERROR,
+                            GWY_MODULE_FILE_ERROR_DATA,
+                            _("Truncated data in block %s"), line);
+                goto fail;
             }
-            else {
-                in_data = yres;
-                gwy_debug("Reading the following %u lines as data", in_data);
-                dfield = gwy_data_field_new(xres, yres,
-                                            aspect*xres*pixel_size,
-                                            yres*pixel_size,
-                                            FALSE);
 
-                siunit = gwy_si_unit_new("m");
-                gwy_data_field_set_si_unit_xy(dfield, siunit);
-                g_object_unref(siunit);
+            gwy_container_set_object(container, gwy_app_get_data_key_for_id(j),
+                                     dfield);
+            if (mfield)
+                gwy_container_set_object(container,
+                                         gwy_app_get_mask_key_for_id(j),
+                                         mfield);
 
-                siunit = gwy_si_unit_new("m");
-                gwy_data_field_set_si_unit_z(dfield, siunit);
-                g_object_unref(siunit);
+            s = g_strdup_printf("%s/title",
+                                g_quark_to_string(gwy_app_get_data_key_for_id(j)));
+            if (intensity)
+                gwy_container_set_string_by_name(container, s, g_strdup(line));
+            else if ((k = g_hash_table_lookup(hash, "Title")))
+                gwy_container_set_string_by_name(container, s, g_strdup(k));
+            else
+                gwy_app_channel_title_fall_back(container, j);
+            g_free(s);
 
-                mfield = gwy_data_field_new_alike(dfield, FALSE);
-                gwy_data_field_fill(mfield, 1.0);
+            s = g_strdup_printf("%s/realsquare",
+                                g_quark_to_string(gwy_app_get_data_key_for_id(j)));
+            gwy_container_set_boolean_by_name(container, s, TRUE);
+            g_free(s);
 
-                data = gwy_data_field_get_data(dfield);
-                mdata = gwy_data_field_get_data(mfield);
-            }
+            j++;
             continue;
         }
 
@@ -717,29 +723,12 @@ opd_asc_load(const gchar *filename,
         g_hash_table_insert(hash, line, s);
     }
 
-    if (!dfield) {
+    if (!j) {
+        g_object_unref(container);
         err_NO_DATA(error);
-        goto fail;
     }
 
-    mcount = remove_bad_data(dfield, mfield);
-    container = gwy_container_new();
-    gwy_container_set_object_by_name(container, "/0/data", dfield);
-    if (mcount)
-        gwy_container_set_object_by_name(container, "/0/mask", mfield);
-
-    if ((s = g_hash_table_lookup(hash, "Title")))
-        gwy_container_set_string_by_name(container, "/0/data/title",
-                                         g_strdup(s));
-    else
-        gwy_app_channel_title_fall_back(container, 0);
-
-    if (aspect != 1.0)
-        gwy_container_set_boolean_by_name(container, "/0/data/realsquare",
-                                          TRUE);
-
 fail:
-
     gwy_object_unref(dfield);
     gwy_object_unref(mfield);
     g_free(buffer);
@@ -747,6 +736,76 @@ fail:
         g_hash_table_destroy(hash);
 
     return container;
+}
+
+static GwyDataField*
+get_asc_data_field(gchar **p,
+                   guint xres, guint yres,
+                   gdouble pixel_size, gdouble aspect, gdouble wavelength,
+                   const gchar *zunits,
+                   GwyDataField **maskfield)
+{
+    GwyDataField *dfield, *mfield;
+    GwySIUnit *siunit;
+    gdouble *data, *mdata;
+    guint mcount, i, j;
+    gchar *s;
+
+    if (maskfield)
+        *maskfield = NULL;
+
+    dfield = gwy_data_field_new(xres, yres,
+                                xres*pixel_size, aspect*yres*pixel_size, FALSE);
+
+    siunit = gwy_si_unit_new("m");
+    gwy_data_field_set_si_unit_xy(dfield, siunit);
+    g_object_unref(siunit);
+
+    siunit = gwy_si_unit_new(zunits);
+    gwy_data_field_set_si_unit_z(dfield, siunit);
+    g_object_unref(siunit);
+
+    mfield = gwy_data_field_new_alike(dfield, FALSE);
+    gwy_data_field_fill(mfield, 1.0);
+
+    data = gwy_data_field_get_data(dfield);
+    mdata = gwy_data_field_get_data(mfield);
+
+    for (j = 0; j < xres; j++) {
+        if (!(s = gwy_str_next_line(p)))
+            goto fail;
+
+        for (i = yres; i; i--) {
+            const gchar *sprev = s;
+
+            if (strncmp(s, "Bad", 3) == 0) {
+                mdata[(i - 1)*xres + j] = 0.0;
+                s += 3;
+            }
+            else
+                data[(i - 1)*xres + j] = g_ascii_strtod(s, &s)*wavelength;
+
+            while (g_ascii_isspace(*s))
+                s++;
+
+            if (s == sprev)
+                goto fail;
+        }
+    }
+
+    mcount = remove_bad_data(dfield, mfield);
+
+    if (maskfield && mcount)
+        *maskfield = mfield;
+    else
+        g_object_unref(mfield);
+
+    return dfield;
+
+fail:
+    g_object_unref(dfield);
+    g_object_unref(mfield);
+    return NULL;
 }
 
 /***** Common *************************************************************/
