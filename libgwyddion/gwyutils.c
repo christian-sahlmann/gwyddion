@@ -271,6 +271,41 @@ gwy_strisident(const gchar *s,
 }
 
 /**
+ * gwy_stramong:
+ * @str: A string to find.
+ * @...: %NULL-terminated list of string to compare @str with.
+ *
+ * Checks whether a string is equal to any from given list.
+ *
+ * Returns: Zero if @str does not equal to any string from the list, nozero
+ *          othwerise.  More precisely, the position + 1 of the first string
+ *          @str equals to is returned in the latter case.
+ *
+ * Since: 2.11
+ **/
+guint
+gwy_stramong(const gchar *str,
+             ...)
+{
+    va_list ap;
+    const gchar *s;
+    guint i = 1;
+
+    va_start(ap, str);
+    while ((s = va_arg(ap, const gchar*))) {
+        if (gwy_strequal(str, s)) {
+            va_end(ap);
+            return i;
+        }
+        i++;
+    }
+    va_end(ap);
+
+    return 0;
+}
+
+
+/**
  * gwy_file_get_contents:
  * @filename: A file to read contents of.
  * @buffer: Buffer to store the file contents.

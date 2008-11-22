@@ -42,6 +42,8 @@ gint         gwy_strdiffpos            (const gchar *s1,
 gboolean     gwy_strisident            (const gchar *s,
                                         const gchar *more,
                                         const gchar *startmore);
+guint        gwy_stramong              (const gchar *str,
+                                        ...);
 gboolean     gwy_file_get_contents     (const gchar *filename,
                                         guchar **buffer,
                                         gsize *size,
