@@ -1,5 +1,5 @@
 /*
- *  $Id: spmlabf.c 8773 2008-11-18 10:09:10Z yeti-dn $
+ *  $Id$
  *  Copyright (C) 2008 David Necas (Yeti).
  *
  *  This program is free software; you can redistribute it and/or modify
