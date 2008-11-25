@@ -97,7 +97,7 @@ typedef struct {
     char name[BLOCK_NAME_SIZE + 1];
     guint type;
     guint size;
-    guint flags;
+    guint flags;   /* XXX: I don't know what is this good for. */
     /* Derived info */
     guint pos;
     const guchar *data;
@@ -128,6 +128,9 @@ static GwyDataField* get_data_field    (const OPDBlock *datablock,
                                         const gchar *zunits,
                                         GwyDataField **maskfield,
                                         GError **error);
+static void          store_asc_meta    (gpointer key,
+                                        gpointer value,
+                                        gpointer user_data);
 static GwyDataField* get_asc_data_field(gchar **p,
                                         guint xres,
                                         guint yres,
@@ -136,6 +139,8 @@ static GwyDataField* get_asc_data_field(gchar **p,
                                         gdouble wavelength,
                                         const gchar *zunits,
                                         GwyDataField **maskfield);
+static GwyContainer* get_meta          (const OPDBlock *header,
+                                        guint nblocks);
 static gboolean      check_sizes       (const OPDBlock *header,
                                         guint nblocks,
                                         GError **error);
@@ -148,6 +153,9 @@ static const guchar* get_array_params  (const guchar *p,
                                         OPDArrayType *type);
 static guint         remove_bad_data   (GwyDataField *dfield,
                                         GwyDataField *mfield);
+static void          clone_meta        (GwyContainer *container,
+                                        GwyContainer *meta,
+                                        guint nchannels);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -202,7 +210,7 @@ opd_load(const gchar *filename,
          G_GNUC_UNUSED GwyRunType mode,
          GError **error)
 {
-    GwyContainer *meta, *container = NULL;
+    GwyContainer *container = NULL;
     guchar *buffer = NULL;
     OPDBlock directory_block, *header = NULL;
     gsize size = 0;
@@ -345,7 +353,13 @@ opd_load(const gchar *filename,
         j++;
     }
 
-    if (!j) {
+    if (j) {
+        GwyContainer *meta = get_meta(header, nblocks);
+
+        clone_meta(container, meta, j);
+        g_object_unref(meta);
+    }
+    else {
         g_object_unref(container);
         err_NO_DATA(error);
     }
@@ -470,6 +484,47 @@ get_data_field(const OPDBlock *datablock,
         g_object_unref(mfield);
 
     return dfield;
+}
+
+static GwyContainer*
+get_meta(const OPDBlock *header,
+         guint nblocks)
+{
+    GwyContainer *meta = gwy_container_new();
+    guint i, type;
+    const guchar *p;
+    gchar *s;
+
+    for (i = 0; i < nblocks; i++) {
+        type = header[i].type;
+        p = header[i].data;
+        s = NULL;
+        if (type == OPD_TEXT) {
+            s = g_convert(header[i].data, header[i].size, "UTF-8", "ISO-8859-1",
+                          NULL, NULL, NULL);
+            if (s && !*s) {
+                g_free(s);
+                s = NULL;
+            }
+        }
+        else if (type == OPD_SHORT || type == OPD_LONG) {
+            gint32 value = (type == OPD_SHORT)
+                           ? gwy_get_gint16_le(&p)
+                           : gwy_get_gint32_le(&p);
+            s = g_strdup_printf("%d", value);
+        }
+        else if (type == OPD_FLOAT || type == OPD_DOUBLE) {
+            gdouble value = (type == OPD_FLOAT)
+                            ? gwy_get_gfloat_le(&p)
+                            : gwy_get_gdouble_le(&p);
+            s = g_strdup_printf("%g", value);
+        }
+        /* Ignore all other types */
+        if (s)
+            gwy_container_set_string_by_name(meta, header[i].name, s);
+    }
+
+    return meta;
 }
 
 /* TODO: Improve error messages */
@@ -723,7 +778,14 @@ opd_asc_load(const gchar *filename,
         g_hash_table_insert(hash, line, s);
     }
 
-    if (!j) {
+    if (j) {
+        GwyContainer *meta = gwy_container_new();
+
+        g_hash_table_foreach(hash, store_asc_meta, meta);
+        clone_meta(container, meta, j);
+        g_object_unref(meta);
+    }
+    else {
         g_object_unref(container);
         err_NO_DATA(error);
     }
@@ -736,6 +798,20 @@ fail:
         g_hash_table_destroy(hash);
 
     return container;
+}
+
+static void
+store_asc_meta(gpointer key,
+               gpointer value,
+               gpointer user_data)
+{
+    GwyContainer *meta = (GwyContainer*)user_data;
+    gchar *cval;
+
+    if (!(cval = g_convert(value, strlen(value), "UTF-8", "ISO-8859-1",
+                           NULL, NULL, NULL)))
+        return;
+    gwy_container_set_string_by_name(meta, key, cval);
 }
 
 static GwyDataField*
@@ -838,6 +914,24 @@ remove_bad_data(GwyDataField *dfield, GwyDataField *mfield)
     gwy_debug("mcount = %u", mcount);
 
     return mcount;
+}
+
+static void
+clone_meta(GwyContainer *container, GwyContainer *meta, guint nchannels)
+{
+    guint i;
+    gchar s[32];
+
+    if (!gwy_container_get_n_items(meta))
+        return;
+
+    /* Simply store identical metadata for each channel */
+    for (i = 0; i < nchannels; i++) {
+        GwyContainer *m = gwy_container_duplicate(meta);
+        g_snprintf(s, sizeof(s), "/%u/meta", i);
+        gwy_container_set_object_by_name(container, s, m);
+        g_object_unref(m);
+    }
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
