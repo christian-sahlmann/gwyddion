@@ -178,6 +178,9 @@ EXTRA_DIST = \
 	pygwy-fix-defs.py \
 	makefile.msc \
 	wrap_calls.h \
+	pygwy-console.h \
+	pygwy.h \
+	gwyutils.py \
 	makefile.msc.gwt \
 	pygwywrap.c.win32
 

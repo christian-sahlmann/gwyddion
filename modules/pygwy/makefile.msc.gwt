@@ -5,6 +5,10 @@ pygwy_module = pygwy.la
 <[[:SELF:]]>
 <[[:MODULES:]]>
 
+DATA_TYPE = pygwy
+
+<[[:DATA:]]>
+
 !INCLUDE $(TOP_SRCDIR)\make.msc
 
 !IFDEF ENABLE_PYGWY
@@ -38,7 +42,7 @@ mod: $(MODULES)
 
 data: $(DATA)
 
-install: install-mod install data
+install: install-mod install data install-data
 
 !INCLUDE $(TOP_SRCDIR)\rules.msc
 
