@@ -4,7 +4,7 @@
 
 
 
-#line 4 "./pygwy.override"
+#line 25 "./pygwy.override"
 #include <Python.h>
 #include <pygobject.h>
 #include <pygtk/pygtk.h>
@@ -82,9 +82,11 @@ typedef gint GIntValue;
 typedef gdouble GDoubleValue;
 typedef gdouble GDoubleArray;
 typedef gdouble GDoubleArrayToFill;
+typedef gchar keep_gchar;       // do not delete when returning
+typedef gchar pass_owner_gchar; // do not delete in wrapped function
 
 // ##include "pywrap.h"
-#line 88 "pygwywrap.c"
+#line 90 "pygwywrap.c"
 
 
 /* ---------- types from other modules ---------- */
@@ -189,7 +191,7 @@ PyTypeObject G_GNUC_INTERNAL PyGwyStringList_Type;
 PyTypeObject G_GNUC_INTERNAL PyGwyVRuler_Type;
 PyTypeObject G_GNUC_INTERNAL PyGwyVectorLayer_Type;
 
-#line 193 "pygwywrap.c"
+#line 195 "pygwywrap.c"
 
 
 
@@ -1385,38 +1387,317 @@ _wrap_gwy_container_gis_double(PyGObject *self, PyObject *args, PyObject *kwargs
 
 }
 
-#line 387 "./pygwy.override"
-/**
- * gwy_container_get_object_by_name:
- * @name: name of object
- *
- * Get object of given name from container.
- *
- * Returns: object of given name
-**/
 static PyObject *
-_wrap_gwy_container_get_object_by_name(PyGObject *self, PyObject *args, PyObject *kwargs) 
+_wrap_gwy_container_contains_by_name(PyGObject *self, PyObject *args, PyObject *kwargs)
 {
-   static char *kwlist[] = {"name",  NULL};
-   gchar *key;
-   PyObject *obj;
-   GValue gval;
+    static char *kwlist[] = { "name", NULL };
+    char *name;
+    int ret;
 
-   if (!PyArg_ParseTupleAndKeywords(args, 
-                                    kwargs,
-                                    "s:GwyContainer.get_object_by_name", 
-                                    kwlist, 
-                                    &key))
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs,"s:GwyContainer.contains_by_name", kwlist, &name))
         return NULL;
-   gval = gwy_container_get_value_by_name(GWY_CONTAINER(self->obj), key);
-   obj = convert_gvalue_to_pyobject(&gval);
-   return obj;
+    
+    ret = gwy_container_contains_by_name(GWY_CONTAINER(self->obj), name);
+    
+    return PyBool_FromLong(ret);
+
 }
 
-#line 1417 "pygwywrap.c"
+static PyObject *
+_wrap_gwy_container_remove_by_name(PyGObject *self, PyObject *args, PyObject *kwargs)
+{
+    static char *kwlist[] = { "name", NULL };
+    char *name;
 
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs,"s:GwyContainer.remove_by_name", kwlist, &name))
+        return NULL;
+    
+    gwy_container_remove_by_name(GWY_CONTAINER(self->obj), name);
+    
+    Py_INCREF(Py_None);
+    return Py_None;
+}
 
-#line 532 "./pygwy.override"
+static PyObject *
+_wrap_gwy_container_rename_by_name(PyGObject *self, PyObject *args, PyObject *kwargs)
+{
+    static char *kwlist[] = { "name", "new_name", "delete", NULL };
+    char *name, *new_name;
+    int delete;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs,"ssi:GwyContainer.rename_by_name", kwlist, &name, &new_name, &delete))
+        return NULL;
+    
+    gwy_container_rename_by_name(GWY_CONTAINER(self->obj), name, new_name, delete);
+    
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
+static PyObject *
+_wrap_gwy_container_set_boolean_by_name(PyGObject *self, PyObject *args, PyObject *kwargs)
+{
+    static char *kwlist[] = { "name", "value", NULL };
+    char *name;
+    int value;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs,"si:GwyContainer.set_boolean_by_name", kwlist, &name, &value))
+        return NULL;
+    
+    gwy_container_set_boolean_by_name(GWY_CONTAINER(self->obj), name, value);
+    
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
+static PyObject *
+_wrap_gwy_container_set_double_by_name(PyGObject *self, PyObject *args, PyObject *kwargs)
+{
+    static char *kwlist[] = { "name", "value", NULL };
+    char *name;
+    double value;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs,"sd:GwyContainer.set_double_by_name", kwlist, &name, &value))
+        return NULL;
+    
+    gwy_container_set_double_by_name(GWY_CONTAINER(self->obj), name, value);
+    
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
+static PyObject *
+_wrap_gwy_container_set_enum_by_name(PyGObject *self, PyObject *args, PyObject *kwargs)
+{
+    static char *kwlist[] = { "name", "value", NULL };
+    char *name;
+    PyObject *py_value = NULL;
+    guint value = 0;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs,"sO:GwyContainer.set_enum_by_name", kwlist, &name, &py_value))
+        return NULL;
+    if (py_value) {
+        if (PyLong_Check(py_value))
+            value = PyLong_AsUnsignedLong(py_value);
+        else if (PyInt_Check(py_value))
+            value = PyInt_AsLong(py_value);
+        else
+            PyErr_SetString(PyExc_TypeError, "Parameter 'value' must be an int or a long");
+        if (PyErr_Occurred())
+            return NULL;
+    }
+    
+    gwy_container_set_enum_by_name(GWY_CONTAINER(self->obj), name, value);
+    
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
+static PyObject *
+_wrap_gwy_container_set_int32_by_name(PyGObject *self, PyObject *args, PyObject *kwargs)
+{
+    static char *kwlist[] = { "name", "value", NULL };
+    char *name;
+    int value;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs,"si:GwyContainer.set_int32_by_name", kwlist, &name, &value))
+        return NULL;
+    
+    gwy_container_set_int32_by_name(GWY_CONTAINER(self->obj), name, value);
+    
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
+static PyObject *
+_wrap_gwy_container_set_int64_by_name(PyGObject *self, PyObject *args, PyObject *kwargs)
+{
+    static char *kwlist[] = { "name", "value", NULL };
+    char *name;
+    gint64 value;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs,"sL:GwyContainer.set_int64_by_name", kwlist, &name, &value))
+        return NULL;
+    
+    gwy_container_set_int64_by_name(GWY_CONTAINER(self->obj), name, value);
+    
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
+static PyObject *
+_wrap_gwy_container_set_object_by_name(PyGObject *self, PyObject *args, PyObject *kwargs)
+{
+    static char *kwlist[] = { "name", "value", NULL };
+    char *name;
+    PyGObject *value;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs,"sO!:GwyContainer.set_object_by_name", kwlist, &name, &PyGObject_Type, &value))
+        return NULL;
+    
+    gwy_container_set_object_by_name(GWY_CONTAINER(self->obj), name, G_OBJECT(value->obj));
+    
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
+static PyObject *
+_wrap_gwy_container_set_uchar_by_name(PyGObject *self, PyObject *args, PyObject *kwargs)
+{
+    static char *kwlist[] = { "name", "value", NULL };
+    char *name, value;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs,"sc:GwyContainer.set_uchar_by_name", kwlist, &name, &value))
+        return NULL;
+    
+    gwy_container_set_uchar_by_name(GWY_CONTAINER(self->obj), name, value);
+    
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
+static PyObject *
+_wrap_gwy_container_set_string_by_name(PyGObject *self, PyObject *args, PyObject *kwargs)
+{
+    static char *kwlist[] = { "name", "value", NULL };
+    char *name, *value, *value_dup;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs,"ss:GwyContainer.set_string_by_name", kwlist, &name, &value))
+        return NULL;
+    value_dup = g_strdup(value);
+    
+    gwy_container_set_string_by_name(GWY_CONTAINER(self->obj), name, value_dup);
+    
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
+static PyObject *
+_wrap_gwy_container_get_boolean_by_name(PyGObject *self, PyObject *args, PyObject *kwargs)
+{
+    static char *kwlist[] = { "name", NULL };
+    char *name;
+    int ret;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs,"s:GwyContainer.get_boolean_by_name", kwlist, &name))
+        return NULL;
+    
+    ret = gwy_container_get_boolean_by_name(GWY_CONTAINER(self->obj), name);
+    
+    return PyBool_FromLong(ret);
+
+}
+
+static PyObject *
+_wrap_gwy_container_get_double_by_name(PyGObject *self, PyObject *args, PyObject *kwargs)
+{
+    static char *kwlist[] = { "name", NULL };
+    char *name;
+    double ret;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs,"s:GwyContainer.get_double_by_name", kwlist, &name))
+        return NULL;
+    
+    ret = gwy_container_get_double_by_name(GWY_CONTAINER(self->obj), name);
+    
+    return PyFloat_FromDouble(ret);
+}
+
+static PyObject *
+_wrap_gwy_container_get_enum_by_name(PyGObject *self, PyObject *args, PyObject *kwargs)
+{
+    static char *kwlist[] = { "name", NULL };
+    char *name;
+    guint ret;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs,"s:GwyContainer.get_enum_by_name", kwlist, &name))
+        return NULL;
+    
+    ret = gwy_container_get_enum_by_name(GWY_CONTAINER(self->obj), name);
+    
+    return PyLong_FromUnsignedLong(ret);
+}
+
+static PyObject *
+_wrap_gwy_container_get_int32_by_name(PyGObject *self, PyObject *args, PyObject *kwargs)
+{
+    static char *kwlist[] = { "name", NULL };
+    char *name;
+    int ret;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs,"s:GwyContainer.get_int32_by_name", kwlist, &name))
+        return NULL;
+    
+    ret = gwy_container_get_int32_by_name(GWY_CONTAINER(self->obj), name);
+    
+    return PyInt_FromLong(ret);
+}
+
+static PyObject *
+_wrap_gwy_container_get_int64_by_name(PyGObject *self, PyObject *args, PyObject *kwargs)
+{
+    static char *kwlist[] = { "name", NULL };
+    char *name;
+    gint64 ret;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs,"s:GwyContainer.get_int64_by_name", kwlist, &name))
+        return NULL;
+    
+    ret = gwy_container_get_int64_by_name(GWY_CONTAINER(self->obj), name);
+    
+    return PyLong_FromLongLong(ret);
+}
+
+static PyObject *
+_wrap_gwy_container_get_object_by_name(PyGObject *self, PyObject *args, PyObject *kwargs)
+{
+    static char *kwlist[] = { "name", NULL };
+    char *name;
+    GObject *ret;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs,"s:GwyContainer.get_object_by_name", kwlist, &name))
+        return NULL;
+    
+    ret = gwy_container_get_object_by_name(GWY_CONTAINER(self->obj), name);
+    
+    /* pygobject_new handles NULL checking */
+    return pygobject_new((GObject *)ret);
+}
+
+static PyObject *
+_wrap_gwy_container_get_uchar_by_name(PyGObject *self, PyObject *args, PyObject *kwargs)
+{
+    static char *kwlist[] = { "name", NULL };
+    char *name;
+    gchar ret;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs,"s:GwyContainer.get_uchar_by_name", kwlist, &name))
+        return NULL;
+    
+    ret = gwy_container_get_uchar_by_name(GWY_CONTAINER(self->obj), name);
+    
+    return PyString_FromStringAndSize(&ret, 1);
+}
+
+static PyObject *
+_wrap_gwy_container_get_string_by_name(PyGObject *self, PyObject *args, PyObject *kwargs)
+{
+    static char *kwlist[] = { "name", NULL };
+    char *name;
+    const gchar *ret;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs,"s:GwyContainer.get_string_by_name", kwlist, &name))
+        return NULL;
+    
+    ret = gwy_container_get_string_by_name(GWY_CONTAINER(self->obj), name);
+    
+    if (ret)
+        return PyString_FromString(ret);
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
+#line 468 "./pygwy.override"
 static PyObject *
 _wrap_gwy_container_keys_by_name(PyGObject *self) 
 {
@@ -1436,10 +1717,10 @@ _wrap_gwy_container_keys_by_name(PyGObject *self)
    return tuple;
 }
 
-#line 1440 "pygwywrap.c"
+#line 1721 "pygwywrap.c"
 
 
-#line 483 "./pygwy.override"
+#line 419 "./pygwy.override"
 /**
  * gwy_container_get_object:
  * @key: key of object.
@@ -1466,32 +1747,39 @@ _wrap_gwy_container_get_object(PyGObject *self, PyObject *args, PyObject *kwargs
    }
 }
 
-#line 1470 "pygwywrap.c"
+#line 1751 "pygwywrap.c"
 
 
-#line 416 "./pygwy.override"
+#line 534 "./pygwy.override"
 static PyObject *
-_wrap_gwy_container_contains_by_name(PyGObject *self, PyObject *args, PyObject *kwargs) 
+_wrap_gwy_container_datafields(PyGObject *self) 
 {
-   static char *kwlist[] = {"name",  NULL};
-   gchar *key;
-   gboolean res;
+   gint i;
+   GQuark *keys;
+   PyObject *py_list;
+   gpointer value;
 
-   if (!PyArg_ParseTupleAndKeywords(args, 
-                                    kwargs,
-                                    "s:GwyContainer.contains_by_name", 
-                                    kwlist, 
-                                    &key))
-        return NULL;
-   res = gwy_container_contains_by_name(GWY_CONTAINER(self->obj), key);
+   py_list = PyList_New(0);
+   if (!py_list) {
+      return NULL;
+   }
 
-   return PyBool_FromLong((long) res);
+   keys = gwy_container_keys(GWY_CONTAINER(self->obj));
+   for (i = 0 ; i < gwy_container_get_n_items(GWY_CONTAINER(self->obj)); i++) 
+   {
+      if (gwy_container_gis_object(GWY_CONTAINER(self->obj),  keys[i], &value) 
+          && GWY_IS_DATA_FIELD(value)) 
+      {
+         PyList_Append(py_list, pygobject_new((GObject*)value));
+      }
+   }
+   g_free(keys);
+   return py_list;
 }
+#line 1780 "pygwywrap.c"
 
-#line 1492 "pygwywrap.c"
 
-
-#line 511 "./pygwy.override"
+#line 447 "./pygwy.override"
 static PyObject *
 _wrap_gwy_container_keys(PyGObject *self) 
 {
@@ -1511,10 +1799,10 @@ _wrap_gwy_container_keys(PyGObject *self)
    return tuple;
 }
 
-#line 1515 "pygwywrap.c"
+#line 1803 "pygwywrap.c"
 
 
-#line 464 "./pygwy.override"
+#line 400 "./pygwy.override"
 static PyObject *
 _wrap_gwy_container_get_string(PyGObject *self, PyObject *args, PyObject *kwargs)
 {
@@ -1532,10 +1820,41 @@ _wrap_gwy_container_get_string(PyGObject *self, PyObject *args, PyObject *kwargs
         return NULL;
 }
 
-#line 1536 "pygwywrap.c"
+#line 1824 "pygwywrap.c"
 
 
-#line 436 "./pygwy.override"
+#line 561 "./pygwy.override"
+static PyObject *
+_wrap_gwy_container_graph_models(PyGObject *self) 
+{
+   gint i;
+   GQuark *keys;
+   PyObject *py_list;
+   gpointer value;
+
+   py_list = PyList_New(0);
+   if (!py_list) {
+      return NULL;
+   }
+
+   keys = gwy_container_keys(GWY_CONTAINER(self->obj));
+   for (i = 0 ; i < gwy_container_get_n_items(GWY_CONTAINER(self->obj)); i++) 
+   {
+      if (gwy_container_gis_object(GWY_CONTAINER(self->obj),  keys[i], &value) 
+          && GWY_IS_GRAPH_MODEL(value)) 
+      {
+         PyList_Append(py_list, pygobject_new((GObject*)value));
+      }
+   }
+   g_free(keys);
+   return py_list;
+}
+// TODO: use G_OBJECT_TYPE_NAME instead of string values in set_object_by_name
+/* vim: set cin et ts=4 sw=4 cino=>1s syntax=c,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
+#line 1855 "pygwywrap.c"
+
+
+#line 372 "./pygwy.override"
 /**
  * gwy_container_set_string: 
  * @key: an object key
@@ -1562,47 +1881,7 @@ _wrap_gwy_container_set_string(PyGObject *self, PyObject *args, PyObject *kwargs
     return Py_None;
 }
 
-#line 1566 "pygwywrap.c"
-
-
-#line 349 "./pygwy.override"
-/**
- * gwy_container_set_object_by_name:
- * @name: name of object to store
- * @object: object to store
- *
- * Store object into container, not tested.
-**/      
-static PyObject *
-_wrap_gwy_container_set_object_by_name(PyGObject *self, PyObject *args, PyObject *kwargs) 
-{
-   static char *kwlist[] = {"name", "obj",  NULL};
-   GwyContainer *container;   
-   gchar *key;
-   PyObject *obj;
-   GValue *gval;
-
-   container = GWY_CONTAINER(self->obj);
-   if (!PyArg_ParseTupleAndKeywords(args, 
-                                    kwargs,
-                                    "sO:GwyContainer.set_object_by_name", 
-                                    kwlist, 
-                                    &key, 
-                                    &obj))
-        return NULL;
-   // try to convert to GValue
-   gval = convert_pyobject_to_gvalue(obj);
-   if (!gval) {
-      PyErr_SetString(PyExc_TypeError, "could not convert Python object to GObject");
-      return NULL;
-   }
-   gwy_container_set_value_by_name(container, key, gval, 0);
-   
-   Py_INCREF(Py_None);
-   return Py_None;
-}
-
-#line 1606 "pygwywrap.c"
+#line 1885 "pygwywrap.c"
 
 
 static const PyMethodDef _PyGwyContainer_methods[] = {
@@ -1654,21 +1933,57 @@ static const PyMethodDef _PyGwyContainer_methods[] = {
       NULL },
     { "gis_double", (PyCFunction)_wrap_gwy_container_gis_double, METH_VARARGS|METH_KEYWORDS,
       NULL },
+    { "contains_by_name", (PyCFunction)_wrap_gwy_container_contains_by_name, METH_VARARGS|METH_KEYWORDS,
+      NULL },
+    { "remove_by_name", (PyCFunction)_wrap_gwy_container_remove_by_name, METH_VARARGS|METH_KEYWORDS,
+      NULL },
+    { "rename_by_name", (PyCFunction)_wrap_gwy_container_rename_by_name, METH_VARARGS|METH_KEYWORDS,
+      NULL },
+    { "set_boolean_by_name", (PyCFunction)_wrap_gwy_container_set_boolean_by_name, METH_VARARGS|METH_KEYWORDS,
+      NULL },
+    { "set_double_by_name", (PyCFunction)_wrap_gwy_container_set_double_by_name, METH_VARARGS|METH_KEYWORDS,
+      NULL },
+    { "set_enum_by_name", (PyCFunction)_wrap_gwy_container_set_enum_by_name, METH_VARARGS|METH_KEYWORDS,
+      NULL },
+    { "set_int32_by_name", (PyCFunction)_wrap_gwy_container_set_int32_by_name, METH_VARARGS|METH_KEYWORDS,
+      NULL },
+    { "set_int64_by_name", (PyCFunction)_wrap_gwy_container_set_int64_by_name, METH_VARARGS|METH_KEYWORDS,
+      NULL },
+    { "set_object_by_name", (PyCFunction)_wrap_gwy_container_set_object_by_name, METH_VARARGS|METH_KEYWORDS,
+      NULL },
+    { "set_uchar_by_name", (PyCFunction)_wrap_gwy_container_set_uchar_by_name, METH_VARARGS|METH_KEYWORDS,
+      NULL },
+    { "set_string_by_name", (PyCFunction)_wrap_gwy_container_set_string_by_name, METH_VARARGS|METH_KEYWORDS,
+      NULL },
+    { "get_boolean_by_name", (PyCFunction)_wrap_gwy_container_get_boolean_by_name, METH_VARARGS|METH_KEYWORDS,
+      NULL },
+    { "get_double_by_name", (PyCFunction)_wrap_gwy_container_get_double_by_name, METH_VARARGS|METH_KEYWORDS,
+      NULL },
+    { "get_enum_by_name", (PyCFunction)_wrap_gwy_container_get_enum_by_name, METH_VARARGS|METH_KEYWORDS,
+      NULL },
+    { "get_int32_by_name", (PyCFunction)_wrap_gwy_container_get_int32_by_name, METH_VARARGS|METH_KEYWORDS,
+      NULL },
+    { "get_int64_by_name", (PyCFunction)_wrap_gwy_container_get_int64_by_name, METH_VARARGS|METH_KEYWORDS,
+      NULL },
     { "get_object_by_name", (PyCFunction)_wrap_gwy_container_get_object_by_name, METH_VARARGS|METH_KEYWORDS,
+      NULL },
+    { "get_uchar_by_name", (PyCFunction)_wrap_gwy_container_get_uchar_by_name, METH_VARARGS|METH_KEYWORDS,
+      NULL },
+    { "get_string_by_name", (PyCFunction)_wrap_gwy_container_get_string_by_name, METH_VARARGS|METH_KEYWORDS,
       NULL },
     { "keys_by_name", (PyCFunction)_wrap_gwy_container_keys_by_name, METH_NOARGS,
       NULL },
     { "get_object", (PyCFunction)_wrap_gwy_container_get_object, METH_VARARGS|METH_KEYWORDS,
       NULL },
-    { "contains_by_name", (PyCFunction)_wrap_gwy_container_contains_by_name, METH_VARARGS|METH_KEYWORDS,
+    { "datafields", (PyCFunction)_wrap_gwy_container_datafields, METH_NOARGS,
       NULL },
     { "keys", (PyCFunction)_wrap_gwy_container_keys, METH_NOARGS,
       NULL },
     { "get_string", (PyCFunction)_wrap_gwy_container_get_string, METH_VARARGS|METH_KEYWORDS,
       NULL },
-    { "set_string", (PyCFunction)_wrap_gwy_container_set_string, METH_VARARGS|METH_KEYWORDS,
+    { "graph_models", (PyCFunction)_wrap_gwy_container_graph_models, METH_NOARGS,
       NULL },
-    { "set_object_by_name", (PyCFunction)_wrap_gwy_container_set_object_by_name, METH_VARARGS|METH_KEYWORDS,
+    { "set_string", (PyCFunction)_wrap_gwy_container_set_string, METH_VARARGS|METH_KEYWORDS,
       NULL },
     { NULL, NULL, 0, NULL }
 };
@@ -5656,7 +5971,19 @@ _wrap_gwy_data_field_circular_area_extract_wrap(PyGObject *self, PyObject *args,
 
 }
 
-#line 212 "./pygwy.override"
+static PyObject *
+_wrap_gwy_data_field_create_full_mask(PyGObject *self)
+{
+    GwyDataField *ret;
+
+    
+    ret = gwy_data_field_create_full_mask(GWY_DATA_FIELD(self->obj));
+    
+    /* pygobject_new handles NULL checking */
+    return pygobject_new((GObject *)ret);
+}
+
+#line 235 "./pygwy.override"
 /**
  * gwy_data_field_duplicate:
  *
@@ -5674,10 +6001,10 @@ _wrap_gwy_data_field_duplicate(PyGObject *self)
    return pygobject_new((GObject *)ret); 
 }
 
-#line 5678 "pygwywrap.c"
+#line 6005 "pygwywrap.c"
 
 
-#line 282 "./pygwy.override"
+#line 305 "./pygwy.override"
 /**
  * gwy_data_field_get_data:
  *
@@ -5710,7 +6037,7 @@ _wrap_gwy_data_field_get_data(PyGObject *self)
    return tuple;
 }
 
-#line 5714 "pygwywrap.c"
+#line 6041 "pygwywrap.c"
 
 
 static const PyMethodDef _PyGwyDataField_methods[] = {
@@ -6131,6 +6458,8 @@ static const PyMethodDef _PyGwyDataField_methods[] = {
     { "elliptic_area_extract", (PyCFunction)_wrap_gwy_data_field_elliptic_area_extract_wrap, METH_VARARGS|METH_KEYWORDS,
       NULL },
     { "circular_area_extract", (PyCFunction)_wrap_gwy_data_field_circular_area_extract_wrap, METH_VARARGS|METH_KEYWORDS,
+      NULL },
+    { "create_full_mask", (PyCFunction)_wrap_gwy_data_field_create_full_mask, METH_NOARGS,
       NULL },
     { "duplicate", (PyCFunction)_wrap_gwy_data_field_duplicate, METH_NOARGS,
       NULL },
@@ -7309,7 +7638,7 @@ _wrap_gwy_data_line_psdf(PyGObject *self, PyObject *args, PyObject *kwargs)
     return Py_None;
 }
 
-#line 282 "./pygwy.override"
+#line 305 "./pygwy.override"
 static PyObject *
 _wrap_gwy_data_line_get_data(PyGObject *self)
 {   
@@ -7332,7 +7661,7 @@ _wrap_gwy_data_line_get_data(PyGObject *self)
 
    return tuple;
 }
-#line 7336 "pygwywrap.c"
+#line 7665 "pygwywrap.c"
 
 
 static const PyMethodDef _PyGwyDataLine_methods[] = {
@@ -16234,7 +16563,7 @@ _wrap_gwy_app_data_browser_add_spectra(PyObject *self, PyObject *args, PyObject 
     return PyInt_FromLong(ret);
 }
 
-#line 306 "./pygwy.override"
+#line 329 "./pygwy.override"
 /**
  *  gwy_app_data_browser_get_data_ids:
  *  @container: A data container.
@@ -16276,7 +16605,7 @@ _wrap_gwy_app_data_browser_get_data_ids(PyObject *self, PyObject *args, PyObject
    return tuple;
 }
 
-#line 16280 "pygwywrap.c"
+#line 16609 "pygwywrap.c"
 
 
 static PyObject *
@@ -16572,7 +16901,7 @@ _wrap_gwy_app_set_current_directory(PyObject *self, PyObject *args, PyObject *kw
     return Py_None;
 }
 
-#line 553 "./pygwy.override"
+#line 489 "./pygwy.override"
 /**
  * gwy_app_file_load:
  * @filename: Filename of file to open
@@ -16595,7 +16924,7 @@ _wrap_gwy_app_file_load(PyObject *self, PyObject *args, PyObject *kwargs)
    return pygobject_new((GObject *)c);
 }
 
-#line 16599 "pygwywrap.c"
+#line 16928 "pygwywrap.c"
 
 
 static PyObject *
@@ -16618,7 +16947,7 @@ _wrap_gwy_app_file_merge(PyObject *self)
     return Py_None;
 }
 
-#line 577 "./pygwy.override"
+#line 513 "./pygwy.override"
 static PyObject *
 _wrap_gwy_app_file_write(PyObject *self, PyObject *args, PyObject *kwargs)
 {
@@ -16638,7 +16967,7 @@ _wrap_gwy_app_file_write(PyObject *self, PyObject *args, PyObject *kwargs)
    
 
 }
-#line 16642 "pygwywrap.c"
+#line 16971 "pygwywrap.c"
 
 
 static PyObject *
@@ -17176,7 +17505,7 @@ _wrap_gwy_app_gl_is_ok(PyObject *self)
 
 }
 
-#line 231 "./pygwy.override"
+#line 254 "./pygwy.override"
 static PyObject *
 _wrap_gwy_app_undo_qcheckpointv(PyObject *self, PyObject *args, PyObject *kwargs) 
 {
@@ -17192,7 +17521,7 @@ _wrap_gwy_app_undo_qcheckpointv(PyObject *self, PyObject *args, PyObject *kwargs
    return Py_None;
 }
 
-#line 17196 "pygwywrap.c"
+#line 17525 "pygwywrap.c"
 
 
 static PyObject *
@@ -18789,7 +19118,123 @@ _wrap_gwy_app_data_browser_get_data_ids_wrap(PyObject *self, PyObject *args, PyO
 
 }
 
-#line 130 "./pygwy.override"
+static PyObject *
+_wrap_gwy_file_save_png(PyObject *self, PyObject *args, PyObject *kwargs)
+{
+    static char *kwlist[] = { "data", "filename", "zoom", "scale", NULL };
+    PyGObject *data;
+    char *filename;
+    double zoom, scale;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs,"O!sdd:gwy_file_save_png", kwlist, &PyGwyContainer_Type, &data, &filename, &zoom, &scale))
+        return NULL;
+    
+    gwy_file_save_png(GWY_CONTAINER(data->obj), filename, zoom, scale);
+    
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
+static PyObject *
+_wrap_gwy_get_key_from_name(PyObject *self, PyObject *args, PyObject *kwargs)
+{
+    static char *kwlist[] = { "name", NULL };
+    char *name;
+    int ret;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs,"s:gwy_get_key_from_name", kwlist, &name))
+        return NULL;
+    
+    ret = gwy_get_key_from_name(name);
+    
+    return PyInt_FromLong(ret);
+}
+
+static PyObject *
+_wrap_gwy_tip_dilation_wrap(PyObject *self, PyObject *args, PyObject *kwargs)
+{
+    static char *kwlist[] = { "tip", "surface", NULL };
+    PyGObject *tip, *surface;
+    GwyDataField *ret;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs,"O!O!:gwy_tip_dilation", kwlist, &PyGwyDataField_Type, &tip, &PyGwyDataField_Type, &surface))
+        return NULL;
+    
+    ret = gwy_tip_dilation_wrap(GWY_DATA_FIELD(tip->obj), GWY_DATA_FIELD(surface->obj));
+    
+    /* pygobject_new handles NULL checking */
+    return pygobject_new((GObject *)ret);
+}
+
+static PyObject *
+_wrap_gwy_tip_erosion_wrap(PyObject *self, PyObject *args, PyObject *kwargs)
+{
+    static char *kwlist[] = { "tip", "surface", NULL };
+    PyGObject *tip, *surface;
+    GwyDataField *ret;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs,"O!O!:gwy_tip_erosion", kwlist, &PyGwyDataField_Type, &tip, &PyGwyDataField_Type, &surface))
+        return NULL;
+    
+    ret = gwy_tip_erosion_wrap(GWY_DATA_FIELD(tip->obj), GWY_DATA_FIELD(surface->obj));
+    
+    /* pygobject_new handles NULL checking */
+    return pygobject_new((GObject *)ret);
+}
+
+static PyObject *
+_wrap_gwy_tip_cmap_wrap(PyObject *self, PyObject *args, PyObject *kwargs)
+{
+    static char *kwlist[] = { "tip", "surface", NULL };
+    PyGObject *tip, *surface;
+    GwyDataField *ret;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs,"O!O!:gwy_tip_cmap", kwlist, &PyGwyDataField_Type, &tip, &PyGwyDataField_Type, &surface))
+        return NULL;
+    
+    ret = gwy_tip_cmap_wrap(GWY_DATA_FIELD(tip->obj), GWY_DATA_FIELD(surface->obj));
+    
+    /* pygobject_new handles NULL checking */
+    return pygobject_new((GObject *)ret);
+}
+
+static PyObject *
+_wrap_gwy_tip_estimate_partial_wrap(PyObject *self, PyObject *args, PyObject *kwargs)
+{
+    static char *kwlist[] = { "tip", "surface", "threshold", "use_edges", NULL };
+    PyGObject *tip, *surface;
+    double threshold;
+    int use_edges;
+    GwyDataField *ret;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs,"O!O!di:gwy_tip_estimate_partial", kwlist, &PyGwyDataField_Type, &tip, &PyGwyDataField_Type, &surface, &threshold, &use_edges))
+        return NULL;
+    
+    ret = gwy_tip_estimate_partial_wrap(GWY_DATA_FIELD(tip->obj), GWY_DATA_FIELD(surface->obj), threshold, use_edges);
+    
+    /* pygobject_new handles NULL checking */
+    return pygobject_new((GObject *)ret);
+}
+
+static PyObject *
+_wrap_gwy_tip_estimate_full_wrap(PyObject *self, PyObject *args, PyObject *kwargs)
+{
+    static char *kwlist[] = { "tip", "surface", "threshold", "use_edges", NULL };
+    PyGObject *tip, *surface;
+    double threshold;
+    int use_edges;
+    GwyDataField *ret;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs,"O!O!di:gwy_tip_estimate_full", kwlist, &PyGwyDataField_Type, &tip, &PyGwyDataField_Type, &surface, &threshold, &use_edges))
+        return NULL;
+    
+    ret = gwy_tip_estimate_full_wrap(GWY_DATA_FIELD(tip->obj), GWY_DATA_FIELD(surface->obj), threshold, use_edges);
+    
+    /* pygobject_new handles NULL checking */
+    return pygobject_new((GObject *)ret);
+}
+
+#line 153 "./pygwy.override"
 /**
  *  gwy_app_data_browser_get_current:
  *  @obj_type: object type, expected values: C{B{APP_DATA_FIELD_ID, APP_GRAPH_MODEL_ID, 
@@ -18851,10 +19296,10 @@ _wrap_gwy_app_data_browser_get_current(PyObject *self, PyObject *args, PyObject 
    }
 }
 
-#line 18855 "pygwywrap.c"
+#line 19300 "pygwywrap.c"
 
 
-#line 193 "./pygwy.override"
+#line 216 "./pygwy.override"
 /**
  *  gwy_app_data_browser_get_containers:
  *
@@ -18872,7 +19317,7 @@ _wrap_gwy_app_data_browser_get_containers(PyGObject *self)
    return list;
 }
 
-#line 18876 "pygwywrap.c"
+#line 19321 "pygwywrap.c"
 
 
 const PyMethodDef pygwy_functions[] = {
@@ -19330,6 +19775,20 @@ const PyMethodDef pygwy_functions[] = {
       NULL },
     { "gwy_app_data_browser_get_data_ids", (PyCFunction)_wrap_gwy_app_data_browser_get_data_ids_wrap, METH_VARARGS|METH_KEYWORDS,
       NULL },
+    { "gwy_file_save_png", (PyCFunction)_wrap_gwy_file_save_png, METH_VARARGS|METH_KEYWORDS,
+      NULL },
+    { "gwy_get_key_from_name", (PyCFunction)_wrap_gwy_get_key_from_name, METH_VARARGS|METH_KEYWORDS,
+      NULL },
+    { "gwy_tip_dilation", (PyCFunction)_wrap_gwy_tip_dilation_wrap, METH_VARARGS|METH_KEYWORDS,
+      NULL },
+    { "gwy_tip_erosion", (PyCFunction)_wrap_gwy_tip_erosion_wrap, METH_VARARGS|METH_KEYWORDS,
+      NULL },
+    { "gwy_tip_cmap", (PyCFunction)_wrap_gwy_tip_cmap_wrap, METH_VARARGS|METH_KEYWORDS,
+      NULL },
+    { "gwy_tip_estimate_partial", (PyCFunction)_wrap_gwy_tip_estimate_partial_wrap, METH_VARARGS|METH_KEYWORDS,
+      NULL },
+    { "gwy_tip_estimate_full", (PyCFunction)_wrap_gwy_tip_estimate_full_wrap, METH_VARARGS|METH_KEYWORDS,
+      NULL },
     { "gwy_app_data_browser_get_current", (PyCFunction)_wrap_gwy_app_data_browser_get_current, METH_VARARGS|METH_KEYWORDS,
       NULL },
     { "gwy_app_data_browser_get_containers", (PyCFunction)_wrap_gwy_app_data_browser_get_containers, METH_NOARGS,
@@ -19561,7 +20020,7 @@ pygwy_register_classes(PyObject *d)
     }
 
 
-#line 19565 "pygwywrap.c"
+#line 20024 "pygwywrap.c"
     pygobject_register_class(d, "GwyAxis", GWY_TYPE_AXIS, &PyGwyAxis_Type, Py_BuildValue("(O)", &PyGtkWidget_Type));
     pygobject_register_class(d, "GwyColorAxis", GWY_TYPE_COLOR_AXIS, &PyGwyColorAxis_Type, Py_BuildValue("(O)", &PyGtkWidget_Type));
     pygobject_register_class(d, "GwyColorButton", GWY_TYPE_COLOR_BUTTON, &PyGwyColorButton_Type, Py_BuildValue("(O)", &PyGtkButton_Type));

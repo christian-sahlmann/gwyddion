@@ -5,10 +5,6 @@ pygwy_module = pygwy.la
 <[[:SELF:]]>
 <[[:MODULES:]]>
 
-DATA_TYPE = pygwy
-
-<[[:DATA:]]>
-
 !INCLUDE $(TOP_SRCDIR)\make.msc
 
 !IFDEF ENABLE_PYGWY
@@ -54,6 +50,7 @@ pygwywrap.c: pygwywrap.c.win32
 	copy pygwywrap.c.win32 pygwywrap.c
 
 DATA_TYPE = pygwy
+
 <[[:DATA:]]>
 
 !ELSE
