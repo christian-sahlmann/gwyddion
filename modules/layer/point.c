@@ -179,10 +179,8 @@ gwy_layer_point_class_init(GwyLayerPointClass *klass)
          PROP_MARKER_RADIUS,
          g_param_spec_uint("marker-radius",
                            "Marker radius",
-                           "fill me in",
-                           0,
-                           50,
-                           0,
+                           "Radius of marker to draw",
+                           0, 50, 0,
                            G_PARAM_READWRITE));
 }
 
