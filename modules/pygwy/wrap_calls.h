@@ -61,13 +61,14 @@ GArray* gwy_data_field_circular_area_extract_wrap(
 
 GArrayInt* gwy_app_data_browser_get_data_ids_wrap(GwyContainer *data);
 
+/* XXX: no implementation yet???
 void gwy_file_save_png(
       GwyContainer *data, 
       gchar *filename, 
       double zoom,
       double scale
       );
-
+*/
 gint          gwy_get_key_from_name        (const gchar *name);
 GwyDataField* gwy_tip_dilation_wrap        (GwyDataField *tip, GwyDataField *surface);
 GwyDataField* gwy_tip_erosion_wrap         (GwyDataField *tip, GwyDataField *surface);

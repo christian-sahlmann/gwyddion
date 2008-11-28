@@ -28,7 +28,8 @@ MOD_LINK = \
 	$(MOD_LINK) \
 	$(PYGWY_LDFLAGS) \
 	$(PYGWY_LIBS) \
-	wrap_calls.obj
+	wrap_calls.obj \
+	pygwywrap.obj
 
 
 ## targets

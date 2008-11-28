@@ -94,8 +94,11 @@ extended_parameters = {}
 #extended_parameters['gwy_interpolation_resolve_coeffs_1d'] = [['data'],['data|n']]
 #extended_parameters['gwy_selection_get_data'] = [['data'],['data|ret']]
 
+if len(sys.argv) < 2:
+   sys.stderr.write("pygwy-fix-defs.py: Codegen location required as first parameter and first parameter not provided. Exiting.\n")
+   exit(1)
 
-sys.path.insert(0, "/usr/share/pygtk/2.0/codegen")
+sys.path.insert(0, sys.argv[1]) # fix: "/usr/share/pygtk/2.0/codegen")
 
 import defsparser, definitions
 parser = defsparser.DefsParser("pygwy.defs.tmp")
