@@ -19119,23 +19119,6 @@ _wrap_gwy_app_data_browser_get_data_ids_wrap(PyObject *self, PyObject *args, PyO
 }
 
 static PyObject *
-_wrap_gwy_file_save_png(PyObject *self, PyObject *args, PyObject *kwargs)
-{
-    static char *kwlist[] = { "data", "filename", "zoom", "scale", NULL };
-    PyGObject *data;
-    char *filename;
-    double zoom, scale;
-
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs,"O!sdd:gwy_file_save_png", kwlist, &PyGwyContainer_Type, &data, &filename, &zoom, &scale))
-        return NULL;
-    
-    gwy_file_save_png(GWY_CONTAINER(data->obj), filename, zoom, scale);
-    
-    Py_INCREF(Py_None);
-    return Py_None;
-}
-
-static PyObject *
 _wrap_gwy_get_key_from_name(PyObject *self, PyObject *args, PyObject *kwargs)
 {
     static char *kwlist[] = { "name", NULL };
@@ -19296,7 +19279,7 @@ _wrap_gwy_app_data_browser_get_current(PyObject *self, PyObject *args, PyObject 
    }
 }
 
-#line 19300 "pygwywrap.c"
+#line 19283 "pygwywrap.c"
 
 
 #line 216 "./pygwy.override"
@@ -19317,7 +19300,7 @@ _wrap_gwy_app_data_browser_get_containers(PyGObject *self)
    return list;
 }
 
-#line 19321 "pygwywrap.c"
+#line 19304 "pygwywrap.c"
 
 
 const PyMethodDef pygwy_functions[] = {
@@ -19775,8 +19758,6 @@ const PyMethodDef pygwy_functions[] = {
       NULL },
     { "gwy_app_data_browser_get_data_ids", (PyCFunction)_wrap_gwy_app_data_browser_get_data_ids_wrap, METH_VARARGS|METH_KEYWORDS,
       NULL },
-    { "gwy_file_save_png", (PyCFunction)_wrap_gwy_file_save_png, METH_VARARGS|METH_KEYWORDS,
-      NULL },
     { "gwy_get_key_from_name", (PyCFunction)_wrap_gwy_get_key_from_name, METH_VARARGS|METH_KEYWORDS,
       NULL },
     { "gwy_tip_dilation", (PyCFunction)_wrap_gwy_tip_dilation_wrap, METH_VARARGS|METH_KEYWORDS,
@@ -20020,7 +20001,7 @@ pygwy_register_classes(PyObject *d)
     }
 
 
-#line 20024 "pygwywrap.c"
+#line 20005 "pygwywrap.c"
     pygobject_register_class(d, "GwyAxis", GWY_TYPE_AXIS, &PyGwyAxis_Type, Py_BuildValue("(O)", &PyGtkWidget_Type));
     pygobject_register_class(d, "GwyColorAxis", GWY_TYPE_COLOR_AXIS, &PyGwyColorAxis_Type, Py_BuildValue("(O)", &PyGtkWidget_Type));
     pygobject_register_class(d, "GwyColorButton", GWY_TYPE_COLOR_BUTTON, &PyGwyColorButton_Type, Py_BuildValue("(O)", &PyGtkButton_Type));
