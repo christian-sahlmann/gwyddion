@@ -129,7 +129,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Profile tool, creates profile graphs from selected lines."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "2.6",
+    "2.7",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -428,6 +428,7 @@ gwy_tool_profile_data_switched(GwyTool *gwytool,
     if (data_view) {
         gwy_object_set_or_reset(plain_tool->layer,
                                 tool->layer_type_line,
+                                "thickness", tool->args.thickness,
                                 "editable", TRUE,
                                 "focus", -1,
                                 NULL);
@@ -652,7 +653,14 @@ static void
 gwy_tool_profile_thickness_changed(GwyToolProfile *tool,
                                    GtkAdjustment *adj)
 {
+    GwyPlainTool *plain_tool;
+
     tool->args.thickness = gwy_adjustment_get_int(adj);
+    plain_tool = GWY_PLAIN_TOOL(tool);
+    if (plain_tool->layer)
+        g_object_set(plain_tool->layer,
+                     "thickness", tool->args.thickness,
+                     NULL);
     gwy_tool_profile_update_all_curves(tool);
 }
 

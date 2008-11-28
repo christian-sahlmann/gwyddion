@@ -626,7 +626,7 @@ static GwyModuleInfo module_info = {
     N_("Calculate surface profile parameters."),
     "Martin Hasoň <hasonm@physics.muni.cz>, "
         "Yeti <yeti@gwyddion.net>",
-    "1.1",
+    "1.2",
     "Martin Hasoň & David Nečas (Yeti)",
     "2006",
 };
@@ -1104,6 +1104,7 @@ gwy_tool_roughness_data_switched(GwyTool *gwytool,
     if (data_view) {
         gwy_object_set_or_reset(plain_tool->layer,
                                 tool->layer_type_line,
+                                "thickness", tool->args.thickness,
                                 "line-numbers", FALSE,
                                 "editable", TRUE,
                                 "focus", -1,
@@ -1158,7 +1159,14 @@ static void
 gwy_tool_roughness_thickness_changed(GtkAdjustment *adj,
                                      GwyToolRoughness *tool)
 {
+    GwyPlainTool *plain_tool;
+
     tool->args.thickness = gwy_adjustment_get_int(adj);
+    plain_tool = GWY_PLAIN_TOOL(tool);
+    if (plain_tool->layer)
+        g_object_set(plain_tool->layer,
+                     "thickness", tool->args.thickness,
+                     NULL);
     gwy_tool_roughness_update(tool);
 }
 
