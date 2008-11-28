@@ -337,7 +337,7 @@ if test "x$enable_pygwy" != xno; then
     PKG_CHECK_MODULES(GTKSOURCEVIEW,[gtksourceview-2.0],
                       [AC_DEFINE(HAVE_GTKSOURCEVIEW,1,
                                  [Define if we have the GtkSourceView package.])],
-                      enable_gtksourceview=no; PYGWY_WARN=" (needs GtkSourceView)")
+                      enable_gtksourceview=no; GTKSOURCEVIEW_WARN=" (needs GtkSourceView)")
   fi
   if test "x$enable_gtksourceview" != "xno"; then
     GTKSOURCEVIEW_DEPENDENCY=gtksourceview-2.0
@@ -580,11 +580,14 @@ AC_OUTPUT
 
 echo "================================================================="
 echo "Configuration:"
-echo "  TIFF (including JPK):               $enable_tiff$TIFF_WARN"
-echo "  SMPL:                               $enable_spml$SPML_WARN"
-echo "  FFTW3:                              $enable_fftw3$FFTW3_WARN"
-echo "  OpenGL 3D widgets:                  $enable_gl$GL_WARN"
-echo "  Remote control:                     $enable_remote$REMOTE_WARN"
-echo "  Python interface:                   $enable_pygwy$PYGWY_WARN"
+echo "  TIFF (including JPK):                  $enable_tiff$TIFF_WARN"
+echo "  SMPL:                                  $enable_spml$SPML_WARN"
+echo "  FFTW3:                                 $enable_fftw3$FFTW3_WARN"
+echo "  OpenGL 3D widgets:                     $enable_gl$GL_WARN"
+echo "  Remote control:                        $enable_remote$REMOTE_WARN"
+echo "  Python interface (pygwy):              $enable_pygwy$PYGWY_WARN"
+if test x$enable_pygwy = xyes; then
+  echo "  Syntax highlighting for pygwy console: $enable_gtksourceview$GTKSOURCEVIEW_WARN"
+fi
 echo "================================================================="
 
