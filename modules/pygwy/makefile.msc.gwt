@@ -29,11 +29,11 @@ MOD_LINK = \
 	$(PYGWY_LDFLAGS) \
 	$(PYGWY_LIBS) \
 	wrap_calls.obj \
-	pygwywrap.obj
+	pygwy-console.obj
 
 
 ## targets
-all: wrap_calls.obj mod data
+all: wrap_calls.obj pygwy-console.obj mod data
 
 mod: $(MODULES)
 
