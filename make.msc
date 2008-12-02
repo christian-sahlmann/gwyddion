@@ -175,6 +175,9 @@ clean::
 	-@mkdir "$(DEST_DIR)\devel-docs\libgwydraw"
 	-@mkdir "$(DEST_DIR)\devel-docs\libgwymodule"
 	-@mkdir "$(DEST_DIR)\devel-docs\libgwyprocess"
+!IFDEF ENABLE_PYGWY
+	-@mkdir "$(DEST_DIR)\pygwy"
+!ENDIF	
 	cd po
 	nmake -nologo -f makefile.msc installdirs
 	cd ..
