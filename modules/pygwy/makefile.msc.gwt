@@ -39,7 +39,7 @@ mod: $(MODULES)
 
 data: $(DATA)
 
-install: install-mod install data install-data
+install: data install-mod install-data
 
 !INCLUDE $(TOP_SRCDIR)\rules.msc
 
