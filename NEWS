@@ -2,6 +2,10 @@
 Application:
 - Translations updated: French.
 
+Libraries:
+- libgwyddion: Median line statistics no longer crashes when area width is
+  larger than its height.
+
 Modules:
 - Omicron MATRIX (new): Omicron MATRIX file import support.
 - SPMLabF (new): SPMLab floating-point format (.flt) import support.

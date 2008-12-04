@@ -3958,7 +3958,7 @@ gwy_data_field_area_get_line_stats(GwyDataField *data_field,
                 for (j = 0; j < width; j++) {
                     gwy_data_field_get_column_part(data_field, buf,
                                                    j, row, row + height);
-                    ldata[j] = gwy_math_median(width, buf->data);
+                    ldata[j] = gwy_math_median(height, buf->data);
                 }
                 g_object_unref(buf);
                 break;
