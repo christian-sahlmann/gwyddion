@@ -1582,21 +1582,38 @@ gwy_axis_calculate_format(GwyAxis *axis,
                                         (axis->unit, GWY_SI_UNIT_FORMAT_MARKUP,
                                          average, step, format);
 
-    /* Ensure the format is not too precise */
+    /* Ensure the format is not too precise, but do not attempt this in weird
+     * cases */
+    if (axis->mjticks->len < 2)
+        return format;
+
     format->precision++;
     u1 = g_string_new(NULL);
     u2 = g_string_new(NULL);
     ok = TRUE;
     while (ok && format->precision > 0 && axis->mjticks->len > 1) {
+        gdouble v0;
+
         format->precision--;
         ok = TRUE;
         pmjt = &g_array_index(axis->mjticks, GwyAxisLabeledTick, 0);
-        g_string_printf(u1, "%.*f",
-                        format->precision, pmjt->t.value/format->magnitude);
+        v0 = pmjt->t.value/format->magnitude;
+        g_string_printf(u1, "%.*f", format->precision, v0);
+
         for (i = 1; i < 6; i++) {
-            pmjt = &g_array_index(axis->mjticks, GwyAxisLabeledTick, i);
-            g_string_printf(u2, "%.*f",
-                            format->precision, pmjt->t.value/format->magnitude);
+            gdouble v;
+
+            if (i < axis->mjticks->len) {
+                pmjt = &g_array_index(axis->mjticks, GwyAxisLabeledTick, i);
+                v = pmjt->t.value/format->magnitude;
+            }
+            else {
+                pmjt = &g_array_index(axis->mjticks, GwyAxisLabeledTick,
+                                      axis->mjticks->len - 1);
+                v = (pmjt->t.value/format->magnitude - v0)
+                    /(axis->mjticks->len - 1)*i + v0;
+            }
+            g_string_printf(u2, "%.*f", format->precision, v);
             if (gwy_strequal(u2->str, u1->str)) {
                 format->precision++;
                 ok = FALSE;
