@@ -250,7 +250,7 @@ _gwy_morph_lib_ierosion(gint **image, gint im_xsiz, gint im_ysiz,
             for (py = pymin; py <= pymax; py++) { /* Loop over points in tip */
                 for (px = pxmin; px <= pxmax; px++) {
                     temp = image[j + py][i + px] - tip[py + yc][px + xc];
-                    if (min < temp)
+                    if (min > temp)
                         min = temp;
                 }
             }
