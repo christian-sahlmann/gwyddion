@@ -52,6 +52,7 @@
 #include <libprocess/stats.h>
 #include <libgwymodule/gwymodule-file.h>
 #include <app/gwymoduleutils-file.h>
+#include <app/gwyapp.h>
 
 #include "err.h"
 
@@ -77,6 +78,10 @@
     "f\0i\0l\0e\0f\0o\0r\0m\0a\0t\0 \0=\0 " \
     "\0b\0c\0r\0f\0_\0u\0n\0i\0c\0o\0d\0e\0\n\0"
 #define MAGIC_SIZE4 (sizeof(MAGIC4) - 1)
+
+#define MAGIC5 "fileformat = bcrf\r\n"
+#define MAGIC_SIZE5 (sizeof(MAGIC5) - 1)
+
 
 #define MAGIC_SIZE \
     (MAX(MAX(MAGIC_SIZE1, MAGIC_SIZE2), MAX(MAGIC_SIZE3, MAGIC_SIZE4)))
@@ -154,7 +159,8 @@ bcrfile_detect(const GwyFileDetectInfo *fileinfo,
         && (memcmp(fileinfo->head, MAGIC1, MAGIC_SIZE1) == 0
             || memcmp(fileinfo->head, MAGIC2, MAGIC_SIZE2) == 0
             || memcmp(fileinfo->head, MAGIC3, MAGIC_SIZE3) == 0
-            || memcmp(fileinfo->head, MAGIC4, MAGIC_SIZE4) == 0))
+            || memcmp(fileinfo->head, MAGIC4, MAGIC_SIZE4) == 0
+            || memcmp(fileinfo->head, MAGIC5, MAGIC_SIZE5) == 0))
         score = 100;
 
     return score;
@@ -229,6 +235,9 @@ bcrfile_load(const gchar *filename,
         container = gwy_container_new();
         gwy_container_set_object_by_name(container, "/0/data", dfield);
         g_object_unref(dfield);
+        /*********************************************************************/
+        gwy_app_set_data_field_title(container, 0, g_strrstr(filename, "/") + 1);
+        /***********************************************************************/
         gwy_app_channel_title_fall_back(container, 0);
         if (voidmask) {
             gwy_container_set_object_by_name(container, "/0/mask", voidmask);
@@ -336,6 +345,7 @@ file_load_real(const guchar *buffer,
 
     if (!(s = g_hash_table_lookup(meta, "zunit")))
         s = "nm";
+    s = "nm";
     siunit1 = gwy_si_unit_new_parse(s, &power10);
     gwy_data_field_set_si_unit_z(dfield, siunit1);
     g_object_unref(siunit1);
