@@ -4055,7 +4055,7 @@ gwy_data_field_area_get_line_stats(GwyDataField *data_field,
                     for (j = 0; j < width; j++)
                         ldata[i] += data[i*xres + j];
                 }
-                gwy_data_line_multiply(target_line, 1.0/height);
+                gwy_data_line_multiply(target_line, 1.0/width);
                 break;
 
                 case GWY_LINE_STAT_MEDIAN:
