@@ -24,6 +24,7 @@
 #include <libgwymodule/gwymodule-tool.h>
 #include <libprocess/gwyprocesstypes.h>
 #include <libprocess/stats.h>
+#include <libprocess/linestats.h>
 #include <libgwydgets/gwystock.h>
 #include <libgwydgets/gwycombobox.h>
 #include <libgwydgets/gwyradiobuttons.h>
@@ -75,6 +76,7 @@ struct _GwyToolLineStats {
     GtkWidget *interpolation_label;
     GtkWidget *update;
     GtkWidget *apply;
+    GtkWidget *result_label;
 
     /* potential class data */
     GType layer_type_rect;
@@ -149,10 +151,15 @@ static const GwyEnum sf_types[] =  {
     { N_("Median"),             GWY_LINE_STAT_MEDIAN,    },
     { N_("Minimum"),            GWY_LINE_STAT_MINIMUM,   },
     { N_("Maximum"),            GWY_LINE_STAT_MAXIMUM,   },
-    { N_("RMS"),                GWY_LINE_STAT_RMS,       },
     { N_("Length"),             GWY_LINE_STAT_LENGTH,    },
     { N_("Slope"),              GWY_LINE_STAT_SLOPE,     },
     { N_("tan β<sub>0</sub>"),  GWY_LINE_STAT_TAN_BETA0, },
+    { N_("Ra"),                 GWY_LINE_STAT_RA,        },
+    { N_("Rq (RMS)"),           GWY_LINE_STAT_RMS,       },
+    { N_("Rz"),                 GWY_LINE_STAT_RZ,        },
+    { N_("Rt"),                 GWY_LINE_STAT_RT,        },
+    { N_("Skew"),               GWY_LINE_STAT_SKEW,      },
+    { N_("Kurtosis"),           GWY_LINE_STAT_KURTOSIS,  },
 };
 
 GWY_MODULE_QUERY(module_info)
@@ -283,7 +290,7 @@ gwy_tool_line_stats_init_dialog(GwyToolLineStats *tool)
         { N_("Co_lumns"), GWY_ORIENTATION_VERTICAL,   },
     };
     GtkDialog *dialog;
-    GtkWidget *label, *hbox, *vbox, *hbox2, *image;
+    GtkWidget *label, *hbox, *vbox, *hbox2, *hbox3, *image;
     GtkTable *table;
     guint row;
 
@@ -384,6 +391,21 @@ gwy_tool_line_stats_init_dialog(GwyToolLineStats *tool)
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), tool->interpolation);
     gtk_box_pack_end(GTK_BOX(hbox2), tool->interpolation, FALSE, FALSE, 0);
     row++;
+
+
+    hbox3 = gtk_hbox_new(FALSE, 2);
+    gtk_table_attach(table, hbox3,
+                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    label = gtk_label_new(_("Average: "));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_box_pack_start(GTK_BOX(hbox3), label, FALSE, FALSE, 0);
+
+    label = gtk_label_new(_(""));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_box_pack_start(GTK_BOX(hbox3), label, FALSE, FALSE, 0);
+    tool->result_label = label;
+
+ 
 
     tool->gmodel = gwy_graph_model_new();
 
@@ -496,9 +518,12 @@ gwy_tool_line_stats_update_curve(GwyToolLineStats *tool)
     GwyPlainTool *plain_tool;
     GwyGraphCurveModel *gcmodel;
     gdouble sel[4];
+    gchar result[100];
     gint isel[4] = { sizeof("Die, die, GCC!"), 0, 0, 0 };
     gint n, nsel, w = sizeof("Die, die, GCC!"), h = 0;
     const gchar *title;
+    GwySIUnit *siunit;
+    GwySIValueFormat *format;
 
     plain_tool = GWY_PLAIN_TOOL(tool);
 
@@ -575,6 +600,15 @@ gwy_tool_line_stats_update_curve(GwyToolLineStats *tool)
     g_object_set(gcmodel, "description", title, NULL);
     g_object_set(tool->gmodel, "title", title, NULL);
     gwy_graph_model_set_units_from_data_line(tool->gmodel, tool->line);
+
+    siunit = gwy_data_line_get_si_unit_y(tool->line);
+    format = gwy_si_unit_get_format(siunit, GWY_SI_UNIT_FORMAT_MARKUP, 
+                                    gwy_data_line_get_avg(tool->line), NULL);
+    g_snprintf(result, sizeof(result), "(%.4g ± %.4g) %s",  
+               gwy_data_line_get_avg(tool->line)/format->magnitude,
+               gwy_data_line_get_rms(tool->line)/format->magnitude,
+               format->units);    
+    gtk_label_set_markup(GTK_LABEL(tool->result_label), result);
 }
 
 static void
