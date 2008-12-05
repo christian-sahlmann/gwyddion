@@ -401,7 +401,7 @@ gwy_layer_line_draw_object(GwyVectorLayer *layer,
         gdouble xd, yd, h;
 
         /* Calculate orthogonal line in terms of samples, that differs from
-         * display pixels -- and either can be non-square./ */
+         * display pixels -- and either can be non-square. */
         gwy_data_view_get_pixel_data_sizes(data_view, &xres, &yres);
         xd = (xy[3] - xy[1])/yreal*yres;
         yd = (xy[0] - xy[2])/xreal*xres;
@@ -415,8 +415,7 @@ gwy_layer_line_draw_object(GwyVectorLayer *layer,
                                             &xl0, &yl0);
             gwy_data_view_coords_real_to_xy(data_view, xy[0] - xd, xy[1] - yd,
                                             &xl1, &yl1);
-            gwy_data_view_coords_xy_clamp(data_view, &xl0, &yl0);
-            gwy_data_view_coords_xy_clamp(data_view, &xl1, &yl1);
+            gwy_data_view_coords_xy_cut_line(data_view, &xl0, &yl0, &xl1, &yl1);
             break;
 
             case GWY_RENDERING_TARGET_PIXMAP_IMAGE:
@@ -438,8 +437,7 @@ gwy_layer_line_draw_object(GwyVectorLayer *layer,
                                             &xl0, &yl0);
             gwy_data_view_coords_real_to_xy(data_view, xy[2] - xd, xy[3] - yd,
                                             &xl1, &yl1);
-            gwy_data_view_coords_xy_clamp(data_view, &xl0, &yl0);
-            gwy_data_view_coords_xy_clamp(data_view, &xl1, &yl1);
+            gwy_data_view_coords_xy_cut_line(data_view, &xl0, &yl0, &xl1, &yl1);
             break;
 
             case GWY_RENDERING_TARGET_PIXMAP_IMAGE:
