@@ -1949,7 +1949,7 @@ gwy_data_field_area_psdf(GwyDataField *data_field,
                                   windowing,
                                   GWY_TRANSFORM_DIRECTION_FORWARD,
                                   interpolation,
-                                  TRUE, 2);
+                                  TRUE, 2); 
         re = re_field->data;
         im = im_field->data;
         for (i = 0; i < height; i++) {
@@ -3883,6 +3883,134 @@ gwy_data_field_get_inclination(GwyDataField *data_field,
                                         phi);
 }
 
+
+/*TODO, do anything with these four functions*/
+static gint
+gwy_tool_roughness_peaks(GwyDataLine *data_line, gdouble *peaks,
+                         gint from, gint to, gdouble threshold, gint k,
+                         gboolean symmetrical)
+{
+    gint i, res, c=-1;
+    gdouble val, val_prev;
+    gdouble *p;
+    gboolean under=FALSE;
+
+    g_return_val_if_fail(GWY_IS_DATA_LINE(data_line), 0);
+
+    res = data_line->res-1;
+
+    if (from < 1) from = 1;
+    if (to>(res+1)) to = res+1;
+
+    val_prev=data_line->data[from-1];
+    if (val_prev > threshold) c++;
+
+    for (i = from; i<to; i++)
+    {
+        val = data_line->data[i];
+        if ((val > threshold) && (val_prev < threshold)) c++;
+        if (symmetrical == TRUE)
+            if ((val < (-1.0)*threshold) && (val_prev > (-1.0)*threshold))
+                under = TRUE;
+        val_prev = val;
+    }
+
+    p = g_new(gdouble, c+1);
+    c = -1;
+    val_prev=data_line->data[from-1];
+    if (val_prev > threshold) {
+        c++;
+        p[c] = val_prev;
+    }
+    for (i = from; i<to; i++)
+    {
+        val = data_line->data[i];
+        if (val > threshold) {
+            if (val_prev < threshold) {
+                c++;
+                p[c] = val;
+            }
+            else {
+                if (c >= 0 && val > p[c])
+                    p[c] = val;
+            }
+        }
+
+        val_prev = val;
+    }
+
+    gwy_math_sort(c+1, p);
+
+    if (k < 0) k = c;
+
+    for (i=0; i<k; i++)
+        if (i <= c)
+            peaks[i] = p[c-i];
+        else
+            peaks[i] = 0;
+
+    g_free(p);
+
+    return c+1;
+}
+static gdouble
+gwy_tool_roughness_Xpm(GwyDataLine *data_line, gint m, gint k)
+{
+    gdouble Xpm = 0.0;
+    GwyDataLine *dl;
+    gint i, samp;
+    gdouble *peaks;
+
+    g_return_val_if_fail(GWY_IS_DATA_LINE(data_line), Xpm);
+    g_return_val_if_fail(m >= 1, Xpm);
+    g_return_val_if_fail(k >= 1, Xpm);
+
+    dl = gwy_data_line_new_alike(data_line, FALSE);
+    gwy_data_line_copy(data_line, dl);
+
+    if (m > 1) {
+        samp = dl->res/m;
+        gwy_data_line_resample(dl, m*samp, GWY_INTERPOLATION_LINEAR);
+    }
+    else
+        samp = dl->res;
+
+    peaks = g_new0(gdouble, k);
+    for (i = 1; i <= m; i++) {
+        gwy_tool_roughness_peaks(dl, peaks, (i-1)*samp+1, i*samp, 0, k, FALSE);
+        Xpm += peaks[k-1];
+    }
+    g_free(peaks);
+
+    g_object_unref(dl);
+
+    return Xpm/m;
+}
+static gdouble
+gwy_tool_roughness_Xvm(GwyDataLine *data_line, gint m, gint k)
+{
+    gdouble Xvm = 0.0;
+    GwyDataLine *dl;
+
+    g_return_val_if_fail(GWY_IS_DATA_LINE(data_line), Xvm);
+
+    dl = gwy_data_line_new_alike(data_line, FALSE);
+    gwy_data_line_copy(data_line, dl);
+    gwy_data_line_multiply(dl, -1.0);
+
+    Xvm = gwy_tool_roughness_Xpm(dl, m, k);
+
+    g_object_unref(dl);
+    return Xvm;
+}
+
+static gdouble
+gwy_tool_roughness_Xtm(GwyDataLine *data_line, gint m, gint k)
+{
+    return gwy_tool_roughness_Xpm(data_line, m, k)
+        + gwy_tool_roughness_Xvm(data_line, m, k);
+}
+
 /**
  * gwy_data_field_area_get_line_stats:
  * @data_field: A data field.
@@ -3904,6 +4032,7 @@ gwy_data_field_get_inclination(GwyDataField *data_field,
  *
  * Since: 2.2
  **/
+#include <stdio.h>
 void
 gwy_data_field_area_get_line_stats(GwyDataField *data_field,
                                    GwyDataField *mask,
@@ -3918,7 +4047,9 @@ gwy_data_field_area_get_line_stats(GwyDataField *data_field,
     gint i, j, xres, yres;
     const gdouble *data;
     gdouble *ldata;
-    gdouble v;
+    gdouble v, av, bv;
+    gdouble mean, rms;
+    int lev = 1; /*none, area, line*/
 
     g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
     g_return_if_fail(GWY_IS_DATA_LINE(target_line));
@@ -3936,11 +4067,11 @@ gwy_data_field_area_get_line_stats(GwyDataField *data_field,
     xres = data_field->xres;
     yres = data_field->yres;
     data = data_field->data + row*xres + col;
+    
 
     if (orientation == GWY_ORIENTATION_VERTICAL) {
         gwy_data_line_resample(target_line, width, GWY_INTERPOLATION_NONE);
         ldata = target_line->data;
-
         if (!mask) {
             switch (quantity) {
                 case GWY_LINE_STAT_MEAN:
@@ -4030,6 +4161,81 @@ gwy_data_field_area_get_line_stats(GwyDataField *data_field,
                 g_object_unref(buf);
                 break;
 
+                case GWY_LINE_STAT_RA:
+                gwy_data_line_clear(target_line);
+                buf = gwy_data_line_new(height, 1.0, FALSE);
+                for (j = 0; j < width; j++) {
+                    gwy_data_field_get_column_part(data_field, buf,
+                                                   j, row, row + height);
+                    mean = gwy_data_line_get_avg(buf);
+                    for (i = 0; i < height; i++)
+                        ldata[j] += fabs(data[i*xres + j] - mean);
+                }
+                gwy_data_line_multiply(target_line, 1.0/height);
+                g_object_unref(buf);
+                break;
+
+                case GWY_LINE_STAT_RT:
+                gwy_data_line_clear(target_line);
+                buf = gwy_data_line_new(height, 1.0, FALSE);
+                for (j = 0; j < width; j++) {
+                    gwy_data_field_get_column_part(data_field, buf,
+                                                   j, row, row + height);
+                    mean = gwy_data_line_get_avg(buf);
+                    gwy_data_line_add(buf, -mean);
+                    ldata[j] = gwy_tool_roughness_Xtm(buf, 1, 1);
+                }
+                g_object_unref(buf);
+                break;
+
+                case GWY_LINE_STAT_RZ:
+                gwy_data_line_clear(target_line);
+                buf = gwy_data_line_new(height, 1.0, FALSE);
+                for (j = 0; j < width; j++) {
+                    gwy_data_field_get_column_part(data_field, buf,
+                                                   j, row, row + height);
+                    mean = gwy_data_line_get_avg(buf);
+                    gwy_data_line_add(buf, -mean);
+                    ldata[j] = gwy_tool_roughness_Xtm(buf, 5, 1);
+                }
+                g_object_unref(buf);
+                break;
+
+
+                case GWY_LINE_STAT_SKEW:
+                gwy_data_line_clear(target_line);
+                buf = gwy_data_line_new(height, 1.0, FALSE);
+                for (j = 0; j < width; j++) {
+                    gwy_data_field_get_column_part(data_field, buf,
+                                                   j, row, row + height);
+                    mean = gwy_data_line_get_avg(buf);
+                    rms = gwy_data_line_get_rms(buf);
+                    for (i = 0; i < height; i++)
+                        ldata[j] += (data[i*xres + j] - mean)*(data[i*xres + j] - mean)*(data[i*xres + j] - mean);
+                    ldata[j] /= rms*rms*rms;
+                }
+                gwy_data_line_multiply(target_line, 1.0/height);
+                g_object_unref(buf);
+                 break;
+
+                case GWY_LINE_STAT_KURTOSIS:
+                gwy_data_line_clear(target_line);
+                buf = gwy_data_line_new(height, 1.0, FALSE);
+                for (j = 0; j < width; j++) {
+                    gwy_data_field_get_column_part(data_field, buf,
+                                                   j, row, row + height);
+                    mean = gwy_data_line_get_avg(buf);
+                    rms = gwy_data_line_get_rms(buf);
+                    for (i = 0; i < height; i++)
+                        ldata[j] += (data[i*xres + j] - mean)*(data[i*xres + j] - mean)
+                                   *(data[i*xres + j] - mean)*(data[i*xres + j] - mean);
+                    ldata[j] /= rms*rms*rms*rms;
+                }
+                gwy_data_line_multiply(target_line, 1.0/height);
+                g_object_unref(buf);
+                break;
+
+
                 default:
                 g_return_if_reached();
                 break;
@@ -4092,15 +4298,25 @@ gwy_data_field_area_get_line_stats(GwyDataField *data_field,
                 break;
 
                 case GWY_LINE_STAT_RMS:
-                buf = gwy_data_line_new(width,
-                                        gwy_data_field_jtor(data_field, width),
-                                        FALSE);
+                gwy_data_line_clear(target_line);
+                buf = gwy_data_line_new(width, 1.0, FALSE);
+                mean = 0;
+                if (lev == 1) mean = gwy_data_field_get_avg(data_field);
                 for (i = 0; i < height; i++) {
                     memcpy(buf->data, data + i*xres, width*sizeof(gdouble));
-                    ldata[i] = gwy_data_line_get_rms(buf);
+                    if (lev == 2) {
+                        gwy_data_line_get_line_coeffs(buf, &av, &bv);
+                        gwy_data_line_line_level(buf, av, bv);
+                        mean = gwy_data_line_get_avg(buf);
+                    }
+                    for (j = 0; j < width; j++)
+                        ldata[i] += (buf->data[j] - mean)*(buf->data[j] - mean);
                 }
+                gwy_data_line_multiply(target_line, 1.0/width);
+                for (i = 0; i < height; i++) ldata[i] = sqrt(ldata[i]);
                 g_object_unref(buf);
                 break;
+
 
                 case GWY_LINE_STAT_LENGTH:
                 buf = gwy_data_line_new(width,
@@ -4136,6 +4352,102 @@ gwy_data_field_area_get_line_stats(GwyDataField *data_field,
                 g_object_unref(buf);
                 break;
 
+                case GWY_LINE_STAT_RA:
+                gwy_data_line_clear(target_line);
+                buf = gwy_data_line_new(width, 1.0, FALSE);
+                mean = 0;
+                if (lev == 1) mean = gwy_data_field_get_avg(data_field);
+                for (i = 0; i < height; i++) {
+                    memcpy(buf->data, data + i*xres, width*sizeof(gdouble));
+                    if (lev == 2) {
+                        gwy_data_line_get_line_coeffs(buf, &av, &bv);
+                        gwy_data_line_line_level(buf, av, bv);
+                        mean = gwy_data_line_get_avg(buf);
+                    }
+                    for (j = 0; j < width; j++)
+                        ldata[i] += fabs(buf->data[j] - mean);
+                }
+                gwy_data_line_multiply(target_line, 1.0/width);
+                g_object_unref(buf);
+                break;
+
+                case GWY_LINE_STAT_RT:
+                gwy_data_line_clear(target_line);
+                buf = gwy_data_line_new(width, 1.0, FALSE);
+                mean = gwy_data_field_get_avg(data_field);
+                for (i = 0; i < height; i++) {
+                    memcpy(buf->data, data + i*xres, width*sizeof(gdouble));
+                    if (lev == 2) {
+                        gwy_data_line_get_line_coeffs(buf, &av, &bv);
+                        gwy_data_line_line_level(buf, av, bv);
+                    } else if (lev == 1)
+                        gwy_data_line_add(buf, -mean);
+                    ldata[i] = gwy_tool_roughness_Xtm(buf, 1, 1);
+                }
+                g_object_unref(buf);
+                break;
+
+                case GWY_LINE_STAT_RZ:
+                gwy_data_line_clear(target_line);
+                buf = gwy_data_line_new(width, 1.0, FALSE);
+                mean = gwy_data_field_get_avg(data_field);
+                for (i = 0; i < height; i++) {
+                    memcpy(buf->data, data + i*xres, width*sizeof(gdouble));
+                    if (lev == 2) {
+                        gwy_data_line_get_line_coeffs(buf, &av, &bv);
+                        gwy_data_line_line_level(buf, av, bv);
+                    } else if (lev == 1)
+                        gwy_data_line_add(buf, -mean);
+                    ldata[i] = gwy_tool_roughness_Xtm(buf, 5, 1);
+                }
+                g_object_unref(buf);
+                break;
+
+
+                case GWY_LINE_STAT_SKEW:
+                gwy_data_line_clear(target_line);
+                buf = gwy_data_line_new(width, 1.0, FALSE);
+                mean = 0;
+                if (lev == 1) mean = gwy_data_field_get_avg(data_field);
+                for (i = 0; i < height; i++) {
+                    memcpy(buf->data, data + i*xres, width*sizeof(gdouble));
+                    if (lev == 2) {
+                        gwy_data_line_get_line_coeffs(buf, &av, &bv);
+                        gwy_data_line_line_level(buf, av, bv);
+                        mean = gwy_data_line_get_avg(buf);
+                    }
+                    rms = gwy_data_line_get_rms(buf);
+                    for (j = 0; j < width; j++)
+                        ldata[i] += (buf->data[j] - mean)*(buf->data[j] - mean)*(buf->data[j] - mean);
+                    ldata[i] /= rms*rms*rms;
+                }
+                gwy_data_line_multiply(target_line, 1.0/width);
+                g_object_unref(buf);
+                 break;
+
+                case GWY_LINE_STAT_KURTOSIS:
+                gwy_data_line_clear(target_line);
+                buf = gwy_data_line_new(width, 1.0, FALSE);
+                mean = 0;
+                if (lev == 1) mean = gwy_data_field_get_avg(data_field);
+                for (i = 0; i < height; i++) {
+                    memcpy(buf->data, data + i*xres, width*sizeof(gdouble));
+                    if (lev == 2) {
+                        gwy_data_line_get_line_coeffs(buf, &av, &bv);
+                        gwy_data_line_line_level(buf, av, bv);
+                        mean = gwy_data_line_get_avg(buf);
+                    }
+                    rms = gwy_data_line_get_rms(buf);
+                    for (j = 0; j < width; j++)
+                        ldata[i] += (buf->data[j] - mean)*(buf->data[j] - mean)
+                                   *(buf->data[j] - mean)*(buf->data[j] - mean);
+                    ldata[i] /= rms*rms*rms*rms;
+                }
+                gwy_data_line_multiply(target_line, 1.0/width);
+                g_object_unref(buf);
+                break;
+
+
                 default:
                 g_return_if_reached();
                 break;
@@ -4165,11 +4477,16 @@ gwy_data_field_area_get_line_stats(GwyDataField *data_field,
         case GWY_LINE_STAT_MINIMUM:
         case GWY_LINE_STAT_MAXIMUM:
         case GWY_LINE_STAT_RMS:
+        case GWY_LINE_STAT_RA:
+        case GWY_LINE_STAT_RT:
+        case GWY_LINE_STAT_RZ:
         gwy_serializable_clone(G_OBJECT(zunit), G_OBJECT(lunit));
         break;
 
         case GWY_LINE_STAT_SLOPE:
         case GWY_LINE_STAT_TAN_BETA0:
+        case GWY_LINE_STAT_SKEW:
+        case GWY_LINE_STAT_KURTOSIS:
         gwy_si_unit_divide(zunit, xyunit, lunit);
         break;
 
