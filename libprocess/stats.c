@@ -3957,7 +3957,7 @@ gwy_data_field_area_get_line_stats(GwyDataField *data_field,
                 buf = gwy_data_line_new(height, 1.0, FALSE);
                 for (j = 0; j < width; j++) {
                     gwy_data_field_get_column_part(data_field, buf,
-                                                   j, row, row + height);
+                                                   col + j, row, row + height);
                     ldata[j] = gwy_math_median(height, buf->data);
                 }
                 g_object_unref(buf);
@@ -3990,7 +3990,7 @@ gwy_data_field_area_get_line_stats(GwyDataField *data_field,
                 buf = gwy_data_line_new(height, 1.0, FALSE);
                 for (j = 0; j < width; j++) {
                     gwy_data_field_get_column_part(data_field, buf,
-                                                   j, row, row + height);
+                                                   col + j, row, row + height);
                     ldata[j] = gwy_data_line_get_rms(buf);
                 }
                 g_object_unref(buf);
@@ -4001,7 +4001,7 @@ gwy_data_field_area_get_line_stats(GwyDataField *data_field,
                 buf = gwy_data_line_new(height, 1.0, FALSE);
                 for (j = 0; j < width; j++) {
                     gwy_data_field_get_column_part(data_field, buf,
-                                                   j, row, row + height);
+                                                   col + j, row, row + height);
                     ldata[j] = gwy_data_line_get_length(buf);
                 }
                 g_object_unref(buf);
@@ -4012,7 +4012,7 @@ gwy_data_field_area_get_line_stats(GwyDataField *data_field,
                 buf = gwy_data_line_new(height, 1.0, FALSE);
                 for (j = 0; j < width; j++) {
                     gwy_data_field_get_column_part(data_field, buf,
-                                                   j, row, row + height);
+                                                   col + j, row, row + height);
                     gwy_data_line_get_line_coeffs(buf, NULL, &v);
                     ldata[j] = v*yres/data_field->yreal;
                 }
@@ -4024,7 +4024,7 @@ gwy_data_field_area_get_line_stats(GwyDataField *data_field,
                 buf = gwy_data_line_new(height, 1.0, FALSE);
                 for (j = 0; j < width; j++) {
                     gwy_data_field_get_column_part(data_field, buf,
-                                                   j, row, row + height);
+                                                   col + j, row, row + height);
                     ldata[j] = gwy_data_line_get_tan_beta0(buf);
                 }
                 g_object_unref(buf);
