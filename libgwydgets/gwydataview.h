@@ -119,6 +119,11 @@ GwyContainer*   gwy_data_view_get_data            (GwyDataView *data_view);
 void            gwy_data_view_coords_xy_clamp     (GwyDataView *data_view,
                                                    gint *xscr,
                                                    gint *yscr);
+void            gwy_data_view_coords_xy_cut_line  (GwyDataView *data_view,
+                                                   gint *x0scr,
+                                                   gint *y0scr,
+                                                   gint *x1scr,
+                                                   gint *y1scr);
 void            gwy_data_view_coords_xy_to_real   (GwyDataView *data_view,
                                                    gint xscr,
                                                    gint yscr,

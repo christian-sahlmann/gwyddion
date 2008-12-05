@@ -32,6 +32,9 @@
 
 #define BITS_PER_SAMPLE 8
 
+/* Rounding errors */
+#define EPS 1e-6
+
 enum {
     REDRAWN,
     RESIZED,
@@ -1160,11 +1163,9 @@ void
 gwy_data_view_coords_xy_clamp(GwyDataView *data_view,
                               gint *xscr, gint *yscr)
 {
-    GtkWidget *widget;
     gint size;
 
     g_return_if_fail(GWY_IS_DATA_VIEW(data_view));
-    widget = GTK_WIDGET(data_view);
 
     if (xscr) {
         size = gdk_pixbuf_get_width(data_view->pixbuf);
@@ -1174,6 +1175,105 @@ gwy_data_view_coords_xy_clamp(GwyDataView *data_view,
         size = gdk_pixbuf_get_height(data_view->pixbuf);
         *yscr = CLAMP(*yscr, data_view->yoff, data_view->yoff + size-1);
     }
+}
+
+/**
+ * gwy_data_view_coords_xy_cut_line:
+ * @data_view: A data view.
+ * @x0scr: First point screen x-coordinate relative to widget origin.
+ * @y0scr: First point screen y-coordinate relative to widget origin.
+ * @x1scr: Second point screen x-coordinate relative to widget origin.
+ * @y1scr: Second point screen y-coordinate relative to widget origin.
+ *
+ * Fixes screen coordinates of line endpoints to be inside the data-displaying
+ * area (which can be smaller than widget size).
+ *
+ * Since: 2.11
+ **/
+void
+gwy_data_view_coords_xy_cut_line(GwyDataView *data_view,
+                                 gint *x0scr, gint *y0scr,
+                                 gint *x1scr, gint *y1scr)
+{
+    gint i, i0, i1, xsize, ysize, x0s, y0s, x1s, y1s;
+    gdouble t[6];
+
+    g_return_if_fail(GWY_IS_DATA_VIEW(data_view));
+
+    xsize = gdk_pixbuf_get_width(data_view->pixbuf);
+    x0s = CLAMP(*x0scr, data_view->xoff, data_view->xoff + xsize-1);
+    x1s = CLAMP(*x1scr, data_view->xoff, data_view->xoff + xsize-1);
+    ysize = gdk_pixbuf_get_height(data_view->pixbuf);
+    y0s = CLAMP(*y0scr, data_view->yoff, data_view->yoff + ysize-1);
+    y1s = CLAMP(*y1scr, data_view->yoff, data_view->yoff + ysize-1);
+
+    /* All inside */
+    if (x0s == *x0scr && y0s == *y0scr && x1s == *x1scr && y1s == *y1scr)
+        return;
+
+    /* Horizontal/vertical lines */
+    if (*x1scr == *x0scr) {
+        *y0scr = y0s;
+        *y1scr = y1s;
+    }
+    if (*y1scr == *y0scr) {
+        *x0scr = x0s;
+        *x1scr = x1s;
+    }
+    if (*y1scr == *y0scr || *x1scr == *x0scr)
+        return;
+
+    /* The hard case */
+    x0s = *x0scr;
+    x1s = *x1scr;
+    y0s = *y0scr;
+    y1s = *y1scr;
+
+    t[0] = -(x0s)/(gdouble)(x1s - x0s);
+    t[1] = (xsize - 1 -(x0s))/(gdouble)(x1s - x0s);
+    t[2] = -(y0s)/(gdouble)(y1s - y0s);
+    t[3] = (ysize - 1 -(y0s))/(gdouble)(y1s - y0s);
+    /* Include the endpoints */
+    t[4] = 0.0;
+    t[5] = 1.0;
+
+    gwy_math_sort(G_N_ELEMENTS(t), t);
+
+    i0 = i1 = -1;
+    for (i = 0; i < G_N_ELEMENTS(t); i++) {
+        gdouble xy;
+
+        if (t[i] < -EPS || t[i] > 1.0 + EPS)
+            continue;
+
+        xy = x0s + t[i]*(x1s - x0s);
+        if (xy < -EPS || xy > xsize-1 + EPS)
+            continue;
+
+        xy = y0s + t[i]*(y1s - y0s);
+        if (xy < -EPS || xy > ysize-1 + EPS)
+            continue;
+
+        /* i0 is the first index, once i0 != -1, do not change it any more */
+        if (i0 == -1)
+            i0 = i;
+
+        /* i1 is the last index, move it as long as we are inside */
+        i1 = i;
+    }
+
+    /* The line does not intersect the boundary at all.  Just return something
+     * and pray... */
+    if (i0 == -1) {
+        *x0scr = *x1scr = xsize/2;
+        *y0scr = *y1scr = ysize/2;
+        return;
+    }
+
+    *x0scr = GWY_ROUND(x0s + t[i0]*(x1s - x0s));
+    *x1scr = GWY_ROUND(x0s + t[i1]*(x1s - x0s));
+    *y0scr = GWY_ROUND(y0s + t[i0]*(y1s - y0s));
+    *y1scr = GWY_ROUND(y0s + t[i1]*(y1s - y0s));
 }
 
 /**
