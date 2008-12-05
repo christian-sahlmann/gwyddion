@@ -3,8 +3,11 @@ Application:
 - Translations updated: French.
 
 Libraries:
-- libgwyddion: Median line statistics no longer crashes when area width is
+- libgwyprocess: Median line statistics no longer crashes when area width is
   larger than its height.
+- libgwyprocess: Several column line statistics taking data subarea always from
+  the left edge instead the given column were fixed.
+- libgwyprocess: Wrong calculation of mean row statistics was fixed.
 
 Modules:
 - Omicron MATRIX (new): Omicron MATRIX file import support.
@@ -12,6 +15,7 @@ Modules:
 - OPD (new): Wyko Vision OPD file import support.
 - SPMLab: Can import R7 files now.
 - ECS file: Import works also in locales that use decimal comma.
+- Line selection: Can draw orthogonal endpoint markers expressing line width.
 - Omicron: Flipped spectra y-coordinates were fixed.
 - Polynomial level: Can exclude/include mask when fitting the data.
 - Grain statistics: Exports the (previously omitted) last grain too.
