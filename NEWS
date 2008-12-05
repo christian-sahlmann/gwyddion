@@ -8,6 +8,8 @@ Libraries:
 - libgwyprocess: Several column line statistics taking data subarea always from
   the left edge instead the given column were fixed.
 - libgwyprocess: Wrong calculation of mean row statistics was fixed.
+- libgwyprocess: added few line statistics
+- libgwyprocess: bug in integer erosion (and certainty map therefore) present in 2.9 and 2.10 fixed.
 
 Modules:
 - Omicron MATRIX (new): Omicron MATRIX file import support.
@@ -19,6 +21,7 @@ Modules:
 - Omicron: Flipped spectra y-coordinates were fixed.
 - Polynomial level: Can exclude/include mask when fitting the data.
 - Grain statistics: Exports the (previously omitted) last grain too.
+- Line statistics: added mean value of selected statistics
 
 
 2.10 (2008-06-26)
