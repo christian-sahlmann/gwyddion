@@ -400,7 +400,7 @@ gwy_tool_line_stats_init_dialog(GwyToolLineStats *tool)
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_box_pack_start(GTK_BOX(hbox3), label, FALSE, FALSE, 0);
 
-    label = gtk_label_new(_(""));
+    label = gtk_label_new("");
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_box_pack_start(GTK_BOX(hbox3), label, FALSE, FALSE, 0);
     tool->result_label = label;
