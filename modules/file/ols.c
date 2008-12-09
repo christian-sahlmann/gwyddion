@@ -62,11 +62,11 @@ module_register(void)
     return TRUE;
 }
 
-gchar*
+static gchar*
 ols_read_value(const gchar* comment, const gchar* value_name)
 {
    gchar *pos;
-   
+
    pos = g_strstr_len(comment, strlen(comment), value_name);
    if (pos) {
       pos = g_strstr_len(pos, strlen(pos), "=");
@@ -95,7 +95,7 @@ ols_detect(const GwyFileDetectInfo *fileinfo, gboolean only_name)
 
     if ((tiff = TIFFOpen(fileinfo->name, "r"))
         && TIFFGetField(tiff, TIFFTAG_IMAGEDESCRIPTION, &comment)
-        && strstr(comment, "OLS")) 
+        && strstr(comment, "OLS"))
     {
         score = 100;
     }
@@ -110,7 +110,7 @@ static GwyContainer*
 ols_load(const gchar *filename,
           G_GNUC_UNUSED GwyRunType mode,
           GError **error)
-{   
+{
     TIFF *tiff;
     GwyContainer *container = NULL;
 
@@ -131,7 +131,7 @@ ols_load_tiff(TIFF *tiff, GError **error)
     GwyDataField *dfield;
     GwySIUnit *siunit;
     gint i, j, power10;
-    gchar *comment = NULL, *data_channel_info_title, *data_channel_info;    
+    gchar *comment = NULL, *data_channel_info_title, *data_channel_info;
     uint32 width, height;
     guchar *buffer;
     gchar channel_name[50];
@@ -139,17 +139,17 @@ ols_load_tiff(TIFF *tiff, GError **error)
     double z_axis, xy_axis, factor;
 
     if (!TIFFGetField(tiff, TIFFTAG_IMAGEDESCRIPTION, &comment)
-        || !strstr(comment, "OLS")) 
+        || !strstr(comment, "OLS"))
     {
        return NULL;
     }
 
-    z_axis = - atof(ols_read_value(comment, "ZPositionUp"))  
+    z_axis = - atof(ols_read_value(comment, "ZPositionUp"))
              + atof(ols_read_value(comment, "ZPositionLow"));
-    
+
     TIFFGetField(tiff, TIFFTAG_IMAGEWIDTH, &width);
     TIFFGetField(tiff, TIFFTAG_IMAGELENGTH, &height);
-    do {              
+    do {
        sprintf(channel_name, "/%d/data", dir_num++);
        data_channel_info_title = g_strdup_printf("[Data %d Info]", dir_num);
        // find channel info
@@ -157,34 +157,34 @@ ols_load_tiff(TIFF *tiff, GError **error)
        if (!data_channel_info) {
           g_warning("Cannot find '%s' in comment.", data_channel_info_title);
           continue;
-       } 
+       }
        if (!ols_read_value(data_channel_info, "XY Convert Value")) {
           g_warning("Cannot find 'XY Convert Value' in comment.");
           continue;
        }
        xy_axis = atof(ols_read_value(data_channel_info, "XY Convert Value"));
-       
+
        buffer = g_new(guchar, TIFFScanlineSize(tiff));
        siunit = gwy_si_unit_new_parse("nm", &power10);
        dfield = gwy_data_field_new(width, height,
-                                width * xy_axis * pow10(power10), 
+                                width * xy_axis * pow10(power10),
                                 height * xy_axis * pow10(power10),
                                 FALSE);
        // units
        gwy_data_field_set_si_unit_xy(dfield, siunit);
        g_object_unref(siunit);
-       
+
        siunit = gwy_si_unit_new_parse("um", &power10);
        gwy_data_field_set_si_unit_z(dfield, siunit);
        g_object_unref(siunit);
-       
+
        factor = z_axis * pow10(power10) / 4095.0;
        for (i = 0; i <  height; i++) {
           gdouble *d;
           guint16 *tiff_data = (guint16 *)buffer;
           TIFFReadScanline(tiff, buffer, i, 0);
 
-          d = gwy_data_field_get_data(dfield) + (height-1 - i) * width;           
+          d = gwy_data_field_get_data(dfield) + (height-1 - i) * width;
           for (j = 0; j < width; j++) {
              d[j] = tiff_data[j] * factor;
           }
@@ -194,7 +194,7 @@ ols_load_tiff(TIFF *tiff, GError **error)
        if (!container) {
           container = gwy_container_new();
        }
-       
+
        gwy_container_set_object_by_name(container, channel_name, dfield);
 
        // free resources
@@ -202,7 +202,7 @@ ols_load_tiff(TIFF *tiff, GError **error)
        g_free(buffer);
        g_free(data_channel_info_title);
     } while (TIFFReadDirectory(tiff));
-    
+
     return container;
 }
 
