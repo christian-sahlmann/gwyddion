@@ -303,7 +303,7 @@ static GwyModuleInfo module_info = {
     (GwyModuleRegisterFunc) &module_register,
     N_("Analyses nanoindentation structure (volumes, surfaces, ...)."),
     "Lukáš Chvátal <chvatal@physics.muni.cz>",
-    "0.1.1",
+    "0.1.2",
     "Lukáš Chvátal",
     "2005",
 };
@@ -454,17 +454,17 @@ create_parameters_table(IndentAnalyzeControls * controls)
          GTK_OBJECT(controls->w_how_mark), GWY_HSCALE_WIDGET);
    
    controls->w_plane_tol = gtk_adjustment_new(args->plane_tol, 0, 100, 0.1, 1,
-         10);
+                                              0);
    gwy_table_attach_hscale(table, row++, _("Ref. plane _tolerance:"), "%",
          controls->w_plane_tol, 0);
    
-   controls->w_phi_tol = gtk_adjustment_new(args->phi_tol, 0, 180, 0.1, 10, 10);
+   controls->w_phi_tol = gtk_adjustment_new(args->phi_tol, 0, 180, 0.1, 10, 0);
    gwy_table_attach_hscale(table, row++, _("Angle _1 tolerance:"), "deg",
          controls->w_phi_tol, 0);
    
    /* XXX: what the hell is this for?
     controls.w_theta_tol = gtk_adjustment_new(args->theta_tol,
-    0, 90, 0.1, 10, 10);
+    0, 90, 0.1, 10, 0);
     spin = gwy_table_attach_hscale(table, row, _("T_heta range:"), "deg",
     controls.w_theta_tol, 0);
     row++;
