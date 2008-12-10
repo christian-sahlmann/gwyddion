@@ -215,7 +215,7 @@ static GwyModuleInfo module_info = {
     N_("Imports raw data files, both ASCII and binary, according to "
        "user-specified format."),
     "Yeti <yeti@gwyddion.net>",
-    "2.4",
+    "2.5",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -581,14 +581,14 @@ rawfile_dialog_info_page(RawFileArgs *args,
     table_attach_heading(table, _("Resolution"), row);
     row++;
 
-    adj = gtk_adjustment_new(args->p.xres, 1, 16384, 1, 10, 100);
+    adj = gtk_adjustment_new(args->p.xres, 1, 16384, 1, 10, 0);
     controls->xres = gwy_table_attach_spinbutton(table, row,
                                                  _("_Horizontal size:"),
                                                  _("data samples"), adj);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(controls->xres), 0);
     row++;
 
-    adj = gtk_adjustment_new(args->p.yres, 1, 16384, 1, 10, 100);
+    adj = gtk_adjustment_new(args->p.yres, 1, 16384, 1, 10, 0);
     controls->yres = gwy_table_attach_spinbutton(table, row,
                                                  _("_Vertical size:"),
                                                  _("data samples"), adj);
@@ -604,7 +604,7 @@ rawfile_dialog_info_page(RawFileArgs *args,
     table_attach_heading(table, _("Physical Dimensions"), row);
     row++;
 
-    adj = gtk_adjustment_new(args->p.xreal, 0.01, 10000, 1, 100, 100);
+    adj = gtk_adjustment_new(args->p.xreal, 0.01, 10000, 1, 100, 0);
     controls->xreal = gtk_spin_button_new(GTK_ADJUSTMENT(adj), 1, 2);
     gtk_spin_button_set_numeric(GTK_SPIN_BUTTON(controls->xreal), TRUE);
     gtk_table_attach(GTK_TABLE(table), controls->xreal,
@@ -640,7 +640,7 @@ rawfile_dialog_info_page(RawFileArgs *args,
     gtk_box_pack_end(GTK_BOX(hbox), controls->xyunits, FALSE, FALSE, 0);
     row++;
 
-    adj = gtk_adjustment_new(args->p.yreal, 0.01, 10000, 1, 100, 100);
+    adj = gtk_adjustment_new(args->p.yreal, 0.01, 10000, 1, 100, 0);
     controls->yreal = gtk_spin_button_new(GTK_ADJUSTMENT(adj), 1, 2);
     gtk_spin_button_set_numeric(GTK_SPIN_BUTTON(controls->yreal), TRUE);
     gtk_table_attach(GTK_TABLE(table), controls->yreal,
@@ -659,7 +659,7 @@ rawfile_dialog_info_page(RawFileArgs *args,
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
     row++;
 
-    adj = gtk_adjustment_new(args->p.zscale, 0.01, 10000, 1, 100, 100);
+    adj = gtk_adjustment_new(args->p.zscale, 0.01, 10000, 1, 100, 0);
     controls->zscale = gtk_spin_button_new(GTK_ADJUSTMENT(adj), 1, 2);
     gtk_spin_button_set_numeric(GTK_SPIN_BUTTON(controls->zscale), TRUE);
     gtk_table_attach(GTK_TABLE(table), controls->zscale,
@@ -738,14 +738,14 @@ rawfile_dialog_format_page(RawFileArgs *args,
                               0, 3, row, row+1);
     row++;
 
-    adj = gtk_adjustment_new(args->p.lineoffset, 0, 1 << 30, 1, 10, 10);
+    adj = gtk_adjustment_new(args->p.lineoffset, 0, 1 << 30, 1, 10, 0);
     controls->lineoffset = gwy_table_attach_spinbutton(table, row,
                                                        _("Start from _line:"),
                                                        "", adj);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(controls->lineoffset), 0);
     row++;
 
-    adj = gtk_adjustment_new(args->p.skipfields, 0, 1 << 30, 1, 10, 10);
+    adj = gtk_adjustment_new(args->p.skipfields, 0, 1 << 30, 1, 10, 0);
     controls->skipfields = gwy_table_attach_spinbutton(table, row,
                                                        _("E_ach row skip:"),
                                                        "fields", adj);
@@ -814,14 +814,14 @@ rawfile_dialog_format_page(RawFileArgs *args,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
-    adj = gtk_adjustment_new(args->p.offset, 0, 1 << 30, 16, 1024, 1024);
+    adj = gtk_adjustment_new(args->p.offset, 0, 1 << 30, 16, 1024, 0);
     controls->offset = gwy_table_attach_spinbutton(table, row,
                                                    _("Start at _offset:"),
                                                    "bytes", adj);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(controls->offset), 0);
     row++;
 
-    adj = gtk_adjustment_new(args->p.size, 1, 24, 1, 8, 8);
+    adj = gtk_adjustment_new(args->p.size, 1, 24, 1, 8, 0);
     controls->size = gwy_table_attach_spinbutton(table, row,
                                                  _("_Sample size:"),
                                                  "bits", adj);
@@ -829,7 +829,7 @@ rawfile_dialog_format_page(RawFileArgs *args,
     gtk_spin_button_set_snap_to_ticks(GTK_SPIN_BUTTON(controls->size), TRUE);
     row++;
 
-    adj = gtk_adjustment_new(args->p.skip, 0, 1 << 30, 1, 8, 8);
+    adj = gtk_adjustment_new(args->p.skip, 0, 1 << 30, 1, 8, 0);
     controls->skip = gwy_table_attach_spinbutton(table, row,
                                                  _("After each sample s_kip:"),
                                                  "bits", adj);
@@ -837,7 +837,7 @@ rawfile_dialog_format_page(RawFileArgs *args,
     gtk_spin_button_set_snap_to_ticks(GTK_SPIN_BUTTON(controls->skip), TRUE);
     row++;
 
-    adj = gtk_adjustment_new(args->p.rowskip, 0, 1 << 30, 1, 8, 8);
+    adj = gtk_adjustment_new(args->p.rowskip, 0, 1 << 30, 1, 8, 0);
     controls->rowskip = gwy_table_attach_spinbutton(table, row,
                                                     _("After each _row skip:"),
                                                     "bits", adj);

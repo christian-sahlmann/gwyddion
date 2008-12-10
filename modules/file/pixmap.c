@@ -897,7 +897,7 @@ pixmap_load_dialog(PixmapLoadArgs *args,
                      0, 3, row, row+1, GTK_FILL, 0, 0, 0);
     row++;
 
-    adj = gtk_adjustment_new(args->xreal, 0.01, 10000, 1, 100, 100);
+    adj = gtk_adjustment_new(args->xreal, 0.01, 10000, 1, 100, 0);
     controls.xreal = gtk_spin_button_new(GTK_ADJUSTMENT(adj), 1, 2);
     gtk_spin_button_set_numeric(GTK_SPIN_BUTTON(controls.xreal), TRUE);
     gtk_table_attach(GTK_TABLE(table), controls.xreal,
@@ -932,7 +932,7 @@ pixmap_load_dialog(PixmapLoadArgs *args,
     gtk_box_pack_end(GTK_BOX(hbox2), controls.xyunits, FALSE, FALSE, 0);
     row++;
 
-    adj = gtk_adjustment_new(args->yreal, 0.01, 10000, 1, 100, 100);
+    adj = gtk_adjustment_new(args->yreal, 0.01, 10000, 1, 100, 0);
     controls.yreal = gtk_spin_button_new(GTK_ADJUSTMENT(adj), 1, 2);
     gtk_spin_button_set_numeric(GTK_SPIN_BUTTON(controls.yreal), TRUE);
     gtk_table_attach(GTK_TABLE(table), controls.yreal,
@@ -951,7 +951,7 @@ pixmap_load_dialog(PixmapLoadArgs *args,
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
     row++;
 
-    adj = gtk_adjustment_new(args->zreal, 0.01, 10000, 1, 100, 100);
+    adj = gtk_adjustment_new(args->zreal, 0.01, 10000, 1, 100, 0);
     controls.zreal = gtk_spin_button_new(GTK_ADJUSTMENT(adj), 1, 2);
     gtk_spin_button_set_numeric(GTK_SPIN_BUTTON(controls.zreal), TRUE);
     gtk_table_attach(GTK_TABLE(table), controls.zreal,
