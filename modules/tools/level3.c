@@ -104,7 +104,7 @@ static GwyModuleInfo module_info = {
     N_("Three-point level tool, levels data by subtracting a plane fitted "
        "through three selected points."),
     "Yeti <yeti@gwyddion.net>",
-    "2.3",
+    "2.4",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -239,7 +239,7 @@ gwy_tool_level3_init_dialog(GwyToolLevel3 *tool)
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_box_pack_start(GTK_BOX(dialog->vbox), table, TRUE, TRUE, 0);
 
-    tool->radius = gtk_adjustment_new(tool->args.radius, 1, 16, 1, 5, 16);
+    tool->radius = gtk_adjustment_new(tool->args.radius, 1, 16, 1, 5, 0);
     gwy_table_attach_spinbutton(table, 1, _("_Averaging radius:"), "px",
                                 tool->radius);
     g_signal_connect_swapped(tool->radius, "value-changed",

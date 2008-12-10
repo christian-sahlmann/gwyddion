@@ -121,7 +121,7 @@ static GwyModuleInfo module_info = {
        "color scale should map to, either on data or on height distribution "
        "histogram."),
     "Yeti <yeti@gwyddion.net>",
-    "3.7",
+    "3.8",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -332,7 +332,7 @@ gwy_tool_color_range_init_dialog(GwyToolColorRange *tool)
     gtk_table_attach(table, label, 0, 1, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
-    spin_adj = gtk_adjustment_new(1, -1e6, 1e6, 0.01, 0.5, 1e6);
+    spin_adj = gtk_adjustment_new(1, -1e6, 1e6, 0.01, 0.5, 0);
     tool->spinmin = gtk_spin_button_new(GTK_ADJUSTMENT(spin_adj), 0.0, 3);
     gtk_widget_set_sensitive(GTK_WIDGET(tool->spinmin), FALSE);
     gtk_spin_button_set_numeric(GTK_SPIN_BUTTON(tool->spinmin), TRUE);
@@ -357,7 +357,7 @@ gwy_tool_color_range_init_dialog(GwyToolColorRange *tool)
     gtk_table_attach(table, label, 0, 1, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
-    spin_adj = gtk_adjustment_new(1, -1e6, 1e6, 0.01, 0.5, 1e6);
+    spin_adj = gtk_adjustment_new(1, -1e6, 1e6, 0.01, 0.5, 0);
     tool->spinmax = gtk_spin_button_new(GTK_ADJUSTMENT(spin_adj), 0.0, 3);
     gtk_widget_set_sensitive(GTK_WIDGET(tool->spinmax), FALSE);
     gtk_spin_button_set_numeric(GTK_SPIN_BUTTON(tool->spinmax), TRUE);
