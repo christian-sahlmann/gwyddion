@@ -335,7 +335,7 @@ static GwyModuleInfo module_info = {
        "TARGA. "
        "Import support relies on GDK and thus may be installation-dependent."),
     "Yeti <yeti@gwyddion.net>",
-    "6.4.1",
+    "6.5",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -512,6 +512,10 @@ pixmap_detect(const GwyFileDetectInfo *fileinfo,
     }
     else if (gwy_strequal(name, "ras")) {
         if (memcmp(fileinfo->head, "\x59\xa6\x6a\x95", 4) != 0)
+            return 0;
+    }
+    else if (gwy_strequal(name, "jpeg2000")) {
+        if (memcmp(fileinfo->head, "\x00\x00\x00\x0C\x6A\x50\x20\x20\x0D\x0A\x87\x0A\x00\x00\x00\x14\x66\x74\x79\x70\x6A\x70\x32", 23) != 0)
             return 0;
     }
     else if (gwy_strequal(name, "tga")) {
