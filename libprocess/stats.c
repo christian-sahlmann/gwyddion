@@ -3884,9 +3884,8 @@ gwy_data_field_get_inclination(GwyDataField *data_field,
 }
 
 
-/*TODO, do anything with these four functions*/
 static gint
-gwy_tool_roughness_peaks(GwyDataLine *data_line, gdouble *peaks,
+get_peaks(GwyDataLine *data_line, gdouble *peaks,
                          gint from, gint to, gdouble threshold, gint k,
                          gboolean symmetrical)
 {
@@ -3953,8 +3952,9 @@ gwy_tool_roughness_peaks(GwyDataLine *data_line, gdouble *peaks,
 
     return c+1;
 }
+
 static gdouble
-gwy_tool_roughness_Xpm(GwyDataLine *data_line, gint m, gint k)
+get_Xpm(GwyDataLine *data_line, gint m, gint k)
 {
     gdouble Xpm = 0.0;
     GwyDataLine *dl;
@@ -3970,6 +3970,10 @@ gwy_tool_roughness_Xpm(GwyDataLine *data_line, gint m, gint k)
 
     if (m > 1) {
         samp = dl->res/m;
+        if (samp <= 0) {
+            g_object_unref(dl);
+            return 0;
+        }
         gwy_data_line_resample(dl, m*samp, GWY_INTERPOLATION_LINEAR);
     }
     else
@@ -3977,7 +3981,7 @@ gwy_tool_roughness_Xpm(GwyDataLine *data_line, gint m, gint k)
 
     peaks = g_new0(gdouble, k);
     for (i = 1; i <= m; i++) {
-        gwy_tool_roughness_peaks(dl, peaks, (i-1)*samp+1, i*samp, 0, k, FALSE);
+        get_peaks(dl, peaks, (i-1)*samp+1, i*samp, 0, k, FALSE);
         Xpm += peaks[k-1];
     }
     g_free(peaks);
@@ -3986,8 +3990,9 @@ gwy_tool_roughness_Xpm(GwyDataLine *data_line, gint m, gint k)
 
     return Xpm/m;
 }
+
 static gdouble
-gwy_tool_roughness_Xvm(GwyDataLine *data_line, gint m, gint k)
+get_Xvm(GwyDataLine *data_line, gint m, gint k)
 {
     gdouble Xvm = 0.0;
     GwyDataLine *dl;
@@ -3998,17 +4003,17 @@ gwy_tool_roughness_Xvm(GwyDataLine *data_line, gint m, gint k)
     gwy_data_line_copy(data_line, dl);
     gwy_data_line_multiply(dl, -1.0);
 
-    Xvm = gwy_tool_roughness_Xpm(dl, m, k);
+    Xvm = get_Xpm(dl, m, k);
 
     g_object_unref(dl);
     return Xvm;
 }
 
 static gdouble
-gwy_tool_roughness_Xtm(GwyDataLine *data_line, gint m, gint k)
+get_Xtm(GwyDataLine *data_line, gint m, gint k)
 {
-    return gwy_tool_roughness_Xpm(data_line, m, k)
-        + gwy_tool_roughness_Xvm(data_line, m, k);
+    return get_Xpm(data_line, m, k)
+        + get_Xvm(data_line, m, k);
 }
 
 /**
@@ -4032,7 +4037,6 @@ gwy_tool_roughness_Xtm(GwyDataLine *data_line, gint m, gint k)
  *
  * Since: 2.2
  **/
-#include <stdio.h>
 void
 gwy_data_field_area_get_line_stats(GwyDataField *data_field,
                                    GwyDataField *mask,
@@ -4183,7 +4187,7 @@ gwy_data_field_area_get_line_stats(GwyDataField *data_field,
                                                    j, row, row + height);
                     mean = gwy_data_line_get_avg(buf);
                     gwy_data_line_add(buf, -mean);
-                    ldata[j] = gwy_tool_roughness_Xtm(buf, 1, 1);
+                    ldata[j] = get_Xtm(buf, 1, 1);
                 }
                 g_object_unref(buf);
                 break;
@@ -4196,7 +4200,7 @@ gwy_data_field_area_get_line_stats(GwyDataField *data_field,
                                                    j, row, row + height);
                     mean = gwy_data_line_get_avg(buf);
                     gwy_data_line_add(buf, -mean);
-                    ldata[j] = gwy_tool_roughness_Xtm(buf, 5, 1);
+                    ldata[j] = get_Xtm(buf, 5, 1);
                 }
                 g_object_unref(buf);
                 break;
@@ -4382,7 +4386,7 @@ gwy_data_field_area_get_line_stats(GwyDataField *data_field,
                         gwy_data_line_line_level(buf, av, bv);
                     } else if (lev == 1)
                         gwy_data_line_add(buf, -mean);
-                    ldata[i] = gwy_tool_roughness_Xtm(buf, 1, 1);
+                    ldata[i] = get_Xtm(buf, 1, 1);
                 }
                 g_object_unref(buf);
                 break;
@@ -4398,7 +4402,7 @@ gwy_data_field_area_get_line_stats(GwyDataField *data_field,
                         gwy_data_line_line_level(buf, av, bv);
                     } else if (lev == 1)
                         gwy_data_line_add(buf, -mean);
-                    ldata[i] = gwy_tool_roughness_Xtm(buf, 5, 1);
+                    ldata[i] = get_Xtm(buf, 5, 1);
                 }
                 g_object_unref(buf);
                 break;
