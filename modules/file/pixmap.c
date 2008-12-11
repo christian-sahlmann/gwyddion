@@ -477,6 +477,7 @@ pixmap_detect(const GwyFileDetectInfo *fileinfo,
 
     /* FIXME: GdkPixbuf doesn't good a good job regarding detection
      * we do some sanity check ourselves */
+    score = 80;
     if (gwy_strequal(name, "png")) {
         if (memcmp(fileinfo->head, "\x89PNG\r\n\x1a\n", 8) != 0)
             return 0;
@@ -514,6 +515,10 @@ pixmap_detect(const GwyFileDetectInfo *fileinfo,
         if (memcmp(fileinfo->head, "\x59\xa6\x6a\x95", 4) != 0)
             return 0;
     }
+    else if (gwy_strequal(name, "icns")) {
+        if (memcmp(fileinfo->head, "icns", 4) != 0)
+            return 0;
+    }
     else if (gwy_strequal(name, "jpeg2000")) {
         if (memcmp(fileinfo->head, "\x00\x00\x00\x0C\x6A\x50\x20\x20\x0D\x0A\x87\x0A\x00\x00\x00\x14\x66\x74\x79\x70\x6A\x70\x32", 23) != 0)
             return 0;
@@ -533,15 +538,18 @@ pixmap_detect(const GwyFileDetectInfo *fileinfo,
         else
             return 0;
     }
+    else {
+        /* Assign lower score to loaders we found by trying if they accept
+         * the header because they often have no clue. */
+        score = 75;
+    }
 
     loader = gdk_pixbuf_loader_new_with_type(name, NULL);
     if (!loader)
         return 0;
 
-    if (gdk_pixbuf_loader_write(loader,
-                                fileinfo->head, fileinfo->buffer_len, &err))
-        score = 80;
-    else {
+    if (!gdk_pixbuf_loader_write(loader,
+                                 fileinfo->head, fileinfo->buffer_len, &err)) {
         gwy_debug("%s", err->message);
         g_clear_error(&err);
         score = 0;
