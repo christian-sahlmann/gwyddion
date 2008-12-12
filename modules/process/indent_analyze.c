@@ -459,13 +459,13 @@ create_parameters_table(IndentAnalyzeControls * controls)
          controls->w_plane_tol, 0);
    
    controls->w_phi_tol = gtk_adjustment_new(args->phi_tol, 0, 180, 0.1, 10, 0);
-   gwy_table_attach_hscale(table, row++, _("Angle _1 tolerance:"), "deg",
+   gwy_table_attach_hscale(table, row++, _("Angle _1 tolerance:"), _("deg"),
          controls->w_phi_tol, 0);
    
    /* XXX: what the hell is this for?
     controls.w_theta_tol = gtk_adjustment_new(args->theta_tol,
     0, 90, 0.1, 10, 0);
-    spin = gwy_table_attach_hscale(table, row, _("T_heta range:"), "deg",
+    spin = gwy_table_attach_hscale(table, row, _("T_heta range:"), _("deg"),
     controls.w_theta_tol, 0);
     row++;
     */

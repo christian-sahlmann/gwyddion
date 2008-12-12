@@ -395,7 +395,7 @@ facets_dialog(FacetsArgs *args,
 
     controls.tolerance = gtk_adjustment_new(args->tolerance*180.0/G_PI,
                                             0.0, 15.0, 0.01, 0.1, 0);
-    scale = gwy_table_attach_hscale(table, row++, _("_Tolerance:"), "deg",
+    scale = gwy_table_attach_hscale(table, row++, _("_Tolerance:"), _("deg"),
                                     controls.tolerance, 0);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(scale), 3);
     g_signal_connect(controls.tolerance, "value-changed",
