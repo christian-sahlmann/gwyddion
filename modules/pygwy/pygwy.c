@@ -1258,20 +1258,6 @@ pygwy_create_py_list_of_containers(GwyContainer *data, gpointer list)
    
 }
 
-void 
-pygwy_add_sys_path(PyObject *dir, gchar *path)
-{
-    gchar *sys_path_append;
-
-    if ( g_file_test(path, G_FILE_TEST_IS_DIR) ) {
-       sys_path_append = g_strdup_printf("sys.path.append('%s')\n", path);
-       pygwy_run_string(sys_path_append, Py_file_input, dir, dir);
-       g_free(sys_path_append);
-    } else {
-       g_warning("Cannot add non-existent path '%s'.", path);
-    }
- 
-}
 
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

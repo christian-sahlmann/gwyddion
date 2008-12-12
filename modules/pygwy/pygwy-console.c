@@ -61,7 +61,7 @@ pygwy_register_console()
     }
 }
 
-char *
+static char *
 pygwy_console_run_command(gchar *cmd, int mode)
 {
    if (!cmd) {
@@ -89,6 +89,21 @@ pygwy_console_run_command(gchar *cmd, int mode)
    return PyString_AsString( PyDict_GetItemString(
             s_console_setup->dictionary, 
             "_stderr_redir_string") );
+}
+
+static void 
+pygwy_add_sys_path(PyObject *dir, gchar *path)
+{
+    gchar *sys_path_append;
+
+    if ( g_file_test(path, G_FILE_TEST_IS_DIR) ) {
+       sys_path_append = g_strdup_printf("sys.path.append('%s')\n", path);
+       pygwy_run_string(sys_path_append, Py_file_input, dir, dir);
+       g_free(sys_path_append);
+    } else {
+       g_warning("Cannot add non-existent path '%s'.", path);
+    }
+ 
 }
 
 static void
