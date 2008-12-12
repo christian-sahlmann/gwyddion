@@ -44,6 +44,7 @@
 #include <libprocess/inttrans.h>
 #include <libprocess/stats.h>
 #include <libprocess/level.h>
+#include <libprocess/tip.h>
 
 G_BEGIN_DECLS
 
