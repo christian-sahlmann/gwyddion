@@ -50,6 +50,7 @@ process_LTLIBRARIES = \
 	shade.la \
 	slope_dist.la \
 	sphere-revolve.la \
+	tilt.la \
 	tip_blind.la \
 	tip_model.la \
 	tipops.la \
@@ -137,6 +138,7 @@ shade_la_SOURCES = shade.c
 slope_dist_la_SOURCES = slope_dist.c
 sphere_revolve_la_SOURCES = sphere-revolve.c
 #superresolution_la_SOURCES = superresolution.c
+tilt_la_SOURCES = tilt.c
 tip_blind_la_SOURCES = tip_blind.c
 tip_model_la_SOURCES = tip_model.c
 tipops_la_SOURCES = tipops.c
