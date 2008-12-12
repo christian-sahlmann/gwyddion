@@ -29,7 +29,7 @@
  *   <glob pattern="*.SM3"/>
  * </mime-type>
  **/
-#define DEBUG 1
+
 #include "config.h"
 #include <string.h>
 #include <libgwyddion/gwymacros.h>
