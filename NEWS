@@ -24,7 +24,9 @@ Modules:
 - Omicron: Flipped spectra y-coordinates were fixed.
 - Polynomial level: Can exclude/include mask when fitting the data.
 - Grain statistics: Exports the (previously omitted) last grain too.
-- Line statistics: added mean value of selected statistics
+- Line statistics: Displays the mean value of selected statistics.
+- Facet level: Behaviour for surfaces with very large or small ratio of
+  height range to lateral dimensions was considerably improved.
 
 
 2.10 (2008-06-26)
