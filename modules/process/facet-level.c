@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2004 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2004,2008 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -41,7 +41,7 @@ static GwyModuleInfo module_info = {
     N_("Automatic facet-orientation based levelling. "
        "Levels data to make facets point up."),
     "Yeti <yeti@gwyddion.net>",
-    "1.3",
+    "2.0",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -68,7 +68,7 @@ facet_level(GwyContainer *data, GwyRunType run)
     GwyDataField *dfield, *old;
     GQuark quark;
     gdouble c, bx, by, b2;
-    gdouble p, progress, maxb2 = 666, eps = 1e-6;
+    gdouble p, progress, maxb2 = 666, eps = 1e-8;
     gint i, id;
     gboolean cancelled = FALSE;
 
@@ -140,7 +140,7 @@ static void
 facet_level_coeffs(GwyDataField *dfield, gdouble *bx, gdouble *by)
 {
     gdouble *data, *row, *newrow;
-    gdouble vx, vy, q, sumvx, sumvy, sumvz, xr, yr;
+    gdouble vx, vy, q, sumvx, sumvy, sumvz, xr, yr, sigma2;
     gint xres, yres, i, j;
 
     xres = gwy_data_field_get_xres(dfield);
@@ -154,6 +154,21 @@ facet_level_coeffs(GwyDataField *dfield, gdouble *bx, gdouble *by)
     yr = gwy_data_field_get_ymeasure(dfield);
 
     data = gwy_data_field_get_data(dfield);
+
+    sigma2 = 0.0;
+    newrow = data;
+    for (i = 1; i < yres; i++) {
+        row = newrow;
+        newrow += xres;
+
+        for (j = 1; j < xres; j++) {
+            vx = 0.5*(newrow[j] + row[j] - newrow[j-1] - row[j-1])/xr;
+            vy = 0.5*(newrow[j-1] + newrow[j] - row[j-1] - row[j])/yr;
+            sigma2 += vx*vx + vy*vy;
+        }
+    }
+    sigma2 = 0.05*sigma2/(xres*yres);
+
     sumvx = sumvy = sumvz = 0.0;
     newrow = data;
     for (i = 1; i < yres; i++) {
@@ -166,7 +181,7 @@ facet_level_coeffs(GwyDataField *dfield, gdouble *bx, gdouble *by)
             /* XXX: braindamaged heuristics; I thought q alone (i.e., normal
              * normalization) whould give nice facet leveling, but alas! the
              * higher norm values has to be suppressed much more -- it seems */
-            q = exp(20.0*(vx*vx + vy*vy));
+            q = exp((vx*vx + vy*vy)/sigma2);
             sumvx += vx/q;
             sumvy += vy/q;
             sumvz += 1.0/q;
@@ -175,7 +190,8 @@ facet_level_coeffs(GwyDataField *dfield, gdouble *bx, gdouble *by)
     q = sumvz;
     *bx = sumvx/q;
     *by = sumvy/q;
-    gwy_debug("(%g, %g, %g) %g (%g, %g)", sumvx, sumvy, sumvz, q, *bx, *by);
+    gwy_debug("sigma=%g sum=(%g, %g, %g) q=%g b=(%g, %g)",
+              sqrt(sigma2), sumvx, sumvy, sumvz, q, *bx, *by);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
