@@ -1,3 +1,4 @@
+# vim: set ts=28 :
 acf2d	statistical-analysis	autocorrelation-2d
 angle_dist	statistical-analysis	angle-distribution
 apefile	managing-files
@@ -27,11 +28,11 @@ ellipse	selections
 ezdfile	managing-files
 facet-level	leveling-and-background	facet-level
 facet_analysis	statistical-analysis	facet-analysis
-fit_2d	leveling-and-background	fit-sphere
 fft	integral-transforms	fft
 fft_filter_1d	edit-extended	fft-filter-1d
 fft_filter_2d	edit-extended	fft-filter-2d
 filter	filters-presentations	basic-filters
+fit_2d	leveling-and-background	fit-sphere
 fraccor	editing-correction	fractal-correction
 fractal	fractal-analysis	fractal-dimension
 gradient	filters-presentations	gradient
@@ -40,13 +41,14 @@ grain_dist	grain-analysis	grain-distributions
 grain_mark	grain-analysis	grain-threshold
 grain_rem_threshold	grain-analysis	grain-remove-threshold
 grain_wshed	grain-analysis	grain-watershed
+grainmeasure	grain-analysis	grain-measure
 grainremover	editing-correction
 graph_cd	graph-processing	graph-critical-dimension
 graph_cut	graph-processing
-graph_fdfit	graph-processing
 graph_export_ascii	graph-processing
 graph_export_bitmap	graph-processing
 graph_export_vector	graph-processing
+graph_fdfit	graph-processing
 graph_fit	graph-processing	graph-fit
 graph_level	graph-processing
 graph_stats	graph-processing
@@ -80,15 +82,17 @@ nanoscope-ii	managing-files
 nanotop	managing-files
 netcdf	managing-files
 nt-mdt	managing-files
+ols	managing-files
 omicron	managing-files
+omicronmatrix	managing-files
 opdfile	managing-files
 outliers	editing-correction	mask-of-outliers
 pathlevel	leveling-and-background	path-level
 pixmap	managing-files
 plugin-proxy	plugins
 pnifile	managing-files
-polydistort	edit-extended	polynomial-distort
 point	selections
+polydistort	edit-extended	polynomial-distort
 polylevel	leveling-and-background	polynomial-level
 polynom	editing-correction	line-polynomial
 presentationops	filters-presentations	presentationops
@@ -98,28 +102,26 @@ quesant	managing-files
 rawfile	raw-file-import
 readvalue	basic-operations	read-value
 rectangle	selections
-roughness	statistical-analysis	roughness-iso
 rhk-sm3	managing-files
 rhk-spm32	managing-files
 rotate	basic-operations	rotate
+roughness	statistical-analysis	roughness-iso
 scale	basic-operations	scale
 scars	editing-correction	remove-scars
 sdfile	managing-files
-sensofar	managing-files
-sicmfile	managing-files
-spmlabf	managing-files
-omicronmatrix	managing-files
-ols	managing-files
 seiko	managing-files
+sensofar	managing-files
 sfunctions	statistical-analysis	sfunctions
 shade	filters-presentations	shade
 shimadzu	managing-files
+sicmfile	managing-files
 sis	managing-files
 slope_dist	statistical-analysis	slope-distribution
 spectro	single-point-spectra
 sphere-revolve	leveling-and-background	revolve-arc
 spml	managing-files
 spmlab	managing-files
+spmlabf	managing-files
 spotremove	editing-correction	remove-spots
 stats	statistical-analysis	stat-quantities
 stmprg	managing-files
@@ -132,5 +134,3 @@ unisoku	managing-files
 unrotate	editing-correction	unrotate
 witfile	managing-files
 wsxmfile	managing-files
-grainmeasure	grain-analysis	grain-measure
-# vim: set ts=28 :
