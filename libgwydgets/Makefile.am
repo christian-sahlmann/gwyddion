@@ -106,7 +106,7 @@ AM_CPPFLAGS = -I$(top_srcdir) -DG_LOG_DOMAIN=\"Gwydgets\"
 # Any iface change    C++: 0:   A
 # Adding ifaces       C:   R:   A++
 # Changing ifaces     C:   R:   0
-libgwydgets2_la_LDFLAGS = @GTKGLEXT_LIBS@ @BASIC_LIBS@ -version-info 5:1:5
+libgwydgets2_la_LDFLAGS = @GTKGLEXT_LIBS@ @BASIC_LIBS@ -version-info 6:0:6
 #libgwydgets2_la_LDFLAGS = @GTKGLEXT_LIBS@ @BASIC_LIBS@ -release @LIBRARY_RELEASE@
 libgwydgets2_la_LIBADD = $(libgwydgets_libadd)
 
