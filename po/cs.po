@@ -3291,7 +3291,7 @@ msgstr "Export grafu do vektorového obrázku"
 
 #: modules/graph/graph_fdfit.c:169
 msgid "Fit force-distance data"
-msgstr ""
+msgstr "Proložit FD data"
 
 #: modules/graph/graph_fdfit.c:183
 msgid "/_Fit FD curve..."
@@ -3299,7 +3299,7 @@ msgstr "/Proložit _FD křivku..."
 
 #: modules/graph/graph_fdfit.c:186
 msgid "Fit a force-distance curve"
-msgstr ""
+msgstr "Proložit FD křívku"
 
 #: modules/graph/graph_fdfit.c:249
 msgid "Fit FD Curve"
@@ -4105,11 +4105,11 @@ msgstr "Presentace Houghových linií"
 
 #: modules/process/edge.c:209
 msgid "/_Presentation/_Edge Detection/_Harris Corner"
-msgstr "/_Presentace/Detekce _hran/_Harrisův roh"
+msgstr "/_Presentace/Detekce _hran/_Harrisova detekce rohů"
 
 #: modules/process/edge.c:214
 msgid "Harris corner presentation"
-msgstr ""
+msgstr "Harrisova detekce rohů"
 
 #: modules/process/edge.c:217
 msgid "/_Presentation/_Edge Detection/_Inclination"
@@ -4467,19 +4467,19 @@ msgstr "Upevnit středy nových oblastí do počátku"
 
 #: modules/process/fft_synth.c:127
 msgid "Generates random surfaces using spectral synthesis."
-msgstr ""
+msgstr "Vytvoření náhodného povrchu spektrální syntézou"
 
 #: modules/process/fft_synth.c:141
 msgid "/Simulat_e/_Spectral Synthesis..."
-msgstr ""
+msgstr "Spektrální syntéza"
 
 #: modules/process/fft_synth.c:145
 msgid "Generate surface using spectral synthesis"
-msgstr ""
+msgstr "Vytvořit povrch spektrální syntézou"
 
 #: modules/process/fft_synth.c:206
 msgid "Spectral Synthesis"
-msgstr ""
+msgstr "Spektrální syntéza"
 
 #: modules/process/fft_synth.c:256
 #, fuzzy
@@ -4512,11 +4512,11 @@ msgstr "Minimální _délka:"
 
 #: modules/process/fft_synth.c:320
 msgid "Ma_ximum frequency:"
-msgstr ""
+msgstr "Ma_ximální frekvence"
 
 #: modules/process/fft_synth.c:325
 msgid "Enable _Gaussian multiplier"
-msgstr ""
+msgstr "Aplikovat _Gaussovský multiplikátor"
 
 #: modules/process/fft_synth.c:332
 #, fuzzy
@@ -4525,11 +4525,11 @@ msgstr "Korelační _metoda:"
 
 #: modules/process/fft_synth.c:338
 msgid "Enable _power multiplier"
-msgstr ""
+msgstr "Aplikovat mocninný multi_plikátor"
 
 #: modules/process/fft_synth.c:345
 msgid "Po_wer:"
-msgstr ""
+msgstr "M_ocnina"
 
 #: modules/process/fft_synth.c:350
 #, fuzzy
@@ -4550,7 +4550,7 @@ msgstr "Proložit sférou"
 
 #: modules/process/fit_2d.c:238
 msgid "Fit sphere"
-msgstr "Proložení sféry"
+msgstr "Proložení koule"
 
 #: modules/process/fit_2d.c:282
 msgid "Fitting Parameters"
@@ -5175,27 +5175,27 @@ msgstr "Rovinu"
 
 #: modules/process/indent_analyze.c:280
 msgid "Impression"
-msgstr ""
+msgstr "Vtisk"
 
 #: modules/process/indent_analyze.c:281
 msgid "Inner Pile-up"
-msgstr ""
+msgstr "Vnitřní pile-up"
 
 #: modules/process/indent_analyze.c:282
 msgid "Outer Pile-up"
-msgstr ""
+msgstr "Vnější pile-up"
 
 #: modules/process/indent_analyze.c:283
 msgid "Special points"
-msgstr ""
+msgstr "Význačné body"
 
 #: modules/process/indent_analyze.c:284
 msgid "Faces border"
-msgstr ""
+msgstr "Okraje faset"
 
 #: modules/process/indent_analyze.c:288
 msgid "Vickers"
-msgstr ""
+msgstr "Vickers"
 
 #: modules/process/indent_analyze.c:289
 msgid "Berkovich"
@@ -5223,7 +5223,7 @@ msgstr "Rockwell"
 
 #: modules/process/indent_analyze.c:304
 msgid "Analyses nanoindentation structure (volumes, surfaces, ...)."
-msgstr ""
+msgstr "Analýza struktur vzniklých nanoindentací"
 
 #: modules/process/indent_analyze.c:321
 msgid "/Indento_r/_Analyze..."
@@ -5232,7 +5232,7 @@ msgstr "/Indento_r/_Analyzovat..."
 #: modules/process/indent_analyze.c:441
 #, fuzzy
 msgid "Marked _areas:"
-msgstr ""
+msgstr "Označená oblast"
 
 #: modules/process/indent_analyze.c:447
 msgid "_Indentor type:"
@@ -5253,7 +5253,7 @@ msgstr "_Tolerance úhlu 1:"
 
 #: modules/process/indent_analyze.c:487
 msgid "Indent centre at"
-msgstr ""
+msgstr "Střed vtisku"
 
 #: modules/process/indent_analyze.c:490
 #, fuzzy
@@ -5280,7 +5280,7 @@ msgstr ""
 
 #: modules/process/indent_analyze.c:560
 msgid "Indent. volume"
-msgstr ""
+msgstr "Objem vtisku"
 
 #: modules/process/indent_analyze.c:566
 #, fuzzy
@@ -5294,19 +5294,19 @@ msgstr "tg β<sub>0</sub>"
 
 #: modules/process/indent_analyze.c:589
 msgid "Inner Pile-Up A<sub>d</sub>"
-msgstr ""
+msgstr "Vnitřní pile-up A<sub>d</sub>"
 
 #: modules/process/indent_analyze.c:598
 msgid "Inner Pile-Up A<sub>p</sub>"
-msgstr ""
+msgstr "Vnitřní pile-up A<sub>p</sub>"
 
 #: modules/process/indent_analyze.c:607
 msgid "Outer Pile-Up A<sub>d</sub>"
-msgstr ""
+msgstr "Vnější pile-up A<sub>d</sub>"
 
 #: modules/process/indent_analyze.c:616
 msgid "Outer Pile-Up A<sub>p</sub>"
-msgstr ""
+msgstr "Vnější pile-up A<sub>p</sub>"
 
 #: modules/process/indent_analyze.c:650
 msgid "Indentaion statistics"
@@ -5314,7 +5314,7 @@ msgstr "Statistika indentace"
 
 #: modules/process/indent_analyze.c:651
 msgid "_Compute & mark"
-msgstr ""
+msgstr "_Označit a spočítat"
 
 #: modules/process/indent_analyze.c:652
 msgid "_Save statistics"
@@ -5322,7 +5322,7 @@ msgstr "/_Uložit statistiky"
 
 #: modules/process/indent_analyze.c:1581
 msgid "No statistics has benn computed yet."
-msgstr ""
+msgstr "Dosud nebylo provedeno vyhodnocení."
 
 #: modules/process/indent_analyze.c:1589
 msgid "Save Indentation Statistics"
@@ -5677,7 +5677,7 @@ msgstr "/Indento_r/Srovnat..."
 
 #: modules/process/nanoindent_adjust.c:106
 msgid "Adjust two nanoindentation imprints"
-msgstr ""
+msgstr "Prostorově srovnat dva vtisky nanoindentoru"
 
 #: modules/process/nanoindent_adjust.c:159
 msgid "Imprints adjustment"
@@ -5689,7 +5689,7 @@ msgstr "Modelování vtisku indentoru"
 
 #: modules/process/nanoindent_adjust.c:185
 msgid "Imprint to be _adjusted:"
-msgstr ""
+msgstr "V_tisky ke srovnání"
 
 #: modules/process/nanoindent_adjust.c:196
 msgid "_Move data"
@@ -6997,19 +6997,19 @@ msgstr "_Graf:"
 
 #: modules/tools/roughness.c:842
 msgid "C_ut-off:"
-msgstr ""
+msgstr "C_ut-off:"
 
 #: modules/tools/roughness.c:1357
 msgid "Amplitude Distribution Function"
-msgstr ""
+msgstr "Rozdělení amplitudy"
 
 #: modules/tools/roughness.c:1358
 msgid "The Bearing Ratio Curve"
-msgstr ""
+msgstr "Bearing ratio"
 
 #: modules/tools/roughness.c:1393
 msgid "Surface Profiles"
-msgstr ""
+msgstr "Profily"
 
 #: modules/tools/roughness.c:2108
 msgid "Save Roughness Parameters"
