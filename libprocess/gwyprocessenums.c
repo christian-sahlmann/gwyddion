@@ -415,6 +415,12 @@ gwy_correlation_type_get_enum(void)
  * @GWY_LINE_STAT_LENGTH: Line length.
  * @GWY_LINE_STAT_SLOPE: Overall line slope.
  * @GWY_LINE_STAT_TAN_BETA0: Root mean square slope.
+ * @GWY_LINE_STAT_RA: Arithmetic mean surface roughness
+ * @GWY_LINE_STAT_RZ: Maximum height of the roughness profile
+ * @GWY_LINE_STAT_RT: Total height of the roughness profile
+ * @GWY_LINE_STAT_SKEW: Line skew
+ * @GWY_LINE_STAT_KURTOSIS: Line kurtosis
+ *
  *
  * Line statistical quantities to be requested with
  * gwy_data_field_area_get_line_stats().
