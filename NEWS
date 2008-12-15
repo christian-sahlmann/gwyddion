@@ -8,7 +8,7 @@ Libraries:
 - libgwyprocess: Several column line statistics taking data subarea always from
   the left edge instead the given column were fixed.
 - libgwyprocess: Wrong calculation of mean row statistics was fixed.
-- libgwyprocess: added few line statistics
+- libgwyprocess: added few line statistics (Rt, Rz, Ra, Skew and Kurtosis)
 - libgwyprocess: bug in integer erosion (and certainty map therefore) present
   in 2.9 and 2.10 fixed.
 
@@ -25,6 +25,7 @@ Modules:
 - Polynomial level: Can exclude/include mask when fitting the data.
 - Grain statistics: Exports the (previously omitted) last grain too.
 - Line statistics: Displays the mean value of selected statistics.
+- Line statistics: Added Ra, Rt, Rz, Skew and Kurtosis
 - Facet level: Behaviour for surfaces with very large or small ratio of
   height range to lateral dimensions was considerably improved.
 
