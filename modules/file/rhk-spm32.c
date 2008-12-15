@@ -377,7 +377,7 @@ rhkspm32_read_header(RHKPage *rhkpage,
     if ((rhkpage->type == RHK_TYPE_IMAGE)
         && (rhkpage->data_type != RHK_DATA_INT16)) {
         g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                    _("rhk=spm32: invalid data type %d for image data."),
+                    _("Invalid data type %d for image data."),
                     rhkpage->data_type);
         return FALSE;
     }
@@ -385,7 +385,7 @@ rhkspm32_read_header(RHKPage *rhkpage,
         && !((rhkpage->data_type == RHK_DATA_INT16)
              || (rhkpage->data_type == RHK_DATA_SINGLE))) {
         g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                    _("rhk=spm32: invalid data type %d for line data."),
+                    _("Invalid data type %d for line data."),
                     rhkpage->data_type);
         return FALSE;
     }

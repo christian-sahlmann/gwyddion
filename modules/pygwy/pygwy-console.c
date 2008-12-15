@@ -40,17 +40,17 @@ static void       pygwy_on_console_save_as_file      (GtkToolButton *btn, gpoint
 static void       pygwy_console_run                  (GwyContainer *data,
                                                       GwyRunType run,
                                                       const gchar *name);
-static void             pygwy_on_console_command_execute(GtkEntry *entry, 
+static void             pygwy_on_console_command_execute(GtkEntry *entry,
                                                          gpointer user_data);
-static gboolean         pygwy_on_console_close(GtkWidget *widget, 
-                                               GdkEvent *event, 
+static gboolean         pygwy_on_console_close(GtkWidget *widget,
+                                               GdkEvent *event,
                                                gpointer user_data);
 
 void
 pygwy_register_console()
 {
 
-    if (gwy_process_func_register(N_("pygwy_console"),
+    if (gwy_process_func_register("pygwy_console",
                                   pygwy_console_run,
                                   N_("/Pygwy console"),
                                   NULL,
@@ -74,24 +74,24 @@ pygwy_console_run_command(gchar *cmd, int mode)
       return NULL;
    }
    // store _stderr_redir location
-   pygwy_run_string(cmd, 
-         mode, 
-         s_console_setup->dictionary, 
+   pygwy_run_string(cmd,
+         mode,
+         s_console_setup->dictionary,
          s_console_setup->dictionary);
    pygwy_run_string("_stderr_redir_pos = _stderr_redir.tell()\n"
                     "_stderr_redir.seek(0)\n"
                     "_stderr_redir_string = _stderr_redir.read(_stderr_redir_pos)\n"
                     "_stderr_redir.seek(0)",
-         Py_file_input, 
+         Py_file_input,
          s_console_setup->dictionary,
          s_console_setup->dictionary);
 
    return PyString_AsString( PyDict_GetItemString(
-            s_console_setup->dictionary, 
+            s_console_setup->dictionary,
             "_stderr_redir_string") );
 }
 
-static void 
+static void
 pygwy_add_sys_path(PyObject *dir, gchar *path)
 {
     gchar *sys_path_append;
@@ -103,7 +103,7 @@ pygwy_add_sys_path(PyObject *dir, gchar *path)
     } else {
        g_warning("Cannot add non-existent path '%s'.", path);
     }
- 
+
 }
 
 static void
@@ -138,7 +138,7 @@ pygwy_console_append(gchar *msg)
    gtk_text_buffer_get_end_iter(GTK_TEXT_BUFFER(console_buf), &end_iter);
    end_mark = gtk_text_buffer_create_mark(console_buf, "cursor", &end_iter, FALSE);
    g_object_ref(end_mark);
-   gtk_text_view_scroll_to_mark(GTK_TEXT_VIEW(s_console_setup->console_output), 
+   gtk_text_view_scroll_to_mark(GTK_TEXT_VIEW(s_console_setup->console_output),
          end_mark, 0.0, FALSE, 0.0, 0.0);
    g_object_unref(end_mark);
 
@@ -150,16 +150,17 @@ pygwy_on_console_run_file(GtkToolButton *btn, gpointer user_data)
    GtkTextIter start_iter, end_iter;
    char *output, *file_info_line;
 
-   GtkTextBuffer *console_file_buf = 
+   GtkTextBuffer *console_file_buf =
       gtk_text_view_get_buffer(GTK_TEXT_VIEW(s_console_setup->console_file_content));
 
-   file_info_line = g_strdup_printf(">>> Running file content of below textfield\n");
+   file_info_line
+       = g_strdup_printf(_(">>> Running file content of below textfield\n"));
 
    pygwy_console_append(file_info_line);
 
    gtk_text_buffer_get_bounds(console_file_buf, &start_iter, &end_iter);
    output = pygwy_console_run_command(
-         gtk_text_buffer_get_text(console_file_buf, &start_iter, &end_iter, FALSE), 
+         gtk_text_buffer_get_text(console_file_buf, &start_iter, &end_iter, FALSE),
          Py_file_input);
    pygwy_console_append(output);
 
@@ -177,18 +178,18 @@ pygwy_on_console_open_file(GtkToolButton *btn, gpointer user_data)
    GtkTextBuffer *console_file_buf;
    gtk_file_filter_add_mime_type(filter, "text/x-python");
 
-   file_chooser = gtk_file_chooser_dialog_new(N_("Open Python script"), 
-         NULL, 
-         GTK_FILE_CHOOSER_ACTION_OPEN,
-         GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-	      GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT,
-         NULL);
+   file_chooser
+       = gtk_file_chooser_dialog_new(_("Open Python script"),
+                                     NULL,
+                                     GTK_FILE_CHOOSER_ACTION_OPEN,
+                                     GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
+                                     GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT,
+                                     NULL);
    gtk_file_chooser_set_filter(GTK_FILE_CHOOSER(file_chooser), filter);
-   if (gtk_dialog_run (GTK_DIALOG (file_chooser)) == GTK_RESPONSE_ACCEPT)
-   {
+   if (gtk_dialog_run (GTK_DIALOG (file_chooser)) == GTK_RESPONSE_ACCEPT) {
       char *file_content;
       GError *err = NULL;
-      
+
 
       if (s_console_setup->script_filename) {
          g_free(s_console_setup->script_filename);
@@ -200,11 +201,12 @@ pygwy_on_console_open_file(GtkToolButton *btn, gpointer user_data)
                             &file_content,
                             NULL,
                             &err)) {
-         g_warning("Cannot read content of file '%s'", s_console_setup->script_filename);
+         g_warning("Cannot read content of file '%s'",
+                   s_console_setup->script_filename);
          g_free(s_console_setup->script_filename);
          return;
       }
-      
+
       // read string which contain last command output
       console_file_buf = gtk_text_view_get_buffer(GTK_TEXT_VIEW(s_console_setup->console_file_content));
 
@@ -234,7 +236,7 @@ pygwy_on_console_save_file(GtkToolButton *btn, gpointer user_data)
       fwrite(output->str, 1, output->len, f);
       fclose(f);
    }
-}   
+}
 
 static void
 pygwy_on_console_save_as_file(GtkToolButton *btn, gpointer user_data)
@@ -257,10 +259,10 @@ pygwy_on_console_save_as_file(GtkToolButton *btn, gpointer user_data)
       pygwy_on_console_save_file(btn, user_data);
    }
    gtk_widget_destroy (dialog);
-}   
+}
 
 
-static void 
+static void
 pygwy_console_create_gui()
 {
    GtkWidget *console_win, *vbox1, *console_scrolledwin, *file_scrolledwin, *vpaned, *frame;
@@ -268,11 +270,11 @@ pygwy_console_create_gui()
    PangoFontDescription *font_desc;
    GtkAccelGroup *accel_group;
    GtkTooltips *button_bar_tips;
-   
 
 
 
-#ifdef HAVE_GTKSOURCEVIEW     
+
+#ifdef HAVE_GTKSOURCEVIEW
    GtkSourceLanguageManager *manager;
 #endif
 
@@ -291,12 +293,12 @@ pygwy_console_create_gui()
    button_save_as = GTK_WIDGET(gtk_tool_button_new_from_stock(GTK_STOCK_SAVE_AS));
    button_run = GTK_WIDGET(gtk_tool_button_new_from_stock(GTK_STOCK_EXECUTE));
    button_bar_tips = gtk_tooltips_new ();
-   gtk_tooltips_set_tip (GTK_TOOLTIPS (button_bar_tips), 
-                         button_open, N_("Open script in Python language (Ctrl-O)"), "");
-   gtk_tooltips_set_tip (GTK_TOOLTIPS (button_bar_tips), 
-                         button_save, N_("Save script (Ctrl-S)"), "");
-   gtk_tooltips_set_tip (GTK_TOOLTIPS (button_bar_tips), 
-                         button_run, N_("Execute script (Ctrl-E)"), "");
+   gtk_tooltips_set_tip (GTK_TOOLTIPS (button_bar_tips),
+                         button_open, _("Open script in Python language (Ctrl-O)"), "");
+   gtk_tooltips_set_tip (GTK_TOOLTIPS (button_bar_tips),
+                         button_save, _("Save script (Ctrl-S)"), "");
+   gtk_tooltips_set_tip (GTK_TOOLTIPS (button_bar_tips),
+                         button_run, _("Execute script (Ctrl-E)"), "");
    accel_group = gtk_accel_group_new ();
    gtk_widget_add_accelerator (button_run, "clicked", accel_group,
                               GDK_E, (GdkModifierType) GDK_CONTROL_MASK,
@@ -326,11 +328,11 @@ pygwy_console_create_gui()
    gtk_paned_pack1(GTK_PANED(vpaned), file_scrolledwin, TRUE, FALSE);
    //gtk_box_pack_start (GTK_BOX (vbox1), file_scrolledwin, TRUE, TRUE, 0);
    gtk_scrolled_window_set_shadow_type (GTK_SCROLLED_WINDOW (file_scrolledwin), GTK_SHADOW_IN);
-   gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(file_scrolledwin), 
+   gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(file_scrolledwin),
                                   GTK_POLICY_AUTOMATIC,
                                   GTK_POLICY_AUTOMATIC);
    console_scrolledwin = gtk_scrolled_window_new (NULL, NULL);
-   gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(console_scrolledwin), 
+   gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(console_scrolledwin),
                                   GTK_POLICY_AUTOMATIC,
                                   GTK_POLICY_AUTOMATIC);
    gtk_paned_pack2(GTK_PANED(vpaned), console_scrolledwin, TRUE, TRUE);
@@ -344,7 +346,7 @@ pygwy_console_create_gui()
    gtk_text_view_set_editable (GTK_TEXT_VIEW (s_console_setup->console_output), FALSE);
 
    // file buffer
-#ifdef HAVE_GTKSOURCEVIEW  
+#ifdef HAVE_GTKSOURCEVIEW
    s_console_setup->console_file_content = gtk_source_view_new();
    gtk_source_view_set_show_line_numbers(
         GTK_SOURCE_VIEW(s_console_setup->console_file_content), TRUE);
@@ -414,11 +416,11 @@ pygwy_console_run(GwyContainer *data, GwyRunType run, const gchar *name)
 {
     PyObject *d; //, *py_container;
     gchar *plugin_dir_name = NULL;
-    
+
     pygwy_initialize();
     pygwy_console_create_gui();
     s_console_setup->script_filename = NULL;
-    // create new environment    
+    // create new environment
     d = create_environment("__console__", FALSE);
     if (!d) {
         g_warning("Cannot create copy of Python dictionary.");
@@ -431,7 +433,7 @@ pygwy_console_run(GwyContainer *data, GwyRunType run, const gchar *name)
     //    g_warning("Variable 'gwy.data' was not inicialized.");
     //}
     //PyDict_SetItemString(s_pygwy_dict, "data", py_container);
-    
+
     // redirect stdout & stderr to temporary file
     pygwy_run_string("import sys, gwy, tempfile\n"
                      "from gwy import *\n"
@@ -470,7 +472,7 @@ pygwy_on_console_command_execute(GtkEntry *entry, gpointer user_data)
 
     input_line = g_strconcat(">>> ", gtk_entry_get_text(entry), "\n", NULL);
     output = g_string_new(input_line);
-    output = g_string_append(output,  
+    output = g_string_append(output,
           pygwy_console_run_command((gchar*) gtk_entry_get_text(GTK_ENTRY(entry)), Py_single_input) );
 
     pygwy_console_append((gchar *)output->str);

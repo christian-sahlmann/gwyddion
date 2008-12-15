@@ -393,10 +393,10 @@ gwy_tool_line_stats_init_dialog(GwyToolLineStats *tool)
     row++;
 
 
-    hbox3 = gtk_hbox_new(FALSE, 2);
+    hbox3 = gtk_hbox_new(FALSE, 8);
     gtk_table_attach(table, hbox3,
                      0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
-    label = gtk_label_new(_("Average: "));
+    label = gtk_label_new(_("Average:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_box_pack_start(GTK_BOX(hbox3), label, FALSE, FALSE, 0);
 

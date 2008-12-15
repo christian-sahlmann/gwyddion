@@ -69,7 +69,7 @@ static gboolean
 module_register(void)
 {
     gwy_file_func_register("quesant",
-                           N_("quesant files"),
+                           N_("Quesant files"),
                            (GwyFileDetectFunc)&quesant_detect,
                            (GwyFileLoadFunc)&quesant_load,
                            NULL,
