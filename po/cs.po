@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2008-12-15 13:55+0100\n"
+"POT-Creation-Date: 2008-12-16 10:23+0100\n"
 "PO-Revision-Date: 2008-12-15 14:37+0100\n"
 "Last-Translator: Yeti <yeti@gwyddion.net>\n"
 "Language-Team: Czech\n"
@@ -387,6 +387,7 @@ msgstr "Popisky"
 
 #: libgwydgets/gwy3dwindow.c:757 modules/process/facet_analysis.c:354
 #: modules/process/facet_analysis.c:370 modules/process/shade.c:251
+#: modules/process/tilt.c:218
 msgid "φ:"
 msgstr "φ:"
 
@@ -394,13 +395,15 @@ msgstr "φ:"
 #: libgwydgets/gwy3dwindow.c:875 libgwydgets/gwy3dwindow.c:883
 #: modules/process/facet_analysis.c:398 modules/process/indent_analyze.c:462
 #: modules/process/rotate.c:280 modules/process/shade.c:243
-#: modules/process/shade.c:251 modules/process/tip_model.c:234
+#: modules/process/shade.c:251 modules/process/tilt.c:206
+#: modules/process/tilt.c:218 modules/process/tip_model.c:234
 #: modules/process/tip_model.c:240 modules/process/unrotate.c:344
 msgid "deg"
 msgstr "stupňů"
 
 #: libgwydgets/gwy3dwindow.c:763 modules/process/facet_analysis.c:353
 #: modules/process/facet_analysis.c:369 modules/process/shade.c:243
+#: modules/process/tilt.c:206
 msgid "θ:"
 msgstr "θ:"
 
@@ -508,8 +511,8 @@ msgstr "pixelů"
 #: modules/process/polylevel.c:382 modules/process/rotate.c:260
 #: modules/process/scale.c:193 modules/process/scars.c:469
 #: modules/process/shade.c:214 modules/process/slope_dist.c:201
-#: modules/process/sphere-revolve.c:215 modules/process/tip_model.c:170
-#: modules/process/unrotate.c:226
+#: modules/process/sphere-revolve.c:215 modules/process/tilt.c:156
+#: modules/process/tip_model.c:170 modules/process/unrotate.c:226
 msgid "_Reset"
 msgstr "_Obnovit"
 
@@ -2150,6 +2153,39 @@ msgstr "Omicron MATRIX (param.mtrx & data.mtrx)"
 msgid "Omicron MATRIX (.mtrx & .mtrx)"
 msgstr "Omicron MATRIX (.mtrx)"
 
+#: modules/file/opdfile.c:163
+#, fuzzy
+msgid "Imports Wyko OPD and ASC files."
+msgstr "Načítá XQD soubory Seiko."
+
+#: modules/file/opdfile.c:176
+#, fuzzy
+msgid "Wyko OPD files (.opd)"
+msgstr "Seiko soubory (.xqd)"
+
+#: modules/file/opdfile.c:183
+msgid "Wyko ASCII export files (.asc)"
+msgstr ""
+
+#: modules/file/opdfile.c:250
+#, fuzzy
+msgid "File header is truncated"
+msgstr "Hlavička souboru je příliš krátká."
+
+#: modules/file/opdfile.c:273
+#, c-format
+msgid "Item `%s' is beyond the end of the file."
+msgstr ""
+
+#: modules/file/opdfile.c:553
+msgid "Nested directories found"
+msgstr ""
+
+#: modules/file/opdfile.c:743
+#, c-format
+msgid "Truncated data in block %s"
+msgstr ""
+
 #: modules/file/pixmap.c:272
 msgid "Portable Network Graphics (.png)"
 msgstr "Portable Network Graphics (.png)"
@@ -2749,18 +2785,17 @@ msgid "Invalid file header."
 msgstr "Neplatná hlavička souboru."
 
 #: modules/file/rhk-spm32.c:374
-#, fuzzy
 msgid "Only image and line files are supported."
 msgstr ""
 
 #: modules/file/rhk-spm32.c:380
-#, c-format
-msgid "rhk=spm32: invalid data type %d for image data."
-msgstr ""
+#, fuzzy, c-format
+msgid "Invalid data type %d for image data."
+msgstr "Neplatná kormát klíče dat"
 
 #: modules/file/rhk-spm32.c:388
 #, c-format
-msgid "rhk=spm32: invalid data type %d for line data."
+msgid "Invalid data type %d for line data."
 msgstr ""
 
 #: modules/file/rhk-spm32.c:407
@@ -2919,6 +2954,20 @@ msgstr "Thermicroscopes SpmLab soubory"
 #, c-format
 msgid "Unknown format version %c."
 msgstr "Neznámá verze formátu: %c."
+
+#: modules/file/spmlabf.c:70
+#, fuzzy
+msgid "Imports SPMLab floating-point files."
+msgstr "Načítá datové soubory OLS."
+
+#: modules/file/spmlabf.c:83
+msgid "SPMLab floating-point files (.flt)"
+msgstr ""
+
+#: modules/file/spmlabf.c:143
+#, fuzzy
+msgid "Missing data start marker [Data]."
+msgstr "Chybí značka začátku dat (*)."
 
 #: modules/file/stmprg.c:217
 msgid "Imports Omicron STMPRG data files (tp ta)."
@@ -6061,7 +6110,7 @@ msgstr "Typ výstupu"
 msgid "Angular Slope Distribution"
 msgstr "Úhlové rozdělení sklonů"
 
-#: modules/process/slope_dist.c:438
+#: modules/process/slope_dist.c:438 modules/process/tilt.c:174
 msgid "Slopes"
 msgstr "Sklony"
 
@@ -6131,6 +6180,37 @@ msgstr ""
 #: modules/process/superresolution.c:554
 msgid "Interpolating..."
 msgstr ""
+
+#: modules/process/tilt.c:73
+msgid "Tilts image by specified amount."
+msgstr ""
+
+#: modules/process/tilt.c:87
+#, fuzzy
+msgid "/_Basic Operations/_Tilt..."
+msgstr "/_Jednoduché operace/Změna velikosti..."
+
+#: modules/process/tilt.c:91
+msgid "Tilt by specified amount"
+msgstr ""
+
+#: modules/process/tilt.c:155
+#, fuzzy
+msgid "Tilt"
+msgstr "Filtr"
+
+#: modules/process/tilt.c:180
+msgid "_X:"
+msgstr ""
+
+#: modules/process/tilt.c:189
+msgid "_Y:"
+msgstr ""
+
+#: modules/process/tilt.c:199
+#, fuzzy
+msgid "Angles"
+msgstr "Úhel"
 
 #: modules/process/tip_blind.c:128
 msgid "Blind estimation of SPM tip using Villarubia's algorithm."
@@ -6325,10 +6405,6 @@ msgstr "_Předpokládat:"
 msgid "Correction:"
 msgstr "Korekce:"
 
-#: modules/pygwy/pygwy-console.c:53
-msgid "pygwy_console"
-msgstr ""
-
 #: modules/pygwy/pygwy-console.c:55
 msgid "/Pygwy console"
 msgstr "/Konsola pygwy"
@@ -6337,23 +6413,27 @@ msgstr "/Konsola pygwy"
 msgid "Python wrapper console"
 msgstr ""
 
-#: modules/pygwy/pygwy-console.c:180
+#: modules/pygwy/pygwy-console.c:157
+msgid ">>> Running file content of below textfield\n"
+msgstr ""
+
+#: modules/pygwy/pygwy-console.c:182
 msgid "Open Python script"
 msgstr "Otevřít skript v Pythonu"
 
-#: modules/pygwy/pygwy-console.c:295
+#: modules/pygwy/pygwy-console.c:297
 msgid "Open script in Python language (Ctrl-O)"
 msgstr "Otevřít skript v jazyce Python (Ctrl-O)"
 
-#: modules/pygwy/pygwy-console.c:297
+#: modules/pygwy/pygwy-console.c:299
 msgid "Save script (Ctrl-S)"
 msgstr "Uložit skript (Ctrl-S)"
 
-#: modules/pygwy/pygwy-console.c:299
+#: modules/pygwy/pygwy-console.c:301
 msgid "Execute script (Ctrl-E)"
 msgstr "Spustit skript (Ctrl-E)"
 
-#: modules/pygwy/pygwy-console.c:377
+#: modules/pygwy/pygwy-console.c:379
 msgid "Command"
 msgstr "Příkaz"
 

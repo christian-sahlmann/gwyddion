@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: French localization\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2008-11-21 15:58+0100\n"
+"POT-Creation-Date: 2008-12-16 10:23+0100\n"
 "PO-Revision-Date: 2008-12-08 23:09+0100\n"
 "Last-Translator: François RIGUET <francheu@caramail.com>\n"
 "Language-Team: François RIGUET <francheu@caramail.com>\n"
@@ -145,7 +145,7 @@ msgstr "Volume"
 msgid "Boundary"
 msgstr "Limite"
 
-#: libprocess/gwygrainvalue.c:900 modules/tools/linestats.c:154
+#: libprocess/gwygrainvalue.c:900 modules/tools/linestats.c:155
 msgid "Slope"
 msgstr "Pente"
 
@@ -401,18 +401,23 @@ msgstr "Labels"
 
 #: libgwydgets/gwy3dwindow.c:757 modules/process/facet_analysis.c:354
 #: modules/process/facet_analysis.c:370 modules/process/shade.c:251
+#: modules/process/tilt.c:218
 msgid "φ:"
 msgstr "φ :"
 
 #: libgwydgets/gwy3dwindow.c:757 libgwydgets/gwy3dwindow.c:763
 #: libgwydgets/gwy3dwindow.c:875 libgwydgets/gwy3dwindow.c:883
-#: modules/process/rotate.c:280 modules/process/tip_model.c:234
+#: modules/process/facet_analysis.c:398 modules/process/indent_analyze.c:462
+#: modules/process/rotate.c:280 modules/process/shade.c:243
+#: modules/process/shade.c:251 modules/process/tilt.c:206
+#: modules/process/tilt.c:218 modules/process/tip_model.c:234
 #: modules/process/tip_model.c:240 modules/process/unrotate.c:344
 msgid "deg"
 msgstr "deg"
 
 #: libgwydgets/gwy3dwindow.c:763 modules/process/facet_analysis.c:353
 #: modules/process/facet_analysis.c:369 modules/process/shade.c:243
+#: modules/process/tilt.c:206
 msgid "θ:"
 msgstr "θ :"
 
@@ -507,8 +512,8 @@ msgstr "Taille :"
 msgid "pixels"
 msgstr "pixels"
 
-#: libgwydgets/gwy3dwindow.c:1018 modules/file/pixmap.c:824
-#: modules/file/pixmap.c:2070 modules/file/rawfile.c:379
+#: libgwydgets/gwy3dwindow.c:1018 modules/file/pixmap.c:836
+#: modules/file/pixmap.c:2082 modules/file/rawfile.c:379
 #: modules/process/angle_dist.c:170 modules/process/calibrate.c:282
 #: modules/process/cwt.c:132 modules/process/drift.c:222
 #: modules/process/dwt.c:164 modules/process/dwtanisotropy.c:183
@@ -522,8 +527,8 @@ msgstr "pixels"
 #: modules/process/polylevel.c:382 modules/process/rotate.c:260
 #: modules/process/scale.c:193 modules/process/scars.c:469
 #: modules/process/shade.c:214 modules/process/slope_dist.c:201
-#: modules/process/sphere-revolve.c:215 modules/process/tip_model.c:170
-#: modules/process/unrotate.c:226
+#: modules/process/sphere-revolve.c:215 modules/process/tilt.c:156
+#: modules/process/tip_model.c:170 modules/process/unrotate.c:226
 #, fuzzy
 msgid "_Reset"
 msgstr "_Remise à zéro"
@@ -769,7 +774,7 @@ msgid "Points anywhere"
 msgstr ""
 
 #: libgwydgets/gwygraphwindowmeasuredialog.c:279
-#: libgwydgets/gwygraphwindowmeasuredialog.c:435 modules/tools/linestats.c:153
+#: libgwydgets/gwygraphwindowmeasuredialog.c:435 modules/tools/linestats.c:154
 #: modules/tools/roughness.c:528
 msgid "Length"
 msgstr "Longueur"
@@ -838,7 +843,7 @@ msgstr "Exposant"
 msgid "Preview"
 msgstr "Aperçu"
 
-#: libgwymodule/gwymodule-file.c:514 modules/file/pixmap.c:600
+#: libgwymodule/gwymodule-file.c:514 modules/file/pixmap.c:612
 #, c-format
 msgid "Cannot open file for reading: %s."
 msgstr "Impossible d'ouvrir le fichier pour le lire : %s."
@@ -1642,20 +1647,20 @@ msgstr "Importe les fichiers Assing AFM."
 msgid "Assing AFM files (.afm)"
 msgstr "Assing AFM (.afm)"
 
-#: modules/file/bcrfile.c:120
+#: modules/file/bcrfile.c:125
 msgid "Imports Image Metrology BCR data files."
 msgstr "Importe les fichiers Image Metrology BCR"
 
-#: modules/file/bcrfile.c:133
+#: modules/file/bcrfile.c:138
 msgid "BCR files (.bcr, .bcrf)"
 msgstr "BCR (.bcr, .bcrf)"
 
-#: modules/file/bcrfile.c:209
+#: modules/file/bcrfile.c:215
 #, c-format
 msgid "File header is not convertible from UTF-16: %s"
 msgstr "L'en-tête n'est pas convertible depuis UTF-16 : %s"
 
-#: modules/file/bcrfile.c:275
+#: modules/file/bcrfile.c:284
 #, c-format
 msgid "Unknown file type header: `%s'."
 msgstr "Type d'en-tête inconnu : `%s'."
@@ -1690,7 +1695,7 @@ msgid "Burleigh exported data (.txt, .bin)"
 msgstr "Burleigh données exportées (.txt, .bin)"
 
 #: modules/file/burleigh_exp.c:208 modules/file/burleigh_exp.c:249
-#: modules/file/nanoscope.c:780 modules/file/omicron.c:356
+#: modules/file/nanoscope.c:776 modules/file/omicron.c:356
 #: modules/file/shimadzu.c:403
 msgid "Missing colon in header line."
 msgstr "Il manque une colonne dans la ligne d'en-tête."
@@ -2056,16 +2061,16 @@ msgid "File is not a Nanoscope file, or it is a unknown subtype."
 msgstr ""
 "Le fichier n'est pas un fichier Nanoscope, ou est d'un sous-type inconnu."
 
-#: modules/file/nanoscope.c:452 modules/file/nanoscope.c:468
+#: modules/file/nanoscope.c:448 modules/file/nanoscope.c:464
 msgid "Cannot parse `Scan size' field."
 msgstr "Impossible d'analyser le champ `Scan size'."
 
-#: modules/file/nanoscope.c:691
+#: modules/file/nanoscope.c:687
 #, c-format
 msgid "Garbage after data sample #%d."
 msgstr "Données erronées après l'échantillon #%d."
 
-#: modules/file/nanoscope.c:770
+#: modules/file/nanoscope.c:766
 msgid "Truncated header line."
 msgstr "Ligne d'en-tête tronquée."
 
@@ -2178,6 +2183,36 @@ msgstr "Omicron MATRIX (param.mtrx & data.mtrx)"
 msgid "Omicron MATRIX (.mtrx & .mtrx)"
 msgstr "Omicron MATRIX (.mtrx & .mtrx)"
 
+#: modules/file/opdfile.c:163
+msgid "Imports Wyko OPD and ASC files."
+msgstr "Importe les fichiers  Wyko OPD et ASC."
+
+#: modules/file/opdfile.c:176
+msgid "Wyko OPD files (.opd)"
+msgstr "Fichiers Wyko OPD (.opd)"
+
+#: modules/file/opdfile.c:183
+msgid "Wyko ASCII export files (.asc)"
+msgstr "Fichiers Wyko ASCII (.asc)"
+
+#: modules/file/opdfile.c:250
+msgid "File header is truncated"
+msgstr "L'en-tête de fichier est tronqué."
+
+#: modules/file/opdfile.c:273
+#, c-format
+msgid "Item `%s' is beyond the end of the file."
+msgstr "L'élément `%s' est au-delà de la fin du fichier."
+
+#: modules/file/opdfile.c:553
+msgid "Nested directories found"
+msgstr ""
+
+#: modules/file/opdfile.c:743
+#, c-format
+msgid "Truncated data in block %s"
+msgstr "Données tronquées dans le bloc %s"
+
 #: modules/file/pixmap.c:272
 msgid "Portable Network Graphics (.png)"
 msgstr "Portable Network Graphics (.png)"
@@ -2214,190 +2249,190 @@ msgstr ""
 "PNG, JPEG, TIFF (si disponible), PPM, BMP, TARGA. L'import dépend de GDK et "
 "peut ainsi dépendre de l'installation."
 
-#: modules/file/pixmap.c:586
+#: modules/file/pixmap.c:598
 msgid "Pixmap image import must be run as interactive."
 msgstr ""
 
-#: modules/file/pixmap.c:594
+#: modules/file/pixmap.c:606
 #, c-format
 msgid "Pixmap has not registered file type `%s'."
 msgstr ""
 
-#: modules/file/pixmap.c:608
+#: modules/file/pixmap.c:620
 #, c-format
 msgid "Cannot get pixbuf loader: %s."
 msgstr ""
 
-#: modules/file/pixmap.c:620 modules/file/pixmap.c:630
+#: modules/file/pixmap.c:632 modules/file/pixmap.c:642
 #, c-format
 msgid "Pixbuf loader refused data: %s."
 msgstr ""
 
-#: modules/file/pixmap.c:821
+#: modules/file/pixmap.c:833
 msgid "Import "
 msgstr "Importer"
 
-#: modules/file/pixmap.c:847 modules/file/rawfile.c:581
+#: modules/file/pixmap.c:859 modules/file/rawfile.c:581
 msgid "Resolution"
 msgstr "Résolution"
 
-#: modules/file/pixmap.c:854 modules/file/rawfile.c:586
+#: modules/file/pixmap.c:866 modules/file/rawfile.c:586
 msgid "_Horizontal size:"
 msgstr "Taille _horizontale :"
 
-#: modules/file/pixmap.c:854 modules/file/pixmap.c:861
+#: modules/file/pixmap.c:866 modules/file/pixmap.c:873
 msgid "px"
 msgstr "px"
 
-#: modules/file/pixmap.c:861 modules/file/rawfile.c:593
+#: modules/file/pixmap.c:873 modules/file/rawfile.c:593
 msgid "_Vertical size:"
 msgstr "Taille _verticale :"
 
-#: modules/file/pixmap.c:892 modules/file/rawfile.c:604
+#: modules/file/pixmap.c:904 modules/file/rawfile.c:604
 msgid "Physical Dimensions"
 msgstr "Dimensions physiques"
 
-#: modules/file/pixmap.c:902
+#: modules/file/pixmap.c:914
 msgid "_Width"
 msgstr "Largeur"
 
-#: modules/file/pixmap.c:924 modules/file/pixmap.c:979
+#: modules/file/pixmap.c:936 modules/file/pixmap.c:991
 #: modules/file/rawfile.c:636 modules/file/rawfile.c:692
 #: modules/process/calibrate.c:337 modules/process/calibrate.c:403
 msgid "Change"
 msgstr "Changer"
 
-#: modules/file/pixmap.c:937
+#: modules/file/pixmap.c:949
 msgid "H_eight"
 msgstr "Haut_eur"
 
-#: modules/file/pixmap.c:944 modules/file/rawfile.c:656
+#: modules/file/pixmap.c:956 modules/file/rawfile.c:656
 msgid "Identical _measures"
 msgstr "_Mesures identiques"
 
-#: modules/file/pixmap.c:956 modules/file/rawfile.c:668
+#: modules/file/pixmap.c:968 modules/file/rawfile.c:668
 #, fuzzy
 msgid "_Z-scale (per sample unit):"
 msgstr "Echelle _Z (par unité d'échantillon):"
 
-#: modules/file/pixmap.c:989
+#: modules/file/pixmap.c:1001
 msgid ""
 "Warning: Colorful images cannot be reliably mapped to meaningful values."
 msgstr ""
 "Attention : des valeurs correctes ne peuvent être appliquées de manière "
 "fiable à des images en couleurs ."
 
-#: modules/file/pixmap.c:1007
+#: modules/file/pixmap.c:1019
 msgid "Use"
 msgstr "Utiliser"
 
-#: modules/file/pixmap.c:1007
+#: modules/file/pixmap.c:1019
 msgid "as data"
 msgstr "en tant que données"
 
-#: modules/file/pixmap.c:1203 modules/file/rawfile.c:1307
+#: modules/file/pixmap.c:1215 modules/file/rawfile.c:1307
 #: modules/process/calibrate.c:753
 msgid "Change Units"
 msgstr "Changer les unités"
 
-#: modules/file/pixmap.c:1217 modules/file/rawfile.c:1321
+#: modules/file/pixmap.c:1229 modules/file/rawfile.c:1321
 #: modules/process/calibrate.c:767
 msgid "New _units:"
 msgstr "Nouvelles _unités :"
 
-#: modules/file/pixmap.c:1276 modules/file/pixmap.c:1301
+#: modules/file/pixmap.c:1288 modules/file/pixmap.c:1313
 #, c-format
 msgid "Pixbuf save failed: %s."
 msgstr ""
 
-#: modules/file/pixmap.c:1336
+#: modules/file/pixmap.c:1348
 msgid "TIFFOpen() function failed."
 msgstr "La fonction TIFFOpen() a échoué."
 
-#: modules/file/pixmap.c:1354
+#: modules/file/pixmap.c:1366
 msgid "TIFFWriteScanline() function failed."
 msgstr "La fonction TIFFWriteScanline() a échoué."
 
-#: modules/file/pixmap.c:1539
+#: modules/file/pixmap.c:1551
 msgid "Image is too large to be stored as TARGA."
 msgstr "L'image est trop grande pour être enregistrée au format TARGA"
 
-#: modules/file/pixmap.c:1616
+#: modules/file/pixmap.c:1628
 msgid "Data must be displayed in a window for pixmap export."
 msgstr ""
 
-#: modules/file/pixmap.c:2018
+#: modules/file/pixmap.c:2030
 #, fuzzy
 msgid "Change Inset Color"
 msgstr "Changer la couleur du masque"
 
-#: modules/file/pixmap.c:2067
+#: modules/file/pixmap.c:2079
 #, c-format
 msgid "Export %s"
 msgstr "Exporter %s"
 
-#: modules/file/pixmap.c:2093
+#: modules/file/pixmap.c:2105
 msgid "Scaling"
 msgstr "Echelle"
 
-#: modules/file/pixmap.c:2101
+#: modules/file/pixmap.c:2113
 msgid "_Zoom:"
 msgstr "_Zoom :"
 
-#: modules/file/pixmap.c:2110 modules/file/rawfile.c:613
+#: modules/file/pixmap.c:2122 modules/file/rawfile.c:613
 #: modules/process/crosscor.c:197 modules/process/tip_blind.c:264
 msgid "_Width:"
 msgstr "Largeur :"
 
-#: modules/file/pixmap.c:2119 modules/process/grain_mark.c:312
+#: modules/file/pixmap.c:2131 modules/process/grain_mark.c:312
 #: modules/process/grain_rem_threshold.c:280 modules/process/tip_blind.c:271
 msgid "_Height:"
 msgstr "_Hauteur :"
 
-#: modules/file/pixmap.c:2128
+#: modules/file/pixmap.c:2140
 msgid "Scale text _proportionally"
 msgstr "Mettre _proportionnellement le texte à l'échelle"
 
-#: modules/file/pixmap.c:2143
+#: modules/file/pixmap.c:2155
 msgid "_Font size:"
 msgstr "Taille de police :"
 
-#: modules/file/pixmap.c:2153
+#: modules/file/pixmap.c:2165
 msgid "Output"
 msgstr "Sortie"
 
-#: modules/file/pixmap.c:2157
+#: modules/file/pixmap.c:2169
 msgid "Lateral scale:"
 msgstr "Echelle latérale :"
 
-#: modules/file/pixmap.c:2166 modules/file/pixmap.c:2193
+#: modules/file/pixmap.c:2178 modules/file/pixmap.c:2205
 #: modules/process/immerse.c:367
 msgid "_None"
 msgstr "_Aucun"
 
-#: modules/file/pixmap.c:2167
+#: modules/file/pixmap.c:2179
 msgid "_Rulers"
 msgstr ""
 
-#: modules/file/pixmap.c:2168
+#: modules/file/pixmap.c:2180
 msgid "_Inset scale bar"
 msgstr ""
 
-#: modules/file/pixmap.c:2184
+#: modules/file/pixmap.c:2196
 #, fuzzy
 msgid "Value scale:"
 msgstr "_Valeur d'échelle :"
 
-#: modules/file/pixmap.c:2194
+#: modules/file/pixmap.c:2206
 #, fuzzy
 msgid "_False color ruler"
 msgstr "Echelle de _fausses couleurs"
 
-#: modules/file/pixmap.c:2200
+#: modules/file/pixmap.c:2212
 msgid "Draw _mask"
 msgstr "Dessiner un _masque"
 
-#: modules/file/pixmap.c:2210
+#: modules/file/pixmap.c:2222
 msgid "Draw _selection"
 msgstr "Dessiner une _sélection"
 
@@ -2444,7 +2479,8 @@ msgid "Imports Quesant file format."
 msgstr "Importe les fichiers Quesant."
 
 #: modules/file/quesant.c:72
-msgid "quesant files"
+#, fuzzy
+msgid "Quesant files"
 msgstr "Quesant (.afm)"
 
 #: modules/file/rawfile.c:215
@@ -2522,7 +2558,7 @@ msgstr "Préréglages"
 #: modules/process/grain_mark.c:262 modules/process/grain_rem_threshold.c:221
 #: modules/process/grain_wshed.c:179 modules/process/polydistort.c:206
 #: modules/process/scars.c:466 modules/process/tip_model.c:167
-#: modules/tools/linestats.c:394 modules/tools/sfunctions.c:412
+#: modules/tools/linestats.c:416 modules/tools/sfunctions.c:412
 #: modules/tools/stats.c:365
 msgid "_Update"
 msgstr "Mise à jour"
@@ -2774,13 +2810,13 @@ msgid "Only image and line files are supported."
 msgstr "Seuls les fichiers image et ligne sont supportés."
 
 #: modules/file/rhk-spm32.c:380
-#, c-format
-msgid "rhk=spm32: invalid data type %d for image data."
+#, fuzzy, c-format
+msgid "Invalid data type %d for image data."
 msgstr "rhk=spm32: type %d de données invalides pour les données d'image."
 
 #: modules/file/rhk-spm32.c:388
-#, c-format
-msgid "rhk=spm32: invalid data type %d for line data."
+#, fuzzy, c-format
+msgid "Invalid data type %d for line data."
 msgstr "rhk=spm32: type %d de données invalides pour les données de ligne."
 
 #: modules/file/rhk-spm32.c:407
@@ -2942,6 +2978,19 @@ msgstr "Thermicroscopes SpmLab"
 #, c-format
 msgid "Unknown format version %c."
 msgstr "Version de format %c inconnue."
+
+#: modules/file/spmlabf.c:70
+msgid "Imports SPMLab floating-point files."
+msgstr "Importe les fichiers SPMLab à virgule flottante."
+
+#: modules/file/spmlabf.c:83
+msgid "SPMLab floating-point files (.flt)"
+msgstr "Fichiers SPMLab en virgule flottante (.flt)"
+
+#: modules/file/spmlabf.c:143
+#, fuzzy
+msgid "Missing data start marker [Data]."
+msgstr "Il manque le marqueur de début de données (*)."
 
 #: modules/file/stmprg.c:217
 msgid "Imports Omicron STMPRG data files (tp ta)."
@@ -3428,7 +3477,7 @@ msgstr ""
 msgid "Layer allowing selection of elliptic areas."
 msgstr "Couche permettant de sélectionner des zones elliptiques."
 
-#: modules/layer/line.c:157
+#: modules/layer/line.c:161
 msgid "Layer allowing selection of arbitrary straight lines."
 msgstr "Couche permettant de sélectionner des lignes droites."
 
@@ -3968,7 +4017,7 @@ msgstr "Compenser la dérive"
 #: modules/process/fractal.c:228 modules/process/nanoindent_adjust.c:228
 #: modules/process/polydistort.c:258 modules/process/rotate.c:289
 #: modules/process/scale.c:248 modules/process/unrotate.c:282
-#: modules/tools/linestats.c:374 modules/tools/profile.c:380
+#: modules/tools/linestats.c:381 modules/tools/profile.c:380
 #: modules/tools/roughness.c:860 modules/tools/sfunctions.c:392
 msgid "_Interpolation type:"
 msgstr "Type d'interpolation :"
@@ -4897,7 +4946,7 @@ msgstr "Dessiner les _graphes"
 msgid "Grain Distributions"
 msgstr "Distribution des grains"
 
-#: modules/process/grain_dist.c:292 modules/tools/linestats.c:349
+#: modules/process/grain_dist.c:292 modules/tools/linestats.c:356
 #: modules/tools/profile.c:352 modules/tools/sfunctions.c:367
 msgid "_Fix res.:"
 msgstr ""
@@ -5777,7 +5826,7 @@ msgid "Distort by Polynomial"
 msgstr "Distorsion polynomiale"
 
 #: modules/process/polydistort.c:266 modules/tools/filter.c:208
-#: modules/tools/icolorange.c:385 modules/tools/linestats.c:150
+#: modules/tools/icolorange.c:385 modules/tools/linestats.c:152
 msgid "Minimum"
 msgstr "Minimum"
 
@@ -6026,7 +6075,6 @@ msgid "_Hard threshold:"
 msgstr "Seuil dur : "
 
 #: modules/process/scars.c:530 modules/process/scars.c:537
-#: modules/tools/linestats.c:152
 msgid "RMS"
 msgstr "RMS"
 
@@ -6101,7 +6149,7 @@ msgstr "Type de sortie"
 msgid "Angular Slope Distribution"
 msgstr "Distribution angulaires des pentes"
 
-#: modules/process/slope_dist.c:438
+#: modules/process/slope_dist.c:438 modules/process/tilt.c:174
 msgid "Slopes"
 msgstr "Pentes"
 
@@ -6172,6 +6220,37 @@ msgstr "Corrélation croisée..."
 #: modules/process/superresolution.c:554
 msgid "Interpolating..."
 msgstr "Interpolation..."
+
+#: modules/process/tilt.c:73
+msgid "Tilts image by specified amount."
+msgstr ""
+
+#: modules/process/tilt.c:87
+#, fuzzy
+msgid "/_Basic Operations/_Tilt..."
+msgstr "/Opérations _Basiques/Echelle..."
+
+#: modules/process/tilt.c:91
+msgid "Tilt by specified amount"
+msgstr ""
+
+#: modules/process/tilt.c:155
+#, fuzzy
+msgid "Tilt"
+msgstr "Filtre"
+
+#: modules/process/tilt.c:180
+msgid "_X:"
+msgstr ""
+
+#: modules/process/tilt.c:189
+msgid "_Y:"
+msgstr ""
+
+#: modules/process/tilt.c:199
+#, fuzzy
+msgid "Angles"
+msgstr "Angle"
 
 #: modules/process/tip_blind.c:128
 msgid "Blind estimation of SPM tip using Villarubia's algorithm."
@@ -6373,11 +6452,6 @@ msgstr "Hypothèse :"
 msgid "Correction:"
 msgstr "Correction :"
 
-#: modules/pygwy/pygwy-console.c:53
-#, fuzzy
-msgid "pygwy_console"
-msgstr "Console Pygwy"
-
 #: modules/pygwy/pygwy-console.c:55
 msgid "/Pygwy console"
 msgstr "/Console Pygwy"
@@ -6386,23 +6460,27 @@ msgstr "/Console Pygwy"
 msgid "Python wrapper console"
 msgstr "Console Python"
 
-#: modules/pygwy/pygwy-console.c:165
+#: modules/pygwy/pygwy-console.c:157
+msgid ">>> Running file content of below textfield\n"
+msgstr ""
+
+#: modules/pygwy/pygwy-console.c:182
 msgid "Open Python script"
 msgstr "Ouvrir un script Python"
 
-#: modules/pygwy/pygwy-console.c:280
+#: modules/pygwy/pygwy-console.c:297
 msgid "Open script in Python language (Ctrl-O)"
 msgstr "Ouvrir un script Python (Ctrl-O)"
 
-#: modules/pygwy/pygwy-console.c:282
+#: modules/pygwy/pygwy-console.c:299
 msgid "Save script (Ctrl-S)"
 msgstr "Sauver le script (Ctrl-S)"
 
-#: modules/pygwy/pygwy-console.c:284
+#: modules/pygwy/pygwy-console.c:301
 msgid "Execute script (Ctrl-E)"
 msgstr "Exécuter le script (Ctrl-E)"
 
-#: modules/pygwy/pygwy-console.c:362
+#: modules/pygwy/pygwy-console.c:379
 msgid "Command"
 msgstr "Commande "
 
@@ -6463,7 +6541,7 @@ msgstr "Distance"
 msgid "Measure distances and directions between points"
 msgstr "Mesure de distances et de directions entre des points"
 
-#: modules/tools/distance.c:484
+#: modules/tools/distance.c:485
 msgid "Save Table"
 msgstr "Sauver le tableau"
 
@@ -6484,7 +6562,7 @@ msgid "Conservative denoise"
 msgstr "Débruitage conservatif"
 
 #: modules/tools/filter.c:209 modules/tools/icolorange.c:396
-#: modules/tools/linestats.c:151
+#: modules/tools/linestats.c:153
 msgid "Maximum"
 msgstr "Maximum"
 
@@ -6640,7 +6718,7 @@ msgstr "Mise à jour _instantanée"
 msgid "Set plane to _zero"
 msgstr "Mise à zéro du plan"
 
-#: modules/tools/linestats.c:121
+#: modules/tools/linestats.c:123
 msgid ""
 "Row/column statistical function tool, mean values, medians, maxima, minima, "
 "RMS, ..., of rows or columns."
@@ -6648,43 +6726,72 @@ msgstr ""
 "Outil de calcul statistique de ligne/colonne, calcule les valeurs moyenne, "
 "médiane, maximale, minimale, RMS, ..., de lignes ou de colonnes."
 
-#: modules/tools/linestats.c:148
+#: modules/tools/linestats.c:150
 msgid "Mean"
 msgstr "Moyenne"
 
-#: modules/tools/linestats.c:149
+#: modules/tools/linestats.c:151
 msgid "Median"
 msgstr "Médiane"
 
-#: modules/tools/linestats.c:155
+#: modules/tools/linestats.c:156
 msgid "tan β<sub>0</sub>"
 msgstr "tan β<sub>0</sub>"
 
-#: modules/tools/linestats.c:180
+#: modules/tools/linestats.c:157
+msgid "Ra"
+msgstr "Ra"
+
+#: modules/tools/linestats.c:158
+msgid "Rq (RMS)"
+msgstr "Rq (RMS)"
+
+#: modules/tools/linestats.c:159
+msgid "Rz"
+msgstr "Rz"
+
+#: modules/tools/linestats.c:160
+msgid "Rt"
+msgstr "Ret"
+
+#: modules/tools/linestats.c:161
+msgid "Skew"
+msgstr "Asymétrie"
+
+#: modules/tools/linestats.c:162 modules/tools/roughness.c:398
+msgid "Kurtosis"
+msgstr "Kurtosis"
+
+#: modules/tools/linestats.c:187
 msgid "Row/Column Statistics"
 msgstr "Statistiques de ligne/colonne"
 
-#: modules/tools/linestats.c:181
+#: modules/tools/linestats.c:188
 msgid "Calculate row/column statistical functions"
 msgstr "Calcule les statistiques de ligne/colonne."
 
-#: modules/tools/linestats.c:282
+#: modules/tools/linestats.c:289
 msgid "Ro_ws"
 msgstr "Lignes"
 
-#: modules/tools/linestats.c:283
+#: modules/tools/linestats.c:290
 msgid "Co_lumns"
 msgstr "Colonnes"
 
-#: modules/tools/linestats.c:320 modules/tools/profile.c:325
+#: modules/tools/linestats.c:327 modules/tools/profile.c:325
 #: modules/tools/sfunctions.c:338 modules/tools/spectro.c:292
 msgid "<b>Options</b>"
 msgstr "<b>Options</b>"
 
-#: modules/tools/linestats.c:336 modules/tools/sfunctions.c:354
+#: modules/tools/linestats.c:343 modules/tools/sfunctions.c:354
 #: modules/tools/stats.c:328
 msgid "_Instant updates"
 msgstr "Mises à jour instantanées"
+
+#: modules/tools/linestats.c:399
+#, fuzzy
+msgid "Average:"
+msgstr "Moyenne"
 
 #: modules/tools/maskedit.c:120
 msgid "Mask editor tool, allows to interactively add or remove parts of mask."
@@ -6854,7 +6961,7 @@ msgstr "Extraire les profils"
 msgid "_Separate profiles"
 msgstr "Profils _séparés"
 
-#: modules/tools/profile.c:545
+#: modules/tools/profile.c:546
 #, c-format
 msgid "Profile %d"
 msgstr "Profil %d"
@@ -6932,10 +7039,6 @@ msgstr "Hauteur maximale moyenne du profil"
 msgid "Skewness"
 msgstr "Asymétrie"
 
-#: modules/tools/roughness.c:398
-msgid "Kurtosis"
-msgstr "Kurtosis"
-
 #: modules/tools/roughness.c:406
 msgid "Waviness average"
 msgstr "Ondulation moyenne"
@@ -6989,7 +7092,7 @@ msgid "Calculate surface profile parameters."
 msgstr "Calculer les paramètres du profil de surface."
 
 #: modules/tools/roughness.c:660 modules/tools/roughness.c:789
-#: modules/tools/roughness.c:1348
+#: modules/tools/roughness.c:1356
 msgid "Roughness"
 msgstr "Rugosité"
 
@@ -6997,11 +7100,11 @@ msgstr "Rugosité"
 msgid "Calculate roughness parameters"
 msgstr "Calculer les paramètres de rugosité"
 
-#: modules/tools/roughness.c:787 modules/tools/roughness.c:1346
+#: modules/tools/roughness.c:787 modules/tools/roughness.c:1354
 msgid "Texture"
 msgstr "Texture"
 
-#: modules/tools/roughness.c:788 modules/tools/roughness.c:1347
+#: modules/tools/roughness.c:788 modules/tools/roughness.c:1355
 msgid "Waviness"
 msgstr "Ondulation"
 
@@ -7013,7 +7116,7 @@ msgstr "ADF"
 msgid "BRC"
 msgstr "BRC"
 
-#: modules/tools/roughness.c:792 modules/tools/roughness.c:1351
+#: modules/tools/roughness.c:792 modules/tools/roughness.c:1359
 msgid "Peak Count"
 msgstr "Comptage des pics"
 
@@ -7025,39 +7128,39 @@ msgstr "_Graphe :"
 msgid "C_ut-off:"
 msgstr "Co_upure :"
 
-#: modules/tools/roughness.c:1349
+#: modules/tools/roughness.c:1357
 #, fuzzy
 msgid "Amplitude Distribution Function"
 msgstr "Fonction de distribution d'amplitude"
 
-#: modules/tools/roughness.c:1350
+#: modules/tools/roughness.c:1358
 #, fuzzy
 msgid "The Bearing Ratio Curve"
 msgstr "Courbe du ratio de Bearing"
 
-#: modules/tools/roughness.c:1385
+#: modules/tools/roughness.c:1393
 msgid "Surface Profiles"
 msgstr "Profils de surface"
 
-#: modules/tools/roughness.c:2100
+#: modules/tools/roughness.c:2108
 msgid "Save Roughness Parameters"
 msgstr "Enregistrer les paramètres de rugosité"
 
-#: modules/tools/roughness.c:2124
+#: modules/tools/roughness.c:2132
 msgid "Roughness Parameters"
 msgstr "Paramètres de rugosité"
 
-#: modules/tools/roughness.c:2130 modules/tools/stats.c:741
+#: modules/tools/roughness.c:2138 modules/tools/stats.c:741
 #, c-format
 msgid "File:              %s\n"
 msgstr "Fichier :              %s\n"
 
-#: modules/tools/roughness.c:2134 modules/tools/stats.c:745
+#: modules/tools/roughness.c:2142 modules/tools/stats.c:745
 #, c-format
 msgid "Data channel:      %s\n"
 msgstr "Canal de données :      %s\n"
 
-#: modules/tools/roughness.c:2165
+#: modules/tools/roughness.c:2173
 #, c-format
 msgid ""
 "Selected line:     (%s, %s) to (%s, %s) px\n"
@@ -7296,48 +7399,6 @@ msgstr ""
 "Inclination θ:      %s\n"
 "Inclination φ:      %s\n"
 
-#~ msgid "Imports Wyko OPD and ASC files."
-#~ msgstr "Importe les fichiers  Wyko OPD et ASC."
-
-#~ msgid "Wyko OPD files (.opd)"
-#~ msgstr "Fichiers Wyko OPD (.opd)"
-
-#~ msgid "Wyko ASCII export files (.asc)"
-#~ msgstr "Fichiers Wyko ASCII (.asc)"
-
-#~ msgid "File header is truncated"
-#~ msgstr "L'en-tête de fichier est tronqué."
-
-#~ msgid "Item `%s' is beyond the end of the file."
-#~ msgstr "L'élément `%s' est au-delà de la fin du fichier."
-
-#~ msgid "Truncated data in block %s"
-#~ msgstr "Données tronquées dans le bloc %s"
-
-#~ msgid "Imports SPMLab floating-point files."
-#~ msgstr "Importe les fichiers SPMLab à virgule flottante."
-
-#~ msgid "SPMLab floating-point files (.flt)"
-#~ msgstr "Fichiers SPMLab en virgule flottante (.flt)"
-
 #, fuzzy
-#~ msgid "Missing data start marker [Data]."
-#~ msgstr "Il manque le marqueur de début de données (*)."
-
-#~ msgid "Ra"
-#~ msgstr "Ra"
-
-#~ msgid "Rq (RMS)"
-#~ msgstr "Rq (RMS)"
-
-#~ msgid "Rz"
-#~ msgstr "Rz"
-
-#~ msgid "Rt"
-#~ msgstr "Ret"
-
-#~ msgid "Skew"
-#~ msgstr "Asymétrie"
-
-#~ msgid "Average: "
-#~ msgstr "Moyenne"
+#~ msgid "pygwy_console"
+#~ msgstr "Console Pygwy"
