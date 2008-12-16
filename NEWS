@@ -1,6 +1,6 @@
-2.11 (0000-00-00)
+2.11 (2008-12-16)
 Application:
-- Translations updated: French.
+- Translations updated: Czech, French, Italian.
 
 Libraries:
 - libgwyprocess: Median line statistics no longer crashes when area width is
@@ -8,9 +8,9 @@ Libraries:
 - libgwyprocess: Several column line statistics taking data subarea always from
   the left edge instead the given column were fixed.
 - libgwyprocess: Wrong calculation of mean row statistics was fixed.
-- libgwyprocess: added few line statistics (Rt, Rz, Ra, Skew and Kurtosis)
-- libgwyprocess: bug in integer erosion (and certainty map therefore) present
-  in 2.9 and 2.10 fixed.
+- libgwyprocess: New line statistics (Rt, Rz, Ra, Skew and Kurtosis) added.
+- libgwyprocess: Bug in integer erosion (and certainty map therefore) present
+  in 2.9 and 2.10 was fixed.
 
 Modules:
 - Omicron MATRIX (new): Omicron MATRIX file import support.
