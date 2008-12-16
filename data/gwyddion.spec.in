@@ -20,8 +20,9 @@ BuildRequires: gtk2-devel >= 2.8
 BuildRequires: glib2-devel >= 2.8
 BuildRequires: libtiff-devel >= 3.6
 BuildRequires: pango-devel >= 1.10
+BuildRequires: gtkglext-devel
 BuildRequires: libxml2-devel
-BuildRequires: python >= 2.2
+BuildRequires: python-devel >= 2.2
 BuildRequires: ruby >= 1.8
 BuildRequires: gettext
 BuildRequires: desktop-file-utils >= 0.9
@@ -30,15 +31,23 @@ BuildRequires: findutils
 
 %if %{distro_is_fedora}
 BuildRequires: libXmu-devel
+BuildRequires: pygtk2-devel
+BuildRequires: gtksourceview2-devel
 %define fftw3 fftw
 %endif
 
 %if %{distro_is_suse}
 BuildRequires: xorg-x11-Mesa-devel
+BuildRequires: xorg-x11-libXmu-devel
+BuildRequires: python-gtk-devel
+BuildRequires: gtksourceview-devel
 %define fftw3 fftw3
 %endif
 
 %if %{distro_is_mdk}
+BuildRequires: libxmu-devel
+BuildRequires: python-gtk-devel
+BuildRequires: gtksourceview-devel
 %define fftw3 libfftw3
 %endif
 
@@ -102,7 +111,7 @@ sed -i -e '1s/env *//' plugins/process/*.{py,rb,pl}
 
 
 %build
-%configure --disable-pascal --disable-desktop-file-update --disable-pygwy \
+%configure --disable-pascal --disable-desktop-file-update --enable-pygwy \
            --disable-rpath
 make %{?_smp_mflags}
 
@@ -150,10 +159,12 @@ update-desktop-database &>/dev/null || :
 %{pkgdatadir}/pixmaps/*.ico
 %{pkgdatadir}/gradients/*
 %{pkgdatadir}/glmaterials/*
+%{pkgdatadir}/pygwy/*
 %{pkgdatadir}/ui/*
 %dir %{pkgdatadir}/pixmaps
 %dir %{pkgdatadir}/gradients
 %dir %{pkgdatadir}/glmaterials
+%dir %{pkgdatadir}/pygwy
 %dir %{pkgdatadir}/ui
 %dir %{pkgdatadir}
 %{_mandir}/man1/%{name}.1*
