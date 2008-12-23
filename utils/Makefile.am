@@ -62,10 +62,10 @@ modules.xml: dump-modules $(GUIDE_MAP) $(moduledir)/*.c $(moduledir)/*/*.c
 	rm -f $(GUIDE_MAP).tmp
 
 module-list.html: modules.xml modules-web.xsl
-	$(XSLTPROC) modules-web.xsl modules.xml >module-list.html
+	$(XSLTPROC) -o module-list.html modules-web.xsl modules.xml
 
 module-list-nocss.html: modules.xml modules-web-nocss.xsl
-	$(XSLTPROC) modules-web-nocss.xsl modules.xml >module-list-nocss.html
+	$(XSLTPROC) -o module-list-nocss.html modules-web-nocss.xsl modules.xml
 
 clean-local:
 	rm -f core.* *~

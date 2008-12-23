@@ -1,0 +1,90 @@
+.TH "gwyddion-thumbnailer" "1" "Dec 2008" " " " "
+.\" @(#) $Id: gwyddion.1 8685 2007-11-29 17:09:35Z yeti-dn $
+.SH NAME
+.PP
+gwyddion-thumbnailer \-\- Create thumbnails of SPM data files
+.
+.
+.SH "SYNOPSIS"
+.PP
+\fBgwyddion-thumbnailer\fR {\fB\-\-version\fR | \fB\-\-help\fR}
+.br
+\fBgwyddion-thumbnailer\fR \fBgnome2\fR \fIMAX-SIZE\fR \fIINPUT-FILE\fR \fIOUTPUT-FILE\fR
+.br
+\fBgwyddion-thumbnailer\fR \fBtms\fR \fIMAX-SIZE\fR \fIINPUT-FILE\fR
+.
+.
+.SH DESCRIPTION
+.PP
+Gwyddion-thumbnailer creates thumbnails of SPM (Scanning Probe Microscope)
+image files.  Depending on the mode of operation, described below, the
+thumbnails are written to conform to various desktop standards so that they
+can be displayed in
+.BR nautilus (1)
+and similar file managers.
+.PP
+Since gwyddion-thumbnailer loads and renders files using
+.BR gwyddion (1)
+libraries and modules, it can create thumbnails of all file formats supported
+by your Gwyddion installation.  This also means it inherits all Gwyddion
+settings, e.g. the default false color gradient, and that it is influenced by
+the same environment variables as Gwyddion.
+.
+.
+.SH INFORMATIVE OPTIONS
+.TP
+\fB\-h\fR, \fB\-\-help\fR
+Prints a brief help and terminates.
+.TP
+\fB\-v\fR, \fB\-\-version\fR
+Prints version information and terminates.
+.
+.
+.SH GNOME 2
+.PP
+In \fBgnome2\fR mode, gwyddion-thumbnailer creates PNG thumbnails according to
+the Gnome thumbnailer specification.  Usings the convention from this
+specification, it should be run
+.sp
+.RS 4
+.nf
+gwyddion-thumbnailer gnome2 %s %i %o
+.fi
+.RE
+.PP
+Gwyddion installs thumbnailers for all file types it supports by default, so
+usually this should Just Work and should not need to be set up manually.
+.PP
+The thumbnails created in \fBgnome2\fR more are identical as in \fBtms\fR mode,
+including all the PNG auxiliary chunks (provided that the same \fIMAX\-SIZE\fR
+as in \fBtms\fR mode is specified, of course).
+.
+.
+.SH TMS
+.PP
+In \fBtms\fR mode, gwyddion-thumbnailer creates PNG thumbnails according to the
+Thumbnail Managing Standard.  Only normal-sized thumbnails are
+supported at this moment, i.e. \fIMAX\-SIZE\fR must be either \fB128\fR or
+\fBnormal\fR (with the same meaning).
+.PP
+Output file name is not given as it is prescribed by the TMS.
+.PP
+This mode can also be useful for manual batch-creation of thumbnails.
+For instance, to create them for all \fB*.afm\fR files in directory
+\fBscans\fR and its subdirectories, you can run
+.sp
+.RS 4
+.nf
+find scans -type f -name '*.afm' -print0 \\
+    | xargs -0 -n 1 gwyddion-thumbnailer tms normal
+.fi
+.RE
+.PP
+And then go make yourself a coffee because this will take some time.
+.
+.
+.SH SEE ALSO
+.PP
+\fIgwyddion\fR(1).
+.
+

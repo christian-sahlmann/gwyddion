@@ -17,6 +17,7 @@ SUBDIRS = \
 	ruby \
 	data \
 	utils \
+	thumbnailer \
 	devel-docs
 
 EXTRA_DIST = \

@@ -41,6 +41,7 @@ AC_CONFIG_FILES(\
   data/gradients/Makefile \
   utils/Makefile \
   utils/gwywin32.bat \
+  thumbnailer/Makefile \
   devel-docs/Makefile \
   devel-docs/libgwyapp/Makefile \
   devel-docs/libgwyapp/releaseinfo.xml \
@@ -83,8 +84,7 @@ AC_DISABLE_STATIC
 AC_PROG_CC
 dnl FIXME: Can't do this, see math section below
 dnl AC_PROG_CC_C99
-AC_AIX
-AC_GNU_SOURCE
+AC_USE_SYSTEM_EXTENSIONS
 AC_LIBTOOL_WIN32_DLL
 AC_PROG_LIBTOOL
 AC_PROG_INSTALL
@@ -145,6 +145,23 @@ GWY_ENABLE([desktop-file-update],
            [desktop_file_update],
            [Update Freedesktop databases])
 AM_CONDITIONAL([DESKTOP_FILE_UPDATE],[test "$enable_desktop_file_update" != no])
+
+#############################################################################
+# GConf (only for Gnome thumbnailer schemas -- the thumbnailer has other uses
+# so we build it unconditionally).
+
+dnl The following conditional is set in AM_GCONF_SOURCE_2.
+dnl Because we may skip its execution, we have to set a default here.
+AM_CONDITIONAL([GCONF_SCHEMAS_INSTALL], [false])
+
+dnl Don't publish the GCONFTOOL variable, AM_GCONF_SOURCE_2 has
+dnl `gconftool-2' hardwired.
+m4_pattern_allow([^AM_GCONF_SOURCE_2$])
+GCONFTOOL=
+AC_CHECK_PROG([GCONFTOOL], [gconftool-2], [gconftool-2], [no])
+if test "x$GCONFTOOL" != xno; then
+    AM_GCONF_SOURCE_2
+fi
 
 #############################################################################
 # Python
