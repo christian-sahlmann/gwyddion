@@ -1,3 +1,16 @@
+2.12 (2000-00-00)
+Application:
+- New translations: Russian.
+
+Modules:
+- Pixmap export: Inset scale bar position and length can be adjusted.
+- Facet level: If a mask is present, offers a choice to exclude/include data
+  under mask.
+- Lines layer: `Random' line numbers sizes in pixmap export were fixed.
+- Level and Level Rotate: Masking type is honoured when run with Ctrl-F
+  (if a mask is present).
+
+
 2.11 (2008-12-16)
 Application:
 - Translations updated: Czech, French, Italian.
