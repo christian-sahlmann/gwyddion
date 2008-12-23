@@ -160,7 +160,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Layer allowing selection of arbitrary straight lines."),
     "Yeti <yeti@gwyddion.net>",
-    "3.1",
+    "3.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -468,6 +468,7 @@ gwy_layer_line_draw_object(GwyVectorLayer *layer,
         break;
 
         case GWY_RENDERING_TARGET_PIXMAP_IMAGE:
+        gwy_data_view_get_pixel_data_sizes(data_view, &xi1, &yi1);
         zoom = sqrt(((gdouble)(width*height))/(xi1*yi1));
 
         gwy_layer_line_draw_label(layer, drawable, zoom, i, xt, yt);
