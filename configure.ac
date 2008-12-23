@@ -171,7 +171,7 @@ AM_CONDITIONAL([HAVE_PYTHON], [test "$PYTHON" != : -a "$enable_python" != no])
 
 AC_ARG_ENABLE(pygwy, AC_HELP_STRING([--enable-pygwy],
                                     [Build Python wrapper to Gwyddion]),[],
-                                    [enable_pygwy=no])
+                                    [enable_pygwy=yes])
 
 if test "x$enable_pygwy" != xno; then
   if test "$PYTHON" = : -o "x$enable_python" = no; then

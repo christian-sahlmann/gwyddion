@@ -3,6 +3,7 @@ Application:
 - New translations: Russian.
 
 Modules:
+- Pygwy: Is enabled by default in configure.
 - Pixmap export: Inset scale bar position and length can be adjusted.
 - Facet level: If a mask is present, offers a choice to exclude/include data
   under mask.
