@@ -112,7 +112,7 @@ sed -i -e '1s/env *//' plugins/process/*.{py,rb,pl}
 
 %build
 %configure --disable-pascal --disable-desktop-file-update --enable-pygwy \
-           --disable-rpath
+           --disable-rpath --disable-schemas-install
 make %{?_smp_mflags}
 
 
@@ -153,6 +153,7 @@ update-desktop-database &>/dev/null || :
 %files -f %{name}.lang
 %defattr(755,root,root)
 %{_bindir}/%{name}
+%{_bindir}/%{name}-thumbnailer
 %defattr(-,root,root)
 %doc AUTHORS COPYING INSTALL.%{name} NEWS README THANKS
 %{pkgdatadir}/pixmaps/*.png
@@ -168,6 +169,7 @@ update-desktop-database &>/dev/null || :
 %dir %{pkgdatadir}/ui
 %dir %{pkgdatadir}
 %{_mandir}/man1/%{name}.1*
+%{_mandir}/man1/%{name}-thumbnailer.1*
 %{_datadir}/icons/hicolor/48x48/apps/%{name}.png
 %{pkglibdir}/modules/file/*.so
 %{pkglibdir}/modules/graph/*.so
