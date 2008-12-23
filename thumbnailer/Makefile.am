@@ -1,4 +1,4 @@
-# @(#) $Id: Makefile.am 8698 2008-01-09 08:58:51Z xhorak $
+# @(#) $Id$
 
 libgwyddion = $(top_builddir)/libgwyddion/libgwyddion2.la
 libgwymodule = $(top_builddir)/libgwymodule/libgwymodule2.la

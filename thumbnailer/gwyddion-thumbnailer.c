@@ -1,5 +1,5 @@
 /*
- *  @(#) $Id: gwyddion.c 8566 2007-09-23 09:46:47Z yeti-dn $
+ *  @(#) $Id$
  *  Copyright (C) 2008 David Necas (Yeti).
  *  E-mail: yeti@gwyddion.net.
  *
