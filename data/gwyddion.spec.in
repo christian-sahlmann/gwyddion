@@ -111,7 +111,7 @@ sed -i -e '1s/env *//' plugins/process/*.{py,rb,pl}
 
 
 %build
-%configure --disable-pascal --disable-desktop-file-update --enable-pygwy \
+%configure --disable-pascal --disable-desktop-file-update \
            --disable-rpath --disable-schemas-install
 make %{?_smp_mflags}
 
