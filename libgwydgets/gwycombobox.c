@@ -417,7 +417,7 @@ gwy_combo_box_metric_unit_make_enum(gint from,
  * SECTION:gwycombobox
  * @title: gwycombobox
  * @short_description: Combo box constructors
- * @see_also: <link linkend="libgwydget-gwyradiobuttons">gwyradiobuttons</link>
+ * @see_also: <link linkend="libgwydgets-gwyradiobuttons">gwyradiobuttons</link>
  *            -- radio button constructors
  *
  * Combo boxes can be easily constructed from #GwyEnum's with

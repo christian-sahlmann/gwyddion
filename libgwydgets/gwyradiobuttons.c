@@ -308,7 +308,7 @@ gwy_radio_button_set_value(GtkWidget *button,
  * SECTION:gwyradiobuttons
  * @title: gwyradiobuttons
  * @short_description: Radio button constructors for enums
- * @see_also: <link linkend="libgwydget-gwycombobox">gwycombobox</link>
+ * @see_also: <link linkend="libgwydgets-gwycombobox">gwycombobox</link>
  *            -- combo box constructors
  *
  * Groups of button associated with some integers can be easily constructed

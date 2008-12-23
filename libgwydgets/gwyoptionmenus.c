@@ -826,9 +826,9 @@ gl_material_resource_info(void)
  * SECTION:gwyoptionmenus
  * @title: gwyoptionmenus
  * @short_description: Resource selectors
- * @see_also: <link linkend="libgwydget-gwyradiobuttons">gwyradiobuttons</link>
+ * @see_also: <link linkend="libgwydgets-gwyradiobuttons">gwyradiobuttons</link>
  *            -- radio button constructors,
- *            <link linkend="libgwydget-gwycombobox">gwycombobox</link>
+ *            <link linkend="libgwydgets-gwycombobox">gwycombobox</link>
  *            -- combo box constructors
  **/
 
