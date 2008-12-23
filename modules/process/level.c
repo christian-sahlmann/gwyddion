@@ -84,7 +84,7 @@ static GwyModuleInfo module_info = {
     N_("Levels data by simple plane subtraction or by rotation, "
        "and fixes minimal or mean value to zero."),
     "Yeti <yeti@gwyddion.net>",
-    "1.5.1",
+    "1.6",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -158,14 +158,14 @@ do_level(GwyContainer *data,
                                      0);
     g_return_if_fail(dfield && quark);
 
+    level_load_args(gwy_app_settings_get(), &args);
     if (run != GWY_RUN_IMMEDIATE && mfield) {
-        level_load_args(gwy_app_settings_get(), &args);
         ok = level_dialog(&args, dialog_title);
         level_save_args(gwy_app_settings_get(), &args);
         if (!ok)
             return;
     }
-    else
+    if (!mfield)
         args.level_mode = LEVEL_IGNORE;
 
     if (args.level_mode == LEVEL_IGNORE)
@@ -209,8 +209,7 @@ do_level(GwyContainer *data,
         break;
     }
 
-    if (mfield)
-        g_object_unref(mfield);
+    gwy_object_unref(mfield);
 }
 
 static void
@@ -277,7 +276,7 @@ level_dialog(LevelArgs *args,
     gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox), table);
     row = 0;
 
-    label = gwy_label_new_header(_("Plane Fit Mode"));
+    label = gwy_label_new_header(_("Masking Mode"));
     gtk_table_attach(GTK_TABLE(table), label,
                      0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
