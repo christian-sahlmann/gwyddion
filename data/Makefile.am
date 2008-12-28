@@ -73,26 +73,38 @@ gwyddion.xml: $(top_srcdir)/utils/extract-file-magic.py $(file_magic_sources)
 	  FREEDESKTOP $(file_magic_sources) >gwyddion.xml
 
 # Gnome thumbnailer schemas
-gwyddion-thumbnailer.schemas: $(srcdir)/thumbnailer-schemas.xsl $(srcdir)/gwyddion.xml
-	$(XSLTPROC) -o gwyddion-thumbnailer.schemas $(srcdir)/thumbnailer-schemas.xsl $(srcdir)/gwyddion.xml
+gwyddion-thumbnailer.schemas: thumbnailer-schemas.xsl $(srcdir)/gwyddion.xml
+	$(XSLTPROC) $(srcdir)/thumbnailer-schemas.xsl $(srcdir)/gwyddion.xml \
+	  | $(SED) -e 's/^\(<gconfschemafile\) .*\(>\)/\1\2/' \
+	           -e 's#[@]bindir[@]#$(bindir)#' >gwyddion-thumbnailer.schemas
 endif
 
 # Desktop file installation
 # FIXME: Maybe not according to current standards
-if DESKTOP_FILE_UPDATE
 install-data-hook:
-	$(UPDATE_DESKTOP_DATABASE) $(DESTDIR)$(datadir)/applications
-	$(UPDATE_MIME_DATABASE) $(DESTDIR)$(datadir)/mime
-
-uninstall-hook:
-	$(UPDATE_DESKTOP_DATABASE) $(DESTDIR)$(datadir)/applications
-	$(UPDATE_MIME_DATABASE) $(DESTDIR)$(datadir)/mime
+if DESKTOP_FILE_UPDATE
+	if test -z "$(DESTDIR)"; then \
+		$(UPDATE_DESKTOP_DATABASE) $(DESTDIR)$(datadir)/applications; \
+		$(UPDATE_MIME_DATABASE) $(DESTDIR)$(datadir)/mime; \
+	fi
+endif
+if GCONF_SCHEMAS_INSTALL
+	if test -z "$(DESTDIR)" -a -n "$(schemadir)"; then \
+	  GCONF_CONFIG_SOURCE=$(GCONF_SCHEMA_CONFIG_SOURCE) \
+	    $(GCONFTOOL) --makefile-install-rule $(schema_DATA); \
+	fi
 endif
 
+uninstall-hook:
+if DESKTOP_FILE_UPDATE
+	if test -z "$(DESTDIR)"; then \
+		$(UPDATE_DESKTOP_DATABASE) $(DESTDIR)$(datadir)/applications; \
+		$(UPDATE_MIME_DATABASE) $(DESTDIR)$(datadir)/mime; \
+	fi
+endif
 if GCONF_SCHEMAS_INSTALL
-install-data-local:
-	if test -z "$(DESTDIR)" -a -n "$(GCONF_SCHEMA_FILE_DIR)"; then \
+	if test -z "$(DESTDIR)" -a -n "$(schemadir)"; then \
 	  GCONF_CONFIG_SOURCE=$(GCONF_SCHEMA_CONFIG_SOURCE) \
-	    $(GCONFTOOL) --makefile-install-rule gwyddion-thumbnailer.schemas; \
+	    $(GCONFTOOL) --makefile-uninstall-rule $(schema_DATA); \
 	fi
 endif

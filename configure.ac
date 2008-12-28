@@ -145,6 +145,8 @@ GWY_ENABLE([desktop-file-update],
            [desktop_file_update],
            [Update Freedesktop databases])
 AM_CONDITIONAL([DESKTOP_FILE_UPDATE],[test "$enable_desktop_file_update" != no])
+# This is always supported
+THUMBNAILERS="XDG/manual"
 
 #############################################################################
 # GConf (only for Gnome thumbnailer schemas -- the thumbnailer has other uses
@@ -161,6 +163,7 @@ GCONFTOOL=
 AC_CHECK_PROG([GCONFTOOL], [gconftool-2], [gconftool-2], [no])
 if test "x$GCONFTOOL" != xno; then
     AM_GCONF_SOURCE_2
+    THUMBNAILERS="$THUMBNAILERS GNOME/GConf"
 fi
 
 #############################################################################
@@ -602,6 +605,7 @@ echo "  SMPL:                                  $enable_spml$SPML_WARN"
 echo "  FFTW3:                                 $enable_fftw3$FFTW3_WARN"
 echo "  OpenGL 3D widgets:                     $enable_gl$GL_WARN"
 echo "  Remote control:                        $enable_remote$REMOTE_WARN"
+echo "  Desktop thumbnailers:                  $THUMBNAILERS"
 echo "  Python interface (pygwy):              $enable_pygwy$PYGWY_WARN"
 if test x$enable_pygwy = xyes; then
   echo "  Syntax highlighting for pygwy console: $enable_gtksourceview$GTKSOURCEVIEW_WARN"
