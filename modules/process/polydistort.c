@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2007 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2007,2008 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -81,6 +81,8 @@ static void       polydistort                   (GwyContainer *data,
 static void       distort_dialog                (DistortArgs *args,
                                                  GwyContainer *data,
                                                  GwyDataField *dfield,
+                                                 GwyDataField *mfield,
+                                                 GwyDataField *sfield,
                                                  gint id);
 static GtkWidget* coeff_table_new               (GtkWidget **entry,
                                                  gpointer id,
@@ -95,6 +97,8 @@ static void       update_changed                (GtkToggleButton *check,
 static void       run_noninteractive            (DistortArgs *args,
                                                  GwyContainer *data,
                                                  GwyDataField *dfield,
+                                                 GwyDataField *mfield,
+                                                 GwyDataField *sfield,
                                                  GwyDataField *result,
                                                  gint id);
 static void       distort_dialog_update_controls(DistortControls *controls,
@@ -130,7 +134,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Apllies polynomial distortion in the horizontal plane."),
     "Yeti <yeti@gwyddion.net>",
-    "1.2",
+    "1.3",
     "David Nečas (Yeti) & Petr Klapetek",
     "2007",
 };
@@ -156,7 +160,7 @@ static void
 polydistort(GwyContainer *data, GwyRunType run)
 {
     DistortArgs args;
-    GwyDataField *dfield;
+    GwyDataField *dfield, *mfield, *sfield;
     gint id;
 
     g_return_if_fail(run & DISTORT_RUN_MODES);
@@ -164,14 +168,16 @@ polydistort(GwyContainer *data, GwyRunType run)
     args.ycoeff = g_new(gdouble, NCOEFF);
     distort_load_args(gwy_app_settings_get(), &args);
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
+                                     GWY_APP_MASK_FIELD, &mfield,
+                                     GWY_APP_SHOW_FIELD, &sfield,
                                      GWY_APP_DATA_FIELD_ID, &id,
                                      0);
     g_return_if_fail(dfield);
 
     if (run == GWY_RUN_IMMEDIATE)
-        run_noninteractive(&args, data, dfield, NULL, id);
+        run_noninteractive(&args, data, dfield, mfield, sfield, NULL, id);
     else {
-        distort_dialog(&args, data, dfield, id);
+        distort_dialog(&args, data, dfield, mfield, sfield, id);
         distort_save_args(gwy_app_settings_get(), &args);
     }
 
@@ -183,6 +189,8 @@ static void
 distort_dialog(DistortArgs *args,
                GwyContainer *data,
                GwyDataField *dfield,
+               GwyDataField *mfield,
+               GwyDataField *sfield,
                gint id)
 {
     enum {
@@ -376,10 +384,11 @@ distort_dialog(DistortArgs *args,
     gtk_widget_destroy(dialog);
 
     if (controls.computed)
-        run_noninteractive(args, data, dfield, controls.result, id);
+        run_noninteractive(args, data, dfield, mfield, sfield,
+                           controls.result, id);
     else {
         gwy_object_unref(controls.result);
-        run_noninteractive(args, data, dfield, NULL, id);
+        run_noninteractive(args, data, dfield, mfield, sfield, NULL, id);
     }
 }
 
@@ -485,6 +494,8 @@ static void
 run_noninteractive(DistortArgs *args,
                    GwyContainer *data,
                    GwyDataField *dfield,
+                   GwyDataField *mfield,
+                   GwyDataField *sfield,
                    GwyDataField *result,
                    gint id)
 {
@@ -498,11 +509,34 @@ run_noninteractive(DistortArgs *args,
     newid = gwy_app_data_browser_add_data_field(result, data, TRUE);
     gwy_app_set_data_field_title(data, newid, _("Distorted"));
     gwy_app_sync_data_items(data, data, id, newid, FALSE,
-                            GWY_DATA_ITEM_PALETTE,
+                            GWY_DATA_ITEM_GRADIENT,
                             GWY_DATA_ITEM_RANGE,
+                            GWY_DATA_ITEM_MASK_COLOR,
+                            GWY_DATA_ITEM_REAL_SQUARE,
                             0);
 
     g_object_unref(result);
+
+
+    if (mfield) {
+        GwyInterpolationType interp = args->interp;
+
+        result = gwy_data_field_duplicate(mfield);
+        args->interp = GWY_INTERPOLATION_ROUND;
+        distort_do(args, mfield, result);
+        args->interp = interp;
+        gwy_container_set_object(data, gwy_app_get_mask_key_for_id(newid),
+                                 result);
+        g_object_unref(result);
+    }
+
+    if (sfield) {
+        result = gwy_data_field_duplicate(sfield);
+        distort_do(args, sfield, result);
+        gwy_container_set_object(data, gwy_app_get_show_key_for_id(newid),
+                                 result);
+        g_object_unref(result);
+    }
 }
 
 static void
