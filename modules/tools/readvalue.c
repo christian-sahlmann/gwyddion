@@ -108,7 +108,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Pointer tool, reads value under pointer."),
     "Yeti <yeti@gwyddion.net>",
-    "2.8",
+    "2.9",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -217,9 +217,11 @@ gwy_tool_read_value_init_dialog(GwyToolReadValue *tool)
     GtkTable *table;
     GtkWidget *label, *align;
     GtkRequisition req;
+    GtkTooltips *tips;
     gint row;
 
     dialog = GTK_DIALOG(GWY_TOOL(tool)->dialog);
+    tips = gwy_app_get_tooltips();
 
     table = GTK_TABLE(gtk_table_new(10, 3, FALSE));
     gtk_table_set_col_spacings(table, 6);
@@ -284,6 +286,9 @@ gwy_tool_read_value_init_dialog(GwyToolReadValue *tool)
 
     tool->set_zero = gtk_button_new_with_mnemonic(_("Set _Zero"));
     gtk_container_add(GTK_CONTAINER(align), tool->set_zero);
+    gtk_tooltips_set_tip(tips, tool->set_zero,
+                         _("Shift plane z=0 to pass through the "
+                           "selected point"), NULL);
     gtk_widget_set_sensitive(tool->set_zero, FALSE);
     g_signal_connect_swapped(tool->set_zero, "clicked",
                              G_CALLBACK(gwy_tool_read_value_set_zero), tool);
