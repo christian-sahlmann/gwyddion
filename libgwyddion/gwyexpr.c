@@ -660,7 +660,7 @@ gwy_expr_token_new0(GwyExpr *expr)
     expr->reservoir = token->next;
     if (expr->reservoir)
         expr->reservoir->prev = NULL;
-    memset(token, 0, sizeof(GwyExprToken));
+    gwy_clear(token, 1);
 
     return token;
 }
@@ -1520,8 +1520,8 @@ gwy_expr_resolve_variables(GwyExpr *expr,
     g_return_val_if_fail(!n || (names && indices), 0);
 
     requested = g_newa(gboolean, expr->identifiers->len);
-    memset(requested, 0, expr->identifiers->len*sizeof(gboolean));
-    memset(indices, 0, n*sizeof(guint));
+    gwy_clear(requested, expr->identifiers->len);
+    gwy_clear(indices, n);
     for (i = 0; i < n; i++) {
         for (j = 1; j < expr->identifiers->len; j++) {
             if (gwy_strequal(names[i],

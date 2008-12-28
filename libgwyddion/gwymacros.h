@@ -55,6 +55,9 @@
 #define GWY_CLAMP(x, low, hi) \
     (G_UNLIKELY((x) > (hi)) ? (hi) : (G_UNLIKELY((x) < (low)) ? (low) : (x)))
 
+#define gwy_clear(array, n) \
+    memset((array), 0, (n)*sizeof((array)[0]))
+
 #define gwy_object_unref(obj) \
     do { \
         if (obj) \

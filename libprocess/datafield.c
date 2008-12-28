@@ -1592,8 +1592,7 @@ void
 gwy_data_field_clear(GwyDataField *data_field)
 {
     g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
-    memset(data_field->data, 0,
-           data_field->xres*data_field->yres*sizeof(gdouble));
+    gwy_clear(data_field->data, data_field->xres*data_field->yres);
 
     /* We can precompute stats */
     data_field->cached = CBIT(MIN) | CBIT(MAX) | CBIT(SUM) | CBIT(RMS)

@@ -792,8 +792,8 @@ bluestein(guint n,
         are[j] = bre[j]*in_re[istride*j] + bim[j]*in_im[istride*j];
         aim[j] = bre[j]*in_im[istride*j] - bim[j]*in_re[istride*j];
     }
-    memset(are + n, 0, sizeof(gdouble)*(nfft - n));
-    memset(aim + n, 0, sizeof(gdouble)*(nfft - n));
+    gwy_clear(are + n, nfft - n);
+    gwy_clear(aim + n, nfft - n);
     gwy_fft_simple(GWY_TRANSFORM_DIRECTION_FORWARD, nfft,
                    1, are, aim, 1, are + 2*nfft, aim + 2*nfft);
 

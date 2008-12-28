@@ -802,7 +802,7 @@ gwy_data_field_get_autorange(GwyDataField *data_field,
         q = AR_NDH/(max - min);
 
         n = data_field->xres*data_field->yres;
-        memset(dh, 0, AR_NDH*sizeof(guint));
+        gwy_clear(dh, AR_NDH);
         for (i = n, p = data_field->data; i; i--, p++) {
             j = (*p - min)*q;
             dh[MIN(j, AR_NDH-1)]++;
@@ -1526,7 +1526,7 @@ do_fft_acf(fftw_plan plan,
     in = din->data;
     out = dout->data;
 
-    memset(in + width, 0, (res - width)*sizeof(gdouble));
+    gwy_clear(in + width, res - width);
 
     fftw_execute(plan);
     in[0] = out[0]*out[0];
@@ -1561,7 +1561,7 @@ do_fft_hhcf(fftw_plan plan,
         target_line->data[width-1-j] += sum*res/(j+1);
     }
 
-    memset(in + width, 0, (res - width)*sizeof(gdouble));
+    gwy_clear(in + width, res - width);
 
     fftw_execute(plan);
     in[0] = out[0]*out[0];
@@ -2266,7 +2266,7 @@ gwy_data_field_area_2dacf(GwyDataField *data_field,
             src[2*i + 0] = re_out->data[i*xsize + j];
             src[2*i + 1] = im_out->data[i*xsize + j];
         }
-        memset(src + 2*height, 0, 2*(ysize - height)*sizeof(gdouble));
+        gwy_clear(src + 2*height, 2*(ysize - height));
 #ifdef HAVE_FFTW3
         fftw_execute(plan);
 #else
@@ -3551,7 +3551,7 @@ gwy_data_field_slope_distribution(GwyDataField *dfield,
     data = dfield->data;
     xres = dfield->xres;
     yres = dfield->yres;
-    memset(der, 0, nder*sizeof(gdouble));
+    gwy_clear(der, nder);
     if (kernel_size > 0) {
         for (row = 0; row + kernel_size < yres; row++) {
             for (col = 0; col + kernel_size < xres; col++) {

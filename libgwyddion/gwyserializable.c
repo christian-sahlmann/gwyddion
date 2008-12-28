@@ -1388,7 +1388,7 @@ gwy_deserialize_hash_items(const guchar *buffer,
     sp.array_size = &it.array_size;
     sp.value = &it.value;
     while (position < size) {
-        memset(&it, 0, sizeof(it));
+        gwy_clear(&it, 1);
         nlen = gwy_serialize_check_string(buffer, size, position, NULL);
         if (!nlen) {
             g_warning("Expected a component name to deserialize, got garbage");

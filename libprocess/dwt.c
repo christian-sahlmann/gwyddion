@@ -738,6 +738,7 @@ gwy_data_line_dwt_real(GwyDataLine *dline,
     dline->data += 1;    /* XXX: hack, pwt() uses 1-based indexing */
 }
 
+/* XXX: uses 1-based indexing! */
 static GwyDataLine*
 pwt(GwyDWTFilter *wt,
     GwyDataLine *dline,
@@ -751,7 +752,7 @@ pwt(GwyDWTFilter *wt,
     g_return_val_if_fail(n >= 4, NULL);
     data = dline->data;
     wdata = wt->wksp->data;
-    memset(wdata + 1, 0, n*sizeof(gdouble));
+    gwy_clear(wdata + 1, n);
 
     nmod = wt->ncof*n;
     n1 = n-1;

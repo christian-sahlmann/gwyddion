@@ -799,7 +799,7 @@ gwy_data_field_2dfft_real_do(GwyDataField *rin,
     }
     if (rin->yres % 2) {
         k = rin->xres * (rin->yres - 1);
-        memset(ibuf->data, 0, rin->xres*sizeof(gdouble));
+        gwy_clear(ibuf->data, rin->xres);
         gwy_fft_simple(direction, rin->xres,
                        1, rin->data + k, ibuf->data,
                        1, rout->data + k, iout->data + k);
@@ -1464,7 +1464,7 @@ gwy_data_field_xfft_real_do(GwyDataField *rin,
     }
     if (rin->yres % 2) {
         k = rin->xres * (rin->yres - 1);
-        memset(ibuf->data, 0, rin->xres*sizeof(gdouble));
+        gwy_clear(ibuf->data, rin->xres);
         gwy_fft_simple(direction, rin->xres,
                        1, rin->data + k, ibuf->data,
                        1, rout->data + k, iout->data + k);

@@ -767,7 +767,7 @@ gwy_data_field_area_hconvolve(GwyDataField *data_field,
     for (i = 0; i < height; i++) {
         drow = data_field->data + (row + i)*data_field->xres + col;
         /* Initialize with a triangluar sums, mirror-extend */
-        memset(buf, 0, kres*sizeof(gdouble));
+        gwy_clear(buf, kres);
         for (j = 0; j < kres; j++) {
             k = j - kres/2;
             d = drow[k >= 0 ? k : -k-1];
@@ -816,7 +816,7 @@ gwy_data_field_area_vconvolve(GwyDataField *data_field,
     for (j = 0; j < width; j++) {
         dcol = data_field->data + row*xres + (col + j);
         /* Initialize with a triangluar sums, mirror-extend */
-        memset(buf, 0, kres*sizeof(gdouble));
+        gwy_clear(buf, kres);
         for (i = 0; i < kres; i++) {
             k = i - kres/2;
             d = dcol[k >= 0 ? k*xres : (-k-1)*xres];

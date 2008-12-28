@@ -1006,7 +1006,7 @@ void
 gwy_data_line_clear(GwyDataLine *data_line)
 {
     g_return_if_fail(GWY_IS_DATA_LINE(data_line));
-    memset(data_line->data, 0, data_line->res*sizeof(gdouble));
+    gwy_clear(data_line->data, data_line->res);
 }
 
 /**
@@ -1438,7 +1438,7 @@ gwy_data_line_part_fit_polynom(GwyDataLine *data_line,
     if (!coeffs)
         coeffs = g_new0(gdouble, n+1);
     else
-        memset(coeffs, 0, (n+1)*sizeof(gdouble));
+        gwy_clear(coeffs, n+1);
 
     for (i = from; i < to; i++) {
         gdouble x = i;
@@ -1466,7 +1466,7 @@ gwy_data_line_part_fit_polynom(GwyDataLine *data_line,
     }
     if (!gwy_math_choleski_decompose(n+1, m)) {
         g_warning("Line polynomial fit failed");
-        memset(coeffs, 0, (n+1)*sizeof(gdouble));
+        gwy_clear(coeffs, n+1);
     }
     else
         gwy_math_choleski_solve(n+1, m, coeffs);

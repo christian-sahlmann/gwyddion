@@ -1374,12 +1374,12 @@ gwy_curve_get_vector(GwyCurve *c, gint c_index, gint veclen, gdouble vector[])
             for (x = 0; x < veclen; ++x, rx += dx) {
                 vector[x] = unproject(RADIUS + c->height -
                                       channel->points[(int)rx].y,
-                c->min_y, c->max_y,
-                c->height);
+                                      c->min_y, c->max_y,
+                                      c->height);
             }
         }
         else
-            memset(vector, 0, veclen * sizeof(vector[0]));
+            gwy_clear(vector, veclen);
         break;
     }
 }

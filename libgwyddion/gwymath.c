@@ -431,7 +431,7 @@ gwy_math_fit_polynom(gint ndata,
     if (!coeffs)
         coeffs = g_new0(gdouble, n+1);
     else
-        memset(coeffs, 0, (n+1)*sizeof(gdouble));
+        gwy_clear(coeffs, n+1);
 
     for (i = 0; i < ndata; i++) {
         gdouble x = xdata[i];
@@ -458,7 +458,7 @@ gwy_math_fit_polynom(gint ndata,
             row[j] = sumx[i+j];
     }
     if (!gwy_math_choleski_decompose(n+1, m))
-        memset(coeffs, 0, (n+1)*sizeof(gdouble));
+        gwy_clear(coeffs, n+1);
     else
         gwy_math_choleski_solve(n+1, m, coeffs);
 

@@ -284,8 +284,8 @@ gwy_math_nlfit_fit_full(GwyNLFitter *nlfit,
             mlambda *= nlfit->mdec;
             sumr = sumr1;
 
-            memset(a, 0, covar_size*sizeof(gdouble));
-            memset(v, 0, n_var_param*sizeof(gdouble));
+            gwy_clear(a, covar_size);
+            gwy_clear(v, n_var_param);
 
             /* J'J and J'r computation */
             for (i = 0; i < n_dat; i++) {

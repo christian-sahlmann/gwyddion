@@ -728,17 +728,17 @@ gwy_container_gis_value_of_type(GwyContainer *container,
 GValue
 gwy_container_get_value(GwyContainer *container, GQuark key)
 {
-    GValue value;
+    GValue gvalue;
     GValue *p;
 
-    memset(&value, 0, sizeof(value));
+    gwy_clear(&gvalue, 1);
     p = gwy_container_get_value_of_type(container, key, 0);
     if (G_LIKELY(p)) {
-        g_value_init(&value, G_VALUE_TYPE(p));
-        g_value_copy(p, &value);
+        g_value_init(&gvalue, G_VALUE_TYPE(p));
+        g_value_copy(p, &gvalue);
     }
 
-    return value;
+    return gvalue;
 }
 
 /**
@@ -1559,7 +1559,7 @@ gwy_container_set_boolean(GwyContainer *container,
 {
     GValue gvalue;
 
-    memset(&gvalue, 0, sizeof(GValue));
+    gwy_clear(&gvalue, 1);
     g_value_init(&gvalue, G_TYPE_BOOLEAN);
     g_value_set_boolean(&gvalue, !!value);
     gwy_container_try_set_one(container, key, &gvalue, TRUE, TRUE);
@@ -1589,7 +1589,7 @@ gwy_container_set_uchar(GwyContainer *container,
 {
     GValue gvalue;
 
-    memset(&gvalue, 0, sizeof(GValue));
+    gwy_clear(&gvalue, 1);
     g_value_init(&gvalue, G_TYPE_UCHAR);
     g_value_set_uchar(&gvalue, value);
     gwy_container_try_set_one(container, key, &gvalue, TRUE, TRUE);
@@ -1619,7 +1619,7 @@ gwy_container_set_int32(GwyContainer *container,
 {
     GValue gvalue;
 
-    memset(&gvalue, 0, sizeof(GValue));
+    gwy_clear(&gvalue, 1);
     g_value_init(&gvalue, G_TYPE_INT);
     g_value_set_int(&gvalue, value);
     gwy_container_try_set_one(container, key, &gvalue, TRUE, TRUE);
@@ -1680,7 +1680,7 @@ gwy_container_set_int64(GwyContainer *container,
 {
     GValue gvalue;
 
-    memset(&gvalue, 0, sizeof(GValue));
+    gwy_clear(&gvalue, 1);
     g_value_init(&gvalue, G_TYPE_INT64);
     g_value_set_int64(&gvalue, value);
     gwy_container_try_set_one(container, key, &gvalue, TRUE, TRUE);
@@ -1710,7 +1710,7 @@ gwy_container_set_double(GwyContainer *container,
 {
     GValue gvalue;
 
-    memset(&gvalue, 0, sizeof(GValue));
+    gwy_clear(&gvalue, 1);
     g_value_init(&gvalue, G_TYPE_DOUBLE);
     g_value_set_double(&gvalue, value);
     gwy_container_try_set_one(container, key, &gvalue, TRUE, TRUE);
@@ -1746,7 +1746,7 @@ gwy_container_set_string(GwyContainer *container,
 {
     GValue gvalue;
 
-    memset(&gvalue, 0, sizeof(GValue));
+    gwy_clear(&gvalue, 1);
     g_value_init(&gvalue, G_TYPE_STRING);
     g_value_take_string(&gvalue, (gchar*)value);
     gwy_container_try_set_one(container, key, &gvalue, TRUE, TRUE);
@@ -1785,7 +1785,7 @@ gwy_container_set_object(GwyContainer *container,
     GValue gvalue;
 
     g_return_if_fail(G_IS_OBJECT(value));
-    memset(&gvalue, 0, sizeof(GValue));
+    gwy_clear(&gvalue, 1);
     g_value_init(&gvalue, G_TYPE_OBJECT);
     g_value_set_object(&gvalue, value);  /* this increases refcount too */
     gwy_container_try_set_one(container, key, &gvalue, TRUE, TRUE);

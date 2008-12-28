@@ -442,7 +442,7 @@ gwy_data_field_area_fit_polynom(GwyDataField *data_field,
     if (!coeffs)
         coeffs = g_new0(gdouble, size);
     else
-        memset(coeffs, 0, size*sizeof(gdouble));
+        gwy_clear(coeffs, size);
 
     sums = g_new0(gdouble, (2*row_degree+1)*(2*col_degree+1));
     for (r = row; r < row + height; r++) {
@@ -487,7 +487,7 @@ gwy_data_field_area_fit_polynom(GwyDataField *data_field,
     }
 
     if (!gwy_math_choleski_decompose(size, m))
-        memset(coeffs, 0, size*sizeof(gdouble));
+        gwy_clear(coeffs, size);
     else
         gwy_math_choleski_solve(size, m, coeffs);
 
@@ -687,7 +687,7 @@ gwy_data_field_area_fit_legendre(GwyDataField *data_field,
     if (!coeffs)
         coeffs = g_new0(gdouble, size);
     else
-        memset(coeffs, 0, size*sizeof(gdouble));
+        gwy_clear(coeffs, size);
 
     sumsx = g_new0(gdouble, col_n*col_n);
     sumsy = g_new0(gdouble, row_n*row_n);
@@ -759,7 +759,7 @@ gwy_data_field_area_fit_legendre(GwyDataField *data_field,
         }
         /* Solve */
         if (!gwy_math_choleski_decompose(thissize, m)) {
-            memset(coeffs, 0, size*sizeof(gdouble));
+            gwy_clear(coeffs, size);
             goto fail;
         }
         gwy_math_choleski_solve(thissize, m, rhs);
@@ -799,7 +799,7 @@ gwy_data_field_area_fit_legendre(GwyDataField *data_field,
         }
         /* Solve */
         if (!gwy_math_choleski_decompose(thissize, m)) {
-            memset(coeffs, 0, size*sizeof(gdouble));
+            gwy_clear(coeffs, size);
             goto fail;
         }
         gwy_math_choleski_solve(thissize, m, rhs);
@@ -839,7 +839,7 @@ gwy_data_field_area_fit_legendre(GwyDataField *data_field,
         }
         /* Solve */
         if (!gwy_math_choleski_decompose(thissize, m)) {
-            memset(coeffs, 0, size*sizeof(gdouble));
+            gwy_clear(coeffs, size);
             goto fail;
         }
         gwy_math_choleski_solve(thissize, m, rhs);
@@ -879,7 +879,7 @@ gwy_data_field_area_fit_legendre(GwyDataField *data_field,
         }
         /* Solve */
         if (!gwy_math_choleski_decompose(thissize, m)) {
-            memset(coeffs, 0, size*sizeof(gdouble));
+            gwy_clear(coeffs, size);
             goto fail;
         }
         gwy_math_choleski_solve(thissize, m, rhs);
@@ -1068,7 +1068,7 @@ gwy_data_field_area_fit_poly_max(GwyDataField *data_field,
     if (!coeffs)
         coeffs = g_new0(gdouble, size);
     else
-        memset(coeffs, 0, size*sizeof(gdouble));
+        gwy_clear(coeffs, size);
 
     sumsx = g_new0(gdouble, degree_n*degree_n);
     sumsy = g_new0(gdouble, degree_n*degree_n);
@@ -1133,7 +1133,7 @@ gwy_data_field_area_fit_poly_max(GwyDataField *data_field,
     }
     /* Solve */
     if (!gwy_math_choleski_decompose(size, m)) {
-        memset(coeffs, 0, size*sizeof(gdouble));
+        gwy_clear(coeffs, size);
         goto fail;
     }
     gwy_math_choleski_solve(size, m, coeffs);
@@ -1375,7 +1375,7 @@ gwy_data_field_area_fit_poly(GwyDataField *data_field,
     }
 
     if (!gwy_math_choleski_decompose(nterms, m))
-        memset(coeffs, 0, nterms*sizeof(gdouble));
+        gwy_clear(coeffs, nterms);
     else
         gwy_math_choleski_solve(nterms, m, coeffs);
 
@@ -1553,7 +1553,6 @@ gwy_data_field_area_fit_local_planes(GwyDataField *data_field,
     gint xres, yres, ri, i, j, ii, jj;
 
     g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), NULL);
-    g_return_val_if_fail(coeffs, NULL);
     g_return_val_if_fail(size > 1, NULL);
     g_return_val_if_fail(col >= 0 && row >= 0
                      && width > 0 && height > 0

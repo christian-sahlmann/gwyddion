@@ -308,7 +308,7 @@ _gwy_morph_lib_icmap(gint **image, gint im_xsiz, gint im_ysiz,
     /* create output array of appropriate size */
     cmap = _gwy_morph_lib_iallocmatrix(im_ysiz, im_xsiz);
     for (imy = 0; imy < im_ysiz; imy++)
-        memset(cmap[imy], 0, im_xsiz*sizeof(gint));
+        gwy_clear(cmap[imy], im_xsiz);
 
     /*
        Loop over all pixels in the interior of the image. We skip

@@ -869,10 +869,10 @@ gwy_object_set_or_reset(gpointer object,
 
     pspec = g_object_class_list_properties(klass, &nspec);
     already_set = g_newa(gboolean, nspec);
-    memset(already_set, 0, nspec*sizeof(gboolean));
+    gwy_clear(already_set, nspec);
 
-    memset(&cur_value, 0, sizeof(GValue));
-    memset(&new_value, 0, sizeof(GValue));
+    gwy_clear(&cur_value, 1);
+    gwy_clear(&new_value, 1);
 
     va_start(ap, type);
     for (name = va_arg(ap, gchar*); name; name = va_arg(ap, gchar*)) {
@@ -913,7 +913,7 @@ gwy_object_set_or_reset(gpointer object,
     }
     va_end(ap);
 
-    memset(&value, 0, sizeof(GValue));
+    gwy_clear(&value, 1);
     for (i = 0; i < nspec; i++) {
         if (already_set[i]
             || !(pspec[i]->flags & G_PARAM_WRITABLE)
@@ -1013,6 +1013,20 @@ gwy_object_set_or_reset(gpointer object,
  * It is supposed to be used on results of floating-point operations that
  * should fall to a known range but may occasionaly fail to due to rounding
  * errors and in similar situations.  Under normal circumstances, use CLAMP().
+ **/
+
+/**
+ * gwy_clear:
+ * @array: Pointer to an array of values to clear.
+ *         This argument may be evaluated several times.
+ * @n: Number of items to clear.
+ *
+ * Fills memory block representing an array with zeroes.
+ *
+ * This is a shorthand for memset, with the number of bytes to fill calculated
+ * from the type of the pointer.
+ *
+ * Since: 2.12
  **/
 
 /**
