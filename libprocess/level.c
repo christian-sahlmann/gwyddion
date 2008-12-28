@@ -281,6 +281,91 @@ gwy_data_field_plane_rotate(GwyDataField *data_field,
     gwy_data_field_invalidate(data_field);
 }
 
+#if 0
+void
+gwy_data_field_plane_true_rotate(GwyDataField *data_field,
+                                 gdouble xangle,
+                                 gdouble yangle,
+                                 GwyInterpolationType interpolation)
+{
+    gdouble diag, dx, dy, phi, phi0, theta, tx, ty;
+    gint xres, yres, txres, tyres, xbw, ybw, i;
+    gdouble *data, *tdata;
+    GwyDataField *tmp;
+
+    if (xangle == 0 || yangle == 0) {
+        gwy_data_field_plane_rotate(data_field, xangle, yangle, interpolation);
+        return;
+    }
+
+    xres = data_field->xres;
+    yres = data_field->yres;
+    data = data_field->data;
+
+    dx = tan(xangle);
+    dy = tan(yangle);
+    phi = atan2(dy, dx);
+    theta = atan(hypot(dx, dy));
+    phi0 = atan2(yres, xres);
+    diag = hypot(xres, yres);
+    tx = MAX(fabs(cos(-phi + phi0)), fabs(cos(-phi - phi0)));
+    ty = MAX(fabs(sin(-phi + phi0)), fabs(sin(-phi - phi0)));
+    txres = ((guint)GWY_ROUND(diag*tx + 2));
+    tyres = ((guint)GWY_ROUND(diag*ty + 2));
+    /* Keep parity to make the rotation less fuzzy */
+    xbw = (txres - xres + 1)/2;
+    if (xres + 2*xbw != txres)
+        txres++;
+    ybw = (tyres - yres + 1)/2;
+    if (yres + 2*ybw != tyres)
+        tyres++;
+
+    /* Rotate to a temporary data field extended with border pixels */
+    tmp = gwy_data_field_new(txres, tyres, 1.0, 1.0, FALSE);
+    tdata = tmp->data;
+    /* Copy */
+    gwy_data_field_area_copy(data_field, tmp, 0, 0, xres, yres, xbw, ybw);
+    /* Corners */
+    gwy_data_field_area_fill(tmp, 0, 0, xbw, ybw,
+                             data[0]);
+    gwy_data_field_area_fill(tmp, xres + xbw, 0, xbw, ybw,
+                             data[xres-1]);
+    gwy_data_field_area_fill(tmp, 0, yres + ybw, xbw, ybw,
+                             data[xres*(yres - 1)]);
+    gwy_data_field_area_fill(tmp, xres + xbw, yres + ybw, xbw, ybw,
+                             data[xres*yres - 1]);
+    /* Sides */
+    for (i = 0; i < ybw; i++)
+        memcpy(tdata + i*txres + xbw, data,
+               xres*sizeof(gdouble));
+    for (i = 0; i < ybw; i++)
+        memcpy(tdata + (yres + ybw + i)*txres + xbw, data + xres*(yres - 1),
+               xres*sizeof(gdouble));
+    for (i = 0; i < yres; i++) {
+        gwy_data_field_area_fill(tmp, 0, ybw + i, xbw, 1,
+                                 data[i*xres]);
+        gwy_data_field_area_fill(tmp, xres + xbw, ybw + i, xbw, 1,
+                                 data[i*xres + xres - 1]);
+    }
+
+    /* Rotate in xy to make the space rotation along y axis */
+    gwy_data_field_rotate(tmp, -phi, interpolation);
+    /* XXX: Still, individual gwy_data_line_rotate() can resample differently,
+     * causing incompatible rows in the image.  And we cannot get the
+     * resampling information from gwy_data_line_rotate(). */
+    gwy_data_field_plane_rotate(tmp, theta, 0, GWY_INTERPOLATION_LINEAR);
+    /* TODO:
+     * recalculate xres
+     * make samples square again
+     */
+    gwy_data_field_rotate(tmp, phi, interpolation);
+    /* XXX: xbw is no longer correct border */
+    gwy_data_field_area_copy(tmp, data_field, xbw, ybw, xres, yres, 0, 0);
+
+    g_object_unref(tmp);
+}
+#endif
+
 /**
  * gwy_data_field_fit_lines:
  * @data_field: A data field.
