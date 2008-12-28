@@ -43,6 +43,7 @@ void       gwy_app_do_remote                (GwyAppRemoteType type,
 GtkWidget* gwy_app_toolbox_create           (void);
 GtkWidget* gwy_app_show_data_browser        (void);
 void       gwy_app_about                    (void);
+void       gwy_app_tip_of_the_day           (void);
 void       gwy_app_metadata_browser         (GwyContainer *data,
                                              gint id);
 void       gwy_app_splash_start             (gboolean visible);

@@ -703,6 +703,14 @@ gwy_app_menu_create_meta_menu(GtkAccelGroup *accel_group)
             "<Separator>",
             NULL },
         {
+            N_("/_Tip of the Day"),
+            NULL,
+            gwy_app_tip_of_the_day,
+            0,
+            "<StockItem>",
+            GTK_STOCK_DIALOG_INFO
+        },
+        {
             N_("/_About Gwyddion"),
             NULL,
             gwy_app_about,

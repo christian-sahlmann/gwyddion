@@ -118,6 +118,7 @@ gwyddion_SOURCES = \
 	meta.c \
 	remote.c \
 	splash.c \
+	tips.c \
 	toolbox.c
 
 gwyddion_LDADD = @GTKGLEXT_LIBS@ @BASIC_LIBS@ $(LIBTIFF) $(LIBXMU) \
