@@ -26,6 +26,7 @@
 #include <libgwyddion/gwycontainer.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <app/app.h>
+#include <app/menu.h>
 #include <app/gwytool.h>
 
 static void     gwy_tool_class_init    (GwyToolClass *klass);
@@ -226,12 +227,15 @@ gwy_tool_add_hide_button(GwyTool *tool,
                          gboolean set_default)
 {
     GtkAccelGroup *accelgroup;
+    GtkTooltips *tips;
     GtkWidget *button;
 
     g_return_if_fail(GWY_IS_TOOL(tool));
 
+    tips = gwy_app_get_tooltips();
     button = gtk_dialog_add_button(GTK_DIALOG(tool->dialog), _("Hide"),
                                    GTK_RESPONSE_DELETE_EVENT);
+    gtk_tooltips_set_tip(tips, button, _("Hide tool dialog (Esc)"), NULL);
     if (set_default)
         gtk_dialog_set_default_response(GTK_DIALOG(tool->dialog),
                                         GTK_RESPONSE_DELETE_EVENT);

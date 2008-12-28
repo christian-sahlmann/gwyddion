@@ -27,6 +27,7 @@
 #include <libgwyddion/gwycontainer.h>
 #include <libprocess/elliptic.h>
 #include <libgwydgets/gwydgetutils.h>
+#include <app/menu.h>
 #include <app/gwyplaintool.h>
 
 #define ITEM_CHANGED "item-changed::"
@@ -777,13 +778,17 @@ GtkWidget*
 gwy_plain_tool_add_clear_button(GwyPlainTool *plain_tool)
 {
     GtkDialog *dialog;
+    GtkTooltips *tips;
 
     g_return_val_if_fail(GWY_IS_PLAIN_TOOL(plain_tool), NULL);
     g_return_val_if_fail(!plain_tool->clear, NULL);
 
     dialog = GTK_DIALOG(GWY_TOOL(plain_tool)->dialog);
+    tips = gwy_app_get_tooltips();
     plain_tool->clear = gtk_dialog_add_button(dialog, GTK_STOCK_CLEAR,
                                               GWY_TOOL_RESPONSE_CLEAR);
+    gtk_tooltips_set_tip(tips, plain_tool->clear,
+                         _("Clear selected objects"), NULL);
     if (!plain_tool->selection
         || !gwy_selection_get_data(plain_tool->selection, NULL))
         gtk_widget_set_sensitive(plain_tool->clear, FALSE);
