@@ -468,13 +468,14 @@ static void
 gwy_color_axis_draw_labels(GwyColorAxis *axis)
 {
     GtkWidget *widget;
-    PangoLayout *layout;
+    PangoLayout *layoutmax, *layoutmin;
     GwySIValueFormat *format = NULL;
     GString *strmin, *strmax;
     GdkGC *gc;
-    PangoRectangle rect;
+    PangoRectangle rectmin, rectmax;
     gint xthickness, ythickness, width, height, swidth, off;
     gdouble max;
+    gboolean twoline_layout = FALSE;
 
     gwy_debug("labels_visible: %d", axis->labels_visible);
     widget = GTK_WIDGET(axis);
@@ -495,8 +496,8 @@ gwy_color_axis_draw_labels(GwyColorAxis *axis)
              ? xthickness : ythickness);
 
     /* Compute minimum and maximum numbers */
-    strmin = g_string_new("");
-    strmax = g_string_new("");
+    strmin = g_string_new(NULL);
+    strmax = g_string_new(NULL);
     max = MAX(fabs(axis->min), fabs(axis->max));
     if (max == 0) {
         g_string_assign(strmin, "0.0");
@@ -511,42 +512,64 @@ gwy_color_axis_draw_labels(GwyColorAxis *axis)
                         axis->max/format->magnitude, format->units);
     }
 
-    layout = gtk_widget_create_pango_layout(widget, "");
+    /* Measure text */
+    layoutmax = gtk_widget_create_pango_layout(widget, "");
+    pango_layout_set_markup(layoutmax, strmax->str, strmax->len);
+    pango_layout_get_pixel_extents(layoutmax, NULL, &rectmax);
+    if (axis->orientation == GTK_ORIENTATION_VERTICAL
+        && rectmax.width + off > width)
+        twoline_layout = TRUE;
+
+    layoutmin = gtk_widget_create_pango_layout(widget, "");
+    pango_layout_set_markup(layoutmin, strmin->str, strmin->len);
+    pango_layout_get_pixel_extents(layoutmin, NULL, &rectmin);
+    if (axis->orientation == GTK_ORIENTATION_VERTICAL
+        && rectmin.width + off > width)
+        twoline_layout = TRUE;
+
+    if (twoline_layout) {
+        g_string_printf(strmax, "%3.1f\n%s",
+                        axis->max/format->magnitude, format->units);
+        pango_layout_set_markup(layoutmax, strmax->str, strmax->len);
+        pango_layout_get_pixel_extents(layoutmax, NULL, &rectmax);
+
+        g_string_printf(strmin, "%3.1f\n%s",
+                        axis->min/format->magnitude, format->units);
+        pango_layout_set_markup(layoutmin, strmin->str, strmin->len);
+        pango_layout_get_pixel_extents(layoutmin, NULL, &rectmin);
+    }
 
     /* Draw text */
     gc = widget->style->text_gc[GTK_WIDGET_STATE(widget)];
 
-    pango_layout_set_markup(layout,  strmax->str, strmax->len);
-    pango_layout_get_pixel_extents(layout, NULL, &rect);
     if (axis->orientation == GTK_ORIENTATION_VERTICAL) {
-        gdk_draw_layout(widget->window, gc, off, ythickness, layout);
-        axis->labelb_size = rect.height;
+        gdk_draw_layout(widget->window, gc, off, ythickness, layoutmax);
+        axis->labelb_size = rectmax.height;
     }
     else {
-        gdk_draw_layout(widget->window, gc, xthickness, off, layout);
-        axis->labelb_size = rect.width;
+        gdk_draw_layout(widget->window, gc, xthickness, off, layoutmax);
+        axis->labelb_size = rectmax.width;
     }
 
-    pango_layout_set_markup(layout,  strmin->str, strmin->len);
-    pango_layout_get_pixel_extents(layout, NULL, &rect);
     if (axis->orientation == GTK_ORIENTATION_VERTICAL) {
         gdk_draw_layout(widget->window, gc,
-                        off, height - rect.height - ythickness,
-                        layout);
-        axis->labele_size = rect.height;
+                        off, height - rectmin.height - ythickness,
+                        layoutmin);
+        axis->labele_size = rectmin.height;
     }
     else {
         gdk_draw_layout(widget->window, gc,
-                        width - rect.width - xthickness, off,
-                        layout);
-        axis->labele_size = rect.width;
+                        width - rectmin.width - xthickness, off,
+                        layoutmin);
+        axis->labele_size = rectmin.width;
     }
 
-    if (format)
-        gwy_si_unit_value_format_free(format);
-    g_object_unref(layout);
+    g_object_unref(layoutmin);
+    g_object_unref(layoutmax);
     g_string_free(strmin, TRUE);
     g_string_free(strmax, TRUE);
+    if (format)
+        gwy_si_unit_value_format_free(format);
 }
 
 static void
