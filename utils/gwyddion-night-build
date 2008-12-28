@@ -177,7 +177,7 @@ function check_desktop() {
 
 
 function install_to_tmp() {
-  make -k install schemadir=
+  make -k install DISABLE_GCONF_SCHEMAS_INSTALL=
 }
 
 

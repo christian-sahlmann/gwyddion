@@ -89,7 +89,7 @@ if DESKTOP_FILE_UPDATE
 	fi
 endif
 if GCONF_SCHEMAS_INSTALL
-	if test -z "$(DESTDIR)" -a -n "$(schemadir)"; then \
+	if test -z "$(DESTDIR)" -a -z "$(DISABLE_GCONF_SCHEMAS_INSTALL)"; then \
 	  GCONF_CONFIG_SOURCE=$(GCONF_SCHEMA_CONFIG_SOURCE) \
 	    $(GCONFTOOL) --makefile-install-rule $(schema_DATA); \
 	fi
@@ -103,7 +103,7 @@ if DESKTOP_FILE_UPDATE
 	fi
 endif
 if GCONF_SCHEMAS_INSTALL
-	if test -z "$(DESTDIR)" -a -n "$(schemadir)"; then \
+	if test -z "$(DESTDIR)" -a -n "$(DISABLE_GCONF_SCHEMAS_INSTALL)"; then \
 	  GCONF_CONFIG_SOURCE=$(GCONF_SCHEMA_CONFIG_SOURCE) \
 	    $(GCONFTOOL) --makefile-uninstall-rule $(schema_DATA); \
 	fi
