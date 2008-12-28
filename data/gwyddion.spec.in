@@ -49,7 +49,7 @@ BuildRequires: gtksourceview-devel
 
 %if %{distro_is_mdk}
 BuildRequires: libxmu-devel
-BuildRequires: python-gtk-devel
+BuildRequires: pygtk2.0-devel
 BuildRequires: gtksourceview-devel
 %define fftw3 libfftw3
 %endif
