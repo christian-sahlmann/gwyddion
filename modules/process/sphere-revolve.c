@@ -94,7 +94,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Subtracts background by arc or sphere revolution."),
     "Yeti <yeti@gwyddion.net>",
-    "1.4",
+    "1.5",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -252,8 +252,8 @@ sphrev_dialog(Sphrev1DArgs *args)
         = gwy_radio_buttons_create(directions, G_N_ELEMENTS(directions),
                                    G_CALLBACK(direction_changed_cb), args,
                                    args->direction);
-    gwy_radio_buttons_attach_to_table(controls.direction, GTK_TABLE(table),
-                                      4, row);
+    row = gwy_radio_buttons_attach_to_table(controls.direction,
+                                            GTK_TABLE(table), 4, row);
 
     controls.do_extract
         = gtk_check_button_new_with_mnemonic(_("E_xtract background"));
