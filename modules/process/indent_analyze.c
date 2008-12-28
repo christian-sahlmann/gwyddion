@@ -913,7 +913,7 @@ level_data(IndentAnalyzeControls *c)
             gwy_data_field_plane_rotate(dfield,
                                 180/G_PI*atan2(args->plane_x, 1),
                                 180/G_PI*atan2(args->plane_y, 1),
-                                GWY_INTERPOLATION_BILINEAR);
+                                GWY_INTERPOLATION_LINEAR);
             break;
     }
 */
@@ -1288,7 +1288,6 @@ indent_analyze_ok(GwyContainer *data, IndentAnalyzeControls * controls)
 {
     //GwyDataField *dfield;
     GObject *maskfield;
-    gint dfield_id = 0;
     GString *mask_name = g_string_new("");
     
     // get right ID of datafield    

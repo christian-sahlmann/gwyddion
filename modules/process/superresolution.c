@@ -399,11 +399,11 @@ get_mean_correlation(GwyDataField *dfield,
     sm_dfield = gwy_data_field_new_resampled(dfield, 
                                              newxres,
                                              newyres,
-                                             GWY_INTERPOLATION_BILINEAR);
+                                             GWY_INTERPOLATION_LINEAR);
     sm_last = gwy_data_field_new_resampled(last, 
                                              newxres,
                                              newyres,
-                                             GWY_INTERPOLATION_BILINEAR);
+                                             GWY_INTERPOLATION_LINEAR);
 
     dfield_kernel = gwy_data_field_area_extract(sm_dfield, 
                                                 newxres/2 - newxres/6, 
@@ -546,7 +546,7 @@ TODO: use this when the rest works well.
 
     /*now, resample the original data twice*/
     gwy_data_field_copy(last, result, FALSE);
-    gwy_data_field_resample(result, xres*2, yres*2, GWY_INTERPOLATION_BILINEAR);
+    gwy_data_field_resample(result, xres*2, yres*2, GWY_INTERPOLATION_LINEAR);
 
     /*merge values from array into the field*/
     gwy_app_wait_start(gwy_app_find_window_for_channel(args->objects[0].data,

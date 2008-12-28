@@ -66,7 +66,7 @@ static void     dwt_anisotropy_sanitize_args(DWTAnisotropyArgs *args);
 
 
 static const DWTAnisotropyArgs dwt_anisotropy_defaults = {
-    GWY_INTERPOLATION_BILINEAR,
+    GWY_INTERPOLATION_LINEAR,
     GWY_DWT_DAUB12,
     0.2,
     4
@@ -77,7 +77,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("2D DWT anisotropy detection based on X/Y components ratio."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.5",
+    "1.6",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -162,9 +162,9 @@ dwt_anisotropy(GwyContainer *data, GwyRunType run)
     /*justo for sure clamp the lowlimit again*/
     limit = pow(2, CLAMP(args.lowlimit, 1, 20));
     gwy_data_field_dwt_mark_anisotropy(dfield, mask, wtcoefs, args.ratio,
-                                              limit);
+                                       limit);
 
-    gwy_data_field_resample(mask, xsize, ysize, GWY_INTERPOLATION_BILINEAR);
+    gwy_data_field_resample(mask, xsize, ysize, GWY_INTERPOLATION_ROUND);
     g_object_unref(wtcoefs);
     g_object_unref(dfield);
     gwy_data_field_data_changed(mask);

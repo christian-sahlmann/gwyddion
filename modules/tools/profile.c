@@ -146,7 +146,7 @@ static const ToolArgs default_args = {
     1,
     120,
     FALSE,
-    GWY_INTERPOLATION_BILINEAR,
+    GWY_INTERPOLATION_LINEAR,
     FALSE,
 };
 
