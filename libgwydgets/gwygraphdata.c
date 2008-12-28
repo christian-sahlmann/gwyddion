@@ -390,7 +390,7 @@ gwy_graph_data_update_headers(GwyGraphData *graph_data)
     sy = gwy_si_unit_get_string(siunit, GWY_SI_UNIT_FORMAT_MARKUP);
     g_object_unref(siunit);
 
-    str = g_string_new("");
+    str = g_string_new(NULL);
     for (i = 0; i < graph_data->curves->len; i++) {
         curve = &g_array_index(graph_data->curves, GwyGraphDataCurve, i);
         column = gtk_tree_view_get_column(treeview, i);

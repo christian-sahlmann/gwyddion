@@ -144,7 +144,7 @@ gwy_data_window_init(GwyDataWindow *data_window)
         gtk_object_sink(GTK_OBJECT(tooltips));
     }
 
-    data_window->data_name = g_string_new("");
+    data_window->data_name = g_string_new(NULL);
 }
 
 static void

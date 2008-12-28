@@ -180,7 +180,7 @@ gwy_3d_label_init(Gwy3DLabel *label)
     label->rotation = PSPEC("rotation", DOUBLE)->default_value;
     label->size = PSPEC("size", DOUBLE)->default_value;
     /* default text is a construction property */
-    label->text = g_string_new("");
+    label->text = g_string_new(NULL);
 }
 
 static void
@@ -512,8 +512,8 @@ gwy_3d_label_expand_text(Gwy3DLabel *label,
     g_return_val_if_fail(GWY_IS_3D_LABEL(label), NULL);
     lb = label->text->str;
 
-    buffer = g_string_new("");
-    key = g_string_new("");
+    buffer = g_string_new(NULL);
+    key = g_string_new(NULL);
     while (lb && *lb) {
         if (!(s = strchr(lb, '$'))) {
             g_string_append(buffer, lb);

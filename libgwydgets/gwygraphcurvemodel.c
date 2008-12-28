@@ -303,7 +303,7 @@ gwy_graph_curve_model_init(GwyGraphCurveModel *gcmodel)
     gwy_debug("");
     gwy_debug_objects_creation((GObject*)gcmodel);
 
-    gcmodel->description = g_string_new("");
+    gcmodel->description = g_string_new(NULL);
     gcmodel->color.r = 0;
     gcmodel->color.g = 0;
     gcmodel->color.b = 0;

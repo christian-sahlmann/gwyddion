@@ -392,9 +392,9 @@ gwy_graph_model_init(GwyGraphModel *gmodel)
 
     gmodel->title = g_string_new("Graph");
     gmodel->bottom_label = g_string_new("x");
-    gmodel->top_label = g_string_new("");
+    gmodel->top_label = g_string_new(NULL);
     gmodel->left_label = g_string_new("y");
-    gmodel->right_label = g_string_new("");
+    gmodel->right_label = g_string_new(NULL);
 
     gmodel->label_position = GWY_GRAPH_LABEL_NORTHEAST;
     gmodel->grid_type = GWY_GRAPH_GRID_AUTO;
@@ -1582,9 +1582,9 @@ gwy_graph_model_export_ascii(GwyGraphModel *model,
     switch (export_style) {
         case GWY_GRAPH_MODEL_EXPORT_ASCII_PLAIN:
         case GWY_GRAPH_MODEL_EXPORT_ASCII_ORIGIN:
-        labels = g_string_new("");
-        descriptions = g_string_new("");
-        units = g_string_new("");
+        labels = g_string_new(NULL);
+        descriptions = g_string_new(NULL);
+        units = g_string_new(NULL);
         for (i = 0; i < model->curves->len; i++) {
             cmodel = g_ptr_array_index(model->curves, i);
             if (export_metadata)
@@ -1653,9 +1653,9 @@ gwy_graph_model_export_ascii(GwyGraphModel *model,
         break;
 
         case GWY_GRAPH_MODEL_EXPORT_ASCII_CSV:
-        labels = g_string_new("");
-        descriptions = g_string_new("");
-        units = g_string_new("");
+        labels = g_string_new(NULL);
+        descriptions = g_string_new(NULL);
+        units = g_string_new(NULL);
         for (i = 0; i < model->curves->len; i++) {
             cmodel = g_ptr_array_index(model->curves, i);
             if (export_metadata)

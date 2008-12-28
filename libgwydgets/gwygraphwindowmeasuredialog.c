@@ -247,7 +247,7 @@ selection_updated_cb(GwySelection *selection,
          }
     }
 
-    str = g_string_new("");
+    str = g_string_new(NULL);
 
     xaxis = gwy_graph_get_axis(graph, GTK_POS_TOP);
     xunit = gwy_si_unit_new(gwy_axis_get_magnification_string(xaxis));
@@ -387,7 +387,7 @@ _gwy_graph_window_measure_dialog_new(GwyGraph *graph)
     dialog->disty = g_ptr_array_new();
     dialog->slope = g_ptr_array_new();
     dialog->curve_index = 1;
-    str = g_string_new("");
+    str = g_string_new(NULL);
 
     table = gtk_table_new(1, 4, FALSE);
     gtk_table_set_col_spacings(GTK_TABLE(table), 4);
