@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003-2006 Nenad Ocelic, David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003-2008 Nenad Ocelic, David Necas (Yeti), Petr Klapetek.
  *  E-mail: ocelic@biochem.mpg.de, yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -35,10 +35,6 @@
 #define GWY_TOOL_DISTANCE_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_TOOL_DISTANCE, GwyToolDistanceClass))
 
 enum {
-    RESPONSE_SAVE = 1024
-};
-
-enum {
     NLINES = 18
 };
 
@@ -54,6 +50,9 @@ struct _GwyToolDistance {
 
     GtkTreeView *treeview;
     GtkTreeModel *model;
+    GtkBox *aux_box;
+    GtkWidget *copy;
+    GtkWidget *save;
 
     /* potential class data */
     GwySIValueFormat *angle_format;
@@ -66,30 +65,33 @@ struct _GwyToolDistanceClass {
 
 static gboolean module_register(void);
 
-static GType  gwy_tool_distance_get_type         (void) G_GNUC_CONST;
-static void   gwy_tool_distance_finalize         (GObject *object);
-static void   gwy_tool_distance_init_dialog      (GwyToolDistance *tool);
-static void   gwy_tool_distance_data_switched    (GwyTool *gwytool,
-                                                  GwyDataView *data_view);
-static void   gwy_tool_distance_data_changed     (GwyPlainTool *plain_tool);
-static void   gwy_tool_distance_response         (GwyTool *tool,
-                                                  gint response_id);
-static void   gwy_tool_distance_selection_changed(GwyPlainTool *plain_tool,
-                                                  gint hint);
-static void   gwy_tool_distance_update_headers   (GwyToolDistance *tool);
-static void   gwy_tool_distance_render_cell      (GtkCellLayout *layout,
-                                                  GtkCellRenderer *renderer,
-                                                  GtkTreeModel *model,
-                                                  GtkTreeIter *iter,
-                                                  gpointer user_data);
-static void   gwy_tool_distance_save_lines       (GwyToolDistance *tool);
+static GType      gwy_tool_distance_get_type         (void) G_GNUC_CONST;
+static void       gwy_tool_distance_finalize         (GObject *object);
+static void       gwy_tool_distance_init_dialog      (GwyToolDistance *tool);
+static void       gwy_tool_distance_data_switched    (GwyTool *gwytool,
+                                                      GwyDataView *data_view);
+static GtkWidget* gwy_tool_distance_add_aux_button   (GwyToolDistance *tool,
+                                                      const gchar *stock_id,
+                                                      const gchar *tooltip);
+static void       gwy_tool_distance_data_changed     (GwyPlainTool *plain_tool);
+static void       gwy_tool_distance_selection_changed(GwyPlainTool *plain_tool,
+                                                      gint hint);
+static void       gwy_tool_distance_update_headers   (GwyToolDistance *tool);
+static void       gwy_tool_distance_render_cell      (GtkCellLayout *layout,
+                                                      GtkCellRenderer *renderer,
+                                                      GtkTreeModel *model,
+                                                      GtkTreeIter *iter,
+                                                      gpointer user_data);
+static void       gwy_tool_distance_save             (GwyToolDistance *tool);
+static void       gwy_tool_distance_copy             (GwyToolDistance *tool);
+static gchar*     gwy_tool_distance_create_report    (GwyToolDistance *tool);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Distance measurement tool, measures distances and angles."),
     "Nenad Ocelic <ocelic@biochem.mpg.de>",
-    "2.8",
+    "2.9",
     "Nenad Ocelic & David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -121,7 +123,6 @@ gwy_tool_distance_class_init(GwyToolDistanceClass *klass)
     tool_class->prefix = "/module/distance";
     tool_class->default_height = 240;
     tool_class->data_switched = gwy_tool_distance_data_switched;
-    tool_class->response = gwy_tool_distance_response;
 
     ptool_class->data_changed = gwy_tool_distance_data_changed;
     ptool_class->selection_changed = gwy_tool_distance_selection_changed;
@@ -175,7 +176,7 @@ gwy_tool_distance_init_dialog(GwyToolDistance *tool)
     GtkTreeViewColumn *column;
     GtkCellRenderer *renderer;
     GtkDialog *dialog;
-    GtkWidget *scwin, *label;
+    GtkWidget *scwin, *label, *hbox;
     GwyNullStore *store;
     guint i;
     GwyPlainTool *plain_tool;
@@ -212,14 +213,47 @@ gwy_tool_distance_init_dialog(GwyToolDistance *tool)
     gtk_container_add(GTK_CONTAINER(scwin), GTK_WIDGET(tool->treeview));
     gtk_box_pack_start(GTK_BOX(dialog->vbox), scwin, TRUE, TRUE, 0);
 
-    gtk_dialog_add_button(dialog, GTK_STOCK_SAVE, RESPONSE_SAVE);
+    hbox = gtk_hbox_new(FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(dialog->vbox), hbox, FALSE, FALSE, 0);
+    tool->aux_box = GTK_BOX(hbox);
+  
+    tool->save = gwy_tool_distance_add_aux_button(tool, GTK_STOCK_SAVE,
+                                                  _("Save table to a file"));
+    g_signal_connect_swapped(tool->save, "clicked",
+                             G_CALLBACK(gwy_tool_distance_save), tool);
+
+    tool->copy = gwy_tool_distance_add_aux_button(tool, GTK_STOCK_COPY,
+                                                  _("Copy table to clipboard"));
+    g_signal_connect_swapped(tool->save, "clicked",
+                             G_CALLBACK(gwy_tool_distance_copy), tool);
+
     gwy_plain_tool_add_clear_button(GWY_PLAIN_TOOL(tool));
     gwy_tool_add_hide_button(GWY_TOOL(tool), TRUE);
 
     gwy_tool_distance_update_headers(tool);
-    gtk_dialog_set_response_sensitive(dialog, RESPONSE_SAVE, FALSE);
 
     gtk_widget_show_all(dialog->vbox);
+}
+
+static GtkWidget*
+gwy_tool_distance_add_aux_button(GwyToolDistance *tool,
+                                 const gchar *stock_id,
+                                 const gchar *tooltip)
+{
+    GtkTooltips *tips;
+    GtkWidget *button;
+
+    tips = gwy_app_get_tooltips();
+    button = gtk_button_new();
+    gtk_button_set_relief(GTK_BUTTON(button), GTK_RELIEF_NONE);
+    gtk_tooltips_set_tip(tips, button, tooltip, NULL);
+    gtk_container_add(GTK_CONTAINER(button),
+                      gtk_image_new_from_stock(stock_id,
+                                               GTK_ICON_SIZE_SMALL_TOOLBAR));
+    gtk_box_pack_end(tool->aux_box, button, FALSE, FALSE, 0);
+    gtk_widget_set_sensitive(button, FALSE);
+
+    return button;
 }
 
 static void
@@ -260,16 +294,6 @@ gwy_tool_distance_data_changed(GwyPlainTool *plain_tool)
 }
 
 static void
-gwy_tool_distance_response(GwyTool *tool,
-                           gint response_id)
-{
-    GWY_TOOL_CLASS(gwy_tool_distance_parent_class)->response(tool, response_id);
-
-    if (response_id == RESPONSE_SAVE)
-        gwy_tool_distance_save_lines(GWY_TOOL_DISTANCE(tool));
-}
-
-static void
 gwy_tool_distance_selection_changed(GwyPlainTool *plain_tool,
                                     gint hint)
 {
@@ -301,8 +325,8 @@ gwy_tool_distance_selection_changed(GwyPlainTool *plain_tool,
 
     ok = (plain_tool->selection
           && gwy_selection_get_data(plain_tool->selection, NULL));
-    gtk_dialog_set_response_sensitive(GTK_DIALOG(GWY_TOOL(tool)->dialog),
-                                      RESPONSE_SAVE, ok);
+    gtk_widget_set_sensitive(tool->save, ok);
+    gtk_widget_set_sensitive(tool->copy, ok);
 }
 
 static void
@@ -353,8 +377,8 @@ gwy_tool_distance_update_headers(GwyToolDistance *tool)
 
     ok = (plain_tool->selection
           && gwy_selection_get_data(plain_tool->selection, NULL));
-    gtk_dialog_set_response_sensitive(GTK_DIALOG(GWY_TOOL(tool)->dialog),
-                                      RESPONSE_SAVE, ok);
+    gtk_widget_set_sensitive(tool->save, ok);
+    gtk_widget_set_sensitive(tool->copy, ok);
 }
 
 static void
@@ -432,17 +456,45 @@ gwy_tool_distance_render_cell(GtkCellLayout *layout,
 }
 
 static void
-gwy_tool_distance_save_lines(GwyToolDistance *tool)
+gwy_tool_distance_save(GwyToolDistance *tool)
+{
+    gchar *text;
+
+    text = gwy_tool_distance_create_report(tool);
+    gwy_save_auxiliary_data(_("Save Table"),
+                            GTK_WINDOW(GWY_TOOL(tool)->dialog), -1, text);
+    g_free(text);
+}
+
+static void
+gwy_tool_distance_copy(GwyToolDistance *tool)
+{
+    GtkClipboard *clipboard;
+    GdkDisplay *display;
+    GdkAtom atom;
+    gchar *text;
+
+    text = gwy_tool_distance_create_report(tool);
+    atom = gdk_atom_intern("CLIPBOARD", FALSE);
+    display = gtk_widget_get_display(GTK_WIDGET(GWY_TOOL(tool)->dialog));
+    clipboard = gtk_clipboard_get_for_display(display, atom);
+    gtk_clipboard_set_text(clipboard, text, -1);
+    g_free(text);
+}
+
+static gchar*
+gwy_tool_distance_create_report(GwyToolDistance *tool)
 {
     GwyPlainTool *plain_tool;
-    gint            n, x, y, i;
-    gdouble         line[4], val_dx, val_dy, val_r, val_phi, val_dz;
+    gint n, x, y, i;
+    gdouble line[4], val_dx, val_dy, val_r, val_phi, val_dz;
     const GwySIValueFormat *vf_dx, *vf_dy, *vf_r, *vf_phi, *vf_dz;
-    GString *str_to_save;
+    GString *text;
+    gchar *retval;
 
     plain_tool = GWY_PLAIN_TOOL(tool);
-    str_to_save = g_string_new(NULL);
-    g_string_append_printf(str_to_save,
+    text = g_string_new(NULL);
+    g_string_append_printf(text,
                            "n Δx [%s] Δy [%s] φ [%s] R [%s] Δz [%s]\n",
                            plain_tool->coord_format->units,
                            plain_tool->coord_format->units,
@@ -474,7 +526,7 @@ gwy_tool_distance_save_lines(GwyToolDistance *tool)
         val_dz -= gwy_data_field_get_val(plain_tool->data_field, x, y);
         vf_dz = plain_tool->value_format;
 
-        g_string_append_printf(str_to_save, "%d %.*f %.*f %.*f %.*f %.*f\n",
+        g_string_append_printf(text, "%d %.*f %.*f %.*f %.*f %.*f\n",
                                i+1,
                                vf_dx->precision, val_dx/vf_dx->magnitude,
                                vf_dy->precision, val_dy/vf_dy->magnitude,
@@ -482,11 +534,11 @@ gwy_tool_distance_save_lines(GwyToolDistance *tool)
                                vf_r->precision, val_r/vf_r->magnitude,
                                vf_dz->precision, val_dz/vf_dz->magnitude);
     }
-    gwy_save_auxiliary_data(_("Save Table"),
-                            GTK_WINDOW(GWY_TOOL(tool)->dialog),
-                            -1,
-                            str_to_save->str);
-    g_string_free(str_to_save, TRUE);
+
+    retval = text->str;
+    g_string_free(text, FALSE);
+
+    return retval;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
