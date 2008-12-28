@@ -43,8 +43,6 @@
  *   <magic priority="50">
  *     <match type="string" offset="0" value="&lt;SPML"/>
  *   </magic>
- *   <glob pattern="*.xml"/>
- *   <glob pattern="*.XML"/>
  * </mime-type>
  **/
 

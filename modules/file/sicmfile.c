@@ -18,6 +18,16 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
+/**
+ * [FILE-MAGIC-FREEDESKTOP]
+ * <mime-type type="application/x-sicm-spm">
+ *   <comment>IonScope SICM data</comment>
+ *   <magic priority="30">
+ *     <match type="string" offset="0" value="\x32\x00"/>
+ *   </magic>
+ * </mime-type>
+ **/
+
 /*--------------------------------------------------------------------------
   Dependencies
 ----------------------------------------------------------------------------*/

@@ -30,8 +30,6 @@
  *     <magic priority="50">
  *     <match type="string" offset="0" value="AFM/Ver. "/>
  *   </magic>
- *   <glob pattern="*.afm"/>
- *   <glob pattern="*.AFM"/>
  * </mime-type>
  **/
 

@@ -26,8 +26,6 @@
  *   <magic priority="40">
  *     <match type="string" offset="0" value="\xa0\x00"/>
  *   </magic>
- *   <glob pattern="*.img"/>
- *   <glob pattern="*.IMG"/>
  * </mime-type>
  **/
 

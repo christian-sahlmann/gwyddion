@@ -17,6 +17,19 @@
  *  Software Foundation, Inc., 59 Temple Place, Suite 330,
  *  Boston, MA 02111 USA
  */
+
+/**
+ * [FILE-MAGIC-FREEDESKTOP]
+ * <mime-type type="application/x-omicron-matrix-spm">
+ *   <comment>Omicron MATRIX SPM data</comment>
+ *   <magic priority="30">
+ *     <match type="string" offset="0" value="ONTMATRX0101TLKB"/>
+ *   </magic>
+ *   <glob pattern="*.mtrx"/>
+ *   <glob pattern="*.MTRX"/>
+ * </mime-type>
+ **/
+
 /* Version 0.81, 17.10.2008 */
 #include <stdlib.h>
 #include <string.h>
@@ -187,7 +200,7 @@ static gboolean module_register(void)
 }
 
 static gint matrix_detect(const GwyFileDetectInfo *fileinfo,
-               gboolean only_name)
+                          gboolean only_name)
 {
     if (only_name)
         return g_str_has_suffix(fileinfo->name_lowercase, 

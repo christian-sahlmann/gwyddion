@@ -25,8 +25,6 @@
  *   <magic priority="50">
  *     <match type="string" offset="0" value="\x88\x1b\x03\x6f"/>
  *   </magic>
- *   <glob pattern="*.dat"/>
- *   <glob pattern="*.DAT"/>
  * </mime-type>
  **/
 

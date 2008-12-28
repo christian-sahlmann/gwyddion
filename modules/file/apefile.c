@@ -29,8 +29,6 @@
  *   <magic priority="50">
  *     <match type="string" offset="234" value="APERES"/>
  *   </magic>
- *   <glob pattern="*.dat"/>
- *   <glob pattern="*.DAT"/>
  * </mime-type>
  **/
 

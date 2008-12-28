@@ -18,6 +18,16 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
+/**
+ * [FILE-MAGIC-FREEDESKTOP]
+ * <mime-type type="application/x-burleigh-export-spm">
+ *   <comment>Burleigh exported SPM data</comment>
+ *   <magic priority="30">
+ *     <match type="string" offset="0" value=".Image Data"/>
+ *   </magic>
+ * </mime-type>
+ **/
+
 #include "config.h"
 #include <stdlib.h>
 #include <string.h>

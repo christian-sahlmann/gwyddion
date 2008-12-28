@@ -28,8 +28,6 @@
  *       <match type="string" offset="160" value="Mesuared by"/>
  *     </match>
  *   </magic>
- *   <glob pattern="*.tif"/>
- *   <glob pattern="*.TIF"/>
  * </mime-type>
  **/
 

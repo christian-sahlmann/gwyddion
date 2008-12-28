@@ -25,8 +25,6 @@
  *   <magic priority="50">
  *     <match type="string" offset="0" value="RSCOPE"/>
  *   </magic>
- *   <glob pattern="*.img"/>
- *   <glob pattern="*.IMG"/>
  * </mime-type>
  **/
 

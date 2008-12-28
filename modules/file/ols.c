@@ -18,6 +18,18 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
+/**
+ * [FILE-MAGIC-FREEDESKTOP]
+ * <mime-type type="application/x-olympus-lex-3000">
+ *   <comment>Olympus LEX 3000</comment>
+ *   <magic priority="10">
+ *     <match type="string" offset="0" value="II\x2a\x00"/>
+ *   </magic>
+ *   <glob pattern="*.ols"/>
+ *   <glob pattern="*.OLS"/>
+ * </mime-type>
+ **/
+
 #include "config.h"
 #include <stdlib.h>
 #include <libgwyddion/gwymath.h>

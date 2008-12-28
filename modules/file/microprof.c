@@ -25,8 +25,6 @@
  *   <magic priority="40">
  *     <match type="string" offset="0" value="HeaderLines"/>
  *   </magic>
- *   <glob pattern="*.txt"/>
- *   <glob pattern="*.TXT"/>
  * </mime-type>
  **/
 
