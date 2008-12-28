@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003-2006 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003-2008 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -76,7 +76,7 @@ struct _GwyToolLineStats {
     GtkWidget *interpolation_label;
     GtkWidget *update;
     GtkWidget *apply;
-    GtkWidget *result_label;
+    GtkWidget *average_label;
 
     /* potential class data */
     GType layer_type_rect;
@@ -123,7 +123,7 @@ static GwyModuleInfo module_info = {
     N_("Row/column statistical function tool, mean values, medians, maxima, "
        "minima, RMS, ..., of rows or columns."),
     "Yeti <yeti@gwyddion.net>",
-    "1.1",
+    "1.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
@@ -290,7 +290,7 @@ gwy_tool_line_stats_init_dialog(GwyToolLineStats *tool)
         { N_("Co_lumns"), GWY_ORIENTATION_VERTICAL,   },
     };
     GtkDialog *dialog;
-    GtkWidget *label, *hbox, *vbox, *hbox2, *hbox3, *image;
+    GtkWidget *label, *hbox, *vbox, *hbox2, *image;
     GtkTable *table;
     guint row;
 
@@ -312,16 +312,34 @@ gwy_tool_line_stats_init_dialog(GwyToolLineStats *tool)
                        FALSE, FALSE, 0);
 
     /* Output type */
-    hbox2 = gtk_hbox_new(FALSE, 4);
+    hbox2 = gtk_hbox_new(FALSE, 8);
     gtk_container_set_border_width(GTK_CONTAINER(hbox2), 4);
     gtk_box_pack_start(GTK_BOX(vbox), hbox2, FALSE, FALSE, 0);
+
+    label = gtk_label_new_with_mnemonic(_("_Quantity:"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_box_pack_start(GTK_BOX(hbox2), label, FALSE, FALSE, 0);
 
     tool->output_type = gwy_enum_combo_box_new
                            (sf_types, G_N_ELEMENTS(sf_types),
                             G_CALLBACK(gwy_tool_line_stats_output_type_changed),
                             tool,
                             tool->args.output_type, TRUE);
+    gtk_label_set_mnemonic_widget(GTK_LABEL(label), tool->output_type);
     gtk_box_pack_start(GTK_BOX(hbox2), tool->output_type, FALSE, FALSE, 0);
+    
+    /* Average */
+    hbox2 = gtk_hbox_new(FALSE, 8);
+    gtk_container_set_border_width(GTK_CONTAINER(hbox2), 4);
+    gtk_box_pack_start(GTK_BOX(vbox), hbox2, FALSE, FALSE, 0);
+
+    label = gtk_label_new(_("Average:"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_box_pack_start(GTK_BOX(hbox2), label, FALSE, FALSE, 0);
+
+    tool->average_label = label = gtk_label_new(NULL);
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_box_pack_start(GTK_BOX(hbox2), label, TRUE, TRUE, 0);
 
     /* Options */
     tool->options = gtk_expander_new(_("<b>Options</b>"));
@@ -392,21 +410,6 @@ gwy_tool_line_stats_init_dialog(GwyToolLineStats *tool)
     gtk_box_pack_end(GTK_BOX(hbox2), tool->interpolation, FALSE, FALSE, 0);
     row++;
 
-
-    hbox3 = gtk_hbox_new(FALSE, 8);
-    gtk_table_attach(table, hbox3,
-                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
-    label = gtk_label_new(_("Average:"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_box_pack_start(GTK_BOX(hbox3), label, FALSE, FALSE, 0);
-
-    label = gtk_label_new("");
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_box_pack_start(GTK_BOX(hbox3), label, FALSE, FALSE, 0);
-    tool->result_label = label;
-
- 
-
     tool->gmodel = gwy_graph_model_new();
 
     tool->graph = gwy_graph_new(tool->gmodel);
@@ -440,7 +443,7 @@ gwy_tool_line_stats_data_switched(GwyTool *gwytool,
     ignore = (data_view == plain_tool->data_view);
 
     GWY_TOOL_CLASS(gwy_tool_line_stats_parent_class)->data_switched(gwytool,
-                                                                 data_view);
+                                                                    data_view);
 
     if (ignore || plain_tool->init_failed)
         return;
@@ -535,6 +538,7 @@ gwy_tool_line_stats_update_curve(GwyToolLineStats *tool)
         zunit = gwy_data_field_get_si_unit_z(plain_tool->data_field);
         if (!gwy_si_unit_equal(xyunit, zunit)) {
             gwy_graph_model_remove_all_curves(tool->gmodel);
+            gtk_label_set_text(GTK_LABEL(tool->average_label), "");
             gtk_widget_set_sensitive(tool->apply, FALSE);
             return;
         }
@@ -571,6 +575,7 @@ gwy_tool_line_stats_update_curve(GwyToolLineStats *tool)
         return;
 
     if (nsel == 0 && n > 0) {
+        gtk_label_set_text(GTK_LABEL(tool->average_label), "");
         gwy_graph_model_remove_all_curves(tool->gmodel);
         return;
     }
@@ -608,7 +613,7 @@ gwy_tool_line_stats_update_curve(GwyToolLineStats *tool)
                gwy_data_line_get_avg(tool->line)/format->magnitude,
                gwy_data_line_get_rms(tool->line)/format->magnitude,
                format->units);    
-    gtk_label_set_markup(GTK_LABEL(tool->result_label), result);
+    gtk_label_set_markup(GTK_LABEL(tool->average_label), result);
 }
 
 static void
