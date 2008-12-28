@@ -31,14 +31,8 @@
 
 #define LEVEL_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
-typedef enum {
-    LEVEL_EXCLUDE,
-    LEVEL_INCLUDE,
-    LEVEL_IGNORE,
-} LevelMaskingType;
-
 typedef struct {
-    LevelMaskingType level_mode;
+    GwyMaskingType level_mode;
 } LevelArgs;
 
 typedef struct {
@@ -51,7 +45,7 @@ static void     facet_level       (GwyContainer *data,
                                    GwyRunType run);
 static gboolean facet_level_coeffs(GwyDataField *dfield,
                                    GwyDataField *mfield,
-                                   LevelMaskingType masking_type,
+                                   GwyMaskingType masking_type,
                                    gdouble *bx,
                                    gdouble *by);
 static gboolean level_dialog      (LevelArgs *args,
@@ -64,7 +58,7 @@ static void     level_save_args   (GwyContainer *container,
                                    LevelArgs *args);
 
 static const LevelArgs level_defaults = {
-    LEVEL_EXCLUDE
+    GWY_MASK_EXCLUDE
 };
 
 static GwyModuleInfo module_info = {
@@ -141,7 +135,7 @@ facet_level(GwyContainer *data, GwyRunType run)
             return;
     }
     if (!mfield)
-        args.level_mode = LEVEL_IGNORE;
+        args.level_mode = GWY_MASK_IGNORE;
 
     /* converge
      * FIXME: this can take a long time */
@@ -187,7 +181,7 @@ facet_level(GwyContainer *data, GwyRunType run)
 
 static gboolean
 facet_level_coeffs(GwyDataField *dfield, GwyDataField *mfield,
-                   LevelMaskingType masking_type,
+                   GwyMaskingType masking_type,
                    gdouble *bx, gdouble *by)
 {
     gdouble *data, *row, *newrow;
@@ -215,11 +209,11 @@ facet_level_coeffs(GwyDataField *dfield, GwyDataField *mfield,
         newmrow += xres;
 
         for (j = 1; j < xres; j++) {
-            if (masking_type == LEVEL_IGNORE
-                || (masking_type == LEVEL_INCLUDE
+            if (masking_type == GWY_MASK_IGNORE
+                || (masking_type == GWY_MASK_INCLUDE
                     && newmrow[j] >= 1.0 && mrow[j] >= 1.0
                     && newmrow[j-1] >= 1.0 && mrow[j-1] >= 1.0)
-                || (masking_type == LEVEL_EXCLUDE
+                || (masking_type == GWY_MASK_EXCLUDE
                     && newmrow[j] <= 1.0 && mrow[j] <= 1.0
                     && newmrow[j-1] <= 1.0 && mrow[j-1] <= 1.0)) {
                 n++;
@@ -246,11 +240,11 @@ facet_level_coeffs(GwyDataField *dfield, GwyDataField *mfield,
         newmrow += xres;
 
         for (j = 1; j < xres; j++) {
-            if (masking_type == LEVEL_IGNORE
-                || (masking_type == LEVEL_INCLUDE
+            if (masking_type == GWY_MASK_IGNORE
+                || (masking_type == GWY_MASK_INCLUDE
                     && newmrow[j] >= 1.0 && mrow[j] >= 1.0
                     && newmrow[j-1] >= 1.0 && mrow[j-1] >= 1.0)
-                || (masking_type == LEVEL_EXCLUDE
+                || (masking_type == GWY_MASK_EXCLUDE
                     && newmrow[j] <= 1.0 && mrow[j] <= 1.0
                     && newmrow[j-1] <= 1.0 && mrow[j-1] <= 1.0)) {
                 vx = 0.5*(newrow[j] + row[j] - newrow[j-1] - row[j-1])/xr;
@@ -280,9 +274,9 @@ level_dialog(LevelArgs *args,
 {
     enum { RESPONSE_RESET = 1 };
     static const GwyEnum modes[] = {
-        { N_("_Exclude region under mask"),      LEVEL_EXCLUDE, },
-        { N_("Exclude region _outside mask"),    LEVEL_INCLUDE, },
-        { N_("Use entire _image (ignore mask)"), LEVEL_IGNORE,  },
+        { N_("_Exclude region under mask"),      GWY_MASK_EXCLUDE, },
+        { N_("Exclude region _outside mask"),    GWY_MASK_INCLUDE, },
+        { N_("Use entire _image (ignore mask)"), GWY_MASK_IGNORE,  },
     };
 
     GtkWidget *dialog, *label, *table;

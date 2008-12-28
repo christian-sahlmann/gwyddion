@@ -32,6 +32,12 @@ typedef enum {
 } GwyMergeType;
 
 typedef enum {
+    GWY_MASK_EXCLUDE = 0,
+    GWY_MASK_INCLUDE = 1,
+    GWY_MASK_IGNORE  = 2,
+} GwyMaskingType;
+
+typedef enum {
     GWY_WATERSHED_STATE_INIT,
     GWY_WATERSHED_STATE_LOCATE,
     GWY_WATERSHED_STATE_MIN,

@@ -33,18 +33,12 @@
 #define LEVEL_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
 typedef enum {
-    LEVEL_EXCLUDE,
-    LEVEL_INCLUDE,
-    LEVEL_IGNORE,
-} LevelMaskingType;
-
-typedef enum {
     LEVEL_SUBTRACT,
     LEVEL_ROTATE,
 } LevelMethod;
 
 typedef struct {
-    LevelMaskingType level_mode;
+    GwyMaskingType level_mode;
 } LevelArgs;
 
 typedef struct {
@@ -75,7 +69,7 @@ static void      level_load_args     (GwyContainer *container, LevelArgs *args);
 static void      level_save_args     (GwyContainer *container, LevelArgs *args);
 
 static const LevelArgs level_defaults = {
-    LEVEL_EXCLUDE
+    GWY_MASK_EXCLUDE
 };
 
 static GwyModuleInfo module_info = {
@@ -166,13 +160,13 @@ do_level(GwyContainer *data,
             return;
     }
     if (!mfield)
-        args.level_mode = LEVEL_IGNORE;
+        args.level_mode = GWY_MASK_IGNORE;
 
-    if (args.level_mode == LEVEL_IGNORE)
+    if (args.level_mode == GWY_MASK_IGNORE)
         mfield = NULL;
     if (mfield)
         mfield = gwy_data_field_duplicate(mfield);
-    if (mfield && args.level_mode == LEVEL_EXCLUDE) {
+    if (mfield && args.level_mode == GWY_MASK_EXCLUDE) {
         gwy_data_field_multiply(mfield, -1.0);
         gwy_data_field_add(mfield, 1.0);
     }
@@ -250,9 +244,9 @@ level_dialog(LevelArgs *args,
 {
     enum { RESPONSE_RESET = 1 };
     static const GwyEnum modes[] = {
-        { N_("_Exclude region under mask"),      LEVEL_EXCLUDE, },
-        { N_("Exclude region _outside mask"),    LEVEL_INCLUDE, },
-        { N_("Use entire _image (ignore mask)"), LEVEL_IGNORE,  },
+        { N_("_Exclude region under mask"),      GWY_MASK_EXCLUDE, },
+        { N_("Exclude region _outside mask"),    GWY_MASK_INCLUDE, },
+        { N_("Use entire _image (ignore mask)"), GWY_MASK_IGNORE,  },
     };
 
     GtkWidget *dialog, *label, *table;

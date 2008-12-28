@@ -277,6 +277,21 @@ gwy_correlation_type_get_enum(void)
  **/
 
 /**
+ * GwyMaskingType:
+ * @GWY_MASK_EXCLUDE: Exclude data under mask, i.e. take into account only
+ *                    data not covered by the mask.
+ * @GWY_MASK_INCLUDE: Take into account only data under the mask.
+ * @GWY_MASK_IGNORE: Ignore mask, if present, and use all data.
+ *
+ * Mask handling in procedures that can apply masking.
+ *
+ * FIXME: At present this is used namely by modules, the mask-application
+ * interfaces of #GwyDataField methods are not very consistent.
+ *
+ * Since: 2.12
+ **/
+
+/**
  * GwyTransformDirection:
  * @GWY_TRANSFORM_DIRECTION_BACKWARD: Backward (inverse) transform.
  * @GWY_TRANSFORM_DIRECTION_FORWARD: Forward (direct) transform.

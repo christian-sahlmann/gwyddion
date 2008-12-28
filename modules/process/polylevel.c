@@ -39,12 +39,6 @@ enum {
     MAX_DEGREE = 12
 };
 
-typedef enum {
-    LEVEL_IGNORE = 0,
-    LEVEL_EXCLUDE,
-    LEVEL_INCLUDE,
-} LevelMaskingType;
-
 typedef struct {
     gint col_degree;
     gint row_degree;
@@ -52,7 +46,7 @@ typedef struct {
     gboolean do_extract;
     gboolean same_degree;
     gboolean independent;
-    LevelMaskingType masking;
+    GwyMaskingType masking;
 } PolyLevelArgs;
 
 typedef struct {
@@ -114,7 +108,7 @@ static const PolyLevelArgs poly_level_defaults = {
     FALSE,
     TRUE,
     TRUE,
-    LEVEL_IGNORE,
+    GWY_MASK_IGNORE,
 };
 
 static GwyModuleInfo module_info = {
@@ -252,7 +246,7 @@ poly_level_do_with_mask(GwyDataField *dfield,
     }
 
     coeffs = gwy_data_field_fit_poly(dfield, mask, nterms, term_powers,
-                                     args->masking == LEVEL_EXCLUDE, NULL);
+                                     args->masking == GWY_MASK_EXCLUDE, NULL);
     gwy_data_field_subtract_poly(result, nterms, term_powers, coeffs);
     gwy_data_field_data_changed(result);
 
@@ -283,7 +277,7 @@ poly_level_do(GwyContainer *data,
     if (args->do_extract)
         bg = gwy_data_field_new_alike(dfield, TRUE);
 
-    if (mfield && args->masking != LEVEL_IGNORE)
+    if (mfield && args->masking != GWY_MASK_IGNORE)
         poly_level_do_with_mask(dfield, mfield, dfield, bg, args);
     else if (args->independent)
         poly_level_do_independent(dfield, dfield, bg,
@@ -507,11 +501,11 @@ poly_level_dialog(PolyLevelArgs *args,
             = gwy_radio_buttons_createl(G_CALLBACK(poly_level_masking_changed),
                                         &controls, args->masking,
                                         _("_Exclude region under mask"),
-                                        LEVEL_EXCLUDE,
+                                        GWY_MASK_EXCLUDE,
                                         _("Exclude region _outside mask"),
-                                        LEVEL_INCLUDE,
+                                        GWY_MASK_INCLUDE,
                                         _("Use entire _image (ignore mask)"),
-                                        LEVEL_IGNORE,
+                                        GWY_MASK_IGNORE,
                                         NULL);
         row = gwy_radio_buttons_attach_to_table(controls.masking_group,
                                                 GTK_TABLE(table), 3, row);
@@ -731,7 +725,7 @@ poly_level_update_preview(PolyLevelControls *controls,
     gwy_data_field_copy(source, leveled, FALSE);
     gwy_data_field_clear(bg);
 
-    if (mask && args->masking != LEVEL_IGNORE)
+    if (mask && args->masking != GWY_MASK_IGNORE)
         poly_level_do_with_mask(source, mask, leveled, bg, args);
     else if (args->independent)
         poly_level_do_independent(source, leveled, bg,
@@ -754,7 +748,7 @@ sanitize_args(PolyLevelArgs *args)
     args->col_degree = CLAMP(args->col_degree, 0, MAX_DEGREE);
     args->row_degree = CLAMP(args->row_degree, 0, MAX_DEGREE);
     args->max_degree = CLAMP(args->max_degree, 0, MAX_DEGREE);
-    args->masking = MIN(args->masking, LEVEL_INCLUDE);
+    args->masking = MIN(args->masking, GWY_MASK_INCLUDE);
     args->do_extract = !!args->do_extract;
     args->independent = !!args->independent;
     args->same_degree = !!args->same_degree;
