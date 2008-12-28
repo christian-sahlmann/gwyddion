@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2006-2007 Martin Hason, David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2006-2008 Martin Hason, David Necas (Yeti), Petr Klapetek.
  *  E-mail: hasonm@physics.muni.cz, yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -41,10 +41,6 @@
 #define GWY_TOOL_ROUGHNESS_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS((obj), \
                                            GWY_TYPE_TOOL_ROUGHNESS, \
                                            GwyToolRoughnessClass))
-
-enum {
-    RESPONSE_SAVE = 1024
-};
 
 typedef enum {
     UNITS_NONE,
@@ -188,6 +184,10 @@ struct _GwyToolRoughness {
     GtkObject *cutoff;
     GtkWidget *interpolation;
 
+    GtkBox *aux_box;
+    GtkWidget *copy;
+    GtkWidget *save;
+
     /* potential class data */
     GwySIValueFormat *none_format;
     GType layer_type_line;
@@ -203,6 +203,9 @@ static void     gwy_tool_roughness_finalize          (GObject *object);
 static void     gwy_tool_roughness_init_params       (GwyToolRoughness *tool);
 static void     gwy_tool_roughness_init_dialog       (GwyToolRoughness *tool);
 static GtkWidget* gwy_tool_roughness_param_view_new(GwyToolRoughness *tool);
+static GtkWidget* gwy_tool_roughness_add_aux_button  (GwyToolRoughness *tool,
+                                                      const gchar *stock_id,
+                                                      const gchar *tooltip);
 static void     gwy_tool_roughness_data_switched     (GwyTool *gwytool,
                                                       GwyDataView *data_view);
 static void     gwy_tool_roughness_response          (GwyTool *tool,
@@ -275,7 +278,8 @@ static void    gwy_tool_roughness_graph_adf    (GwyRoughnessProfiles *profiles);
 static void    gwy_tool_roughness_graph_brc    (GwyRoughnessProfiles *profiles);
 static void    gwy_tool_roughness_graph_pc     (GwyRoughnessProfiles *profiles);
 static void    gwy_tool_roughness_save         (GwyToolRoughness *tool);
-static gchar*  gwy_tool_roughness_report_create(gpointer user_data,
+static void    gwy_tool_roughness_copy         (GwyToolRoughness *tool);
+static gchar*  gwy_tool_roughness_create_report(gpointer user_data,
                                                 gssize *data_len);
 
 static const GwyRoughnessParameterInfo parameters[] = {
@@ -626,7 +630,7 @@ static GwyModuleInfo module_info = {
     N_("Calculate surface profile parameters."),
     "Martin Hasoň <hasonm@physics.muni.cz>, "
         "Yeti <yeti@gwyddion.net>",
-    "1.2",
+    "1.3",
     "Martin Hasoň & David Nečas (Yeti)",
     "2006",
 };
@@ -821,6 +825,20 @@ gwy_tool_roughness_init_dialog(GwyToolRoughness *tool)
     treeview = gwy_tool_roughness_param_view_new(tool);
     gtk_container_add(GTK_CONTAINER(scwin), treeview);
 
+    hbox = gtk_hbox_new(FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(vbox_left), hbox, FALSE, FALSE, 0);
+    tool->aux_box = GTK_BOX(hbox);
+  
+    tool->save = gwy_tool_roughness_add_aux_button(tool, GTK_STOCK_SAVE,
+                                                   _("Save table to a file"));
+    g_signal_connect_swapped(tool->save, "clicked",
+                             G_CALLBACK(gwy_tool_roughness_save), tool);
+
+    tool->copy = gwy_tool_roughness_add_aux_button(tool, GTK_STOCK_COPY,
+                                                  _("Copy table to clipboard"));
+    g_signal_connect_swapped(tool->save, "clicked",
+                             G_CALLBACK(gwy_tool_roughness_copy), tool);
+
     table = gtk_table_new(4, 4, FALSE);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
@@ -882,12 +900,10 @@ gwy_tool_roughness_init_dialog(GwyToolRoughness *tool)
     gtk_size_group_add_widget(sizegroup, GTK_WIDGET(axis));
     g_object_unref(sizegroup);
 
-    gtk_dialog_add_button(dialog, GTK_STOCK_SAVE, RESPONSE_SAVE);
     gwy_plain_tool_add_clear_button(GWY_PLAIN_TOOL(tool));
     gwy_tool_add_hide_button(GWY_TOOL(tool), FALSE);
     gtk_dialog_add_button(dialog, GTK_STOCK_APPLY, GTK_RESPONSE_APPLY);
     gtk_dialog_set_default_response(dialog, GTK_RESPONSE_APPLY);
-    gtk_dialog_set_response_sensitive(dialog, RESPONSE_SAVE, FALSE);
 
     gtk_widget_show_all(dialog_vbox);
 }
@@ -1079,8 +1095,27 @@ gwy_tool_roughness_response(GwyTool *tool,
 
     if (response_id == GTK_RESPONSE_APPLY)
         gwy_tool_roughness_apply(GWY_TOOL_ROUGHNESS(tool));
-    if (response_id == RESPONSE_SAVE)
-        gwy_tool_roughness_save(GWY_TOOL_ROUGHNESS(tool));
+}
+
+static GtkWidget*
+gwy_tool_roughness_add_aux_button(GwyToolRoughness *tool,
+                                  const gchar *stock_id,
+                                  const gchar *tooltip)
+{
+    GtkTooltips *tips;
+    GtkWidget *button;
+
+    tips = gwy_app_get_tooltips();
+    button = gtk_button_new();
+    gtk_button_set_relief(GTK_BUTTON(button), GTK_RELIEF_NONE);
+    gtk_tooltips_set_tip(tips, button, tooltip, NULL);
+    gtk_container_add(GTK_CONTAINER(button),
+                      gtk_image_new_from_stock(stock_id,
+                                               GTK_ICON_SIZE_SMALL_TOOLBAR));
+    gtk_box_pack_end(tool->aux_box, button, FALSE, FALSE, 0);
+    gtk_widget_set_sensitive(button, FALSE);
+
+    return button;
 }
 
 static void
@@ -1144,7 +1179,8 @@ gwy_tool_roughness_selection_changed(GwyPlainTool *plain_tool,
     gwy_tool_roughness_update(tool);
     dialog = GTK_DIALOG(GWY_TOOL(tool)->dialog);
     gtk_dialog_set_response_sensitive(dialog, GTK_RESPONSE_APPLY, n > 0);
-    gtk_dialog_set_response_sensitive(dialog, RESPONSE_SAVE, n > 0);
+    gtk_widget_set_sensitive(tool->save, n > 0);
+    gtk_widget_set_sensitive(tool->copy, n > 0);
 }
 
 static void
@@ -2107,13 +2143,48 @@ gwy_tool_roughness_save(GwyToolRoughness *tool)
 
     gwy_save_auxiliary_with_callback(_("Save Roughness Parameters"),
                                      GTK_WINDOW(GWY_TOOL(tool)->dialog),
-                                     &gwy_tool_roughness_report_create,
+                                     &gwy_tool_roughness_create_report,
                                      (GwySaveAuxiliaryDestroy)g_free,
                                      &report_data);
+    g_free(report_data.params);
+}
+
+static void
+gwy_tool_roughness_copy(GwyToolRoughness *tool)
+{
+    GwyPlainTool *plain_tool;
+    ToolReportData report_data;
+    GtkClipboard *clipboard;
+    GdkDisplay *display;
+    GdkAtom atom;
+    gssize len;
+    gchar *text;
+
+    g_return_if_fail(tool->dataline);
+    plain_tool = GWY_PLAIN_TOOL(tool);
+
+    report_data.args = tool->args;
+    report_data.params = g_memdup(tool->params,
+                                  ROUGHNESS_NPARAMS*sizeof(gdouble));
+    gwy_selection_get_object(plain_tool->selection, 0, report_data.line);
+    report_data.none_format = tool->none_format;
+    report_data.same_units = tool->same_units;
+    report_data.container = plain_tool->container;
+    report_data.data_field = plain_tool->data_field;
+    report_data.id = plain_tool->id;
+
+    text = gwy_tool_roughness_create_report(&report_data, &len);
+    atom = gdk_atom_intern("CLIPBOARD", FALSE);
+    display = gtk_widget_get_display(GTK_WIDGET(GWY_TOOL(tool)->dialog));
+    clipboard = gtk_clipboard_get_for_display(display, atom);
+    gtk_clipboard_set_text(clipboard, text, -1);
+    g_free(text);
+
+    g_free(report_data.params);
 }
 
 static gchar*
-gwy_tool_roughness_report_create(gpointer user_data,
+gwy_tool_roughness_create_report(gpointer user_data,
                                  gssize *data_len)
 {
     const ToolReportData *report_data = (const ToolReportData*)user_data;
