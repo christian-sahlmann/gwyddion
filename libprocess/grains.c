@@ -1176,7 +1176,7 @@ gwy_data_field_grains_get_values(GwyDataField *data_field,
 
         case GWY_GRAIN_VALUE_MEAN:
         sizes = g_new0(gint, ngrains + 1);
-        memset(values, 0, (ngrains + 1)*sizeof(gdouble));
+        gwy_clear(values, ngrains + 1);
         for (i = 0; i < nn; i++) {
             gno = grains[i];
             values[gno] += d[i];
@@ -1219,7 +1219,7 @@ gwy_data_field_grains_get_values(GwyDataField *data_field,
         break;
 
         case GWY_GRAIN_VALUE_FLAT_BOUNDARY_LENGTH:
-        memset(values, 0, (ngrains + 1)*sizeof(gdouble));
+        gwy_clear(values, ngrains + 1);
         q = hypot(qh, qv);
         for (i = 0; i <= yres; i++) {
             for (j = 0; j <= xres; j++) {
@@ -1246,8 +1246,8 @@ gwy_data_field_grains_get_values(GwyDataField *data_field,
                 }
                 else if (g2 && g3) {
                     /* This works for both g2 == g3 and g2 != g3 */
-                    values[g1] += q/2.0;
-                    values[g4] += q/2.0;
+                    values[g2] += q/2.0;
+                    values[g3] += q/2.0;
                 }
                 else if (g1 == g2)
                     values[g1 | g3] += qh;
@@ -1260,8 +1260,41 @@ gwy_data_field_grains_get_values(GwyDataField *data_field,
         }
         break;
 
+        case GWY_GRAIN_VALUE_BOUNDARY_MINIMUM:
+        case GWY_GRAIN_VALUE_BOUNDARY_MAXIMUM:
+        q = (quantity == GWY_GRAIN_VALUE_BOUNDARY_MINIMUM)
+            ? G_MAXDOUBLE : -G_MAXDOUBLE;
+        for (i = 0; i <= ngrains; i++)
+            values[i] = q;
+        for (i = 0; i < yres; i++) {
+            for (j = 0; j < xres; j++) {
+                gdouble z;
+
+                /* Processing of the none-grain boundary is waste of time. */
+                if (!(gno = grains[i*xres + j]))
+                    continue;
+
+                if ((i == 0 || grains[(i - 1)*xres + j] == gno)
+                    && (j == 0 || grains[i*xres + j - 1] == gno)
+                    && (j == xres-1 || grains[i*xres + j + 1] == gno)
+                    && (i == yres-1 || grains[(i + 1)*xres + j] == gno))
+                    continue;
+
+                z = d[i*xres + j];
+                if (quantity == GWY_GRAIN_VALUE_BOUNDARY_MINIMUM) {
+                    if (z < values[gno])
+                        values[gno] = z;
+                }
+                else {
+                    if (z > values[gno])
+                        values[gno] = z;
+                }
+            }
+        }
+        break;
+
         case GWY_GRAIN_VALUE_SURFACE_AREA:
-        memset(values, 0, (ngrains + 1)*sizeof(gdouble));
+        gwy_clear(values, ngrains + 1);
         q = qh*qv/8.0;
         qh = qh*qh;
         qv = qv*qv;
@@ -1362,7 +1395,7 @@ gwy_data_field_grains_get_values(GwyDataField *data_field,
 
         case GWY_GRAIN_VALUE_CENTER_X:
         sizes = g_new0(gint, ngrains + 1);
-        memset(values, 0, (ngrains + 1)*sizeof(gdouble));
+        gwy_clear(values, ngrains + 1);
         for (i = 0; i < yres; i++) {
             for (j = 0; j < xres; j++) {
                 gno = grains[i*xres + j];
@@ -1378,7 +1411,7 @@ gwy_data_field_grains_get_values(GwyDataField *data_field,
 
         case GWY_GRAIN_VALUE_CENTER_Y:
         sizes = g_new0(gint, ngrains + 1);
-        memset(values, 0, (ngrains + 1)*sizeof(gdouble));
+        gwy_clear(values, ngrains + 1);
         for (i = 0; i < yres; i++) {
             for (j = 0; j < xres; j++) {
                 gno = grains[i*xres + j];
@@ -1403,7 +1436,7 @@ gwy_data_field_grains_get_values(GwyDataField *data_field,
         else
             tmp = NULL;
 
-        memset(values, 0, (ngrains + 1)*sizeof(gdouble));
+        gwy_clear(values, ngrains + 1);
         for (i = 0; i < yres; i++) {
             for (j = 0; j < xres; j++) {
                 gint ix, ipx, imx, jp, jm;
@@ -1437,7 +1470,7 @@ gwy_data_field_grains_get_values(GwyDataField *data_field,
         break;
 
         case GWY_GRAIN_VALUE_VOLUME_LAPLACE:
-        memset(values, 0, (ngrains + 1)*sizeof(gdouble));
+        gwy_clear(values, ngrains + 1);
         /* Fail gracefully when there is one big `grain' over all data */
         pos = gwy_data_field_get_grain_bounding_boxes(data_field,
                                                       ngrains, grains, NULL);
@@ -1507,7 +1540,7 @@ gwy_data_field_grains_get_values(GwyDataField *data_field,
 
         default:
         g_warning("Wrong grain quantity %d", (gint)quantity);
-        memset(values, 0, (ngrains + 1)*sizeof(gdouble));
+        gwy_clear(values, ngrains + 1);
         break;
     }
 

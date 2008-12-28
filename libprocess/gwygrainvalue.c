@@ -122,6 +122,24 @@ grain_values[] = {
         }
     },
     {
+        N_("Minimum value on boundary"),
+        GWY_GRAIN_VALUE_BOUNDARY_MINIMUM,
+        {
+            GWY_GRAIN_VALUE_GROUP_VALUE,
+            "<i>b</i><sub>min</sub>", "b_min", NULL,
+            0, 1, 0, 0,
+        }
+    },
+    {
+        N_("Maximum value on boundary"),
+        GWY_GRAIN_VALUE_BOUNDARY_MAXIMUM,
+        {
+            GWY_GRAIN_VALUE_GROUP_VALUE,
+            "<i>b</i><sub>max</sub>", "b_max", NULL,
+            0, 1, 0, 0,
+        }
+    },
+    {
         N_("Projected area"),
         GWY_GRAIN_VALUE_PROJECTED_AREA,
         {
@@ -1079,7 +1097,7 @@ gwy_grain_values_calculate(gint nvalues,
 
         /* Expressions */
         gwy_grain_value_resolve_expression(gvalue->expression, vars, NULL);
-        memset(mapped, 0, (MAXBUILTINS + 1)*sizeof(gdouble*));
+        gwy_clear(mapped, MAXBUILTINS + 1);
         for (q = 0; q < MAXBUILTINS; q++) {
             if (vars[q]) {
                 g_assert(quantities[q]);

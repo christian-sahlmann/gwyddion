@@ -175,6 +175,8 @@ typedef enum {
     GWY_GRAIN_VALUE_VOLUME_LAPLACE       = 20,
     GWY_GRAIN_VALUE_SLOPE_THETA          = 23,
     GWY_GRAIN_VALUE_SLOPE_PHI            = 24,
+    GWY_GRAIN_VALUE_BOUNDARY_MAXIMUM     = 25,
+    GWY_GRAIN_VALUE_BOUNDARY_MINIMUM     = 26,
 } GwyGrainQuantity;
 
 typedef enum {
