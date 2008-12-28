@@ -177,7 +177,7 @@ function check_desktop() {
 
 
 function install_to_tmp() {
-  make -k install
+  make -k install schemadir=
 }
 
 
