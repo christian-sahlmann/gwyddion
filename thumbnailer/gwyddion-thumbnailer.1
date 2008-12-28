@@ -9,9 +9,7 @@ gwyddion-thumbnailer \-\- Create thumbnails of SPM data files
 .PP
 \fBgwyddion-thumbnailer\fR {\fB\-\-version\fR | \fB\-\-help\fR}
 .br
-\fBgwyddion-thumbnailer\fR \fBgnome2\fR \fIMAX-SIZE\fR \fIINPUT-FILE\fR \fIOUTPUT-FILE\fR
-.br
-\fBgwyddion-thumbnailer\fR \fBtms\fR \fIMAX-SIZE\fR \fIINPUT-FILE\fR
+\fBgwyddion-thumbnailer\fR [\fIOPTIONS\fR...] \fIMODE\fR \fIARGUMENTS...\fR
 .
 .
 .SH DESCRIPTION
@@ -20,13 +18,14 @@ Gwyddion-thumbnailer creates thumbnails of SPM (Scanning Probe Microscope)
 image files.  Depending on the mode of operation, described below, the
 thumbnails are written to conform to various desktop standards so that they
 can be displayed in
-.BR nautilus (1)
+.BR nautilus (1),
+.BR Thunar (1)
 and similar file managers.
 .PP
-Since gwyddion-thumbnailer loads and renders files using
+Gwyddion-thumbnailer loads and renders files using
 .BR gwyddion (1)
-libraries and modules, it can create thumbnails of all file formats supported
-by your Gwyddion installation.  This also means it inherits all Gwyddion
+libraries and modules, therefore it can create thumbnails of all file formats
+supported by your Gwyddion installation.  This also means it inherits Gwyddion
 settings, e.g. the default false color gradient, and that it is influenced by
 the same environment variables as Gwyddion.
 .
@@ -34,13 +33,31 @@ the same environment variables as Gwyddion.
 .SH INFORMATIVE OPTIONS
 .TP
 \fB\-h\fR, \fB\-\-help\fR
-Prints a brief help and terminates.
+Print a brief help and terminates.
 .TP
 \fB\-v\fR, \fB\-\-version\fR
-Prints version information and terminates.
+Print version information and terminates.
+.
+.
+.SH THUMBNAILING OPTIONS
+.TP
+\fB\-\-update\fR
+Write thumbnail only if it does not exist yet or does not seem to be
+up-to-date.  By default, gwyddion-thumbnailer overwrites existing thumbnails
+with fresh ones even if they were up to date.
+.
+.
+.SH MODE
+.PP
+Two modes are available: \fBgnome2\fR and \fBtms\fB.  They are described
+below.
 .
 .
 .SH GNOME 2
+.PP
+Synopsis:
+.sp
+\fBgwyddion-thumbnailer\fR [\fIOPTIONS\fR...] \fBgnome2\fR \fIMAX-SIZE\fR \fIINPUT-FILE\fR \fIOUTPUT-FILE\fR
 .PP
 In \fBgnome2\fR mode, gwyddion-thumbnailer creates PNG thumbnails according to
 the Gnome thumbnailer specification.  Usings the convention from this
@@ -52,8 +69,9 @@ gwyddion-thumbnailer gnome2 %s %i %o
 .fi
 .RE
 .PP
-Gwyddion installs thumbnailers for all file types it supports by default, so
-usually this should Just Work and should not need to be set up manually.
+Gwyddion installs the corresponding GConf schemas and enables thumbnailers for
+all file types it supports by default, so usually this should Just Work and
+should not need to be set up manually.
 .PP
 The thumbnails created in \fBgnome2\fR more are identical as in \fBtms\fR mode,
 including all the PNG auxiliary chunks (provided that the same \fIMAX\-SIZE\fR
@@ -62,12 +80,18 @@ as in \fBtms\fR mode is specified, of course).
 .
 .SH TMS
 .PP
-In \fBtms\fR mode, gwyddion-thumbnailer creates PNG thumbnails according to the
-Thumbnail Managing Standard.  Only normal-sized thumbnails are
-supported at this moment, i.e. \fIMAX\-SIZE\fR must be either \fB128\fR or
-\fBnormal\fR (with the same meaning).
+Synopsis:
+.sp
+\fBgwyddion-thumbnailer\fR [\fIOPTIONS\fR...] \fBtms\fR \fIMAX-SIZE\fR \fIINPUT-FILE\fR
 .PP
-Output file name is not given as it is prescribed by the TMS.
+In \fBtms\fR mode, gwyddion-thumbnailer creates PNG thumbnails according to the
+Thumbnail Managing Standard.  Argument  \fIMAX\-SIZE\fR must be
+\fB128\fR or \fBnormal\fR (both meaning 128 pixels) or \fB256\fR or
+\fBlarge\fR (both meaning 256 pixels).
+.PP
+Output file name is not given as it is prescribed by the TMS.  The thumbnail
+is placed to the directory for normal or large thumbnails according to given
+\fIMAX-SIZE\fR.
 .PP
 This mode can also be useful for manual batch-creation of thumbnails.
 For instance, to create them for all \fB*.afm\fR files in directory
@@ -76,7 +100,7 @@ For instance, to create them for all \fB*.afm\fR files in directory
 .RS 4
 .nf
 find scans -type f -name '*.afm' -print0 \\
-    | xargs -0 -n 1 gwyddion-thumbnailer tms normal
+    | xargs -0 -n 1 gwyddion-thumbnailer --update tms normal
 .fi
 .RE
 .PP
