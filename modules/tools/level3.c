@@ -104,7 +104,7 @@ static GwyModuleInfo module_info = {
     N_("Three-point level tool, levels data by subtracting a plane fitted "
        "through three selected points."),
     "Yeti <yeti@gwyddion.net>",
-    "2.4",
+    "2.5",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -236,6 +236,7 @@ gwy_tool_level3_init_dialog(GwyToolLevel3 *tool)
                        TRUE, TRUE, 0);
 
     table = gtk_table_new(3, 3, FALSE);
+    gtk_table_set_col_spacings(table, 6);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_box_pack_start(GTK_BOX(dialog->vbox), table, TRUE, TRUE, 0);
 
