@@ -38,12 +38,17 @@ output.append(magic['comment'] % ('This is a ' + 'GENERATED' + ' file.'))
 for filename in sys.argv[2:]:
     base = os.path.basename(filename)
     try:
+        # output From module... comment only if something is found
         comment = magic['comment'] % ('From module ' + base)
         for m in magic_block_re.finditer(file(filename).read()):
             if comment:
                 output.append(comment)
                 comment = None
             output.append(re.sub(r'(?m)^ \* ', '', m.group('body')))
+        # and when nothing is found, note it
+        if comment:
+            comment = magic['comment'] % ('Module %s contains no magic.' % base)
+            output.append(comment + '\n')
     except OSError:
         sys.stderr.write('Cannot read %s\n' % filename)
         sys.exit(1)

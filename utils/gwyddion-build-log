@@ -154,6 +154,7 @@ coding_style_report
 printerr install_to_tmp grep -vFf build_project.err
 printerr check_headers
 printerr check_symbols
+printerr check_desktop
 printerr check_coding_style
 printerr make_dists grep -vFf build_project.err
 printerr gnains_index
