@@ -85,7 +85,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Rotates data by arbitrary angle."),
     "Yeti <yeti@gwyddion.net>",
-    "1.8",
+    "1.9",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -176,8 +176,12 @@ rotate(GwyContainer *data, GwyRunType run)
     dfields[0] = gwy_data_field_duplicate(dfields[0]);
     rotate_datafield(dfields[0], &args);
     if (dfields[1]) {
+        GwyInterpolationType interp = args.interp;
+
         dfields[1] = gwy_data_field_duplicate(dfields[1]);
+        args.interp = GWY_INTERPOLATION_ROUND;
         rotate_datafield(dfields[1], &args);
+        args.interp = interp;
     }
     if (dfields[2]) {
         dfields[2] = gwy_data_field_duplicate(dfields[2]);

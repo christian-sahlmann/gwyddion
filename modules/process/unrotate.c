@@ -88,7 +88,7 @@ static GwyModuleInfo module_info = {
     N_("Rotates data to make characteristic directions parallel "
        "with x or y axis."),
     "Yeti <yeti@gwyddion.net>",
-    "2.3",
+    "2.4",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -162,7 +162,7 @@ unrotate(GwyContainer *data, GwyRunType run)
     gwy_data_field_rotate(dfield, phi, args.interp);
     gwy_data_field_data_changed(dfield);
     if (mfield) {
-        gwy_data_field_rotate(mfield, phi, args.interp);
+        gwy_data_field_rotate(mfield, phi, GWY_INTERPOLATION_ROUND);
         gwy_data_field_data_changed(mfield);
     }
     if (sfield) {
