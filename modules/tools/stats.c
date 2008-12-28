@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003-2006 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003-2008 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -37,10 +37,6 @@
 #define GWY_TOOL_STATS(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_TOOL_STATS, GwyToolStats))
 #define GWY_IS_TOOL_STATS(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj), GWY_TYPE_TOOL_STATS))
 #define GWY_TOOL_STATS_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_TOOL_STATS, GwyToolStatsClass))
-
-enum {
-    RESPONSE_SAVE = 1024
-};
 
 typedef struct _GwyToolStats      GwyToolStats;
 typedef struct _GwyToolStatsClass GwyToolStatsClass;
@@ -87,6 +83,9 @@ struct _GwyToolStats {
 
     GwyRectSelectionLabels *rlabels;
     GtkWidget *update;
+    GtkBox *aux_box;
+    GtkWidget *copy;
+    GtkWidget *save;
 
     GtkWidget *avg;
     GtkWidget *min;
@@ -122,6 +121,9 @@ static gboolean module_register(void);
 static GType gwy_tool_stats_get_type              (void) G_GNUC_CONST;
 static void  gwy_tool_stats_finalize              (GObject *object);
 static void  gwy_tool_stats_init_dialog           (GwyToolStats *tool);
+static GtkWidget* gwy_tool_stats_add_aux_button   (GwyToolStats *tool,
+                                                   const gchar *stock_id,
+                                                   const gchar *tooltip);
 static void  gwy_tool_stats_data_switched         (GwyTool *gwytool,
                                                    GwyDataView *data_view);
 static void  gwy_tool_stats_data_changed          (GwyPlainTool *plain_tool);
@@ -141,7 +143,8 @@ static void  gwy_tool_stats_use_mask_changed      (GtkToggleButton *toggle,
 static void  gwy_tool_stats_instant_update_changed(GtkToggleButton *check,
                                                    GwyToolStats *tool);
 static void  gwy_tool_stats_save                  (GwyToolStats *tool);
-static gchar* gwy_tool_stats_report_create        (gpointer user_data,
+static void  gwy_tool_stats_copy                  (GwyToolStats *tool);
+static gchar* gwy_tool_stats_create_report        (gpointer user_data,
                                                    gssize *data_len);
 
 static GwyModuleInfo module_info = {
@@ -149,7 +152,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Statistics tool."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "2.7",
+    "2.8",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -248,6 +251,27 @@ gwy_tool_stats_init(GwyToolStats *tool)
                                      "rectangle");
 
     gwy_tool_stats_init_dialog(tool);
+}
+
+static GtkWidget*
+gwy_tool_stats_add_aux_button(GwyToolStats *tool,
+                              const gchar *stock_id,
+                              const gchar *tooltip)
+{
+    GtkTooltips *tips;
+    GtkWidget *button;
+
+    tips = gwy_app_get_tooltips();
+    button = gtk_button_new();
+    gtk_button_set_relief(GTK_BUTTON(button), GTK_RELIEF_NONE);
+    gtk_tooltips_set_tip(tips, button, tooltip, NULL);
+    gtk_container_add(GTK_CONTAINER(button),
+                      gtk_image_new_from_stock(stock_id,
+                                               GTK_ICON_SIZE_SMALL_TOOLBAR));
+    gtk_box_pack_end(tool->aux_box, button, FALSE, FALSE, 0);
+    gtk_widget_set_sensitive(button, FALSE);
+
+    return button;
 }
 
 static void
@@ -362,16 +386,28 @@ gwy_tool_stats_init_dialog(GwyToolStats *tool)
         row++;
     }
 
+    hbox = gtk_hbox_new(FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(dialog->vbox), hbox, FALSE, FALSE, 0);
+    tool->aux_box = GTK_BOX(hbox);
+  
+    tool->save = gwy_tool_stats_add_aux_button(tool, GTK_STOCK_SAVE,
+                                               _("Save table to a file"));
+    g_signal_connect_swapped(tool->save, "clicked",
+                             G_CALLBACK(gwy_tool_stats_save), tool);
+
+    tool->copy = gwy_tool_stats_add_aux_button(tool, GTK_STOCK_COPY,
+                                               _("Copy table to clipboard"));
+    g_signal_connect_swapped(tool->save, "clicked",
+                             G_CALLBACK(gwy_tool_stats_copy), tool);
+
     tool->update = gtk_dialog_add_button(dialog, _("_Update"),
                                          GWY_TOOL_RESPONSE_UPDATE);
     image = gtk_image_new_from_stock(GTK_STOCK_EXECUTE, GTK_ICON_SIZE_BUTTON);
     gtk_button_set_image(GTK_BUTTON(tool->update), image);
-    gtk_dialog_add_button(dialog, GTK_STOCK_SAVE, RESPONSE_SAVE);
     gwy_plain_tool_add_clear_button(GWY_PLAIN_TOOL(tool));
     gwy_tool_add_hide_button(GWY_TOOL(tool), TRUE);
 
     gtk_widget_set_sensitive(tool->update, !tool->args.instant_update);
-    gtk_dialog_set_response_sensitive(dialog, RESPONSE_SAVE, FALSE);
 
     gtk_widget_show_all(dialog->vbox);
 }
@@ -407,8 +443,8 @@ gwy_tool_stats_data_switched(GwyTool *gwytool,
         gwy_selection_set_max_objects(plain_tool->selection, 1);
     }
 
-    gtk_dialog_set_response_sensitive(GTK_DIALOG(gwytool->dialog),
-                                      RESPONSE_SAVE, data_view != NULL);
+    gtk_widget_set_sensitive(tool->copy, data_view != NULL);
+    gtk_widget_set_sensitive(tool->save, data_view != NULL);
 }
 
 static void
@@ -460,9 +496,7 @@ gwy_tool_stats_response(GwyTool *tool,
 {
     GWY_TOOL_CLASS(gwy_tool_stats_parent_class)->response(tool, response_id);
 
-    if (response_id == RESPONSE_SAVE)
-        gwy_tool_stats_save(GWY_TOOL_STATS(tool));
-    else if (response_id == GWY_TOOL_RESPONSE_UPDATE)
+    if (response_id == GWY_TOOL_RESPONSE_UPDATE)
         gwy_tool_stats_update_labels(GWY_TOOL_STATS(tool));
 }
 
@@ -704,9 +738,41 @@ gwy_tool_stats_save(GwyToolStats *tool)
 
     gwy_save_auxiliary_with_callback(_("Save Statistical Quantities"),
                                      GTK_WINDOW(GWY_TOOL(tool)->dialog),
-                                     &gwy_tool_stats_report_create,
+                                     &gwy_tool_stats_create_report,
                                      (GwySaveAuxiliaryDestroy)g_free,
                                      &report_data);
+}
+
+static void
+gwy_tool_stats_copy(GwyToolStats *tool)
+{
+    GwyPlainTool *plain_tool;
+    ToolReportData report_data;
+    GtkClipboard *clipboard;
+    GdkDisplay *display;
+    GdkAtom atom;
+    gssize len;
+    gchar *text;
+
+    plain_tool = GWY_PLAIN_TOOL(tool);
+    g_return_if_fail(plain_tool->container);
+    if (!tool->results_up_to_date)
+        gwy_tool_stats_update_labels(tool);
+
+    report_data.results = tool->results;
+    report_data.mask_in_use = tool->args.use_mask && plain_tool->mask_field;
+    report_data.same_units = tool->same_units;
+    report_data.angle_format = tool->angle_format;
+    report_data.container = plain_tool->container;
+    report_data.data_field = plain_tool->data_field;
+    report_data.id = plain_tool->id;
+
+    text = gwy_tool_stats_create_report(&report_data, &len);
+    atom = gdk_atom_intern("CLIPBOARD", FALSE);
+    display = gtk_widget_get_display(GTK_WIDGET(GWY_TOOL(tool)->dialog));
+    clipboard = gtk_clipboard_get_for_display(display, atom);
+    gtk_clipboard_set_text(clipboard, text, -1);
+    g_free(text);
 }
 
 #define fmt_val(v) \
@@ -715,7 +781,7 @@ gwy_tool_stats_save(GwyToolStats *tool)
                     *vf->units ? " " : "", vf->units)
 
 static gchar*
-gwy_tool_stats_report_create(gpointer user_data,
+gwy_tool_stats_create_report(gpointer user_data,
                              gssize *data_len)
 {
     const ToolReportData *report_data = (const ToolReportData*)user_data;
