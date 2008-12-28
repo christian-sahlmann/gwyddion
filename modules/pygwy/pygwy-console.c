@@ -49,10 +49,9 @@ static gboolean         pygwy_on_console_close(GtkWidget *widget,
 void
 pygwy_register_console()
 {
-
     if (gwy_process_func_register("pygwy_console",
                                   pygwy_console_run,
-                                  N_("/Pygwy console"),
+                                  N_("/Pygwy Console"),
                                   NULL,
                                   GWY_RUN_IMMEDIATE,
                                   GWY_MENU_FLAG_DATA,

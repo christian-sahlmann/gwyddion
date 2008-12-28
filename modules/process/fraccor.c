@@ -48,7 +48,7 @@ module_register(void)
 {
     gwy_process_func_register("fraccor",
                               (GwyProcessFunc)&fraccor,
-                              N_("/_Correct Data/_Fractal correction"),
+                              N_("/_Correct Data/_Fractal Correction"),
                               NULL,
                               FRACCOR_RUN_MODES,
                               GWY_MENU_FLAG_DATA_MASK | GWY_MENU_FLAG_DATA,

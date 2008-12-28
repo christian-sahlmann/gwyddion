@@ -180,7 +180,7 @@ module_register(void)
 {
     gwy_graph_func_register("graph_fdfit",
                             (GwyGraphFunc)&fit,
-                            N_("/_Fit FD curve..."),
+                            N_("/_Fit FD Curve..."),
                             GWY_STOCK_GRAPH_FUNCTION,
                             GWY_MENU_FLAG_GRAPH,
                             N_("Fit a force-distance curve"));

@@ -145,7 +145,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("2D FFT Filtering"),
     "Chris Anderson <sidewinder.asu@gmail.com>",
-    "1.6",
+    "1.6.1",
     "Chris Anderson, Molecular Imaging Corp.",
     "2005",
 };
@@ -157,7 +157,7 @@ module_register(void)
 {
     gwy_process_func_register("fft_filter_2d",
                               (GwyProcessFunc)&run_main,
-                              N_("/_Correct Data/_2D FFT filtering..."),
+                              N_("/_Correct Data/_2D FFT Filtering..."),
                               NULL,
                               FFTF_2D_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
@@ -403,7 +403,7 @@ run_dialog(ControlsType *controls)
     /* Setup tooltips */
     hash_tips = g_hash_table_new_full(g_str_hash, g_str_equal, NULL, NULL);
     build_tooltips(hash_tips);
-    tips = gtk_tooltips_new();
+    tips = gwy_app_get_tooltips();
 
     /* Setup sensitvity group */
     controls->sensgroup = gwy_sensitivity_group_new();

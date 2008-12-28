@@ -132,7 +132,7 @@ module_register(void)
 {
     gwy_process_func_register("fft_filter_1d",
                               (GwyProcessFunc)&fftf_1d,
-                              N_("/_Correct Data/1D _FFT filtering..."),
+                              N_("/_Correct Data/1D _FFT Filtering..."),
                               NULL,
                               FFTF_1D_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
