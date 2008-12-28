@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2007 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2007,2008 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -82,10 +82,14 @@ static void          compensate_drift             (GwyContainer *data,
 static void          drift_dialog                 (DriftArgs *args,
                                                    GwyContainer *data,
                                                    GwyDataField *dfield,
+                                                   GwyDataField *mfield,
+                                                   GwyDataField *sfield,
                                                    gint id);
 static void          run_noninteractive           (DriftArgs *args,
                                                    GwyContainer *data,
                                                    GwyDataField *dfield,
+                                                   GwyDataField *mfield,
+                                                   GwyDataField *sfield,
                                                    GwyDataField *result,
                                                    GwyDataLine *drift,
                                                    gint id);
@@ -150,7 +154,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Evaluates and/or correct thermal drift in fast scan axis."),
     "Petr Klapetek <petr@klapetek.cz>, Yeti <yeti@gwyddion.net>",
-    "2.2",
+    "2.3",
     "David Nečas (Yeti) & Petr Klapetek",
     "2007",
 };
@@ -176,20 +180,22 @@ static void
 compensate_drift(GwyContainer *data, GwyRunType run)
 {
     DriftArgs args;
-    GwyDataField *dfield;
+    GwyDataField *dfield, *mfield, *sfield;
     gint id;
 
     g_return_if_fail(run & DRIFT_RUN_MODES);
     drift_load_args(gwy_app_settings_get(), &args);
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
+                                     GWY_APP_MASK_FIELD, &mfield,
+                                     GWY_APP_SHOW_FIELD, &sfield,
                                      GWY_APP_DATA_FIELD_ID, &id,
                                      0);
     g_return_if_fail(dfield);
 
     if (run == GWY_RUN_IMMEDIATE)
-        run_noninteractive(&args, data, dfield, NULL, NULL, id);
+        run_noninteractive(&args, data, dfield, mfield, sfield, NULL, NULL, id);
     else {
-        drift_dialog(&args, data, dfield, id);
+        drift_dialog(&args, data, dfield, mfield, sfield, id);
         drift_save_args(gwy_app_settings_get(), &args);
     }
 }
@@ -198,6 +204,8 @@ static void
 drift_dialog(DriftArgs *args,
              GwyContainer *data,
              GwyDataField *dfield,
+             GwyDataField *mfield,
+             GwyDataField *sfield,
              gint id)
 {
     enum {
@@ -386,13 +394,13 @@ drift_dialog(DriftArgs *args,
     gtk_widget_destroy(dialog);
 
     if (controls.computed)
-        run_noninteractive(args, data, dfield,
+        run_noninteractive(args, data, dfield, mfield, sfield,
                            controls.result, controls.drift,
                            id);
     else {
         gwy_object_unref(controls.result);
         gwy_object_unref(controls.drift);
-        run_noninteractive(args, data, dfield, NULL, NULL, id);
+        run_noninteractive(args, data, dfield, mfield, sfield, NULL, NULL, id);
     }
 }
 
@@ -401,6 +409,8 @@ static void
 run_noninteractive(DriftArgs *args,
                    GwyContainer *data,
                    GwyDataField *dfield,
+                   GwyDataField *mfield,
+                   GwyDataField *sfield,
                    GwyDataField *result,
                    GwyDataLine *drift,
                    gint id)
@@ -424,9 +434,28 @@ run_noninteractive(DriftArgs *args,
         newid = gwy_app_data_browser_add_data_field(result, data, TRUE);
         gwy_app_set_data_field_title(data, newid, _("Drift-corrected"));
         gwy_app_sync_data_items(data, data, id, newid, FALSE,
-                                GWY_DATA_ITEM_PALETTE,
+                                GWY_DATA_ITEM_GRADIENT,
                                 GWY_DATA_ITEM_RANGE,
+                                GWY_DATA_ITEM_MASK_COLOR,
+                                GWY_DATA_ITEM_REAL_SQUARE,
                                 0);
+
+        if (mfield) {
+            mfield = gwy_data_field_duplicate(mfield);
+            apply_drift(mfield, drift, GWY_INTERPOLATION_ROUND);
+            gwy_container_set_object(data, gwy_app_get_mask_key_for_id(newid),
+                                     mfield);
+            g_object_unref(mfield);
+        }
+
+        if (sfield) {
+            sfield = gwy_data_field_duplicate(sfield);
+            apply_drift(sfield, drift, args->interp);
+            gwy_container_set_object(data, gwy_app_get_show_key_for_id(newid),
+                                     sfield);
+            g_object_unref(sfield);
+        }
+
     }
     g_object_unref(result);
 
