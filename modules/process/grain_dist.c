@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003-2007 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003-2008 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -101,6 +101,9 @@ static void grain_dist                          (GwyContainer *data,
                                                  GwyRunType run);
 static void grain_stat                          (GwyContainer *data,
                                                  GwyRunType run);
+static GtkWidget* grain_stats_add_aux_button    (GtkWidget *hbox,
+                                                 const gchar *stock_id,
+                                                 const gchar *tooltip);
 static void grain_dist_dialog                   (GrainDistArgs *args,
                                                  GwyContainer *data,
                                                  GwyDataField *dfield,
@@ -139,9 +142,9 @@ static GwyModuleInfo module_info = {
     N_("Evaluates distribution of grains (continuous parts of mask)."),
     "Petr Klapetek <petr@klapetek.cz>, Sven Neumann <neumann@jpk.com>, "
         "Yeti <yeti@gwyddion.net>",
-    "3.4",
+    "3.5",
     "David Nečas (Yeti) & Petr Klapetek & Sven Neumann",
-    "2003-2007",
+    "2003",
 };
 
 static const gchar fixres_key[]     = "/module/grain_dist/fixres";
@@ -586,7 +589,8 @@ static void
 add_report_row(GtkTable *table,
                gint *row,
                const gchar *name,
-               const gchar *value)
+               const gchar *value,
+               GPtrArray *report)
 {
     GtkWidget *label;
 
@@ -598,12 +602,39 @@ add_report_row(GtkTable *table,
     gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
     gtk_table_attach(table, label, 1, 2, *row, *row+1, GTK_FILL, 0, 2, 2);
     (*row)++;
+
+    g_ptr_array_add(report, (gpointer)name);
+    /* FIXME: We should use PLAIN format for text output, not Pango markup */
+    g_ptr_array_add(report, g_strdup(value));
 }
 
 static void
-grain_stat(G_GNUC_UNUSED GwyContainer *data, GwyRunType run)
+grain_stat_save(GtkWidget *dialog)
 {
-    GtkWidget *dialog, *table;
+    gchar *text = (gchar*)g_object_get_data(G_OBJECT(dialog), "report");
+
+    gwy_save_auxiliary_data(_("Save Grain Statistics"), GTK_WINDOW(dialog),
+                            -1, text);
+}
+
+static void
+grain_stat_copy(GtkWidget *dialog)
+{
+    GtkClipboard *clipboard;
+    GdkDisplay *display;
+    GdkAtom atom;
+    gchar *text = (gchar*)g_object_get_data(G_OBJECT(dialog), "report");
+
+    atom = gdk_atom_intern("CLIPBOARD", FALSE);
+    display = gtk_widget_get_display(dialog);
+    clipboard = gtk_clipboard_get_for_display(display, atom);
+    gtk_clipboard_set_text(clipboard, text, -1);
+}
+
+static void
+grain_stat(GwyContainer *data, GwyRunType run)
+{
+    GtkWidget *dialog, *table, *hbox, *button;
     GwyDataField *dfield, *mfield;
     GwySIUnit *siunit, *siunit2;
     GwySIValueFormat *vf;
@@ -612,14 +643,37 @@ grain_stat(G_GNUC_UNUSED GwyContainer *data, GwyRunType run)
     gdouble *values = NULL;
     gint *grains;
     GString *str;
-    gint row;
+    GPtrArray *report;
+    const guchar *title;
+    gchar *key, *value;
+    gint row, id;
+    guint i, maxlen;
 
     g_return_if_fail(run & STAT_RUN_MODES);
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
                                      GWY_APP_MASK_FIELD, &mfield,
+                                     GWY_APP_DATA_FIELD_ID, &id,
                                      0);
     g_return_if_fail(dfield);
     g_return_if_fail(mfield);
+
+    report = g_ptr_array_sized_new(20);
+
+    if (gwy_container_gis_string_by_name(data, "/filename", &title)) {
+        g_ptr_array_add(report, _("File:"));
+        g_ptr_array_add(report, g_strdup(title));
+    }
+
+    key = g_strdup_printf("/%d/data/title", id);
+    if (gwy_container_gis_string_by_name(data, key, &title)) {
+        g_ptr_array_add(report, _("Data channel:"));
+        g_ptr_array_add(report, g_strdup(title));
+    }
+    g_free(key);
+
+    /* Make empty line in the report */
+    g_ptr_array_add(report, NULL);
+    g_ptr_array_add(report, NULL);
 
     xres = gwy_data_field_get_xres(mfield);
     yres = gwy_data_field_get_yres(mfield);
@@ -646,14 +700,15 @@ grain_stat(G_GNUC_UNUSED GwyContainer *data, GwyRunType run)
                                          NULL);
     gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
 
-    table = gtk_table_new(7, 2, FALSE);
+    table = gtk_table_new(9, 2, FALSE);
     gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox), table);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     row = 0;
     str = g_string_new(NULL);
 
     g_string_printf(str, "%d", ngrains);
-    add_report_row(GTK_TABLE(table), &row, _("Number of grains:"), str->str);
+    add_report_row(GTK_TABLE(table), &row, _("Number of grains:"),
+                   str->str, report);
 
     siunit = gwy_data_field_get_si_unit_xy(dfield);
     siunit2 = gwy_si_unit_power(siunit, 2, NULL);
@@ -662,21 +717,23 @@ grain_stat(G_GNUC_UNUSED GwyContainer *data, GwyRunType run)
     vf = gwy_si_unit_get_format(siunit2, GWY_SI_UNIT_FORMAT_VFMARKUP, v, NULL);
     g_string_printf(str, "%.*f %s", vf->precision, v/vf->magnitude, vf->units);
     add_report_row(GTK_TABLE(table), &row, _("Total projected area (abs.):"),
-                   str->str);
+                   str->str, report);
 
     g_string_printf(str, "%.2f %%", 100.0*area/total_area);
     add_report_row(GTK_TABLE(table), &row, _("Total projected area (rel.):"),
-                   str->str);
+                   str->str, report);
 
     v = area/ngrains;
     gwy_si_unit_get_format(siunit2, GWY_SI_UNIT_FORMAT_VFMARKUP, v, vf);
     g_string_printf(str, "%.*f %s", vf->precision, v/vf->magnitude, vf->units);
-    add_report_row(GTK_TABLE(table), &row, _("Mean grain area:"), str->str);
+    add_report_row(GTK_TABLE(table), &row, _("Mean grain area:"),
+                   str->str, report);
 
     v = size/ngrains;
     gwy_si_unit_get_format(siunit, GWY_SI_UNIT_FORMAT_VFMARKUP, v, vf);
     g_string_printf(str, "%.*f %s", vf->precision, v/vf->magnitude, vf->units);
-    add_report_row(GTK_TABLE(table), &row, _("Mean grain size:"), str->str);
+    add_report_row(GTK_TABLE(table), &row, _("Mean grain size:"),
+                   str->str, report);
 
     siunit = gwy_data_field_get_si_unit_z(dfield);
     gwy_si_unit_multiply(siunit2, siunit, siunit2);
@@ -685,27 +742,86 @@ grain_stat(G_GNUC_UNUSED GwyContainer *data, GwyRunType run)
     gwy_si_unit_get_format(siunit2, GWY_SI_UNIT_FORMAT_VFMARKUP, v, vf);
     g_string_printf(str, "%.*f %s", vf->precision, v/vf->magnitude, vf->units);
     add_report_row(GTK_TABLE(table), &row, _("Total grain volume (zero):"),
-                   str->str);
+                   str->str, report);
 
     v = vol_min;
     gwy_si_unit_get_format(siunit2, GWY_SI_UNIT_FORMAT_VFMARKUP, v, vf);
     g_string_printf(str, "%.*f %s", vf->precision, v/vf->magnitude, vf->units);
     add_report_row(GTK_TABLE(table), &row, _("Total grain volume (minimum):"),
-                   str->str);
+                   str->str, report);
 
     v = vol_laplace;
     gwy_si_unit_get_format(siunit2, GWY_SI_UNIT_FORMAT_VFMARKUP, v, vf);
     g_string_printf(str, "%.*f %s", vf->precision, v/vf->magnitude, vf->units);
     add_report_row(GTK_TABLE(table), &row, _("Total grain volume (laplacian):"),
-                   str->str);
+                   str->str, report);
 
     gwy_si_unit_value_format_free(vf);
-    g_string_free(str, TRUE);
     g_object_unref(siunit2);
+
+    maxlen = 0;
+    for (i = 0; i < report->len/2; i++) {
+        key = (gchar*)g_ptr_array_index(report, 2*i);
+        if (key)
+            maxlen = MAX(strlen(key), maxlen);
+    }
+
+    g_string_truncate(str, 0);
+    g_string_append(str, _("Grain Statistics"));
+    g_string_append(str, "\n\n");
+
+    for (i = 0; i < report->len/2; i++) {
+        key = (gchar*)g_ptr_array_index(report, 2*i);
+        if (key) {
+            value = (gchar*)g_ptr_array_index(report, 2*i + 1);
+            g_string_append_printf(str, "%-*s %s\n", maxlen+1, key, value);
+            g_free(value);
+        }
+        else
+            g_string_append_c(str, '\n');
+    }
+    g_ptr_array_free(report, TRUE);
+    g_object_set_data(G_OBJECT(dialog), "report", str->str);
+
+    hbox = gtk_hbox_new(FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox,
+                       FALSE, FALSE, 0);
+  
+    button = grain_stats_add_aux_button(hbox, GTK_STOCK_SAVE,
+                                        _("Save table to a file"));
+    g_signal_connect_swapped(button, "clicked",
+                             G_CALLBACK(grain_stat_save), dialog);
+
+    button = grain_stats_add_aux_button(hbox, GTK_STOCK_COPY,
+                                        _("Copy table to clipboard"));
+    g_signal_connect_swapped(button, "clicked",
+                             G_CALLBACK(grain_stat_copy), dialog);
 
     gtk_widget_show_all(dialog);
     gtk_dialog_run(GTK_DIALOG(dialog));
     gtk_widget_destroy(dialog);
+
+    g_string_free(str, TRUE);
+}
+
+static GtkWidget*
+grain_stats_add_aux_button(GtkWidget *hbox,
+                           const gchar *stock_id,
+                           const gchar *tooltip)
+{
+    GtkTooltips *tips;
+    GtkWidget *button;
+
+    tips = gwy_app_get_tooltips();
+    button = gtk_button_new();
+    gtk_button_set_relief(GTK_BUTTON(button), GTK_RELIEF_NONE);
+    gtk_tooltips_set_tip(tips, button, tooltip, NULL);
+    gtk_container_add(GTK_CONTAINER(button),
+                      gtk_image_new_from_stock(stock_id,
+                                               GTK_ICON_SIZE_SMALL_TOOLBAR));
+    gtk_box_pack_end(GTK_BOX(hbox), button, FALSE, FALSE, 0);
+
+    return button;
 }
 
 static void
