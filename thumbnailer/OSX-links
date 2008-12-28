@@ -1,0 +1,17 @@
+===[ API ]===
+
+QLThumbnailRequest API:
+http://developer.apple.com/documentation/UserExperience/Reference/QLThumbnailRequest_Ref/index.html
+
+QLPreviewRequest API:
+http://developer.apple.com/documentation/UserExperience/Reference/QLPreviewRequest_Ref/index.html
+
+===[ Examples ]===
+
+DawrinGIMP (GPL):
+Repo: http://darwingimp.svn.sourceforge.net/svnroot/darwingimp/
+File: experimental/quicklook/ufraw_quicklook/GenerateThumbnailForURL.m
+
+DDSconverter (???):
+Repo: http://bmmt.googlecode.com/svn/ 
+File: trunk/DDSConverter/GenerateThumbnailForURL.c
