@@ -50,6 +50,8 @@
 
 #define PROGRAM_NAME "gwyddion-thumbnailer"
 
+#define THUMBNAILER_ERROR thumbnailer_error_quark()
+
 /***********************************************************************
  * XXX: Copied from app/filelist.c, should be consolidated to a single place.
  ***********************************************************************/
@@ -75,6 +77,7 @@
 
 typedef enum {
     /* Auxiliary modes */
+    THUMBNAILER_UPDATE  = -100,
     THUMBNAILER_VERSION = -3,
     THUMBNAILER_HELP    = -2,
     THUMBNAILER_UNKNOWN = -1,
@@ -83,11 +86,51 @@ typedef enum {
     THUMBNAILER_TMS,
 } ThumbnailerMode;
 
+typedef enum {
+    THUMBNAIL_SIZE_NORMAL = 128,
+    THUMBNAIL_SIZE_LARGE  = 256,
+} ThumbnailSize;
+
+typedef enum {
+    THUMBNAILER_ERROR_NO_DATA,
+    THUMBNAILER_ERROR_THUMBNAIL,
+} ThumbnailerError;
+
+typedef struct {
+    ThumbnailerMode mode;
+    gboolean update;
+} Options;
+
+typedef struct {
+    gchar *inputfile;
+    gchar *outputfile;
+    gchar *uri;
+    gulong mtime;
+    gulong fsize;
+} FileInfo;
+
 typedef struct {
     GwyContainer *container;
     gint present;
     gint visible;
 } DataFound;
+
+static const GwyEnum thumbnail_sizes[] = {
+    { "normal", THUMBNAIL_SIZE_NORMAL, },
+    { "large",  THUMBNAIL_SIZE_LARGE,  },
+};
+
+const GwyEnum modes[] = {
+    { "gnome2",    THUMBNAILER_GNOME2,  },
+    { "tms",       THUMBNAILER_TMS,     },
+    { "help",      THUMBNAILER_HELP,    },
+    { "--help",    THUMBNAILER_HELP,    },
+    { "-h",        THUMBNAILER_HELP,    },
+    { "version",   THUMBNAILER_VERSION, },
+    { "--version", THUMBNAILER_VERSION, },
+    { "-v",        THUMBNAILER_VERSION, },
+    { "--update",  THUMBNAILER_UPDATE,  },
+};
 
 static void
 print_help(gboolean succeed)
@@ -117,32 +160,33 @@ print_version(void)
     exit(EXIT_SUCCESS);
 }
 
-static ThumbnailerMode
-parse_mode(const gchar *strmode)
+static void
+parse_mode(Options *options,
+           int *argc, char ***argv)
 {
-    const GwyEnum modes[] = {
-        { "gnome2",    THUMBNAILER_GNOME2,  },
-        { "tms",       THUMBNAILER_TMS,     },
-        { "help",      THUMBNAILER_HELP,    },
-        { "--help",    THUMBNAILER_HELP,    },
-        { "-h",        THUMBNAILER_HELP,    },
-        { "version",   THUMBNAILER_VERSION, },
-        { "--version", THUMBNAILER_VERSION, },
-        { "-v",        THUMBNAILER_VERSION, },
-    };
     ThumbnailerMode mode;
 
-    mode = gwy_string_to_enum(strmode ? strmode : "",
-                              modes, G_N_ELEMENTS(modes));
+    while (TRUE) {
+        mode = gwy_string_to_enum((*argv)[1] ? (*argv)[1] : "",
+                                  modes, G_N_ELEMENTS(modes));
+        (*argc)--;
+        (*argv)++;
 
-    if (mode == THUMBNAILER_UNKNOWN)
-        print_help(FALSE);
-    if (mode == THUMBNAILER_HELP)
-        print_help(TRUE);
-    if (mode == THUMBNAILER_VERSION)
-        print_version();
+        if (mode == THUMBNAILER_UPDATE) {
+            options->update = TRUE;
+            continue;
+        }
+        else if (mode == THUMBNAILER_UNKNOWN)
+            print_help(FALSE);
+        else if (mode == THUMBNAILER_HELP)
+            print_help(TRUE);
+        else if (mode == THUMBNAILER_VERSION)
+            print_version();
 
-    return mode;
+        break;
+    }
+
+    options->mode = mode;
 }
 
 static void
@@ -170,6 +214,17 @@ static void
 die_errno(const gchar *func)
 {
     die("%s failed with: %s", func, g_strerror(errno));
+}
+
+static GQuark
+thumbnailer_error_quark(void)
+{
+    static GQuark error_domain = 0;
+
+    if (!error_domain)
+        error_domain = g_quark_from_static_string("thumbnailer-error-quark");
+
+    return error_domain;
 }
 
 static void
@@ -204,6 +259,9 @@ load_modules(void)
     g_ptr_array_free(module_dirs, TRUE);
 }
 
+/* Be defensive.  On the other hand we do not perform global file validation,
+ * if we find something to make thumbnail of, we are happy and the rest can
+ * be complete rubbish. */
 static void
 find_some_data(gpointer pquark, gpointer pvalue, gpointer user_data)
 {
@@ -240,39 +298,88 @@ find_some_data(gpointer pquark, gpointer pvalue, gpointer user_data)
         data_found->visible = id;
 }
 
-static void
-write_thumbnail(const gchar *inputfile,
-                const gchar *outputfile,
-                const gchar *uri,
-                gint maxsize)
+static gboolean
+check_thumbnail(FileInfo *fileinfo)
+{
+    GdkPixbuf *pixbuf;
+    struct stat st;
+    const gchar *value;
+    gboolean ok = FALSE;
+
+    if (stat(fileinfo->inputfile, &st) != 0)
+        die_errno("stat");
+
+    fileinfo->mtime = st.st_mtime;
+    fileinfo->fsize = st.st_size;
+
+    if (stat(fileinfo->outputfile, &st) != 0)
+        return FALSE;
+
+    /* If the file is newer than the thumbnail, do not bother loading the
+     * pixbuf. */
+    if (fileinfo->mtime > (gulong)st.st_mtime)
+        return FALSE;
+
+    pixbuf = gdk_pixbuf_new_from_file(fileinfo->outputfile, NULL);
+    if (!pixbuf)
+        return FALSE;
+
+    if (!(value = gdk_pixbuf_get_option(pixbuf, KEY_THUMB_URI))
+        || !gwy_strequal(value, fileinfo->uri))
+        goto finalize;
+
+    if (!(value = gdk_pixbuf_get_option(pixbuf, KEY_THUMB_MTIME))
+        || (gulong)atol(value) != fileinfo->mtime)
+        goto finalize;
+
+    if (!(value = gdk_pixbuf_get_option(pixbuf, KEY_THUMB_FILESIZE))
+        || (gulong)atol(value) != fileinfo->fsize)
+        goto finalize;
+
+    ok = TRUE;
+
+finalize:
+    g_object_unref(pixbuf);
+    return ok;
+}
+
+static gboolean
+write_thumbnail(const FileInfo *fileinfo,
+                gint maxsize,
+                GError **error)
 {
     GwyContainer *container;
     GwyDataField *dfield;
     DataFound data_found = { NULL, -1, -1 };
-    GError *err = NULL;
     GdkPixbuf *pixbuf;
-    struct stat st;
     GwySIUnit *siunit;
     GwySIValueFormat *vf;
     gdouble xreal, yreal;
-    gchar *str_mtime, *str_size, *str_width, *str_height, *str_real_size;
+    gchar *str_mtime, *str_fsize, *str_width, *str_height, *str_real_size;
+    gboolean ok;
     gint id;
 
-    if (!(container = gwy_file_load(inputfile, GWY_RUN_NONINTERACTIVE, &err)))
-        die_gerror(err, "gwy_file_load");
+    if (!(container = gwy_file_load(fileinfo->inputfile,
+                                    GWY_RUN_NONINTERACTIVE, error)))
+        return FALSE;
 
     data_found.container = container;
     gwy_container_foreach(container, NULL, find_some_data, &data_found);
     id = data_found.visible > -1 ? data_found.visible : data_found.present;
-    if (id < 0)
-        die("File contains no data field.");
+    if (id < 0) {
+        g_object_unref(container);
+        g_set_error(error, THUMBNAILER_ERROR, THUMBNAILER_ERROR_NO_DATA,
+                    "File contains no previewable data.");
+        return FALSE;
+    }
 
     pixbuf = gwy_app_get_channel_thumbnail(container, id, maxsize, maxsize);
-    if (!pixbuf)
-        die("Cannot create pixbuf.");
-
-    if (stat(inputfile, &st) != 0)
-        die_errno("stat");
+    if (!pixbuf) {
+        g_object_unref(container);
+        g_set_error(error, THUMBNAILER_ERROR, THUMBNAILER_ERROR_THUMBNAIL,
+                    "Cannot preview channel %d.", id);
+        return FALSE;
+    }
 
     dfield = gwy_container_get_object(container,
                                       gwy_app_get_data_key_for_id(id));
@@ -281,27 +388,36 @@ write_thumbnail(const gchar *inputfile,
     yreal = gwy_data_field_get_yreal(dfield);
     vf = gwy_si_unit_get_format(siunit, GWY_SI_UNIT_FORMAT_VFMARKUP,
                                 sqrt(xreal*yreal), NULL);
+    g_object_unref(container);
     str_real_size = g_strdup_printf("%.*f×%.*f%s%s",
                                     vf->precision, xreal/vf->magnitude,
                                     vf->precision, yreal/vf->magnitude,
                                     (vf->units && *vf->units) ? " " : "",
                                     vf->units);
-    str_mtime = g_strdup_printf("%lu", (gulong)st.st_mtime);
-    str_size = g_strdup_printf("%lu", (gulong)st.st_size);
+    gwy_si_unit_value_format_free(vf);
+    str_mtime = g_strdup_printf("%lu", (gulong)fileinfo->mtime);
+    str_fsize = g_strdup_printf("%lu", (gulong)fileinfo->fsize);
     str_width = g_strdup_printf("%d", gwy_data_field_get_xres(dfield));
     str_height = g_strdup_printf("%d", gwy_data_field_get_yres(dfield));
 
-    if (!gdk_pixbuf_save(pixbuf, outputfile, "png", &err,
+    ok = gdk_pixbuf_save(pixbuf, fileinfo->outputfile, "png", error,
                          "compression", "9",
                          KEY_SOFTWARE, PACKAGE_NAME,
-                         KEY_THUMB_URI, uri,
+                         KEY_THUMB_URI, fileinfo->uri,
                          KEY_THUMB_MTIME, str_mtime,
-                         KEY_THUMB_FILESIZE, str_size,
+                         KEY_THUMB_FILESIZE, str_fsize,
                          KEY_THUMB_IMAGE_WIDTH, str_width,
                          KEY_THUMB_IMAGE_HEIGHT, str_height,
                          KEY_THUMB_GWY_REAL_SIZE, str_real_size,
-                         NULL))
-        die_gerror(err, "gdk_pixbuf_save");
+                         NULL);
+    g_free(str_real_size);
+    g_free(str_mtime);
+    g_free(str_fsize);
+    g_free(str_width);
+    g_free(str_height);
+    g_object_unref(pixbuf);
+
+    return ok;
 }
 
 /***********************************************************************
@@ -326,9 +442,11 @@ gwy_recent_file_thumbnail_dir(void)
 }
 
 static gchar*
-gwy_recent_file_thumbnail_name(const gchar *uri)
+gwy_recent_file_thumbnail_name(const gchar *uri,
+                               ThumbnailSize size)
 {
     static const gchar *hex2digit = "0123456789abcdef";
+    const gchar *sizename;
     guchar md5sum[16];
     gchar buffer[37], *p;
     gsize i;
@@ -345,7 +463,11 @@ gwy_recent_file_thumbnail_name(const gchar *uri)
     *p++ = 'g';
     *p = '\0';
 
-    return g_build_filename(gwy_recent_file_thumbnail_dir(), "normal", buffer,
+    sizename = gwy_enum_to_string(size, thumbnail_sizes,
+                                  G_N_ELEMENTS(thumbnail_sizes));
+    g_assert(sizename && *sizename);
+
+    return g_build_filename(gwy_recent_file_thumbnail_dir(), sizename, buffer,
                             NULL);
 }
 
@@ -353,46 +475,58 @@ int
 main(int argc,
      char *argv[])
 {
-    ThumbnailerMode mode;
-    const gchar *inputfile, *outputfile;
-    char *uri;
-    gint maxsize = 0;
+    Options options = {
+        THUMBNAILER_UNKNOWN,
+        FALSE,
+    };
+    FileInfo fileinfo = { NULL, NULL, NULL, 0, 0 };
+    gint maxsize;
+    gchar *canonpath;
+    GError *err = NULL;
 
     /* Parse arguments. */
     gtk_parse_args(&argc, &argv);
-    mode = parse_mode(argv[1]);
+    parse_mode(&options, &argc, &argv);
 
-    if (mode == THUMBNAILER_GNOME2) {
-        if (argc != 5)
-            die("Wrong number of arguments for mode %s.\n", argv[1]);
-        maxsize = strtol(argv[2], NULL, 0);
-        inputfile = argv[3];
-        outputfile = argv[4];
-    }
-    if (mode == THUMBNAILER_TMS) {
+    if (options.mode == THUMBNAILER_GNOME2) {
         if (argc != 4)
-            die("Wrong number of arguments for mode %s.\n", argv[1]);
-        if (gwy_strequal(argv[2], "normal") || strtol(argv[2], NULL, 0) == 128)
-            maxsize = 128;
-        else
-            die("Maximum size must be normal or 128.");
-        inputfile = argv[3];
-        outputfile = NULL;
+            die("Wrong number of arguments for mode %s.\n",
+                gwy_enum_to_string(options.mode, modes, G_N_ELEMENTS(modes)));
+        maxsize = strtol(argv[1], NULL, 0);
+        fileinfo.inputfile = argv[2];
+        fileinfo.outputfile = argv[3];
+    }
+    else if (options.mode == THUMBNAILER_TMS) {
+        if (argc != 3)
+            die("Wrong number of arguments for mode %s.\n",
+                gwy_enum_to_string(options.mode, modes, G_N_ELEMENTS(modes)));
+
+        if (!(maxsize = strtol(argv[1], NULL, 0))
+            && ((maxsize = gwy_string_to_enum(argv[1], thumbnail_sizes,
+                                              G_N_ELEMENTS(thumbnail_sizes)))
+                < 0))
+            die("Maximum size must be normal, large, 128 or 256.");
+        fileinfo.inputfile = argv[2];
     }
     else
         g_assert_not_reached();
 
-    /* FIXME: Handle failure to produce the URI better. */
-    uri = g_filename_to_uri(gwy_canonicalize_path(inputfile), NULL, NULL);
-    if (!uri)
-        uri = g_strdup("");
+    canonpath = gwy_canonicalize_path(fileinfo.inputfile);
+    if (!(fileinfo.uri = g_filename_to_uri(canonpath, NULL, &err)))
+        die_gerror(err, "g_filename_to_uri");
+    g_free(canonpath);
 
-    if (mode == THUMBNAILER_TMS)
-        outputfile = gwy_recent_file_thumbnail_name(uri);
+    if (options.mode == THUMBNAILER_TMS)
+        fileinfo.outputfile = gwy_recent_file_thumbnail_name(fileinfo.uri,
+                                                             maxsize);
 
     /* Perform a sanity check before we load modules. */
     if (maxsize < 2)
         die("Invalid maximum size %d.\n", maxsize);
+
+    /* check_thumbnail() fills mtime and fsize, must go first! */
+    if (check_thumbnail(&fileinfo) && options.update)
+        return 0;
 
     /* Initialize Gwyddion */
     gwy_draw_type_init();
@@ -401,7 +535,8 @@ main(int argc,
     load_modules();
 
     /* Go... */
-    write_thumbnail(inputfile, outputfile, uri, maxsize);
+    if (!write_thumbnail(&fileinfo, maxsize, &err))
+        die_gerror(err, "write_thumbnail");
 
     return 0;
 }
