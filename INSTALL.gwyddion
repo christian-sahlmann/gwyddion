@@ -10,9 +10,11 @@ Contents:
 
 ===[ 0. Prebuilt binaries ]==================================================
 
-Binary packages provided by us, currently that is RPMs for Fedora Core Linux
-and installers from MS Windows, require no additional setup after standard
-package installation procedure.
+Binary packages provided by us, i.e. installers from MS Windows, require no
+additional setup after standard package installation procedure.  If you have
+never installed Gwyddion (or other Gtk+ application), you will need to
+install of Gtk+ runtime libraries prior to Gwyddion installation, we
+recommend GladeWin32 packages.
 
 We cannot tell for packages provided for other systems by other entities, but
 do not expect them to require any additional setup either.
@@ -36,15 +38,21 @@ Recommended though optional, for TIFF and JPK file support:
 Recommended though optional, for speed up of some operations:
 - FFTW-3.0.0 (on 64bit systems, 3.1.0) or newer, including development files
 
+Recommended though optional, for basic desktop integration:
+- desktop-file-utils
+
 Recommended though optional, for `remote control':
 - LibXmu (a part of X11, though packaged separately since Xorg 7.0), including
   development files
 
+Recommended though optional, for Python scripting interface pygwy:
+- PyGTK2, including codegen, and all its dependencies
+
+Optional, for better GNOME and XFce integration (SPM file thumbnails):
+- GConf2
+
 Optional, for SPML file support:
 - LibXML2, including development files
-
-Optional, for Python scripting interface pygwy (experimental):
-- PyGTK2, including codegen, and all its dependencies
 
 Optional, for development of plug-in in various languages:
 - Python-2.2 or newer
@@ -55,16 +63,20 @@ Optional, for development of plug-in in various languages:
 Read generic GNU installation instruction in INSTALL that describe the build
 process, common program arguments, and important environment variables.
 
-If you have Gtk+ (or other packages, e.g., FFTW) in a nonstandard directory,
-assure PKG_CONFIG_PATH environment variable points to directory where
-gtk+-2.0.pc (e.g.) resides.
-
 Quick instructions:
 Unpack tarball with sources, cd to the created directory, then run:
   ./configure
   make
 and as root run:
   make install
+
+If you have Gtk+ (or other packages, e.g., FFTW) in a nonstandard directory,
+assure PKG_CONFIG_PATH environment variable points to directory where
+gtk+-2.0.pc (e.g.) resides.
+
+If you install to a subdirectory of home, you may need to adjust
+GCONF_SCHEMA_DIR (during make install) and XDG_DATA_DIRS (after installation)
+to get full desktop integration.
 
 
 ===[ 2. From sources -- MS Windows ]=========================================
@@ -229,8 +241,8 @@ will work as expected.
    values and enable pygwy by uncommenting ENABLE_PYGWY variable.
    Compile & install
 
-Note: to see messages printed by Python interpreter to stdou you can add
-/subsystem:console to LDFLAGS in make.msc and recompile&reinstall Gwyddion.
+Note: to see messages printed by Python interpreter to stdout you can add
+/subsystem:console to LDFLAGS in make.msc and recompile & reinstall Gwyddion.
 
 
 ===[ 6. Modules and plug-ins ]===============================================
