@@ -77,11 +77,11 @@ AC_SUBST(LIBRARY_RELEASE)
 
 #############################################################################
 # Checks for programs and systems.
-# Make libtool stop checking for C++ and Fortran.
-m4_defun([_LT_AC_LANG_CXX_CONFIG],[:])
+# Make libtool stop checking for FORTRAN.
 m4_defun([_LT_AC_LANG_F77_CONFIG],[:])
 AC_DISABLE_STATIC
 AC_PROG_CC
+AC_PROG_CXX
 dnl FIXME: Can't do this, see math section below
 dnl AC_PROG_CC_C99
 AC_USE_SYSTEM_EXTENSIONS
@@ -146,11 +146,12 @@ GWY_ENABLE([desktop-file-update],
            [Update Freedesktop databases])
 AM_CONDITIONAL([DESKTOP_FILE_UPDATE],[test "$enable_desktop_file_update" != no])
 # This is always supported
-THUMBNAILERS="XDG/manual"
+THUMBNAILERS="manual"
 
 #############################################################################
 # GConf (only for Gnome thumbnailer schemas -- the thumbnailer has other uses
 # so we build it unconditionally).
+# Very optional.
 
 dnl The following conditional is set in AM_GCONF_SOURCE_2.
 dnl Because we may skip its execution, we have to set a default here.
@@ -160,17 +161,17 @@ dnl Don't publish the GCONFTOOL variable, AM_GCONF_SOURCE_2 has
 dnl `gconftool-2' hardwired.
 m4_pattern_allow([^AM_GCONF_SOURCE_2$])
 GCONFTOOL=
-AC_CHECK_PROG([GCONFTOOL], [gconftool-2], [gconftool-2], [no])
+AC_CHECK_PROG([GCONFTOOL],[gconftool-2],[gconftool-2],[no])
 if test "x$GCONFTOOL" != xno; then
-    AM_GCONF_SOURCE_2
-    THUMBNAILERS="$THUMBNAILERS GNOME/GConf"
+  AM_GCONF_SOURCE_2
+  THUMBNAILERS="$THUMBNAILERS GNOME2"
 fi
 
 #############################################################################
 # Python
 GWY_ENABLE([python],,[Install Python modules and plug-ins])
 AM_PATH_PYTHON(2.2,,:)
-AM_CONDITIONAL([HAVE_PYTHON], [test "$PYTHON" != : -a "$enable_python" != no])
+AM_CONDITIONAL([HAVE_PYTHON],[test "$PYTHON" != : -a "$enable_python" != no])
 
 AC_ARG_ENABLE(pygwy, AC_HELP_STRING([--enable-pygwy],
                                     [Build Python wrapper to Gwyddion]),[],
@@ -482,6 +483,88 @@ fi
 AM_CONDITIONAL([HAVE_XML2],[test x$enable_spml != xno])
 
 #############################################################################
+# KDE4 and Qt4 (for KDE thumbnailer plug-in)
+# Very optional.
+#
+# Note we need headers of both, but actually link only with Qt.
+#
+# KDE4 uses cmake as the build system.  So either we are going to break things
+# by mixing automake & cmake (because the thumbnailer needs to be linked with
+# gwyddion libs), or we are going to break things by doing everything manually.
+# In the latter case the poor user should have a better chance to fix it by
+# setting CXXFLAGS, LIBS, etc. herself.
+GWY_ENABLE([kde4-thumbnailer],
+           [kde4_thumbnailer],
+           [KDE4 thumbnail creator module])
+# Normalize
+if test "x$enable_kde4_thumbnailer" != xno; then
+  enable_kde4_thumbnailer=yes
+fi
+
+# Find kde4-config.
+AC_ARG_VAR([KDE4_CONFIG],[path to kde4-config utility])
+if test "x$ac_cv_env_KDE4_CONFIG_set" != xset; then
+  AC_PATH_TOOL([KDE4_CONFIG],[kde4-config])
+fi
+if test "x$KDE4_CONFIG" = x; then
+  enable_kde4_thumbnailer=no
+else
+  # XXX: This leaves lots to desire.  What if someone installs Gwyddion to
+  # home?  Let her at least overrride KDE4_MODULE_DIR
+  KDE4_MODULE_DIR=`$KDE4_CONFIG --install module`
+  KDE4_PREFIX=`$KDE4_CONFIG --prefix`
+  KDE4_LIBSUFFIX=`$KDE4_CONFIG --libsuffix`
+  QT4_PREFIX=`$KDE4_CONFIG --qt-prefix`
+  QT4_LIBDIR=`$KDE4_CONFIG --qt-libraries`
+fi
+
+AC_LANG_PUSH([C++])
+KDE4_ORIG_LIBS="$LIBS"
+KDE4_ORIG_LDFLAGS="$LDFLAGS"
+KDE4_ORIG_CPPFLAGS="$CPPFLAGS"
+KDE4_CPPFLAGS="-I$KDE4_PREFIX/include/kde4 -I$QT4_PREFIX/include"
+KDE4_LDFLAGS="-L$KDE4_PREFIX/lib$KDE4_LIBSUFFIX -L$QT4_LIBDIR"
+KDE4_LIBS="-lQtCore -lQtGui"
+CPPFLAGS="$CPPFLAGS $KDE4_CPPFLAGS"
+LDFLAGS="$LDFLAGS $KDE4_LDFLAGS"
+LIBS="$LIBS $KDE4_LIBS"
+
+# Try to link with QtCore and QtGui.
+if test "x$enable_kde4_thumbnailer" != xno; then
+  AC_MSG_CHECKING([for qVersion in $KDE4_LIBS])
+  LIBS="$LIBS $KDE4_LIBS"
+  AC_LINK_IFELSE([char qVersion(void); int main(void){ return qVersion(); }],
+                 [:],[enable_kde4_thumbnailer=no])
+  AC_MSG_RESULT([$enable_kde4_thumbnailer])
+fi
+
+# Try to compile with the corresponding headers.
+if test "x$enable_kde4_thumbnailer" != xno; then
+  AC_CHECK_HEADER([QtCore/qstring.h],[:],[enable_kde4_thumbnailer=no])
+fi
+if test "x$enable_kde4_thumbnailer" != xno; then
+  AC_CHECK_HEADER([QtGui/qimage.h],[:],[enable_kde4_thumbnailer=no])
+fi
+if test "x$enable_kde4_thumbnailer" != xno; then
+  AC_CHECK_HEADER([kio/thumbcreator.h],[:],[enable_kde4_thumbnailer=no])
+fi
+
+CPPFLAGS="$KDE4_ORIG_CPPFLAGS"
+LDFLAGS="$KDE4_ORIG_LDFLAGS"
+LIBS="$KDE4_ORIG_LIBS"
+AC_LANG_POP([C++])
+
+AM_CONDITIONAL([KDE4_THUMBNAILER],[test "x$enable_kde4_thumbnailer" != xno])
+if test "x$enable_kde4_thumbnailer" != xno; then
+  THUMBNAILERS="$THUMBNAILERS KDE4"
+fi
+
+AC_SUBST(KDE4_MODULE_DIR)
+AC_SUBST(KDE4_CPPFLAGS)
+AC_SUBST(KDE4_LDFLAGS)
+AC_SUBST(KDE4_LIBS)
+
+#############################################################################
 # Check for header files.
 AC_MSG_CHECKING([for anyone actually reading this nonsense])
 AC_MSG_RESULT([no])
@@ -514,6 +597,13 @@ AC_DEFINE_UNQUOTED(GETTEXT_PACKAGE,"$GETTEXT_PACKAGE",[Gettext package name])
 AC_SUBST(GETTEXT_PACKAGE)
 
 #############################################################################
+# GLIBC >= 2.1
+gl_GLIBC21
+if test "x$GLIBC21" = xyes; then
+  AC_DEFINE([HAVE_MEMMEM],1,[Define if we have working memmem()])
+fi
+
+#############################################################################
 # Libs
 BASIC_LIBS="$GOBJECT_LIBS $INTLLIBS $LIBM"
 LIBS="$ORIG_LIBS"
@@ -526,6 +616,7 @@ AC_SUBST(COMMON_CFLAGS)
 
 #############################################################################
 # Plugin-proxy
+# Deprecated.
 GWY_ENABLE([plugin-proxy],
            [plugin_proxy],
            [Build plug-in proxy module])
@@ -600,15 +691,15 @@ AC_OUTPUT
 
 echo "================================================================="
 echo "Configuration:"
-echo "  TIFF (including JPK):                  $enable_tiff$TIFF_WARN"
-echo "  SMPL:                                  $enable_spml$SPML_WARN"
-echo "  FFTW3:                                 $enable_fftw3$FFTW3_WARN"
-echo "  OpenGL 3D widgets:                     $enable_gl$GL_WARN"
-echo "  Remote control:                        $enable_remote$REMOTE_WARN"
-echo "  Desktop thumbnailers:                  $THUMBNAILERS"
-echo "  Python interface (pygwy):              $enable_pygwy$PYGWY_WARN"
+echo "  TIFF (including JPK):              $enable_tiff$TIFF_WARN"
+echo "  SMPL:                              $enable_spml$SPML_WARN"
+echo "  FFTW3:                             $enable_fftw3$FFTW3_WARN"
+echo "  OpenGL 3D widgets:                 $enable_gl$GL_WARN"
+echo "  Remote control:                    $enable_remote$REMOTE_WARN"
+echo "  Thumbnailers to build:             $THUMBNAILERS"
+echo "  Python interface (pygwy):          $enable_pygwy$PYGWY_WARN"
 if test x$enable_pygwy = xyes; then
-  echo "  Syntax highlighting for pygwy console: $enable_gtksourceview$GTKSOURCEVIEW_WARN"
+  echo "  Pygwy console syntax highlighting: $enable_gtksourceview$GTKSOURCEVIEW_WARN"
 fi
 echo "================================================================="
 
