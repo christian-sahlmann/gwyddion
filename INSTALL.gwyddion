@@ -75,8 +75,8 @@ assure PKG_CONFIG_PATH environment variable points to directory where
 gtk+-2.0.pc (e.g.) resides.
 
 If you install to a subdirectory of home, you may need to adjust
-GCONF_SCHEMA_DIR (during make install) and XDG_DATA_DIRS (after installation)
-to get full desktop integration.
+GCONF_SCHEMA_CONFIG_SOURCE, KDE4_MODULE_DIR (during make install) and
+XDG_DATA_DIRS (after installation) to get full desktop integration.
 
 
 ===[ 2. From sources -- MS Windows ]=========================================
