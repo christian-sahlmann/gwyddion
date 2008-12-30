@@ -24,7 +24,7 @@
  * [FILE-MAGIC-FREEDESKTOP]
  * <mime-type type="application/x-nanonis-spm">
  *   <comment>Nanonis SPM data</comment>
- *   <magic priority="50">
+ *   <magic priority="80">
  *     <match type="string" offset="0" value=":NANONIS_VERSION:"/>
  *   </magic>
  *   <glob pattern="*.sxm"/>

@@ -22,7 +22,7 @@
  * [FILE-MAGIC-FREEDESKTOP]
  * <mime-type type="application/x-rhk-sm2-spm">
  *   <comment>RHK SM2 SPM data</comment>
- *   <magic priority="50">
+ *   <magic priority="80">
  *     <match type="string" offset="0" value="STiMage 3.1"/>
  *   </magic>
  *   <glob pattern="*.sm2"/>

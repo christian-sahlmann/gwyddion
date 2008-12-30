@@ -22,7 +22,7 @@
  * [FILE-MAGIC-FREEDESKTOP]
  * <mime-type type="application/x-unisoku-spm">
  *   <comment>Unisoku SPM data header</comment>
- *   <magic priority="50">
+ *   <magic priority="80">
  *     <match type="string" offset="0" value=":STM data\r\n"/>
  *   </magic>
  *   <glob pattern="*.hdr"/>

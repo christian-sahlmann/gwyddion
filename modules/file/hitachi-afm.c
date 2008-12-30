@@ -27,7 +27,7 @@
  * [FILE-MAGIC-FREEDESKTOP]
  * <mime-type type="application/x-hitachi-spm">
  *   <comment>Hitachi SPM data</comment>
- *     <magic priority="50">
+ *     <magic priority="80">
  *     <match type="string" offset="0" value="AFM/Ver. "/>
  *   </magic>
  * </mime-type>

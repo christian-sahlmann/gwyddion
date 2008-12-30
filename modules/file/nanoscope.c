@@ -22,7 +22,7 @@
  * [FILE-MAGIC-FREEDESKTOP]
  * <mime-type type="application/x-nanoscope-iii-spm">
  *   <comment>Nanoscope III SPM data</comment>
- *   <magic priority="50">
+ *   <magic priority="80">
  *     <match type="string" offset="0" value="\\*File list\r\n"/>
  *     <match type="string" offset="0" value="?*File list\r\n"/>
  *   </magic>

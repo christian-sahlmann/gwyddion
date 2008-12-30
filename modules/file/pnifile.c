@@ -22,7 +22,7 @@
  * [FILE-MAGIC-FREEDESKTOP]
  * <mime-type type="application/x-pni-spm">
  *   <comment>PNI SPM data</comment>
- *   <magic priority="50">
+ *   <magic priority="80">
  *     <match type="string" offset="0" value="\0\0\0\0001.0"/>
  *     <match type="string" offset="0" value="\315\315\315\3151.0"/>
  *   </magic>

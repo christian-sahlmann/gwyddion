@@ -24,7 +24,7 @@
  * [FILE-MAGIC-FREEDESKTOP]
  * <mime-type type="application/x-spmlab-spm">
  *   <comment>SPMLab SPM data</comment>
- *   <magic priority="50">
+ *   <magic priority="80">
  *     <match type="string" offset="0" value="#R3"/>
  *     <match type="string" offset="0" value="#R4"/>
  *     <match type="string" offset="0" value="#R5"/>

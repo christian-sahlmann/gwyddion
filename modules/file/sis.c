@@ -22,7 +22,7 @@
  * [FILE-MAGIC-FREEDESKTOP]
  * <mime-type type="application/x-sis-spm">
  *   <comment>SIS SPM data</comment>
- *   <magic priority="50">
+ *   <magic priority="80">
  *     <match type="string" offset="0" value="SIS&amp;STB  SIScan"/>
  *   </magic>
  *   <glob pattern="*.sis"/>

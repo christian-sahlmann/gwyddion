@@ -21,7 +21,7 @@
  * [FILE-MAGIC-FREEDESKTOP]
  * <mime-type type="application/x-wyko-opd">
  *   <comment>Wyko OPD data</comment>
- *   <magic priority="50">
+ *   <magic priority="80">
  *     <match type="string" offset="0" value="\x01\x00Directory"/>
  *   </magic>
  *   <glob pattern="*.opd"/>
@@ -33,7 +33,7 @@
  * [FILE-MAGIC-FREEDESKTOP]
  * <mime-type type="application/x-wyko-asc">
  *   <comment>Wyko ASCII data</comment>
- *   <magic priority="50">
+ *   <magic priority="80">
  *     <match type="string" offset="0" value="Wyko ASCII Data File Format 0\t0\t1"/>
  *   </magic>
  *   <glob pattern="*.asc"/>

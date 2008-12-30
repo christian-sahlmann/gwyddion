@@ -36,12 +36,18 @@
  */
 /*#define DEBUG*/
 
+/* XXX: The typical length of a XML declaration is about 40 bytes.  So while
+ * there can be more stuff before <SPML than 60 bytes, we have to find a
+ * compromise between generality and efficiency.  It's the SPML guys' fight,
+ * they should have created a more easily detectable format... */
 /**
  * [FILE-MAGIC-FREEDESKTOP]
  * <mime-type type="application/x-spml-spm">
  *   <comment>SPML data</comment>
- *   <magic priority="50">
- *     <match type="string" offset="0" value="&lt;SPML"/>
+ *   <magic priority="80">
+ *     <match type="string" offset="0" value="&lt;?xml">
+ *       <match type="string" offset="20:60" value="&lt;SPML"/>
+ *     </match>
  *   </magic>
  * </mime-type>
  **/

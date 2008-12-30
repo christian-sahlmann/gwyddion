@@ -22,9 +22,8 @@
  * [FILE-MAGIC-FREEDESKTOP]
  * <mime-type type="application/x-quesant-afm">
  *   <comment>Quesant AFM data</comment>
- *   <magic priority="50">
- *     <match type="string" offset="0" value="\\*File list\r\n"/>
- *     <match type="string" offset="0" value="?*File list\r\n"/>
+ *   <magic priority="80">
+ *     <match type="string" offset="0" value="\x02\x00\x00\x00\x01\x00\x00\x00"/>
  *   </magic>
  * </mime-type>
  **/
@@ -37,7 +36,6 @@
 #include <app/gwymoduleutils-file.h>
 
 #include "err.h"
-
 
 #define MAGIC "\x02\x00\x00\x00\x01\x00\x00\x00"
 #define MAGIC_SIZE (sizeof(MAGIC) - 1)
@@ -55,8 +53,7 @@ static GwyContainer*   quesant_load         (const gchar *filename,
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    N_("Imports Quesant file format"
-       "."),
+    N_("Imports Quesant file format."),
     "Jan Hořák <xhorak@gmail.com>",
     "0.1",
     "David Nečas (Yeti) & Petr Klapetek",

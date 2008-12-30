@@ -26,7 +26,7 @@ endif
 
 filedir = $(pkglibdir)/modules/file
 
- file_LTLIBRARIES = \
+file_LTLIBRARIES = \
 	assing-afm.la \
 	apefile.la \
 	asciiexport.la \

@@ -21,7 +21,7 @@
  * [FILE-MAGIC-FREEDESKTOP]
  * <mime-type type="application/x-spmlab-float-spm">
  *   <comment>SPMLab floating-point SPM data</comment>
- *   <magic priority="50">
+ *   <magic priority="80">
  *     <match type="string" offset="0" value="[DataVersion]\r\nProgram=SPMLab"/>
  *   </magic>
  *   <glob pattern="*.flt"/>

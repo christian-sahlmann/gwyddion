@@ -23,7 +23,7 @@
  * [FILE-MAGIC-FREEDESKTOP]
  * <mime-type type="application/x-seiko-spm">
  *   <comment>Seiko SPM data</comment>
- *   <magic priority="50">
+ *   <magic priority="80">
  *     <match type="string" offset="0" value="SPIZ000DFM"/>
  *   </magic>
  *   <glob pattern="*.xqd"/>

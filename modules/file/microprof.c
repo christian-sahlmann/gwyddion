@@ -22,7 +22,7 @@
  * [FILE-MAGIC-FREEDESKTOP]
  * <mime-type type="application/x-microprof">
  *   <comment>MicroProf FRT data</comment>
- *   <magic priority="40">
+ *   <magic priority="80">
  *     <match type="string" offset="0" value="HeaderLines"/>
  *   </magic>
  * </mime-type>

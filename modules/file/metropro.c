@@ -22,7 +22,7 @@
  * [FILE-MAGIC-FREEDESKTOP]
  * <mime-type type="application/x-zygo-spm">
  *   <comment>Zygo SPM data</comment>
- *   <magic priority="50">
+ *   <magic priority="80">
  *     <match type="string" offset="0" value="\x88\x1b\x03\x6f"/>
  *   </magic>
  * </mime-type>

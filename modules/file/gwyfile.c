@@ -22,7 +22,7 @@
  * [FILE-MAGIC-FREEDESKTOP]
  * <mime-type type="application/x-gwyddion-spm">
  *   <comment>Gwyddion SPM data</comment>
- *   <magic priority="90">
+ *   <magic priority="100">
  *     <match type="string" offset="0" value="GWYOGwyContainer"/>
  *     <match type="string" offset="0" value="GWYPGwyContainer"/>
  *   </magic>

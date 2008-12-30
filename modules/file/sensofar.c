@@ -18,17 +18,6 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-/**
- * [FILE-MAGIC-FREEDESKTOP]
- * <mime-type type="application/x-sensofar-plu">
- *   <comment>Sensofar PLu data</comment>
- *   <magic priority="50">
- *     <match type="string" offset="0" value="\\*File list\r\n"/>
- *     <match type="string" offset="0" value="?*File list\r\n"/>
- *   </magic>
- * </mime-type>
- **/
-
 #include "config.h"
 #include <stdio.h>
 #include <libgwyddion/gwymath.h>
@@ -131,7 +120,7 @@ module_register(void)
 
 static gint
 sensofar_detect(const GwyFileDetectInfo *fileinfo,
-                 gboolean only_name)
+		gboolean only_name)
 {
     gint score = 0;
     char day_name[4], month_name[4];

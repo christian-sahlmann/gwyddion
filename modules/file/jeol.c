@@ -22,7 +22,7 @@
  * [FILE-MAGIC-FREEDESKTOP]
  * <mime-type type="application/x-jeol-spm">
  *   <comment>JEOL SPM data</comment>
- *   <magic priority="50">
+ *   <magic priority="80">
  *     <match type="string" offset="0" value="II\x2a\x00\xd4\x17\x00\x00\x00\x04">
  *       <match type="string" offset="160" value="Measured by"/>
  *       <match type="string" offset="160" value="Mesuared by"/>

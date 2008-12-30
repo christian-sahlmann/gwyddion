@@ -23,7 +23,7 @@
  * [FILE-MAGIC-FREEDESKTOP]
  * <mime-type type="application/x-nt-mdt-spm">
  *   <comment>NT-MDT SPM data</comment>
- *   <magic priority="50">
+ *   <magic priority="80">
  *     <match type="string" offset="0" value="\x01\xb0\x93\xff"/>
  *   </magic>
  *   <glob pattern="*.mdt"/>

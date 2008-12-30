@@ -22,7 +22,7 @@
  * [FILE-MAGIC-FREEDESKTOP]
  * <mime-type type="application/x-burleigh-export-spm">
  *   <comment>Burleigh exported SPM data</comment>
- *   <magic priority="30">
+ *   <magic priority="80">
  *     <match type="string" offset="0" value=".Image Data"/>
  *   </magic>
  * </mime-type>

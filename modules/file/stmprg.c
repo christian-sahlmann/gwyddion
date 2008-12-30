@@ -28,7 +28,7 @@
  * [FILE-MAGIC-FREEDESKTOP]
  * <mime-type type="application/x-stmprg-spm">
  *   <comment>Omicron STMPRG data parameters</comment>
- *   <magic priority="50">
+ *   <magic priority="80">
  *     <match type="string" offset="0" value="MPAR"/>
  *   </magic>
  *   <glob pattern="tp*"/>

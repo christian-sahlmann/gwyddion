@@ -22,7 +22,7 @@
  * [FILE-MAGIC-FREEDESKTOP]
  * <mime-type type="application/x-sicm-spm">
  *   <comment>IonScope SICM data</comment>
- *   <magic priority="30">
+ *   <magic priority="50">
  *     <match type="string" offset="0" value="\x32\x00"/>
  *   </magic>
  * </mime-type>

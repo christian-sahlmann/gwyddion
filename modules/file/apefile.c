@@ -26,7 +26,7 @@
  * [FILE-MAGIC-FREEDESKTOP]
  * <mime-type type="application/x-ape-spm">
  *   <comment>APE SPM data</comment>
- *   <magic priority="50">
+ *   <magic priority="80">
  *     <match type="string" offset="234" value="APERES"/>
  *   </magic>
  * </mime-type>

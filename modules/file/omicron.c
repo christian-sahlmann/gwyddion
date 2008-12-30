@@ -23,7 +23,7 @@
  * [FILE-MAGIC-FREEDESKTOP]
  * <mime-type type="application/x-omicron-spm">
  *   <comment>Omicron SCALA data parameters</comment>
- *   <magic priority="50">
+ *   <magic priority="80">
  *     <match type="string" offset="0:160" value="Omicron SPM Control"/>
  *   </magic>
  *   <glob pattern="*.par"/>

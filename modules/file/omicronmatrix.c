@@ -22,7 +22,7 @@
  * [FILE-MAGIC-FREEDESKTOP]
  * <mime-type type="application/x-omicron-matrix-spm">
  *   <comment>Omicron MATRIX SPM data</comment>
- *   <magic priority="30">
+ *   <magic priority="80">
  *     <match type="string" offset="0" value="ONTMATRX0101TLKB"/>
  *   </magic>
  *   <glob pattern="*.mtrx"/>

@@ -22,7 +22,7 @@
  * [FILE-MAGIC-FREEDESKTOP]
  * <mime-type type="application/x-shimadzu-spm">
  *   <comment>Shimadzu SPM data</comment>
- *   <magic priority="50">
+ *   <magic priority="80">
  *     <match type="string" offset="0" value="Shimadzu SPM File Format"/>
  *   </magic>
  * </mime-type>

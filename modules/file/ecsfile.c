@@ -23,8 +23,8 @@
  * [FILE-MAGIC-FREEDESKTOP]
  * <mime-type type="application/x-ecs-spm">
  *   <comment>ECS SPM data</comment>
- *   <magic priority="40">
- *     <match type="string" offset="0" value="\xa0\x00"/>
+ *   <magic priority="50">
+ *     <match type="string" offset="0" value="\xa0\x00\x00"/>
  *   </magic>
  * </mime-type>
  **/
@@ -43,7 +43,7 @@
 #include "get.h"
 
 /* Not a real magic header, but filters out most non-ECS files */
-#define MAGIC "\xa0\x00"
+#define MAGIC "\xa0\x00\x00"
 #define MAGIC_SIZE (sizeof(MAGIC)-1)
 
 #define EXTENSION ".img"

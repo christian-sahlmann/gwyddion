@@ -27,7 +27,7 @@
  * [FILE-MAGIC-FREEDESKTOP]
  * <mime-type type="application/x-intematix-spm">
  *   <comment>Intematix SPM data</comment>
- *   <magic priority="30">
+ *   <magic priority="80">
  *     <match type="string" offset="0" value="II\x2a\x00">
  *       <match type="string" offset="8:160" value="Intematix"/>
  *     </match>

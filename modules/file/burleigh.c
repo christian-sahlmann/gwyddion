@@ -33,7 +33,7 @@
  * [FILE-MAGIC-FREEDESKTOP]
  * <mime-type type="application/x-burleigh-spm">
  *   <comment>Burleigh SPM data</comment>
- *   <magic priority="50">
+ *   <magic priority="80">
  *     <match type="string" offset="0" value="\xff\x06@\x00"/>
  *   </magic>
  * </mime-type>
