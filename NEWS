@@ -8,12 +8,15 @@ Libraries:
   boundary length calculation.  This was corrected.
 - libgwyprocess: New grain quantities boundary minimum and maximum were added.
 - libgwyprocess: GwyMaskingType enum was added.
-- libgwyddion: Macro gwy_clear() zeroes memory in a sizeof-safe way.
+- libgwyddion: New nacro gwy_clear() zeroes memory in a sizeof-safe way.
+- libgwyddion: New function gwy_memmem() that wraps or emulates GNU memmem().
 - libgwydgets: GwyColorAxis uses two-line labels if number and units do not fit
   on one line together.
 
 Modules:
 - Pygwy: Is enabled by default (on Unix).
+- Polynomial level: Possible crash when no mask is present was fixed (bug
+  introduced in 2.11).
 - Calibrate: No longer mangles units of the original data, Reset button works
   again, some user interface corrections.
 - Pixmap export: Inset scale bar position and length can be adjusted.
@@ -25,18 +28,24 @@ Modules:
 - Distance, Stats and Roughness tools: Button copying results table to the
   clipboard was added.
 - Drift, Polynomial distortion: Mask and presentation are transformed too.
+- Burleigh BII: Botched module was completely rewritten.
+- Fit sphere: Critical message caused by failed assertions was fixed.
 - Scale, Rotate, Unrotate: Masks are always tranformed with rounding
   interpolation, i.e. output pixels are either fully masked or not at all.
 - Grain statistics: Can save the statistics table or copy it to clipboard.
+- Mask of outliers: No longer creates empty masks.  Should the mask be empty,
+  it is removed/not created instead.
 - Arc revolution: Cluttered labels were fixed.
 - Row/column statistics: Average value was moved from Options to a place where
   it is always visible and it is properly reset when no data is loaded.
+- Polynomial distortion, 1D FFT filter: Update button is insensitive when
+  automatic updates are enabled.
 
 Other:
 - New utility gwyddion-thumbnailer creates SPM file thumbnails for desktop
-  environments.  In this release, GNOME and XFce are fully supported with
-  thumbnails created on-the-fly.  In other TMS-conforming environments (e.g.
-  KDE) the thumbnailer must be run manually to batch-create the thumbnails.
+  environments.  In this release, GNOME, XFce and KDE4 are fully supported with
+  thumbnails created on-the-fly.  In other TMS-conforming environments the
+  thumbnailer must be run manually to batch-create the thumbnails.
 - Registered MIME types were updated, generic extensions such as *.dat or *.xml
   are no longer used for file format recognition.
 - If `make install' is run with nonempty DESTDIR, freedesktop databases are not
