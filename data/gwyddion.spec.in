@@ -42,6 +42,7 @@ BuildRequires: xorg-x11-Mesa-devel
 BuildRequires: xorg-x11-libXmu-devel
 BuildRequires: python-gtk-devel
 BuildRequires: gtksourceview-devel
+BuildRequires: libkde4-devel
 %define fftw3 fftw3
 %endif
 
@@ -49,6 +50,7 @@ BuildRequires: gtksourceview-devel
 BuildRequires: libxmu-devel
 BuildRequires: pygtk2.0-devel
 BuildRequires: gtksourceview-devel
+BuildRequires: kdelibs4-devel
 %define fftw3 libfftw3
 %endif
 
