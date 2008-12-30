@@ -15,9 +15,6 @@ Source0:       http://gwyddion.net/download/%{version}/%{name}-%{version}.tar.bz
 BuildRoot:     %{_tmppath}/%{name}-%{version}-%{release}-root-%(id -un)
 Requires(pre):    /sbin/ldconfig
 Requires(postun): /sbin/ldconfig
-Requires(pre):    GConf2
-Requires(post):   GConf2
-Requires(preun):  GConf2
 
 BuildRequires: gtk2-devel >= 2.8
 BuildRequires: glib2-devel >= 2.8
@@ -36,6 +33,7 @@ BuildRequires: findutils
 BuildRequires: libXmu-devel
 BuildRequires: pygtk2-devel
 BuildRequires: gtksourceview2-devel
+BuildRequires: kdelibs-devel >= 4.0
 %define fftw3 fftw
 %endif
 
@@ -90,6 +88,25 @@ Requires:      python-abi = %(%{__python} -c "import sys ; print sys.version[:3]
 %endif
 
 
+%package thumbnailer-gconf
+Summary:         GConf schemas for gwyddion-thumbnailer integration
+Group:           System Environment/Libraries
+Requires:        %{name} = %{version}
+Requires(pre):   GConf2
+Requires(post):  GConf2
+Requires(preun): GConf2
+
+
+%package thumbnailer-kde4
+Summary:         KDE4 gwyddion thumbnailer module
+Group:           System Environment/Libraries
+Requires:        %{name} = %{version}
+# We do not actually link with them, but they own the module directory.
+%if %{distro_is_fedora}
+Requires:        kdelibs >= 4.0
+%endif
+
+
 %description
 Gwyddion is a modular SPM (Scanning Probe Microsopy) data visualization and
 analysis tool written with Gtk+.
@@ -107,6 +124,16 @@ other 2D data.
 Header files, libraries and tools for Gwyddion module and plug-in development.
 This package also contains the API docmentation and sample plug-ins in various
 programming languages.
+
+
+%description thumbnailer-gconf
+GConf schemas that register gwyddion-thumbnailer as thumbnailer for SPM files
+in GNOME and XFce.
+
+
+%description thumbnailer-kde4
+Gwyddion-thumbnailer based KDE thumbnail creator extension module for SPM
+files.
 
 
 %prep
@@ -144,29 +171,32 @@ rm -f $RPM_BUILD_ROOT%{_mandir}/man3/Gwyddion::dump.*
 rm -rf $RPM_BUILD_ROOT
 
 
-%pre
-if [ "$1" -gt 1 ]; then
-    %{gconftool} --makefile-uninstall-rule %{schemas} >/dev/null || :
-fi
-
-
 %post
 /sbin/ldconfig
 update-mime-database %{_datadir}/mime &>/dev/null || :
 update-desktop-database &>/dev/null || :
-%{gconftool} --makefile-install-rule %{schemas} >/dev/null || :
-
-
-%preun
-if [ "$1" -eq 0 ]; then
-    %{gconftool} --makefile-uninstall-rule %{schemas} >/dev/null || :
-fi
 
 
 %postun
 /sbin/ldconfig
 update-mime-database %{_datadir}/mime &>/dev/null || :
 update-desktop-database &>/dev/null || :
+
+
+%pre(thumbnail-gconf)
+if [ "$1" -gt 1 ]; then
+    %{gconftool} --makefile-uninstall-rule %{schemas} >/dev/null || :
+fi
+
+
+%post(thumbnail-gconf)
+%{gconftool} --makefile-install-rule %{schemas} >/dev/null || :
+
+
+%preun(thumbnail-gconf)
+if [ "$1" -eq 0 ]; then
+    %{gconftool} --makefile-uninstall-rule %{schemas} >/dev/null || :
+fi
 
 
 %files -f %{name}.lang
@@ -206,7 +236,6 @@ update-desktop-database &>/dev/null || :
 %{_libdir}/*.so.*
 %{_datadir}/applications/%{name}.desktop
 %{_datadir}/mime/packages/%{name}.xml
-%{gconfdir}/*.schemas
 
 
 %files devel
@@ -264,3 +293,9 @@ update-desktop-database &>/dev/null || :
 %dir %{pkglibexecdir}/plugins/process
 %dir %{pkglibexecdir}/plugins
 %dir %{pkglibexecdir}
+
+%files thumbnailer-gconf
+%{gconfdir}/*.schemas
+
+%files thumbnailer-kde4
+%{libdir}/kde4/gwthumbcreator.so
