@@ -304,6 +304,61 @@ gwy_stramong(const gchar *str,
     return 0;
 }
 
+/**
+ * gwy_memmem:
+ * @haystack: Memory block to search in.
+ * @haystack_len: Size of @haystack, in bytes.
+ * @needle: Memory block to find.
+ * @needle_len: Size of @needle, in bytes.
+ *
+ * Find a block of memory in another block of memory.
+ *
+ * This function is very similar to strstr(), except that it works with
+ * arbitrary memory blocks instead of %NUL-terminated strings.
+ *
+ * If @needle_len is zero, @haystack is always returned.
+ *
+ * On GNU systems with glibc at least 2.1 this is a just a trivial memmem()
+ * wrapper.  On other systems it emulates memmem() behaviour.
+ *
+ * Returns: Pointer to the first byte of memory block in @haystack that matches
+ *          @needle; %NULL if no such block exists.
+ *
+ * Since: 2.12
+ **/
+gpointer
+gwy_memmem(gconstpointer haystack,
+           gsize haystack_len,
+           gconstpointer needle,
+           gsize needle_len)
+{
+#undef HAVE_MEMMEM
+#ifdef HAVE_MEMMEM
+    return memmem(haystack, haystack_len, needle, needle_len);
+#else
+    const guchar *h = haystack;
+    const guchar *s, *p;
+    guchar n0;
+
+    /* Empty needle can be found anywhere */
+    if (!needle_len)
+        return (gpointer)haystack;
+
+    /* Needle that doesn't fit cannot be found anywhere */
+    if (needle_len > haystack_len)
+        return NULL;
+
+    /* The general case */
+    n0 = *(const guchar*)needle;
+    s = h + haystack_len - needle_len;
+    for (p = h; p <= s; p = memchr(p, n0, s-p + 1)) {
+        if (memcmp(p, needle, needle_len) == 0)
+            return (gpointer)p;
+        p++;
+    }
+    return NULL;
+#endif
+}
 
 /**
  * gwy_file_get_contents:

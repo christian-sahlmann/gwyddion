@@ -44,6 +44,10 @@ gboolean     gwy_strisident            (const gchar *s,
                                         const gchar *startmore);
 guint        gwy_stramong              (const gchar *str,
                                         ...);
+gpointer     gwy_memmem                (gconstpointer haystack,
+                                        gsize haystack_len,
+                                        gconstpointer needle,
+                                        gsize needle_len);
 gboolean     gwy_file_get_contents     (const gchar *filename,
                                         guchar **buffer,
                                         gsize *size,
