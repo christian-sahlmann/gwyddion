@@ -116,7 +116,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Subtracts polynomial background."),
     "Yeti <yeti@gwyddion.net>",
-    "2.4",
+    "2.5",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -715,7 +715,7 @@ static void
 poly_level_update_preview(PolyLevelControls *controls,
                           PolyLevelArgs *args)
 {
-    GwyDataField *source, *leveled, *bg, *mask;
+    GwyDataField *source, *leveled, *bg, *mask = NULL;
 
     gwy_container_gis_object_by_name(controls->data, "/source", &source);
     gwy_container_gis_object_by_name(controls->data, "/mask", &mask);
