@@ -7,7 +7,7 @@ DIE=0
 
 PROJECT=Gwyddion
 # When runnig autogen.sh one normally wants this.
-CONF_FLAGS="--enable-maintainer-mode"
+CONF_FLAGS="--enable-maintainer-mode --enable-gtk-doc"
 AUTOCONF=${AUTOCONF:-autoconf}
 AUTOM4TE=${AUTOM4TE:-autom4te}
 LIBTOOLIZE=${LIBTOOLIZE:-libtoolize}
