@@ -68,8 +68,15 @@ static const StartupTip tips[] = {
            "with the right mouse button."),
     },
     {
+        GWY_STOCK_SHADER,
+        N_("Data presentations created by functions in Data Process → "
+           "Presentation do not change the underlying data.  All subsequent "
+           "operations still apply to the underlying data."),
+    },
+    {
         NULL,
-        N_("Menus can be torn off by clicking the dashed line near the top."),
+        N_("Menus can be torn off by clicking the dashed line near the top "
+           "for quick access to a subset of functions."),
     },
     /* Files */
     {
@@ -85,8 +92,8 @@ static const StartupTip tips[] = {
     },
     {
         GTK_STOCK_OPEN,
-        N_("Automatic import of unknown data as raw can be enabled/disabled "
-           "in the Raw file dialog."),
+        N_("Automatic import of unrecognized files as raw data can be "
+           "enabled/disabled in the Raw file import dialog."),
     },
     {
         GTK_STOCK_SAVE,
@@ -94,22 +101,29 @@ static const StartupTip tips[] = {
            "(PNG, TIFF, JPEG, ...) just save it as this format with "
            "File → Save As."),
     },
+    {
+        GTK_STOCK_OPEN,
+        N_("File → Merge imports all data from selected file to the current "
+           "file."),
+    },
     /* Resources */
     {
         GWY_STOCK_PALETTES,
         N_("Your favorite false color gradient can be set as default in the "
-           "gradient editor (Edit → Color Gradients)."),
+           "gradient editor: Edit → Color Gradients.  The default gradient "
+           "is shown in bold face."),
     },
     {
         GWY_STOCK_GL_MATERIAL,
         N_("Your favorite GL material can be set as default in the "
-           "material editor (Edit → GL Materials)."),
+           "material editor: Edit → GL Materials.  The default material "
+           "is shown in bold face."),
     },
     {
         GWY_STOCK_MASK,
-        N_("Default mask color, used when a mask is created on data that "
-           "have not had a mask before, is set with "
-           "Edit → Default Mask Color."),
+        N_("Edit → Default Mask Color sets the default mask color.  "
+           "This color is used when a mask is created on data that "
+           "have not had a mask before."),
     },
     {
         NULL,
@@ -118,13 +132,13 @@ static const StartupTip tips[] = {
     {
         GTK_STOCK_INDEX,
         N_("Meta → Metadata Browser displays metadata (auxiliary information) "
-           "of channels and allows to edit it."),
+           "of channels and allows to edit it or export to a text file."),
     },
     /* 1D Views */
     {
         GTK_STOCK_DND_MULTIPLE,
         N_("Curves can be copied to other (compatible) graphs by "
-           "dragging them from Curves tab."),
+           "dragging them from Curves tab to the graph window."),
     },
     {
         GWY_STOCK_GRAPH,
@@ -158,9 +172,11 @@ static const StartupTip tips[] = {
         N_("Key ‛Z’ resets data window zoom to 1:1."),
     },
     {
-        NULL,
-        N_("Pixel-wise and realistic aspect ratio of 2D data view "
-           "can be selected with the data window top left corner menu."),
+        GWY_STOCK_DATA_MEASURE,
+        N_("Data with different <i>x</i> and <i>y</i> measures can be "
+           "displayed either with pixel-wise or realistic aspect ratio.  "
+           "The menu in data window top left corner enables to switch "
+           "between these two modes."),
     },
     {
         GWY_STOCK_PALETTES,
@@ -188,11 +204,6 @@ static const StartupTip tips[] = {
         GTK_STOCK_DND_MULTIPLE,
         N_("Dragging channels or graphs from Data Browser to a window "
            "copies them to the corresponding file."),
-    },
-    {
-        GTK_STOCK_DND_MULTIPLE,
-        N_("Graphs can be copied to other files by dragging them from "
-           "Data Browser to a window."),
     },
     {
         GTK_STOCK_INDEX,
@@ -231,6 +242,11 @@ static const StartupTip tips[] = {
            "grain function."),
     },
     {
+        GWY_STOCK_EDGE,
+        N_("Data Process → Presentation → Edge Detection → Step "
+           "is a fine step detector with a good dynamic range"),
+    },
+    {
         GWY_STOCK_DATA_MEASURE,
         N_("Data Process → Basic Operations → Recalibrate changes scales, "
            "offsets and even lateral and value units."),
@@ -249,7 +265,8 @@ static const StartupTip tips[] = {
     /* Graphing */
     {
         GWY_STOCK_GRAPH_MEASURE,
-        N_("Graph → Critical Dimension measures steps on profile graphs."),
+        N_("Graph → Critical Dimension measures steps on extracted profile "
+           "graphs."),
     },
     /* Tools */
     {
