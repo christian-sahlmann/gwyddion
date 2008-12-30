@@ -22,7 +22,7 @@
  * [FILE-MAGIC-FREEDESKTOP]
  * <mime-type type="application/x-nanosurf-spm">
  *   <comment>Nanosurf SPM data</comment>
- *   <magic priority="50">
+ *   <magic priority="80">
  *     <match type="string" offset="0" value="[DataSet]\r\n"/>
  *   </magic>
  *   <glob pattern="*.ezd"/>
@@ -115,7 +115,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Nanosurf EZD and NID data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.7",
+    "0.7.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -240,14 +240,7 @@ find_data_start(const guchar *buffer,
                 gsize size)
 {
     const guchar *p;
-
-    size -= DATA_MAGIC_SIZE;
-
-    for (p = buffer;
-         p && strncmp(p, DATA_MAGIC, DATA_MAGIC_SIZE);
-         p = memchr(p+1, (DATA_MAGIC)[0], size - (p - buffer) - 1))
-        ;
-
+    p = gwy_memmem(buffer, size, DATA_MAGIC, DATA_MAGIC_SIZE);
     return p ? (p - buffer) + DATA_MAGIC_SIZE : 0;
 }
 
@@ -602,7 +595,7 @@ read_data_field(GwyDataField *dfield,
 }
 
 static void
-check_section_ranges(gpointer data, gpointer user_data)
+check_section_ranges(gpointer data, G_GNUC_UNUSED gpointer user_data)
 {   
    EZDSection *section = (EZDSection*) data;
    
