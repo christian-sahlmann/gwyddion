@@ -170,7 +170,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("2D fitting"),
     "Petr Klapetek <petr@klapetek.cz>",
-    "1.4",
+    "1.5",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -268,6 +268,7 @@ fit_2d_dialog(Fit2DArgs *args,
     layer = gwy_layer_basic_new();
     gwy_pixmap_layer_set_data_key(layer, "/0/data");
     gwy_layer_basic_set_gradient_key(GWY_LAYER_BASIC(layer), "/0/base/palette");
+    gwy_data_view_set_data_prefix(GWY_DATA_VIEW(controls.view), "/0/data");
     gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view), layer);
     gwy_set_data_preview_size(GWY_DATA_VIEW(controls.view), PREVIEW_SIZE);
 
