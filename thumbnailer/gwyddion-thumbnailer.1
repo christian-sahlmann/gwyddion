@@ -36,7 +36,8 @@ the same environment variables as Gwyddion.
 Print a brief help and terminates.
 .TP
 \fB\-v\fR, \fB\-\-version\fR
-Print version information and terminates.
+Print version information and terminates.  The version is identical to
+Gwyddion's.
 .
 .
 .SH THUMBNAILING OPTIONS
@@ -49,8 +50,9 @@ with fresh ones even if they were up to date.
 .
 .SH MODE
 .PP
-Two modes are available: \fBgnome2\fR and \fBtms\fB.  They are described
-below.
+Three thumbnailing modes are available: \fBgnome2\fR, \fBtms\fR and \fBkde4\fR,
+and one special mode: \fBcheck\fR.
+They are described below.
 .
 .
 .SH GNOME 2
@@ -107,8 +109,59 @@ find scans -type f -name '*.afm' -print0 \\
 And then go make yourself a coffee because this will take some time.
 .
 .
+.SH KDE 4
+.PP
+Synopsis:
+.sp
+\fBgwyddion-thumbnailer\fR \fBkde4\fR \fIMAX-SIZE\fR \fIINPUT-FILE\fR
+.PP
+In \fBkde4\fR mode, gwyddion-thumbnailer creates PNG thumbnails that are
+intended to be consumed by gwythumbcreator KDE module.  The thumbnail,
+again identical as in the other modes, is written to the standard output.
+.PP
+Do \fBNOT\fR use this mode from the command line.  It is documented for
+completness, however, the protocol between gwythumbcreator and
+gwyddion-thumbnailer must be considered private and it can change any time.
+.
+.
+.SH CHECK
+.PP
+Synopsis:
+.sp
+\fBgwyddion-thumbnailer\fR \fBcheck\fR \fIINPUT-FILE\fR
+.PP
+The \fBcheck\fR mode does not serve for thumbnail creation.  Instead,
+gwyddion-thumbnailer prints information about available thumbnails of
+\fIINPUT-FILE\fR and cached failures to produce a thumbnail by individual
+applications, as described by the TMS.
+.PP
+If the normal-sized thumbnail exists and is up to date, the large version does
+not exist and there is one cached failure from gnome-thumbnail-factory, the
+output can be for instance:
+.sp
+.RS 4
+.nf
+File:   \fIINPUT-FILE\fR
+URI:    file:///home/me/Pictures/naughty/broken-tip3/\fIINPUT-FILE\fR
+Normal: /home/me/.thumbnails/normal/\fIMD5\fR.png
+        status: OK
+Large:  /home/me/.thumbnails/large/\fIMD5\fR.png
+        status: Thumbnail does not exist or stat() fails on it.
+Failed: /home/me/.thumbnails/fail/gnome-thumbnail-factory/\fIMD5\fR.png
+.fi
+.RE
+.PP
+URI is the canonical URI of the input file, \fIMD5\fR stands for the hex
+representation of MD5 sum of the URI, as described by the TMS.  If there are
+no cached failures, no Failed lines are printed.
+.PP
+This function can be used to check thumbnails of any kind, not
+necessarily created by gwyddion or gwyddion-thumbnailer.  In future, it might
+be reported as an error if the thumbnail does not contain Gwyddion-specific
+information though.
+.
+.
 .SH SEE ALSO
 .PP
 \fIgwyddion\fR(1).
 .
-
