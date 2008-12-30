@@ -49,6 +49,11 @@ typedef enum {
     PREVIEW_LAST
 } DistortPreviewType;
 
+enum {
+    RESPONSE_RESET   = 1,
+    RESPONSE_PREVIEW = 2
+};
+
 /* Data for this function. */
 typedef struct {
     DistortPreviewType preview_type;
@@ -134,7 +139,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Apllies polynomial distortion in the horizontal plane."),
     "Yeti <yeti@gwyddion.net>",
-    "1.3",
+    "1.4",
     "David Nečas (Yeti) & Petr Klapetek",
     "2007",
 };
@@ -193,11 +198,6 @@ distort_dialog(DistortArgs *args,
                GwyDataField *sfield,
                gint id)
 {
-    enum {
-        RESPONSE_RESET   = 1,
-        RESPONSE_PREVIEW = 2
-    };
-
     GtkWidget *dialog, *table, *hbox, *label;
     DistortControls controls;
     gint response;
@@ -214,6 +214,8 @@ distort_dialog(DistortArgs *args,
                                  gwy_stock_like_button_new(_("_Update"),
                                                            GTK_STOCK_EXECUTE),
                                  RESPONSE_PREVIEW);
+    gtk_dialog_set_response_sensitive(GTK_DIALOG(dialog), RESPONSE_PREVIEW,
+                                      !args->update);
     gtk_dialog_add_button(GTK_DIALOG(dialog), _("_Reset"), RESPONSE_RESET);
     gtk_dialog_add_button(GTK_DIALOG(dialog),
                           GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL);
@@ -485,6 +487,9 @@ update_changed(GtkToggleButton *check,
                DistortControls *controls)
 {
     controls->args->update = gtk_toggle_button_get_active(check);
+    gtk_dialog_set_response_sensitive(GTK_DIALOG(controls->dialog),
+                                      RESPONSE_PREVIEW,
+                                      !controls->args->update);
     if (controls->args->update)
         preview(controls, controls->args);
 }

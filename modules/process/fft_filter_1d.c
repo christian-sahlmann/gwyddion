@@ -53,6 +53,11 @@ enum {
     MAX_PREV = 240
 };
 
+enum {
+    RESPONSE_PREVIEW = 1,
+    RESPONSE_CLEAR   = 2
+};
+
 typedef struct {
     GwyFftf1dSuppressType suppress;
     GwyFftf1dViewType view_type;
@@ -62,6 +67,7 @@ typedef struct {
 } Fftf1dArgs;
 
 typedef struct {
+    GtkWidget *dialog;
     GtkWidget *view_original;
     GtkWidget *view_result;
     GtkWidget *type;
@@ -120,7 +126,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("FFT filtering"),
     "Petr Klapetek <petr@klapetek.cz>",
-    "2.2",
+    "2.3",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -166,11 +172,6 @@ fftf_1d_dialog(Fftf1dArgs *args,
                GwyDataField *dfield,
                gint id)
 {
-    enum {
-        RESPONSE_PREVIEW = 1,
-        RESPONSE_CLEAR   = 2
-    };
-
     static const GwyEnum view_types[] = {
         { N_("Marked"),    GWY_FFTF_1D_VIEW_MARKED,    },
         { N_("Unmarked"),  GWY_FFTF_1D_VIEW_UNMARKED,  },
@@ -191,10 +192,13 @@ fftf_1d_dialog(Fftf1dArgs *args,
     gchar *key;
 
     dialog = gtk_dialog_new_with_buttons(_("1D FFT filter"), NULL, 0, NULL);
+    controls.dialog = dialog;
     gtk_dialog_add_action_widget(GTK_DIALOG(dialog),
                                  gwy_stock_like_button_new(_("_Update"),
                                                            GTK_STOCK_EXECUTE),
                                  RESPONSE_PREVIEW);
+    gtk_dialog_set_response_sensitive(GTK_DIALOG(dialog), RESPONSE_PREVIEW,
+                                      !args->update);
     gtk_dialog_add_button(GTK_DIALOG(dialog), GTK_STOCK_CLEAR, RESPONSE_CLEAR);
     gtk_dialog_add_button(GTK_DIALOG(dialog),
                           GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL);
@@ -531,6 +535,9 @@ static void
 update_changed_cb(GtkToggleButton *button, Fftf1dControls *controls)
 {
     controls->args->update = gtk_toggle_button_get_active(button);
+    gtk_dialog_set_response_sensitive(GTK_DIALOG(controls->dialog),
+                                      RESPONSE_PREVIEW,
+                                      !controls->args->update);
     if (controls->args->update)
         update_view(controls, controls->args);
 }
