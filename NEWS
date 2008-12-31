@@ -1,6 +1,7 @@
 2.12 (2000-00-00)
 Application:
 - New translations: Russian.
+- Translations updated: Czech.
 - Tips of the day were added, accessible in Meta -> Tip of the Day.
 
 Libraries:
@@ -33,8 +34,10 @@ Modules:
 - Scale, Rotate, Unrotate: Masks are always tranformed with rounding
   interpolation, i.e. output pixels are either fully masked or not at all.
 - Grain statistics: Can save the statistics table or copy it to clipboard.
+- Grain distributions: Can add an header comment describing the columns.
 - Mask of outliers: No longer creates empty masks.  Should the mask be empty,
   it is removed/not created instead.
+- Arithmetic: Knows the constant pi.
 - Arc revolution: Cluttered labels were fixed.
 - Row/column statistics: Average value was moved from Options to a place where
   it is always visible and it is properly reset when no data is loaded.
