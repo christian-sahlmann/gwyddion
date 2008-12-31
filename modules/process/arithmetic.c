@@ -88,7 +88,7 @@ static GwyModuleInfo module_info = {
     N_("Simple arithmetic operations with two data fields "
        "(or a data field and a scalar)."),
     "Yeti <yeti@gwyddion.net>",
-    "2.3",
+    "2.3.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -128,6 +128,9 @@ arithmetic(GwyContainer *data, GwyRunType run)
     }
     arithmetic_load_args(settings, &args);
     args.expr = gwy_expr_new();
+
+    gwy_expr_define_constant(args.expr, "pi", G_PI, NULL);
+    gwy_expr_define_constant(args.expr, "π", G_PI, NULL);
 
     if (arithmetic_dialog(&args)) {
         arithmetic_do(&args);
