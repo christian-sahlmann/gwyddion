@@ -202,17 +202,6 @@ function make_dists() {
 }
 
 
-function gnains_index() {
-  if which gnains-mkindex >&/dev/null; then
-    for d in ${gtkdocdirs[@]/%/$gtkdocdir}; do
-      test -f "$d/index.sgml" && echo $d
-    done | xargs gnains-mkindex -f $gnainsindex
-  else
-    echo "gnains-mkindex not available" 1>&2
-  fi
-}
-
-
 function help() {
   sed <$0 -e '1,/^  # LIST-BEGIN/d' \
           -e '/^  # LIST-END/,$d' \
@@ -245,6 +234,5 @@ else
   call check_desktop
   call check_coding_style
   call make_dists
-  call gnains_index
   # LIST-END
 fi
