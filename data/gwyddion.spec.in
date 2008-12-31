@@ -300,4 +300,4 @@ fi
 %{gconfdir}/*.schemas
 
 %files thumbnailer-kde4
-%{libdir}/kde4/gwthumbcreator.so
+%{_libdir}/kde4/gwthumbcreator.so
