@@ -2,7 +2,6 @@
 %{expand:%global distro_is_fedora %(test ! -f /etc/fedora-release; echo $?)}
 %{expand:%global distro_is_suse %(test ! -f /etc/SuSE-release; echo $?)}
 %{expand:%global distro_is_mdk %(test ! -f /etc/mandriva-release; echo $?)}
-%define enable_kde4_thumbnailer 0
 
 Name:          @PACKAGE_TARNAME@
 Version:       @PACKAGE_VERSION@
@@ -34,9 +33,7 @@ BuildRequires: findutils
 BuildRequires: libXmu-devel
 BuildRequires: pygtk2-devel
 BuildRequires: gtksourceview2-devel
-%if %{enable_kde4_thumbnailer}
 BuildRequires: kdelibs-devel >= 4.0
-%endif
 %define fftw3 fftw
 %endif
 
@@ -45,9 +42,7 @@ BuildRequires: xorg-x11-Mesa-devel
 BuildRequires: xorg-x11-libXmu-devel
 BuildRequires: python-gtk-devel
 BuildRequires: gtksourceview-devel
-%if %{enable_kde4_thumbnailer}
 BuildRequires: libkde4-devel
-%endif
 %define fftw3 fftw3
 %endif
 
@@ -55,9 +50,7 @@ BuildRequires: libkde4-devel
 BuildRequires: libxmu-devel
 BuildRequires: pygtk2.0-devel
 BuildRequires: gtksourceview-devel
-%if %{enable_kde4_thumbnailer}
 BuildRequires: kdelibs4-devel
-%endif
 %define fftw3 libfftw3
 %endif
 
@@ -106,7 +99,6 @@ Requires(post):  GConf2
 Requires(preun): GConf2
 
 
-%if %{enable_kde4_thumbnailer}
 %package thumbnailer-kde4
 Summary:         KDE4 gwyddion thumbnailer module
 Group:           System Environment/Libraries
@@ -141,11 +133,9 @@ GConf schemas that register gwyddion-thumbnailer as thumbnailer for SPM files
 in GNOME and XFce.
 
 
-%if %{enable_kde4_thumbnailer}
 %description thumbnailer-kde4
 Gwyddion-thumbnailer based KDE thumbnail creator extension module for SPM
 files.
-%endif
 
 
 %prep
@@ -157,7 +147,7 @@ sed -i -e '1s/env *//' plugins/process/*.{py,rb,pl}
 
 
 %build
-%configure --disable-pascal --disable-rpath --disable-kde4-thumbnailer
+%configure --disable-pascal --disable-rpath
 make %{?_smp_mflags}
 
 
@@ -309,7 +299,5 @@ fi
 %files thumbnailer-gconf
 %{gconfdir}/*.schemas
 
-%if %{enable_kde4_thumbnailer}
 %files thumbnailer-kde4
 %{libdir}/kde4/gwthumbcreator.so
-%endif

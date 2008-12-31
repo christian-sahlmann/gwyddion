@@ -177,7 +177,9 @@ function check_desktop() {
 
 
 function install_to_tmp() {
-  make -k install DISABLE_GCONF_SCHEMAS_INSTALL=yes
+  make -k install \
+    KDE4_MODULE_DIR=$installprefix/lib/kde \
+    DISABLE_GCONF_SCHEMAS_INSTALL=yes
 }
 
 
