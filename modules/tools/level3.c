@@ -236,7 +236,7 @@ gwy_tool_level3_init_dialog(GwyToolLevel3 *tool)
                        TRUE, TRUE, 0);
 
     table = gtk_table_new(3, 3, FALSE);
-    gtk_table_set_col_spacings(table, 6);
+    gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_box_pack_start(GTK_BOX(dialog->vbox), table, TRUE, TRUE, 0);
 
