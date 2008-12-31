@@ -72,6 +72,7 @@ typedef struct {
     GrainDistMode mode;
     const gchar *selected;
     gint expanded;
+    gboolean add_comment;
     gboolean fixres;
     gint resolution;
 
@@ -84,6 +85,7 @@ typedef struct {
     GrainDistArgs *args;
     GtkWidget *values;
     GSList *mode;
+    GtkWidget *add_comment;
     GtkWidget *fixres;
     GtkObject *resolution;
     GtkWidget *ok;
@@ -94,6 +96,7 @@ typedef struct {
     guint nvalues;
     GwyGrainValue **gvalues;
     GwyDataLine **rawvalues;
+    gboolean add_comment;
 } GrainDistExportData;
 
 static gboolean module_register                 (void);
@@ -131,6 +134,7 @@ static const GrainDistArgs grain_dist_defaults = {
     "Equivalent disc radius",
     0,
     FALSE,
+    FALSE,
     120,
     FALSE,
     0xffffffffU,
@@ -142,7 +146,7 @@ static GwyModuleInfo module_info = {
     N_("Evaluates distribution of grains (continuous parts of mask)."),
     "Petr Klapetek <petr@klapetek.cz>, Sven Neumann <neumann@jpk.com>, "
         "Yeti <yeti@gwyddion.net>",
-    "3.5",
+    "3.6",
     "David Nečas (Yeti) & Petr Klapetek & Sven Neumann",
     "2003",
 };
@@ -227,6 +231,7 @@ grain_dist_dialog(GrainDistArgs *args,
     GtkTreeSelection *selection;
     GtkTreeModel *model;
     GtkTable *table;
+    GSList *l;
     gint row, response;
 
     controls.args = args;
@@ -270,7 +275,7 @@ grain_dist_dialog(GrainDistArgs *args,
                              G_CALLBACK(selected_changed_cb), &controls);
 
     /* Options */
-    table = GTK_TABLE(gtk_table_new(4, 4, FALSE));
+    table = GTK_TABLE(gtk_table_new(5, 4, FALSE));
     gtk_table_set_row_spacings(table, 2);
     gtk_table_set_col_spacings(table, 6);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
@@ -284,10 +289,29 @@ grain_dist_dialog(GrainDistArgs *args,
                                              args->mode);
 
     gtk_table_attach(table, gwy_label_new_header(_("Options")),
-                     0, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
-    row = gwy_radio_buttons_attach_to_table(controls.mode, table, 4, row);
+    l = controls.mode;
+    gtk_table_attach(table, GTK_WIDGET(l->data),
+                     0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    l = g_slist_next(l);
+    row++;
+
+    controls.add_comment
+        = gtk_check_button_new_with_mnemonic(_("Add _informational "
+                                               "comment header"));
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.add_comment),
+                                 args->add_comment);
+    gtk_table_attach(table, controls.add_comment,
+                     0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    row++;
+
+    gtk_table_attach(table, GTK_WIDGET(l->data),
+                     0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    l = g_slist_next(l);
+    gtk_table_set_row_spacing(table, row, 8);
+    row++;
 
     controls.resolution = gtk_adjustment_new(args->resolution,
                                              MIN_RESOLUTION, MAX_RESOLUTION,
@@ -297,6 +321,7 @@ grain_dist_dialog(GrainDistArgs *args,
     controls.fixres = gwy_table_hscale_get_check(controls.resolution);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.fixres),
                                  args->fixres);
+    row++;
 
     gtk_widget_show_all(GTK_WIDGET(dialog));
     grain_dist_dialog_update_sensitivity(&controls, args);
@@ -373,6 +398,8 @@ grain_dist_dialog_update_values(GrainDistControls *controls,
     args->resolution = gwy_adjustment_get_int(controls->resolution);
     args->fixres
         = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->fixres));
+    args->add_comment
+        = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->add_comment));
 }
 
 static void
@@ -385,12 +412,14 @@ grain_dist_dialog_update_sensitivity(GrainDistControls *controls,
     check = gwy_table_hscale_get_check(controls->resolution);
     switch (args->mode) {
         case MODE_GRAPH:
+        gtk_widget_set_sensitive(controls->add_comment, FALSE);
         gtk_widget_set_sensitive(check, TRUE);
         gtk_toggle_button_toggled(GTK_TOGGLE_BUTTON(check));
         gtk_toggle_button_toggled(GTK_TOGGLE_BUTTON(check));
         break;
 
         case MODE_RAW:
+        gtk_widget_set_sensitive(controls->add_comment, TRUE);
         gtk_widget_set_sensitive(check, FALSE);
         w = gwy_table_hscale_get_scale(controls->resolution);
         gtk_widget_set_sensitive(w, FALSE);
@@ -485,6 +514,7 @@ grain_dist_run(GrainDistArgs *args,
     nvalues = g_strv_length(names);
     expdata.gvalues = g_new(GwyGrainValue*, nvalues);
     expdata.rawvalues = g_new(GwyDataLine*, nvalues);
+    expdata.add_comment = args->add_comment;
     results = g_new(gdouble*, nvalues);
     for (nvalues = i = 0; names[i]; i++) {
         gvalue = gwy_grain_values_get_grain_value(names[nvalues]);
@@ -550,6 +580,17 @@ grain_dist_export_create(gpointer user_data,
         ngrains = gwy_data_line_get_res(expdata->rawvalues[0]) - 1;
 
     report = g_string_sized_new(12*ngrains*expdata->nvalues);
+
+    if (expdata->add_comment) {
+        g_string_append_c(report, '#');
+        for (i = 0; i < expdata->nvalues; i++) {
+            g_string_append_c(report, ' ');
+            g_string_append(report,
+                            gwy_grain_value_get_symbol(expdata->gvalues[i]));
+        }
+        g_string_append_c(report, '\n');
+    }
+
     for (gno = 1; gno <= ngrains; gno++) {
         for (i = 0; i < expdata->nvalues; i++) {
             val = gwy_data_line_get_val(expdata->rawvalues[i], gno);
