@@ -153,13 +153,14 @@ function check_headers() {
   cat >$exceptions <<EOF
 EOF
   incl=$installprefix/include/$pkgname
+  flags=$(PKG_CONFIG_PATH="$installdir/lib/pkgconfig:$PKG_CONFIG_PATH" pkg-config --cflags $pkgname)
   for f in $(find $incl -type f -name '*.h' | sed "s#$incl/##"); do
     if grep -F $f $exceptions; then
       continue
     fi
     tmp=_check_header_$(sed 's#[^-a-zA-Z0-9]#_#g' <<<$f)
     echo "#include <$f>" >$tmp.c
-    if ! gcc $(pkg-config --cflags $pkgname) -c -o $tmp.o $tmp.c; then
+    if ! gcc $flags -c -o $tmp.o $tmp.c; then
       echo 1>&2
     fi
     rm -f $tmp.c $tmp.o
