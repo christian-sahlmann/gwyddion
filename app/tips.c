@@ -288,11 +288,6 @@ static const StartupTip tips[] = {
            "them in the list and pressing Delete."),
     },
     {
-        GWY_STOCK_DISTANCE,
-        N_("Distance tool measures distances, angles and height differences "
-           "between selected points."),
-    },
-    {
         GWY_STOCK_PROFILE,
         N_("Individual lines can be deleted in Profiles tool by selecting "
            "them in the list and pressing Delete."),
