@@ -170,8 +170,8 @@ sensofar_load(const gchar *filename,
    }
    if (size < sizeof(tDataDesc) + 12) {
       g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                  _("File too small (less than %d bytes). Header is not complete."), 
-                  sizeof(tDataDesc)+12);
+                  _("File too small (less than %lu bytes). Header is not complete."), 
+                  (gulong)(sizeof(tDataDesc)+12));
       return NULL;
    }
    // A little dirty, set pointer to data description structure to start of buffer

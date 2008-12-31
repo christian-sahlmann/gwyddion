@@ -151,9 +151,9 @@ ols_load_tiff(TIFF *tiff, GError **error)
     double z_axis, xy_axis, factor;
 
     if (!TIFFGetField(tiff, TIFFTAG_IMAGEDESCRIPTION, &comment)
-        || !strstr(comment, "OLS"))
-    {
-       return NULL;
+        || !strstr(comment, "OLS")) {
+        err_FILE_TYPE(error, "OLS");
+        return NULL;
     }
 
     z_axis = - atof(ols_read_value(comment, "ZPositionUp"))
@@ -165,7 +165,8 @@ ols_load_tiff(TIFF *tiff, GError **error)
        sprintf(channel_name, "/%d/data", dir_num++);
        data_channel_info_title = g_strdup_printf("[Data %d Info]", dir_num);
        // find channel info
-       data_channel_info = g_strstr_len(comment, strlen(comment), data_channel_info_title);
+       data_channel_info = g_strstr_len(comment, strlen(comment),
+                                        data_channel_info_title);
        if (!data_channel_info) {
           g_warning("Cannot find '%s' in comment.", data_channel_info_title);
           continue;
