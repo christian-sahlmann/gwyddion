@@ -492,7 +492,7 @@ poly_level_dialog(PolyLevelArgs *args,
     row++;
 
     if (mfield) {
-        label = gwy_label_new_header(_("Masking"));
+        label = gwy_label_new_header(_("Masking Mode"));
         gtk_table_attach(GTK_TABLE(table), label,
                         0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
         row++;
