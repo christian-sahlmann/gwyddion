@@ -190,7 +190,7 @@ function make_dists() {
   make dist
   if test -s $pkgname-$version.tar.bz2; then
     if which rpmbuild >&/dev/null; then
-      TAR_OPTIONS=--wildcards rpmbuild -ta --with-kde4-thumbnailer --clean $pkgname-$version.tar.bz2 \
+      TAR_OPTIONS=--wildcards rpmbuild -ta --with kde4-thumbnailer --clean $pkgname-$version.tar.bz2 \
         && touch .releaseme
     else
       echo "rpmbuild not available" 1>&2
