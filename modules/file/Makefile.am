@@ -85,6 +85,7 @@ noinst_HEADERS = \
 	get.h
 
 EXTRA_DIST = \
+	1CHECKLIST \
 	$(jpkscan_sources) \
 	$(ols_sources) \
 	$(spml_sources) \
