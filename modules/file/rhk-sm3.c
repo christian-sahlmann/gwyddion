@@ -1,6 +1,6 @@
 /*
  *  $Id$
- *  Copyright (C) 2005 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2005,2008 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -37,7 +37,10 @@
 #include <libgwyddion/gwyutils.h>
 #include <libprocess/datafield.h>
 #include <libgwymodule/gwymodule-file.h>
+#include <libgwydgets/gwygraphmodel.h>
+#include <libgwydgets/gwygraphcurvemodel.h>
 #include <app/gwymoduleutils-file.h>
+#include <app/data-browser.h>
 
 #include "err.h"
 #include "get.h"
@@ -196,10 +199,10 @@ typedef struct {
     gdouble angle;
     guchar page_id[16];
     gchar *strings[RHK_STRING_NSTRINGS];
-    /* Always 32bit signed integers */
+    /* The actual type depends.  The documentation is a bit confusing as to
+     * which type is used when, but at least we know int32 and float32 can
+     * occur. */
     const guchar *page_data;
-    /* Varies, FIXME: we don't import this yet */
-    const guchar *spectral_data;
     RHKColorInformation color_info;
 } RHKPage;
 
@@ -216,7 +219,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports RHK Technology SM3 data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.11",
+    "0.12",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -413,10 +416,7 @@ rhk_sm3_read_page(const guchar **buffer,
     if (err_SIZE_MISMATCH(error, expected, *len - (p - *buffer), FALSE))
         goto fail;
 
-    if (page->type == RHK_TYPE_IMAGE)
-        page->page_data = p;
-    else
-        page->spectral_data = p;
+    page->page_data = p;
     p += expected;
 
     if (page->type == RHK_TYPE_IMAGE) {
@@ -503,6 +503,68 @@ rhk_sm3_page_to_data_field(const RHKPage *page)
     return dfield;
 }
 
+static GwyGraphModel*
+rhk_sm3_page_to_spectra(const RHKPage *page)
+{
+    GwyGraphModel *gmodel;
+    GwyDataLine *dline;
+    GwySIUnit *siunit;
+    const gchar *unit;
+    gint res, ncurves, i, j;
+    const guchar *p;
+    gdouble *data;
+
+    res = page->x_size;
+    ncurves = page->y_size;
+    gmodel = gwy_graph_model_new();
+    dline = gwy_data_line_new(res, res*fabs(page->x_scale), FALSE);
+    data = gwy_data_line_get_data(dline);
+    p = page->page_data;
+
+    if (page->strings[RHK_STRING_X_UNITS])
+        unit = page->strings[RHK_STRING_X_UNITS];
+    else
+        unit = "";
+    siunit = gwy_si_unit_new(unit);
+    gwy_data_line_set_si_unit_x(dline, siunit);
+    g_object_unref(siunit);
+
+    if (page->strings[RHK_STRING_Z_UNITS])
+        unit = page->strings[RHK_STRING_Z_UNITS];
+    else
+        unit = "";
+    /* Fix some silly units */
+    if (gwy_strequal(unit, "N/sec"))
+        unit = "s^-1";
+    siunit = gwy_si_unit_new(unit);
+    gwy_data_line_set_si_unit_y(dline, siunit);
+    g_object_unref(siunit);
+
+    for (i = 0; i < ncurves; i++) {
+        GwyGraphCurveModel *gcmodel = gwy_graph_curve_model_new();
+        gchar *s = g_strdup_printf("%d", i+1);
+
+        /* FIXME: The docs seem to talk about floats, but AFAICT the data looks
+         * like integers. */
+        for (j = 0; j < res; j++)
+            data[j] = gwy_get_gint32_le(&p) * page->z_scale + page->z_offset;
+
+        gwy_graph_curve_model_set_data_from_dataline(gcmodel, dline, 0, 0);
+        g_object_set(gcmodel,
+                     "mode", GWY_GRAPH_CURVE_LINE,
+                     "color", gwy_graph_get_preset_color(i),
+                     "description", s,
+                     NULL);
+        gwy_graph_model_add_curve(gmodel, gcmodel);
+        g_object_unref(gcmodel);
+        g_free(s);
+    }
+
+    g_object_unref(dline);
+
+    return gmodel;
+}
+
 static GwyContainer*
 rhk_sm3_load(const gchar *filename,
              G_GNUC_UNUSED GwyRunType mode,
@@ -514,7 +576,6 @@ rhk_sm3_load(const gchar *filename,
     guchar *buffer = NULL;
     gsize size = 0;
     GError *err = NULL;
-    GwyDataField *dfield = NULL;
     const guchar *p;
     GString *key;
     guint i, count;
@@ -539,8 +600,8 @@ rhk_sm3_load(const gchar *filename,
         count++;
         rhkpage->pageno = count;
         gwy_debug("position %04x", (guint)(p - buffer));
-        if (rhkpage->type != RHK_TYPE_IMAGE) {
-            gwy_debug("Page is not IMAGE, skipping");
+        if (rhkpage->type != RHK_TYPE_IMAGE && rhkpage->type != RHK_TYPE_LINE) {
+            gwy_debug("Page is neither IMAGE nor LINE, skipping");
             rhk_sm3_page_free(rhkpage);
             continue;
         }
@@ -561,20 +622,29 @@ rhk_sm3_load(const gchar *filename,
     g_clear_error(&err);
 
     container = gwy_container_new();
-    key = g_string_new("");
-    for (i = 0; i < rhkfile->len; i++) {
+    key = g_string_new(NULL);
+
+    /* Process fields and lines separately to get nicer data ids */
+    /* So, first fields. */
+    for (i = count = 0; i < rhkfile->len; i++) {
+        GwyDataField *dfield;
+        GQuark quark;
         const gchar *cs;
         gchar *s;
 
         rhkpage = g_ptr_array_index(rhkfile, i);
+        if (rhkpage->type != RHK_TYPE_IMAGE)
+            continue;
+
         dfield = rhk_sm3_page_to_data_field(rhkpage);
-        g_string_printf(key, "/%d/data", i);
-        gwy_container_set_object_by_name(container, key->str, dfield);
+        quark = gwy_app_get_data_key_for_id(count);
+        gwy_container_set_object(container, quark, dfield);
         g_object_unref(dfield);
         p = rhkpage->strings[RHK_STRING_LABEL];
         cs = gwy_enum_to_string(rhkpage->scan_dir,
                                 scan_directions, G_N_ELEMENTS(scan_directions));
         if (p && *p) {
+            g_string_assign(key, g_quark_to_string(quark));
             g_string_append(key, "/title");
             if (cs)
                 s = g_strdup_printf("%s [%s]", p, cs);
@@ -584,12 +654,63 @@ rhk_sm3_load(const gchar *filename,
         }
 
         meta = rhk_sm3_get_metadata(rhkpage);
-        g_string_printf(key, "/%d/meta", i);
+        g_string_printf(key, "/%d/meta", count);
         gwy_container_set_object_by_name(container, key->str, meta);
         g_object_unref(meta);
 
-        gwy_app_channel_check_nonsquare(container, i);
+        gwy_app_channel_check_nonsquare(container, count);
+        count++;
     }
+
+    /* Then lines.  Since the spectra does not seem to have any positional
+     * information attached, it makes not sense trying to construct
+     * GwySpectra.  Just add them as graphs. */
+    for (i = count = 0; i < rhkfile->len; i++) {
+        GwyGraphModel *spectra;
+        GQuark quark;
+        gchar *s = NULL;
+
+        rhkpage = g_ptr_array_index(rhkfile, i);
+        if (rhkpage->type != RHK_TYPE_LINE)
+            continue;
+
+        p = rhkpage->strings[RHK_STRING_LABEL];
+        if (!p || !*p)
+            p = gwy_enuml_to_string
+                         (rhkpage->line_type,
+                          "Histogram", RHK_LINE_HISTOGRAM,
+                          "Cross section", RHK_LINE_CROSS_SECTION,
+                          "Line test", RHK_LINE_LINE_TEST,
+                          "Oscilloscope", RHK_LINE_OSCILLOSCOPE,
+                          "Noise power spectrum", RHK_LINE_NOISE_POWER_SPECTRUM,
+                          "I-V spectrum", RHK_LINE_IV_SPECTRUM,
+                          "I-Z spectrum", RHK_LINE_IZ_SPECTRUM,
+                          "Image x average", RHK_LINE_IMAGE_X_AVERAGE,
+                          "Image y average", RHK_LINE_IMAGE_Y_AVERAGE,
+                          "Noise autocorrelation spectrum",
+                          RHK_LINE_NOISE_AUTOCORRELATION_SPECTRUM,
+                          "Multichannel analyser data",
+                          RHK_LINE_MULTICHANNEL_ANALYSER_DATA,
+                          "Renormalized I-V", RHK_LINE_RENORMALIZED_IV,
+                          "Image histogram spectra",
+                          RHK_LINE_IMAGE_HISTOGRAM_SPECTRA,
+                          "Image cross section", RHK_LINE_IMAGE_CROSS_SECTION,
+                          "Image avegrage", RHK_LINE_IMAGE_AVERAGE,
+                          NULL);
+        if (!p || !*p)
+            p = s = g_strdup_printf(_("Unknown line %d"), count);
+
+        spectra = rhk_sm3_page_to_spectra(rhkpage);
+        g_object_set(spectra, "title", p, NULL);
+        quark = gwy_app_get_graph_key_for_id(count);
+        gwy_container_set_object(container, quark, spectra);
+        g_object_unref(spectra);
+
+        g_free(s);
+
+        count++;
+    }
+
     g_string_free(key, TRUE);
 
     gwy_file_abandon_contents(buffer, size, NULL);
