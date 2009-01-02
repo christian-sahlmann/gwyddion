@@ -244,7 +244,7 @@ mprofile_load(const gchar *filename,
         return NULL;
     }
 
-    key = g_string_new("");
+    key = g_string_new(NULL);
     container = gwy_container_new();
     for (i = 0; i < n; i++) {
         if (i < mprofile.nbuckets) {

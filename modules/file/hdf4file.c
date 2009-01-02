@@ -890,7 +890,7 @@ hdf4_describe_tag(const HDF4DataDescriptor *desc)
     gchar *s;
     guint i;
 
-    str = g_string_new("");
+    str = g_string_new(NULL);
     if (desc->tag == HDF4_NULL)
         goto finish;
 

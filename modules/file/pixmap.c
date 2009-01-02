@@ -2783,7 +2783,7 @@ fmscale(gint size,
     GString *s;
     gint l, tick, width, lw;
 
-    s = g_string_new("");
+    s = g_string_new(NULL);
     layout = prepare_layout(zoom);
 
     x = MAX(fabs(bot), fabs(top));

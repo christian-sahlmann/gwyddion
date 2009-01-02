@@ -271,7 +271,7 @@ rhkspm32_load(const gchar *filename,
     g_clear_error(&err);
 
     container = gwy_container_new();
-    key = g_string_new("");
+    key = g_string_new(NULL);
     for (i = 0; i < rhkfile->len; i++) {
         const gchar *cs;
         gchar *s;

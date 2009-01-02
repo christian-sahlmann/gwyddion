@@ -231,8 +231,10 @@ apefile_load(const gchar *filename,
     apefile.topo_means = gwy_get_guint16_le(&p);
     apefile.optical_means = gwy_get_guint16_le(&p);
     apefile.error_means = gwy_get_guint16_le(&p);
+    /*
     g_printerr("%04x %04x %04x\n",
                apefile.topo_means, apefile.optical_means, apefile.error_means);
+               */
     apefile.channels = gwy_get_guint32_le(&p);
     apefile.ndata = 0;
     for (b = apefile.channels; b; b = b >> 1)

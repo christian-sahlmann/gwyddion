@@ -282,7 +282,7 @@ witec_load(const gchar *filename,
     }
 
     container = gwy_container_new();
-    key = g_string_new("");
+    key = g_string_new(NULL);
     for (i = 0; i < witfile.header.channels; i++) {
         dfield = witec_image_to_data_field(&witfile, i);
         g_string_printf(key, "/%d/data", i);

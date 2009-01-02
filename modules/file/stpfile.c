@@ -445,7 +445,7 @@ process_metadata(STPFile *stpfile,
 
     /* Metadata */
     meta = gwy_container_new();
-    str = g_string_new("");
+    str = g_string_new(NULL);
 
     /* Global */
     for (i = 0; i < G_N_ELEMENTS(global_metadata); i++) {

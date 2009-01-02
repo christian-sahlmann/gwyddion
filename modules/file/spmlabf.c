@@ -144,7 +144,8 @@ slf_load(const gchar *filename,
         goto fail;
     }
 
-    header = g_memdup(buffer, p - buffer);
+    header = g_memdup(buffer, p - buffer + 1);
+    header[p - buffer] = '\0';
     hash = read_hash(header);
     g_free(header);
 

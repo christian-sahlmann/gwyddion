@@ -442,7 +442,7 @@ tiff_load_channel(TIFF *tiff,
 
     /* Add the GwyDataField to the container */
 
-    key = g_string_new("");
+    key = g_string_new(NULL);
     g_string_printf(key, "/%d/data", idx);
     gwy_container_set_object_by_name(container, key->str, dfield);
     g_object_unref(dfield);

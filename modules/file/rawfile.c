@@ -2505,7 +2505,7 @@ rawfile_import_1x_presets(GwyContainer *settings)
 
     inventory = gwy_raw_file_presets();
     preset_list = g_strsplit(presets, "\n", 0);
-    from = g_string_new("");
+    from = g_string_new(NULL);
     for (i = 0; preset_list[i]; i++) {
         if (gwy_inventory_get_item(inventory, preset_list[i])) {
             g_warning("Preset `%s' already exists, cannot import from 1.x.",

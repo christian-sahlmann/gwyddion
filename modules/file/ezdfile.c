@@ -398,7 +398,7 @@ find_data_offsets(const gchar *buffer,
     }
 
     /* Scan groups */
-    grkey = g_string_new("");
+    grkey = g_string_new(NULL);
     for (i = 0; i < ngroups; i++) {
         g_string_printf(grkey, "Gr%d-Count", i);
         if (!(p = g_hash_table_lookup(dataset->meta, grkey->str))) {

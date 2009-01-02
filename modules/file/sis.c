@@ -510,7 +510,7 @@ sis_load(const gchar *filename,
                                            NULL, g_free);
     if (sis_real_load(buffer, size, &sisfile, error)) {
         data = gwy_container_new();
-        key = g_string_new("");
+        key = g_string_new(NULL);
         for (i = 0; i < sisfile.nchannels; i++) {
             for (j = 0; j < sisfile.channels[i].nimages; j++) {
                 image = sisfile.channels[i].images + j;
