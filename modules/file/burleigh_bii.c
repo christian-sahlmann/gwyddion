@@ -113,7 +113,7 @@ burleigh_bii_load(const gchar *filename,
                   G_GNUC_UNUSED GwyRunType mode,
                   GError **error)
 {
-    gchar *buffer = NULL;
+    guchar *buffer = NULL;
     const guchar *p;
     gsize size = 0;
     GError *err = NULL;
@@ -125,7 +125,7 @@ burleigh_bii_load(const gchar *filename,
     GwySIUnit *units;
     gdouble *data;
 
-    if (!g_file_get_contents(filename, &buffer, &size, &err)) {
+    if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
         err_GET_FILE_CONTENTS(error, &err);
         return NULL;      
     }
@@ -149,7 +149,15 @@ burleigh_bii_load(const gchar *filename,
     }
     p = buffer + data_end_offset + FILE_IMG_XY_SCALE_POS;
     x_scale = gwy_get_gdouble_le(&p);
+    if (!((x_scale = fabs(x_scale)) > 0)) {
+        g_warning("Real x size is 0.0, fixing to 1.0");
+        x_scale = 1.0;
+    }
     y_scale = gwy_get_gdouble_le(&p);
+    if (!((y_scale = fabs(y_scale)) > 0)) {
+        g_warning("Real y size is 0.0, fixing to 1.0");
+        y_scale = 1.0;
+    }
     p = buffer + data_end_offset + FILE_IMG_Z_SCALE_POS;
     z_scale = gwy_get_gdouble_le(&p);
 
@@ -160,9 +168,9 @@ burleigh_bii_load(const gchar *filename,
               y_scale, z_scale);
     // create new datafield
     dfield = gwy_data_field_new(width, height, 
-                           x_scale * pow10(power10), 
-                           y_scale * pow10(power10), 
-                           TRUE);
+                                x_scale * pow10(power10), 
+                                y_scale * pow10(power10), 
+                                FALSE);
     gwy_data_field_set_si_unit_xy(dfield, units);
     g_object_unref(units);
 
