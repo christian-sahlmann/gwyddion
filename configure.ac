@@ -169,7 +169,7 @@ fi
 
 #############################################################################
 # Python
-GWY_ENABLE([python],,[Install Python modules and plug-ins])
+GWY_WITH([python],,[Install Python modules and plug-ins])
 AM_PATH_PYTHON(2.2,,:)
 AM_CONDITIONAL([HAVE_PYTHON],[test "$PYTHON" != : -a "$enable_python" != no])
 
@@ -219,7 +219,7 @@ AM_CONDITIONAL([ENABLE_PYGWY], [test "x$enable_pygwy" != xno])
 
 #############################################################################
 # Check for Perl
-GWY_ENABLE([perl],,[Install Perl modules and plug-ins])
+GWY_WITH([perl],,[Install Perl modules and plug-ins])
 AC_PATH_PROGS(PERL,perl5 perl,:)
 if test "$PERL" != :; then
   AC_PATH_PROGS(POD2MAN,pod2man,:)
@@ -229,7 +229,7 @@ AM_CONDITIONAL([HAVE_PERL], [test "$PERL" != : -a "$enable_perl" != no])
 #############################################################################
 # Check for Ruby
 # The outer [] are necessary to quote the inner [] inside Ruby
-GWY_ENABLE([ruby],,[Install Ruby modules and plug-ins])
+GWY_WITH([ruby],,[Install Ruby modules and plug-ins])
 AC_PATH_PROGS(RUBY,ruby,:)
 if test "$RUBY" != :; then
   AC_MSG_CHECKING([if ruby version >= 1.8])
@@ -266,7 +266,7 @@ AM_CONDITIONAL([HAVE_RUBY_NARRAY], [test "$ruby_has_narray" = yes])
 #############################################################################
 # Check for Pascal compiler
 # The outer [] are necessary to quote the inner [] inside sed expressions
-GWY_ENABLE([pascal],,[Build sample Pascal plug-ins])
+GWY_WITH([pascal],,[Build sample Pascal plug-ins])
 AC_PATH_PROGS(PASCAL,fpc,:)
 if test "$PASCAL" != :; then
   AC_MSG_CHECKING([if fpc version >= 1.9])
@@ -492,9 +492,9 @@ AM_CONDITIONAL([HAVE_XML2],[test x$enable_spml != xno])
 # gwyddion libs), or we are going to break things by doing everything manually.
 # In the latter case the poor user should have a better chance to fix it by
 # setting CXXFLAGS, LIBS, etc. herself.
-GWY_ENABLE([kde4-thumbnailer],
-           [kde4_thumbnailer],
-           [KDE4 thumbnail creator module])
+GWY_WITH([kde4-thumbnailer],
+         [kde4_thumbnailer],
+         [KDE4 thumbnail creator module])
 # Normalize
 if test "x$enable_kde4_thumbnailer" != xno; then
   enable_kde4_thumbnailer=yes

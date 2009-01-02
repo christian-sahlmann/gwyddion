@@ -55,6 +55,8 @@ Other:
   environments.  In this release, GNOME, XFce and KDE4 are fully supported with
   thumbnails created on-the-fly.  In other TMS-conforming environments the
   thumbnailer must be run manually to batch-create the thumbnails.
+- configure options --enable-python, --enable-perl, --enable-ruby and
+  --enable-pascal were canonicalized to the with-form: --with-python, etc.
 - Registered MIME types were updated, generic extensions such as *.dat or *.xml
   are no longer used for file format recognition.
 - If `make install' is run with nonempty DESTDIR, freedesktop databases are not
