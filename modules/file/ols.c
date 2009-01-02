@@ -162,58 +162,56 @@ ols_load_tiff(TIFF *tiff, GError **error)
     TIFFGetField(tiff, TIFFTAG_IMAGEWIDTH, &width);
     TIFFGetField(tiff, TIFFTAG_IMAGELENGTH, &height);
     do {
-       sprintf(channel_name, "/%d/data", dir_num++);
-       data_channel_info_title = g_strdup_printf("[Data %d Info]", dir_num);
-       // find channel info
-       data_channel_info = g_strstr_len(comment, strlen(comment),
-                                        data_channel_info_title);
-       if (!data_channel_info) {
-          g_warning("Cannot find '%s' in comment.", data_channel_info_title);
-          continue;
-       }
-       if (!ols_read_value(data_channel_info, "XY Convert Value")) {
-          g_warning("Cannot find 'XY Convert Value' in comment.");
-          continue;
-       }
-       xy_axis = atof(ols_read_value(data_channel_info, "XY Convert Value"));
+        sprintf(channel_name, "/%d/data", dir_num++);
+        data_channel_info_title = g_strdup_printf("[Data %d Info]", dir_num);
+        // find channel info
+        data_channel_info = g_strstr_len(comment, strlen(comment),
+                                         data_channel_info_title);
+        if (!data_channel_info) {
+            g_warning("Cannot find '%s' in comment.", data_channel_info_title);
+            continue;
+        }
+        if (!ols_read_value(data_channel_info, "XY Convert Value")) {
+            g_warning("Cannot find 'XY Convert Value' in comment.");
+            continue;
+        }
+        xy_axis = atof(ols_read_value(data_channel_info, "XY Convert Value"));
 
-       buffer = g_new(guchar, TIFFScanlineSize(tiff));
-       siunit = gwy_si_unit_new_parse("nm", &power10);
-       dfield = gwy_data_field_new(width, height,
-                                width * xy_axis * pow10(power10),
-                                height * xy_axis * pow10(power10),
-                                FALSE);
-       // units
-       gwy_data_field_set_si_unit_xy(dfield, siunit);
-       g_object_unref(siunit);
+        buffer = g_new(guchar, TIFFScanlineSize(tiff));
+        siunit = gwy_si_unit_new_parse("nm", &power10);
+        dfield = gwy_data_field_new(width, height,
+                                    width * xy_axis * pow10(power10),
+                                    height * xy_axis * pow10(power10),
+                                    FALSE);
+        // units
+        gwy_data_field_set_si_unit_xy(dfield, siunit);
+        g_object_unref(siunit);
 
-       siunit = gwy_si_unit_new_parse("um", &power10);
-       gwy_data_field_set_si_unit_z(dfield, siunit);
-       g_object_unref(siunit);
+        siunit = gwy_si_unit_new_parse("um", &power10);
+        gwy_data_field_set_si_unit_z(dfield, siunit);
+        g_object_unref(siunit);
 
-       factor = z_axis * pow10(power10) / 4095.0;
-       for (i = 0; i <  height; i++) {
-          gdouble *d;
-          guint16 *tiff_data = (guint16 *)buffer;
-          TIFFReadScanline(tiff, buffer, i, 0);
+        factor = z_axis * pow10(power10)/4095.0;
+        for (i = 0; i < height; i++) {
+            gdouble *d;
+            const guint16 *tiff_data = (const guint16*)buffer;
+            TIFFReadScanline(tiff, buffer, i, 0);
 
-          d = gwy_data_field_get_data(dfield) + (height-1 - i) * width;
-          for (j = 0; j < width; j++) {
-             d[j] = tiff_data[j] * factor;
-          }
-       }
+            d = gwy_data_field_get_data(dfield) + (height-1 - i) * width;
+            for (j = 0; j < width; j++)
+                d[j] = tiff_data[j] * factor;
+        }
 
-       // add readed datafield to container
-       if (!container) {
-          container = gwy_container_new();
-       }
+        // add readed datafield to container
+        if (!container)
+            container = gwy_container_new();
 
-       gwy_container_set_object_by_name(container, channel_name, dfield);
+        gwy_container_set_object_by_name(container, channel_name, dfield);
 
-       // free resources
-       g_object_unref(dfield);
-       g_free(buffer);
-       g_free(data_channel_info_title);
+        // free resources
+        g_object_unref(dfield);
+        g_free(buffer);
+        g_free(data_channel_info_title);
     } while (TIFFReadDirectory(tiff));
 
     return container;
