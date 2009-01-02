@@ -20,6 +20,7 @@ cat >autostuff.ignore <<':'
 :
 
 cat >build_project_nopygwy.ignore <<':'
+^mkdir: cannot create directory `\.libs': File exists
 ^TRANSLATION [a-z]
 ^[0-9]\+ translated messages
 \.\.\. done
@@ -52,12 +53,6 @@ cat >make_dists.ignore <<':'
 \.\{6,\}
 ^[0-9]\+ blocks
 ^[0-9]\+ translated message
-':'
-:
-
-cat >gnains_index.ignore <<':'
-*** gnains-mkindex-Warning: Cannot decide what to do with <.*>
-*** gnains-mkindex-Warning: Duplicit key <.*>
 ':'
 :
 
