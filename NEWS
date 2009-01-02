@@ -61,6 +61,7 @@ Other:
   updated, i.e. configure --disable-desktop-file-update is no longer needed.
 - Flag -fno-strict-aliasing is no longer added to gcc compilation options.
 - Missing RPM dependencies on Mandriva were fixed.
+- Missing header gwyconfig.h was added to the Win32 packages.
 
 
 2.11 (2008-12-16)
