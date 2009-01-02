@@ -642,7 +642,7 @@ gwy_graph_curve_model_set_data_from_dataline(GwyGraphCurveModel *gcmodel,
 
     offset = gwy_data_line_get_offset(dline);
 
-    ldata = gwy_data_line_get_data(dline);
+    ldata = gwy_data_line_get_data_const(dline);
     for (i = 0; i < res; i++) {
         xdata[i] = realmin + i*(realmax - realmin)/res + offset;
         ydata[i] = ldata[i + from_index];
