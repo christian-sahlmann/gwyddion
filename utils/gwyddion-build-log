@@ -5,7 +5,6 @@ projectdir=$HOME/Projects/Gwyddion/$pkgname
 tmplog=tmplog
 
 source $HOME/.bashrc
-source $HOME/.ssh/current-ssh-agent
 cd $logdir
 
 cat >autostuff.ignore <<':'
@@ -24,6 +23,7 @@ cat >build_project_nopygwy.ignore <<':'
 ^TRANSLATION [a-z]
 ^[0-9]\+ translated messages
 \.\.\. done
+^/usr/bin/glib-mkenums: ./.*.h:[0-9]*: lowercase_name is deprecated, use underscore_name
 ':'
 :
 
