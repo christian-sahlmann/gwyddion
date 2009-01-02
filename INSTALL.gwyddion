@@ -51,6 +51,9 @@ Recommended though optional, for Python scripting interface pygwy:
 Optional, for better GNOME and XFce integration (SPM file thumbnails):
 - GConf2
 
+Optional, for better KDE integration (SPM file thumbnails):
+- KDE4 libraries, including development files, and all their dependencies
+
 Optional, for SPML file support:
 - LibXML2, including development files
 
