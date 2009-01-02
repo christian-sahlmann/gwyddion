@@ -87,7 +87,7 @@ err_SIZE_MISMATCH(GError **error, guint expected, guint real, gboolean strict)
 static inline gboolean
 err_DIMENSION(GError **error, gint dim)
 {
-    if (dim >= 1 && dim <= 1 << 24)
+    if (dim >= 1 && dim <= 1 << 15)
         return FALSE;
 
     g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
