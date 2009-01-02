@@ -157,7 +157,7 @@ sed -i -e '1s/env *//' plugins/process/*.{py,rb,pl}
 
 
 %build
-%configure --disable-pascal --disable-rpath %{?_with_kde4_thumbnailer}
+%configure --without-pascal --disable-rpath %{?_with_kde4_thumbnailer}
 make %{?_smp_mflags}
 
 
