@@ -1207,6 +1207,7 @@ gwy_data_field_get_value_format_z(GwyDataField *data_field,
 gdouble
 gwy_data_field_itor(GwyDataField *data_field, gdouble row)
 {
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), 0.0);
     return row * data_field->yreal/data_field->yres;
 }
 
@@ -1226,6 +1227,7 @@ gwy_data_field_itor(GwyDataField *data_field, gdouble row)
 gdouble
 gwy_data_field_jtor(GwyDataField *data_field, gdouble col)
 {
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), 0.0);
     return col * data_field->xreal/data_field->xres;
 }
 
@@ -1244,6 +1246,7 @@ gwy_data_field_jtor(GwyDataField *data_field, gdouble col)
 gdouble
 gwy_data_field_rtoi(GwyDataField *data_field, gdouble realy)
 {
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), 0.0);
     return realy * data_field->yres/data_field->yreal;
 }
 
@@ -1262,6 +1265,7 @@ gwy_data_field_rtoi(GwyDataField *data_field, gdouble realy)
 gdouble
 gwy_data_field_rtoj(GwyDataField *data_field, gdouble realx)
 {
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), 0.0);
     return realx * data_field->xres/data_field->xreal;
 }
 
@@ -1283,7 +1287,7 @@ gwy_data_field_inside(GwyDataField *data_field, gint i, gint j)
  * Gets value at given position in a data field.
  *
  * Do not access data with this function inside inner loops, it's slow.
- * Get raw data buffer with gwy_data_field_get_data_const() and access it
+ * Get the raw data buffer with gwy_data_field_get_data_const() and access it
  * directly instead.
  *
  * Returns: Value at (@col, @row).
@@ -1291,6 +1295,7 @@ gwy_data_field_inside(GwyDataField *data_field, gint i, gint j)
 gdouble
 gwy_data_field_get_val(GwyDataField *data_field, gint col, gint row)
 {
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), 0.0);
     g_return_val_if_fail(gwy_data_field_inside(data_field, col, row), 0.0);
     return data_field->data[col + data_field->xres*row];
 }
@@ -1304,14 +1309,16 @@ gwy_data_field_get_val(GwyDataField *data_field, gint col, gint row)
  *
  * Sets value at given position in a data field.
  *
- * Do not set data with this function inside inner loops, it's slow.  Get raw
- * data buffer with gwy_data_field_get_data() and write to it directly instead.
+ * Do not set data with this function inside inner loops, it's slow.  Get the
+ * raw data buffer with gwy_data_field_get_data() and write to it directly
+ * instead.
  **/
 void
 gwy_data_field_set_val(GwyDataField *data_field,
                        gint col, gint row,
                        gdouble value)
 {
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
     g_return_if_fail(gwy_data_field_inside(data_field, col, row));
     gwy_data_field_invalidate(data_field);
     data_field->data[col + data_field->xres*row] = value;
