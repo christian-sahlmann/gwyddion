@@ -13,6 +13,10 @@ Libraries:
 - libgwyddion: New function gwy_memmem() that wraps or emulates GNU memmem().
 - libgwydgets: GwyColorAxis uses two-line labels if number and units do not fit
   on one line together.
+- ligwyprocess: DataField methods such as gwy_data_field_set_val() check the
+  type of the data field argument.
+- libgwyapp: gwy_get_foo() binary data functions were changed into a form that
+  hopefully works with strict aliasing rules.
 
 Modules:
 - Pygwy: Is enabled by default (on Unix).
@@ -29,7 +33,9 @@ Modules:
 - Distance, Stats and Roughness tools: Button copying results table to the
   clipboard was added.
 - Drift, Polynomial distortion: Mask and presentation are transformed too.
-- Burleigh BII: Botched module was completely rewritten.
+- Burleigh BII, Quesant: Botched modules were completely rewritten.
+- Sensofar: Module was completely rewritten, fixing crashes on 64bit systems.
+- RHK SM3: Limited support for line data import was added.
 - Fit sphere: Critical message caused by failed assertions was fixed.
 - Scale, Rotate, Unrotate: Masks are always tranformed with rounding
   interpolation, i.e. output pixels are either fully masked or not at all.
@@ -53,6 +59,7 @@ Other:
   are no longer used for file format recognition.
 - If `make install' is run with nonempty DESTDIR, freedesktop databases are not
   updated, i.e. configure --disable-desktop-file-update is no longer needed.
+- Flag -fno-strict-aliasing is no longer added to gcc compilation options.
 - Missing RPM dependencies on Mandriva were fixed.
 
 
