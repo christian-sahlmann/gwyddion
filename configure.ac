@@ -301,14 +301,13 @@ if test "$GCC" = yes; then
   GWY_PROG_CC_OPTION([WREDUNDANT_DECLS],[-Wredundant-decls],,)
   GWY_PROG_CC_OPTION([FNO_TRAP_MATH],[-fno-trapping-math],,)
   GWY_PROG_CC_OPTION([FNO_MATH_ERRNO],[-fno-math-errno],,)
-  GWY_PROG_CC_OPTION([FNO_STRICT_ALIAS],[-fno-strict-aliasing],,)
   # Flags we can't use:
   # -Wstrict-protoypes makes gtkitemfactory.h noisy, but they have a
   #    comment there they can't fix it due to compatibility
   # -Wwrite-strings because it makes all struct initializations very noisy
   WARNING_CFLAGS="-Wall -W -Wshadow -Wpointer-arith -Wno-sign-compare -Wundef $PROG_CC_ERR_IFD $PROG_CC_WNO_SYS_HEADERS $PROG_CC_WNO_POINTER_SIGN $PROG_CC_WNO_EMPTY_FMT $PROG_CC_WMIXED_DECL $PROG_CC_WREDUNDANT_DECLS"
   WARNING_NOUNUSED_PAR="$PROG_CC_WNO_UNUSED_PAR"
-  PREMISE_CFLAGS="$PROG_CC_FNO_TRAP_MATH $PROG_CC_FNO_MATH_ERRNO $PROG_CC_FNO_STRICT_ALIAS"
+  PREMISE_CFLAGS="$PROG_CC_FNO_TRAP_MATH $PROG_CC_FNO_MATH_ERRNO"
 fi
 AC_SUBST(WARNING_NOUNUSED_PAR)
 
