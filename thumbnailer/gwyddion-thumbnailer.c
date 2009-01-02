@@ -46,6 +46,7 @@
 #include <libgwyddion/gwyddion.h>
 #include <libprocess/gwyprocess.h>
 #include <libdraw/gwydraw.h>
+#include <libgwydgets/gwydgets.h>
 #include <libgwymodule/gwymodule.h>
 
 #define PROGRAM_NAME "gwyddion-thumbnailer"
@@ -687,7 +688,7 @@ main(int argc,
         return 0;
 
     /* Initialize Gwyddion */
-    gwy_draw_type_init();
+    gwy_widgets_type_init();
     gwy_app_settings_load(gwy_app_settings_get_settings_filename(), NULL);
     gwy_resource_class_load(g_type_class_peek(GWY_TYPE_GRADIENT));
     load_modules();
