@@ -311,5 +311,5 @@ fi
 
 %if %{enable_kde4_thumbnailer}
 %files thumbnailer-kde4
-%{_libdir}/kde4/gwthumbcreator.so
+%{_libdir}/kde4/gwythumbcreator.so
 %endif
