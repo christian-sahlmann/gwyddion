@@ -977,17 +977,15 @@ spml_load(const gchar *filename)
                 /* create and allocate datafield of given dimensions and given physical
                    dimensions */
                 if (rotate == 90) {
-                    dfield =
-                    GWY_DATA_FIELD(gwy_data_field_new
+                    dfield = gwy_data_field_new
                                    (dimensions[1], dimensions[0],
                                     y_dimen * pow10(y_power10),
-                                    x_dimen * pow10(x_power10), FALSE));
+                                    x_dimen * pow10(x_power10), FALSE);
                 } else {
-                dfield =
-                    GWY_DATA_FIELD(gwy_data_field_new
+                dfield = gwy_data_field_new
                                    (dimensions[0], dimensions[1],
                                     x_dimen * pow10(x_power10),
-                                    y_dimen * pow10(y_power10), FALSE));
+                                    y_dimen * pow10(y_power10), FALSE);
                 }
                 gwy_debug("X real width: %f", x_dimen * pow10(x_power10));
                 gwy_debug("X real_width_height: %f", x_dimen);
@@ -1031,7 +1029,7 @@ spml_load(const gchar *filename)
 
                 if (object == NULL) {
                     /* create gwyddion container */
-                    object = GWY_CONTAINER(gwy_container_new());
+                    object = gwy_container_new();
                 }
                 /* put datachannel into container */
                 gwy_channel_location =
