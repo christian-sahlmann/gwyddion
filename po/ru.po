@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2009-01-04 20:16+0100\n"
+"POT-Creation-Date: 2009-01-04 20:41+0100\n"
 "PO-Revision-Date: 2009-01-03 22:03+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@km.ru>\n"
 "Language-Team: russian <ru@li.org>\n"
@@ -544,9 +544,9 @@ msgstr "точек"
 #: modules/file/pixmap.c:2259 modules/file/rawfile.c:379
 #: modules/process/angle_dist.c:170 modules/process/calibrate.c:289
 #: modules/process/cwt.c:132 modules/process/drift.c:230
-#: modules/process/dwtanisotropy.c:183 modules/process/dwt.c:164
-#: modules/process/edge.c:636 modules/process/facet_analysis.c:272
-#: modules/process/facet-level.c:289 modules/process/fft.c:272
+#: modules/process/dwt.c:164 modules/process/dwtanisotropy.c:183
+#: modules/process/edge.c:636 modules/process/facet-level.c:289
+#: modules/process/facet_analysis.c:272 modules/process/fft.c:272
 #: modules/process/fft_filter_2d.c:396 modules/process/fft_synth.c:212
 #: modules/process/fractal.c:206 modules/process/grain_mark.c:265
 #: modules/process/grain_rem_threshold.c:224 modules/process/grain_wshed.c:182
@@ -928,6 +928,19 @@ msgstr "Верхний индекс"
 msgid "Preview"
 msgstr "Предпросмотр"
 
+#: libgwymodule/gwymodule-file.c:514 modules/file/pixmap.c:633
+#, c-format
+msgid "Cannot open file for reading: %s."
+msgstr "Невозможно открыть файл для чтения: %s."
+
+#: libgwymodule/gwymodule-file.c:523
+msgid "No module can load this file type."
+msgstr "Ни один из модулей не может открыть этот тип файла"
+
+#: libgwymodule/gwymodule-file.c:589
+msgid "No module can save to this file type."
+msgstr "Ни один из модулей не может сохранить этот тип файла"
+
 #: libgwymodule/gwymodulebrowser.c:66
 msgid "Module Browser"
 msgstr "Просмотр модулей"
@@ -980,19 +993,6 @@ msgstr "Имя:"
 #: libgwymodule/gwymodulebrowser.c:270
 msgid "Failure:"
 msgstr "Ошибка:"
-
-#: libgwymodule/gwymodule-file.c:514 modules/file/pixmap.c:633
-#, c-format
-msgid "Cannot open file for reading: %s."
-msgstr "Невозможно открыть файл для чтения: %s."
-
-#: libgwymodule/gwymodule-file.c:523
-msgid "No module can load this file type."
-msgstr "Ни один из модулей не может открыть этот тип файла"
-
-#: libgwymodule/gwymodule-file.c:589
-msgid "No module can save to this file type."
-msgstr "Ни один из модулей не может сохранить этот тип файла"
 
 #: app/about.c:49
 #, fuzzy, c-format
@@ -2129,14 +2129,6 @@ msgstr "Заголовок файла не может быть сконверт�
 msgid "Unknown file type header: `%s'."
 msgstr "Неизвестный заголовок типа файла: `%s'."
 
-#: modules/file/burleigh_bii.c:68
-msgid "Imports Burleigh BII binary data files."
-msgstr "Импортирует двоичные файлы данных Burleigh BII."
-
-#: modules/file/burleigh_bii.c:81
-msgid "Burleigh Image Studio files (.bii)"
-msgstr "Файлы Burleigh Image Studio (.bii)"
-
 #: modules/file/burleigh.c:112
 msgid "Imports Burleigh IMG data files version 2.1."
 msgstr "Импортирует файлы данных Burleigh IMG версии 2.1."
@@ -2149,6 +2141,14 @@ msgstr "Файлы Burleigh 2.1 (.img)"
 #, c-format
 msgid "File format version %.1f is not supported."
 msgstr "Формат файла версии %.1f не поддерживается."
+
+#: modules/file/burleigh_bii.c:68
+msgid "Imports Burleigh BII binary data files."
+msgstr "Импортирует двоичные файлы данных Burleigh BII."
+
+#: modules/file/burleigh_bii.c:81
+msgid "Burleigh Image Studio files (.bii)"
+msgstr "Файлы Burleigh Image Studio (.bii)"
 
 #: modules/file/burleigh_exp.c:81
 msgid "Imports Burleigh text/bin exported images."
@@ -2499,6 +2499,14 @@ msgstr ""
 msgid "Missing data start marker \\x1a\\x04."
 msgstr "Отсутствует маркер начала данных \\x1a\\x04."
 
+#: modules/file/nanoscope-ii.c:76
+msgid "Imports Digital Instruments Nanoscope II data files."
+msgstr "Импортирует файлы данных Digital Instruments Nanoscope II."
+
+#: modules/file/nanoscope-ii.c:89
+msgid "Nanoscope II files"
+msgstr "Файлы Nanoscope II"
+
 #: modules/file/nanoscope.c:137
 msgid ""
 "Imports Veeco (Digital Instruments) Nanoscope data files, version 3 or newer."
@@ -2526,14 +2534,6 @@ msgstr ""
 #: modules/file/nanoscope.c:766
 msgid "Truncated header line."
 msgstr ""
-
-#: modules/file/nanoscope-ii.c:76
-msgid "Imports Digital Instruments Nanoscope II data files."
-msgstr "Импортирует файлы данных Digital Instruments Nanoscope II."
-
-#: modules/file/nanoscope-ii.c:89
-msgid "Nanoscope II files"
-msgstr "Файлы Nanoscope II"
 
 #: modules/file/nanotop.c:99
 msgid "Imports NANOTOP AFM files"
@@ -3476,6 +3476,15 @@ msgstr "Достигнут конец файла внутри блока кан�
 msgid "End of file reached when another channel was expected."
 msgstr "Достигнут конец файла в то время, как ожидался другой канал."
 
+#: modules/file/spml.c:91
+msgid "Loads SPML (Scanning Probe Microscopy Markup Language) data files."
+msgstr ""
+"Загружает файлы данных SPML (Scanning Probe Microscopy Markup Language)."
+
+#: modules/file/spml.c:105
+msgid "SPML files (.xml)"
+msgstr "Файлы SPML (.xml)"
+
 #: modules/file/spmlab.c:113
 msgid "Imports Thermicroscopes SpmLab R3 to R7 data files."
 msgstr "Импортирует файлы данных Thermicroscopes SpmLab от R3 до R7"
@@ -3500,15 +3509,6 @@ msgstr "Файлы с плавающей точкой SPMLab (.flt)"
 #: modules/file/spmlabf.c:143
 msgid "Missing data start marker [Data]."
 msgstr "Отсутствует маркер начала данных [Data]."
-
-#: modules/file/spml.c:91
-msgid "Loads SPML (Scanning Probe Microscopy Markup Language) data files."
-msgstr ""
-"Загружает файлы данных SPML (Scanning Probe Microscopy Markup Language)."
-
-#: modules/file/spml.c:105
-msgid "SPML files (.xml)"
-msgstr "Файлы SPML (.xml)"
 
 #: modules/file/stmprg.c:217
 msgid "Imports Omicron STMPRG data files (tp ta)."
@@ -4546,8 +4546,8 @@ msgstr ""
 msgid "2D CWT"
 msgstr ""
 
-#: modules/process/cwt.c:155 modules/process/dwtanisotropy.c:208
-#: modules/process/dwt.c:183
+#: modules/process/cwt.c:155 modules/process/dwt.c:183
+#: modules/process/dwtanisotropy.c:208
 #, fuzzy
 msgid "_Wavelet type:"
 msgstr "Тип вейвлета:"
@@ -4570,8 +4570,8 @@ msgstr ""
 msgid "Compensate Drift"
 msgstr "Компенсировать дрейф"
 
-#: modules/process/drift.c:291 modules/process/dwtanisotropy.c:201
-#: modules/process/dwt.c:204 modules/process/fft_filter_1d.c:329
+#: modules/process/drift.c:291 modules/process/dwt.c:204
+#: modules/process/dwtanisotropy.c:201 modules/process/fft_filter_1d.c:329
 #: modules/process/fractal.c:228 modules/process/nanoindent_adjust.c:228
 #: modules/process/polydistort.c:268 modules/process/rotate.c:293
 #: modules/process/scale.c:248 modules/process/unrotate.c:282
@@ -4626,6 +4626,39 @@ msgstr "дрейф"
 msgid "x-axis drift"
 msgstr "дрейф оси x"
 
+#: modules/process/dwt.c:71
+#, fuzzy
+msgid "Two-dimensional DWT (Discrete Wavelet Transform)."
+msgstr "Двумерное дискретное вейвлет-преобразование"
+
+#: modules/process/dwt.c:85
+msgid "/_Integral Transforms/2D _DWT..."
+msgstr ""
+
+#: modules/process/dwt.c:89
+msgid "Compute Discrete Wavelet Transform"
+msgstr "Вычислить дискретное вейвлет-преобразование"
+
+#: modules/process/dwt.c:118 modules/process/dwtanisotropy.c:130
+#, c-format
+msgid "%s: Data must be square."
+msgstr ""
+
+#: modules/process/dwt.c:145
+msgid "DWT"
+msgstr ""
+
+#: modules/process/dwt.c:163
+msgid "2D DWT"
+msgstr ""
+
+#: modules/process/dwt.c:189
+#, c-format
+msgid ""
+"Size %d is not a power of 2,\n"
+"data will be resampled to %d×%d for DWT."
+msgstr ""
+
 #: modules/process/dwtanisotropy.c:78
 msgid "2D DWT anisotropy detection based on X/Y components ratio."
 msgstr ""
@@ -4636,11 +4669,6 @@ msgstr ""
 
 #: modules/process/dwtanisotropy.c:96
 msgid "DWT anisotropy detection"
-msgstr ""
-
-#: modules/process/dwtanisotropy.c:130 modules/process/dwt.c:118
-#, c-format
-msgid "%s: Data must be square."
 msgstr ""
 
 #: modules/process/dwtanisotropy.c:130
@@ -4657,34 +4685,6 @@ msgstr ""
 
 #: modules/process/dwtanisotropy.c:221
 msgid "Low level exclude limit:"
-msgstr ""
-
-#: modules/process/dwt.c:71
-#, fuzzy
-msgid "Two-dimensional DWT (Discrete Wavelet Transform)."
-msgstr "Двумерное дискретное вейвлет-преобразование"
-
-#: modules/process/dwt.c:85
-msgid "/_Integral Transforms/2D _DWT..."
-msgstr ""
-
-#: modules/process/dwt.c:89
-msgid "Compute Discrete Wavelet Transform"
-msgstr "Вычислить дискретное вейвлет-преобразование"
-
-#: modules/process/dwt.c:145
-msgid "DWT"
-msgstr ""
-
-#: modules/process/dwt.c:163
-msgid "2D DWT"
-msgstr ""
-
-#: modules/process/dwt.c:189
-#, c-format
-msgid ""
-"Size %d is not a power of 2,\n"
-"data will be resampled to %d×%d for DWT."
 msgstr ""
 
 #: modules/process/edge.c:147
@@ -4815,6 +4815,53 @@ msgstr ""
 msgid "I_nstant updates"
 msgstr ""
 
+#: modules/process/facet-level.c:67
+msgid ""
+"Automatic facet-orientation based levelling. Levels data to make facets "
+"point up."
+msgstr ""
+
+#: modules/process/facet-level.c:82
+msgid "/_Level/_Facet Level"
+msgstr ""
+
+#: modules/process/facet-level.c:86
+msgid "Level data to make facets point upward"
+msgstr "Выровнять данные заставив грани смотреть вверх"
+
+#: modules/process/facet-level.c:120
+msgid ""
+"Facet level: Lateral dimensions and value must be the same physical quantity."
+msgstr ""
+
+#: modules/process/facet-level.c:132
+msgid "Facet Level"
+msgstr ""
+
+#: modules/process/facet-level.c:145
+msgid "Facet-leveling"
+msgstr ""
+
+#: modules/process/facet-level.c:277 modules/process/level.c:247
+#: modules/process/polylevel.c:503
+msgid "_Exclude region under mask"
+msgstr ""
+
+#: modules/process/facet-level.c:278 modules/process/level.c:248
+#: modules/process/polylevel.c:505
+msgid "Exclude region _outside mask"
+msgstr ""
+
+#: modules/process/facet-level.c:279 modules/process/level.c:249
+#: modules/process/polylevel.c:507
+msgid "Use entire _image (ignore mask)"
+msgstr ""
+
+#: modules/process/facet-level.c:303 modules/process/level.c:273
+#: modules/process/polylevel.c:495
+msgid "Masking Mode"
+msgstr ""
+
 #: modules/process/facet_analysis.c:161
 msgid "Visualizes, marks and measures facet orientation."
 msgstr ""
@@ -4862,53 +4909,6 @@ msgstr "Допуск:"
 msgid ""
 "Warning: Lateral and value units differ. Angles are not physically "
 "meaningful."
-msgstr ""
-
-#: modules/process/facet-level.c:67
-msgid ""
-"Automatic facet-orientation based levelling. Levels data to make facets "
-"point up."
-msgstr ""
-
-#: modules/process/facet-level.c:82
-msgid "/_Level/_Facet Level"
-msgstr ""
-
-#: modules/process/facet-level.c:86
-msgid "Level data to make facets point upward"
-msgstr "Выровнять данные заставив грани смотреть вверх"
-
-#: modules/process/facet-level.c:120
-msgid ""
-"Facet level: Lateral dimensions and value must be the same physical quantity."
-msgstr ""
-
-#: modules/process/facet-level.c:132
-msgid "Facet Level"
-msgstr ""
-
-#: modules/process/facet-level.c:145
-msgid "Facet-leveling"
-msgstr ""
-
-#: modules/process/facet-level.c:277 modules/process/level.c:247
-#: modules/process/polylevel.c:503
-msgid "_Exclude region under mask"
-msgstr ""
-
-#: modules/process/facet-level.c:278 modules/process/level.c:248
-#: modules/process/polylevel.c:505
-msgid "Exclude region _outside mask"
-msgstr ""
-
-#: modules/process/facet-level.c:279 modules/process/level.c:249
-#: modules/process/polylevel.c:507
-msgid "Use entire _image (ignore mask)"
-msgstr ""
-
-#: modules/process/facet-level.c:303 modules/process/level.c:273
-#: modules/process/polylevel.c:495
-msgid "Masking Mode"
 msgstr ""
 
 #: modules/process/fft.c:90
@@ -7069,25 +7069,6 @@ msgstr ""
 msgid "Correction:"
 msgstr ""
 
-#: pygwy.c:91
-msgid "Pygwy, the Gwyddion Python wrapper."
-msgstr "Pygwy, оболочка Python в Gwyddion."
-
-#: pygwy.c:443
-msgid "Function written in Python"
-msgstr "Функция на языке Python"
-
-#: pygwy.c:489
-msgid "Graph function written in Python"
-msgstr "Графическая функция на языке Python"
-
-#: pygwy.c:887
-#, c-format
-msgid ""
-"Pygwy plugin: %s (%s)\n"
-"Export failed."
-msgstr ""
-
 #: modules/pygwy/pygwy-console.c:54
 msgid "/Pygwy Console"
 msgstr "/Консоль Pygwy"
@@ -7119,6 +7100,25 @@ msgstr "Выполнить сценарий (Ctrl-E)"
 #: modules/pygwy/pygwy-console.c:378
 msgid "Command"
 msgstr "Команда"
+
+#: pygwy.c:91
+msgid "Pygwy, the Gwyddion Python wrapper."
+msgstr "Pygwy, оболочка Python в Gwyddion."
+
+#: pygwy.c:443
+msgid "Function written in Python"
+msgstr "Функция на языке Python"
+
+#: pygwy.c:489
+msgid "Graph function written in Python"
+msgstr "Графическая функция на языке Python"
+
+#: pygwy.c:887
+#, c-format
+msgid ""
+"Pygwy plugin: %s (%s)\n"
+"Export failed."
+msgstr ""
 
 #: modules/tools/crop.c:81
 msgid "Crop tool, crops data to smaller size."

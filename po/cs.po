@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2009-01-04 20:16+0100\n"
+"POT-Creation-Date: 2009-01-04 20:41+0100\n"
 "PO-Revision-Date: 2008-12-15 14:37+0100\n"
 "Last-Translator: Yeti <yeti@gwyddion.net>\n"
 "Language-Team: Czech\n"
@@ -508,9 +508,9 @@ msgstr "pixelů"
 #: modules/file/pixmap.c:2259 modules/file/rawfile.c:379
 #: modules/process/angle_dist.c:170 modules/process/calibrate.c:289
 #: modules/process/cwt.c:132 modules/process/drift.c:230
-#: modules/process/dwtanisotropy.c:183 modules/process/dwt.c:164
-#: modules/process/edge.c:636 modules/process/facet_analysis.c:272
-#: modules/process/facet-level.c:289 modules/process/fft.c:272
+#: modules/process/dwt.c:164 modules/process/dwtanisotropy.c:183
+#: modules/process/edge.c:636 modules/process/facet-level.c:289
+#: modules/process/facet_analysis.c:272 modules/process/fft.c:272
 #: modules/process/fft_filter_2d.c:396 modules/process/fft_synth.c:212
 #: modules/process/fractal.c:206 modules/process/grain_mark.c:265
 #: modules/process/grain_rem_threshold.c:224 modules/process/grain_wshed.c:182
@@ -835,6 +835,19 @@ msgstr "_Exponent"
 msgid "Preview"
 msgstr "Náhled"
 
+#: libgwymodule/gwymodule-file.c:514 modules/file/pixmap.c:633
+#, c-format
+msgid "Cannot open file for reading: %s."
+msgstr "Soubor nelze otevřít pro čtení: %s."
+
+#: libgwymodule/gwymodule-file.c:523
+msgid "No module can load this file type."
+msgstr "Žádný modul nedokáže načíst tento typ souboru."
+
+#: libgwymodule/gwymodule-file.c:589
+msgid "No module can save to this file type."
+msgstr "Žádný modul nedokáže zapsat tento typ souboru."
+
 #: libgwymodule/gwymodulebrowser.c:66
 msgid "Module Browser"
 msgstr "Prohlížeč modulů"
@@ -887,19 +900,6 @@ msgstr "Jméno:"
 #: libgwymodule/gwymodulebrowser.c:270
 msgid "Failure:"
 msgstr "Selhání:"
-
-#: libgwymodule/gwymodule-file.c:514 modules/file/pixmap.c:633
-#, c-format
-msgid "Cannot open file for reading: %s."
-msgstr "Soubor nelze otevřít pro čtení: %s."
-
-#: libgwymodule/gwymodule-file.c:523
-msgid "No module can load this file type."
-msgstr "Žádný modul nedokáže načíst tento typ souboru."
-
-#: libgwymodule/gwymodule-file.c:589
-msgid "No module can save to this file type."
-msgstr "Žádný modul nedokáže zapsat tento typ souboru."
 
 #: app/about.c:49
 #, c-format
@@ -2012,14 +2012,6 @@ msgstr "Hlavičku souboru nelze převést z UTF-16: %s"
 msgid "Unknown file type header: `%s'."
 msgstr "Neznámá hlavička souboru: „%s“."
 
-#: modules/file/burleigh_bii.c:68
-msgid "Imports Burleigh BII binary data files."
-msgstr "Načítá datové soubory Burleigh BII."
-
-#: modules/file/burleigh_bii.c:81
-msgid "Burleigh Image Studio files (.bii)"
-msgstr "Burleigh Image Studio soubory (.bii)"
-
 #: modules/file/burleigh.c:112
 msgid "Imports Burleigh IMG data files version 2.1."
 msgstr "Načítá datové soubory Burleigh IMG verze 2.1."
@@ -2032,6 +2024,14 @@ msgstr "Burleigh 2.1 soubory (.img)"
 #, c-format
 msgid "File format version %.1f is not supported."
 msgstr "Formát souboru verze %.1f není podporován."
+
+#: modules/file/burleigh_bii.c:68
+msgid "Imports Burleigh BII binary data files."
+msgstr "Načítá datové soubory Burleigh BII."
+
+#: modules/file/burleigh_bii.c:81
+msgid "Burleigh Image Studio files (.bii)"
+msgstr "Burleigh Image Studio soubory (.bii)"
 
 #: modules/file/burleigh_exp.c:81
 msgid "Imports Burleigh text/bin exported images."
@@ -2378,6 +2378,14 @@ msgstr "Řádek DATA_INFO obsahuje méně než %d položek."
 msgid "Missing data start marker \\x1a\\x04."
 msgstr "Schází značka začátku dat \\x1a\\x04."
 
+#: modules/file/nanoscope-ii.c:76
+msgid "Imports Digital Instruments Nanoscope II data files."
+msgstr "Načítá datové soubory Digital Instruments Nanoscope II."
+
+#: modules/file/nanoscope-ii.c:89
+msgid "Nanoscope II files"
+msgstr "Nanoscope II soubory."
+
 #: modules/file/nanoscope.c:137
 msgid ""
 "Imports Veeco (Digital Instruments) Nanoscope data files, version 3 or newer."
@@ -2405,14 +2413,6 @@ msgstr "Po datovém vzorku č. %d následují nesmysly."
 #: modules/file/nanoscope.c:766
 msgid "Truncated header line."
 msgstr "Předčasně ukončený řádek hlavičky."
-
-#: modules/file/nanoscope-ii.c:76
-msgid "Imports Digital Instruments Nanoscope II data files."
-msgstr "Načítá datové soubory Digital Instruments Nanoscope II."
-
-#: modules/file/nanoscope-ii.c:89
-msgid "Nanoscope II files"
-msgstr "Nanoscope II soubory."
 
 #: modules/file/nanotop.c:99
 msgid "Imports NANOTOP AFM files"
@@ -3334,6 +3334,14 @@ msgstr "Soubor skončil v bloku kanálu."
 msgid "End of file reached when another channel was expected."
 msgstr "Soubor skončil v místě, kde by měl být další kanál."
 
+#: modules/file/spml.c:91
+msgid "Loads SPML (Scanning Probe Microscopy Markup Language) data files."
+msgstr "Načítá datové soubory SPML (Scanning Probe Microscopy Markup Language)"
+
+#: modules/file/spml.c:105
+msgid "SPML files (.xml)"
+msgstr "SPML soubory (.xml)"
+
 #: modules/file/spmlab.c:113
 msgid "Imports Thermicroscopes SpmLab R3 to R7 data files."
 msgstr "Načítá datové soubory Thermicroscopes SpmLab R3 až R7."
@@ -3358,14 +3366,6 @@ msgstr "SPMLab soubory s plovoucí čárkou (.flt)"
 #: modules/file/spmlabf.c:143
 msgid "Missing data start marker [Data]."
 msgstr "Chybí značka začátku dat [Data]."
-
-#: modules/file/spml.c:91
-msgid "Loads SPML (Scanning Probe Microscopy Markup Language) data files."
-msgstr "Načítá datové soubory SPML (Scanning Probe Microscopy Markup Language)"
-
-#: modules/file/spml.c:105
-msgid "SPML files (.xml)"
-msgstr "SPML soubory (.xml)"
 
 #: modules/file/stmprg.c:217
 msgid "Imports Omicron STMPRG data files (tp ta)."
@@ -4354,8 +4354,8 @@ msgstr "CWT"
 msgid "2D CWT"
 msgstr "2D CWT"
 
-#: modules/process/cwt.c:155 modules/process/dwtanisotropy.c:208
-#: modules/process/dwt.c:183
+#: modules/process/cwt.c:155 modules/process/dwt.c:183
+#: modules/process/dwtanisotropy.c:208
 msgid "_Wavelet type:"
 msgstr "Typ _waveletu:"
 
@@ -4375,8 +4375,8 @@ msgstr "Vyhodnotit/opravit termální drift v rychlé ose skenu"
 msgid "Compensate Drift"
 msgstr "Kompenzace driftu"
 
-#: modules/process/drift.c:291 modules/process/dwtanisotropy.c:201
-#: modules/process/dwt.c:204 modules/process/fft_filter_1d.c:329
+#: modules/process/drift.c:291 modules/process/dwt.c:204
+#: modules/process/dwtanisotropy.c:201 modules/process/fft_filter_1d.c:329
 #: modules/process/fractal.c:228 modules/process/nanoindent_adjust.c:228
 #: modules/process/polydistort.c:268 modules/process/rotate.c:293
 #: modules/process/scale.c:248 modules/process/unrotate.c:282
@@ -4431,39 +4431,6 @@ msgstr "drift"
 msgid "x-axis drift"
 msgstr "drift podél x"
 
-#: modules/process/dwtanisotropy.c:78
-msgid "2D DWT anisotropy detection based on X/Y components ratio."
-msgstr "Detekce anisotropie založená na poměru X/Y komponentů"
-
-#: modules/process/dwtanisotropy.c:92
-msgid "/_Integral Transforms/DWT _Anisotropy..."
-msgstr "/_Integrální transformace/DWT _anisotropie"
-
-#: modules/process/dwtanisotropy.c:96
-msgid "DWT anisotropy detection"
-msgstr "Detekce anisotropie pomocí DWT"
-
-#: modules/process/dwtanisotropy.c:130 modules/process/dwt.c:118
-#, c-format
-msgid "%s: Data must be square."
-msgstr "%s: Data musejí být čtvercová."
-
-#: modules/process/dwtanisotropy.c:130
-msgid "DWT Anisotropy"
-msgstr "DWT anisotropie"
-
-#: modules/process/dwtanisotropy.c:182
-msgid "2D DWT Anisotropy"
-msgstr "2D DWT detekce anisotropie"
-
-#: modules/process/dwtanisotropy.c:213
-msgid "X/Y ratio threshold:"
-msgstr "práh poměru X/Y:"
-
-#: modules/process/dwtanisotropy.c:221
-msgid "Low level exclude limit:"
-msgstr "Spodní limit rozkladu:"
-
 #: modules/process/dwt.c:71
 msgid "Two-dimensional DWT (Discrete Wavelet Transform)."
 msgstr "Dvourozměrná DWT (diskrétní waveletová transformace)."
@@ -4475,6 +4442,11 @@ msgstr "/_Integrální transformace/2D _DWT..."
 #: modules/process/dwt.c:89
 msgid "Compute Discrete Wavelet Transform"
 msgstr "Vypočíst disktérní waveletovou tranformaci"
+
+#: modules/process/dwt.c:118 modules/process/dwtanisotropy.c:130
+#, c-format
+msgid "%s: Data must be square."
+msgstr "%s: Data musejí být čtvercová."
 
 #: modules/process/dwt.c:145
 msgid "DWT"
@@ -4492,6 +4464,34 @@ msgid ""
 msgstr ""
 "Velikost %d není mocnina dvou,\n"
 "pro DWT budou data přeškálována na %d×%d."
+
+#: modules/process/dwtanisotropy.c:78
+msgid "2D DWT anisotropy detection based on X/Y components ratio."
+msgstr "Detekce anisotropie založená na poměru X/Y komponentů"
+
+#: modules/process/dwtanisotropy.c:92
+msgid "/_Integral Transforms/DWT _Anisotropy..."
+msgstr "/_Integrální transformace/DWT _anisotropie"
+
+#: modules/process/dwtanisotropy.c:96
+msgid "DWT anisotropy detection"
+msgstr "Detekce anisotropie pomocí DWT"
+
+#: modules/process/dwtanisotropy.c:130
+msgid "DWT Anisotropy"
+msgstr "DWT anisotropie"
+
+#: modules/process/dwtanisotropy.c:182
+msgid "2D DWT Anisotropy"
+msgstr "2D DWT detekce anisotropie"
+
+#: modules/process/dwtanisotropy.c:213
+msgid "X/Y ratio threshold:"
+msgstr "práh poměru X/Y:"
+
+#: modules/process/dwtanisotropy.c:221
+msgid "Low level exclude limit:"
+msgstr "Spodní limit rozkladu:"
 
 #: modules/process/edge.c:147
 msgid ""
@@ -4621,54 +4621,6 @@ msgstr "Detekované _nespojitosti"
 msgid "I_nstant updates"
 msgstr "Okamžité _aktualizace"
 
-#: modules/process/facet_analysis.c:161
-msgid "Visualizes, marks and measures facet orientation."
-msgstr "Zobrazuje, označuje a měří orientaci plošek."
-
-#: modules/process/facet_analysis.c:175
-msgid "/_Statistics/Facet _Analysis..."
-msgstr "/_Statistika/Analýza _plošek"
-
-#: modules/process/facet_analysis.c:179
-msgid "Mark areas by 2D slope"
-msgstr "Označení plošek podle 2D sklonu"
-
-#: modules/process/facet_analysis.c:268
-msgid "Mark Facets"
-msgstr "Označení plošek"
-
-#: modules/process/facet_analysis.c:271
-msgid "_Mark"
-msgstr "_Označit"
-
-#: modules/process/facet_analysis.c:348
-msgid "noun|Normal"
-msgstr "Normála"
-
-#: modules/process/facet_analysis.c:356
-msgid "_Find Maximum"
-msgstr "_Najít maximum"
-
-#: modules/process/facet_analysis.c:364
-msgid "Mean Normal"
-msgstr "Střední normála"
-
-#: modules/process/facet_analysis.c:373
-msgid "Facet plane size:"
-msgstr "Velikot plošky:"
-
-#: modules/process/facet_analysis.c:398
-msgid "_Tolerance:"
-msgstr "_Tolerance:"
-
-#: modules/process/facet_analysis.c:418
-msgid ""
-"Warning: Lateral and value units differ. Angles are not physically "
-"meaningful."
-msgstr ""
-"Pozor: Jednotky podélných rozměrů a hodnot se liší. Úhly nedávají fyzikálně "
-"smysl."
-
 #: modules/process/facet-level.c:67
 msgid ""
 "Automatic facet-orientation based levelling. Levels data to make facets "
@@ -4719,6 +4671,54 @@ msgstr "Prokládat _celými daty (maska nemá vliv)"
 #: modules/process/polylevel.c:495
 msgid "Masking Mode"
 msgstr "Maska"
+
+#: modules/process/facet_analysis.c:161
+msgid "Visualizes, marks and measures facet orientation."
+msgstr "Zobrazuje, označuje a měří orientaci plošek."
+
+#: modules/process/facet_analysis.c:175
+msgid "/_Statistics/Facet _Analysis..."
+msgstr "/_Statistika/Analýza _plošek"
+
+#: modules/process/facet_analysis.c:179
+msgid "Mark areas by 2D slope"
+msgstr "Označení plošek podle 2D sklonu"
+
+#: modules/process/facet_analysis.c:268
+msgid "Mark Facets"
+msgstr "Označení plošek"
+
+#: modules/process/facet_analysis.c:271
+msgid "_Mark"
+msgstr "_Označit"
+
+#: modules/process/facet_analysis.c:348
+msgid "noun|Normal"
+msgstr "Normála"
+
+#: modules/process/facet_analysis.c:356
+msgid "_Find Maximum"
+msgstr "_Najít maximum"
+
+#: modules/process/facet_analysis.c:364
+msgid "Mean Normal"
+msgstr "Střední normála"
+
+#: modules/process/facet_analysis.c:373
+msgid "Facet plane size:"
+msgstr "Velikot plošky:"
+
+#: modules/process/facet_analysis.c:398
+msgid "_Tolerance:"
+msgstr "_Tolerance:"
+
+#: modules/process/facet_analysis.c:418
+msgid ""
+"Warning: Lateral and value units differ. Angles are not physically "
+"meaningful."
+msgstr ""
+"Pozor: Jednotky podélných rozměrů a hodnot se liší. Úhly nedávají fyzikálně "
+"smysl."
 
 #: modules/process/fft.c:90
 msgid "Two-dimensional FFT (Fast Fourier Transform)."
@@ -6811,27 +6811,6 @@ msgstr "_Předpokládat:"
 msgid "Correction:"
 msgstr "Korekce:"
 
-#: pygwy.c:91
-msgid "Pygwy, the Gwyddion Python wrapper."
-msgstr "Pygwy, pythoní rozhraní ke Gwyddionu."
-
-#: pygwy.c:443
-msgid "Function written in Python"
-msgstr "Funkce napsaná v Pythonu"
-
-#: pygwy.c:489
-msgid "Graph function written in Python"
-msgstr "Grafová funkce napsaná v Pythonu"
-
-#: pygwy.c:887
-#, c-format
-msgid ""
-"Pygwy plugin: %s (%s)\n"
-"Export failed."
-msgstr ""
-"Pygwy plugin: %s (%s)\n"
-"Export se nezdařil."
-
 #: modules/pygwy/pygwy-console.c:54
 msgid "/Pygwy Console"
 msgstr "/Konsola pygwy"
@@ -6863,6 +6842,27 @@ msgstr "Spustit skript (Ctrl-E)"
 #: modules/pygwy/pygwy-console.c:378
 msgid "Command"
 msgstr "Příkaz"
+
+#: pygwy.c:91
+msgid "Pygwy, the Gwyddion Python wrapper."
+msgstr "Pygwy, pythoní rozhraní ke Gwyddionu."
+
+#: pygwy.c:443
+msgid "Function written in Python"
+msgstr "Funkce napsaná v Pythonu"
+
+#: pygwy.c:489
+msgid "Graph function written in Python"
+msgstr "Grafová funkce napsaná v Pythonu"
+
+#: pygwy.c:887
+#, c-format
+msgid ""
+"Pygwy plugin: %s (%s)\n"
+"Export failed."
+msgstr ""
+"Pygwy plugin: %s (%s)\n"
+"Export se nezdařil."
 
 #: modules/tools/crop.c:81
 msgid "Crop tool, crops data to smaller size."
