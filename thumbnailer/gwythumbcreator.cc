@@ -59,24 +59,22 @@ GwyThumbCreator::create(const QString &path,
                         QImage &image)
 {
     QString program = GWYDDION_THUMBNAILER;
+    QString s = "%1";
     QStringList arguments;
+    arguments << "kde4" << s.arg(qMax(width, height)) << path;
 
-    arguments << "kde4" << QString(qMax(width, height)) << path;
     QProcess *gwythumbnailer = new QProcess();
-
     gwythumbnailer->start(program, arguments);
     if (!gwythumbnailer->waitForStarted(2000)) {
         delete gwythumbnailer;
         return false;
     }
 
-    /* Does this consume all output or just all output available at the
-     * moment of calling? */
-    QByteArray pngdata = gwythumbnailer->readAllStandardOutput();
-    delete gwythumbnailer;
-
+    QByteArray pngdata;
+    while (gwythumbnailer->waitForReadyRead(100))
+        pngdata += gwythumbnailer->readAllStandardOutput();
     image.loadFromData(pngdata, "PNG");
-
+    delete gwythumbnailer;
     return !image.isNull();
 }
 
