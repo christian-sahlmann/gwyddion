@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2008-12-31 11:39+0100\n"
+"POT-Creation-Date: 2009-01-04 20:16+0100\n"
 "PO-Revision-Date: 2008-12-15 14:37+0100\n"
 "Last-Translator: Yeti <yeti@gwyddion.net>\n"
 "Language-Team: Czech\n"
@@ -1400,19 +1400,16 @@ msgstr " je svobodný software uvolněný pod GNU GPL."
 #: app/tips.c:51
 msgid ""
 "Holding Shift restritcs directions of selected lines to multiples of 15°."
-msgstr ""
-"Podržením Shiftu omezíš směry vybíraných čar na násobky 15°."
+msgstr "Podržením Shiftu omezíš směry vybíraných čar na násobky 15°."
 
 #: app/tips.c:56
 msgid ""
 "Holding Shift restritcs shapes of selected rectangles to perfect squares."
-msgstr ""
-"Podržením Shiftu omezíš tvary vybíraných obdéníků na přesné čtverce."
+msgstr "Podržením Shiftu omezíš tvary vybíraných obdéníků na přesné čtverce."
 
 #: app/tips.c:61
 msgid "Holding Shift restritcs shapes of selected ellipses to perfect circles."
-msgstr ""
-"Podržením Shiftu omezíš tvary vybíraných elips na přesné kružnice."
+msgstr "Podržením Shiftu omezíš tvary vybíraných elips na přesné kružnice."
 
 #: app/tips.c:66
 msgid ""
@@ -1523,8 +1520,7 @@ msgstr "Popisky os grafu lze upravovat klinutím na daný popisek."
 #: app/tips.c:153
 msgid ""
 "Graph key (legend) properties can be edited by double-clicking on the legend."
-msgstr ""
-"Legendu grafu lze upravovat dvojitém kliknutí na legendu."
+msgstr "Legendu grafu lze upravovat dvojitém kliknutí na legendu."
 
 #: app/tips.c:158
 msgid ""
@@ -1615,8 +1611,8 @@ msgid ""
 "Data Arithmetic works as a scientific calculator, just type an arithmetic "
 "expression."
 msgstr ""
-"Funkce Aritmetika funguje i jako vědecký kalkulátor: prostě napiš do pole pro"
-"výraz aritmetický výraz."
+"Funkce Aritmetika funguje i jako vědecký kalkulátor: prostě napiš do pole "
+"provýraz aritmetický výraz."
 
 #: app/tips.c:235
 msgid ""
@@ -1679,78 +1675,72 @@ msgstr ""
 
 #: app/tips.c:292
 msgid ""
-"Distance tool measures distances, angles and height differences between "
-"selected points."
-msgstr "Měření vzdáleností a směrů mezi body"
-
-#: app/tips.c:297
-msgid ""
 "Individual lines can be deleted in Profiles tool by selecting them in the "
 "list and pressing Delete."
 msgstr ""
 
-#: app/tips.c:302
+#: app/tips.c:297
 msgid ""
 "Spectroscopy tool displays point spectroscopy data and extracts them to "
 "standalone graphs that can be subsequently analysed for instance with Graph "
 "→ Fit FD Curve."
 msgstr ""
 
-#: app/tips.c:308
+#: app/tips.c:303
 msgid ""
 "Statistical Quantities tool allows to limit the area of interest by a mask, "
 "rectangular selection or the intersection of both."
 msgstr ""
 
-#: app/tips.c:313
+#: app/tips.c:308
 msgid ""
 "Beside height and angle distributions, Statistical Functions tool calculates "
 "also correlation functions, power spectrum density (PSDF) and some more "
 "exotic functions."
 msgstr ""
 
-#: app/tips.c:319
+#: app/tips.c:314
 msgid ""
 "Path Level tool levels misaligned rows by lining them up along manually "
 "selected lines.  If there are no large features automatic Median Line "
 "Correction usually works well."
 msgstr ""
 
-#: app/tips.c:325
+#: app/tips.c:320
 msgid ""
 "Grain Measure tool is great for examining individual grains.  Overall grain "
 "statistics are available in Data Processing → Grains."
 msgstr ""
 
-#: app/tips.c:331
+#: app/tips.c:326
 msgid "Mask Editor tool can create, edit, invert, grow and shrink masks."
 msgstr ""
 
-#: app/tips.c:335
+#: app/tips.c:330
 msgid ""
 "Color Range tool offers several false color scale mapping modes and can make "
 "any of them the default mode."
 msgstr ""
 
-#: app/tips.c:341
+#: app/tips.c:336
 msgid ""
 "Gwyddion User Guide explains in detail many of the methods and algorithms "
 "implemented in Gwyddion."
 msgstr ""
 
-#: app/tips.c:346
+#: app/tips.c:341
 msgid "Gwyddion is a son of Math."
 msgstr ""
 
-#: app/tips.c:393
+#: app/tips.c:388
 msgid "Gwyddion Tip of the Day"
 msgstr "Gwyddion: Tip dne"
 
-#: app/tips.c:405
+#: app/tips.c:400
 msgid "_Previous Tip"
 msgstr "_Předchozí tip"
 
-#: app/tips.c:411
+#: app/tips.c:406
 msgid "_Next Tip"
 msgstr "_Následující tip"
 
@@ -2544,7 +2534,7 @@ msgstr "Wyko OPD soubory (.opd)"
 msgid "Wyko ASCII export files (.asc)"
 msgstr "Wyko exportované ASCII soubory (.asc)"
 
-#: modules/file/opdfile.c:250
+#: modules/file/opdfile.c:250 modules/file/sensofar.c:251
 msgid "File header is truncated"
 msgstr "Hlavička souboru je uříznutá."
 
@@ -2856,7 +2846,8 @@ msgid "Imports Quesant file format."
 msgstr "Načítá datové soubory Quesant."
 
 #: modules/file/quesant.c:69
-msgid "Quesant files"
+#, fuzzy
+msgid "Quesant files (.afm)"
 msgstr "Quesant soubory"
 
 #: modules/file/rawfile.c:215
@@ -3151,23 +3142,23 @@ msgstr ""
 "Čekal bych oddělovač „%s“ po datech v řádku %u, sloupci %u, ale narazil jsem "
 "na „%.16s“"
 
-#: modules/file/rhk-sm3.c:217
+#: modules/file/rhk-sm3.c:220
 msgid "Imports RHK Technology SM3 data files."
 msgstr "Načítá datové soubory RHK Technology typu SM3."
 
-#: modules/file/rhk-sm3.c:237
+#: modules/file/rhk-sm3.c:240
 msgid "RHK SM3 files (.sm3)"
 msgstr "RHK SM3 soubory (.sm3)"
 
-#: modules/file/rhk-sm3.c:317 modules/file/rhk-sm3.c:330
+#: modules/file/rhk-sm3.c:320 modules/file/rhk-sm3.c:333
 msgid "End of file reached in page header."
 msgstr "Soubor skončil v hlavičce stránky."
 
-#: modules/file/rhk-sm3.c:321
+#: modules/file/rhk-sm3.c:324
 msgid "magic page header"
 msgstr "magická hlavička stránky"
 
-#: modules/file/rhk-sm3.c:402
+#: modules/file/rhk-sm3.c:405
 #, c-format
 msgid "End of file reached in string #%u."
 msgstr "Soubor skončil v řetězci č. %u."
@@ -3179,6 +3170,11 @@ msgstr "Soubor skončil v hlavičce dat barev."
 #: modules/file/rhk-sm3.c:434
 msgid "End of file reached in color data."
 msgstr "Soubor skončil v datech barev."
+
+#: modules/file/rhk-sm3.c:701
+#, fuzzy, c-format
+msgid "Unknown line %d"
+msgstr "Neznámý kanál %d"
 
 #: modules/file/rhk-spm32.c:161
 msgid "Imports RHK Technology SPM32 data files."
@@ -3267,23 +3263,19 @@ msgstr "Načítá XQD soubory Seiko."
 msgid "Seiko files (.xqd)"
 msgstr "Seiko soubory (.xqd)"
 
-#: modules/file/sensofar.c:99
+#: modules/file/sensofar.c:195
 msgid "Imports Sensofar PLu file format, version 2000 or newer."
 msgstr "Načítá formát souboru Sensofar PLu, verze 2000 nebo novější."
 
-#: modules/file/sensofar.c:113
-msgid "Sensofar PLu files"
+#: modules/file/sensofar.c:209
+#, fuzzy
+msgid "Sensofar PLu files (.plu)"
 msgstr "Sensofar PLu soubory"
 
-#: modules/file/sensofar.c:173
-#, c-format
-msgid "File too small (less than %lu bytes). Header is not complete."
-msgstr "Soubor je příliš malý (méně než %lu bajtů). Hlavička je nekompletní."
-
-#: modules/file/sensofar.c:230
-#, c-format
-msgid "Data type '%d' is not implemented."
-msgstr "Datový typ „%d“ není implementován."
+#: modules/file/sensofar.c:483 modules/file/sensofar.c:497
+#, fuzzy
+msgid "Profile"
+msgstr "Profily"
 
 #: modules/file/shimadzu.c:94
 msgid "Imports Shimadzu SPM data files, version 2."
@@ -4034,31 +4026,31 @@ msgstr "/M_ultidata/_Aritmetika..."
 msgid "Arithmetic operations on data"
 msgstr "Aritmetické operace s daty"
 
-#: modules/process/arithmetic.c:148
+#: modules/process/arithmetic.c:151
 msgid "Arithmetic"
 msgstr "Aritmetika"
 
-#: modules/process/arithmetic.c:163 modules/process/superresolution.c:159
+#: modules/process/arithmetic.c:166 modules/process/superresolution.c:159
 msgid "Operands:"
 msgstr "O_perandy:"
 
-#: modules/process/arithmetic.c:192
+#: modules/process/arithmetic.c:195
 msgid "_Expression:"
 msgstr "_Výraz:"
 
-#: modules/process/arithmetic.c:367 modules/process/superresolution.c:304
+#: modules/process/arithmetic.c:370 modules/process/superresolution.c:304
 msgid "Pixel dimensions differ"
 msgstr "Nekompatibilní rozlišení"
 
-#: modules/process/arithmetic.c:369 modules/process/superresolution.c:306
+#: modules/process/arithmetic.c:372 modules/process/superresolution.c:306
 msgid "Lateral dimensions are different physical quantities"
 msgstr "Příčné rozměry jsou nekompatibilní fyzikální veličiny"
 
-#: modules/process/arithmetic.c:372 modules/process/superresolution.c:309
+#: modules/process/arithmetic.c:375 modules/process/superresolution.c:309
 msgid "Physical dimensions differ"
 msgstr "Nekompatibilní fyzické rozměry"
 
-#: modules/process/arithmetic.c:419 modules/process/superresolution.c:353
+#: modules/process/arithmetic.c:422 modules/process/superresolution.c:353
 msgid "Calculated"
 msgstr "Vypočtený"
 
@@ -4724,6 +4716,7 @@ msgid "Use entire _image (ignore mask)"
 msgstr "Prokládat _celými daty (maska nemá vliv)"
 
 #: modules/process/facet-level.c:303 modules/process/level.c:273
+#: modules/process/polylevel.c:495
 msgid "Masking Mode"
 msgstr "Maska"
 
@@ -6298,10 +6291,6 @@ msgstr "S_tejné stupně"
 msgid "_Maximum polynom degree:"
 msgstr "_Maximální stupeň polynomu"
 
-#: modules/process/polylevel.c:495
-msgid "Masking"
-msgstr "Maska"
-
 #: modules/process/presentationops.c:57
 msgid "Basic operations with presentation: extraction, removal."
 msgstr "Základní operace s presentacemi: extrakce, odstranění."
@@ -7771,6 +7760,21 @@ msgstr ""
 "Projektovaná plocha: %s\n"
 "θ sklonu:            %s\n"
 "φ sklonu:            %s\n"
+
+#~ msgid ""
+#~ "Distance tool measures distances, angles and height differences between "
+#~ "selected points."
+#~ msgstr "Měření vzdáleností a směrů mezi body"
+
+#~ msgid "File too small (less than %lu bytes). Header is not complete."
+#~ msgstr ""
+#~ "Soubor je příliš malý (méně než %lu bajtů). Hlavička je nekompletní."
+
+#~ msgid "Data type '%d' is not implemented."
+#~ msgstr "Datový typ „%d“ není implementován."
+
+#~ msgid "Masking"
+#~ msgstr "Maska"
 
 #~ msgid "Output"
 #~ msgstr "Výstup"
