@@ -157,7 +157,8 @@ sed -i -e '1s/env *//' plugins/process/*.{py,rb,pl}
 
 
 %build
-%configure --without-pascal --disable-rpath %{?_with_kde4_thumbnailer}
+%configure --without-pascal --disable-rpath \
+	   --without-kde4-thumbnailer %{?_with_kde4_thumbnailer}
 make %{?_smp_mflags}
 
 
@@ -195,17 +196,17 @@ update-mime-database %{_datadir}/mime &>/dev/null || :
 update-desktop-database &>/dev/null || :
 
 
-%pre(thumbnail-gconf)
+%pre thumbnailer-gconf
 if [ "$1" -gt 1 ]; then
     %{gconftool} --makefile-uninstall-rule %{schemas} >/dev/null || :
 fi
 
 
-%post(thumbnail-gconf)
+%post thumbnailer-gconf
 %{gconftool} --makefile-install-rule %{schemas} >/dev/null || :
 
 
-%preun(thumbnail-gconf)
+%preun thumbnailer-gconf
 if [ "$1" -eq 0 ]; then
     %{gconftool} --makefile-uninstall-rule %{schemas} >/dev/null || :
 fi
