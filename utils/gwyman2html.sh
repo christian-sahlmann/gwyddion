@@ -36,7 +36,7 @@ include('_top.php');
 EOF
 
 sed '1,/<body>/d; /^This document was created by/,$d; s#\.\./index\.html#/#' "$out.tmp" \
-  | sed '/^<hr/d; s#<a href="\.\./man1.*">\([^<]*\)</a>#\1#'
+  | sed '/^<hr/d; s#<a href="\.\./man1[^"]*">\([^<]*\)</a>#\1#g'
 
 cat <<EOF
 
