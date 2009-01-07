@@ -15,7 +15,7 @@ test -z "$DIE" || exit 1
 f="$1"
 name=$(basename "$f")
 out=$name.html
-sect=${name%*.}
+sect=${name#*.}
 name=${name%.[0-9]}
 man2html -r "$f" \
   | sed 1,2d \
@@ -29,14 +29,14 @@ cat <<EOF
 <?php
 \$title = 'Gwyddion - $name($sect)';
 \$fid = array('\$Revision: $revision \$', '\$Author: $author \$', '\$Date: $date $');
-ini_set('include_path', '.:' . ini_get('include_path'));
+ini_set('include_path', '..:' . ini_get('include_path'));
 include('_head.php');
 include('_top.php');
 ?>
 EOF
 
-sed '1,/<body>/d; /^This document was created by/,$d' "$out.tmp" \
-  | sed '$d; s#<a href="\.\./man1.*">\(.*\)</a>#\1#'
+sed '1,/<body>/d; /^This document was created by/,$d; s#\.\./index\.html#/#' "$out.tmp" \
+  | sed '/^<hr/d; s#<a href="\.\./man1.*">\(.*\)</a>#\1#'
 
 cat <<EOF
 
