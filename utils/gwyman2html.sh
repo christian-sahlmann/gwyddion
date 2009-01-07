@@ -14,7 +14,7 @@ test -z "$DIE" || exit 1
 
 f="$1"
 name=$(basename "$f")
-out=$name.html
+out=$php
 sect=${name#*.}
 name=${name%.[0-9]}
 man2html -r "$f" \
@@ -36,9 +36,11 @@ include('_top.php');
 EOF
 
 sed '1,/<body>/d; /^This document was created by/,$d; s#\.\./index\.html#/#' "$out.tmp" \
-  | sed '/^<hr/d; s#<a href="\.\./man1.*">\(.*\)</a>#\1#'
+  | sed '/^<hr/d; s#<a href="\.\./man1.*">\([^<]*\)</a>#\1#'
 
 cat <<EOF
 
 <?php include('_bot.php'); ?>
 EOF
+
+rm -f $out
