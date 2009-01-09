@@ -1,3 +1,9 @@
+2.13 (2000-00-00)
+Other:
+- File gwydion-thumbnailer.schemas is no longer distributed with paths from the
+  packager's system, it is created on the build system with the correct paths.
+
+
 2.12 (2009-01-04)
 Application:
 - New translations: Russian.

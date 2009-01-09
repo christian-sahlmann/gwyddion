@@ -31,7 +31,7 @@ EXTRA_DIST = \
 	gwyconfig.h.win32 \
 	gwyddion-devel.iss \
 	gwyddion-devel.iss.in \
-	gwyddion-thumbnailer.schemas \
+	gwyddion-thumbnailer.schemas.in \
 	gwyddion.iss \
 	gwyddion.iss.in \
 	gwyddion.pc.in \
@@ -55,8 +55,10 @@ gwyddion_vim_sources = \
 
 file_magic_sources = $(top_srcdir)/modules/file/*.c
 
+CLEANFILES = \
+	gwyddion-thumbnailer.schemas
+
 MAINTAINERCLEANFILES = \
-	gwyddion-thumbnailer.schemas \
 	gwyddion.vim \
 	gwyddion.xml
 
@@ -72,12 +74,22 @@ gwyddion.xml: $(top_srcdir)/utils/extract-file-magic.py $(file_magic_sources)
 	$(PYTHON) $(top_srcdir)/utils/extract-file-magic.py \
 	  FREEDESKTOP $(file_magic_sources) >gwyddion.xml
 
-# Gnome thumbnailer schemas
-gwyddion-thumbnailer.schemas: thumbnailer-schemas.xsl $(srcdir)/gwyddion.xml
+# Generate Gnome thumbnailer schemas
+gwyddion-thumbnailer.schemas.in: thumbnailer-schemas.xsl $(srcdir)/gwyddion.xml
 	$(XSLTPROC) $(srcdir)/thumbnailer-schemas.xsl $(srcdir)/gwyddion.xml \
-	  | $(SED) -e 's/^\(<gconfschemafile\) .*\(>\)/\1\2/' \
-	           -e 's#[@]bindir[@]#$(bindir)#' >gwyddion-thumbnailer.schemas
+	  >gwyddion-thumbnailer.schemas.in
 endif
+
+# Fix paths in Gnome thumbnailer schemas
+# NB: We must use sed, not autoconf @-replacements, because that would leave
+# unexpanded ${prefix} in the schemas file.
+# Depend on Makefile, this may run this rule perhaps too often but ensures
+# the paths are updated every time they should.
+gwyddion-thumbnailer.schemas: gwyddion-thumbnailer.schemas.in Makefile
+	$(SED) -e 's/^\(<gconfschemafile\) .*\(>\)/\1\2/' \
+	  -e 's#[@]bindir[@]#$(bindir)#' \
+	   $(srcdir)/gwyddion-thumbnailer.schemas.in \
+	   >gwyddion-thumbnailer.schemas
 
 # Desktop file installation
 # FIXME: Maybe not according to current standards
