@@ -278,7 +278,7 @@ drift_dialog(DriftArgs *args,
     row = 0;
 
     controls.range = gtk_adjustment_new(args->range, 1.0, 50.0, 1.0, 5.0, 0);
-    spin = gwy_table_attach_hscale(table, row, "_Search range:", "rows",
+    spin = gwy_table_attach_hscale(table, row, _("_Search range:"), _("rows"),
                                    controls.range, GWY_HSCALE_DEFAULT);
     g_signal_connect(controls.range, "value-changed",
                      G_CALLBACK(drift_invalidate), &controls);
