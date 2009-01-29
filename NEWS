@@ -1,7 +1,16 @@
 2.13 (2000-00-00)
+Application:
+- Translations updated: Russian.
+
+Modules
+- Distance, Stats and Rougness tools: Copy to clipboard buttons actually work
+  (in 2.12 Save button did both actions and Copy did not do anything).
+- Stats tool: Angles are exported in degrees as stated, instead of radians.
+
 Other:
 - File gwydion-thumbnailer.schemas is no longer distributed with paths from the
   packager's system, it is created on the build system with the correct paths.
+- Outdated MSVC makefiles released in 2.12 were corrected.
 
 
 2.12 (2009-01-04)
