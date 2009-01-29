@@ -224,7 +224,7 @@ gwy_tool_distance_init_dialog(GwyToolDistance *tool)
 
     tool->copy = gwy_tool_distance_add_aux_button(tool, GTK_STOCK_COPY,
                                                   _("Copy table to clipboard"));
-    g_signal_connect_swapped(tool->save, "clicked",
+    g_signal_connect_swapped(tool->copy, "clicked",
                              G_CALLBACK(gwy_tool_distance_copy), tool);
 
     gwy_plain_tool_add_clear_button(GWY_PLAIN_TOOL(tool));
@@ -471,13 +471,11 @@ gwy_tool_distance_copy(GwyToolDistance *tool)
 {
     GtkClipboard *clipboard;
     GdkDisplay *display;
-    GdkAtom atom;
     gchar *text;
 
     text = gwy_tool_distance_create_report(tool);
-    atom = gdk_atom_intern("CLIPBOARD", FALSE);
     display = gtk_widget_get_display(GTK_WIDGET(GWY_TOOL(tool)->dialog));
-    clipboard = gtk_clipboard_get_for_display(display, atom);
+    clipboard = gtk_clipboard_get_for_display(display, GDK_SELECTION_CLIPBOARD);
     gtk_clipboard_set_text(clipboard, text, -1);
     g_free(text);
 }

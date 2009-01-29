@@ -663,12 +663,10 @@ grain_stat_copy(GtkWidget *dialog)
 {
     GtkClipboard *clipboard;
     GdkDisplay *display;
-    GdkAtom atom;
     gchar *text = (gchar*)g_object_get_data(G_OBJECT(dialog), "report");
 
-    atom = gdk_atom_intern("CLIPBOARD", FALSE);
     display = gtk_widget_get_display(dialog);
-    clipboard = gtk_clipboard_get_for_display(display, atom);
+    clipboard = gtk_clipboard_get_for_display(display, GDK_SELECTION_CLIPBOARD);
     gtk_clipboard_set_text(clipboard, text, -1);
 }
 
@@ -827,7 +825,7 @@ grain_stat(GwyContainer *data, GwyRunType run)
     hbox = gtk_hbox_new(FALSE, 0);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox,
                        FALSE, FALSE, 0);
-  
+
     button = grain_stats_add_aux_button(hbox, GTK_STOCK_SAVE,
                                         _("Save table to a file"));
     g_signal_connect_swapped(button, "clicked",

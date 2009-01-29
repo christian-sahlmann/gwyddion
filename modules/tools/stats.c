@@ -389,7 +389,7 @@ gwy_tool_stats_init_dialog(GwyToolStats *tool)
     hbox = gtk_hbox_new(FALSE, 0);
     gtk_box_pack_start(GTK_BOX(dialog->vbox), hbox, FALSE, FALSE, 0);
     tool->aux_box = GTK_BOX(hbox);
-  
+
     tool->save = gwy_tool_stats_add_aux_button(tool, GTK_STOCK_SAVE,
                                                _("Save table to a file"));
     g_signal_connect_swapped(tool->save, "clicked",
@@ -397,7 +397,7 @@ gwy_tool_stats_init_dialog(GwyToolStats *tool)
 
     tool->copy = gwy_tool_stats_add_aux_button(tool, GTK_STOCK_COPY,
                                                _("Copy table to clipboard"));
-    g_signal_connect_swapped(tool->save, "clicked",
+    g_signal_connect_swapped(tool->copy, "clicked",
                              G_CALLBACK(gwy_tool_stats_copy), tool);
 
     tool->update = gtk_dialog_add_button(dialog, _("_Update"),
@@ -750,7 +750,6 @@ gwy_tool_stats_copy(GwyToolStats *tool)
     ToolReportData report_data;
     GtkClipboard *clipboard;
     GdkDisplay *display;
-    GdkAtom atom;
     gssize len;
     gchar *text;
 
@@ -768,9 +767,8 @@ gwy_tool_stats_copy(GwyToolStats *tool)
     report_data.id = plain_tool->id;
 
     text = gwy_tool_stats_create_report(&report_data, &len);
-    atom = gdk_atom_intern("CLIPBOARD", FALSE);
     display = gtk_widget_get_display(GTK_WIDGET(GWY_TOOL(tool)->dialog));
-    clipboard = gtk_clipboard_get_for_display(display, atom);
+    clipboard = gtk_clipboard_get_for_display(display, GDK_SELECTION_CLIPBOARD);
     gtk_clipboard_set_text(clipboard, text, -1);
     g_free(text);
 }

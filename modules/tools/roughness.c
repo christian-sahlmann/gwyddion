@@ -836,7 +836,7 @@ gwy_tool_roughness_init_dialog(GwyToolRoughness *tool)
 
     tool->copy = gwy_tool_roughness_add_aux_button(tool, GTK_STOCK_COPY,
                                                   _("Copy table to clipboard"));
-    g_signal_connect_swapped(tool->save, "clicked",
+    g_signal_connect_swapped(tool->copy, "clicked",
                              G_CALLBACK(gwy_tool_roughness_copy), tool);
 
     table = gtk_table_new(4, 4, FALSE);
@@ -2156,7 +2156,6 @@ gwy_tool_roughness_copy(GwyToolRoughness *tool)
     ToolReportData report_data;
     GtkClipboard *clipboard;
     GdkDisplay *display;
-    GdkAtom atom;
     gssize len;
     gchar *text;
 
@@ -2174,9 +2173,8 @@ gwy_tool_roughness_copy(GwyToolRoughness *tool)
     report_data.id = plain_tool->id;
 
     text = gwy_tool_roughness_create_report(&report_data, &len);
-    atom = gdk_atom_intern("CLIPBOARD", FALSE);
     display = gtk_widget_get_display(GTK_WIDGET(GWY_TOOL(tool)->dialog));
-    clipboard = gtk_clipboard_get_for_display(display, atom);
+    clipboard = gtk_clipboard_get_for_display(display, GDK_SELECTION_CLIPBOARD);
     gtk_clipboard_set_text(clipboard, text, -1);
     g_free(text);
 
