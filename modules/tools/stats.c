@@ -60,6 +60,7 @@ typedef struct {
     gdouble kurtosis;
     gdouble area;
     gdouble projarea;
+    /* These two are in degrees as we use need only for the user. */
     gdouble theta;
     gdouble phi;
 } ToolResults;
@@ -152,7 +153,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Statistics tool."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "2.8",
+    "2.9",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -577,10 +578,8 @@ gwy_tool_stats_update_labels(GwyToolStats *tool)
         gtk_label_set_text(GTK_LABEL(tool->area), _("N.A."));
 
     if (tool->same_units && !mask_in_use) {
-        update_label(tool->angle_format, tool->theta,
-                     180.0/G_PI * tool->results.theta);
-        update_label(tool->angle_format, tool->phi,
-                     180.0/G_PI * tool->results.phi);
+        update_label(tool->angle_format, tool->theta, tool->results.theta);
+        update_label(tool->angle_format, tool->phi, tool->results.phi);
     }
     else {
         gtk_label_set_text(GTK_LABEL(tool->theta), _("N.A."));
@@ -666,6 +665,8 @@ gwy_tool_stats_calculate(GwyToolStats *tool)
                                             isel[0], isel[1], w, h,
                                             &tool->results.theta,
                                             &tool->results.phi);
+        tool->results.theta *= 180.0/G_PI;
+        tool->results.phi *= 180.0/G_PI;
     }
 
     memcpy(tool->results.isel, isel, sizeof(isel));
