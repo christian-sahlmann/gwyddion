@@ -5,6 +5,8 @@ Application:
 Modules
 - Distance, Stats and Rougness tools: Copy to clipboard buttons actually work
   (in 2.12 Save button did both actions and Copy did not do anything).
+- Nanoscope: Physical y-size is recalculated to conserve the pixel
+  y-size/x-size ratio in all files now.  This affects non-square images.
 - Stats tool: Angles are exported in degrees as stated, instead of radians.
 
 Other:
