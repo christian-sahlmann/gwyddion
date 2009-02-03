@@ -8,6 +8,7 @@ Modules
 - Nanoscope: Physical y-size is recalculated to conserve the pixel
   y-size/x-size ratio in all files now.  This affects non-square images.
 - Stats tool: Angles are exported in degrees as stated, instead of radians.
+- HDF4 file: PSI files are flipped vertically to follow the convention.
 
 Other:
 - File gwydion-thumbnailer.schemas is no longer distributed with paths from the

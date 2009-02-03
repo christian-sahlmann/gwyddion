@@ -330,7 +330,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Hierarchical Data Format (HDF) files, version 4."),
     "Yeti <yeti@gwyddion.net>",
-    "0.5",
+    "0.6",
     "David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
@@ -492,6 +492,7 @@ psi_load(const gchar *filename,
         g_object_unref(siunit);
 
         gwy_data_field_multiply(dfield, header->zgain*pow10(power10));
+        gwy_data_field_invert(dfield, TRUE, FALSE, FALSE);
 
         container = gwy_container_new();
         gwy_container_set_object_by_name(container, "/0/data", dfield);
