@@ -91,7 +91,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Distance measurement tool, measures distances and angles."),
     "Nenad Ocelic <ocelic@biochem.mpg.de>",
-    "2.9",
+    "2.10",
     "Nenad Ocelic & David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -432,11 +432,11 @@ gwy_tool_distance_render_cell(GtkCellLayout *layout,
         {
             gint x, y;
 
-            x = gwy_data_field_rtoj(plain_tool->data_field, line[2]);
-            y = gwy_data_field_rtoi(plain_tool->data_field, line[3]);
+            x = floor(gwy_data_field_rtoj(plain_tool->data_field, line[2]));
+            y = floor(gwy_data_field_rtoi(plain_tool->data_field, line[3]));
             val = gwy_data_field_get_val(plain_tool->data_field, x, y);
-            x = gwy_data_field_rtoj(plain_tool->data_field, line[0]);
-            y = gwy_data_field_rtoi(plain_tool->data_field, line[1]);
+            x = floor(gwy_data_field_rtoj(plain_tool->data_field, line[0]));
+            y = floor(gwy_data_field_rtoi(plain_tool->data_field, line[1]));
             val -= gwy_data_field_get_val(plain_tool->data_field, x, y);
             vf = plain_tool->value_format;
         }
@@ -516,11 +516,11 @@ gwy_tool_distance_create_report(GwyToolDistance *tool)
         vf_phi = tool->angle_format;
         val_phi = atan2(line[1] - line[3], line[2] - line[0]) * 180.0/G_PI;
 
-        x = gwy_data_field_rtoj(plain_tool->data_field, line[2]);
-        y = gwy_data_field_rtoi(plain_tool->data_field, line[3]);
+        x = floor(gwy_data_field_rtoj(plain_tool->data_field, line[2]));
+        y = floor(gwy_data_field_rtoi(plain_tool->data_field, line[3]));
         val_dz = gwy_data_field_get_val(plain_tool->data_field, x, y);
-        x = gwy_data_field_rtoj(plain_tool->data_field, line[0]);
-        y = gwy_data_field_rtoi(plain_tool->data_field, line[1]);
+        x = floor(gwy_data_field_rtoj(plain_tool->data_field, line[0]));
+        y = floor(gwy_data_field_rtoi(plain_tool->data_field, line[1]));
         val_dz -= gwy_data_field_get_val(plain_tool->data_field, x, y);
         vf_dz = plain_tool->value_format;
 

@@ -108,7 +108,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Pointer tool, reads value under pointer."),
     "Yeti <yeti@gwyddion.net>",
-    "2.9",
+    "2.10",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -490,8 +490,8 @@ gwy_tool_read_value_update_values(GwyToolReadValue *tool)
     xoff = gwy_data_field_get_xoffset(plain_tool->data_field);
     yoff = gwy_data_field_get_yoffset(plain_tool->data_field);
 
-    col = gwy_data_field_rtoj(plain_tool->data_field, point[0]);
-    row = gwy_data_field_rtoi(plain_tool->data_field, point[1]);
+    col = floor(gwy_data_field_rtoj(plain_tool->data_field, point[0]));
+    row = floor(gwy_data_field_rtoi(plain_tool->data_field, point[1]));
 
     update_label(plain_tool->coord_format, tool->x, point[0] + xoff);
     update_label(tool->pixel_format, tool->xpx, col);

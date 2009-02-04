@@ -630,7 +630,7 @@ static GwyModuleInfo module_info = {
     N_("Calculate surface profile parameters."),
     "Martin Hasoň <hasonm@physics.muni.cz>, "
         "Yeti <yeti@gwyddion.net>",
-    "1.3",
+    "1.4",
     "Martin Hasoň & David Nečas (Yeti)",
     "2006",
 };
@@ -1280,10 +1280,10 @@ gwy_tool_roughness_update(GwyToolRoughness *tool)
     g_return_if_fail(plain_tool->selection);
     g_return_if_fail(gwy_selection_get_object(plain_tool->selection, 0, line));
 
-    xl1 = (gint)gwy_data_field_rtoj(plain_tool->data_field, line[0]);
-    yl1 = (gint)gwy_data_field_rtoi(plain_tool->data_field, line[1]);
-    xl2 = (gint)gwy_data_field_rtoj(plain_tool->data_field, line[2]);
-    yl2 = (gint)gwy_data_field_rtoi(plain_tool->data_field, line[3]);
+    xl1 = floor(gwy_data_field_rtoj(plain_tool->data_field, line[0]));
+    yl1 = floor(gwy_data_field_rtoi(plain_tool->data_field, line[1]));
+    xl2 = floor(gwy_data_field_rtoj(plain_tool->data_field, line[2]));
+    yl2 = floor(gwy_data_field_rtoi(plain_tool->data_field, line[3]));
 
     lineres = ROUND(hypot(xl1 - xl2, yl1 - yl2));
     if (lineres < 8)
@@ -2225,13 +2225,13 @@ gwy_tool_roughness_create_report(gpointer user_data,
 
     for (i = 0; i < 4; i++) {
         if (i % 2 == 0) {
-            k = (gint)gwy_data_field_rtoj(report_data->data_field,
-                                          report_data->line[i]);
+            k = floor(gwy_data_field_rtoj(report_data->data_field,
+                                          report_data->line[i]));
             x = report_data->line[i] + xoff;
         }
         else {
-            k = (gint)gwy_data_field_rtoi(report_data->data_field,
-                                          report_data->line[i]);
+            k = floor(gwy_data_field_rtoi(report_data->data_field,
+                                          report_data->line[i]));
             x = report_data->line[i] + yoff;
         }
         linepx[i] = g_strdup_printf("%d", k);

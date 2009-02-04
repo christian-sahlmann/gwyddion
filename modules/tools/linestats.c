@@ -21,6 +21,7 @@
 #include "config.h"
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwymath.h>
 #include <libgwymodule/gwymodule-tool.h>
 #include <libprocess/gwyprocesstypes.h>
 #include <libprocess/stats.h>
@@ -123,7 +124,7 @@ static GwyModuleInfo module_info = {
     N_("Row/column statistical function tool, mean values, medians, maxima, "
        "minima, RMS, ..., of rows or columns."),
     "Yeti <yeti@gwyddion.net>",
-    "1.2",
+    "1.3",
     "David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
@@ -555,10 +556,10 @@ gwy_tool_line_stats_update_curve(GwyToolLineStats *tool)
             h = gwy_data_field_get_yres(plain_tool->data_field);
         }
         else {
-            isel[0] = gwy_data_field_rtoj(plain_tool->data_field, sel[0]);
-            isel[1] = gwy_data_field_rtoi(plain_tool->data_field, sel[1]);
-            isel[2] = gwy_data_field_rtoj(plain_tool->data_field, sel[2]);
-            isel[3] = gwy_data_field_rtoi(plain_tool->data_field, sel[3]);
+            isel[0] = floor(gwy_data_field_rtoj(plain_tool->data_field, sel[0]));
+            isel[1] = floor(gwy_data_field_rtoi(plain_tool->data_field, sel[1]));
+            isel[2] = floor(gwy_data_field_rtoj(plain_tool->data_field, sel[2]));
+            isel[3] = floor(gwy_data_field_rtoi(plain_tool->data_field, sel[3]));
 
             w = ABS(isel[2] - isel[0]) + 1;
             h = ABS(isel[3] - isel[1]) + 1;

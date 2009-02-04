@@ -21,6 +21,7 @@
 #include "config.h"
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwymath.h>
 #include <libgwymodule/gwymodule-tool.h>
 #include <libprocess/datafield.h>
 #include <libgwydgets/gwystock.h>
@@ -80,7 +81,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Crop tool, crops data to smaller size."),
     "Yeti <yeti@gwyddion.net>",
-    "2.6",
+    "2.7",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -363,10 +364,10 @@ gwy_tool_crop_apply(GwyToolCrop *tool)
         return;
     }
 
-    isel[0] = gwy_data_field_rtoj(plain_tool->data_field, sel[0]);
-    isel[1] = gwy_data_field_rtoi(plain_tool->data_field, sel[1]);
-    isel[2] = gwy_data_field_rtoj(plain_tool->data_field, sel[2]);
-    isel[3] = gwy_data_field_rtoi(plain_tool->data_field, sel[3]);
+    isel[0] = floor(gwy_data_field_rtoj(plain_tool->data_field, sel[0]));
+    isel[1] = floor(gwy_data_field_rtoi(plain_tool->data_field, sel[1]));
+    isel[2] = floor(gwy_data_field_rtoj(plain_tool->data_field, sel[2]));
+    isel[3] = floor(gwy_data_field_rtoi(plain_tool->data_field, sel[3]));
     if (isel[2] < isel[0])
         GWY_SWAP(gdouble, isel[0], isel[2]);
     if (isel[3] < isel[1])

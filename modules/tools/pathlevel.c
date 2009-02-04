@@ -108,7 +108,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Path level tool, performs row leveling along on user-set lines."),
     "Yeti <yeti@gwyddion.net>",
-    "1.3",
+    "1.4",
     "David Nečas (Yeti)",
     "2007",
 };
@@ -543,10 +543,10 @@ gwy_tool_path_level_sel_to_isel(GwyToolPathLevel *tool,
     yres = gwy_data_field_get_yres(plain_tool->data_field);
     gwy_selection_get_object(plain_tool->selection, i, sel);
 
-    sel[0] = gwy_data_field_rtoj(plain_tool->data_field, sel[0]);
-    sel[1] = gwy_data_field_rtoi(plain_tool->data_field, sel[1]);
-    sel[2] = gwy_data_field_rtoj(plain_tool->data_field, sel[2]);
-    sel[3] = gwy_data_field_rtoi(plain_tool->data_field, sel[3]);
+    sel[0] = floor(gwy_data_field_rtoj(plain_tool->data_field, sel[0]));
+    sel[1] = floor(gwy_data_field_rtoi(plain_tool->data_field, sel[1]));
+    sel[2] = floor(gwy_data_field_rtoj(plain_tool->data_field, sel[2]));
+    sel[3] = floor(gwy_data_field_rtoi(plain_tool->data_field, sel[3]));
     if (sel[1] > sel[3]) {
         GWY_SWAP(gdouble, sel[0], sel[2]);
         GWY_SWAP(gdouble, sel[1], sel[3]);

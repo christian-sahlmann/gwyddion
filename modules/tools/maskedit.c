@@ -22,6 +22,7 @@
 #include <string.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwymath.h>
 #include <libgwymodule/gwymodule-tool.h>
 #include <libprocess/elliptic.h>
 #include <libprocess/stats.h>
@@ -120,7 +121,7 @@ static GwyModuleInfo module_info = {
     N_("Mask editor tool, allows to interactively add or remove parts "
        "of mask."),
     "Yeti <yeti@gwyddion.net>",
-    "2.6",
+    "2.7",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -979,10 +980,10 @@ gwy_tool_mask_editor_selection_finished(GwyPlainTool *plain_tool)
     if (!gwy_selection_get_object(plain_tool->selection, 0, sel))
         return;
 
-    isel[0] = gwy_data_field_rtoj(plain_tool->data_field, sel[0]);
-    isel[1] = gwy_data_field_rtoi(plain_tool->data_field, sel[1]);
-    isel[2] = gwy_data_field_rtoj(plain_tool->data_field, sel[2]);
-    isel[3] = gwy_data_field_rtoi(plain_tool->data_field, sel[3]);
+    isel[0] = floor(gwy_data_field_rtoj(plain_tool->data_field, sel[0]));
+    isel[1] = floor(gwy_data_field_rtoi(plain_tool->data_field, sel[1]));
+    isel[2] = floor(gwy_data_field_rtoj(plain_tool->data_field, sel[2]));
+    isel[3] = floor(gwy_data_field_rtoi(plain_tool->data_field, sel[3]));
     if (tool->args.shape == MASK_SHAPE_LINE) {
         if (isel[2] < isel[0]) {
             GWY_SWAP(gdouble, isel[0], isel[2]);

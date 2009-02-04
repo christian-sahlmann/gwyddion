@@ -121,7 +121,7 @@ static GwyModuleInfo module_info = {
        "color scale should map to, either on data or on height distribution "
        "histogram."),
     "Yeti <yeti@gwyddion.net>",
-    "3.8",
+    "3.9",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -726,10 +726,10 @@ gwy_tool_color_range_set_min_max(GwyToolColorRange *tool)
             clear = TRUE;
             break;
         }
-        isel[0] = gwy_data_field_rtoj(plain_tool->data_field, sel[0]);
-        isel[1] = gwy_data_field_rtoi(plain_tool->data_field, sel[1]);
-        isel[2] = gwy_data_field_rtoj(plain_tool->data_field, sel[2]);
-        isel[3] = gwy_data_field_rtoi(plain_tool->data_field, sel[3]);
+        isel[0] = floor(gwy_data_field_rtoj(plain_tool->data_field, sel[0]));
+        isel[1] = floor(gwy_data_field_rtoi(plain_tool->data_field, sel[1]));
+        isel[2] = floor(gwy_data_field_rtoj(plain_tool->data_field, sel[2]));
+        isel[3] = floor(gwy_data_field_rtoi(plain_tool->data_field, sel[3]));
 
         gwy_data_field_area_get_min_max(plain_tool->data_field, NULL,
                                         MIN(isel[0], isel[2]),

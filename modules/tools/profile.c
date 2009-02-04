@@ -129,7 +129,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Profile tool, creates profile graphs from selected lines."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "2.7",
+    "2.9",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -518,13 +518,13 @@ gwy_tool_profile_update_curve(GwyToolProfile *tool,
     g_return_if_fail(plain_tool->selection);
     g_return_if_fail(gwy_selection_get_object(plain_tool->selection, i, line));
 
-    xl1 = gwy_data_field_rtoj(plain_tool->data_field, line[0]);
-    yl1 = gwy_data_field_rtoi(plain_tool->data_field, line[1]);
-    xl2 = gwy_data_field_rtoj(plain_tool->data_field, line[2]);
-    yl2 = gwy_data_field_rtoi(plain_tool->data_field, line[3]);
+    xl1 = floor(gwy_data_field_rtoj(plain_tool->data_field, line[0]));
+    yl1 = floor(gwy_data_field_rtoi(plain_tool->data_field, line[1]));
+    xl2 = floor(gwy_data_field_rtoj(plain_tool->data_field, line[2]));
+    yl2 = floor(gwy_data_field_rtoi(plain_tool->data_field, line[3]));
 
     if (!tool->args.fixres) {
-        lineres = GWY_ROUND(hypot(xl1 - xl2, yl1 - yl2));
+        lineres = GWY_ROUND(hypot(xl1 - xl2 + 1, yl1 - yl2 + 1));
         lineres = MAX(lineres, MIN_RESOLUTION);
     }
     else
@@ -613,19 +613,19 @@ gwy_tool_profile_render_cell(GtkCellLayout *layout,
     vf = tool->pixel_format;
     switch (id) {
         case COLUMN_X1:
-        val = gwy_data_field_rtoj(plain_tool->data_field, line[0]);
+        val = floor(gwy_data_field_rtoj(plain_tool->data_field, line[0]));
         break;
 
         case COLUMN_Y1:
-        val = gwy_data_field_rtoi(plain_tool->data_field, line[1]);
+        val = floor(gwy_data_field_rtoi(plain_tool->data_field, line[1]));
         break;
 
         case COLUMN_X2:
-        val = gwy_data_field_rtoj(plain_tool->data_field, line[2]);
+        val = floor(gwy_data_field_rtoj(plain_tool->data_field, line[2]));
         break;
 
         case COLUMN_Y2:
-        val = gwy_data_field_rtoi(plain_tool->data_field, line[3]);
+        val = floor(gwy_data_field_rtoi(plain_tool->data_field, line[3]));
         break;
 
         default:
