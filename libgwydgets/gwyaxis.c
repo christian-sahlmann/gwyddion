@@ -1059,7 +1059,7 @@ gwy_axis_format_label(GwyAxis *axis,
     if ((axis->magnification_string && axis->magnification_string->len > 0)
         || *units) {
         g_string_append(plotlabel, " [");
-        if (axis->magnification_string)
+        if (axis->magnification_string && axis->magnification_string->len)
             g_string_append(plotlabel, axis->magnification_string->str);
         else
             g_string_append(plotlabel, units);
@@ -2029,7 +2029,7 @@ gwy_axis_export_vector(GwyAxis *axis, gint xmin, gint ymin,
     units = gwy_si_unit_get_string(axis->unit, GWY_SI_UNIT_FORMAT_MARKUP);
     if (axis->magnification_string->len > 0 || *units) {
         g_string_append(plotlabel, " [");
-        if (axis->magnification_string)
+        if (axis->magnification_string->len)
             g_string_append(plotlabel, axis->magnification_string->str);
         else
             g_string_append(plotlabel, units);
