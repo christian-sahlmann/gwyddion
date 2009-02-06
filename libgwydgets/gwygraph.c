@@ -348,7 +348,7 @@ gwy_graph_model_notify(GwyGraph *graph,
     }
 
     /* Units */
-    if (g_str_has_prefix(pspec->name, "si-unit")) {
+    if (g_str_has_prefix(pspec->name, "si-unit-")) {
         const gchar *name = pspec->name + strlen("si-unit-");
         GwySIUnit *unit = NULL;
 
