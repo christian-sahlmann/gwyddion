@@ -3,12 +3,15 @@ Application:
 - Translations updated: Russian.
 
 Modules
+- Raw graph import (new): Imports simple two-column text files as graphs.
 - Distance, Stats and Rougness tools: Copy to clipboard buttons actually work
   (in 2.12 Save button did both actions and Copy did not do anything).
 - Nanoscope: Physical y-size is recalculated to conserve the pixel
   y-size/x-size ratio in all files now.  This affects non-square images.
 - Stats tool: Angles are exported in degrees as stated, instead of radians.
 - HDF4 file: PSI files are flipped vertically to follow the convention.
+- All tools: Somewhat inconsistent conversion between pixel and real
+  coordinates were unified.
 
 Other:
 - File gwydion-thumbnailer.schemas is no longer distributed with paths from the

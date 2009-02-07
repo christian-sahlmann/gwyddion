@@ -27,6 +27,7 @@
 #include <libgwymodule/gwymodule-file.h>
 #include <libgwydgets/gwygraphmodel.h>
 #include <libgwydgets/gwygraphcurvemodel.h>
+#include <app/settings.h>
 #include <app/data-browser.h>
 
 #include "err.h"
@@ -37,6 +38,11 @@ typedef struct {
     gchar *y_label;
     gchar *x_units;
     gchar *y_units;
+    /* Interface only */
+    guint ncols;
+    GArray *data;
+    gdouble *xdata;
+    gdouble *ydata;
 } RawGraphArgs;
 
 typedef struct {
@@ -48,22 +54,32 @@ typedef struct {
     GtkWidget *y_units;
 } RawGraphControls;
 
-static gboolean       module_register(void);
-static GwyContainer*  rawgraph_load  (const gchar *filename,
-                                      GwyRunType mode,
-                                      GError **error);
-static gboolean       rawgraph_dialog(RawGraphArgs *args,
-                                      GwyGraphModel *gmodel);
-static GtkWidget*     attach_entry   (GtkTable *table,
-                                      const gchar *description,
-                                      const gchar *contents,
-                                      gint *row);
-static void           update_string  (GtkWidget *entry,
-                                      gchar **text);
-static GwyGraphModel* rawgraph_parse (gchar *buffer,
-                                      GError **error);
-static int            compare_double (gconstpointer a,
-                                      gconstpointer b);
+static gboolean       module_register   (void);
+static GwyContainer*  rawgraph_load     (const gchar *filename,
+                                         GwyRunType mode,
+                                         GError **error);
+static gboolean       rawgraph_dialog   (RawGraphArgs *args,
+                                         GwyGraphModel *gmodel);
+static GtkWidget*     attach_entry      (GtkTable *table,
+                                         const gchar *description,
+                                         gint *row);
+static void           update_string     (GtkWidget *entry,
+                                         gchar **text);
+static void           update_property   (GtkEntry *entry,
+                                         GObject *object);
+static void           update_units      (GtkEntry *entry,
+                                         GObject *object);
+static GwyGraphModel* rawgraph_parse    (gchar *buffer,
+                                         RawGraphArgs *args,
+                                         GError **error);
+static void           fill_data         (GwyGraphModel *gmodel,
+                                         RawGraphArgs *args);
+static int            compare_double    (gconstpointer a,
+                                         gconstpointer b);
+static void           rawgraph_load_args(GwyContainer *container,
+                                         RawGraphArgs *args);
+static void           rawgraph_save_args(GwyContainer *container,
+                                         RawGraphArgs *args);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -114,20 +130,20 @@ rawgraph_load(const gchar *filename,
     }
 
     gwy_clear(&args, 1);
-    if (!(gmodel = rawgraph_parse(buffer, error)))
+    if (!(gmodel = rawgraph_parse(buffer, &args, error)))
         goto fail;
 
-    args.title = g_strdup("Title");
-    args.x_label = g_strdup("X label");
-    args.y_label = g_strdup("Y label");
-    args.x_units = g_strdup("X units");
-    args.y_units = g_strdup("Y units");
+    rawgraph_load_args(gwy_app_settings_get(), &args);
+    fill_data(gmodel, &args);
     if (!rawgraph_dialog(&args, gmodel)) {
         err_CANCELLED(error);
         goto fail;
     }
+    rawgraph_save_args(gwy_app_settings_get(), &args);
 
-    err_NO_DATA(error);
+    container = gwy_container_new();
+    gwy_container_set_object(container, gwy_app_get_graph_key_for_id(1),
+                             gmodel);
 
 fail:
     g_free(buffer);
@@ -137,6 +153,9 @@ fail:
     g_free(args.y_label);
     g_free(args.x_units);
     g_free(args.y_units);
+    g_free(args.xdata);
+    g_free(args.ydata);
+    g_array_free(args.data, TRUE);
 
     return container;
 }
@@ -146,9 +165,12 @@ rawgraph_dialog(RawGraphArgs *args,
                 GwyGraphModel *gmodel)
 {
     RawGraphControls controls;
+    GwyGraphCurveModel *gcmodel;
     GtkWidget *dialog, *hbox, *align, *graph;
     GtkTable *table;
     gint row, response;
+
+    gcmodel = gwy_graph_model_get_curve(gmodel, 0);
 
     dialog = gtk_dialog_new_with_buttons(_("Import Graph Data"), NULL, 0,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
@@ -175,11 +197,36 @@ rawgraph_dialog(RawGraphArgs *args,
     gtk_container_add(GTK_CONTAINER(align), GTK_WIDGET(table));
     row = 0;
 
-    controls.title = attach_entry(table, _("Graph _title:"), args->title, &row);
-    controls.x_label = attach_entry(table, _("_X label:"), args->x_label, &row);
-    controls.y_label = attach_entry(table, _("_Y label:"), args->y_label, &row);
-    controls.x_units = attach_entry(table, _("X _units:"), args->x_units, &row);
-    controls.y_units = attach_entry(table, _("Y un_its:"), args->y_units, &row);
+    controls.title = attach_entry(table, _("_Title:"), &row);
+    g_object_set_data(G_OBJECT(controls.title), "id", "title");
+    g_signal_connect(controls.title, "changed",
+                     G_CALLBACK(update_property), gmodel);
+    g_signal_connect(controls.title, "changed",
+                     G_CALLBACK(update_property), gcmodel);
+
+    controls.x_label = attach_entry(table, _("_X label:"), &row);
+    g_object_set_data(G_OBJECT(controls.x_label), "id", "axis-label-bottom");
+    g_signal_connect(controls.x_label, "changed",
+                     G_CALLBACK(update_property), gmodel);
+
+    controls.y_label = attach_entry(table, _("_Y label:"), &row);
+    g_object_set_data(G_OBJECT(controls.y_label), "id", "axis-label-left");
+    g_signal_connect(controls.y_label, "changed",
+                     G_CALLBACK(update_property), gmodel);
+
+    controls.x_units = attach_entry(table, _("X _units:"), &row);
+    g_object_set_data(G_OBJECT(controls.x_units), "id", "si-unit-x");
+    g_object_set_data(G_OBJECT(controls.x_units), "string", &args->x_units);
+    g_object_set_data(G_OBJECT(controls.x_units), "args", args);
+    g_signal_connect(controls.x_units, "changed",
+                     G_CALLBACK(update_units), gmodel);
+
+    controls.y_units = attach_entry(table, _("Y un_its:"), &row);
+    g_object_set_data(G_OBJECT(controls.y_units), "id", "si-unit-y");
+    g_object_set_data(G_OBJECT(controls.y_units), "string", &args->y_units);
+    g_object_set_data(G_OBJECT(controls.y_units), "args", args);
+    g_signal_connect(controls.y_units, "changed",
+                     G_CALLBACK(update_units), gmodel);
 
     /********************************************************************
      * Right column
@@ -188,6 +235,12 @@ rawgraph_dialog(RawGraphArgs *args,
     graph = gwy_graph_new(gmodel);
     gtk_widget_set_size_request(graph, 320, 240);
     gtk_box_pack_start(GTK_BOX(hbox), graph, TRUE, TRUE, 0);
+
+    gtk_entry_set_text(GTK_ENTRY(controls.title), args->title);
+    gtk_entry_set_text(GTK_ENTRY(controls.x_label), args->x_label);
+    gtk_entry_set_text(GTK_ENTRY(controls.y_label), args->y_label);
+    gtk_entry_set_text(GTK_ENTRY(controls.y_units), args->y_units);
+    gtk_entry_set_text(GTK_ENTRY(controls.y_units), args->y_units);
 
     gtk_widget_show_all(dialog);
     do {
@@ -204,8 +257,6 @@ rawgraph_dialog(RawGraphArgs *args,
             update_string(controls.title, &args->title);
             update_string(controls.x_label, &args->x_label);
             update_string(controls.y_label, &args->y_label);
-            update_string(controls.x_units, &args->x_units);
-            update_string(controls.y_units, &args->y_units);
             break;
 
             default:
@@ -222,7 +273,6 @@ rawgraph_dialog(RawGraphArgs *args,
 static GtkWidget*
 attach_entry(GtkTable *table,
              const gchar *description,
-             const gchar *contents,
              gint *row)
 {
     GtkWidget *label, *entry;
@@ -232,7 +282,6 @@ attach_entry(GtkTable *table,
     gtk_table_attach(table, label, 0, 1, *row, *row + 1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
     entry = gtk_entry_new();
-    gtk_entry_set_text(GTK_ENTRY(entry), contents);
     gtk_table_attach(table, entry, 1, 2, *row, *row + 1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), entry);
@@ -255,15 +304,47 @@ update_string(GtkWidget *entry,
     }
 }
 
+static void
+update_property(GtkEntry *entry,
+                GObject *object)
+{
+    const gchar *name = g_object_get_data(G_OBJECT(entry), "id");
+
+    if (gwy_strequal(name, "title") && GWY_IS_GRAPH_CURVE_MODEL(object))
+        name = "description";
+    g_object_set(object, name, gtk_entry_get_text(entry), NULL);
+}
+
+static void
+update_units(GtkEntry *entry,
+             GObject *object)
+{
+    RawGraphArgs *args;
+    GwySIUnit *unit;
+    const gchar *unitstr;
+    gchar **s;
+
+    unitstr = gtk_entry_get_text(entry);
+    unit = gwy_si_unit_new(unitstr);
+    g_object_set(object, g_object_get_data(G_OBJECT(entry), "id"), unit, NULL);
+    s = g_object_get_data(G_OBJECT(entry), "string");
+    g_free(*s);
+    *s = g_strdup(unitstr);
+    g_object_unref(unit);
+
+    args = g_object_get_data(G_OBJECT(entry), "args");
+    fill_data(GWY_GRAPH_MODEL(object), args);
+}
+
 static GwyGraphModel*
 rawgraph_parse(gchar *buffer,
+               RawGraphArgs *args,
                GError **error)
 {
     GwyGraphModel *gmodel;
     GwyGraphCurveModel *gcmodel;
     GArray *data = NULL;
-    guint i, j, ncols = 0;
-    gdouble *xdata, *ydata;
+    guint i, ncols = 0;
     gchar *line, *end;
 
     for (line = gwy_str_next_line(&buffer);
@@ -316,34 +397,57 @@ rawgraph_parse(gchar *buffer,
     }
 
     if (!data->len) {
-        g_array_free(data, TRUE);
         err_NO_DATA(error);
         return NULL;
     }
 
     g_array_sort(data, compare_double);
-    xdata = g_new(gdouble, data->len);
-    ydata = g_new(gdouble, data->len);
-
-    for (j = 0; j < data->len; j++)
-        xdata[j] = g_array_index(data, gdouble, j*ncols);
+    args->data = data;
+    args->xdata = g_new(gdouble, data->len);
+    args->ydata = g_new(gdouble, data->len);
+    args->ncols = ncols;
 
     gmodel = gwy_graph_model_new();
     for (i = 1; i < ncols; i++) {
-        for (j = 0; j < data->len; j++)
-            ydata[j] = g_array_index(data, gdouble, j*ncols + i);
-
         gcmodel = gwy_graph_curve_model_new();
-        gwy_graph_curve_model_set_data(gcmodel, xdata, ydata, data->len);
         gwy_graph_model_add_curve(gmodel, gcmodel);
         g_object_unref(gcmodel);
     }
 
-    g_free(xdata);
-    g_free(ydata);
-    g_array_free(data, TRUE);
-
     return gmodel;
+}
+
+static void
+fill_data(GwyGraphModel *gmodel,
+          RawGraphArgs *args)
+{
+    GwyGraphCurveModel *gcmodel;
+    GwySIUnit *unit;
+    gint power10;
+    guint i, j;
+    gdouble q;
+
+    unit = gwy_si_unit_new_parse(args->x_units, &power10);
+    q = pow10(power10);
+
+    for (j = 0; j < args->data->len; j++)
+        args->xdata[j] = q*g_array_index(args->data, gdouble, j*args->ncols);
+
+    gwy_si_unit_set_from_string_parse(unit, args->y_units, &power10);
+    q = pow10(power10);
+
+    for (i = 1; i < args->ncols; i++) {
+        for (j = 0; j < args->data->len; j++)
+            args->ydata[j] = q*g_array_index(args->data, gdouble,
+                                             j*args->ncols + i);
+
+        gcmodel = gwy_graph_model_get_curve(gmodel, i-1);
+        gwy_graph_curve_model_set_data(gcmodel,
+                                       args->xdata, args->ydata,
+                                       args->data->len);
+    }
+
+    g_object_unref(unit);
 }
 
 static int
@@ -357,6 +461,62 @@ compare_double(gconstpointer a, gconstpointer b)
     if (da > db)
         return 1;
     return 0.0;
+}
+
+static const gchar title_key[]   = "/module/rawgraph/title";
+static const gchar x_label_key[] = "/module/rawgraph/x-label";
+static const gchar y_label_key[] = "/module/rawgraph/y-label";
+static const gchar x_units_key[] = "/module/rawgraph/x-units";
+static const gchar y_units_key[] = "/module/rawgraph/y-units";
+
+static void
+rawgraph_load_args(GwyContainer *container,
+                   RawGraphArgs *args)
+{
+    args->title = (gchar*)_("Curve");
+    args->x_label = (gchar*)"x";
+    args->y_label = (gchar*)"y";
+    args->x_units = (gchar*)"";
+    args->y_units = (gchar*)"";
+
+    gwy_container_gis_string_by_name(container, title_key,
+                                     (const guchar**)&args->title);
+    gwy_container_gis_string_by_name(container, x_label_key,
+                                     (const guchar**)&args->x_label);
+    gwy_container_gis_string_by_name(container, y_label_key,
+                                     (const guchar**)&args->y_label);
+    gwy_container_gis_string_by_name(container, x_units_key,
+                                     (const guchar**)&args->x_units);
+    gwy_container_gis_string_by_name(container, y_units_key,
+                                     (const guchar**)&args->y_units);
+
+    args->title = g_strdup(args->title);
+    args->x_label = g_strdup(args->x_label);
+    args->y_label = g_strdup(args->y_label);
+    args->x_units = g_strdup(args->x_units);
+    args->y_units = g_strdup(args->y_units);
+}
+
+static void
+rawgraph_save_args(GwyContainer *container,
+                   RawGraphArgs *args)
+{
+    gwy_container_set_string_by_name(container, title_key,
+                                     (guchar*)args->title);
+    gwy_container_set_string_by_name(container, x_label_key,
+                                     (guchar*)args->x_label);
+    gwy_container_set_string_by_name(container, y_label_key,
+                                     (guchar*)args->y_label);
+    gwy_container_set_string_by_name(container, x_units_key,
+                                     (guchar*)args->x_units);
+    gwy_container_set_string_by_name(container, y_units_key,
+                                     (guchar*)args->y_units);
+
+    args->title = NULL;
+    args->x_label = NULL;
+    args->y_label = NULL;
+    args->x_units = NULL;
+    args->y_units = NULL;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
