@@ -1,6 +1,6 @@
 2.13 (2000-00-00)
 Application:
-- Translations updated: Russian.
+- Translations updated: Czech, French, Russian.
 
 Modules
 - Raw graph import (new): Imports simple two-column text files as graphs.
