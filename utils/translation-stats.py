@@ -95,7 +95,7 @@ print """<table summary="Translation statistics" class="stats">
   <th class="odd">Language</th>
   <th>Translated</th><th class="odd">%</th>
   <th>Fuzzy</th><th class="odd">%</th>
-  <th>Untranslated</th><th class="odd">%</th>
+  <th>Missing</th><th class="odd">%</th>
   <th>Total</th>
   <th>Graph</th>
 </tr>
