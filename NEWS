@@ -2,7 +2,7 @@
 Application:
 - Translations updated: Czech, French, Russian.
 
-Modules
+Modules:
 - Raw graph import (new): Imports simple two-column text files as graphs.
 - Distance, Stats and Rougness tools: Copy to clipboard buttons actually work
   (in 2.12 Save button did both actions and Copy did not do anything).
