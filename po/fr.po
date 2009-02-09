@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: French localization\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2009-01-30 11:59+0100\n"
+"POT-Creation-Date: 2009-02-07 10:33+0100\n"
 "PO-Revision-Date: 2009-01-29 15:39+0100\n"
 "Last-Translator: François RIGUET <francheu@caramail.com>\n"
 "Language-Team: François RIGUET <francheu@caramail.com>\n"
@@ -155,7 +155,7 @@ msgstr "Volume"
 msgid "Boundary"
 msgstr "Limite"
 
-#: libprocess/gwygrainvalue.c:918 modules/tools/linestats.c:155
+#: libprocess/gwygrainvalue.c:918 modules/tools/linestats.c:156
 msgid "Slope"
 msgstr "Pente"
 
@@ -782,7 +782,7 @@ msgid "Points anywhere"
 msgstr ""
 
 #: libgwydgets/gwygraphwindowmeasuredialog.c:279
-#: libgwydgets/gwygraphwindowmeasuredialog.c:435 modules/tools/linestats.c:154
+#: libgwydgets/gwygraphwindowmeasuredialog.c:435 modules/tools/linestats.c:155
 #: modules/tools/roughness.c:532
 msgid "Length"
 msgstr "Longueur"
@@ -1988,7 +1988,7 @@ msgstr "Exporter le texte"
 #: modules/file/rawfile.c:701 modules/process/fft_filter_1d.c:296
 #: modules/process/grain_dist.c:291 modules/process/grain_mark.c:347
 #: modules/process/grain_rem_threshold.c:324 modules/process/grain_wshed.c:278
-#: modules/tools/spotremove.c:319 modules/tools/stats.c:338
+#: modules/tools/spotremove.c:319 modules/tools/stats.c:339
 msgid "Options"
 msgstr "Options"
 
@@ -2056,7 +2056,7 @@ msgid "Burleigh exported data (.txt, .bin)"
 msgstr "Burleigh données exportées (.txt, .bin)"
 
 #: modules/file/burleigh_exp.c:218 modules/file/burleigh_exp.c:259
-#: modules/file/nanoscope.c:776 modules/file/omicron.c:356
+#: modules/file/nanoscope.c:782 modules/file/omicron.c:356
 #: modules/file/shimadzu.c:403
 msgid "Missing colon in header line."
 msgstr "Il manque une colonne dans la ligne d'en-tête."
@@ -2236,19 +2236,19 @@ msgstr "Importe les fichiers Hierarchical Data Format (HDF) version 4."
 msgid "Psi HDF4 files (.hdf)"
 msgstr "Psi HDF4 (.hdf)"
 
-#: modules/file/hdf4file.c:529
+#: modules/file/hdf4file.c:530
 msgid "PSI binary header is too short."
 msgstr "L'en-tête PSI binaire est trop court."
 
-#: modules/file/hdf4file.c:642
+#: modules/file/hdf4file.c:643
 msgid "Data descriptor header is truncated."
 msgstr "L'en-tête de description des données est tronqué."
 
-#: modules/file/hdf4file.c:652
+#: modules/file/hdf4file.c:653
 msgid "Data descriptor block is truncated."
 msgstr "Le bloc de description des données est tronqué."
 
-#: modules/file/hdf4file.c:686
+#: modules/file/hdf4file.c:687
 msgid "HDF data with `native' type is not supported."
 msgstr "Les données HDF avec le type `natif' ne sont pas supportées."
 
@@ -2418,12 +2418,12 @@ msgstr ""
 msgid "Cannot parse `Scan size' field."
 msgstr "Impossible d'analyser le champ `Scan size'."
 
-#: modules/file/nanoscope.c:687
+#: modules/file/nanoscope.c:693
 #, c-format
 msgid "Garbage after data sample #%d."
 msgstr "Données erronées après l'échantillon #%d."
 
-#: modules/file/nanoscope.c:766
+#: modules/file/nanoscope.c:772
 msgid "Truncated header line."
 msgstr "Ligne d'en-tête tronquée."
 
@@ -2949,8 +2949,8 @@ msgstr "Préréglages"
 #: modules/process/grain_mark.c:262 modules/process/grain_rem_threshold.c:221
 #: modules/process/grain_wshed.c:179 modules/process/polydistort.c:214
 #: modules/process/scars.c:466 modules/process/tip_model.c:167
-#: modules/tools/linestats.c:419 modules/tools/sfunctions.c:412
-#: modules/tools/stats.c:404
+#: modules/tools/linestats.c:420 modules/tools/sfunctions.c:413
+#: modules/tools/stats.c:405
 msgid "_Update"
 msgstr "Mise à jour"
 
@@ -3153,6 +3153,59 @@ msgstr ""
 #, c-format
 msgid "Expected delimiter `%s' after data in row %u, column %u, got `%.16s'"
 msgstr ""
+
+#: modules/file/rawgraph.c:87
+msgid "Imports simple text files as graph curves."
+msgstr ""
+
+#: modules/file/rawgraph.c:100
+msgid "ASCII graph curve files"
+msgstr ""
+
+#: modules/file/rawgraph.c:123
+#, fuzzy
+msgid "ASCII graph import must be run as interactive."
+msgstr ""
+"L'import des fichiers texte brut doit être fait de manière interactive."
+
+#: modules/file/rawgraph.c:175
+#, fuzzy
+msgid "Import Graph Data"
+msgstr "_Exporter les données brutes"
+
+#: modules/file/rawgraph.c:200
+#, fuzzy
+msgid "_Title:"
+msgstr "Fichier :"
+
+#: modules/file/rawgraph.c:207
+#, fuzzy
+msgid "_X label:"
+msgstr "_Label :"
+
+#: modules/file/rawgraph.c:212
+#, fuzzy
+msgid "_Y label:"
+msgstr "_Label :"
+
+#: modules/file/rawgraph.c:217
+#, fuzzy
+msgid "X _units:"
+msgstr "Nouvelles _unités :"
+
+#: modules/file/rawgraph.c:224
+#, fuzzy
+msgid "Y un_its:"
+msgstr "Nouvelles _unités :"
+
+#: modules/file/rawgraph.c:377
+msgid "Only files with two columns can be imported."
+msgstr ""
+
+#: modules/file/rawgraph.c:476
+#, fuzzy
+msgid "Curve"
+msgstr "Courbes"
 
 #: modules/file/rhk-sm3.c:220
 msgid "Imports RHK Technology SM3 data files."
@@ -3637,10 +3690,10 @@ msgstr "Il faut sélectionner plus de points que de paramètres d'ajustement"
 #: modules/graph/graph_cd.c:669 modules/graph/graph_fdfit.c:782
 #: modules/graph/graph_fit.c:806 modules/tools/grainmeasure.c:215
 #: modules/tools/readvalue.c:510 modules/tools/readvalue.c:511
-#: modules/tools/roughness.c:966 modules/tools/stats.c:578
-#: modules/tools/stats.c:585 modules/tools/stats.c:586
-#: modules/tools/stats.c:857 modules/tools/stats.c:864
-#: modules/tools/stats.c:866
+#: modules/tools/roughness.c:966 modules/tools/stats.c:579
+#: modules/tools/stats.c:586 modules/tools/stats.c:587
+#: modules/tools/stats.c:858 modules/tools/stats.c:865
+#: modules/tools/stats.c:867
 msgid "N.A."
 msgstr ""
 
@@ -4419,8 +4472,8 @@ msgstr "Lignes"
 #: modules/process/fractal.c:228 modules/process/nanoindent_adjust.c:228
 #: modules/process/polydistort.c:268 modules/process/rotate.c:293
 #: modules/process/scale.c:248 modules/process/unrotate.c:282
-#: modules/tools/linestats.c:399 modules/tools/profile.c:380
-#: modules/tools/roughness.c:878 modules/tools/sfunctions.c:392
+#: modules/tools/linestats.c:400 modules/tools/profile.c:380
+#: modules/tools/roughness.c:878 modules/tools/sfunctions.c:393
 msgid "_Interpolation type:"
 msgstr "Type d'interpolation :"
 
@@ -4920,7 +4973,7 @@ msgstr "Masque de filtre"
 msgid "_Undo"
 msgstr "_Annuler"
 
-#: modules/process/fft_filter_2d.c:489 modules/tools/maskedit.c:392
+#: modules/process/fft_filter_2d.c:489 modules/tools/maskedit.c:393
 msgid "_Remove"
 msgstr "Supprimer"
 
@@ -5366,8 +5419,8 @@ msgstr "Dessiner les _graphes"
 msgid "Grain Distributions"
 msgstr "Distribution des grains"
 
-#: modules/process/grain_dist.c:319 modules/tools/linestats.c:374
-#: modules/tools/profile.c:352 modules/tools/sfunctions.c:367
+#: modules/process/grain_dist.c:319 modules/tools/linestats.c:375
+#: modules/tools/profile.c:352 modules/tools/sfunctions.c:368
 msgid "_Fix res.:"
 msgstr ""
 
@@ -5424,12 +5477,12 @@ msgid "Total grain volume (laplacian):"
 msgstr "Volume de grain total (base laplacienne) :"
 
 #: modules/process/grain_dist.c:830 modules/tools/distance.c:221
-#: modules/tools/roughness.c:833 modules/tools/stats.c:395
+#: modules/tools/roughness.c:833 modules/tools/stats.c:396
 msgid "Save table to a file"
 msgstr "Sauver le tableau"
 
 #: modules/process/grain_dist.c:835 modules/tools/distance.c:226
-#: modules/tools/roughness.c:838 modules/tools/stats.c:400
+#: modules/tools/roughness.c:838 modules/tools/stats.c:401
 msgid "Copy table to clipboard"
 msgstr ""
 
@@ -6239,7 +6292,7 @@ msgid "Distort by Polynomial"
 msgstr "Distorsion polynomiale"
 
 #: modules/process/polydistort.c:276 modules/tools/filter.c:208
-#: modules/tools/icolorange.c:385 modules/tools/linestats.c:152
+#: modules/tools/icolorange.c:385 modules/tools/linestats.c:153
 msgid "Minimum"
 msgstr "Minimum"
 
@@ -6582,12 +6635,12 @@ msgid "Level data by arc revolution"
 msgstr ""
 
 #: modules/process/sphere-revolve.c:204 modules/tools/polynom.c:209
-#: modules/tools/sfunctions.c:300
+#: modules/tools/sfunctions.c:301
 msgid "_Horizontal direction"
 msgstr "Direction _horizontale"
 
 #: modules/process/sphere-revolve.c:205 modules/tools/polynom.c:210
-#: modules/tools/sfunctions.c:301
+#: modules/tools/sfunctions.c:302
 msgid "_Vertical direction"
 msgstr "Direction _verticale"
 
@@ -6909,27 +6962,27 @@ msgstr "Exécuter le script (Ctrl-E)"
 msgid "Command"
 msgstr "Commande "
 
-#: modules/tools/crop.c:81
+#: modules/tools/crop.c:82
 msgid "Crop tool, crops data to smaller size."
 msgstr "Rognage, limite les données à une zone plus petite."
 
-#: modules/tools/crop.c:118
+#: modules/tools/crop.c:119
 msgid "Crop"
 msgstr "Rognage"
 
-#: modules/tools/crop.c:119
+#: modules/tools/crop.c:120
 msgid "Crop data"
 msgstr "Rogner les données"
 
-#: modules/tools/crop.c:209
+#: modules/tools/crop.c:210
 msgid "Keep lateral offsets"
 msgstr "Conserver les offsets latéraux"
 
-#: modules/tools/crop.c:220
+#: modules/tools/crop.c:221
 msgid "Create new channel"
 msgstr "Créer un nouveau canal"
 
-#: modules/tools/crop.c:393
+#: modules/tools/crop.c:394
 msgid "Detail"
 msgstr "Detail"
 
@@ -6966,7 +7019,7 @@ msgid "Conservative denoise"
 msgstr "Débruitage conservatif"
 
 #: modules/tools/filter.c:209 modules/tools/icolorange.c:396
-#: modules/tools/linestats.c:153
+#: modules/tools/linestats.c:154
 msgid "Maximum"
 msgstr "Maximum"
 
@@ -7121,7 +7174,7 @@ msgstr "Mise à jour _instantanée"
 msgid "Set plane to _zero"
 msgstr "Mise à zéro du plan"
 
-#: modules/tools/linestats.c:123
+#: modules/tools/linestats.c:124
 msgid ""
 "Row/column statistical function tool, mean values, medians, maxima, minima, "
 "RMS, ..., of rows or columns."
@@ -7129,163 +7182,163 @@ msgstr ""
 "Outil de calcul statistique de ligne/colonne, calcule les valeurs moyenne, "
 "médiane, maximale, minimale, RMS, ..., de lignes ou de colonnes."
 
-#: modules/tools/linestats.c:150
+#: modules/tools/linestats.c:151
 msgid "Mean"
 msgstr "Moyenne"
 
-#: modules/tools/linestats.c:151
+#: modules/tools/linestats.c:152
 msgid "Median"
 msgstr "Médiane"
 
-#: modules/tools/linestats.c:156
+#: modules/tools/linestats.c:157
 msgid "tan β<sub>0</sub>"
 msgstr "tan β<sub>0</sub>"
 
-#: modules/tools/linestats.c:157
+#: modules/tools/linestats.c:158
 msgid "Ra"
 msgstr "Ra"
 
-#: modules/tools/linestats.c:158
+#: modules/tools/linestats.c:159
 msgid "Rq (RMS)"
 msgstr "Rq (RMS)"
 
-#: modules/tools/linestats.c:159
+#: modules/tools/linestats.c:160
 msgid "Rz"
 msgstr "Rz"
 
-#: modules/tools/linestats.c:160
+#: modules/tools/linestats.c:161
 msgid "Rt"
 msgstr "Ret"
 
-#: modules/tools/linestats.c:161
+#: modules/tools/linestats.c:162
 msgid "Skew"
 msgstr "Asymétrie"
 
-#: modules/tools/linestats.c:162 modules/tools/roughness.c:402
+#: modules/tools/linestats.c:163 modules/tools/roughness.c:402
 msgid "Kurtosis"
 msgstr "Kurtosis"
 
-#: modules/tools/linestats.c:187
+#: modules/tools/linestats.c:188
 msgid "Row/Column Statistics"
 msgstr "Statistiques de ligne/colonne"
 
-#: modules/tools/linestats.c:188
+#: modules/tools/linestats.c:189
 msgid "Calculate row/column statistical functions"
 msgstr "Calcule les statistiques de ligne/colonne."
 
-#: modules/tools/linestats.c:289
+#: modules/tools/linestats.c:290
 msgid "Ro_ws"
 msgstr "Lignes"
 
-#: modules/tools/linestats.c:290
+#: modules/tools/linestats.c:291
 msgid "Co_lumns"
 msgstr "Colonnes"
 
-#: modules/tools/linestats.c:319
+#: modules/tools/linestats.c:320
 msgid "_Quantity:"
 msgstr "Quantité"
 
-#: modules/tools/linestats.c:336
+#: modules/tools/linestats.c:337
 msgid "Average:"
 msgstr "Moyenne :"
 
-#: modules/tools/linestats.c:345 modules/tools/profile.c:325
-#: modules/tools/sfunctions.c:338 modules/tools/spectro.c:292
+#: modules/tools/linestats.c:346 modules/tools/profile.c:325
+#: modules/tools/sfunctions.c:339 modules/tools/spectro.c:292
 msgid "<b>Options</b>"
 msgstr "<b>Options</b>"
 
-#: modules/tools/linestats.c:361 modules/tools/sfunctions.c:354
-#: modules/tools/stats.c:353
+#: modules/tools/linestats.c:362 modules/tools/sfunctions.c:355
+#: modules/tools/stats.c:354
 msgid "_Instant updates"
 msgstr "Mises à jour instantanées"
 
-#: modules/tools/maskedit.c:120
+#: modules/tools/maskedit.c:121
 msgid "Mask editor tool, allows to interactively add or remove parts of mask."
 msgstr ""
 "Outil d'édition de masque, permet d'ajouter ou d'enlever des parties du "
 "masque de manière interactive"
 
-#: modules/tools/maskedit.c:168
+#: modules/tools/maskedit.c:169
 msgid "Mask Editor"
 msgstr "Editeur de masque"
 
-#: modules/tools/maskedit.c:169
+#: modules/tools/maskedit.c:170
 msgid "Edit mask"
 msgstr "Editer le masque"
 
-#: modules/tools/maskedit.c:253
+#: modules/tools/maskedit.c:254
 msgid "Set mask to selection"
 msgstr "Définir la sélection comme masque"
 
-#: modules/tools/maskedit.c:258
+#: modules/tools/maskedit.c:259
 msgid "Add selection to mask"
 msgstr "Ajouter la sélection au masque"
 
-#: modules/tools/maskedit.c:263
+#: modules/tools/maskedit.c:264
 msgid "Subtract selection from mask"
 msgstr "Soustraire la sélection du masque"
 
-#: modules/tools/maskedit.c:268
+#: modules/tools/maskedit.c:269
 msgid "Intersect selection with mask"
 msgstr "Insérer la sélection avec un masque"
 
-#: modules/tools/maskedit.c:275
+#: modules/tools/maskedit.c:276
 msgid "Rectangular shapes"
 msgstr "Rectangles"
 
-#: modules/tools/maskedit.c:280
+#: modules/tools/maskedit.c:281
 msgid "Elliptic shapes"
 msgstr "Ellipses"
 
-#: modules/tools/maskedit.c:285
+#: modules/tools/maskedit.c:286
 msgid "Thin lines"
 msgstr "Lignes"
 
-#: modules/tools/maskedit.c:312
+#: modules/tools/maskedit.c:313
 msgid "Editor"
 msgstr "Editeur"
 
-#: modules/tools/maskedit.c:317
+#: modules/tools/maskedit.c:318
 msgid "Mode:"
 msgstr "Mode :"
 
-#: modules/tools/maskedit.c:346
+#: modules/tools/maskedit.c:347
 msgid "Shape:"
 msgstr "Forme :"
 
-#: modules/tools/maskedit.c:376
+#: modules/tools/maskedit.c:377
 msgid "Actions"
 msgstr "Actions"
 
-#: modules/tools/maskedit.c:384
+#: modules/tools/maskedit.c:385
 msgid "_Invert"
 msgstr "_Inverser"
 
-#: modules/tools/maskedit.c:400
+#: modules/tools/maskedit.c:401
 msgid "_Fill"
 msgstr "Remplir"
 
-#: modules/tools/maskedit.c:413
+#: modules/tools/maskedit.c:414
 msgid "Grow/Shrink"
 msgstr "Dilater / Eroder"
 
-#: modules/tools/maskedit.c:422
+#: modules/tools/maskedit.c:423
 msgid "_Grow"
 msgstr "Dilater"
 
-#: modules/tools/maskedit.c:430
+#: modules/tools/maskedit.c:431
 msgid "Shrin_k"
 msgstr "Eroder"
 
-#: modules/tools/maskedit.c:445
+#: modules/tools/maskedit.c:446
 msgid "_Amount:"
 msgstr "Qu_antité :"
 
-#: modules/tools/maskedit.c:452
+#: modules/tools/maskedit.c:453
 msgid "Shrink from _border"
 msgstr "Eroder à partir du _bord"
 
-#: modules/tools/maskedit.c:463
+#: modules/tools/maskedit.c:464
 msgid "_Prevent grain merging by growing"
 msgstr "Em_pêcher la fusion de grains lors d'une dilatation"
 
@@ -7556,12 +7609,12 @@ msgstr "Enregistrer les paramètres de rugosité"
 msgid "Roughness Parameters"
 msgstr "Paramètres de rugosité"
 
-#: modules/tools/roughness.c:2207 modules/tools/stats.c:806
+#: modules/tools/roughness.c:2207 modules/tools/stats.c:807
 #, c-format
 msgid "File:              %s\n"
 msgstr "Fichier :              %s\n"
 
-#: modules/tools/roughness.c:2211 modules/tools/stats.c:810
+#: modules/tools/roughness.c:2211 modules/tools/stats.c:811
 #, c-format
 msgid "Data channel:      %s\n"
 msgstr "Canal de données :      %s\n"
@@ -7575,7 +7628,7 @@ msgstr ""
 "Ligne sélectionnée :     (%s, %s) à (%s, %s) px\n"
 "                   (%s, %s) à (%s, %s) %s\n"
 
-#: modules/tools/sfunctions.c:135
+#: modules/tools/sfunctions.c:136
 msgid ""
 "Statistical function tool, calculates one-dimensional statistical functions "
 "(height distribution, correlations, PSDF, Minkowski functionals) of selected "
@@ -7585,55 +7638,55 @@ msgstr ""
 "(distribution de hauteur, correlations, PSDF, fonctions de Minkowski) de la "
 "partie sélectionnée des données."
 
-#: modules/tools/sfunctions.c:163
+#: modules/tools/sfunctions.c:164
 msgid "Height distribution"
 msgstr "Distribution des hauteurs"
 
-#: modules/tools/sfunctions.c:164
+#: modules/tools/sfunctions.c:165
 msgid "Cum. height distribution"
 msgstr "Distribution des hauteurs cumulée"
 
-#: modules/tools/sfunctions.c:165
+#: modules/tools/sfunctions.c:166
 msgid "Distribution of angles"
 msgstr "Distribution angulaire"
 
-#: modules/tools/sfunctions.c:166
+#: modules/tools/sfunctions.c:167
 msgid "Cum. distribution of angles"
 msgstr "Distribution cumulée des angles"
 
-#: modules/tools/sfunctions.c:167
+#: modules/tools/sfunctions.c:168
 msgid "ACF"
 msgstr "ACF"
 
-#: modules/tools/sfunctions.c:168
+#: modules/tools/sfunctions.c:169
 msgid "HHCF"
 msgstr "HHCF"
 
-#: modules/tools/sfunctions.c:169
+#: modules/tools/sfunctions.c:170
 msgid "PSDF"
 msgstr "PSDF"
 
-#: modules/tools/sfunctions.c:170
+#: modules/tools/sfunctions.c:171
 msgid "Radial PSDF"
 msgstr "PSDF radiale"
 
-#: modules/tools/sfunctions.c:171
+#: modules/tools/sfunctions.c:172
 msgid "Minkowski volume"
 msgstr "Volume de Minkowski"
 
-#: modules/tools/sfunctions.c:172
+#: modules/tools/sfunctions.c:173
 msgid "Minkowski boundary"
 msgstr "Limite de Minkowski"
 
-#: modules/tools/sfunctions.c:173
+#: modules/tools/sfunctions.c:174
 msgid "Minkowski connectivity"
 msgstr "Connectivité de Minkowski"
 
-#: modules/tools/sfunctions.c:198
+#: modules/tools/sfunctions.c:199
 msgid "Statistical Functions"
 msgstr "Fonctions statistiques"
 
-#: modules/tools/sfunctions.c:199
+#: modules/tools/sfunctions.c:200
 msgid "Calculate 1D statistical functions"
 msgstr "Calcule les fonctions statistiques 1D"
 
@@ -7685,87 +7738,87 @@ msgstr "Pseudo-Laplace"
 msgid "Fractal interpolation"
 msgstr "Interpolation fractale"
 
-#: modules/tools/stats.c:154
+#: modules/tools/stats.c:155
 msgid "Statistics tool."
 msgstr "Outil statistique."
 
-#: modules/tools/stats.c:191 modules/tools/stats.c:800
+#: modules/tools/stats.c:192 modules/tools/stats.c:801
 msgid "Statistical Quantities"
 msgstr "Statistiques"
 
-#: modules/tools/stats.c:192
+#: modules/tools/stats.c:193
 msgid "Statistical quantities"
 msgstr "Statistiques"
 
-#: modules/tools/stats.c:297
+#: modules/tools/stats.c:298
 msgid "Average value:"
 msgstr "Valeur moyenne :"
 
-#: modules/tools/stats.c:298
+#: modules/tools/stats.c:299
 msgid "Minimum:"
 msgstr "Minimum :"
 
-#: modules/tools/stats.c:299
+#: modules/tools/stats.c:300
 msgid "Maximum:"
 msgstr "Maximum :"
 
-#: modules/tools/stats.c:300
+#: modules/tools/stats.c:301
 msgid "Median:"
 msgstr "Médiane :"
 
-#: modules/tools/stats.c:301
+#: modules/tools/stats.c:302
 msgid "Ra:"
 msgstr "Ra :"
 
-#: modules/tools/stats.c:302
+#: modules/tools/stats.c:303
 msgid "Rms:"
 msgstr "Rms :"
 
-#: modules/tools/stats.c:303
+#: modules/tools/stats.c:304
 msgid "Skew:"
 msgstr "Asymétrie :"
 
-#: modules/tools/stats.c:304
+#: modules/tools/stats.c:305
 msgid "Kurtosis:"
 msgstr "Kurtosis :"
 
-#: modules/tools/stats.c:305
+#: modules/tools/stats.c:306
 msgid "Surface area:"
 msgstr "Surface :"
 
-#: modules/tools/stats.c:306
+#: modules/tools/stats.c:307
 msgid "Projected area:"
 msgstr "Surface projetée :"
 
-#: modules/tools/stats.c:307
+#: modules/tools/stats.c:308
 msgid "Inclination θ:"
 msgstr "Inclinaison θ:"
 
-#: modules/tools/stats.c:308
+#: modules/tools/stats.c:309
 msgid "Inclination φ:"
 msgstr "Inclinaison φ:"
 
-#: modules/tools/stats.c:343
+#: modules/tools/stats.c:344
 msgid "Use _mask"
 msgstr "Utiliser le _masque"
 
-#: modules/tools/stats.c:370
+#: modules/tools/stats.c:371
 msgid "Parameters"
 msgstr "Paramètres"
 
-#: modules/tools/stats.c:740
+#: modules/tools/stats.c:741
 msgid "Save Statistical Quantities"
 msgstr "Enregistrer les statistiques"
 
-#: modules/tools/stats.c:832
+#: modules/tools/stats.c:833
 msgid "Yes"
 msgstr "Oui"
 
-#: modules/tools/stats.c:832
+#: modules/tools/stats.c:833
 msgid "No"
 msgstr "Non"
 
-#: modules/tools/stats.c:869
+#: modules/tools/stats.c:870
 #, c-format
 msgid ""
 "Selected area:     %s × %s at (%s, %s) px\n"

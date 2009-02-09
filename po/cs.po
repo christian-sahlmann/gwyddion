@@ -3221,6 +3221,7 @@ msgid "End of file reached in color data."
 msgstr "Soubor skončil v datech barev."
 
 #: modules/file/rhk-sm3.c:701
+#, c-format
 msgid "Unknown line %d"
 msgstr "Neznámá čára %d"
 
