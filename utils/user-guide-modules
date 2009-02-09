@@ -100,6 +100,7 @@ profile	basic-operations	profile
 psia	managing-files
 quesant	managing-files
 rawfile	raw-file-import
+rawgraph	managing-files
 readvalue	basic-operations	read-value
 rectangle	selections
 rhk-sm3	managing-files
