@@ -55,7 +55,7 @@
             <row>
               <entry>0x06</entry>
               <entry><type>uint16</type></entry>
-              <entry><varname>xres</varname></entry>
+              <entry><varname>yres</varname></entry>
               <entry>Number of lines</entry>
             </row>
             <row>
