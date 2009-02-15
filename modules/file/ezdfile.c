@@ -107,7 +107,7 @@ static GwyContainer* ezdfile_get_metadata  (GPtrArray *ezdfile,
 static void          fix_scales            (EZDSection *section,
                                             gint idx,
                                             GwyContainer *container);
-static void          check_section_ranges  (gpointer data, 
+static void          check_section_ranges  (gpointer data,
                                             gpointer user_data);
 
 static GwyModuleInfo module_info = {
@@ -596,27 +596,26 @@ read_data_field(GwyDataField *dfield,
 
 static void
 check_section_ranges(gpointer data, G_GNUC_UNUSED gpointer user_data)
-{   
-   EZDSection *section = (EZDSection*) data;
-   
-   if (!section->data)
-      return;
-   
-   gwy_debug("Check ranges");
-   if (!((section->xrange.range = fabs(section->xrange.range)) > 0)) {
-       g_warning("Real x size is 0.0, fixing to 1.0");
-       //section->xrange.range = 1.0;
-   }
-   if (!((section->yrange.range = fabs(section->yrange.range)) > 0)) {
-       g_warning("Real y size is 0.0, fixing to 1.0");
-       //section->yrange.range = 1.0;
-   }
-   /* fix for Z axis*/
-   if (!((section->zrange.range = fabs(section->zrange.range)) > 0)) {
-       g_warning("Real z size is 0.0, fixing to 1.0");
-       section->zrange.range = 1.0;
-   }
+{
+    EZDSection *section = (EZDSection*) data;
+
+    if (!section->data)
+        return;
+
+    gwy_debug("Check ranges");
+    if (!((section->xrange.range = fabs(section->xrange.range)) > 0)) {
+        g_warning("Real x size is 0.0, fixing to 1.0");
+        section->xrange.range = 1.0;
+    }
+    if (!((section->yrange.range = fabs(section->yrange.range)) > 0)) {
+        g_warning("Real y size is 0.0, fixing to 1.0");
+        section->yrange.range = 1.0;
+    }
+    /* fix for Z axis*/
+    if (!((section->zrange.range = fabs(section->zrange.range)) > 0)) {
+        g_warning("Real z size is 0.0, fixing to 1.0");
+        section->zrange.range = 1.0;
+    }
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
-
