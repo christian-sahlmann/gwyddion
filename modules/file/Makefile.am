@@ -68,6 +68,7 @@ file_LTLIBRARIES = \
 	sdfile.la \
 	seiko.la \
 	sensofar.la \
+	sensolytics.la \
 	shimadzu.la \
 	sicmfile.la \
 	sis.la \
@@ -153,6 +154,7 @@ rhk_spm32_la_SOURCES     = rhk-spm32.c
 sdfile_la_SOURCES        = sdfile.c
 seiko_la_SOURCES         = seiko.c
 sensofar_la_SOURCES      = sensofar.c
+sensolytics_la_SOURCES   = sensolytics.c
 shimadzu_la_SOURCES      = shimadzu.c
 sicmfile_la_SOURCES      = sicmfile.c
 sis_la_SOURCES           = sis.c
