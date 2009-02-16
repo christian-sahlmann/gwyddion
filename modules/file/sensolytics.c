@@ -78,6 +78,10 @@ static SensolyticsChannel* create_fields  (GHashTable *hash,
                                            gchar *line,
                                            gint ndata,
                                            const Dimensions *dimensions);
+static GwyContainer*       get_meta       (GHashTable *hash);
+static void                clone_meta     (GwyContainer *container,
+                                           GwyContainer *meta,
+                                           guint nchannels);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -124,7 +128,7 @@ sly_load(const gchar *filename,
          G_GNUC_UNUSED GwyRunType mode,
          GError **error)
 {
-    GwyContainer *container = NULL;
+    GwyContainer *container = NULL, *meta = NULL;
     gchar *buffer = NULL;
     GError *err = NULL;
     GHashTable *hash = NULL;
@@ -234,6 +238,10 @@ sly_load(const gchar *filename,
         else
             gwy_app_channel_title_fall_back(container, i);
     }
+
+    meta = get_meta(hash);
+    clone_meta(container, meta, ndata);
+    g_object_unref(meta);
 
 fail:
     g_free(buffer);
@@ -355,6 +363,25 @@ create_fields(GHashTable *hash,
     return channels;
 }
 
+static GwyContainer*
+get_meta(GHashTable *hash)
+{
+    static const gchar *keys[] = {
+        "Mode", "max. Speed", "Waiting Time", "Scan started", "Scan ended",
+    };
+    GwyContainer *meta = gwy_container_new();
+    const gchar *value;
+    guint i;
+
+    for (i = 0; i < G_N_ELEMENTS(keys); i++) {
+        if (!(value = g_hash_table_lookup(hash, keys[i])))
+            continue;
+
+        gwy_container_set_string_by_name(meta, keys[i], g_strdup(value));
+    }
+
+    return meta;
+}
 static void
 clone_meta(GwyContainer *container, GwyContainer *meta, guint nchannels)
 {
