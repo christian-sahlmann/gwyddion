@@ -30,7 +30,7 @@
  *   </magic>
  * </mime-type>
  **/
-#define DEBUG 1
+
 #include "config.h"
 #include <string.h>
 #include <stdio.h>
@@ -52,19 +52,32 @@
 
 #define Micrometer 1e-6
 
-static gboolean      module_register(void);
-static gint          sly_detect     (const GwyFileDetectInfo *fileinfo,
-                                     gboolean only_name);
-static GwyContainer* sly_load       (const gchar *filename,
-                                     GwyRunType mode,
-                                     GError **error);
-static gboolean      read_dimensions(GHashTable *hash,
-                                     gint *ndata,
-                                     gint *xres,
-                                     gint *yres,
-                                     gdouble *xreal,
-                                     gdouble *yreal,
-                                     GError **error);
+typedef struct {
+    gint xres, yres;
+    gdouble xreal, yreal;
+} Dimensions;
+
+typedef struct {
+    GwyDataField *dfield;
+    gdouble *data;
+    const gchar *name;
+    gdouble q;
+} SensolyticsChannel;
+
+static gboolean            module_register(void);
+static gint                sly_detect     (const GwyFileDetectInfo *fileinfo,
+                                           gboolean only_name);
+static GwyContainer*       sly_load       (const gchar *filename,
+                                           GwyRunType mode,
+                                           GError **error);
+static gboolean            read_dimensions(GHashTable *hash,
+                                           gint *ndata,
+                                           Dimensions *dimensions,
+                                           GError **error);
+static SensolyticsChannel* create_fields  (GHashTable *hash,
+                                           gchar *line,
+                                           gint ndata,
+                                           const Dimensions *dimensions);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -117,10 +130,9 @@ sly_load(const gchar *filename,
     GHashTable *hash = NULL;
     gchar *p, *line, *value;
     guint expecting_data = 0;
-    GwyDataField **fields = NULL;
-    gdouble **data = NULL;
-    gdouble xreal, yreal;
-    gint xres, yres, ndata = 0, i;
+    SensolyticsChannel *channels = NULL;
+    Dimensions dimensions;
+    gint ndata = 0, i;
 
     if (!g_file_get_contents(filename, &buffer, NULL, &err)) {
         err_GET_FILE_CONTENTS(error, &err);
@@ -153,7 +165,8 @@ sly_load(const gchar *filename,
                 g_ascii_strtod(line, &line);
 
             for (i = 0; i < ndata; i++)
-                data[i][expecting_data] = g_ascii_strtod(line, &line);
+                channels[i].data[expecting_data]
+                    = channels[i].q * g_ascii_strtod(line, &line);
         }
         else {
             g_strstrip(line);
@@ -167,29 +180,16 @@ sly_load(const gchar *filename,
             } while (g_ascii_isspace(*line));
 
             if (g_str_has_prefix(line, "X [")) {
-                if (fields) {
+                if (channels) {
                     g_warning("Multiple data headers!?");
                     continue;
                 }
 
-                /* TODO: Parse it? */
-                if (!read_dimensions(hash, &ndata, &xres, &yres, &xreal, &yreal,
-                                     error))
+                if (!read_dimensions(hash, &ndata, &dimensions, error)
+                    || !(channels = create_fields(hash, line,
+                                                  ndata, &dimensions)))
                     goto fail;
-
-                fields = g_new(GwyDataField*, ndata);
-                data = g_new(gdouble*, ndata);
-                for (i = 0; i < ndata; i++) {
-                    GwySIUnit *unit;
-
-                    fields[i] = gwy_data_field_new(xres, yres, xreal, yreal,
-                                                   FALSE);
-                    data[i] = gwy_data_field_get_data(fields[i]);
-                    unit = gwy_si_unit_new("m");
-                    gwy_data_field_set_si_unit_xy(fields[i], unit);
-                    g_object_unref(unit);
-                }
-                expecting_data = xres*yres;
+                expecting_data = dimensions.xres * dimensions.yres;
                 continue;
             }
 
@@ -213,7 +213,7 @@ sly_load(const gchar *filename,
         }
     }
 
-    if (!fields) {
+    if (!channels) {
         err_NO_DATA(error);
         goto fail;
     }
@@ -222,19 +222,27 @@ sly_load(const gchar *filename,
     for (i = 0; i < ndata; i++) {
         GQuark key = gwy_app_get_data_key_for_id(i);
 
-        gwy_container_set_object(container, key, fields[i]);
+        gwy_data_field_invert(channels[i].dfield, FALSE, TRUE, FALSE);
+        gwy_container_set_object(container, key, channels[i].dfield);
         gwy_app_channel_check_nonsquare(container, i);
+        if (channels[i].name) {
+            gchar *s = g_strconcat(g_quark_to_string(key), "/title", NULL);
+            gwy_container_set_string_by_name(container, s,
+                                             g_strdup(channels[i].name));
+            g_free(s);
+        }
+        else
+            gwy_app_channel_title_fall_back(container, i);
     }
 
 fail:
     g_free(buffer);
     if (hash)
         g_hash_table_destroy(hash);
-    if (fields) {
+    if (channels) {
         for (i = 0; i < ndata; i++)
-            g_object_unref(fields[i]);
-        g_free(fields);
-        g_free(data);
+            g_object_unref(channels[i].dfield);
+        g_free(channels);
     }
 
     return container;
@@ -243,8 +251,7 @@ fail:
 static gboolean
 read_dimensions(GHashTable *hash,
                 gint *ndata,
-                gint *xres, gint *yres,
-                gdouble *xreal, gdouble *yreal,
+                Dimensions *dimensions,
                 GError **error)
 {
     const gchar *value;
@@ -265,8 +272,8 @@ read_dimensions(GHashTable *hash,
         err_MISSING_FIELD(error, "Lines");
         return FALSE;
     }
-    *yres = atoi(value);
-    if (err_DIMENSION(error, *yres))
+    dimensions->yres = atoi(value);
+    if (err_DIMENSION(error, dimensions->yres))
         return FALSE;
 
     if (!(value = g_hash_table_lookup(hash, "Rows"))) {
@@ -274,8 +281,8 @@ read_dimensions(GHashTable *hash,
         return FALSE;
     }
     /* XXX: When the file says Rows, it actually means Columns-1.  Bite me. */
-    *xres = atoi(value) + 1;
-    if (err_DIMENSION(error, *xres))
+    dimensions->xres = atoi(value) + 1;
+    if (err_DIMENSION(error, dimensions->xres))
         return FALSE;
 
     /* Real sizes */
@@ -283,23 +290,69 @@ read_dimensions(GHashTable *hash,
         err_MISSING_FIELD(error, "X-Length");
         return FALSE;
     }
-    *xreal = Micrometer * g_ascii_strtod(value, NULL);
-    if (!((*xreal = fabs(*xreal)) > 0)) {
+    dimensions->xreal = Micrometer * g_ascii_strtod(value, NULL);
+    if (!((dimensions->xreal = fabs(dimensions->xreal)) > 0)) {
         g_warning("Real x size is 0.0, fixing to 1.0");
-        *xreal = 1.0;
+        dimensions->xreal = 1.0;
     }
 
     if (!(value = g_hash_table_lookup(hash, "Y-Length"))) {
         err_MISSING_FIELD(error, "Y-Length");
         return FALSE;
     }
-    *yreal = Micrometer * g_ascii_strtod(value, NULL);
-    if (!((*yreal = fabs(*yreal)) > 0)) {
+    dimensions->yreal = Micrometer * g_ascii_strtod(value, NULL);
+    if (!((dimensions->yreal = fabs(dimensions->yreal)) > 0)) {
         g_warning("Real y size is 0.0, fixing to 1.0");
-        *yreal = 1.0;
+        dimensions->yreal = 1.0;
     }
 
     return TRUE;
+}
+
+static SensolyticsChannel*
+create_fields(GHashTable *hash,
+              /* Can we obtain any useful information from this? */
+              G_GNUC_UNUSED gchar *line,
+              gint ndata,
+              const Dimensions *dimensions)
+{
+    SensolyticsChannel *channels;
+    GString *str;
+    const gchar *value;
+    GwySIUnit *unit;
+    gint i, power10;
+
+    str = g_string_new(NULL);
+    channels = g_new0(SensolyticsChannel, ndata+1);
+    for (i = 0; i < ndata; i++) {
+        channels[i].dfield = gwy_data_field_new(dimensions->xres,
+                                                dimensions->yres,
+                                                dimensions->xreal,
+                                                dimensions->yreal,
+                                                FALSE);
+        channels[i].data = gwy_data_field_get_data(channels[i].dfield);
+
+        unit = gwy_si_unit_new("m");
+        gwy_data_field_set_si_unit_xy(channels[i].dfield, unit);
+        g_object_unref(unit);
+
+        g_string_printf(str, "Channel %d Unit", i+1);
+        channels[i].q = 1.0;
+        if ((value = g_hash_table_lookup(hash, str->str))) {
+            unit = gwy_si_unit_new_parse(value, &power10);
+            gwy_data_field_set_si_unit_z(channels[i].dfield, unit);
+            g_object_unref(unit);
+            channels[i].q = pow10(power10);
+        }
+        else
+            g_warning("Channel %d has no units", i+1);
+
+        g_string_printf(str, "Channel %d Name", i+1);
+        if (!(channels[i].name = g_hash_table_lookup(hash, str->str)))
+            g_warning("Channel %d has no name", i+1);
+    }
+
+    return channels;
 }
 
 static void
