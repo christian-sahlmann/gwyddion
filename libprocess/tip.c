@@ -225,29 +225,29 @@ delta(GwyDataField *tip, gdouble height,
 
 static const GwyTipModelPreset tip_presets[] = {
     {
-        "Pyramide",
-        "Pyramidal",
+        N_("Pyramide"),
+        N_("Pyramidal"),
         &pyramide,
         &pyramide_guess,
         0
     },
     {
-        "Contact",
-        "Pyramidal",
+        N_("Contact"),
+        N_("Pyramidal"),
         &contact,
         &contact_guess,
         0
     },
     {
-        "Noncontact",
-        "Pyramidal",
+        N_("Noncontact"),
+        N_("Pyramidal"),
         &noncontact,
         &noncontact_guess,
         0
     },
      {
-        "Delta function",
-        "Analytical",
+        N_("Delta function"),
+        N_("Analytical"),
         &delta,
         &delta_guess,
         0
