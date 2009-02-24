@@ -1,6 +1,14 @@
 2.14 (2009-00-00)
+Application:
+- Translations updated: Czech, Russian.
+
+Libraries:
+- Some forgotten strings were made translatable and gettext() was applied to
+  some to actually translate them.
+
 Modules:
 - Sensolytics (new): Imports Sensolytics file format.
+- PNI file: Vertical flipping was removed.
 
 
 2.13 (2009-02-09)
