@@ -240,7 +240,7 @@ gwy_resource_editor_setup(GwyResourceEditor *editor)
         gtk_container_add(GTK_CONTAINER(button), image);
         gtk_box_pack_start(GTK_BOX(hbox), button, TRUE, TRUE, 0);
         gtk_tooltips_set_tip(tooltips, button,
-                             toolbar_buttons[i].tooltip, NULL);
+                             gettext(toolbar_buttons[i].tooltip), NULL);
         gwy_sensitivity_group_add_widget(editor->sensgroup, button,
                                          toolbar_buttons[i].sens_flags);
         g_signal_connect_swapped(button, "clicked",
@@ -698,6 +698,7 @@ gwy_resource_editor_get_active(GwyResourceEditor *editor,
     if (!gtk_tree_selection_get_selected(selection, &treemodel, &treeiter)) {
         if (warnwhat)
             g_critical("Something must be selected for `%s'!", warnwhat);
+        *model = NULL;
         return NULL;
     }
 
