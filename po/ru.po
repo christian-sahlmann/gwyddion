@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2009-02-15 03:59+0100\n"
-"PO-Revision-Date: 2009-02-15 18:39+0300\n"
+"POT-Creation-Date: 2009-02-23 03:59+0100\n"
+"PO-Revision-Date: 2009-02-23 14:14+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@km.ru>\n"
 "Language-Team: russian <ru@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -255,18 +255,16 @@ msgid "Scale and space adaptive"
 msgstr ""
 
 #: libprocess/gwyprocessenums.c:205
-#, fuzzy
 msgid "Round"
-msgstr "Круг"
+msgstr "Округлить"
 
 #: libprocess/gwyprocessenums.c:206
 msgid "Linear"
 msgstr "Линейная"
 
 #: libprocess/gwyprocessenums.c:207
-#, fuzzy
 msgid "Key"
-msgstr "Клавиша"
+msgstr ""
 
 #: libprocess/gwyprocessenums.c:208
 msgid "BSpline"
@@ -329,8 +327,9 @@ msgid "Kaiser 2.5"
 msgstr ""
 
 #: libprocess/gwyprocessenums.c:262
+#, fuzzy
 msgid "Normal"
-msgstr ""
+msgstr "Обычная"
 
 #: libprocess/gwyprocessenums.c:263
 msgid "FFT"
@@ -348,19 +347,18 @@ msgstr ""
 
 #: libprocess/morph_lib.c:235
 #: libprocess/morph_lib.c:528
-#, fuzzy
 msgid "Erosion"
-msgstr "Разрушение"
+msgstr "Эрозия"
 
 #: libprocess/morph_lib.c:305
 msgid "Certainty map"
-msgstr ""
+msgstr "Карта достоверности"
 
 #: libprocess/morph_lib.c:616
 #: libprocess/morph_lib.c:758
 #, c-format
 msgid "Iterating estimate (iteration %d)"
-msgstr ""
+msgstr "Циклическая оценка (цикл %d)"
 
 #: libprocess/morph_lib.c:624
 #: libprocess/morph_lib.c:778
@@ -387,11 +385,11 @@ msgstr ""
 
 #: libprocess/tip.c:783
 msgid "Starting partial estimation"
-msgstr ""
+msgstr "Запускается частичная оценка"
 
 #: libprocess/tip.c:860
 msgid "Starting full estimation"
-msgstr ""
+msgstr "Запускается полная оценка"
 
 #: libgwydgets/gwy3dwindow.c:495
 msgid "Rotate view (R)"
@@ -690,7 +688,7 @@ msgstr "Тип точки:"
 #: libgwydgets/gwygraphareadialog.c:151
 #, fuzzy
 msgid "_Point size:"
-msgstr "Размер"
+msgstr "Размер точки:"
 
 #: libgwydgets/gwygraphareadialog.c:161
 #, fuzzy
@@ -1025,7 +1023,7 @@ msgstr "Ошибка:"
 #: app/about.c:49
 #, fuzzy, c-format
 msgid "About %s"
-msgstr "О программе %s"
+msgstr "Об %s"
 
 #: app/about.c:83
 msgid "An SPM data visualization and analysis tool."
@@ -1174,7 +1172,7 @@ msgstr "Открыть файл"
 
 #: app/file.c:421
 #: app/gwymoduleutils.c:196
-#, fuzzy, c-format
+#, c-format
 msgid "Saving of `%s' failed"
 msgstr "Сохранение `%s' не выполнено"
 
@@ -2469,7 +2467,7 @@ msgstr "Файлы GSXM netCDF (.nc)"
 #: modules/file/netcdf.c:227
 #, c-format
 msgid "Variable `%s' refers to invalid or nonexistent data."
-msgstr ""
+msgstr "Переменная `%s' ссылается на неверные или несуществующие данные."
 
 #: modules/file/netcdf.c:252
 msgid "NetCDF records are not supported."
@@ -2669,7 +2667,6 @@ msgid "Physical Dimensions"
 msgstr "Физические размеры"
 
 #: modules/file/pixmap.c:935
-#, fuzzy
 msgid "_Width"
 msgstr "_Ширина"
 
@@ -2683,9 +2680,8 @@ msgid "Change"
 msgstr "Изменить"
 
 #: modules/file/pixmap.c:970
-#, fuzzy
 msgid "H_eight"
-msgstr "Высота"
+msgstr "_Высота"
 
 #: modules/file/pixmap.c:977
 #: modules/file/rawfile.c:656
@@ -2769,7 +2765,6 @@ msgstr "_Масштаб:"
 #: modules/file/rawfile.c:613
 #: modules/process/crosscor.c:197
 #: modules/process/tip_blind.c:264
-#, fuzzy
 msgid "_Width:"
 msgstr "_Ширина:"
 
@@ -2835,7 +2830,7 @@ msgstr "левый"
 #: modules/file/pixmap.c:2422
 #, fuzzy
 msgid "center"
-msgstr "Центр"
+msgstr "центр"
 
 #: modules/file/pixmap.c:2426
 #, fuzzy
@@ -3242,12 +3237,12 @@ msgstr "_Заголовок:"
 #: modules/file/rawgraph.c:207
 #, fuzzy
 msgid "_X label:"
-msgstr "Надпись X:"
+msgstr "Метка X:"
 
 #: modules/file/rawgraph.c:212
 #, fuzzy
 msgid "_Y label:"
-msgstr "Надпись Y:"
+msgstr "Метка Y:"
 
 #: modules/file/rawgraph.c:217
 #, fuzzy
@@ -3405,6 +3400,14 @@ msgstr "Файлы Sensofar PLu (.plu)"
 #, fuzzy
 msgid "Profile"
 msgstr "Профиль"
+
+#: modules/file/sensolytics.c:89
+msgid "Imports Sensolytics text files."
+msgstr "Импортирует текстовые файлы Sensolytics"
+
+#: modules/file/sensolytics.c:102
+msgid "Sensolytics text files (.dat)"
+msgstr "Текстовые файлы Sensolytics (.dat)"
 
 #: modules/file/shimadzu.c:94
 msgid "Imports Shimadzu SPM data files, version 2."
@@ -3996,8 +3999,9 @@ msgid "e_stimate"
 msgstr ""
 
 #: modules/graph/graph_fit.c:440
+#, fuzzy
 msgid "p_lot"
-msgstr ""
+msgstr "график"
 
 #: modules/graph/graph_level.c:37
 msgid "Level graph by line."
@@ -4462,7 +4466,7 @@ msgstr "Размер окна"
 #: modules/process/crosscor.c:217
 #, fuzzy
 msgid "W_idth:"
-msgstr "Ширина:"
+msgstr "&Толщина:"
 
 #: modules/process/crosscor.c:223
 #, fuzzy
@@ -4472,7 +4476,7 @@ msgstr "_Высота:"
 #: modules/process/crosscor.c:231
 #, fuzzy
 msgid "Absolute"
-msgstr "Абсолютный"
+msgstr "Абсолютно"
 
 #: modules/process/crosscor.c:232
 msgid "X Distance"
@@ -6178,8 +6182,9 @@ msgid "Blending _depth:"
 msgstr ""
 
 #: modules/process/local_contrast.c:150
+#, fuzzy
 msgid "_Weight:"
-msgstr ""
+msgstr "Толщина"
 
 #: modules/process/maskcor.c:87
 msgid "Creates mask by correlation with another data."
@@ -6425,7 +6430,7 @@ msgstr "Переместить данные"
 #: modules/process/nanoindent_adjust.c:205
 #, fuzzy
 msgid "_Rotate data"
-msgstr "ROTATE"
+msgstr "Вращать данные"
 
 #: modules/process/nanoindent_adjust.c:214
 msgid "E_xtrapolate result data out of measured range"
@@ -6881,8 +6886,9 @@ msgid "Tilt by specified amount"
 msgstr ""
 
 #: modules/process/tilt.c:155
+#, fuzzy
 msgid "Tilt"
-msgstr ""
+msgstr "Наклон"
 
 #: modules/process/tilt.c:180
 msgid "_X:"
@@ -6897,39 +6903,37 @@ msgid "Angles"
 msgstr "Углы"
 
 #: modules/process/tip_blind.c:128
+#, fuzzy
 msgid "Blind estimation of SPM tip using Villarubia's algorithm."
-msgstr ""
+msgstr "Оценка слепого пятна зонда СЗМ используя алгоритм Вильярубия"
 
 #: modules/process/tip_blind.c:142
-#, fuzzy
 msgid "/_Tip/_Blind Estimation..."
-msgstr "/_Зонд/Оценка слепого пятна..."
+msgstr "/_Зонд/Оценка _слепого пятна..."
 
 #: modules/process/tip_blind.c:146
-#, fuzzy
 msgid "Blind tip estimation"
 msgstr "Оценка слепого пятна"
 
 #: modules/process/tip_blind.c:182
-#, fuzzy
 msgid "Blind Tip Estimation"
 msgstr "Оценка слепого пятна"
 
 #: modules/process/tip_blind.c:183
 msgid "Run _Partial"
-msgstr ""
+msgstr "Выполнить _частично"
 
 #: modules/process/tip_blind.c:184
 msgid "Run _Full"
-msgstr ""
+msgstr "Выполнить п_олностью"
 
 #: modules/process/tip_blind.c:185
 msgid "_Reset Tip"
-msgstr ""
+msgstr "_Сброс зонда"
 
 #: modules/process/tip_blind.c:252
 msgid "Related _data:"
-msgstr ""
+msgstr "Соответствующие _данные:"
 
 #: modules/process/tip_blind.c:257
 msgid "Estimated Tip Size"
@@ -6937,15 +6941,15 @@ msgstr "Оценочный размер зонда"
 
 #: modules/process/tip_blind.c:278
 msgid "_Same resolution"
-msgstr ""
+msgstr "Одинаковое _разрешение"
 
 #: modules/process/tip_blind.c:293
 msgid "Noise suppression t_hreshold:"
-msgstr ""
+msgstr "_Порог подавления шума:"
 
 #: modules/process/tip_blind.c:313
 msgid "Use _boundaries"
-msgstr ""
+msgstr "Использовать _границы"
 
 #: modules/process/tip_blind.c:622
 msgid "Estimated tip"
@@ -6957,7 +6961,7 @@ msgstr "Модель зонда СЗМ"
 
 #: modules/process/tip_model.c:127
 msgid "/_Tip/_Model Tip..."
-msgstr ""
+msgstr "/_Зонд/_Модель зонда..."
 
 #: modules/process/tip_model.c:131
 msgid "Model AFM tip"
@@ -6969,28 +6973,27 @@ msgstr "Модель зонда"
 
 #: modules/process/tip_model.c:224
 msgid "Tip _type:"
-msgstr ""
+msgstr "Тип _зонда:"
 
 #: modules/process/tip_model.c:229
-#, fuzzy
 msgid "_Number of sides:"
-msgstr "Количество сторон"
+msgstr "_Число сторон"
 
 #: modules/process/tip_model.c:234
 msgid "Tip _slope:"
-msgstr ""
+msgstr "_Угол зонда:"
 
 #: modules/process/tip_model.c:240
 msgid "Tip _rotation:"
-msgstr ""
+msgstr "_Поворот зонда:"
 
 #: modules/process/tip_model.c:250
 msgid "Tip _apex radius:"
-msgstr ""
+msgstr "_Радиус острия зонда:"
 
 #: modules/process/tip_model.c:466
 msgid "Modelled tip"
-msgstr ""
+msgstr "Модель зонда"
 
 #: modules/process/tip_model.c:511
 #, c-format
@@ -7020,11 +7023,11 @@ msgstr "Восстановление поверхности по известн�
 
 #: modules/process/tipops.c:94
 msgid "/_Tip/_Certainty Map..."
-msgstr ""
+msgstr "/_Зонд/Карта _достоверности..."
 
 #: modules/process/tipops.c:98
 msgid "Tip certainty map"
-msgstr ""
+msgstr "Карта достоверности зонда"
 
 #: modules/process/tipops.c:137
 msgid "Tip Dilation"
@@ -7036,11 +7039,11 @@ msgstr "Восстановление поверхности"
 
 #: modules/process/tipops.c:139
 msgid "Certainty Map Analysis"
-msgstr ""
+msgstr "Анализ карты достоверности"
 
 #: modules/process/tipops.c:160
 msgid "_Tip morphology:"
-msgstr ""
+msgstr "Морфология _зонда:"
 
 #: modules/process/tipops.c:248
 #, c-format
