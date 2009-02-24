@@ -111,7 +111,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Models SPM tip."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.4",
+    "1.5",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -372,9 +372,8 @@ create_preset_menu(GCallback callback,
         }
     }
 
-    /* XXX: presets currently not translatable? */
     return gwy_enum_combo_box_new(entries, nentries,
-                                  callback, cbdata, current, FALSE);
+                                  callback, cbdata, current, TRUE);
 }
 
 static void
