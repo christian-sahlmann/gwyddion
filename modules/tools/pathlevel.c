@@ -37,7 +37,7 @@
 #define GWY_TOOL_PATH_LEVEL_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_TOOL_PATH_LEVEL, GwyToolPathLevelClass))
 
 enum {
-    NLINES = 18,
+    NLINES = 1024,
     MAX_THICKNESS = 128
 };
 
@@ -108,7 +108,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Path level tool, performs row leveling along on user-set lines."),
     "Yeti <yeti@gwyddion.net>",
-    "1.4",
+    "1.5",
     "David Nečas (Yeti)",
     "2007",
 };

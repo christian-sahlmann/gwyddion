@@ -8,6 +8,8 @@ Libraries:
 
 Modules:
 - Sensolytics (new): Imports Sensolytics file format.
+- Distance, Profile and Path leven tools: The maximum number of lines was
+  increased to 1024.
 - PNI file: Vertical flipping was removed.
 
 
