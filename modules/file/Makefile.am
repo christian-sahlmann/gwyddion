@@ -44,6 +44,7 @@ file_LTLIBRARIES = \
 	intematix.la \
 	jeol.la \
 	$(jpkscan_module) \
+	mapvue.la \
 	metropro.la \
 	microprof.la \
 	mifile.la \
@@ -132,6 +133,7 @@ hdf4file_la_SOURCES      = hdf4file.c
 hitachi_afm_la_SOURCES   = hitachi-afm.c
 intematix_la_SOURCES     = intematix.c gwytiff.h
 jeol_la_SOURCES          = jeol.c
+mapvue_la_SOURCES        = mapvue.c
 metropro_la_SOURCES      = metropro.c
 microprof_la_SOURCES     = microprof.c
 mifile_la_SOURCES        = mifile.c
