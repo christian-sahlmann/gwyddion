@@ -84,7 +84,7 @@
 
 
 #define MAGIC_SIZE \
-    (MAX(MAX(MAGIC_SIZE1, MAGIC_SIZE2), MAX(MAGIC_SIZE3, MAGIC_SIZE4)))
+    (MAX(MAX(MAX(MAGIC_SIZE1, MAGIC_SIZE2), MAX(MAGIC_SIZE3, MAGIC_SIZE4)), MAGIC_SIZE5))
 
 /* values are bytes per pixel */
 typedef enum {
@@ -235,8 +235,9 @@ bcrfile_load(const gchar *filename,
         container = gwy_container_new();
         gwy_container_set_object_by_name(container, "/0/data", dfield);
         g_object_unref(dfield);
+
         /*********************************************************************/
-        gwy_app_set_data_field_title(container, 0, g_strrstr(filename, "/") + 1);
+        /*gwy_app_set_data_field_title(container, 0, g_strdup(g_strrstr(filename, "/") + 1));*/
         /***********************************************************************/
         gwy_app_channel_title_fall_back(container, 0);
         if (voidmask) {
@@ -345,7 +346,6 @@ file_load_real(const guchar *buffer,
 
     if (!(s = g_hash_table_lookup(meta, "zunit")))
         s = "nm";
-    s = "nm";
     siunit1 = gwy_si_unit_new_parse(s, &power10);
     gwy_data_field_set_si_unit_z(dfield, siunit1);
     g_object_unref(siunit1);
