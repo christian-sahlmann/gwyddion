@@ -19,6 +19,7 @@
  */
 
 #include "config.h"
+#include <stdlib.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
@@ -129,7 +130,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Profile tool, creates profile graphs from selected lines."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "2.10",
+    "2.11",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -524,7 +525,7 @@ gwy_tool_profile_update_curve(GwyToolProfile *tool,
     yl2 = floor(gwy_data_field_rtoi(plain_tool->data_field, line[3]));
 
     if (!tool->args.fixres) {
-        lineres = GWY_ROUND(hypot(xl1 - xl2 + 1, yl1 - yl2 + 1));
+        lineres = GWY_ROUND(hypot(abs(xl1 - xl2) + 1, abs(yl1 - yl2) + 1));
         lineres = MAX(lineres, MIN_RESOLUTION);
     }
     else

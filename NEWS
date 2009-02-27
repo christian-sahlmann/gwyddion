@@ -5,9 +5,13 @@ Application:
 Libraries:
 - Some forgotten strings were made translatable and gettext() was applied to
   some to actually translate them.
+- libprocess: Profile extraction auto number of samples always corresponds to
+  the number of pixels for horizontal and vertical lines.
 
 Modules:
 - Sensolytics (new): Imports Sensolytics file format.
+- Profile, Roughness tools: Subsampling of the profile for some directions of
+  purely horizontal/vertical lines was fixed.
 - Distance, Profile and Path leven tools: The maximum number of lines was
   increased to 1024.
 - PNI file: Vertical flipping was removed.

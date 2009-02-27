@@ -2072,7 +2072,7 @@ gwy_data_field_get_profile(GwyDataField *data_field,
                          && erow < data_field->yres && ecol < data_field->xres,
                          NULL);
 
-    size = hypot(scol - ecol, srow - erow);
+    size = hypot(abs(scol - ecol) + 1, abs(srow - erow) + 1);
     size = MAX(size, 1.0);
     if (res <= 0)
         res = GWY_ROUND(size);

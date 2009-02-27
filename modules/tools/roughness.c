@@ -19,6 +19,7 @@
  */
 
 #include <string.h>
+#include <stdlib.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
@@ -630,7 +631,7 @@ static GwyModuleInfo module_info = {
     N_("Calculate surface profile parameters."),
     "Martin Hasoň <hasonm@physics.muni.cz>, "
         "Yeti <yeti@gwyddion.net>",
-    "1.4",
+    "1.5",
     "Martin Hasoň & David Nečas (Yeti)",
     "2006",
 };
@@ -1285,7 +1286,7 @@ gwy_tool_roughness_update(GwyToolRoughness *tool)
     xl2 = floor(gwy_data_field_rtoj(plain_tool->data_field, line[2]));
     yl2 = floor(gwy_data_field_rtoi(plain_tool->data_field, line[3]));
 
-    lineres = ROUND(hypot(xl1 - xl2, yl1 - yl2));
+    lineres = ROUND(hypot(abs(xl1 - xl2) + 1, abs(yl1 - yl2) + 1));
     if (lineres < 8)
         return;
 
