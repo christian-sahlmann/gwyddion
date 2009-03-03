@@ -136,38 +136,49 @@ typedef struct {
 
 typedef struct {
     gint reftag;
-    gint tag_mark;
-    gint tag_size;
     gint system_information;
 } MapVueGroup801;
 
+/* XXX: Format documentation seems to mix 851 and 852 together, but the files
+ * split them similarly to 52 and 53 */
 typedef struct {
     gint reftag;
-    gint tag_mark;
-    gint tag_size;
     gchar field1[256];
     gchar field2[256];
     gchar field3[256];
     gchar field4[256];
     gchar field5[256];
+} MapVueGroup851;
+
+typedef struct {
+    gint reftag;
     gchar field6[256];
+    gchar field7[256];
 } MapVueGroup852;
 
 typedef struct {
     gint reftag;
-    gint tag_mark;
-    gint tag_size;
     gchar comment[256];
 } MapVueGroup901;
 
 typedef struct {
     gint reftag;
-    gint tag_mark;
-    gint tag_size;
     gdouble stage_x;
     gdouble stage_y;
     gdouble stage_z;
 } MapVueGroup1152;
+
+/* This is not what the files contain at all. */
+typedef struct {
+    gint reftag;
+    gint64 propagation_factor;
+    gint64 index_of_refraction;
+    gint64 wavelength;
+    gchar material[256];
+    gchar name[256];
+    gdouble x_coordinates;
+    gdouble y_coordinates;
+} MapVueGroup1560;
 
 typedef struct {
     gint id;
@@ -182,9 +193,11 @@ typedef struct {
     MapVueGroup551 group551;
     MapVueGroup651 group651;
     MapVueGroup801 group801;
+    MapVueGroup851 group851;
     MapVueGroup852 group852;
     MapVueGroup901 group901;
     MapVueGroup1152 group1152;
+    MapVueGroup1560 group1560;
 } MapVueFile;
 
 static gboolean      module_register       (void);
@@ -249,6 +262,10 @@ static guint         mapvue_read_group801  (const guchar **p,
                                             gsize size,
                                             gpointer grpdata,
                                             GError **error);
+static guint         mapvue_read_group851  (const guchar **p,
+                                            gsize size,
+                                            gpointer grpdata,
+                                            GError **error);
 static guint         mapvue_read_group852  (const guchar **p,
                                             gsize size,
                                             gpointer grpdata,
@@ -257,6 +274,16 @@ static guint         mapvue_read_group901  (const guchar **p,
                                             gsize size,
                                             gpointer grpdata,
                                             GError **error);
+static guint         mapvue_read_group1152 (const guchar **p,
+                                            gsize size,
+                                            gpointer grpdata,
+                                            GError **error);
+#if 0
+static guint         mapvue_read_group1560 (const guchar **p,
+                                            gsize size,
+                                            gpointer grpdata,
+                                            GError **error);
+#endif
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -302,8 +329,8 @@ mapvue_detect(const GwyFileDetectInfo *fileinfo,
 
 static GwyContainer*
 mapvue_load(const gchar *filename,
-             G_GNUC_UNUSED GwyRunType mode,
-             GError **error)
+            G_GNUC_UNUSED GwyRunType mode,
+            GError **error)
 {
     MapVueReadGroup readgroup;
     MapVueFile mapvuefile;
@@ -326,11 +353,12 @@ mapvue_load(const gchar *filename,
         goto fail;
     }
 
+    gwy_clear(&mapvuefile, 1);
     p = buffer + 2;
     while ((gsize)(p - buffer) + 2 < size) {
         guint tagsize, reftag = gwy_get_guint16_le(&p);
 
-        g_printerr("Found tag %u\n", reftag);
+        g_printerr("Found tag %u at pos %04x\n", reftag, (guint)(p - buffer) - 2);
         /* The groups should be ordered, but do not rely on that. */
         if (reftag == 2) {
             readgroup = &mapvue_read_group2;
@@ -376,6 +404,10 @@ mapvue_load(const gchar *filename,
             readgroup = &mapvue_read_group801;
             groupdata = &mapvuefile.group801;
         }
+        else if (reftag == 851) {
+            readgroup = &mapvue_read_group851;
+            groupdata = &mapvuefile.group851;
+        }
         else if (reftag == 852) {
             readgroup = &mapvue_read_group852;
             groupdata = &mapvuefile.group852;
@@ -384,6 +416,16 @@ mapvue_load(const gchar *filename,
             readgroup = &mapvue_read_group901;
             groupdata = &mapvuefile.group901;
         }
+        else if (reftag == 1152) {
+            readgroup = &mapvue_read_group1152;
+            groupdata = &mapvuefile.group1152;
+        }
+#if 0
+        else if (reftag == 1560) {
+            readgroup = &mapvue_read_group1560;
+            groupdata = &mapvuefile.group1560;
+        }
+#endif
         else {
             g_printerr("Unknown tag %u\n", reftag);
             tagsize = mapvue_skip_group(&p, size - (p - buffer), reftag, error);
@@ -394,6 +436,7 @@ mapvue_load(const gchar *filename,
             continue;
         }
 
+        *(gint*)groupdata = reftag;
         tagsize = readgroup(&p, size - (p - buffer), groupdata, error);
         if (!tagsize)
             goto fail;
@@ -481,7 +524,7 @@ mapvue_group_size(const guchar **p, gsize size, guint reftag, GError **error)
         return 0;
     }
 
-    if (err_TAG_SIZE(error, reftag, tagsize + 4, size))
+    if (err_TAG_SIZE(error, reftag, tagsize + 2 + sizesize, size))
         return 0;
 
     return tagsize + 2 + sizesize;
@@ -500,6 +543,7 @@ mapvue_read_string(const guchar **p, gsize size, gchar *str, GError **error)
     }
 
     strsize = **p;
+    g_printerr("strsize = %u\n", strsize);
     (*p)++;
 
     if (strsize+1 > size) {
@@ -722,10 +766,14 @@ static guint
 mapvue_read_group801(const guchar **p, gsize size, gpointer grpdata,
                      GError **error)
 {
+    enum { SIZE = 2 };
     MapVueGroup801 *group = (MapVueGroup801*)grpdata;
 
     /* XXX: What if group size > known data size */
     if (!(size = mapvue_group_size(p, size, group->reftag, error)))
+        return 0;
+
+    if (err_TAG_SIZE(error, group->reftag, SIZE, size))
         return 0;
 
     group->system_information = gwy_get_guint16_le(p);
@@ -734,11 +782,11 @@ mapvue_read_group801(const guchar **p, gsize size, gpointer grpdata,
 }
 
 static guint
-mapvue_read_group852(const guchar **p, gsize size, gpointer grpdata,
-                    GError **error)
+mapvue_read_group851(const guchar **p, gsize size, gpointer grpdata,
+                     GError **error)
 {
     guint len, tagsize = 0;
-    MapVueGroup852 *group = (MapVueGroup852*)grpdata;
+    MapVueGroup851 *group = (MapVueGroup851*)grpdata;
 
     /* XXX: What if group size > known data size */
     if (!(size = mapvue_group_size(p, size, group->reftag, error)))
@@ -765,7 +813,26 @@ mapvue_read_group852(const guchar **p, gsize size, gpointer grpdata,
         return 0;
     tagsize += len;
 
+    return tagsize;
+}
+
+static guint
+mapvue_read_group852(const guchar **p, gsize size, gpointer grpdata,
+                     GError **error)
+{
+    guint len, tagsize = 0;
+    MapVueGroup852 *group = (MapVueGroup852*)grpdata;
+
+    /* XXX: What if group size > known data size */
+    if (!(size = mapvue_group_size(p, size, group->reftag, error)))
+        return 0;
+
+    g_printerr("%u\n", (guint)size);
     if (!(len = mapvue_read_string(p, size - tagsize, group->field6, error)))
+        return 0;
+    tagsize += len;
+
+    if (!(len = mapvue_read_string(p, size - tagsize, group->field7, error)))
         return 0;
     tagsize += len;
 
@@ -774,7 +841,7 @@ mapvue_read_group852(const guchar **p, gsize size, gpointer grpdata,
 
 static guint
 mapvue_read_group901(const guchar **p, gsize size, gpointer grpdata,
-                    GError **error)
+                     GError **error)
 {
     guint len, tagsize = 0;
     MapVueGroup901 *group = (MapVueGroup901*)grpdata;
@@ -790,5 +857,63 @@ mapvue_read_group901(const guchar **p, gsize size, gpointer grpdata,
     return tagsize;
 }
 
+static guint
+mapvue_read_group1152(const guchar **p, gsize size, gpointer grpdata,
+                      GError **error)
+{
+    enum { SIZE = 3*4 };
+    MapVueGroup1152 *group = (MapVueGroup1152*)grpdata;
+
+    /* XXX: What if group size > known data size */
+    if (!(size = mapvue_group_size(p, size, group->reftag, error)))
+        return 0;
+
+    if (err_TAG_SIZE(error, group->reftag, SIZE, size))
+        return 0;
+
+    group->stage_x = gwy_get_gfloat_le(p);
+    group->stage_y = gwy_get_gfloat_le(p);
+    group->stage_z = gwy_get_gfloat_le(p);
+
+    return size;
+}
+
+#if 0
+static guint
+mapvue_read_group1560(const guchar **p, gsize size, gpointer grpdata,
+                      GError **error)
+{
+    enum { SIZE = 3*8 + 2 + 2*8 };
+    MapVueGroup1560 *group = (MapVueGroup1560*)grpdata;
+    guint len, tagsize = 3*8;
+
+    /* XXX: What if group size > known data size */
+    if (!(size = mapvue_group_size(p, size, group->reftag, error)))
+        return 0;
+
+    if (err_TAG_SIZE(error, group->reftag, SIZE, size))
+        return 0;
+
+    group->propagation_factor = gwy_get_gint64_le(p);
+    group->index_of_refraction = gwy_get_gint64_le(p);
+    group->wavelength = gwy_get_gint64_le(p);
+
+    if (!(len = mapvue_read_string(p, size - tagsize, group->material, error)))
+        return 0;
+    tagsize += len;
+
+    if (!(len = mapvue_read_string(p, size - tagsize, group->name, error)))
+        return 0;
+    tagsize += len;
+
+    if (err_TAG_SIZE(error, group->reftag, tagsize + 2*8, size))
+        return 0;
+
+    group->x_coordinates = gwy_get_gdouble_le(p);
+    group->y_coordinates = gwy_get_gdouble_le(p);
+
+    return size;
+}
+#endif
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
