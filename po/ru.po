@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2009-02-23 03:59+0100\n"
-"PO-Revision-Date: 2009-02-23 14:14+0300\n"
+"POT-Creation-Date: 2009-02-25 03:59+0100\n"
+"PO-Revision-Date: 2009-03-01 13:38+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@km.ru>\n"
 "Language-Team: russian <ru@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -243,8 +243,9 @@ msgid "Daubechies 20"
 msgstr "Добеши 20"
 
 #: libprocess/gwyprocessenums.c:165
+#, fuzzy
 msgid "Universal"
-msgstr ""
+msgstr "Универсальный режим"
 
 #: libprocess/gwyprocessenums.c:166
 msgid "Scale adaptive"
@@ -263,8 +264,9 @@ msgid "Linear"
 msgstr "Линейная"
 
 #: libprocess/gwyprocessenums.c:207
+#, fuzzy
 msgid "Key"
-msgstr ""
+msgstr "Клавиша"
 
 #: libprocess/gwyprocessenums.c:208
 msgid "BSpline"
@@ -343,7 +345,7 @@ msgstr "Только фаза"
 #: libprocess/morph_lib.c:169
 #: libprocess/morph_lib.c:461
 msgid "Dilation"
-msgstr ""
+msgstr "Расширение"
 
 #: libprocess/morph_lib.c:235
 #: libprocess/morph_lib.c:528
@@ -375,6 +377,33 @@ msgstr "Поиск локальных максимумов"
 #, fuzzy, c-format
 msgid "Found %d internal local maxima"
 msgstr "Найдено %d внутренних локальных максимумов"
+
+#: libprocess/tip.c:228
+msgid "Pyramide"
+msgstr "Пирамида"
+
+#: libprocess/tip.c:229
+#: libprocess/tip.c:236
+#: libprocess/tip.c:243
+msgid "Pyramidal"
+msgstr "Пирамидальный"
+
+#: libprocess/tip.c:235
+msgid "Contact"
+msgstr "Контактный"
+
+#: libprocess/tip.c:242
+msgid "Noncontact"
+msgstr "Бесконтактный"
+
+#: libprocess/tip.c:249
+msgid "Delta function"
+msgstr "Дельта-функция"
+
+#: libprocess/tip.c:250
+#, fuzzy
+msgid "Analytical"
+msgstr "Аналитический"
 
 #: libprocess/tip.c:773
 #: libprocess/tip.c:801
@@ -1023,7 +1052,7 @@ msgstr "Ошибка:"
 #: app/about.c:49
 #, fuzzy, c-format
 msgid "About %s"
-msgstr "Об %s"
+msgstr "О программе %s"
 
 #: app/about.c:83
 msgid "An SPM data visualization and analysis tool."
@@ -1610,19 +1639,19 @@ msgstr "Кривые могут быть скопированы на други�
 
 #: app/tips.c:145
 msgid "Graph curve properties can be edited by clicking on the curve."
-msgstr ""
+msgstr "Свойства кривой графика можно редактировать щелчком мышью по кривой."
 
 #: app/tips.c:149
 msgid "Graph axis labels can be edited after by clicking on the label."
-msgstr ""
+msgstr "Метки осей графика можно впоследствии редактировать щелчком по метке."
 
 #: app/tips.c:153
 msgid "Graph key (legend) properties can be edited by double-clicking on the legend."
-msgstr ""
+msgstr "Свойства подсказок к графику (легенды) можно редактировать двойным щелчком по ней."
 
 #: app/tips.c:158
 msgid "Curves can be deleted from graphs by selecting the curve in Curves tab and pressing Delete."
-msgstr ""
+msgstr "Кривые могут быть удалены с графиков выбором их во вкладке Кривые и нажатием клавиши Delete."
 
 #: app/tips.c:164
 msgid "Key ‛+’ or ‛=’ zooms in a data window."
@@ -1638,15 +1667,15 @@ msgstr "Клавиша ‛Z’ сбрасывает масштаб данных 
 
 #: app/tips.c:176
 msgid "Data with different <i>x</i> and <i>y</i> measures can be displayed either with pixel-wise or realistic aspect ratio.  The menu in data window top left corner enables to switch between these two modes."
-msgstr ""
+msgstr "Данные с различным шагом точек по <i>x</i> и <i>y</i> могут отображаться как попиксельно, так и в реальном масштабе. Меню в левом верхнем углу окна данных позволяет переключаться между двумя этими режимами."
 
 #: app/tips.c:183
 msgid "Clicking on a false color scale with the right mouse button brings a false color gradient selector."
-msgstr ""
+msgstr "Нажатие на шкалу псевдоцвета с помощью правой кнопки мыши показывает меню выбора градиента псевдоцвета."
 
 #: app/tips.c:189
 msgid "Clicking on a 3D view with the right mouse button brings a GL material or false color gradient selector."
-msgstr ""
+msgstr "Нажатие на окно трёхмерного вида правой кнопкой мыши показывает меню выбора материала OpenGL или градиента псевдоцвета."
 
 #: app/tips.c:194
 msgid "3D view transformation modes can be selected with keys: R (rotate), S (scale), V (value scale) and L (light source)."
@@ -1658,11 +1687,11 @@ msgstr "Нажатие Ctrl-C копирует изображение канал
 
 #: app/tips.c:205
 msgid "Dragging channels or graphs from Data Browser to a window copies them to the corresponding file."
-msgstr ""
+msgstr "Перетаскивание каналов и графиков из просмотра данных в окно копирует их в соответствующий файл."
 
 #: app/tips.c:210
 msgid "Meta → Show Data Browser brings back a closed Data Browser."
-msgstr ""
+msgstr "Мета → Показать просмотр данных возвращает обратно закрытое окно просмотра данных."
 
 #: app/tips.c:214
 msgid "Channels and graphs can be renamed by double-clicking on their name in Data Browser."
@@ -1670,11 +1699,11 @@ msgstr "Каналы и графики можно переименовать д�
 
 #: app/tips.c:220
 msgid "Facet Level offers to use/exclude the masked area if a mask is present on the data."
-msgstr ""
+msgstr "Выравнивание граней предлагает использовать/исключить область под маской если она есть."
 
 #: app/tips.c:225
 msgid "Plane Level offers to use/exclude the masked area if a mask is present on the data."
-msgstr ""
+msgstr "При выравнивании плоскости предлагается использовать/исключить маскированную область если на данных есть маска."
 
 #: app/tips.c:230
 msgid "Data Arithmetic works as a scientific calculator, just type an arithmetic expression."
@@ -1682,11 +1711,11 @@ msgstr ""
 
 #: app/tips.c:235
 msgid "Facet Level can often level data with large features that make impossible to use standard plane levelling.  It levels the surface by making flat areas point upwards."
-msgstr ""
+msgstr "Выравнивание граней нередко может выровнять данные с крупными деталями, что делает невозможным использование обычного выравнивания плоскости. Оно выравнивает поверхность заставляя плоские участки смотреть вверх."
 
 #: app/tips.c:241
 msgid "Too small grains can be filtered out with Remove by Threshold grain function."
-msgstr ""
+msgstr "Слишком мелкие зёрна могут быть отфильтрованы с помощью функции \"Удалить по порогу\"."
 
 #: app/tips.c:246
 msgid "Data Process → Presentation → Edge Detection → Step is a fine step detector with a good dynamic range"
@@ -1694,15 +1723,15 @@ msgstr ""
 
 #: app/tips.c:251
 msgid "Data Process → Basic Operations → Recalibrate changes scales, offsets and even lateral and value units."
-msgstr ""
+msgstr "Обработка данных → Базовые действия → Перекалибровать меняет масштабы, смещения и даже единицы измерения как смещения, так и данных."
 
 #: app/tips.c:256
 msgid "Grains or other areas of interest are marked with masks.  Many functions then can do something interesting with the masked areas."
-msgstr ""
+msgstr "Зёрна и другие интересующие области можно пометить маской. Многие функции могут сделать что-нибудь интересное с областью под маской."
 
 #: app/tips.c:262
 msgid "Remove Scars in the toolbox runs with the settings last used in Mark Scars."
-msgstr ""
+msgstr "Убрать запилы на панели инструментов запускается с настройками, выставленными последний раз в меню Пометить запилы"
 
 #: app/tips.c:268
 msgid "Graph → Critical Dimension measures steps on extracted profile graphs."
@@ -1714,19 +1743,19 @@ msgstr "Нажатие Esc скрывает окна инструментов."
 
 #: app/tips.c:278
 msgid "Read Value tool displays also the local facet normal."
-msgstr ""
+msgstr "Инструмент Считать данные также показывает направление нормали к локальной грани."
 
 #: app/tips.c:282
 msgid "Read Value tool can shift data to make <i>z</i>=0 plane pass through the selected point."
-msgstr ""
+msgstr "Инструмент Считать значение может сдвинуть данные так. чтобы плоскость <i>z</i>=0 проходила через выбранную точку."
 
 #: app/tips.c:287
 msgid "Individual lines can be deleted in Distance tool by selecting them in the list and pressing Delete."
-msgstr ""
+msgstr "Отдельные линии в инструменте Расстояние можно удалить выбрав их в списке и нажав Delete."
 
 #: app/tips.c:292
 msgid "Individual lines can be deleted in Profiles tool by selecting them in the list and pressing Delete."
-msgstr ""
+msgstr "Отдельные линии в инструменте Профиль можно удалить выбрав их в списке и нажав Delete."
 
 #: app/tips.c:297
 msgid "Spectroscopy tool displays point spectroscopy data and extracts them to standalone graphs that can be subsequently analysed for instance with Graph → Fit FD Curve."
@@ -1742,11 +1771,11 @@ msgstr ""
 
 #: app/tips.c:314
 msgid "Path Level tool levels misaligned rows by lining them up along manually selected lines.  If there are no large features automatic Median Line Correction usually works well."
-msgstr ""
+msgstr "Инструмент \"Выровнять вдоль линии\" выравнивает сбившиеся строки путём параллельного сдвига их так, чтобы выбранная линия стала прямой. Если данные не содержат крупных деталей, автоматическая коррекция линии по срединному обычно справляется неплохо."
 
 #: app/tips.c:320
 msgid "Grain Measure tool is great for examining individual grains.  Overall grain statistics are available in Data Processing → Grains."
-msgstr ""
+msgstr "Инструмент \"Измерение зёрна\" великолепно подходит для исследования отдельных зёрен. Общая статистика зерна доступна в меню Обработка данных → Зёрна."
 
 #: app/tips.c:326
 msgid "Mask Editor tool can create, edit, invert, grow and shrink masks."
@@ -1754,7 +1783,7 @@ msgstr ""
 
 #: app/tips.c:330
 msgid "Color Range tool offers several false color scale mapping modes and can make any of them the default mode."
-msgstr ""
+msgstr "Инструмент \"Диапазон цвета\" предлагает несколько режимов наложения псевдоцвета и может сделать любой из них режимом по умолчанию."
 
 #: app/tips.c:336
 msgid "Gwyddion User Guide explains in detail many of the methods and algorithms implemented in Gwyddion."
@@ -2805,8 +2834,9 @@ msgid "_None"
 msgstr "_Никакого"
 
 #: modules/file/pixmap.c:2391
+#, fuzzy
 msgid "_Rulers"
-msgstr ""
+msgstr "Напаравляющие"
 
 #: modules/file/pixmap.c:2392
 msgid "_Inset scale bar"
@@ -2830,7 +2860,7 @@ msgstr "левый"
 #: modules/file/pixmap.c:2422
 #, fuzzy
 msgid "center"
-msgstr "центр"
+msgstr "Центр"
 
 #: modules/file/pixmap.c:2426
 #, fuzzy
@@ -2838,12 +2868,10 @@ msgid "right"
 msgstr "правый"
 
 #: modules/file/pixmap.c:2431
-#, fuzzy
 msgid "top"
 msgstr "верх"
 
 #: modules/file/pixmap.c:2443
-#, fuzzy
 msgid "bottom"
 msgstr "низ"
 
@@ -3800,7 +3828,7 @@ msgstr "Данные:            %s\n"
 #: modules/graph/graph_fit.c:1404
 #, c-format
 msgid "Number of points: %d of %d\n"
-msgstr ""
+msgstr "Число точек: %d из %d\n"
 
 #: modules/graph/graph_cd.c:971
 #: modules/graph/graph_fdfit.c:1365
@@ -3848,8 +3876,9 @@ msgid "Gnuplot friendly"
 msgstr ""
 
 #: modules/graph/graph_export_ascii.c:54
+#, fuzzy
 msgid "Comma separated values"
-msgstr ""
+msgstr "  %1 (CSV)"
 
 #: modules/graph/graph_export_ascii.c:55
 #, fuzzy
@@ -4165,7 +4194,7 @@ msgstr "Распределение углов"
 #: modules/process/angle_dist.c:169
 #, fuzzy
 msgid "Angle Distribution"
-msgstr "Распределение угла"
+msgstr "Распределение углов"
 
 #: modules/process/angle_dist.c:186
 #: modules/process/slope_dist.c:238
@@ -4180,9 +4209,8 @@ msgstr "_Число шагов:"
 
 #: modules/process/angle_dist.c:196
 #: modules/process/slope_dist.c:243
-#, fuzzy
 msgid "_Logarithmic value scale"
-msgstr "Логарифмический масштаб"
+msgstr "_Логарифмическая шкала"
 
 #: modules/process/angle_dist.c:202
 #: modules/process/slope_dist.c:249
@@ -4429,11 +4457,11 @@ msgstr "Симметрия"
 
 #: modules/process/convolution_filter.c:570
 msgid "HSym"
-msgstr ""
+msgstr "ГСим"
 
 #: modules/process/convolution_filter.c:580
 msgid "VSym"
-msgstr ""
+msgstr "ВСим"
 
 #: modules/process/crosscor.c:107
 msgid "Calculates cross-correlation of two data fields."
@@ -4519,12 +4547,10 @@ msgid "Absolute difference"
 msgstr ""
 
 #: modules/process/crosscor.c:476
-#, fuzzy
 msgid "X difference"
 msgstr "Различие X"
 
 #: modules/process/crosscor.c:480
-#, fuzzy
 msgid "Y difference"
 msgstr "Различие Y"
 
@@ -4793,16 +4819,15 @@ msgstr ""
 
 #: modules/process/edge.c:245
 msgid "Zero crossing step detection presentation"
-msgstr ""
+msgstr "презенация \"Обнаружение ступени по пересечению нуля\""
 
 #: modules/process/edge.c:630
 msgid "Zero Crossing Step Detection"
-msgstr ""
+msgstr "Обнаружение ступени по пересечению нуля"
 
 #: modules/process/edge.c:681
-#, fuzzy
 msgid "_Gaussian FWHM:"
-msgstr "Гауссова полная ширина на половине высоты:"
+msgstr "Ширина на половине высоты _гауссиан:"
 
 #: modules/process/edge.c:690
 msgid "_Threshold:"
@@ -4810,7 +4835,7 @@ msgstr "_Пороговое значение:"
 
 #: modules/process/edge.c:690
 msgid "NRMS"
-msgstr ""
+msgstr "ср. квадр. в окр."
 
 #: modules/process/edge.c:697
 #: modules/process/fft_filter_2d.c:525
@@ -4824,11 +4849,11 @@ msgstr "Исходное _изображение"
 
 #: modules/process/edge.c:707
 msgid "_LoG convolved"
-msgstr ""
+msgstr "_ЛГ после свёртки"
 
 #: modules/process/edge.c:708
 msgid "Detected st_ep"
-msgstr ""
+msgstr "Найденная с_тупень"
 
 #: modules/process/edge.c:714
 #: modules/process/fft_filter_1d.c:334
@@ -5181,7 +5206,6 @@ msgid "Size:"
 msgstr "Размер:"
 
 #: modules/process/fft_synth.c:285
-#, fuzzy
 msgid "Measure:"
 msgstr "Измерить:"
 
@@ -5428,10 +5452,9 @@ msgstr ""
 
 #: modules/process/fractal.c:203
 msgid "Reco_mpute"
-msgstr ""
+msgstr "_Пересчитать"
 
 #: modules/process/fractal.c:244
-#, fuzzy
 msgid "_Method:"
 msgstr "_Метод:"
 
@@ -5440,9 +5463,8 @@ msgid "Fit Area"
 msgstr ""
 
 #: modules/process/fractal.c:270
-#, fuzzy
 msgid "From:"
-msgstr "Из:"
+msgstr "От:"
 
 #: modules/process/fractal.c:270
 #: modules/process/fractal.c:517
@@ -5451,9 +5473,8 @@ msgid "minimum"
 msgstr "минимум"
 
 #: modules/process/fractal.c:273
-#, fuzzy
 msgid "To:"
-msgstr "В:"
+msgstr "До:"
 
 #: modules/process/fractal.c:273
 #: modules/process/fractal.c:518
@@ -5864,9 +5885,8 @@ msgid "Plane rotate"
 msgstr "Поворот плоскости"
 
 #: modules/process/indent_analyze.c:268
-#, fuzzy
 msgid "New"
-msgstr "Создать"
+msgstr "Новая"
 
 #: modules/process/indent_analyze.c:269
 msgid "AND"
@@ -5885,21 +5905,18 @@ msgid "XOR"
 msgstr "Исключающее ИЛИ"
 
 #: modules/process/indent_analyze.c:276
-#, fuzzy
 msgid "Nothing"
-msgstr "Нет"
+msgstr "Ничего"
 
 #: modules/process/indent_analyze.c:277
-#, fuzzy
 msgid "Above"
-msgstr "Над"
+msgstr "Выше"
 
 #: modules/process/indent_analyze.c:278
 msgid "Bellow"
-msgstr ""
+msgstr "Ниже"
 
 #: modules/process/indent_analyze.c:279
-#, fuzzy
 msgid "Plane"
 msgstr "Плоскость"
 
@@ -5916,13 +5933,12 @@ msgid "Outer Pile-up"
 msgstr ""
 
 #: modules/process/indent_analyze.c:283
-#, fuzzy
 msgid "Special points"
 msgstr "Особые точки"
 
 #: modules/process/indent_analyze.c:284
 msgid "Faces border"
-msgstr ""
+msgstr "Границы граней"
 
 #: modules/process/indent_analyze.c:288
 msgid "Vickers"
@@ -6042,11 +6058,11 @@ msgstr ""
 
 #: modules/process/indent_analyze.c:651
 msgid "_Compute & mark"
-msgstr ""
+msgstr "_Рассчитать и пометить"
 
 #: modules/process/indent_analyze.c:652
 msgid "_Save statistics"
-msgstr ""
+msgstr "_Сохранить статистику"
 
 #: modules/process/indent_analyze.c:1580
 msgid "No statistics has benn computed yet."
@@ -6430,7 +6446,7 @@ msgstr "Переместить данные"
 #: modules/process/nanoindent_adjust.c:205
 #, fuzzy
 msgid "_Rotate data"
-msgstr "Вращать данные"
+msgstr "Повернуть данные"
 
 #: modules/process/nanoindent_adjust.c:214
 msgid "E_xtrapolate result data out of measured range"
@@ -6454,7 +6470,7 @@ msgstr "/_Исправить данные/Маска в_ыпадающего"
 
 #: modules/process/outliers.c:56
 msgid "Mark data farther than 3σ from mean value"
-msgstr ""
+msgstr "Пометить данные которые находятся дальше, чем 3σ от среднего значения"
 
 #: modules/process/polydistort.c:140
 msgid "Apllies polynomial distortion in the horizontal plane."
@@ -6603,10 +6619,9 @@ msgstr ""
 
 #: modules/process/presentationops.c:208
 msgid "Attach Presentation"
-msgstr ""
+msgstr "Присоединить презентацию"
 
 #: modules/process/presentationops.c:222
-#, fuzzy
 msgid "_Data to attach:"
 msgstr "Присоединяемые _данные:"
 
@@ -6681,7 +6696,7 @@ msgstr "Новая _высота:"
 
 #: modules/process/scars.c:124
 msgid "Marks and/or removes scars (horizontal linear artefacts)."
-msgstr ""
+msgstr "Помечает и/или удаляет запилы (горизонтальные линейные артефакты)"
 
 #: modules/process/scars.c:138
 msgid "/_Correct Data/M_ark Scars..."
@@ -6689,7 +6704,7 @@ msgstr "/_Исправить данные/Пометить _запилы..."
 
 #: modules/process/scars.c:142
 msgid "Mark horizontal scars (strokes)"
-msgstr ""
+msgstr "Помечает горизонтальные запилы (штрихи)"
 
 #: modules/process/scars.c:145
 msgid "/_Correct Data/Remove _Scars"
@@ -6886,9 +6901,8 @@ msgid "Tilt by specified amount"
 msgstr ""
 
 #: modules/process/tilt.c:155
-#, fuzzy
 msgid "Tilt"
-msgstr "Наклон"
+msgstr "Н_аклон"
 
 #: modules/process/tilt.c:180
 msgid "_X:"
@@ -6903,21 +6917,20 @@ msgid "Angles"
 msgstr "Углы"
 
 #: modules/process/tip_blind.c:128
-#, fuzzy
 msgid "Blind estimation of SPM tip using Villarubia's algorithm."
-msgstr "Оценка слепого пятна зонда СЗМ используя алгоритм Вильярубия"
+msgstr "Слепая оценка зонда СЗМ используя алгоритм Вильярубия."
 
 #: modules/process/tip_blind.c:142
 msgid "/_Tip/_Blind Estimation..."
-msgstr "/_Зонд/Оценка _слепого пятна..."
+msgstr "/_Зонд/_Слепая оценка"
 
 #: modules/process/tip_blind.c:146
 msgid "Blind tip estimation"
-msgstr "Оценка слепого пятна"
+msgstr "Слепая оценка зонда"
 
 #: modules/process/tip_blind.c:182
 msgid "Blind Tip Estimation"
-msgstr "Оценка слепого пятна"
+msgstr "Слепая оценка зонда"
 
 #: modules/process/tip_blind.c:183
 msgid "Run _Partial"
@@ -6953,7 +6966,7 @@ msgstr "Использовать _границы"
 
 #: modules/process/tip_blind.c:622
 msgid "Estimated tip"
-msgstr ""
+msgstr "Предполагаемый зонд"
 
 #: modules/process/tip_model.c:112
 msgid "Models SPM tip."
@@ -6991,31 +7004,30 @@ msgstr "_Поворот зонда:"
 msgid "Tip _apex radius:"
 msgstr "_Радиус острия зонда:"
 
-#: modules/process/tip_model.c:466
+#: modules/process/tip_model.c:465
 msgid "Modelled tip"
 msgstr "Модель зонда"
 
-#: modules/process/tip_model.c:511
+#: modules/process/tip_model.c:510
 #, c-format
 msgid "Tip resolution: %d × %d pixels"
 msgstr "Разрешение зонда: %d × %d пикселей"
 
 #: modules/process/tipops.c:65
 msgid "Tip operations: dilation (convolution), erosion (reconstruction) and certainty map."
-msgstr ""
+msgstr "Операции с зондом: расширение (свёртка), эрозия (реконструкция) и карта достоверности."
 
 #: modules/process/tipops.c:80
 msgid "/_Tip/_Dilation..."
-msgstr ""
+msgstr "/_Зонд/_Расширение..."
 
 #: modules/process/tipops.c:84
-#, fuzzy
 msgid "Surface dilation by defined tip"
-msgstr "расширение поверхности известным зондом"
+msgstr "Расширение поверхности известным зондом"
 
 #: modules/process/tipops.c:87
 msgid "/_Tip/_Surface Reconstruction..."
-msgstr ""
+msgstr "/_Зонд/_Восстановление поверхности..."
 
 #: modules/process/tipops.c:91
 msgid "Surface reconstruction by defined tip"
@@ -7031,7 +7043,7 @@ msgstr "Карта достоверности зонда"
 
 #: modules/process/tipops.c:137
 msgid "Tip Dilation"
-msgstr ""
+msgstr "Расширение зонда"
 
 #: modules/process/tipops.c:138
 msgid "Surface Reconstruction"
@@ -7051,10 +7063,12 @@ msgid ""
 "Tip measure does not match data.\n"
 "It will be resampled from %d×%d to %d×%d."
 msgstr ""
+"Размеры зонда не соответствует данным.\n"
+"Они будут пересчитаны с %d×%d в %d×%d."
 
 #: modules/process/tipops.c:287
 msgid "Dilated data"
-msgstr ""
+msgstr "Расширенные данные"
 
 #: modules/process/tipops.c:288
 msgid "Surface reconstruction"
@@ -7062,7 +7076,7 @@ msgstr "Восстановление поверхности"
 
 #: modules/process/unrotate.c:88
 msgid "Rotates data to make characteristic directions parallel with x or y axis."
-msgstr ""
+msgstr "Вращает данные так, чтобы сделать характеристические направления параллельными оси x или y."
 
 #: modules/process/unrotate.c:103
 msgid "/_Correct Data/_Unrotate..."
@@ -7142,6 +7156,8 @@ msgid ""
 "Pygwy plugin: %s (%s)\n"
 "Export failed."
 msgstr ""
+"Подключаемый модуль Pygwy: %s (%s)\n"
+"Экспорт закончился неудачно."
 
 #: modules/tools/crop.c:82
 msgid "Crop tool, crops data to smaller size."
@@ -7220,7 +7236,7 @@ msgstr "_Тип:"
 
 #: modules/tools/grainmeasure.c:91
 msgid "Grain measurement tool, calculates characteristics of selected countinous parts of mask."
-msgstr ""
+msgstr "Инструмент измерения зёрен, рассчитывает характеристики выбранных непрерывных частей маски."
 
 #: modules/tools/grainmeasure.c:123
 msgid "Grain Measure"
@@ -7232,7 +7248,7 @@ msgstr "Измерять отдельные зёрна (непрерывные �
 
 #: modules/tools/grainremover.c:97
 msgid "Grain removal tool, removes continuous parts of mask and/or underlying data."
-msgstr ""
+msgstr "Инструмент удаления зёрен, удаляет непрерывные части маски и/или данные под ними."
 
 #: modules/tools/grainremover.c:106
 #, fuzzy
@@ -7281,7 +7297,6 @@ msgid "Interactive color range tool, allows to select data range false color sca
 msgstr "Интерактивный инструмент цветового диапазона, позволяет выбрать диапазон данных, которому будет соответствовать шкала псевдоцвета, как на наборе данных, так и на гистограмме распределения высот."
 
 #: modules/tools/icolorange.c:151
-#, fuzzy
 msgid "Color Range"
 msgstr "Диапазон цвета"
 
@@ -7308,8 +7323,9 @@ msgid "Adaptive nonlinear color mapping"
 msgstr "Адаптивное нелинейное установление цвета"
 
 #: modules/tools/icolorange.c:274
+#, fuzzy
 msgid "_default"
-msgstr ""
+msgstr "Исходная"
 
 #: modules/tools/icolorange.c:289
 msgid "Height histogram"
@@ -7361,7 +7377,7 @@ msgstr "Установить плоскость в _нуль"
 
 #: modules/tools/linestats.c:124
 msgid "Row/column statistical function tool, mean values, medians, maxima, minima, RMS, ..., of rows or columns."
-msgstr ""
+msgstr "Функция статистики по строке/столбцу, средние, срединные, максимумы, минимумы. среднеквадратичные, строк и столбцов."
 
 #: modules/tools/linestats.c:151
 msgid "Mean"
@@ -7534,11 +7550,11 @@ msgstr ""
 
 #: modules/tools/pathlevel.c:109
 msgid "Path level tool, performs row leveling along on user-set lines."
-msgstr ""
+msgstr "Выравнять вдоль линии, выравнивает строки по пересечению с выбранной пользователем линией."
 
 #: modules/tools/pathlevel.c:142
 msgid "Path Level"
-msgstr ""
+msgstr "Выровнять вдоль линии"
 
 #: modules/tools/pathlevel.c:143
 msgid "Level rows using intersections with given lines"
@@ -7626,9 +7642,8 @@ msgid "Read value under mouse cursor"
 msgstr "Считать значение под курсором мыши."
 
 #: modules/tools/readvalue.c:287
-#, fuzzy
 msgid "Set _Zero"
-msgstr "Установить ноль"
+msgstr "Установить _нуль"
 
 #: modules/tools/readvalue.c:290
 msgid "Shift plane z=0 to pass through the selected point"
@@ -7639,9 +7654,8 @@ msgid "Facet"
 msgstr "Грань"
 
 #: modules/tools/readvalue.c:340
-#, fuzzy
 msgid "Show _selection"
-msgstr "Показать выделение"
+msgstr "Показать _выбор"
 
 #: modules/tools/roughness.c:290
 msgid "Amplitude"
