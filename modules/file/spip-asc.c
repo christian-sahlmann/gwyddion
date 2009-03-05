@@ -18,7 +18,7 @@
  */
 
 /* FIXME: Not sure where these come from, but the files tend to bear
- * `created by SPIP'.  The filed names resemble BCR, but the format is not
+ * `created by SPIP'.  The field names resemble BCR, but the format is not
  * the same.  So let's call the format SPIP ASCII data... */
 /**
  * [FILE-MAGIC-FREEDESKTOP]
@@ -61,6 +61,9 @@ static gint          asc_detect        (const GwyFileDetectInfo *fileinfo,
 static GwyContainer* asc_load          (const gchar *filename,
                                         GwyRunType mode,
                                         GError **error);
+static gboolean require_keys           (GHashTable *hash,
+                                        GError **error,
+                                        ...);
 static guint         remove_bad_data   (GwyDataField *dfield,
                                         GwyDataField *mfield);
 
@@ -111,11 +114,14 @@ asc_load(const gchar *filename,
 {
     GwyContainer *container = NULL;
     GwyDataField *dfield = NULL, *mfield = NULL;
+    GwySIUnit *unit;
     gchar *line, *p, *value, *buffer = NULL;
     GHashTable *hash = NULL;
-    guint j, xres = 0, yres = 0;
     gsize size;
     GError *err = NULL;
+    gdouble xreal, yreal, q;
+    gint i, xres, yres;
+    gdouble *data;
 
     if (!g_file_get_contents(filename, &buffer, &size, &err)) {
         err_GET_FILE_CONTENTS(error, &err);
@@ -157,22 +163,95 @@ asc_load(const gchar *filename,
         } while (g_ascii_isspace(value[0]));
 
         g_strchomp(line);
+        for (i = 0; line[i]; i++)
+            line[i] = g_ascii_tolower(line[i]);
 
-        g_printerr("<%s> = <%s>\n", line, value);
-
+        gwy_debug("<%s> = <%s>\n", line, value);
         g_hash_table_insert(hash, line, value);
     }
 
-    err_NO_DATA(error);
+    if (!require_keys(hash, error,
+                      "x-pixels", "y-pixels", "x-length", "y-length",
+                      NULL))
+        goto fail;
+
+    xres = atoi(g_hash_table_lookup(hash, "x-pixels"));
+    yres = atoi(g_hash_table_lookup(hash, "y-pixels"));
+    if (err_DIMENSION(error, xres) || err_DIMENSION(error, yres))
+        goto fail;
+
+    xreal = Nanometer * g_ascii_strtod(g_hash_table_lookup(hash, "x-length"),
+                                       NULL);
+    yreal = Nanometer * g_ascii_strtod(g_hash_table_lookup(hash, "y-length"),
+                                       NULL);
+    /* Use negated positive conditions to catch NaNs */
+    if (!((xreal = fabs(xreal)) > 0)) {
+        g_warning("Real x size is 0.0, fixing to 1.0");
+        xreal = 1.0;
+    }
+    if (!((yreal = fabs(yreal)) > 0)) {
+        g_warning("Real y size is 0.0, fixing to 1.0");
+        yreal = 1.0;
+    }
+
+    dfield = gwy_data_field_new(xres, yres, xreal, yreal, FALSE);
+
+    unit = gwy_si_unit_new("m");
+    gwy_data_field_set_si_unit_xy(dfield, unit);
+    g_object_unref(unit);
+
+    if ((value = g_hash_table_lookup(hash, "z-unit"))) {
+        gint power10;
+
+        unit = gwy_si_unit_new_parse(value, &power10);
+        gwy_data_field_set_si_unit_z(dfield, unit);
+        g_object_unref(unit);
+        q = pow10(power10);
+    }
+    else if ((value = g_hash_table_lookup(hash, "bit2nm"))) {
+        q = Nanometer * g_ascii_strtod(value, NULL);
+    }
+    else
+        q = 1.0;
+
+    data = gwy_data_field_get_data(dfield);
+    value = p;
+    for (i = 0; i < xres*yres; i++) {
+        data[i] = q*g_ascii_strtod(value, &p);
+        value = p;
+    }
+
+    container = gwy_container_new();
+
+    gwy_container_set_object(container, gwy_app_get_data_key_for_id(0), dfield);
+    g_object_unref(dfield);
 
 fail:
-    gwy_object_unref(container);
-    gwy_object_unref(dfield);
-    gwy_object_unref(mfield);
     g_free(buffer);
     g_hash_table_destroy(hash);
 
     return container;
+}
+
+static gboolean
+require_keys(GHashTable *hash,
+             GError **error,
+             ...)
+{
+    va_list ap;
+    const gchar *key;
+
+    va_start(ap, error);
+    while ((key = va_arg(ap, const gchar *))) {
+        if (!g_hash_table_lookup(hash, key)) {
+            err_MISSING_FIELD(error, key);
+            va_end(ap);
+            return FALSE;
+        }
+    }
+    va_end(ap);
+
+    return TRUE;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
