@@ -319,7 +319,7 @@ nanoindent_adjust_do(NanoindentAdjustArgs *args)
 
     dfield = gwy_data_field_duplicate(dfield1);
 
-    gwy_app_wait_start(GTK_WIDGET(args->win2), "Initializing...");
+    gwy_app_wait_start(GTK_WIDGET(args->win2), _("Initializing..."));
     dfield = gwy_nanoindent_adjust(dfield1, dfield,
                               gwy_app_wait_set_fraction,
                               gwy_app_wait_set_message,

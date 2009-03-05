@@ -303,7 +303,7 @@ static GwyModuleInfo module_info = {
     (GwyModuleRegisterFunc) &module_register,
     N_("Analyses nanoindentation structure (volumes, surfaces, ...)."),
     "Lukáš Chvátal <chvatal@physics.muni.cz>",
-    "0.1.2",
+    "0.1.3",
     "Lukáš Chvátal",
     "2005",
 };
@@ -1623,59 +1623,62 @@ save_statistics_dialog(IndentAnalyzeControls *c,
          * formats */
         fprintf(out, "%s\n", filename_sys);
 
-        fprintf(out, "Indentor:  %s\n", "...to be added");
-        fprintf(out, "Length units: %s\n", vf->units);
+        fprintf(out, _("Indentor:  %s\n"),
+                _(gwy_enum_to_string(args->indentor,
+                                     indentor_enum,
+                                     G_N_ELEMENTS(indentor_enum))));
+        fprintf(out, _("Length units: %s\n"), vf->units);
 
-        fprintf(out, "Indentation centre at [%d, %d] px:      %lf\n",
+        fprintf(out, _("Indentation centre at [%d, %d] px:      %lf\n"),
                 args->minx, args->miny, args->min_val/mag);
-        fprintf(out, "Maximum at [%d, %d] is:                 %lf\n",
+        fprintf(out, _("Maximum at [%d, %d] is:                 %lf\n"),
                 args->maxx, args->maxy, args->max_val/mag);
-        fprintf(out, "Diference max-min:                      %lf\n",
+        fprintf(out, _("Diference max-min:                      %lf\n"),
                 (args->max_val - args->min_val)/mag);
-        fprintf(out, "\n");
+        fprintf(out, _("\n"));
 
         fprintf(out,
-                "Area (projected) above plane:             %g (%.1lf %%)\n",
+                _("Area (projected) above plane:             %g (%.1lf %%)\n"),
                 args->area_above/mag/mag,
                 100. * (args->area_above/sxy));
         fprintf(out,
-                "Area (projected) below plane:             %g (%.1lf %%)\n",
+                _("Area (projected) below plane:             %g (%.1lf %%)\n"),
                 args->area_below/mag/mag,
                 100. * (args->area_below/sxy));
         fprintf(out,
-                "Area (projected) of    plane:             %g (%.1lf %%)\n",
+                _("Area (projected) of    plane:             %g (%.1lf %%)\n"),
                 args->area_plane/mag/mag,
                 100. * (args->area_plane/sxy));
-        fprintf(out, "\n");
+        fprintf(out, _("\n"));
 
-        fprintf(out, "Area (developed) above %g (+%.1f %%)\n",
+        fprintf(out, _("Area (developed) above %g (+%.1f %%)\n"),
                 args->surface_above/mag/mag,
                 100. * args->surface_above/sxy);
-        fprintf(out, "Area (developed) above %g (+%.1lf %%)\n",
+        fprintf(out, _("Area (developed) above %g (+%.1lf %%)\n"),
                 args->surface_below/mag/mag,
                 100. * args->surface_below/sxy);
 
-        fprintf(out, "Volume above:     %g\n",
+        fprintf(out, _("Volume above:     %g\n"),
                 args->volume_above/mag/mag/mag);
-        fprintf(out, "Volume below:     %g\n",
+        fprintf(out, _("Volume below:     %g\n"),
                 args->volume_below/mag/mag/mag);
-        fprintf(out, "Volume diference  %g\n",
+        fprintf(out, _("Volume diference  %g\n"),
                 (args->volume_above -
                  args->volume_below)/mag/mag/mag);
 
-        fprintf(out, "\nIndentation\n");
-        fprintf(out, "Volume      %g\n",
+        fprintf(out, _("\nIndentation\n"));
+        fprintf(out, _("Volume      %g\n"),
                 args->volume_indent/mag/mag/mag);
         fprintf(out, "A_P         %g\n", args->surface_indent/mag/mag);
         fprintf(out, "A_D         %g\n", (args->area_indent)/mag/mag);
 
-        fprintf(out, "\nIndentation - Inner Pile-Up\n");
+        fprintf(out, _("\nIndentation - Inner Pile-Up\n"));
         fprintf(out, "A_P         %g\n",
                 args->surface_innerpileup/mag/mag);
         fprintf(out, "A_D         %g\n",
                 (args->area_innerpileup)/mag/mag);
 
-        fprintf(out, "Indentation - Outer Pile-Up\n");
+        fprintf(out, _("Indentation - Outer Pile-Up\n"));
         fprintf(out, "A_P         %g\n",
                 args->surface_outerpileup/mag/mag);
         fprintf(out, "A_D         %g\n",
