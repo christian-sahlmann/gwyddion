@@ -73,6 +73,7 @@ file_LTLIBRARIES = \
 	shimadzu.la \
 	sicmfile.la \
 	sis.la \
+	spip-asc.la \
 	$(spml_module) \
 	spmlab.la \
 	spmlabf.la \
@@ -160,6 +161,7 @@ sensolytics_la_SOURCES   = sensolytics.c
 shimadzu_la_SOURCES      = shimadzu.c
 sicmfile_la_SOURCES      = sicmfile.c
 sis_la_SOURCES           = sis.c
+spip_asc_la_SOURCES      = spip-asc.c
 spmlab_la_SOURCES        = spmlab.c
 spmlabf_la_SOURCES       = spmlabf.c
 stmprg_la_SOURCES        = stmprg.c
