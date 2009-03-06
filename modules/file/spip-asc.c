@@ -221,10 +221,28 @@ asc_load(const gchar *filename,
         value = p;
     }
 
+    if ((value = g_hash_table_lookup(hash, "voidpixels")) && atoi(value)) {
+        mfield = gwy_data_field_new_alike(dfield, FALSE);
+        data = gwy_data_field_get_data(mfield);
+        value = p;
+        for (i = 0; i < xres*yres; i++) {
+            data[i] = 1.0 - g_ascii_strtod(value, &p);
+            value = p;
+        }
+        if (!remove_bad_data(dfield, mfield))
+            gwy_object_unref(mfield);
+    }
+
     container = gwy_container_new();
 
     gwy_container_set_object(container, gwy_app_get_data_key_for_id(0), dfield);
     g_object_unref(dfield);
+
+    if (mfield) {
+        gwy_container_set_object(container, gwy_app_get_mask_key_for_id(0),
+                                 mfield);
+        g_object_unref(mfield);
+    }
 
 fail:
     g_free(buffer);
@@ -252,6 +270,36 @@ require_keys(GHashTable *hash,
     va_end(ap);
 
     return TRUE;
+}
+
+static guint
+remove_bad_data(GwyDataField *dfield, GwyDataField *mfield)
+{
+    gdouble *data = gwy_data_field_get_data(dfield);
+    gdouble *mdata = gwy_data_field_get_data(mfield);
+    gdouble *drow, *mrow;
+    gdouble avg;
+    guint i, j, mcount, xres, yres;
+
+    xres = gwy_data_field_get_xres(dfield);
+    yres = gwy_data_field_get_yres(dfield);
+    avg = gwy_data_field_area_get_avg(dfield, mfield, 0, 0, xres, yres);
+    mcount = 0;
+    for (i = 0; i < yres; i++) {
+        mrow = mdata + i*xres;
+        drow = data + i*xres;
+        for (j = 0; j < xres; j++) {
+            if (!mrow[j]) {
+                drow[j] = avg;
+                mcount++;
+            }
+            mrow[j] = 1.0 - mrow[j];
+        }
+    }
+
+    gwy_debug("mcount = %u", mcount);
+
+    return mcount;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
