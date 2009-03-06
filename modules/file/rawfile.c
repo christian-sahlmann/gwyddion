@@ -748,7 +748,7 @@ rawfile_dialog_format_page(RawFileArgs *args,
     adj = gtk_adjustment_new(args->p.skipfields, 0, 1 << 30, 1, 10, 0);
     controls->skipfields = gwy_table_attach_spinbutton(table, row,
                                                        _("E_ach row skip:"),
-                                                       "fields", adj);
+                                                       _("fields"), adj);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(controls->skipfields), 0);
     row++;
 
@@ -817,14 +817,14 @@ rawfile_dialog_format_page(RawFileArgs *args,
     adj = gtk_adjustment_new(args->p.offset, 0, 1 << 30, 16, 1024, 0);
     controls->offset = gwy_table_attach_spinbutton(table, row,
                                                    _("Start at _offset:"),
-                                                   "bytes", adj);
+                                                   _("bytes"), adj);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(controls->offset), 0);
     row++;
 
     adj = gtk_adjustment_new(args->p.size, 1, 24, 1, 8, 0);
     controls->size = gwy_table_attach_spinbutton(table, row,
                                                  _("_Sample size:"),
-                                                 "bits", adj);
+                                                 _("bits"), adj);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(controls->size), 0);
     gtk_spin_button_set_snap_to_ticks(GTK_SPIN_BUTTON(controls->size), TRUE);
     row++;
@@ -832,7 +832,7 @@ rawfile_dialog_format_page(RawFileArgs *args,
     adj = gtk_adjustment_new(args->p.skip, 0, 1 << 30, 1, 8, 0);
     controls->skip = gwy_table_attach_spinbutton(table, row,
                                                  _("After each sample s_kip:"),
-                                                 "bits", adj);
+                                                 _("bits"), adj);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(controls->skip), 0);
     gtk_spin_button_set_snap_to_ticks(GTK_SPIN_BUTTON(controls->skip), TRUE);
     row++;
@@ -840,7 +840,7 @@ rawfile_dialog_format_page(RawFileArgs *args,
     adj = gtk_adjustment_new(args->p.rowskip, 0, 1 << 30, 1, 8, 0);
     controls->rowskip = gwy_table_attach_spinbutton(table, row,
                                                     _("After each _row skip:"),
-                                                    "bits", adj);
+                                                    _("bits"), adj);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(controls->rowskip), 0);
     gtk_spin_button_set_snap_to_ticks(GTK_SPIN_BUTTON(controls->rowskip), TRUE);
     row++;
