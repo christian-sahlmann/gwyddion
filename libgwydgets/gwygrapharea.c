@@ -1524,13 +1524,14 @@ scr_to_data_x(GtkWidget *widget, gint scr)
 
     scr = CLAMP(scr, 0, widget->allocation.width-1);
     g_object_get(model, "x-logarithmic", &lg, NULL);
-    if (!lg)
+    if (!lg) 
         return area->x_min + scr*(area->x_max
                                   - area->x_min) /(widget->allocation.width-1);
-    else
+    else 
         return pow(10, log10(area->x_min)
-                   + scr*(log10(area->x_max
-                                - log10(area->x_min)))/(widget->allocation.width-1));
+                   + scr*(log10(area->x_max)
+                                - log10(area->x_min))/(widget->allocation.width-1));
+
 }
 
 static void
