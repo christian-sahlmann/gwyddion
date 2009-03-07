@@ -151,8 +151,6 @@ static const guchar* get_array_params  (const guchar *p,
                                         guint *xres,
                                         guint *yres,
                                         OPDArrayType *type);
-static guint         remove_bad_data   (GwyDataField *dfield,
-                                        GwyDataField *mfield);
 static void          clone_meta        (GwyContainer *container,
                                         GwyContainer *meta,
                                         guint nchannels);
@@ -162,7 +160,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Wyko OPD and ASC files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.4",
+    "0.5",
     "David Nečas (Yeti)",
     "2008",
 };
@@ -476,7 +474,7 @@ get_data_field(const OPDBlock *datablock,
             return NULL;
         }
     }
-    mcount = remove_bad_data(dfield, mfield);
+    mcount = gwy_app_channel_remove_bad_data(dfield, mfield);
 
     if (maskfield && mcount)
         *maskfield = mfield;
@@ -869,7 +867,7 @@ get_asc_data_field(gchar **p,
         }
     }
 
-    mcount = remove_bad_data(dfield, mfield);
+    mcount = gwy_app_channel_remove_bad_data(dfield, mfield);
 
     if (maskfield && mcount)
         *maskfield = mfield;
@@ -885,36 +883,6 @@ fail:
 }
 
 /***** Common *************************************************************/
-
-static guint
-remove_bad_data(GwyDataField *dfield, GwyDataField *mfield)
-{
-    gdouble *data = gwy_data_field_get_data(dfield);
-    gdouble *mdata = gwy_data_field_get_data(mfield);
-    gdouble *drow, *mrow;
-    gdouble avg;
-    guint i, j, mcount, xres, yres;
-
-    xres = gwy_data_field_get_xres(dfield);
-    yres = gwy_data_field_get_yres(dfield);
-    avg = gwy_data_field_area_get_avg(dfield, mfield, 0, 0, xres, yres);
-    mcount = 0;
-    for (i = 0; i < yres; i++) {
-        mrow = mdata + i*xres;
-        drow = data + i*xres;
-        for (j = 0; j < xres; j++) {
-            if (!mrow[j]) {
-                drow[j] = avg;
-                mcount++;
-            }
-            mrow[j] = 1.0 - mrow[j];
-        }
-    }
-
-    gwy_debug("mcount = %u", mcount);
-
-    return mcount;
-}
 
 static void
 clone_meta(GwyContainer *container, GwyContainer *meta, guint nchannels)

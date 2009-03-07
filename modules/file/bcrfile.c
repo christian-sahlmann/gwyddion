@@ -1,7 +1,7 @@
 /*
  *  $Id$
- *  Copyright (C) 2005 David Necas (Yeti), Petr Klbcrtek.
- *  E-mail: yeti@gwyddion.net, klbcrtek@gwyddion.net.
+ *  Copyright (C) 2005 David Necas (Yeti), Petr Klapetek.
+ *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -92,39 +92,34 @@ typedef enum {
     BCR_FILE_FLOAT = 4
 } BCRFileType;
 
-static gboolean      module_register           (void);
-static gint          bcrfile_detect          (const GwyFileDetectInfo *fileinfo,
-                                              gboolean only_name);
-static GwyContainer* bcrfile_load              (const gchar *filename,
-                                                GwyRunType mode,
-                                                GError **error);
-static GwyDataField* file_load_real            (const guchar *buffer,
-                                                gsize size,
-                                                gsize header_size,
-                                                GHashTable *meta,
-                                                GwyDataField **voidmask,
-                                                GError **error);
-static GwyDataField* read_data_field           (const guchar *buffer,
-                                                gint xres,
-                                                gint yres,
-                                                BCRFileType type,
-                                                gboolean little_endian);
-static GwyDataField* read_data_field_with_voids(const guchar *buffer,
-                                                gint xres,
-                                                gint yres,
-                                                BCRFileType type,
-                                                gboolean little_endian,
-                                                GwyDataField **voidmask);
-static void          load_metadata             (gchar *buffer,
-                                                GHashTable *meta);
-static GwyContainer* bcrfile_get_metadata      (GHashTable *bcrmeta);
+static gboolean      module_register     (void);
+static gint          bcrfile_detect      (const GwyFileDetectInfo *fileinfo,
+                                          gboolean only_name);
+static GwyContainer* bcrfile_load        (const gchar *filename,
+                                          GwyRunType mode,
+                                          GError **error);
+static GwyDataField* file_load_real      (const guchar *buffer,
+                                          gsize size,
+                                          gsize header_size,
+                                          GHashTable *meta,
+                                          GwyDataField **voidmask,
+                                          GError **error);
+static GwyDataField* read_data_field     (const guchar *buffer,
+                                          gint xres,
+                                          gint yres,
+                                          BCRFileType type,
+                                          gboolean little_endian,
+                                          GwyDataField **voidmask);
+static void          load_metadata       (gchar *buffer,
+                                          GHashTable *meta);
+static GwyContainer* bcrfile_get_metadata(GHashTable *bcrmeta);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Imports Image Metrology BCR data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.10",
+    "0.11",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -305,19 +300,13 @@ file_load_real(const guchar *buffer,
     if ((s = g_hash_table_lookup(meta, "intelmode")))
         intelmode = !!atol(s);
 
-    /* This is in fact an int, but we only care whether it's nonzero */
-    if ((s = g_hash_table_lookup(meta, "voidpixels")))
-        voidpixels = !!atol(s);
-
     if (err_SIZE_MISMATCH(error, xres*yres*type, (guint)(size - header_size),
                           FALSE))
         return NULL;
 
-    if (voidpixels)
-        dfield = read_data_field_with_voids(buffer, xres, yres,
-                                            type, intelmode, voidmask);
-    else
-        dfield = read_data_field(buffer, xres, yres, type, intelmode);
+    /* Do not trust `voidpixels' and always read data assuming the rules for
+     * bad pixels. */
+    dfield = read_data_field(buffer, xres, yres, type, intelmode, voidmask);
 
     if ((s = g_hash_table_lookup(meta, "xlength"))
         && (q = g_ascii_strtod(s, NULL)) > 0) {
@@ -429,89 +418,38 @@ read_data_field(const guchar *buffer,
                 gint xres,
                 gint yres,
                 BCRFileType type,
-                gboolean little_endian)
-{
-    const guint16 *p = (const guint16*)buffer;
-    GwyDataField *dfield;
-    gdouble *data;
-    guint i;
-
-    dfield = gwy_data_field_new(xres, yres, 1e-6, 1e-6, FALSE);
-    data = gwy_data_field_get_data(dfield);
-    switch (type) {
-        case BCR_FILE_INT16:
-        if (little_endian) {
-            for (i = 0; i < xres*yres; i++)
-                data[i] = GINT16_FROM_LE(p[i]);
-        }
-        else {
-            for (i = 0; i < xres*yres; i++)
-                data[i] = GINT16_FROM_BE(p[i]);
-        }
-        break;
-
-        case BCR_FILE_FLOAT:
-        if (little_endian) {
-            for (i = 0; i < xres*yres; i++)
-                data[i] = gwy_get_gfloat_le(&buffer);
-        }
-        else {
-            for (i = 0; i < xres*yres; i++)
-                data[i] = gwy_get_gfloat_be(&buffer);
-        }
-        gwy_data_field_multiply(dfield, 1e-9);
-        break;
-
-        default:
-        g_assert_not_reached();
-        break;
-    }
-
-    return dfield;
-}
-
-static GwyDataField*
-read_data_field_with_voids(const guchar *buffer,
-                           gint xres,
-                           gint yres,
-                           BCRFileType type,
-                           gboolean little_endian,
-                           GwyDataField **voidmask)
+                gboolean little_endian,
+                GwyDataField **voidmask)
 {
     const guint16 *p = (const guint16*)buffer;
     GwyDataField *dfield;
     gdouble *data, *voids;
-    gdouble sum;
-    guint i, ngood;
+    guint i;
 
     dfield = gwy_data_field_new(xres, yres, 1e-6, 1e-6, FALSE);
-    *voidmask = gwy_data_field_new(xres, yres, 1e-6, 1e-6, TRUE);
+    *voidmask = gwy_data_field_new(xres, yres, 1e-6, 1e-6, FALSE);
+    gwy_data_field_fill(*voidmask, 1.0);
+
     data = gwy_data_field_get_data(dfield);
     voids = gwy_data_field_get_data(*voidmask);
-    ngood = 0;
-    sum = 0.0;
     switch (type) {
         case BCR_FILE_INT16:
         if (little_endian) {
             for (i = 0; i < xres*yres; i++) {
-                data[i] = GINT16_FROM_LE(p[i]);
-                if (data[i] == 32767.0)
-                    voids[i] = 1.0;
-                else {
-                    ngood++;
-                    sum += data[i];
-                }
+                gdouble v = GINT16_FROM_LE(p[i]);
+                if (v == 32767.0)
+                    voids[i] = 0.0;
+                else
+                    data[i] = v;
             }
         }
         else {
             for (i = 0; i < xres*yres; i++) {
-                data[i] = GINT16_FROM_BE(p[i]);
-                if (data[i] == 32767.0)
-                    voids[i] = 1.0;
-                else {
-                    ngood++;
-                    sum += data[i];
-                }
+                gdouble v = GINT16_FROM_BE(p[i]);
+                if (v == 32767.0)
+                    voids[i] = 0.0;
+                else
+                    data[i] = v;
             }
         }
         break;
@@ -519,24 +457,20 @@ read_data_field_with_voids(const guchar *buffer,
         case BCR_FILE_FLOAT:
         if (little_endian) {
             for (i = 0; i < xres*yres; i++) {
-                data[i] = gwy_get_gfloat_le(&buffer);
-                if (data[i] > 1.7e38)
-                    voids[i] = 1.0;
-                else {
-                    ngood++;
-                    sum += data[i];
-                }
+                gdouble v = gwy_get_gfloat_le(&buffer);
+                if (v > 1.7e38)
+                    voids[i] = 0.0;
+                else
+                    data[i] = v;
             }
         }
         else {
             for (i = 0; i < xres*yres; i++) {
-                data[i] = gwy_get_gfloat_be(&buffer);
-                if (data[i] > 1.7e38)
-                    voids[i] = 1.0;
-                else {
-                    ngood++;
-                    sum += data[i];
-                }
+                gdouble v = gwy_get_gfloat_be(&buffer);
+                if (v > 1.7e38)
+                    voids[i] = 0.0;
+                else
+                    data[i] = v;
             }
         }
         gwy_data_field_multiply(dfield, 1e-9);
@@ -547,21 +481,8 @@ read_data_field_with_voids(const guchar *buffer,
         break;
     }
 
-    if (!ngood || ngood == xres*yres) {
-        if (!ngood) {
-            g_warning("Data contain no valid pixels.");
-            gwy_data_field_clear(dfield);
-        }
+    if (!gwy_app_channel_remove_bad_data(dfield, *voidmask))
         gwy_object_unref(*voidmask);
-        return dfield;
-    }
-
-    /* Replace void data with mean value */
-    sum /= ngood;
-    for (i = 0; i < xres*yres; i++) {
-        if (voids[i])
-            data[i] = sum;
-    }
 
     return dfield;
 }

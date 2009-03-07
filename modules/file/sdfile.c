@@ -141,7 +141,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Surfstand group SDF (Surface Data File) files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.9",
+    "0.10",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -431,13 +431,6 @@ sdfile_export_text(G_GNUC_UNUSED GwyContainer *data,
     return TRUE;
 }
 
-#define GET_MICROMAP_PARAM(hash, key, val, error, var) \
-    if (!(val = g_hash_table_lookup(hash, key))) { \
-        err_MISSING_FIELD(error, key); \
-        goto fail; \
-    } \
-    var = g_ascii_strtod(val, NULL)
-
 static GwyContainer*
 micromap_load(const gchar *filename,
               G_GNUC_UNUSED GwyRunType mode,
@@ -450,7 +443,6 @@ micromap_load(const gchar *filename,
     GError *err = NULL;
     GwyDataField *dfield = NULL;
     gdouble objectivemag, tubemag, cameraxpixel, cameraypixel;
-    const gchar *val;
 
     if (!g_file_get_contents(filename, &buffer, &size, &err)) {
         err_GET_FILE_CONTENTS(error, &err);
@@ -471,10 +463,20 @@ micromap_load(const gchar *filename,
         err_MISSING_FIELD(error, "OBJECTIVEMAG");
         goto fail;
     }
-    GET_MICROMAP_PARAM(sdfile.extras, "OBJECTIVEMAG", val, error, objectivemag);
-    GET_MICROMAP_PARAM(sdfile.extras, "TUBEMAG", val, error, tubemag);
-    GET_MICROMAP_PARAM(sdfile.extras, "CAMERAXPIXEL", val, error, cameraxpixel);
-    GET_MICROMAP_PARAM(sdfile.extras, "CAMERAYPIXEL", val, error, cameraypixel);
+
+    if (!require_keys(sdfile.extras, error,
+                      "OBJECTIVEMAG", "TUBEMAG", "CAMERAXPIXEL", "CAMERAYPIXEL",
+                      NULL))
+        goto fail;
+
+    objectivemag = g_ascii_strtod(g_hash_table_lookup(sdfile.extras,
+                                                      "OBJECTIVEMAG"), NULL);
+    tubemag = g_ascii_strtod(g_hash_table_lookup(sdfile.extras,
+                                                 "TUBEMAG"), NULL);
+    cameraxpixel = g_ascii_strtod(g_hash_table_lookup(sdfile.extras,
+                                                      "CAMERAXPIXEL"), NULL);
+    cameraypixel = g_ascii_strtod(g_hash_table_lookup(sdfile.extras,
+                                                      "CAMERAYPIXEL"), NULL);
 
     sdfile_set_units(&sdfile, dfield);
     gwy_data_field_set_xreal(dfield,

@@ -167,7 +167,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports binary MetroPro (Zygo) data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.4",
+    "0.5",
     "David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
@@ -468,43 +468,15 @@ set_units(GwyDataField *dfield,
     g_object_unref(siunit);
 }
 
-static void
-fix_void_pixels(GwyDataField *dfield,
-                GwyDataField *vpmask,
-                gdouble avg)
-{
-    GwySIUnit *siunit;
-    const gdouble *mask;
-    gdouble *data;
-    gint i, n;
-
-    data = gwy_data_field_get_data(dfield);
-    mask = gwy_data_field_get_data_const(vpmask);
-    n = gwy_data_field_get_xres(dfield)*gwy_data_field_get_yres(dfield);
-    for (i = 0; i < n; i++) {
-        if (mask[i])
-            data[i] = avg;
-    }
-
-    siunit = gwy_data_field_get_si_unit_xy(dfield);
-    siunit = gwy_si_unit_duplicate(siunit);
-    gwy_data_field_set_si_unit_xy(vpmask, siunit);
-    g_object_unref(siunit);
-
-    siunit = gwy_si_unit_new("");
-    gwy_data_field_set_si_unit_z(vpmask, siunit);
-    g_object_unref(siunit);
-}
-
 static gint
 fill_data_fields(MProFile *mprofile,
                  const guchar *buffer)
 {
     GwyDataField *dfield, *vpmask;
     gdouble *data, *mask;
-    gdouble xreal, yreal, q, avg;
+    gdouble xreal, yreal, q;
     const guchar *p;
-    guint n, id, i, j, nvoid, ndata;
+    guint n, id, i, j, ndata;
 
     ndata = 0;
     mprofile->intensity_data = NULL;
@@ -524,7 +496,6 @@ fill_data_fields(MProFile *mprofile,
 
     if (mprofile->nbuckets) {
         const guint16 *d16;
-        guint16 d;
 
         mprofile->intensity_data = g_new(GwyDataField*, mprofile->nbuckets);
         mprofile->intensity_mask = g_new(GwyDataField*, mprofile->nbuckets);
@@ -547,33 +518,26 @@ fill_data_fields(MProFile *mprofile,
                                         mprofile->intens_yres,
                                         xreal, yreal,
                                         FALSE);
-            vpmask = gwy_data_field_new_alike(dfield, TRUE);
+            vpmask = gwy_data_field_new_alike(dfield, FALSE);
+            gwy_data_field_fill(vpmask, 1.0);
             data = gwy_data_field_get_data(dfield);
             mask = gwy_data_field_get_data(vpmask);
             d16 = (const guint16*)p;
-            avg = 0.0;
-            nvoid = 0;
             for (i = 0; i < mprofile->intens_yres; i++) {
                 for (j = 0; j < mprofile->intens_xres; j++) {
-                    d = q*GUINT16_FROM_BE(*d16);
-                    *data = q*d;
-                    if (*d16 >= 65412) {
-                        nvoid++;
-                        mask[i*mprofile->intens_xres + j] = 1.0;
+                    guint v16 = GUINT16_FROM_BE(*d16);
+                    if (v16 >= 65412) {
+                        mask[i*mprofile->intens_xres + j] = 0.0;
                     }
                     else
-                        avg += *data;
+                        *data = q*v16;
                     d16++;
                     data++;
                 }
             }
 
-            gwy_debug("intens_nvoid[%u]: %u", id, nvoid);
             set_units(dfield, mprofile, "");
-            if (nvoid)
-                fix_void_pixels(dfield, vpmask,
-                                nvoid == n ? 0.0 : avg/(n - nvoid));
-            else
+            if (!gwy_app_channel_remove_bad_data(dfield, vpmask))
                 gwy_object_unref(vpmask);
 
             mprofile->intensity_data[id] = dfield;
@@ -613,33 +577,26 @@ fill_data_fields(MProFile *mprofile,
                                     mprofile->phase_yres,
                                     xreal, yreal,
                                     FALSE);
-        vpmask = gwy_data_field_new_alike(dfield, TRUE);
+        vpmask = gwy_data_field_new_alike(dfield, FALSE);
+        gwy_data_field_fill(vpmask, 1.0);
         data = gwy_data_field_get_data(dfield);
         mask = gwy_data_field_get_data(vpmask);
         d32 = (const gint32*)p;
-        avg = 0.0;
-        nvoid = 0;
         for (i = 0; i < mprofile->phase_yres; i++) {
             for (j = 0; j < mprofile->phase_xres; j++) {
                 d = GINT32_FROM_BE(*d32);
-                *data = q*d;
                 if (d >= 2147483640) {
-                    nvoid++;
-                    mask[i*mprofile->phase_xres + j] = 1.0;
+                    mask[i*mprofile->phase_xres + j] = 0.0;
                 }
                 else
-                    avg += *data;
+                    *data = q*d;
                 d32++;
                 data++;
             }
         }
 
-        gwy_debug("phase_nvoid: %u", nvoid);
         set_units(dfield, mprofile, "m");
-        if (nvoid)
-            fix_void_pixels(dfield, vpmask,
-                            nvoid == n ? 0.0 : avg/(n - nvoid));
-        else
+        if (!gwy_app_channel_remove_bad_data(dfield, vpmask))
             gwy_object_unref(vpmask);
 
         mprofile->phase_data = dfield;

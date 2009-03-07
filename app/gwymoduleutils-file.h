@@ -24,6 +24,7 @@
 #include <string.h>
 #include <glib/gutils.h>
 #include <libgwyddion/gwycontainer.h>
+#include <libprocess/datafield.h>
 
 G_BEGIN_DECLS
 
@@ -309,6 +310,8 @@ gboolean gwy_app_channel_check_nonsquare(GwyContainer *data,
                                          gint id);
 gboolean gwy_app_channel_title_fall_back(GwyContainer *data,
                                          gint id);
+guint    gwy_app_channel_remove_bad_data(GwyDataField *dfield,
+                                         GwyDataField *mfield);
 
 G_END_DECLS
 

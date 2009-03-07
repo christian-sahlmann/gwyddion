@@ -185,8 +185,6 @@ static GwyGraphModel* sensofar_read_profile  (SensofarDataDesc *data_desc,
                                               const guchar **p,
                                               gsize size,
                                               GError **error);
-static guint         remove_bad_data         (GwyDataField *dfield,
-                                              GwyDataField *mfield);
 static gboolean      parses_as_date          (const gchar *str);
 
 static GwyModuleInfo module_info = {
@@ -195,7 +193,7 @@ static GwyModuleInfo module_info = {
     N_("Imports Sensofar PLu file format, "
        "version 2000 or newer."),
     "Jan Hořák <xhorak@gmail.com>, Yeti <yeti@gwyddion.net>",
-    "0.2",
+    "0.3",
     "David Nečas (Yeti) & Jan Hořák",
     "2008",
 };
@@ -420,7 +418,7 @@ sensofar_read_data_field(SensofarDataDesc *data_desc,
     //gwy_data_field_set_xoffset(d, pow10(power10)*data_desc.axes_config.x_0);
     //gwy_data_field_set_yoffset(d, pow10(power10)*data_desc.axes_config.y_0);
 
-    mcount = remove_bad_data(dfield, mfield);
+    mcount = gwy_app_channel_remove_bad_data(dfield, mfield);
 
     if (maskfield && mcount)
         *maskfield = mfield;
@@ -500,36 +498,6 @@ sensofar_read_profile(SensofarDataDesc *data_desc,
     g_object_unref(gcmodel);
 
     return gmodel;
-}
-
-static guint
-remove_bad_data(GwyDataField *dfield, GwyDataField *mfield)
-{
-    gdouble *data = gwy_data_field_get_data(dfield);
-    gdouble *mdata = gwy_data_field_get_data(mfield);
-    gdouble *drow, *mrow;
-    gdouble avg;
-    guint i, j, mcount, xres, yres;
-
-    xres = gwy_data_field_get_xres(dfield);
-    yres = gwy_data_field_get_yres(dfield);
-    avg = gwy_data_field_area_get_avg(dfield, mfield, 0, 0, xres, yres);
-    mcount = 0;
-    for (i = 0; i < yres; i++) {
-        mrow = mdata + i*xres;
-        drow = data + i*xres;
-        for (j = 0; j < xres; j++) {
-            if (!mrow[j]) {
-                drow[j] = avg;
-                mcount++;
-            }
-            mrow[j] = 1.0 - mrow[j];
-        }
-    }
-
-    gwy_debug("mcount = %u", mcount);
-
-    return mcount;
 }
 
 /* File starts with date, try to parse it.

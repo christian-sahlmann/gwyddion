@@ -127,9 +127,6 @@ static GwyContainer*   nanoscope_get_metadata(GHashTable *hash,
                                               GList *list);
 static NanoscopeValue* parse_value           (const gchar *key,
                                               gchar *line);
-static gboolean        require_keys          (GHashTable *hash,
-                                              GError **error,
-                                              ...);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -956,27 +953,6 @@ parse_value(const gchar *key, gchar *line)
     }
 
     return val;
-}
-
-static gboolean
-require_keys(GHashTable *hash,
-             GError **error,
-             ...)
-{
-    va_list ap;
-    const gchar *key;
-
-    va_start(ap, error);
-    while ((key = va_arg(ap, const gchar *))) {
-        if (!g_hash_table_lookup(hash, key)) {
-            err_MISSING_FIELD(error, key);
-            va_end(ap);
-            return FALSE;
-        }
-    }
-    va_end(ap);
-
-    return TRUE;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

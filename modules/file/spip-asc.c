@@ -55,17 +55,15 @@
 
 #define Nanometer (1e-9)
 
-static gboolean      module_register   (void);
-static gint          asc_detect        (const GwyFileDetectInfo *fileinfo,
-                                        gboolean only_name);
-static GwyContainer* asc_load          (const gchar *filename,
-                                        GwyRunType mode,
-                                        GError **error);
-static gboolean require_keys           (GHashTable *hash,
-                                        GError **error,
-                                        ...);
-static guint         remove_bad_data   (GwyDataField *dfield,
-                                        GwyDataField *mfield);
+static gboolean      module_register(void);
+static gint          asc_detect     (const GwyFileDetectInfo *fileinfo,
+                                     gboolean only_name);
+static GwyContainer* asc_load       (const gchar *filename,
+                                     GwyRunType mode,
+                                     GError **error);
+static gboolean      require_keys   (GHashTable *hash,
+                                     GError **error,
+                                     ...);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -229,7 +227,7 @@ asc_load(const gchar *filename,
             data[i] = 1.0 - g_ascii_strtod(value, &p);
             value = p;
         }
-        if (!remove_bad_data(dfield, mfield))
+        if (!gwy_app_channel_remove_bad_data(dfield, mfield))
             gwy_object_unref(mfield);
     }
 
@@ -249,57 +247,6 @@ fail:
     g_hash_table_destroy(hash);
 
     return container;
-}
-
-static gboolean
-require_keys(GHashTable *hash,
-             GError **error,
-             ...)
-{
-    va_list ap;
-    const gchar *key;
-
-    va_start(ap, error);
-    while ((key = va_arg(ap, const gchar *))) {
-        if (!g_hash_table_lookup(hash, key)) {
-            err_MISSING_FIELD(error, key);
-            va_end(ap);
-            return FALSE;
-        }
-    }
-    va_end(ap);
-
-    return TRUE;
-}
-
-static guint
-remove_bad_data(GwyDataField *dfield, GwyDataField *mfield)
-{
-    gdouble *data = gwy_data_field_get_data(dfield);
-    gdouble *mdata = gwy_data_field_get_data(mfield);
-    gdouble *drow, *mrow;
-    gdouble avg;
-    guint i, j, mcount, xres, yres;
-
-    xres = gwy_data_field_get_xres(dfield);
-    yres = gwy_data_field_get_yres(dfield);
-    avg = gwy_data_field_area_get_avg(dfield, mfield, 0, 0, xres, yres);
-    mcount = 0;
-    for (i = 0; i < yres; i++) {
-        mrow = mdata + i*xres;
-        drow = data + i*xres;
-        for (j = 0; j < xres; j++) {
-            if (!mrow[j]) {
-                drow[j] = avg;
-                mcount++;
-            }
-            mrow[j] = 1.0 - mrow[j];
-        }
-    }
-
-    gwy_debug("mcount = %u", mcount);
-
-    return mcount;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

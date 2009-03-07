@@ -58,9 +58,6 @@ static GwyContainer* slf_load       (const gchar *filename,
                                      GwyRunType mode,
                                      GError **error);
 static GHashTable*   read_hash      (gchar *buffer);
-static gboolean      require_keys   (GHashTable *hash,
-                                     GError **error,
-                                     ...);
 static GwyContainer* add_metadata   (GHashTable *hash,
                                      ...);
 
@@ -305,27 +302,6 @@ read_hash(gchar *buffer)
     }
 
     return hash;
-}
-
-static gboolean
-require_keys(GHashTable *hash,
-             GError **error,
-             ...)
-{
-    va_list ap;
-    const gchar *key;
-
-    va_start(ap, error);
-    while ((key = va_arg(ap, const gchar *))) {
-        if (!g_hash_table_lookup(hash, key)) {
-            err_MISSING_FIELD(error, key);
-            va_end(ap);
-            return FALSE;
-        }
-    }
-    va_end(ap);
-
-    return TRUE;
 }
 
 static GwyContainer*

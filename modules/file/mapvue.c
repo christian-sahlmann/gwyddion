@@ -366,8 +366,6 @@ static GwyDataField* read_data_field       (const gint32 *d32,
                                             gint xres,
                                             gint yres,
                                             GwyDataField **maskfield);
-static guint         remove_bad_data       (GwyDataField *dfield,
-                                            GwyDataField *mfield);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -1193,7 +1191,7 @@ read_data_field(const gint32 *d32,
         }
     }
 
-    mcount = remove_bad_data(dfield, mfield);
+    mcount = gwy_app_channel_remove_bad_data(dfield, mfield);
 
     if (maskfield && mcount)
         *maskfield = mfield;
@@ -1201,38 +1199,6 @@ read_data_field(const gint32 *d32,
         g_object_unref(mfield);
 
     return dfield;
-}
-
-/***** Common *************************************************************/
-
-static guint
-remove_bad_data(GwyDataField *dfield, GwyDataField *mfield)
-{
-    gdouble *data = gwy_data_field_get_data(dfield);
-    gdouble *mdata = gwy_data_field_get_data(mfield);
-    gdouble *drow, *mrow;
-    gdouble avg;
-    guint i, j, mcount, xres, yres;
-
-    xres = gwy_data_field_get_xres(dfield);
-    yres = gwy_data_field_get_yres(dfield);
-    avg = gwy_data_field_area_get_avg(dfield, mfield, 0, 0, xres, yres);
-    mcount = 0;
-    for (i = 0; i < yres; i++) {
-        mrow = mdata + i*xres;
-        drow = data + i*xres;
-        for (j = 0; j < xres; j++) {
-            if (!mrow[j]) {
-                drow[j] = avg;
-                mcount++;
-            }
-            mrow[j] = 1.0 - mrow[j];
-        }
-    }
-
-    gwy_debug("mcount = %u", mcount);
-
-    return mcount;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

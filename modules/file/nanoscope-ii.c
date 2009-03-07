@@ -65,9 +65,6 @@ static GwyDataField*   hash_to_data_field    (GHashTable *hash,
                                               GError **error);
 static GHashTable*     read_hash             (gchar *buffer,
                                               GError **error);
-static gboolean        require_keys          (GHashTable *hash,
-                                              GError **error,
-                                              ...);
 static GwyContainer*   nanoscope_get_metadata(GHashTable *hash);
 
 static GwyModuleInfo module_info = {
@@ -260,27 +257,6 @@ read_hash(gchar *buffer,
     }
 
     return hash;
-}
-
-static gboolean
-require_keys(GHashTable *hash,
-             GError **error,
-             ...)
-{
-    va_list ap;
-    const gchar *key;
-
-    va_start(ap, error);
-    while ((key = va_arg(ap, const gchar *))) {
-        if (!g_hash_table_lookup(hash, key)) {
-            err_MISSING_FIELD(error, key);
-            va_end(ap);
-            return FALSE;
-        }
-    }
-    va_end(ap);
-
-    return TRUE;
 }
 
 static GwyContainer*

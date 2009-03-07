@@ -19,7 +19,8 @@
  */
 
 #include "config.h"
-#include <libprocess/datafield.h>
+#include <libgwyddion/gwymacros.h>
+#include <libprocess/stats.h>
 #include <app/data-browser.h>
 #include <app/gwymoduleutils-file.h>
 
@@ -138,6 +139,57 @@ gwy_app_channel_title_fall_back(GwyContainer *data,
     }
 
     return FALSE;
+}
+
+/**
+ * gwy_app_channel_remove_bad_data:
+ * @dfield: A data field.  The values of bad data points are ignored and might
+ *          be even left uninitialized.
+ * @mfield: A mask field containing 1.0 in place of good data points, 1.0 in
+ *          place of bad points.  It will be inverted to become the mask of
+ *          bad points.
+ *
+ * Replaces bad data points with some neutral values.
+ *
+ * Since Gwyddion has no concept of bad data points, they are usually marked
+ * with a mask and replaced with some neutral values upon import, leaving the
+ * user to decide how to proceed further.  This helper function performs such
+ * replacement, using the average of all good points as the neutral replacement
+ * value (at this moment).
+ *
+ * Returns: The number of bad data points replaced.  If zero is returned, all
+ *          points are good and there is no need for masking.
+ *
+ * Since: 2.14
+ **/
+guint
+gwy_app_channel_remove_bad_data(GwyDataField *dfield, GwyDataField *mfield)
+{
+    gdouble *data = gwy_data_field_get_data(dfield);
+    gdouble *mdata = gwy_data_field_get_data(mfield);
+    gdouble *drow, *mrow;
+    gdouble avg;
+    guint i, j, mcount, xres, yres;
+
+    xres = gwy_data_field_get_xres(dfield);
+    yres = gwy_data_field_get_yres(dfield);
+    avg = gwy_data_field_area_get_avg(dfield, mfield, 0, 0, xres, yres);
+    mcount = 0;
+    for (i = 0; i < yres; i++) {
+        mrow = mdata + i*xres;
+        drow = data + i*xres;
+        for (j = 0; j < xres; j++) {
+            if (!mrow[j]) {
+                drow[j] = avg;
+                mcount++;
+            }
+            mrow[j] = 1.0 - mrow[j];
+        }
+    }
+
+    gwy_debug("mcount = %u", mcount);
+
+    return mcount;
 }
 
 /************************** Documentation ****************************/
