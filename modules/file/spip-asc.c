@@ -61,9 +61,6 @@ static gint          asc_detect     (const GwyFileDetectInfo *fileinfo,
 static GwyContainer* asc_load       (const gchar *filename,
                                      GwyRunType mode,
                                      GError **error);
-static gboolean      require_keys   (GHashTable *hash,
-                                     GError **error,
-                                     ...);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
