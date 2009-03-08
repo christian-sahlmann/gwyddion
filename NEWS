@@ -7,8 +7,10 @@ Libraries:
   some to actually translate them.
 - libprocess: Profile extraction auto number of samples always corresponds to
   the number of pixels for horizontal and vertical lines.
-- libgwydgets: corrected wrong x-axis value reported for mouse selection in GwyGraph
-  in x-axis logarithmic mode.
+- libgwyapp: A helper function for interpolation of bad pixels upon data import
+  was added.
+- libgwydgets: Corrected wrong x-axis value reported for mouse selection in
+  GwyGraph in x-axis logarithmic mode.
 
 Modules:
 - Sensolytics (new): Imports Sensolytics file format.
