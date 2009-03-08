@@ -36,6 +36,7 @@ process_LTLIBRARIES = \
 	level.la \
 	linecorrect.la \
 	local_contrast.la \
+	mark_with.la \
 	maskcor.la \
 	maskops.la \
 	median-bg.la \
@@ -122,6 +123,7 @@ laplace_la_SOURCES = laplace.c
 level_la_SOURCES = level.c
 linecorrect_la_SOURCES = linecorrect.c
 local_contrast_la_SOURCES = local_contrast.c
+mark_with_la_SOURCES = mark_with.c
 maskcor_la_SOURCES = maskcor.c
 maskops_la_SOURCES = maskops.c
 median_bg_la_SOURCES = median-bg.c
