@@ -92,53 +92,51 @@ typedef struct {
     GwyDataObjectId target;
     GwyDataObjectId source;
     MarkArgs *args;
+    gboolean calculated;
 } MarkControls;
 
-static gboolean module_register            (void);
-static void     mark                       (GwyContainer *data,
-                                            GwyRunType run);
-static void     mark_dialog                (MarkArgs *args,
-                                            const GwyDataObjectId *target,
-                                            GQuark mquark);
-static void     mark_load_args             (GwyContainer *container,
-                                            MarkArgs *args);
-static void     mark_save_args             (GwyContainer *container,
-                                            MarkArgs *args);
-static void     mark_sanitize_args         (MarkArgs *args);
-static void     mark_run                   (MarkControls *controls,
-                                            MarkArgs *args);
-static void     mark_do                    (MarkControls *controls);
-static void     mark_dialog_abandon        (MarkControls *controls,
-                                            MarkArgs *args);
-static void     operation_changed          (MarkControls *controls,
-                                            GtkWidget *button);
-static void     mark_with_changed          (GtkWidget *button,
-                                            MarkControls *controls);
-static void     channel_changed            (GwyDataChooser *chooser,
-                                            MarkControls *controls);
-static void     min_changed                (MarkControls *controls,
-                                            GtkAdjustment *adj);
-static void     max_changed                (MarkControls *controls,
-                                            GtkAdjustment *adj);
-static void     update_changed_cb          (GtkToggleButton *button,
-                                            MarkControls *controls);
-static void     update_view                (MarkControls *controls,
-                                            MarkArgs *args);
-static void     setup_source_view_data     (MarkControls *controls);
-static void     update_source_mask         (MarkControls *controls);
-static void     gwy_data_field_threshold_to(GwyDataField *source,
-                                            GwyDataField *dest,
-                                            gdouble min,
-                                            gdouble max);
-static gboolean mask_attach_filter         (GwyContainer *source,
-                                            gint id,
-                                            gpointer user_data);
-static gboolean data_attach_filter         (GwyContainer *source,
-                                            gint id,
-                                            gpointer user_data);
-static gboolean show_attach_filter         (GwyContainer *source,
-                                            gint id,
-                                            gpointer user_data);
+static gboolean      module_register            (void);
+static void          mark                       (GwyContainer *data,
+                                                 GwyRunType run);
+static void          mark_dialog                (MarkArgs *args,
+                                                 const GwyDataObjectId *target,
+                                                 GQuark mquark);
+static void          mark_load_args             (GwyContainer *container,
+                                                 MarkArgs *args);
+static void          mark_save_args             (GwyContainer *container,
+                                                 MarkArgs *args);
+static void          mark_sanitize_args         (MarkArgs *args);
+static void          operation_changed          (MarkControls *controls,
+                                                 GtkWidget *button);
+static void          mark_with_changed          (GtkWidget *button,
+                                                 MarkControls *controls);
+static void          channel_changed            (GwyDataChooser *chooser,
+                                                 MarkControls *controls);
+static void          min_changed                (MarkControls *controls,
+                                                 GtkAdjustment *adj);
+static void          max_changed                (MarkControls *controls,
+                                                 GtkAdjustment *adj);
+static void          update_changed             (GtkToggleButton *button,
+                                                 MarkControls *controls);
+static void          perform_operation          (MarkControls *controls);
+static void          setup_source_view_data     (MarkControls *controls);
+static void          ensure_mask_color          (GwyContainer *container,
+                                                 const gchar *prefix);
+static void          update_source_mask         (MarkControls *controls);
+static GwyDataField* create_mask_field          (GwyDataField *dfield);
+static void          gwy_data_field_threshold_to(GwyDataField *source,
+                                                 GwyDataField *dest,
+                                                 gdouble min,
+                                                 gdouble max);
+static gboolean      mask_attach_filter         (GwyContainer *source,
+                                                 gint id,
+                                                 gpointer user_data);
+static gboolean      data_attach_filter         (GwyContainer *source,
+                                                 gint id,
+                                                 gpointer user_data);
+static gboolean      show_attach_filter         (GwyContainer *source,
+                                                 gint id,
+                                                 gpointer user_data);
 
 static const MarkArgs mark_with_defaults = {
     MARK_WITH_MASK,
@@ -258,11 +256,11 @@ mark_dialog(MarkArgs *args,
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox,
                        TRUE, TRUE, 4);
 
-    /* store pointer to data container */
     controls.args = args;
     controls.target = *target;
     controls.source = *target;
     controls.original_mask = NULL;
+    controls.calculated = FALSE;
     /* 0 == source, 1 == result */
     controls.mydata = gwy_container_new();
 
@@ -282,7 +280,13 @@ mark_dialog(MarkArgs *args,
                             GWY_DATA_ITEM_RANGE,
                             GWY_DATA_ITEM_REAL_SQUARE,
                             0);
-    /* TODO: setup the result mask */
+    if (controls.original_mask)
+        dfield = gwy_data_field_duplicate(controls.original_mask);
+    else
+        dfield = create_mask_field(dfield);
+    gwy_container_set_object_by_name(controls.mydata, "/1/mask", dfield);
+    g_object_unref(dfield);
+    ensure_mask_color(controls.mydata, "/1/mask");
 
     vbox = gtk_vbox_new(FALSE, 4);
     gtk_box_pack_start(GTK_BOX(hbox), vbox, FALSE, FALSE, 4);
@@ -424,7 +428,7 @@ mark_dialog(MarkArgs *args,
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.update),
                                  args->update);
     g_signal_connect(controls.update, "toggled",
-                     G_CALLBACK(update_changed_cb), &controls);
+                     G_CALLBACK(update_changed), &controls);
     row++;
 
     /* Ensure something sensible is selected.  We know that at least the data
@@ -454,11 +458,15 @@ mark_dialog(MarkArgs *args,
             break;
 
             case GTK_RESPONSE_OK:
-            mark_do(&controls);
+            if (!controls.calculated) {
+                setup_source_view_data(&controls);
+                update_source_mask(&controls);
+            }
             break;
 
             case RESPONSE_PREVIEW:
-            mark_run(&controls, args);
+            setup_source_view_data(&controls);
+            update_source_mask(&controls);
             break;
 
             default:
@@ -468,55 +476,66 @@ mark_dialog(MarkArgs *args,
     } while (response != GTK_RESPONSE_OK);
 
     gtk_widget_destroy(dialog);
-    mark_dialog_abandon(&controls, args);
-}
 
-static void
-mark_dialog_abandon(MarkControls *controls,
-                    G_GNUC_UNUSED MarkArgs *args)
-{
-    g_object_unref(controls->mydata);
-}
+    dfield = gwy_container_get_object_by_name(controls.mydata, "/1/mask");
+    gwy_app_undo_qcheckpointv(target->data, 1, &mquark);
+    gwy_container_set_object(target->data, mquark, dfield);
 
-/*update preview depending on user's wishes*/
-static void
-update_view(MarkControls *controls,
-            MarkArgs *args)
-{
-    GwyDataField *rfield;
-
-    gwy_debug("args->update = %d", args->update);
-    rfield = gwy_container_get_object_by_name(controls->mydata, "/0/data");
-
-    gwy_data_field_data_changed(rfield);
+    g_object_unref(controls.mydata);
 }
 
 /*fit data*/
 static void
-mark_run(MarkControls *controls,
-            MarkArgs *args)
+perform_operation(MarkControls *controls)
 {
-    update_view(controls, args);
-}
+    MarkArgs *args = controls->args;
+    GwyDataField *source, *mfield;
 
-/*dialog finished, export result data*/
-static void
-mark_do(MarkControls *controls)
-{
-    GwyDataField *rfield;
-    gint newid;
+    source = gwy_container_get_object_by_name(controls->mydata, "/0/mask");
+    mfield = gwy_container_get_object_by_name(controls->mydata, "/1/mask");
 
-    rfield = gwy_container_get_object_by_name(controls->mydata, "/0/data");
-    /*
-    newid = gwy_app_data_browser_add_data_field(rfield, controls->original_data,
-                                                TRUE);
-                                                */
+    /* Simple cases. */
+    if (!controls->original_mask || args->operation == MASK_EDIT_SET) {
+        if (args->operation == MASK_EDIT_SET
+            || args->operation == MASK_EDIT_ADD)
+            gwy_data_field_copy(source, mfield, FALSE);
+        else
+            gwy_data_field_clear(mfield);
+
+        gwy_data_field_data_changed(mfield);
+        return;
+    }
+
+    /* Not so simple cases. */
+    if (args->operation == MASK_EDIT_ADD)
+        gwy_data_field_max_of_fields(mfield, controls->original_mask, source);
+    else if (args->operation == MASK_EDIT_INTERSECT)
+        gwy_data_field_min_of_fields(mfield, controls->original_mask, source);
+    else if (args->operation == MASK_EDIT_REMOVE) {
+        const gdouble *sdata, *odata;
+        gdouble *mdata;
+        gint i, n;
+
+        n = gwy_data_field_get_xres(source) * gwy_data_field_get_yres(source);
+        mdata = gwy_data_field_get_data(mfield);
+        odata = gwy_data_field_get_data_const(controls->original_mask);
+        sdata = gwy_data_field_get_data_const(source);
+        for (i = 0; i < n; i++)
+            mdata[i] = MIN(odata[i], 1.0 - sdata[i]);
+    }
+
+    gwy_data_field_data_changed(mfield);
+    controls->calculated = TRUE;
 }
 
 static void
 operation_changed(MarkControls *controls,
                   GtkWidget *button)
 {
+    controls->args->operation = gwy_radio_button_get_value(button);
+    controls->calculated = FALSE;
+    if (controls->args->update)
+        perform_operation(controls);
 }
 
 static void
@@ -531,8 +550,8 @@ mark_with_changed(GtkWidget *button,
     gwy_table_hscale_set_sensitive(GTK_OBJECT(controls->max),
                                    controls->args->mark_with != MARK_WITH_MASK);
 
-    setup_source_view_data(controls);
-    update_source_mask(controls);
+    channel_changed(GWY_DATA_CHOOSER(controls->channels[controls->args->mark_with]),
+                    controls);
 }
 
 static void
@@ -542,8 +561,11 @@ channel_changed(GwyDataChooser *chooser,
     /* The channel type is recorded in mark_with, it cannot change here. */
     controls->source.data = gwy_data_chooser_get_active(chooser,
                                                         &controls->source.id);
-    setup_source_view_data(controls);
-    update_source_mask(controls);
+    controls->calculated = FALSE;
+    if (controls->args->update) {
+        setup_source_view_data(controls);
+        update_source_mask(controls);
+    }
 }
 
 static void
@@ -551,7 +573,9 @@ min_changed(MarkControls *controls,
             GtkAdjustment *adj)
 {
     controls->args->min = gtk_adjustment_get_value(adj)/100.0;
-    update_source_mask(controls);
+    controls->calculated = FALSE;
+    if (controls->args->update)
+        update_source_mask(controls);
 }
 
 static void
@@ -559,21 +583,9 @@ max_changed(MarkControls *controls,
             GtkAdjustment *adj)
 {
     controls->args->max = gtk_adjustment_get_value(adj)/100.0;
-    update_source_mask(controls);
-}
-
-static GwyDataField*
-create_mask_field(GwyDataField *dfield)
-{
-    GwyDataField *mfield;
-    GwySIUnit *siunit;
-
-    mfield = gwy_data_field_new_alike(dfield, FALSE);
-    siunit = gwy_si_unit_new(NULL);
-    gwy_data_field_set_si_unit_z(mfield, siunit);
-    g_object_unref(siunit);
-
-    return mfield;
+    controls->calculated = FALSE;
+    if (controls->args->update)
+        update_source_mask(controls);
 }
 
 static void
@@ -581,7 +593,6 @@ setup_source_view_data(MarkControls *controls)
 {
     MarkArgs *args = controls->args;
     GwyDataField *dfield, *mfield;
-    GwyRGBA rgba;
     GQuark quark;
 
     /* Base field to display under the source mask.  This is read-only, so
@@ -626,9 +637,18 @@ setup_source_view_data(MarkControls *controls)
                             GWY_DATA_ITEM_REAL_SQUARE,
                             0);
 
-    if (!gwy_rgba_get_from_container(&rgba, controls->mydata, "/0/mask")) {
+    ensure_mask_color(controls->mydata, "/0/mask");
+}
+
+static void
+ensure_mask_color(GwyContainer *container,
+                  const gchar *prefix)
+{
+    GwyRGBA rgba;
+
+    if (!gwy_rgba_get_from_container(&rgba, container, prefix)) {
         gwy_rgba_get_from_container(&rgba, gwy_app_settings_get(), "/mask");
-        gwy_rgba_store_to_container(&rgba, controls->mydata, "/0/mask");
+        gwy_rgba_store_to_container(&rgba, container, prefix);
     }
 }
 
@@ -657,6 +677,22 @@ update_source_mask(MarkControls *controls)
                                 controls->data_min + d*args->min,
                                 controls->data_min + d*args->max);
     gwy_data_field_data_changed(mfield);
+    /* FIXME: Does not really belong here... */
+    perform_operation(controls);
+}
+
+static GwyDataField*
+create_mask_field(GwyDataField *dfield)
+{
+    GwyDataField *mfield;
+    GwySIUnit *siunit;
+
+    mfield = gwy_data_field_new_alike(dfield, FALSE);
+    siunit = gwy_si_unit_new(NULL);
+    gwy_data_field_set_si_unit_z(mfield, siunit);
+    g_object_unref(siunit);
+
+    return mfield;
 }
 
 static void
@@ -682,14 +718,16 @@ gwy_data_field_threshold_to(GwyDataField *source, GwyDataField *dest,
 }
 
 static void
-update_changed_cb(GtkToggleButton *button, MarkControls *controls)
+update_changed(GtkToggleButton *button, MarkControls *controls)
 {
     controls->args->update = gtk_toggle_button_get_active(button);
     gtk_dialog_set_response_sensitive(GTK_DIALOG(controls->dialog),
                                       RESPONSE_PREVIEW,
                                       !controls->args->update);
-    if (controls->args->update)
-        update_view(controls, controls->args);
+    if (controls->args->update && !controls->calculated) {
+        setup_source_view_data(controls);
+        update_source_mask(controls);
+    }
 }
 
 static gboolean
