@@ -1159,7 +1159,7 @@ static const GwyNLFitParam sinc_params[] = {
 
 static const GwyNLFitPresetBuiltin fitting_presets[] = {
     {
-        "Gaussian",
+        N_("Gaussian"),
         "<i>f</i>(<i>x</i>) "
             "= <i>y</i><sub>0</sub> "
             "+ <i>a</i> exp[−(<i>x</i> "
@@ -1175,7 +1175,7 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
         gauss_params,
     },
     {
-        "Gaussian (PSDF)",
+        N_("Gaussian (PSDF)"),
         "<i>f</i>(<i>x</i>) "
             "= σ<sup>2</sup><i>T</i>/(2√π) "
             "exp[−(<i>x</i><i>T</i>/2)<sup>2</sup>]",
@@ -1189,7 +1189,7 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
         gauss_two_params,
     },
     {
-        "Gaussian (ACF)",
+        N_("Gaussian (ACF)"),
         "<i>f</i>(<i>x</i>) "
             "= σ<sup>2</sup> "
             "exp[−(<i>x</i>/<i>T</i>)<sup>2</sup>]",
@@ -1203,7 +1203,7 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
         gauss_two_params,
     },
     {
-        "Gaussian (HHCF)",
+        N_("Gaussian (HHCF)"),
         "<i>f</i>(<i>x</i>) "
             "= 2σ<sup>2</sup>"
             "[1 − exp(−(<i>x</i>/<i>T</i>)<sup>2</sup>)]",
@@ -1217,7 +1217,7 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
         gauss_two_params,
     },
     {
-        "Gaussian (RPSDF)",
+        N_("Gaussian (RPSDF)"),
         "<i>f</i>(<i>x</i>) "
             "= (σ<i>T</i>)<sup>2</sup>/2 "
             "<i>x</i> exp[−(<i>x</i><i>T</i>/2)<sup>2</sup>]",
@@ -1231,7 +1231,7 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
         gauss_two_params,
     },
     {
-        "Exponential",
+        N_("Exponential"),
         "<i>f</i>(<i>x</i>) "
             "= <i>y</i><sub>0</sub> + <i>a</i> exp(<i>x</i>/<i>b</i>)",
         &exp_func,
@@ -1244,7 +1244,7 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
         exp_params,
     },
     {
-        "Exponential (PSDF)",
+        N_("Exponential (PSDF)"),
         "<i>f</i>(<i>x</i>) "
             "= σ<sup>2</sup><i>T</i>/π "
             "1/[1 + <i>x</i><sup>2</sup><i>T</i><sup>2</sup>]",
@@ -1258,7 +1258,7 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
         gauss_two_params,
     },
     {
-        "Exponential (ACF)",
+        N_("Exponential (ACF)"),
         "<i>f</i>(<i>x</i>) "
             "= σ<sup>2</sup> exp[−<i>x</i>/<i>T</i>]",
         &exp_acf_func,
@@ -1271,7 +1271,7 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
         gauss_two_params,
     },
     {
-        "Exponential (HHCF)",
+        N_("Exponential (HHCF)"),
         "<i>f</i>(<i>x</i>) "
             "= 2σ<sup>2</sup>"
             "[1 − exp(−<i>x</i>/<i>T</i>)]",
@@ -1285,7 +1285,7 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
         gauss_two_params,
     },
     {
-        "Exponential (RPSDF)",
+        N_("Exponential (RPSDF)"),
         "<i>f</i>(<i>x</i>) "
             "= σ<sup>2</sup><i>T</i> "
             "<i>xT</i>/[1 + <i>x</i><sup>2</sup><i>T</i><sup>2</sup>]"
@@ -1300,7 +1300,7 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
         gauss_two_params,
     },
     {
-        "Polynomial (order 0)",
+        N_("Polynomial (order 0)"),
         "<i>f</i>(<i>x</i>) = <i>a</i>",
         &poly_0_func,
         NULL,
@@ -1312,7 +1312,7 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
         poly3_params,
     },
     {
-        "Polynomial (order 1)",
+        N_("Polynomial (order 1)"),
         "<i>f</i>(<i>x</i>) = <i>a</i> + <i>b</i><i>x</i>",
         &poly_1_func,
         NULL,
@@ -1324,7 +1324,7 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
         poly3_params,
     },
     {
-        "Polynomial (order 2)",
+        N_("Polynomial (order 2)"),
         "<i>f</i>(<i>x</i>) "
             "= <i>a</i> + <i>b</i><i>x</i> + <i>c</i><i>x</i><sup>2</sup>",
         &poly_2_func,
@@ -1337,7 +1337,7 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
         poly3_params,
     },
     {
-        "Polynomial (order 3)",
+        N_("Polynomial (order 3)"),
         "<i>f</i>(<i>x</i>) "
             "= <i>a</i> + <i>b</i><i>x</i> + <i>c</i><i>x</i><sup>2</sup> "
             "+ <i>d</i><i>x</i><sup>3</sup>",
@@ -1351,7 +1351,7 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
         poly3_params,
     },
     {
-        "Square wave",
+        N_("Square wave"),
         "<i>f</i>(<i>x</i>) "
             "= (<i>t</i> + <i>b</i>)/2 "
             "+ 2(<i>t</i> − <i>b</i>)"
@@ -1368,7 +1368,7 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
         square_params,
     },
     {
-        "Power",
+        N_("Power"),
         "<i>f</i>(<i>x</i>) "
             "= <i>a</i> + <i>b</i><i>x</i><sup><i>c</i></sup>",
         &power_func,
@@ -1381,7 +1381,7 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
         power_params,
     },
     {
-        "Lorentzian",
+        N_("Lorentzian"),
         "<i>f</i>(<i>x</i>) "
             "= <i>y</i><sub>0</sub> "
             "+ <i>a</i>/[<i>b</i><sup>2</sup> "
@@ -1396,7 +1396,7 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
         lorentz_params,
     },
     {
-        "Sinc",
+        N_("Sinc"),
         "<i>f</i>(<i>x</i>) "
             "= <i>a</i> sinc(<i>x</i>/<i>b</i>)",
         &sinc_func,

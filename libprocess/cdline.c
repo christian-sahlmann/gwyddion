@@ -493,8 +493,8 @@ static const GwyCDLineParam circle_pars[] = {
 
 static const GwyCDLineBuiltin cdlines[] = {
     {
-        "Edge height (right)",
-        "Edge",
+        N_("Edge height (right)"),
+        N_("Edge"),
         "cd_step.png",
         &func_edgeheight,
         &cd_uedgeheight,
@@ -502,8 +502,8 @@ static const GwyCDLineBuiltin cdlines[] = {
         edgeheight_pars
     },
     {
-        "Edge height (left)",
-        "Edge",
+        N_("Edge height (left)"),
+        N_("Edge"),
         "cd_rstep.png",
         &func_edgeheight,
         &cd_ledgeheight,
@@ -511,8 +511,8 @@ static const GwyCDLineBuiltin cdlines[] = {
         edgeheight_pars
     },
     {
-        "Step height (positive)",  /* ISO 5436 */
-        "Line",
+        N_("Step height (positive)"),  /* ISO 5436 */
+        N_("Line"),
         "cd_line.png",
         &func_stepheight,
         &cd_stepheight,
@@ -520,8 +520,8 @@ static const GwyCDLineBuiltin cdlines[] = {
         stepheight_pars
     },
     {
-        "Step height (negative)",
-        "Line",
+        N_("Step height (negative)"),
+        N_("Line"),
         "cd_rline.png",
         &func_stepheight,
         &cd_rstepheight,
@@ -529,8 +529,8 @@ static const GwyCDLineBuiltin cdlines[] = {
         stepheight_pars
     },
     {
-        "Circle (down)",
-        "Circle",
+        N_("Circle (down)"),
+        N_("Circle"),
         "circle_down.png",
         &func_circle_down,
         &cd_circle_down,
@@ -538,8 +538,8 @@ static const GwyCDLineBuiltin cdlines[] = {
         circle_pars
     },
     {
-        "Circle (up)",
-        "Circle",
+        N_("Circle (up)"),
+        N_("Circle"),
         "circle_up.png",
         &func_circle_up,
         &cd_circle_up,

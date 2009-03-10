@@ -742,7 +742,7 @@ static const GwyNLFitParam hsphhertz_params[] = {
 
 static const GwyNLFitPresetBuiltin fitting_presets[] = {
     {
-        "vdW: semisphere",
+        N_("vdW: semisphere"),
         "<i>f</i>(<i>x</i>) "
         "= -<i>H</i>/6 (<i>R</i><sup>3</sup>(<i>R</i>+2(<i>x</i>-<i>x<sub>c</sub></i>)))"
         "/((<i>x</i>-<i>x<sub>c</sub></i>)<sup>2</sup>((<i>x</i>-<i>x<sub>c</sub></i>)"
@@ -757,7 +757,7 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
         sszanette_params,
     },
      {
-        "vdW: pyramide",
+        N_("vdW: pyramide"),
         "<i>f</i>(<i>x</i>) "
         "= -2<i>H</i> (tan(<i>γ</i>)<sup>2</sup>)/3/Pi/(<i>x</i>-<i>x<sub>c</sub></i>) ",
         &pyrzanette_func,
@@ -770,7 +770,7 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
         pyrzanette_params,
     },
      {
-        "vdW: truncated pyramid",
+        N_("vdW: truncated pyramid"),
         "<i>f</i>(<i>x</i>) "
         "= -2HL<sup>2</sup>/(x-xc)<sup>3</sup> * (1 + (tan(γ)(x-xc))/L + (tan(γ)(x-xc))<sup>2</sup>)/L<sup>2</sup>)",
         &tpyrzanette_func,
@@ -783,7 +783,7 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
         tpyrzanette_params,
     },
      {
-        "vdW: sphere",
+        N_("vdW: sphere"),
         "<i>f</i>(<i>x</i>) "
         "= -<i>HR</i>/6/(<i>x</i>-<i>x<sub>c</sub></i>)<sup>2</sup> ",
         &sphcapella_func,
@@ -796,7 +796,7 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
         sphcapella_params,
     },
      {
-        "vdW: offset sphere",
+        N_("vdW: offset sphere"),
         "<i>f</i>(<i>x</i>) "
         "= -<i>HR</i>/6/((<i>x</i>-<i>x<sub>c</sub></i>)-<i>ξ</i>)<sup>2</sup>",
         &sphtiptap_func,
@@ -809,7 +809,7 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
         sphtiptap_params,
     },
      {
-        "vdW: two spheres",
+        N_("vdW: two spheres"),
         "<i>f</i>(<i>x</i>) "
         "= -<i>HR<sub>1</sub>R<sub>2</sub></i>/6/(<i>x</i>-<i>x<sub>c</sub></i>)(R<sub>1</sub> + R<sub>2</sub>)<sup>2</sup> ",
         &sphsphcapella_func,
@@ -822,7 +822,7 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
         sphsphcapella_params,
     },
      {
-        "vdW: cone",
+        N_("vdW: cone"),
         "<i>f</i>(<i>x</i>) "
         "= -<i>H tan<sup>2</sup>(theta)</i>/6/(<i>x</i>-<i>x<sub>c</sub></i>)",
         &conecapella_func,
@@ -835,7 +835,7 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
         conecapella_params,
     },
      {
-        "vdW: cylinder",
+        N_("vdW: cylinder"),
         "<i>f</i>(<i>x</i>) "
         "= -<i>HR<sup>2</sup></i>/6/(<i>x</i>-<i>x<sub>c</sub></i>)<sup>3</sup> ",
         &cylindercapella_func,
@@ -848,7 +848,7 @@ static const GwyNLFitPresetBuiltin fitting_presets[] = {
         sphcapella_params,
     },
      {
-        "vdW: paraboloid",
+        N_("vdW: paraboloid"),
         "<i>f</i>(<i>x</i>) "
         "= -<i>Hl<sub>xy</sub><sup>2</sup></i>/12/(<i>x</i>-<i>x<sub>c</sub></i>)<sup>2</sup> ",
         &parcapella_func,
