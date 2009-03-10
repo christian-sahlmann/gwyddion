@@ -1210,6 +1210,20 @@ copy_param(GObject *button,
     gtk_widget_activate(cntrl->init);
 }
 
+static void
+render_translated_name(G_GNUC_UNUSED GtkCellLayout *layout,
+                       GtkCellRenderer *renderer,
+                       GtkTreeModel *model,
+                       GtkTreeIter *iter,
+                       gpointer data)
+{
+    guint i = GPOINTER_TO_UINT(data);
+    const gchar *text;
+
+    gtk_tree_model_get(model, iter, i, &text, -1);
+    g_object_set(renderer, "text", _(text), NULL);
+}
+
 static GtkWidget*
 function_selector_new(GCallback callback,
                       gpointer cbdata,
@@ -1218,7 +1232,7 @@ function_selector_new(GCallback callback,
     GtkCellRenderer *renderer;
     GtkWidget *combo;
     GwyInventoryStore *store;
-    gint i;
+    guint i;
 
     store = gwy_inventory_store_new(gwy_nlfit_presets());
 
@@ -1228,7 +1242,9 @@ function_selector_new(GCallback callback,
     renderer = gtk_cell_renderer_text_new();
     gtk_cell_layout_pack_start(GTK_CELL_LAYOUT(combo), renderer, TRUE);
     i = gwy_inventory_store_get_column_by_name(store, "name");
-    gtk_cell_layout_add_attribute(GTK_CELL_LAYOUT(combo), renderer, "text", i);
+    gtk_cell_layout_set_cell_data_func(GTK_CELL_LAYOUT(combo), renderer,
+                                       render_translated_name,
+                                       GUINT_TO_POINTER(i), NULL);
     gtk_combo_box_set_active(GTK_COMBO_BOX(combo), current);
     g_signal_connect(combo, "changed", callback, cbdata);
 
