@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2009-03-06 03:59+0100\n"
-"PO-Revision-Date: 2009-03-06 09:59+0300\n"
+"POT-Creation-Date: 2009-03-09 03:59+0100\n"
+"PO-Revision-Date: 2009-03-09 11:45+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@km.ru>\n"
 "Language-Team: russian <ru@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -330,7 +330,7 @@ msgstr ""
 #: libprocess/gwyprocessenums.c:262
 #, fuzzy
 msgid "Normal"
-msgstr "Обычная"
+msgstr "Нормаль"
 
 #: libprocess/gwyprocessenums.c:263
 msgid "FFT"
@@ -892,14 +892,12 @@ msgid "Toggle logarithmic y axis"
 msgstr "Сделать ось y логарифмической"
 
 #: libgwydgets/gwygraphwindowmeasuredialog.c:52
-#, fuzzy
 msgid "Intersections"
 msgstr "Пересечения"
 
 #: libgwydgets/gwygraphwindowmeasuredialog.c:53
-#, fuzzy
 msgid "Points anywhere"
-msgstr "Точки везде"
+msgstr "Точки в любом  месте"
 
 #: libgwydgets/gwygraphwindowmeasuredialog.c:279
 #: libgwydgets/gwygraphwindowmeasuredialog.c:435
@@ -924,9 +922,8 @@ msgid "Curve:"
 msgstr "Кривая:"
 
 #: libgwydgets/gwygraphwindowmeasuredialog.c:408
-#, fuzzy
 msgid "Method:"
-msgstr "Метод:"
+msgstr "Способ:"
 
 #: libgwydgets/gwygraphwindowmeasuredialog.c:447
 #: modules/process/crosscor.c:234
@@ -1054,7 +1051,7 @@ msgstr "О программе %s"
 
 #: app/about.c:83
 msgid "An SPM data visualization and analysis tool."
-msgstr "средство визуализации и анализа данных СЗМ"
+msgstr "Инструмент визуализации и анализа данных СЗМ."
 
 #: app/about.c:93
 #, c-format
@@ -1285,18 +1282,16 @@ msgid "Color Gradient `%s'"
 msgstr "Цветовой градиент `%s'"
 
 #: app/gradient-editor.c:223
-#, fuzzy
 msgid "_Points"
-msgstr "Точки"
+msgstr "_Точки"
 
 #: app/gradient-editor.c:224
-#, fuzzy
 msgid "_Curve"
-msgstr "Кривая"
+msgstr "_Кривая"
 
 #: app/gradient-editor.c:262
 msgid "_Snap to control points"
-msgstr ""
+msgstr "_Притягиваться к контрольным точкам"
 
 #: app/gwyappfilechooser.c:211
 msgid "Save File"
@@ -1551,9 +1546,8 @@ msgid "Cannot create user module directory %s: %s"
 msgstr "Не удаётся создать каталог модулей пользователя %s: %s"
 
 #: app/splash.c:651
-#, fuzzy
 msgid "Starting "
-msgstr "Запускается %s"
+msgstr "Запускается"
 
 #: app/splash.c:697
 msgid " is free software released under GNU GPL."
@@ -1583,14 +1577,12 @@ msgid "Data presentations created by functions in Data Process → Presentation 
 msgstr ""
 
 #: app/tips.c:78
-#, fuzzy
 msgid "Menus can be torn off by clicking the dashed line near the top for quick access to a subset of functions."
-msgstr "Строка меню может быть оторвана нажатием на пунктирную линию около верха."
+msgstr "Строка меню может быть оторвана нажатием на пунктирную линию около верха для быстрого доступа к подмножеству функций."
 
 #: app/tips.c:84
-#, fuzzy
 msgid "When Gwyddion is run with a directory argument it opens a file open dialog showing this directory."
-msgstr "Если Gwyddion запущен с каталогом в качестве параметра коммандной строки, он открывает диалог открытия файла, показывающий этот каталог."
+msgstr "Если Gwyddion запущен с каталогом в качестве параметра командной строки, он открывает диалог открытия файла, показывающий этот каталог."
 
 #: app/tips.c:89
 msgid "File → Open Recent → Document History opens a browser of recently loaded files with the possibility to search them by name."
@@ -1609,19 +1601,16 @@ msgid "File → Merge imports all data from selected file to the current file."
 msgstr "Файл → Объединить импортирует все данные из выбранного файла в текущий файл."
 
 #: app/tips.c:112
-#, fuzzy
 msgid "Your favorite false color gradient can be set as default in the gradient editor: Edit → Color Gradients.  The default gradient is shown in bold face."
 msgstr "Ваш любимый градиент псевдоцвета может быть установлен по умолчанию в редакторе градиентов (Правка → Цветовые градиенты)."
 
 #: app/tips.c:118
-#, fuzzy
 msgid "Your favorite GL material can be set as default in the material editor: Edit → GL Materials.  The default material is shown in bold face."
 msgstr "Ваш любимый материал OpenGL может быть установлен по умолчанию в редакторе материалов (Правка → Материалы OpenGL)."
 
 #: app/tips.c:124
-#, fuzzy
 msgid "Edit → Default Mask Color sets the default mask color.  This color is used when a mask is created on data that have not had a mask before."
-msgstr "Цвет маски по умолчанию, который используется когда маска создаётся в первый раз на этом наборе данных, устанавливается с помощью меню Правка → Цвет маски по умолчанию."
+msgstr "Меню Правка → Цвет маски по умолчанию устанавливает цвет маски по умолчанию. Этот цвет используется когда маска создаётся в первый раз на этом наборе данных."
 
 #: app/tips.c:130
 msgid "Each channel has its own metadata."
@@ -1676,8 +1665,9 @@ msgid "Clicking on a 3D view with the right mouse button brings a GL material or
 msgstr "Нажатие на окно трёхмерного вида правой кнопкой мыши показывает меню выбора материала OpenGL или градиента псевдоцвета."
 
 #: app/tips.c:194
+#, fuzzy
 msgid "3D view transformation modes can be selected with keys: R (rotate), S (scale), V (value scale) and L (light source)."
-msgstr ""
+msgstr "Режимы изменения параметров трёхмерного просмотра могут быть выбраны с помощью клавиш: R (поворот/rotate), S (масштаб/scale), V (масштаб значений/value scale) и L (источник света/light source)."
 
 #: app/tips.c:200
 msgid "Pressing Ctrl-C copies the image of a channel, graph or 3D view to the clipboard."
@@ -1733,7 +1723,7 @@ msgstr "Убрать царапины на панели инструментов
 
 #: app/tips.c:268
 msgid "Graph → Critical Dimension measures steps on extracted profile graphs."
-msgstr ""
+msgstr "График → Габаритный Размер измеряет ступеньки на извлечённых графиках профилей."
 
 #: app/tips.c:274
 msgid "Pressing Esc hides tool windows."
@@ -1916,9 +1906,8 @@ msgid "OpenGL 3D graphics not available"
 msgstr "Трёхмерная графика OpenGL не доступна"
 
 #: app/toolbox.c:1163
-#, fuzzy
 msgid "Initialization of OpenGL failed.  Check output of <tt>glxinfo</tt> and warning messages printed to console during Gwyddion startup."
-msgstr "Инициализация OpenGL не удалась. Проверьте вывод <tt>glxinfo</tt> и предупредительные сообщения, которые выводились на консоль при старте Gwyddion."
+msgstr "Инициализация OpenGL не удалась. Проверьте вывод <tt>glxinfo</tt> и предупреждения, которые выводились на консоль при старте Gwyddion."
 
 #: app/toolbox.c:1167
 msgid "This version of Gwyddion was built without OpenGL support."
@@ -1969,7 +1958,6 @@ msgid "Item key does not belong to any known data"
 msgstr ""
 
 #: app/validate.c:601
-#, fuzzy
 msgid "Wrong data item id"
 msgstr "Неверный идентификатор элемента данных"
 
@@ -2044,9 +2032,8 @@ msgid "Options"
 msgstr "Параметры"
 
 #: modules/file/asciiexport.c:213
-#, fuzzy
 msgid "Use _dot as decimal separator"
-msgstr "Использовать точку как десятичный разделитель"
+msgstr "Использовать точку как _десятичный разделитель"
 
 #: modules/file/asciiexport.c:220
 #: modules/process/grain_dist.c:302
@@ -2061,20 +2048,20 @@ msgstr "Импортирует файлы данных Assing AFM."
 msgid "Assing AFM files (.afm)"
 msgstr "Файлы Assing AFM (.afm)"
 
-#: modules/file/bcrfile.c:125
+#: modules/file/bcrfile.c:120
 msgid "Imports Image Metrology BCR data files."
 msgstr "Импортирует файлы данных Image Metrology BCR."
 
-#: modules/file/bcrfile.c:138
+#: modules/file/bcrfile.c:133
 msgid "BCR files (.bcr, .bcrf)"
 msgstr "Файлы BCR (.bcr, .bcrf)"
 
-#: modules/file/bcrfile.c:215
+#: modules/file/bcrfile.c:210
 #, c-format
 msgid "File header is not convertible from UTF-16: %s"
 msgstr "Заголовок файла не может быть сконвертирован из UTF-16: %s"
 
-#: modules/file/bcrfile.c:285
+#: modules/file/bcrfile.c:280
 #, c-format
 msgid "Unknown file type header: `%s'."
 msgstr "Неизвестный заголовок типа файла: `%s'."
@@ -2110,9 +2097,9 @@ msgstr "Экспортированные данные Burleigh (.txt, .bin)"
 
 #: modules/file/burleigh_exp.c:218
 #: modules/file/burleigh_exp.c:259
-#: modules/file/nanoscope.c:782
+#: modules/file/nanoscope.c:779
 #: modules/file/omicron.c:356
-#: modules/file/shimadzu.c:403
+#: modules/file/shimadzu.c:400
 msgid "Missing colon in header line."
 msgstr "Пропущено двоеточие в строке заголовка."
 
@@ -2235,7 +2222,7 @@ msgstr "Мусор перед первой частью заголовка."
 
 #: modules/file/ezdfile.c:305
 #: modules/file/microprof.c:284
-#: modules/file/nanoscope-ii.c:248
+#: modules/file/nanoscope-ii.c:245
 msgid "Malformed header line (missing =)."
 msgstr ""
 
@@ -2365,48 +2352,48 @@ msgstr ""
 "\n"
 "Вы используете %s. Обновите libtiff до версии %d.%d или более новой."
 
-#: modules/file/mapvue.c:375
+#: modules/file/mapvue.c:373
 msgid "Imports MapVue data files (.map)."
 msgstr "Импортирует файлы данных MapVue (.map)."
 
-#: modules/file/mapvue.c:388
+#: modules/file/mapvue.c:386
 msgid "MapVue files (.map)"
 msgstr "Файлы MapVue (.map)"
 
-#: modules/file/mapvue.c:445
+#: modules/file/mapvue.c:443
 #, c-format
 msgid "Required tag %u was not found."
 msgstr ""
 
-#: modules/file/mapvue.c:614
+#: modules/file/mapvue.c:612
 msgid "File end was reached while scanning tags."
 msgstr ""
 
-#: modules/file/mapvue.c:626
+#: modules/file/mapvue.c:624
 #, fuzzy, c-format
 msgid "Expected tag %u size is %u bytes, but the actual size is %u bytes."
 msgstr "Ожидаемый размер данных, рассчитанный из данных заголовка, должен быть %u байт, но реальный размер %u байт."
 
-#: modules/file/mapvue.c:640
+#: modules/file/mapvue.c:638
 #, c-format
 msgid "Tag %u size is %u bytes, which is not enough to hold the tag marker."
 msgstr ""
 
-#: modules/file/mapvue.c:651
-#: modules/file/mapvue.c:664
+#: modules/file/mapvue.c:649
+#: modules/file/mapvue.c:662
 #, c-format
 msgid "Tag %u size is %u bytes, which is not enough to hold the tag marker and size."
 msgstr ""
 
-#: modules/file/mapvue.c:675
+#: modules/file/mapvue.c:673
 #, c-format
 msgid "Tag marker is missing on an unknown tag %u."
 msgstr ""
 
-#: modules/file/mapvue.c:694
-#: modules/file/mapvue.c:704
+#: modules/file/mapvue.c:692
+#: modules/file/mapvue.c:702
 msgid "Character array does not fit into the file."
-msgstr ""
+msgstr "Массив символов не помещается в файл."
 
 #: modules/file/metropro.c:168
 msgid "Imports binary MetroPro (Zygo) data files."
@@ -2480,37 +2467,37 @@ msgstr ""
 msgid "Missing data start marker \\x1a\\x04."
 msgstr "Отсутствует маркер начала данных \\x1a\\x04."
 
-#: modules/file/nanoscope-ii.c:76
+#: modules/file/nanoscope-ii.c:73
 msgid "Imports Digital Instruments Nanoscope II data files."
 msgstr "Импортирует файлы данных Digital Instruments Nanoscope II."
 
-#: modules/file/nanoscope-ii.c:89
+#: modules/file/nanoscope-ii.c:86
 msgid "Nanoscope II files"
 msgstr "Файлы Nanoscope II"
 
-#: modules/file/nanoscope.c:137
+#: modules/file/nanoscope.c:134
 msgid "Imports Veeco (Digital Instruments) Nanoscope data files, version 3 or newer."
 msgstr "Импортирует файлы данных Veeco (Digital Instruments) Nanoscope версии 3 или более новой."
 
-#: modules/file/nanoscope.c:151
+#: modules/file/nanoscope.c:148
 msgid "Nanoscope III files"
 msgstr "Файлы Nanoscope III"
 
-#: modules/file/nanoscope.c:209
+#: modules/file/nanoscope.c:206
 msgid "File is not a Nanoscope file, or it is a unknown subtype."
 msgstr "Файл не является файлом Nanoscope или неизвестного подтипа."
 
-#: modules/file/nanoscope.c:448
-#: modules/file/nanoscope.c:464
+#: modules/file/nanoscope.c:445
+#: modules/file/nanoscope.c:461
 msgid "Cannot parse `Scan size' field."
 msgstr "Не удаётся распознать поле `Scan size'."
 
-#: modules/file/nanoscope.c:693
+#: modules/file/nanoscope.c:690
 #, c-format
 msgid "Garbage after data sample #%d."
 msgstr ""
 
-#: modules/file/nanoscope.c:772
+#: modules/file/nanoscope.c:769
 msgid "Truncated header line."
 msgstr ""
 
@@ -2547,12 +2534,12 @@ msgstr "Файл неожиданно окончился внутри `%s'."
 #: modules/file/netcdf.c:580
 #, c-format
 msgid "Expected `%s' array or `ABSENT'."
-msgstr ""
+msgstr "Ожидался массив `%s'  или  `ABSENT'."
 
 #: modules/file/netcdf.c:588
 #, c-format
 msgid "Array `%s' has non-zero number of elements in spite of being absent."
-msgstr ""
+msgstr "Массив `%s' содержит ненулевое количество элементов вместо того, чтобы отсутствовать."
 
 #: modules/file/netcdf.c:647
 msgid "More than one record dimension found."
@@ -2577,17 +2564,17 @@ msgstr ""
 #: modules/file/nt-mdt.c:998
 #, c-format
 msgid "End of file reached in frame header #%u."
-msgstr ""
+msgstr "Достигнут конец файла в заголовке фрейма #%u."
 
 #: modules/file/nt-mdt.c:1006
 #, c-format
 msgid "End of file reached in frame data #%u."
-msgstr ""
+msgstr "Достигнут конец файла в данных фрейма #%u."
 
 #: modules/file/nt-mdt.c:1039
 #, c-format
 msgid "Frame #%u is too short for scanned data header."
-msgstr ""
+msgstr "Фрейм #%u слишком короткий чтобы быть заголовком сканированных данных."
 
 #: modules/file/ols.c:55
 msgid "Imports OLS data files."
@@ -2621,33 +2608,33 @@ msgstr ""
 msgid "Omicron MATRIX (.mtrx & .mtrx)"
 msgstr ""
 
-#: modules/file/opdfile.c:163
+#: modules/file/opdfile.c:161
 msgid "Imports Wyko OPD and ASC files."
 msgstr "Импортирует файлы Wyko OPD и ASC."
 
-#: modules/file/opdfile.c:176
+#: modules/file/opdfile.c:174
 msgid "Wyko OPD files (.opd)"
 msgstr "Файлы Wyko OPD (.opd)"
 
-#: modules/file/opdfile.c:183
+#: modules/file/opdfile.c:181
 msgid "Wyko ASCII export files (.asc)"
 msgstr "Файлы экспорта в ASCII Wyko (.asc)"
 
-#: modules/file/opdfile.c:250
-#: modules/file/sensofar.c:251
+#: modules/file/opdfile.c:248
+#: modules/file/sensofar.c:249
 msgid "File header is truncated"
 msgstr "Заголовок файла усечён"
 
-#: modules/file/opdfile.c:273
+#: modules/file/opdfile.c:271
 #, c-format
 msgid "Item `%s' is beyond the end of the file."
 msgstr "Элемент `%s' находится за концом файла."
 
-#: modules/file/opdfile.c:553
+#: modules/file/opdfile.c:551
 msgid "Nested directories found"
 msgstr "Найдены вложенные каталоги"
 
-#: modules/file/opdfile.c:743
+#: modules/file/opdfile.c:741
 #, c-format
 msgid "Truncated data in block %s"
 msgstr ""
@@ -3037,6 +3024,7 @@ msgstr "Предустановки"
 #: modules/process/grain_mark.c:262
 #: modules/process/grain_rem_threshold.c:221
 #: modules/process/grain_wshed.c:179
+#: modules/process/mark_with.c:238
 #: modules/process/polydistort.c:214
 #: modules/process/scars.c:466
 #: modules/process/tip_model.c:167
@@ -3086,6 +3074,10 @@ msgstr "_Начать со строки:"
 msgid "E_ach row skip:"
 msgstr "_В каждой строке пропустить:"
 
+#: modules/file/rawfile.c:751
+msgid "fields"
+msgstr "полей"
+
 #: modules/file/rawfile.c:755
 msgid "_Field delimiter:"
 msgstr "_Разделитель полей:"
@@ -3118,9 +3110,19 @@ msgstr "_Шаблон перестановки байт:"
 msgid "Start at _offset:"
 msgstr "Начать со сме_щения:"
 
+#: modules/file/rawfile.c:820
+msgid "bytes"
+msgstr "байт"
+
 #: modules/file/rawfile.c:826
 msgid "_Sample size:"
 msgstr "Размер с_эмплов"
+
+#: modules/file/rawfile.c:827
+#: modules/file/rawfile.c:835
+#: modules/file/rawfile.c:843
+msgid "bits"
+msgstr "бит"
 
 #: modules/file/rawfile.c:834
 msgid "After each sample s_kip:"
@@ -3380,32 +3382,32 @@ msgstr "Текстовые файлы Surfstand SDF (.sdf)"
 msgid "Micromap SDF files (.sdfa)"
 msgstr "Файлы Micromap SDF (.sdfa)"
 
-#: modules/file/sdfile.c:582
+#: modules/file/sdfile.c:584
 #, c-format
 msgid "Invalid `%s' value: %d."
 msgstr "Неверное значение `%s': %d."
 
-#: modules/file/sdfile.c:591
+#: modules/file/sdfile.c:593
 #, c-format
 msgid "Invalid `%s' value: %g."
 msgstr "Неверное значение `%s': %g."
 
-#: modules/file/sdfile.c:649
+#: modules/file/sdfile.c:651
 msgid "Missing data start marker (*)."
 msgstr "Отсутствует маркер начала данных (*)."
 
-#: modules/file/sdfile.c:673
+#: modules/file/sdfile.c:675
 #, c-format
 msgid "End of file reached when looking for `%s' field."
 msgstr "Достигнут конец файла при поиске поля `%s'."
 
-#: modules/file/sdfile.c:681
+#: modules/file/sdfile.c:683
 #, c-format
 msgid "Invalid line found when looking for `%s' field."
 msgstr "Неправильная строка найдена при поиске поля `%s'."
 
-#: modules/file/sdfile.c:808
-#: modules/file/sdfile.c:825
+#: modules/file/sdfile.c:810
+#: modules/file/sdfile.c:827
 #, c-format
 msgid "End of file reached when reading sample #%d of %d"
 msgstr ""
@@ -3418,16 +3420,16 @@ msgstr "Импортирует файлы Seiko XQD."
 msgid "Seiko files (.xqd)"
 msgstr "Файлы Seiko (.xqd)"
 
-#: modules/file/sensofar.c:195
+#: modules/file/sensofar.c:193
 msgid "Imports Sensofar PLu file format, version 2000 or newer."
 msgstr "Импортирует формат файлов Sensofar PLu, версии 2000 или новее."
 
-#: modules/file/sensofar.c:209
+#: modules/file/sensofar.c:207
 msgid "Sensofar PLu files (.plu)"
 msgstr "Файлы Sensofar PLu (.plu)"
 
-#: modules/file/sensofar.c:483
-#: modules/file/sensofar.c:497
+#: modules/file/sensofar.c:481
+#: modules/file/sensofar.c:495
 #, fuzzy
 msgid "Profile"
 msgstr "Профиль"
@@ -3440,15 +3442,15 @@ msgstr "Импортирует текстовые файлы Sensolytics"
 msgid "Sensolytics text files (.dat)"
 msgstr "Текстовые файлы Sensolytics (.dat)"
 
-#: modules/file/shimadzu.c:94
+#: modules/file/shimadzu.c:91
 msgid "Imports Shimadzu SPM data files, version 2."
 msgstr "Импортирует файлы данных Shimadzu SPM, версии 2."
 
-#: modules/file/shimadzu.c:107
+#: modules/file/shimadzu.c:104
 msgid "Shimadzu files"
 msgstr "Файлы Shimadzu"
 
-#: modules/file/shimadzu.c:314
+#: modules/file/shimadzu.c:311
 #, fuzzy, c-format
 msgid "Cannot parse data values after %d of %d."
 msgstr "Невозможно распознать значения данных после %d %d."
@@ -3498,12 +3500,12 @@ msgstr "Достигнут конец файла внутри блока кан�
 msgid "End of file reached when another channel was expected."
 msgstr "Достигнут конец файла в то время, как ожидался другой канал."
 
-#: modules/file/spip-asc.c:73
+#: modules/file/spip-asc.c:68
 #, fuzzy
 msgid "Imports SPIP ASC files."
 msgstr "импортирует файлы данных PSIA."
 
-#: modules/file/spip-asc.c:86
+#: modules/file/spip-asc.c:81
 #, fuzzy
 msgid "SPIP ASCII files (.asc)"
 msgstr "Файлы SIS (.sis)"
@@ -3529,15 +3531,15 @@ msgstr "Файлы Thermicroscopes SpmLab"
 msgid "Unknown format version %c."
 msgstr "Неизвестная версия формата %c."
 
-#: modules/file/spmlabf.c:70
+#: modules/file/spmlabf.c:67
 msgid "Imports SPMLab floating-point files."
 msgstr "импортирует файлы с плавающей точкой SPMLab."
 
-#: modules/file/spmlabf.c:83
+#: modules/file/spmlabf.c:80
 msgid "SPMLab floating-point files (.flt)"
 msgstr "Файлы с плавающей точкой SPMLab (.flt)"
 
-#: modules/file/spmlabf.c:143
+#: modules/file/spmlabf.c:140
 msgid "Missing data start marker [Data]."
 msgstr "Отсутствует маркер начала данных [Data]."
 
@@ -3657,7 +3659,7 @@ msgstr "Файлы Unisoku (.hdr + .dat)"
 
 #: modules/file/unisoku.c:215
 msgid "No corresponding data file was found for header file."
-msgstr ""
+msgstr "Не найден файл данных, соответствующий заголовочному файлу."
 
 #: modules/file/unisoku.c:276
 msgid "format version"
@@ -3727,19 +3729,19 @@ msgstr "Неизвестный тип данных `%s'."
 
 #: modules/file/wsxmfile.c:239
 msgid "Missing end of file header marker."
-msgstr ""
+msgstr "Отсутствует заголовочный маркер конца файла."
 
 #: modules/graph/graph_cd.c:134
 msgid "Critical dimension measurements"
-msgstr ""
+msgstr "Измерения габаритных размеров"
 
 #: modules/graph/graph_cd.c:148
 msgid "/_Critical Dimension..."
-msgstr ""
+msgstr "/_Габаритный размер..."
 
 #: modules/graph/graph_cd.c:151
 msgid "Fit critical dimension"
-msgstr ""
+msgstr "Аппроксимировать габаритный размер"
 
 #: modules/graph/graph_cd.c:207
 #: modules/graph/graph_fit.c:254
@@ -3803,7 +3805,7 @@ msgstr ""
 #: modules/graph/graph_fdfit.c:733
 #: modules/graph/graph_fit.c:757
 msgid "It is necessary to select more data points than free fit parameters"
-msgstr ""
+msgstr "Необходимо выбрать больше точек данных, чем возможных параметров аппроксимации"
 
 #: modules/graph/graph_cd.c:669
 #: modules/graph/graph_fdfit.c:782
@@ -3864,19 +3866,19 @@ msgstr "Результаты\n"
 
 #: modules/graph/graph_cut.c:86
 msgid "Cut graph"
-msgstr ""
+msgstr "Обрезать график"
 
 #: modules/graph/graph_cut.c:100
 msgid "/_Cut Graph..."
-msgstr ""
+msgstr "/_Обрезать график..."
 
 #: modules/graph/graph_cut.c:103
 msgid "Extract part of graph into new one"
-msgstr ""
+msgstr "Извлечь часть старого графика в новый"
 
 #: modules/graph/graph_cut.c:146
 msgid "Cut Graph"
-msgstr ""
+msgstr "Обрезает график"
 
 #: modules/graph/graph_export_ascii.c:52
 msgid "Plain text"
@@ -3900,7 +3902,7 @@ msgstr "Экспортирует графические данные в текс
 
 #: modules/graph/graph_export_ascii.c:82
 msgid "/Export _Text..."
-msgstr ""
+msgstr "/Экспортировать _текст..."
 
 #: modules/graph/graph_export_ascii.c:85
 msgid "Export graph data to a text file"
@@ -3920,43 +3922,43 @@ msgstr "Экспорт мета_данных"
 
 #: modules/graph/graph_export_bitmap.c:34
 msgid "Export graph into bitmap"
-msgstr ""
+msgstr "Экспортировать график в растровое изображение"
 
 #: modules/graph/graph_export_bitmap.c:48
 msgid "/Export _Bitmap"
-msgstr ""
+msgstr "/Экспортировать _растр"
 
 #: modules/graph/graph_export_bitmap.c:51
 msgid "Export graph to a raster image"
-msgstr ""
+msgstr "Экспортирует график в растровое изображение"
 
 #: modules/graph/graph_export_vector.c:36
 msgid "Export graph in postscript"
-msgstr ""
+msgstr "Экспортировать график в postscript"
 
 #: modules/graph/graph_export_vector.c:50
 msgid "/Export _PostScript"
-msgstr ""
+msgstr "/Экспортировать _PostScript"
 
 #: modules/graph/graph_export_vector.c:53
 msgid "Export graph to a vector image"
-msgstr ""
+msgstr "Экспортирует график в векторное изображение"
 
 #: modules/graph/graph_fdfit.c:169
 msgid "Fit force-distance data"
-msgstr ""
+msgstr "Аппроксимировать данные сила-расстояние"
 
 #: modules/graph/graph_fdfit.c:183
 msgid "/_Fit FD Curve..."
-msgstr ""
+msgstr "/Аппроксимировать _кривую сила-расстояние..."
 
 #: modules/graph/graph_fdfit.c:186
 msgid "Fit a force-distance curve"
-msgstr ""
+msgstr "Аппроксимирует кривую сила-расстояние"
 
 #: modules/graph/graph_fdfit.c:249
 msgid "Fit FD Curve"
-msgstr ""
+msgstr "Аппроксимировать кривую сила-расстояние"
 
 #: modules/graph/graph_fdfit.c:257
 #: modules/graph/graph_fit.c:262
@@ -4017,15 +4019,15 @@ msgstr "Матрица корреляции\n"
 
 #: modules/graph/graph_fit.c:173
 msgid "Fit graph with function"
-msgstr ""
+msgstr "Аппроксимировать график функцией"
 
 #: modules/graph/graph_fit.c:187
 msgid "/_Fit Function..."
-msgstr ""
+msgstr "/_Аппроксимировать функцией..."
 
 #: modules/graph/graph_fit.c:190
 msgid "Fit a function on graph data"
-msgstr ""
+msgstr "Аппроксимирует данные графика функцией"
 
 #: modules/graph/graph_fit.c:415
 msgid "Plot full range"
@@ -4041,15 +4043,15 @@ msgstr "ст_роить"
 
 #: modules/graph/graph_level.c:37
 msgid "Level graph by line."
-msgstr ""
+msgstr "Выровнять график линией."
 
 #: modules/graph/graph_level.c:51
 msgid "/_Level"
-msgstr "/Вы_равнивание"
+msgstr "/_Выравнивание"
 
 #: modules/graph/graph_level.c:54
 msgid "Level graph curves"
-msgstr ""
+msgstr "Выравнивает кривые графиков"
 
 #: modules/layer/axis.c:131
 #, fuzzy
@@ -4163,35 +4165,36 @@ msgstr "Отсутствует маркер конца поля данных."
 
 #: modules/process/acf2d.c:36
 msgid "Calculates two-dimensional autocorrelation function."
-msgstr ""
+msgstr "Рассчитывает двумерную функцию автокорреляции."
 
 #: modules/process/acf2d.c:50
 msgid "/_Statistics/2D Auto_correlation"
-msgstr ""
+msgstr "/_Статистика/Двумерная _автокорреляция"
 
 #: modules/process/acf2d.c:54
 msgid "Calculate 2D autocorrelation function"
-msgstr ""
+msgstr "Рассчитать двумерную функцию автокорреляции"
 
 #: modules/process/acf2d.c:75
 msgid "2D ACF"
 msgstr ""
 
 #: modules/process/angle_dist.c:99
+#, fuzzy
 msgid "Calculates two-dimensional distribution of angles, that is projections of slopes to all directions."
-msgstr ""
+msgstr "Рассчитывает двумерное распределение углов, это проекция наклонов на все направления."
 
 #: modules/process/angle_dist.c:114
 msgid "/_Statistics/An_gle Distribution..."
-msgstr ""
+msgstr "/_Статистика/Распределение _углов..."
 
 #: modules/process/angle_dist.c:118
 msgid "Calculate two-dimensional angle distribution"
-msgstr ""
+msgstr "Рассчитать двумерное распределение углов"
 
 #: modules/process/angle_dist.c:146
 msgid "Computing angle distribution"
-msgstr ""
+msgstr "Рассчитываем распределение углов"
 
 #: modules/process/angle_dist.c:157
 msgid "Angle distribution"
@@ -4203,9 +4206,8 @@ msgstr "Распределение углов"
 
 #: modules/process/angle_dist.c:186
 #: modules/process/slope_dist.c:238
-#, fuzzy
 msgid "Output _size:"
-msgstr "Размер вывода:"
+msgstr "_Размер результата:"
 
 #: modules/process/angle_dist.c:191
 #: modules/process/grain_wshed.c:232
@@ -4220,12 +4222,12 @@ msgstr "_Логарифмическая шкала"
 #: modules/process/angle_dist.c:202
 #: modules/process/slope_dist.c:249
 msgid "Use local plane _fitting"
-msgstr ""
+msgstr "Использовать _аппроксимацию локальной плоскостью"
 
 #: modules/process/angle_dist.c:211
 #: modules/process/slope_dist.c:258
 msgid "_Plane size:"
-msgstr ""
+msgstr "Размер _плоскости:"
 
 #: modules/process/arithmetic.c:88
 msgid "Simple arithmetic operations with two data fields (or a data field and a scalar)."
@@ -4864,6 +4866,7 @@ msgstr "Найденная с_тупень"
 #: modules/process/fft_synth.c:355
 #: modules/process/grain_mark.c:380
 #: modules/process/grain_rem_threshold.c:357
+#: modules/process/mark_with.c:399
 #: modules/process/polydistort.c:334
 #: modules/process/scars.c:575
 msgid "I_nstant updates"
@@ -4919,15 +4922,15 @@ msgstr ""
 
 #: modules/process/facet_analysis.c:161
 msgid "Visualizes, marks and measures facet orientation."
-msgstr ""
+msgstr "Показывает, помечает и измеряет положение граней в пространстве."
 
 #: modules/process/facet_analysis.c:175
 msgid "/_Statistics/Facet _Analysis..."
-msgstr ""
+msgstr "/_Статистика/Анализ _граней..."
 
 #: modules/process/facet_analysis.c:179
 msgid "Mark areas by 2D slope"
-msgstr ""
+msgstr "Пометить области по двумерному наклону"
 
 #: modules/process/facet_analysis.c:268
 msgid "Mark Facets"
@@ -4939,25 +4942,23 @@ msgstr "_Пометить"
 
 #: modules/process/facet_analysis.c:348
 msgid "noun|Normal"
-msgstr ""
+msgstr "Нормаль"
 
 #: modules/process/facet_analysis.c:356
-#, fuzzy
 msgid "_Find Maximum"
-msgstr "Найти точку максимума"
+msgstr "_Найти максимум"
 
 #: modules/process/facet_analysis.c:364
 msgid "Mean Normal"
-msgstr ""
+msgstr "Средняя нормаль"
 
 #: modules/process/facet_analysis.c:373
 msgid "Facet plane size:"
 msgstr "Площадь поверхности грани:"
 
 #: modules/process/facet_analysis.c:398
-#, fuzzy
 msgid "_Tolerance:"
-msgstr "Допуск"
+msgstr "_Допуск"
 
 #: modules/process/facet_analysis.c:418
 msgid "Warning: Lateral and value units differ. Angles are not physically meaningful."
@@ -5410,7 +5411,7 @@ msgstr ""
 
 #: modules/process/fraccor.c:37
 msgid "Removes data under mask using fractal interpolation."
-msgstr ""
+msgstr "Убирает данные под маской используя фрактальную интерполяцию."
 
 #: modules/process/fraccor.c:51
 msgid "/_Correct Data/_Fractal Correction"
@@ -5421,8 +5422,9 @@ msgid "Interpolate data under mask with fractal interpolation"
 msgstr ""
 
 #: modules/process/fractal.c:123
+#, fuzzy
 msgid "Partitioning"
-msgstr ""
+msgstr "Декомпозиция"
 
 #: modules/process/fractal.c:124
 msgid "Cube counting"
@@ -5443,15 +5445,15 @@ msgstr ""
 
 #: modules/process/fractal.c:161
 msgid "/_Statistics/_Fractal Dimension..."
-msgstr ""
+msgstr "/_Статистика/_Фрактальная размерность..."
 
 #: modules/process/fractal.c:165
 msgid "Calculate fractal dimension"
-msgstr ""
+msgstr "Рассчитать фрактальную размерность"
 
 #: modules/process/fractal.c:202
 msgid "Fractal Dimension"
-msgstr ""
+msgstr "Фрактальная размерность"
 
 #: modules/process/fractal.c:203
 msgid "Reco_mpute"
@@ -5463,7 +5465,7 @@ msgstr "_Метод:"
 
 #: modules/process/fractal.c:265
 msgid "Fit Area"
-msgstr ""
+msgstr "Область аппроксимации"
 
 #: modules/process/fractal.c:270
 msgid "From:"
@@ -5487,7 +5489,7 @@ msgstr "максимум"
 
 #: modules/process/fractal.c:478
 msgid "Linear fit"
-msgstr ""
+msgstr "Линейная аппроксимация"
 
 #: modules/process/gradient.c:42
 msgid "Creates presentations with various gradients (Sobel, Prewitt)."
@@ -6297,6 +6299,75 @@ msgstr "_Глубина смешения:"
 msgid "_Weight:"
 msgstr "_Вес:"
 
+#: modules/process/mark_with.c:141
+msgid "Creates or modifies a mask using other channels."
+msgstr ""
+
+#: modules/process/mark_with.c:155
+#, fuzzy
+msgid "/_Mask/Mark _With..."
+msgstr "/_Зёрна/Пометить по _водоразделу..."
+
+#: modules/process/mark_with.c:159
+msgid "Mask combining and modification"
+msgstr ""
+
+#: modules/process/mark_with.c:201
+#: modules/tools/maskedit.c:254
+msgid "Set mask to selection"
+msgstr ""
+
+#: modules/process/mark_with.c:206
+#: modules/tools/maskedit.c:259
+msgid "Add selection to mask"
+msgstr ""
+
+#: modules/process/mark_with.c:211
+#: modules/tools/maskedit.c:264
+msgid "Subtract selection from mask"
+msgstr ""
+
+#: modules/process/mark_with.c:216
+#: modules/tools/maskedit.c:269
+msgid "Intersect selection with mask"
+msgstr ""
+
+#: modules/process/mark_with.c:235
+#, fuzzy
+msgid "Mark With"
+msgstr "Пометить грани"
+
+#: modules/process/mark_with.c:316
+msgid "Operation:"
+msgstr "Операция:"
+
+#: modules/process/mark_with.c:347
+msgid "Mark with:"
+msgstr ""
+
+#: modules/process/mark_with.c:355
+#: modules/tools/grainremover.c:106
+#, fuzzy
+msgid "_Mask"
+msgstr "_Маска"
+
+#: modules/process/mark_with.c:356
+#: modules/tools/grainremover.c:107
+#, fuzzy
+msgid "_Data"
+msgstr "Да_нные"
+
+#: modules/process/mark_with.c:357
+#, fuzzy
+msgid "_Presentation"
+msgstr "Презентационное"
+
+#: modules/process/mark_with.c:382
+#: modules/process/mark_with.c:391
+#, fuzzy
+msgid "M_inimum:"
+msgstr "Минимум"
+
 #: modules/process/maskcor.c:87
 msgid "Creates mask by correlation with another data."
 msgstr ""
@@ -6870,50 +6941,48 @@ msgstr "C_мешать:"
 
 #: modules/process/slope_dist.c:107
 msgid "Calculates one- or two-dimensional distribution of slopes or graph of their angular distribution."
-msgstr ""
+msgstr "Рассчитывает одно- или двумерное распределение наклонов или график их углового распределения."
 
 #: modules/process/slope_dist.c:122
 msgid "/_Statistics/_Slope Distribution..."
-msgstr ""
+msgstr "/_Статистика/Распределение _наклонов..."
 
 #: modules/process/slope_dist.c:126
 msgid "Calculate angular slope distribution"
-msgstr ""
+msgstr "Рассчитать угловое распределение наклонов"
 
 #: modules/process/slope_dist.c:165
-#, fuzzy
 msgid "Slope distribution"
-msgstr "Распределение уклона"
+msgstr "Распределение наклона"
 
 #: modules/process/slope_dist.c:190
 msgid "_Two-dimensional distribution"
-msgstr ""
+msgstr "_Двумерное распределение"
 
 #: modules/process/slope_dist.c:191
 msgid "Directional (φ) _graph"
-msgstr ""
+msgstr "_График направлений (φ) "
 
 #: modules/process/slope_dist.c:192
 msgid "_Inclination (θ) graph"
-msgstr ""
+msgstr "График _наклонов (θ)"
 
 #: modules/process/slope_dist.c:200
 msgid "Slope Distribution"
-msgstr ""
+msgstr "Распределение наклонов"
 
 #: modules/process/slope_dist.c:216
-#, fuzzy
 msgid "Output type"
 msgstr "Тип вывода"
 
 #: modules/process/slope_dist.c:428
 msgid "Angular Slope Distribution"
-msgstr ""
+msgstr "Распределение наклонов по углам"
 
 #: modules/process/slope_dist.c:438
 #: modules/process/tilt.c:174
 msgid "Slopes"
-msgstr "Уклоны"
+msgstr "Наклоны"
 
 #: modules/process/slope_dist.c:493
 msgid "Inclination Distribution"
@@ -6921,7 +6990,7 @@ msgstr "Распределение наклона"
 
 #: modules/process/slope_dist.c:503
 msgid "Inclinations"
-msgstr ""
+msgstr "Наклоны"
 
 #: modules/process/sphere-revolve.c:95
 msgid "Subtracts background by arc or sphere revolution."
@@ -7347,16 +7416,6 @@ msgstr "Измерять отдельные зёрна (непрерывные �
 msgid "Grain removal tool, removes continuous parts of mask and/or underlying data."
 msgstr "Инструмент удаления зёрен, удаляет непрерывные части маски и/или данные под ними."
 
-#: modules/tools/grainremover.c:106
-#, fuzzy
-msgid "_Mask"
-msgstr "_Маска"
-
-#: modules/tools/grainremover.c:107
-#, fuzzy
-msgid "_Data"
-msgstr "Да_нные"
-
 #: modules/tools/grainremover.c:108
 #, fuzzy
 msgid "_Both"
@@ -7502,19 +7561,17 @@ msgid "Rt"
 msgstr "Rt"
 
 #: modules/tools/linestats.c:162
-#, fuzzy
 msgid "Skew"
 msgstr "Искажение"
 
 #: modules/tools/linestats.c:163
 #: modules/tools/roughness.c:403
-#, fuzzy
 msgid "Kurtosis"
 msgstr "Эксцесс"
 
 #: modules/tools/linestats.c:188
 msgid "Row/Column Statistics"
-msgstr ""
+msgstr "Статистика по столбцам/строкам"
 
 #: modules/tools/linestats.c:189
 msgid "Calculate row/column statistical functions"
@@ -7522,20 +7579,17 @@ msgstr "Рассчитать статистические функции для 
 
 #: modules/tools/linestats.c:290
 msgid "Ro_ws"
-msgstr ""
+msgstr "Стро_ки"
 
 #: modules/tools/linestats.c:291
-#, fuzzy
 msgid "Co_lumns"
-msgstr "Столбц&ы"
+msgstr "С_толбцы"
 
 #: modules/tools/linestats.c:320
-#, fuzzy
 msgid "_Quantity:"
-msgstr "Количество"
+msgstr "_Величина:"
 
 #: modules/tools/linestats.c:337
-#, fuzzy
 msgid "Average:"
 msgstr "Среднее:"
 
@@ -7564,22 +7618,6 @@ msgstr "Редактор маски"
 #: modules/tools/maskedit.c:170
 msgid "Edit mask"
 msgstr "Редактировать маску"
-
-#: modules/tools/maskedit.c:254
-msgid "Set mask to selection"
-msgstr ""
-
-#: modules/tools/maskedit.c:259
-msgid "Add selection to mask"
-msgstr ""
-
-#: modules/tools/maskedit.c:264
-msgid "Subtract selection from mask"
-msgstr ""
-
-#: modules/tools/maskedit.c:269
-msgid "Intersect selection with mask"
-msgstr ""
 
 #: modules/tools/maskedit.c:276
 msgid "Rectangular shapes"
@@ -7673,9 +7711,8 @@ msgid "Level X or Y lines with polynomials"
 msgstr "Выровнять линии по X или по Y с помощью полиномов"
 
 #: modules/tools/polynom.c:203
-#, fuzzy
 msgid "Fit height"
-msgstr "По высоте"
+msgstr ""
 
 #: modules/tools/polynom.c:204
 msgid "Fit linear"
@@ -7756,7 +7793,6 @@ msgid "Amplitude"
 msgstr "Амплитуда"
 
 #: modules/tools/roughness.c:299
-#, fuzzy
 msgid "Roughness average"
 msgstr "Средняя шероховатость"
 
@@ -7819,9 +7855,8 @@ msgid "Maximum height of the profile"
 msgstr ""
 
 #: modules/tools/roughness.c:443
-#, fuzzy
 msgid "Spatial"
-msgstr "Пространственное преобразование"
+msgstr "Пространственные"
 
 #: modules/tools/roughness.c:493
 msgid "Average wavelength of the profile"
@@ -7832,9 +7867,8 @@ msgid "Root mean square (RMS) wavelength of the profile"
 msgstr ""
 
 #: modules/tools/roughness.c:509
-#, fuzzy
 msgid "Hybrid"
-msgstr "Адаптивный гибридный"
+msgstr "Гибридные"
 
 #: modules/tools/roughness.c:517
 msgid "Average absolute slope"
@@ -7892,13 +7926,12 @@ msgid "Peak Count"
 msgstr "Число пиков"
 
 #: modules/tools/roughness.c:854
-#, fuzzy
 msgid "_Graph:"
-msgstr "&График"
+msgstr "_График:"
 
 #: modules/tools/roughness.c:861
 msgid "C_ut-off:"
-msgstr ""
+msgstr "_Порог:"
 
 #: modules/tools/roughness.c:1394
 #, fuzzy
