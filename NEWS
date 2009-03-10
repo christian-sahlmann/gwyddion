@@ -13,9 +13,12 @@ Libraries:
   GwyGraph in x-axis logarithmic mode.
 
 Modules:
+- Mark With (new): Create or modify a mask using another mask, data or
+  presentation.
 - Sensolytics (new): Imports Sensolytics file format.
 - SPIP ASC (new): Imports text SPM files that look like exported from SPIP.
 - MapVue (new): Imports MapVue data files (highly experimental).
+- Mask operations: Attach Mask was removed, superseded by Mark With.
 - Profile, Roughness tools: Subsampling of the profile for some directions of
   purely horizontal/vertical lines was fixed.
 - Distance, Profile and Path leven tools: The maximum number of lines was
