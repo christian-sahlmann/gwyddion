@@ -218,7 +218,7 @@ gwy_graph_window_new(GwyGraph *graph)
                                                GTK_ICON_SIZE_LARGE_TOOLBAR));
     gtk_box_pack_start(GTK_BOX(hbox), graphwindow->button_y_log,
                        FALSE, FALSE, 0);
-    gwy_graph_window_set_tooltip(graphwindow->button_x_log,
+    gwy_graph_window_set_tooltip(graphwindow->button_y_log,
                                  _("Toggle logarithmic y axis"));
     g_signal_connect_swapped(graphwindow->button_y_log, "clicked",
                              G_CALLBACK(gwy_graph_window_y_log),
