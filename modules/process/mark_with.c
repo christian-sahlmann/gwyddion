@@ -92,6 +92,7 @@ typedef struct {
     GwyDataObjectId target;
     GwyDataObjectId source;
     MarkArgs *args;
+    gboolean in_construction;
     gboolean calculated;
 } MarkControls;
 
@@ -106,8 +107,8 @@ static void          mark_load_args             (GwyContainer *container,
 static void          mark_save_args             (GwyContainer *container,
                                                  MarkArgs *args);
 static void          mark_sanitize_args         (MarkArgs *args);
-static void          operation_changed          (MarkControls *controls,
-                                                 GtkWidget *button);
+static void          operation_changed          (GtkWidget *button,
+                                                 MarkControls *controls);
 static void          mark_with_changed          (GtkWidget *button,
                                                  MarkControls *controls);
 static void          channel_changed            (GwyDataChooser *chooser,
@@ -231,32 +232,9 @@ mark_dialog(MarkArgs *args,
     controls.source = *target;
     controls.original_mask = NULL;
     controls.calculated = FALSE;
+    controls.in_construction = TRUE;
     /* 0 == source, 1 == result */
     controls.mydata = gwy_container_new();
-
-    gwy_container_gis_object(controls.target.data,
-                             gwy_app_get_mask_key_for_id(controls.target.id),
-                             &controls.original_mask);
-    gwy_container_gis_object(controls.target.data,
-                             gwy_app_get_data_key_for_id(controls.target.id),
-                             &dfield);
-    setup_source_view_data(&controls);
-
-    /*setup result container*/
-    gwy_container_set_object_by_name(controls.mydata, "/1/data", dfield);
-    gwy_app_sync_data_items(target->data, controls.mydata, target->id, 1, FALSE,
-                            GWY_DATA_ITEM_GRADIENT,
-                            GWY_DATA_ITEM_MASK_COLOR,
-                            GWY_DATA_ITEM_RANGE,
-                            GWY_DATA_ITEM_REAL_SQUARE,
-                            0);
-    if (controls.original_mask)
-        dfield = gwy_data_field_duplicate(controls.original_mask);
-    else
-        dfield = create_mask_field(dfield);
-    gwy_container_set_object_by_name(controls.mydata, "/1/mask", dfield);
-    g_object_unref(dfield);
-    ensure_mask_color(controls.mydata, "/1/mask");
 
     vbox = gtk_vbox_new(FALSE, 4);
     gtk_box_pack_start(GTK_BOX(hbox), vbox, FALSE, FALSE, 4);
@@ -265,35 +243,9 @@ mark_dialog(MarkArgs *args,
     controls.view_source = gwy_data_view_new(controls.mydata);
     gtk_box_pack_start(GTK_BOX(vbox), controls.view_source, FALSE, FALSE, 4);
 
-    layer = gwy_layer_basic_new();
-    gwy_pixmap_layer_set_data_key(layer, "/0/data");
-    gwy_layer_basic_set_gradient_key(GWY_LAYER_BASIC(layer), "/0/base/palette");
-    gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view_source), layer);
-    layer = gwy_layer_mask_new();
-    gwy_pixmap_layer_set_data_key(layer, "/0/mask");
-    gwy_layer_mask_set_color_key(GWY_LAYER_MASK(layer), "/0/mask");
-    gwy_data_view_set_alpha_layer(GWY_DATA_VIEW(controls.view_source), layer);
-    gwy_data_view_set_data_prefix(GWY_DATA_VIEW(controls.view_source),
-                                  "/0/data");
-    gwy_set_data_preview_size(GWY_DATA_VIEW(controls.view_source),
-                              PREVIEW_SIZE);
-
     /* Result preview */
     controls.view_result = gwy_data_view_new(controls.mydata);
     gtk_box_pack_start(GTK_BOX(vbox), controls.view_result, FALSE, FALSE, 4);
-
-    layer = gwy_layer_basic_new();
-    gwy_pixmap_layer_set_data_key(layer, "/1/data");
-    gwy_layer_basic_set_gradient_key(GWY_LAYER_BASIC(layer), "/1/base/palette");
-    gwy_data_view_set_data_prefix(GWY_DATA_VIEW(controls.view_result),
-                                  "/1/data");
-    gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view_result), layer);
-    layer = gwy_layer_mask_new();
-    gwy_pixmap_layer_set_data_key(layer, "/1/mask");
-    gwy_layer_mask_set_color_key(GWY_LAYER_MASK(layer), "/1/mask");
-    gwy_data_view_set_alpha_layer(GWY_DATA_VIEW(controls.view_result), layer);
-    gwy_set_data_preview_size(GWY_DATA_VIEW(controls.view_result),
-                              PREVIEW_SIZE);
 
     /* Controls */
     table = GTK_TABLE(gtk_table_new(12, 4, FALSE));
@@ -403,6 +355,64 @@ mark_dialog(MarkArgs *args,
         }
     }
 
+    /* Really set up the data views after we know something sensible is
+     * selected. */
+    gwy_container_gis_object(controls.target.data,
+                             gwy_app_get_mask_key_for_id(controls.target.id),
+                             &controls.original_mask);
+    gwy_container_gis_object(controls.target.data,
+                             gwy_app_get_data_key_for_id(controls.target.id),
+                             &dfield);
+    setup_source_view_data(&controls);
+
+    gwy_container_set_object_by_name(controls.mydata, "/1/data", dfield);
+    gwy_app_sync_data_items(target->data, controls.mydata, target->id, 1, FALSE,
+                            GWY_DATA_ITEM_GRADIENT,
+                            GWY_DATA_ITEM_MASK_COLOR,
+                            GWY_DATA_ITEM_RANGE,
+                            GWY_DATA_ITEM_REAL_SQUARE,
+                            0);
+    if (controls.original_mask)
+        dfield = gwy_data_field_duplicate(controls.original_mask);
+    else
+        dfield = create_mask_field(dfield);
+    gwy_container_set_object_by_name(controls.mydata, "/1/mask", dfield);
+    g_object_unref(dfield);
+    ensure_mask_color(controls.mydata, "/1/mask");
+
+    /* Source mask preview */
+    layer = gwy_layer_basic_new();
+    gwy_pixmap_layer_set_data_key(layer, "/0/data");
+    gwy_layer_basic_set_gradient_key(GWY_LAYER_BASIC(layer), "/0/base/palette");
+    gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view_source), layer);
+    layer = gwy_layer_mask_new();
+    gwy_pixmap_layer_set_data_key(layer, "/0/mask");
+    gwy_layer_mask_set_color_key(GWY_LAYER_MASK(layer), "/0/mask");
+    gwy_data_view_set_alpha_layer(GWY_DATA_VIEW(controls.view_source), layer);
+    gwy_data_view_set_data_prefix(GWY_DATA_VIEW(controls.view_source),
+                                  "/0/data");
+    gwy_set_data_preview_size(GWY_DATA_VIEW(controls.view_source),
+                              PREVIEW_SIZE);
+
+    /* Result preview */
+    layer = gwy_layer_basic_new();
+    gwy_pixmap_layer_set_data_key(layer, "/1/data");
+    gwy_layer_basic_set_gradient_key(GWY_LAYER_BASIC(layer), "/1/base/palette");
+    gwy_data_view_set_data_prefix(GWY_DATA_VIEW(controls.view_result),
+                                  "/1/data");
+    gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view_result), layer);
+    layer = gwy_layer_mask_new();
+    gwy_pixmap_layer_set_data_key(layer, "/1/mask");
+    gwy_layer_mask_set_color_key(GWY_LAYER_MASK(layer), "/1/mask");
+    gwy_data_view_set_alpha_layer(GWY_DATA_VIEW(controls.view_result), layer);
+    gwy_set_data_preview_size(GWY_DATA_VIEW(controls.view_result),
+                              PREVIEW_SIZE);
+
+    controls.in_construction = FALSE;
+    mark_with_changed(gwy_radio_buttons_find(controls.mark_with,
+                                             args->mark_with),
+                      &controls);
+
     gtk_widget_show_all(dialog);
     do {
         response = gtk_dialog_run(GTK_DIALOG(dialog));
@@ -486,10 +496,13 @@ perform_operation(MarkControls *controls)
 }
 
 static void
-operation_changed(MarkControls *controls,
-                  GtkWidget *button)
+operation_changed(GtkWidget *button,
+                  MarkControls *controls)
 {
     controls->args->operation = gwy_radio_button_get_value(button);
+    if (controls->in_construction)
+        return;
+
     controls->calculated = FALSE;
     if (controls->args->update)
         perform_operation(controls);
@@ -501,7 +514,6 @@ mark_with_changed(GtkWidget *button,
 {
     controls->args->mark_with = gwy_radio_button_get_value(button);
 
-    /* TODO: Must do also on dialog setup. */
     gwy_table_hscale_set_sensitive(GTK_OBJECT(controls->min),
                                    controls->args->mark_with != MARK_WITH_MASK);
     gwy_table_hscale_set_sensitive(GTK_OBJECT(controls->max),
@@ -518,6 +530,9 @@ channel_changed(GwyDataChooser *chooser,
     /* The channel type is recorded in mark_with, it cannot change here. */
     controls->source.data = gwy_data_chooser_get_active(chooser,
                                                         &controls->source.id);
+    if (controls->in_construction)
+        return;
+
     controls->calculated = FALSE;
     if (controls->args->update) {
         setup_source_view_data(controls);
