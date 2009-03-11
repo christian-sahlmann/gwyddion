@@ -223,7 +223,8 @@ mark_dialog(MarkArgs *args,
 
     tips = gwy_app_get_tooltips();
 
-    hbox = gtk_hbox_new(FALSE, 4);
+    hbox = gtk_hbox_new(FALSE, 12);
+    gtk_container_set_border_width(GTK_CONTAINER(hbox), 4);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox,
                        TRUE, TRUE, 4);
 
@@ -236,21 +237,21 @@ mark_dialog(MarkArgs *args,
     /* 0 == source, 1 == result */
     controls.mydata = gwy_container_new();
 
-    vbox = gtk_vbox_new(FALSE, 4);
-    gtk_box_pack_start(GTK_BOX(hbox), vbox, FALSE, FALSE, 4);
+    vbox = gtk_vbox_new(FALSE, 8);
+    gtk_box_pack_start(GTK_BOX(hbox), vbox, FALSE, FALSE, 0);
 
     /* Source mask preview */
     controls.view_source = gwy_data_view_new(controls.mydata);
-    gtk_box_pack_start(GTK_BOX(vbox), controls.view_source, FALSE, FALSE, 4);
+    gtk_box_pack_start(GTK_BOX(vbox), controls.view_source, FALSE, FALSE, 0);
 
     /* Result preview */
     controls.view_result = gwy_data_view_new(controls.mydata);
-    gtk_box_pack_start(GTK_BOX(vbox), controls.view_result, FALSE, FALSE, 4);
+    gtk_box_pack_start(GTK_BOX(vbox), controls.view_result, FALSE, FALSE, 0);
 
     /* Controls */
-    table = GTK_TABLE(gtk_table_new(12, 4, FALSE));
-    gtk_table_set_row_spacings(GTK_TABLE(table), 2);
-    gtk_table_set_col_spacings(GTK_TABLE(table), 6);
+    table = GTK_TABLE(gtk_table_new(13, 4, FALSE));
+    gtk_table_set_row_spacings(table, 2);
+    gtk_table_set_col_spacings(table, 6);
     gtk_box_pack_start(GTK_BOX(hbox), GTK_WIDGET(table), FALSE, TRUE, 0);
     row = 0;
 
@@ -269,7 +270,7 @@ mark_dialog(MarkArgs *args,
                                     _("_Intersect masks"), MASK_EDIT_INTERSECT,
                                     NULL);
     row = gwy_radio_buttons_attach_to_table(controls.operation, table, 3, row);
-    gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
+    gtk_table_set_row_spacing(table, row-1, 8);
 
     /* Mark with */
     label = gtk_label_new(_("Mark with:"));
@@ -311,6 +312,12 @@ mark_dialog(MarkArgs *args,
     }
     gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
 
+    /* Range */
+    label = gtk_label_new(_("Marked data range:"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(table, label, 0, 1, row, row+1, GTK_FILL, 0, 0, 0);
+    row++;
+
     /* Minimum */
     controls.min = GTK_ADJUSTMENT(gtk_adjustment_new(100.0*args->min,
                                                      0.0, 100.0, 0.01, 1.0, 0));
@@ -327,7 +334,7 @@ mark_dialog(MarkArgs *args,
                             GTK_OBJECT(controls.max), 0);
     g_signal_connect_swapped(controls.max, "value-changed",
                              G_CALLBACK(max_changed), &controls);
-    gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
+    gtk_table_set_row_spacing(table, row, 8);
     row++;
 
     /* Instant update */
