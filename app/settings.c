@@ -423,6 +423,7 @@ gwy_app_settings_apply(GwyContainer *settings)
     GwyResource *resource;
     const guchar *s;
     gchar **preferred, **p;
+    gboolean disabled;
 
     /* Preferred resources */
     if (gwy_container_gis_string_by_name(settings, "/app/gradients/preferred",
@@ -453,6 +454,12 @@ gwy_app_settings_apply(GwyContainer *settings)
     if (gwy_container_gis_string_by_name(settings, "/app/glmaterials/default",
                                          &s))
         gwy_inventory_set_default_item_name(gwy_gl_materials(), s);
+
+    /* Globally disabled 3D view axes */
+    if (gwy_container_gis_boolean_by_name(settings, "/app/3d/axes/disable",
+                                          &disabled)
+        && disabled)
+        gwy_3d_view_class_disable_axis_drawing(disabled);
 }
 
 /**

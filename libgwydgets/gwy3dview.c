@@ -202,6 +202,8 @@ labels[GWY_3D_VIEW_NLABELS] = {
 };
 #endif /* HAVE_GTKGLEXT */
 
+static gboolean ugly_hack_globally_disable_axis_drawing = FALSE;
+
 G_DEFINE_TYPE(Gwy3DView, gwy_3d_view, GTK_TYPE_WIDGET)
 
 #ifdef HAVE_GTKGLEXT
@@ -1869,6 +1871,9 @@ gwy_3d_draw_axes(Gwy3DView *widget)
     gboolean yfirst;
     GwyGLMaterial *mat_none;
 
+    if (ugly_hack_globally_disable_axis_drawing)
+        return;
+
     gwy_debug(" ");
 
     xres = gwy_data_field_get_xres(widget->data_field);
@@ -2575,6 +2580,26 @@ gwy_3d_view_set_scale_range(G_GNUC_UNUSED Gwy3DView *gwy3dview,
     g_critical("OpenGL support was not compiled in.");
 }
 #endif /* HAVE_GTKGLEXT */
+
+/**
+ * gwy_3d_view_class_disable_axis_drawing:
+ * @disable: %TRUE to disable 3D view axes globally, %FALSE to enable them.
+ *
+ * Globally disables drawing of 3D view axes.
+ *
+ * If axis drawing is disabled, axes are never drawn.  If it is not disabled,
+ * their rendering depends on the 3D view setup.
+ *
+ * This function is a hack and exists to work around various GL implementations
+ * that crash on pixmap drawing operations.
+ *
+ * Since: 2.14
+ **/
+void
+gwy_3d_view_class_disable_axis_drawing(gboolean disable)
+{
+    ugly_hack_globally_disable_axis_drawing = disable;
+}
 
 /************************** Documentation ****************************/
 

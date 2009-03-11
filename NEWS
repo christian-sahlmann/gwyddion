@@ -9,8 +9,11 @@ Libraries:
   the number of pixels for horizontal and vertical lines.
 - libgwyapp: A helper function for interpolation of bad pixels upon data import
   was added.
-- libgwydgets: Corrected wrong x-axis value reported for mouse selection in
-  GwyGraph in x-axis logarithmic mode.
+- libgwydgets: Wrong x-axis value reported for mouse selection in GwyGraph in
+  x-axis logarithmic mode was corrected.
+- libgwydgets, libgwyapp: 3D view axes drawing can be globally disabled with
+  "/app/3d/axes/disable" boolean True
+  line in ~/.gwyddion/settings to work around broken OpenGL implementations.
 
 Modules:
 - Mark With (new): Create or modify a mask using another mask, data or

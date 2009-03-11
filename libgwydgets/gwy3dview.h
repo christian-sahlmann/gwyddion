@@ -168,6 +168,8 @@ void              gwy_3d_view_set_scale_range   (Gwy3DView *gwy3dview,
                                                  gdouble min_scale,
                                                  gdouble max_scale);
 
+void              gwy_3d_view_class_disable_axis_drawing(gboolean disable);
+
 G_END_DECLS
 
 #endif  /* __GWY_3D_VIEW_H__ */
