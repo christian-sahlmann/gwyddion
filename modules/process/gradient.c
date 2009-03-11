@@ -42,7 +42,7 @@ static GwyModuleInfo module_info = {
     N_("Creates presentations with various gradients "
        "(Sobel, Prewitt)."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.4",
+    "1.5",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -80,8 +80,44 @@ module_register(void)
                               GRADIENT_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
                               N_("Vertical Prewitt gradient presentation"));
+    gwy_process_func_register("azimuth",
+                              (GwyProcessFunc)&gradient,
+                              N_("/_Presentation/_Gradient/_Azimuth"),
+                              NULL,
+                              GRADIENT_RUN_MODES,
+                              GWY_MENU_FLAG_DATA,
+                              N_("Local slope azimuth presentation"));
 
     return TRUE;
+}
+
+static void
+filter_azimuth(GwyDataField *dfield, GwyDataField *target)
+{
+    const gdouble *sdata;
+    gdouble *data;
+    gint xres, yres, i, j;
+
+    sdata = gwy_data_field_get_data_const(dfield);
+    data = gwy_data_field_get_data(target);
+    xres = gwy_data_field_get_xres(target);
+    yres = gwy_data_field_get_yres(target);
+
+    for (j = 0; j < xres; j++)
+        data[j] = 0.0;
+
+    for (i = 1; i < yres-1; i++) {
+        data[i*xres] = 0.0;
+        for (j = 1; j < xres-1; j++) {
+            gdouble xd = sdata[i*xres + j+1] - sdata[i*xres + j-1];
+            gdouble yd = sdata[(i+1)*xres + j] - sdata[(i-1)*xres + j];
+            data[i*xres + j] = atan2(yd, xd);
+        }
+        data[i*xres + xres-1] = 0.0;
+    }
+
+    for (j = 0; j < xres; j++)
+        data[(yres - 1)*xres + j] = 0.0;
 }
 
 static void
@@ -123,6 +159,8 @@ gradient(GwyContainer *data,
         gwy_data_field_filter_prewitt(showfield, GWY_ORIENTATION_HORIZONTAL);
     else if (gwy_strequal(name, "prewitt_vertical"))
         gwy_data_field_filter_prewitt(showfield, GWY_ORIENTATION_VERTICAL);
+    else if (gwy_strequal(name, "azimuth"))
+        filter_azimuth(dfield, showfield);
     else {
         g_warning("gradient does not provide function `%s'", name);
     }
