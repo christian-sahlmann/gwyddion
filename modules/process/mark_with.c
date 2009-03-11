@@ -195,38 +195,8 @@ mark_dialog(MarkArgs *args,
             const GwyDataObjectId *target,
             GQuark mquark)
 {
-    static struct {
-        guint type;
-        const gchar *stock_id;
-        const gchar *text;
-    }
-    const operations[] = {
-        {
-            MASK_EDIT_SET,
-            GWY_STOCK_MASK,
-            N_("Set mask to the source mask"),
-        },
-        {
-            MASK_EDIT_ADD,
-            GWY_STOCK_MASK_ADD,
-            N_("Add source mask to the mask"),
-        },
-        {
-            MASK_EDIT_REMOVE,
-            GWY_STOCK_MASK_SUBTRACT,
-            N_("Subtract source mask from the mask"),
-        },
-        {
-            MASK_EDIT_INTERSECT,
-            GWY_STOCK_MASK_INTERSECT,
-            N_("Intersect mask with the source mask"),
-        },
-    };
-
     GtkWidget *dialog, *hbox, *vbox, *label;
-    GtkRadioButton *group;
     GtkTable *table;
-    GtkBox *hbox2;
     GtkTooltips *tips;
     MarkControls controls;
     GwyDataField *dfield;
@@ -336,31 +306,18 @@ mark_dialog(MarkArgs *args,
     label = gtk_label_new(_("Operation:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(table, label, 0, 1, row, row+1, GTK_FILL, 0, 0, 0);
-
-    hbox2 = GTK_BOX(gtk_hbox_new(FALSE, 0));
-    gtk_table_attach(table, GTK_WIDGET(hbox2),
-                     1, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
-
-    group = NULL;
-    for (i = 0; i < G_N_ELEMENTS(operations); i++) {
-        GtkWidget *button, *image;
-
-        button = gtk_radio_button_new_from_widget(group);
-        g_object_set(button, "draw-indicator", FALSE, NULL);
-        image = gtk_image_new_from_stock(operations[i].stock_id,
-                                         GTK_ICON_SIZE_LARGE_TOOLBAR);
-        gtk_container_add(GTK_CONTAINER(button), image);
-        gwy_radio_button_set_value(button, operations[i].type);
-        gtk_box_pack_start(hbox2, button, FALSE, FALSE, 0);
-        gtk_tooltips_set_tip(tips, button, gettext(operations[i].text), NULL);
-        g_signal_connect_swapped(button, "clicked",
-                                 G_CALLBACK(operation_changed), &controls);
-        if (!group)
-            group = GTK_RADIO_BUTTON(button);
-    }
-    controls.operation = gtk_radio_button_get_group(group);
-    gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
     row++;
+
+    controls.operation
+        = gwy_radio_buttons_createl(G_CALLBACK(operation_changed), &controls,
+                                    args->operation,
+                                    _("Se_t mask"), MASK_EDIT_SET,
+                                    _("_Add mask"), MASK_EDIT_ADD,
+                                    _("_Subtract mask"), MASK_EDIT_REMOVE,
+                                    _("_Intersect masks"), MASK_EDIT_INTERSECT,
+                                    NULL);
+    row = gwy_radio_buttons_attach_to_table(controls.operation, table, 3, row);
+    gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
 
     /* Mark with */
     label = gtk_label_new(_("Mark with:"));
