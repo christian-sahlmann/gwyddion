@@ -18,6 +18,7 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
+#include "config.h"
 #include <string.h>
 #include <stdlib.h>
 #include <gtk/gtk.h>
@@ -631,7 +632,7 @@ static GwyModuleInfo module_info = {
     N_("Calculate surface profile parameters."),
     "Martin Hasoň <hasonm@physics.muni.cz>, "
         "Yeti <yeti@gwyddion.net>",
-    "1.5",
+    "1.6",
     "Martin Hasoň & David Nečas (Yeti)",
     "2006",
 };
@@ -940,7 +941,7 @@ render_name(G_GNUC_UNUSED GtkTreeViewColumn *column,
     g_object_set(renderer,
                  "ellipsize", header ? PANGO_ELLIPSIZE_NONE : PANGO_ELLIPSIZE_END ,
                  "weight", header ? PANGO_WEIGHT_BOLD : PANGO_WEIGHT_NORMAL,
-                 "text", pinfo->name,
+                 "text", gettext(pinfo->name),
                  NULL);
 }
 
@@ -1417,7 +1418,7 @@ gwy_tool_roughness_update_graphs(GwyToolRoughness *tool)
             g_object_set(gcmodel,
                          "mode", GWY_GRAPH_CURVE_LINE,
                          "color", gwy_graph_get_preset_color(i),
-                         "description", graph->title,
+                         "description", gettext(graph->title),
                          NULL);
             gwy_graph_model_add_curve(gmodel, gcmodel);
             g_object_unref(gcmodel);
@@ -2284,7 +2285,7 @@ gwy_tool_roughness_create_report(gpointer user_data,
         gchar *sym;
 
         if (pinfo->param == -1) {
-            g_string_append_printf(report, "\n%s\n", pinfo->name);
+            g_string_append_printf(report, "\n%s\n", gettext(pinfo->name));
             continue;
         }
 
