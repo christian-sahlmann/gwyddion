@@ -1,6 +1,6 @@
 /*
  *  $Id$
- *  Copyright (C) 2005 David Necas (Yeti), Petr Klwsxmtek.
+ *  Copyright (C) 2005 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klwsxmtek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
