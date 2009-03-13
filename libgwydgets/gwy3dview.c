@@ -163,7 +163,9 @@ static void     gwy_3d_view_send_configure       (Gwy3DView *gwy3dview);
 static gboolean gwy_3d_view_button_press         (GtkWidget *widget,
                                                   GdkEventButton *event);
 static Gwy3DVector* gwy_3d_make_normals          (GwyDataField *dfield,
-                                                  Gwy3DVector *normals);
+                                                  Gwy3DVector *normals,
+                                                  GLfloat *pdx,
+                                                  GLfloat *pdy);
 static gboolean gwy_3d_view_motion_notify        (GtkWidget *widget,
                                                   GdkEventMotion *event);
 static void     gwy_3d_make_list                 (Gwy3DView *gwy3D,
@@ -1665,17 +1667,39 @@ gwy_3d_view_motion_notify(GtkWidget *widget,
 
 static Gwy3DVector*
 gwy_3d_make_normals(GwyDataField *dfield,
-                    Gwy3DVector *normals)
+                    Gwy3DVector *normals,
+                    GLfloat *pdx,
+                    GLfloat *pdy)
 {
    typedef struct { Gwy3DVector A, B; } RectangleNorm;
    const gdouble *data;
    gint i, j, xres, yres;
+   gdouble xreal, yreal;
+   GLfloat dx, dy, dx2, dy2;
    RectangleNorm * norms;
 
    g_return_val_if_fail(normals, NULL);
 
    xres = gwy_data_field_get_xres(dfield);
    yres = gwy_data_field_get_yres(dfield);
+   xreal = gwy_data_field_get_xreal(dfield);
+   yreal = gwy_data_field_get_yreal(dfield);
+   /* The smaller triangle side is 1.0, the larger is, well, at least that.
+    * To get pixel-wise behaviour, just set dx=dy=1. */
+   if (xres/xreal <= yres/yreal) {
+       dx = (yres/yreal)/(xres/xreal);
+       dy = 1.0;
+   }
+   else {
+       dx = 1.0;
+       dy = (xres/xreal)/(yres/yreal);
+   }
+   dx2 = dx*dx;
+   dy2 = dy*dy;
+   if (pdx)
+       *pdx = dx;
+   if (pdy)
+       *pdy = dy;
    data = gwy_data_field_get_data_const(dfield);
 
    /* memory for normals of triangles
@@ -1686,30 +1710,34 @@ gwy_3d_make_normals(GwyDataField *dfield,
    if (norms == NULL)
        return NULL;
 
-   /* Calculation of nornals of triangles */
+   /* Calculation of normals of triangles */
    for (j = 0; j < yres-1; j++) {
       for (i = 0; i < xres-1; i++) {
-         GLfloat a, b, c, n;
+         GLfloat a, b, c, ab, ac, bc, n;
 
          a = data[(yres-1 - j)*xres + i];
          b = data[(yres-2 - j)*xres + i];
          c = data[(yres-1 - j)*xres + i+1];
-         n = 1.0 / sqrt((a-c)*(a-c) + (b-a)*(b-a) + 1.0);
-         norms[j*(xres-1) + i].A.x = (a-c)*n;
-         norms[j*(xres-1) + i].A.y = (b-a)*n;
-         norms[j*(xres-1)+ i].A.z = n;
+         ab = a - b;
+         ac = a - c;
+         n = 1.0/sqrt(dy2*ac*ac + dx2*ab*ab + dx2*dy2);
+         norms[j*(xres-1) + i].A.x = dy*ac*n;
+         norms[j*(xres-1) + i].A.y = -dx*ab*n;
+         norms[j*(xres-1)+ i].A.z = dx*dy*n;
 
          a = b;
          b = c;
          c = data[(yres-2 - j)*xres + i+1];
-         n = 1.0 / sqrt((a-c)*(a-c) + (c-b)*(c-b) + 1.0);
-         norms[j*(xres-1) + i].B.x = (a-c)*n;
-         norms[j*(xres-1) + i].B.y = (c-b)*n;
-         norms[j*(xres-1) + i].B.z = n;
+         ac = a - c;
+         bc = b - c;
+         n = 1.0/sqrt(dy2*ac*ac + dx2*bc*bc + dx2*dy2);
+         norms[j*(xres-1) + i].B.x = dy*ac*n;
+         norms[j*(xres-1) + i].B.y = -bc*dx*n;
+         norms[j*(xres-1) + i].B.z = dx*dy*n;
       }
    }
 
-   /* two of corner vertecies have only one triangle adjacent
+   /* two of corner vertices have only one triangle adjacent
     * (first and last vertex) */
    normals[0] = norms[0].A;
    normals[xres * yres - 1] = norms[(xres-1) * (yres-1) - 1].B;
@@ -1723,7 +1751,7 @@ gwy_3d_make_normals(GwyDataField *dfield,
                                   + norms[(xres - 1)*(yres -2)].B.y)/2.0f;
    normals[xres * (yres -1)].z = (norms[xres - 2].A.z
                                   + norms[(xres - 1)*(yres -2)].B.z)/2.0f;
-   /*the vertexies on the edge og the matrix have three adjacent triangles*/
+   /*the vertices on the edge of the matrix have three adjacent triangles*/
    for (i = 1; i < xres - 1; i ++) {
        const Gwy3DVector *a = &(norms[i-1].A);
        const Gwy3DVector *b = &(norms[i-1].B);
@@ -1764,7 +1792,7 @@ gwy_3d_make_normals(GwyDataField *dfield,
        normals[i * xres - 1].z = (a->z + b->z + c->z)/3.0;
    }
 
-   /* The vertecies inside of matrix have six adjacent triangles*/
+   /* The vertices inside of matrix have six adjacent triangles*/
    for (j = 1; j < yres - 1; j++) {
        for (i = 1; i < xres - 1; i++) {
            Gwy3DVector *adj_tri[6];
@@ -1800,9 +1828,10 @@ gwy_3d_make_list(Gwy3DView *gwy3dview,
                  GwyDataField *dfield,
                  gint shape)
 {
-    gint i, j, xres, yres, res;
-    gdouble data_min, data_max;
+    gint i, j, xres, yres;
+    gdouble data_min, data_max, res;
     GLdouble zdifr;
+    GLfloat dx, dy;
     Gwy3DVector *normals;
     const gdouble *data;
     GwyGradient *grad;
@@ -1815,22 +1844,23 @@ gwy_3d_make_list(Gwy3DView *gwy3dview,
     yres = gwy_data_field_get_yres(dfield);
     gwy_data_field_get_min_max(gwy3dview->data_field, &data_min, &data_max);
     data = gwy_data_field_get_data_const(dfield);
-    res  = xres > yres ? xres : yres;
     grad = gwy3dview->gradient;
     if (!grad)
         grad = gwy_gradients_get_gradient(NULL);
 
+    normals = g_new(Gwy3DVector, xres * yres);
+    if (!gwy_3d_make_normals(dfield, normals, &dx, &dy)) {
+        /*TODO solve not enough memory problem*/
+        g_return_if_reached();
+    }
+
+    res = MAX(xres*dx, yres*dy);
     glNewList(gwy3dview->shape_list_base + shape, GL_COMPILE);
     glPushMatrix();
-    glTranslatef(-(xres/(double)res), -(yres/(double)res),
-                 GWY_3D_Z_DISPLACEMENT);
+    glTranslatef(-xres*dx/res, -yres*dy/res, GWY_3D_Z_DISPLACEMENT);
     glScalef(2.0/res, 2.0/res, GWY_3D_Z_TRANSFORMATION/(data_max - data_min));
     glTranslatef(0.0, 0.0, -data_min);
     zdifr = 1.0/(data_max - data_min);
-    normals = g_new(Gwy3DVector, xres * yres);
-    if (!gwy_3d_make_normals(dfield, normals)) {
-        /*TODO solve not enough memory problem*/
-    }
 
     /* FIXME: This should be avoided in lighting visualization mode, create
      * it only upon a switch to gradient mode. */
@@ -1846,13 +1876,13 @@ gwy_3d_make_list(Gwy3DView *gwy3dview,
                        normals[j*xres+i].z);
             gwy_gradient_get_color(grad, (a - data_min)*zdifr, &color);
             glColor3d(color.r , color.g, color.b);
-            glVertex3d((double)i, (double)j, a);
+            glVertex3d(i*dx, j*dy, a);
             glNormal3d(normals[(j+1)*xres+i].x,
                        normals[(j+1)*xres+i].y,
                        normals[(j+1)*xres+i].z);
             gwy_gradient_get_color(grad, (b - data_min)*zdifr, &color);
             glColor3d(color.r , color.g, color.b);
-            glVertex3d((double)i, (double)(j+1), b);
+            glVertex3d(i*dx, (j+1)*dy, b);
         }
         glEnd();
     }
