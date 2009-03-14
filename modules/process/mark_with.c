@@ -281,9 +281,12 @@ mark_dialog(MarkArgs *args,
     controls.mark_with
         = gwy_radio_buttons_createl(G_CALLBACK(mark_with_changed), &controls,
                                     args->mark_with,
-                                    _("_Mask"), MARK_WITH_MASK,
-                                    _("_Data"), MARK_WITH_DATA,
-                                    _("_Presentation"), MARK_WITH_SHOW,
+                                    gwy_sgettext("with|_Mask"),
+                                    MARK_WITH_MASK,
+                                    gwy_sgettext("with|_Data"),
+                                    MARK_WITH_DATA,
+                                    gwy_sgettext("with|_Presentation"),
+                                    MARK_WITH_SHOW,
                                     NULL);
     for (l = controls.mark_with; l; l = g_slist_next(l)) {
         GwyDataChooser *chooser;
@@ -321,7 +324,7 @@ mark_dialog(MarkArgs *args,
     /* Minimum */
     controls.min = GTK_ADJUSTMENT(gtk_adjustment_new(100.0*args->min,
                                                      0.0, 100.0, 0.01, 1.0, 0));
-    gwy_table_attach_hscale(GTK_WIDGET(table), row, _("M_inimum:"), "%",
+    gwy_table_attach_hscale(GTK_WIDGET(table), row, _("_Minimum:"), "%",
                             GTK_OBJECT(controls.min), 0);
     g_signal_connect_swapped(controls.min, "value-changed",
                              G_CALLBACK(min_changed), &controls);
@@ -330,7 +333,7 @@ mark_dialog(MarkArgs *args,
     /* Maximum */
     controls.max = GTK_ADJUSTMENT(gtk_adjustment_new(100.0*args->max,
                                                      0.0, 100.0, 0.01, 1.0, 0));
-    gwy_table_attach_hscale(GTK_WIDGET(table), row, _("M_inimum:"), "%",
+    gwy_table_attach_hscale(GTK_WIDGET(table), row, _("M_aximum:"), "%",
                             GTK_OBJECT(controls.max), 0);
     g_signal_connect_swapped(controls.max, "value-changed",
                              G_CALLBACK(max_changed), &controls);
