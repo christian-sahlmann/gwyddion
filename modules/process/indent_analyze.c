@@ -1635,7 +1635,7 @@ save_statistics_dialog(IndentAnalyzeControls *c,
                 args->maxx, args->maxy, args->max_val/mag);
         fprintf(out, _("Diference max-min:                      %lf\n"),
                 (args->max_val - args->min_val)/mag);
-        fprintf(out, _("\n"));
+        fprintf(out, "\n");
 
         fprintf(out,
                 _("Area (projected) above plane:             %g (%.1lf %%)\n"),
@@ -1649,7 +1649,7 @@ save_statistics_dialog(IndentAnalyzeControls *c,
                 _("Area (projected) of    plane:             %g (%.1lf %%)\n"),
                 args->area_plane/mag/mag,
                 100. * (args->area_plane/sxy));
-        fprintf(out, _("\n"));
+        fprintf(out, "\n");
 
         fprintf(out, _("Area (developed) above %g (+%.1f %%)\n"),
                 args->surface_above/mag/mag,
