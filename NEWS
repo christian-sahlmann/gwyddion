@@ -3,8 +3,7 @@ Application:
 - Translations updated: Czech, Russian.
 
 Libraries:
-- Some forgotten strings were made translatable and gettext() was applied to
-  some to actually translate them.
+- libgwyapp: Data browser displays channel thumbnails.
 - libprocess: Profile extraction auto number of samples always corresponds to
   the number of pixels for horizontal and vertical lines.
 - libgwyapp: A helper function for interpolation of bad pixels upon data import
@@ -16,6 +15,8 @@ Libraries:
 - libgwydgets, libgwyapp: 3D view axes drawing can be globally disabled with
   "/app/3d/axes/disable" boolean True
   line in ~/.gwyddion/settings to work around broken OpenGL implementations.
+- Some forgotten strings were made translatable and gettext() was applied to
+  some to actually translate them.
 
 Modules:
 - Mark With (new): Create or modify a mask using another mask, data or
@@ -30,6 +31,7 @@ Modules:
 - Distance, Profile and Path leven tools: The maximum number of lines was
   increased to 1024.
 - PNI file: Vertical flipping was removed.
+- Many modules: Translation problems were corrected.
 
 
 2.13 (2009-02-09)
@@ -166,7 +168,7 @@ Modules:
 - MI file: Reading of ASCII image files was actually implemented.
 - Plugin-proxy: Memory overflow in dump file reading was fixed.
 - Sensofar (new): Added Sensofar PLu file import module.
-- SCIM (new): Added SICM file import module.
+- SICM (new): Added IonScope SCIM file import module.
 - Burleigh BII (new): Added read support for burleigh BII binary file format.
 - Surf: Added export to Surf files
 - stpfile: Improved support for extended source modes.

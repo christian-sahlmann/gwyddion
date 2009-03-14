@@ -80,6 +80,7 @@ enum {
     MODEL_ID,
     MODEL_OBJECT,
     MODEL_WIDGET,
+    MODEL_TIMESTAMP,
     MODEL_THUMBNAIL,
     MODEL_N_COLUMNS
 };
@@ -105,15 +106,6 @@ typedef struct {
     Gwy3DWindow *window;
     gint id;
 } GwyApp3DAssociation;
-
-/* One item for the thumbnail rendering queue.   Store defines the type of
- * object to render. */
-typedef struct {
-    GwyContainer *weak_data;
-    GtkListStore *store;
-    GTimeVal timestamp;
-    gint id;
-} GwyThumbnailQueueItem;
 
 /* The data browser */
 struct _GwyAppDataBrowser {
@@ -148,7 +140,6 @@ static gboolean gwy_app_data_proxy_find_object(GtkListStore *store,
                                                gint i,
                                                GtkTreeIter *iter);
 static void gwy_app_data_browser_switch_data(GwyContainer *data);
-static gboolean gwy_app_data_browser_render_thumbnail(gpointer user_data);
 static void gwy_app_data_browser_sync_mask  (GwyContainer *data,
                                              GQuark quark,
                                              GwyDataView *data_view);
@@ -195,6 +186,17 @@ static GQuark graph_window_quark = 0;
 
 /* The data browser */
 static GwyAppDataBrowser *gwy_app_data_browser = NULL;
+
+/* Use doubles for timestamps.  They have 53bit mantisa, which is sufficient
+ * for microsecond precision. */
+static inline gdouble
+gwy_get_timestamp(void)
+{
+    GTimeVal timestamp;
+
+    g_get_current_time(&timestamp);
+    return timestamp.tv_sec + 1e-6*timestamp.tv_usec;
+}
 
 /**
  * gwy_app_data_proxy_compare_data:
@@ -542,10 +544,27 @@ gwy_app_data_proxy_switch_object_data(G_GNUC_UNUSED GwyAppDataProxy *proxy,
  * (Currently does not do anything.)
  **/
 static void
-gwy_app_data_proxy_channel_changed(G_GNUC_UNUSED GwyDataField *channel,
-                                   G_GNUC_UNUSED GwyAppDataProxy *proxy)
+gwy_app_data_proxy_channel_changed(GwyDataField *channel,
+                                   GwyAppDataProxy *proxy)
 {
+    GwyAppKeyType type;
+    GtkTreeIter iter;
+    GQuark quark;
+    gint id;
+
     gwy_debug("proxy=%p channel=%p", proxy, channel);
+    quark = GPOINTER_TO_UINT(g_object_get_qdata(G_OBJECT(channel),
+                                                own_key_quark));
+    g_return_if_fail(quark);
+    id = _gwy_app_analyse_data_key(g_quark_to_string(quark), &type, NULL);
+    g_return_if_fail(id >= 0);
+    if (!gwy_app_data_proxy_find_object(proxy->lists[PAGE_CHANNELS].store, id,
+                                        &iter))
+        return;
+
+    gtk_list_store_set(proxy->lists[PAGE_CHANNELS].store, &iter,
+                       MODEL_TIMESTAMP, gwy_get_timestamp(),
+                       -1);
 }
 
 /**
@@ -1046,7 +1065,6 @@ gwy_app_data_proxy_item_changed(GwyContainer *data,
                                 GwyAppDataProxy *proxy)
 {
     GObject *object = NULL;
-    GwyThumbnailQueueItem tqitem;
     GwyAppDataList *list;
     const gchar *strkey;
     GwyAppKeyType type;
@@ -1054,12 +1072,11 @@ gwy_app_data_proxy_item_changed(GwyContainer *data,
     GwyDataView *data_view = NULL;
     gboolean found;
     GList *item;
-    gint i;
+    gint id, pageno = -1;
 
-    gwy_clear(&tqitem, 1);
     strkey = g_quark_to_string(quark);
-    i = _gwy_app_analyse_data_key(strkey, &type, NULL);
-    if (i < 0) {
+    id = _gwy_app_analyse_data_key(strkey, &type, NULL);
+    if (id < 0) {
         if (type == KEY_IS_FILENAME) {
             gwy_app_data_browser_update_filename(proxy);
             gwy_app_data_proxy_update_window_titles(proxy);
@@ -1070,70 +1087,78 @@ gwy_app_data_proxy_item_changed(GwyContainer *data,
     switch (type) {
         case KEY_IS_DATA:
         gwy_container_gis_object(data, quark, &object);
-        list = &proxy->lists[PAGE_CHANNELS];
-        found = gwy_app_data_proxy_find_object(list->store, i, &iter);
+        pageno = PAGE_CHANNELS;
+        list = &proxy->lists[pageno];
+        found = gwy_app_data_proxy_find_object(list->store, id, &iter);
         gwy_debug("Channel <%s>: %s in container, %s in list store",
                   strkey,
                   object ? "present" : "missing",
                   found ? "present" : "missing");
         g_return_if_fail(object || found);
         if (object && !found)
-            gwy_app_data_proxy_connect_channel(proxy, i, object);
+            gwy_app_data_proxy_connect_channel(proxy, id, object);
         else if (!object && found)
             gwy_app_data_proxy_disconnect_channel(proxy, &iter);
         else {
             gwy_app_data_proxy_reconnect_channel(proxy, &iter, object);
             gwy_list_store_row_changed(list->store, &iter, NULL, -1);
         }
-        if (object) {
-            tqitem.store = list->store;
-            tqitem.weak_data = proxy->container;
-            tqitem.id = i;
-        }
+        /* Prevent thumbnail update */
+        if (!object)
+            pageno = -1;
         break;
 
         case KEY_IS_GRAPH:
         gwy_container_gis_object(data, quark, &object);
-        list = &proxy->lists[PAGE_GRAPHS];
-        found = gwy_app_data_proxy_find_object(list->store, i, &iter);
+        pageno = PAGE_GRAPHS;
+        list = &proxy->lists[pageno];
+        found = gwy_app_data_proxy_find_object(list->store, id, &iter);
         gwy_debug("Graph <%s>: %s in container, %s in list store",
                   strkey,
                   object ? "present" : "missing",
                   found ? "present" : "missing");
         g_return_if_fail(object || found);
         if (object && !found)
-            gwy_app_data_proxy_connect_graph(proxy, i, object);
+            gwy_app_data_proxy_connect_graph(proxy, id, object);
         else if (!object && found)
             gwy_app_data_proxy_disconnect_graph(proxy, &iter);
         else {
             gwy_app_data_proxy_reconnect_graph(proxy, &iter, object);
             gwy_list_store_row_changed(list->store, &iter, NULL, -1);
         }
+        /* Prevent thumbnail update */
+        if (!object)
+            pageno = -1;
         break;
 
         case KEY_IS_SPECTRA:
         gwy_container_gis_object(data, quark, &object);
-        list = &proxy->lists[PAGE_SPECTRA];
-        found = gwy_app_data_proxy_find_object(list->store, i, &iter);
+        pageno = PAGE_SPECTRA;
+        list = &proxy->lists[pageno];
+        found = gwy_app_data_proxy_find_object(list->store, id, &iter);
         gwy_debug("Spectra <%s>: %s in container, %s in list store",
                   strkey,
                   object ? "present" : "missing",
                   found ? "present" : "missing");
         g_return_if_fail(object || found);
         if (object && !found)
-            gwy_app_data_proxy_connect_spectra(proxy, i, object);
+            gwy_app_data_proxy_connect_spectra(proxy, id, object);
         else if (!object && found)
             gwy_app_data_proxy_disconnect_spectra(proxy, &iter);
         else {
             gwy_app_data_proxy_reconnect_spectra(proxy, &iter, object);
             gwy_list_store_row_changed(list->store, &iter, NULL, -1);
         }
+        /* Prevent thumbnail update */
+        if (!object)
+            pageno = -1;
         break;
 
         case KEY_IS_MASK:
         gwy_container_gis_object(data, quark, &object);
-        list = &proxy->lists[PAGE_CHANNELS];
-        found = gwy_app_data_proxy_find_object(list->store, i, &iter);
+        pageno = PAGE_CHANNELS;
+        list = &proxy->lists[pageno];
+        found = gwy_app_data_proxy_find_object(list->store, id, &iter);
         if (found) {
             gwy_list_store_row_changed(proxy->lists[PAGE_CHANNELS].store,
                                        &iter, NULL, -1);
@@ -1147,15 +1172,16 @@ gwy_app_data_proxy_item_changed(GwyContainer *data,
             gwy_app_data_browser_sync_mask(data, quark, data_view);
             g_object_unref(data_view);
         }
-        tqitem.store = list->store;
-        tqitem.weak_data = proxy->container;
-        tqitem.id = i;
+        /* Prevent thumbnail update */
+        if (!found)
+            pageno = -1;
         break;
 
         case KEY_IS_SHOW:
         gwy_container_gis_object(data, quark, &object);
-        list = &proxy->lists[PAGE_CHANNELS];
-        found = gwy_app_data_proxy_find_object(list->store, i, &iter);
+        pageno = PAGE_CHANNELS;
+        list = &proxy->lists[pageno];
+        found = gwy_app_data_proxy_find_object(list->store, id, &iter);
         if (found) {
             gwy_list_store_row_changed(proxy->lists[PAGE_CHANNELS].store,
                                        &iter, NULL, -1);
@@ -1167,17 +1193,18 @@ gwy_app_data_proxy_item_changed(GwyContainer *data,
          * non-GUI */
         if (data_view) {
             gwy_app_data_browser_sync_show(data, quark, data_view);
-            gwy_app_update_data_range_type(data_view, i);
+            gwy_app_update_data_range_type(data_view, id);
             g_object_unref(data_view);
         }
-        tqitem.store = list->store;
-        tqitem.weak_data = proxy->container;
-        tqitem.id = i;
+        /* Prevent thumbnail update */
+        if (!found)
+            pageno = -1;
         break;
 
         case KEY_IS_TITLE:
-        list = &proxy->lists[PAGE_CHANNELS];
-        found = gwy_app_data_proxy_find_object(list->store, i, &iter);
+        pageno = PAGE_CHANNELS;
+        list = &proxy->lists[pageno];
+        found = gwy_app_data_proxy_find_object(list->store, id, &iter);
         if (found)
             gtk_tree_model_get(GTK_TREE_MODEL(list->store), &iter,
                                MODEL_WIDGET, &data_view,
@@ -1185,19 +1212,22 @@ gwy_app_data_proxy_item_changed(GwyContainer *data,
         /* XXX: This is not a good place to do that, DataProxy should be
          * non-GUI */
         if (data_view) {
-            gwy_app_update_data_window_title(data_view, i);
+            gwy_app_update_data_window_title(data_view, id);
             g_object_unref(data_view);
         }
-        if ((item = gwy_app_data_proxy_get_3d(proxy, i))) {
+        if ((item = gwy_app_data_proxy_get_3d(proxy, id))) {
             GwyApp3DAssociation *assoc = (GwyApp3DAssociation*)item->data;
 
-            gwy_app_update_3d_window_title(assoc->window, i);
+            gwy_app_update_3d_window_title(assoc->window, id);
         }
+        /* Prevent thumbnail update */
+        pageno = -1;
         break;
 
         case KEY_IS_RANGE_TYPE:
-        list = &proxy->lists[PAGE_CHANNELS];
-        found = gwy_app_data_proxy_find_object(list->store, i, &iter);
+        pageno = PAGE_CHANNELS;
+        list = &proxy->lists[pageno];
+        found = gwy_app_data_proxy_find_object(list->store, id, &iter);
         if (found)
             gtk_tree_model_get(GTK_TREE_MODEL(list->store), &iter,
                                MODEL_WIDGET, &data_view,
@@ -1205,34 +1235,36 @@ gwy_app_data_proxy_item_changed(GwyContainer *data,
         /* XXX: This is not a good place to do that, DataProxy should be
          * non-GUI */
         if (data_view) {
-            gwy_app_update_data_range_type(data_view, i);
+            gwy_app_update_data_range_type(data_view, id);
             g_object_unref(data_view);
         }
-        tqitem.store = list->store;
-        tqitem.weak_data = proxy->container;
-        tqitem.id = i;
+        /* Prevent thumbnail update */
+        if (!found)
+            pageno = -1;
+        break;
+
+        case KEY_IS_PALETTE:
+        case KEY_IS_MASK_COLOR:
+        case KEY_IS_REAL_SQUARE:
+        pageno = PAGE_CHANNELS;
+        list = &proxy->lists[pageno];
+        found = gwy_app_data_proxy_find_object(list->store, id, &iter);
+        /* Prevent thumbnail update */
+        if (!found)
+            pageno = -1;
         break;
 
         default:
         break;
     }
 
-    /* FIXME: There are many cases we do *not* need to do this. */
-    if (tqitem.store) {
-        GwyThumbnailQueueItem *tqi = g_new(GwyThumbnailQueueItem, 1);
+    if (pageno == -1)
+        return;
 
-        *tqi = tqitem;
-        g_object_add_weak_pointer(G_OBJECT(tqi->weak_data),
-                                  (gpointer*)&tqi->weak_data);
-        g_get_current_time(&tqi->timestamp);
-        g_timeout_add_full(G_PRIORITY_DEFAULT_IDLE, THUMB_TIMEOUT,
-                           gwy_app_data_browser_render_thumbnail, tqi, g_free);
-        g_printerr("Thumbnail timeout (%lu %lu) on %p :: %d of type %u\n",
-                   tqi->timestamp.tv_sec, tqi->timestamp.tv_usec,
-                   tqi->weak_data, tqi->id,
-                   GPOINTER_TO_UINT(g_object_get_qdata(G_OBJECT(tqi->store),
-                                                       page_id_quark)));
-    }
+    /* XXX: This code asserts list and iter was set above. */
+    gtk_list_store_set(list->store, &iter,
+                       MODEL_TIMESTAMP, gwy_get_timestamp(),
+                       -1);
 }
 
 /**
@@ -1337,6 +1369,7 @@ gwy_app_data_proxy_list_setup(GwyAppDataList *list)
                                      G_TYPE_INT,
                                      G_TYPE_OBJECT,
                                      G_TYPE_OBJECT,
+                                     G_TYPE_DOUBLE,
                                      GDK_TYPE_PIXBUF);
     gwy_debug_objects_creation(G_OBJECT(list->store));
     gtk_tree_sortable_set_sort_column_id(GTK_TREE_SORTABLE(list->store),
@@ -1585,60 +1618,6 @@ gwy_app_data_browser_selection_changed(GtkTreeSelection *selection,
                                     SENS_OBJECT, any ? SENS_OBJECT : 0);
 }
 
-static gboolean
-gwy_app_data_browser_render_thumbnail(gpointer user_data)
-{
-    GwyThumbnailQueueItem *item = (GwyThumbnailQueueItem*)user_data;
-    GdkPixbuf *pixbuf;
-    GTimeVal *pbuft;
-    GtkTreeIter iter;
-    guint pageno;
-
-    /* XXX: This crashes if item->store ceases to exist meanwhile. */
-    g_printerr("Thumnbail render (%lu %lu) on %p :: %d of type %u\n",
-               item->timestamp.tv_sec, item->timestamp.tv_usec,
-               item->weak_data, item->id,
-               GPOINTER_TO_UINT(g_object_get_qdata(G_OBJECT(item->store),
-                                                   page_id_quark)));
-
-    if (!item->weak_data)
-        return FALSE;
-
-    pageno = GPOINTER_TO_INT(g_object_get_qdata(G_OBJECT(item->store),
-                                                page_id_quark));
-    g_return_val_if_fail(pageno, FALSE);
-    pageno--;
-
-    /* At this moment, we only make channel thumbnails. */
-    if (pageno != PAGE_CHANNELS)
-        return FALSE;
-
-    if (!gwy_app_data_proxy_find_object(item->store, item->id, &iter)) {
-        g_critical("Cannot find data %d", item->id);
-        return FALSE;
-    }
-    gtk_tree_model_get(GTK_TREE_MODEL(item->store), &iter,
-                       MODEL_THUMBNAIL, &pixbuf,
-                       -1);
-    if (pixbuf) {
-        pbuft = (GTimeVal*)g_object_get_data(G_OBJECT(pixbuf), "timestamp");
-        if (pbuft->tv_sec > item->timestamp.tv_sec
-            || (pbuft->tv_sec == item->timestamp.tv_sec
-                && pbuft->tv_usec >= item->timestamp.tv_usec))
-            return FALSE;
-    }
-
-    pixbuf = gwy_app_get_channel_thumbnail(item->weak_data, item->id,
-                                           THUMB_SIZE, THUMB_SIZE);
-    pbuft = g_new(GTimeVal, 1);
-    g_get_current_time(pbuft);
-    g_object_set_data_full(G_OBJECT(pixbuf), "timestamp", pbuft, g_free);
-    gtk_list_store_set(item->store, &iter, MODEL_THUMBNAIL, pixbuf, -1);
-    gwy_object_unref(pixbuf);
-
-    return FALSE;
-}
-
 /**************************************************************************
  *
  * Channels treeview
@@ -1691,6 +1670,51 @@ gwy_app_data_browser_channel_render_flags(G_GNUC_UNUSED GtkTreeViewColumn *colum
                has_show ? "P" : "");
 
     g_object_set(renderer, "text", key, NULL);
+}
+
+static void
+gwy_app_data_browser_render_channel(G_GNUC_UNUSED GtkTreeViewColumn *column,
+                                    GtkCellRenderer *renderer,
+                                    GtkTreeModel *model,
+                                    GtkTreeIter *iter,
+                                    G_GNUC_UNUSED gpointer userdata)
+{
+    GwyContainer *container;
+    GObject *object;
+    GdkPixbuf *pixbuf;
+    gdouble timestamp, *pbuf_timestamp = NULL;
+    gint id;
+
+    gtk_tree_model_get(model, iter,
+                       MODEL_ID, &id,
+                       MODEL_OBJECT, &object,
+                       MODEL_TIMESTAMP, &timestamp,
+                       MODEL_THUMBNAIL, &pixbuf,
+                       -1);
+
+    container = g_object_get_qdata(object, container_quark);
+
+    if (pixbuf) {
+        pbuf_timestamp = (gdouble*)g_object_get_data(G_OBJECT(pixbuf),
+                                                     "timestamp");
+        if (*pbuf_timestamp >= timestamp) {
+            g_object_set(renderer, "pixbuf", pixbuf, NULL);
+            g_object_unref(pixbuf);
+            return;
+        }
+    }
+
+    pixbuf = gwy_app_get_channel_thumbnail(container, id,
+                                           THUMB_SIZE, THUMB_SIZE);
+    pbuf_timestamp = g_new(gdouble, 1);
+    *pbuf_timestamp = gwy_get_timestamp();
+    g_object_set_data_full(G_OBJECT(pixbuf), "timestamp", pbuf_timestamp,
+                           g_free);
+    gtk_list_store_set(GTK_LIST_STORE(model), iter,
+                       MODEL_THUMBNAIL, pixbuf,
+                       -1);
+    g_object_set(renderer, "pixbuf", pixbuf, NULL);
+    g_object_unref(pixbuf);
 }
 
 /**
@@ -2298,8 +2322,10 @@ gwy_app_data_browser_construct_channels(GwyAppDataBrowser *browser)
     /* Add the thumbnail column */
     renderer = gtk_cell_renderer_pixbuf_new();
     column = gtk_tree_view_column_new_with_attributes("Thumbnail", renderer,
-                                                      "pixbuf", MODEL_THUMBNAIL,
                                                       NULL);
+    gtk_tree_view_column_set_cell_data_func
+        (column, renderer,
+         gwy_app_data_browser_render_channel, browser, NULL);
     gtk_tree_view_append_column(treeview, column);
 
     /* Add the visibility column */
