@@ -81,6 +81,10 @@ If you install to a subdirectory of home, you may need to adjust
 GCONF_SCHEMA_CONFIG_SOURCE, KDE4_MODULE_DIR (during make install) and
 XDG_DATA_DIRS (after installation) to get full desktop integration.
 
+To prevent the installation of GConf schemas, even though you have enabled the
+GNOME thumbnailer, run `make install DISABLE_GCONF_SCHEMAS_INSTALL=yes'.  To
+ease packaging, it is automatically disabled when DESTDIR is non-empty.
+
 
 ===[ 2. From sources -- MS Windows ]=========================================
 
