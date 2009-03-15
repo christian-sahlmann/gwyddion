@@ -1,5 +1,5 @@
 /*
- *  @(#) $Id: indent_analyze.c,v 1.1.2.7 2005/07/13 22:47:36 yeti-dn Exp $
+ *  @(#) $Id$
  *  Copyright (C) 2006 Lukas Chvatal, David Necas (Yeti), Petr Klapetek.
  *  E-mail: chvatal@physics.muni.cz, yeti@gwyddion.net, klapetek@gwyddion.net.
  *
