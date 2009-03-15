@@ -770,11 +770,11 @@ gwy_3d_window_build_basic_tab(Gwy3DWindow *window)
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 2);
 
     adj = gwy_3d_window_make_setup_adj(window, setup, "z-scale",
-                                       0.05, 10.0, 0.01, 0.1,
+                                       0.001, 100.0, 0.001, 1.0,
                                        FALSE);
     spin = gwy_table_attach_spinbutton(table, row++,
                                        _("_Value scale:"), NULL, adj);
-    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 2);
+    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 3);
 
     button = gtk_button_new_with_mnemonic(_("Make _1:1"));
     gtk_table_attach(GTK_TABLE(table), button,
