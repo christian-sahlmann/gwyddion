@@ -111,6 +111,9 @@ gauss_psdf_guess(gint n_dat,
     gdouble sw, w, xx, l, k2, k4, b0, b2, d, alpha, beta;
     gint i;
 
+    param[0] = 0.0;
+    param[1] = 1.0;
+
     sw = k2 = k4 = b0 = b2 = 0.0;
     for (i = 0; i < n_dat; i++) {
         if (x[i] <= 0.0 || y[i] <= 0.0)
@@ -305,6 +308,9 @@ gauss_acf_guess(gint n_dat,
     gdouble sw, w, xx, l, k2, k4, b0, b2, d, alpha, beta;
     gint i;
 
+    param[0] = 0.0;
+    param[1] = 1.0;
+
     sw = k2 = k4 = b0 = b2 = 0.0;
     for (i = 0; i < n_dat; i++) {
         if (x[i] <= 0.0 || y[i] <= 0.0)
@@ -373,6 +379,9 @@ gauss_rpsdf_guess(gint n_dat,
 {
     gdouble sw, w, xx, l, k2, k4, b0, b2, d, alpha, beta;
     gint i;
+
+    param[0] = 0.0;
+    param[1] = 1.0;
 
     sw = k2 = k4 = b0 = b2 = 0.0;
     for (i = 0; i < n_dat; i++) {
@@ -502,6 +511,10 @@ exp_psdf_guess(gint n_dat,
     gdouble s0, s1, max;
     gint i, n;
 
+    param[0] = 0.0;
+    param[1] = 0.0;
+    param[2] = 0.0;
+
     s0 = s1 = 0.0;
     max = -G_MAXDOUBLE;
     n = 0;
@@ -597,6 +610,10 @@ exp_acf_guess(gint n_dat,
     gdouble sw, w, xx, l, k2, k4, b0, b2, d, alpha, beta;
     gint i;
 
+    param[0] = 0.0;
+    param[1] = 0.0;
+    param[2] = 0.0;
+
     sw = k2 = k4 = b0 = b2 = 0.0;
     for (i = 0; i < n_dat; i++) {
         if (x[i] <= 0.0 || y[i] <= 0.0)
@@ -667,6 +684,10 @@ exp_rpsdf_guess(gint n_dat,
 {
     gdouble s0, sm1, max;
     gint i, n;
+
+    param[0] = 0.0;
+    param[1] = 0.0;
+    param[2] = 0.0;
 
     s0 = sm1 = 0.0;
     max = -G_MAXDOUBLE;
@@ -861,6 +882,10 @@ power_guess(gint n_dat,
     gint i;
     gdouble q, la, lb, c1, c2;
 
+    param[0] = 0.0;
+    param[1] = 0.0;
+    param[2] = 1.0;
+
     if (n_dat < 4 || x[0] <= 0.0) {
         *fres = FALSE;
         return;
@@ -958,6 +983,11 @@ lorentz_guess(gint n_dat,
 {
     gint i, imin, imax;
     gdouble c0, c2p, c2m;
+
+    param[0] = 0.0;
+    param[1] = 0.0;
+    param[2] = 0.0;
+    param[4] = 1.0;
 
     imin = imax = 0;
     for (i = 1; i < n_dat; i++) {
@@ -1587,6 +1617,9 @@ gwy_nlfit_preset_get_nparams(GwyNLFitPreset* preset)
  * absolute guarantee of quality, however if the data points approximately
  * match the fitted function the fit will typically converge from the returned
  * estimate.
+ *
+ * The parameters are filled also on failure, though just with some neutral
+ * values that should not give raise to NaNs and infinities.
  **/
 void
 gwy_nlfit_preset_guess(GwyNLFitPreset *preset,
