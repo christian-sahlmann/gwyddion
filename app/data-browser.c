@@ -39,6 +39,7 @@
 #include <libgwydgets/gwylayer-mask.h>
 #include <libgwydgets/gwygraphwindow.h>
 #include <libgwydgets/gwy3dwindow.h>
+#include <libgwydgets/gwygraph.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <app/gwyapp.h>
 #include "app/gwyappinternal.h"
@@ -176,6 +177,10 @@ gwy_app_data_browser_figure_out_channel_title(GwyContainer *data,
                                               gint channel);
 static void gwy_app_data_browser_show_real   (GwyAppDataBrowser *browser);
 static void gwy_app_data_browser_hide_real   (GwyAppDataBrowser *browser);
+static GdkPixbuf* gwy_app_get_graph_thumbnail(GwyContainer *data,
+                                              gint id,
+                                              gint max_width,
+                                              gint max_height);
 
 static GQuark container_quark    = 0;
 static GQuark own_key_quark      = 0;
@@ -2638,6 +2643,51 @@ gwy_app_data_browser_graph_render_ncurves(G_GNUC_UNUSED GtkTreeViewColumn *colum
     g_snprintf(s, sizeof(s), "%d", gwy_graph_model_get_n_curves(gmodel));
     g_object_set(renderer, "text", s, NULL);
     g_object_unref(gmodel);
+}
+
+G_GNUC_UNUSED static void
+gwy_app_data_browser_render_graph(G_GNUC_UNUSED GtkTreeViewColumn *column,
+                                  GtkCellRenderer *renderer,
+                                  GtkTreeModel *model,
+                                  GtkTreeIter *iter,
+                                  G_GNUC_UNUSED gpointer userdata)
+{
+    GwyContainer *container;
+    GObject *object;
+    GdkPixbuf *pixbuf;
+    gdouble timestamp, *pbuf_timestamp = NULL;
+    gint id;
+
+    gtk_tree_model_get(model, iter,
+                       MODEL_ID, &id,
+                       MODEL_OBJECT, &object,
+                       MODEL_TIMESTAMP, &timestamp,
+                       MODEL_THUMBNAIL, &pixbuf,
+                       -1);
+
+    container = g_object_get_qdata(object, container_quark);
+
+    if (pixbuf) {
+        pbuf_timestamp = (gdouble*)g_object_get_data(G_OBJECT(pixbuf),
+                                                     "timestamp");
+        if (*pbuf_timestamp >= timestamp) {
+            g_object_set(renderer, "pixbuf", pixbuf, NULL);
+            g_object_unref(pixbuf);
+            return;
+        }
+    }
+
+    pixbuf = gwy_app_get_graph_thumbnail(container, id,
+                                         THUMB_SIZE, THUMB_SIZE);
+    pbuf_timestamp = g_new(gdouble, 1);
+    *pbuf_timestamp = gwy_get_timestamp();
+    g_object_set_data_full(G_OBJECT(pixbuf), "timestamp", pbuf_timestamp,
+                           g_free);
+    gtk_list_store_set(GTK_LIST_STORE(model), iter,
+                       MODEL_THUMBNAIL, pixbuf,
+                       -1);
+    g_object_set(renderer, "pixbuf", pixbuf, NULL);
+    g_object_unref(pixbuf);
 }
 
 /**
@@ -5868,6 +5918,29 @@ gwy_app_get_channel_thumbnail(GwyContainer *data,
     }
 
     return pixbuf;
+}
+
+/* Keep this private.  We cannot render graphs completely off-screen. */
+G_GNUC_UNUSED static GdkPixbuf*
+gwy_app_get_graph_thumbnail(GwyContainer *data,
+                            gint id,
+                            gint max_width,
+                            gint max_height)
+{
+    GwyGraphModel *gmodel;
+
+    g_return_val_if_fail(GWY_IS_CONTAINER(data), NULL);
+    g_return_val_if_fail(id >= 0, NULL);
+    g_return_val_if_fail(max_width > 1 && max_height > 1, NULL);
+
+    if (!gwy_container_gis_object(data, gwy_app_get_graph_key_for_id(id),
+                                  &gmodel))
+        return NULL;
+
+    /* FIXME: I do not know how to implement this w/o showing windows on
+     * screen... */
+
+    return NULL;
 }
 
 /************************** Documentation ****************************/
