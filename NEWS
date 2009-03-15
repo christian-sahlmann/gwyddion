@@ -12,6 +12,7 @@ Libraries:
   x-axis logarithmic mode was corrected.
 - libgwydgets: 3D view shows data with non-suqare pixels with the physical
   aspect ratio.
+- libgwydgets: 3D window has a button to set the z-scale to physically 1:1.
 - libgwydgets, libgwyapp: 3D view axes drawing can be globally disabled with
   "/app/3d/axes/disable" boolean True
   line in ~/.gwyddion/settings to work around broken OpenGL implementations.

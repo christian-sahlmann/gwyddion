@@ -35,7 +35,7 @@
 #include <gtk/gtktreeselection.h>
 #include <gtk/gtkvbox.h>
 
-#include <libprocess/datafield.h>
+#include <libprocess/stats.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwydgets/gwy3dwindow.h>
@@ -125,6 +125,7 @@ static void     gwy_3d_window_gradient_selected    (GtkWidget *item,
                                                     Gwy3DWindow *gwy3dwindow);
 static void     gwy_3d_window_material_selected    (GtkWidget *item,
                                                     Gwy3DWindow *gwy3dwindow);
+static void     gwy_3d_window_make_zscale_1_1      (Gwy3DWindow *window);
 
 /* These are actually class data.  To put them to Class struct someone would
  * have to do class_ref() and live with this reference to the end of time. */
@@ -735,7 +736,7 @@ gwy_3d_window_build_basic_tab(Gwy3DWindow *window)
 {
     Gwy3DView *view;
     Gwy3DSetup *setup;
-    GtkWidget *vbox, *spin, *table, *check;
+    GtkWidget *vbox, *spin, *table, *check, *button;
     GtkObject *adj;
     gint row;
 
@@ -744,7 +745,7 @@ gwy_3d_window_build_basic_tab(Gwy3DWindow *window)
 
     vbox = gtk_vbox_new(FALSE, 0);
 
-    table = gtk_table_new(7, 3, FALSE);
+    table = gtk_table_new(8, 3, FALSE);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
@@ -774,6 +775,14 @@ gwy_3d_window_build_basic_tab(Gwy3DWindow *window)
     spin = gwy_table_attach_spinbutton(table, row++,
                                        _("_Value scale:"), NULL, adj);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 2);
+
+    button = gtk_button_new_with_mnemonic(_("Make _1:1"));
+    gtk_table_attach(GTK_TABLE(table), button,
+                     1, 3, row, row+1, 0, 0, 0, 0);
+    g_signal_connect_swapped(button, "clicked",
+                             G_CALLBACK(gwy_3d_window_make_zscale_1_1), window);
+    gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
+    row++;
 
     check = gtk_check_button_new_with_mnemonic(_("Show _axes"));
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(check),
@@ -1497,6 +1506,35 @@ gwy_3d_window_material_selected(GtkWidget *item,
     gwy_container_set_string_by_name(gwy_3d_view_get_data(view),
                                      gwy_3d_view_get_material_key(view),
                                      g_strdup(name));
+}
+
+static void
+gwy_3d_window_make_zscale_1_1(Gwy3DWindow *window)
+{
+    Gwy3DView *view;
+    GwyContainer *container;
+    const gchar *data_key;
+    Gwy3DSetup *setup;
+    GwyDataField *dfield = NULL;
+    gdouble min, max, xreal, yreal, scale, zscale;
+
+    view = GWY_3D_VIEW(window->gwy3dview);
+    container = gwy_3d_view_get_data(view);
+    setup = gwy_3d_view_get_setup(view);
+    data_key = gwy_3d_view_get_data_key(view);
+    if (!container || !setup || !data_key)
+        return;
+    if (!gwy_container_gis_object_by_name(container, data_key, &dfield))
+        return;
+
+    /* FIXME: We need to carefully emulate the code from 3D view here. */
+    gwy_data_field_get_min_max(dfield, &min, &max);
+    xreal = gwy_data_field_get_xreal(dfield);
+    yreal = gwy_data_field_get_yreal(dfield);
+    scale = 2.0/MAX(xreal, yreal);
+    zscale = scale*2*(max - min);
+
+    g_object_set(setup, "z-scale", zscale, NULL);
 }
 
 /************************** Documentation ****************************/
