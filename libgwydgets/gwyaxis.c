@@ -625,6 +625,8 @@ gwy_axis_size_request(GtkWidget *widget,
                 axis->rerequest_size = 0;
             }
         }
+        else
+            axis->rerequest_size = 0;
         gwy_debug("%p must rerequest: %d", axis, axis->rerequest_size);
         requisition->width += rect_label.width;
         break;
@@ -712,7 +714,6 @@ gwy_axis_adjust(GwyAxis *axis, gint width, gint height)
 
     if (axis->rerequest_size) {
         gwy_debug("%p issuing rerequest", axis);
-        axis->rerequest_size = 0;
         gtk_widget_queue_resize(GTK_WIDGET(axis));
     }
     if (GTK_WIDGET_DRAWABLE(axis))
@@ -1404,6 +1405,11 @@ gwy_axis_scale(GwyAxis *a)
         gwy_axis_logscale(a);
     else
         gwy_axis_normalscale(a);
+
+    /* Displaying NaN or similar rubbish, just return success... */
+    if (!a->mjticks->len)
+        return 0;
+
     /*label ticks*/
     ret = gwy_axis_formatticks(a);
 
