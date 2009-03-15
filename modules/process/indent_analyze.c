@@ -189,10 +189,10 @@ typedef struct {
     GtkWidget *w_area_outerpileup;
 
     GtkFileSelection *filesel;
-    
+
     // id of datafield which the mask will be applied to
-    gint dfield_id; 
-    
+    gint dfield_id;
+
 } IndentAnalyzeControls;
 
 typedef struct {
@@ -334,10 +334,10 @@ static gboolean
 indent_analyze(GwyContainer *data, GwyRunType run)
 {
 
-    IndentAnalyzeArgs args;    
+    IndentAnalyzeArgs args;
 
     g_return_val_if_fail(run & INDENT_ANALYZE_RUN_MODES, FALSE);
-    
+
     if (run == GWY_RUN_INTERACTIVE) {
        load_args(gwy_app_settings_get(), &args);
        indent_analyze_dialog(data, &args);
@@ -364,8 +364,8 @@ create_preview_data(IndentAnalyzeControls *controls)
     gint oldid;
     gint xres, yres;
     // No zoom, zoom disorder final result
-    // gdouble zoomval;    
-    const GwyRGBA mask_color = { 1.0, 0.0, 0.00, 0.5 };    
+    // gdouble zoomval;
+    const GwyRGBA mask_color = { 1.0, 0.0, 0.00, 0.5 };
 
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
                                      GWY_APP_DATA_FIELD_ID, &oldid,
@@ -375,31 +375,31 @@ create_preview_data(IndentAnalyzeControls *controls)
     if (dfield) {
       preview_container = gwy_container_new();
       dfield = gwy_data_field_duplicate(dfield);
-      
+
       xres = gwy_data_field_get_xres(dfield);
       yres = gwy_data_field_get_yres(dfield);
       // No zoom because it disorder mask on original image.
       // zoomval = (gdouble)PREVIEW_SIZE/MAX(xres, yres);
       // gwy_data_field_resample(dfield, xres*zoomval, yres*zoomval,
       //                        GWY_INTERPOLATION_LINEAR);
-      
+
 
       gwy_container_set_object_by_name(preview_container, "/0/data", dfield);
       mask = gwy_data_field_new_alike(dfield, TRUE);
       g_object_unref(dfield);
       gwy_container_set_object_by_name(preview_container, "/0/mask", mask);
       g_object_unref(mask);
-      
+
       /*
       gwy_app_sync_data_items(data, preview_container, oldid, 0, FALSE,
             GWY_DATA_ITEM_GRADIENT, GWY_DATA_ITEM_RANGE,
-            GWY_DATA_ITEM_MASK_COLOR, 0);                  
+            GWY_DATA_ITEM_MASK_COLOR, 0);
       */
-      
+
       gwy_rgba_store_to_container(gwy_rgba_copy(&mask_color),
             preview_container, "/0/mask");
    }
-    
+
     return preview_container;
 }
 /** Create table with statistical info.
@@ -417,12 +417,12 @@ create_parameters_table(IndentAnalyzeControls * controls)
    GwyDataField *dfield;
    GwySIValueFormat *siformat;
    GString *siu;
-   
+
    /* TABLE */
    table = gtk_table_new(8, 3, FALSE);
    gtk_table_set_col_spacings(GTK_TABLE(table), 4);
    gtk_container_set_border_width(GTK_CONTAINER(table), 4);
-   
+
    /*
     controls.w_plane_correct
     = gwy_option_menu_create(plane_correct_enum,
@@ -441,28 +441,28 @@ create_parameters_table(IndentAnalyzeControls * controls)
          args->what_mark, TRUE);
    gwy_table_attach_hscale(table, row++, _("Marked _areas:"), NULL,
          GTK_OBJECT(controls->w_what_mark), GWY_HSCALE_WIDGET);
-   
+
    controls->w_indentor = gwy_enum_combo_box_new(indentor_enum,
          G_N_ELEMENTS(indentor_enum), G_CALLBACK(indentor_changed_cb),
          controls, args->indentor, TRUE);
    gwy_table_attach_hscale(table, row++, _("_Indentor type:"), NULL,
          GTK_OBJECT(controls->w_indentor), GWY_HSCALE_WIDGET);
-   
+
    controls->w_how_mark = gwy_enum_combo_box_new(how_mark_enum,
          G_N_ELEMENTS(how_mark_enum), G_CALLBACK(how_mark_cb), controls,
          args->how_mark, TRUE);
    gwy_table_attach_hscale(table, row++, _("_Mask creation type:"), NULL,
          GTK_OBJECT(controls->w_how_mark), GWY_HSCALE_WIDGET);
-   
+
    controls->w_plane_tol = gtk_adjustment_new(args->plane_tol, 0, 100, 0.1, 1,
                                               0);
    gwy_table_attach_hscale(table, row++, _("Ref. plane _tolerance:"), "%",
          controls->w_plane_tol, 0);
-   
+
    controls->w_phi_tol = gtk_adjustment_new(args->phi_tol, 0, 180, 0.1, 10, 0);
    gwy_table_attach_hscale(table, row++, _("Angle _1 tolerance:"), _("deg"),
          controls->w_phi_tol, 0);
-   
+
    /* XXX: what the hell is this for?
     controls.w_theta_tol = gtk_adjustment_new(args->theta_tol,
     0, 90, 0.1, 10, 0);
@@ -483,7 +483,7 @@ create_parameters_table(IndentAnalyzeControls * controls)
       g_warning("Cannot get siformat from /0/data");
    }
    siu = g_string_new(siformat->units);
-   
+
    controls->w_min_xy = gtk_label_new("");
    gwy_table_attach_row(table, row++, _("Indent centre at"), siu->str,
          controls->w_min_xy);
@@ -493,9 +493,9 @@ create_parameters_table(IndentAnalyzeControls * controls)
    controls->w_minmax = gtk_label_new("");
    gwy_table_attach_row(table, row++, _("Max-min diference"), siu->str,
          controls->w_minmax);
-   
+
    g_string_append(siu, "<sup>2</sup>");
-   
+
    controls->w_surface_indent_exp = gtk_label_new("");
    gwy_table_attach_row(table, row, _("Expected A<sub>d</sub>:"), siu->str,
          controls->w_surface_indent_exp);
@@ -512,12 +512,12 @@ create_parameters_table(IndentAnalyzeControls * controls)
             gtk_label_get_text(GTK_LABEL(label)) );
    }
    row++;
-   
+
    gtk_table_attach(GTK_TABLE(table), gtk_hseparator_new(), 0, 2, row, row + 1,
          (GtkAttachOptions) (GTK_FILL), (GtkAttachOptions) (GTK_EXPAND
                | GTK_FILL), 0, 0);
    row++;
-   
+
    /*
     controls.w_area_above = gtk_label_new ("");
     gtk_label_set_justify( &controls.w_area_above, GTK_JUSTIFY_RIGHT);
@@ -551,16 +551,16 @@ create_parameters_table(IndentAnalyzeControls * controls)
    controls->w_volume_dif = gtk_label_new("");
    gwy_table_attach_row(table, row++, _("Volume above-below"), siu->str,
          controls->w_volume_dif);
-   
+
    gtk_table_attach(GTK_TABLE(table), gtk_hseparator_new(), 0, 2, row, row + 1,
          (GtkAttachOptions) (GTK_FILL), (GtkAttachOptions) (GTK_EXPAND
                | GTK_FILL), 0, 0);
    row++;
-   
+
    controls->w_volume_indent = gtk_label_new("");
    gwy_table_attach_row(table, row++, _("Indent. volume"), siu->str,
          controls->w_volume_indent);
-   
+
    g_string_assign(siu, siformat->units);
    g_string_append(siu, "<sup>2</sup>");
    controls->w_surface_indent = gtk_label_new("");
@@ -571,7 +571,7 @@ create_parameters_table(IndentAnalyzeControls * controls)
             gtk_label_get_text(GTK_LABEL(label)) );
    }
    row++;
-   
+
    controls->w_area_indent = gtk_label_new("");
    gwy_table_attach_row(table, row, _("Indent. A<sub>p</sub>"), siu->str,
          controls->w_area_indent);
@@ -580,12 +580,12 @@ create_parameters_table(IndentAnalyzeControls * controls)
             gtk_label_get_text(GTK_LABEL(label)) );
    }
    row++;
-   
+
    gtk_table_attach(GTK_TABLE(table), gtk_hseparator_new(), 0, 2, row, row + 1,
          (GtkAttachOptions) (GTK_FILL), (GtkAttachOptions) (GTK_EXPAND
                | GTK_FILL), 0, 0);
    row++;
-   
+
    controls->w_surface_innerpileup = gtk_label_new("");
    gwy_table_attach_row(table, row, _("Inner Pile-Up A<sub>d</sub>"), siu->str,
          controls->w_surface_innerpileup);
@@ -593,7 +593,7 @@ create_parameters_table(IndentAnalyzeControls * controls)
       gtk_label_set_markup_with_mnemonic(GTK_LABEL(label),
             gtk_label_get_text(GTK_LABEL(label)) );
    }
-   
+
    row++;
    controls->w_area_innerpileup = gtk_label_new("");
    gwy_table_attach_row(table, row, _("Inner Pile-Up A<sub>p</sub>"), siu->str,
@@ -602,7 +602,7 @@ create_parameters_table(IndentAnalyzeControls * controls)
       gtk_label_set_markup_with_mnemonic(GTK_LABEL(label),
             gtk_label_get_text(GTK_LABEL(label)) );
    }
-   
+
    row++;
    controls->w_surface_outerpileup = gtk_label_new("");
    gwy_table_attach_row(table, row, _("Outer Pile-Up A<sub>d</sub>"), siu->str,
@@ -611,7 +611,7 @@ create_parameters_table(IndentAnalyzeControls * controls)
       gtk_label_set_markup_with_mnemonic(GTK_LABEL(label),
             gtk_label_get_text(GTK_LABEL(label)) );
    }
-   
+
    row++;
    controls->w_area_outerpileup = gtk_label_new("");
    gwy_table_attach_row(table, row, _("Outer Pile-Up A<sub>p</sub>"), siu->str,
@@ -620,10 +620,10 @@ create_parameters_table(IndentAnalyzeControls * controls)
       gtk_label_set_markup_with_mnemonic(GTK_LABEL(label),
             gtk_label_get_text(GTK_LABEL(label)) );
    }
-   
+
    g_string_free(siu, TRUE);
    gwy_si_unit_value_format_free(siformat);
-   
+
    return table;
 }
 
@@ -636,7 +636,7 @@ create_parameters_table(IndentAnalyzeControls * controls)
  */
 static gboolean
 indent_analyze_dialog(GwyContainer *data, IndentAnalyzeArgs * args)
-{    
+{
     GtkWidget *dialog, *table, *hbox;
     IndentAnalyzeControls controls;
     gint response;
@@ -646,7 +646,7 @@ indent_analyze_dialog(GwyContainer *data, IndentAnalyzeArgs * args)
     };
     //gdouble zoomval;
     GtkObject *layer;
-    
+
     controls.args = args;
     dialog = gtk_dialog_new_with_buttons(_("Indentaion statistics"), NULL, 0,
                                          _("_Compute & mark"), RESPONSE_COMPUTE,
@@ -662,7 +662,7 @@ indent_analyze_dialog(GwyContainer *data, IndentAnalyzeArgs * args)
     // create mydata
     controls.mydata = create_preview_data(&controls);
     // create view
-    controls.view = gwy_data_view_new(controls.mydata);    
+    controls.view = gwy_data_view_new(controls.mydata);
     // data layer
     layer = GTK_OBJECT(gwy_layer_basic_new());
     gwy_pixmap_layer_set_data_key(GWY_PIXMAP_LAYER(layer), "/0/data");
@@ -673,11 +673,11 @@ indent_analyze_dialog(GwyContainer *data, IndentAnalyzeArgs * args)
     layer = GTK_OBJECT(gwy_layer_mask_new());
     gwy_pixmap_layer_set_data_key(GWY_PIXMAP_LAYER(layer), "/0/mask");
     gwy_layer_mask_set_color_key(GWY_LAYER_MASK(layer), "/0/mask");
-    gwy_data_view_set_alpha_layer(GWY_DATA_VIEW(controls.view), 
-                                  GWY_PIXMAP_LAYER(layer));       
-    gtk_box_pack_start(GTK_BOX(hbox), controls.view, TRUE, TRUE, 4);    
+    gwy_data_view_set_alpha_layer(GWY_DATA_VIEW(controls.view),
+                                  GWY_PIXMAP_LAYER(layer));
+    gtk_box_pack_start(GTK_BOX(hbox), controls.view, TRUE, TRUE, 4);
     //gtk_widget_show_all(GTK_WIDGET(controls.view));
-        
+
     table = create_parameters_table(&controls);
     gtk_box_pack_start(GTK_BOX(hbox), table, FALSE, FALSE, 4);
     gtk_widget_show_all(GTK_WIDGET(hbox));
@@ -695,30 +695,30 @@ indent_analyze_dialog(GwyContainer *data, IndentAnalyzeArgs * args)
          case GTK_RESPONSE_NONE:
             return FALSE;
             break;
-            
+
          case GTK_RESPONSE_OK:
             break;
-            
+
          case RESPONSE_COMPUTE:
             compute_and_preview(&controls);
             update_data_labels(&controls);
             break;
-            
+
          case RESPONSE_SAVE:
             save_statistics_dialog(&controls, dialog);
             break;
-            
+
          default:
             g_assert_not_reached();
             break;
       }
    } while (response != GTK_RESPONSE_OK);
-   
+
    indent_analyze_ok(data, &controls);
-   
+
    g_object_unref(controls.mydata);
    gtk_widget_destroy(dialog);
-   
+
    return controls.computed;
 }
 
@@ -877,7 +877,7 @@ set_mask_at(GwyDataField *mask, gint x, gint y, gdouble m, gint how)
         case GWY_HOW_MARK_XOR:
             act_mask = !(act_mask || im);
             break;
-    }    
+    }
     gwy_data_field_set_val(mask, x, y, (double)act_mask);
 }
 
@@ -935,7 +935,7 @@ typedef struct {
 
 static void indentmask_flood_fill(GwyDataField *indentmask, gint i, gint j,
       GwyDataField *dfield, FloodFillInfo * ffi)
-{   
+{
    gint test = 0;
    gdouble c_f, c_t;
    gint dfield_xres = gwy_data_field_get_xres(dfield);
@@ -950,13 +950,13 @@ static void indentmask_flood_fill(GwyDataField *indentmask, gint i, gint j,
    pq = g_new(FFPoint, FLOOD_MAX_POINTS);
    tail = pq;
    head = pq;
-   
+
    data_field_average_normal_vector(dfield, i, j, ffi->seed, &v);
    head->x = i;
    head->y = j;
    gwy_data_field_set_val(indentmask, i, j, FLOOD_QUEUED);
    head++;
-   
+
    while (head != tail) {
       data_field_average_normal_vector(dfield, tail->x, tail->y, ffi->seed, &v);
       test = 0;
@@ -986,7 +986,7 @@ static void indentmask_flood_fill(GwyDataField *indentmask, gint i, gint j,
                test = 1;
             break;
       }
-      
+
       if (test) {
          gint rr, s;
          gwy_data_field_set_val(indentmask, tail->x, tail->y, INDENT_INSIDE);
@@ -1017,10 +1017,10 @@ static void indentmask_flood_fill(GwyDataField *indentmask, gint i, gint j,
                }
             }
          }
-      } else {         
+      } else {
          gwy_data_field_set_val(indentmask, tail->x, tail->y, INDENT_BORDER);
       }
-      
+
       if (tail == pq + FLOOD_MAX_POINTS - 1) {
          tail = pq;
       } else
@@ -1084,7 +1084,7 @@ indent_analyze_do_the_hard_work(IndentAnalyzeControls * controls)
 
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     // gwy_app_undo_checkpoint(data, "/0/data", NULL); why?
-    if (!gwy_container_gis_object_by_name(data, "/0/mask", (GObject **)&mask)) {   
+    if (!gwy_container_gis_object_by_name(data, "/0/mask", (GObject **)&mask)) {
        g_warning("Cannot find mask datafield.");
        return FALSE;
     }
@@ -1156,7 +1156,7 @@ indent_analyze_do_the_hard_work(IndentAnalyzeControls * controls)
         height = -1e10;
         side_r = 0;
         while (height < SURE_IMPRESSION_COEFF * args->min_val) {
-           
+
             sx = args->minx - side_r * cos(side_dir +
                                            i * 2 * G_PI/args->nof_sides);
             sy = args->miny - side_r * sin(side_dir +
@@ -1194,7 +1194,7 @@ indent_analyze_do_the_hard_work(IndentAnalyzeControls * controls)
                 args->area_outerpileup += ds;
                 args->surface_outerpileup +=
                     data_field_compute_ds(dfield, i, j);
-                if (args->what_mark == GWY_WHAT_MARK_ABOVE 
+                if (args->what_mark == GWY_WHAT_MARK_ABOVE
                       || args->what_mark == GWY_WHAT_MARK_OUTERPILEUP)
                 {
                    mark_it = 1;
@@ -1260,7 +1260,7 @@ indent_analyze_do_the_hard_work(IndentAnalyzeControls * controls)
                     mark_it = (height >= 0) ? 1.0 : 0.0;
                     break;
                 }
-                
+
             }
 
             if (gwy_data_field_get_val(indentmask, i, j) == INDENT_BORDER) {
@@ -1290,8 +1290,8 @@ indent_analyze_ok(GwyContainer *data, IndentAnalyzeControls * controls)
     //GwyDataField *dfield;
     GObject *maskfield;
     GString *mask_name = g_string_new("");
-    
-    // get right ID of datafield    
+
+    // get right ID of datafield
     g_string_printf(mask_name, "/%d/mask", controls->dfield_id);
 
     if (!controls->computed) {
@@ -1301,10 +1301,10 @@ indent_analyze_ok(GwyContainer *data, IndentAnalyzeControls * controls)
     maskfield = gwy_container_get_object_by_name(controls->mydata, "/0/mask");
     // mark undo
     gwy_app_undo_checkpoint(data, mask_name->str, NULL);
-    
+
     gwy_container_set_object_by_name(data, mask_name->str, maskfield);
     gwy_data_field_data_changed(GWY_DATA_FIELD(maskfield));
-    
+
     g_string_free(mask_name, TRUE);
 
     return TRUE;
@@ -1315,8 +1315,8 @@ static void
 compute_and_preview(IndentAnalyzeControls * controls)
 {
     GwyDataField *maskfield = 0, *dfield;
-    GwyPixmapLayer *layer;    
-    
+    GwyPixmapLayer *layer;
+
     dfield =
         GWY_DATA_FIELD(gwy_container_get_object_by_name
                        (controls->mydata, "/0/data"));
@@ -1333,7 +1333,7 @@ compute_and_preview(IndentAnalyzeControls * controls)
     else {
        g_warning("Cannot find mask datafield.");
        return;
-        
+
     }
 
     controls->computed = indent_analyze_do_the_hard_work(controls);
@@ -1347,7 +1347,7 @@ compute_and_preview(IndentAnalyzeControls * controls)
         //gwy_data_view_update(GWY_DATA_VIEW(controls->view));
     }
 
-       
+
 }
 
 /* =========== dialog control functions ========================= */
@@ -1401,7 +1401,7 @@ how_mark_cb(GtkWidget *item, IndentAnalyzeControls * controls)
 static void
 indentor_changed_cb(GtkWidget *item, IndentAnalyzeControls * controls)
 {
-    controls->args->indentor = 
+    controls->args->indentor =
         gtk_combo_box_get_active(GTK_COMBO_BOX(item));
         //= GPOINTER_TO_UINT(g_object_get_data(G_OBJECT(item), "indentor-type"));
 
