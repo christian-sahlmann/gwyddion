@@ -16,6 +16,10 @@ Libraries:
 - libgwydgets, libgwyapp: 3D view axes drawing can be globally disabled with
   "/app/3d/axes/disable" boolean True
   line in ~/.gwyddion/settings to work around broken OpenGL implementations.
+- libgwydgets: GwyAxis no longer enters an infinite resize loop when it
+  encounters completely bogus data such as undefined values and/or infinites.
+- libgwyddion: GwyNLFitPreset estimators always assing some reasonable values
+  to the parameters even if the estimation in fact fails.
 - Some forgotten strings were made translatable and gettext() was applied to
   some to actually translate them.
 
