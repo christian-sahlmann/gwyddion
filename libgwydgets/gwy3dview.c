@@ -606,7 +606,7 @@ gwy_3d_view_set_data_key(Gwy3DView *gwy3dview,
 const gchar*
 gwy_3d_view_get_data_key(Gwy3DView *gwy3dview)
 {
-    g_return_val_if_fail(GWY_IS_LAYER_BASIC(gwy3dview), NULL);
+    g_return_val_if_fail(GWY_IS_3D_VIEW(gwy3dview), NULL);
     return g_quark_to_string(gwy3dview->data_key);
 }
 
