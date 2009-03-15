@@ -1,7 +1,7 @@
 /*
  *  @(#) $Id: indent_analyze.c,v 1.1.2.7 2005/07/13 22:47:36 yeti-dn Exp $
- *  Copyright (C) 2004 David Necas (Yeti), Petr Klapetek.
- *  E-mail:
+ *  Copyright (C) 2006 Lukas Chvatal, David Necas (Yeti), Petr Klapetek.
+ *  E-mail: chvatal@physics.muni.cz, yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -23,6 +23,7 @@ controls_changed => computed = FALSE
 
 */
 
+#include "config.h"
 #include <string.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
@@ -303,7 +304,7 @@ static GwyModuleInfo module_info = {
     (GwyModuleRegisterFunc) &module_register,
     N_("Analyses nanoindentation structure (volumes, surfaces, ...)."),
     "Lukáš Chvátal <chvatal@physics.muni.cz>",
-    "0.1.3",
+    "0.1.4",
     "Lukáš Chvátal",
     "2005",
 };
