@@ -1655,7 +1655,7 @@ save_statistics_dialog(IndentAnalyzeControls *c,
         fprintf(out, _("Area (developed) above %g (+%.1f %%)\n"),
                 args->surface_above/mag/mag,
                 100. * args->surface_above/sxy);
-        fprintf(out, _("Area (developed) above %g (+%.1lf %%)\n"),
+        fprintf(out, _("Area (developed) below %g (+%.1lf %%)\n"),
                 args->surface_below/mag/mag,
                 100. * args->surface_below/sxy);
 
