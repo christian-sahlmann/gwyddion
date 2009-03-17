@@ -234,7 +234,7 @@ static const StartupTip tips[] = {
         GWY_STOCK_FACET_LEVEL,
         N_("Facet Level can often level data with large features that make "
            "impossible to use standard plane levelling.  It levels the surface "
-           "by making flat areas point upwards."),
+           "by making normals of flat areas point upwards."),
     },
     {
         GWY_STOCK_GRAINS_REMOVE,
