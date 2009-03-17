@@ -1,4 +1,4 @@
-2.14 (2009-00-00)
+2.14 (2009-03-18)
 Application:
 - Translations updated: Czech, Russian.
 
@@ -30,6 +30,7 @@ Modules:
 - SPIP ASC (new): Imports text SPM files that look like exported from SPIP.
 - MapVue (new): Imports MapVue data files (highly experimental).
 - Gradient: New function for local slope azimuth presentation was added.
+- BCR: Possible crash was fixed.
 - Mask operations: Attach Mask was removed, superseded by Mark With.
 - Profile, Roughness tools: Subsampling of the profile for some directions of
   purely horizontal/vertical lines was fixed.
