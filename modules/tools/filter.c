@@ -209,7 +209,7 @@ gwy_tool_filter_init_dialog(GwyToolFilter *tool)
         { N_("Maximum"),              GWY_FILTER_MAXIMUM,      },
         { N_("Kuwahara"),             GWY_FILTER_KUWAHARA,     },
         { N_("Dechecker"),            GWY_FILTER_DECHECKER,    },
-        { N_("filter|Gaussian")       GWY_FILTER_GAUSSIAN,     },
+        { N_("filter|Gaussian"),      GWY_FILTER_GAUSSIAN,     },
     };
     GtkDialog *dialog;
     GtkTable *table;
