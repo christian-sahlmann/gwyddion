@@ -35,6 +35,7 @@ Modules:
   purely horizontal/vertical lines was fixed.
 - Distance, Profile and Path leven tools: The maximum number of lines was
   increased to 1024.
+- Crop tool: Mask on cropped channels is properly redrawn now.
 - PNI file: Vertical flipping was removed.
 - Many modules: Translation problems were corrected.
 

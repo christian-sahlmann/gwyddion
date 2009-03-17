@@ -81,7 +81,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Crop tool, crops data to smaller size."),
     "Yeti <yeti@gwyddion.net>",
-    "2.7",
+    "2.8",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -425,13 +425,13 @@ gwy_tool_crop_apply(GwyToolCrop *tool)
         if (plain_tool->mask_field) {
             gwy_tool_crop_one_field(plain_tool->mask_field, isel, sel,
                                     tool->args.keep_offsets);
-            gwy_data_field_data_changed(plain_tool->data_field);
+            gwy_data_field_data_changed(plain_tool->mask_field);
         }
 
         if (plain_tool->show_field) {
             gwy_tool_crop_one_field(plain_tool->show_field, isel, sel,
                                     tool->args.keep_offsets);
-            gwy_data_field_data_changed(plain_tool->data_field);
+            gwy_data_field_data_changed(plain_tool->show_field);
         }
 
         /* XXX: This is not undoable */
