@@ -55,6 +55,8 @@ typedef struct {
 } RawGraphControls;
 
 static gboolean       module_register   (void);
+static gint           rawgraph_detect   (const GwyFileDetectInfo *fileinfo,
+                                         gboolean only_name);
 static GwyContainer*  rawgraph_load     (const gchar *filename,
                                          GwyRunType mode,
                                          GError **error);
@@ -86,7 +88,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports simple text files as graph curves."),
     "Yeti <yeti@gwyddion.net>",
-    "0.1",
+    "0.2",
     "David Nečas (Yeti)",
     "2009",
 };
@@ -98,12 +100,53 @@ module_register(void)
 {
     gwy_file_func_register("rawgraph",
                            N_("ASCII graph curve files"),
-                           NULL,
+                           (GwyFileDetectFunc)&rawgraph_detect,
                            (GwyFileLoadFunc)&rawgraph_load,
                            NULL,
                            NULL);
 
     return TRUE;
+}
+
+static gint
+rawgraph_detect(const GwyFileDetectInfo *fileinfo,
+                gboolean only_name)
+{
+    const gchar *s;
+    gchar *end;
+    guint i;
+
+    if (only_name)
+        return 0;
+
+    s = fileinfo->head;
+    for (i = 0; i < 6; i++) {
+        g_ascii_strtod(s, &end);
+        if (end == s) {
+            /* If we encounter garbage at the first line, give it a one more
+             * chance. */
+            if (i || !(s = strchr(s, '\n')))
+                return 0;
+            goto next_line;
+        }
+        s = end;
+        g_ascii_strtod(s, &end);
+        if (end == s)
+            return 0;
+
+        s = end;
+        while (*s == ' ' || *s == '\t')
+            s++;
+        if (*s != '\n' && *s != '\r')
+            return 0;
+
+next_line:
+        do {
+            s++;
+        } while (g_ascii_isspace(*s));
+    }
+
+    return 50;
 }
 
 static GwyContainer*
