@@ -20,8 +20,34 @@ a:link img { border: none; }
 .variablelist table { padding: 4px; margin-left: 3em; }
 .programlisting, .synopsis {
   font-size: 90%;
-  padding: 3px 8px;
   background-color: #fdf3df;
+  padding: 0.5em;
+  margin: 0px;
+  border: 0px;
+}
+.listing_lines {
+  font-size: 90%;
+  background-color: #a0a0a0;
+  color: #ffffff;
+  font-weight: bold;
+  width: 2.5em;
+}
+.listing_code {
+  background-color: #fdf3df;
+}
+.listing_lines pre {
+  padding: 0.5em;
+  margin: 0px;
+  border: 0px;
+}
+.listing_lines, .listing_code {
+  margin: 0px;
+  padding: 0px;
+  border: 0px;
+}
+.listing_frame {
+  width: 100%;
+  padding: 0px;
 }
 .variablelist td:first-child { vertical-align: top; }
 /* this is needed so that the local anchors are displayed below the navigation */
@@ -53,6 +79,12 @@ div.refentry, div.chapter, div.part, div.book, div.index, div.glossary, div.sect
   top: 3em;
   z-index: 0;
 }
+div.footer {
+  margin-top: 3em;
+  font-style: italic;
+  text-align: right;
+  font-size: small;
+}
 div.refnamediv { margin-top: 2em; }
 div.gallery-float { float: left; padding: 10px; }
 div.gallery-float img { border-style: none; }
@@ -74,6 +106,19 @@ div.table table td, div.table table th
   padding: 3px;
   vertical-align: top;
 }
+
+.programlisting .cbracket   { color: #a40000; }
+.programlisting .comment    { color: #a0a0a0; }
+.programlisting .function   { color: #000000; }
+.programlisting .function a { color: #11326b; }
+.programlisting .keyword    { color: #5b1508; font-weight: bold; }
+.programlisting .linenum    { color: #ffffff; font-weight: bold; }
+.programlisting .number     { color: #a00000; }
+.programlisting .preproc    { color: #204a87; }
+.programlisting .string     { color: #a00000; }
+.programlisting .type       { color: #008000; font-weight: bold; }
+.programlisting .type a     { color: #008000; }
+.programlisting .symbol     { color: #ce5c00; }
 
 div.table table th { background-color: #eeeeee; }
 hr { visibility: collapse; display: none; }
