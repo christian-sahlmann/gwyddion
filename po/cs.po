@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2009-03-17 13:28+0100\n"
+"POT-Creation-Date: 2009-03-17 14:15+0100\n"
 "PO-Revision-Date: 2009-03-17 13:35+0100\n"
 "Last-Translator: Yeti <yeti@gwyddion.net>\n"
 "Language-Team: Czech\n"
@@ -3401,47 +3401,47 @@ msgstr ""
 "Čekal bych oddělovač „%s“ po datech v řádku %u, sloupci %u, ale narazil jsem "
 "na „%.16s“"
 
-#: modules/file/rawgraph.c:87
+#: modules/file/rawgraph.c:89
 msgid "Imports simple text files as graph curves."
 msgstr "Načítá jednoduché textové soubory jako křivky grafy."
 
-#: modules/file/rawgraph.c:100
+#: modules/file/rawgraph.c:102
 msgid "ASCII graph curve files"
 msgstr "ASCII soubory s křivkami"
 
-#: modules/file/rawgraph.c:123
+#: modules/file/rawgraph.c:166
 msgid "ASCII graph import must be run as interactive."
 msgstr "Import ASCII souborů s křivkami musí být spuštěno interaktivně."
 
-#: modules/file/rawgraph.c:175
+#: modules/file/rawgraph.c:218
 msgid "Import Graph Data"
 msgstr "Importovat grafová data"
 
-#: modules/file/rawgraph.c:200
+#: modules/file/rawgraph.c:243
 msgid "_Title:"
 msgstr "_Název:"
 
-#: modules/file/rawgraph.c:207
+#: modules/file/rawgraph.c:250
 msgid "_X label:"
 msgstr "Popisek _x:"
 
-#: modules/file/rawgraph.c:212
+#: modules/file/rawgraph.c:255
 msgid "_Y label:"
 msgstr "Popisek _y:"
 
-#: modules/file/rawgraph.c:217
+#: modules/file/rawgraph.c:260
 msgid "X _units:"
 msgstr "_Jednotky x:"
 
-#: modules/file/rawgraph.c:224
+#: modules/file/rawgraph.c:267
 msgid "Y un_its:"
 msgstr "J_ednotky y:"
 
-#: modules/file/rawgraph.c:377
+#: modules/file/rawgraph.c:420
 msgid "Only files with two columns can be imported."
 msgstr "Importovat lze pouze soubory se dvěma sloupci dat."
 
-#: modules/file/rawgraph.c:476
+#: modules/file/rawgraph.c:519
 msgid "Curve"
 msgstr "Křivka"
 
