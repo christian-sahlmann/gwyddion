@@ -1901,9 +1901,6 @@ gwy_3d_draw_axes(Gwy3DView *widget)
     gboolean yfirst;
     GwyGLMaterial *mat_none;
 
-    if (ugly_hack_globally_disable_axis_drawing)
-        return;
-
     gwy_debug(" ");
 
     xres = gwy_data_field_get_xres(widget->data_field);
@@ -1990,7 +1987,8 @@ gwy_3d_draw_axes(Gwy3DView *widget)
     TODO: create bitmaps with labels in the beginning (possibly in init_gl)
           into display lists and draw here
     */
-    if (widget->setup->labels_visible) {
+    if (widget->setup->labels_visible
+        && !ugly_hack_globally_disable_axis_drawing) {
         guint view_size;
         gint size;
 
