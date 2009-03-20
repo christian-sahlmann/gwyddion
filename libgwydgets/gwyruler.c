@@ -449,6 +449,11 @@ gwy_ruler_expose(GtkWidget *widget,
     if (GTK_WIDGET_DRAWABLE(widget)) {
         ruler = GWY_RULER(widget);
 
+        gdk_window_clear_area(widget->window,
+                              0, 0,
+                              widget->allocation.width,
+                              widget->allocation.height);
+
         gtk_paint_box(widget->style, widget->window,
                       GTK_STATE_NORMAL, GTK_SHADOW_OUT,
                       NULL, widget, "ruler",
