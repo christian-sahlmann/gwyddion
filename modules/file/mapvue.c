@@ -130,7 +130,7 @@ typedef struct {
 typedef struct {
     gint reftag;
     gdouble magnification;
-    gdouble x_frame_scale;
+    gdouble x_frame_scale;  /* This seems to be (yres/xres)/(xreal/yreal) */
     gdouble y_optical_scale;
 } MapVueGroup551;
 
@@ -372,7 +372,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports MapVue data files (.map)."),
     "Yeti <yeti@gwyddion.net>",
-    "0.1",
+    "0.2",
     "David Nečas (Yeti)",
     "2009",
 };
@@ -422,6 +422,7 @@ mapvue_load(const gchar *filename,
     GError *err = NULL;
     GwyDataField *dfield = NULL, *mfield;
     gint xres, yres;
+    gdouble xreal, yreal;
 
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
         err_GET_FILE_CONTENTS(error, &err);
@@ -440,8 +441,12 @@ mapvue_load(const gchar *filename,
 
     if (mapvuefile.group3.reftag != 3) {
         g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                    _("Required tag %u was not found."),
-                    3);
+                    _("Required tag %u was not found."), 3);
+        goto fail;
+    }
+    if (mapvuefile.group551.reftag != 551) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Required tag %u was not found."), 551);
         goto fail;
     }
 
@@ -457,6 +462,11 @@ mapvue_load(const gchar *filename,
         goto fail;
 
     dfield = read_data_field((const gint32*)p, xres, yres, &mfield);
+    /* FIXME: Just guessing. */
+    yreal = 1e-3*yres*mapvuefile.group551.y_optical_scale;
+    xreal = yreal*mapvuefile.group551.x_frame_scale*xres/yres;
+    gwy_data_field_set_xreal(dfield, xreal);
+    gwy_data_field_set_yreal(dfield, yreal);
 
     container = gwy_container_new();
     gwy_container_set_object_by_name(container, "/0/data", dfield);
@@ -1168,6 +1178,7 @@ read_data_field(const gint32 *d32,
                 GwyDataField **maskfield)
 {
     GwyDataField *dfield, *mfield;
+    GwySIUnit *unit;
     gdouble *data, *mdata;
     gint i, j, mcount;
 
@@ -1175,6 +1186,13 @@ read_data_field(const gint32 *d32,
         *maskfield = NULL;
 
     dfield = gwy_data_field_new(xres, yres, 1.0, 1.0, FALSE);
+    unit = gwy_si_unit_new("m");
+    gwy_data_field_set_si_unit_xy(dfield, unit);
+    g_object_unref(unit);
+    unit = gwy_si_unit_new("m");
+    gwy_data_field_set_si_unit_z(dfield, unit);
+    g_object_unref(unit);
+
     mfield = gwy_data_field_new_alike(dfield, FALSE);
     gwy_data_field_fill(mfield, 1.0);
 
