@@ -840,7 +840,6 @@ mapvue_read_group101(const guchar *p, gsize size, gpointer grpdata,
     group->testwedge = gwy_get_gfloat_le(&p);
     group->wavelength = gwy_get_gfloat_le(&p);
     group->new_wavelength = gwy_get_gfloat_le(&p);
-    g_printerr("wavelength %g %g\n", group->wavelength, group->new_wavelength);
     return SIZE;
 }
 
@@ -855,7 +854,6 @@ mapvue_read_group201(const guchar *p, gsize size, gpointer grpdata,
         return 0;
 
     group->data_scale_factor = gwy_get_gfloat_le(&p);
-    g_printerr("data_scale_factor %g\n", group->data_scale_factor);
     return SIZE;
 }
 
@@ -900,7 +898,6 @@ mapvue_read_group551(const guchar *p, gsize size, gpointer grpdata,
     group->magnification = gwy_get_gfloat_le(&p);
     group->x_frame_scale = gwy_get_gfloat_le(&p);
     group->y_optical_scale = gwy_get_gfloat_le(&p);
-    g_printerr("mag %g, x %g, y %g\n", group->magnification, group->x_frame_scale, group->y_optical_scale);
     return SIZE;
 }
 
@@ -1202,7 +1199,7 @@ read_data_field(const gint32 *d32,
         for (j = 0; j < xres; j++) {
             gint32 v = GINT32_FROM_LE(*d32);
             if (v != G_MAXINT32)
-                data[i*xres + j] = v/(gdouble)G_MAXINT32;
+                data[i*xres + j] = v/(gdouble)G_MAXINT32/5.625e4;
             else
                 mdata[i*xres + j] = 0.0;
             d32++;
