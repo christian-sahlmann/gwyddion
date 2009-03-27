@@ -209,7 +209,7 @@ gwy_sensitivity_group_add_widget(GwySensitivityGroup *sensgroup,
     /* Self-reference (pretend the widget has referenced us) */
     g_object_ref(sensgroup);
 
-    sens = ((senslist->mask & sensgroup->state) == senslist->mask);
+    sens = ((senslist->mask & sensgroup->old_state) == senslist->mask);
     gtk_widget_set_sensitive(widget, sens);
 }
 
