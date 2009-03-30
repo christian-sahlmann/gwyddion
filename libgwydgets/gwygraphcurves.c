@@ -388,7 +388,7 @@ render_column(GtkCellLayout *column,
             modes = gwy_graph_curve_type_get_enum();
             s = gwy_enum_to_string(v, modes, -1);
             if (s && *s)
-                g_object_set(renderer, "text", s, NULL);
+                g_object_set(renderer, "text", gwy_sgettext(s), NULL);
         }
         break;
 
