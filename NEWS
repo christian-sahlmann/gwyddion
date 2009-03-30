@@ -7,8 +7,10 @@ Libraries:
   properly if they were added during a queued update.  This was fixed.
 - libgwydgets: 3D view unqueues full-size redraw when it is unrealized, fixing
   crashes when the widget is destroyed before the redraw occurs.
+- libgwydgets: More translatability problems were fixed.
 
 Modules:
+- Pixmap export: Inset scale bar is now antialiased.
 - MapVue: Lateral dimensions of imported data were corrected, value scale was
   possibly fixed.
 - Scale: Occasional weird range of permitted scaling ratios was fixed.
