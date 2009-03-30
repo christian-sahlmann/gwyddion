@@ -90,7 +90,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Scales data by arbitrary factor."),
     "Yeti <yeti@gwyddion.net>",
-    "1.5",
+    "1.6",
     "David Nečas (Yeti) & Petr Klapetek & Dirk Kähler",
     "2003",
 };
@@ -205,8 +205,8 @@ scale_dialog(ScaleArgs *args)
                        FALSE, FALSE, 4);
 
     controls.ratio = gtk_adjustment_new(args->ratio,
-                                        2.0/MIN(args->xres, args->yres),
-                                        4096.0/MAX(args->xres, args->yres),
+                                        2.0/MIN(args->org_xres, args->org_yres),
+                                        8192.0/MAX(args->org_xres, args->org_yres),
                                         0.01, 0.2, 0);
     spin = gwy_table_attach_hscale(table, 0, _("Scale by _ratio:"), NULL,
                                    controls.ratio, GWY_HSCALE_LOG);
@@ -226,7 +226,7 @@ scale_dialog(ScaleArgs *args)
                      G_CALLBACK(proportional_changed_cb), args);
 
     controls.xres = gtk_adjustment_new(args->ratio*args->xres,
-                                       2, 4096, 1, 10, 0);
+                                       2, 8192, 1, 10, 0);
     spin = gwy_table_attach_hscale(table, 1, _("New _width:"), "px",
                                    controls.xres, GWY_HSCALE_LOG);
     g_object_set_data(G_OBJECT(controls.xres), "controls", &controls);
@@ -234,7 +234,7 @@ scale_dialog(ScaleArgs *args)
                      G_CALLBACK(width_changed_cb), args);
 
     controls.yres = gtk_adjustment_new(args->ratio*args->yres,
-                                       2, 4096, 1, 10, 0);
+                                       2, 8192, 1, 10, 0);
     spin = gwy_table_attach_hscale(table, 2, _("New _height:"), "px",
                                    controls.yres, GWY_HSCALE_LOG);
     g_object_set_data(G_OBJECT(controls.yres), "controls", &controls);
@@ -385,7 +385,7 @@ scale_dialog_update(ScaleControls *controls,
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->proportional),
                                  args->proportional);
     /* deactivate Ratio */
-    gwy_table_hscale_set_sensitive(controls->ratio,args->proportional);
+    gwy_table_hscale_set_sensitive(controls->ratio, args->proportional);
     gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->interp),
                                   args->interp);
 }
