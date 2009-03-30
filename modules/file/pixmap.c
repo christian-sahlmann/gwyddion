@@ -356,7 +356,7 @@ static GwyModuleInfo module_info = {
        "TARGA. "
        "Import support relies on GDK and thus may be installation-dependent."),
     "Yeti <yeti@gwyddion.net>",
-    "7.0",
+    "7.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -2894,13 +2894,10 @@ scalebar(gint size,
         guchar *row = pixels + rowstride*i;
 
         for (j = 0; j < (guint)width; j++) {
-            if (row[4*j] < 120) {
-                row[4*j] = color_bytes[0];
-                row[4*j + 1] = color_bytes[1];
-                row[4*j + 2] = color_bytes[2];
-            }
-            else
-                row[4*j + 3] = 0;
+            row[4*j + 3] = 255 - row[4*j];
+            row[4*j] = color_bytes[0];
+            row[4*j + 1] = color_bytes[1];
+            row[4*j + 2] = color_bytes[2];
         }
     }
 
