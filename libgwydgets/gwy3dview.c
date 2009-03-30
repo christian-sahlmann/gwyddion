@@ -437,6 +437,11 @@ gwy_3d_view_unrealize(GtkWidget *widget)
 
     gwy3dview = GWY_3D_VIEW(widget);
 
+    if (gwy3dview->timeout_id) {
+         g_source_remove(gwy3dview->timeout_id);
+         gwy3dview->timeout_id = 0;
+    }
+
     gwy_3d_view_release_lists(gwy3dview);
     gwy_object_unref(gwy3dview->downsampled);
 
