@@ -247,7 +247,7 @@ gwy_sci_text_new(void)
     gtk_cell_layout_pack_start(layout, cell, TRUE);
     gtk_cell_layout_set_attributes(layout, cell, "text", i, NULL);
 
-    button = gtk_button_new_with_mnemonic("A_dd symbol");
+    button = gtk_button_new_with_mnemonic(_("A_dd symbol"));
     g_signal_connect_swapped(button, "clicked",
                              G_CALLBACK(gwy_sci_text_entity_selected),
                              sci_text);
