@@ -1,11 +1,17 @@
 2.15 (0000-00-00)
+Application:
+- Translations updated: Russian.
+
 Libraries:
 - libgwydgets: Initial state of widgets in GwySensitivityGroup might not be set
   properly if they were added during a queued update.  This was fixed.
+- libgwydgets: 3D view unqueues full-size redraw when it is unrealized, fixing
+  crashes when the widget is destroyed before the redraw occurs.
 
 Modules:
 - MapVue: Lateral dimensions of imported data were corrected, value scale was
   possibly fixed.
+- Scale: Occasional weird range of permitted scaling ratios was fixed.
 
 
 2.14 (2009-03-18)
