@@ -1,6 +1,7 @@
 # @(#) $Id$
 
 jpkscan_module = jpkscan.la
+ols_module = ols.la
 spml_module = spml.la
 
 <[[:SELF:]]>
