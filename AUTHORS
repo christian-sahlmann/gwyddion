@@ -23,7 +23,7 @@ Lukáš Chvátal <chvatal@physics.muni.cz>
 Sven Neumann <neumann@jpk.com>
     JPK file import, miscellaneous improvements.
 Jan Hořák <xhorak@gmail.com>
-    SPML import module, Python interface, Win32 remote control.
+    Python interface, Win32 remote control, SPML and other file import modules.
 Александр Ковалев <av_kov@tut.by>
     Nanotop import module.
 Owain Davies <owain.davies@blueyonder.co.uk>
