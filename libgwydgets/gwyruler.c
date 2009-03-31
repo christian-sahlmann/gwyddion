@@ -449,23 +449,11 @@ gwy_ruler_expose(GtkWidget *widget,
     if (GTK_WIDGET_DRAWABLE(widget)) {
         ruler = GWY_RULER(widget);
 
-        gdk_window_clear_area(widget->window,
-                              0, 0,
-                              widget->allocation.width,
-                              widget->allocation.height);
-
-        gtk_paint_box(widget->style, widget->window,
+        gtk_paint_box(widget->style, ruler->backing_store,
                       GTK_STATE_NORMAL, GTK_SHADOW_OUT,
                       NULL, widget, "ruler",
                       0, 0,
                       widget->allocation.width, widget->allocation.height);
-
-        gdk_draw_drawable(ruler->backing_store,
-                          ruler->non_gr_exp_gc,
-                          widget->window,
-                          0, 0, 0, 0,
-                          widget->allocation.width,
-                          widget->allocation.height);
 
         gwy_ruler_draw_ticks(ruler);
 
