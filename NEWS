@@ -10,6 +10,7 @@ Libraries:
 - libgwydgets: More translatability problems were fixed.
 
 Modules:
+- OLS: Module omitted in the MS Windows builds was added.
 - Pixmap export: Inset scale bar is now antialiased.
 - MapVue: Lateral dimensions of imported data were corrected, value scale was
   possibly fixed.
@@ -187,6 +188,12 @@ Libraries:
 - libgwyddion: Added FD curves
 
 Modules:
+- Queasant (new): Added import module
+- OLS (new): Olympus LEX 3000 file import support.
+- Sensofar (new): Added Sensofar PLu file import module.
+- SICM (new): Added IonScope SCIM file import module.
+- Burleigh BII (new): Added read support for burleigh BII binary file format.
+- Indentor analyze: Re-added.
 - Grain distributions: Possible crashes or bogus resolutions in graph
   plotting mode were fixed.
 - Graph fitting: It is possible to plot the curve over the full range even
@@ -194,13 +201,9 @@ Modules:
 - RHK SPM32 (SM2): Support for spectra was added.
 - MI file: Reading of ASCII image files was actually implemented.
 - Plugin-proxy: Memory overflow in dump file reading was fixed.
-- Sensofar (new): Added Sensofar PLu file import module.
-- SICM (new): Added IonScope SCIM file import module.
-- Burleigh BII (new): Added read support for burleigh BII binary file format.
 - Surf: Added export to Surf files
 - stpfile: Improved support for extended source modes.
-- Queasant (new): Added import module
-- Indentor analyze
+
 
 2.9 (2007-10-19)
 Application:
