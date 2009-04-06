@@ -46,6 +46,7 @@ typedef struct {
     gdouble zreal;
     gdouble x0;
     gdouble y0;
+    gdouble zshift;
     gdouble xorig;
     gdouble yorig;
     gdouble zorig;
@@ -77,6 +78,7 @@ typedef struct {
     GtkObject *zreal;
     GtkObject *x0;
     GtkObject *y0;
+    GtkObject *zshift;
     gboolean in_update;
     GtkWidget *xyunits;
     GtkWidget *zunits;
@@ -102,6 +104,8 @@ static void        yreal_changed_cb          (GtkAdjustment *adj,
 static void        x0_changed_cb             (GtkAdjustment *adj,
                                               CalibrateControls *controls);
 static void        y0_changed_cb             (GtkAdjustment *adj,
+                                              CalibrateControls *controls);
+static void        zshift_changed_cb         (GtkAdjustment *adj,
                                               CalibrateControls *controls);
 static void        zreal_changed_cb          (GtkAdjustment *adj,
                                               CalibrateControls *controls);
@@ -131,7 +135,7 @@ static const CalibrateArgs calibrate_defaults = {
     -6,
     -6,
     TRUE,
-    0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+    0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0, 0, 0, 0,
     "m", "m", "m", "m"
 };
 
@@ -140,7 +144,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Recalibrates scan lateral dimensions or value range."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "2.7",
+    "2.8",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -219,6 +223,8 @@ calibrate(GwyContainer *data, GwyRunType run)
     gwy_data_field_set_yreal(dfields[0], args.yreal);
     if (args.zratio != 1.0)
         gwy_data_field_multiply(dfields[0], args.zratio);
+    if (args.zshift != 0.0)
+        gwy_data_field_add(dfields[0], args.zshift);
     gwy_data_field_set_xoffset(dfields[0], args.x0);
     gwy_data_field_set_yoffset(dfields[0], args.y0);
     if (args.xyunit != args.xyunitorig) {
@@ -296,7 +302,7 @@ calibrate_dialog(CalibrateArgs *args,
     controls.args = args;
     controls.in_update = TRUE;
 
-    table = gtk_table_new(13, 4, FALSE);
+    table = gtk_table_new(14, 4, FALSE);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
@@ -354,6 +360,8 @@ calibrate_dialog(CalibrateArgs *args,
     gtk_table_attach(GTK_TABLE(table), controls.square,
                      0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
+
+    /***** Lateral Offsets *****/
 
     label = gtk_label_new_with_mnemonic(_("_X offset:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
@@ -413,7 +421,22 @@ calibrate_dialog(CalibrateArgs *args,
     gtk_table_attach(GTK_TABLE(table), controls.zunits,
                      3, 4, row, row+1,
                      GTK_EXPAND | GTK_FILL | GTK_SHRINK, 0, 0, 0);
+    row++;
 
+    /***** Value Shift *****/
+
+    label = gtk_label_new_with_mnemonic(_("Z shi_ft:"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), label,
+                     0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+
+    controls.zshift = gtk_adjustment_new(args->zshift/pow10(args->zexponent),
+                                         -10000, 10000, 1, 10, 0);
+    spin = gtk_spin_button_new(GTK_ADJUSTMENT(controls.zshift), 1, 2);
+    gtk_spin_button_set_numeric(GTK_SPIN_BUTTON(spin), TRUE);
+    gtk_table_attach(GTK_TABLE(table), spin,
+                     1, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
     row++;
 
     /***** Calibration Coefficients *****/
@@ -458,6 +481,8 @@ calibrate_dialog(CalibrateArgs *args,
                      G_CALLBACK(x0_changed_cb), &controls);
     g_signal_connect(controls.y0, "value-changed",
                      G_CALLBACK(y0_changed_cb), &controls);
+    g_signal_connect(controls.zshift, "value-changed",
+                     G_CALLBACK(zshift_changed_cb), &controls);
     g_signal_connect(controls.zreal, "value-changed",
                      G_CALLBACK(zreal_changed_cb), &controls);
     g_signal_connect(controls.xratio, "value-changed",
@@ -535,6 +560,8 @@ dialog_reset(CalibrateControls *controls,
                              args->x0orig/pow10(args->xyexponent));
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->y0),
                              args->y0orig/pow10(args->xyexponent));
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->zshift),
+                             calibrate_defaults.zshift);
 
     calibrate_dialog_update(controls, args);
 }
@@ -668,6 +695,22 @@ y0_changed_cb(GtkAdjustment *adj,
     controls->in_update = TRUE;
 
     args->y0 = gtk_adjustment_get_value(adj) * pow10(args->xyexponent);
+    calibrate_dialog_update(controls, args);
+    controls->in_update = FALSE;
+}
+
+static void
+zshift_changed_cb(GtkAdjustment *adj,
+                  CalibrateControls *controls)
+{
+    CalibrateArgs *args = controls->args;
+
+    if (controls->in_update)
+        return;
+
+    controls->in_update = TRUE;
+
+    args->zshift = gtk_adjustment_get_value(adj) * pow10(args->zexponent);
     calibrate_dialog_update(controls, args);
     controls->in_update = FALSE;
 }
@@ -846,6 +889,8 @@ calibrate_dialog_update(CalibrateControls *controls,
 
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->zreal),
                              args->zreal/pow10(args->zexponent));
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->zshift),
+                             args->zshift/pow10(args->zexponent));
 
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->xratio),
                              args->xratio/pow10(args->xyexponent
@@ -879,6 +924,7 @@ calibrate_dialog_update(CalibrateControls *controls,
 static const gchar xratio_key[] = "/module/calibrate/xratio";
 static const gchar yratio_key[] = "/module/calibrate/yratio";
 static const gchar zratio_key[] = "/module/calibrate/zratio";
+static const gchar zshift_key[] = "/module/calibrate/zshift";
 static const gchar square_key[] = "/module/calibrate/square";
 
 static void
@@ -887,6 +933,7 @@ calibrate_sanitize_args(CalibrateArgs *args)
     args->xratio = CLAMP(args->xratio, 1e-15, 1e15);
     args->yratio = CLAMP(args->yratio, 1e-15, 1e15);
     args->zratio = CLAMP(args->zratio, 1e-15, 1e15);
+    args->zshift = CLAMP(args->zshift, -1e-9, 1e9);
     args->square = !!args->square;
 }
 
@@ -899,6 +946,7 @@ calibrate_load_args(GwyContainer *container,
     gwy_container_gis_double_by_name(container, xratio_key, &args->xratio);
     gwy_container_gis_double_by_name(container, yratio_key, &args->yratio);
     gwy_container_gis_double_by_name(container, zratio_key, &args->zratio);
+    gwy_container_gis_double_by_name(container, zshift_key, &args->zshift);
     gwy_container_gis_boolean_by_name(container, square_key, &args->square);
     calibrate_sanitize_args(args);
 }
@@ -910,6 +958,7 @@ calibrate_save_args(GwyContainer *container,
     gwy_container_set_double_by_name(container, xratio_key, args->xratio);
     gwy_container_set_double_by_name(container, yratio_key, args->yratio);
     gwy_container_set_double_by_name(container, zratio_key, args->zratio);
+    gwy_container_set_double_by_name(container, zshift_key, args->zshift);
     gwy_container_set_boolean_by_name(container, square_key, args->square);
 }
 
