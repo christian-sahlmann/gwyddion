@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2009-03-28 03:59+0100\n"
-"PO-Revision-Date: 2009-03-28 15:02+0300\n"
+"POT-Creation-Date: 2009-04-04 03:59+0200\n"
+"PO-Revision-Date: 2009-04-04 18:54+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@km.ru>\n"
 "Language-Team: russian <ru@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -87,9 +87,8 @@ msgid "Gaussian (RPSDF)"
 msgstr ""
 
 #: libgwyddion/gwynlfitpreset.c:1264
-#, fuzzy
 msgid "Exponential"
-msgstr "Экспонента"
+msgstr "Экспоненциальная"
 
 #: libgwyddion/gwynlfitpreset.c:1277
 msgid "Exponential (PSDF)"
@@ -128,9 +127,8 @@ msgid "Square wave"
 msgstr ""
 
 #: libgwyddion/gwynlfitpreset.c:1401
-#, fuzzy
 msgid "Power"
-msgstr "Питание"
+msgstr "Степенная"
 
 #: libgwyddion/gwynlfitpreset.c:1414
 msgid "Lorentzian"
@@ -414,9 +412,8 @@ msgid "Linear"
 msgstr "Линейная"
 
 #: libprocess/gwyprocessenums.c:207
-#, fuzzy
 msgid "Key"
-msgstr "Клавиша"
+msgstr ""
 
 #: libprocess/gwyprocessenums.c:208
 msgid "BSpline"
@@ -463,9 +460,8 @@ msgid "Welch"
 msgstr ""
 
 #: libprocess/gwyprocessenums.c:249
-#, fuzzy
 msgid "Rect"
-msgstr "Rect"
+msgstr ""
 
 #: libprocess/gwyprocessenums.c:250
 msgid "Nuttall"
@@ -969,13 +965,12 @@ msgid "Line Style"
 msgstr "Стиль линии"
 
 #: libgwydgets/gwygraphlabeldialog.c:74
-#, fuzzy
 msgid "Frame thickness:"
 msgstr "Толщина рамки:"
 
 #: libgwydgets/gwygraphlabeldialog.c:81
 msgid "_Reversed layout"
-msgstr ""
+msgstr "_Обратное расположение"
 
 #: libgwydgets/gwygraphwindow.c:140
 #: app/toolbox.c:111
@@ -1089,6 +1084,10 @@ msgstr "_Нижний индекс"
 #: libgwydgets/gwyscitext.c:97
 msgid "Su_perscript"
 msgstr "_Верхний индекс"
+
+#: libgwydgets/gwyscitext.c:250
+msgid "A_dd symbol"
+msgstr "_Добавить символ"
 
 #: libgwydgets/gwyscitext.c:273
 #: modules/file/rawfile.c:508
@@ -2421,8 +2420,9 @@ msgid "Parameter tag set is incomplete."
 msgstr ""
 
 #: modules/file/intematix.c:309
+#, fuzzy
 msgid "image depth"
-msgstr ""
+msgstr "глубина изображения"
 
 #: modules/file/jeol.c:522
 msgid "Imports JEOL data files."
@@ -2475,11 +2475,11 @@ msgstr "Файлы MapVue (.map)"
 #: modules/file/mapvue.c:449
 #, c-format
 msgid "Required tag %u was not found."
-msgstr ""
+msgstr "Требуемый тег %u не был найден."
 
 #: modules/file/mapvue.c:622
 msgid "File end was reached while scanning tags."
-msgstr ""
+msgstr "В процессе поиска тегов был достигнут конец файла."
 
 #: modules/file/mapvue.c:634
 #, fuzzy, c-format
@@ -2749,7 +2749,7 @@ msgstr "Найдены вложенные каталоги"
 #: modules/file/opdfile.c:741
 #, c-format
 msgid "Truncated data in block %s"
-msgstr ""
+msgstr "Неполные данные в блоке %s"
 
 #: modules/file/pixmap.c:291
 msgid "Portable Network Graphics (.png)"
@@ -2777,11 +2777,11 @@ msgstr "TARGA (.tga,.targa)"
 
 #: modules/file/pixmap.c:349
 msgid "Exports data as pixmap images and imports data from pixmap images. Supports following image formats for export: PNG, JPEG, TIFF (if available), PPM, BMP, TARGA. Import support relies on GDK and thus may be installation-dependent."
-msgstr ""
+msgstr "Экспортирует данные как растровые изображения и импортирует данные из растровых изображений. Поддерживает следующие форматы изображений при экспорте: PNG, JPEG, TIFF (если есть), PPM, BMP, TARGA. Поддержка импорта полагается на GDK и, вследствие этого, может зависеть от варианта установки."
 
 #: modules/file/pixmap.c:619
 msgid "Pixmap image import must be run as interactive."
-msgstr ""
+msgstr "Импорт растровых изображений должен запускаться в интерактивном режиме."
 
 #: modules/file/pixmap.c:627
 #, c-format
@@ -2801,7 +2801,7 @@ msgstr ""
 
 #: modules/file/pixmap.c:854
 msgid "Import "
-msgstr "Импортировать"
+msgstr "Импортировать "
 
 #: modules/file/pixmap.c:880
 #: modules/file/rawfile.c:581
@@ -2864,7 +2864,6 @@ msgid "Use"
 msgstr "Использовать"
 
 #: modules/file/pixmap.c:1040
-#, fuzzy
 msgid "as data"
 msgstr "как данные"
 
@@ -3051,7 +3050,7 @@ msgstr "Файлы данных PSIA (.tiff)"
 
 #: modules/file/psia.c:205
 msgid "Data tag is missing."
-msgstr ""
+msgstr "Тег данных отсутствует."
 
 #: modules/file/quesant.c:56
 msgid "Imports Quesant file format."
@@ -3356,12 +3355,12 @@ msgstr "Мусор `%.16s' в строке %u, столбце %u"
 #: modules/file/rawfile.c:2158
 #, c-format
 msgid "Expected delimiter `%c' after data in row %u, column %u, got `%c'"
-msgstr ""
+msgstr "Ожидался разделитель `%c' после данных в строке %u, столбце %u, получили `%c'"
 
 #: modules/file/rawfile.c:2184
 #, c-format
 msgid "Expected delimiter `%s' after data in row %u, column %u, got `%.16s'"
-msgstr ""
+msgstr "Ожидался разделитель `%s' после данных в строке %u, столбце %u, получили `%.16s'"
 
 #: modules/file/rawgraph.c:89
 msgid "Imports simple text files as graph curves."
@@ -3775,7 +3774,6 @@ msgid "format version"
 msgstr "версия формата"
 
 #: modules/file/unisoku.c:291
-#, fuzzy
 msgid "format flags"
 msgstr "Флаги формата"
 
@@ -3788,22 +3786,18 @@ msgid "Missing or invalid some integers heaven knows what they mean but that sho
 msgstr ""
 
 #: modules/file/unisoku.c:323
-#, fuzzy
 msgid "x scale parameters"
 msgstr "Параметры масштаба x"
 
 #: modules/file/unisoku.c:334
-#, fuzzy
 msgid "y scale parameters"
 msgstr "Параметры масштаба y"
 
 #: modules/file/unisoku.c:358
-#, fuzzy
 msgid "z scale parameters"
 msgstr "Параметры масштаба z"
 
 #: modules/file/unisoku.c:366
-#, fuzzy
 msgid "data type parameters"
 msgstr "Параметры типа данных"
 
@@ -3902,7 +3896,7 @@ msgstr "–"
 #: modules/graph/graph_fit.c:493
 #: modules/process/fit_2d.c:930
 msgid "Save Fit Report"
-msgstr ""
+msgstr "Сохранить отчёт аппроксимации"
 
 #: modules/graph/graph_cd.c:499
 #: modules/graph/graph_fdfit.c:693
@@ -3965,7 +3959,7 @@ msgstr ""
 #: modules/graph/graph_fit.c:1430
 #, c-format
 msgid "Fitted function:  %s\n"
-msgstr ""
+msgstr "Аппроксимирующая функция:  %s\n"
 
 #: modules/graph/graph_cd.c:996
 #: modules/graph/graph_fdfit.c:1390
@@ -4085,7 +4079,7 @@ msgstr "_Исходный"
 #: modules/graph/graph_fit.c:332
 #: modules/process/fit_2d.c:337
 msgid "Fix"
-msgstr "Исправить"
+msgstr "Править"
 
 #: modules/graph/graph_fdfit.c:338
 #: modules/graph/graph_fit.c:338
@@ -4097,7 +4091,7 @@ msgstr "Исходное"
 #: modules/graph/graph_fit.c:349
 #: modules/process/fit_2d.c:409
 msgid "χ<sup>2</sup> result:"
-msgstr ""
+msgstr "Результирующее χ<sup>2</sup>:"
 
 #: modules/graph/graph_fdfit.c:365
 #: modules/graph/graph_fit.c:365
@@ -4119,7 +4113,7 @@ msgstr ""
 #: modules/graph/graph_fit.c:1460
 #, c-format
 msgid "Residual sum:   %g\n"
-msgstr ""
+msgstr "Остаточная сумма:   %g\n"
 
 #: modules/graph/graph_fdfit.c:1420
 #: modules/graph/graph_fit.c:1463
@@ -4152,7 +4146,7 @@ msgstr "ст_роить"
 
 #: modules/graph/graph_level.c:37
 msgid "Level graph by line."
-msgstr "Выровнять график линией."
+msgstr "Выравнивает график вычетом линии."
 
 #: modules/graph/graph_level.c:51
 msgid "/_Level"
@@ -4594,7 +4588,7 @@ msgstr ""
 
 #: modules/process/crosscor.c:189
 msgid "Search size"
-msgstr ""
+msgstr "Размер поиска"
 
 #: modules/process/crosscor.c:209
 msgid "Window size"
@@ -5001,25 +4995,25 @@ msgstr "Выравнивание граней"
 #: modules/process/level.c:247
 #: modules/process/polylevel.c:503
 msgid "_Exclude region under mask"
-msgstr ""
+msgstr "_Исключить область под маской"
 
 #: modules/process/facet-level.c:278
 #: modules/process/level.c:248
 #: modules/process/polylevel.c:505
 msgid "Exclude region _outside mask"
-msgstr ""
+msgstr "Исключить область с_наружи маски"
 
 #: modules/process/facet-level.c:279
 #: modules/process/level.c:249
 #: modules/process/polylevel.c:507
 msgid "Use entire _image (ignore mask)"
-msgstr ""
+msgstr "Использовать _всё изображение (игнорировать маску)"
 
 #: modules/process/facet-level.c:303
 #: modules/process/level.c:273
 #: modules/process/polylevel.c:495
 msgid "Masking Mode"
-msgstr ""
+msgstr "Режим использования маски"
 
 #: modules/process/facet_analysis.c:161
 msgid "Visualizes, marks and measures facet orientation."
@@ -5976,9 +5970,8 @@ msgid "_Mean value"
 msgstr ""
 
 #: modules/process/immerse.c:376
-#, fuzzy
 msgid "Show _frame"
-msgstr "_Показывать рамку"
+msgstr "Показывать _рамку"
 
 #: modules/process/immerse.c:800
 msgid "Immersed detail"
@@ -6581,27 +6574,22 @@ msgid "E_xtract background"
 msgstr "_Извлечь фон"
 
 #: modules/process/merge.c:127
-#, fuzzy
 msgid "Up"
-msgstr "Вверх"
+msgstr "Сверху"
 
 #: modules/process/merge.c:128
-#, fuzzy
 msgid "Down"
-msgstr "Вниз"
+msgstr "Снизу"
 
 #: modules/process/merge.c:129
-#, fuzzy
 msgid "Right"
 msgstr "Справа"
 
 #: modules/process/merge.c:130
-#, fuzzy
 msgid "Left"
 msgstr "Слева"
 
 #: modules/process/merge.c:134
-#, fuzzy
 msgid "Correlation"
 msgstr "Корреляция"
 
@@ -6614,19 +6602,16 @@ msgid "Second operand"
 msgstr "Второй операнд."
 
 #: modules/process/merge.c:141
-#, fuzzy
 msgid "Smooth"
-msgstr "Плавный"
+msgstr "Плавный переход"
 
 #: modules/process/merge.c:155
-#, fuzzy
 msgid "Merges two images."
 msgstr "Объединяет два изображения."
 
 #: modules/process/merge.c:169
-#, fuzzy
 msgid "/M_ultidata/_Merge..."
-msgstr "/Множественные данные/объединить..."
+msgstr "/М_ножественные данные/_Объединить..."
 
 #: modules/process/merge.c:173
 msgid "Merge two images"
@@ -6638,22 +6623,21 @@ msgstr "Объединить данные"
 
 #: modules/process/merge.c:228
 msgid "_Merge with:"
-msgstr ""
+msgstr "О_бъединить с:"
 
 #: modules/process/merge.c:236
 msgid "_Put second operand:"
-msgstr ""
+msgstr "_Поместить второй операнд:"
 
 #: modules/process/merge.c:243
 msgid "_Align second operand:"
-msgstr ""
+msgstr "_Выровнять второй операнд:"
 
 #: modules/process/merge.c:250
 msgid "_Boundary treatment:"
-msgstr ""
+msgstr "Режим _границы:"
 
 #: modules/process/merge.c:556
-#, fuzzy
 msgid "Merged images"
 msgstr "Объединённые изображения"
 
@@ -7499,9 +7483,8 @@ msgid "_Data"
 msgstr "Да_нные"
 
 #: modules/tools/grainremover.c:108
-#, fuzzy
 msgid "_Both"
-msgstr "Оба"
+msgstr "_Оба"
 
 #: modules/tools/grainremover.c:112
 #: modules/tools/spotremove.c:268
@@ -7526,9 +7509,8 @@ msgstr "Удалить:"
 
 #: modules/tools/grainremover.c:224
 #: modules/tools/spotremove.c:323
-#, fuzzy
 msgid "_Interpolation method:"
-msgstr "Метод интерполяции:"
+msgstr "Метод _интерполяции:"
 
 #: modules/tools/icolorange.c:120
 msgid "Interactive color range tool, allows to select data range false color scale should map to, either on data or on height distribution histogram."
@@ -7547,7 +7529,6 @@ msgid "Full color range from minimum to maximum"
 msgstr "Полный цветовой диапазон от минимума до максимума"
 
 #: modules/tools/icolorange.c:224
-#, fuzzy
 msgid "Explicitly set fixed color range"
 msgstr "Точно установить фиксированный диапазон цветов"
 
@@ -7556,9 +7537,8 @@ msgid "Automatic color range with tails cut off"
 msgstr "Автоматический цветовой диапазон с обрезкой хвостов распределения"
 
 #: modules/tools/icolorange.c:234
-#, fuzzy
 msgid "Adaptive nonlinear color mapping"
-msgstr "Адаптивное нелинейное установление цвета"
+msgstr "Адаптивная нелинейная установка цвета"
 
 #: modules/tools/icolorange.c:274
 msgid "_default"
@@ -7581,9 +7561,8 @@ msgid "M_aximum"
 msgstr "М_аксимум"
 
 #: modules/tools/icolorange.c:380
-#, fuzzy
 msgid "Full"
-msgstr "Полное"
+msgstr "Полный"
 
 #: modules/tools/level3.c:104
 msgid "Three-point level tool, levels data by subtracting a plane fitted through three selected points."
@@ -7693,7 +7672,6 @@ msgid "Mask editor tool, allows to interactively add or remove parts of mask."
 msgstr "Редактор маски, позволяет интерактивно добавлять и удалять части маски."
 
 #: modules/tools/maskedit.c:169
-#, fuzzy
 msgid "Mask Editor"
 msgstr "Редактор маски"
 
@@ -8186,7 +8164,7 @@ msgstr "Фрактальная интерполяция"
 #: modules/tools/stats.c:155
 #, fuzzy
 msgid "Statistics tool."
-msgstr "Инструмент статистики"
+msgstr "Инструмент статистики."
 
 #: modules/tools/stats.c:192
 #: modules/tools/stats.c:801
