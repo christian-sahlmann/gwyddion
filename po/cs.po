@@ -4,7 +4,7 @@ msgstr ""
 "Project-Id-Version: Gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
 "POT-Creation-Date: 2009-03-17 14:15+0100\n"
-"PO-Revision-Date: 2009-03-17 13:35+0100\n"
+"PO-Revision-Date: 2009-04-06 17:09+0200\n"
 "Last-Translator: Yeti <yeti@gwyddion.net>\n"
 "Language-Team: Czech\n"
 "MIME-Version: 1.0\n"
@@ -1822,6 +1822,8 @@ msgid ""
 "Data Process → Presentation → Edge Detection → Step is a fine step detector "
 "with a good dynamic range"
 msgstr ""
+"Zpracování dat → Základní operace -> Detekce hran → Schod je detektor "
+"jemných schodů s dobrým dynamickým rozsahem."
 
 #: app/tips.c:251
 msgid ""
@@ -1843,6 +1845,8 @@ msgstr ""
 msgid ""
 "Remove Scars in the toolbox runs with the settings last used in Mark Scars."
 msgstr ""
+"Odstranění šrámů v panelu nástrojů používá stejné nastavení parametrů jako "
+"poslední Označení šrámů."
 
 #: app/tips.c:268
 msgid "Graph → Critical Dimension measures steps on extracted profile graphs."
@@ -1892,6 +1896,8 @@ msgid ""
 "Statistical Quantities tool allows to limit the area of interest by a mask, "
 "rectangular selection or the intersection of both."
 msgstr ""
+"Nástroj Statistické veličiny umožňuje omezit plochu zájmu pomocí masky, "
+"pravoúhleho výběru nebo kombinace obou."
 
 #: app/tips.c:308
 msgid ""
@@ -1899,6 +1905,8 @@ msgid ""
 "also correlation functions, power spectrum density (PSDF) and some more "
 "exotic functions."
 msgstr ""
+"Vedle rozdělení výšek a sklonů počítá nástroj Statistické funkce také "
+"korelační funkce, spektrální hustotu (PSDF) a další, exotičtější funkce."
 
 #: app/tips.c:314
 msgid ""
@@ -1906,12 +1914,17 @@ msgid ""
 "selected lines.  If there are no large features automatic Median Line "
 "Correction usually works well."
 msgstr ""
+"Nástroj Vyrovnání podle čar vyrovnává posunutí řádků srovnáním výšek podél "
+"ručně vybraných čar.  Nejsou-li na povrchu žádné velké objekty, funguje "
+"většinou dobře automatické Mediánové srovnání řádků."
 
 #: app/tips.c:320
 msgid ""
 "Grain Measure tool is great for examining individual grains.  Overall grain "
 "statistics are available in Data Processing → Grains."
 msgstr ""
+"Nástroj Měření zrn je výtečný pro zkoumání jednotlivých zrn.  Celkové "
+"statistiky poskytují funkce v Zpracování dat → Zrna."
 
 #: app/tips.c:326
 msgid "Mask Editor tool can create, edit, invert, grow and shrink masks."
@@ -1924,12 +1937,16 @@ msgid ""
 "Color Range tool offers several false color scale mapping modes and can make "
 "any of them the default mode."
 msgstr ""
+"Nástroj Barevný rozsah nabízí několik typů mapování hodnot na falešné barvy "
+"a umožňuje kterýkoli nastavit coby výchozí."
 
 #: app/tips.c:336
 msgid ""
 "Gwyddion User Guide explains in detail many of the methods and algorithms "
 "implemented in Gwyddion."
 msgstr ""
+"Uživatelská příručka Gwyddionu (Gwyddion user guide) detailně popisuje mnoho "
+"metod a algoritmů implementovaných v Gwyddionu."
 
 #: app/tips.c:341
 msgid "Gwyddion is a son of Math."
@@ -3070,7 +3087,7 @@ msgstr ""
 #: modules/graph/graph_fdfit.c:336 modules/graph/graph_fit.c:336
 #: modules/process/fit_2d.c:333
 msgid "Error"
-msgstr ""
+msgstr "Chyba"
 
 #: modules/file/pnifile.c:162
 msgid "L-R"
@@ -4893,7 +4910,7 @@ msgstr "Presentace lokálního sklonu"
 
 #: modules/process/edge.c:225
 msgid "/_Presentation/_Edge Detection/_Step"
-msgstr "/_Presentace/Detekce _hran/_Step"
+msgstr "/_Presentace/Detekce _hran/_Schod"
 
 #: modules/process/edge.c:229
 msgid "Fine step detection presentation"
@@ -5291,12 +5308,11 @@ msgstr "RMS:"
 
 #: modules/process/fft_synth.c:304
 msgid "Random seed:"
-msgstr ""
+msgstr "Hnízdo náhodných čísel:"
 
 #: modules/process/fft_synth.c:307
-#, fuzzy
 msgid "_New Seed"
-msgstr "_Nový"
+msgstr "_Nové hnízdo"
 
 #: modules/process/fft_synth.c:314
 msgid "M_inimum frequency:"
@@ -7050,11 +7066,11 @@ msgstr ""
 
 #: modules/process/superresolution.c:512
 msgid "Cross-correlation..."
-msgstr ""
+msgstr "Počítám křížovou korelaci..."
 
 #: modules/process/superresolution.c:554
 msgid "Interpolating..."
-msgstr ""
+msgstr "Interpoluji..."
 
 #: modules/process/tilt.c:73
 msgid "Tilts image by specified amount."
