@@ -1,16 +1,18 @@
 2.15 (0000-00-00)
 Application:
-- Translations updated: Russian.
+- Translations updated: Czech, French, Russian.
 
 Libraries:
 - libgwydgets: Initial state of widgets in GwySensitivityGroup might not be set
   properly if they were added during a queued update.  This was fixed.
 - libgwydgets: 3D view unqueues full-size redraw when it is unrealized, fixing
   crashes when the widget is destroyed before the redraw occurs.
+- libgwydgets: Rendering of GwyRuler with Quartz Gtk+ (native OS X) was fixed.
 - libgwydgets: More translatability problems were fixed.
 
 Modules:
 - OLS: Module omitted in the MS Windows builds was added.
+- Calibrate: It is possible to shift the data by a numerically entered value.
 - Pixmap export: Inset scale bar is now antialiased.
 - MapVue: Lateral dimensions of imported data were corrected, value scale was
   possibly fixed.
