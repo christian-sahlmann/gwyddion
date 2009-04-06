@@ -356,7 +356,7 @@ static GwyModuleInfo module_info = {
        "TARGA. "
        "Import support relies on GDK and thus may be installation-dependent."),
     "Yeti <yeti@gwyddion.net>",
-    "7.1",
+    "7.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -822,12 +822,12 @@ pixmap_load_dialog(PixmapLoadArgs *args,
 {
     enum { RESPONSE_RESET = 1 };
     static const GwyEnum value_map_types[] = {
-        { "Red",         PIXMAP_MAP_RED,   },
-        { "Green",       PIXMAP_MAP_GREEN, },
-        { "Blue",        PIXMAP_MAP_BLUE,  },
-        { "Value (max)", PIXMAP_MAP_VALUE, },
-        { "RGB sum",     PIXMAP_MAP_SUM,   },
-        { "Alpha",       PIXMAP_MAP_ALPHA, },
+        { N_("Red"),         PIXMAP_MAP_RED,   },
+        { N_("Green"),       PIXMAP_MAP_GREEN, },
+        { N_("Blue"),        PIXMAP_MAP_BLUE,  },
+        { N_("Value (max)"), PIXMAP_MAP_VALUE, },
+        { N_("RGB sum"),     PIXMAP_MAP_SUM,   },
+        { N_("Alpha"),       PIXMAP_MAP_ALPHA, },
     };
 
     PixmapLoadControls controls;
