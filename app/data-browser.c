@@ -49,6 +49,9 @@
 #define GTK_TREE_MODEL_ROW \
     { "GTK_TREE_MODEL_ROW", GTK_TARGET_SAME_APP, 0 }
 
+/* Data browser window manager role */
+#define GWY_DATABROWSER_WM_ROLE "gwyddion-databrowser"
+
 /* The container prefix all graph reside in.  This is a bit silly but it does
  * not worth to break file compatibility with 1.x. */
 #define GRAPH_PREFIX "/0/graph/graph"
@@ -3581,6 +3584,7 @@ gwy_app_data_browser_construct_window(GwyAppDataBrowser *browser)
 
     gtk_window_set_default_size(GTK_WINDOW(browser->window), 300, 300);
     gtk_window_set_title(GTK_WINDOW(browser->window), _("Data Browser"));
+    gtk_window_set_role(GTK_WINDOW(browser->window), GWY_DATABROWSER_WM_ROLE);
     gwy_app_add_main_accel_group(GTK_WINDOW(browser->window));
 
     vbox = gtk_vbox_new(FALSE, 0);
