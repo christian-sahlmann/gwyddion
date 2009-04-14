@@ -1930,7 +1930,7 @@ gwy_3d_make_list(Gwy3DView *gwy3dview,
 static void
 gwy_3d_draw_axes(Gwy3DView *widget)
 {
-    GLfloat rx, Ax, Ay, Bx, By, Cx, Cy;
+    GLfloat dx, dy, rx, Ax, Ay, Bx, By, Cx, Cy;
     gdouble data_min, data_max;
     gint xres, yres, res;
     gboolean yfirst;
@@ -1941,7 +1941,8 @@ gwy_3d_draw_axes(Gwy3DView *widget)
     xres = gwy_data_field_get_xres(widget->data_field);
     yres = gwy_data_field_get_yres(widget->data_field);
     gwy_data_field_get_min_max(widget->data_field, &data_min, &data_max);
-    res  = xres > yres ? xres : yres;
+    gwy_3d_calculate_pixel_sizes(widget->data_field, &dx, &dy);
+    res = MAX(xres*dx, yres*dy);
 
     Ax = Ay = Bx = By = Cx = Cy = 0.0f;
     yfirst = TRUE;
@@ -1952,8 +1953,7 @@ gwy_3d_draw_axes(Gwy3DView *widget)
     mat_none = gwy_gl_materials_get_gl_material(GWY_GL_MATERIAL_NONE);
 
     glPushMatrix();
-    glTranslatef(-(xres/(double)res), -(yres/(double)res),
-                 GWY_3D_Z_DISPLACEMENT);
+    glTranslatef(-dx*xres/res, -dy*yres/res, GWY_3D_Z_DISPLACEMENT);
     glScalef(2.0/res, 2.0/res, GWY_3D_Z_TRANSFORMATION/(data_max - data_min));
     gwy_3d_view_rgba_dv(GL_FRONT, GL_AMBIENT,
                         gwy_gl_material_get_ambient(mat_none));
@@ -1965,24 +1965,24 @@ gwy_3d_draw_axes(Gwy3DView *widget)
                 (GLfloat)gwy_gl_material_get_shininess(mat_none)*128.0f);
 
     if (rx >= 0.0 && rx <= 90.0) {
-        Ay = yres;
-        Cx = xres;
+        Ay = dy*yres;
+        Cx = dx*xres;
         yfirst = TRUE;
     } else if (rx > 90.0 && rx <= 180.0) {
-        Ax = xres;
-        Ay = yres;
-        By = yres;
+        Ax = dx*xres;
+        Ay = dy*yres;
+        By = dy*yres;
         yfirst = FALSE;
     } else if (rx > 180.0 && rx <= 270.0) {
-        Ax = xres;
-        Bx = xres;
-        By = yres;
-        Cy = yres;
+        Ax = dx*xres;
+        Bx = dx*xres;
+        By = dy*yres;
+        Cy = dy*yres;
        yfirst = TRUE;
     } else if (rx >= 270.0 && rx <= 360.0) {
-        Bx = xres;
-        Cx = xres;
-        Cy = yres;
+        Bx = dx*xres;
+        Cx = dx*xres;
+        Cy = dy*yres;
         yfirst = FALSE;
     }
     glBegin(GL_LINE_STRIP);
