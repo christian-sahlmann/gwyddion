@@ -8,6 +8,9 @@ Libraries:
 - libgwydgets: 3D view unqueues full-size redraw when it is unrealized, fixing
   crashes when the widget is destroyed before the redraw occurs.
 - libgwydgets: Rendering of GwyRuler with Quartz Gtk+ (native OS X) was fixed.
+- libgwyapp: Data browser window has wm role set to "gwyddion-databrowser".
+- libgwydgets: 3D view axes lengths and positions for data with non-square
+  pixels were corrected.
 - libgwydgets: More translatability problems were fixed.
 
 Modules:
