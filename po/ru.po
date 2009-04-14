@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2009-04-04 03:59+0200\n"
-"PO-Revision-Date: 2009-04-04 18:54+0300\n"
+"POT-Creation-Date: 2009-04-11 03:59+0200\n"
+"PO-Revision-Date: 2009-04-12 23:25+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@km.ru>\n"
 "Language-Team: russian <ru@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -18,48 +18,57 @@ msgstr ""
 "X-Poedit-Country: RUSSIAN FEDERATION\n"
 
 #: libgwyddion/gwyfdcurvepreset.c:745
+#, fuzzy
 msgid "vdW: semisphere"
-msgstr ""
+msgstr "vdW: полусфера"
 
 #: libgwyddion/gwyfdcurvepreset.c:760
+#, fuzzy
 msgid "vdW: pyramide"
-msgstr ""
+msgstr "vdW: пирамида"
 
 #: libgwyddion/gwyfdcurvepreset.c:773
+#, fuzzy
 msgid "vdW: truncated pyramid"
-msgstr ""
+msgstr "vdW: усечёная пирамида"
 
 #: libgwyddion/gwyfdcurvepreset.c:786
+#, fuzzy
 msgid "vdW: sphere"
-msgstr ""
+msgstr "vdW: сфера"
 
 #: libgwyddion/gwyfdcurvepreset.c:799
+#, fuzzy
 msgid "vdW: offset sphere"
-msgstr ""
+msgstr "vdW: смещёная сфера"
 
 #: libgwyddion/gwyfdcurvepreset.c:812
+#, fuzzy
 msgid "vdW: two spheres"
-msgstr ""
+msgstr "vdW: две сферы"
 
 #: libgwyddion/gwyfdcurvepreset.c:825
+#, fuzzy
 msgid "vdW: cone"
-msgstr ""
+msgstr "vdW: конус"
 
 #: libgwyddion/gwyfdcurvepreset.c:838
+#, fuzzy
 msgid "vdW: cylinder"
-msgstr ""
+msgstr "vdW: цилиндр"
 
 #: libgwyddion/gwyfdcurvepreset.c:851
+#, fuzzy
 msgid "vdW: paraboloid"
-msgstr ""
+msgstr "vdW: параболоид"
 
 #: libgwyddion/gwyinventory.c:1310
 #: libgwydgets/gwygraphwindow.c:603
-#: app/data-browser.c:1432
-#: app/data-browser.c:2157
-#: app/data-browser.c:2919
-#: app/data-browser.c:3078
-#: app/data-browser.c:4884
+#: app/data-browser.c:1435
+#: app/data-browser.c:2160
+#: app/data-browser.c:2922
+#: app/data-browser.c:3081
+#: app/data-browser.c:4888
 #: app/resource-editor.c:365
 #: modules/process/convolution_filter.c:700
 msgid "Untitled"
@@ -68,23 +77,23 @@ msgstr "Безымянный"
 #: libgwyddion/gwynlfitpreset.c:1192
 #: libprocess/gwyprocessenums.c:100
 msgid "Gaussian"
-msgstr "Гауссов"
+msgstr "Гауссова"
 
 #: libgwyddion/gwynlfitpreset.c:1208
 msgid "Gaussian (PSDF)"
-msgstr ""
+msgstr "Гауссова (PSDF)"
 
 #: libgwyddion/gwynlfitpreset.c:1222
 msgid "Gaussian (ACF)"
-msgstr ""
+msgstr "Гауссова (ACF)"
 
 #: libgwyddion/gwynlfitpreset.c:1236
 msgid "Gaussian (HHCF)"
-msgstr ""
+msgstr "Гауссова (HHCF)"
 
 #: libgwyddion/gwynlfitpreset.c:1250
 msgid "Gaussian (RPSDF)"
-msgstr ""
+msgstr "Гауссова (RPSDF)"
 
 #: libgwyddion/gwynlfitpreset.c:1264
 msgid "Exponential"
@@ -92,39 +101,39 @@ msgstr "Экспоненциальная"
 
 #: libgwyddion/gwynlfitpreset.c:1277
 msgid "Exponential (PSDF)"
-msgstr ""
+msgstr "Экспоненциальная (PSDF)"
 
 #: libgwyddion/gwynlfitpreset.c:1291
 msgid "Exponential (ACF)"
-msgstr ""
+msgstr "Экспоненциальная (ACF)"
 
 #: libgwyddion/gwynlfitpreset.c:1304
 msgid "Exponential (HHCF)"
-msgstr ""
+msgstr "Экспоненциальная (HHCF)"
 
 #: libgwyddion/gwynlfitpreset.c:1318
 msgid "Exponential (RPSDF)"
-msgstr ""
+msgstr "Экспоненциальная (RPSDF)"
 
 #: libgwyddion/gwynlfitpreset.c:1333
 msgid "Polynomial (order 0)"
-msgstr ""
+msgstr "Полиномиальная (порядка 0)"
 
 #: libgwyddion/gwynlfitpreset.c:1345
 msgid "Polynomial (order 1)"
-msgstr ""
+msgstr "Полиномиальная (порядка 1)"
 
 #: libgwyddion/gwynlfitpreset.c:1357
 msgid "Polynomial (order 2)"
-msgstr ""
+msgstr "Полиномиальная (порядка 2)"
 
 #: libgwyddion/gwynlfitpreset.c:1370
 msgid "Polynomial (order 3)"
-msgstr ""
+msgstr "Полиномиальная (порядка 3)"
 
 #: libgwyddion/gwynlfitpreset.c:1384
 msgid "Square wave"
-msgstr ""
+msgstr "Прямоугольные импульсы"
 
 #: libgwyddion/gwynlfitpreset.c:1401
 msgid "Power"
@@ -132,7 +141,7 @@ msgstr "Степенная"
 
 #: libgwyddion/gwynlfitpreset.c:1414
 msgid "Lorentzian"
-msgstr ""
+msgstr "Лоренцева"
 
 #: libgwyddion/gwynlfitpreset.c:1429
 msgid "Sinc"
@@ -476,16 +485,14 @@ msgid "Kaiser 2.5"
 msgstr ""
 
 #: libprocess/gwyprocessenums.c:262
-#, fuzzy
 msgid "Normal"
-msgstr "Обычная"
+msgstr "Обычный"
 
 #: libprocess/gwyprocessenums.c:263
 msgid "FFT"
 msgstr "БПФ"
 
 #: libprocess/gwyprocessenums.c:264
-#, fuzzy
 msgid "Phase only"
 msgstr "Только фаза"
 
@@ -511,9 +518,9 @@ msgstr "Циклическая оценка (цикл %d)"
 
 #: libprocess/morph_lib.c:624
 #: libprocess/morph_lib.c:778
-#, c-format
+#, fuzzy, c-format
 msgid "%d image locations produced refinement"
-msgstr ""
+msgstr "%d участков изображения были уточнены"
 
 #: libprocess/morph_lib.c:722
 #, fuzzy
@@ -556,8 +563,9 @@ msgstr "Аналитический"
 #: libprocess/tip.c:801
 #: libprocess/tip.c:850
 #: libprocess/tip.c:877
+#, fuzzy
 msgid "Converting fields"
-msgstr ""
+msgstr "Преобразуем поля"
 
 #: libprocess/tip.c:783
 msgid "Starting partial estimation"
@@ -737,7 +745,7 @@ msgstr "точек"
 #: modules/file/pixmap.c:2259
 #: modules/file/rawfile.c:379
 #: modules/process/angle_dist.c:170
-#: modules/process/calibrate.c:289
+#: modules/process/calibrate.c:295
 #: modules/process/cwt.c:132
 #: modules/process/drift.c:230
 #: modules/process/dwt.c:164
@@ -815,7 +823,6 @@ msgid "Line + points"
 msgstr "Линия + точки"
 
 #: libgwydgets/gwydgetutils.c:561
-#, fuzzy
 msgid "Change Mask Color"
 msgstr "Изменить цвет маски"
 
@@ -940,9 +947,8 @@ msgid "Solid"
 msgstr "Сплошная"
 
 #: libgwydgets/gwygraphareadialog.c:614
-#, fuzzy
 msgid "Dash"
-msgstr "Штрихи"
+msgstr "Пунктир"
 
 #: libgwydgets/gwygraphcurves.c:447
 msgid "Description"
@@ -1164,7 +1170,7 @@ msgid "Failure:"
 msgstr "Ошибка:"
 
 #: app/about.c:49
-#, fuzzy, c-format
+#, c-format
 msgid "About %s"
 msgstr "О программе %s"
 
@@ -1231,8 +1237,9 @@ msgid "Set as Default"
 msgstr "Использовать по умолчанию"
 
 #: app/app.c:427
+#, fuzzy
 msgid "Set the current view setup as the default"
-msgstr ""
+msgstr "Установить текущие настройки вида как настройки по умолчанию"
 
 #: app/app.c:459
 #, c-format
@@ -1245,7 +1252,7 @@ msgstr "Экспортировать трёхмерный вид"
 
 #: app/app.c:662
 msgid "Mask _Color..."
-msgstr "_Цвет маски.."
+msgstr "_Цвет маски..."
 
 #: app/app.c:678
 msgid "Zoom _1:1"
@@ -1261,39 +1268,39 @@ msgstr "Квадратный попиксельно"
 msgid "_Physically Square"
 msgstr "Квадратный физически"
 
-#: app/data-browser.c:3537
+#: app/data-browser.c:3540
 msgid "Extract to a new file"
 msgstr "Извлечь в новый файл"
 
-#: app/data-browser.c:3538
+#: app/data-browser.c:3541
 msgid "Duplicate"
 msgstr "Сделать копию"
 
-#: app/data-browser.c:3539
+#: app/data-browser.c:3542
 msgid "Delete"
 msgstr "Удалить"
 
-#: app/data-browser.c:3583
+#: app/data-browser.c:3586
 msgid "Data Browser"
 msgstr "Просмотр данных"
 
-#: app/data-browser.c:3605
+#: app/data-browser.c:3609
 msgid "Close file"
 msgstr "Закрыть файл"
 
-#: app/data-browser.c:3618
+#: app/data-browser.c:3622
 msgid "Channels"
 msgstr "Каналы"
 
-#: app/data-browser.c:3632
+#: app/data-browser.c:3636
 msgid "Graphs"
 msgstr "Графики"
 
-#: app/data-browser.c:3646
+#: app/data-browser.c:3650
 msgid "Spectra"
 msgstr "Спектры"
 
-#: app/data-browser.c:4922
+#: app/data-browser.c:4926
 #, c-format
 msgid "Unknown channel %d"
 msgstr "Неизвестный канал %d"
@@ -1357,7 +1364,6 @@ msgid "_Filter:"
 msgstr "_Фильтр:"
 
 #: app/filelist.c:596
-#, fuzzy
 msgid "Case _sensitive"
 msgstr "С учётом _регистра"
 
@@ -2002,11 +2008,11 @@ msgstr "/_Цвет маски по умолчанию..."
 
 #: app/toolbox.c:879
 msgid "/Color _Gradients..."
-msgstr "/Цветовые _градиенты"
+msgstr "/Цветовые _градиенты..."
 
 #: app/toolbox.c:887
 msgid "/G_L Materials..."
-msgstr "/_Материалы OpenGL"
+msgstr "/_Материалы OpenGL..."
 
 #: app/toolbox.c:1128
 msgid "Change Default Mask Color"
@@ -2482,9 +2488,9 @@ msgid "File end was reached while scanning tags."
 msgstr "В процессе поиска тегов был достигнут конец файла."
 
 #: modules/file/mapvue.c:634
-#, fuzzy, c-format
+#, c-format
 msgid "Expected tag %u size is %u bytes, but the actual size is %u bytes."
-msgstr "Ожидаемый размер данных, рассчитанный из данных заголовка, должен быть %u байт, но реальный размер %u байт."
+msgstr "Ожидаемый размер тега %u должен быть %u байт, но реальный размер %u байт."
 
 #: modules/file/mapvue.c:648
 #, c-format
@@ -2799,6 +2805,30 @@ msgstr ""
 msgid "Pixbuf loader refused data: %s."
 msgstr ""
 
+#: modules/file/pixmap.c:825
+msgid "Red"
+msgstr "Красный"
+
+#: modules/file/pixmap.c:826
+msgid "Green"
+msgstr "Зеленый"
+
+#: modules/file/pixmap.c:827
+msgid "Blue"
+msgstr "Синий"
+
+#: modules/file/pixmap.c:828
+msgid "Value (max)"
+msgstr "Значение (макс.)"
+
+#: modules/file/pixmap.c:829
+msgid "RGB sum"
+msgstr "Сумма RGB"
+
+#: modules/file/pixmap.c:830
+msgid "Alpha"
+msgstr "Альфа"
+
 #: modules/file/pixmap.c:854
 msgid "Import "
 msgstr "Импортировать "
@@ -2836,8 +2866,8 @@ msgstr "_Ширина"
 #: modules/file/pixmap.c:1012
 #: modules/file/rawfile.c:636
 #: modules/file/rawfile.c:692
-#: modules/process/calibrate.c:332
-#: modules/process/calibrate.c:411
+#: modules/process/calibrate.c:338
+#: modules/process/calibrate.c:419
 msgid "Change"
 msgstr "Изменить"
 
@@ -2869,16 +2899,15 @@ msgstr "как данные"
 
 #: modules/file/pixmap.c:1236
 #: modules/file/rawfile.c:1307
-#: modules/process/calibrate.c:772
+#: modules/process/calibrate.c:815
 msgid "Change Units"
 msgstr "Изменить единицы измерения"
 
 #: modules/file/pixmap.c:1250
 #: modules/file/rawfile.c:1321
-#: modules/process/calibrate.c:786
-#, fuzzy
+#: modules/process/calibrate.c:829
 msgid "New _units:"
-msgstr "Новые величины:"
+msgstr "Новые _единицы:"
 
 #: modules/file/pixmap.c:1309
 #: modules/file/pixmap.c:1334
@@ -4212,7 +4241,7 @@ msgstr "Невозможно выполнить подключаемый мод�
 
 #: modules/plugin-proxy.c:786
 #: modules/plugin-proxy.c:881
-#, fuzzy, c-format
+#, c-format
 msgid "Plug-in `%s' returned non-zero exit status: %d."
 msgstr "Подключаемый модуль `%s' вернул ненулевое значение выхода: %d."
 
@@ -4278,9 +4307,8 @@ msgid "2D ACF"
 msgstr ""
 
 #: modules/process/angle_dist.c:99
-#, fuzzy
 msgid "Calculates two-dimensional distribution of angles, that is projections of slopes to all directions."
-msgstr "Рассчитывает двумерное распределение углов, это проекция наклонов на все направления."
+msgstr "Рассчитывает двумерное распределение углов, которые являются проекциями наклонов на все направления."
 
 #: modules/process/angle_dist.c:114
 msgid "/_Statistics/An_gle Distribution..."
@@ -4443,72 +4471,75 @@ msgstr "/_Базовые действия/Обнулить _смещения"
 msgid "Null horizontall offsets, moving the origin to the upper left corner"
 msgstr "Обнуляет смещения по горизонтали, перемещая начало координат в верхний левый угол"
 
-#: modules/process/calibrate.c:141
+#: modules/process/calibrate.c:145
 msgid "Recalibrates scan lateral dimensions or value range."
 msgstr "Перекалибровывает пространственное разрешение скана или диапазон значений"
 
-#: modules/process/calibrate.c:155
-msgid "/_Basic Operations/_Recalibrate..."
-msgstr "/_Базовые действия/_Перекалибровать"
-
 #: modules/process/calibrate.c:159
+msgid "/_Basic Operations/_Recalibrate..."
+msgstr "/_Базовые действия/_Перекалибровать..."
+
+#: modules/process/calibrate.c:163
 msgid "Recalibrate data"
 msgstr "Перекалибровать данные"
 
-#: modules/process/calibrate.c:275
+#: modules/process/calibrate.c:281
 msgid "Recalibrated Data"
 msgstr "Перекалиброванные данные"
 
-#: modules/process/calibrate.c:288
-#, fuzzy
+#: modules/process/calibrate.c:294
 msgid "Calibrate"
 msgstr "Калибровка"
 
-#: modules/process/calibrate.c:307
+#: modules/process/calibrate.c:313
 msgid "New Real Dimensions"
 msgstr "Новые реальные размеры"
 
-#: modules/process/calibrate.c:312
+#: modules/process/calibrate.c:318
 msgid "_X range:"
 msgstr "Диапазон _X:"
 
-#: modules/process/calibrate.c:339
+#: modules/process/calibrate.c:345
 msgid "_Y range:"
 msgstr "Диапазон _Y:"
 
-#: modules/process/calibrate.c:353
+#: modules/process/calibrate.c:359
 msgid "_Square samples"
 msgstr "_Квадратный образец"
 
-#: modules/process/calibrate.c:358
+#: modules/process/calibrate.c:366
 msgid "_X offset:"
 msgstr "Смещение по _X:"
 
-#: modules/process/calibrate.c:371
+#: modules/process/calibrate.c:379
 msgid "_Y offset:"
 msgstr "Смещение по _Y:"
 
-#: modules/process/calibrate.c:386
+#: modules/process/calibrate.c:394
 msgid "Value Range"
 msgstr "Диапазон значений"
 
-#: modules/process/calibrate.c:391
+#: modules/process/calibrate.c:399
 msgid "_Z range:"
 msgstr "Диапазон _Z:"
 
-#: modules/process/calibrate.c:420
+#: modules/process/calibrate.c:428
+msgid "Z shi_ft:"
+msgstr "С_двиг Z:"
+
+#: modules/process/calibrate.c:443
 msgid "Calibration Coefficients"
 msgstr "Коэффициенты калибровки"
 
-#: modules/process/calibrate.c:427
+#: modules/process/calibrate.c:450
 msgid "_X calibration factor:"
 msgstr "Множитель калибровки по _X:"
 
-#: modules/process/calibrate.c:435
+#: modules/process/calibrate.c:458
 msgid "_Y calibration factor:"
 msgstr "Множитель калибровки по _Y:"
 
-#: modules/process/calibrate.c:443
+#: modules/process/calibrate.c:466
 msgid "_Z calibration factor:"
 msgstr "Множитель калибровки по _Z:"
 
@@ -4568,23 +4599,23 @@ msgstr "ВСим"
 
 #: modules/process/crosscor.c:107
 msgid "Calculates cross-correlation of two data fields."
-msgstr ""
+msgstr "Вычисляет взаимную корреляцию двух полей данных."
 
 #: modules/process/crosscor.c:121
 msgid "/M_ultidata/_Cross-Correlation..."
-msgstr ""
+msgstr "/М_ножественные данные/_Взаимная корреляция..."
 
 #: modules/process/crosscor.c:125
 msgid "Cross-correlate two data fields"
-msgstr ""
+msgstr "Взаимная корреляция двух полей данных"
 
 #: modules/process/crosscor.c:161
 msgid "Cross-Correlation"
-msgstr ""
+msgstr "Взаимная корреляция"
 
 #: modules/process/crosscor.c:183
 msgid "Co_rrelate with:"
-msgstr ""
+msgstr "Ко_ррелировать с:"
 
 #: modules/process/crosscor.c:189
 msgid "Search size"
@@ -4603,24 +4634,23 @@ msgid "Hei_ght:"
 msgstr "В_ысота:"
 
 #: modules/process/crosscor.c:231
-#, fuzzy
 msgid "Absolute"
-msgstr "Абсолютно"
+msgstr "Модуль"
 
 #: modules/process/crosscor.c:232
 msgid "X Distance"
-msgstr "Расстояние по X:"
+msgstr "Расстояние по X"
 
 #: modules/process/crosscor.c:233
 msgid "Y Distance"
-msgstr "Расстояние по Y:"
+msgstr "Расстояние по Y"
 
 #: modules/process/crosscor.c:236
 #: modules/process/fft.c:299
 #: modules/process/fft_filter_2d.c:565
 #: modules/process/maskcor.c:175
 msgid "Output _type:"
-msgstr "Тип _вывода:"
+msgstr "Тип в_ывода:"
 
 #: modules/process/crosscor.c:242
 msgid "Add _low score results mask"
@@ -4641,7 +4671,7 @@ msgstr "Инициализация..."
 
 #: modules/process/crosscor.c:417
 msgid "Correlating..."
-msgstr ""
+msgstr "Коррелируется..."
 
 #: modules/process/crosscor.c:472
 msgid "Absolute difference"
@@ -4816,7 +4846,7 @@ msgstr "Обнаружение анизотропии 2D DWT основанно�
 
 #: modules/process/dwtanisotropy.c:92
 msgid "/_Integral Transforms/DWT _Anisotropy..."
-msgstr "/_Интегральные преобразования/_Анизотропия DWT"
+msgstr "/_Интегральные преобразования/_Анизотропия DWT..."
 
 #: modules/process/dwtanisotropy.c:96
 msgid "DWT anisotropy detection"
@@ -5871,7 +5901,7 @@ msgstr "Размер _капли:"
 #: modules/process/tip_blind.c:558
 #: modules/process/tipops.c:307
 msgid "Initializing"
-msgstr "Инициализация..."
+msgstr "Инициализация"
 
 #: modules/process/grain_wshed.c:507
 msgid "Finding minima"
@@ -5915,59 +5945,59 @@ msgstr "Размер _круга:"
 
 #: modules/process/immerse.c:174
 msgid "Immerse high resolution detail into overall image."
-msgstr ""
+msgstr "Встраивает фрагмент с высоким разрешением в общее изображение."
 
 #: modules/process/immerse.c:188
 msgid "/M_ultidata/_Immerse Detail..."
-msgstr ""
+msgstr "/М_ножественные данные/Встроить _фрагмент..."
 
 #: modules/process/immerse.c:192
 msgid "Immerse a detail into image"
-msgstr ""
+msgstr "Встраивает более подробный фрагмент в изображение"
 
 #: modules/process/immerse.c:237
 msgid "Immerse Detail"
-msgstr ""
+msgstr "Встроить фрагмент"
 
 #: modules/process/immerse.c:242
 msgid "_Locate"
-msgstr ""
+msgstr "Н_айти"
 
 #: modules/process/immerse.c:244
 msgid "Locate detail by full image correlation search"
-msgstr ""
+msgstr "Найти фрагмент корреляционным поиском по всему изображению"
 
 #: modules/process/immerse.c:247
 msgid "_Improve"
-msgstr ""
+msgstr "У_точнить"
 
 #: modules/process/immerse.c:249
 msgid "Improve detail position by correlation search in neighborhood"
-msgstr ""
+msgstr "Уточнить положение фрагмента корреляционным поиском в окрестности"
 
 #: modules/process/immerse.c:318
 msgid "_Detail image:"
-msgstr ""
+msgstr "Изображение _фрагмента:"
 
 #: modules/process/immerse.c:336
 msgid "Result Sampling"
-msgstr ""
+msgstr "Разрешение результата"
 
 #: modules/process/immerse.c:346
 msgid "_Upsample large image"
-msgstr ""
+msgstr "_Увеличить разрешение большого изображения"
 
 #: modules/process/immerse.c:348
 msgid "_Downsample detail"
-msgstr ""
+msgstr "Сн_изить разрешение фрагмента"
 
 #: modules/process/immerse.c:357
 msgid "Detail Leveling"
-msgstr ""
+msgstr "Выравнивание фрагмента"
 
 #: modules/process/immerse.c:368
 msgid "_Mean value"
-msgstr ""
+msgstr "_Среднее значение"
 
 #: modules/process/immerse.c:376
 msgid "Show _frame"
@@ -5975,7 +6005,7 @@ msgstr "Показывать _рамку"
 
 #: modules/process/immerse.c:800
 msgid "Immersed detail"
-msgstr ""
+msgstr "Встроенный фрагмент"
 
 #: modules/process/indent_analyze.c:263
 #, fuzzy
@@ -6092,15 +6122,15 @@ msgstr ""
 
 #: modules/process/indent_analyze.c:454
 msgid "_Mask creation type:"
-msgstr ""
+msgstr "Тип создания _маски:"
 
 #: modules/process/indent_analyze.c:459
 msgid "Ref. plane _tolerance:"
-msgstr ""
+msgstr "_Допуск базовой плоскости:"
 
 #: modules/process/indent_analyze.c:463
 msgid "Angle _1 tolerance:"
-msgstr ""
+msgstr "Допуск угла _1:"
 
 #: modules/process/indent_analyze.c:488
 msgid "Indent centre at"
@@ -6456,49 +6486,49 @@ msgstr "М_аксимум:"
 
 #: modules/process/maskcor.c:87
 msgid "Creates mask by correlation with another data."
-msgstr ""
+msgstr "Создаёт маску путём корреляции с другими данными."
 
 #: modules/process/maskcor.c:101
 msgid "/M_ultidata/_Mask by Correlation..."
-msgstr ""
+msgstr "/М_ножественные данные/_Маска по корреляции..."
 
 #: modules/process/maskcor.c:105
 msgid "Create mask by correlation with another data"
-msgstr ""
+msgstr "Создать маску путём корреляции с другими данными"
 
 #: modules/process/maskcor.c:142
 msgid "Mask by Correlation"
-msgstr ""
+msgstr "Пометить корреляцией"
 
 #: modules/process/maskcor.c:164
 msgid "Correlation _kernel:"
-msgstr ""
+msgstr "_Ядро корреляции:"
 
 #: modules/process/maskcor.c:171
 msgid "Objects marked"
-msgstr ""
+msgstr "Помеченные объекты"
 
 #: modules/process/maskcor.c:172
 msgid "Correlation maxima"
-msgstr ""
+msgstr "Максимумы корреляции"
 
 #: modules/process/maskcor.c:173
 #: modules/process/maskcor.c:361
 msgid "Correlation score"
-msgstr ""
+msgstr "Степень корреляции"
 
 #: modules/process/maskcor.c:182
 msgid "Correlation _method:"
-msgstr ""
+msgstr "_Метод корреляции:"
 
 #: modules/process/maskcor.c:329
 #: modules/process/merge.c:688
 msgid "Correlating"
-msgstr ""
+msgstr "Коррелируется"
 
 #: modules/process/maskops.c:46
 msgid "Basic operations with mask: inversion, removal, extraction."
-msgstr ""
+msgstr "Основные операции с маской: инверсия, удаление, извлечение."
 
 #: modules/process/maskops.c:60
 msgid "/_Mask/_Remove Mask"
@@ -6534,7 +6564,7 @@ msgstr ""
 
 #: modules/process/median-bg.c:94
 msgid "/_Level/_Median Level..."
-msgstr "/_Выравнивание/Выравнивание по _срединному"
+msgstr "/_Выравнивание/Выравнивание по _срединному..."
 
 #: modules/process/median-bg.c:98
 #, fuzzy
@@ -7142,7 +7172,7 @@ msgstr "Слепая оценка зонда СЗМ используя алго�
 
 #: modules/process/tip_blind.c:142
 msgid "/_Tip/_Blind Estimation..."
-msgstr "/_Зонд/_Слепая оценка"
+msgstr "/_Зонд/_Слепая оценка..."
 
 #: modules/process/tip_blind.c:146
 msgid "Blind tip estimation"
@@ -7591,7 +7621,7 @@ msgstr "Установить плоскость в _нуль"
 
 #: modules/tools/linestats.c:124
 msgid "Row/column statistical function tool, mean values, medians, maxima, minima, RMS, ..., of rows or columns."
-msgstr "Функция статистики по строке/столбцу, средние, срединные, максимумы, минимумы. среднеквадратичные, строк и столбцов."
+msgstr "Функция статистики по строке/столбцу, средние, срединные, максимумы, минимумы. среднеквадратичные, и т.п., строк и столбцов."
 
 #: modules/tools/linestats.c:151
 msgid "Mean"
