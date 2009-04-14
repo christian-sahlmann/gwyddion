@@ -162,10 +162,11 @@ static gboolean gwy_3d_view_configure            (GtkWidget *widget,
 static void     gwy_3d_view_send_configure       (Gwy3DView *gwy3dview);
 static gboolean gwy_3d_view_button_press         (GtkWidget *widget,
                                                   GdkEventButton *event);
+static void     gwy_3d_calculate_pixel_sizes     (GwyDataField *dfield,
+                                                  GLfloat *dx,
+                                                  GLfloat *dy);
 static Gwy3DVector* gwy_3d_make_normals          (GwyDataField *dfield,
-                                                  Gwy3DVector *normals,
-                                                  GLfloat *pdx,
-                                                  GLfloat *pdy);
+                                                  Gwy3DVector *normals);
 static gboolean gwy_3d_view_motion_notify        (GtkWidget *widget,
                                                   GdkEventMotion *event);
 static void     gwy_3d_make_list                 (Gwy3DView *gwy3D,
@@ -1670,20 +1671,25 @@ gwy_3d_view_motion_notify(GtkWidget *widget,
     return FALSE;
 }
 
-static Gwy3DVector*
-gwy_3d_make_normals(GwyDataField *dfield,
-                    Gwy3DVector *normals,
-                    GLfloat *pdx,
-                    GLfloat *pdy)
+/**
+ * gwy_3d_calculate_pixel_sizes:
+ * @dfield: A data field.
+ * @pdx: Location to store x-direction step, or NULL.
+ * @pdy: Location to store y-direction step, or NULL.
+ *
+ * Calculates pixel sizes used for visualization.
+ *
+ * The smaller step of @pdx and @pdy is always 1.0, which mean the GL dimension
+ * will be equal to the resolution.  The larger is calculated to keep the
+ * physical aspect ratio.
+ **/
+static void
+gwy_3d_calculate_pixel_sizes(GwyDataField *dfield,
+                             GLfloat *dx,
+                             GLfloat *dy)
 {
-   typedef struct { Gwy3DVector A, B; } RectangleNorm;
-   const gdouble *data;
-   gint i, j, xres, yres;
+   gint xres, yres;
    gdouble xreal, yreal;
-   GLfloat dx, dy, dx2, dy2;
-   RectangleNorm * norms;
-
-   g_return_val_if_fail(normals, NULL);
 
    xres = gwy_data_field_get_xres(dfield);
    yres = gwy_data_field_get_yres(dfield);
@@ -1692,20 +1698,43 @@ gwy_3d_make_normals(GwyDataField *dfield,
    /* The smaller triangle side is 1.0, the larger is, well, at least that.
     * To get pixel-wise behaviour, just set dx=dy=1. */
    if (xres/xreal <= yres/yreal) {
-       dx = (yres/yreal)/(xres/xreal);
-       dy = 1.0;
+       *dx = (yres/yreal)/(xres/xreal);
+       *dy = 1.0;
    }
    else {
-       dx = 1.0;
-       dy = (xres/xreal)/(yres/yreal);
+       *dx = 1.0;
+       *dy = (xres/xreal)/(yres/yreal);
    }
+}
+
+/**
+ * gwy_3d_make_normals:
+ * @dfield: A data field.
+ * @normals: Array of normals to fill.  It must have the same number of
+ *           elements as @dfield.
+ *
+ * Calculates surface normals used for visualization.
+ *
+ * Returns: @normals again, %NULL if when memory could not be allocated.
+ **/
+static Gwy3DVector*
+gwy_3d_make_normals(GwyDataField *dfield,
+                    Gwy3DVector *normals)
+{
+   typedef struct { Gwy3DVector A, B; } RectangleNorm;
+   const gdouble *data;
+   gint i, j, xres, yres;
+   GLfloat dx, dy, dx2, dy2;
+   RectangleNorm * norms;
+
+   g_return_val_if_fail(normals, NULL);
+
+   xres = gwy_data_field_get_xres(dfield);
+   yres = gwy_data_field_get_yres(dfield);
+   data = gwy_data_field_get_data_const(dfield);
+   gwy_3d_calculate_pixel_sizes(dfield, &dx, &dy);
    dx2 = dx*dx;
    dy2 = dy*dy;
-   if (pdx)
-       *pdx = dx;
-   if (pdy)
-       *pdy = dy;
-   data = gwy_data_field_get_data_const(dfield);
 
    /* memory for normals of triangles
     * total count of rectangels is (xres-1)*(yres-1), each one has 2n triangles
@@ -1854,11 +1883,12 @@ gwy_3d_make_list(Gwy3DView *gwy3dview,
         grad = gwy_gradients_get_gradient(NULL);
 
     normals = g_new(Gwy3DVector, xres * yres);
-    if (!gwy_3d_make_normals(dfield, normals, &dx, &dy)) {
+    if (!gwy_3d_make_normals(dfield, normals)) {
         /*TODO solve not enough memory problem*/
         g_return_if_reached();
     }
 
+    gwy_3d_calculate_pixel_sizes(dfield, &dx, &dy);
     res = MAX(xres*dx, yres*dy);
     glNewList(gwy3dview->shape_list_base + shape, GL_COMPILE);
     glPushMatrix();
