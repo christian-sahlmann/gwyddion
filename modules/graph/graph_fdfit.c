@@ -420,14 +420,14 @@ fit_dialog(FitArgs *args)
     label = gtk_label_new(_("Instant:"));
     gtk_box_pack_start(GTK_BOX(hbox2), label, FALSE, FALSE, 0);
 
-    controls.auto_estimate = gtk_check_button_new_with_mnemonic("e_stimate");
+    controls.auto_estimate = gtk_check_button_new_with_mnemonic(_("e_stimate"));
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.auto_estimate),
                                  args->auto_estimate);
     gtk_box_pack_start(GTK_BOX(hbox2), controls.auto_estimate, FALSE, FALSE, 0);
     g_signal_connect(controls.auto_estimate, "toggled",
                      G_CALLBACK(auto_estimate_changed), &controls);
 
-    controls.auto_plot = gtk_check_button_new_with_mnemonic("p_lot");
+    controls.auto_plot = gtk_check_button_new_with_mnemonic(_("p_lot"));
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.auto_plot),
                                  args->auto_plot);
     gtk_box_pack_start(GTK_BOX(hbox2), controls.auto_plot, FALSE, FALSE, 0);
