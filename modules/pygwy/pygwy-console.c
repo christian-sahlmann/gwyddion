@@ -242,18 +242,18 @@ pygwy_on_console_save_as_file(GtkToolButton *btn, gpointer user_data)
 {
    GtkWidget *dialog;
 
-   dialog = gtk_file_chooser_dialog_new ("Save File as",
-				      NULL,
-				      GTK_FILE_CHOOSER_ACTION_SAVE,
-				      GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-				      GTK_STOCK_SAVE, GTK_RESPONSE_ACCEPT,
-				      NULL);
+   dialog = gtk_file_chooser_dialog_new(_("Save Script as"),
+                                        NULL,
+                                        GTK_FILE_CHOOSER_ACTION_SAVE,
+                                        GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
+                                        GTK_STOCK_SAVE, GTK_RESPONSE_ACCEPT,
+                                        NULL);
    gtk_file_chooser_set_do_overwrite_confirmation (GTK_FILE_CHOOSER (dialog), TRUE);
 
    //gtk_file_chooser_set_current_folder (GTK_FILE_CHOOSER (dialog), default_folder_for_saving);
-   gtk_file_chooser_set_current_name (GTK_FILE_CHOOSER (dialog), "Untitled document");
+   gtk_file_chooser_set_current_name(GTK_FILE_CHOOSER (dialog), "Untitled document");
 
-   if (gtk_dialog_run (GTK_DIALOG (dialog)) == GTK_RESPONSE_ACCEPT) {
+   if (gtk_dialog_run(GTK_DIALOG (dialog)) == GTK_RESPONSE_ACCEPT) {
       s_console_setup->script_filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (dialog));
       pygwy_on_console_save_file(btn, user_data);
    }
@@ -278,13 +278,13 @@ pygwy_console_create_gui()
 #endif
 
    // create static structure;
-   s_console_setup = g_malloc(sizeof(PygwyConsoleSetup));
+   s_console_setup = g_new(PygwyConsoleSetup, 1);
    // create GUI
    console_win = gtk_window_new (GTK_WINDOW_TOPLEVEL);
-   gtk_window_set_title (GTK_WINDOW (console_win), "Pygwy Console");
+   gtk_window_set_title(GTK_WINDOW(console_win), _("Pygwy Console"));
 
-   vbox1 = gtk_vbox_new (FALSE, 0);
-   gtk_container_add (GTK_CONTAINER (console_win), vbox1);
+   vbox1 = gtk_vbox_new(FALSE, 0);
+   gtk_container_add(GTK_CONTAINER(console_win), vbox1);
 
    // buttons
    button_open = GTK_WIDGET(gtk_tool_button_new_from_stock(GTK_STOCK_OPEN));
@@ -375,7 +375,7 @@ pygwy_console_create_gui()
 
    gtk_container_add (GTK_CONTAINER (file_scrolledwin), s_console_setup->console_file_content);
    gtk_text_view_set_editable (GTK_TEXT_VIEW (s_console_setup->console_file_content), TRUE);
-   frame = gtk_frame_new(N_("Command"));
+   frame = gtk_frame_new(_("Command"));
    entry_input = gtk_entry_new ();
    gtk_container_add(GTK_CONTAINER(frame), entry_input);
    gtk_box_pack_start (GTK_BOX (vbox1), frame, FALSE, FALSE, 0);
@@ -491,3 +491,4 @@ pygwy_on_console_close(GtkWidget *widget, GdkEvent *event, gpointer user_data)
     return FALSE;
 }
 
+/* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
