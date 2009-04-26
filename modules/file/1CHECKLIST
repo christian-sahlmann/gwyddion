@@ -10,37 +10,36 @@ And maintainable because file formats tend to evolve.
    - strings
    - other stuff
 
-2. I did not mean usually.  I meant does it release them on *all possibe code
+2. I do not mean usually.  I mean, does it release them on *all possibe code
    paths*?  Especially when it fails to load the file?
 
-3. When it parses some buffer, does it always know that it contains enough
-   data?  Use err_SIZE_MISMATCH().
+3. When it reads values from some buffer, does it always know that it contains
+   enough data?  Use err_SIZE_MISMATCH().
 
 4. When it reads the size or offset of something, does it validates the value
-   before using it?  At least that it does not point after the end of the file?
-   Did you count the lenght of the thing?  Use err_DIMENSION().
+   before using it?  At least that it does not point beyond the end of the
+   file?  Did you calculate the length of the thing?  Use err_DIMENSION().
 
-5. Does it re-check the file type in the loader?  Users can ask for a specific
-   file type.   If the automatic detection works, they will rarely ask for the
-   correct type -- it would be recognized automatically.
+5. Does it re-check the file type in the loader?  Users can try to load a file
+   as a specific type that does not match the actual file type.
 
 6. Does it validate data field dimensions?  They should not be zero.  And they
-   should not be 2**30 either.  Not speaking about negative dimensions.
+   should not be 2**30 either.  And they definitely cannot be negative.
 
 7. If it uses string functions (strFOO instead of memFOO), does it ensure
    the search cannot run away past the end of the buffer?
 
 8. If it parses numbers in text format, does it use g_ascii_strtod() or other
-   means of locale-independent parsing?  Some local use decimal comma, but
+   means of locale-independent parsing?  Some locales use decimal comma, but
    data files (normally) always use decimal points.
 
-9. Does it work on platforms with reverse byte order? 
+9. Does it work on platforms with reverse byte order?
 
 A. Does it work on platforms with different structure packing?
 
 B. Does it work on platforms with different data type sizes?
 
-C. Does avoid implementation-dependent types such as long or time_t?
+C. Does it avoid implementation-dependent types such as long or time_t?
 
 D. Really?  Does it use functions such as gwy_get_uint16_le() or
    GINT32_FROM_LE() to obtain/convert data, or does it foolishly attempt to
@@ -48,20 +47,20 @@ D. Really?  Does it use functions such as gwy_get_uint16_le() or
    tutorial.
 
 E. Does it trust any information from the file?  It must not.  In particular,
-   it must assume that some field is always present in the file.  It might be
-   missing and then the loader must fail gracefully.  And what if some
+   it must not assume that some field is always present in the file.  It might
+   be missing and then the loader must fail gracefully.  And what if some
    enumerated value falls outside the set of known values?
 
 F. Does it report errors correctly?  I mean, if the loader returns NULL, it
    *must* give a reason in the error argument.
 
-G. Are the metadata, such as the module authors, description and version
-   correct?  Or did you just copied that from another module and left there
-   some bogus values?
+G. Is the module information, such as the authors, description and version
+   correct?  Or did you just copied that from another module and left some
+   some bogus values there?
 
 H. Is the comment defining Freedesktop MIME type correct?  If you cannot write
    a good magic or glob rule, it is better to omit the type than to break other
-   files.  By omit it I mean *delete* the comment.
+   files.  By omitting it I mean *delete* the comment.
 
 I. Does it ensure physical data field and line dimensions are positive (not
    negative, not zero) numbers?
@@ -71,12 +70,12 @@ J. Does it take into account that SI units are objects and have their identity?
    *two* SI unit objects (both representing meters) and set one as the lateral
    units and another as the value units.
 
-K. Does it handle the case of valid file that however does not contain anything
+K. What does it do when the file is valid yet does not contain anything
    importable?  Use err_NO_DATA().
 
-L. Does it convert text descriptions to UTF-8 (typically from Latin 1)?
+L. Does it convert text descriptions to UTF-8 (typically, from Latin 1)?
 
-M. Does it fill the data field with gwy_data_field_set_val()?  And why do you
+M. Does it fill the data field with gwy_data_field_set_val()?  Why do you
    think its documentation says `do not set data with this function inside
    inner loops, it's slow'?  Is it necessary to call pow10() for each value
    filled?
