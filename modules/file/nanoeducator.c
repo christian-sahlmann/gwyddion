@@ -54,7 +54,6 @@
 
 #define Nanometer 1e-9
 #define NanoAmpere 1e-9
-#define Angstrom 1e-10
 
 enum {
     NANOEDU_IDENT_SIZE = 29,
@@ -139,7 +138,7 @@ typedef struct {
     gint n_spectra_lines;    /* number of spectra or CVC lines */
     gint n_spectrum_points;    /* points per line */
     /* scan parameters */
-    gdouble xy_step;    /* in Angstroems */
+    gdouble xy_step;    /* in nanometers */
     gdouble scan_rate;    /* in nm/s */
     gdouble scan_voltage;    /* in mV */
     gdouble scan_current;    /* in nA */
@@ -305,7 +304,7 @@ nanoedu_load(const gchar *filename,
 
     container = gwy_container_new();
 
-    scale = Angstrom * params.xy_step;
+    scale = Nanometer * params.xy_step;
 
     if (params.aqui_topo && header.topo_nx && header.topo_ny) {
         if (err_DIMENSION(error, header.topo_nx)
