@@ -48,9 +48,10 @@ file_LTLIBRARIES = \
 	metropro.la \
 	microprof.la \
 	mifile.la \
+	nanoeducator.la \
+	nanonis.la \
 	nanoscope-ii.la \
 	nanoscope.la \
-	nanonis.la \
 	nanotop.la \
 	netcdf.la \
 	nt-mdt.la \
@@ -138,9 +139,10 @@ mapvue_la_SOURCES        = mapvue.c
 metropro_la_SOURCES      = metropro.c
 microprof_la_SOURCES     = microprof.c
 mifile_la_SOURCES        = mifile.c
+nanoeducator_la_SOURCES  = nanoeducator.c
+nanonis_la_SOURCES       = nanonis.c
 nanoscope_ii_la_SOURCES  = nanoscope-ii.c
 nanoscope_la_SOURCES     = nanoscope.c
-nanonis_la_SOURCES       = nanonis.c
 nanotop_la_SOURCES       = nanotop.c
 netcdf_la_SOURCES        = netcdf.c
 nt_mdt_la_SOURCES        = nt-mdt.c
