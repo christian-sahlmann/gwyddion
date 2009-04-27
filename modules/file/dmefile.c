@@ -205,11 +205,11 @@ dme_load(const gchar *filename,
     }
 
     /* Use negated positive conditions to catch NaNs */
-    if (!((dmefile.xreal = fabs(dmefile.xreal)) > 0)) {
+    if (!((dmefile.xreal = fabs(dmefile.x_calibration * dmefile.xreal)) > 0)) {
         g_warning("Real x size is 0.0, fixing to 1.0");
         dmefile.xreal = 1.0;
     }
-    if (!((dmefile.yreal = fabs(dmefile.yreal)) > 0)) {
+    if (!((dmefile.yreal = fabs(dmefile.y_calibration * dmefile.yreal)) > 0)) {
         g_warning("Real y size is 0.0, fixing to 1.0");
         dmefile.yreal = 1.0;
     }
@@ -223,6 +223,7 @@ dme_load(const gchar *filename,
            + dmefile.xres*dmefile.yres;
     for (i = 0; i < dmefile.yres; i++) {
         q = Angstrom * dmefile.height_scale_factor * pow(2.0, ls16[i] & 0x0f);
+        q *= dmefile.z_calibration;
         for (j = 0; j < dmefile.xres; j++) {
             data[i*dmefile.xres + (dmefile.xres-1 - j)]
                 = q*GINT16_FROM_LE(d16[i*dmefile.xres + j]);
