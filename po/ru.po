@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2009-04-11 03:59+0200\n"
-"PO-Revision-Date: 2009-04-12 23:25+0300\n"
+"POT-Creation-Date: 2009-04-15 03:59+0200\n"
+"PO-Revision-Date: 2009-04-24 10:21+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@km.ru>\n"
 "Language-Team: russian <ru@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -414,7 +414,7 @@ msgstr ""
 
 #: libprocess/gwyprocessenums.c:205
 msgid "Round"
-msgstr "Округлить"
+msgstr "Округление"
 
 #: libprocess/gwyprocessenums.c:206
 msgid "Linear"
@@ -422,7 +422,7 @@ msgstr "Линейная"
 
 #: libprocess/gwyprocessenums.c:207
 msgid "Key"
-msgstr ""
+msgstr "Бикубическая"
 
 #: libprocess/gwyprocessenums.c:208
 msgid "BSpline"
@@ -470,7 +470,7 @@ msgstr ""
 
 #: libprocess/gwyprocessenums.c:249
 msgid "Rect"
-msgstr ""
+msgstr "Прямоугольное"
 
 #: libprocess/gwyprocessenums.c:250
 msgid "Nuttall"
@@ -1345,7 +1345,7 @@ msgstr "Предыдущие документы"
 
 #: app/filelist.c:263
 msgid "_Prune"
-msgstr ""
+msgstr "_Чистить"
 
 #: app/filelist.c:267
 msgid "Remove entries of files that no longer exist"
@@ -1459,7 +1459,7 @@ msgstr "Регистрация"
 
 #: app/gwyddion.c:125
 msgid "stock items"
-msgstr ""
+msgstr "основные элементы"
 
 #: app/gwyddion.c:129
 msgid "color gradients"
@@ -1872,7 +1872,7 @@ msgstr "Инструмент \"Статистические величины\" �
 
 #: app/tips.c:308
 msgid "Beside height and angle distributions, Statistical Functions tool calculates also correlation functions, power spectrum density (PSDF) and some more exotic functions."
-msgstr ""
+msgstr "Помимо распределений высот и углов, инструмент \"Статистические функции\" также рассчитывает функции корреляции, плотности спектра мощности (PSDF) и некоторые более экзотичные функции."
 
 #: app/tips.c:314
 msgid "Path Level tool levels misaligned rows by lining them up along manually selected lines.  If there are no large features automatic Median Line Correction usually works well."
@@ -2262,7 +2262,7 @@ msgstr "Файлы ECS (.img)"
 
 #: modules/file/ecsfile.c:167
 msgid "Scan size header field overlaps with data."
-msgstr ""
+msgstr "Поле заголовка \"размер сканирования\" пересекается с данными."
 
 #: modules/file/err.h:55
 #, c-format
@@ -2284,14 +2284,14 @@ msgid "Expected data size calculated from file headers is %u bytes, but the real
 msgstr "Ожидаемый размер данных, рассчитанный из данных заголовка, должен быть %u байт, но реальный размер %u байт."
 
 #: modules/file/err.h:94
-#, c-format
+#, fuzzy, c-format
 msgid "Invalid field dimension: %d."
-msgstr ""
+msgstr "Неправильная размерность поля: %d."
 
 #: modules/file/err.h:102
 #, c-format
 msgid "The number of bits per sample %d is invalid or unsupported for this file type."
-msgstr ""
+msgstr "Число бит на отсчёт %d неверно или не поддерживается этим типом файлов."
 
 #: modules/file/err.h:112
 #, c-format
@@ -2341,7 +2341,7 @@ msgstr "Мусор перед первой частью заголовка."
 #: modules/file/microprof.c:284
 #: modules/file/nanoscope-ii.c:245
 msgid "Malformed header line (missing =)."
-msgstr ""
+msgstr "Искаженная строка заголовка (отсутствует =)."
 
 #: modules/file/ezdfile.c:390
 msgid "First section isn't DataSet"
@@ -2616,8 +2616,9 @@ msgid "Garbage after data sample #%d."
 msgstr ""
 
 #: modules/file/nanoscope.c:769
+#, fuzzy
 msgid "Truncated header line."
-msgstr ""
+msgstr "Обрезанная строка заголовка."
 
 #: modules/file/nanotop.c:99
 msgid "Imports NANOTOP AFM files"
@@ -2629,7 +2630,7 @@ msgstr "Файлы Nanotop (.spm)"
 
 #: modules/file/netcdf.c:168
 msgid "Imports network Common Data Form (netCDF) files."
-msgstr ""
+msgstr "Импортирует файлы network Common Data Form (netCDF)."
 
 #: modules/file/netcdf.c:181
 msgid "GSXM netCDF files (.nc)"
@@ -2929,11 +2930,11 @@ msgstr "Изображение слишком велико чтобы сохра
 
 #: modules/file/pixmap.c:1649
 msgid "Data must be displayed in a window for pixmap export."
-msgstr ""
+msgstr "Данные должны отображаться в окне для экспорта изображения."
 
 #: modules/file/pixmap.c:2206
 msgid "Change Inset Color"
-msgstr ""
+msgstr "Изменить цвет отрезка"
 
 #: modules/file/pixmap.c:2256
 #, c-format
@@ -4133,6 +4134,16 @@ msgstr "Матрица корреляции"
 msgid "Instant:"
 msgstr "Сразу:"
 
+#: modules/graph/graph_fdfit.c:423
+#: modules/graph/graph_fit.c:433
+msgid "e_stimate"
+msgstr "о_ценивать"
+
+#: modules/graph/graph_fdfit.c:430
+#: modules/graph/graph_fit.c:440
+msgid "p_lot"
+msgstr "ст_роить"
+
 #: modules/graph/graph_fdfit.c:692
 #: modules/graph/graph_fit.c:716
 msgid "noun|Estimate"
@@ -4164,14 +4175,6 @@ msgstr "Аппроксимирует данные графика функцие�
 #: modules/graph/graph_fit.c:415
 msgid "Plot full range"
 msgstr "Строить весь диапазон"
-
-#: modules/graph/graph_fit.c:433
-msgid "e_stimate"
-msgstr "о_ценивать"
-
-#: modules/graph/graph_fit.c:440
-msgid "p_lot"
-msgstr "ст_роить"
 
 #: modules/graph/graph_level.c:37
 msgid "Level graph by line."
@@ -6106,7 +6109,7 @@ msgstr ""
 
 #: modules/process/indent_analyze.c:305
 msgid "Analyses nanoindentation structure (volumes, surfaces, ...)."
-msgstr ""
+msgstr "Анализирует структуру отпечатка при исследовании твёрдости (объёмы, поверхности, ...)."
 
 #: modules/process/indent_analyze.c:322
 msgid "/Indento_r/_Analyze..."
@@ -6118,7 +6121,7 @@ msgstr "Помеченные обл_асти:"
 
 #: modules/process/indent_analyze.c:448
 msgid "_Indentor type:"
-msgstr ""
+msgstr "Тип _индентора:"
 
 #: modules/process/indent_analyze.c:454
 msgid "_Mask creation type:"
@@ -7135,8 +7138,9 @@ msgid "Cross-correlation..."
 msgstr ""
 
 #: modules/process/superresolution.c:554
+#, fuzzy
 msgid "Interpolating..."
-msgstr ""
+msgstr "Интерполируется..."
 
 #: modules/process/tilt.c:73
 msgid "Tilts image by specified amount."
@@ -7372,6 +7376,14 @@ msgstr ""
 msgid "Open Python script"
 msgstr "Открыть скрипт Python"
 
+#: modules/pygwy/pygwy-console.c:245
+msgid "Save Script as"
+msgstr "Сохранить скрипт как"
+
+#: modules/pygwy/pygwy-console.c:284
+msgid "Pygwy Console"
+msgstr "Консоль Pygwy"
+
 #: modules/pygwy/pygwy-console.c:296
 msgid "Open script in Python language (Ctrl-O)"
 msgstr "Открыть скрипт на языке Python (Ctrl-O)"
@@ -7423,7 +7435,7 @@ msgstr "Кадрировать данные"
 
 #: modules/tools/crop.c:210
 msgid "Keep lateral offsets"
-msgstr ""
+msgstr "Сохранять пространственные смещения"
 
 #: modules/tools/crop.c:221
 msgid "Create new channel"
@@ -7474,12 +7486,10 @@ msgid "Kuwahara"
 msgstr "Кувахара"
 
 #: modules/tools/filter.c:211
-#, fuzzy
 msgid "Dechecker"
 msgstr "Убрать \"шахматную доску\""
 
 #: modules/tools/filter.c:212
-#, fuzzy
 msgid "filter|Gaussian"
 msgstr "Гауссов"
 
@@ -7763,16 +7773,15 @@ msgstr "_Заполнить"
 
 #: modules/tools/maskedit.c:414
 msgid "Grow/Shrink"
-msgstr ""
+msgstr "Растянуть/Ужать"
 
 #: modules/tools/maskedit.c:423
-#, fuzzy
 msgid "_Grow"
-msgstr "_Нарастание"
+msgstr "_Растянуть"
 
 #: modules/tools/maskedit.c:431
 msgid "Shrin_k"
-msgstr ""
+msgstr "_Ужать"
 
 #: modules/tools/maskedit.c:446
 msgid "_Amount:"
@@ -7780,12 +7789,11 @@ msgstr "_Величина:"
 
 #: modules/tools/maskedit.c:453
 msgid "Shrink from _border"
-msgstr ""
+msgstr "Ужать от _границы"
 
 #: modules/tools/maskedit.c:464
-#, fuzzy
 msgid "_Prevent grain merging by growing"
-msgstr "_Предотвращать слияние зёрен при росте"
+msgstr "_Предотвращать слияние зёрен при растяжении"
 
 #: modules/tools/pathlevel.c:109
 msgid "Path level tool, performs row leveling along on user-set lines."
@@ -7818,9 +7826,8 @@ msgid "Level X or Y lines with polynomials"
 msgstr "Выровнять линии по X или по Y с помощью полиномов"
 
 #: modules/tools/polynom.c:203
-#, fuzzy
 msgid "Fit height"
-msgstr "По высоте"
+msgstr "Аппроксимировать высоту"
 
 #: modules/tools/polynom.c:204
 msgid "Fit linear"
@@ -7836,7 +7843,7 @@ msgstr "Аппроксимировать кривой третьего поря�
 
 #: modules/tools/polynom.c:235
 msgid "Fiting Mode"
-msgstr ""
+msgstr "Режим аппроксимации"
 
 #: modules/tools/polynom.c:263
 msgid "_Exclude area if selected"
@@ -8077,7 +8084,7 @@ msgid "Data channel:      %s\n"
 msgstr "Канал данных:      %s\n"
 
 #: modules/tools/roughness.c:2244
-#, fuzzy, c-format
+#, c-format
 msgid ""
 "Selected line:     (%s, %s) to (%s, %s) px\n"
 "                   (%s, %s) to (%s, %s) %s\n"
@@ -8164,8 +8171,9 @@ msgid "Spectroscopy"
 msgstr "Спектроскопия"
 
 #: modules/tools/spotremove.c:151
+#, fuzzy
 msgid "Spot removal tool, interpolates small parts of data (displayed on a zoomed view) using selected algorithm."
-msgstr ""
+msgstr "Инструмент убирания пятен, интерполирует небольшие области данных (отображаемые в мастабированном виде) используя выбранный алгоритм."
 
 #: modules/tools/spotremove.c:194
 #, fuzzy
@@ -8192,7 +8200,6 @@ msgid "Fractal interpolation"
 msgstr "Фрактальная интерполяция"
 
 #: modules/tools/stats.c:155
-#, fuzzy
 msgid "Statistics tool."
 msgstr "Инструмент статистики."
 
@@ -8294,4 +8301,20 @@ msgid ""
 "Inclination θ:     %s\n"
 "Inclination φ:     %s\n"
 msgstr ""
+"Выбранная область:     %s × %s начиная с (%s, %s) пикселей\n"
+"                   %s × %s начиная с (%s, %s) %s\n"
+"Маска используется:       %s\n"
+"\n"
+"Среднее значение:     %s\n"
+"Минимум:           %s\n"
+"Максимум:           %s\n"
+"Срединное:            %s\n"
+"Ra:                %s\n"
+"Rms:               %s\n"
+"Асимметрия:              %s\n"
+"Эксцесс:          %s\n"
+"Площадь поверхности:      %s\n"
+"Площадь проекции:    %s\n"
+"Наклон θ:     %s\n"
+"Наклон φ:     %s\n"
 
