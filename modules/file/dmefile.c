@@ -113,7 +113,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Danish Micro Engineering (DME) data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.3",
+    "0.4",
     "David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
@@ -224,7 +224,7 @@ dme_load(const gchar *filename,
     for (i = 0; i < dmefile.yres; i++) {
         q = Angstrom * dmefile.height_scale_factor * pow(2.0, ls16[i] & 0x0f);
         for (j = 0; j < dmefile.xres; j++) {
-            data[i*dmefile.xres + j]
+            data[i*dmefile.xres + (dmefile.xres-1 - j)]
                 = q*GINT16_FROM_LE(d16[i*dmefile.xres + j]);
         }
     }
@@ -325,4 +325,3 @@ dme_read_header(const guchar *p,
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
-
