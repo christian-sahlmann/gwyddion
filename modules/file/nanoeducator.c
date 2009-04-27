@@ -291,8 +291,7 @@ nanoedu_load(const gchar *filename,
         goto fail;
     p += len;
 
-    /* TODO: Support older versions */
-    if (header.version < 13) {
+    if (header.version < 11) {
         err_UNSUPPORTED(error, _("format version"));
         goto fail;
     }
@@ -323,10 +322,10 @@ nanoedu_load(const gchar *filename,
             g_warning("params.topo_ny (%d) != header.topo_ny (%d), "
                       "choosing header", params.topo_ny, header.topo_ny);
 
-        /* Version 13+ */
+        /* Version 12+ */
         q = 1e-3 * params.sens_z * params.amp_zgain * params.discr_z_mvolt;
-        /* Is this correct in version 11? */
-        if (!q)
+        /* Version 11. */
+        if (header.version == 11 || !q)
             q = 1.0;
         dfield1 = nanoedu_read_data_field(buffer + header.topo_offset,
                                           size - header.topo_offset,
@@ -363,10 +362,10 @@ nanoedu_load(const gchar *filename,
             case NANOEDU_BACK_PASS:
             case NANOEDU_LITHO:
             case NANOEDU_SCANNER_TRAINING:
-            /* Version 13+ */
+            /* Version 12+ */
             q = 1e-3 * params.sens_z * params.amp_zgain * params.discr_z_mvolt;
-            /* Is this correct in version 11? */
-            if (!q)
+            /* Version 11. */
+            if (header.version == 11 || !q)
                 q = 1.0;
             q *= Nanometer;
             units = "m";
