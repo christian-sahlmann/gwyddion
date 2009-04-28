@@ -39,6 +39,7 @@
 #include <libgwyddion/gwyutils.h>
 #include <libgwyddion/gwymath.h>
 #include <libprocess/datafield.h>
+#include <libprocess/spectra.h>
 #include <libgwydgets/gwygraphmodel.h>
 #include <libgwymodule/gwymodule-file.h>
 #include <app/gwymoduleutils-file.h>
@@ -229,13 +230,24 @@ static GwyGraphModel* nanoedu_read_graph     (const guchar *buffer,
                                               const char *yunits,
                                               gdouble q,
                                               GError **error);
+static GwySpectra*    nanoedu_read_spectra   (const guchar *pos_buffer,
+                                              gsize pos_size,
+                                              const guchar *data_buffer,
+                                              gsize data_size,
+                                              gint nspectra,
+                                              gint res,
+                                              gdouble real,
+                                              const gchar *xunits,
+                                              const char *yunits,
+                                              gdouble q,
+                                              GError **error);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Imports Nanoeducator data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.1",
+    "0.2",
     "David Nečas (Yeti)",
     "2009",
 };
@@ -288,6 +300,7 @@ nanoedu_load(const gchar *filename,
     GError *err = NULL;
     GwyDataField *dfield = NULL;
     GwyGraphModel *gmodel = NULL;
+    GwySpectra *spectra = NULL;
     gdouble scale, q;
     const gchar *units, *title;
     guint nobjects = 0;
@@ -369,7 +382,19 @@ nanoedu_load(const gchar *filename,
             goto finish;
         }
 
-        /* TODO */
+        spectra = nanoedu_read_spectra(buffer + header.point_offset,
+                                       size - header.point_offset,
+                                       buffer + header.spec_offset,
+                                       size - header.spec_offset,
+                                       params.n_spectra_lines,
+                                       params.n_spectrum_points,
+                                       1.0, "m", "m", 1.0, error);
+        if (!spectra)
+            goto finish;
+
+        gwy_container_set_object_by_name(container, "/sps/0", spectra);
+        g_object_unref(spectra);
+        nobjects++;
     }
 
     /* Additonal data: one-line scan/scanner training */
@@ -400,6 +425,11 @@ nanoedu_load(const gchar *filename,
         if (!gmodel)
             goto finish;
 
+        g_object_set(gmodel,
+                     "title",
+                     params.path_mode ? "Scanner Training (vertical)"
+                                      : "Scanner Training (horizontal)",
+                     NULL);
         gwy_container_set_object_by_name(container, "/0/graph/graph/1", gmodel);
         g_object_unref(gmodel);
         nobjects++;
@@ -629,23 +659,35 @@ nanoedu_read_parameters(const guchar *buffer,
               params->sens_z, params->amp_zgain, params->discr_z_mvolt,
               params->V_D, params->nA_D, params->xy_step);
 
-    params->amp_modulation = gwy_get_gint16_le(&buffer); // XXX
+    params->amp_modulation = gwy_get_gint32_le(&buffer); // XXX
     params->sd_gain_fm = gwy_get_guint16_le(&buffer);
     params->sd_gain_am = gwy_get_guint16_le(&buffer);
     params->res_freq_r = gwy_get_guint16_le(&buffer);
     params->res_freq_f = gwy_get_guint16_le(&buffer);
-    params->f0 = gwy_get_gint16_le(&buffer); // XXX
+    params->f0 = gwy_get_gint32_le(&buffer); // XXX
     params->ampl_suppress = gwy_get_gfloat_le(&buffer);
+    gwy_debug("work func: %d (%u %u) (%u %u) %d %g",
+              params->amp_modulation, params->sd_gain_fm, params->sd_gain_am,
+              params->res_freq_r, params->res_freq_f, params->f0,
+              params->ampl_suppress);
 
     params->n_of_steps_x = gwy_get_gint16_le(&buffer);
     params->n_of_steps_y = gwy_get_gint16_le(&buffer);
     params->n_of_averaging = gwy_get_gint16_le(&buffer);
+    gwy_debug("n_of_steps_x=%d, n_of_steps_y=%d, n_of_averaging=%d",
+              params->n_of_steps_x, params->n_of_steps_y,
+              params->n_of_averaging);
     params->spec_voltage_start = gwy_get_gfloat_le(&buffer);
     params->spec_voltage_final = gwy_get_gfloat_le(&buffer);
     params->time_spec_point = gwy_get_gfloat_le(&buffer);
     params->spec_modulation = gwy_get_gfloat_le(&buffer);
     params->spec_detector_coeff = gwy_get_gfloat_le(&buffer);
     params->resistance = gwy_get_gfloat_le(&buffer);
+    gwy_debug("spec_voltage=[%g,%g], time_spec_point=%g, spec_modulation=%g, "
+              "spec_detector_coeff=%g, resistance=%g",
+              params->spec_voltage_start, params->spec_voltage_final,
+              params->time_spec_point, params->spec_modulation,
+              params->spec_detector_coeff, params->resistance);
     params->reserved_spec1 = gwy_get_gint16_le(&buffer);
     params->reserved_spec2 = gwy_get_gint16_le(&buffer);
     params->reserved_spec3 = gwy_get_gfloat_le(&buffer);
@@ -653,6 +695,7 @@ nanoedu_read_parameters(const guchar *buffer,
 
     params->cvc_type = gwy_get_gint16_le(&buffer);
     params->spectroscopy_type = gwy_get_gint16_le(&buffer);
+    gwy_debug("spectroscopy_type=%d", params->spectroscopy_type);
     params->const_current = gwy_get_gboolean8(&buffer);
     params->reserved_type1 = gwy_get_gboolean8(&buffer);
     params->reserved_type2 = gwy_get_gboolean8(&buffer);
@@ -775,7 +818,6 @@ nanoedu_read_graph(const guchar *buffer,
     siunitx = gwy_si_unit_new(xunits);
     siunity = gwy_si_unit_new(yunits);
     gmodel = g_object_new(GWY_TYPE_GRAPH_MODEL,
-                          "title", "Scanner Training",
                           "si-unit-x", siunitx,
                           "si-unit-y", siunity,
                           NULL);
@@ -785,6 +827,64 @@ nanoedu_read_graph(const guchar *buffer,
     g_object_unref(siunity);
 
     return gmodel;
+}
+
+static GwySpectra*
+nanoedu_read_spectra(const guchar *pos_buffer, gsize pos_size,
+                     const guchar *data_buffer, gsize data_size,
+                     gint nspectra, gint res,
+                     gdouble real,
+                     const gchar *xunits, const char *yunits,
+                     gdouble q,
+                     GError **error)
+{
+    gint i, j;
+    GwySpectra *spectra;
+    GwyDataLine *dline;
+    GwySIUnit *siunitx, *siunity;
+    const gint16 *p16 = (const gint16*)pos_buffer;
+    const gint16 *d16 = (const gint16*)data_buffer;
+    gdouble x, y;
+    gdouble *data;
+
+    if (err_SIZE_MISMATCH(error, 2*2*nspectra, pos_size, FALSE)
+        || err_SIZE_MISMATCH(error, 4*nspectra*res, data_size, FALSE))
+        return NULL;
+
+    /* Use negated positive conditions to catch NaNs */
+    if (!((real = fabs(real)) > 0)) {
+        g_warning("Real size is 0.0, fixing to 1.0");
+        real = 1.0;
+    }
+
+    spectra = gwy_spectra_new();
+    siunitx = gwy_si_unit_new(xunits);
+    gwy_spectra_set_si_unit_xy(spectra, siunitx);
+    g_object_unref(siunitx);
+    gwy_spectra_set_title(spectra, _("Spectra"));
+
+    for (i = 0; i < nspectra; i++) {
+        dline = gwy_data_line_new(res, real, FALSE);
+        siunitx = gwy_si_unit_new(xunits);
+        siunity = gwy_si_unit_new(yunits);
+        gwy_data_line_set_si_unit_x(dline, siunitx);
+        gwy_data_line_set_si_unit_y(dline, siunity);
+        g_object_unref(siunitx);
+        g_object_unref(siunity);
+        data = gwy_data_line_get_data(dline);
+        x = GINT16_FROM_LE(p16[2*i]);
+        y = GINT16_FROM_LE(p16[2*i + 1]);
+        gwy_debug("spec%d [%g,%g]", i, x, y);
+        for (j = 0; j < res; j++) {
+            /* FIXME: The odd coordinates seem to be abscissas.  Read them! */
+            gint16 v = d16[2*(i*res + j)];
+            data[j] = q*GINT16_FROM_LE(v);
+        }
+        gwy_spectra_add_spectrum(spectra, dline, x*Nanometer, y*Nanometer);
+        g_object_unref(dline);
+    }
+
+    return spectra;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
