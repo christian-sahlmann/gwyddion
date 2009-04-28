@@ -82,6 +82,7 @@ typedef struct {
     GtkWidget *curve;
     GtkWidget *function;
     GtkWidget *formula;
+    GtkWidget *draw_circle;
     FitParamControl param[MAX_PARAMS];
     gboolean in_update;
 } FitControls;
@@ -127,6 +128,7 @@ static void        load_args                 (GwyContainer *container,
 static void        save_args                 (GwyContainer *container,
                                               FitArgs *args);
 static GString*    create_fit_report         (FitArgs *args);
+static void        draw_circle_changed       (FitControls *controls);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -222,7 +224,7 @@ fit_dialog(FitArgs *args)
     hbox = gtk_hbox_new(FALSE, 2);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox, TRUE, TRUE, 0);
 
-    table = gtk_table_new(4, 2, FALSE);
+    table = gtk_table_new(5, 2, FALSE);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_box_pack_start(GTK_BOX(hbox), table, FALSE, FALSE, 0);
@@ -312,6 +314,17 @@ fit_dialog(FitArgs *args)
     label = gtk_label_new(NULL);
     gtk_label_set_markup(GTK_LABEL(label), args->abscissa_vf->units);
     gtk_box_pack_start(GTK_BOX(hbox2), label, FALSE, FALSE, 0);
+
+    row++;
+
+    controls.draw_circle = gtk_check_button_new_with_mnemonic(_("_Draw whole circle"));
+    gtk_table_attach(GTK_TABLE(table), controls.draw_circle,
+                     0, 2, row, row+1, GTK_FILL, 0, 0, 0);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.draw_circle),
+                                 FALSE);
+    gtk_widget_set_sensitive(controls.draw_circle,FALSE);
+    g_signal_connect_swapped(controls.draw_circle, "toggled",
+                             G_CALLBACK(draw_circle_changed), &controls);
 
     /* Graph */
     args->graph_model = gwy_graph_model_new_alike(gmodel);
@@ -566,6 +579,8 @@ curve_changed(GtkComboBox *combo,
                                                         controls->args->curve));
     fit_limit_selection(controls, TRUE);
     fit_set_state(controls, FALSE);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->draw_circle),
+                                 FALSE);
 }
 
 static void
@@ -603,6 +618,8 @@ function_changed(GtkComboBox *combo, FitControls *controls)
     }
 
     fit_set_state(controls, FALSE);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->draw_circle),
+                                 FALSE);
 }
 
 static void
@@ -631,6 +648,13 @@ fit_set_state(FitControls *controls,
         }
     }
     args->is_fitted = is_fitted;
+
+    if (is_fitted &&
+        (gwy_strequal(gwy_cdline_get_name(args->fitfunc),"Circle (down)") ||
+        gwy_strequal(gwy_cdline_get_name(args->fitfunc),"Circle (up)")))
+        gtk_widget_set_sensitive(controls->draw_circle,TRUE);
+    else
+        gtk_widget_set_sensitive(controls->draw_circle,FALSE);
 }
 
 static void
@@ -718,6 +742,8 @@ graph_selected(GwySelection* selection,
     controls->in_update = FALSE;
 
     fit_set_state(controls, FALSE);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->draw_circle),
+                                 FALSE);
 }
 
 static void
@@ -1025,6 +1051,73 @@ create_fit_report(FitArgs *args)
     g_string_append_c(report, '\n');
 
     return report;
+}
+
+static void
+draw_circle_changed(FitControls *controls)
+{
+    FitArgs *args;
+    GwyGraphCurveModel *cmodel;
+    gdouble *xd, *yd;
+    gboolean ok;   /* XXX: ignored */
+    gint i, j, n, res=100;
+    gdouble *param;
+    GwyCDLine *func;
+
+    args = controls->args;
+    n = gwy_cdline_get_nparams(args->fitfunc);
+    param = g_newa(gdouble, n);
+    for (i = 0; i < n; i++)
+        param[i] = args->param[i].value;
+/*
+    n = gwy_data_line_get_res(args->xdata);
+    g_return_if_fail(n == gwy_data_line_get_res(args->ydata));
+    xd = gwy_data_line_get_data(args->xdata);
+    yd = gwy_data_line_get_data(args->ydata);
+    xd_long = (gdouble *) g_malloc(2*n*sizeof(gdouble));
+    yd_long = (gdouble *) g_malloc(2*n*sizeof(gdouble));*/
+    xd = (gdouble *) g_malloc(2*res*sizeof(gdouble));
+    yd = (gdouble *) g_malloc(2*res*sizeof(gdouble));
+
+    for (i = 0; i < res; i++)
+         xd[2*res-1-i] = xd[i] = param[1]-param[0]+2*param[0]*i/(res-1);
+
+    if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->draw_circle))) {
+        for (i = 0; i < res; i++) {
+             yd[i] = gwy_cdline_get_value(args->fitfunc, xd[i], param, &ok);
+             if (gwy_strequal(gwy_cdline_get_name(args->fitfunc),"Circle (down)")) {
+                 for (j=0;j<6;j++) {
+                      func = gwy_inventory_get_nth_item(gwy_cdlines(), j);
+                      if (gwy_strequal(gwy_cdline_get_name(func),"Circle (up)"))
+                          break;
+                 }
+                 yd[2*res-1-i] = gwy_cdline_get_value(func, xd[2*res-1-i], param, &ok);
+             }
+             else {
+                 for (j=0;j<6;j++) {
+                      func = gwy_inventory_get_nth_item(gwy_cdlines(), j);
+                      if (gwy_strequal(gwy_cdline_get_name(func),"Circle (down)"))
+                          break;
+                 }
+                 yd[2*res-1-i] = gwy_cdline_get_value(func, xd[2*res-1-i], param, &ok);
+             }
+        }
+        if (gwy_graph_model_get_n_curves(args->graph_model) == 2)
+            cmodel = gwy_graph_model_get_curve(args->graph_model, 1);
+        else {
+              cmodel = gwy_graph_curve_model_new();
+              g_object_set(cmodel,
+                          "mode", GWY_GRAPH_CURVE_LINE,
+                          "color", &args->fitcolor,
+                          NULL);
+              gwy_graph_model_add_curve(args->graph_model, cmodel);
+              g_object_unref(cmodel);
+        }
+        g_object_set(cmodel, "description", gwy_sgettext("noun|Fit"), NULL);
+        gwy_graph_curve_model_set_data(cmodel, xd, yd, 2*res);
+    }
+    else
+        fit_plot_curve(args);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
