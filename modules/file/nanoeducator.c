@@ -22,7 +22,7 @@
 /**
  * [FILE-MAGIC-FREEDESKTOP]
  * <mime-type type="application/x-nanoeducator-spm">
- *   <comment>Nanoedu SPM data header</comment>
+ *   <comment>Nanoedu SPM data</comment>
  *   <magic priority="80">
  *     <match type="string" offset="0" value="\x19(C) STM Data File System \x00\x00\x00\x00"/>
  *   </magic>
