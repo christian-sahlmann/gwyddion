@@ -57,6 +57,9 @@ Optional, for better KDE integration (SPM file thumbnails):
 Optional, for SPML file support:
 - LibXML2, including development files
 
+Optional, for Matlab MAT5 file support:
+- zlib, including development files
+
 Optional, for development of plug-in in various languages:
 - Python-2.2 or newer
 - Ruby-1.8 or newer
