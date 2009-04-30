@@ -24,6 +24,16 @@ spml_module =
 spml_sources = spml.c
 endif
 
+# When libz is disabled, put the sources to EXTRA_DIST to include them in
+# make dist.
+if HAVE_LIBZ
+matfile_module = matfile.la
+matfile_sources =
+else
+matfile_module =
+matfile_sources = matfile.c
+endif
+
 filedir = $(pkglibdir)/modules/file
 
 file_LTLIBRARIES = \
@@ -45,7 +55,7 @@ file_LTLIBRARIES = \
 	jeol.la \
 	$(jpkscan_module) \
 	mapvue.la \
-	matfile.la \
+	$(matfile_module) \
 	metropro.la \
 	microprof.la \
 	mifile.la \
@@ -137,7 +147,6 @@ hitachi_afm_la_SOURCES   = hitachi-afm.c
 intematix_la_SOURCES     = intematix.c gwytiff.h
 jeol_la_SOURCES          = jeol.c
 mapvue_la_SOURCES        = mapvue.c
-matfile_la_SOURCES       = matfile.c
 metropro_la_SOURCES      = metropro.c
 microprof_la_SOURCES     = microprof.c
 mifile_la_SOURCES        = mifile.c
@@ -190,6 +199,11 @@ if HAVE_XML2
 spml_la_SOURCES          = spml.c spml-utils.h
 spml_la_CFLAGS           = $(AM_CFLAGS) @XML2_CFLAGS@
 spml_la_LIBADD           = @XML2_LIBS@
+endif
+
+if HAVE_LIBZ
+matfile_la_SOURCES       = matfile.c
+matfile_la_LIBADD        = @LIBZ_LIBS@
 endif
 
 MAINTAINERCLEANFILES = makefile.msc

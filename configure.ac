@@ -469,6 +469,24 @@ AM_CONDITIONAL([HAVE_TIFF],[test x$enable_tiff != xno && test -n "$LIBTIFF"])
 AC_SUBST(LIBTIFF)
 
 #############################################################################
+# libz
+# Optional.
+GWY_WITH([zlib],,[build with zlib support])
+if test x$enable_zlib != xno && test -z "$ZLIB"; then
+  AC_CHECK_LIB(z, inflate,
+    [AC_CHECK_HEADER(zlib.h, ZLIB='-lz', [enable_zlib=no])],
+    [enable_zlib=no],
+    [])
+fi
+if test x$enable_tiff != xno && test -n "$ZLIB"; then
+  AC_DEFINE(HAVE_ZLIB,1,[Define if we have the ZLIB library.])
+else
+  ZLIB_WARN=" (needs zlib)"
+fi
+AM_CONDITIONAL([HAVE_ZLIB],[test x$enable_zlib != xno && test -n "$ZLIB"])
+AC_SUBST(ZLIB)
+
+#############################################################################
 # SPML importer
 # Only if you want to have support for spml importer compiled
 GWY_WITH([spml],,[SPML importer (libxml2 required)])
@@ -692,6 +710,7 @@ echo "================================================================="
 echo "Configuration:"
 echo "  TIFF (including JPK):              $enable_tiff$TIFF_WARN"
 echo "  SMPL:                              $enable_spml$SPML_WARN"
+echo "  Matlab MAT5:                       $enable_zlib$ZLIB_WARN"
 echo "  FFTW3:                             $enable_fftw3$FFTW3_WARN"
 echo "  OpenGL 3D widgets:                 $enable_gl$GL_WARN"
 echo "  Remote control:                    $enable_remote$REMOTE_WARN"
