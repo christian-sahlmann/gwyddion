@@ -145,6 +145,34 @@ static GwyDataField* try_read_datafield(Mat5FileCursor *parent,
 static gboolean      zinflate_variable (Mat5FileCursor *cursor,
                                         GError **error);
 
+/* Indexed by Mat5DataType */
+static const struct {
+    Mat5ClassType class_type;
+    guint type_size;
+}
+typeinfo[] = {
+    { 0,                     0, },
+    { MAT5_CLASS_INT8,       1, },
+    { MAT5_CLASS_UINT8,      1, },
+    { MAT5_CLASS_INT16,      2, },
+    { MAT5_CLASS_UINT16,     2, },
+    { MAT5_CLASS_INT32,      4, },
+    { MAT5_CLASS_UINT32,     4, },
+    { MAT5_CLASS_SINGLE,     4, },
+    { 0,                     0, },
+    { MAT5_CLASS_DOUBLE,     8, },
+    { 0,                     0, },
+    { 0,                     0, },
+    { 0,                     0, },
+    { MAT5_CLASS_INT64,      8, },
+    { MAT5_CLASS_UINT64,     8, },
+    { 0,                     0, },
+    { 0,                     0, },
+    { 0,                     1, },
+    { 0,                     2, },
+    { 0,                     4, },
+};
+
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
@@ -205,10 +233,14 @@ mat5_next_tag(Mat5FileCursor *cursor, GError **error)
         return FALSE;
     }
 
-    cursor->nbytes = fc->get_guint16(&cursor->p);
-    if (cursor->nbytes) {
-        cursor->p -= 2;
-        cursor->data_type = fc->get_guint32(&cursor->p);
+    /* Short tags have nonzero in first two bytes.  So says the Matlab docs,
+     * however, this statement seems to be a big-endianism.  Check the two
+     * *upper* bytes of data type. */
+    cursor->data_type = fc->get_guint32(&cursor->p);
+    cursor->nbytes = cursor->data_type >> 16;
+    gwy_debug("raw data_type: %08x", cursor->data_type);
+    if (cursor->nbytes == 0) {
+        /* Normal (long) tag */
         cursor->nbytes = fc->get_guint32(&cursor->p);
         cursor->size -= MAT5_TAG_SIZE;
         /* Elements *start* at multiples of 8, but the last element in the
@@ -251,10 +283,25 @@ mat5_next_tag(Mat5FileCursor *cursor, GError **error)
             cursor->size -= padded_size;
     }
     else {
-        cursor->data_type = fc->get_guint16(&cursor->p);
+        /* Short tag, the length seems to be simply the upper two bytes,
+         * whereas the data type the lower two bytes.  Do not trust the nice
+         * boxes showing which byte is which in the documentation.  They were
+         * made by the evil big-endian people.  */
+        cursor->data_type &= 0xffff;
         cursor->zp = cursor->p;
         cursor->p += 4;
         cursor->size -= MAT5_TAG_SIZE;
+        if (cursor->data_type >= G_N_ELEMENTS(typeinfo)
+            || cursor->nbytes > 4
+            || cursor->nbytes < typeinfo[cursor->data_type].type_size
+            || cursor->nbytes % typeinfo[cursor->data_type].type_size) {
+            g_set_error(error, GWY_MODULE_FILE_ERROR,
+                        GWY_MODULE_FILE_ERROR_DATA,
+                        _("Invalid short tag of type %u claims to consists of "
+                          "%u bytes."),
+                        cursor->data_type, cursor->nbytes);
+            return FALSE;
+        }
         gwy_debug("ShortData of type %u", cursor->data_type);
     }
 
@@ -354,34 +401,6 @@ static GwyDataField*
 try_read_datafield(Mat5FileCursor *parent,
                    GString *name)
 {
-    /* Indexed by Mat5DataType */
-    static const struct {
-        Mat5ClassType class_type;
-        guint type_size;
-    }
-    typeinfo[] = {
-        { 0,                     0, },
-        { MAT5_CLASS_INT8,       1, },
-        { MAT5_CLASS_UINT8,      1, },
-        { MAT5_CLASS_INT16,      2, },
-        { MAT5_CLASS_UINT16,     2, },
-        { MAT5_CLASS_INT32,      4, },
-        { MAT5_CLASS_UINT32,     4, },
-        { MAT5_CLASS_SINGLE,     4, },
-        { 0,                     0, },
-        { MAT5_CLASS_DOUBLE,     8, },
-        { 0,                     0, },
-        { 0,                     0, },
-        { 0,                     0, },
-        { MAT5_CLASS_INT64,      8, },
-        { MAT5_CLASS_UINT64,     8, },
-        { 0,                     0, },
-        { 0,                     0, },
-        { 0,                     1, },
-        { 0,                     2, },
-        { 0,                     4, },
-    };
-
     Mat5FileContext *fc = parent->context;
     Mat5FileCursor cursor;
     Mat5ClassType klass;
@@ -439,7 +458,7 @@ try_read_datafield(Mat5FileCursor *parent,
               cursor.data_type,
               typeinfo[cursor.data_type].class_type,
               typeinfo[cursor.data_type].type_size);
-    if (cursor.data_type > G_N_ELEMENTS(typeinfo)
+    if (cursor.data_type >= G_N_ELEMENTS(typeinfo)
         || typeinfo[cursor.data_type].class_type != klass) {
         g_warning("Variable class %u does not correspond to data type %u",
                   klass, cursor.data_type);
@@ -537,7 +556,6 @@ zinflate_variable(Mat5FileCursor *cursor,
     z_stream zbuf; /* decompression stream */
     const guchar *p;
     guint nbytes;
-    gboolean retval;
 
     g_byte_array_set_size(fc->zbuffer, MAT5_TAG_SIZE);
     if (!zinflate_into(&zbuf, Z_SYNC_FLUSH,
@@ -550,11 +568,8 @@ zinflate_variable(Mat5FileCursor *cursor,
     nbytes = fc->get_guint32(&p);
     g_byte_array_set_size(fc->zbuffer, nbytes + MAT5_TAG_SIZE);
 
-    /* FIXME: Why Z_FINISH does not work? */
-    retval = zinflate_into(&zbuf, Z_SYNC_FLUSH,
-                           cursor->nbytes, cursor->zp, fc->zbuffer, error);
-
-    return retval;
+    return zinflate_into(&zbuf, Z_SYNC_FLUSH,
+                         cursor->nbytes, cursor->zp, fc->zbuffer, error);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
