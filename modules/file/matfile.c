@@ -495,23 +495,36 @@ zinflate_into(z_stream *zbuf,
     zbuf->next_out = output->data;
     zbuf->avail_out = output->len;
 
-    if ((status = inflateInit(zbuf)) != Z_OK
-        || (status = inflate(zbuf, flush_mode)) != Z_OK) {
-        g_printerr("!!!! Ignoring zlib error\n");
-        /*
+    /* XXX: zbuf->msg does not seem to ever contain anything, so just report
+     * the error codes. */
+    if ((status = inflateInit(zbuf)) != Z_OK) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR,
+                    GWY_MODULE_FILE_ERROR_SPECIFIC,
+                    _("zlib initialization failed with error %d, "
+                      "cannot decompress data."),
+                    status);
+        return FALSE;
+    }
+
+    if ((status = inflate(zbuf, flush_mode)) != Z_OK
+        /* zlib return Z_STREAM_END also when we *exactly* exhaust all input.
+         * But this is no error, in fact it should happen every time, so check
+         * for it specifically. */
+        && !(status == Z_STREAM_END
+             && zbuf->total_in == csize
+             && zbuf->total_out == output->len)) {
         g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
                     _("Decompression of compressed variable failed with "
-                      "error %d (%s)."),
-                    status, zbuf->msg);
+                      "error %d."),
+                    status);
         retval = FALSE;
-        */
     }
 
     status = inflateEnd(zbuf);
-    /* This should not really happen whatever data we pass in. */
-    if (status != Z_OK) {
-        g_critical("inflateEnd() failed with error %d (%s)", status, zbuf->msg);
-    }
+    /* This should not really happen whatever data we pass in.  And we have
+     * already our output, so just make some noise and get over it.  */
+    if (status != Z_OK)
+        g_critical("inflateEnd() failed with error %d", status);
 
     return retval;
 }
