@@ -331,7 +331,7 @@ mat5_load(const gchar *filename,
 
                 gwy_container_set_object(container, quark, dfield);
                 g_object_unref(dfield);
-                key = g_strdup_printf("%s/%d", g_quark_to_string(quark), id);
+                key = g_strconcat(g_quark_to_string(quark), "/title", NULL);
                 gwy_container_set_string_by_name(container, key,
                                                  g_strdup(name->str));
                 g_free(key);
