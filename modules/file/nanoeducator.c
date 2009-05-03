@@ -17,7 +17,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
-
+#define DEBUG 1
 /* FIXME: What about .spm and .stm extensions?  Too generic? */
 /**
  * [FILE-MAGIC-FREEDESKTOP]
@@ -237,8 +237,10 @@ static GwySpectra*    nanoedu_read_spectra   (const guchar *pos_buffer,
                                               gint nspectra,
                                               gint res,
                                               gdouble real,
+                                              gdouble yreal,
                                               const gchar *xunits,
                                               const char *yunits,
+                                              gdouble scale,
                                               gdouble q,
                                               GError **error);
 
@@ -382,13 +384,16 @@ nanoedu_load(const gchar *filename,
             goto finish;
         }
 
+        /* FIXME: sqrt(1e-17) seems to be, for some random reason, a good
+         * approximation of the scaling factor... */
         spectra = nanoedu_read_spectra(buffer + header.point_offset,
                                        size - header.point_offset,
                                        buffer + header.spec_offset,
                                        size - header.spec_offset,
                                        params.n_spectra_lines,
                                        params.n_spectrum_points,
-                                       1.0, "m", "m", 1.0, error);
+                                       1.0, scale*header.topo_ny,
+                                       "m", "m", sqrt(1e-17), 1.0, error);
         if (!spectra)
             goto finish;
 
@@ -427,8 +432,8 @@ nanoedu_load(const gchar *filename,
 
         g_object_set(gmodel,
                      "title",
-                     params.path_mode ? "Scanner Training (vertical)"
-                                      : "Scanner Training (horizontal)",
+                     params.path_mode ? "Scanner Training (Y+)"
+                                      : "Scanner Training (X+)",
                      NULL);
         gwy_container_set_object_by_name(container, "/0/graph/graph/1", gmodel);
         g_object_unref(gmodel);
@@ -833,8 +838,9 @@ static GwySpectra*
 nanoedu_read_spectra(const guchar *pos_buffer, gsize pos_size,
                      const guchar *data_buffer, gsize data_size,
                      gint nspectra, gint res,
-                     gdouble real,
+                     gdouble real, gdouble yreal,
                      const gchar *xunits, const char *yunits,
+                     gdouble scale,
                      gdouble q,
                      GError **error)
 {
@@ -847,7 +853,8 @@ nanoedu_read_spectra(const guchar *pos_buffer, gsize pos_size,
     gdouble x, y;
     gdouble *data;
 
-    if (err_SIZE_MISMATCH(error, 2*2*nspectra, pos_size, FALSE)
+    /* See below for explanation of 3 */
+    if (err_SIZE_MISMATCH(error, 3*2*nspectra, pos_size, FALSE)
         || err_SIZE_MISMATCH(error, 4*nspectra*res, data_size, FALSE))
         return NULL;
 
@@ -872,15 +879,22 @@ nanoedu_read_spectra(const guchar *pos_buffer, gsize pos_size,
         g_object_unref(siunitx);
         g_object_unref(siunity);
         data = gwy_data_line_get_data(dline);
-        x = GINT16_FROM_LE(p16[2*i]);
-        y = GINT16_FROM_LE(p16[2*i + 1]);
+        /* FIXME: There seems to be always number `1' after each spectrum
+         * coordinates.  Dunno what it means, possibly the number of spectra in
+         * this particular point?  If it is so, then the import fails when
+         * there is more than one spectrum in a point because we are not
+         * prepared for this. */
+        x = scale*GINT16_FROM_LE(p16[3*i]);
+        /* FIXME: This is wrong, it needs to be flipped, but there is still
+         * some offset with regard to the actual coordinates. */
+        y = yreal - scale*GINT16_FROM_LE(p16[3*i + 1]);
         gwy_debug("spec%d [%g,%g]", i, x, y);
         for (j = 0; j < res; j++) {
             /* FIXME: The odd coordinates seem to be abscissas.  Read them! */
             gint16 v = d16[2*(i*res + j)];
             data[j] = q*GINT16_FROM_LE(v);
         }
-        gwy_spectra_add_spectrum(spectra, dline, x*Nanometer, y*Nanometer);
+        gwy_spectra_add_spectrum(spectra, dline, x, y);
         g_object_unref(dline);
     }
 
