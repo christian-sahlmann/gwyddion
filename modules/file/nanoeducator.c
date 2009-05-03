@@ -17,7 +17,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
-#define DEBUG 1
+
 /* FIXME: What about .spm and .stm extensions?  Too generic? */
 /**
  * [FILE-MAGIC-FREEDESKTOP]
@@ -236,10 +236,11 @@ static GwySpectra*    nanoedu_read_spectra   (const guchar *pos_buffer,
                                               gsize data_size,
                                               gint nspectra,
                                               gint res,
-                                              gdouble real,
-                                              gdouble yreal,
+                                              const gchar *xyunits,
                                               const gchar *xunits,
-                                              const char *yunits,
+                                              const gchar *yunits,
+                                              gdouble xy_step,
+                                              gdouble yreal,
                                               gdouble scale,
                                               gdouble q,
                                               GError **error);
@@ -355,12 +356,12 @@ nanoedu_load(const gchar *filename,
         if (header.version == 11 || !q)
             q = 1.0;
         dfield = nanoedu_read_data_field(buffer + header.topo_offset,
-                                          size - header.topo_offset,
-                                          header.topo_nx,
-                                          header.topo_ny,
-                                          scale*header.topo_nx,
-                                          scale*header.topo_ny,
-                                          "m", "m", q*Nanometer, error);
+                                         size - header.topo_offset,
+                                         header.topo_nx,
+                                         header.topo_ny,
+                                         scale*header.topo_nx,
+                                         scale*header.topo_ny,
+                                         "m", "m", q*Nanometer, error);
         if (!dfield)
             goto finish;
 
@@ -386,14 +387,16 @@ nanoedu_load(const gchar *filename,
 
         /* FIXME: sqrt(1e-17) seems to be, for some random reason, a good
          * approximation of the scaling factor... */
+        q = 1e-3 * params.sens_z * params.amp_zgain * params.discr_z_mvolt;
         spectra = nanoedu_read_spectra(buffer + header.point_offset,
                                        size - header.point_offset,
                                        buffer + header.spec_offset,
                                        size - header.spec_offset,
                                        params.n_spectra_lines,
                                        params.n_spectrum_points,
-                                       1.0, scale*header.topo_ny,
-                                       "m", "m", sqrt(1e-17), 1.0, error);
+                                       "m", "m", NULL,
+                                       Nanometer*q, scale*header.topo_ny,
+                                       sqrt(1e-17), 1.0, error);
         if (!spectra)
             goto finish;
 
@@ -834,51 +837,64 @@ nanoedu_read_graph(const guchar *buffer,
     return gmodel;
 }
 
+static GwyDataLine*
+make_spectrum(gint res, gdouble real,
+              const char *xunits, const gchar *yunits)
+{
+    GwyDataLine *dline;
+    GwySIUnit *siunitx, *siunity;
+
+    dline = gwy_data_line_new(res, real, FALSE);
+    siunitx = gwy_si_unit_new(xunits);
+    siunity = gwy_si_unit_new(yunits);
+    gwy_data_line_set_si_unit_x(dline, siunitx);
+    gwy_data_line_set_si_unit_y(dline, siunity);
+    g_object_unref(siunitx);
+    g_object_unref(siunity);
+
+    return dline;
+}
+
 static GwySpectra*
 nanoedu_read_spectra(const guchar *pos_buffer, gsize pos_size,
                      const guchar *data_buffer, gsize data_size,
                      gint nspectra, gint res,
-                     gdouble real, gdouble yreal,
-                     const gchar *xunits, const char *yunits,
-                     gdouble scale,
-                     gdouble q,
+                     const gchar *xyunits,
+                     const gchar *xunits, const gchar *yunits,
+                     gdouble xy_step, gdouble yreal,
+                     gdouble scale, gdouble q,
                      GError **error)
 {
-    gint i, j;
+    gint i, j, amin;
     GwySpectra *spectra;
     GwyDataLine *dline;
-    GwySIUnit *siunitx, *siunity;
+    GwySIUnit *siunit;
     const gint16 *p16 = (const gint16*)pos_buffer;
     const gint16 *d16 = (const gint16*)data_buffer;
-    gdouble x, y;
+    gdouble x, y, z0;
     gdouble *data;
 
-    /* See below for explanation of 3 */
+    /* See below for explanation of 3* and 2* */
     if (err_SIZE_MISMATCH(error, 3*2*nspectra, pos_size, FALSE)
-        || err_SIZE_MISMATCH(error, 4*nspectra*res, data_size, FALSE))
+        || err_SIZE_MISMATCH(error, 2*4*nspectra*res, data_size, FALSE))
         return NULL;
 
     /* Use negated positive conditions to catch NaNs */
-    if (!((real = fabs(real)) > 0)) {
+    if (!((xy_step = fabs(xy_step)) > 0)) {
         g_warning("Real size is 0.0, fixing to 1.0");
-        real = 1.0;
+        xy_step = 1.0;
     }
 
     spectra = gwy_spectra_new();
-    siunitx = gwy_si_unit_new(xunits);
-    gwy_spectra_set_si_unit_xy(spectra, siunitx);
-    g_object_unref(siunitx);
+    siunit = gwy_si_unit_new(xyunits);
+    gwy_spectra_set_si_unit_xy(spectra, siunit);
+    g_object_unref(siunit);
     gwy_spectra_set_title(spectra, _("Spectra"));
 
+    /* For FD curves, there are always two spectra: forward and backward.
+     * The backward one is really stored backwards, so we revert it upon
+     * reading. */
     for (i = 0; i < nspectra; i++) {
-        dline = gwy_data_line_new(res, real, FALSE);
-        siunitx = gwy_si_unit_new(xunits);
-        siunity = gwy_si_unit_new(yunits);
-        gwy_data_line_set_si_unit_x(dline, siunitx);
-        gwy_data_line_set_si_unit_y(dline, siunity);
-        g_object_unref(siunitx);
-        g_object_unref(siunity);
-        data = gwy_data_line_get_data(dline);
         /* FIXME: There seems to be always number `1' after each spectrum
          * coordinates.  Dunno what it means, possibly the number of spectra in
          * this particular point?  If it is so, then the import fails when
@@ -889,11 +905,52 @@ nanoedu_read_spectra(const guchar *pos_buffer, gsize pos_size,
          * some offset with regard to the actual coordinates. */
         y = yreal - scale*GINT16_FROM_LE(p16[3*i + 1]);
         gwy_debug("spec%d [%g,%g]", i, x, y);
+
+        /* Forward */
+        dline = make_spectrum(res, res*xy_step, xunits, yunits);
+        data = gwy_data_line_get_data(dline);
+        amin = G_MAXINT;
+        z0 = 1.0;
+        /* XXX: The odd coordinates are abscissas.  We only use the zeroth for
+         * setting the offset.  If they are not equidistant, though luck... */
         for (j = 0; j < res; j++) {
-            /* FIXME: The odd coordinates seem to be abscissas.  Read them! */
-            gint16 v = d16[2*(i*res + j)];
+            gint16 v = d16[2*(2*i*res + j)];
+            gint a = d16[2*(2*i*res + j) + 1];
             data[j] = q*GINT16_FROM_LE(v);
+            /* Find the abscissa closest to zero, the values should be divied
+             * by the value at zero Z */
+            a = GINT16_FROM_LE(a);
+            if (abs(a) < abs(amin)) {
+                amin = a;
+                z0 = data[j];
+            }
         }
+        gwy_data_line_multiply(dline, 1.0/z0);
+        gwy_data_line_set_offset(dline, xy_step*d16[2*i*res + 1]);
+        gwy_spectra_add_spectrum(spectra, dline, x, y);
+        g_object_unref(dline);
+
+        /* Backward */
+        dline = make_spectrum(res, res*xy_step, xunits, yunits);
+        data = gwy_data_line_get_data(dline);
+        amin = G_MAXINT;
+        z0 = 1.0;
+        /* XXX: The odd coordinates are abscissas.  We only use the zeroth for
+         * setting the offset.  If they are not equidistant, though luck... */
+        for (j = 0; j < res; j++) {
+            gint16 v = d16[2*((2*i + 1)*res + res-1-j)];
+            gint a = d16[2*(2*i*res + j) + 1];
+            data[j] = q*GINT16_FROM_LE(v);
+            /* Find the abscissa closest to zero, the values should be divied
+             * by the value at zero Z */
+            a = GINT16_FROM_LE(a);
+            if (abs(a) < abs(amin)) {
+                amin = a;
+                z0 = data[j];
+            }
+        }
+        gwy_data_line_multiply(dline, 1.0/z0);
+        gwy_data_line_set_offset(dline, xy_step*d16[2*i*res + 1]);
         gwy_spectra_add_spectrum(spectra, dline, x, y);
         g_object_unref(dline);
     }
