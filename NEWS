@@ -3,6 +3,8 @@ Application:
 - Translations updated: Czech, French, Russian.
 
 Libraries:
+- libgwyapp: Critical warnings/crashes in data browser when a new object was
+  added was fixed.
 - libgwydgets: Initial state of widgets in GwySensitivityGroup might not be set
   properly if they were added during a queued update.  This was fixed.
 - libgwydgets: 3D view unqueues full-size redraw when it is unrealized, fixing
