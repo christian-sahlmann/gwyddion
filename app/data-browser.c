@@ -500,11 +500,10 @@ _gwy_app_analyse_data_key(const gchar *strkey,
 static void
 gwy_app_data_proxy_add_object(GwyAppDataList *list,
                               gint i,
+                              GtkTreeIter *iter,
                               GObject *object)
 {
-    GtkTreeIter iter;
-
-    gtk_list_store_insert_with_values(list->store, &iter, G_MAXINT,
+    gtk_list_store_insert_with_values(list->store, iter, G_MAXINT,
                                       MODEL_ID, i,
                                       MODEL_OBJECT, object,
                                       MODEL_WIDGET, NULL,
@@ -587,12 +586,14 @@ gwy_app_data_proxy_channel_changed(GwyDataField *channel,
 static void
 gwy_app_data_proxy_connect_channel(GwyAppDataProxy *proxy,
                                    gint i,
+                                   GtkTreeIter *iter,
                                    GObject *object)
 {
     gchar key[24];
     GQuark quark;
 
-    gwy_app_data_proxy_add_object(&proxy->lists[PAGE_CHANNELS], i, object);
+    gwy_app_data_proxy_add_object(&proxy->lists[PAGE_CHANNELS], i, iter,
+                                  object);
     g_snprintf(key, sizeof(key), "/%d/data", i);
     gwy_debug("%p: %d in %p", object, i, proxy->container);
     quark = g_quark_from_string(key);
@@ -703,11 +704,13 @@ gwy_app_data_proxy_graph_changed(GwyGraphModel *graph,
 static void
 gwy_app_data_proxy_connect_graph(GwyAppDataProxy *proxy,
                                  gint i,
+                                 GtkTreeIter *iter,
                                  GObject *object)
 {
     GQuark quark;
 
-    gwy_app_data_proxy_add_object(&proxy->lists[PAGE_GRAPHS], i, object);
+    gwy_app_data_proxy_add_object(&proxy->lists[PAGE_GRAPHS], i, iter,
+                                  object);
     gwy_debug("%p: %d in %p", object, i, proxy->container);
     quark = gwy_app_get_graph_key_for_id(i);
     g_object_set_qdata(object, container_quark, proxy->container);
@@ -816,11 +819,12 @@ gwy_app_data_proxy_spectra_changed(GwySpectra *spectra,
 static void
 gwy_app_data_proxy_connect_spectra(GwyAppDataProxy *proxy,
                                    gint i,
+                                   GtkTreeIter *iter,
                                    GObject *object)
 {
     GQuark quark;
 
-    gwy_app_data_proxy_add_object(&proxy->lists[PAGE_SPECTRA], i, object);
+    gwy_app_data_proxy_add_object(&proxy->lists[PAGE_SPECTRA], i, iter, object);
     gwy_debug("%p: %d in %p", object, i, proxy->container);
     quark = gwy_app_get_spectra_key_for_id(i);
     g_object_set_qdata(object, container_quark, proxy->container);
@@ -909,6 +913,7 @@ gwy_app_data_proxy_scan_data(gpointer key,
     GwyAppDataProxy *proxy = (GwyAppDataProxy*)userdata;
     const gchar *strkey;
     GwyAppKeyType type;
+    GtkTreeIter iter;
     GObject *object;
     gint i;
 
@@ -923,7 +928,7 @@ gwy_app_data_proxy_scan_data(gpointer key,
         g_return_if_fail(G_VALUE_HOLDS_OBJECT(gvalue));
         object = g_value_get_object(gvalue);
         g_return_if_fail(GWY_IS_DATA_FIELD(object));
-        gwy_app_data_proxy_connect_channel(proxy, i, object);
+        gwy_app_data_proxy_connect_channel(proxy, i, &iter, object);
         break;
 
         case KEY_IS_GRAPH:
@@ -931,7 +936,7 @@ gwy_app_data_proxy_scan_data(gpointer key,
         g_return_if_fail(G_VALUE_HOLDS_OBJECT(gvalue));
         object = g_value_get_object(gvalue);
         g_return_if_fail(GWY_IS_GRAPH_MODEL(object));
-        gwy_app_data_proxy_connect_graph(proxy, i, object);
+        gwy_app_data_proxy_connect_graph(proxy, i, &iter, object);
         break;
 
         case KEY_IS_SPECTRA:
@@ -939,7 +944,7 @@ gwy_app_data_proxy_scan_data(gpointer key,
         g_return_if_fail(G_VALUE_HOLDS_OBJECT(gvalue));
         object = g_value_get_object(gvalue);
         g_return_if_fail(GWY_IS_SPECTRA(object));
-        gwy_app_data_proxy_connect_spectra(proxy, i, object);
+        gwy_app_data_proxy_connect_spectra(proxy, i, &iter, object);
         break;
 
         case KEY_IS_MASK:
@@ -1104,7 +1109,7 @@ gwy_app_data_proxy_item_changed(GwyContainer *data,
                   found ? "present" : "missing");
         g_return_if_fail(object || found);
         if (object && !found)
-            gwy_app_data_proxy_connect_channel(proxy, id, object);
+            gwy_app_data_proxy_connect_channel(proxy, id, &iter, object);
         else if (!object && found)
             gwy_app_data_proxy_disconnect_channel(proxy, &iter);
         else {
@@ -1127,7 +1132,7 @@ gwy_app_data_proxy_item_changed(GwyContainer *data,
                   found ? "present" : "missing");
         g_return_if_fail(object || found);
         if (object && !found)
-            gwy_app_data_proxy_connect_graph(proxy, id, object);
+            gwy_app_data_proxy_connect_graph(proxy, id, &iter, object);
         else if (!object && found)
             gwy_app_data_proxy_disconnect_graph(proxy, &iter);
         else {
@@ -1150,7 +1155,7 @@ gwy_app_data_proxy_item_changed(GwyContainer *data,
                   found ? "present" : "missing");
         g_return_if_fail(object || found);
         if (object && !found)
-            gwy_app_data_proxy_connect_spectra(proxy, id, object);
+            gwy_app_data_proxy_connect_spectra(proxy, id, &iter, object);
         else if (!object && found)
             gwy_app_data_proxy_disconnect_spectra(proxy, &iter);
         else {
