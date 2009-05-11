@@ -5993,6 +5993,10 @@ gwy_app_get_graph_thumbnail(GwyContainer *data,
  * @GWY_APP_GRAPH_MODEL: Graph model.
  * @GWY_APP_GRAPH_MODEL_KEY: Quark corresponding to the graph model.
  * @GWY_APP_GRAPH_MODEL_ID: Number (id) of the graph model in its container.
+ * @GWY_APP_SPECTRA: Single point spectra.
+ * @GWY_APP_SPECTRA_KEY: Quark corresponding to the single point spectra.
+ * @GWY_APP_SPECTRA_ID: Number (id) of the the single point spectra in its
+ *                      container.
  *
  * Types of current objects that can be requested with
  * gwy_app_data_browser_get_current().
