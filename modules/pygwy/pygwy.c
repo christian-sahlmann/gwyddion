@@ -317,7 +317,7 @@ pygwy_get_plugin_metadata(const gchar *filename,
     *desc = pygwy_read_val_from_dict(plugin_dict, "plugin_desc", filename);
     *menu_path = pygwy_read_val_from_dict(plugin_dict, "plugin_menu", filename);
     type_str = pygwy_read_val_from_dict(plugin_dict, "plugin_type", filename);
-    gwy_debug("read values: %s %s %s %x %x %x", *desc, *menu_path, type_str, *desc, *menu_path, type_str);
+    gwy_debug("read values: %s %s %s %p %p %p", *desc, *menu_path, type_str, *desc, *menu_path, type_str);
     if (!type_str) {
        g_warning("Undefined plugin type, cannot load.");
        *type = PYGWY_UNDEFINED;
@@ -940,7 +940,8 @@ pygwy_file_load_run(const gchar *filename,
         goto error;
     PyDict_SetItemString(d, "filename", o);
     cmd = g_strdup_printf("import %s\n"
-                          "result = %s.load(\"test\")\nprint result",
+                          "result = %s.load(filename)\n"
+                          "print result",
                           info->name,
                           info->name);
     pygwy_run_string(cmd, Py_file_input, d, d);
