@@ -242,7 +242,8 @@ static GwySpectra*    nanoedu_read_spectra   (const guchar *pos_buffer,
                                               const gchar *yunits,
                                               gdouble xy_step,
                                               gdouble yreal,
-                                              gdouble scale,
+                                              gdouble xscale,
+                                              gdouble yscale,
                                               gdouble q,
                                               GError **error);
 
@@ -305,7 +306,7 @@ nanoedu_load(const gchar *filename,
     GwyDataField *dfield = NULL;
     GwyGraphModel *gmodel = NULL;
     GwySpectra *spectra = NULL;
-    gdouble scale, q;
+    gdouble scale, q, qx, qy;
     const gchar *units, *title;
     guint nobjects = 0;
 
@@ -332,6 +333,11 @@ nanoedu_load(const gchar *filename,
     container = gwy_container_new();
 
     scale = Nanometer * params.xy_step;
+    /* Version 12+ */
+    q = 1e-3 * params.sens_z * params.amp_zgain * params.discr_z_mvolt;
+    /* Version 11. */
+    if (header.version == 11 || !q)
+        q = 1.0;
 
     /* The basic topography data, they need not to be always present though. */
     if (params.aqui_topo && header.topo_nx && header.topo_ny) {
@@ -351,11 +357,6 @@ nanoedu_load(const gchar *filename,
             g_warning("params.topo_ny (%d) != header.topo_ny (%d), "
                       "choosing header", params.topo_ny, header.topo_ny);
 
-        /* Version 12+ */
-        q = 1e-3 * params.sens_z * params.amp_zgain * params.discr_z_mvolt;
-        /* Version 11. */
-        if (header.version == 11 || !q)
-            q = 1.0;
         dfield = nanoedu_read_data_field(buffer + header.topo_offset,
                                          size - header.topo_offset,
                                          header.topo_nx,
@@ -386,9 +387,8 @@ nanoedu_load(const gchar *filename,
             goto finish;
         }
 
-        /* FIXME: sqrt(1e-17) seems to be, for some random reason, a good
-         * approximation of the scaling factor... */
-        q = 1e-3 * params.sens_z * params.amp_zgain * params.discr_z_mvolt;
+        qx = 1e-3 * params.sens_x * params.gain_x * params.discr_z_mvolt;
+        qy = 1e-3 * params.sens_y * params.gain_y * params.discr_z_mvolt;
         spectra = nanoedu_read_spectra(buffer + header.point_offset,
                                        size - header.point_offset,
                                        buffer + header.spec_offset,
@@ -398,7 +398,8 @@ nanoedu_load(const gchar *filename,
                                        params.n_spectrum_points,
                                        "m", "m", NULL,
                                        Nanometer*q, scale*header.topo_ny,
-                                       sqrt(1e-17), 1.0, error);
+                                       Nanometer*qx, Nanometer*qy, 1.0,
+                                       error);
         if (!spectra)
             goto finish;
 
@@ -655,6 +656,8 @@ nanoedu_read_parameters(const guchar *buffer,
     params->reserved_scan1 = *(buffer++);
     params->reserved_scan2 = gwy_get_gint16_le(&buffer);
     params->reserved_scan3 = *(buffer++);
+    gwy_debug("amp_zgain=%g, xy_step=%g",
+              params->amp_zgain, params->xy_step);
 
     params->sens_x = gwy_get_gfloat_le(&buffer);
     params->sens_y = gwy_get_gfloat_le(&buffer);
@@ -664,10 +667,11 @@ nanoedu_read_parameters(const guchar *buffer,
     params->gain_y = gwy_get_gfloat_le(&buffer);
     params->nA_D = gwy_get_gfloat_le(&buffer);
     params->V_D = gwy_get_gfloat_le(&buffer);
-    gwy_debug("sens_z=%g, amp_zgain=%g, discr_z_mvolt=%g, V_D=%g, nA_D=%g, "
-              "xy_step=%g",
-              params->sens_z, params->amp_zgain, params->discr_z_mvolt,
-              params->V_D, params->nA_D, params->xy_step);
+    gwy_debug("sens_x=%g, sens_y=%g, sens_z=%g",
+              params->sens_x, params->sens_y, params->sens_z);
+    gwy_debug("gain_x=%g, gain_y=%g, discr_z_mvolt=%g, nA_d=%g, V_D=%g",
+              params->gain_x, params->gain_y, params->discr_z_mvolt,
+              params->nA_D, params->V_D);
 
     params->amp_modulation = gwy_get_gint32_le(&buffer); // XXX
     params->sd_gain_fm = gwy_get_guint16_le(&buffer);
@@ -898,7 +902,7 @@ nanoedu_read_spectra(const guchar *pos_buffer, gsize pos_size,
                      const gchar *xyunits,
                      const gchar *xunits, const gchar *yunits,
                      gdouble xy_step, gdouble yreal,
-                     gdouble scale, gdouble q,
+                     gdouble xscale, gdouble yscale, gdouble q,
                      GError **error)
 {
     gint i, n, speccount, pointstep;
@@ -964,10 +968,8 @@ nanoedu_read_spectra(const guchar *pos_buffer, gsize pos_size,
          * this particular point?  If it is so, then the import fails when
          * there is more than one spectrum in a point because we are not
          * prepared for this. */
-        x = scale*GINT16_FROM_LE(p16[pointstep*i]);
-        /* FIXME: This is wrong, it needs to be flipped, but there is still
-         * some offset with regard to the actual coordinates. */
-        y = yreal - scale*GINT16_FROM_LE(p16[pointstep*i + 1]);
+        x = xscale*GINT16_FROM_LE(p16[pointstep*i]);
+        y = yreal - yscale*GINT16_FROM_LE(p16[pointstep*i + 1]);
         n = (pointstep == 3) ? GINT16_FROM_LE(p16[pointstep*i + 2]) : 1;
         gwy_debug("spec%d [%g,%g] %dpts", i, x, y, n);
 
