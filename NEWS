@@ -19,6 +19,8 @@ Modules:
 - Nanoeducator (new): NT-MDT Nanoeducator file import.
 - Matfile (new): Crude Matlab MAT5 two-dimensional data import.
 - OLS: Module omitted in the MS Windows builds was added.
+- OPD file: Import of integer data was corrected.
+- Pygwy: module load() methods are run with the real filename, not with "test".
 - Calibrate: It is possible to shift the data by a numerically entered value.
 - Pixmap export: Inset scale bar is now antialiased.
 - MapVue: Lateral dimensions of imported data were corrected, value scale was
