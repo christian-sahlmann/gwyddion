@@ -41,6 +41,7 @@
 #include <libprocess/datafield.h>
 #include <libprocess/spectra.h>
 #include <libgwydgets/gwygraphmodel.h>
+#include <libgwydgets/gwygraphbasics.h>
 #include <libgwymodule/gwymodule-file.h>
 #include <app/gwymoduleutils-file.h>
 
@@ -225,6 +226,7 @@ static GwyDataField*  nanoedu_read_data_field(const guchar *buffer,
 static GwyGraphModel* nanoedu_read_graph     (const guchar *buffer,
                                               gsize size,
                                               gint res,
+                                              gint ncurves,
                                               gdouble real,
                                               const gchar *xunits,
                                               const char *yunits,
@@ -337,7 +339,8 @@ nanoedu_load(const gchar *filename,
         q = 1.0;
 
     /* The basic topography data, they need not to be always present though. */
-    if (params.aqui_topo && header.topo_nx && header.topo_ny) {
+    if (params.aqui_topo && header.topo_nx && header.topo_ny
+        && !(params.aqui_add == NANOEDU_SCANNER_TRAINING)) {
         if (err_DIMENSION(error, header.topo_nx)
             || err_DIMENSION(error, header.topo_ny))
             goto finish;
@@ -369,6 +372,48 @@ nanoedu_load(const gchar *filename,
                                          g_strdup("Topography"));
         g_object_unref(dfield);
         nobjects++;
+    }
+
+    /* Additonal, but in fact alternative, data: one-line scans */
+    if (header.topo_nx && header.topo_ny
+        && params.aqui_add == NANOEDU_SCANNER_TRAINING) {
+        if (err_DIMENSION(error, header.topo_nx)
+            || err_DIMENSION(error, header.topo_ny))
+            goto finish;
+        if (header.topo_offset >= size) {
+            g_set_error(error, GWY_MODULE_FILE_ERROR,
+                        GWY_MODULE_FILE_ERROR_DATA,
+                        _("Image data starts past the end of file."));
+            goto finish;
+        }
+
+        /* Version 12+ */
+        q = 1e-3 * params.sens_z * params.amp_zgain * params.discr_z_mvolt;
+        /* Version 11. */
+        if (header.version == 11 || !q)
+            q = 1.0;
+        q *= Nanometer;
+        units = "m";
+
+        gmodel = nanoedu_read_graph(buffer + header.topo_offset,
+                                    size - header.topo_offset,
+                                    header.topo_nx, header.topo_ny,
+                                    scale*header.topo_nx,
+                                    "m", units, q, error);
+        if (!gmodel)
+            goto finish;
+
+        g_object_set(gmodel,
+                     "title",
+                     params.path_mode ? "Scanner Training (Y+)"
+                                      : "Scanner Training (X+)",
+                     NULL);
+        gwy_container_set_object_by_name(container, "/0/graph/graph/1", gmodel);
+        g_object_unref(gmodel);
+        nobjects++;
+
+        /* This was already addsurf, so do not attempt to read it again. */
+        goto finish;
     }
 
     /* Additonal data: spectra */
@@ -404,48 +449,10 @@ nanoedu_load(const gchar *filename,
         nobjects++;
     }
 
-    /* Additonal data: one-line scan/scanner training */
-    if (header.addsurf_nx && header.addsurf_ny == 1
-        && params.aqui_add == NANOEDU_SCANNER_TRAINING) {
-        if (err_DIMENSION(error, header.addsurf_nx))
-            goto finish;
-        if (header.addsurf_offset >= size) {
-            g_set_error(error, GWY_MODULE_FILE_ERROR,
-                        GWY_MODULE_FILE_ERROR_DATA,
-                        _("Image data starts past the end of file."));
-            goto finish;
-        }
-
-        /* Version 12+ */
-        q = 1e-3 * params.sens_z * params.amp_zgain * params.discr_z_mvolt;
-        /* Version 11. */
-        if (header.version == 11 || !q)
-            q = 1.0;
-        q *= Nanometer;
-        units = "m";
-
-        gmodel = nanoedu_read_graph(buffer + header.addsurf_offset,
-                                    size - header.addsurf_offset,
-                                    header.addsurf_nx,
-                                    scale*header.addsurf_nx,
-                                    "m", units, q, error);
-        if (!gmodel)
-            goto finish;
-
-        g_object_set(gmodel,
-                     "title",
-                     params.path_mode ? "Scanner Training (Y+)"
-                                      : "Scanner Training (X+)",
-                     NULL);
-        gwy_container_set_object_by_name(container, "/0/graph/graph/1", gmodel);
-        g_object_unref(gmodel);
-        nobjects++;
-    }
-
     /* Additonal data: two-dimensional data. */
     /* This seems to be the only way to recognize whether addsurf is present
      * because addsurf type 0 is a valid type. */
-    if (header.addsurf_nx && header.addsurf_ny > 1) {
+    if (header.addsurf_nx && header.addsurf_ny >= 1) {
         if (err_DIMENSION(error, header.addsurf_nx)
             || err_DIMENSION(error, header.addsurf_ny))
             goto finish;
@@ -791,19 +798,20 @@ nanoedu_read_data_field(const guchar *buffer,
 static GwyGraphModel*
 nanoedu_read_graph(const guchar *buffer,
                    gsize size,
-                   gint res, gdouble real,
+                   gint res, gint ncurves, gdouble real,
                    const gchar *xunits, const char *yunits,
                    gdouble q,
                    GError **error)
 {
-    gint j;
+    gint i, j;
     GwyGraphModel *gmodel;
     GwyGraphCurveModel *gcmodel;
     GwySIUnit *siunitx, *siunity;
     gdouble *xdata, *ydata;
     const gint16 *d16 = (const gint16*)buffer;
+    GString *str;
 
-    if (err_SIZE_MISMATCH(error, 2*res, size, FALSE))
+    if (err_SIZE_MISMATCH(error, 2*res*ncurves, size, FALSE))
         return NULL;
 
     /* Use negated positive conditions to catch NaNs */
@@ -812,32 +820,39 @@ nanoedu_read_graph(const guchar *buffer,
         real = 1.0;
     }
 
-    xdata = g_new(gdouble, 2*res);
-    ydata = xdata + res;
-
-    for (j = 0; j < res; j++) {
-        gint16 v = d16[j];
-        xdata[j] = j*real/(res - 1);
-        ydata[j] = q*GINT16_FROM_LE(v);
-    }
-
-    gcmodel = g_object_new(GWY_TYPE_GRAPH_CURVE_MODEL,
-                           "description", "Height",
-                           "mode", GWY_GRAPH_CURVE_LINE,
-                           NULL);
-    gwy_graph_curve_model_set_data(gcmodel, xdata, ydata, res);
-    g_free(xdata);
-
     siunitx = gwy_si_unit_new(xunits);
     siunity = gwy_si_unit_new(yunits);
     gmodel = g_object_new(GWY_TYPE_GRAPH_MODEL,
                           "si-unit-x", siunitx,
                           "si-unit-y", siunity,
                           NULL);
-    gwy_graph_model_add_curve(gmodel, gcmodel);
-    g_object_unref(gcmodel);
     g_object_unref(siunitx);
     g_object_unref(siunity);
+
+    xdata = g_new(gdouble, 2*res);
+    ydata = xdata + res;
+    str = g_string_new(NULL);
+
+    for (i = 0; i < ncurves; i++) {
+        for (j = 0; j < res; j++) {
+            gint16 v = d16[i*res + j];
+            xdata[j] = j*real/(res - 1);
+            ydata[j] = q*GINT16_FROM_LE(v);
+        }
+
+        g_string_printf(str, _("Profile %d"), i);
+        gcmodel = g_object_new(GWY_TYPE_GRAPH_CURVE_MODEL,
+                               "description", str->str,
+                               "mode", GWY_GRAPH_CURVE_LINE,
+                               "color", gwy_graph_get_preset_color(i),
+                               NULL);
+        gwy_graph_curve_model_set_data(gcmodel, xdata, ydata, res);
+        gwy_graph_model_add_curve(gmodel, gcmodel);
+        g_object_unref(gcmodel);
+    }
+
+    g_string_free(str, TRUE);
+    g_free(xdata);
 
     return gmodel;
 }
