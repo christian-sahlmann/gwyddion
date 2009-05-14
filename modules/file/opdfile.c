@@ -121,6 +121,11 @@ static gboolean      get_float         (const OPDBlock *header,
                                         const gchar *name,
                                         gdouble *value,
                                         GError **error);
+static gboolean      get_int16         (const OPDBlock *header,
+                                        guint nblocks,
+                                        const gchar *name,
+                                        gint *value,
+                                        GError **error);
 static GwyDataField* get_data_field    (const OPDBlock *datablock,
                                         gdouble pixel_size,
                                         gdouble aspect,
@@ -216,7 +221,8 @@ opd_load(const gchar *filename,
     GwyDataField *dfield = NULL, *mfield = NULL;
     const guchar *p;
     guint nblocks, offset, i, j, k;
-    gdouble pixel_size, wavelength, mult = 1.0, aspect = 1.0;
+    gdouble pixel_size, wavelength, aspect = 1.0;
+    gint mult = 1;
 
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
         err_GET_FILE_CONTENTS(error, &err);
@@ -285,7 +291,7 @@ opd_load(const gchar *filename,
 
     wavelength *= Nanometer;
     pixel_size *= Milimeter;
-    get_float(header, nblocks, "Mult", &mult, NULL);
+    get_int16(header, nblocks, "Mult", &mult, NULL);
     get_float(header, nblocks, "Aspect", &aspect, NULL);
     wavelength /= mult;
 
@@ -404,6 +410,30 @@ get_float(const OPDBlock *header,
     p = header[i].data;
     *value = gwy_get_gfloat_le(&p);
     gwy_debug("%s = %g", name, *value);
+    return TRUE;
+}
+
+static gboolean
+get_int16(const OPDBlock *header,
+          guint nblocks,
+          const gchar *name,
+          gint *value,
+          GError **error)
+{
+    const guchar *p;
+    guint i;
+
+    if ((i = find_block(header, nblocks, name)) == nblocks) {
+        err_MISSING_FIELD(error, name);
+        return FALSE;
+    }
+    if (header[i].type != OPD_SHORT) {
+        err_INVALID(error, name);
+        return FALSE;
+    }
+    p = header[i].data;
+    *value = gwy_get_gint16_le(&p);
+    gwy_debug("%s = %d", name, *value);
     return TRUE;
 }
 
