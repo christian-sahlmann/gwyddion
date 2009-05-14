@@ -160,7 +160,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Wyko OPD and ASC files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.5",
+    "0.6",
     "David Nečas (Yeti)",
     "2008",
 };
@@ -454,7 +454,7 @@ get_data_field(const OPDBlock *datablock,
         }
         else if (datatype == OPD_ARRAY_INT16) {
             for (j = yres; j; j--) {
-                guint v = gwy_get_guint16_le(&p);
+                gint v = gwy_get_gint16_le(&p);
                 if (v < OPD_BAD_INT16)
                     data[(j - 1)*xres + i] = wavelength*v;
                 else
