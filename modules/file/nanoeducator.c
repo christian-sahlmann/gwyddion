@@ -243,7 +243,18 @@ static GwySpectra*    nanoedu_read_fd_spectra(const guchar *pos_buffer,
                                               gdouble yreal,
                                               gdouble xscale,
                                               gdouble yscale,
-                                              gdouble q,
+                                              GError **error);
+static GwySpectra*    nanoedu_read_iv_spectra(const guchar *pos_buffer,
+                                              gsize pos_size,
+                                              const guchar *data_buffer,
+                                              gsize data_size,
+                                              gint version,
+                                              gint nspectra,
+                                              gint res,
+                                              gdouble xy_step,
+                                              gdouble yreal,
+                                              gdouble xscale,
+                                              gdouble yscale,
                                               GError **error);
 
 static GwyModuleInfo module_info = {
@@ -431,16 +442,32 @@ nanoedu_load(const gchar *filename,
 
         qx = 1e-3 * params.sens_x * params.gain_x * params.discr_z_mvolt;
         qy = 1e-3 * params.sens_y * params.gain_y * params.discr_z_mvolt;
-        spectra = nanoedu_read_fd_spectra(buffer + header.point_offset,
-                                          size - header.point_offset,
-                                          buffer + header.spec_offset,
-                                          size - header.spec_offset,
-                                          header.version,
-                                          params.n_spectra_lines,
-                                          params.n_spectrum_points,
-                                          Nanometer*q, scale*header.topo_ny,
-                                          Nanometer*qx, Nanometer*qy, 1.0,
-                                          error);
+
+        /* FIXME: This might be wrong, however, there does not seem to be any
+         * other discriminating quantity in the headers. */
+        if (params.probe_type == 0)
+            spectra = nanoedu_read_fd_spectra(buffer + header.point_offset,
+                                              size - header.point_offset,
+                                              buffer + header.spec_offset,
+                                              size - header.spec_offset,
+                                              header.version,
+                                              params.n_spectra_lines,
+                                              params.n_spectrum_points,
+                                              Nanometer*q, scale*header.topo_ny,
+                                              Nanometer*qx, Nanometer*qy,
+                                              error);
+        else
+            spectra = nanoedu_read_iv_spectra(buffer + header.point_offset,
+                                              size - header.point_offset,
+                                              buffer + header.spec_offset,
+                                              size - header.spec_offset,
+                                              header.version,
+                                              params.n_spectra_lines,
+                                              params.n_spectrum_points,
+                                              Nanometer*q, scale*header.topo_ny,
+                                              Nanometer*qx, Nanometer*qy,
+                                              error);
+
         if (!spectra)
             goto finish;
 
@@ -544,6 +571,8 @@ finish:
     gwy_file_abandon_contents(buffer, size, NULL);
     if (!nobjects)
         gwy_object_unref(container);
+    else
+        g_clear_error(error);
 
     return container;
 }
@@ -858,9 +887,7 @@ nanoedu_read_graph(const guchar *buffer,
 }
 
 static GwyDataLine*
-make_fd_spectrum(gint res, gdouble xy_step,
-                 const gint16 *d16, gdouble q,
-                 gboolean flip)
+make_fd_spectrum(gint res, gdouble xy_step, const gint16 *d16, gboolean flip)
 {
     GwyDataLine *dline;
     GwySIUnit *siunitx, *siunity;
@@ -892,7 +919,7 @@ make_fd_spectrum(gint res, gdouble xy_step,
             v = d16[2*j];
             a = d16[2*j + 1];
         }
-        data[j] = q*GINT16_FROM_LE(v);
+        data[j] = GINT16_FROM_LE(v);
         /* Find the abscissa closest to zero, the values should be divied
          * by the value at zero Z */
         a = GINT16_FROM_LE(a);
@@ -913,7 +940,7 @@ nanoedu_read_fd_spectra(const guchar *pos_buffer, gsize pos_size,
                         gint version,
                         gint nspectra, gint res,
                         gdouble xy_step, gdouble yreal,
-                        gdouble xscale, gdouble yscale, gdouble q,
+                        gdouble xscale, gdouble yscale,
                         GError **error)
 {
     gint i, n, speccount, pointstep;
@@ -968,33 +995,157 @@ nanoedu_read_fd_spectra(const guchar *pos_buffer, gsize pos_size,
     siunit = gwy_si_unit_new("m");
     gwy_spectra_set_si_unit_xy(spectra, siunit);
     g_object_unref(siunit);
-    gwy_spectra_set_title(spectra, _("Spectra"));
+    gwy_spectra_set_title(spectra, _("F-D spectra"));
 
     /* For FD curves, there are always two spectra: forward and backward.
      * The backward one is really stored backwards, so we revert it upon
      * reading. */
     for (i = speccount = 0; speccount < nspectra; i++) {
-        /* FIXME: There seems to be always number `1' after each spectrum
-         * coordinates.  Dunno what it means, possibly the number of spectra in
-         * this particular point?  If it is so, then the import fails when
-         * there is more than one spectrum in a point because we are not
-         * prepared for this. */
         x = xscale*GINT16_FROM_LE(p16[pointstep*i]);
         y = yreal - yscale*GINT16_FROM_LE(p16[pointstep*i + 1]);
         n = (pointstep == 3) ? GINT16_FROM_LE(p16[pointstep*i + 2]) : 1;
-        gwy_debug("spec%d [%g,%g] %dpts", i, x, y, n);
+        gwy_debug("FD spec%d [%g,%g] %dpts", i, x, y, n);
 
         while (n--) {
             /* Forward */
             dline = make_fd_spectrum(res, xy_step,
-                                     d16 + 2*2*speccount*res, q, FALSE);
+                                     d16 + 2*2*speccount*res, FALSE);
             data = gwy_data_line_get_data(dline);
             gwy_spectra_add_spectrum(spectra, dline, x, y);
             g_object_unref(dline);
 
             /* Backward */
             dline = make_fd_spectrum(res, xy_step,
-                                     d16 + 2*2*speccount*res + 2*res, q, TRUE);
+                                     d16 + 2*2*speccount*res + 2*res, TRUE);
+            gwy_spectra_add_spectrum(spectra, dline, x, y);
+            g_object_unref(dline);
+
+            speccount++;
+        }
+    }
+
+    return spectra;
+}
+
+static GwyDataLine*
+make_iv_spectrum(gint res, gdouble xy_step,
+                 const gint16 *d16, gdouble q,
+                 gboolean flip)
+{
+    GwyDataLine *dline;
+    GwySIUnit *siunitx, *siunity;
+    gdouble *data;
+    gint j;
+
+    dline = gwy_data_line_new(res, xy_step*res, FALSE);
+    siunitx = gwy_si_unit_new("V");
+    siunity = gwy_si_unit_new("A");
+    gwy_data_line_set_si_unit_x(dline, siunitx);
+    gwy_data_line_set_si_unit_y(dline, siunity);
+    g_object_unref(siunitx);
+    g_object_unref(siunity);
+
+    data = gwy_data_line_get_data(dline);
+    /* XXX: The even coordinates are abscissas.  We only use the zeroth for
+     * setting the offset.  If they are not equidistant, though luck... */
+    for (j = 0; j < res; j++) {
+        gint v;
+
+        if (flip)
+            v = d16[2*(res-1 - j) + 1];
+        else
+            v = d16[2*j + 1];
+
+        data[j] = q*GINT16_FROM_LE(v);
+    }
+    gwy_data_line_set_offset(dline, xy_step*d16[flip ? 2*(res-1): 0]);
+
+    return dline;
+}
+
+static GwySpectra*
+nanoedu_read_iv_spectra(const guchar *pos_buffer, gsize pos_size,
+                        const guchar *data_buffer, gsize data_size,
+                        gint version,
+                        gint nspectra, gint res,
+                        gdouble xy_step, gdouble yreal,
+                        gdouble xscale, gdouble yscale,
+                        GError **error)
+{
+    gint i, n, speccount, pointstep;
+    GwySpectra *spectra;
+    GwyDataLine *dline;
+    GwySIUnit *siunit;
+    const gint16 *p16 = (const gint16*)pos_buffer;
+    const gint16 *d16 = (const gint16*)data_buffer;
+    gdouble x, y;
+    gdouble *data;
+
+    /* In versions up to 13, there are only (X, Y) spectra positions.
+     * In version 14+, there are (X, Y, N) triplets where N denotes the number
+     * of spectra measured in the point.  Since the number of spectra can
+     * differ from point to point in v14+, check if the counts sum up first. */
+    if (version >= 14) {
+        /* The maximum number of coodinates that can be there.
+         * FIXME: This is too optimistic, pos_size can extend to the end of
+         * the file. */
+        pointstep = 3;
+        n = pos_size/(2*pointstep);
+
+        for (i = speccount = 0; i < n && speccount < nspectra; i++) {
+            speccount += GINT16_FROM_LE(p16[pointstep*i + 2]);
+            if (speccount >= nspectra)
+                break;
+        }
+        if (speccount != nspectra) {
+            g_set_error(error, GWY_MODULE_FILE_ERROR,
+                        GWY_MODULE_FILE_ERROR_DATA,
+                        _("The number of spectra coordinates does "
+                          "not match the number of spectra."));
+            return NULL;
+        }
+    }
+    else {
+        pointstep = 2;
+        if (err_SIZE_MISMATCH(error, pointstep*2*nspectra, pos_size, FALSE))
+            return NULL;
+    }
+
+    if (err_SIZE_MISMATCH(error, 2*4*nspectra*res, data_size, FALSE))
+        return NULL;
+
+    /* Use negated positive conditions to catch NaNs */
+    if (!((xy_step = fabs(xy_step)) > 0)) {
+        g_warning("Real size is 0.0, fixing to 1.0");
+        xy_step = 1.0;
+    }
+
+    spectra = gwy_spectra_new();
+    siunit = gwy_si_unit_new("m");
+    gwy_spectra_set_si_unit_xy(spectra, siunit);
+    g_object_unref(siunit);
+    gwy_spectra_set_title(spectra, _("I-V spectra"));
+
+    /* For IV curves, there are always two spectra: forward and backward.
+     * The backward one is really stored backwards, so we revert it upon
+     * reading. */
+    for (i = speccount = 0; speccount < nspectra; i++) {
+        x = xscale*GINT16_FROM_LE(p16[pointstep*i]);
+        y = yreal - yscale*GINT16_FROM_LE(p16[pointstep*i + 1]);
+        n = (pointstep == 3) ? GINT16_FROM_LE(p16[pointstep*i + 2]) : 1;
+        gwy_debug("IV spec%d [%g,%g] %dpts", i, x, y, n);
+
+        while (n--) {
+            /* Forward */
+            dline = make_iv_spectrum(res, xy_step,
+                                     d16 + 2*2*speccount*res, 1.0, FALSE);
+            data = gwy_data_line_get_data(dline);
+            gwy_spectra_add_spectrum(spectra, dline, x, y);
+            g_object_unref(dline);
+
+            /* Backward */
+            dline = make_iv_spectrum(res, xy_step,
+                                     d16 + 2*2*speccount*res + 2*res, 1.0, FALSE);
             gwy_spectra_add_spectrum(spectra, dline, x, y);
             g_object_unref(dline);
 
