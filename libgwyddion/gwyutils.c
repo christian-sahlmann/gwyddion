@@ -351,7 +351,7 @@ gwy_memmem(gconstpointer haystack,
     /* The general case */
     n0 = *(const guchar*)needle;
     s = h + haystack_len - needle_len;
-    for (p = h; p <= s; p = memchr(p, n0, s-p + 1)) {
+    for (p = h; p <= s; /*p = memchr(p, n0, s-p + 1)*/) {
         if (memcmp(p, needle, needle_len) == 0)
             return (gpointer)p;
         p++;
