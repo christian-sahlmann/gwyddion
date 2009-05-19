@@ -256,13 +256,24 @@ static GwySpectra*    nanoedu_read_iv_spectra(const guchar *pos_buffer,
                                               gdouble yscale,
                                               gdouble vscale,
                                               GError **error);
+static GwySpectra*    nanoedu_read_iz_spectra(const guchar *pos_buffer,
+                                              gsize pos_size,
+                                              const guchar *data_buffer,
+                                              gsize data_size,
+                                              gint version,
+                                              gint nspectra,
+                                              gint res,
+                                              gdouble yreal,
+                                              gdouble xscale,
+                                              gdouble yscale,
+                                              GError **error);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Imports Nanoeducator data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.2",
+    "0.3",
     "David Nečas (Yeti)",
     "2009",
 };
@@ -454,6 +465,17 @@ nanoedu_load(const gchar *filename,
                                               params.n_spectra_lines,
                                               params.n_spectrum_points,
                                               Nanometer*q, scale*header.topo_ny,
+                                              Nanometer*qx, Nanometer*qy,
+                                              error);
+        else if (params.amp_modulation == 1)
+            spectra = nanoedu_read_iz_spectra(buffer + header.point_offset,
+                                              size - header.point_offset,
+                                              buffer + header.spec_offset,
+                                              size - header.spec_offset,
+                                              header.version,
+                                              params.n_spectra_lines,
+                                              params.n_spectrum_points,
+                                              scale*header.topo_ny,
                                               Nanometer*qx, Nanometer*qy,
                                               error);
         else
@@ -1073,7 +1095,7 @@ make_iv_spectrum(gint res, gdouble xy_step,
 
         data[j] = q*GINT16_FROM_LE(v);
     }
-    gwy_data_line_set_offset(dline, xy_step*d16[flip ? 2*(res-1): 0]);
+    gwy_data_line_set_offset(dline, xy_step*d16[flip ? 2*(res-1) : 0]);
 
     return dline;
 }
@@ -1132,6 +1154,98 @@ nanoedu_read_iv_spectra(const guchar *pos_buffer, gsize pos_size,
             dline = make_iv_spectrum(res, vscale,
                                      d16 + 2*2*speccount*res + 2*res, 1e-12,
                                      FALSE);
+            gwy_spectra_add_spectrum(spectra, dline, x, y);
+            g_object_unref(dline);
+
+            speccount++;
+        }
+    }
+
+    return spectra;
+}
+
+static GwyDataLine*
+make_iz_spectrum(gint res, gdouble xy_step,
+                 const gint16 *d16, gdouble q,
+                 gboolean flip)
+{
+    GwyDataLine *dline;
+    GwySIUnit *siunitx, *siunity;
+    gdouble *data;
+    gint j;
+
+    dline = gwy_data_line_new(res, xy_step*res, FALSE);
+    siunitx = gwy_si_unit_new("m");
+    siunity = gwy_si_unit_new("A");
+    gwy_data_line_set_si_unit_x(dline, siunitx);
+    gwy_data_line_set_si_unit_y(dline, siunity);
+    g_object_unref(siunitx);
+    g_object_unref(siunity);
+
+    data = gwy_data_line_get_data(dline);
+    /* XXX: The odd coordinates are abscissas.  We only use the zeroth for
+     * setting the offset.  If they are not equidistant, though luck... */
+    for (j = 0; j < res; j++) {
+        gint v;
+
+        if (flip)
+            v = d16[2*(res-1 - j)];
+        else
+            v = d16[2*j];
+
+        data[j] = q*GINT16_FROM_LE(v);
+    }
+    gwy_data_line_set_offset(dline, xy_step*d16[flip ? 2*(res-1) + 1 : 1]);
+
+    return dline;
+}
+
+static GwySpectra*
+nanoedu_read_iz_spectra(const guchar *pos_buffer, gsize pos_size,
+                        const guchar *data_buffer, gsize data_size,
+                        gint version,
+                        gint nspectra, gint res,
+                        gdouble yreal,
+                        gdouble xscale, gdouble yscale,
+                        GError **error)
+{
+    gint i, n, speccount, pointstep;
+    GwySpectra *spectra;
+    GwyDataLine *dline;
+    GwySIUnit *siunit;
+    const gint16 *p16 = (const gint16*)pos_buffer;
+    const gint16 *d16 = (const gint16*)data_buffer;
+    gdouble x, y;
+    gdouble *data;
+
+    if (!(pointstep = check_spectra_size(version, nspectra, p16, pos_size,
+                                         error)))
+        return NULL;
+
+    if (err_SIZE_MISMATCH(error, 4*nspectra*res, data_size, FALSE))
+        return NULL;
+
+    spectra = gwy_spectra_new();
+    siunit = gwy_si_unit_new("m");
+    gwy_spectra_set_si_unit_xy(spectra, siunit);
+    g_object_unref(siunit);
+    gwy_spectra_set_title(spectra, _("I-Z spectra"));
+
+    /* For IV curves, there are always two spectra: forward and backward.
+     * The backward one is really stored backwards, so we revert it upon
+     * reading. */
+    for (i = speccount = 0; speccount < nspectra; i++) {
+        x = xscale*GINT16_FROM_LE(p16[pointstep*i]);
+        y = yreal - yscale*GINT16_FROM_LE(p16[pointstep*i + 1]);
+        n = (pointstep == 3) ? GINT16_FROM_LE(p16[pointstep*i + 2]) : 1;
+        gwy_debug("IV spec%d [%g,%g] %dpts", i, x, y, n);
+
+        while (n--) {
+            /* Only one direction */
+            dline = make_iz_spectrum(res, 1.0,
+                                     d16 + 2*speccount*res, 1e-12,
+                                     FALSE);
+            data = gwy_data_line_get_data(dline);
             gwy_spectra_add_spectrum(spectra, dline, x, y);
             g_object_unref(dline);
 
