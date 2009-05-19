@@ -251,10 +251,10 @@ static GwySpectra*    nanoedu_read_iv_spectra(const guchar *pos_buffer,
                                               gint version,
                                               gint nspectra,
                                               gint res,
-                                              gdouble xy_step,
                                               gdouble yreal,
                                               gdouble xscale,
                                               gdouble yscale,
+                                              gdouble vscale,
                                               GError **error);
 
 static GwyModuleInfo module_info = {
@@ -464,8 +464,9 @@ nanoedu_load(const gchar *filename,
                                               header.version,
                                               params.n_spectra_lines,
                                               params.n_spectrum_points,
-                                              Nanometer*q, scale*header.topo_ny,
+                                              scale*header.topo_ny,
                                               Nanometer*qx, Nanometer*qy,
+                                              1e-3 * params.discr_z_mvolt,
                                               error);
 
         if (!spectra)
@@ -886,6 +887,46 @@ nanoedu_read_graph(const guchar *buffer,
     return gmodel;
 }
 
+static guint
+check_spectra_size(guint version, guint nspectra,
+                   const gint16 *p16, gsize pos_size,
+                   GError **error)
+{
+    guint i, n, speccount, pointstep;
+
+    /* In versions up to 13, there are only (X, Y) spectra positions.
+     * In version 14+, there are (X, Y, N) triplets where N denotes the number
+     * of spectra measured in the point.  Since the number of spectra can
+     * differ from point to point in v14+, check if the counts sum up first. */
+    if (version >= 14) {
+        /* The maximum number of coodinates that can be there.
+         * FIXME: This is too optimistic, pos_size can extend to the end of
+         * the file. */
+        pointstep = 3;
+        n = pos_size/(2*pointstep);
+
+        for (i = speccount = 0; i < n && speccount < nspectra; i++) {
+            speccount += GINT16_FROM_LE(p16[pointstep*i + 2]);
+            if (speccount >= nspectra)
+                break;
+        }
+        if (speccount != nspectra) {
+            g_set_error(error, GWY_MODULE_FILE_ERROR,
+                        GWY_MODULE_FILE_ERROR_DATA,
+                        _("The number of spectra coordinates does "
+                          "not match the number of spectra."));
+            return 0;
+        }
+    }
+    else {
+        pointstep = 2;
+        if (err_SIZE_MISMATCH(error, pointstep*2*nspectra, pos_size, FALSE))
+            return 0;
+    }
+
+    return pointstep;
+}
+
 static GwyDataLine*
 make_fd_spectrum(gint res, gdouble xy_step, const gint16 *d16, gboolean flip)
 {
@@ -952,35 +993,9 @@ nanoedu_read_fd_spectra(const guchar *pos_buffer, gsize pos_size,
     gdouble x, y;
     gdouble *data;
 
-    /* In versions up to 13, there are only (X, Y) spectra positions.
-     * In version 14+, there are (X, Y, N) triplets where N denotes the number
-     * of spectra measured in the point.  Since the number of spectra can
-     * differ from point to point in v14+, check if the counts sum up first. */
-    if (version >= 14) {
-        /* The maximum number of coodinates that can be there.
-         * FIXME: This is too optimistic, pos_size can extend to the end of
-         * the file. */
-        pointstep = 3;
-        n = pos_size/(2*pointstep);
-
-        for (i = speccount = 0; i < n && speccount < nspectra; i++) {
-            speccount += GINT16_FROM_LE(p16[pointstep*i + 2]);
-            if (speccount >= nspectra)
-                break;
-        }
-        if (speccount != nspectra) {
-            g_set_error(error, GWY_MODULE_FILE_ERROR,
-                        GWY_MODULE_FILE_ERROR_DATA,
-                        _("The number of spectra coordinates does "
-                          "not match the number of spectra."));
-            return NULL;
-        }
-    }
-    else {
-        pointstep = 2;
-        if (err_SIZE_MISMATCH(error, pointstep*2*nspectra, pos_size, FALSE))
-            return NULL;
-    }
+    if (!(pointstep = check_spectra_size(version, nspectra, p16, pos_size,
+                                         error)))
+        return NULL;
 
     if (err_SIZE_MISMATCH(error, 2*4*nspectra*res, data_size, FALSE))
         return NULL;
@@ -1068,8 +1083,9 @@ nanoedu_read_iv_spectra(const guchar *pos_buffer, gsize pos_size,
                         const guchar *data_buffer, gsize data_size,
                         gint version,
                         gint nspectra, gint res,
-                        gdouble xy_step, gdouble yreal,
+                        gdouble yreal,
                         gdouble xscale, gdouble yscale,
+                        gdouble vscale,
                         GError **error)
 {
     gint i, n, speccount, pointstep;
@@ -1081,44 +1097,12 @@ nanoedu_read_iv_spectra(const guchar *pos_buffer, gsize pos_size,
     gdouble x, y;
     gdouble *data;
 
-    /* In versions up to 13, there are only (X, Y) spectra positions.
-     * In version 14+, there are (X, Y, N) triplets where N denotes the number
-     * of spectra measured in the point.  Since the number of spectra can
-     * differ from point to point in v14+, check if the counts sum up first. */
-    if (version >= 14) {
-        /* The maximum number of coodinates that can be there.
-         * FIXME: This is too optimistic, pos_size can extend to the end of
-         * the file. */
-        pointstep = 3;
-        n = pos_size/(2*pointstep);
-
-        for (i = speccount = 0; i < n && speccount < nspectra; i++) {
-            speccount += GINT16_FROM_LE(p16[pointstep*i + 2]);
-            if (speccount >= nspectra)
-                break;
-        }
-        if (speccount != nspectra) {
-            g_set_error(error, GWY_MODULE_FILE_ERROR,
-                        GWY_MODULE_FILE_ERROR_DATA,
-                        _("The number of spectra coordinates does "
-                          "not match the number of spectra."));
-            return NULL;
-        }
-    }
-    else {
-        pointstep = 2;
-        if (err_SIZE_MISMATCH(error, pointstep*2*nspectra, pos_size, FALSE))
-            return NULL;
-    }
+    if (!(pointstep = check_spectra_size(version, nspectra, p16, pos_size,
+                                         error)))
+        return NULL;
 
     if (err_SIZE_MISMATCH(error, 2*4*nspectra*res, data_size, FALSE))
         return NULL;
-
-    /* Use negated positive conditions to catch NaNs */
-    if (!((xy_step = fabs(xy_step)) > 0)) {
-        g_warning("Real size is 0.0, fixing to 1.0");
-        xy_step = 1.0;
-    }
 
     spectra = gwy_spectra_new();
     siunit = gwy_si_unit_new("m");
@@ -1137,15 +1121,17 @@ nanoedu_read_iv_spectra(const guchar *pos_buffer, gsize pos_size,
 
         while (n--) {
             /* Forward */
-            dline = make_iv_spectrum(res, xy_step,
-                                     d16 + 2*2*speccount*res, 1.0, FALSE);
+            dline = make_iv_spectrum(res, vscale,
+                                     d16 + 2*2*speccount*res, 1e-12,
+                                     FALSE);
             data = gwy_data_line_get_data(dline);
             gwy_spectra_add_spectrum(spectra, dline, x, y);
             g_object_unref(dline);
 
             /* Backward */
-            dline = make_iv_spectrum(res, xy_step,
-                                     d16 + 2*2*speccount*res + 2*res, 1.0, FALSE);
+            dline = make_iv_spectrum(res, vscale,
+                                     d16 + 2*2*speccount*res + 2*res, 1e-12,
+                                     FALSE);
             gwy_spectra_add_spectrum(spectra, dline, x, y);
             g_object_unref(dline);
 
