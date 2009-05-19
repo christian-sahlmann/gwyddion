@@ -268,6 +268,8 @@ static GwySpectra*    nanoedu_read_iz_spectra(const guchar *pos_buffer,
                                               gdouble xscale,
                                               gdouble yscale,
                                               GError **error);
+static GwyContainer* nanoedu_read_meta       (const NanoeduFileHeader *header,
+                                              const NanoeduParameterHeader *param);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -320,7 +322,7 @@ nanoedu_load(const gchar *filename,
 {
     NanoeduFileHeader header;
     NanoeduParameterHeader params;
-    GwyContainer *meta, *container = NULL;
+    GwyContainer *m, *meta = NULL, *container = NULL;
     guchar *buffer = NULL;
     const guchar *p;
     gsize len, size = 0;
@@ -353,6 +355,7 @@ nanoedu_load(const gchar *filename,
     p += len;
 
     container = gwy_container_new();
+    meta = nanoedu_read_meta(&header, &params);
 
     scale = Nanometer * params.xy_step;
     /* Version 12+ */
@@ -393,6 +396,7 @@ nanoedu_load(const gchar *filename,
         gwy_container_set_object_by_name(container, "/0/data", dfield);
         gwy_container_set_string_by_name(container, "/0/data/title",
                                          g_strdup("Topography"));
+        gwy_container_set_object_by_name(container, "/0/meta", meta);
         g_object_unref(dfield);
         nobjects++;
     }
@@ -584,7 +588,11 @@ nanoedu_load(const gchar *filename,
         if (title && *title)
             gwy_container_set_string_by_name(container, "/1/data/title",
                                              g_strdup(title));
+
         g_object_unref(dfield);
+        m = gwy_container_duplicate(meta);
+        gwy_container_set_object_by_name(container, "/1/meta", m);
+        g_object_unref(m);
         nobjects++;
     }
 
@@ -593,6 +601,8 @@ nanoedu_load(const gchar *filename,
 
 finish:
     gwy_file_abandon_contents(buffer, size, NULL);
+    gwy_object_unref(meta);
+
     if (!nobjects)
         gwy_object_unref(container);
     else
@@ -1255,6 +1265,68 @@ nanoedu_read_iz_spectra(const guchar *pos_buffer, gsize pos_size,
     }
 
     return spectra;
+}
+
+static GwyContainer*
+nanoedu_read_meta(const NanoeduFileHeader *header,
+                  const NanoeduParameterHeader *param)
+{
+    GwyContainer *meta;
+
+    meta = gwy_container_new();
+    gwy_container_set_string_by_name(meta, "Version",
+                                     g_strdup_printf("%u", header->version));
+    gwy_container_set_string_by_name(meta, "Date",
+                                     g_strdup_printf("%u-%02u-%02u "
+                                                     "%02u:%02u:%02u",
+                                                     param->year, param->month,
+                                                     param->day, param->hour,
+                                                     param->minute,
+                                                     param->second));
+    if (strlen(param->material))
+        gwy_container_set_string_by_name(meta, "Material",
+                                         g_strdup(param->material));
+    if (strlen(param->scanner_name))
+        gwy_container_set_string_by_name(meta, "Scanner number",
+                                         g_strdup(param->scanner_name));
+    gwy_container_set_string_by_name(meta, "Scan rate",
+                                     g_strdup_printf("%g nm/s",
+                                                     param->scan_rate));
+    gwy_container_set_string_by_name(meta, "X sensitivity",
+                                     g_strdup_printf("%g nm/V",
+                                                     param->sens_x));
+    gwy_container_set_string_by_name(meta, "Y sensitivity",
+                                     g_strdup_printf("%g nm/V",
+                                                     param->sens_y));
+    gwy_container_set_string_by_name(meta, "Z sensitivity",
+                                     g_strdup_printf("%g nm/V",
+                                                     param->sens_z));
+    gwy_container_set_string_by_name(meta, "X gain",
+                                     g_strdup_printf("%g",
+                                                     param->gain_x));
+    gwy_container_set_string_by_name(meta, "Y gain",
+                                     g_strdup_printf("%g",
+                                                     param->gain_y));
+    gwy_container_set_string_by_name(meta, "Z gain",
+                                     g_strdup_printf("%g",
+                                                     param->amp_zgain));
+    gwy_container_set_string_by_name(meta, "Tunnel current",
+                                     g_strdup_printf("%g nA",
+                                                     param->scan_current));
+    gwy_container_set_string_by_name(meta, "Tunnel voltage",
+                                     g_strdup_printf("%g V",
+                                                     param->scan_voltage));
+    gwy_container_set_string_by_name(meta, "Resonance frequency",
+                                     g_strdup_printf("%g kHz",
+                                                     param->f0/1000.0));
+    gwy_container_set_string_by_name(meta, "Amplitude suppression",
+                                     g_strdup_printf("%g",
+                                                     param->ampl_suppress));
+    gwy_container_set_string_by_name(meta, "Linearization",
+                                     g_strdup_printf(param->linear
+                                                     ? "yes" : "no"));
+
+    return meta;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
