@@ -3,8 +3,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2009-04-27 10:50+0200\n"
-"PO-Revision-Date: 2009-04-28 11:29+0200\n"
+"POT-Creation-Date: 2009-05-19 13:33+0200\n"
+"PO-Revision-Date: 2009-05-19 13:38+0200\n"
 "Last-Translator: Yeti <yeti@gwyddion.net>\n"
 "Language-Team: Czech\n"
 "MIME-Version: 1.0\n"
@@ -48,8 +48,8 @@ msgid "vdW: paraboloid"
 msgstr "vdW: paraboloid"
 
 #: libgwyddion/gwyinventory.c:1310 libgwydgets/gwygraphwindow.c:603
-#: app/data-browser.c:1435 app/data-browser.c:2160 app/data-browser.c:2922
-#: app/data-browser.c:3081 app/data-browser.c:4888 app/resource-editor.c:365
+#: app/data-browser.c:1440 app/data-browser.c:2165 app/data-browser.c:2927
+#: app/data-browser.c:3086 app/data-browser.c:4893 app/resource-editor.c:365
 #: modules/process/convolution_filter.c:700
 msgid "Untitled"
 msgstr "Nepojmenovaný"
@@ -1170,39 +1170,39 @@ msgstr "Čtvercové pi_xely"
 msgid "_Physically Square"
 msgstr "_Fyzicky čtvercový"
 
-#: app/data-browser.c:3540
+#: app/data-browser.c:3545
 msgid "Extract to a new file"
 msgstr "Extrahovat do nového souboru"
 
-#: app/data-browser.c:3541
+#: app/data-browser.c:3546
 msgid "Duplicate"
 msgstr "Zduplikovat"
 
-#: app/data-browser.c:3542
+#: app/data-browser.c:3547
 msgid "Delete"
 msgstr "Smazat"
 
-#: app/data-browser.c:3586
+#: app/data-browser.c:3591
 msgid "Data Browser"
 msgstr "Prohlížeč dat"
 
-#: app/data-browser.c:3609
+#: app/data-browser.c:3614
 msgid "Close file"
 msgstr "Zavřít soubor"
 
-#: app/data-browser.c:3622
+#: app/data-browser.c:3627
 msgid "Channels"
 msgstr "Kanály"
 
-#: app/data-browser.c:3636
+#: app/data-browser.c:3641
 msgid "Graphs"
 msgstr "Grafy"
 
-#: app/data-browser.c:3650
+#: app/data-browser.c:3655
 msgid "Spectra"
 msgstr "Spektra"
 
-#: app/data-browser.c:4926
+#: app/data-browser.c:4931
 #, c-format
 msgid "Unknown channel %d"
 msgstr "Neznámý kanál %d"
@@ -2575,6 +2575,38 @@ msgstr "Neznámý tag %u nemá značku tagu."
 msgid "Character array does not fit into the file."
 msgstr "Znakové pole přesahuje konec souboru."
 
+#: modules/file/matfile.c:179
+msgid "Imports Matlab MAT files v5."
+msgstr "Načítá datové soubory Matlabu MAT v5."
+
+#: modules/file/matfile.c:192
+msgid "Matlab MAT 5 files (.mat)"
+msgstr "Matlab MAT 5 soubory (.map)"
+
+#: modules/file/matfile.c:232 modules/file/matfile.c:254
+msgid "File is truncated."
+msgstr "Soubor je uříznutý."
+
+#: modules/file/matfile.c:264
+msgid "Compressed data inside compressed data found."
+msgstr "Komprimovaná data se nacházejí uvnitř komprimovaných dat."
+
+#: modules/file/matfile.c:300
+#, c-format
+msgid "Invalid short tag of type %u claims to consists of %u bytes."
+msgstr "Neplatný short-tag typu %u tvrdí, že zabírá %u bajtů."
+
+#: modules/file/matfile.c:522
+#, c-format
+msgid "zlib initialization failed with error %d, cannot decompress data."
+msgstr ""
+"Selhala inicialize zlib (s chybovým kódem %d), nelze rozbalit data."
+
+#: modules/file/matfile.c:536
+#, c-format
+msgid "Decompression of compressed variable failed with error %d."
+msgstr "Rozbalení komprimovaných dat selhalo s chybovým kódem %d."
+
 #: modules/file/metropro.c:168
 msgid "Imports binary MetroPro (Zygo) data files."
 msgstr "Načístá binární datové soubory MetroPro (Zygo)."
@@ -2615,30 +2647,56 @@ msgstr "PicoView soubory (.mi)"
 msgid "Spectroscopy Graph"
 msgstr "Graf spektroskopie"
 
-#: modules/file/nanoeducator.c:227
+#: modules/file/nanoeducator.c:277
 msgid "Imports Nanoeducator data files."
 msgstr "Načítá datové soubory Nanoducator."
 
-#: modules/file/nanoeducator.c:240
+#: modules/file/nanoeducator.c:290
 msgid "Nanoeducator files (.mspm, .spm, .stm)"
 msgstr "Nanoeducator soubory (.mspm, .spm, .stm)"
 
-#: modules/file/nanoeducator.c:296 modules/file/unisoku.c:276
+#: modules/file/nanoeducator.c:348 modules/file/unisoku.c:276
 msgid "format version"
 msgstr "verze formátu"
 
-#: modules/file/nanoeducator.c:316 modules/file/nanoeducator.c:357
+#: modules/file/nanoeducator.c:376 modules/file/nanoeducator.c:413
+#: modules/file/nanoeducator.c:517
 msgid "Image data starts past the end of file."
 msgstr "Data obrázku začínají za koncem souboru."
 
-#: modules/file/nanoeducator.c:456 modules/file/opdfile.c:248
+#: modules/file/nanoeducator.c:455
+msgid "Spectra data starts past the end of file."
+msgstr "Data spekter začínají za koncem souboru."
+
+#: modules/file/nanoeducator.c:622 modules/file/opdfile.c:254
 #: modules/file/sensofar.c:249
 msgid "File header is truncated"
 msgstr "Hlavička souboru je uříznutá."
 
-#: modules/file/nanoeducator.c:515
+#: modules/file/nanoeducator.c:681
 msgid "Parameter header is truncated"
 msgstr "Parametrová hlavička je uříznutá."
+
+#: modules/file/nanoeducator.c:906 modules/tools/profile.c:547
+#, c-format
+msgid "Profile %d"
+msgstr "Profil %d"
+
+#: modules/file/nanoeducator.c:949
+msgid "The number of spectra coordinates does not match the number of spectra."
+msgstr "Počet souřadnic spekter nesouhlasí s počtem spekter."
+
+#: modules/file/nanoeducator.c:1046
+msgid "F-D spectra"
+msgstr "F-D spektra"
+
+#: modules/file/nanoeducator.c:1144
+msgid "I-V spectra"
+msgstr "I-V spektra"
+
+#: modules/file/nanoeducator.c:1243
+msgid "I-Z spectra"
+msgstr "I-Z spektra"
 
 #: modules/file/nanonis.c:96
 msgid "Imports Nanonis SXM data files."
@@ -2815,28 +2873,28 @@ msgstr "Omicron MATRIX (param.mtrx & data.mtrx)"
 msgid "Omicron MATRIX (.mtrx & .mtrx)"
 msgstr "Omicron MATRIX (.mtrx)"
 
-#: modules/file/opdfile.c:161
+#: modules/file/opdfile.c:166
 msgid "Imports Wyko OPD and ASC files."
 msgstr "Načítá Wyko OPD a ASC soubory."
 
-#: modules/file/opdfile.c:174
+#: modules/file/opdfile.c:179
 msgid "Wyko OPD files (.opd)"
 msgstr "Wyko OPD soubory (.opd)"
 
-#: modules/file/opdfile.c:181
+#: modules/file/opdfile.c:186
 msgid "Wyko ASCII export files (.asc)"
 msgstr "Wyko exportované ASCII soubory (.asc)"
 
-#: modules/file/opdfile.c:271
+#: modules/file/opdfile.c:277
 #, c-format
 msgid "Item `%s' is beyond the end of the file."
 msgstr "Položka ‚%s‘ zasahuje za konec souboru."
 
-#: modules/file/opdfile.c:551
+#: modules/file/opdfile.c:581
 msgid "Nested directories found"
 msgstr "Struktura obsahuje vnořené adresáře"
 
-#: modules/file/opdfile.c:741
+#: modules/file/opdfile.c:771
 #, c-format
 msgid "Truncated data in block %s"
 msgstr "Data v bloku %s jsou uříznutá"
@@ -3132,7 +3190,7 @@ msgstr ""
 msgid "Dem"
 msgstr ""
 
-#: modules/file/pnifile.c:161 modules/graph/graph_cd.c:278
+#: modules/file/pnifile.c:161 modules/graph/graph_cd.c:280
 #: modules/graph/graph_fdfit.c:336 modules/graph/graph_fit.c:336
 #: modules/process/fit_2d.c:333
 msgid "Error"
@@ -3930,68 +3988,72 @@ msgstr "Neznámý typ dat: „%s“."
 msgid "Missing end of file header marker."
 msgstr "Schází značka konce hlavičky souboru."
 
-#: modules/graph/graph_cd.c:134
+#: modules/graph/graph_cd.c:136
 msgid "Critical dimension measurements"
 msgstr "Měření kritické dimenze"
 
-#: modules/graph/graph_cd.c:148
+#: modules/graph/graph_cd.c:150
 msgid "/_Critical Dimension..."
 msgstr "/_Kritická dimenze..."
 
-#: modules/graph/graph_cd.c:151
+#: modules/graph/graph_cd.c:153
 msgid "Fit critical dimension"
 msgstr "Proložení kritické dimenze"
 
-#: modules/graph/graph_cd.c:207 modules/graph/graph_fit.c:254
+#: modules/graph/graph_cd.c:209 modules/graph/graph_fit.c:254
 msgid "Fit Graph"
 msgstr "Proložení funkce grafem"
 
-#: modules/graph/graph_cd.c:211 modules/graph/graph_fdfit.c:253
+#: modules/graph/graph_cd.c:213 modules/graph/graph_fdfit.c:253
 #: modules/graph/graph_fit.c:258 modules/process/fit_2d.c:239
 msgid "_Fit"
 msgstr "_Proložit"
 
-#: modules/graph/graph_cd.c:233 modules/graph/graph_cut.c:166
+#: modules/graph/graph_cd.c:235 modules/graph/graph_cut.c:166
 #: modules/graph/graph_fdfit.c:279 modules/graph/graph_fit.c:284
 msgid "_Graph curve:"
 msgstr "_Křivka grafu:"
 
-#: modules/graph/graph_cd.c:247 modules/graph/graph_fdfit.c:293
+#: modules/graph/graph_cd.c:249 modules/graph/graph_fdfit.c:293
 #: modules/graph/graph_fit.c:298
 msgid "F_unction:"
 msgstr "_Funkce:"
 
-#: modules/graph/graph_cd.c:276 modules/graph/graph_fdfit.c:334
+#: modules/graph/graph_cd.c:278 modules/graph/graph_fdfit.c:334
 #: modules/graph/graph_fit.c:334
 msgid "Parameter"
 msgstr "Parametr"
 
-#: modules/graph/graph_cd.c:290 modules/graph/graph_cut.c:196
+#: modules/graph/graph_cd.c:292 modules/graph/graph_cut.c:196
 #: modules/graph/graph_fdfit.c:388 modules/graph/graph_fit.c:388
 msgid "Range:"
 msgstr "Rozsah:"
 
-#: modules/graph/graph_cd.c:301 modules/graph/graph_cut.c:207
+#: modules/graph/graph_cd.c:303 modules/graph/graph_cut.c:207
 #: modules/graph/graph_fdfit.c:399 modules/graph/graph_fit.c:399
 msgid "range|to"
 msgstr "až"
 
-#: modules/graph/graph_cd.c:360 modules/graph/graph_fdfit.c:483
+#: modules/graph/graph_cd.c:320
+msgid "_Draw whole circle"
+msgstr "Kreslit _celou kružnici"
+
+#: modules/graph/graph_cd.c:373 modules/graph/graph_fdfit.c:483
 #: modules/graph/graph_fit.c:493 modules/process/fit_2d.c:930
 msgid "Save Fit Report"
 msgstr "Uložit výsledky"
 
-#: modules/graph/graph_cd.c:499 modules/graph/graph_fdfit.c:693
-#: modules/graph/graph_fit.c:717
+#: modules/graph/graph_cd.c:512 modules/graph/graph_cd.c:1116
+#: modules/graph/graph_fdfit.c:693 modules/graph/graph_fit.c:717
 msgid "noun|Fit"
 msgstr "Proložení"
 
-#: modules/graph/graph_cd.c:525 modules/graph/graph_fdfit.c:733
+#: modules/graph/graph_cd.c:538 modules/graph/graph_fdfit.c:733
 #: modules/graph/graph_fit.c:757
 msgid "It is necessary to select more data points than free fit parameters"
 msgstr "Je třeba vybrat více datových bodů, než je volných parametrů fitu."
 
-#: modules/graph/graph_cd.c:669 modules/graph/graph_fdfit.c:782
+#: modules/graph/graph_cd.c:693 modules/graph/graph_fdfit.c:782
 #: modules/graph/graph_fit.c:806 modules/tools/grainmeasure.c:215
 #: modules/tools/readvalue.c:510 modules/tools/readvalue.c:511
 #: modules/tools/roughness.c:968 modules/tools/stats.c:579
@@ -4001,36 +4063,36 @@ msgstr "Je třeba vybrat více datových bodů, než je volných parametrů fitu
 msgid "N.A."
 msgstr "nelze použít"
 
-#: modules/graph/graph_cd.c:976 modules/graph/graph_fdfit.c:1370
+#: modules/graph/graph_cd.c:1002 modules/graph/graph_fdfit.c:1370
 #: modules/graph/graph_fit.c:1413
 msgid "===== Fit Results ====="
 msgstr "===== Výsledek proložení ====="
 
-#: modules/graph/graph_cd.c:980 modules/graph/graph_fdfit.c:1374
+#: modules/graph/graph_cd.c:1006 modules/graph/graph_fdfit.c:1374
 #: modules/graph/graph_fit.c:1417
 #, c-format
 msgid "Data:             %s\n"
 msgstr "Data:             %s\n"
 
-#: modules/graph/graph_cd.c:983 modules/graph/graph_fdfit.c:1377
+#: modules/graph/graph_cd.c:1009 modules/graph/graph_fdfit.c:1377
 #: modules/graph/graph_fit.c:1420
 #, c-format
 msgid "Number of points: %d of %d\n"
 msgstr "Počet bodů:       %d z %d\n"
 
-#: modules/graph/graph_cd.c:987 modules/graph/graph_fdfit.c:1381
+#: modules/graph/graph_cd.c:1013 modules/graph/graph_fdfit.c:1381
 #: modules/graph/graph_fit.c:1424
 #, c-format
 msgid "X range:          %.*f to %.*f %s\n"
 msgstr "Rozsah x:         %.*f až %.*f %s\n"
 
-#: modules/graph/graph_cd.c:993 modules/graph/graph_fdfit.c:1387
+#: modules/graph/graph_cd.c:1019 modules/graph/graph_fdfit.c:1387
 #: modules/graph/graph_fit.c:1430
 #, c-format
 msgid "Fitted function:  %s\n"
 msgstr "Proložená funkce: %s\n"
 
-#: modules/graph/graph_cd.c:996 modules/graph/graph_fdfit.c:1390
+#: modules/graph/graph_cd.c:1022 modules/graph/graph_fdfit.c:1390
 #: modules/graph/graph_fit.c:1433
 msgid "Results\n"
 msgstr "Výsledky\n"
@@ -7867,11 +7929,6 @@ msgstr "Získat profily"
 #: modules/tools/profile.c:368
 msgid "_Separate profiles"
 msgstr "_Oddělit profily"
-
-#: modules/tools/profile.c:547
-#, c-format
-msgid "Profile %d"
-msgstr "Profil %d"
 
 #: modules/tools/readvalue.c:109
 msgid "Pointer tool, reads value under pointer."
