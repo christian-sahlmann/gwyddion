@@ -112,6 +112,50 @@ typedef enum {
     MAT5_CLASS_MASK   = 0x00ff,
 } Mat5ArrayFlags;
 
+enum {
+    MAX_DIMS = 4,
+};
+
+struct _Mat5Element;
+struct _Mat5Matrix;
+
+typedef struct _Mat5Element {
+    Mat5DataType type;
+    guint nitems;
+    /* single-item value are represented directly, arrays are kept as pointers
+     */
+    union {
+        gint i;
+        gint *ia;
+        guint u;
+        guint *ua;
+        gdouble f;
+        gdouble *fa;
+        gint64 i64;
+        gint64 *i64a;
+        guint64 u64;
+        guint64 *u64a;
+        guchar *str;
+        struct Mat5Matrix *mat;
+    } value;
+} Mat5Element;
+
+typedef struct _Mat5Matrix {
+    Mat5ClassType klass;
+    Mat5ArrayFlags flags;
+    guint dims[MAX_DIMS];
+    guint nitems;    /* calculated */
+    gchar *name;
+    /* Regular arrays */
+    gpointer real;
+    gpointer imag;
+    /* Structures */
+    gchar **field_names;
+    struct Mat5Matrix *fields;
+    /* Objects, in addition */
+    gchar *class_name;
+} Mat5Matrix;
+
 struct _Mat5FileCursor;
 struct _Mat5FileContext;
 
@@ -269,6 +313,8 @@ mat5_next_tag(Mat5FileCursor *cursor, GError **error)
             if (!zinflate_variable(cursor, error))
                 return FALSE;
 
+            g_file_set_contents("dump", fc->zbuffer->data, fc->zbuffer->len,
+                                NULL);
             fc->zbuffer_owner = cursor;
             cursor->size -= padded_size;
 
@@ -416,6 +462,9 @@ try_read_datafield(Mat5FileCursor *parent,
     cursor.p = parent->zp;
     cursor.size = parent->nbytes;
 
+    for (i = 0; i < 128; i++)
+        printf("%02x%c", cursor.p[i], i % 16 == 15 ? '\n' : ' ');
+
     /* Array flags */
     if (!mat5_next_tag(&cursor, NULL)
         || cursor.data_type != MAT5_UINT32 || cursor.nbytes != 2*4)
@@ -428,7 +477,8 @@ try_read_datafield(Mat5FileCursor *parent,
     /* reserved: fc->get_guint32(&cursor.zp); */
 
     if (klass != MAT5_CLASS_DOUBLE
-        && klass != MAT5_CLASS_SINGLE)
+        && klass != MAT5_CLASS_SINGLE
+        && klass != MAT5_CLASS_STRUCT)
         return NULL;
 
     /* Dimensions array */
@@ -450,6 +500,31 @@ try_read_datafield(Mat5FileCursor *parent,
 
     g_string_truncate(name, 0);
     g_string_append_len(name, cursor.zp, cursor.nbytes);
+    gwy_debug("name = %s", name->str);
+
+    /* Debug struct contents */
+    if (klass == MAT5_CLASS_STRUCT) {
+        guint n, field_name_len;
+
+        if (!mat5_next_tag(&cursor, NULL)
+            || cursor.data_type != MAT5_INT32)
+            return NULL;
+
+        field_name_len = fc->get_guint32(&cursor.zp);
+        gwy_debug("field_name_len: %u", field_name_len);
+
+        if (!mat5_next_tag(&cursor, NULL)
+            || cursor.data_type != MAT5_INT8)
+            return NULL;
+
+        n = cursor.nbytes/field_name_len;
+        for (i = 0; i < n; i++) {
+            gwy_debug("struct field%d %s", i, cursor.zp);
+            cursor.zp += field_name_len;
+            cursor.nbytes -= field_name_len;
+        }
+        return NULL;
+    }
 
     /* Real part */
     if (!mat5_next_tag(&cursor, NULL))
