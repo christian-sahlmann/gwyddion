@@ -263,6 +263,7 @@ static GwySpectra*    nanoedu_read_iz_spectra(const guchar *pos_buffer,
                                               gint version,
                                               gint nspectra,
                                               gint res,
+                                              gdouble xy_step,
                                               gdouble yreal,
                                               gdouble xscale,
                                               gdouble yscale,
@@ -475,7 +476,7 @@ nanoedu_load(const gchar *filename,
                                               header.version,
                                               params.n_spectra_lines,
                                               params.n_spectrum_points,
-                                              scale*header.topo_ny,
+                                              Nanometer*q, scale*header.topo_ny,
                                               Nanometer*qx, Nanometer*qy,
                                               error);
         else
@@ -1205,7 +1206,7 @@ nanoedu_read_iz_spectra(const guchar *pos_buffer, gsize pos_size,
                         const guchar *data_buffer, gsize data_size,
                         gint version,
                         gint nspectra, gint res,
-                        gdouble yreal,
+                        gdouble xy_step, gdouble yreal,
                         gdouble xscale, gdouble yscale,
                         GError **error)
 {
@@ -1238,11 +1239,11 @@ nanoedu_read_iz_spectra(const guchar *pos_buffer, gsize pos_size,
         x = xscale*GINT16_FROM_LE(p16[pointstep*i]);
         y = yreal - yscale*GINT16_FROM_LE(p16[pointstep*i + 1]);
         n = (pointstep == 3) ? GINT16_FROM_LE(p16[pointstep*i + 2]) : 1;
-        gwy_debug("IV spec%d [%g,%g] %dpts", i, x, y, n);
+        gwy_debug("IZ spec%d [%g,%g] %dpts", i, x, y, n);
 
         while (n--) {
             /* Only one direction */
-            dline = make_iz_spectrum(res, 1.0,
+            dline = make_iz_spectrum(res, xy_step,
                                      d16 + 2*speccount*res, 1e-12,
                                      FALSE);
             data = gwy_data_line_get_data(dline);
