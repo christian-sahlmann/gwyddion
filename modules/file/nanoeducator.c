@@ -1292,6 +1292,12 @@ nanoedu_read_meta(const NanoeduFileHeader *header,
     gwy_container_set_string_by_name(meta, "Scan rate",
                                      g_strdup_printf("%g nm/s",
                                                      param->scan_rate));
+    gwy_container_set_string_by_name(meta, "X offset",
+                                     g_strdup_printf("%g nm",
+                                                     param->x_offset));
+    gwy_container_set_string_by_name(meta, "Y offset",
+                                     g_strdup_printf("%g nm",
+                                                     param->y_offset));
     gwy_container_set_string_by_name(meta, "X sensitivity",
                                      g_strdup_printf("%g nm/V",
                                                      param->sens_x));
@@ -1318,7 +1324,7 @@ nanoedu_read_meta(const NanoeduFileHeader *header,
                                                      param->scan_voltage));
     gwy_container_set_string_by_name(meta, "Resonance frequency",
                                      g_strdup_printf("%g kHz",
-                                                     param->f0/1000.0));
+                                                     param->f0/1.0));
     gwy_container_set_string_by_name(meta, "Amplitude suppression",
                                      g_strdup_printf("%g",
                                                      param->ampl_suppress));
