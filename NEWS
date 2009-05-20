@@ -1,4 +1,4 @@
-2.15 (0000-00-00)
+2.15 (2009-05-20)
 Application:
 - Translations updated: Czech, French, Russian.
 
@@ -13,11 +13,11 @@ Libraries:
 - libgwyapp: Data browser window has wm role set to "gwyddion-databrowser".
 - libgwydgets: 3D view axes lengths and positions for data with non-square
   pixels were corrected.
+- libgwyddion: Crash in gwy_memem() after failed partial match was fixed.
 - libgwydgets: More translatability problems were fixed.
 
 Modules:
 - Nanoeducator (new): NT-MDT Nanoeducator file import.
-- Matfile (new): Crude Matlab MAT5 two-dimensional data import.
 - OLS: Module omitted in the MS Windows builds was added.
 - OPD file: Import of integer data was corrected.
 - Pygwy: module load() methods are run with the real filename, not with "test".
