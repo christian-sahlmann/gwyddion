@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2009-05-19 13:33+0200\n"
+"POT-Creation-Date: 2009-05-20 15:25+0200\n"
 "PO-Revision-Date: 2009-05-19 13:38+0200\n"
 "Last-Translator: Yeti <yeti@gwyddion.net>\n"
 "Language-Team: Czech\n"
@@ -2575,34 +2575,33 @@ msgstr "Neznámý tag %u nemá značku tagu."
 msgid "Character array does not fit into the file."
 msgstr "Znakové pole přesahuje konec souboru."
 
-#: modules/file/matfile.c:179
+#: modules/file/matfile.c:223
 msgid "Imports Matlab MAT files v5."
 msgstr "Načítá datové soubory Matlabu MAT v5."
 
-#: modules/file/matfile.c:192
+#: modules/file/matfile.c:236
 msgid "Matlab MAT 5 files (.mat)"
 msgstr "Matlab MAT 5 soubory (.map)"
 
-#: modules/file/matfile.c:232 modules/file/matfile.c:254
+#: modules/file/matfile.c:276 modules/file/matfile.c:298
 msgid "File is truncated."
 msgstr "Soubor je uříznutý."
 
-#: modules/file/matfile.c:264
+#: modules/file/matfile.c:308
 msgid "Compressed data inside compressed data found."
 msgstr "Komprimovaná data se nacházejí uvnitř komprimovaných dat."
 
-#: modules/file/matfile.c:300
+#: modules/file/matfile.c:346
 #, c-format
 msgid "Invalid short tag of type %u claims to consists of %u bytes."
 msgstr "Neplatný short-tag typu %u tvrdí, že zabírá %u bajtů."
 
-#: modules/file/matfile.c:522
+#: modules/file/matfile.c:597
 #, c-format
 msgid "zlib initialization failed with error %d, cannot decompress data."
-msgstr ""
-"Selhala inicialize zlib (s chybovým kódem %d), nelze rozbalit data."
+msgstr "Selhala inicialize zlib (s chybovým kódem %d), nelze rozbalit data."
 
-#: modules/file/matfile.c:536
+#: modules/file/matfile.c:611
 #, c-format
 msgid "Decompression of compressed variable failed with error %d."
 msgstr "Rozbalení komprimovaných dat selhalo s chybovým kódem %d."
@@ -2690,11 +2689,11 @@ msgstr "Počet souřadnic spekter nesouhlasí s počtem spekter."
 msgid "F-D spectra"
 msgstr "F-D spektra"
 
-#: modules/file/nanoeducator.c:1144
+#: modules/file/nanoeducator.c:1145
 msgid "I-V spectra"
 msgstr "I-V spektra"
 
-#: modules/file/nanoeducator.c:1243
+#: modules/file/nanoeducator.c:1244
 msgid "I-Z spectra"
 msgstr "I-Z spektra"
 

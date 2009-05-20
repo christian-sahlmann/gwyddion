@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2009-03-17 14:15+0100\n"
+"POT-Creation-Date: 2009-05-20 15:25+0200\n"
 "PO-Revision-Date: 2007-03-14 17:40+0100\n"
 "Last-Translator: Philipp Leufke <webmaster@leufke.info>\n"
 "Language-Team: deutsch <de@li.org>\n"
@@ -57,8 +57,8 @@ msgid "vdW: paraboloid"
 msgstr ""
 
 #: libgwyddion/gwyinventory.c:1310 libgwydgets/gwygraphwindow.c:603
-#: app/data-browser.c:1432 app/data-browser.c:2157 app/data-browser.c:2919
-#: app/data-browser.c:3078 app/data-browser.c:4884 app/resource-editor.c:365
+#: app/data-browser.c:1440 app/data-browser.c:2165 app/data-browser.c:2927
+#: app/data-browser.c:3086 app/data-browser.c:4893 app/resource-editor.c:365
 #: modules/process/convolution_filter.c:700
 msgid "Untitled"
 msgstr "Unbenannt"
@@ -737,11 +737,11 @@ msgstr "Pixel"
 
 #: libgwydgets/gwy3dwindow.c:1027 modules/file/pixmap.c:857
 #: modules/file/pixmap.c:2259 modules/file/rawfile.c:379
-#: modules/process/angle_dist.c:170 modules/process/calibrate.c:289
+#: modules/process/angle_dist.c:170 modules/process/calibrate.c:295
 #: modules/process/cwt.c:132 modules/process/drift.c:230
-#: modules/process/dwtanisotropy.c:183 modules/process/dwt.c:164
-#: modules/process/edge.c:636 modules/process/facet_analysis.c:272
-#: modules/process/facet-level.c:289 modules/process/fft.c:272
+#: modules/process/dwt.c:164 modules/process/dwtanisotropy.c:183
+#: modules/process/edge.c:636 modules/process/facet-level.c:289
+#: modules/process/facet_analysis.c:272 modules/process/fft.c:272
 #: modules/process/fft_filter_2d.c:396 modules/process/fft_synth.c:212
 #: modules/process/fractal.c:206 modules/process/grain_mark.c:265
 #: modules/process/grain_rem_threshold.c:224 modules/process/grain_wshed.c:182
@@ -1086,9 +1086,26 @@ msgstr "_Tiefgestellt"
 msgid "Su_perscript"
 msgstr "_Hochgestellt"
 
+#: libgwydgets/gwyscitext.c:250
+msgid "A_dd symbol"
+msgstr ""
+
 #: libgwydgets/gwyscitext.c:273 modules/file/rawfile.c:508
 msgid "Preview"
 msgstr "Vorschau"
+
+#: libgwymodule/gwymodule-file.c:514 modules/file/pixmap.c:633
+#, c-format
+msgid "Cannot open file for reading: %s."
+msgstr "Datei kann nicht zum Lesen geöffnet werden: %s"
+
+#: libgwymodule/gwymodule-file.c:523
+msgid "No module can load this file type."
+msgstr "Das Laden dieses Dateiformats wird von keinem Modul unterstützt."
+
+#: libgwymodule/gwymodule-file.c:589
+msgid "No module can save to this file type."
+msgstr "Speichern in diesem Dateitformat wird von keinem Modul unterstützt."
 
 #: libgwymodule/gwymodulebrowser.c:66
 #, fuzzy
@@ -1147,19 +1164,6 @@ msgstr "Name"
 #, fuzzy
 msgid "Failure:"
 msgstr "Datei:"
-
-#: libgwymodule/gwymodule-file.c:514 modules/file/pixmap.c:633
-#, c-format
-msgid "Cannot open file for reading: %s."
-msgstr "Datei kann nicht zum Lesen geöffnet werden: %s"
-
-#: libgwymodule/gwymodule-file.c:523
-msgid "No module can load this file type."
-msgstr "Das Laden dieses Dateiformats wird von keinem Modul unterstützt."
-
-#: libgwymodule/gwymodule-file.c:589
-msgid "No module can save to this file type."
-msgstr "Speichern in diesem Dateitformat wird von keinem Modul unterstützt."
 
 #: app/about.c:49
 #, c-format
@@ -1271,42 +1275,42 @@ msgstr ""
 msgid "_Physically Square"
 msgstr ""
 
-#: app/data-browser.c:3537
+#: app/data-browser.c:3545
 msgid "Extract to a new file"
 msgstr "In neue Datei extrahieren"
 
-#: app/data-browser.c:3538
+#: app/data-browser.c:3546
 msgid "Duplicate"
 msgstr "_Duplizieren"
 
-#: app/data-browser.c:3539
+#: app/data-browser.c:3547
 #, fuzzy
 msgid "Delete"
 msgstr "_Löschen"
 
-#: app/data-browser.c:3583
+#: app/data-browser.c:3591
 #, fuzzy
 msgid "Data Browser"
 msgstr "Daten-Browser"
 
-#: app/data-browser.c:3605
+#: app/data-browser.c:3614
 #, fuzzy
 msgid "Close file"
 msgstr "Datei _schleißen"
 
-#: app/data-browser.c:3618
+#: app/data-browser.c:3627
 msgid "Channels"
 msgstr "Kanäle"
 
-#: app/data-browser.c:3632
+#: app/data-browser.c:3641
 msgid "Graphs"
 msgstr "Graphen"
 
-#: app/data-browser.c:3646
+#: app/data-browser.c:3655
 msgid "Spectra"
 msgstr ""
 
-#: app/data-browser.c:4922
+#: app/data-browser.c:4931
 #, c-format
 msgid "Unknown channel %d"
 msgstr "Unbekannter Kanal %d"
@@ -2291,16 +2295,6 @@ msgstr ""
 msgid "Unknown file type header: `%s'."
 msgstr "Unbekannte Dateityp-Kopfzeile: `%s'."
 
-#: modules/file/burleigh_bii.c:68
-#, fuzzy
-msgid "Imports Burleigh BII binary data files."
-msgstr "Importiert Burleigh IMG-Daten der Version 2.1."
-
-#: modules/file/burleigh_bii.c:81
-#, fuzzy
-msgid "Burleigh Image Studio files (.bii)"
-msgstr "Burleigh 2.1 Dateien (.img)"
-
 #: modules/file/burleigh.c:112
 msgid "Imports Burleigh IMG data files version 2.1."
 msgstr "Importiert Burleigh IMG-Daten der Version 2.1."
@@ -2313,6 +2307,16 @@ msgstr "Burleigh 2.1 Dateien (.img)"
 #, c-format
 msgid "File format version %.1f is not supported."
 msgstr "Das Dateiformat der Version %.1f wird nicht unterstützt."
+
+#: modules/file/burleigh_bii.c:68
+#, fuzzy
+msgid "Imports Burleigh BII binary data files."
+msgstr "Importiert Burleigh IMG-Daten der Version 2.1."
+
+#: modules/file/burleigh_bii.c:81
+#, fuzzy
+msgid "Burleigh Image Studio files (.bii)"
+msgstr "Burleigh 2.1 Dateien (.img)"
 
 #: modules/file/burleigh_exp.c:81
 msgid "Imports Burleigh text/bin exported images."
@@ -2603,40 +2607,74 @@ msgstr "Importiert Createc-Daten."
 msgid "MapVue files (.map)"
 msgstr "APE-Dateien (.dat)"
 
-#: modules/file/mapvue.c:443
+#: modules/file/mapvue.c:444 modules/file/mapvue.c:449
 #, c-format
 msgid "Required tag %u was not found."
 msgstr ""
 
-#: modules/file/mapvue.c:612
+#: modules/file/mapvue.c:622
 msgid "File end was reached while scanning tags."
 msgstr ""
 
-#: modules/file/mapvue.c:624
+#: modules/file/mapvue.c:634
 #, fuzzy, c-format
 msgid "Expected tag %u size is %u bytes, but the actual size is %u bytes."
 msgstr ""
 "Erwartete Dateigröße aus Dateikopf ist %u Bytes, die reale Größe ist jedoch %"
 "u Bytes."
 
-#: modules/file/mapvue.c:638
+#: modules/file/mapvue.c:648
 #, c-format
 msgid "Tag %u size is %u bytes, which is not enough to hold the tag marker."
 msgstr ""
 
-#: modules/file/mapvue.c:649 modules/file/mapvue.c:662
+#: modules/file/mapvue.c:659 modules/file/mapvue.c:672
 #, c-format
 msgid ""
 "Tag %u size is %u bytes, which is not enough to hold the tag marker and size."
 msgstr ""
 
-#: modules/file/mapvue.c:673
+#: modules/file/mapvue.c:683
 #, c-format
 msgid "Tag marker is missing on an unknown tag %u."
 msgstr ""
 
-#: modules/file/mapvue.c:692 modules/file/mapvue.c:702
+#: modules/file/mapvue.c:702 modules/file/mapvue.c:712
 msgid "Character array does not fit into the file."
+msgstr ""
+
+#: modules/file/matfile.c:223
+#, fuzzy
+msgid "Imports Matlab MAT files v5."
+msgstr "Importiert Createc-Daten."
+
+#: modules/file/matfile.c:236
+#, fuzzy
+msgid "Matlab MAT 5 files (.mat)"
+msgstr "APE-Dateien (.dat)"
+
+#: modules/file/matfile.c:276 modules/file/matfile.c:298
+#, fuzzy
+msgid "File is truncated."
+msgstr "Die Datei ist leer."
+
+#: modules/file/matfile.c:308
+msgid "Compressed data inside compressed data found."
+msgstr ""
+
+#: modules/file/matfile.c:346
+#, c-format
+msgid "Invalid short tag of type %u claims to consists of %u bytes."
+msgstr ""
+
+#: modules/file/matfile.c:597
+#, c-format
+msgid "zlib initialization failed with error %d, cannot decompress data."
+msgstr ""
+
+#: modules/file/matfile.c:611
+#, c-format
+msgid "Decompression of compressed variable failed with error %d."
 msgstr ""
 
 #: modules/file/metropro.c:168
@@ -2680,6 +2718,58 @@ msgstr ""
 msgid "Spectroscopy Graph"
 msgstr ""
 
+#: modules/file/nanoeducator.c:277
+#, fuzzy
+msgid "Imports Nanoeducator data files."
+msgstr "Importiert Createc-Daten."
+
+#: modules/file/nanoeducator.c:290
+msgid "Nanoeducator files (.mspm, .spm, .stm)"
+msgstr ""
+
+#: modules/file/nanoeducator.c:348 modules/file/unisoku.c:276
+msgid "format version"
+msgstr ""
+
+#: modules/file/nanoeducator.c:376 modules/file/nanoeducator.c:413
+#: modules/file/nanoeducator.c:517
+msgid "Image data starts past the end of file."
+msgstr ""
+
+#: modules/file/nanoeducator.c:455
+msgid "Spectra data starts past the end of file."
+msgstr ""
+
+#: modules/file/nanoeducator.c:622 modules/file/opdfile.c:254
+#: modules/file/sensofar.c:249
+msgid "File header is truncated"
+msgstr ""
+
+#: modules/file/nanoeducator.c:681
+msgid "Parameter header is truncated"
+msgstr ""
+
+#: modules/file/nanoeducator.c:906 modules/tools/profile.c:547
+#, c-format
+msgid "Profile %d"
+msgstr ""
+
+#: modules/file/nanoeducator.c:949
+msgid "The number of spectra coordinates does not match the number of spectra."
+msgstr ""
+
+#: modules/file/nanoeducator.c:1046
+msgid "F-D spectra"
+msgstr ""
+
+#: modules/file/nanoeducator.c:1145
+msgid "I-V spectra"
+msgstr ""
+
+#: modules/file/nanoeducator.c:1244
+msgid "I-Z spectra"
+msgstr ""
+
 #: modules/file/nanonis.c:96
 msgid "Imports Nanonis SXM data files."
 msgstr ""
@@ -2711,6 +2801,15 @@ msgstr ""
 msgid "Missing data start marker \\x1a\\x04."
 msgstr ""
 
+#: modules/file/nanoscope-ii.c:73
+#, fuzzy
+msgid "Imports Digital Instruments Nanoscope II data files."
+msgstr "Importiert Nanosurf EZD- und NID-Daten."
+
+#: modules/file/nanoscope-ii.c:86
+msgid "Nanoscope II files"
+msgstr ""
+
 #: modules/file/nanoscope.c:134
 msgid ""
 "Imports Veeco (Digital Instruments) Nanoscope data files, version 3 or newer."
@@ -2735,15 +2834,6 @@ msgstr ""
 
 #: modules/file/nanoscope.c:769
 msgid "Truncated header line."
-msgstr ""
-
-#: modules/file/nanoscope-ii.c:73
-#, fuzzy
-msgid "Imports Digital Instruments Nanoscope II data files."
-msgstr "Importiert Nanosurf EZD- und NID-Daten."
-
-#: modules/file/nanoscope-ii.c:86
-msgid "Nanoscope II files"
 msgstr ""
 
 #: modules/file/nanotop.c:99
@@ -2854,34 +2944,30 @@ msgstr ""
 msgid "Omicron MATRIX (.mtrx & .mtrx)"
 msgstr ""
 
-#: modules/file/opdfile.c:161
+#: modules/file/opdfile.c:166
 #, fuzzy
 msgid "Imports Wyko OPD and ASC files."
 msgstr "Importiert Createc-Daten."
 
-#: modules/file/opdfile.c:174
+#: modules/file/opdfile.c:179
 #, fuzzy
 msgid "Wyko OPD files (.opd)"
 msgstr "APE-Dateien (.dat)"
 
-#: modules/file/opdfile.c:181
+#: modules/file/opdfile.c:186
 msgid "Wyko ASCII export files (.asc)"
 msgstr ""
 
-#: modules/file/opdfile.c:248 modules/file/sensofar.c:249
-msgid "File header is truncated"
-msgstr ""
-
-#: modules/file/opdfile.c:271
+#: modules/file/opdfile.c:277
 #, c-format
 msgid "Item `%s' is beyond the end of the file."
 msgstr ""
 
-#: modules/file/opdfile.c:551
+#: modules/file/opdfile.c:581
 msgid "Nested directories found"
 msgstr ""
 
-#: modules/file/opdfile.c:741
+#: modules/file/opdfile.c:771
 #, c-format
 msgid "Truncated data in block %s"
 msgstr ""
@@ -2937,6 +3023,33 @@ msgstr ""
 msgid "Pixbuf loader refused data: %s."
 msgstr ""
 
+#: modules/file/pixmap.c:825
+#, fuzzy
+msgid "Red"
+msgstr "/Er_neut durchführen"
+
+#: modules/file/pixmap.c:826
+msgid "Green"
+msgstr ""
+
+#: modules/file/pixmap.c:827
+#, fuzzy
+msgid "Blue"
+msgstr "Wert"
+
+#: modules/file/pixmap.c:828
+#, fuzzy
+msgid "Value (max)"
+msgstr "_Werteskala:"
+
+#: modules/file/pixmap.c:829
+msgid "RGB sum"
+msgstr ""
+
+#: modules/file/pixmap.c:830
+msgid "Alpha"
+msgstr ""
+
 #: modules/file/pixmap.c:854
 msgid "Import "
 msgstr "Importieren"
@@ -2968,7 +3081,7 @@ msgstr "_Breite"
 
 #: modules/file/pixmap.c:957 modules/file/pixmap.c:1012
 #: modules/file/rawfile.c:636 modules/file/rawfile.c:692
-#: modules/process/calibrate.c:332 modules/process/calibrate.c:411
+#: modules/process/calibrate.c:338 modules/process/calibrate.c:419
 #, fuzzy
 msgid "Change"
 msgstr "Kanäle"
@@ -3001,13 +3114,13 @@ msgid "as data"
 msgstr "als Daten"
 
 #: modules/file/pixmap.c:1236 modules/file/rawfile.c:1307
-#: modules/process/calibrate.c:772
+#: modules/process/calibrate.c:815
 #, fuzzy
 msgid "Change Units"
 msgstr "Kanäle"
 
 #: modules/file/pixmap.c:1250 modules/file/rawfile.c:1321
-#: modules/process/calibrate.c:786
+#: modules/process/calibrate.c:829
 #, fuzzy
 msgid "New _units:"
 msgstr "Neues Element"
@@ -3164,7 +3277,7 @@ msgstr ""
 msgid "Dem"
 msgstr ""
 
-#: modules/file/pnifile.c:161 modules/graph/graph_cd.c:278
+#: modules/file/pnifile.c:161 modules/graph/graph_cd.c:280
 #: modules/graph/graph_fdfit.c:336 modules/graph/graph_fit.c:336
 #: modules/process/fit_2d.c:333
 msgid "Error"
@@ -3756,6 +3869,14 @@ msgstr "Importiert Createc-Daten."
 msgid "SPIP ASCII files (.asc)"
 msgstr "APE-Dateien (.dat)"
 
+#: modules/file/spml.c:91
+msgid "Loads SPML (Scanning Probe Microscopy Markup Language) data files."
+msgstr ""
+
+#: modules/file/spml.c:105
+msgid "SPML files (.xml)"
+msgstr ""
+
 #: modules/file/spmlab.c:113
 #, fuzzy
 msgid "Imports Thermicroscopes SpmLab R3 to R7 data files."
@@ -3783,14 +3904,6 @@ msgstr ""
 #, fuzzy
 msgid "Missing data start marker [Data]."
 msgstr "Markierung des Datenfeld-Endes fehlt."
-
-#: modules/file/spml.c:91
-msgid "Loads SPML (Scanning Probe Microscopy Markup Language) data files."
-msgstr ""
-
-#: modules/file/spml.c:105
-msgid "SPML files (.xml)"
-msgstr ""
 
 #: modules/file/stmprg.c:217
 msgid "Imports Omicron STMPRG data files (tp ta)."
@@ -3908,10 +4021,6 @@ msgstr ""
 msgid "No corresponding data file was found for header file."
 msgstr ""
 
-#: modules/file/unisoku.c:276
-msgid "format version"
-msgstr ""
-
 #: modules/file/unisoku.c:291
 msgid "format flags"
 msgstr ""
@@ -3975,71 +4084,75 @@ msgstr ""
 msgid "Missing end of file header marker."
 msgstr ""
 
-#: modules/graph/graph_cd.c:134
+#: modules/graph/graph_cd.c:136
 msgid "Critical dimension measurements"
 msgstr ""
 
-#: modules/graph/graph_cd.c:148
+#: modules/graph/graph_cd.c:150
 #, fuzzy
 msgid "/_Critical Dimension..."
 msgstr "/_Kritische Dimension..."
 
-#: modules/graph/graph_cd.c:151
+#: modules/graph/graph_cd.c:153
 msgid "Fit critical dimension"
 msgstr ""
 
-#: modules/graph/graph_cd.c:207 modules/graph/graph_fit.c:254
+#: modules/graph/graph_cd.c:209 modules/graph/graph_fit.c:254
 #, fuzzy
 msgid "Fit Graph"
 msgstr "Graph"
 
-#: modules/graph/graph_cd.c:211 modules/graph/graph_fdfit.c:253
+#: modules/graph/graph_cd.c:213 modules/graph/graph_fdfit.c:253
 #: modules/graph/graph_fit.c:258 modules/process/fit_2d.c:239
 msgid "_Fit"
 msgstr ""
 
-#: modules/graph/graph_cd.c:233 modules/graph/graph_cut.c:166
+#: modules/graph/graph_cd.c:235 modules/graph/graph_cut.c:166
 #: modules/graph/graph_fdfit.c:279 modules/graph/graph_fit.c:284
 #, fuzzy
 msgid "_Graph curve:"
 msgstr "_Graph"
 
-#: modules/graph/graph_cd.c:247 modules/graph/graph_fdfit.c:293
+#: modules/graph/graph_cd.c:249 modules/graph/graph_fdfit.c:293
 #: modules/graph/graph_fit.c:298
 msgid "F_unction:"
 msgstr ""
 
-#: modules/graph/graph_cd.c:276 modules/graph/graph_fdfit.c:334
+#: modules/graph/graph_cd.c:278 modules/graph/graph_fdfit.c:334
 #: modules/graph/graph_fit.c:334
 msgid "Parameter"
 msgstr ""
 
-#: modules/graph/graph_cd.c:290 modules/graph/graph_cut.c:196
+#: modules/graph/graph_cd.c:292 modules/graph/graph_cut.c:196
 #: modules/graph/graph_fdfit.c:388 modules/graph/graph_fit.c:388
 msgid "Range:"
 msgstr ""
 
-#: modules/graph/graph_cd.c:301 modules/graph/graph_cut.c:207
+#: modules/graph/graph_cd.c:303 modules/graph/graph_cut.c:207
 #: modules/graph/graph_fdfit.c:399 modules/graph/graph_fit.c:399
 msgid "range|to"
 msgstr ""
 
-#: modules/graph/graph_cd.c:360 modules/graph/graph_fdfit.c:483
+#: modules/graph/graph_cd.c:320
+msgid "_Draw whole circle"
+msgstr ""
+
+#: modules/graph/graph_cd.c:373 modules/graph/graph_fdfit.c:483
 #: modules/graph/graph_fit.c:493 modules/process/fit_2d.c:930
 msgid "Save Fit Report"
 msgstr ""
 
-#: modules/graph/graph_cd.c:499 modules/graph/graph_fdfit.c:693
-#: modules/graph/graph_fit.c:717
+#: modules/graph/graph_cd.c:512 modules/graph/graph_cd.c:1116
+#: modules/graph/graph_fdfit.c:693 modules/graph/graph_fit.c:717
 msgid "noun|Fit"
 msgstr ""
 
-#: modules/graph/graph_cd.c:525 modules/graph/graph_fdfit.c:733
+#: modules/graph/graph_cd.c:538 modules/graph/graph_fdfit.c:733
 #: modules/graph/graph_fit.c:757
 msgid "It is necessary to select more data points than free fit parameters"
 msgstr ""
 
-#: modules/graph/graph_cd.c:669 modules/graph/graph_fdfit.c:782
+#: modules/graph/graph_cd.c:693 modules/graph/graph_fdfit.c:782
 #: modules/graph/graph_fit.c:806 modules/tools/grainmeasure.c:215
 #: modules/tools/readvalue.c:510 modules/tools/readvalue.c:511
 #: modules/tools/roughness.c:968 modules/tools/stats.c:579
@@ -4049,37 +4162,37 @@ msgstr ""
 msgid "N.A."
 msgstr "N.V."
 
-#: modules/graph/graph_cd.c:976 modules/graph/graph_fdfit.c:1370
+#: modules/graph/graph_cd.c:1002 modules/graph/graph_fdfit.c:1370
 #: modules/graph/graph_fit.c:1413
 #, fuzzy
 msgid "===== Fit Results ====="
 msgstr "Ergebnis _auffrischen"
 
-#: modules/graph/graph_cd.c:980 modules/graph/graph_fdfit.c:1374
+#: modules/graph/graph_cd.c:1006 modules/graph/graph_fdfit.c:1374
 #: modules/graph/graph_fit.c:1417
 #, c-format
 msgid "Data:             %s\n"
 msgstr ""
 
-#: modules/graph/graph_cd.c:983 modules/graph/graph_fdfit.c:1377
+#: modules/graph/graph_cd.c:1009 modules/graph/graph_fdfit.c:1377
 #: modules/graph/graph_fit.c:1420
 #, c-format
 msgid "Number of points: %d of %d\n"
 msgstr ""
 
-#: modules/graph/graph_cd.c:987 modules/graph/graph_fdfit.c:1381
+#: modules/graph/graph_cd.c:1013 modules/graph/graph_fdfit.c:1381
 #: modules/graph/graph_fit.c:1424
 #, c-format
 msgid "X range:          %.*f to %.*f %s\n"
 msgstr ""
 
-#: modules/graph/graph_cd.c:993 modules/graph/graph_fdfit.c:1387
+#: modules/graph/graph_cd.c:1019 modules/graph/graph_fdfit.c:1387
 #: modules/graph/graph_fit.c:1430
 #, c-format
 msgid "Fitted function:  %s\n"
 msgstr ""
 
-#: modules/graph/graph_cd.c:996 modules/graph/graph_fdfit.c:1390
+#: modules/graph/graph_cd.c:1022 modules/graph/graph_fdfit.c:1390
 #: modules/graph/graph_fit.c:1433
 #, fuzzy
 msgid "Results\n"
@@ -4227,6 +4340,15 @@ msgstr "Korrelationsmatrix"
 msgid "Instant:"
 msgstr "Sofort:"
 
+#: modules/graph/graph_fdfit.c:423 modules/graph/graph_fit.c:433
+#, fuzzy
+msgid "e_stimate"
+msgstr "_Abschätzung"
+
+#: modules/graph/graph_fdfit.c:430 modules/graph/graph_fit.c:440
+msgid "p_lot"
+msgstr ""
+
 #: modules/graph/graph_fdfit.c:692 modules/graph/graph_fit.c:716
 #, fuzzy
 msgid "noun|Estimate"
@@ -4256,15 +4378,6 @@ msgstr "Funktion an Graphen fitten"
 
 #: modules/graph/graph_fit.c:415
 msgid "Plot full range"
-msgstr ""
-
-#: modules/graph/graph_fit.c:433
-#, fuzzy
-msgid "e_stimate"
-msgstr "_Abschätzung"
-
-#: modules/graph/graph_fit.c:440
-msgid "p_lot"
 msgstr ""
 
 #: modules/graph/graph_level.c:37
@@ -4579,72 +4692,76 @@ msgstr "/_Grundfunktionen/Zu _Quadrat skalieren"
 msgid "Null horizontall offsets, moving the origin to the upper left corner"
 msgstr ""
 
-#: modules/process/calibrate.c:141
+#: modules/process/calibrate.c:145
 msgid "Recalibrates scan lateral dimensions or value range."
 msgstr ""
 
-#: modules/process/calibrate.c:155
+#: modules/process/calibrate.c:159
 msgid "/_Basic Operations/_Recalibrate..."
 msgstr "/_Grundfunktionen/_Rekalibrieren..."
 
-#: modules/process/calibrate.c:159
+#: modules/process/calibrate.c:163
 msgid "Recalibrate data"
 msgstr ""
 
-#: modules/process/calibrate.c:275
+#: modules/process/calibrate.c:281
 msgid "Recalibrated Data"
 msgstr ""
 
-#: modules/process/calibrate.c:288
+#: modules/process/calibrate.c:294
 msgid "Calibrate"
 msgstr ""
 
-#: modules/process/calibrate.c:307
+#: modules/process/calibrate.c:313
 msgid "New Real Dimensions"
 msgstr ""
 
-#: modules/process/calibrate.c:312
+#: modules/process/calibrate.c:318
 msgid "_X range:"
 msgstr ""
 
-#: modules/process/calibrate.c:339
+#: modules/process/calibrate.c:345
 msgid "_Y range:"
 msgstr ""
 
-#: modules/process/calibrate.c:353
+#: modules/process/calibrate.c:359
 msgid "_Square samples"
 msgstr ""
 
-#: modules/process/calibrate.c:358
+#: modules/process/calibrate.c:366
 msgid "_X offset:"
 msgstr ""
 
-#: modules/process/calibrate.c:371
+#: modules/process/calibrate.c:379
 msgid "_Y offset:"
 msgstr ""
 
-#: modules/process/calibrate.c:386
+#: modules/process/calibrate.c:394
 #, fuzzy
 msgid "Value Range"
 msgstr "Skaliere Wertebereich"
 
-#: modules/process/calibrate.c:391
+#: modules/process/calibrate.c:399
 msgid "_Z range:"
 msgstr ""
 
-#: modules/process/calibrate.c:420
-msgid "Calibration Coefficients"
-msgstr ""
-
-#: modules/process/calibrate.c:427
-msgid "_X calibration factor:"
-msgstr ""
-
-#: modules/process/calibrate.c:435
-msgid "_Y calibration factor:"
+#: modules/process/calibrate.c:428
+msgid "Z shi_ft:"
 msgstr ""
 
 #: modules/process/calibrate.c:443
+msgid "Calibration Coefficients"
+msgstr ""
+
+#: modules/process/calibrate.c:450
+msgid "_X calibration factor:"
+msgstr ""
+
+#: modules/process/calibrate.c:458
+msgid "_Y calibration factor:"
+msgstr ""
+
+#: modules/process/calibrate.c:466
 msgid "_Z calibration factor:"
 msgstr ""
 
@@ -4812,8 +4929,8 @@ msgstr "CWT"
 msgid "2D CWT"
 msgstr "2D CWT"
 
-#: modules/process/cwt.c:155 modules/process/dwtanisotropy.c:208
-#: modules/process/dwt.c:183
+#: modules/process/cwt.c:155 modules/process/dwt.c:183
+#: modules/process/dwtanisotropy.c:208
 msgid "_Wavelet type:"
 msgstr "_Wavelet-Typ:"
 
@@ -4844,8 +4961,8 @@ msgstr "Such-Größe"
 msgid "rows"
 msgstr "Kreuz"
 
-#: modules/process/drift.c:291 modules/process/dwtanisotropy.c:201
-#: modules/process/dwt.c:204 modules/process/fft_filter_1d.c:329
+#: modules/process/drift.c:291 modules/process/dwt.c:204
+#: modules/process/dwtanisotropy.c:201 modules/process/fft_filter_1d.c:329
 #: modules/process/fractal.c:228 modules/process/nanoindent_adjust.c:228
 #: modules/process/polydistort.c:268 modules/process/rotate.c:293
 #: modules/process/scale.c:248 modules/process/unrotate.c:282
@@ -4905,6 +5022,39 @@ msgstr "_Bearbeiten"
 msgid "x-axis drift"
 msgstr "Drift in X-Richtung"
 
+#: modules/process/dwt.c:71
+#, fuzzy
+msgid "Two-dimensional DWT (Discrete Wavelet Transform)."
+msgstr "Zweidimensionale DWT (Diskrete Wavelet Transformation)."
+
+#: modules/process/dwt.c:85
+msgid "/_Integral Transforms/2D _DWT..."
+msgstr "/_Integrale Transformationen/2D _DWT..."
+
+#: modules/process/dwt.c:89
+msgid "Compute Discrete Wavelet Transform"
+msgstr "Diskrete Wavelet Transformation berechnen"
+
+#: modules/process/dwt.c:118 modules/process/dwtanisotropy.c:130
+#, c-format
+msgid "%s: Data must be square."
+msgstr "%s: Datensatz muss quadratisch sein."
+
+#: modules/process/dwt.c:145
+msgid "DWT"
+msgstr "DWT"
+
+#: modules/process/dwt.c:163
+msgid "2D DWT"
+msgstr "2D DWT"
+
+#: modules/process/dwt.c:189
+#, c-format
+msgid ""
+"Size %d is not a power of 2,\n"
+"data will be resampled to %d×%d for DWT."
+msgstr ""
+
 #: modules/process/dwtanisotropy.c:78
 msgid "2D DWT anisotropy detection based on X/Y components ratio."
 msgstr ""
@@ -4918,11 +5068,6 @@ msgstr "/_Integrale Transformationen/DWT _Anisotropie..."
 #: modules/process/dwtanisotropy.c:96
 msgid "DWT anisotropy detection"
 msgstr "DWT Anisotropie-Erkennung"
-
-#: modules/process/dwtanisotropy.c:130 modules/process/dwt.c:118
-#, c-format
-msgid "%s: Data must be square."
-msgstr "%s: Datensatz muss quadratisch sein."
 
 #: modules/process/dwtanisotropy.c:130
 msgid "DWT Anisotropy"
@@ -4940,34 +5085,6 @@ msgstr "Schwellwert für X/Y Verhältnis:"
 #, fuzzy
 msgid "Low level exclude limit:"
 msgstr "Untere Grenze:"
-
-#: modules/process/dwt.c:71
-#, fuzzy
-msgid "Two-dimensional DWT (Discrete Wavelet Transform)."
-msgstr "Zweidimensionale DWT (Diskrete Wavelet Transformation)."
-
-#: modules/process/dwt.c:85
-msgid "/_Integral Transforms/2D _DWT..."
-msgstr "/_Integrale Transformationen/2D _DWT..."
-
-#: modules/process/dwt.c:89
-msgid "Compute Discrete Wavelet Transform"
-msgstr "Diskrete Wavelet Transformation berechnen"
-
-#: modules/process/dwt.c:145
-msgid "DWT"
-msgstr "DWT"
-
-#: modules/process/dwt.c:163
-msgid "2D DWT"
-msgstr "2D DWT"
-
-#: modules/process/dwt.c:189
-#, c-format
-msgid ""
-"Size %d is not a power of 2,\n"
-"data will be resampled to %d×%d for DWT."
-msgstr ""
 
 #: modules/process/edge.c:147
 #, fuzzy
@@ -5113,6 +5230,57 @@ msgstr "Erkannte _Kanten"
 msgid "I_nstant updates"
 msgstr "_Sofort aktualisieren"
 
+#: modules/process/facet-level.c:67
+msgid ""
+"Automatic facet-orientation based levelling. Levels data to make facets "
+"point up."
+msgstr ""
+"Automatische Facetten-Orientierte Nivellierung. Nivelliert Daten so, dass "
+"Facetten nach oben zeigen."
+
+#: modules/process/facet-level.c:82
+msgid "/_Level/_Facet Level"
+msgstr "/_Nivellierung/_Facetten-Nivellierung"
+
+#: modules/process/facet-level.c:86
+msgid "Level data to make facets point upward"
+msgstr "Nivelliert Daten so, dass Facetten nach oben zeigen"
+
+#: modules/process/facet-level.c:120
+msgid ""
+"Facet level: Lateral dimensions and value must be the same physical quantity."
+msgstr ""
+
+#: modules/process/facet-level.c:132
+#, fuzzy
+msgid "Facet Level"
+msgstr "Ebene nivellieren"
+
+#: modules/process/facet-level.c:145
+msgid "Facet-leveling"
+msgstr "Facetten-Nivellierung"
+
+#: modules/process/facet-level.c:277 modules/process/level.c:247
+#: modules/process/polylevel.c:503
+msgid "_Exclude region under mask"
+msgstr "Bereich _unter Maske ausschließen"
+
+#: modules/process/facet-level.c:278 modules/process/level.c:248
+#: modules/process/polylevel.c:505
+msgid "Exclude region _outside mask"
+msgstr "Bereich _außerhalb Maske ausschließen"
+
+#: modules/process/facet-level.c:279 modules/process/level.c:249
+#: modules/process/polylevel.c:507
+msgid "Use entire _image (ignore mask)"
+msgstr "Gesamtes Bild verwenden (Maske ignorieren)"
+
+#: modules/process/facet-level.c:303 modules/process/level.c:273
+#: modules/process/polylevel.c:495
+#, fuzzy
+msgid "Masking Mode"
+msgstr "Maske"
+
 #: modules/process/facet_analysis.c:161
 msgid "Visualizes, marks and measures facet orientation."
 msgstr "Visualisiert, markiert und misst Facetten-Orientierung."
@@ -5164,57 +5332,6 @@ msgid ""
 msgstr ""
 "Warnung: laterale Einheiten und Werte differieren. Winkel sind nicht "
 "physikalisch aussagekräftig."
-
-#: modules/process/facet-level.c:67
-msgid ""
-"Automatic facet-orientation based levelling. Levels data to make facets "
-"point up."
-msgstr ""
-"Automatische Facetten-Orientierte Nivellierung. Nivelliert Daten so, dass "
-"Facetten nach oben zeigen."
-
-#: modules/process/facet-level.c:82
-msgid "/_Level/_Facet Level"
-msgstr "/_Nivellierung/_Facetten-Nivellierung"
-
-#: modules/process/facet-level.c:86
-msgid "Level data to make facets point upward"
-msgstr "Nivelliert Daten so, dass Facetten nach oben zeigen"
-
-#: modules/process/facet-level.c:120
-msgid ""
-"Facet level: Lateral dimensions and value must be the same physical quantity."
-msgstr ""
-
-#: modules/process/facet-level.c:132
-#, fuzzy
-msgid "Facet Level"
-msgstr "Ebene nivellieren"
-
-#: modules/process/facet-level.c:145
-msgid "Facet-leveling"
-msgstr "Facetten-Nivellierung"
-
-#: modules/process/facet-level.c:277 modules/process/level.c:247
-#: modules/process/polylevel.c:503
-msgid "_Exclude region under mask"
-msgstr "Bereich _unter Maske ausschließen"
-
-#: modules/process/facet-level.c:278 modules/process/level.c:248
-#: modules/process/polylevel.c:505
-msgid "Exclude region _outside mask"
-msgstr "Bereich _außerhalb Maske ausschließen"
-
-#: modules/process/facet-level.c:279 modules/process/level.c:249
-#: modules/process/polylevel.c:507
-msgid "Use entire _image (ignore mask)"
-msgstr "Gesamtes Bild verwenden (Maske ignorieren)"
-
-#: modules/process/facet-level.c:303 modules/process/level.c:273
-#: modules/process/polylevel.c:495
-#, fuzzy
-msgid "Masking Mode"
-msgstr "Maske"
 
 #: modules/process/fft.c:90
 msgid "Two-dimensional FFT (Fast Fourier Transform)."
@@ -7548,6 +7665,46 @@ msgstr ""
 msgid "Correction:"
 msgstr "Korrektur:"
 
+#: modules/pygwy/pygwy-console.c:54
+msgid "/Pygwy Console"
+msgstr ""
+
+#: modules/pygwy/pygwy-console.c:58
+msgid "Python wrapper console"
+msgstr ""
+
+#: modules/pygwy/pygwy-console.c:156
+msgid ">>> Running file content of below textfield\n"
+msgstr ""
+
+#: modules/pygwy/pygwy-console.c:181
+msgid "Open Python script"
+msgstr ""
+
+#: modules/pygwy/pygwy-console.c:245
+msgid "Save Script as"
+msgstr ""
+
+#: modules/pygwy/pygwy-console.c:284
+msgid "Pygwy Console"
+msgstr ""
+
+#: modules/pygwy/pygwy-console.c:296
+msgid "Open script in Python language (Ctrl-O)"
+msgstr ""
+
+#: modules/pygwy/pygwy-console.c:298
+msgid "Save script (Ctrl-S)"
+msgstr ""
+
+#: modules/pygwy/pygwy-console.c:300
+msgid "Execute script (Ctrl-E)"
+msgstr ""
+
+#: modules/pygwy/pygwy-console.c:378
+msgid "Command"
+msgstr ""
+
 #: pygwy.c:91
 msgid "Pygwy, the Gwyddion Python wrapper."
 msgstr ""
@@ -7565,38 +7722,6 @@ msgstr ""
 msgid ""
 "Pygwy plugin: %s (%s)\n"
 "Export failed."
-msgstr ""
-
-#: modules/pygwy/pygwy-console.c:54
-msgid "/Pygwy Console"
-msgstr ""
-
-#: modules/pygwy/pygwy-console.c:58
-msgid "Python wrapper console"
-msgstr ""
-
-#: modules/pygwy/pygwy-console.c:156
-msgid ">>> Running file content of below textfield\n"
-msgstr ""
-
-#: modules/pygwy/pygwy-console.c:181
-msgid "Open Python script"
-msgstr ""
-
-#: modules/pygwy/pygwy-console.c:296
-msgid "Open script in Python language (Ctrl-O)"
-msgstr ""
-
-#: modules/pygwy/pygwy-console.c:298
-msgid "Save script (Ctrl-S)"
-msgstr ""
-
-#: modules/pygwy/pygwy-console.c:300
-msgid "Execute script (Ctrl-E)"
-msgstr ""
-
-#: modules/pygwy/pygwy-console.c:378
-msgid "Command"
 msgstr ""
 
 #: modules/tools/crop.c:82
@@ -8063,11 +8188,6 @@ msgstr ""
 
 #: modules/tools/profile.c:368
 msgid "_Separate profiles"
-msgstr ""
-
-#: modules/tools/profile.c:547
-#, c-format
-msgid "Profile %d"
 msgstr ""
 
 #: modules/tools/readvalue.c:109
