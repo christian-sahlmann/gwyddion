@@ -17,10 +17,10 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
-#define DEBUG 1
+
 /* FIXME: Other apps may frown at us for registering this. */
 /**
- * [FILE-MAGIC-FREEDESKTOP]
+ * ************[FILE-MAGIC-FREEDESKTOP]
  * <mime-type type="application/x-matlab-mat5">
  *   <comment>Matlab MAT5 data</comment>
  *   <magic priority="80">

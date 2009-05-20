@@ -26,13 +26,13 @@ endif
 
 # When libz is disabled, put the sources to EXTRA_DIST to include them in
 # make dist.
-if HAVE_ZLIB
-matfile_module = matfile.la
-matfile_sources =
-else
+#if HAVE_ZLIB
+#matfile_module = matfile.la
+#matfile_sources =
+#else
 matfile_module =
 matfile_sources = matfile.c
-endif
+#endif
 
 filedir = $(pkglibdir)/modules/file
 
@@ -202,8 +202,8 @@ spml_la_LIBADD           = @XML2_LIBS@
 endif
 
 if HAVE_ZLIB
-matfile_la_SOURCES       = matfile.c
-matfile_la_LIBADD        = @ZLIB@
+#matfile_la_SOURCES       = matfile.c
+#matfile_la_LIBADD        = @ZLIB@
 endif
 
 MAINTAINERCLEANFILES = makefile.msc
