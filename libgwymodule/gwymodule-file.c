@@ -962,8 +962,10 @@ gwy_file_container_finalized(G_GNUC_UNUSED gpointer userdata,
  * @GWY_MODULE_FILE_ERROR_DATA: Data is corrupted or in an unsupported format.
  * @GWY_MODULE_FILE_ERROR_INTERACTIVE: Operation requires user input, but
  *                                     it was run as GWY_RUN_NONINTERACTIVE.
- * @GWY_MODULE_FILE_ERROR_SPECIFIC: Special module errors that do not fall into
- *                                  any other category.  Should be rarely used.
+ * @GWY_MODULE_FILE_ERROR_SPECIFIC: Specific module errors that do not fall
+ *                                  into any other category (such as the
+ *                                  failure to initialize a library used to
+ *                                  read the data).  Seldom used.
  *
  * Error codes returned by file module operations.
  *
