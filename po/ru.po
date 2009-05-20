@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2009-05-11 03:59+0200\n"
-"PO-Revision-Date: 2009-05-11 09:59+0300\n"
+"POT-Creation-Date: 2009-05-20 03:59+0200\n"
+"PO-Revision-Date: 2009-05-20 08:35+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@km.ru>\n"
 "Language-Team: russian <ru@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -1293,7 +1293,6 @@ msgid "Graphs"
 msgstr "Графики"
 
 #: app/data-browser.c:3655
-#: modules/file/nanoeducator.c:956
 msgid "Spectra"
 msgstr "Спектры"
 
@@ -2506,34 +2505,34 @@ msgstr ""
 msgid "Character array does not fit into the file."
 msgstr "Массив символов не помещается в файл."
 
-#: modules/file/matfile.c:179
+#: modules/file/matfile.c:223
 msgid "Imports Matlab MAT files v5."
 msgstr "Импортирует файлы Matlab MAT v5."
 
-#: modules/file/matfile.c:192
+#: modules/file/matfile.c:236
 msgid "Matlab MAT 5 files (.mat)"
 msgstr "Файлы Matlab MAT 5 (.mat)"
 
-#: modules/file/matfile.c:232
-#: modules/file/matfile.c:254
+#: modules/file/matfile.c:276
+#: modules/file/matfile.c:298
 msgid "File is truncated."
 msgstr "Файл усечен."
 
-#: modules/file/matfile.c:264
+#: modules/file/matfile.c:308
 msgid "Compressed data inside compressed data found."
 msgstr "Сжатые данные найдены внутри сжатых данных."
 
-#: modules/file/matfile.c:300
+#: modules/file/matfile.c:346
 #, c-format
 msgid "Invalid short tag of type %u claims to consists of %u bytes."
 msgstr ""
 
-#: modules/file/matfile.c:522
+#: modules/file/matfile.c:597
 #, c-format
 msgid "zlib initialization failed with error %d, cannot decompress data."
 msgstr "Инициализация zlib закончилась с ошибкой %d, не удалось распаковать данные."
 
-#: modules/file/matfile.c:536
+#: modules/file/matfile.c:611
 #, c-format
 msgid "Decompression of compressed variable failed with error %d."
 msgstr "Распаковка сжатой переменной закончилась с ошибкой %d."
@@ -2578,42 +2577,60 @@ msgstr "Файлы данных PicoView (.mi)"
 msgid "Spectroscopy Graph"
 msgstr "График спектроскопии"
 
-#: modules/file/nanoeducator.c:252
+#: modules/file/nanoeducator.c:277
 msgid "Imports Nanoeducator data files."
 msgstr "Импортирует файлы данных Nanoeducator."
 
-#: modules/file/nanoeducator.c:265
+#: modules/file/nanoeducator.c:290
 msgid "Nanoeducator files (.mspm, .spm, .stm)"
 msgstr "Файлы Nanoeducator (.mspm, .spm, .stm)"
 
-#: modules/file/nanoeducator.c:323
+#: modules/file/nanoeducator.c:348
 #: modules/file/unisoku.c:276
 msgid "format version"
 msgstr "версия формата"
 
-#: modules/file/nanoeducator.c:344
-#: modules/file/nanoeducator.c:418
-#: modules/file/nanoeducator.c:458
+#: modules/file/nanoeducator.c:376
+#: modules/file/nanoeducator.c:413
+#: modules/file/nanoeducator.c:517
 msgid "Image data starts past the end of file."
 msgstr "Данные изображения начинаются после конца файла."
 
-#: modules/file/nanoeducator.c:385
+#: modules/file/nanoeducator.c:455
 msgid "Spectra data starts past the end of file."
 msgstr "Данные спектроскопии начинаются после конца файла."
 
-#: modules/file/nanoeducator.c:555
-#: modules/file/opdfile.c:248
+#: modules/file/nanoeducator.c:622
+#: modules/file/opdfile.c:254
 #: modules/file/sensofar.c:249
 msgid "File header is truncated"
 msgstr "Заголовок файла усечён"
 
-#: modules/file/nanoeducator.c:614
+#: modules/file/nanoeducator.c:681
 msgid "Parameter header is truncated"
 msgstr "Заголовок параметров усечён"
 
-#: modules/file/nanoeducator.c:932
+#: modules/file/nanoeducator.c:906
+#: modules/tools/profile.c:547
+#, c-format
+msgid "Profile %d"
+msgstr "Профиль %d"
+
+#: modules/file/nanoeducator.c:949
 msgid "The number of spectra coordinates does not match the number of spectra."
 msgstr "Число координат спектров не соответствует числу спектров."
+
+#: modules/file/nanoeducator.c:1046
+msgid "F-D spectra"
+msgstr "Спектры сила-расстояние"
+
+#: modules/file/nanoeducator.c:1144
+msgid "I-V spectra"
+msgstr "Спектры ВАХ"
+
+#: modules/file/nanoeducator.c:1243
+msgid "I-Z spectra"
+msgstr "Спектры I-Z"
 
 #: modules/file/nanonis.c:96
 msgid "Imports Nanonis SXM data files."
@@ -2788,28 +2805,28 @@ msgstr ""
 msgid "Omicron MATRIX (.mtrx & .mtrx)"
 msgstr ""
 
-#: modules/file/opdfile.c:161
+#: modules/file/opdfile.c:166
 msgid "Imports Wyko OPD and ASC files."
 msgstr "Импортирует файлы Wyko OPD и ASC."
 
-#: modules/file/opdfile.c:174
+#: modules/file/opdfile.c:179
 msgid "Wyko OPD files (.opd)"
 msgstr "Файлы Wyko OPD (.opd)"
 
-#: modules/file/opdfile.c:181
+#: modules/file/opdfile.c:186
 msgid "Wyko ASCII export files (.asc)"
 msgstr "Файлы экспорта в ASCII Wyko (.asc)"
 
-#: modules/file/opdfile.c:271
+#: modules/file/opdfile.c:277
 #, c-format
 msgid "Item `%s' is beyond the end of the file."
 msgstr "Элемент `%s' находится за концом файла."
 
-#: modules/file/opdfile.c:551
+#: modules/file/opdfile.c:581
 msgid "Nested directories found"
 msgstr "Найдены вложенные каталоги"
 
-#: modules/file/opdfile.c:741
+#: modules/file/opdfile.c:771
 #, c-format
 msgid "Truncated data in block %s"
 msgstr "Неполные данные в блоке %s"
@@ -3156,27 +3173,27 @@ msgstr "Определённый пользователем"
 
 #: modules/file/rawfile.c:237
 msgid "Signed byte"
-msgstr ""
+msgstr "байт со знаком"
 
 #: modules/file/rawfile.c:238
 msgid "Unsigned byte"
-msgstr ""
+msgstr "байт без знака"
 
 #: modules/file/rawfile.c:239
 msgid "Signed 16bit word"
-msgstr ""
+msgstr "16битное слово со знаком"
 
 #: modules/file/rawfile.c:240
 msgid "Unsigned 16bit word"
-msgstr ""
+msgstr "16битное слово без знака"
 
 #: modules/file/rawfile.c:241
 msgid "Signed 32bit word"
-msgstr ""
+msgstr "32битное слово со знаком"
 
 #: modules/file/rawfile.c:242
 msgid "Unsigned 32bit word"
-msgstr ""
+msgstr "16битное слово без знака"
 
 #: modules/file/rawfile.c:243
 msgid "IEEE single"
@@ -3939,7 +3956,7 @@ msgstr "Аппроксимировать график"
 #: modules/graph/graph_fit.c:258
 #: modules/process/fit_2d.c:239
 msgid "_Fit"
-msgstr "_Аппроксимировать"
+msgstr "_Аппрокс."
 
 #: modules/graph/graph_cd.c:235
 #: modules/graph/graph_cut.c:166
@@ -4038,9 +4055,9 @@ msgstr "Число точек: %d из %d\n"
 #: modules/graph/graph_cd.c:1013
 #: modules/graph/graph_fdfit.c:1381
 #: modules/graph/graph_fit.c:1424
-#, c-format
+#, fuzzy, c-format
 msgid "X range:          %.*f to %.*f %s\n"
-msgstr ""
+msgstr "Диапазон X:          от %.*f до %.*f %s\n"
 
 #: modules/graph/graph_cd.c:1019
 #: modules/graph/graph_fdfit.c:1387
@@ -4268,7 +4285,7 @@ msgstr "Слой, позволяющих выбрать прямоугольны
 
 #: modules/plugin-proxy.c:154
 msgid "Plug-in proxy is a module capable of querying, registering, and running external programs (plug-ins) on data pretending they are data processing or file loading/saving modules."
-msgstr ""
+msgstr "Plug-in proxy - модуль, опрашивающий, регистрирующий и запускающий внешние программы (подключаемые модули) на данных так, как будто они являются модулями обработки данных или загрузки/сохранения файлов."
 
 #: modules/plugin-proxy.c:472
 msgid "/_Plug-Ins"
@@ -4282,7 +4299,7 @@ msgstr "Запустить подключаемый модуль %s"
 #: modules/plugin-proxy.c:746
 #: modules/plugin-proxy.c:847
 msgid "Plugin-proxy must be run as interactive."
-msgstr ""
+msgstr "Plugin-proxy должен запускаться в интерактивном режиме."
 
 #: modules/plugin-proxy.c:752
 #, c-format
@@ -4733,8 +4750,9 @@ msgid "Correlating..."
 msgstr "Коррелируется..."
 
 #: modules/process/crosscor.c:472
+#, fuzzy
 msgid "Absolute difference"
-msgstr ""
+msgstr "Разница по модулю"
 
 #: modules/process/crosscor.c:476
 msgid "X difference"
@@ -4745,8 +4763,9 @@ msgid "Y difference"
 msgstr "Различие Y"
 
 #: modules/process/crosscor.c:484
+#, fuzzy
 msgid "Direction difference"
-msgstr ""
+msgstr "Разница направлений"
 
 #: modules/process/cwt.c:63
 msgid "Two-dimensional CWT (Continuous Wavelet Transform)."
@@ -5603,7 +5622,7 @@ msgstr "/Исправить _данные/_Фрактальная коррекц
 
 #: modules/process/fraccor.c:55
 msgid "Interpolate data under mask with fractal interpolation"
-msgstr ""
+msgstr "Интерполировать данные под маской фрактальной интерполяцией"
 
 #: modules/process/fractal.c:123
 #, fuzzy
@@ -7427,7 +7446,7 @@ msgstr "Командная строка оболочки Python"
 
 #: modules/pygwy/pygwy-console.c:156
 msgid ">>> Running file content of below textfield\n"
-msgstr ""
+msgstr ">>> Запускается содержимое файла из нижнего текстового поля\n"
 
 #: modules/pygwy/pygwy-console.c:181
 msgid "Open Python script"
@@ -7927,11 +7946,6 @@ msgstr "Извлечь профили"
 msgid "_Separate profiles"
 msgstr "_Разделить профили"
 
-#: modules/tools/profile.c:547
-#, c-format
-msgid "Profile %d"
-msgstr "Профиль %d"
-
 #: modules/tools/readvalue.c:109
 msgid "Pointer tool, reads value under pointer."
 msgstr "Инструмент указатель, считывает данные под указателем."
@@ -8023,32 +8037,37 @@ msgid "Waviness maximum height"
 msgstr ""
 
 #: modules/tools/roughness.c:436
+#, fuzzy
 msgid "Maximum height of the profile"
-msgstr ""
+msgstr "Максимальная высота профиля"
 
 #: modules/tools/roughness.c:444
 msgid "Spatial"
 msgstr "Пространственные"
 
 #: modules/tools/roughness.c:494
+#, fuzzy
 msgid "Average wavelength of the profile"
-msgstr ""
+msgstr "Средняя длина волны профиля"
 
 #: modules/tools/roughness.c:502
+#, fuzzy
 msgid "Root mean square (RMS) wavelength of the profile"
-msgstr ""
+msgstr "Среднеквадратичная длина волны профиля"
 
 #: modules/tools/roughness.c:510
 msgid "Hybrid"
 msgstr "Гибридные"
 
 #: modules/tools/roughness.c:518
+#, fuzzy
 msgid "Average absolute slope"
-msgstr ""
+msgstr "Средний по модулю наклон"
 
 #: modules/tools/roughness.c:526
+#, fuzzy
 msgid "Root mean square (RMS) slope"
-msgstr ""
+msgstr "Среднеквадратичный наклон"
 
 #: modules/tools/roughness.c:542
 msgid "Developed profile length"
