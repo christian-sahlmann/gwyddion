@@ -40,7 +40,7 @@ static GwyModuleInfo module_info = {
     N_("Removes data under mask, "
        "interpolating them with Laplace equation solution."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.2",
+    "1.3",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -66,7 +66,7 @@ module_register(void)
 static void
 laplace(GwyContainer *data, GwyRunType run)
 {
-    GwyDataField *dfield, *mfield, *buffer, *old;
+    GwyDataField *dfield, *mfield, *buffer;
     GQuark dquark;
     gdouble error, cor, maxer, lastfrac, frac, starter;
     gint i, id;
@@ -84,7 +84,6 @@ laplace(GwyContainer *data, GwyRunType run)
     gwy_app_wait_start(gwy_app_find_window_for_channel(data, id),
                        _("Laplace correction"));
 
-    old = dfield;
     dfield = gwy_data_field_duplicate(dfield);
     buffer = gwy_data_field_new_alike(dfield, TRUE);
     gwy_data_field_correct_average(dfield, mfield);
@@ -116,8 +115,7 @@ laplace(GwyContainer *data, GwyRunType run)
     gwy_app_wait_finish();
     if (!cancelled) {
         gwy_app_undo_qcheckpointv(data, 1, &dquark);
-        gwy_data_field_copy(dfield, old, FALSE);
-        gwy_data_field_data_changed(old);
+        gwy_container_set_object(data, dquark, dfield);
     }
     g_object_unref(dfield);
     g_object_unref(buffer);
