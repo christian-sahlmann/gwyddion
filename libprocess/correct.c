@@ -249,6 +249,7 @@ gwy_data_field_correct_laplace_iteration(GwyDataField *data_field,
     }
 
     gwy_data_field_copy(buffer_field, data_field, FALSE);
+    gwy_data_field_invalidate(data_field);
 
     if (error)
         *error = err;
