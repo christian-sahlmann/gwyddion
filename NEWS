@@ -3,6 +3,10 @@ Libraries:
 - libgwyprocess: Missing data field invalidation after Laplace iteration was
   added, fixing wrong color scales after Laplace interpolation data removal.
 
+Modules:
+- OLS: GwyTIFF is used instead of libTIFF for the detection phase as it seems
+  less fragile.
+
 
 2.15 (2009-05-20)
 Application:
