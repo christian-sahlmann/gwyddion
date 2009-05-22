@@ -121,7 +121,7 @@ static GwyModuleInfo module_info = {
     module_register,
     N_("Imports Intematix SDF data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.2",
+    "0.3",
     "David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
@@ -146,6 +146,7 @@ isdf_detect(const GwyFileDetectInfo *fileinfo, gboolean only_name)
 {
     GwyTIFF *tiff;
     gint score = 0;
+    guint magic;
 
     if (only_name)
         return score;
@@ -155,17 +156,13 @@ isdf_detect(const GwyFileDetectInfo *fileinfo, gboolean only_name)
         || memcmp(fileinfo->head, MAGIC, MAGIC_SIZE) != 0)
         return 0;
 
-    if ((tiff = gwy_tiff_load(fileinfo->name, NULL))) {
-        const GwyTIFFEntry *entry;
+    if ((tiff = gwy_tiff_load(fileinfo->name, NULL))
+         && gwy_tiff_get_sint0(tiff, ISDF_TIFFTAG_FILEID, &magic)
+         && magic == ISDF_MAGIC_NUMBER)
+        score = 100;
 
-        if ((entry = gwy_tiff_find_tag(tiff, ISDF_TIFFTAG_FILEID))) {
-            const guchar *p = entry->value;
-
-            if (tiff->gets32(&p) == ISDF_MAGIC_NUMBER)
-                score = 100;
-        }
+    if (tiff)
         gwy_tiff_free(tiff);
-    }
 
     return score;
 }
@@ -190,7 +187,7 @@ isdf_load(const gchar *filename,
         return NULL;
 
     memset(&image, 0, sizeof(ISDFImage));
-    if (!gwy_tiff_get_sint(tiff, ISDF_TIFFTAG_FILEID, &magic)
+    if (!gwy_tiff_get_sint0(tiff, ISDF_TIFFTAG_FILEID, &magic)
         || magic != ISDF_MAGIC_NUMBER) {
         err_FILE_TYPE(error, "Intematix SDF");
         goto fail;
@@ -289,17 +286,17 @@ isdf_image_fill_info(ISDFImage *image,
     const guchar *p;
 
     /* Required parameters */
-    if (!(gwy_tiff_get_uint(tiff, GWY_TIFFTAG_IMAGEWIDTH, &image->xres)
-          && gwy_tiff_get_uint(tiff, GWY_TIFFTAG_IMAGELENGTH, &image->yres)
-          && gwy_tiff_get_uint(tiff, ISDF_TIFFTAG_IMAGEDEPTH, &image->zres)
-          && gwy_tiff_get_uint(tiff, ISDF_TIFFTAG_FILETYPE, &image->file_type)
-          && gwy_tiff_get_uint(tiff, ISDF_TIFFTAG_DATATYPE, &image->data_type)
-          && gwy_tiff_get_float(tiff, ISDF_TIFFTAG_DATACNVT, &image->data_cnvt)
-          && gwy_tiff_get_string(tiff, ISDF_TIFFTAG_XDIMUNIT, &image->xunit)
-          && gwy_tiff_get_string(tiff, ISDF_TIFFTAG_YDIMUNIT, &image->yunit)
-          && gwy_tiff_get_string(tiff, ISDF_TIFFTAG_DATAUNIT, &image->dataunit)
-          && gwy_tiff_get_float(tiff, ISDF_TIFFTAG_IMGXDIM, &image->xreal)
-          && gwy_tiff_get_float(tiff, ISDF_TIFFTAG_IMGYDIM, &image->yreal))) {
+    if (!(gwy_tiff_get_uint0(tiff, GWY_TIFFTAG_IMAGEWIDTH, &image->xres)
+          && gwy_tiff_get_uint0(tiff, GWY_TIFFTAG_IMAGELENGTH, &image->yres)
+          && gwy_tiff_get_uint0(tiff, ISDF_TIFFTAG_IMAGEDEPTH, &image->zres)
+          && gwy_tiff_get_uint0(tiff, ISDF_TIFFTAG_FILETYPE, &image->file_type)
+          && gwy_tiff_get_uint0(tiff, ISDF_TIFFTAG_DATATYPE, &image->data_type)
+          && gwy_tiff_get_float0(tiff, ISDF_TIFFTAG_DATACNVT, &image->data_cnvt)
+          && gwy_tiff_get_string0(tiff, ISDF_TIFFTAG_XDIMUNIT, &image->xunit)
+          && gwy_tiff_get_string0(tiff, ISDF_TIFFTAG_YDIMUNIT, &image->yunit)
+          && gwy_tiff_get_string0(tiff, ISDF_TIFFTAG_DATAUNIT, &image->dataunit)
+          && gwy_tiff_get_float0(tiff, ISDF_TIFFTAG_IMGXDIM, &image->xreal)
+          && gwy_tiff_get_float0(tiff, ISDF_TIFFTAG_IMGYDIM, &image->yreal))) {
         g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
                     _("Parameter tag set is incomplete."));
         return FALSE;
@@ -310,7 +307,7 @@ isdf_image_fill_info(ISDFImage *image,
         return FALSE;
     }
 
-    if (!(entry = gwy_tiff_find_tag(tiff, ISDF_TIFFTAG_SPMDATA))) {
+    if (!(entry = gwy_tiff_find_tag(tiff, 0, ISDF_TIFFTAG_SPMDATA))) {
         err_NO_DATA(error);
         return FALSE;
     }
@@ -335,7 +332,7 @@ meta_add_string(GwyContainer *meta,
 {
     gchar *t;
 
-    if (!gwy_tiff_get_string(tiff, tag, &t))
+    if (!gwy_tiff_get_string0(tiff, tag, &t))
         return;
 
     g_strstrip(t);
@@ -411,10 +408,10 @@ isdf_get_metadata(const GwyTIFF *tiff,
     meta_add_string(meta, tiff, ISDF_TIFFTAG_USERINFO, "User information");
     meta_add_string(meta, tiff, ISDF_TIFFTAG_SAMPLEINFO, "Sample information");
 
-    if (gwy_tiff_get_float(tiff, ISDF_TIFFTAG_SCANRATE, &v))
+    if (gwy_tiff_get_float0(tiff, ISDF_TIFFTAG_SCANRATE, &v))
         gwy_container_set_string_by_name(meta, "Scan rate",
                                          g_strdup_printf("%g line/s", v));
-    if (gwy_tiff_get_float(tiff, ISDF_TIFFTAG_BIASVOLTS, &v))
+    if (gwy_tiff_get_float0(tiff, ISDF_TIFFTAG_BIASVOLTS, &v))
         gwy_container_set_string_by_name(meta, "Bias",
                                          g_strdup_printf("%g V", v));
 

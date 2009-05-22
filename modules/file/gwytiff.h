@@ -30,6 +30,15 @@
  * Names starting GWY_TIFF, GwyTIFF and gwy_tiff are reserved.
  */
 
+/* Search in all directories */
+#define GWY_TIFF_ANY_DIR ((guint)-1)
+
+/* Convenience functions for the 0th directory */
+#define gwy_tiff_get_sint0(T, t, r) gwy_tiff_get_sint((T), 0, (t), (r))
+#define gwy_tiff_get_uint0(T, t, r) gwy_tiff_get_uint((T), 0, (t), (r))
+#define gwy_tiff_get_float0(T, t, r) gwy_tiff_get_float((T), 0, (t), (r))
+#define gwy_tiff_get_string0(T, t, r) gwy_tiff_get_string((T), 0, (t), (r))
+
 /* TIFF data types */
 typedef enum {
     GWY_TIFF_NOTYPE    = 0,
@@ -67,7 +76,7 @@ typedef struct {
 typedef struct {
     guchar *data;
     gsize size;
-    GArray *tags;
+    GPtrArray *dirs;  // Array of GwyTIFFEntry GArray*
     guint16 (*getu16)(const guchar **p);
     gint16 (*gets16)(const guchar **p);
     guint32 (*getu32)(const guchar **p);
@@ -76,6 +85,7 @@ typedef struct {
     gdouble (*getdbl)(const guchar **p);
 } GwyTIFF;
 
+/* Does not need to free tags on failure, the caller takes care of it. */
 static gboolean
 gwy_tiff_load_real(GwyTIFF *tiff,
                    const gchar *filename,
@@ -83,7 +93,7 @@ gwy_tiff_load_real(GwyTIFF *tiff,
 {
     GError *err = NULL;
     const guchar *p;
-    guint magic, offset, ifdno, total, nentries;
+    guint magic, offset, nentries;
 
     if (!gwy_file_get_contents(filename, &tiff->data, &tiff->size, &err)) {
         err_GET_FILE_CONTENTS(error, &err);
@@ -122,16 +132,18 @@ gwy_tiff_load_real(GwyTIFF *tiff,
         break;
     }
 
-    /* Validate and count tags */
+    tiff->dirs = g_ptr_array_new();
     p = tiff->data + 4;
     offset = tiff->getu32(&p);
-    ifdno = 0;
-    total = 0;
     do {
+        GArray *tags;
+        guint i;
+
         if (offset + 2 + 4 > tiff->size) {
             g_set_error(error, GWY_MODULE_FILE_ERROR,
                         GWY_MODULE_FILE_ERROR_DATA,
-                        "TIFF directory %u ended unexpectedly.", ifdno);
+                        _("TIFF directory %u ended unexpectedly."),
+                        (guint)tags->len);
             return FALSE;
         }
 
@@ -140,35 +152,25 @@ gwy_tiff_load_real(GwyTIFF *tiff,
         if (offset + 2 + 4 + 12*nentries > tiff->size) {
             g_set_error(error, GWY_MODULE_FILE_ERROR,
                         GWY_MODULE_FILE_ERROR_DATA,
-                        "TIFF directory %u ended unexpectedly.", ifdno);
+                        _("TIFF directory %u ended unexpectedly."),
+                        (guint)tags->len);
             return FALSE;
         }
-        total += nentries;
-        p += 12*nentries;
-        offset = tiff->getu32(&p);
-        ifdno++;
-    } while (offset);
 
-    /* Read the tags */
-    p = tiff->data + 4;
-    offset = tiff->getu32(&p);
-    tiff->tags = g_array_sized_new(FALSE, FALSE, sizeof(GwyTIFFEntry), total);
-    do {
-        GwyTIFFEntry entry;
-        guint i;
+        tags = g_array_sized_new(FALSE, FALSE, sizeof(GwyTIFFEntry), nentries);
+        g_ptr_array_add(tiff->dirs, tags);
 
-        p = tiff->data + offset;
-        nentries = tiff->getu16(&p);
         for (i = 0; i < nentries; i++) {
+            GwyTIFFEntry entry;
+
             entry.tag = tiff->getu16(&p);
             entry.type = tiff->getu16(&p);
             entry.count = tiff->getu32(&p);
             memcpy(entry.value, p, 4);
             p += 4;
-            g_array_append_val(tiff->tags, entry);
+            g_array_append_val(tags, entry);
         }
         offset = tiff->getu32(&p);
-        ifdno++;
     } while (offset);
 
     return TRUE;
@@ -177,8 +179,15 @@ gwy_tiff_load_real(GwyTIFF *tiff,
 static void
 gwy_tiff_free(GwyTIFF *tiff)
 {
-    if (tiff->tags)
-        g_array_free(tiff->tags, TRUE);
+    if (tiff->dirs) {
+        guint i;
+
+        for (i = 0; i < tiff->dirs->len; i++)
+            g_array_free(g_ptr_array_index(tiff->dirs, i), TRUE);
+
+        g_ptr_array_free(tiff->dirs, TRUE);
+    }
+
     if (tiff->data)
         gwy_file_abandon_contents(tiff->data, tiff->size, NULL);
 
@@ -243,26 +252,30 @@ gwy_tiff_tags_valid(const GwyTIFF *tiff,
                     GError **error)
 {
     const guchar *p;
-    guint i, offset, item_size;
+    guint i, j, offset, item_size;
 
-    for (i = 0; i < tiff->tags->len; i++) {
-        const GwyTIFFEntry *entry;
+    for (i = 0; i < tiff->dirs->len; i++) {
+        const GArray *tags = g_ptr_array_index(tiff->dirs, i);
 
-        entry = &g_array_index(tiff->tags, GwyTIFFEntry, i);
-        p = entry->value;
-        offset = tiff->getu32(&p);
-        item_size = gwy_tiff_data_type_size(entry->type);
-        /* Uknown types are implicitly OK.  If we cannot read it we never
-         * read it by definition, so let the hell take what it refers to.
-         * This also means readers of custom types have to check the size
-         * themselves. */
-        if (item_size
-            && entry->count > 4/item_size
-            && !gwy_tiff_data_fits(tiff, offset, item_size, entry->count)) {
-            g_set_error(error, GWY_MODULE_FILE_ERROR,
-                        GWY_MODULE_FILE_ERROR_DATA,
-                        _("Invalid tag data positions were found."));
-            return FALSE;
+        for (j = 0; j < tags->len; j++) {
+            const GwyTIFFEntry *entry;
+
+            entry = &g_array_index(tags, GwyTIFFEntry, j);
+            p = entry->value;
+            offset = tiff->getu32(&p);
+            item_size = gwy_tiff_data_type_size(entry->type);
+            /* Uknown types are implicitly OK.  If we cannot read it we never
+             * read it by definition, so let the hell take what it refers to.
+             * This also means readers of custom types have to check the size
+             * themselves. */
+            if (item_size
+                && entry->count > 4/item_size
+                && !gwy_tiff_data_fits(tiff, offset, item_size, entry->count)) {
+                g_set_error(error, GWY_MODULE_FILE_ERROR,
+                            GWY_MODULE_FILE_ERROR_DATA,
+                            _("Invalid tag data positions were found."));
+                return FALSE;
+            }
         }
     }
 
@@ -282,32 +295,56 @@ gwy_tiff_tag_compare(gconstpointer a, gconstpointer b)
     return 0;
 }
 
+static void
+gwy_tiff_sort_tags(GwyTIFF *tiff)
+{
+    guint i;
+
+    for (i = 0; i < tiff->dirs->len; i++)
+        g_array_sort(g_ptr_array_index(tiff->dirs, i), gwy_tiff_tag_compare);
+}
+
 static const GwyTIFFEntry*
 gwy_tiff_find_tag(const GwyTIFF *tiff,
+                  guint dirno,
                   guint tag)
 {
     const GwyTIFFEntry *entry;
+    const GArray *tags;
     guint lo, hi, m;
 
-    if (!tiff->tags)
+    if (!tiff->dirs)
         return NULL;
 
+    /* If dirno is GWY_TIFF_ANY_DIR, search in all directories. */
+    if (dirno == GWY_TIFF_ANY_DIR) {
+        for (m = 0; m < tiff->dirs->len; m++) {
+            if ((entry = gwy_tiff_find_tag(tiff, m, tag)))
+                return entry;
+        }
+        return NULL;
+    }
+
+    if (dirno >= tiff->dirs->len)
+        return NULL;
+
+    tags = g_ptr_array_index(tiff->dirs, dirno);
     lo = 0;
-    hi = tiff->tags->len-1;
+    hi = tags->len-1;
     while (hi - lo > 1) {
         m = (lo + hi)/2;
-        entry = &g_array_index(tiff->tags, GwyTIFFEntry, m);
+        entry = &g_array_index(tags, GwyTIFFEntry, m);
         if (entry->tag > tag)
             hi = m;
         else
             lo = m;
     }
 
-    entry = &g_array_index(tiff->tags, GwyTIFFEntry, lo);
+    entry = &g_array_index(tags, GwyTIFFEntry, lo);
     if (entry->tag == tag)
         return entry;
 
-    entry = &g_array_index(tiff->tags, GwyTIFFEntry, hi);
+    entry = &g_array_index(tags, GwyTIFFEntry, hi);
     if (entry->tag == tag)
         return entry;
 
@@ -316,6 +353,7 @@ gwy_tiff_find_tag(const GwyTIFF *tiff,
 
 G_GNUC_UNUSED static gboolean
 gwy_tiff_get_sint(const GwyTIFF *tiff,
+                  guint dirno,
                   guint tag,
                   gint *retval)
 {
@@ -323,7 +361,7 @@ gwy_tiff_get_sint(const GwyTIFF *tiff,
     const guchar *p;
     const gchar *q;
 
-    entry = gwy_tiff_find_tag(tiff, tag);
+    entry = gwy_tiff_find_tag(tiff, dirno, tag);
     if (!entry || entry->count != 1)
         return FALSE;
 
@@ -352,13 +390,14 @@ gwy_tiff_get_sint(const GwyTIFF *tiff,
 
 G_GNUC_UNUSED static gboolean
 gwy_tiff_get_uint(const GwyTIFF *tiff,
+                  guint dirno,
                   guint tag,
                   guint *retval)
 {
     const GwyTIFFEntry *entry;
     const guchar *p;
 
-    entry = gwy_tiff_find_tag(tiff, tag);
+    entry = gwy_tiff_find_tag(tiff, dirno, tag);
     if (!entry || entry->count != 1)
         return FALSE;
 
@@ -386,6 +425,7 @@ gwy_tiff_get_uint(const GwyTIFF *tiff,
 
 G_GNUC_UNUSED static gboolean
 gwy_tiff_get_float(const GwyTIFF *tiff,
+                   guint dirno,
                    guint tag,
                    gdouble *retval)
 {
@@ -393,7 +433,7 @@ gwy_tiff_get_float(const GwyTIFF *tiff,
     const guchar *p;
     guint offset;
 
-    entry = gwy_tiff_find_tag(tiff, tag);
+    entry = gwy_tiff_find_tag(tiff, dirno, tag);
     if (!entry || entry->count != 1)
         return FALSE;
 
@@ -419,6 +459,7 @@ gwy_tiff_get_float(const GwyTIFF *tiff,
 
 G_GNUC_UNUSED static gboolean
 gwy_tiff_get_string(const GwyTIFF *tiff,
+                    guint dirno,
                     guint tag,
                     gchar **retval)
 {
@@ -426,13 +467,13 @@ gwy_tiff_get_string(const GwyTIFF *tiff,
     const guchar *p;
     guint offset;
 
-    entry = gwy_tiff_find_tag(tiff, tag);
+    entry = gwy_tiff_find_tag(tiff, dirno, tag);
     if (!entry || entry->type != GWY_TIFF_ASCII)
         return FALSE;
 
     p = entry->value;
     if (entry->count <= 4) {
-        *retval = g_new0(gchar, MAX(entry->count, 1));
+        *retval = g_new0(gchar, MAX(entry->count, 1) + 1);
         memcpy(*retval, entry->value, entry->count);
     }
     else {
@@ -455,7 +496,7 @@ gwy_tiff_load(const gchar *filename,
     tiff = g_new0(GwyTIFF, 1);
     if (gwy_tiff_load_real(tiff, filename, error)
         && gwy_tiff_tags_valid(tiff, error)) {
-        g_array_sort(tiff->tags, gwy_tiff_tag_compare);
+        gwy_tiff_sort_tags(tiff);
         return tiff;
     }
 

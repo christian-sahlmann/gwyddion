@@ -109,7 +109,7 @@ static GwyModuleInfo module_info = {
     module_register,
     N_("Imports PSIA data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.3",
+    "0.4",
     "David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
@@ -145,7 +145,7 @@ psia_detect(const GwyFileDetectInfo *fileinfo, gboolean only_name)
         return 0;
 
     if ((tiff = gwy_tiff_load(fileinfo->name, NULL))
-        && gwy_tiff_get_uint(tiff, PSIA_TIFFTAG_MagicNumber, &magic)
+        && gwy_tiff_get_uint0(tiff, PSIA_TIFFTAG_MagicNumber, &magic)
         && magic == PSIA_MAGIC_NUMBER)
         score = 100;
 
@@ -190,16 +190,16 @@ psia_load_tiff(GwyTIFF *tiff, GError **error)
     gdouble q, z0;
     gdouble *d;
 
-    if (!gwy_tiff_get_uint(tiff, PSIA_TIFFTAG_MagicNumber, &magic)
+    if (!gwy_tiff_get_uint0(tiff, PSIA_TIFFTAG_MagicNumber, &magic)
         || magic != PSIA_MAGIC_NUMBER
-        || !gwy_tiff_get_uint(tiff, PSIA_TIFFTAG_Version, &version)
+        || !gwy_tiff_get_uint0(tiff, PSIA_TIFFTAG_Version, &version)
         || version < 0x01000001) {
         err_FILE_TYPE(error, "PSIA");
         return NULL;
     }
 
     /* Data */
-    entry = gwy_tiff_find_tag(tiff, PSIA_TIFFTAG_Data);
+    entry = gwy_tiff_find_tag(tiff, 0, PSIA_TIFFTAG_Data);
     if (!entry) {
         g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
                     _("Data tag is missing."));
@@ -211,7 +211,7 @@ psia_load_tiff(GwyTIFF *tiff, GError **error)
     gwy_debug("data_len: %d", data_len);
 
     /* Header */
-    entry = gwy_tiff_find_tag(tiff, PSIA_TIFFTAG_Header);
+    entry = gwy_tiff_find_tag(tiff, 0, PSIA_TIFFTAG_Header);
     if (!entry) {
         err_FILE_TYPE(error, "PSIA");
         return NULL;
@@ -299,7 +299,7 @@ psia_load_tiff(GwyTIFF *tiff, GError **error)
     header.data_avg = gwy_get_gint32_le(&p);
     header.compression = gwy_get_guint32_le(&p);
 
-    gwy_tiff_get_string(tiff, PSIA_TIFFTAG_Comments, &comment);
+    gwy_tiff_get_string0(tiff, PSIA_TIFFTAG_Comments, &comment);
 
     dfield = gwy_data_field_new(header.xres, header.yres,
                                 header.xreal, header.yreal,
