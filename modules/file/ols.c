@@ -35,26 +35,33 @@
 #include <libgwyddion/gwymath.h>
 #include <libprocess/stats.h>
 #include <app/gwymoduleutils-file.h>
+#include <app/data-browser.h>
 #include "err.h"
+#include "gwytiff.h"
 #include <tiffio.h>
 
 #define MAGIC      "II\x2a\x00"
 #define MAGIC_SIZE (sizeof(MAGIC) - 1)
 
-static gboolean      module_register      (void);
-static gint          ols_detect           (const GwyFileDetectInfo *fileinfo,
-                                            gboolean only_name);
-static GwyContainer* ols_load             (const gchar *filename,
-                                            GwyRunType mode,
-                                            GError **error);
-static GwyContainer* ols_load_tiff        (TIFF *tiff,
-                                            GError **error);
+#define MAGIC_COMMENT "System Name =         OLS"
+
+static gboolean      module_register(void);
+static gint          ols_detect     (const GwyFileDetectInfo *fileinfo,
+                                     gboolean only_name);
+static GwyContainer* ols_load       (const gchar *filename,
+                                     GwyRunType mode,
+                                     GError **error);
+static const gchar*  ols_read_value (const gchar* comment,
+                                     const gchar* value_name);
+static GwyContainer* ols_load_tiff  (TIFF *tiff,
+                                     GError **error);
+
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     module_register,
     N_("Imports OLS data files."),
-    "Jan Hořák <xhorak@gmail.com>",
-    "0.1",
+    "Jan Hořák <xhorak@gmail.com>, Yeti <yeti@gwyddion.net>",
+    "0.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2008",
 };
@@ -74,28 +81,12 @@ module_register(void)
     return TRUE;
 }
 
-static gchar*
-ols_read_value(const gchar* comment, const gchar* value_name)
-{
-   gchar *pos;
-
-   pos = g_strstr_len(comment, strlen(comment), value_name);
-   if (pos) {
-      pos = g_strstr_len(pos, strlen(pos), "=");
-      pos++;
-   }
-   if (!pos) {
-      g_warning("Cannot find '%s' in file comment.\n", value_name);
-   }
-   return pos;
-}
-
 static gint
 ols_detect(const GwyFileDetectInfo *fileinfo, gboolean only_name)
 {
-    TIFF *tiff = 0;
+    GwyTIFF *tiff;
     gint score = 0;
-    gchar *comment = 0;
+    gchar *comment = NULL;
 
     if (only_name)
         return score;
@@ -105,15 +96,15 @@ ols_detect(const GwyFileDetectInfo *fileinfo, gboolean only_name)
         || memcmp(fileinfo->head, MAGIC, MAGIC_SIZE) != 0)
         return 0;
 
-    if ((tiff = TIFFOpen(fileinfo->name, "r"))
-        && TIFFGetField(tiff, TIFFTAG_IMAGEDESCRIPTION, &comment)
-        && strstr(comment, "OLS"))
-    {
+    /* Use GwyTIFF for detection to avoid problems with fragile libtiff. */
+    if ((tiff = gwy_tiff_load(fileinfo->name, NULL))
+        && gwy_tiff_get_string0(tiff, GWY_TIFFTAG_IMAGEDESCRIPTION, &comment)
+        && strstr(comment, MAGIC_COMMENT))
         score = 100;
-    }
 
+    g_free(comment);
     if (tiff)
-        TIFFClose(tiff);
+        gwy_tiff_free(tiff);
 
     return score;
 }
@@ -136,6 +127,23 @@ ols_load(const gchar *filename,
     return container;
 }
 
+static const gchar*
+ols_read_value(const gchar* comment, const gchar* value_name)
+{
+   gchar *pos;
+
+   pos = g_strstr_len(comment, strlen(comment), value_name);
+   if (pos) {
+      pos = g_strstr_len(pos, strlen(pos), "=");
+      pos++;
+   }
+   if (!pos) {
+      g_warning("Cannot find '%s' in file comment.\n", value_name);
+   }
+
+   return pos;
+}
+
 static GwyContainer*
 ols_load_tiff(TIFF *tiff, GError **error)
 {
@@ -144,38 +152,53 @@ ols_load_tiff(TIFF *tiff, GError **error)
     GwySIUnit *siunit;
     gint i, j, power10;
     gchar *comment = NULL, *data_channel_info_title, *data_channel_info;
+    const gchar *s1, *s2;
     uint32 width, height;
     guchar *buffer;
-    gchar channel_name[50];
     int dir_num = 0;
-    double z_axis, xy_axis, factor;
+    double z_axis = 1.0, xy_axis, factor;
 
+    /* Comment with parameters is common for all data fields */
     if (!TIFFGetField(tiff, TIFFTAG_IMAGEDESCRIPTION, &comment)
-        || !strstr(comment, "OLS")) {
+        || !strstr(comment, MAGIC_COMMENT)) {
         err_FILE_TYPE(error, "OLS");
         return NULL;
     }
 
-    z_axis = - atof(ols_read_value(comment, "ZPositionUp"))
-             + atof(ols_read_value(comment, "ZPositionLow"));
+    /* The value gets overwritten by libtiff as other values are read. */
+    comment = g_strdup(comment);
+    if ((s1 = ols_read_value(comment, "ZPositionUp"))
+         && (s2 = ols_read_value(comment, "ZPositionLow")))
+        z_axis = g_ascii_strtod(s1, NULL) - g_ascii_strtod(s2, NULL);
 
-    TIFFGetField(tiff, TIFFTAG_IMAGEWIDTH, &width);
-    TIFFGetField(tiff, TIFFTAG_IMAGELENGTH, &height);
     do {
-        sprintf(channel_name, "/%d/data", dir_num++);
-        data_channel_info_title = g_strdup_printf("[Data %d Info]", dir_num);
-        // find channel info
-        data_channel_info = g_strstr_len(comment, strlen(comment),
-                                         data_channel_info_title);
-        if (!data_channel_info) {
-            g_warning("Cannot find '%s' in comment.", data_channel_info_title);
+        if (!TIFFGetField(tiff, TIFFTAG_IMAGEWIDTH, &width)
+            || !TIFFGetField(tiff, TIFFTAG_IMAGELENGTH, &height)) {
+            g_warning("Missing image dimensions in directory %u.", dir_num);
             continue;
         }
+        data_channel_info_title = g_strdup_printf("[Data %d Info]", dir_num+1);
+        // find channel info
+        data_channel_info = strstr(comment, data_channel_info_title);
+        if (!data_channel_info) {
+            g_warning("Cannot find '%s' in comment.", data_channel_info_title);
+            g_free(data_channel_info_title);
+            continue;
+        }
+        g_free(data_channel_info_title);
         if (!ols_read_value(data_channel_info, "XY Convert Value")) {
             g_warning("Cannot find 'XY Convert Value' in comment.");
             continue;
         }
-        xy_axis = atof(ols_read_value(data_channel_info, "XY Convert Value"));
+        /* FIXME: This is wrong, it can find the value also in any later
+         * section.  Must use sectlen somehow. */
+        if (!(s1 = ols_read_value(data_channel_info, "XY Convert Value")))
+            continue;
+        xy_axis = g_ascii_strtod(s1, NULL);
+        if (!((xy_axis = fabs(xy_axis)) > 0)) {
+            g_warning("Real size step is 0.0, fixing to 1.0");
+            xy_axis = 1.0;
+        }
 
         buffer = g_new(guchar, TIFFScanlineSize(tiff));
         siunit = gwy_si_unit_new_parse("nm", &power10);
@@ -206,13 +229,16 @@ ols_load_tiff(TIFF *tiff, GError **error)
         if (!container)
             container = gwy_container_new();
 
-        gwy_container_set_object_by_name(container, channel_name, dfield);
+        gwy_container_set_object(container, gwy_app_get_data_key_for_id(dir_num),
+                                 dfield);
 
         // free resources
         g_object_unref(dfield);
         g_free(buffer);
-        g_free(data_channel_info_title);
+        dir_num++;
     } while (TIFFReadDirectory(tiff));
+
+    g_free(comment);
 
     return container;
 }

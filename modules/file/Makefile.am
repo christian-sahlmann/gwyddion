@@ -37,9 +37,9 @@ matfile_sources = matfile.c
 filedir = $(pkglibdir)/modules/file
 
 file_LTLIBRARIES = \
-	assing-afm.la \
 	apefile.la \
 	asciiexport.la \
+	assing-afm.la \
 	bcrfile.la \
 	burleigh.la \
 	burleigh_bii.la \
@@ -130,8 +130,8 @@ else
 MODULE_LIBTIFF =
 endif
 
-asciiexport_la_SOURCES   = asciiexport.c
 apefile_la_SOURCES       = apefile.c
+asciiexport_la_SOURCES   = asciiexport.c
 assing_afm_la_SOURCES    = assing-afm.c
 bcrfile_la_SOURCES       = bcrfile.c
 burleigh_la_SOURCES      = burleigh.c
@@ -191,7 +191,7 @@ pixmap_la_LIBADD         = $(MODULE_LIBTIFF)
 if HAVE_TIFF
 jpkscan_la_SOURCES       = jpkscan.c jpk.h
 jpkscan_la_LIBADD        = $(MODULE_LIBTIFF)
-ols_la_SOURCES           = ols.c
+ols_la_SOURCES           = ols.c gwytiff.h
 ols_la_LIBADD            = $(MODULE_LIBTIFF)
 endif
 
