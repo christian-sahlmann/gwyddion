@@ -143,7 +143,7 @@ gwy_tiff_load_real(GwyTIFF *tiff,
             g_set_error(error, GWY_MODULE_FILE_ERROR,
                         GWY_MODULE_FILE_ERROR_DATA,
                         _("TIFF directory %u ended unexpectedly."),
-                        (guint)tags->len);
+                        (guint)tiff->dirs->len);
             return FALSE;
         }
 
@@ -153,7 +153,7 @@ gwy_tiff_load_real(GwyTIFF *tiff,
             g_set_error(error, GWY_MODULE_FILE_ERROR,
                         GWY_MODULE_FILE_ERROR_DATA,
                         _("TIFF directory %u ended unexpectedly."),
-                        (guint)tags->len);
+                        (guint)tiff->dirs->len);
             return FALSE;
         }
 
@@ -485,6 +485,15 @@ gwy_tiff_get_string(const GwyTIFF *tiff,
     }
 
     return TRUE;
+}
+
+G_GNUC_UNUSED static guint
+gwy_tiff_get_n_dirs(GwyTIFF *tiff)
+{
+    if (!tiff->dirs)
+        return 0;
+
+    return tiff->dirs->len;
 }
 
 static GwyTIFF*
