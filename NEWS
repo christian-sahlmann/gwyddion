@@ -1,3 +1,9 @@
+2.16 (2000-00-00)
+Libraries:
+- libgwyprocess: Missing data field invalidation after Laplace iteration was
+  added, fixing wrong color scales after Laplace interpolation data removal.
+
+
 2.15 (2009-05-20)
 Application:
 - Translations updated: Czech, French, Russian.
