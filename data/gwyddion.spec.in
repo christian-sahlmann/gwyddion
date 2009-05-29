@@ -93,6 +93,7 @@ Group:         Development/Libraries
 Requires:      %{name} = %{version}
 # This pulls everything else
 Requires:      gtk2-devel >= 2.8
+Requires:      gtkglext-devel
 %if %{distro_is_fedora}
 Requires:      perl(:MODULE_COMPAT_%(eval "`%{__perl} -V:version`"; echo $version))
 Requires:      python-abi = %(%{__python} -c "import sys ; print sys.version[:3]")
