@@ -19,6 +19,17 @@ OutputDir=.
 OutputBaseFilename=@PACKAGE_NAME@-@PACKAGE_VERSION@
 ChangesAssociations=yes
 PrivilegesRequired=none
+ShowLanguageDialog=yes
+ShowUndisplayableLanguages=yes
+ChangesEnvironment=yes
+
+[Languages]
+Name: "en"; MessagesFile: "compiler:Default.isl"
+Name: "cz"; MessagesFile: "compiler:Languages\Czech.isl"
+Name: "de"; MessagesFile: "compiler:Languages\German.isl"
+Name: "fr"; MessagesFile: "compiler:Languages\French.isl"
+Name: "it"; MessagesFile: "compiler:Languages\Italian.isl"
+Name: "ru"; MessagesFile: "compiler:Languages\Russian.isl"
 
 [Files]
 Source: "*.dll"; DestDir: "{app}"
@@ -66,7 +77,13 @@ Root: HKCR; Subkey: ".gwy"; ValueType: string; ValueName: ""; ValueData: "@PACKA
 Root: HKCR; Subkey: "@PACKAGE_NAME@.NativeData"; ValueType: string; ValueName: ""; ValueData: "@PACKAGE_NAME@ Native Data File"; Flags: uninsdeletekey
 Root: HKCR; Subkey: "@PACKAGE_NAME@.NativeData\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\pixmaps\@PACKAGE_TARNAME@.ico"
 Root: HKCR; Subkey: "@PACKAGE_NAME@.NativeData\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\@PACKAGE_TARNAME@.exe"" --remote-new ""%1"""
-
+; LANG settings
+Root: HKLM; Subkey: "SYSTEM\CurrentControlSet\Control\Session Manager\Environment"; ValueType: string; ValueName: "LANG"; ValueData: "en_US.UTF-8"; Languages: en; Flags: uninsdeletevalue
+Root: HKLM; Subkey: "SYSTEM\CurrentControlSet\Control\Session Manager\Environment"; ValueType: string; ValueName: "LANG"; ValueData: "cs_CZ.UTF-8"; Languages: cz; Flags: uninsdeletevalue
+Root: HKLM; Subkey: "SYSTEM\CurrentControlSet\Control\Session Manager\Environment"; ValueType: string; ValueName: "LANG"; ValueData: "de_DE.UTF-8"; Languages: de; Flags: uninsdeletevalue
+Root: HKLM; Subkey: "SYSTEM\CurrentControlSet\Control\Session Manager\Environment"; ValueType: string; ValueName: "LANG"; ValueData: "fr_FR.UTF-8"; Languages: fr; Flags: uninsdeletevalue
+Root: HKLM; Subkey: "SYSTEM\CurrentControlSet\Control\Session Manager\Environment"; ValueType: string; ValueName: "LANG"; ValueData: "it_IT.UTF-8"; Languages: it; Flags: uninsdeletevalue
+Root: HKLM; Subkey: "SYSTEM\CurrentControlSet\Control\Session Manager\Environment"; ValueType: string; ValueName: "LANG"; ValueData: "ru_RU.UTF-8"; Languages: ru; Flags: uninsdeletevalue
 
 [Code]
 var
