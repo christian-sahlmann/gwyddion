@@ -326,6 +326,41 @@ saveable_formats[] = {
     },
 };
 
+static struct {
+    const gchar *name;
+    const gchar *description;
+}
+known_formats[] = {
+    {
+        "gif",
+        N_("Graphics Interchange Format (.gif)"),
+    },
+    {
+        "tiff",
+        N_("TIFF (.tiff,.tif)"),
+    },
+    {
+        "jpeg2000",
+        N_("JPEG 2000 (.jpx)"),
+    },
+    {
+        "pcx",
+        N_("PCX (.pcx)"),
+    },
+    {
+        "xpm",
+        N_("X Pixmap (.xpm)"),
+    },
+    {
+        "ras",
+        N_("Sun raster image (.ras)"),
+    },
+    {
+        "icns",
+        N_("Apple icon (.icns)"),
+    },
+};
+
 /* List of PixmapFormatInfo for all formats.
  * FIXME: this is never freed */
 static GSList *pixmap_formats = NULL;
@@ -356,7 +391,7 @@ static GwyModuleInfo module_info = {
        "TARGA. "
        "Import support relies on GDK and thus may be installation-dependent."),
     "Yeti <yeti@gwyddion.net>",
-    "7.2",
+    "7.3",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -425,6 +460,17 @@ module_register(void)
             format_info->extensions = g_strconcat(".", s, NULL);
             g_free(s);
             g_strfreev(ext);
+
+            /* Fix silly descriptions starting `The image format...' or
+             * something like that that are unusable for a sorted list. */
+            for (i = 0; i < G_N_ELEMENTS(known_formats); i++) {
+                if (gwy_strequal(fmtname, known_formats[i].name)) {
+                    gwy_debug("Fixing the description of known type: %s",
+                              fmtname);
+                    format_info->description = known_formats[i].description;
+                    break;
+                }
+            }
         }
         gwy_file_func_register(format_info->name,
                                format_info->description,
