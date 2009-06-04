@@ -104,7 +104,7 @@ static GwyModuleInfo module_info = {
     module_register,
     N_("Imports JPK image scans."),
     "Sven Neumann <neumann@jpk.com>",
-    "0.6",
+    "0.7",
     "JPK Instruments AG",
     "2005-2007",
 };
@@ -141,8 +141,11 @@ jpkscan_detect(const GwyFileDetectInfo *fileinfo, gboolean only_name)
     TIFFErrorHandler old_error, old_warning;
     TIFF *tiff;
     gdouble ulen, vlen;
-    const gchar *name;
+    const gchar *name, *libtiff_name;
     gint score = 0;
+#ifdef G_OS_WIN32
+    gchar *locale_name;
+#endif
 
     if (only_name)
         return score;
@@ -154,7 +157,16 @@ jpkscan_detect(const GwyFileDetectInfo *fileinfo, gboolean only_name)
     old_warning = TIFFSetWarningHandler(tiff_ignore);
     old_error = TIFFSetErrorHandler(tiff_ignore);
 
-    if ((tiff = TIFFOpen(fileinfo->name, "r"))
+    libtiff_name = fileinfo->name;
+#ifdef G_OS_WIN32
+    /* If the conversion fails, it does not really mater what we do, just do
+     * not pass NULL to libtiff... */
+    if ((locale_name = g_locale_from_utf8(fileinfo->name, -1,
+                                          NULL, NULL, NULL)))
+        libtiff_name = locale_name;
+#endif
+
+    if ((tiff = TIFFOpen(libtiff_name, "r"))
         && tiff_get_custom_double(tiff, JPK_TIFFTAG_Grid_uLength, &ulen)
         && tiff_get_custom_double(tiff, JPK_TIFFTAG_Grid_vLength, &vlen)
         && ulen > 0.0
@@ -163,6 +175,9 @@ jpkscan_detect(const GwyFileDetectInfo *fileinfo, gboolean only_name)
             || tiff_get_custom_string(tiff, JPK_TIFFTAG_Channel, &name)))
         score = 100;
 
+#ifdef G_OS_WIN32
+    g_free(locale_name);
+#endif
     if (tiff)
         TIFFClose(tiff);
 
@@ -178,15 +193,29 @@ jpkscan_load(const gchar *filename,
              GError **error)
 {
     TIFFErrorHandler old_error, old_warning;
+    const gchar *libtiff_name;
     GwyContainer *container;
+#ifdef G_OS_WIN32
+    gchar *locale_name;
+#endif
 
     gwy_debug("Loading <%s>", filename);
 
     old_warning = TIFFSetWarningHandler(tiff_ignore);
     old_error = TIFFSetErrorHandler(tiff_error);
 
-    container = jpkscan_load_tiff(filename, error);
+    libtiff_name = filename;
+#ifdef G_OS_WIN32
+    /* If the conversion fails, it does not really mater what we do, just do
+     * not pass NULL to libtiff... */
+    if ((locale_name = g_locale_from_utf8(filename, -1, NULL, NULL, NULL)))
+        libtiff_name = locale_name;
+#endif
+    container = jpkscan_load_tiff(libtiff_name, error);
 
+#ifdef G_OS_WIN32
+    g_free(locale_name);
+#endif
     TIFFSetErrorHandler(old_error);
     TIFFSetErrorHandler(old_warning);
 
