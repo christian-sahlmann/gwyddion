@@ -263,7 +263,7 @@ cut_dialog(CutArgs *args)
     } while (response != GTK_RESPONSE_OK);
 }
 
-static void        
+static void
 do_cut(CutArgs *args)
 {
     gint i, j, k, ndata, nndata, cstart, cend;
@@ -274,7 +274,7 @@ do_cut(CutArgs *args)
     gdouble *nxdata, *nydata;
 
     ngmodel = gwy_graph_model_new_alike(args->graph_model);
-    
+
     if (args->is_all) {
         cstart = 0;
         cend = gwy_graph_model_get_n_curves(args->graph_model);
@@ -287,7 +287,7 @@ do_cut(CutArgs *args)
 
         gcmodel = gwy_graph_model_get_curve(args->graph_model, k);
         ngcmodel = gwy_graph_curve_model_duplicate(gcmodel);
-        
+
         xdata = gwy_graph_curve_model_get_xdata(gcmodel);
         ydata = gwy_graph_curve_model_get_ydata(gcmodel);
         ndata = gwy_graph_curve_model_get_ndata(gcmodel);
@@ -312,12 +312,12 @@ do_cut(CutArgs *args)
         gwy_graph_curve_model_set_data(ngcmodel, nxdata, nydata, nndata);
 
         gwy_graph_model_add_curve(ngmodel, ngcmodel);
-        g_object_unref(ngcmodel); 
+        g_object_unref(ngcmodel);
     }
-                                        
+
     gwy_app_data_browser_get_current(GWY_APP_CONTAINER, &data, NULL);
     gwy_app_data_browser_add_graph_model(ngmodel, data, TRUE);
-    
+
     g_object_unref(ngmodel);
 }
 
@@ -334,7 +334,7 @@ cut_fetch_entry(CutControls *controls)
 }
 
 
-static void 
+static void
 pick_curves(CutControls *controls)
 {
     GwyGraphModel *parent_gmodel, *graph_model;
