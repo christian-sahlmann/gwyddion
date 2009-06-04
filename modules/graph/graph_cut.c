@@ -176,7 +176,7 @@ cut_dialog(CutArgs *args)
                      1, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
-    controls.all = gtk_check_button_new_with_mnemonic("Cut _all curves");
+    controls.all = gtk_check_button_new_with_mnemonic(_("Cut _all curves"));
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.all),
                                                    args->is_all);
     gtk_table_attach(GTK_TABLE(table), controls.all,
