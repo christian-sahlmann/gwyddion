@@ -25,7 +25,8 @@
  *
  * It is required to read some TIFF-based files because the software that
  * writes them is very creative with regard to the specification.  In other
- * words, we need to read some incorrect TIFFs too.
+ * words, we need to read some incorrect TIFFs too.  In particular, we do not
+ * expect directories to be sorted and we accept bogus (nul) entries.
  *
  * Names starting GWY_TIFF, GwyTIFF and gwy_tiff are reserved.
  */
@@ -59,15 +60,20 @@ typedef enum {
 
 /* Standard TIFF tags */
 enum {
-    GWY_TIFFTAG_IMAGEWIDTH        = 256,
-    GWY_TIFFTAG_IMAGELENGTH       = 257,
+    GWY_TIFFTAG_IMAGE_WIDTH       = 256,
+    GWY_TIFFTAG_IMAGE_LENGTH      = 257,
+    GWY_TIFFTAG_BITS_PER_SAMPLE   = 258,
+    GWY_TIFFTAG_PHOTOMETRIC       = 262,
     GWY_TIFFTAG_COMPRESSION       = 259,
-    GWY_TIFFTAG_IMAGEDESCRIPTION  = 270,
+    GWY_TIFFTAG_IMAGE_DESCRIPTION = 270,
     GWY_TIFFTAG_STRIP_OFFSETS     = 273,
+    GWY_TIFFTAG_ORIENTATION       = 274,
+    GWY_TIFFTAG_SAMPLES_PER_PIXEL = 277,
     GWY_TIFFTAG_ROWS_PER_STRIP    = 278,
     GWY_TIFFTAG_STRIP_BYTE_COUNTS = 279,
+    GWY_TIFFTAG_PLANAR_CONFIG     = 284,
     GWY_TIFFTAG_SOFTWARE          = 305,
-    GWY_TIFFTAG_DATETIME          = 306,
+    GWY_TIFFTAG_DATE_TIME         = 306,
 } GwyTIFFTag;
 
 typedef struct {
@@ -180,7 +186,7 @@ gwy_tiff_load_real(GwyTIFF *tiff,
     return TRUE;
 }
 
-static void
+static inline void
 gwy_tiff_free(GwyTIFF *tiff)
 {
     if (tiff->dirs) {
@@ -299,7 +305,7 @@ gwy_tiff_tag_compare(gconstpointer a, gconstpointer b)
     return 0;
 }
 
-static void
+static inline void
 gwy_tiff_sort_tags(GwyTIFF *tiff)
 {
     guint i;
@@ -491,7 +497,7 @@ gwy_tiff_get_string(const GwyTIFF *tiff,
     return TRUE;
 }
 
-G_GNUC_UNUSED static guint
+G_GNUC_UNUSED static inline guint
 gwy_tiff_get_n_dirs(GwyTIFF *tiff)
 {
     if (!tiff->dirs)
@@ -500,7 +506,7 @@ gwy_tiff_get_n_dirs(GwyTIFF *tiff)
     return tiff->dirs->len;
 }
 
-static GwyTIFF*
+G_GNUC_UNUSED static GwyTIFF*
 gwy_tiff_load(const gchar *filename,
               GError **error)
 {

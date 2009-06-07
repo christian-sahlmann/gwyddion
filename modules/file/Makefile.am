@@ -160,6 +160,7 @@ nt_mdt_la_SOURCES        = nt-mdt.c
 omicron_la_SOURCES       = omicron.c
 omicronmatrix_la_SOURCES = omicronmatrix.c
 opdfile_la_SOURCES       = opdfile.c
+pixmap_la_SOURCES        = pixmap.c
 pnifile_la_SOURCES       = pnifile.c
 psia_la_SOURCES          = psia.c gwytiff.h
 quesant_la_SOURCES       = quesant.c
@@ -183,10 +184,6 @@ surffile_la_SOURCES      = surffile.c
 unisoku_la_SOURCES       = unisoku.c
 witfile_la_SOURCES       = witfile.c
 wsxmfile_la_SOURCES      = wsxmfile.c
-
-# pixmap is built always, the source code branches on TIFF availability
-pixmap_la_SOURCES        = pixmap.c
-pixmap_la_LIBADD         = $(MODULE_LIBTIFF)
 
 if HAVE_TIFF
 jpkscan_la_SOURCES       = jpkscan.c jpk.h

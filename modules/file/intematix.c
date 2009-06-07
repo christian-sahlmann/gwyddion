@@ -286,8 +286,8 @@ isdf_image_fill_info(ISDFImage *image,
     const guchar *p;
 
     /* Required parameters */
-    if (!(gwy_tiff_get_uint0(tiff, GWY_TIFFTAG_IMAGEWIDTH, &image->xres)
-          && gwy_tiff_get_uint0(tiff, GWY_TIFFTAG_IMAGELENGTH, &image->yres)
+    if (!(gwy_tiff_get_uint0(tiff, GWY_TIFFTAG_IMAGE_WIDTH, &image->xres)
+          && gwy_tiff_get_uint0(tiff, GWY_TIFFTAG_IMAGE_LENGTH, &image->yres)
           && gwy_tiff_get_uint0(tiff, ISDF_TIFFTAG_IMAGEDEPTH, &image->zres)
           && gwy_tiff_get_uint0(tiff, ISDF_TIFFTAG_FILETYPE, &image->file_type)
           && gwy_tiff_get_uint0(tiff, ISDF_TIFFTAG_DATATYPE, &image->data_type)
@@ -401,9 +401,9 @@ isdf_get_metadata(const GwyTIFF *tiff,
     if (s)
         gwy_container_set_string_by_name(meta, "Data type", g_strdup(s));
 
-    meta_add_string(meta, tiff, GWY_TIFFTAG_IMAGEDESCRIPTION, "Description");
+    meta_add_string(meta, tiff, GWY_TIFFTAG_IMAGE_DESCRIPTION, "Description");
     meta_add_string(meta, tiff, GWY_TIFFTAG_SOFTWARE, "Software");
-    meta_add_string(meta, tiff, GWY_TIFFTAG_DATETIME, "Date");
+    meta_add_string(meta, tiff, GWY_TIFFTAG_DATE_TIME, "Date");
     meta_add_string(meta, tiff, ISDF_TIFFTAG_FILEINFO, "File information");
     meta_add_string(meta, tiff, ISDF_TIFFTAG_USERINFO, "User information");
     meta_add_string(meta, tiff, ISDF_TIFFTAG_SAMPLEINFO, "Sample information");

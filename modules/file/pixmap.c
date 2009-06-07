@@ -28,10 +28,6 @@
 #include <gdk/gdk.h>
 #include <gtk/gtk.h>
 
-#ifdef HAVE_TIFF
-#include <tiffio.h>
-#endif
-
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwydebugobjects.h>
@@ -39,8 +35,10 @@
 #include <libprocess/stats.h>
 #include <libgwydgets/gwydgets.h>
 #include <app/gwyapp.h>
+#include <app/gwymoduleutils-file.h>
 
 #include "err.h"
+#include "gwytiff.h"
 
 #define GWY_PNG_EXTENSIONS   ".png"
 #define GWY_JPEG_EXTENSIONS  ".jpeg,.jpg,.jpe"
@@ -222,12 +220,10 @@ static gboolean          pixmap_save_jpeg          (GwyContainer *data,
                                                     const gchar *filename,
                                                     GwyRunType mode,
                                                     GError **error);
-#ifdef HAVE_TIFF
 static gboolean          pixmap_save_tiff          (GwyContainer *data,
                                                     const gchar *filename,
                                                     GwyRunType mode,
                                                     GError **error);
-#endif
 static gboolean          pixmap_save_ppm           (GwyContainer *data,
                                                     const gchar *filename,
                                                     GwyRunType mode,
@@ -298,14 +294,12 @@ saveable_formats[] = {
         GWY_JPEG_EXTENSIONS,
         (GwyFileSaveFunc)&pixmap_save_jpeg,
     },
-#ifdef HAVE_TIFF
     {
         "tiff",
         N_("TIFF (.tiff,.tif)"),
         GWY_TIFF_EXTENSIONS,
         (GwyFileSaveFunc)&pixmap_save_tiff,
     },
-#endif
     {
         "pnm",
         N_("Portable Pixmap (.ppm,.pnm)"),
@@ -334,10 +328,6 @@ known_formats[] = {
     {
         "gif",
         N_("Graphics Interchange Format (.gif)"),
-    },
-    {
-        "tiff",
-        N_("TIFF (.tiff,.tif)"),
     },
     {
         "jpeg2000",
@@ -381,17 +371,12 @@ static const PixmapLoadArgs pixmap_load_defaults = {
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    N_("Exports data as pixmap images and imports data from pixmap images. "
-       "Supports following image formats for export: "
-       "PNG, "
-       "JPEG, "
-       "TIFF (if available), "
-       "PPM, "
-       "BMP, "
-       "TARGA. "
+    N_("Renders data into pixmap images and imports data from pixmap images. "
+       "Supports the following image formats for export: "
+       "PNG, JPEG, TIFF, PPM, BMP, TARGA. "
        "Import support relies on GDK and thus may be installation-dependent."),
     "Yeti <yeti@gwyddion.net>",
-    "7.3",
+    "7.4",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -1385,62 +1370,95 @@ pixmap_save_jpeg(GwyContainer *data,
     return ok;
 }
 
-#ifdef HAVE_TIFF
+/* Expand a word and double-word into LSB-ordered sequence of bytes */
+#define W(x) (x)&0xff, (x)>>8
+#define Q(x) (x)&0xff, ((x)>>8)&0xff, ((x)>>16)&0xff, (x)>>24
+
 static gboolean
 pixmap_save_tiff(GwyContainer *data,
                  const gchar *filename,
                  GwyRunType mode,
                  GError **error)
 {
-    GdkPixbuf *pixbuf;
-    TIFF *out;
-    guchar *pixels = NULL;
-    guint rowstride, i, width, height;
-    /* TODO: error handling (ugly, requires global variables for
-     * communication) */
-    gboolean ok = TRUE;
+    enum {
+        N_ENTRIES = 11,
+        ESTART = 4 + 4 + 2,
+        HEAD_SIZE = ESTART + 12*N_ENTRIES + 4,  /* head + 0th directory */
+        /* offsets of things we have to fill run-time */
+        WIDTH_OFFSET = ESTART + 12*0 + 8,
+        HEIGHT_OFFSET = ESTART + 12*1 + 8,
+        ROWS_OFFSET = ESTART + 12*8 + 8,
+        BYTES_OFFSET = ESTART + 12*9 + 8,
+    };
+    static guchar tiff_head[] = {
+        0x49, 0x49,   /* magic (LSB) */
+        W(42),        /* more magic */
+        Q(8),         /* 0th directory offset */
+        W(N_ENTRIES), /* number of entries */
+        W(GWY_TIFFTAG_IMAGE_WIDTH), W(GWY_TIFF_SHORT), Q(1), Q(0),
+        W(GWY_TIFFTAG_IMAGE_LENGTH), W(GWY_TIFF_SHORT), Q(1), Q(0),
+        W(GWY_TIFFTAG_BITS_PER_SAMPLE), W(GWY_TIFF_SHORT), Q(3), Q(HEAD_SIZE),
+        W(GWY_TIFFTAG_COMPRESSION), W(GWY_TIFF_SHORT), Q(1), Q(1),
+        W(GWY_TIFFTAG_PHOTOMETRIC), W(GWY_TIFF_SHORT), Q(1), Q(2),
+        W(GWY_TIFFTAG_STRIP_OFFSETS), W(GWY_TIFF_LONG), Q(1), Q(HEAD_SIZE + 6),
+        W(GWY_TIFFTAG_ORIENTATION), W(GWY_TIFF_SHORT), Q(1), Q(1),
+        W(GWY_TIFFTAG_SAMPLES_PER_PIXEL), W(GWY_TIFF_SHORT), Q(1), Q(3),
+        W(GWY_TIFFTAG_ROWS_PER_STRIP), W(GWY_TIFF_SHORT), Q(1), Q(0),
+        W(GWY_TIFFTAG_STRIP_BYTE_COUNTS), W(GWY_TIFF_LONG), Q(1), Q(0),
+        W(GWY_TIFFTAG_PLANAR_CONFIG), W(GWY_TIFF_SHORT), Q(1), Q(1),
+        Q(0),              /* next directory */
+        W(8), W(8), W(8),  /* value of bits per sample */
+        /* here starts the image data */
+    };
+    GdkPixbuf *pixbuf = NULL;
+    guchar *pixels;
+    guint rowstride, i, width, height, bytes;
+    FILE *fh = NULL;
+    gboolean ok = FALSE;
 
-    pixbuf = pixmap_draw_pixbuf(data, "TIFF", mode, error);
-    if (!pixbuf)
-        return FALSE;
+    if (!(pixbuf = pixmap_draw_pixbuf(data, "TIFF", mode, error)))
+        goto fail;
 
     pixels = gdk_pixbuf_get_pixels(pixbuf);
     rowstride = gdk_pixbuf_get_rowstride(pixbuf);
     width = gdk_pixbuf_get_width(pixbuf);
     height = gdk_pixbuf_get_height(pixbuf);
+    bytes = 3*width*height;
 
-    out = TIFFOpen(filename, "w");
-    if (!out) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_IO,
-                    _("TIFFOpen() function failed."));
-        g_object_unref(pixbuf);
-        return FALSE;
+    fh = g_fopen(filename, "w");
+    if (!fh) {
+        err_OPEN_WRITE(error);
+        goto fail;
     }
 
-    TIFFSetField(out, TIFFTAG_IMAGEWIDTH, width);
-    TIFFSetField(out, TIFFTAG_IMAGELENGTH, height);
-    TIFFSetField(out, TIFFTAG_SAMPLESPERPIXEL, 3);
-    TIFFSetField(out, TIFFTAG_BITSPERSAMPLE, 8);
-    TIFFSetField(out, TIFFTAG_ORIENTATION, ORIENTATION_TOPLEFT);
-    TIFFSetField(out, TIFFTAG_PLANARCONFIG, PLANARCONFIG_CONTIG);
-    TIFFSetField(out, TIFFTAG_PHOTOMETRIC, PHOTOMETRIC_RGB);
+    *(guint32*)(tiff_head + WIDTH_OFFSET) = GUINT32_TO_LE(width);
+    *(guint32*)(tiff_head + HEIGHT_OFFSET) = GUINT32_TO_LE(height);
+    *(guint32*)(tiff_head + ROWS_OFFSET) = GUINT32_TO_LE(height);
+    *(guint32*)(tiff_head + BYTES_OFFSET) = GUINT32_TO_LE(bytes);
 
-    g_return_val_if_fail(TIFFScanlineSize(out) <= (glong)rowstride, FALSE);
-    TIFFSetField(out, TIFFTAG_ROWSPERSTRIP, TIFFDefaultStripSize(out, 3*width));
+    if (!fwrite(tiff_head, sizeof(tiff_head), 1, fh)) {
+        err_WRITE(error);
+        goto fail;
+    }
+
     for (i = 0; i < height; i++) {
-        if (TIFFWriteScanline(out, pixels + i*rowstride, i, 0) < 0) {
-            g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_IO,
-                        _("TIFFWriteScanline() function failed."));
-            ok = FALSE;
-            break;
+        if (!fwrite(pixels + i*rowstride, 3*width, 1, fh)) {
+            err_WRITE(error);
+            goto fail;
         }
     }
-    TIFFClose(out);
-    g_object_unref(pixbuf);
+    ok = TRUE;
 
+    gwy_object_unref(pixbuf);
+    if (fh)
+        fclose(fh);
+
+fail:
     return ok;
 }
-#endif
+
+#undef W
+#undef Q
 
 static gboolean
 pixmap_save_ppm(GwyContainer *data,

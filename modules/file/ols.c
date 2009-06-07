@@ -98,7 +98,7 @@ ols_detect(const GwyFileDetectInfo *fileinfo, gboolean only_name)
 
     /* Use GwyTIFF for detection to avoid problems with fragile libtiff. */
     if ((tiff = gwy_tiff_load(fileinfo->name, NULL))
-        && gwy_tiff_get_string0(tiff, GWY_TIFFTAG_IMAGEDESCRIPTION, &comment)
+        && gwy_tiff_get_string0(tiff, GWY_TIFFTAG_IMAGE_DESCRIPTION, &comment)
         && strstr(comment, MAGIC_COMMENT))
         score = 100;
 
