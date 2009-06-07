@@ -206,7 +206,7 @@ psia_load_tiff(GwyTIFF *tiff, GError **error)
         return NULL;
     }
     p = entry->value;
-    data = (const guint16*)(tiff->data + tiff->getu32(&p));
+    data = (const guint16*)(tiff->data + tiff->get_guint32(&p));
     data_len = entry->count;
     gwy_debug("data_len: %d", data_len);
 
@@ -217,7 +217,7 @@ psia_load_tiff(GwyTIFF *tiff, GError **error)
         return NULL;
     }
     p = entry->value;
-    i = tiff->getu32(&p);
+    i = tiff->get_guint32(&p);
     p = tiff->data + i;
     count = entry->count;
     gwy_debug("[Header] count: %d", count);

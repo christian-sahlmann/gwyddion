@@ -84,15 +84,28 @@ typedef struct {
 } GwyTIFFEntry;
 
 typedef struct {
+    guint dirno;
+    guint width;
+    guint height;
+    guint stripe_rows;
+    guint bits_per_sample;
+    guint samples_per_pixel;
+    guint rowstride;
+    guint row;
+    guint *offsets;
+} GwyTIFFImageReader;
+
+typedef struct {
     guchar *data;
     gsize size;
     GPtrArray *dirs;  // Array of GwyTIFFEntry GArray*
-    guint16 (*getu16)(const guchar **p);
-    gint16 (*gets16)(const guchar **p);
-    guint32 (*getu32)(const guchar **p);
-    gint32 (*gets32)(const guchar **p);
-    gfloat (*getflt)(const guchar **p);
-    gdouble (*getdbl)(const guchar **p);
+    guint16 (*get_guint16)(const guchar **p);
+    gint16 (*get_gint16)(const guchar **p);
+    guint32 (*get_guint32)(const guchar **p);
+    gint32 (*get_gint32)(const guchar **p);
+    gfloat (*get_gfloat)(const guchar **p);
+    gdouble (*get_gdouble)(const guchar **p);
+    GwyTIFFImageReader reader;
 } GwyTIFF;
 
 /* Does not need to free tags on failure, the caller takes care of it. */
@@ -119,21 +132,21 @@ gwy_tiff_load_real(GwyTIFF *tiff,
     magic = gwy_get_guint32_le(&p);
     switch (magic) {
         case 0x002a4949:
-        tiff->getu16 = gwy_get_guint16_le;
-        tiff->gets16 = gwy_get_gint16_le;
-        tiff->getu32 = gwy_get_guint32_le;
-        tiff->gets32 = gwy_get_gint32_le;
-        tiff->getflt = gwy_get_gfloat_le;
-        tiff->getdbl = gwy_get_gdouble_le;
+        tiff->get_guint16 = gwy_get_guint16_le;
+        tiff->get_gint16 = gwy_get_gint16_le;
+        tiff->get_guint32 = gwy_get_guint32_le;
+        tiff->get_gint32 = gwy_get_gint32_le;
+        tiff->get_gfloat = gwy_get_gfloat_le;
+        tiff->get_gdouble = gwy_get_gdouble_le;
         break;
 
         case 0x2a004d4d:
-        tiff->getu16 = gwy_get_guint16_be;
-        tiff->gets16 = gwy_get_gint16_be;
-        tiff->getu32 = gwy_get_guint32_be;
-        tiff->gets32 = gwy_get_gint32_be;
-        tiff->getflt = gwy_get_gfloat_be;
-        tiff->getdbl = gwy_get_gdouble_be;
+        tiff->get_guint16 = gwy_get_guint16_be;
+        tiff->get_gint16 = gwy_get_gint16_be;
+        tiff->get_guint32 = gwy_get_guint32_be;
+        tiff->get_gint32 = gwy_get_gint32_be;
+        tiff->get_gfloat = gwy_get_gfloat_be;
+        tiff->get_gdouble = gwy_get_gdouble_be;
         break;
 
         default:
@@ -144,7 +157,7 @@ gwy_tiff_load_real(GwyTIFF *tiff,
 
     tiff->dirs = g_ptr_array_new();
     p = tiff->data + 4;
-    offset = tiff->getu32(&p);
+    offset = tiff->get_guint32(&p);
     do {
         GArray *tags;
         guint i;
@@ -158,7 +171,7 @@ gwy_tiff_load_real(GwyTIFF *tiff,
         }
 
         p = tiff->data + offset;
-        nentries = tiff->getu16(&p);
+        nentries = tiff->get_guint16(&p);
         if (offset + 2 + 4 + 12*nentries > tiff->size) {
             g_set_error(error, GWY_MODULE_FILE_ERROR,
                         GWY_MODULE_FILE_ERROR_DATA,
@@ -173,14 +186,14 @@ gwy_tiff_load_real(GwyTIFF *tiff,
         for (i = 0; i < nentries; i++) {
             GwyTIFFEntry entry;
 
-            entry.tag = tiff->getu16(&p);
-            entry.type = tiff->getu16(&p);
-            entry.count = tiff->getu32(&p);
+            entry.tag = tiff->get_guint16(&p);
+            entry.type = tiff->get_guint16(&p);
+            entry.count = tiff->get_guint32(&p);
             memcpy(entry.value, p, 4);
             p += 4;
             g_array_append_val(tags, entry);
         }
-        offset = tiff->getu32(&p);
+        offset = tiff->get_guint32(&p);
     } while (offset);
 
     return TRUE;
@@ -198,6 +211,7 @@ gwy_tiff_free(GwyTIFF *tiff)
         g_ptr_array_free(tiff->dirs, TRUE);
     }
 
+    g_free(tiff->reader.offsets);
     if (tiff->data)
         gwy_file_abandon_contents(tiff->data, tiff->size, NULL);
 
@@ -272,7 +286,7 @@ gwy_tiff_tags_valid(const GwyTIFF *tiff,
 
             entry = &g_array_index(tags, GwyTIFFEntry, j);
             p = entry->value;
-            offset = tiff->getu32(&p);
+            offset = tiff->get_guint32(&p);
             item_size = gwy_tiff_data_type_size(entry->type);
             /* Uknown types are implicitly OK.  If we cannot read it we never
              * read it by definition, so let the hell take what it refers to.
@@ -383,11 +397,11 @@ gwy_tiff_get_sint(const GwyTIFF *tiff,
         break;
 
         case GWY_TIFF_SHORT:
-        *retval = tiff->gets16(&p);
+        *retval = tiff->get_gint16(&p);
         break;
 
         case GWY_TIFF_LONG:
-        *retval = tiff->gets32(&p);
+        *retval = tiff->get_gint32(&p);
         break;
 
         default:
@@ -418,11 +432,11 @@ gwy_tiff_get_uint(const GwyTIFF *tiff,
         break;
 
         case GWY_TIFF_SHORT:
-        *retval = tiff->gets16(&p);
+        *retval = tiff->get_gint16(&p);
         break;
 
         case GWY_TIFF_LONG:
-        *retval = tiff->gets32(&p);
+        *retval = tiff->get_gint32(&p);
         break;
 
         default:
@@ -450,13 +464,13 @@ gwy_tiff_get_float(const GwyTIFF *tiff,
     p = entry->value;
     switch (entry->type) {
         case GWY_TIFF_FLOAT:
-        *retval = tiff->getflt(&p);
+        *retval = tiff->get_gfloat(&p);
         break;
 
         case GWY_TIFF_DOUBLE:
-        offset = tiff->getu32(&p);
+        offset = tiff->get_guint32(&p);
         p = tiff->data + offset;
-        *retval = tiff->getdbl(&p);
+        *retval = tiff->get_gdouble(&p);
         break;
 
         default:
@@ -487,13 +501,151 @@ gwy_tiff_get_string(const GwyTIFF *tiff,
         memcpy(*retval, entry->value, entry->count);
     }
     else {
-        offset = tiff->getu32(&p);
+        offset = tiff->get_guint32(&p);
         p = tiff->data + offset;
         *retval = g_new(gchar, entry->count);
         memcpy(*retval, p, entry->count);
         (*retval)[entry->count-1] = '\0';
     }
 
+    return TRUE;
+}
+
+G_GNUC_UNUSED static gboolean
+gwy_tiff_start_reading_image(GwyTIFF *tiff,
+                             guint dirno,
+                             GError **error)
+{
+    GwyTIFFImageReader *reader = &tiff->reader;
+    guint nstripes, i, ssize;
+
+    /* Invalidate reader */
+    reader->dirno = G_MAXUINT;
+
+    /* Required integer fields */
+    if (!gwy_tiff_get_uint(tiff, dirno, GWY_TIFFTAG_IMAGE_WIDTH,
+                           &reader->width)) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Required tag %u was not found."),
+                    GWY_TIFFTAG_IMAGE_WIDTH);
+        return FALSE;
+    }
+    if (!gwy_tiff_get_uint(tiff, dirno, GWY_TIFFTAG_IMAGE_LENGTH,
+                           &reader->height)) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Required tag %u was not found."),
+                    GWY_TIFFTAG_IMAGE_LENGTH);
+        return FALSE;
+    }
+    if (!gwy_tiff_get_uint(tiff, dirno, GWY_TIFFTAG_ROWS_PER_STRIP,
+                           &reader->stripe_rows)) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Required tag %u was not found."),
+                    GWY_TIFFTAG_ROWS_PER_STRIP);
+        return FALSE;
+    }
+    if (!gwy_tiff_get_uint(tiff, dirno, GWY_TIFFTAG_BITS_PER_SAMPLE,
+                           &reader->bits_per_sample)) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Required tag %u was not found."),
+                    GWY_TIFFTAG_BITS_PER_SAMPLE);
+        return FALSE;
+    }
+    if (!gwy_tiff_get_uint(tiff, dirno, GWY_TIFFTAG_SAMPLES_PER_PIXEL,
+                           &reader->samples_per_pixel)) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Required tag %u was not found."),
+                    GWY_TIFFTAG_SAMPLES_PER_PIXEL);
+        return FALSE;
+    }
+
+    /* Integer fields specifying data in a format we do not support */
+    if (gwy_tiff_get_uint(tiff, dirno, GWY_TIFFTAG_COMPRESSION, &i)
+        && i != 1) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Compression type %u is not supported."), i);
+        return FALSE;
+    }
+    if (gwy_tiff_get_uint(tiff, dirno, GWY_TIFFTAG_PLANAR_CONFIG, &i)
+        && i != 1) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Planar configuration %u is not supported."), i);
+        return FALSE;
+    }
+    if (reader->bits_per_sample != 16) {
+        err_BPP(error, reader->bits_per_sample);
+        return FALSE;
+    }
+    if (reader->samples_per_pixel != 1) {
+        err_UNSUPPORTED(error, "SamplesPerPixel");
+        return FALSE;
+    }
+    if (reader->stripe_rows == 0 || reader->stripe_rows > reader->width) {
+        err_INVALID(error, "RowsPerStripe");
+        return FALSE;
+    }
+    if (err_DIMENSION(error, reader->width)
+        || err_DIMENSION(error, reader->height))
+        return FALSE;
+
+    nstripes = (reader->height + reader->stripe_rows-1)/reader->stripe_rows;
+    reader->offsets = g_renew(guint, reader->offsets, nstripes);
+
+    /* Stripe offsets and byte counts.
+     * Actually, we ignore the latter as compression is not permitted. */
+    if (nstripes == 1) {
+        if (!gwy_tiff_get_uint(tiff, dirno, GWY_TIFFTAG_STRIP_OFFSETS,
+                               reader->offsets)) {
+            g_set_error(error, GWY_MODULE_FILE_ERROR,
+                        GWY_MODULE_FILE_ERROR_DATA,
+                        _("Required tag %u was not found."),
+                        GWY_TIFFTAG_STRIP_OFFSETS);
+
+            return FALSE;
+        }
+    }
+    else {
+        const GwyTIFFEntry *entry;
+        const guchar *p;
+
+        if (!(entry = gwy_tiff_find_tag(tiff, dirno,
+                                         GWY_TIFFTAG_STRIP_OFFSETS))
+            || entry->type != GWY_TIFF_LONG
+            || entry->count != nstripes) {
+            g_set_error(error, GWY_MODULE_FILE_ERROR,
+                        GWY_MODULE_FILE_ERROR_DATA,
+                        _("Required tag %u was not found."),
+                        GWY_TIFFTAG_STRIP_OFFSETS);
+            return FALSE;
+        }
+
+        /* Matching type ensured the tag data is at a valid position in the
+         * file. */
+        p = entry->value;
+        i = tiff->get_guint32(&p);
+        p = tiff->data + i;
+        for (i = 0; i < nstripes; i++)
+            reader->offsets[i] = tiff->get_guint32(&p);
+    }
+
+    /* Validate stripe offsets and sizes */
+    reader->rowstride = reader->bits_per_sample/8 * reader->samples_per_pixel;
+    ssize = reader->rowstride * reader->stripe_rows;
+    for (i = 0; i < nstripes; i++) {
+        if (i == nstripes-1 && reader->height % reader->stripe_rows)
+            ssize = reader->rowstride * (reader->height % reader->stripe_rows);
+
+        if (reader->offsets[i] + ssize > tiff->size) {
+            g_set_error(error, GWY_MODULE_FILE_ERROR,
+                        GWY_MODULE_FILE_ERROR_DATA,
+                        _("File is truncated"));
+            return FALSE;
+        }
+    }
+
+    /* If we got here we are convinced we can read the image data. */
+    reader->dirno = dirno;
+    reader->row = 0;
     return TRUE;
 }
 
@@ -513,6 +665,7 @@ gwy_tiff_load(const gchar *filename,
     GwyTIFF *tiff;
 
     tiff = g_new0(GwyTIFF, 1);
+    tiff->reader.dirno = G_MAXUINT;
     if (gwy_tiff_load_real(tiff, filename, error)
         && gwy_tiff_tags_valid(tiff, error)) {
         gwy_tiff_sort_tags(tiff);

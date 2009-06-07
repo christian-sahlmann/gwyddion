@@ -241,14 +241,14 @@ isdf_load(const gchar *filename,
         case GWY_TIFF_SLONG:
         for (i = 0; i < image.yres; i++) {
             for (j = 0; j < image.xres; j++)
-                data[i*image.xres + j] = q*tiff->gets32(&p);
+                data[i*image.xres + j] = q*tiff->get_gint32(&p);
         }
         break;
 
         case GWY_TIFF_DOUBLE:
         for (i = 0; i < image.yres; i++) {
             for (j = 0; j < image.xres; j++)
-                data[i*image.xres + j] = q*tiff->getdbl(&p);
+                data[i*image.xres + j] = q*tiff->get_gdouble(&p);
         }
         break;
 
@@ -312,7 +312,7 @@ isdf_image_fill_info(ISDFImage *image,
         return FALSE;
     }
     p = entry->value;
-    image->raw_data = tiff->data + tiff->getu32(&p);
+    image->raw_data = tiff->data + tiff->get_guint32(&p);
     image->raw_data_type = entry->type;
     image->raw_data_len = entry->count;
     if (image->raw_data_type != GWY_TIFF_SLONG
