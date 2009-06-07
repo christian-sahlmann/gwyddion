@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2009-06-04 03:59+0200\n"
-"PO-Revision-Date: 2009-06-04 08:49+0300\n"
+"POT-Creation-Date: 2009-06-05 03:59+0200\n"
+"PO-Revision-Date: 2009-06-07 22:52+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@km.ru>\n"
 "Language-Team: russian <ru@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -2448,15 +2448,15 @@ msgstr "Импортирует изображения сканирований J
 msgid "JPK image scans (.jpk)"
 msgstr "Изображения сканирований JPK (.jpk)"
 
-#: modules/file/jpkscan.c:213
+#: modules/file/jpkscan.c:242
 msgid "JPK scan"
 msgstr "Сканирование JPK"
 
-#: modules/file/jpkscan.c:222
+#: modules/file/jpkscan.c:251
 msgid "File does not contain grid dimensions."
 msgstr "Файл не содержит размеров сетки"
 
-#: modules/file/jpkscan.c:320
+#: modules/file/jpkscan.c:349
 #, c-format
 msgid ""
 "LibTIFF too old!\n"
@@ -2493,18 +2493,18 @@ msgstr "Ожидаемый размер тега %u должен быть %u б�
 #: modules/file/mapvue.c:648
 #, c-format
 msgid "Tag %u size is %u bytes, which is not enough to hold the tag marker."
-msgstr ""
+msgstr "Разме тега %u - %u байт, что недостаточно чтобы содержать маркер тега"
 
 #: modules/file/mapvue.c:659
 #: modules/file/mapvue.c:672
 #, c-format
 msgid "Tag %u size is %u bytes, which is not enough to hold the tag marker and size."
-msgstr ""
+msgstr "Разме тега %u - %u байт, что недостаточно чтобы содержать маркер тега и его размер"
 
 #: modules/file/mapvue.c:683
 #, c-format
 msgid "Tag marker is missing on an unknown tag %u."
-msgstr ""
+msgstr "Маркер тега отсутствует на неизвестном теге %u."
 
 #: modules/file/mapvue.c:702
 #: modules/file/mapvue.c:712
@@ -2529,9 +2529,9 @@ msgid "Compressed data inside compressed data found."
 msgstr "Сжатые данные найдены внутри сжатых данных."
 
 #: modules/file/matfile.c:346
-#, c-format
+#, fuzzy, c-format
 msgid "Invalid short tag of type %u claims to consists of %u bytes."
-msgstr ""
+msgstr "Неверный короткий тег типа %u претендует что его длина %u байт."
 
 #: modules/file/matfile.c:597
 #, c-format
@@ -2746,7 +2746,7 @@ msgstr "Массив `%s' содержит ненулевое количеств
 
 #: modules/file/netcdf.c:647
 msgid "More than one record dimension found."
-msgstr ""
+msgstr "Найдена больше, чем одна запись о размерности."
 
 #: modules/file/nt-mdt.c:533
 msgid "Imports NT-MDT data files."
@@ -2758,11 +2758,11 @@ msgstr "Файлы NT-MDT (.mdt)"
 
 #: modules/file/nt-mdt.c:889
 msgid "Frame is too short for Frame Mode."
-msgstr ""
+msgstr "Фрейм слишком короткий для режима фреймов."
 
 #: modules/file/nt-mdt.c:903
 msgid "Frame is too short for dots or data."
-msgstr ""
+msgstr "Фрейм слишком короткий для точек или данных."
 
 #: modules/file/nt-mdt.c:998
 #, c-format
@@ -2871,8 +2871,9 @@ msgid "JPEG 2000 (.jpx)"
 msgstr ""
 
 #: modules/file/pixmap.c:348
+#, fuzzy
 msgid "PCX (.pcx)"
-msgstr ""
+msgstr "PCX"
 
 #: modules/file/pixmap.c:352
 msgid "X Pixmap (.xpm)"
@@ -3176,7 +3177,7 @@ msgstr ""
 
 #: modules/file/psia.c:110
 msgid "Imports PSIA data files."
-msgstr "импортирует файлы данных PSIA."
+msgstr "Импортирует файлы данных PSIA."
 
 #: modules/file/psia.c:123
 msgid "PSIA data files (.tiff)"
@@ -3681,7 +3682,7 @@ msgstr "Профиль"
 
 #: modules/file/sensolytics.c:89
 msgid "Imports Sensolytics text files."
-msgstr "Импортирует текстовые файлы Sensolytics"
+msgstr "Импортирует текстовые файлы Sensolytics."
 
 #: modules/file/sensolytics.c:102
 msgid "Sensolytics text files (.dat)"
@@ -3710,7 +3711,7 @@ msgstr "Файлы IonScope SICM (.img)"
 
 #: modules/file/sis.c:448
 msgid "Imports SIS (Surface Imaging Systems) data files."
-msgstr "Импортирует файлы данных SIS (Surface Imaging Systems)"
+msgstr "Импортирует файлы данных SIS (Surface Imaging Systems)."
 
 #: modules/file/sis.c:461
 msgid "SIS files (.sis)"
@@ -3763,7 +3764,7 @@ msgstr "Файлы SPML (.xml)"
 
 #: modules/file/spmlab.c:113
 msgid "Imports Thermicroscopes SpmLab R3 to R7 data files."
-msgstr "Импортирует файлы данных Thermicroscopes SpmLab от R3 до R7"
+msgstr "Импортирует файлы данных Thermicroscopes SpmLab от R3 до R7."
 
 #: modules/file/spmlab.c:126
 msgid "Thermicroscopes SpmLab files"
@@ -3776,7 +3777,7 @@ msgstr "Неизвестная версия формата %c."
 
 #: modules/file/spmlabf.c:67
 msgid "Imports SPMLab floating-point files."
-msgstr "импортирует файлы с плавающей точкой SPMLab."
+msgstr "Импортирует файлы с плавающей точкой SPMLab."
 
 #: modules/file/spmlabf.c:80
 msgid "SPMLab floating-point files (.flt)"
@@ -4119,6 +4120,10 @@ msgstr "Извлечь часть старого графика в новый"
 msgid "Cut Graph"
 msgstr "Обрезать график"
 
+#: modules/graph/graph_cut.c:179
+msgid "Cut _all curves"
+msgstr "Обрезать _все кривые"
+
 #: modules/graph/graph_export_ascii.c:52
 msgid "Plain text"
 msgstr "Простой текст"
@@ -4161,7 +4166,7 @@ msgstr "Экспорт мета_данных"
 
 #: modules/graph/graph_export_bitmap.c:34
 msgid "Export graph into bitmap"
-msgstr "Экспортировать график в растровое изображение"
+msgstr "Экспортирует график в растровое изображение"
 
 #: modules/graph/graph_export_bitmap.c:48
 msgid "/Export _Bitmap"
@@ -4169,11 +4174,11 @@ msgstr "/Экспортировать _растр"
 
 #: modules/graph/graph_export_bitmap.c:51
 msgid "Export graph to a raster image"
-msgstr "Экспортирует график в растровое изображение"
+msgstr "Экспортировать график в растровое изображение"
 
 #: modules/graph/graph_export_vector.c:36
 msgid "Export graph in postscript"
-msgstr "Экспортировать график в postscript"
+msgstr "Экспортирует график в postscript"
 
 #: modules/graph/graph_export_vector.c:50
 msgid "/Export _PostScript"
@@ -4181,11 +4186,11 @@ msgstr "/Экспортировать _PostScript"
 
 #: modules/graph/graph_export_vector.c:53
 msgid "Export graph to a vector image"
-msgstr "Экспортирует график в векторное изображение"
+msgstr "Экспортировать график в векторное изображение"
 
 #: modules/graph/graph_fdfit.c:169
 msgid "Fit force-distance data"
-msgstr "Аппроксимировать данные сила-расстояние"
+msgstr "Аппроксимирует данные сила-расстояние"
 
 #: modules/graph/graph_fdfit.c:183
 msgid "/_Fit FD Curve..."
@@ -4193,7 +4198,7 @@ msgstr "/Аппроксимировать _кривую сила-расстоя�
 
 #: modules/graph/graph_fdfit.c:186
 msgid "Fit a force-distance curve"
-msgstr "Аппроксимирует кривую сила-расстояние"
+msgstr "Аппроксимировать кривую сила-расстояние"
 
 #: modules/graph/graph_fdfit.c:249
 msgid "Fit FD Curve"
@@ -4268,7 +4273,7 @@ msgstr "Матрица корреляции\n"
 
 #: modules/graph/graph_fit.c:173
 msgid "Fit graph with function"
-msgstr "Аппроксимировать график функцией"
+msgstr "Аппроксимирует график функцией"
 
 #: modules/graph/graph_fit.c:187
 msgid "/_Fit Function..."
@@ -4276,7 +4281,7 @@ msgstr "/_Аппроксимировать функцией..."
 
 #: modules/graph/graph_fit.c:190
 msgid "Fit a function on graph data"
-msgstr "Аппроксимирует данные графика функцией"
+msgstr "Аппроксимировать данные графика функцией"
 
 #: modules/graph/graph_fit.c:415
 msgid "Plot full range"
@@ -4979,7 +4984,7 @@ msgstr "Предел исключения низкого уровня:"
 
 #: modules/process/edge.c:147
 msgid "Several edge detection methods (Laplacian of Gaussian, Canny, and some experimental), creates presentation."
-msgstr ""
+msgstr "Несколько методов обнаружения границ (лапласиан гауссианов, Канни и несколько экспериментальных), создают презентации."
 
 #: modules/process/edge.c:162
 msgid "/_Presentation/_Edge Detection/_Laplacian of Gaussian"
@@ -5493,7 +5498,7 @@ msgstr ""
 
 #: modules/process/fit_2d.c:171
 msgid "2D fitting"
-msgstr ""
+msgstr "Двумерная аппроксимация"
 
 #: modules/process/fit_2d.c:185
 msgid "/_Level/_Fit Sphere..."
@@ -5771,9 +5776,8 @@ msgid "Local slope azimuth presentation"
 msgstr "Презентация азимута локального наклона"
 
 #: modules/process/grain_cross.c:76
-#, fuzzy
 msgid "Plots one grain quantity as a function of another."
-msgstr "Строит одно из свойств зёрен как функцию от другого."
+msgstr "Строит график одного из свойств зёрен как функции от другого."
 
 #: modules/process/grain_cross.c:90
 msgid "/_Grains/_Correlate..."
@@ -5801,7 +5805,6 @@ msgid "O_rdinate"
 msgstr "О_рдината"
 
 #: modules/process/grain_dist.c:146
-#, fuzzy
 msgid "Evaluates distribution of grains (continuous parts of mask)."
 msgstr "Оценивает распределение зёрен (непрерывных частей маски)."
 
@@ -6036,19 +6039,19 @@ msgstr "Помечаются границы"
 
 #: modules/process/hough.c:72
 msgid "Hough transform."
-msgstr ""
+msgstr "Преобразование Хафа."
 
 #: modules/process/hough.c:86
 msgid "/_Integral Transforms/_Hough..."
-msgstr ""
+msgstr "/_Интегральные преобразования/преобразование _Хафа"
 
 #: modules/process/hough.c:90
 msgid "Compute Hough transform"
-msgstr ""
+msgstr "Рассчитать преобразование Хафа."
 
 #: modules/process/hough.c:174
 msgid "Hough Transform"
-msgstr ""
+msgstr "Преобразование Хафа"
 
 #: modules/process/hough.c:197
 msgid "_Transform type:"
@@ -6675,7 +6678,7 @@ msgstr "Маска"
 
 #: modules/process/median-bg.c:80
 msgid "Subtracts background using a rank-based algorithm."
-msgstr ""
+msgstr "Вычитает фон используя алгоритм выстраивания в линию."
 
 #: modules/process/median-bg.c:94
 msgid "/_Level/_Median Level..."
@@ -6832,7 +6835,6 @@ msgid "Immersed detail data"
 msgstr ""
 
 #: modules/process/outliers.c:38
-#, fuzzy
 msgid "Creates mask of outliers."
 msgstr "Создаёт маску выпадающих деталей."
 
@@ -6845,7 +6847,6 @@ msgid "Mark data farther than 3σ from mean value"
 msgstr "Пометить данные которые находятся дальше, чем 3σ от среднего значения"
 
 #: modules/process/polydistort.c:140
-#, fuzzy
 msgid "Apllies polynomial distortion in the horizontal plane."
 msgstr "Накладывает полиномиальное искажение в горизонтальной плоскости."
 
@@ -6854,9 +6855,8 @@ msgid "/_Correct Data/Pol_ynomial Distortion..."
 msgstr "/Исправить _данные/Полиномиальное _искривление..."
 
 #: modules/process/polydistort.c:158
-#, fuzzy
 msgid "Apllies polynomial distortion in the horizontal plane"
-msgstr "Накладывает полиномиальное искажение в вертикальной плоскости."
+msgstr "Накладывает полиномиальное искажение в горизонтальной плоскости"
 
 #: modules/process/polydistort.c:211
 msgid "Distort by Polynomial"
@@ -7256,7 +7256,7 @@ msgstr "Интерполируется..."
 
 #: modules/process/tilt.c:73
 msgid "Tilts image by specified amount."
-msgstr ""
+msgstr "Наклоняет изображение на заданную величину."
 
 #: modules/process/tilt.c:87
 msgid "/_Basic Operations/_Tilt..."
@@ -7264,7 +7264,7 @@ msgstr "/_Базовые действия/_Наклон..."
 
 #: modules/process/tilt.c:91
 msgid "Tilt by specified amount"
-msgstr ""
+msgstr "Наклонить на заданную величину"
 
 #: modules/process/tilt.c:155
 msgid "Tilt"
@@ -7336,7 +7336,7 @@ msgstr "Предполагаемый зонд"
 
 #: modules/process/tip_model.c:112
 msgid "Models SPM tip."
-msgstr "Модель зонда СЗМ"
+msgstr "Моделирует зонд СЗМ."
 
 #: modules/process/tip_model.c:127
 msgid "/_Tip/_Model Tip..."
@@ -7560,7 +7560,7 @@ msgstr "Детально"
 
 #: modules/tools/distance.c:92
 msgid "Distance measurement tool, measures distances and angles."
-msgstr "Инструмент измерения расстояний, меряет расстояния и углы."
+msgstr "Инструмент измерения расстояний, измеряет расстояния и углы."
 
 #: modules/tools/distance.c:121
 msgid "Distance"
@@ -7575,9 +7575,8 @@ msgid "Save Table"
 msgstr "Сохранение таблицы"
 
 #: modules/tools/filter.c:98
-#, fuzzy
 msgid "Filter tool, processes selected part of data with a filter (conservative denoise, mean, median. Kuwahara, minimum, maximum)."
-msgstr "Инструмент-фильтр, обрабатывает выбранную часть  данных фильтром (выборочной уборки шума, среднего, срединного. Кувахара, минимум. максимум)."
+msgstr "Инструмент-фильтр, обрабатывает выбранную часть данных фильтром (выборочной уборки шума, среднего, срединного. Кувахара, минимум. максимум)."
 
 #: modules/tools/filter.c:137
 msgid "Basic filters: mean, median, denoise, …"
@@ -8110,7 +8109,7 @@ msgstr ""
 
 #: modules/tools/roughness.c:632
 msgid "Calculate surface profile parameters."
-msgstr ""
+msgstr "Рассчитывает параметры профиля поверхности."
 
 #: modules/tools/roughness.c:666
 #: modules/tools/roughness.c:795
