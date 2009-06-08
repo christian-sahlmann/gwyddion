@@ -987,7 +987,7 @@ lorentz_guess(gint n_dat,
     param[0] = 0.0;
     param[1] = 0.0;
     param[2] = 0.0;
-    param[4] = 1.0;
+    param[3] = 1.0;
 
     imin = imax = 0;
     for (i = 1; i < n_dat; i++) {
@@ -1802,7 +1802,7 @@ gwy_nlfit_presets(void)
  * /&ast; Use a priori parameter value information, or: &ast;/
  * gwy_nlfit_preset_guess(preset, ndata, xdata, ydata, params, &ok);
  * fitter = gwy_nlfit_preset_fit(preset, NULL,
- *                               ndata, xdata, ydata, params, 
+ *                               ndata, xdata, ydata, params,
  *                               params, errors, NULL);
  *
  * /&ast; Examine fitting status, parameters and errors... &ast;/
