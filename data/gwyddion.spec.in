@@ -22,7 +22,6 @@ Requires(postun): /sbin/ldconfig
 
 BuildRequires: gtk2-devel >= 2.8
 BuildRequires: glib2-devel >= 2.8
-BuildRequires: libtiff-devel >= 3.6
 BuildRequires: pango-devel >= 1.10
 BuildRequires: gtkglext-devel
 BuildRequires: libxml2-devel
