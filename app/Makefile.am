@@ -121,7 +121,7 @@ gwyddion_SOURCES = \
 	tips.c \
 	toolbox.c
 
-gwyddion_LDADD = @GTKGLEXT_LIBS@ @BASIC_LIBS@ $(LIBTIFF) $(LIBXMU) \
+gwyddion_LDADD = @GTKGLEXT_LIBS@ @BASIC_LIBS@ $(LIBXMU) \
 	libgwyapp2.la \
 	$(libgwymodule) \
 	$(libgwydgets) \

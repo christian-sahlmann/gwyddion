@@ -101,7 +101,6 @@ AM_CFLAGS = @COMMON_CFLAGS@
 AM_LDFLAGS = -avoid-version -module $(no_undefined) $(module_libadd)
 
 if MODULE_DEPENDENCIES
-MODULE_LIBTIFF = $(LIBTIFF)
 module_libadd = \
 	$(top_builddir)/app/libgwyapp2.la \
 	$(top_builddir)/libdraw/libgwydraw2.la \
@@ -110,8 +109,6 @@ module_libadd = \
 	$(top_builddir)/libgwymodule/libgwymodule2.la \
 	$(top_builddir)/libprocess/libgwyprocess2.la \
 	@GTK_LIBS@
-else
-MODULE_LIBTIFF =
 endif
 
 apefile_la_SOURCES       = apefile.c

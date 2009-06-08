@@ -425,50 +425,6 @@ esac
 AC_SUBST(LIBXMU)
 
 #############################################################################
-# TIFF
-# Optional.
-GWY_WITH([tiff],,[build with TIFF support])
-if test x$enable_tiff != xno && test -z "$LIBTIFF"; then
-  AC_CHECK_LIB(tiff, TIFFReadScanline,
-    [AC_CHECK_HEADER(tiffio.h, LIBTIFF='-ltiff', [enable_tiff=no])],
-    [AC_CHECK_LIB(tiff, TIFFWriteScanline,
-      [AC_CHECK_HEADER(tiffio.h, LIBTIFF='-ltiff -ljpeg -lz',
-        [enable_tiff=no])],
-      [enable_tiff=no],
-      [-ljpeg -lz])],
-    [])
-  if test x$enable_tiff != xno; then
-    AC_MSG_CHECKING([whether libtiff version is at least 3.6])
-    TIFF_ORIG_LIBS="$LIBS"
-    LIBS="$LIBS $LIBTIFF"
-    AC_RUN_IFELSE(AC_LANG_PROGRAM([[#include <tiffio.h>
-                                    #include <stdio.h>
-                                   ]],
-                                  [[const char *v;
-                                    int major, minor, micro;
-                                    v = TIFFGetVersion();
-                                    while (*v && (*v < '0' || *v > '9')) v++;
-                                    if (sscanf(v, "%d.%d.%d",
-                                        &major, &minor, &micro) != 3) return 1;
-                                    if (major < 3 || (major == 3 && minor < 6))
-                                        return 1;
-                                    ]]),
-       [enable_tiff=yes],
-       [enable_tiff=no],
-       [enable_tiff=no])
-    LIBS="$TIFF_ORIG_LIBS"
-    AC_MSG_RESULT([$enable_tiff])
-  fi
-fi
-if test x$enable_tiff != xno && test -n "$LIBTIFF"; then
-  AC_DEFINE(HAVE_TIFF,1,[Define if we have the TIFF library.])
-else
-  TIFF_WARN=" (needs libtiff)"
-fi
-AM_CONDITIONAL([HAVE_TIFF],[test x$enable_tiff != xno && test -n "$LIBTIFF"])
-AC_SUBST(LIBTIFF)
-
-#############################################################################
 # libz
 # Optional.
 GWY_WITH([zlib],,[build with zlib support])
@@ -478,7 +434,7 @@ if test x$enable_zlib != xno && test -z "$ZLIB"; then
     [enable_zlib=no],
     [])
 fi
-if test x$enable_tiff != xno && test -n "$ZLIB"; then
+if test x$enable_zlib != xno && test -n "$ZLIB"; then
   AC_DEFINE(HAVE_ZLIB,1,[Define if we have the ZLIB library.])
 else
   ZLIB_WARN=" (needs zlib)"
@@ -708,7 +664,6 @@ AC_OUTPUT
 
 echo "================================================================="
 echo "Configuration:"
-echo "  TIFF (including JPK):              $enable_tiff$TIFF_WARN"
 echo "  SMPL:                              $enable_spml$SPML_WARN"
 #echo "  Matlab MAT5:                       $enable_zlib$ZLIB_WARN"
 echo "  FFTW3:                             $enable_fftw3$FFTW3_WARN"

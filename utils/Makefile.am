@@ -36,7 +36,7 @@ dump_modules_SOURCES = \
 AM_CPPFLAGS = -I$(top_srcdir)
 AM_CFLAGS = @COMMON_CFLAGS@
 
-dump_modules_LDADD = @GTKGLEXT_LIBS@ @BASIC_LIBS@ $(LIBTIFF) \
+dump_modules_LDADD = @GTKGLEXT_LIBS@ @BASIC_LIBS@ \
 	$(libgwyapp) \
 	$(libgwymodule) \
 	$(libgwydgets) \

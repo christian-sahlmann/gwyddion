@@ -34,7 +34,7 @@ gwythumbcreator_la_SOURCES = gwythumbcreator.cc
 AM_CPPFLAGS = -I$(top_srcdir)
 AM_CFLAGS = @COMMON_CFLAGS@
 
-gwyddion_thumbnailer_LDADD = @GTKGLEXT_LIBS@ @BASIC_LIBS@ $(LIBTIFF) \
+gwyddion_thumbnailer_LDADD = @GTKGLEXT_LIBS@ @BASIC_LIBS@ \
 	$(libgwyapp) \
 	$(libgwymodule) \
 	$(libgwydgets) \
