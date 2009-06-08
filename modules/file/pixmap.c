@@ -1398,15 +1398,19 @@ pixmap_save_tiff(GwyContainer *data,
         W(GWY_TIFFTAG_IMAGE_WIDTH), W(GWY_TIFF_SHORT), Q(1), Q(0),
         W(GWY_TIFFTAG_IMAGE_LENGTH), W(GWY_TIFF_SHORT), Q(1), Q(0),
         W(GWY_TIFFTAG_BITS_PER_SAMPLE), W(GWY_TIFF_SHORT), Q(3), Q(HEAD_SIZE),
-        W(GWY_TIFFTAG_COMPRESSION), W(GWY_TIFF_SHORT), Q(1), Q(1),
-        W(GWY_TIFFTAG_PHOTOMETRIC), W(GWY_TIFF_SHORT), Q(1), Q(2),
+        W(GWY_TIFFTAG_COMPRESSION), W(GWY_TIFF_SHORT), Q(1),
+            Q(GWY_TIFF_COMPRESSION_NONE),
+        W(GWY_TIFFTAG_PHOTOMETRIC), W(GWY_TIFF_SHORT), Q(1),
+            Q(GWY_TIFF_PHOTOMETRIC_RGB),
         W(GWY_TIFFTAG_STRIP_OFFSETS), W(GWY_TIFF_LONG), Q(1), Q(HEAD_SIZE + 6),
-        W(GWY_TIFFTAG_ORIENTATION), W(GWY_TIFF_SHORT), Q(1), Q(1),
+        W(GWY_TIFFTAG_ORIENTATION), W(GWY_TIFF_SHORT), Q(1),
+            Q(GWY_TIFF_ORIENTATION_TOPLEFT),
         W(GWY_TIFFTAG_SAMPLES_PER_PIXEL), W(GWY_TIFF_SHORT), Q(1), Q(3),
         W(GWY_TIFFTAG_ROWS_PER_STRIP), W(GWY_TIFF_SHORT), Q(1), Q(0),
         W(GWY_TIFFTAG_STRIP_BYTE_COUNTS), W(GWY_TIFF_LONG), Q(1), Q(0),
-        W(GWY_TIFFTAG_PLANAR_CONFIG), W(GWY_TIFF_SHORT), Q(1), Q(1),
-        Q(0),              /* next directory */
+        W(GWY_TIFFTAG_PLANAR_CONFIG), W(GWY_TIFF_SHORT), Q(1),
+            Q(GWY_TIFF_PLANAR_CONFIG_CONTIGNUOUS),
+        Q(0),              /* next directory (0 = none) */
         W(8), W(8), W(8),  /* value of bits per sample */
         /* here starts the image data */
     };

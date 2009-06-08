@@ -81,25 +81,42 @@ enum {
     GWY_TIFFTAG_ARTIST            = 315,
 } GwyTIFFTag;
 
+/* Values of some standard tags.
+ * Note only values interesting for us are enumerated.  Add more from the
+ * standard if needed.  */
+typedef enum {
+    GWY_TIFF_COMPRESSION_NONE = 1,
+} GwyTIFFCompression;
+
+typedef enum {
+    GWY_TIFF_ORIENTATION_TOPLEFT = 1,
+    GWY_TIFF_ORIENTATION_TOPRIGHT = 2,
+    GWY_TIFF_ORIENTATION_BOTRIGHT = 3,
+    GWY_TIFF_ORIENTATION_BOTLEFT = 4,
+    GWY_TIFF_ORIENTATION_LEFTTOP = 5,
+    GWY_TIFF_ORIENTATION_RIGHTTOP = 6,
+    GWY_TIFF_ORIENTATION_RIGHTBOT = 7,
+    GWY_TIFF_ORIENTATION_LEFTBOT = 8,
+} GwyTIFFOrientation;
+
+typedef enum {
+    GWY_TIFF_PHOTOMETRIC_MIN_IS_WHITE = 0,
+    GWY_TIFF_PHOTOMETRIC_MIN_IS_BLACK = 1,
+    GWY_TIFF_PHOTOMETRIC_RGB          = 2,
+} GwyTIFFPhotometric;
+
+typedef enum {
+    GWY_TIFF_PLANAR_CONFIG_CONTIGNUOUS = 1,
+    GWY_TIFF_PLANAR_CONFIG_SEPARATE = 2,
+} GwyTIFFPlanarConfig;
+
+/* TIFF structure representation */
 typedef struct {
     guint tag;
     GwyTIFFDataType type;
     guint count;
     guchar value[4];
 } GwyTIFFEntry;
-
-typedef struct {
-    /* public for reading */
-    guint dirno;
-    guint width;
-    guint height;
-    guint stripe_rows;
-    guint bits_per_sample;
-    guint samples_per_pixel;
-    /* private */
-    guint rowstride;
-    guint *offsets;
-} GwyTIFFImageReader;
 
 typedef struct {
     guchar *data;
@@ -113,9 +130,23 @@ typedef struct {
     gdouble (*get_gdouble)(const guchar **p);
 } GwyTIFF;
 
+/* State-object for image data reading */
+typedef struct {
+    /* public for reading */
+    guint dirno;
+    guint width;
+    guint height;
+    guint stripe_rows;
+    guint bits_per_sample;
+    guint samples_per_pixel;
+    /* private */
+    guint rowstride;
+    guint *offsets;
+} GwyTIFFImageReader;
+
 /* Does not need to free tags on failure, the caller takes care of it. */
 static gboolean
-gwy_tiff_load_real(GwyTIFF *tiff,
+gwy_tiff_load_impl(GwyTIFF *tiff,
                    const gchar *filename,
                    GError **error)
 {
@@ -380,43 +411,6 @@ gwy_tiff_find_tag(const GwyTIFF *tiff,
 }
 
 G_GNUC_UNUSED static gboolean
-gwy_tiff_get_sint(const GwyTIFF *tiff,
-                  guint dirno,
-                  guint tag,
-                  gint *retval)
-{
-    const GwyTIFFEntry *entry;
-    const guchar *p;
-    const gchar *q;
-
-    entry = gwy_tiff_find_tag(tiff, dirno, tag);
-    if (!entry || entry->count != 1)
-        return FALSE;
-
-    p = entry->value;
-    switch (entry->type) {
-        case GWY_TIFF_BYTE:
-        q = (const gchar*)p;
-        *retval = q[0];
-        break;
-
-        case GWY_TIFF_SHORT:
-        *retval = tiff->get_gint16(&p);
-        break;
-
-        case GWY_TIFF_LONG:
-        *retval = tiff->get_gint32(&p);
-        break;
-
-        default:
-        return FALSE;
-        break;
-    }
-
-    return TRUE;
-}
-
-G_GNUC_UNUSED static gboolean
 gwy_tiff_get_uint(const GwyTIFF *tiff,
                   guint dirno,
                   guint tag,
@@ -436,11 +430,96 @@ gwy_tiff_get_uint(const GwyTIFF *tiff,
         break;
 
         case GWY_TIFF_SHORT:
-        *retval = tiff->get_gint16(&p);
+        *retval = tiff->get_guint16(&p);
         break;
 
         case GWY_TIFF_LONG:
+        *retval = tiff->get_guint32(&p);
+        break;
+
+        default:
+        return FALSE;
+        break;
+    }
+
+    return TRUE;
+}
+
+G_GNUC_UNUSED static gboolean
+gwy_tiff_get_sint(const GwyTIFF *tiff,
+                  guint dirno,
+                  guint tag,
+                  gint *retval)
+{
+    const GwyTIFFEntry *entry;
+    const guchar *p;
+    const gchar *q;
+
+    entry = gwy_tiff_find_tag(tiff, dirno, tag);
+    if (!entry || entry->count != 1)
+        return FALSE;
+
+    p = entry->value;
+    switch (entry->type) {
+        case GWY_TIFF_SBYTE:
+        q = (const gchar*)p;
+        *retval = q[0];
+        break;
+
+        case GWY_TIFF_BYTE:
+        *retval = p[0];
+        break;
+
+        case GWY_TIFF_SHORT:
+        *retval = tiff->get_guint16(&p);
+        break;
+
+        case GWY_TIFF_SSHORT:
+        *retval = tiff->get_gint16(&p);
+        break;
+
+        /* XXX: If the value does not fit, this is wrong no matter what. */
+        case GWY_TIFF_LONG:
+        *retval = tiff->get_guint32(&p);
+        break;
+
+        case GWY_TIFF_SLONG:
         *retval = tiff->get_gint32(&p);
+        break;
+
+        default:
+        return FALSE;
+        break;
+    }
+
+    return TRUE;
+}
+
+G_GNUC_UNUSED static gboolean
+gwy_tiff_get_bool(const GwyTIFF *tiff,
+                  guint dirno,
+                  guint tag,
+                  gboolean *retval)
+{
+    const GwyTIFFEntry *entry;
+    const guchar *p;
+    const gchar *q;
+
+    entry = gwy_tiff_find_tag(tiff, dirno, tag);
+    if (!entry || entry->count != 1)
+        return FALSE;
+
+    p = entry->value;
+    switch (entry->type) {
+        case GWY_TIFF_BYTE:
+        case GWY_TIFF_SBYTE:
+        q = (const gchar*)p;
+        *retval = !!q[0];
+        break;
+
+        case GWY_TIFF_SHORT:
+        case GWY_TIFF_SSHORT:
+        *retval = !!tiff->get_gint16(&p);
         break;
 
         default:
@@ -540,35 +619,31 @@ gwy_tiff_get_image_reader(const GwyTIFF *tiff,
                     GWY_TIFFTAG_IMAGE_LENGTH);
         return NULL;
     }
+
+    /* The TIFF specs say these are required, but they seem to default to 1. */
     if (!gwy_tiff_get_uint(tiff, dirno, GWY_TIFFTAG_BITS_PER_SAMPLE,
-                           &reader.bits_per_sample)) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                    _("Required tag %u was not found."),
-                    GWY_TIFFTAG_BITS_PER_SAMPLE);
-        return NULL;
-    }
+                           &reader.bits_per_sample))
+        reader.bits_per_sample = 1;
     if (!gwy_tiff_get_uint(tiff, dirno, GWY_TIFFTAG_SAMPLES_PER_PIXEL,
-                           &reader.samples_per_pixel)) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                    _("Required tag %u was not found."),
-                    GWY_TIFFTAG_SAMPLES_PER_PIXEL);
-        return NULL;
-    }
-    /* The TIFF specs say this is required, but OLS does not specify it and
-     * other readers seem to happily assume RowsPerStrip = ImageLength. */
+                           &reader.samples_per_pixel))
+        reader.samples_per_pixel = 1;
+
+    /* The TIFF specs say this is required, but it seems to default to
+     * MAXINT.  Setting more reasonably to RowsPerStrip = ImageLength achieves
+     * the same ends. */
     if (!gwy_tiff_get_uint(tiff, dirno, GWY_TIFFTAG_ROWS_PER_STRIP,
                            &reader.stripe_rows))
         reader.stripe_rows = reader.height;
 
     /* Integer fields specifying data in a format we do not support */
     if (gwy_tiff_get_uint(tiff, dirno, GWY_TIFFTAG_COMPRESSION, &i)
-        && i != 1) {
+        && i != GWY_TIFF_COMPRESSION_NONE) {
         g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
                     _("Compression type %u is not supported."), i);
         return NULL;
     }
     if (gwy_tiff_get_uint(tiff, dirno, GWY_TIFFTAG_PLANAR_CONFIG, &i)
-        && i != 1) {
+        && i != GWY_TIFF_PLANAR_CONFIG_CONTIGNUOUS) {
         g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
                     _("Planar configuration %u is not supported."), i);
         return NULL;
@@ -653,7 +728,7 @@ gwy_tiff_get_image_reader(const GwyTIFF *tiff,
 
 G_GNUC_UNUSED static inline void
 gwy_tiff_read_image_row(const GwyTIFF *tiff,
-                        GwyTIFFImageReader *reader,
+                        const GwyTIFFImageReader *reader,
                         guint rowno,
                         gdouble q,
                         gdouble z0,
@@ -681,11 +756,15 @@ gwy_tiff_read_image_row(const GwyTIFF *tiff,
     }
 }
 
-G_GNUC_UNUSED static inline void
+/* Idempotent, use: reader = gwy_tiff_image_reader_free(reader); */
+G_GNUC_UNUSED static inline gpointer
 gwy_tiff_image_reader_free(GwyTIFFImageReader *reader)
 {
-    g_free(reader->offsets);
-    g_free(reader);
+    if (reader) {
+        g_free(reader->offsets);
+        g_free(reader);
+    }
+    return NULL;
 }
 
 G_GNUC_UNUSED static inline guint
@@ -704,7 +783,7 @@ gwy_tiff_load(const gchar *filename,
     GwyTIFF *tiff;
 
     tiff = g_new0(GwyTIFF, 1);
-    if (gwy_tiff_load_real(tiff, filename, error)
+    if (gwy_tiff_load_impl(tiff, filename, error)
         && gwy_tiff_tags_valid(tiff, error)) {
         gwy_tiff_sort_tags(tiff);
         return tiff;

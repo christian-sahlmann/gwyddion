@@ -1,15 +1,5 @@
 # @(#) $Id$
 
-# When libTIFF is disabled, put the sources to EXTRA_DIST to include them in
-# make dist.
-if HAVE_TIFF
-jpkscan_module = jpkscan.la
-jpkscan_sources =
-else
-jpkscan_module =
-jpkscan_sources = jpk.h jpkscan.c
-endif
-
 # When libXML2 is disabled, put the sources to EXTRA_DIST to include them in
 # make dist.
 if HAVE_XML2
@@ -49,7 +39,7 @@ file_LTLIBRARIES = \
 	hitachi-afm.la \
 	intematix.la \
 	jeol.la \
-	$(jpkscan_module) \
+	jpkscan.la \
 	mapvue.la \
 	$(matfile_module) \
 	metropro.la \
@@ -98,7 +88,6 @@ noinst_HEADERS = \
 
 EXTRA_DIST = \
 	1CHECKLIST \
-	$(jpkscan_sources) \
 	$(spml_sources) \
 	makefile.msc \
 	makefile.msc.gwt
@@ -141,6 +130,7 @@ hdf4file_la_SOURCES      = hdf4file.c
 hitachi_afm_la_SOURCES   = hitachi-afm.c
 intematix_la_SOURCES     = intematix.c gwytiff.h
 jeol_la_SOURCES          = jeol.c
+jpkscan_la_SOURCES       = jpkscan.c jpk.h gwytiff.h
 mapvue_la_SOURCES        = mapvue.c
 metropro_la_SOURCES      = metropro.c
 microprof_la_SOURCES     = microprof.c
@@ -180,11 +170,6 @@ surffile_la_SOURCES      = surffile.c
 unisoku_la_SOURCES       = unisoku.c
 witfile_la_SOURCES       = witfile.c
 wsxmfile_la_SOURCES      = wsxmfile.c
-
-if HAVE_TIFF
-jpkscan_la_SOURCES       = jpkscan.c jpk.h
-jpkscan_la_LIBADD        = $(MODULE_LIBTIFF)
-endif
 
 if HAVE_XML2
 spml_la_SOURCES          = spml.c spml-utils.h

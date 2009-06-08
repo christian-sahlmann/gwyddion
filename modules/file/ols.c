@@ -171,11 +171,7 @@ ols_load_tiff(const GwyTIFF *tiff, GError **error)
         z_axis = g_ascii_strtod(s1, NULL) - g_ascii_strtod(s2, NULL);
 
     for (dir_num = 0; dir_num < gwy_tiff_get_n_dirs(tiff); dir_num++) {
-        if (reader) {
-            gwy_tiff_image_reader_free(reader);
-            reader = NULL;
-        }
-
+        reader = gwy_tiff_image_reader_free(reader);
         /* Request a reader, this ensures dimensions and stuff are defined. */
         reader = gwy_tiff_get_image_reader(tiff, dir_num, &err);
         if (!reader) {

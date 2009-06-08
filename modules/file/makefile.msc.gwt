@@ -1,6 +1,5 @@
 # @(#) $Id$
 
-jpkscan_module = jpkscan.la
 spml_module = spml.la
 #matfile_module = matfile.la
 
