@@ -206,9 +206,15 @@ psia_load_tiff(GwyTIFF *tiff, GError **error)
         return NULL;
     }
     p = entry->value;
-    data = (const guint16*)(tiff->data + tiff->get_guint32(&p));
+    count = tiff->get_guint32(&p);
+    data = (const guint16*)(tiff->data + count);
     data_len = entry->count;
     gwy_debug("data_len: %d", data_len);
+    if (data_len + count > tiff->size) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("File is truncated."));
+        return NULL;
+    }
 
     /* Header */
     entry = gwy_tiff_find_tag(tiff, 0, PSIA_TIFFTAG_Header);
