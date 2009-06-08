@@ -1748,10 +1748,10 @@ gwy_data_field_yfft_real_do(GwyDataField *rin,
         for (j = 1; j < rin->yres; j++) {
             gint n = rin->xres*rin->yres, kj = rin->xres*j;
 
-            r0[rin->xres*j] = (re[kj] + re[n - kj])/2.0;
-            i0[rin->xres*j] = (im[kj] - im[n - kj])/2.0;
-            r1[rin->xres*j] = (im[kj] + im[n - kj])/2.0;
-            i1[rin->xres*j] = (-re[kj] + re[n - kj])/2.0;
+            r0[kj] = (re[kj] + re[n - kj])/2.0;
+            i0[kj] = (im[kj] - im[n - kj])/2.0;
+            r1[kj] = (im[kj] + im[n - kj])/2.0;
+            i1[kj] = (-re[kj] + re[n - kj])/2.0;
         }
     }
     if (rin->xres % 2) {
