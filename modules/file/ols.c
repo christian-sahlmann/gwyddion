@@ -38,7 +38,6 @@
 #include <app/data-browser.h>
 #include "err.h"
 #include "gwytiff.h"
-#include <tiffio.h>
 
 #define MAGIC      "II\x2a\x00"
 #define MAGIC_SIZE (sizeof(MAGIC) - 1)
@@ -53,7 +52,7 @@ static GwyContainer* ols_load       (const gchar *filename,
                                      GError **error);
 static const gchar*  ols_read_value (const gchar* comment,
                                      const gchar* value_name);
-static GwyContainer* ols_load_tiff  (TIFF *tiff,
+static GwyContainer* ols_load_tiff  (const GwyTIFF *tiff,
                                      GError **error);
 
 static GwyModuleInfo module_info = {
@@ -61,7 +60,7 @@ static GwyModuleInfo module_info = {
     module_register,
     N_("Imports OLS data files."),
     "Jan Hořák <xhorak@gmail.com>, Yeti <yeti@gwyddion.net>",
-    "0.2",
+    "0.5",
     "David Nečas (Yeti) & Petr Klapetek",
     "2008",
 };
@@ -111,18 +110,18 @@ ols_detect(const GwyFileDetectInfo *fileinfo, gboolean only_name)
 
 static GwyContainer*
 ols_load(const gchar *filename,
-          G_GNUC_UNUSED GwyRunType mode,
-          GError **error)
+         G_GNUC_UNUSED GwyRunType mode,
+         GError **error)
 {
-    TIFF *tiff;
+    GwyTIFF *tiff;
     GwyContainer *container = NULL;
 
-    tiff = TIFFOpen(filename, "r");
+    tiff = gwy_tiff_load(filename, error);
     if (!tiff)
         return NULL;
 
     container = ols_load_tiff(tiff, error);
-    TIFFClose(tiff);
+    gwy_tiff_free(tiff);
 
     return container;
 }
@@ -145,40 +144,48 @@ ols_read_value(const gchar* comment, const gchar* value_name)
 }
 
 static GwyContainer*
-ols_load_tiff(TIFF *tiff, GError **error)
+ols_load_tiff(const GwyTIFF *tiff, GError **error)
 {
     GwyContainer *container = NULL;
     GwyDataField *dfield;
     GwySIUnit *siunit;
-    gint i, j, power10;
+    GwyTIFFImageReader *reader = NULL;
+    gint i, power10;
     gchar *comment = NULL, *data_channel_info_title, *data_channel_info;
     const gchar *s1, *s2;
-    uint32 width, height;
-    guchar *buffer;
-    int dir_num = 0;
+    GError *err = NULL;
+    guint dir_num = 0;
+    gdouble *data;
     double z_axis = 1.0, xy_axis, factor;
 
     /* Comment with parameters is common for all data fields */
-    if (!TIFFGetField(tiff, TIFFTAG_IMAGEDESCRIPTION, &comment)
+    if (!gwy_tiff_get_string0(tiff, GWY_TIFFTAG_IMAGE_DESCRIPTION, &comment)
         || !strstr(comment, MAGIC_COMMENT)) {
+        g_free(comment);
         err_FILE_TYPE(error, "OLS");
         return NULL;
     }
 
-    /* The value gets overwritten by libtiff as other values are read. */
-    comment = g_strdup(comment);
     if ((s1 = ols_read_value(comment, "ZPositionUp"))
          && (s2 = ols_read_value(comment, "ZPositionLow")))
         z_axis = g_ascii_strtod(s1, NULL) - g_ascii_strtod(s2, NULL);
 
-    do {
-        if (!TIFFGetField(tiff, TIFFTAG_IMAGEWIDTH, &width)
-            || !TIFFGetField(tiff, TIFFTAG_IMAGELENGTH, &height)) {
-            g_warning("Missing image dimensions in directory %u.", dir_num);
+    for (dir_num = 0; dir_num < gwy_tiff_get_n_dirs(tiff); dir_num++) {
+        if (reader) {
+            gwy_tiff_image_reader_free(reader);
+            reader = NULL;
+        }
+
+        /* Request a reader, this ensures dimensions and stuff are defined. */
+        reader = gwy_tiff_get_image_reader(tiff, dir_num, &err);
+        if (!reader) {
+            g_warning("Ignoring directory %u: %s.", dir_num, err->message);
+            g_clear_error(&err);
             continue;
         }
+
+        /* Find channel info in the comment */
         data_channel_info_title = g_strdup_printf("[Data %d Info]", dir_num+1);
-        // find channel info
         data_channel_info = strstr(comment, data_channel_info_title);
         if (!data_channel_info) {
             g_warning("Cannot find '%s' in comment.", data_channel_info_title);
@@ -200,11 +207,10 @@ ols_load_tiff(TIFF *tiff, GError **error)
             xy_axis = 1.0;
         }
 
-        buffer = g_new(guchar, TIFFScanlineSize(tiff));
         siunit = gwy_si_unit_new_parse("nm", &power10);
-        dfield = gwy_data_field_new(width, height,
-                                    width * xy_axis * pow10(power10),
-                                    height * xy_axis * pow10(power10),
+        dfield = gwy_data_field_new(reader->width, reader->height,
+                                    reader->width * xy_axis * pow10(power10),
+                                    reader->height * xy_axis * pow10(power10),
                                     FALSE);
         // units
         gwy_data_field_set_si_unit_xy(dfield, siunit);
@@ -215,30 +221,29 @@ ols_load_tiff(TIFF *tiff, GError **error)
         g_object_unref(siunit);
 
         factor = z_axis * pow10(power10)/4095.0;
-        for (i = 0; i < height; i++) {
-            gdouble *d;
-            const guint16 *tiff_data = (const guint16*)buffer;
-            TIFFReadScanline(tiff, buffer, i, 0);
+        data = gwy_data_field_get_data(dfield);
 
-            d = gwy_data_field_get_data(dfield) + (height-1 - i) * width;
-            for (j = 0; j < width; j++)
-                d[j] = tiff_data[j] * factor;
-        }
+        for (i = 0; i < reader->height; i++)
+            gwy_tiff_read_image_row(tiff, reader, i, factor, 0.0,
+                                    data + (reader->height-1 - i)*reader->width);
 
-        // add readed datafield to container
+        /* add read datafield to container */
         if (!container)
             container = gwy_container_new();
 
-        gwy_container_set_object(container, gwy_app_get_data_key_for_id(dir_num),
+        gwy_container_set_object(container,
+                                 gwy_app_get_data_key_for_id(dir_num),
                                  dfield);
 
         // free resources
         g_object_unref(dfield);
-        g_free(buffer);
-        dir_num++;
-    } while (TIFFReadDirectory(tiff));
+    }
 
     g_free(comment);
+    if (reader) {
+        gwy_tiff_image_reader_free(reader);
+        reader = NULL;
+    }
 
     return container;
 }

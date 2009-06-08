@@ -5,13 +5,9 @@
 if HAVE_TIFF
 jpkscan_module = jpkscan.la
 jpkscan_sources =
-ols_module = ols.la
-ols_sources =
 else
 jpkscan_module =
 jpkscan_sources = jpk.h jpkscan.c
-ols_module =
-ols_sources = ols.c
 endif
 
 # When libXML2 is disabled, put the sources to EXTRA_DIST to include them in
@@ -68,7 +64,7 @@ file_LTLIBRARIES = \
 	nt-mdt.la \
 	omicron.la \
 	omicronmatrix.la \
-	$(ols_module) \
+	ols.la \
 	opdfile.la \
 	pixmap.la \
 	pnifile.la \
@@ -103,7 +99,6 @@ noinst_HEADERS = \
 EXTRA_DIST = \
 	1CHECKLIST \
 	$(jpkscan_sources) \
-	$(ols_sources) \
 	$(spml_sources) \
 	makefile.msc \
 	makefile.msc.gwt
@@ -157,6 +152,7 @@ nanoscope_la_SOURCES     = nanoscope.c
 nanotop_la_SOURCES       = nanotop.c
 netcdf_la_SOURCES        = netcdf.c
 nt_mdt_la_SOURCES        = nt-mdt.c
+ols_la_SOURCES           = ols.c gwytiff.h
 omicron_la_SOURCES       = omicron.c
 omicronmatrix_la_SOURCES = omicronmatrix.c
 opdfile_la_SOURCES       = opdfile.c
@@ -188,8 +184,6 @@ wsxmfile_la_SOURCES      = wsxmfile.c
 if HAVE_TIFF
 jpkscan_la_SOURCES       = jpkscan.c jpk.h
 jpkscan_la_LIBADD        = $(MODULE_LIBTIFF)
-ols_la_SOURCES           = ols.c gwytiff.h
-ols_la_LIBADD            = $(MODULE_LIBTIFF)
 endif
 
 if HAVE_XML2

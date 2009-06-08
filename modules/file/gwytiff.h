@@ -89,12 +89,14 @@ typedef struct {
 } GwyTIFFEntry;
 
 typedef struct {
+    /* public for reading */
     guint dirno;
     guint width;
     guint height;
     guint stripe_rows;
     guint bits_per_sample;
     guint samples_per_pixel;
+    /* private */
     guint rowstride;
     guint *offsets;
 } GwyTIFFImageReader;
@@ -514,7 +516,7 @@ gwy_tiff_get_string(const GwyTIFF *tiff,
 }
 
 G_GNUC_UNUSED static GwyTIFFImageReader*
-gwy_tiff_get_image_reader(GwyTIFF *tiff,
+gwy_tiff_get_image_reader(const GwyTIFF *tiff,
                           guint dirno,
                           GError **error)
 {
@@ -538,13 +540,6 @@ gwy_tiff_get_image_reader(GwyTIFF *tiff,
                     GWY_TIFFTAG_IMAGE_LENGTH);
         return NULL;
     }
-    if (!gwy_tiff_get_uint(tiff, dirno, GWY_TIFFTAG_ROWS_PER_STRIP,
-                           &reader.stripe_rows)) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                    _("Required tag %u was not found."),
-                    GWY_TIFFTAG_ROWS_PER_STRIP);
-        return NULL;
-    }
     if (!gwy_tiff_get_uint(tiff, dirno, GWY_TIFFTAG_BITS_PER_SAMPLE,
                            &reader.bits_per_sample)) {
         g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
@@ -559,6 +554,11 @@ gwy_tiff_get_image_reader(GwyTIFF *tiff,
                     GWY_TIFFTAG_SAMPLES_PER_PIXEL);
         return NULL;
     }
+    /* The TIFF specs say this is required, but OLS does not specify it and
+     * other readers seem to happily assume RowsPerStrip = ImageLength. */
+    if (!gwy_tiff_get_uint(tiff, dirno, GWY_TIFFTAG_ROWS_PER_STRIP,
+                           &reader.stripe_rows))
+        reader.stripe_rows = reader.height;
 
     /* Integer fields specifying data in a format we do not support */
     if (gwy_tiff_get_uint(tiff, dirno, GWY_TIFFTAG_COMPRESSION, &i)
@@ -631,7 +631,8 @@ gwy_tiff_get_image_reader(GwyTIFF *tiff,
     }
 
     /* Validate stripe offsets and sizes */
-    reader.rowstride = reader.bits_per_sample/8 * reader.samples_per_pixel;
+    reader.rowstride = (reader.bits_per_sample/8 * reader.samples_per_pixel
+                        * reader.width);
     ssize = reader.rowstride * reader.stripe_rows;
     for (i = 0; i < nstripes; i++) {
         if (i == nstripes-1 && reader.height % reader.stripe_rows)
@@ -688,7 +689,7 @@ gwy_tiff_image_reader_free(GwyTIFFImageReader *reader)
 }
 
 G_GNUC_UNUSED static inline guint
-gwy_tiff_get_n_dirs(GwyTIFF *tiff)
+gwy_tiff_get_n_dirs(const GwyTIFF *tiff)
 {
     if (!tiff->dirs)
         return 0;
