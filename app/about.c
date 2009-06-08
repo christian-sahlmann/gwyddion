@@ -20,25 +20,31 @@
 
 #include "config.h"
 #include <gtk/gtk.h>
+#ifdef HAVE_GTKGLEXT
+#include <gtk/gtkgl.h>
+#endif
+#ifdef HAVE_FFTW3
+#include <fftw3.h>
+#endif
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwyversion.h>
 #include <libgwydgets/gwystock.h>
+#include <libgwymodule/gwymoduleloader.h>
 #include "app.h"
 #include "authors.h"
 
-static void about_close   (void);
-static void about_allocate(GtkWidget *vbox,
-                           GtkAllocation *allocation,
-                           GtkLabel *label);
-static void fill_credits  (GtkTextBuffer *buffer);
+static void about_close  (void);
+static void fill_credits (GtkTextBuffer *buffer);
+static void fill_features(GtkTextBuffer *buffer);
 
 static GtkWidget *about = NULL;
 
 void
 gwy_app_about(void)
 {
-    GtkWidget *vbox, *hbox, *widget, *credits, *text;
+    GtkWidget *vbox, *hbox, *widget, *credits, *text, *notebook;
     GtkTextBuffer *buff;
+    GtkTextIter iter;
     gchar *s, *s2;
     gint size;
 
@@ -96,18 +102,18 @@ gwy_app_about(void)
     g_free(s);
     gtk_label_set_selectable(GTK_LABEL(widget), TRUE);
 
-    vbox = gtk_vbox_new(FALSE, 0);
-    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(about)->vbox), vbox, TRUE, TRUE, 0);
+    notebook = gtk_notebook_new();
+    gtk_notebook_set_show_border(GTK_NOTEBOOK(notebook), FALSE);
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(about)->vbox), notebook,
+                       TRUE, TRUE, 0);
 
-    widget = gtk_label_new(_("Credits"));
-    gtk_misc_set_alignment(GTK_MISC(widget), 0.0, 0.5);
-    gtk_box_pack_start(GTK_BOX(vbox), widget, FALSE, FALSE, 0);
-
+    /* Credits */
     credits = gtk_scrolled_window_new(NULL, NULL);
     gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(credits),
                                    GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
     gtk_widget_set_size_request(credits, 320, 160);
-    gtk_box_pack_start(GTK_BOX(vbox), credits, TRUE, TRUE, 0);
+    gtk_notebook_append_page(GTK_NOTEBOOK(notebook),
+                             credits, gtk_label_new(_("Credits")));
 
     buff = gtk_text_buffer_new(NULL);
     fill_credits(buff);
@@ -118,24 +124,50 @@ gwy_app_about(void)
     gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(text), GTK_WRAP_WORD);
     gtk_container_add(GTK_CONTAINER(credits), text);
 
-    widget = gtk_label_new(NULL);
-    gtk_misc_set_alignment(GTK_MISC(widget), 0.0, 0.5);
+    /* License */
+    credits = gtk_scrolled_window_new(NULL, NULL);
+    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(credits),
+                                   GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
+    gtk_widget_set_size_request(credits, 320, 160);
+    gtk_notebook_append_page(GTK_NOTEBOOK(notebook),
+                             credits, gtk_label_new(_("License")));
+
+    buff = gtk_text_buffer_new(NULL);
+    gtk_text_buffer_get_end_iter(buff, &iter);
     s = g_strdup_printf(
-            _("\n"
-              "<small>%s is free software; "
+            _("%s is free software; "
               "you can redistribute it and/or modify it "
               "under the terms of the GNU General Public License "
               "as published by the Free Software Foundation; "
               "either version 2 of the License, or (at your option) "
               "any later version. For full license text see file COPYING "
-              "included in the source tarball.</small>"),
+              "included in the source tarball."),
             g_get_application_name());
-    gtk_label_set_markup(GTK_LABEL(widget), s);
+    gtk_text_buffer_insert(buff, &iter, s, -1);
     g_free(s);
-    gtk_label_set_line_wrap(GTK_LABEL(widget), TRUE);
-    gtk_label_set_selectable(GTK_LABEL(widget), TRUE);
-    gtk_box_pack_start(GTK_BOX(vbox), widget, FALSE, FALSE, 0);
-    gtk_widget_set_size_request(widget, 320, -1);
+
+    text = gtk_text_view_new_with_buffer(buff);
+    g_object_unref(buff);
+    gtk_text_view_set_editable(GTK_TEXT_VIEW(text), FALSE);
+    gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(text), GTK_WRAP_WORD);
+    gtk_container_add(GTK_CONTAINER(credits), text);
+
+    /* Features */
+    credits = gtk_scrolled_window_new(NULL, NULL);
+    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(credits),
+                                   GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
+    gtk_widget_set_size_request(credits, 320, 160);
+    gtk_notebook_append_page(GTK_NOTEBOOK(notebook),
+                             credits, gtk_label_new(_("Features")));
+
+    buff = gtk_text_buffer_new(NULL);
+    fill_features(buff);
+
+    text = gtk_text_view_new_with_buffer(buff);
+    g_object_unref(buff);
+    gtk_text_view_set_editable(GTK_TEXT_VIEW(text), FALSE);
+    gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(text), GTK_WRAP_WORD);
+    gtk_container_add(GTK_CONTAINER(credits), text);
 
     gtk_widget_show_all(about);
 
@@ -143,17 +175,6 @@ gwy_app_about(void)
                      G_CALLBACK(about_close), NULL);
     g_signal_connect(about, "response",
                      G_CALLBACK(about_close), NULL);
-    g_signal_connect(GTK_DIALOG(about)->vbox, "size-allocate",
-                     G_CALLBACK(about_allocate), widget);
-}
-
-static void
-about_allocate(G_GNUC_UNUSED GtkWidget *vbox,
-               GtkAllocation *allocation,
-               GtkLabel *label)
-{
-    pango_layout_set_width(gtk_label_get_layout(label),
-                           PANGO_SCALE*allocation->width);
 }
 
 static void
@@ -166,7 +187,8 @@ about_close(void)
 static void
 add_credits_block(GtkTextBuffer *buffer,
                   const gchar *title,
-                  const gchar *list)
+                  const gchar *body,
+                  gboolean italicize)
 {
     GtkTextIter iter;
 
@@ -174,7 +196,11 @@ add_credits_block(GtkTextBuffer *buffer,
     gtk_text_buffer_insert_with_tags_by_name(buffer, &iter, title, -1,
                                              "b", NULL);
     gtk_text_buffer_insert(buffer, &iter, "\n", 1);
-    gtk_text_buffer_insert(buffer, &iter, list, -1);
+    if (italicize)
+        gtk_text_buffer_insert_with_tags_by_name(buffer, &iter, body, -1,
+                                                 "i", NULL);
+    else
+        gtk_text_buffer_insert(buffer, &iter, body, -1);
     gtk_text_buffer_insert(buffer, &iter, "\n", 1);
 }
 
@@ -191,8 +217,8 @@ fill_credits(GtkTextBuffer *buffer)
                                "weight", PANGO_WEIGHT_BOLD,
                                NULL);
 
-    add_credits_block(buffer, _("Developers"), developers);
-    add_credits_block(buffer, _("Translators"), translators);
+    add_credits_block(buffer, _("Developers"), developers, FALSE);
+    add_credits_block(buffer, _("Translators"), translators, FALSE);
 
     gtk_text_buffer_get_end_iter(buffer, &iter);
     gtk_text_buffer_insert(buffer, &iter,
@@ -201,6 +227,64 @@ fill_credits(GtkTextBuffer *buffer)
     gtk_text_buffer_insert_with_tags_by_name(buffer, &iter,
                                              "http://www.cmi.cz/", -1,
                                              "uri", NULL);
+}
+
+static void
+fill_features(GtkTextBuffer *buffer)
+{
+    const GwyModuleInfo *modinfo;
+    G_GNUC_UNUSED gchar *s;
+    G_GNUC_UNUSED const gchar *cs;
+    gboolean b;
+
+    gtk_text_buffer_create_tag(buffer, "b",
+                               "weight", PANGO_WEIGHT_BOLD,
+                               NULL);
+    gtk_text_buffer_create_tag(buffer, "i",
+                               "style", PANGO_STYLE_ITALIC,
+                               NULL);
+
+#ifdef HAVE_GTKGLEXT
+    s = g_strdup_printf("GtkGLExt %d.%d.%d\n",
+                        gtkglext_major_version,
+                        gtkglext_minor_version,
+                        gtkglext_micro_version);
+    add_credits_block(buffer, _("OpenGL 3D View"), s, FALSE);
+    g_free(s);
+#else
+    add_credits_block(buffer, _("OpenGL 3D View"),
+                      _("not available\n"), TRUE);
+#endif
+
+#ifdef HAVE_FFTW3
+    s = g_strdup_printf("FFTW %s\n", fftw_version);
+    add_credits_block(buffer, _("Fast Fourier Transform"), s, FALSE);
+    g_free(s);
+#else
+    add_credits_block(buffer, _("Fast Fourier Transform"),
+                      _("built-in SimpleFFT\n"), TRUE);
+#endif
+
+    cs = _("not available\n");
+    b = TRUE;
+#ifdef HAVE_REMOTE_X11
+    cs = _("X11 protocol\n");
+    b = FALSE;
+#endif
+#ifdef HAVE_REMOTE_WIN32
+    cs = _("Win32 protocol\n");
+    b = FALSE;
+#endif
+    add_credits_block(buffer, _("Remote Control"), cs, b);
+
+    if ((modinfo = gwy_module_lookup("pygwy"))) {
+        s = g_strdup_printf("pygwy %s\n", modinfo->version);
+        add_credits_block(buffer, _("Python Scripting Interface"), s, FALSE);
+        g_free(s);
+    }
+    else
+        add_credits_block(buffer, _("Python Scripting Interface"),
+                          _("not available\n"), TRUE);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
