@@ -981,8 +981,8 @@ lorentz_guess(gint n_dat,
               gdouble *param,
               gboolean *fres)
 {
-    gint i, imin, imax;
-    gdouble c0, c2p, c2m;
+    gint i, imin, imax, nv;
+    gdouble c0, cm, vec[5];
 
     param[0] = 0.0;
     param[1] = 0.0;
@@ -997,36 +997,34 @@ lorentz_guess(gint n_dat,
             imin = i;
     }
 
-    c0 = c2p = c2m = 0.0;
-    for (i = 0; i < n_dat; i++) {
+    c0 = 0.0;
+    for (i = 0; i < n_dat; i++)
         c0 += y[i];
-        c2p += y[i]*(x[i] - x[imax])*(x[i] - x[imax]);
-        c2m += y[i]*(x[i] - x[imin])*(x[i] - x[imin]);
-    }
-    c0 *= (x[n_dat-1] - x[0])/n_dat;
-    c2p *= (x[n_dat-1] - x[0])/n_dat;
-    c2m *= (x[n_dat-1] - x[0])/n_dat;
+    c0 /= n_dat;
 
-    param[2] = c2p/(c0/y[imax] + x[n_dat-1] - x[0]);
-    if (param[2]*y[imax] > 0.0) {
-        param[3] = sqrt(param[2]/y[imax]);
+    nv = G_N_ELEMENTS(vec);
+    for (i = 0; i < nv; i++)
+        vec[i] = y[i*(n_dat - 1)/(nv - 1)];
+    cm = gwy_math_median(nv, vec);
+
+    if (cm - y[imin] < y[imax] - cm) {
+        param[0] = y[imin];
         param[1] = x[imax];
     }
     else {
-        param[2] = c2m/(c0/y[imin] + x[n_dat-1] - x[0]);
-        if (param[2]*y[imin] > 0.0) {
-            param[3] = sqrt(param[2]/y[imin]);
-            param[1] = x[imin];
-        }
-        else {
-            *fres = FALSE;
-            return;
-        }
-    }
-    if (param[2] > 0.0)
-        param[0] = y[imin];
-    else
         param[0] = y[imax];
+        param[1] = x[imin];
+    }
+
+    c0 = c0 - param[0];
+    c0 *= fabs(x[n_dat-1] - x[0]);
+    c0 /= G_PI;
+    param[2] = c0*fabs(c0)/(y[imax] - y[imin]);
+
+    if (c0)
+        param[3] = param[2]/c0;
+    else
+        param[3] = fabs(x[n_dat-1] - x[0])/4.0;
 
     *fres = TRUE;
 }
