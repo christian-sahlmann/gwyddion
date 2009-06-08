@@ -5,6 +5,9 @@ Application:
 Libraries:
 - libgwyprocess: Missing data field invalidation after Laplace iteration was
   added, fixing wrong color scales after Laplace interpolation data removal.
+- libgwyddion: Lorentzian fitting preset parameter estimator was corrected.
+- libgwyprocess: Broken Fourier transformations of large prime sizes with
+  stride larger than one were fixed in simpleFFT (does not affect FFTW).
 
 Modules:
 - OLS, JPK: GwyTIFF is used instead of libTIFF for file loading.  This should
