@@ -9,6 +9,7 @@ Libraries:
 Modules:
 - OLS, JPK: GwyTIFF is used instead of libTIFF for file loading.  This should
   fix a number of TIFF-related problems, namely on MS Windows.
+- Pixmap export: libTIFF is no longer used, TIFF files are written directly.
 
 Other:
 - Gwyddion no longer uses libTIFF on any platform (it used to be optionally
