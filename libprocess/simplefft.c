@@ -1074,8 +1074,8 @@ gwy_fft_simple(GwyTransformDirection dir,
          * sign convention, unlike everything else here. */
         for (j = 0; j < k; j++)
             bluestein(m,
-                      k*istride, in_im + j, in_re + j,
-                      k*ostride, out_im + j, out_re + j);
+                      k*istride, in_im + j*istride, in_re + j*istride,
+                      k*ostride, out_im + j*ostride, out_re + j*ostride);
         if (k == 1)
             return;
     }
