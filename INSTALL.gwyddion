@@ -32,9 +32,6 @@ Prerequisities:
 Recommended though optional, for 3D data view:
 - GtkGLExt-1.0 or newer, including development files
 
-Recommended though optional, for TIFF and JPK file support:
-- LibTIFF-3.6 or newer, including development files
-
 Recommended though optional, for speed up of some operations:
 - FFTW-3.0.0 (on 64bit systems, 3.1.0) or newer, including development files
 
@@ -150,7 +147,7 @@ Essentially, the Unix instructions apply here too.
 
 It's recommended to use Darwinports for installing the dependencies.  You
 need to install ports for gtk2, pkg-config; that should pull all the other
-dependencies.  It is recommended to install gtkglext, tiff and libxml2 too.
+dependencies.  It is recommended to install gtkglext and libxml2 too.
 
 To make sure headers and libraries are found where Darwinports install them
 you may want to explicitely set:
