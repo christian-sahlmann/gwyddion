@@ -1,6 +1,7 @@
 2.16 (2000-00-00)
 Application:
 - Translations updated: French, Russian.
+- About dialog shows optional features built into the specific version.
 
 Libraries:
 - libgwyprocess: Missing data field invalidation after Laplace iteration was
@@ -10,6 +11,7 @@ Libraries:
   stride larger than one were fixed in simpleFFT (does not affect FFTW).
 
 Modules:
+- PSIA: Format version 1.0.2 is supported.
 - OLS, JPK: GwyTIFF is used instead of libTIFF for file loading.  This should
   fix a number of TIFF-related problems, namely on MS Windows.
 - Pixmap export: libTIFF is no longer used, TIFF files are written directly.
