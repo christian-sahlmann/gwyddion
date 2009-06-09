@@ -43,6 +43,8 @@ enum {
     /* Version values */
     PSIA_VERSION1 = 0x1000001u,
     PSIA_VERSION2 = 0x1000002u,
+    /* Maximum number of different spectroscopy channels */
+    PSIA_MAX_SPECTRO_CHANNEL = 8,
 };
 
 /* Custom TIFF tags */
@@ -55,14 +57,21 @@ enum {
     PSIA_TIFFTAG_LineProfileHeader  = 50437,
     PSIA_TIFFTAG_SpectroscopyHeader = 50438,
     PSIA_TIFFTAG_SpectroscopyData   = 50439,
+    /* Nothing is known about these */
+    PSIA_TIFFTAG_InternalData       = 50440,
+    PSIA_TIFFTAG_Reserved           = 50441,
 };
-/* PSIA claims tag numbers 50432 to 50441, but nothing is known about the
- * remaining tags. */
 
 typedef enum {
     PSIA_2D_MAPPED    = 0,
-    PSIA_LINE_PROFILE = 1
+    PSIA_LINE_PROFILE = 1,
+    PSIA_SPECTROSCOPY = 2,
 } PSIAImageType;
+
+typedef enum {
+    PSIA_SPEC_SPECTROSCOPY = 0,
+    PSIA_SPEC_INDENTOR     = 1
+} PSIASpectroType;
 
 /* Version 2+ only */
 typedef enum {
@@ -122,30 +131,98 @@ typedef struct {
     gchar *cantilever_name;  /* [16] */
 } PSIAImageHeader;
 
-static gboolean      module_register       (void);
-static gint          psia_detect           (const GwyFileDetectInfo *fileinfo,
-                                            gboolean only_name);
-static GwyContainer* psia_load             (const gchar *filename,
-                                            GwyRunType mode,
-                                            GError **error);
-static GwyContainer* psia_load_tiff        (GwyTIFF *tiff,
-                                            GError **error);
-static void          psia_free_image_header(PSIAImageHeader *header);
-static void          psia_read_data_field  (GwyDataField *dfield,
-                                            const guchar *p,
-                                            PSIADataType data_type,
-                                            gdouble q,
-                                            gdouble z_scale,
-                                            gdouble z0);
-static guint         psia_read_image_header(const guchar *p,
-                                            gsize size,
-                                            guint version,
-                                            PSIAImageHeader *header,
-                                            GError **error);
-static gchar*        psia_wchar_to_utf8    (const guchar **src,
-                                            guint len);
-static GwyContainer* psia_get_metadata     (PSIAImageHeader *header,
-                                            guint version);
+typedef struct {
+    gboolean low_pass_filter;
+    gdouble lp_strength;
+    gint avg_mode;
+    /* There is much more stuff, but it seems GUI-related */
+} PSIALineProfileHeader;
+
+typedef struct {
+    gchar *source_name;   /* [32] Topography, ... */
+    gchar *w_unit;        /* [8] */
+    gdouble data_gain;
+    gboolean x_axis_source;
+    gboolean y_axis_source;
+} PSIASpectroscopyChannel;
+
+typedef struct {
+    PSIASpectroscopyChannel channel[PSIA_MAX_SPECTRO_CHANNEL];
+    gint spect_sources;      /* Number of spectro sources (channels?) */
+    gint average;
+    gint res;                /* Number of data values in a spectrum */
+    gint npoints;            /* Number spectroscopy points */
+    gint driving_source_index;
+    gdouble forward_period;  /* In seconds */
+    gdouble backward_period; /* In seconds */
+    gdouble forward_speed;   /* Driving source unit/second */
+    gdouble backward_speed;  /* Driving source unit/second */
+    gboolean volume_image;
+    gdouble offset[PSIA_MAX_SPECTRO_CHANNEL];
+    gboolean log_scale[PSIA_MAX_SPECTRO_CHANNEL];
+    gboolean square[PSIA_MAX_SPECTRO_CHANNEL];
+    /* Version 2+ only */
+    gint spec_point_per_x;   /* If volume_image && !spec_point_per_x, then
+                                points are arranged in a square matrix */
+    gboolean has_reference_image;
+    gdouble xreal;     /* Grid dimensions */
+    gdouble yreal;
+    gdouble xoff;
+    gdouble yoff;
+    gdouble force_constant;      /* F-D, in Newton/meter */
+    gdouble sensitivity;         /* F-D, in Volt/micrometer */
+    gdouble force_limit;         /* F-D, in Volts */
+    gdouble time_interval;       /* F-D, in seconds? */
+    gdouble max_voltage;         /* I-V, in Volts */
+    gdouble min_voltage;         /* I-V, in Volts */
+    gdouble start_voltage;       /* I-V, in Volts */
+    gdouble end_voltage;         /* I-V, in Volts */
+    gdouble delayed_start_time;  /* I-V, in seconds? */
+    gboolean z_servo;            /* I-V */
+    gdouble data_gain;
+    gchar *w_unit;
+    gboolean use_extended_header;
+    PSIASpectroType spec_type;
+    gdouble reset_level;           /* Photo-current information */
+    gdouble reset_duration;
+    gdouble operation_level;
+    gdouble operation_duration;
+    gdouble time_before_reset;
+    gdouble time_after_reset;
+    gdouble time_before_light_on;
+    gdouble time_light_duration;
+} PSIASpectroscopyHeader;
+
+static gboolean      module_register         (void);
+static gint          psia_detect             (const GwyFileDetectInfo *fileinfo,
+                                              gboolean only_name);
+static GwyContainer* psia_load               (const gchar *filename,
+                                              GwyRunType mode,
+                                              GError **error);
+static GwyContainer* psia_load_tiff          (GwyTIFF *tiff,
+                                              GError **error);
+static void          psia_free_image_header  (PSIAImageHeader *header);
+static void          psia_free_spectro_header(PSIASpectroscopyHeader *header);
+static void          psia_read_data_field    (GwyDataField *dfield,
+                                              const guchar *p,
+                                              PSIADataType data_type,
+                                              gdouble q,
+                                              gdouble z_scale,
+                                              gdouble z0);
+static guint         psia_read_image_header  (const guchar *p,
+                                              gsize size,
+                                              guint version,
+                                              PSIAImageHeader *header,
+                                              GError **error);
+static gboolean      psia_read_spectro_header(const guchar *p,
+                                              gsize size,
+                                              guint version,
+                                              PSIASpectroscopyHeader *header,
+                                              GError **error);
+static gchar*        psia_wchar_to_utf8      (const guchar **src,
+                                              guint len);
+static GwyContainer* psia_get_metadata       (PSIAImageHeader *header,
+                                              guint version);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -223,6 +300,7 @@ psia_load_tiff(GwyTIFF *tiff, GError **error)
 {
     const GwyTIFFEntry *entry;
     PSIAImageHeader header;
+    PSIASpectroscopyHeader specheader;
     GwyContainer *container = NULL;
     GwyContainer *meta = NULL;
     GwyDataField *dfield;
@@ -330,6 +408,14 @@ psia_load_tiff(GwyTIFF *tiff, GError **error)
 
     psia_free_image_header(&header);
 
+    if ((entry = gwy_tiff_find_tag(tiff, 0, PSIA_TIFFTAG_SpectroscopyHeader))) {
+        gwy_debug("Found SpectroscopyHeader");
+        p = entry->value;
+        psia_read_spectro_header(tiff->data + tiff->get_guint32(&p),
+                                 entry->count, version, &specheader, error);
+        psia_free_spectro_header(&specheader);
+    }
+
     return container;
 }
 
@@ -340,6 +426,18 @@ psia_free_image_header(PSIAImageHeader *header)
     g_free(header->image_mode);
     g_free(header->set_point_unit);
     g_free(header->z_unit);
+}
+
+static void
+psia_free_spectro_header(PSIASpectroscopyHeader *header)
+{
+    guint i;
+
+    for (i = 0; i < PSIA_MAX_SPECTRO_CHANNEL; i++) {
+        g_free(header->channel[i].source_name);
+        g_free(header->channel[i].w_unit);
+    }
+    g_free(header->w_unit);
 }
 
 static void
@@ -410,7 +508,8 @@ psia_read_image_header(const guchar *p,
     memset(header, 0, sizeof(PSIAImageHeader));
     header->image_type = gwy_get_guint32_le(&p);
     gwy_debug("image_type: %d", header->image_type);
-    if (header->image_type != PSIA_2D_MAPPED) {
+    if (header->image_type != PSIA_2D_MAPPED
+        && header->image_type != PSIA_SPECTROSCOPY) {
         err_NO_DATA(error);
         return 0;
     }
@@ -498,6 +597,91 @@ psia_read_image_header(const guchar *p,
         err_DATA_TYPE(error, header->data_type);
 
     return bps;
+}
+
+static gboolean
+psia_read_spectro_header(const guchar *p,
+                         gsize size,
+                         guint version,
+                         PSIASpectroscopyHeader *header,
+                         GError **error)
+{
+    guint i;
+
+    memset(header, 0, sizeof(PSIASpectroscopyHeader));
+
+    if (size < 536) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Spectroscopy header is too short (only %lu bytes)."),
+                    (gulong)size);
+        return FALSE;
+    }
+
+    for (i = 0; i < PSIA_MAX_SPECTRO_CHANNEL; i++) {
+        PSIASpectroscopyChannel *channel = header->channel + i;
+
+        channel->source_name = psia_wchar_to_utf8(&p, 32);
+        channel->w_unit = psia_wchar_to_utf8(&p, 8);
+        gwy_debug("spectro channel[%u] source_name: %s, w_unit: %s",
+                  i, channel->source_name, channel->w_unit);
+        channel->data_gain = gwy_get_gdouble_le(&p);
+        channel->x_axis_source = gwy_get_guint32_le(&p);
+        channel->y_axis_source = gwy_get_guint32_le(&p);
+    }
+
+    header->spect_sources = gwy_get_gint32_le(&p);
+    gwy_debug("spect_sources: %d", header->spect_sources);
+    header->average = gwy_get_gint32_le(&p);
+    header->res = gwy_get_gint32_le(&p);
+    header->npoints = gwy_get_gint32_le(&p);
+    gwy_debug("res: %d, npoints: %d", header->res, header->npoints);
+    header->driving_source_index  = gwy_get_gint32_le(&p);
+    header->forward_period  = gwy_get_gfloat_le(&p);
+    header->backward_period  = gwy_get_gfloat_le(&p);
+    header->forward_speed  = gwy_get_gfloat_le(&p);
+    header->backward_speed  = gwy_get_gfloat_le(&p);
+    header->volume_image = gwy_get_guint32_le(&p);
+    gwy_debug("volume_image: %d", header->volume_image);
+    for (i = 0; i < PSIA_MAX_SPECTRO_CHANNEL; i++)
+        header->offset[i] = gwy_get_gdouble_le(&p);
+    for (i = 0; i < PSIA_MAX_SPECTRO_CHANNEL; i++)
+        header->log_scale[i] = gwy_get_guint32_le(&p);
+    for (i = 0; i < PSIA_MAX_SPECTRO_CHANNEL; i++)
+        header->square[i] = gwy_get_guint32_le(&p);
+
+    if (version == PSIA_VERSION1)
+        return TRUE;
+
+    header->spec_point_per_x = gwy_get_gint32_le(&p);
+    header->has_reference_image = gwy_get_guint32_le(&p);
+    header->xreal = gwy_get_gdouble_le(&p);
+    header->yreal = gwy_get_gdouble_le(&p);
+    header->xoff = gwy_get_gdouble_le(&p);
+    header->yoff = gwy_get_gdouble_le(&p);
+    header->force_constant = gwy_get_gdouble_le(&p);
+    header->sensitivity = gwy_get_gdouble_le(&p);
+    header->force_limit = gwy_get_gfloat_le(&p);
+    header->time_interval = gwy_get_gfloat_le(&p);
+    header->max_voltage = gwy_get_gfloat_le(&p);
+    header->min_voltage = gwy_get_gfloat_le(&p);
+    header->start_voltage = gwy_get_gfloat_le(&p);
+    header->end_voltage = gwy_get_gfloat_le(&p);
+    header->delayed_start_time = gwy_get_gfloat_le(&p);
+    header->z_servo = gwy_get_guint32_le(&p);
+    header->data_gain = gwy_get_gdouble_le(&p);
+    header->w_unit = psia_wchar_to_utf8(&p, 8);
+    header->use_extended_header = gwy_get_guint32_le(&p);
+    header->spec_type = gwy_get_gint32_le(&p);
+    header->reset_level = gwy_get_gfloat_le(&p);
+    header->reset_duration = gwy_get_gfloat_le(&p);
+    header->operation_level = gwy_get_gfloat_le(&p);
+    header->operation_duration = gwy_get_gfloat_le(&p);
+    header->time_before_reset = gwy_get_gfloat_le(&p);
+    header->time_after_reset = gwy_get_gfloat_le(&p);
+    header->time_before_light_on = gwy_get_gfloat_le(&p);
+    header->time_light_duration = gwy_get_gfloat_le(&p);
+
+    return TRUE;
 }
 
 static gchar*
