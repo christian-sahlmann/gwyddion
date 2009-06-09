@@ -47,12 +47,14 @@ enum {
 
 /* Custom TIFF tags */
 enum {
-    PSIA_TIFFTAG_MagicNumber       = 50432,
-    PSIA_TIFFTAG_Version           = 50433,
-    PSIA_TIFFTAG_Data              = 50434,
-    PSIA_TIFFTAG_Header            = 50435,
-    PSIA_TIFFTAG_Comments          = 50436,
-    PSIA_TIFFTAG_LineProfileHeader = 50437
+    PSIA_TIFFTAG_MagicNumber        = 50432,
+    PSIA_TIFFTAG_Version            = 50433,
+    PSIA_TIFFTAG_Data               = 50434,
+    PSIA_TIFFTAG_Header             = 50435,
+    PSIA_TIFFTAG_Comments           = 50436,
+    PSIA_TIFFTAG_LineProfileHeader  = 50437,
+    PSIA_TIFFTAG_SpectroscopyHeader = 50438,
+    PSIA_TIFFTAG_SpectroscopyData   = 50439,
 };
 /* PSIA claims tag numbers 50432 to 50441, but nothing is known about the
  * remaining tags. */
@@ -135,6 +137,11 @@ static void          psia_read_data_field  (GwyDataField *dfield,
                                             gdouble q,
                                             gdouble z_scale,
                                             gdouble z0);
+static guint         psia_read_image_header(const guchar *p,
+                                            gsize size,
+                                            guint version,
+                                            PSIAImageHeader *header,
+                                            GError **error);
 static gchar*        psia_wchar_to_utf8    (const guchar **src,
                                             guint len);
 static GwyContainer* psia_get_metadata     (PSIAImageHeader *header,
@@ -264,106 +271,8 @@ psia_load_tiff(GwyTIFF *tiff, GError **error)
     count = entry->count;
     gwy_debug("[Header] count: %d", count);
 
-    if ((version == PSIA_VERSION1 && count < 356)
-        || (version == PSIA_VERSION2 && count < 580)) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                    _("Header is too short (only %d bytes)."),
-                    count);
-        return NULL;
-    }
-
     /* Parse header */
-    memset(&header, 0, sizeof(PSIAImageHeader));
-    header.image_type = gwy_get_guint32_le(&p);
-    gwy_debug("image_type: %d", header.image_type);
-    if (header.image_type != PSIA_2D_MAPPED) {
-        err_NO_DATA(error);
-        return NULL;
-    }
-    header.source_name = psia_wchar_to_utf8(&p, 32);
-    header.image_mode = psia_wchar_to_utf8(&p, 8);
-    gwy_debug("source_name: <%s>, image_mode: <%s>",
-              header.source_name, header.image_mode);
-    header.lpf_strength = gwy_get_gdouble_le(&p);
-    header.auto_flatten = gwy_get_guint32_le(&p);
-    header.ac_track = gwy_get_guint32_le(&p);
-    header.xres = gwy_get_guint32_le(&p);
-    header.yres = gwy_get_guint32_le(&p);
-    gwy_debug("xres: %d, yres: %d", header.xres, header.yres);
-    if (err_DIMENSION(error, header.xres)
-        || err_DIMENSION(error, header.yres)) {
-        psia_free_image_header(&header);
-        return NULL;
-    }
-
-    header.angle = gwy_get_gdouble_le(&p);
-    header.sine_scan = gwy_get_guint32_le(&p);
-    header.overscan_rate = gwy_get_gdouble_le(&p);
-    header.forward = gwy_get_guint32_le(&p);
-    header.scan_up = gwy_get_guint32_le(&p);
-    header.swap_xy = gwy_get_guint32_le(&p);
-    header.xreal = gwy_get_gdouble_le(&p);
-    header.yreal = gwy_get_gdouble_le(&p);
-    gwy_debug("xreal: %g, yreal: %g", header.xreal, header.yreal);
-    /* Use negated positive conditions to catch NaNs */
-    if (!((header.xreal = fabs(header.xreal)) > 0)) {
-        g_warning("Real x size is 0.0, fixing to 1.0");
-        header.xreal = 1.0;
-    }
-    if (!((header.yreal = fabs(header.yreal)) > 0)) {
-        g_warning("Real y size is 0.0, fixing to 1.0");
-        header.yreal = 1.0;
-    }
-    header.xreal *= Micrometre;
-    header.yreal *= Micrometre;
-
-    header.xoff = gwy_get_gdouble_le(&p) * Micrometre;
-    header.yoff = gwy_get_gdouble_le(&p) * Micrometre;
-    gwy_debug("xoff: %g, yoff: %g", header.xoff, header.yoff);
-    header.scan_rate = gwy_get_gdouble_le(&p);
-    header.set_point = gwy_get_gdouble_le(&p);
-    header.set_point_unit = psia_wchar_to_utf8(&p, 8);
-    if (!header.set_point_unit)
-        header.set_point_unit = g_strdup("V");
-    header.tip_bias = gwy_get_gdouble_le(&p);
-    header.sample_bias = gwy_get_gdouble_le(&p);
-    header.data_gain = gwy_get_gdouble_le(&p);
-    header.z_scale = gwy_get_gdouble_le(&p);
-    header.z_offset = gwy_get_gdouble_le(&p);
-    gwy_debug("data_gain: %g, z_scale: %g", header.data_gain, header.z_scale);
-    header.z_unit = psia_wchar_to_utf8(&p, 8);
-    gwy_debug("z_unit: <%s>", header.z_unit);
-    header.data_min = gwy_get_gint32_le(&p);
-    header.data_max = gwy_get_gint32_le(&p);
-    header.data_avg = gwy_get_gint32_le(&p);
-    header.compression = gwy_get_guint32_le(&p);
-    header.logscale = gwy_get_guint32_le(&p);
-    header.square = gwy_get_guint32_le(&p);
-
-    if (version == PSIA_VERSION2) {
-        header.z_servo_gain = gwy_get_gdouble_le(&p);
-        header.z_scanner_range = gwy_get_gdouble_le(&p);
-        header.xy_voltage_mode = psia_wchar_to_utf8(&p, 8);
-        header.z_voltage_mode = psia_wchar_to_utf8(&p, 8);
-        header.xy_servo_mode = psia_wchar_to_utf8(&p, 8);
-        header.data_type = gwy_get_guint32_le(&p);
-        header.reserved1 = gwy_get_guint32_le(&p);
-        header.reserved2 = gwy_get_guint32_le(&p);
-        header.ncm_amplitude = gwy_get_gdouble_le(&p);
-        header.ncm_frequency = gwy_get_gdouble_le(&p);
-        header.cantilever_name = psia_wchar_to_utf8(&p, 16);
-    }
-    else
-        header.data_type = PSIA_DATA_INT16;
-
-    gwy_debug("data_type: %d", header.data_type);
-    if (header.data_type == PSIA_DATA_INT16)
-        bps = 2;
-    else if (header.data_type == PSIA_DATA_INT32
-             || header.data_type == PSIA_DATA_FLOAT)
-        bps = 4;
-    else {
-        err_DATA_TYPE(error, header.data_type);
+    if (!(bps = psia_read_image_header(p, count, version, &header, error))) {
         psia_free_image_header(&header);
         return NULL;
     }
@@ -476,6 +385,119 @@ psia_read_data_field(GwyDataField *dfield,
     else {
         g_return_if_reached();
     }
+}
+
+static guint
+psia_read_image_header(const guchar *p,
+                       gsize size,
+                       guint version,
+                       PSIAImageHeader *header,
+                       GError **error)
+{
+    guint bps = 0;
+
+    memset(header, 0, sizeof(PSIAImageHeader));
+
+    if ((version == PSIA_VERSION1 && size < 356)
+        || (version == PSIA_VERSION2 && size < 580)) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Header is too short (only %lu bytes)."),
+                    (gulong)size);
+        return 0;
+    }
+
+    /* Parse header */
+    memset(header, 0, sizeof(PSIAImageHeader));
+    header->image_type = gwy_get_guint32_le(&p);
+    gwy_debug("image_type: %d", header->image_type);
+    if (header->image_type != PSIA_2D_MAPPED) {
+        err_NO_DATA(error);
+        return 0;
+    }
+    header->source_name = psia_wchar_to_utf8(&p, 32);
+    header->image_mode = psia_wchar_to_utf8(&p, 8);
+    gwy_debug("source_name: <%s>, image_mode: <%s>",
+              header->source_name, header->image_mode);
+    header->lpf_strength = gwy_get_gdouble_le(&p);
+    header->auto_flatten = gwy_get_guint32_le(&p);
+    header->ac_track = gwy_get_guint32_le(&p);
+    header->xres = gwy_get_guint32_le(&p);
+    header->yres = gwy_get_guint32_le(&p);
+    gwy_debug("xres: %d, yres: %d", header->xres, header->yres);
+    if (err_DIMENSION(error, header->xres)
+        || err_DIMENSION(error, header->yres))
+        return 0;
+
+    header->angle = gwy_get_gdouble_le(&p);
+    header->sine_scan = gwy_get_guint32_le(&p);
+    header->overscan_rate = gwy_get_gdouble_le(&p);
+    header->forward = gwy_get_guint32_le(&p);
+    header->scan_up = gwy_get_guint32_le(&p);
+    header->swap_xy = gwy_get_guint32_le(&p);
+    header->xreal = gwy_get_gdouble_le(&p);
+    header->yreal = gwy_get_gdouble_le(&p);
+    gwy_debug("xreal: %g, yreal: %g", header->xreal, header->yreal);
+    /* Use negated positive conditions to catch NaNs */
+    if (!((header->xreal = fabs(header->xreal)) > 0)) {
+        g_warning("Real x size is 0.0, fixing to 1.0");
+        header->xreal = 1.0;
+    }
+    if (!((header->yreal = fabs(header->yreal)) > 0)) {
+        g_warning("Real y size is 0.0, fixing to 1.0");
+        header->yreal = 1.0;
+    }
+    header->xreal *= Micrometre;
+    header->yreal *= Micrometre;
+
+    header->xoff = gwy_get_gdouble_le(&p) * Micrometre;
+    header->yoff = gwy_get_gdouble_le(&p) * Micrometre;
+    gwy_debug("xoff: %g, yoff: %g", header->xoff, header->yoff);
+    header->scan_rate = gwy_get_gdouble_le(&p);
+    header->set_point = gwy_get_gdouble_le(&p);
+    header->set_point_unit = psia_wchar_to_utf8(&p, 8);
+    if (!header->set_point_unit)
+        header->set_point_unit = g_strdup("V");
+    header->tip_bias = gwy_get_gdouble_le(&p);
+    header->sample_bias = gwy_get_gdouble_le(&p);
+    header->data_gain = gwy_get_gdouble_le(&p);
+    header->z_scale = gwy_get_gdouble_le(&p);
+    header->z_offset = gwy_get_gdouble_le(&p);
+    gwy_debug("data_gain: %g, z_scale: %g", header->data_gain, header->z_scale);
+    header->z_unit = psia_wchar_to_utf8(&p, 8);
+    gwy_debug("z_unit: <%s>", header->z_unit);
+    header->data_min = gwy_get_gint32_le(&p);
+    header->data_max = gwy_get_gint32_le(&p);
+    header->data_avg = gwy_get_gint32_le(&p);
+    header->compression = gwy_get_guint32_le(&p);
+    header->logscale = gwy_get_guint32_le(&p);
+    header->square = gwy_get_guint32_le(&p);
+
+    if (version == PSIA_VERSION2) {
+        header->z_servo_gain = gwy_get_gdouble_le(&p);
+        header->z_scanner_range = gwy_get_gdouble_le(&p);
+        header->xy_voltage_mode = psia_wchar_to_utf8(&p, 8);
+        header->z_voltage_mode = psia_wchar_to_utf8(&p, 8);
+        header->xy_servo_mode = psia_wchar_to_utf8(&p, 8);
+        header->data_type = gwy_get_guint32_le(&p);
+        header->reserved1 = gwy_get_guint32_le(&p);
+        header->reserved2 = gwy_get_guint32_le(&p);
+        header->ncm_amplitude = gwy_get_gdouble_le(&p);
+        header->ncm_frequency = gwy_get_gdouble_le(&p);
+        header->cantilever_name = psia_wchar_to_utf8(&p, 16);
+    }
+    else
+        header->data_type = PSIA_DATA_INT16;
+
+    gwy_debug("data_type: %d", header->data_type);
+    if (header->data_type == PSIA_DATA_INT16)
+        bps = 2;
+    else if (header->data_type == PSIA_DATA_INT32
+             || header->data_type == PSIA_DATA_FLOAT)
+        bps = 4;
+    else
+        err_DATA_TYPE(error, header->data_type);
+
+    return bps;
 }
 
 static gchar*
