@@ -59,6 +59,7 @@ cat >make_dists.ignore <<':'
 
 cat >install_to_tmp.ignore <<':'
 ^libtool: install: warning: relinking `.*.la'
+^libtool: install: warning: remember to run `libtool --finish /usr/lib
 ':'
 :
 
