@@ -346,7 +346,7 @@ def check_make_all():
 
 def check_completness(config):
     """Check if optional features that can affect completnes are enabled."""
-    must_have = 'HAVE_TIFF', 'HAVE_XML2', 'HAVE_GTKGLEXT'
+    must_have = 'HAVE_XML2', 'HAVE_GTKGLEXT'
     text = get_file(config)
     ok = True
     for x in must_have:
