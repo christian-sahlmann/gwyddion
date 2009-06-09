@@ -35,10 +35,15 @@
 #define MAGIC      "II\x2a\x00"
 #define MAGIC_SIZE (sizeof(MAGIC) - 1)
 
-/* The value of PSIA_TIFFTAG_MagicNumber */
-#define PSIA_MAGIC_NUMBER 0x0E031301
-
 #define Micrometre (1e-6)
+
+enum {
+    /* The value of PSIA_TIFFTAG_MagicNumber */
+    PSIA_MAGIC_NUMBER = 0x0E031301u,
+    /* Version values */
+    PSIA_VERSION1 = 0x1000001u,
+    PSIA_VERSION2 = 0x1000002u,
+};
 
 /* Custom TIFF tags */
 enum {
@@ -57,38 +62,62 @@ typedef enum {
     PSIA_LINE_PROFILE = 1
 } PSIAImageType;
 
+/* Version 2+ only */
+typedef enum {
+    PSIA_DATA_INT16 = 0,
+    PSIA_DATA_INT32 = 1,
+    PSIA_DATA_FLOAT = 2,
+} PSIADataType;
+
 typedef struct {
     PSIAImageType image_type;
-    gchar *source_name;
-    gchar *image_mode;
-    gdouble lpf_strength;
-    gboolean auto_flatten;
-    gboolean ac_track;
+    gchar *source_name;     /* [32] Topography, ... */
+    gchar *image_mode;      /* [8] AFM, NCM, ... */
+    gdouble lpf_strength;   /* Low-pass filter strength */
+    gboolean auto_flatten;  /* Automatic flatten after scan */
+    gboolean ac_track;    /* AC track, order of flattening + 1 (WTF?) */
     guint32 xres;
     guint32 yres;
-    gdouble angle;
+    gdouble angle;          /* Of fast axis wrt positive x-axis */
     gboolean sine_scan;
-    gdouble overscan_rate;
-    gboolean forward;
-    gboolean scan_up;
-    gboolean swap_xy;
-    gdouble xreal;
+    gdouble overscan_rate;  /* In % */
+    gboolean forward;       /* Otherwise backward */
+    gboolean scan_up;       /* Otherwise scan down */
+    gboolean swap_xy;       /* Swap slow/fast, actually */
+    gdouble xreal;          /* In micrometers */
     gdouble yreal;
     gdouble xoff;
     gdouble yoff;
-    gdouble scan_rate;
-    gdouble set_point;
-    gchar *set_point_unit;
-    gdouble tip_bias;
+    gdouble scan_rate;      /* In rows per second */
+    gdouble set_point;      /* Error signal set point */
+    gchar *set_point_unit;  /* [8] */
+    gdouble tip_bias;       /* In volts */
     gdouble sample_bias;
     gdouble data_gain;
-    gdouble z_scale;
+    gdouble z_scale;        /* Scale multiplier, they say it is always 1 */
     gdouble z_offset;
-    gchar *z_unit;
-    gint data_min;
+    gchar *z_unit;          /* [8] */
+    gint data_min;          /* Statistics, we do not trust these anyway */
     gint data_max;
     gint data_avg;
     gboolean compression;
+    gboolean logscale;
+    gboolean square;
+    /* Only in version 2+
+     * NB: This must be interpreted as the new version can have different data
+     * types. */
+    gdouble z_servo_gain;
+    gdouble z_scanner_range;
+    gchar *xy_voltage_mode;  /* [8] */
+    gchar *z_voltage_mode;   /* [8] */
+    gchar *xy_servo_mode;    /* [8] */
+    PSIADataType data_type;
+    gint reserved1;
+    gint reserved2;
+    gdouble ncm_amplitude;
+    gdouble ncm_frequency;
+    gdouble head_rotation_angle;
+    gchar *cantilever_name;  /* [16] */
 } PSIAImageHeader;
 
 static gboolean      module_register       (void);
@@ -100,16 +129,23 @@ static GwyContainer* psia_load             (const gchar *filename,
 static GwyContainer* psia_load_tiff        (GwyTIFF *tiff,
                                             GError **error);
 static void          psia_free_image_header(PSIAImageHeader *header);
+static void          psia_read_data_field  (GwyDataField *dfield,
+                                            const guchar *p,
+                                            PSIADataType data_type,
+                                            gdouble q,
+                                            gdouble z_scale,
+                                            gdouble z0);
 static gchar*        psia_wchar_to_utf8    (const guchar **src,
                                             guint len);
-static GwyContainer* psia_get_metadata     (PSIAImageHeader *header);
+static GwyContainer* psia_get_metadata     (PSIAImageHeader *header,
+                                            guint version);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     module_register,
     N_("Imports PSIA data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.4",
+    "0.5",
     "David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
@@ -134,7 +170,7 @@ psia_detect(const GwyFileDetectInfo *fileinfo, gboolean only_name)
 {
     GwyTIFF *tiff;
     gint score = 0;
-    guint magic = 0;
+    guint magic, version;
 
     if (only_name)
         return score;
@@ -146,7 +182,9 @@ psia_detect(const GwyFileDetectInfo *fileinfo, gboolean only_name)
 
     if ((tiff = gwy_tiff_load(fileinfo->name, NULL))
         && gwy_tiff_get_uint0(tiff, PSIA_TIFFTAG_MagicNumber, &magic)
-        && magic == PSIA_MAGIC_NUMBER)
+        && magic == PSIA_MAGIC_NUMBER
+        && gwy_tiff_get_uint0(tiff, PSIA_TIFFTAG_Version, &version)
+        && (version == PSIA_VERSION1 || version == PSIA_VERSION2))
         score = 100;
 
     if (tiff)
@@ -182,18 +220,16 @@ psia_load_tiff(GwyTIFF *tiff, GError **error)
     GwyContainer *meta = NULL;
     GwyDataField *dfield;
     GwySIUnit *siunit;
-    guint magic, version, i, j;
-    const guchar *p;
-    const guint16 *data;
+    guint magic, version, bps, i;
+    const guchar *p, *data;
     gchar *comment = NULL;
     gint count, data_len, power10;
     gdouble q, z0;
-    gdouble *d;
 
     if (!gwy_tiff_get_uint0(tiff, PSIA_TIFFTAG_MagicNumber, &magic)
         || magic != PSIA_MAGIC_NUMBER
         || !gwy_tiff_get_uint0(tiff, PSIA_TIFFTAG_Version, &version)
-        || version < 0x01000001) {
+        || !(version == PSIA_VERSION1 || version == PSIA_VERSION2)) {
         err_FILE_TYPE(error, "PSIA");
         return NULL;
     }
@@ -207,7 +243,7 @@ psia_load_tiff(GwyTIFF *tiff, GError **error)
     }
     p = entry->value;
     count = tiff->get_guint32(&p);
-    data = (const guint16*)(tiff->data + count);
+    data = tiff->data + count;
     data_len = entry->count;
     gwy_debug("data_len: %d", data_len);
     if (data_len + count > tiff->size) {
@@ -228,7 +264,8 @@ psia_load_tiff(GwyTIFF *tiff, GError **error)
     count = entry->count;
     gwy_debug("[Header] count: %d", count);
 
-    if (count < 356) {
+    if ((version == PSIA_VERSION1 && count < 356)
+        || (version == PSIA_VERSION2 && count < 580)) {
         g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
                     _("Header is too short (only %d bytes)."),
                     count);
@@ -255,10 +292,6 @@ psia_load_tiff(GwyTIFF *tiff, GError **error)
     gwy_debug("xres: %d, yres: %d", header.xres, header.yres);
     if (err_DIMENSION(error, header.xres)
         || err_DIMENSION(error, header.yres)) {
-        psia_free_image_header(&header);
-        return NULL;
-    }
-    if (err_SIZE_MISMATCH(error, 2*header.xres*header.yres, data_len, TRUE)) {
         psia_free_image_header(&header);
         return NULL;
     }
@@ -304,6 +337,41 @@ psia_load_tiff(GwyTIFF *tiff, GError **error)
     header.data_max = gwy_get_gint32_le(&p);
     header.data_avg = gwy_get_gint32_le(&p);
     header.compression = gwy_get_guint32_le(&p);
+    header.logscale = gwy_get_guint32_le(&p);
+    header.square = gwy_get_guint32_le(&p);
+
+    if (version == PSIA_VERSION2) {
+        header.z_servo_gain = gwy_get_gdouble_le(&p);
+        header.z_scanner_range = gwy_get_gdouble_le(&p);
+        header.xy_voltage_mode = psia_wchar_to_utf8(&p, 8);
+        header.z_voltage_mode = psia_wchar_to_utf8(&p, 8);
+        header.xy_servo_mode = psia_wchar_to_utf8(&p, 8);
+        header.data_type = gwy_get_guint32_le(&p);
+        header.reserved1 = gwy_get_guint32_le(&p);
+        header.reserved2 = gwy_get_guint32_le(&p);
+        header.ncm_amplitude = gwy_get_gdouble_le(&p);
+        header.ncm_frequency = gwy_get_gdouble_le(&p);
+        header.cantilever_name = psia_wchar_to_utf8(&p, 16);
+    }
+    else
+        header.data_type = PSIA_DATA_INT16;
+
+    gwy_debug("data_type: %d", header.data_type);
+    if (header.data_type == PSIA_DATA_INT16)
+        bps = 2;
+    else if (header.data_type == PSIA_DATA_INT32
+             || header.data_type == PSIA_DATA_FLOAT)
+        bps = 4;
+    else {
+        err_DATA_TYPE(error, header.data_type);
+        psia_free_image_header(&header);
+        return NULL;
+    }
+
+    if (err_SIZE_MISMATCH(error, bps*header.xres*header.yres, data_len, TRUE)) {
+        psia_free_image_header(&header);
+        return NULL;
+    }
 
     gwy_tiff_get_string0(tiff, PSIA_TIFFTAG_Comments, &comment);
 
@@ -328,12 +396,7 @@ psia_load_tiff(GwyTIFF *tiff, GError **error)
         header.z_scale = 1.0;
     z0 = header.z_offset;
     q = pow10(power10)*header.data_gain;
-    for (i = 0; i < header.yres; i++) {
-        d = gwy_data_field_get_data(dfield) + (header.yres-1 - i)*header.xres;
-        for (j = 0; j < header.xres; j++)
-            d[j] = q*(GINT16_FROM_LE(data[i*header.xres + j])*header.z_scale
-                      + z0);
-    }
+    psia_read_data_field(dfield, data, header.data_type, q, header.z_scale, z0);
 
     container = gwy_container_new();
     gwy_container_set_object_by_name(container, "/0/data", dfield);
@@ -343,7 +406,7 @@ psia_load_tiff(GwyTIFF *tiff, GError **error)
         gwy_container_set_string_by_name(container, "/0/data/title",
                                          g_strdup(header.source_name));
 
-    meta = psia_get_metadata(&header);
+    meta = psia_get_metadata(&header, version);
     if (comment && *comment) {
         /* FIXME: Charset conversion. But from what? */
         gwy_container_set_string_by_name(meta, "Comment", comment);
@@ -370,6 +433,51 @@ psia_free_image_header(PSIAImageHeader *header)
     g_free(header->z_unit);
 }
 
+static void
+psia_read_data_field(GwyDataField *dfield,
+                     const guchar *p,
+                     PSIADataType data_type,
+                     gdouble q,
+                     gdouble z_scale,
+                     gdouble z0)
+{
+    gint i, j, xres, yres;
+    gdouble *data, *d;
+
+    xres = gwy_data_field_get_xres(dfield);
+    yres = gwy_data_field_get_yres(dfield);
+    data = gwy_data_field_get_data(dfield);
+
+    if (data_type == PSIA_DATA_INT16) {
+        const gint16 *p16 = (const gint16*)p;
+
+        for (i = 0; i < yres; i++) {
+            d = data + (yres-1 - i)*xres;
+            for (j = 0; j < xres; j++)
+                d[j] = q*(GINT16_FROM_LE(p16[i*xres + j])*z_scale + z0);
+        }
+    }
+    else if (data_type == PSIA_DATA_INT32) {
+        const gint32 *p32 = (const gint32*)p;
+
+        for (i = 0; i < yres; i++) {
+            d = data + (yres-1 - i)*xres;
+            for (j = 0; j < xres; j++)
+                d[j] = q*(GINT32_FROM_LE(p32[i*xres + j])*z_scale + z0);
+        }
+    }
+    else if (data_type == PSIA_DATA_FLOAT) {
+        for (i = 0; i < yres; i++) {
+            d = data + (yres-1 - i)*xres;
+            for (j = 0; j < xres; j++)
+                d[j] = q*(gwy_get_gfloat_le(&p)*z_scale + z0);
+        }
+    }
+    else {
+        g_return_if_reached();
+    }
+}
+
 static gchar*
 psia_wchar_to_utf8(const guchar **src,
                    guint len)
@@ -389,7 +497,8 @@ psia_wchar_to_utf8(const guchar **src,
 }
 
 static GwyContainer*
-psia_get_metadata(PSIAImageHeader *header)
+psia_get_metadata(PSIAImageHeader *header,
+                  guint version)
 {
     GwyContainer *meta;
 
@@ -406,6 +515,14 @@ psia_get_metadata(PSIAImageHeader *header)
         header->image_mode = NULL;
     }
 
+    gwy_container_set_string_by_name(meta, "Version",
+                                     g_strdup_printf("%u.%u.%u",
+                                                     version >> 24,
+                                                     (version >> 12) & 0xfff,
+                                                     version & 0xfff));
+    gwy_container_set_string_by_name(meta, "Overscan",
+                                     g_strdup_printf("%g %%",
+                                                     100*header->overscan_rate));
     gwy_container_set_string_by_name(meta, "Fast direction",
                                      g_strdup(header->swap_xy ? "Y" : "X"));
     gwy_container_set_string_by_name(meta, "Angle",
@@ -434,6 +551,42 @@ psia_get_metadata(PSIAImageHeader *header)
     gwy_container_set_string_by_name(meta, "Sample bias",
                                      g_strdup_printf("%g V",
                                                      header->sample_bias));
+
+    if (version == PSIA_VERSION1)
+        return meta;
+
+    if (header->xy_voltage_mode && *header->xy_voltage_mode) {
+        gwy_container_set_string_by_name(meta, "XY voltage mode",
+                                         header->xy_voltage_mode);
+        header->xy_voltage_mode = NULL;
+    }
+
+    if (header->z_voltage_mode && *header->z_voltage_mode) {
+        gwy_container_set_string_by_name(meta, "Z voltage mode",
+                                         header->z_voltage_mode);
+        header->z_voltage_mode = NULL;
+    }
+
+    if (header->xy_servo_mode && *header->xy_servo_mode) {
+        gwy_container_set_string_by_name(meta, "XY servo mode",
+                                         header->xy_servo_mode);
+        header->xy_servo_mode = NULL;
+    }
+
+    if (header->cantilever_name && *header->cantilever_name) {
+        gwy_container_set_string_by_name(meta, "Cantilever",
+                                         header->cantilever_name);
+        header->cantilever_name = NULL;
+    }
+
+    gwy_container_set_string_by_name(meta, "Z scanner range",
+                                     g_strdup_printf("%g",
+                                                     header->z_scanner_range));
+    gwy_container_set_string_by_name(meta, "Z servo gain",
+                                     g_strdup_printf("%g",
+                                                     header->z_servo_gain));
+    gwy_container_set_string_by_name(meta, "Head tilt angle",
+                                     g_strdup_printf("%g°", header->head_rotation_angle));
 
     return meta;
 }
