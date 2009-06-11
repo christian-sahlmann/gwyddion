@@ -529,7 +529,7 @@ pixmap_detect(const GwyFileDetectInfo *fileinfo,
 
     /* FIXME: GdkPixbuf doesn't good a good job regarding detection
      * we do some sanity check ourselves */
-    score = 80;
+    score = 70;
     if (gwy_strequal(name, "png")) {
         if (memcmp(fileinfo->head, "\x89PNG\r\n\x1a\n", 8) != 0)
             return 0;
@@ -593,13 +593,24 @@ pixmap_detect(const GwyFileDetectInfo *fileinfo,
     else {
         /* Assign lower score to loaders we found by trying if they accept
          * the header because they often have no clue. */
-        score = 75;
+        score = 60;
     }
 
     loader = gdk_pixbuf_loader_new_with_type(name, NULL);
     if (!loader)
         return 0;
 
+    /* XXX: libTIFF seems to crash on broken TIFFs a way too often, especially
+     * on MS Windows for some reason.  Do not try to feed anything to it
+     * just accept it's a TIFF and hope some other loader of a TIFF-based
+     * format will claim this with a higher score. */
+    if (gwy_strequal(name, "tiff")) {
+        g_object_unref(loader);
+        return score - 10;
+    }
+
+    /* For sane readers, try to feed the start of the file and see if it fails.
+     * Success rarely means anything though. */
     if (!gdk_pixbuf_loader_write(loader,
                                  fileinfo->head, fileinfo->buffer_len, &err)) {
         gwy_debug("%s", err->message);
