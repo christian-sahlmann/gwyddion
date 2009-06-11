@@ -24,6 +24,7 @@ GWY_SCAN_OPTIONS = \
 
 GTKDOC_CC = $(LIBTOOL) --mode=compile $(CC) $(GWY_DOC_CFLAGS) $(GTKDOC_CFLAGS) $(CPPFLAGS) $(CFLAGS)
 GTKDOC_LD = $(LIBTOOL) --mode=link $(CC) $(GWY_DOC_LIBS) $(GTKDOC_LIBS) $(CFLAGS) $(LDFLAGS)
+GTKDOC_RUN = $(LIBTOOL) --mode=execute
 
 # We set GPATH here; this gives us semantics for GNU make
 # which are more like other make's VPATH, when it comes to
