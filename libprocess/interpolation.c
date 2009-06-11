@@ -24,8 +24,6 @@
 #include <libgwyddion/gwymath.h>
 #include <libprocess/interpolation.h>
 
-enum { SUPPORT_LENGTH_MAX = 4 };
-
 static const gdouble synth_func_values_bspline3[] = {
     2.0/3.0, 1.0/6.0,
 };
@@ -39,8 +37,6 @@ gwy_interpolation_get_weights(gdouble x,
                               GwyInterpolationType interpolation,
                               gdouble *w)
 {
-    g_return_if_fail(x >= 0.0 && x <= 1.0);
-
     switch (interpolation) {
         case GWY_INTERPOLATION_NONE:
         /* Don't really care. */
@@ -128,6 +124,7 @@ gwy_interpolation_get_weights(gdouble x,
         break;
     }
 }
+
 /**
  * gwy_interpolation_get_dval:
  * @x: requested value coordinate
@@ -208,7 +205,7 @@ gwy_interpolation_get_dval_of_equidists(gdouble x,
                                         GwyInterpolationType interpolation)
 {
     gint l;
-    gdouble w[SUPPORT_LENGTH_MAX];
+    gdouble *w;
     gdouble rest;
 
     x += 1.0;
@@ -227,6 +224,7 @@ gwy_interpolation_get_dval_of_equidists(gdouble x,
 
         case GWY_INTERPOLATION_ROUND:
         case GWY_INTERPOLATION_LINEAR:
+        w = g_newa(gdouble, 2);
         gwy_interpolation_get_weights(rest, interpolation, w);
         return w[0]*data[l] + w[1]*data[l + 1];
         break;
@@ -240,6 +238,7 @@ gwy_interpolation_get_dval_of_equidists(gdouble x,
         case GWY_INTERPOLATION_KEY:
         case GWY_INTERPOLATION_NNA:
         case GWY_INTERPOLATION_SCHAUM:
+        w = g_newa(gdouble, 4);
         gwy_interpolation_get_weights(rest, interpolation, w);
         return w[0]*data[l - 1] + w[1]*data[l]
                + w[2]*data[l + 1] + w[3]*data[l + 2];
@@ -272,7 +271,7 @@ gwy_interpolation_interpolate_1d(gdouble x,
                                  const gdouble *coeff,
                                  GwyInterpolationType interpolation)
 {
-    gdouble w[SUPPORT_LENGTH_MAX];
+    gdouble *w;
     gint i, suplen;
     gdouble v;
 
@@ -281,6 +280,7 @@ gwy_interpolation_interpolate_1d(gdouble x,
     if (G_UNLIKELY(suplen == 0))
         return 0.0;
     g_return_val_if_fail(suplen > 0, 0.0);
+    w = g_newa(gdouble, suplen);
     gwy_interpolation_get_weights(x, interpolation, w);
 
     v = 0.0;
@@ -312,7 +312,7 @@ gwy_interpolation_interpolate_2d(gdouble x,
                                  const gdouble *coeff,
                                  GwyInterpolationType interpolation)
 {
-    gdouble wx[SUPPORT_LENGTH_MAX], wy[SUPPORT_LENGTH_MAX];
+    gdouble *wx, *wy;
     gint i, j, suplen;
     gdouble v, vx;
 
@@ -321,6 +321,8 @@ gwy_interpolation_interpolate_2d(gdouble x,
     if (G_UNLIKELY(suplen == 0))
         return 0.0;
     g_return_val_if_fail(suplen > 0, 0.0);
+    wx = g_newa(gdouble, suplen);
+    wy = g_newa(gdouble, suplen);
     gwy_interpolation_get_weights(x, interpolation, wx);
     gwy_interpolation_get_weights(y, interpolation, wy);
 
@@ -914,9 +916,9 @@ gwy_interpolation_shift_block_1d(gint length,
 
     suplen = gwy_interpolation_get_support_size(interpolation);
     g_return_if_fail(suplen > 0);
+    w = g_newa(gdouble, suplen);
     sf = -((suplen - 1)/2);
     st = suplen/2;
-    w = g_newa(gdouble, suplen);
 
     d0 = data[0];
     dn = data[length-1];
