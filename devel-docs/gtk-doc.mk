@@ -91,7 +91,7 @@ scan-build.stamp: $(HFILE_GLOB) $(CFILE_GLOB) $(ADD_OBJECTS)
 	            --source-dir=$(top_srcdir)/$(DOC_SOURCE_DIR) $x \
 	            $(GWY_SCAN_OPTIONS) $(SCAN_OPTIONS)
 	if grep -l '^..*$$' $(DOC_MODULE).types >/dev/null 2>&1 ; then \
-		CC="$(GTKDOC_CC)" LD="$(GTKDOC_LD)" gtkdoc-scangobj $(SCANGOBJ_OPTIONS) --module=$(DOC_MODULE) --output-dir=$(builddir); \
+		CC="$(GTKDOC_CC)" LD="$(GTKDOC_LD)" RUN="$(GTKDOC_RUN)" gtkdoc-scangobj $(SCANGOBJ_OPTIONS) --module=$(DOC_MODULE) --output-dir=$(builddir); \
 	else \
 		for i in $(SCANOBJ_FILES); do \
 			test -f $$i || touch $$i ; \
