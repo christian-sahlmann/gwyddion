@@ -19,6 +19,7 @@
  */
 
 #include "config.h"
+#include <string.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
@@ -37,6 +38,13 @@
 #define GWY_IS_TOOL_SELECTION_MANAGER(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj), GWY_TYPE_TOOL_SELECTION_MANAGER))
 #define GWY_TOOL_SELECTION_MANAGER_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_TOOL_SELECTION_MANAGER, GwyToolSelectionManagerClass))
 
+enum {
+    MODEL_ID,
+    MODEL_OBJECT,
+    MODEL_WIDGET,
+    MODEL_N_COLUMNS
+};
+
 typedef struct _GwyToolSelectionManager      GwyToolSelectionManager;
 typedef struct _GwyToolSelectionManagerClass GwyToolSelectionManagerClass;
 
@@ -49,8 +57,8 @@ struct _GwyToolSelectionManager {
 
     ToolArgs args;
 
-    GtkWidget *list;
-    gint row;
+    GtkListStore *model;
+    GtkWidget *treeview;
 
     /* potential class data */
     GType layer_type_point;
@@ -126,6 +134,7 @@ gwy_tool_selection_manager_finalize(GObject *object)
     gwy_container_set_int32_by_name(settings,
                                     mode_key, tool->args.mode);
                                     */
+    g_object_unref(tool->model);
 
     G_OBJECT_CLASS(gwy_tool_selection_manager_parent_class)->finalize(object);
 }
@@ -148,6 +157,9 @@ gwy_tool_selection_manager_init(GwyToolSelectionManager *tool)
     gwy_container_gis_enum_by_name(settings, mode_key, &tool->args.mode);
     */
 
+    tool->model = gtk_list_store_new(MODEL_N_COLUMNS,
+                                     G_TYPE_INT, G_TYPE_OBJECT, G_TYPE_OBJECT);
+
     gwy_plain_tool_connect_selection(plain_tool, tool->layer_type_point,
                                      "pointer");
 
@@ -155,39 +167,96 @@ gwy_tool_selection_manager_init(GwyToolSelectionManager *tool)
 }
 
 static void
+render_name(G_GNUC_UNUSED GtkTreeViewColumn *column,
+            GtkCellRenderer *renderer,
+            GtkTreeModel *model,
+            GtkTreeIter *iter,
+            G_GNUC_UNUSED gpointer user_data)
+{
+    GQuark quark;
+    const gchar *s;
+
+    gtk_tree_model_get(model, iter, MODEL_ID, &quark, -1);
+    s = g_quark_to_string(quark);
+    g_return_if_fail(s);
+    s = strrchr(s, GWY_CONTAINER_PATHSEP);
+    g_return_if_fail(s);
+    g_object_set(renderer, "text", s+1, NULL);
+}
+
+static void
+render_type(G_GNUC_UNUSED GtkTreeViewColumn *column,
+            GtkCellRenderer *renderer,
+            GtkTreeModel *model,
+            GtkTreeIter *iter,
+            G_GNUC_UNUSED gpointer user_data)
+{
+    GwySelection *sel;
+
+    gtk_tree_model_get(model, iter, MODEL_OBJECT, &sel, -1);
+    g_return_if_fail(GWY_IS_SELECTION(sel));
+    g_object_set(renderer, "text", G_OBJECT_TYPE_NAME(sel), NULL);
+    g_object_unref(sel);
+}
+
+static void
+render_objects(G_GNUC_UNUSED GtkTreeViewColumn *column,
+               GtkCellRenderer *renderer,
+               GtkTreeModel *model,
+               GtkTreeIter *iter,
+               G_GNUC_UNUSED gpointer user_data)
+{
+    gchar buffer[16];
+    GwySelection *sel;
+
+    gtk_tree_model_get(model, iter, MODEL_OBJECT, &sel, -1);
+    g_return_if_fail(GWY_IS_SELECTION(sel));
+    g_snprintf(buffer, sizeof(buffer), "%d", gwy_selection_get_data(sel, NULL));
+    g_object_set(renderer, "text", buffer, NULL);
+    g_object_unref(sel);
+}
+
+static void
 gwy_tool_selection_manager_init_dialog(GwyToolSelectionManager *tool)
 {
-    GtkWidget *label, *combo;
     GtkDialog *dialog;
-    GtkTable *table;
-    GSList *group;
-    gboolean sensitive;
-    gint row;
+    GtkWidget *scwin;
+    GtkCellRenderer *renderer;
+    GtkTreeViewColumn *column;
 
     dialog = GTK_DIALOG(GWY_TOOL(tool)->dialog);
 
-    table = GTK_TABLE(gtk_table_new(10, 3, FALSE));
-    gtk_table_set_col_spacings(table, 6);
-    gtk_table_set_row_spacings(table, 2);
-    gtk_container_set_border_width(GTK_CONTAINER(table), 4);
-    gtk_box_pack_start(GTK_BOX(dialog->vbox), GTK_WIDGET(table), TRUE, TRUE, 0);
-    row = 0;
+    scwin = gtk_scrolled_window_new(NULL, NULL);
+    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scwin),
+                                   GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
+    gtk_box_pack_start(GTK_BOX(dialog->vbox), scwin, TRUE, TRUE, 0);
 
-    tool->list = table;
+    tool->treeview = gtk_tree_view_new_with_model(GTK_TREE_MODEL(tool->model));
+    gtk_container_add(GTK_CONTAINER(scwin), tool->treeview);
 
-    label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), "<b>Name</b>");
-    gtk_table_attach(table, label,
-                     0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
-    label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), "<b>Objects</b>");
-    gtk_table_attach(table, label,
-                     1, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
-    label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), "<b>Max. Objects</b>");
-    gtk_table_attach(table, label,
-                     2, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
-    row++;
+    column = gtk_tree_view_column_new();
+    gtk_tree_view_column_set_title(column, _("Selection"));
+    gtk_tree_view_append_column(GTK_TREE_VIEW(tool->treeview), column);
+    renderer = gtk_cell_renderer_text_new();
+    gtk_tree_view_column_pack_start(column, renderer, TRUE);
+    gtk_tree_view_column_set_cell_data_func(column, renderer,
+                                            render_name, tool, NULL);
+
+    column = gtk_tree_view_column_new();
+    gtk_tree_view_column_set_title(column, "Type");
+    gtk_tree_view_append_column(GTK_TREE_VIEW(tool->treeview), column);
+    renderer = gtk_cell_renderer_text_new();
+    gtk_tree_view_column_pack_start(column, renderer, TRUE);
+    gtk_tree_view_column_set_cell_data_func(column, renderer,
+                                            render_type, tool, NULL);
+
+    column = gtk_tree_view_column_new();
+    gtk_tree_view_column_set_title(column, "Objects");
+    gtk_tree_view_append_column(GTK_TREE_VIEW(tool->treeview), column);
+    renderer = gtk_cell_renderer_text_new();
+    gtk_tree_view_column_pack_start(column, renderer, TRUE);
+    gtk_tree_view_column_set_cell_data_func(column, renderer,
+                                            render_objects, tool, NULL);
 
     gwy_tool_add_hide_button(GWY_TOOL(tool), TRUE);
 
@@ -200,29 +269,23 @@ add_selection(gpointer hkey, gpointer hvalue, gpointer data)
     GQuark quark = GPOINTER_TO_UINT(hkey);
     GValue *value = (GValue*)hvalue;
     GwyToolSelectionManager *tool = (GwyToolSelectionManager*)data;
-    GtkTable *table = GTK_TABLE(tool->list);
     GwySelection *sel = g_value_get_object(value);
-    GtkWidget *label;
+    GtkTreeIter iter;
 
-    label = gtk_label_new(G_OBJECT_TYPE_NAME(sel));
-    gtk_table_attach_defaults(table, label, 0, 1, tool->row, tool->row+1);
-    label = gtk_label_new(g_strdup_printf("%u", gwy_selection_get_data(sel,
-                                                                       NULL)));
-    gtk_table_attach_defaults(table, label, 1, 2, tool->row, tool->row+1);
-    tool->row++;
+    gtk_list_store_insert_with_values(tool->model, &iter, G_MAXINT,
+                                      MODEL_ID, quark,  /* FIXME */
+                                      MODEL_OBJECT, sel,
+                                      MODEL_WIDGET, NULL, /* FIXME */
+                                      -1);
 }
 
 static void
 gwy_tool_selection_manager_data_switched(GwyTool *gwytool,
-                                     GwyDataView *data_view)
+                                         GwyDataView *data_view)
 {
     GwyPlainTool *plain_tool;
     GwyToolSelectionManager *tool;
-    GtkWidget *label;
-    GtkTable *table;
-    GtkDialog *dialog;
     gboolean ignore;
-    gint row;
 
     plain_tool = GWY_PLAIN_TOOL(gwytool);
     ignore = (data_view == plain_tool->data_view);
@@ -234,34 +297,9 @@ gwy_tool_selection_manager_data_switched(GwyTool *gwytool,
         return;
 
     tool = GWY_TOOL_SELECTION_MANAGER(gwytool);
-    gtk_widget_destroy(tool->list);
-    dialog = GTK_DIALOG(gwytool->dialog);
-
-    table = GTK_TABLE(gtk_table_new(10, 3, FALSE));
-    gtk_table_set_col_spacings(table, 6);
-    gtk_table_set_row_spacings(table, 2);
-    gtk_container_set_border_width(GTK_CONTAINER(table), 4);
-    gtk_box_pack_start(GTK_BOX(dialog->vbox), GTK_WIDGET(table), TRUE, TRUE, 0);
-    row = 0;
-
-    tool->list = table;
-
-    label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), "<b>Name</b>");
-    gtk_table_attach(table, label,
-                     0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
-    label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), "<b>Objects</b>");
-    gtk_table_attach(table, label,
-                     1, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
-    label = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(label), "<b>Max. Objects</b>");
-    gtk_table_attach(table, label,
-                     2, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
-    row++;
 
     if (data_view) {
-        tool->row = row;
+        gtk_list_store_clear(tool->model);
         gwy_container_foreach(plain_tool->container,
                               g_strdup_printf("/%d/select", plain_tool->id),
                               (GHFunc)&add_selection,
@@ -276,8 +314,6 @@ gwy_tool_selection_manager_data_switched(GwyTool *gwytool,
         gwy_selection_set_max_objects(plain_tool->selection, 1);
         */
     }
-
-    gtk_widget_show_all(GTK_WIDGET(table));
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
