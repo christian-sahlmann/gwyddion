@@ -215,7 +215,7 @@ static GwyModuleInfo module_info = {
     N_("Imports raw data files, both ASCII and binary, according to "
        "user-specified format."),
     "Yeti <yeti@gwyddion.net>",
-    "2.5",
+    "2.6",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -240,6 +240,8 @@ static const GwyEnum builtin_menu[] = {
     { N_("Unsigned 16bit word"),  RAW_UNSIGNED_WORD16 },
     { N_("Signed 32bit word"),    RAW_SIGNED_WORD32   },
     { N_("Unsigned 32bit word"),  RAW_UNSIGNED_WORD32 },
+    { N_("Signed 64bit word"),    RAW_SIGNED_WORD64   },
+    { N_("Unsigned 64bit word"),  RAW_UNSIGNED_WORD64 },
     { N_("IEEE single"),          RAW_IEEE_FLOAT      },
     { N_("IEEE double"),          RAW_IEEE_DOUBLE     },
 };
@@ -1955,7 +1957,13 @@ rawfile_read_builtin(RawFileArgs *args,
 {
     guchar *rtable8 = NULL;
     guint i, j, k, size, skip, rowskip;
-    double good_alignment;
+    union {
+        gint8 i8; guint8 u8;
+        gint16 i16; guint16 u16;
+        gint32 i32; guint32 u32;
+        gint64 i64; guint64 u64;
+        gfloat f; gdouble d;
+    } good_alignment;
     guchar *b;
 
     g_assert(args->p.builtin > RAW_NONE && args->p.builtin < RAW_LAST);
@@ -1991,35 +1999,43 @@ rawfile_read_builtin(RawFileArgs *args,
             /* now interpret b as a number in HOST order */
             switch (args->p.builtin) {
                 case RAW_SIGNED_BYTE:
-                *(data++) = (gdouble)(gchar)b[0];
+                *(data++) = (gdouble)good_alignment.i8;
                 break;
 
                 case RAW_UNSIGNED_BYTE:
-                *(data++) = (gdouble)b[0];
+                *(data++) = (gdouble)good_alignment.u8;
                 break;
 
                 case RAW_SIGNED_WORD16:
-                *(data++) = (gdouble)*(gint16*)b;
+                *(data++) = (gdouble)good_alignment.i16;
                 break;
 
                 case RAW_UNSIGNED_WORD16:
-                *(data++) = (gdouble)*(guint16*)b;
+                *(data++) = (gdouble)good_alignment.u16;
                 break;
 
                 case RAW_SIGNED_WORD32:
-                *(data++) = (gdouble)*(gint32*)b;
+                *(data++) = (gdouble)good_alignment.i32;
                 break;
 
                 case RAW_UNSIGNED_WORD32:
-                *(data++) = (gdouble)*(guint32*)b;
+                *(data++) = (gdouble)good_alignment.u32;
                 break;
 
                 case RAW_IEEE_FLOAT:
-                *(data++) = *(float*)b;
+                *(data++) = (gdouble)good_alignment.f;
                 break;
 
                 case RAW_IEEE_DOUBLE:
-                *(data++) = *(double*)b;
+                *(data++) = (gdouble)good_alignment.d;
+                break;
+
+                case RAW_SIGNED_WORD64:
+                *(data++) = (gdouble)good_alignment.i64;
+                break;
+
+                case RAW_UNSIGNED_WORD64:
+                *(data++) = (gdouble)good_alignment.u64;
                 break;
 
                 default:

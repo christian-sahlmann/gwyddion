@@ -36,6 +36,8 @@ typedef enum {
     RAW_UNSIGNED_WORD32,
     RAW_IEEE_FLOAT,
     RAW_IEEE_DOUBLE,
+    RAW_SIGNED_WORD64,
+    RAW_UNSIGNED_WORD64,
     RAW_LAST
 } RawFileBuiltin;
 
