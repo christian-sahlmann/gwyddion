@@ -13,6 +13,7 @@ gradientdata_DATA = \
 	Blue-Yellow \
 	Body \
 	Caribbean \
+	Code-V \
 	Cold \
 	DFit \
 	Digitalis \
@@ -26,6 +27,7 @@ gradientdata_DATA = \
 	Halcyon \
 	Lines \
 	Maple \
+	NT-MDT \
 	Neon \
 	Olive \
 	Pink \
@@ -46,6 +48,9 @@ gradientdata_DATA = \
 	Spectral \
 	Spring \
 	Warm \
+	Warpp-mono \
+	Warpp-spectral \
+	Wyko \
 	Yellow \
 	Zones
 
