@@ -41,6 +41,7 @@ typedef struct _GwyToolSelectionManager      GwyToolSelectionManager;
 typedef struct _GwyToolSelectionManagerClass GwyToolSelectionManagerClass;
 
 typedef struct {
+    gint msvc60_does_not_permit_empty_structs;
 } ToolArgs;
 
 struct _GwyToolSelectionManager {
@@ -81,6 +82,7 @@ static GwyModuleInfo module_info = {
 };
 
 static const ToolArgs default_args = {
+    0,
 };
 
 GWY_MODULE_QUERY(module_info)
