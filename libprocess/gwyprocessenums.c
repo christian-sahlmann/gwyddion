@@ -385,6 +385,10 @@ gwy_correlation_type_get_enum(void)
  *                               upwards). (Since: 2.7)
  * @GWY_GRAIN_VALUE_SLOPE_PHI: Spherical angle phi of grain normal (0 is
  *                             in positive x direction). (Since: 2.7)
+ * @GWY_GRAIN_VALUE_BOUNDARY_MINIMUM: Minimum value on the grain inner
+ *                                    boundary.  (Since: 2.12)
+ * @GWY_GRAIN_VALUE_BOUNDARY_MAXIMUM: Maximum value in the grain inner
+ *                                    boundary.  (Since: 2.12)
  *
  * Grain quantity to request from gwy_data_field_grains_get_distribution()
  * and similar functions.
