@@ -17,7 +17,6 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
-
 #include "config.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -2035,7 +2034,16 @@ rawfile_read_builtin(RawFileArgs *args,
                 break;
 
                 case RAW_UNSIGNED_WORD64:
+                /* Fucking MSVC6 cannot convert unsigned 64bit int to double. */
+#ifdef _MSC_VER
+                {
+                    guint u32h = good_alignment.u64 >> 32u;
+                    guint u32l = good_alignment.u64 & 0xffffffffu;
+                    *(data++) = 4294967296.0*u32h + u32l;
+                }
+#else
                 *(data++) = (gdouble)good_alignment.u64;
+#endif
                 break;
 
                 default:
