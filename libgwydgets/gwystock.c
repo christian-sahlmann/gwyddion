@@ -925,6 +925,13 @@ free_the_icon_factory(void)
  **/
 
 /**
+ * GWY_STOCK_SELECTIONS:
+ *
+ * The "Selections" stock icon.
+ * <inlinegraphic fileref="gwy_selections-24.png" format="PNG"/>
+ **/
+
+/**
  * GWY_STOCK_SHADER:
  *
  * The "Shader" stock icon.
