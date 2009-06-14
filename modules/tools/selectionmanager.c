@@ -114,7 +114,7 @@ gwy_tool_selection_manager_class_init(GwyToolSelectionManagerClass *klass)
 
     gobject_class->finalize = gwy_tool_selection_manager_finalize;
 
-    tool_class->stock_id = GWY_STOCK_ARITHMETIC;
+    tool_class->stock_id = GWY_SELECTIONS;
     tool_class->title = _("Selection Manager");
     tool_class->tooltip = _("Display and copy selections");
     tool_class->prefix = "/module/selmanager";
