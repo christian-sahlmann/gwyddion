@@ -49,7 +49,7 @@ typedef struct _GwyToolSelectionManager      GwyToolSelectionManager;
 typedef struct _GwyToolSelectionManagerClass GwyToolSelectionManagerClass;
 
 typedef struct {
-    gint msvc60_does_not_permit_empty_structs;
+    gboolean allfiles;
 } ToolArgs;
 
 struct _GwyToolSelectionManager {
@@ -59,6 +59,8 @@ struct _GwyToolSelectionManager {
 
     GtkListStore *model;
     GtkWidget *treeview;
+    GtkWidget *allfiles;
+    GtkWidget *distribute;
 
     /* potential class data */
     GType layer_type_point;
@@ -74,9 +76,14 @@ static GType gwy_tool_selection_manager_get_type        (void) G_GNUC_CONST;
 static void gwy_tool_selection_manager_finalize         (GObject *object);
 static void gwy_tool_selection_manager_init_dialog      (GwyToolSelectionManager *tool);
 static void gwy_tool_selection_manager_data_switched    (GwyTool *gwytool,
-                                                     GwyDataView *data_view);
+                                                         GwyDataView *data_view);
+static void gwy_tool_selection_manager_selection_changed(GwyToolSelectionManager *tool,
+                                                         GtkTreeSelection *selection);
+static void gwy_tool_selection_manager_all_files_changed(GwyToolSelectionManager *tool,
+                                                         GtkToggleButton *button);
+static void gwy_tool_selection_manager_distribute       (GwyToolSelectionManager *tool);
 
-//static const gchar mode_key[]   = "/module/grainremover/mode";
+static const gchar mode_key[]   = "/module/selectionmanager/allfiles";
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -90,7 +97,7 @@ static GwyModuleInfo module_info = {
 };
 
 static const ToolArgs default_args = {
-    0,
+    FALSE,
 };
 
 GWY_MODULE_QUERY(module_info)
@@ -130,10 +137,8 @@ gwy_tool_selection_manager_finalize(GObject *object)
     tool = GWY_TOOL_SELECTION_MANAGER(object);
 
     settings = gwy_app_settings_get();
-    /*
-    gwy_container_set_int32_by_name(settings,
-                                    mode_key, tool->args.mode);
-                                    */
+    gwy_container_set_boolean_by_name(settings,
+                                      mode_key, tool->args.allfiles);
     g_object_unref(tool->model);
 
     G_OBJECT_CLASS(gwy_tool_selection_manager_parent_class)->finalize(object);
@@ -142,26 +147,14 @@ gwy_tool_selection_manager_finalize(GObject *object)
 static void
 gwy_tool_selection_manager_init(GwyToolSelectionManager *tool)
 {
-    GwyPlainTool *plain_tool;
     GwyContainer *settings;
-
-    plain_tool = GWY_PLAIN_TOOL(tool);
-    tool->layer_type_point = gwy_plain_tool_check_layer_type(plain_tool,
-                                                             "GwyLayerPoint");
-    if (!tool->layer_type_point)
-        return;
 
     settings = gwy_app_settings_get();
     tool->args = default_args;
-    /*
-    gwy_container_gis_enum_by_name(settings, mode_key, &tool->args.mode);
-    */
+    gwy_container_gis_boolean_by_name(settings, mode_key, &tool->args.allfiles);
 
     tool->model = gtk_list_store_new(MODEL_N_COLUMNS,
                                      G_TYPE_INT, G_TYPE_OBJECT, G_TYPE_OBJECT);
-
-    gwy_plain_tool_connect_selection(plain_tool, tool->layer_type_point,
-                                     "pointer");
 
     gwy_tool_selection_manager_init_dialog(tool);
 }
@@ -220,9 +213,10 @@ static void
 gwy_tool_selection_manager_init_dialog(GwyToolSelectionManager *tool)
 {
     GtkDialog *dialog;
-    GtkWidget *scwin;
+    GtkWidget *scwin, *hbox;
     GtkCellRenderer *renderer;
     GtkTreeViewColumn *column;
+    GtkTreeSelection *selection;
 
     dialog = GTK_DIALOG(GWY_TOOL(tool)->dialog);
 
@@ -233,6 +227,9 @@ gwy_tool_selection_manager_init_dialog(GwyToolSelectionManager *tool)
 
     tool->treeview = gtk_tree_view_new_with_model(GTK_TREE_MODEL(tool->model));
     gtk_container_add(GTK_CONTAINER(scwin), tool->treeview);
+
+    selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(tool->treeview));
+    gtk_tree_selection_set_mode(selection, GTK_SELECTION_MULTIPLE);
 
     column = gtk_tree_view_column_new();
     gtk_tree_view_column_set_title(column, _("Selection"));
@@ -257,6 +254,24 @@ gwy_tool_selection_manager_init_dialog(GwyToolSelectionManager *tool)
     gtk_tree_view_column_pack_start(column, renderer, TRUE);
     gtk_tree_view_column_set_cell_data_func(column, renderer,
                                             render_objects, tool, NULL);
+
+    hbox = gtk_hbox_new(FALSE, 12);
+    gtk_box_pack_start(GTK_BOX(dialog->vbox), hbox, FALSE, FALSE, 0);
+
+    tool->distribute = gtk_button_new_with_mnemonic(_("_Distribute"));
+    gtk_box_pack_start(GTK_BOX(hbox), tool->distribute, FALSE, FALSE, 0);
+    g_signal_connect_swapped(tool->distribute, "clicked",
+                             G_CALLBACK(gwy_tool_selection_manager_distribute),
+                             tool);
+    g_signal_connect_swapped(selection, "changed",
+                             G_CALLBACK(gwy_tool_selection_manager_selection_changed),
+                             tool);
+
+    tool->allfiles = gtk_check_button_new_with_mnemonic(_("to _all files"));
+    gtk_box_pack_start(GTK_BOX(hbox), tool->allfiles, FALSE, FALSE, 0);
+    g_signal_connect_swapped(tool->distribute, "toggled",
+                             G_CALLBACK(gwy_tool_selection_manager_all_files_changed),
+                             tool);
 
     gwy_tool_add_hide_button(GWY_TOOL(tool), TRUE);
 
@@ -314,6 +329,28 @@ gwy_tool_selection_manager_data_switched(GwyTool *gwytool,
         gwy_selection_set_max_objects(plain_tool->selection, 1);
         */
     }
+}
+
+static void
+gwy_tool_selection_manager_selection_changed(GwyToolSelectionManager *tool,
+                                             GtkTreeSelection *selection)
+{
+    gint selrows = gtk_tree_selection_count_selected_rows(selection);
+
+    gtk_widget_set_sensitive(tool->distribute, selrows > 0);
+}
+
+static void
+gwy_tool_selection_manager_all_files_changed(GwyToolSelectionManager *tool,
+                                             GtkToggleButton *button)
+{
+    tool->args.allfiles = gtk_toggle_button_get_active(button);
+}
+
+static void
+gwy_tool_selection_manager_distribute(GwyToolSelectionManager *tool)
+{
+    /* TODO */
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
