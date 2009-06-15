@@ -33,6 +33,17 @@
 #include <libgwydgets/gwycombobox.h>
 #include <app/gwyapp.h>
 
+/* The GtkTargetEntry for tree model drags.
+ * FIXME: Is it Gtk+ private or what? */
+#define GTK_TREE_MODEL_ROW \
+    { "GTK_TREE_MODEL_ROW", GTK_TARGET_SAME_APP, 0 }
+
+/* XXX: Copied from data browser. */
+#define page_id_key "gwy-app-data-browser-page-id"
+enum {
+    PAGE_NOPAGE = G_MAXINT-1
+};
+
 #define GWY_TYPE_TOOL_SELECTION_MANAGER            (gwy_tool_selection_manager_get_type())
 #define GWY_TOOL_SELECTION_MANAGER(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_TOOL_SELECTION_MANAGER, GwyToolSelectionManager))
 #define GWY_IS_TOOL_SELECTION_MANAGER(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj), GWY_TYPE_TOOL_SELECTION_MANAGER))
@@ -115,7 +126,7 @@ module_register(void)
 static void
 gwy_tool_selection_manager_class_init(GwyToolSelectionManagerClass *klass)
 {
-    GwyPlainToolClass *ptool_class = GWY_PLAIN_TOOL_CLASS(klass);
+    /*GwyPlainToolClass *ptool_class = GWY_PLAIN_TOOL_CLASS(klass);*/
     GwyToolClass *tool_class = GWY_TOOL_CLASS(klass);
     GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
 
@@ -155,6 +166,8 @@ gwy_tool_selection_manager_init(GwyToolSelectionManager *tool)
 
     tool->model = gtk_list_store_new(MODEL_N_COLUMNS,
                                      G_TYPE_INT, G_TYPE_OBJECT, G_TYPE_OBJECT);
+    g_object_set_data(G_OBJECT(tool->model), page_id_key,
+                      GUINT_TO_POINTER(PAGE_NOPAGE+1));
 
     gwy_tool_selection_manager_init_dialog(tool);
 }
@@ -212,6 +225,8 @@ render_objects(G_GNUC_UNUSED GtkTreeViewColumn *column,
 static void
 gwy_tool_selection_manager_init_dialog(GwyToolSelectionManager *tool)
 {
+    static const GtkTargetEntry dnd_target_table[] = { GTK_TREE_MODEL_ROW };
+
     GtkDialog *dialog;
     GtkWidget *scwin, *hbox;
     GtkCellRenderer *renderer;
@@ -227,6 +242,11 @@ gwy_tool_selection_manager_init_dialog(GwyToolSelectionManager *tool)
 
     tool->treeview = gtk_tree_view_new_with_model(GTK_TREE_MODEL(tool->model));
     gtk_container_add(GTK_CONTAINER(scwin), tool->treeview);
+    gtk_tree_view_enable_model_drag_source(GTK_TREE_VIEW(tool->treeview),
+                                           GDK_BUTTON1_MASK,
+                                           dnd_target_table,
+                                           G_N_ELEMENTS(dnd_target_table),
+                                           GDK_ACTION_COPY);
 
     selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(tool->treeview));
     gtk_tree_selection_set_mode(selection, GTK_SELECTION_MULTIPLE);
@@ -269,7 +289,7 @@ gwy_tool_selection_manager_init_dialog(GwyToolSelectionManager *tool)
 
     tool->allfiles = gtk_check_button_new_with_mnemonic(_("to _all files"));
     gtk_box_pack_start(GTK_BOX(hbox), tool->allfiles, FALSE, FALSE, 0);
-    g_signal_connect_swapped(tool->distribute, "toggled",
+    g_signal_connect_swapped(tool->allfiles, "toggled",
                              G_CALLBACK(gwy_tool_selection_manager_all_files_changed),
                              tool);
 
