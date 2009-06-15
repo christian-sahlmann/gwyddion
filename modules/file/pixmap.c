@@ -605,6 +605,7 @@ pixmap_detect(const GwyFileDetectInfo *fileinfo,
      * just accept it's a TIFF and hope some other loader of a TIFF-based
      * format will claim this with a higher score. */
     if (gwy_strequal(name, "tiff")) {
+        gdk_pixbuf_loader_close(loader, NULL);
         g_object_unref(loader);
         return score - 10;
     }
