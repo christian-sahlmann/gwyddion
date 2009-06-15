@@ -69,7 +69,8 @@ enum {
     PAGE_CHANNELS,
     PAGE_GRAPHS,
     PAGE_SPECTRA,
-    NPAGES
+    NPAGES,
+    PAGE_NOPAGE = G_MAXINT-1,
 };
 
 /* Sensitivity flags */
@@ -173,6 +174,10 @@ static void     gwy_app_data_browser_copy_object(GwyAppDataProxy *srcproxy,
                                                  GtkTreeModel *model,
                                                  GtkTreeIter *iter,
                                                  GwyAppDataProxy *destproxy);
+static void     gwy_app_data_browser_copy_other(GtkTreeModel *model,
+                                                GtkTreeIter *iter,
+                                                GtkWidget *window,
+                                                GwyContainer *container);
 static gboolean gwy_app_data_browser_select_data_view2(GwyDataView *data_view);
 static gboolean gwy_app_data_browser_select_graph2    (GwyGraph *graph);
 static const gchar*
@@ -1758,7 +1763,7 @@ gwy_app_data_browser_channel_deleted(GwyDataWindow *data_window)
     gint i;
 
     gwy_debug("Data window %p deleted", data_window);
-    data_view  = gwy_data_window_get_data_view(data_window);
+    data_view = gwy_data_window_get_data_view(data_window);
     data = gwy_data_view_get_data(data_view);
     layer = gwy_data_view_get_base_layer(data_view);
     strkey = gwy_pixmap_layer_get_data_key(layer);
@@ -1898,7 +1903,11 @@ gwy_app_window_dnd_data_received(GtkWidget *window,
         container = g_object_get_qdata(object, container_quark);
     }
 
-    if (container) {
+    /* Foreign tree models */
+    if (pageno == PAGE_NOPAGE) {
+        gwy_app_data_browser_copy_other(model, &iter, window, container);
+    }
+    else if (container) {
         destproxy = gwy_app_data_browser_get_proxy(browser, container, FALSE);
         gwy_app_data_browser_copy_object(srcproxy, pageno, model, &iter,
                                          destproxy);
@@ -3450,6 +3459,73 @@ gwy_app_data_browser_copy_object(GwyAppDataProxy *srcproxy,
 
     if (!destproxy)
         g_object_unref(container);
+}
+
+static void
+gwy_app_data_browser_copy_other(GtkTreeModel *model,
+                                GtkTreeIter *iter,
+                                GtkWidget *window,
+                                GwyContainer *container)
+{
+    GwyDataView *data_view;
+    GwyPixmapLayer *layer;
+    GQuark srcquark, targetquark, destquark;
+    GObject *object, *destobject;
+    const gchar *srckey, *targetkey;
+    GwyAppKeyType type;
+    gint id;
+    gchar *destkey;
+    guint len;
+
+    /* XXX: At this moment, the copying possibilities are fairly limited. */
+    if (!GWY_IS_DATA_WINDOW(window))
+        return;
+
+    /* Source */
+    gtk_tree_model_get(model, iter,
+                       MODEL_ID, &srcquark,
+                       MODEL_OBJECT, &object,
+                       -1);
+    if (!object)
+        return;
+    srckey = g_quark_to_string(srcquark);
+    if (!srckey) {
+        g_object_unref(object);
+        return;
+    }
+    gwy_debug("DnD: key %08x <%s>, object %p <%s>\n",
+               srcquark, srckey, object, G_OBJECT_TYPE_NAME(object));
+
+    id = _gwy_app_analyse_data_key(srckey, &type, &len);
+    /* XXX: At this moment, the copying possibilities are fairly limited. */
+    if (id == -1 || type != KEY_IS_SELECT || !GWY_IS_SELECTION(object)) {
+        g_object_unref(object);
+        return;
+    }
+
+    /* Target */
+    data_view  = gwy_data_window_get_data_view(GWY_DATA_WINDOW(window));
+    layer = gwy_data_view_get_base_layer(data_view);
+    targetkey = gwy_pixmap_layer_get_data_key(layer);
+    targetquark = g_quark_from_string(targetkey);
+    g_return_if_fail(targetquark);
+    id = _gwy_app_analyse_data_key(targetkey, &type, NULL);
+    g_return_if_fail(id >= 0 && type == KEY_IS_DATA);
+
+    /* Destination */
+    destkey = g_strdup_printf("/%d/select%s", id, srckey+len);
+    destquark = g_quark_from_string(destkey);
+    g_free(destkey);
+
+    /* Avoid copies if source is the same as the target */
+    if (!gwy_container_gis_object(container, destquark, &destobject)
+        || destobject != object) {
+        destobject = gwy_serializable_duplicate(G_OBJECT(object));
+        gwy_container_set_object(container, destquark, destobject);
+        g_object_unref(destobject);
+    }
+
+    g_object_unref(object);
 }
 
 static void
