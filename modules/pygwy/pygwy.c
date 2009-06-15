@@ -677,7 +677,7 @@ pygwy_reload_code(PygwyPluginInfo **info)
             (*info)->code = code_obj; // XXX: override info->code without Py_DECREF is ok?
             (*info)->m_time = file_stat.st_mtime;
         } else {
-            g_debug("No changes in '%s' since last run.", (*info)->filename);
+            gwy_debug("No changes in '%s' since last run.", (*info)->filename);
         }
     } else {
         g_warning("Cannot get last modification time for file '%s'",
