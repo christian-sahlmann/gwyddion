@@ -17,7 +17,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
-
+/* FIXME: crop() can really crop the lines */
 #include "config.h"
 #include <pango/pangocairo.h>
 #include <libgwyddion/gwymacros.h>
@@ -97,6 +97,14 @@ struct _GwySelectionLineClass {
 static gboolean   module_register                (void);
 static GType      gwy_layer_line_get_type        (void) G_GNUC_CONST;
 static GType      gwy_selection_line_get_type    (void) G_GNUC_CONST;
+static gboolean   gwy_selection_line_crop_object (GwySelection *selection,
+                                                  gint i,
+                                                  gpointer user_data);
+static void       gwy_selection_line_crop        (GwySelection *selection,
+                                                  gdouble xmin,
+                                                  gdouble ymin,
+                                                  gdouble xmax,
+                                                  gdouble ymax);
 static void       gwy_layer_line_set_property    (GObject *object,
                                                   guint prop_id,
                                                   const GValue *value,
@@ -160,7 +168,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Layer allowing selection of arbitrary straight lines."),
     "Yeti <yeti@gwyddion.net>",
-    "3.2",
+    "3.3",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -183,6 +191,34 @@ gwy_selection_line_class_init(GwySelectionLineClass *klass)
     GwySelectionClass *sel_class = GWY_SELECTION_CLASS(klass);
 
     sel_class->object_size = OBJECT_SIZE;
+    sel_class->crop = gwy_selection_line_crop;
+}
+
+static gboolean
+gwy_selection_line_crop_object(GwySelection *selection,
+                               gint i,
+                               gpointer user_data)
+{
+    const gdouble *minmax = (const gdouble*)user_data;
+    gdouble xy[OBJECT_SIZE];
+
+    gwy_selection_get_object(selection, i, xy);
+    return (MIN(xy[0], xy[2]) >= minmax[0]
+            && MIN(xy[1], xy[3]) >= minmax[1]
+            && MAX(xy[0], xy[2]) <= minmax[2]
+            && MAX(xy[1], xy[3]) <= minmax[3]);
+}
+
+static void
+gwy_selection_line_crop(GwySelection *selection,
+                        gdouble xmin,
+                        gdouble ymin,
+                        gdouble xmax,
+                        gdouble ymax)
+{
+    gdouble minmax[4] = { xmin, ymin, xmax, ymax };
+
+    gwy_selection_filter(selection, gwy_selection_line_crop_object, minmax);
 }
 
 static void
