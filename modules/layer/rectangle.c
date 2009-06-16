@@ -179,8 +179,10 @@ gwy_selection_rectangle_crop_object(GwySelection *selection,
     gdouble xy[OBJECT_SIZE];
 
     gwy_selection_get_object(selection, i, xy);
-    return (xy[0] >= minmax[0] && xy[1] >= minmax[1]
-            && xy[2] <= minmax[2] && xy[3] <= minmax[3]);
+    return (MIN(xy[0], xy[2]) >= minmax[0]
+            && MIN(xy[1], xy[3]) >= minmax[1]
+            && MAX(xy[0], xy[2]) <= minmax[2]
+            && MAX(xy[1], xy[3]) <= minmax[3]);
 }
 
 static void
