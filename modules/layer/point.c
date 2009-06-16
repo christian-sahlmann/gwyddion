@@ -78,6 +78,14 @@ struct _GwySelectionPointClass {
 static gboolean module_register                  (void);
 static GType    gwy_layer_point_get_type         (void) G_GNUC_CONST;
 static GType    gwy_selection_point_get_type     (void) G_GNUC_CONST;
+static gboolean gwy_selection_point_crop_object  (GwySelection *selection,
+                                                  gint i,
+                                                  gpointer user_data);
+static void     gwy_selection_point_crop         (GwySelection *selection,
+                                                  gdouble xmin,
+                                                  gdouble ymin,
+                                                  gdouble xmax,
+                                                  gdouble ymax);
 static void     gwy_layer_point_set_property     (GObject *object,
                                                   guint prop_id,
                                                   const GValue *value,
@@ -119,7 +127,7 @@ static GwyModuleInfo module_info = {
     N_("Layer allowing selection of several points, displayed as crosses "
        "or inivisible."),
     "Yeti <yeti@gwyddion.net>",
-    "2.6",
+    "2.7",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -142,6 +150,7 @@ gwy_selection_point_class_init(GwySelectionPointClass *klass)
     GwySelectionClass *sel_class = GWY_SELECTION_CLASS(klass);
 
     sel_class->object_size = OBJECT_SIZE;
+    sel_class->crop = gwy_selection_point_crop;
 }
 
 static void
@@ -189,6 +198,31 @@ gwy_selection_point_init(GwySelectionPoint *selection)
 {
     /* Set max. number of objects to one */
     g_array_set_size(GWY_SELECTION(selection)->objects, OBJECT_SIZE);
+}
+
+static gboolean
+gwy_selection_point_crop_object(GwySelection *selection,
+                                gint i,
+                                gpointer user_data)
+{
+    const gdouble *minmax = (const gdouble*)user_data;
+    gdouble xy[OBJECT_SIZE];
+
+    gwy_selection_get_object(selection, i, xy);
+    return (xy[1] >= minmax[1] && xy[1] <= minmax[3]
+            && xy[0] >= minmax[0] && xy[0] <= minmax[2]);
+}
+
+static void
+gwy_selection_point_crop(GwySelection *selection,
+                         gdouble xmin,
+                         gdouble ymin,
+                         gdouble xmax,
+                         gdouble ymax)
+{
+    gdouble minmax[4] = { xmin, ymin, xmax, ymax };
+
+    gwy_selection_filter(selection, gwy_selection_point_crop_object, minmax);
 }
 
 static void
