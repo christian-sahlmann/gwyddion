@@ -90,6 +90,11 @@ static void     gwy_selection_axis_get_property   (GObject*object,
                                                    guint prop_id,
                                                    GValue *value,
                                                    GParamSpec *pspec);
+static void     gwy_selection_axis_crop           (GwySelection *selection,
+                                                   gdouble xmin,
+                                                   gdouble ymin,
+                                                   gdouble xmax,
+                                                   gdouble ymax);
 static GByteArray* gwy_selection_axis_serialize   (GObject *serializable,
                                                    GByteArray *buffer);
 static GObject* gwy_selection_axis_deserialize    (const guchar *buffer,
@@ -130,7 +135,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Layer allowing selection of horizontal or vertical lines."),
     "Yeti <yeti@gwyddion.net>",
-    "2.5",
+    "2.6",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -253,28 +258,32 @@ gwy_selection_axis_get_property(GObject *object,
     }
 }
 
+static gboolean
+gwy_selection_axis_crop_object(GwySelection *selection,
+                               gint i,
+                               gpointer user_data)
+{
+    const gdouble *minmax = (const gdouble*)user_data;
+    GwySelectionAxis *selection_axis = GWY_SELECTION_AXIS(selection);
+    gdouble xy[OBJECT_SIZE];
+
+    gwy_selection_get_object(selection, i, xy);
+    if (selection_axis->orientation == GWY_ORIENTATION_VERTICAL)
+        return xy[0] >= minmax[1] && xy[0] <= minmax[3];
+    else
+        return xy[0] >= minmax[0] && xy[0] <= minmax[2];
+}
+
 static void
-gwy_selection_axis_crop(GwySelection *sel,
+gwy_selection_axis_crop(GwySelection *selection,
                         gdouble xmin,
                         gdouble ymin,
                         gdouble xmax,
                         gdouble ymax)
 {
-    GwySelectionAxis *selection = GWY_SELECTION_AXIS(sel);
-    gdouble *data;
-    guint i, j, n;
+    gdouble minmax[] = { xmin, ymin, xmax, ymax };
 
-    n = gwy_selection_get_data(sel, NULL);
-    data = g_new(gdouble, OBJECT_SIZE*n);
-    gwy_selection_get_data(sel, data);
-    for (i = j = 0; i < n; i++) {
-        gdouble *xy = data + i*OBJECT_SIZE;
-
-        if (selection->orientation == GWY_ORIENTATION_VERTICAL) {
-            if (v[0] <= ymax && v[0] >= ymin) {
-                memcpy(data + j*OBJECT_SIZE, xy, OBJECT_SIZE*sizeof(gdouble));
-        }
-    }
+    gwy_selection_filter(selection, gwy_selection_axis_crop_object, minmax);
 }
 
 static GByteArray*
