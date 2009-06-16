@@ -70,7 +70,9 @@ struct _GwySelectionClass {
     void (*set_max_objects)(GwySelection *selection,
                             guint max_objects);
     /* TODO: maybe geometrical methods: clamp, move, scale */
-    void (*reserved1)(void);
+    void (*crop)(GwySelection *selection,
+                 gdouble xmin, gdouble ymin,
+                 gdouble xmax, gdouble ymax);
     void (*reserved2)(void);
     void (*reserved3)(void);
     void (*reserved4)(void);
@@ -106,6 +108,11 @@ guint    gwy_selection_get_max_objects(GwySelection *selection);
 void     gwy_selection_set_max_objects(GwySelection *selection,
                                        guint max_objects);
 gboolean gwy_selection_is_full        (GwySelection *selection);
+void     gwy_selection_crop           (GwySelection *selection,
+                                       gdouble xmin,
+                                       gdouble ymin,
+                                       gdouble xmax,
+                                       gdouble ymax);
 void     gwy_selection_changed        (GwySelection *selection,
                                        gint i);
 void     gwy_selection_finished       (GwySelection *selection);

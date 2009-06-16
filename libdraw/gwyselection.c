@@ -64,6 +64,11 @@ static void      gwy_selection_set_data_default   (GwySelection *selection,
                                                    const gdouble *data);
 static void  gwy_selection_set_max_objects_default(GwySelection *selection,
                                                    guint max_objects);
+static void      gwy_selection_crop_default       (GwySelection *selection,
+                                                   gdouble xmin,
+                                                   gdouble ymin,
+                                                   gdouble xmax,
+                                                   gdouble ymax);
 static GByteArray* gwy_selection_serialize_default(GObject *obj,
                                                    GByteArray *buffer);
 static gsize     gwy_selection_get_size_default   (GObject *obj);
@@ -96,6 +101,7 @@ gwy_selection_class_init(GwySelectionClass *klass)
     klass->get_data = gwy_selection_get_data_default;
     klass->set_data = gwy_selection_set_data_default;
     klass->set_max_objects = gwy_selection_set_max_objects_default;
+    klass->crop = gwy_selection_crop_default;
 
     g_object_class_install_property
         (gobject_class,
@@ -245,6 +251,34 @@ gwy_selection_clear(GwySelection *selection)
 {
     g_return_if_fail(GWY_IS_SELECTION(selection));
     GWY_SELECTION_GET_CLASS(selection)->clear(selection);
+}
+
+/**
+ * gwy_selection_crop:
+ * @selection: A selection.
+ * @xmin: Minimum x-coordinate.
+ * @ymin: Minimum y-coordinate.
+ * @xmax: Maximum x-coordinate.
+ * @ymax: Maximum y-coordinate.
+ *
+ * Limits objects in a selection to a rectangle.
+ *
+ * Objects that are fully outside specified rectangle are removed.  Objects
+ * partially outside may be removed or cut, depending on what makes sense for
+ * the specific selection type.  If the selection class does not implement this
+ * method then all objects are removed.
+ *
+ * Since: 2.16
+ **/
+void
+gwy_selection_crop(GwySelection *selection,
+                   gdouble xmin,
+                   gdouble ymin,
+                   gdouble xmax,
+                   gdouble ymax)
+{
+    g_return_if_fail(GWY_IS_SELECTION(selection));
+    GWY_SELECTION_GET_CLASS(selection)->crop(selection, xmin, ymin, xmax, ymax);
 }
 
 /**
@@ -566,6 +600,18 @@ gwy_selection_set_max_objects_default(GwySelection *selection,
     }
     else
         g_object_notify(G_OBJECT(selection), "max-objects");
+}
+
+static void
+gwy_selection_crop_default(GwySelection *selection,
+                           G_GNUC_UNUSED gdouble xmin,
+                           G_GNUC_UNUSED gdouble ymin,
+                           G_GNUC_UNUSED gdouble xmax,
+                           G_GNUC_UNUSED gdouble ymax)
+{
+    /* If the selection class does not implement crop, we have to remove all
+     * objects. */
+    gwy_selection_clear(selection);
 }
 
 static GByteArray*
