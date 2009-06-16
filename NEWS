@@ -9,12 +9,17 @@ Libraries:
 - libgwyddion: Lorentzian fitting preset parameter estimator was corrected.
 - libgwyprocess: Broken Fourier transformations of large prime sizes with
   stride larger than one were fixed in simpleFFT (does not affect FFTW).
+- libgwydraw: GwySelection has a new virtual method crop().
+- libgwydraw: Function for filtering objects in GwySelection was added.
 
 Modules:
+- Selection manager tool (new): Copies selections to other chanels and files.
 - PSIA: Format version 1.0.2 is supported.
 - OLS, JPK: GwyTIFF is used instead of libTIFF for file loading.  This should
   fix a number of TIFF-related problems, namely on MS Windows.
 - Pixmap export: libTIFF is no longer used, TIFF files are written directly.
+- Rawfile: Support for 64bit integer built-in types was added.
+- Layer modules: Support for crop() method was added.
 
 Other:
 - Gwyddion no longer uses libTIFF on any platform (it used to be optionally
