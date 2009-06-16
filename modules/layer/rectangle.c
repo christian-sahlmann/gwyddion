@@ -17,7 +17,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
-
+/* FIXME: crop() can really crop the recangles */
 #include "config.h"
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwydebugobjects.h>
@@ -84,6 +84,14 @@ struct _GwySelectionRectangleClass {
 static gboolean module_register                    (void);
 static GType    gwy_layer_rectangle_get_type       (void) G_GNUC_CONST;
 static GType    gwy_selection_rectangle_get_type   (void) G_GNUC_CONST;
+static gboolean gwy_selection_rectangle_crop_object(GwySelection *selection,
+                                                    gint i,
+                                                    gpointer user_data);
+static void     gwy_selection_rectangle_crop       (GwySelection *selection,
+                                                    gdouble xmin,
+                                                    gdouble ymin,
+                                                    gdouble xmax,
+                                                    gdouble ymax);
 static void     gwy_layer_rectangle_set_property   (GObject *object,
                                                     guint prop_id,
                                                     const GValue *value,
@@ -134,7 +142,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Layer allowing selection of rectangular areas."),
     "Yeti <yeti@gwyddion.net>",
-    "2.7",
+    "2.8",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -159,6 +167,32 @@ gwy_selection_rectangle_class_init(GwySelectionRectangleClass *klass)
     GwySelectionClass *sel_class = GWY_SELECTION_CLASS(klass);
 
     sel_class->object_size = OBJECT_SIZE;
+    sel_class->crop = gwy_selection_rectangle_crop;
+}
+
+static gboolean
+gwy_selection_rectangle_crop_object(GwySelection *selection,
+                                    gint i,
+                                    gpointer user_data)
+{
+    const gdouble *minmax = (const gdouble*)user_data;
+    gdouble xy[OBJECT_SIZE];
+
+    gwy_selection_get_object(selection, i, xy);
+    return (xy[0] >= minmax[0] && xy[1] >= minmax[1]
+            && xy[2] <= minmax[2] && xy[3] <= minmax[3]);
+}
+
+static void
+gwy_selection_rectangle_crop(GwySelection *selection,
+                             gdouble xmin,
+                             gdouble ymin,
+                             gdouble xmax,
+                             gdouble ymax)
+{
+    gdouble minmax[4] = { xmin, ymin, xmax, ymax };
+
+    gwy_selection_filter(selection, gwy_selection_rectangle_crop_object, minmax);
 }
 
 static void
