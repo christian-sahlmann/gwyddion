@@ -159,6 +159,7 @@ gwy_selection_axis_class_init(GwySelectionAxisClass *klass)
     gobject_class->get_property = gwy_selection_axis_get_property;
 
     sel_class->object_size = OBJECT_SIZE;
+    sel_class->crop = gwy_selection_axis_crop;
 
     g_object_class_install_property
         (gobject_class,
@@ -234,7 +235,7 @@ gwy_selection_axis_set_property(GObject *object,
 }
 
 static void
-gwy_selection_axis_get_property(GObject*object,
+gwy_selection_axis_get_property(GObject *object,
                                 guint prop_id,
                                 GValue *value,
                                 GParamSpec *pspec)
@@ -249,6 +250,30 @@ gwy_selection_axis_get_property(GObject*object,
         default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
         break;
+    }
+}
+
+static void
+gwy_selection_axis_crop(GwySelection *sel,
+                        gdouble xmin,
+                        gdouble ymin,
+                        gdouble xmax,
+                        gdouble ymax)
+{
+    GwySelectionAxis *selection = GWY_SELECTION_AXIS(sel);
+    gdouble *data;
+    guint i, j, n;
+
+    n = gwy_selection_get_data(sel, NULL);
+    data = g_new(gdouble, OBJECT_SIZE*n);
+    gwy_selection_get_data(sel, data);
+    for (i = j = 0; i < n; i++) {
+        gdouble *xy = data + i*OBJECT_SIZE;
+
+        if (selection->orientation == GWY_ORIENTATION_VERTICAL) {
+            if (v[0] <= ymax && v[0] >= ymin) {
+                memcpy(data + j*OBJECT_SIZE, xy, OBJECT_SIZE*sizeof(gdouble));
+        }
     }
 }
 
@@ -336,9 +361,10 @@ static void
 gwy_selection_axis_clone(GObject *source,
                          GObject *copy)
 {
-    gwy_selection_axis_serializable_parent_iface->clone(source, copy);
     GWY_SELECTION_AXIS(copy)->orientation
         = GWY_SELECTION_AXIS(source)->orientation;
+    /* Must do this at the end, it emits a signal. */
+    gwy_selection_axis_serializable_parent_iface->clone(source, copy);
 }
 
 static void
