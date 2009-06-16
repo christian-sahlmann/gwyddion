@@ -60,6 +60,12 @@ typedef struct _GwyToolSelectionManager      GwyToolSelectionManager;
 typedef struct _GwyToolSelectionManagerClass GwyToolSelectionManagerClass;
 
 typedef struct {
+    GwySelection *selection;
+    const gchar *name;
+    GwySIUnit *zunit;
+} DistributeData;
+
+typedef struct {
     gboolean allfiles;
 } ToolArgs;
 
@@ -93,6 +99,8 @@ static void gwy_tool_selection_manager_selection_changed(GwyToolSelectionManager
 static void gwy_tool_selection_manager_all_files_changed(GwyToolSelectionManager *tool,
                                                          GtkToggleButton *button);
 static void gwy_tool_selection_manager_distribute       (GwyToolSelectionManager *tool);
+static void gwy_tool_selection_manager_distribute_one   (GwyContainer *container,
+                                                         DistributeData *distdata);
 
 static const gchar mode_key[]   = "/module/selectionmanager/allfiles";
 
@@ -249,7 +257,7 @@ gwy_tool_selection_manager_init_dialog(GwyToolSelectionManager *tool)
                                            GDK_ACTION_COPY);
 
     selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(tool->treeview));
-    gtk_tree_selection_set_mode(selection, GTK_SELECTION_MULTIPLE);
+    gtk_tree_selection_set_mode(selection, GTK_SELECTION_SINGLE);
 
     column = gtk_tree_view_column_new();
     gtk_tree_view_column_set_title(column, _("Selection"));
@@ -308,7 +316,7 @@ add_selection(gpointer hkey, gpointer hvalue, gpointer data)
     GtkTreeIter iter;
 
     gtk_list_store_insert_with_values(tool->model, &iter, G_MAXINT,
-                                      MODEL_ID, quark,  /* FIXME */
+                                      MODEL_ID, quark,
                                       MODEL_OBJECT, sel,
                                       MODEL_WIDGET, NULL, /* FIXME */
                                       -1);
@@ -326,7 +334,7 @@ gwy_tool_selection_manager_data_switched(GwyTool *gwytool,
     ignore = (data_view == plain_tool->data_view);
 
     GWY_TOOL_CLASS(gwy_tool_selection_manager_parent_class)->data_switched(gwytool,
-                                                                     data_view);
+                                                                           data_view);
 
     if (ignore || plain_tool->init_failed)
         return;
@@ -370,7 +378,84 @@ gwy_tool_selection_manager_all_files_changed(GwyToolSelectionManager *tool,
 static void
 gwy_tool_selection_manager_distribute(GwyToolSelectionManager *tool)
 {
-    /* TODO */
+    GwyPlainTool *plain_tool;
+    GtkTreeSelection *treesel;
+    DistributeData distdata;
+    GtkTreeIter iter;
+    GQuark quark;
+    const gchar *s;
+
+    treesel = gtk_tree_view_get_selection(GTK_TREE_VIEW(tool->treeview));
+    if (!gtk_tree_selection_get_selected(treesel, NULL, &iter))
+        return;
+
+    gtk_tree_model_get(GTK_TREE_MODEL(tool->model), &iter,
+                       MODEL_ID, &quark,
+                       MODEL_OBJECT, &distdata.selection,
+                       -1);
+    s = g_quark_to_string(quark);
+    g_return_if_fail(s);
+    distdata.name = strrchr(s, GWY_CONTAINER_PATHSEP);
+    g_return_if_fail(distdata.name);
+
+    plain_tool = GWY_PLAIN_TOOL(tool);
+    distdata.zunit = gwy_data_field_get_si_unit_z(plain_tool->data_field);
+
+    if (tool->args.allfiles)
+        gwy_app_data_browser_foreach((GwyAppDataForeachFunc)gwy_tool_selection_manager_distribute_one,
+                                     &distdata);
+    else
+        gwy_tool_selection_manager_distribute_one(plain_tool->container,
+                                                  &distdata);
+}
+
+static void
+gwy_tool_selection_manager_distribute_one(GwyContainer *container,
+                                          DistributeData *distdata)
+{
+    GObject *object, *selobject;
+    GwyDataField *dfield;
+    GString *str;
+    GQuark quark;
+    gint *ids;
+    gint i;
+
+    ids = gwy_app_data_browser_get_data_ids(container);
+    str = g_string_new(NULL);
+    selobject = G_OBJECT(distdata->selection);
+    for (i = 0; ids[i] > 0; i++) {
+        gdouble xmin, xmax, ymin, ymax;
+
+        g_string_printf(str, "/%d/select%s", ids[i], distdata->name);
+        quark = g_quark_from_string(str->str);
+
+        /* Avoid copying to self */
+        if (gwy_container_gis_object(container, quark, &object)
+            && object == selobject)
+            continue;
+
+        /* Check units */
+        g_string_printf(str, "/%d/data", ids[i]);
+        if (!gwy_container_gis_object_by_name(container, str->str, &object)
+            || !GWY_IS_DATA_FIELD(object))
+            continue;
+        dfield = GWY_DATA_FIELD(object);
+        if (!gwy_si_unit_equal(gwy_data_field_get_si_unit_z(dfield),
+                               distdata->zunit))
+            continue;
+
+        xmin = xmax = gwy_data_field_get_xoffset(dfield);
+        ymin = ymax = gwy_data_field_get_yoffset(dfield);
+        xmax += gwy_data_field_get_xreal(dfield);
+        ymax += gwy_data_field_get_yreal(dfield);
+        object = gwy_serializable_duplicate(selobject);
+        gwy_selection_crop(GWY_SELECTION(object), xmin, ymin, xmax, ymax);
+        if (gwy_selection_get_data(GWY_SELECTION(object), NULL))
+            gwy_container_set_object(container, quark, object);
+        g_object_unref(object);
+    }
+    g_string_free(str, TRUE);
+    g_free(ids);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
