@@ -3469,6 +3469,7 @@ gwy_app_data_browser_copy_other(GtkTreeModel *model,
 {
     GwyDataView *data_view;
     GwyPixmapLayer *layer;
+    GwyDataField *dfield;
     GQuark srcquark, targetquark, destquark;
     GObject *object, *destobject;
     const gchar *srckey, *targetkey;
@@ -3511,6 +3512,8 @@ gwy_app_data_browser_copy_other(GtkTreeModel *model,
     g_return_if_fail(targetquark);
     id = _gwy_app_analyse_data_key(targetkey, &type, NULL);
     g_return_if_fail(id >= 0 && type == KEY_IS_DATA);
+    dfield = gwy_container_get_object(container, targetquark);
+    g_return_if_fail(GWY_IS_DATA_FIELD(dfield));
 
     /* Destination */
     destkey = g_strdup_printf("/%d/select%s", id, srckey+len);
@@ -3520,8 +3523,18 @@ gwy_app_data_browser_copy_other(GtkTreeModel *model,
     /* Avoid copies if source is the same as the target */
     if (!gwy_container_gis_object(container, destquark, &destobject)
         || destobject != object) {
+        gdouble xmin, xmax, ymin, ymax;
+
+        /* FIXME: It would be nice to check compatibility of units, but we have
+         * no idea where the selection come from. */
+        xmin = xmax = gwy_data_field_get_xoffset(dfield);
+        ymin = ymax = gwy_data_field_get_yoffset(dfield);
+        xmax += gwy_data_field_get_xreal(dfield);
+        ymax += gwy_data_field_get_yreal(dfield);
         destobject = gwy_serializable_duplicate(G_OBJECT(object));
-        gwy_container_set_object(container, destquark, destobject);
+        gwy_selection_crop(GWY_SELECTION(destobject), xmin, ymin, xmax, ymax);
+        if (gwy_selection_get_data(GWY_SELECTION(destobject), NULL))
+            gwy_container_set_object(container, destquark, destobject);
         g_object_unref(destobject);
     }
 
