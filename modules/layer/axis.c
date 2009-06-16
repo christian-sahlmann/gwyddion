@@ -90,6 +90,9 @@ static void     gwy_selection_axis_get_property   (GObject*object,
                                                    guint prop_id,
                                                    GValue *value,
                                                    GParamSpec *pspec);
+static gboolean gwy_selection_axis_crop_object    (GwySelection *selection,
+                                                   gint i,
+                                                   gpointer user_data);
 static void     gwy_selection_axis_crop           (GwySelection *selection,
                                                    gdouble xmin,
                                                    gdouble ymin,
@@ -281,7 +284,7 @@ gwy_selection_axis_crop(GwySelection *selection,
                         gdouble xmax,
                         gdouble ymax)
 {
-    gdouble minmax[] = { xmin, ymin, xmax, ymax };
+    gdouble minmax[4] = { xmin, ymin, xmax, ymax };
 
     gwy_selection_filter(selection, gwy_selection_axis_crop_object, minmax);
 }
