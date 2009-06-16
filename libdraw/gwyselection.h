@@ -35,7 +35,6 @@ G_BEGIN_DECLS
 typedef struct _GwySelection      GwySelection;
 typedef struct _GwySelectionClass GwySelectionClass;
 
-
 struct _GwySelection {
     GObject parent_instance;
 
@@ -85,6 +84,10 @@ struct _GwySelectionClass {
     void (*finished)(GwySelection *selection);
 };
 
+typedef gboolean (*GwySelectionFilterFunc)(GwySelection *selection,
+                                           gint i,
+                                           gpointer data);
+
 #define gwy_selection_duplicate(selection) \
         (GWY_SELECTION(gwy_serializable_duplicate(G_OBJECT(selection))))
 
@@ -113,6 +116,9 @@ void     gwy_selection_crop           (GwySelection *selection,
                                        gdouble ymin,
                                        gdouble xmax,
                                        gdouble ymax);
+void     gwy_selection_filter         (GwySelection *selection,
+                                       GwySelectionFilterFunc filter,
+                                       gpointer data);
 void     gwy_selection_changed        (GwySelection *selection,
                                        gint i);
 void     gwy_selection_finished       (GwySelection *selection);

@@ -282,6 +282,44 @@ gwy_selection_crop(GwySelection *selection,
 }
 
 /**
+ * gwy_selection_filter:
+ * @selection: A selection.
+ * @filter: Function returning %TRUE for objects that should be kept, %FALSE
+ *          for objects that should be removed.
+ * @data: User data passed to @filter.
+ *
+ * Removes selection objects matching certain criteria.
+ *
+ * Since: 2.16
+ **/
+void
+gwy_selection_filter(GwySelection *selection,
+                     GwySelectionFilterFunc filter,
+                     gpointer data)
+{
+    GwySelection *sel;
+    guint len, i, object_size;
+    gdouble *xy;
+
+    /* Be careful to work with non-default implementations.  Do not assume we
+     * know much about the internal structure. */
+    sel = gwy_selection_duplicate(selection);
+    gwy_selection_clear(sel);
+    len = gwy_selection_get_data(selection, NULL);
+    object_size = gwy_selection_get_object_size(selection);
+    xy = g_newa(gdouble, object_size);
+    for (i = 0; i < len; i++) {
+        if (filter(selection, i, data)) {
+            gwy_selection_get_object(selection, i, xy);
+            gwy_selection_set_object(sel, -1, xy);
+        }
+    }
+    /* This is the only place we emit a signal on @selection. */
+    gwy_serializable_clone(G_OBJECT(sel), G_OBJECT(selection));
+    g_object_unref(sel);
+}
+
+/**
  * gwy_selection_get_object:
  * @selection: A selection.
  * @i: Index of object to get.
@@ -830,6 +868,20 @@ gwy_selection_clone_default(GObject *source, GObject *copy)
  *
  * Convenience macro doing gwy_serializable_duplicate() with all the necessary
  * typecasting.
+ **/
+
+/**
+ * GwySelectionFilterFunc:
+ * @selection: A selection.
+ * @i: Index of object to consider.
+ * @data: User data passed to gwy_selection_filter().
+ *
+ * Type of selection filtering function.
+ *
+ * Returns: %TRUE for objects that should be kept, %FALSE for objects that
+ *          should be removed.
+ *
+ * Since: 2.16
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
