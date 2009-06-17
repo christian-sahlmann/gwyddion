@@ -62,7 +62,7 @@ typedef struct _GwyToolSelectionManagerClass GwyToolSelectionManagerClass;
 typedef struct {
     GwySelection *selection;
     const gchar *name;
-    GwySIUnit *zunit;
+    GwySIUnit *xyunit;
 } DistributeData;
 
 typedef struct {
@@ -399,7 +399,7 @@ gwy_tool_selection_manager_distribute(GwyToolSelectionManager *tool)
     g_return_if_fail(distdata.name);
 
     plain_tool = GWY_PLAIN_TOOL(tool);
-    distdata.zunit = gwy_data_field_get_si_unit_z(plain_tool->data_field);
+    distdata.xyunit = gwy_data_field_get_si_unit_xy(plain_tool->data_field);
 
     if (tool->args.allfiles)
         gwy_app_data_browser_foreach((GwyAppDataForeachFunc)gwy_tool_selection_manager_distribute_one,
@@ -427,22 +427,29 @@ gwy_tool_selection_manager_distribute_one(GwyContainer *container,
         gdouble xmin, xmax, ymin, ymax;
 
         g_string_printf(str, "/%d/select%s", ids[i], distdata->name);
+        gwy_debug("%p %s", container, str->str);
         quark = g_quark_from_string(str->str);
 
         /* Avoid copying to self */
         if (gwy_container_gis_object(container, quark, &object)
-            && object == selobject)
+            && object == selobject) {
+            gwy_debug("avoiding copy-to-self");
             continue;
+        }
 
         /* Check units */
         g_string_printf(str, "/%d/data", ids[i]);
         if (!gwy_container_gis_object_by_name(container, str->str, &object)
-            || !GWY_IS_DATA_FIELD(object))
+            || !GWY_IS_DATA_FIELD(object)) {
+            gwy_debug("data field not found?!");
             continue;
+        }
         dfield = GWY_DATA_FIELD(object);
-        if (!gwy_si_unit_equal(gwy_data_field_get_si_unit_z(dfield),
-                               distdata->zunit))
+        if (!gwy_si_unit_equal(gwy_data_field_get_si_unit_xy(dfield),
+                               distdata->xyunit)) {
+            gwy_debug("units differ");
             continue;
+        }
 
         xmin = xmax = gwy_data_field_get_xoffset(dfield);
         ymin = ymax = gwy_data_field_get_yoffset(dfield);
@@ -452,6 +459,9 @@ gwy_tool_selection_manager_distribute_one(GwyContainer *container,
         gwy_selection_crop(GWY_SELECTION(object), xmin, ymin, xmax, ymax);
         if (gwy_selection_get_data(GWY_SELECTION(object), NULL))
             gwy_container_set_object(container, quark, object);
+        else {
+            gwy_debug("selection empty after cropping");
+        }
         g_object_unref(object);
     }
     g_string_free(str, TRUE);
