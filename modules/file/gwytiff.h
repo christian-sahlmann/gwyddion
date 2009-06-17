@@ -716,7 +716,7 @@ gwy_tiff_get_image_reader(const GwyTIFF *tiff,
         if (reader.offsets[i] + ssize > tiff->size) {
             g_set_error(error, GWY_MODULE_FILE_ERROR,
                         GWY_MODULE_FILE_ERROR_DATA,
-                        _("File is truncated"));
+                        _("File is truncated."));
             g_free(reader.offsets);
             return NULL;
         }
