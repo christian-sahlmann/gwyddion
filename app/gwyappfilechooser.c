@@ -33,7 +33,9 @@
 #include "gwyappinternal.h"
 
 enum {
-    TMS_NORMAL_THUMB_SIZE = 128
+    TMS_NORMAL_THUMB_SIZE = 128,
+    BLOODY_ICON_VIEW_PADDING = 2*6,
+    PADDED_THUMBNAIL_SIZE = TMS_NORMAL_THUMB_SIZE + BLOODY_ICON_VIEW_PADDING
 };
 
 enum {
@@ -649,8 +651,19 @@ gwy_app_file_chooser_add_preview(GwyAppFileChooser *chooser)
     chooser->renderer_fileinfo = G_OBJECT(renderer);
 
     gtk_icon_view_set_selection_mode(preview, GTK_SELECTION_NONE);
-    gtk_icon_view_set_item_width(preview, TMS_NORMAL_THUMB_SIZE);
-    w = TMS_NORMAL_THUMB_SIZE + 2*gtk_icon_view_get_margin(preview);
+    /* In Gtk+ 2.14 and older, things work.  2.16 adds some padding that
+     * breaks everything.  And this padding together with the usual margin
+     * meaks too much white space so we have to get rid of the margin in 2.16+.
+     */
+    if (gtk_major_version == 2 && gtk_minor_version <= 14) {
+        gtk_icon_view_set_item_width(preview, TMS_NORMAL_THUMB_SIZE);
+        w = TMS_NORMAL_THUMB_SIZE + 2*gtk_icon_view_get_margin(preview);
+    }
+    else {
+        gtk_icon_view_set_margin(preview, 0);
+        gtk_icon_view_set_item_width(preview, PADDED_THUMBNAIL_SIZE);
+        w = PADDED_THUMBNAIL_SIZE;
+    }
     gtk_widget_set_size_request(chooser->preview, w, -1);
     gtk_container_add(GTK_CONTAINER(scwin), chooser->preview);
 
