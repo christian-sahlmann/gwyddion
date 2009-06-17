@@ -20,17 +20,11 @@
 
 #include "config.h"
 #include <string.h>
+#include <gdk/gdkkeysyms.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
-#include <libgwyddion/gwymath.h>
 #include <libgwymodule/gwymodule-tool.h>
-#include <libprocess/grains.h>
-#include <libprocess/fractals.h>
-#include <libprocess/correct.h>
-#include <libprocess/stats.h>
 #include <libgwydgets/gwystock.h>
-#include <libgwydgets/gwyradiobuttons.h>
-#include <libgwydgets/gwycombobox.h>
 #include <app/gwyapp.h>
 
 /* The GtkTargetEntry for tree model drags.
@@ -101,6 +95,9 @@ static void gwy_tool_selection_manager_selection_changed(GwyToolSelectionManager
                                                          GtkTreeSelection *selection);
 static void gwy_tool_selection_manager_all_files_changed(GwyToolSelectionManager *tool,
                                                          GtkToggleButton *button);
+static gboolean gwy_tool_selection_manager_delete       (GwyToolSelectionManager *tool,
+                                                         GdkEventKey *event,
+                                                         GtkTreeView *treeview);
 static void gwy_tool_selection_manager_distribute       (GwyToolSelectionManager *tool);
 static void gwy_tool_selection_manager_distribute_one   (GwyContainer *container,
                                                          DistributeData *distdata);
@@ -260,6 +257,9 @@ gwy_tool_selection_manager_init_dialog(GwyToolSelectionManager *tool)
                                            dnd_target_table,
                                            G_N_ELEMENTS(dnd_target_table),
                                            GDK_ACTION_COPY);
+    g_signal_connect_swapped(tool->treeview, "key-press-event",
+                             G_CALLBACK(gwy_tool_selection_manager_delete),
+                             tool);
 
     selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(tool->treeview));
     gtk_tree_selection_set_mode(selection, GTK_SELECTION_SINGLE);
@@ -288,7 +288,7 @@ gwy_tool_selection_manager_init_dialog(GwyToolSelectionManager *tool)
     gtk_tree_view_column_set_cell_data_func(column, renderer,
                                             render_objects, tool, NULL);
 
-    hbox = gtk_hbox_new(FALSE, 12);
+    hbox = gtk_hbox_new(FALSE, 6);
     gtk_box_pack_start(GTK_BOX(dialog->vbox), hbox, FALSE, FALSE, 0);
 
     tool->distribute = gtk_button_new_with_mnemonic(_("_Distribute"));
@@ -412,6 +412,31 @@ gwy_tool_selection_manager_all_files_changed(GwyToolSelectionManager *tool,
                                              GtkToggleButton *button)
 {
     tool->args.allfiles = gtk_toggle_button_get_active(button);
+}
+
+static gboolean
+gwy_tool_selection_manager_delete(GwyToolSelectionManager *tool,
+                                  GdkEventKey *event,
+                                  GtkTreeView *treeview)
+{
+    GtkTreeSelection *selection;
+    GtkTreeModel *model;
+    GtkTreeIter iter;
+    GQuark quark;
+
+    if (event->keyval != GDK_Delete)
+        return FALSE;
+
+    selection = gtk_tree_view_get_selection(treeview);
+    if (!gtk_tree_selection_get_selected(selection, &model, &iter))
+        return FALSE;
+
+    gtk_tree_model_get(model, &iter, MODEL_ID, &quark, -1);
+    gwy_container_remove(GWY_PLAIN_TOOL(tool)->container, quark);
+    /* FIXME: Since the model is not auto-updated, clear it manually. */
+    gtk_list_store_remove(tool->model, &iter);
+
+    return TRUE;
 }
 
 static void
