@@ -216,7 +216,7 @@ gwy_tool_distance_init_dialog(GwyToolDistance *tool)
     hbox = gtk_hbox_new(FALSE, 0);
     gtk_box_pack_start(GTK_BOX(dialog->vbox), hbox, FALSE, FALSE, 0);
     tool->aux_box = GTK_BOX(hbox);
-  
+
     tool->save = gwy_tool_distance_add_aux_button(tool, GTK_STOCK_SAVE,
                                                   _("Save table to a file"));
     g_signal_connect_swapped(tool->save, "clicked",
