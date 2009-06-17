@@ -54,6 +54,11 @@ Instead of running the user interface and opening \fIFILE\fRs, loads the
 files, performs a sanity check on them (printing errors to standard error
 output) and terminates.
 .TP
+\fB\-\-log\-to\-file\fR
+Redirect messages from GLib, Gtk+, Gwyddion, etc. to ~/.gwyddion/gwyddion.log
+or file given in \fBGWYDDION_LOGFILE\fR environment variable.  Note messages
+are always redirected to a file on Win32.
+.TP
 \fB\-\-debug\-objects\fR
 Prints list of objects created during run time, with creation and
 desctruction times or reference counts on program exit.  Useful only for
@@ -85,6 +90,10 @@ If not set, it defaults to compiled-in value of ${libexecdir}.
 .B GWYDDION_LOCALEDIR
 Locale distrectory where translations were installed.
 If not set, it defaults to compiled-in value of ${datadir}/locale.
+.
+.TP
+.B GWYDDION_LOGFILE
+Name of file to redirect messages to if \fB\-\-log\-to\-file\fR is given.
 .
 .
 .SH FILES
