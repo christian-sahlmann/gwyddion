@@ -94,6 +94,9 @@ static void gwy_tool_selection_manager_finalize         (GObject *object);
 static void gwy_tool_selection_manager_init_dialog      (GwyToolSelectionManager *tool);
 static void gwy_tool_selection_manager_data_switched    (GwyTool *gwytool,
                                                          GwyDataView *data_view);
+static void gwy_tool_selection_manager_response         (GwyTool *gwytool,
+                                                         gint response_id);
+static void gwy_tool_selection_manager_clear            (GwyToolSelectionManager *tool);
 static void gwy_tool_selection_manager_selection_changed(GwyToolSelectionManager *tool,
                                                          GtkTreeSelection *selection);
 static void gwy_tool_selection_manager_all_files_changed(GwyToolSelectionManager *tool,
@@ -143,8 +146,10 @@ gwy_tool_selection_manager_class_init(GwyToolSelectionManagerClass *klass)
     tool_class->stock_id = GWY_STOCK_SELECTIONS;
     tool_class->title = _("Selection Manager");
     tool_class->tooltip = _("Display and copy selections");
-    tool_class->prefix = "/module/selmanager";
+    tool_class->prefix = "/module/selectionmanager";
+    tool_class->default_height = 240;
     tool_class->data_switched = gwy_tool_selection_manager_data_switched;
+    tool_class->response = gwy_tool_selection_manager_response;
 }
 
 static void
@@ -260,7 +265,7 @@ gwy_tool_selection_manager_init_dialog(GwyToolSelectionManager *tool)
     gtk_tree_selection_set_mode(selection, GTK_SELECTION_SINGLE);
 
     column = gtk_tree_view_column_new();
-    gtk_tree_view_column_set_title(column, _("Selection"));
+    gtk_tree_view_column_set_title(column, _("Name"));
     gtk_tree_view_append_column(GTK_TREE_VIEW(tool->treeview), column);
     renderer = gtk_cell_renderer_text_new();
     gtk_tree_view_column_pack_start(column, renderer, TRUE);
@@ -276,7 +281,7 @@ gwy_tool_selection_manager_init_dialog(GwyToolSelectionManager *tool)
                                             render_type, tool, NULL);
 
     column = gtk_tree_view_column_new();
-    gtk_tree_view_column_set_title(column, "Objects");
+    gtk_tree_view_column_set_title(column, _("Objects"));
     gtk_tree_view_append_column(GTK_TREE_VIEW(tool->treeview), column);
     renderer = gtk_cell_renderer_text_new();
     gtk_tree_view_column_pack_start(column, renderer, TRUE);
@@ -304,6 +309,8 @@ gwy_tool_selection_manager_init_dialog(GwyToolSelectionManager *tool)
                              tool);
 
     gwy_tool_add_hide_button(GWY_TOOL(tool), TRUE);
+    gtk_dialog_add_button(GTK_DIALOG(GWY_TOOL(tool)->dialog),
+                          GTK_STOCK_CLEAR, GWY_TOOL_RESPONSE_CLEAR);
 
     gtk_widget_show_all(dialog->vbox);
 }
@@ -343,22 +350,52 @@ gwy_tool_selection_manager_data_switched(GwyTool *gwytool,
 
     tool = GWY_TOOL_SELECTION_MANAGER(gwytool);
 
+    /* FIXME: This is very naive because the tool cannot react to selections
+     * changed by something else.  Hopefully only other tools do such things
+     * -- and then we get a chance to re-read the selection list.  */
     if (data_view) {
         gtk_list_store_clear(tool->model);
         gwy_container_foreach(plain_tool->container,
                               g_strdup_printf("/%d/select", plain_tool->id),
                               (GHFunc)&add_selection,
                               tool);
-        /*
-        gwy_object_set_or_reset(plain_tool->layer,
-                                tool->layer_type_point,
-                                "draw-marker", FALSE,
-                                "editable", TRUE,
-                                "focus", -1,
-                                NULL);
-        gwy_selection_set_max_objects(plain_tool->selection, 1);
-        */
+        /* XXX: In normal tools, we set up the layer here. */
     }
+}
+
+static void
+gwy_tool_selection_manager_response(GwyTool *gwytool,
+                                    gint response_id)
+{
+    GwyToolSelectionManager *tool;
+
+    GWY_TOOL_CLASS(gwy_tool_selection_manager_parent_class)->response(gwytool,
+                                                                      response_id);
+
+    tool = GWY_TOOL_SELECTION_MANAGER(gwytool);
+    if (response_id == GWY_TOOL_RESPONSE_CLEAR)
+        gwy_tool_selection_manager_clear(tool);
+}
+
+static void
+gwy_tool_selection_manager_clear(GwyToolSelectionManager *tool)
+{
+    GtkTreeModel *model = GTK_TREE_MODEL(tool->model);
+    GwyPlainTool *plain_tool;
+    GtkTreeIter iter;
+
+    if (!gtk_tree_model_get_iter_first(model, &iter))
+        return;
+
+    plain_tool = GWY_PLAIN_TOOL(tool);
+    do {
+        GQuark quark;
+        gtk_tree_model_get(model, &iter, MODEL_ID, &quark, -1);
+        gwy_container_remove(plain_tool->container, quark);
+    } while (gtk_tree_model_iter_next(model, &iter));
+
+    /* FIXME: Since the model is not auto-updated, clear it manually. */
+    gtk_list_store_clear(tool->model);
 }
 
 static void
