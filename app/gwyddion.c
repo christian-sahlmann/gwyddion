@@ -36,9 +36,9 @@
 #include "gwyddion.h"
 
 #ifdef G_OS_WIN32
-#define LOG_TO_FILE 1
+#define LOG_TO_FILE_DEFAULT TRUE
 #else
-#undef LOG_TO_FILE
+#define LOG_TO_FILE_DEFAULT FALSE
 #endif
 
 typedef struct {
@@ -46,37 +46,35 @@ typedef struct {
     gboolean debug_objects;
     gboolean startup_time;
     gboolean check;
+    gboolean log_to_file;
     GwyAppRemoteType remote;
 } GwyAppOptions;
 
-#ifdef LOG_TO_FILE
-static void setup_logging(void);
-static void logger       (const gchar *log_domain,
-                          GLogLevelFlags log_level,
-                          const gchar *message,
-                          gpointer user_data);
-#endif  /* LOG_TO_FILE */
-
-static void       open_command_line_files  (gint n,
-                                            gchar **args);
-static gint       check_command_line_files (gint n,
-                                            gchar **args);
-static void       print_help               (void);
-static void       process_preinit_options  (int *argc,
-                                            char ***argv,
-                                            GwyAppOptions *options);
-static void       debug_time               (GTimer *timer,
-                                            const gchar *task);
-static void       warn_broken_settings_file(GtkWidget *parent,
-                                            const gchar *settings_file,
-                                            const gchar *reason);
-static void       gwy_app_init             (int *argc,
-                                            char ***argv);
-static void       gwy_app_set_window_icon  (void);
-static void       gwy_app_check_version    (void);
+static void open_command_line_files  (gint n,
+                                      gchar **args);
+static gint check_command_line_files (gint n,
+                                      gchar **args);
+static void print_help               (void);
+static void process_preinit_options  (int *argc,
+                                      char ***argv,
+                                      GwyAppOptions *options);
+static void debug_time               (GTimer *timer,
+                                      const gchar *task);
+static void setup_logging            (void);
+static void logger                   (const gchar *log_domain,
+                                      GLogLevelFlags log_level,
+                                      const gchar *message,
+                                      gpointer user_data);
+static void warn_broken_settings_file(GtkWidget *parent,
+                                      const gchar *settings_file,
+                                      const gchar *reason);
+static void gwy_app_init             (int *argc,
+                                      char ***argv);
+static void gwy_app_set_window_icon  (void);
+static void gwy_app_check_version    (void);
 
 static GwyAppOptions app_options = {
-    FALSE, FALSE, FALSE, FALSE, GWY_APP_REMOTE_NONE,
+    FALSE, FALSE, FALSE, FALSE, LOG_TO_FILE_DEFAULT, GWY_APP_REMOTE_NONE,
 };
 
 int
@@ -96,10 +94,9 @@ main(int argc, char *argv[])
     /* TODO: handle failure */
     gwy_app_settings_create_config_dir(NULL);
     /* FIXME: somewhat late, actually even gwy_find_self_set_argv0() which MUST
-     * be run first can print things to console when debuggin is enabled. */
-#ifdef LOG_TO_FILE
-    setup_logging();
-#endif  /* LOG_TO_FILE */
+     * be run first can print things to console when debugging is enabled. */
+    if (app_options.log_to_file)
+        setup_logging();
     debug_time(timer, "init");
 
     gtk_init(&argc, &argv);
@@ -268,6 +265,10 @@ process_preinit_options(int *argc,
                 options->startup_time = TRUE;
                 continue;
             }
+            if (gwy_strequal((*argv)[i], "--log-to-file")) {
+                options->log_to_file = TRUE;
+                continue;
+            }
             if (gwy_strequal((*argv)[i], "--check")) {
                 options->check = TRUE;
                 continue;
@@ -296,6 +297,7 @@ print_help(void)
 "     --remote-new           Load FILES to a running instance or run a new one.\n"
 "     --remote-existing      Load FILES to a running instance or fail.\n"
 "     --check                Check FILES, print problems and terminate.\n"
+"     --log-to-file          Redirect messages file set in GWYDDION_LOGFILE.\n"
 "     --debug-objects        Catch leaking objects (devel only).\n"
 "     --startup-time         Measure time of startup tasks.\n"
         );
@@ -361,7 +363,6 @@ warn_broken_settings_file(GtkWidget *parent,
     gtk_widget_destroy(dialog);
 }
 
-#ifdef LOG_TO_FILE
 /* Redirect messages from all libraries we use to a file.  This (a) creates
  * a possibly useful log if we don't crash totally (b) prevents the mesages
  * to go to a DOS console thus creating it. */
@@ -369,7 +370,7 @@ static void
 setup_logging(void)
 {
     const gchar *domains[] = {
-        "GLib", "GLib-GObject", "GModule", "GThread",
+        "GLib", "GLib-GObject", "GLib-GIO", "GModule", "GThread",
         "GdkPixbuf", "Gdk", "Gtk",
         "GdkGLExt", "GtkGLExt",
         "Pango",
@@ -421,7 +422,6 @@ logger(const gchar *log_domain,
             message);
     fflush(logfile);
 }
-#endif  /* LOG_TO_FILE */
 
 static void
 open_command_line_files(gint n, gchar **args)

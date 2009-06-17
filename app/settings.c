@@ -524,6 +524,11 @@ gwy_app_settings_get_settings_filename(void)
 gchar*
 gwy_app_settings_get_log_filename(void)
 {
+    const gchar *s;
+
+    if ((s = g_getenv("GWYDDION_LOGFILE")))
+        return g_strdup(s);
+
     return g_build_filename(gwy_get_user_dir(), "gwyddion.log", NULL);
 }
 
