@@ -297,6 +297,8 @@ gwy_tool_selection_manager_init_dialog(GwyToolSelectionManager *tool)
 
     tool->allfiles = gtk_check_button_new_with_mnemonic(_("to _all files"));
     gtk_box_pack_start(GTK_BOX(hbox), tool->allfiles, FALSE, FALSE, 0);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(tool->allfiles),
+                                 tool->args.allfiles);
     g_signal_connect_swapped(tool->allfiles, "toggled",
                              G_CALLBACK(gwy_tool_selection_manager_all_files_changed),
                              tool);
@@ -400,6 +402,7 @@ gwy_tool_selection_manager_distribute(GwyToolSelectionManager *tool)
 
     plain_tool = GWY_PLAIN_TOOL(tool);
     distdata.xyunit = gwy_data_field_get_si_unit_xy(plain_tool->data_field);
+    gwy_debug("source: %p %s", plain_tool->data_field, s);
 
     if (tool->args.allfiles)
         gwy_app_data_browser_foreach((GwyAppDataForeachFunc)gwy_tool_selection_manager_distribute_one,
@@ -420,10 +423,11 @@ gwy_tool_selection_manager_distribute_one(GwyContainer *container,
     gint *ids;
     gint i;
 
+    gwy_debug("dest: %p", container);
     ids = gwy_app_data_browser_get_data_ids(container);
     str = g_string_new(NULL);
     selobject = G_OBJECT(distdata->selection);
-    for (i = 0; ids[i] > 0; i++) {
+    for (i = 0; ids[i] >= 0; i++) {
         gdouble xmin, xmax, ymin, ymax;
 
         g_string_printf(str, "/%d/select%s", ids[i], distdata->name);
