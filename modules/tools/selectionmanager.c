@@ -207,11 +207,32 @@ render_type(G_GNUC_UNUSED GtkTreeViewColumn *column,
             GtkTreeIter *iter,
             G_GNUC_UNUSED gpointer user_data)
 {
+    static const struct {
+        const gchar *typename;
+        const gchar *humanname;
+    }
+    type_names[] = {
+        { "GwySelectionAxis",      N_("Horiz./vert. lines"), },
+        { "GwySelectionEllipse",   N_("Ellipses"),           },
+        { "GwySelectionLine",      N_("Lines"),              },
+        { "GwySelectionPoint",     N_("Points"),             },
+        { "GwySelectionRectangle", N_("Rectangles"),         },
+    };
+
     GwySelection *sel;
+    const gchar *name;
+    guint i;
 
     gtk_tree_model_get(model, iter, MODEL_OBJECT, &sel, -1);
     g_return_if_fail(GWY_IS_SELECTION(sel));
-    g_object_set(renderer, "text", G_OBJECT_TYPE_NAME(sel), NULL);
+    name = G_OBJECT_TYPE_NAME(sel);
+    for (i = 0; i < G_N_ELEMENTS(type_names); i++) {
+        if (gwy_strequal(name, type_names[i].typename)) {
+            name = _(type_names[i].humanname);
+            break;
+        }
+    }
+    g_object_set(renderer, "text", name, NULL);
     g_object_unref(sel);
 }
 
