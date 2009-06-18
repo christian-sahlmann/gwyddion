@@ -95,62 +95,65 @@ struct _GwyDataViewClass {
     void (*reserved2)(void);
 };
 
-GType           gwy_data_view_get_type            (void) G_GNUC_CONST;
-GtkWidget*      gwy_data_view_new                 (GwyContainer *data);
-GwyPixmapLayer* gwy_data_view_get_base_layer      (GwyDataView *data_view);
-void            gwy_data_view_set_base_layer      (GwyDataView *data_view,
-                                                   GwyPixmapLayer *layer);
-GwyPixmapLayer* gwy_data_view_get_alpha_layer     (GwyDataView *data_view);
-void            gwy_data_view_set_alpha_layer     (GwyDataView *data_view,
-                                                   GwyPixmapLayer *layer);
-GwyVectorLayer* gwy_data_view_get_top_layer       (GwyDataView *data_view);
-void            gwy_data_view_set_top_layer       (GwyDataView *data_view,
-                                                   GwyVectorLayer *layer);
-const gchar*    gwy_data_view_get_data_prefix     (GwyDataView *data_view);
-void            gwy_data_view_set_data_prefix     (GwyDataView *data_view,
-                                                   const gchar *prefix);
-gdouble         gwy_data_view_get_hexcess         (GwyDataView* data_view);
-gdouble         gwy_data_view_get_vexcess         (GwyDataView* data_view);
-void            gwy_data_view_set_zoom            (GwyDataView *data_view,
-                                                   gdouble zoom);
-gdouble         gwy_data_view_get_zoom            (GwyDataView *data_view);
-gdouble         gwy_data_view_get_real_zoom       (GwyDataView *data_view);
-GwyContainer*   gwy_data_view_get_data            (GwyDataView *data_view);
-void            gwy_data_view_coords_xy_clamp     (GwyDataView *data_view,
-                                                   gint *xscr,
-                                                   gint *yscr);
-void            gwy_data_view_coords_xy_cut_line  (GwyDataView *data_view,
-                                                   gint *x0scr,
-                                                   gint *y0scr,
-                                                   gint *x1scr,
-                                                   gint *y1scr);
-void            gwy_data_view_coords_xy_to_real   (GwyDataView *data_view,
-                                                   gint xscr,
-                                                   gint yscr,
-                                                   gdouble *xreal,
-                                                   gdouble *yreal);
-void            gwy_data_view_coords_real_to_xy   (GwyDataView *data_view,
-                                                   gdouble xreal,
-                                                   gdouble yreal,
-                                                   gint *xscr,
-                                                   gint *yscr);
-gdouble         gwy_data_view_get_xmeasure        (GwyDataView *data_view);
-gdouble         gwy_data_view_get_ymeasure        (GwyDataView *data_view);
-void            gwy_data_view_get_pixel_data_sizes(GwyDataView *data_view,
-                                                   gint *xres,
-                                                   gint *yres);
-void            gwy_data_view_get_real_data_sizes (GwyDataView *data_view,
-                                                   gdouble *xreal,
-                                                   gdouble *yreal);
-void            gwy_data_view_get_metric          (GwyDataView *data_view,
-                                                   gdouble *metric);
-GdkPixbuf*      gwy_data_view_get_pixbuf          (GwyDataView *data_view,
-                                                   gint max_width,
-                                                   gint max_height);
-GdkPixbuf*      gwy_data_view_export_pixbuf       (GwyDataView *data_view,
-                                                   gdouble zoom,
-                                                   gboolean draw_alpha,
-                                                   gboolean draw_top);
+GType           gwy_data_view_get_type             (void) G_GNUC_CONST;
+GtkWidget*      gwy_data_view_new                  (GwyContainer *data);
+GwyPixmapLayer* gwy_data_view_get_base_layer       (GwyDataView *data_view);
+void            gwy_data_view_set_base_layer       (GwyDataView *data_view,
+                                                    GwyPixmapLayer *layer);
+GwyPixmapLayer* gwy_data_view_get_alpha_layer      (GwyDataView *data_view);
+void            gwy_data_view_set_alpha_layer      (GwyDataView *data_view,
+                                                    GwyPixmapLayer *layer);
+GwyVectorLayer* gwy_data_view_get_top_layer        (GwyDataView *data_view);
+void            gwy_data_view_set_top_layer        (GwyDataView *data_view,
+                                                    GwyVectorLayer *layer);
+const gchar*    gwy_data_view_get_data_prefix      (GwyDataView *data_view);
+void            gwy_data_view_set_data_prefix      (GwyDataView *data_view,
+                                                    const gchar *prefix);
+gdouble         gwy_data_view_get_hexcess          (GwyDataView* data_view);
+gdouble         gwy_data_view_get_vexcess          (GwyDataView* data_view);
+void            gwy_data_view_set_zoom             (GwyDataView *data_view,
+                                                    gdouble zoom);
+gdouble         gwy_data_view_get_zoom             (GwyDataView *data_view);
+gdouble         gwy_data_view_get_real_zoom        (GwyDataView *data_view);
+GwyContainer*   gwy_data_view_get_data             (GwyDataView *data_view);
+void            gwy_data_view_coords_xy_clamp      (GwyDataView *data_view,
+                                                    gint *xscr,
+                                                    gint *yscr);
+void            gwy_data_view_coords_xy_cut_line   (GwyDataView *data_view,
+                                                    gint *x0scr,
+                                                    gint *y0scr,
+                                                    gint *x1scr,
+                                                    gint *y1scr);
+void            gwy_data_view_coords_xy_to_real    (GwyDataView *data_view,
+                                                    gint xscr,
+                                                    gint yscr,
+                                                    gdouble *xreal,
+                                                    gdouble *yreal);
+void            gwy_data_view_coords_real_to_xy    (GwyDataView *data_view,
+                                                    gdouble xreal,
+                                                    gdouble yreal,
+                                                    gint *xscr,
+                                                    gint *yscr);
+gdouble         gwy_data_view_get_xmeasure         (GwyDataView *data_view);
+gdouble         gwy_data_view_get_ymeasure         (GwyDataView *data_view);
+void            gwy_data_view_get_pixel_data_sizes (GwyDataView *data_view,
+                                                    gint *xres,
+                                                    gint *yres);
+void            gwy_data_view_get_real_data_sizes  (GwyDataView *data_view,
+                                                    gdouble *xreal,
+                                                    gdouble *yreal);
+void            gwy_data_view_get_real_data_offsets(GwyDataView *data_view,
+                                                    gdouble *xoffset,
+                                                    gdouble *yoffset);
+void            gwy_data_view_get_metric           (GwyDataView *data_view,
+                                                    gdouble *metric);
+GdkPixbuf*      gwy_data_view_get_pixbuf           (GwyDataView *data_view,
+                                                    gint max_width,
+                                                    gint max_height);
+GdkPixbuf*      gwy_data_view_export_pixbuf        (GwyDataView *data_view,
+                                                    gdouble zoom,
+                                                    gboolean draw_alpha,
+                                                    gboolean draw_top);
 
 G_END_DECLS
 

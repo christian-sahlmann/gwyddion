@@ -35,6 +35,9 @@
 /* Rounding errors */
 #define EPS 1e-6
 
+#define GWY_DATA_VIEW_GET_PRIVATE(o) \
+   (G_TYPE_INSTANCE_GET_PRIVATE((o), GWY_TYPE_DATA_VIEW, GwyDataViewPrivate))
+
 enum {
     REDRAWN,
     RESIZED,
@@ -47,6 +50,14 @@ enum {
     PROP_0,
     PROP_ZOOM,
     PROP_DATA_PREFIX,
+};
+
+typedef struct _GwyDataViewPrivate GwyDataViewPrivate;
+
+/* The data field offsets, not display offsets */
+struct _GwyDataViewPrivate {
+    gdouble xoffset;
+    gdouble yoffset;
 };
 
 static void     gwy_data_view_destroy              (GtkObject *object);
@@ -124,6 +135,8 @@ gwy_data_view_class_init(GwyDataViewClass *klass)
     widget_class->motion_notify_event = gwy_data_view_motion_notify;
     widget_class->key_press_event = gwy_data_view_key_press;
     widget_class->key_release_event = gwy_data_view_key_release;
+
+    g_type_class_add_private(klass, sizeof(GwyDataViewPrivate));
 
     /**
      * GwyDataView:zoom:
@@ -773,6 +786,7 @@ gwy_data_view_key_release(GtkWidget *widget,
 static void
 gwy_data_view_update(GwyDataView *data_view)
 {
+    GwyDataViewPrivate *priv;
     GtkWidget *widget;
     GwyDataField *data_field;
     const gchar *key;
@@ -789,6 +803,10 @@ gwy_data_view_update(GwyDataView *data_view)
     data_view->yres = gwy_data_field_get_yres(data_field);
     data_view->xreal = gwy_data_field_get_xreal(data_field);
     data_view->yreal = gwy_data_field_get_yreal(data_field);
+
+    priv = GWY_DATA_VIEW_GET_PRIVATE(data_view);
+    priv->xoffset = gwy_data_field_get_xoffset(data_field);
+    priv->yoffset = gwy_data_field_get_yoffset(data_field);
 
     widget = GTK_WIDGET(data_view);
     if (!widget->window)
@@ -1336,7 +1354,7 @@ gwy_data_view_coords_real_to_xy(GwyDataView *data_view,
  *
  * This is a convenience method, the same values could be obtained
  * by gwy_data_field_get_xres() and gwy_data_field_get_yres() of the data
- * field displayed by base layer.
+ * field displayed by the base layer.
  **/
 void
 gwy_data_view_get_pixel_data_sizes(GwyDataView *data_view,
@@ -1361,10 +1379,10 @@ gwy_data_view_get_pixel_data_sizes(GwyDataView *data_view,
  *
  * Obtains physical dimensions of data displayed by a data view.
  *
- * Physical coordinates are always taken from data field displayed by base
+ * Physical coordinates are always taken from data field displayed by the base
  * layer.  This is a convenience method, the same values could be obtained
  * by gwy_data_field_get_xreal() and gwy_data_field_get_yreal() of the data
- * field displayed by base layer.
+ * field displayed by the base layer.
  **/
 void
 gwy_data_view_get_real_data_sizes(GwyDataView *data_view,
@@ -1402,6 +1420,39 @@ gwy_data_view_get_metric(GwyDataView *data_view,
     metric[0] = 1.0/(data_view->xmeasure*data_view->xmeasure);
     metric[1] = metric[2] = 0.0;
     metric[3] = 1.0/(data_view->ymeasure*data_view->ymeasure);
+}
+
+/**
+ * gwy_data_view_get_real_data_offsets:
+ * @data_view: A data view.
+ * @xoffset: Location to store physical x-offset of the top corner of
+ *           displayed data without excess (or %NULL).
+ * @yoffset: Location to store physical y-offset of the top corner of
+ *           displayed data without excess (or %NULL).
+ *
+ * Obtains physical offsets of data displayed by a data view.
+ *
+ * Physical coordinates are always taken from data field displayed by the base
+ * layer.  This is a convenience method, the same values could be obtained
+ * by gwy_data_field_get_xoffset() and gwy_data_field_get_yoffset() of the data
+ * field displayed by the base layer.
+ *
+ * Since: 2.16
+ **/
+void
+gwy_data_view_get_real_data_offsets(GwyDataView *data_view,
+                                    gdouble *xoffset,
+                                    gdouble *yoffset)
+{
+    GwyDataViewPrivate *priv;
+
+    g_return_if_fail(GWY_IS_DATA_VIEW(data_view));
+
+    priv = GWY_DATA_VIEW_GET_PRIVATE(data_view);
+    if (xoffset)
+        *xoffset = priv->xoffset;
+    if (yoffset)
+        *yoffset = priv->yoffset;
 }
 
 /**
