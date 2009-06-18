@@ -1,7 +1,7 @@
 2.16 (2000-00-00)
 Application:
-- Translations updated: French, Russian.
-- About dialog shows optional features built into the specific version.
+- Translations updated: Czech, French, Russian.
+- About dialog shows optional features compiled into the specific build.
 
 Libraries:
 - libgwyprocess: Missing data field invalidation after Laplace iteration was
@@ -11,6 +11,9 @@ Libraries:
   stride larger than one were fixed in simpleFFT (does not affect FFTW).
 - libgwydraw: GwySelection has a new virtual method crop().
 - libgwydraw: Function for filtering objects in GwySelection was added.
+- libgwyapp: Layout of previews in file dialogs, broken by Gtk+ 2.16, was
+  corrected.
+- libgwydgets: GwyDataView provides real offsets of displayed data field.
 
 Modules:
 - Selection manager tool (new): Copies selections to other chanels and files.
@@ -20,6 +23,8 @@ Modules:
 - Pixmap export: libTIFF is no longer used, TIFF files are written directly.
 - Rawfile: Support for 64bit integer built-in types was added.
 - Layer modules: Support for crop() method was added.
+- Point layer: Can display selection as vectors from the origin (new property
+  "draw-as-vector").
 
 Other:
 - Gwyddion no longer uses libTIFF on any platform (it used to be optionally
