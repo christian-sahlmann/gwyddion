@@ -258,10 +258,10 @@ fft_dialog(FFTArgs *args)
     enum { RESPONSE_RESET = 1 };
     static const GwyEnum fft_outputs[] = {
         { N_("Real + Imaginary"),  GWY_FFT_OUTPUT_REAL_IMG,  },
-        { N_("Module + Phase"),    GWY_FFT_OUTPUT_MOD_PHASE, },
+        { N_("Modulus + Phase"),   GWY_FFT_OUTPUT_MOD_PHASE, },
         { N_("Real"),              GWY_FFT_OUTPUT_REAL,      },
         { N_("Imaginary"),         GWY_FFT_OUTPUT_IMG,       },
-        { N_("Module"),            GWY_FFT_OUTPUT_MOD,       },
+        { N_("Modulus"),           GWY_FFT_OUTPUT_MOD,       },
         { N_("Phase"),             GWY_FFT_OUTPUT_PHASE,     },
     };
     GtkWidget *dialog, *table;
