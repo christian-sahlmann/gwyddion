@@ -431,8 +431,7 @@ gwy_layer_point_draw_vector(GwyVectorLayer *layer,
         case GWY_RENDERING_TARGET_SCREEN:
         gwy_data_view_coords_real_to_xy(data_view, -xoff, -yoff, &xi0, &yi0);
         gwy_data_view_coords_real_to_xy(data_view, xy[0], xy[1], &xi1, &yi1);
-        gwy_data_view_coords_xy_clamp(data_view, &xi0, &yi0);
-        gwy_data_view_coords_xy_clamp(data_view, &xi1, &yi1);
+        gwy_data_view_coords_xy_cut_line(data_view, &xi0, &yi0, &xi1, &yi1);
         break;
 
         case GWY_RENDERING_TARGET_PIXMAP_IMAGE:
