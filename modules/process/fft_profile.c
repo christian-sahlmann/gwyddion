@@ -64,7 +64,8 @@ typedef struct {
     GtkWidget *fixres;
     GtkWidget *interpolation;
     GtkWidget *view;
-    GwyDataField *fftfield;
+    GwyDataField *psdffield;
+    GwyDataField *modfield;
     GwySelection *selection;
     GtkWidget *graph;
     GwyDataLine *line;
@@ -93,8 +94,9 @@ static void          prof_update_curve          (ProfControls *controls,
                                                  gint i);
 static void          prof_execute               (ProfControls *controls,
                                                  GwyContainer *container);
-static GwyDataField* prof_fft_modulus           (GwyDataField *dfield,
+static GwyDataField* prof_psdf                  (GwyDataField *dfield,
                                                  const ProfArgs *args);
+static GwyDataField* prof_sqrt                  (GwyDataField *dfield);
 static void          prof_load_args             (GwyContainer *container,
                                                  ProfArgs *args);
 static void          prof_save_args             (GwyContainer *container,
@@ -111,7 +113,8 @@ static const ProfArgs prof_defaults = {
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    N_("Reads radial profiles of two-dimensional Fourier coefficients."),
+    N_("Reads radial profiles of two-dimensional power spectrum density "
+       "function."),
     "Yeti <yeti@gwyddion.net>",
     "1.0",
     "David Nečas (Yeti)",
@@ -125,11 +128,11 @@ module_register(void)
 {
     gwy_process_func_register("fft_profile",
                               (GwyProcessFunc)&fft_profile,
-                              N_("/_Statistics/_FFT Profile..."),
+                              N_("/_Statistics/_PDSF Profile..."),
                               GWY_STOCK_GRAPH_HALFGAUSS,
                               PROF_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
-                              N_("Read radial FFT modulus profiles"));
+                              N_("Read radial PSDF profiles"));
 
     return TRUE;
 }
@@ -171,9 +174,10 @@ prof_dialog(ProfArgs *args,
     gint row;
 
     controls.args = args;
-    controls.fftfield = prof_fft_modulus(dfield, args);
+    controls.psdffield = prof_psdf(dfield, args);
+    controls.modfield = prof_sqrt(controls.psdffield);
 
-    controls.dialog = gtk_dialog_new_with_buttons(_("Radial FFT Profile"),
+    controls.dialog = gtk_dialog_new_with_buttons(_("Radial PSDF Profile"),
                                                   NULL, 0,
                                                   GTK_STOCK_CLEAR,
                                                   RESPONSE_CLEAR,
@@ -194,8 +198,8 @@ prof_dialog(ProfArgs *args,
 
     controls.mydata = gwy_container_new();
     gwy_container_set_object_by_name(controls.mydata, "/0/data",
-                                     controls.fftfield);
-    g_object_unref(controls.fftfield);
+                                     controls.modfield);
+    g_object_unref(controls.modfield);
     gwy_container_set_string_by_name(controls.mydata, "/0/base/palette",
                                      g_strdup("DFit"));
     gwy_container_set_enum_by_name(controls.mydata, "/0/base/range-type",
@@ -232,7 +236,7 @@ prof_dialog(ProfArgs *args,
 
     controls.gmodel = gwy_graph_model_new();
     g_object_set(controls.gmodel,
-                 "title", _("FFT Modulus"),
+                 "title", _("PSDF Profile"),
                  NULL);
     controls.line = gwy_data_line_new(1, 1.0, FALSE);
 
@@ -305,10 +309,7 @@ prof_dialog(ProfArgs *args,
             case GTK_RESPONSE_DELETE_EVENT:
             gtk_widget_destroy(controls.dialog);
             case GTK_RESPONSE_NONE:
-            g_object_unref(controls.mydata);
-            g_object_unref(controls.gmodel);
-            g_object_unref(controls.line);
-            return;
+            goto finalize;
             break;
 
             case GTK_RESPONSE_OK:
@@ -326,6 +327,8 @@ prof_dialog(ProfArgs *args,
 
     gtk_widget_destroy(controls.dialog);
     prof_execute(&controls, data);
+finalize:
+    g_object_unref(controls.psdffield);
     g_object_unref(controls.mydata);
     g_object_unref(controls.gmodel);
     g_object_unref(controls.line);
@@ -397,12 +400,12 @@ prof_update_curve(ProfControls *controls,
 
     /* The ω=0 pixel is always at res/2, for even dimensions it means it is
      * shifted half-a-pixel to the right from the precise centre. */
-    xl0 = gwy_data_field_get_xres(controls->fftfield)/2;
-    yl0 = gwy_data_field_get_yres(controls->fftfield)/2;
-    xoff = gwy_data_field_get_xoffset(controls->fftfield);
-    yoff = gwy_data_field_get_yoffset(controls->fftfield);
-    xl1 = floor(gwy_data_field_rtoj(controls->fftfield, xy[0]));
-    yl1 = floor(gwy_data_field_rtoi(controls->fftfield, xy[1]));
+    xl0 = gwy_data_field_get_xres(controls->psdffield)/2;
+    yl0 = gwy_data_field_get_yres(controls->psdffield)/2;
+    xoff = gwy_data_field_get_xoffset(controls->psdffield);
+    yoff = gwy_data_field_get_yoffset(controls->psdffield);
+    xl1 = floor(gwy_data_field_rtoj(controls->psdffield, xy[0]));
+    yl1 = floor(gwy_data_field_rtoi(controls->psdffield, xy[1]));
 
     if (!controls->args->fixres) {
         lineres = GWY_ROUND(hypot(abs(xl0 - xl1) + 1, abs(yl0 - yl1) + 1));
@@ -411,7 +414,7 @@ prof_update_curve(ProfControls *controls,
     else
         lineres = controls->args->resolution;
 
-    gwy_data_field_get_profile(controls->fftfield, controls->line,
+    gwy_data_field_get_profile(controls->psdffield, controls->line,
                                xl0, yl0, xl1, yl1,
                                lineres,
                                1,
@@ -436,7 +439,7 @@ prof_update_curve(ProfControls *controls,
     }
 
     gwy_graph_curve_model_set_data_from_dataline(gcmodel, controls->line, 0, 0);
-    desc = g_strdup_printf(_("FFT modulus %.1f°"),
+    desc = g_strdup_printf(_("PSDF %.1f°"),
                            180.0/G_PI*atan2(-(xy[1] + yoff), xy[0] + xoff));
     g_object_set(gcmodel, "description", desc, NULL);
     g_free(desc);
@@ -479,8 +482,8 @@ prof_execute(ProfControls *controls,
 }
 
 static GwyDataField*
-prof_fft_modulus(GwyDataField *dfield,
-                 const ProfArgs *args)
+prof_psdf(GwyDataField *dfield,
+          const ProfArgs *args)
 {
     GwyDataField *fftre, *fftim;
     GwySIUnit *xyunit;
@@ -503,15 +506,17 @@ prof_fft_modulus(GwyDataField *dfield,
     re = gwy_data_field_get_data(fftre);
     im = gwy_data_field_get_data_const(fftim);
 
-    /* Put the modulus to fftre */
+    /* Put the PSDF to fftre. */
     for (i = 0; i < xres*yres; i++)
-        re[i] = hypot(re[i], im[i]);
+        re[i] = re[i]*re[i] + im[i]*im[i];
 
     g_object_unref(fftim);
 
     gwy_data_field_2dfft_humanize(fftre);
     xyunit = gwy_data_field_get_si_unit_xy(fftre);
     gwy_si_unit_power(xyunit, -1, xyunit);
+
+    /* TODO: The z units */
 
     gwy_data_field_set_xreal(fftre, 1.0/gwy_data_field_get_xmeasure(fftre));
     gwy_data_field_set_yreal(fftre, 1.0/gwy_data_field_get_ymeasure(fftre));
@@ -525,6 +530,23 @@ prof_fft_modulus(GwyDataField *dfield,
     gwy_data_field_set_yoffset(fftre, -gwy_data_field_itor(fftre, r));
 
     return fftre;
+}
+
+static GwyDataField*
+prof_sqrt(GwyDataField *dfield)
+{
+    gint xres, yres, i;
+    gdouble *data;
+
+    dfield = gwy_data_field_duplicate(dfield);
+    xres = gwy_data_field_get_xres(dfield);
+    yres = gwy_data_field_get_yres(dfield);
+    data = gwy_data_field_get_data(dfield);
+
+    for (i = 0; i < xres*yres; i++)
+        data[i] = sqrt(data[i]);
+
+    return dfield;
 }
 
 static const gchar separate_key[]      = "/module/fft_profile/separate";
