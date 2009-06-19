@@ -29,6 +29,7 @@
 #include <libgwydgets/gwylayer-basic.h>
 #include <libgwydgets/gwygraph.h>
 #include <libgwydgets/gwydgetutils.h>
+#include <libgwydgets/gwycombobox.h>
 #include <libgwydgets/gwystock.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwymoduleutils.h>
@@ -38,7 +39,8 @@
 
 enum {
     PREVIEW_SIZE = 400,
-    NLINES = 18,
+    GRAPH_WIDTH = 320,
+    NLINES = 12,
     MIN_RESOLUTION = 4,
     MAX_RESOLUTION = 16384
 };
@@ -59,6 +61,9 @@ typedef struct {
     ProfArgs *args;
     GtkWidget *dialog;
     GtkWidget *ok;
+    GtkObject *resolution;
+    GtkWidget *fixres;
+    GtkWidget *interpolation;
     GtkWidget *view;
     GwyDataField *fftfield;
     GwySelection *selection;
@@ -77,10 +82,12 @@ static void          prof_dialog                (ProfArgs *args,
                                                  GwyContainer *data,
                                                  GwyDataField *dfield,
                                                  gint id);
-static void          prof_dialog_update_controls(ProfControls *controls,
-                                                 ProfArgs *args);
-static void          prof_dialog_update_values  (ProfControls *controls,
-                                                 ProfArgs *args);
+static void          prof_fixres_changed        (ProfControls *controls,
+                                                 GtkToggleButton *check);
+static void          prof_resolution_changed    (ProfControls *controls,
+                                                 GtkAdjustment *adj);
+static void          prof_interpolation_changed (GtkComboBox *combo,
+                                                 ProfControls *controls);
 static void          prof_separate_changed      (ProfControls *controls);
 static void          prof_selection_changed     (ProfControls *controls,
                                                  gint hint);
@@ -152,7 +159,9 @@ prof_dialog(ProfArgs *args,
             GwyDataField *dfield,
             gint id)
 {
-    GtkWidget *dialog, *table, *hbox, *vbox, *label, *pivot;
+    GtkWidget *dialog, *table, *hbox, *hbox2, *vbox, *label;
+    GwyGraph *graph;
+    GwyGraphArea *area;
     ProfControls controls;
     gint response;
     GwyPixmapLayer *layer;
@@ -222,12 +231,15 @@ prof_dialog(ProfArgs *args,
     controls.line = gwy_data_line_new(1, 1.0, FALSE);
 
     controls.graph = gwy_graph_new(controls.gmodel);
-    gwy_graph_set_axis_visible(GWY_GRAPH(controls.graph), GTK_POS_LEFT, FALSE);
-    gwy_graph_set_axis_visible(GWY_GRAPH(controls.graph), GTK_POS_RIGHT, FALSE);
-    gwy_graph_set_axis_visible(GWY_GRAPH(controls.graph), GTK_POS_TOP, FALSE);
-    gwy_graph_set_axis_visible(GWY_GRAPH(controls.graph), GTK_POS_BOTTOM, FALSE);
-    gwy_graph_enable_user_input(GWY_GRAPH(controls.graph), FALSE);
-    /* TODO: setup the area */
+    graph = GWY_GRAPH(controls.graph);
+    gtk_widget_set_size_request(controls.graph, GRAPH_WIDTH, -1);
+    gwy_graph_set_axis_visible(graph, GTK_POS_LEFT, FALSE);
+    gwy_graph_set_axis_visible(graph, GTK_POS_RIGHT, FALSE);
+    gwy_graph_set_axis_visible(graph, GTK_POS_TOP, FALSE);
+    gwy_graph_set_axis_visible(graph, GTK_POS_BOTTOM, FALSE);
+    gwy_graph_enable_user_input(graph, FALSE);
+    area = GWY_GRAPH_AREA(gwy_graph_get_area(graph));
+    gwy_graph_area_enable_user_input(area, FALSE);
     gtk_box_pack_start(GTK_BOX(vbox), controls.graph, TRUE, TRUE, 0);
 
     table = gtk_table_new(3, 4, FALSE);
@@ -237,14 +249,47 @@ prof_dialog(ProfArgs *args,
     gtk_box_pack_start(GTK_BOX(vbox), table, FALSE, FALSE, 0);
     row = 0;
 
+    controls.resolution = gtk_adjustment_new(controls.args->resolution,
+                                             MIN_RESOLUTION, MAX_RESOLUTION,
+                                             1, 10, 0);
+    gwy_table_attach_hscale(GTK_WIDGET(table), row, _("_Fix res.:"), NULL,
+                            controls.resolution,
+                            GWY_HSCALE_CHECK | GWY_HSCALE_SQRT);
+    g_signal_connect_swapped(controls.resolution, "value-changed",
+                             G_CALLBACK(prof_resolution_changed), &controls);
+    controls.fixres = gwy_table_hscale_get_check(controls.resolution);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.fixres),
+                                 controls.args->fixres);
+    g_signal_connect_swapped(controls.fixres, "toggled",
+                             G_CALLBACK(prof_fixres_changed), &controls);
+    gwy_table_hscale_set_sensitive(controls.resolution, controls.args->fixres);
+    row++;
+
     controls.separate = gtk_check_button_new_with_mnemonic(_("_Separate curves"));
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.separate),
+                                 args->separate);
     gtk_table_attach(GTK_TABLE(table), controls.separate,
                      0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     g_signal_connect_swapped(controls.separate, "toggled",
                              G_CALLBACK(prof_separate_changed), &controls);
     row++;
 
-    prof_dialog_update_controls(&controls, args);
+    hbox2 = gtk_hbox_new(FALSE, 6);
+    gtk_table_attach(GTK_TABLE(table), hbox2,
+                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+
+    label = gtk_label_new_with_mnemonic(_("_Interpolation type:"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_box_pack_start(GTK_BOX(hbox2), label, FALSE, FALSE, 0);
+
+    controls.interpolation
+        = gwy_enum_combo_box_new(gwy_interpolation_type_get_enum(), -1,
+                                 G_CALLBACK(prof_interpolation_changed),
+                                 &controls,
+                                 controls.args->interpolation, TRUE);
+    gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls.interpolation);
+    gtk_box_pack_end(GTK_BOX(hbox2), controls.interpolation, FALSE, FALSE, 0);
+    row++;
 
     /* finished initializing, allow instant updates */
     controls.in_init = FALSE;
@@ -267,7 +312,7 @@ prof_dialog(ProfArgs *args,
             break;
 
             case RESPONSE_CLEAR:
-            g_printerr("IMPLEMENT ME!\n");
+            gwy_selection_clear(controls.selection);
             break;
 
             default:
@@ -284,19 +329,28 @@ prof_dialog(ProfArgs *args,
 }
 
 static void
-prof_dialog_update_controls(ProfControls *controls,
-                            ProfArgs *args)
+prof_resolution_changed(ProfControls *controls,
+                        GtkAdjustment *adj)
 {
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->separate),
-                                 args->separate);
+    controls->args->resolution = gwy_adjustment_get_int(adj);
+    /* Resolution can be changed only when fixres == TRUE */
+    prof_selection_changed(controls, -1);
 }
 
 static void
-prof_dialog_update_values(ProfControls *controls,
-                          ProfArgs *args)
+prof_fixres_changed(ProfControls *controls,
+                    GtkToggleButton *check)
 {
-    args->separate
-        = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->separate));
+    controls->args->fixres = gtk_toggle_button_get_active(check);
+    prof_selection_changed(controls, -1);
+}
+
+static void
+prof_interpolation_changed(GtkComboBox *combo,
+                           ProfControls *controls)
+{
+    controls->args->interpolation = gwy_enum_combo_box_get_active(combo);
+    prof_selection_changed(controls, -1);
 }
 
 static void
@@ -330,16 +384,19 @@ prof_update_curve(ProfControls *controls,
                   gint i)
 {
     GwyGraphCurveModel *gcmodel;
-    gdouble xy[4];
+    gdouble xy[4], xoff, yoff;
     gint xl0, yl0, xl1, yl1;
     gint n, lineres;
     gchar *desc;
 
     g_return_if_fail(gwy_selection_get_object(controls->selection, i, xy));
 
-    /* FIXME: odd/even */
+    /* The ω=0 pixel is always at res/2, for even dimensions it means it is
+     * shifted half-a-pixel to the right from the precise centre. */
     xl0 = gwy_data_field_get_xres(controls->fftfield)/2;
     yl0 = gwy_data_field_get_yres(controls->fftfield)/2;
+    xoff = gwy_data_field_get_xoffset(controls->fftfield);
+    yoff = gwy_data_field_get_yoffset(controls->fftfield);
     xl1 = floor(gwy_data_field_rtoj(controls->fftfield, xy[0]));
     yl1 = floor(gwy_data_field_rtoi(controls->fftfield, xy[1]));
 
@@ -375,7 +432,8 @@ prof_update_curve(ProfControls *controls,
     }
 
     gwy_graph_curve_model_set_data_from_dataline(gcmodel, controls->line, 0, 0);
-    desc = g_strdup_printf(_("Profile %.1f°"), 180.0/G_PI*atan2(xy[1], xy[0]));
+    desc = g_strdup_printf(_("FFT modulus %.1f°"),
+                           180.0/G_PI*atan2(-(xy[1] + yoff), xy[0] + xoff));
     g_object_set(gcmodel, "description", desc, NULL);
     g_free(desc);
 }
