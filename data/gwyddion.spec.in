@@ -160,13 +160,17 @@ sed -i -e '1s/env *//' plugins/process/*.{py,rb,pl}
 
 %build
 %configure --without-pascal --disable-rpath \
-	   --without-kde4-thumbnailer %{?_with_kde4_thumbnailer}
+           --without-kde4-thumbnailer %{?_with_kde4_thumbnailer}
 make %{?_smp_mflags}
 
 
 %install
 rm -rf $RPM_BUILD_ROOT
 make install DESTDIR=$RPM_BUILD_ROOT
+# Install the icon to the hicolor theme *and* to /usr/share/pixmaps because
+# some distros expect it in one place, some in another.
+mkdir -p $RPM_BUILD_ROOT%{_datadir}/pixmaps
+install pixmaps/%{name}.png $RPM_BUILD_ROOT%{_datadir}/pixmaps
 %find_lang %{name}
 
 # Get rid of .la files if some silly distros (hello Mandriva) overwrote our
@@ -235,6 +239,7 @@ fi
 %{_mandir}/man1/%{name}.1*
 %{_mandir}/man1/%{name}-thumbnailer.1*
 %{_datadir}/icons/hicolor/48x48/apps/%{name}.png
+%{_datadir}/pixmaps/%{name}.png
 %{pkglibdir}/modules/file/*.so
 %{pkglibdir}/modules/graph/*.so
 %{pkglibdir}/modules/layer/*.so
