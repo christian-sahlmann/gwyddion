@@ -60,7 +60,6 @@ typedef struct {
 typedef struct {
     ProfArgs *args;
     GtkWidget *dialog;
-    GtkWidget *ok;
     GtkObject *resolution;
     GtkWidget *fixres;
     GtkWidget *interpolation;
@@ -72,7 +71,6 @@ typedef struct {
     GwyGraphModel *gmodel;
     GtkWidget *separate;
     GwyContainer *mydata;
-    gboolean in_init;
 } ProfControls;
 
 static gboolean      module_register            (void);
@@ -93,6 +91,8 @@ static void          prof_selection_changed     (ProfControls *controls,
                                                  gint hint);
 static void          prof_update_curve          (ProfControls *controls,
                                                  gint i);
+static void          prof_execute               (ProfControls *controls,
+                                                 GwyContainer *container);
 static GwyDataField* prof_fft_modulus           (GwyDataField *dfield,
                                                  const ProfArgs *args);
 static void          prof_load_args             (GwyContainer *container,
@@ -159,7 +159,9 @@ prof_dialog(ProfArgs *args,
             GwyDataField *dfield,
             gint id)
 {
-    GtkWidget *dialog, *table, *hbox, *hbox2, *vbox, *label;
+    GtkWidget *hbox, *hbox2, *vbox, *label;
+    GtkTable *table;
+    GtkDialog *dialog;
     GwyGraph *graph;
     GwyGraphArea *area;
     ProfControls controls;
@@ -169,20 +171,21 @@ prof_dialog(ProfArgs *args,
     gint row;
 
     controls.args = args;
-    controls.in_init = TRUE;
     controls.fftfield = prof_fft_modulus(dfield, args);
 
-    dialog = gtk_dialog_new_with_buttons(_("Radial FFT Profile"), NULL, 0,
-                                         NULL);
-    gtk_dialog_add_button(GTK_DIALOG(dialog),
-                          GTK_STOCK_CLEAR, RESPONSE_CLEAR);
-    gtk_dialog_add_button(GTK_DIALOG(dialog),
-                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL);
-    controls.ok = gtk_dialog_add_button(GTK_DIALOG(dialog),
-                                        GTK_STOCK_OK, GTK_RESPONSE_OK);
-    gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
-    gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
-    controls.dialog = dialog;
+    controls.dialog = gtk_dialog_new_with_buttons(_("Radial FFT Profile"),
+                                                  NULL, 0,
+                                                  GTK_STOCK_CLEAR,
+                                                  RESPONSE_CLEAR,
+                                                  GTK_STOCK_CANCEL,
+                                                  GTK_RESPONSE_CANCEL,
+                                                  GTK_STOCK_OK,
+                                                  GTK_RESPONSE_OK,
+                                                  NULL);
+    dialog = GTK_DIALOG(controls.dialog);
+    gtk_dialog_set_has_separator(dialog, FALSE);
+    gtk_dialog_set_default_response(dialog, GTK_RESPONSE_OK);
+    gtk_dialog_set_response_sensitive(dialog, GTK_RESPONSE_OK, FALSE);
 
     hbox = gtk_hbox_new(FALSE, 2);
 
@@ -228,6 +231,9 @@ prof_dialog(ProfArgs *args,
     gtk_box_pack_start(GTK_BOX(hbox), vbox, TRUE, TRUE, 4);
 
     controls.gmodel = gwy_graph_model_new();
+    g_object_set(controls.gmodel,
+                 "title", _("FFT Modulus"),
+                 NULL);
     controls.line = gwy_data_line_new(1, 1.0, FALSE);
 
     controls.graph = gwy_graph_new(controls.gmodel);
@@ -242,11 +248,11 @@ prof_dialog(ProfArgs *args,
     gwy_graph_area_enable_user_input(area, FALSE);
     gtk_box_pack_start(GTK_BOX(vbox), controls.graph, TRUE, TRUE, 0);
 
-    table = gtk_table_new(3, 4, FALSE);
-    gtk_table_set_row_spacings(GTK_TABLE(table), 2);
-    gtk_table_set_col_spacings(GTK_TABLE(table), 6);
+    table = GTK_TABLE(gtk_table_new(3, 4, FALSE));
+    gtk_table_set_row_spacings(table, 2);
+    gtk_table_set_col_spacings(table, 6);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
-    gtk_box_pack_start(GTK_BOX(vbox), table, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(vbox), GTK_WIDGET(table), FALSE, FALSE, 0);
     row = 0;
 
     controls.resolution = gtk_adjustment_new(controls.args->resolution,
@@ -268,14 +274,14 @@ prof_dialog(ProfArgs *args,
     controls.separate = gtk_check_button_new_with_mnemonic(_("_Separate curves"));
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.separate),
                                  args->separate);
-    gtk_table_attach(GTK_TABLE(table), controls.separate,
+    gtk_table_attach(table, controls.separate,
                      0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     g_signal_connect_swapped(controls.separate, "toggled",
                              G_CALLBACK(prof_separate_changed), &controls);
     row++;
 
     hbox2 = gtk_hbox_new(FALSE, 6);
-    gtk_table_attach(GTK_TABLE(table), hbox2,
+    gtk_table_attach(table, hbox2,
                      0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
     label = gtk_label_new_with_mnemonic(_("_Interpolation type:"));
@@ -291,16 +297,13 @@ prof_dialog(ProfArgs *args,
     gtk_box_pack_end(GTK_BOX(hbox2), controls.interpolation, FALSE, FALSE, 0);
     row++;
 
-    /* finished initializing, allow instant updates */
-    controls.in_init = FALSE;
-
-    gtk_widget_show_all(dialog);
+    gtk_widget_show_all(controls.dialog);
     do {
-        response = gtk_dialog_run(GTK_DIALOG(dialog));
+        response = gtk_dialog_run(dialog);
         switch (response) {
             case GTK_RESPONSE_CANCEL:
             case GTK_RESPONSE_DELETE_EVENT:
-            gtk_widget_destroy(dialog);
+            gtk_widget_destroy(controls.dialog);
             case GTK_RESPONSE_NONE:
             g_object_unref(controls.mydata);
             g_object_unref(controls.gmodel);
@@ -321,11 +324,11 @@ prof_dialog(ProfArgs *args,
         }
     } while (response != GTK_RESPONSE_OK);
 
-    g_printerr("IMPLEMENT ME!\n");
+    gtk_widget_destroy(controls.dialog);
+    prof_execute(&controls, data);
     g_object_unref(controls.mydata);
     g_object_unref(controls.gmodel);
     g_object_unref(controls.line);
-    gtk_widget_destroy(dialog);
 }
 
 static void
@@ -376,7 +379,8 @@ prof_selection_changed(ProfControls *controls,
         prof_update_curve(controls, hint);
     }
 
-    gtk_widget_set_sensitive(controls->ok, n > 0);
+    gtk_dialog_set_response_sensitive(GTK_DIALOG(controls->dialog),
+                                      GTK_RESPONSE_OK, n > 0);
 }
 
 static void
@@ -436,6 +440,42 @@ prof_update_curve(ProfControls *controls,
                            180.0/G_PI*atan2(-(xy[1] + yoff), xy[0] + xoff));
     g_object_set(gcmodel, "description", desc, NULL);
     g_free(desc);
+}
+
+static void
+prof_execute(ProfControls *controls,
+             GwyContainer *container)
+{
+    GwyGraphCurveModel *gcmodel;
+    GwyGraphModel *gmodel;
+    gchar *s;
+    gint i, n;
+
+    n = gwy_selection_get_data(controls->selection, NULL);
+    g_return_if_fail(n);
+
+    if (!controls->args->separate) {
+        gmodel = gwy_graph_model_duplicate(controls->gmodel);
+        g_object_set(gmodel, "label-visible", TRUE, NULL);
+        gwy_app_data_browser_add_graph_model(gmodel, container, TRUE);
+        g_object_unref(gmodel);
+
+        return;
+    }
+
+    for (i = 0; i < n; i++) {
+        gmodel = gwy_graph_model_new_alike(controls->gmodel);
+        g_object_set(gmodel, "label-visible", TRUE, NULL);
+        gcmodel = gwy_graph_model_get_curve(controls->gmodel, i);
+        gcmodel = gwy_graph_curve_model_duplicate(gcmodel);
+        gwy_graph_model_add_curve(gmodel, gcmodel);
+        g_object_unref(gcmodel);
+        g_object_get(gcmodel, "description", &s, NULL);
+        g_object_set(gmodel, "title", s, NULL);
+        g_free(s);
+        gwy_app_data_browser_add_graph_model(gmodel, container, TRUE);
+        g_object_unref(gmodel);
+    }
 }
 
 static GwyDataField*
