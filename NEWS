@@ -14,6 +14,7 @@ Libraries:
 - libgwyapp: Layout of previews in file dialogs, broken by Gtk+ 2.16, was
   corrected.
 - libgwydgets: GwyDataView provides real offsets of displayed data field.
+- libgwydgets: Truncated logarithmic axes were really fixed.
 
 Modules:
 - Selection manager tool (new): Copies selections to other chanels and files.
@@ -21,6 +22,7 @@ Modules:
 - PSIA: Format version 1.0.2 is supported.
 - OLS, JPK: GwyTIFF is used instead of libTIFF for file loading.  This should
   fix a number of TIFF-related problems, namely on MS Windows.
+- RHK SM3: Bug that prevented loading of some SM3 files was fixed.
 - Pixmap export: libTIFF is no longer used, TIFF files are written directly.
 - Rawfile: Support for 64bit integer built-in types was added.
 - Layer modules: Support for crop() method was added.
