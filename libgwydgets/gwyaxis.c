@@ -1305,7 +1305,7 @@ gwy_axis_normalscale(GwyAxis *a)
 static gboolean
 gwy_axis_logscale(GwyAxis *a)
 {
-    gint i;
+    gint i, n;
     gdouble max, min, logmax, logmin, tickstep, base;
     GwyAxisLabeledTick mjt;
     GwyAxisTick mit;
@@ -1325,9 +1325,15 @@ gwy_axis_logscale(GwyAxis *a)
 
     /* Ticks will be linearly distributed again */
     /* Major ticks - will be equally ditributed in the log domain 1,10,100 */
-    tickstep = (ceil(logmax) - floor(logmin))/MAX(a->par.major_maxticks - 1, 1);
+    n = MAX(a->par.major_maxticks - 1, 1);
+    tickstep = (ceil(logmax) - floor(logmin))/n;
     tickstep = ceil(tickstep);
-    base = (ceil(logmin/tickstep) - 1)*tickstep; /* starting value */
+    for (i = 0; i < 3; i++) {
+        base = (ceil(logmin/tickstep) - 1)*tickstep; /* starting value */
+        if (base <= logmin && base + n*tickstep >= logmax)
+            break;
+        tickstep += 1.0;
+    }
     logmin = base;
     i = 0;
     do {
