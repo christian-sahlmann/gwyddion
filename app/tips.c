@@ -330,6 +330,11 @@ static const StartupTip tips[] = {
         N_("Color Range tool offers several false color scale mapping modes "
            "and can make any of them the default mode."),
     },
+    {
+        GWY_STOCK_SELECTIONS,
+        N_("Dragging selections from Selections Manager tool to a data window "
+           "copies the selection to the target data."),
+    },
     /* General and bragging. */
     {
         GWY_STOCK_GWYDDION,
