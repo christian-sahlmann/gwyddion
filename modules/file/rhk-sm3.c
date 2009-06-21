@@ -219,7 +219,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports RHK Technology SM3 data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.12",
+    "0.13",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -426,8 +426,9 @@ rhk_sm3_read_page(const guchar **buffer,
                         _("End of file reached in color data header."));
             goto fail;
         }
-        /* Info size includes itself */
-        page->color_info.size = gwy_get_guint32_le(&p) - 2;
+        /* XPMPro manual says the length field is 4bytes, but reality seems to
+         * disagree vehemently. */
+        page->color_info.size = gwy_get_guint16_le(&p);
         if (*len < (p - *buffer) + page->color_info.size) {
             g_set_error(error, GWY_MODULE_FILE_ERROR,
                         GWY_MODULE_FILE_ERROR_DATA,
