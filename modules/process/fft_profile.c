@@ -25,6 +25,7 @@
 #include <libgwyddion/gwymath.h>
 #include <libprocess/inttrans.h>
 #include <libprocess/gwyprocesstypes.h>
+#include <libprocess/linestats.h>
 #include <libgwydgets/gwydataview.h>
 #include <libgwydgets/gwylayer-basic.h>
 #include <libgwydgets/gwygraph.h>
@@ -64,6 +65,8 @@ typedef struct {
     GtkWidget *fixres;
     GtkWidget *interpolation;
     GtkWidget *view;
+    gdouble hx;
+    gdouble hy;
     GwyDataField *psdffield;
     GwyDataField *modfield;
     GwySelection *selection;
@@ -176,6 +179,8 @@ prof_dialog(ProfArgs *args,
     controls.args = args;
     controls.psdffield = prof_psdf(dfield, args);
     controls.modfield = prof_sqrt(controls.psdffield);
+    controls.hx = gwy_data_field_get_xmeasure(dfield)/(2*G_PI);
+    controls.hy = gwy_data_field_get_xmeasure(dfield)/(2*G_PI);
 
     controls.dialog = gtk_dialog_new_with_buttons(_("Radial PSDF Profile"),
                                                   NULL, 0,
@@ -237,6 +242,8 @@ prof_dialog(ProfArgs *args,
     controls.gmodel = gwy_graph_model_new();
     g_object_set(controls.gmodel,
                  "title", _("PSDF Profile"),
+                 "axis-label-bottom", "k",
+                 "axis-label-left", "W",
                  NULL);
     controls.line = gwy_data_line_new(1, 1.0, FALSE);
 
@@ -391,7 +398,7 @@ prof_update_curve(ProfControls *controls,
                   gint i)
 {
     GwyGraphCurveModel *gcmodel;
-    gdouble xy[4], xoff, yoff;
+    gdouble xy[4], h;
     gint xl0, yl0, xl1, yl1;
     gint n, lineres;
     gchar *desc;
@@ -402,10 +409,11 @@ prof_update_curve(ProfControls *controls,
      * shifted half-a-pixel to the right from the precise centre. */
     xl0 = gwy_data_field_get_xres(controls->psdffield)/2;
     yl0 = gwy_data_field_get_yres(controls->psdffield)/2;
-    xoff = gwy_data_field_get_xoffset(controls->psdffield);
-    yoff = gwy_data_field_get_yoffset(controls->psdffield);
     xl1 = floor(gwy_data_field_rtoj(controls->psdffield, xy[0]));
     yl1 = floor(gwy_data_field_rtoi(controls->psdffield, xy[1]));
+    xy[0] += gwy_data_field_get_xoffset(controls->psdffield);
+    xy[1] += gwy_data_field_get_yoffset(controls->psdffield);
+    h = hypot(controls->hx*xy[0], controls->hy*xy[1])/hypot(xy[0], xy[1]);
 
     if (!controls->args->fixres) {
         lineres = GWY_ROUND(hypot(abs(xl0 - xl1) + 1, abs(yl0 - yl1) + 1));
@@ -419,6 +427,7 @@ prof_update_curve(ProfControls *controls,
                                lineres,
                                1,
                                controls->args->interpolation);
+    gwy_data_line_multiply(controls->line, h);
 
     n = gwy_graph_model_get_n_curves(controls->gmodel);
     if (i < n) {
@@ -439,8 +448,7 @@ prof_update_curve(ProfControls *controls,
     }
 
     gwy_graph_curve_model_set_data_from_dataline(gcmodel, controls->line, 0, 0);
-    desc = g_strdup_printf(_("PSDF %.1f°"),
-                           180.0/G_PI*atan2(-(xy[1] + yoff), xy[0] + xoff));
+    desc = g_strdup_printf(_("PSDF %.1f°"), 180.0/G_PI*atan2(-xy[1], xy[0]));
     g_object_set(gcmodel, "description", desc, NULL);
     g_free(desc);
 }
@@ -486,7 +494,7 @@ prof_psdf(GwyDataField *dfield,
           const ProfArgs *args)
 {
     GwyDataField *fftre, *fftim;
-    GwySIUnit *xyunit;
+    GwySIUnit *xyunit, *zunit;
     const gdouble *im;
     gdouble *re;
     gint xres, yres, i, res;
@@ -514,9 +522,10 @@ prof_psdf(GwyDataField *dfield,
 
     gwy_data_field_2dfft_humanize(fftre);
     xyunit = gwy_data_field_get_si_unit_xy(fftre);
-    gwy_si_unit_power(xyunit, -1, xyunit);
-
-    /* TODO: The z units */
+    gwy_si_unit_power(gwy_data_field_get_si_unit_xy(dfield), -1, xyunit);
+    zunit = gwy_data_field_get_si_unit_z(fftre);
+    gwy_si_unit_power(gwy_data_field_get_si_unit_z(dfield), 2, zunit);
+    gwy_si_unit_multiply(gwy_data_field_get_si_unit_xy(dfield), zunit, zunit);
 
     gwy_data_field_set_xreal(fftre, 1.0/gwy_data_field_get_xmeasure(fftre));
     gwy_data_field_set_yreal(fftre, 1.0/gwy_data_field_get_ymeasure(fftre));
