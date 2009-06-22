@@ -131,11 +131,11 @@ module_register(void)
 {
     gwy_process_func_register("fft_profile",
                               (GwyProcessFunc)&fft_profile,
-                              N_("/_Statistics/_PDSF Profile..."),
+                              N_("/_Statistics/_PDSF Section..."),
                               GWY_STOCK_GRAPH_HALFGAUSS,
                               PROF_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
-                              N_("Read radial PSDF profiles"));
+                              N_("Read radial PSDF sections"));
 
     return TRUE;
 }
@@ -182,7 +182,7 @@ prof_dialog(ProfArgs *args,
     controls.hx = gwy_data_field_get_xmeasure(dfield)/(2*G_PI);
     controls.hy = gwy_data_field_get_xmeasure(dfield)/(2*G_PI);
 
-    controls.dialog = gtk_dialog_new_with_buttons(_("Radial PSDF Profile"),
+    controls.dialog = gtk_dialog_new_with_buttons(_("Radial PSDF Section"),
                                                   NULL, 0,
                                                   GTK_STOCK_CLEAR,
                                                   RESPONSE_CLEAR,
@@ -241,7 +241,7 @@ prof_dialog(ProfArgs *args,
 
     controls.gmodel = gwy_graph_model_new();
     g_object_set(controls.gmodel,
-                 "title", _("PSDF Profile"),
+                 "title", _("PSDF Section"),
                  "axis-label-bottom", "k",
                  "axis-label-left", "W",
                  NULL);
@@ -448,7 +448,7 @@ prof_update_curve(ProfControls *controls,
     }
 
     gwy_graph_curve_model_set_data_from_dataline(gcmodel, controls->line, 0, 0);
-    desc = g_strdup_printf(_("PSDF %.1f°"), 180.0/G_PI*atan2(-xy[1], xy[0]));
+    desc = g_strdup_printf(_("PSDF %.0f°"), 180.0/G_PI*atan2(-xy[1], xy[0]));
     g_object_set(gcmodel, "description", desc, NULL);
     g_free(desc);
 }
