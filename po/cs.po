@@ -3,8 +3,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2009-06-17 13:33+0200\n"
-"PO-Revision-Date: 2009-06-17 13:39+0200\n"
+"POT-Creation-Date: 2009-06-22 09:05+0200\n"
+"PO-Revision-Date: 2009-06-22 09:13+0200\n"
 "Last-Translator: Yeti <yeti@gwyddion.net>\n"
 "Language-Team: Czech\n"
 "MIME-Version: 1.0\n"
@@ -729,6 +729,7 @@ msgid "Hidden"
 msgstr "Skrytý"
 
 #: libgwydgets/gwydgetenums.c:46 libgwydgets/gwygraphwindowmeasuredialog.c:427
+#: modules/tools/selectionmanager.c:218
 msgid "Points"
 msgstr "Body"
 
@@ -963,6 +964,7 @@ msgstr "Upřednostňovaný"
 
 #: libgwydgets/gwyoptionmenus.c:464 app/meta.c:283 modules/file/rawfile.c:939
 #: modules/process/convolution_filter.c:547
+#: modules/tools/selectionmanager.c:289
 msgid "Name"
 msgstr "Jméno"
 
@@ -1019,7 +1021,7 @@ msgstr "Žádný modul nedokáže zapsat tento typ souboru."
 msgid "Module Browser"
 msgstr "Prohlížeč modulů"
 
-#: libgwymodule/gwymodulebrowser.c:189 modules/process/fft.c:264
+#: libgwymodule/gwymodulebrowser.c:189
 msgid "Module"
 msgstr "Modul"
 
@@ -1387,47 +1389,47 @@ msgstr "…"
 msgid "Cannot preview"
 msgstr "Náhled není možný"
 
-#: app/gwyddion.c:119
+#: app/gwyddion.c:116
 msgid "Loading document history"
 msgstr "Načítám historii dokumentů"
 
-#: app/gwyddion.c:124
+#: app/gwyddion.c:121
 msgid "Registering "
 msgstr "Registruji "
 
-#: app/gwyddion.c:125
+#: app/gwyddion.c:122
 msgid "stock items"
 msgstr "standardní ikony"
 
-#: app/gwyddion.c:129
+#: app/gwyddion.c:126
 msgid "color gradients"
 msgstr "barevné gradienty"
 
-#: app/gwyddion.c:131
+#: app/gwyddion.c:128
 msgid "GL materials"
 msgstr "GL materiály"
 
-#: app/gwyddion.c:133
+#: app/gwyddion.c:130
 msgid "grain quantities"
 msgstr "zrnové veličiny"
 
-#: app/gwyddion.c:138
+#: app/gwyddion.c:135
 msgid "Loading settings"
 msgstr "Načítám nastavení"
 
-#: app/gwyddion.c:145
+#: app/gwyddion.c:142
 msgid "Registering modules"
 msgstr "Registruji moduly"
 
-#: app/gwyddion.c:162
+#: app/gwyddion.c:159
 msgid "Initializing GUI"
 msgstr "Inicializuji GUI"
 
-#: app/gwyddion.c:350
+#: app/gwyddion.c:352
 msgid "Could not read settings."
 msgstr "Nezdařilo se přečíst nastavení."
 
-#: app/gwyddion.c:353
+#: app/gwyddion.c:355
 #, c-format
 msgid ""
 "Settings file `%s' cannot be read: %s\n"
@@ -1986,7 +1988,15 @@ msgstr ""
 "Nástroj Barevný rozsah nabízí několik typů mapování hodnot na falešné barvy "
 "a umožňuje kterýkoli nastavit coby výchozí."
 
-#: app/tips.c:336
+#: app/tips.c:335
+msgid ""
+"Dragging selections from Selections Manager tool to a data window copies the "
+"selection to the target data."
+msgstr ""
+"Výběry ve Správci výběrů můžeš zkopírovat do jiných dat přetažením výběru "
+"ze seznamu do příšlušného okna."
+
+#: app/tips.c:341
 msgid ""
 "Gwyddion User Guide explains in detail many of the methods and algorithms "
 "implemented in Gwyddion."
@@ -1994,19 +2004,19 @@ msgstr ""
 "Uživatelská příručka Gwyddionu (Gwyddion user guide) detailně popisuje mnoho "
 "metod a algoritmů implementovaných v Gwyddionu."
 
-#: app/tips.c:341
+#: app/tips.c:346
 msgid "Gwyddion is a son of Math."
 msgstr "Gwyddion je syn Matha."
 
-#: app/tips.c:388
+#: app/tips.c:393
 msgid "Gwyddion Tip of the Day"
 msgstr "Gwyddion: Tip dne"
 
-#: app/tips.c:400
+#: app/tips.c:405
 msgid "_Previous Tip"
 msgstr "_Předchozí tip"
 
-#: app/tips.c:406
+#: app/tips.c:411
 msgid "_Next Tip"
 msgstr "_Následující tip"
 
@@ -3679,11 +3689,11 @@ msgstr "Soubor skončil v řetězci č. %u."
 msgid "End of file reached in color data header."
 msgstr "Soubor skončil v hlavičce dat barev."
 
-#: modules/file/rhk-sm3.c:434
+#: modules/file/rhk-sm3.c:435
 msgid "End of file reached in color data."
 msgstr "Soubor skončil v datech barev."
 
-#: modules/file/rhk-sm3.c:701
+#: modules/file/rhk-sm3.c:702
 #, c-format
 msgid "Unknown line %d"
 msgstr "Neznámá čára %d"
@@ -4377,7 +4387,7 @@ msgstr "Vrstva umožňující výběr eliptických oblastí."
 msgid "Layer allowing selection of arbitrary straight lines."
 msgstr "Vrstva umožňující výběr libovolných přímých čar."
 
-#: modules/layer/point.c:127
+#: modules/layer/point.c:141
 msgid ""
 "Layer allowing selection of several points, displayed as crosses or "
 "inivisible."
@@ -4919,11 +4929,12 @@ msgstr "řádků"
 
 #: modules/process/drift.c:291 modules/process/dwt.c:204
 #: modules/process/dwtanisotropy.c:201 modules/process/fft_filter_1d.c:329
-#: modules/process/fractal.c:228 modules/process/nanoindent_adjust.c:228
-#: modules/process/polydistort.c:268 modules/process/rotate.c:293
-#: modules/process/scale.c:248 modules/process/unrotate.c:282
-#: modules/tools/linestats.c:400 modules/tools/profile.c:381
-#: modules/tools/roughness.c:880 modules/tools/sfunctions.c:393
+#: modules/process/fft_profile.c:298 modules/process/fractal.c:228
+#: modules/process/nanoindent_adjust.c:228 modules/process/polydistort.c:268
+#: modules/process/rotate.c:293 modules/process/scale.c:248
+#: modules/process/unrotate.c:282 modules/tools/linestats.c:400
+#: modules/tools/profile.c:381 modules/tools/roughness.c:880
+#: modules/tools/sfunctions.c:393
 msgid "_Interpolation type:"
 msgstr "Typ _interpolace:"
 
@@ -5295,7 +5306,7 @@ msgid "Real + Imaginary"
 msgstr "Reálný + imaginární"
 
 #: modules/process/fft.c:261
-msgid "Module + Phase"
+msgid "Modulus + Phase"
 msgstr "Modul + fáze"
 
 #: modules/process/fft.c:262
@@ -5305,6 +5316,10 @@ msgstr "Reálný"
 #: modules/process/fft.c:263
 msgid "Imaginary"
 msgstr "Imaginární"
+
+#: modules/process/fft.c:264
+msgid "Modulus"
+msgstr "Modul FFT"
 
 #: modules/process/fft.c:265
 msgid "Phase"
@@ -5477,6 +5492,43 @@ msgstr "Odstranit celou masku"
 #: modules/process/fft_filter_2d.c:1094
 msgid "Forces new markers to center around the origin"
 msgstr "Upevnit středy nových oblastí do počátku"
+
+#: modules/process/fft_profile.c:119
+msgid ""
+"Reads radial sections of two-dimensional power spectrum density function."
+msgstr ""
+"Odečítá radiální řezy dvojrozměrné spektrální hustoty."
+
+#: modules/process/fft_profile.c:134
+msgid "/_Statistics/_PDSF Section..."
+msgstr "/_Statistika/Řez _PSDF..."
+
+#: modules/process/fft_profile.c:138
+msgid "Read radial PSDF sections"
+msgstr "Odečítání radiálních řezů PSDF"
+
+#: modules/process/fft_profile.c:185
+msgid "Radial PSDF Section"
+msgstr "Radiální řez PSDF"
+
+#: modules/process/fft_profile.c:244
+msgid "PSDF Section"
+msgstr "PSDF řez"
+
+#: modules/process/fft_profile.c:272 modules/process/grain_dist.c:319
+#: modules/tools/linestats.c:375 modules/tools/profile.c:353
+#: modules/tools/sfunctions.c:368
+msgid "_Fix res.:"
+msgstr "Ro_zliš.:"
+
+#: modules/process/fft_profile.c:285
+msgid "_Separate curves"
+msgstr "_Oddělit křivky"
+
+#: modules/process/fft_profile.c:451
+#, c-format
+msgid "PSDF %.0f°"
+msgstr "PSDF %.0f°"
 
 #: modules/process/fft_synth.c:127
 msgid "Generates random surfaces using spectral synthesis."
@@ -5878,11 +5930,6 @@ msgstr "Vykreslit _grafy"
 #: modules/process/grain_dist.c:239
 msgid "Grain Distributions"
 msgstr "Rozdělení zrn"
-
-#: modules/process/grain_dist.c:319 modules/tools/linestats.c:375
-#: modules/tools/profile.c:353 modules/tools/sfunctions.c:368
-msgid "_Fix res.:"
-msgstr "Ro_zliš.:"
 
 #: modules/process/grain_dist.c:482
 msgid "noun|count"
@@ -8231,15 +8278,35 @@ msgstr "Správce výběrů"
 msgid "Display and copy selections"
 msgstr "Zobrazuje a kopíruje výběry"
 
-#: modules/tools/selectionmanager.c:263
-msgid "Selection"
-msgstr "Výběr"
+#: modules/tools/selectionmanager.c:215
+#, fuzzy
+msgid "Horiz./vert. lines"
+msgstr "_Linie driftu"
 
-#: modules/tools/selectionmanager.c:289
+#: modules/tools/selectionmanager.c:216
+#, fuzzy
+msgid "Ellipses"
+msgstr "Eliptické tvary"
+
+#: modules/tools/selectionmanager.c:217
+msgid "Lines"
+msgstr "Tenké čáry"
+
+#: modules/tools/selectionmanager.c:219
+#, fuzzy
+msgid "Rectangles"
+msgstr "Obdélníkové tvary"
+
+#: modules/tools/selectionmanager.c:305
+#, fuzzy
+msgid "Objects"
+msgstr "Vyznačené objekty"
+
+#: modules/tools/selectionmanager.c:315
 msgid "_Distribute"
 msgstr "_Rozkopírovat"
 
-#: modules/tools/selectionmanager.c:298
+#: modules/tools/selectionmanager.c:324
 msgid "to _all files"
 msgstr "do _všech souborů"
 
@@ -8771,9 +8838,6 @@ msgstr ""
 #~ msgstr ""
 #~ "Nemohu uložit výsledky do %s.\n"
 #~ "%s\n"
-
-#~ msgid "Lines"
-#~ msgstr "Tenké čáry"
 
 #~ msgid "Per-angle _graph"
 #~ msgstr "_Graf podle úhlu"
