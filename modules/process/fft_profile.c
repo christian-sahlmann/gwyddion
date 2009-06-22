@@ -116,7 +116,7 @@ static const ProfArgs prof_defaults = {
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    N_("Reads radial profiles of two-dimensional power spectrum density "
+    N_("Reads radial sections of two-dimensional power spectrum density "
        "function."),
     "Yeti <yeti@gwyddion.net>",
     "1.0",
