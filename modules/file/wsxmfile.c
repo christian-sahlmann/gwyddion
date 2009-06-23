@@ -43,9 +43,13 @@
 
 #include "err.h"
 
-#define MAGIC "WSxM file copyright Nanotec Electronica\r\n" \
-              "SxM Image file\r\n"
-#define MAGIC_SIZE (sizeof(MAGIC) - 1)
+#define MAGIC1 "WSxM file copyright Nanotec Electronica"
+#define MAGIC2 "SxM Image file"
+#define MAGIC1_SIZE (sizeof(MAGIC1) - 1)
+#define MAGIC2_SIZE (sizeof(MAGIC2) - 1)
+#define MAGIC_SIZE (MAGIC1_SIZE + MAGIC2_SIZE)
+
+#define SIZE_HEADER "Image header size:"
 
 typedef enum {
     WSXM_DATA_INT16,
@@ -73,7 +77,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Nanotec WSxM data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.8",
+    "0.9",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -93,6 +97,30 @@ module_register(void)
     return TRUE;
 }
 
+// Return pointer to character after newline
+static const char *read_newline(const char *str)
+{
+    if (str[0] == '\n')
+        return &str[1];
+    else if (str[0] == '\r' && str[1] == '\n')
+        return &str[2];
+
+    return NULL;
+}
+
+// Return pointer to character after magic
+static const char *wsxmfile_check_magic(const char *head) {
+    const char *rest;
+
+    if (!memcmp(head, MAGIC1, MAGIC1_SIZE)
+        && (rest = read_newline(&head[MAGIC1_SIZE]))
+        && !memcmp(rest, MAGIC2, MAGIC2_SIZE)
+        && (rest = read_newline(&rest[MAGIC2_SIZE])))
+        return rest;
+
+    return NULL;
+}
+
 static gint
 wsxmfile_detect(const GwyFileDetectInfo *fileinfo,
                 gboolean only_name)
@@ -103,7 +131,7 @@ wsxmfile_detect(const GwyFileDetectInfo *fileinfo,
         return g_str_has_suffix(fileinfo->name_lowercase, ".tom") ? 20 : 0;
 
     if (fileinfo->buffer_len > MAGIC_SIZE
-        && !memcmp(fileinfo->head, MAGIC, MAGIC_SIZE))
+        && wsxmfile_check_magic(fileinfo->head))
         score = 100;
 
     return score;
@@ -116,6 +144,7 @@ wsxmfile_load(const gchar *filename,
 {
     GwyContainer *container = NULL;
     guchar *buffer = NULL;
+    const gchar *rest = NULL;
     gsize size = 0;
     GError *err = NULL;
     GwyDataField *dfield = NULL;
@@ -130,9 +159,10 @@ wsxmfile_load(const gchar *filename,
         err_GET_FILE_CONTENTS(error, &err);
         return NULL;
     }
-    if (strncmp(buffer, MAGIC, MAGIC_SIZE)
-        || sscanf(buffer + MAGIC_SIZE,
-                  "Image header size: %u", &header_size) < 1) {
+
+    if (!(rest = wsxmfile_check_magic(buffer))
+        || !memcmp(rest, SIZE_HEADER, sizeof(SIZE_HEADER))
+        || (header_size = strtol(rest + sizeof(SIZE_HEADER), &p, 10)) < 1) {
         err_FILE_TYPE(error, "WSXM");
         gwy_file_abandon_contents(buffer, size, NULL);
         return NULL;
