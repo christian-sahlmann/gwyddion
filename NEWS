@@ -23,6 +23,7 @@ Modules:
 - OLS, JPK: GwyTIFF is used instead of libTIFF for file loading.  This should
   fix a number of TIFF-related problems, namely on MS Windows.
 - RHK SM3: Bug that prevented loading of some SM3 files was fixed.
+- WSxM: Files produced by Nanonics AFM are supported.
 - Pixmap export: libTIFF is no longer used, TIFF files are written directly.
 - Rawfile: Support for 64bit integer built-in types was added.
 - Layer modules: Support for crop() method was added.
@@ -30,8 +31,8 @@ Modules:
   "draw-as-vector").
 
 Other:
-- Gwyddion no longer uses libTIFF on any platform (it used to be optionally
-  linked with libTIFF).
+- Gwyddion no longer directly uses libTIFF on any platform (it used to be
+  optionally linked with libTIFF).
 
 
 2.15 (2009-05-20)
