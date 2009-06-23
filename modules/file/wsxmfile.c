@@ -97,8 +97,9 @@ module_register(void)
     return TRUE;
 }
 
-// Return pointer to character after newline
-static const char *read_newline(const char *str)
+/* Return pointer to character after newline */
+static const char
+*read_newline(const char *str)
 {
     if (str[0] == '\n')
         return &str[1];
@@ -108,8 +109,9 @@ static const char *read_newline(const char *str)
     return NULL;
 }
 
-// Return pointer to character after magic
-static const char *wsxmfile_check_magic(const char *head) {
+/* Return pointer to character after magic */
+static const char
+*wsxmfile_check_magic(const char *head) {
     const char *rest;
 
     if (!memcmp(head, MAGIC1, MAGIC1_SIZE)
