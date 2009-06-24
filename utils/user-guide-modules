@@ -8,9 +8,9 @@ assing-afm	managing-files
 axis	selections
 basicops	basic-operations	modules-basic
 bcrfile	managing-files
+burleigh	managing-files
 burleigh_bii	managing-files
 burleigh_exp	managing-files
-burleigh	managing-files
 calibrate	basic-operations	calibrate
 convolution_filter	filters-presentations	convolution-filter
 createc	managing-files
@@ -20,17 +20,18 @@ cwt	integral-transforms	cwt
 distance	basic-operations	distance
 dmefile	managing-files
 drift	edit-extended	drift-compensation
-dwtanisotropy	integral-transforms	dwt
 dwt	integral-transforms	dwt
+dwtanisotropy	integral-transforms	dwt
 ecsfile	managing-files
 edge	filters-presentations	edge
 ellipse	selections
 ezdfile	managing-files
-facet_analysis	statistical-analysis	facet-analysis
 facet-level	leveling-and-background	facet-level
+facet_analysis	statistical-analysis	facet-analysis
+fft	integral-transforms	fft
 fft_filter_1d	edit-extended	fft-filter-1d
 fft_filter_2d	edit-extended	fft-filter-2d
-fft	integral-transforms	fft
+fft_profile	integral-transforms
 filter	filters-presentations	basic-filters
 fit_2d	leveling-and-background	fit-sphere
 fraccor	editing-correction	fractal-correction
@@ -39,10 +40,10 @@ gradient	filters-presentations	gradient
 grain_cross	grain-analysis	grain-correlation
 grain_dist	grain-analysis	grain-distributions
 grain_mark	grain-analysis	grain-threshold
-grainmeasure	grain-analysis	grain-measure
-grainremover	editing-correction
 grain_rem_threshold	grain-analysis	grain-remove-threshold
 grain_wshed	grain-analysis	grain-watershed
+grainmeasure	grain-analysis	grain-measure
+grainremover	editing-correction
 graph_cd	graph-processing	graph-critical-dimension
 graph_cut	graph-processing
 graph_export_ascii	graph-processing
@@ -62,10 +63,10 @@ intematix	managing-files
 jeol	managing-files
 jpkscan	managing-files
 laplace	editing-correction	remove-data-under-mask
-level3	leveling-and-background	three-point-level
 level	leveling-and-background	plane-level
-linecorrect	editing-correction	line-correction
+level3	leveling-and-background	three-point-level
 line	selections
+linecorrect	editing-correction	line-correction
 linestats	statistical-analysis	line-stats
 local_contrast	filters-presentations	local-contrast
 mapvue	managing-files
@@ -80,8 +81,8 @@ microprof	managing-files
 mifile	managing-files
 nanoeducator	managing-files
 nanonis	managing-files
-nanoscope-ii	managing-files
 nanoscope	managing-files
+nanoscope-ii	managing-files
 nanotop	managing-files
 netcdf	managing-files
 nt-mdt	managing-files
@@ -114,6 +115,7 @@ scale	basic-operations	scale
 scars	editing-correction	remove-scars
 sdfile	managing-files
 seiko	managing-files
+selectionmanager	selections
 sensofar	managing-files
 sensolytics	managing-files
 sfunctions	statistical-analysis	sfunctions
@@ -125,9 +127,9 @@ slope_dist	statistical-analysis	slope-distribution
 spectro	single-point-spectra
 sphere-revolve	leveling-and-background	revolve-arc
 spip-asc	managing-files
-spmlabf	managing-files
-spmlab	managing-files
 spml	managing-files
+spmlab	managing-files
+spmlabf	managing-files
 spotremove	editing-correction	remove-spots
 stats	statistical-analysis	stat-quantities
 stmprg	managing-files
