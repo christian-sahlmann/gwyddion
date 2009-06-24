@@ -78,12 +78,18 @@ Root: HKCR; Subkey: "@PACKAGE_NAME@.NativeData"; ValueType: string; ValueName: "
 Root: HKCR; Subkey: "@PACKAGE_NAME@.NativeData\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\pixmaps\@PACKAGE_TARNAME@.ico"
 Root: HKCR; Subkey: "@PACKAGE_NAME@.NativeData\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\@PACKAGE_TARNAME@.exe"" --remote-new ""%1"""
 ; LANG settings
-Root: HKLM; Subkey: "SYSTEM\CurrentControlSet\Control\Session Manager\Environment"; ValueType: string; ValueName: "LANG"; ValueData: "en_US.UTF-8"; Languages: en; Flags: uninsdeletevalue
-Root: HKLM; Subkey: "SYSTEM\CurrentControlSet\Control\Session Manager\Environment"; ValueType: string; ValueName: "LANG"; ValueData: "cs_CZ.UTF-8"; Languages: cz; Flags: uninsdeletevalue
-Root: HKLM; Subkey: "SYSTEM\CurrentControlSet\Control\Session Manager\Environment"; ValueType: string; ValueName: "LANG"; ValueData: "de_DE.UTF-8"; Languages: de; Flags: uninsdeletevalue
-Root: HKLM; Subkey: "SYSTEM\CurrentControlSet\Control\Session Manager\Environment"; ValueType: string; ValueName: "LANG"; ValueData: "fr_FR.UTF-8"; Languages: fr; Flags: uninsdeletevalue
-Root: HKLM; Subkey: "SYSTEM\CurrentControlSet\Control\Session Manager\Environment"; ValueType: string; ValueName: "LANG"; ValueData: "it_IT.UTF-8"; Languages: it; Flags: uninsdeletevalue
-Root: HKLM; Subkey: "SYSTEM\CurrentControlSet\Control\Session Manager\Environment"; ValueType: string; ValueName: "LANG"; ValueData: "ru_RU.UTF-8"; Languages: ru; Flags: uninsdeletevalue
+Root: HKLM; Subkey: "Software\@PACKAGE_NAME@\1.0"; ValueType: string; ValueName: "gwy_locale"; ValueData: "en_US.UTF-8"; Languages: en; Flags: uninsdeletevalue
+Root: HKLM; Subkey: "Software\@PACKAGE_NAME@\1.0"; ValueType: string; ValueName: "gwy_locale"; ValueData: "cs_CZ.UTF-8"; Languages: cz; Flags: uninsdeletevalue
+Root: HKLM; Subkey: "Software\@PACKAGE_NAME@\1.0"; ValueType: string; ValueName: "gwy_locale"; ValueData: "de_DE.UTF-8"; Languages: de; Flags: uninsdeletevalue
+Root: HKLM; Subkey: "Software\@PACKAGE_NAME@\1.0"; ValueType: string; ValueName: "gwy_locale"; ValueData: "fr_FR.UTF-8"; Languages: fr; Flags: uninsdeletevalue
+Root: HKLM; Subkey: "Software\@PACKAGE_NAME@\1.0"; ValueType: string; ValueName: "gwy_locale"; ValueData: "it_IT.UTF-8"; Languages: it; Flags: uninsdeletevalue
+Root: HKLM; Subkey: "Software\@PACKAGE_NAME@\1.0"; ValueType: string; ValueName: "gwy_locale"; ValueData: "ru_RU.UTF-8"; Languages: ru; Flags: uninsdeletevalue
+Root: HKCU; Subkey: "Software\@PACKAGE_NAME@\1.0"; ValueType: string; ValueName: "gwy_locale"; ValueData: "en_US.UTF-8"; Languages: en; Flags: uninsdeletevalue
+Root: HKCU; Subkey: "Software\@PACKAGE_NAME@\1.0"; ValueType: string; ValueName: "gwy_locale"; ValueData: "cs_CZ.UTF-8"; Languages: cz; Flags: uninsdeletevalue
+Root: HKCU; Subkey: "Software\@PACKAGE_NAME@\1.0"; ValueType: string; ValueName: "gwy_locale"; ValueData: "de_DE.UTF-8"; Languages: de; Flags: uninsdeletevalue
+Root: HKCU; Subkey: "Software\@PACKAGE_NAME@\1.0"; ValueType: string; ValueName: "gwy_locale"; ValueData: "fr_FR.UTF-8"; Languages: fr; Flags: uninsdeletevalue
+Root: HKCU; Subkey: "Software\@PACKAGE_NAME@\1.0"; ValueType: string; ValueName: "gwy_locale"; ValueData: "it_IT.UTF-8"; Languages: it; Flags: uninsdeletevalue
+Root: HKCU; Subkey: "Software\@PACKAGE_NAME@\1.0"; ValueType: string; ValueName: "gwy_locale"; ValueData: "ru_RU.UTF-8"; Languages: ru; Flags: uninsdeletevalue
 
 [Code]
 var

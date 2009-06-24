@@ -37,6 +37,8 @@
 
 #ifdef G_OS_WIN32
 #define LOG_TO_FILE_DEFAULT TRUE
+#include <windows.h>
+#include <winreg.h>
 #else
 #define LOG_TO_FILE_DEFAULT FALSE
 #endif
@@ -86,6 +88,11 @@ main(int argc, char *argv[])
     gboolean has_settings, settings_ok = FALSE;
     GError *settings_err = NULL;
     GTimer *timer;
+#ifdef G_OS_WIN32
+    gchar locale[20];
+    guint size;
+    HKEY reg_key;
+#endif
 
     timer = g_timer_new();
     gwy_app_check_version();
@@ -98,6 +105,27 @@ main(int argc, char *argv[])
     if (app_options.log_to_file)
         setup_logging();
     debug_time(timer, "init");
+
+#ifdef G_OS_WIN32
+   if( RegOpenKeyEx( HKEY_CURRENT_USER,
+        TEXT("Software\\Gwyddion\\1.0"),
+        0,
+        KEY_READ,
+        &reg_key) == ERROR_SUCCESS
+      )
+   {
+      RegQueryValueEx(
+        reg_key,
+        TEXT("gwy_locale"),
+        NULL,
+        NULL,
+        locale,
+        &size
+    );
+    g_setenv("LANG", locale, TRUE);
+    RegCloseKey(reg_key);
+   }
+#endif
 
     gtk_init(&argc, &argv);
     debug_time(timer, "gtk_init()");
