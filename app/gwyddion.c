@@ -52,28 +52,29 @@ typedef struct {
     GwyAppRemoteType remote;
 } GwyAppOptions;
 
-static void open_command_line_files  (gint n,
-                                      gchar **args);
-static gint check_command_line_files (gint n,
-                                      gchar **args);
-static void print_help               (void);
-static void process_preinit_options  (int *argc,
-                                      char ***argv,
-                                      GwyAppOptions *options);
-static void debug_time               (GTimer *timer,
-                                      const gchar *task);
-static void setup_logging            (void);
-static void logger                   (const gchar *log_domain,
-                                      GLogLevelFlags log_level,
-                                      const gchar *message,
-                                      gpointer user_data);
-static void warn_broken_settings_file(GtkWidget *parent,
-                                      const gchar *settings_file,
-                                      const gchar *reason);
-static void gwy_app_init             (int *argc,
-                                      char ***argv);
-static void gwy_app_set_window_icon  (void);
-static void gwy_app_check_version    (void);
+static void open_command_line_files         (gint n,
+                                             gchar **args);
+static gint check_command_line_files        (gint n,
+                                             gchar **args);
+static void print_help                      (void);
+static void process_preinit_options         (int *argc,
+                                             char ***argv,
+                                             GwyAppOptions *options);
+static void debug_time                      (GTimer *timer,
+                                             const gchar *task);
+static void setup_logging                   (void);
+static void logger                          (const gchar *log_domain,
+                                             GLogLevelFlags log_level,
+                                             const gchar *message,
+                                             gpointer user_data);
+static void setup_locale_from_win32_registry(void);
+static void warn_broken_settings_file       (GtkWidget *parent,
+                                             const gchar *settings_file,
+                                             const gchar *reason);
+static void gwy_app_init                    (int *argc,
+                                             char ***argv);
+static void gwy_app_set_window_icon         (void);
+static void gwy_app_check_version           (void);
 
 static GwyAppOptions app_options = {
     FALSE, FALSE, FALSE, FALSE, LOG_TO_FILE_DEFAULT, GWY_APP_REMOTE_NONE,
@@ -88,11 +89,6 @@ main(int argc, char *argv[])
     gboolean has_settings, settings_ok = FALSE;
     GError *settings_err = NULL;
     GTimer *timer;
-#ifdef G_OS_WIN32
-    gchar locale[20];
-    guint size;
-    HKEY reg_key;
-#endif
 
     timer = g_timer_new();
     gwy_app_check_version();
@@ -105,28 +101,7 @@ main(int argc, char *argv[])
     if (app_options.log_to_file)
         setup_logging();
     debug_time(timer, "init");
-
-#ifdef G_OS_WIN32
-   if( RegOpenKeyEx( HKEY_CURRENT_USER,
-        TEXT("Software\\Gwyddion\\1.0"),
-        0,
-        KEY_READ,
-        &reg_key) == ERROR_SUCCESS
-      )
-   {
-      RegQueryValueEx(
-        reg_key,
-        TEXT("gwy_locale"),
-        NULL,
-        NULL,
-        locale,
-        &size
-    );
-    g_setenv("LANG", locale, TRUE);
-    RegCloseKey(reg_key);
-   }
-#endif
-
+    setup_locale_from_win32_registry();
     gtk_init(&argc, &argv);
     debug_time(timer, "gtk_init()");
     gwy_app_do_remote(app_options.remote, argc - 1, argv + 1);
@@ -449,6 +424,23 @@ logger(const gchar *log_domain,
             log_domain ? ": " : "",
             message);
     fflush(logfile);
+}
+
+static void
+setup_locale_from_win32_registry(void)
+{
+#ifdef G_OS_WIN32
+    gchar locale[64];
+    guint size = sizeof(locale);
+    HKEY reg_key;
+
+    if (RegOpenKeyEx(HKEY_CURRENT_USER, TEXT("Software\\Gwyddion\\1.0"),
+                     0, KEY_READ, &reg_key) == ERROR_SUCCESS) {
+        RegQueryValueEx(reg_key, TEXT("gwy_locale"), NULL, NULL, locale, &size);
+        g_setenv("LANG", locale, TRUE);
+        RegCloseKey(reg_key);
+   }
+#endif
 }
 
 static void
