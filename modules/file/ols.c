@@ -50,8 +50,6 @@ static gint          ols_detect      (const GwyFileDetectInfo *fileinfo,
 static GwyContainer* ols_load        (const gchar *filename,
                                       GwyRunType mode,
                                       GError **error);
-static const gchar*  ols_read_value  (const gchar* comment,
-                                      const gchar* value_name);
 static GwyContainer* ols_load_tiff   (const GwyTIFF *tiff,
                                       GError **error);
 static GHashTable*   ols_parse_header(gchar *p,
@@ -62,7 +60,7 @@ static GwyModuleInfo module_info = {
     module_register,
     N_("Imports OLS data files."),
     "Jan Hořák <xhorak@gmail.com>, Yeti <yeti@gwyddion.net>",
-    "0.5",
+    "0.6",
     "David Nečas (Yeti) & Petr Klapetek",
     "2008",
 };
@@ -128,23 +126,6 @@ ols_load(const gchar *filename,
     return container;
 }
 
-static const gchar*
-ols_read_value(const gchar* comment, const gchar* value_name)
-{
-   gchar *pos;
-
-   pos = g_strstr_len(comment, strlen(comment), value_name);
-   if (pos) {
-      pos = g_strstr_len(pos, strlen(pos), "=");
-      pos++;
-   }
-   if (!pos) {
-      g_warning("Cannot find '%s' in file comment.\n", value_name);
-   }
-
-   return pos;
-}
-
 static GwyContainer*
 ols_load_tiff(const GwyTIFF *tiff, GError **error)
 {
@@ -152,13 +133,15 @@ ols_load_tiff(const GwyTIFF *tiff, GError **error)
     GwyDataField *dfield;
     GwySIUnit *siunit;
     GwyTIFFImageReader *reader = NULL;
+    GHashTable *hash;
     gint i, power10;
-    gchar *comment = NULL, *data_channel_info_title, *data_channel_info;
+    gchar *comment = NULL;
     const gchar *s1, *s2;
     GError *err = NULL;
     guint dir_num = 0;
     gdouble *data;
     double z_axis = 1.0, xy_axis, factor;
+    GString *key;
 
     /* Comment with parameters is common for all data fields */
     if (!gwy_tiff_get_string0(tiff, GWY_TIFFTAG_IMAGE_DESCRIPTION, &comment)
@@ -168,10 +151,17 @@ ols_load_tiff(const GwyTIFF *tiff, GError **error)
         return NULL;
     }
 
-    if ((s1 = ols_read_value(comment, "ZPositionUp"))
-         && (s2 = ols_read_value(comment, "ZPositionLow")))
+    /* Read the comment header. */
+    if (!(hash = ols_parse_header(comment, error))) {
+        g_free(comment);
+        return NULL;
+    }
+
+    if ((s1 = g_hash_table_lookup(hash, "Acquisition Parameters::ZPositionUp"))
+         && (s2 = g_hash_table_lookup(hash, "Acquisition Parameters::ZPositionLow")))
         z_axis = g_ascii_strtod(s1, NULL) - g_ascii_strtod(s2, NULL);
 
+    key = g_string_new(NULL);
     for (dir_num = 0; dir_num < gwy_tiff_get_n_dirs(tiff); dir_num++) {
         reader = gwy_tiff_image_reader_free(reader);
         /* Request a reader, this ensures dimensions and stuff are defined. */
@@ -181,24 +171,11 @@ ols_load_tiff(const GwyTIFF *tiff, GError **error)
             g_clear_error(&err);
             continue;
         }
-
-        /* Find channel info in the comment */
-        data_channel_info_title = g_strdup_printf("[Data %d Info]", dir_num+1);
-        data_channel_info = strstr(comment, data_channel_info_title);
-        if (!data_channel_info) {
-            g_warning("Cannot find '%s' in comment.", data_channel_info_title);
-            g_free(data_channel_info_title);
+        g_string_printf(key, "Data %u Info::XY Convert Value", dir_num+1);
+        if (!(s1 = g_hash_table_lookup(hash, key->str))) {
+            g_warning("Cannot find 'XY Convert Value' for data %u.", dir_num+1);
             continue;
         }
-        g_free(data_channel_info_title);
-        if (!ols_read_value(data_channel_info, "XY Convert Value")) {
-            g_warning("Cannot find 'XY Convert Value' in comment.");
-            continue;
-        }
-        /* FIXME: This is wrong, it can find the value also in any later
-         * section.  Must use sectlen somehow. */
-        if (!(s1 = ols_read_value(data_channel_info, "XY Convert Value")))
-            continue;
         xy_axis = g_ascii_strtod(s1, NULL);
         if (!((xy_axis = fabs(xy_axis)) > 0)) {
             g_warning("Real size step is 0.0, fixing to 1.0");
@@ -237,7 +214,8 @@ ols_load_tiff(const GwyTIFF *tiff, GError **error)
         g_object_unref(dfield);
     }
 
-    ols_parse_header(comment, NULL);
+    g_hash_table_destroy(hash);
+    g_string_free(key, TRUE);
     g_free(comment);
     if (reader) {
         gwy_tiff_image_reader_free(reader);
