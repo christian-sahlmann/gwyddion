@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2009-05-20 15:25+0200\n"
+"POT-Creation-Date: 2009-06-25 11:37+0200\n"
 "PO-Revision-Date: 2007-03-14 17:40+0100\n"
 "Last-Translator: Philipp Leufke <webmaster@leufke.info>\n"
 "Language-Team: deutsch <de@li.org>\n"
@@ -57,86 +57,86 @@ msgid "vdW: paraboloid"
 msgstr ""
 
 #: libgwyddion/gwyinventory.c:1310 libgwydgets/gwygraphwindow.c:603
-#: app/data-browser.c:1440 app/data-browser.c:2165 app/data-browser.c:2927
-#: app/data-browser.c:3086 app/data-browser.c:4893 app/resource-editor.c:365
+#: app/data-browser.c:1445 app/data-browser.c:2174 app/data-browser.c:2936
+#: app/data-browser.c:3095 app/data-browser.c:4982 app/resource-editor.c:365
 #: modules/process/convolution_filter.c:700
 msgid "Untitled"
 msgstr "Unbenannt"
 
-#: libgwyddion/gwynlfitpreset.c:1192 libprocess/gwyprocessenums.c:100
+#: libgwyddion/gwynlfitpreset.c:1190 libprocess/gwyprocessenums.c:100
 msgid "Gaussian"
 msgstr "Gauss'sch"
 
-#: libgwyddion/gwynlfitpreset.c:1208
+#: libgwyddion/gwynlfitpreset.c:1206
 #, fuzzy
 msgid "Gaussian (PSDF)"
 msgstr "Gauss'sch"
 
-#: libgwyddion/gwynlfitpreset.c:1222
+#: libgwyddion/gwynlfitpreset.c:1220
 #, fuzzy
 msgid "Gaussian (ACF)"
 msgstr "Gauss'sch"
 
-#: libgwyddion/gwynlfitpreset.c:1236
+#: libgwyddion/gwynlfitpreset.c:1234
 #, fuzzy
 msgid "Gaussian (HHCF)"
 msgstr "Gauss'sch"
 
-#: libgwyddion/gwynlfitpreset.c:1250
+#: libgwyddion/gwynlfitpreset.c:1248
 #, fuzzy
 msgid "Gaussian (RPSDF)"
 msgstr "Gauss'sch"
 
-#: libgwyddion/gwynlfitpreset.c:1264
+#: libgwyddion/gwynlfitpreset.c:1262
 msgid "Exponential"
 msgstr ""
 
-#: libgwyddion/gwynlfitpreset.c:1277
+#: libgwyddion/gwynlfitpreset.c:1275
 msgid "Exponential (PSDF)"
 msgstr ""
 
-#: libgwyddion/gwynlfitpreset.c:1291
+#: libgwyddion/gwynlfitpreset.c:1289
 msgid "Exponential (ACF)"
 msgstr ""
 
-#: libgwyddion/gwynlfitpreset.c:1304
+#: libgwyddion/gwynlfitpreset.c:1302
 msgid "Exponential (HHCF)"
 msgstr ""
 
-#: libgwyddion/gwynlfitpreset.c:1318
+#: libgwyddion/gwynlfitpreset.c:1316
 msgid "Exponential (RPSDF)"
 msgstr ""
 
-#: libgwyddion/gwynlfitpreset.c:1333
+#: libgwyddion/gwynlfitpreset.c:1331
 msgid "Polynomial (order 0)"
 msgstr ""
 
-#: libgwyddion/gwynlfitpreset.c:1345
+#: libgwyddion/gwynlfitpreset.c:1343
 msgid "Polynomial (order 1)"
 msgstr ""
 
-#: libgwyddion/gwynlfitpreset.c:1357
+#: libgwyddion/gwynlfitpreset.c:1355
 msgid "Polynomial (order 2)"
 msgstr ""
 
-#: libgwyddion/gwynlfitpreset.c:1370
+#: libgwyddion/gwynlfitpreset.c:1368
 msgid "Polynomial (order 3)"
 msgstr ""
 
-#: libgwyddion/gwynlfitpreset.c:1384
+#: libgwyddion/gwynlfitpreset.c:1382
 #, fuzzy
 msgid "Square wave"
 msgstr "Quadrat"
 
-#: libgwyddion/gwynlfitpreset.c:1401
+#: libgwyddion/gwynlfitpreset.c:1399
 msgid "Power"
 msgstr ""
 
-#: libgwyddion/gwynlfitpreset.c:1414
+#: libgwyddion/gwynlfitpreset.c:1412
 msgid "Lorentzian"
 msgstr ""
 
-#: libgwyddion/gwynlfitpreset.c:1429
+#: libgwyddion/gwynlfitpreset.c:1427
 msgid "Sinc"
 msgstr ""
 
@@ -735,8 +735,8 @@ msgstr "_Größe:"
 msgid "pixels"
 msgstr "Pixel"
 
-#: libgwydgets/gwy3dwindow.c:1027 modules/file/pixmap.c:857
-#: modules/file/pixmap.c:2259 modules/file/rawfile.c:379
+#: libgwydgets/gwy3dwindow.c:1027 modules/file/pixmap.c:900
+#: modules/file/pixmap.c:2339 modules/file/rawfile.c:380
 #: modules/process/angle_dist.c:170 modules/process/calibrate.c:295
 #: modules/process/cwt.c:132 modules/process/drift.c:230
 #: modules/process/dwt.c:164 modules/process/dwtanisotropy.c:183
@@ -790,6 +790,7 @@ msgid "Hidden"
 msgstr "Versteckt"
 
 #: libgwydgets/gwydgetenums.c:46 libgwydgets/gwygraphwindowmeasuredialog.c:427
+#: modules/tools/selectionmanager.c:218
 msgid "Points"
 msgstr "Punkte"
 
@@ -1051,8 +1052,9 @@ msgstr "Winkel"
 msgid "Preferred"
 msgstr "Bevorzugt"
 
-#: libgwydgets/gwyoptionmenus.c:464 app/meta.c:283 modules/file/rawfile.c:938
+#: libgwydgets/gwyoptionmenus.c:464 app/meta.c:283 modules/file/rawfile.c:939
 #: modules/process/convolution_filter.c:547
+#: modules/tools/selectionmanager.c:289
 msgid "Name"
 msgstr "Name"
 
@@ -1090,11 +1092,11 @@ msgstr "_Hochgestellt"
 msgid "A_dd symbol"
 msgstr ""
 
-#: libgwydgets/gwyscitext.c:273 modules/file/rawfile.c:508
+#: libgwydgets/gwyscitext.c:273 modules/file/rawfile.c:509
 msgid "Preview"
 msgstr "Vorschau"
 
-#: libgwymodule/gwymodule-file.c:514 modules/file/pixmap.c:633
+#: libgwymodule/gwymodule-file.c:514 modules/file/pixmap.c:676
 #, c-format
 msgid "Cannot open file for reading: %s."
 msgstr "Datei kann nicht zum Lesen geöffnet werden: %s"
@@ -1112,7 +1114,7 @@ msgstr "Speichern in diesem Dateitformat wird von keinem Modul unterstützt."
 msgid "Module Browser"
 msgstr "Modul-Browser"
 
-#: libgwymodule/gwymodulebrowser.c:189 modules/process/fft.c:264
+#: libgwymodule/gwymodulebrowser.c:189
 msgid "Module"
 msgstr "Modul"
 
@@ -1165,37 +1167,41 @@ msgstr "Name"
 msgid "Failure:"
 msgstr "Datei:"
 
-#: app/about.c:49
+#: app/about.c:55
 #, c-format
 msgid "About %s"
 msgstr "Über %s"
 
-#: app/about.c:83
+#: app/about.c:89
 #, fuzzy
 msgid "An SPM data visualization and analysis tool."
 msgstr "Ein Datenanalyse-Programm für Rastersondenmikroskopie."
 
-#: app/about.c:93
+#: app/about.c:99
 #, c-format
 msgid ""
 "<i>%s</i>\n"
 "Report bugs to: <i>%s</i>"
 msgstr ""
 
-#: app/about.c:102
+#: app/about.c:116
 #, fuzzy
 msgid "Credits"
 msgstr "Mitwirkende"
 
-#: app/about.c:124
-#, c-format
+#: app/about.c:133
+#, fuzzy
+msgid "License"
+msgstr "Linie"
+
+#: app/about.c:138
+#, fuzzy, c-format
 msgid ""
-"\n"
-"<small>%s is free software; you can redistribute it and/or modify it under "
-"the terms of the GNU General Public License as published by the Free "
-"Software Foundation; either version 2 of the License, or (at your option) "
-"any later version. For full license text see file COPYING included in the "
-"source tarball.</small>"
+"%s is free software; you can redistribute it and/or modify it under the "
+"terms of the GNU General Public License as published by the Free Software "
+"Foundation; either version 2 of the License, or (at your option) any later "
+"version. For full license text see file COPYING included in the source "
+"tarball."
 msgstr ""
 "\n"
 "<small>%s ist freie Software. Sie können es unter den Bedingungen der GNU "
@@ -1205,22 +1211,61 @@ msgstr ""
 "Lizenzformulierung finden Sie in der Datei COPYING, die Quellpaket enthalten "
 "ist.</small>"
 
-#: app/about.c:194
+#: app/about.c:161
+#, fuzzy
+msgid "Features"
+msgstr "Datei:"
+
+#: app/about.c:220
 #, fuzzy
 msgid "Developers"
 msgstr "<b>Entwickler</b>\n"
 
-#: app/about.c:195
+#: app/about.c:221
 #, fuzzy
 msgid "Translators"
 msgstr "<b>Übersetzer</b>\n"
 
-#: app/about.c:199
+#: app/about.c:225
 #, fuzzy
 msgid "Development is supported by the Czech Metrology Institute: "
 msgstr ""
 "Die Entwicklung dieser Software wird ünterstützt vom Tschechischen "
 "Metrologie Institut (<i>http://www.cmi.cz/</i>).\n"
+
+#: app/about.c:252 app/about.c:255
+#, fuzzy
+msgid "OpenGL 3D View"
+msgstr "3D-Ansicht exportieren"
+
+#: app/about.c:256 app/about.c:268 app/about.c:287
+msgid "not available\n"
+msgstr ""
+
+#: app/about.c:261 app/about.c:264
+#, fuzzy
+msgid "Fast Fourier Transform"
+msgstr "Schnelle Fouriertransformation berechnen"
+
+#: app/about.c:265
+msgid "built-in SimpleFFT\n"
+msgstr ""
+
+#: app/about.c:271
+msgid "X11 protocol\n"
+msgstr ""
+
+#: app/about.c:275
+msgid "Win32 protocol\n"
+msgstr ""
+
+#: app/about.c:278
+msgid "Remote Control"
+msgstr ""
+
+#: app/about.c:282 app/about.c:286
+msgid "Python Scripting Interface"
+msgstr ""
 
 #: app/app.c:235
 #, fuzzy, c-format
@@ -1275,42 +1320,42 @@ msgstr ""
 msgid "_Physically Square"
 msgstr ""
 
-#: app/data-browser.c:3545
+#: app/data-browser.c:3634
 msgid "Extract to a new file"
 msgstr "In neue Datei extrahieren"
 
-#: app/data-browser.c:3546
+#: app/data-browser.c:3635
 msgid "Duplicate"
 msgstr "_Duplizieren"
 
-#: app/data-browser.c:3547
+#: app/data-browser.c:3636
 #, fuzzy
 msgid "Delete"
 msgstr "_Löschen"
 
-#: app/data-browser.c:3591
+#: app/data-browser.c:3680
 #, fuzzy
 msgid "Data Browser"
 msgstr "Daten-Browser"
 
-#: app/data-browser.c:3614
+#: app/data-browser.c:3703
 #, fuzzy
 msgid "Close file"
 msgstr "Datei _schleißen"
 
-#: app/data-browser.c:3627
+#: app/data-browser.c:3716
 msgid "Channels"
 msgstr "Kanäle"
 
-#: app/data-browser.c:3641
+#: app/data-browser.c:3730
 msgid "Graphs"
 msgstr "Graphen"
 
-#: app/data-browser.c:3655
+#: app/data-browser.c:3744
 msgid "Spectra"
 msgstr ""
 
-#: app/data-browser.c:4931
+#: app/data-browser.c:5020
 #, c-format
 msgid "Unknown channel %d"
 msgstr "Unbekannter Kanal %d"
@@ -1325,7 +1370,7 @@ msgstr "Das Öffnen von `%s' ist fehlgeschlagen"
 msgid "Merge File"
 msgstr "Zusammengefügte Bilder"
 
-#: app/file.c:266 app/gwyappfilechooser.c:206
+#: app/file.c:266 app/gwyappfilechooser.c:208
 msgid "Open File"
 msgstr "Datei öffnen"
 
@@ -1428,37 +1473,37 @@ msgstr "_Kurve"
 msgid "_Snap to control points"
 msgstr "An Kontrollpunkten ein_rasten"
 
-#: app/gwyappfilechooser.c:211
+#: app/gwyappfilechooser.c:213
 msgid "Save File"
 msgstr "Datei Speichern"
 
-#: app/gwyappfilechooser.c:389
+#: app/gwyappfilechooser.c:391
 #, c-format
 msgid "File _type: %s, filtered"
 msgstr "Datei_typ: %s, gefiltert"
 
-#: app/gwyappfilechooser.c:391
+#: app/gwyappfilechooser.c:393
 #, fuzzy, c-format
 msgid "File _type: %s"
 msgstr "Datei_typ:"
 
-#: app/gwyappfilechooser.c:484
+#: app/gwyappfilechooser.c:486
 msgid "Automatic by extension"
 msgstr "Automatisch, nach Dateiendung"
 
-#: app/gwyappfilechooser.c:493
+#: app/gwyappfilechooser.c:495
 msgid "Automatically detected"
 msgstr "Automatisch erkennen"
 
-#: app/gwyappfilechooser.c:544
+#: app/gwyappfilechooser.c:546
 msgid "Show only loadable files of selected type"
 msgstr "Nur ladbare Dateien des ausgewählten Typs anzeigen"
 
-#: app/gwyappfilechooser.c:746
+#: app/gwyappfilechooser.c:759
 msgid "…"
 msgstr "..."
 
-#: app/gwyappfilechooser.c:894
+#: app/gwyappfilechooser.c:907
 msgid "Cannot preview"
 msgstr "Keine Vorschau möglich"
 
@@ -1501,11 +1546,11 @@ msgstr "Registriere Module"
 msgid "Initializing GUI"
 msgstr "Initialisiere graphische Benutzeroberfläche"
 
-#: app/gwyddion.c:350
+#: app/gwyddion.c:355
 msgid "Could not read settings."
 msgstr "Einstellungen konnten nicht gelesen werden."
 
-#: app/gwyddion.c:353
+#: app/gwyddion.c:358
 #, c-format
 msgid ""
 "Settings file `%s' cannot be read: %s\n"
@@ -1547,7 +1592,7 @@ msgstr "Ausgewähltes Element löschen"
 msgid "Origin"
 msgstr "<b>Ursprung</b>"
 
-#: app/gwyplaintool.c:1013 modules/file/rawfile.c:940
+#: app/gwyplaintool.c:1013 modules/file/rawfile.c:941
 #: modules/process/convolution_filter.c:358
 #: modules/process/convolution_filter.c:562
 msgid "Size"
@@ -1605,7 +1650,7 @@ msgstr "/_Speichern"
 msgid "_New"
 msgstr "_Neu"
 
-#: app/meta.c:145 modules/file/rawfile.c:1007
+#: app/meta.c:145 modules/file/rawfile.c:1008
 msgid "_Delete"
 msgstr "_Löschen"
 
@@ -1991,25 +2036,31 @@ msgid ""
 "any of them the default mode."
 msgstr ""
 
-#: app/tips.c:336
+#: app/tips.c:335
+msgid ""
+"Dragging selections from Selections Manager tool to a data window copies the "
+"selection to the target data."
+msgstr ""
+
+#: app/tips.c:341
 msgid ""
 "Gwyddion User Guide explains in detail many of the methods and algorithms "
 "implemented in Gwyddion."
 msgstr ""
 
-#: app/tips.c:341
+#: app/tips.c:346
 msgid "Gwyddion is a son of Math."
 msgstr ""
 
-#: app/tips.c:388
+#: app/tips.c:393
 msgid "Gwyddion Tip of the Day"
 msgstr ""
 
-#: app/tips.c:400
+#: app/tips.c:405
 msgid "_Previous Tip"
 msgstr ""
 
-#: app/tips.c:406
+#: app/tips.c:411
 msgid "_Next Tip"
 msgstr ""
 
@@ -2214,6 +2265,16 @@ msgstr ""
 msgid "Please wait"
 msgstr "Bitte warten"
 
+#: modules/file/aistfile.c:53
+#, fuzzy
+msgid "Imports AIST-NT data files."
+msgstr "Importiert Createc-Daten."
+
+#: modules/file/aistfile.c:66
+#, fuzzy
+msgid "AIST-NT files (.aist)"
+msgstr "APE-Dateien (.dat)"
+
 #: modules/file/apefile.c:118
 msgid "Imports APE (Applied Physics and Engineering) data files."
 msgstr "Importiert APE-Dateien (Applied Physics and Engineering)."
@@ -2251,8 +2312,8 @@ msgstr ""
 msgid "Export Text"
 msgstr "Exportieren"
 
-#: modules/file/asciiexport.c:210 modules/file/pixmap.c:2347
-#: modules/file/rawfile.c:701 modules/process/fft_filter_1d.c:296
+#: modules/file/asciiexport.c:210 modules/file/pixmap.c:2427
+#: modules/file/rawfile.c:702 modules/process/fft_filter_1d.c:296
 #: modules/process/grain_dist.c:291 modules/process/grain_mark.c:347
 #: modules/process/grain_rem_threshold.c:324 modules/process/grain_wshed.c:278
 #: modules/tools/spotremove.c:319 modules/tools/stats.c:339
@@ -2355,7 +2416,7 @@ msgstr "Importiert APE-Dateien (Applied Physics and Engineering)."
 msgid "DME files (.img)"
 msgstr "APE-Dateien (.dat)"
 
-#: modules/file/dmefile.c:181 modules/file/psia.c:227
+#: modules/file/dmefile.c:181
 #, c-format
 msgid "Header is too short (only %d bytes)."
 msgstr ""
@@ -2496,9 +2557,37 @@ msgid ""
 "Data deserialization succeeded, but resulted in an unexpected object %s."
 msgstr ""
 
-#: modules/file/gwytiff.h:264
+#: modules/file/gwytiff.h:204 modules/file/gwytiff.h:214
+#, c-format
+msgid "TIFF directory %u ended unexpectedly."
+msgstr ""
+
+#: modules/file/gwytiff.h:335
 msgid "Invalid tag data positions were found."
 msgstr ""
+
+#: modules/file/gwytiff.h:611 modules/file/gwytiff.h:618
+#: modules/file/gwytiff.h:677 modules/file/gwytiff.h:693
+#: modules/file/mapvue.c:444 modules/file/mapvue.c:449
+#, c-format
+msgid "Required tag %u was not found."
+msgstr ""
+
+#: modules/file/gwytiff.h:642
+#, fuzzy, c-format
+msgid "Compression type %u is not supported."
+msgstr "Das Dateiformat der Version %.1f wird nicht unterstützt."
+
+#: modules/file/gwytiff.h:648
+#, fuzzy, c-format
+msgid "Planar configuration %u is not supported."
+msgstr "Das Dateiformat der Version %.1f wird nicht unterstützt."
+
+#: modules/file/gwytiff.h:719 modules/file/matfile.c:276
+#: modules/file/matfile.c:298 modules/file/psia.c:336
+#, fuzzy
+msgid "File is truncated."
+msgstr "Die Datei ist leer."
 
 #: modules/file/hdf4file.c:331
 msgid "Imports Hierarchical Data Format (HDF) files, version 4."
@@ -2551,11 +2640,11 @@ msgstr "Importiert Createc-Daten."
 msgid "Intematix SDF data files (.sdf)"
 msgstr "APE-Dateien (.dat)"
 
-#: modules/file/intematix.c:304
+#: modules/file/intematix.c:301
 msgid "Parameter tag set is incomplete."
 msgstr ""
 
-#: modules/file/intematix.c:309
+#: modules/file/intematix.c:306
 msgid "image depth"
 msgstr ""
 
@@ -2573,28 +2662,16 @@ msgstr "APE-Dateien (.dat)"
 msgid "The type of data is unknown.  Please report it to the developers."
 msgstr ""
 
-#: modules/file/jpkscan.c:105
+#: modules/file/jpkscan.c:83
 msgid "Imports JPK image scans."
 msgstr ""
 
-#: modules/file/jpkscan.c:129
+#: modules/file/jpkscan.c:96
 msgid "JPK image scans (.jpk)"
 msgstr ""
 
-#: modules/file/jpkscan.c:213
-msgid "JPK scan"
-msgstr ""
-
-#: modules/file/jpkscan.c:222
+#: modules/file/jpkscan.c:158
 msgid "File does not contain grid dimensions."
-msgstr ""
-
-#: modules/file/jpkscan.c:320
-#, c-format
-msgid ""
-"LibTIFF too old!\n"
-"\n"
-"You are using %s. Please update to libtiff version %d.%d or newer."
 msgstr ""
 
 #: modules/file/mapvue.c:373
@@ -2606,11 +2683,6 @@ msgstr "Importiert Createc-Daten."
 #, fuzzy
 msgid "MapVue files (.map)"
 msgstr "APE-Dateien (.dat)"
-
-#: modules/file/mapvue.c:444 modules/file/mapvue.c:449
-#, c-format
-msgid "Required tag %u was not found."
-msgstr ""
 
 #: modules/file/mapvue.c:622
 msgid "File end was reached while scanning tags."
@@ -2652,11 +2724,6 @@ msgstr "Importiert Createc-Daten."
 #, fuzzy
 msgid "Matlab MAT 5 files (.mat)"
 msgstr "APE-Dateien (.dat)"
-
-#: modules/file/matfile.c:276 modules/file/matfile.c:298
-#, fuzzy
-msgid "File is truncated."
-msgstr "Die Datei ist leer."
 
 #: modules/file/matfile.c:308
 msgid "Compressed data inside compressed data found."
@@ -2911,13 +2978,18 @@ msgstr ""
 msgid "Frame #%u is too short for scanned data header."
 msgstr ""
 
-#: modules/file/ols.c:55
+#: modules/file/ols.c:61
 #, fuzzy
 msgid "Imports OLS data files."
 msgstr "Importiert Createc-Daten."
 
-#: modules/file/ols.c:68
+#: modules/file/ols.c:74
 msgid "Olympus LEXT OLS3000 (.ols)"
+msgstr ""
+
+#: modules/file/ols.c:259 modules/file/ols.c:269
+#, c-format
+msgid "Section ‛%s’ ended with ‛%s’."
 msgstr ""
 
 #: modules/file/omicron.c:138
@@ -2972,291 +3044,306 @@ msgstr ""
 msgid "Truncated data in block %s"
 msgstr ""
 
-#: modules/file/pixmap.c:291
+#: modules/file/pixmap.c:287
 msgid "Portable Network Graphics (.png)"
 msgstr ""
 
-#: modules/file/pixmap.c:297
+#: modules/file/pixmap.c:293
 msgid "JPEG (.jpeg,.jpg)"
 msgstr ""
 
-#: modules/file/pixmap.c:304
+#: modules/file/pixmap.c:299
 msgid "TIFF (.tiff,.tif)"
 msgstr ""
 
-#: modules/file/pixmap.c:311
+#: modules/file/pixmap.c:305
 msgid "Portable Pixmap (.ppm,.pnm)"
 msgstr ""
 
-#: modules/file/pixmap.c:317
+#: modules/file/pixmap.c:311
 msgid "Windows or OS2 Bitmap (.bmp)"
 msgstr ""
 
-#: modules/file/pixmap.c:323
+#: modules/file/pixmap.c:317
 msgid "TARGA (.tga,.targa)"
 msgstr ""
 
-#: modules/file/pixmap.c:349
-msgid ""
-"Exports data as pixmap images and imports data from pixmap images. Supports "
-"following image formats for export: PNG, JPEG, TIFF (if available), PPM, "
-"BMP, TARGA. Import support relies on GDK and thus may be installation-"
-"dependent."
+#: modules/file/pixmap.c:330
+msgid "Graphics Interchange Format (.gif)"
 msgstr ""
 
-#: modules/file/pixmap.c:619
+#: modules/file/pixmap.c:334
+msgid "JPEG 2000 (.jpx)"
+msgstr ""
+
+#: modules/file/pixmap.c:338
+msgid "PCX (.pcx)"
+msgstr ""
+
+#: modules/file/pixmap.c:342
+msgid "X Pixmap (.xpm)"
+msgstr ""
+
+#: modules/file/pixmap.c:346
+msgid "Sun raster image (.ras)"
+msgstr ""
+
+#: modules/file/pixmap.c:350
+msgid "Apple icon (.icns)"
+msgstr ""
+
+#: modules/file/pixmap.c:374
+msgid ""
+"Renders data into pixmap images and imports data from pixmap images. "
+"Supports the following image formats for export: PNG, JPEG, TIFF, PPM, BMP, "
+"TARGA. Import support relies on GDK and thus may be installation-dependent."
+msgstr ""
+
+#: modules/file/pixmap.c:662
 msgid "Pixmap image import must be run as interactive."
 msgstr ""
 
-#: modules/file/pixmap.c:627
+#: modules/file/pixmap.c:670
 #, c-format
 msgid "Pixmap has not registered file type `%s'."
 msgstr ""
 
-#: modules/file/pixmap.c:641
+#: modules/file/pixmap.c:684
 #, c-format
 msgid "Cannot get pixbuf loader: %s."
 msgstr ""
 
-#: modules/file/pixmap.c:653 modules/file/pixmap.c:663
+#: modules/file/pixmap.c:696 modules/file/pixmap.c:706
 #, c-format
 msgid "Pixbuf loader refused data: %s."
 msgstr ""
 
-#: modules/file/pixmap.c:825
+#: modules/file/pixmap.c:868
 #, fuzzy
 msgid "Red"
 msgstr "/Er_neut durchführen"
 
-#: modules/file/pixmap.c:826
+#: modules/file/pixmap.c:869
 msgid "Green"
 msgstr ""
 
-#: modules/file/pixmap.c:827
+#: modules/file/pixmap.c:870
 #, fuzzy
 msgid "Blue"
 msgstr "Wert"
 
-#: modules/file/pixmap.c:828
+#: modules/file/pixmap.c:871
 #, fuzzy
 msgid "Value (max)"
 msgstr "_Werteskala:"
 
-#: modules/file/pixmap.c:829
+#: modules/file/pixmap.c:872
 msgid "RGB sum"
 msgstr ""
 
-#: modules/file/pixmap.c:830
+#: modules/file/pixmap.c:873
 msgid "Alpha"
 msgstr ""
 
-#: modules/file/pixmap.c:854
+#: modules/file/pixmap.c:897
 msgid "Import "
 msgstr "Importieren"
 
-#: modules/file/pixmap.c:880 modules/file/rawfile.c:581
+#: modules/file/pixmap.c:923 modules/file/rawfile.c:582
 msgid "Resolution"
 msgstr ""
 
-#: modules/file/pixmap.c:887 modules/file/rawfile.c:586
+#: modules/file/pixmap.c:930 modules/file/rawfile.c:587
 msgid "_Horizontal size:"
 msgstr "_Horizontale Größe:"
 
-#: modules/file/pixmap.c:887 modules/file/pixmap.c:894
+#: modules/file/pixmap.c:930 modules/file/pixmap.c:937
 msgid "px"
 msgstr "px"
 
-#: modules/file/pixmap.c:894 modules/file/rawfile.c:593
+#: modules/file/pixmap.c:937 modules/file/rawfile.c:594
 msgid "_Vertical size:"
 msgstr "_Vertikale Größe:"
 
-#: modules/file/pixmap.c:925 modules/file/rawfile.c:604
+#: modules/file/pixmap.c:968 modules/file/rawfile.c:605
 #, fuzzy
 msgid "Physical Dimensions"
 msgstr "<b>Physische Ausmaße</b>"
 
-#: modules/file/pixmap.c:935
+#: modules/file/pixmap.c:978
 msgid "_Width"
 msgstr "_Breite"
 
-#: modules/file/pixmap.c:957 modules/file/pixmap.c:1012
-#: modules/file/rawfile.c:636 modules/file/rawfile.c:692
+#: modules/file/pixmap.c:1000 modules/file/pixmap.c:1055
+#: modules/file/rawfile.c:637 modules/file/rawfile.c:693
 #: modules/process/calibrate.c:338 modules/process/calibrate.c:419
 #, fuzzy
 msgid "Change"
 msgstr "Kanäle"
 
-#: modules/file/pixmap.c:970
+#: modules/file/pixmap.c:1013
 msgid "H_eight"
 msgstr "H_öhe"
 
-#: modules/file/pixmap.c:977 modules/file/rawfile.c:656
+#: modules/file/pixmap.c:1020 modules/file/rawfile.c:657
 msgid "Identical _measures"
 msgstr "Identische _Maße"
 
-#: modules/file/pixmap.c:989 modules/file/rawfile.c:668
+#: modules/file/pixmap.c:1032 modules/file/rawfile.c:669
 #, fuzzy
 msgid "_Z-scale (per sample unit):"
 msgstr "_Z-Skalierung (pro Abtast-Einheit):"
 
-#: modules/file/pixmap.c:1022
+#: modules/file/pixmap.c:1065
 msgid ""
 "Warning: Colorful images cannot be reliably mapped to meaningful values."
 msgstr ""
 
-#: modules/file/pixmap.c:1040
+#: modules/file/pixmap.c:1083
 msgid "Use"
 msgstr "Verwende"
 
-#: modules/file/pixmap.c:1040
+#: modules/file/pixmap.c:1083
 #, fuzzy
 msgid "as data"
 msgstr "als Daten"
 
-#: modules/file/pixmap.c:1236 modules/file/rawfile.c:1307
+#: modules/file/pixmap.c:1279 modules/file/rawfile.c:1308
 #: modules/process/calibrate.c:815
 #, fuzzy
 msgid "Change Units"
 msgstr "Kanäle"
 
-#: modules/file/pixmap.c:1250 modules/file/rawfile.c:1321
+#: modules/file/pixmap.c:1293 modules/file/rawfile.c:1322
 #: modules/process/calibrate.c:829
 #, fuzzy
 msgid "New _units:"
 msgstr "Neues Element"
 
-#: modules/file/pixmap.c:1309 modules/file/pixmap.c:1334
+#: modules/file/pixmap.c:1352 modules/file/pixmap.c:1377
 #, c-format
 msgid "Pixbuf save failed: %s."
 msgstr ""
 
-#: modules/file/pixmap.c:1369
-msgid "TIFFOpen() function failed."
-msgstr ""
-
-#: modules/file/pixmap.c:1387
-msgid "TIFFWriteScanline() function failed."
-msgstr ""
-
-#: modules/file/pixmap.c:1572
+#: modules/file/pixmap.c:1652
 msgid "Image is too large to be stored as TARGA."
 msgstr ""
 
-#: modules/file/pixmap.c:1649
+#: modules/file/pixmap.c:1729
 msgid "Data must be displayed in a window for pixmap export."
 msgstr ""
 
-#: modules/file/pixmap.c:2206
+#: modules/file/pixmap.c:2286
 #, fuzzy
 msgid "Change Inset Color"
 msgstr "Maskenfarbe ändern"
 
-#: modules/file/pixmap.c:2256
+#: modules/file/pixmap.c:2336
 #, c-format
 msgid "Export %s"
 msgstr ""
 
-#: modules/file/pixmap.c:2286
+#: modules/file/pixmap.c:2366
 msgid "Scaling"
 msgstr ""
 
-#: modules/file/pixmap.c:2295
+#: modules/file/pixmap.c:2375
 msgid "_Zoom:"
 msgstr ""
 
-#: modules/file/pixmap.c:2304 modules/file/rawfile.c:613
+#: modules/file/pixmap.c:2384 modules/file/rawfile.c:614
 #: modules/process/crosscor.c:197 modules/process/tip_blind.c:264
 msgid "_Width:"
 msgstr ""
 
-#: modules/file/pixmap.c:2313 modules/process/grain_mark.c:312
+#: modules/file/pixmap.c:2393 modules/process/grain_mark.c:312
 #: modules/process/grain_rem_threshold.c:280 modules/process/tip_blind.c:271
 msgid "_Height:"
 msgstr "_Höhe:"
 
-#: modules/file/pixmap.c:2322
+#: modules/file/pixmap.c:2402
 msgid "Scale text _proportionally"
 msgstr ""
 
-#: modules/file/pixmap.c:2337
+#: modules/file/pixmap.c:2417
 msgid "_Font size:"
 msgstr ""
 
-#: modules/file/pixmap.c:2351
+#: modules/file/pixmap.c:2431
 msgid "Draw _mask"
 msgstr ""
 
-#: modules/file/pixmap.c:2360
+#: modules/file/pixmap.c:2440
 msgid "Draw _selection"
 msgstr ""
 
-#: modules/file/pixmap.c:2383
+#: modules/file/pixmap.c:2463
 #, fuzzy
 msgid "Lateral Scale"
 msgstr "_Werteskala:"
 
-#: modules/file/pixmap.c:2390 modules/file/pixmap.c:2488
+#: modules/file/pixmap.c:2470 modules/file/pixmap.c:2568
 #: modules/process/immerse.c:367
 msgid "_None"
 msgstr "_Keine"
 
-#: modules/file/pixmap.c:2391
+#: modules/file/pixmap.c:2471
 #, fuzzy
 msgid "_Rulers"
 msgstr "_Zurücksetzen"
 
-#: modules/file/pixmap.c:2392
+#: modules/file/pixmap.c:2472
 msgid "_Inset scale bar"
 msgstr ""
 
-#: modules/file/pixmap.c:2397
+#: modules/file/pixmap.c:2477
 #, fuzzy
 msgid "Color:"
 msgstr "Farbe"
 
-#: modules/file/pixmap.c:2413 modules/process/immerse.c:323
+#: modules/file/pixmap.c:2493 modules/process/immerse.c:323
 msgid "Position:"
 msgstr "Position:"
 
-#: modules/file/pixmap.c:2418
+#: modules/file/pixmap.c:2498
 #, fuzzy
 msgid "left"
 msgstr "Links"
 
-#: modules/file/pixmap.c:2422
+#: modules/file/pixmap.c:2502
 #, fuzzy
 msgid "center"
 msgstr "X Zentrum"
 
-#: modules/file/pixmap.c:2426
+#: modules/file/pixmap.c:2506
 #, fuzzy
 msgid "right"
 msgstr "Rechts"
 
-#: modules/file/pixmap.c:2431
+#: modules/file/pixmap.c:2511
 msgid "top"
 msgstr ""
 
-#: modules/file/pixmap.c:2443
+#: modules/file/pixmap.c:2523
 msgid "bottom"
 msgstr ""
 
-#: modules/file/pixmap.c:2454
+#: modules/file/pixmap.c:2534
 #, fuzzy
 msgid "_Length:"
 msgstr "Länge"
 
-#: modules/file/pixmap.c:2471
+#: modules/file/pixmap.c:2551
 #, fuzzy
 msgid "_Auto"
 msgstr "Auto"
 
-#: modules/file/pixmap.c:2481
+#: modules/file/pixmap.c:2561
 #, fuzzy
 msgid "Value Scale"
 msgstr "_Werteskala:"
 
-#: modules/file/pixmap.c:2489
+#: modules/file/pixmap.c:2569
 #, fuzzy
 msgid "_False color ruler"
 msgstr "_Maskenfarbe:"
@@ -3287,18 +3374,28 @@ msgstr ""
 msgid "L-R"
 msgstr ""
 
-#: modules/file/psia.c:110
+#: modules/file/psia.c:230
 #, fuzzy
 msgid "Imports PSIA data files."
 msgstr "Importiert Createc-Daten."
 
-#: modules/file/psia.c:123
+#: modules/file/psia.c:243
 #, fuzzy
 msgid "PSIA data files (.tiff)"
 msgstr "APE-Dateien (.dat)"
 
-#: modules/file/psia.c:205
+#: modules/file/psia.c:326
 msgid "Data tag is missing."
+msgstr ""
+
+#: modules/file/psia.c:502
+#, c-format
+msgid "Header is too short (only %lu bytes)."
+msgstr ""
+
+#: modules/file/psia.c:615
+#, c-format
+msgid "Spectroscopy header is too short (only %lu bytes)."
 msgstr ""
 
 #: modules/file/quesant.c:56
@@ -3311,73 +3408,81 @@ msgstr "Importiert Createc-Daten."
 msgid "Quesant files (.afm)"
 msgstr "Createc-Dateien (.dat)"
 
-#: modules/file/rawfile.c:215
+#: modules/file/rawfile.c:214
 msgid ""
 "Imports raw data files, both ASCII and binary, according to user-specified "
 "format."
 msgstr ""
 
-#: modules/file/rawfile.c:236
+#: modules/file/rawfile.c:235
 msgid "User-specified"
 msgstr ""
 
-#: modules/file/rawfile.c:237
+#: modules/file/rawfile.c:236
 msgid "Signed byte"
 msgstr ""
 
-#: modules/file/rawfile.c:238
+#: modules/file/rawfile.c:237
 msgid "Unsigned byte"
 msgstr ""
 
-#: modules/file/rawfile.c:239
+#: modules/file/rawfile.c:238
 msgid "Signed 16bit word"
 msgstr ""
 
-#: modules/file/rawfile.c:240
+#: modules/file/rawfile.c:239
 msgid "Unsigned 16bit word"
 msgstr ""
 
-#: modules/file/rawfile.c:241
+#: modules/file/rawfile.c:240
 msgid "Signed 32bit word"
 msgstr ""
 
-#: modules/file/rawfile.c:242
+#: modules/file/rawfile.c:241
 msgid "Unsigned 32bit word"
 msgstr ""
 
+#: modules/file/rawfile.c:242
+msgid "Signed 64bit word"
+msgstr ""
+
 #: modules/file/rawfile.c:243
-msgid "IEEE single"
+msgid "Unsigned 64bit word"
 msgstr ""
 
 #: modules/file/rawfile.c:244
+msgid "IEEE single"
+msgstr ""
+
+#: modules/file/rawfile.c:245
 msgid "IEEE double"
 msgstr ""
 
-#: modules/file/rawfile.c:297
+#: modules/file/rawfile.c:298
 msgid "Raw data files"
 msgstr ""
 
-#: modules/file/rawfile.c:336
+#: modules/file/rawfile.c:337
 msgid "Raw data import must be run as interactive."
 msgstr ""
 
-#: modules/file/rawfile.c:378
+#: modules/file/rawfile.c:379
 msgid "Read Raw File"
 msgstr ""
 
-#: modules/file/rawfile.c:405
+#: modules/file/rawfile.c:406
 msgid "Information"
 msgstr ""
 
-#: modules/file/rawfile.c:410
+#: modules/file/rawfile.c:411
 msgid "Data Format"
 msgstr ""
 
-#: modules/file/rawfile.c:417 modules/process/convolution_filter.c:288
+#: modules/file/rawfile.c:418 modules/process/convolution_filter.c:288
 msgid "Presets"
 msgstr ""
 
-#: modules/file/rawfile.c:522 modules/process/convolution_filter.c:243
+#: modules/file/rawfile.c:523 modules/process/convolution_filter.c:243
 #: modules/process/drift.c:227 modules/process/edge.c:633
 #: modules/process/fft_filter_1d.c:197 modules/process/fft_synth.c:209
 #: modules/process/grain_mark.c:262 modules/process/grain_rem_threshold.c:221
@@ -3388,164 +3493,164 @@ msgstr ""
 msgid "_Update"
 msgstr "A_ktualisieren"
 
-#: modules/file/rawfile.c:557
+#: modules/file/rawfile.c:558
 msgid "<b>File</b>"
 msgstr ""
 
-#: modules/file/rawfile.c:587 modules/file/rawfile.c:594
+#: modules/file/rawfile.c:588 modules/file/rawfile.c:595
 msgid "data samples"
 msgstr ""
 
-#: modules/file/rawfile.c:598
+#: modules/file/rawfile.c:599
 msgid "S_quare sample"
 msgstr ""
 
-#: modules/file/rawfile.c:649 modules/process/crosscor.c:203
+#: modules/file/rawfile.c:650 modules/process/crosscor.c:203
 msgid "H_eight:"
 msgstr "H_öhe_"
 
-#: modules/file/rawfile.c:704
+#: modules/file/rawfile.c:705
 msgid "_Automatically offer raw data import of unknown files"
 msgstr ""
 
-#: modules/file/rawfile.c:733
+#: modules/file/rawfile.c:734
 msgid "_Text data"
 msgstr ""
 
-#: modules/file/rawfile.c:734
+#: modules/file/rawfile.c:735
 msgid "_Binary data"
 msgstr ""
 
-#: modules/file/rawfile.c:743
+#: modules/file/rawfile.c:744
 msgid "Start from _line:"
 msgstr ""
 
-#: modules/file/rawfile.c:750
+#: modules/file/rawfile.c:751
 msgid "E_ach row skip:"
 msgstr ""
 
-#: modules/file/rawfile.c:751
+#: modules/file/rawfile.c:752
 #, fuzzy
 msgid "fields"
 msgstr "Pixel"
 
-#: modules/file/rawfile.c:755
+#: modules/file/rawfile.c:756
 msgid "_Field delimiter:"
 msgstr ""
 
-#: modules/file/rawfile.c:763
+#: modules/file/rawfile.c:764
 msgid "Any whitespace"
 msgstr ""
 
-#: modules/file/rawfile.c:764
+#: modules/file/rawfile.c:765
 msgid "TAB character"
 msgstr ""
 
-#: modules/file/rawfile.c:765
+#: modules/file/rawfile.c:766
 msgid "Ohter character"
 msgstr ""
 
-#: modules/file/rawfile.c:773
+#: modules/file/rawfile.c:774
 msgid "_Other delimiter:"
 msgstr ""
 
-#: modules/file/rawfile.c:786
+#: modules/file/rawfile.c:787
 msgid "_Decimal separator is comma"
 msgstr ""
 
-#: modules/file/rawfile.c:804
+#: modules/file/rawfile.c:805
 msgid "Byte s_wap pattern:"
 msgstr ""
 
-#: modules/file/rawfile.c:819
+#: modules/file/rawfile.c:820
 msgid "Start at _offset:"
 msgstr ""
 
-#: modules/file/rawfile.c:820
+#: modules/file/rawfile.c:821
 msgid "bytes"
 msgstr ""
 
-#: modules/file/rawfile.c:826
+#: modules/file/rawfile.c:827
 msgid "_Sample size:"
 msgstr ""
 
-#: modules/file/rawfile.c:827 modules/file/rawfile.c:835
-#: modules/file/rawfile.c:843
+#: modules/file/rawfile.c:828 modules/file/rawfile.c:836
+#: modules/file/rawfile.c:844
 #, fuzzy
 msgid "bits"
 msgstr "Punkte"
 
-#: modules/file/rawfile.c:834
+#: modules/file/rawfile.c:835
 msgid "After each sample s_kip:"
 msgstr ""
 
-#: modules/file/rawfile.c:842
+#: modules/file/rawfile.c:843
 msgid "After each _row skip:"
 msgstr ""
 
-#: modules/file/rawfile.c:848
+#: modules/file/rawfile.c:849
 msgid "_Reverse bits in bytes"
 msgstr ""
 
-#: modules/file/rawfile.c:853
+#: modules/file/rawfile.c:854
 msgid "Reverse bi_ts in samples"
 msgstr ""
 
-#: modules/file/rawfile.c:858
+#: modules/file/rawfile.c:859
 msgid "Samples are si_gned"
 msgstr ""
 
-#: modules/file/rawfile.c:888
+#: modules/file/rawfile.c:889
 msgid "Binary"
 msgstr ""
 
-#: modules/file/rawfile.c:888
+#: modules/file/rawfile.c:889
 msgid "Text"
 msgstr ""
 
-#: modules/file/rawfile.c:910
+#: modules/file/rawfile.c:911
 msgid "Delimiter: whitespace"
 msgstr ""
 
-#: modules/file/rawfile.c:913
+#: modules/file/rawfile.c:914
 #, c-format
 msgid "Delimiter: 0x%02x"
 msgstr ""
 
-#: modules/file/rawfile.c:915
+#: modules/file/rawfile.c:916
 #, c-format
 msgid "Delimiter: %s"
 msgstr ""
 
-#: modules/file/rawfile.c:939
+#: modules/file/rawfile.c:940
 msgid "Type"
 msgstr ""
 
-#: modules/file/rawfile.c:941
+#: modules/file/rawfile.c:942
 msgid "Info"
 msgstr ""
 
-#: modules/file/rawfile.c:955
+#: modules/file/rawfile.c:956
 msgid "Preset l_ist"
 msgstr ""
 
-#: modules/file/rawfile.c:989
+#: modules/file/rawfile.c:990
 msgid "_Load"
 msgstr ""
 
-#: modules/file/rawfile.c:995
+#: modules/file/rawfile.c:996
 msgid "_Store"
 msgstr ""
 
-#: modules/file/rawfile.c:1001
+#: modules/file/rawfile.c:1002
 msgid "_Rename"
 msgstr ""
 
-#: modules/file/rawfile.c:1019
+#: modules/file/rawfile.c:1020
 msgid "Preset _name:"
 msgstr ""
 
-#: modules/file/rawfile.c:1103
+#: modules/file/rawfile.c:1104
 #, c-format
 msgid ""
 "<b>Too short file</b>\n"
@@ -3553,50 +3658,50 @@ msgid ""
 "s' is only %u bytes."
 msgstr ""
 
-#: modules/file/rawfile.c:1119
+#: modules/file/rawfile.c:1120
 #, c-format
 msgid ""
 "<b>Parsing failed</b>\n"
 "The contents of `%s' does not match format: %s."
 msgstr ""
 
-#: modules/file/rawfile.c:1593
+#: modules/file/rawfile.c:1599
 #, c-format
 msgid "The name `%s' is invalid."
 msgstr ""
 
-#: modules/file/rawfile.c:2062
+#: modules/file/rawfile.c:2091
 #, c-format
 msgid "Not enough lines (%d) for offset (%d)"
 msgstr ""
 
-#: modules/file/rawfile.c:2087
+#: modules/file/rawfile.c:2116
 #, c-format
 msgid "Expected whitespace to skip more fields in row %u, got `%.16s'"
 msgstr ""
 
-#: modules/file/rawfile.c:2101
+#: modules/file/rawfile.c:2130
 #, c-format
 msgid "Expected `%c' to skip more fields in row %u, got `%.16s'"
 msgstr ""
 
-#: modules/file/rawfile.c:2115
+#: modules/file/rawfile.c:2144
 #, c-format
 msgid "Expected `%s' to skip more fields in row %u, got `%.16s'"
 msgstr ""
 
-#: modules/file/rawfile.c:2132 modules/file/rawfile.c:2146
-#: modules/file/rawfile.c:2172
+#: modules/file/rawfile.c:2161 modules/file/rawfile.c:2175
+#: modules/file/rawfile.c:2201
 #, c-format
 msgid "Garbage `%.16s' in row %u, column %u"
 msgstr ""
 
-#: modules/file/rawfile.c:2158
+#: modules/file/rawfile.c:2187
 #, c-format
 msgid "Expected delimiter `%c' after data in row %u, column %u, got `%c'"
 msgstr ""
 
-#: modules/file/rawfile.c:2184
+#: modules/file/rawfile.c:2213
 #, c-format
 msgid "Expected delimiter `%s' after data in row %u, column %u, got `%.16s'"
 msgstr ""
@@ -3679,11 +3784,11 @@ msgstr ""
 msgid "End of file reached in color data header."
 msgstr ""
 
-#: modules/file/rhk-sm3.c:434
+#: modules/file/rhk-sm3.c:435
 msgid "End of file reached in color data."
 msgstr ""
 
-#: modules/file/rhk-sm3.c:701
+#: modules/file/rhk-sm3.c:702
 #, fuzzy, c-format
 msgid "Unknown line %d"
 msgstr "Unbekannter Kanal %d"
@@ -4059,28 +4164,28 @@ msgstr ""
 msgid "WITec files (.wit)"
 msgstr ""
 
-#: modules/file/wsxmfile.c:74
+#: modules/file/wsxmfile.c:78
 msgid "Imports Nanotec WSxM data files."
 msgstr ""
 
-#: modules/file/wsxmfile.c:87
+#: modules/file/wsxmfile.c:91
 msgid "WSXM files (.tom)"
 msgstr ""
 
-#: modules/file/wsxmfile.c:154
+#: modules/file/wsxmfile.c:186
 msgid "number of columns"
 msgstr ""
 
-#: modules/file/wsxmfile.c:161
+#: modules/file/wsxmfile.c:193
 msgid "number of rows"
 msgstr ""
 
-#: modules/file/wsxmfile.c:172
+#: modules/file/wsxmfile.c:204
 #, c-format
 msgid "Unknown data type `%s'."
 msgstr ""
 
-#: modules/file/wsxmfile.c:239
+#: modules/file/wsxmfile.c:271
 msgid "Missing end of file header marker."
 msgstr ""
 
@@ -4217,6 +4322,10 @@ msgstr "In neue Datei extrahieren"
 #, fuzzy
 msgid "Cut Graph"
 msgstr "Graph"
+
+#: modules/graph/graph_cut.c:179
+msgid "Cut _all curves"
+msgstr ""
 
 #: modules/graph/graph_export_ascii.c:52
 msgid "Plain text"
@@ -4392,26 +4501,26 @@ msgstr "/_Nivellieren"
 msgid "Level graph curves"
 msgstr "Diagrammkurven nivellieren"
 
-#: modules/layer/axis.c:131
+#: modules/layer/axis.c:139
 msgid "Layer allowing selection of horizontal or vertical lines."
 msgstr "Ebene zur Auswahl horizontaler oder vertikaler Linien."
 
-#: modules/layer/ellipse.c:131
+#: modules/layer/ellipse.c:139
 msgid "Layer allowing selection of elliptic areas."
 msgstr "Ebene zur Auswahl elliptischer Bereiche."
 
-#: modules/layer/line.c:161
+#: modules/layer/line.c:169
 msgid "Layer allowing selection of arbitrary straight lines."
 msgstr "Ebene zur Auswahl beliebiger gerader Linien."
 
-#: modules/layer/point.c:119
+#: modules/layer/point.c:141
 msgid ""
 "Layer allowing selection of several points, displayed as crosses or "
 "inivisible."
 msgstr ""
 "Ebene zur Auswahl mehrerer Punkte, dargestellt als Kreuze oder unsichtbar."
 
-#: modules/layer/rectangle.c:135
+#: modules/layer/rectangle.c:143
 msgid "Layer allowing selection of rectangular areas."
 msgstr "Ebene zur Auswahl rechteckiger Bereiche."
 
@@ -4963,11 +5072,12 @@ msgstr "Kreuz"
 
 #: modules/process/drift.c:291 modules/process/dwt.c:204
 #: modules/process/dwtanisotropy.c:201 modules/process/fft_filter_1d.c:329
-#: modules/process/fractal.c:228 modules/process/nanoindent_adjust.c:228
-#: modules/process/polydistort.c:268 modules/process/rotate.c:293
-#: modules/process/scale.c:248 modules/process/unrotate.c:282
-#: modules/tools/linestats.c:400 modules/tools/profile.c:381
-#: modules/tools/roughness.c:880 modules/tools/sfunctions.c:393
+#: modules/process/fft_profile.c:298 modules/process/fractal.c:228
+#: modules/process/nanoindent_adjust.c:228 modules/process/polydistort.c:268
+#: modules/process/rotate.c:293 modules/process/scale.c:248
+#: modules/process/unrotate.c:282 modules/tools/linestats.c:400
+#: modules/tools/profile.c:381 modules/tools/roughness.c:880
+#: modules/tools/sfunctions.c:393
 msgid "_Interpolation type:"
 msgstr "_Interpolationstyp:"
 
@@ -5368,7 +5478,8 @@ msgid "Real + Imaginary"
 msgstr "Realteil + Imaginärteil"
 
 #: modules/process/fft.c:261
-msgid "Module + Phase"
+#, fuzzy
+msgid "Modulus + Phase"
 msgstr "Betrag + Phase"
 
 #: modules/process/fft.c:262
@@ -5378,6 +5489,11 @@ msgstr "Realteil"
 #: modules/process/fft.c:263
 msgid "Imaginary"
 msgstr "Imaginärteil"
+
+#: modules/process/fft.c:264
+#, fuzzy
+msgid "Modulus"
+msgstr "FFT Betrag"
 
 #: modules/process/fft.c:265
 msgid "Phase"
@@ -5556,6 +5672,45 @@ msgstr "Entfernt die gesamte Filtermaske"
 #: modules/process/fft_filter_2d.c:1094
 msgid "Forces new markers to center around the origin"
 msgstr "Erzwingt Zentrierung neuer Masken um den Ursprung"
+
+#: modules/process/fft_profile.c:119
+msgid ""
+"Reads radial sections of two-dimensional power spectrum density function."
+msgstr ""
+
+#: modules/process/fft_profile.c:134
+#, fuzzy
+msgid "/_Statistics/_PDSF Section..."
+msgstr "/_Statistik/_Fraktale Dimension..."
+
+#: modules/process/fft_profile.c:138
+msgid "Read radial PSDF sections"
+msgstr ""
+
+#: modules/process/fft_profile.c:185
+msgid "Radial PSDF Section"
+msgstr ""
+
+#: modules/process/fft_profile.c:244
+#, fuzzy
+msgid "PSDF Section"
+msgstr "_Auswahlmodus:"
+
+#: modules/process/fft_profile.c:272 modules/process/grain_dist.c:319
+#: modules/tools/linestats.c:375 modules/tools/profile.c:353
+#: modules/tools/sfunctions.c:368
+msgid "_Fix res.:"
+msgstr "_Feste Auflösung:"
+
+#: modules/process/fft_profile.c:285
+#, fuzzy
+msgid "_Separate curves"
+msgstr "_Graph"
+
+#: modules/process/fft_profile.c:451
+#, c-format
+msgid "PSDF %.0f°"
+msgstr ""
 
 #: modules/process/fft_synth.c:127
 msgid "Generates random surfaces using spectral synthesis."
@@ -5976,11 +6131,6 @@ msgstr "_Graphen zeichnen"
 #: modules/process/grain_dist.c:239
 msgid "Grain Distributions"
 msgstr "Kornverteilungen"
-
-#: modules/process/grain_dist.c:319 modules/tools/linestats.c:375
-#: modules/tools/profile.c:353 modules/tools/sfunctions.c:368
-msgid "_Fix res.:"
-msgstr "_Feste Auflösung:"
 
 #: modules/process/grain_dist.c:482
 #, fuzzy
@@ -7816,7 +7966,7 @@ msgstr "Kornoberfl. Flächeninhalte"
 msgid "Measure individual grains (continuous parts of mask)"
 msgstr "Bestimmt Kornverteilungen (Zusammenhängende maskierte Bereiche)."
 
-#: modules/tools/grainremover.c:97
+#: modules/tools/grainremover.c:97 modules/tools/selectionmanager.c:110
 msgid ""
 "Grain removal tool, removes continuous parts of mask and/or underlying data."
 msgstr ""
@@ -8394,6 +8544,47 @@ msgstr ""
 msgid ""
 "Selected line:     (%s, %s) to (%s, %s) px\n"
 "                   (%s, %s) to (%s, %s) %s\n"
+msgstr ""
+
+#: modules/tools/selectionmanager.c:144
+#, fuzzy
+msgid "Selection Manager"
+msgstr "_Auswahlmodus:"
+
+#: modules/tools/selectionmanager.c:145
+msgid "Display and copy selections"
+msgstr ""
+
+#: modules/tools/selectionmanager.c:215
+#, fuzzy
+msgid "Horiz./vert. lines"
+msgstr "Drift-_Linien"
+
+#: modules/tools/selectionmanager.c:216
+msgid "Ellipses"
+msgstr ""
+
+#: modules/tools/selectionmanager.c:217
+#, fuzzy
+msgid "Lines"
+msgstr "Linie"
+
+#: modules/tools/selectionmanager.c:219
+#, fuzzy
+msgid "Rectangles"
+msgstr "Bereich"
+
+#: modules/tools/selectionmanager.c:305
+msgid "Objects"
+msgstr ""
+
+#: modules/tools/selectionmanager.c:315
+#, fuzzy
+msgid "_Distribute"
+msgstr "Verzerrt"
+
+#: modules/tools/selectionmanager.c:324
+msgid "to _all files"
 msgstr ""
 
 #: modules/tools/sfunctions.c:136
@@ -9086,10 +9277,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Interval()"
 #~ msgstr "Interval()"
-
-#, fuzzy
-#~ msgid "Lines"
-#~ msgstr "Linie"
 
 #, fuzzy
 #~ msgid "/_Presentation/_Edge Detection/Local _Maxima"

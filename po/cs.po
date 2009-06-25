@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2009-06-22 09:05+0200\n"
+"POT-Creation-Date: 2009-06-25 11:37+0200\n"
 "PO-Revision-Date: 2009-06-22 09:13+0200\n"
 "Last-Translator: Yeti <yeti@gwyddion.net>\n"
 "Language-Team: Czech\n"
@@ -1389,47 +1389,47 @@ msgstr "…"
 msgid "Cannot preview"
 msgstr "Náhled není možný"
 
-#: app/gwyddion.c:116
+#: app/gwyddion.c:119
 msgid "Loading document history"
 msgstr "Načítám historii dokumentů"
 
-#: app/gwyddion.c:121
+#: app/gwyddion.c:124
 msgid "Registering "
 msgstr "Registruji "
 
-#: app/gwyddion.c:122
+#: app/gwyddion.c:125
 msgid "stock items"
 msgstr "standardní ikony"
 
-#: app/gwyddion.c:126
+#: app/gwyddion.c:129
 msgid "color gradients"
 msgstr "barevné gradienty"
 
-#: app/gwyddion.c:128
+#: app/gwyddion.c:131
 msgid "GL materials"
 msgstr "GL materiály"
 
-#: app/gwyddion.c:130
+#: app/gwyddion.c:133
 msgid "grain quantities"
 msgstr "zrnové veličiny"
 
-#: app/gwyddion.c:135
+#: app/gwyddion.c:138
 msgid "Loading settings"
 msgstr "Načítám nastavení"
 
-#: app/gwyddion.c:142
+#: app/gwyddion.c:145
 msgid "Registering modules"
 msgstr "Registruji moduly"
 
-#: app/gwyddion.c:159
+#: app/gwyddion.c:162
 msgid "Initializing GUI"
 msgstr "Inicializuji GUI"
 
-#: app/gwyddion.c:352
+#: app/gwyddion.c:355
 msgid "Could not read settings."
 msgstr "Nezdařilo se přečíst nastavení."
 
-#: app/gwyddion.c:355
+#: app/gwyddion.c:358
 #, c-format
 msgid ""
 "Settings file `%s' cannot be read: %s\n"
@@ -1993,8 +1993,8 @@ msgid ""
 "Dragging selections from Selections Manager tool to a data window copies the "
 "selection to the target data."
 msgstr ""
-"Výběry ve Správci výběrů můžeš zkopírovat do jiných dat přetažením výběru "
-"ze seznamu do příšlušného okna."
+"Výběry ve Správci výběrů můžeš zkopírovat do jiných dat přetažením výběru ze "
+"seznamu do příšlušného okna."
 
 #: app/tips.c:341
 msgid ""
@@ -2910,6 +2910,11 @@ msgstr "Načítá datové soubory OLS."
 msgid "Olympus LEXT OLS3000 (.ols)"
 msgstr "Olympus LEXT OLS3000 (.ols)"
 
+#: modules/file/ols.c:259 modules/file/ols.c:269
+#, c-format
+msgid "Section ‛%s’ ended with ‛%s’."
+msgstr ""
+
 #: modules/file/omicron.c:138
 msgid "Imports Omicron data files (two-part .par + .tf*, .tb*, .sf*, .sb*)."
 msgstr ""
@@ -3569,51 +3574,51 @@ msgstr ""
 "<b>Čtení selhalo</b>\n"
 "Obsah souboru `%s' neodpovídá formátu: %s."
 
-#: modules/file/rawfile.c:1594
+#: modules/file/rawfile.c:1599
 #, c-format
 msgid "The name `%s' is invalid."
 msgstr "Jméno „%s“ je neplatné."
 
-#: modules/file/rawfile.c:2086
+#: modules/file/rawfile.c:2091
 #, c-format
 msgid "Not enough lines (%d) for offset (%d)"
 msgstr "Příliš málo řádků (%d), než aby šlo začít od pozice %d"
 
-#: modules/file/rawfile.c:2111
+#: modules/file/rawfile.c:2116
 #, c-format
 msgid "Expected whitespace to skip more fields in row %u, got `%.16s'"
 msgstr ""
 "Čekal jsem bílé znaky, abych mohl přeskočit další pole v řádku %u, ale "
 "narazil jsem na „%.16s“"
 
-#: modules/file/rawfile.c:2125
+#: modules/file/rawfile.c:2130
 #, c-format
 msgid "Expected `%c' to skip more fields in row %u, got `%.16s'"
 msgstr ""
 "Čekal jsem „%c“, abych mohl přeskočit další pole v řádku %u, ale narazil "
 "jsem na „%.16s“"
 
-#: modules/file/rawfile.c:2139
+#: modules/file/rawfile.c:2144
 #, c-format
 msgid "Expected `%s' to skip more fields in row %u, got `%.16s'"
 msgstr ""
 "Čekal jsem „%s“, abych mohl přeskočit další pole v řádku %u, ale narazil "
 "jsem na „%.16s“"
 
-#: modules/file/rawfile.c:2156 modules/file/rawfile.c:2170
-#: modules/file/rawfile.c:2196
+#: modules/file/rawfile.c:2161 modules/file/rawfile.c:2175
+#: modules/file/rawfile.c:2201
 #, c-format
 msgid "Garbage `%.16s' in row %u, column %u"
 msgstr "Nesmysly „%.16s“ v řádku %u, sloupci %u"
 
-#: modules/file/rawfile.c:2182
+#: modules/file/rawfile.c:2187
 #, c-format
 msgid "Expected delimiter `%c' after data in row %u, column %u, got `%c'"
 msgstr ""
 "Čekal bych oddělovač „%c“ po datech v řádku %u, sloupci %u, ale narazil jsem "
 "na „%c“"
 
-#: modules/file/rawfile.c:2208
+#: modules/file/rawfile.c:2213
 #, c-format
 msgid "Expected delimiter `%s' after data in row %u, column %u, got `%.16s'"
 msgstr ""
@@ -4058,28 +4063,28 @@ msgstr "Načítá datové soubory WIT WITecu."
 msgid "WITec files (.wit)"
 msgstr "WITec soubory (.wit)"
 
-#: modules/file/wsxmfile.c:74
+#: modules/file/wsxmfile.c:78
 msgid "Imports Nanotec WSxM data files."
 msgstr "Načítá datové soubory Nanotec WSxM."
 
-#: modules/file/wsxmfile.c:87
+#: modules/file/wsxmfile.c:91
 msgid "WSXM files (.tom)"
 msgstr "WSXM soubory (.tom)"
 
-#: modules/file/wsxmfile.c:154
+#: modules/file/wsxmfile.c:186
 msgid "number of columns"
 msgstr "počet sloupců"
 
-#: modules/file/wsxmfile.c:161
+#: modules/file/wsxmfile.c:193
 msgid "number of rows"
 msgstr "počet řádků"
 
-#: modules/file/wsxmfile.c:172
+#: modules/file/wsxmfile.c:204
 #, c-format
 msgid "Unknown data type `%s'."
 msgstr "Neznámý typ dat: „%s“."
 
-#: modules/file/wsxmfile.c:239
+#: modules/file/wsxmfile.c:271
 msgid "Missing end of file header marker."
 msgstr "Schází značka konce hlavičky souboru."
 
@@ -5496,8 +5501,7 @@ msgstr "Upevnit středy nových oblastí do počátku"
 #: modules/process/fft_profile.c:119
 msgid ""
 "Reads radial sections of two-dimensional power spectrum density function."
-msgstr ""
-"Odečítá radiální řezy dvojrozměrné spektrální hustoty."
+msgstr "Odečítá radiální řezy dvojrozměrné spektrální hustoty."
 
 #: modules/process/fft_profile.c:134
 msgid "/_Statistics/_PDSF Section..."
