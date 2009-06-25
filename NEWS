@@ -1,4 +1,4 @@
-2.16 (2000-00-00)
+2.16 (2009-06-25)
 Application:
 - Translations updated: Czech, French, Russian.
 - About dialog shows optional features compiled into the specific build.
@@ -26,11 +26,14 @@ Modules:
 - WSxM: Files produced by Nanonics AFM are supported.
 - Pixmap export: libTIFF is no longer used, TIFF files are written directly.
 - Rawfile: Support for 64bit integer built-in types was added.
+- Rawfile: Updating the preview with Alt+U uses the new value of just-editted
+  field.
 - Layer modules: Support for crop() method was added.
 - Point layer: Can display selection as vectors from the origin (new property
   "draw-as-vector").
 
 Other:
+- Win32 installer offers to choose the language to use.
 - Gwyddion no longer directly uses libTIFF on any platform (it used to be
   optionally linked with libTIFF).
 
