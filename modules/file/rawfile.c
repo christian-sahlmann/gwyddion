@@ -1371,10 +1371,15 @@ preview_cb(RawFileControls *controls)
 {
     GwyDataField *dfield;
     GdkPixbuf *pixbuf, *pixbuf2;
+    GtkWidget *entry;
     gint xres, yres;
     gdouble zoom, avg, rms;
 
     rawfile_warn_clear(controls);
+    entry = gtk_window_get_focus(GTK_WINDOW(controls->dialog));
+    if (entry && GTK_IS_ENTRY(entry))
+        gtk_widget_activate(entry);
+
     update_dialog_values(controls);
     if (!(dfield = rawfile_read_data_field(controls,
                                            controls->args,
