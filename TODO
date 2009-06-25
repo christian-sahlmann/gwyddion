@@ -7,8 +7,6 @@ to locate them ;-)
 Particularly (overall app issues, module issues not listed):
 - Printing
 - Integrated help
-- Proper associations and drag'n'drop support
-- Module profiles
 - Sessions
 - ...
 
@@ -28,7 +26,7 @@ Release checklist:
   really final versions, making dists in general updates po again)
 - make sure global library headers (libfoo.h) include all other public
   headers
-- update library versions, if something changed
+- update library versions, if something has changed
 - make sure gwyddion.iss.in contains all translations (XXX: automate this)
 - update version in configure.ac
 - update version in gwyddion-night-build
