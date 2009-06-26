@@ -26,6 +26,7 @@
 #include <libprocess/datafield.h>
 #include <libgwydgets/gwydatawindow.h>
 #include <libgwydgets/gwydgetutils.h>
+#include <app/app.h>
 #include <app/data-browser.h>
 #include <app/gwymoduleutils.h>
 
@@ -114,6 +115,7 @@ gwy_app_metadata_browser(GwyContainer *data,
                                 MIN(request.width + 24, 2*gdk_screen_width()/3),
                                 MIN(request.height + 32,
                                     2*gdk_screen_height()/3));
+    gwy_app_add_main_accel_group(GTK_WINDOW(browser->window));
 
     vbox = gtk_vbox_new(FALSE, 0);
     gtk_container_add(GTK_CONTAINER(browser->window), vbox);

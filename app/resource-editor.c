@@ -196,6 +196,7 @@ gwy_resource_editor_setup(GwyResourceEditor *editor)
     /* Window setup */
     gtk_window_set_resizable(GTK_WINDOW(editor), TRUE);
     gtk_window_set_title(GTK_WINDOW(editor), klass->window_title);
+    gwy_app_add_main_accel_group(GTK_WINDOW(editor));
     editor->sensgroup = gwy_sensitivity_group_new();
 
     editor->vbox = gtk_vbox_new(FALSE, 0);

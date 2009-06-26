@@ -397,6 +397,7 @@ gwy_app_tip_of_the_day(void)
                                          NULL);
     tod->dialog = dialog;
     gtk_window_set_position(GTK_WINDOW(dialog), GTK_WIN_POS_CENTER);
+    gwy_app_add_main_accel_group(GTK_WINDOW(dialog));
     g_signal_connect_swapped(dialog, "destroy", G_CALLBACK(finalize), tod);
     g_signal_connect_swapped(dialog, "response", G_CALLBACK(response), tod);
 

@@ -59,12 +59,13 @@ gwy_app_about(void)
                                         | GTK_DIALOG_DESTROY_WITH_PARENT,
                                         GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE,
                                         NULL);
+    g_free(s);
     gtk_dialog_set_default_response(GTK_DIALOG(about), GTK_RESPONSE_CLOSE);
     gtk_container_set_border_width(GTK_CONTAINER(about), 6);
     gtk_window_set_transient_for(GTK_WINDOW(about),
                                  GTK_WINDOW(gwy_app_main_window_get()));
     gtk_window_set_position(GTK_WINDOW(about), GTK_WIN_POS_CENTER);
-    g_free(s);
+    gwy_app_add_main_accel_group(GTK_WINDOW(about));
 
     vbox = GTK_DIALOG(about)->vbox;
     gtk_box_set_spacing(GTK_BOX(vbox), 8);

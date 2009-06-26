@@ -126,6 +126,8 @@ gwy_app_main_window_restore_position(void)
  * @window: A window.
  *
  * Adds main (global) application accelerator group to a window.
+ *
+ * This includes accelerators for terminating Gwyddion, opening files, etc.
  **/
 void
 gwy_app_add_main_accel_group(GtkWindow *window)
