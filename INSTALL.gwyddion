@@ -27,35 +27,50 @@ Prerequisities:
   to compile Gtk+, but what is good enough for Gtk+ should be good enough for
   Gwyddion), GNU toolchain is the prefered one
 - Gtk+-2.8 or newer, including development files
+  http://www.gtk.org/
 - pkg-config 0.16 or newer
+  http://pkgconfig.freedesktop.org/
 
 Recommended though optional, for 3D data view:
 - GtkGLExt-1.0 or newer, including development files
+  http://gtkglext.sourceforge.net/
 
 Recommended though optional, for speed up of some operations:
 - FFTW-3.0.0 (on 64bit systems, 3.1.0) or newer, including development files
+  http://www.fftw.org/
 
 Recommended though optional, for basic desktop integration:
 - desktop-file-utils
+  http://www.freedesktop.org/software/desktop-file-utils
 
 Recommended though optional, for `remote control':
 - LibXmu (a part of X11, though packaged separately since Xorg 7.0), including
   development files
+  http://www.x.org
 
 Recommended though optional, for Python scripting interface pygwy:
 - PyGTK2, including codegen, and all its dependencies
+  http://www.pygtk.org/
+
+Optional, for syntax highlighting in the Python console:
+- GtkSourceView, including development files
+  http://gtksourceview.sourceforge.net/
 
 Optional, for better GNOME and XFce integration (SPM file thumbnails):
 - GConf2
+  http://projects.gnome.org/gconf/
 
 Optional, for better KDE integration (SPM file thumbnails):
 - KDE4 libraries, including development files, and all their dependencies
+  http://www.kde.org/
 
 Optional, for SPML file support:
 - LibXML2, including development files
+  http://xmlsoft.org/
 
 Optional, for Matlab MAT5 file support:
 - zlib, including development files
+  http://www.gzip.org/zlib/
 
 Optional, for development of plug-in in various languages:
 - Python-2.2 or newer
