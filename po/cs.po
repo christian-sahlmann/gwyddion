@@ -4,7 +4,7 @@ msgstr ""
 "Project-Id-Version: Gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
 "POT-Creation-Date: 2009-06-25 11:37+0200\n"
-"PO-Revision-Date: 2009-06-22 09:13+0200\n"
+"PO-Revision-Date: 2009-07-06 17:17+0200\n"
 "Last-Translator: Yeti <yeti@gwyddion.net>\n"
 "Language-Team: Czech\n"
 "MIME-Version: 1.0\n"
@@ -2913,7 +2913,7 @@ msgstr "Olympus LEXT OLS3000 (.ols)"
 #: modules/file/ols.c:259 modules/file/ols.c:269
 #, c-format
 msgid "Section ‛%s’ ended with ‛%s’."
-msgstr ""
+msgstr "Sekce „%s“ skončila „%s“."
 
 #: modules/file/omicron.c:138
 msgid "Imports Omicron data files (two-part .par + .tf*, .tb*, .sf*, .sb*)."
@@ -3266,11 +3266,11 @@ msgstr "PNI soubory (.pni)"
 
 #: modules/file/pnifile.c:159
 msgid "Sens"
-msgstr ""
+msgstr "Sens"
 
 #: modules/file/pnifile.c:160
 msgid "Dem"
-msgstr ""
+msgstr "Dem"
 
 #: modules/file/pnifile.c:161 modules/graph/graph_cd.c:280
 #: modules/graph/graph_fdfit.c:336 modules/graph/graph_fit.c:336
@@ -3280,7 +3280,7 @@ msgstr "Chyba"
 
 #: modules/file/pnifile.c:162
 msgid "L-R"
-msgstr ""
+msgstr "L-R"
 
 #: modules/file/psia.c:230
 msgid "Imports PSIA data files."
@@ -8283,28 +8283,24 @@ msgid "Display and copy selections"
 msgstr "Zobrazuje a kopíruje výběry"
 
 #: modules/tools/selectionmanager.c:215
-#, fuzzy
 msgid "Horiz./vert. lines"
-msgstr "_Linie driftu"
+msgstr "Vodorov./svis. čáry"
 
 #: modules/tools/selectionmanager.c:216
-#, fuzzy
 msgid "Ellipses"
-msgstr "Eliptické tvary"
+msgstr "Elipsy"
 
 #: modules/tools/selectionmanager.c:217
 msgid "Lines"
-msgstr "Tenké čáry"
+msgstr "Čáry"
 
 #: modules/tools/selectionmanager.c:219
-#, fuzzy
 msgid "Rectangles"
-msgstr "Obdélníkové tvary"
+msgstr "Obdélníky"
 
 #: modules/tools/selectionmanager.c:305
-#, fuzzy
 msgid "Objects"
-msgstr "Vyznačené objekty"
+msgstr "Objekty"
 
 #: modules/tools/selectionmanager.c:315
 msgid "_Distribute"
@@ -8541,7 +8537,6 @@ msgstr ""
 "θ sklonu:            %s\n"
 "φ sklonu:            %s\n"
 
-#, fuzzy
 #~ msgid "File is truncated"
 #~ msgstr "Soubor je uříznutý."
 
