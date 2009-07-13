@@ -48,10 +48,15 @@
 #define MAGIC_TXT "?*File list\r\n"
 #define MAGIC_SIZE (sizeof(MAGIC_TXT)-1)
 
+#define MAGIC_BIN_PARTIAL "\\*File list"
+#define MAGIC_TXT_PARTIAL "?*File list"
+#define MAGIC_SIZE_PARTIAL (sizeof(MAGIC_TXT_PARTIAL)-1)
+
 typedef enum {
     NANOSCOPE_FILE_TYPE_NONE = 0,
     NANOSCOPE_FILE_TYPE_BIN,
-    NANOSCOPE_FILE_TYPE_TXT
+    NANOSCOPE_FILE_TYPE_TXT,
+    NANOSCOPE_FILE_TYPE_BROKEN
 } NanoscopeFileType;
 
 typedef enum {
@@ -134,7 +139,7 @@ static GwyModuleInfo module_info = {
     N_("Imports Veeco (Digital Instruments) Nanoscope data files, "
        "version 3 or newer."),
     "Yeti <yeti@gwyddion.net>",
-    "0.23",
+    "0.24",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -164,8 +169,8 @@ nanoscope_detect(const GwyFileDetectInfo *fileinfo,
         return 0;
 
     if (fileinfo->buffer_len > MAGIC_SIZE
-        && (memcmp(fileinfo->head, MAGIC_TXT, MAGIC_SIZE) == 0
-            || memcmp(fileinfo->head, MAGIC_BIN, MAGIC_SIZE) == 0))
+        && (!memcmp(fileinfo->head, MAGIC_TXT_PARTIAL, MAGIC_SIZE_PARTIAL)
+            || !memcmp(fileinfo->head, MAGIC_BIN_PARTIAL, MAGIC_SIZE_PARTIAL)))
         score = 100;
 
     return score;
@@ -200,6 +205,9 @@ nanoscope_load(const gchar *filename,
             file_type = NANOSCOPE_FILE_TYPE_TXT;
         else if (!memcmp(buffer, MAGIC_BIN, MAGIC_SIZE))
             file_type = NANOSCOPE_FILE_TYPE_BIN;
+        else if (!memcmp(buffer, MAGIC_TXT_PARTIAL, MAGIC_SIZE_PARTIAL)
+                 || !memcmp(buffer, MAGIC_BIN_PARTIAL, MAGIC_SIZE_PARTIAL))
+          file_type = NANOSCOPE_FILE_TYPE_BROKEN;
     }
     if (!file_type) {
         g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
@@ -208,8 +216,23 @@ nanoscope_load(const gchar *filename,
         g_free(buffer);
         return NULL;
     }
+    if (file_type == NANOSCOPE_FILE_TYPE_BROKEN) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("File has been damaged by change of line endings, "
+                      "resulting in corruption of the binary part of the file."
+                      "\n\n"
+                      "Typically, this occurs if the file is treated as text "
+                      "when sent by e-mail uncompressed, sent by FTP in ascii "
+                      "mode (use binary), compressed by ‘Send to compressed "
+                      "folder’ in some versions of MS Windows, or any other "
+                      "file transfer that attempts to store text "
+                      "platform-independently."));
+        g_free(buffer);
+        return NULL;
+    }
+
     gwy_debug("File type: %d", file_type);
-    /* as already know file_type, fix the first char for hash reading */
+    /* as we already know file_type, fix the first char for hash reading */
     *buffer = '\\';
 
     p = buffer;
