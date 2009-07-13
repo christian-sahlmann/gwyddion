@@ -2063,13 +2063,16 @@ gwy_data_field_get_profile(GwyDataField *data_field,
     gint k, j;
     gdouble cosa, sina, size, mid, sum;
     gdouble col, row, srcol, srrow;
+    gint xres, yres;
 
     g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), NULL);
     g_return_val_if_fail(!data_line || GWY_IS_DATA_LINE(data_line), NULL);
+    xres = data_field->xres;
+    yres = data_field->yres;
     g_return_val_if_fail(scol >= 0 && srow >= 0
                          && ecol >= 0 && erow >= 0
-                         && srow < data_field->yres && scol < data_field->xres
-                         && erow < data_field->yres && ecol < data_field->xres,
+                         && srow < yres && scol < xres
+                         && erow < yres && ecol < xres,
                          NULL);
 
     size = hypot(abs(scol - ecol) + 1, abs(srow - erow) + 1);
@@ -2091,7 +2094,9 @@ gwy_data_field_get_profile(GwyDataField *data_field,
                                                      scol + 0.5 + k*cosa,
                                                      srow + 0.5 + k*sina,
                                                      interpolation);
-    data_line->real = size * data_field->xreal/data_field->xres;
+    data_line->real = hypot(abs(scol - ecol)*data_field->xreal/xres,
+                            abs(srow - erow)*data_field->yreal/yres);
+    data_line->real *= res/(res - 1.0);
     gwy_data_field_copy_units_to_data_line(data_field, data_line);
 
     if (thickness <= 1)
@@ -2106,8 +2111,8 @@ gwy_data_field_get_profile(GwyDataField *data_field,
             srrow = srow + 0.5 + k*sina;
             col = srcol + j*sina;
             row = srrow + j*cosa;
-            if (col >= 0 && col < (data_field->xres-1)
-                && row >= 0 && row < (data_field->yres-1)) {
+            if (col >= 0 && col < (xres-1)
+                && row >= 0 && row < (yres-1)) {
                 sum += gwy_data_field_get_dval(data_field,
                                                col, row,
                                                interpolation);
