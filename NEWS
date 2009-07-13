@@ -1,3 +1,17 @@
+2.17 (0000-00-00)
+Application:
+- Translations updated: Czech, French.
+
+Libraries:
+- libgwyprocess: Real length of extracted profiles was corrected for very
+  short lines and different vertical and horizontal measures.
+
+Modules:
+- Profile: The profile resolution is no longer limited by the data dimensions.
+- Nanoscope: Files broken by line-end transformations are detected and an
+  explanatory error message is given.
+
+
 2.16 (2009-06-25)
 Application:
 - Translations updated: Czech, French, Russian.
