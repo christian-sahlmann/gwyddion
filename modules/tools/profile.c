@@ -130,7 +130,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Profile tool, creates profile graphs from selected lines."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "2.11",
+    "2.12",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -453,19 +453,7 @@ gwy_tool_profile_response(GwyTool *tool,
 static void
 gwy_tool_profile_data_changed(GwyPlainTool *plain_tool)
 {
-    GwyToolProfile *tool;
-    GtkWidget *spin;
-    gint m;
-
-    tool = GWY_TOOL_PROFILE(plain_tool);
-    if (plain_tool->data_field) {
-        spin = gwy_table_hscale_get_middle_widget(tool->resolution);
-        m = MAX(gwy_data_field_get_xres(plain_tool->data_field),
-                gwy_data_field_get_yres(plain_tool->data_field));
-        gtk_spin_button_set_range(GTK_SPIN_BUTTON(spin), MIN_RESOLUTION, m);
-    }
-
-    gwy_tool_profile_update_all_curves(tool);
+    gwy_tool_profile_update_all_curves(GWY_TOOL_PROFILE(plain_tool));
 }
 
 static void
