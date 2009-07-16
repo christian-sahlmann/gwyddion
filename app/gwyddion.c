@@ -436,10 +436,19 @@ setup_locale_from_win32_registry(void)
 
     if (RegOpenKeyEx(HKEY_CURRENT_USER, TEXT("Software\\Gwyddion\\1.0"),
                      0, KEY_READ, &reg_key) == ERROR_SUCCESS) {
-        RegQueryValueEx(reg_key, TEXT("gwy_locale"), NULL, NULL, locale, &size);
-        g_setenv("LANG", locale, TRUE);
+        if (RegQueryValueEx(reg_key, TEXT("gwy_locale"), NULL, NULL, locale, &size) == ERROR_SUCCESS){
+            g_setenv("LANG", locale, TRUE);
+            RegCloseKey(reg_key);
+            return;
+        }
         RegCloseKey(reg_key);
-   }
+    }
+    if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, TEXT("Software\\Gwyddion\\1.0"),
+                     0, KEY_READ, &reg_key) == ERROR_SUCCESS) {
+        if (RegQueryValueEx(reg_key, TEXT("gwy_locale"), NULL, NULL, locale, &size) == ERROR_SUCCESS)
+            g_setenv("LANG", locale, TRUE);
+        RegCloseKey(reg_key);
+    }
 #endif
 }
 
