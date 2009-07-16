@@ -12,6 +12,9 @@ Modules:
 - Nanoscope: Files broken by line-end transformations are detected and an
   explanatory error message is given.
 
+Other:
+- Forgotten @LIBTIFF@ was removed from gwyddion pkg-config file.
+
 
 2.16 (2009-06-25)
 Application:
