@@ -1,6 +1,7 @@
 2.17 (0000-00-00)
 Application:
 - Translations updated: Czech, French.
+- Language falls back to system langauge if gwy_locale is unset on Win32.
 
 Libraries:
 - libgwyprocess: Real length of extracted profiles was corrected for very
