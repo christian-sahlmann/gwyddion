@@ -243,7 +243,7 @@ gwy_windowing_type_get_enum(void)
         { N_("None"),       GWY_WINDOWING_NONE,      },
         { N_("Hann"),       GWY_WINDOWING_HANN,      },
         { N_("Hamming"),    GWY_WINDOWING_HAMMING,   },
-        { N_("Blackman"),   GWY_WINDOWING_BLACKMANN, },
+        { N_("Blackmann"),  GWY_WINDOWING_BLACKMANN, },
         { N_("Lanzcos"),    GWY_WINDOWING_LANCZOS,   },
         { N_("Welch"),      GWY_WINDOWING_WELCH,     },
         { N_("Rect"),       GWY_WINDOWING_RECT,      },
