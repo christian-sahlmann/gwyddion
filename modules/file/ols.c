@@ -202,7 +202,7 @@ ols_load_tiff(const GwyTIFF *tiff, GError **error)
 
         for (i = 0; i < reader->height; i++)
             gwy_tiff_read_image_row(tiff, reader, i, factor, 0.0,
-                                    data + (reader->height-1 - i)*reader->width);
+                                    data + i*reader->width);
 
         /* add read datafield to container */
         if (!container)
