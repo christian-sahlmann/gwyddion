@@ -137,10 +137,12 @@ ols_load_tiff(const GwyTIFF *tiff, GError **error)
     gint i, power10;
     gchar *comment = NULL;
     const gchar *s1;
+    gchar *s2;
     GError *err = NULL;
     guint dir_num = 0;
     gdouble *data;
     double z_axis = 1.0, xy_axis, factor;
+    GQuark quark;
     GString *key;
 
     /* Comment with parameters is common for all data fields */
@@ -208,9 +210,16 @@ ols_load_tiff(const GwyTIFF *tiff, GError **error)
         if (!container)
             container = gwy_container_new();
 
-        gwy_container_set_object(container,
-                                 gwy_app_get_data_key_for_id(dir_num),
-                                 dfield);
+        quark = gwy_app_get_data_key_for_id(dir_num);
+        gwy_container_set_object(container, quark, dfield);
+
+        /* Channel 1 seems to be topography */
+        if (dir_num == 1) {
+            s2 = g_strdup_printf("%s/title", g_quark_to_string(quark));
+            gwy_container_set_string_by_name(container, s2,
+                                             g_strdup("Height"));
+            g_free(s2);
+        }
 
         // free resources
         g_object_unref(dfield);
