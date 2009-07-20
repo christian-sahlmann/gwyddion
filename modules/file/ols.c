@@ -195,7 +195,10 @@ ols_load_tiff(const GwyTIFF *tiff, GError **error)
         gwy_data_field_set_si_unit_xy(dfield, siunit);
         g_object_unref(siunit);
 
-        siunit = gwy_si_unit_new_parse("nm", &power10);
+        if (dir_num == 1)
+            siunit = gwy_si_unit_new_parse("nm", &power10);
+        else
+            siunit = gwy_si_unit_new_parse("1e-6", &power10);
         gwy_data_field_set_si_unit_z(dfield, siunit);
         g_object_unref(siunit);
 
@@ -213,8 +216,15 @@ ols_load_tiff(const GwyTIFF *tiff, GError **error)
         quark = gwy_app_get_data_key_for_id(dir_num);
         gwy_container_set_object(container, quark, dfield);
 
-        /* Channel 1 seems to be topography */
-        if (dir_num == 1) {
+        /* Channel 0 is texture */
+        if (dir_num == 0) {
+            s2 = g_strdup_printf("%s/title", g_quark_to_string(quark));
+            gwy_container_set_string_by_name(container, s2,
+                                             g_strdup("Texture"));
+            g_free(s2);
+        }
+        /* Channel 1 is topography */
+        else if (dir_num == 1) {
             s2 = g_strdup_printf("%s/title", g_quark_to_string(quark));
             gwy_container_set_string_by_name(container, s2,
                                              g_strdup("Height"));
