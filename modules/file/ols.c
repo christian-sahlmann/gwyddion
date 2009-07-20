@@ -1,5 +1,5 @@
 /*
- *  @(#) $Id: psia.c 8034 2007-05-13 18:04:39Z yeti-dn $
+ *  @(#) $Id$
  *  Copyright (C) 2006 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
