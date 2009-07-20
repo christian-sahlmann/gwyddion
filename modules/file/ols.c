@@ -136,7 +136,7 @@ ols_load_tiff(const GwyTIFF *tiff, GError **error)
     GHashTable *hash;
     gint i, power10;
     gchar *comment = NULL;
-    const gchar *s1, *s2;
+    const gchar *s1;
     GError *err = NULL;
     guint dir_num = 0;
     gdouble *data;
@@ -156,10 +156,6 @@ ols_load_tiff(const GwyTIFF *tiff, GError **error)
         g_free(comment);
         return NULL;
     }
-
-    if ((s1 = g_hash_table_lookup(hash, "Acquisition Parameters::ZPositionUp"))
-         && (s2 = g_hash_table_lookup(hash, "Acquisition Parameters::ZPositionLow")))
-        z_axis = g_ascii_strtod(s1, NULL) - g_ascii_strtod(s2, NULL);
 
     key = g_string_new(NULL);
     for (dir_num = 0; dir_num < gwy_tiff_get_n_dirs(tiff); dir_num++) {
@@ -181,6 +177,12 @@ ols_load_tiff(const GwyTIFF *tiff, GError **error)
             g_warning("Real size step is 0.0, fixing to 1.0");
             xy_axis = 1.0;
         }
+        g_string_printf(key, "Data %u Info::Z Convert Value", dir_num+1);
+        if (!(s1 = g_hash_table_lookup(hash, key->str))) {
+            g_warning("Cannot find 'Z Convert Value' for data %u.", dir_num+1);
+            continue;
+        }
+        z_axis = g_ascii_strtod(s1, NULL);
 
         siunit = gwy_si_unit_new_parse("nm", &power10);
         dfield = gwy_data_field_new(reader->width, reader->height,
@@ -191,11 +193,11 @@ ols_load_tiff(const GwyTIFF *tiff, GError **error)
         gwy_data_field_set_si_unit_xy(dfield, siunit);
         g_object_unref(siunit);
 
-        siunit = gwy_si_unit_new_parse("um", &power10);
+        siunit = gwy_si_unit_new_parse("nm", &power10);
         gwy_data_field_set_si_unit_z(dfield, siunit);
         g_object_unref(siunit);
 
-        factor = z_axis * pow10(power10)/4095.0;
+        factor = z_axis * pow10(power10);
         data = gwy_data_field_get_data(dfield);
 
         for (i = 0; i < reader->height; i++)
