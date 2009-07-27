@@ -632,7 +632,7 @@ static GwyModuleInfo module_info = {
     N_("Calculate surface profile parameters."),
     "Martin Hasoň <hasonm@physics.muni.cz>, "
         "Yeti <yeti@gwyddion.net>",
-    "1.6",
+    "1.7",
     "Martin Hasoň & David Nečas (Yeti)",
     "2006",
 };
@@ -858,7 +858,7 @@ gwy_tool_roughness_init_dialog(GwyToolRoughness *tool)
 
     /* cut-off */
     tool->cutoff = gtk_adjustment_new(tool->args.cutoff,
-                                      0.0, 0.2, 0.01, 0.05, 0);
+                                      0.0, 0.3, 0.01, 0.05, 0);
     gwy_table_attach_hscale(table, row, _("C_ut-off:"), NULL,
                             tool->cutoff, GWY_HSCALE_DEFAULT);
     g_signal_connect(tool->cutoff, "value-changed",
