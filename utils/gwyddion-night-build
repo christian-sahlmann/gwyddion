@@ -3,8 +3,8 @@
 disabled=
 pkgname=gwyddion
 basever=2.16
-projectdir=$HOME/Projects/Gwyddion/$pkgname-trunk
-logdir=$HOME/Projects/Gwyddion/buildlog
+projectdir=$PWD
+logdir=$projectdir/../buildlog
 installprefix=$HOME/opt/gwyddion
 gtkdocdir="/share/gtk-doc/html/*"
 gtkdocdirs=(/usr /usr/local /opt/gnome $installprefix $HOME)
@@ -199,7 +199,6 @@ function help() {
 }
 
 # =====[ main ]==============================================================
-cd $projectdir
 test -d $logdir || mkdir $logdir
 
 if test -n "$1"; then

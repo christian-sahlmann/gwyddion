@@ -1,8 +1,8 @@
 #!/bin/bash
 # @(#) $Id$
 pkgname=gwyddion
-logdir=$HOME/Projects/Gwyddion/buildlog
-projectdir=$HOME/Projects/Gwyddion/$pkgname-trunk
+projectdir=$PWD
+logdir=$projectdir/../buildlog
 tmplog=tmplog
 
 source $HOME/.bashrc
