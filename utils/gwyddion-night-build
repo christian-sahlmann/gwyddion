@@ -29,15 +29,6 @@ function call() {
   $@
 }
 
-# extract makefile-style list $2 from $1
-function getlist() {
-  test -f $1 || return
-  grep --quiet "^$2" $1 || return
-  sed -n -e '/^'"$2"' *= *\\/,/[^\\]$/H' \
-         -e '/^'"$2"' *= *[a-zA-Z0-9]/H' \
-         -e '${g;s/\\[[:space:]]*//g;s/.*= *//;p}' $1
-}
-
 # =====[ components ]========================================================
 function update_version() {
   version=$basever
