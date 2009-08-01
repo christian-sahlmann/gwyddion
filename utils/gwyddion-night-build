@@ -210,7 +210,9 @@ if test -n "$1"; then
     done
   fi
 else
-  rm -f $logdir/*
+  for x in $(help); do
+    rm -f $logdir/$x.{log,err}
+  done
   # LIST-BEGIN
   call update_version
   call autostuff
