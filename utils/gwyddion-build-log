@@ -156,6 +156,5 @@ printerr check_symbols
 printerr check_desktop
 printerr check_coding_style
 printerr make_dists grep -vFf build_project.err
-printerr gnains_index
 
 rm *.ignore $tmplog
