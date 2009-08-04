@@ -17,7 +17,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
-/* TODO: some metadata, MDA, ... */
+/* TODO: some metadata, ... */
 
 /**
  * [FILE-MAGIC-FREEDESKTOP]
@@ -1390,22 +1390,21 @@ unitCodeForSiCode(guint64 siCode)
     return MDT_UNIT_NONE; // dimensionless
 }
 
-static GwyDataField*
-extract_mda_data(MDTMDAFrame *dataframe)
+static GwyDataField *
+extract_mda_data(MDTMDAFrame * dataframe)
 {
     GwyDataField *dfield;
-    gdouble *data;
+    gdouble *data, *end_data;
     gdouble xreal, yreal, zscale;
     gint power10xy, power10z;
     GwySIUnit *siunitxy, *siunitz;
-    gint i, total;
+    gint total;
     const guchar *p;
     const gchar *cunit;
     gchar *unit;
 
     MDTMDACalibration *xAxis = &dataframe->dimensions[0],
-                      *yAxis = &dataframe->dimensions[0],
-                      *zAxis = &dataframe->mesurands[0];
+        *yAxis = &dataframe->dimensions[0], *zAxis = &dataframe->mesurands[0];
 
     if (xAxis->unit && xAxis->unitLen) {
         unit = g_strndup(xAxis->unit, xAxis->unitLen);
@@ -1431,78 +1430,114 @@ extract_mda_data(MDTMDAFrame *dataframe)
                                         mdt_units, mdt_units_name);
         siunitz = gwy_si_unit_new_parse(cunit, &power10z);
     }
-    gwy_debug("z unit power %d",power10xy);
+    gwy_debug("z unit power %d", power10xy);
 
-    xreal = pow10(power10xy)*xAxis->scale;
-    yreal = pow10(power10xy)*yAxis->scale;
-    zscale = pow10(power10z)*zAxis->scale;
+    xreal = pow10(power10xy) * xAxis->scale;
+    yreal = pow10(power10xy) * yAxis->scale;
+    zscale = pow10(power10z) * zAxis->scale;
 
-    dfield = gwy_data_field_new(xAxis->maxIndex-xAxis->minIndex+1,
-                                yAxis->maxIndex-yAxis->minIndex+1,
-                                xreal, yreal,
-                                FALSE);
-    total = (xAxis->maxIndex-xAxis->minIndex+1)*(yAxis->maxIndex-yAxis->minIndex+1);
+    dfield = gwy_data_field_new(xAxis->maxIndex - xAxis->minIndex + 1,
+                                yAxis->maxIndex - yAxis->minIndex + 1,
+                                xreal, yreal, FALSE);
+    total =
+        (xAxis->maxIndex - xAxis->minIndex + 1) * (yAxis->maxIndex -
+                                                   yAxis->minIndex + 1);
     gwy_data_field_set_si_unit_xy(dfield, siunitxy);
     g_object_unref(siunitxy);
     gwy_data_field_set_si_unit_z(dfield, siunitz);
     g_object_unref(siunitz);
 
     data = gwy_data_field_get_data(dfield);
-    p = (gchar*)dataframe->image;
+    p = (gchar *)dataframe->image;
     gwy_debug("total points %d; data type %d; cell size %d",
               total, zAxis->dataType, dataframe->cellSize);
-    for (i = 0; i < total; i++) {
-        switch (zAxis->dataType) {
-            case MDA_DATA_INT8:
-            data[i] = zscale*(*(gchar*)p);
-            p++;
-            break;
+    end_data = data + total;
+    switch (zAxis->dataType) {
+        case MDA_DATA_INT8:
+        {
+            const gchar *tp = p;
 
-            case MDA_DATA_UINT8:
-            data[i] = zscale*(*(guchar*)p);
-            p++;
-            break;
-
-            case MDA_DATA_INT16:
-            data[i] = zscale*GINT16_FROM_LE(*(gint16*)p);
-            p += 2;
-            break;
-
-            case MDA_DATA_UINT16:
-            data[i] = zscale*GUINT16_FROM_LE(*(guint16*)p);
-            p += 2;
-            break;
-
-            case MDA_DATA_INT32:
-            data[i] = zscale*GINT32_FROM_LE(*(gint32*)p);
-            p += 4;
-            break;
-
-            case MDA_DATA_UINT32:
-            data[i] = zscale*GUINT32_FROM_LE(*(guint32*)p);
-            p += 4;
-            break;
-
-            case MDA_DATA_INT64:
-            data[i] = zscale*GINT64_FROM_LE(*(gint64*)p);
-            p += 8;
-            break;
-
-            case MDA_DATA_UINT64:
-            data[i] = zscale*GUINT64_FROM_LE(*(guint64*)p);
-            p += 8;
-            break;
-
-            case MDA_DATA_FLOAT32:
-            data[i] = zscale*gwy_get_gfloat_le(&p);
-            break;
-
-            case MDA_DATA_FLOAT64:
-            data[i] = zscale*gwy_get_gdouble_le(&p);
-            break;
-
+            while (data < end_data)
+                *(data++) = zscale * (*(tp++));
         }
-        //p+=dataframe->cellSize;
+        break;
+
+        case MDA_DATA_UINT8:
+        {
+            const guchar *tp = (const guchar *)p;
+
+            while (data < end_data)
+                *(data++) = zscale * (*(tp++));
+        }
+        break;
+
+        case MDA_DATA_INT16:
+        {
+            const gint16 *tp = (const gint16 *)p;
+
+            while (data < end_data)
+                *(data++) = zscale * GINT16_FROM_LE(*(tp++));
+        }
+        break;
+
+        case MDA_DATA_UINT16:
+        {
+            const guint16 *tp = (const guint16 *)p;
+
+            while (data < end_data)
+                *(data++) = zscale * GUINT16_FROM_LE(*(tp++));
+        }
+        break;
+
+        case MDA_DATA_INT32:
+        {
+            const gint32 *tp = (const gint32 *)p;
+
+            while (data < end_data)
+                *(data++) = zscale * GINT32_FROM_LE(*(tp++));
+        }
+        break;
+
+        case MDA_DATA_UINT32:
+        {
+            const guint32 *tp = (const guint32 *)p;
+
+            while (data < end_data)
+                *(data++) = zscale * GUINT32_FROM_LE(*(tp++));
+        }
+        break;
+
+        case MDA_DATA_INT64:
+        {
+            const gint64 *tp = (const gint64 *)p;
+
+            while (data < end_data)
+                *(data++) = zscale * GINT64_FROM_LE(*(tp++));
+        }
+        break;
+
+        case MDA_DATA_UINT64:
+        {
+            const guint64 *tp = (const guint64 *)p;
+
+            while (data < end_data)
+                *(data++) = zscale * GUINT64_FROM_LE(*(tp++));
+        }
+        break;
+
+        case MDA_DATA_FLOAT32:
+        while (data < end_data)
+            *(data++) = zscale * gwy_get_gfloat_le(&p);
+        break;
+
+        case MDA_DATA_FLOAT64:
+        while (data < end_data)
+            *(data++) = zscale * gwy_get_gdouble_le(&p);
+        break;
+
+        default:
+        g_assert_not_reached();
+        break;
     }
     gwy_data_field_invert(dfield, TRUE, FALSE, FALSE);
     return dfield;
