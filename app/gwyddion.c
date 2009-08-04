@@ -34,6 +34,7 @@
 #include <app/gwyapp.h>
 #include "gwyappinternal.h"
 #include "gwyddion.h"
+#include "mac_integration.h"
 
 #ifdef G_OS_WIN32
 #define LOG_TO_FILE_DEFAULT TRUE
@@ -92,6 +93,10 @@ main(int argc, char *argv[])
 
     timer = g_timer_new();
     gwy_app_check_version();
+	
+	gwy_osx_init_handler(&argc);
+	gwy_osx_set_locale();
+	
     process_preinit_options(&argc, &argv, &app_options);
     gwy_debug_objects_enable(app_options.debug_objects);
     /* TODO: handle failure */
@@ -183,9 +188,13 @@ main(int argc, char *argv[])
     debug_time(timer, "show toolbox");
     g_timer_destroy(timer);
     debug_time(NULL, "STARTUP");
-
+	
+	gwy_osx_open_files();
+	
     gtk_main();
-
+	
+	gwy_osx_remove_handler();
+	
     timer = g_timer_new();
     /* TODO: handle failure */
     if (settings_ok || !has_settings)

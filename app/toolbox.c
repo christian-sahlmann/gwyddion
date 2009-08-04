@@ -37,6 +37,10 @@
 #include <shlobj.h>
 #endif
 
+#ifdef __APPLE__
+#include "mac_integration.h"
+#endif
+
 enum {
     DND_TARGET_STRING = 1,
 };
@@ -642,7 +646,10 @@ gwy_app_toolbox_create(void)
 
     gtk_window_add_accel_group(GTK_WINDOW(toolbox), accel_group);
     gtk_widget_show_all(toolbox);
-
+	
+#ifdef __APPLE__
+	gwy_osx_get_menu_from_widget(container);
+#endif
     while (gtk_events_pending())
         gtk_main_iteration_do(FALSE);
 
@@ -1171,5 +1178,7 @@ gwy_app_gl_view_maybe_cb(void)
     g_object_add_weak_pointer(G_OBJECT(dialog), (gpointer*)&dialog);
     gtk_widget_show(dialog);
 }
+
+
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

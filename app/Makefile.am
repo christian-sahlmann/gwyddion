@@ -9,6 +9,15 @@ libgwydgets = $(top_builddir)/libgwydgets/libgwydgets2.la
 libgwyapp2includedir = $(pkgincludedir)/app
 uidatadir = $(pkgdatadir)/ui
 
+
+if OS_DARWIN
+mac_integration_src   = ige-mac-menu.c mac_integration.c
+mac_integration_extra =
+else
+mac_integration_src   = 
+mac_integration_extra = ige-mac-menu.c mac_integration.c
+endif
+
 if MODULE_DEPENDENCIES
 libgwyapp_libadd = \
 	$(libgwymodule) \
@@ -41,6 +50,8 @@ libgwyapp2include_HEADERS = \
 	wait.h
 
 noinst_HEADERS = \
+	ige-mac-menu.h\
+	mac_integration.h\
 	authors.h \
 	gwyappfilechooser.h \
 	gwyappinternal.h \
@@ -56,7 +67,8 @@ EXTRA_DIST = \
 	makefile.msc.gwt \
 	libgwyapp2.def \
 	README.objdata \
-	toolbox.xml
+	toolbox.xml\
+	$(mac_integration_extra)
 
 BUILT_SOURCES = \
 	authors.h
@@ -77,8 +89,14 @@ MKENUM_HFILES = \
 	$(srcdir)/settings.h
 include $(top_srcdir)/utils/mkenum.mk
 
+
+if OS_DARWIN
+AM_CFLAGS = -ObjC -framework AppKit -framework Carbon -framework ApplicationServices @COMMON_CFLAGS@
+else
 AM_CFLAGS = @COMMON_CFLAGS@
-AM_CPPFLAGS = -I$(top_srcdir)
+endif
+
+AM_CPPFLAGS = -I$(top_srcdir) 
 
 # In following order do:
 # Any code change     C:   R++: A
@@ -119,7 +137,9 @@ gwyddion_SOURCES = \
 	remote.c \
 	splash.c \
 	tips.c \
-	toolbox.c
+	toolbox.c \
+	$(mac_integration_src)
+	
 
 gwyddion_LDADD = @GTKGLEXT_LIBS@ @BASIC_LIBS@ $(LIBXMU) \
 	libgwyapp2.la \

@@ -122,6 +122,20 @@ AC_MSG_RESULT([$os_win32])
 AM_CONDITIONAL([OS_WIN32],[test "$os_win32" = "yes"])
 
 #############################################################################
+# Darwin.
+AC_MSG_CHECKING([for Darwin])
+case "$host_os" in
+  darwin*)
+    os_darwin=yes
+    ;;
+  *)
+    os_darwin=no
+    ;;
+esac
+AC_MSG_RESULT([$os_darwin])
+AM_CONDITIONAL([OS_DARWIN],[test "$os_darwin" = "yes"])
+
+#############################################################################
 # Module symbol resolution.
 # We try not to link modules with libraries and let symbols resolve through
 # app, because it means faster app startup and much faster compilation.  But
