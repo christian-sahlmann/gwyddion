@@ -53,6 +53,10 @@
 G_WIN32_DLLMAIN_FOR_DLL_NAME(static, dll_name);
 #endif
 
+#ifdef __APPLE__
+#include <CoreFoundation/CoreFoundation.h>
+#endif
+
 static GQuark error_domain = 0;
 
 /**
@@ -500,6 +504,52 @@ gwy_sgettext(const gchar *msgid)
     return msgstr;
 }
 
+#ifdef __APPLE__
+static gchar *
+gwy_osx_find_dir_in_bundle(const gchar *dirname)
+{
+    static gchar *basedir = NULL;
+
+    if (!basedir) {
+        int maxlen = 256;
+        int len;
+        char *res_url_path;
+
+        CFURLRef res_url_ref = NULL, bundle_url_ref = NULL;
+
+        res_url_ref =
+            CFBundleCopyResourcesDirectoryURL(CFBundleGetMainBundle());
+        bundle_url_ref = CFBundleCopyBundleURL(CFBundleGetMainBundle());
+
+        if (res_url_ref
+            && bundle_url_ref && !CFEqual(res_url_ref, bundle_url_ref)) {
+
+            res_url_path = malloc(maxlen);
+
+            while (!CFURLGetFileSystemRepresentation(res_url_ref, true,
+                                                     (UInt8*) res_url_path,
+                                                     maxlen)) {
+                maxlen *= 2;
+                res_url_path = realloc(res_url_path, maxlen);
+            }
+
+            len = strlen(res_url_path);
+            basedir = malloc(len + 1);
+            strncpy(basedir, res_url_path, len);
+            basedir[len] = 0;
+        }
+        if (res_url_ref)
+            CFRelease(res_url_ref);
+        if (bundle_url_ref)
+            CFRelease(bundle_url_ref);
+    }
+    if (gwy_strequal(dirname, "data"))
+        dirname = NULL;
+
+    return basedir ? g_build_filename(basedir, dirname, NULL) : NULL;
+}
+#endif
+
 /**
  * gwy_find_self_dir:
  * @dirname: A gwyddion directory name:
@@ -539,6 +589,7 @@ gwy_find_self_dir(const gchar *dirname)
 #endif    /* G_OS_WIN32 */
 
 #ifdef G_OS_UNIX
+#ifdef GWY_LIBDIR
     static const struct {
         const gchar *id;
         const gchar *base;
@@ -579,7 +630,14 @@ gwy_find_self_dir(const gchar *dirname)
     };
     gsize i;
     const gchar *base;
+#endif
+#ifdef __APPLE__
+    char *ret = gwy_osx_find_dir_in_bundle(dirname);
 
+    if (ret)
+        return ret;
+#endif
+#ifdef GWY_LIBDIR
     for (i = 0; i < G_N_ELEMENTS(paths); i++) {
         if (!gwy_strequal(dirname, paths[i].id))
             continue;
@@ -592,6 +650,7 @@ gwy_find_self_dir(const gchar *dirname)
         return g_build_filename(base, paths[i].dir, NULL);
     }
     g_critical("Cannot find directory for `%s'", dirname);
+#endif
     return NULL;
 #endif    /* G_OS_UNIX */
 }
