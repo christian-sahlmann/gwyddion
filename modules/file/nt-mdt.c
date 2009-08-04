@@ -64,7 +64,7 @@ typedef enum {
     MDT_FRAME_PALETTE      = 107
 } MDTFrameType;
 
-typedef enum{
+typedef enum {
     MDA_DATA_INT8          = -1,
     MDA_DATA_UINT8         =  1,
     MDA_DATA_INT16         = -2,
@@ -282,7 +282,7 @@ typedef struct {
     gchar *xmlstuff;
 } MDTScannedDataFrame;
 
-typedef struct{
+typedef struct {
     guint totLen;
     guint nameLen;
     const gchar *name;
@@ -1451,8 +1451,8 @@ extract_mda_data(MDTMDAFrame *dataframe)
     p = (gchar*)dataframe->image;
     gwy_debug("total points %d; data type %d; cell size %d",
               total, zAxis->dataType, dataframe->cellSize);
-    for (i = 0; i < total; i++){
-        switch (zAxis->dataType){
+    for (i = 0; i < total; i++) {
+        switch (zAxis->dataType) {
             case MDA_DATA_INT8:
             data[i] = zscale*(*(gchar*)p);
             p++;
