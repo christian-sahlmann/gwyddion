@@ -24,12 +24,15 @@ ShowUndisplayableLanguages=yes
 ChangesEnvironment=yes
 
 [Languages]
+;; The following generated part is updated by running utils/update-langs.py
+;; @@@ GENERATED LANG INNO LANGUAGES BEGIN @@@
 Name: "en"; MessagesFile: "compiler:Default.isl"
 Name: "cz"; MessagesFile: "compiler:Languages\Czech.isl"
 Name: "de"; MessagesFile: "compiler:Languages\German.isl"
 Name: "fr"; MessagesFile: "compiler:Languages\French.isl"
 Name: "it"; MessagesFile: "compiler:Languages\Italian.isl"
 Name: "ru"; MessagesFile: "compiler:Languages\Russian.isl"
+;; @@@ GENERATED LANG INNO LANGUAGES END @@@
 
 [Files]
 Source: "*.dll"; DestDir: "{app}"
@@ -46,11 +49,14 @@ Source: "modules\layer\*.*"; DestDir: "{app}\modules\layer"
 Source: "modules\process\*.*"; DestDir: "{app}\modules\process"
 Source: "modules\tool\*.*"; DestDir: "{app}\modules\tool"
 Source: "plugins\file\*.*"; DestDir: "{app}\plugins\file"
+;; The following generated part is updated by running utils/update-langs.py
+;; @@@ GENERATED LANG INNO LC_MESSAGES BEGIN @@@
 Source: "locale\cs\LC_MESSAGES\*.*"; DestDir: "{app}\locale\cs\LC_MESSAGES"
 Source: "locale\de\LC_MESSAGES\*.*"; DestDir: "{app}\locale\de\LC_MESSAGES"
 Source: "locale\fr\LC_MESSAGES\*.*"; DestDir: "{app}\locale\fr\LC_MESSAGES"
 Source: "locale\it\LC_MESSAGES\*.*"; DestDir: "{app}\locale\it\LC_MESSAGES"
 Source: "locale\ru\LC_MESSAGES\*.*"; DestDir: "{app}\locale\ru\LC_MESSAGES"
+;; @@@ GENERATED LANG INNO LC_MESSAGES END @@@
 
 [Icons]
 Name: "{group}\@PACKAGE_NAME@"; Filename: "{app}\@PACKAGE_TARNAME@.exe"; IconFilename: "{app}\pixmaps\@PACKAGE_TARNAME@.ico"
@@ -78,18 +84,23 @@ Root: HKCR; Subkey: "@PACKAGE_NAME@.NativeData"; ValueType: string; ValueName: "
 Root: HKCR; Subkey: "@PACKAGE_NAME@.NativeData\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\pixmaps\@PACKAGE_TARNAME@.ico"
 Root: HKCR; Subkey: "@PACKAGE_NAME@.NativeData\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\@PACKAGE_TARNAME@.exe"" --remote-new ""%1"""
 ; LANG settings
+;; The following generated part is updated by running utils/update-langs.py
+;; @@@ GENERATED LANG INNO HKLM BEGIN @@@
 Root: HKLM; Subkey: "Software\@PACKAGE_NAME@\1.0"; ValueType: string; ValueName: "gwy_locale"; ValueData: "en_US.UTF-8"; Languages: en; Flags: uninsdeletevalue
 Root: HKLM; Subkey: "Software\@PACKAGE_NAME@\1.0"; ValueType: string; ValueName: "gwy_locale"; ValueData: "cs_CZ.UTF-8"; Languages: cz; Flags: uninsdeletevalue
 Root: HKLM; Subkey: "Software\@PACKAGE_NAME@\1.0"; ValueType: string; ValueName: "gwy_locale"; ValueData: "de_DE.UTF-8"; Languages: de; Flags: uninsdeletevalue
 Root: HKLM; Subkey: "Software\@PACKAGE_NAME@\1.0"; ValueType: string; ValueName: "gwy_locale"; ValueData: "fr_FR.UTF-8"; Languages: fr; Flags: uninsdeletevalue
 Root: HKLM; Subkey: "Software\@PACKAGE_NAME@\1.0"; ValueType: string; ValueName: "gwy_locale"; ValueData: "it_IT.UTF-8"; Languages: it; Flags: uninsdeletevalue
 Root: HKLM; Subkey: "Software\@PACKAGE_NAME@\1.0"; ValueType: string; ValueName: "gwy_locale"; ValueData: "ru_RU.UTF-8"; Languages: ru; Flags: uninsdeletevalue
+;; @@@ GENERATED LANG INNO HKLM END @@@
+;; @@@ GENERATED LANG INNO HKCU BEGIN @@@
 Root: HKCU; Subkey: "Software\@PACKAGE_NAME@\1.0"; ValueType: string; ValueName: "gwy_locale"; ValueData: "en_US.UTF-8"; Languages: en; Flags: uninsdeletevalue
 Root: HKCU; Subkey: "Software\@PACKAGE_NAME@\1.0"; ValueType: string; ValueName: "gwy_locale"; ValueData: "cs_CZ.UTF-8"; Languages: cz; Flags: uninsdeletevalue
 Root: HKCU; Subkey: "Software\@PACKAGE_NAME@\1.0"; ValueType: string; ValueName: "gwy_locale"; ValueData: "de_DE.UTF-8"; Languages: de; Flags: uninsdeletevalue
 Root: HKCU; Subkey: "Software\@PACKAGE_NAME@\1.0"; ValueType: string; ValueName: "gwy_locale"; ValueData: "fr_FR.UTF-8"; Languages: fr; Flags: uninsdeletevalue
 Root: HKCU; Subkey: "Software\@PACKAGE_NAME@\1.0"; ValueType: string; ValueName: "gwy_locale"; ValueData: "it_IT.UTF-8"; Languages: it; Flags: uninsdeletevalue
 Root: HKCU; Subkey: "Software\@PACKAGE_NAME@\1.0"; ValueType: string; ValueName: "gwy_locale"; ValueData: "ru_RU.UTF-8"; Languages: ru; Flags: uninsdeletevalue
+;; @@@ GENERATED LANG INNO HKCU END @@@
 
 [Code]
 var
