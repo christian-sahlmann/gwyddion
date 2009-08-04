@@ -630,13 +630,13 @@ gwy_find_self_dir(const gchar *dirname)
     };
     gsize i;
     const gchar *base;
-#endif
+#endif    /* GWY_LIBDIR */
 #ifdef __APPLE__
     char *ret = gwy_osx_find_dir_in_bundle(dirname);
 
     if (ret)
         return ret;
-#endif
+#endif    /* __APPLE__ */
 #ifdef GWY_LIBDIR
     for (i = 0; i < G_N_ELEMENTS(paths); i++) {
         if (!gwy_strequal(dirname, paths[i].id))
@@ -650,7 +650,7 @@ gwy_find_self_dir(const gchar *dirname)
         return g_build_filename(base, paths[i].dir, NULL);
     }
     g_critical("Cannot find directory for `%s'", dirname);
-#endif
+#endif    /* GWY_LIBDIR */
     return NULL;
 #endif    /* G_OS_UNIX */
 }
