@@ -5,12 +5,15 @@
 #include <file.h>
 #include "ige-mac-menu.h"
 #define USE_MAC_INTEGRATION
+#define USED_ON_MAC /* */
+#else
+#define USED_ON_MAC G_GNUC_UNUSED
 #endif
 
 #include "mac_integration.h"
 
 void
-gwy_osx_get_menu_from_widget(GtkWidget *container)
+gwy_osx_get_menu_from_widget(USED_ON_MAC GtkWidget *container)
 {
 #ifdef USE_MAC_INTEGRATION
     GList *children;            //,*subchildren,*subsubchildren;
@@ -102,7 +105,7 @@ appleEventHandler(const AppleEvent * event, AppleEvent * event2, long param)
 
 #endif
 void
-gwy_osx_init_handler(int *argc)
+gwy_osx_init_handler(USED_ON_MAC int *argc)
 {
 #ifdef USE_MAC_INTEGRATION
     gchar *tmp = gwy_osx_find_dir_in_bundle("data");
