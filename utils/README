@@ -77,6 +77,13 @@ stockgen.py
     pixmaps/Makefile.am.  Must be run from the top-level source directory.
 
 
+update-langs.py
+
+    Updates files that, for whatever reason, contain the list of available
+    localizations.  The primary list is in this script.  Must be run from
+    the top-level source directory.
+
+
 update-msvc.py
 
     Updates makefile.msc in every source directory to match Makefile.am

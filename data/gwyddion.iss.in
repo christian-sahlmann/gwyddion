@@ -27,7 +27,7 @@ ChangesEnvironment=yes
 ;; The following generated part is updated by running utils/update-langs.py
 ;; @@@ GENERATED LANG INNO LANGUAGES BEGIN @@@
 Name: "en"; MessagesFile: "compiler:Default.isl"
-Name: "cz"; MessagesFile: "compiler:Languages\Czech.isl"
+Name: "cs"; MessagesFile: "compiler:Languages\Czech.isl"
 Name: "de"; MessagesFile: "compiler:Languages\German.isl"
 Name: "fr"; MessagesFile: "compiler:Languages\French.isl"
 Name: "it"; MessagesFile: "compiler:Languages\Italian.isl"
@@ -86,17 +86,17 @@ Root: HKCR; Subkey: "@PACKAGE_NAME@.NativeData\shell\open\command"; ValueType: s
 ; LANG settings
 ;; The following generated part is updated by running utils/update-langs.py
 ;; @@@ GENERATED LANG INNO HKLM BEGIN @@@
-Root: HKLM; Subkey: "Software\@PACKAGE_NAME@\1.0"; ValueType: string; ValueName: "gwy_locale"; ValueData: "en_US.UTF-8"; Languages: en; Flags: uninsdeletevalue
-Root: HKLM; Subkey: "Software\@PACKAGE_NAME@\1.0"; ValueType: string; ValueName: "gwy_locale"; ValueData: "cs_CZ.UTF-8"; Languages: cz; Flags: uninsdeletevalue
+Root: HKLM; Subkey: "Software\@PACKAGE_NAME@\1.0"; ValueType: string; ValueName: "gwy_locale"; ValueData: "cs_CZ.UTF-8"; Languages: cs; Flags: uninsdeletevalue
 Root: HKLM; Subkey: "Software\@PACKAGE_NAME@\1.0"; ValueType: string; ValueName: "gwy_locale"; ValueData: "de_DE.UTF-8"; Languages: de; Flags: uninsdeletevalue
+Root: HKLM; Subkey: "Software\@PACKAGE_NAME@\1.0"; ValueType: string; ValueName: "gwy_locale"; ValueData: "en_US.UTF-8"; Languages: en; Flags: uninsdeletevalue
 Root: HKLM; Subkey: "Software\@PACKAGE_NAME@\1.0"; ValueType: string; ValueName: "gwy_locale"; ValueData: "fr_FR.UTF-8"; Languages: fr; Flags: uninsdeletevalue
 Root: HKLM; Subkey: "Software\@PACKAGE_NAME@\1.0"; ValueType: string; ValueName: "gwy_locale"; ValueData: "it_IT.UTF-8"; Languages: it; Flags: uninsdeletevalue
 Root: HKLM; Subkey: "Software\@PACKAGE_NAME@\1.0"; ValueType: string; ValueName: "gwy_locale"; ValueData: "ru_RU.UTF-8"; Languages: ru; Flags: uninsdeletevalue
 ;; @@@ GENERATED LANG INNO HKLM END @@@
 ;; @@@ GENERATED LANG INNO HKCU BEGIN @@@
-Root: HKCU; Subkey: "Software\@PACKAGE_NAME@\1.0"; ValueType: string; ValueName: "gwy_locale"; ValueData: "en_US.UTF-8"; Languages: en; Flags: uninsdeletevalue
-Root: HKCU; Subkey: "Software\@PACKAGE_NAME@\1.0"; ValueType: string; ValueName: "gwy_locale"; ValueData: "cs_CZ.UTF-8"; Languages: cz; Flags: uninsdeletevalue
+Root: HKCU; Subkey: "Software\@PACKAGE_NAME@\1.0"; ValueType: string; ValueName: "gwy_locale"; ValueData: "cs_CZ.UTF-8"; Languages: cs; Flags: uninsdeletevalue
 Root: HKCU; Subkey: "Software\@PACKAGE_NAME@\1.0"; ValueType: string; ValueName: "gwy_locale"; ValueData: "de_DE.UTF-8"; Languages: de; Flags: uninsdeletevalue
+Root: HKCU; Subkey: "Software\@PACKAGE_NAME@\1.0"; ValueType: string; ValueName: "gwy_locale"; ValueData: "en_US.UTF-8"; Languages: en; Flags: uninsdeletevalue
 Root: HKCU; Subkey: "Software\@PACKAGE_NAME@\1.0"; ValueType: string; ValueName: "gwy_locale"; ValueData: "fr_FR.UTF-8"; Languages: fr; Flags: uninsdeletevalue
 Root: HKCU; Subkey: "Software\@PACKAGE_NAME@\1.0"; ValueType: string; ValueName: "gwy_locale"; ValueData: "it_IT.UTF-8"; Languages: it; Flags: uninsdeletevalue
 Root: HKCU; Subkey: "Software\@PACKAGE_NAME@\1.0"; ValueType: string; ValueName: "gwy_locale"; ValueData: "ru_RU.UTF-8"; Languages: ru; Flags: uninsdeletevalue

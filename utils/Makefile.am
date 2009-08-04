@@ -18,6 +18,7 @@ EXTRA_DIST = \
 	mkenum.h.template \
 	mkenum.mk \
 	modules-web.xsl \
+	update-langs.py \
 	update-msvc.py \
 	update-potfiles.sh \
 	$(GUIDE_MAP) \

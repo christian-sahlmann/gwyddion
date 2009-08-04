@@ -1,2 +1,5 @@
 # Set of available languages.
+# The following generated part is updated by running utils/update-langs.py
+# @@@ GENERATED LANG LINGUAS BEGIN @@@
 cs de fr it ru
+# @@@ GENERATED LANG LINGUAS END @@@

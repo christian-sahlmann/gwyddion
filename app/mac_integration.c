@@ -170,14 +170,17 @@ gwy_osx_set_locale()
     static const struct {
         const gchar *locale;
         const gchar *lang;
-    } locales[] = {
-        {
-        "cs_CS.UTF-8", "cs"}, {
-        "de_DE.UTF-8", "de"}, {
-        "", "en"}, {
-        "fr_FR.UTF-8", "fr"}, {
-        "it_IT.UTF-8", "it"}, {
-        "ru_RU.UTF-8", "ru"}
+    }
+    locales[] = {
+/* The following generated part is updated by running utils/update-langs.py */
+/* @@@ GENERATED LANG OS X BEGIN @@@ */
+        { "cs_CZ.UTF-8", "cs" },
+        { "de_DE.UTF-8", "de" },
+        { "en_US.UTF-8", "en" },
+        { "fr_FR.UTF-8", "fr" },
+        { "it_IT.UTF-8", "it" },
+        { "ru_RU.UTF-8", "ru" },
+/* @@@ GENERATED LANG OS X END @@@ */
     };
 
     CFTypeRef preferences = CFPreferencesCopyAppValue(CFSTR("AppleLanguages"),
