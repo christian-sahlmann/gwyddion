@@ -1,5 +1,5 @@
 /*
- *  @(#) $Id: gwyddion.c 9549 2009-08-04 11:26:28Z yeti-dn $
+ *  @(#) $Id$
  *  Copyright (C) 2009 Andrey Gruzdev.
  *  E-mail: gruzdev@ntmdt.ru.
  *
