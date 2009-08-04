@@ -37,9 +37,7 @@
 #include <shlobj.h>
 #endif
 
-#ifdef __APPLE__
 #include "mac_integration.h"
-#endif
 
 enum {
     DND_TARGET_STRING = 1,
@@ -646,10 +644,8 @@ gwy_app_toolbox_create(void)
 
     gtk_window_add_accel_group(GTK_WINDOW(toolbox), accel_group);
     gtk_widget_show_all(toolbox);
-	
-#ifdef __APPLE__
-	gwy_osx_get_menu_from_widget(container);
-#endif
+
+    gwy_osx_get_menu_from_widget(container);
     while (gtk_events_pending())
         gtk_main_iteration_do(FALSE);
 
