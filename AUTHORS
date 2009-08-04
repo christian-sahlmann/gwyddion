@@ -40,6 +40,8 @@ Philipp Rahe <hquerquadrat@gmail.com>
     Omicron MATRIX file import.
 Matthew Caldwell <m.caldwell@ucl.ac.uk>
     IonScope SICM file import.
+Андрей Груздев <gruzdev@ntmdt.ru>
+    Mac OS X integration.
 
 
 === Translators ===
@@ -107,4 +109,8 @@ Hans-Peter Doerr
 The Board of Trustees of the University of Illinois
     The list of HDF tags in the hdf4file module was taken from libHDF4 header
     files (the rest is a clean-room implementation).
+
+Gtk+ Mac OS X project
+    OS X menubar integration app/ige-mac-menu.[ch] was copied from this
+    project, see the files for mode.
 
