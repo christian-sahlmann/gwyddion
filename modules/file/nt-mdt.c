@@ -41,6 +41,9 @@
 #include <libgwymodule/gwymodule-file.h>
 #include <app/gwymoduleutils-file.h>
 
+#include <glib.h>
+#include <glib/gprintf.h>
+
 #include "err.h"
 #include "get.h"
 
@@ -60,6 +63,19 @@ typedef enum {
     MDT_FRAME_MDA          = 106,
     MDT_FRAME_PALETTE      = 107
 } MDTFrameType;
+
+typedef enum{
+    MDA_DATA_INT8          = -1,
+    MDA_DATA_UINT8         =  1,
+    MDA_DATA_INT16         = -2,
+    MDA_DATA_UINT16        =  2,
+    MDA_DATA_INT32         = -4,
+    MDA_DATA_UINT32        =  4,
+    MDA_DATA_INT64         = -8,
+    MDA_DATA_UINT64        =  8,
+    MDA_DATA_FLOAT32       = -(4 + 23 * 256),
+    MDA_DATA_FLOAT64       = -(8 + 52 * 256)
+} MDADataType ;
 
 typedef enum {
     MDT_UNIT_RAMAN_SHIFT     = -10,
@@ -266,6 +282,39 @@ typedef struct {
     gchar *xmlstuff;
 } MDTScannedDataFrame;
 
+typedef struct{
+    guint totLen;
+    guint nameLen;
+    const gchar *name;
+    guint commentLen;
+    const gchar *comment;
+    guint unitLen;
+    const gchar *unit;
+    guint authorLen;
+    const gchar *author;
+
+//  guint32 totLen;
+    gdouble    accuracy ;
+    gdouble    scale ;
+    gdouble    bias ;
+    guint64    minIndex;
+    guint64    maxIndex;
+    gint32    dataType ;
+    guint64 siUnit;
+} MDTMDACalibration;
+
+typedef struct {
+    MDTMDACalibration *dimensions;
+    MDTMDACalibration *mesurands;
+    gint nDimensions;
+    gint nMesurands;
+    guint cellSize;
+    const guchar *image;
+    guint title_len;
+    const guchar *title;
+    gchar *xmlstuff;
+} MDTMDAFrame;
+
 typedef struct {
     guint size;     /* h_sz */
     MDTFrameType type;     /* h_what */
@@ -304,6 +353,7 @@ static gboolean      mdt_real_load         (const guchar *buffer,
                                             MDTFile *mdtfile,
                                             GError **error);
 static GwyDataField* extract_scanned_data  (MDTScannedDataFrame *dataframe);
+static GwyDataField* extract_mda_data      (MDTMDAFrame *dataframe);
 
 #ifdef DEBUG
 static const GwyEnum frame_types[] = {
@@ -374,7 +424,7 @@ static const GwyEnum mdt_units[] = {
    When you edit mdt_units[] data above,
    re-run flatten.py SOURCE.c. */
 static const gchar mdt_units_name[] =
-    "1/cm\000\000\000\000\000m\000cm\000mm\000µm\000nm\000�\205\000nA\000V"
+    "1/cm\000\000\000\000\000m\000cm\000mm\000µm\000nm\000?\205\000nA\000V"
     "\000\000kHz\000deg\000%\000°C\000V\000s\000ms\000µs\000ns\000\000px"
     "\000\000\000\000\000\000A\000mA\000µA\000nA\000pA\000V\000mV\000µV\000"
     "nV\000pV\000N\000mN\000µN\000nN\000pN\000\000\000\000\000";
@@ -532,7 +582,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports NT-MDT data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.10",
+    "0.11",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -640,6 +690,20 @@ mdt_load(const gchar *filename,
             g_object_unref(meta);
 
             n++;
+        }
+        else if (mdtfile.frames[i].type == MDT_FRAME_MDA) {
+            MDTMDAFrame *mdaframe;
+            mdaframe = (MDTMDAFrame*)mdtfile.frames[i].frame_data;
+            gwy_debug("dimensions %d ; measurands %d",
+                      mdaframe->nDimensions, mdaframe->nMesurands);
+            if(mdaframe->nDimensions==2 && mdaframe->nMesurands==1) { // scan
+                dfield = extract_mda_data(mdaframe);
+                g_string_printf(key, "/%d/data", n);
+                gwy_container_set_object_by_name(data, key->str, dfield);
+                g_object_unref(dfield);
+                gwy_app_channel_title_fall_back(data, n);
+                n++;
+            }
         }
     }
     g_string_free(key, TRUE);
@@ -957,6 +1021,167 @@ mdt_scanned_data_vars(const guchar *p,
     return TRUE;
 }
 
+static void
+mdt_read_mda_calibration(const guchar *p, MDTMDACalibration *calibration)
+{
+    guint  structLen;
+    const guchar *sp;
+
+    gwy_debug("Reading MDA calibration");
+    calibration->totLen = gwy_get_guint32_le(&p);
+    structLen = gwy_get_guint32_le(&p);
+    sp = p+structLen;
+    calibration->nameLen = gwy_get_guint32_le(&p);
+    calibration->commentLen = gwy_get_guint32_le(&p);
+    calibration->unitLen = gwy_get_guint32_le(&p);
+
+    calibration->siUnit   = gwy_get_guint64_le(&p);
+    calibration->accuracy = gwy_get_gdouble_le(&p);
+    p+=8;  // skip function id and dimensions
+    calibration->bias  = gwy_get_gdouble_le(&p);
+    calibration->scale  = gwy_get_gdouble_le(&p);
+    gwy_debug("Scale= %f", calibration->scale);
+    calibration->minIndex  = gwy_get_guint64_le(&p);
+    calibration->maxIndex  = gwy_get_guint64_le(&p);
+    gwy_debug("minIndex %d, maxIndex %d", (gint)calibration->minIndex,(gint)calibration->maxIndex);
+    calibration->dataType  = gwy_get_gint32_le(&p);
+    calibration->authorLen  = gwy_get_guint32_le(&p);
+
+    p = sp;
+    if (calibration->nameLen > 0) {
+        calibration->name = p;
+        p += calibration->nameLen;
+        gwy_debug("name = %.*s", calibration->nameLen, calibration->name);
+    }
+    else
+        calibration->name = NULL;
+
+    if (calibration->commentLen > 0) {
+        calibration->comment = p;
+        p += calibration->commentLen;
+        gwy_debug("comment = %.*s", calibration->commentLen,
+                  calibration->comment);
+    }
+    else
+        calibration->comment = NULL;
+
+    if (calibration->unitLen > 0) {
+        calibration->unit = p;
+        p += calibration->unitLen;
+        gwy_debug("unit = %.*s", calibration->unitLen, calibration->unit);
+    }
+    else
+        calibration->unit = NULL;
+
+    if (calibration->authorLen > 0) {
+        calibration->author = p;
+        p += calibration->authorLen;
+        gwy_debug("author = %.*s", calibration->authorLen, calibration->author);
+    }
+    else
+        calibration->author = NULL;
+}
+
+static gboolean
+mdt_mda_vars(const guchar *p,
+             const guchar *fstart,
+             MDTMDAFrame *frame,
+             guint frame_size,
+             guint vars_size,
+             GError **error)
+{
+
+    guint headSize, totLen, NameSize, CommSize, ViewInfoSize, SpecSize;
+    guint SourceInfoSize, VarSize, DataSize, StructLen, CellSize;
+    guint64  num;
+    const guchar *recordPointer = p;
+    const guchar *structPointer;
+
+    gwy_debug("Rerad MDA header");
+    headSize    = gwy_get_guint32_le(&p);
+    gwy_debug("headSize %u\n",headSize);
+    totLen      = gwy_get_guint32_le(&p);
+    gwy_debug("totLen %u\n",totLen);
+    p += 16*2 + 4; // skip guids and frame status
+
+    NameSize    = gwy_get_guint32_le(&p);
+    gwy_debug("NameSize %u\n",NameSize);
+    CommSize    = gwy_get_guint32_le(&p);
+    gwy_debug("CommSize %u\n",CommSize);
+    ViewInfoSize= gwy_get_guint32_le(&p);
+    gwy_debug("ViewInfoSize %u\n",ViewInfoSize);
+    SpecSize    = gwy_get_guint32_le(&p);
+    gwy_debug("SpecSize %u\n",SpecSize);
+    SourceInfoSize= gwy_get_guint32_le(&p);
+    gwy_debug("SourceInfoSize %u\n",SourceInfoSize);
+    VarSize        = gwy_get_guint32_le(&p);
+    gwy_debug("VarSize %u\n",VarSize);
+    p +=4 ; // skip data offset
+    DataSize    = gwy_get_guint32_le(&p);
+    gwy_debug("DataSize %u\n",DataSize);
+    p = recordPointer + headSize;
+    frame->title_len = NameSize;
+
+    if (NameSize && (guint)(frame_size - (p - fstart)) >= NameSize) {
+        frame->title = p;
+        p += NameSize;
+    }
+    else
+        frame->title = NULL;
+
+
+    if (CommSize && (guint) (frame_size - (p - fstart)) >= CommSize) {
+        frame->xmlstuff =
+            g_convert((const gchar *)p, CommSize, "UTF-8", "UTF-16", NULL, NULL,
+                      NULL);
+        p += CommSize;
+    }
+    else
+        frame->xmlstuff = NULL;
+
+    p += SpecSize + ViewInfoSize + SourceInfoSize;      // skip FrameSpec ViewInfo SourceInfo and vars
+
+    p += 4;                     // skip total size
+    StructLen = gwy_get_guint32_le(&p);
+    structPointer = p;
+    num = gwy_get_guint64_le(&p);
+    CellSize = gwy_get_guint32_le(&p);
+
+    frame->nDimensions = gwy_get_guint32_le(&p);
+    frame->nMesurands = gwy_get_guint32_le(&p);
+    p = structPointer + StructLen;
+
+    if (frame->nDimensions) {
+        int i;
+
+        frame->dimensions = g_new0(MDTMDACalibration, frame->nDimensions);
+        for (i = 0; i < frame->nDimensions; i++) {
+            mdt_read_mda_calibration(p, &frame->dimensions[i]);
+            p += frame->dimensions[i].totLen;
+        }
+
+    }
+    else
+        frame->dimensions = NULL;
+
+    if (frame->nMesurands) {
+        int i;
+
+        frame->mesurands = g_new0(MDTMDACalibration, frame->nMesurands);
+        for (i = 0; i < frame->nMesurands; i++) {
+            mdt_read_mda_calibration(p, &frame->mesurands[i]);
+            p += frame->mesurands[i].totLen;
+        }
+
+    }
+    else
+        frame->mesurands = NULL;
+
+    frame->image = p;
+
+    return TRUE;
+}
+
 static gboolean
 mdt_real_load(const guchar *buffer,
               guint size,
@@ -966,6 +1191,7 @@ mdt_real_load(const guchar *buffer,
     guint i;
     const guchar *p, *fstart;
     MDTScannedDataFrame *scannedframe;
+    MDTMDAFrame *mdaframe;
 
     /* File Header */
     if (size < 32) {
@@ -1069,6 +1295,13 @@ mdt_real_load(const guchar *buffer,
 
             case MDT_FRAME_MDA:
             gwy_debug("Cannot read MDA frame");
+
+            mdaframe = g_new0(MDTMDAFrame, 1);
+            if (!mdt_mda_vars(p, fstart, mdaframe,
+                              frame->size, frame->var_size, error))
+                return FALSE;
+            frame->frame_data = mdaframe;
+
             break;
 
             case MDT_FRAME_PALETTE:
@@ -1128,6 +1361,150 @@ extract_scanned_data(MDTScannedDataFrame *dataframe)
 
     gwy_data_field_invert(dfield, TRUE, FALSE, FALSE);
 
+    return dfield;
+}
+
+static gint
+unitCodeForSiCode(guint64 siCode)
+{
+
+    switch (siCode) {
+        case 0x0000000000000001ll:
+        return MDT_UNIT_NONE;
+
+        case 0x0000000000000101ll:
+        return MDT_UNIT_METER; // Meter
+
+        case 0x0000000000100001ll:
+        return MDT_UNIT_AMPERE2; // Ampere
+
+        case 0x000000fffd010200ll:
+        return MDT_UNIT_VOLT2; // volt
+
+        case 0x0000000001000001ll:
+        return MDT_UNIT_SECOND; // second
+
+        default:
+        return MDT_UNIT_NONE;
+    }
+    return MDT_UNIT_NONE; // dimensionless
+}
+
+static GwyDataField*
+extract_mda_data(MDTMDAFrame *dataframe)
+{
+    GwyDataField *dfield;
+    gdouble *data;
+    gdouble xreal, yreal, zscale;
+    gint power10xy, power10z;
+    GwySIUnit *siunitxy, *siunitz;
+    gint i, total;
+    const guchar *p;
+    const gchar *cunit;
+    gchar *unit;
+
+    MDTMDACalibration *xAxis = &dataframe->dimensions[0],
+                      *yAxis = &dataframe->dimensions[0],
+                      *zAxis = &dataframe->mesurands[0];
+
+    if (xAxis->unit && xAxis->unitLen) {
+        unit = g_strndup(xAxis->unit, xAxis->unitLen);
+        siunitxy = gwy_si_unit_new_parse(unit, &power10xy);
+        g_free(unit);
+    }
+    else {
+        cunit = gwy_flat_enum_to_string(unitCodeForSiCode(xAxis->siUnit),
+                                        G_N_ELEMENTS(mdt_units),
+                                        mdt_units, mdt_units_name);
+        siunitxy = gwy_si_unit_new_parse(cunit, &power10xy);
+    }
+    gwy_debug("xy unit power %d", power10xy);
+
+    if (zAxis->unit && zAxis->unitLen) {
+        unit = g_strndup(zAxis->unit, zAxis->unitLen);
+        siunitz = gwy_si_unit_new_parse(unit, &power10z);
+        g_free(unit);
+    }
+    else {
+        cunit = gwy_flat_enum_to_string(unitCodeForSiCode(zAxis->siUnit),
+                                        G_N_ELEMENTS(mdt_units),
+                                        mdt_units, mdt_units_name);
+        siunitz = gwy_si_unit_new_parse(cunit, &power10z);
+    }
+    gwy_debug("z unit power %d",power10xy);
+
+    xreal = pow10(power10xy)*xAxis->scale;
+    yreal = pow10(power10xy)*yAxis->scale;
+    zscale = pow10(power10z)*zAxis->scale;
+
+    dfield = gwy_data_field_new(xAxis->maxIndex-xAxis->minIndex+1,
+                                yAxis->maxIndex-yAxis->minIndex+1,
+                                xreal, yreal,
+                                FALSE);
+    total = (xAxis->maxIndex-xAxis->minIndex+1)*(yAxis->maxIndex-yAxis->minIndex+1);
+    gwy_data_field_set_si_unit_xy(dfield, siunitxy);
+    g_object_unref(siunitxy);
+    gwy_data_field_set_si_unit_z(dfield, siunitz);
+    g_object_unref(siunitz);
+
+    data = gwy_data_field_get_data(dfield);
+    p = (gchar*)dataframe->image;
+    gwy_debug("total points %d; data type %d; cell size %d",
+              total, zAxis->dataType, dataframe->cellSize);
+    for (i = 0; i < total; i++){
+        switch (zAxis->dataType){
+            case MDA_DATA_INT8:
+            data[i] = zscale*(*(gchar*)p);
+            p++;
+            break;
+
+            case MDA_DATA_UINT8:
+            data[i] = zscale*(*(guchar*)p);
+            p++;
+            break;
+
+            case MDA_DATA_INT16:
+            data[i] = zscale*GINT16_FROM_LE(*(gint16*)p);
+            p += 2;
+            break;
+
+            case MDA_DATA_UINT16:
+            data[i] = zscale*GUINT16_FROM_LE(*(guint16*)p);
+            p += 2;
+            break;
+
+            case MDA_DATA_INT32:
+            data[i] = zscale*GINT32_FROM_LE(*(gint32*)p);
+            p += 4;
+            break;
+
+            case MDA_DATA_UINT32:
+            data[i] = zscale*GUINT32_FROM_LE(*(guint32*)p);
+            p += 4;
+            break;
+
+            case MDA_DATA_INT64:
+            data[i] = zscale*GINT64_FROM_LE(*(gint64*)p);
+            p += 8;
+            break;
+
+            case MDA_DATA_UINT64:
+            data[i] = zscale*GUINT64_FROM_LE(*(guint64*)p);
+            p += 8;
+            break;
+
+            case MDA_DATA_FLOAT32:
+            data[i] = zscale*gwy_get_gfloat_le(&p);
+            break;
+
+            case MDA_DATA_FLOAT64:
+            data[i] = zscale*gwy_get_gdouble_le(&p);
+            break;
+
+        }
+        //p+=dataframe->cellSize;
+    }
+    gwy_data_field_invert(dfield, TRUE, FALSE, FALSE);
     return dfield;
 }
 
