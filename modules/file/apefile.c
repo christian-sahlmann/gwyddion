@@ -273,10 +273,10 @@ apefile_load(const gchar *filename,
     /* reserved */
     p += 2;
 
-    /* FIXME: Or multiply??? */
+    /* FIXME: Or divide??? */
     if (apefile.version == 2 && apefile.subversion >= 3) {
-        apefile.maxr_x /= apefile.fast2_0;
-        apefile.maxr_y /= apefile.fast2_1;
+        apefile.maxr_x *= apefile.fast2_0;
+        apefile.maxr_y *= apefile.fast2_1;
     }
     if (apefile.version == 2 && apefile.subversion >= 1) {
         apefile.z_piezo_factor /= apefile.hv_gain_z;
