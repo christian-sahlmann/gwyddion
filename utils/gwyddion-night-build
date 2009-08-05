@@ -91,7 +91,7 @@ function check_coding_style() {
   # Source coding style
   # Keep the `GENERATED' string quoted to prevent match here
   grep -r --include '*.[ch]' -L ' This is a 'GENERATED' file\>' . \
-    | grep -Ev '^\./gwyddion-|/(main|test|wtest)\.c' \
+    | grep -Ev '^\./gwyddion-|/(main|test|wtest)\.c|/ige-mac-menu\.[ch]' \
     | xargs ./utils/check-coding-style.py \
     | cat --squeeze-blank >$logdir/coding-style.log
 
