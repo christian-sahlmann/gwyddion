@@ -21,7 +21,7 @@
  */
 
 /* TODO: channel types */
-
+#define DEBUG 1
 /**
  * [FILE-MAGIC-FREEDESKTOP]
  * <mime-type type="application/x-ape-spm">
@@ -86,10 +86,24 @@ typedef struct {
     guint topo_means;
     guint optical_means;
     guint error_means;
-    guint channels;
+    guint channels;  /* bit mask, bits 0, 1, 4 and 5 should be always present */
     guint ndata;   /* computed, number of nonzero bits in channels */
     gdouble range_x;
     gdouble range_y;
+    guint subversion;
+    /* Since 2.1 */
+    gdouble hv_gain_z;
+    /* Since 2.2 */
+    gdouble fast2_0;
+    gdouble fast2_1;
+    gdouble fast2_2;
+    gdouble fast2_3;
+    /* Since 2.3 */
+    gboolean pg850_image;
+    /* Since 2.4 */
+    gint xy_hv_status;
+    gint z_hv_status;
+    /* The data */
     GwyDataField **data;
 } APEFile;
 
@@ -179,7 +193,7 @@ apefile_load(const gchar *filename,
     gsize size = 0;
     GError *err = NULL;
     GwyDataField *dfield = NULL;
-    guint b, n;
+    guint b, i, n;
 
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
         err_GET_FILE_CONTENTS(error, &err);
@@ -241,6 +255,33 @@ apefile_load(const gchar *filename,
         apefile.ndata += (b & 1);
     apefile.range_x = gwy_get_gfloat_le(&p);
     apefile.range_y = gwy_get_gfloat_le(&p);
+    apefile.subversion = gwy_get_guint16_le(&p);
+    /* Read everything since the header is long enough, check the version
+     * later when we decide whether to use these values or not. */
+    /* Since 2.1 */
+    apefile.hv_gain_z = gwy_get_gfloat_le(&p);
+    /* Since 2.2 */
+    apefile.fast2_0 = gwy_get_gdouble_le(&p);
+    apefile.fast2_1 = gwy_get_gdouble_le(&p);
+    apefile.fast2_2 = gwy_get_gdouble_le(&p);
+    apefile.fast2_3 = gwy_get_gdouble_le(&p);
+    /* Since 2.3 */
+    apefile.pg850_image = !!gwy_get_guint16_le(&p);
+    /* Since 2.4 */
+    apefile.xy_hv_status = gwy_get_gint16_le(&p);
+    apefile.z_hv_status = gwy_get_gint16_le(&p);
+    /* reserved */
+    p += 2;
+
+    /* FIXME: Or multiply??? */
+    if (apefile.version == 2 && apefile.subversion >= 3) {
+        apefile.maxr_x /= apefile.fast2_0;
+        apefile.maxr_y /= apefile.fast2_1;
+    }
+    if (apefile.version == 2 && apefile.subversion >= 1) {
+        apefile.z_piezo_factor /= apefile.hv_gain_z;
+    }
+
     apefile.xreal = apefile.maxr_x * apefile.x_piezo_factor * apefile.range_x
                     * apefile.hv_gain/65535.0 * 1e-9;
     apefile.yreal = apefile.maxr_y * apefile.y_piezo_factor * apefile.range_y
@@ -254,10 +295,9 @@ apefile_load(const gchar *filename,
         g_warning("Real y size is 0.0, fixing to 1.0");
         apefile.yreal = 1.0;
     }
-    /* reserved */
-    p += 46;
 
-    gwy_debug("version = %u, spm_mode = %u", apefile.version, apefile.spm_mode);
+    gwy_debug("version = %u.%u, spm_mode = %u",
+              apefile.version, apefile.subversion, apefile.spm_mode);
     gwy_debug("scan_date = %f", apefile.scan_date);
     gwy_debug("maxr_x = %g, maxr_y = %g", apefile.maxr_x, apefile.maxr_y);
     gwy_debug("x_offset = %u, y_offset = %u",
@@ -298,19 +338,43 @@ apefile_load(const gchar *filename,
     container = gwy_container_new();
     /* All metadata seems to be per-file (global) */
     meta = apefile_get_metadata(&apefile);
-    for (n = 0; n < apefile.ndata; n++) {
+    for (b = apefile.channels, n = 0, i = 0; b; b = b >> 1, i++) {
         GwyContainer *tmp;
-        gchar key[24];
+        gchar *title;
+        gchar key[32];
+
+        if (!(b & 1))
+            continue;
 
         g_snprintf(key, sizeof(key), "/%d/data", n);
         dfield = apefile.data[n];
         gwy_container_set_object_by_name(container, key, dfield);
         g_object_unref(apefile.data[n]);
 
+        g_snprintf(key, sizeof(key), "/%d/data/title", n);
+        title = gwy_enuml_to_string(i,
+                                    "Out", 0,
+                                    "Out-R", 1,
+                                    "Error", 2,
+                                    "Error-R", 3,
+                                    "NSOM", 4,
+                                    "NSOM-R", 5,
+                                    "NSOM2", 6,
+                                    "NSOM2-R", 7,
+                                    "Aux1", 8,
+                                    "Aux2", 9,
+                                    "Aux1-R", 10,
+                                    "Aux2-R", 11,
+                                    NULL);
+        if (title && *title)
+            gwy_container_set_string_by_name(container, key, g_strdup(title));
+
         tmp = gwy_container_duplicate(meta);
         g_snprintf(key, sizeof(key), "/%d/meta", n);
         gwy_container_set_object_by_name(container, key, tmp);
         g_object_unref(tmp);
+
+        n++;
     }
 
     g_object_unref(meta);
