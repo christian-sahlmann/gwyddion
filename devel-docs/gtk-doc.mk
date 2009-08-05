@@ -189,9 +189,7 @@ install-data-local:
 	fi; \
 	if test -n "$$d"; then \
 		$(mkdir_p) $(DESTDIR)$(TARGET_DIR); \
-		for i in $$d/*; do \
-			$(INSTALL_DATA) $$i $(DESTDIR)$(TARGET_DIR); \
-		done; \
+		( cd $$d && $(INSTALL_DATA) * "$(DESTDIR)$(TARGET_DIR)"; ); \
 	fi; \
 	test -n "$$d"
 
