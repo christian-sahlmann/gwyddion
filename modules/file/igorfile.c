@@ -26,7 +26,7 @@
  *   <glob pattern="*.IBW"/>
  * </mime-type>
  **/
-
+#define DEBUG 1
 #include "config.h"
 #include <string.h>
 #include <stdlib.h>
@@ -140,7 +140,8 @@ static GwyContainer* igor_load           (const gchar *filename,
                                           GError **error);
 static guint         igor_read_headers   (IgorFile *igorfile,
                                           const guchar *buffer,
-                                          gsize size);
+                                          gsize size,
+                                          GError **error);
 static guint         igor_checksum       (const IgorFile *igorfile,
                                           const guchar *buffer,
                                           gsize size);
@@ -186,7 +187,8 @@ igor_detect(const GwyFileDetectInfo *fileinfo,
     if (fileinfo->buffer_len >= MIN_FILE_SIZE) {
        IgorFile igorfile;
 
-       if (igor_read_headers(&igorfile, fileinfo->head, fileinfo->buffer_len)) {
+       if (igor_read_headers(&igorfile, fileinfo->head, fileinfo->buffer_len,
+                             NULL)) {
            igor_file_free(&igorfile);
            return 100;
        }
@@ -266,25 +268,47 @@ igor_load(const gchar *filename,
 static guint
 igor_read_headers(IgorFile *igorfile,
                   const guchar *buffer,
-                  gsize size)
+                  gsize size,
+                  GError **error)
 {
     IgorBinHeader *header;
     IgorWaveHeader5 *wave5;
-    const guchar *p = buffer;
     gsize headers_size;
-    guint version, chksum;
+    guint version, chksum, i;
+    gboolean lsb;
+    const guchar *p = buffer;
 
-    if (size < HEADER_SIZE1)
+    if (size < HEADER_SIZE1) {
+        err_TOO_SHORT(error);
         return 0;
+    }
 
     /* The lower byte of version is nonzero.  Use it to detect endianess. */
     version = gwy_get_guint16_le(&p);
+    gwy_debug("raw version: 0x%04x", version);
 
-    /* Keep the rejection code path fast by performing version check as the
-     * very first thing. */
-    if (version & 0xff) {
-        if (version != 1 && version != 2 && version != 3 && version != 5)
-            return 0;
+    /* Keep the rejection code path fast by performing version sanity check
+     * as the very first thing. */
+    if ((lsb = (version & 0xff))) {
+        gwy_debug("little endian");
+    }
+    else {
+        gwy_debug("big endian");
+        version /= 0x100;
+    }
+
+    if (version != 1 && version != 2 && version != 3 && version != 5) {
+        err_FILE_TYPE(error, "IGOR Pro");
+        return 0;
+    }
+
+    memset(igorfile, 0, sizeof(IgorFile));
+    header = &igorfile->header;
+    wave5 = &igorfile->wave5;
+    header->version = version;
+    gwy_debug("format version: %u", header->version);
+
+    if (lsb) {
         igorfile->get_guint16 = gwy_get_guint16_le;
         igorfile->get_gint16 = gwy_get_gint16_le;
         igorfile->get_guint32 = gwy_get_guint32_le;
@@ -293,9 +317,6 @@ igor_read_headers(IgorFile *igorfile,
         igorfile->get_gdouble = gwy_get_gdouble_le;
     }
     else {
-        header->version /= 0x100;
-        if (version != 1 && version != 2 && version != 3 && version != 5)
-            return 0;
         igorfile->get_guint16 = gwy_get_guint16_be;
         igorfile->get_gint16 = gwy_get_gint16_be;
         igorfile->get_guint32 = gwy_get_guint32_be;
@@ -304,35 +325,36 @@ igor_read_headers(IgorFile *igorfile,
         igorfile->get_gdouble = gwy_get_gdouble_be;
     }
 
-    memset(igorfile, 0, sizeof(IgorFile));
-    header = &igorfile->header;
-    wave5 = &igorfile->wave5;
-    header->version = version;
+    /* Check if version is known and the buffer size */
+    if (header->version == 1)
+        headers_size = HEADER_SIZE1 + WAVE_SIZE2;
+    else if (header->version == 2)
+        headers_size = HEADER_SIZE2 + WAVE_SIZE2;
+    else if (header->version == 3)
+        headers_size = HEADER_SIZE3 + WAVE_SIZE2;
+    else if (header->version == 5)
+        headers_size = HEADER_SIZE5 + WAVE_SIZE5;
+    else {
+        g_assert_not_reached();
+    }
+    gwy_debug("expected headers_size %lu", (gulong)headers_size);
+    if (size < headers_size) {
+        err_TOO_SHORT(error);
+        return 0;
+    }
 
     /* Read the rest of the binary header */
     if (header->version == 1) {
-        headers_size = HEADER_SIZE1 + WAVE_SIZE2;
-        if (size < headers_size)
-            return 0;
-
         header->wfm_size = igorfile->get_guint32(&p);
         header->checksum = igorfile->get_guint16(&p);
     }
     else if (header->version == 2) {
-        headers_size = HEADER_SIZE2 + WAVE_SIZE2;
-        if (size < headers_size)
-            return 0;
-
         header->wfm_size = igorfile->get_guint32(&p);
         header->note_size = igorfile->get_guint32(&p);
         header->pict_size = igorfile->get_guint32(&p);
         header->checksum = igorfile->get_guint16(&p);
     }
     else if (header->version == 3) {
-        headers_size = HEADER_SIZE3 + WAVE_SIZE2;
-        if (size < headers_size)
-            return 0;
-
         header->wfm_size = igorfile->get_guint32(&p);
         header->note_size = igorfile->get_guint32(&p);
         header->formula_size = igorfile->get_guint32(&p);
@@ -340,12 +362,6 @@ igor_read_headers(IgorFile *igorfile,
         header->checksum = igorfile->get_guint16(&p);
     }
     else if (header->version == 5) {
-        guint i;
-
-        headers_size = HEADER_SIZE5 + WAVE_SIZE5;
-        if (size < headers_size)
-            return 0;
-
         header->checksum = igorfile->get_guint16(&p);
         header->wfm_size = igorfile->get_guint32(&p);
         header->formula_size = igorfile->get_guint32(&p);
@@ -359,11 +375,13 @@ igor_read_headers(IgorFile *igorfile,
         header->options_size1 = igorfile->get_guint32(&p);
         header->options_size2 = igorfile->get_guint32(&p);
     }
-    else
-        return 0;
+    else {
+        g_assert_not_reached();
+    }
 
     /* Check the checksum */
     chksum = igor_checksum(igorfile, buffer, headers_size);
+    gwy_debug("checksum calculated %u, header %u", chksum, header->checksum);
     if (chksum != header->checksum)
         return 0;
 
@@ -379,6 +397,7 @@ igor_checksum(const IgorFile *igorfile,
 
     /* This ignores the last byte should the size be odd, IGOR seems to do
      * the same. */
+    g_printerr(">>> %u\n", (guint)size/2);
     for (sum = 0, n = size/2; n; n--)
         sum += igorfile->get_guint16(&p);
 
