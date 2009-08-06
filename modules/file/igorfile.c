@@ -1,7 +1,7 @@
 /*
  *  $Id$
- *  Copyright (C) 2005 David Necas (Yeti), Petr Klapetek.
- *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
+ *  Copyright (C) 2009 David Necas (Yeti).
+ *  E-mail: yeti@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -381,13 +381,17 @@ igor_read_headers(IgorFile *igorfile,
 
     /* Check the checksum */
     chksum = igor_checksum(igorfile, buffer, headers_size);
-    gwy_debug("checksum calculated %u, header %u", chksum, header->checksum);
-    if (chksum != header->checksum)
+    gwy_debug("checksum %u", chksum);
+    if (chksum) {
+        err_FILE_TYPE(error, "IGOR Pro");
         return 0;
+    }
 
     return p - buffer;
 }
 
+/* The way the checksum is constructed (header->checksum is the complement),
+ * the return value is expected to be zero */
 static guint
 igor_checksum(const IgorFile *igorfile,
               const guchar *buffer, gsize size)
@@ -397,7 +401,6 @@ igor_checksum(const IgorFile *igorfile,
 
     /* This ignores the last byte should the size be odd, IGOR seems to do
      * the same. */
-    g_printerr(">>> %u\n", (guint)size/2);
     for (sum = 0, n = size/2; n; n--)
         sum += igorfile->get_guint16(&p);
 
