@@ -31,6 +31,11 @@
 
 #include "mac_integration.h"
 
+#ifdef USE_MAC_INTEGRATION
+int fileModulesReady = 0;
+GPtrArray *files_array = NULL;
+#endif
+
 void
 gwy_osx_get_menu_from_widget(USED_ON_MAC GtkWidget *container)
 {
@@ -76,10 +81,6 @@ gwy_osx_get_menu_from_widget(USED_ON_MAC GtkWidget *container)
 
 
 #ifdef USE_MAC_INTEGRATION
-gchar *gwy_osx_find_dir_in_bundle(const gchar *dirname);
-int fileModulesReady = 0;
-GPtrArray *files_array = NULL;
-
 static void
 gwy_osx_open_file(gpointer data, gpointer user_data)
 {
