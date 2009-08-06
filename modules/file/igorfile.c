@@ -40,17 +40,32 @@
 
 #include "err.h"
 
-#define MAGIC1 "\x01\x00"
-#define MAGIC2 "\x02\x00"
-#define MAGIC3 "\x03\x00"
-#define MAGIC5 "\x05\x00"
-#define MAGIC_SIZE 2
-
 #define EXTENSION ".ibw"
 
 enum {
-    MIN_FILE_SIZE = 8 + 110 + 16
+    MAXDIMS = 4,
+    MAX_UNIT_CHARS = 3,
+    MAX_WAVE_NAME2 = 18,
+    MAX_WAVE_NAME5 = 31,
+    MIN_FILE_SIZE = 8 + 110 + 16,
+    HEADER_SIZE1 = 8,
+    HEADER_SIZE2 = 16,
+    HEADER_SIZE3 = 20,
+    HEADER_SIZE5 = 64,
+    WAVE_SIZE2 = 110,
+    WAVE_SIZE5 = 320,
 };
+
+typedef enum {
+    IGOR_TEXT     = 0x00,
+    IGOR_COMPLEX  = 0x01,
+    IGOR_SINGLE   = 0x02,
+    IGOR_DOUBLE   = 0x04,
+    IGOR_INT8     = 0x08,
+    IGOR_INT16    = 0x10,
+    IGOR_INT32    = 0x20,
+    IGOR_UNSIGNED = 0x40,
+} IgorDataType;
 
 /* The header fields we read, they are stored differently in different
  * versions */
@@ -61,29 +76,80 @@ typedef struct {
                            data. */
     guint formula_size; /* The size of the dependency formula, if any. */
     guint note_size;    /* The size of the note text. */
+    guint pict_size;    /* Reserved (0). */
     guint data_e_units_size; /* The size of optional extended data units. */
     guint dim_e_units_size[MAXDIMS]; /* The size of optional extended dimension
                                         units. */
     guint dim_labels_size[MAXDIMS]; /* The size of optional dimension labels. */
-    guint sIndicesSize;   /* The size of string indicies if this is a text
-                              wave. */
-} BinHeader;
+    guint indices_size;   /* The size of string indicies if this is a text
+                             wave. */
+    guint options_size1;  /* Reserved (0). */
+    guint options_size2;  /* Reserved (0). */
+} IgorBinHeader;
 
-static gboolean      module_register        (void);
+typedef struct {
+    guint next;           /* Pointer, ignore. */
+    guint creation_date;  /* DateTime of creation. */
+    guint mod_date;       /* DateTime of last modification. */
+    guint npnts;          /* Total number of points
+                             (multiply dimensions up to first zero). */
+    IgorDataType type;
+    guint lock;           /* Reserved (0). */
+    gchar whpad1[6];      /* Reserved (0). */
+    guint wh_version;     /* Reserved (1). */
+    gchar *bname;         /* Wave name, nul-terminated. */
+    guint whpad2;         /* Reserved (0). */
+    guint dfolder;        /* Pointer, ignore. */
+
+    /* Dimensioning info. [0] == rows, [1] == cols etc */
+    guint n_dim[MAXDIMS];   /* Number of of items in a dimension,
+                               0 means no data. */
+    gdouble sfA[MAXDIMS];   /* Index value for element e of dimension
+                               d = sfA[d]*e + sfB[d]. */
+    gdouble sfB[MAXDIMS];
+
+    /* SI units */
+    gchar *data_units;           /* Natural data units, null if none. */
+    gchar *dim_units[MAXDIMS];   /* Natural dimension units, null if none. */
+
+    gboolean fs_valid;           /* TRUE if full scale values have meaning. */
+    guint whpad3;                /* Reserved (0). */
+    gdouble top_full_scale;      /* The max value for wave. */
+    gdouble bot_full_scale;      /* The max full scale value for wave. */
+
+    /* There is more stuff.  But it's either marked reserved, unused or private
+     * to Igor.  Do not bother with that... */
+} IgorWaveHeader5;
+
+typedef struct {
+    guint16 (*get_guint16)(const guchar **p);
+    gint16 (*get_gint16)(const guchar **p);
+    guint32 (*get_guint32)(const guchar **p);
+    gint32 (*get_gint32)(const guchar **p);
+    gfloat (*get_gfloat)(const guchar **p);
+    gdouble (*get_gdouble)(const guchar **p);
+    IgorBinHeader header;
+    IgorWaveHeader5 wave5;
+} IgorFile;
+
+static gboolean      module_register     (void);
 static gint          igor_detect         (const GwyFileDetectInfo *fileinfo,
-                                             gboolean only_name);
+                                          gboolean only_name);
 static GwyContainer* igor_load           (const gchar *filename,
-                                             GwyRunType mode,
-                                             GError **error);
-static gboolean      igor_read_header    (gchar *buffer,
-                                             IgorFile *ufile,
-                                             GError **error);
+                                          GwyRunType mode,
+                                          GError **error);
+static guint         igor_read_headers   (IgorFile *igorfile,
+                                          const guchar *buffer,
+                                          gsize size);
+static guint         igor_checksum       (const IgorFile *igorfile,
+                                          const guchar *buffer,
+                                          gsize size);
 static GwyDataField* igor_read_data_field(const guchar *buffer,
-                                             gsize size,
-                                             IgorFile *ufile,
-                                             GError **error);
-static GwyContainer* igor_get_metadata   (IgorFile *ufile);
-static void          igor_file_free      (IgorFile *ufile);
+                                          gsize size,
+                                          IgorFile *igorfile,
+                                          GError **error);
+static GwyContainer* igor_get_metadata   (IgorFile *igorfile);
+static void          igor_file_free      (IgorFile *igorfile);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -114,19 +180,19 @@ static gint
 igor_detect(const GwyFileDetectInfo *fileinfo,
                gboolean only_name)
 {
-    gint score = 0;
-
     if (only_name)
         return g_str_has_suffix(fileinfo->name_lowercase, EXTENSION) ? 10 : 0;
 
-    if (fileinfo->buffer_len > MAGIC_SIZE
-        && fileinfo->file_size >= MIN_FILE_SIZE) {
+    if (fileinfo->buffer_len >= MIN_FILE_SIZE) {
+       IgorFile igorfile;
 
-        if (memcmp(fileinfo->head, MAGIC1)) {
-        }
+       if (igor_read_headers(&igorfile, fileinfo->head, fileinfo->buffer_len)) {
+           igor_file_free(&igorfile);
+           return 100;
+       }
     }
 
-    return score;
+    return 0;
 }
 
 static GwyContainer*
@@ -134,6 +200,7 @@ igor_load(const gchar *filename,
           G_GNUC_UNUSED GwyRunType mode,
           GError **error)
 {
+#if 0
     IgorFile ufile;
     GwyContainer *meta, *container = NULL;
     guchar *buffer = NULL;
@@ -190,8 +257,135 @@ igor_load(const gchar *filename,
     igor_file_free(&ufile);
 
     return container;
+#endif
+    return NULL;
 }
 
+/* Reads @header and initializes @reader for the correct byte order.  Returns
+ * the number of bytes read, 0 on error. */
+static guint
+igor_read_headers(IgorFile *igorfile,
+                  const guchar *buffer,
+                  gsize size)
+{
+    IgorBinHeader *header;
+    IgorWaveHeader5 *wave5;
+    const guchar *p = buffer;
+    gsize headers_size;
+    guint version, chksum;
+
+    if (size < HEADER_SIZE1)
+        return 0;
+
+    /* The lower byte of version is nonzero.  Use it to detect endianess. */
+    version = gwy_get_guint16_le(&p);
+
+    /* Keep the rejection code path fast by performing version check as the
+     * very first thing. */
+    if (version & 0xff) {
+        if (version != 1 && version != 2 && version != 3 && version != 5)
+            return 0;
+        igorfile->get_guint16 = gwy_get_guint16_le;
+        igorfile->get_gint16 = gwy_get_gint16_le;
+        igorfile->get_guint32 = gwy_get_guint32_le;
+        igorfile->get_gint32 = gwy_get_gint32_le;
+        igorfile->get_gfloat = gwy_get_gfloat_le;
+        igorfile->get_gdouble = gwy_get_gdouble_le;
+    }
+    else {
+        header->version /= 0x100;
+        if (version != 1 && version != 2 && version != 3 && version != 5)
+            return 0;
+        igorfile->get_guint16 = gwy_get_guint16_be;
+        igorfile->get_gint16 = gwy_get_gint16_be;
+        igorfile->get_guint32 = gwy_get_guint32_be;
+        igorfile->get_gint32 = gwy_get_gint32_be;
+        igorfile->get_gfloat = gwy_get_gfloat_be;
+        igorfile->get_gdouble = gwy_get_gdouble_be;
+    }
+
+    memset(igorfile, 0, sizeof(IgorFile));
+    header = &igorfile->header;
+    wave5 = &igorfile->wave5;
+    header->version = version;
+
+    /* Read the rest of the binary header */
+    if (header->version == 1) {
+        headers_size = HEADER_SIZE1 + WAVE_SIZE2;
+        if (size < headers_size)
+            return 0;
+
+        header->wfm_size = igorfile->get_guint32(&p);
+        header->checksum = igorfile->get_guint16(&p);
+    }
+    else if (header->version == 2) {
+        headers_size = HEADER_SIZE2 + WAVE_SIZE2;
+        if (size < headers_size)
+            return 0;
+
+        header->wfm_size = igorfile->get_guint32(&p);
+        header->note_size = igorfile->get_guint32(&p);
+        header->pict_size = igorfile->get_guint32(&p);
+        header->checksum = igorfile->get_guint16(&p);
+    }
+    else if (header->version == 3) {
+        headers_size = HEADER_SIZE3 + WAVE_SIZE2;
+        if (size < headers_size)
+            return 0;
+
+        header->wfm_size = igorfile->get_guint32(&p);
+        header->note_size = igorfile->get_guint32(&p);
+        header->formula_size = igorfile->get_guint32(&p);
+        header->pict_size = igorfile->get_guint32(&p);
+        header->checksum = igorfile->get_guint16(&p);
+    }
+    else if (header->version == 5) {
+        guint i;
+
+        headers_size = HEADER_SIZE5 + WAVE_SIZE5;
+        if (size < headers_size)
+            return 0;
+
+        header->checksum = igorfile->get_guint16(&p);
+        header->wfm_size = igorfile->get_guint32(&p);
+        header->formula_size = igorfile->get_guint32(&p);
+        header->note_size = igorfile->get_guint32(&p);
+        header->data_e_units_size = igorfile->get_guint32(&p);
+        for (i = 0; i < MAXDIMS; i++)
+            header->dim_e_units_size[i] = igorfile->get_guint32(&p);
+        for (i = 0; i < MAXDIMS; i++)
+            header->dim_labels_size[i] = igorfile->get_guint32(&p);
+        header->indices_size = igorfile->get_guint32(&p);
+        header->options_size1 = igorfile->get_guint32(&p);
+        header->options_size2 = igorfile->get_guint32(&p);
+    }
+    else
+        return 0;
+
+    /* Check the checksum */
+    chksum = igor_checksum(igorfile, buffer, headers_size);
+    if (chksum != header->checksum)
+        return 0;
+
+    return p - buffer;
+}
+
+static guint
+igor_checksum(const IgorFile *igorfile,
+              const guchar *buffer, gsize size)
+{
+    const guchar *p = buffer;
+    guint n, sum;
+
+    /* This ignores the last byte should the size be odd, IGOR seems to do
+     * the same. */
+    for (sum = 0, n = size/2; n; n--)
+        sum += igorfile->get_guint16(&p);
+
+    return sum & 0xffff;
+}
+
+#if 0
 static GwyDataField*
 igor_read_data_field(const guchar *buffer,
                         gsize size,
@@ -330,18 +524,11 @@ igor_find_data_name(const gchar *header_name)
     return ok ? retval : NULL;
 }
 
+#endif
+
 static void
-igor_file_free(IgorFile *ufile)
+igor_file_free(IgorFile *igorfile)
 {
-    g_free(ufile->date);
-    g_free(ufile->time);
-    g_free(ufile->sample_name);
-    g_free(ufile->remark);
-    g_free(ufile->unit_x);
-    g_free(ufile->unit_y);
-    g_free(ufile->unit_z);
-    g_free(ufile->stm_voltage_unit);
-    g_free(ufile->stm_current_unit);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
