@@ -1,3 +1,8 @@
+bundler PREFIX
+
+    Create OS X bundle, run after `make install'.
+
+
 check-coding-style.py SOURCE-FILE.c
 
     Checks whether coding style conforms to Gwyddion conventions.
@@ -103,8 +108,6 @@ vim-syn-gen.py
     A general script for creation of Vim C syntax file extensions from
     gtk-doc documentation.  Used with conjuction of data/gwyddion-cfg.py
     which contains configuration for Gwyddion.  See
-
-    http://trific.ath.cx/resources/vim/scripts/#vim-syn-gen
 
 
 extract-file-magic.py TYPE SOURCE-FILES... >OUTPUT
