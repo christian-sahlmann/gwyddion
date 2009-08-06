@@ -116,6 +116,10 @@ typedef struct {
     gdouble range_x;
     gdouble range_y;
     guint subversion;
+    /* The new fields change the conversion rules, however, the simple factor
+     * above are written so that old software performs the conversion
+     * corerectly (they contain pre-multiplied or pre-divided values).  So we
+     * use that and do not care about hv_gain_z or fast2_* */
     /* Since 2.1 */
     gdouble hv_gain_z;
     /* Since 2.2 */
@@ -297,10 +301,6 @@ apefile_load(const gchar *filename,
     apefile.z_hv_status = gwy_get_gint16_le(&p);
     /* reserved */
     p += 2;
-
-    if (apefile.version == 2 && apefile.subversion >= 1) {
-        apefile.z_piezo_factor /= apefile.hv_gain_z;
-    }
 
     apefile.xreal = apefile.maxr_x * apefile.x_piezo_factor * apefile.range_x
                     * apefile.hv_gain/65535.0 * 1e-9;
