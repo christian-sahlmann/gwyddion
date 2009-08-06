@@ -62,7 +62,7 @@ cat << EOT > ${contents_dir}/Info.plist
         <key>CFBundleShortVersionString</key>
         <string>0.3</string>
         <key>CFBundleSignature</key>
-        <string>????</string>
+        <string>gwyd</string>
         <key>CFBundleVersion</key>
         <string>0.3</string>
         <key>NSHumanReadableCopyright</key>
