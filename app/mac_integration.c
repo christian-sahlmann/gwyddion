@@ -57,8 +57,11 @@ gwy_osx_get_menu_from_widget(USED_ON_MAC GtkWidget *container)
 
                         if (GTK_IS_MENU_ITEM(subsubwidget)) {
                             gtk_widget_hide(widget);
+                            gtk_widget_ref(subsubwidget);
+                            gtk_container_remove(GTK_CONTAINER(subwidget), subsubwidget);
                             gtk_menu_shell_append(GTK_MENU_SHELL(menubar),
                                                   subsubwidget);
+                            gtk_widget_unref(subsubwidget);
                         }
                     }
                 }
