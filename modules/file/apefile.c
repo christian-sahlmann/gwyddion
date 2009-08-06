@@ -27,6 +27,17 @@
  *   <magic priority="80">
  *     <match type="string" offset="234" value="APERES"/>
  *   </magic>
+ *   <magic priority="80">
+ *     <match type="byte" offset="0" value="2">
+ *       <match type="little16" offset="3" value="7">
+ *         <match type="byte" offset="1" value="0"/>
+ *         <match type="byte" offset="1" value="1"/>
+ *         <match type="byte" offset="1" value="2"/>
+ *         <match type="byte" offset="1" value="3"/>
+ *         <match type="byte" offset="1" value="4"/>
+ *       </match>
+ *     </match>
+ *   </magic>
  * </mime-type>
  **/
 
