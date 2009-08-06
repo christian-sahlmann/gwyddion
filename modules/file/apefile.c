@@ -20,8 +20,6 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-/* TODO: channel types */
-#define DEBUG 1
 /**
  * [FILE-MAGIC-FREEDESKTOP]
  * <mime-type type="application/x-ape-spm">
@@ -55,6 +53,22 @@ typedef enum {
     SPM_MODE_PHASE_DETECT_AFM = 4,
     SPM_MODE_LAST
 } SPMModeType;
+
+typedef enum {
+    /* They call height `Out' */
+    APE_HEIGHT   = 0,
+    APE_HEIGHT_R = 1,
+    APE_NSOM     = 2,
+    APE_NSOM_R   = 3,
+    APE_ERROR    = 4,
+    APE_ERROR_R  = 5,
+    APE_NSOM2    = 6,
+    APE_NSOM2_R  = 7,
+    APE_AUX1     = 8,
+    APE_AUX2     = 9,
+    APE_AUX1_R   = 10,
+    APE_AUX2_R   = 11,
+} APEChannel;
 
 typedef struct {
     guint version;
@@ -131,7 +145,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports APE (Applied Physics and Engineering) data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.8",
+    "0.9",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -273,11 +287,6 @@ apefile_load(const gchar *filename,
     /* reserved */
     p += 2;
 
-    /* FIXME: Or divide??? */
-    if (apefile.version == 2 && apefile.subversion >= 3) {
-        apefile.maxr_x *= apefile.fast2_0;
-        apefile.maxr_y *= apefile.fast2_1;
-    }
     if (apefile.version == 2 && apefile.subversion >= 1) {
         apefile.z_piezo_factor /= apefile.hv_gain_z;
     }
@@ -353,18 +362,18 @@ apefile_load(const gchar *filename,
 
         g_snprintf(key, sizeof(key), "/%d/data/title", n);
         title = gwy_enuml_to_string(i,
-                                    "Out",     0,
-                                    "Out-R",   1,
-                                    "NSOM",    2,
-                                    "NSOM-R",  3,
-                                    "Error",   4,
-                                    "Error-R", 5,
-                                    "NSOM2",   6,
-                                    "NSOM2-R", 7,
-                                    "Aux1",    8,
-                                    "Aux2",    9,
-                                    "Aux1-R",  10,
-                                    "Aux2-R",  11,
+                                    "Height",   APE_HEIGHT,
+                                    "Height-R", APE_HEIGHT_R,
+                                    "NSOM",     APE_NSOM,
+                                    "NSOM-R",   APE_NSOM_R,
+                                    "Error",    APE_ERROR,
+                                    "Error-R",  APE_ERROR_R,
+                                    "NSOM2",    APE_NSOM2,
+                                    "NSOM2-R",  APE_NSOM2_R,
+                                    "Aux1",     APE_AUX1,
+                                    "Aux2",     APE_AUX2,
+                                    "Aux1-R",   APE_AUX1_R,
+                                    "Aux2-R",   APE_AUX2_R,
                                     NULL);
         if (title && *title)
             gwy_container_set_string_by_name(container, key, g_strdup(title));
@@ -390,27 +399,55 @@ fill_data_fields(APEFile *apefile,
     GwyDataField *dfield;
     GwySIUnit *unit;
     gdouble *data;
-    guint n, i, j;
+    const gchar *zunit;
+    guint b, n, i, j, k;
+    gdouble q;
 
     apefile->data = g_new0(GwyDataField*, apefile->ndata);
-    for (n = 0; n < apefile->ndata; n++) {
+    for (b = apefile->channels, n = 0, k = 0; b; b = b >> 1, k++) {
+        if (!(b & 1))
+            continue;
+
         dfield = gwy_data_field_new(apefile->res, apefile->res,
                                     apefile->xreal, apefile->yreal, FALSE);
         unit = gwy_data_field_get_si_unit_xy(dfield);
         gwy_si_unit_set_from_string(unit, "m");
-        unit = gwy_data_field_get_si_unit_z(dfield);
-        gwy_si_unit_set_from_string(unit, "m");
 
         data = gwy_data_field_get_data(dfield);
         buffer += (apefile->res + 1)*sizeof(float);
+        switch (k) {
+            case APE_HEIGHT:
+            case APE_HEIGHT_R:
+            case APE_AUX2:
+            case APE_AUX2_R:
+            q = apefile->z_piezo_factor * 1e-9;
+            zunit = "m";
+            break;
+
+            case APE_AUX1:
+            case APE_AUX1_R:
+            q = 1.0;
+            zunit = apefile->pg850_image ? "A" : "V";
+            break;
+
+            default:
+            q = 1.0;
+            zunit = "V";
+            break;
+        }
+
+        unit = gwy_data_field_get_si_unit_z(dfield);
+        gwy_si_unit_set_from_string(unit, zunit);
+
         for (i = 0; i < apefile->res; i++) {
+            /* There is always one ignored record, do not ask me why... */
             buffer += sizeof(float);
             for (j = 0; j < apefile->res; j++) {
-                *(data++) = gwy_get_gfloat_le(&buffer);
+                *(data++) = q*gwy_get_gfloat_le(&buffer);
             }
         }
         apefile->data[n] = dfield;
-        gwy_data_field_multiply(dfield, apefile->z_piezo_factor * 1e-9);
+        n++;
     }
 }
 
