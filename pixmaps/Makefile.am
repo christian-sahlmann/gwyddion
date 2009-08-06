@@ -181,6 +181,7 @@ xcf_sources = \
 	gwy_zoom-24.xcf
 
 EXTRA_DIST = \
+	gwyddion.icns \
 	makefile.msc \
 	makefile.msc.gwt \
 	$(icondata_DATA) \
