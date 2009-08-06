@@ -121,18 +121,25 @@ appleEventHandler(const AppleEvent * event, AppleEvent * event2, long param)
     }
     return noErr;
 }
-
 #endif
+
 void
 gwy_osx_init_handler(USED_ON_MAC int *argc)
 {
 #ifdef USE_MAC_INTEGRATION
-    gchar *tmp = gwy_osx_find_dir_in_bundle("data");
+    CFURLRef res_url_ref = NULL, bundle_url_ref = NULL;
 
-    if (tmp)
-        free(tmp);              // check if inside bundle
-    else
-        *argc = 1;              // command line options not available in app bundles
+    res_url_ref = CFBundleCopyResourcesDirectoryURL(CFBundleGetMainBundle());
+    bundle_url_ref = CFBundleCopyBundleURL(CFBundleGetMainBundle());
+
+    if (res_url_ref
+        && bundle_url_ref && !CFEqual(res_url_ref, bundle_url_ref))
+        *argc = 1;        // command line options not available in app bundles
+
+    if (res_url_ref)
+        CFRelease(res_url_ref);
+    if (bundle_url_ref)
+        CFRelease(bundle_url_ref);
 
     AEInstallEventHandler(kCoreEventClass,      // handle open file events
                           kAEOpenDocuments,
