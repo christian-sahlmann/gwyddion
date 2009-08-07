@@ -142,9 +142,9 @@ static guint         igor_read_headers   (IgorFile *igorfile,
                                           const guchar *buffer,
                                           gsize size,
                                           GError **error);
-static guint         igor_checksum       (const IgorFile *igorfile,
-                                          const guchar *buffer,
-                                          gsize size);
+static guint         igor_checksum       (gconstpointer buffer,
+                                          gsize size,
+                                          gboolean lsb);
 static GwyDataField* igor_read_data_field(const guchar *buffer,
                                           gsize size,
                                           IgorFile *igorfile,
@@ -297,11 +297,35 @@ igor_read_headers(IgorFile *igorfile,
         version /= 0x100;
     }
 
-    if (version != 1 && version != 2 && version != 3 && version != 5) {
+    /* Check if version is known and the buffer size */
+    if (version == 1)
+        headers_size = HEADER_SIZE1 + WAVE_SIZE2;
+    else if (version == 2)
+        headers_size = HEADER_SIZE2 + WAVE_SIZE2;
+    else if (version == 3)
+        headers_size = HEADER_SIZE3 + WAVE_SIZE2;
+    else if (version == 5)
+        headers_size = HEADER_SIZE5 + WAVE_SIZE5;
+    else {
+        err_FILE_TYPE(error, "IGOR Pro");
+        return 0;
+    }
+    gwy_debug("expected headers_size %lu", (gulong)headers_size);
+    if (size < headers_size) {
+        err_TOO_SHORT(error);
+        return 0;
+    }
+
+    /* Check the checksum */
+    chksum = igor_checksum(buffer, headers_size, lsb);
+    gwy_debug("checksum %u", chksum);
+    if (chksum) {
         err_FILE_TYPE(error, "IGOR Pro");
         return 0;
     }
 
+    /* If the checksum is correct the file is likely IGOR file and we can
+     * start the expensive actions. */
     memset(igorfile, 0, sizeof(IgorFile));
     header = &igorfile->header;
     wave5 = &igorfile->wave5;
@@ -323,24 +347,6 @@ igor_read_headers(IgorFile *igorfile,
         igorfile->get_gint32 = gwy_get_gint32_be;
         igorfile->get_gfloat = gwy_get_gfloat_be;
         igorfile->get_gdouble = gwy_get_gdouble_be;
-    }
-
-    /* Check if version is known and the buffer size */
-    if (header->version == 1)
-        headers_size = HEADER_SIZE1 + WAVE_SIZE2;
-    else if (header->version == 2)
-        headers_size = HEADER_SIZE2 + WAVE_SIZE2;
-    else if (header->version == 3)
-        headers_size = HEADER_SIZE3 + WAVE_SIZE2;
-    else if (header->version == 5)
-        headers_size = HEADER_SIZE5 + WAVE_SIZE5;
-    else {
-        g_assert_not_reached();
-    }
-    gwy_debug("expected headers_size %lu", (gulong)headers_size);
-    if (size < headers_size) {
-        err_TOO_SHORT(error);
-        return 0;
     }
 
     /* Read the rest of the binary header */
@@ -379,30 +385,27 @@ igor_read_headers(IgorFile *igorfile,
         g_assert_not_reached();
     }
 
-    /* Check the checksum */
-    chksum = igor_checksum(igorfile, buffer, headers_size);
-    gwy_debug("checksum %u", chksum);
-    if (chksum) {
-        err_FILE_TYPE(error, "IGOR Pro");
-        return 0;
-    }
-
     return p - buffer;
 }
 
 /* The way the checksum is constructed (header->checksum is the complement),
  * the return value is expected to be zero */
 static guint
-igor_checksum(const IgorFile *igorfile,
-              const guchar *buffer, gsize size)
+igor_checksum(gconstpointer buffer, gsize size, gboolean lsb)
 {
-    const guchar *p = buffer;
-    guint n, sum;
+    const guint16 *p = (const guint16*)buffer;
+    guint i, sum;
 
     /* This ignores the last byte should the size be odd, IGOR seems to do
      * the same. */
-    for (sum = 0, n = size/2; n; n--)
-        sum += igorfile->get_guint16(&p);
+    if (lsb) {
+        for (sum = 0, i = 0; i < size/2; ++i)
+            sum += GUINT16_FROM_LE(p[i]);
+    }
+    else {
+        for (sum = 0, i = 0; i < size/2; ++i)
+            sum += GUINT16_FROM_BE(p[i]);
+    }
 
     return sum & 0xffff;
 }
