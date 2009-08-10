@@ -141,6 +141,7 @@ static GwyContainer* igor_load           (const gchar *filename,
 static guint         igor_read_headers   (IgorFile *igorfile,
                                           const guchar *buffer,
                                           gsize size,
+                                          gboolean check_only,
                                           GError **error);
 static guint         igor_checksum       (gconstpointer buffer,
                                           gsize size,
@@ -188,7 +189,7 @@ igor_detect(const GwyFileDetectInfo *fileinfo,
        IgorFile igorfile;
 
        if (igor_read_headers(&igorfile, fileinfo->head, fileinfo->buffer_len,
-                             NULL)) {
+                             TRUE, NULL)) {
            igor_file_free(&igorfile);
            return 100;
        }
@@ -269,6 +270,7 @@ static guint
 igor_read_headers(IgorFile *igorfile,
                   const guchar *buffer,
                   gsize size,
+                  gboolean check_only,
                   GError **error)
 {
     IgorBinHeader *header;
@@ -323,6 +325,10 @@ igor_read_headers(IgorFile *igorfile,
         err_FILE_TYPE(error, "IGOR Pro");
         return 0;
     }
+
+    /* If only detection is required, we can stop now. */
+    if (check_only)
+        return headers_size;
 
     /* If the checksum is correct the file is likely IGOR file and we can
      * start the expensive actions. */
