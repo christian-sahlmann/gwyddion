@@ -620,6 +620,7 @@ igor_read_data_field(const IgorFile *igorfile,
 
     gwy_data_field_invert(dfield, TRUE, FALSE, FALSE);
 
+    /* TODO: Support extended units */
     unit = gwy_data_field_get_si_unit_xy(dfield);
     gwy_si_unit_set_from_string(unit, wave5->dim_units[0]);
 
