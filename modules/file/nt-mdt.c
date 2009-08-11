@@ -1369,19 +1369,19 @@ unitCodeForSiCode(guint64 siCode)
 {
 
     switch (siCode) {
-        case 0x0000000000000001ll:
+        case G_GUINT64_CONSTANT(0x0000000000000001):
         return MDT_UNIT_NONE;
 
-        case 0x0000000000000101ll:
+        case G_GUINT64_CONSTANT(0x0000000000000101):
         return MDT_UNIT_METER; // Meter
 
-        case 0x0000000000100001ll:
+        case G_GUINT64_CONSTANT(0x0000000000100001):
         return MDT_UNIT_AMPERE2; // Ampere
 
-        case 0x000000fffd010200ll:
+        case G_GUINT64_CONSTANT(0x000000fffd010200):
         return MDT_UNIT_VOLT2; // volt
 
-        case 0x0000000001000001ll:
+        case G_GUINT64_CONSTANT(0x0000000001000001):
         return MDT_UNIT_SECOND; // second
 
         default:
