@@ -37,6 +37,7 @@
 #include <libprocess/stats.h>
 #include <libgwymodule/gwymodule-file.h>
 #include <app/gwymoduleutils-file.h>
+#include <app/data-browser.h>
 
 #include "err.h"
 #include "get.h"
@@ -132,6 +133,7 @@ typedef struct {
     gdouble (*get_gdouble)(const guchar **p);
     guint wave_header_size;
     guint headers_size;
+    guint type_size;
     IgorBinHeader header;
     IgorWaveHeader5 wave5;
 } IgorFile;
@@ -151,10 +153,10 @@ static guint         igor_checksum       (gconstpointer buffer,
                                           gsize size,
                                           gboolean lsb);
 static guint         igor_data_type_size (IgorDataType type);
-static GwyDataField* igor_read_data_field(const guchar *buffer,
-                                          gsize size,
-                                          IgorFile *igorfile,
-                                          GError **error);
+static GwyDataField* igor_read_data_field(const IgorFile *igorfile,
+                                          const guchar *buffer,
+                                          guint i,
+                                          gboolean imaginary);
 static GwyContainer* igor_get_metadata   (IgorFile *igorfile);
 
 static GwyModuleInfo module_info = {
@@ -213,7 +215,8 @@ igor_load(const gchar *filename,
     guchar *buffer = NULL;
     gint xres, yres, nlayers;
     gsize expected_size, size = 0;
-    guint type_size;
+    guint i, j;
+    GQuark quark;
 
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
         err_GET_FILE_CONTENTS(error, &err);
@@ -242,8 +245,8 @@ igor_load(const gchar *filename,
         goto fail;
     }
 
-    type_size = igor_data_type_size(wave5->type);
-    if (!type_size) {
+    igorfile.type_size = igor_data_type_size(wave5->type);
+    if (!igorfile.type_size) {
         err_DATA_TYPE(error, wave5->type);
         goto fail;
     }
@@ -262,32 +265,34 @@ igor_load(const gchar *filename,
     }
 
     expected_size = igorfile.header.wfm_size - igorfile.wave_header_size;
-    if (expected_size != wave5->npts*type_size) {
+    if (expected_size != wave5->npts*igorfile.type_size) {
         g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
                     _("Data size %u does not match "
                       "the number of data points %u×%u."),
-                    (guint)expected_size, wave5->npts, type_size);
+                    (guint)expected_size, wave5->npts, igorfile.type_size);
     }
 
-
-#if 0
-    dfield = igor_read_data_field(buffer, size, &ufile, error);
-    gwy_file_abandon_contents(buffer, size, NULL);
-
-    if (!dfield) {
-        return NULL;
-    }
+    if (err_SIZE_MISMATCH(error, expected_size + igorfile.headers_size, size,
+                          FALSE))
+        goto fail;
 
     container = gwy_container_new();
-    gwy_container_set_object_by_name(container, "/0/data", dfield);
-    g_object_unref(dfield);
-    gwy_app_channel_title_fall_back(container, 0);
 
-    meta = igor_get_metadata(&ufile);
-    gwy_container_set_object_by_name(container, "/0/meta", meta);
-    g_object_unref(meta);
+    for (i = 0, j = 0; i < nlayers; i++, j++) {
+        dfield = igor_read_data_field(&igorfile, buffer, i, FALSE);
+        quark = gwy_app_get_data_key_for_id(j);
+        gwy_container_set_object(container, quark, dfield);
+        g_object_unref(dfield);
 
-#endif
+        if (wave5->type & IGOR_COMPLEX) {
+            j++;
+            dfield = igor_read_data_field(&igorfile, buffer, i, TRUE);
+            quark = gwy_app_get_data_key_for_id(j);
+            gwy_container_set_object(container, quark, dfield);
+            g_object_unref(dfield);
+        }
+    }
+
 fail:
     gwy_file_abandon_contents(buffer, size, NULL);
 
@@ -508,69 +513,104 @@ igor_data_type_size(IgorDataType type)
     else
         return 0;
 
+    /* unsigned is invalid on floats */
+    if ((type & IGOR_UNSIGNED)
+        && (basetype == IGOR_DOUBLE || basetype == IGOR_SINGLE))
+        return 0;
+
     if (type & IGOR_COMPLEX)
         size *= 2;
 
     return size;
 }
 
-#if 0
 static GwyDataField*
-igor_read_data_field(const guchar *buffer,
-                        gsize size,
-                        IgorFile *ufile,
-                        GError **error)
+igor_read_data_field(const IgorFile *igorfile,
+                     const guchar *buffer,
+                     guint i,
+                     gboolean imaginary)
 {
-    gint i, n, power10;
-    const gchar *unit;
+    const IgorWaveHeader5 *wave5;
+    guint n, xres, yres, skip;
     GwyDataField *dfield;
-    GwySIUnit *siunit;
-    gdouble q, pmin, pmax, rmin, rmax;
+    GwySIUnit *unit;
     gdouble *data;
+    const guchar *p;
 
-    n = ufile->xres * ufile->yres;
-    if (err_SIZE_MISMATCH(error, n*type_sizes[ufile->data_type], size, FALSE))
-        return NULL;
+    wave5 = &igorfile->wave5;
+    xres = wave5->n_dim[0];
+    yres = wave5->n_dim[1];
+    p = buffer + igorfile->headers_size + xres*yres*igorfile->type_size*i;
+    n = xres*yres;
 
-    dfield = gwy_data_field_new(ufile->xres, ufile->yres,
-                                fabs((ufile->end_x - ufile->start_x)),
-                                fabs((ufile->end_y - ufile->start_y)),
+    dfield = gwy_data_field_new(xres, yres,
+                                wave5->sfA[0]*xres, wave5->sfA[1]*yres,
                                 FALSE);
     data = gwy_data_field_get_data(dfield);
 
-    /* FIXME: what to do when ascii_flag is set? */
-    switch (ufile->data_type) {
-        case IGOR_UINT8:
-        for (i = 0; i < n; i++)
-            data[i] = buffer[i];
-        break;
+    g_return_val_if_fail(!imaginary || (wave5->type & IGOR_COMPLEX), dfield);
+    skip = imaginary ? igorfile->type_size/2 : 0;
+    if (imaginary)
+        p += skip;
 
-        case IGOR_SINT8:
-        for (i = 0; i < n; i++)
-            data[i] = (signed char)buffer[i];
-        break;
-
-        case IGOR_UINT16:
+    switch (wave5->type) {
+        case IGOR_INT8:
         {
-            const guint16 *pdata = (const guint16*)buffer;
-
-            for (i = 0; i < n; i++)
-                data[i] = GUINT16_FROM_LE(pdata[i]);
+            const gint8 *ps = (const gint8*)buffer;
+            while (n--) {
+                *(data++) = *(ps++);
+                ps += skip;
+            }
         }
         break;
 
-        case IGOR_SINT16:
-        {
-            const gint16 *pdata = (const gint16*)buffer;
-
-            for (i = 0; i < n; i++)
-                data[i] = GINT16_FROM_LE(pdata[i]);
+        case IGOR_INT8 | IGOR_UNSIGNED:
+        while (n--) {
+            *(data++) = *(p++);
+            p += skip;
         }
         break;
 
-        case IGOR_FLOAT:
-        for (i = 0; i < n; i++)
-            data[i] = gwy_get_gfloat_le(&buffer);
+        case IGOR_INT16:
+        while (n--) {
+            *(data++) = igorfile->get_gint16(&p);
+            p += skip;
+        }
+        break;
+
+        case IGOR_INT16 | IGOR_UNSIGNED:
+        while (n--) {
+            *(data++) = igorfile->get_guint16(&p);
+            p += skip;
+        }
+        break;
+
+        case IGOR_INT32:
+        while (n--) {
+            *(data++) = igorfile->get_gint32(&p);
+            p += skip;
+        }
+        break;
+
+        case IGOR_INT32 | IGOR_UNSIGNED:
+        while (n--) {
+            *(data++) = igorfile->get_guint32(&p);
+            p += skip;
+        }
+        break;
+
+        case IGOR_SINGLE:
+        while (n--) {
+            *(data++) = igorfile->get_gfloat(&p);
+            p += skip;
+        }
+        break;
+
+        case IGOR_DOUBLE:
+        while (n--) {
+            *(data++) = igorfile->get_gdouble(&p);
+            p += skip;
+        }
         break;
 
         default:
@@ -578,32 +618,18 @@ igor_read_data_field(const guchar *buffer,
         break;
     }
 
-    unit = ufile->unit_x;
-    if (!*unit)
-        unit = "nm";
-    siunit = gwy_si_unit_new_parse(unit, &power10);
-    gwy_data_field_set_si_unit_xy(dfield, siunit);
-    q = pow10((gdouble)power10);
-    gwy_data_field_set_xreal(dfield, q*gwy_data_field_get_xreal(dfield));
-    gwy_data_field_set_yreal(dfield, q*gwy_data_field_get_yreal(dfield));
-    g_object_unref(siunit);
+    gwy_data_field_invert(dfield, TRUE, FALSE, FALSE);
 
-    unit = ufile->unit_z;
-    /* XXX: No fallback yet, just make z unitless */
-    siunit = gwy_si_unit_new_parse(unit, &power10);
-    gwy_data_field_set_si_unit_z(dfield, siunit);
-    q = pow10((gdouble)power10);
-    pmin = q*ufile->min_z;
-    pmax = q*ufile->max_z;
-    rmin = ufile->min_raw_z;
-    rmax = ufile->max_raw_z;
-    gwy_data_field_multiply(dfield, (pmax - pmin)/(rmax - rmin));
-    gwy_data_field_add(dfield, (pmin*rmax - pmax*rmin)/(rmax - rmin));
-    g_object_unref(siunit);
+    unit = gwy_data_field_get_si_unit_xy(dfield);
+    gwy_si_unit_set_from_string(unit, wave5->dim_units[0]);
+
+    unit = gwy_data_field_get_si_unit_z(dfield);
+    gwy_si_unit_set_from_string(unit, wave5->data_units);
 
     return dfield;
 }
 
+#if 0
 static GwyContainer*
 igor_get_metadata(IgorFile *ufile)
 {
@@ -626,33 +652,6 @@ igor_get_metadata(IgorFile *ufile)
 
     return meta;
 }
-
-static gchar*
-igor_find_data_name(const gchar *header_name)
-{
-    GString *data_name;
-    gchar *retval;
-    gboolean ok = FALSE;
-
-    data_name = g_string_new(header_name);
-    g_string_truncate(data_name,
-                      data_name->len - (sizeof(EXTENSION_HEADER) - 1));
-    g_string_append(data_name, EXTENSION_DATA);
-    if (g_file_test(data_name->str, G_FILE_TEST_IS_REGULAR))
-        ok = TRUE;
-    else {
-        g_ascii_strup(data_name->str
-                      + data_name->len - (sizeof(EXTENSION_DATA) - 1),
-                      -1);
-        if (g_file_test(data_name->str, G_FILE_TEST_IS_REGULAR))
-            ok = TRUE;
-    }
-    retval = data_name->str;
-    g_string_free(data_name, !ok);
-
-    return ok ? retval : NULL;
-}
-
 #endif
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
