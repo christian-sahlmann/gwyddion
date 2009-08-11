@@ -865,7 +865,7 @@ gwy_filename_ignore(const gchar *filename_sys)
  * Extracts a next line from a character buffer, modifying it in place.
  *
  * @buffer is updated to point after the end of the line and the "\n"
- * (or "\r\n") is replaced with "\0", if present.
+ * (or "\r" or "\r\n") is replaced with "\0", if present.
  *
  * Returns: The start of the line.  %NULL if the buffer is empty or %NULL.
  *          NOT a new string, the returned pointer points somewhere to @buffer.
@@ -874,17 +874,23 @@ gchar*
 gwy_str_next_line(gchar **buffer)
 {
     gchar *p, *q;
+    gsize n;
 
     if (!buffer || !*buffer)
         return NULL;
 
     q = *buffer;
-    p = strchr(*buffer, '\n');
-    if (p) {
-        if (p > *buffer && *(p-1) == '\r')
-            *(p-1) = '\0';
-        *buffer = p+1;
-        *p = '\0';
+    n = strcspn(*buffer, "\n\r");
+    if (n || *q) {
+        p = q + n;
+        if (p[0] == '\r' && p[1] == '\n') {
+            p[0] = p[1] = '\0';
+            *buffer = p+2;
+        }
+        else {
+            p[0] = '\0';
+            *buffer = p+1;
+        }
     }
     else
         *buffer = NULL;
