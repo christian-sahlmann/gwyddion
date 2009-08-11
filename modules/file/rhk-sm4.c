@@ -59,7 +59,8 @@ enum {
     MAGIC_SIZE = G_N_ELEMENTS(MAGIC),
     MAGIC_TOTAL_SIZE = 36,   /* including the version part we do not check */
     HEADER_SIZE = MAGIC_OFFSET + MAGIC_TOTAL_SIZE + 5*4,
-    HEADER_OBJECT_SIZE = 3*4,
+    OBJECT_SIZE = 3*4,
+    PAGE_INDEX_HEADER_SIZE = 4*4,
 };
 
 typedef enum {
@@ -165,19 +166,38 @@ typedef struct {
 typedef struct {
     guint page_count;
     guint object_count;
+    guint reserved1;
+    guint reserved2;
+    RHKObject *objects;
+} RHKPageIndexHeader;
+
+typedef struct {
+    guint page_count;
+    guint object_count;
     guint object_field_size;
     guint reserved1;
     guint reserved2;
     RHKObject *objects;
+    RHKPageIndexHeader page_index_header;
 } RHKFile;
 
-static gboolean      module_register       (void);
-static gint          rhk_sm4_detect        (const GwyFileDetectInfo *fileinfo,
-                                            gboolean only_name);
-static GwyContainer* rhk_sm4_load          (const gchar *filename,
-                                            GwyRunType mode,
-                                            GError **error);
-static void          rhk_sm4_free          (RHKFile *rhkfile);
+static gboolean      module_register               (void);
+static gint          rhk_sm4_detect                (const GwyFileDetectInfo *fileinfo,
+                                                    gboolean only_name);
+static GwyContainer* rhk_sm4_load                  (const gchar *filename,
+                                                    GwyRunType mode,
+                                                    GError **error);
+static gboolean      rhk_sm4_read_page_index_header(RHKPageIndexHeader *header,
+                                                    const RHKObject *obj,
+                                                    const guchar *buffer,
+                                                    gsize size,
+                                                    GError **error);
+static RHKObject*    rhk_sm4_read_objects          (const guchar *buffer,
+                                                    const guchar *p,
+                                                    gsize size,
+                                                    guint count,
+                                                    GError **error);
+static void          rhk_sm4_free                  (RHKFile *rhkfile);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -251,6 +271,7 @@ rhk_sm4_load(const gchar *filename,
         goto fail;
     }
 
+    /* File header */
     p = buffer + MAGIC_OFFSET + MAGIC_TOTAL_SIZE;
     rhkfile.page_count = gwy_get_guint32_le(&p);
     rhkfile.object_count = gwy_get_guint32_le(&p);
@@ -258,26 +279,25 @@ rhk_sm4_load(const gchar *filename,
     gwy_debug("page_count: %u, object_count: %u, object_field_size: %u",
               rhkfile.page_count, rhkfile.object_count,
               rhkfile.object_field_size);
-    if (rhkfile.object_field_size != HEADER_OBJECT_SIZE)
+    if (rhkfile.object_field_size != OBJECT_SIZE)
         g_warning("Object field size %u differs from %u",
-                  rhkfile.object_field_size, HEADER_OBJECT_SIZE);
+                  rhkfile.object_field_size, OBJECT_SIZE);
     rhkfile.reserved1 = gwy_get_guint32_le(&p);
     rhkfile.reserved2 = gwy_get_guint32_le(&p);
 
-    if ((p - buffer) + rhkfile.object_count*HEADER_OBJECT_SIZE >= size) {
-        /* TODO */
+    /* Header objects */
+    if (!(rhkfile.objects = rhk_sm4_read_objects(buffer, p, size,
+                                                 rhkfile.object_count, error)))
         goto fail;
-    }
 
-    rhkfile.objects = g_new(RHKObject, rhkfile.object_count);
     for (i = 0; i < rhkfile.object_count; i++) {
         RHKObject *obj = rhkfile.objects + i;
 
-        obj->type = gwy_get_guint32_le(&p);
-        obj->offset = gwy_get_guint32_le(&p);
-        obj->size = gwy_get_guint32_le(&p);
-        gwy_debug("object of type %u at %u, size %u",
-                  obj->type, obj->offset, obj->size);
+        if (obj->type == RHK_OBJECT_PAGE_INDEX_HEADER) {
+            if (!rhk_sm4_read_page_index_header(&rhkfile.page_index_header,
+                                                obj, buffer, size, error))
+                goto fail;
+        }
     }
 
 fail:
@@ -287,10 +307,76 @@ fail:
     return container;
 }
 
+static gboolean
+rhk_sm4_read_page_index_header(RHKPageIndexHeader *header,
+                               const RHKObject *obj,
+                               const guchar *buffer,
+                               gsize size,
+                               GError **error)
+{
+    const guchar *p;
+
+    if (obj->size < PAGE_INDEX_HEADER_SIZE) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Page index header is truncated"));
+        return FALSE;
+    }
+
+    p = buffer + obj->offset;
+    header->page_count = gwy_get_guint32_le(&p);
+    header->object_count = gwy_get_guint32_le(&p);
+    gwy_debug("page_count: %u, object_count: %u",
+              header->page_count, header->object_count);
+    header->reserved1 = gwy_get_guint32_le(&p);
+    header->reserved2 = gwy_get_guint32_le(&p);
+
+    if (!(header->objects = rhk_sm4_read_objects(buffer, p, size,
+                                                 header->object_count, error)))
+        return FALSE;
+
+    return TRUE;
+}
+
+static RHKObject*
+rhk_sm4_read_objects(const guchar *buffer,
+                     const guchar *p, gsize size, guint count,
+                     GError **error)
+{
+    RHKObject *objects, *obj;
+    guint i;
+
+    if ((p - buffer) + count*OBJECT_SIZE >= size) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Object list is truncated."));
+        return NULL;
+    }
+
+    objects = g_new(RHKObject, count);
+    for (i = 0; i < count; i++) {
+        obj = objects + i;
+        obj->type = gwy_get_guint32_le(&p);
+        obj->offset = gwy_get_guint32_le(&p);
+        obj->size = gwy_get_guint32_le(&p);
+        gwy_debug("object of type %u at %u, size %u",
+                  obj->type, obj->offset, obj->size);
+        if ((gsize)obj->size + obj->offset > size) {
+            g_set_error(error, GWY_MODULE_FILE_ERROR,
+                        GWY_MODULE_FILE_ERROR_DATA,
+                        _("Object of type %u is truncated."),
+                        obj->type);
+            g_free(objects);
+            return NULL;
+        }
+    }
+
+    return objects;
+}
+
 static void
 rhk_sm4_free(RHKFile *rhkfile)
 {
     g_free(rhkfile->objects);
+    g_free(rhkfile->page_index_header.objects);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
