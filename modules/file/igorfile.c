@@ -302,6 +302,7 @@ igor_load(const gchar *filename,
     p += igorfile.header.formula_size;
     if (igorfile.header.note_size &&
         (p - buffer) + igorfile.header.note_size <= size) {
+        /* This might be useful only for Asylum Research files */
         note = g_strndup((const gchar*)p, size);
         hash = igor_read_note_hash(note);
     }
