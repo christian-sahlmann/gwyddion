@@ -58,7 +58,8 @@ enum {
     MAGIC_OFFSET = 2,
     MAGIC_SIZE = G_N_ELEMENTS(MAGIC),
     MAGIC_TOTAL_SIZE = 36,   /* including the version part we do not check */
-    HEADER_SIZE = 2 + MAGIC_TOTAL_SIZE + 5*4
+    HEADER_SIZE = MAGIC_OFFSET + MAGIC_TOTAL_SIZE + 5*4,
+    HEADER_OBJECT_SIZE = 3*4,
 };
 
 typedef enum {
@@ -72,23 +73,23 @@ typedef enum {
 } RHKType;
 
 typedef enum {
-    RHK_OBJECT_UNDEFINED          = -0,
-    RHK_OBJECT_PAGE_INDEX_HEADER  = -1,
-    RHK_OBJECT_PAGE_INDEX_ARRAY   = -2,
-    RHK_OBJECT_PAGE_HEADER        = -3,
-    RHK_OBJECT_PAGE_DATA          = -4,
-    RHK_OBJECT_IMAGE_DRIFT_HEADER = -5,
-    RHK_OBJECT_IMAGE_DRIFT        = -6,
-    RHK_OBJECT_SPEC_DRIFT_HEADER  = -7,
-    RHK_OBJECT_SPEC_DRIFT_DATA    = -8,
-    RHK_OBJECT_COLOR_INFO         = -9,
-    RHK_OBJECT_STRING_DATA        = -10,
-    RHK_OBJECT_TIP_TRACK_HEADER   = -11,
-    RHK_OBJECT_TIP_TRACK_DATA     = -12,
-    RHK_OBJECT_PRM                = -13,
-    RHK_OBJECT_THUMBNAIL          = -14,
-    RHK_OBJECT_PRM_HEADER         = -15,
-    RHK_OBJECT_THUMBNAIL_HEADER   = -16,
+    RHK_OBJECT_UNDEFINED          = 0,
+    RHK_OBJECT_PAGE_INDEX_HEADER  = 1,
+    RHK_OBJECT_PAGE_INDEX_ARRAY   = 2,
+    RHK_OBJECT_PAGE_HEADER        = 3,
+    RHK_OBJECT_PAGE_DATA          = 4,
+    RHK_OBJECT_IMAGE_DRIFT_HEADER = 5,
+    RHK_OBJECT_IMAGE_DRIFT        = 6,
+    RHK_OBJECT_SPEC_DRIFT_HEADER  = 7,
+    RHK_OBJECT_SPEC_DRIFT_DATA    = 8,
+    RHK_OBJECT_COLOR_INFO         = 9,
+    RHK_OBJECT_STRING_DATA        = 10,
+    RHK_OBJECT_TIP_TRACK_HEADER   = 11,
+    RHK_OBJECT_TIP_TRACK_DATA     = 12,
+    RHK_OBJECT_PRM                = 13,
+    RHK_OBJECT_THUMBNAIL          = 14,
+    RHK_OBJECT_PRM_HEADER         = 15,
+    RHK_OBJECT_THUMBNAIL_HEADER   = 16,
 } RHKObjectType;
 
 typedef enum {
@@ -156,11 +157,18 @@ typedef enum {
 } RHKScanType;
 
 typedef struct {
+    RHKObjectType type;
+    guint offset;
+    guint size;
+} RHKObject;
+
+typedef struct {
     guint page_count;
     guint object_count;
     guint object_field_size;
     guint reserved1;
     guint reserved2;
+    RHKObject *objects;
 } RHKFile;
 
 static gboolean      module_register       (void);
@@ -169,6 +177,7 @@ static gint          rhk_sm4_detect        (const GwyFileDetectInfo *fileinfo,
 static GwyContainer* rhk_sm4_load          (const gchar *filename,
                                             GwyRunType mode,
                                             GError **error);
+static void          rhk_sm4_free          (RHKFile *rhkfile);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -229,30 +238,59 @@ rhk_sm4_load(const gchar *filename,
     gsize size = 0;
     GError *err = NULL;
     const guchar *p;
+    guint i;
 
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
         err_GET_FILE_CONTENTS(error, &err);
         return NULL;
     }
+
+    gwy_clear(&rhkfile, 1);
     if (size < HEADER_SIZE) {
         err_TOO_SHORT(error);
-        gwy_file_abandon_contents(buffer, size, NULL);
-        return NULL;
+        goto fail;
     }
 
-    p = buffer + MAGIC_TOTAL_SIZE;
+    p = buffer + MAGIC_OFFSET + MAGIC_TOTAL_SIZE;
     rhkfile.page_count = gwy_get_guint32_le(&p);
     rhkfile.object_count = gwy_get_guint32_le(&p);
     rhkfile.object_field_size = gwy_get_guint32_le(&p);
     gwy_debug("page_count: %u, object_count: %u, object_field_size: %u",
               rhkfile.page_count, rhkfile.object_count,
               rhkfile.object_field_size);
+    if (rhkfile.object_field_size != HEADER_OBJECT_SIZE)
+        g_warning("Object field size %u differs from %u",
+                  rhkfile.object_field_size, HEADER_OBJECT_SIZE);
     rhkfile.reserved1 = gwy_get_guint32_le(&p);
     rhkfile.reserved2 = gwy_get_guint32_le(&p);
 
+    if ((p - buffer) + rhkfile.object_count*HEADER_OBJECT_SIZE >= size) {
+        /* TODO */
+        goto fail;
+    }
+
+    rhkfile.objects = g_new(RHKObject, rhkfile.object_count);
+    for (i = 0; i < rhkfile.object_count; i++) {
+        RHKObject *obj = rhkfile.objects + i;
+
+        obj->type = gwy_get_guint32_le(&p);
+        obj->offset = gwy_get_guint32_le(&p);
+        obj->size = gwy_get_guint32_le(&p);
+        gwy_debug("object of type %u at %u, size %u",
+                  obj->type, obj->offset, obj->size);
+    }
+
+fail:
     gwy_file_abandon_contents(buffer, size, NULL);
+    rhk_sm4_free(&rhkfile);
 
     return container;
+}
+
+static void
+rhk_sm4_free(RHKFile *rhkfile)
+{
+    g_free(rhkfile->objects);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
