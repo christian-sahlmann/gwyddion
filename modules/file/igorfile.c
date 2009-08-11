@@ -116,8 +116,8 @@ typedef struct {
 
     gboolean fs_valid;           /* TRUE if full scale values have meaning. */
     guint whpad3;                /* Reserved (0). */
-    gdouble top_full_scale;      /* The max value for wave. */
-    gdouble bot_full_scale;      /* The max full scale value for wave. */
+    gdouble top_full_scale;      /* The instrument max full scale value. */
+    gdouble bot_full_scale;      /* The instrument min full scale value. */
 
     /* There is more stuff.  But it's either marked reserved, unused or private
      * to Igor.  Do not bother with that... */
@@ -130,6 +130,8 @@ typedef struct {
     gint32 (*get_gint32)(const guchar **p);
     gfloat (*get_gfloat)(const guchar **p);
     gdouble (*get_gdouble)(const guchar **p);
+    guint wave_header_size;
+    guint headers_size;
     IgorBinHeader header;
     IgorWaveHeader5 wave5;
 } IgorFile;
@@ -148,6 +150,7 @@ static guint         igor_read_headers   (IgorFile *igorfile,
 static guint         igor_checksum       (gconstpointer buffer,
                                           gsize size,
                                           gboolean lsb);
+static guint         igor_data_type_size (IgorDataType type);
 static GwyDataField* igor_read_data_field(const guchar *buffer,
                                           gsize size,
                                           IgorFile *igorfile,
@@ -202,39 +205,72 @@ igor_load(const gchar *filename,
           G_GNUC_UNUSED GwyRunType mode,
           GError **error)
 {
-#if 0
     GwyContainer *meta, *container = NULL;
     GwyDataField *dfield = NULL;
-    gchar *data_name;
-#endif
     IgorFile igorfile;
+    IgorWaveHeader5 *wave5;
     GError *err = NULL;
     guchar *buffer = NULL;
-    gsize size = 0;
+    gint xres, yres, nlayers;
+    gsize expected_size, size = 0;
+    guint type_size;
 
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
         err_GET_FILE_CONTENTS(error, &err);
         return NULL;
     }
 
-    if (!igor_read_headers(&igorfile, buffer, size, FALSE, error)) {
-        gwy_file_abandon_contents(buffer, size, NULL);
-        return NULL;
+    if (!igor_read_headers(&igorfile, buffer, size, FALSE, error))
+        goto fail;
+
+    /* Only accept v5 files because older do not support 2D data */
+    if (igorfile.header.version != 5) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Format version is %d.  Only version 5 is supported."),
+                    igorfile.header.version);
+        goto fail;
     }
+
+    /* Must have exactly 3 dims: xres, yres, nlayers */
+    wave5 = &igorfile.wave5;
+    xres = wave5->n_dim[0];
+    yres = wave5->n_dim[1];
+    nlayers = wave5->n_dim[2];
+    if (!xres || !yres || !nlayers || wave5->n_dim[3]) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Only two-dimensional data are supported."));
+        goto fail;
+    }
+
+    type_size = igor_data_type_size(wave5->type);
+    if (!type_size) {
+        err_DATA_TYPE(error, wave5->type);
+        goto fail;
+    }
+
+    if (wave5->npts != xres*yres*nlayers) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Number of data points %u does not match resolutions "
+                      "%u×%u×%u."),
+                    wave5->npts, xres, yres, nlayers);
+        goto fail;
+    }
+
+    if (igorfile.header.wfm_size <= igorfile.wave_header_size) {
+        err_INVALID(error, "wfmSize");
+        goto fail;
+    }
+
+    expected_size = igorfile.header.wfm_size - igorfile.wave_header_size;
+    if (expected_size != wave5->npts*type_size) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Data size %u does not match "
+                      "the number of data points %u×%u."),
+                    (guint)expected_size, wave5->npts, type_size);
+    }
+
 
 #if 0
-    if (ufile.data_type < IGOR_UINT8
-        || ufile.data_type > IGOR_FLOAT
-        || type_sizes[ufile.data_type] == 0) {
-        err_DATA_TYPE(error, ufile.data_type);
-        return NULL;
-    }
-
-    if (!gwy_file_get_contents(data_name, &buffer, &size, &err)) {
-        err_GET_FILE_CONTENTS(error, &err);
-        return NULL;
-    }
-
     dfield = igor_read_data_field(buffer, size, &ufile, error);
     gwy_file_abandon_contents(buffer, size, NULL);
 
@@ -251,10 +287,11 @@ igor_load(const gchar *filename,
     gwy_container_set_object_by_name(container, "/0/meta", meta);
     g_object_unref(meta);
 
-    return container;
 #endif
+fail:
     gwy_file_abandon_contents(buffer, size, NULL);
-    return NULL;
+
+    return container;
 }
 
 /* Reads @header and initializes @reader for the correct byte order.  Returns
@@ -327,6 +364,7 @@ igor_read_headers(IgorFile *igorfile,
     memset(igorfile, 0, sizeof(IgorFile));
     header = &igorfile->header;
     header->version = version;
+    igorfile->headers_size = headers_size;
     gwy_debug("format version: %u", header->version);
 
     if (lsb) {
@@ -348,16 +386,19 @@ igor_read_headers(IgorFile *igorfile,
 
     /* Read the rest of the binary header */
     if (header->version == 1) {
+        igorfile->wave_header_size = 110;
         header->wfm_size = igorfile->get_guint32(&p);
         header->checksum = igorfile->get_guint16(&p);
     }
     else if (header->version == 2) {
+        igorfile->wave_header_size = 110;
         header->wfm_size = igorfile->get_guint32(&p);
         header->note_size = igorfile->get_guint32(&p);
         header->pict_size = igorfile->get_guint32(&p);
         header->checksum = igorfile->get_guint16(&p);
     }
     else if (header->version == 3) {
+        igorfile->wave_header_size = 110;
         header->wfm_size = igorfile->get_guint32(&p);
         header->note_size = igorfile->get_guint32(&p);
         header->formula_size = igorfile->get_guint32(&p);
@@ -365,13 +406,17 @@ igor_read_headers(IgorFile *igorfile,
         header->checksum = igorfile->get_guint16(&p);
     }
     else if (header->version == 5) {
+        igorfile->wave_header_size = 320;
         header->checksum = igorfile->get_guint16(&p);
         header->wfm_size = igorfile->get_guint32(&p);
         header->formula_size = igorfile->get_guint32(&p);
         header->note_size = igorfile->get_guint32(&p);
         header->data_e_units_size = igorfile->get_guint32(&p);
-        for (i = 0; i < MAXDIMS; i++)
+        gwy_debug("data_e_units_size: %u", header->data_e_units_size);
+        for (i = 0; i < MAXDIMS; i++) {
             header->dim_e_units_size[i] = igorfile->get_guint32(&p);
+            gwy_debug("dim_e_units_size[%u]: %u", i, header->dim_e_units_size[i]);
+        }
         for (i = 0; i < MAXDIMS; i++)
             header->dim_labels_size[i] = igorfile->get_guint32(&p);
         header->indices_size = igorfile->get_guint32(&p);
@@ -381,6 +426,8 @@ igor_read_headers(IgorFile *igorfile,
     else {
         g_assert_not_reached();
     }
+
+    gwy_debug("wfm_size: %u", header->wfm_size);
 
     /* Read the wave header */
     if (version == 5) {
@@ -407,8 +454,11 @@ igor_read_headers(IgorFile *igorfile,
         for (i = 0; i < MAXDIMS; i++)
             wave5->sfB[i] = igorfile->get_gdouble(&p);
         get_CHARARRAY0(wave5->data_units, &p);
-        for (i = 0; i < MAXDIMS; i++)
+        gwy_debug("data_units: <%s>", wave5->data_units);
+        for (i = 0; i < MAXDIMS; i++) {
             get_CHARARRAY0(wave5->dim_units[i], &p);
+            gwy_debug("dim_units[%u]: <%s>", i, wave5->data_units);
+        }
         wave5->fs_valid = !!igorfile->get_guint16(&p);
         wave5->whpad3 = igorfile->get_guint16(&p);
         wave5->top_full_scale = igorfile->get_gdouble(&p);
@@ -438,6 +488,30 @@ igor_checksum(gconstpointer buffer, gsize size, gboolean lsb)
     }
 
     return sum & 0xffff;
+}
+
+static guint
+igor_data_type_size(IgorDataType type)
+{
+    IgorDataType basetype;
+    gsize size;
+
+    basetype = type & ~(IGOR_UNSIGNED | IGOR_COMPLEX);
+    if (basetype == IGOR_SINGLE || basetype == IGOR_INT32)
+        size = 4;
+    else if (basetype == IGOR_INT16)
+        size = 2;
+    else if (basetype == IGOR_DOUBLE)
+        size = 8;
+    else if (basetype == IGOR_INT8)
+        size = 1;
+    else
+        return 0;
+
+    if (type & IGOR_COMPLEX)
+        size *= 2;
+
+    return size;
 }
 
 #if 0
