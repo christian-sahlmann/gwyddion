@@ -23,7 +23,7 @@
  * <mime-type type="application/x-rhk-sm3-spm">
  *   <comment>RHK SM3 SPM data</comment>
  *   <magic priority="80">
- *     <match type="string" offset="0" value="S\0T\0i\0M\0a\0g\0e\0 \0"/>
+ *     <match type="string" offset="2" value="S\0T\0i\0M\0a\0g\0e\0 \0\060\0\060\0\064\0.\0"/>
  *   </magic>
  *   <glob pattern="*.sm3"/>
  *   <glob pattern="*.SM3"/>
