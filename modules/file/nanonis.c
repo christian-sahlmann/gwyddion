@@ -449,7 +449,7 @@ sxm_load(const gchar *filename,
         return NULL;
     }
 
-    memset(&sxmfile, 0, sizeof(SXMFile));
+    gwy_clear(&sxmfile, 1);
     sxmfile.meta = g_hash_table_new(g_str_hash, g_str_equal);
 
     header = g_memdup(buffer, p - buffer + 1);

@@ -383,7 +383,7 @@ igor_read_headers(IgorFile *igorfile,
 
     /* If the checksum is correct the file is likely IGOR file and we can
      * start the expensive actions. */
-    memset(igorfile, 0, sizeof(IgorFile));
+    gwy_clear(igorfile, 1);
     header = &igorfile->header;
     header->version = version;
     igorfile->headers_size = headers_size;

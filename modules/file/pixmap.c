@@ -391,7 +391,7 @@ module_register(void)
     gboolean registered[G_N_ELEMENTS(saveable_formats)];
     guint i;
 
-    memset(registered, 0, G_N_ELEMENTS(saveable_formats)*sizeof(gboolean));
+    gwy_clear(registered, G_N_ELEMENTS(registered));
     formats = gdk_pixbuf_get_formats();
     for (l = formats; l; l = g_slist_next(l)) {
         GdkPixbufFormat *pixbuf_format = (GdkPixbufFormat*)l->data;

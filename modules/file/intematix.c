@@ -186,7 +186,7 @@ isdf_load(const gchar *filename,
     if (!(tiff = gwy_tiff_load(filename, error)))
         return NULL;
 
-    memset(&image, 0, sizeof(ISDFImage));
+    gwy_clear(&image, 1);
     if (!gwy_tiff_get_sint0(tiff, ISDF_TIFFTAG_FILEID, &magic)
         || magic != ISDF_MAGIC_NUMBER) {
         err_FILE_TYPE(error, "Intematix SDF");

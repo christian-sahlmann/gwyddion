@@ -655,7 +655,7 @@ mdt_load(const gchar *filename,
         err_GET_FILE_CONTENTS(error, &err);
         return NULL;
     }
-    memset(&mdtfile, 0, sizeof(mdtfile));
+    gwy_clear(&mdtfile, 1);
     if (!mdt_real_load(buffer, size, &mdtfile, error)) {
         gwy_file_abandon_contents(buffer, size, NULL);
         return NULL;
@@ -853,7 +853,7 @@ mdt_add_frame_metadata(MDTScannedDataFrame *sdframe,
     if (!sdframe->xmlstuff)
         return;
 
-    memset(&parser, 0, sizeof(GMarkupParser));
+    gwy_clear(&parser, 1);
     parser.text = &mdt_frame_xml_text;
 
     context = g_markup_parse_context_new(&parser, 0, meta, NULL);

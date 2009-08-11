@@ -192,7 +192,7 @@ burleigh_load(const gchar *filename,
         return NULL;
     }
 
-    memset(&imgfile, 0, sizeof(imgfile));
+    gwy_clear(&imgfile, 1);
     p = buffer;
     imgfile.version = gwy_get_gfloat_le(&p);
     imgfile.version_int = GWY_ROUND(10*imgfile.version);

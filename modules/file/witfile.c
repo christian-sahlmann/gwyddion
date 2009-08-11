@@ -275,7 +275,7 @@ witec_load(const gchar *filename,
         return NULL;
     }
 
-    memset(&witfile, 0, sizeof(witfile));
+    gwy_clear(&witfile, 1);
     if (!witec_read_file(buffer, size, &witfile, error)) {
         gwy_file_abandon_contents(buffer, size, NULL);
         return NULL;

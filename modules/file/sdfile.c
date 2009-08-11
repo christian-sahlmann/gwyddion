@@ -537,7 +537,7 @@ sdfile_read_header_bin(const guchar **p,
         return FALSE;
     }
 
-    memset(sdfile, 0, sizeof(SDFile));
+    gwy_clear(sdfile, 1);
     get_CHARARRAY(sdfile->version, p);
     get_CHARARRAY(sdfile->manufacturer, p);
     get_CHARARRAY(sdfile->creation, p);
@@ -610,7 +610,7 @@ sdfile_read_header_text(gchar **buffer,
         return FALSE;
     }
 
-    memset(sdfile, 0, sizeof(SDFile));
+    gwy_clear(sdfile, 1);
     p = *buffer;
 
     val = g_strstrip(gwy_str_next_line(&p));

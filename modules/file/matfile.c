@@ -582,8 +582,7 @@ zinflate_into(z_stream *zbuf,
     gint status;
     gboolean retval = TRUE;
 
-    memset(zbuf, 0, sizeof(z_stream));
-
+    gwy_clear(zbuf, 1);
     zbuf->next_in = (char*)compressed;
     zbuf->avail_in = csize;
     zbuf->next_out = output->data;

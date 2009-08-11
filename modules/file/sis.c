@@ -505,7 +505,7 @@ sis_load(const gchar *filename,
         return NULL;
     }
     n = 0;
-    memset(&sisfile, 0, sizeof(sisfile));
+    gwy_clear(&sisfile, 1);
     sisfile.params = g_hash_table_new_full(g_direct_hash, g_direct_equal,
                                            NULL, g_free);
     if (sis_real_load(buffer, size, &sisfile, error)) {

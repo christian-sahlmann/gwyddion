@@ -607,7 +607,7 @@ stmprg_load(const gchar *filename,
         return NULL;
     }
 
-    memset(&stmprgfile, 0, sizeof(StmprgFile));
+    gwy_clear(&stmprgfile, 1);
     ok = read_parameters(buffer, size, &stmprgfile, error);
     gwy_file_abandon_contents(buffer, size, NULL);
     if (!ok)

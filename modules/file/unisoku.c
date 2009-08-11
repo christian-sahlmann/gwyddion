@@ -194,7 +194,7 @@ unisoku_load(const gchar *filename,
         return NULL;
     }
 
-    memset(&ufile, 0, sizeof(UnisokuFile));
+    gwy_clear(&ufile, 1);
     if (!unisoku_read_header(text, &ufile, error)) {
         unisoku_file_free(&ufile);
         g_free(text);

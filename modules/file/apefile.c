@@ -737,7 +737,7 @@ format_vt_date(gdouble vt_date)
     if (!gwy_VarUdateFromDate(vt_date, &udate))
         return NULL;
 
-    memset(&tm, 0, sizeof(tm));
+    gwy_clear(&tm, 1);
     gwy_debug("Date: %d-%d-%d %d:%d:%d",
               udate.st.wYear, udate.st.wMonth, udate.st.wDay,
               udate.st.wHour, udate.st.wMinute, udate.st.wSecond);

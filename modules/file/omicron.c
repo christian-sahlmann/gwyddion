@@ -221,7 +221,7 @@ omicron_load(const gchar *filename,
         return NULL;
     }
 
-    memset(&ofile, 0, sizeof(OmicronFile));
+    gwy_clear(&ofile, 1);
     ofile.filename = filename;
     if (!omicron_read_header(text, &ofile, error))
         goto fail;

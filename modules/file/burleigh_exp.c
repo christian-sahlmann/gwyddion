@@ -283,7 +283,7 @@ burleigh_exp_read_header(BurleighExpHeader *header,
     GwySIUnit *yunits = NULL, *dummy = NULL;
     gchar *p, *line;
 
-    memset(header, 0, sizeof(BurleighExpHeader));
+    gwy_clear(header, 1);
     p = buf;
 
     /* Magic header */

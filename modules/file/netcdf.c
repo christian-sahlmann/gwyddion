@@ -205,7 +205,7 @@ gxsm_detect(const GwyFileDetectInfo *fileinfo,
         return 0;
 
     score = 0;
-    memset(&cdffile, 0, sizeof(NetCDF));
+    gwy_clear(&cdffile, 1);
     p = fileinfo->head + MAGIC_SIZE;
     cdffile.nrecs = gwy_get_guint32_be(&p);
     if (cdffile_read_dim_array(&cdffile.dims, &cdffile.ndims,
@@ -458,7 +458,7 @@ cdffile_load(NetCDF *cdffile,
     GError *err = NULL;
     const guchar *p;
 
-    memset(cdffile, 0, sizeof(NetCDF));
+    gwy_clear(cdffile, 1);
 
     if (!gwy_file_get_contents(filename, &cdffile->buffer, &cdffile->size,
                                &err)) {

@@ -494,7 +494,7 @@ psia_read_image_header(const guchar *p,
 {
     guint bps = 0;
 
-    memset(header, 0, sizeof(PSIAImageHeader));
+    gwy_clear(header, 1);
 
     if ((version == PSIA_VERSION1 && size < 356)
         || (version == PSIA_VERSION2 && size < 580)) {
@@ -505,7 +505,7 @@ psia_read_image_header(const guchar *p,
     }
 
     /* Parse header */
-    memset(header, 0, sizeof(PSIAImageHeader));
+    gwy_clear(header, 1);
     header->image_type = gwy_get_guint32_le(&p);
     gwy_debug("image_type: %d", header->image_type);
     if (header->image_type != PSIA_2D_MAPPED
@@ -608,7 +608,7 @@ psia_read_spectro_header(const guchar *p,
 {
     guint i;
 
-    memset(header, 0, sizeof(PSIASpectroscopyHeader));
+    gwy_clear(header, 1);
 
     if (size < 536) {
         g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,

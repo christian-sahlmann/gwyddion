@@ -2549,7 +2549,7 @@ rawfile_import_1x_presets(GwyContainer *settings)
         container = gwy_container_new();
         gwy_container_transfer(settings, container,
                                from->str, "/module/rawfile", TRUE);
-        memset(&args, 0, sizeof(RawFileArgs));
+        gwy_clear(&args, 1);
         rawfile_load_args(container, &args);
         preset = gwy_raw_file_preset_new(preset_list[i], &args.p, FALSE);
         gwy_inventory_insert_item(inventory, preset);
