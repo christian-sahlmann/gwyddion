@@ -157,6 +157,7 @@ static GwyDataField* igor_read_data_field(const IgorFile *igorfile,
                                           const guchar *buffer,
                                           guint i,
                                           gboolean imaginary);
+static GHashTable*   igor_read_note_hash (gchar *text);
 static GwyContainer* igor_get_metadata   (IgorFile *igorfile);
 
 static GwyModuleInfo module_info = {
@@ -207,14 +208,16 @@ igor_load(const gchar *filename,
           G_GNUC_UNUSED GwyRunType mode,
           GError **error)
 {
-    GwyContainer *meta, *container = NULL;
+    GwyContainer *meta = NULL, *container = NULL;
     GwyDataField *dfield = NULL;
+    GHashTable *hash = NULL;
     IgorFile igorfile;
     IgorWaveHeader5 *wave5;
     GError *err = NULL;
-    guchar *buffer = NULL;
+    guchar *p, *buffer = NULL;
     gint xres, yres, nlayers;
     gsize expected_size, size = 0;
+    gchar *note = NULL;
     guint i, j;
     GQuark quark;
 
@@ -293,8 +296,21 @@ igor_load(const gchar *filename,
         }
     }
 
+    p = buffer + igorfile.headers_size + expected_size;
+    gwy_debug("remaning data size: %lu", (gulong)(size - (p - buffer)));
+
+    p += igorfile.header.formula_size;
+    if (igorfile.header.note_size &&
+        (p - buffer) + igorfile.header.note_size <= size) {
+        note = g_strndup((const gchar*)p, size);
+        hash = igor_read_note_hash(note);
+    }
+
 fail:
     gwy_file_abandon_contents(buffer, size, NULL);
+    g_free(note);
+    if (hash)
+        g_hash_table_destroy(hash);
 
     return container;
 }
@@ -415,15 +431,19 @@ igor_read_headers(IgorFile *igorfile,
         header->checksum = igorfile->get_guint16(&p);
         header->wfm_size = igorfile->get_guint32(&p);
         header->formula_size = igorfile->get_guint32(&p);
+        gwy_debug("formula_size: %u", header->formula_size);
         header->note_size = igorfile->get_guint32(&p);
+        gwy_debug("note_size: %u", header->note_size);
         header->data_e_units_size = igorfile->get_guint32(&p);
         gwy_debug("data_e_units_size: %u", header->data_e_units_size);
         for (i = 0; i < MAXDIMS; i++) {
             header->dim_e_units_size[i] = igorfile->get_guint32(&p);
             gwy_debug("dim_e_units_size[%u]: %u", i, header->dim_e_units_size[i]);
         }
-        for (i = 0; i < MAXDIMS; i++)
+        for (i = 0; i < MAXDIMS; i++) {
             header->dim_labels_size[i] = igorfile->get_guint32(&p);
+            gwy_debug("dim_labels_size[%u]: %u", i, header->dim_labels_size[i]);
+        }
         header->indices_size = igorfile->get_guint32(&p);
         header->options_size1 = igorfile->get_guint32(&p);
         header->options_size2 = igorfile->get_guint32(&p);
@@ -628,6 +648,31 @@ igor_read_data_field(const IgorFile *igorfile,
     gwy_si_unit_set_from_string(unit, wave5->data_units);
 
     return dfield;
+}
+
+static GHashTable*
+igor_read_note_hash(gchar *text)
+{
+    GHashTable *hash;
+    gchar *line, *p, *s;
+
+    hash = g_hash_table_new(g_str_hash, g_str_equal);
+    p = text;
+    while ((line = gwy_str_next_line(&p))) {
+        if (!(s = strchr(line, ':')))
+            continue;
+
+        *(s++) = '\0';
+        g_strstrip(line);
+        g_strstrip(s);
+
+        if (*line && *s) {
+            gwy_debug("<%s>=<%s>", line, s);
+            g_hash_table_insert(hash, line, s);
+        }
+    }
+
+    return hash;
 }
 
 #if 0
