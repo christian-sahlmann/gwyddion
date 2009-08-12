@@ -199,9 +199,7 @@ typedef struct {
 
 typedef struct {
     guint field_size;
-    guchar signature[MAGIC_TOTAL_SIZE];
     guint string_count;
-    RHKDataType data_type;
     RHKPageType page_type;
     guint data_sub_source;
     RHKLineType line_type;
@@ -525,13 +523,8 @@ rhk_sm4_read_page_header(RHKPage *page,
         return FALSE;
     }
 
-    /* TODO: Convert to UTF-8, store to meta */
-    //memcpy(page->signature, p, MAGIC_TOTAL_SIZE);
-    //p += 4;
     page->string_count = gwy_get_guint16_le(&p);
     gwy_debug("string_count = %u", page->string_count);
-    //page->data_type = gwy_get_guint32_le(&p);
-    //gwy_debug("data_type = %u", page->data_type);
     page->page_type = gwy_get_guint32_le(&p);
     gwy_debug("page_type = %u", page->page_type);
     page->data_sub_source = gwy_get_guint32_le(&p);
@@ -545,13 +538,16 @@ rhk_sm4_read_page_header(RHKPage *page,
         || err_DIMENSION(error, page->y_size))
         return FALSE;
 
+    /* FIXME: One of the following fields is not there.  Assume image_type,
+     * but we don't really know since they are usually 0. */
     page->source_type = gwy_get_guint32_le(&p);
-    page->image_type = gwy_get_guint32_le(&p);
-    gwy_debug("image_type = %u", page->image_type);
+    //page->image_type = gwy_get_guint32_le(&p);
+    //gwy_debug("image_type = %u", page->image_type);
+    page->image_type = 0;
     page->scan_dir = gwy_get_guint32_le(&p);
     gwy_debug("scan_dir = %u", page->scan_dir);
     page->group_id = gwy_get_guint32_le(&p);
-    gwy_debug("group_id = %u", page->group_id);
+    gwy_debug("group_id = 0x%08x", page->group_id);
     page->data_size = gwy_get_guint32_le(&p);
     gwy_debug("data_size = %u", page->data_size);
     page->min_z_value = gwy_get_gint32_le(&p);
@@ -581,13 +577,19 @@ rhk_sm4_read_page_header(RHKPage *page,
     page->bias = gwy_get_gfloat_le(&p);
     page->current = gwy_get_gfloat_le(&p);
     page->angle = gwy_get_gfloat_le(&p);
+    gwy_debug("period = %g, bias = %g, current = %g, angle = %g",
+              page->period, page->bias, page->current, page->angle);
     page->color_info_count = gwy_get_guint32_le(&p);
+    gwy_debug("color_info_count = %u", page->color_info_count);
     page->grid_x_size = gwy_get_guint32_le(&p);
     page->grid_y_size = gwy_get_guint32_le(&p);
+    gwy_debug("gird_x,y = %u %u", page->grid_x_size, page->grid_y_size);
     page->object_count = gwy_get_guint32_le(&p);
     for (i = 0; i < G_N_ELEMENTS(page->reserved); i++)
         page->reserved[i] = gwy_get_guint32_le(&p);
 
+    /* FIXME: Some of the objects read are of type 0 and size 0, but maybe
+     * that's right and they allow empty object slots */
     if (!(page->objects = rhk_sm4_read_objects(buffer, p, size,
                                                page->object_count, error)))
         return FALSE;
