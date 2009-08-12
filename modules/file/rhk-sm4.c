@@ -60,8 +60,10 @@ enum {
     MAGIC_TOTAL_SIZE = 36,   /* including the version part we do not check */
     HEADER_SIZE = MAGIC_OFFSET + MAGIC_TOTAL_SIZE + 5*4,
     OBJECT_SIZE = 3*4,
+    GUID_SIZE = 16,
     PAGE_INDEX_HEADER_SIZE = 4*4,
-    PAGE_INDEX_ARRAY_SIZE = 16 + 4*4,
+    PAGE_INDEX_ARRAY_SIZE = GUID_SIZE + 4*4,
+    PAGE_HEADER_SIZE = 170,
 };
 
 typedef enum {
@@ -71,7 +73,7 @@ typedef enum {
     RHK_DATA_ANNOTATED_LINE = 3,
     RHK_DATA_TEXT           = 4,
     RHK_DATA_ANNOTATED_TEXT = 5,
-    RHK_DATA_SEQUENTIAL     = 6,
+    RHK_DATA_SEQUENTIAL     = 6,    /* Only in RHKPageIndex */
 } RHKDataType;
 
 typedef enum {
@@ -102,34 +104,51 @@ typedef enum {
 } RHKSourceType;
 
 typedef enum {
-    RHK_PAGE_UNDEFINED                = 0,
-    RHK_PAGE_TOPOGAPHIC               = 1,
-    RHK_PAGE_CURRENT                  = 2,
-    RHK_PAGE_AUX                      = 3,
-    RHK_PAGE_FORCE                    = 4,
-    RHK_PAGE_SIGNAL                   = 5,
-    RHK_PAGE_FFT                      = 6,
-    RHK_PAGE_NOISE_POWER_SPECTRUM     = 7,
-    RHK_PAGE_LINE_TEST                = 8,
-    RHK_PAGE_OSCILLOSCOPE             = 9,
-    RHK_PAGE_IV_SPECTRA               = 10,
-    RHK_PAGE_IV_4x4                   = 11,
-    RHK_PAGE_IV_8x8                   = 12,
-    RHK_PAGE_IV_16x16                 = 13,
-    RHK_PAGE_IV_32x32                 = 14,
-    RHK_PAGE_IV_CENTER                = 15,
-    RHK_PAGE_INTERACTIVE_SPECTRA      = 16,
-    RHK_PAGE_AUTOCORRELATION          = 17,
-    RHK_PAGE_IZ_SPECTRA               = 18,
-    RHK_PAGE_4_GAIN_TOPOGRAPHY        = 19,
-    RHK_PAGE_8_GAIN_TOPOGRAPHY        = 20,
-    RHK_PAGE_4_GAIN_CURRENT           = 21,
-    RHK_PAGE_8_GAIN_CURRENT           = 22,
-    RHK_PAGE_IV_64x64                 = 23,
-    RHK_PAGE_AUTOCORRELATION_SPECTRUM = 24,
-    RHK_PAGE_COUNTER                  = 25,
-    RHK_PAGE_MULTICHANNEL_ANALYSER    = 26,
-    RHK_PAGE_AFM_100                  = 27
+    RHK_IMAGE_NORMAL         = 0,
+    RHK_IMAGE_AUTOCORRELATED = 1,
+} RHKImageType;
+
+typedef enum {
+    RHK_PAGE_UNDEFINED                   = 0,
+    RHK_PAGE_TOPOGAPHIC                  = 1,
+    RHK_PAGE_CURRENT                     = 2,
+    RHK_PAGE_AUX                         = 3,
+    RHK_PAGE_FORCE                       = 4,
+    RHK_PAGE_SIGNAL                      = 5,
+    RHK_PAGE_FFT                         = 6,
+    RHK_PAGE_NOISE_POWER_SPECTRUM        = 7,
+    RHK_PAGE_LINE_TEST                   = 8,
+    RHK_PAGE_OSCILLOSCOPE                = 9,
+    RHK_PAGE_IV_SPECTRA                  = 10,
+    RHK_PAGE_IV_4x4                      = 11,
+    RHK_PAGE_IV_8x8                      = 12,
+    RHK_PAGE_IV_16x16                    = 13,
+    RHK_PAGE_IV_32x32                    = 14,
+    RHK_PAGE_IV_CENTER                   = 15,
+    RHK_PAGE_INTERACTIVE_SPECTRA         = 16,
+    RHK_PAGE_AUTOCORRELATION             = 17,
+    RHK_PAGE_IZ_SPECTRA                  = 18,
+    RHK_PAGE_4_GAIN_TOPOGRAPHY           = 19,
+    RHK_PAGE_8_GAIN_TOPOGRAPHY           = 20,
+    RHK_PAGE_4_GAIN_CURRENT              = 21,
+    RHK_PAGE_8_GAIN_CURRENT              = 22,
+    RHK_PAGE_IV_64x64                    = 23,
+    RHK_PAGE_AUTOCORRELATION_SPECTRUM    = 24,
+    RHK_PAGE_COUNTER                     = 25,
+    RHK_PAGE_MULTICHANNEL_ANALYSER       = 26,
+    RHK_PAGE_AFM_100                     = 27,
+    RHK_PAGE_CITS                        = 28,
+    RHK_PAGE_GPIB                        = 29,
+    RHK_PAGE_VIDEO_CHANNEL               = 30,
+    RHK_PAGE_IMAGE_OUT_SPECTRA           = 31,
+    RHK_PAGE_I_DATALOG                   = 32,
+    RHK_PAGE_I_ECSET                     = 33,
+    RHK_PAGE_I_ECDATA                    = 34,
+    RHK_PAGE_I_DSP_AD                    = 35,
+    RHK_PAGE_DISCRETE_SPECTROSCOPY_PP    = 36,
+    RHK_PAGE_IMAGE_DISCRETE_SPECTROSCOPY = 37,
+    RHK_PAGE_RAMP_SPECTROSCOPY_RP        = 38,
+    RHK_PAGE_DISCRETE_SPECTROSCOPY_RP    = 39,
 } RHKPageType;
 
 typedef enum {
@@ -148,7 +167,13 @@ typedef enum {
     RHK_LINE_RENORMALIZED_IV                = 13,
     RHK_LINE_IMAGE_HISTOGRAM_SPECTRA        = 14,
     RHK_LINE_IMAGE_CROSS_SECTION            = 15,
-    RHK_LINE_IMAGE_AVERAGE                  = 16
+    RHK_LINE_IMAGE_AVERAGE                  = 16,
+    RHK_LINE_IMAGE_CROSS_SECTION_G          = 17,
+    RHK_LINE_IMAGE_OUT_SPECTRA              = 18,
+    RHK_LINE_DATALOG_SPECTRUM               = 19,
+    RHK_LINE_GXY                            = 20,
+    RHK_LINE_ELECTROCHEMISTRY               = 21,
+    RHK_LINE_DISCRETE_SPECTROSCOPY          = 22,
 } RHKLineType;
 
 typedef enum {
@@ -173,12 +198,51 @@ typedef struct {
 } RHKPageIndexHeader;
 
 typedef struct {
-    guchar id[16];
+    guint field_size;
+    guchar signature[MAGIC_TOTAL_SIZE];
+    guint string_count;
+    RHKDataType data_type;
+    RHKPageType page_type;
+    guint data_sub_source;
+    RHKLineType line_type;
+    gint x_coord;
+    gint y_coord;
+    guint x_size;
+    guint y_size;
+    RHKSourceType source_type;
+    RHKImageType image_type;
+    RHKScanType scan_dir;
+    guint group_id;
+    guint data_size;
+    guint min_z_value;
+    guint max_z_value;
+    gdouble x_scale;
+    gdouble y_scale;
+    gdouble z_scale;
+    gdouble xy_scale;
+    gdouble x_offset;
+    gdouble y_offset;
+    gdouble z_offset;
+    gdouble period;
+    gdouble bias;
+    gdouble current;
+    gdouble angle;
+    guint color_info_count;
+    guint grid_x_size;
+    guint grid_y_size;
+    guint object_count;
+    guint reserved[16];
+    RHKObject *objects;
+} RHKPage;
+
+typedef struct {
+    guchar id[GUID_SIZE];
     RHKDataType data_type;
     RHKSourceType source;
     guint object_count;
     guint minor_version;
     RHKObject *objects;
+    RHKPage page;
 } RHKPageIndex;
 
 typedef struct {
@@ -204,6 +268,11 @@ static gboolean      rhk_sm4_read_page_index_header(RHKPageIndexHeader *header,
                                                     gsize size,
                                                     GError **error);
 static gboolean      rhk_sm4_read_page_index       (RHKPageIndex *header,
+                                                    const RHKObject *obj,
+                                                    const guchar *buffer,
+                                                    gsize size,
+                                                    GError **error);
+static gboolean      rhk_sm4_read_page_header      (RHKPage *page,
                                                     const RHKObject *obj,
                                                     const guchar *buffer,
                                                     gsize size,
@@ -342,6 +411,23 @@ rhk_sm4_load(const gchar *filename,
         o.offset += o.size + OBJECT_SIZE*rhkfile.page_indices[i].object_count;
     }
 
+    /* Read page headers */
+    for (i = 0; i < rhkfile.page_index_header.page_count; i++) {
+        RHKPageIndex *pi = rhkfile.page_indices + i;
+
+        /* Page must contain data */
+        if (!rhk_sm4_find_object(pi->objects, pi->object_count,
+                                 RHK_OBJECT_PAGE_DATA,
+                                 "PageData", "PageIndex", error))
+            goto fail;
+        /* And header */
+        if (!(obj = rhk_sm4_find_object(pi->objects, pi->object_count,
+                                        RHK_OBJECT_PAGE_HEADER,
+                                        "PageHeader", "PageIndex", error))
+            || !rhk_sm4_read_page_header(&pi->page, obj, buffer, size, error))
+            goto fail;
+    }
+
 fail:
     gwy_file_abandon_contents(buffer, size, NULL);
     rhk_sm4_free(&rhkfile);
@@ -417,6 +503,98 @@ rhk_sm4_read_page_index(RHKPageIndex *header,
     return TRUE;
 }
 
+static gboolean
+rhk_sm4_read_page_header(RHKPage *page,
+                         const RHKObject *obj,
+                         const guchar *buffer,
+                         gsize size,
+                         GError **error)
+{
+    const guchar *p;
+    guint i;
+
+    if (obj->size < PAGE_HEADER_SIZE) {
+        err_OBJECT_TRUNCATED(error, "PageHeader");
+        return FALSE;
+    }
+
+    p = buffer + obj->offset;
+    page->field_size = gwy_get_guint16_le(&p);
+    if (obj->size < page->field_size) {
+        err_OBJECT_TRUNCATED(error, "PageHeader");
+        return FALSE;
+    }
+
+    /* TODO: Convert to UTF-8, store to meta */
+    //memcpy(page->signature, p, MAGIC_TOTAL_SIZE);
+    //p += 4;
+    page->string_count = gwy_get_guint16_le(&p);
+    gwy_debug("string_count = %u", page->string_count);
+    //page->data_type = gwy_get_guint32_le(&p);
+    //gwy_debug("data_type = %u", page->data_type);
+    page->page_type = gwy_get_guint32_le(&p);
+    gwy_debug("page_type = %u", page->page_type);
+    page->data_sub_source = gwy_get_guint32_le(&p);
+    page->line_type = gwy_get_guint32_le(&p);
+    page->x_coord = gwy_get_gint32_le(&p);
+    page->y_coord = gwy_get_gint32_le(&p);
+    page->x_size = gwy_get_guint32_le(&p);
+    page->y_size = gwy_get_guint32_le(&p);
+    gwy_debug("x_size = %u, y_size = %u", page->x_size, page->y_size);
+    if (err_DIMENSION(error, page->x_size)
+        || err_DIMENSION(error, page->y_size))
+        return FALSE;
+
+    page->source_type = gwy_get_guint32_le(&p);
+    page->image_type = gwy_get_guint32_le(&p);
+    gwy_debug("image_type = %u", page->image_type);
+    page->scan_dir = gwy_get_guint32_le(&p);
+    gwy_debug("scan_dir = %u", page->scan_dir);
+    page->group_id = gwy_get_guint32_le(&p);
+    gwy_debug("group_id = %u", page->group_id);
+    page->data_size = gwy_get_guint32_le(&p);
+    gwy_debug("data_size = %u", page->data_size);
+    page->min_z_value = gwy_get_gint32_le(&p);
+    page->max_z_value = gwy_get_gint32_le(&p);
+    gwy_debug("min,max_z_value = %d %d", page->min_z_value, page->max_z_value);
+    page->x_scale = gwy_get_gfloat_le(&p);
+    page->y_scale = gwy_get_gfloat_le(&p);
+    page->z_scale = gwy_get_gfloat_le(&p);
+    gwy_debug("x,y,z_scale = %g %g %g",
+              page->x_scale, page->y_scale, page->z_scale);
+    /* Use negated positive conditions to catch NaNs */
+    if (!((page->x_scale = fabs(page->x_scale)) > 0)) {
+        g_warning("Real x scale is 0.0, fixing to 1.0");
+        page->x_scale = 1.0;
+    }
+    if (!((page->y_scale = fabs(page->y_scale)) > 0)) {
+        g_warning("Real y scale is 0.0, fixing to 1.0");
+        page->y_scale = 1.0;
+    }
+    page->xy_scale = gwy_get_gfloat_le(&p);
+    page->x_offset = gwy_get_gfloat_le(&p);
+    page->y_offset = gwy_get_gfloat_le(&p);
+    page->z_offset = gwy_get_gfloat_le(&p);
+    gwy_debug("x,y,z_offset = %g %g %g",
+              page->x_offset, page->y_offset, page->z_offset);
+    page->period = gwy_get_gfloat_le(&p);
+    page->bias = gwy_get_gfloat_le(&p);
+    page->current = gwy_get_gfloat_le(&p);
+    page->angle = gwy_get_gfloat_le(&p);
+    page->color_info_count = gwy_get_guint32_le(&p);
+    page->grid_x_size = gwy_get_guint32_le(&p);
+    page->grid_y_size = gwy_get_guint32_le(&p);
+    page->object_count = gwy_get_guint32_le(&p);
+    for (i = 0; i < G_N_ELEMENTS(page->reserved); i++)
+        page->reserved[i] = gwy_get_guint32_le(&p);
+
+    if (!(page->objects = rhk_sm4_read_objects(buffer, p, size,
+                                               page->object_count, error)))
+        return FALSE;
+
+    return TRUE;
+}
+
 static RHKObject*
 rhk_sm4_read_objects(const guchar *buffer,
                      const guchar *p, gsize size, guint count,
@@ -486,4 +664,3 @@ rhk_sm4_free(RHKFile *rhkfile)
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
-
