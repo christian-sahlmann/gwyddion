@@ -179,7 +179,7 @@ typedef struct {
     guint object_count;
     guint minor_version;
     RHKObject *objects;
-} RHKPageIndexArray;
+} RHKPageIndex;
 
 typedef struct {
     guint page_count;
@@ -189,7 +189,7 @@ typedef struct {
     guint reserved2;
     RHKObject *objects;
     RHKPageIndexHeader page_index_header;
-    RHKPageIndexArray *page_index_arrays;
+    RHKPageIndex *page_indices;
 } RHKFile;
 
 static gboolean      module_register               (void);
@@ -203,7 +203,7 @@ static gboolean      rhk_sm4_read_page_index_header(RHKPageIndexHeader *header,
                                                     const guchar *buffer,
                                                     gsize size,
                                                     GError **error);
-static gboolean      rhk_sm4_read_page_index_array (RHKPageIndexArray *header,
+static gboolean      rhk_sm4_read_page_index       (RHKPageIndex *header,
                                                     const RHKObject *obj,
                                                     const guchar *buffer,
                                                     gsize size,
@@ -321,8 +321,10 @@ rhk_sm4_load(const gchar *filename,
                                            obj, buffer, size, error))
         goto fail;
 
-    rhkfile.page_index_arrays = g_new0(RHKPageIndexArray,
-                                       rhkfile.page_index_header.page_count);
+    /* There, find the page index array.  That's a single object in the object
+     * list but it contains a page_count-long sequence of page indices. */
+    rhkfile.page_indices = g_new0(RHKPageIndex,
+                                  rhkfile.page_index_header.page_count);
     if (!(obj = rhk_sm4_find_object(rhkfile.page_index_header.objects,
                                     rhkfile.page_index_header.object_count,
                                     RHK_OBJECT_PAGE_INDEX_ARRAY,
@@ -332,12 +334,12 @@ rhk_sm4_load(const gchar *filename,
 
     o = *obj;
     for (i = 0; i < rhkfile.page_index_header.page_count; i++) {
-        if (!rhk_sm4_read_page_index_array(rhkfile.page_index_arrays + i,
-                                           &o, buffer, size, error))
+        if (!rhk_sm4_read_page_index(rhkfile.page_indices + i, &o,
+                                     buffer, size, error))
             goto fail;
 
-        o.offset += o.size
-                    + OBJECT_SIZE*rhkfile.page_index_arrays[i].object_count;
+        /* Carefully move to the next page index */
+        o.offset += o.size + OBJECT_SIZE*rhkfile.page_indices[i].object_count;
     }
 
 fail:
@@ -384,16 +386,16 @@ rhk_sm4_read_page_index_header(RHKPageIndexHeader *header,
 }
 
 static gboolean
-rhk_sm4_read_page_index_array(RHKPageIndexArray *header,
-                              const RHKObject *obj,
-                              const guchar *buffer,
-                              gsize size,
-                              GError **error)
+rhk_sm4_read_page_index(RHKPageIndex *header,
+                        const RHKObject *obj,
+                        const guchar *buffer,
+                        gsize size,
+                        GError **error)
 {
     const guchar *p;
 
     if (obj->size < PAGE_INDEX_ARRAY_SIZE) {
-        err_OBJECT_TRUNCATED(error, "PageIndexArray");
+        err_OBJECT_TRUNCATED(error, "PageIndex");
         return FALSE;
     }
 
@@ -476,10 +478,10 @@ rhk_sm4_free(RHKFile *rhkfile)
 
     g_free(rhkfile->objects);
     g_free(rhkfile->page_index_header.objects);
-    if (rhkfile->page_index_arrays) {
+    if (rhkfile->page_indices) {
         for (i = 0; i < rhkfile->page_index_header.page_count; i++)
-            g_free(rhkfile->page_index_arrays[i].objects);
-        g_free(rhkfile->page_index_arrays);
+            g_free(rhkfile->page_indices[i].objects);
+        g_free(rhkfile->page_indices);
     }
 }
 
