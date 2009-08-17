@@ -19,6 +19,7 @@
  */
 
 #include "config.h"
+#include <string.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
@@ -36,10 +37,19 @@ enum {
 };
 
 enum {
+    ARITHMETIC_VALUE,
+    ARITHMETIC_DER_X,
+    ARITHMETIC_DER_Y,
+    ARITHMETIC_NVARS,
+};
+
+enum {
     ARITHMETIC_OK   = 0,
     ARITHMETIC_DATA = 1,
     ARITHMETIC_EXPR = 2
 };
+
+typedef GwyDataField* (*MakeFieldFunc)(GwyDataField *dfield);
 
 typedef struct {
     GwyContainer *data;
@@ -51,8 +61,8 @@ typedef struct {
     gchar *expression;
     guint err;
     GwyDataObjectId objects[NARGS];
-    gchar *name[NARGS];
-    guint pos[NARGS];
+    gchar *name[NARGS*ARITHMETIC_NVARS];
+    guint pos[NARGS*ARITHMETIC_NVARS];
 } ArithmeticArgs;
 
 typedef struct {
@@ -63,22 +73,25 @@ typedef struct {
     GtkWidget *data[NARGS];
 } ArithmeticControls;
 
-static gboolean     module_register           (void);
-static void         arithmetic                (GwyContainer *data,
-                                               GwyRunType run);
-static void         arithmetic_load_args      (GwyContainer *settings,
-                                               ArithmeticArgs *args);
-static void         arithmetic_save_args      (GwyContainer *settings,
-                                               ArithmeticArgs *args);
-static gboolean     arithmetic_dialog         (ArithmeticArgs *args);
-static void         arithmetic_data_cb        (GwyDataChooser *chooser,
-                                               ArithmeticControls *controls);
-static void         arithmetic_expr_cb        (GtkWidget *entry,
-                                               ArithmeticControls *controls);
-static void         arithmetic_maybe_preview  (ArithmeticControls *controls);
-static const gchar* arithmetic_check          (ArithmeticArgs *args);
-static void         arithmetic_do             (ArithmeticArgs *args);
-
+static gboolean      module_register         (void);
+static void          arithmetic              (GwyContainer *data,
+                                              GwyRunType run);
+static void          arithmetic_load_args    (GwyContainer *settings,
+                                              ArithmeticArgs *args);
+static void          arithmetic_save_args    (GwyContainer *settings,
+                                              ArithmeticArgs *args);
+static gboolean      arithmetic_dialog       (ArithmeticArgs *args);
+static void          arithmetic_data_cb      (GwyDataChooser *chooser,
+                                              ArithmeticControls *controls);
+static void          arithmetic_expr_cb      (GtkWidget *entry,
+                                              ArithmeticControls *controls);
+static void          arithmetic_maybe_preview(ArithmeticControls *controls);
+static const gchar*  arithmetic_check        (ArithmeticArgs *args);
+static void          arithmetic_do           (ArithmeticArgs *args);
+static void          arithmetic_need_data    (const ArithmeticArgs *args,
+                                              gboolean *need_data);
+static GwyDataField* make_x_der              (GwyDataField *dfield);
+static GwyDataField* make_y_der              (GwyDataField *dfield);
 
 static const gchar default_expression[] = "d1 - d2";
 
@@ -88,7 +101,7 @@ static GwyModuleInfo module_info = {
     N_("Simple arithmetic operations with two data fields "
        "(or a data field and a scalar)."),
     "Yeti <yeti@gwyddion.net>",
-    "2.3.1",
+    "2.4",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -137,6 +150,8 @@ arithmetic(GwyContainer *data, GwyRunType run)
     }
     arithmetic_save_args(settings, &args);
     gwy_expr_free(args.expr);
+    for (i = 0; i < NARGS*ARITHMETIC_NVARS; i++)
+        g_free(args.name[i]);
 }
 
 static gboolean
@@ -170,12 +185,16 @@ arithmetic_dialog(ArithmeticArgs *args)
     row++;
 
     for (i = 0; i < NARGS; i++) {
+        /* VALUE is 0 */
         args->name[i] = g_strdup_printf("d_%d", i+1);
         label = gtk_label_new_with_mnemonic(args->name[i]);
         gwy_strkill(args->name[i], "_");
         gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
         gtk_table_attach(GTK_TABLE(table), label, 0, 1, row, row+1,
                          GTK_EXPAND | GTK_FILL, 0, 0, 0);
+
+        args->name[NARGS*ARITHMETIC_DER_X + i] = g_strdup_printf("bx%d", i+1);
+        args->name[NARGS*ARITHMETIC_DER_Y + i] = g_strdup_printf("by%d", i+1);
 
         chooser = gwy_data_chooser_new_channels();
         gwy_data_chooser_set_active(GWY_DATA_CHOOSER(chooser),
@@ -280,7 +299,7 @@ arithmetic_expr_cb(GtkWidget *entry,
                                               GTK_RESPONSE_OK, FALSE);
         }
         else {
-            if (!gwy_expr_resolve_variables(args->expr, NARGS,
+            if (!gwy_expr_resolve_variables(args->expr, NARGS*ARITHMETIC_NVARS,
                                             (const gchar*const*)args->name,
                                             args->pos)) {
                 arithmetic_maybe_preview(controls);
@@ -330,12 +349,15 @@ arithmetic_check(ArithmeticArgs *args)
     GQuark quark;
     GwyDataField *dfirst, *dfield;
     GwyDataCompatibilityFlags diff;
+    gboolean need_data[NARGS];
 
     if (args->err & ARITHMETIC_EXPR)
         return NULL;
 
+    arithmetic_need_data(args, need_data);
+
     for (i = 0; i < NARGS; i++) {
-        if (args->pos[i]) {
+        if (need_data[i]) {
             first = i;
             break;
         }
@@ -351,7 +373,7 @@ arithmetic_check(ArithmeticArgs *args)
     quark = gwy_app_get_data_key_for_id(args->objects[first].id);
     dfirst = GWY_DATA_FIELD(gwy_container_get_object(data, quark));
     for (i = first+1; i < NARGS; i++) {
-        if (!args->pos[i])
+        if (!need_data[i])
             continue;
 
         data = args->objects[i].data;
@@ -383,11 +405,14 @@ arithmetic_check(ArithmeticArgs *args)
 static void
 arithmetic_do(ArithmeticArgs *args)
 {
+    static MakeFieldFunc derivers[ARITHMETIC_NVARS] = {
+        NULL, make_x_der, make_y_der,
+    };
     GwyContainer *data, *firstdata = NULL;
     GQuark quark;
-    GwyDataField *dfield, *result = NULL;
-    /* We know the expression can't contain more variables than NARGS */
-    const gdouble *d[NARGS + 1];
+    GwyDataField **data_fields, *dfield, *result = NULL;
+    const gdouble **d;
+    gboolean need_data[NARGS];
     gdouble *r = NULL;
     gboolean first = TRUE;
     guint n = 0, i;
@@ -395,15 +420,24 @@ arithmetic_do(ArithmeticArgs *args)
 
     g_return_if_fail(!args->err);
 
+    arithmetic_need_data(args, need_data);
+    /* We know the expression can't contain more variables */
+    data_fields = g_new0(GwyDataField*, NARGS*ARITHMETIC_NVARS);
+    d = g_new0(const gdouble*, NARGS*ARITHMETIC_NVARS + 1);
     d[0] = NULL;
+
+    /* First get all the fields we directly have */
     for (i = 0; i < NARGS; i++) {
-        if (!args->pos[i])
+        gwy_debug("dfield[%u]: %s", i, need_data[i] ? "NEEDED" : "not needed");
+        if (!need_data[i])
             continue;
 
         data = args->objects[i].data;
         quark = gwy_app_get_data_key_for_id(args->objects[i].id);
         dfield = GWY_DATA_FIELD(gwy_container_get_object(data, quark));
+        data_fields[i] = dfield;
         d[args->pos[i]] = gwy_data_field_get_data_const(dfield);
+        gwy_debug("d[%u] set to PRIMARY %u", args->pos[i], i);
         if (first) {
             first = FALSE;
             n = gwy_data_field_get_xres(dfield)*gwy_data_field_get_yres(dfield);
@@ -415,13 +449,128 @@ arithmetic_do(ArithmeticArgs *args)
     }
     g_return_if_fail(firstdata);
 
+    /* Derive derived fields */
+    for (i = NARGS; i < NARGS*ARITHMETIC_NVARS; i++) {
+        if (!args->pos[i])
+            continue;
+
+        g_return_if_fail(data_fields[i % NARGS]);
+        dfield = derivers[i/NARGS](data_fields[i % NARGS]);
+        gwy_debug("d[%u] set to DERIVED %u (type %u)",
+                  args->pos[i], i/NARGS, i%NARGS);
+        data_fields[i] = dfield;
+        d[args->pos[i]] = gwy_data_field_get_data_const(dfield);
+    }
+
+    /* Execute */
     gwy_expr_vector_execute(args->expr, n, d, r);
 
+    /* Free stuff */
+    for (i = NARGS; i < ARITHMETIC_NVARS; i++) {
+        if (data_fields[i])
+            g_object_unref(data_fields[i]);
+    }
+    g_free(data_fields);
+    g_free(d);
+
+    /* Create the new data field */
     newid = gwy_app_data_browser_add_data_field(result, firstdata, TRUE);
     g_object_unref(result);
     gwy_app_set_data_field_title(firstdata, newid, _("Calculated"));
     gwy_app_sync_data_items(firstdata, firstdata, firstid, newid, FALSE,
                             GWY_DATA_ITEM_GRADIENT, 0);
+}
+
+/* Find which data we need, for derivatives or otherwise */
+static void
+arithmetic_need_data(const ArithmeticArgs *args,
+                     gboolean *need_data)
+{
+    guint i;
+
+    gwy_clear(need_data, NARGS);
+    for (i = 0; i < NARGS*ARITHMETIC_NVARS; i++) {
+        if (args->pos[i])
+            need_data[i % NARGS] = TRUE;
+    }
+}
+
+static GwyDataField*
+make_x_der(GwyDataField *dfield)
+{
+    GwyDataField *result;
+    const gdouble *d, *drow;
+    gdouble *r, *rrow;
+    guint xres, yres, i, j;
+    gdouble h;
+
+    result = gwy_data_field_new_alike(dfield, FALSE);
+    xres = gwy_data_field_get_xres(dfield);
+    yres = gwy_data_field_get_yres(dfield);
+    h = 2.0*gwy_data_field_get_xreal(dfield)/xres;
+    d = gwy_data_field_get_data_const(dfield);
+    r = gwy_data_field_get_data(result);
+
+    if (xres < 2) {
+        gwy_data_field_clear(result);
+        return result;
+    }
+
+    for (i = 0; i < yres; i++) {
+        drow = d + i*xres;
+        rrow = r + i*xres;
+        rrow[0] = 2.0*(drow[1] - drow[0])/h;
+        for (j = 1; j < xres-1; j++)
+            rrow[j] = (drow[j+1] - drow[j-1])/h;
+        rrow[xres-1] = 2.0*(drow[xres-1] - drow[xres-2])/h;
+    }
+
+    return result;
+}
+
+static GwyDataField*
+make_y_der(GwyDataField *dfield)
+{
+    GwyDataField *result;
+    const gdouble *d, *drow, *drowp, *drowm;
+    gdouble *r, *rrow;
+    guint xres, yres, i, j;
+    gdouble h;
+
+    result = gwy_data_field_new_alike(dfield, FALSE);
+    xres = gwy_data_field_get_xres(dfield);
+    yres = gwy_data_field_get_yres(dfield);
+    h = 2.0*gwy_data_field_get_yreal(dfield)/yres;
+    d = gwy_data_field_get_data_const(dfield);
+    r = gwy_data_field_get_data(result);
+
+    if (yres < 2) {
+        gwy_data_field_clear(result);
+        return result;
+    }
+
+    rrow = r;
+    drow = d;
+    drowp = d + xres;
+    for (j = 0; j < xres; j++)
+        rrow[j] = 2.0*(drowp[j] - drow[j])/h;
+
+    for (i = 1; i < yres-1; i++) {
+        drowm = drow;
+        drow = drowp;
+        drowp += xres;
+        rrow += xres;
+        for (j = 0; j < xres; j++)
+            rrow[j] = (drowp[j] - drowm[j])/h;
+    }
+
+    drowm = drow;
+    drow = drowp;
+    rrow += xres;
+    for (j = 0; j < xres; j++)
+        rrow[j] = 2.0*(drow[j] - drowm[j])/h;
+
+    return result;
 }
 
 static const gchar expression_key[] = "/module/arithmetic/expression";
@@ -446,4 +595,3 @@ arithmetic_save_args(GwyContainer *settings,
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
-
