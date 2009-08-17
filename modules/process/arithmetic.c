@@ -1,7 +1,7 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003,2004 David Necas (Yeti), Petr Klapetek.
- *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
+ *  Copyright (C) 2003-2009 David Necas (Yeti).
+ *  E-mail: yeti@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -102,7 +102,7 @@ static GwyModuleInfo module_info = {
        "(or a data field and a scalar)."),
     "Yeti <yeti@gwyddion.net>",
     "2.4",
-    "David Nečas (Yeti) & Petr Klapetek",
+    "David Nečas (Yeti)",
     "2004",
 };
 
