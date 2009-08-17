@@ -9,6 +9,10 @@ Libraries:
   short lines and different vertical and horizontal measures.
 
 Modules:
+- IGOR (new): Imports IGOR Pro binary waves.
+- Arithmetic: New quantities bx1, by1, bx2, ..., by5 represent the local x-
+  and y-derivatives.
+- Arithmetic: History of previously used expressions is remembered.
 - NT-MDT: Support for MDA frames was added.
 - Olympus: Value scales of imported data were corrected.
 - APE: Support for newer 2.x files was implemented, some units and scales
