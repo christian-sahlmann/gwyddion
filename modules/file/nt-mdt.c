@@ -1088,7 +1088,7 @@ mdt_mda_vars(const guchar *p,
              MDTMDAFrame *frame,
              guint frame_size,
              guint vars_size,
-             GError **error)
+             G_GNUC_UNUSED GError **error)
 {
 
     guint headSize, totLen, NameSize, CommSize, ViewInfoSize, SpecSize;
@@ -1475,8 +1475,10 @@ extract_mda_data(MDTMDAFrame * dataframe)
         {
             const gint16 *tp = (const gint16 *)p;
 
-            while (data < end_data)
-                *(data++) = zscale * GINT16_FROM_LE(*(tp++));
+            while (data < end_data) {
+                *(data++) = zscale * GINT16_FROM_LE(*tp);
+                tp++;
+            }
         }
         break;
 
@@ -1484,8 +1486,10 @@ extract_mda_data(MDTMDAFrame * dataframe)
         {
             const guint16 *tp = (const guint16 *)p;
 
-            while (data < end_data)
-                *(data++) = zscale * GUINT16_FROM_LE(*(tp++));
+            while (data < end_data) {
+                *(data++) = zscale * GUINT16_FROM_LE(*tp);
+                tp++;
+            }
         }
         break;
 
@@ -1493,8 +1497,10 @@ extract_mda_data(MDTMDAFrame * dataframe)
         {
             const gint32 *tp = (const gint32 *)p;
 
-            while (data < end_data)
-                *(data++) = zscale * GINT32_FROM_LE(*(tp++));
+            while (data < end_data) {
+                *(data++) = zscale * GINT32_FROM_LE(*tp);
+                tp++;
+            }
         }
         break;
 
@@ -1502,8 +1508,10 @@ extract_mda_data(MDTMDAFrame * dataframe)
         {
             const guint32 *tp = (const guint32 *)p;
 
-            while (data < end_data)
-                *(data++) = zscale * GUINT32_FROM_LE(*(tp++));
+            while (data < end_data) {
+                *(data++) = zscale * GUINT32_FROM_LE(*tp);
+                tp++;
+            }
         }
         break;
 
@@ -1511,8 +1519,10 @@ extract_mda_data(MDTMDAFrame * dataframe)
         {
             const gint64 *tp = (const gint64 *)p;
 
-            while (data < end_data)
-                *(data++) = zscale * GINT64_FROM_LE(*(tp++));
+            while (data < end_data) {
+                *(data++) = zscale * GINT64_FROM_LE(*tp);
+                tp++;
+            }
         }
         break;
 
@@ -1520,8 +1530,17 @@ extract_mda_data(MDTMDAFrame * dataframe)
         {
             const guint64 *tp = (const guint64 *)p;
 
-            while (data < end_data)
-                *(data++) = zscale * GUINT64_FROM_LE(*(tp++));
+            while (data < end_data) {
+                /* Fucking MSVC6 cannot convert unsigned 64bit int to double. */
+#ifdef _MSC_VER
+                guint u32h = *tp >> 32u;
+                guint u32l = *tp & 0xffffffffu;
+                *(data++) = 4294967296.0*u32h + u32l;
+#else
+                *(data++) = zscale * GUINT64_FROM_LE(*tp);
+#endif
+                tp++;
+            }
         }
         break;
 
