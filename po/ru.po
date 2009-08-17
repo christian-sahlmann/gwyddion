@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2009-07-06 03:59+0200\n"
-"PO-Revision-Date: 2009-07-06 08:53+0300\n"
+"POT-Creation-Date: 2009-08-12 04:01+0200\n"
+"PO-Revision-Date: 2009-08-13 00:25+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@km.ru>\n"
 "Language-Team: russian <ru@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -447,7 +447,7 @@ msgid "Hamming"
 msgstr ""
 
 #: libprocess/gwyprocessenums.c:246
-msgid "Blackman"
+msgid "Blackmann"
 msgstr ""
 
 #: libprocess/gwyprocessenums.c:247
@@ -967,7 +967,7 @@ msgid "_Reversed layout"
 msgstr "_Обратное расположение"
 
 #: libgwydgets/gwygraphwindow.c:140
-#: app/toolbox.c:111
+#: app/toolbox.c:113
 msgid "Graph"
 msgstr "График"
 
@@ -1474,48 +1474,48 @@ msgstr ""
 msgid "Cannot preview"
 msgstr "Не удалось создать файл предварительного просмотра."
 
-#: app/gwyddion.c:119
+#: app/gwyddion.c:124
 msgid "Loading document history"
 msgstr "Загружаем список предыдущих документов"
 
-#: app/gwyddion.c:124
+#: app/gwyddion.c:129
 msgid "Registering "
 msgstr "Регистрируем"
 
-#: app/gwyddion.c:125
+#: app/gwyddion.c:130
 msgid "stock items"
 msgstr "основные элементы"
 
-#: app/gwyddion.c:129
+#: app/gwyddion.c:134
 msgid "color gradients"
 msgstr "Цветовые градиенты"
 
-#: app/gwyddion.c:131
+#: app/gwyddion.c:136
 msgid "GL materials"
 msgstr "Материалы GL"
 
-#: app/gwyddion.c:133
+#: app/gwyddion.c:138
 #, fuzzy
 msgid "grain quantities"
 msgstr "величины зёрен"
 
-#: app/gwyddion.c:138
+#: app/gwyddion.c:143
 msgid "Loading settings"
 msgstr "Загрузка настроек"
 
-#: app/gwyddion.c:145
+#: app/gwyddion.c:150
 msgid "Registering modules"
 msgstr "Регистрация модулей"
 
-#: app/gwyddion.c:162
+#: app/gwyddion.c:167
 msgid "Initializing GUI"
 msgstr "Инициализируем графический интерфейс"
 
-#: app/gwyddion.c:355
+#: app/gwyddion.c:364
 msgid "Could not read settings."
 msgstr "Не удается считать настройки"
 
-#: app/gwyddion.c:358
+#: app/gwyddion.c:367
 #, c-format
 msgid ""
 "Settings file `%s' cannot be read: %s\n"
@@ -1571,12 +1571,12 @@ msgid "Hide tool dialog (Esc)"
 msgstr "Убрать диалог инструментов (Esc)"
 
 #: app/menu.c:492
-#: app/toolbox.c:616
+#: app/toolbox.c:618
 msgid "_Data Process"
 msgstr "_Обработка данных"
 
 #: app/menu.c:535
-#: app/toolbox.c:620
+#: app/toolbox.c:622
 msgid "_Graph"
 msgstr "_График"
 
@@ -1936,123 +1936,123 @@ msgstr "_Пред. совет"
 msgid "_Next Tip"
 msgstr "_Следующий совет"
 
-#: app/toolbox.c:111
+#: app/toolbox.c:113
 msgid "View"
 msgstr "Вид"
 
-#: app/toolbox.c:111
+#: app/toolbox.c:113
 msgid "Data Process"
 msgstr "Обработка данных"
 
-#: app/toolbox.c:111
+#: app/toolbox.c:113
 msgid "Tools"
 msgstr "Инструменты"
 
-#: app/toolbox.c:167
+#: app/toolbox.c:169
 msgid "Display a 3D view of data"
 msgstr "Показать трехмерный вид данных"
 
-#: app/toolbox.c:174
+#: app/toolbox.c:176
 msgid "Zoom in"
 msgstr "Приблизить"
 
-#: app/toolbox.c:178
+#: app/toolbox.c:180
 msgid "Zoom 1:1"
 msgstr "Масштаб 1:1"
 
-#: app/toolbox.c:182
+#: app/toolbox.c:184
 msgid "Zoom out"
 msgstr "Отдалить"
 
-#: app/toolbox.c:609
+#: app/toolbox.c:611
 msgid "_File"
 msgstr "_Файл"
 
-#: app/toolbox.c:611
+#: app/toolbox.c:613
 msgid "_Edit"
 msgstr "_Правка"
 
-#: app/toolbox.c:623
+#: app/toolbox.c:625
 msgid "_Meta"
 msgstr "_Мета"
 
-#: app/toolbox.c:675
+#: app/toolbox.c:678
 msgid "/Show _Data Browser"
 msgstr "/Показать просмотр _данных"
 
-#: app/toolbox.c:683
+#: app/toolbox.c:686
 msgid "/_Metadata Browser"
 msgstr "/Просмотр _метаданных"
 
-#: app/toolbox.c:691
+#: app/toolbox.c:694
 msgid "/Module _Browser"
 msgstr "/_Просмотр модулей"
 
-#: app/toolbox.c:706
+#: app/toolbox.c:709
 msgid "/_Tip of the Day"
 msgstr "/_Совет дня"
 
-#: app/toolbox.c:714
+#: app/toolbox.c:717
 msgid "/_About Gwyddion"
 msgstr "О программе Gwyddion"
 
-#: app/toolbox.c:753
+#: app/toolbox.c:756
 msgid "/_Open..."
 msgstr "/_Открыть..."
 
-#: app/toolbox.c:761
+#: app/toolbox.c:764
 msgid "/_Merge..."
 msgstr "/Объ_единить..."
 
-#: app/toolbox.c:769
+#: app/toolbox.c:772
 msgid "/Open _Recent"
 msgstr "/_Последние файлы"
 
-#: app/toolbox.c:777
+#: app/toolbox.c:780
 msgid "/_Save"
 msgstr "/_Сохранить"
 
-#: app/toolbox.c:785
+#: app/toolbox.c:788
 msgid "/Save _As..."
 msgstr "/Сохранить _как..."
 
-#: app/toolbox.c:801
+#: app/toolbox.c:804
 msgid "/_Quit"
 msgstr "/_Выйти"
 
-#: app/toolbox.c:847
+#: app/toolbox.c:850
 msgid "/_Undo"
 msgstr "/_Отменить"
 
-#: app/toolbox.c:855
+#: app/toolbox.c:858
 msgid "/_Redo"
 msgstr "/_Повторить"
 
-#: app/toolbox.c:871
+#: app/toolbox.c:874
 msgid "/Default Mask _Color..."
 msgstr "/_Цвет маски по умолчанию..."
 
-#: app/toolbox.c:879
+#: app/toolbox.c:882
 msgid "/Color _Gradients..."
 msgstr "/Цветовые _градиенты..."
 
-#: app/toolbox.c:887
+#: app/toolbox.c:890
 msgid "/G_L Materials..."
 msgstr "/_Материалы OpenGL..."
 
-#: app/toolbox.c:1128
+#: app/toolbox.c:1131
 msgid "Change Default Mask Color"
 msgstr "Изменить цвет маски по умолчанию"
 
-#: app/toolbox.c:1156
+#: app/toolbox.c:1159
 msgid "OpenGL 3D graphics not available"
 msgstr "Трёхмерная графика OpenGL не доступна"
 
-#: app/toolbox.c:1163
+#: app/toolbox.c:1166
 msgid "Initialization of OpenGL failed.  Check output of <tt>glxinfo</tt> and warning messages printed to console during Gwyddion startup."
 msgstr "Инициализация OpenGL не удалась. Проверьте вывод <tt>glxinfo</tt> и предупреждения, которые выводились на консоль при старте Gwyddion."
 
-#: app/toolbox.c:1167
+#: app/toolbox.c:1170
 msgid "This version of Gwyddion was built without OpenGL support."
 msgstr "Эта версия Gwyddion была собрана без поддержки OpenGL"
 
@@ -2124,11 +2124,11 @@ msgstr "Вторичный элемент данных не имеет перв�
 msgid "Please wait"
 msgstr "Пожалуйста, ждите"
 
-#: modules/file/apefile.c:118
+#: modules/file/apefile.c:161
 msgid "Imports APE (Applied Physics and Engineering) data files."
 msgstr "Импортирует файлы данных APE (Applied Physics and Engineering)."
 
-#: modules/file/apefile.c:131
+#: modules/file/apefile.c:174
 msgid "APE files (.dat)"
 msgstr "Файлы APE (.dat)"
 
@@ -2240,7 +2240,7 @@ msgstr "Экспортированные данные Burleigh (.txt, .bin)"
 
 #: modules/file/burleigh_exp.c:218
 #: modules/file/burleigh_exp.c:259
-#: modules/file/nanoscope.c:779
+#: modules/file/nanoscope.c:802
 #: modules/file/omicron.c:356
 #: modules/file/shimadzu.c:400
 msgid "Missing colon in header line."
@@ -2471,6 +2471,33 @@ msgstr "Файлы Hitachi AFM, старые (.afm)"
 msgid "Hitachi-AFM has not registered file type `%s'."
 msgstr "Hitachi-AFM не имеет зарегистрированного типа файла `%s'."
 
+#: modules/file/igorfile.c:166
+msgid "Imports Igor binary waves (.ibw)."
+msgstr "Импортирует Igor binary waves (.ibw)."
+
+#: modules/file/igorfile.c:179
+msgid "Igor binary waves (.ibw)"
+msgstr ""
+
+#: modules/file/igorfile.c:235
+#, c-format
+msgid "Format version is %d.  Only version 5 is supported."
+msgstr "Версия формата %d.  Поддерживается только версия 5."
+
+#: modules/file/igorfile.c:247
+msgid "Only two-dimensional data are supported."
+msgstr "Поддерживаются только двумерные данные."
+
+#: modules/file/igorfile.c:259
+#, c-format
+msgid "Number of data points %u does not match resolutions %u×%u×%u."
+msgstr "Число точек данных %u не соответствует разрешению %u×%u×%u."
+
+#: modules/file/igorfile.c:273
+#, c-format
+msgid "Data size %u does not match the number of data points %u×%u."
+msgstr "Размер данных %u не соответствует числу точек данных %u×%u."
+
 #: modules/file/intematix.c:122
 msgid "Imports Intematix SDF data files."
 msgstr "Импортирует файлы данных Intematix SDF."
@@ -2566,12 +2593,12 @@ msgstr "Сжатые данные найдены внутри сжатых да�
 msgid "Invalid short tag of type %u claims to consists of %u bytes."
 msgstr "Неверный короткий тег типа %u претендует что его длина %u байт."
 
-#: modules/file/matfile.c:597
+#: modules/file/matfile.c:596
 #, c-format
 msgid "zlib initialization failed with error %d, cannot decompress data."
 msgstr "Инициализация zlib закончилась с ошибкой %d, не удалось распаковать данные."
 
-#: modules/file/matfile.c:611
+#: modules/file/matfile.c:610
 #, c-format
 msgid "Decompression of compressed variable failed with error %d."
 msgstr "Распаковка сжатой переменной закончилась с ошибкой %d."
@@ -2650,7 +2677,7 @@ msgid "Parameter header is truncated"
 msgstr "Заголовок параметров усечён"
 
 #: modules/file/nanoeducator.c:906
-#: modules/tools/profile.c:547
+#: modules/tools/profile.c:535
 #, c-format
 msgid "Profile %d"
 msgstr "Профиль %d"
@@ -2711,29 +2738,39 @@ msgstr "Импортирует файлы данных Digital Instruments Nanos
 msgid "Nanoscope II files"
 msgstr "Файлы Nanoscope II"
 
-#: modules/file/nanoscope.c:134
+#: modules/file/nanoscope.c:139
 msgid "Imports Veeco (Digital Instruments) Nanoscope data files, version 3 or newer."
 msgstr "Импортирует файлы данных Veeco (Digital Instruments) Nanoscope версии 3 или более новой."
 
-#: modules/file/nanoscope.c:148
+#: modules/file/nanoscope.c:153
 msgid "Nanoscope III files"
 msgstr "Файлы Nanoscope III"
 
-#: modules/file/nanoscope.c:206
+#: modules/file/nanoscope.c:214
 msgid "File is not a Nanoscope file, or it is a unknown subtype."
 msgstr "Файл не является файлом Nanoscope или неизвестного подтипа."
 
-#: modules/file/nanoscope.c:445
-#: modules/file/nanoscope.c:461
+#: modules/file/nanoscope.c:221
+msgid ""
+"File has been damaged by change of line endings, resulting in corruption of the binary part of the file.\n"
+"\n"
+"Typically, this occurs if the file is treated as text when sent by e-mail uncompressed, sent by FTP in ascii mode (use binary), compressed by ‘Send to compressed folder’ in some versions of MS Windows, or any other file transfer that attempts to store text platform-independently."
+msgstr ""
+"Файл повреждён при изменении символов конца строки, что привело к повреждению двоичной части файла.\n"
+"\n"
+"Обычно это происходит если файл был воспринят как текст при передаче по электронной почте в несжатом виде, по FTP в ASCII-режиме (используйте binary), сжат с помощью команды 'Послать в сжатую папку' в некоторых версиях MS Windows, или при других способах передачи файла, которые используют платформо-независимое сохранение текста."
+
+#: modules/file/nanoscope.c:468
+#: modules/file/nanoscope.c:484
 msgid "Cannot parse `Scan size' field."
 msgstr "Не удаётся распознать поле `Scan size'."
 
-#: modules/file/nanoscope.c:690
+#: modules/file/nanoscope.c:713
 #, c-format
 msgid "Garbage after data sample #%d."
 msgstr "Мусор после элемента данных #%d."
 
-#: modules/file/nanoscope.c:769
+#: modules/file/nanoscope.c:792
 msgid "Truncated header line."
 msgstr "Обрезанная строка заголовка."
 
@@ -2781,33 +2818,33 @@ msgstr "Массив `%s' содержит ненулевое количеств
 msgid "More than one record dimension found."
 msgstr "Найдена больше, чем одна запись о размерности."
 
-#: modules/file/nt-mdt.c:533
+#: modules/file/nt-mdt.c:583
 msgid "Imports NT-MDT data files."
 msgstr "Импорт файлов данных NT-MDT"
 
-#: modules/file/nt-mdt.c:546
+#: modules/file/nt-mdt.c:596
 msgid "NT-MDT files (.mdt)"
 msgstr "Файлы NT-MDT (.mdt)"
 
-#: modules/file/nt-mdt.c:889
+#: modules/file/nt-mdt.c:953
 msgid "Frame is too short for Frame Mode."
 msgstr "Фрейм слишком короткий для режима фреймов."
 
-#: modules/file/nt-mdt.c:903
+#: modules/file/nt-mdt.c:967
 msgid "Frame is too short for dots or data."
 msgstr "Фрейм слишком короткий для точек или данных."
 
-#: modules/file/nt-mdt.c:998
+#: modules/file/nt-mdt.c:1224
 #, c-format
 msgid "End of file reached in frame header #%u."
 msgstr "Достигнут конец файла в заголовке фрейма #%u."
 
-#: modules/file/nt-mdt.c:1006
+#: modules/file/nt-mdt.c:1232
 #, c-format
 msgid "End of file reached in frame data #%u."
 msgstr "Достигнут конец файла в данных фрейма #%u."
 
-#: modules/file/nt-mdt.c:1039
+#: modules/file/nt-mdt.c:1265
 #, c-format
 msgid "Frame #%u is too short for scanned data header."
 msgstr "Фрейм #%u слишком короткий чтобы быть заголовком сканированных данных."
@@ -2820,8 +2857,8 @@ msgstr "Импортирует файлы данных OLS."
 msgid "Olympus LEXT OLS3000 (.ols)"
 msgstr ""
 
-#: modules/file/ols.c:259
-#: modules/file/ols.c:269
+#: modules/file/ols.c:280
+#: modules/file/ols.c:290
 #, c-format
 msgid "Section ‛%s’ ended with ‛%s’."
 msgstr "Секция ‛%s’ закончилась ‛%s’."
@@ -3624,6 +3661,28 @@ msgstr "Достигнут конец файла в цветовых данны�
 #, c-format
 msgid "Unknown line %d"
 msgstr "Неизвестная строка %d"
+
+#: modules/file/rhk-sm4.c:205
+msgid "Imports RHK Technology SM4 data files."
+msgstr "Импортирует файлы данных RHK Technology SM4."
+
+#: modules/file/rhk-sm4.c:225
+msgid "RHK SM4 files (.sm4)"
+msgstr "Файлы RHK SM4 (.sm4)"
+
+#: modules/file/rhk-sm4.c:321
+#, fuzzy
+msgid "Page index header is truncated"
+msgstr "Заголовок индекса страниц усечён"
+
+#: modules/file/rhk-sm4.c:350
+msgid "Object list is truncated."
+msgstr "Список объектов усечён"
+
+#: modules/file/rhk-sm4.c:365
+#, c-format
+msgid "Object of type %u is truncated."
+msgstr "Объект типа %u усечен."
 
 #: modules/file/rhk-spm32.c:161
 msgid "Imports RHK Technology SPM32 data files."
@@ -6907,7 +6966,7 @@ msgstr "Вращать данные"
 #: modules/process/nanoindent_adjust.c:214
 #, fuzzy
 msgid "E_xtrapolate result data out of measured range"
-msgstr "Данные результата экстраполяции лежат вне измеренного диапазона"
+msgstr "Экстраполировать полученные данные вне измеренного диапазона"
 
 #: modules/process/nanoindent_adjust.c:294
 msgid "Tip has different range/resolution ratio than image. Tip will be resampled."
