@@ -20,6 +20,8 @@
 
 #include "config.h"
 #include <string.h>
+#include <stdio.h>
+#include <glib/gstdio.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
@@ -33,7 +35,8 @@
 #define ARITH_RUN_MODES GWY_RUN_INTERACTIVE
 
 enum {
-    NARGS = 5
+    NARGS = 5,
+    HISTSIZE = 20
 };
 
 enum {
@@ -59,6 +62,7 @@ typedef struct {
 typedef struct {
     GwyExpr *expr;
     gchar *expression;
+    GtkTreeModel *history;
     guint err;
     GwyDataObjectId objects[NARGS];
     gchar *name[NARGS*ARITHMETIC_NVARS];
@@ -73,25 +77,26 @@ typedef struct {
     GtkWidget *data[NARGS];
 } ArithmeticControls;
 
-static gboolean      module_register         (void);
-static void          arithmetic              (GwyContainer *data,
-                                              GwyRunType run);
-static void          arithmetic_load_args    (GwyContainer *settings,
-                                              ArithmeticArgs *args);
-static void          arithmetic_save_args    (GwyContainer *settings,
-                                              ArithmeticArgs *args);
-static gboolean      arithmetic_dialog       (ArithmeticArgs *args);
-static void          arithmetic_data_cb      (GwyDataChooser *chooser,
-                                              ArithmeticControls *controls);
-static void          arithmetic_expr_cb      (GtkWidget *entry,
-                                              ArithmeticControls *controls);
-static void          arithmetic_maybe_preview(ArithmeticControls *controls);
-static const gchar*  arithmetic_check        (ArithmeticArgs *args);
-static void          arithmetic_do           (ArithmeticArgs *args);
-static void          arithmetic_need_data    (const ArithmeticArgs *args,
-                                              gboolean *need_data);
-static GwyDataField* make_x_der              (GwyDataField *dfield);
-static GwyDataField* make_y_der              (GwyDataField *dfield);
+static gboolean      module_register          (void);
+static void          arithmetic               (GwyContainer *data,
+                                               GwyRunType run);
+static void          arithmetic_load_args     (GwyContainer *settings,
+                                               ArithmeticArgs *args);
+static void          arithmetic_save_args     (GwyContainer *settings,
+                                               ArithmeticArgs *args);
+static gboolean      arithmetic_dialog        (ArithmeticArgs *args);
+static void          arithmetic_data_cb       (GwyDataChooser *chooser,
+                                               ArithmeticControls *controls);
+static void          arithmetic_expr_cb       (GtkWidget *entry,
+                                               ArithmeticControls *controls);
+static void          arithmetic_maybe_preview (ArithmeticControls *controls);
+static const gchar*  arithmetic_check         (ArithmeticArgs *args);
+static void          arithmetic_do            (ArithmeticArgs *args);
+static void          arithmetic_need_data     (const ArithmeticArgs *args,
+                                               gboolean *need_data);
+static void          arithmetic_update_history(ArithmeticArgs *args);
+static GwyDataField* make_x_der               (GwyDataField *dfield);
+static GwyDataField* make_y_der               (GwyDataField *dfield);
 
 static const gchar default_expression[] = "d1 - d2";
 
@@ -101,7 +106,7 @@ static GwyModuleInfo module_info = {
     N_("Simple arithmetic operations with two data fields "
        "(or a data field and a scalar)."),
     "Yeti <yeti@gwyddion.net>",
-    "2.4",
+    "2.5",
     "David Nečas (Yeti)",
     "2004",
 };
@@ -217,8 +222,9 @@ arithmetic_dialog(ArithmeticArgs *args)
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
-    controls.expression = entry = gtk_entry_new();
-    gtk_entry_set_text(GTK_ENTRY(entry), args->expression);
+    entry = gtk_combo_box_entry_new_with_model(args->history, 0);
+    controls.expression = entry;
+    gtk_combo_box_set_active(GTK_COMBO_BOX(controls.expression), 0);
     gtk_table_attach(GTK_TABLE(table), entry, 0, 2, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
     g_signal_connect(entry, "changed",
@@ -278,13 +284,15 @@ arithmetic_expr_cb(GtkWidget *entry,
                    ArithmeticControls *controls)
 {
     ArithmeticArgs *args;
+    GtkComboBox *combo;
     guint nvars;
     gdouble v;
     gchar *s;
 
+    combo = GTK_COMBO_BOX(entry);
     args = controls->args;
     g_free(args->expression);
-    args->expression = gtk_editable_get_chars(GTK_EDITABLE(entry), 0, -1);
+    args->expression = g_strdup(gtk_combo_box_get_active_text(combo));
     args->err = ARITHMETIC_OK;
 
     if (gwy_expr_compile(args->expr, args->expression, NULL)) {
@@ -573,25 +581,102 @@ make_y_der(GwyDataField *dfield)
     return result;
 }
 
+static void
+arithmetic_update_history(ArithmeticArgs *args)
+{
+    GtkListStore *store;
+    GtkTreeIter iter;
+    gchar *s;
+
+    if (!*args->expression)
+        return;
+
+    store = GTK_LIST_STORE(args->history);
+    gtk_list_store_prepend(store, &iter);
+    gtk_list_store_set(store, &iter, 0, args->expression, -1);
+
+    while (gtk_tree_model_iter_next(args->history, &iter)) {
+        gtk_tree_model_get(args->history, &iter, 0, &s, -1);
+        if (gwy_strequal(s, args->expression)) {
+            gtk_list_store_remove(store, &iter);
+            break;
+        }
+    }
+}
+
 static const gchar expression_key[] = "/module/arithmetic/expression";
 
 static void
 arithmetic_load_args(GwyContainer *settings,
                      ArithmeticArgs *args)
 {
+    GtkListStore *store;
     const guchar *exprstr;
+    gchar *filename, *buffer, *line, *p;
+    gsize size;
 
     exprstr = default_expression;
     gwy_container_gis_string_by_name(settings, expression_key, &exprstr);
     args->expression = g_strdup(exprstr);
+
+    store = gtk_list_store_new(1, G_TYPE_STRING);
+    args->history = GTK_TREE_MODEL(store);
+
+    filename = g_build_filename(gwy_get_user_dir(), "arithmetic", "history",
+                                NULL);
+    if (g_file_get_contents(filename, &buffer, &size, NULL)) {
+        p = buffer;
+        for (line = gwy_str_next_line(&p); line; line = gwy_str_next_line(&p)) {
+            GtkTreeIter iter;
+
+            g_strstrip(line);
+            if (*line) {
+                gtk_list_store_append(store, &iter);
+                gtk_list_store_set(store, &iter, 0, line, -1);
+            }
+        }
+        g_free(buffer);
+    }
+    g_free(filename);
+
+    /* Ensures args->expression comes first */
+    arithmetic_update_history(args);
 }
 
 static void
 arithmetic_save_args(GwyContainer *settings,
                      ArithmeticArgs *args)
 {
+    gchar *filename;
+    FILE *fh;
+
     gwy_container_set_string_by_name(settings, expression_key,
                                      args->expression);
+
+    filename = g_build_filename(gwy_get_user_dir(), "arithmetic", NULL);
+    if (!g_file_test(filename, G_FILE_TEST_IS_DIR))
+        g_mkdir(filename, 0700);
+    g_free(filename);
+
+    filename = g_build_filename(gwy_get_user_dir(), "arithmetic", "history",
+                                NULL);
+    if ((fh = g_fopen(filename, "w"))) {
+        GtkTreeIter iter;
+        guint i = 0;
+        gchar *s;
+
+        if (gtk_tree_model_get_iter_first(args->history, &iter)) {
+            do {
+                gtk_tree_model_get(args->history, &iter, 0, &s, -1);
+                fputs(s, fh);
+                fputc('\n', fh);
+                g_free(s);
+            } while (++i < HISTSIZE
+                     && gtk_tree_model_iter_next(args->history, &iter));
+        }
+        fclose(fh);
+    }
+    g_free(filename);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
