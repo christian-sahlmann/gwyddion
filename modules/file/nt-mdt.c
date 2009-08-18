@@ -1520,7 +1520,9 @@ extract_mda_data(MDTMDAFrame * dataframe)
             const gint64 *tp = (const gint64 *)p;
 
             while (data < end_data) {
-                *(data++) = zscale * GINT64_FROM_LE(*tp);
+                /* for some reason, MSVC6 spits an unsigned int64 conversion
+                 * error also here */
+                *(data++) = zscale * (gint64)GINT64_FROM_LE(*tp);
                 tp++;
             }
         }
