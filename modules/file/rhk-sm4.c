@@ -384,6 +384,7 @@ rhk_sm4_load(const gchar *filename,
     gsize size = 0;
     GError *err = NULL;
     const guchar *p;
+    GString *key = NULL;
     guint i, imageid = 0;
 
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
@@ -447,6 +448,7 @@ rhk_sm4_load(const gchar *filename,
     }
 
     container = gwy_container_new();
+    key = g_string_new(NULL);
 
     /* Read pages */
     for (i = 0; i < rhkfile.page_index_header.page_count; i++) {
@@ -480,9 +482,23 @@ rhk_sm4_load(const gchar *filename,
         if (pi->data_type == RHK_DATA_IMAGE) {
             GwyDataField *dfield = rhk_sm4_page_to_data_field(page);
             GQuark quark = gwy_app_get_data_key_for_id(imageid);
+            const gchar *scandir, *name;
+            gchar *title;
 
             gwy_container_set_object(container, quark, dfield);
             g_object_unref(dfield);
+
+            if ((name = page->strings[RHK_STRING_LABEL])) {
+                scandir = gwy_enum_to_string(page->scan_dir, scan_directions,
+                                             G_N_ELEMENTS(scan_directions));
+                g_string_assign(key, g_quark_to_string(quark));
+                g_string_append(key, "/title");
+                if (scandir && *scandir)
+                    title = g_strdup_printf("%s [%s]", name, scandir);
+                else
+                    title = g_strdup(name);
+                gwy_container_set_string_by_name(container, key->str, title);
+            }
 
             imageid++;
         }
@@ -497,6 +513,8 @@ fail:
     if (!imageid) {
         gwy_object_unref(container);
     }
+    if (key)
+        g_string_free(key, TRUE);
 
     return container;
 }
@@ -706,6 +724,9 @@ rhk_sm4_read_string_data(RHKPage *page,
             return FALSE;
 
         len = gwy_get_guint16_le(&p);
+        if (!len)
+            continue;
+
         /* String does not fit */
         if (p - buffer + 2*len > obj->offset + obj->size)
             return FALSE;
@@ -840,6 +861,8 @@ static GwyDataField*
 rhk_sm4_page_to_data_field(const RHKPage *page)
 {
     GwyDataField *dfield;
+    GwySIUnit *siunit;
+    const gchar *unit;
     const gint32 *pdata;
     gint xres, yres, i, j;
     gdouble *data;
@@ -857,6 +880,36 @@ rhk_sm4_page_to_data_field(const RHKPage *page)
                                         *page->z_scale + page->z_offset;
         }
     }
+
+    /* XY units */
+    if (page->strings[RHK_STRING_X_UNITS]
+        && page->strings[RHK_STRING_Y_UNITS]) {
+        if (!gwy_strequal(page->strings[RHK_STRING_X_UNITS],
+                          page->strings[RHK_STRING_Y_UNITS]))
+            g_warning("X and Y units differ, using X");
+        unit = page->strings[RHK_STRING_X_UNITS];
+    }
+    else if (page->strings[RHK_STRING_X_UNITS])
+        unit = page->strings[RHK_STRING_X_UNITS];
+    else if (page->strings[RHK_STRING_Y_UNITS])
+        unit = page->strings[RHK_STRING_Y_UNITS];
+    else
+        unit = NULL;
+
+    siunit = gwy_data_field_get_si_unit_xy(dfield);
+    gwy_si_unit_set_from_string(siunit, unit);
+
+    /* Z units */
+    if (page->strings[RHK_STRING_Z_UNITS])
+        unit = page->strings[RHK_STRING_Z_UNITS];
+    else
+        unit = NULL;
+    /* Fix some silly units */
+    if (unit && gwy_strequal(unit, "N/sec"))
+        unit = "s^-1";
+
+    siunit = gwy_data_field_get_si_unit_z(dfield);
+    gwy_si_unit_set_from_string(siunit, unit);
 
     return dfield;
 }
