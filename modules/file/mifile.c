@@ -21,9 +21,6 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
- /*TODO: Make sure it can handle old beta .mi files that had "data" tag with no
-reference to BINARY or ASCII. Also, implement loading of ASCII files */
-
 /**
  * [FILE-MAGIC-FREEDESKTOP]
  * <mime-type type="application/x-mi-spm">
@@ -59,6 +56,8 @@ reference to BINARY or ASCII. Also, implement loading of ASCII files */
 #define DATA_MAGIC_SIZE (sizeof(DATA_MAGIC) - 1)
 #define BINARY_DATA_MAGIC "data          BINARY\n"
 #define BINARY_DATA_MAGIC_SIZE (sizeof(BINARY_DATA_MAGIC) - 1)
+#define BINARY32_DATA_MAGIC "data          BINARY_32\n"
+#define BINARY32_DATA_MAGIC_SIZE (sizeof(BINARY32_DATA_MAGIC) - 1)
 #define ASCII_DATA_MAGIC  "data          ASCII\n"
 #define ASCII_DATA_MAGIC_SIZE (sizeof(ASCII_DATA_MAGIC) - 1)
 
@@ -66,10 +65,16 @@ reference to BINARY or ASCII. Also, implement loading of ASCII files */
 #define KEY_LEN 14
 #define GRAPH_PREFIX "/0/graph/graph"
 
+typedef enum {
+    MI_ASCII = 0,
+    MI_BINARY = 1,    /* This means 16-bit data */
+    MI_BINARY32 = 2,
+} MIDataType;
+
 /* These two structs are for MI Image Files only */
 typedef struct {
     gchar *id;
-    const gint16 *data;
+    const guchar *data;
     GHashTable *meta;
 } MIData;
 
@@ -119,7 +124,7 @@ static GwyContainer*    mifile_load          (const gchar *filename,
 
 /* Helper Functions */
 static guint        find_data_start         (const guchar *buffer, gsize size,
-                                             gboolean *isbinary);
+                                             MIDataType *data_type);
 static guint        image_file_read_header  (MIFile *mifile,
                                              gchar *buffer,
                                              GError **error);
@@ -127,6 +132,9 @@ static guint        spect_file_read_header  (MISpectFile *mifile,
                                              gchar *buffer,
                                              GError **error);
 static void         read_data_field_bin     (GwyDataField *dfield,
+                                             MIData *midata,
+                                             gint xres, gint yres);
+static void         read_data_field_bin32   (GwyDataField *dfield,
                                              MIData *midata,
                                              gint xres, gint yres);
 static void         read_data_field_text    (GwyDataField *dfield,
@@ -148,7 +156,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Molecular Imaging MI data files."),
     "Chris Anderson <sidewinder.asu@gmail.com>",
-    "0.11",
+    "0.12",
     "Chris Anderson, Molecular Imaging Corp.",
     "2006",
 };
@@ -203,7 +211,7 @@ mifile_load(const gchar *filename,
     guint header_size;
     gchar *p;
     gboolean ok = TRUE;
-    gboolean isbinary = TRUE;
+    MIDataType data_type = MI_BINARY;
     gboolean isimage = TRUE;
     guint i = 0, j = 0, pos, buffi;
 
@@ -226,18 +234,14 @@ mifile_load(const gchar *filename,
         ok = FALSE;
 
     gwy_debug("*************************************");
-    gwy_debug("*************************************");
-    gwy_debug("*************************************");
     gwy_debug("isimage: %i    ok: %i", isimage, ok);
 
     /* Find out the length of the file header (and binary/ascii mode) */
-    header_size = find_data_start(buffer, size, &isbinary);
+    header_size = find_data_start(buffer, size, &data_type);
     if (!header_size)
          ok = FALSE;
 
     gwy_debug("header_size: %i", header_size);
-    gwy_debug("*************************************");
-    gwy_debug("*************************************");
     gwy_debug("*************************************");
 
     /* Report error if file is invalid */
@@ -285,11 +289,17 @@ mifile_load(const gchar *filename,
             dfield = gwy_data_field_new(mifile->xres, mifile->yres,
                                         1.0, 1.0, FALSE);
 
-            if (isbinary) {
-                mifile->buffers[i].data = (const gint16*)(buffer + pos);
-                pos += 2*mifile->xres * mifile->yres;
+            if (data_type == MI_BINARY) {
+                mifile->buffers[i].data = buffer + pos;
                 read_data_field_bin(dfield, mifile->buffers + i,
                                     mifile->xres, mifile->yres);
+                pos += 2*mifile->xres * mifile->yres;
+            }
+            else if (data_type == MI_BINARY32) {
+                mifile->buffers[i].data = buffer + pos;
+                read_data_field_bin32(dfield, mifile->buffers + i,
+                                      mifile->xres, mifile->yres);
+                pos += 4*mifile->xres * mifile->yres;
             }
             else {
                 read_data_field_text(dfield, buffer, &pos,
@@ -380,25 +390,30 @@ mifile_load(const gchar *filename,
 }
 
 static guint
-find_data_start(const guchar *buffer, gsize size, gboolean *isbinary)
+find_data_start(const guchar *buffer, gsize size, MIDataType *data_type)
 {
-    const guchar *locate_none, *locate_binary, *locate_ascii;
+    const guchar *locate_none, *locate_binary, *locate_ascii, *locate_binary32;
     guint value = 0;
 
     locate_none = g_strstr_len(buffer, size, DATA_MAGIC);
     locate_binary = g_strstr_len(buffer, size, BINARY_DATA_MAGIC);
+    locate_binary32 = g_strstr_len(buffer, size, BINARY32_DATA_MAGIC);
     locate_ascii = g_strstr_len(buffer, size, ASCII_DATA_MAGIC);
 
     if (locate_none != NULL) {
-        *isbinary = TRUE;
+        *data_type = MI_BINARY;
         value = (locate_none - buffer) + DATA_MAGIC_SIZE;
     }
     else if (locate_binary != NULL) {
-        *isbinary = TRUE;
+        *data_type = MI_BINARY;
         value = (locate_binary - buffer) + BINARY_DATA_MAGIC_SIZE;
     }
+    else if (locate_binary32 != NULL) {
+        *data_type = MI_BINARY32;
+        value = (locate_binary32 - buffer) + BINARY32_DATA_MAGIC_SIZE;
+    }
     else if (locate_ascii != NULL) {
-        *isbinary = FALSE;
+        *data_type = MI_ASCII;
         value = (locate_ascii - buffer) + ASCII_DATA_MAGIC_SIZE;
     }
     else
@@ -516,9 +531,27 @@ read_data_field_bin(GwyDataField *dfield,
     gwy_data_field_resample(dfield, xres, yres, GWY_INTERPOLATION_NONE);
     data = gwy_data_field_get_data(dfield);
     for (i = 0; i < yres; i++) {
-        row = midata->data + (yres-1 - i)*xres;
+        row = (const gint16*)midata->data + (yres-1 - i)*xres;
         for (j = 0; j < xres; j++)
             data[i*xres + j] = GINT16_FROM_LE(row[j]);
+    }
+}
+
+static void
+read_data_field_bin32(GwyDataField *dfield,
+                      MIData *midata,
+                      gint xres, gint yres)
+{
+    gdouble *data;
+    const gint32 *row;
+    gint i, j;
+
+    gwy_data_field_resample(dfield, xres, yres, GWY_INTERPOLATION_NONE);
+    data = gwy_data_field_get_data(dfield);
+    for (i = 0; i < yres; i++) {
+        row = (const gint32*)midata->data + (yres-1 - i)*xres;
+        for (j = 0; j < xres; j++)
+            data[i*xres + j] = GINT32_FROM_LE(row[j]);
     }
 }
 
