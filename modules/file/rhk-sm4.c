@@ -282,7 +282,6 @@ static gboolean      rhk_sm4_read_page_header      (RHKPage *page,
 static gboolean      rhk_sm4_read_page_data        (RHKPage *page,
                                                     const RHKObject *obj,
                                                     const guchar *buffer,
-                                                    gsize size,
                                                     GError **error);
 static RHKObject*    rhk_sm4_read_objects          (const guchar *buffer,
                                                     const guchar *p,
@@ -435,7 +434,7 @@ rhk_sm4_load(const gchar *filename,
         if (!(obj = rhk_sm4_find_object(pi->objects, pi->object_count,
                                         RHK_OBJECT_PAGE_DATA,
                                         RHK_OBJECT_PAGE_INDEX, error))
-            || !rhk_sm4_read_page_data(&pi->page, obj, buffer, size, error))
+            || !rhk_sm4_read_page_data(&pi->page, obj, buffer, error))
             goto fail;
     }
 
@@ -619,9 +618,16 @@ static gboolean
 rhk_sm4_read_page_data(RHKPage *page,
                        const RHKObject *obj,
                        const guchar *buffer,
-                       gsize size,
                        GError **error)
 {
+    gsize expected_size;
+
+    expected_size = 4 * page->x_size * page->y_size;
+    if (err_SIZE_MISMATCH(error, expected_size, obj->size, TRUE))
+        return FALSE;
+
+    page->data = buffer + obj->offset;
+
     return TRUE;
 }
 
