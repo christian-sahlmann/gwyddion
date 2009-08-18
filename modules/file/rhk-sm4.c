@@ -94,6 +94,9 @@ typedef enum {
     RHK_OBJECT_THUMBNAIL          = 14,
     RHK_OBJECT_PRM_HEADER         = 15,
     RHK_OBJECT_THUMBNAIL_HEADER   = 16,
+    /* Our types */
+    RHK_OBJECT_FILE_HEADER        = -42,
+    RHK_OBJECT_PAGE_INDEX         = -43,
 } RHKObjectType;
 
 typedef enum {
@@ -230,6 +233,7 @@ typedef struct {
     guint grid_y_size;
     guint object_count;
     guint reserved[16];
+    const guchar *data;
     RHKObject *objects;
 } RHKPage;
 
@@ -275,15 +279,21 @@ static gboolean      rhk_sm4_read_page_header      (RHKPage *page,
                                                     const guchar *buffer,
                                                     gsize size,
                                                     GError **error);
+static gboolean      rhk_sm4_read_page_data        (RHKPage *page,
+                                                    const RHKObject *obj,
+                                                    const guchar *buffer,
+                                                    gsize size,
+                                                    GError **error);
 static RHKObject*    rhk_sm4_read_objects          (const guchar *buffer,
                                                     const guchar *p,
                                                     gsize size,
                                                     guint count,
+                                                    RHKObjectType intype,
                                                     GError **error);
 static RHKObject*    rhk_sm4_find_object           (RHKObject *objects,
                                                     guint count,
                                                     RHKObjectType type,
-                                                    const gchar *parentname,
+                                                    RHKObjectType parenttype,
                                                     GError **error);
 static const gchar*  rhk_sm4_describe_object       (RHKObjectType type);
 static void          rhk_sm4_free                  (RHKFile *rhkfile);
@@ -377,13 +387,15 @@ rhk_sm4_load(const gchar *filename,
 
     /* Header objects */
     if (!(rhkfile.objects = rhk_sm4_read_objects(buffer, p, size,
-                                                 rhkfile.object_count, error)))
+                                                 rhkfile.object_count,
+                                                 RHK_OBJECT_FILE_HEADER,
+                                                 error)))
         goto fail;
 
     /* Find page index header */
     if (!(obj = rhk_sm4_find_object(rhkfile.objects, rhkfile.object_count,
                                     RHK_OBJECT_PAGE_INDEX_HEADER,
-                                    "FileHeader", error))
+                                    RHK_OBJECT_FILE_HEADER, error))
         || !rhk_sm4_read_page_index_header(&rhkfile.page_index_header,
                                            obj, buffer, size, error))
         goto fail;
@@ -395,8 +407,7 @@ rhk_sm4_load(const gchar *filename,
     if (!(obj = rhk_sm4_find_object(rhkfile.page_index_header.objects,
                                     rhkfile.page_index_header.object_count,
                                     RHK_OBJECT_PAGE_INDEX_ARRAY,
-                                    "PageIndexHeader",
-                                    error)))
+                                    RHK_OBJECT_PAGE_INDEX_HEADER, error)))
         goto fail;
 
     o = *obj;
@@ -413,16 +424,18 @@ rhk_sm4_load(const gchar *filename,
     for (i = 0; i < rhkfile.page_index_header.page_count; i++) {
         RHKPageIndex *pi = rhkfile.page_indices + i;
 
-        /* Page must contain data */
-        if (!rhk_sm4_find_object(pi->objects, pi->object_count,
-                                 RHK_OBJECT_PAGE_DATA,
-                                 "PageIndex", error))
-            goto fail;
-        /* And header */
+        /* Page must contain header */
         if (!(obj = rhk_sm4_find_object(pi->objects, pi->object_count,
                                         RHK_OBJECT_PAGE_HEADER,
-                                        "PageIndex", error))
+                                        RHK_OBJECT_PAGE_INDEX, error))
             || !rhk_sm4_read_page_header(&pi->page, obj, buffer, size, error))
+            goto fail;
+
+        /* Page must contain data */
+        if (!(obj = rhk_sm4_find_object(pi->objects, pi->object_count,
+                                        RHK_OBJECT_PAGE_DATA,
+                                        RHK_OBJECT_PAGE_INDEX, error))
+            || !rhk_sm4_read_page_data(&pi->page, obj, buffer, size, error))
             goto fail;
     }
 
@@ -464,7 +477,9 @@ rhk_sm4_read_page_index_header(RHKPageIndexHeader *header,
     header->reserved2 = gwy_get_guint32_le(&p);
 
     if (!(header->objects = rhk_sm4_read_objects(buffer, p, size,
-                                                 header->object_count, error)))
+                                                 header->object_count,
+                                                 RHK_OBJECT_PAGE_INDEX_HEADER,
+                                                 error)))
         return FALSE;
 
     return TRUE;
@@ -480,7 +495,7 @@ rhk_sm4_read_page_index(RHKPageIndex *header,
     const guchar *p;
 
     if (obj->size < PAGE_INDEX_ARRAY_SIZE) {
-        err_OBJECT_TRUNCATED(error, RHK_OBJECT_PAGE_INDEX_HEADER);
+        err_OBJECT_TRUNCATED(error, RHK_OBJECT_PAGE_INDEX_ARRAY);
         return FALSE;
     }
 
@@ -496,7 +511,9 @@ rhk_sm4_read_page_index(RHKPageIndex *header,
               header->object_count, header->minor_version);
 
     if (!(header->objects = rhk_sm4_read_objects(buffer, p, size,
-                                                 header->object_count, error)))
+                                                 header->object_count,
+                                                 RHK_OBJECT_PAGE_INDEX_ARRAY,
+                                                 error)))
         return FALSE;
 
     return TRUE;
@@ -589,26 +606,39 @@ rhk_sm4_read_page_header(RHKPage *page,
     for (i = 0; i < G_N_ELEMENTS(page->reserved); i++)
         page->reserved[i] = gwy_get_guint32_le(&p);
 
-    /* FIXME: Some of the objects read are of type 0 and size 0, but maybe
-     * that's right and they allow empty object slots */
     if (!(page->objects = rhk_sm4_read_objects(buffer, p, size,
-                                               page->object_count, error)))
+                                               page->object_count,
+                                               RHK_OBJECT_PAGE_HEADER,
+                                               error)))
         return FALSE;
 
     return TRUE;
 }
 
+static gboolean
+rhk_sm4_read_page_data(RHKPage *page,
+                       const RHKObject *obj,
+                       const guchar *buffer,
+                       gsize size,
+                       GError **error)
+{
+    return TRUE;
+}
+
+/* FIXME: Some of the objects read are of type 0 and size 0, but maybe
+ * that's right and they allow empty object slots */
 static RHKObject*
 rhk_sm4_read_objects(const guchar *buffer,
                      const guchar *p, gsize size, guint count,
-                     GError **error)
+                     RHKObjectType intype, GError **error)
 {
     RHKObject *objects, *obj;
     guint i;
 
     if ((p - buffer) + count*OBJECT_SIZE >= size) {
         g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                    _("Object list is truncated."));
+                    _("Object list in %s is truncated."),
+                    rhk_sm4_describe_object(intype));
         return NULL;
     }
 
@@ -635,8 +665,9 @@ rhk_sm4_read_objects(const guchar *buffer,
 }
 
 static RHKObject*
-rhk_sm4_find_object(RHKObject *objects, guint count, RHKObjectType type,
-                    const gchar *parentname, GError **error)
+rhk_sm4_find_object(RHKObject *objects, guint count,
+                    RHKObjectType type, RHKObjectType parenttype,
+                    GError **error)
 {
     guint i;
 
@@ -649,7 +680,8 @@ rhk_sm4_find_object(RHKObject *objects, guint count, RHKObjectType type,
 
     g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
                 _("Cannot find object %s in %s."),
-                rhk_sm4_describe_object(type), parentname);
+                rhk_sm4_describe_object(type),
+                rhk_sm4_describe_object(parenttype));
     return NULL;
 }
 
@@ -674,6 +706,9 @@ rhk_sm4_describe_object(RHKObjectType type)
         { "Thumbnail",        RHK_OBJECT_THUMBNAIL,          },
         { "PRMHeader",        RHK_OBJECT_PRM_HEADER,         },
         { "ThumbnailHeader",  RHK_OBJECT_THUMBNAIL_HEADER,   },
+        /* Our types */
+        { "FileHeader",       RHK_OBJECT_FILE_HEADER,        },
+        { "PageIndex",        RHK_OBJECT_PAGE_INDEX,         },
     };
 
     const gchar *retval;
