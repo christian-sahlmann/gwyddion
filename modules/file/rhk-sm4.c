@@ -296,6 +296,7 @@ static RHKObject*    rhk_sm4_find_object           (RHKObject *objects,
                                                     GError **error);
 static const gchar*  rhk_sm4_describe_object       (RHKObjectType type);
 static void          rhk_sm4_free                  (RHKFile *rhkfile);
+static GwyDataField* rhk_sm4_page_to_data_field    (const RHKPage *page);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -357,7 +358,7 @@ rhk_sm4_load(const gchar *filename,
     gsize size = 0;
     GError *err = NULL;
     const guchar *p;
-    guint i;
+    guint i, imageid = 0;
 
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
         err_GET_FILE_CONTENTS(error, &err);
@@ -419,7 +420,9 @@ rhk_sm4_load(const gchar *filename,
         o.offset += o.size + OBJECT_SIZE*rhkfile.page_indices[i].object_count;
     }
 
-    /* Read page headers */
+    container = gwy_container_new();
+
+    /* Read pages */
     for (i = 0; i < rhkfile.page_index_header.page_count; i++) {
         RHKPageIndex *pi = rhkfile.page_indices + i;
 
@@ -436,11 +439,27 @@ rhk_sm4_load(const gchar *filename,
                                         RHK_OBJECT_PAGE_INDEX, error))
             || !rhk_sm4_read_page_data(&pi->page, obj, buffer, error))
             goto fail;
+
+        if (pi->data_type == RHK_DATA_IMAGE) {
+            GwyDataField *dfield = rhk_sm4_page_to_data_field(&pi->page);
+            GQuark quark = gwy_app_get_data_key_for_id(imageid);
+
+            gwy_container_set_object(container, quark, dfield);
+            g_object_unref(dfield);
+
+            imageid++;
+        }
     }
+
+    if (!imageid)
+        err_NO_DATA(error);
 
 fail:
     gwy_file_abandon_contents(buffer, size, NULL);
     rhk_sm4_free(&rhkfile);
+    if (!imageid) {
+        gwy_object_unref(container);
+    }
 
     return container;
 }
@@ -738,6 +757,31 @@ rhk_sm4_free(RHKFile *rhkfile)
             g_free(rhkfile->page_indices[i].objects);
         g_free(rhkfile->page_indices);
     }
+}
+
+static GwyDataField*
+rhk_sm4_page_to_data_field(const RHKPage *page)
+{
+    GwyDataField *dfield;
+    const gint32 *pdata;
+    gint xres, yres, i, j;
+    gdouble *data;
+
+    xres = page->x_size;
+    yres = page->y_size;
+    dfield = gwy_data_field_new(xres, yres,
+                                xres*page->x_scale, yres*page->y_scale,
+                                FALSE);
+    data = gwy_data_field_get_data(dfield);
+    pdata = (const gint32*)page->data;
+    for (i = 0; i < yres; i++) {
+        for (j = 0; j < xres; j++) {
+            data[i*xres + xres-1 - j] = GINT32_FROM_LE(pdata[i*xres + j])
+                                        *page->z_scale + page->z_offset;
+        }
+    }
+
+    return dfield;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
