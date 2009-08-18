@@ -1,6 +1,6 @@
 2.17 (0000-00-00)
 Application:
-- Translations updated: Czech, French.
+- Translations updated: Czech, French, Russian.
 - OS X integration: menubar, language selection, opening files from Finder.
 - Language falls back to system langauge if gwy_locale is unset on Win32.
 
@@ -17,6 +17,7 @@ Modules:
 - Olympus: Value scales of imported data were corrected.
 - APE: Support for newer 2.x files was implemented, some units and scales
   corrected; channels have meaningful names now.
+- MI file: Support for 32bit binary files was added.
 - Profile: The profile resolution is no longer limited by the data dimensions.
 - Nanoscope: Files broken by line-end transformations are detected and an
   explanatory error message is given.
