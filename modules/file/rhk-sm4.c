@@ -186,6 +186,27 @@ typedef enum {
     RHK_SCAN_DOWN  = 3
 } RHKScanType;
 
+typedef enum {
+    RHK_STRING_LABEL,
+    RHK_STRING_SYSTEM_TEXT,
+    RHK_STRING_SESSION_TEXT,
+    RHK_STRING_USER_TEXT,
+    RHK_STRING_PATH,
+    RHK_STRING_DATE,
+    RHK_STRING_TIME,
+    RHK_STRING_X_UNITS,
+    RHK_STRING_Y_UNITS,
+    RHK_STRING_Z_UNITS,
+    RHK_STRING_X_LABEL,
+    RHK_STRING_Y_LABEL,
+    RHK_STRING_STATUS_CHANNEL_TEXT,
+    RHK_STRING_COMPLETED_LINE_COUNT,
+    RHK_STRING_OVERSAMPLING_COUNT,
+    RHK_STRING_SLICED_VOLTAGE,
+    RHK_STRING_PLL_PRO_STATUS,
+    RHK_STRING_NSTRINGS
+} RHKStringType;
+
 typedef struct {
     RHKObjectType type;
     guint offset;
@@ -234,6 +255,7 @@ typedef struct {
     guint object_count;
     guint reserved[16];
     const guchar *data;
+    gchar *strings[RHK_STRING_NSTRINGS];
     RHKObject *objects;
 } RHKPage;
 
@@ -283,6 +305,10 @@ static gboolean      rhk_sm4_read_page_data        (RHKPage *page,
                                                     const RHKObject *obj,
                                                     const guchar *buffer,
                                                     GError **error);
+static gboolean      rhk_sm4_read_string_data      (RHKPage *page,
+                                                    const RHKObject *obj,
+                                                    guint count,
+                                                    const guchar *buffer);
 static RHKObject*    rhk_sm4_read_objects          (const guchar *buffer,
                                                     const guchar *p,
                                                     gsize size,
@@ -425,23 +451,34 @@ rhk_sm4_load(const gchar *filename,
     /* Read pages */
     for (i = 0; i < rhkfile.page_index_header.page_count; i++) {
         RHKPageIndex *pi = rhkfile.page_indices + i;
+        RHKPage *page = &pi->page;
 
         /* Page must contain header */
         if (!(obj = rhk_sm4_find_object(pi->objects, pi->object_count,
                                         RHK_OBJECT_PAGE_HEADER,
                                         RHK_OBJECT_PAGE_INDEX, error))
-            || !rhk_sm4_read_page_header(&pi->page, obj, buffer, size, error))
+            || !rhk_sm4_read_page_header(page, obj, buffer, size, error))
             goto fail;
 
         /* Page must contain data */
         if (!(obj = rhk_sm4_find_object(pi->objects, pi->object_count,
                                         RHK_OBJECT_PAGE_DATA,
                                         RHK_OBJECT_PAGE_INDEX, error))
-            || !rhk_sm4_read_page_data(&pi->page, obj, buffer, error))
+            || !rhk_sm4_read_page_data(page, obj, buffer, error))
             goto fail;
 
+        /* Page may contain strings */
+        if (!(obj = rhk_sm4_find_object(page->objects, page->object_count,
+                                        RHK_OBJECT_STRING_DATA,
+                                        RHK_OBJECT_PAGE_HEADER, NULL))
+            || !rhk_sm4_read_string_data(page, obj, pi->page.string_count,
+                                         buffer)) {
+            g_warning("Failed to read string data in page %u", i);
+        }
+
+        /* Read the data */
         if (pi->data_type == RHK_DATA_IMAGE) {
-            GwyDataField *dfield = rhk_sm4_page_to_data_field(&pi->page);
+            GwyDataField *dfield = rhk_sm4_page_to_data_field(page);
             GQuark quark = gwy_app_get_data_key_for_id(imageid);
 
             gwy_container_set_object(container, quark, dfield);
@@ -650,6 +687,41 @@ rhk_sm4_read_page_data(RHKPage *page,
     return TRUE;
 }
 
+static gboolean
+rhk_sm4_read_string_data(RHKPage *page,
+                         const RHKObject *obj,
+                         guint count,
+                         const guchar *buffer)
+{
+    const guchar *p;
+    gchar *s;
+    guint i, len;
+
+    gwy_debug("count: %u, known strings: %u", count, RHK_STRING_NSTRINGS);
+    count = MIN(count, RHK_STRING_NSTRINGS);
+    p = buffer + obj->offset;
+    for (i = 0; i < count; i++) {
+        /* Not enough strings */
+        if (p - buffer + 2 > obj->offset + obj->size)
+            return FALSE;
+
+        len = gwy_get_guint16_le(&p);
+        /* String does not fit */
+        if (p - buffer + 2*len > obj->offset + obj->size)
+            return FALSE;
+
+        s = page->strings[i] = g_new0(gchar, 6*len + 1);
+        while (len--)
+            s += g_unichar_to_utf8(gwy_get_guint16_le(&p), s);
+
+        if (s != page->strings[i]) {
+            gwy_debug("string[%u]: <%s>", i, page->strings[i]);
+        }
+    }
+
+    return TRUE;
+}
+
 /* FIXME: Some of the objects read are of type 0 and size 0, but maybe
  * that's right and they allow empty object slots */
 static RHKObject*
@@ -748,13 +820,18 @@ rhk_sm4_describe_object(RHKObjectType type)
 static void
 rhk_sm4_free(RHKFile *rhkfile)
 {
-    guint i;
+    RHKPage *page;
+    guint i, j;
 
     g_free(rhkfile->objects);
     g_free(rhkfile->page_index_header.objects);
     if (rhkfile->page_indices) {
-        for (i = 0; i < rhkfile->page_index_header.page_count; i++)
+        for (i = 0; i < rhkfile->page_index_header.page_count; i++) {
             g_free(rhkfile->page_indices[i].objects);
+            page = &rhkfile->page_indices[i].page;
+            for (j = 0; j < RHK_STRING_NSTRINGS; j++)
+                g_free(page->strings[j]);
+        }
         g_free(rhkfile->page_indices);
     }
 }
