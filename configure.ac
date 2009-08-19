@@ -674,6 +674,12 @@ _______EOF
   gwy_math_atanh=$gwy_math_atanh
 ])
 
+# Make msgmerge work on Darwin.  See
+# http://subcommanderblog.wordpress.com/2009/05/16/msgmerge-on-macosx-and-no-such-file-or-directory/
+if test "$os_darwin" = yes; then
+  chmod +a "" po/*.po
+fi
+
 AC_OUTPUT
 
 echo "================================================================="
@@ -690,3 +696,4 @@ if test x$enable_pygwy = xyes; then
 fi
 echo "================================================================="
 
+# vim: set ts=2 sw=2 et :
