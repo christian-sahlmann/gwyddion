@@ -22,6 +22,8 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/*< private_header >*/
+
 #ifndef __IGE_MAC_MENU_H__
 #define __IGE_MAC_MENU_H__
 

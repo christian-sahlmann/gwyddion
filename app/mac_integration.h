@@ -17,6 +17,9 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
+
+/*< private_header >*/
+
 #ifndef __MAC_INTEGRATION_H__
 #define __MAC_INTEGRATION_H__
 
