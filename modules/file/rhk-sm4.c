@@ -29,7 +29,7 @@
  *   <glob pattern="*.SM4"/>
  * </mime-type>
  **/
-#define DEBUG 1
+
 #include "config.h"
 #include <string.h>
 #include <libgwyddion/gwymacros.h>
@@ -322,6 +322,8 @@ static RHKObject*    rhk_sm4_find_object           (RHKObject *objects,
 static const gchar*  rhk_sm4_describe_object       (RHKObjectType type);
 static void          rhk_sm4_free                  (RHKFile *rhkfile);
 static GwyDataField* rhk_sm4_page_to_data_field    (const RHKPage *page);
+static GwyContainer* rhk_sm4_get_metadata          (const RHKPageIndex *pi,
+                                                    const RHKPage *page);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -498,6 +500,11 @@ rhk_sm4_load(const gchar *filename,
                     title = g_strdup(name);
                 gwy_container_set_string_by_name(container, key->str, title);
             }
+
+            meta = rhk_sm4_get_metadata(pi, page);
+            g_string_printf(key, "/%u/meta", imageid);
+            gwy_container_set_object_by_name(container, key->str, meta);
+            g_object_unref(meta);
 
             imageid++;
         }
@@ -907,6 +914,136 @@ rhk_sm4_page_to_data_field(const RHKPage *page)
     gwy_si_unit_set_from_string(siunit, unit);
 
     return dfield;
+}
+
+static void
+rhk_sm4_meta_string(const RHKPage *page,
+                    RHKStringType stringid,
+                    const gchar *name,
+                    GwyContainer *meta)
+{
+    const gchar *s;
+
+    g_return_if_fail(stringid < RHK_STRING_NSTRINGS);
+    if ((s = page->strings[stringid]))
+        gwy_container_set_string_by_name(meta, name, g_strdup(s));
+}
+
+static GwyContainer*
+rhk_sm4_get_metadata(const RHKPageIndex *pi,
+                     const RHKPage *page)
+{
+    static const gchar hex[] = "0123456789abcdef";
+
+    GwyContainer *meta;
+    const gchar *s;
+    gchar *str;
+    guint i, w;
+
+    meta = gwy_container_new();
+
+    s = gwy_enuml_to_string(page->page_type,
+                            "Topographic", RHK_PAGE_TOPOGAPHIC,
+                            "Current", RHK_PAGE_CURRENT,
+                            "Aux", RHK_PAGE_AUX,
+                            "Force", RHK_PAGE_FORCE,
+                            "Signal", RHK_PAGE_SIGNAL,
+                            "FFT transform", RHK_PAGE_FFT,
+                            "Noise power spectrum",
+                            RHK_PAGE_NOISE_POWER_SPECTRUM,
+                            "Line test", RHK_PAGE_LINE_TEST,
+                            "Oscilloscope", RHK_PAGE_OSCILLOSCOPE,
+                            "IV spectra", RHK_PAGE_IV_SPECTRA,
+                            "Image IV 4x4", RHK_PAGE_IV_4x4,
+                            "Image IV 8x8", RHK_PAGE_IV_8x8,
+                            "Image IV 16x16", RHK_PAGE_IV_16x16,
+                            "Image IV 32x32", RHK_PAGE_IV_32x32,
+                            "Image IV Center", RHK_PAGE_IV_CENTER,
+                            "Interactive spectra", RHK_PAGE_INTERACTIVE_SPECTRA,
+                            "Autocorrelation", RHK_PAGE_AUTOCORRELATION,
+                            "IZ spectra", RHK_PAGE_IZ_SPECTRA,
+                            "4 gain topography", RHK_PAGE_4_GAIN_TOPOGRAPHY,
+                            "8 gain topography", RHK_PAGE_8_GAIN_TOPOGRAPHY,
+                            "4 gain current", RHK_PAGE_4_GAIN_CURRENT,
+                            "8 gain current", RHK_PAGE_8_GAIN_CURRENT,
+                            "Image IV 64x64", RHK_PAGE_IV_64x64,
+                            "Autocorrelation spectrum",
+                            RHK_PAGE_AUTOCORRELATION_SPECTRUM,
+                            "Counter data", RHK_PAGE_COUNTER,
+                            "Multichannel analyser",
+                            RHK_PAGE_MULTICHANNEL_ANALYSER,
+                            "AFM using AFM-100", RHK_PAGE_AFM_100,
+                            "CITS", RHK_PAGE_CITS,
+                            "GBIB", RHK_PAGE_GPIB,
+                            "Video channel", RHK_PAGE_VIDEO_CHANNEL,
+                            "Image OUT spectra", RHK_PAGE_IMAGE_OUT_SPECTRA,
+                            "I_Datalog", RHK_PAGE_I_DATALOG,
+                            "I_Ecset", RHK_PAGE_I_ECSET,
+                            "I_Ecdata", RHK_PAGE_I_ECDATA,
+                            "DSP channel", RHK_PAGE_I_DSP_AD,
+                            "Discrete spectroscopy (present pos)",
+                            RHK_PAGE_DISCRETE_SPECTROSCOPY_PP,
+                            "Image discrete spectroscopy",
+                            RHK_PAGE_IMAGE_DISCRETE_SPECTROSCOPY,
+                            "Ramp spectroscopy (relative points)",
+                            RHK_PAGE_RAMP_SPECTROSCOPY_RP,
+                            "Discrete spectroscopy (relative points)",
+                            RHK_PAGE_DISCRETE_SPECTROSCOPY_RP,
+                            NULL);
+    if (s && *s)
+        gwy_container_set_string_by_name(meta, "Type", g_strdup(s));
+
+    s = gwy_enum_to_string(page->scan_dir,
+                           scan_directions, G_N_ELEMENTS(scan_directions));
+    if (s && *s)
+        gwy_container_set_string_by_name(meta, "Scan Direction", g_strdup(s));
+
+    s = gwy_enuml_to_string(pi->source,
+                            "Raw", RHK_SOURCE_RAW,
+                            "Processed", RHK_SOURCE_PROCESSED,
+                            "Calculated", RHK_SOURCE_CALCULATED,
+                            "Imported", RHK_SOURCE_IMPORTED,
+                            NULL);
+    if (s && *s)
+        gwy_container_set_string_by_name(meta, "Source", g_strdup(s));
+
+    gwy_container_set_string_by_name(meta, "Bias",
+                                     g_strdup_printf("%g V", page->bias));
+    gwy_container_set_string_by_name(meta, "Rotation angle",
+                                     g_strdup_printf("%f", page->angle));
+    gwy_container_set_string_by_name(meta, "Period",
+                                     g_strdup_printf("%f s", page->period));
+
+    s = page->strings[RHK_STRING_DATE];
+    if (s && *s) {
+        str = g_strconcat(s, " ", page->strings[RHK_STRING_TIME], NULL);
+        gwy_container_set_string_by_name(meta, "Date", str);
+    }
+
+    rhk_sm4_meta_string(page, RHK_STRING_LABEL, "Label", meta);
+    rhk_sm4_meta_string(page, RHK_STRING_PATH, "Path", meta);
+    rhk_sm4_meta_string(page, RHK_STRING_SYSTEM_TEXT, "System comment", meta);
+    rhk_sm4_meta_string(page, RHK_STRING_SESSION_TEXT, "Session comment", meta);
+    rhk_sm4_meta_string(page, RHK_STRING_USER_TEXT, "User comment", meta);
+
+    str = g_new(gchar, 33);
+    for (i = 0; i < 16; i++) {
+        str[2*i] = hex[pi->id[i]/16];
+        str[2*i + 1] = hex[pi->id[i] % 16];
+    }
+    str[32] = '\0';
+    gwy_container_set_string_by_name(meta, "Page ID", str);
+
+    str = g_new(gchar, 9);
+    w = page->group_id;
+    for (i = 0; i < 8; i++) {
+        str[7 - i] = hex[w & 0xf];
+        w = w >> 4;
+    }
+    str[8] = '\0';
+    gwy_container_set_string_by_name(meta, "Group ID", str);
+
+    return meta;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
