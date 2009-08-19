@@ -231,7 +231,6 @@ typedef struct {
     gint y_coord;
     guint x_size;
     guint y_size;
-    RHKSourceType source_type;
     RHKImageType image_type;
     RHKScanType scan_dir;
     guint group_id;
@@ -629,12 +628,8 @@ rhk_sm4_read_page_header(RHKPage *page,
         || err_DIMENSION(error, page->y_size))
         return FALSE;
 
-    /* FIXME: One of the following fields is not there.  Assume image_type,
-     * but we don't really know since they are usually 0. */
-    page->source_type = gwy_get_guint32_le(&p);
-    //page->image_type = gwy_get_guint32_le(&p);
-    //gwy_debug("image_type = %u", page->image_type);
-    page->image_type = 0;
+    page->image_type = gwy_get_guint32_le(&p);
+    gwy_debug("image_type = %u", page->image_type);
     page->scan_dir = gwy_get_guint32_le(&p);
     gwy_debug("scan_dir = %u", page->scan_dir);
     page->group_id = gwy_get_guint32_le(&p);
