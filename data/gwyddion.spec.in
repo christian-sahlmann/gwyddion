@@ -38,6 +38,7 @@ BuildRequires: libXmu-devel
 BuildRequires: pygtk2-devel
 BuildRequires: gtksourceview2-devel
 %define fftw3 fftw
+%define fftw3devel fftw-devel
 %define kde4libs kdelibs
 %endif
 
@@ -47,6 +48,7 @@ BuildRequires: xorg-x11-libXmu-devel
 BuildRequires: python-gtk-devel
 BuildRequires: gtksourceview-devel
 %define fftw3 fftw3
+%define fftw3devel fftw3-devel
 %define kde4libs libkde4
 %endif
 
@@ -55,6 +57,7 @@ BuildRequires: libxmu-devel
 BuildRequires: pygtk2.0-devel
 BuildRequires: gtksourceview-devel
 %define fftw3 libfftw3
+%define fftw3devel libfftw-devel
 %define kde4libs kdelibs4
 %endif
 
@@ -63,9 +66,9 @@ BuildRequires: %{kde4libs}-devel >= 4.0
 %endif
 
 %ifarch %ix86
-BuildRequires: %{fftw3}-devel >= 3.0
+BuildRequires: %{fftw3devel} >= 3.0
 %else
-BuildRequires: %{fftw3}-devel >= 3.1
+BuildRequires: %{fftw3devel} >= 3.1
 %endif
 # Fedora guarantees these two, other may not
 BuildRequires: perl >= 5.005
@@ -93,7 +96,7 @@ Requires:      %{name} = %{version}
 # This pulls everything else
 Requires:      gtk2-devel >= 2.8
 Requires:      gtkglext-devel
-Requires:      %{fftw3}-devel
+Requires:      %{fftw3devel}
 %if %{distro_is_fedora}
 Requires:      perl(:MODULE_COMPAT_%(eval "`%{__perl} -V:version`"; echo $version))
 Requires:      python-abi = %(%{__python} -c "import sys ; print sys.version[:3]")
