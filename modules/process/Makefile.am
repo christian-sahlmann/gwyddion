@@ -10,6 +10,7 @@ process_LTLIBRARIES = \
 	calibrate.la \
 	convolution_filter.la \
 	crosscor.la \
+	curvature.la \
 	cwt.la \
 	drift.la \
 	dwt.la \
@@ -98,6 +99,7 @@ calibrate_la_SOURCES = calibrate.c
 convolution_filter_la_SOURCES = convolution_filter.c convolutionfilterpreset.h
 crosscor_la_SOURCES = crosscor.c
 cwt_la_SOURCES = cwt.c
+curvature_la_SOURCES = curvature.c
 drift_la_SOURCES = drift.c
 dwt_la_SOURCES = dwt.c
 dwtanisotropy_la_SOURCES = dwtanisotropy.c
