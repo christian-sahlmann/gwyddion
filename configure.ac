@@ -331,12 +331,62 @@ AC_PATH_XTRA
 test "x$x_includes" = "x" || CPPFLAGS="$CPPFLAGS -I$x_includes"
 test "x$x_libraries" = "x" || LDFLAGS="$LDFLAGS -L$x_libraries"
 
-# XXX: We do not need pangoft2, but we export a deprecated function to obtain
-# Pango FT2 context.  Get rid of this once possible.
-PKG_CHECK_MODULES(GTK, [pangoft2 pangocairo gtk+-2.0 >= 2.8.0])
+# A dummy Gtk+ check, we perform another when we know whether to request
+# pangoft2 or not.
+PKG_CHECK_MODULES(GTK_BASE, [gtk+-2.0 >= 2.8.0])
 PKG_CHECK_MODULES(GOBJECT, [gobject-2.0])
 PKG_CHECK_MODULES(GMODULE, [gmodule-2.0])
 GWY_CHECK_LIBM
+
+#############################################################################
+# Gtk+ targets (X11, Quartz)
+AC_MSG_CHECKING([for Gdk target])
+gdk_target=`$PKG_CONFIG --variable=target gtk+-2.0`
+AC_MSG_RESULT([$gdk_target])
+enable_remote=no
+target_quartz=no
+pangoft2=pangoft2
+case "$gdk_target" in
+  x11)
+    have_xmu=no
+    if test -z "$LIBXMU"; then
+      XMU_ORIG_CFLAGS="$CFLAGS"
+      XMU_ORIG_LDFLAGS="$LDFLAGS"
+      CFLAGS="$CFLAGS $X_CFLAGS"
+      LDFLAGS="$LDFLAGS $X_LIBS"
+      AC_CHECK_LIB(Xmu, XmuClientWindow,
+        [AC_CHECK_HEADER(X11/Xmu/WinUtil.h,
+          [have_xmu=yes;
+           LIBXMU="$X_LIBS $X_PRE_LIBS -lX11 -lXmu -lXt";
+           AC_DEFINE(HAVE_REMOTE_X11,1,
+                     [Define if we have X11 remote control available.])],
+          [XMU_WARN=" (needs libXmu headers)"])],
+        [XMU_WARN=" (needs libXmu)"],
+        [-lXt -lX11])
+      CFLAGS="$XMU_ORIG_CFLAGS"
+      LDFLAGS="$XMU_ORIG_LDFLAGS"
+    else
+      have_xmu=yes
+    fi
+    enable_remote="$have_xmu"
+    REMOTE_WARN="$XMU_WARN"
+    ;;
+  quartz)
+    REMOTE_WARN="(unavailable on $gdk_target)"
+    target_quartz=yes
+    pangoft2=
+    ;;
+  *)
+    REMOTE_WARN="(unavailable on $gdk_target)"
+    ;;
+esac
+AC_SUBST(LIBXMU)
+
+#############################################################################
+# Full Gtk+ check
+# XXX: We do not need pangoft2, but we export a deprecated function to obtain
+# Pango FT2 context.  Get rid of this once possible.
+PKG_CHECK_MODULES(GTK, [$pangoft2 pangocairo gtk+-2.0 >= 2.8.0])
 
 #############################################################################
 # FFTW3
@@ -350,7 +400,7 @@ if test "x$enable_fftw3" != "xno"; then
 fi
 if test "x$enable_fftw3" != "xno"; then
   if test "x$arch_32bit" != "xyes"; then
-    PKG_CHECK_MODULES(FFTW3_DUMMY,[fftw3 >= 3.1],[:],
+    PKG_CHECK_MODULES(FFTW3_1,[fftw3 >= 3.1],[:],
       AC_MSG_WARN([FFTW3 older than 3.1 may cause crashes on 64bit systems.
         Consider installation of FFTW3 at least 3.1.  Alternatively you can
         disable FFTW3 with --without-fftw3.])
@@ -388,7 +438,7 @@ fi
 GWY_WITH([gl],,[OpenGL 3D view widgets])
 if test "x$enable_gl" != "xno"; then
   # Repeat pangoft2 here to maintain assertion GTK flags are subset of GTKGLEXT
-  PKG_CHECK_MODULES(GTKGLEXT,[pangoft2 gtkglext-1.0],
+  PKG_CHECK_MODULES(GTKGLEXT,[$pangoft2 gtkglext-1.0],
                     [AC_DEFINE(HAVE_GTKGLEXT,1,
                                [Define if we have the GtkGLExt package.])],
                     enable_gl=no; GL_WARN=" (needs GtkGLExt)")
@@ -401,42 +451,6 @@ else
   GTKGLEXT_LIBS="$GTK_LIBS"
 fi
 AC_SUBST([GTKGLEXT_DEPENDENCY])
-
-#############################################################################
-# Xmu
-# Optional, X11 only.
-gdk_target=`$PKG_CONFIG --variable=target gtk+-2.0`
-case "$gdk_target" in
-  x11)
-    have_xmu=no
-    if test -z "$LIBXMU"; then
-      XMU_ORIG_CFLAGS="$CFLAGS"
-      XMU_ORIG_LDFLAGS="$LDFLAGS"
-      CFLAGS="$CFLAGS $X_CFLAGS"
-      LDFLAGS="$LDFLAGS $X_LIBS"
-      AC_CHECK_LIB(Xmu, XmuClientWindow,
-        [AC_CHECK_HEADER(X11/Xmu/WinUtil.h,
-          [have_xmu=yes;
-           LIBXMU="$X_LIBS $X_PRE_LIBS -lX11 -lXmu -lXt";
-           AC_DEFINE(HAVE_REMOTE_X11,1,
-                     [Define if we have X11 remote control available.])],
-          [XMU_WARN=" (needs libXmu headers)"])],
-        [XMU_WARN=" (needs libXmu)"],
-        [-lXt -lX11])
-      CFLAGS="$XMU_ORIG_CFLAGS"
-      LDFLAGS="$XMU_ORIG_LDFLAGS"
-    else
-      have_xmu=yes
-    fi
-    enable_remote="$have_xmu"
-    REMOTE_WARN="$XMU_WARN"
-    ;;
-  *)
-    enable_remote=no
-    REMOTE_WARN="(unavailable on $gdk_target)"
-    ;;
-esac
-AC_SUBST(LIBXMU)
 
 #############################################################################
 # libz
