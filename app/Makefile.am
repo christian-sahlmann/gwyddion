@@ -89,14 +89,12 @@ MKENUM_HFILES = \
 	$(srcdir)/settings.h
 include $(top_srcdir)/utils/mkenum.mk
 
-
 if OS_DARWIN
-AM_CFLAGS = -ObjC -framework AppKit -framework Carbon -framework ApplicationServices @COMMON_CFLAGS@
-else
-AM_CFLAGS = @COMMON_CFLAGS@
+carbon_cflags = -ObjC -framework AppKit -framework Carbon -framework ApplicationServices
 endif
 
-AM_CPPFLAGS = -I$(top_srcdir) 
+AM_CFLAGS = $(carbon_cflags) @COMMON_CFLAGS@
+AM_CPPFLAGS = -I$(top_srcdir)
 
 # In following order do:
 # Any code change     C:   R++: A
@@ -140,7 +138,7 @@ gwyddion_SOURCES = \
 	tips.c \
 	toolbox.c \
 	$(mac_integration_src)
-	
+
 
 gwyddion_LDADD = @GTKGLEXT_LIBS@ @BASIC_LIBS@ $(LIBXMU) \
 	libgwyapp2.la \
