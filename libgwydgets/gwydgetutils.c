@@ -26,7 +26,9 @@
 #include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwydebugobjects.h>
 #include <libdraw/gwydraw.h>
+#ifndef GDK_WINDOWING_QUARTZ
 #include <pango/pangoft2.h>
+#endif
 #include <libgwydgets/gwydgetutils.h>
 
 enum {
@@ -1024,14 +1026,16 @@ gwy_get_pango_ft2_font_map(gboolean unref)
         return NULL;
     }
 
+#ifndef GDK_WINDOWING_QUARTZ
     if (ft2_font_map)
         return ft2_font_map;
 
     ft2_font_map = pango_ft2_font_map_new();
     gwy_debug_objects_creation(G_OBJECT(ft2_font_map));
-    pango_ft2_font_map_set_resolution(PANGO_FT2_FONT_MAP(ft2_font_map),
-                                      72, 72);
-
+    pango_ft2_font_map_set_resolution(PANGO_FT2_FONT_MAP(ft2_font_map), 72, 72);
+#else
+    g_critical("FT2 is not available on Quartz");
+#endif
     return ft2_font_map;
 }
 
