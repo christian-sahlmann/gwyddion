@@ -17,7 +17,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
-
+#define DEBUG 1
 #include "config.h"
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
@@ -43,6 +43,16 @@ typedef struct {
     gboolean plot_graph;
     GwyMaskingType masking;
 } CurvatureArgs;
+
+typedef struct {
+    gdouble a;
+    gdouble x0;
+    gdouble y0;
+    gdouble r1;
+    gdouble r2;
+    gdouble phi1;
+    gdouble phi2;
+} CurvatureParams;
 
 typedef struct {
     CurvatureArgs *args;
@@ -144,33 +154,96 @@ curvature(GwyContainer *data, GwyRunType run)
     curvature_do(data, dfield, mfield, id, &args);
 }
 
+/* Does not include x and y offsets */
 static void
 curvature_calculate(GwyDataField *dfield,
                     GwyDataField *mask,
                     const CurvatureArgs *args,
-                    GwySelection *selection,
-                    GwyGraphModel *gmodel)
+                    CurvatureParams *params)
 {
     enum { DEGREE = 2 };
-    gint *term_powers;
-    gdouble *coeffs;
-    gint nterms, i, j, k;
+    enum { A, BX, CXX, BY, CXY, CYY, NTERMS };
+    gint term_powers[2*NTERMS];
+    gdouble coeffs[NTERMS];
+    gdouble xreal, yreal, qx, qy;
+    gdouble a, bx, by, cxx, cxy, cyy;
+    gdouble det, x_0, y_0, phi, h;
+    gint xres, yres, i, j, k;
 
     k = 0;
-    nterms = (DEGREE + 1)*(DEGREE + 2)/2;
-    term_powers = g_new(gint, 2*nterms);
+    g_assert(NTERMS == (DEGREE + 1)*(DEGREE + 2)/2);
     for (i = 0; i <= DEGREE; i++) {
         for (j = 0; j <= DEGREE - i; j++) {
-            term_powers[k++] = i;
             term_powers[k++] = j;
+            term_powers[k++] = i;
         }
     }
 
-    coeffs = gwy_data_field_fit_poly(dfield, mask, nterms, term_powers,
-                                     args->masking == GWY_MASK_EXCLUDE, NULL);
+    gwy_data_field_fit_poly(dfield, mask, NTERMS, term_powers,
+                            args->masking == GWY_MASK_EXCLUDE, coeffs);
+    gwy_debug("NORM a=%g, bx=%g, by=%g, cxx=%g, cxy=%g, cyy=%g",
+              coeffs[A], coeffs[BX], coeffs[BY],
+              coeffs[CXX], coeffs[CXY], coeffs[CYY]);
 
-    g_free(coeffs);
-    g_free(term_powers);
+    /* Transform coeffs from normalized coordinates to real coordinates */
+    xres = gwy_data_field_get_xres(dfield);
+    yres = gwy_data_field_get_yres(dfield);
+    xreal = gwy_data_field_get_xreal(dfield);
+    yreal = gwy_data_field_get_yreal(dfield);
+    qx = 2.0/xreal*xres/(xres - 1.0);
+    qy = 2.0/yreal*yres/(yres - 1.0);
+
+    a = coeffs[A] - coeffs[BX] - coeffs[BY] + coeffs[CXX] + coeffs[CXY]
+        + coeffs[CYY];
+    bx = (coeffs[BX] - 2.0*coeffs[CXX] - coeffs[CXY])*qx;
+    by = (coeffs[BY] - 2.0*coeffs[CYY] - coeffs[CXY])*qy;
+    cxx = coeffs[CXX]*qx*qx;
+    cxy = coeffs[CXY]*qx*qy;
+    cyy = coeffs[CYY]*qy*qy;
+    gwy_debug("REAL a=%g, bx=%g, by=%g, cxx=%g, cxy=%g, cyy=%g",
+              a, bx, by, cxx, cxy, cyy);
+
+    /* Calculate the canonical cone section parameters */
+    det = 4*cxx*cyy - cxy*cxy;
+    gwy_debug("det=%g", det);
+    if (det == 0.0) {
+        /* FIXME: One axis of symmetry may still exist. */
+        x_0 = y_0 = 0.0;
+    }
+    else {
+        x_0 = (by*cxy - 2.0*bx*cyy)/det;
+        y_0 = (bx*cxy - 2.0*by*cxx)/det;
+    }
+    gwy_debug("x0=%g, y0=%g", x_0, y_0);
+
+    h = hypot(cxy, cxx - cyy);
+    phi = 0.5*atan2(cxx - cyy, cxy);
+    gwy_debug("h=%g, phi=%g", h, phi);
+
+    params->a = a + bx*x_0 + by*y_0 + cxx*x_0*x_0 + cxy*x_0*y_0 + cyy*y_0*y_0;
+    params->x0 = x_0;
+    params->y0 = y_0;
+    /* FIXME: Ensure r1 corresponds to phi1 */
+    params->r1 = 1.0/(cxx + cyy + h);
+    params->r2 = 1.0/(cxx + cyy - h);
+    params->phi1 = phi;
+    params->phi2 = phi + G_PI/2.0;
+}
+
+static gboolean
+curvature_set_selection(GwyDataField *dfield,
+                        const CurvatureParams *params,
+                        GwySelection *selection)
+{
+    return FALSE;
+}
+
+static gboolean
+curvature_plot_graph(GwyDataField *dfield,
+                     const CurvatureParams *params,
+                     GwyGraphModel *gmodel)
+{
+    return FALSE;
 }
 
 static void
@@ -180,14 +253,17 @@ curvature_do(GwyContainer *data,
              gint oldid,
              const CurvatureArgs *args)
 {
+    CurvatureParams params;
     gint newid;
 
-    curvature_calculate(dfield, mfield, args, NULL, NULL);
+    curvature_calculate(dfield, mfield, args, &params);
 
     if (args->set_selection) {
+        curvature_set_selection(dfield, &params, NULL);
     }
 
     if (args->plot_graph) {
+        curvature_plot_graph(dfield, &params, NULL);
         //newid = gwy_app_data_browser_add_graph_model(bg, data, TRUE);
         //g_object_unref(bg);
     }
