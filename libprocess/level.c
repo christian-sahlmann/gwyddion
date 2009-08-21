@@ -1385,6 +1385,10 @@ pow_int(gdouble x, guint n)
  *
  * Fit a given set of polynomial terms to a rectangular part of a data field.
  *
+ * The polynomial coefficients correspond to normalized coordinates that
+ * are always from the interval [-1,1] where -1 corresponds to the left/topmost
+ * pixel and 1 corresponds to the bottom/rightmost pixel of the area.
+ *
  * Returns: Either @coeffs if it was not %NULL, or a newly allocated array
  *          with coefficients.
  *
