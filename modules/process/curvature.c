@@ -19,15 +19,16 @@
  */
 #define DEBUG 1
 #include "config.h"
+#include <string.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libprocess/level.h>
-#include <libgwydgets/gwystock.h>
+#include <libgwydgets/gwydgetutils.h>
 #include <libgwydgets/gwydataview.h>
 #include <libgwydgets/gwylayer-basic.h>
 #include <libgwydgets/gwyradiobuttons.h>
-#include <libgwydgets/gwydgetutils.h>
+#include <libgwydgets/gwynullstore.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwymoduleutils.h>
 #include <app/gwyapp.h>
@@ -38,6 +39,17 @@ enum {
     PREVIEW_SIZE = 320,
 };
 
+typedef enum {
+    PARAM_X0,
+    PARAM_Y0,
+    PARAM_A,
+    PARAM_R1,
+    PARAM_R2,
+    PARAM_PHI1,
+    PARAM_PHI2,
+    PARAM_NPARAMS
+} CurvatureParamType;
+
 typedef struct {
     gboolean set_selection;
     gboolean plot_graph;
@@ -45,23 +57,15 @@ typedef struct {
 } CurvatureArgs;
 
 typedef struct {
-    gdouble a;
-    gdouble x0;
-    gdouble y0;
-    gdouble r1;
-    gdouble r2;
-    gdouble phi1;
-    gdouble phi2;
-} CurvatureParams;
-
-typedef struct {
     CurvatureArgs *args;
+    double params[PARAM_NPARAMS];
+    GwySIUnit *unit;
     GSList *masking_group;
     GtkWidget *set_selection;
     GtkWidget *plot_graph;
     GtkWidget *view;
     GtkWidget *graph;
-    GtkWidget *params;
+    GwyNullStore *paramstore;
     GwyGraphModel *gmodel;
     GwySelection *selection;
     GwyContainer *data;
@@ -144,6 +148,22 @@ curvature(GwyContainer *data, GwyRunType run)
                                      0);
     g_return_if_fail(dfield);
 
+    if (!gwy_si_unit_equal(gwy_data_field_get_si_unit_xy(dfield),
+                           gwy_data_field_get_si_unit_z(dfield))) {
+        GtkWidget *dialog;
+
+        dialog = gtk_message_dialog_new
+                        (gwy_app_find_window_for_channel(data, id),
+                         GTK_DIALOG_DESTROY_WITH_PARENT,
+                         GTK_MESSAGE_ERROR,
+                         GTK_BUTTONS_OK,
+                         _("Curvature: Lateral dimensions and value must "
+                           "be the same physical quantity."));
+        gtk_dialog_run(GTK_DIALOG(dialog));
+        gtk_widget_destroy(dialog);
+        return;
+    }
+
     load_args(gwy_app_settings_get(), &args);
     if (run == GWY_RUN_INTERACTIVE) {
         ok = curvature_dialog(&args, data, dfield, mfield, id);
@@ -159,7 +179,7 @@ static void
 curvature_calculate(GwyDataField *dfield,
                     GwyDataField *mask,
                     const CurvatureArgs *args,
-                    CurvatureParams *params)
+                    double *params)
 {
     enum { DEGREE = 2 };
     enum { A, BX, CXX, BY, CXY, CYY, NTERMS };
@@ -220,19 +240,20 @@ curvature_calculate(GwyDataField *dfield,
     phi = 0.5*atan2(cxx - cyy, cxy);
     gwy_debug("h=%g, phi=%g", h, phi);
 
-    params->a = a + bx*x_0 + by*y_0 + cxx*x_0*x_0 + cxy*x_0*y_0 + cyy*y_0*y_0;
-    params->x0 = x_0;
-    params->y0 = y_0;
+    params[PARAM_X0] = x_0;
+    params[PARAM_Y0] = y_0;
+    params[PARAM_A] = a + bx*x_0 + by*y_0
+                      + cxx*x_0*x_0 + cxy*x_0*y_0 + cyy*y_0*y_0;
     /* FIXME: Ensure r1 corresponds to phi1 */
-    params->r1 = 1.0/(cxx + cyy + h);
-    params->r2 = 1.0/(cxx + cyy - h);
-    params->phi1 = phi;
-    params->phi2 = phi + G_PI/2.0;
+    params[PARAM_R1] = 1.0/(cxx + cyy + h);
+    params[PARAM_R2] = 1.0/(cxx + cyy - h);
+    params[PARAM_PHI1] = phi;
+    params[PARAM_PHI2] = phi + G_PI/2.0;
 }
 
 static gboolean
 curvature_set_selection(GwyDataField *dfield,
-                        const CurvatureParams *params,
+                        const gdouble *params,
                         GwySelection *selection)
 {
     return FALSE;
@@ -240,7 +261,7 @@ curvature_set_selection(GwyDataField *dfield,
 
 static gboolean
 curvature_plot_graph(GwyDataField *dfield,
-                     const CurvatureParams *params,
+                     const gdouble *params,
                      GwyGraphModel *gmodel)
 {
     return FALSE;
@@ -253,20 +274,78 @@ curvature_do(GwyContainer *data,
              gint oldid,
              const CurvatureArgs *args)
 {
-    CurvatureParams params;
+    gdouble params[PARAM_NPARAMS];
     gint newid;
 
-    curvature_calculate(dfield, mfield, args, &params);
+    curvature_calculate(dfield, mfield, args, params);
 
     if (args->set_selection) {
-        curvature_set_selection(dfield, &params, NULL);
+        curvature_set_selection(dfield, params, NULL);
     }
 
     if (args->plot_graph) {
-        curvature_plot_graph(dfield, &params, NULL);
+        curvature_plot_graph(dfield, params, NULL);
         //newid = gwy_app_data_browser_add_graph_model(bg, data, TRUE);
         //g_object_unref(bg);
     }
+}
+
+static void
+render_name(G_GNUC_UNUSED GtkTreeViewColumn *column,
+            GtkCellRenderer *renderer,
+            GtkTreeModel *model,
+            GtkTreeIter *iter,
+            gpointer data)
+{
+    const gchar **names = (const gchar**)data;
+    gint i;
+
+    gtk_tree_model_get(model, iter, 0, &i, -1);
+    g_object_set(renderer, "text", _(names[i]), NULL);
+}
+
+static void
+render_symbol(G_GNUC_UNUSED GtkTreeViewColumn *column,
+              GtkCellRenderer *renderer,
+              GtkTreeModel *model,
+              GtkTreeIter *iter,
+              gpointer data)
+{
+    const gchar **names = (const gchar**)data;
+    gint i;
+
+    gtk_tree_model_get(model, iter, 0, &i, -1);
+    g_object_set(renderer, "markup", names[i], NULL);
+}
+
+static void
+render_value(G_GNUC_UNUSED GtkTreeViewColumn *column,
+             GtkCellRenderer *renderer,
+             GtkTreeModel *model,
+             GtkTreeIter *iter,
+             gpointer data)
+{
+    const CurvatureControls *controls = (const CurvatureControls*)data;
+    GwySIValueFormat *vf;
+    gdouble val;
+    gchar *s;
+    gint i;
+
+    gtk_tree_model_get(model, iter, 0, &i, -1);
+    val = controls->params[i];
+    if (i == PARAM_PHI1 || i == PARAM_PHI2) {
+        s = g_strdup_printf("%.2f deg", val*180.0/G_PI);
+    }
+    else {
+        vf = gwy_si_unit_get_format_with_digits(controls->unit,
+                                                GWY_SI_UNIT_FORMAT_VFMARKUP,
+                                                val, 3, NULL);
+        s = g_strdup_printf("%.*f %s",
+                            vf->precision, val/vf->magnitude, vf->units);
+        gwy_si_unit_value_format_free(vf);
+    }
+    g_object_set(renderer, "markup", s, NULL);
+    g_free(s);
 }
 
 static gboolean
@@ -277,7 +356,28 @@ curvature_dialog(CurvatureArgs *args,
                  gint id)
 {
     enum { RESPONSE_RESET = 1 };
-    GtkWidget *dialog, *table, *label, *hbox, *vbox, *scwin;
+    static const gchar *param_names[] = {
+        N_("Center x position"),
+        N_("Center y position"),
+        N_("Center value"),
+        N_("Curvature radius 1"),
+        N_("Curvature radius 2"),
+        N_("Direction 1"),
+        N_("Direction 2"),
+    };
+    static const gchar *param_symbols[] = {
+        "x<sub>0</sub>",
+        "y<sub>0</sub>",
+        "z<sub>0</sub>",
+        "r<sub>1</sub>",
+        "r<sub>2</sub>",
+        "φ<sub>1</sub>",
+        "φ<sub>2</sub>",
+    };
+
+    GtkWidget *dialog, *table, *label, *hbox, *vbox, *scwin, *treeview;
+    GtkTreeViewColumn *column;
+    GtkCellRenderer *renderer;
     GwyPixmapLayer *player;
     GwyVectorLayer *vlayer;
     CurvatureControls controls;
@@ -285,6 +385,8 @@ curvature_dialog(CurvatureArgs *args,
     gint row;
 
     controls.args = args;
+    controls.unit = gwy_data_field_get_si_unit_xy(dfield);
+    gwy_clear(controls.params, PARAM_NPARAMS);
 
     dialog = gtk_dialog_new_with_buttons(_("Curvature"),
                                          NULL, 0,
@@ -348,8 +450,37 @@ curvature_dialog(CurvatureArgs *args,
                                    GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
     gtk_box_pack_start(GTK_BOX(vbox), scwin, TRUE, TRUE, 4);
 
-    controls.params = gtk_tree_view_new();
-    gtk_container_add(GTK_CONTAINER(scwin), controls.params);
+    controls.paramstore = gwy_null_store_new(PARAM_NPARAMS);
+    treeview
+        = gtk_tree_view_new_with_model(GTK_TREE_MODEL(controls.paramstore));
+    g_object_unref(controls.paramstore);
+    gtk_tree_view_set_headers_visible(GTK_TREE_VIEW(treeview), FALSE);
+    gtk_container_add(GTK_CONTAINER(scwin), treeview);
+
+    renderer = gtk_cell_renderer_text_new();
+    column = gtk_tree_view_column_new_with_attributes(_("Parameter"), renderer,
+                                                      NULL);
+    gtk_tree_view_column_set_cell_data_func(column, renderer,
+                                            render_name, param_names, NULL);
+    gtk_tree_view_column_set_expand(column, TRUE);
+    gtk_tree_view_append_column(GTK_TREE_VIEW(treeview), column);
+
+    renderer = gtk_cell_renderer_text_new();
+    column = gtk_tree_view_column_new_with_attributes(_("Symbol"), renderer,
+                                                      NULL);
+    gtk_tree_view_column_set_cell_data_func(column, renderer,
+                                            render_symbol, param_symbols, NULL);
+    gtk_tree_view_column_set_expand(column, TRUE);
+    gtk_tree_view_append_column(GTK_TREE_VIEW(treeview), column);
+
+    renderer = gtk_cell_renderer_text_new();
+    g_object_set(renderer, "alignment", PANGO_ALIGN_RIGHT, NULL);
+    column = gtk_tree_view_column_new_with_attributes(_("Value"), renderer,
+                                                      NULL);
+    gtk_tree_view_column_set_cell_data_func(column, renderer,
+                                            render_value, &controls, NULL);
+    gtk_tree_view_column_set_expand(column, TRUE);
+    gtk_tree_view_append_column(GTK_TREE_VIEW(treeview), column);
 
     table = gtk_table_new(2 + (mfield ? 4 : 0), 4, FALSE);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
@@ -483,20 +614,14 @@ curvature_update_preview(CurvatureControls *controls,
                          CurvatureArgs *args)
 {
     GwyDataField *source, *mask = NULL;
+    guint i;
 
     gwy_container_gis_object_by_name(controls->data, "/0/data", &source);
     gwy_container_gis_object_by_name(controls->data, "/0/mask", &mask);
 
-    /*
-
-    if (mask && args->masking != GWY_MASK_IGNORE)
-        curvature_do_with_mask(source, mask, leveled, bg, args);
-    else if (args->independent)
-        curvature_do_independent(source, leveled, bg,
-                                  args->col_degree, args->row_degree);
-    else
-        curvature_do_maximum(source, leveled, bg, args->max_degree);
-        */
+    curvature_calculate(source, mask, args, controls->params);
+    for (i = 0; i < PARAM_NPARAMS; i++)
+        gwy_null_store_row_changed(controls->paramstore, i);
 }
 
 static const gchar set_selection_key[] = "/module/curvature/set_selection";
