@@ -1375,7 +1375,7 @@ pow_int(gdouble x, guint n)
  * @row: Upper-left row coordinate.
  * @width: Area width (number of columns).
  * @height: Area height (number of rows).
- * @nterms: The number of polynomial terms to take into account (twice the
+ * @nterms: The number of polynomial terms to take into account (half the
  *          number of items in @term_powers).
  * @term_powers: Array of size 2*@nterms describing the terms to fit.  Each
  *               terms is described by a couple of powers (powerx, powery).
@@ -1439,15 +1439,17 @@ gwy_data_field_area_fit_poly(GwyDataField *data_field,
         for (c = 0; c < width; c++) {
             gdouble x = 2*c/(width - 1.0) - 1.0;
             gdouble z = data[(row + r)*xres + (col + c)];
-            gdouble w = mask[(row + r)*xres + (col + c)];
+            gdouble w = 1.0;
 
-            if (exclude)
-                w = 1.0-w;
-
-            if (w <= 0.0)
-                continue;
-            if (w >= 1.0)
-                w = 1.0;
+            if (mask) {
+                w = mask[(row + r)*xres + (col + c)];
+                if (exclude)
+                    w = 1.0-w;
+                if (w <= 0.0)
+                    continue;
+                if (w >= 1.0)
+                    w = 1.0;
+            }
 
             for (i = 0; i < nterms; i++) {
                 p[i] = pow_int(x, term_powers[2*i])
@@ -1483,7 +1485,7 @@ gwy_data_field_area_fit_poly(GwyDataField *data_field,
  *        cause inclusion of corresponding @data_field samples.  The behaviour
  *        for values inside (0.0, 1.0) is undefined (it may be specified
  *        in the future).
- * @nterms: The number of polynomial terms to take into account (twice the
+ * @nterms: The number of polynomial terms to take into account (half the
  *          number of items in @term_powers).
  * @term_powers: Array of size 2*@nterms describing the terms to fit.  Each
  *               terms is described by a couple of powers (powerx, powery).
@@ -1521,7 +1523,7 @@ gwy_data_field_fit_poly(GwyDataField *data_field,
  * @row: Upper-left row coordinate.
  * @width: Area width (number of columns).
  * @height: Area height (number of rows).
- * @nterms: The number of polynomial terms to take into account (twice the
+ * @nterms: The number of polynomial terms to take into account (half the
  *          number of items in @term_powers).
  * @term_powers: Array of size 2*@nterms describing the fitted terms.  Each
  *               terms is described by a couple of powers (powerx, powery).
@@ -1578,7 +1580,7 @@ gwy_data_field_area_subtract_poly(GwyDataField *data_field,
 /**
  * gwy_data_field_subtract_poly:
  * @data_field: A data field.
- * @nterms: The number of polynomial terms to take into account (twice the
+ * @nterms: The number of polynomial terms to take into account (half the
  *          number of items in @term_powers).
  * @term_powers: Array of size 2*@nterms describing the fitter terms.  Each
  *               terms is described by a couple of powers (powerx, powery).
