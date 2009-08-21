@@ -7,8 +7,10 @@ Application:
 Libraries:
 - libgwyprocess: Real length of extracted profiles was corrected for very
   short lines and different vertical and horizontal measures.
+- libgwyprocess: gwy_data_field_area_fit_poly() reall works with NULL mask.
 
 Modules:
+- Curvature (new): Calculates global curvature of second-order surfaces.
 - IGOR (new): Imports IGOR Pro binary waves.
 - RHK-SM4 (new): Imports RHK Technology SM4 files.
 - Arithmetic: New quantities bx1, by1, bx2, ..., by5 represent the local x-
@@ -25,6 +27,7 @@ Modules:
 
 Other:
 - Forgotten @LIBTIFF@ was removed from gwyddion pkg-config file.
+- Building RPMs works on Mandriva again.
 
 
 2.16 (2009-06-25)
