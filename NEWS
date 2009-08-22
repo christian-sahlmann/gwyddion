@@ -21,6 +21,7 @@ Modules:
 - APE: Support for newer 2.x files was implemented, some units and scales
   corrected; channels have meaningful names now.
 - MI file: Support for 32bit binary files was added.
+- MicroProf: Can read binary FRT files (the first channel only).
 - Profile: The profile resolution is no longer limited by the data dimensions.
 - Nanoscope: Files broken by line-end transformations are detected and an
   explanatory error message is given.
