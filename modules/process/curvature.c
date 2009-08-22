@@ -17,7 +17,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
-#define DEBUG 1
+
 #include "config.h"
 #include <string.h>
 #include <stdlib.h>
@@ -182,7 +182,7 @@ curvature(GwyContainer *data, GwyRunType run)
     gint id;
 
     g_return_if_fail(run & CURVATURE_RUN_MODES);
-    g_return_if_fail(g_type_from_name("GwyLayerPoint"));
+    g_return_if_fail(g_type_from_name("GwyLayerLine"));
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
                                      GWY_APP_MASK_FIELD, &mfield,
                                      GWY_APP_DATA_FIELD_ID, &id,
@@ -288,8 +288,8 @@ curvature_calculate(GwyDataField *dfield,
     /* FIXME: Ensure r1 corresponds to phi1 */
     params[PARAM_R1] = 1.0/(cxx + cyy + h);
     params[PARAM_R2] = 1.0/(cxx + cyy - h);
-    params[PARAM_PHI1] = phi;
-    params[PARAM_PHI2] = phi + G_PI/2.0;
+    params[PARAM_PHI1] = fmod(phi, G_PI);
+    params[PARAM_PHI2] = fmod(phi + G_PI/2.0, G_PI);
 }
 
 static int
@@ -399,6 +399,7 @@ curvature_set_selection(GwyDataField *dfield,
     gdouble xreal, yreal;
     Intersection i1[2], i2[2];
     gdouble xy[4];
+    gint xres, yres;
     guint i;
 
     xreal = gwy_data_field_get_xreal(dfield);
@@ -412,11 +413,13 @@ curvature_set_selection(GwyDataField *dfield,
         }
     }
 
+    xres = gwy_data_field_get_xres(dfield);
+    yres = gwy_data_field_get_yres(dfield);
     for (i = 0; i < 2; i++) {
-        xy[0] = i1[i].x;
-        xy[1] = i1[i].y;
-        xy[2] = i2[i].x;
-        xy[3] = i2[i].y;
+        xy[0] = CLAMP(i1[i].x, 0, xreal*(xres - 1)/xres);
+        xy[1] = CLAMP(i1[i].y, 0, yreal*(yres - 1)/yres);
+        xy[2] = CLAMP(i2[i].x, 0, xreal*(xres - 1)/xres);
+        xy[3] = CLAMP(i2[i].y, 0, yreal*(yres - 1)/yres);
         gwy_selection_set_object(selection, i, xy);
     }
 
@@ -448,6 +451,7 @@ curvature_plot_graph(GwyDataField *dfield,
 
     if (!gwy_graph_model_get_n_curves(gmodel)) {
         GwySIUnit *siunitxy, *siunitz;
+        gchar *s;
 
         siunitxy = gwy_si_unit_duplicate(gwy_data_field_get_si_unit_xy(dfield));
         siunitz = gwy_si_unit_duplicate(gwy_data_field_get_si_unit_z(dfield));
@@ -461,11 +465,13 @@ curvature_plot_graph(GwyDataField *dfield,
 
         for (i = 0; i < 2; i++) {
             gcmodel = gwy_graph_curve_model_new();
+            s = g_strdup_printf(_("Profile %d"), (gint)i+1);
             g_object_set(gcmodel,
-                         "description", "Profile", /* XXX */
+                         "description", s,
                          "mode", GWY_GRAPH_CURVE_LINE,
                          "color", gwy_graph_get_preset_color(i),
                          NULL);
+            g_free(s);
             gwy_graph_model_add_curve(gmodel, gcmodel);
             g_object_unref(gcmodel);
         }
@@ -509,17 +515,29 @@ curvature_do(GwyContainer *data,
 {
     gdouble params[PARAM_NPARAMS];
     gint newid;
+    gchar *key;
 
     curvature_calculate(dfield, mfield, args, params);
 
     if (args->set_selection) {
-        curvature_set_selection(dfield, params, NULL);
+        GwySelection *selection;
+
+        selection = g_object_new(g_type_from_name("GwySelectionLine"),
+                                 "max-objects", 1024,
+                                 NULL);
+        curvature_set_selection(dfield, params, selection);
+        key = g_strdup_printf("/%d/select/line", oldid);
+        gwy_container_set_object_by_name(data, key, selection);
+        g_object_unref(selection);
     }
 
     if (args->plot_graph) {
-        curvature_plot_graph(dfield, params, NULL);
-        //newid = gwy_app_data_browser_add_graph_model(bg, data, TRUE);
-        //g_object_unref(bg);
+        GwyGraphModel *gmodel;
+
+        gmodel = gwy_graph_model_new();
+        curvature_plot_graph(dfield, params, gmodel);
+        newid = gwy_app_data_browser_add_graph_model(gmodel, data, TRUE);
+        g_object_unref(gmodel);
     }
 }
 
@@ -591,6 +609,7 @@ curvature_dialog(CurvatureArgs *args,
 {
     enum { RESPONSE_RESET = 1 };
     GtkWidget *dialog, *table, *label, *hbox, *vbox, *treeview, *button;
+    GtkTreeSelection *selection;
     GtkTreeViewColumn *column;
     GtkCellRenderer *renderer;
     GwyPixmapLayer *player;
@@ -618,7 +637,7 @@ curvature_dialog(CurvatureArgs *args,
                        FALSE, FALSE, 0);
 
     vbox = gtk_vbox_new(FALSE, 0);
-    gtk_box_pack_start(GTK_BOX(hbox), vbox, TRUE, TRUE, 0);
+    gtk_box_pack_start(GTK_BOX(hbox), vbox, FALSE, FALSE, 0);
 
     controls.data = gwy_container_new();
     gwy_container_set_object_by_name(controls.data, "/0/data", dfield);
@@ -651,61 +670,6 @@ curvature_dialog(CurvatureArgs *args,
     g_object_set(controls.selection, "max-objects", 2, NULL);
 
     gtk_box_pack_start(GTK_BOX(vbox), controls.view, FALSE, FALSE, 4);
-
-    controls.gmodel = gwy_graph_model_new();
-    controls.graph = gwy_graph_new(controls.gmodel);
-    g_object_unref(controls.gmodel);
-
-    gtk_box_pack_start(GTK_BOX(vbox), controls.graph, TRUE, TRUE, 4);
-
-    vbox = gtk_vbox_new(FALSE, 0);
-    gtk_box_pack_start(GTK_BOX(hbox), vbox, FALSE, FALSE, 0);
-
-    controls.paramstore = gwy_null_store_new(PARAM_NPARAMS);
-    treeview
-        = gtk_tree_view_new_with_model(GTK_TREE_MODEL(controls.paramstore));
-    g_object_unref(controls.paramstore);
-    gtk_tree_view_set_headers_visible(GTK_TREE_VIEW(treeview), FALSE);
-    gtk_box_pack_start(GTK_BOX(vbox), treeview, FALSE, FALSE, 4);
-
-    renderer = gtk_cell_renderer_text_new();
-    column = gtk_tree_view_column_new_with_attributes(_("Parameter"), renderer,
-                                                      NULL);
-    gtk_tree_view_column_set_cell_data_func(column, renderer,
-                                            render_name, param_names, NULL);
-    gtk_tree_view_column_set_expand(column, TRUE);
-    gtk_tree_view_append_column(GTK_TREE_VIEW(treeview), column);
-
-    renderer = gtk_cell_renderer_text_new();
-    column = gtk_tree_view_column_new_with_attributes(_("Symbol"), renderer,
-                                                      NULL);
-    gtk_tree_view_column_set_cell_data_func(column, renderer,
-                                            render_symbol, param_symbols, NULL);
-    gtk_tree_view_column_set_expand(column, TRUE);
-    gtk_tree_view_append_column(GTK_TREE_VIEW(treeview), column);
-
-    renderer = gtk_cell_renderer_text_new();
-    g_object_set(renderer, "xalign", 1.0, NULL);
-    column = gtk_tree_view_column_new_with_attributes(_("Value"), renderer,
-                                                      NULL);
-    gtk_tree_view_column_set_cell_data_func(column, renderer,
-                                            render_value, &controls, NULL);
-    gtk_tree_view_column_set_expand(column, TRUE);
-    gtk_tree_view_append_column(GTK_TREE_VIEW(treeview), column);
-
-    hbox = gtk_hbox_new(FALSE, 0);
-    gtk_box_pack_start(GTK_BOX(vbox), hbox, FALSE, FALSE, 0);
-
-    button = curvature_add_aux_button(hbox, GTK_STOCK_SAVE,
-                                      _("Save table to a file"));
-    g_signal_connect_swapped(button, "clicked",
-                             G_CALLBACK(curvature_save), &controls);
-
-    button = curvature_add_aux_button(hbox, GTK_STOCK_COPY,
-                                      _("Copy table to clipboard"));
-    g_signal_connect_swapped(button, "clicked",
-                             G_CALLBACK(curvature_copy), &controls);
-
 
     table = gtk_table_new(3 + (mfield ? 4 : 0), 4, FALSE);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
@@ -762,6 +726,64 @@ curvature_dialog(CurvatureArgs *args,
     }
     else
         controls.masking_group = NULL;
+
+    vbox = gtk_vbox_new(FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(hbox), vbox, TRUE, TRUE, 0);
+
+    controls.gmodel = gwy_graph_model_new();
+    controls.graph = gwy_graph_new(controls.gmodel);
+    gtk_widget_set_size_request(controls.graph, 320, 260);
+    g_object_unref(controls.gmodel);
+
+    gtk_box_pack_start(GTK_BOX(vbox), controls.graph, TRUE, TRUE, 4);
+
+    controls.paramstore = gwy_null_store_new(PARAM_NPARAMS);
+    treeview
+        = gtk_tree_view_new_with_model(GTK_TREE_MODEL(controls.paramstore));
+    g_object_unref(controls.paramstore);
+    gtk_tree_view_set_headers_visible(GTK_TREE_VIEW(treeview), FALSE);
+    gtk_box_pack_start(GTK_BOX(vbox), treeview, FALSE, FALSE, 4);
+
+    selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(treeview));
+    gtk_tree_selection_set_mode(selection, GTK_SELECTION_NONE);
+
+    renderer = gtk_cell_renderer_text_new();
+    column = gtk_tree_view_column_new_with_attributes(_("Parameter"), renderer,
+                                                      NULL);
+    gtk_tree_view_column_set_cell_data_func(column, renderer,
+                                            render_name, param_names, NULL);
+    gtk_tree_view_column_set_expand(column, TRUE);
+    gtk_tree_view_append_column(GTK_TREE_VIEW(treeview), column);
+
+    renderer = gtk_cell_renderer_text_new();
+    column = gtk_tree_view_column_new_with_attributes(_("Symbol"), renderer,
+                                                      NULL);
+    gtk_tree_view_column_set_cell_data_func(column, renderer,
+                                            render_symbol, param_symbols, NULL);
+    gtk_tree_view_column_set_expand(column, TRUE);
+    gtk_tree_view_append_column(GTK_TREE_VIEW(treeview), column);
+
+    renderer = gtk_cell_renderer_text_new();
+    g_object_set(renderer, "xalign", 1.0, NULL);
+    column = gtk_tree_view_column_new_with_attributes(_("Value"), renderer,
+                                                      NULL);
+    gtk_tree_view_column_set_cell_data_func(column, renderer,
+                                            render_value, &controls, NULL);
+    gtk_tree_view_column_set_expand(column, TRUE);
+    gtk_tree_view_append_column(GTK_TREE_VIEW(treeview), column);
+
+    hbox = gtk_hbox_new(FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(vbox), hbox, FALSE, FALSE, 0);
+
+    button = curvature_add_aux_button(hbox, GTK_STOCK_SAVE,
+                                      _("Save table to a file"));
+    g_signal_connect_swapped(button, "clicked",
+                             G_CALLBACK(curvature_save), &controls);
+
+    button = curvature_add_aux_button(hbox, GTK_STOCK_COPY,
+                                      _("Copy table to clipboard"));
+    g_signal_connect_swapped(button, "clicked",
+                             G_CALLBACK(curvature_copy), &controls);
 
     curvature_update_preview(&controls, args);
 
