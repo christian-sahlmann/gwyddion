@@ -71,6 +71,7 @@ typedef struct {
     GtkWidget *plot_graph;
     GtkWidget *view;
     GtkWidget *graph;
+    GtkWidget *warning;
     GwyNullStore *paramstore;
     GwyGraphModel *gmodel;
     GwySelection *selection;
@@ -215,83 +216,6 @@ curvature(GwyContainer *data, GwyRunType run)
     curvature_do(data, dfield, mfield, id, &args);
 }
 
-/* Does not include x and y offsets */
-static void
-curvature_calculate(GwyDataField *dfield,
-                    GwyDataField *mask,
-                    const CurvatureArgs *args,
-                    double *params)
-{
-    enum { DEGREE = 2 };
-    enum { A, BX, CXX, BY, CXY, CYY, NTERMS };
-    gint term_powers[2*NTERMS];
-    gdouble coeffs[NTERMS];
-    gdouble xreal, yreal, qx, qy;
-    gdouble a, bx, by, cxx, cxy, cyy;
-    gdouble det, x_0, y_0, phi, h;
-    gint xres, yres, i, j, k;
-
-    k = 0;
-    g_assert(NTERMS == (DEGREE + 1)*(DEGREE + 2)/2);
-    for (i = 0; i <= DEGREE; i++) {
-        for (j = 0; j <= DEGREE - i; j++) {
-            term_powers[k++] = j;
-            term_powers[k++] = i;
-        }
-    }
-
-    gwy_data_field_fit_poly(dfield, mask, NTERMS, term_powers,
-                            args->masking == GWY_MASK_EXCLUDE, coeffs);
-    gwy_debug("NORM a=%g, bx=%g, by=%g, cxx=%g, cxy=%g, cyy=%g",
-              coeffs[A], coeffs[BX], coeffs[BY],
-              coeffs[CXX], coeffs[CXY], coeffs[CYY]);
-
-    /* Transform coeffs from normalized coordinates to real coordinates */
-    xres = gwy_data_field_get_xres(dfield);
-    yres = gwy_data_field_get_yres(dfield);
-    xreal = gwy_data_field_get_xreal(dfield);
-    yreal = gwy_data_field_get_yreal(dfield);
-    qx = 2.0/xreal*xres/(xres - 1.0);
-    qy = 2.0/yreal*yres/(yres - 1.0);
-
-    a = coeffs[A] - coeffs[BX] - coeffs[BY] + coeffs[CXX] + coeffs[CXY]
-        + coeffs[CYY];
-    bx = (coeffs[BX] - 2.0*coeffs[CXX] - coeffs[CXY])*qx;
-    by = (coeffs[BY] - 2.0*coeffs[CYY] - coeffs[CXY])*qy;
-    cxx = coeffs[CXX]*qx*qx;
-    cxy = coeffs[CXY]*qx*qy;
-    cyy = coeffs[CYY]*qy*qy;
-    gwy_debug("REAL a=%g, bx=%g, by=%g, cxx=%g, cxy=%g, cyy=%g",
-              a, bx, by, cxx, cxy, cyy);
-
-    /* Calculate the canonical cone section parameters */
-    det = 4*cxx*cyy - cxy*cxy;
-    gwy_debug("det=%g", det);
-    if (det == 0.0) {
-        /* FIXME: One axis of symmetry may still exist. */
-        x_0 = y_0 = 0.0;
-    }
-    else {
-        x_0 = (by*cxy - 2.0*bx*cyy)/det;
-        y_0 = (bx*cxy - 2.0*by*cxx)/det;
-    }
-    gwy_debug("x0=%g, y0=%g", x_0, y_0);
-
-    h = hypot(cxy, cxx - cyy);
-    phi = 0.5*atan2(cxy, cxx - cyy);
-    gwy_debug("h=%g, phi=%g", h, phi);
-
-    params[PARAM_X0] = x_0;
-    params[PARAM_Y0] = y_0;
-    params[PARAM_A] = a + bx*x_0 + by*y_0
-                      + cxx*x_0*x_0 + cxy*x_0*y_0 + cyy*y_0*y_0;
-    /* FIXME: Ensure r1 corresponds to phi1 */
-    params[PARAM_R1] = 1.0/(cxx + cyy + h);
-    params[PARAM_R2] = 1.0/(cxx + cyy - h);
-    params[PARAM_PHI1] = fmod(phi, G_PI);
-    params[PARAM_PHI2] = fmod(phi + G_PI/2.0, G_PI);
-}
-
 static int
 compare_double(const void *a, const void *b)
 {
@@ -391,28 +315,108 @@ intersect_with_boundary(gdouble x_0, gdouble y_0,
     return FALSE;
 }
 
+/* Does not include x and y offsets */
+static gboolean
+curvature_calculate(GwyDataField *dfield,
+                    GwyDataField *mask,
+                    const CurvatureArgs *args,
+                    double *params,
+                    Intersection *i1,
+                    Intersection *i2)
+{
+    enum { DEGREE = 2 };
+    enum { A, BX, CXX, BY, CXY, CYY, NTERMS };
+    gint term_powers[2*NTERMS];
+    gdouble coeffs[NTERMS];
+    gdouble xreal, yreal, qx, qy;
+    gdouble a, bx, by, cxx, cxy, cyy;
+    gdouble det, x_0, y_0, phi, h;
+    gint xres, yres, i, j, k;
+    gboolean ok;
+
+    k = 0;
+    g_assert(NTERMS == (DEGREE + 1)*(DEGREE + 2)/2);
+    for (i = 0; i <= DEGREE; i++) {
+        for (j = 0; j <= DEGREE - i; j++) {
+            term_powers[k++] = j;
+            term_powers[k++] = i;
+        }
+    }
+
+    gwy_data_field_fit_poly(dfield, mask, NTERMS, term_powers,
+                            args->masking != GWY_MASK_INCLUDE, coeffs);
+    gwy_debug("NORM a=%g, bx=%g, by=%g, cxx=%g, cxy=%g, cyy=%g",
+              coeffs[A], coeffs[BX], coeffs[BY],
+              coeffs[CXX], coeffs[CXY], coeffs[CYY]);
+
+    /* Transform coeffs from normalized coordinates to real coordinates */
+    xres = gwy_data_field_get_xres(dfield);
+    yres = gwy_data_field_get_yres(dfield);
+    xreal = gwy_data_field_get_xreal(dfield);
+    yreal = gwy_data_field_get_yreal(dfield);
+    qx = 2.0/xreal*xres/(xres - 1.0);
+    qy = 2.0/yreal*yres/(yres - 1.0);
+
+    a = coeffs[A] - coeffs[BX] - coeffs[BY] + coeffs[CXX] + coeffs[CXY]
+        + coeffs[CYY];
+    bx = (coeffs[BX] - 2.0*coeffs[CXX] - coeffs[CXY])*qx;
+    by = (coeffs[BY] - 2.0*coeffs[CYY] - coeffs[CXY])*qy;
+    cxx = coeffs[CXX]*qx*qx;
+    cxy = coeffs[CXY]*qx*qy;
+    cyy = coeffs[CYY]*qy*qy;
+    gwy_debug("REAL a=%g, bx=%g, by=%g, cxx=%g, cxy=%g, cyy=%g",
+              a, bx, by, cxx, cxy, cyy);
+
+    /* Calculate the canonical cone section parameters */
+    det = 4*cxx*cyy - cxy*cxy;
+    gwy_debug("det=%g", det);
+    if (det == 0.0) {
+        /* FIXME: One axis of symmetry may still exist. */
+        x_0 = y_0 = 0.0;
+    }
+    else {
+        x_0 = (by*cxy - 2.0*bx*cyy)/det;
+        y_0 = (bx*cxy - 2.0*by*cxx)/det;
+    }
+    gwy_debug("x0=%g, y0=%g", x_0, y_0);
+
+    h = hypot(cxy, cxx - cyy);
+    phi = 0.5*atan2(cxy, cxx - cyy);
+    gwy_debug("h=%g, phi=%g", h, phi);
+
+    params[PARAM_X0] = x_0;
+    params[PARAM_Y0] = y_0;
+    params[PARAM_A] = a + bx*x_0 + by*y_0
+                      + cxx*x_0*x_0 + cxy*x_0*y_0 + cyy*y_0*y_0;
+    /* FIXME: Ensure r1 corresponds to phi1 */
+    params[PARAM_R1] = 1.0/(cxx + cyy + h);
+    params[PARAM_R2] = 1.0/(cxx + cyy - h);
+    params[PARAM_PHI1] = fmod(phi, G_PI);
+    params[PARAM_PHI2] = fmod(phi + G_PI/2.0, G_PI);
+
+    ok = TRUE;
+    for (i = 0; i < 2; i++) {
+        ok &= intersect_with_boundary(params[PARAM_X0], params[PARAM_Y0],
+                                      params[PARAM_PHI1 + i],
+                                      xreal, yreal, i1 + i, i2 + i);
+    }
+
+    return ok;
+}
+
 static gboolean
 curvature_set_selection(GwyDataField *dfield,
-                        const gdouble *params,
+                        const Intersection *i1,
+                        const Intersection *i2,
                         GwySelection *selection)
 {
     gdouble xreal, yreal;
-    Intersection i1[2], i2[2];
     gdouble xy[4];
     gint xres, yres;
     guint i;
 
     xreal = gwy_data_field_get_xreal(dfield);
     yreal = gwy_data_field_get_yreal(dfield);
-    for (i = 0; i < 2; i++) {
-        if (!intersect_with_boundary(params[PARAM_X0], params[PARAM_Y0],
-                                     params[PARAM_PHI1 + i],
-                                     xreal, yreal, i1 + i, i2 + i)) {
-            gwy_selection_clear(selection);
-            return FALSE;
-        }
-    }
-
     xres = gwy_data_field_get_xres(dfield);
     yres = gwy_data_field_get_yres(dfield);
     for (i = 0; i < 2; i++) {
@@ -428,26 +432,14 @@ curvature_set_selection(GwyDataField *dfield,
 
 static gboolean
 curvature_plot_graph(GwyDataField *dfield,
-                     const gdouble *params,
+                     const Intersection *i1,
+                     const Intersection *i2,
                      GwyGraphModel *gmodel)
 {
     GwyGraphCurveModel *gcmodel;
     GwyDataLine *dline;
-    gdouble xreal, yreal;
-    Intersection i1[2], i2[2];
     gint xres, yres;
     guint i;
-
-    xreal = gwy_data_field_get_xreal(dfield);
-    yreal = gwy_data_field_get_yreal(dfield);
-    for (i = 0; i < 2; i++) {
-        if (!intersect_with_boundary(params[PARAM_X0], params[PARAM_Y0],
-                                     params[PARAM_PHI1 + i],
-                                     xreal, yreal, i1 + i, i2 + i)) {
-            gwy_graph_model_remove_all_curves(gmodel);
-            return FALSE;
-        }
-    }
 
     if (!gwy_graph_model_get_n_curves(gmodel)) {
         GwySIUnit *siunitxy, *siunitz;
@@ -514,10 +506,12 @@ curvature_do(GwyContainer *data,
              const CurvatureArgs *args)
 {
     gdouble params[PARAM_NPARAMS];
+    Intersection i1[2], i2[2];
     gint newid;
     gchar *key;
 
-    curvature_calculate(dfield, mfield, args, params);
+    if (!curvature_calculate(dfield, mfield, args, params, i1, i2))
+        return;
 
     if (args->set_selection) {
         GwySelection *selection;
@@ -525,7 +519,7 @@ curvature_do(GwyContainer *data,
         selection = g_object_new(g_type_from_name("GwySelectionLine"),
                                  "max-objects", 1024,
                                  NULL);
-        curvature_set_selection(dfield, params, selection);
+        curvature_set_selection(dfield, i1, i2, selection);
         key = g_strdup_printf("/%d/select/line", oldid);
         gwy_container_set_object_by_name(data, key, selection);
         g_object_unref(selection);
@@ -535,7 +529,7 @@ curvature_do(GwyContainer *data,
         GwyGraphModel *gmodel;
 
         gmodel = gwy_graph_model_new();
-        curvature_plot_graph(dfield, params, gmodel);
+        curvature_plot_graph(dfield, i1, i2, gmodel);
         newid = gwy_app_data_browser_add_graph_model(gmodel, data, TRUE);
         g_object_unref(gmodel);
     }
@@ -632,7 +626,8 @@ curvature_dialog(CurvatureArgs *args,
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
     controls.dialog = dialog;
 
-    hbox = gtk_hbox_new(FALSE, 20);
+    hbox = gtk_hbox_new(FALSE, 8);
+    gtk_container_set_border_width(GTK_CONTAINER(hbox), 4);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox,
                        FALSE, FALSE, 0);
 
@@ -671,10 +666,9 @@ curvature_dialog(CurvatureArgs *args,
 
     gtk_box_pack_start(GTK_BOX(vbox), controls.view, FALSE, FALSE, 4);
 
-    table = gtk_table_new(3 + (mfield ? 4 : 0), 4, FALSE);
+    table = gtk_table_new(4 + (mfield ? 4 : 0), 4, FALSE);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
-    gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_box_pack_start(GTK_BOX(vbox), table, FALSE, FALSE, 0);
     row = 0;
 
@@ -723,9 +717,15 @@ curvature_dialog(CurvatureArgs *args,
                                         NULL);
         row = gwy_radio_buttons_attach_to_table(controls.masking_group,
                                                 GTK_TABLE(table), 3, row);
+        gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
     }
     else
         controls.masking_group = NULL;
+
+    controls.warning = gtk_label_new(NULL);
+    gtk_misc_set_alignment(GTK_MISC(controls.warning), 0.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), controls.warning,
+                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
     vbox = gtk_vbox_new(FALSE, 0);
     gtk_box_pack_start(GTK_BOX(hbox), vbox, TRUE, TRUE, 0);
@@ -886,6 +886,8 @@ curvature_update_preview(CurvatureControls *controls,
 {
     GwyDataField *source, *mask = NULL;
     GwySelection *selection;
+    Intersection i1[2], i2[2];
+    gboolean ok;
     guint i;
 
     source = gwy_container_get_object_by_name(controls->data, "/0/data");
@@ -893,12 +895,21 @@ curvature_update_preview(CurvatureControls *controls,
                                                  "/0/select/line");
     gwy_container_gis_object_by_name(controls->data, "/0/mask", &mask);
 
-    curvature_calculate(source, mask, args, controls->params);
+    ok = curvature_calculate(source, mask, args, controls->params, i1, i2);
     for (i = 0; i < PARAM_NPARAMS; i++)
         gwy_null_store_row_changed(controls->paramstore, i);
 
-    curvature_set_selection(source, controls->params, selection);
-    curvature_plot_graph(source, controls->params, controls->gmodel);
+    if (ok) {
+        curvature_set_selection(source, i1, i2, selection);
+        curvature_plot_graph(source, i1, i2, controls->gmodel);
+        gtk_label_set_text(GTK_LABEL(controls->warning), "");
+    }
+    else {
+        gwy_selection_clear(selection);
+        gwy_graph_model_remove_all_curves(controls->gmodel);
+        gtk_label_set_text(GTK_LABEL(controls->warning),
+                           _("Axes are outside the image."));
+    }
 }
 
 static gchar*
