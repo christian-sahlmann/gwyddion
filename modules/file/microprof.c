@@ -225,12 +225,16 @@ microprof_load(const gchar *filename,
     mfile.zscale = gwy_get_gdouble_le(&p);
 
     datasize = 2*mfile.xres*mfile.yres;
+    if (err_SIZE_MISMATCH(error, datasize, size - MICROPROF_HEADER_SIZE, FALSE))
+        goto fail;
+    /* FIXME: There is weird stuff between channels.  Need specs.
     ndata = (size - MICROPROF_HEADER_SIZE)/datasize;
     if (!ndata) {
         err_NO_DATA(error);
         goto fail;
     }
-
+    */
+    ndata = 1;
     container = gwy_container_new();
 
     mfile.data = buffer + MICROPROF_HEADER_SIZE;
@@ -239,7 +243,7 @@ microprof_load(const gchar *filename,
         GQuark quark;
 
         dfield = microprof_read_data_field(&mfile,
-                                           mfile.data + i*(datasize + 5342));
+                                           mfile.data + i*datasize);
         quark = gwy_app_get_data_key_for_id(i);
         gwy_container_set_object(container, quark, dfield);
         g_object_unref(dfield);
