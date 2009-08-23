@@ -315,7 +315,7 @@ intersect_with_boundary(gdouble x_0, gdouble y_0,
     return FALSE;
 }
 
-/* Does not include x and y offsets */
+/* Does not include x and y offsets of the data field */
 static gboolean
 curvature_calculate(GwyDataField *dfield,
                     GwyDataField *mask,
@@ -329,8 +329,8 @@ curvature_calculate(GwyDataField *dfield,
     gint term_powers[2*NTERMS];
     gdouble coeffs[NTERMS];
     gdouble xreal, yreal, qx, qy;
-    gdouble a, bx, by, cxx, cxy, cyy;
-    gdouble det, x_0, y_0, phi, h;
+    gdouble a, a1, bx, by, cxx, cxy, cyy, cx, cy;
+    gdouble x_0, y_0, phi;
     gint xres, yres, i, j, k;
     gboolean ok;
 
@@ -357,40 +357,65 @@ curvature_calculate(GwyDataField *dfield,
     qx = 2.0/xreal*xres/(xres - 1.0);
     qy = 2.0/yreal*yres/(yres - 1.0);
 
-    a = coeffs[A] - coeffs[BX] - coeffs[BY] + coeffs[CXX] + coeffs[CXY]
-        + coeffs[CYY];
-    bx = (coeffs[BX] - 2.0*coeffs[CXX] - coeffs[CXY])*qx;
-    by = (coeffs[BY] - 2.0*coeffs[CYY] - coeffs[CXY])*qy;
-    cxx = coeffs[CXX]*qx*qx;
-    cxy = coeffs[CXY]*qx*qy;
-    cyy = coeffs[CYY]*qy*qy;
-    gwy_debug("REAL a=%g, bx=%g, by=%g, cxx=%g, cxy=%g, cyy=%g",
-              a, bx, by, cxx, cxy, cyy);
+    a1 = coeffs[A];
+    bx = qx*coeffs[BX];
+    by = qy*coeffs[BY];
+    cxx = qx*qx*coeffs[CXX];
+    cxy = qx*qy*coeffs[CXY];
+    cyy = qy*qy*coeffs[CYY];
 
-    /* Calculate the canonical cone section parameters */
-    det = 4*cxx*cyy - cxy*cxy;
-    gwy_debug("det=%g", det);
-    if (det == 0.0) {
-        /* FIXME: One axis of symmetry may still exist. */
+    /* Eliminate the mixed term */
+    if (fabs(cxx) + fabs(cxy) + fabs(cyy)
+        <= 1e-14*(fabs(bx)/xreal + fabs(by)/yreal)) {
+        /* Linear gradient */
+        phi = 0.0;
+        cx = cy = 0.0;
         x_0 = y_0 = 0.0;
+        a = a1;
     }
     else {
-        x_0 = (by*cxy - 2.0*bx*cyy)/det;
-        y_0 = (bx*cxy - 2.0*by*cxx)/det;
-    }
-    gwy_debug("x0=%g, y0=%g", x_0, y_0);
+        /* At least one quadratic term */
+        gdouble cm = cxx - cyy;
+        gdouble cp = cxx + cyy;
+        gdouble bx1, by1, xc, yc;
 
-    h = hypot(cxy, cxx - cyy);
-    phi = 0.5*atan2(cxy, cxx - cyy);
-    gwy_debug("h=%g, phi=%g", h, phi);
+        phi = 0.5*atan2(cxy, cm);
+        cx = cp + hypot(cm, cxy);
+        cy = cp - hypot(cm, cxy);
+        bx1 = bx*cos(phi) + by*sin(phi);
+        by1 = -bx*sin(phi) + by*cos(phi);
+
+        /* Eliminate linear terms */
+        if (fabs(cx) < 1e-14*fabs(cy)) {
+            /* Only y quadratic term */
+            xc = 0.0;
+            yc = -by1/cy;
+        }
+        else if (fabs(cy) < 1e-14*fabs(cx)) {
+            /* Only x quadratic term */
+            xc = -bx1/cx;
+            yc = 0.0;
+        }
+        else {
+            /* Two quadratic terms */
+            xc = -bx1/cx;
+            yc = -by1/cy;
+        }
+        a = a1 + xc*bx1 + yc*by1 + xc*xc*cx + yc*yc*cy;
+        x_0 = xc*cos(phi) - yc*sin(phi);
+        y_0 = xc*sin(phi) + yc*cos(phi);
+    }
+
+    /* Shift to coordinate system with [0,0] in the corner */
+    x_0 += 0.5*xreal;
+    y_0 += 0.5*yreal;
+    gwy_debug("x0=%g, y0=%g", x_0, y_0);
 
     params[PARAM_X0] = x_0;
     params[PARAM_Y0] = y_0;
-    params[PARAM_A] = a + bx*x_0 + by*y_0
-                      + cxx*x_0*x_0 + cxy*x_0*y_0 + cyy*y_0*y_0;
-    /* FIXME: Ensure r1 corresponds to phi1 */
-    params[PARAM_R1] = 1.0/(cxx + cyy + h);
-    params[PARAM_R2] = 1.0/(cxx + cyy - h);
+    params[PARAM_A] = a;
+    params[PARAM_R1] = 1.0/cx;
+    params[PARAM_R2] = 1.0/cy;
     params[PARAM_PHI1] = fmod(phi, G_PI);
     params[PARAM_PHI2] = fmod(phi + G_PI/2.0, G_PI);
 
@@ -579,7 +604,7 @@ render_value(G_GNUC_UNUSED GtkTreeViewColumn *column,
     gtk_tree_model_get(model, iter, 0, &i, -1);
     val = controls->params[i];
     if (i == PARAM_PHI1 || i == PARAM_PHI2) {
-        s = g_strdup_printf("%.2f deg", val*180.0/G_PI);
+        s = g_strdup_printf("%.2f deg", -val*180.0/G_PI);
     }
     else {
         vf = gwy_si_unit_get_format_with_digits(controls->unit,
@@ -943,7 +968,7 @@ curvature_make_report(const CurvatureControls *controls)
         g_string_append(str, " = ");
         val = controls->params[i];
         if (i == PARAM_PHI1 || i == PARAM_PHI2) {
-            g_string_append_printf(str, "%.2f deg", val*180.0/G_PI);
+            g_string_append_printf(str, "%.2f deg", -val*180.0/G_PI);
         }
         else {
             vf = gwy_si_unit_get_format_with_digits(controls->unit,
