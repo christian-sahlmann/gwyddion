@@ -214,13 +214,17 @@ microprof_load(const gchar *filename,
 
     p = buffer + XRANGE;
     mfile.xrange = gwy_get_gdouble_le(&p);
-    if (!(mfile.xrange = fabs(mfile.xrange)))
+    if (!(mfile.xrange = fabs(mfile.xrange))) {
         g_warning("Real x size is 0.0, fixing to 1.0");
+        mfile.xrange = 1.0;
+    }
 
     p = buffer + YRANGE;
     mfile.yrange = gwy_get_gdouble_le(&p);
-    if (!(mfile.yrange = fabs(mfile.yrange)))
+    if (!(mfile.yrange = fabs(mfile.yrange))) {
         g_warning("Real y size is 0.0, fixing to 1.0");
+        mfile.yrange = 1.0;
+    }
 
     p = buffer + ZRANGE;
     mfile.zscale = gwy_get_gdouble_le(&p);
