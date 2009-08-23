@@ -39,7 +39,6 @@
 #include <libgwymodule/gwymodule-file.h>
 #include <libprocess/datafield.h>
 #include <app/data-browser.h>
-#include <app/gwymoduleutils-file.h>
 
 #include "err.h"
 
