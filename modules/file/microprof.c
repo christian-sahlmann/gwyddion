@@ -129,6 +129,7 @@ microprof_detect(const GwyFileDetectInfo *fileinfo,
         return g_str_has_suffix(fileinfo->name_lowercase, EXTENSION) ? 10 : 0;
 
     if (fileinfo->file_size < MICROPROF_HEADER_SIZE
+        || fileinfo->buffer_len < MAGIC_SIZE
         || memcmp(fileinfo->head, MAGIC, MAGIC_SIZE) != 0)
         return 0;
 
