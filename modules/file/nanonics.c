@@ -51,22 +51,34 @@
 
 #define EXTENSION ".nan"
 
+#define Micrometer 1e-6
+
 typedef struct {
-    guint header_length;
-    guint data_length;
+    guint header_size;
+    guint page_size;
+    guint page_header_size;
+    guint page_data_size;
+    guint xres;
+    guint yres;
+    gdouble xreal;
+    gdouble yreal;
     GHashTable *meta;
-    GHashTable **chmeta;
+    GHashTable **pagemeta;
 } NanonicsFile;
 
-static gboolean      module_register     (void);
-static gint          nanonics_detect     (const GwyFileDetectInfo *fileinfo,
-                                          gboolean only_name);
-static GwyContainer* nanonics_load       (const gchar *filename,
-                                          GwyRunType mode,
-                                          GError **error);
-static GHashTable*   nanonics_read_header(gchar *text,
-                                          const gchar *name,
-                                          GError **error);
+static gboolean      module_register         (void);
+static gint          nanonics_detect         (const GwyFileDetectInfo *fileinfo,
+                                              gboolean only_name);
+static GwyContainer* nanonics_load           (const gchar *filename,
+                                              GwyRunType mode,
+                                              GError **error);
+static GHashTable*   nanonics_read_header    (gchar *text,
+                                              const gchar *name,
+                                              GError **error);
+static GwyDataField* nanonics_read_data_field(const NanonicsFile *nfile,
+                                              guint id,
+                                              gboolean retrace,
+                                              const guchar *buffer);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -118,7 +130,7 @@ nanonics_load(const gchar *filename,
     NanonicsFile nfile;
     gsize size = 0;
     GError *err = NULL;
-    guint i;
+    guint i, ndata = 0, header_size;
 
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
         err_GET_FILE_CONTENTS(error, &err);
@@ -139,29 +151,126 @@ nanonics_load(const gchar *filename,
                     "-End Header-");
         goto fail;
     }
-    nfile.header_length = (s - header) + strlen("-End Header-");
-    header[nfile.header_length] = '\0';
+    header_size = (s - header) + strlen("-End Header-");
+    header[header_size] = '\0';
 
     if (!(nfile.meta = nanonics_read_header(header, "Header", error)))
         goto fail;
 
+    g_free(header);
+    header = NULL;
+
     if (!require_keys(nfile.meta, error,
                       "HeaderLength", "DataLength",
-                      "ReF", "ReS",
+                      "ReF", "ReS", "WSF", "WSS",
                       NULL))
         goto fail;
 
-    nfile.header_length = strtol(g_hash_table_lookup(nfile.meta,
-                                                     "HeaderLength"),
-                                 NULL, 10);
-    nfile.data_length = strtol(g_hash_table_lookup(nfile.meta, "DataLength"),
+    /* Must explicitly specify base, the numbers often start with 0 */
+    nfile.header_size = strtol(g_hash_table_lookup(nfile.meta, "HeaderLength"),
                                NULL, 10);
+    nfile.page_size = strtol(g_hash_table_lookup(nfile.meta, "DataLength"),
+                             NULL, 10);
+
+    if (nfile.header_size != header_size + MAGIC_LINE_SIZE) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("HeaderLength %u differs from actual header length %u"),
+                    nfile.header_size, header_size);
+        goto fail;
+    }
+
+    ndata = (size - nfile.header_size)/nfile.page_size;
+    gwy_debug("ndata: %u", ndata);
+    if (!ndata) {
+        err_NO_DATA(error);
+        goto fail;
+    }
+
+    nfile.xres = strtol(g_hash_table_lookup(nfile.meta, "ReF"), NULL, 10);
+    nfile.yres = strtol(g_hash_table_lookup(nfile.meta, "ReS"), NULL, 10);
+    gwy_debug("xres: %u, yres: %u", nfile.xres, nfile.yres);
+    if (err_DIMENSION(error, nfile.xres) || err_DIMENSION(error, nfile.yres))
+        goto fail;
+
+    nfile.xreal = g_ascii_strtod(g_hash_table_lookup(nfile.meta, "WSF"), NULL);
+    if (!(nfile.xreal = fabs(nfile.xreal))) {
+        g_warning("Real x size is 0.0, fixing to 1.0");
+        nfile.xreal = 1.0;
+    }
+    nfile.xreal *= Micrometer;
+
+    nfile.yreal = g_ascii_strtod(g_hash_table_lookup(nfile.meta, "WSS"), NULL);
+    if (!(nfile.yreal = fabs(nfile.yreal))) {
+        g_warning("Real y size is 0.0, fixing to 1.0");
+        nfile.yreal = 1.0;
+    }
+    nfile.yreal *= Micrometer;
+
+    nfile.page_data_size = sizeof(guint32)*nfile.xres*nfile.yres;
+    gwy_debug("page data size: %u", nfile.page_data_size);
+    /* Well, there is probably a stricter page header size lower bound than 4 */
+    if (err_SIZE_MISMATCH(error, nfile.page_data_size + 4, nfile.page_size,
+                          FALSE))
+        goto fail;
+
+    nfile.page_header_size = nfile.page_size - nfile.page_data_size;
+    gwy_debug("page header size: %u", nfile.page_header_size);
+    nfile.pagemeta = g_new0(GHashTable*, ndata);
+    s = buffer + nfile.header_size;
+    for (i = 0; i < ndata; i++) {
+        gwy_debug("reading page header %u", i);
+        header = g_strndup(s + i*nfile.page_size, nfile.page_header_size);
+        if (!(nfile.pagemeta[i] = nanonics_read_header(header, "Channel Header",
+                                                       error)))
+            goto fail;
+
+        g_free(header);
+        header = NULL;
+    }
+
+    container = gwy_container_new();
+    s += nfile.page_header_size;
+    for (i = 0; i < ndata; i++) {
+        guint j;
+
+        for (j = 0; j < 2; j++) {
+            GwyDataField *dfield;
+            gchar *key, *title;
+            GQuark quark;
+
+            dfield = nanonics_read_data_field(&nfile, i, j,
+                                              s + i*nfile.page_size);
+            quark = gwy_app_get_data_key_for_id(2*i + j);
+            gwy_container_set_object(container, quark, dfield);
+            g_object_unref(dfield);
+
+            if ((title = g_hash_table_lookup(nfile.pagemeta[i], "CHN"))) {
+                key = g_strconcat(g_quark_to_string(quark), "/title", NULL);
+                if (j) {
+                    title = g_strconcat(title, " [Retrace]", NULL);
+                    gwy_container_set_string_by_name(container, key, title);
+                }
+                else
+                    gwy_container_set_string_by_name(container, key,
+                                                     g_strdup(title));
+                g_free(key);
+            }
+        }
+    }
 
 fail:
     g_free(header);
     if (nfile.meta)
         g_hash_table_destroy(nfile.meta);
+    if (nfile.pagemeta) {
+        for (i = 0; i < ndata; i++) {
+            if (nfile.pagemeta[i])
+                g_hash_table_destroy(nfile.pagemeta[i]);
+        }
+        g_free(nfile.pagemeta);
+    }
     gwy_file_abandon_contents(buffer, size, NULL);
+
     return container;
 }
 
@@ -220,15 +329,71 @@ nanonics_read_header(gchar *text, const gchar *name, GError **error)
         return NULL;
     }
 
-    /*
     line = gwy_str_next_line(&p);
     if (line)
         g_warning("Text beyond %s", marker);
-        */
     g_free(marker);
 
     return hash;
 }
 
-/* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
+static GwyDataField*
+nanonics_read_data_field(const NanonicsFile *nfile,
+                         guint id,
+                         gboolean retrace,
+                         const guchar *buffer)
+{
+    const gint16 *d16 = (const gint16*)buffer;
+    GwyDataField *dfield;
+    GwySIUnit *siunit;
+    gint xres, yres, i, j, power10;
+    gdouble *d;
+    gchar *s;
 
+    xres = nfile->xres;
+    yres = nfile->yres;
+    dfield = gwy_data_field_new(xres, yres, nfile->xreal, nfile->yreal, FALSE);
+    d = gwy_data_field_get_data(dfield);
+
+    for (i = 0; i < yres; i++) {
+        if (retrace) {
+            for (j = 0; j < xres; j++) {
+                gint16 v = d16[(i + 1)*2*xres - 1 - j];
+                *(d++) = GINT16_FROM_BE(v);
+            }
+        }
+        else {
+            for (j = 0; j < xres; j++) {
+                gint16 v = d16[i*2*xres + j];
+                *(d++) = GINT16_FROM_BE(v);
+            }
+        }
+    }
+
+    siunit = gwy_data_field_get_si_unit_xy(dfield);
+    gwy_si_unit_set_from_string(siunit, "m");
+
+    if ((s = g_hash_table_lookup(nfile->pagemeta[id], "CHU"))) {
+        /* Fix some verbose units
+         * XXX: Modifies the string in-place (can do since it's allocated but
+         * be careful). */
+        if (gwy_strequal(s, "Pi")) {
+            gwy_data_field_multiply(dfield, G_PI);
+            s[0] = '\0';
+        }
+        if (g_str_has_suffix(s, "Volts"))
+            s[strlen(s) - strlen("Volts") + 1] = '\0';
+        else if (g_str_has_suffix(s, "Newton"))
+            s[strlen(s) - strlen("Newton") + 1] = '\0';
+
+        siunit = gwy_data_field_get_si_unit_z(dfield);
+        gwy_si_unit_set_from_string_parse(siunit, s, &power10);
+
+        if (power10)
+            gwy_data_field_multiply(dfield, pow10(power10));
+    }
+
+    return dfield;
+}
+
+/* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
