@@ -7,28 +7,110 @@ typedef struct {
     gint xres;
     gint yres;
     gdouble measure;
-    gdouble zscale;
     gchar *xyunits;
     gchar *zunits;
     gint xyexponent;
     gint zexponent;
 } GwyDimensionArgs;
 
-#define GWY_DIMENSION_ARGS_INIT { 256, 256, 1.0, 1.0, NULL, NULL, 0, 0 }
+#define GWY_DIMENSION_ARGS_INIT { 256, 256, 1.0, NULL, NULL, 0, 0 }
 
 typedef struct {
     GwyDimensionArgs *args;
+    GwySIUnit *siunit;
     GtkWidget *table;
     GtkAdjustment *xres;
     GtkAdjustment *yres;
     GtkWidget *xyreseq;
     GtkAdjustment *xreal;
     GtkAdjustment *yreal;
-    GtkAdjustment *zscale;
+    GtkWidget *xunitslab;
+    GtkWidget *yunitslab;
     GtkWidget *xyexponent;
+    GtkWidget *xyunits;
     GtkWidget *zexponent;
+    GtkWidget *zunits;
     gboolean in_update;
 } GwyDimensions;
+
+static GtkAdjustment*
+gwy_dimensions_make_res(GtkTable *table,
+                        gint row,
+                        const gchar *name,
+                        gint value)
+{
+    GtkWidget *label, *spin;
+    GtkAdjustment *adj;
+    GtkObject *obj;
+
+    label = gtk_label_new_with_mnemonic(name);
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(table, label, 0, 1, row, row+1, GTK_FILL, 0, 0, 0);
+
+    obj = gtk_adjustment_new(value, 2, 16384, 1, 100, 0);
+    adj = GTK_ADJUSTMENT(obj);
+    spin = gtk_spin_button_new(adj, 0, 0);
+    gtk_label_set_mnemonic_widget(GTK_LABEL(label), spin);
+    gtk_table_attach(table, spin, 1, 2, row, row+1, GTK_FILL, 0, 0, 0);
+
+    label = gtk_label_new("px");
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(table, label, 2, 3, row, row+1, GTK_FILL, 0, 0, 0);
+
+    return adj;
+}
+
+static GtkAdjustment*
+gwy_dimensions_make_real(GtkTable *table,
+                         gint row,
+                         const gchar *name,
+                         gdouble value,
+                         const gchar *units,
+                         GtkWidget **unitlab)
+{
+    GtkWidget *label, *spin;
+    GtkAdjustment *adj;
+    GtkObject *obj;
+
+    label = gtk_label_new_with_mnemonic(name);
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(table, label, 0, 1, row, row+1, GTK_FILL, 0, 0, 0);
+
+    obj = gtk_adjustment_new(value, 0.001, 10000.0, 1, 100, 0);
+    adj = GTK_ADJUSTMENT(obj);
+    spin = gtk_spin_button_new(adj, 0, 3);
+    gtk_table_attach(table, spin, 1, 2, row, row+1, GTK_FILL, 0, 0, 0);
+
+    *unitlab = gtk_label_new(units);
+    gtk_misc_set_alignment(GTK_MISC(*unitlab), 0.0, 0.5);
+    gtk_table_attach(table, *unitlab, 2, 3, row, row+1, GTK_FILL, 0, 0, 0);
+
+    return adj;
+}
+
+static GtkWidget*
+gwy_dimensions_make_units(GtkTable *table,
+                          gint row,
+                          const gchar *name,
+                          gint pwr,
+                          GwySIUnit *siunit,
+                          GtkWidget **combo)
+{
+    GtkWidget *label, *changer;
+
+    label = gtk_label_new_with_mnemonic(name);
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(table, label, 0, 1, row, row+1, GTK_FILL, 0, 0, 0);
+
+    *combo = gwy_combo_box_metric_unit_new(NULL, NULL,
+                                           pwr - 6, pwr + 6, siunit, pwr);
+    gtk_table_attach(table, *combo, 1, 2, row, row+1, GTK_FILL, 0, 0, 0);
+
+    changer = gtk_button_new_with_label(_("Change"));
+    gtk_table_attach(table, changer, 2, 3, row, row+1, GTK_FILL, 0, 0, 0);
+
+    return changer;
+}
 
 static void
 gwy_dimensions_set_combo_from_unit(GtkComboBox *combo,
@@ -106,39 +188,6 @@ gwy_dimensions_units_changed(GtkWidget *button,
     gtk_widget_destroy(dialog);
 }
 
-static GtkWidget*
-gwy_dimensions_make_unit_changer(GwyDimensions *dims,
-                                 const gchar *id,
-                                 gint *pwr,
-                                 const gchar *unit,
-                                 GtkSizeGroup *sizegroup,
-                                 GtkWidget **combo)
-{
-    GtkWidget *hbox, *align, *changer;
-    GwySIUnit *siunit;
-
-    align = gtk_alignment_new(0.0, 0.5, 1.0, 0.0);
-
-    hbox = gtk_hbox_new(FALSE, 6);
-    gtk_size_group_add_widget(sizegroup, hbox);
-    gtk_container_add(GTK_CONTAINER(align), hbox);
-
-    siunit = gwy_si_unit_new(unit);
-    *combo = gwy_combo_box_metric_unit_new
-                              (G_CALLBACK(gwy_enum_combo_box_update_int), pwr,
-                               *pwr - 6, *pwr + 6, siunit, *pwr);
-    g_object_unref(siunit);
-    gtk_box_pack_start(GTK_BOX(hbox), *combo, FALSE, FALSE, 0);
-
-    changer = gtk_button_new_with_label(_("Change"));
-    g_object_set_data(G_OBJECT(changer), "id", (gpointer)id);
-    g_signal_connect(changer, "clicked",
-                     G_CALLBACK(gwy_dimensions_units_changed), dims);
-    gtk_box_pack_end(GTK_BOX(hbox), changer, FALSE, FALSE, 0);
-
-    return align;
-}
-
 static void
 gwy_dimensions_xres_changed(GtkAdjustment *adj,
                             GwyDimensions *dims)
@@ -211,109 +260,74 @@ gwy_dimensions_xyreseq_toggled(GtkToggleButton *toggle,
         gtk_adjustment_set_value(dims->yres, dims->args->xres);
 }
 
-static void
-gwy_dimensions_zscale_changed(GtkAdjustment *adj,
-                              GwyDimensions *dims)
-{
-    dims->args->zscale = gtk_adjustment_get_value(adj);
-}
-
 static GwyDimensions*
-gwy_dimensions_new(GwyDimensionArgs *args,
-                   const gchar *zname)
+gwy_dimensions_new(GwyDimensionArgs *args)
 {
     GwyDimensions *dims = g_new0(GwyDimensions, 1);
-    GtkWidget *label, *align, *spin;
-    GtkSizeGroup *sizegroup;
-    GtkObject *obj;
+    GtkWidget *label;
     GtkTable *table;
     gint row;
 
     dims->args = args;
+    dims->siunit = gwy_si_unit_new(NULL);
 
-    sizegroup = gtk_size_group_new(GTK_SIZE_GROUP_HORIZONTAL);
-
-    dims->table = gtk_table_new(4, 5, FALSE);
+    dims->table = gtk_table_new(10, 3, FALSE);
     table = GTK_TABLE(dims->table);
     gtk_table_set_row_spacings(table, 2);
     gtk_table_set_col_spacings(table, 6);
-    //gtk_container_set_border_width(GTK_CONTAINER(table), 4);
+    gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     row = 0;
 
-    /* Horizontal */
-    label = gtk_label_new_with_mnemonic(_("_Horizontal size:"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(table, label, 0, 1, row, row+1, GTK_FILL, 0, 0, 0);
-
-    obj = gtk_adjustment_new(args->xres, 2, 16384, 1, 100, 0);
-    dims->xres = GTK_ADJUSTMENT(obj);
-    spin = gtk_spin_button_new(dims->xres, 0, 0);
-    gtk_table_attach(table, spin, 1, 2, row, row+1,
-                     GTK_EXPAND | GTK_FILL | GTK_SHRINK, 0, 0, 0);
-
-    obj = gtk_adjustment_new(args->xres * args->measure,
-                             0.001, 10000.0, 1, 100, 0);
-    dims->xreal = GTK_ADJUSTMENT(obj);
-    spin = gtk_spin_button_new(dims->xreal, 0, 3);
-    gtk_table_attach(table, spin, 2, 3, row, row+1,
-                     GTK_EXPAND | GTK_FILL | GTK_SHRINK, 0, 0, 0);
-
+    /* Resolution */
+    label = gwy_label_new_header(_("Resolution"));
+    gtk_table_attach(table, label, 0, 3, row, row+1, GTK_FILL, 0, 0, 0);
     row++;
 
-    /* Vertical */
-    label = gtk_label_new_with_mnemonic(_("_Vertical size:"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(table, label, 0, 1, row, row+1, GTK_FILL, 0, 0, 0);
+    dims->xres = gwy_dimensions_make_res(table, row++, _("_Horizontal size:"),
+                                         args->xres);
+    dims->yres = gwy_dimensions_make_res(table, row++, _("_Vertical size:"),
+                                         args->yres);
 
-    obj = gtk_adjustment_new(args->yres, 2, 16384, 1, 100, 0);
-    dims->yres = GTK_ADJUSTMENT(obj);
-    spin = gtk_spin_button_new(dims->yres, 0, 0);
-    gtk_table_attach(table, spin, 1, 2, row, row+1,
-                     GTK_EXPAND | GTK_FILL | GTK_SHRINK, 0, 0, 0);
-
-    obj = gtk_adjustment_new(args->yres * args->measure,
-                             0.001, 10000.0, 1, 100, 0);
-    dims->yreal = GTK_ADJUSTMENT(obj);
-    spin = gtk_spin_button_new(dims->yreal, 0, 3);
-    gtk_table_attach(table, spin, 2, 3, row, row+1,
-                     GTK_EXPAND | GTK_FILL | GTK_SHRINK, 0, 0, 0);
-
-    /* Lateral units */
-    align = gwy_dimensions_make_unit_changer(dims, "xy", &args->xyexponent,
-                                             args->xyunits, sizegroup,
-                                             &dims->xyexponent);
-    gtk_table_attach(table, align, 3, 4, row-1, row+1,
-                     GTK_EXPAND | GTK_FILL | GTK_SHRINK, 0, 0, 0);
-    row++;
-
-    /* Squareness */
-    dims->xyreseq = gtk_check_button_new_with_mnemonic(_("S_quare sample"));
-    gtk_table_attach_defaults(table, dims->xyreseq, 0, 4, row, row+1);
+    dims->xyreseq = gtk_check_button_new_with_mnemonic(_("S_quare image"));
+    gtk_table_attach(table, dims->xyreseq, 0, 3, row, row+1, GTK_FILL, 0, 0, 0);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(dims->xyreseq),
                                  args->xres == args->yres);
     gtk_table_set_row_spacing(table, row, 8);
     row++;
 
-    /* Z scale */
-    label = gtk_label_new_with_mnemonic(zname);
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(table, label, 0, 2, row, row+1, GTK_FILL, 0, 0, 0);
-
-    obj = gtk_adjustment_new(args->zscale, 0.001, 10000.0, 1, 100, 0);
-    dims->zscale = GTK_ADJUSTMENT(obj);
-    spin = gtk_spin_button_new(dims->zscale, 0, 3);
-    gtk_table_attach(table, spin, 2, 3, row, row+1,
-                     GTK_EXPAND | GTK_FILL | GTK_SHRINK, 0, 0, 0);
-
-    /* Z units */
-    align = gwy_dimensions_make_unit_changer(dims, "z", &args->zexponent,
-                                             args->zunits, sizegroup,
-                                             &dims->zexponent);
-    gtk_table_attach(table, align, 3, 4, row, row+1,
-                     GTK_EXPAND | GTK_FILL | GTK_SHRINK, 0, 0, 0);
+    /* Physical dimensions */
+    label = gwy_label_new_header(_("Physical Dimensions"));
+    gtk_table_attach(table, label, 0, 3, row, row+1, GTK_FILL, 0, 0, 0);
     row++;
 
+    /* XXX: Must recalculate the unit strings! */
+    dims->xres = gwy_dimensions_make_real(table, row++, _("_Width:"),
+                                          args->xres * args->measure,
+                                          args->xyunits, &dims->xunitslab);
+    dims->yres = gwy_dimensions_make_real(table, row++, _("H_eight:"),
+                                          args->yres * args->measure,
+                                          args->zunits, &dims->yunitslab);
+    gtk_table_set_row_spacing(table, row-1, 8);
+
+    /* Units */
+    label = gwy_label_new_header(_("Units"));
+    gtk_table_attach(table, label, 0, 3, row, row+1, GTK_FILL, 0, 0, 0);
+    row++;
+
+    gwy_si_unit_set_from_string(dims->siunit, args->xyunits);
+    dims->xyunits = gwy_dimensions_make_units(table, row++,
+                                              _("Dimension units:"),
+                                              args->xyexponent, dims->siunit,
+                                              &dims->xyexponent);
+
+    gwy_si_unit_set_from_string(dims->siunit, args->zunits);
+    dims->zunits = gwy_dimensions_make_units(table, row++,
+                                             _("Value units:"),
+                                             args->zexponent, dims->siunit,
+                                             &dims->zexponent);
+
     /* Final setup */
+    /*
     g_signal_connect(dims->xres, "value-changed",
                      G_CALLBACK(gwy_dimensions_xres_changed), dims);
     g_signal_connect(dims->yres, "value-changed",
@@ -324,10 +338,7 @@ gwy_dimensions_new(GwyDimensionArgs *args,
                      G_CALLBACK(gwy_dimensions_xreal_changed), dims);
     g_signal_connect(dims->yreal, "value-changed",
                      G_CALLBACK(gwy_dimensions_yreal_changed), dims);
-    g_signal_connect(dims->zscale, "value-changed",
-                     G_CALLBACK(gwy_dimensions_zscale_changed), dims);
-
-    g_object_unref(sizegroup);
+                     */
 
     return dims;
 }
@@ -341,6 +352,7 @@ gwy_dimensions_get_widget(GwyDimensions *dims)
 static void
 gwy_dimensions_free(GwyDimensions *dims)
 {
+    g_object_unref(dims->siunit);
     g_free(dims);
 }
 
@@ -393,9 +405,6 @@ gwy_dimensions_load_args(GwyDimensionArgs *args,
     g_string_append(g_string_truncate(key, len), "measure");
     gwy_container_gis_double_by_name(settings, key->str, &args->measure);
 
-    g_string_append(g_string_truncate(key, len), "zscale");
-    gwy_container_gis_double_by_name(settings, key->str, &args->zscale);
-
     g_string_append(g_string_truncate(key, len), "xyexponent");
     gwy_container_gis_int32_by_name(settings, key->str, &args->xyexponent);
 
@@ -439,9 +448,6 @@ gwy_dimensions_save_args(const GwyDimensionArgs *args,
 
     g_string_append(g_string_truncate(key, len), "measure");
     gwy_container_set_double_by_name(settings, key->str, args->measure);
-
-    g_string_append(g_string_truncate(key, len), "zscale");
-    gwy_container_set_double_by_name(settings, key->str, args->zscale);
 
     g_string_append(g_string_truncate(key, len), "xyexponent");
     gwy_container_set_int32_by_name(settings, key->str, args->xyexponent);

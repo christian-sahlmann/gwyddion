@@ -36,7 +36,7 @@
 #define FFT_SYNTH_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
 enum {
-    PREVIEW_SIZE = 240,
+    PREVIEW_SIZE = 320,
 };
 
 enum {
@@ -138,7 +138,7 @@ module_register(void)
                               N_("/S_ynthetic/_Spectral..."),
                               NULL,
                               FFT_SYNTH_RUN_MODES,
-                              0,
+                              GWY_MENU_FLAG_DATA,
                               N_("Generate surface using spectral synthesis"));
 
     return TRUE;
@@ -199,7 +199,7 @@ fft_synth_dialog(FFTSynthArgs *args,
                  GwyDataField *dfield,
                  gint id)
 {
-    GtkWidget *dialog, *table, *vbox, *hbox, *hbox2, *label;
+    GtkWidget *dialog, *table, *vbox, *hbox, *hbox2, *label, *notebook;
     FFTSynthControls controls;
     gint response;
     GwyPixmapLayer *layer;
@@ -254,15 +254,31 @@ fft_synth_dialog(FFTSynthArgs *args,
 
     gtk_box_pack_start(GTK_BOX(vbox), controls.view, FALSE, FALSE, 0);
 
-    controls.dims = gwy_dimensions_new(dimsargs, "RMS:");
-    gtk_box_pack_start(GTK_BOX(vbox), gwy_dimensions_get_widget(controls.dims),
-                       TRUE, TRUE, 0);
+    controls.update = gtk_check_button_new_with_mnemonic(_("I_nstant updates"));
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.update),
+                                 args->update);
+    gtk_box_pack_start(GTK_BOX(vbox), controls.update, FALSE, FALSE, 0);
+    /*
+    g_signal_connect_swapped(controls.update, "toggled",
+                             G_CALLBACK(update_change_cb), &controls);
+                             */
+
+    notebook = gtk_notebook_new();
+    gtk_box_pack_start(GTK_BOX(hbox), notebook, FALSE, FALSE, 4);
+
+    controls.dims = gwy_dimensions_new(dimsargs);
+    gtk_notebook_append_page(GTK_NOTEBOOK(notebook),
+                             gwy_dimensions_get_widget(controls.dims),
+                             gtk_label_new(_("Dimensions")));
+
+    /* TODO: RMS */
 
     table = gtk_table_new(11, 4, FALSE);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
-    gtk_box_pack_start(GTK_BOX(hbox), table, TRUE, TRUE, 4);
+    gtk_notebook_append_page(GTK_NOTEBOOK(notebook), table,
+                             gtk_label_new(_("Generator")));
     row = 0;
 
     controls.seed = gtk_adjustment_new(args->seed,
@@ -316,17 +332,6 @@ fft_synth_dialog(FFTSynthArgs *args,
     gwy_table_attach_hscale(table, row++, _("Correlation lengt_h:"),
                             NULL,
                             controls.power_tau, 0);
-    row++;
-
-    controls.update = gtk_check_button_new_with_mnemonic(_("I_nstant updates"));
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.update),
-                                 args->update);
-    gtk_table_attach(GTK_TABLE(table), controls.update,
-                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
-    /*
-    g_signal_connect_swapped(controls.update, "toggled",
-                             G_CALLBACK(update_change_cb), &controls);
-                             */
     row++;
 
     fft_synth_invalidate(&controls);
