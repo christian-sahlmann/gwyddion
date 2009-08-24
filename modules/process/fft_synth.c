@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2007 David Necas (Yeti).
+ *  Copyright (C) 2007,2009 David Necas (Yeti).
  *  E-mail: yeti@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -31,6 +31,8 @@
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
 
+#include "dimensions.h"
+
 #define FFT_SYNTH_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
 enum {
@@ -45,10 +47,6 @@ enum {
 typedef struct {
     guint32 seed;
     gboolean replace;
-    gint xres;
-    gint yres;
-    gdouble measure;
-    gdouble sigma;
     gdouble freq_min;
     gdouble freq_max;
     gboolean gauss_enable;
@@ -61,12 +59,9 @@ typedef struct {
 
 typedef struct {
     FFTSynthArgs *args;
+    GwyDimensions *dims;
     GtkWidget *dialog;
     GtkWidget *view;
-    GtkWidget *xres;
-    GtkWidget *yres;
-    GtkObject *measure;
-    GtkObject *sigma;
     GtkObject *seed;
     GtkWidget *seed_new;
     GtkObject *freq_min;
@@ -86,40 +81,42 @@ typedef struct {
     gboolean in_init;
 } FFTSynthControls;
 
-static gboolean module_register                    (void);
-static void     fft_synth                          (GwyContainer *data,
-                                                    GwyRunType run);
-static void     run_noninteractive                 (FFTSynthArgs *args,
-                                                    GwyContainer *data,
-                                                    GwyDataField *dfield,
-                                                    gint id);
-static void     fft_synth_dialog                  (FFTSynthArgs *args,
-                                                    GwyContainer *data,
-                                                    GwyDataField *dfield,
-                                                    gint id);
-static void     fft_synth_dialog_update_controls  (FFTSynthControls *controls,
-                                                    FFTSynthArgs *args);
-static void     fft_synth_dialog_update_values    (FFTSynthControls *controls,
-                                                    FFTSynthArgs *args);
-static void     fft_synth_invalidate                   (FFTSynthControls *controls);
-static void     update_change_cb                   (FFTSynthControls *controls);
-static void     preview                            (FFTSynthControls *controls,
-                                                    FFTSynthArgs *args);
-static void     fft_synth_load_args               (GwyContainer *container,
-                                                    FFTSynthArgs *args);
-static void     fft_synth_save_args               (GwyContainer *container,
-                                                    FFTSynthArgs *args);
+static gboolean module_register                 (void);
+static void     fft_synth                       (GwyContainer *data,
+                                                 GwyRunType run);
+static void     run_noninteractive              (FFTSynthArgs *args,
+                                                 GwyDimensionArgs *dimsargs,
+                                                 GwyContainer *data,
+                                                 GwyDataField *dfield,
+                                                 gint id);
+static void     fft_synth_dialog                (FFTSynthArgs *args,
+                                                 GwyDimensionArgs *dimsargs,
+                                                 GwyContainer *data,
+                                                 GwyDataField *dfield,
+                                                 gint id);
+static void     fft_synth_dialog_update_controls(FFTSynthControls *controls,
+                                                 FFTSynthArgs *args);
+static void     fft_synth_dialog_update_values  (FFTSynthControls *controls,
+                                                 FFTSynthArgs *args);
+static void     fft_synth_invalidate            (FFTSynthControls *controls);
+static void     update_change_cb                (FFTSynthControls *controls);
+static void     preview                         (FFTSynthControls *controls,
+                                                 FFTSynthArgs *args);
+static void     fft_synth_load_args             (GwyContainer *container,
+                                                 FFTSynthArgs *args);
+static void     fft_synth_save_args             (GwyContainer *container,
+                                                 FFTSynthArgs *args);
 
 static const FFTSynthArgs fft_synth_defaults = {
     42,
     FALSE,
-    PREVIEW_SIZE, PREVIEW_SIZE,
-    2.5e-8, 1e-8,
     0.0, 1.0,
     FALSE, 0.1,
     FALSE, 1.5, 0.1,
     FALSE,
 };
+
+static const GwyDimensionArgs dims_defaults = GWY_DIMENSION_ARGS_INIT;
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -138,7 +135,7 @@ module_register(void)
 {
     gwy_process_func_register("fft_synth",
                               (GwyProcessFunc)&fft_synth,
-                              N_("/Simulat_e/_Spectral Synthesis..."),
+                              N_("/S_ynthetic/_Spectral..."),
                               NULL,
                               FFT_SYNTH_RUN_MODES,
                               0,
@@ -151,26 +148,35 @@ static void
 fft_synth(GwyContainer *data, GwyRunType run)
 {
     FFTSynthArgs args;
+    GwyDimensionArgs dimsargs;
     GwyDataField *dfield;
     gint id;
 
     g_return_if_fail(run & FFT_SYNTH_RUN_MODES);
     fft_synth_load_args(gwy_app_settings_get(), &args);
+    gwy_clear(&dimsargs, 1);
+    gwy_dimensions_copy_args(&dims_defaults, &dimsargs);
+    gwy_dimensions_load_args(&dimsargs, gwy_app_settings_get(),
+                             "/module/fft_synth");
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
                                      GWY_APP_DATA_FIELD_ID, &id,
                                      0);
     g_return_if_fail(dfield);
 
     if (run == GWY_RUN_IMMEDIATE)
-        run_noninteractive(&args, data, dfield, id);
+        run_noninteractive(&args, &dimsargs, data, dfield, id);
     else {
-        fft_synth_dialog(&args, data, dfield, id);
+        fft_synth_dialog(&args, &dimsargs, data, dfield, id);
         fft_synth_save_args(gwy_app_settings_get(), &args);
+        gwy_dimensions_save_args(&dimsargs, gwy_app_settings_get(),
+                                 "/module/fft_synth");
     }
+    gwy_dimensions_free_args(&dimsargs);
 }
 
 static void
 run_noninteractive(FFTSynthArgs *args,
+                   GwyDimensionArgs *dimsargs,
                    GwyContainer *data,
                    GwyDataField *dfield,
                    gint id)
@@ -188,6 +194,7 @@ run_noninteractive(FFTSynthArgs *args,
 
 static void
 fft_synth_dialog(FFTSynthArgs *args,
+                 GwyDimensionArgs *dimsargs,
                  GwyContainer *data,
                  GwyDataField *dfield,
                  gint id)
@@ -226,9 +233,9 @@ fft_synth_dialog(FFTSynthArgs *args,
     gtk_box_pack_start(GTK_BOX(hbox), vbox, FALSE, FALSE, 4);
 
     controls.mydata = gwy_container_new();
-    dfield = gwy_data_field_new(args->xres, args->yres,
-                                args->measure*args->xres,
-                                args->measure*args->yres,
+    dfield = gwy_data_field_new(dimsargs->xres, dimsargs->yres,
+                                dimsargs->measure*dimsargs->xres,
+                                dimsargs->measure*dimsargs->yres,
                                 FALSE);
     gwy_container_set_object_by_name(controls.mydata, "/0/data", dfield);
     gwy_app_sync_data_items(data, controls.mydata, id, 0, FALSE,
@@ -247,50 +254,9 @@ fft_synth_dialog(FFTSynthArgs *args,
 
     gtk_box_pack_start(GTK_BOX(vbox), controls.view, FALSE, FALSE, 0);
 
-    table = gtk_table_new(6, 4, FALSE);
-    gtk_table_set_row_spacings(GTK_TABLE(table), 2);
-    gtk_table_set_col_spacings(GTK_TABLE(table), 6);
-    gtk_box_pack_start(GTK_BOX(vbox), table, TRUE, TRUE, 0);
-    row = 0;
-
-    label = gtk_label_new_with_mnemonic(_("Size:"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label,
-                     0, 1, row, row+1, GTK_FILL, 0, 0, 0);
-
-    hbox2 = gtk_hbox_new(FALSE, 2);
-    gtk_table_attach(GTK_TABLE(table), hbox2,
-                     1, 3, row, row+1, GTK_FILL, 0, 0, 0);
-
-    controls.xres = gtk_entry_new();
-    gtk_entry_set_width_chars(GTK_ENTRY(controls.xres), 4);
-    gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls.xres);
-    gtk_box_pack_start(GTK_BOX(hbox2), controls.xres, TRUE, TRUE, 0);
-
-    label = gtk_label_new("×");
-    gtk_box_pack_start(GTK_BOX(hbox2), label, FALSE, FALSE, 0);
-
-    controls.yres = gtk_entry_new();
-    gtk_entry_set_width_chars(GTK_ENTRY(controls.yres), 4);
-    gtk_box_pack_start(GTK_BOX(hbox2), controls.yres, TRUE, TRUE, 0);
-
-    label = gtk_label_new("px");
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), label,
-                     3, 4, row, row+1, GTK_FILL, 0, 0, 0);
-    row++;
-
-    controls.measure = gtk_adjustment_new(args->measure/1e-9,
-                                          0.1, 1000.0, 0.1, 10.0, 0);
-    gwy_table_attach_hscale(table, row++, _("Measure:"), "nm/px",
-                            controls.measure, GWY_HSCALE_NO_SCALE);
-    row++;
-
-    controls.sigma = gtk_adjustment_new(args->sigma/1e-9,
-                                        0.1, 1000.0, 0.1, 10.0, 0);
-    gwy_table_attach_hscale(table, row++, _("RMS:"), "nm",
-                            controls.sigma, GWY_HSCALE_NO_SCALE);
-    row++;
+    controls.dims = gwy_dimensions_new(dimsargs, "RMS:");
+    gtk_box_pack_start(GTK_BOX(vbox), gwy_dimensions_get_widget(controls.dims),
+                       TRUE, TRUE, 0);
 
     table = gtk_table_new(11, 4, FALSE);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
@@ -302,7 +268,7 @@ fft_synth_dialog(FFTSynthArgs *args,
     controls.seed = gtk_adjustment_new(args->seed,
                                        1.0, 0xffffffff, 1.0, 10.0, 0);
     gwy_table_attach_hscale(table, row, _("Random seed:"), NULL,
-                            controls.sigma, GWY_HSCALE_NO_SCALE);
+                            controls.seed, GWY_HSCALE_NO_SCALE);
 
     controls.seed_new = gtk_button_new_with_mnemonic(_("_New Seed"));
     gtk_table_attach(GTK_TABLE(table), controls.seed_new,
@@ -383,6 +349,7 @@ fft_synth_dialog(FFTSynthArgs *args,
             gtk_widget_destroy(dialog);
             case GTK_RESPONSE_NONE:
             g_object_unref(controls.mydata);
+            gwy_dimensions_free(controls.dims);
             return;
             break;
 
@@ -424,6 +391,7 @@ fft_synth_dialog(FFTSynthArgs *args,
         run_noninteractive(args, data, dfield, mquark);
     }
     */
+    gwy_dimensions_free(controls.dims);
 }
 
 static void
@@ -602,4 +570,3 @@ fft_synth_save_args(GwyContainer *container,
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
-
