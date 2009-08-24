@@ -35,6 +35,17 @@
 
 #define FFT_SYNTH_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
+#ifdef HAVE_SINCOS
+#define _gwy_sincos sincos
+#else
+static inline void
+_gwy_sincos(gdouble x, gdouble *s, gdouble *c)
+{
+    *s = sin(x);
+    *c = cos(x);
+}
+#endif
+
 enum {
     PREVIEW_SIZE = 320,
 };
@@ -196,14 +207,14 @@ static void
 fft_synth_dialog(FFTSynthArgs *args,
                  GwyDimensionArgs *dimsargs,
                  GwyContainer *data,
-                 GwyDataField *dfield,
+                 GwyDataField *dfield_template,
                  gint id)
 {
     GtkWidget *dialog, *table, *vbox, *hbox, *hbox2, *label, *notebook;
     FFTSynthControls controls;
+    GwyDataField *dfield;
     gint response;
     GwyPixmapLayer *layer;
-    gdouble zoomval;
     gboolean temp;
     gint row;
 
@@ -233,9 +244,9 @@ fft_synth_dialog(FFTSynthArgs *args,
     gtk_box_pack_start(GTK_BOX(hbox), vbox, FALSE, FALSE, 4);
 
     controls.mydata = gwy_container_new();
-    dfield = gwy_data_field_new(dimsargs->xres, dimsargs->yres,
-                                dimsargs->measure*dimsargs->xres,
-                                dimsargs->measure*dimsargs->yres,
+    dfield = gwy_data_field_new(PREVIEW_SIZE, PREVIEW_SIZE,
+                                dimsargs->measure*PREVIEW_SIZE,
+                                dimsargs->measure*PREVIEW_SIZE,
                                 FALSE);
     gwy_container_set_object_by_name(controls.mydata, "/0/data", dfield);
     gwy_app_sync_data_items(data, controls.mydata, id, 0, FALSE,
@@ -248,9 +259,6 @@ fft_synth_dialog(FFTSynthArgs *args,
                  "gradient-key", "/0/base/palette",
                  NULL);
     gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view), layer);
-    zoomval = PREVIEW_SIZE/(gdouble)MAX(gwy_data_field_get_xres(dfield),
-                                        gwy_data_field_get_yres(dfield));
-    gwy_data_view_set_zoom(GWY_DATA_VIEW(controls.view), zoomval);
 
     gtk_box_pack_start(GTK_BOX(vbox), controls.view, FALSE, FALSE, 0);
 
@@ -266,7 +274,7 @@ fft_synth_dialog(FFTSynthArgs *args,
     notebook = gtk_notebook_new();
     gtk_box_pack_start(GTK_BOX(hbox), notebook, FALSE, FALSE, 4);
 
-    controls.dims = gwy_dimensions_new(dimsargs);
+    controls.dims = gwy_dimensions_new(dimsargs, dfield_template);
     gtk_notebook_append_page(GTK_NOTEBOOK(notebook),
                              gwy_dimensions_get_widget(controls.dims),
                              gtk_label_new(_("Dimensions")));
@@ -293,13 +301,13 @@ fft_synth_dialog(FFTSynthArgs *args,
 
     controls.freq_min = gtk_adjustment_new(args->freq_min,
                                            0.0, 1.0, 0.001, 0.1, 0);
-    gwy_table_attach_hscale(table, row++, _("M_inimum frequency:"), NULL,
+    gwy_table_attach_hscale(table, row, _("M_inimum frequency:"), NULL,
                             controls.freq_min, 0);
     row++;
 
     controls.freq_max = gtk_adjustment_new(args->freq_max,
                                            0.0, 1.0, 0.001, 0.1, 0);
-    gwy_table_attach_hscale(table, row++, _("Ma_ximum frequency:"), NULL,
+    gwy_table_attach_hscale(table, row, _("Ma_ximum frequency:"), NULL,
                             controls.freq_max, 0);
     row++;
 
@@ -310,8 +318,8 @@ fft_synth_dialog(FFTSynthArgs *args,
     row++;
 
     controls.gauss_tau = gtk_adjustment_new(args->gauss_tau,
-                                           0.0, 2.0, 0.001, 0.1, 0);
-    gwy_table_attach_hscale(table, row++, _("Correlation _length:"),
+                                            0.0001, 2.0, 0.0001, 0.1, 0);
+    gwy_table_attach_hscale(table, row, _("Correlation _length:"),
                             NULL,
                             controls.gauss_tau, 0);
     row++;
@@ -324,12 +332,12 @@ fft_synth_dialog(FFTSynthArgs *args,
 
     controls.power_p = gtk_adjustment_new(args->power_p,
                                           0.0, 3.0, 0.001, 0.1, 0);
-    gwy_table_attach_hscale(table, row++, _("Po_wer:"), NULL,
+    gwy_table_attach_hscale(table, row, _("Po_wer:"), NULL,
                             controls.power_p, 0);
     row++;
     controls.power_tau = gtk_adjustment_new(args->power_tau,
                                            0.0, 2.0, 0.001, 0.1, 0);
-    gwy_table_attach_hscale(table, row++, _("Correlation lengt_h:"),
+    gwy_table_attach_hscale(table, row, _("Correlation lengt_h:"),
                             NULL,
                             controls.power_tau, 0);
     row++;
@@ -468,7 +476,8 @@ preview(FFTSynthControls *controls,
     GwyDataField *dfield;
     GRand *rng;
     gdouble *re, *im;
-    gdouble x, y, f, phi;
+    gdouble power_p, gauss_tau;
+    gboolean power_enable, gauss_enable;
     gint xres, yres, i, j;
 
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
@@ -488,17 +497,36 @@ preview(FFTSynthControls *controls,
 
     xres = gwy_data_field_get_xres(dfield);
     yres = gwy_data_field_get_yres(dfield);
+
+    /* Optimization hints */
+    power_enable = args->power_enable;
+    power_p = args->power_p;
+    gauss_enable = args->gauss_enable;
+    gauss_tau = args->gauss_tau;
+
     for (i = 0; i < yres; i++) {
-        y = (i <= yres/2 ? i : yres-i)/(yres/2.0);
+        gdouble y = (i <= yres/2 ? i : yres-i)/(yres/2.0);
         for (j = 0; j < xres; j++) {
-            x = (j <= xres/2 ? j : xres-j)/(xres/2.0);
-            f = pow(hypot(x, y) + 0.01, -3);
-            f *= g_rand_double(rng);
-            phi = 2.0*G_PI*g_rand_double(rng);
-            re[i*xres + j] = f*sin(phi);
-            im[i*xres + j] = f*cos(phi);
+            gdouble x = (j <= xres/2 ? j : xres-j)/(xres/2.0);
+            gdouble f = g_rand_double(rng);
+            gdouble r = hypot(x, y);
+            gdouble phi = 2.0*G_PI*g_rand_double(rng);
+
+            if (power_enable)
+                f /= pow(r, power_p);
+            if (gauss_enable) {
+                gdouble t = r/gauss_tau;
+                f /= exp(0.5*t*t);
+            }
+            {
+                gdouble s, c;
+                _gwy_sincos(phi, &s, &c);
+                re[i*xres + j] = f*s;
+                im[i*xres + j] = f*c;
+            }
         }
     }
+    re[0] = im[0] = 0.0;
 
     gwy_data_field_2dfft_raw(controls->in_re, controls->in_im,
                              dfield, controls->out_im,

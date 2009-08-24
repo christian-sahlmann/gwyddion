@@ -1,3 +1,23 @@
+/*
+ *  @(#) $Id$
+ *  Copyright (C) 2009 David Necas (Yeti).
+ *  E-mail: yeti@gwyddion.net.
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
+ */
+
 #ifndef __GWY_DIMENSIONS_H__
 #define __GWY_DIMENSIONS_H__ 1
 
@@ -9,15 +29,21 @@ typedef struct {
     gdouble measure;
     gchar *xyunits;
     gchar *zunits;
-    gint xyexponent;
-    gint zexponent;
+    gint xypow10;
+    gint zpow10;
 } GwyDimensionArgs;
 
 #define GWY_DIMENSION_ARGS_INIT { 256, 256, 1.0, NULL, NULL, 0, 0 }
 
 typedef struct {
     GwyDimensionArgs *args;
-    GwySIUnit *siunit;
+    /* These are provided for the user callbacks to that he can easily update
+     * unit labels */
+    GwySIValueFormat *xyvf;
+    GwySIValueFormat *zvf;
+    GwySIUnit *xysiunit;
+    GwySIUnit *zsiunit;
+    GwyDataField *template_;
     GtkWidget *table;
     GtkAdjustment *xres;
     GtkAdjustment *yres;
@@ -26,9 +52,9 @@ typedef struct {
     GtkAdjustment *yreal;
     GtkWidget *xunitslab;
     GtkWidget *yunitslab;
-    GtkWidget *xyexponent;
+    GtkWidget *xypow10;
     GtkWidget *xyunits;
-    GtkWidget *zexponent;
+    GtkWidget *zpow10;
     GtkWidget *zunits;
     gboolean in_update;
 } GwyDimensions;
@@ -79,9 +105,11 @@ gwy_dimensions_make_real(GtkTable *table,
     obj = gtk_adjustment_new(value, 0.001, 10000.0, 1, 100, 0);
     adj = GTK_ADJUSTMENT(obj);
     spin = gtk_spin_button_new(adj, 0, 3);
+    gtk_label_set_mnemonic_widget(GTK_LABEL(label), spin);
     gtk_table_attach(table, spin, 1, 2, row, row+1, GTK_FILL, 0, 0, 0);
 
     *unitlab = gtk_label_new(units);
+    gtk_label_set_use_markup(GTK_LABEL(*unitlab), TRUE);
     gtk_misc_set_alignment(GTK_MISC(*unitlab), 0.0, 0.5);
     gtk_table_attach(table, *unitlab, 2, 3, row, row+1, GTK_FILL, 0, 0, 0);
 
@@ -104,6 +132,7 @@ gwy_dimensions_make_units(GtkTable *table,
 
     *combo = gwy_combo_box_metric_unit_new(NULL, NULL,
                                            pwr - 6, pwr + 6, siunit, pwr);
+    gtk_label_set_mnemonic_widget(GTK_LABEL(label), *combo);
     gtk_table_attach(table, *combo, 1, 2, row, row+1, GTK_FILL, 0, 0, 0);
 
     changer = gtk_button_new_with_label(_("Change"));
@@ -121,22 +150,22 @@ gwy_dimensions_set_combo_from_unit(GtkComboBox *combo,
 
     unit = gwy_si_unit_new_parse(str, &power10);
     gwy_combo_box_metric_unit_set_unit(combo, power10 - 6, power10 + 6, unit);
+    gwy_enum_combo_box_set_active(combo, power10);
     g_object_unref(unit);
 }
 
 static void
-gwy_dimensions_units_changed(GtkWidget *button,
-                             GwyDimensions *dims)
+gwy_dimensions_units_changed(GtkWidget *widget,
+                             GtkComboBox *combo,
+                             gchar **unitstr)
 {
     GtkWidget *dialog, *hbox, *label, *toplevel;
     GtkEntry *entry;
     GtkWindow *parent = NULL;
-    const gchar *id, *unit;
+    const gchar *unit;
     gint response;
 
-    id = g_object_get_data(G_OBJECT(button), "id");
-    g_return_if_fail(gwy_strequal(id, "xy") || gwy_strequal(id, "z"));
-    toplevel = gtk_widget_get_toplevel(dims->table);
+    toplevel = gtk_widget_get_toplevel(widget);
     if (GTK_WIDGET_TOPLEVEL(toplevel) && GTK_IS_WINDOW(toplevel))
         parent = GTK_WINDOW(toplevel);
     dialog = gtk_dialog_new_with_buttons(_("Change Units"), parent,
@@ -156,10 +185,7 @@ gwy_dimensions_units_changed(GtkWidget *button,
     gtk_box_pack_start(GTK_BOX(hbox), label, TRUE, TRUE, 0);
 
     entry = GTK_ENTRY(gtk_entry_new());
-    if (gwy_strequal(id, "xy"))
-        gtk_entry_set_text(entry, dims->args->xyunits);
-    else if (gwy_strequal(id, "z"))
-        gtk_entry_set_text(entry, dims->args->zunits);
+    gtk_entry_set_text(entry, *unitstr);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), GTK_WIDGET(entry));
     gtk_entry_set_activates_default(entry, TRUE);
     gtk_box_pack_start(GTK_BOX(hbox), GTK_WIDGET(entry), TRUE, TRUE, 0);
@@ -172,25 +198,16 @@ gwy_dimensions_units_changed(GtkWidget *button,
     }
 
     unit = gtk_entry_get_text(entry);
-    if (gwy_strequal(id, "xy")) {
-        g_free(dims->args->xyunits);
-        dims->args->xyunits = g_strdup(unit);
-        gwy_dimensions_set_combo_from_unit(GTK_COMBO_BOX(dims->xyexponent),
-                                           unit);
-    }
-    else if (gwy_strequal(id, "z")) {
-        g_free(dims->args->zunits);
-        dims->args->zunits = g_strdup(unit);
-        gwy_dimensions_set_combo_from_unit(GTK_COMBO_BOX(dims->zexponent),
-                                           unit);
-    }
+    g_free(*unitstr);
+    *unitstr = g_strdup(unit);
+    gwy_dimensions_set_combo_from_unit(combo, unit);
 
     gtk_widget_destroy(dialog);
 }
 
 static void
-gwy_dimensions_xres_changed(GtkAdjustment *adj,
-                            GwyDimensions *dims)
+gwy_dimensions_xres_changed(GwyDimensions *dims,
+                            GtkAdjustment *adj)
 {
     GwyDimensionArgs *args = dims->args;
 
@@ -207,8 +224,8 @@ gwy_dimensions_xres_changed(GtkAdjustment *adj,
 }
 
 static void
-gwy_dimensions_yres_changed(GtkAdjustment *adj,
-                            GwyDimensions *dims)
+gwy_dimensions_yres_changed(GwyDimensions *dims,
+                            GtkAdjustment *adj)
 {
     GwyDimensionArgs *args = dims->args;
 
@@ -225,8 +242,8 @@ gwy_dimensions_yres_changed(GtkAdjustment *adj,
 }
 
 static void
-gwy_dimensions_xreal_changed(GtkAdjustment *adj,
-                             GwyDimensions *dims)
+gwy_dimensions_xreal_changed(GwyDimensions *dims,
+                             GtkAdjustment *adj)
 {
     GwyDimensionArgs *args = dims->args;
 
@@ -239,8 +256,8 @@ gwy_dimensions_xreal_changed(GtkAdjustment *adj,
 }
 
 static void
-gwy_dimensions_yreal_changed(GtkAdjustment *adj,
-                             GwyDimensions *dims)
+gwy_dimensions_yreal_changed(GwyDimensions *dims,
+                             GtkAdjustment *adj)
 {
     GwyDimensionArgs *args = dims->args;
 
@@ -253,25 +270,109 @@ gwy_dimensions_yreal_changed(GtkAdjustment *adj,
 }
 
 static void
-gwy_dimensions_xyreseq_toggled(GtkToggleButton *toggle,
-                               GwyDimensions *dims)
+gwy_dimensions_xyreseq_toggled(GwyDimensions *dims,
+                               GtkToggleButton *toggle)
 {
-    if (gtk_toggle_button_get_active(toggle))
+    if (!dims->in_update && gtk_toggle_button_get_active(toggle))
         gtk_adjustment_set_value(dims->yres, dims->args->xres);
 }
 
+static void
+gwy_dimensions_xyunits_changed(GwyDimensions *dims)
+{
+    gwy_dimensions_units_changed(dims->table, GTK_COMBO_BOX(dims->xypow10),
+                                 &dims->args->xyunits);
+}
+
+static void
+gwy_dimensions_zunits_changed(GwyDimensions *dims)
+{
+    gwy_dimensions_units_changed(dims->table, GTK_COMBO_BOX(dims->zpow10),
+                                 &dims->args->zunits);
+}
+
+static void
+gwy_dimensions_xypow10_changed(GwyDimensions *dims,
+                               GtkComboBox *combo)
+{
+    dims->args->xypow10 = gwy_enum_combo_box_get_active(combo);
+    gwy_si_unit_set_from_string(dims->xysiunit, dims->args->xyunits);
+    gwy_si_unit_get_format_for_power10(dims->xysiunit,
+                                       GWY_SI_UNIT_FORMAT_VFMARKUP,
+                                       dims->args->xypow10, dims->xyvf);
+    /* Update our parameter unit labels. */
+    gtk_label_set_markup(GTK_LABEL(dims->xunitslab), dims->xyvf->units);
+    gtk_label_set_markup(GTK_LABEL(dims->yunitslab), dims->xyvf->units);
+}
+
+static void
+gwy_dimensions_zpow10_changed(GwyDimensions *dims,
+                              GtkComboBox *combo)
+{
+    dims->args->zpow10 = gwy_enum_combo_box_get_active(combo);
+    gwy_si_unit_set_from_string(dims->zsiunit, dims->args->zunits);
+    gwy_si_unit_get_format_for_power10(dims->zsiunit,
+                                       GWY_SI_UNIT_FORMAT_VFMARKUP,
+                                       dims->args->zpow10, dims->zvf);
+}
+
+static void
+gwy_dimensions_use_template(GwyDimensions *dims)
+{
+    gint xres = gwy_data_field_get_xres(dims->template_);
+    gint yres = gwy_data_field_get_yres(dims->template_);
+    gdouble xreal = gwy_data_field_get_xreal(dims->template_);
+    gdouble yreal = gwy_data_field_get_yreal(dims->template_);
+    GwySIValueFormat *xyvf
+        = gwy_data_field_get_value_format_xy(dims->template_,
+                                             GWY_SI_UNIT_FORMAT_PLAIN, NULL);
+    GwySIValueFormat *zvf
+        = gwy_data_field_get_value_format_z(dims->template_,
+                                            GWY_SI_UNIT_FORMAT_PLAIN, NULL);
+
+    dims->args->measure = xreal/xyvf->magnitude/xres;
+    dims->in_update = TRUE;
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(dims->xyreseq),
+                                 xres == yres);
+    gtk_adjustment_set_value(dims->xres, xres);
+    gtk_adjustment_set_value(dims->yres, yres);
+    gtk_adjustment_set_value(dims->xreal, xreal/xyvf->magnitude);
+    gtk_adjustment_set_value(dims->yreal, yreal/xyvf->magnitude);
+    g_free(dims->args->xyunits);
+    dims->args->xyunits = g_strdup(xyvf->units);
+    gwy_dimensions_set_combo_from_unit(GTK_COMBO_BOX(dims->xypow10),
+                                       xyvf->units);
+    g_free(dims->args->zunits);
+    dims->args->zunits = g_strdup(zvf->units);
+    gwy_dimensions_set_combo_from_unit(GTK_COMBO_BOX(dims->zpow10),
+                                       zvf->units);
+    dims->in_update = FALSE;
+
+    gwy_si_unit_value_format_free(xyvf);
+    gwy_si_unit_value_format_free(zvf);
+}
+
 static GwyDimensions*
-gwy_dimensions_new(GwyDimensionArgs *args)
+gwy_dimensions_new(GwyDimensionArgs *args,
+                   GwyDataField *template_)
 {
     GwyDimensions *dims = g_new0(GwyDimensions, 1);
-    GtkWidget *label;
+    GtkWidget *label, *button, *align;
     GtkTable *table;
     gint row;
 
     dims->args = args;
-    dims->siunit = gwy_si_unit_new(NULL);
+    dims->template_ = g_object_ref(template_);
+    dims->xysiunit = gwy_si_unit_new(dims->args->xyunits);
+    dims->xyvf = gwy_si_unit_get_format_for_power10(dims->xysiunit,
+                                                    GWY_SI_UNIT_FORMAT_VFMARKUP,
+                                                    args->xypow10, NULL);
+    dims->zsiunit = gwy_si_unit_new(dims->args->zunits);
+    dims->zvf = gwy_si_unit_get_format_for_power10(dims->zsiunit,
+                                                   GWY_SI_UNIT_FORMAT_VFMARKUP,
+                                                   args->zpow10, NULL);
 
-    dims->table = gtk_table_new(10, 3, FALSE);
+    dims->table = gtk_table_new(11, 3, FALSE);
     table = GTK_TABLE(dims->table);
     gtk_table_set_row_spacings(table, 2);
     gtk_table_set_col_spacings(table, 6);
@@ -300,13 +401,12 @@ gwy_dimensions_new(GwyDimensionArgs *args)
     gtk_table_attach(table, label, 0, 3, row, row+1, GTK_FILL, 0, 0, 0);
     row++;
 
-    /* XXX: Must recalculate the unit strings! */
-    dims->xres = gwy_dimensions_make_real(table, row++, _("_Width:"),
-                                          args->xres * args->measure,
-                                          args->xyunits, &dims->xunitslab);
-    dims->yres = gwy_dimensions_make_real(table, row++, _("H_eight:"),
-                                          args->yres * args->measure,
-                                          args->zunits, &dims->yunitslab);
+    dims->xreal = gwy_dimensions_make_real(table, row++, _("_Width:"),
+                                           args->xres * args->measure,
+                                           dims->xyvf->units, &dims->xunitslab);
+    dims->yreal = gwy_dimensions_make_real(table, row++, _("H_eight:"),
+                                           args->yres * args->measure,
+                                           dims->xyvf->units, &dims->yunitslab);
     gtk_table_set_row_spacing(table, row-1, 8);
 
     /* Units */
@@ -314,31 +414,48 @@ gwy_dimensions_new(GwyDimensionArgs *args)
     gtk_table_attach(table, label, 0, 3, row, row+1, GTK_FILL, 0, 0, 0);
     row++;
 
-    gwy_si_unit_set_from_string(dims->siunit, args->xyunits);
     dims->xyunits = gwy_dimensions_make_units(table, row++,
-                                              _("Dimension units:"),
-                                              args->xyexponent, dims->siunit,
-                                              &dims->xyexponent);
+                                              _("_Dimension units:"),
+                                              args->xypow10, dims->xysiunit,
+                                              &dims->xypow10);
 
-    gwy_si_unit_set_from_string(dims->siunit, args->zunits);
     dims->zunits = gwy_dimensions_make_units(table, row++,
-                                             _("Value units:"),
-                                             args->zexponent, dims->siunit,
-                                             &dims->zexponent);
+                                             _("_Value units:"),
+                                             args->zpow10, dims->zsiunit,
+                                             &dims->zpow10);
+
+    /* Template */
+    if (dims->template_) {
+        gtk_table_set_row_spacing(table, row-1, 8);
+        align = gtk_alignment_new(0.0, 0.5, 0.0, 0.0);
+        gtk_table_attach(table, align, 0, 3, row, row+1, GTK_FILL, 0, 0, 0);
+
+        button = gtk_button_new_with_mnemonic(_("_Like Current Channel"));
+        gtk_container_add(GTK_CONTAINER(align), button);
+        g_signal_connect_swapped(button, "clicked",
+                                 G_CALLBACK(gwy_dimensions_use_template), dims);
+        row++;
+    }
 
     /* Final setup */
-    /*
-    g_signal_connect(dims->xres, "value-changed",
-                     G_CALLBACK(gwy_dimensions_xres_changed), dims);
-    g_signal_connect(dims->yres, "value-changed",
-                     G_CALLBACK(gwy_dimensions_yres_changed), dims);
-    g_signal_connect(dims->xyreseq, "toggled",
-                     G_CALLBACK(gwy_dimensions_xyreseq_toggled), dims);
-    g_signal_connect(dims->xreal, "value-changed",
-                     G_CALLBACK(gwy_dimensions_xreal_changed), dims);
-    g_signal_connect(dims->yreal, "value-changed",
-                     G_CALLBACK(gwy_dimensions_yreal_changed), dims);
-                     */
+    g_signal_connect_swapped(dims->xres, "value-changed",
+                             G_CALLBACK(gwy_dimensions_xres_changed), dims);
+    g_signal_connect_swapped(dims->yres, "value-changed",
+                             G_CALLBACK(gwy_dimensions_yres_changed), dims);
+    g_signal_connect_swapped(dims->xyreseq, "toggled",
+                             G_CALLBACK(gwy_dimensions_xyreseq_toggled), dims);
+    g_signal_connect_swapped(dims->xreal, "value-changed",
+                             G_CALLBACK(gwy_dimensions_xreal_changed), dims);
+    g_signal_connect_swapped(dims->yreal, "value-changed",
+                             G_CALLBACK(gwy_dimensions_yreal_changed), dims);
+    g_signal_connect_swapped(dims->xyunits, "clicked",
+                             G_CALLBACK(gwy_dimensions_xyunits_changed), dims);
+    g_signal_connect_swapped(dims->zunits, "clicked",
+                             G_CALLBACK(gwy_dimensions_zunits_changed), dims);
+    g_signal_connect_swapped(dims->xypow10, "changed",
+                             G_CALLBACK(gwy_dimensions_xypow10_changed), dims);
+    g_signal_connect_swapped(dims->zpow10, "changed",
+                             G_CALLBACK(gwy_dimensions_zpow10_changed), dims);
 
     return dims;
 }
@@ -352,7 +469,11 @@ gwy_dimensions_get_widget(GwyDimensions *dims)
 static void
 gwy_dimensions_free(GwyDimensions *dims)
 {
-    g_object_unref(dims->siunit);
+    g_object_unref(dims->xysiunit);
+    g_object_unref(dims->zsiunit);
+    gwy_si_unit_value_format_free(dims->xyvf);
+    gwy_si_unit_value_format_free(dims->zvf);
+    g_object_unref(dims->template_);
     g_free(dims);
 }
 
@@ -405,11 +526,11 @@ gwy_dimensions_load_args(GwyDimensionArgs *args,
     g_string_append(g_string_truncate(key, len), "measure");
     gwy_container_gis_double_by_name(settings, key->str, &args->measure);
 
-    g_string_append(g_string_truncate(key, len), "xyexponent");
-    gwy_container_gis_int32_by_name(settings, key->str, &args->xyexponent);
+    g_string_append(g_string_truncate(key, len), "xypow10");
+    gwy_container_gis_int32_by_name(settings, key->str, &args->xypow10);
 
-    g_string_append(g_string_truncate(key, len), "zexponent");
-    gwy_container_gis_int32_by_name(settings, key->str, &args->zexponent);
+    g_string_append(g_string_truncate(key, len), "zpow10");
+    gwy_container_gis_int32_by_name(settings, key->str, &args->zpow10);
 
     g_string_append(g_string_truncate(key, len), "xyunits");
     if (gwy_container_gis_string_by_name(settings, key->str, &s)) {
@@ -449,11 +570,11 @@ gwy_dimensions_save_args(const GwyDimensionArgs *args,
     g_string_append(g_string_truncate(key, len), "measure");
     gwy_container_set_double_by_name(settings, key->str, args->measure);
 
-    g_string_append(g_string_truncate(key, len), "xyexponent");
-    gwy_container_set_int32_by_name(settings, key->str, args->xyexponent);
+    g_string_append(g_string_truncate(key, len), "xypow10");
+    gwy_container_set_int32_by_name(settings, key->str, args->xypow10);
 
-    g_string_append(g_string_truncate(key, len), "zexponent");
-    gwy_container_set_int32_by_name(settings, key->str, args->zexponent);
+    g_string_append(g_string_truncate(key, len), "zpow10");
+    gwy_container_set_int32_by_name(settings, key->str, args->zpow10);
 
     g_string_append(g_string_truncate(key, len), "xyunits");
     s = args->xyunits;
