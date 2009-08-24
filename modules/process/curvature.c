@@ -417,7 +417,11 @@ curvature_calculate(GwyDataField *dfield,
     params[PARAM_R1] = 1.0/cx;
     params[PARAM_R2] = 1.0/cy;
     params[PARAM_PHI1] = fmod(phi, G_PI);
+    if (params[PARAM_PHI1] > G_PI/2.0)
+        params[PARAM_PHI1] -= G_PI;
     params[PARAM_PHI2] = fmod(phi + G_PI/2.0, G_PI);
+    if (params[PARAM_PHI2] > G_PI/2.0)
+        params[PARAM_PHI2] -= G_PI;
 
     ok = TRUE;
     for (i = 0; i < 2; i++) {
