@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2009-08-12 04:01+0200\n"
-"PO-Revision-Date: 2009-08-13 00:25+0300\n"
+"POT-Creation-Date: 2009-08-24 03:59+0200\n"
+"PO-Revision-Date: 2009-08-24 12:54+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@km.ru>\n"
 "Language-Team: russian <ru@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -186,10 +186,12 @@ msgid "Grain number"
 msgstr "Номер зерна"
 
 #: libprocess/gwygrainvalue.c:71
+#: modules/process/curvature.c:122
 msgid "Center x position"
 msgstr "Положение центра x"
 
 #: libprocess/gwygrainvalue.c:80
+#: modules/process/curvature.c:123
 msgid "Center y position"
 msgstr "Положение центра y"
 
@@ -292,6 +294,7 @@ msgstr "Позиция"
 
 #: libprocess/gwygrainvalue.c:914
 #: app/meta.c:286
+#: modules/process/curvature.c:793
 #: modules/tools/level3.c:461
 #: modules/tools/readvalue.c:269
 msgid "Value"
@@ -733,6 +736,7 @@ msgstr "точек"
 #: modules/file/rawfile.c:380
 #: modules/process/angle_dist.c:170
 #: modules/process/calibrate.c:295
+#: modules/process/curvature.c:646
 #: modules/process/cwt.c:132
 #: modules/process/drift.c:230
 #: modules/process/dwt.c:164
@@ -810,7 +814,7 @@ msgstr "Точки"
 msgid "Line + points"
 msgstr "Линия + точки"
 
-#: libgwydgets/gwydgetutils.c:561
+#: libgwydgets/gwydgetutils.c:563
 msgid "Change Mask Color"
 msgstr "Изменить цвет маски"
 
@@ -821,6 +825,7 @@ msgstr "Количество"
 
 #: libgwydgets/gwygrainvaluemenu.c:181
 #: libgwydgets/gwygrainvaluemenu.c:194
+#: modules/process/curvature.c:784
 #, fuzzy
 msgid "Symbol"
 msgstr "Символ"
@@ -2363,7 +2368,7 @@ msgid "Garbage before first header section."
 msgstr "Мусор перед первой частью заголовка."
 
 #: modules/file/ezdfile.c:305
-#: modules/file/microprof.c:284
+#: modules/file/microprof.c:461
 #: modules/file/nanoscope-ii.c:245
 msgid "Malformed header line (missing =)."
 msgstr "Искаженная строка заголовка (отсутствует =)."
@@ -2619,27 +2624,31 @@ msgstr "Заголовок файла слишком короткий."
 msgid "File header is larger than file."
 msgstr "Заголовок файла больше, чем сам файл."
 
-#: modules/file/microprof.c:64
+#: modules/file/microprof.c:96
 msgid "Imports MicroProf FRT profilometer data files."
 msgstr "Импортирует файлы данных профилометра MicroProf FRT."
 
-#: modules/file/microprof.c:77
-msgid "MicroProf FRT files (.txt)"
-msgstr "Файлы MicroProf FRT (.txt)"
+#: modules/file/microprof.c:109
+msgid "MicroProf FRT files (.frt)"
+msgstr "Файлы MicroProf FRT (.frt)"
 
-#: modules/file/microprof.c:234
+#: modules/file/microprof.c:115
+msgid "MicroProf FRT text files (.txt)"
+msgstr "Текстовые файлы MicroProf FRT (.txt)"
+
+#: modules/file/microprof.c:411
 msgid "File contains less than XSize*YSize data points."
 msgstr "Файл содержит меньше точек данных, чем XSize*YSize."
 
-#: modules/file/mifile.c:149
+#: modules/file/mifile.c:157
 msgid "Imports Molecular Imaging MI data files."
 msgstr "Импортирует файлы данных Molecular Imaging MI."
 
-#: modules/file/mifile.c:162
+#: modules/file/mifile.c:170
 msgid "PicoView Data Files (.mi)"
 msgstr "Файлы данных PicoView (.mi)"
 
-#: modules/file/mifile.c:356
+#: modules/file/mifile.c:366
 msgid "Spectroscopy Graph"
 msgstr "График спектроскопии"
 
@@ -2677,6 +2686,7 @@ msgid "Parameter header is truncated"
 msgstr "Заголовок параметров усечён"
 
 #: modules/file/nanoeducator.c:906
+#: modules/process/curvature.c:485
 #: modules/tools/profile.c:535
 #, c-format
 msgid "Profile %d"
@@ -2697,6 +2707,30 @@ msgstr "Спектры ВАХ"
 #: modules/file/nanoeducator.c:1244
 msgid "I-Z spectra"
 msgstr "Спектры I-Z"
+
+#: modules/file/nanonics.c:85
+msgid "Imports Nanonics NAN data files."
+msgstr "Импортирует файлы данных Nanoniсs NAN."
+
+#: modules/file/nanonics.c:98
+msgid "Nanonics files (.nan)"
+msgstr "Файлы Nanoniсs (.nan)"
+
+#: modules/file/nanonics.c:149
+#: modules/file/nanonics.c:324
+#, c-format
+msgid "Expected header end marker ‘%s’ was not found."
+msgstr "Ожидаемый маркер конца заголовка ‘%s’ не был найден."
+
+#: modules/file/nanonics.c:176
+#, c-format
+msgid "HeaderLength %u differs from actual header length %u"
+msgstr "HeaderLength %u отличается от реальной длины заголовка %u"
+
+#: modules/file/nanonics.c:289
+#, c-format
+msgid "Expected header start marker ‘%s’ but found ‘%s’."
+msgstr "Ожидался маркер начала заголовка ‘%s’, но был найден ‘%s’."
 
 #: modules/file/nanonis.c:96
 msgid "Imports Nanonis SXM data files."
@@ -3662,27 +3696,33 @@ msgstr "Достигнут конец файла в цветовых данны�
 msgid "Unknown line %d"
 msgstr "Неизвестная строка %d"
 
-#: modules/file/rhk-sm4.c:205
+#: modules/file/rhk-sm4.c:331
 msgid "Imports RHK Technology SM4 data files."
 msgstr "Импортирует файлы данных RHK Technology SM4."
 
-#: modules/file/rhk-sm4.c:225
+#: modules/file/rhk-sm4.c:351
 msgid "RHK SM4 files (.sm4)"
 msgstr "Файлы RHK SM4 (.sm4)"
 
-#: modules/file/rhk-sm4.c:321
-#, fuzzy
-msgid "Page index header is truncated"
-msgstr "Заголовок индекса страниц усечён"
-
-#: modules/file/rhk-sm4.c:350
-msgid "Object list is truncated."
-msgstr "Список объектов усечён"
-
-#: modules/file/rhk-sm4.c:365
+#: modules/file/rhk-sm4.c:532
 #, c-format
-msgid "Object of type %u is truncated."
-msgstr "Объект типа %u усечен."
+msgid "Object %s is truncated."
+msgstr "Объект %s усечён."
+
+#: modules/file/rhk-sm4.c:760
+#, c-format
+msgid "Object list in %s is truncated."
+msgstr "Список объектов в %s усечён."
+
+#: modules/file/rhk-sm4.c:777
+#, c-format
+msgid "Object of type %s is truncated."
+msgstr "Объект типа %s усечен."
+
+#: modules/file/rhk-sm4.c:802
+#, c-format
+msgid "Cannot find object %s in %s."
+msgstr "Невозможно найти объект %s в %s."
 
 #: modules/file/rhk-spm32.c:161
 msgid "Imports RHK Technology SPM32 data files."
@@ -4112,6 +4152,7 @@ msgstr "_Функция:"
 #: modules/graph/graph_cd.c:278
 #: modules/graph/graph_fdfit.c:334
 #: modules/graph/graph_fit.c:334
+#: modules/process/curvature.c:776
 msgid "Parameter"
 msgstr "Параметр"
 
@@ -4575,47 +4616,47 @@ msgstr "Использовать _аппроксимацию локальной 
 msgid "_Plane size:"
 msgstr "Размер _плоскости:"
 
-#: modules/process/arithmetic.c:88
+#: modules/process/arithmetic.c:106
 msgid "Simple arithmetic operations with two data fields (or a data field and a scalar)."
 msgstr "Простые арифметические операции с двумя полями данных (или полем данных и числом)."
 
-#: modules/process/arithmetic.c:103
+#: modules/process/arithmetic.c:121
 msgid "/M_ultidata/_Arithmetic..."
 msgstr "/М_ножественные данные/_Арифметика..."
 
-#: modules/process/arithmetic.c:107
+#: modules/process/arithmetic.c:125
 msgid "Arithmetic operations on data"
 msgstr "Арифметические операции над данными"
 
-#: modules/process/arithmetic.c:151
+#: modules/process/arithmetic.c:171
 msgid "Arithmetic"
 msgstr "Арифметические операции"
 
-#: modules/process/arithmetic.c:166
+#: modules/process/arithmetic.c:186
 #: modules/process/superresolution.c:159
 msgid "Operands:"
 msgstr "Операнды:"
 
-#: modules/process/arithmetic.c:195
+#: modules/process/arithmetic.c:219
 msgid "_Expression:"
 msgstr "_Выражение:"
 
-#: modules/process/arithmetic.c:370
+#: modules/process/arithmetic.c:400
 #: modules/process/superresolution.c:304
 msgid "Pixel dimensions differ"
 msgstr "Размеры в пикселях отличаются"
 
-#: modules/process/arithmetic.c:372
+#: modules/process/arithmetic.c:402
 #: modules/process/superresolution.c:306
 msgid "Lateral dimensions are different physical quantities"
 msgstr "Поперечные направления отображают разные физические величины"
 
-#: modules/process/arithmetic.c:375
+#: modules/process/arithmetic.c:405
 #: modules/process/superresolution.c:309
 msgid "Physical dimensions differ"
 msgstr "Физические размеры отличаются"
 
-#: modules/process/arithmetic.c:422
+#: modules/process/arithmetic.c:487
 #: modules/process/superresolution.c:353
 #, fuzzy
 msgid "Calculated"
@@ -4908,6 +4949,115 @@ msgstr "Различие Y"
 #, fuzzy
 msgid "Direction difference"
 msgstr "Разница направлений"
+
+#: modules/process/curvature.c:124
+msgid "Center value"
+msgstr "Значение центра"
+
+#: modules/process/curvature.c:125
+msgid "Curvature radius 1"
+msgstr "Радиус кривизны 1"
+
+#: modules/process/curvature.c:126
+msgid "Curvature radius 2"
+msgstr "Радиус кривизны 2"
+
+#: modules/process/curvature.c:127
+msgid "Direction 1"
+msgstr "Направление 1"
+
+#: modules/process/curvature.c:128
+msgid "Direction 2"
+msgstr "Направление 2"
+
+#: modules/process/curvature.c:154
+msgid "Calculates overall curvature."
+msgstr "Рассчитывает общую кривизну."
+
+#: modules/process/curvature.c:168
+msgid "/_Level/_Curvature..."
+msgstr "/_Выравнивание/_Кривизна..."
+
+#: modules/process/curvature.c:172
+msgid "Calculate overall curvature"
+msgstr "Рассчитать общую кривизну"
+
+#: modules/process/curvature.c:202
+msgid "Curvature: Lateral dimensions and value must be the same physical quantity."
+msgstr "Кривизна: пространственные размерности и значения должны быть одной физической величиной."
+
+#: modules/process/curvature.c:476
+msgid "Curvature Sections"
+msgstr "Сечения кривизны"
+
+#: modules/process/curvature.c:644
+msgid "Curvature"
+msgstr "Кривизна"
+
+#: modules/process/curvature.c:700
+#: modules/process/slope_dist.c:216
+msgid "Output type"
+msgstr "Тип вывода"
+
+#: modules/process/curvature.c:707
+msgid "_Set selection"
+msgstr "_Установить выделение"
+
+#: modules/process/curvature.c:717
+msgid "_Plot graph"
+msgstr "Строить _график"
+
+#: modules/process/curvature.c:728
+#: modules/process/facet-level.c:303
+#: modules/process/level.c:273
+#: modules/process/polylevel.c:495
+msgid "Masking Mode"
+msgstr "Режим использования маски"
+
+#: modules/process/curvature.c:736
+#: modules/process/facet-level.c:277
+#: modules/process/level.c:247
+#: modules/process/polylevel.c:503
+msgid "_Exclude region under mask"
+msgstr "_Исключить область под маской"
+
+#: modules/process/curvature.c:738
+#: modules/process/facet-level.c:278
+#: modules/process/level.c:248
+#: modules/process/polylevel.c:505
+msgid "Exclude region _outside mask"
+msgstr "Исключить область с_наружи маски"
+
+#: modules/process/curvature.c:740
+#: modules/process/facet-level.c:279
+#: modules/process/level.c:249
+#: modules/process/polylevel.c:507
+msgid "Use entire _image (ignore mask)"
+msgstr "Использовать _всё изображение (игнорировать маску)"
+
+#: modules/process/curvature.c:804
+#: modules/process/grain_dist.c:830
+#: modules/tools/distance.c:221
+#: modules/tools/roughness.c:835
+#: modules/tools/stats.c:396
+msgid "Save table to a file"
+msgstr "Сохранить таблицу в файл"
+
+#: modules/process/curvature.c:809
+#: modules/process/grain_dist.c:835
+#: modules/tools/distance.c:226
+#: modules/tools/roughness.c:840
+#: modules/tools/stats.c:401
+msgid "Copy table to clipboard"
+msgstr "Скопировать таблицу в буфер обмена"
+
+#: modules/process/curvature.c:936
+msgid "Axes are outside the image."
+msgstr "Оси снаружи изображения."
+
+#: modules/process/curvature.c:1001
+msgid "Save Curvature"
+msgstr "Сохранить кривизну"
 
 #: modules/process/cwt.c:63
 msgid "Two-dimensional CWT (Continuous Wavelet Transform)."
@@ -5242,30 +5392,6 @@ msgstr "Выравнивание граней"
 msgid "Facet-leveling"
 msgstr "Выравнивание граней"
 
-#: modules/process/facet-level.c:277
-#: modules/process/level.c:247
-#: modules/process/polylevel.c:503
-msgid "_Exclude region under mask"
-msgstr "_Исключить область под маской"
-
-#: modules/process/facet-level.c:278
-#: modules/process/level.c:248
-#: modules/process/polylevel.c:505
-msgid "Exclude region _outside mask"
-msgstr "Исключить область с_наружи маски"
-
-#: modules/process/facet-level.c:279
-#: modules/process/level.c:249
-#: modules/process/polylevel.c:507
-msgid "Use entire _image (ignore mask)"
-msgstr "Использовать _всё изображение (игнорировать маску)"
-
-#: modules/process/facet-level.c:303
-#: modules/process/level.c:273
-#: modules/process/polylevel.c:495
-msgid "Masking Mode"
-msgstr "Режим использования маски"
-
 #: modules/process/facet_analysis.c:161
 msgid "Visualizes, marks and measures facet orientation."
 msgstr "Показывает, помечает и измеряет положение граней в пространстве."
@@ -5581,7 +5707,6 @@ msgid "/Simulat_e/_Spectral Synthesis..."
 msgstr "/Сим_улировать/_Спектральный синтез..."
 
 #: modules/process/fft_synth.c:145
-#, fuzzy
 msgid "Generate surface using spectral synthesis"
 msgstr "Создать поверхность используя спектральный синтез"
 
@@ -5602,7 +5727,6 @@ msgid "RMS:"
 msgstr ""
 
 #: modules/process/fft_synth.c:304
-#, fuzzy
 msgid "Random seed:"
 msgstr "Случайное зерно:"
 
@@ -6037,20 +6161,6 @@ msgstr "Общий объём зерна (минимум):"
 msgid "Total grain volume (laplacian):"
 msgstr "Общий объём зерна (по Лапласу):"
 
-#: modules/process/grain_dist.c:830
-#: modules/tools/distance.c:221
-#: modules/tools/roughness.c:835
-#: modules/tools/stats.c:396
-msgid "Save table to a file"
-msgstr "Сохранить таблицу в файл"
-
-#: modules/process/grain_dist.c:835
-#: modules/tools/distance.c:226
-#: modules/tools/roughness.c:840
-#: modules/tools/stats.c:401
-msgid "Copy table to clipboard"
-msgstr "Скопировать таблицу в буфер обмена"
-
 #: modules/process/grain_mark.c:144
 msgid "Marks grains by thresholding (height, slope, curvature)."
 msgstr "Помечает зёрна по порогу (высоты, размера)."
@@ -6263,7 +6373,6 @@ msgid "Immersed detail"
 msgstr "Встроенный фрагмент"
 
 #: modules/process/indent_analyze.c:263
-#, fuzzy
 msgid "Do nothing"
 msgstr "Ничего не делать"
 
@@ -7312,10 +7421,6 @@ msgstr "График _наклонов (θ)"
 #: modules/process/slope_dist.c:200
 msgid "Slope Distribution"
 msgstr "Распределение наклонов"
-
-#: modules/process/slope_dist.c:216
-msgid "Output type"
-msgstr "Тип вывода"
 
 #: modules/process/slope_dist.c:428
 msgid "Angular Slope Distribution"
