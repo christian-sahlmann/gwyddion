@@ -13,6 +13,7 @@ Modules:
 - Curvature (new): Calculates global curvature of second-order surfaces.
 - IGOR (new): Imports IGOR Pro binary waves.
 - RHK-SM4 (new): Imports RHK Technology SM4 files.
+- Nanonics (new): Imports Nanonics NAN files.
 - Arithmetic: New quantities bx1, by1, bx2, ..., by5 represent the local x-
   and y-derivatives.
 - Arithmetic: History of previously used expressions is remembered.
