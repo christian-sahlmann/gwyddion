@@ -35,17 +35,6 @@
 
 #define FFT_SYNTH_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
-#ifdef HAVE_SINCOS
-#define _gwy_sincos sincos
-#else
-static inline void
-_gwy_sincos(gdouble x, gdouble *s, gdouble *c)
-{
-    *s = sin(x);
-    *c = cos(x);
-}
-#endif
-
 enum {
     PREVIEW_SIZE = 320,
 };
@@ -55,16 +44,20 @@ enum {
     RESPONSE_PREVIEW = 2
 };
 
+enum {
+    PAGE_DIMENSIONS = 0,
+    PAGE_GENERATOR = 1,
+};
+
 typedef struct {
-    guint32 seed;
-    gboolean replace;
+    gint seed;
     gdouble freq_min;
     gdouble freq_max;
+    gdouble sigma;
     gboolean gauss_enable;
     gdouble gauss_tau;
     gboolean power_enable;
     gdouble power_p;
-    gdouble power_tau;
     gboolean update;
 } FFTSynthArgs;
 
@@ -75,13 +68,14 @@ typedef struct {
     GtkWidget *view;
     GtkObject *seed;
     GtkWidget *seed_new;
+    GtkObject *sigma;
+    GtkWidget *sigma_units;
     GtkObject *freq_min;
     GtkObject *freq_max;
     GtkWidget *gauss_enable;
     GtkObject *gauss_tau;
     GtkWidget *power_enable;
     GtkObject *power_p;
-    GtkObject *power_tau;
     GtkWidget *update;
     GwyContainer *mydata;
 
@@ -109,22 +103,27 @@ static void     fft_synth_dialog_update_controls(FFTSynthControls *controls,
                                                  FFTSynthArgs *args);
 static void     fft_synth_dialog_update_values  (FFTSynthControls *controls,
                                                  FFTSynthArgs *args);
+static void     page_switched                   (FFTSynthControls *controls,
+                                                 GtkNotebookPage *page,
+                                                 gint pagenum);
 static void     fft_synth_invalidate            (FFTSynthControls *controls);
 static void     update_change_cb                (FFTSynthControls *controls);
 static void     preview                         (FFTSynthControls *controls,
                                                  FFTSynthArgs *args);
 static void     fft_synth_load_args             (GwyContainer *container,
-                                                 FFTSynthArgs *args);
+                                                 FFTSynthArgs *args,
+                                                 GwyDimensionArgs *dimsargs);
 static void     fft_synth_save_args             (GwyContainer *container,
-                                                 FFTSynthArgs *args);
+                                                 const FFTSynthArgs *args,
+                                                 const GwyDimensionArgs *dimsargs);
 
 static const FFTSynthArgs fft_synth_defaults = {
     42,
-    FALSE,
     0.0, 1.0,
+    1.0,
     FALSE, 0.1,
-    FALSE, 1.5, 0.1,
-    FALSE,
+    FALSE, 1.5,
+    TRUE,
 };
 
 static const GwyDimensionArgs dims_defaults = GWY_DIMENSION_ARGS_INIT;
@@ -136,7 +135,7 @@ static GwyModuleInfo module_info = {
     "Yeti <yeti@gwyddion.net>",
     "1.0",
     "David Nečas (Yeti)",
-    "2007",
+    "2009",
 };
 
 GWY_MODULE_QUERY(module_info)
@@ -164,27 +163,22 @@ fft_synth(GwyContainer *data, GwyRunType run)
     gint id;
 
     g_return_if_fail(run & FFT_SYNTH_RUN_MODES);
-    fft_synth_load_args(gwy_app_settings_get(), &args);
-    gwy_clear(&dimsargs, 1);
-    gwy_dimensions_copy_args(&dims_defaults, &dimsargs);
-    gwy_dimensions_load_args(&dimsargs, gwy_app_settings_get(),
-                             "/module/fft_synth");
+    fft_synth_load_args(gwy_app_settings_get(), &args, &dimsargs);
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
                                      GWY_APP_DATA_FIELD_ID, &id,
                                      0);
     g_return_if_fail(dfield);
 
     if (run == GWY_RUN_IMMEDIATE)
-        run_noninteractive(&args, &dimsargs, data, dfield, id);
+        ; /*run_noninteractive(&args, &dimsargs, data, dfield, id);*/
     else {
         fft_synth_dialog(&args, &dimsargs, data, dfield, id);
-        fft_synth_save_args(gwy_app_settings_get(), &args);
-        gwy_dimensions_save_args(&dimsargs, gwy_app_settings_get(),
-                                 "/module/fft_synth");
+        fft_synth_save_args(gwy_app_settings_get(), &args, &dimsargs);
     }
     gwy_dimensions_free_args(&dimsargs);
 }
 
+    /*
 static void
 run_noninteractive(FFTSynthArgs *args,
                    GwyDimensionArgs *dimsargs,
@@ -192,7 +186,6 @@ run_noninteractive(FFTSynthArgs *args,
                    GwyDataField *dfield,
                    gint id)
 {
-    /*
     GwyDataField *mfield;
 
     gwy_app_undo_qcheckpointv(data, 1, &mquark);
@@ -200,8 +193,8 @@ run_noninteractive(FFTSynthArgs *args,
     mark_fft_synth(dfield, mfield, args);
     gwy_container_set_object(data, mquark, mfield);
     g_object_unref(mfield);
-    */
 }
+    */
 
 static void
 fft_synth_dialog(FFTSynthArgs *args,
@@ -218,7 +211,7 @@ fft_synth_dialog(FFTSynthArgs *args,
     gboolean temp;
     gint row;
 
-    memset(&controls, 0, sizeof(FFTSynthControls));
+    gwy_clear(&controls, 1);
     controls.in_init = TRUE;
     controls.args = args;
     dialog = gtk_dialog_new_with_buttons(_("Spectral Synthesis"),
@@ -273,6 +266,8 @@ fft_synth_dialog(FFTSynthArgs *args,
 
     notebook = gtk_notebook_new();
     gtk_box_pack_start(GTK_BOX(hbox), notebook, FALSE, FALSE, 4);
+    g_signal_connect_swapped(notebook, "switch-page",
+                             G_CALLBACK(page_switched), &controls);
 
     controls.dims = gwy_dimensions_new(dimsargs, dfield_template);
     gtk_notebook_append_page(GTK_NOTEBOOK(notebook),
@@ -281,7 +276,7 @@ fft_synth_dialog(FFTSynthArgs *args,
 
     /* TODO: RMS */
 
-    table = gtk_table_new(11, 4, FALSE);
+    table = gtk_table_new(11, 5, FALSE);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
@@ -297,6 +292,15 @@ fft_synth_dialog(FFTSynthArgs *args,
     controls.seed_new = gtk_button_new_with_mnemonic(_("_New Seed"));
     gtk_table_attach(GTK_TABLE(table), controls.seed_new,
                      1, 2, row, row+1, GTK_FILL, 0, 0, 0);
+    gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
+    row++;
+
+    controls.sigma = gtk_adjustment_new(args->sigma,
+                                        0.0001, 10000.0, 0.0001, 1.0, 0);
+    gwy_table_attach_hscale(table, row, _("_RMS:"), "",
+                            controls.sigma, 0);
+    controls.sigma_units = gwy_table_hscale_get_units(controls.sigma);
+    gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
     row++;
 
     controls.freq_min = gtk_adjustment_new(args->freq_min,
@@ -309,6 +313,7 @@ fft_synth_dialog(FFTSynthArgs *args,
                                            0.0, 1.0, 0.001, 0.1, 0);
     gwy_table_attach_hscale(table, row, _("Ma_ximum frequency:"), NULL,
                             controls.freq_max, 0);
+    gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
     row++;
 
     controls.gauss_enable
@@ -322,6 +327,7 @@ fft_synth_dialog(FFTSynthArgs *args,
     gwy_table_attach_hscale(table, row, _("Correlation _length:"),
                             NULL,
                             controls.gauss_tau, 0);
+    gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
     row++;
 
     controls.power_enable
@@ -331,15 +337,9 @@ fft_synth_dialog(FFTSynthArgs *args,
     row++;
 
     controls.power_p = gtk_adjustment_new(args->power_p,
-                                          0.0, 3.0, 0.001, 0.1, 0);
+                                          0.0, 5.0, 0.001, 0.1, 0);
     gwy_table_attach_hscale(table, row, _("Po_wer:"), NULL,
                             controls.power_p, 0);
-    row++;
-    controls.power_tau = gtk_adjustment_new(args->power_tau,
-                                           0.0, 2.0, 0.001, 0.1, 0);
-    gwy_table_attach_hscale(table, row, _("Correlation lengt_h:"),
-                            NULL,
-                            controls.power_tau, 0);
     row++;
 
     fft_synth_invalidate(&controls);
@@ -444,6 +444,18 @@ fft_synth_dialog_update_values(FFTSynthControls *controls,
 }
 
 static void
+page_switched(FFTSynthControls *controls,
+              G_GNUC_UNUSED GtkNotebookPage *page,
+              gint pagenum)
+{
+    if (pagenum == PAGE_GENERATOR) {
+        if (controls->sigma_units)
+            gtk_label_set_markup(GTK_LABEL(controls->sigma_units),
+                                 controls->dims->zvf->units);
+    }
+}
+
+static void
 fft_synth_invalidate(FFTSynthControls *controls)
 {
     controls->computed = FALSE;
@@ -468,6 +480,17 @@ update_change_cb(FFTSynthControls *controls)
     if (controls->args->update)
         fft_synth_invalidate(controls);
 }
+
+#ifdef HAVE_SINCOS
+#define _gwy_sincos sincos
+#else
+static inline void
+_gwy_sincos(gdouble x, gdouble *s, gdouble *c)
+{
+    *s = sin(x);
+    *c = cos(x);
+}
+#endif
 
 static void
 preview(FFTSynthControls *controls,
@@ -538,68 +561,75 @@ preview(FFTSynthControls *controls,
     controls->computed = TRUE;
 }
 
-/*
-static const gchar type_key[]           = "/module/fft_synth/type";
-static const gchar threshold_low_key[]  = "/module/fft_synth/threshold_low";
-static const gchar threshold_high_key[] = "/module/fft_synth/threshold_high";
-static const gchar min_len_key[]        = "/module/fft_synth/min_len";
-static const gchar max_width_key[]      = "/module/fft_synth/max_width";
-static const gchar update_key[]         = "/module/fft_synth/update";
+static const gchar prefix[]           = "/module/fft_synth";
+static const gchar seed_key[]         = "/module/fft_synth/seed";
+static const gchar freq_min_key[]     = "/module/fft_synth/freq_min";
+static const gchar freq_max_key[]     = "/module/fft_synth/freq_max";
+static const gchar sigma_key[]        = "/module/fft_synth/sigma";
+static const gchar gauss_enable_key[] = "/module/fft_synth/gauss_enable";
+static const gchar gauss_tau_key[]    = "/module/fft_synth/gauss_tau";
+static const gchar power_enable_key[] = "/module/fft_synth/power_enable";
+static const gchar power_p_key[]      = "/module/fft_synth/power_p";
+static const gchar update_key[]       = "/module/fft_synth/update";
 
 static void
 fft_synth_sanitize_args(FFTSynthArgs *args)
 {
-    args->type = CLAMP(args->type, FEATURES_POSITIVE, FEATURES_BOTH);
-    args->threshold_low = MAX(args->threshold_low, 0.0);
-    args->threshold_high = MAX(args->threshold_low, args->threshold_high);
-    args->min_len = CLAMP(args->min_len, 1, MAX_LENGTH);
-    args->max_width = CLAMP(args->max_width, 1, 16);
+    args->freq_min = CLAMP(args->freq_min, 0.0, 1.0);
+    args->freq_max = CLAMP(args->freq_max, 0.0, 1.0);
+    args->sigma = CLAMP(args->sigma, 0.001, 10000.0);
+    args->gauss_enable = !!args->gauss_enable;
+    args->gauss_tau = CLAMP(args->gauss_tau, 0.0001, 2.0);
+    args->power_enable = !!args->power_enable;
+    args->power_p = CLAMP(args->power_p, 0.0, 5.0);
     args->update = !!args->update;
 }
 
 static void
 fft_synth_load_args(GwyContainer *container,
-                     FFTSynthArgs *args)
+                    FFTSynthArgs *args,
+                    GwyDimensionArgs *dimsargs)
 {
     *args = fft_synth_defaults;
 
-    gwy_container_gis_enum_by_name(container, type_key, &args->type);
-    gwy_container_gis_double_by_name(container, threshold_high_key,
-                                     &args->threshold_high);
-    gwy_container_gis_double_by_name(container, threshold_low_key,
-                                     &args->threshold_low);
-    gwy_container_gis_int32_by_name(container, min_len_key, &args->min_len);
-    gwy_container_gis_int32_by_name(container, max_width_key, &args->max_width);
+    gwy_container_gis_int32_by_name(container, seed_key, &args->seed);
+    gwy_container_gis_double_by_name(container, freq_min_key, &args->freq_min);
+    gwy_container_gis_double_by_name(container, freq_max_key, &args->freq_max);
+    gwy_container_gis_double_by_name(container, sigma_key, &args->sigma);
+    gwy_container_gis_boolean_by_name(container, gauss_enable_key,
+                                      &args->gauss_enable);
+    gwy_container_gis_double_by_name(container, gauss_tau_key,
+                                     &args->gauss_tau);
+    gwy_container_gis_boolean_by_name(container, power_enable_key,
+                                      &args->power_enable);
+    gwy_container_gis_double_by_name(container, power_p_key, &args->power_p);
     gwy_container_gis_boolean_by_name(container, update_key, &args->update);
     fft_synth_sanitize_args(args);
+
+    gwy_clear(dimsargs, 1);
+    gwy_dimensions_copy_args(&dims_defaults, dimsargs);
+    gwy_dimensions_load_args(dimsargs, container, prefix);
 }
 
 static void
 fft_synth_save_args(GwyContainer *container,
-                     FFTSynthArgs *args)
+                    const FFTSynthArgs *args,
+                    const GwyDimensionArgs *dimsargs)
 {
-    gwy_container_set_enum_by_name(container, type_key, args->type);
-    gwy_container_set_double_by_name(container, threshold_high_key,
-                                     args->threshold_high);
-    gwy_container_set_double_by_name(container, threshold_low_key,
-                                     args->threshold_low);
-    gwy_container_set_int32_by_name(container, min_len_key, args->min_len);
-    gwy_container_set_int32_by_name(container, max_width_key, args->max_width);
+    gwy_container_set_int32_by_name(container, seed_key, args->seed);
+    gwy_container_set_double_by_name(container, freq_min_key, args->freq_min);
+    gwy_container_set_double_by_name(container, freq_max_key, args->freq_max);
+    gwy_container_set_double_by_name(container, sigma_key, args->sigma);
+    gwy_container_set_boolean_by_name(container, gauss_enable_key,
+                                      args->gauss_enable);
+    gwy_container_set_double_by_name(container, gauss_tau_key,
+                                     args->gauss_tau);
+    gwy_container_set_boolean_by_name(container, power_enable_key,
+                                      args->power_enable);
+    gwy_container_set_double_by_name(container, power_p_key, args->power_p);
     gwy_container_set_boolean_by_name(container, update_key, args->update);
-}
-*/
 
-static void
-fft_synth_load_args(GwyContainer *container,
-                    FFTSynthArgs *args)
-{
-    *args = fft_synth_defaults;
-}
-
-static void
-fft_synth_save_args(GwyContainer *container,
-                    FFTSynthArgs *args)
-{
+    gwy_dimensions_save_args(dimsargs, container, prefix);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
