@@ -106,6 +106,20 @@ static void     fft_synth_dialog_update_values  (FFTSynthControls *controls,
 static void     page_switched                   (FFTSynthControls *controls,
                                                  GtkNotebookPage *page,
                                                  gint pagenum);
+static void     sigma_changed                   (FFTSynthControls *controls,
+                                                 GtkAdjustment *adj);
+static void     freq_min_changed                (FFTSynthControls *controls,
+                                                 GtkAdjustment *adj);
+static void     freq_max_changed                (FFTSynthControls *controls,
+                                                 GtkAdjustment *adj);
+static void     gauss_enable_changed            (FFTSynthControls *controls,
+                                                 GtkToggleButton *button);
+static void     gauss_tau_changed               (FFTSynthControls *controls,
+                                                 GtkAdjustment *adj);
+static void     power_enable_changed            (FFTSynthControls *controls,
+                                                 GtkToggleButton *button);
+static void     power_p_changed                 (FFTSynthControls *controls,
+                                                 GtkAdjustment *adj);
 static void     fft_synth_invalidate            (FFTSynthControls *controls);
 static void     update_change_cb                (FFTSynthControls *controls);
 static void     preview                         (FFTSynthControls *controls,
@@ -203,7 +217,7 @@ fft_synth_dialog(FFTSynthArgs *args,
                  GwyDataField *dfield_template,
                  gint id)
 {
-    GtkWidget *dialog, *table, *vbox, *hbox, *hbox2, *label, *notebook;
+    GtkWidget *dialog, *table, *vbox, *hbox, *label, *notebook;
     FFTSynthControls controls;
     GwyDataField *dfield;
     gint response;
@@ -274,8 +288,6 @@ fft_synth_dialog(FFTSynthArgs *args,
                              gwy_dimensions_get_widget(controls.dims),
                              gtk_label_new(_("Dimensions")));
 
-    /* TODO: RMS */
-
     table = gtk_table_new(11, 5, FALSE);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
@@ -301,12 +313,16 @@ fft_synth_dialog(FFTSynthArgs *args,
                             controls.sigma, 0);
     controls.sigma_units = gwy_table_hscale_get_units(controls.sigma);
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
+    g_signal_connect_swapped(controls.sigma, "changed",
+                             G_CALLBACK(sigma_changed), &controls);
     row++;
 
     controls.freq_min = gtk_adjustment_new(args->freq_min,
                                            0.0, 1.0, 0.001, 0.1, 0);
     gwy_table_attach_hscale(table, row, _("M_inimum frequency:"), NULL,
                             controls.freq_min, 0);
+    g_signal_connect_swapped(controls.freq_min, "changed",
+                             G_CALLBACK(freq_min_changed), &controls);
     row++;
 
     controls.freq_max = gtk_adjustment_new(args->freq_max,
@@ -314,12 +330,16 @@ fft_synth_dialog(FFTSynthArgs *args,
     gwy_table_attach_hscale(table, row, _("Ma_ximum frequency:"), NULL,
                             controls.freq_max, 0);
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
+    g_signal_connect_swapped(controls.freq_max, "changed",
+                             G_CALLBACK(freq_max_changed), &controls);
     row++;
 
     controls.gauss_enable
         = gtk_check_button_new_with_mnemonic(_("Enable _Gaussian multiplier"));
     gtk_table_attach(GTK_TABLE(table), controls.gauss_enable,
                      0, 3, row, row+1, GTK_FILL, 0, 0, 0);
+    g_signal_connect_swapped(controls.gauss_enable, "toggled",
+                             G_CALLBACK(gauss_enable_changed), &controls);
     row++;
 
     controls.gauss_tau = gtk_adjustment_new(args->gauss_tau,
@@ -327,6 +347,9 @@ fft_synth_dialog(FFTSynthArgs *args,
     gwy_table_attach_hscale(table, row, _("Correlation _length:"),
                             NULL,
                             controls.gauss_tau, 0);
+    gwy_table_hscale_set_sensitive(controls.gauss_tau, args->gauss_enable);
+    g_signal_connect_swapped(controls.gauss_tau, "changed",
+                             G_CALLBACK(gauss_tau_changed), &controls);
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
     row++;
 
@@ -334,12 +357,17 @@ fft_synth_dialog(FFTSynthArgs *args,
         = gtk_check_button_new_with_mnemonic(_("Enable _power multiplier"));
     gtk_table_attach(GTK_TABLE(table), controls.power_enable,
                      0, 3, row, row+1, GTK_FILL, 0, 0, 0);
+    g_signal_connect_swapped(controls.power_enable, "toggled",
+                             G_CALLBACK(power_enable_changed), &controls);
     row++;
 
     controls.power_p = gtk_adjustment_new(args->power_p,
                                           0.0, 5.0, 0.001, 0.1, 0);
     gwy_table_attach_hscale(table, row, _("Po_wer:"), NULL,
                             controls.power_p, 0);
+    gwy_table_hscale_set_sensitive(controls.power_p, args->power_enable);
+    g_signal_connect_swapped(controls.power_p, "changed",
+                             G_CALLBACK(power_p_changed), &controls);
     row++;
 
     fft_synth_invalidate(&controls);
@@ -453,6 +481,66 @@ page_switched(FFTSynthControls *controls,
             gtk_label_set_markup(GTK_LABEL(controls->sigma_units),
                                  controls->dims->zvf->units);
     }
+}
+
+static void
+sigma_changed(FFTSynthControls *controls,
+              GtkAdjustment *adj)
+{
+    controls->args->sigma = gtk_adjustment_get_value(adj);
+    /* Sigma is not observable on the preview, don't do anything. */
+}
+
+static void
+freq_min_changed(FFTSynthControls *controls,
+                 GtkAdjustment *adj)
+{
+    controls->args->freq_min = gtk_adjustment_get_value(adj);
+    fft_synth_invalidate(controls);
+}
+
+static void
+freq_max_changed(FFTSynthControls *controls,
+                 GtkAdjustment *adj)
+{
+    controls->args->freq_max = gtk_adjustment_get_value(adj);
+    fft_synth_invalidate(controls);
+}
+
+static void
+gauss_enable_changed(FFTSynthControls *controls,
+                     GtkToggleButton *button)
+{
+    controls->args->gauss_enable = gtk_toggle_button_get_active(button);
+    gwy_table_hscale_set_sensitive(controls->gauss_tau,
+                                   controls->args->gauss_enable);
+    fft_synth_invalidate(controls);
+}
+
+static void
+gauss_tau_changed(FFTSynthControls *controls,
+                  GtkAdjustment *adj)
+{
+    controls->args->gauss_tau = gtk_adjustment_get_value(adj);
+    fft_synth_invalidate(controls);
+}
+
+static void
+power_enable_changed(FFTSynthControls *controls,
+                     GtkToggleButton *button)
+{
+    controls->args->power_enable = gtk_toggle_button_get_active(button);
+    gwy_table_hscale_set_sensitive(controls->power_p,
+                                   controls->args->power_enable);
+    fft_synth_invalidate(controls);
+}
+
+static void
+power_p_changed(FFTSynthControls *controls,
+                  GtkAdjustment *adj)
+{
+    controls->args->power_p = gtk_adjustment_get_value(adj);
+    fft_synth_invalidate(controls);
 }
 
 static void
