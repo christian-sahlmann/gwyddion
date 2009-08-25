@@ -342,9 +342,8 @@ fft_synth_dialog(FFTSynthArgs *args,
     row++;
 
     controls.gauss_tau = gtk_adjustment_new(args->gauss_tau,
-                                            0.0001, 2.0, 0.0001, 0.1, 0);
-    gwy_table_attach_hscale(table, row, _("Correlation _length:"),
-                            NULL,
+                                            1.0, 1000.0, 0.1, 10.0, 0);
+    gwy_table_attach_hscale(table, row, _("Correlation _length:"), "px",
                             controls.gauss_tau, GWY_HSCALE_LOG);
     gwy_table_hscale_set_sensitive(controls.gauss_tau, args->gauss_enable);
     g_signal_connect_swapped(controls.gauss_tau, "value-changed",
@@ -594,9 +593,9 @@ preview(FFTSynthControls *controls,
     gauss_tau = args->gauss_tau;
 
     for (i = 0; i < yres; i++) {
-        gdouble y = (i <= yres/2 ? i : yres-i);
+        gdouble y = (i <= yres/2 ? i : yres-i)/(0.5*yres);
         for (j = 0; j < xres; j++) {
-            gdouble x = (j <= xres/2 ? j : xres-j);
+            gdouble x = (j <= xres/2 ? j : xres-j)/(0.5*xres);
             gdouble f = g_rand_double(rng);
             gdouble r = hypot(x, y);
             gdouble phi = 2.0*G_PI*g_rand_double(rng);
@@ -644,7 +643,7 @@ fft_synth_sanitize_args(FFTSynthArgs *args)
     args->freq_max = CLAMP(args->freq_max, 0.0, 1.0);
     args->sigma = CLAMP(args->sigma, 0.001, 10000.0);
     args->gauss_enable = !!args->gauss_enable;
-    args->gauss_tau = CLAMP(args->gauss_tau, 0.0001, 2.0);
+    args->gauss_tau = CLAMP(args->gauss_tau, 1.0, 1000.0);
     args->power_enable = !!args->power_enable;
     args->power_p = CLAMP(args->power_p, 0.0, 5.0);
     args->update = !!args->update;
