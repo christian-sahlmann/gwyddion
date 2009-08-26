@@ -26,7 +26,7 @@
 G_BEGIN_DECLS
 
 /* Must include fftw3.h to get it actually defined */
-#define _GWY_FFTW_PATIENCE FFTW_MEASURE
+#define _GWY_FFTW_PATIENCE FFTW_ESTIMATE
 
 /* Cache operations */
 #define CVAL(datafield, b)  ((datafield)->cache[GWY_DATA_FIELD_CACHE_##b])
