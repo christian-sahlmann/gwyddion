@@ -82,19 +82,17 @@ typedef struct {
     GwyDataField *in_re;
     GwyDataField *in_im;
     GwyDataField *out_im;
-    gboolean computed;
     gboolean in_init;
 } FFTSynthControls;
 
 static gboolean module_register                 (void);
 static void     fft_synth                       (GwyContainer *data,
                                                  GwyRunType run);
-static void     run_noninteractive              (FFTSynthArgs *args,
-                                                 GwyDimensionArgs *dimsargs,
+static void     run_noninteractive              (const FFTSynthArgs *args,
+                                                 const GwyDimensionArgs *dimsargs,
                                                  GwyContainer *data,
-                                                 GwyDataField *dfield,
-                                                 gint id);
-static void     fft_synth_dialog                (FFTSynthArgs *args,
+                                                 gint oldid);
+static gboolean fft_synth_dialog                (FFTSynthArgs *args,
                                                  GwyDimensionArgs *dimsargs,
                                                  GwyContainer *data,
                                                  GwyDataField *dfield,
@@ -122,7 +120,12 @@ static void     instant_updates_changed         (FFTSynthControls *controls,
                                                  GtkToggleButton *button);
 static void     fft_synth_invalidate            (FFTSynthControls *controls);
 static void     preview                         (FFTSynthControls *controls,
-                                                 FFTSynthArgs *args);
+                                                 const FFTSynthArgs *args);
+static void     fft_synth_do                    (const FFTSynthArgs *args,
+                                                 GwyDataField *in_re,
+                                                 GwyDataField *in_im,
+                                                 GwyDataField *out_re,
+                                                 GwyDataField *out_im);
 static void     fft_synth_load_args             (GwyContainer *container,
                                                  FFTSynthArgs *args,
                                                  GwyDimensionArgs *dimsargs);
@@ -182,34 +185,59 @@ fft_synth(GwyContainer *data, GwyRunType run)
                                      0);
     g_return_if_fail(dfield);
 
-    if (run == GWY_RUN_IMMEDIATE)
-        ; /*run_noninteractive(&args, &dimsargs, data, dfield, id);*/
-    else {
-        fft_synth_dialog(&args, &dimsargs, data, dfield, id);
+    if (run == GWY_RUN_IMMEDIATE
+        || fft_synth_dialog(&args, &dimsargs, data, dfield, id))
+        run_noninteractive(&args, &dimsargs, data, id);
+
+    if (run == GWY_RUN_INTERACTIVE)
         fft_synth_save_args(gwy_app_settings_get(), &args, &dimsargs);
-    }
+
     gwy_dimensions_free_args(&dimsargs);
 }
 
-    /*
 static void
-run_noninteractive(FFTSynthArgs *args,
-                   GwyDimensionArgs *dimsargs,
+run_noninteractive(const FFTSynthArgs *args,
+                   const GwyDimensionArgs *dimsargs,
                    GwyContainer *data,
-                   GwyDataField *dfield,
-                   gint id)
+                   gint oldid)
 {
-    GwyDataField *mfield;
+    GwyDataField *in_re, *in_im, *out_re, *out_im;
+    GwySIUnit *siunit;
+    gdouble mag;
+    gint newid;
 
-    gwy_app_undo_qcheckpointv(data, 1, &mquark);
-    mfield = create_mask_field(dfield);
-    mark_fft_synth(dfield, mfield, args);
-    gwy_container_set_object(data, mquark, mfield);
-    g_object_unref(mfield);
+    mag = pow10(dimsargs->xypow10) * dimsargs->measure;
+    in_re = gwy_data_field_new(dimsargs->xres, dimsargs->yres,
+                               mag*dimsargs->xres, mag*dimsargs->yres,
+                               FALSE);
+    in_im = gwy_data_field_new_alike(in_re, FALSE);
+    out_re = gwy_data_field_new_alike(in_re, FALSE);
+    out_im = gwy_data_field_new_alike(in_re, FALSE);
+    fft_synth_do(args, in_re, in_im, out_re, out_im);
+    g_object_unref(in_re);
+    g_object_unref(in_im);
+    g_object_unref(out_im);
+
+    mag = gwy_data_field_get_rms(out_re);
+    if (mag)
+        gwy_data_field_multiply(out_re,
+                                pow10(dimsargs->zpow10)*args->sigma/mag);
+
+    siunit = gwy_data_field_get_si_unit_xy(out_re);
+    gwy_si_unit_set_from_string(siunit, dimsargs->xyunits);
+
+    siunit = gwy_data_field_get_si_unit_z(out_re);
+    gwy_si_unit_set_from_string(siunit, dimsargs->zunits);
+
+    newid = gwy_app_data_browser_add_data_field(out_re, data, TRUE);
+    g_object_unref(out_re);
+    gwy_app_sync_data_items(data, data, oldid, newid, FALSE,
+                            GWY_DATA_ITEM_GRADIENT,
+                            0);
+    gwy_app_set_data_field_title(data, newid, _("Generated"));
 }
-    */
 
-static void
+static gboolean
 fft_synth_dialog(FFTSynthArgs *args,
                  GwyDimensionArgs *dimsargs,
                  GwyContainer *data,
@@ -221,7 +249,6 @@ fft_synth_dialog(FFTSynthArgs *args,
     GwyDataField *dfield;
     gint response;
     GwyPixmapLayer *layer;
-    gboolean temp;
     gint row;
 
     gwy_clear(&controls, 1);
@@ -316,7 +343,8 @@ fft_synth_dialog(FFTSynthArgs *args,
 
     controls.freq_min = gtk_adjustment_new(args->freq_min,
                                            0.0, 1.0, 0.001, 0.1, 0);
-    gwy_table_attach_hscale(table, row, _("M_inimum frequency:"), NULL,
+    gwy_table_attach_hscale(table, row, _("M_inimum frequency:"),
+                            "px<sup>-1</sup>",
                             controls.freq_min, 0);
     g_signal_connect_swapped(controls.freq_min, "value-changed",
                              G_CALLBACK(freq_min_changed), &controls);
@@ -324,7 +352,8 @@ fft_synth_dialog(FFTSynthArgs *args,
 
     controls.freq_max = gtk_adjustment_new(args->freq_max,
                                            0.0, 1.0, 0.001, 0.1, 0);
-    gwy_table_attach_hscale(table, row, _("Ma_ximum frequency:"), NULL,
+    gwy_table_attach_hscale(table, row, _("Ma_ximum frequency:"),
+                            "px<sup>-1</sup>",
                             controls.freq_max, 0);
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
     g_signal_connect_swapped(controls.freq_max, "value-changed",
@@ -373,7 +402,6 @@ fft_synth_dialog(FFTSynthArgs *args,
     fft_synth_invalidate(&controls);
     controls.in_init = FALSE;
 
-    /* show initial preview if instant updates are on */
     if (args->update) {
         gtk_dialog_set_response_sensitive(GTK_DIALOG(controls.dialog),
                                           RESPONSE_PREVIEW, FALSE);
@@ -381,25 +409,25 @@ fft_synth_dialog(FFTSynthArgs *args,
     }
 
     gtk_widget_show_all(dialog);
-    do {
+
+    while (TRUE) {
         response = gtk_dialog_run(GTK_DIALOG(dialog));
         switch (response) {
             case GTK_RESPONSE_CANCEL:
             case GTK_RESPONSE_DELETE_EVENT:
+            case GTK_RESPONSE_OK:
             gtk_widget_destroy(dialog);
             case GTK_RESPONSE_NONE:
             g_object_unref(controls.mydata);
             gwy_dimensions_free(controls.dims);
-            return;
-            break;
-
-            case GTK_RESPONSE_OK:
+            gwy_object_unref(controls.in_re);
+            gwy_object_unref(controls.in_im);
+            gwy_object_unref(controls.out_im);
+            return response == GTK_RESPONSE_OK;
             break;
 
             case RESPONSE_RESET:
-            temp = args->update;
             *args = fft_synth_defaults;
-            args->update = temp;
             controls.in_init = TRUE;
             fft_synth_dialog_update_controls(&controls, args);
             controls.in_init = FALSE;
@@ -415,22 +443,7 @@ fft_synth_dialog(FFTSynthArgs *args,
             g_assert_not_reached();
             break;
         }
-    } while (response != GTK_RESPONSE_OK);
-
-    gtk_widget_destroy(dialog);
-
-    /*
-    if (controls.computed) {
-        gwy_app_undo_qcheckpointv(data, 1, &mquark);
-        gwy_container_set_object(data, mquark, mfield);
-        g_object_unref(controls.mydata);
     }
-    else {
-        g_object_unref(controls.mydata);
-        run_noninteractive(args, data, dfield, mquark);
-    }
-    */
-    gwy_dimensions_free(controls.dims);
 }
 
 static void
@@ -527,8 +540,6 @@ power_p_changed(FFTSynthControls *controls,
 static void
 fft_synth_invalidate(FFTSynthControls *controls)
 {
-    controls->computed = FALSE;
-
     /* create preview if instant updates are on */
     if (controls->args->update && !controls->in_init)
         preview(controls, controls->args);
@@ -559,14 +570,9 @@ _gwy_sincos(gdouble x, gdouble *s, gdouble *c)
 
 static void
 preview(FFTSynthControls *controls,
-        FFTSynthArgs *args)
+        const FFTSynthArgs *args)
 {
     GwyDataField *dfield;
-    GRand *rng;
-    gdouble *re, *im;
-    gdouble power_p, gauss_tau;
-    gboolean power_enable, gauss_enable;
-    gint xres, yres, i, j;
 
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
                                                              "/0/data"));
@@ -577,52 +583,80 @@ preview(FFTSynthControls *controls,
         controls->out_im = gwy_data_field_new_alike(dfield, FALSE);
     }
 
+    fft_synth_do(args, controls->in_re, controls->in_im,
+                 dfield, controls->out_im);
+}
+
+static void
+fft_synth_do(const FFTSynthArgs *args,
+             GwyDataField *in_re,
+             GwyDataField *in_im,
+             GwyDataField *out_re,
+             GwyDataField *out_im)
+{
+    GRand *rng;
+    gdouble *re, *im;
+    gdouble power_p, gauss_tau, freq_min, freq_max;
+    gboolean power_enable, gauss_enable;
+    gint xres, yres, i, j, k;
+
     rng = g_rand_new();
     g_rand_set_seed(rng, args->seed);
 
-    re = gwy_data_field_get_data(controls->in_re);
-    im = gwy_data_field_get_data(controls->in_im);
+    re = gwy_data_field_get_data(in_re);
+    im = gwy_data_field_get_data(in_im);
 
-    xres = gwy_data_field_get_xres(dfield);
-    yres = gwy_data_field_get_yres(dfield);
+    xres = gwy_data_field_get_xres(out_re);
+    yres = gwy_data_field_get_yres(out_re);
 
     /* Optimization hints */
+    freq_min = args->freq_min;
+    freq_max = args->freq_max;
     power_enable = args->power_enable;
     power_p = args->power_p;
     gauss_enable = args->gauss_enable;
     gauss_tau = args->gauss_tau;
 
+    k = 0;
     for (i = 0; i < yres; i++) {
         gdouble y = (i <= yres/2 ? i : yres-i)/(0.5*yres);
         for (j = 0; j < xres; j++) {
             gdouble x = (j <= xres/2 ? j : xres-j)/(0.5*xres);
-            gdouble f = g_rand_double(rng);
             gdouble r = hypot(x, y);
-            gdouble phi = 2.0*G_PI*g_rand_double(rng);
-            gdouble s, c;
 
-            if (power_enable)
-                f /= pow(r, power_p);
-            if (gauss_enable) {
-                gdouble t = r*gauss_tau;
-                f /= exp(0.5*t*t);
+            if (r < freq_min || r > freq_max) {
+                /* XXX: This is necessary for stability! */
+                g_rand_double(rng);
+                g_rand_double(rng);
+                re[k] = im[k] = 0.0;
             }
+            else {
+                gdouble f = g_rand_double(rng);
+                gdouble phi = 2.0*G_PI*g_rand_double(rng);
+                gdouble s, c;
 
-            _gwy_sincos(phi, &s, &c);
-            re[i*xres + j] = f*s;
-            im[i*xres + j] = f*c;
+                if (power_enable)
+                    f /= pow(r, power_p);
+                if (gauss_enable) {
+                    gdouble t = r*gauss_tau;
+                    f /= exp(0.5*t*t);
+                }
+
+                _gwy_sincos(phi, &s, &c);
+                re[k] = f*s;
+                im[k] = f*c;
+            }
+            k++;
         }
     }
     re[0] = im[0] = 0.0;
 
-    gwy_data_field_2dfft_raw(controls->in_re, controls->in_im,
-                             dfield, controls->out_im,
+    gwy_data_field_2dfft_raw(in_re, in_im, out_re, out_im,
                              GWY_TRANSFORM_DIRECTION_BACKWARD);
 
     g_rand_free(rng);
-    gwy_data_field_data_changed(dfield);
-
-    controls->computed = TRUE;
+    gwy_data_field_data_changed(out_re);
+    gwy_data_field_data_changed(out_im);
 }
 
 static const gchar prefix[]           = "/module/fft_synth";
