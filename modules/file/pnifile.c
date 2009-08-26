@@ -155,11 +155,11 @@ pni_load(const gchar *filename,
          GError **error)
 {
     static const GwyEnum titles[] = {
-        { N_("Height"), DATA_TYPE_HGT, },
-        { N_("Sens"),   DATA_TYPE_SEN, },
-        { N_("Dem"),    DATA_TYPE_DEM, },
-        { N_("Error"),  DATA_TYPE_ERR, },
-        { N_("L-R"),    DATA_TYPE_L_R, },
+        { "Height", DATA_TYPE_HGT, },
+        { "Sens",   DATA_TYPE_SEN, },
+        { "Dem",    DATA_TYPE_DEM, },
+        { "Error",  DATA_TYPE_ERR, },
+        { "L-R",    DATA_TYPE_L_R, },
     };
 
     GwyContainer *container = NULL;
