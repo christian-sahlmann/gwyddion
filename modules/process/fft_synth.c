@@ -471,7 +471,8 @@ fft_synth_dialog(FFTSynthArgs *args,
             gwy_object_unref(controls.in_re);
             gwy_object_unref(controls.in_im);
             gwy_object_unref(controls.out_im);
-            gwy_si_unit_value_format_free(controls.freqvf);
+            if (controls.freqvf)
+                gwy_si_unit_value_format_free(controls.freqvf);
             return response == GTK_RESPONSE_OK;
             break;
 
