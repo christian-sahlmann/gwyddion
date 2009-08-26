@@ -64,7 +64,7 @@ typedef struct {
 typedef struct {
     FFTSynthArgs *args;
     GwyDimensions *dims;
-    gdouble freqres;
+    gdouble pxsize;
     GwySIValueFormat *freqvf;
     GtkWidget *dialog;
     GtkWidget *view;
@@ -268,7 +268,7 @@ fft_synth_dialog(FFTSynthArgs *args,
     gwy_clear(&controls, 1);
     controls.in_init = TRUE;
     controls.args = args;
-    controls.freqres = 1.0;
+    controls.pxsize = 1.0;
     dialog = gtk_dialog_new_with_buttons(_("Spectral Synthesis"),
                                          NULL, 0, NULL);
     gtk_dialog_add_action_widget(GTK_DIALOG(dialog),
@@ -519,6 +519,9 @@ page_switched(FFTSynthControls *controls,
               G_GNUC_UNUSED GtkNotebookPage *page,
               gint pagenum)
 {
+    if (controls->in_init)
+        return;
+
     if (pagenum == PAGE_GENERATOR) {
         GwyDimensions *dims = controls->dims;
         GwySIUnit *units;
@@ -526,12 +529,12 @@ page_switched(FFTSynthControls *controls,
         if (controls->sigma_units)
             gtk_label_set_markup(GTK_LABEL(controls->sigma_units),
                                  dims->zvf->units);
-        controls->freqres = dims->args->measure * pow10(dims->args->xypow10);
+        controls->pxsize = dims->args->measure * pow10(dims->args->xypow10);
         units = gwy_si_unit_power(dims->xysiunit, -1, NULL);
         controls->freqvf
             = gwy_si_unit_get_format_with_digits(units,
                                                  GWY_SI_UNIT_FORMAT_VFMARKUP,
-                                                 1.0/controls->freqres, 4,
+                                                 1.0/controls->pxsize, 4,
                                                  controls->freqvf);
         g_object_unref(units);
 
@@ -569,7 +572,7 @@ static void
 update_freq_min_value(FFTSynthControls *controls)
 {
     update_value_label(GTK_LABEL(controls->freq_min_value), controls->freqvf,
-                       controls->args->freq_min * controls->freqres);
+                       controls->args->freq_min/controls->pxsize);
 }
 
 static void
@@ -585,7 +588,7 @@ static void
 update_freq_max_value(FFTSynthControls *controls)
 {
     update_value_label(GTK_LABEL(controls->freq_max_value), controls->freqvf,
-                       controls->args->freq_max * controls->freqres);
+                       controls->args->freq_max/controls->pxsize);
 }
 
 static void
@@ -603,12 +606,16 @@ gauss_tau_changed(FFTSynthControls *controls,
                   GtkAdjustment *adj)
 {
     controls->args->gauss_tau = gtk_adjustment_get_value(adj);
+    update_gauss_tau_value(controls);
     fft_synth_invalidate(controls);
 }
 
 static void
 update_gauss_tau_value(FFTSynthControls *controls)
 {
+    update_value_label(GTK_LABEL(controls->gauss_tau_value),
+                       controls->dims->xyvf,
+                       controls->args->gauss_tau*controls->pxsize);
 }
 
 static void
