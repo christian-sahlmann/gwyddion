@@ -367,10 +367,12 @@ gwy_dimensions_new(GwyDimensionArgs *args,
     dims->xyvf = gwy_si_unit_get_format_for_power10(dims->xysiunit,
                                                     GWY_SI_UNIT_FORMAT_VFMARKUP,
                                                     args->xypow10, NULL);
+    dims->xyvf->precision = 2;
     dims->zsiunit = gwy_si_unit_new(dims->args->zunits);
     dims->zvf = gwy_si_unit_get_format_for_power10(dims->zsiunit,
                                                    GWY_SI_UNIT_FORMAT_VFMARKUP,
                                                    args->zpow10, NULL);
+    dims->zvf->precision = 2;
 
     dims->table = gtk_table_new(11, 3, FALSE);
     table = GTK_TABLE(dims->table);
