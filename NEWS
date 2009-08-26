@@ -8,6 +8,8 @@ Libraries:
 - libgwyprocess: Real length of extracted profiles was corrected for very
   short lines and different vertical and horizontal measures.
 - libgwyprocess: gwy_data_field_area_fit_poly() reall works with NULL mask.
+- libgwyprocess: FFT functions no longer unpredictably lose input data with
+  FFTW3 -- they now use the FFTW_ESTIMATE planner that preserves the input
 
 Modules:
 - Curvature (new): Calculates global curvature of second-order surfaces.
