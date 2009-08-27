@@ -40,7 +40,7 @@ enum {
 };
 
 enum {
-    RESPONSE_RESET   = 1,
+    RESPONSE_RESET = 1,
 };
 
 enum {
@@ -49,6 +49,7 @@ enum {
 };
 
 typedef struct {
+    gint active_page;
     gint seed;
     gboolean randomize;
     gboolean update;
@@ -155,6 +156,7 @@ static void       fft_synth_save_args    (GwyContainer *container,
                                           const GwyDimensionArgs *dimsargs);
 
 static const FFTSynthArgs fft_synth_defaults = {
+    PAGE_DIMENSIONS,
     42, TRUE, TRUE,
     0.0, G_SQRT2*G_PI,
     1.0,
@@ -466,10 +468,11 @@ fft_synth_dialog(FFTSynthArgs *args,
                              G_CALLBACK(power_p_changed), &controls);
     row++;
 
-    controls.in_init = FALSE;
-    fft_synth_invalidate(&controls);
-
     gtk_widget_show_all(dialog);
+    controls.in_init = FALSE;
+    /* Must be done when widgets are shown, see GtkNotebook docs */
+    gtk_notebook_set_current_page(GTK_NOTEBOOK(notebook), args->active_page);
+    fft_synth_invalidate(&controls);
 
     while (TRUE) {
         response = gtk_dialog_run(GTK_DIALOG(dialog));
@@ -607,6 +610,8 @@ page_switched(FFTSynthControls *controls,
 {
     if (controls->in_init)
         return;
+
+    controls->args->active_page = pagenum;
 
     if (pagenum == PAGE_GENERATOR) {
         GwyDimensions *dims = controls->dims;
@@ -861,6 +866,7 @@ fft_synth_do(const FFTSynthArgs *args,
     gwy_data_field_data_changed(out_im);
 }
 
+static const gchar active_page_key[]  = "/module/fft_synth/active_page";
 static const gchar update_key[]       = "/module/fft_synth/update";
 static const gchar randomize_key[]    = "/module/fft_synth/randomize";
 static const gchar prefix[]           = "/module/fft_synth";
@@ -876,6 +882,8 @@ static const gchar power_p_key[]      = "/module/fft_synth/power_p";
 static void
 fft_synth_sanitize_args(FFTSynthArgs *args)
 {
+    args->active_page = CLAMP(args->active_page,
+                              PAGE_DIMENSIONS, PAGE_GENERATOR);
     args->update = !!args->update;
     args->seed = MAX(0, args->seed);
     args->randomize = !!args->randomize;
@@ -895,9 +903,12 @@ fft_synth_load_args(GwyContainer *container,
 {
     *args = fft_synth_defaults;
 
+    gwy_container_gis_int32_by_name(container, active_page_key,
+                                    &args->active_page);
     gwy_container_gis_boolean_by_name(container, update_key, &args->update);
     gwy_container_gis_int32_by_name(container, seed_key, &args->seed);
-    gwy_container_gis_boolean_by_name(container, randomize_key, &args->randomize);
+    gwy_container_gis_boolean_by_name(container, randomize_key,
+                                      &args->randomize);
     gwy_container_gis_double_by_name(container, freq_min_key, &args->freq_min);
     gwy_container_gis_double_by_name(container, freq_max_key, &args->freq_max);
     gwy_container_gis_double_by_name(container, sigma_key, &args->sigma);
@@ -920,9 +931,12 @@ fft_synth_save_args(GwyContainer *container,
                     const FFTSynthArgs *args,
                     const GwyDimensionArgs *dimsargs)
 {
+    gwy_container_set_int32_by_name(container, active_page_key,
+                                    args->active_page);
     gwy_container_set_boolean_by_name(container, update_key, args->update);
     gwy_container_set_int32_by_name(container, seed_key, args->seed);
-    gwy_container_set_boolean_by_name(container, randomize_key, args->randomize);
+    gwy_container_set_boolean_by_name(container, randomize_key,
+                                      args->randomize);
     gwy_container_set_double_by_name(container, freq_min_key, args->freq_min);
     gwy_container_set_double_by_name(container, freq_max_key, args->freq_max);
     gwy_container_set_double_by_name(container, sigma_key, args->sigma);
