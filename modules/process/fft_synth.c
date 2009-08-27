@@ -99,7 +99,9 @@ static void     fft_synth              (GwyContainer *data,
 static void     run_noninteractive     (const FFTSynthArgs *args,
                                         const GwyDimensionArgs *dimsargs,
                                         GwyContainer *data,
-                                        gint oldid);
+                                        GwyDataField *dfield,
+                                        gint oldid,
+                                        GQuark quark);
 static gboolean fft_synth_dialog       (FFTSynthArgs *args,
                                         GwyDimensionArgs *dimsargs,
                                         GwyContainer *data,
@@ -193,18 +195,20 @@ fft_synth(GwyContainer *data, GwyRunType run)
     FFTSynthArgs args;
     GwyDimensionArgs dimsargs;
     GwyDataField *dfield;
+    GQuark quark;
     gint id;
 
     g_return_if_fail(run & FFT_SYNTH_RUN_MODES);
     fft_synth_load_args(gwy_app_settings_get(), &args, &dimsargs);
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
                                      GWY_APP_DATA_FIELD_ID, &id,
+                                     GWY_APP_DATA_FIELD_KEY, &quark,
                                      0);
     g_return_if_fail(dfield);
 
     if (run == GWY_RUN_IMMEDIATE
         || fft_synth_dialog(&args, &dimsargs, data, dfield, id))
-        run_noninteractive(&args, &dimsargs, data, id);
+        run_noninteractive(&args, &dimsargs, data, dfield, id, quark);
 
     if (run == GWY_RUN_INTERACTIVE)
         fft_synth_save_args(gwy_app_settings_get(), &args, &dimsargs);
@@ -216,19 +220,24 @@ static void
 run_noninteractive(const FFTSynthArgs *args,
                    const GwyDimensionArgs *dimsargs,
                    GwyContainer *data,
-                   gint oldid)
+                   GwyDataField *dfield,
+                   gint oldid,
+                   GQuark quark)
 {
     GwyDataField *in_re, *in_im, *out_re, *out_im;
     GwySIUnit *siunit;
+    gboolean replace = dimsargs->replace && dfield;
     gdouble mag;
     gint newid;
 
     mag = pow10(dimsargs->xypow10) * dimsargs->measure;
+    if (replace)
+        gwy_app_undo_qcheckpointv(data, 1, &quark);
     in_re = gwy_data_field_new(dimsargs->xres, dimsargs->yres,
                                mag*dimsargs->xres, mag*dimsargs->yres,
                                FALSE);
     in_im = gwy_data_field_new_alike(in_re, FALSE);
-    out_re = gwy_data_field_new_alike(in_re, FALSE);
+    out_re = replace ? dfield : gwy_data_field_new_alike(in_re, FALSE);
     out_im = gwy_data_field_new_alike(in_re, FALSE);
     fft_synth_do(args, in_re, in_im, out_re, out_im);
     g_object_unref(in_re);
@@ -246,12 +255,16 @@ run_noninteractive(const FFTSynthArgs *args,
     siunit = gwy_data_field_get_si_unit_z(out_re);
     gwy_si_unit_set_from_string(siunit, dimsargs->zunits);
 
-    newid = gwy_app_data_browser_add_data_field(out_re, data, TRUE);
-    g_object_unref(out_re);
-    gwy_app_sync_data_items(data, data, oldid, newid, FALSE,
-                            GWY_DATA_ITEM_GRADIENT,
-                            0);
-    gwy_app_set_data_field_title(data, newid, _("Generated"));
+    if (dimsargs->replace)
+        gwy_data_field_data_changed(out_re);
+    else {
+        newid = gwy_app_data_browser_add_data_field(out_re, data, TRUE);
+        gwy_app_sync_data_items(data, data, oldid, newid, FALSE,
+                                GWY_DATA_ITEM_GRADIENT,
+                                0);
+        gwy_app_set_data_field_title(data, newid, _("Generated"));
+        g_object_unref(out_re);
+    }
 }
 
 static gboolean
