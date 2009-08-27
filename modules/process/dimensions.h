@@ -23,6 +23,10 @@
 
 #include <libgwydgets/gwycombobox.h>
 
+enum {
+    GWY_DIMENSIONS_SENS = 1
+};
+
 typedef struct {
     gint xres;
     gint yres;
@@ -31,9 +35,10 @@ typedef struct {
     gchar *zunits;
     gint xypow10;
     gint zpow10;
+    gboolean replace;
 } GwyDimensionArgs;
 
-#define GWY_DIMENSION_ARGS_INIT { 256, 256, 1.0, NULL, NULL, 0, 0 }
+#define GWY_DIMENSION_ARGS_INIT { 256, 256, 1.0, NULL, NULL, 0, 0, FALSE }
 
 typedef struct {
     GwyDimensionArgs *args;
@@ -43,6 +48,7 @@ typedef struct {
     GwySIValueFormat *zvf;
     GwySIUnit *xysiunit;
     GwySIUnit *zsiunit;
+    GwySensitivityGroup *sensgroup;
     GwyDataField *template_;
     GtkWidget *table;
     GtkAdjustment *xres;
@@ -56,11 +62,13 @@ typedef struct {
     GtkWidget *xyunits;
     GtkWidget *zpow10;
     GtkWidget *zunits;
+    GtkWidget *replace;
     gboolean in_update;
 } GwyDimensions;
 
 static GtkAdjustment*
 gwy_dimensions_make_res(GtkTable *table,
+                        GwySensitivityGroup *sensgroup,
                         gint row,
                         const gchar *name,
                         gint value)
@@ -71,16 +79,19 @@ gwy_dimensions_make_res(GtkTable *table,
 
     label = gtk_label_new_with_mnemonic(name);
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gwy_sensitivity_group_add_widget(sensgroup, label, GWY_DIMENSIONS_SENS);
     gtk_table_attach(table, label, 0, 1, row, row+1, GTK_FILL, 0, 0, 0);
 
     obj = gtk_adjustment_new(value, 2, 16384, 1, 100, 0);
     adj = GTK_ADJUSTMENT(obj);
     spin = gtk_spin_button_new(adj, 0, 0);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), spin);
+    gwy_sensitivity_group_add_widget(sensgroup, spin, GWY_DIMENSIONS_SENS);
     gtk_table_attach(table, spin, 1, 2, row, row+1, GTK_FILL, 0, 0, 0);
 
     label = gtk_label_new("px");
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gwy_sensitivity_group_add_widget(sensgroup, label, GWY_DIMENSIONS_SENS);
     gtk_table_attach(table, label, 2, 3, row, row+1, GTK_FILL, 0, 0, 0);
 
     return adj;
@@ -88,6 +99,7 @@ gwy_dimensions_make_res(GtkTable *table,
 
 static GtkAdjustment*
 gwy_dimensions_make_real(GtkTable *table,
+                         GwySensitivityGroup *sensgroup,
                          gint row,
                          const gchar *name,
                          gdouble value,
@@ -100,17 +112,20 @@ gwy_dimensions_make_real(GtkTable *table,
 
     label = gtk_label_new_with_mnemonic(name);
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gwy_sensitivity_group_add_widget(sensgroup, label, GWY_DIMENSIONS_SENS);
     gtk_table_attach(table, label, 0, 1, row, row+1, GTK_FILL, 0, 0, 0);
 
     obj = gtk_adjustment_new(value, 0.001, 10000.0, 1, 100, 0);
     adj = GTK_ADJUSTMENT(obj);
     spin = gtk_spin_button_new(adj, 0, 3);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), spin);
+    gwy_sensitivity_group_add_widget(sensgroup, spin, GWY_DIMENSIONS_SENS);
     gtk_table_attach(table, spin, 1, 2, row, row+1, GTK_FILL, 0, 0, 0);
 
     *unitlab = gtk_label_new(units);
     gtk_label_set_use_markup(GTK_LABEL(*unitlab), TRUE);
     gtk_misc_set_alignment(GTK_MISC(*unitlab), 0.0, 0.5);
+    gwy_sensitivity_group_add_widget(sensgroup, *unitlab, GWY_DIMENSIONS_SENS);
     gtk_table_attach(table, *unitlab, 2, 3, row, row+1, GTK_FILL, 0, 0, 0);
 
     return adj;
@@ -118,6 +133,7 @@ gwy_dimensions_make_real(GtkTable *table,
 
 static GtkWidget*
 gwy_dimensions_make_units(GtkTable *table,
+                          GwySensitivityGroup *sensgroup,
                           gint row,
                           const gchar *name,
                           gint pwr,
@@ -128,14 +144,17 @@ gwy_dimensions_make_units(GtkTable *table,
 
     label = gtk_label_new_with_mnemonic(name);
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gwy_sensitivity_group_add_widget(sensgroup, label, GWY_DIMENSIONS_SENS);
     gtk_table_attach(table, label, 0, 1, row, row+1, GTK_FILL, 0, 0, 0);
 
     *combo = gwy_combo_box_metric_unit_new(NULL, NULL,
                                            pwr - 6, pwr + 6, siunit, pwr);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), *combo);
+    gwy_sensitivity_group_add_widget(sensgroup, *combo, GWY_DIMENSIONS_SENS);
     gtk_table_attach(table, *combo, 1, 2, row, row+1, GTK_FILL, 0, 0, 0);
 
     changer = gtk_button_new_with_label(_("Change"));
+    gwy_sensitivity_group_add_widget(sensgroup, changer, GWY_DIMENSIONS_SENS);
     gtk_table_attach(table, changer, 2, 3, row, row+1, GTK_FILL, 0, 0, 0);
 
     return changer;
@@ -352,17 +371,35 @@ gwy_dimensions_use_template(GwyDimensions *dims)
     gwy_si_unit_value_format_free(zvf);
 }
 
+static void
+gwy_dimensions_replace(GwyDimensions *dims,
+                       GtkToggleButton *toggle)
+{
+    gboolean replace;
+
+    replace = toggle && gtk_toggle_button_get_active(toggle);
+
+    dims->args->replace = replace;
+    if (replace)
+        gwy_dimensions_use_template(dims);
+    gwy_sensitivity_group_set_state(dims->sensgroup,
+                                    GWY_DIMENSIONS_SENS,
+                                    replace ? 0 : GWY_DIMENSIONS_SENS);
+}
+
 static GwyDimensions*
 gwy_dimensions_new(GwyDimensionArgs *args,
                    GwyDataField *template_)
 {
     GwyDimensions *dims = g_new0(GwyDimensions, 1);
-    GtkWidget *label, *button, *align;
+    GwySensitivityGroup *sensgroup;
+    GtkWidget *label, *button;
     GtkTable *table;
     gint row;
 
     dims->args = args;
     dims->template_ = g_object_ref(template_);
+    dims->sensgroup = sensgroup = gwy_sensitivity_group_new();
     dims->xysiunit = gwy_si_unit_new(dims->args->xyunits);
     dims->xyvf = gwy_si_unit_get_format_for_power10(dims->xysiunit,
                                                     GWY_SI_UNIT_FORMAT_VFMARKUP,
@@ -383,59 +420,78 @@ gwy_dimensions_new(GwyDimensionArgs *args,
 
     /* Resolution */
     label = gwy_label_new_header(_("Resolution"));
+    gwy_sensitivity_group_add_widget(sensgroup, label, GWY_DIMENSIONS_SENS);
     gtk_table_attach(table, label, 0, 3, row, row+1, GTK_FILL, 0, 0, 0);
     row++;
 
-    dims->xres = gwy_dimensions_make_res(table, row++, _("_Horizontal size:"),
+    dims->xres = gwy_dimensions_make_res(table, sensgroup, row++,
+                                         _("_Horizontal size:"),
                                          args->xres);
-    dims->yres = gwy_dimensions_make_res(table, row++, _("_Vertical size:"),
+    dims->yres = gwy_dimensions_make_res(table, sensgroup, row++,
+                                         _("_Vertical size:"),
                                          args->yres);
 
     dims->xyreseq = gtk_check_button_new_with_mnemonic(_("S_quare image"));
-    gtk_table_attach(table, dims->xyreseq, 0, 3, row, row+1, GTK_FILL, 0, 0, 0);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(dims->xyreseq),
                                  args->xres == args->yres);
+    gwy_sensitivity_group_add_widget(sensgroup, dims->xyreseq,
+                                     GWY_DIMENSIONS_SENS);
+    gtk_table_attach(table, dims->xyreseq, 0, 3, row, row+1, GTK_FILL, 0, 0, 0);
     gtk_table_set_row_spacing(table, row, 8);
     row++;
 
     /* Physical dimensions */
     label = gwy_label_new_header(_("Physical Dimensions"));
+    gwy_sensitivity_group_add_widget(sensgroup, label, GWY_DIMENSIONS_SENS);
     gtk_table_attach(table, label, 0, 3, row, row+1, GTK_FILL, 0, 0, 0);
     row++;
 
-    dims->xreal = gwy_dimensions_make_real(table, row++, _("_Width:"),
+    dims->xreal = gwy_dimensions_make_real(table, sensgroup, row++,
+                                           _("_Width:"),
                                            args->xres * args->measure,
                                            dims->xyvf->units, &dims->xunitslab);
-    dims->yreal = gwy_dimensions_make_real(table, row++, _("H_eight:"),
+    dims->yreal = gwy_dimensions_make_real(table, sensgroup, row++,
+                                           _("H_eight:"),
                                            args->yres * args->measure,
                                            dims->xyvf->units, &dims->yunitslab);
     gtk_table_set_row_spacing(table, row-1, 8);
 
     /* Units */
     label = gwy_label_new_header(_("Units"));
+    gwy_sensitivity_group_add_widget(sensgroup, label, GWY_DIMENSIONS_SENS);
     gtk_table_attach(table, label, 0, 3, row, row+1, GTK_FILL, 0, 0, 0);
     row++;
 
-    dims->xyunits = gwy_dimensions_make_units(table, row++,
+    dims->xyunits = gwy_dimensions_make_units(table, sensgroup, row++,
                                               _("_Dimension units:"),
                                               args->xypow10, dims->xysiunit,
                                               &dims->xypow10);
 
-    dims->zunits = gwy_dimensions_make_units(table, row++,
+    dims->zunits = gwy_dimensions_make_units(table, sensgroup, row++,
                                              _("_Value units:"),
                                              args->zpow10, dims->zsiunit,
                                              &dims->zpow10);
 
     /* Template */
     if (dims->template_) {
+        GtkWidget *hbox = gtk_hbox_new(FALSE, 6);
+
         gtk_table_set_row_spacing(table, row-1, 8);
-        align = gtk_alignment_new(0.0, 0.5, 0.0, 0.0);
-        gtk_table_attach(table, align, 0, 3, row, row+1, GTK_FILL, 0, 0, 0);
+        gtk_table_attach(table, hbox, 0, 4, row, row+1, GTK_FILL, 0, 0, 0);
 
         button = gtk_button_new_with_mnemonic(_("_Like Current Channel"));
-        gtk_container_add(GTK_CONTAINER(align), button);
+        gwy_sensitivity_group_add_widget(sensgroup, button,
+                                         GWY_DIMENSIONS_SENS);
+        gtk_box_pack_start(GTK_BOX(hbox), button, FALSE, FALSE, 0);
         g_signal_connect_swapped(button, "clicked",
                                  G_CALLBACK(gwy_dimensions_use_template), dims);
+
+        button = gtk_check_button_new_with_mnemonic(_("_Replace the current "
+                                                      "channel"));
+        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(button), args->replace);
+        gtk_box_pack_start(GTK_BOX(hbox), button, FALSE, FALSE, 0);
+        g_signal_connect_swapped(button, "toggled",
+                                 G_CALLBACK(gwy_dimensions_replace), dims);
         row++;
     }
 
@@ -459,6 +515,8 @@ gwy_dimensions_new(GwyDimensionArgs *args,
     g_signal_connect_swapped(dims->zpow10, "changed",
                              G_CALLBACK(gwy_dimensions_zpow10_changed), dims);
 
+    gwy_dimensions_replace(dims, NULL);
+
     return dims;
 }
 
@@ -471,6 +529,7 @@ gwy_dimensions_get_widget(GwyDimensions *dims)
 static void
 gwy_dimensions_free(GwyDimensions *dims)
 {
+    g_object_unref(dims->sensgroup);
     g_object_unref(dims->xysiunit);
     g_object_unref(dims->zsiunit);
     gwy_si_unit_value_format_free(dims->xyvf);
@@ -546,6 +605,9 @@ gwy_dimensions_load_args(GwyDimensionArgs *args,
         args->zunits = g_strdup(s);
     }
 
+    g_string_append(g_string_truncate(key, len), "replace");
+    gwy_container_gis_boolean_by_name(settings, key->str, &args->replace);
+
     g_string_free(key, TRUE);
 }
 
@@ -585,6 +647,9 @@ gwy_dimensions_save_args(const GwyDimensionArgs *args,
     g_string_append(g_string_truncate(key, len), "zunits");
     s = args->zunits;
     gwy_container_set_string_by_name(settings, key->str, g_strdup(s ? s : ""));
+
+    g_string_append(g_string_truncate(key, len), "replace");
+    gwy_container_set_boolean_by_name(settings, key->str, args->replace);
 
     g_string_free(key, TRUE);
 }
