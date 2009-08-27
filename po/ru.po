@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2009-08-24 03:59+0200\n"
-"PO-Revision-Date: 2009-08-24 12:54+0300\n"
+"POT-Creation-Date: 2009-08-27 03:59+0200\n"
+"PO-Revision-Date: 2009-08-27 10:17+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@km.ru>\n"
 "Language-Team: russian <ru@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -294,7 +294,7 @@ msgstr "Позиция"
 
 #: libprocess/gwygrainvalue.c:914
 #: app/meta.c:286
-#: modules/process/curvature.c:793
+#: modules/process/curvature.c:797
 #: modules/tools/level3.c:461
 #: modules/tools/readvalue.c:269
 msgid "Value"
@@ -736,7 +736,7 @@ msgstr "точек"
 #: modules/file/rawfile.c:380
 #: modules/process/angle_dist.c:170
 #: modules/process/calibrate.c:295
-#: modules/process/curvature.c:646
+#: modules/process/curvature.c:650
 #: modules/process/cwt.c:132
 #: modules/process/drift.c:230
 #: modules/process/dwt.c:164
@@ -746,7 +746,7 @@ msgstr "точек"
 #: modules/process/facet_analysis.c:272
 #: modules/process/fft.c:272
 #: modules/process/fft_filter_2d.c:396
-#: modules/process/fft_synth.c:212
+#: modules/process/fft_synth.c:281
 #: modules/process/fractal.c:206
 #: modules/process/grain_mark.c:265
 #: modules/process/grain_rem_threshold.c:224
@@ -825,7 +825,7 @@ msgstr "Количество"
 
 #: libgwydgets/gwygrainvaluemenu.c:181
 #: libgwydgets/gwygrainvaluemenu.c:194
-#: modules/process/curvature.c:784
+#: modules/process/curvature.c:788
 #, fuzzy
 msgid "Symbol"
 msgstr "Символ"
@@ -1023,7 +1023,6 @@ msgstr "Длина"
 #: libgwydgets/gwygraphwindowmeasuredialog.c:283
 #: libgwydgets/gwygraphwindowmeasuredialog.c:443
 #: app/gwyplaintool.c:1020
-#: modules/file/pnifile.c:158
 msgid "Height"
 msgstr "Высота"
 
@@ -1917,9 +1916,8 @@ msgid "Color Range tool offers several false color scale mapping modes and can m
 msgstr "Инструмент \"Диапазон цвета\" предлагает несколько режимов наложения псевдоцвета и может сделать любой из них режимом по умолчанию."
 
 #: app/tips.c:335
-#, fuzzy
 msgid "Dragging selections from Selections Manager tool to a data window copies the selection to the target data."
-msgstr "Перенос выделений из менеджера выделений в окно данных копирует выделение на указанные данные."
+msgstr "Перенос выделенной области из менеджера выделенного в окно данных копирует область на указанные данные."
 
 #: app/tips.c:341
 msgid "Gwyddion User Guide explains in detail many of the methods and algorithms implemented in Gwyddion."
@@ -2686,7 +2684,7 @@ msgid "Parameter header is truncated"
 msgstr "Заголовок параметров усечён"
 
 #: modules/file/nanoeducator.c:906
-#: modules/process/curvature.c:485
+#: modules/process/curvature.c:489
 #: modules/tools/profile.c:535
 #, c-format
 msgid "Profile %d"
@@ -3049,11 +3047,13 @@ msgstr "Импортировать "
 
 #: modules/file/pixmap.c:923
 #: modules/file/rawfile.c:582
+#: modules/process/dimensions.h:385
 msgid "Resolution"
 msgstr "Разрешение"
 
 #: modules/file/pixmap.c:930
 #: modules/file/rawfile.c:587
+#: modules/process/dimensions.h:389
 msgid "_Horizontal size:"
 msgstr "_Горизонтальный размер:"
 
@@ -3064,11 +3064,13 @@ msgstr "точек"
 
 #: modules/file/pixmap.c:937
 #: modules/file/rawfile.c:594
+#: modules/process/dimensions.h:391
 msgid "_Vertical size:"
 msgstr "В_ертикальный размер:"
 
 #: modules/file/pixmap.c:968
 #: modules/file/rawfile.c:605
+#: modules/process/dimensions.h:402
 msgid "Physical Dimensions"
 msgstr "Физические размеры"
 
@@ -3082,6 +3084,7 @@ msgstr "_Ширина"
 #: modules/file/rawfile.c:693
 #: modules/process/calibrate.c:338
 #: modules/process/calibrate.c:419
+#: modules/process/dimensions.h:138
 msgid "Change"
 msgstr "Изменить"
 
@@ -3114,12 +3117,14 @@ msgstr "как данные"
 #: modules/file/pixmap.c:1279
 #: modules/file/rawfile.c:1308
 #: modules/process/calibrate.c:815
+#: modules/process/dimensions.h:171
 msgid "Change Units"
 msgstr "Изменить единицы измерения"
 
 #: modules/file/pixmap.c:1293
 #: modules/file/rawfile.c:1322
 #: modules/process/calibrate.c:829
+#: modules/process/dimensions.h:184
 msgid "New _units:"
 msgstr "Новые _единицы:"
 
@@ -3157,6 +3162,7 @@ msgstr "_Увеличение:"
 #: modules/file/pixmap.c:2384
 #: modules/file/rawfile.c:614
 #: modules/process/crosscor.c:197
+#: modules/process/dimensions.h:406
 #: modules/process/tip_blind.c:264
 msgid "_Width:"
 msgstr "_Ширина:"
@@ -3254,26 +3260,6 @@ msgstr "Импорт файлов данных Pacific Nanotechnology PNI."
 #: modules/file/pnifile.c:118
 msgid "PNI files (.pni)"
 msgstr "Файлы PNI (.pni)"
-
-#: modules/file/pnifile.c:159
-msgid "Sens"
-msgstr ""
-
-#: modules/file/pnifile.c:160
-msgid "Dem"
-msgstr ""
-
-#: modules/file/pnifile.c:161
-#: modules/graph/graph_cd.c:280
-#: modules/graph/graph_fdfit.c:336
-#: modules/graph/graph_fit.c:336
-#: modules/process/fit_2d.c:333
-msgid "Error"
-msgstr "Ошибка"
-
-#: modules/file/pnifile.c:162
-msgid "L-R"
-msgstr ""
 
 #: modules/file/psia.c:230
 msgid "Imports PSIA data files."
@@ -3383,7 +3369,7 @@ msgstr "Предустановки"
 #: modules/process/drift.c:227
 #: modules/process/edge.c:633
 #: modules/process/fft_filter_1d.c:197
-#: modules/process/fft_synth.c:209
+#: modules/process/fft_synth.c:278
 #: modules/process/grain_mark.c:262
 #: modules/process/grain_rem_threshold.c:221
 #: modules/process/grain_wshed.c:179
@@ -3412,6 +3398,7 @@ msgstr "_Квадратный образец"
 
 #: modules/file/rawfile.c:650
 #: modules/process/crosscor.c:203
+#: modules/process/dimensions.h:409
 msgid "H_eight:"
 msgstr "_Высота:"
 
@@ -4152,9 +4139,16 @@ msgstr "_Функция:"
 #: modules/graph/graph_cd.c:278
 #: modules/graph/graph_fdfit.c:334
 #: modules/graph/graph_fit.c:334
-#: modules/process/curvature.c:776
+#: modules/process/curvature.c:780
 msgid "Parameter"
 msgstr "Параметр"
+
+#: modules/graph/graph_cd.c:280
+#: modules/graph/graph_fdfit.c:336
+#: modules/graph/graph_fit.c:336
+#: modules/process/fit_2d.c:333
+msgid "Error"
+msgstr "Ошибка"
 
 #: modules/graph/graph_cd.c:292
 #: modules/graph/graph_cut.c:196
@@ -4986,56 +4980,56 @@ msgstr "Рассчитать общую кривизну"
 msgid "Curvature: Lateral dimensions and value must be the same physical quantity."
 msgstr "Кривизна: пространственные размерности и значения должны быть одной физической величиной."
 
-#: modules/process/curvature.c:476
+#: modules/process/curvature.c:480
 msgid "Curvature Sections"
 msgstr "Сечения кривизны"
 
-#: modules/process/curvature.c:644
+#: modules/process/curvature.c:648
 msgid "Curvature"
 msgstr "Кривизна"
 
-#: modules/process/curvature.c:700
+#: modules/process/curvature.c:704
 #: modules/process/slope_dist.c:216
 msgid "Output type"
 msgstr "Тип вывода"
 
-#: modules/process/curvature.c:707
+#: modules/process/curvature.c:711
 msgid "_Set selection"
 msgstr "_Установить выделение"
 
-#: modules/process/curvature.c:717
+#: modules/process/curvature.c:721
 msgid "_Plot graph"
 msgstr "Строить _график"
 
-#: modules/process/curvature.c:728
+#: modules/process/curvature.c:732
 #: modules/process/facet-level.c:303
 #: modules/process/level.c:273
 #: modules/process/polylevel.c:495
 msgid "Masking Mode"
 msgstr "Режим использования маски"
 
-#: modules/process/curvature.c:736
+#: modules/process/curvature.c:740
 #: modules/process/facet-level.c:277
 #: modules/process/level.c:247
 #: modules/process/polylevel.c:503
 msgid "_Exclude region under mask"
 msgstr "_Исключить область под маской"
 
-#: modules/process/curvature.c:738
+#: modules/process/curvature.c:742
 #: modules/process/facet-level.c:278
 #: modules/process/level.c:248
 #: modules/process/polylevel.c:505
 msgid "Exclude region _outside mask"
 msgstr "Исключить область с_наружи маски"
 
-#: modules/process/curvature.c:740
+#: modules/process/curvature.c:744
 #: modules/process/facet-level.c:279
 #: modules/process/level.c:249
 #: modules/process/polylevel.c:507
 msgid "Use entire _image (ignore mask)"
 msgstr "Использовать _всё изображение (игнорировать маску)"
 
-#: modules/process/curvature.c:804
+#: modules/process/curvature.c:808
 #: modules/process/grain_dist.c:830
 #: modules/tools/distance.c:221
 #: modules/tools/roughness.c:835
@@ -5043,7 +5037,7 @@ msgstr "Использовать _всё изображение (игнорир�
 msgid "Save table to a file"
 msgstr "Сохранить таблицу в файл"
 
-#: modules/process/curvature.c:809
+#: modules/process/curvature.c:813
 #: modules/process/grain_dist.c:835
 #: modules/tools/distance.c:226
 #: modules/tools/roughness.c:840
@@ -5051,11 +5045,11 @@ msgstr "Сохранить таблицу в файл"
 msgid "Copy table to clipboard"
 msgstr "Скопировать таблицу в буфер обмена"
 
-#: modules/process/curvature.c:936
+#: modules/process/curvature.c:940
 msgid "Axes are outside the image."
 msgstr "Оси снаружи изображения."
 
-#: modules/process/curvature.c:1001
+#: modules/process/curvature.c:1005
 msgid "Save Curvature"
 msgstr "Сохранить кривизну"
 
@@ -5084,6 +5078,26 @@ msgstr ""
 #: modules/process/dwtanisotropy.c:208
 msgid "_Wavelet type:"
 msgstr "Тип _вейвлета:"
+
+#: modules/process/dimensions.h:394
+msgid "S_quare image"
+msgstr "_Квадратное изображение"
+
+#: modules/process/dimensions.h:415
+msgid "Units"
+msgstr "Единицы измерения"
+
+#: modules/process/dimensions.h:420
+msgid "_Dimension units:"
+msgstr "Единицы измерения _размера:"
+
+#: modules/process/dimensions.h:425
+msgid "_Value units:"
+msgstr "Единицы измерения _значения:"
+
+#: modules/process/dimensions.h:435
+msgid "_Like Current Channel"
+msgstr "Как _у текущего канала"
 
 #: modules/process/drift.c:155
 msgid "Evaluates and/or correct thermal drift in fast scan axis."
@@ -5359,7 +5373,7 @@ msgstr "Найденная с_тупень"
 
 #: modules/process/edge.c:714
 #: modules/process/fft_filter_1d.c:334
-#: modules/process/fft_synth.c:355
+#: modules/process/fft_synth.c:316
 #: modules/process/grain_mark.c:380
 #: modules/process/grain_rem_threshold.c:357
 #: modules/process/mark_with.c:344
@@ -5697,78 +5711,69 @@ msgstr "_Разделить кривые"
 msgid "PSDF %.0f°"
 msgstr "ФСПМ %.0f°"
 
-#: modules/process/fft_synth.c:127
+#: modules/process/fft_synth.c:167
 msgid "Generates random surfaces using spectral synthesis."
 msgstr "Генерирует случайные поверхности используя спектральный синтез."
 
-#: modules/process/fft_synth.c:141
-#, fuzzy
-msgid "/Simulat_e/_Spectral Synthesis..."
-msgstr "/Сим_улировать/_Спектральный синтез..."
+#: modules/process/fft_synth.c:181
+msgid "/S_ynthetic/_Spectral..."
+msgstr "/Син_тез/_Спектральный..."
 
-#: modules/process/fft_synth.c:145
+#: modules/process/fft_synth.c:185
 msgid "Generate surface using spectral synthesis"
 msgstr "Создать поверхность используя спектральный синтез"
 
-#: modules/process/fft_synth.c:206
+#: modules/process/fft_synth.c:254
+msgid "Generated"
+msgstr "Сгенерированное"
+
+#: modules/process/fft_synth.c:275
 msgid "Spectral Synthesis"
 msgstr "Спектральный синтез"
 
-#: modules/process/fft_synth.c:256
-msgid "Size:"
-msgstr "Размер:"
+#: modules/process/fft_synth.c:331
+msgid "Dimensions"
+msgstr "Размеры"
 
-#: modules/process/fft_synth.c:285
-msgid "Measure:"
-msgstr "Измерить:"
+#: modules/process/fft_synth.c:338
+msgid "Generator"
+msgstr "Генератор"
 
-#: modules/process/fft_synth.c:291
-msgid "RMS:"
-msgstr ""
-
-#: modules/process/fft_synth.c:304
+#: modules/process/fft_synth.c:343
 msgid "Random seed:"
 msgstr "Случайное зерно:"
 
-#: modules/process/fft_synth.c:307
-#, fuzzy
+#: modules/process/fft_synth.c:348
 msgid "_New Seed"
-msgstr "Новое зерно"
+msgstr "Н_овое зерно"
 
-#: modules/process/fft_synth.c:314
-#, fuzzy
+#: modules/process/fft_synth.c:358
+msgid "_RMS:"
+msgstr "Ср. _квадр.:"
+
+#: modules/process/fft_synth.c:368
 msgid "M_inimum frequency:"
 msgstr "М_инимальная частота:"
 
-#: modules/process/fft_synth.c:320
-#, fuzzy
+#: modules/process/fft_synth.c:388
 msgid "Ma_ximum frequency:"
 msgstr "М_аксимальная частота:"
 
-#: modules/process/fft_synth.c:325
-#, fuzzy
+#: modules/process/fft_synth.c:408
 msgid "Enable _Gaussian multiplier"
 msgstr "Разрешить _гауссов множитель"
 
-#: modules/process/fft_synth.c:332
-#, fuzzy
+#: modules/process/fft_synth.c:419
 msgid "Correlation _length:"
 msgstr "_Длина корреляции:"
 
-#: modules/process/fft_synth.c:338
-#, fuzzy
+#: modules/process/fft_synth.c:439
 msgid "Enable _power multiplier"
-msgstr "Разрешить _степенной множитель"
+msgstr "Разрешить ст_епенной множитель"
 
-#: modules/process/fft_synth.c:345
-#, fuzzy
+#: modules/process/fft_synth.c:450
 msgid "Po_wer:"
 msgstr "С_тепень:"
-
-#: modules/process/fft_synth.c:350
-#, fuzzy
-msgid "Correlation lengt_h:"
-msgstr "Д_лина корреляции:"
 
 #: modules/process/fit_2d.c:171
 msgid "2D fitting"
@@ -7360,7 +7365,7 @@ msgstr "_Жёсткий порог:"
 #: modules/process/scars.c:530
 #: modules/process/scars.c:537
 msgid "RMS"
-msgstr ""
+msgstr "Ср. квадр."
 
 #: modules/process/scars.c:537
 msgid "_Soft threshold:"
