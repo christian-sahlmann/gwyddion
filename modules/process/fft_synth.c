@@ -429,9 +429,9 @@ fft_synth_dialog(FFTSynthArgs *args,
 
     controls.gauss_tau = gtk_adjustment_new(args->gauss_tau,
                                             1.0, 1000.0, 0.1, 10.0, 0);
-    gwy_table_hscale_set_sensitive(controls.gauss_tau, args->gauss_enable);
     gwy_table_attach_hscale(table, row, _("Correlation _length:"), "px",
                             controls.gauss_tau, GWY_HSCALE_LOG);
+    gwy_table_hscale_set_sensitive(controls.gauss_tau, args->gauss_enable);
     g_signal_connect_swapped(controls.gauss_tau, "value-changed",
                              G_CALLBACK(gauss_tau_changed), &controls);
     row++;
@@ -462,9 +462,9 @@ fft_synth_dialog(FFTSynthArgs *args,
 
     controls.power_p = gtk_adjustment_new(args->power_p,
                                           0.0, 5.0, 0.001, 0.1, 0);
-    gwy_table_hscale_set_sensitive(controls.power_p, args->power_enable);
     gwy_table_attach_hscale(table, row, _("Po_wer:"), NULL,
                             controls.power_p, 0);
+    gwy_table_hscale_set_sensitive(controls.power_p, args->power_enable);
     g_signal_connect_swapped(controls.power_p, "value-changed",
                              G_CALLBACK(power_p_changed), &controls);
     row++;
