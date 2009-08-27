@@ -488,6 +488,7 @@ gwy_dimensions_new(GwyDimensionArgs *args,
 
         button = gtk_check_button_new_with_mnemonic(_("_Replace the current "
                                                       "channel"));
+        dims->replace = button;
         gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(button), args->replace);
         gtk_box_pack_start(GTK_BOX(hbox), button, FALSE, FALSE, 0);
         g_signal_connect_swapped(button, "toggled",
@@ -515,7 +516,7 @@ gwy_dimensions_new(GwyDimensionArgs *args,
     g_signal_connect_swapped(dims->zpow10, "changed",
                              G_CALLBACK(gwy_dimensions_zpow10_changed), dims);
 
-    gwy_dimensions_replace(dims, NULL);
+    gwy_dimensions_replace(dims, dims->replace);
 
     return dims;
 }
