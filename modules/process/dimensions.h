@@ -373,11 +373,11 @@ gwy_dimensions_use_template(GwyDimensions *dims)
 
 static void
 gwy_dimensions_replace(GwyDimensions *dims,
-                       GtkToggleButton *toggle)
+                       GtkWidget *toggle)
 {
     gboolean replace;
 
-    replace = toggle && gtk_toggle_button_get_active(toggle);
+    replace = toggle && gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(toggle));
 
     dims->args->replace = replace;
     if (replace)
@@ -411,7 +411,7 @@ gwy_dimensions_new(GwyDimensionArgs *args,
                                                    args->zpow10, NULL);
     dims->zvf->precision = 2;
 
-    dims->table = gtk_table_new(11, 3, FALSE);
+    dims->table = gtk_table_new(10 + (dims->template_ ? 2 : 0), 3, FALSE);
     table = GTK_TABLE(dims->table);
     gtk_table_set_row_spacings(table, 2);
     gtk_table_set_col_spacings(table, 6);
@@ -474,23 +474,24 @@ gwy_dimensions_new(GwyDimensionArgs *args,
 
     /* Template */
     if (dims->template_) {
-        GtkWidget *hbox = gtk_hbox_new(FALSE, 6);
+        GtkWidget *align = gtk_alignment_new(0.0, 0.5, 0.0, 0.0);
 
         gtk_table_set_row_spacing(table, row-1, 8);
-        gtk_table_attach(table, hbox, 0, 4, row, row+1, GTK_FILL, 0, 0, 0);
+        gtk_table_attach(table, align, 0, 3, row, row+1, GTK_FILL, 0, 0, 0);
 
         button = gtk_button_new_with_mnemonic(_("_Like Current Channel"));
         gwy_sensitivity_group_add_widget(sensgroup, button,
                                          GWY_DIMENSIONS_SENS);
-        gtk_box_pack_start(GTK_BOX(hbox), button, FALSE, FALSE, 0);
+        gtk_container_add(GTK_CONTAINER(align), button);
         g_signal_connect_swapped(button, "clicked",
                                  G_CALLBACK(gwy_dimensions_use_template), dims);
+        row++;
 
         button = gtk_check_button_new_with_mnemonic(_("_Replace the current "
                                                       "channel"));
         dims->replace = button;
         gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(button), args->replace);
-        gtk_box_pack_start(GTK_BOX(hbox), button, FALSE, FALSE, 0);
+        gtk_table_attach(table, button, 0, 3, row, row+1, GTK_FILL, 0, 0, 0);
         g_signal_connect_swapped(button, "toggled",
                                  G_CALLBACK(gwy_dimensions_replace), dims);
         row++;
