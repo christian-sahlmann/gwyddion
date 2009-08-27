@@ -154,7 +154,7 @@ static void     fft_synth_save_args    (GwyContainer *container,
 
 static const FFTSynthArgs fft_synth_defaults = {
     42,
-    0.0, G_SQRT2,
+    0.0, G_SQRT2*G_PI,
     1.0,
     FALSE, 10.0,
     FALSE, 1.5,
