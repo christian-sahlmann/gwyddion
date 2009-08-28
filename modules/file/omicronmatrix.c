@@ -177,9 +177,9 @@ static GwyModuleInfo module_info = {
     N_("Omicron MATRIX (param.mtrx & data.mtrx)"),
     "Philipp Rahe <hquerquadrat@gmail.com>",
 #ifdef OSNAVERSION
-    "0.81-Osnabruck",
+    "0.82-Osnabruck",
 #else
-    "0.81",
+    "0.82",
 #endif
     "Philipp Rahe",
     "2008",
@@ -226,7 +226,7 @@ static gchar* matrix_readstring(const guchar** fp,
 
     len = gwy_get_guint32_le(fp);
     if(len == 0) {
-        return "";
+        return g_strdup("");
     }
     if(len > STRING_MAXLENGTH) {
       g_warning("omicronmatrix::matrix_readstring:"
@@ -1545,6 +1545,7 @@ static GwyContainer* matrix_load(const gchar* filename,
     gchar newdelimiter = '_';
 
     // Some default values
+    gwy_clear(&matrixdata, 1);
     matrixdata.zoom = 1.0;
     // TODO: correct error-management
     
