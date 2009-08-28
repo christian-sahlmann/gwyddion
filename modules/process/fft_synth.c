@@ -72,6 +72,7 @@ typedef struct {
     GtkWidget *update;
     GtkWidget *update_now;
     GtkObject *seed;
+    GtkWidget *randomize;
     GtkObject *sigma;
     GtkWidget *sigma_units;
     GtkObject *freq_min;
@@ -255,15 +256,15 @@ run_noninteractive(FFTSynthArgs *args,
         gwy_data_field_multiply(out_re,
                                 pow10(dimsargs->zpow10)*args->sigma/mag);
 
-    siunit = gwy_data_field_get_si_unit_xy(out_re);
-    gwy_si_unit_set_from_string(siunit, dimsargs->xyunits);
-
-    siunit = gwy_data_field_get_si_unit_z(out_re);
-    gwy_si_unit_set_from_string(siunit, dimsargs->zunits);
-
     if (dimsargs->replace)
         gwy_data_field_data_changed(out_re);
     else {
+        siunit = gwy_data_field_get_si_unit_xy(out_re);
+        gwy_si_unit_set_from_string(siunit, dimsargs->xyunits);
+
+        siunit = gwy_data_field_get_si_unit_z(out_re);
+        gwy_si_unit_set_from_string(siunit, dimsargs->zunits);
+
         newid = gwy_app_data_browser_add_data_field(out_re, data, TRUE);
         gwy_app_sync_data_items(data, data, oldid, newid, FALSE,
                                 GWY_DATA_ITEM_GRADIENT,
@@ -292,12 +293,11 @@ fft_synth_dialog(FFTSynthArgs *args,
     controls.args = args;
     controls.pxsize = 1.0;
     dialog = gtk_dialog_new_with_buttons(_("Spectral Synthesis"),
-                                         NULL, 0, NULL);
-    gtk_dialog_add_button(GTK_DIALOG(dialog), _("_Reset"), RESPONSE_RESET);
-    gtk_dialog_add_button(GTK_DIALOG(dialog),
-                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL);
-    gtk_dialog_add_button(GTK_DIALOG(dialog),
-                          GTK_STOCK_OK, GTK_RESPONSE_OK);
+                                         NULL, 0,
+                                         _("_Reset"), RESPONSE_RESET,
+                                         GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
+                                         GTK_STOCK_OK, GTK_RESPONSE_OK,
+                                         NULL);
     gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
     controls.dialog = dialog;
@@ -344,8 +344,8 @@ fft_synth_dialog(FFTSynthArgs *args,
     g_signal_connect_swapped(controls.seed, "value-changed",
                              G_CALLBACK(seed_changed), &controls);
 
-    gtk_box_pack_start(GTK_BOX(vbox), randomize_new(&args->randomize),
-                       FALSE, FALSE, 0);
+    controls.randomize = randomize_new(&args->randomize);
+    gtk_box_pack_start(GTK_BOX(vbox), controls.randomize, FALSE, FALSE, 0);
 
     notebook = gtk_notebook_new();
     gtk_box_pack_start(GTK_BOX(hbox), notebook, FALSE, FALSE, 4);
@@ -368,11 +368,11 @@ fft_synth_dialog(FFTSynthArgs *args,
     controls.sigma = gtk_adjustment_new(args->sigma,
                                         0.0001, 10000.0, 0.0001, 1.0, 0);
     gwy_table_attach_hscale(table, row, _("_RMS:"), "",
-                            controls.sigma, 0);
+                            controls.sigma, GWY_HSCALE_LOG);
     controls.sigma_units = gwy_table_hscale_get_units(controls.sigma);
-    gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
     g_signal_connect_swapped(controls.sigma, "value-changed",
                              G_CALLBACK(sigma_changed), &controls);
+    gtk_table_set_row_spacing(GTK_TABLE(table), row, 12);
     row++;
 
     controls.freq_min = gtk_adjustment_new(args->freq_min,
@@ -413,7 +413,7 @@ fft_synth_dialog(FFTSynthArgs *args,
     gtk_misc_set_alignment(GTK_MISC(controls.freq_max_units), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), controls.freq_max_units,
                      3, 4, row, row+1, GTK_FILL, 0, 0, 0);
-    gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
+    gtk_table_set_row_spacing(GTK_TABLE(table), row, 12);
     row++;
 
     controls.gauss_enable
@@ -440,13 +440,13 @@ fft_synth_dialog(FFTSynthArgs *args,
     gtk_widget_set_sensitive(controls.gauss_tau_value, args->gauss_enable);
     gtk_table_attach(GTK_TABLE(table), controls.gauss_tau_value,
                      2, 3, row, row+1, GTK_FILL, 0, 0, 0);
-    gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
 
     controls.gauss_tau_units = gtk_label_new(NULL);
     gtk_misc_set_alignment(GTK_MISC(controls.gauss_tau_units), 0.0, 0.5);
     gtk_widget_set_sensitive(controls.gauss_tau_units, args->gauss_enable);
     gtk_table_attach(GTK_TABLE(table), controls.gauss_tau_units,
                      3, 4, row, row+1, GTK_FILL, 0, 0, 0);
+    gtk_table_set_row_spacing(GTK_TABLE(table), row, 12);
     row++;
 
     controls.power_enable
@@ -516,7 +516,11 @@ static void
 update_controls(FFTSynthControls *controls,
                 FFTSynthArgs *args)
 {
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->update),
+                                 args->update);
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->seed), args->seed);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->randomize),
+                                 args->randomize);
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->sigma), args->sigma);
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->freq_min),
                              args->freq_min);
@@ -530,8 +534,6 @@ update_controls(FFTSynthControls *controls,
                                  args->gauss_enable);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->power_enable),
                                  args->power_enable);
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->update),
-                                 args->update);
 }
 
 static void
@@ -866,10 +868,10 @@ fft_synth_do(const FFTSynthArgs *args,
     gwy_data_field_data_changed(out_im);
 }
 
+static const gchar prefix[]           = "/module/fft_synth";
 static const gchar active_page_key[]  = "/module/fft_synth/active_page";
 static const gchar update_key[]       = "/module/fft_synth/update";
 static const gchar randomize_key[]    = "/module/fft_synth/randomize";
-static const gchar prefix[]           = "/module/fft_synth";
 static const gchar seed_key[]         = "/module/fft_synth/seed";
 static const gchar freq_min_key[]     = "/module/fft_synth/freq_min";
 static const gchar freq_max_key[]     = "/module/fft_synth/freq_max";

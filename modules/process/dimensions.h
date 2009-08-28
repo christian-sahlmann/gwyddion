@@ -437,7 +437,7 @@ gwy_dimensions_new(GwyDimensionArgs *args,
     gwy_sensitivity_group_add_widget(sensgroup, dims->xyreseq,
                                      GWY_DIMENSIONS_SENS);
     gtk_table_attach(table, dims->xyreseq, 0, 3, row, row+1, GTK_FILL, 0, 0, 0);
-    gtk_table_set_row_spacing(table, row, 8);
+    gtk_table_set_row_spacing(table, row, 12);
     row++;
 
     /* Physical dimensions */
@@ -454,7 +454,7 @@ gwy_dimensions_new(GwyDimensionArgs *args,
                                            _("H_eight:"),
                                            args->yres * args->measure,
                                            dims->xyvf->units, &dims->yunitslab);
-    gtk_table_set_row_spacing(table, row-1, 8);
+    gtk_table_set_row_spacing(table, row-1, 12);
 
     /* Units */
     label = gwy_label_new_header(_("Units"));
@@ -476,7 +476,7 @@ gwy_dimensions_new(GwyDimensionArgs *args,
     if (dims->template_) {
         GtkWidget *align = gtk_alignment_new(0.0, 0.5, 0.0, 0.0);
 
-        gtk_table_set_row_spacing(table, row-1, 8);
+        gtk_table_set_row_spacing(table, row-1, 12);
         gtk_table_attach(table, align, 0, 3, row, row+1, GTK_FILL, 0, 0, 0);
 
         button = gtk_button_new_with_mnemonic(_("_Like Current Channel"));
