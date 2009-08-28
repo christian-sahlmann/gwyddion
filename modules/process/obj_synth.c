@@ -356,13 +356,17 @@ obj_synth_dialog(ObjSynthArgs *args,
                              gwy_dimensions_get_widget(controls.dims),
                              gtk_label_new(_("Dimensions")));
 
-    table = gtk_table_new(10, 5, FALSE);
+    table = gtk_table_new(15, 5, FALSE);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_notebook_append_page(GTK_NOTEBOOK(notebook), table,
                              gtk_label_new(_("Shape")));
     row = 0;
+
+    gtk_table_attach(GTK_TABLE(table), gwy_label_new_header(_("Size")),
+                     0, 3, row, row+1, GTK_FILL, 0, 0, 0);
+    row++;
 
     controls.size = gtk_adjustment_new(args->size, 1.0, 1000.0, 0.1, 10.0, 0);
     gwy_table_attach_hscale(table, row, _("_Size:"), "px",
@@ -384,11 +388,15 @@ obj_synth_dialog(ObjSynthArgs *args,
 
     controls.size_noise = gtk_adjustment_new(args->size_noise,
                                              0.0, 1.0, 0.001, 0.1, 0);
-    gwy_table_attach_hscale(table, row, _("Randomization:"), NULL,
+    gwy_table_attach_hscale(table, row, _("Variance:"), NULL,
                             controls.size_noise, GWY_HSCALE_SQRT);
     g_signal_connect_swapped(controls.size_noise, "value-changed",
                              G_CALLBACK(size_noise_changed), &controls);
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 12);
+    row++;
+
+    gtk_table_attach(GTK_TABLE(table), gwy_label_new_header(_("Aspect Ratio")),
+                     0, 3, row, row+1, GTK_FILL, 0, 0, 0);
     row++;
 
     controls.aspect = gtk_adjustment_new(args->aspect,
@@ -401,11 +409,15 @@ obj_synth_dialog(ObjSynthArgs *args,
 
     controls.aspect_noise = gtk_adjustment_new(args->aspect_noise,
                                              0.0, 1.0, 0.001, 0.1, 0);
-    gwy_table_attach_hscale(table, row, _("Randomization:"), NULL,
+    gwy_table_attach_hscale(table, row, _("Variance:"), NULL,
                             controls.aspect_noise, GWY_HSCALE_SQRT);
     g_signal_connect_swapped(controls.aspect_noise, "value-changed",
                              G_CALLBACK(aspect_noise_changed), &controls);
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 12);
+    row++;
+
+    gtk_table_attach(GTK_TABLE(table), gwy_label_new_header(_("Height")),
+                     0, 3, row, row+1, GTK_FILL, 0, 0, 0);
     row++;
 
     controls.height = gtk_adjustment_new(args->height,
@@ -419,11 +431,15 @@ obj_synth_dialog(ObjSynthArgs *args,
 
     controls.height_noise = gtk_adjustment_new(args->height_noise,
                                              0.0, 1.0, 0.001, 0.1, 0);
-    gwy_table_attach_hscale(table, row, _("Randomization:"), NULL,
+    gwy_table_attach_hscale(table, row, _("Variance:"), NULL,
                             controls.height_noise, GWY_HSCALE_SQRT);
     g_signal_connect_swapped(controls.height_noise, "value-changed",
                              G_CALLBACK(height_noise_changed), &controls);
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 12);
+    row++;
+
+    gtk_table_attach(GTK_TABLE(table), gwy_label_new_header(_("Orientation")),
+                     0, 3, row, row+1, GTK_FILL, 0, 0, 0);
     row++;
 
     controls.angle = gtk_adjustment_new(args->angle*180.0/G_PI,
@@ -436,7 +452,7 @@ obj_synth_dialog(ObjSynthArgs *args,
 
     controls.angle_noise = gtk_adjustment_new(args->angle_noise,
                                              0.0, 1.0, 0.001, 0.1, 0);
-    gwy_table_attach_hscale(table, row, _("Randomization:"), NULL,
+    gwy_table_attach_hscale(table, row, _("Variance:"), NULL,
                             controls.angle_noise, GWY_HSCALE_SQRT);
     g_signal_connect_swapped(controls.angle_noise, "value-changed",
                              G_CALLBACK(angle_noise_changed), &controls);
