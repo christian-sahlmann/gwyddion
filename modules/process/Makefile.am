@@ -44,6 +44,7 @@ process_LTLIBRARIES = \
 	maskops.la \
 	median-bg.la \
 	merge.la \
+	obj_synth.la \
 	outliers.la \
 	polylevel.la \
 	polydistort.la \
@@ -134,6 +135,7 @@ maskops_la_SOURCES             = maskops.c
 median_bg_la_SOURCES           = median-bg.c
 merge_la_SOURCES               = merge.c
 #nanoindent_adjust_la_SOURCES  = nanoindent_adjust.c
+obj_synth_la_SOURCES           = obj_synth.c dimensions.h
 outliers_la_SOURCES            = outliers.c
 polylevel_la_SOURCES           = polylevel.c
 polydistort_la_SOURCES         = polydistort.c
