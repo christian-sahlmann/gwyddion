@@ -64,7 +64,8 @@ class Columnizer:
 
 class FuncColumnizer(Columnizer):
     regexp = (r'(?s)(?P<type>.*?)\b(?P<name>[_a-zA-Z]\w*)\s*'
-              r'(?P<args>\(.*?\);)\s*')
+              r'(?P<args>\(.*?\))\s*'
+              r'(?P<attrs>(?:G_GNUC_[^;]*)?);\s*')
 
     def fix(self, s):
         return re.sub(r'\s+', ' ', s).strip()
@@ -72,14 +73,20 @@ class FuncColumnizer(Columnizer):
     def feed(self, text):
         self.cols = []
         for m in self.re.finditer(text):
-            args = [self.fix(x) for x in m.group('args').split(',')]
+            args = m.group('args')
+            attrs = m.group('attrs')
+            args = [self.fix(x) for x in args.split(',')]
             for i in range(0, len(args)-1):
                 args[i] = args[i] + ','
             typ = re.sub(r'\s+\*$', '*', self.fix(m.group('type'))) + ' '
-            line = [typ, m.group('name'), args[0]]
+            line = [typ, m.group('name'), args[0], '']
             self.cols.append(line)
             for x in args[1:]:
-                self.cols.append(['', '', ' ' + x])
+                self.cols.append(['', '', ' ' + x, ''])
+            if attrs:
+                self.cols[-1][-1] = ' ' + attrs + ';'
+            else:
+                self.cols[-1][-2] += ';'
 
         self.widths = [[len(x) for x in line] for line in self.cols]
         return self.widths
@@ -151,7 +158,7 @@ def align_string(s):
     stripped = s.strip()
     if stripped.startswith('{'):
         c = ArrayColumnizer()
-    elif stripped.endswith(');'):
+    elif stripped.endswith(');') or re.search(r'\)\s*G_GNUC', stripped):
         c = FuncColumnizer()
     else:
         c = SimpleColumnizer()
