@@ -281,7 +281,7 @@ fft_synth_dialog(FFTSynthArgs *args,
                  GwyDataField *dfield_template,
                  gint id)
 {
-    GtkWidget *dialog, *table, *vbox, *hbox, *notebook;
+    GtkWidget *dialog, *table, *vbox, *hbox, *notebook, *spin;
     FFTSynthControls controls;
     GwyDataField *dfield;
     gint response;
@@ -366,9 +366,10 @@ fft_synth_dialog(FFTSynthArgs *args,
     row = 0;
 
     controls.sigma = gtk_adjustment_new(args->sigma,
-                                        0.0001, 10000.0, 0.0001, 1.0, 0);
-    gwy_table_attach_hscale(table, row, _("_RMS:"), "",
-                            controls.sigma, GWY_HSCALE_LOG);
+                                        0.0001, 10000.0, 0.1, 1.0, 0);
+    spin = gwy_table_attach_hscale(table, row, _("_RMS:"), "",
+                                   controls.sigma, GWY_HSCALE_LOG);
+    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 4);
     controls.sigma_units = gwy_table_hscale_get_units(controls.sigma);
     g_signal_connect_swapped(controls.sigma, "value-changed",
                              G_CALLBACK(sigma_changed), &controls);
@@ -460,9 +461,10 @@ fft_synth_dialog(FFTSynthArgs *args,
     row++;
 
     controls.power_p = gtk_adjustment_new(args->power_p,
-                                          0.0, 5.0, 0.001, 0.1, 0);
-    gwy_table_attach_hscale(table, row, _("Po_wer:"), NULL,
-                            controls.power_p, 0);
+                                          0.0, 5.0, 0.01, 0.1, 0);
+    spin = gwy_table_attach_hscale(table, row, _("Po_wer:"), NULL,
+                                   controls.power_p, 0);
+    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 3);
     gwy_table_hscale_set_sensitive(controls.power_p, args->power_enable);
     g_signal_connect_swapped(controls.power_p, "value-changed",
                              G_CALLBACK(power_p_changed), &controls);
