@@ -46,6 +46,7 @@ enum {
 enum {
     PAGE_DIMENSIONS = 0,
     PAGE_GENERATOR = 1,
+    PAGE_NPAGES
 };
 
 typedef struct {
@@ -429,7 +430,7 @@ fft_synth_dialog(FFTSynthArgs *args,
 
     controls.gauss_tau = gtk_adjustment_new(args->gauss_tau,
                                             1.0, 1000.0, 0.1, 10.0, 0);
-    gwy_table_attach_hscale(table, row, _("Correlation _length:"), "px",
+    gwy_table_attach_hscale(table, row, _("_Autocorrelation length:"), "px",
                             controls.gauss_tau, GWY_HSCALE_LOG);
     gwy_table_hscale_set_sensitive(controls.gauss_tau, args->gauss_enable);
     g_signal_connect_swapped(controls.gauss_tau, "value-changed",
@@ -887,7 +888,7 @@ static void
 fft_synth_sanitize_args(FFTSynthArgs *args)
 {
     args->active_page = CLAMP(args->active_page,
-                              PAGE_DIMENSIONS, PAGE_GENERATOR);
+                              PAGE_DIMENSIONS, PAGE_NPAGES-1);
     args->update = !!args->update;
     args->seed = MAX(0, args->seed);
     args->randomize = !!args->randomize;
