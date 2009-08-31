@@ -360,7 +360,7 @@ obj_synth_dialog(ObjSynthArgs *args,
                  GwyDataField *dfield_template,
                  gint id)
 {
-    GtkWidget *dialog, *table, *vbox, *hbox, *notebook;
+    GtkWidget *dialog, *table, *vbox, *hbox, *notebook, *spin;
     ObjSynthControls controls;
     GwyDataField *dfield;
     gint response;
@@ -437,7 +437,7 @@ obj_synth_dialog(ObjSynthArgs *args,
                              gwy_dimensions_get_widget(controls.dims),
                              gtk_label_new(_("Dimensions")));
 
-    table = gtk_table_new(15, 5, FALSE);
+    table = gtk_table_new(15, 4, FALSE);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
@@ -473,9 +473,10 @@ obj_synth_dialog(ObjSynthArgs *args,
     row++;
 
     controls.size_noise = gtk_adjustment_new(args->size_noise,
-                                             0.0, 1.0, 0.001, 0.1, 0);
-    gwy_table_attach_hscale(table, row, _("Variance:"), NULL,
-                            controls.size_noise, GWY_HSCALE_SQRT);
+                                             0.0, 1.0, 0.01, 0.1, 0);
+    spin = gwy_table_attach_hscale(table, row, _("Variance:"), NULL,
+                                   controls.size_noise, GWY_HSCALE_SQRT);
+    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 3);
     g_signal_connect_swapped(controls.size_noise, "value-changed",
                              G_CALLBACK(size_noise_changed), &controls);
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 12);
@@ -486,7 +487,7 @@ obj_synth_dialog(ObjSynthArgs *args,
     row++;
 
     controls.aspect = gtk_adjustment_new(args->aspect,
-                                         0.2, 5.0, 0.01, 1.0, 0);
+                                         0.2, 5.0, 0.1, 1.0, 0);
     gwy_table_attach_hscale(table, row, _("_Aspect ratio:"), NULL,
                             controls.aspect, GWY_HSCALE_LOG);
     g_signal_connect_swapped(controls.aspect, "value-changed",
@@ -494,9 +495,10 @@ obj_synth_dialog(ObjSynthArgs *args,
     row++;
 
     controls.aspect_noise = gtk_adjustment_new(args->aspect_noise,
-                                             0.0, 1.0, 0.001, 0.1, 0);
-    gwy_table_attach_hscale(table, row, _("Variance:"), NULL,
-                            controls.aspect_noise, GWY_HSCALE_SQRT);
+                                               0.0, 1.0, 0.01, 0.1, 0);
+    spin = gwy_table_attach_hscale(table, row, _("Variance:"), NULL,
+                                   controls.aspect_noise, GWY_HSCALE_SQRT);
+    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 3);
     g_signal_connect_swapped(controls.aspect_noise, "value-changed",
                              G_CALLBACK(aspect_noise_changed), &controls);
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 12);
@@ -507,18 +509,20 @@ obj_synth_dialog(ObjSynthArgs *args,
     row++;
 
     controls.height = gtk_adjustment_new(args->height,
-                                        0.0001, 10000.0, 0.0001, 1.0, 0);
-    gwy_table_attach_hscale(table, row, _("_Height:"), "",
-                            controls.height, GWY_HSCALE_LOG);
+                                        0.0001, 10000.0, 0.1, 10.0, 0);
+    spin = gwy_table_attach_hscale(table, row, _("_Height:"), "",
+                                   controls.height, GWY_HSCALE_LOG);
+    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 4);
     controls.height_units = gwy_table_hscale_get_units(controls.height);
     g_signal_connect_swapped(controls.height, "value-changed",
                              G_CALLBACK(height_changed), &controls);
     row++;
 
     controls.height_noise = gtk_adjustment_new(args->height_noise,
-                                             0.0, 1.0, 0.001, 0.1, 0);
-    gwy_table_attach_hscale(table, row, _("Variance:"), NULL,
-                            controls.height_noise, GWY_HSCALE_SQRT);
+                                               0.0, 1.0, 0.01, 0.1, 0);
+    spin = gwy_table_attach_hscale(table, row, _("Variance:"), NULL,
+                                   controls.height_noise, GWY_HSCALE_SQRT);
+    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 3);
     g_signal_connect_swapped(controls.height_noise, "value-changed",
                              G_CALLBACK(height_noise_changed), &controls);
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 12);
@@ -529,21 +533,31 @@ obj_synth_dialog(ObjSynthArgs *args,
     row++;
 
     controls.angle = gtk_adjustment_new(args->angle*180.0/G_PI,
-                                         -180.0, 180.0, 0.1, 10.0, 0);
-    gwy_table_attach_hscale(table, row, _("Orien_tation:"), "deg",
-                            controls.angle, 0);
+                                         -180.0, 180.0, 1.0, 10.0, 0);
+    spin = gwy_table_attach_hscale(table, row, _("Orien_tation:"), "deg",
+                                   controls.angle, 0);
+    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 1);
     g_signal_connect_swapped(controls.angle, "value-changed",
                              G_CALLBACK(angle_changed), &controls);
     row++;
 
     controls.angle_noise = gtk_adjustment_new(args->angle_noise,
-                                             0.0, 1.0, 0.001, 0.1, 0);
-    gwy_table_attach_hscale(table, row, _("Variance:"), NULL,
-                            controls.angle_noise, GWY_HSCALE_SQRT);
+                                              0.0, 1.0, 0.01, 0.1, 0);
+    spin = gwy_table_attach_hscale(table, row, _("Variance:"), NULL,
+                                   controls.angle_noise, GWY_HSCALE_SQRT);
+    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 3);
     g_signal_connect_swapped(controls.angle_noise, "value-changed",
                              G_CALLBACK(angle_noise_changed), &controls);
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 12);
     row++;
+
+    table = gtk_table_new(15, 4, FALSE);
+    gtk_table_set_row_spacings(GTK_TABLE(table), 2);
+    gtk_table_set_col_spacings(GTK_TABLE(table), 6);
+    gtk_container_set_border_width(GTK_CONTAINER(table), 4);
+    gtk_notebook_append_page(GTK_NOTEBOOK(notebook), table,
+                             gtk_label_new(_("Placement")));
+    row = 0;
 
     gtk_widget_show_all(dialog);
     controls.in_init = FALSE;
