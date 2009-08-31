@@ -44,13 +44,16 @@ enum {
 
 enum {
     PAGE_DIMENSIONS = 0,
-    PAGE_SHAPE = 1,
-    PAGE_PLACEMENT = 2,
+    PAGE_SHAPE      = 1,
+    PAGE_PLACEMENT  = 2,
 };
 
 typedef enum {
-    OBJ_SYNTH_SPHERE = 0,
-    OBJ_SYNTH_PYRAMID = 1,
+    OBJ_SYNTH_SPHERE   = 0,
+    OBJ_SYNTH_PYRAMID  = 1,
+    OBJ_SYNTH_NUGGET   = 2,
+    OBJ_SYNTH_THATCH   = 3,
+    OBJ_SYNTH_DOUGHNUT = 4,
     OBJ_SYNTH_NTYPES
 } ObjSynthType;
 
@@ -59,6 +62,13 @@ typedef void (*MakeFeatureFunc)(GwyDataField *feature,
                                 gdouble aspect,
                                 gdouble height,
                                 gdouble angle);
+
+typedef struct {
+    ObjSynthType type;
+    const gchar *name;
+    MakeFeatureFunc create;
+} ObjSynthFeature;
+
 typedef struct {
     GRand *id;
     GRand *size;
@@ -126,6 +136,7 @@ static gboolean    obj_synth_dialog    (ObjSynthArgs *args,
                                         GwyContainer *data,
                                         GwyDataField *dfield,
                                         gint id);
+static GtkWidget*  feature_selector_new(ObjSynthControls *controls);
 static void        update_controls     (ObjSynthControls *controls,
                                         ObjSynthArgs *args);
 static GtkWidget*  random_seed_new     (GtkAdjustment *adj);
@@ -141,6 +152,8 @@ static void        seed_changed        (ObjSynthControls *controls,
 static void        randomize_seed      (GtkAdjustment *adj);
 static void        size_changed        (ObjSynthControls *controls,
                                         GtkAdjustment *adj);
+static void        feature_type_selected(GtkComboBox *combo,
+                                         ObjSynthControls *controls);
 static void        update_size_value   (ObjSynthControls *controls);
 static void        size_noise_changed  (ObjSynthControls *controls,
                                         GtkAdjustment *adj);
@@ -225,6 +238,14 @@ static const ObjSynthArgs obj_synth_defaults = {
 };
 
 static const GwyDimensionArgs dims_defaults = GWY_DIMENSION_ARGS_INIT;
+
+static const ObjSynthFeature features[] = {
+    { OBJ_SYNTH_SPHERE,   N_("Spheres"),  &make_sphere,   },
+    { OBJ_SYNTH_PYRAMID,  N_("Pyramids"), &make_pyramid,  },
+    { OBJ_SYNTH_NUGGET,   N_("Nuggets"),  &make_nugget,   },
+    { OBJ_SYNTH_THATCH,   N_("Thatches"), &make_thatch,   },
+    { OBJ_SYNTH_DOUGHNUT, N_("Dougnuts"), &make_doughnut, },
+};
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -424,6 +445,11 @@ obj_synth_dialog(ObjSynthArgs *args,
                              gtk_label_new(_("Shape")));
     row = 0;
 
+    controls.type = feature_selector_new(&controls);
+    gwy_table_attach_hscale(table, row, _("_Shape:"), NULL,
+                            GTK_OBJECT(controls.type), GWY_HSCALE_WIDGET);
+    row++;
+
     gtk_table_attach(GTK_TABLE(table), gwy_label_new_header(_("Size")),
                      0, 3, row, row+1, GTK_FILL, 0, 0, 0);
     row++;
@@ -558,6 +584,28 @@ obj_synth_dialog(ObjSynthArgs *args,
     }
 }
 
+static GtkWidget*
+feature_selector_new(ObjSynthControls *controls)
+{
+    GtkWidget *combo;
+    GwyEnum *model;
+    guint n, i;
+
+    n = G_N_ELEMENTS(features);
+    model = g_new(GwyEnum, n);
+    for (i = 0; i < n; i++) {
+        model[i].value = features[i].type;
+        model[i].name = features[i].name;
+    }
+
+    combo = gwy_enum_combo_box_new(model, n,
+                                   G_CALLBACK(feature_type_selected), controls,
+                                   controls->args->type, TRUE);
+    g_object_weak_ref(G_OBJECT(combo), (GWeakNotify)g_free, model);
+
+    return combo;
+}
+
 static void
 update_controls(ObjSynthControls *controls,
                 ObjSynthArgs *args)
@@ -690,6 +738,14 @@ randomize_seed(GtkAdjustment *adj)
 {
     /* Use the GLib's global PRNG for seeding */
     gtk_adjustment_set_value(adj, g_random_int() & 0x7fffffff);
+}
+
+static void
+feature_type_selected(GtkComboBox *combo,
+                      ObjSynthControls *controls)
+{
+    controls->args->type = gwy_enum_combo_box_get_active(combo);
+    obj_synth_invalidate(controls);
 }
 
 static void
@@ -880,7 +936,7 @@ object_synth_iter(GwyDataField *surface,
         if (args->angle_noise)
             angle += randsymm(rngset->height, G_PI*args->angle_noise);
 
-        make_doughnut(object, size, aspect, height, angle);
+        features[args->type].create(object, size, aspect, height, angle);
 
         from = (j*xres + nxcells/2)/nxcells;
         to = (j*xres + xres + nxcells/2)/nxcells;
