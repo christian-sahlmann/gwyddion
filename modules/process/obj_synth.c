@@ -46,6 +46,7 @@ enum {
     PAGE_DIMENSIONS = 0,
     PAGE_SHAPE      = 1,
     PAGE_PLACEMENT  = 2,
+    PAGE_NPAGES
 };
 
 typedef enum {
@@ -91,6 +92,8 @@ typedef struct {
     gdouble height_noise;
     gdouble angle;
     gdouble angle_noise;
+    gdouble coverage;
+    gdouble smooth;
 } ObjSynthArgs;
 
 typedef struct {
@@ -116,116 +119,131 @@ typedef struct {
     GtkObject *height_noise;
     GtkObject *angle;
     GtkObject *angle_noise;
+    GtkObject *coverage;
+    GtkWidget *coverage_value;
+    GtkWidget *coverage_units;
+    GtkObject *smooth;
+    GtkWidget *smooth_value;
+    GtkWidget *smooth_units;
     GwyContainer *mydata;
     gboolean in_init;
 } ObjSynthControls;
 
-static gboolean    module_register     (void);
-static void        obj_synth           (GwyContainer *data,
-                                        GwyRunType run);
-static void        run_noninteractive  (ObjSynthArgs *args,
-                                        const GwyDimensionArgs *dimsargs,
-                                        RandGenSet *rngset,
-                                        GwyContainer *data,
-                                        GwyDataField *dfield,
-                                        gint oldid,
-                                        GQuark quark);
-static gboolean    obj_synth_dialog    (ObjSynthArgs *args,
-                                        GwyDimensionArgs *dimsargs,
-                                        RandGenSet *rngset,
-                                        GwyContainer *data,
-                                        GwyDataField *dfield,
-                                        gint id);
-static GtkWidget*  feature_selector_new(ObjSynthControls *controls);
-static void        update_controls     (ObjSynthControls *controls,
-                                        ObjSynthArgs *args);
-static GtkWidget*  random_seed_new     (GtkAdjustment *adj);
-static GtkWidget*  randomize_new       (gboolean *randomize);
-static GtkWidget*  instant_updates_new (GtkWidget **update,
-                                        GtkWidget **instant,
-                                        gboolean *state);
-static void        page_switched       (ObjSynthControls *controls,
-                                        GtkNotebookPage *page,
-                                        gint pagenum);
-static void        seed_changed        (ObjSynthControls *controls,
-                                        GtkAdjustment *adj);
-static void        randomize_seed      (GtkAdjustment *adj);
-static void        size_changed        (ObjSynthControls *controls,
-                                        GtkAdjustment *adj);
+static gboolean    module_register      (void);
+static void        obj_synth            (GwyContainer *data,
+                                         GwyRunType run);
+static void        run_noninteractive   (ObjSynthArgs *args,
+                                         const GwyDimensionArgs *dimsargs,
+                                         RandGenSet *rngset,
+                                         GwyContainer *data,
+                                         GwyDataField *dfield,
+                                         gint oldid,
+                                         GQuark quark);
+static gboolean    obj_synth_dialog     (ObjSynthArgs *args,
+                                         GwyDimensionArgs *dimsargs,
+                                         RandGenSet *rngset,
+                                         GwyContainer *data,
+                                         GwyDataField *dfield,
+                                         gint id);
+static GtkWidget*  feature_selector_new (ObjSynthControls *controls);
+static void        update_controls      (ObjSynthControls *controls,
+                                         ObjSynthArgs *args);
+static GtkWidget*  random_seed_new      (GtkAdjustment *adj);
+static GtkWidget*  randomize_new        (gboolean *randomize);
+static GtkWidget*  instant_updates_new  (GtkWidget **update,
+                                         GtkWidget **instant,
+                                         gboolean *state);
+static void        page_switched        (ObjSynthControls *controls,
+                                         GtkNotebookPage *page,
+                                         gint pagenum);
+static void        seed_changed         (ObjSynthControls *controls,
+                                         GtkAdjustment *adj);
+static void        randomize_seed       (GtkAdjustment *adj);
+static void        size_changed         (ObjSynthControls *controls,
+                                         GtkAdjustment *adj);
 static void        feature_type_selected(GtkComboBox *combo,
                                          ObjSynthControls *controls);
-static void        update_size_value   (ObjSynthControls *controls);
-static void        size_noise_changed  (ObjSynthControls *controls,
-                                        GtkAdjustment *adj);
-static void        aspect_changed      (ObjSynthControls *controls,
-                                        GtkAdjustment *adj);
-static void        aspect_noise_changed(ObjSynthControls *controls,
-                                        GtkAdjustment *adj);
-static void        height_changed      (ObjSynthControls *controls,
-                                        GtkAdjustment *adj);
-static void        height_noise_changed(ObjSynthControls *controls,
-                                        GtkAdjustment *adj);
-static void        angle_changed       (ObjSynthControls *controls,
-                                        GtkAdjustment *adj);
-static void        angle_noise_changed (ObjSynthControls *controls,
-                                        GtkAdjustment *adj);
-static void        update_value_label  (GtkLabel *label,
-                                        const GwySIValueFormat *vf,
-                                        gdouble value);
-static void        obj_synth_invalidate(ObjSynthControls *controls);
-static void        preview             (ObjSynthControls *controls);
-static void        obj_synth_do        (const ObjSynthArgs *args,
-                                        RandGenSet *rngset,
-                                        GwyDataField *dfield);
-static void        object_synth_iter   (GwyDataField *surface,
-                                        GwyDataField *object,
-                                        const ObjSynthArgs *args,
-                                        RandGenSet *rngset,
-                                        gint nxcells,
-                                        gint nycells,
-                                        gint xoff,
-                                        gint yoff,
-                                        gint nobjects,
-                                        gint *indices);
-static void        make_sphere         (GwyDataField *feature,
-                                        gdouble size,
-                                        gdouble aspect,
-                                        gdouble height,
-                                        gdouble angle);
-static void        make_pyramid        (GwyDataField *feature,
-                                        gdouble size,
-                                        gdouble aspect,
-                                        gdouble height,
-                                        gdouble angle);
-static void        make_nugget         (GwyDataField *feature,
-                                        gdouble size,
-                                        gdouble aspect,
-                                        gdouble height,
-                                        gdouble angle);
-static void        make_thatch         (GwyDataField *feature,
-                                        gdouble size,
-                                        gdouble aspect,
-                                        gdouble height,
-                                        gdouble angle);
-static void        make_doughnut       (GwyDataField *feature,
-                                        gdouble size,
-                                        gdouble aspect,
-                                        gdouble height,
-                                        gdouble angle);
-static void        place_add_min       (GwyDataField *surface,
-                                        GwyDataField *object,
-                                        gint col,
-                                        gint row);
-static RandGenSet* rand_gen_set_new    (void);
-static void        rand_gen_set_init   (RandGenSet *rngset,
-                                        guint seed);
-static void        rand_gen_set_free   (RandGenSet *rngset);
-static void        obj_synth_load_args (GwyContainer *container,
-                                        ObjSynthArgs *args,
-                                        GwyDimensionArgs *dimsargs);
-static void        obj_synth_save_args (GwyContainer *container,
-                                        const ObjSynthArgs *args,
-                                        const GwyDimensionArgs *dimsargs);
+static void        update_size_value    (ObjSynthControls *controls);
+static void        size_noise_changed   (ObjSynthControls *controls,
+                                         GtkAdjustment *adj);
+static void        aspect_changed       (ObjSynthControls *controls,
+                                         GtkAdjustment *adj);
+static void        aspect_noise_changed (ObjSynthControls *controls,
+                                         GtkAdjustment *adj);
+static void        height_changed       (ObjSynthControls *controls,
+                                         GtkAdjustment *adj);
+static void        height_noise_changed (ObjSynthControls *controls,
+                                         GtkAdjustment *adj);
+static void        angle_changed        (ObjSynthControls *controls,
+                                         GtkAdjustment *adj);
+static void        angle_noise_changed  (ObjSynthControls *controls,
+                                         GtkAdjustment *adj);
+static void        coverage_changed     (ObjSynthControls *controls,
+                                         GtkAdjustment *adj);
+static void        update_coverage_value(ObjSynthControls *controls);
+static void        smooth_changed       (ObjSynthControls *controls,
+                                         GtkAdjustment *adj);
+static void        update_smooth_value  (ObjSynthControls *controls);
+static void        update_value_label   (GtkLabel *label,
+                                         const GwySIValueFormat *vf,
+                                         gdouble value);
+static void        obj_synth_invalidate (ObjSynthControls *controls);
+static void        preview              (ObjSynthControls *controls);
+static void        obj_synth_do         (const ObjSynthArgs *args,
+                                         RandGenSet *rngset,
+                                         GwyDataField *dfield);
+static guint       calculate_n_objects  (const ObjSynthArgs *args,
+                                         guint xres,
+                                         guint yres);
+static void        object_synth_iter    (GwyDataField *surface,
+                                         GwyDataField *object,
+                                         const ObjSynthArgs *args,
+                                         RandGenSet *rngset,
+                                         gint nxcells,
+                                         gint nycells,
+                                         gint xoff,
+                                         gint yoff,
+                                         gint nobjects,
+                                         gint *indices);
+static void        make_sphere          (GwyDataField *feature,
+                                         gdouble size,
+                                         gdouble aspect,
+                                         gdouble height,
+                                         gdouble angle);
+static void        make_pyramid         (GwyDataField *feature,
+                                         gdouble size,
+                                         gdouble aspect,
+                                         gdouble height,
+                                         gdouble angle);
+static void        make_nugget          (GwyDataField *feature,
+                                         gdouble size,
+                                         gdouble aspect,
+                                         gdouble height,
+                                         gdouble angle);
+static void        make_thatch          (GwyDataField *feature,
+                                         gdouble size,
+                                         gdouble aspect,
+                                         gdouble height,
+                                         gdouble angle);
+static void        make_doughnut        (GwyDataField *feature,
+                                         gdouble size,
+                                         gdouble aspect,
+                                         gdouble height,
+                                         gdouble angle);
+static void        place_add_min        (GwyDataField *surface,
+                                         GwyDataField *object,
+                                         gint col,
+                                         gint row);
+static RandGenSet* rand_gen_set_new     (void);
+static void        rand_gen_set_init    (RandGenSet *rngset,
+                                         guint seed);
+static void        rand_gen_set_free    (RandGenSet *rngset);
+static void        obj_synth_load_args  (GwyContainer *container,
+                                         ObjSynthArgs *args,
+                                         GwyDimensionArgs *dimsargs);
+static void        obj_synth_save_args  (GwyContainer *container,
+                                         const ObjSynthArgs *args,
+                                         const GwyDimensionArgs *dimsargs);
 
 static const ObjSynthArgs obj_synth_defaults = {
     PAGE_DIMENSIONS,
@@ -235,6 +253,8 @@ static const ObjSynthArgs obj_synth_defaults = {
     1.0, 0.0,
     1.0, 0.0,
     0.0, 0.0,
+    1.0,
+    0.0,
 };
 
 static const GwyDimensionArgs dims_defaults = GWY_DIMENSION_ARGS_INIT;
@@ -448,6 +468,7 @@ obj_synth_dialog(ObjSynthArgs *args,
     controls.type = feature_selector_new(&controls);
     gwy_table_attach_hscale(table, row, _("_Shape:"), NULL,
                             GTK_OBJECT(controls.type), GWY_HSCALE_WIDGET);
+    gtk_table_set_row_spacing(GTK_TABLE(table), row, 12);
     row++;
 
     gtk_table_attach(GTK_TABLE(table), gwy_label_new_header(_("Size")),
@@ -548,7 +569,7 @@ obj_synth_dialog(ObjSynthArgs *args,
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 3);
     g_signal_connect_swapped(controls.angle_noise, "value-changed",
                              G_CALLBACK(angle_noise_changed), &controls);
-    gtk_table_set_row_spacing(GTK_TABLE(table), row, 12);
+    /*gtk_table_set_row_spacing(GTK_TABLE(table), row, 12);*/
     row++;
 
     table = gtk_table_new(15, 4, FALSE);
@@ -558,6 +579,53 @@ obj_synth_dialog(ObjSynthArgs *args,
     gtk_notebook_append_page(GTK_NOTEBOOK(notebook), table,
                              gtk_label_new(_("Placement")));
     row = 0;
+
+    controls.coverage = gtk_adjustment_new(args->coverage,
+                                           0.05, 20.0, 0.1, 1.0, 0);
+    spin = gwy_table_attach_hscale(table, row, _("Co_verage:"), NULL,
+                                   controls.coverage, GWY_HSCALE_SQRT);
+    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 2);
+    g_signal_connect_swapped(controls.coverage, "value-changed",
+                             G_CALLBACK(coverage_changed), &controls);
+    row++;
+
+    controls.coverage_value = gtk_label_new(NULL);
+    gtk_misc_set_alignment(GTK_MISC(controls.coverage_value), 1.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), controls.coverage_value,
+                     2, 3, row, row+1, GTK_FILL, 0, 0, 0);
+
+    controls.coverage_units = gtk_label_new(_("obj."));
+    gtk_misc_set_alignment(GTK_MISC(controls.coverage_units), 0.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), controls.coverage_units,
+                     3, 4, row, row+1, GTK_FILL, 0, 0, 0);
+    gtk_table_set_row_spacing(GTK_TABLE(table), row, 12);
+    row++;
+
+    gtk_table_attach(GTK_TABLE(table),
+                     gwy_label_new_header(_("Smoothing After Each Layer")),
+                     0, 3, row, row+1, GTK_FILL, 0, 0, 0);
+    row++;
+
+    controls.smooth = gtk_adjustment_new(args->smooth,
+                                         0.0, 50.0, 1.0, 10.0, 0);
+    spin = gwy_table_attach_hscale(table, row, _("_Gaussian FWHM:"), "px",
+                                   controls.smooth, GWY_HSCALE_SQRT);
+    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 1);
+    g_signal_connect_swapped(controls.smooth, "value-changed",
+                             G_CALLBACK(smooth_changed), &controls);
+    row++;
+
+    controls.smooth_value = gtk_label_new(NULL);
+    gtk_misc_set_alignment(GTK_MISC(controls.smooth_value), 1.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), controls.smooth_value,
+                     2, 3, row, row+1, GTK_FILL, 0, 0, 0);
+    gtk_table_set_row_spacing(GTK_TABLE(table), row, 12);
+
+    controls.smooth_units = gtk_label_new(NULL);
+    gtk_misc_set_alignment(GTK_MISC(controls.smooth_units), 0.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), controls.smooth_units,
+                     3, 4, row, row+1, GTK_FILL, 0, 0, 0);
+    row++;
 
     gtk_widget_show_all(dialog);
     controls.in_init = FALSE;
@@ -836,6 +904,44 @@ angle_noise_changed(ObjSynthControls *controls,
 }
 
 static void
+coverage_changed(ObjSynthControls *controls,
+                 GtkAdjustment *adj)
+{
+    controls->args->coverage = gtk_adjustment_get_value(adj);
+    update_coverage_value(controls);
+    obj_synth_invalidate(controls);
+}
+
+static void
+update_coverage_value(ObjSynthControls *controls)
+{
+    guint nobjects = calculate_n_objects(controls->args,
+                                         controls->dims->args->xres,
+                                         controls->dims->args->yres);
+    guchar buf[32];
+
+    g_snprintf(buf, sizeof(buf), "%u", nobjects);
+    gtk_label_set_text(GTK_LABEL(controls->coverage_value), buf);
+}
+
+static void
+smooth_changed(ObjSynthControls *controls,
+               GtkAdjustment *adj)
+{
+    controls->args->smooth = gtk_adjustment_get_value(adj);
+    update_smooth_value(controls);
+    obj_synth_invalidate(controls);
+}
+
+static void
+update_smooth_value(ObjSynthControls *controls)
+{
+    update_value_label(GTK_LABEL(controls->smooth_value),
+                       controls->dims->xyvf,
+                       controls->args->smooth*controls->pxsize);
+}
+
+static void
 update_value_label(GtkLabel *label,
                    const GwySIValueFormat *vf,
                    gdouble value)
@@ -888,6 +994,13 @@ obj_synth_do(const ObjSynthArgs *args,
     g_free(indices);
 
     gwy_data_field_data_changed(dfield);
+}
+
+static guint
+calculate_n_objects(const ObjSynthArgs *args,
+                    guint xres, guint yres)
+{
+    return args->coverage*xres*yres/(args->size*args->size);
 }
 
 static inline gdouble
@@ -1253,11 +1366,14 @@ static const gchar height_key[]       = "/module/obj_synth/height";
 static const gchar height_noise_key[] = "/module/obj_synth/height_noise";
 static const gchar angle_key[]        = "/module/obj_synth/angle";
 static const gchar angle_noise_key[]  = "/module/obj_synth/angle_noise";
+static const gchar coverage_key[]     = "/module/obj_synth/coverage";
+static const gchar smooth_key[]       = "/module/obj_synth/smooth";
 
 static void
 obj_synth_sanitize_args(ObjSynthArgs *args)
 {
-    args->active_page = CLAMP(args->active_page, PAGE_DIMENSIONS, PAGE_SHAPE);
+    args->active_page = CLAMP(args->active_page,
+                              PAGE_DIMENSIONS, PAGE_NPAGES-1);
     args->update = !!args->update;
     args->seed = MAX(0, args->seed);
     args->randomize = !!args->randomize;
@@ -1270,6 +1386,8 @@ obj_synth_sanitize_args(ObjSynthArgs *args)
     args->height_noise = CLAMP(args->height_noise, 0.0, 1.0);
     args->angle = CLAMP(args->angle, -G_PI, G_PI);
     args->angle_noise = CLAMP(args->angle_noise, 0.0, 1.0);
+    args->coverage = CLAMP(args->angle, 0.05, 20.0);
+    args->smooth = CLAMP(args->angle, 0.0, 50.0);
 }
 
 static void
@@ -1298,6 +1416,8 @@ obj_synth_load_args(GwyContainer *container,
     gwy_container_gis_double_by_name(container, angle_key, &args->angle);
     gwy_container_gis_double_by_name(container, angle_noise_key,
                                      &args->angle_noise);
+    gwy_container_gis_double_by_name(container, coverage_key, &args->coverage);
+    gwy_container_gis_double_by_name(container, smooth_key, &args->smooth);
     obj_synth_sanitize_args(args);
 
     gwy_clear(dimsargs, 1);
@@ -1329,6 +1449,8 @@ obj_synth_save_args(GwyContainer *container,
     gwy_container_set_double_by_name(container, angle_key, args->angle);
     gwy_container_set_double_by_name(container, angle_noise_key,
                                      args->angle_noise);
+    gwy_container_set_double_by_name(container, coverage_key, args->coverage);
+    gwy_container_set_double_by_name(container, smooth_key, args->smooth);
 
     gwy_dimensions_save_args(dimsargs, container, prefix);
 }
