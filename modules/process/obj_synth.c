@@ -179,6 +179,26 @@ static void        make_sphere         (GwyDataField *feature,
                                         gdouble aspect,
                                         gdouble height,
                                         gdouble angle);
+static void        make_pyramid        (GwyDataField *feature,
+                                        gdouble size,
+                                        gdouble aspect,
+                                        gdouble height,
+                                        gdouble angle);
+static void        make_nugget         (GwyDataField *feature,
+                                        gdouble size,
+                                        gdouble aspect,
+                                        gdouble height,
+                                        gdouble angle);
+static void        make_thatch         (GwyDataField *feature,
+                                        gdouble size,
+                                        gdouble aspect,
+                                        gdouble height,
+                                        gdouble angle);
+static void        make_doughnut       (GwyDataField *feature,
+                                        gdouble size,
+                                        gdouble aspect,
+                                        gdouble height,
+                                        gdouble angle);
 static void        place_add_min       (GwyDataField *surface,
                                         GwyDataField *object,
                                         gint col,
@@ -789,7 +809,7 @@ obj_synth_do(const ObjSynthArgs *args,
     object = gwy_data_field_new(1, 1, 1.0, 1.0, FALSE);
 
     gwy_data_field_clear(dfield);
-    for (i = 0; i < 10; i++) {
+    for (i = 0; i < 5; i++) {
         object_synth_iter(dfield, object, args, rngset,
                           10, 10, 0, 0, 100, indices);
     }
@@ -860,7 +880,7 @@ object_synth_iter(GwyDataField *surface,
         if (args->angle_noise)
             angle += randsymm(rngset->height, G_PI*args->angle_noise);
 
-        make_sphere(object, size, aspect, height, angle);
+        make_doughnut(object, size, aspect, height, angle);
 
         from = (j*xres + nxcells/2)/nxcells;
         to = (j*xres + xres + nxcells/2)/nxcells;
@@ -910,6 +930,125 @@ make_sphere(GwyDataField *feature,
 }
 
 static void
+make_pyramid(GwyDataField *feature,
+             gdouble size,
+             gdouble aspect,
+             gdouble height,
+             gdouble angle)
+{
+    gdouble a, b, c, s, r, x, y, xc, yc;
+    gint xres, yres, i, j;
+    gdouble *z;
+
+    a = size/sqrt(aspect);
+    b = size*sqrt(aspect);
+    c = cos(angle);
+    s = sin(angle);
+    xres = (gint)ceil(2*(a*fabs(c) + b*fabs(s)) + 1) | 1;
+    yres = (gint)ceil(2*(a*fabs(s) + b*fabs(c)) + 1) | 1;
+
+    gwy_data_field_resample(feature, xres, yres, GWY_INTERPOLATION_NONE);
+    z = gwy_data_field_get_data(feature);
+    for (i = 0; i < yres; i++) {
+        y = i - yres/2;
+        for (j = 0; j < xres; j++) {
+            x = j - xres/2;
+
+            xc = (x*c - y*s)/a;
+            yc = (x*s + y*c)/b;
+            r = 1.0 - MAX(fabs(xc), fabs(yc));
+            z[i*xres + j] = (r > 0.0) ? height*r : 0.0;
+        }
+    }
+}
+
+static void
+make_nugget(GwyDataField *feature,
+            gdouble size,
+            gdouble aspect,
+            gdouble height,
+            gdouble angle)
+{
+    gdouble a, b, c, s, r, x, y, xc, yc, excess;
+    gint xres, yres, i, j;
+    gdouble *z;
+
+    if (aspect == 1.0) {
+        make_sphere(feature, size, aspect, height, angle);
+        return;
+    }
+
+    /* Ensure a > b */
+    if (aspect >= 1.0) {
+        angle += G_PI/2.0;
+        aspect = 1.0/aspect;
+    }
+
+    a = size/sqrt(aspect);
+    b = size*sqrt(aspect);
+    c = cos(angle);
+    s = sin(angle);
+    excess = 1.0/aspect - 1.0;
+    /* FIXME: The rotated rectangular bounding box, this is a bit wasteful. */
+    xres = (gint)ceil(2*(a*fabs(c) + b*fabs(s)) + 1) | 1;
+    yres = (gint)ceil(2*(a*fabs(s) + b*fabs(c)) + 1) | 1;
+
+    gwy_data_field_resample(feature, xres, yres, GWY_INTERPOLATION_NONE);
+    z = gwy_data_field_get_data(feature);
+    for (i = 0; i < yres; i++) {
+        y = i - yres/2;
+        for (j = 0; j < xres; j++) {
+            x = j - xres/2;
+
+            xc = (x*c - y*s)/b;
+            yc = (x*s + y*c)/b;
+            xc = fabs(xc) - excess;
+            if (xc < 0.0)
+                xc = 0.0;
+            r = 1.0 - xc*xc - yc*yc;
+            z[i*xres + j] = (r > 0.0) ? height*sqrt(r) : 0.0;
+        }
+    }
+}
+
+static void
+make_thatch(GwyDataField *feature,
+            gdouble size,
+            gdouble aspect,
+            gdouble height,
+            gdouble angle)
+{
+    gdouble a, b, c, s, r, x, y, xc, yc;
+    gint xres, yres, i, j;
+    gdouble *z;
+
+    a = size/sqrt(aspect);
+    b = size*sqrt(aspect);
+    c = cos(angle);
+    s = sin(angle);
+    /* FIXME: The rotated rectangular bounding box, this is a bit wasteful. */
+    xres = (gint)ceil(2*(a*fabs(c) + b*fabs(s)) + 1) | 1;
+    yres = (gint)ceil(2*(a*fabs(s) + b*fabs(c)) + 1) | 1;
+
+    gwy_data_field_resample(feature, xres, yres, GWY_INTERPOLATION_NONE);
+    z = gwy_data_field_get_data(feature);
+    for (i = 0; i < yres; i++) {
+        y = i - yres/2;
+        for (j = 0; j < xres; j++) {
+            x = j - xres/2;
+
+            xc = (x*c - y*s)/a;
+            yc = (x*s + y*c)/b;
+            r = 0.5 - 0.5*xc;
+            if (r >= 0.0 && r <= 1.0)
+                z[i*xres + j] = (fabs(yc) <= r*aspect) ? height*(1.0 - r) : 0.0;
+            else
+                z[i*xres + j] = 0.0;
+        }
+    }
+}
+
+static void
 place_add_min(GwyDataField *surface,
               GwyDataField *object,
               gint col,
@@ -938,18 +1077,57 @@ place_add_min(GwyDataField *surface,
     min = G_MAXDOUBLE;
     for (i = 0; i < kyres; i++) {
         drow = d + ((ioff + i) % yres)*xres;
+        krow = k + i*kxres;
         for (j = 0; j < kxres; j++) {
-            l = (joff + j) % xres;
-            if (drow[l] < min)
-                min = drow[l];
+            if (krow[j]) {
+                l = (joff + j) % xres;
+                if (drow[l] < min)
+                    min = drow[l];
+            }
         }
     }
     for (i = 0; i < kyres; i++) {
         drow = d + ((ioff + i) % yres)*xres;
         krow = k + i*kxres;
         for (j = 0; j < kxres; j++) {
-            l = (joff + j) % xres;
-            drow[l] = MAX(drow[l], min + krow[j]);
+            if (krow[j]) {
+                l = (joff + j) % xres;
+                drow[l] = MAX(drow[l], min + krow[j]);
+            }
+        }
+    }
+}
+
+static void
+make_doughnut(GwyDataField *feature,
+              gdouble size,
+              gdouble aspect,
+              gdouble height,
+              gdouble angle)
+{
+    gdouble a, b, c, s, r, x, y, xc, yc;
+    gint xres, yres, i, j;
+    gdouble *z;
+
+    a = size/sqrt(aspect);
+    b = size*sqrt(aspect);
+    c = cos(angle);
+    s = sin(angle);
+    xres = (gint)ceil(2*hypot(a*c, b*s) + 1) | 1;
+    yres = (gint)ceil(2*hypot(a*s, b*c) + 1) | 1;
+
+    gwy_data_field_resample(feature, xres, yres, GWY_INTERPOLATION_NONE);
+    z = gwy_data_field_get_data(feature);
+    for (i = 0; i < yres; i++) {
+        y = i - yres/2;
+        for (j = 0; j < xres; j++) {
+            x = j - xres/2;
+
+            xc = (x*c - y*s)/a;
+            yc = (x*s + y*c)/b;
+            r = hypot(xc, yc) - 0.6;
+            r = 1.0 - r*r/0.16;
+            z[i*xres + j] = (r > 0.0) ? height*sqrt(r) : 0.0;
         }
     }
 }
