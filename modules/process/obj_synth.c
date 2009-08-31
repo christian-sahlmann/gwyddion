@@ -64,10 +64,13 @@ typedef void (*MakeFeatureFunc)(GwyDataField *feature,
                                 gdouble height,
                                 gdouble angle);
 
+typedef gdouble (*GetCoverageFunc)(gdouble aspect);
+
 typedef struct {
     ObjSynthType type;
     const gchar *name;
     MakeFeatureFunc create;
+    GetCoverageFunc get_coverage;
 } ObjSynthFeature;
 
 typedef struct {
@@ -192,9 +195,6 @@ static void        preview              (ObjSynthControls *controls);
 static void        obj_synth_do         (const ObjSynthArgs *args,
                                          RandGenSet *rngset,
                                          GwyDataField *dfield);
-static guint       calculate_n_objects  (const ObjSynthArgs *args,
-                                         guint xres,
-                                         guint yres);
 static void        object_synth_iter    (GwyDataField *surface,
                                          GwyDataField *object,
                                          const ObjSynthArgs *args,
@@ -234,6 +234,14 @@ static void        place_add_min        (GwyDataField *surface,
                                          GwyDataField *object,
                                          gint col,
                                          gint row);
+static guint       calculate_n_objects  (const ObjSynthArgs *args,
+                                         guint xres,
+                                         guint yres);
+static gdouble     getcov_sphere        (gdouble aspect);
+static gdouble     getcov_pyramid       (gdouble aspect);
+static gdouble     getcov_nugget        (gdouble aspect);
+static gdouble     getcov_thatch        (gdouble aspect);
+static gdouble     getcov_doughnut      (gdouble aspect);
 static RandGenSet* rand_gen_set_new     (void);
 static void        rand_gen_set_init    (RandGenSet *rngset,
                                          guint seed);
@@ -260,11 +268,11 @@ static const ObjSynthArgs obj_synth_defaults = {
 static const GwyDimensionArgs dims_defaults = GWY_DIMENSION_ARGS_INIT;
 
 static const ObjSynthFeature features[] = {
-    { OBJ_SYNTH_SPHERE,   N_("Spheres"),  &make_sphere,   },
-    { OBJ_SYNTH_PYRAMID,  N_("Pyramids"), &make_pyramid,  },
-    { OBJ_SYNTH_NUGGET,   N_("Nuggets"),  &make_nugget,   },
-    { OBJ_SYNTH_THATCH,   N_("Thatches"), &make_thatch,   },
-    { OBJ_SYNTH_DOUGHNUT, N_("Dougnuts"), &make_doughnut, },
+    { OBJ_SYNTH_SPHERE,   N_("Spheres"),  &make_sphere,   &getcov_sphere,   },
+    { OBJ_SYNTH_PYRAMID,  N_("Pyramids"), &make_pyramid,  &getcov_pyramid,  },
+    { OBJ_SYNTH_NUGGET,   N_("Nuggets"),  &make_nugget,   &getcov_nugget,   },
+    { OBJ_SYNTH_THATCH,   N_("Thatches"), &make_thatch,   &getcov_thatch,   },
+    { OBJ_SYNTH_DOUGHNUT, N_("Dougnuts"), &make_doughnut, &getcov_doughnut, },
 };
 
 static GwyModuleInfo module_info = {
@@ -996,13 +1004,6 @@ obj_synth_do(const ObjSynthArgs *args,
     gwy_data_field_data_changed(dfield);
 }
 
-static guint
-calculate_n_objects(const ObjSynthArgs *args,
-                    guint xres, guint yres)
-{
-    return args->coverage*xres*yres/(args->size*args->size);
-}
-
 static inline gdouble
 randsymm(GRand *rng, gdouble mag)
 {
@@ -1232,6 +1233,40 @@ make_thatch(GwyDataField *feature,
 }
 
 static void
+make_doughnut(GwyDataField *feature,
+              gdouble size,
+              gdouble aspect,
+              gdouble height,
+              gdouble angle)
+{
+    gdouble a, b, c, s, r, x, y, xc, yc;
+    gint xres, yres, i, j;
+    gdouble *z;
+
+    a = size/sqrt(aspect);
+    b = size*sqrt(aspect);
+    c = cos(angle);
+    s = sin(angle);
+    xres = (gint)ceil(2*hypot(a*c, b*s) + 1) | 1;
+    yres = (gint)ceil(2*hypot(a*s, b*c) + 1) | 1;
+
+    gwy_data_field_resample(feature, xres, yres, GWY_INTERPOLATION_NONE);
+    z = gwy_data_field_get_data(feature);
+    for (i = 0; i < yres; i++) {
+        y = i - yres/2;
+        for (j = 0; j < xres; j++) {
+            x = j - xres/2;
+
+            xc = (x*c - y*s)/a;
+            yc = (x*s + y*c)/b;
+            r = hypot(xc, yc) - 0.6;
+            r = 1.0 - r*r/0.16;
+            z[i*xres + j] = (r > 0.0) ? height*sqrt(r) : 0.0;
+        }
+    }
+}
+
+static void
 place_add_min(GwyDataField *surface,
               GwyDataField *object,
               gint col,
@@ -1281,38 +1316,46 @@ place_add_min(GwyDataField *surface,
     }
 }
 
-static void
-make_doughnut(GwyDataField *feature,
-              gdouble size,
-              gdouble aspect,
-              gdouble height,
-              gdouble angle)
+static guint
+calculate_n_objects(const ObjSynthArgs *args,
+                    guint xres, guint yres)
 {
-    gdouble a, b, c, s, r, x, y, xc, yc;
-    gint xres, yres, i, j;
-    gdouble *z;
+    gdouble area_ratio = features[args->type].get_coverage(args->aspect);
+    /* TODO: compensate for randomization - the distribution of area differs
+     * from the distribution of size! */
+    gdouble mean_obj_area = args->size*args->size * area_ratio;
+    gdouble must_cover = args->coverage*xres*yres;
+    return must_cover/mean_obj_area;
+}
 
-    a = size/sqrt(aspect);
-    b = size*sqrt(aspect);
-    c = cos(angle);
-    s = sin(angle);
-    xres = (gint)ceil(2*hypot(a*c, b*s) + 1) | 1;
-    yres = (gint)ceil(2*hypot(a*s, b*c) + 1) | 1;
+static gdouble
+getcov_sphere(G_GNUC_UNUSED gdouble aspect)
+{
+    return G_PI/4.0;
+}
 
-    gwy_data_field_resample(feature, xres, yres, GWY_INTERPOLATION_NONE);
-    z = gwy_data_field_get_data(feature);
-    for (i = 0; i < yres; i++) {
-        y = i - yres/2;
-        for (j = 0; j < xres; j++) {
-            x = j - xres/2;
+static gdouble
+getcov_pyramid(G_GNUC_UNUSED gdouble aspect)
+{
+    return 1.0;
+}
 
-            xc = (x*c - y*s)/a;
-            yc = (x*s + y*c)/b;
-            r = hypot(xc, yc) - 0.6;
-            r = 1.0 - r*r/0.16;
-            z[i*xres + j] = (r > 0.0) ? height*sqrt(r) : 0.0;
-        }
-    }
+static gdouble
+getcov_nugget(G_GNUC_UNUSED gdouble aspect)
+{
+    return 1.0 - (1.0 - G_PI/4.0)/MAX(aspect, 1.0/aspect);
+}
+
+static gdouble
+getcov_thatch(G_GNUC_UNUSED gdouble aspect)
+{
+    return 0.5;
+}
+
+static gdouble
+getcov_doughnut(G_GNUC_UNUSED gdouble aspect)
+{
+    return G_PI/4.0 * 24.0/25.0;
 }
 
 static RandGenSet*
