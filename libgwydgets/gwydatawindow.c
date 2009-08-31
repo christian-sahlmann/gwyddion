@@ -73,6 +73,8 @@ static void     gwy_data_window_gradient_selected (GtkWidget *item,
                                                    GwyDataWindow *data_window);
 static void     gwy_data_window_gradient_changed  (GtkTreeSelection *selection,
                                                    GwyDataWindow *data_window);
+static gboolean gradient_window_key_pressed       (GtkWidget *window,
+                                                   GdkEventKey *event);
 static void     gwy_data_window_gradient_update   (GwyDataWindow *data_window,
                                                    const gchar *gradient);
 static void     gwy_data_window_data_view_updated (GwyDataWindow *data_window);
@@ -916,6 +918,8 @@ gwy_data_window_show_more_gradients(GwyDataWindow *data_window)
                                           data_window, active);
     g_signal_connect_swapped(treeview, "row-activated",
                              G_CALLBACK(gtk_widget_destroy), window);
+    g_signal_connect_swapped(treeview, "key-press-event",
+                             G_CALLBACK(gradient_window_key_pressed), window);
     data_window->grad_selector = treeview;
     g_object_add_weak_pointer(G_OBJECT(treeview),
                               (gpointer*)&data_window->grad_selector);
@@ -968,6 +972,24 @@ gwy_data_window_gradient_changed(GtkTreeSelection *selection,
         gwy_data_window_gradient_update(data_window,
                                         gwy_resource_get_name(resource));
     }
+}
+
+static gboolean
+gradient_window_key_pressed(GtkWidget *window,
+                            GdkEventKey *event)
+{
+    enum {
+        important_mods = GDK_CONTROL_MASK | GDK_MOD1_MASK | GDK_RELEASE_MASK
+    };
+    guint state, key;
+
+    state = event->state & important_mods;
+    key = event->keyval;
+    if (state == 0 && key == GDK_Escape) {
+        gtk_widget_destroy(window);
+        return TRUE;
+    }
+    return FALSE;
 }
 
 static void

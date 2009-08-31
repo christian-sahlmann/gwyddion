@@ -21,6 +21,7 @@
 #include "config.h"
 #include <string.h>
 #include <gtk/gtk.h>
+#include <gdk/gdkkeysyms.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwydebugobjects.h>
 #include <libdraw/gwygradient.h>
@@ -110,6 +111,8 @@ static void gwy_resource_button_destroy           (GtkWidget *button,
                                                    CallbackInfo *cbinfo);
 static void gwy_resource_store_finalized          (gpointer data,
                                                    GObject *exobject);
+static gboolean resource_window_key_pressed       (GtkWidget *window,
+                                                   GdkEventKey *event);
 
 /************************** Pop-up menus ****************************/
 
@@ -594,6 +597,8 @@ gwy_resource_button_toggled(GtkWidget *button,
                      G_CALLBACK(gwy_resource_button_treeview_destroy), button);
     g_signal_connect_swapped(treeview, "row-activated",
                              G_CALLBACK(gtk_widget_destroy), window);
+    g_signal_connect_swapped(treeview, "key-press-event",
+                             G_CALLBACK(resource_window_key_pressed), window);
 
     selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(treeview));
     g_signal_connect(selection, "changed",
@@ -730,6 +735,24 @@ gwy_resource_button_treeview_destroy(G_GNUC_UNUSED GtkWidget *treeview,
     gwy_debug(" ");
     g_object_set_data(G_OBJECT(button), "treeview", NULL);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(button), FALSE);
+}
+
+static gboolean
+resource_window_key_pressed(GtkWidget *window,
+                            GdkEventKey *event)
+{
+    enum {
+        important_mods = GDK_CONTROL_MASK | GDK_MOD1_MASK | GDK_RELEASE_MASK
+    };
+    guint state, key;
+
+    state = event->state & important_mods;
+    key = event->keyval;
+    if (state == 0 && key == GDK_Escape) {
+        gtk_widget_destroy(window);
+        return TRUE;
+    }
+    return FALSE;
 }
 
 static void
