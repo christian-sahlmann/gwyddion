@@ -1315,7 +1315,7 @@ create_4hedron(GwyDataField *feature,
             xm = 0.5*xc - GWY_SQRT3/2.0*yc;
             r = MAX(-xc, xp);
             r = MAX(r, xm);
-            r = 1.0 - 4.0/3.0*r;
+            r = 1.0 - GWY_SQRT3*r;
             z[i*xres + j] = (r > 0.0) ? height*r : 0.0;
         }
     }
@@ -1376,7 +1376,7 @@ calculate_n_objects(const ObjSynthArgs *args,
                     guint xres, guint yres)
 {
     /* The distribution of area differs from the distribution of size. */
-    gdouble noise_corr = exp(args->size_noise*args->size_noise/2.0);
+    gdouble noise_corr = exp(2.0*args->size_noise*args->size_noise);
     gdouble area_ratio = features[args->type].get_coverage(args->aspect);
     gdouble mean_obj_area = args->size*args->size * area_ratio * noise_corr;
     gdouble must_cover = args->coverage*xres*yres;
