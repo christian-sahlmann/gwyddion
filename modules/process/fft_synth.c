@@ -370,6 +370,7 @@ fft_synth_dialog(FFTSynthArgs *args,
                                         0.0001, 10000.0, 0.1, 1.0, 0);
     spin = gwy_table_attach_hscale(table, row, _("_RMS:"), "",
                                    controls.sigma, GWY_HSCALE_LOG);
+    gtk_spin_button_set_snap_to_ticks(GTK_SPIN_BUTTON(spin), FALSE);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 4);
     controls.sigma_units = gwy_table_hscale_get_units(controls.sigma);
     g_signal_connect_swapped(controls.sigma, "value-changed",
@@ -465,6 +466,7 @@ fft_synth_dialog(FFTSynthArgs *args,
                                           0.0, 5.0, 0.01, 0.1, 0);
     spin = gwy_table_attach_hscale(table, row, _("Po_wer:"), NULL,
                                    controls.power_p, 0);
+    gtk_spin_button_set_snap_to_ticks(GTK_SPIN_BUTTON(spin), FALSE);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 3);
     gwy_table_hscale_set_sensitive(controls.power_p, args->power_enable);
     g_signal_connect_swapped(controls.power_p, "value-changed",
@@ -498,7 +500,9 @@ fft_synth_dialog(FFTSynthArgs *args,
             case RESPONSE_RESET:
             {
                 gboolean temp = args->update;
+                gint temp2 = args->active_page;
                 *args = fft_synth_defaults;
+                args->active_page = temp2;
                 args->update = temp;
             }
             controls.in_init = TRUE;
