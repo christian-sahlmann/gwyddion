@@ -10,18 +10,22 @@ Libraries:
 - libgwyprocess: gwy_data_field_area_fit_poly() reall works with NULL mask.
 - libgwyprocess: FFT functions no longer unpredictably lose input data with
   FFTW3 -- they now use the FFTW_ESTIMATE planner that preserves the input
+- libgwydgets: Resource selection windows can be closed with Esc.
 
 Modules:
 - Curvature (new): Calculates global curvature of second-order surfaces.
 - IGOR (new): Imports IGOR Pro binary waves.
 - RHK-SM4 (new): Imports RHK Technology SM4 files.
 - Nanonics (new): Imports Nanonics NAN files.
+- FFT Synthesis (new): Generates random surfaces by spectral synthesis.
+- Object Synthesis (new): Generates random surfaces by object placement.
 - Arithmetic: New quantities bx1, by1, bx2, ..., by5 represent the local x-
   and y-derivatives.
 - Arithmetic: History of previously used expressions is remembered.
+- Omicron MATRIX: Possible crash was fixed.
 - NT-MDT: Support for MDA frames was added.
 - Olympus: Value scales of imported data were corrected.
-- APE: Support for newer 2.x files was implemented, some units and scales
+- APE file: Support for newer 2.x files was implemented, some units and scales
   corrected; channels have meaningful names now.
 - MI file: Support for 32bit binary files was added.
 - MicroProf: Can read binary FRT files (the first channel only).
