@@ -22,12 +22,9 @@
  */
 
 /* TODO:
- * - multiple images / selection dialog
+ * - multiple images
  * - constant height or current
  * - saving
- *
- * (Yeti):
- * FIXME: I do not have the specs.
 */
 
 /**
@@ -52,8 +49,11 @@
 
 #include "err.h"
 
-#define MAGIC_TXT "[Parameter]"
-#define MAGIC_SIZE (sizeof(MAGIC_TXT)-1)
+#define MAGIC_TXT1 "[Parameter]"
+/* FIXME: This one is apparently compressed and we don't know how to load it. */
+#define MAGIC_TXT2 "[Paramco32]"
+/* Assume idencital sizes */
+#define MAGIC_SIZE (sizeof(MAGIC_TXT1)-1)
 
 static gboolean      module_register      (void);
 static gint          createc_detect       (const GwyFileDetectInfo *fileinfo,
@@ -63,13 +63,14 @@ static GwyContainer* createc_load         (const gchar *filename,
                                            GError **error);
 static GHashTable*   read_hash            (gchar *buffer);
 static GwyDataField* hash_to_data_field   (GHashTable *hash,
-                                           gchar *buffer,
+                                           gint version,
+                                           const gchar *buffer,
+                                           gsize size,
                                            GError **error);
-static gboolean      read_binary_data     (gint n,
+static void          read_binary_data     (gint n,
                                            gdouble *data,
-                                           gchar *buffer,
-                                           gint bpp,
-                                           GError **error);
+                                           const gchar *buffer,
+                                           gint bpp);
 static GwyContainer* createc_get_metadata (GHashTable *hash);
 
 static GwyModuleInfo module_info = {
@@ -77,7 +78,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Createc data files."),
     "Rok Zitko <rok.zitko@ijs.si>",
-    "0.8",
+    "0.9",
     "Rok Zitko",
     "2004",
 };
@@ -107,7 +108,8 @@ createc_detect(const GwyFileDetectInfo *fileinfo,
         return g_str_has_suffix(fileinfo->name_lowercase, ".dat") ? 10 : 0;
 
     if (fileinfo->buffer_len > MAGIC_SIZE
-        && memcmp(fileinfo->head, MAGIC_TXT, MAGIC_SIZE) == 0)
+        && (memcmp(fileinfo->head, MAGIC_TXT1, MAGIC_SIZE) == 0
+            || memcmp(fileinfo->head, MAGIC_TXT2, MAGIC_SIZE) == 0))
         score = 100;
 
     return score;
@@ -119,25 +121,37 @@ createc_load(const gchar *filename,
              GError **error)
 {
     GwyContainer *meta, *container = NULL;
-    gchar *buffer = NULL;
+    gchar *p, *buffer = NULL;
     gsize size = 0;
     GError *err = NULL;
     GHashTable *hash = NULL;
     GwyDataField *dfield;
+    gint version;
 
     if (!g_file_get_contents(filename, &buffer, &size, &err)) {
         err_GET_FILE_CONTENTS(error, &err);
         return NULL;
     }
-    if (size < MAGIC_SIZE || memcmp(buffer, MAGIC_TXT, MAGIC_SIZE) != 0) {
+    if (size < MAGIC_SIZE) {
         err_FILE_TYPE(error, "Createc");
         g_free(buffer);
         return NULL;
     }
 
-    hash = read_hash(buffer);
+    if (memcmp(buffer, MAGIC_TXT1, MAGIC_SIZE) == 0)
+        version = 1;
+    else if (memcmp(buffer, MAGIC_TXT2, MAGIC_SIZE) == 0)
+        version = 2;
+    else {
+        err_FILE_TYPE(error, "Createc");
+        g_free(buffer);
+        return NULL;
+    }
 
-    dfield = hash_to_data_field(hash, buffer, error);
+    for (p = buffer + MAGIC_SIZE; g_ascii_isspace(*p); p++)
+        ;
+    hash = read_hash(p);
+    dfield = hash_to_data_field(hash, version, buffer, size, error);
 
     if (dfield) {
         container = gwy_container_new();
@@ -152,7 +166,8 @@ createc_load(const gchar *filename,
         g_object_unref(meta);
     }
 
-    g_hash_table_destroy(hash);
+    if (hash)
+        g_hash_table_destroy(hash);
     g_free(buffer);
 
     return container;
@@ -165,34 +180,30 @@ read_hash(gchar *buffer)
     GHashTable *hash;
     gchar *line, *eq, *p;
 
+    hash = g_hash_table_new(g_str_hash, g_str_equal);
     p = buffer;
-
-    line = gwy_str_next_line(&p);
-    if (!line)
-        return NULL;
-    if (!strstr(line, "[Parameter]") != 0)
-        return NULL;
-
-    hash = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
-    while (p[0]) {
-        line = gwy_str_next_line(&p);
-        if (!line)
-            goto fail;
+    for (line = gwy_str_next_line(&p); line; line = gwy_str_next_line(&p)) {
+        g_strstrip(line);
+        if (!*line)
+            continue;
         eq = strchr(line, '=');
-        if (!eq)
-            goto fail;
-        *eq = '\0';
-        if (*line != '\0') { /* drop entries without keyword */
-          g_hash_table_insert(hash, g_strdup(line), g_strdup(eq + 1));
-          gwy_debug("<%s>: <%s>\n", line, eq + 1);
+        if (!eq) {
+            g_warning("Stray line `%s'", line);
+            continue;
+        }
+        *(eq++) = '\0';
+        g_strchomp(line);
+        while (g_ascii_isspace(*eq))
+            eq++;
+
+        /* drop entries without keyword */
+        if (line[0]) {
+            g_hash_table_insert(hash, line, eq);
+            gwy_debug("<%s>: <%s>", line, eq);
         }
     }
 
     return hash;
-
-fail:
-    g_hash_table_destroy(hash);
-    return NULL;
 }
 
 #define createc_atof(x) g_ascii_strtod(x, NULL)
@@ -206,7 +217,8 @@ fail:
     } \
     var = typeconv(s)
 
-/* Support for alternative keywords in some versions of dat files */
+/* Support for alternative keywords in some (apparently newer) versions of dat
+ * files */
 #define HASH_GET2(key1, key2, var, typeconv, err) \
     if (!(s = g_hash_table_lookup(hash, key1))) { \
       if (!(s = g_hash_table_lookup(hash, key2))) { \
@@ -228,7 +240,9 @@ fail:
 
 static GwyDataField*
 hash_to_data_field(GHashTable *hash,
-                   gchar *buffer,
+                   gint version,
+                   const gchar *buffer,
+                   gsize size,
                    GError **error)
 {
     GwyDataField *dfield;
@@ -241,12 +255,29 @@ hash_to_data_field(GHashTable *hash,
     gint ti1, ti2; /* temporary storage */
     gdouble td; /* temporary storage */
 
-    bpp = 2; /* int16, always */
-    offset = 16384 + 2; /* header + 2 offset bytes */
+    if (!hash)
+        return NULL;
+
+    if (version == 1) {
+        bpp = 2;
+        offset = 16384 + 2; /* header + 2 unused bytes */
+    }
+    else if (version == 2) {
+        bpp = 4;
+        offset = 16384 + 4; /* header + 4 unused bytes */
+    }
+    else {
+        g_return_val_if_reached(NULL);
+    }
     is_current = FALSE;
 
     HASH_INT2("Num.X", "Num.X / Num.X", xres, error);
     HASH_INT2("Num.Y", "Num.Y / Num.Y", yres, error);
+    if (err_DIMENSION(error, xres) || err_DIMENSION(error, yres))
+        return NULL;
+
+    if (err_SIZE_MISMATCH(error, offset + bpp*xres*yres, size, FALSE))
+        return NULL;
 
     HASH_INT2("Delta X", "Delta X / Delta X [Dac]", ti1, error);
     HASH_INT2("GainX", "GainX / GainX", ti2, error);
@@ -254,6 +285,10 @@ hash_to_data_field(GHashTable *hash,
     xreal = xres * ti1; /* dacs */
     xreal *= 20.0/65536.0 * ti2; /* voltage per dac */
     xreal *= td * 1.0e-10; /* piezoconstant [A/V] */
+    if (!(xreal = fabs(xreal))) {
+        g_warning("Real x size is 0.0, fixing to 1.0");
+        xreal = 1.0;
+    }
 
     HASH_INT2("Delta Y", "Delta Y / Delta Y [Dac]", ti1, error);
     HASH_INT2("GainY", "GainY / GainY", ti2, error);
@@ -261,6 +296,10 @@ hash_to_data_field(GHashTable *hash,
     yreal = yres * ti1;
     yreal *= 20.0/65536.0 * ti2;
     yreal *= td * 1.0e-10;
+    if (!(yreal = fabs(yreal))) {
+        g_warning("Real y size is 0.0, fixing to 1.0");
+        yreal = 1.0;
+    }
 
     HASH_INT2("GainZ", "GainZ / GainZ", ti2, error);
     HASH_DOUBLE("ZPiezoconst", td, error); /* upcase P */
@@ -270,10 +309,7 @@ hash_to_data_field(GHashTable *hash,
 
     dfield = gwy_data_field_new(xres, yres, xreal, yreal, FALSE);
     data = gwy_data_field_get_data(dfield);
-    if (!read_binary_data(xres*yres, data, buffer + offset, bpp, error)) {
-        g_object_unref(dfield);
-        return NULL;
-    }
+    read_binary_data(xres*yres, data, buffer + offset, bpp);
     gwy_data_field_multiply(dfield, q);
 
     unit = gwy_si_unit_new("m");
@@ -291,7 +327,7 @@ hash_to_data_field(GHashTable *hash,
 
 #define HASH_STORE(key) \
     if ((val = g_hash_table_lookup(hash, key))) { \
-        gwy_debug("key = %s, val = %s\n", key, val); \
+        gwy_debug("key = %s, val = %s", key, val); \
         gwy_container_set_string_by_name(meta, key, g_strdup(val)); \
     }
 
@@ -376,11 +412,11 @@ createc_get_metadata(GHashTable *hash)
     return meta;
 }
 
-static gboolean
-read_binary_data(gint n, gdouble *data,
-                 gchar *buffer,
-                 gint bpp,
-                 GError **error)
+static void
+read_binary_data(gint n,
+                 gdouble *data,
+                 const gchar *buffer,
+                 gint bpp)
 {
     gint i;
     gdouble q;
@@ -394,7 +430,7 @@ read_binary_data(gint n, gdouble *data,
 
         case 2:
         {
-            gint16 *p = (gint16*)buffer;
+            const gint16 *p = (const gint16*)buffer;
 
             for (i = 0; i < n; i++)
                 data[i] = q*GINT16_FROM_LE(p[i]);
@@ -403,21 +439,18 @@ read_binary_data(gint n, gdouble *data,
 
         case 4:
         {
-            gint32 *p = (gint32*)buffer;
+            const guchar *p = (const guchar*)buffer;
 
             for (i = 0; i < n; i++)
-                data[i] = q*GINT32_FROM_LE(p[i]);
+                data[i] = gwy_get_gfloat_le(&p);
         }
 
         break;
 
         default:
-        err_BPP(error, bpp);
-        return FALSE;
+        g_return_if_reached();
         break;
     }
-
-    return TRUE;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
