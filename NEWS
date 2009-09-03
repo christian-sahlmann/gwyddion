@@ -35,7 +35,8 @@ Modules:
 
 Other:
 - Forgotten @LIBTIFF@ was removed from gwyddion pkg-config file.
-- Building RPMs works on Mandriva again.
+- Building RPMs works on Mandriva again, including working around the utterly
+  broken enforcement of -Werror=format-security in 2009.1.
 
 
 2.16 (2009-06-25)

@@ -1043,11 +1043,14 @@ gwy_serialize_skip_type(const guchar *buffer,
                         gsize *position,
                         guchar ctype)
 {
-    static const gchar *too_short_msg =
-        "Truncated or corrupted buffer, need %" G_GSIZE_FORMAT " bytes "
-        "to skip <%c>, but only %" G_GSIZE_FORMAT " bytes remain.";
-    static const gchar *no_string_msg =
-        "Expected a string, trying to skip to end of [sub]buffer.";
+/* XXX: Must use #defines that have no scope and are not visible in debugger
+ * instead of const char buffers because Mandriva's idiotic enforcement of
+ * -Werror=format-security. */
+#define too_short_msg \
+        "Truncated or corrupted buffer, need %" G_GSIZE_FORMAT " bytes " \
+        "to skip <%c>, but only %" G_GSIZE_FORMAT " bytes remain."
+#define no_string_msg \
+        "Expected a string, trying to skip to end of [sub]buffer."
 
     gsize tsize, alen;
 
