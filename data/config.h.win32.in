@@ -36,8 +36,8 @@
 #pragma warning(disable:4018) /* signed/unsigned mismatch */
 #endif /* _MSC_VER */
 
-/* All Win32 Gtk+ packages has libtiff */
-#define HAVE_TIFF 1
+/* All Win32 Gtk+ packages have zlib */
+#define HAVE_ZLIB 1
 
 /* GladeWin32 has GtkGLExt */
 #define HAVE_GTKGLEXT 1
