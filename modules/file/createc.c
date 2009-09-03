@@ -20,7 +20,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
-
+#define DEBUG 1
 /* TODO:
  * - multiple images
  * - constant height or current
@@ -49,29 +49,42 @@
 
 #include "err.h"
 
-#define MAGIC_TXT1 "[Parameter]"
-/* FIXME: This one is apparently compressed and we don't know how to load it. */
-#define MAGIC_TXT2 "[Paramco32]"
-/* Assume idencital sizes */
-#define MAGIC_SIZE (sizeof(MAGIC_TXT1)-1)
+enum {
+    HEADER_SIZE = 16384,
+};
 
-static gboolean      module_register      (void);
-static gint          createc_detect       (const GwyFileDetectInfo *fileinfo,
+typedef enum {
+    CREATEC_NONE,
+    CREATEC_1,
+    CREATEC_2,
+    CREATEC_2Z,
+} CreatecVersion;
+
+static gboolean       module_register     (void);
+static gint           createc_detect      (const GwyFileDetectInfo *fileinfo,
                                            gboolean only_name);
-static GwyContainer* createc_load         (const gchar *filename,
+static GwyContainer*  createc_load        (const gchar *filename,
                                            GwyRunType mode,
                                            GError **error);
-static GHashTable*   read_hash            (gchar *buffer);
-static GwyDataField* hash_to_data_field   (GHashTable *hash,
+static CreatecVersion createc_get_version (const gchar *buffer,
+                                           gsize size);
+static GHashTable*    read_hash           (gchar *buffer);
+static GwyDataField*  hash_to_data_field  (GHashTable *hash,
                                            gint version,
                                            const gchar *buffer,
                                            gsize size,
                                            GError **error);
-static void          read_binary_data     (gint n,
+static void           read_binary_data    (gint n,
                                            gdouble *data,
                                            const gchar *buffer,
                                            gint bpp);
-static GwyContainer* createc_get_metadata (GHashTable *hash);
+static GwyContainer*  createc_get_metadata(GHashTable *hash);
+
+static const GwyEnum versions[] = {
+    { "[Parameter]", CREATEC_1,  },
+    { "[Paramet32]", CREATEC_2,  },   /* FIXME: I just made this up! */
+    { "[Paramco32]", CREATEC_2Z, },
+};
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -102,17 +115,13 @@ static gint
 createc_detect(const GwyFileDetectInfo *fileinfo,
                gboolean only_name)
 {
-    gint score = 0;
-
     if (only_name)
         return g_str_has_suffix(fileinfo->name_lowercase, ".dat") ? 10 : 0;
 
-    if (fileinfo->buffer_len > MAGIC_SIZE
-        && (memcmp(fileinfo->head, MAGIC_TXT1, MAGIC_SIZE) == 0
-            || memcmp(fileinfo->head, MAGIC_TXT2, MAGIC_SIZE) == 0))
-        score = 100;
+    if (createc_get_version(fileinfo->head, fileinfo->buffer_len))
+        return 100;
 
-    return score;
+    return 0;
 }
 
 static GwyContainer*
@@ -121,34 +130,27 @@ createc_load(const gchar *filename,
              GError **error)
 {
     GwyContainer *meta, *container = NULL;
-    gchar *p, *buffer = NULL;
+    guchar *buffer = NULL;
+    gchar *p, *head;
     gsize size = 0;
     GError *err = NULL;
     GHashTable *hash = NULL;
     GwyDataField *dfield;
-    gint version;
+    CreatecVersion version;
 
-    if (!g_file_get_contents(filename, &buffer, &size, &err)) {
+    if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
         err_GET_FILE_CONTENTS(error, &err);
         return NULL;
     }
-    if (size < MAGIC_SIZE) {
+    if (!(version = createc_get_version(buffer, size))) {
         err_FILE_TYPE(error, "Createc");
-        g_free(buffer);
+        gwy_file_abandon_contents(buffer, size, NULL);
         return NULL;
     }
 
-    if (memcmp(buffer, MAGIC_TXT1, MAGIC_SIZE) == 0)
-        version = 1;
-    else if (memcmp(buffer, MAGIC_TXT2, MAGIC_SIZE) == 0)
-        version = 2;
-    else {
-        err_FILE_TYPE(error, "Createc");
-        g_free(buffer);
-        return NULL;
-    }
-
-    for (p = buffer + MAGIC_SIZE; g_ascii_isspace(*p); p++)
+    head = g_memdup(buffer, HEADER_SIZE + 1);
+    head[HEADER_SIZE] = '\0';
+    for (p = head + strlen(versions[version].name); g_ascii_isspace(*p); p++)
         ;
     hash = read_hash(p);
     dfield = hash_to_data_field(hash, version, buffer, size, error);
@@ -166,11 +168,32 @@ createc_load(const gchar *filename,
         g_object_unref(meta);
     }
 
+    /* Must not free earlier, it holds the hash's strings */
+    g_free(head);
     if (hash)
         g_hash_table_destroy(hash);
-    g_free(buffer);
+    gwy_file_abandon_contents(buffer, size, NULL);
 
     return container;
+}
+
+static CreatecVersion
+createc_get_version(const gchar *buffer,
+                    gsize size)
+{
+    guint i, len;
+
+    for (i = 0; i < G_N_ELEMENTS(versions); i++) {
+        len = strlen(versions[i].name);
+        if (size > len && memcmp(versions[i].name, buffer, len) == 0) {
+            gwy_debug("header=%s, version=%u",
+                      versions[i].name, versions[i].value);
+            return versions[i].value;
+        }
+    }
+    gwy_debug("header=%.*s, no version matched",
+              (int)strlen(versions[0].name), buffer);
+    return CREATEC_NONE;
 }
 
 /* Read the ASCII header and fill the hash with key/value pairs */
@@ -258,13 +281,20 @@ hash_to_data_field(GHashTable *hash,
     if (!hash)
         return NULL;
 
-    if (version == 1) {
+    if (version == CREATEC_1) {
         bpp = 2;
         offset = 16384 + 2; /* header + 2 unused bytes */
     }
-    else if (version == 2) {
+    else if (version == CREATEC_2) {
         bpp = 4;
         offset = 16384 + 4; /* header + 4 unused bytes */
+    }
+    else if (version == CREATEC_2Z) {
+        bpp = 4;
+        offset = 16384 + 4; /* header */
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    "Compressed data are not supported yet.");
+        return NULL;
     }
     else {
         g_return_val_if_reached(NULL);
@@ -423,11 +453,6 @@ read_binary_data(gint n,
 
     q = 1.0/(1 << (8*bpp));
     switch (bpp) {
-        case 1:
-        for (i = 0; i < n; i++)
-            data[i] = q*buffer[i];
-        break;
-
         case 2:
         {
             const gint16 *p = (const gint16*)buffer;
