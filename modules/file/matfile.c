@@ -571,6 +571,7 @@ try_read_datafield(Mat5FileCursor *parent,
     return dfield;
 }
 
+/* XXX: Common with createc.c */
 static inline gboolean
 zinflate_into(z_stream *zbuf,
               gint flush_mode,
