@@ -23,6 +23,8 @@ Modules:
   and y-derivatives.
 - Arithmetic: History of previously used expressions is remembered.
 - Omicron MATRIX: Possible crash was fixed.
+- Createc: Support for floating-point files was added, including compressed
+  data.  Module is more robust with respect to broken files.
 - NT-MDT: Support for MDA frames was added.
 - Olympus: Value scales of imported data were corrected.
 - APE file: Support for newer 2.x files was implemented, some units and scales
