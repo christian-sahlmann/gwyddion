@@ -174,6 +174,9 @@ unisoku_la_SOURCES       = unisoku.c
 witfile_la_SOURCES       = witfile.c
 wsxmfile_la_SOURCES      = wsxmfile.c
 
+# It compiles also without.
+createc_la_LIBADD        = @ZLIB@
+
 if HAVE_XML2
 spml_la_SOURCES          = spml.c spml-utils.h
 spml_la_CFLAGS           = $(AM_CFLAGS) @XML2_CFLAGS@

@@ -1,7 +1,9 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2004 Rok Zitko
- *  E-mail: rok.zitko@ijs.si
+ *  Copyright (C) 2004 Rok Zitko.
+ *  E-mail: rok.zitko@ijs.si.
+ *  Copyright (C) 2009 David Necas (Yeti).
+ *  E-mail: yeti@gwyddion.net.
  *
  *  Based on nanoscope.c, Copyright (C) 2004 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
@@ -20,7 +22,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
-#define DEBUG 1
+
 /* TODO:
  * - multiple images
  * - constant height or current
@@ -33,6 +35,7 @@
  *   <comment>Createc SPM data</comment>
  *   <magic priority="80">
  *     <match type="string" offset="0" value="[Parameter]"/>
+ *     <match type="string" offset="0" value="[Paramco32]"/>
  *   </magic>
  * </mime-type>
  **/
@@ -40,6 +43,11 @@
 #include "config.h"
 #include <string.h>
 #include <stdlib.h>
+
+#ifdef HAVE_ZLIB
+#include <zlib.h>
+#endif
+
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwyutils.h>
 #include <libgwyddion/gwymath.h>
@@ -60,25 +68,30 @@ typedef enum {
     CREATEC_2Z,
 } CreatecVersion;
 
-static gboolean       module_register     (void);
-static gint           createc_detect      (const GwyFileDetectInfo *fileinfo,
-                                           gboolean only_name);
-static GwyContainer*  createc_load        (const gchar *filename,
-                                           GwyRunType mode,
-                                           GError **error);
-static CreatecVersion createc_get_version (const gchar *buffer,
-                                           gsize size);
-static GHashTable*    read_hash           (gchar *buffer);
-static GwyDataField*  hash_to_data_field  (GHashTable *hash,
-                                           gint version,
-                                           const gchar *buffer,
-                                           gsize size,
-                                           GError **error);
-static void           read_binary_data    (gint n,
-                                           gdouble *data,
-                                           const gchar *buffer,
-                                           gint bpp);
-static GwyContainer*  createc_get_metadata(GHashTable *hash);
+static gboolean       module_register       (void);
+static gint           createc_detect        (const GwyFileDetectInfo *fileinfo,
+                                             gboolean only_name);
+static GwyContainer*  createc_load          (const gchar *filename,
+                                             GwyRunType mode,
+                                             GError **error);
+static CreatecVersion createc_get_version   (const gchar *buffer,
+                                             gsize size);
+static GHashTable*    read_hash             (gchar *buffer);
+static GwyDataField*  hash_to_data_field    (GHashTable *hash,
+                                             gint version,
+                                             const gchar *buffer,
+                                             gsize size,
+                                             GError **error);
+static void           read_binary_data      (gint n,
+                                             gdouble *data,
+                                             const gchar *buffer,
+                                             gint bpp);
+static GwyContainer*  createc_get_metadata  (GHashTable *hash);
+static gchar*         unpack_compressed_data(const guchar *buffer,
+                                             gsize size,
+                                             gsize imagesize,
+                                             gsize *datasize,
+                                             GError **error);
 
 static const GwyEnum versions[] = {
     { "[Parameter]", CREATEC_1,  },
@@ -91,8 +104,8 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Createc data files."),
     "Rok Zitko <rok.zitko@ijs.si>",
-    "0.9",
-    "Rok Zitko",
+    "0.10",
+    "Rok Zitko, David Nečas (Yeti)",
     "2004",
 };
 
@@ -133,6 +146,7 @@ createc_load(const gchar *filename,
     guchar *buffer = NULL;
     gchar *p, *head;
     gsize size = 0;
+    guint len;
     GError *err = NULL;
     GHashTable *hash = NULL;
     GwyDataField *dfield;
@@ -150,7 +164,8 @@ createc_load(const gchar *filename,
 
     head = g_memdup(buffer, HEADER_SIZE + 1);
     head[HEADER_SIZE] = '\0';
-    for (p = head + strlen(versions[version].name); g_ascii_isspace(*p); p++)
+    len = strlen(gwy_enum_to_string(version, versions, G_N_ELEMENTS(versions)));
+    for (p = head + len; g_ascii_isspace(*p); p++)
         ;
     hash = read_hash(p);
     dfield = hash_to_data_field(hash, version, buffer, size, error);
@@ -236,7 +251,7 @@ read_hash(gchar *buffer)
 #define HASH_GET(key, var, typeconv, err) \
     if (!(s = g_hash_table_lookup(hash, key))) { \
         err_MISSING_FIELD(err, key); \
-        return NULL; \
+        goto fail; \
     } \
     var = typeconv(s)
 
@@ -248,7 +263,7 @@ read_hash(gchar *buffer)
           g_set_error(err, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA, \
                       _("Neither `%s' nor `%s' header field found."), \
                       key1, key2); \
-        return NULL; \
+        goto fail; \
       } \
     } \
     var = typeconv(s)
@@ -268,10 +283,12 @@ hash_to_data_field(GHashTable *hash,
                    gsize size,
                    GError **error)
 {
-    GwyDataField *dfield;
+    GwyDataField *dfield = NULL;
     GwySIUnit *unit;
     const gchar *s; /* for HASH_GET macros */
     gint xres, yres, bpp, offset;
+    gchar *imagedata = NULL;
+    gsize datasize;
     gdouble xreal, yreal, q;
     gboolean is_current;
     gdouble *data;
@@ -291,14 +308,17 @@ hash_to_data_field(GHashTable *hash,
     }
     else if (version == CREATEC_2Z) {
         bpp = 4;
-        offset = 16384 + 4; /* header */
-        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                    "Compressed data are not supported yet.");
-        return NULL;
+        offset = 16384; /* header */
     }
     else {
         g_return_val_if_reached(NULL);
     }
+
+    if (size < offset) {
+        err_TOO_SHORT(error);
+        return NULL;
+    }
+
     is_current = FALSE;
 
     HASH_INT2("Num.X", "Num.X / Num.X", xres, error);
@@ -306,8 +326,20 @@ hash_to_data_field(GHashTable *hash,
     if (err_DIMENSION(error, xres) || err_DIMENSION(error, yres))
         return NULL;
 
+    if (version == CREATEC_2Z) {
+        if (!(imagedata = unpack_compressed_data(buffer + offset, size - offset,
+                                                 bpp*xres*yres,
+                                                 &datasize, error)))
+            return NULL;
+
+        /* Point buffer to the decompressed data. */
+        buffer = imagedata;
+        size = datasize;
+        offset = 4;   /* the usual 4 unused bytes */
+    }
+
     if (err_SIZE_MISMATCH(error, offset + bpp*xres*yres, size, FALSE))
-        return NULL;
+        goto fail;
 
     HASH_INT2("Delta X", "Delta X / Delta X [Dac]", ti1, error);
     HASH_INT2("GainX", "GainX / GainX", ti2, error);
@@ -349,6 +381,9 @@ hash_to_data_field(GHashTable *hash,
     unit = gwy_si_unit_new(is_current ? "A" : "m");
     gwy_data_field_set_si_unit_z(dfield, unit);
     g_object_unref(unit);
+
+fail:
+    g_free(imagedata);
 
     return dfield;
 }
@@ -477,5 +512,98 @@ read_binary_data(gint n,
         break;
     }
 }
+
+#ifdef HAVE_ZLIB
+/* XXX: Common with matfile.c */
+static inline gboolean
+zinflate_into(z_stream *zbuf,
+              gint flush_mode,
+              gsize csize,
+              const guchar *compressed,
+              GByteArray *output,
+              GError **error)
+{
+    gint status;
+    gboolean retval = TRUE;
+
+    gwy_clear(zbuf, 1);
+    zbuf->next_in = (char*)compressed;
+    zbuf->avail_in = csize;
+    zbuf->next_out = output->data;
+    zbuf->avail_out = output->len;
+
+    /* XXX: zbuf->msg does not seem to ever contain anything, so just report
+     * the error codes. */
+    if ((status = inflateInit(zbuf)) != Z_OK) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR,
+                    GWY_MODULE_FILE_ERROR_SPECIFIC,
+                    _("zlib initialization failed with error %d, "
+                      "cannot decompress data."),
+                    status);
+        return FALSE;
+    }
+
+    if ((status = inflate(zbuf, flush_mode)) != Z_OK
+        /* zlib return Z_STREAM_END also when we *exactly* exhaust all input.
+         * But this is no error, in fact it should happen every time, so check
+         * for it specifically. */
+        && !(status == Z_STREAM_END
+             && zbuf->total_in == csize
+             && zbuf->total_out == output->len)) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Decompression of compressed data failed with "
+                      "error %d."),
+                    status);
+        retval = FALSE;
+    }
+
+    status = inflateEnd(zbuf);
+    /* This should not really happen whatever data we pass in.  And we have
+     * already our output, so just make some noise and get over it.  */
+    if (status != Z_OK)
+        g_critical("inflateEnd() failed with error %d", status);
+
+    return retval;
+}
+
+static gchar*
+unpack_compressed_data(const guchar *buffer,
+                       gsize size,
+                       gsize imagesize,
+                       gsize *datasize,
+                       GError **error)
+{
+    gsize compressed_size = size - HEADER_SIZE;
+    /* Estimate how many data fields we might decompress */
+    guint ndata = compressed_size/imagesize + 1;
+    gsize expected_size = ndata*imagesize + 4;  /* 4 unused bytes, as usual */
+    z_stream zbuf; /* decompression stream */
+    GByteArray *output;
+    gboolean ok;
+
+    gwy_debug("Expecting to decompress %u data fields", ndata);
+    output = g_byte_array_sized_new(expected_size);
+    g_byte_array_set_size(output, expected_size);
+    ok = zinflate_into(&zbuf, Z_SYNC_FLUSH, compressed_size, buffer,
+                       output, error);
+    *datasize = output->len;
+
+    return g_byte_array_free(output, !ok);
+}
+#else
+static gchar*
+unpack_compressed_data(G_GNUC_UNUSED const guchar *buffer,
+                       G_GNUC_UNUSED gsize size,
+                       G_GNUC_UNUSED gsize imagesize,
+                       gsize *datasize,
+                       GError **error)
+{
+    *datasize = 0;
+    g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_SPECIFIC,
+                _("Cannot decompress compressed data.  Zlib support was "
+                  "not built in."));
+    return NULL;
+}
+#endif
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
