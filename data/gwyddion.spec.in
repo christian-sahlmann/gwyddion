@@ -40,6 +40,7 @@ BuildRequires: gtksourceview2-devel
 %define fftw3 fftw
 %define fftw3devel fftw-devel
 %define kde4libs kdelibs
+%define configureopts %{nil}
 %endif
 
 %if %{distro_is_suse}
@@ -50,6 +51,7 @@ BuildRequires: gtksourceview-devel
 %define fftw3 fftw3
 %define fftw3devel fftw3-devel
 %define kde4libs libkde4
+%define configureopts %{nil}
 %endif
 
 %if %{distro_is_mdk}
@@ -59,6 +61,9 @@ BuildRequires: gtksourceview-devel
 %define fftw3 libfftw3
 %define fftw3devel libfftw-devel
 %define kde4libs kdelibs4
+# Mandriva enforces --as-needed and other weirdness on everything.
+# So, give it what it deserves.
+%define configureopts --enable-library-bloat
 %endif
 
 %if %{enable_kde4_thumbnailer}
@@ -162,7 +167,7 @@ sed -i -e '1s/env *//' plugins/process/*.{py,rb,pl}
 
 
 %build
-%configure --without-pascal --disable-rpath \
+%configure %configureopts --without-pascal --disable-rpath \
            --without-kde4-thumbnailer %{?_with_kde4_thumbnailer}
 make %{?_smp_mflags}
 
