@@ -341,23 +341,23 @@ typedef struct {
     MDTFrame *frames;
 } MDTFile;
 
-static gboolean      module_register       (void);
-static gint          mdt_detect            (const GwyFileDetectInfo *fileinfo,
-                                            gboolean only_name);
-static GwyContainer* mdt_load              (const gchar *filename,
-                                            GwyRunType mode,
-                                            GError **error);
-static GwyContainer* mdt_get_metadata      (MDTFile *mdtfile,
-                                            guint i);
-static void          mdt_add_frame_metadata(MDTScannedDataFrame *sdframe,
-                                            GwyContainer *meta);
-static gboolean      mdt_real_load         (const guchar *buffer,
-                                            guint size,
-                                            MDTFile *mdtfile,
-                                            GError **error);
-static GwyDataField* extract_scanned_data  (MDTScannedDataFrame *dataframe);
-static GwyDataField* extract_mda_data      (MDTMDAFrame *dataframe);
-static GwyGraphCurveModel* extract_mda_spectrum (MDTMDAFrame *dataframe);
+static gboolean       module_register       (void);
+static gint           mdt_detect            (const GwyFileDetectInfo *fileinfo,
+                                             gboolean only_name);
+static GwyContainer*  mdt_load              (const gchar *filename,
+                                             GwyRunType mode,
+                                             GError **error);
+static GwyContainer*  mdt_get_metadata      (MDTFile *mdtfile,
+                                             guint i);
+static void           mdt_add_frame_metadata(MDTScannedDataFrame *sdframe,
+                                             GwyContainer *meta);
+static gboolean       mdt_real_load         (const guchar *buffer,
+                                             guint size,
+                                             MDTFile *mdtfile,
+                                             GError **error);
+static GwyDataField*  extract_scanned_data  (MDTScannedDataFrame *dataframe);
+static GwyDataField*  extract_mda_data      (MDTMDAFrame *dataframe);
+static GwyGraphModel* extract_mda_spectrum  (MDTMDAFrame *dataframe);
 
 #ifdef DEBUG
 static const GwyEnum frame_types[] = {
@@ -711,14 +711,9 @@ mdt_load(const gchar *filename,
             }
             else if (mdaframe->nDimensions == 0 && mdaframe->nMesurands == 2) {
                 // raman spectra
-                GwyGraphCurveModel *gcmodel;
                 GwyGraphModel *gmodel;
 
-                gcmodel = extract_mda_spectrum(mdaframe);
-                gmodel = gwy_graph_model_new();
-                gwy_graph_model_add_curve(gmodel, gcmodel);
-                g_object_unref(gcmodel);
-                g_object_set(gmodel, "title", "Raman spectra", NULL);
+                gmodel = extract_mda_spectrum(mdaframe);
                 g_string_printf(key, "/0/graph/graph/%d", n+1);
                 gwy_container_set_object_by_name(data, key->str, gmodel);
                 g_object_unref(gmodel);
@@ -1584,10 +1579,11 @@ extract_mda_data(MDTMDAFrame * dataframe)
     return dfield;
 }
 
-static GwyGraphCurveModel*
+static GwyGraphModel*
 extract_mda_spectrum(MDTMDAFrame *dataframe)
 {
     GwyGraphCurveModel *spectra;
+    GwyGraphModel *gmodel;
     gdouble xscale, yscale;
     gint power10x, power10y;
     GwySIUnit *siunitx, *siunity;
@@ -1641,7 +1637,18 @@ extract_mda_spectrum(MDTMDAFrame *dataframe)
     }
     gwy_graph_curve_model_set_data(spectra, xdata, ydata, res);
 
-    return spectra;
+    gmodel = gwy_graph_model_new();
+    g_object_set(gmodel,
+                 "title", "Raman spectra",
+                 "si-unit-x", siunitx,
+                 "si-unit-y", siunity,
+                 NULL);
+    gwy_graph_model_add_curve(gmodel, spectra);
+    g_object_unref(spectra);
+    g_object_unref(siunitx);
+    g_object_unref(siunity);
+
+    return gmodel;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
