@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2009-09-05 03:59+0200\n"
-"PO-Revision-Date: 2009-09-05 10:07+0300\n"
+"POT-Creation-Date: 2009-09-15 03:59+0200\n"
+"PO-Revision-Date: 2009-09-15 10:15+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@km.ru>\n"
 "Language-Team: russian <ru@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -471,7 +471,7 @@ msgstr ""
 
 #: libprocess/gwyprocessenums.c:251
 msgid "Flat-top"
-msgstr ""
+msgstr "Плоская вершина"
 
 #: libprocess/gwyprocessenums.c:252
 msgid "Kaiser 2.5"
@@ -511,7 +511,7 @@ msgstr "Циклическая оценка (цикл %d)"
 
 #: libprocess/morph_lib.c:624
 #: libprocess/morph_lib.c:778
-#, fuzzy, c-format
+#, c-format
 msgid "%d image locations produced refinement"
 msgstr "%d участков изображения были уточнены"
 
@@ -1476,9 +1476,8 @@ msgid "…"
 msgstr ""
 
 #: app/gwyappfilechooser.c:907
-#, fuzzy
 msgid "Cannot preview"
-msgstr "Не удалось создать файл предварительного просмотра."
+msgstr "Нельзя просмотреть."
 
 #: app/gwyddion.c:124
 msgid "Loading document history"
@@ -3019,18 +3018,18 @@ msgstr "Импорт растровых изображений должен за
 #: modules/file/pixmap.c:670
 #, c-format
 msgid "Pixmap has not registered file type `%s'."
-msgstr ""
+msgstr "Модуль импорта изображений не имеет зарегистрированного типа файла `%s'."
 
 #: modules/file/pixmap.c:684
 #, c-format
 msgid "Cannot get pixbuf loader: %s."
-msgstr ""
+msgstr "Не удаётся получить загрузчик pixbuf: %s."
 
 #: modules/file/pixmap.c:696
 #: modules/file/pixmap.c:706
 #, c-format
 msgid "Pixbuf loader refused data: %s."
-msgstr ""
+msgstr "Загрузчик pixbuf не принял данные: %s."
 
 #: modules/file/pixmap.c:868
 msgid "Red"
@@ -3110,7 +3109,7 @@ msgstr "_Высота"
 #: modules/file/pixmap.c:1020
 #: modules/file/rawfile.c:657
 msgid "Identical _measures"
-msgstr "Одинаковые раз_меры"
+msgstr "Одинаковый _масштаб"
 
 #: modules/file/pixmap.c:1032
 #: modules/file/rawfile.c:669
@@ -3147,7 +3146,7 @@ msgstr "Новые _единицы:"
 #: modules/file/pixmap.c:1377
 #, c-format
 msgid "Pixbuf save failed: %s."
-msgstr ""
+msgstr "Сохранение pixbuf закончилось неудачно: %s."
 
 #: modules/file/pixmap.c:1652
 msgid "Image is too large to be stored as TARGA."
@@ -3826,7 +3825,6 @@ msgstr "Файлы Sensofar PLu (.plu)"
 
 #: modules/file/sensofar.c:481
 #: modules/file/sensofar.c:495
-#, fuzzy
 msgid "Profile"
 msgstr "Профиль"
 
@@ -7166,9 +7164,8 @@ msgid "Co_verage:"
 msgstr "По_крытие:"
 
 #: modules/process/obj_synth.c:508
-#, fuzzy
 msgid "obj."
-msgstr "объект"
+msgstr "объект."
 
 #: modules/process/obj_synth.c:520
 msgid "_Size:"
@@ -7593,7 +7590,7 @@ msgstr "Простые операции подавления с двумя по�
 
 #: modules/process/superresolution.c:102
 msgid "/M_ultidata/_Super-resolution..."
-msgstr ""
+msgstr "/М_ножественные данные/_Сверхразрешение..."
 
 #: modules/process/superresolution.c:106
 msgid "Super resolution of multiple images of same object"
@@ -8401,12 +8398,10 @@ msgid "Average maximum height of the roughness"
 msgstr "Средняя максимальная высота шероховатости"
 
 #: modules/tools/roughness.c:348
-#, fuzzy
 msgid "Average maximum roughness valley depth"
 msgstr "Средняя максимальная глубина долины шероховатости"
 
 #: modules/tools/roughness.c:356
-#, fuzzy
 msgid "Average maximum roughness peak height"
 msgstr "Средняя максимальная высота пика шероховатости"
 
