@@ -428,10 +428,10 @@ static const GwyEnum mdt_units[] = {
    When you edit mdt_units[] data above,
    re-run flatten.py SOURCE.c. */
 static const gchar mdt_units_name[] =
-    "1/cm\000\000\000\000\000m\000cm\000mm\000µm\000nm\000?\205\000nA\000V"
+    "1/cm\000\000\000\000\000m\000cm\000mm\000µm\000nm\000Å\000nA\000V"
     "\000\000kHz\000deg\000%\000°C\000V\000s\000ms\000µs\000ns\000\000px"
-    "\000\000\000\000\000\000A\000mA\000µA\000nA\000pA\000V\000mV\000µV\000"
-    "nV\000pV\000N\000mN\000µN\000nN\000pN\000\000\000\000\000";
+    "\000\000\000\000\000\000A\000mA\000µA\000nA\000pA\000V\000mV\000µV"
+    "\000nV\000pV\000N\000mN\000µN\000nN\000pN\000\000\000\000\000";
 
 static const GwyFlatEnum mdt_units[] = {
     { 0, MDT_UNIT_RAMAN_SHIFT },
@@ -543,13 +543,14 @@ static const GwyEnum mdt_spm_modes[] = {
    When you edit mdt_spm_modes[] data above,
    re-run flatten.py SOURCE.c. */
 static const gchar mdt_spm_modes_name[] =
-    "Constant Force\000Contact Constant Height\000Contact Error\000Lateral Fo"
-    "rce\000Force Modulation\000Spreading Resistance Imaging\000Semicontact T"
-    "opography\000Semicontact Error\000Phase Contrast\000AC Magnetic Force"
-    "\000DC Magnetic Force\000Electrostatic Force\000Capacitance Contrast\000"
-    "Kelvin Probe\000Constant Current\000Barrier Height\000Constant Height"
-    "\000AFAM\000Contact EFM\000Shear Force Topography\000SFOM\000Contact Cap"
-    "acitance\000SNOM Transmission\000SNOM Reflection\000SNOM All\000SNOM";
+    "Constant Force\000Contact Constant Height\000Contact Error\000Lateral "
+    "Force\000Force Modulation\000Spreading Resistance Imaging\000Semiconta"
+    "ct Topography\000Semicontact Error\000Phase Contrast\000AC Magnetic Fo"
+    "rce\000DC Magnetic Force\000Electrostatic Force\000Capacitance Contras"
+    "t\000Kelvin Probe\000Constant Current\000Barrier Height\000Constant He"
+    "ight\000AFAM\000Contact EFM\000Shear Force Topography\000SFOM\000Conta"
+    "ct Capacitance\000SNOM Transmission\000SNOM Reflection\000SNOM All\000"
+    "SNOM";
 
 static const GwyFlatEnum mdt_spm_modes[] = {
     { 0, MDT_SPM_MODE_CONSTANT_FORCE },
