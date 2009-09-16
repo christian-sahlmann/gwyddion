@@ -768,7 +768,7 @@ random_seed_new(GtkAdjustment *adj)
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), spin);
     gtk_box_pack_start(GTK_BOX(hbox), spin, FALSE, FALSE, 0);
 
-    button = gtk_button_new_with_mnemonic(_("_New"));
+    button = gtk_button_new_with_mnemonic(gwy_sgettext("seed|_New"));
     gtk_box_pack_start(GTK_BOX(hbox), button, FALSE, FALSE, 0);
     g_signal_connect_swapped(button, "clicked",
                              G_CALLBACK(randomize_seed), adj);
