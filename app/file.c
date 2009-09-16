@@ -27,6 +27,14 @@
 #include <app/gwyapp.h>
 #include "gwyappfilechooser.h"
 
+typedef struct {
+    const gchar *funcname;
+    const gchar *modname;
+    const GwyModuleInfo *modinfo;
+} FindFileFuncModuleData;
+
+static void          warn_broken_load_func     (const gchar *name,
+                                                GwyContainer *data);
 static GwyContainer* gwy_app_file_load_real    (const gchar *filename_utf8,
                                                 const gchar *filename_sys,
                                                 const gchar *name,
@@ -132,10 +140,87 @@ gwy_app_file_load(const gchar *filename_utf8,
     data = gwy_app_file_load_real(filename_utf8, filename_sys, name, TRUE);
     /* gwy_app_file_add_loaded() takes a reference therefore we can release
      * the initial one */
-    if (data)
+    if (data) {
         g_object_unref(data);
+        warn_broken_load_func(name, data);
+    }
 
     return data;
+}
+
+static void
+find_file_func_author(gpointer hkey, gpointer hvalue, gpointer user_data)
+{
+    const gchar *modname = (const gchar*)hkey;
+    const GwyModuleInfo *modinfo = (const GwyModuleInfo*)hvalue;
+    FindFileFuncModuleData *ffdata = (FindFileFuncModuleData*)user_data;
+    GSList *l;
+
+    l = gwy_module_get_functions(modname);
+    while (l) {
+        const gchar *funcname = (const gchar*)l->data;
+        if (g_str_has_prefix(funcname, "file::")
+            && gwy_strequal(funcname + sizeof("file::") - 1,
+                            ffdata->funcname)) {
+            ffdata->modname = modname;
+            ffdata->modinfo = modinfo;
+            return;
+        }
+        l = g_slist_next(l);
+    }
+}
+
+static void
+warn_broken_load_func(const gchar *name,
+                      GwyContainer *data)
+{
+    static const gchar *broken_file_funcs[] = {
+        "igorfile", "nanonics",
+    };
+
+    FindFileFuncModuleData ffdata;
+    const gchar *description;
+    GtkWidget *dialog;
+    guint i;
+
+    if (!name) {
+        g_return_if_fail(GWY_IS_CONTAINER(data));
+        gwy_file_get_data_info(data, &name, NULL);
+        g_return_if_fail(name);
+    }
+
+    for (i = 0; i < G_N_ELEMENTS(broken_file_funcs); i++) {
+        if (gwy_strequal(name, broken_file_funcs[i]))
+            break;
+    }
+    if (i == G_N_ELEMENTS(broken_file_funcs))
+        return;
+
+    description = gwy_file_func_get_description(name);
+    gwy_clear(&ffdata, 1);
+    ffdata.funcname = name;
+    gwy_module_foreach(find_file_func_author, &ffdata);
+    g_return_if_fail(ffdata.modinfo && ffdata.modname);
+
+    dialog = gtk_message_dialog_new(NULL, 0, GTK_MESSAGE_WARNING,
+                                    GTK_BUTTONS_OK,
+                                    _("Imported data are likely incorrect."));
+
+    gtk_message_dialog_format_secondary_text
+        (GTK_MESSAGE_DIALOG(dialog),
+         _("Import support for files of type\n\n"
+           "%s\n\n"
+           "is incomplete due to the lack of documentation, "
+           "testing files and/or people willing to help with the testing.\n\n"
+           "If you want to help to improve the import please contact the "
+           "author of module %s-%s:\n\n"
+           "%s"),
+       description, ffdata.modname, ffdata.modinfo->version,
+       ffdata.modinfo->author);
+
+    g_signal_connect(dialog, "response", G_CALLBACK(gtk_widget_destroy), NULL);
+    gtk_widget_show_all(dialog);
+    gtk_window_present(GTK_WINDOW(dialog));
 }
 
 static GwyContainer*
@@ -300,14 +385,19 @@ gwy_app_file_open_or_merge(gboolean merge)
                 gwy_app_data_browser_merge(data);
             else
                 gwy_app_file_add_loaded(data, filename_utf8, filename_sys);
+
+            warn_broken_load_func(name, data);
         }
         else {
             if (merge) {
                 GwyContainer *newdata;
 
                 newdata = gwy_app_file_load_real(NULL, fname_sys, name, FALSE);
-                gwy_app_data_browser_merge(newdata);
-                g_object_unref(newdata);
+                if (newdata) {
+                    gwy_app_data_browser_merge(newdata);
+                    g_object_unref(newdata);
+                    warn_broken_load_func(name, newdata);
+                }
             }
             else
                 gwy_app_file_load(NULL, fname_sys, name);
