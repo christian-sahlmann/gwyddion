@@ -38,6 +38,9 @@
 #include <libgwyddion/gwyutils.h>
 #include <libgwyddion/gwymath.h>
 #include <libprocess/datafield.h>
+#include <libprocess/spectra.h>
+#include <libgwydgets/gwygraphmodel.h>
+#include <libgwydgets/gwygraphbasics.h>
 #include <libgwymodule/gwymodule-file.h>
 #include <app/gwymoduleutils-file.h>
 
@@ -354,6 +357,7 @@ static gboolean      mdt_real_load         (const guchar *buffer,
                                             GError **error);
 static GwyDataField* extract_scanned_data  (MDTScannedDataFrame *dataframe);
 static GwyDataField* extract_mda_data      (MDTMDAFrame *dataframe);
+static GwyGraphCurveModel* extract_mda_spectrum (MDTMDAFrame *dataframe);
 
 #ifdef DEBUG
 static const GwyEnum frame_types[] = {
@@ -648,7 +652,7 @@ mdt_load(const gchar *filename,
     GwyContainer *meta, *data = NULL;
     MDTFile mdtfile;
     GString *key;
-    guint n, i;
+    guint n,i;
 
     gwy_debug("");
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
@@ -702,6 +706,21 @@ mdt_load(const gchar *filename,
                 gwy_container_set_object_by_name(data, key->str, dfield);
                 g_object_unref(dfield);
                 gwy_app_channel_title_fall_back(data, n);
+                n++;
+            }
+            else if (mdaframe->nDimensions == 0 && mdaframe->nMesurands == 2) {
+                // raman spectra
+                GwyGraphCurveModel *gcmodel;
+                GwyGraphModel *gmodel;
+
+                gcmodel = extract_mda_spectrum(mdaframe);
+                gmodel = gwy_graph_model_new();
+                gwy_graph_model_add_curve(gmodel, gcmodel);
+                g_object_unref(gcmodel);
+                g_object_set(gmodel, "title", "Raman spectra", NULL);
+                g_string_printf(key, "/0/graph/graph/%d", n+1);
+                gwy_container_set_object_by_name(data, key->str, gmodel);
+                g_object_unref(gmodel);
                 n++;
             }
         }
@@ -1562,6 +1581,66 @@ extract_mda_data(MDTMDAFrame * dataframe)
     }
     gwy_data_field_invert(dfield, TRUE, FALSE, FALSE);
     return dfield;
+}
+
+static GwyGraphCurveModel*
+extract_mda_spectrum(MDTMDAFrame *dataframe)
+{
+    GwyGraphCurveModel *spectra;
+    gdouble xscale, yscale;
+    gint power10x, power10y;
+    GwySIUnit *siunitx, *siunity;
+    gint res = 1024;            /* I don't know where to find this 1024 points
+                                   per spectra */
+    gdouble xdata[res], ydata[res];
+    const guchar *p;
+    const gchar *cunit;
+    gchar *unit;
+    gint i;
+
+    MDTMDACalibration *xAxis = &dataframe->mesurands[0],
+                      *yAxis = &dataframe->mesurands[1];
+
+    if (xAxis->unit && xAxis->unitLen) {
+        unit = g_strndup(xAxis->unit, xAxis->unitLen);
+        siunitx = gwy_si_unit_new_parse(unit, &power10x);
+        g_free(unit);
+    }
+    else {
+        cunit = gwy_flat_enum_to_string(unitCodeForSiCode(xAxis->siUnit),
+                                        G_N_ELEMENTS(mdt_units),
+                                        mdt_units, mdt_units_name);
+        siunitx = gwy_si_unit_new_parse(cunit, &power10x);
+    }
+    gwy_debug("x unit power %d", power10x);
+
+    if (yAxis->unit && yAxis->unitLen) {
+        unit = g_strndup(yAxis->unit, yAxis->unitLen);
+        siunity = gwy_si_unit_new_parse(unit, &power10y);
+        g_free(unit);
+    }
+    else {
+        cunit = gwy_flat_enum_to_string(unitCodeForSiCode(yAxis->siUnit),
+                                        G_N_ELEMENTS(mdt_units),
+                                        mdt_units, mdt_units_name);
+        siunity = gwy_si_unit_new_parse(cunit, &power10y);
+    }
+    gwy_debug("y unit power %d", power10y);
+
+    xscale = pow10(power10x) * xAxis->scale;
+    yscale = pow10(power10y) * yAxis->scale;
+
+    spectra = gwy_graph_curve_model_new();
+
+    p = (gchar*)dataframe->image;
+
+    for (i = 0; i < res; i++) {
+        xdata[i] = xscale * gwy_get_gfloat_le(&p);
+        ydata[i] = yscale * gwy_get_gfloat_le(&p);
+    }
+    gwy_graph_curve_model_set_data(spectra, xdata, ydata, res);
+
+    return spectra;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
