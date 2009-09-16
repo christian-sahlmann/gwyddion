@@ -215,7 +215,7 @@ warn_broken_load_func(const gchar *name,
            "If you want to help to improve the import please contact the "
            "author of module %s-%s:\n\n"
            "%s"),
-       description, ffdata.modname, ffdata.modinfo->version,
+       _(description), ffdata.modname, ffdata.modinfo->version,
        ffdata.modinfo->author);
 
     g_signal_connect(dialog, "response", G_CALLBACK(gtk_widget_destroy), NULL);
