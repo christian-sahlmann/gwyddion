@@ -275,7 +275,7 @@ level_dialog(LevelArgs *args,
     enum { RESPONSE_RESET = 1 };
     static const GwyEnum modes[] = {
         { N_("_Exclude region under mask"),      GWY_MASK_EXCLUDE, },
-        { N_("Exclude region _outside mask"),    GWY_MASK_INCLUDE, },
+        { N_("Include _only region under mask"), GWY_MASK_INCLUDE, },
         { N_("Use entire _image (ignore mask)"), GWY_MASK_IGNORE,  },
     };
 
