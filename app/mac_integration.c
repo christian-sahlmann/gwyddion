@@ -82,12 +82,10 @@ gwy_osx_get_menu_from_widget(USED_ON_MAC GtkWidget *container)
 
 #ifdef USE_MAC_INTEGRATION
 static void
-gwy_osx_open_file(gpointer data, gpointer user_data)
+gwy_osx_open_file(gpointer data,
+                  G_GNUC_UNUSED gpointer user_data)
 {
-    GString *str = (GString *) data;
-
-    gwy_app_file_load(str->str, str->str, NULL);
-    g_string_free(str, TRUE);
+    gwy_app_file_load((const gchar*)data, (const gchar*)data, NULL);
 }
 
 static OSStatus
@@ -109,16 +107,13 @@ appleEventHandler(const AppleEvent * event, AppleEvent * event2, long param)
             if (AEGetNthPtr(&docs, i + 1, typeFSRef, 0, 0, &ref, sizeof(ref), 0)
                 != noErr)
                 continue;
-            if (FSRefMakePath(&ref, strBuffer, BUFLEN)
-                == noErr) {
-                GString *str = g_strdup(strBuffer);     //g_string_new((const gchar*)strBuffer);
-
+            if (FSRefMakePath(&ref, strBuffer, BUFLEN) == noErr) {
                 if (fileModulesReady)
-                    gwy_osx_open_file(str, NULL);
+                    gwy_osx_open_file(strBuffer, NULL);
                 else {
                     if (!files_array)
                         files_array = g_ptr_array_new();
-                    g_ptr_array_add(files_array, str);
+                    g_ptr_array_add(files_array, g_strdup((gchar*)strBuffer));
                 }
             }
         }
@@ -167,7 +162,8 @@ gwy_osx_open_files(void)
 #ifdef USE_MAC_INTEGRATION
     if (files_array) {
         g_ptr_array_foreach(files_array, gwy_osx_open_file, NULL);
-        g_ptr_array_free(files_array, FALSE);
+        g_ptr_array_foreach(files_array, (GFunc)g_free, NULL);
+        g_ptr_array_free(files_array, TRUE);
         files_array = NULL;
     }
     fileModulesReady = 1;
