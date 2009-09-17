@@ -12,14 +12,7 @@ mkdir ${contents_dir}
 mkdir ${bin_dir}
 mkdir ${res_dir}
 
-
-if [ $# -lt 1 ] ; then
-   echo "Syntax: $0: prefix\n"
-   echo "Example:$0 /usr/local/\n"
-   exit 1
-fi
-
-prefix=$1
+prefix=@prefix@
 
 cp pixmaps/${app_name}.icns ${res_dir}/
 
