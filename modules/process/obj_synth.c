@@ -1124,8 +1124,8 @@ create_sphere(GwyDataField *feature,
     gint xres, yres, i, j;
     gdouble *z;
 
-    a = size/sqrt(aspect);
-    b = size*sqrt(aspect);
+    a = size*sqrt(aspect);
+    b = size/sqrt(aspect);
     c = cos(angle);
     s = sin(angle);
     xres = (gint)ceil(2*hypot(a*c, b*s) + 1) | 1;
@@ -1157,8 +1157,8 @@ create_pyramid(GwyDataField *feature,
     gint xres, yres, i, j;
     gdouble *z;
 
-    a = size/sqrt(aspect);
-    b = size*sqrt(aspect);
+    a = size*sqrt(aspect);
+    b = size/sqrt(aspect);
     c = cos(angle);
     s = sin(angle);
     xres = (gint)ceil(2*(a*fabs(c) + b*fabs(s)) + 1) | 1;
@@ -1196,16 +1196,16 @@ create_nugget(GwyDataField *feature,
     }
 
     /* Ensure a > b */
-    if (aspect >= 1.0) {
+    if (aspect < 1.0) {
         angle += G_PI/2.0;
         aspect = 1.0/aspect;
     }
 
-    a = size/sqrt(aspect);
-    b = size*sqrt(aspect);
+    a = size*sqrt(aspect);
+    b = size/sqrt(aspect);
     c = cos(angle);
     s = sin(angle);
-    excess = 1.0/aspect - 1.0;
+    excess = aspect - 1.0;
     xres = (gint)ceil(2*((a - b)*fabs(c) + b) + 1) | 1;
     yres = (gint)ceil(2*((a - b)*fabs(s) + b) + 1) | 1;
 
@@ -1238,8 +1238,8 @@ create_thatch(GwyDataField *feature,
     gint xres, yres, i, j;
     gdouble *z;
 
-    a = size/sqrt(aspect);
-    b = size*sqrt(aspect);
+    a = size*sqrt(aspect);
+    b = size/sqrt(aspect);
     c = cos(angle);
     s = sin(angle);
     xres = (gint)ceil(2*(a*fabs(c) + b*fabs(s)) + 1) | 1;
@@ -1274,8 +1274,8 @@ create_doughnut(GwyDataField *feature,
     gint xres, yres, i, j;
     gdouble *z;
 
-    a = size/sqrt(aspect);
-    b = size*sqrt(aspect);
+    a = size*sqrt(aspect);
+    b = size/sqrt(aspect);
     c = cos(angle);
     s = sin(angle);
     xres = (gint)ceil(2*hypot(a*c, b*s) + 1) | 1;
@@ -1308,8 +1308,8 @@ create_4hedron(GwyDataField *feature,
     gint xres, yres, i, j;
     gdouble *z;
 
-    a = size/sqrt(aspect)*GWY_SQRT3/2.0;
-    b = size*sqrt(aspect);
+    a = size*sqrt(aspect)*GWY_SQRT3/2.0;
+    b = size/sqrt(aspect);
     c = cos(angle);
     s = sin(angle);
     xres = (gint)ceil(2*(a*fabs(c) + b*fabs(s)) + 1) | 1;
