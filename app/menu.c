@@ -665,7 +665,9 @@ gwy_app_run_process_func_in_mode(const gchar *name,
         return;
 
     gwy_app_data_browser_get_current(GWY_APP_CONTAINER, &data, 0);
-    g_return_if_fail(data);
+    g_return_if_fail(data
+                     || !(gwy_process_func_get_sensitivity_mask(name)
+                          & GWY_MENU_FLAG_DATA));
     gwy_process_func_run(name, data, run);
     gwy_app_update_last_process_func(name);
     gwy_app_sensitivity_set_state(GWY_MENU_FLAG_LAST_PROC,
