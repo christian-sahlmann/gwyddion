@@ -3,8 +3,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2009-09-16 20:39+0200\n"
-"PO-Revision-Date: 2009-09-16 20:42+0200\n"
+"POT-Creation-Date: 2009-09-17 12:16+0200\n"
+"PO-Revision-Date: 2009-09-17 12:20+0200\n"
 "Last-Translator: Yeti <yeti@gwyddion.net>\n"
 "Language-Team: Czech\n"
 "MIME-Version: 1.0\n"
@@ -5079,17 +5079,17 @@ msgstr "Maska"
 #: modules/process/curvature.c:740 modules/process/facet-level.c:277
 #: modules/process/level.c:247 modules/process/polylevel.c:503
 msgid "_Exclude region under mask"
-msgstr "_Ignorovat data pod maskou"
+msgstr "_Ignorovat oblast pod maskou"
 
 #: modules/process/curvature.c:742 modules/process/facet-level.c:278
 #: modules/process/level.c:248 modules/process/polylevel.c:505
-msgid "Exclude region _outside mask"
-msgstr "_Zahrnout pouze data pod maskou"
+msgid "Include _only region under mask"
+msgstr "Použít pou_ze oblast pod maskou"
 
 #: modules/process/curvature.c:744 modules/process/facet-level.c:279
 #: modules/process/level.c:249 modules/process/polylevel.c:507
 msgid "Use entire _image (ignore mask)"
-msgstr "Prokládat _celými daty (maska nemá vliv)"
+msgstr "Ignorovat masku (použít celá data)"
 
 #: modules/process/curvature.c:808 modules/process/grain_dist.c:830
 #: modules/tools/distance.c:221 modules/tools/roughness.c:835
@@ -7617,7 +7617,7 @@ msgstr ""
 
 #: modules/process/superresolution.c:423
 msgid "Correlating to determine mean shift..."
-msgstr ""
+msgstr "Koreluji k určení středního posunu..."
 
 #: modules/process/superresolution.c:512
 msgid "Cross-correlation..."
@@ -8840,6 +8840,9 @@ msgstr ""
 "Projektovaná plocha: %s\n"
 "θ sklonu:            %s\n"
 "φ sklonu:            %s\n"
+
+#~ msgid "Exclude region _outside mask"
+#~ msgstr "_Zahrnout pouze data pod maskou"
 
 #~ msgid "Imports AIST-NT data files."
 #~ msgstr "Načítá datové soubory AIST-NT."
