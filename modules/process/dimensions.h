@@ -398,7 +398,7 @@ gwy_dimensions_new(GwyDimensionArgs *args,
     gint row;
 
     dims->args = args;
-    dims->template_ = g_object_ref(template_);
+    dims->template_ = template_ ? g_object_ref(template_) : NULL;
     dims->sensgroup = sensgroup = gwy_sensitivity_group_new();
     dims->xysiunit = gwy_si_unit_new(dims->args->xyunits);
     dims->xyvf = gwy_si_unit_get_format_for_power10(dims->xysiunit,
@@ -536,7 +536,7 @@ gwy_dimensions_free(GwyDimensions *dims)
     g_object_unref(dims->zsiunit);
     gwy_si_unit_value_format_free(dims->xyvf);
     gwy_si_unit_value_format_free(dims->zvf);
-    g_object_unref(dims->template_);
+    gwy_object_unref(dims->template_);
     g_free(dims);
 }
 

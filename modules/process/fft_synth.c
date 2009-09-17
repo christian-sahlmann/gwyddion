@@ -188,7 +188,7 @@ module_register(void)
                               N_("/S_ynthetic/_Spectral..."),
                               NULL,
                               FFT_SYNTH_RUN_MODES,
-                              GWY_MENU_FLAG_DATA,
+                              0,
                               N_("Generate surface using spectral synthesis"));
 
     return TRUE;
@@ -209,7 +209,6 @@ fft_synth(GwyContainer *data, GwyRunType run)
                                      GWY_APP_DATA_FIELD_ID, &id,
                                      GWY_APP_DATA_FIELD_KEY, &quark,
                                      0);
-    g_return_if_fail(dfield);
 
     if (run == GWY_RUN_IMMEDIATE
         || fft_synth_dialog(&args, &dimsargs, data, dfield, id))
@@ -266,10 +265,23 @@ run_noninteractive(FFTSynthArgs *args,
         siunit = gwy_data_field_get_si_unit_z(out_re);
         gwy_si_unit_set_from_string(siunit, dimsargs->zunits);
 
-        newid = gwy_app_data_browser_add_data_field(out_re, data, TRUE);
-        gwy_app_sync_data_items(data, data, oldid, newid, FALSE,
-                                GWY_DATA_ITEM_GRADIENT,
-                                0);
+        if (data) {
+            newid = gwy_app_data_browser_add_data_field(out_re, data, TRUE);
+            gwy_app_sync_data_items(data, data, oldid, newid, FALSE,
+                                    GWY_DATA_ITEM_GRADIENT,
+                                    0);
+        }
+        else {
+            newid = 0;
+            data = gwy_container_new();
+            gwy_container_set_object(data, gwy_app_get_data_key_for_id(newid),
+                                     out_re);
+            gwy_app_data_browser_add(data);
+            gwy_app_data_browser_reset_visibility(data,
+                                                  GWY_VISIBILITY_RESET_SHOW_ALL);
+            g_object_unref(data);
+        }
+
         gwy_app_set_data_field_title(data, newid, _("Generated"));
         g_object_unref(out_re);
     }
@@ -316,9 +328,10 @@ fft_synth_dialog(FFTSynthArgs *args,
                                 dimsargs->measure*PREVIEW_SIZE,
                                 FALSE);
     gwy_container_set_object_by_name(controls.mydata, "/0/data", dfield);
-    gwy_app_sync_data_items(data, controls.mydata, id, 0, FALSE,
-                            GWY_DATA_ITEM_PALETTE,
-                            0);
+    if (data)
+        gwy_app_sync_data_items(data, controls.mydata, id, 0, FALSE,
+                                GWY_DATA_ITEM_PALETTE,
+                                0);
     controls.view = gwy_data_view_new(controls.mydata);
     layer = gwy_layer_basic_new();
     g_object_set(layer,
