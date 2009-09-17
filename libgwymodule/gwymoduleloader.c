@@ -619,7 +619,7 @@ gwy_module_lookup(const gchar *name)
  **/
 
 /**
- * GWY_MODULE_QUERY(mod_info):
+ * GWY_MODULE_QUERY:
  * @mod_info: The #GwyModuleInfo structure to return as module info.
  *
  * The declaration of module info query (the ONLY exported symbol from
