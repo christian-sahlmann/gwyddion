@@ -392,7 +392,7 @@ run_noninteractive(ObjSynthArgs *args,
             newid = 0;
             data = gwy_container_new();
             gwy_container_set_object(data, gwy_app_get_data_key_for_id(newid),
-                                     out_re);
+                                     dfield);
             gwy_app_data_browser_add(data);
             gwy_app_data_browser_reset_visibility(data,
                                                   GWY_VISIBILITY_RESET_SHOW_ALL);
