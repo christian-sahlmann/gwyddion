@@ -690,10 +690,14 @@ _______EOF
   gwy_math_atanh=$gwy_math_atanh
 ])
 
-# Make msgmerge work on Darwin.  See
-# http://subcommanderblog.wordpress.com/2009/05/16/msgmerge-on-macosx-and-no-such-file-or-directory/
 if test "$os_darwin" = yes; then
-  chmod +a "" po/*.po
+  # Make msgmerge work on Darwin.  See
+  # http://subcommanderblog.wordpress.com/2009/05/16/msgmerge-on-macosx-and-no-such-file-or-directory/
+  AC_CONFIG_COMMANDS([osx-chmod],
+  [
+    chmod +a "" po/*.po
+    chmod a+x utils/bundler utils/mkosxlauncher
+  ])
 fi
 
 AC_OUTPUT
