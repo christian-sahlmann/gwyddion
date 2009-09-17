@@ -1,0 +1,87 @@
+#!/bin/sh
+
+app_name=gwyddion
+gwyddion_app_dir=${app_name}.app
+contents_dir=${gwyddion_app_dir}/Contents
+bin_dir=${contents_dir}/MacOS
+res_dir=${contents_dir}/Resources
+
+rm -rf ${gwyddion_app_dir}
+mkdir ${gwyddion_app_dir}
+mkdir ${contents_dir}
+mkdir ${bin_dir}
+mkdir ${res_dir}
+
+
+if [ $# -lt 1 ] ; then
+   echo "Syntax: $0: prefix\n"
+   echo "Example:$0 /usr/local/\n"
+   exit 1
+fi
+
+prefix=$1
+
+cp pixmaps/${app_name}.icns ${res_dir}/
+
+LAUNCH=${prefix}/bin/${app_name}
+
+cat << EOT > ${bin_dir}/${app_name}
+#!/bin/sh
+
+${LAUNCH}
+EOT
+
+chmod a+x ${bin_dir}/${app_name}
+
+
+cat << EOT > ${contents_dir}/Info.plist
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>English</string>
+	<key>CFBundleExecutable</key>
+	<string>gwyddion</string>
+	<key>CFBundleGetInfoString</key>
+	<string>gwyddion</string>
+	<key>CFBundleIconFile</key>
+	<string>gwyddion.icns</string>
+	<key>CFBundleIdentifier</key>
+	<string>net.gwyddion.gwyddion</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>@PACKAGE_VERSION@</string>
+	<key>CFBundleSignature</key>
+	<string>gwyd</string>
+	<key>CFBundleVersion</key>
+	<string>@PACKAGE_VERSION@</string>
+	<key>NSHumanReadableCopyright</key>
+	<string>GPL</string>
+	<key>LSMinimumSystemVersion</key>
+	<string>10.4</string>
+	<key>CFBundleDocumentTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeExtensions</key>
+			<array>
+				<string></string>
+			</array>
+			<key>CFBundleTypeName</key>
+			<string>DocumentType</string>
+			<key>CFBundleTypeOSTypes</key>
+			<array>
+				<string>****</string>
+			</array>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>NSDocumentClass</key>
+			<string>MyDocument</string>
+		</dict>
+	</array>
+</dict>
+</plist>
+EOT

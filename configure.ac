@@ -41,6 +41,8 @@ AC_CONFIG_FILES(\
   data/gradients/Makefile \
   utils/Makefile \
   utils/gwywin32.bat \
+  utils/bundler \
+  utils/mkosxlauncher \
   thumbnailer/Makefile \
   devel-docs/Makefile \
   devel-docs/libgwyapp/Makefile \

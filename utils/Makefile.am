@@ -24,7 +24,9 @@ EXTRA_DIST = \
 	$(GUIDE_MAP) \
 	vim-syn-gen.py \
 	gwyddion.nsi.template \
-	generate-gwyddion-nsi.py
+	generate-gwyddion-nsi.py \
+	bundler.in \
+	mkosxlauncher.in
 
 module-list: modules.xml module-list.html module-list-nocss.html
 
