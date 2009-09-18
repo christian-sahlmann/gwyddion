@@ -1582,13 +1582,13 @@ extract_mda_data(MDTMDAFrame * dataframe)
 static GwyGraphModel*
 extract_mda_spectrum(MDTMDAFrame *dataframe)
 {
+    /* FIXME: I don't know where to find this 1024 points per spectra */
+    enum { res = 1024 };
     GwyGraphCurveModel *spectra;
     GwyGraphModel *gmodel;
     gdouble xscale, yscale;
     gint power10x, power10y;
     GwySIUnit *siunitx, *siunity;
-    gint res = 1024;            /* I don't know where to find this 1024 points
-                                   per spectra */
     gdouble xdata[res], ydata[res];
     const guchar *p;
     const gchar *cunit;
