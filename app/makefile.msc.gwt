@@ -2,6 +2,8 @@
 
 <[[:SELF:]]>
 
+mac_integration_src = ige-mac-menu.c
+
 DATA_TYPE = ui
 LIB_VER = $(LIBGWYAPP_VER)
 PROGRAM = gwyddion
