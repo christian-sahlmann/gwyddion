@@ -14,9 +14,15 @@ mkdir ${res_dir}
 
 prefix=@prefix@
 
-cp pixmaps/${app_name}.icns ${res_dir}/
+if [ $# -gt 0 ] ; then
+  prefix=$1
+fi
 
 LAUNCH=${prefix}/bin/${app_name}
+
+echo "Creating launcher bundle to ${LAUNCH}"
+
+cp pixmaps/${app_name}.icns ${res_dir}/
 
 cat << EOT > ${bin_dir}/${app_name}
 #!/bin/sh
@@ -25,7 +31,6 @@ ${LAUNCH}
 EOT
 
 chmod a+x ${bin_dir}/${app_name}
-
 
 cat << EOT > ${contents_dir}/Info.plist
 <?xml version="1.0" encoding="UTF-8"?>
