@@ -14,8 +14,6 @@
 - 3D:
   light source grid not visible on some machines?
 - Fix copied channel naming (identical)
-- Use Pango FT2 to render fonts in pixmap instead of the ugly hack, needs
-  complete pixmap export bpp clean-up -- wait for Cairo?
 - Fix enum documentation after rename, write missing
   libprocess: GwyWatershedStateType, Gwy2DCWTWaveletType, GwyDWTDenoiseType,
               GwyTipType

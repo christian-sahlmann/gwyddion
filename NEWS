@@ -1,4 +1,4 @@
-2.17 (0000-00-00)
+2.17 (2009-09-22)
 Application:
 - Translations updated: Czech, French, Russian.
 - OS X integration: menubar, language selection, opening files from Finder.
@@ -14,9 +14,9 @@ Libraries:
 
 Modules:
 - Curvature (new): Calculates global curvature of second-order surfaces.
-- IGOR (new): Imports IGOR Pro binary waves.
 - RHK-SM4 (new): Imports RHK Technology SM4 files.
-- Nanonics (new): Imports Nanonics NAN files.
+- IGOR (new): Imports IGOR Pro binary waves (highly experimental).
+- Nanonics (new): Imports Nanonics NAN files (highly experimental).
 - FFT Synthesis (new): Generates random surfaces by spectral synthesis.
 - Object Synthesis (new): Generates random surfaces by object placement.
 - Arithmetic: New quantities bx1, by1, bx2, ..., by5 represent the local x-
@@ -37,8 +37,8 @@ Modules:
 
 Other:
 - Forgotten @LIBTIFF@ was removed from gwyddion pkg-config file.
-- Building RPMs works on Mandriva again, including working around the utterly
-  broken enforcement of -Werror=format-security in 2009.1.
+- Building RPMs hopefully works on Mandriva again, including working around
+  the utterly broken enforcement of -Werror=format-security in 2009.1.
 
 
 2.16 (2009-06-25)
