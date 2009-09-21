@@ -701,7 +701,8 @@ mdt_load(const gchar *filename,
             mdaframe = (MDTMDAFrame*)mdtfile.frames[i].frame_data;
             gwy_debug("dimensions %d ; measurands %d",
                       mdaframe->nDimensions, mdaframe->nMesurands);
-            if(mdaframe->nDimensions==2 && mdaframe->nMesurands==1) { // scan
+            if (mdaframe->nDimensions == 2 && mdaframe->nMesurands == 1) {
+                // scan
                 dfield = extract_mda_data(mdaframe);
                 g_string_printf(key, "/%d/data", n);
                 gwy_container_set_object_by_name(data, key->str, dfield);
@@ -1309,8 +1310,6 @@ mdt_real_load(const guchar *buffer,
             break;
 
             case MDT_FRAME_MDA:
-            gwy_debug("Cannot read MDA frame");
-
             mdaframe = g_new0(MDTMDAFrame, 1);
             if (!mdt_mda_vars(p, fstart, mdaframe,
                               frame->size, frame->var_size, error))
@@ -1628,6 +1627,10 @@ extract_mda_spectrum(MDTMDAFrame *dataframe)
     yscale = pow10(power10y) * yAxis->scale;
 
     spectra = gwy_graph_curve_model_new();
+    g_object_set(spectra,
+                 "description", "Raman spectra",
+                 "mode", GWY_GRAPH_CURVE_LINE,
+                 NULL);
 
     p = (gchar*)dataframe->image;
 
