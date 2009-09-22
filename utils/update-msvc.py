@@ -238,15 +238,18 @@ def expand_template(makefile, name, supplementary=None):
         lst = []
         for p in programs:
             up = underscorize(p)
-            lst += fix_suffixes(get_list(makefile, '%s_SOURCES' % up),
-                                '.c', '.obj')
+            srclst = expand_make_vars(get_list(makefile, '%s_SOURCES' % up),
+                                      makefile)
+            lst += fix_suffixes(srclst, '.c', '.obj')
         return name + ' =' + format_list(lst)
     elif name == 'PRG_OBJ_RULES':
         programs = get_list(makefile, 'bin_PROGRAMS')
         lst = []
         for p in programs:
             up = underscorize(p)
-            for x in fix_suffixes(get_list(makefile, '%s_SOURCES' % up), '.c'):
+            srclst = expand_make_vars(get_list(makefile, '%s_SOURCES' % up),
+                                      makefile)
+            for x in fix_suffixes(srclst, '.c'):
                 deps = format_list(get_file_deps(x))
                 lst.append(object_rule % (x, deps, 'PRG', x))
         return  '\n'.join(lst)
