@@ -26,6 +26,7 @@ file_LTLIBRARIES = \
 	apefile.la \
 	asciiexport.la \
 	assing-afm.la \
+	attocube.la \
 	bcrfile.la \
 	burleigh.la \
 	burleigh_bii.la \
@@ -117,6 +118,7 @@ endif
 apefile_la_SOURCES       = apefile.c
 asciiexport_la_SOURCES   = asciiexport.c
 assing_afm_la_SOURCES    = assing-afm.c
+attocube_la_SOURCES      = attocube.c
 bcrfile_la_SOURCES       = bcrfile.c
 burleigh_la_SOURCES      = burleigh.c
 burleigh_bii_la_SOURCES  = burleigh_bii.c
