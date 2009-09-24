@@ -40,7 +40,11 @@
 #endif
 
 #ifdef HAVE_GTKGLEXT
+#ifdef GDK_WINDOWING_QUARTZ
+#include <OpenGL/gl.h>
+#else
 #include <GL/gl.h>
+#endif
 #endif
 
 #include <libgwyddion/gwymacros.h>
