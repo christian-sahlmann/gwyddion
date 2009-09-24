@@ -95,7 +95,7 @@ static gchar*         unpack_compressed_data(const guchar *buffer,
 
 static const GwyEnum versions[] = {
     { "[Parameter]", CREATEC_1,  },
-    { "[Paramet32]", CREATEC_2,  },   /* FIXME: I just made this up! */
+    { "[Paramet32]", CREATEC_2,  },
     { "[Paramco32]", CREATEC_2Z, },
 };
 
