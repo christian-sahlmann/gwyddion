@@ -192,6 +192,268 @@ gwy_app_channel_remove_bad_data(GwyDataField *dfield, GwyDataField *mfield)
     return mcount;
 }
 
+static inline guint
+chomp(gchar *line,
+      guint len)
+{
+    while (len && g_ascii_isspace(line[len-1]))
+        line[--len] = '\0';
+
+    return len;
+}
+
+static inline gchar*
+strip(gchar *line,
+      guint len)
+{
+    while (len && g_ascii_isspace(*line)) {
+        line++;
+        len--;
+    }
+    while (len && g_ascii_isspace(line[len-1]))
+        line[--len] = '\0';
+
+    return line;
+}
+
+GHashTable*
+gwy_parse_text_header(gchar *buffer,
+                      const gchar *comment_prefix,
+                      const gchar *section_template,
+                      const gchar *endsection_template,
+                      const gchar *section_accessor,
+                      const gchar *line_prefix,
+                      const gchar *key_value_separator,
+                      GwyTextHeaderItemFunc postprocess,
+                      gpointer user_data,
+                      GDestroyNotify destroy_value)
+{
+    GHashTable *hash;
+    gchar *line, *section = NULL;
+    const gchar *section_prefix = NULL, *section_suffix = NULL,
+                *endsect_prefix = NULL, *endsect_suffix = NULL,
+                **comments = NULL;
+    guint section_prefix_len = 0, section_suffix_len = 0,
+          endsect_prefix_len = 0, endsect_suffix_len = 0,
+          comment_prefix_len = 0, line_prefix_len = 0;
+    gchar equal_sign_char = 0;
+    guint i, j, ncomments = 0;
+    gboolean free_keys = FALSE, free_values = FALSE;
+
+    /* Split section templates to prefix and suffix. */
+    if (section_template) {
+        gchar *p;
+
+        if ((p = strchr(section_template, '\x1a'))) {
+            section_prefix = section_template;
+            section_prefix_len = p - section_template;
+            section_suffix = section_prefix + (p+1 - section_template);
+            section_suffix_len = strlen(section_suffix);
+            free_keys = TRUE;
+        }
+        else {
+            g_warning("Section template lacks substitute character \\x1a.");
+            section_template = NULL;
+        }
+    }
+
+    if (endsection_template) {
+        if (section_template) {
+            gchar *p;
+
+            if ((p = strchr(endsection_template, '\x1a'))) {
+                endsect_prefix = endsection_template;
+                endsect_prefix_len = p - endsection_template;
+                endsect_suffix = endsect_prefix + (p+1 - endsection_template);
+                endsect_suffix_len = strlen(endsect_suffix);
+                endsection_template = NULL;
+            }
+        }
+        else {
+            g_warning("Endsection template without a section template.");
+            endsection_template = NULL;
+        }
+    }
+
+    if (comment_prefix) {
+        comment_prefix_len = strlen(comment_prefix);
+        if (strchr(comment_prefix, '\n')) {
+            const gchar *p;
+
+            for (j = 0, p = comment_prefix-1; p; p = strchr(p+1, '\n'), j++)
+                ;
+            ncomments = j;
+            comments = g_new(const gchar*, j+1);
+            comments[0] = comment_prefix;
+            j = 1;
+            do {
+                if ((p = strchr(comments[j-1], '\n')))
+                    comments[j++] = p+1;
+            } while (p);
+            comments[j] = comment_prefix + comment_prefix_len + 1;
+        }
+    }
+
+    if (line_prefix)
+        line_prefix_len = strlen(line_prefix);
+    if (key_value_separator && strlen(key_value_separator) == 1)
+        equal_sign_char = key_value_separator[0];
+    if (!section_accessor)
+        section_accessor = "";
+    if (postprocess)
+        free_values = TRUE;
+
+    /* Build the hash table */
+    hash = g_hash_table_new_full(g_str_hash, g_str_equal,
+                                 free_keys ? g_free : NULL,
+                                 free_values ? destroy_value : NULL);
+
+    for (line = gwy_str_next_line(&buffer), i = 0;
+         line;
+         line = gwy_str_next_line(&buffer), i++) {
+        gchar *key, *value;
+        guint len;
+
+        /* Chomp whitespace at the end */
+        if (!(len = chomp(line, strlen(line))))
+            continue;
+
+        /* Section ends -- before section starts beause they might look
+         * similar. */
+        if (endsection_template && gwy_strequal(line, endsection_template)) {
+            section = NULL;
+            continue;
+        }
+        if (endsect_prefix
+            && len > endsect_prefix_len + endsect_suffix_len
+            && strncmp(line, endsect_prefix, endsect_prefix_len) == 0
+            && gwy_strequal(line + len - endsect_suffix_len, endsect_suffix)) {
+            gchar *endsection;
+
+            len -= endsect_suffix_len;
+            line[len] = '\0';
+            endsection = strip(line + endsect_prefix_len,
+                               len - endsect_prefix_len);
+
+            if (!section) {
+                g_warning("Section %s ended at line %u but it did not start.",
+                          endsection, i);
+                continue;
+            }
+
+            if (!gwy_strequal(endsection, section)) {
+                g_warning("Section %s ended at line %u instead of %s.",
+                          endsection, i, section);
+                continue;
+            }
+
+            section = NULL;
+            continue;
+        }
+
+        /* Sections starts */
+        if (section_prefix
+            && len > section_prefix_len + section_suffix_len
+            && strncmp(line, section_template, section_prefix_len) == 0
+            && gwy_strequal(line + len - section_suffix_len, section_suffix)) {
+            gchar *newsection;
+
+            len -= section_suffix_len;
+            line[len] = '\0';
+            newsection = strip(line + section_prefix_len,
+                               len - section_prefix_len);
+
+            if ((endsection_template || endsect_prefix) && section) {
+                g_warning("Section %s started at line %u before %s ended.",
+                          newsection, i, section);
+            }
+
+            if (!*newsection) {
+                g_warning("Empty section name at line %u.", i);
+                continue;
+            }
+
+            section = newsection;
+            continue;
+        }
+        /* Comments */
+        if (comments) {
+            for (j = 0; j < ncomments; j++) {
+                if (strncmp(line, comments[j],
+                            comments[j+1] - comments[j] - 1) == 0)
+                    break;
+            }
+            if (j < ncomments)
+                continue;
+        }
+        else if (comment_prefix
+                 && strncmp(line, comment_prefix, comment_prefix_len) == 0)
+            continue;
+
+        /* Line prefixes */
+        if (line_prefix) {
+            if (strncmp(line, line_prefix, line_prefix_len) == 0) {
+                line += line_prefix_len;
+                len -= line_prefix_len;
+            }
+            else {
+                g_warning("Line %u lacks prefix %s.", i, line_prefix);
+                continue;
+            }
+        }
+        while (g_ascii_isspace(*line)) {
+            line++;
+            len--;
+        }
+
+        /* Keys and values */
+        if (equal_sign_char)
+            value = strchr(line, equal_sign_char);
+        else if (key_value_separator)
+            value = strstr(line, key_value_separator);
+        else {
+            for (value = line; !g_ascii_isspace(*value); value++) {
+                if (!*value) {
+                    value = NULL;
+                    break;
+                }
+            }
+        }
+        if (!value) {
+            g_warning("Line %u lacks key-value separator.", i);
+            continue;
+        }
+
+        *(value++) = '\0';
+        if (!chomp(line, value - line - 1)) {
+            g_warning("Key at line %u is empty.", i);
+            continue;
+        }
+        key = line;
+        value = strip(value, len - (value - line));
+
+        if (section_template) {
+            if (section)
+                key = g_strconcat(section, section_accessor, key, NULL);
+            else
+                key = g_strdup(key);
+        }
+
+        if (postprocess) {
+            gpointer result = postprocess(key, value, user_data);
+
+            if (result)
+                g_hash_table_replace(hash, key, result);
+        }
+        else
+            g_hash_table_replace(hash, key, value);
+    }
+
+    g_free(comments);
+
+    return hash;
+}
+
 /************************** Documentation ****************************/
 
 /**

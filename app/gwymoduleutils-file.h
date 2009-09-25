@@ -28,6 +28,10 @@
 
 G_BEGIN_DECLS
 
+typedef gpointer (*GwyTextHeaderItemFunc)(const gchar *key,
+                                          const gchar *value,
+                                          gpointer user_data);
+
 /* This is necessary to fool gtk-doc that ignores static inline functions */
 #define _GWY_STATIC_INLINE static inline
 
@@ -312,6 +316,21 @@ gboolean gwy_app_channel_title_fall_back(GwyContainer *data,
                                          gint id);
 guint    gwy_app_channel_remove_bad_data(GwyDataField *dfield,
                                          GwyDataField *mfield);
+
+#define gwy_parse_text_header_simple(buffer, comment_prefix, key_value_separator) \
+    gwy_parse_text_header(buffer, comment_prefix, NULL, NULL, NULL, \
+                          NULL, key_value_separator, NULL, NULL, NULL)
+
+GHashTable* gwy_parse_text_header(gchar *buffer,
+                                  const gchar *comment_prefix,
+                                  const gchar *section_template,
+                                  const gchar *endsection_template,
+                                  const gchar *section_accessor,
+                                  const gchar *line_prefix,
+                                  const gchar *key_value_separator,
+                                  GwyTextHeaderItemFunc postprocess,
+                                  gpointer user_data,
+                                  GDestroyNotify destroy_value);
 
 G_END_DECLS
 
