@@ -110,8 +110,6 @@ static GwyDataField* read_data_field     (const guchar *buffer,
                                           BCRFileType type,
                                           gboolean little_endian,
                                           GwyDataField **voidmask);
-static void          load_metadata       (gchar *buffer,
-                                          GHashTable *meta);
 static GwyContainer* bcrfile_get_metadata(GHashTable *bcrmeta);
 
 static GwyModuleInfo module_info = {
@@ -119,7 +117,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Image Metrology BCR data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.11",
+    "0.12",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -219,9 +217,7 @@ bcrfile_load(const gchar *filename,
         header = g_memdup(buffer, header_size);
         header[header_size-1] = '\0';
     }
-    bcrmeta = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
-    load_metadata(header, bcrmeta);
-    g_free(header);
+    bcrmeta = gwy_parse_text_header_simple(header, "#\n%", "=");
 
     dfield = file_load_real(buffer + header_size, size, header_size, bcrmeta,
                             &voidmask, error);
@@ -246,6 +242,7 @@ bcrfile_load(const gchar *filename,
         g_object_unref(meta);
     }
     g_hash_table_destroy(bcrmeta);
+    g_free(header);
 
     return container;
 }
@@ -485,38 +482,6 @@ read_data_field(const guchar *buffer,
         gwy_object_unref(*voidmask);
 
     return dfield;
-}
-
-static void
-load_metadata(gchar *buffer,
-              GHashTable *meta)
-{
-    gchar *line, *p;
-    gchar *key, *value;
-
-    while ((line = gwy_str_next_line(&buffer))) {
-        if (line[0] == '%' || line[0] == '#')
-            continue;
-
-        p = strchr(line, '=');
-        if (!p || p == line || !p[1])
-            continue;
-
-        key = g_strstrip(g_strndup(line, p-line));
-        if (!key[0]) {
-            g_free(key);
-            continue;
-        }
-        value = g_strstrip(g_strdup(p+1));
-        if (!value[0]) {
-            g_free(key);
-            g_free(value);
-            continue;
-        }
-
-        g_hash_table_insert(meta, key, value);
-        gwy_debug("<%s> = <%s>", key, value);
-    }
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

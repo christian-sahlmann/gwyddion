@@ -76,7 +76,6 @@ static GwyContainer*  createc_load          (const gchar *filename,
                                              GError **error);
 static CreatecVersion createc_get_version   (const gchar *buffer,
                                              gsize size);
-static GHashTable*    read_hash             (gchar *buffer);
 static GwyDataField*  hash_to_data_field    (GHashTable *hash,
                                              gint version,
                                              const gchar *buffer,
@@ -104,7 +103,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Createc data files."),
     "Rok Zitko <rok.zitko@ijs.si>",
-    "0.10",
+    "0.11",
     "Rok Zitko, David Nečas (Yeti)",
     "2004",
 };
@@ -167,7 +166,8 @@ createc_load(const gchar *filename,
     len = strlen(gwy_enum_to_string(version, versions, G_N_ELEMENTS(versions)));
     for (p = head + len; g_ascii_isspace(*p); p++)
         ;
-    hash = read_hash(p);
+    /* There are lots of lines with just an equal sign, make them comments. */
+    hash = gwy_parse_text_header_simple(p, "=", "=");
     dfield = hash_to_data_field(hash, version, buffer, size, error);
 
     if (dfield) {
@@ -209,39 +209,6 @@ createc_get_version(const gchar *buffer,
     gwy_debug("header=%.*s, no version matched",
               (int)strlen(versions[0].name), buffer);
     return CREATEC_NONE;
-}
-
-/* Read the ASCII header and fill the hash with key/value pairs */
-static GHashTable*
-read_hash(gchar *buffer)
-{
-    GHashTable *hash;
-    gchar *line, *eq, *p;
-
-    hash = g_hash_table_new(g_str_hash, g_str_equal);
-    p = buffer;
-    for (line = gwy_str_next_line(&p); line; line = gwy_str_next_line(&p)) {
-        g_strstrip(line);
-        if (!*line)
-            continue;
-        eq = strchr(line, '=');
-        if (!eq) {
-            g_warning("Stray line `%s'", line);
-            continue;
-        }
-        *(eq++) = '\0';
-        g_strchomp(line);
-        while (g_ascii_isspace(*eq))
-            eq++;
-
-        /* drop entries without keyword */
-        if (line[0]) {
-            g_hash_table_insert(hash, line, eq);
-            gwy_debug("<%s>: <%s>", line, eq);
-        }
-    }
-
-    return hash;
 }
 
 #define createc_atof(x) g_ascii_strtod(x, NULL)

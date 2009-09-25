@@ -87,15 +87,13 @@ static GwyDataField* microprof_read_data_field(const MicroProfFile *mfile,
 static GwyContainer* microprof_txt_load       (const gchar *filename,
                                                GwyRunType mode,
                                                GError **error);
-static GHashTable*   microprof_txt_read_header(gchar *buffer,
-                                               GError **error);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Imports MicroProf FRT profilometer data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.3",
+    "0.4",
     "David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
@@ -141,6 +139,7 @@ microprof_txt_detect(const GwyFileDetectInfo *fileinfo,
                      gboolean only_name)
 {
     GHashTable *meta;
+    const guchar *p;
     gchar *buffer;
     gsize size;
     gint score = 0;
@@ -148,14 +147,20 @@ microprof_txt_detect(const GwyFileDetectInfo *fileinfo,
     if (only_name)
         return g_str_has_suffix(fileinfo->name_lowercase, EXTENSION_TXT) ? 10 : 0;
 
-    size = fileinfo->buffer_len;
-    if (size < MICROPROF_MIN_TEXT_SIZE
+    if (fileinfo->buffer_len < MICROPROF_MIN_TEXT_SIZE
         || memcmp(fileinfo->head, MAGIC_TXT, MAGIC_TXT_SIZE) != 0)
         return 0;
 
+    if (!(p = strstr(fileinfo->head, "\n\n"))
+        && !(p = strstr(fileinfo->head, "\r\r"))
+        && !(p = strstr(fileinfo->head, "\r\n\r\n")))
+        return 0;
+
+    size = p - (const guchar*)fileinfo->head;
     buffer = g_memdup(fileinfo->head, size);
-    if ((meta = microprof_txt_read_header(buffer, NULL))
-        && g_hash_table_lookup(meta, "XSize")
+    meta = gwy_parse_text_header(buffer, NULL, NULL, NULL, NULL, NULL, "=",
+                                 NULL, NULL, NULL);
+    if (g_hash_table_lookup(meta, "XSize")
         && g_hash_table_lookup(meta, "YSize")
         && g_hash_table_lookup(meta, "XRange")
         && g_hash_table_lookup(meta, "YRange")
@@ -300,9 +305,9 @@ microprof_txt_load(const gchar *filename,
 {
     GwyContainer *container = NULL;
     guchar *p, *buffer = NULL;
-    GHashTable *meta;
+    GHashTable *meta = NULL;
     GwySIUnit *siunit;
-    gchar *header, *s, *prev;
+    gchar *header = NULL, *s, *prev;
     gsize size = 0;
     GError *err = NULL;
     GwyDataField *dfield = NULL;
@@ -318,14 +323,13 @@ microprof_txt_load(const gchar *filename,
     if (size < MICROPROF_MIN_TEXT_SIZE
         || memcmp(buffer, MAGIC_TXT, MAGIC_TXT_SIZE) != 0) {
         err_FILE_TYPE(error, "MicroProf");
-        gwy_file_abandon_contents(buffer, size, NULL);
-        return 0;
+        goto fail;
     }
 
     hlines = atoi(buffer + MAGIC_TXT_SIZE);
     if (hlines < 7) {
         err_FILE_TYPE(error, "MicroProf");
-        gwy_file_abandon_contents(buffer, size, NULL);
+        goto fail;
     }
 
     /* Skip specified number of lines */
@@ -334,8 +338,7 @@ microprof_txt_load(const gchar *filename,
             p++;
         if ((gsize)(p - buffer) == size) {
             err_FILE_TYPE(error, "MicroProf");
-            gwy_file_abandon_contents(buffer, size, NULL);
-            return NULL;
+            goto fail;
         }
         /* Now skip the \n */
         p++;
@@ -344,47 +347,36 @@ microprof_txt_load(const gchar *filename,
     header = g_memdup(buffer, p - buffer + 1);
     header[p - buffer] = '\0';
 
-    if (!(meta = microprof_txt_read_header(header, error))) {
-        g_free(header);
-        gwy_file_abandon_contents(buffer, size, NULL);
-        return NULL;
-    }
-
-    g_free(header);
+    meta = gwy_parse_text_header_simple(header, NULL, "=");
 
     if (!(s = g_hash_table_lookup(meta, "XSize"))
         || !((xres = atoi(s)) > 0)) {
         err_INVALID(error, "XSize");
-        gwy_file_abandon_contents(buffer, size, NULL);
-        return NULL;
+        goto fail;
     }
 
     if (!(s = g_hash_table_lookup(meta, "YSize"))
         || !((yres = atoi(s)) > 0)) {
         err_INVALID(error, "YSize");
-        gwy_file_abandon_contents(buffer, size, NULL);
-        return NULL;
+        goto fail;
     }
 
     if (!(s = g_hash_table_lookup(meta, "XRange"))
         || !((xreal = g_ascii_strtod(s, NULL)) > 0.0)) {
         err_INVALID(error, "YRange");
-        gwy_file_abandon_contents(buffer, size, NULL);
-        return NULL;
+        goto fail;
     }
 
     if (!(s = g_hash_table_lookup(meta, "YRange"))
         || !((yreal = g_ascii_strtod(s, NULL)) > 0.0)) {
         err_INVALID(error, "YRange");
-        gwy_file_abandon_contents(buffer, size, NULL);
-        return NULL;
+        goto fail;
     }
 
     if (!(s = g_hash_table_lookup(meta, "ZScale"))
         || !((zscale = g_ascii_strtod(s, NULL)) > 0.0)) {
         err_INVALID(error, "ZScale");
-        gwy_file_abandon_contents(buffer, size, NULL);
-        return NULL;
+        goto fail;
     }
 
     dfield = gwy_data_field_new(xres, yres, xreal, yreal, FALSE);
@@ -410,9 +402,7 @@ microprof_txt_load(const gchar *filename,
                             GWY_MODULE_FILE_ERROR_DATA,
                             _("File contains less than XSize*YSize data "
                               "points."));
-                gwy_file_abandon_contents(buffer, size, NULL);
-                g_hash_table_destroy(meta);
-                return NULL;
+                goto fail;
             }
         }
     }
@@ -432,48 +422,13 @@ microprof_txt_load(const gchar *filename,
     gwy_container_set_string_by_name(container, "/0/data/title",
                                      g_strdup("Topography"));
 
-    g_hash_table_destroy(meta);
+fail:
+    gwy_file_abandon_contents(buffer, size, NULL);
+    if (meta)
+        g_hash_table_destroy(meta);
+    g_free(header);
 
     return container;
-}
-
-/* NB: Buffer must be writable and nul-terminated */
-static GHashTable*
-microprof_txt_read_header(gchar *buffer,
-                          GError **error)
-{
-    GHashTable *hash;
-    gchar *line, *p;
-
-    line = buffer;
-    hash = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
-
-    while ((line = gwy_str_next_line(&buffer))) {
-        g_strstrip(line);
-        /* Stop scanning at the first empty line */
-        if (!*line)
-            return hash;
-        gwy_debug("<%s>", line);
-        p = strchr(line, '=');
-        if (!p) {
-            g_set_error(error, GWY_MODULE_FILE_ERROR,
-                        GWY_MODULE_FILE_ERROR_DATA,
-                        _("Malformed header line (missing =)."));
-            goto fail;
-        }
-        *p = '\0';
-        p++;
-        g_strstrip(line);
-        g_strstrip(p);
-        gwy_debug("<%s> <%s>", line, p);
-        g_hash_table_insert(hash, g_strdup(line), g_strdup(p));
-    }
-
-    return hash;
-
-fail:
-    g_hash_table_destroy(hash);
-    return NULL;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

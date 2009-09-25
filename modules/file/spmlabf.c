@@ -57,7 +57,6 @@ static gint          slf_detect     (const GwyFileDetectInfo *fileinfo,
 static GwyContainer* slf_load       (const gchar *filename,
                                      GwyRunType mode,
                                      GError **error);
-static GHashTable*   read_hash      (gchar *buffer);
 static GwyContainer* add_metadata   (GHashTable *hash,
                                      ...);
 
@@ -66,7 +65,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports SPMLab floating-point files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.2",
+    "0.3",
     "David Nečas (Yeti)",
     "2008",
 };
@@ -114,7 +113,7 @@ slf_load(const gchar *filename,
     GwySIUnit *siunitx, *siunity, *siunitz, *siunit;
     const guchar *p;
     const gchar *val;
-    gchar *header, *end, *s;
+    gchar *header = NULL, *end, *s;
     gdouble *data, *row;
     guint data_offset, xres, yres, i, j;
     gdouble xreal, yreal, q, off;
@@ -143,8 +142,8 @@ slf_load(const gchar *filename,
 
     header = g_memdup(buffer, p - buffer + 1);
     header[p - buffer] = '\0';
-    hash = read_hash(header);
-    g_free(header);
+    /* Comment prefix [ means we ignore sections. */
+    hash = gwy_parse_text_header_simple(header, "[", "=");
 
     if (!require_keys(hash, error,
                       "DataOffset", "ScanRangeX", "ScanRangeY",
@@ -264,6 +263,7 @@ slf_load(const gchar *filename,
         gwy_container_set_object_by_name(container, "/0/meta", meta);
 
 fail:
+    g_free(header);
     if (hash)
         g_hash_table_destroy(hash);
     gwy_object_unref(meta);
@@ -271,37 +271,6 @@ fail:
     gwy_file_abandon_contents(buffer, size, NULL);
 
     return container;
-}
-
-/* Read the ASCII header and fill the hash with key/value pairs */
-static GHashTable*
-read_hash(gchar *buffer)
-{
-    GHashTable *hash;
-    gchar *line, *eq, *p;
-
-    p = buffer;
-
-    hash = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
-    while (p && p[0]) {
-        line = gwy_str_next_line(&p);
-        if (!line)
-            break;
-        eq = strchr(line, '=');
-        /* This also skips sections [Foo] */
-        if (!eq)
-            continue;
-        *eq = '\0';
-        if (*line != '\0') { /* drop entries without keyword */
-            eq++;
-            while (g_ascii_isspace(*eq))
-                eq++;
-            g_hash_table_insert(hash, g_strdup(line), g_strdup(eq));
-            gwy_debug("<%s>: <%s>", line, eq);
-        }
-    }
-
-    return hash;
 }
 
 static GwyContainer*

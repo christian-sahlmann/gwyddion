@@ -156,7 +156,6 @@ static GwyDataField* igor_read_data_field(const IgorFile *igorfile,
                                           const guchar *buffer,
                                           guint i,
                                           gboolean imaginary);
-static GHashTable*   igor_read_note_hash (gchar *text);
 static GwyContainer* igor_get_metadata   (IgorFile *igorfile);
 
 static GwyModuleInfo module_info = {
@@ -164,7 +163,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Igor binary waves (.ibw)."),
     "Yeti <yeti@gwyddion.net>",
-    "0.1",
+    "0.2",
     "David Nečas (Yeti)",
     "2009",
 };
@@ -303,7 +302,7 @@ igor_load(const gchar *filename,
         (p - buffer) + igorfile.header.note_size <= size) {
         /* This might be useful only for Asylum Research files */
         note = g_strndup((const gchar*)p, size);
-        hash = igor_read_note_hash(note);
+        hash = gwy_parse_text_header_simple(note, NULL, ":");
     }
 
 fail:
@@ -648,31 +647,6 @@ igor_read_data_field(const IgorFile *igorfile,
     gwy_si_unit_set_from_string(unit, wave5->data_units);
 
     return dfield;
-}
-
-static GHashTable*
-igor_read_note_hash(gchar *text)
-{
-    GHashTable *hash;
-    gchar *line, *p, *s;
-
-    hash = g_hash_table_new(g_str_hash, g_str_equal);
-    p = text;
-    while ((line = gwy_str_next_line(&p))) {
-        if (!(s = strchr(line, ':')))
-            continue;
-
-        *(s++) = '\0';
-        g_strstrip(line);
-        g_strstrip(s);
-
-        if (*line && *s) {
-            gwy_debug("<%s>=<%s>", line, s);
-            g_hash_table_insert(hash, line, s);
-        }
-    }
-
-    return hash;
 }
 
 #if 0

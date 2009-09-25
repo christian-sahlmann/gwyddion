@@ -52,15 +52,13 @@ static GwyContainer* ols_load        (const gchar *filename,
                                       GError **error);
 static GwyContainer* ols_load_tiff   (const GwyTIFF *tiff,
                                       GError **error);
-static GHashTable*   ols_parse_header(gchar *p,
-                                      GError **error);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     module_register,
     N_("Imports OLS data files."),
     "Jan Hořák <xhorak@gmail.com>, Yeti <yeti@gwyddion.net>",
-    "0.7",
+    "0.8",
     "David Nečas (Yeti) & Petr Klapetek",
     "2008",
 };
@@ -154,10 +152,9 @@ ols_load_tiff(const GwyTIFF *tiff, GError **error)
     }
 
     /* Read the comment header. */
-    if (!(hash = ols_parse_header(comment, error))) {
-        g_free(comment);
-        return NULL;
-    }
+    hash = gwy_parse_text_header(comment, NULL,
+                                 "[\x1a]", "[\x1a End]", "::", NULL, "=",
+                                 NULL, NULL, NULL);
 
     key = g_string_new(NULL);
     for (dir_num = 0; dir_num < gwy_tiff_get_n_dirs(tiff); dir_num++) {
@@ -244,77 +241,6 @@ ols_load_tiff(const GwyTIFF *tiff, GError **error)
     }
 
     return container;
-}
-
-static GHashTable*
-ols_parse_header(gchar *p, GError **error)
-{
-    GHashTable *hash;
-    const gchar *sect = "";
-    gchar *s, *line, *key;
-    guint len;
-
-    hash = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
-
-    while ((s = line = gwy_str_next_line(&p))) {
-        g_strstrip(line);
-        if (!*line)
-            continue;
-
-        /* Sections */
-        len = strlen(line);
-        if (line[0] == '[' && line[len-1] == ']') {
-            line[len-1] = '\0';
-            line++;
-            g_strstrip(line);
-            /* Start */
-            if (!*sect) {
-                sect = line;
-                gwy_debug("section %s", sect);
-                continue;
-            }
-            /* End */
-            if (!g_str_has_suffix(line, " End")) {
-                g_set_error(error, GWY_MODULE_FILE_ERROR,
-                            GWY_MODULE_FILE_ERROR_DATA,
-                            _("Section ‛%s’ ended with ‛%s’."), sect, line);
-                g_hash_table_destroy(hash);
-                return NULL;
-            }
-            len = strlen(line);
-            line[len-4] = '\0';
-            if (!gwy_strequal(line, sect)) {
-                line[len-4] = ' ';
-                g_set_error(error, GWY_MODULE_FILE_ERROR,
-                            GWY_MODULE_FILE_ERROR_DATA,
-                            _("Section ‛%s’ ended with ‛%s’."), sect, line);
-                g_hash_table_destroy(hash);
-                return NULL;
-            }
-            gwy_debug("end section %s", sect);
-            sect = "";
-        }
-        /* Values */
-        else if ((s = strchr(line, '='))) {
-            if (!*sect) {
-                g_warning("Field %s outside section", line);
-                continue;
-            }
-            *s = '\0';
-            s++;
-            g_strstrip(line);
-            g_strstrip(s);
-            key = g_strconcat(sect, "::", line, NULL);
-            g_hash_table_insert(hash, key, s);
-            gwy_debug("<%s> = <%s>", key, s);
-        }
-        /* WTF? */
-        else {
-            g_warning("Stray line %s", line);
-        }
-    }
-
-    return hash;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

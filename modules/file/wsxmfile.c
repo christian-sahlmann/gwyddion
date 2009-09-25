@@ -66,9 +66,6 @@ static GwyDataField* read_data_field   (const guchar *buffer,
                                         gint xres,
                                         gint yres,
                                         WSxMDataType type);
-static gboolean      file_read_meta    (GHashTable *meta,
-                                        gchar *buffer,
-                                        GError **error);
 static void          process_metadata  (GHashTable *wsxmmeta,
                                         GwyContainer *container);
 
@@ -77,7 +74,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Nanotec WSxM data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.9",
+    "0.10",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -139,6 +136,15 @@ wsxmfile_detect(const GwyFileDetectInfo *fileinfo,
     return score;
 }
 
+static gpointer
+convert_to_utf8(G_GNUC_UNUSED const gchar *key,
+                const gchar *value,
+                G_GNUC_UNUSED gpointer user_data)
+{
+    return g_convert(value, strlen(value), "UTF-8", "ISO-8859-1",
+                     NULL, NULL, NULL);
+}
+
 static GwyContainer*
 wsxmfile_load(const gchar *filename,
               G_GNUC_UNUSED GwyRunType mode,
@@ -153,8 +159,8 @@ wsxmfile_load(const gchar *filename,
     GHashTable *meta = NULL;
     WSxMDataType type = WSXM_DATA_INT16;
     guint header_size;
-    gchar *p;
-    gboolean ok;
+    gchar *p, *header;
+    gboolean ok = TRUE;
     gint xres = 0, yres = 0;
 
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
@@ -175,10 +181,16 @@ wsxmfile_load(const gchar *filename,
         return NULL;
     }
 
-    meta = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
-    p = g_strndup(buffer, header_size);
-    ok = file_read_meta(meta, p, error);
-    g_free(p);
+    header = g_strndup(buffer, header_size);
+    p = strchr(header, '[');
+    if (!p) {
+        err_FILE_TYPE(error, "WSxM");
+        gwy_file_abandon_contents(buffer, size, NULL);
+        g_free(header);
+        return NULL;
+    }
+    meta = gwy_parse_text_header(p, NULL, "[\x1a]", NULL, "::", NULL, ":",
+                                 convert_to_utf8, NULL, g_free);
 
     if (ok
         && (!(p = g_hash_table_lookup(meta, "General Info::Number of columns"))
@@ -218,61 +230,9 @@ wsxmfile_load(const gchar *filename,
         process_metadata(meta, container);
     }
     g_hash_table_destroy(meta);
+    g_free(header);
 
     return container;
-}
-
-static gboolean
-file_read_meta(GHashTable *meta,
-               gchar *buffer,
-               GError **error)
-{
-    gchar *p, *line, *key, *value, *section = NULL;
-    guint len;
-
-    while ((line = gwy_str_next_line(&buffer))) {
-        line = g_strstrip(line);
-        if (!(len = strlen(line)))
-            continue;
-        if (line[0] == '[' && line[len-1] == ']') {
-            line[len-1] = '\0';
-            section = line + 1;
-            gwy_debug("Section <%s>", section);
-            continue;
-        }
-        /* skip pre-header */
-        if (!section)
-            continue;
-
-        p = strchr(line, ':');
-        if (!p) {
-            g_warning("Cannot parse line <%s>", line);
-            continue;
-        }
-        *p = '\0';
-        p += 2;
-
-        value = g_convert(p, strlen(p), "UTF-8", "ISO-8859-1",
-                          NULL, NULL, NULL);
-        if (!value)
-            continue;
-        g_strstrip(value);
-        if (!*value) {
-            g_free(value);
-            continue;
-        }
-
-        key = g_strconcat(section, "::", line, NULL);
-        gwy_debug("<%s> = <%s>", key, value);
-        g_hash_table_replace(meta, key, value);
-    }
-    if (!gwy_strequal(section, "Header end")) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                    _("Missing end of file header marker."));
-        return FALSE;
-    }
-
-    return TRUE;
 }
 
 static void
