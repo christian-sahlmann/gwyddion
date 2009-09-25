@@ -1441,7 +1441,7 @@ pixmap_save_tiff(GwyContainer *data,
     height = gdk_pixbuf_get_height(pixbuf);
     bytes = 3*width*height;
 
-    fh = g_fopen(filename, "w");
+    fh = g_fopen(filename, "wb");
     if (!fh) {
         err_OPEN_WRITE(error);
         goto fail;
