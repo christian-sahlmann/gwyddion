@@ -1,8 +1,7 @@
 /*
  *  $Id$
- *  Copyright (C) 2006 David Necas (Yeti), Petr Klapetek, Markus Pristovsek
- *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net,
- *  prissi@gift.physik.tu-berlin.de.
+ *  Copyright (C) 2006 David Necas (Yeti), Markus Pristovsek.
+ *  E-mail: yeti@gwyddion.net, prissi@gift.physik.tu-berlin.de.
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -24,10 +23,15 @@
  * <mime-type type="application/x-seiko-spm">
  *   <comment>Seiko SPM data</comment>
  *   <magic priority="80">
+ *     <match type="string" offset="0" value="SPIZ000AFM"/>
  *     <match type="string" offset="0" value="SPIZ000DFM"/>
  *   </magic>
+ *   <glob pattern="*.xqb"/>
+ *   <glob pattern="*.XQB"/>
  *   <glob pattern="*.xqd"/>
  *   <glob pattern="*.XQD"/>
+ *   <glob pattern="*.xqt"/>
+ *   <glob pattern="*.XQT"/>
  * </mime-type>
  **/
 
@@ -43,10 +47,13 @@
 #include "err.h"
 #include "get.h"
 
-#define MAGIC "SPIZ000DFM"
-#define MAGIC_SIZE (sizeof(MAGIC)-1)
+#define MAGIC1 "SPIZ000AFM"
+#define MAGIC2 "SPIZ000DFM"
+#define MAGIC_SIZE (sizeof(MAGIC1)-1)
 
-#define EXTENSION ".xqd"
+#define EXTENSION1 ".xqb"
+#define EXTENSION2 ".xqd"
+#define EXTENSION3 ".xqt"
 
 #define Nanometer 1e-9
 
@@ -61,17 +68,14 @@ static GwyContainer* seiko_load        (const gchar *filename,
 static GwyDataField* read_data_field   (const guchar *buffer,
                                         guint size,
                                         GError **error);
-static void          seiko_process_meta(GwyContainer *container,
-                                        const guchar *buffer,
-                                        guint size);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    N_("Imports Seiko XQD files."),
+    N_("Imports Seiko XQB, XQD and XQT files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.4",
-    "David Nečas (Yeti) & Petr Klapetek & Markus Pristovsek",
+    "0.5",
+    "David Nečas (Yeti) & Markus Pristovsek",
     "2006",
 };
 
@@ -81,7 +85,7 @@ static gboolean
 module_register(void)
 {
     gwy_file_func_register("seiko",
-                           N_("Seiko files (.xqd)"),
+                           N_("Seiko files (.xqb, .xqd, .xqt)"),
                            (GwyFileDetectFunc)&seiko_detect,
                            (GwyFileLoadFunc)&seiko_load,
                            NULL,
@@ -96,12 +100,18 @@ seiko_detect(const GwyFileDetectInfo *fileinfo,
 {
     gint score = 0;
 
-    if (only_name)
-        return g_str_has_suffix(fileinfo->name_lowercase, EXTENSION) ? 20 : 0;
+    if (only_name) {
+        if (g_str_has_suffix(fileinfo->name_lowercase, EXTENSION1)
+            || g_str_has_suffix(fileinfo->name_lowercase, EXTENSION2)
+            || g_str_has_suffix(fileinfo->name_lowercase, EXTENSION3))
+            return 20;
+        return 0;
+    }
 
     if (fileinfo->buffer_len > MAGIC_SIZE
         && fileinfo->file_size >= HEADER_SIZE + 2
-        && !memcmp(fileinfo->head, MAGIC, MAGIC_SIZE))
+        && (memcmp(fileinfo->head, MAGIC1, MAGIC_SIZE) == 0
+            || memcmp(fileinfo->head, MAGIC2, MAGIC_SIZE) == 0))
         score = 100;
 
     return score;
@@ -112,6 +122,11 @@ seiko_load(const gchar *filename,
            G_GNUC_UNUSED GwyRunType mode,
            GError **error)
 {
+    enum {
+        COMMENT_OFFSET = 0x480,
+        COMMENT_SIZE = 0x80,
+    };
+
     GwyContainer *container = NULL;
     guchar *buffer = NULL;
     gsize size = 0;
@@ -128,6 +143,13 @@ seiko_load(const gchar *filename,
         return NULL;
     }
 
+    if (memcmp(buffer, MAGIC1, MAGIC_SIZE) != 0
+        && memcmp(buffer, MAGIC2, MAGIC_SIZE) != 0) {
+        err_FILE_TYPE(error, "Seiko");
+        gwy_file_abandon_contents(buffer, size, NULL);
+        return NULL;
+    }
+
     dfield = read_data_field(buffer, size, error);
     if (!dfield) {
         gwy_file_abandon_contents(buffer, size, NULL);
@@ -138,9 +160,9 @@ seiko_load(const gchar *filename,
     gwy_container_set_object_by_name(container, "/0/data", dfield);
     g_object_unref(dfield);
     gwy_container_set_string_by_name(container, "/0/data/title",
-                                     g_strdup("Topography"));
+                                     g_strndup(buffer + COMMENT_OFFSET,
+                                               COMMENT_SIZE));
 
-    seiko_process_meta(container, buffer, size);
     gwy_file_abandon_contents(buffer, size, NULL);
 
     return container;
@@ -214,32 +236,4 @@ read_data_field(const guchar *buffer,
     return dfield;
 }
 
-static void
-seiko_process_meta(GwyContainer *container,
-                   const guchar *buffer,
-                   G_GNUC_UNUSED guint size)
-{
-    GwyContainer *meta;
-
-    enum {
-        COMMENT_OFFSET  = 0x28,
-        COMMENT_SIZE  = 0x70,
-    };
-    gchar comment[0x70];
-    const guchar *p;
-
-    p = buffer + COMMENT_OFFSET;
-    get_CHARARRAY0(comment, &p);
-
-    meta = gwy_container_new();
-
-    if (comment[0])
-        gwy_container_set_string_by_name(meta, "Comment", g_strdup(comment));
-
-    if (gwy_container_get_n_items(meta))
-        gwy_container_set_object_by_name(container, "/0/meta", meta);
-    g_object_unref(meta);
-}
-
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
-
