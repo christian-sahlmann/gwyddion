@@ -105,7 +105,7 @@ asc_load(const gchar *filename,
          G_GNUC_UNUSED GwyRunType mode,
          GError **error)
 {
-    GwyContainer *container = NULL;
+    GwyContainer *container = NULL, *meta;
     GwyDataField *dfield = NULL;
     GwySIUnit *unit;
     gchar *line, *p, *value, *buffer = NULL;
@@ -240,6 +240,21 @@ asc_load(const gchar *filename,
 
     gwy_container_set_object(container, gwy_app_get_data_key_for_id(0), dfield);
     g_object_unref(dfield);
+
+    if ((value = g_hash_table_lookup(hash, "display")))
+        gwy_container_set_string_by_name(container, "/0/data/title",
+                                         g_strdup(value));
+
+    meta = gwy_container_new();
+    gwy_container_set_object_by_name(container, "/0/meta", meta);
+    g_object_unref(meta);
+
+    value = g_strdup_printf("%04u-%02u-%02u %02u:%02u:%02u",
+                            year, month, day, hour, minute, second);
+    gwy_container_set_string_by_name(meta, "Date", value);
+
+    if ((value = g_hash_table_lookup(hash, "scanspeed")))
+        gwy_container_set_string_by_name(meta, "Scan Speed", g_strdup(value));
 
 fail:
     g_free(buffer);
