@@ -1,6 +1,10 @@
 2.18 (0000-00-00)
+Libraries:
+- libgwyapp: A function to parse typical text headers of SPM files was added.
+
 Modules:
 - Attocube (new): Imports Attocube Systems ASC files.
+- Seiko: Supports more file types (with magic header SPIZ000AFM).
 
 Other:
 - Inclusion of wrong OpenGL header when building with Quartz backend was fixed.
