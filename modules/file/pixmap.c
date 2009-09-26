@@ -1577,7 +1577,7 @@ pixmap_save_bmp(GwyContainer *data,
     }
 
     *(guint32*)(bmp_head + 2) = GUINT32_TO_LE(bmplen);
-    *(guint32*)(bmp_head + 18) = GUINT32_TO_LE(bmprowstride/3);
+    *(guint32*)(bmp_head + 18) = GUINT32_TO_LE(width);
     *(guint32*)(bmp_head + 22) = GUINT32_TO_LE(height);
     *(guint32*)(bmp_head + 34) = GUINT32_TO_LE(height*bmprowstride);
     if (fwrite(bmp_head, 1, sizeof(bmp_head), fh) != sizeof(bmp_head)) {
@@ -1647,15 +1647,15 @@ pixmap_save_targa(GwyContainer *data,
     height = gdk_pixbuf_get_height(pixbuf);
     targarowstride = 12*((width + 3)/4);
 
-    if (height > 65535 || width > 65535) {
+    if (height >= 65535 || width >= 65535) {
         g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
                     _("Image is too large to be stored as TARGA."));
         return FALSE;
     }
-    targa_head[12] = (targarowstride/3) & 0xff;
-    targa_head[13] = (targarowstride/3 >> 8) & 0xff;
-    targa_head[14] = (height) & 0xff;
-    targa_head[15] = (height >> 8) & 0xff;
+    targa_head[12] = width & 0xff;
+    targa_head[13] = width >> 8;
+    targa_head[14] = height & 0xff;
+    targa_head[15] = height >> 8;
 
     fh = g_fopen(filename, "wb");
     if (!fh) {
