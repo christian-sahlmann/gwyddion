@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003-2007 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2004-2009 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -376,9 +376,9 @@ static GwyModuleInfo module_info = {
        "PNG, JPEG, TIFF, PPM, BMP, TARGA. "
        "Import support relies on GDK and thus may be installation-dependent."),
     "Yeti <yeti@gwyddion.net>",
-    "7.4",
+    "7.5",
     "David Nečas (Yeti) & Petr Klapetek",
-    "2004",
+    "2004-2009",
 };
 
 GWY_MODULE_QUERY(module_info)
@@ -1633,7 +1633,7 @@ pixmap_save_targa(GwyContainer *data,
     };
     GdkPixbuf *pixbuf;
     guchar *pixels, *buffer = NULL;
-    guint targarowstride, rowstride, i, j, width, height;
+    guint rowstride, i, j, width, height;
     gboolean ok = FALSE;
     FILE *fh;
 
@@ -1645,7 +1645,6 @@ pixmap_save_targa(GwyContainer *data,
     rowstride = gdk_pixbuf_get_rowstride(pixbuf);
     width = gdk_pixbuf_get_width(pixbuf);
     height = gdk_pixbuf_get_height(pixbuf);
-    targarowstride = 12*((width + 3)/4);
 
     if (height >= 65535 || width >= 65535) {
         g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
@@ -1670,8 +1669,8 @@ pixmap_save_targa(GwyContainer *data,
     }
 
     /* The ugly part: TARGA uses BGR instead of RGB */
-    buffer = g_new(guchar, targarowstride);
-    memset(buffer, 0xff, sizeof(targarowstride));
+    buffer = g_new(guchar, rowstride);
+    memset(buffer, 0xff, sizeof(rowstride));
     for (i = 0; i < height; i++) {
         guchar *p = pixels + i*rowstride;
         guchar *q = buffer;
@@ -1681,7 +1680,7 @@ pixmap_save_targa(GwyContainer *data,
             *(q + 1) = *(p + 1);
             *(q + 2) = *p;
         }
-        if (fwrite(buffer, 1, targarowstride, fh) != targarowstride) {
+        if (fwrite(buffer, 1, rowstride, fh) != rowstride) {
             err_WRITE(error);
             goto end;
         }
