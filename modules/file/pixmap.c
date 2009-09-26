@@ -1,7 +1,7 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2004-2009 David Necas (Yeti), Petr Klapetek.
- *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
+ *  Copyright (C) 2004-2009 David Necas (Yeti).
+ *  E-mail: yeti@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -31,6 +31,7 @@
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwydebugobjects.h>
+#include <libdraw/gwypixfield.h>
 #include <libgwymodule/gwymodule-file.h>
 #include <libprocess/stats.h>
 #include <libgwydgets/gwydgets.h>
@@ -86,6 +87,24 @@ typedef enum {
     PIXMAP_MAP_LAST
 } PixmapMapType;
 
+typedef enum {
+    GWY_COLORSPACE_RGB = GDK_COLORSPACE_RGB,
+    GWY_COLORSPACE_GRAY,
+} GwyColorspace;
+
+/* GdkPixbuf does not support 16bit depth nor grayscale images, use something
+ * that is able to represent these. */
+typedef struct {
+    GwyColorspace colorspace;
+    guint bit_depth;
+    guint nchannels;
+    guint width;
+    guint height;
+    guint rowstride;
+    gpointer pixels;
+    GdkPixbuf *owner;
+} GwyPixbuf;
+
 typedef struct {
     gdouble zoom;
     PixmapOutput xytype;
@@ -95,11 +114,13 @@ typedef struct {
     gchar *inset_length;
     gboolean draw_mask;
     gboolean draw_selection;
-    gboolean scale_font;
     gdouble font_size;
+    gboolean scale_font;
+    guint grayscale;
     /* Interface only */
     GwyDataView *data_view;
     GwyDataField *dfield;
+    gboolean supports_16bit;
     /* These two are `1:1' sizes, i.e. they differ from data field sizes when
      * realsquare is TRUE. */
     gint xres;
@@ -122,7 +143,10 @@ typedef struct {
 
 typedef struct {
     PixmapSaveArgs *args;
+    GwySensitivityGroup *sensgroup;
     GtkWidget *dialog;
+    GtkWidget *left_column;
+    GtkWidget *right_column;
     GSList *xytypes;
     GSList *ztypes;
     GtkWidget *inset_color_label;
@@ -141,6 +165,7 @@ typedef struct {
     GtkWidget *draw_mask;
     GtkWidget *draw_selection;
     GtkWidget *scale_font;
+    GtkWidget *grayscale;
     GwyContainer *data;
     gboolean in_update;
 } PixmapSaveControls;
@@ -203,12 +228,17 @@ static void              pixmap_load_update_controls(PixmapLoadControls *control
                                                     PixmapLoadArgs *args);
 static void              pixmap_load_update_values (PixmapLoadControls *controls,
                                                     PixmapLoadArgs *args);
-static GdkPixbuf*        pixmap_draw_pixbuf        (GwyContainer *data,
+static GwyPixbuf*        pixmap_draw               (GwyContainer *data,
+                                                    PixmapSaveArgs *args);
+static void              gwy_pixbuf_free           (GwyPixbuf *gwypixbuf);
+static GwyPixbuf*        pixmap_draw_pixbuf        (GwyContainer *data,
                                                     const gchar *format_name,
+                                                    gboolean supports_16bit,
                                                     GwyRunType mode,
                                                     GError **error);
-static GdkPixbuf*        pixmap_real_draw_pixbuf   (GwyContainer *data,
-                                                    PixmapSaveArgs *args);
+static GdkPixbuf*       pixmap_draw_presentational(GwyContainer *data,
+                                                   PixmapSaveArgs *args);
+static GwyPixbuf*       pixmap_draw_heightfield(PixmapSaveArgs *args);
 static gboolean          pixmap_save_dialog        (GwyContainer *data,
                                                     PixmapSaveArgs *args,
                                                     const gchar *name);
@@ -360,8 +390,9 @@ static const PixmapSaveArgs pixmap_save_defaults = {
     { 1.0, 1.0, 1.0, 1.0 }, INSET_POS_BOTTOM_RIGHT,
     "",  /* invalid value, causes the automatic length to be used */
     TRUE, TRUE, FONT_SIZE, TRUE,
+    0,
     /* Interface only */
-    NULL, NULL, 0, 0, FALSE,
+    NULL, NULL, FALSE, 0, 0, FALSE,
 };
 
 static const PixmapLoadArgs pixmap_load_defaults = {
@@ -372,12 +403,12 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Renders data into pixmap images and imports data from pixmap images. "
-       "Supports the following image formats for export: "
+       "It supports the following image formats for export: "
        "PNG, JPEG, TIFF, PPM, BMP, TARGA. "
        "Import support relies on GDK and thus may be installation-dependent."),
     "Yeti <yeti@gwyddion.net>",
-    "7.5",
-    "David Nečas (Yeti) & Petr Klapetek",
+    "7.6",
+    "David Nečas (Yeti)",
     "2004-2009",
 };
 
@@ -1338,21 +1369,21 @@ pixmap_save_png(GwyContainer *data,
                 GwyRunType mode,
                 GError **error)
 {
-    GdkPixbuf *pixbuf;
+    GwyPixbuf *pixbuf;
     GError *err = NULL;
     gboolean ok;
 
-    pixbuf = pixmap_draw_pixbuf(data, "PNG", mode, error);
+    pixbuf = pixmap_draw_pixbuf(data, "PNG", FALSE, mode, error);
     if (!pixbuf)
         return FALSE;
 
-    ok = gdk_pixbuf_save(pixbuf, filename, "png", &err, NULL);
+    ok = gdk_pixbuf_save(pixbuf->owner, filename, "png", &err, NULL);
     if (!ok) {
         g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_IO,
                     _("Pixbuf save failed: %s."), err->message);
         g_clear_error(&err);
     }
-    g_object_unref(pixbuf);
+    gwy_pixbuf_free(pixbuf);
 
     return ok;
 }
@@ -1363,21 +1394,23 @@ pixmap_save_jpeg(GwyContainer *data,
                  GwyRunType mode,
                  GError **error)
 {
-    GdkPixbuf *pixbuf;
+    GwyPixbuf *pixbuf;
     GError *err = NULL;
     gboolean ok;
 
-    pixbuf = pixmap_draw_pixbuf(data, "JPEG", mode, error);
+    pixbuf = pixmap_draw_pixbuf(data, "JPEG", FALSE, mode, error);
     if (!pixbuf)
         return FALSE;
 
-    ok = gdk_pixbuf_save(pixbuf, filename, "jpeg", &err, "quality", "98", NULL);
+    ok = gdk_pixbuf_save(pixbuf->owner, filename, "jpeg", &err,
+                         "quality", "98",
+                         NULL);
     if (!ok) {
         g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_IO,
                     _("Pixbuf save failed: %s."), err->message);
         g_clear_error(&err);
     }
-    g_object_unref(pixbuf);
+    gwy_pixbuf_free(pixbuf);
 
     return ok;
 }
@@ -1387,10 +1420,10 @@ pixmap_save_jpeg(GwyContainer *data,
 #define Q(x) (x)&0xff, ((x)>>8)&0xff, ((x)>>16)&0xff, (x)>>24
 
 static gboolean
-pixmap_save_tiff(GwyContainer *data,
-                 const gchar *filename,
-                 GwyRunType mode,
-                 GError **error)
+write_tiff_head_rgb(FILE *fh,
+                    guint width,
+                    guint height,
+                    guint bit_depth)
 {
     enum {
         N_ENTRIES = 11,
@@ -1423,23 +1456,86 @@ pixmap_save_tiff(GwyContainer *data,
         W(GWY_TIFFTAG_PLANAR_CONFIG), W(GWY_TIFF_SHORT), Q(1),
             Q(GWY_TIFF_PLANAR_CONFIG_CONTIGNUOUS),
         Q(0),              /* next directory (0 = none) */
-        W(8), W(8), W(8),  /* value of bits per sample */
+        W(0), W(0), W(0),  /* value of bits per sample */
         /* here starts the image data */
     };
-    GdkPixbuf *pixbuf = NULL;
-    guchar *pixels;
-    guint rowstride, i, width, height, bytes;
+    guint nbytes = 3*(bit_depth/8)*width*height;
+
+    *(guint32*)(tiff_head + WIDTH_OFFSET) = GUINT32_TO_LE(width);
+    *(guint32*)(tiff_head + HEIGHT_OFFSET) = GUINT32_TO_LE(height);
+    *(guint32*)(tiff_head + ROWS_OFFSET) = GUINT32_TO_LE(height);
+    *(guint32*)(tiff_head + BYTES_OFFSET) = GUINT32_TO_LE(nbytes);
+    *(guint16*)(tiff_head + HEAD_SIZE) = GUINT32_TO_LE(bit_depth);
+    *(guint16*)(tiff_head + HEAD_SIZE + 2) = GUINT32_TO_LE(bit_depth);
+    *(guint16*)(tiff_head + HEAD_SIZE + 4) = GUINT32_TO_LE(bit_depth);
+
+    return fwrite(tiff_head, sizeof(tiff_head), 1, fh) == 1;
+}
+
+static gboolean
+write_tiff_head_gray(FILE *fh,
+                     guint width,
+                     guint height,
+                     guint bit_depth)
+{
+    enum {
+        N_ENTRIES = 11,
+        ESTART = 4 + 4 + 2,
+        HEAD_SIZE = ESTART + 12*N_ENTRIES + 4,  /* head + 0th directory */
+        /* offsets of things we have to fill run-time */
+        WIDTH_OFFSET = ESTART + 12*0 + 8,
+        HEIGHT_OFFSET = ESTART + 12*1 + 8,
+        BPS_OFFSET = ESTART + 12*2 + 8,
+        ROWS_OFFSET = ESTART + 12*8 + 8,
+        BYTES_OFFSET = ESTART + 12*9 + 8,
+    };
+    static guchar tiff_head[] = {
+        0x49, 0x49,   /* magic (LSB) */
+        W(42),        /* more magic */
+        Q(8),         /* 0th directory offset */
+        W(N_ENTRIES), /* number of entries */
+        W(GWY_TIFFTAG_IMAGE_WIDTH), W(GWY_TIFF_SHORT), Q(1), Q(0),
+        W(GWY_TIFFTAG_IMAGE_LENGTH), W(GWY_TIFF_SHORT), Q(1), Q(0),
+        W(GWY_TIFFTAG_BITS_PER_SAMPLE), W(GWY_TIFF_SHORT), Q(1), Q(0),
+        W(GWY_TIFFTAG_COMPRESSION), W(GWY_TIFF_SHORT), Q(1),
+            Q(GWY_TIFF_COMPRESSION_NONE),
+        W(GWY_TIFFTAG_PHOTOMETRIC), W(GWY_TIFF_SHORT), Q(1),
+            Q(GWY_TIFF_PHOTOMETRIC_MIN_IS_BLACK),
+        W(GWY_TIFFTAG_STRIP_OFFSETS), W(GWY_TIFF_LONG), Q(1), Q(HEAD_SIZE),
+        W(GWY_TIFFTAG_ORIENTATION), W(GWY_TIFF_SHORT), Q(1),
+            Q(GWY_TIFF_ORIENTATION_TOPLEFT),
+        W(GWY_TIFFTAG_SAMPLES_PER_PIXEL), W(GWY_TIFF_SHORT), Q(1), Q(1),
+        W(GWY_TIFFTAG_ROWS_PER_STRIP), W(GWY_TIFF_SHORT), Q(1), Q(0),
+        W(GWY_TIFFTAG_STRIP_BYTE_COUNTS), W(GWY_TIFF_LONG), Q(1), Q(0),
+        W(GWY_TIFFTAG_PLANAR_CONFIG), W(GWY_TIFF_SHORT), Q(1),
+            Q(GWY_TIFF_PLANAR_CONFIG_CONTIGNUOUS),
+        Q(0),              /* next directory (0 = none) */
+        /* here starts the image data */
+    };
+    guint nbytes = (bit_depth/8)*width*height;
+
+    *(guint32*)(tiff_head + WIDTH_OFFSET) = GUINT32_TO_LE(width);
+    *(guint32*)(tiff_head + HEIGHT_OFFSET) = GUINT32_TO_LE(height);
+    *(guint32*)(tiff_head + ROWS_OFFSET) = GUINT32_TO_LE(height);
+    *(guint32*)(tiff_head + BYTES_OFFSET) = GUINT32_TO_LE(nbytes);
+    *(guint16*)(tiff_head + BPS_OFFSET) = GUINT32_TO_LE(bit_depth);
+
+    return fwrite(tiff_head, sizeof(tiff_head), 1, fh) == 1;
+}
+
+static gboolean
+pixmap_save_tiff(GwyContainer *data,
+                 const gchar *filename,
+                 GwyRunType mode,
+                 GError **error)
+{
+    GwyPixbuf *pixbuf = NULL;
+    guint i, rowsize;
     FILE *fh = NULL;
     gboolean ok = FALSE;
 
-    if (!(pixbuf = pixmap_draw_pixbuf(data, "TIFF", mode, error)))
+    if (!(pixbuf = pixmap_draw_pixbuf(data, "TIFF", TRUE, mode, error)))
         goto fail;
-
-    pixels = gdk_pixbuf_get_pixels(pixbuf);
-    rowstride = gdk_pixbuf_get_rowstride(pixbuf);
-    width = gdk_pixbuf_get_width(pixbuf);
-    height = gdk_pixbuf_get_height(pixbuf);
-    bytes = 3*width*height;
 
     fh = g_fopen(filename, "wb");
     if (!fh) {
@@ -1447,25 +1543,34 @@ pixmap_save_tiff(GwyContainer *data,
         goto fail;
     }
 
-    *(guint32*)(tiff_head + WIDTH_OFFSET) = GUINT32_TO_LE(width);
-    *(guint32*)(tiff_head + HEIGHT_OFFSET) = GUINT32_TO_LE(height);
-    *(guint32*)(tiff_head + ROWS_OFFSET) = GUINT32_TO_LE(height);
-    *(guint32*)(tiff_head + BYTES_OFFSET) = GUINT32_TO_LE(bytes);
-
-    if (!fwrite(tiff_head, sizeof(tiff_head), 1, fh)) {
-        err_WRITE(error);
-        goto fail;
+    if (pixbuf->colorspace == GWY_COLORSPACE_GRAY) {
+        g_assert(pixbuf->nchannels == 1);
+        if (!write_tiff_head_gray(fh, pixbuf->width, pixbuf->height,
+                                  pixbuf->bit_depth)) {
+            err_WRITE(error);
+            goto fail;
+        }
+    }
+    else if (pixbuf->colorspace == GWY_COLORSPACE_RGB) {
+        g_assert(pixbuf->nchannels == 3);
+        if (!write_tiff_head_rgb(fh, pixbuf->width, pixbuf->height,
+                                 pixbuf->bit_depth)) {
+            err_WRITE(error);
+            goto fail;
+        }
     }
 
-    for (i = 0; i < height; i++) {
-        if (!fwrite(pixels + i*rowstride, 3*width, 1, fh)) {
+    rowsize = pixbuf->nchannels * (pixbuf->bit_depth/8) * pixbuf->width;
+    for (i = 0; i < pixbuf->height; i++) {
+        if (!fwrite((guchar*)pixbuf->pixels + i*pixbuf->rowstride,
+                    rowsize, 1, fh)) {
             err_WRITE(error);
             goto fail;
         }
     }
     ok = TRUE;
 
-    gwy_object_unref(pixbuf);
+    gwy_pixbuf_free(pixbuf);;
     if (fh)
         fclose(fh);
 
@@ -1483,37 +1588,44 @@ pixmap_save_ppm(GwyContainer *data,
                 GError **error)
 {
     static const gchar *ppm_header = "P6\n%u\n%u\n255\n";
-    GdkPixbuf *pixbuf;
-    guchar *pixels = NULL;
-    guint rowstride, i, width, height;
+    static const gchar *pgm_header = "P5\n%u\n%u\n65535\n";
+    GwyPixbuf *pixbuf;
+    guint i, rowsize;
     gboolean ok = FALSE;
     gchar *ppmh = NULL;
     FILE *fh;
 
-    pixbuf = pixmap_draw_pixbuf(data, "PPM", mode, error);
+    pixbuf = pixmap_draw_pixbuf(data, "PPM", TRUE, mode, error);
     if (!pixbuf)
         return FALSE;
-
-    pixels = gdk_pixbuf_get_pixels(pixbuf);
-    rowstride = gdk_pixbuf_get_rowstride(pixbuf);
-    width = gdk_pixbuf_get_width(pixbuf);
-    height = gdk_pixbuf_get_height(pixbuf);
 
     fh = g_fopen(filename, "wb");
     if (!fh) {
         err_OPEN_WRITE(error);
-        g_object_unref(pixbuf);
+        gwy_pixbuf_free(pixbuf);
         return FALSE;
     }
 
-    ppmh = g_strdup_printf(ppm_header, width, height);
+    ppmh = g_strdup_printf(pixbuf->colorspace == GWY_COLORSPACE_RGB
+                           ? ppm_header : pgm_header,
+                           pixbuf->width, pixbuf->height);
     if (fwrite(ppmh, 1, strlen(ppmh), fh) != strlen(ppmh)) {
         err_WRITE(error);
         goto end;
     }
 
-    for (i = 0; i < height; i++) {
-        if (fwrite(pixels + i*rowstride, 1, 3*width, fh) != 3*width) {
+    rowsize = pixbuf->nchannels * (pixbuf->bit_depth/8) * pixbuf->width;
+    for (i = 0; i < pixbuf->height; i++) {
+        if (pixbuf->bit_depth == 16) {
+            guint16 *row16 = (guint16*)((guchar*)pixbuf->pixels
+                                        + i*pixbuf->rowstride);
+            guint j;
+
+            for (j = 0; j < pixbuf->width * pixbuf->nchannels; j++)
+                row16[j] = GUINT16_TO_BE(row16[j]);
+        }
+        if (!fwrite((guchar*)pixbuf->pixels + i*pixbuf->rowstride,
+                    rowsize, 1, fh)) {
             err_WRITE(error);
             goto end;
         }
@@ -1521,7 +1633,7 @@ pixmap_save_ppm(GwyContainer *data,
 
     ok = TRUE;
 end:
-    g_object_unref(pixbuf);
+    gwy_pixbuf_free(pixbuf);
     g_free(ppmh);
     fclose(fh);
 
@@ -1551,35 +1663,31 @@ pixmap_save_bmp(GwyContainer *data,
         0, 0, 0, 0,  /* ncl */
         0, 0, 0, 0,  /* nic */
     };
-    GdkPixbuf *pixbuf;
-    guchar *pixels = NULL, *buffer = NULL;
-    guint rowstride, i, j, width, height;
+    GwyPixbuf *pixbuf;
+    guchar *buffer = NULL;
+    guint i, j;
     guint bmplen, bmprowstride;
     gboolean ok = FALSE;
     FILE *fh;
 
-    pixbuf = pixmap_draw_pixbuf(data, "BMP", mode, error);
+    pixbuf = pixmap_draw_pixbuf(data, "BMP", FALSE, mode, error);
     if (!pixbuf)
         return FALSE;
 
-    pixels = gdk_pixbuf_get_pixels(pixbuf);
-    rowstride = gdk_pixbuf_get_rowstride(pixbuf);
-    width = gdk_pixbuf_get_width(pixbuf);
-    height = gdk_pixbuf_get_height(pixbuf);
-    bmprowstride = 12*((width + 3)/4);
-    bmplen = height*bmprowstride + sizeof(bmp_head);
+    bmprowstride = 12*((pixbuf->width + 3)/4);
+    bmplen = pixbuf->height*bmprowstride + sizeof(bmp_head);
 
     fh = g_fopen(filename, "wb");
     if (!fh) {
         err_OPEN_WRITE(error);
-        g_object_unref(pixbuf);
+        gwy_pixbuf_free(pixbuf);
         return FALSE;
     }
 
     *(guint32*)(bmp_head + 2) = GUINT32_TO_LE(bmplen);
-    *(guint32*)(bmp_head + 18) = GUINT32_TO_LE(width);
-    *(guint32*)(bmp_head + 22) = GUINT32_TO_LE(height);
-    *(guint32*)(bmp_head + 34) = GUINT32_TO_LE(height*bmprowstride);
+    *(guint32*)(bmp_head + 18) = GUINT32_TO_LE(pixbuf->width);
+    *(guint32*)(bmp_head + 22) = GUINT32_TO_LE(pixbuf->height);
+    *(guint32*)(bmp_head + 34) = GUINT32_TO_LE(pixbuf->height*bmprowstride);
     if (fwrite(bmp_head, 1, sizeof(bmp_head), fh) != sizeof(bmp_head)) {
         err_WRITE(error);
         goto end;
@@ -1589,16 +1697,17 @@ pixmap_save_bmp(GwyContainer *data,
      * this silliness may originate nowhere else than in MS... */
     buffer = g_new(guchar, bmprowstride);
     memset(buffer, 0xff, sizeof(bmprowstride));
-    for (i = 0; i < height; i++) {
-        guchar *p = pixels + (height - 1 - i)*rowstride;
+    for (i = 0; i < pixbuf->height; i++) {
+        const guchar *p = ((const guchar *)pixbuf->pixels
+                           + (pixbuf->height - 1 - i)*pixbuf->rowstride);
         guchar *q = buffer;
 
-        for (j = width; j; j--, p += 3, q += 3) {
+        for (j = pixbuf->width; j; j--, p += 3, q += 3) {
             *q = *(p + 2);
             *(q + 1) = *(p + 1);
             *(q + 2) = *p;
         }
-        if (fwrite(buffer, 1, bmprowstride, fh) != bmprowstride) {
+        if (!fwrite(buffer, bmprowstride, 1, fh)) {
             err_WRITE(error);
             goto end;
         }
@@ -1606,7 +1715,7 @@ pixmap_save_bmp(GwyContainer *data,
 
     ok = TRUE;
 end:
-    g_object_unref(pixbuf);
+    gwy_pixbuf_free(pixbuf);
     g_free(buffer);
     fclose(fh);
 
@@ -1631,35 +1740,29 @@ pixmap_save_targa(GwyContainer *data,
      24,          /* bits per pixel */
      0x20,        /* image descriptor flags: origin upper */
     };
-    GdkPixbuf *pixbuf;
-    guchar *pixels, *buffer = NULL;
-    guint rowstride, i, j, width, height;
+    GwyPixbuf *pixbuf;
+    guchar *buffer = NULL;
+    guint i, j;
     gboolean ok = FALSE;
     FILE *fh;
 
-    pixbuf = pixmap_draw_pixbuf(data, "TARGA", mode, error);
+    pixbuf = pixmap_draw_pixbuf(data, "TARGA", FALSE, mode, error);
     if (!pixbuf)
         return FALSE;
 
-    pixels = gdk_pixbuf_get_pixels(pixbuf);
-    rowstride = gdk_pixbuf_get_rowstride(pixbuf);
-    width = gdk_pixbuf_get_width(pixbuf);
-    height = gdk_pixbuf_get_height(pixbuf);
-
-    if (height >= 65535 || width >= 65535) {
+    if (pixbuf->height >= 65535 || pixbuf->width >= 65535) {
         g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
                     _("Image is too large to be stored as TARGA."));
         return FALSE;
     }
-    targa_head[12] = width & 0xff;
-    targa_head[13] = width >> 8;
-    targa_head[14] = height & 0xff;
-    targa_head[15] = height >> 8;
+
+    *(guint16*)(targa_head + 12) = GUINT16_TO_LE((guint16)pixbuf->width);
+    *(guint16*)(targa_head + 14) = GUINT16_TO_LE((guint16)pixbuf->height);
 
     fh = g_fopen(filename, "wb");
     if (!fh) {
         err_OPEN_WRITE(error);
-        g_object_unref(pixbuf);
+        gwy_pixbuf_free(pixbuf);
         return FALSE;
     }
 
@@ -1669,18 +1772,18 @@ pixmap_save_targa(GwyContainer *data,
     }
 
     /* The ugly part: TARGA uses BGR instead of RGB */
-    buffer = g_new(guchar, rowstride);
-    memset(buffer, 0xff, sizeof(rowstride));
-    for (i = 0; i < height; i++) {
-        guchar *p = pixels + i*rowstride;
+    buffer = g_new(guchar, pixbuf->rowstride);
+    memset(buffer, 0xff, pixbuf->rowstride);
+    for (i = 0; i < pixbuf->height; i++) {
+        const guchar *p = (const guchar*)pixbuf->pixels + i*pixbuf->rowstride;
         guchar *q = buffer;
 
-        for (j = width; j; j--, p += 3, q += 3) {
+        for (j = pixbuf->width; j; j--, p += 3, q += 3) {
             *q = *(p + 2);
             *(q + 1) = *(p + 1);
             *(q + 2) = *p;
         }
-        if (fwrite(buffer, 1, rowstride, fh) != rowstride) {
+        if (!fwrite(buffer, pixbuf->rowstride, 1, fh)) {
             err_WRITE(error);
             goto end;
         }
@@ -1688,7 +1791,7 @@ pixmap_save_targa(GwyContainer *data,
 
     ok = TRUE;
 end:
-    g_object_unref(pixbuf);
+    gwy_pixbuf_free(pixbuf);
     g_free(buffer);
     fclose(fh);
 
@@ -1701,13 +1804,14 @@ end:
  *
  ***************************************************************************/
 
-static GdkPixbuf*
+static GwyPixbuf*
 pixmap_draw_pixbuf(GwyContainer *data,
                    const gchar *format_name,
+                   gboolean supports_16bit,
                    GwyRunType mode,
                    GError **error)
 {
-    GdkPixbuf *pixbuf;
+    GwyPixbuf *pixbuf;
     GwyContainer *settings;
     PixmapSaveArgs args;
     const gchar *key;
@@ -1715,6 +1819,7 @@ pixmap_draw_pixbuf(GwyContainer *data,
 
     settings = gwy_app_settings_get();
     pixmap_save_load_args(settings, &args);
+    args.supports_16bit = supports_16bit;
     gwy_app_data_browser_get_current(GWY_APP_DATA_VIEW, &args.data_view,
                                      GWY_APP_DATA_FIELD, &args.dfield,
                                      0);
@@ -1740,33 +1845,85 @@ pixmap_draw_pixbuf(GwyContainer *data,
         g_free(args.inset_length);
         return NULL;
     }
-    pixbuf = pixmap_real_draw_pixbuf(data, &args);
+    pixbuf = pixmap_draw(data, &args);
     pixmap_save_save_args(settings, &args);
     g_free(args.inset_length);
 
     return pixbuf;
 }
 
+static GwyPixbuf*
+pixmap_draw(GwyContainer *data,
+            PixmapSaveArgs *args)
+{
+    if (args->supports_16bit && args->grayscale)
+        return pixmap_draw_heightfield(args);
+    else {
+        GwyPixbuf *gwypixbuf = g_new(GwyPixbuf, 1);
+
+        gwypixbuf->owner = pixmap_draw_presentational(data, args);
+        gwypixbuf->colorspace = gdk_pixbuf_get_colorspace(gwypixbuf->owner);
+        gwypixbuf->bit_depth = gdk_pixbuf_get_bits_per_sample(gwypixbuf->owner);
+        gwypixbuf->nchannels = gdk_pixbuf_get_n_channels(gwypixbuf->owner);
+        gwypixbuf->width = gdk_pixbuf_get_width(gwypixbuf->owner);
+        gwypixbuf->height = gdk_pixbuf_get_height(gwypixbuf->owner);
+        gwypixbuf->rowstride = gdk_pixbuf_get_rowstride(gwypixbuf->owner);
+        gwypixbuf->pixels = gdk_pixbuf_get_pixels(gwypixbuf->owner);
+        return gwypixbuf;
+    }
+}
+
+static void
+gwy_pixbuf_free(GwyPixbuf *gwypixbuf)
+{
+    if (gwypixbuf->owner)
+        g_object_unref(gwypixbuf->owner);
+    else
+        g_free(gwypixbuf->pixels);
+
+    g_free(gwypixbuf);
+}
+
 static GdkPixbuf*
-pixmap_real_draw_pixbuf(GwyContainer *data,
-                        PixmapSaveArgs *args)
+pixmap_draw_presentational(GwyContainer *data,
+                           PixmapSaveArgs *args)
 {
     GtkWidget *data_window;
     GwyPixmapLayer *layer;
-    GwyGradient *gradient;
     GtkWidget *coloraxis;
     GdkPixbuf *pixbuf, *datapixbuf, *tmpixbuf;
     GdkPixbuf *hrpixbuf = NULL, *vrpixbuf = NULL, *scalepixbuf = NULL;
     GwySIUnit *siunit_xy, *siunit_z;
-    const guchar *samples, *name;
-    const gchar *key;
     guchar *pixels;
-    gint zwidth, zheight, hrh, vrw, scw, nsamp, y, lw;
+    gint zwidth, zheight, hrh, vrw, scw, y, lw;
     gboolean has_presentation;
     gdouble fontzoom, min, max;
     gint border = 20;
     gint gap = 20;
     gint fmw = 18;
+
+    if (args->supports_16bit && args->grayscale) {
+        GwyGradient *gradient;
+        gint width = args->zoom * gwy_data_field_get_xres(args->dfield);
+        gint height = args->zoom * gwy_data_field_get_yres(args->dfield);
+
+        width = MAX(width, 2);
+        height = MAX(height, 2);
+        datapixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, 8,
+                                    gwy_data_field_get_xres(args->dfield),
+                                    gwy_data_field_get_yres(args->dfield));
+
+        gradient = gwy_gradients_get_gradient("Gray");
+        gwy_resource_use(GWY_RESOURCE(gradient));
+        gwy_pixbuf_draw_data_field(datapixbuf, args->dfield, gradient);
+        gwy_resource_release(GWY_RESOURCE(gradient));
+
+        pixbuf = gdk_pixbuf_scale_simple(datapixbuf, width, height,
+                                         GDK_INTERP_TILES);
+        g_object_unref(datapixbuf);
+
+        return pixbuf;
+    }
 
     data_window = gtk_widget_get_toplevel(GTK_WIDGET(args->data_view));
     g_return_val_if_fail(gwy_data_view_get_data(args->data_view) == data, NULL);
@@ -1779,14 +1936,6 @@ pixmap_real_draw_pixbuf(GwyContainer *data,
     siunit_xy = gwy_data_field_get_si_unit_xy(args->dfield);
     has_presentation
         = gwy_layer_basic_get_has_presentation(GWY_LAYER_BASIC(layer));
-    key = gwy_layer_basic_get_gradient_key(GWY_LAYER_BASIC(layer));
-    name = NULL;
-    if (key)
-        gwy_container_gis_string_by_name(data, key, &name);
-    gradient = gwy_gradients_get_gradient(name);
-    gwy_resource_use(GWY_RESOURCE(gradient));
-    samples = gwy_gradient_get_samples(gradient, &nsamp);
-    gwy_resource_release(GWY_RESOURCE(gradient));
 
     datapixbuf = gwy_data_view_export_pixbuf(args->data_view,
                                              args->zoom,
@@ -1895,12 +2044,23 @@ pixmap_real_draw_pixbuf(GwyContainer *data,
         g_object_unref(vrpixbuf);
     }
     if (args->ztype == PIXMAP_FMSCALE) {
+        GwyGradient *gradient;
+        const guchar *name = NULL, *key, *samples;
+        gint nsamples;
+
         gdk_pixbuf_copy_area(scalepixbuf,
                             0, 0, scw, zheight + 2*lw,
                             pixbuf,
                             border + vrw + zwidth + 2*lw + gap + fmw + 2*lw,
                             hrh + border);
         g_object_unref(scalepixbuf);
+
+        key = gwy_layer_basic_get_gradient_key(GWY_LAYER_BASIC(layer));
+        if (key)
+            gwy_container_gis_string_by_name(data, key, &name);
+        gradient = gwy_gradients_get_gradient(name);
+        gwy_resource_use(GWY_RESOURCE(gradient));
+        samples = gwy_gradient_get_samples(gradient, &nsamples);
 
         pixels = gdk_pixbuf_get_pixels(pixbuf);
         for (y = 0; y < zheight; y++) {
@@ -1910,13 +2070,15 @@ pixmap_real_draw_pixbuf(GwyContainer *data,
             row = pixels
                 + gdk_pixbuf_get_rowstride(pixbuf)*(border + hrh + lw + y)
                 + 3*(int)(border + vrw + zwidth + 2*lw + gap + lw);
-            k = nsamp-1 - floor(nsamp*y/zheight);
+            k = nsamples-1 - floor(nsamples*y/zheight);
             for (j = 0; j < fmw; j++) {
                 row[3*j] = samples[4*k];
                 row[3*j + 1] = samples[4*k + 1];
                 row[3*j + 2] = samples[4*k + 2];
             }
         }
+
+        gwy_resource_release(GWY_RESOURCE(gradient));
     }
 
     if (args->xytype == PIXMAP_SCALEBAR && args->ztype == PIXMAP_NONE)
@@ -1964,6 +2126,41 @@ pixmap_real_draw_pixbuf(GwyContainer *data,
     return pixbuf;
 }
 
+static GwyPixbuf*
+pixmap_draw_heightfield(PixmapSaveArgs *args)
+{
+    GwyPixbuf *gwypixbuf;
+    gdouble min, max;
+
+    g_return_val_if_fail(args->supports_16bit && args->grayscale, NULL);
+
+    gwypixbuf = g_new(GwyPixbuf, 1);
+    gwypixbuf->colorspace = GWY_COLORSPACE_GRAY;
+    gwypixbuf->bit_depth = args->grayscale;
+    gwypixbuf->nchannels = 1;
+    gwypixbuf->width = gwy_data_field_get_xres(args->dfield);
+    gwypixbuf->height = gwy_data_field_get_yres(args->dfield);
+    gwypixbuf->rowstride = gwypixbuf->width * (gwypixbuf->bit_depth/8);
+    gwypixbuf->pixels = g_malloc(gwypixbuf->rowstride * gwypixbuf->height);
+    gwypixbuf->owner = NULL;
+
+    gwy_data_field_get_min_max(args->dfield, &min, &max);
+    if (min == max)
+        memset(gwypixbuf->pixels, 0, gwypixbuf->rowstride * gwypixbuf->height);
+    else {
+        guint16 *pixels = (guint16*)gwypixbuf->pixels;
+        gdouble q = 65535.999/(max - min);
+        const gdouble *d;
+        guint i;
+
+        d = gwy_data_field_get_data_const(args->dfield);
+        for (i = 0; i < gwypixbuf->height * gwypixbuf->width; i++)
+            pixels[i] = (guint16)(q*(d[i] - min));
+    }
+
+    return gwypixbuf;
+}
+
 static void
 save_calculate_resolutions(PixmapSaveArgs *args)
 {
@@ -1994,7 +2191,7 @@ save_update_preview(PixmapSaveControls *controls)
         && controls->args->xytype != PIXMAP_RULERS)
         controls->args->zoom *= 1.4;
 
-    pixbuf = pixmap_real_draw_pixbuf(controls->data, controls->args);
+    pixbuf = pixmap_draw_presentational(controls->data, controls->args);
     gtk_image_set_from_pixbuf(GTK_IMAGE(controls->image), pixbuf);
     g_object_unref(pixbuf);
 
@@ -2008,8 +2205,17 @@ static void
 save_update_sensitivity(PixmapSaveControls *controls)
 {
     gboolean sens = controls->args->xytype == PIXMAP_SCALEBAR;
+    gboolean pmode = !(controls->args->grayscale
+                       && controls->args->supports_16bit);
     guint i;
     GSList *l;
+
+    gtk_widget_set_sensitive(controls->right_column, pmode);
+    gtk_widget_set_sensitive(controls->left_column, pmode);
+
+    /* Don't update individual widgets when they are insensitive anyway */
+    if (!pmode)
+        return;
 
     gtk_widget_set_sensitive(controls->inset_color_label, sens);
     gtk_widget_set_sensitive(controls->inset_color, sens);
@@ -2310,6 +2516,15 @@ select_inset_color(GwyColorButton *button,
     save_update_preview(controls);
 }
 
+static void
+grayscale_changed(GtkToggleButton *check,
+                  PixmapSaveControls *controls)
+{
+    controls->args->grayscale = gtk_toggle_button_get_active(check) ? 16 : 0;
+    save_update_sensitivity(controls);
+    save_update_preview(controls);
+}
+
 static gboolean
 pixmap_save_dialog(GwyContainer *data,
                    PixmapSaveArgs *args,
@@ -2318,7 +2533,7 @@ pixmap_save_dialog(GwyContainer *data,
     enum { RESPONSE_RESET = 1 };
 
     PixmapSaveControls controls;
-    GtkWidget *dialog, *spin, *hbox, *align, *check, *label;
+    GtkWidget *dialog, *spin, *vbox, *hbox, *align, *check, *label;
     GtkTable *table;
     GtkObject *adj;
     gdouble minzoom, maxzoom;
@@ -2352,13 +2567,14 @@ pixmap_save_dialog(GwyContainer *data,
      * Left column
      ********************************************************************/
 
-    align = gtk_alignment_new(0.0, 0.0, 0.0, 0.0);
-    gtk_box_pack_start(GTK_BOX(hbox), align, FALSE, FALSE, 0);
+    vbox = gtk_vbox_new(FALSE, 8);
+    gtk_box_pack_start(GTK_BOX(hbox), vbox, FALSE, FALSE, 0);
 
     table = GTK_TABLE(gtk_table_new(12, 3, FALSE));
     gtk_table_set_row_spacings(table, 2);
     gtk_table_set_col_spacings(table, 6);
-    gtk_container_add(GTK_CONTAINER(align), GTK_WIDGET(table));
+    gtk_box_pack_start(GTK_BOX(vbox), GTK_WIDGET(table), FALSE, FALSE, 0);
+    controls.left_column = GTK_WIDGET(table);
     row = 0;
 
     gtk_table_attach(table,
@@ -2437,13 +2653,35 @@ pixmap_save_dialog(GwyContainer *data,
     row++;
 
     check = gtk_check_button_new_with_mnemonic(_("Draw _selection"));
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(check), 
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(check),
                                  args->draw_selection);
     gtk_table_attach(table, check, 0, 3, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
     g_signal_connect(check, "toggled",
                      G_CALLBACK(draw_selection_changed), &controls);
     controls.draw_selection = check;
+    row++;
+
+    table = GTK_TABLE(gtk_table_new(12, 3, FALSE));
+    gtk_table_set_row_spacings(table, 2);
+    gtk_table_set_col_spacings(table, 6);
+    gtk_box_pack_start(GTK_BOX(vbox), GTK_WIDGET(table), FALSE, FALSE, 0);
+    row = 0;
+
+    gtk_table_attach(table, gwy_label_new_header(_("Grayscale Mode")),
+                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    row++;
+
+    check = gtk_check_button_new_with_mnemonic(_("Export as 1_6 bit "
+                                                 "grayscale"));
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(check),
+                                 args->supports_16bit && args->grayscale);
+    gtk_widget_set_sensitive(check, args->supports_16bit);
+    gtk_table_attach(table, check, 0, 3, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    g_signal_connect(check, "toggled",
+                     G_CALLBACK(grayscale_changed), &controls);
+    controls.grayscale = check;
     row++;
 
     /********************************************************************
@@ -2457,6 +2695,7 @@ pixmap_save_dialog(GwyContainer *data,
     gtk_table_set_row_spacings(table, 2);
     gtk_table_set_col_spacings(table, 6);
     gtk_container_add(GTK_CONTAINER(align), GTK_WIDGET(table));
+    controls.right_column = GTK_WIDGET(table);
     row = 0;
 
     gtk_table_attach(table, gwy_label_new_header(_("Lateral Scale")),
@@ -2499,7 +2738,7 @@ pixmap_save_dialog(GwyContainer *data,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
     controls.inset_pos_label[2] = label = gtk_label_new(_("center"));
-    gtk_table_attach(table, label, 2, 3, row, row+1, 
+    gtk_table_attach(table, label, 2, 3, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
     controls.inset_pos_label[3] = label = gtk_label_new(_("right"));
@@ -2552,8 +2791,6 @@ pixmap_save_dialog(GwyContainer *data,
                              G_CALLBACK(inset_length_set_auto), &controls);
     gtk_table_attach(table, controls.inset_length_auto,
                      3, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
-
-    save_update_sensitivity(&controls);
     gtk_table_set_row_spacing(table, row, 8);
     row++;
 
@@ -2569,6 +2806,8 @@ pixmap_save_dialog(GwyContainer *data,
                                     NULL);
     row = gwy_radio_buttons_attach_to_table(controls.ztypes, table, 3, row);
     gtk_table_set_row_spacing(table, row-1, 8);
+
+    save_update_sensitivity(&controls);
 
     /********************************************************************
      * Preview
@@ -3061,13 +3300,14 @@ find_format(const gchar *name)
 static const gchar draw_mask_key[]      = "/module/pixmap/draw_mask";
 static const gchar draw_selection_key[] = "/module/pixmap/draw_selection";
 static const gchar font_size_key[]      = "/module/pixmap/font_size";
-static const gchar xytype_key[]         = "/module/pixmap/xytype";
-static const gchar ztype_key[]          = "/module/pixmap/ztype";
+static const gchar grayscale_key[]      = "/module/pixmap/grayscale";
 static const gchar inset_color_key[]    = "/module/pixmap/inset_color";
-static const gchar inset_pos_key[]      = "/module/pixmap/inset_pos";
 static const gchar inset_length_key[]   = "/module/pixmap/inset_length";
+static const gchar inset_pos_key[]      = "/module/pixmap/inset_pos";
 static const gchar scale_font_key[]     = "/module/pixmap/scale_font";
+static const gchar xytype_key[]         = "/module/pixmap/xytype";
 static const gchar zoom_key[]           = "/module/pixmap/zoom";
+static const gchar ztype_key[]          = "/module/pixmap/ztype";
 
 static void
 pixmap_save_sanitize_args(PixmapSaveArgs *args)
@@ -3082,6 +3322,7 @@ pixmap_save_sanitize_args(PixmapSaveArgs *args)
     args->draw_selection = !!args->draw_selection;
     args->scale_font = !!args->scale_font;
     args->font_size = CLAMP(args->font_size, 1.2, 120.0);
+    args->grayscale = (args->grayscale == 16) ? 16 : 0;
 }
 
 static void
@@ -3105,6 +3346,7 @@ pixmap_save_load_args(GwyContainer *container,
                                      &args->font_size);
     gwy_container_gis_string_by_name(container, inset_length_key,
                                      (const guchar**)&args->inset_length);
+    gwy_container_gis_int32_by_name(container, grayscale_key, &args->grayscale);
     args->inset_length = g_strdup(args->inset_length);
     pixmap_save_sanitize_args(args);
 }
@@ -3125,6 +3367,7 @@ pixmap_save_save_args(GwyContainer *container,
     gwy_container_set_boolean_by_name(container, scale_font_key,
                                       args->scale_font);
     gwy_container_set_double_by_name(container, font_size_key, args->font_size);
+    gwy_container_set_int32_by_name(container, grayscale_key, args->grayscale);
 }
 
 static const gchar xreal_key[]       = "/module/pixmap/xreal";
