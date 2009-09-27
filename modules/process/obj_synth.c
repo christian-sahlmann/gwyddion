@@ -65,6 +65,7 @@ typedef enum {
     OBJ_SYNTH_THATCH   = 3,
     OBJ_SYNTH_DOUGHNUT = 4,
     OBJ_SYNTH_4HEDRON  = 5,
+    OBJ_SYNTH_BOX      = 6,
     OBJ_SYNTH_NTYPES
 } ObjSynthType;
 
@@ -221,6 +222,11 @@ static void        create_pyramid       (GwyDataField *feature,
                                          gdouble aspect,
                                          gdouble height,
                                          gdouble angle);
+static void        create_box           (GwyDataField *feature,
+                                         gdouble size,
+                                         gdouble aspect,
+                                         gdouble height,
+                                         gdouble angle);
 static void        create_nugget        (GwyDataField *feature,
                                          gdouble size,
                                          gdouble aspect,
@@ -250,6 +256,7 @@ static glong       calculate_n_objects  (const ObjSynthArgs *args,
                                          guint yres);
 static gdouble     getcov_sphere        (gdouble aspect);
 static gdouble     getcov_pyramid       (gdouble aspect);
+static gdouble     getcov_box           (gdouble aspect);
 static gdouble     getcov_nugget        (gdouble aspect);
 static gdouble     getcov_thatch        (gdouble aspect);
 static gdouble     getcov_doughnut      (gdouble aspect);
@@ -281,6 +288,7 @@ static const GwyDimensionArgs dims_defaults = GWY_DIMENSION_ARGS_INIT;
 static const ObjSynthFeature features[] = {
     { OBJ_SYNTH_SPHERE,   N_("Spheres"),      &create_sphere,   &getcov_sphere,   },
     { OBJ_SYNTH_PYRAMID,  N_("Pyramids"),     &create_pyramid,  &getcov_pyramid,  },
+    { OBJ_SYNTH_BOX,      N_("Boxes"),        &create_box,      &getcov_box,      },
     { OBJ_SYNTH_NUGGET,   N_("Nuggets"),      &create_nugget,   &getcov_nugget,   },
     { OBJ_SYNTH_THATCH,   N_("Thatches"),     &create_thatch,   &getcov_thatch,   },
     { OBJ_SYNTH_DOUGHNUT, N_("Dougnuts"),     &create_doughnut, &getcov_doughnut, },
@@ -292,7 +300,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Generates randomly patterned surfaces by placing objects."),
     "Yeti <yeti@gwyddion.net>",
-    "1.0",
+    "1.1",
     "David Nečas (Yeti)",
     "2009",
 };
@@ -680,6 +688,20 @@ obj_synth_dialog(ObjSynthArgs *args,
     }
 }
 
+static const ObjSynthFeature*
+get_feature(guint type)
+{
+    guint i;
+
+    for (i = 0; i < G_N_ELEMENTS(features); i++) {
+        if (features[i].type == type)
+            return features + i;
+    }
+    g_warning("Unknown featue %u\n", type);
+
+    return features + 0;
+}
+
 static GtkWidget*
 feature_selector_new(ObjSynthControls *controls)
 {
@@ -1056,9 +1078,11 @@ object_synth_iter(GwyDataField *surface,
                   gint *indices)
 {
     gint xres, yres, ncells, k;
+    const ObjSynthFeature *feature;
 
     g_return_if_fail(nobjects <= nxcells*nycells);
 
+    feature = get_feature(args->type);
     xres = gwy_data_field_get_xres(surface);
     yres = gwy_data_field_get_yres(surface);
     ncells = nxcells*nycells;
@@ -1097,7 +1121,7 @@ object_synth_iter(GwyDataField *surface,
             angle += rand_gen_set_gauss(rngset, RNG_ANGLE,
                                         2*args->angle_noise);
 
-        features[args->type].create(object, size, aspect, height, angle);
+        feature->create(object, size, aspect, height, angle);
 
         from = (j*xres + nxcells/2)/nxcells;
         to = (j*xres + xres + nxcells/2)/nxcells;
@@ -1175,6 +1199,39 @@ create_pyramid(GwyDataField *feature,
             yc = (x*s + y*c)/b;
             r = 1.0 - MAX(fabs(xc), fabs(yc));
             z[i*xres + j] = (r > 0.0) ? height*r : 0.0;
+        }
+    }
+}
+
+static void
+create_box(GwyDataField *feature,
+           gdouble size,
+           gdouble aspect,
+           gdouble height,
+           gdouble angle)
+{
+    gdouble a, b, c, s, r, x, y, xc, yc;
+    gint xres, yres, i, j;
+    gdouble *z;
+
+    a = size*sqrt(aspect);
+    b = size/sqrt(aspect);
+    c = cos(angle);
+    s = sin(angle);
+    xres = (gint)ceil(2*(a*fabs(c) + b*fabs(s)) + 1) | 1;
+    yres = (gint)ceil(2*(a*fabs(s) + b*fabs(c)) + 1) | 1;
+
+    gwy_data_field_resample(feature, xres, yres, GWY_INTERPOLATION_NONE);
+    z = gwy_data_field_get_data(feature);
+    for (i = 0; i < yres; i++) {
+        y = i - yres/2;
+        for (j = 0; j < xres; j++) {
+            x = j - xres/2;
+
+            xc = (x*c - y*s)/a;
+            yc = (x*s + y*c)/b;
+            r = 1.0 - MAX(fabs(xc), fabs(yc));
+            z[i*xres + j] = (r >= 0.0) ? height : 0.0;
         }
     }
 }
@@ -1389,8 +1446,9 @@ calculate_n_objects(const ObjSynthArgs *args,
                     guint xres, guint yres)
 {
     /* The distribution of area differs from the distribution of size. */
+    const ObjSynthFeature *feature = get_feature(args->type);
     gdouble noise_corr = exp(2.0*args->size_noise*args->size_noise);
-    gdouble area_ratio = features[args->type].get_coverage(args->aspect);
+    gdouble area_ratio = feature->get_coverage(args->aspect);
     gdouble mean_obj_area = args->size*args->size * area_ratio * noise_corr;
     gdouble must_cover = args->coverage*xres*yres;
     return (glong)ceil(must_cover/mean_obj_area);
@@ -1404,6 +1462,12 @@ getcov_sphere(G_GNUC_UNUSED gdouble aspect)
 
 static gdouble
 getcov_pyramid(G_GNUC_UNUSED gdouble aspect)
+{
+    return 1.0;
+}
+
+static gdouble
+getcov_box(G_GNUC_UNUSED gdouble aspect)
 {
     return 1.0;
 }
