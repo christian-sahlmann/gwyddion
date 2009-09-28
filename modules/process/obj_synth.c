@@ -35,6 +35,11 @@
 
 #define OBJ_SYNTH_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
+#define DECLARE_OBJECT(name) \
+    static void create_##name(GwyDataField *feature, gdouble size, \
+                              gdouble aspect, gdouble height, gdouble angle); \
+    static gdouble getcov_##name(gdouble aspect)
+
 enum {
     PREVIEW_SIZE = 320,
 };
@@ -66,6 +71,7 @@ typedef enum {
     OBJ_SYNTH_DOUGHNUT = 4,
     OBJ_SYNTH_4HEDRON  = 5,
     OBJ_SYNTH_BOX      = 6,
+    OBJ_SYNTH_CONE     = 7,
     OBJ_SYNTH_NTYPES
 } ObjSynthType;
 
@@ -212,41 +218,6 @@ static void        object_synth_iter    (GwyDataField *surface,
                                          gint yoff,
                                          gint nobjects,
                                          gint *indices);
-static void        create_sphere        (GwyDataField *feature,
-                                         gdouble size,
-                                         gdouble aspect,
-                                         gdouble height,
-                                         gdouble angle);
-static void        create_pyramid       (GwyDataField *feature,
-                                         gdouble size,
-                                         gdouble aspect,
-                                         gdouble height,
-                                         gdouble angle);
-static void        create_box           (GwyDataField *feature,
-                                         gdouble size,
-                                         gdouble aspect,
-                                         gdouble height,
-                                         gdouble angle);
-static void        create_nugget        (GwyDataField *feature,
-                                         gdouble size,
-                                         gdouble aspect,
-                                         gdouble height,
-                                         gdouble angle);
-static void        create_thatch        (GwyDataField *feature,
-                                         gdouble size,
-                                         gdouble aspect,
-                                         gdouble height,
-                                         gdouble angle);
-static void        create_doughnut      (GwyDataField *feature,
-                                         gdouble size,
-                                         gdouble aspect,
-                                         gdouble height,
-                                         gdouble angle);
-static void        create_4hedron       (GwyDataField *feature,
-                                         gdouble size,
-                                         gdouble aspect,
-                                         gdouble height,
-                                         gdouble angle);
 static void        place_add_min        (GwyDataField *surface,
                                          GwyDataField *object,
                                          gint col,
@@ -254,13 +225,6 @@ static void        place_add_min        (GwyDataField *surface,
 static glong       calculate_n_objects  (const ObjSynthArgs *args,
                                          guint xres,
                                          guint yres);
-static gdouble     getcov_sphere        (gdouble aspect);
-static gdouble     getcov_pyramid       (gdouble aspect);
-static gdouble     getcov_box           (gdouble aspect);
-static gdouble     getcov_nugget        (gdouble aspect);
-static gdouble     getcov_thatch        (gdouble aspect);
-static gdouble     getcov_doughnut      (gdouble aspect);
-static gdouble     getcov_4hedron       (gdouble aspect);
 static RandGenSet* rand_gen_set_new     (guint n);
 static void        rand_gen_set_init    (RandGenSet *rngset,
                                          guint seed);
@@ -271,6 +235,15 @@ static void        obj_synth_load_args  (GwyContainer *container,
 static void        obj_synth_save_args  (GwyContainer *container,
                                          const ObjSynthArgs *args,
                                          const GwyDimensionArgs *dimsargs);
+
+DECLARE_OBJECT(sphere);
+DECLARE_OBJECT(pyramid);
+DECLARE_OBJECT(box);
+DECLARE_OBJECT(nugget);
+DECLARE_OBJECT(thatch);
+DECLARE_OBJECT(doughnut);
+DECLARE_OBJECT(4hedron);
+DECLARE_OBJECT(cone);
 
 static const ObjSynthArgs obj_synth_defaults = {
     PAGE_DIMENSIONS,
@@ -289,6 +262,7 @@ static const ObjSynthFeature features[] = {
     { OBJ_SYNTH_SPHERE,   N_("Spheres"),      &create_sphere,   &getcov_sphere,   },
     { OBJ_SYNTH_PYRAMID,  N_("Pyramids"),     &create_pyramid,  &getcov_pyramid,  },
     { OBJ_SYNTH_BOX,      N_("Boxes"),        &create_box,      &getcov_box,      },
+    { OBJ_SYNTH_CONE,     N_("Cones"),        &create_cone,     &getcov_cone,     },
     { OBJ_SYNTH_NUGGET,   N_("Nuggets"),      &create_nugget,   &getcov_nugget,   },
     { OBJ_SYNTH_THATCH,   N_("Thatches"),     &create_thatch,   &getcov_thatch,   },
     { OBJ_SYNTH_DOUGHNUT, N_("Dougnuts"),     &create_doughnut, &getcov_doughnut, },
@@ -1237,6 +1211,39 @@ create_box(GwyDataField *feature,
 }
 
 static void
+create_cone(GwyDataField *feature,
+            gdouble size,
+            gdouble aspect,
+            gdouble height,
+            gdouble angle)
+{
+    gdouble a, b, c, s, r, x, y, xc, yc;
+    gint xres, yres, i, j;
+    gdouble *z;
+
+    a = size*sqrt(aspect);
+    b = size/sqrt(aspect);
+    c = cos(angle);
+    s = sin(angle);
+    xres = (gint)ceil(2*hypot(a*c, b*s) + 1) | 1;
+    yres = (gint)ceil(2*hypot(a*s, b*c) + 1) | 1;
+
+    gwy_data_field_resample(feature, xres, yres, GWY_INTERPOLATION_NONE);
+    z = gwy_data_field_get_data(feature);
+    for (i = 0; i < yres; i++) {
+        y = i - yres/2;
+        for (j = 0; j < xres; j++) {
+            x = j - xres/2;
+
+            xc = (x*c - y*s)/a;
+            yc = (x*s + y*c)/b;
+            r = 1.0 - hypot(xc, yc);
+            z[i*xres + j] = (r > 0.0) ? height*r : 0.0;
+        }
+    }
+}
+
+static void
 create_nugget(GwyDataField *feature,
               gdouble size,
               gdouble aspect,
@@ -1470,6 +1477,12 @@ static gdouble
 getcov_box(G_GNUC_UNUSED gdouble aspect)
 {
     return 1.0;
+}
+
+static gdouble
+getcov_cone(G_GNUC_UNUSED gdouble aspect)
+{
+    return G_PI/4.0;
 }
 
 static gdouble
