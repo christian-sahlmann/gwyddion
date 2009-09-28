@@ -170,6 +170,7 @@ bcrfile_load(const gchar *filename,
     gsize header_size, size = 0;
     GError *err = NULL;
     GwyDataField *dfield = NULL, *voidmask = NULL;
+    GwyTextHeaderParser parser;
     GHashTable *bcrmeta = NULL;
     gboolean utf16 = FALSE;
 
@@ -217,7 +218,11 @@ bcrfile_load(const gchar *filename,
         header = g_memdup(buffer, header_size);
         header[header_size-1] = '\0';
     }
-    bcrmeta = gwy_parse_text_header_simple(header, "#\n%", "=");
+
+    gwy_clear(&parser, 1);
+    parser.comment_prefix = "#\n%";
+    parser.key_value_separator = "=";
+    bcrmeta = gwy_text_header_parse(header, &parser, NULL, NULL);
 
     dfield = file_load_real(buffer + header_size, size, header_size, bcrmeta,
                             &voidmask, error);

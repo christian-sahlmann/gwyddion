@@ -19,10 +19,21 @@
  */
 
 #include "config.h"
+#include <stdarg.h>
+#include <string.h>
 #include <libgwyddion/gwymacros.h>
 #include <libprocess/stats.h>
 #include <app/data-browser.h>
 #include <app/gwymoduleutils-file.h>
+
+struct _GwyTextHeaderContext {
+    const GwyTextHeaderParser *parser;
+    GHashTable *hash;
+    GError *error;
+    gchar *section;
+    gpointer user_data;
+    guint lineno;
+};
 
 /**
  * gwy_app_channel_check_nonsquare:
@@ -192,6 +203,28 @@ gwy_app_channel_remove_bad_data(GwyDataField *dfield, GwyDataField *mfield)
     return mcount;
 }
 
+/**
+ * gwy_text_header_error_quark:
+ *
+ * Returns error domain for expression parsin and evaluation.
+ *
+ * See and use %GWY_TEXT_HEADER_ERROR.
+ *
+ * Returns: The error domain.
+ *
+ * Since: 2.18
+ **/
+GQuark
+gwy_text_header_error_quark(void)
+{
+    static GQuark error_domain = 0;
+
+    if (!error_domain)
+        error_domain = g_quark_from_static_string("gwy-text-header-error-quark");
+
+    return error_domain;
+}
+
 static inline guint
 chomp(gchar *line,
       guint len)
@@ -216,20 +249,61 @@ strip(gchar *line,
     return line;
 }
 
-GHashTable*
-gwy_parse_text_header(gchar *buffer,
-                      const gchar *comment_prefix,
-                      const gchar *section_template,
-                      const gchar *endsection_template,
-                      const gchar *section_accessor,
-                      const gchar *line_prefix,
-                      const gchar *key_value_separator,
-                      GwyTextHeaderItemFunc postprocess,
-                      gpointer user_data,
-                      GDestroyNotify destroy_value)
+static void
+check_fatal_error(GwyTextHeaderContext *context)
 {
-    GHashTable *hash;
-    gchar *line, *section = NULL;
+    if (!context->parser->error
+        || !context->parser->error(context, context->error, context->user_data))
+        g_clear_error(&context->error);
+}
+
+static void
+make_noise(GwyTextHeaderContext *context,
+           GwyTextHeaderError code,
+           const gchar *format,
+           ...)
+{
+    gchar *s;
+    va_list ap;
+
+    if (!context->parser->error)
+        return;
+
+    va_start(ap, format);
+    s = g_strdup_vprintf(format, ap);
+    va_end(ap);
+    g_set_error_literal(&context->error, GWY_TEXT_HEADER_ERROR, code, s);
+    g_free(s);
+    check_fatal_error(context);
+}
+
+/**
+ * gwy_text_header_parse:
+ * @header: Text header to parse.  It must be %NULL-terminated and writable.
+ *          Its contents will be modified to directly embed the hash keys
+ *          and/or values.  It must not be freed while the returned hash
+ *          table is in use.
+ * @parser: Parser specification.
+ * @user_data: User data passed to parser callbacks.
+ * @error: Error to set on fatal errors.
+ *
+ * Parses a line-oriented text header into a hash table.
+ *
+ * See #GwyTextHeaderParser for details of memory and error handling.
+ *
+ * Returns: A newly created hash table with values indexed by they keys found
+ *          in the header.
+ *
+ * Since: 2.18.
+ **/
+GHashTable*
+gwy_text_header_parse(gchar *header,
+                      const GwyTextHeaderParser *parser,
+                      gpointer user_data,
+                      GError **error)
+{
+    GwyTextHeaderContext context;
+    gchar *line;
     const gchar *section_prefix = NULL, *section_suffix = NULL,
                 *endsect_prefix = NULL, *endsect_suffix = NULL,
                 **comments = NULL;
@@ -237,80 +311,83 @@ gwy_parse_text_header(gchar *buffer,
           endsect_prefix_len = 0, endsect_suffix_len = 0,
           comment_prefix_len = 0, line_prefix_len = 0;
     gchar equal_sign_char = 0;
-    guint i, j, ncomments = 0;
-    gboolean free_keys = FALSE, free_values = FALSE;
+    guint j, ncomments = 0;
+    gboolean free_keys = FALSE;
+
+    g_return_val_if_fail(parser->section_template
+                         || !parser->endsection_template,
+                         NULL);
+    g_return_val_if_fail(!parser->section_template == !parser->section_accessor,
+                         NULL);
+    g_return_val_if_fail(parser->item || !parser->destroy_key, NULL);
+    g_return_val_if_fail(parser->item || !parser->destroy_value, NULL);
 
     /* Split section templates to prefix and suffix. */
-    if (section_template) {
+    if (parser->section_template) {
         gchar *p;
 
-        if ((p = strchr(section_template, '\x1a'))) {
-            section_prefix = section_template;
-            section_prefix_len = p - section_template;
-            section_suffix = section_prefix + (p+1 - section_template);
-            section_suffix_len = strlen(section_suffix);
-            free_keys = TRUE;
-        }
-        else {
-            g_warning("Section template lacks substitute character \\x1a.");
-            section_template = NULL;
+        p = strchr(parser->section_template, '\x1a');
+        g_return_val_if_fail(p, NULL);
+        section_prefix = parser->section_template;
+        section_prefix_len = p - parser->section_template;
+        section_suffix = section_prefix + (p+1 - parser->section_template);
+        section_suffix_len = strlen(section_suffix);
+        free_keys = TRUE;
+    }
+
+    if (parser->endsection_template) {
+        gchar *p;
+
+        if ((p = strchr(parser->endsection_template, '\x1a'))) {
+            endsect_prefix = parser->endsection_template;
+            endsect_prefix_len = p - parser->endsection_template;
+            endsect_suffix = endsect_prefix + (p+1 - parser->endsection_template);
+            endsect_suffix_len = strlen(endsect_suffix);
         }
     }
 
-    if (endsection_template) {
-        if (section_template) {
-            gchar *p;
-
-            if ((p = strchr(endsection_template, '\x1a'))) {
-                endsect_prefix = endsection_template;
-                endsect_prefix_len = p - endsection_template;
-                endsect_suffix = endsect_prefix + (p+1 - endsection_template);
-                endsect_suffix_len = strlen(endsect_suffix);
-                endsection_template = NULL;
-            }
-        }
-        else {
-            g_warning("Endsection template without a section template.");
-            endsection_template = NULL;
-        }
-    }
-
-    if (comment_prefix) {
-        comment_prefix_len = strlen(comment_prefix);
-        if (strchr(comment_prefix, '\n')) {
+    if (parser->comment_prefix) {
+        comment_prefix_len = strlen(parser->comment_prefix);
+        if (strchr(parser->comment_prefix, '\n')) {
             const gchar *p;
 
-            for (j = 0, p = comment_prefix-1; p; p = strchr(p+1, '\n'), j++)
+            for (j = 0, p = parser->comment_prefix-1;
+                 p;
+                 p = strchr(p+1, '\n'), j++)
                 ;
             ncomments = j;
             comments = g_new(const gchar*, j+1);
-            comments[0] = comment_prefix;
+            comments[0] = parser->comment_prefix;
             j = 1;
             do {
                 if ((p = strchr(comments[j-1], '\n')))
                     comments[j++] = p+1;
             } while (p);
-            comments[j] = comment_prefix + comment_prefix_len + 1;
+            comments[j] = parser->comment_prefix + comment_prefix_len + 1;
         }
     }
 
-    if (line_prefix)
-        line_prefix_len = strlen(line_prefix);
-    if (key_value_separator && strlen(key_value_separator) == 1)
-        equal_sign_char = key_value_separator[0];
-    if (!section_accessor)
-        section_accessor = "";
-    if (postprocess)
-        free_values = TRUE;
+    if (parser->line_prefix)
+        line_prefix_len = strlen(parser->line_prefix);
+    if (parser->key_value_separator && strlen(parser->key_value_separator) == 1)
+        equal_sign_char = parser->key_value_separator[0];
 
     /* Build the hash table */
-    hash = g_hash_table_new_full(g_str_hash, g_str_equal,
-                                 free_keys ? g_free : NULL,
-                                 free_values ? destroy_value : NULL);
+    context.lineno = 0;
+    context.section = NULL;
+    context.error = NULL;
+    context.parser = parser;
+    context.user_data = user_data;
+    context.hash = g_hash_table_new_full(g_str_hash, g_str_equal,
+                                         parser->destroy_key
+                                         ? parser->destroy_key
+                                         : (free_keys ? g_free : NULL),
+                                         parser->destroy_value
+                                         ? parser->destroy_value : NULL);
 
-    for (line = gwy_str_next_line(&buffer), i = 0;
-         line;
-         line = gwy_str_next_line(&buffer), i++) {
+    for (line = gwy_str_next_line(&header);
+         line && !context.error;
+         line = gwy_str_next_line(&header), context.lineno++) {
         gchar *key, *value;
         guint len;
 
@@ -318,12 +395,13 @@ gwy_parse_text_header(gchar *buffer,
         if (!(len = chomp(line, strlen(line))))
             continue;
 
+        /* Header end marker */
+        if (parser->terminator
+            && gwy_strequal(line, parser->terminator))
+            break;
+
         /* Section ends -- before section starts beause they might look
          * similar. */
-        if (endsection_template && gwy_strequal(line, endsection_template)) {
-            section = NULL;
-            continue;
-        }
         if (endsect_prefix
             && len > endsect_prefix_len + endsect_suffix_len
             && strncmp(line, endsect_prefix, endsect_prefix_len) == 0
@@ -335,26 +413,43 @@ gwy_parse_text_header(gchar *buffer,
             endsection = strip(line + endsect_prefix_len,
                                len - endsect_prefix_len);
 
-            if (!section) {
-                g_warning("Section %s ended at line %u but it did not start.",
-                          endsection, i);
+            if (!context.section) {
+                make_noise(&context, GWY_TEXT_HEADER_ERROR_SECTION_END,
+                           _("Section %s ended at line %u but it has "
+                             "never started."),
+                           endsection, context.lineno);
                 continue;
             }
 
-            if (!gwy_strequal(endsection, section)) {
-                g_warning("Section %s ended at line %u instead of %s.",
-                          endsection, i, section);
+            if (!gwy_strequal(endsection, context.section)) {
+                make_noise(&context, GWY_TEXT_HEADER_ERROR_SECTION_END,
+                           _("Section %s ended at line %u instead of %s."),
+                           endsection, context.lineno, context.section);
                 continue;
             }
 
-            section = NULL;
+            if (parser->endsection
+                && !parser->endsection(&context, context.section, user_data,
+                                       &context.error))
+                check_fatal_error(&context);
+
+            context.section = NULL;
+            continue;
+        }
+        else if (parser->endsection_template
+                 && gwy_strequal(line, parser->endsection_template)) {
+            if (parser->endsection
+                && !parser->endsection(&context, context.section, user_data,
+                                       &context.error))
+                check_fatal_error(&context);
+            context.section = NULL;
             continue;
         }
 
         /* Sections starts */
         if (section_prefix
             && len > section_prefix_len + section_suffix_len
-            && strncmp(line, section_template, section_prefix_len) == 0
+            && strncmp(line, parser->section_template, section_prefix_len) == 0
             && gwy_strequal(line + len - section_suffix_len, section_suffix)) {
             gchar *newsection;
 
@@ -363,17 +458,24 @@ gwy_parse_text_header(gchar *buffer,
             newsection = strip(line + section_prefix_len,
                                len - section_prefix_len);
 
-            if ((endsection_template || endsect_prefix) && section) {
-                g_warning("Section %s started at line %u before %s ended.",
-                          newsection, i, section);
+            if (parser->endsection_template && context.section) {
+                make_noise(&context, GWY_TEXT_HEADER_ERROR_SECTION_START,
+                           _("Section %s started at line %u before %s ended."),
+                           newsection, context.lineno, context.section);
             }
 
             if (!*newsection) {
-                g_warning("Empty section name at line %u.", i);
+                make_noise(&context, GWY_TEXT_HEADER_ERROR_SECTION_NAME,
+                           _("Empty section name at header line %u."),
+                           context.lineno);
                 continue;
             }
 
-            section = newsection;
+            context.section = newsection;
+            if (parser->section
+                && !parser->section(&context, context.section, user_data,
+                                    &context.error))
+                check_fatal_error(&context);
             continue;
         }
         /* Comments */
@@ -386,18 +488,21 @@ gwy_parse_text_header(gchar *buffer,
             if (j < ncomments)
                 continue;
         }
-        else if (comment_prefix
-                 && strncmp(line, comment_prefix, comment_prefix_len) == 0)
+        else if (parser->comment_prefix
+                 && strncmp(line, parser->comment_prefix,
+                            comment_prefix_len) == 0)
             continue;
 
         /* Line prefixes */
-        if (line_prefix) {
-            if (strncmp(line, line_prefix, line_prefix_len) == 0) {
+        if (parser->line_prefix) {
+            if (strncmp(line, parser->line_prefix, line_prefix_len) == 0) {
                 line += line_prefix_len;
                 len -= line_prefix_len;
             }
             else {
-                g_warning("Line %u lacks prefix %s.", i, line_prefix);
+                make_noise(&context, GWY_TEXT_HEADER_ERROR_PREFIX,
+                           _("Header line %u lacks prefix %s."),
+                           context.lineno, parser->line_prefix);
                 continue;
             }
         }
@@ -409,8 +514,8 @@ gwy_parse_text_header(gchar *buffer,
         /* Keys and values */
         if (equal_sign_char)
             value = strchr(line, equal_sign_char);
-        else if (key_value_separator)
-            value = strstr(line, key_value_separator);
+        else if (parser->key_value_separator)
+            value = strstr(line, parser->key_value_separator);
         else {
             for (value = line; !g_ascii_isspace(*value); value++) {
                 if (!*value) {
@@ -420,38 +525,88 @@ gwy_parse_text_header(gchar *buffer,
             }
         }
         if (!value) {
-            g_warning("Line %u lacks key-value separator.", i);
+            make_noise(&context, GWY_TEXT_HEADER_ERROR_GARBAGE,
+                       _("Header line %u lacks key-value separator."),
+                       context.lineno);
             continue;
         }
 
         *(value++) = '\0';
         if (!chomp(line, value - line - 1)) {
-            g_warning("Key at line %u is empty.", i);
+            make_noise(&context, GWY_TEXT_HEADER_ERROR_KEY,
+                       _("Key at header line %u is empty."), context.lineno);
             continue;
         }
         key = line;
         value = strip(value, len - (value - line));
 
-        if (section_template) {
-            if (section)
-                key = g_strconcat(section, section_accessor, key, NULL);
+        if (parser->section_template) {
+            if (context.section)
+                key = g_strconcat(context.section, parser->section_accessor,
+                                  key, NULL);
             else
                 key = g_strdup(key);
         }
 
-        if (postprocess) {
-            gpointer result = postprocess(key, value, user_data);
-
-            if (result)
-                g_hash_table_replace(hash, key, result);
+        if (parser->item) {
+            if (!parser->item(&context, context.hash, key, value,
+                              context.user_data, &context.error))
+                check_fatal_error(&context);
         }
         else
-            g_hash_table_replace(hash, key, value);
+            g_hash_table_replace(context.hash, key, value);
     }
 
     g_free(comments);
 
-    return hash;
+    if (parser->terminator && !line && !context.error)
+        make_noise(&context, GWY_TEXT_HEADER_ERROR_TERMINATOR,
+                   _("Header suddenly ended at line %u; end of header marker "
+                     "is missing"),
+                   context.lineno);
+
+    if (context.error) {
+        g_propagate_error(error, context.error);
+        g_hash_table_destroy(context.hash);
+        return NULL;
+    }
+
+    return context.hash;
+}
+
+/**
+ * gwy_text_header_context_get_section:
+ * @context: Header parsing context.
+ *
+ * Gets the currently open section.
+ *
+ * This function may be called if no sectioning is defined.  It simply
+ * returns %NULL then.
+ *
+ * Returns: The name of the currently open section, %NULL if there is none.
+ *
+ * Since: 2.18
+ **/
+const gchar*
+gwy_text_header_context_get_section(const GwyTextHeaderContext *context)
+{
+    return context->section;
+}
+
+/**
+ * gwy_text_header_context_get_lineno:
+ * @context: Header parsing context.
+ *
+ * Gets the current header line.
+ *
+ * Returns: The current line number, starting from zero.
+ *
+ * Since: 2.18
+ **/
+guint
+gwy_text_header_context_get_lineno(const GwyTextHeaderContext *context)
+{
+    return context->lineno;
 }
 
 /************************** Documentation ****************************/
@@ -755,6 +910,113 @@ gwy_parse_text_header(gchar *buffer,
  * Returns: The floating point value read from the buffer as a #gdouble.
  *
  * Since: 2.3
+ **/
+
+/**
+ * GWY_TEXT_HEADER_ERROR:
+ *
+ * Error domain for text header parsing. Errors in this domain will be from the
+ * #GwyTextHeaderError enumeration. See #GError for information on error
+ * domains.
+ *
+ * Since: 2.18
+ **/
+
+/**
+ * GwyTextHeaderError:
+ * @GWY_TEXT_HEADER_ERROR_SECTION_NAME: Section name is invalid.  It is raised
+ *                                      by the parser only for an empty section
+ *                                      name.
+ * @GWY_TEXT_HEADER_ERROR_SECTION_END: Section ended when a different section
+ *                                     or no section was open.  Note that
+ *                                     gwy_text_header_context_get_section()
+ *                                     returns the section being closed at the
+ *                                     time this error is raised.
+ * @GWY_TEXT_HEADER_ERROR_SECTION_START: Section started before the previous
+ *                                       ended.  This is raised only if
+ *                                       @endsection_template is set.
+ * @GWY_TEXT_HEADER_ERROR_PREFIX: Line lacks the mandatory prefix.
+ * @GWY_TEXT_HEADER_ERROR_GARBAGE: Line cannot be parsed into a key-value pair.
+ * @GWY_TEXT_HEADER_ERROR_KEY: Key name is invalid, namely empty.
+ * @GWY_TEXT_HEADER_ERROR_VALUE: Value is invalid.  This is never raised by
+ *                               the parser.
+ * @GWY_TEXT_HEADER_ERROR_TERMINATOR: The text header has ended without being
+ *                                    terminated by specified terminator.
+ *
+ * Error codes returned by text header parsing.
+ *
+ * Some errors, in particular %GWY_TEXT_HEADER_ERROR_KEY and
+ * %GWY_TEXT_HEADER_ERROR_VALUE are expected to be raised by user callbacks
+ * (they are not restricted to these codes though).
+ *
+ * Since: 2.18
+ **/
+
+/**
+ * GwyTextHeaderContext:
+ *
+ * #GwyTextHeaderContext represents the parsing state.  It is an opaque data
+ * structure and should be only manipulated with the functions below.
+ *
+ * Since: 2.18
+ **/
+
+/**
+ * GwyTextHeaderParser:
+ * @comment_prefix: Prefix denoting comment lines.  It is possible to specify
+ *                  multiple prefixes by separating them with newline ("\n").
+ * @section_template: Section start template.  It must contain the character
+ *                    "\x1a" in the place where the section name apprears.
+ *                    Example: "[Section \x1a]".
+ * @endsection_template: Section end template.  It may or may not contain the
+ *                       substitute character "\x1a" depending on whether the
+ *                       section end markers contain the section name.  It is
+ *                       invalid to set @endsection_template without setting
+ *                       @section_template.  Example: "[Section \x1a End]".
+ * @section_accessor: Glue to put between the section name and key when
+ *                    constructing hash table keys.  It is invalid to set
+ *                    @section_accessor without setting @section_template.
+ *                    Typically, "::" is used.
+ * @line_prefix: Mandatory prefix of each line.
+ * @key_value_separator: The string separating keys and values on each line.
+ *                       Typically, "=" or ":" is used.  When left %NULL,
+ *                       whitespace plays the role of the separator.  Of
+ *                       course, keys cannot contain whitespace then.
+ * @terminator: Line that marks end of the header.  It is mandatory if
+ *              specified, @GWY_TEXT_HEADER_ERROR_TERMINATOR is raised when
+ *              the header ends sooner than @terminator is found.
+ * @item: Callback called when a key-value pair is found.  If set it is
+ *        responsible for inserting the pair to the hash table with
+ *        g_hash_table_replace().  It is free to insert a different pair or
+ *        nothing.  It must return %FALSE if it raises an error.
+ * @section: Callback called when a section starts.  It must return %FALSE if
+ *           it raises an error.
+ * @endsection: Callback called when a section end.  It must return %FALSE if
+ *              it raises an error.
+ * @error: Callback called when an error occurs, including errors raised by
+ *         other user callbacks.  If it returns %TRUE the error is considered
+ *         fatal and the parsing terminates immediately.  If it is left unset
+ *         no errors are fatal hence no errors reported to the caller.
+ * @destroy_key: Function to destroy keys, passed to g_hash_table_new_full().
+ *               It is invalid to set @destroy_key if @item callback is not
+ *               set.
+ * @destroy_value: Function to destroy values, passed to
+ *                 g_hash_table_new_full().  It is invalid to set
+ *                 @destroy_value if @item callback is not set.
+ *
+ * Text header parser specification.
+ *
+ * Memory considerations: In general, the parser attempts to reuse the contents
+ * of @header directly for the hash keys and values.  There are two cases when
+ * it cannot: sectioning implies that keys must be constructed dynamically
+ * and the use of @item callback means the parser has no control on what is
+ * inserted into the hash table.
+ *
+ * This means that the @item callback must free @key if sectioning is used and
+ * it is not going to actually use it as the hash table key.  And, of course,
+ * suitable @destroy_key and @destroy_value functions must be set.
+ *
+ * Since: 2.18
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

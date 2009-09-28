@@ -157,6 +157,8 @@ static GwyDataField* igor_read_data_field(const IgorFile *igorfile,
                                           guint i,
                                           gboolean imaginary);
 static GwyContainer* igor_get_metadata   (IgorFile *igorfile);
+static GPtrArray*    read_channel_labels (const gchar *p,
+                                          guint n);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -208,6 +210,7 @@ igor_load(const gchar *filename,
 {
     GwyContainer *meta = NULL, *container = NULL;
     GwyDataField *dfield = NULL;
+    GwyTextHeaderParser parser;
     GHashTable *hash = NULL;
     IgorFile igorfile;
     IgorWaveHeader5 *wave5;
@@ -216,7 +219,7 @@ igor_load(const gchar *filename,
     gint xres, yres, nlayers;
     gsize expected_size, size = 0;
     gchar *note = NULL;
-    guint i, j;
+    guint i, nchannels;
     GQuark quark;
 
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
@@ -279,16 +282,16 @@ igor_load(const gchar *filename,
 
     container = gwy_container_new();
 
-    for (i = 0, j = 0; i < nlayers; i++, j++) {
+    for (i = 0, nchannels = 0; i < nlayers; i++, nchannels++) {
         dfield = igor_read_data_field(&igorfile, buffer, i, FALSE);
-        quark = gwy_app_get_data_key_for_id(j);
+        quark = gwy_app_get_data_key_for_id(nchannels);
         gwy_container_set_object(container, quark, dfield);
         g_object_unref(dfield);
 
         if (wave5->type & IGOR_COMPLEX) {
-            j++;
+            nchannels++;
             dfield = igor_read_data_field(&igorfile, buffer, i, TRUE);
-            quark = gwy_app_get_data_key_for_id(j);
+            quark = gwy_app_get_data_key_for_id(nchannels);
             gwy_container_set_object(container, quark, dfield);
             g_object_unref(dfield);
         }
@@ -302,8 +305,36 @@ igor_load(const gchar *filename,
         (p - buffer) + igorfile.header.note_size <= size) {
         /* This might be useful only for Asylum Research files */
         note = g_strndup((const gchar*)p, size);
-        hash = gwy_parse_text_header_simple(note, NULL, ":");
+        gwy_clear(&parser, 1);
+        parser.key_value_separator = ":";
+        hash = gwy_text_header_parse(note, &parser, NULL, NULL);
     }
+    p += igorfile.header.note_size;
+    p += igorfile.header.data_e_units_size;
+    for (i = 0; i < MAXDIMS; i++)
+        p += igorfile.header.dim_e_units_size[i];
+    for (i = 0; i < 2; i++)
+        p += igorfile.header.dim_labels_size[i];
+
+    /* I have no idea why the channel names are under index 2 or why they are
+     * numbered from 1.  This is just the way they do it at WaveMetrics. */
+    expected_size = (MAX_WAVE_NAME5 + 1)*(nchannels + 1);
+    if (igorfile.header.dim_labels_size[2] == expected_size
+        && (p - buffer) + expected_size <= size) {
+        GPtrArray *titles = read_channel_labels((const gchar*)p, nchannels);
+        gchar key[64];
+
+        for (i = 0; i < nchannels; i++) {
+            g_snprintf(key, sizeof(key), "/%d/data/title", i);
+            gwy_container_set_string_by_name(container, key,
+                                             g_ptr_array_index(titles, i));
+        }
+        /* Do not free the individual titles, the container has eaten them. */
+        g_ptr_array_free(titles, TRUE);
+    }
+
+    for (i = 2; i < MAXDIMS; i++)
+        p += igorfile.header.dim_labels_size[i];
 
 fail:
     gwy_file_abandon_contents(buffer, size, NULL);
@@ -647,6 +678,22 @@ igor_read_data_field(const IgorFile *igorfile,
     gwy_si_unit_set_from_string(unit, wave5->data_units);
 
     return dfield;
+}
+
+static GPtrArray*
+read_channel_labels(const gchar *p,
+                    guint n)
+{
+    GPtrArray *array = g_ptr_array_sized_new(n);
+    guint i;
+
+    for (i = 0; i < n; i++) {
+        g_ptr_array_add(array, g_strndup(p + (i + 1)*(MAX_WAVE_NAME5 + 1),
+                                         MAX_WAVE_NAME5));
+        gwy_debug("label%u=%s", i, (gchar*)g_ptr_array_index(array, i));
+    }
+
+    return array;
 }
 
 #if 0

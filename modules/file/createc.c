@@ -147,6 +147,7 @@ createc_load(const gchar *filename,
     gsize size = 0;
     guint len;
     GError *err = NULL;
+    GwyTextHeaderParser parser;
     GHashTable *hash = NULL;
     GwyDataField *dfield;
     CreatecVersion version;
@@ -166,8 +167,13 @@ createc_load(const gchar *filename,
     len = strlen(gwy_enum_to_string(version, versions, G_N_ELEMENTS(versions)));
     for (p = head + len; g_ascii_isspace(*p); p++)
         ;
-    /* There are lots of lines with just an equal sign, make them comments. */
-    hash = gwy_parse_text_header_simple(p, "=", "=");
+
+    /* Lots of lines contain just an equal sign, make them comments. */
+    gwy_clear(&parser, 1);
+    parser.comment_prefix = "=";
+    parser.key_value_separator = "=";
+    hash = gwy_text_header_parse(p, &parser, NULL, NULL);
+
     dfield = hash_to_data_field(hash, version, buffer, size, error);
 
     if (dfield) {

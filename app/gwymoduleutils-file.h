@@ -28,10 +28,6 @@
 
 G_BEGIN_DECLS
 
-typedef gpointer (*GwyTextHeaderItemFunc)(const gchar *key,
-                                          const gchar *value,
-                                          gpointer user_data);
-
 /* This is necessary to fool gtk-doc that ignores static inline functions */
 #define _GWY_STATIC_INLINE static inline
 
@@ -317,20 +313,61 @@ gboolean gwy_app_channel_title_fall_back(GwyContainer *data,
 guint    gwy_app_channel_remove_bad_data(GwyDataField *dfield,
                                          GwyDataField *mfield);
 
-#define gwy_parse_text_header_simple(buffer, comment_prefix, key_value_separator) \
-    gwy_parse_text_header(buffer, comment_prefix, NULL, NULL, NULL, \
-                          NULL, key_value_separator, NULL, NULL, NULL)
+#define GWY_TEXT_HEADER_ERROR gwy_text_header_error_quark()
 
-GHashTable* gwy_parse_text_header(gchar *buffer,
-                                  const gchar *comment_prefix,
-                                  const gchar *section_template,
-                                  const gchar *endsection_template,
-                                  const gchar *section_accessor,
-                                  const gchar *line_prefix,
-                                  const gchar *key_value_separator,
-                                  GwyTextHeaderItemFunc postprocess,
-                                  gpointer user_data,
-                                  GDestroyNotify destroy_value);
+typedef enum {
+    GWY_TEXT_HEADER_ERROR_SECTION_NAME,
+    GWY_TEXT_HEADER_ERROR_SECTION_END,
+    GWY_TEXT_HEADER_ERROR_SECTION_START,
+    GWY_TEXT_HEADER_ERROR_PREFIX,
+    GWY_TEXT_HEADER_ERROR_GARBAGE,
+    GWY_TEXT_HEADER_ERROR_KEY,
+    GWY_TEXT_HEADER_ERROR_VALUE,
+    GWY_TEXT_HEADER_ERROR_TERMINATOR,
+} GwyTextHeaderError;
+
+typedef struct _GwyTextHeaderContext GwyTextHeaderContext;
+
+typedef struct {
+    const gchar *comment_prefix;
+    const gchar *section_template;
+    const gchar *endsection_template;
+    const gchar *section_accessor;
+    const gchar *line_prefix;
+    const gchar *key_value_separator;
+    const gchar *terminator;
+    gboolean (*item)(const GwyTextHeaderContext *context,
+                     GHashTable *hash,
+                     gchar *key,
+                     gchar *value,
+                     gpointer user_data,
+                     GError **error);
+    gboolean (*section)(const GwyTextHeaderContext *context,
+                        const gchar *name,
+                        gpointer user_data,
+                        GError **error);
+    gboolean (*endsection)(const GwyTextHeaderContext *context,
+                           const gchar *name,
+                           gpointer user_data,
+                           GError **error);
+    gboolean (*error)(const GwyTextHeaderContext *context,
+                      GError *error,
+                      gpointer user_data);
+    GDestroyNotify destroy_key;
+    GDestroyNotify destroy_value;
+} GwyTextHeaderParser;
+
+GQuark      gwy_text_header_error_quark(void);
+GHashTable* gwy_text_header_parse      (gchar *header,
+                                        const GwyTextHeaderParser *parser,
+                                        gpointer user_data,
+                                        GError **error);
+
+const gchar*
+gwy_text_header_context_get_section(const GwyTextHeaderContext *context);
+
+guint
+gwy_text_header_context_get_lineno(const GwyTextHeaderContext *context);
 
 G_END_DECLS
 

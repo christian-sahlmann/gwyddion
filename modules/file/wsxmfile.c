@@ -136,13 +136,18 @@ wsxmfile_detect(const GwyFileDetectInfo *fileinfo,
     return score;
 }
 
-static gpointer
-convert_to_utf8(G_GNUC_UNUSED const gchar *key,
-                const gchar *value,
-                G_GNUC_UNUSED gpointer user_data)
+static gboolean
+convert_to_utf8(G_GNUC_UNUSED const GwyTextHeaderContext *context,
+                GHashTable *hash,
+                gchar *key,
+                gchar *value,
+                G_GNUC_UNUSED gpointer user_data,
+                G_GNUC_UNUSED GError **error)
 {
-    return g_convert(value, strlen(value), "UTF-8", "ISO-8859-1",
-                     NULL, NULL, NULL);
+    g_hash_table_replace(hash, key,
+                         g_convert(value, strlen(value), "UTF-8", "ISO-8859-1",
+                                   NULL, NULL, NULL));
+    return TRUE;
 }
 
 static GwyContainer*
@@ -156,6 +161,7 @@ wsxmfile_load(const gchar *filename,
     gsize size = 0;
     GError *err = NULL;
     GwyDataField *dfield = NULL;
+    GwyTextHeaderParser parser;
     GHashTable *meta = NULL;
     WSxMDataType type = WSXM_DATA_INT16;
     guint header_size;
@@ -189,8 +195,13 @@ wsxmfile_load(const gchar *filename,
         g_free(header);
         return NULL;
     }
-    meta = gwy_parse_text_header(p, NULL, "[\x1a]", NULL, "::", NULL, ":",
-                                 convert_to_utf8, NULL, g_free);
+    gwy_clear(&parser, 1);
+    parser.key_value_separator = ":";
+    parser.section_template = "[\x1a]";
+    parser.section_accessor = "::";
+    parser.destroy_value = g_free;
+    parser.item = convert_to_utf8;
+    meta = gwy_text_header_parse(p, &parser, NULL, NULL);
 
     if (ok
         && (!(p = g_hash_table_lookup(meta, "General Info::Number of columns"))

@@ -105,6 +105,7 @@ slf_load(const gchar *filename,
          GError **error)
 {
     GwyContainer *meta = NULL, *container = NULL;
+    GwyTextHeaderParser parser;
     GHashTable *hash = NULL;
     guchar *buffer = NULL;
     gsize size = 0;
@@ -143,7 +144,10 @@ slf_load(const gchar *filename,
     header = g_memdup(buffer, p - buffer + 1);
     header[p - buffer] = '\0';
     /* Comment prefix [ means we ignore sections. */
-    hash = gwy_parse_text_header_simple(header, "[", "=");
+    gwy_clear(&parser, 1);
+    parser.comment_prefix = "[";
+    parser.key_value_separator = "=";
+    hash = gwy_text_header_parse(header, &parser, NULL, NULL);
 
     if (!require_keys(hash, error,
                       "DataOffset", "ScanRangeX", "ScanRangeY",

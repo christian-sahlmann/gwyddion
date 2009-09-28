@@ -138,6 +138,7 @@ static gint
 microprof_txt_detect(const GwyFileDetectInfo *fileinfo,
                      gboolean only_name)
 {
+    GwyTextHeaderParser parser;
     GHashTable *meta;
     const guchar *p;
     gchar *buffer;
@@ -158,8 +159,9 @@ microprof_txt_detect(const GwyFileDetectInfo *fileinfo,
 
     size = p - (const guchar*)fileinfo->head;
     buffer = g_memdup(fileinfo->head, size);
-    meta = gwy_parse_text_header(buffer, NULL, NULL, NULL, NULL, NULL, "=",
-                                 NULL, NULL, NULL);
+    gwy_clear(&parser, 1);
+    parser.key_value_separator = "=";
+    meta = gwy_text_header_parse(buffer, &parser, NULL, NULL);
     if (g_hash_table_lookup(meta, "XSize")
         && g_hash_table_lookup(meta, "YSize")
         && g_hash_table_lookup(meta, "XRange")
@@ -305,6 +307,7 @@ microprof_txt_load(const gchar *filename,
 {
     GwyContainer *container = NULL;
     guchar *p, *buffer = NULL;
+    GwyTextHeaderParser parser;
     GHashTable *meta = NULL;
     GwySIUnit *siunit;
     gchar *header = NULL, *s, *prev;
@@ -347,7 +350,9 @@ microprof_txt_load(const gchar *filename,
     header = g_memdup(buffer, p - buffer + 1);
     header[p - buffer] = '\0';
 
-    meta = gwy_parse_text_header_simple(header, NULL, "=");
+    gwy_clear(&parser, 1);
+    parser.key_value_separator = "=";
+    meta = gwy_text_header_parse(header, &parser, NULL, NULL);
 
     if (!(s = g_hash_table_lookup(meta, "XSize"))
         || !((xres = atoi(s)) > 0)) {

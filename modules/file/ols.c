@@ -131,6 +131,7 @@ ols_load_tiff(const GwyTIFF *tiff, GError **error)
     GwyDataField *dfield;
     GwySIUnit *siunit;
     GwyTIFFImageReader *reader = NULL;
+    GwyTextHeaderParser parser;
     GHashTable *hash;
     gint i, power10;
     gchar *comment = NULL;
@@ -152,9 +153,12 @@ ols_load_tiff(const GwyTIFF *tiff, GError **error)
     }
 
     /* Read the comment header. */
-    hash = gwy_parse_text_header(comment, NULL,
-                                 "[\x1a]", "[\x1a End]", "::", NULL, "=",
-                                 NULL, NULL, NULL);
+    gwy_clear(&parser, 1);
+    parser.key_value_separator = "=";
+    parser.section_template = "[\x1a]";
+    parser.endsection_template = "[\x1a End]";
+    parser.section_accessor = "::";
+    hash = gwy_text_header_parse(comment, &parser, NULL, NULL);
 
     key = g_string_new(NULL);
     for (dir_num = 0; dir_num < gwy_tiff_get_n_dirs(tiff); dir_num++) {
