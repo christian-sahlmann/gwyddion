@@ -23,7 +23,7 @@
  *   <comment>NanoScan SPM data</comment>
  *   <magic priority="80">
  *     <match type="string" offset="0" value="&lt;?xml">
- *       <match type="string" offset="40:120" value="xmlns=\"http://www.swissprobe.com/SPM\""/>
+ *       <match type="string" offset="40:120" value="xmlns=&quot;http://www.swissprobe.com/SPM&quot;"/>
  *     </match>
  *   </magic>
  * </mime-type>
