@@ -12,7 +12,6 @@ M4TESTS = \
 	gwy-cc-options.m4 \
 	gwy-enable.m4 \
 	gwy-math.m4 \
-	gwy-preproc-symbol.m4 \
 	gwy-python.m4 \
 	iconv.m4 \
 	intmax.m4 \

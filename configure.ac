@@ -225,8 +225,6 @@ if test "x$enable_pygwy" != xno; then
 fi
 
 if test "x$enable_pygwy" != xno; then
-  GWY_PREPROC_SYMBOL(_POSIX_C_SOURCE, PYTHON_POSIX_C_SOURCE,
-                     [#include <Python.h>], [$PYTHON_INCLUDES])
   PKG_CHECK_MODULES(PYGTK,[pygtk-2.0 >= 2.9.0],[],
                     [enable_pygwy=no; PYGWY_WARN=" (needs pygtk2)"])
   AC_SUBST(PYGTK_CFLAGS)
