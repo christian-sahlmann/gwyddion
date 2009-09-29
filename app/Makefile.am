@@ -85,6 +85,7 @@ MKENUM_ID = GWY_APP_TYPES
 MKENUM_HFILES = \
 	$(srcdir)/data-browser.h \
 	$(srcdir)/menu.h \
+	$(srcdir)/gwymoduleutils-file.h \
 	$(srcdir)/gwyplaintool.h \
 	$(srcdir)/settings.h
 include $(top_srcdir)/utils/mkenum.mk
