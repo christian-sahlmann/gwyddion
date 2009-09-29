@@ -51,6 +51,7 @@
 #define MAGIC2 MAGIC_BARE "\n"
 #define MAGIC1_SIZE (sizeof(MAGIC1)-1)
 #define MAGIC2_SIZE (sizeof(MAGIC2)-1)
+#define DATA_MAGIC "# Start of Data:"
 #define EXTENSION ".asc"
 
 static gboolean      module_register(void);
@@ -100,6 +101,23 @@ asc_detect(const GwyFileDetectInfo *fileinfo,
     return 100;
 }
 
+static gboolean
+lowercase_value(G_GNUC_UNUSED const GwyTextHeaderContext *context,
+                GHashTable *hash,
+                gchar *key,
+                gchar *value,
+                G_GNUC_UNUSED gpointer user_data,
+                G_GNUC_UNUSED GError **error)
+{
+    gchar *p;
+
+    for (p = value; *p; p++)
+        *p = g_ascii_tolower(*p);
+    g_hash_table_replace(hash, key, value);
+
+    return TRUE;
+}
+
 static GwyContainer*
 asc_load(const gchar *filename,
          G_GNUC_UNUSED GwyRunType mode,
@@ -108,7 +126,8 @@ asc_load(const gchar *filename,
     GwyContainer *container = NULL, *meta;
     GwyDataField *dfield = NULL;
     GwySIUnit *unit;
-    gchar *line, *p, *value, *buffer = NULL;
+    gchar *line, *p, *value, *header, *buffer = NULL;
+    GwyTextHeaderParser parser;
     GHashTable *hash = NULL;
     gsize size;
     GError *err = NULL;
@@ -137,40 +156,20 @@ asc_load(const gchar *filename,
         goto fail;
     }
 
-    hash = g_hash_table_new(g_str_hash, g_str_equal);
-    while ((line = gwy_str_next_line(&p))) {
-        g_strstrip(line);
-        if (!line[0])
-            continue;
-
-        if (line[0] != '#') {
-            g_warning("Strange line not starting with #");
-            continue;
-        }
-
-        do {
-            line++;
-        } while (g_ascii_isspace(line[0]));
-
-        if (gwy_strequal(line, "Start of Data:"))
-            break;
-
-        value = strchr(line, ':');
-        if (!value)
-            continue;
-
-        *value = '\0';
-        do {
-            value++;
-        } while (g_ascii_isspace(value[0]));
-
-        g_strchomp(line);
-        for (i = 0; line[i]; i++)
-            line[i] = g_ascii_tolower(line[i]);
-
-        gwy_debug("<%s> = <%s>\n", line, value);
-        g_hash_table_insert(hash, line, value);
+    header = p;
+    p = strstr(header, DATA_MAGIC);
+    if (!p) {
+        err_FILE_TYPE(error, "Attocube ASC");
+        goto fail;
     }
+    *p = '\0';
+    p += strlen(DATA_MAGIC);
+
+    gwy_clear(&parser, 1);
+    parser.line_prefix = "#";
+    parser.key_value_separator = ":";
+    parser.item = &lowercase_value;
+    hash = gwy_text_header_parse(header, &parser, NULL, NULL);
 
     if (!require_keys(hash, error,
                       "x-pixels", "y-pixels", "x-length", "y-length",
