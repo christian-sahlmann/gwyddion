@@ -9,7 +9,7 @@ Modules:
   images on MS Windows.
 - Pixmap export: It is possible to export data as 16bit grayscale images (at
   present for TIFF and PNM).
-- Object Synthesis (new): Cone and box shapes were added.
+- Object Synthesis: Cone and box shapes were added.
 
 Other:
 - Inclusion of wrong OpenGL header when building with Quartz backend was fixed.
