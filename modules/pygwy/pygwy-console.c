@@ -19,14 +19,13 @@
  *  Description: This file contains pygwy console module.
  */
 
-
+#include "config.h"
+#include "pygwy-console.h"
+#include "pygwy.h"
 #include <gdk/gdkkeysyms.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
-#include "pygwy-console.h"
-#include "pygwy.h"
-#include "config.h"
 
 #ifdef HAVE_GTKSOURCEVIEW
 #include <gtksourceview/gtksourceview.h>

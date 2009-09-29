@@ -21,8 +21,8 @@
  *  Description: This file contains pygwy console module.
  */
 
-#include <gtk/gtk.h>
 #include <Python.h>
+#include <gtk/gtk.h>
 typedef struct {
    PyObject *std_err;
    PyObject *dictionary;
