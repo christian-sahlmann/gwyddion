@@ -50,6 +50,7 @@ file_LTLIBRARIES = \
 	nanoeducator.la \
 	nanonics.la \
 	nanonis.la \
+	nanoscan.la \
 	nanoscope-ii.la \
 	nanoscope.la \
 	nanotop.la \
@@ -141,6 +142,7 @@ mifile_la_SOURCES        = mifile.c
 nanoeducator_la_SOURCES  = nanoeducator.c
 nanonics_la_SOURCES      = nanonics.c
 nanonis_la_SOURCES       = nanonis.c
+nanoscan_la_SOURCES      = nanoscan.c
 nanoscope_ii_la_SOURCES  = nanoscope-ii.c
 nanoscope_la_SOURCES     = nanoscope.c
 nanotop_la_SOURCES       = nanotop.c
