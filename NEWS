@@ -4,12 +4,13 @@ Libraries:
 
 Modules:
 - Attocube (new): Imports Attocube Systems ASC files.
+- NanoScan (new): Imports NanoScan XML files.
 - Seiko: Supports more file types (with magic header SPIZ000AFM).
 - Pixmap export: TIFFs are written in binary mode, fixing broken exported
   images on MS Windows.
 - Pixmap export: It is possible to export data as 16bit grayscale images (at
   present for TIFF and PNM).
-- Object Synthesis: Cone and box shapes were added.
+- Object Synthesis: Cone, box and tent shapes were added.
 
 Other:
 - Inclusion of wrong OpenGL header when building with Quartz backend was fixed.
