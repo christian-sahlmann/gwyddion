@@ -72,6 +72,7 @@ typedef enum {
     OBJ_SYNTH_4HEDRON  = 5,
     OBJ_SYNTH_BOX      = 6,
     OBJ_SYNTH_CONE     = 7,
+    OBJ_SYNTH_TENT     = 8,
     OBJ_SYNTH_NTYPES
 } ObjSynthType;
 
@@ -242,8 +243,9 @@ DECLARE_OBJECT(box);
 DECLARE_OBJECT(nugget);
 DECLARE_OBJECT(thatch);
 DECLARE_OBJECT(doughnut);
-DECLARE_OBJECT(4hedron);
+DECLARE_OBJECT(thedron);
 DECLARE_OBJECT(cone);
+DECLARE_OBJECT(tent);
 
 static const ObjSynthArgs obj_synth_defaults = {
     PAGE_DIMENSIONS,
@@ -260,13 +262,14 @@ static const GwyDimensionArgs dims_defaults = GWY_DIMENSION_ARGS_INIT;
 
 static const ObjSynthFeature features[] = {
     { OBJ_SYNTH_SPHERE,   N_("Spheres"),      &create_sphere,   &getcov_sphere,   },
-    { OBJ_SYNTH_PYRAMID,  N_("Pyramids"),     &create_pyramid,  &getcov_pyramid,  },
     { OBJ_SYNTH_BOX,      N_("Boxes"),        &create_box,      &getcov_box,      },
     { OBJ_SYNTH_CONE,     N_("Cones"),        &create_cone,     &getcov_cone,     },
+    { OBJ_SYNTH_PYRAMID,  N_("Pyramids"),     &create_pyramid,  &getcov_pyramid,  },
+    { OBJ_SYNTH_4HEDRON,  N_("Tetrahedrons"), &create_thedron,  &getcov_thedron,  },
     { OBJ_SYNTH_NUGGET,   N_("Nuggets"),      &create_nugget,   &getcov_nugget,   },
     { OBJ_SYNTH_THATCH,   N_("Thatches"),     &create_thatch,   &getcov_thatch,   },
+    { OBJ_SYNTH_TENT,     N_("Tents"),        &create_tent,     &getcov_tent,     },
     { OBJ_SYNTH_DOUGHNUT, N_("Dougnuts"),     &create_doughnut, &getcov_doughnut, },
-    { OBJ_SYNTH_4HEDRON,  N_("Tetrahedrons"), &create_4hedron,  &getcov_4hedron,  },
 };
 
 static GwyModuleInfo module_info = {
@@ -1211,6 +1214,39 @@ create_box(GwyDataField *feature,
 }
 
 static void
+create_tent(GwyDataField *feature,
+            gdouble size,
+            gdouble aspect,
+            gdouble height,
+            gdouble angle)
+{
+    gdouble a, b, c, s, r, x, y, xc, yc;
+    gint xres, yres, i, j;
+    gdouble *z;
+
+    a = size*sqrt(aspect);
+    b = size/sqrt(aspect);
+    c = cos(angle);
+    s = sin(angle);
+    xres = (gint)ceil(2*(a*fabs(c) + b*fabs(s)) + 1) | 1;
+    yres = (gint)ceil(2*(a*fabs(s) + b*fabs(c)) + 1) | 1;
+
+    gwy_data_field_resample(feature, xres, yres, GWY_INTERPOLATION_NONE);
+    z = gwy_data_field_get_data(feature);
+    for (i = 0; i < yres; i++) {
+        y = i - yres/2;
+        for (j = 0; j < xres; j++) {
+            x = j - xres/2;
+
+            xc = (x*c - y*s)/a;
+            yc = (x*s + y*c)/b;
+            r = 1.0 - fabs(yc);
+            z[i*xres + j] = (fabs(xc) <= 1.0 && r > 0.0) ? height*r : 0.0;
+        }
+    }
+}
+
+static void
 create_cone(GwyDataField *feature,
             gdouble size,
             gdouble aspect,
@@ -1362,7 +1398,7 @@ create_doughnut(GwyDataField *feature,
 }
 
 static void
-create_4hedron(GwyDataField *feature,
+create_thedron(GwyDataField *feature,
                gdouble size,
                gdouble aspect,
                gdouble height,
@@ -1480,6 +1516,12 @@ getcov_box(G_GNUC_UNUSED gdouble aspect)
 }
 
 static gdouble
+getcov_tent(G_GNUC_UNUSED gdouble aspect)
+{
+    return 1.0;
+}
+
+static gdouble
 getcov_cone(G_GNUC_UNUSED gdouble aspect)
 {
     return G_PI/4.0;
@@ -1504,7 +1546,7 @@ getcov_doughnut(G_GNUC_UNUSED gdouble aspect)
 }
 
 static gdouble
-getcov_4hedron(G_GNUC_UNUSED gdouble aspect)
+getcov_thedron(G_GNUC_UNUSED gdouble aspect)
 {
     return GWY_SQRT3/4.0;
 }
