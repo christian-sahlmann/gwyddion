@@ -29,7 +29,6 @@
  * </mime-type>
  **/
 
-#define DEBUG 1
 #include "config.h"
 #include <string.h>
 #include <stdlib.h>
@@ -56,6 +55,44 @@
 #define TREAT_CDATA_AS_TEXT 0
 #endif
 
+#define RES_PREFIX "/scan/vector/contents/size/contents"
+#define RES_PREFIX_SIZE (sizeof(RES_PREFIX)-1)
+
+#define DIMS_PREFIX "/scan/vector/contents/area/contents"
+#define DIMS_PREFIX_SIZE (sizeof(DIMS_PREFIX)-1)
+
+#define AXIS_PREFIX "/scan/vector/contents/axis/vector/contents"
+#define AXIS_PREFIX_SIZE (sizeof(AXIS_PREFIX)-1)
+
+#define DATA_PREFIX "/scan/vector/contents/direction/vector/contents"
+#define DATA_PREFIX_SIZE (sizeof(DATA_PREFIX)-1)
+
+enum { NAXES = 2 };
+
+typedef enum {
+    SCAN_UNKNOWN = 0,
+    SCAN_FORWARD = 1,
+    SCAN_BACKWARD = -1,
+} NanoScanDirection;
+
+typedef struct {
+    gchar *name;
+    gchar *zunits;
+    gfloat *data;
+    NanoScanDirection direction;
+    gboolean already_added;
+} NanoScanChannel;
+
+typedef struct {
+    gchar *name;
+    gchar *units;
+    gchar *display_units;
+    gdouble display_scale;
+    /* FIXME: These can be vectors in the energy scan mode! */
+    gdouble start;
+    gdouble stop;
+} NanoScanAxis;
+
 typedef struct {
     GString *path;
     gchar *xyunits;
@@ -63,29 +100,61 @@ typedef struct {
     gint yres;
     gdouble xreal;
     gdouble yreal;
+    NanoScanDirection current_direction;
+    NanoScanAxis axes[NAXES];
+    GArray *channels;
+    guint naxes;
 } NanoScanFile;
 
-static gboolean      module_register(void);
-static gint          nanoscan_detect(const GwyFileDetectInfo *fileinfo,
-                                     gboolean only_name);
-static GwyContainer* nanoscan_load  (const gchar *filename,
-                                     GwyRunType mode,
-                                     GError **error);
-static void          start_element  (GMarkupParseContext *context,
-                                     const gchar *element_name,
-                                     const gchar **attribute_names,
-                                     const gchar **attribute_values,
-                                     gpointer user_data,
-                                     GError **error);
-static void          end_element    (GMarkupParseContext *context,
-                                     const gchar *element_name,
-                                     gpointer user_data,
-                                     GError **error);
-static void          text           (GMarkupParseContext *context,
-                                     const gchar *text,
-                                     gsize text_len,
-                                     gpointer user_data,
-                                     GError **error);
+static gboolean      module_register     (void);
+static gint          nanoscan_detect     (const GwyFileDetectInfo *fileinfo,
+                                          gboolean only_name);
+static GwyContainer* nanoscan_load       (const gchar *filename,
+                                          GwyRunType mode,
+                                          GError **error);
+static void          add_channel         (GwyContainer *container,
+                                          NanoScanFile *nfile,
+                                          NanoScanChannel *channel,
+                                          gint id);
+static void          add_graph           (GwyContainer *container,
+                                          NanoScanFile *nfile,
+                                          NanoScanChannel *channel,
+                                          gint id);
+static void          add_curve_model     (NanoScanFile *nfile,
+                                          NanoScanChannel *channel,
+                                          guint i,
+                                          GwyGraphModel *gmodel);
+static void          add_multigraph      (GwyContainer *container,
+                                          NanoScanFile *nfile,
+                                          NanoScanChannel *channel,
+                                          gint id);
+static void          add_multicurve_model(NanoScanFile *nfile,
+                                          NanoScanChannel *channel,
+                                          guint i,
+                                          GwyGraphModel *gmodel);
+static void          nanoscan_free       (NanoScanFile *nfile);
+static void          start_element       (GMarkupParseContext *context,
+                                          const gchar *element_name,
+                                          const gchar **attribute_names,
+                                          const gchar **attribute_values,
+                                          gpointer user_data,
+                                          GError **error);
+static void          end_element         (GMarkupParseContext *context,
+                                          const gchar *element_name,
+                                          gpointer user_data,
+                                          GError **error);
+static void          text                (GMarkupParseContext *context,
+                                          const gchar *text,
+                                          gsize text_len,
+                                          gpointer user_data,
+                                          GError **error);
+static gfloat*       read_channel_data   (const gchar *value,
+                                          gsize value_len,
+                                          guint npixels,
+                                          GError **error);
+static gsize         decode_base64       (const guchar *buf,
+                                          gsize len,
+                                          guchar *out);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -135,18 +204,14 @@ nanoscan_load(const gchar *filename,
          G_GNUC_UNUSED GwyRunType mode,
          GError **error)
 {
-    GwyContainer *container = NULL, *meta;
+    GwyContainer *container = NULL;
     NanoScanFile nfile;
-    /*
-    GwyDataField *dfield = NULL;
-    GwySIUnit *unit;
-    */
     gchar *head, *buffer = NULL;
     GMarkupParser parser = { start_element, end_element, text, NULL, NULL };
     GMarkupParseContext *context;
     gsize size;
     GError *err = NULL;
-    gdouble q;
+    guint i, id;
 
     if (!g_file_get_contents(filename, &buffer, &size, &err)) {
         err_GET_FILE_CONTENTS(error, &err);
@@ -162,24 +227,331 @@ nanoscan_load(const gchar *filename,
     }
     g_free(head);
 
+    /* Parse the XML */
     nfile.path = g_string_new(NULL);
+    nfile.channels = g_array_new(FALSE, FALSE, sizeof(NanoScanChannel));
     context = g_markup_parse_context_new(&parser,
                                          G_MARKUP_PREFIX_ERROR_POSITION
                                          | TREAT_CDATA_AS_TEXT,
                                          &nfile, NULL);
-    if (!g_markup_parse_context_parse(context, buffer, size, error)) {
+    if (!g_markup_parse_context_parse(context, buffer, size, &err)
+        || !g_markup_parse_context_end_parse(context, &err)) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("XML parsing failed: %s"), err->message);
+        g_clear_error(&err);
         g_markup_parse_context_free(context);
         goto fail;
     }
     g_markup_parse_context_free(context);
 
+    if (err_DIMENSION(error, nfile.xres) || err_DIMENSION(error, nfile.yres))
+        goto fail;
+
+    /* Depending on whether we have image or other data, some might be unset. */
+    if (!((nfile.xreal = fabs(nfile.xreal)) > 0))
+        nfile.xreal = nfile.xres;
+    if (!((nfile.yreal = fabs(nfile.yreal)) > 0))
+        nfile.yreal = nfile.yres;
+    for (i = 0; i < NAXES; i++) {
+        if (nfile.axes[i].stop == nfile.axes[i].start) {
+            nfile.axes[i].stop = 1.0;
+            nfile.axes[i].start = 0.0;
+        }
+        if (!nfile.axes[i].display_scale)
+            nfile.axes[i].display_scale = 1.0;
+    }
+
+    /* Construct a GwyContainer */
+    container = gwy_container_new();
+    for (i = id = 0; i < nfile.channels->len; i++) {
+        NanoScanChannel *channel = &g_array_index(nfile.channels,
+                                                  NanoScanChannel, i);
+        if (!channel->data || channel->already_added)
+            continue;
+
+        if (nfile.yres == 1)
+            add_graph(container, &nfile, channel, id);
+        else if (nfile.naxes == NAXES)
+            add_multigraph(container, &nfile, channel, id);
+        else
+            add_channel(container, &nfile, channel, id);
+
+        id++;
+    }
+
+    if (!id) {
+        err_NO_DATA(error);
+        gwy_object_unref(container);
+    }
 
 fail:
     g_free(buffer);
-    if (nfile.path)
-        g_string_free(nfile.path, TRUE);
+    nanoscan_free(&nfile);
 
     return container;
+}
+
+static void
+nanoscan_free(NanoScanFile *nfile)
+{
+    guint i;
+
+    g_free(nfile->xyunits);
+    if (nfile->path)
+        g_string_free(nfile->path, TRUE);
+
+    for (i = 0; i < NAXES; i++) {
+        g_free(nfile->axes[i].name);
+        g_free(nfile->axes[i].units);
+    }
+
+    if (!nfile->channels)
+        return;
+
+    for (i = 0; i < nfile->channels->len; i++) {
+        NanoScanChannel *channel = &g_array_index(nfile->channels,
+                                                  NanoScanChannel, i);
+        g_free(channel->name);
+        g_free(channel->zunits);
+        g_free(channel->data);
+    }
+    g_array_free(nfile->channels, TRUE);
+}
+
+static void
+add_channel(GwyContainer *container,
+            NanoScanFile *nfile,
+            NanoScanChannel *channel,
+            gint id)
+{
+    GwyDataField *dfield;
+    GwySIUnit *unit;
+    gint power10;
+    gdouble *d;
+    GQuark quark;
+    gchar *key, *title;
+    gdouble q = 1.0;
+    gint i, j;
+
+    dfield = gwy_data_field_new(nfile->xres, nfile->yres,
+                                nfile->xreal, nfile->yreal,
+                                FALSE);
+    if (nfile->xyunits) {
+        unit = gwy_data_field_get_si_unit_xy(dfield);
+        gwy_si_unit_set_from_string_parse(unit, nfile->xyunits, &power10);
+        gwy_data_field_set_xreal(dfield, pow10(power10)*nfile->xreal);
+        gwy_data_field_set_yreal(dfield, pow10(power10)*nfile->yreal);
+    }
+    if (channel->zunits) {
+        unit = gwy_data_field_get_si_unit_z(dfield);
+        gwy_si_unit_set_from_string_parse(unit, channel->zunits, &power10);
+        q = pow10(power10);
+    }
+    d = gwy_data_field_get_data(dfield);
+    for (i = 0; i < nfile->yres; i++) {
+        for (j = 0; j < nfile->xres; j++) {
+            d[(nfile->yres-1 - i)*nfile->xres + j]
+                = q*channel->data[i*nfile->xres + j];
+        }
+    }
+    quark = gwy_app_get_data_key_for_id(id);
+    gwy_container_set_object(container, quark, dfield);
+    g_object_unref(dfield);
+
+    if (channel->name) {
+        key = g_strconcat(g_quark_to_string(quark), "/title", NULL);
+        if (channel->direction == SCAN_FORWARD)
+            title = g_strconcat(channel->name, " [Forward]", NULL);
+        else if (channel->direction == SCAN_BACKWARD)
+            title = g_strconcat(channel->name, " [Backward]", NULL);
+        else {
+            title = channel->name;
+            channel->name = NULL;
+        }
+        gwy_container_set_string_by_name(container, key, title);
+        g_free(key);
+    }
+    channel->already_added = TRUE;
+}
+
+static void
+add_graph(GwyContainer *container,
+          NanoScanFile *nfile,
+          NanoScanChannel *channel,
+          gint id)
+{
+    GwyGraphModel *gmodel;
+    GQuark quark;
+    guint j, i;
+
+    gmodel = gwy_graph_model_new();
+    add_curve_model(nfile, channel, 0, gmodel);
+    for (j = i = 0; j < nfile->channels->len; j++) {
+        NanoScanChannel *other = &g_array_index(nfile->channels,
+                                                NanoScanChannel, j);
+        if (other == channel || other->already_added
+            || !other->name || !channel->name
+            || !gwy_strequal(other->name, channel->name))
+            continue;
+        add_curve_model(nfile, other, ++i, gmodel);
+    }
+    if (channel->name) {
+        g_object_set(gmodel, "axis-label-left", channel->name, NULL);
+        g_object_set(gmodel, "title", channel->name, NULL);
+    }
+    if (nfile->axes[0].name)
+        g_object_set(gmodel, "axis-label-bottom", nfile->axes[0].name, NULL);
+
+    quark = gwy_app_get_graph_key_for_id(id);
+    gwy_container_set_object(container, quark, gmodel);
+    g_object_unref(gmodel);
+}
+
+static void
+add_curve_model(NanoScanFile *nfile,
+                NanoScanChannel *channel,
+                guint i,
+                GwyGraphModel *gmodel)
+{
+    NanoScanAxis *axis0 = &nfile->axes[0];
+    GwyGraphCurveModel *gcmodel;
+    GwyDataLine *dline;
+    GwySIUnit *unit;
+    gdouble real, q = 1.0;
+    gdouble *d;
+    gint power10, j;
+
+    real = axis0->stop - axis0->start;
+    dline = gwy_data_line_new(nfile->xres, real, FALSE);
+    gwy_data_line_set_offset(dline, axis0->start);
+    if (axis0->units) {
+        unit = gwy_data_line_get_si_unit_x(dline);
+        gwy_si_unit_set_from_string_parse(unit, axis0->units, &power10);
+        gwy_data_line_set_real(dline, pow10(power10)*real);
+        gwy_data_line_set_offset(dline, pow10(power10)*axis0->start);
+    }
+    if (channel->zunits) {
+        unit = gwy_data_line_get_si_unit_y(dline);
+        gwy_si_unit_set_from_string_parse(unit, channel->zunits, &power10);
+        q = pow10(power10);
+    }
+    d = gwy_data_line_get_data(dline);
+    for (j = 0; j < nfile->xres; j++) {
+        d[j] = q*channel->data[j];
+    }
+    gcmodel = gwy_graph_curve_model_new();
+    gwy_graph_curve_model_set_data_from_dataline(gcmodel, dline, 0, 0);
+    g_object_set(gcmodel,
+                 "mode", GWY_GRAPH_CURVE_LINE,
+                 "color", gwy_graph_get_preset_color(i),
+                 NULL);
+
+    if (channel->direction == SCAN_FORWARD)
+        g_object_set(gcmodel, "description", "Forward", NULL);
+    else if (channel->direction == SCAN_BACKWARD)
+        g_object_set(gcmodel, "description", "Backward", NULL);
+    else
+        g_object_set(gcmodel, "description", "Unknown direction", NULL);
+
+    gwy_graph_model_add_curve(gmodel, gcmodel);
+    g_object_unref(gcmodel);
+    gwy_graph_model_set_units_from_data_line(gmodel, dline);
+    g_object_unref(dline);
+    channel->already_added = TRUE;
+}
+
+static void
+add_multigraph(GwyContainer *container,
+               NanoScanFile *nfile,
+               NanoScanChannel *channel,
+               gint id)
+{
+    GwyGraphModel *gmodel;
+    GQuark quark;
+    guint i;
+
+    gmodel = gwy_graph_model_new();
+    for (i = 0; i < nfile->yres; i++)
+        add_multicurve_model(nfile, channel, i, gmodel);
+
+    if (channel->name) {
+        gchar *title;
+
+        g_object_set(gmodel, "axis-label-left", channel->name, NULL);
+        if (channel->direction == SCAN_FORWARD)
+            title = g_strconcat(channel->name, " [Forward]", NULL);
+        else if (channel->direction == SCAN_BACKWARD)
+            title = g_strconcat(channel->name, " [Backward]", NULL);
+        else {
+            title = channel->name;
+            channel->name = NULL;
+        }
+        g_object_set(gmodel, "title", title, NULL);
+        g_free(title);
+    }
+    if (nfile->axes[0].name)
+        g_object_set(gmodel, "axis-label-bottom", nfile->axes[0].name, NULL);
+
+    quark = gwy_app_get_graph_key_for_id(id);
+    gwy_container_set_object(container, quark, gmodel);
+    g_object_unref(gmodel);
+    channel->already_added = TRUE;
+}
+
+static void
+add_multicurve_model(NanoScanFile *nfile,
+                     NanoScanChannel *channel,
+                     guint i,
+                     GwyGraphModel *gmodel)
+{
+    NanoScanAxis *axis0 = &nfile->axes[0];
+    NanoScanAxis *axis1 = &nfile->axes[1];
+    GwyGraphCurveModel *gcmodel;
+    GwyDataLine *dline;
+    GwySIUnit *unit;
+    gdouble real, yval, q = 1.0;
+    gdouble *d;
+    gchar *descr;
+    gint power10, j;
+
+    real = axis0->stop - axis0->start;
+    dline = gwy_data_line_new(nfile->xres, real, FALSE);
+    gwy_data_line_set_offset(dline, axis0->start);
+    if (axis0->units) {
+        unit = gwy_data_line_get_si_unit_x(dline);
+        gwy_si_unit_set_from_string_parse(unit, axis0->units, &power10);
+        gwy_data_line_set_real(dline, pow10(power10)*real);
+        gwy_data_line_set_offset(dline, pow10(power10)*axis0->start);
+    }
+    if (channel->zunits) {
+        unit = gwy_data_line_get_si_unit_y(dline);
+        gwy_si_unit_set_from_string_parse(unit, channel->zunits, &power10);
+        q = pow10(power10);
+    }
+    d = gwy_data_line_get_data(dline);
+    for (j = 0; j < nfile->xres; j++) {
+        d[j] = q*channel->data[i*nfile->xres + j];
+    }
+    gcmodel = gwy_graph_curve_model_new();
+    gwy_graph_curve_model_set_data_from_dataline(gcmodel, dline, 0, 0);
+    yval = i/(nfile->yres - 1.0)*(axis1->stop - axis1->start) + axis1->start;
+    descr = g_strdup_printf("%s %g%s%s",
+                            axis1->name ? axis1->name : "Y",
+                            yval * axis1->display_scale,
+                            axis1->display_units ? " " : "",
+                            axis1->display_units ? axis1->display_units : "");
+    g_object_set(gcmodel,
+                 "mode", GWY_GRAPH_CURVE_LINE,
+                 "color", gwy_graph_get_preset_color(i),
+                 "description", descr,
+                 NULL);
+    g_free(descr);
+
+    gwy_graph_model_add_curve(gmodel, gcmodel);
+    g_object_unref(gcmodel);
+    gwy_graph_model_set_units_from_data_line(gmodel, dline);
+    g_object_unref(dline);
+    channel->already_added = TRUE;
 }
 
 static void
@@ -193,7 +565,9 @@ start_element(G_GNUC_UNUSED GMarkupParseContext *context,
     NanoScanFile *nfile = (NanoScanFile*)user_data;
 
     if (!nfile->path->len && !gwy_strequal(element_name, "scan")) {
-        /* TODO: Make big noise. */
+        g_set_error(error, G_MARKUP_ERROR, G_MARKUP_ERROR_UNKNOWN_ELEMENT,
+                    _("Top-level element is not ‘scan’."));
+        return;
     }
 
     g_string_append_c(nfile->path, '/');
@@ -215,12 +589,6 @@ end_element(G_GNUC_UNUSED GMarkupParseContext *context,
     g_string_truncate(nfile->path, pos - nfile->path->str);
 }
 
-#define RES_PREFIX "/scan/vector/contents/size/contents"
-#define RES_PREFIX_SIZE (sizeof(RES_PREFIX)-1)
-
-#define DIMS_PREFIX "/scan/vector/contents/area/contents"
-#define DIMS_PREFIX_SIZE (sizeof(DIMS_PREFIX)-1)
-
 static void
 text(G_GNUC_UNUSED GMarkupParseContext *context,
      const gchar *value,
@@ -231,33 +599,235 @@ text(G_GNUC_UNUSED GMarkupParseContext *context,
     NanoScanFile *nfile = (NanoScanFile*)user_data;
     const gchar *path = nfile->path->str;
 
+    /* Content is not directly in elements such as <unit>.  Each element, in
+     * spite of its content model being a single value, must contain a <v>
+     * element that actually contains the value.  Fortunately, the genius that
+     * has invented this did not realize that the <v> element cannot directly
+     * contain the value either and it needs its own <v> element... */
+    if (nfile->path->len < 3
+        || nfile->path->str[nfile->path->len-1] != 'v'
+        || nfile->path->str[nfile->path->len-2] != '/')
+        return;
+    nfile->path->str[nfile->path->len-2] = '\0';
+
     if (strncmp(path, RES_PREFIX, RES_PREFIX_SIZE) == 0) {
         path += RES_PREFIX_SIZE;
-        if (gwy_strequal(path, "/fast_axis/v")) {
+        if (gwy_strequal(path, "/fast_axis")) {
             nfile->xres = atoi(value);
             gwy_debug("xres: %d", nfile->xres);
         }
-        else if (gwy_strequal(path, "/slow_axis/v")) {
+        else if (gwy_strequal(path, "/slow_axis")) {
             nfile->yres = atoi(value);
             gwy_debug("xres: %d", nfile->yres);
         }
     }
     else if (strncmp(path, DIMS_PREFIX, DIMS_PREFIX_SIZE) == 0) {
         path += RES_PREFIX_SIZE;
-        if (gwy_strequal(path, "/unit/v")) {
+        if (gwy_strequal(path, "/unit")) {
             g_free(nfile->xyunits);
             nfile->xyunits = g_strdup(value);
             gwy_debug("xyunits: %s", value);
         }
-        else if (gwy_strequal(path, "/size/contents/fast_axis/v")) {
+        else if (gwy_strequal(path, "/size/contents/fast_axis")) {
             nfile->xreal = g_ascii_strtod(value, NULL);
             gwy_debug("xreal: %g", nfile->xreal);
         }
-        else if (gwy_strequal(path, "/size/contents/slow_axis/v")) {
+        else if (gwy_strequal(path, "/size/contents/slow_axis")) {
             nfile->yreal = g_ascii_strtod(value, NULL);
             gwy_debug("yreal: %g", nfile->yreal);
         }
     }
+    else if (strncmp(path, AXIS_PREFIX, AXIS_PREFIX_SIZE) == 0) {
+        NanoScanAxis *axis = nfile->axes + nfile->naxes - 1;
+
+        path += AXIS_PREFIX_SIZE;
+        if (gwy_strequal(path, "/name")) {
+            nfile->axes[nfile->naxes].name = g_strdup(value);
+            nfile->naxes++;
+            gwy_debug("axis[%d]: %s", nfile->naxes, value);
+        }
+        else if (gwy_strequal(path, "/unit")
+                 && nfile->naxes > 0 && nfile->naxes <= NAXES) {
+            g_free(axis->units);
+            axis->units = g_strdup(value);
+            gwy_debug("axis units: %s", value);
+        }
+        else if (gwy_strequal(path, "/display_unit")
+                 && nfile->naxes > 0 && nfile->naxes <= NAXES) {
+            g_free(axis->display_units);
+            axis->display_units = g_strdup(value);
+            gwy_debug("axis units: %s", value);
+        }
+        else if (gwy_strequal(path, "/display_scale")
+                 && nfile->naxes > 0 && nfile->naxes <= NAXES) {
+            axis->display_scale = g_ascii_strtod(value, NULL);
+            gwy_debug("axis start: %g", axis->display_scale);
+        }
+        else if (gwy_strequal(path, "/start/vector")
+                 && nfile->naxes > 0 && nfile->naxes <= NAXES) {
+            axis->start = g_ascii_strtod(value, NULL);
+            gwy_debug("axis start: %g", axis->start);
+        }
+        else if (gwy_strequal(path, "/stop/vector")
+                 && nfile->naxes > 0 && nfile->naxes <= NAXES) {
+            axis->stop = g_ascii_strtod(value, NULL);
+            gwy_debug("axis stop: %g", axis->stop);
+        }
+    }
+    else if (strncmp(path, DATA_PREFIX, DATA_PREFIX_SIZE) == 0) {
+        /* The channels are groupped by direction.  Unusual though it probably
+         * makes sense.  What is worse, they could not do something like
+         * <forward>
+         *   <channel>...</channel>
+         *   <channel>...</channel>
+         * </forward>
+         * <backward>
+         *   <channel>...</channel>
+         *   <channel>...</channel>
+         * </backward>
+         * Instead, there is all kind of stuff stored sequentially under
+         * DATA_PREFIX and when we find a <name> tag it means a new group of
+         * channels is to be expected, with the direction given by the tag
+         * content. */
+        path += DATA_PREFIX_SIZE;
+        if (gwy_strequal(path, "/name")) {
+            if (gwy_strequal(value, "forward")) {
+                nfile->current_direction = SCAN_FORWARD;
+                gwy_debug("direction: forward");
+            }
+            else if (gwy_strequal(value, "backward")) {
+                nfile->current_direction = SCAN_BACKWARD;
+                gwy_debug("direction: backward");
+            }
+            else
+                g_warning("Unknown direction %s.", value);
+        }
+        /* In spite of the insanely deep nesting of XML elements, someone
+         * apparently forgot to encapsulate each channel into its own element.
+         * So much for hierarchy.  Just read stuff and when you see a channel
+         * name you probably found a new channel.  Or not. */
+        else if (gwy_strequal(path, "/channel/vector/contents/name")) {
+            NanoScanChannel channel;
+
+            gwy_clear(&channel, 1);
+            channel.name = g_strdup(value);
+            channel.direction = nfile->current_direction;
+            g_array_append_val(nfile->channels, channel);
+            gwy_debug("channel: %s", value);
+        }
+        else if (gwy_strequal(path, "/channel/vector/contents/unit")
+                 && nfile->channels->len) {
+            NanoScanChannel *channel = &g_array_index(nfile->channels,
+                                                      NanoScanChannel,
+                                                      nfile->channels->len - 1);
+            g_free(channel->zunits);
+            channel->zunits = g_strdup(value);
+            gwy_debug("zunits: %s", value);
+        }
+        else if (gwy_strequal(path, "/channel/vector/contents/data")
+                 && nfile->channels->len) {
+            NanoScanChannel *channel = &g_array_index(nfile->channels,
+                                                      NanoScanChannel,
+                                                      nfile->channels->len - 1);
+            g_free(channel->data);
+            channel->data = read_channel_data(value, value_len,
+                                              nfile->xres * nfile->yres, error);
+            gwy_debug("DATA: %p", channel->data);
+        }
+    }
+
+    nfile->path->str[nfile->path->len-2] = '/';
+}
+
+static gfloat*
+read_channel_data(const gchar *value, gsize value_len,
+                  guint npixels,
+                  GError **error)
+{
+    gpointer *mem;
+    gsize len, maxlen = 3*value_len/4;
+
+    if (maxlen < npixels*sizeof(gfloat)) {
+        g_set_error(error, G_MARKUP_ERROR, G_MARKUP_ERROR_INVALID_CONTENT,
+                    _("Wrong size of of Base64 encoded data."));
+        return NULL;
+    }
+
+    mem = g_malloc(maxlen);
+    len = decode_base64((const guchar*)value, value_len, (guchar*)mem);
+    if (len != npixels*sizeof(gfloat)) {
+        g_set_error(error, G_MARKUP_ERROR, G_MARKUP_ERROR_INVALID_CONTENT,
+                    _("Wrong size of of Base64 encoded data."));
+        g_free(mem);
+        return NULL;
+    }
+
+    return (gfloat*)mem;
+}
+
+static gsize
+decode_base64(const guchar *buf, gsize len, guchar *out)
+{
+    static const guchar base64_codes[0x100] = {
+        255, 255, 255, 255, 255, 255, 255, 255,
+        255, 255, 255, 255, 255, 255, 255, 255,
+        255, 255, 255, 255, 255, 255, 255, 255,
+        255, 255, 255, 255, 255, 255, 255, 255,
+        255, 255, 255, 255, 255, 255, 255, 255,
+        255, 255, 255,  62, 255, 255, 255,  63,
+         52,  53,  54,  55,  56,  57,  58,  59,
+         60,  61, 255, 255, 255,   0, 255, 255,
+        255,   0,   1,   2,   3,   4,   5,   6,
+          7,   8,   9,  10,  11,  12,  13,  14,
+         15,  16,  17,  18,  19,  20,  21,  22,
+         23,  24,  25, 255, 255, 255, 255, 255,
+        255,  26,  27,  28,  29,  30,  31,  32,
+         33,  34,  35,  36,  37,  38,  39,  40,
+         41,  42,  43,  44,  45,  46,  47,  48,
+         49,  50,  51, 255, 255, 255, 255, 255,
+        255, 255, 255, 255, 255, 255, 255, 255,
+        255, 255, 255, 255, 255, 255, 255, 255,
+        255, 255, 255, 255, 255, 255, 255, 255,
+        255, 255, 255, 255, 255, 255, 255, 255,
+        255, 255, 255, 255, 255, 255, 255, 255,
+        255, 255, 255, 255, 255, 255, 255, 255,
+        255, 255, 255, 255, 255, 255, 255, 255,
+        255, 255, 255, 255, 255, 255, 255, 255,
+        255, 255, 255, 255, 255, 255, 255, 255,
+        255, 255, 255, 255, 255, 255, 255, 255,
+        255, 255, 255, 255, 255, 255, 255, 255,
+        255, 255, 255, 255, 255, 255, 255, 255,
+        255, 255, 255, 255, 255, 255, 255, 255,
+        255, 255, 255, 255, 255, 255, 255, 255,
+        255, 255, 255, 255, 255, 255, 255, 255,
+        255, 255, 255, 255, 255, 255, 255, 255,
+    };
+
+    const guchar *end = buf + len;
+    guchar *p = out;
+    guchar c, code, last[2];
+    guint i = 0, v = 0;
+
+    last[0] = last[1] = 0;
+    while (buf < end) {
+        c = *buf++;
+        code = base64_codes[c];
+        if (code != 255) {
+            last[1] = last[0];
+            last[0] = c;
+            v = (v << 6) | code;
+            if (++i == 4) {
+                *p++ = v >> 16;
+                if (last[1] != '=')
+                    *p++ = v >> 8;
+                if (last[0] != '=')
+                    *p++ = v;
+                i = 0;
+            }
+        }
+    }
+
+    return p - out;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
