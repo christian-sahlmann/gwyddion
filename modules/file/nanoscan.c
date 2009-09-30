@@ -67,7 +67,8 @@
 #define DATA_PREFIX "/scan/vector/contents/direction/vector/contents"
 #define DATA_PREFIX_SIZE (sizeof(DATA_PREFIX)-1)
 
-enum { NAXES = 2 };
+#define CHANNEL_PREFIX "/scan/vector/contents/direction/vector/contents/channel/vector/contents"
+#define CHANNEL_PREFIX_SIZE (sizeof(CHANNEL_PREFIX)-1)
 
 typedef enum {
     SCAN_UNKNOWN = 0,
@@ -101,9 +102,8 @@ typedef struct {
     gdouble xreal;
     gdouble yreal;
     NanoScanDirection current_direction;
-    NanoScanAxis axes[NAXES];
+    GArray *axes;
     GArray *channels;
-    guint naxes;
 } NanoScanFile;
 
 static gboolean      module_register     (void);
@@ -230,6 +230,7 @@ nanoscan_load(const gchar *filename,
     /* Parse the XML */
     nfile.path = g_string_new(NULL);
     nfile.channels = g_array_new(FALSE, FALSE, sizeof(NanoScanChannel));
+    nfile.axes = g_array_new(FALSE, FALSE, sizeof(NanoScanAxis));
     context = g_markup_parse_context_new(&parser,
                                          G_MARKUP_PREFIX_ERROR_POSITION
                                          | TREAT_CDATA_AS_TEXT,
@@ -252,13 +253,14 @@ nanoscan_load(const gchar *filename,
         nfile.xreal = nfile.xres;
     if (!((nfile.yreal = fabs(nfile.yreal)) > 0))
         nfile.yreal = nfile.yres;
-    for (i = 0; i < NAXES; i++) {
-        if (nfile.axes[i].stop == nfile.axes[i].start) {
-            nfile.axes[i].stop = 1.0;
-            nfile.axes[i].start = 0.0;
+    for (i = 0; i < nfile.axes->len; i++) {
+        NanoScanAxis *axis = &g_array_index(nfile.axes, NanoScanAxis, i);
+        if (axis->stop == axis->start) {
+            axis->stop = 1.0;
+            axis->start = 0.0;
         }
-        if (!nfile.axes[i].display_scale)
-            nfile.axes[i].display_scale = 1.0;
+        if (!axis->display_scale)
+            axis->display_scale = 1.0;
     }
 
     /* Construct a GwyContainer */
@@ -271,7 +273,7 @@ nanoscan_load(const gchar *filename,
 
         if (nfile.yres == 1)
             add_graph(container, &nfile, channel, id);
-        else if (nfile.naxes == NAXES)
+        else if (nfile.axes->len == 2)
             add_multigraph(container, &nfile, channel, id);
         else
             add_channel(container, &nfile, channel, id);
@@ -300,22 +302,24 @@ nanoscan_free(NanoScanFile *nfile)
     if (nfile->path)
         g_string_free(nfile->path, TRUE);
 
-    for (i = 0; i < NAXES; i++) {
-        g_free(nfile->axes[i].name);
-        g_free(nfile->axes[i].units);
+    if (nfile->axes) {
+        for (i = 0; i < nfile->axes->len; i++) {
+            NanoScanAxis *axis = &g_array_index(nfile->axes, NanoScanAxis, i);
+            g_free(axis->name);
+            g_free(axis->units);
+        }
+        g_array_free(nfile->axes, TRUE);
     }
-
-    if (!nfile->channels)
-        return;
-
-    for (i = 0; i < nfile->channels->len; i++) {
-        NanoScanChannel *channel = &g_array_index(nfile->channels,
-                                                  NanoScanChannel, i);
-        g_free(channel->name);
-        g_free(channel->zunits);
-        g_free(channel->data);
+    if (nfile->channels) {
+        for (i = 0; i < nfile->channels->len; i++) {
+            NanoScanChannel *channel = &g_array_index(nfile->channels,
+                                                      NanoScanChannel, i);
+            g_free(channel->name);
+            g_free(channel->zunits);
+            g_free(channel->data);
+        }
+        g_array_free(nfile->channels, TRUE);
     }
-    g_array_free(nfile->channels, TRUE);
 }
 
 static void
@@ -380,6 +384,7 @@ add_graph(GwyContainer *container,
           NanoScanChannel *channel,
           gint id)
 {
+    NanoScanAxis *axis0 = &g_array_index(nfile->axes, NanoScanAxis, 0);
     GwyGraphModel *gmodel;
     GQuark quark;
     guint j, i;
@@ -399,8 +404,8 @@ add_graph(GwyContainer *container,
         g_object_set(gmodel, "axis-label-left", channel->name, NULL);
         g_object_set(gmodel, "title", channel->name, NULL);
     }
-    if (nfile->axes[0].name)
-        g_object_set(gmodel, "axis-label-bottom", nfile->axes[0].name, NULL);
+    if (axis0->name)
+        g_object_set(gmodel, "axis-label-bottom", axis0->name, NULL);
 
     quark = gwy_app_get_graph_key_for_id(id);
     gwy_container_set_object(container, quark, gmodel);
@@ -413,7 +418,7 @@ add_curve_model(NanoScanFile *nfile,
                 guint i,
                 GwyGraphModel *gmodel)
 {
-    NanoScanAxis *axis0 = &nfile->axes[0];
+    NanoScanAxis *axis0 = &g_array_index(nfile->axes, NanoScanAxis, 0);
     GwyGraphCurveModel *gcmodel;
     GwyDataLine *dline;
     GwySIUnit *unit;
@@ -466,6 +471,7 @@ add_multigraph(GwyContainer *container,
                NanoScanChannel *channel,
                gint id)
 {
+    NanoScanAxis *axis0 = &g_array_index(nfile->axes, NanoScanAxis, 0);
     GwyGraphModel *gmodel;
     GQuark quark;
     guint i;
@@ -489,8 +495,8 @@ add_multigraph(GwyContainer *container,
         g_object_set(gmodel, "title", title, NULL);
         g_free(title);
     }
-    if (nfile->axes[0].name)
-        g_object_set(gmodel, "axis-label-bottom", nfile->axes[0].name, NULL);
+    if (axis0->name)
+        g_object_set(gmodel, "axis-label-bottom", axis0->name, NULL);
 
     quark = gwy_app_get_graph_key_for_id(id);
     gwy_container_set_object(container, quark, gmodel);
@@ -504,8 +510,8 @@ add_multicurve_model(NanoScanFile *nfile,
                      guint i,
                      GwyGraphModel *gmodel)
 {
-    NanoScanAxis *axis0 = &nfile->axes[0];
-    NanoScanAxis *axis1 = &nfile->axes[1];
+    NanoScanAxis *axis0 = &g_array_index(nfile->axes, NanoScanAxis, 0);
+    NanoScanAxis *axis1 = &g_array_index(nfile->axes, NanoScanAxis, 1);
     GwyGraphCurveModel *gcmodel;
     GwyDataLine *dline;
     GwySIUnit *unit;
@@ -572,6 +578,25 @@ start_element(G_GNUC_UNUSED GMarkupParseContext *context,
 
     g_string_append_c(nfile->path, '/');
     g_string_append(nfile->path, element_name);
+
+    if (gwy_strequal(nfile->path->str, CHANNEL_PREFIX)) {
+        NanoScanChannel channel;
+
+        /* Individual channels are inside <contents> tags, but there can be
+         * empty <contents> tags and stuff.  Just create what we see and hope
+         * upstream cann sort it out. */
+        gwy_clear(&channel, 1);
+        channel.direction = nfile->current_direction;
+        g_array_append_val(nfile->channels, channel);
+        gwy_debug("channel #%u", (guint)nfile->channels->len);
+    }
+    else if (gwy_strequal(nfile->path->str, AXIS_PREFIX)) {
+        NanoScanAxis axis;
+
+        gwy_clear(&axis, 1);
+        g_array_append_val(nfile->axes, axis);
+        gwy_debug("axis #%u", (guint)nfile->axes->len);
+    }
 }
 
 static void
@@ -637,58 +662,72 @@ text(G_GNUC_UNUSED GMarkupParseContext *context,
             gwy_debug("yreal: %g", nfile->yreal);
         }
     }
-    else if (strncmp(path, AXIS_PREFIX, AXIS_PREFIX_SIZE) == 0) {
-        NanoScanAxis *axis = nfile->axes + nfile->naxes - 1;
+    else if (strncmp(path, AXIS_PREFIX, AXIS_PREFIX_SIZE) == 0
+             && nfile->axes->len) {
+        NanoScanAxis *axis = &g_array_index(nfile->axes, NanoScanAxis,
+                                            nfile->axes->len - 1);
 
         path += AXIS_PREFIX_SIZE;
         if (gwy_strequal(path, "/name")) {
-            nfile->axes[nfile->naxes].name = g_strdup(value);
-            nfile->naxes++;
-            gwy_debug("axis[%d]: %s", nfile->naxes, value);
+            g_free(axis->name);
+            axis->name = g_strdup(value);
+            gwy_debug("axis name: %s", value);
         }
-        else if (gwy_strequal(path, "/unit")
-                 && nfile->naxes > 0 && nfile->naxes <= NAXES) {
+        else if (gwy_strequal(path, "/unit")) {
             g_free(axis->units);
             axis->units = g_strdup(value);
             gwy_debug("axis units: %s", value);
         }
-        else if (gwy_strequal(path, "/display_unit")
-                 && nfile->naxes > 0 && nfile->naxes <= NAXES) {
+        else if (gwy_strequal(path, "/display_unit")) {
             g_free(axis->display_units);
             axis->display_units = g_strdup(value);
-            gwy_debug("axis units: %s", value);
+            gwy_debug("axis display_units: %s", value);
         }
-        else if (gwy_strequal(path, "/display_scale")
-                 && nfile->naxes > 0 && nfile->naxes <= NAXES) {
+        else if (gwy_strequal(path, "/display_scale")) {
             axis->display_scale = g_ascii_strtod(value, NULL);
-            gwy_debug("axis start: %g", axis->display_scale);
+            gwy_debug("axis display_scale: %g", axis->display_scale);
         }
-        else if (gwy_strequal(path, "/start/vector")
-                 && nfile->naxes > 0 && nfile->naxes <= NAXES) {
+        /* FIXME: These can be vectors in the energy scan mode! */
+        else if (gwy_strequal(path, "/start/vector")) {
             axis->start = g_ascii_strtod(value, NULL);
             gwy_debug("axis start: %g", axis->start);
         }
-        else if (gwy_strequal(path, "/stop/vector")
-                 && nfile->naxes > 0 && nfile->naxes <= NAXES) {
+        else if (gwy_strequal(path, "/stop/vector")) {
             axis->stop = g_ascii_strtod(value, NULL);
             gwy_debug("axis stop: %g", axis->stop);
         }
     }
+    else if (strncmp(path, CHANNEL_PREFIX, CHANNEL_PREFIX_SIZE) == 0
+             && nfile->channels->len) {
+        NanoScanChannel *channel = &g_array_index(nfile->channels,
+                                                  NanoScanChannel,
+                                                  nfile->channels->len - 1);
+
+        path += CHANNEL_PREFIX_SIZE;
+        /* Individual channels are inside <contents> tags, but there can be
+         * empty <contents> tags and stuff.  Just create what we see and hope
+         * upstream cann sort it out. */
+        if (gwy_strequal(path, "/name")) {
+            g_free(channel->name);
+            channel->name = g_strdup(value);
+            gwy_debug("channel: %s", value);
+        }
+        else if (gwy_strequal(path, "/unit")) {
+            g_free(channel->zunits);
+            channel->zunits = g_strdup(value);
+            gwy_debug("zunits: %s", value);
+        }
+        else if (gwy_strequal(path, "/data")) {
+            g_free(channel->data);
+            channel->data = read_channel_data(value, value_len,
+                                              nfile->xres * nfile->yres, error);
+            gwy_debug("DATA: %p", channel->data);
+        }
+    }
     else if (strncmp(path, DATA_PREFIX, DATA_PREFIX_SIZE) == 0) {
-        /* The channels are groupped by direction.  Unusual though it probably
-         * makes sense.  What is worse, they could not do something like
-         * <forward>
-         *   <channel>...</channel>
-         *   <channel>...</channel>
-         * </forward>
-         * <backward>
-         *   <channel>...</channel>
-         *   <channel>...</channel>
-         * </backward>
-         * Instead, there is all kind of stuff stored sequentially under
-         * DATA_PREFIX and when we find a <name> tag it means a new group of
-         * channels is to be expected, with the direction given by the tag
-         * content. */
+        /* The channels are groupped by direction.  So we need to remember
+         * which direction are in because it is just an element along the
+         * way. */
         path += DATA_PREFIX_SIZE;
         if (gwy_strequal(path, "/name")) {
             if (gwy_strequal(value, "forward")) {
@@ -701,38 +740,6 @@ text(G_GNUC_UNUSED GMarkupParseContext *context,
             }
             else
                 g_warning("Unknown direction %s.", value);
-        }
-        /* In spite of the insanely deep nesting of XML elements, someone
-         * apparently forgot to encapsulate each channel into its own element.
-         * So much for hierarchy.  Just read stuff and when you see a channel
-         * name you probably found a new channel.  Or not. */
-        else if (gwy_strequal(path, "/channel/vector/contents/name")) {
-            NanoScanChannel channel;
-
-            gwy_clear(&channel, 1);
-            channel.name = g_strdup(value);
-            channel.direction = nfile->current_direction;
-            g_array_append_val(nfile->channels, channel);
-            gwy_debug("channel: %s", value);
-        }
-        else if (gwy_strequal(path, "/channel/vector/contents/unit")
-                 && nfile->channels->len) {
-            NanoScanChannel *channel = &g_array_index(nfile->channels,
-                                                      NanoScanChannel,
-                                                      nfile->channels->len - 1);
-            g_free(channel->zunits);
-            channel->zunits = g_strdup(value);
-            gwy_debug("zunits: %s", value);
-        }
-        else if (gwy_strequal(path, "/channel/vector/contents/data")
-                 && nfile->channels->len) {
-            NanoScanChannel *channel = &g_array_index(nfile->channels,
-                                                      NanoScanChannel,
-                                                      nfile->channels->len - 1);
-            g_free(channel->data);
-            channel->data = read_channel_data(value, value_len,
-                                              nfile->xres * nfile->yres, error);
-            gwy_debug("DATA: %p", channel->data);
         }
     }
 
