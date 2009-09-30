@@ -456,7 +456,7 @@ AC_SUBST([GTKGLEXT_DEPENDENCY])
 
 #############################################################################
 # libz
-# Optional.
+# Optional.  Used sometimes for data compression, e.g. in Createc and MATLAB.
 GWY_WITH([zlib],,[build with zlib support])
 if test x$enable_zlib != xno && test -z "$ZLIB"; then
   AC_CHECK_LIB(z, inflate,
@@ -474,9 +474,9 @@ AC_SUBST(ZLIB)
 
 #############################################################################
 # PNG
-# Optional.
+# Optional.  Only directly used for 16bit grayscale PNG pixmap export.
 enable_png=yes
-PKG_CHECK_MODULES(PNG, [PNG],
+PKG_CHECK_MODULES(PNG, [libpng],
                   [AC_DEFINE(HAVE_PNG,1,
                             [Define if we have the libpng package.])],
                   [enable_png=no])
