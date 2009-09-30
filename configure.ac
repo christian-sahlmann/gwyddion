@@ -473,6 +473,16 @@ AM_CONDITIONAL([HAVE_ZLIB],[test x$enable_zlib != xno && test -n "$ZLIB"])
 AC_SUBST(ZLIB)
 
 #############################################################################
+# PNG
+# Optional.
+enable_png=yes
+PKG_CHECK_MODULES(PNG, [PNG],
+                  [AC_DEFINE(HAVE_PNG,1,
+                            [Define if we have the libpng package.])],
+                  [enable_png=no])
+AM_CONDITIONAL([HAVE_PNG],[test x$enable_png != xno])
+
+#############################################################################
 # SPML importer
 # Only if you want to have support for spml importer compiled
 GWY_WITH([spml],,[SPML importer (libxml2 required)])

@@ -102,7 +102,7 @@ no_undefined = -no-undefined
 endif
 
 AM_CPPFLAGS = -I$(top_srcdir) -DG_LOG_DOMAIN=\"Module\"
-AM_CFLAGS = @COMMON_CFLAGS@
+AM_CFLAGS = @COMMON_CFLAGS@ @PNG_CFLAGS@
 AM_LDFLAGS = -avoid-version -module $(no_undefined) $(module_libadd)
 
 if MODULE_DEPENDENCIES
@@ -180,6 +180,7 @@ wsxmfile_la_SOURCES      = wsxmfile.c
 
 # It compiles also without.
 createc_la_LIBADD        = @ZLIB@
+pixmap_la_LIBADD         = @PNG_LIBS@
 
 if HAVE_XML2
 spml_la_SOURCES          = spml.c spml-utils.h

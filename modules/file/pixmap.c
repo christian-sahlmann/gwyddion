@@ -28,6 +28,10 @@
 #include <gdk/gdk.h>
 #include <gtk/gtk.h>
 
+#ifdef HAVE_PNG
+#include <png.h>
+#endif
+
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwydebugobjects.h>
@@ -1363,6 +1367,91 @@ units_change_cb(GtkWidget *button,
  *
  ***************************************************************************/
 
+#ifdef HAVE_PNG
+static gboolean
+pixmap_save_png_gray(GwyPixbuf *pixbuf,
+                     const gchar *filename,
+                     GError **error)
+{
+    png_structp writer;
+    png_infop writer_info;
+    png_byte **rows = NULL;
+#if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
+    guint transform_flags = PNG_TRANSFORM_SWAP_ENDIAN;
+#endif
+#if (G_BYTE_ORDER == G_BIG_ENDIAN)
+    guint transform_flags = PNG_TRANSFORM_IDENTITY;
+#endif
+    guint i;
+    FILE *fw;
+
+    writer = png_create_write_struct(PNG_LIBPNG_VER_STRING,
+                                     NULL, NULL, NULL);
+
+    if (!writer) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR,
+                    GWY_MODULE_FILE_ERROR_SPECIFIC,
+                    _("libpng initialization error (in %s)"),
+                    "png_create_write_struct");
+        return FALSE;
+    }
+
+    writer_info = png_create_info_struct(writer);
+    if (!writer_info) {
+        png_destroy_read_struct(&writer, NULL, NULL);
+        g_set_error(error, GWY_MODULE_FILE_ERROR,
+                    GWY_MODULE_FILE_ERROR_SPECIFIC,
+                    _("libpng initialization error (in %s)"),
+                    "png_create_info_struct");
+        return FALSE;
+    }
+
+    fw = g_fopen(filename, "wb");
+
+    if (setjmp(png_jmpbuf(writer))) {
+        /* FIXME: Not very helpful.  Thread-unsafe. */
+        g_set_error(error, GWY_MODULE_FILE_ERROR,
+                    GWY_MODULE_FILE_ERROR_SPECIFIC,
+                    _("libpng error occured"));
+        png_destroy_write_struct(&writer, &writer_info);
+        fclose(fw);
+        g_unlink(filename);
+        g_free(rows);
+        return FALSE;
+    }
+
+    rows = g_new(png_bytep, pixbuf->height);
+    for (i = 0; i < pixbuf->height; i++)
+        rows[i] = (png_bytep)pixbuf->pixels + i*pixbuf->rowstride;
+
+    png_init_io(writer, fw);
+    png_set_filter(writer, 0, PNG_ALL_FILTERS);
+    png_set_compression_level(writer, Z_BEST_COMPRESSION);
+    png_set_IHDR(writer, writer_info, pixbuf->width, pixbuf->height,
+                 pixbuf->bit_depth, PNG_COLOR_TYPE_GRAY, PNG_INTERLACE_NONE,
+                 PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
+    /* TODO */
+    png_set_rows(writer, writer_info, rows);
+    png_write_png(writer, writer_info, transform_flags, NULL);
+
+    /* Cleanup */
+    fclose(fw);
+    g_free(rows);
+    png_destroy_write_struct(&writer, &writer_info);
+
+    return TRUE;
+}
+#else
+static gboolean
+pixmap_save_png_gray(G_GNUC_UNUSED GwyPixbuf *pixbuf,
+                     G_GNUC_UNUSED const gchar *filename,
+                     G_GNUC_UNUSED GError **error)
+{
+    g_assert_not_reached();
+    return FALSE;
+}
+#endif
+
 static gboolean
 pixmap_save_png(GwyContainer *data,
                 const gchar *filename,
@@ -1373,15 +1462,26 @@ pixmap_save_png(GwyContainer *data,
     GError *err = NULL;
     gboolean ok;
 
-    pixbuf = pixmap_draw_pixbuf(data, "PNG", FALSE, mode, error);
+    pixbuf = pixmap_draw_pixbuf(data, "PNG",
+#ifdef HAVE_PNG
+                                TRUE,
+#else
+                                FALSE,
+#endif
+                                mode, error);
     if (!pixbuf)
         return FALSE;
 
-    ok = gdk_pixbuf_save(pixbuf->owner, filename, "png", &err, NULL);
-    if (!ok) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_IO,
-                    _("Pixbuf save failed: %s."), err->message);
-        g_clear_error(&err);
+    if (pixbuf->colorspace == GWY_COLORSPACE_GRAY) {
+        ok = pixmap_save_png_gray(pixbuf, filename, error);
+    }
+    else {
+        ok = gdk_pixbuf_save(pixbuf->owner, filename, "png", &err, NULL);
+        if (!ok) {
+            g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_IO,
+                        _("Pixbuf save failed: %s."), err->message);
+            g_clear_error(&err);
+        }
     }
     gwy_pixbuf_free(pixbuf);
 

@@ -39,6 +39,9 @@
 /* All Win32 Gtk+ packages have zlib */
 #define HAVE_ZLIB 1
 
+/* All Win32 Gtk+ packages have libpng */
+#define HAVE_PNG 1
+
 /* GladeWin32 has GtkGLExt */
 #define HAVE_GTKGLEXT 1
 
