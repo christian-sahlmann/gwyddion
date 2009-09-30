@@ -271,9 +271,9 @@ nanoscan_load(const gchar *filename,
         if (!channel->data || channel->already_added)
             continue;
 
-        if (nfile.yres == 1)
+        if (nfile.yres == 1 && nfile.axes->len >= 1)
             add_graph(container, &nfile, channel, id);
-        else if (nfile.axes->len == 2)
+        else if (nfile.axes->len >= 2)
             add_multigraph(container, &nfile, channel, id);
         else
             add_channel(container, &nfile, channel, id);
