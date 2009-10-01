@@ -1,6 +1,30 @@
 #!/usr/bin/python
+# vim: sw=4 ts=4 et :
 # Written by Yeti <yeti@gwyddion.net>. Public domain.
 import sys, os, re
+
+def format_userguide(module, body):
+    def fmtsup(supported, what):
+        supported = [re.sub(r'\W', '', x) for x in supported]
+        for x in what:
+            if x in supported:
+                return 'Yes'
+        return 'No'
+
+    module = re.sub(r'\.c$', '', module)
+    lines = ['<row>']
+    input = body.split('\n')
+    lines.append('  <entry>%s</entry>' % input[0])
+    lines.append('  <entry>%s</entry>' % ', '.join(input[1].split()))
+    lines.append('  <entry>%s module</entry>' % module)
+    supports = input[2].split()
+    lines.append('  <entry>%s</entry>' % fmtsup(supports, ('Read',)))
+    lines.append('  <entry>%s</entry>' % fmtsup(supports, ('Save', 'Export')))
+    lines.append('  <entry>%s</entry>' % fmtsup(supports, ('SPS',)))
+    lines.append('</row>')
+    for i, x in enumerate(lines):
+        lines[i] = '    ' + x
+    return '\n'.join(lines)
 
 mclasses = {
     'FREEDESKTOP': {
@@ -11,7 +35,35 @@ mclasses = {
     },
     'FILE': {
         'comment': '# %s',
-    }
+    },
+    'USERGUIDE': {
+        'comment': '    <!-- %s -->',
+        'header': '''<?xml version='1.0' encoding='utf-8'?>
+<!DOCTYPE book PUBLIC '-//OASIS//DTD DocBook XML V4.5//EN'
+               'http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd'>
+<informaltable frame='none' id='table-file-formats'>
+  <indexterm>
+    <primary>file</primary>
+    <primary>supported formats</primary>
+  </indexterm>
+  <tgroup cols='6' align='left'>
+    <?dblatex XXXccc?>
+    <thead>
+      <row>
+        <entry>File Format</entry>
+        <entry>Extensions</entry>
+        <entry>Supported By</entry>
+        <entry>Read</entry>
+        <entry>Write</entry>
+        <entry>SPS</entry>
+      </row>
+    </thead>
+    <tbody>''',
+        'footer': '''    </tbody>
+  </tgroup>
+</informaltable>''',
+        'formatter': format_userguide,
+     },
 }
 
 try:
@@ -44,11 +96,14 @@ for filename in sys.argv[2:]:
             if comment:
                 output.append(comment)
                 comment = None
-            output.append(re.sub(r'(?m)^ \* ', '', m.group('body')))
+            body = re.sub(r'(?m)^ \* ', '', m.group('body'))
+            if 'formatter' in magic:
+                body = magic['formatter'](base, body)
+            output.append(body)
         # and when nothing is found, note it
         if comment:
             comment = magic['comment'] % ('Module %s contains no magic.' % base)
-            output.append(comment + '\n')
+            output.append(comment)
     except OSError:
         sys.stderr.write('Cannot read %s\n' % filename)
         sys.exit(1)
