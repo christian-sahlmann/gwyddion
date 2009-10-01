@@ -29,6 +29,13 @@
  * </mime-type>
  **/
 
+/**
+ * [FILE-MAGIC-USERGUIDE]
+ * Nanoscan XML
+ * .xml
+ * Read
+ **/
+
 #include "config.h"
 #include <string.h>
 #include <stdlib.h>
@@ -49,11 +56,20 @@
 
 #define EXTENSION ".xml"
 
+#ifdef HAVE_MEMRCHR
+#define strlenrchr(s,c,len) (gchar*)memrchr((s),(c),(len))
+#else
+#define strlenrchr(s,c,len) strchr((s),(c))
+#endif
+
 #if GLIB_CHECK_VERSION(2, 12, 0)
 #define TREAT_CDATA_AS_TEXT G_MARKUP_TREAT_CDATA_AS_TEXT
 #else
 #define TREAT_CDATA_AS_TEXT 0
 #endif
+
+#define SCAN_PREFIX "/scan/vector/contents"
+#define SCAN_PREFIX_SIZE (sizeof(SCAN_PREFIX)-1)
 
 #define RES_PREFIX "/scan/vector/contents/size/contents"
 #define RES_PREFIX_SIZE (sizeof(RES_PREFIX)-1)
@@ -70,11 +86,20 @@
 #define CHANNEL_PREFIX "/scan/vector/contents/direction/vector/contents/channel/vector/contents"
 #define CHANNEL_PREFIX_SIZE (sizeof(CHANNEL_PREFIX)-1)
 
+#define META_PREFIX "/scan/vector/contents/instrumental_parameters/contents"
+#define META_PREFIX_SIZE (sizeof(META_PREFIX)-1)
+
 typedef enum {
     SCAN_UNKNOWN = 0,
     SCAN_FORWARD = 1,
     SCAN_BACKWARD = -1,
 } NanoScanDirection;
+
+typedef struct {
+    gchar *name;
+    gchar *value;
+    gchar *units;
+} NanoScanMeta;
 
 typedef struct {
     gchar *name;
@@ -104,6 +129,7 @@ typedef struct {
     NanoScanDirection current_direction;
     GArray *axes;
     GArray *channels;
+    GArray *meta;
 } NanoScanFile;
 
 static gboolean      module_register     (void);
@@ -112,6 +138,7 @@ static gint          nanoscan_detect     (const GwyFileDetectInfo *fileinfo,
 static GwyContainer* nanoscan_load       (const gchar *filename,
                                           GwyRunType mode,
                                           GError **error);
+static void          nanoscan_free       (NanoScanFile *nfile);
 static void          add_channel         (GwyContainer *container,
                                           NanoScanFile *nfile,
                                           NanoScanChannel *channel,
@@ -132,7 +159,10 @@ static void          add_multicurve_model(NanoScanFile *nfile,
                                           NanoScanChannel *channel,
                                           guint i,
                                           GwyGraphModel *gmodel);
-static void          nanoscan_free       (NanoScanFile *nfile);
+static void          fix_metadata        (NanoScanFile *nfile);
+static void          add_metadata        (GwyContainer *container,
+                                          NanoScanFile *nfile,
+                                          gint id);
 static void          start_element       (GMarkupParseContext *context,
                                           const gchar *element_name,
                                           const gchar **attribute_names,
@@ -148,6 +178,9 @@ static void          text                (GMarkupParseContext *context,
                                           gsize text_len,
                                           gpointer user_data,
                                           GError **error);
+static void          add_meta            (NanoScanFile *nfile,
+                                          const gchar *name,
+                                          const gchar *value);
 static gfloat*       read_channel_data   (const gchar *value,
                                           gsize value_len,
                                           guint npixels,
@@ -231,6 +264,7 @@ nanoscan_load(const gchar *filename,
     nfile.path = g_string_new(NULL);
     nfile.channels = g_array_new(FALSE, FALSE, sizeof(NanoScanChannel));
     nfile.axes = g_array_new(FALSE, FALSE, sizeof(NanoScanAxis));
+    nfile.meta = g_array_new(FALSE, FALSE, sizeof(NanoScanMeta));
     context = g_markup_parse_context_new(&parser,
                                          G_MARKUP_PREFIX_ERROR_POSITION
                                          | TREAT_CDATA_AS_TEXT,
@@ -265,6 +299,7 @@ nanoscan_load(const gchar *filename,
 
     /* Construct a GwyContainer */
     container = gwy_container_new();
+    fix_metadata(&nfile);
     for (i = id = 0; i < nfile.channels->len; i++) {
         NanoScanChannel *channel = &g_array_index(nfile.channels,
                                                   NanoScanChannel, i);
@@ -272,11 +307,13 @@ nanoscan_load(const gchar *filename,
             continue;
 
         if (nfile.yres == 1 && nfile.axes->len >= 1)
-            add_graph(container, &nfile, channel, id);
+            add_graph(container, &nfile, channel, id+1);
         else if (nfile.axes->len >= 2)
             add_multigraph(container, &nfile, channel, id);
-        else
+        else {
             add_channel(container, &nfile, channel, id);
+            add_metadata(container, &nfile, id);
+        }
 
         id++;
     }
@@ -319,6 +356,15 @@ nanoscan_free(NanoScanFile *nfile)
             g_free(channel->data);
         }
         g_array_free(nfile->channels, TRUE);
+    }
+    if (nfile->meta) {
+        for (i = 0; i < nfile->channels->len; i++) {
+            NanoScanMeta *meta = &g_array_index(nfile->meta, NanoScanMeta, i);
+            g_free(meta->name);
+            g_free(meta->value);
+            g_free(meta->units);
+        }
+        g_array_free(nfile->meta, TRUE);
     }
 }
 
@@ -561,6 +607,63 @@ add_multicurve_model(NanoScanFile *nfile,
 }
 
 static void
+fix_metadata(NanoScanFile *nfile)
+{
+    guint i;
+
+    for (i = 0; i < nfile->meta->len; i++) {
+        NanoScanMeta *meta = &g_array_index(nfile->meta, NanoScanMeta, i);
+        guint j;
+
+        meta->name[0] = g_ascii_toupper(meta->name[0]);
+        for (j = 1; meta->name[j]; j++) {
+            if (meta->name[j] == '_') {
+                meta->name[j] = ' ';
+                if (meta->name[j+1]) {
+                    meta->name[j+1] = g_ascii_toupper(meta->name[j+1]);
+                    j++;
+                }
+            }
+        }
+        if (meta->value && meta->units) {
+            gchar *fullvalue = g_strconcat(meta->value, " ", meta->units, NULL);
+
+            g_free(meta->value);
+            meta->value = fullvalue;
+            g_free(meta->units);
+            meta->units = NULL;
+        }
+    }
+}
+
+static void
+add_metadata(GwyContainer *container,
+             NanoScanFile *nfile,
+             gint id)
+{
+    GwyContainer *metadata;
+    gchar *key;
+    guint i;
+
+    if (!nfile->meta->len)
+        return;
+
+    metadata = gwy_container_new();
+    for (i = 0; i < nfile->meta->len; i++) {
+        NanoScanMeta *meta = &g_array_index(nfile->meta, NanoScanMeta, i);
+
+        if (meta->value)
+            gwy_container_set_string_by_name(metadata, meta->name,
+                                             g_strdup(meta->value));
+    }
+
+    key = g_strdup_printf("/%d/meta", id);
+    gwy_container_set_object_by_name(container, key, metadata);
+    g_free(key);
+    g_object_unref(metadata);
+}
+
+static void
 start_element(G_GNUC_UNUSED GMarkupParseContext *context,
               const gchar *element_name,
               G_GNUC_UNUSED const gchar **attribute_names,
@@ -608,11 +711,7 @@ end_element(G_GNUC_UNUSED GMarkupParseContext *context,
     NanoScanFile *nfile = (NanoScanFile*)user_data;
     gchar *pos;
 
-#ifdef HAVE_MEMRCHR
-    pos = memrchr(nfile->path->str, '/', nfile->path->len);
-#else
-    pos = strrchr(nfile->path->str, '/');
-#endif
+    pos = strlenrchr(nfile->path->str, '/', nfile->path->len);
     /* GMarkupParser should raise a run-time error if this does not hold. */
     g_assert(pos && strcmp(pos + 1, element_name) == 0);
     g_string_truncate(nfile->path, pos - nfile->path->str);
@@ -746,8 +845,49 @@ text(G_GNUC_UNUSED GMarkupParseContext *context,
                 g_warning("Unknown direction %s.", value);
         }
     }
+    else if (strncmp(path, META_PREFIX, META_PREFIX_SIZE) == 0) {
+        gchar *name;
+
+        path += META_PREFIX_SIZE;
+        name = strlenrchr(path, '/', nfile->path->len - META_PREFIX_SIZE) + 1;
+        add_meta(nfile, name, value);
+    }
+    else if (strncmp(path, SCAN_PREFIX, SCAN_PREFIX_SIZE) == 0
+             && !strchr(path + SCAN_PREFIX_SIZE + 1, '/')) {
+        add_meta(nfile, path + SCAN_PREFIX_SIZE+1, value);
+    }
 
     nfile->path->str[nfile->path->len-2] = '/';
+}
+
+static void
+add_meta(NanoScanFile *nfile,
+         const gchar *name,
+         const gchar *value)
+{
+    /* If the element ends with _units, it should be the units of the
+     * previous element. */
+    if (g_str_has_suffix(name, "_unit")) {
+        if (nfile->meta->len) {
+            NanoScanMeta *meta = &g_array_index(nfile->meta, NanoScanMeta,
+                                                nfile->meta->len - 1);
+
+            if (g_str_has_prefix(name, meta->name)
+                && strlen(name) == strlen(meta->name) + sizeof("_unit")-1) {
+                g_free(meta->units);
+                meta->units = g_strdup(value);
+                gwy_debug("units of %s: %s", meta->name, value);
+            }
+        }
+    }
+    else {
+        NanoScanMeta meta = { NULL, NULL, NULL };
+
+        meta.name = g_strdup(name);
+        meta.value = g_strdup(value);
+        gwy_debug("meta %s: %s", name, value);
+        g_array_append_val(nfile->meta, meta);
+    }
 }
 
 static gfloat*
