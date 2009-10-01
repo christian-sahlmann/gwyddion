@@ -272,7 +272,7 @@ make_noise(GwyTextHeaderContext *context,
     va_start(ap, format);
     s = g_strdup_vprintf(format, ap);
     va_end(ap);
-    g_set_error_literal(&context->error, GWY_TEXT_HEADER_ERROR, code, s);
+    g_set_error(&context->error, GWY_TEXT_HEADER_ERROR, code, "%s", s);
     g_free(s);
     check_fatal_error(context);
 }
