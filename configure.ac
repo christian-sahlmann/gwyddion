@@ -221,7 +221,6 @@ fi
 if test "x$enable_pygwy" != xno; then
   AM_CHECK_PYTHON_HEADERS([],
                           [enable_pygwy=no; PYGWY_WARN=" (needs Python headers)"])
-  AC_SUBST(PYTHON_INCLUDES)
 fi
 
 if test "x$enable_pygwy" != xno; then
