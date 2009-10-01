@@ -36,7 +36,7 @@
 #define OBJ_SYNTH_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
 #define DECLARE_OBJECT(name) \
-    static void create_##name(GwyDataField *feature, gdouble size, \
+    static void create_##name(ObjSynthObject *feature, gdouble size, \
                               gdouble aspect, gdouble height, gdouble angle); \
     static gdouble getcov_##name(gdouble aspect)
 
@@ -76,7 +76,16 @@ typedef enum {
     OBJ_SYNTH_NTYPES
 } ObjSynthType;
 
-typedef void (*CreateFeatureFunc)(GwyDataField *feature,
+/* Avoid reallocations by using a single buffer for objects that can only
+ * grow. */
+typedef struct {
+    gint xres;
+    gint yres;
+    gsize size;
+    gdouble *data;
+} ObjSynthObject;
+
+typedef void (*CreateFeatureFunc)(ObjSynthObject *feature,
                                   gdouble size,
                                   gdouble aspect,
                                   gdouble height,
@@ -210,7 +219,7 @@ static void        obj_synth_do         (const ObjSynthArgs *args,
                                          RandGenSet *rngset,
                                          GwyDataField *dfield);
 static void        object_synth_iter    (GwyDataField *surface,
-                                         GwyDataField *object,
+                                         ObjSynthObject *object,
                                          const ObjSynthArgs *args,
                                          RandGenSet *rngset,
                                          gint nxcells,
@@ -220,7 +229,7 @@ static void        object_synth_iter    (GwyDataField *surface,
                                          gint nobjects,
                                          gint *indices);
 static void        place_add_min        (GwyDataField *surface,
-                                         GwyDataField *object,
+                                         ObjSynthObject *object,
                                          gint col,
                                          gint row);
 static glong       calculate_n_objects  (const ObjSynthArgs *args,
@@ -983,7 +992,7 @@ obj_synth_do(const ObjSynthArgs *args,
              RandGenSet *rngset,
              GwyDataField *dfield)
 {
-    GwyDataField *object;
+    ObjSynthObject object = { 0, 0, 0, NULL };
     gint *indices;
     glong nobjects;
     gint xres, yres, nxcells, nycells, ncells, cellside, niters, i;
@@ -999,17 +1008,16 @@ obj_synth_do(const ObjSynthArgs *args,
 
     rand_gen_set_init(rngset, args->seed);
     indices = g_new(gint, ncells);
-    object = gwy_data_field_new(1, 1, 1.0, 1.0, FALSE);
 
     gwy_data_field_clear(dfield);
     for (i = 0; i < niters; i++) {
-        object_synth_iter(dfield, object, args, rngset,
+        object_synth_iter(dfield, &object, args, rngset,
                           nxcells, nycells, i+1, i+1, ncells, indices);
     }
-    object_synth_iter(dfield, object, args, rngset,
+    object_synth_iter(dfield, &object, args, rngset,
                       nxcells, nycells, 0, 0, nobjects % ncells, indices);
 
-    g_object_unref(object);
+    g_free(object.data);
     g_free(indices);
 
     gwy_data_field_data_changed(dfield);
@@ -1044,7 +1052,7 @@ rand_gen_set_gauss(RandGenSet *rngset,
 
 static void
 object_synth_iter(GwyDataField *surface,
-                  GwyDataField *object,
+                  ObjSynthObject *object,
                   const ObjSynthArgs *args,
                   RandGenSet *rngset,
                   gint nxcells,
@@ -1114,8 +1122,21 @@ object_synth_iter(GwyDataField *surface,
     }
 }
 
+static inline void
+obj_synth_object_resize(ObjSynthObject *object,
+                        gint xres, gint yres)
+{
+    object->xres = xres;
+    object->yres = yres;
+    if ((guint)(xres*yres) > object->size) {
+        g_free(object->data);
+        object->data = g_new(gdouble, xres*yres);
+        object->size = xres*yres;
+    }
+}
+
 static void
-create_sphere(GwyDataField *feature,
+create_sphere(ObjSynthObject *feature,
               gdouble size,
               gdouble aspect,
               gdouble height,
@@ -1132,8 +1153,8 @@ create_sphere(GwyDataField *feature,
     xres = (gint)ceil(2*hypot(a*c, b*s) + 1) | 1;
     yres = (gint)ceil(2*hypot(a*s, b*c) + 1) | 1;
 
-    gwy_data_field_resample(feature, xres, yres, GWY_INTERPOLATION_NONE);
-    z = gwy_data_field_get_data(feature);
+    obj_synth_object_resize(feature, xres, yres);
+    z = feature->data;
     for (i = 0; i < yres; i++) {
         y = i - yres/2;
         for (j = 0; j < xres; j++) {
@@ -1148,7 +1169,7 @@ create_sphere(GwyDataField *feature,
 }
 
 static void
-create_pyramid(GwyDataField *feature,
+create_pyramid(ObjSynthObject *feature,
                gdouble size,
                gdouble aspect,
                gdouble height,
@@ -1165,8 +1186,8 @@ create_pyramid(GwyDataField *feature,
     xres = (gint)ceil(2*(a*fabs(c) + b*fabs(s)) + 1) | 1;
     yres = (gint)ceil(2*(a*fabs(s) + b*fabs(c)) + 1) | 1;
 
-    gwy_data_field_resample(feature, xres, yres, GWY_INTERPOLATION_NONE);
-    z = gwy_data_field_get_data(feature);
+    obj_synth_object_resize(feature, xres, yres);
+    z = feature->data;
     for (i = 0; i < yres; i++) {
         y = i - yres/2;
         for (j = 0; j < xres; j++) {
@@ -1181,7 +1202,7 @@ create_pyramid(GwyDataField *feature,
 }
 
 static void
-create_box(GwyDataField *feature,
+create_box(ObjSynthObject *feature,
            gdouble size,
            gdouble aspect,
            gdouble height,
@@ -1198,8 +1219,8 @@ create_box(GwyDataField *feature,
     xres = (gint)ceil(2*(a*fabs(c) + b*fabs(s)) + 1) | 1;
     yres = (gint)ceil(2*(a*fabs(s) + b*fabs(c)) + 1) | 1;
 
-    gwy_data_field_resample(feature, xres, yres, GWY_INTERPOLATION_NONE);
-    z = gwy_data_field_get_data(feature);
+    obj_synth_object_resize(feature, xres, yres);
+    z = feature->data;
     for (i = 0; i < yres; i++) {
         y = i - yres/2;
         for (j = 0; j < xres; j++) {
@@ -1214,7 +1235,7 @@ create_box(GwyDataField *feature,
 }
 
 static void
-create_tent(GwyDataField *feature,
+create_tent(ObjSynthObject *feature,
             gdouble size,
             gdouble aspect,
             gdouble height,
@@ -1231,8 +1252,8 @@ create_tent(GwyDataField *feature,
     xres = (gint)ceil(2*(a*fabs(c) + b*fabs(s)) + 1) | 1;
     yres = (gint)ceil(2*(a*fabs(s) + b*fabs(c)) + 1) | 1;
 
-    gwy_data_field_resample(feature, xres, yres, GWY_INTERPOLATION_NONE);
-    z = gwy_data_field_get_data(feature);
+    obj_synth_object_resize(feature, xres, yres);
+    z = feature->data;
     for (i = 0; i < yres; i++) {
         y = i - yres/2;
         for (j = 0; j < xres; j++) {
@@ -1247,7 +1268,7 @@ create_tent(GwyDataField *feature,
 }
 
 static void
-create_cone(GwyDataField *feature,
+create_cone(ObjSynthObject *feature,
             gdouble size,
             gdouble aspect,
             gdouble height,
@@ -1264,8 +1285,8 @@ create_cone(GwyDataField *feature,
     xres = (gint)ceil(2*hypot(a*c, b*s) + 1) | 1;
     yres = (gint)ceil(2*hypot(a*s, b*c) + 1) | 1;
 
-    gwy_data_field_resample(feature, xres, yres, GWY_INTERPOLATION_NONE);
-    z = gwy_data_field_get_data(feature);
+    obj_synth_object_resize(feature, xres, yres);
+    z = feature->data;
     for (i = 0; i < yres; i++) {
         y = i - yres/2;
         for (j = 0; j < xres; j++) {
@@ -1280,7 +1301,7 @@ create_cone(GwyDataField *feature,
 }
 
 static void
-create_nugget(GwyDataField *feature,
+create_nugget(ObjSynthObject *feature,
               gdouble size,
               gdouble aspect,
               gdouble height,
@@ -1309,8 +1330,8 @@ create_nugget(GwyDataField *feature,
     xres = (gint)ceil(2*((a - b)*fabs(c) + b) + 1) | 1;
     yres = (gint)ceil(2*((a - b)*fabs(s) + b) + 1) | 1;
 
-    gwy_data_field_resample(feature, xres, yres, GWY_INTERPOLATION_NONE);
-    z = gwy_data_field_get_data(feature);
+    obj_synth_object_resize(feature, xres, yres);
+    z = feature->data;
     for (i = 0; i < yres; i++) {
         y = i - yres/2;
         for (j = 0; j < xres; j++) {
@@ -1328,7 +1349,7 @@ create_nugget(GwyDataField *feature,
 }
 
 static void
-create_thatch(GwyDataField *feature,
+create_thatch(ObjSynthObject *feature,
               gdouble size,
               gdouble aspect,
               gdouble height,
@@ -1345,8 +1366,8 @@ create_thatch(GwyDataField *feature,
     xres = (gint)ceil(2*(a*fabs(c) + b*fabs(s)) + 1) | 1;
     yres = (gint)ceil(2*(a*fabs(s) + b*fabs(c)) + 1) | 1;
 
-    gwy_data_field_resample(feature, xres, yres, GWY_INTERPOLATION_NONE);
-    z = gwy_data_field_get_data(feature);
+    obj_synth_object_resize(feature, xres, yres);
+    z = feature->data;
     for (i = 0; i < yres; i++) {
         y = i - yres/2;
         for (j = 0; j < xres; j++) {
@@ -1364,7 +1385,7 @@ create_thatch(GwyDataField *feature,
 }
 
 static void
-create_doughnut(GwyDataField *feature,
+create_doughnut(ObjSynthObject *feature,
                 gdouble size,
                 gdouble aspect,
                 gdouble height,
@@ -1381,8 +1402,8 @@ create_doughnut(GwyDataField *feature,
     xres = (gint)ceil(2*hypot(a*c, b*s) + 1) | 1;
     yres = (gint)ceil(2*hypot(a*s, b*c) + 1) | 1;
 
-    gwy_data_field_resample(feature, xres, yres, GWY_INTERPOLATION_NONE);
-    z = gwy_data_field_get_data(feature);
+    obj_synth_object_resize(feature, xres, yres);
+    z = feature->data;
     for (i = 0; i < yres; i++) {
         y = i - yres/2;
         for (j = 0; j < xres; j++) {
@@ -1398,7 +1419,7 @@ create_doughnut(GwyDataField *feature,
 }
 
 static void
-create_thedron(GwyDataField *feature,
+create_thedron(ObjSynthObject *feature,
                gdouble size,
                gdouble aspect,
                gdouble height,
@@ -1415,8 +1436,8 @@ create_thedron(GwyDataField *feature,
     xres = (gint)ceil(2*(a*fabs(c) + b*fabs(s)) + 1) | 1;
     yres = (gint)ceil(2*(a*fabs(s) + b*fabs(c)) + 1) | 1;
 
-    gwy_data_field_resample(feature, xres, yres, GWY_INTERPOLATION_NONE);
-    z = gwy_data_field_get_data(feature);
+    obj_synth_object_resize(feature, xres, yres);
+    z = feature->data;
     for (i = 0; i < yres; i++) {
         y = i - yres/2;
         for (j = 0; j < xres; j++) {
@@ -1436,7 +1457,7 @@ create_thedron(GwyDataField *feature,
 
 static void
 place_add_min(GwyDataField *surface,
-              GwyDataField *object,
+              ObjSynthObject *object,
               gint col,
               gint row)
 {
@@ -1444,13 +1465,13 @@ place_add_min(GwyDataField *surface,
     gint ioff, joff;
     gint i, j, l;
     gdouble min;
-    const gdouble *k, *krow;
+    const gdouble *z;
     gdouble *d, *drow;
 
     xres = gwy_data_field_get_xres(surface);
     yres = gwy_data_field_get_yres(surface);
-    kxres = gwy_data_field_get_xres(object);
-    kyres = gwy_data_field_get_yres(object);
+    kxres = object->xres;
+    kyres = object->yres;
 
     joff = (col - kxres/2 + 16384*xres) % xres;
     ioff = (row - kyres/2 + 16384*yres) % yres;
@@ -1458,27 +1479,27 @@ place_add_min(GwyDataField *surface,
     g_return_if_fail(ioff >= 0);
 
     d = gwy_data_field_get_data(surface);
-    k = gwy_data_field_get_data_const(object);
 
     min = G_MAXDOUBLE;
+    z = object->data;
     for (i = 0; i < kyres; i++) {
         drow = d + ((ioff + i) % yres)*xres;
-        krow = k + i*kxres;
-        for (j = 0; j < kxres; j++) {
-            if (krow[j]) {
+        for (j = 0; j < kxres; j++, z++) {
+            if (*z) {
                 l = (joff + j) % xres;
                 if (drow[l] < min)
                     min = drow[l];
             }
         }
     }
+
+    z = object->data;
     for (i = 0; i < kyres; i++) {
         drow = d + ((ioff + i) % yres)*xres;
-        krow = k + i*kxres;
-        for (j = 0; j < kxres; j++) {
-            if (krow[j]) {
+        for (j = 0; j < kxres; j++, z++) {
+            if (*z) {
                 l = (joff + j) % xres;
-                drow[l] = MAX(drow[l], min + krow[j]);
+                drow[l] = MAX(drow[l], min + *z);
             }
         }
     }
