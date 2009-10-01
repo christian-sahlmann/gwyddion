@@ -31,6 +31,13 @@
  * </mime-type>
  **/
 
+/**
+ * [FILE-MAGIC-USERGUIDE]
+ * Pacific Nanotechnology PNI
+ * .pni
+ * Read
+ **/
+
 #include "config.h"
 #include <string.h>
 #include <libgwyddion/gwymacros.h>

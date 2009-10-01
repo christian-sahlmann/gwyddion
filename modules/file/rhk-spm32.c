@@ -30,6 +30,13 @@
  * </mime-type>
  **/
 
+/**
+ * [FILE-MAGIC-USERGUIDE]
+ * RHK Instruments SM2
+ * .sm2
+ * Read SPS
+ **/
+
 #include "config.h"
 #include <string.h>
 #include <stdio.h>

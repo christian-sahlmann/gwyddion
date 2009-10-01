@@ -33,6 +33,13 @@
  * </mime-type>
  **/
 
+/**
+ * [FILE-MAGIC-USERGUIDE]
+ * Hitachi AFM
+ * .afm
+ * Read
+ **/
+
 #include "config.h"
 #include <string.h>
 #include <libgwyddion/gwymacros.h>

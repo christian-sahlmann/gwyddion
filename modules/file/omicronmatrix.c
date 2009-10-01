@@ -30,6 +30,13 @@
  * </mime-type>
  **/
 
+/**
+ * [FILE-MAGIC-USERGUIDE]
+ * Omicron MATRIX
+ * .mtrx
+ * Read
+ **/
+
 /* Version 0.81, 17.10.2008 */
 #include <stdlib.h>
 #include <string.h>

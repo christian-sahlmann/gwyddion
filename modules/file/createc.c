@@ -40,6 +40,13 @@
  * </mime-type>
  **/
 
+/**
+ * [FILE-MAGIC-USERGUIDE]
+ * Createc DAT
+ * .dat
+ * Read
+ **/
+
 #include "config.h"
 #include <string.h>
 #include <stdlib.h>

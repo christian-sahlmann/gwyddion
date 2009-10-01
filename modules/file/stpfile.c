@@ -36,6 +36,13 @@
  * </mime-type>
  **/
 
+/**
+ * [FILE-MAGIC-USERGUIDE]
+ * Molecular Imaging STP
+ * .stp
+ * Read
+ **/
+
 #include "config.h"
 #include <string.h>
 #include <stdlib.h>

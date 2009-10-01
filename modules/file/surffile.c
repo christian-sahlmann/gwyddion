@@ -30,6 +30,13 @@
  * </mime-type>
  **/
 
+/**
+ * [FILE-MAGIC-USERGUIDE]
+ * Surf
+ * .sur
+ * Read
+ **/
+
 #include "config.h"
 #include <string.h>
 #include <libgwyddion/gwymath.h>

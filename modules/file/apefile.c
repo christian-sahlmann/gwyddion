@@ -41,6 +41,13 @@
  * </mime-type>
  **/
 
+/**
+ * [FILE-MAGIC-USERGUIDE]
+ * APE Research DAT
+ * .dat
+ * Read
+ **/
+
 #include <string.h>
 #include <time.h>
 #include "config.h"

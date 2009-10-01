@@ -32,6 +32,13 @@
  * </mime-type>
  **/
 
+/**
+ * [FILE-MAGIC-USERGUIDE]
+ * Nanosurf EZD, NID
+ * .ezd .nid
+ * Read
+ **/
+
 #include "config.h"
 #include <string.h>
 #include <stdlib.h>

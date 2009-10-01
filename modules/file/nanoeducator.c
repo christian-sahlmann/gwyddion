@@ -31,6 +31,13 @@
  * </mime-type>
  **/
 
+/**
+ * [FILE-MAGIC-USERGUIDE]
+ * Nanoeducator
+ * .mspm .stm .spm
+ * Read
+ **/
+
 #include "config.h"
 #include <string.h>
 #include <stdlib.h>

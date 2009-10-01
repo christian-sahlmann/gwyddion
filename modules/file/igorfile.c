@@ -26,6 +26,14 @@
  *   <glob pattern="*.IBW"/>
  * </mime-type>
  **/
+
+/**
+ * [FILE-MAGIC-USERGUIDE]
+ * WaveMetrics IGOR binary wave v5
+ * .ibw
+ * Read
+ **/
+
 #include "config.h"
 #include <string.h>
 #include <stdlib.h>

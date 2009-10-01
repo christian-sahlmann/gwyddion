@@ -28,6 +28,13 @@
  * </mime-type>
  **/
 
+/**
+ * [FILE-MAGIC-USERGUIDE]
+ * Sensofar PLu v2000
+ * .plu
+ * Read
+ **/
+
 #include "config.h"
 #include <stdio.h>
 #include <libgwyddion/gwymath.h>

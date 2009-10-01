@@ -31,6 +31,13 @@
  * </mime-type>
  **/
 
+/**
+ * [FILE-MAGIC-USERGUIDE]
+ * Omicron SCALA
+ * .par .tf* .tb* .sf* .sb*
+ * Read SPS
+ **/
+
 /* TODO: metadata */
 
 #include "config.h"

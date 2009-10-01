@@ -33,6 +33,13 @@
  * </mime-type>
  **/
 
+/**
+ * [FILE-MAGIC-USERGUIDE]
+ * JPK Instruments
+ * .jpk
+ * Read
+ **/
+
 #include "config.h"
 #include <string.h>
 #include <stdio.h>

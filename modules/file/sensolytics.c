@@ -31,6 +31,13 @@
  * </mime-type>
  **/
 
+/**
+ * [FILE-MAGIC-USERGUIDE]
+ * Sensolytics DAT
+ * .dat
+ * Read
+ **/
+
 #include "config.h"
 #include <string.h>
 #include <stdio.h>

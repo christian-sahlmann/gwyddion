@@ -32,6 +32,13 @@
  * </mime-type>
  **/
 
+/**
+ * [FILE-MAGIC-USERGUIDE]
+ * Attocube Systems ASC
+ * .asc
+ * Read
+ **/
+
 #include "config.h"
 #include <string.h>
 #include <stdio.h>

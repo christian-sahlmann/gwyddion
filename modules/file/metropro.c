@@ -28,6 +28,13 @@
  * </mime-type>
  **/
 
+/**
+ * [FILE-MAGIC-USERGUIDE]
+ * Zygo MetroPro DAT
+ * .dat
+ * Read
+ **/
+
 #include <string.h>
 #include <time.h>
 #include "config.h"

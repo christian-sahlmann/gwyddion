@@ -28,6 +28,13 @@
  * </mime-type>
  **/
 
+/**
+ * [FILE-MAGIC-USERGUIDE]
+ * Veeco Nanoscope II
+ * .001 .002 etc.
+ * Read
+ **/
+
 #include "config.h"
 #include <string.h>
 #include <stdlib.h>

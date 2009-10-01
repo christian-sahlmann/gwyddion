@@ -29,6 +29,13 @@
  * </mime-type>
  **/
 
+/**
+ * [FILE-MAGIC-USERGUIDE]
+ * Veeco Nanoscope III
+ * .001 .002 etc.
+ * Read
+ **/
+
 #include "config.h"
 #include <errno.h>
 #include <string.h>

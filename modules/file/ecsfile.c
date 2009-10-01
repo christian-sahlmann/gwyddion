@@ -29,6 +29,13 @@
  * </mime-type>
  **/
 
+/**
+ * [FILE-MAGIC-USERGUIDE]
+ * ECS
+ * .img
+ * Read
+ **/
+
 #include "config.h"
 #include <string.h>
 #include <stdio.h>

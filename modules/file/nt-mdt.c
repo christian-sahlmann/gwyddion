@@ -31,6 +31,13 @@
  * </mime-type>
  **/
 
+/**
+ * [FILE-MAGIC-USERGUIDE]
+ * NT-MDT
+ * .mdt
+ * Read SPS
+ **/
+
 #include "config.h"
 #include <string.h>
 #include <stdlib.h>

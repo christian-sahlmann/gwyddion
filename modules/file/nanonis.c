@@ -32,6 +32,13 @@
  * </mime-type>
  **/
 
+/**
+ * [FILE-MAGIC-USERGUIDE]
+ * Nanonis SXM
+ * .sxm
+ * Read
+ **/
+
 #include "config.h"
 #include <stdlib.h>
 #include <stdio.h>

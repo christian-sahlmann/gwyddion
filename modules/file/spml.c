@@ -52,6 +52,13 @@
  * </mime-type>
  **/
 
+/**
+ * [FILE-MAGIC-USERGUIDE]
+ * SPML (Scanning Probe Microscopy Markup Language)
+ * .xml
+ * Read
+ **/
+
 #include "config.h"
 #include <stdio.h>
 #include <string.h>

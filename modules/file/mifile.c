@@ -34,6 +34,13 @@
  * </mime-type>
  **/
 
+/**
+ * [FILE-MAGIC-USERGUIDE]
+ * Molecular Imaging MI
+ * .mi
+ * Read
+ **/
+
 #include "config.h"
 #include <string.h>
 #include <stdlib.h>

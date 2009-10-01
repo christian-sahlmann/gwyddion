@@ -30,6 +30,13 @@
  * </mime-type>
  **/
 
+/**
+ * [FILE-MAGIC-USERGUIDE]
+ * Nanonics NAN
+ * .nan
+ * Read
+ **/
+
 #include "config.h"
 #include <string.h>
 #include <stdlib.h>

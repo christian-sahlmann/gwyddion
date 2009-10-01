@@ -42,6 +42,13 @@
  * </mime-type>
  **/
 
+/**
+ * [FILE-MAGIC-USERGUIDE]
+ * Image Metrology BCR, BCRF
+ * .bcr .bcrf
+ * Read
+ **/
+
 #include "config.h"
 #include <string.h>
 #include <stdlib.h>

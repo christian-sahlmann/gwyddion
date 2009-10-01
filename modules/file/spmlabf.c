@@ -29,6 +29,13 @@
  * </mime-type>
  **/
 
+/**
+ * [FILE-MAGIC-USERGUIDE]
+ * Thermicroscopes SPMLab floating point
+ * .flt
+ * Read
+ **/
+
 #include "config.h"
 #include <string.h>
 #include <stdio.h>

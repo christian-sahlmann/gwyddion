@@ -28,6 +28,13 @@
  * </mime-type>
  **/
 
+/**
+ * [FILE-MAGIC-USERGUIDE]
+ * Shimadzu
+ * <!--FIXME-->
+ * Read
+ **/
+
 #include "config.h"
 #include <string.h>
 #include <stdlib.h>

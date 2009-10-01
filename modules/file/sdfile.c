@@ -36,6 +36,20 @@
  * </mime-type>
  **/
 
+/**
+ * [FILE-MAGIC-USERGUIDE]
+ * Surfstand Surface Data File
+ * .sdf
+ * Read Export
+ **/
+
+/**
+ * [FILE-MAGIC-USERGUIDE]
+ * Micromap SDFA
+ * .sdfa
+ * Read
+ **/
+
 #include "config.h"
 #include <string.h>
 #include <stdlib.h>

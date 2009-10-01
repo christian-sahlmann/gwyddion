@@ -31,6 +31,13 @@
  * </mime-type>
  **/
 
+/**
+ * [FILE-MAGIC-USERGUIDE]
+ * JEOL
+ * .tif
+ * Read
+ **/
+
 #include "config.h"
 #include <string.h>
 #include <stdarg.h>

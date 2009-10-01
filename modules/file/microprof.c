@@ -38,6 +38,20 @@
  * </mime-type>
  **/
 
+/**
+ * [FILE-MAGIC-USERGUIDE]
+ * MicroProf TXT
+ * .txt
+ * Read
+ **/
+
+/**
+ * [FILE-MAGIC-USERGUIDE]
+ * MicroProf FRT
+ * .frt
+ * Read
+ **/
+
 #include "config.h"
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwyutils.h>

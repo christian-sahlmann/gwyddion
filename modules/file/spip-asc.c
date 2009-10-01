@@ -32,6 +32,13 @@
  * </mime-type>
  **/
 
+/**
+ * [FILE-MAGIC-USERGUIDE]
+ * SPIP ASCII
+ * .asc
+ * Read
+ **/
+
 #include "config.h"
 #include <string.h>
 #include <stdio.h>

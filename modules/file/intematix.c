@@ -37,6 +37,13 @@
  * </mime-type>
  **/
 
+/**
+ * [FILE-MAGIC-USERGUIDE]
+ * Intematix SDF
+ * .sdf
+ * Read
+ **/
+
 #include "config.h"
 #include <string.h>
 #include <stdio.h>

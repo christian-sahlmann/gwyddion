@@ -41,6 +41,20 @@
  * </mime-type>
  **/
 
+/**
+ * [FILE-MAGIC-USERGUIDE]
+ * Wyko OPD
+ * .opd
+ * Read
+ **/
+
+/**
+ * [FILE-MAGIC-USERGUIDE]
+ * Wyko ASCII
+ * .asc
+ * Read
+ **/
+
 #include "config.h"
 #include <string.h>
 #include <stdio.h>

@@ -1,7 +1,7 @@
 /*
  *  $Id$
  *  Copyright (C) 2005 David Necas (Yeti), Petr Klapetek.
- *  E-mail: yeti@gwyddion.net, klwsxmtek@gwyddion.net.
+ *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -28,6 +28,13 @@
  *   <glob pattern="*.tom"/>
  *   <glob pattern="*.TOM"/>
  * </mime-type>
+ **/
+
+/**
+ * [FILE-MAGIC-USERGUIDE]
+ * Nanotec WSxM
+ * .tom
+ * Read
  **/
 
 #include "config.h"

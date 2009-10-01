@@ -36,6 +36,13 @@
  * </mime-type>
  **/
 
+/**
+ * [FILE-MAGIC-USERGUIDE]
+ * Omicron STMPRG
+ * tp* ta*
+ * Read
+ **/
+
 /* TODO
  * - store both directions
  * - other channels

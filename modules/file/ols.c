@@ -30,6 +30,13 @@
  * </mime-type>
  **/
 
+/**
+ * [FILE-MAGIC-USERGUIDE]
+ * Olympus LEX 3000
+ * .ols
+ * Read
+ **/
+
 #include "config.h"
 #include <stdlib.h>
 #include <libgwyddion/gwymath.h>

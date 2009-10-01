@@ -32,6 +32,13 @@
  * </mime-type>
  **/
 
+/**
+ * [FILE-MAGIC-USERGUIDE]
+ * Burleigh BII
+ * .bii
+ * Read
+ **/
+
 #include "config.h"
 #include <string.h>
 #include <stdio.h>

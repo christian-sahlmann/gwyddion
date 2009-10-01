@@ -28,6 +28,13 @@
  * </mime-type>
  **/
 
+/**
+ * [FILE-MAGIC-USERGUIDE]
+ * Burleigh exported data
+ * .txt .bin
+ * Read
+ **/
+
 #include "config.h"
 #include <stdlib.h>
 #include <string.h>

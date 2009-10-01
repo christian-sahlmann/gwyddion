@@ -27,6 +27,14 @@
  *   </magic>
  * </mime-type>
  **/
+
+/**
+ * [FILE-MAGIC-USERGUIDE]
+ * Quesant AFM
+ * .afm
+ * Read
+ **/
+
 // TODO: not sure about picture orientation
 
 #include "config.h"

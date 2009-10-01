@@ -31,6 +31,13 @@
  * </mime-type>
  **/
 
+/**
+ * [FILE-MAGIC-USERGUIDE]
+ * Gwyddion native data
+ * .gwy
+ * Read Save SPS
+ **/
+
 #include "config.h"
 #include <string.h>
 #include <errno.h>
