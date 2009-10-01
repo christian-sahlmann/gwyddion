@@ -596,7 +596,7 @@ AC_CHECK_HEADERS( \
 # Check for library functions.
 AC_FUNC_MMAP
 GWY_CHECK_MATH_FUNCS([cbrt hypot pow10 acosh asinh atanh])
-AC_CHECK_FUNCS([sincos _fpclass])
+AC_CHECK_FUNCS([sincos _fpclass memrchr])
 dnl FIXME: We need C99 for this.  But we must be able to switch off its
 dnl aliasing rules which at this moment we can do for GCC only.  That's too
 dnl limited.

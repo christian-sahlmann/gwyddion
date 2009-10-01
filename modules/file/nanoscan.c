@@ -608,7 +608,11 @@ end_element(G_GNUC_UNUSED GMarkupParseContext *context,
     NanoScanFile *nfile = (NanoScanFile*)user_data;
     gchar *pos;
 
+#ifdef HAVE_MEMRCHR
     pos = memrchr(nfile->path->str, '/', nfile->path->len);
+#else
+    pos = strrchr(nfile->path->str, '/');
+#endif
     /* GMarkupParser should raise a run-time error if this does not hold. */
     g_assert(pos && strcmp(pos + 1, element_name) == 0);
     g_string_truncate(nfile->path, pos - nfile->path->str);
