@@ -418,19 +418,6 @@ gwy_app_file_chooser_type_changed(GwyAppFileChooser *chooser,
     g_free(chooser->filetype);
     gtk_tree_model_get(model, &iter, COLUMN_FILETYPE, &chooser->filetype, -1);
     gwy_app_file_chooser_update_expander(chooser);
-
-    /* XXX: Reset filter and set it again.  There is no way to notify the
-     * file chooser dialog the filter has changed. */
-    key = g_strconcat(chooser->prefix, "/filter", NULL);
-    gwy_container_gis_boolean_by_name(gwy_app_settings_get(), key, &active);
-    g_free(key);
-
-    if (active) {
-        gtk_file_chooser_set_filter(GTK_FILE_CHOOSER(chooser),
-                                    chooser->no_filter);
-        gtk_file_chooser_set_filter(GTK_FILE_CHOOSER(chooser),
-                                    chooser->filter);
-    }
 }
 
 static void
@@ -550,8 +537,7 @@ gwy_app_file_chooser_add_type_list(GwyAppFileChooser *chooser)
 
     if (action == GTK_FILE_CHOOSER_ACTION_OPEN) {
         chooser->filter_enable
-            = gtk_check_button_new_with_mnemonic(_("Show only loadable "
-                                                   "files of selected type"));
+            = gtk_check_button_new_with_mnemonic(_("Show only loadable files"));
         key = g_strconcat(chooser->prefix, "/filter", NULL);
         gwy_container_gis_boolean_by_name(gwy_app_settings_get(), key, &filter);
         g_free(key);
@@ -584,15 +570,8 @@ gwy_app_file_chooser_open_filter(const GtkFileFilterInfo *filter_info,
     gint score;
 
     chooser = GWY_APP_FILE_CHOOSER(userdata);
-    if (chooser->filetype && *chooser->filetype)
-        return gwy_file_func_run_detect(chooser->filetype,
-                                        filter_info->filename,
-                                        FALSE);
-
     name = gwy_file_detect_with_score(filter_info->filename,
-                                      FALSE,
-                                      GWY_FILE_OPERATION_LOAD,
-                                      &score);
+                                      FALSE, GWY_FILE_OPERATION_LOAD, &score);
     /* To filter out `fallback' importers like rawfile */
     return name != NULL && score >= 5;
 }
