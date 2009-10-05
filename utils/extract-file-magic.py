@@ -3,28 +3,61 @@
 # Written by Yeti <yeti@gwyddion.net>. Public domain.
 import sys, os, re
 
+# The global mapping between footnote ids (as they appear in the guide) and
+# their texts.  This is used to compactify footnotes with an identical text.
+footnotes = {}
+
 def format_userguide(module, body):
-    def fmtsup(supported, what):
-        supported = [re.sub(r'\W', '', x) for x in supported]
-        for x in what:
-            if x in supported:
-                return 'Yes'
+    DESCRIPTION, EXTENSIONS, SUPPORTS, NOTES = range(4)
+    parsesupport = re.compile(r'(?P<name>\w+)'
+                              r'(?::(?P<alias>\w+))?'
+                              r'(?:\[(?P<note>\w+)\])?').match
+    parsenotes = re.compile(r'(?ms)\[(?P<note>\w+)\]\s*(?P<text>[^[]*)')
+    entry = '  <entry>%s</entry>'
+
+    # Return the local mapping for a footnote (i.e. between [1] in the comment
+    # in source code and the text that should go to the user guide).
+    def register_note(footnotes, note):
+        key, text = note.group('note'), note.group('text').strip()
+        for fnkey, fntext in footnotes.items():
+            if text == fntext:
+                fmttext = '<footnoteref linkend="%s"/>' % fnkey
+                return key, fmttext
+        fnkey = 'table-file-formats-fn%d' % (len(footnotes) + 1)
+        fmttext = '<footnote id="%s"><para>%s</para></footnote>' % (fnkey, text)
+        footnotes[fnkey] = text
+        return key, fmttext
+
+    def fmtsup(supported, noterefs, what):
+        yes = 'Yes'
+        for x in supported:
+            name = x['name']
+            if name in what:
+                if x['alias']:
+                    yes = x['alias']
+                if x['note']:
+                    yes += noterefs[x['note']]
+                return yes
         return 'No'
 
     module = re.sub(r'\.c$', '', module)
-    lines = ['<row>']
-    input = body.split('\n')
-    lines.append('  <entry>%s</entry>' % input[0])
-    lines.append('  <entry>%s</entry>' % ', '.join(input[1].split()))
-    lines.append('  <entry>%s module</entry>' % module)
-    supports = input[2].split()
-    lines.append('  <entry>%s</entry>' % fmtsup(supports, ('Read',)))
-    lines.append('  <entry>%s</entry>' % fmtsup(supports, ('Save', 'Export')))
-    lines.append('  <entry>%s</entry>' % fmtsup(supports, ('SPS',)))
-    lines.append('</row>')
-    for i, x in enumerate(lines):
-        lines[i] = '    ' + x
-    return '\n'.join(lines)
+    out = ['<row>']
+    lines = body.split('\n')[:NOTES]
+    noterefs = {}
+    for note in parsenotes.finditer('\n'.join(body.split('\n')[NOTES:])):
+        key, text = register_note(footnotes, note)
+        noterefs[key] = text
+    out.append(entry % lines[DESCRIPTION])
+    out.append(entry % ', '.join(lines[EXTENSIONS].split()))
+    out.append(entry % module)
+    supinfo = [parsesupport(x).groupdict() for x in lines[SUPPORTS].split()]
+    out.append(entry % fmtsup(supinfo, noterefs, ('Read',)))
+    out.append(entry % fmtsup(supinfo, noterefs, ('Save', 'Export')))
+    out.append(entry % fmtsup(supinfo, noterefs, ('SPS',)))
+    out.append('</row>')
+    for i, x in enumerate(out):
+        out[i] = '    ' + x
+    return '\n'.join(out)
 
 mclasses = {
     'FREEDESKTOP': {
@@ -52,7 +85,7 @@ mclasses = {
       <row>
         <entry>File Format</entry>
         <entry>Extensions</entry>
-        <entry>Supported By</entry>
+        <entry>Module</entry>
         <entry>Read</entry>
         <entry>Write</entry>
         <entry>SPS</entry>
