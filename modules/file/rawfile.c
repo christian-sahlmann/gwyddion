@@ -214,7 +214,7 @@ static GwyModuleInfo module_info = {
     N_("Imports raw data files, both ASCII and binary, according to "
        "user-specified format."),
     "Yeti <yeti@gwyddion.net>",
-    "2.6",
+    "2.7",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -300,6 +300,9 @@ module_register(void)
                            (GwyFileLoadFunc)&rawfile_load,
                            NULL,
                            NULL);
+    /* We provide a detection function, but that's only to become the fallback
+     * loading method. */
+    gwy_file_func_set_is_detectable("rawfile", FALSE);
 
     return TRUE;
 }

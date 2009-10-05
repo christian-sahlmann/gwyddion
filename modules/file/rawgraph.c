@@ -104,6 +104,9 @@ module_register(void)
                            (GwyFileLoadFunc)&rawgraph_load,
                            NULL,
                            NULL);
+    /* We provide a detection function, but the loading method tries a bit
+     * harder, so let the user choose explicitly. */
+    gwy_file_func_set_is_detectable("rawgraph", FALSE);
 
     return TRUE;
 }
