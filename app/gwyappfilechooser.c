@@ -51,6 +51,7 @@ enum {
 typedef struct {
     GSList *list;
     GwyFileOperationType fileop;
+    gboolean only_nondetectable;
 } TypeListData;
 
 typedef struct {
@@ -72,7 +73,8 @@ static void       gwy_app_file_chooser_add_type       (const gchar *name,
 static gint       gwy_app_file_chooser_type_compare   (gconstpointer a,
                                                        gconstpointer b);
 static void       gwy_app_file_chooser_add_types      (GtkListStore *store,
-                                                       GwyFileOperationType fileop);
+                                                       GwyFileOperationType fileop,
+                                                       gboolean only_nondetectable);
 static void       gwy_app_file_chooser_add_type_list  (GwyAppFileChooser *chooser);
 static void       gwy_app_file_chooser_update_expander(GwyAppFileChooser *chooser);
 static void       gwy_app_file_chooser_type_changed   (GwyAppFileChooser *chooser,
@@ -159,6 +161,9 @@ gwy_app_file_chooser_add_type(const gchar *name,
     if (!(gwy_file_func_get_operations(name) & data->fileop))
         return;
 
+    if (data->only_nondetectable && gwy_file_func_get_is_detectable(name))
+        return;
+
     data->list = g_slist_prepend(data->list, (gpointer)name);
 }
 
@@ -172,7 +177,8 @@ gwy_app_file_chooser_type_compare(gconstpointer a,
 
 static void
 gwy_app_file_chooser_add_types(GtkListStore *store,
-                               GwyFileOperationType fileop)
+                               GwyFileOperationType fileop,
+                               gboolean only_nondetectable)
 {
     TypeListData tldata;
     GtkTreeIter iter;
@@ -180,6 +186,7 @@ gwy_app_file_chooser_add_types(GtkListStore *store,
 
     tldata.list = NULL;
     tldata.fileop = fileop;
+    tldata.only_nondetectable = only_nondetectable;
     gwy_file_func_foreach((GFunc)gwy_app_file_chooser_add_type, &tldata);
     tldata.list = g_slist_sort(tldata.list, gwy_app_file_chooser_type_compare);
 
@@ -485,8 +492,8 @@ gwy_app_file_chooser_add_type_list(GwyAppFileChooser *chooser)
                            COLUMN_FILETYPE, "",
                            COLUMN_LABEL, _("Automatic by extension"),
                            -1);
-        gwy_app_file_chooser_add_types(store, GWY_FILE_OPERATION_SAVE);
-        gwy_app_file_chooser_add_types(store, GWY_FILE_OPERATION_EXPORT);
+        gwy_app_file_chooser_add_types(store, GWY_FILE_OPERATION_SAVE, FALSE);
+        gwy_app_file_chooser_add_types(store, GWY_FILE_OPERATION_EXPORT, FALSE);
         break;
 
         case GTK_FILE_CHOOSER_ACTION_OPEN:
@@ -494,7 +501,7 @@ gwy_app_file_chooser_add_type_list(GwyAppFileChooser *chooser)
                            COLUMN_FILETYPE, "",
                            COLUMN_LABEL, _("Automatically detected"),
                            -1);
-        gwy_app_file_chooser_add_types(store, GWY_FILE_OPERATION_LOAD);
+        gwy_app_file_chooser_add_types(store, GWY_FILE_OPERATION_LOAD, TRUE);
         break;
 
         default:
@@ -562,7 +569,7 @@ gwy_app_file_chooser_add_type_list(GwyAppFileChooser *chooser)
     /* Give it some reasonable size. FIXME: hack. */
     gtk_widget_show_all(vbox);
     gtk_widget_size_request(scwin, &req);
-    gtk_widget_set_size_request(scwin, -1, 3*req.height + 20);
+    gtk_widget_set_size_request(scwin, -1, 2*req.height + 20);
 
     gwy_app_file_chooser_select_type(chooser);
     gwy_app_file_chooser_type_changed(chooser, selection);
