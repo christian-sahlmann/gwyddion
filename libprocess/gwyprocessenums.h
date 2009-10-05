@@ -213,6 +213,7 @@ typedef enum {
 } GwyExteriorType;
 
 const GwyEnum* gwy_merge_type_get_enum(void) G_GNUC_CONST;
+const GwyEnum* gwy_masking_type_get_enum(void) G_GNUC_CONST;
 const GwyEnum* gwy_plane_symmetry_get_enum(void) G_GNUC_CONST;
 const GwyEnum* gwy_2d_cwt_wavelet_type_get_enum(void) G_GNUC_CONST;
 const GwyEnum* gwy_orientation_get_enum(void) G_GNUC_CONST;

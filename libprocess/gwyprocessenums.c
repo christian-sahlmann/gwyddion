@@ -267,6 +267,41 @@ gwy_correlation_type_get_enum(void)
     return entries;
 }
 
+/**
+ * GwyMaskingType:
+ * @GWY_MASK_EXCLUDE: Exclude data under mask, i.e. take into account only
+ *                    data not covered by the mask.
+ * @GWY_MASK_INCLUDE: Take into account only data under the mask.
+ * @GWY_MASK_IGNORE: Ignore mask, if present, and use all data.
+ *
+ * Mask handling in procedures that can apply masking.
+ *
+ * Note at present many procedures do not have a masking argument and hence
+ * cannot apply masks in exclude mode.
+ *
+ * Since: 2.12
+ **/
+/**
+ * gwy_masking_type_get_enum:
+ *
+ * Returns #GwyEnum for #GwyMaskingType enum type.
+ *
+ * Returns: %NULL-terminated #GwyEnum which must not be modified nor freed.
+ *
+ * Since: 2.18
+ **/
+const GwyEnum*
+gwy_masking_type_get_enum(void)
+{
+    static const GwyEnum entries[] = {
+        { N_("Exclude masked region"),          GWY_MASK_EXCLUDE, },
+        { N_("Include only masked region"),     GWY_MASK_INCLUDE, },
+        { N_("Use entire image (ignore mask)"), GWY_MASK_IGNORE,  },
+        { NULL,                                 0,                },
+    };
+    return entries;
+}
+
 
 /************************** Documentation ****************************/
 
@@ -277,29 +312,14 @@ gwy_correlation_type_get_enum(void)
  **/
 
 /**
- * GwyMaskingType:
- * @GWY_MASK_EXCLUDE: Exclude data under mask, i.e. take into account only
- *                    data not covered by the mask.
- * @GWY_MASK_INCLUDE: Take into account only data under the mask.
- * @GWY_MASK_IGNORE: Ignore mask, if present, and use all data.
- *
- * Mask handling in procedures that can apply masking.
- *
- * FIXME: At present this is used namely by modules, the mask-application
- * interfaces of #GwyDataField methods are not very consistent.
- *
- * Since: 2.12
- **/
-
-/**
  * GwyTransformDirection:
  * @GWY_TRANSFORM_DIRECTION_BACKWARD: Backward (inverse) transform.
  * @GWY_TRANSFORM_DIRECTION_FORWARD: Forward (direct) transform.
  *
  * Transform (namely integral transform) direction.
  *
- * In FFT, it is equal to sign of the exponent, that is backward transform
- * uses -1, forward transform +1.
+ * In FFT, it is equal to sign of the exponent, that is the backward transform
+ * uses -1, the forward transform +1.
  **/
 
 /**
