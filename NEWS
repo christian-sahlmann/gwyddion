@@ -20,7 +20,7 @@ Modules:
 - Pixmap export: TIFFs are written in binary mode, fixing broken exported
   images on MS Windows.
 - Pixmap export: It is possible to export data as 16bit grayscale images (at
-  present for TIFF and PNM).
+  present for TIFF, PNG and PNM).
 - Object Synthesis: Cone, box and tent shapes were added.
 
 Other:
