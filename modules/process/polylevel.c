@@ -498,15 +498,9 @@ poly_level_dialog(PolyLevelArgs *args,
         row++;
 
         controls.masking_group
-            = gwy_radio_buttons_createl(G_CALLBACK(poly_level_masking_changed),
-                                        &controls, args->masking,
-                                        _("_Exclude region under mask"),
-                                        GWY_MASK_EXCLUDE,
-                                        _("Include _only region under mask"),
-                                        GWY_MASK_INCLUDE,
-                                        _("Use entire _image (ignore mask)"),
-                                        GWY_MASK_IGNORE,
-                                        NULL);
+            = gwy_radio_buttons_create(gwy_masking_type_get_enum(), -1,
+                                       G_CALLBACK(poly_level_masking_changed),
+                                       &controls, args->masking);
         row = gwy_radio_buttons_attach_to_table(controls.masking_group,
                                                 GTK_TABLE(table), 3, row);
     }

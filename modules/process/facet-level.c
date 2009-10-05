@@ -32,12 +32,12 @@
 #define LEVEL_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
 typedef struct {
-    GwyMaskingType level_mode;
+    GwyMaskingType masking;
 } LevelArgs;
 
 typedef struct {
     LevelArgs *args;
-    GSList *mode;
+    GSList *masking;
 } LevelControls;
 
 static gboolean module_register   (void);
@@ -50,7 +50,7 @@ static gboolean facet_level_coeffs(GwyDataField *dfield,
                                    gdouble *by);
 static gboolean level_dialog      (LevelArgs *args,
                                    const gchar *title);
-static void     mode_changed_cb   (G_GNUC_UNUSED GObject *unused,
+static void     masking_changed   (G_GNUC_UNUSED GObject *unused,
                                    LevelControls *controls);
 static void     level_load_args   (GwyContainer *container,
                                    LevelArgs *args);
@@ -135,7 +135,7 @@ facet_level(GwyContainer *data, GwyRunType run)
             return;
     }
     if (!mfield)
-        args.level_mode = GWY_MASK_IGNORE;
+        args.masking = GWY_MASK_IGNORE;
 
     /* converge
      * FIXME: this can take a long time */
@@ -144,7 +144,7 @@ facet_level(GwyContainer *data, GwyRunType run)
     gwy_app_wait_start(gwy_app_find_window_for_channel(data, id),
                        _("Facet-leveling"));
     while (i < 100) {
-        if (!facet_level_coeffs(dfield, mfield, args.level_mode, &bx, &by)) {
+        if (!facet_level_coeffs(dfield, mfield, args.masking, &bx, &by)) {
             /* Not actually cancelled, but do not save undo */
             cancelled = TRUE;
             break;
@@ -273,12 +273,6 @@ level_dialog(LevelArgs *args,
              const gchar *title)
 {
     enum { RESPONSE_RESET = 1 };
-    static const GwyEnum modes[] = {
-        { N_("_Exclude region under mask"),      GWY_MASK_EXCLUDE, },
-        { N_("Include _only region under mask"), GWY_MASK_INCLUDE, },
-        { N_("Use entire _image (ignore mask)"), GWY_MASK_IGNORE,  },
-    };
-
     GtkWidget *dialog, *label, *table;
     gint row, response;
     LevelControls controls;
@@ -305,10 +299,10 @@ level_dialog(LevelArgs *args,
                      0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
-    controls.mode = gwy_radio_buttons_create(modes, G_N_ELEMENTS(modes),
-                                             G_CALLBACK(mode_changed_cb),
-                                             &controls, args->level_mode);
-    row = gwy_radio_buttons_attach_to_table(controls.mode, GTK_TABLE(table),
+    controls.masking = gwy_radio_buttons_create(gwy_masking_type_get_enum(), -1,
+                                                G_CALLBACK(masking_changed),
+                                                &controls, args->masking);
+    row = gwy_radio_buttons_attach_to_table(controls.masking, GTK_TABLE(table),
                                             3, row);
 
     gtk_widget_show_all(dialog);
@@ -328,7 +322,7 @@ level_dialog(LevelArgs *args,
 
             case RESPONSE_RESET:
             *args = level_defaults;
-            gwy_radio_buttons_set_current(controls.mode, args->level_mode);
+            gwy_radio_buttons_set_current(controls.masking, args->masking);
             break;
 
             default:
@@ -343,27 +337,27 @@ level_dialog(LevelArgs *args,
 }
 
 static void
-mode_changed_cb(G_GNUC_UNUSED GObject *unused, LevelControls *controls)
+masking_changed(G_GNUC_UNUSED GObject *unused, LevelControls *controls)
 {
-    controls->args->level_mode = gwy_radio_buttons_get_current(controls->mode);
+    controls->args->masking = gwy_radio_buttons_get_current(controls->masking);
 }
 
-static const gchar level_mode_key[] = "/module/facet-level/mode";
+static const gchar masking_key[] = "/module/facet-level/mode";
 
 static void
 level_load_args(GwyContainer *container, LevelArgs *args)
 {
     *args = level_defaults;
 
-    gwy_container_gis_enum_by_name(container, level_mode_key,
-                                   &args->level_mode);
+    gwy_container_gis_enum_by_name(container, masking_key,
+                                   &args->masking);
 }
 
 static void
 level_save_args(GwyContainer *container, LevelArgs *args)
 {
-    gwy_container_set_enum_by_name(container, level_mode_key,
-                                   args->level_mode);
+    gwy_container_set_enum_by_name(container, masking_key,
+                                   args->masking);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
