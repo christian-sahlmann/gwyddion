@@ -21,7 +21,7 @@
 /**
  * [FILE-MAGIC-USERGUIDE]
  * Text matrix of data values
- * *.txt
+ * .txt
  * Export
  **/
 
