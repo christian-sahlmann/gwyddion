@@ -265,9 +265,7 @@ nanoscan_load(const gchar *filename,
     nfile.channels = g_array_new(FALSE, FALSE, sizeof(NanoScanChannel));
     nfile.axes = g_array_new(FALSE, FALSE, sizeof(NanoScanAxis));
     nfile.meta = g_array_new(FALSE, FALSE, sizeof(NanoScanMeta));
-    context = g_markup_parse_context_new(&parser,
-                                         G_MARKUP_PREFIX_ERROR_POSITION
-                                         | TREAT_CDATA_AS_TEXT,
+    context = g_markup_parse_context_new(&parser, TREAT_CDATA_AS_TEXT,
                                          &nfile, NULL);
     if (!g_markup_parse_context_parse(context, buffer, size, &err)
         || !g_markup_parse_context_end_parse(context, &err)) {
