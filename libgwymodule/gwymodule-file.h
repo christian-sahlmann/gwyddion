@@ -108,6 +108,9 @@ GwyFileOperationType gwy_file_save            (GwyContainer *data,
                                                const gchar *filename,
                                                GwyRunType mode,
                                                GError **error);
+gboolean            gwy_file_func_get_is_detectable(const gchar *name);
+void                gwy_file_func_set_is_detectable(const gchar *name,
+                                                    gboolean is_detectable);
 gboolean            gwy_file_get_data_info    (GwyContainer *data,
                                                const gchar **name,
                                                const gchar **filename_sys);

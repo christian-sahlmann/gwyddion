@@ -49,6 +49,7 @@ typedef struct {
     GwyFileLoadFunc load;
     GwyFileSaveFunc save;
     GwyFileSaveFunc export_;
+    gboolean is_detectable;
 } GwyFileFuncInfo;
 
 /* Information about current file, passed around during detection */
@@ -154,6 +155,7 @@ gwy_file_func_register(const gchar *name,
     func_info->load = load;
     func_info->save = save;
     func_info->export_ = export_;
+    func_info->is_detectable = !!func_info->detect;
 
     g_hash_table_insert(file_funcs, (gpointer)func_info->name, func_info);
     if (!_gwy_module_add_registered_function(GWY_MODULE_PREFIX_FILE, name)) {
@@ -694,6 +696,65 @@ gwy_file_func_get_description(const gchar *name)
     g_return_val_if_fail(func_info, NULL);
 
     return func_info->description;
+}
+
+/**
+ * gwy_file_func_get_is_detectable:
+ * @name: File type function name.
+ *
+ * Returns if the file format is reasonably detectable.
+ *
+ * This is %TRUE for all file types that define a detection method unless they
+ * explicitly call gwy_file_func_set_is_detectable() to set the file format
+ * non-detectable in spite of providing a detection method.
+ *
+ * If files that can be actually loaded as a given type form a subset of files
+ * that are detected as this format, which is normaly the case, it makes no
+ * sense to let the user explicitly choose between these formats.  Hence,
+ * detectable formats normally are not explicitly offered.
+ *
+ * Returns: If the file format is detectable.
+ *
+ * Since: 2.18
+ **/
+gboolean
+gwy_file_func_get_is_detectable(const gchar *name)
+{
+    GwyFileFuncInfo *func_info;
+
+    g_return_val_if_fail(file_funcs, FALSE);
+    func_info = g_hash_table_lookup(file_funcs, name);
+    g_return_val_if_fail(func_info, FALSE);
+
+    return func_info->is_detectable;
+}
+
+/**
+ * gwy_file_func_set_is_detectable:
+ * @name: File type function name.
+ * @is_detectable: %TRUE to define format as detectable, %FALSE as
+ *                 non-detectable.
+ *
+ * Sets the detectability status of a file format.
+ *
+ * See gwy_file_func_get_is_detectable() for details.  The only rare case when
+ * it makes sense to call this function is when a detection function is
+ * provided for some reason, however, this function is not really able to
+ * detect the format.  For instance, the fallback detection method of the
+ * Gwyddion rawfile module.
+ *
+ * Since: 2.18
+ **/
+void
+gwy_file_func_set_is_detectable(const gchar *name,
+                                gboolean is_detectable)
+{
+    GwyFileFuncInfo *func_info;
+
+    g_return_if_fail(file_funcs);
+    func_info = g_hash_table_lookup(file_funcs, name);
+    g_return_if_fail(func_info);
+    func_info->is_detectable = is_detectable;
 }
 
 gboolean
