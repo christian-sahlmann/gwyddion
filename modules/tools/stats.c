@@ -30,6 +30,7 @@
 #include <libprocess/datafield.h>
 #include <libprocess/stats.h>
 #include <libgwydgets/gwystock.h>
+#include <libgwydgets/gwyradiobuttons.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <app/gwyapp.h>
 #include <app/gwymoduleutils.h>
@@ -43,7 +44,7 @@ typedef struct _GwyToolStats      GwyToolStats;
 typedef struct _GwyToolStatsClass GwyToolStatsClass;
 
 typedef struct {
-    gboolean use_mask;
+    GwyMaskingType masking;
     gboolean instant_update;
 } ToolArgs;
 
@@ -68,7 +69,7 @@ typedef struct {
 
 typedef struct {
     ToolResults results;
-    gboolean mask_in_use;
+    gboolean masking;
     gboolean same_units;
     GwyContainer *container;
     GwyDataField *data_field;
@@ -102,7 +103,7 @@ struct _GwyToolStats {
     GtkWidget *theta;
     GtkWidget *phi;
 
-    GtkWidget *use_mask;
+    GSList *masking;
     GtkWidget *instant_update;
 
     GwySIValueFormat *area_format;
@@ -140,7 +141,7 @@ static void  gwy_tool_stats_update_units          (GwyToolStats *tool);
 static void  update_label                         (GwySIValueFormat *units,
                                                    GtkWidget *label,
                                                    gdouble value);
-static void  gwy_tool_stats_use_mask_changed      (GtkToggleButton *toggle,
+static void  gwy_tool_stats_masking_changed       (GtkWidget *button,
                                                    GwyToolStats *tool);
 static void  gwy_tool_stats_instant_update_changed(GtkToggleButton *check,
                                                    GwyToolStats *tool);
@@ -154,17 +155,17 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Statistics tool."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "2.10",
+    "2.11",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
 
 static const gchar instant_update_key[] = "/module/stats/instant_update";
-static const gchar use_mask_key[]       = "/module/stats/use_mask";
+static const gchar masking_key[]        = "/module/stats/masking";
 
 static const ToolArgs default_args = {
     FALSE,
-    TRUE,
+    GWY_MASK_IGNORE,
 };
 
 GWY_MODULE_QUERY(module_info)
@@ -209,8 +210,7 @@ gwy_tool_stats_finalize(GObject *object)
     tool = GWY_TOOL_STATS(object);
 
     settings = gwy_app_settings_get();
-    gwy_container_set_boolean_by_name(settings, use_mask_key,
-                                      tool->args.use_mask);
+    gwy_container_set_enum_by_name(settings, masking_key, tool->args.masking);
     gwy_container_set_boolean_by_name(settings, instant_update_key,
                                       tool->args.instant_update);
 
@@ -239,8 +239,7 @@ gwy_tool_stats_init(GwyToolStats *tool)
 
     settings = gwy_app_settings_get();
     tool->args = default_args;
-    gwy_container_gis_boolean_by_name(settings, use_mask_key,
-                                      &tool->args.use_mask);
+    gwy_container_gis_enum_by_name(settings, masking_key, &tool->args.masking);
     gwy_container_gis_boolean_by_name(settings, instant_update_key,
                                       &tool->args.instant_update);
 
@@ -329,25 +328,29 @@ gwy_tool_stats_init_dialog(GwyToolStats *tool)
                        FALSE, FALSE, 0);
 
     /* Options */
-    table = GTK_TABLE(gtk_table_new(2, 4, FALSE));
+    table = GTK_TABLE(gtk_table_new(6, 3, FALSE));
     gtk_table_set_col_spacings(table, 6);
     gtk_table_set_row_spacings(table, 2);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_box_pack_start(GTK_BOX(vbox), GTK_WIDGET(table), FALSE, FALSE, 0);
     row = 0;
 
-    label = gwy_label_new_header(_("Options"));
+    label = gwy_label_new_header(_("Masking Mode"));
     gtk_table_attach(table, label,
                      0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
-    tool->use_mask = gtk_check_button_new_with_mnemonic(_("Use _mask"));
-    gtk_table_attach(table, tool->use_mask,
+    tool->masking
+        = gwy_radio_buttons_create(gwy_masking_type_get_enum(), -1,
+                                   G_CALLBACK(gwy_tool_stats_masking_changed),
+                                   tool,
+                                   tool->args.masking);
+    row = gwy_radio_buttons_attach_to_table(tool->masking, table, 3, row);
+    gtk_table_set_row_spacing(table, row-1, 8);
+
+    label = gwy_label_new_header(_("Options"));
+    gtk_table_attach(table, label,
                      0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(tool->use_mask),
-                                 tool->args.use_mask);
-    g_signal_connect(tool->use_mask, "toggled",
-                     G_CALLBACK(gwy_tool_stats_use_mask_changed), tool);
     row++;
 
     tool->instant_update
@@ -488,7 +491,7 @@ gwy_tool_stats_data_changed(GwyPlainTool *plain_tool)
 static void
 gwy_tool_stats_mask_changed(GwyPlainTool *plain_tool)
 {
-    if (GWY_TOOL_STATS(plain_tool)->args.use_mask)
+    if (GWY_TOOL_STATS(plain_tool)->args.masking != GWY_MASK_IGNORE)
         gwy_tool_stats_update_labels(GWY_TOOL_STATS(plain_tool));
 }
 
@@ -593,6 +596,7 @@ gwy_tool_stats_calculate(GwyToolStats *tool)
 {
     GwyPlainTool *plain_tool;
     GwyDataField *mask;
+    GwyMaskingType masking;
     gdouble q;
     gint nn, w, h;
     gdouble sel[4];
@@ -624,17 +628,25 @@ gwy_tool_stats_calculate(GwyToolStats *tool)
     if (!w || !h)
         return FALSE;
 
-    if (tool->args.use_mask && plain_tool->mask_field)
-        mask = plain_tool->mask_field;
-    else
+    masking = tool->args.masking;
+    mask = plain_tool->mask_field;
+    if (!mask || masking == GWY_MASK_IGNORE) {
+        /* If one says masking is not used, set the other accordingly. */
+        masking = GWY_MASK_IGNORE;
         mask = NULL;
+    }
 
     q = gwy_data_field_get_xmeasure(plain_tool->data_field)
         * gwy_data_field_get_ymeasure(plain_tool->data_field);
     if (mask) {
-        gwy_data_field_area_count_in_range(mask, NULL,
-                                           isel[0], isel[1], w, h,
-                                           0.0, 0.0, &nn, NULL);
+        if (masking == GWY_MASK_INCLUDE)
+            gwy_data_field_area_count_in_range(mask, NULL,
+                                               isel[0], isel[1], w, h,
+                                               0.0, 0.0, &nn, NULL);
+        else
+            gwy_data_field_area_count_in_range(mask, NULL,
+                                               isel[0], isel[1], w, h,
+                                               1.0, 1.0, NULL, &nn);
         nn = w*h - nn;
     }
     else
@@ -642,24 +654,26 @@ gwy_tool_stats_calculate(GwyToolStats *tool)
     tool->results.projarea = nn*q;
     /* TODO: do something more reasonable when nn == 0 */
 
-    gwy_data_field_area_get_stats(plain_tool->data_field, mask,
-                                  isel[0], isel[1], w, h,
-                                  &tool->results.avg,
-                                  &tool->results.ra,
-                                  &tool->results.rms,
-                                  &tool->results.skew,
-                                  &tool->results.kurtosis);
-    gwy_data_field_area_get_min_max(plain_tool->data_field, mask,
-                                    isel[0], isel[1], w, h,
-                                    &tool->results.min,
-                                    &tool->results.max);
+    gwy_data_field_area_get_stats_mask(plain_tool->data_field, mask, masking,
+                                       isel[0], isel[1], w, h,
+                                       &tool->results.avg,
+                                       &tool->results.ra,
+                                       &tool->results.rms,
+                                       &tool->results.skew,
+                                       &tool->results.kurtosis);
+    gwy_data_field_area_get_min_max_mask(plain_tool->data_field, mask, masking,
+                                         isel[0], isel[1], w, h,
+                                         &tool->results.min,
+                                         &tool->results.max);
     tool->results.median
-        = gwy_data_field_area_get_median(plain_tool->data_field, mask,
-                                         isel[0], isel[1], w, h);
+        = gwy_data_field_area_get_median_mask(plain_tool->data_field,
+                                              mask, masking,
+                                              isel[0], isel[1], w, h);
     if (tool->same_units)
         tool->results.area
-            = gwy_data_field_area_get_surface_area(plain_tool->data_field, mask,
-                                                   isel[0], isel[1], w, h);
+            = gwy_data_field_area_get_surface_area_mask(plain_tool->data_field,
+                                                        mask, masking,
+                                                        isel[0], isel[1], w, h);
 
     if (tool->same_units && !mask) {
         gwy_data_field_area_get_inclination(plain_tool->data_field,
@@ -696,15 +710,18 @@ update_label(GwySIValueFormat *units,
 }
 
 static void
-gwy_tool_stats_use_mask_changed(GtkToggleButton *toggle,
-                                GwyToolStats *tool)
+gwy_tool_stats_masking_changed(GtkWidget *button,
+                               GwyToolStats *tool)
 {
     GwyPlainTool *plain_tool;
 
+    if (!gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(button)))
+        return;
+
     plain_tool = GWY_PLAIN_TOOL(tool);
-    tool->args.use_mask = gtk_toggle_button_get_active(toggle);
-    if (plain_tool->data_field)
-        gwy_tool_stats_selection_changed(plain_tool, 0);
+    tool->args.masking = gwy_radio_button_get_value(button);
+    if (plain_tool->data_field && plain_tool->mask_field)
+        gwy_tool_stats_update_labels(tool);
 }
 
 static void
@@ -731,7 +748,9 @@ gwy_tool_stats_save(GwyToolStats *tool)
     /* Copy everything as user can switch data during the Save dialog (though
      * he cannot destroy them, so references are not necessary) */
     report_data.results = tool->results;
-    report_data.mask_in_use = tool->args.use_mask && plain_tool->mask_field;
+    report_data.masking = tool->args.masking;
+    if (!plain_tool->mask_field)
+        report_data.masking = GWY_MASK_IGNORE;
     report_data.same_units = tool->same_units;
     report_data.angle_format = tool->angle_format;
     report_data.container = plain_tool->container;
@@ -761,7 +780,9 @@ gwy_tool_stats_copy(GwyToolStats *tool)
         gwy_tool_stats_update_labels(tool);
 
     report_data.results = tool->results;
-    report_data.mask_in_use = tool->args.use_mask && plain_tool->mask_field;
+    report_data.masking = tool->args.masking;
+    if (!plain_tool->mask_field)
+        report_data.masking = GWY_MASK_IGNORE;
     report_data.same_units = tool->same_units;
     report_data.angle_format = tool->angle_format;
     report_data.container = plain_tool->container;
@@ -789,12 +810,14 @@ gwy_tool_stats_create_report(gpointer user_data,
     gdouble xreal, yreal, q;
     GwySIValueFormat *vf = NULL;
     const guchar *title;
+    gboolean mask_in_use;
     GString *report;
     gchar *ix, *iy, *iw, *ih, *rx, *ry, *rw, *rh, *muse, *uni;
     gchar *avg, *min, *max, *median, *rms, *ra, *skew, *kurtosis;
     gchar *area, *projarea, *theta, *phi;
     gchar *key, *retval;
 
+    mask_in_use = (report_data->masking != GWY_MASK_IGNORE);
     *data_len = -1;
     report = g_string_sized_new(4096);
 
@@ -830,7 +853,7 @@ gwy_tool_stats_create_report(gpointer user_data,
                          report_data->results.sel[1]/vf->magnitude);
     uni = g_strdup(vf->units);
 
-    muse = g_strdup(report_data->mask_in_use ? _("Yes") : _("No"));
+    muse = g_strdup(mask_in_use ? _("Yes") : _("No"));
 
     vf = gwy_data_field_get_value_format_z(report_data->data_field,
                                            GWY_SI_UNIT_FORMAT_PLAIN, vf);
@@ -861,9 +884,9 @@ gwy_tool_stats_create_report(gpointer user_data,
     gwy_si_unit_value_format_free(vf);
     vf = report_data->angle_format;
 
-    theta = ((report_data->same_units && !report_data->mask_in_use)
+    theta = ((report_data->same_units && !mask_in_use)
              ? fmt_val(theta) : g_strdup(_("N.A.")));
-    phi = ((report_data->same_units && !report_data->mask_in_use)
+    phi = ((report_data->same_units && !mask_in_use)
            ? fmt_val(phi) : g_strdup(_("N.A.")));
 
     g_string_append_printf(report,
