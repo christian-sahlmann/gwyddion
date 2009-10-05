@@ -18,6 +18,13 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
+/**
+ * [FILE-MAGIC-USERGUIDE]
+ * Text matrix of data values
+ * *.txt
+ * Export
+ **/
+
 #include "config.h"
 #include <stdio.h>
 #include <locale.h>

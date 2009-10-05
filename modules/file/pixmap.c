@@ -18,6 +18,17 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
+/**
+ * [FILE-MAGIC-USERGUIDE]
+ * Pixmap images
+ * .png .jpeg .tiff .tga .pnm .bmp
+ * Read[1] Export[2]
+ * [1] Import support relies on Gdk-Pixbuf and hence may vary among systems.
+ * 16bit depth is not supported.
+ * [2] Usually lossy, intended for presentational purposes.  16bit grayscale
+ * export is possible to PNG, TIFF and PNM.
+ **/
+
 #include "config.h"
 #include <string.h>
 #include <errno.h>

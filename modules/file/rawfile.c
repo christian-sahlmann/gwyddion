@@ -17,6 +17,21 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
+
+/**
+ * [FILE-MAGIC-USERGUIDE]
+ * Raw text files
+ * any
+ * Read
+ **/
+
+/**
+ * [FILE-MAGIC-USERGUIDE]
+ * Raw binary files
+ * any
+ * Read
+ **/
+
 #include "config.h"
 #include <stdio.h>
 #include <stdlib.h>

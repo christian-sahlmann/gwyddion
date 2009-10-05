@@ -18,6 +18,15 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
+/**
+ * [FILE-MAGIC-USERGUIDE]
+ * Graph text data (raw)
+ * any
+ * Read[1]
+ * [1] At present, only simple two-column data, imported as graph curves, are
+ * supported.
+ **/
+
 #include "config.h"
 #include <string.h>
 #include <gtk/gtk.h>

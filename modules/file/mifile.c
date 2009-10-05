@@ -38,7 +38,8 @@
  * [FILE-MAGIC-USERGUIDE]
  * Molecular Imaging MI
  * .mi
- * Read
+ * Read SPS:Limited[1]
+ * [1] Spectra curves are imported as graphs, positional information is lost.
  **/
 
 #include "config.h"
