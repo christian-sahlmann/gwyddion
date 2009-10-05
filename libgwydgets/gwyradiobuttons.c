@@ -47,6 +47,11 @@ gwy_radio_buttons_create_real(const GwyEnum *entries,
     GSList *group;
     gint i;
 
+    if (nentries < 0) {
+        for (nentries = 0; entries[nentries].name != NULL; nentries++)
+            ;
+    }
+
     setup_quark();
     button = curbutton = NULL;
     /* FIXME: this relies on undocumented GtkRadioButton behaviour;
@@ -81,7 +86,8 @@ gwy_radio_buttons_create_real(const GwyEnum *entries,
 /**
  * gwy_radio_buttons_create:
  * @entries: Radio button group items.
- * @nentries: The number of items.
+ * @nentries: The number of items.  Since 2.18 negative value means that
+ *            @entries is terminated with a %NULL-named item.
  * @callback: A callback called when a menu item is activated (or %NULL for
  *            no callback).
  * @cbdata: User data passed to the callback.
