@@ -1,10 +1,21 @@
 2.18 (0000-00-00)
+Application:
+- Translations updated: Russian.
+- Only file types that are not detected automaticaly are shown in the file
+  open dialog.
+
 Libraries:
-- libgwyapp: Functions to parse typical text headers of SPM files was added.
+- libgwyapp: Functions to parse typical text headers of SPM files were added.
+- libgwyprocess: New area statistics functions can either include or exclude
+  the masked area (previously only inclusive masking was possible).
+- libgwyprocess: GwyMaskingType has a public GwyEnum.
+- libgwydgets: gwy_radio_buttons_create() accepts also implicitely terminated
+  value-name tables.
 
 Modules:
 - Attocube (new): Imports Attocube Systems ASC files.
 - NanoScan (new): Imports NanoScan XML files.
+- Statistical quantities: The masked area can also be excluded.
 - Seiko: Supports more file types (with magic header SPIZ000AFM).
 - Pixmap export: TIFFs are written in binary mode, fixing broken exported
   images on MS Windows.
