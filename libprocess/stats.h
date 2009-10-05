@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003-2009 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -47,6 +47,7 @@ gdouble gwy_data_field_area_get_min         (GwyDataField *data_field,
                                              gint row,
                                              gint width,
                                              gint height);
+#ifndef GWY_DISABLE_DEPRECATED
 void    gwy_data_field_area_get_min_max     (GwyDataField *data_field,
                                              GwyDataField *mask,
                                              gint col,
@@ -55,36 +56,91 @@ void    gwy_data_field_area_get_min_max     (GwyDataField *data_field,
                                              gint height,
                                              gdouble *min,
                                              gdouble *max);
+#endif
+void    gwy_data_field_area_get_min_max_mask(GwyDataField *data_field,
+                                             GwyDataField *mask,
+                                             GwyMaskingType mode,
+                                             gint col,
+                                             gint row,
+                                             gint width,
+                                             gint height,
+                                             gdouble *min,
+                                             gdouble *max);
+#ifndef GWY_DISABLE_DEPRECATED
 gdouble gwy_data_field_area_get_avg         (GwyDataField *data_field,
                                              GwyDataField *mask,
                                              gint col,
                                              gint row,
                                              gint width,
                                              gint height);
+#endif
+gdouble gwy_data_field_area_get_avg_mask    (GwyDataField *data_field,
+                                             GwyDataField *mask,
+                                             GwyMaskingType mode,
+                                             gint col,
+                                             gint row,
+                                             gint width,
+                                             gint height);
+#ifndef GWY_DISABLE_DEPRECATED
 gdouble gwy_data_field_area_get_rms         (GwyDataField *data_field,
                                              GwyDataField *mask,
                                              gint col,
                                              gint row,
                                              gint width,
                                              gint height);
+#endif
+gdouble gwy_data_field_area_get_rms_mask    (GwyDataField *data_field,
+                                             GwyDataField *mask,
+                                             GwyMaskingType mode,
+                                             gint col,
+                                             gint row,
+                                             gint width,
+                                             gint height);
+#ifndef GWY_DISABLE_DEPRECATED
 gdouble gwy_data_field_area_get_sum         (GwyDataField *data_field,
                                              GwyDataField *mask,
                                              gint col,
                                              gint row,
                                              gint width,
                                              gint height);
+#endif
+gdouble gwy_data_field_area_get_sum_mask    (GwyDataField *data_field,
+                                             GwyDataField *mask,
+                                             GwyMaskingType mode,
+                                             gint col,
+                                             gint row,
+                                             gint width,
+                                             gint height);
+#ifndef GWY_DISABLE_DEPRECATED
 gdouble gwy_data_field_area_get_median      (GwyDataField *data_field,
                                              GwyDataField *mask,
                                              gint col,
                                              gint row,
                                              gint width,
                                              gint height);
+#endif
+gdouble gwy_data_field_area_get_median_mask (GwyDataField *data_field,
+                                             GwyDataField *mask,
+                                             GwyMaskingType mode,
+                                             gint col,
+                                             gint row,
+                                             gint width,
+                                             gint height);
+#ifndef GWY_DISABLE_DEPRECATED
 gdouble gwy_data_field_area_get_surface_area(GwyDataField *data_field,
                                              GwyDataField *mask,
                                              gint col,
                                              gint row,
                                              gint width,
                                              gint height);
+#endif
+gdouble gwy_data_field_area_get_surface_area_mask(GwyDataField *data_field,
+                                                  GwyDataField *mask,
+                                                  GwyMaskingType mode,
+                                                  gint col,
+                                                  gint row,
+                                                  gint width,
+                                                  gint height);
 gdouble gwy_data_field_area_get_volume      (GwyDataField *data_field,
                                              GwyDataField *basis,
                                              GwyDataField *mask,
@@ -101,8 +157,22 @@ void    gwy_data_field_get_stats            (GwyDataField *data_field,
                                              gdouble *rms,
                                              gdouble *skew,
                                              gdouble *kurtosis);
+#ifndef GWY_DISABLE_DEPRECATED
 void    gwy_data_field_area_get_stats       (GwyDataField *data_field,
                                              GwyDataField *mask,
+                                             gint col,
+                                             gint row,
+                                             gint width,
+                                             gint height,
+                                             gdouble *avg,
+                                             gdouble *ra,
+                                             gdouble *rms,
+                                             gdouble *skew,
+                                             gdouble *kurtosis);
+#endif
+void    gwy_data_field_area_get_stats_mask  (GwyDataField *data_field,
+                                             GwyDataField *mask,
+                                             GwyMaskingType mode,
                                              gint col,
                                              gint row,
                                              gint width,
