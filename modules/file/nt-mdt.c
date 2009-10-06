@@ -1425,7 +1425,7 @@ extract_mda_data(MDTMDAFrame * dataframe)
     gchar *unit;
 
     MDTMDACalibration *xAxis = &dataframe->dimensions[0],
-        *yAxis = &dataframe->dimensions[0], *zAxis = &dataframe->mesurands[0];
+        *yAxis = &dataframe->dimensions[1], *zAxis = &dataframe->mesurands[0];
 
     if (xAxis->unit && xAxis->unitLen) {
         unit = g_strndup(xAxis->unit, xAxis->unitLen);
