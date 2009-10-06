@@ -4800,7 +4800,7 @@ gwy_data_field_get_line_stats(GwyDataField *data_field,
  * to be ignored, values equal to 1.0 and above cause inclusion of
  * corresponding data field samples.  The behaviour for values inside interval
  * (0.0, 1.0) is undefined.  In mode @GWY_MASK_EXCLUDE, the meaning of mask is
- * inverted, as if all mask values <i>x</i> were replaced with 1-<i>x</i>.  The
+ * inverted, as if all mask values x were replaced with 1-x.  The
  * mask field is ignored in mode @GWY_MASK_IGNORE, i.e. the same behaviour
  * occurs as with %NULL mask argument.
  **/
