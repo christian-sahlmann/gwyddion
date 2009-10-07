@@ -65,6 +65,12 @@
 #define Angstrom (1e-10)
 #define Nano (1e-9)
 
+#if GLIB_CHECK_VERSION(2, 12, 0)
+#define TREAT_CDATA_AS_TEXT G_MARKUP_TREAT_CDATA_AS_TEXT
+#else
+#define TREAT_CDATA_AS_TEXT 0
+#endif
+
 typedef enum {
     MDT_FRAME_SCANNED      = 0,
     MDT_FRAME_SPECTROSCOPY = 1,
@@ -216,6 +222,13 @@ typedef enum {
     MDT_ADC_MODE_SNAP_BACK = 18
 } MDTADCMode;
 
+typedef enum {
+	MDT_XML_NONE				= 0,
+	MDT_XML_LASER_WAVELENGTH	= 1,
+	MDT_XML_UNITS				= 2,
+	MDT_XML_DATAARRAY			= -1
+} MDTXMLParamType;
+
 enum {
     FILE_HEADER_SIZE      = 32,
     FRAME_HEADER_SIZE     = 22,
@@ -348,6 +361,14 @@ typedef struct {
     MDTFrame *frames;
 } MDTFile;
 
+typedef struct {
+    gdouble         laser_wavelength;
+    guint           units;
+    guint           res;
+    gdouble         *data;
+    MDTXMLParamType flag;
+} MDTXMLParams;
+
 static gboolean       module_register       (void);
 static gint           mdt_detect            (const GwyFileDetectInfo *fileinfo,
                                              gboolean only_name);
@@ -365,6 +386,22 @@ static gboolean       mdt_real_load         (const guchar *buffer,
 static GwyDataField*  extract_scanned_data  (MDTScannedDataFrame *dataframe);
 static GwyDataField*  extract_mda_data      (MDTMDAFrame *dataframe);
 static GwyGraphModel* extract_mda_spectrum  (MDTMDAFrame *dataframe);
+
+static void          start_element       (GMarkupParseContext *context,
+                                          const gchar *element_name,
+                                          const gchar **attribute_names,
+                                          const gchar **attribute_values,
+                                          gpointer user_data,
+                                          GError **error);
+static void          end_element         (GMarkupParseContext *context,
+                                          const gchar *element_name,
+                                          gpointer user_data,
+                                          GError **error);
+static void          parse_text                (GMarkupParseContext *context,
+                                          const gchar *text,
+                                          gsize text_len,
+                                          gpointer user_data,
+                                          GError **error);
 
 #ifdef DEBUG
 static const GwyEnum frame_types[] = {
@@ -718,7 +755,7 @@ mdt_load(const gchar *filename,
                 n++;
             }
             else if ((mdaframe->nDimensions == 0 && mdaframe->nMesurands == 2) ||
-				(mdaframe->nDimensions == 1 && mdaframe->nMesurands == 1)) {
+                     (mdaframe->nDimensions == 1 && mdaframe->nMesurands == 1)) {
                 // raman spectra
                 GwyGraphModel *gmodel;
 
@@ -1559,7 +1596,8 @@ extract_mda_data(MDTMDAFrame * dataframe)
 #ifdef _MSC_VER
                 guint u32h = *tp >> 32u;
                 guint u32l = *tp & 0xffffffffu;
-                *(data++) = 4294967296.0*u32h + u32l;
+                *(data++) = zscale * (4294967296.0*u32h + u32l);
+
 #else
                 *(data++) = zscale * GUINT64_FROM_LE(*tp);
 #endif
@@ -1589,28 +1627,38 @@ extract_mda_data(MDTMDAFrame * dataframe)
 static GwyGraphModel*
 extract_mda_spectrum(MDTMDAFrame *dataframe)
 {
-    /* FIXME: I don't know where to find this 1024 points per spectra */
-    enum { res = 1024 };
+    gint res;
     GwyGraphCurveModel *spectra;
     GwyGraphModel *gmodel;
     gdouble xscale, yscale;
     gint power10x, power10y;
     GwySIUnit *siunitx, *siunity;
-    gdouble xdata[res], ydata[res];
+    gdouble *xdata, *ydata;
     const guchar *p;
     const gchar *cunit;
-    gchar *unit;
+    gchar *unit, *framename;
     gint i;
 	MDTMDACalibration *xAxis, *yAxis;
-	
-	if (dataframe->nDimensions) {
-		xAxis = &dataframe->dimensions[0],
-        yAxis = &dataframe->mesurands[0];
-	}
-	else {
-		xAxis = &dataframe->mesurands[0],
-        yAxis = &dataframe->mesurands[1];
-	}
+
+	GMarkupParser parser = { start_element, end_element, parse_text, NULL, NULL };
+    GMarkupParseContext *context;
+
+    MDTXMLParams params;
+    GError *err = NULL;
+
+    if (dataframe->title_len && dataframe->title)
+        framename = g_strndup(dataframe->title, dataframe->title_len);
+    else
+        framename = g_strdup("Unknown spectrum");
+
+    if (dataframe->nDimensions) {
+        xAxis = &dataframe->dimensions[0],
+              yAxis = &dataframe->mesurands[0];
+    }
+    else {
+        xAxis = &dataframe->mesurands[0],
+              yAxis = &dataframe->mesurands[1];
+    }
 
     if (xAxis->unit && xAxis->unitLen) {
         unit = g_strndup(xAxis->unit, xAxis->unitLen);
@@ -1643,29 +1691,235 @@ extract_mda_spectrum(MDTMDAFrame *dataframe)
 
     spectra = gwy_graph_curve_model_new();
     g_object_set(spectra,
-                 "description", "Raman spectrum",
+                 "description", framename,
                  "mode", GWY_GRAPH_CURVE_LINE,
                  NULL);
 
+    res = xAxis->maxIndex - xAxis->minIndex + 1;
+    /* FIXME: I don't know where to find this 1024 points per spectra */
+    res = res ? res : 1024;
+
+    xdata = (gdouble *)g_malloc(res*sizeof(gdouble));
+    ydata = (gdouble *)g_malloc(res*sizeof(gdouble));
+
     p = (gchar*)dataframe->image;
-    
+
     for (i = 0; i < res; i++) {
-		if (xAxis->dataType == MDA_DATA_FLOAT32) { /* new variant */
-			xdata[i] = xscale * gwy_get_gfloat_le(&p);
-            ydata[i] = yscale * gwy_get_gfloat_le(&p);
+        if (dataframe->nDimensions) { /* old variant */
+            xdata[i] = i; /* in xml chunk xAxis->comment instead */
         }
-        else if (xAxis->dataType == MDA_DATA_INT32) { /* old variant */
-			xdata[i] = i; /* in xml chunk xAxis->comment instead */
-			ydata[i] = yscale * (gdouble)GINT32_FROM_LE(*(const gint32 *)p);
-			p+=sizeof(gint32)/sizeof(char);
-		}
-	}
-	
+        else { /* new variant */
+            switch (xAxis->dataType) {
+                case MDA_DATA_INT8:
+                {
+                    xdata[i] = xscale * (gdouble)(*p);
+                    p++;
+                }
+                break;
+
+                case MDA_DATA_UINT8:
+                {
+                    const guchar *tp = (const guchar *)p;
+
+                    xdata[i] = xscale * (*tp);
+                    p+=sizeof(guchar)/sizeof(gchar);
+                }
+                break;
+
+                case MDA_DATA_INT16:
+                {
+                    const gint16 *tp = (const gint16 *)p;
+
+                    xdata[i] = xscale * GINT16_FROM_LE(*tp);
+                    p+=sizeof(gint16)/sizeof(gchar);
+                }
+                break;
+
+                case MDA_DATA_UINT16:
+                {
+                    const guint16 *tp = (const guint16 *)p;
+
+                    xdata[i] = xscale * GUINT16_FROM_LE(*tp);
+                    p+=sizeof(guint16)/sizeof(gchar);
+                }
+                break;
+
+                case MDA_DATA_INT32:
+                {
+                    const gint32 *tp = (const gint32 *)p;
+
+                    xdata[i] = xscale * GINT32_FROM_LE(*tp);
+                    p+=sizeof(gint32)/sizeof(gchar);
+                }
+                break;
+
+                case MDA_DATA_UINT32:
+                {
+                    const guint32 *tp = (const guint32 *)p;
+                    xdata[i] = xscale * GUINT32_FROM_LE(*tp);
+                    p+=sizeof(guint32)/sizeof(gchar);
+                }
+                break;
+
+                case MDA_DATA_INT64:
+                {
+                    const gint64 *tp = (const gint64 *)p;
+
+                    /* for some reason, MSVC6 spits an unsigned int64 conversion
+                     * error also here */
+                    xdata[i] = xscale * (gint64)GINT64_FROM_LE(*tp);
+                    p+=sizeof(gint64)/sizeof(gchar);
+                }
+                break;
+
+                case MDA_DATA_UINT64:
+                {
+                    const guint64 *tp = (const guint64 *)p;
+
+                    /* Fucking MSVC6 cannot convert unsigned 64bit int to double. */
+#ifdef _MSC_VER
+                    guint u32h = *tp >> 32u;
+                    guint u32l = *tp & 0xffffffffu;
+                    xdata[i] = xscale * (4294967296.0*u32h + u32l);
+#else
+                    xdata[i] = xscale * GUINT64_FROM_LE(*tp);
+#endif
+                    p+=sizeof(guint64)/sizeof(gchar);
+                }
+                break;
+
+                case MDA_DATA_FLOAT32:
+                xdata[i] = xscale * gwy_get_gfloat_le(&p);
+                break;
+
+                case MDA_DATA_FLOAT64:
+                xdata[i] = xscale * gwy_get_gdouble_le(&p);
+                break;
+
+                default:
+                g_assert_not_reached();
+                break;
+            }
+        } /* end of if (dataframe->nDimensions) and xAxis */
+
+        switch (yAxis->dataType) {
+            case MDA_DATA_INT8:
+            {
+                ydata[i] = yscale * (gdouble)(*p);
+                p++;
+            }
+            break;
+
+            case MDA_DATA_UINT8:
+            {
+                const guchar *tp = (const guchar *)p;
+
+                ydata[i] = yscale * (*tp);
+                p+=sizeof(guchar)/sizeof(gchar);
+            }
+            break;
+
+            case MDA_DATA_INT16:
+            {
+                const gint16 *tp = (const gint16 *)p;
+
+                ydata[i] = yscale * GINT16_FROM_LE(*tp);
+                p+=sizeof(gint16)/sizeof(gchar);
+            }
+            break;
+
+            case MDA_DATA_UINT16:
+            {
+                const guint16 *tp = (const guint16 *)p;
+
+                ydata[i] = yscale * GUINT16_FROM_LE(*tp);
+                p+=sizeof(guint16)/sizeof(gchar);
+            }
+            break;
+
+            case MDA_DATA_INT32:
+            {
+                const gint32 *tp = (const gint32 *)p;
+
+                ydata[i] = yscale * GINT32_FROM_LE(*tp);
+                p+=sizeof(gint32)/sizeof(gchar);
+            }
+            break;
+
+            case MDA_DATA_UINT32:
+            {
+                const guint32 *tp = (const guint32 *)p;
+                ydata[i] = yscale * GUINT32_FROM_LE(*tp);
+                p+=sizeof(guint32)/sizeof(gchar);
+            }
+            break;
+
+            case MDA_DATA_INT64:
+            {
+                const gint64 *tp = (const gint64 *)p;
+
+                /* for some reason, MSVC6 spits an unsigned int64 conversion
+                 * error also here */
+                ydata[i] = yscale * (gint64)GINT64_FROM_LE(*tp);
+                p+=sizeof(gint64)/sizeof(gchar);
+            }
+            break;
+
+            case MDA_DATA_UINT64:
+            {
+                const guint64 *tp = (const guint64 *)p;
+
+                /* Fucking MSVC6 cannot convert unsigned 64bit int to double. */
+#ifdef _MSC_VER
+                guint u32h = *tp >> 32u;
+                guint u32l = *tp & 0xffffffffu;
+                ydata[i] = yscale * (4294967296.0*u32h + u32l);
+#else
+                ydata[i] = yscale * GUINT64_FROM_LE(*tp);
+#endif
+                p+=sizeof(guint64)/sizeof(gchar);
+            }
+            break;
+
+            case MDA_DATA_FLOAT32:
+            ydata[i] = yscale * gwy_get_gfloat_le(&p);
+            break;
+
+            case MDA_DATA_FLOAT64:
+            ydata[i] = yscale * gwy_get_gdouble_le(&p);
+            break;
+
+            default:
+            g_assert_not_reached();
+            break;
+        }
+
+    }
+
+    /* parsing XML xAxis->comment to get xdata */
+    if (dataframe->nDimensions) {
+        if (xAxis->commentLen && xAxis->comment) {
+            params.data = xdata;
+            params.res = res;
+            params.flag=MDT_XML_NONE;
+            context = g_markup_parse_context_new(&parser, TREAT_CDATA_AS_TEXT,
+                                                 &params, NULL);
+            if (!g_markup_parse_context_parse(context, xAxis->comment, xAxis->commentLen, &err)
+                || !g_markup_parse_context_end_parse(context, &err)) {
+                g_clear_error(&err);
+                g_markup_parse_context_free(context);
+            }
+            else {
+                g_markup_parse_context_free(context);
+            }
+        }
+    }
+
     gwy_graph_curve_model_set_data(spectra, xdata, ydata, res);
 
     gmodel = gwy_graph_model_new();
     g_object_set(gmodel,
-                 "title", "Raman spectrum",
+                 "title", framename,
                  "si-unit-x", siunitx,
                  "si-unit-y", siunity,
                  NULL);
@@ -1673,8 +1927,107 @@ extract_mda_spectrum(MDTMDAFrame *dataframe)
     g_object_unref(spectra);
     g_object_unref(siunitx);
     g_object_unref(siunity);
+    g_free(xdata);
+    g_free(ydata);
+    g_free(framename);
 
     return gmodel;
 }
 
+static void
+start_element(G_GNUC_UNUSED GMarkupParseContext *context,
+              const gchar *element_name,
+              G_GNUC_UNUSED const gchar **attribute_names,
+              G_GNUC_UNUSED const gchar **attribute_values,
+              gpointer user_data,
+              GError **error)
+{
+    const gchar **name_cursor = attribute_names;
+    const gchar **value_cursor = attribute_values;
+
+    MDTXMLParams *params = (MDTXMLParams *)user_data;
+    if (params->flag != MDT_XML_NONE) {
+        /* error */
+    }
+    else {
+        if (gwy_strequal(element_name,"Parameter")) {
+            while (*name_cursor) {
+                if (gwy_strequal (*name_cursor, "Name") &&
+                    gwy_strequal (*value_cursor, "LaserWL")) {
+                    params->flag = MDT_XML_LASER_WAVELENGTH;
+                }
+                else if (gwy_strequal (*name_cursor, "Name") &&
+                         gwy_strequal (*value_cursor, "UserUnits"))
+                    params->flag = MDT_XML_UNITS;
+
+                name_cursor++;
+                value_cursor++;
+            }
+        }
+        else if (gwy_strequal(element_name,"Array")) {
+            params->flag = MDT_XML_DATAARRAY;
+            while (*name_cursor) {
+                if (gwy_strequal (*name_cursor,"Count"))
+                    params->res = atoi(*value_cursor);
+
+                name_cursor++;
+                value_cursor++;
+            }
+        }
+    }
+}
+
+static void
+end_element(G_GNUC_UNUSED GMarkupParseContext *context,
+            const gchar *element_name,
+            gpointer user_data,
+            G_GNUC_UNUSED GError **error)
+{
+    MDTXMLParams *params = (MDTXMLParams*)user_data;
+
+    params->flag = MDT_XML_NONE;
+}
+
+static void
+parse_text(G_GNUC_UNUSED GMarkupParseContext *context,
+           const gchar *value,
+           gsize value_len,
+           gpointer user_data,
+           G_GNUC_UNUSED GError **error)
+{
+    MDTXMLParams *params = (MDTXMLParams*)user_data;
+    gchar *line;
+    gdouble wavelength;
+    gint i;
+
+    if (params->flag == MDT_XML_NONE) {
+        /* error */
+    }
+    else if (params->flag == MDT_XML_LASER_WAVELENGTH) {
+        params->laser_wavelength = g_ascii_strtod(g_strdelimit((gchar *)value,",.",'.'),NULL);
+    }
+    else if (params->flag == MDT_XML_UNITS) {
+        params->units = atoi(value);
+    }
+    else if (params->flag == MDT_XML_DATAARRAY) {
+        line = (gchar *)value;
+        if (!params->res) {
+            /* Error */
+        }
+        else
+            for (i=0;i < params->res;i++) {
+                wavelength = g_ascii_strtod(g_strdelimit(line,",.",'.'),&line);
+                line+=2; /* skip ". " between values */
+                if (params->units == 1) { /* nm */
+                    params->data[i] = 1e-9 * wavelength;
+                }
+                else if (params->units == 2
+                         &&   params->laser_wavelength > 0.0) {
+                    /* 1/cm and nonzero laser wavelength */
+                    params->data[i] = 1e9 *
+                        (1 / params->laser_wavelength - 1 / wavelength);
+                }
+            }
+    }
+}
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
