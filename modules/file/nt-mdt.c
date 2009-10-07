@@ -223,10 +223,10 @@ typedef enum {
 } MDTADCMode;
 
 typedef enum {
-	MDT_XML_NONE				= 0,
-	MDT_XML_LASER_WAVELENGTH	= 1,
-	MDT_XML_UNITS				= 2,
-	MDT_XML_DATAARRAY			= -1
+    MDT_XML_NONE             = 0,
+    MDT_XML_LASER_WAVELENGTH = 1,
+    MDT_XML_UNITS            = 2,
+    MDT_XML_DATAARRAY        = -1
 } MDTXMLParamType;
 
 enum {
@@ -1638,9 +1638,10 @@ extract_mda_spectrum(MDTMDAFrame *dataframe)
     const gchar *cunit;
     gchar *unit, *framename;
     gint i;
-	MDTMDACalibration *xAxis, *yAxis;
-
-	GMarkupParser parser = { start_element, end_element, parse_text, NULL, NULL };
+    MDTMDACalibration *xAxis, *yAxis;
+    GMarkupParser parser = {
+        start_element, end_element, parse_text, NULL, NULL
+    };
     GMarkupParseContext *context;
 
     MDTXMLParams params;
@@ -2004,7 +2005,8 @@ parse_text(G_GNUC_UNUSED GMarkupParseContext *context,
         /* error */
     }
     else if (params->flag == MDT_XML_LASER_WAVELENGTH) {
-        params->laser_wavelength = g_ascii_strtod(g_strdelimit((gchar *)value,",.",'.'),NULL);
+        params->laser_wavelength = g_ascii_strtod(g_strdelimit((gchar *)value,
+                                                               ",", '.'), NULL);
     }
     else if (params->flag == MDT_XML_UNITS) {
         params->units = atoi(value);
@@ -2030,4 +2032,5 @@ parse_text(G_GNUC_UNUSED GMarkupParseContext *context,
             }
     }
 }
+
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
