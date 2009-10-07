@@ -717,7 +717,8 @@ mdt_load(const gchar *filename,
                 gwy_app_channel_title_fall_back(data, n);
                 n++;
             }
-            else if (mdaframe->nDimensions == 0 && mdaframe->nMesurands == 2) {
+            else if ((mdaframe->nDimensions == 0 && mdaframe->nMesurands == 2) ||
+				(mdaframe->nDimensions == 1 && mdaframe->nMesurands == 1)) {
                 // raman spectra
                 GwyGraphModel *gmodel;
 
@@ -1120,7 +1121,7 @@ mdt_mda_vars(const guchar *p,
     const guchar *recordPointer = p;
     const guchar *structPointer;
 
-    gwy_debug("Rerad MDA header");
+    gwy_debug("Reread MDA header");
     headSize    = gwy_get_guint32_le(&p);
     gwy_debug("headSize %u\n",headSize);
     totLen      = gwy_get_guint32_le(&p);
@@ -1600,9 +1601,16 @@ extract_mda_spectrum(MDTMDAFrame *dataframe)
     const gchar *cunit;
     gchar *unit;
     gint i;
-
-    MDTMDACalibration *xAxis = &dataframe->mesurands[0],
-                      *yAxis = &dataframe->mesurands[1];
+	MDTMDACalibration *xAxis, *yAxis;
+	
+	if (dataframe->nDimensions) {
+		xAxis = &dataframe->dimensions[0],
+        yAxis = &dataframe->mesurands[0];
+	}
+	else {
+		xAxis = &dataframe->mesurands[0],
+        yAxis = &dataframe->mesurands[1];
+	}
 
     if (xAxis->unit && xAxis->unitLen) {
         unit = g_strndup(xAxis->unit, xAxis->unitLen);
@@ -1635,21 +1643,29 @@ extract_mda_spectrum(MDTMDAFrame *dataframe)
 
     spectra = gwy_graph_curve_model_new();
     g_object_set(spectra,
-                 "description", "Raman spectra",
+                 "description", "Raman spectrum",
                  "mode", GWY_GRAPH_CURVE_LINE,
                  NULL);
 
     p = (gchar*)dataframe->image;
-
+    
     for (i = 0; i < res; i++) {
-        xdata[i] = xscale * gwy_get_gfloat_le(&p);
-        ydata[i] = yscale * gwy_get_gfloat_le(&p);
-    }
+		if (xAxis->dataType == MDA_DATA_FLOAT32) { /* new variant */
+			xdata[i] = xscale * gwy_get_gfloat_le(&p);
+            ydata[i] = yscale * gwy_get_gfloat_le(&p);
+        }
+        else if (xAxis->dataType == MDA_DATA_INT32) { /* old variant */
+			xdata[i] = i; /* in xml chunk xAxis->comment instead */
+			ydata[i] = yscale * (gdouble)GINT32_FROM_LE(*(const gint32 *)p);
+			p+=sizeof(gint32)/sizeof(char);
+		}
+	}
+	
     gwy_graph_curve_model_set_data(spectra, xdata, ydata, res);
 
     gmodel = gwy_graph_model_new();
     g_object_set(gmodel,
-                 "title", "Raman spectra",
+                 "title", "Raman spectrum",
                  "si-unit-x", siunitx,
                  "si-unit-y", siunity,
                  NULL);
