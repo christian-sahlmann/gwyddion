@@ -17,6 +17,7 @@ libgwyprocess2include_HEADERS = \
 	cwt.h \
 	datafield.h \
 	dataline.h \
+	delaunay.h \
 	dwt.h \
 	elliptic.h \
 	filters.h \
@@ -81,6 +82,7 @@ libgwyprocess2_la_SOURCES = \
 	cwt.c \
 	datafield.c \
 	dataline.c \
+	delaunay.c \
 	dwt.c \
 	elliptic.c \
 	filters.c \
