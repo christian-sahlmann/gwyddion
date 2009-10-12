@@ -468,7 +468,7 @@ gwy_masking_type_get_enum(void)
  **/
 
 /**
- * GwyExteriorType;
+ * GwyExteriorType:
  * @GWY_EXTERIOR_UNDEFINED: The values corresponding to or calculated from
  *                          exterior data values are undefined, they may be
  *                          left unset or set to bogus values.  The caller
