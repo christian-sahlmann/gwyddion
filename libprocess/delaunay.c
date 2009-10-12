@@ -1344,6 +1344,14 @@ triangulate(const PointList *pointlist)
     return triangulation;
 }
 
+/**
+ * gwy_delaunay_triangulation_free:
+ * @triangulation: Delaunay triangulation.
+ *
+ * Frees a triangulation created by gwy_delaunay_triangulate().
+ *
+ * Since: 2.18
+ **/
 void
 gwy_delaunay_triangulation_free(GwyDelaunayTriangulation *triangulation)
 {
@@ -1352,6 +1360,23 @@ gwy_delaunay_triangulation_free(GwyDelaunayTriangulation *triangulation)
     g_free(triangulation);
 }
 
+/**
+ * gwy_delaunay_triangulate:
+ * @npoints: Number of points.
+ * @points: Array of points.  They must be typecastable to @GwyDelaunayPointXY,
+ *          however, they can be larger than that.  The actual struct size
+ *          is indicated by @point_size.
+ * @point_size: Size of point struct, in bytes.
+ *
+ * Finds Delaunay triangulation for a set of points in plane.
+ *
+ * The triangulation might not work in numerically unstable cases.  Also, no
+ * points in the input set may coincide.
+ *
+ * Returns: A newly created triangulation, %NULL on failure.
+ *
+ * Since: 2.18
+ **/
 GwyDelaunayTriangulation*
 gwy_delaunay_triangulate(guint npoints, gconstpointer points, gsize point_size)
 {
@@ -1504,6 +1529,27 @@ interpolate_sidelinear(const Triangulation *triangulation,
     return 0.0;
 }
 
+/**
+ * gwy_delaunay_interpolate:
+ * @triangulation: Delaunay triangulation.
+ * @points: Array of points.  They must be typecastable to
+ *          @GwyDelaunayPointXYZ, however they can be larger than that.
+ *          The actual struct size is indicated by @point_size.  Generally,
+ *          this must be the same array as passed to
+ *          gwy_delaunay_triangulate().
+ * @point_size: Size of point struct, in bytes.
+ * @interpolation: Interpolation to use.  Only @GWY_INTERPOLATION_ROUND and
+ *                 @GWY_INTERPOLATION_BILINEAR are implemented.  Is is an error
+ *                 to pass any other interpolation type.
+ * @dfield: Data field to fill with interpolated values.
+ *
+ * Regularizes XYZ data to a grid, represented by a data field.
+ *
+ * The area and resolution of the regular grid is given by the dimensions and
+ * offsets of @dfield.
+ *
+ * Since: 2.18.
+ **/
 void
 gwy_delaunay_interpolate(GwyDelaunayTriangulation *gwytri,
                          gconstpointer points,
@@ -1654,5 +1700,50 @@ test_reflexivity(const Triangulation *triangulation)
     return count;
 }
 #endif
+
+/************************** Documentation ****************************/
+
+/**
+ * SECTION:delaunay
+ * @title: Delaunay
+ * @short_description: Delaunay triangulation and interpolation
+ **/
+
+/**
+ * GwyDelaunayPointXY:
+ * @x: X-coordinate.
+ * @y: Y-coordinate.
+ *
+ * Representation of a point in plane for triangulation.
+ *
+ * Since: 2.18
+ **/
+
+/**
+ * GwyDelaunayPointXYZ:
+ * @x: X-coordinate.
+ * @y: Y-coordinate.
+ * @z: Z-coordinate, i.e. the value in point (@x,@y).
+ *
+ * Representation of a point in plane with associated value for interpolation.
+ *
+ * Since: 2.18
+ **/
+
+/**
+ * GwyDelaunayTriangulation:
+ * @npoints: The number of points, this is equal to the number of points
+ *           passed to gwy_delaunay_triangulate().
+ * @size: Size of @neighbours array, also equal to the last item of @index.
+ * @index: Positions where lists of neighbours for individual points start in
+ *         @neighbours.  The array has @npoints+1 elements so, the neighbours
+ *         of point @i are at positions @index[@i] to @index[@i+1]-1.
+ * @neighbours: Lists of neigbours for invididual points, packed in a one large
+ *              array.
+ *
+ * Delaunay triangulation representation.
+ *
+ * Since: 2.18
+ **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
