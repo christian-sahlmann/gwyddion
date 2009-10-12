@@ -1148,7 +1148,7 @@ mdt_mda_vars(const guchar *p,
              const guchar *fstart,
              MDTMDAFrame *frame,
              guint frame_size,
-             guint vars_size,
+             G_GNUC_UNUSED guint vars_size,
              G_GNUC_UNUSED GError **error)
 {
 
@@ -1941,7 +1941,7 @@ start_element(G_GNUC_UNUSED GMarkupParseContext *context,
               G_GNUC_UNUSED const gchar **attribute_names,
               G_GNUC_UNUSED const gchar **attribute_values,
               gpointer user_data,
-              GError **error)
+              G_GNUC_UNUSED GError **error)
 {
     const gchar **name_cursor = attribute_names;
     const gchar **value_cursor = attribute_values;
@@ -1980,7 +1980,7 @@ start_element(G_GNUC_UNUSED GMarkupParseContext *context,
 
 static void
 end_element(G_GNUC_UNUSED GMarkupParseContext *context,
-            const gchar *element_name,
+            G_GNUC_UNUSED const gchar *element_name,
             gpointer user_data,
             G_GNUC_UNUSED GError **error)
 {
@@ -1992,7 +1992,7 @@ end_element(G_GNUC_UNUSED GMarkupParseContext *context,
 static void
 parse_text(G_GNUC_UNUSED GMarkupParseContext *context,
            const gchar *value,
-           gsize value_len,
+           G_GNUC_UNUSED gsize value_len,
            gpointer user_data,
            G_GNUC_UNUSED GError **error)
 {
