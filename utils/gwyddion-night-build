@@ -161,7 +161,7 @@ EOF
 
 function check_desktop() {
   # Check desktop integration stuff
-  exceptions=' \(rawfile\|asciiexport\|pixmap\)\.c '
+  exceptions=' \(asciiexport\|pixmap\|rawgraph\|rawfile\|rawxyz\)\.c '
   sed -e 's/^<!-- \(Module .* contains no magic\.\) -->$/\1/;t;d' \
     data/gwyddion.xml | grep -v "$exceptions" 1>&2
 }
