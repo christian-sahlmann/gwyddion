@@ -66,6 +66,7 @@ file_LTLIBRARIES = \
 	quesant.la \
 	rawfile.la \
 	rawgraph.la \
+	rawxyz.la \
 	rhk-sm3.la \
 	rhk-sm4.la \
 	rhk-spm32.la \
@@ -158,6 +159,7 @@ psia_la_SOURCES          = psia.c gwytiff.h
 quesant_la_SOURCES       = quesant.c
 rawfile_la_SOURCES       = rawfile.c rawfilepreset.h
 rawgraph_la_SOURCES      = rawgraph.c
+rawxyz_la_SOURCES        = rawxyz.c
 rhk_sm3_la_SOURCES       = rhk-sm3.c
 rhk_sm4_la_SOURCES       = rhk-sm4.c
 rhk_spm32_la_SOURCES     = rhk-spm32.c
