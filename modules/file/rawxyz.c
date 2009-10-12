@@ -132,7 +132,7 @@ static gboolean
 module_register(void)
 {
     gwy_file_func_register("rawxyz",
-                           N_("Raw XYZ files"),
+                           N_("Raw XYZ data"),
                            NULL,
                            (GwyFileLoadFunc)&rawxyz_load,
                            NULL,
@@ -245,10 +245,12 @@ rawxyz_dialog(RawXYZArgs *args,
     gtk_table_attach(table, label, 0, 1, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
     controls.xmin = gtk_entry_new();
+    gtk_entry_set_width_chars(GTK_ENTRY(controls.xmin), 6);
     gtk_table_attach(table, controls.xmin, 1, 2, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
     controls.xreal = gtk_entry_new();
-    gtk_table_attach(table, controls.xreal, 1, 2, row, row+1,
+    gtk_entry_set_width_chars(GTK_ENTRY(controls.xreal), 6);
+    gtk_table_attach(table, controls.xreal, 2, 3, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
@@ -257,20 +259,23 @@ rawxyz_dialog(RawXYZArgs *args,
     gtk_table_attach(table, label, 0, 1, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
     controls.ymin = gtk_entry_new();
+    gtk_entry_set_width_chars(GTK_ENTRY(controls.ymin), 6);
     gtk_table_attach(table, controls.ymin, 1, 2, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
     controls.yreal = gtk_entry_new();
-    gtk_table_attach(table, controls.yreal, 1, 2, row, row+1,
+    gtk_entry_set_width_chars(GTK_ENTRY(controls.yreal), 6);
+    gtk_table_attach(table, controls.yreal, 2, 3, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
     gtk_table_set_row_spacing(table, row, 8);
     row++;
 
-    label = gtk_label_new(_("_Width:"));
+    label = gtk_label_new_with_mnemonic(_("_Width:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(table, label, 0, 2, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
     controls.xres = gtk_adjustment_new(800, 2, 16384, 1, 100, 0);
     spin = gtk_spin_button_new(GTK_ADJUSTMENT(controls.xres), 0, 0);
+    gtk_label_set_mnemonic_widget(GTK_LABEL(label), spin);
     gtk_table_attach(table, spin, 2, 3, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
     label = gtk_label_new("px");
@@ -279,12 +284,13 @@ rawxyz_dialog(RawXYZArgs *args,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
-    label = gtk_label_new(_("_Height:"));
+    label = gtk_label_new_with_mnemonic(_("_Height:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(table, label, 0, 2, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
     controls.yres = gtk_adjustment_new(600, 2, 16384, 1, 100, 0);
     spin = gtk_spin_button_new(GTK_ADJUSTMENT(controls.yres), 0, 0);
+    gtk_label_set_mnemonic_widget(GTK_LABEL(label), spin);
     gtk_table_attach(table, spin, 2, 3, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
     label = gtk_label_new("px");
@@ -299,16 +305,22 @@ rawxyz_dialog(RawXYZArgs *args,
     gtk_table_attach(table, label, 0, 2, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
     controls.xy_units = gtk_entry_new();
+    gtk_entry_set_width_chars(GTK_ENTRY(controls.xy_units), 6);
+    gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls.xy_units);
     gtk_table_attach(table, controls.xy_units, 2, 3, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    row++;
 
     label = gtk_label_new_with_mnemonic(_("_Value units:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(table, label, 0, 2, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
     controls.z_units = gtk_entry_new();
+    gtk_entry_set_width_chars(GTK_ENTRY(controls.z_units), 6);
+    gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls.z_units);
     gtk_table_attach(table, controls.z_units, 2, 3, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    row++;
 
     /********************************************************************
      * Right column
@@ -524,6 +536,10 @@ analyse_points(RawXYZFile *rfile,
 
     xreal = rfile->xmax - rfile->xmin;
     yreal = rfile->ymax - rfile->ymin;
+
+    if (xreal == 0.0 || yreal == 0.0) {
+        g_warning("All points lie on a line, we are going to crash.");
+    }
 
     /* Make a virtual grid */
     xr = xreal/sqrt(npoints)*CELL_SIDE;
