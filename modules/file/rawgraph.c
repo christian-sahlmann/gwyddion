@@ -528,11 +528,11 @@ static void
 rawgraph_load_args(GwyContainer *container,
                    RawGraphArgs *args)
 {
-    args->title = (gchar*)_("Curve");
-    args->x_label = (gchar*)"x";
-    args->y_label = (gchar*)"y";
-    args->x_units = (gchar*)"";
-    args->y_units = (gchar*)"";
+    args->title = NULL;
+    args->x_label = NULL;
+    args->y_label = NULL;
+    args->x_units = NULL;
+    args->y_units = NULL;
 
     gwy_container_gis_string_by_name(container, title_key,
                                      (const guchar**)&args->title);
@@ -545,11 +545,11 @@ rawgraph_load_args(GwyContainer *container,
     gwy_container_gis_string_by_name(container, y_units_key,
                                      (const guchar**)&args->y_units);
 
-    args->title = g_strdup(args->title);
-    args->x_label = g_strdup(args->x_label);
-    args->y_label = g_strdup(args->y_label);
-    args->x_units = g_strdup(args->x_units);
-    args->y_units = g_strdup(args->y_units);
+    args->title = g_strdup(args->title ? args->title : _("Curve"));
+    args->x_label = g_strdup(args->x_label ? args->x_label : "x");
+    args->y_label = g_strdup(args->y_label ? args->y_label : "y");
+    args->x_units = g_strdup(args->x_units ? args->x_units : "");
+    args->y_units = g_strdup(args->y_units ? args->y_units : "");
 }
 
 static void
