@@ -36,6 +36,7 @@
 #include <libgwymodule/gwymodule-file.h>
 #include <app/gwymoduleutils-file.h>
 #include <app/data-browser.h>
+#include <app/settings.h>
 
 #include "err.h"
 
@@ -52,7 +53,7 @@ enum {
 typedef struct {
     /* XXX: Not all values of interpolation and exterior are possible. */
     GwyInterpolationType interpolation;
-    GwyExteriorType exterion;
+    GwyExteriorType exterior;
     gchar *xy_units;
     gchar *z_units;
     /* Interface only */
@@ -76,6 +77,14 @@ typedef struct {
 typedef struct {
     RawXYZArgs *args;
     GtkWidget *dialog;
+    GtkWidget *xmin;
+    GtkWidget *xreal;
+    GtkWidget *ymin;
+    GtkWidget *yreal;
+    GtkObject *xres;
+    GtkObject *yres;
+    GtkWidget *xy_units;
+    GtkWidget *z_units;
 } RawXYZControls;
 
 typedef struct {
@@ -85,14 +94,27 @@ typedef struct {
     guint size;
 } WorkQueue;
 
-static gboolean      module_register(void);
-static GwyContainer* rawxyz_load    (const gchar *filename,
-                                     GwyRunType mode,
-                                     GError **error);
-static void          rawxyz_free    (RawXYZFile *rfile);
-static GArray*       read_points    (gchar *p);
-static void          analyse_points (RawXYZFile *rfile,
-                                     double epsrel);
+static gboolean      module_register (void);
+static GwyContainer* rawxyz_load     (const gchar *filename,
+                                      GwyRunType mode,
+                                      GError **error);
+static gboolean      rawxyz_dialog   (RawXYZArgs *arg,
+                                      RawXYZFile *rfile);
+static void          rawxyz_free     (RawXYZFile *rfile);
+static GArray*       read_points     (gchar *p);
+static void          analyse_points  (RawXYZFile *rfile,
+                                      double epsrel);
+static void          rawxyz_load_args(GwyContainer *container,
+                                      RawXYZArgs *args);
+static void          rawxyz_save_args(GwyContainer *container,
+                                      RawXYZArgs *args);
+
+static const RawXYZArgs rawxyz_defaults = {
+    GWY_INTERPOLATION_LINEAR, GWY_EXTERIOR_MIRROR_EXTEND,
+    NULL, NULL,
+    /* Interface only */
+    0.0, 0.0, 0.0, 0.0
+};
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -124,11 +146,21 @@ rawxyz_load(const gchar *filename,
          G_GNUC_UNUSED GwyRunType mode,
          GError **error)
 {
-    GwyContainer *container = NULL;
+    GwyContainer *settings, *container = NULL;
+    RawXYZArgs args;
     RawXYZFile rfile;
     gchar *buffer = NULL;
     gsize size;
     GError *err = NULL;
+    gboolean ok;
+
+    /* Someday we can load pixmaps with default settings */
+    if (mode != GWY_RUN_INTERACTIVE) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR,
+                    GWY_MODULE_FILE_ERROR_INTERACTIVE,
+                    _("Raw XYZ data import must be run as interactive."));
+        return NULL;
+    }
 
     gwy_clear(&rfile, 1);
 
@@ -144,12 +176,171 @@ rawxyz_load(const gchar *filename,
         goto fail;
     }
 
+    settings = gwy_app_settings_get();
+    rawxyz_load_args(settings, &args);
     analyse_points(&rfile, EPSREL);
+    ok = rawxyz_dialog(&args, &rfile);
+    rawxyz_save_args(settings, &args);
+    if (!ok) {
+        err_CANCELLED(error);
+        goto fail;
+    }
 
 fail:
     rawxyz_free(&rfile);
 
     return container;
+}
+
+static gboolean
+rawxyz_dialog(RawXYZArgs *args,
+              RawXYZFile *rfile)
+{
+    GtkWidget *dialog, *align, *label, *spin, *hbox;
+    GtkTable *table;
+    RawXYZControls controls;
+    gint row, response;
+
+    controls.args = args;
+
+    dialog = gtk_dialog_new_with_buttons(_("Import XYZ Data"), NULL, 0,
+                                         GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
+                                         GTK_STOCK_OK, GTK_RESPONSE_OK,
+                                         NULL);
+    gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
+    gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
+    controls.dialog = dialog;
+
+    hbox = gtk_hbox_new(FALSE, 20);
+    gtk_container_set_border_width(GTK_CONTAINER(hbox), 4);
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox, TRUE, TRUE, 0);
+
+    /********************************************************************
+     * Left column
+     ********************************************************************/
+
+    align = gtk_alignment_new(0.0, 0.0, 0.0, 0.0);
+    gtk_box_pack_start(GTK_BOX(hbox), align, FALSE, FALSE, 0);
+
+    table = GTK_TABLE(gtk_table_new(8, 4, FALSE));
+    gtk_table_set_row_spacings(table, 2);
+    gtk_table_set_col_spacings(table, 6);
+    gtk_container_add(GTK_CONTAINER(align), GTK_WIDGET(table));
+    row = 0;
+
+    label = gtk_label_new(_("Range"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(table, label, 0, 1, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    label = gtk_label_new(_("from"));
+    gtk_table_attach(table, label, 1, 2, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    label = gtk_label_new(_("to"));
+    gtk_table_attach(table, label, 2, 3, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    row++;
+
+    label = gtk_label_new(_("X:"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(table, label, 0, 1, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    controls.xmin = gtk_entry_new();
+    gtk_table_attach(table, controls.xmin, 1, 2, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    controls.xreal = gtk_entry_new();
+    gtk_table_attach(table, controls.xreal, 1, 2, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    row++;
+
+    label = gtk_label_new(_("Y:"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(table, label, 0, 1, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    controls.ymin = gtk_entry_new();
+    gtk_table_attach(table, controls.ymin, 1, 2, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    controls.yreal = gtk_entry_new();
+    gtk_table_attach(table, controls.yreal, 1, 2, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    gtk_table_set_row_spacing(table, row, 8);
+    row++;
+
+    label = gtk_label_new(_("_Width:"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(table, label, 0, 2, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    controls.xres = gtk_adjustment_new(800, 2, 16384, 1, 100, 0);
+    spin = gtk_spin_button_new(GTK_ADJUSTMENT(controls.xres), 0, 0);
+    gtk_table_attach(table, spin, 2, 3, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    label = gtk_label_new("px");
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(table, label, 3, 4, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    row++;
+
+    label = gtk_label_new(_("_Height:"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(table, label, 0, 2, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    controls.yres = gtk_adjustment_new(600, 2, 16384, 1, 100, 0);
+    spin = gtk_spin_button_new(GTK_ADJUSTMENT(controls.yres), 0, 0);
+    gtk_table_attach(table, spin, 2, 3, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    label = gtk_label_new("px");
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(table, label, 3, 4, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    gtk_table_set_row_spacing(table, row, 8);
+    row++;
+
+    label = gtk_label_new_with_mnemonic(_("_Lateral units:"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(table, label, 0, 2, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    controls.xy_units = gtk_entry_new();
+    gtk_table_attach(table, controls.xy_units, 2, 3, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+
+    label = gtk_label_new_with_mnemonic(_("_Value units:"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(table, label, 0, 2, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    controls.z_units = gtk_entry_new();
+    gtk_table_attach(table, controls.z_units, 2, 3, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+
+    /********************************************************************
+     * Right column
+     ********************************************************************/
+
+    gtk_widget_show_all(dialog);
+    do {
+        response = gtk_dialog_run(GTK_DIALOG(dialog));
+        switch (response) {
+            case GTK_RESPONSE_CANCEL:
+            case GTK_RESPONSE_DELETE_EVENT:
+            gtk_widget_destroy(dialog);
+            case GTK_RESPONSE_NONE:
+            return FALSE;
+            break;
+
+            case GTK_RESPONSE_OK:
+            /*
+            update_string(controls.x_label, &args->x_label);
+            update_string(controls.y_label, &args->y_label);
+            */
+            break;
+
+            default:
+            g_assert_not_reached();
+            break;
+        }
+    } while (response != GTK_RESPONSE_OK);
+
+    gtk_widget_destroy(dialog);
+
+    return FALSE;
 }
 
 static void
@@ -202,10 +393,6 @@ coords_to_grid_index(guint xres,
     iy = (gint)floor(y/step);
     if (G_UNLIKELY(iy == yres))
         iy--;
-
-    /* Go zig-zag through the cells */
-    if (iy % 2)
-        ix = xres-1 - ix;
 
     return iy*xres + ix;
 }
@@ -408,8 +595,8 @@ analyse_points(RawXYZFile *rfile,
                 ix = (guint)floor(x);
                 x -= ix;
                 y = (pt->y - rfile->ymin)/step;
-                ix = (guint)floor(y);
-                y -= ix;
+                iy = (guint)floor(y);
+                y -= iy;
 
                 if (ix < xres && iy < yres)
                     work_queue_ensure(&cellqueue, iy*xres + ix);
@@ -432,6 +619,7 @@ analyse_points(RawXYZFile *rfile,
             /* Process all points from the cells and check if they belong to
              * the currently merged group. */
             while (cellqueue.pos < cellqueue.len) {
+                j = cellqueue.id[cellqueue.pos];
                 for (i = cell_index[j]; i < cell_index[j+1]; i++) {
                     if (newpoints[i].z != G_MAXDOUBLE)
                         work_queue_add(&pointqueue, i);
@@ -467,6 +655,53 @@ analyse_points(RawXYZFile *rfile,
     work_queue_destroy(&pointqueue);
 
     g_free(cell_index);
+}
+
+static const gchar exterior_key[]      = "/module/rawxyz/exterior";
+static const gchar interpolation_key[] = "/module/rawxyz/interpolation";
+static const gchar xy_units_key[]      = "/module/rawxyz/xy-units";
+static const gchar z_units_key[]       = "/module/rawxyz/z-units";
+
+static void
+rawxyz_sanitize_args(RawXYZArgs *args)
+{
+    if (args->interpolation != GWY_INTERPOLATION_ROUND)
+        args->interpolation = GWY_INTERPOLATION_LINEAR;
+    if (args->exterior != GWY_EXTERIOR_MIRROR_EXTEND
+        && args->exterior != GWY_EXTERIOR_PERIODIC)
+        args->exterior = GWY_EXTERIOR_BORDER_EXTEND;
+
+}
+static void
+rawxyz_load_args(GwyContainer *container,
+                 RawXYZArgs *args)
+{
+    *args = rawxyz_defaults;
+
+    gwy_container_gis_enum_by_name(container, interpolation_key,
+                                   &args->interpolation);
+    gwy_container_gis_enum_by_name(container, exterior_key, &args->exterior);
+    gwy_container_gis_string_by_name(container, xy_units_key,
+                                     (const guchar**)&args->xy_units);
+    gwy_container_gis_string_by_name(container, z_units_key,
+                                     (const guchar**)&args->z_units);
+
+    rawxyz_sanitize_args(args);
+    args->xy_units = g_strdup(args->xy_units ? args->xy_units : "");
+    args->z_units = g_strdup(args->z_units ? args->xy_units : "");
+}
+
+static void
+rawxyz_save_args(GwyContainer *container,
+                 RawXYZArgs *args)
+{
+    gwy_container_set_enum_by_name(container, interpolation_key,
+                                   args->interpolation);
+    gwy_container_set_enum_by_name(container, exterior_key, args->exterior);
+    gwy_container_set_string_by_name(container, xy_units_key,
+                                     g_strdup(args->xy_units));
+    gwy_container_set_string_by_name(container, z_units_key,
+                                     g_strdup(args->z_units));
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
