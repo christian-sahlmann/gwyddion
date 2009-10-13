@@ -1,6 +1,6 @@
 2.18 (0000-00-00)
 Application:
-- Translations updated: Russian.
+- Translations updated: French, Russian.
 - Only file types that are not detected automaticaly are shown in the file
   open dialog.
 
@@ -15,6 +15,7 @@ Libraries:
 Modules:
 - Attocube (new): Imports Attocube Systems ASC files.
 - NanoScan (new): Imports NanoScan XML files.
+- NT-MDT: MDA frame support was improved.
 - Statistical quantities: The masked area can also be excluded.
 - Seiko: Supports more file types (with magic header SPIZ000AFM).
 - Pixmap export: TIFFs are written in binary mode, fixing broken exported
