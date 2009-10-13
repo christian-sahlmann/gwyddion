@@ -17,10 +17,15 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
+
 #include "config.h"
+#ifdef DEBUG
+#include <stdio.h>
+#endif
 #include <string.h>
 #include <math.h>
-#include <libgwyddion/gwyddion.h>
+#include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwymath.h>
 #include <libprocess/delaunay.h>
 
 enum {
@@ -137,13 +142,13 @@ typedef struct {
     guint ia, ib, ic;           /* Ids of the triangle vertices */
 } Triangle;
 
-/*
+#ifdef DEBUG
 static void dump_neighbours(const Triangulation *triangulation);
 static void dump_triangulation(const Triangulation *triangulation);
 static void dump_points(const Triangulation *triangulation,
                         guint npoints, gconstpointer points, gsize point_size);
 static guint test_reflexivity(const Triangulation *triangulation);
-*/
+#endif
 
 /* Estimate how big block we want to allocate if we have @n neighbours.
  * Returns a multiple of NEIGHBOURS. */
@@ -1600,7 +1605,7 @@ gwy_delaunay_interpolate(GwyDelaunayTriangulation *gwytri,
     gwy_data_field_invalidate(dfield);
 }
 
-#if 0
+#ifdef DEBUG
 G_GNUC_UNUSED
 static void
 dump_neighbours(const Triangulation *triangulation)
