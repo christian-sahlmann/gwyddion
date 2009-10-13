@@ -710,7 +710,6 @@ gwy_si_unit_equal(GwySIUnit *siunit1, GwySIUnit *siunit2)
     return TRUE;
 }
 
-
 static gboolean
 gwy_si_unit_parse(GwySIUnit *siunit,
                   const gchar *string)
@@ -737,7 +736,7 @@ gwy_si_unit_parse(GwySIUnit *siunit,
                   "\030\031\032\033\034\035\036\037"
                   "!#$&()*,:;=?@\\[]_`|{}");
     if (end) {
-        g_warning("Invalid character 0x%02x", *end);
+        /* g_warning("Invalid character 0x%02x", *end); */
         return FALSE;
     }
 
@@ -747,16 +746,18 @@ gwy_si_unit_parse(GwySIUnit *siunit,
         string = end;
         siunit->power10 = GWY_ROUND(log10(q));
         if (q <= 0 || fabs(log(q/pow10(siunit->power10))) > 1e-13) {
-            g_warning("Bad multiplier %g", q);
+            /* g_warning("Bad multiplier %g", q); */
             siunit->power10 = 0;
         }
         else if (g_str_has_prefix(string, "<sup>")) {
             string += strlen("<sup>");
             n = strtol(string, (gchar**)&end, 10);
-            if (end == string)
-                g_warning("Bad exponent %s", string);
-            else if (!g_str_has_prefix(end, "</sup>"))
-                g_warning("Expected </sup> after exponent");
+            if (end == string) {
+                /* g_warning("Bad exponent %s", string); */
+            }
+            else if (!g_str_has_prefix(end, "</sup>")) {
+                /* g_warning("Expected </sup> after exponent"); */
+            }
             else
                 siunit->power10 *= n;
             string = end;
@@ -764,8 +765,9 @@ gwy_si_unit_parse(GwySIUnit *siunit,
         else if (string[0] == '^') {
             string++;
             n = strtol(string, (gchar**)&end, 10);
-            if (end == string)
-                g_warning("Bad exponent %s", string);
+            if (end == string) {
+                /* g_warning("Bad exponent %s", string); */
+            }
             else
                 siunit->power10 *= n;
             string = end;
@@ -835,11 +837,11 @@ gwy_si_unit_parse(GwySIUnit *siunit,
             unit.power = strtol(p + strlen("<sup>"), &e, 10);
             if (e == p + strlen("<sup>")
                 || !g_str_has_prefix(e, "</sup>")) {
-                g_warning("Bad power %s", p);
+                /* g_warning("Bad power %s", p); */
                 unit.power = 1;
             }
             else if (!unit.power || abs(unit.power) > 12) {
-                g_warning("Bad power %d", unit.power);
+                /* g_warning("Bad power %d", unit.power); */
                 unit.power = 1;
             }
             g_string_truncate(buf, p - buf->str);
@@ -847,11 +849,11 @@ gwy_si_unit_parse(GwySIUnit *siunit,
         else if ((p = strchr(buf->str + 1, '^'))) {
             unit.power = strtol(p + 1, &e, 10);
             if (e == p + 1 || *e) {
-                g_warning("Bad power %s", p);
+                /* g_warning("Bad power %s", p); */
                 unit.power = 1;
             }
             else if (!unit.power || abs(unit.power) > 12) {
-                g_warning("Bad power %d", unit.power);
+                /* g_warning("Bad power %d", unit.power); */
                 unit.power = 1;
             }
             g_string_truncate(buf, p - buf->str);
@@ -865,7 +867,7 @@ gwy_si_unit_parse(GwySIUnit *siunit,
             if (i != buf->len) {
                 unit.power = strtol(buf->str + i, NULL, 10);
                 if (!unit.power || abs(unit.power) > 12) {
-                    g_warning("Bad power %d", unit.power);
+                    /* g_warning("Bad power %d", unit.power); */
                     unit.power = 1;
                 }
                 g_string_truncate(buf, i);
@@ -884,7 +886,7 @@ gwy_si_unit_parse(GwySIUnit *siunit,
 
         /* elementary sanity */
         if (!g_utf8_validate(buf->str, -1, (const gchar**)&p)) {
-            g_warning("Unit string is not valid UTF-8");
+            /* g_warning("Unit string is not valid UTF-8"); */
             g_string_truncate(buf, p - buf->str);
         }
         if (!buf->len) {
@@ -893,8 +895,9 @@ gwy_si_unit_parse(GwySIUnit *siunit,
                 unit.power = -unit.power;
             siunit->power10 += unit.power * pfpower;
         }
-        else if (!g_ascii_isalpha(buf->str[0]) && (guchar)buf->str[0] < 128)
-            g_warning("Invalid base unit: %s", buf->str);
+        else if (!g_ascii_isalpha(buf->str[0]) && (guchar)buf->str[0] < 128) {
+            /* g_warning("Invalid base unit: %s", buf->str); */
+        }
         else {
             /* append it */
             unit.unit = g_quark_from_string(buf->str);
@@ -912,8 +915,9 @@ gwy_si_unit_parse(GwySIUnit *siunit,
         while (g_ascii_isspace(*end))
             end++;
         if (*end == '/') {
-            if (dividing)
-                g_warning("Cannot group multiple divisions");
+            if (dividing) {
+                /* g_warning("Cannot group multiple divisions"); */
+            }
             dividing = TRUE;
             end++;
             while (g_ascii_isspace(*end))
