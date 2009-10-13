@@ -602,15 +602,15 @@ rawfile_dialog_info_page(RawFileArgs *args,
 
     adj = gtk_adjustment_new(args->p.xres, 1, 16384, 1, 10, 0);
     controls->xres = gwy_table_attach_spinbutton(table, row,
-                                                 _("_Horizontal size:"),
-                                                 _("data samples"), adj);
+                                                 _("_Horizontal size:"), "px",
+                                                 adj);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(controls->xres), 0);
     row++;
 
     adj = gtk_adjustment_new(args->p.yres, 1, 16384, 1, 10, 0);
     controls->yres = gwy_table_attach_spinbutton(table, row,
-                                                 _("_Vertical size:"),
-                                                 _("data samples"), adj);
+                                                 _("_Vertical size:"), "px",
+                                                 adj);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(controls->yres), 0);
     row++;
 
