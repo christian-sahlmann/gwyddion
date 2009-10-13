@@ -118,6 +118,7 @@ static GwyContainer* rawxyz_load      (const gchar *filename,
                                        GError **error);
 static gboolean      rawxyz_dialog    (RawXYZArgs *arg,
                                        RawXYZFile *rfile);
+static void          preview          (RawXYZControls *controls);
 static void          rawxyz_free      (RawXYZFile *rfile);
 static GArray*       read_points      (gchar *p);
 static void          initialize_ranges(const RawXYZFile *rfile,
@@ -422,6 +423,8 @@ rawxyz_dialog(RawXYZArgs *args,
 
     controls.do_preview = gtk_button_new_with_mnemonic(_("_Update"));
     gtk_box_pack_start(GTK_BOX(vbox), controls.do_preview, FALSE, FALSE, 4);
+    g_signal_connect_swapped(controls.do_preview, "clicked",
+                             G_CALLBACK(preview), &controls);
 
     gtk_widget_show_all(dialog);
     do {
@@ -482,7 +485,8 @@ preview(RawXYZControls *controls)
 
     triangulation = gwy_delaunay_triangulate(points->len, points->data,
                                              sizeof(GwyDelaunayPointXYZ));
-    gwy_delaunay_interpolate(triangulation, points, sizeof(GwyDelaunayPointXYZ),
+    gwy_delaunay_interpolate(triangulation,
+                             points->data, sizeof(GwyDelaunayPointXYZ),
                              args->interpolation, dfield);
     gwy_delaunay_triangulation_free(triangulation);
 
