@@ -98,12 +98,15 @@ typedef struct {
     GtkObject *xres;
     GtkObject *yres;
     GtkWidget *xy_units;
+    GtkWidget *xy_units_parsed;
     GtkWidget *z_units;
+    GtkWidget *z_units_parsed;
     GtkWidget *interpolation;
     GtkWidget *exterior;
     GtkWidget *preview;
     GtkWidget *do_preview;
     GtkWidget *error;
+    gboolean in_update;
 } RawXYZControls;
 
 typedef struct {
@@ -113,25 +116,43 @@ typedef struct {
     guint size;
 } WorkQueue;
 
-static gboolean      module_register  (void);
-static GwyContainer* rawxyz_load      (const gchar *filename,
-                                       GwyRunType mode,
-                                       GError **error);
-static gboolean      rawxyz_dialog    (RawXYZArgs *arg,
-                                       RawXYZFile *rfile);
-static void change_units(RawXYZControls *controls,
-             GtkWidget *button);
-static void          preview          (RawXYZControls *controls);
-static void          rawxyz_free      (RawXYZFile *rfile);
-static GArray*       read_points      (gchar *p);
-static void          initialize_ranges(const RawXYZFile *rfile,
-                                       RawXYZArgs *args);
-static void          analyse_points   (RawXYZFile *rfile,
-                                       double epsrel);
-static void          rawxyz_load_args (GwyContainer *container,
-                                       RawXYZArgs *args);
-static void          rawxyz_save_args (GwyContainer *container,
-                                       RawXYZArgs *args);
+static gboolean      module_register    (void);
+static GwyContainer* rawxyz_load        (const gchar *filename,
+                                         GwyRunType mode,
+                                         GError **error);
+static gboolean      rawxyz_dialog      (RawXYZArgs *arg,
+                                         RawXYZFile *rfile);
+static void          xyunits_changed    (RawXYZControls *controls,
+                                         GtkEntry *entry);
+static void          zunits_changed     (RawXYZControls *controls,
+                                         GtkEntry *entry);
+static void          xres_changed       (RawXYZControls *controls,
+                                         GtkAdjustment *adj);
+static void          yres_changed       (RawXYZControls *controls,
+                                         GtkAdjustment *adj);
+static void          xmin_changed       (RawXYZControls *controls,
+                                         GtkAdjustment *adj);
+static void          xmax_changed       (RawXYZControls *controls,
+                                         GtkAdjustment *adj);
+static void          ymin_changed       (RawXYZControls *controls,
+                                         GtkAdjustment *adj);
+static void          ymax_changed       (RawXYZControls *controls,
+                                         GtkAdjustment *adj);
+static void          xydimeq_changed    (RawXYZControls *controls,
+                                         GtkToggleButton *button);
+static void          xymeasureeq_changed(RawXYZControls *controls,
+                                         GtkToggleButton *button);
+static void          preview            (RawXYZControls *controls);
+static void          rawxyz_free        (RawXYZFile *rfile);
+static GArray*       read_points        (gchar *p);
+static void          initialize_ranges  (const RawXYZFile *rfile,
+                                         RawXYZArgs *args);
+static void          analyse_points     (RawXYZFile *rfile,
+                                         double epsrel);
+static void          rawxyz_load_args   (GwyContainer *container,
+                                         RawXYZArgs *args);
+static void          rawxyz_save_args   (GwyContainer *container,
+                                         RawXYZArgs *args);
 
 static const RawXYZArgs rawxyz_defaults = {
     GWY_INTERPOLATION_LINEAR, GWY_EXTERIOR_MIRROR_EXTEND,
@@ -349,11 +370,15 @@ rawxyz_dialog(RawXYZArgs *args,
     gtk_table_attach(table, label, 0, 1, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
     controls.xy_units = gtk_entry_new();
-    g_object_set_data(G_OBJECT(controls.xy_units), "id", (gpointer)"xy");
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls.xy_units);
     gtk_entry_set_text(GTK_ENTRY(controls.xy_units), args->xy_units);
     gtk_entry_set_width_chars(GTK_ENTRY(controls.xy_units), 6);
-    gtk_table_attach(table, controls.xy_units, 1, 4, row, row+1,
+    gtk_table_attach(table, controls.xy_units, 1, 2, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    controls.xy_units_parsed = gtk_label_new(NULL);
+    gtk_label_set_markup(GTK_LABEL(controls.xy_units_parsed), args->xy_units);
+    gtk_misc_set_alignment(GTK_MISC(controls.xy_units_parsed), 0.0, 0.5);
+    gtk_table_attach(table, controls.xy_units_parsed, 3, 4, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
@@ -362,11 +387,15 @@ rawxyz_dialog(RawXYZArgs *args,
     gtk_table_attach(table, label, 0, 1, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
     controls.z_units = gtk_entry_new();
-    g_object_set_data(G_OBJECT(controls.z_units), "id", (gpointer)"z");
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls.z_units);
     gtk_entry_set_text(GTK_ENTRY(controls.z_units), args->z_units);
     gtk_entry_set_width_chars(GTK_ENTRY(controls.z_units), 6);
-    gtk_table_attach(table, controls.z_units, 1, 4, row, row+1,
+    gtk_table_attach(table, controls.z_units, 1, 2, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    controls.z_units_parsed = gtk_label_new(NULL);
+    gtk_label_set_markup(GTK_LABEL(controls.z_units_parsed), args->z_units);
+    gtk_misc_set_alignment(GTK_MISC(controls.z_units_parsed), 0.0, 0.5);
+    gtk_table_attach(table, controls.z_units_parsed, 3, 4, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
     gtk_table_set_row_spacing(table, row, 8);
     row++;
@@ -435,30 +464,29 @@ rawxyz_dialog(RawXYZArgs *args,
     gtk_widget_set_size_request(controls.error, PREVIEW_SIZE, -1);
     gtk_box_pack_start(GTK_BOX(vbox), controls.error, FALSE, FALSE, 0);
 
-    /*
-    g_signal_connect_swapped(controls.xy_units, "clicked",
-                             G_CALLBACK(change_units), &controls);
-    g_signal_connect_swapped(controls.z_units, "clicked",
-                             G_CALLBACK(change_units), &controls);
+    g_signal_connect_swapped(controls.xy_units, "changed",
+                             G_CALLBACK(xyunits_changed), &controls);
+    g_signal_connect_swapped(controls.z_units, "changed",
+                             G_CALLBACK(zunits_changed), &controls);
     g_signal_connect_swapped(controls.do_preview, "clicked",
                              G_CALLBACK(preview), &controls);
     g_signal_connect_swapped(controls.xres, "value-changed",
-                             G_CALLBACK(xyres_changed), &controls);
+                             G_CALLBACK(xres_changed), &controls);
     g_signal_connect_swapped(controls.yres, "value-changed",
-                             G_CALLBACK(xyres_changed), &controls);
+                             G_CALLBACK(yres_changed), &controls);
     g_signal_connect_swapped(controls.xmin, "value-changed",
-                             G_CALLBACK(xrange_changed), &controls);
+                             G_CALLBACK(xmin_changed), &controls);
     g_signal_connect_swapped(controls.xmax, "value-changed",
-                             G_CALLBACK(yrange_changed), &controls);
+                             G_CALLBACK(xmax_changed), &controls);
     g_signal_connect_swapped(controls.ymin, "value-changed",
-                             G_CALLBACK(yrange_changed), &controls);
+                             G_CALLBACK(ymin_changed), &controls);
     g_signal_connect_swapped(controls.ymax, "value-changed",
-                             G_CALLBACK(xrange_changed), &controls);
+                             G_CALLBACK(ymax_changed), &controls);
     g_signal_connect_swapped(controls.xydimeq, "toggled",
                              G_CALLBACK(xydimeq_changed), &controls);
     g_signal_connect_swapped(controls.xymeasureeq, "toggled",
                              G_CALLBACK(xymeasureeq_changed), &controls);
-                             */
+    controls.in_update = FALSE;
 
     gtk_widget_show_all(dialog);
     do {
@@ -492,75 +520,136 @@ rawxyz_dialog(RawXYZArgs *args,
 }
 
 static void
-set_combo_from_unit(GtkWidget *combo,
-                    const gchar *str)
+update_unit_label(GtkLabel *label,
+                  const gchar *unitstring)
 {
+    GwySIValueFormat *vf;
     GwySIUnit *unit;
     gint power10;
 
-    unit = gwy_si_unit_new_parse(str, &power10);
-    gwy_combo_box_metric_unit_set_unit(GTK_COMBO_BOX(combo),
-                                       power10 - 6, power10 + 6, unit);
-    g_object_unref(unit);
+    unit = gwy_si_unit_new_parse(unitstring, &power10);
+    vf = gwy_si_unit_get_format_for_power10(unit, GWY_SI_UNIT_FORMAT_MARKUP,
+                                            power10, NULL);
+    gtk_label_set_markup(label, vf->units);
+    gwy_si_unit_value_format_free(vf);
 }
 
 static void
-change_units(RawXYZControls *controls,
-             GtkWidget *button)
+xyunits_changed(RawXYZControls *controls,
+                GtkEntry *entry)
 {
-    GtkWidget *dialog, *hbox, *label, *entry;
-    const gchar *id, *unit;
-    gint response;
+    RawXYZArgs *args = controls->args;
 
-    id = g_object_get_data(G_OBJECT(button), "id");
-    dialog = gtk_dialog_new_with_buttons(_("Change Units"),
-                                         GTK_WINDOW(controls->dialog),
-                                         GTK_DIALOG_MODAL
-                                         | GTK_DIALOG_NO_SEPARATOR,
-                                         GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-                                         GTK_STOCK_OK, GTK_RESPONSE_OK,
-                                         NULL);
-    gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
+    g_free(args->xy_units);
+    args->xy_units = gtk_editable_get_chars(GTK_EDITABLE(entry), 0, G_MAXINT);
+    update_unit_label(GTK_LABEL(controls->xy_units_parsed), args->xy_units);
+}
 
-    hbox = gtk_hbox_new(FALSE, 6);
-    gtk_container_set_border_width(GTK_CONTAINER(hbox), 4);
-    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox,
-                       FALSE, FALSE, 0);
+static void
+zunits_changed(RawXYZControls *controls,
+               GtkEntry *entry)
+{
+    RawXYZArgs *args = controls->args;
 
-    label = gtk_label_new_with_mnemonic(_("New _units:"));
-    gtk_box_pack_start(GTK_BOX(hbox), label, TRUE, TRUE, 0);
+    g_free(args->z_units);
+    args->z_units = gtk_editable_get_chars(GTK_EDITABLE(entry), 0, G_MAXINT);
+    update_unit_label(GTK_LABEL(controls->z_units_parsed), args->z_units);
+}
 
-    entry = gtk_entry_new();
-    if (gwy_strequal(id, "xy"))
-        gtk_entry_set_text(GTK_ENTRY(entry), controls->args->xy_units);
-    else if (gwy_strequal(id, "z"))
-        gtk_entry_set_text(GTK_ENTRY(entry), controls->args->z_units);
-    else
-        g_return_if_reached();
-    gtk_label_set_mnemonic_widget(GTK_LABEL(label), entry);
-    gtk_entry_set_activates_default(GTK_ENTRY(entry), TRUE);
-    gtk_box_pack_start(GTK_BOX(hbox), entry, TRUE, TRUE, 0);
+static void
+xres_changed(RawXYZControls *controls,
+             GtkAdjustment *adj)
+{
+    RawXYZArgs *args = controls->args;
 
-    gtk_widget_show_all(dialog);
-    response = gtk_dialog_run(GTK_DIALOG(dialog));
-    if (response != GTK_RESPONSE_OK) {
-        gtk_widget_destroy(dialog);
-        return;
+    args->xres = gwy_adjustment_get_int(adj);
+}
+
+static void
+yres_changed(RawXYZControls *controls,
+             GtkAdjustment *adj)
+{
+    RawXYZArgs *args = controls->args;
+
+    args->xres = gwy_adjustment_get_int(adj);
+}
+
+static void
+xmin_changed(RawXYZControls *controls,
+             GtkAdjustment *adj)
+{
+    RawXYZArgs *args = controls->args;
+
+    args->xmin = gtk_adjustment_get_value(adj);
+    if (args->xydimeq && !controls->in_update) {
+        controls->in_update = TRUE;
+        gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->ymin),
+                                 args->ymax - (args->xmax - args->xmin));
+        controls->in_update = FALSE;
     }
+}
 
-    unit = gtk_entry_get_text(GTK_ENTRY(entry));
-    if (gwy_strequal(id, "xy")) {
-        //set_combo_from_unit(controls->xyexponent, unit);
-        g_free(controls->args->xy_units);
-        controls->args->xy_units = g_strdup(unit);
-    }
-    else if (gwy_strequal(id, "z")) {
-        //set_combo_from_unit(controls->zexponent, unit);
-        g_free(controls->args->z_units);
-        controls->args->z_units = g_strdup(unit);
-    }
+static void
+xmax_changed(RawXYZControls *controls,
+             GtkAdjustment *adj)
+{
+    RawXYZArgs *args = controls->args;
 
-    gtk_widget_destroy(dialog);
+    args->xmax = gtk_adjustment_get_value(adj);
+    if (args->xydimeq && !controls->in_update) {
+        controls->in_update = TRUE;
+        gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->ymax),
+                                 args->ymin + (args->xmax - args->xmin));
+        controls->in_update = FALSE;
+    }
+}
+
+static void
+ymin_changed(RawXYZControls *controls,
+             GtkAdjustment *adj)
+{
+    RawXYZArgs *args = controls->args;
+
+    args->ymin = gtk_adjustment_get_value(adj);
+    if (args->xydimeq && !controls->in_update) {
+        controls->in_update = TRUE;
+        gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->xmin),
+                                 args->xmax - (args->ymax - args->ymin));
+        controls->in_update = FALSE;
+    }
+}
+
+static void
+ymax_changed(RawXYZControls *controls,
+             GtkAdjustment *adj)
+{
+    RawXYZArgs *args = controls->args;
+
+    args->ymax = gtk_adjustment_get_value(adj);
+    if (args->xydimeq && !controls->in_update) {
+        controls->in_update = TRUE;
+        gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->xmax),
+                                 args->xmin + (args->ymax - args->ymin));
+        controls->in_update = FALSE;
+    }
+}
+
+static void
+xydimeq_changed(RawXYZControls *controls,
+                GtkToggleButton *button)
+{
+    RawXYZArgs *args = controls->args;
+
+    args->xydimeq = gtk_toggle_button_get_active(button);
+}
+
+static void
+xymeasureeq_changed(RawXYZControls *controls,
+                    GtkToggleButton *button)
+{
+    RawXYZArgs *args = controls->args;
+
+    args->xymeasureeq = gtk_toggle_button_get_active(button);
 }
 
 static void
