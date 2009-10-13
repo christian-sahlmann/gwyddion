@@ -116,43 +116,47 @@ typedef struct {
     guint size;
 } WorkQueue;
 
-static gboolean      module_register    (void);
-static GwyContainer* rawxyz_load        (const gchar *filename,
-                                         GwyRunType mode,
-                                         GError **error);
-static gboolean      rawxyz_dialog      (RawXYZArgs *arg,
-                                         RawXYZFile *rfile);
-static void          xyunits_changed    (RawXYZControls *controls,
-                                         GtkEntry *entry);
-static void          zunits_changed     (RawXYZControls *controls,
-                                         GtkEntry *entry);
-static void          xres_changed       (RawXYZControls *controls,
-                                         GtkAdjustment *adj);
-static void          yres_changed       (RawXYZControls *controls,
-                                         GtkAdjustment *adj);
-static void          xmin_changed       (RawXYZControls *controls,
-                                         GtkAdjustment *adj);
-static void          xmax_changed       (RawXYZControls *controls,
-                                         GtkAdjustment *adj);
-static void          ymin_changed       (RawXYZControls *controls,
-                                         GtkAdjustment *adj);
-static void          ymax_changed       (RawXYZControls *controls,
-                                         GtkAdjustment *adj);
-static void          xydimeq_changed    (RawXYZControls *controls,
-                                         GtkToggleButton *button);
-static void          xymeasureeq_changed(RawXYZControls *controls,
-                                         GtkToggleButton *button);
-static void          preview            (RawXYZControls *controls);
-static void          rawxyz_free        (RawXYZFile *rfile);
-static GArray*       read_points        (gchar *p);
-static void          initialize_ranges  (const RawXYZFile *rfile,
-                                         RawXYZArgs *args);
-static void          analyse_points     (RawXYZFile *rfile,
-                                         double epsrel);
-static void          rawxyz_load_args   (GwyContainer *container,
-                                         RawXYZArgs *args);
-static void          rawxyz_save_args   (GwyContainer *container,
-                                         RawXYZArgs *args);
+static gboolean      module_register      (void);
+static GwyContainer* rawxyz_load          (const gchar *filename,
+                                           GwyRunType mode,
+                                           GError **error);
+static gboolean      rawxyz_dialog        (RawXYZArgs *arg,
+                                           RawXYZFile *rfile);
+static void          xyunits_changed      (RawXYZControls *controls,
+                                           GtkEntry *entry);
+static void          zunits_changed       (RawXYZControls *controls,
+                                           GtkEntry *entry);
+static void          xres_changed         (RawXYZControls *controls,
+                                           GtkAdjustment *adj);
+static void          yres_changed         (RawXYZControls *controls,
+                                           GtkAdjustment *adj);
+static void          xmin_changed         (RawXYZControls *controls,
+                                           GtkAdjustment *adj);
+static void          xmax_changed         (RawXYZControls *controls,
+                                           GtkAdjustment *adj);
+static void          ymin_changed         (RawXYZControls *controls,
+                                           GtkAdjustment *adj);
+static void          ymax_changed         (RawXYZControls *controls,
+                                           GtkAdjustment *adj);
+static void          xydimeq_changed      (RawXYZControls *controls,
+                                           GtkToggleButton *button);
+static void          xymeasureeq_changed  (RawXYZControls *controls,
+                                           GtkToggleButton *button);
+static void          interpolation_changed(RawXYZControls *controls,
+                                           GtkComboBox *combo);
+static void          exterior_changed     (RawXYZControls *controls,
+                                           GtkComboBox *combo);
+static void          preview              (RawXYZControls *controls);
+static void          rawxyz_free          (RawXYZFile *rfile);
+static GArray*       read_points          (gchar *p);
+static void          initialize_ranges    (const RawXYZFile *rfile,
+                                           RawXYZArgs *args);
+static void          analyse_points       (RawXYZFile *rfile,
+                                           double epsrel);
+static void          rawxyz_load_args     (GwyContainer *container,
+                                           RawXYZArgs *args);
+static void          rawxyz_save_args     (GwyContainer *container,
+                                           RawXYZArgs *args);
 
 static const RawXYZArgs rawxyz_defaults = {
     GWY_INTERPOLATION_LINEAR, GWY_EXTERIOR_MIRROR_EXTEND,
@@ -254,6 +258,24 @@ rawxyz_dialog(RawXYZArgs *args,
     controls.rfile = rfile;
     controls.gradient = gwy_gradients_get_gradient(NULL);
     gwy_resource_use(GWY_RESOURCE(controls.gradient));
+
+    /* Enforce xydimeq */
+    if (args->xydimeq) {
+        gdouble c, dx, dy;
+
+        dx = args->xmax - args->xmin;
+        dy = args->ymax - args->ymin;
+        if (dx > dy) {
+            c = args->ymin + args->ymax;
+            args->ymin = 0.5*(c - dx);
+            args->ymax = 0.5*(c + dx);
+        }
+        else {
+            c = args->xmin + args->xmax;
+            args->xmin = 0.5*(c - dy);
+            args->xmax = 0.5*(c + dy);
+        }
+    }
 
     dialog = gtk_dialog_new_with_buttons(_("Import XYZ Data"), NULL, 0,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
@@ -486,6 +508,10 @@ rawxyz_dialog(RawXYZArgs *args,
                              G_CALLBACK(xydimeq_changed), &controls);
     g_signal_connect_swapped(controls.xymeasureeq, "toggled",
                              G_CALLBACK(xymeasureeq_changed), &controls);
+    g_signal_connect_swapped(controls.interpolation, "changed",
+                             G_CALLBACK(interpolation_changed), &controls);
+    g_signal_connect_swapped(controls.exterior, "changed",
+                             G_CALLBACK(exterior_changed), &controls);
     controls.in_update = FALSE;
 
     gtk_widget_show_all(dialog);
@@ -641,6 +667,10 @@ xydimeq_changed(RawXYZControls *controls,
     RawXYZArgs *args = controls->args;
 
     args->xydimeq = gtk_toggle_button_get_active(button);
+    if (args->xydimeq) {
+        /* Force xmax update. */
+        gtk_adjustment_value_changed(GTK_ADJUSTMENT(controls->xmax));
+    }
 }
 
 static void
@@ -650,6 +680,24 @@ xymeasureeq_changed(RawXYZControls *controls,
     RawXYZArgs *args = controls->args;
 
     args->xymeasureeq = gtk_toggle_button_get_active(button);
+}
+
+static void
+interpolation_changed(RawXYZControls *controls,
+                      GtkComboBox *combo)
+{
+    RawXYZArgs *args = controls->args;
+
+    args->interpolation = gwy_enum_combo_box_get_active(combo);
+}
+
+static void
+exterior_changed(RawXYZControls *controls,
+                      GtkComboBox *combo)
+{
+    RawXYZArgs *args = controls->args;
+
+    args->exterior = gwy_enum_combo_box_get_active(combo);
 }
 
 static void
