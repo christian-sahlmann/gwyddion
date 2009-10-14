@@ -1292,6 +1292,15 @@ triangulate(const PointList *pointlist)
             if (!wspace->len)
                 work_space_construct(triangulation, pointlist, id, wspace);
 
+            /* FIXME: This permits spontaneous loss of relfectivity.
+             * We should update the neighbours selfconsitently.  That is, we
+             * know the only new point that can appear is @i.  Hence @i's
+             * neighbourhood simply consists of points in the queue that has @i
+             * as their neihgbour.  When try_to_add_point() removes a shadowed
+             * point we should immediately remove the opposite neighbour
+             * relation from neighbours[]. */
+            /* Even then we fail miserably in ambiguous cases when we typically
+             * make both diagonals parts of the triangulation. */
             if (try_to_add_point(pointlist, i, wspace)) {
                 /* If we added point i among the neighbours of point id, any
                  * of the id's neighbours may also need updating. */
@@ -1393,6 +1402,7 @@ gwy_delaunay_triangulate(guint npoints, gconstpointer points, gsize point_size)
     triangulation = triangulate(&pointlist);
     gwytri = g_new0(GwyDelaunayTriangulation, 1);
     compactify(triangulation, &pointlist, gwytri);
+    g_assert(gwytri->size % 2 == 0);
 
     triangulation_free(triangulation);
     g_free(pointlist.orig_index);
@@ -1406,7 +1416,7 @@ find_boundary(Triangulation *triangulation,
               gconstpointer points, gsize point_size)
 {
     const NeighbourBlock *nb;
-    guint i, imin, bsize;
+    guint i, imin, bsize, expected_blen;
     gdouble xmin, x;
     const Point *pt, *pt2;
     const guint *neighbours;
@@ -1414,7 +1424,11 @@ find_boundary(Triangulation *triangulation,
     triangulation->bindex = g_new(guint, triangulation->npoints);
     for (i = 0; i < triangulation->npoints; i++)
         triangulation->bindex[i] = UNDEF;
-    bsize = 6*ceil(sqrt(triangulation->npoints));
+    /* If the triangulation is correct this formula holds (every point is
+     * counted twice in @nsize, hence the division by 2).  The use of @nsize
+     * assumes a compactified triangulation! */
+    expected_blen = 3*(triangulation->npoints - 1) - triangulation->nsize/2;
+    bsize = expected_blen;
     triangulation->boundary = g_new(guint, bsize);
     triangulation->blen = 0;
 
@@ -1464,18 +1478,14 @@ find_boundary(Triangulation *triangulation,
         neighbours = triangulation->neighbours + nb->pos;
         i = next_neighbour(neighbours, nb->len,
                            find_neighbour(neighbours, nb->len, i));
-        if (i == triangulation->boundary[0])
+        if (i == triangulation->boundary[0]) {
+            g_assert(triangulation->blen == bsize);
             return;
-        if (triangulation->blen == bsize) {
-            bsize *= 2;
-            triangulation->boundary = g_renew(guint, triangulation->boundary,
-                                              bsize);
         }
+        g_assert(triangulation->blen < bsize);
         imin = i;
         triangulation->bindex[imin] = triangulation->blen;
         triangulation->boundary[triangulation->blen++] = imin;
-
-        g_assert(triangulation->blen <= triangulation->npoints);
     }
 }
 
