@@ -45,7 +45,7 @@
 
 #include "err.h"
 
-#define EPSREL 1e-8
+#define EPSREL 1e-7
 
 /* Use smaller cell sides than the triangulation algorithm as we only need them
  * for identical point detection and border extension. */
@@ -76,10 +76,12 @@ typedef struct {
 typedef struct {
     GArray *points;
     guint norigpoints;
+    guint nbasepoints;
     gdouble xmin;
     gdouble xmax;
     gdouble ymin;
     gdouble ymax;
+    gdouble step;
     gdouble zmin;
     gdouble zmax;
 } RawXYZFile;
@@ -147,6 +149,11 @@ static void          interpolation_changed(RawXYZControls *controls,
 static void          exterior_changed     (RawXYZControls *controls,
                                            GtkComboBox *combo);
 static void          preview              (RawXYZControls *controls);
+static GwyDataField* rawxyz_do(RawXYZFile *rfile,
+                               const RawXYZArgs *args);
+static void          extend_borders       (RawXYZFile *rfile,
+                                           const RawXYZArgs *args,
+                                           gdouble epsrel);
 static void          rawxyz_free          (RawXYZFile *rfile);
 static GArray*       read_points          (gchar *p);
 static void          initialize_ranges    (const RawXYZFile *rfile,
@@ -198,6 +205,7 @@ rawxyz_load(const gchar *filename,
          GError **error)
 {
     GwyContainer *settings, *container = NULL;
+    GwyDataField *dfield;
     RawXYZArgs args;
     RawXYZFile rfile;
     gchar *buffer = NULL;
@@ -205,7 +213,7 @@ rawxyz_load(const gchar *filename,
     GError *err = NULL;
     gboolean ok;
 
-    /* Someday we can load pixmaps with default settings */
+    /* Someday we can load XYZ data with default settings */
     if (mode != GWY_RUN_INTERACTIVE) {
         g_set_error(error, GWY_MODULE_FILE_ERROR,
                     GWY_MODULE_FILE_ERROR_INTERACTIVE,
@@ -237,6 +245,12 @@ rawxyz_load(const gchar *filename,
         err_CANCELLED(error);
         goto fail;
     }
+
+    dfield = rawxyz_do(&rfile, &args);
+    container = gwy_container_new();
+    gwy_container_set_object_by_name(container, "/0/data", dfield);
+    gwy_container_set_string_by_name(container, "/0/data/title",
+                                     g_strdup("Regularized XYZ"));
 
 fail:
     rawxyz_free(&rfile);
@@ -515,6 +529,7 @@ rawxyz_dialog(RawXYZArgs *args,
     controls.in_update = FALSE;
 
     gtk_widget_show_all(dialog);
+
     do {
         response = gtk_dialog_run(GTK_DIALOG(dialog));
         switch (response) {
@@ -527,10 +542,6 @@ rawxyz_dialog(RawXYZArgs *args,
             break;
 
             case GTK_RESPONSE_OK:
-            /*
-            update_string(controls.x_label, &args->x_label);
-            update_string(controls.y_label, &args->y_label);
-            */
             break;
 
             default:
@@ -542,7 +553,7 @@ rawxyz_dialog(RawXYZArgs *args,
     gtk_widget_destroy(dialog);
     gwy_resource_release(GWY_RESOURCE(controls.gradient));
 
-    return FALSE;
+    return TRUE;
 }
 
 static void
@@ -583,12 +594,53 @@ zunits_changed(RawXYZControls *controls,
 }
 
 static void
+set_adjustment_in_update(RawXYZControls *controls,
+                         GtkAdjustment *adj,
+                         gdouble value)
+{
+    controls->in_update = TRUE;
+    gtk_adjustment_set_value(adj, value);
+    controls->in_update = FALSE;
+}
+
+static void
+recalculate_xres(RawXYZControls *controls)
+{
+    RawXYZArgs *args = controls->args;
+    gint xres;
+
+    if (controls->in_update || !args->xymeasureeq)
+        return;
+
+    xres = GWY_ROUND((args->xmax - args->xmin)/(args->ymax - args->ymin)
+                     *args->yres);
+    xres = CLAMP(xres, 2, 16384);
+    set_adjustment_in_update(controls, GTK_ADJUSTMENT(controls->xres), xres);
+}
+
+static void
+recalculate_yres(RawXYZControls *controls)
+{
+    RawXYZArgs *args = controls->args;
+    gint yres;
+
+    if (controls->in_update || !args->xymeasureeq)
+        return;
+
+    yres = GWY_ROUND((args->ymax - args->ymin)/(args->xmax - args->xmin)
+                     *args->xres);
+    yres = CLAMP(yres, 2, 16384);
+    set_adjustment_in_update(controls, GTK_ADJUSTMENT(controls->yres), yres);
+}
+
+static void
 xres_changed(RawXYZControls *controls,
              GtkAdjustment *adj)
 {
     RawXYZArgs *args = controls->args;
 
     args->xres = gwy_adjustment_get_int(adj);
+    recalculate_yres(controls);
 }
 
 static void
@@ -597,7 +649,8 @@ yres_changed(RawXYZControls *controls,
 {
     RawXYZArgs *args = controls->args;
 
-    args->xres = gwy_adjustment_get_int(adj);
+    args->yres = gwy_adjustment_get_int(adj);
+    recalculate_xres(controls);
 }
 
 static void
@@ -605,13 +658,16 @@ xmin_changed(RawXYZControls *controls,
              GtkAdjustment *adj)
 {
     RawXYZArgs *args = controls->args;
+    gdouble val = gtk_adjustment_get_value(adj);
 
-    args->xmin = gtk_adjustment_get_value(adj);
-    if (args->xydimeq && !controls->in_update) {
-        controls->in_update = TRUE;
-        gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->ymin),
-                                 args->ymax - (args->xmax - args->xmin));
-        controls->in_update = FALSE;
+    if (val >= args->xmax && !args->xydimeq)
+        set_adjustment_in_update(controls, adj, args->xmin);
+    else {
+        args->xmin = val;
+        if (args->xydimeq && !controls->in_update)
+            set_adjustment_in_update(controls, GTK_ADJUSTMENT(controls->xmax),
+                                     args->xmin + (args->ymax - args->ymin));
+        recalculate_xres(controls);
     }
 }
 
@@ -620,13 +676,16 @@ xmax_changed(RawXYZControls *controls,
              GtkAdjustment *adj)
 {
     RawXYZArgs *args = controls->args;
+    gdouble val = gtk_adjustment_get_value(adj);
 
-    args->xmax = gtk_adjustment_get_value(adj);
-    if (args->xydimeq && !controls->in_update) {
-        controls->in_update = TRUE;
-        gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->ymax),
-                                 args->ymin + (args->xmax - args->xmin));
-        controls->in_update = FALSE;
+    if (val <= args->xmin)
+        set_adjustment_in_update(controls, adj, args->xmax);
+    else {
+        args->xmax = val;
+        if (args->xydimeq && !controls->in_update)
+            set_adjustment_in_update(controls, GTK_ADJUSTMENT(controls->ymax),
+                                     args->ymin + (args->xmax - args->xmin));
+        recalculate_xres(controls);
     }
 }
 
@@ -635,13 +694,16 @@ ymin_changed(RawXYZControls *controls,
              GtkAdjustment *adj)
 {
     RawXYZArgs *args = controls->args;
+    gdouble val = gtk_adjustment_get_value(adj);
 
-    args->ymin = gtk_adjustment_get_value(adj);
-    if (args->xydimeq && !controls->in_update) {
-        controls->in_update = TRUE;
-        gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->xmin),
-                                 args->xmax - (args->ymax - args->ymin));
-        controls->in_update = FALSE;
+    if (val >= args->ymax && !args->xydimeq)
+        set_adjustment_in_update(controls, adj, args->ymin);
+    else {
+        args->ymin = val;
+        if (args->xydimeq && !controls->in_update)
+            set_adjustment_in_update(controls, GTK_ADJUSTMENT(controls->ymax),
+                                     args->ymin + (args->xmax - args->xmin));
+        recalculate_yres(controls);
     }
 }
 
@@ -650,13 +712,16 @@ ymax_changed(RawXYZControls *controls,
              GtkAdjustment *adj)
 {
     RawXYZArgs *args = controls->args;
+    gdouble val = gtk_adjustment_get_value(adj);
 
-    args->ymax = gtk_adjustment_get_value(adj);
-    if (args->xydimeq && !controls->in_update) {
-        controls->in_update = TRUE;
-        gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->xmax),
-                                 args->xmin + (args->ymax - args->ymin));
-        controls->in_update = FALSE;
+    if (val <= args->ymin)
+        set_adjustment_in_update(controls, adj, args->ymax);
+    else {
+        args->ymax = val;
+        if (args->xydimeq && !controls->in_update)
+            set_adjustment_in_update(controls, GTK_ADJUSTMENT(controls->xmax),
+                                     args->xmin + (args->ymax - args->ymin));
+        recalculate_xres(controls);
     }
 }
 
@@ -668,7 +733,7 @@ xydimeq_changed(RawXYZControls *controls,
 
     args->xydimeq = gtk_toggle_button_get_active(button);
     if (args->xydimeq) {
-        /* Force xmax update. */
+        /* Force ymax update. */
         gtk_adjustment_value_changed(GTK_ADJUSTMENT(controls->xmax));
     }
 }
@@ -680,6 +745,10 @@ xymeasureeq_changed(RawXYZControls *controls,
     RawXYZArgs *args = controls->args;
 
     args->xymeasureeq = gtk_toggle_button_get_active(button);
+    if (args->xymeasureeq) {
+        /* Force yres. update */
+        gtk_adjustment_value_changed(GTK_ADJUSTMENT(controls->xres));
+    }
 }
 
 static void
@@ -704,18 +773,42 @@ static void
 preview(RawXYZControls *controls)
 {
     RawXYZArgs *args = controls->args;
-    GArray *points = controls->rfile->points;
-    GwyDelaunayTriangulation *triangulation;
-    GwySIUnit *unitxy, *unitz;
     GwyDataField *dfield;
-    GdkPixbuf *pixbuf, *pixbuf2;
+    GdkPixbuf *pixbuf;
     GtkWidget *entry;
-    gint xypow10, zpow10;
-    gdouble zoom, avg, rms;
+    gdouble avg, rms;
+    gint xres, yres;
 
     entry = gtk_window_get_focus(GTK_WINDOW(controls->dialog));
     if (entry && GTK_IS_ENTRY(entry))
         gtk_widget_activate(entry);
+
+    xres = args->xres;
+    yres = args->yres;
+    args->xres = PREVIEW_SIZE*xres/MAX(xres, yres);
+    args->yres = PREVIEW_SIZE*yres/MAX(xres, yres);
+    dfield = rawxyz_do(controls->rfile, args);
+    pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, 8,
+                            args->xres, args->yres);
+    args->xres = xres;
+    args->yres = yres;
+    avg = gwy_data_field_get_avg(dfield);
+    rms = gwy_data_field_get_rms(dfield);
+    gwy_pixbuf_draw_data_field(pixbuf, dfield, controls->gradient);
+    gtk_image_set_from_pixbuf(GTK_IMAGE(controls->preview), pixbuf);
+    g_object_unref(pixbuf);
+    g_object_unref(dfield);
+}
+
+static GwyDataField*
+rawxyz_do(RawXYZFile *rfile,
+          const RawXYZArgs *args)
+{
+    GArray *points = rfile->points;
+    GwyDelaunayTriangulation *triangulation;
+    GwySIUnit *unitxy, *unitz;
+    GwyDataField *dfield;
+    gint xypow10, zpow10;
 
     unitxy = gwy_si_unit_new_parse(args->xy_units, &xypow10);
     unitz = gwy_si_unit_new_parse(args->z_units, &zpow10);
@@ -726,6 +819,7 @@ preview(RawXYZControls *controls)
     gwy_data_field_set_xoffset(dfield, pow10(xypow10)*args->xmin);
     gwy_data_field_set_yoffset(dfield, pow10(xypow10)*args->ymin);
 
+    extend_borders(rfile, args, EPSREL);
     triangulation = gwy_delaunay_triangulate(points->len, points->data,
                                              sizeof(GwyDelaunayPointXYZ));
     gwy_delaunay_interpolate(triangulation,
@@ -733,20 +827,115 @@ preview(RawXYZControls *controls)
                              args->interpolation, dfield);
     gwy_delaunay_triangulation_free(triangulation);
 
-    zoom = PREVIEW_SIZE/(gdouble)MAX(args->xres, args->yres);
-    pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, 8,
-                            args->xres, args->yres);
-    avg = gwy_data_field_get_avg(dfield);
-    rms = gwy_data_field_get_rms(dfield);
-    gwy_pixbuf_draw_data_field(pixbuf, dfield, controls->gradient);
-    pixbuf2 = gdk_pixbuf_scale_simple(pixbuf,
-                                      ceil(args->xres*zoom),
-                                      ceil(args->yres*zoom),
-                                      GDK_INTERP_TILES);
-    gtk_image_set_from_pixbuf(GTK_IMAGE(controls->preview), pixbuf2);
-    g_object_unref(pixbuf2);
-    g_object_unref(pixbuf);
-    g_object_unref(dfield);
+    return dfield;
+}
+
+static void
+extend_borders(RawXYZFile *rfile,
+               const RawXYZArgs *args,
+               gdouble epsrel)
+{
+    gdouble xmin, xmax, ymin, ymax, xreal, yreal, eps;
+    guint i;
+
+    g_array_set_size(rfile->points, rfile->nbasepoints);
+
+    if (args->exterior == GWY_EXTERIOR_BORDER_EXTEND)
+        return;
+
+    xreal = rfile->xmax - rfile->xmin;
+    yreal = rfile->ymax - rfile->ymin;
+    xmin = args->xmin - 2*rfile->step;
+    xmax = args->xmax + 2*rfile->step;
+    ymin = args->ymin - 2*rfile->step;
+    ymax = args->ymax + 2*rfile->step;
+    eps = epsrel*rfile->step;
+
+    /* Extend the field according to requester boder extension, however,
+     * create at most 3 full copies (4 halves and 4 quarters) of the base set.
+     * Anyone asking for more is either clueless or malicious. */
+    for (i = 0; i < rfile->nbasepoints; i++) {
+        const GwyDelaunayPointXYZ *pt = &g_array_index(rfile->points,
+                                                       GwyDelaunayPointXYZ, i);
+        GwyDelaunayPointXYZ pt2;
+        gdouble txl, txr, tyt, tyb;
+        gboolean txlok, txrok, tytok, tybok;
+
+        pt2.z = pt->z;
+        if (args->exterior == GWY_EXTERIOR_MIRROR_EXTEND) {
+            txl = 2.0*rfile->xmin - pt->x;
+            tyt = 2.0*rfile->ymin - pt->y;
+            txr = 2.0*rfile->xmax - pt->x;
+            tyb = 2.0*rfile->ymax - pt->y;
+            txlok = pt->x - rfile->xmin < 0.5*xreal;
+            tytok = pt->y - rfile->ymin < 0.5*yreal;
+            txrok = rfile->xmax - pt->x < 0.5*xreal;
+            tybok = rfile->ymax - pt->y < 0.5*yreal;
+        }
+        else if (args->exterior == GWY_EXTERIOR_PERIODIC) {
+            txl = pt->x - xreal;
+            tyt = pt->y - yreal;
+            txr = pt->x + xreal;
+            tyb = pt->y + yreal;
+            txlok = rfile->xmax - pt->x < 0.5*xreal;
+            tytok = rfile->ymax - pt->y < 0.5*yreal;
+            txrok = pt->x - rfile->xmin < 0.5*xreal;
+            tybok = pt->y - rfile->ymin < 0.5*yreal;
+        }
+        else {
+            g_assert_not_reached();
+        }
+
+        txlok = txlok && (txl >= xmin && txl <= xmax
+                          && fabs(txl - rfile->xmin) > eps);
+        tytok = tytok && (tyt >= ymin && tyt <= ymax
+                          && fabs(tyt - rfile->ymin) > eps);
+        txrok = txrok && (txr >= ymin && txr <= xmax
+                          && fabs(txr - rfile->xmax) > eps);
+        tybok = tybok && (tyb >= ymin && tyb <= xmax
+                          && fabs(tyb - rfile->ymax) > eps);
+
+        if (txlok) {
+            pt2.x = txl;
+            pt2.y = pt->y - eps;
+            g_array_append_val(rfile->points, pt2);
+        }
+        if (txlok && tytok) {
+            pt2.x = txl + eps;
+            pt2.y = tyt - eps;
+            g_array_append_val(rfile->points, pt2);
+        }
+        if (tytok) {
+            pt2.x = pt->x + eps;
+            pt2.y = tyt;
+            g_array_append_val(rfile->points, pt2);
+        }
+        if (txrok && tytok) {
+            pt2.x = txr + eps;
+            pt2.y = tyt + eps;
+            g_array_append_val(rfile->points, pt2);
+        }
+        if (txrok) {
+            pt2.x = txr;
+            pt2.y = pt->y + eps;
+            g_array_append_val(rfile->points, pt2);
+        }
+        if (txrok && tybok) {
+            pt2.x = txr - eps;
+            pt2.y = tyb + eps;
+            g_array_append_val(rfile->points, pt2);
+        }
+        if (tybok) {
+            pt2.x = pt->x - eps;
+            pt2.y = tyb;
+            g_array_append_val(rfile->points, pt2);
+        }
+        if (txlok && tybok) {
+            pt2.x = txl - eps;
+            pt2.y = tyb - eps;
+            g_array_append_val(rfile->points, pt2);
+        }
+    }
 }
 
 static void
@@ -943,7 +1132,7 @@ analyse_points(RawXYZFile *rfile,
     guint *cell_index;
 
     /* Calculate data ranges */
-    npoints = rfile->points->len;
+    npoints = rfile->norigpoints = rfile->points->len;
     points = (GwyDelaunayPointXYZ*)rfile->points->data;
     rfile->xmin = rfile->xmax = points[0].x;
     rfile->ymin = rfile->ymax = points[0].y;
@@ -988,6 +1177,7 @@ analyse_points(RawXYZFile *rfile,
         step = yreal/yres;
         xres = (guint)ceil(xreal/step);
     }
+    rfile->step = step;
     eps = epsrel*step;
     eps2 = eps*eps;
 
@@ -1102,8 +1292,10 @@ analyse_points(RawXYZFile *rfile,
 
     work_queue_destroy(&cellqueue);
     work_queue_destroy(&pointqueue);
-
     g_free(cell_index);
+    g_free(newpoints);
+
+    rfile->nbasepoints = rfile->points->len;
 }
 
 static const gchar exterior_key[]      = "/module/rawxyz/exterior";
@@ -1119,8 +1311,8 @@ rawxyz_sanitize_args(RawXYZArgs *args)
     if (args->exterior != GWY_EXTERIOR_MIRROR_EXTEND
         && args->exterior != GWY_EXTERIOR_PERIODIC)
         args->exterior = GWY_EXTERIOR_BORDER_EXTEND;
-
 }
+
 static void
 rawxyz_load_args(GwyContainer *container,
                  RawXYZArgs *args)
