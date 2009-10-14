@@ -6,6 +6,8 @@ Application:
 
 Libraries:
 - libgwyapp: Functions to parse typical text headers of SPM files were added.
+- libgwyprocess: Delaunay triangulation and XYZ data interpolation functions
+  were added.
 - libgwyprocess: New area statistics functions can either include or exclude
   the masked area (previously only inclusive masking was possible).
 - libgwyprocess: GwyMaskingType has a public GwyEnum.
@@ -15,6 +17,7 @@ Libraries:
 Modules:
 - Attocube (new): Imports Attocube Systems ASC files.
 - NanoScan (new): Imports NanoScan XML files.
+- Raw XYZ (new): Imports raw XYZ data and regularizes them to a grid.
 - NT-MDT: MDA frame support was improved.
 - Statistical quantities: The masked area can also be excluded.
 - Seiko: Supports more file types (with magic header SPIZ000AFM).
