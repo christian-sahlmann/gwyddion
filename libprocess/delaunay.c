@@ -1316,8 +1316,6 @@ triangulate(const PointList *pointlist)
             queue.pos++;
         }
 
-        //g_print("%u\n", queue.len);
-
         /* Now take points where insertion succeeded and construct the
          * neighbourhood of i of them */
 
@@ -1476,11 +1474,36 @@ find_boundary(Triangulation *triangulation,
         imin = i;
         triangulation->bindex[imin] = triangulation->blen;
         triangulation->boundary[triangulation->blen++] = imin;
+
+        g_assert(triangulation->blen <= triangulation->npoints);
     }
 }
 
 static inline gdouble
-interpolate_linear(const Triangle *triangle)
+edist2_xyz_xy(const PointXYZ *p, const Point *q)
+{
+    gdouble dx = p->x - q->x, dy = p->y - q->y;
+
+    return dx*dx + dy*dy;
+}
+
+static inline gdouble
+tinterpolate_round(const Triangle *triangle,
+                   const Point *pt)
+{
+    gdouble da = edist2_xyz_xy(triangle->a, pt);
+    gdouble db = edist2_xyz_xy(triangle->b, pt);
+    gdouble dc = edist2_xyz_xy(triangle->c, pt);
+
+    if (da <= db)
+        return (da <= dc) ? triangle->a->z : triangle->c->z;
+    else
+        return (db <= dc) ? triangle->b->z : triangle->c->z;
+}
+
+static inline gdouble
+tinterpolate_linear(const Triangle *triangle,
+                    G_GNUC_UNUSED const Point *pr)
 {
     gdouble wsum = triangle->da + triangle->db + triangle->dc;
 
@@ -1489,16 +1512,24 @@ interpolate_linear(const Triangle *triangle)
 }
 
 static inline gdouble
-interpolate_side(gconstpointer points, gsize point_size,
-                 guint ia, guint ib,
-                 const Point *pt)
+sinterpolate1_round(gconstpointer points, gsize point_size,
+                    guint ia, guint ib,
+                    const Point *pt)
 {
-    const PointXYZ *a, *b;
-    gdouble d;
+    const PointXYZ *a = get_point_xyz(points, point_size, ia);
+    const PointXYZ *b = get_point_xyz(points, point_size, ib);
 
-    a = get_point_xyz(points, point_size, ia);
-    b = get_point_xyz(points, point_size, ib);
-    d = side_intersection_distance(a, b, pt);
+    return edist2_xyz_xy(a, pt) <= edist2_xyz_xy(b, pt) ? a->z : b->z;
+}
+
+static inline gdouble
+sinterpolate1_linear(gconstpointer points, gsize point_size,
+                     guint ia, guint ib,
+                     const Point *pt)
+{
+    const PointXYZ *a = get_point_xyz(points, point_size, ia);
+    const PointXYZ *b = get_point_xyz(points, point_size, ib);
+    gdouble d = side_intersection_distance(a, b, pt);
 
     if (d <= -1.0)
         return a->z;
@@ -1509,29 +1540,36 @@ interpolate_side(gconstpointer points, gsize point_size,
 }
 
 static inline gdouble
-interpolate_sidelinear(const Triangulation *triangulation,
-                       gconstpointer points, gsize point_size,
-                       const Triangle *triangle, const Point *pt)
+sinterpolate(const Triangulation *triangulation,
+             gconstpointer points, gsize point_size,
+             const Triangle *triangle, const Point *pt,
+             GwyInterpolationType interpolation)
 {
     guint ia, ib;
 
     ia = triangle->ia;
     ib = triangle->ib;
     if (find_nearest_side(triangulation, points, point_size, &ia, &ib, pt))
-        return interpolate_side(points, point_size, ia, ib, pt);
+        goto success;
 
     ia = triangle->ib;
     ib = triangle->ic;
     if (find_nearest_side(triangulation, points, point_size, &ia, &ib, pt))
-        return interpolate_side(points, point_size, ia, ib, pt);
+        goto success;
 
     ia = triangle->ic;
     ib = triangle->ia;
     if (find_nearest_side(triangulation, points, point_size, &ia, &ib, pt))
-        return interpolate_side(points, point_size, ia, ib, pt);
+        goto success;
 
     g_assert_not_reached();
     return 0.0;
+
+success:
+    if (interpolation == GWY_INTERPOLATION_LINEAR)
+        return sinterpolate1_linear(points, point_size, ia, ib, pt);
+    else
+        return sinterpolate1_round(points, point_size, ia, ib, pt);
 }
 
 /**
@@ -1544,7 +1582,7 @@ interpolate_sidelinear(const Triangulation *triangulation,
  *          gwy_delaunay_triangulate().
  * @point_size: Size of point struct, in bytes.
  * @interpolation: Interpolation to use.  Only @GWY_INTERPOLATION_ROUND and
- *                 @GWY_INTERPOLATION_BILINEAR are implemented.  Is is an error
+ *                 @GWY_INTERPOLATION_LINEAR are implemented.  Is is an error
  *                 to pass any other interpolation type.
  * @dfield: Data field to fill with interpolated values.
  *
@@ -1571,6 +1609,8 @@ gwy_delaunay_interpolate(GwyDelaunayTriangulation *gwytri,
 
     g_return_if_fail(GWY_IS_DATA_FIELD(dfield));
     g_return_if_fail(point_size >= sizeof(PointXYZ));
+    g_return_if_fail(interpolation == GWY_INTERPOLATION_LINEAR
+                     || interpolation == GWY_INTERPOLATION_ROUND);
 
     triangulation = triangulation_new_from_finalized(gwytri);
     find_boundary(triangulation, points, point_size);
@@ -1590,11 +1630,16 @@ gwy_delaunay_interpolate(GwyDelaunayTriangulation *gwytri,
         for (j = 0; j < xres; j++) {
             pt.x = xoff + qx*(j + 0.5);
             if (ensure_triangle(triangulation, points, point_size,
-                                &triangle, &pt))
-                *d = interpolate_linear(&triangle);
-            else
-                *d = interpolate_sidelinear(triangulation, points, point_size,
-                                            &triangle, &pt);
+                                &triangle, &pt)) {
+                if (interpolation == GWY_INTERPOLATION_LINEAR)
+                    *d = tinterpolate_linear(&triangle, &pt);
+                else
+                    *d = tinterpolate_round(&triangle, &pt);
+            }
+            else {
+                *d = sinterpolate(triangulation, points, point_size,
+                                  &triangle, &pt, interpolation);
+            }
             d++;
         }
     }
