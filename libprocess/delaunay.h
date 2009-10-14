@@ -51,11 +51,11 @@ GwyDelaunayTriangulation* gwy_delaunay_triangulate(guint npoints,
 
 void gwy_delaunay_triangulation_free(GwyDelaunayTriangulation *triangulation);
 
-void gwy_delaunay_interpolate(GwyDelaunayTriangulation *triangulation,
-                              gconstpointer points,
-                              gsize point_size,
-                              GwyInterpolationType interpolation,
-                              GwyDataField *dfield);
+gboolean gwy_delaunay_interpolate(GwyDelaunayTriangulation *triangulation,
+                                  gconstpointer points,
+                                  gsize point_size,
+                                  GwyInterpolationType interpolation,
+                                  GwyDataField *dfield);
 
 G_END_DECLS
 

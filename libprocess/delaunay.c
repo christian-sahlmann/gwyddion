@@ -287,7 +287,7 @@ build_compact_point_list(PointList *pointlist,
     g_free(cell_index);
 }
 
-static inline void
+static inline gboolean
 get_workspace_point(WorkSpacePoint *wpt,
                     const PointList *pointlist,
                     guint id,
@@ -300,11 +300,14 @@ get_workspace_point(WorkSpacePoint *wpt,
     pt.x -= origin->x;
     pt.y -= origin->y;
     wpt->r = hypot(pt.x, pt.y);
-    g_assert(wpt->r != 0);
+    if (G_UNLIKELY(wpt->r == 0.0))
+        return FALSE;
     wpt->phi = atan2(pt.y, pt.x);
     /* Lines start open-ended */
     wpt->tprev = -G_MAXDOUBLE;
     wpt->tnext = G_MAXDOUBLE;
+
+    return TRUE;
 }
 
 static inline void
@@ -475,7 +478,10 @@ try_to_add_point(const PointList *pointlist,
     guint i, inext, iprev, ifar, not_removed;
 
     wdata = wspace->data;
-    get_workspace_point(&wpt, pointlist, id, &wspace->origin);
+    if (!get_workspace_point(&wpt, pointlist, id, &wspace->origin)) {
+        wspace->len = 0;
+        return FALSE;
+    }
 
     /* Not points yet, just assign it */
     if (wspace->len == 0) {
@@ -1100,7 +1106,10 @@ ensure_triangle(const Triangulation *triangulation,
             return FALSE;
 
         make_triangle(triangle, points, point_size);
-        g_assert(iter++ < triangulation->npoints);
+        if (G_UNLIKELY(iter++ == triangulation->npoints)) {
+            triangle->ia = triangle->ib = triangle->ic = UNDEF;
+            return FALSE;
+        }
     }
 
     return TRUE;
@@ -1145,21 +1154,24 @@ compactify(const Triangulation *triangulation,
 
 /* Create a triangle from the first three points.
  * FIXME: If they form a straight line, this will fail. */
-static void
+static gboolean
 create_first_triangle(const PointList *pointlist,
                       Triangulation *triangulation,
                       WorkSpace *wspace)
 {
     NeighbourBlock *nb;
-    guint i, j;
+    guint i, j, n3;
 
-    for (i = 0; i < MIN(pointlist->npoints, 3); i++) {
+    n3 = MIN(pointlist->npoints, 3);
+    for (i = 0; i < n3; i++) {
         wspace->len = 0;
         wspace->origin = pointlist->points[i];
-        for (j = 0; j < MIN(pointlist->npoints, 3); j++) {
+        for (j = 0; j < n3; j++) {
             if (j != i)
                 try_to_add_point(pointlist, j, wspace);
         }
+        if (wspace->len + 1 != n3)
+            return FALSE;
         nb = triangulation->blocks + i;
         nb->pos = i*NEIGHBOURS;
         nb->size = NEIGHBOURS;
@@ -1168,6 +1180,8 @@ create_first_triangle(const PointList *pointlist,
     }
     triangulation->npoints = i;
     triangulation->nlen = i*NEIGHBOURS;
+
+    return TRUE;
 }
 
 static void
@@ -1263,7 +1277,8 @@ triangulate(const PointList *pointlist)
 
     /* create_first_triangle() ends up with point 2 in the work space. */
     wspace = work_space_cache_get(wscache, 2);
-    create_first_triangle(pointlist, triangulation, wspace);
+    if (!create_first_triangle(pointlist, triangulation, wspace))
+        goto fail;
 
     for (i = 3; i < pointlist->npoints; i++) {
         NeighbourBlock *nb;
@@ -1276,6 +1291,8 @@ triangulate(const PointList *pointlist)
         /* Find the enclosing or the nearest (for outside points) triangle */
         in = ensure_triangle(triangulation, pointlist->points, sizeof(Point),
                              &triangle, pointlist->points + i);
+        if (G_UNLIKELY(triangle.ia == UNDEF))
+            goto fail;
         /* Put the three points to the queue as their neighbourhood needs
          * updating. */
         queue.pos = queue.len = 0;
@@ -1302,6 +1319,8 @@ triangulate(const PointList *pointlist)
             /* Even then we fail miserably in ambiguous cases when we typically
              * make both diagonals parts of the triangulation. */
             if (try_to_add_point(pointlist, i, wspace)) {
+                if (G_UNLIKELY(!wspace->len))
+                    goto fail;
                 /* If we added point i among the neighbours of point id, any
                  * of the id's neighbours may also need updating. */
                 nb = triangulation->blocks + id;
@@ -1336,7 +1355,8 @@ triangulate(const PointList *pointlist)
             if (queue.success[j]) {
                 in = try_to_add_point(pointlist, queue.id[j], wspace);
                 /* Reflexivity */
-                g_assert(in);
+                if (G_UNLIKELY(!in || !wspace->len))
+                    goto fail;
             }
         }
 
@@ -1354,6 +1374,13 @@ triangulate(const PointList *pointlist)
     work_queue_destroy(&queue);
 
     return triangulation;
+
+fail:
+    work_space_cache_free(wscache);
+    work_queue_destroy(&queue);
+    triangulation_free(triangulation);
+
+    return NULL;
 }
 
 /**
@@ -1392,7 +1419,7 @@ gwy_delaunay_triangulation_free(GwyDelaunayTriangulation *triangulation)
 GwyDelaunayTriangulation*
 gwy_delaunay_triangulate(guint npoints, gconstpointer points, gsize point_size)
 {
-    GwyDelaunayTriangulation *gwytri;
+    GwyDelaunayTriangulation *gwytri = NULL;
     Triangulation *triangulation;
     PointList pointlist;
 
@@ -1400,10 +1427,16 @@ gwy_delaunay_triangulate(guint npoints, gconstpointer points, gsize point_size)
 
     build_compact_point_list(&pointlist, npoints, points, point_size);
     triangulation = triangulate(&pointlist);
+    if (!triangulation)
+        goto fail;
     gwytri = g_new0(GwyDelaunayTriangulation, 1);
     compactify(triangulation, &pointlist, gwytri);
-    g_assert(gwytri->size % 2 == 0);
+    if (G_UNLIKELY(gwytri->size % 2 != 0)) {
+        gwy_delaunay_triangulation_free(gwytri);
+        gwytri = NULL;
+    }
 
+fail:
     triangulation_free(triangulation);
     g_free(pointlist.orig_index);
     g_free(pointlist.points);
@@ -1411,7 +1444,7 @@ gwy_delaunay_triangulate(guint npoints, gconstpointer points, gsize point_size)
     return gwytri;
 }
 
-static void
+static gboolean
 find_boundary(Triangulation *triangulation,
               gconstpointer points, gsize point_size)
 {
@@ -1446,7 +1479,7 @@ find_boundary(Triangulation *triangulation,
     triangulation->bindex[imin] = triangulation->blen;
     triangulation->boundary[triangulation->blen++] = imin;
     if (triangulation->npoints == 1)
-        return;
+        return TRUE;
 
     /* Its neighbour with the lowest direction angle is the first side,
      * FIXME: In principle, the points are already sorted this way so taking
@@ -1469,7 +1502,7 @@ find_boundary(Triangulation *triangulation,
     triangulation->bindex[imin] = triangulation->blen;
     triangulation->boundary[triangulation->blen++] = imin;
     if (triangulation->npoints == 2)
-        return;
+        return TRUE;
 
     /* The remaining points are always next to the previous boundary point */
     while (TRUE) {
@@ -1478,15 +1511,17 @@ find_boundary(Triangulation *triangulation,
         neighbours = triangulation->neighbours + nb->pos;
         i = next_neighbour(neighbours, nb->len,
                            find_neighbour(neighbours, nb->len, i));
-        if (i == triangulation->boundary[0]) {
-            g_assert(triangulation->blen == bsize);
-            return;
-        }
-        g_assert(triangulation->blen < bsize);
+        if (i == triangulation->boundary[0])
+            return triangulation->blen == bsize;
+        if (G_UNLIKELY(triangulation->blen == bsize))
+            return FALSE;
         imin = i;
         triangulation->bindex[imin] = triangulation->blen;
         triangulation->boundary[triangulation->blen++] = imin;
     }
+
+    g_assert_not_reached();
+    return FALSE;
 }
 
 static inline gdouble
@@ -1601,9 +1636,13 @@ success:
  * The area and resolution of the regular grid is given by the dimensions and
  * offsets of @dfield.
  *
+ * Returns: %TRUE if the interpolation succeeds, %FALSE on failure, e.g. due to
+ *          numerical errors.  In the latter case the contents of @dfield is
+ *          undefined.
+ *
  * Since: 2.18.
  **/
-void
+gboolean
 gwy_delaunay_interpolate(GwyDelaunayTriangulation *gwytri,
                          gconstpointer points,
                          gsize point_size,
@@ -1615,15 +1654,17 @@ gwy_delaunay_interpolate(GwyDelaunayTriangulation *gwytri,
     gdouble qx, qy, xoff, yoff;
     gdouble *d;
     Triangle triangle;
+    gboolean ok = FALSE;
     Point pt;
 
-    g_return_if_fail(GWY_IS_DATA_FIELD(dfield));
-    g_return_if_fail(point_size >= sizeof(PointXYZ));
-    g_return_if_fail(interpolation == GWY_INTERPOLATION_LINEAR
-                     || interpolation == GWY_INTERPOLATION_ROUND);
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(dfield), FALSE);
+    g_return_val_if_fail(point_size >= sizeof(PointXYZ), FALSE);
+    g_return_val_if_fail(interpolation == GWY_INTERPOLATION_LINEAR
+                         || interpolation == GWY_INTERPOLATION_ROUND, FALSE);
 
     triangulation = triangulation_new_from_finalized(gwytri);
-    find_boundary(triangulation, points, point_size);
+    if (!find_boundary(triangulation, points, point_size))
+        goto fail;
 
     make_valid_triangle(triangulation, points, point_size, &triangle, 0);
 
@@ -1647,17 +1688,22 @@ gwy_delaunay_interpolate(GwyDelaunayTriangulation *gwytri,
                     *d = tinterpolate_round(&triangle, &pt);
             }
             else {
+                if (G_UNLIKELY(triangle.ia == UNDEF))
+                    goto fail;
                 *d = sinterpolate(triangulation, points, point_size,
                                   &triangle, &pt, interpolation);
             }
             d++;
         }
     }
+    ok = TRUE;
 
+fail:
     triangulation->neighbours = NULL;   /* Owned by gwytri */
     triangulation_free(triangulation);
-
     gwy_data_field_invalidate(dfield);
+
+    return ok;
 }
 
 #ifdef DEBUG
