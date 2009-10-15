@@ -809,15 +809,21 @@ rawxyz_do(RawXYZFile *rfile,
     GwySIUnit *unitxy, *unitz;
     GwyDataField *dfield;
     gint xypow10, zpow10;
+    gdouble mag;
 
     unitxy = gwy_si_unit_new_parse(args->xy_units, &xypow10);
+    mag = pow10(xypow10);
     unitz = gwy_si_unit_new_parse(args->z_units, &zpow10);
     dfield = gwy_data_field_new(args->xres, args->yres,
-                                pow10(xypow10)*(args->xmax - args->xmin),
-                                pow10(xypow10)*(args->ymax - args->ymin),
+                                args->xmax - args->xmin,
+                                args->ymax - args->ymin,
                                 FALSE);
-    gwy_data_field_set_xoffset(dfield, pow10(xypow10)*args->xmin);
-    gwy_data_field_set_yoffset(dfield, pow10(xypow10)*args->ymin);
+    gwy_data_field_set_si_unit_xy(dfield, unitxy);
+    gwy_data_field_set_si_unit_z(dfield, unitz);
+    gwy_data_field_set_xoffset(dfield, args->xmin);
+    gwy_data_field_set_yoffset(dfield, args->ymin);
+    g_object_unref(unitxy);
+    g_object_unref(unitz);
 
     extend_borders(rfile, args, EPSREL);
     triangulation = gwy_delaunay_triangulate(points->len, points->data,
@@ -826,6 +832,13 @@ rawxyz_do(RawXYZFile *rfile,
                              points->data, sizeof(GwyDelaunayPointXYZ),
                              args->interpolation, dfield);
     gwy_delaunay_triangulation_free(triangulation);
+
+    /* Fix the scales according to real units. */
+    gwy_data_field_set_xreal(dfield, mag*(args->xmax - args->xmin));
+    gwy_data_field_set_yreal(dfield, mag*(args->ymax - args->ymin));
+    gwy_data_field_set_xoffset(dfield, mag*args->xmin);
+    gwy_data_field_set_yoffset(dfield, mag*args->ymin);
+    gwy_data_field_multiply(dfield, pow10(zpow10));
 
     return dfield;
 }
@@ -1218,6 +1231,7 @@ analyse_points(RawXYZFile *rfile,
 
         pointqueue.len = 0;
         cellqueue.len = 0;
+        cellqueue.pos = 0;
         work_queue_add(&pointqueue, i);
         pointqueue.pos = 1;
         oldpos = 0;
