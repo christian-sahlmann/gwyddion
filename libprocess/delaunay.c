@@ -28,6 +28,21 @@
 #include <libgwyddion/gwymath.h>
 #include <libprocess/delaunay.h>
 
+/*
+ * Some identities for planar triangulations
+ * v ... number of vertices
+ * h ... number of edges
+ * t ... number of triangles
+ * b ... number of boundary edges
+ *
+ *    t = h - v + 1
+ *    b = 3*(v - 1) - h
+ *
+ * They are expressed using v and h because that's what we normally have
+ * available: the number of points and the size of neigbours[] (where each
+ * edge is counted twice).
+ */
+
 enum {
     UNDEF = G_MAXUINT,
     /* The work space and work queue can be resized, just choose some
@@ -390,6 +405,12 @@ point_on_right_side(const Point *a, const Point *b, const Point *pt)
     return c.x*v.y - c.y*v.x >= 0.0;
 }
 
+static inline gboolean
+ccw_angle_convex(gdouble phi1, gdouble phi2)
+{
+    return fmod(phi2 - phi1 + 2*G_PI, 2*G_PI) <= G_PI;
+}
+
 /* Returns TRUE if point @x should be inserted between @p and @q, possibly
  * shadowing one of them (not checked here).  If it is so, the intersection
  * times are updated.  If FALSE is returned, the intersection times of @x
@@ -415,10 +436,10 @@ to_be_inserted(WorkSpacePoint *p,
          * between them.  The other ends are open so keep the intersection
          * times at infinities.  */
         /* FIXME: What if the points are exactly *opposite* each other? */
-        if (fmod(x->phi - p->phi + 2*G_PI, 2*G_PI) > G_PI)
-            intersection_times(x, &x->tnext, q, &q->tprev);
-        else
+        if (ccw_angle_convex(p->phi, x->phi))
             intersection_times(p, &p->tnext, x, &x->tprev);
+        else
+            intersection_times(x, &x->tnext, q, &q->tprev);
 
         return TRUE;
     }
@@ -927,7 +948,7 @@ make_valid_triangle(const Triangulation *triangulation,
         c = get_point(points, point_size, triangle->ic);
         phic = atan2(c->y - a->y, c->x - a->x);
 
-        if (fmod(phic - phib + 2*G_PI, 2*G_PI) < G_PI) {
+        if (ccw_angle_convex(phib, phic)) {
             make_triangle(triangle, points, point_size);
             return;
         }
@@ -1034,8 +1055,8 @@ find_nearest_side(const Triangulation *triangulation,
         phib = atan2(b->y - origin.y, b->x - origin.x);
         phi = atan2(pt->y - origin.y, pt->x - origin.x);
 
-        forw = (fmod(phi - phia + 2*G_PI, 2*G_PI) < G_PI);
-        back = (fmod(phib - phi + 2*G_PI, 2*G_PI) < G_PI);
+        forw = ccw_angle_convex(phia, phi);
+        back = ccw_angle_convex(phi, phib);
 
         if (forw && back && point_on_right_side(a, b, pt)) {
             *pia = ia;
@@ -1444,6 +1465,86 @@ fail:
     return gwytri;
 }
 
+/* Calculate circumcircle centre for a triangle that is counter-clockwise at
+ * point @a.  Use the trick with shifting the origin to point @a to simplify
+ * the formulas. */
+static gboolean
+circumcircle_centre(const Point *a,
+                    const Point *b,
+                    const Point *c,
+                    Point *pt)
+{
+    Point ca, ba;
+    gdouble phib, phic, det, ba2, ca2;
+
+    ba.x = b->x - a->x;
+    ba.y = b->y - a->y;
+    ca.x = c->x - a->x;
+    ca.y = c->y - a->y;
+    phib = atan2(ba.y, ba.x);
+    phic = atan2(ca.y, ca.x);
+    if (!ccw_angle_convex(phib, phic))
+        return FALSE;
+
+    ba2 = ba.x*ba.x + ba.y*ba.y;
+    ca2 = ca.x*ca.x + ca.y*ca.y;
+    det = 2*(ba.y*ca.x - ba.x*ca.y);
+    /* FIXME */
+    g_assert(det);
+    if (!det)
+        return FALSE;
+
+    pt->x = a->x + (ba.y*ca2 - ca.y*ba2)/det;
+    pt->y = a->y + (ca.x*ba2 - ba.x*ca2)/det;
+    return TRUE;
+}
+
+static void
+delaunay_to_voronoi(Triangulation *triangulation,
+                    gconstpointer points, gsize point_size)
+{
+    NeighbourBlock *nb;
+    const Point *a, *b, *c;
+    Point *vpoints;
+    Point pt;
+    const guint *neighbours;
+    guint *vneighbours;
+    guint i, j, n, ni, prev, nvoronoi;
+
+    /* This is exact if counting also the vertices in infinities (the formula
+     * is more understandably t+v).  See the identities at the begining of the
+     * file. */
+    nvoronoi = 2*(triangulation->npoints - 1);
+    vpoints = g_new(Point, nvoronoi);
+    /* Points in infinity have only 5 neighbours but who cares... */
+    vneighbours = g_new(guint, 6*nvoronoi);
+    block_clear(vneighbours, 6*nvoronoi);
+
+    n = 0;
+    for (i = 0; i < triangulation->npoints; i++) {
+        a = get_point(points, point_size, i);
+        nb = triangulation->blocks + i;
+        neighbours = triangulation->neighbours + nb->pos;
+        prev = neighbours[nb->len - 1];
+        for (j = 0; j < nb->len; j++) {
+            ni = neighbours[i];
+            if (prev > i && ni > i) {
+                b = get_point(points, point_size, prev);
+                c = get_point(points, point_size, ni);
+                if (circumcircle_centre(a, b, c, &pt)) {
+                    g_assert(n < nvoronoi);
+                    vpoints[n] = pt;
+                    vneighbours[6*n] = i;
+                    vneighbours[6*n + 1] = prev;
+                    vneighbours[6*n + 2] = ni;
+                    n++;
+                }
+            }
+            prev = ni;
+        }
+    }
+}
+
 static gboolean
 find_boundary(Triangulation *triangulation,
               gconstpointer points, gsize point_size)
@@ -1457,9 +1558,9 @@ find_boundary(Triangulation *triangulation,
     triangulation->bindex = g_new(guint, triangulation->npoints);
     for (i = 0; i < triangulation->npoints; i++)
         triangulation->bindex[i] = UNDEF;
-    /* If the triangulation is correct this formula holds (every point is
-     * counted twice in @nsize, hence the division by 2).  The use of @nsize
-     * assumes a compactified triangulation! */
+    /* If the triangulation is correct this formula holds, see the identities
+     * near the start of the file.  The use of @nsize requires a compactified
+     * triangulation! */
     expected_blen = 3*(triangulation->npoints - 1) - triangulation->nsize/2;
     bsize = expected_blen;
     triangulation->boundary = g_new(guint, bsize);
