@@ -812,7 +812,7 @@ triangle_contains_point(Triangle *triangle,
 }
 
 /* If TRUE is returned, then a neighbour on the other side was found and the
- * triangle has become clockwise.  If TRUE is returnes, then opposite is
+ * triangle has become clockwise.  If TRUE is returned, then @opposite is
  * unchanged and the triangle is kept counter-clockwise. */
 static gboolean
 find_the_other_neighbour(const Triangulation *triangulation,
@@ -1533,22 +1533,46 @@ edist2_xyz_xy(const PointXYZ *p, const Point *q)
 }
 
 static inline gdouble
-tinterpolate_round(const Triangle *triangle,
+tinterpolate_round(const Triangulation *triangulation,
+                   gconstpointer points, gsize point_size,
+                   const Triangle *triangle,
                    const Point *pt)
 {
-    gdouble da = edist2_xyz_xy(triangle->a, pt);
-    gdouble db = edist2_xyz_xy(triangle->b, pt);
-    gdouble dc = edist2_xyz_xy(triangle->c, pt);
+    const PointXYZ *p;
+    gdouble d2min, d2[6];
+    guint i, j, n = 0, id[6];
 
-    if (da <= db)
-        return (da <= dc) ? triangle->a->z : triangle->c->z;
-    else
-        return (db <= dc) ? triangle->b->z : triangle->c->z;
+    id[n] = triangle->ia;
+    d2[n++] = edist2_xyz_xy(triangle->a, pt);
+    id[n] = triangle->ib;
+    d2[n++] = edist2_xyz_xy(triangle->b, pt);
+    id[n] = triangle->ic;
+    d2[n++] = edist2_xyz_xy(triangle->c, pt);
+
+    for (j = 0; j < 3; j++) {
+        i = id[j];
+        if (find_the_other_neighbour(triangulation, points, point_size,
+                                     id[(j + 1) % 3], id[(j + 2) % 3], &i)) {
+            id[n] = i;
+            d2[n++] = edist2_xyz_xy(get_point_xyz(points, point_size, i), pt);
+        }
+    }
+
+    i = 0;
+    d2min = d2[0];
+    for (j = 1; j < n; j++) {
+        if (d2[j] < d2min) {
+            d2min = d2[j];
+            i = j;
+        }
+    }
+
+    p = get_point_xyz(points, point_size, id[i]);
+    return p->z;
 }
 
 static inline gdouble
-tinterpolate_linear(const Triangle *triangle,
-                    G_GNUC_UNUSED const Point *pr)
+tinterpolate_linear(const Triangle *triangle)
 {
     gdouble wsum = triangle->da + triangle->db + triangle->dc;
 
@@ -1683,9 +1707,10 @@ gwy_delaunay_interpolate(GwyDelaunayTriangulation *gwytri,
             if (ensure_triangle(triangulation, points, point_size,
                                 &triangle, &pt)) {
                 if (interpolation == GWY_INTERPOLATION_LINEAR)
-                    *d = tinterpolate_linear(&triangle, &pt);
+                    *d = tinterpolate_linear(&triangle);
                 else
-                    *d = tinterpolate_round(&triangle, &pt);
+                    *d = tinterpolate_round(triangulation, points, point_size,
+                                            &triangle, &pt);
             }
             else {
                 if (G_UNLIKELY(triangle.ia == UNDEF))
