@@ -1329,7 +1329,7 @@ rawxyz_load_args(GwyContainer *container,
 
     rawxyz_sanitize_args(args);
     args->xy_units = g_strdup(args->xy_units ? args->xy_units : "");
-    args->z_units = g_strdup(args->z_units ? args->xy_units : "");
+    args->z_units = g_strdup(args->z_units ? args->z_units : "");
 }
 
 static void
