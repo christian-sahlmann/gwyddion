@@ -143,6 +143,12 @@ typedef struct {
     guint type_size;
     IgorBinHeader header;
     IgorWaveHeader5 wave5;
+    /* Only in Asylum Research files... */
+    GPtrArray *channel_types;
+    GHashTable *meta;
+    /* Processing data */
+    const gchar **ignore_prefixes;
+    GwyContainer *channelmeta;
 } IgorFile;
 
 static gboolean      module_register     (void);
@@ -165,7 +171,8 @@ static GwyDataField* igor_read_data_field(const IgorFile *igorfile,
                                           guint i,
                                           const gchar *zunits,
                                           gboolean imaginary);
-static GwyContainer* igor_get_metadata   (IgorFile *igorfile);
+static GwyContainer* igor_get_metadata   (IgorFile *igorfile,
+                                          guint id);
 static GPtrArray*    read_channel_labels (const gchar *p,
                                           guint n);
 
@@ -220,12 +227,11 @@ igor_load(const gchar *filename,
     GwyContainer *meta = NULL, *container = NULL;
     GwyDataField *dfield = NULL;
     GwyTextHeaderParser parser;
-    GHashTable *hash = NULL;
     IgorFile igorfile;
     IgorWaveHeader5 *wave5;
     GError *err = NULL;
     guchar *p, *buffer = NULL;
-    gint xres, yres, nlayers;
+    gint xres, yres, nlayers, channeltype;
     gsize expected_size, size = 0;
     gchar *note = NULL;
     const gchar *zunits = NULL;
@@ -238,6 +244,7 @@ igor_load(const gchar *filename,
         return NULL;
     }
 
+    gwy_clear(&igorfile, 1);
     if (!igor_read_headers(&igorfile, buffer, size, FALSE, error))
         goto fail;
 
@@ -303,7 +310,7 @@ igor_load(const gchar *filename,
         note = g_strndup((const gchar*)p, size);
         gwy_clear(&parser, 1);
         parser.key_value_separator = ":";
-        hash = gwy_text_header_parse(note, &parser, NULL, NULL);
+        igorfile.meta = gwy_text_header_parse(note, &parser, NULL, NULL);
     }
     p += igorfile.header.note_size;
     p += igorfile.header.data_e_units_size;
@@ -313,21 +320,29 @@ igor_load(const gchar *filename,
         p += igorfile.header.dim_labels_size[i];
 
     for (i = 0, nchannels = 0; i < nlayers; i++, nchannels++) {
-        if (hash) {
+        channeltype = -1;
+        if (igorfile.meta) {
             g_snprintf(key, sizeof(key), "Channel%uDataType", i/2 + 1);
-            if ((zunits = g_hash_table_lookup(hash, key)))
-                zunits = gwy_enuml_to_string(atoi(zunits),
+            if ((zunits = g_hash_table_lookup(igorfile.meta, key))) {
+                channeltype = atoi(zunits);
+                zunits = gwy_enuml_to_string(channeltype,
                                              "m", 1,
                                              "m", 2,
                                              "m", 3,
                                              "m", 4,
                                              "deg", 5,
                                              NULL);
+            }
+            meta = igor_get_metadata(&igorfile, i/2 + 1);
         }
         dfield = igor_read_data_field(&igorfile, buffer, i, zunits, FALSE);
         quark = gwy_app_get_data_key_for_id(nchannels);
         gwy_container_set_object(container, quark, dfield);
         g_object_unref(dfield);
+        if (meta) {
+            g_snprintf(key, sizeof(key), "/%d/meta", nchannels);
+            gwy_container_set_object_by_name(container, key, meta);
+        }
 
         if (wave5->type & IGOR_COMPLEX) {
             nchannels++;
@@ -335,7 +350,15 @@ igor_load(const gchar *filename,
             quark = gwy_app_get_data_key_for_id(nchannels);
             gwy_container_set_object(container, quark, dfield);
             g_object_unref(dfield);
+            if (meta) {
+                g_snprintf(key, sizeof(key), "/%d/meta", nchannels);
+                /* container still holds a reference */
+                g_object_unref(meta);
+                meta = gwy_container_duplicate(meta);
+                gwy_container_set_object_by_name(container, key, meta);
+            }
         }
+        gwy_object_unref(meta);
     }
 
     /* I have no idea why the channel names are under index 2 or why they are
@@ -360,8 +383,12 @@ igor_load(const gchar *filename,
 fail:
     gwy_file_abandon_contents(buffer, size, NULL);
     g_free(note);
-    if (hash)
-        g_hash_table_destroy(hash);
+    if (igorfile.channel_types) {
+        g_ptr_array_foreach(igorfile.channel_types, (GFunc)g_free, NULL);
+        g_ptr_array_free(igorfile.channel_types, TRUE);
+    }
+    if (igorfile.meta)
+        g_hash_table_destroy(igorfile.meta);
 
     return container;
 }
@@ -718,29 +745,82 @@ read_channel_labels(const gchar *p,
     return array;
 }
 
-#if 0
-static GwyContainer*
-igor_get_metadata(IgorFile *ufile)
+static void
+gather_channel_types(gpointer hkey,
+                     G_GNUC_UNUSED gpointer hvalue,
+                     gpointer user_data)
 {
-    GwyContainer *meta;
+    const gchar *key = (const gchar*)hkey;
+    GPtrArray *channel_types = (GPtrArray*)user_data;
+    gchar *type;
+    guint i;
 
-    meta = gwy_container_new();
+    if (!g_str_has_suffix(key, "Capture"))
+        return;
 
-    gwy_container_set_string_by_name(meta, "Date",
-                                     g_strconcat(ufile->date, " ",
-                                                 ufile->time, NULL));
-    if (*ufile->remark)
-        gwy_container_set_string_by_name(meta, "Remark",
-                                         g_strdup(ufile->remark));
-    if (*ufile->sample_name)
-        gwy_container_set_string_by_name(meta, "Sample name",
-                                         g_strdup(ufile->sample_name));
-    if (*ufile->ad_name)
-        gwy_container_set_string_by_name(meta, "AD name",
-                                         g_strdup(ufile->ad_name));
-
-    return meta;
+    type = g_strndup(key, strlen(key) - strlen("Capture"));
+    for (i = 0; i < channel_types->len; i++) {
+        if (gwy_strequal(g_ptr_array_index(channel_types, i), type)) {
+            g_free(type);
+            return;
+        }
+    }
+    g_ptr_array_add(channel_types, type);
 }
-#endif
+
+static void
+gather_channel_meta(gpointer hkey,
+                    gpointer hvalue,
+                    gpointer user_data)
+{
+    const gchar *key = (const gchar*)hkey;
+    const gchar *value = (const gchar*)hvalue;
+    IgorFile *igorfile = (IgorFile*)user_data;
+    guint i;
+
+    if (!*value)
+        return;
+    for (i = 0; i < igorfile->channel_types->len; i++) {
+        if (g_str_has_prefix(key, g_ptr_array_index(igorfile->channel_types,
+                                                    i)))
+            return;
+    }
+    for (i = 0; igorfile->ignore_prefixes[i]; i++) {
+        if (g_str_has_prefix(key, igorfile->ignore_prefixes[i]))
+            return;
+    }
+
+    if (g_utf8_validate(value, -1, NULL))
+        value = g_strdup(value);
+    else
+        value = g_convert(value, -1, "UTF-8", "ISO-8859-1", NULL, NULL, NULL);
+
+    gwy_container_set_string_by_name(igorfile->channelmeta, key, value);
+}
+
+static GwyContainer*
+igor_get_metadata(IgorFile *igorfile,
+                  G_GNUC_UNUSED guint id)
+{
+    static const gchar *ignore_prefixes[] = {
+        "Channel", "ColorMap", "Display", "Flatten", "PlaneFit", "Planefit",
+        NULL
+    };
+
+    if (!igorfile->meta)
+        return NULL;
+
+    if (!igorfile->channel_types) {
+        igorfile->channel_types = g_ptr_array_new();
+        g_hash_table_foreach(igorfile->meta, gather_channel_types,
+                             igorfile->channel_types);
+        igorfile->ignore_prefixes = ignore_prefixes;
+    }
+
+    igorfile->channelmeta = gwy_container_new();
+    g_hash_table_foreach(igorfile->meta, gather_channel_meta, igorfile);
+
+    return igorfile->channelmeta;
+}
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
