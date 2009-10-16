@@ -175,7 +175,7 @@ warn_broken_load_func(const gchar *name,
                       GwyContainer *data)
 {
     static const gchar *broken_file_funcs[] = {
-        "igorfile", "nanonics",
+        "nanonics",
     };
 
     FindFileFuncModuleData ffdata;
