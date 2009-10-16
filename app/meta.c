@@ -426,8 +426,14 @@ gwy_meta_browser_add_line(gpointer hkey,
         fd->value = (gchar*)val;
         fd->isok = TRUE;
     }
-    else if ((s = g_locale_to_utf8(val, -1, NULL, NULL, NULL)))
+    else if ((s = g_convert(val, -1, "UTF-8", "ISO-8859-1", NULL, NULL, NULL)))
         fd->value = s;
+    else {
+        g_warning("Bogus metadata <%s> at key <%s>",
+                  val, g_quark_to_string(quark));
+        g_free(fd);
+        return;
+    }
 
     /* The same applies to markup validity.  Fix invalid markup by taking it
      * literally. */
