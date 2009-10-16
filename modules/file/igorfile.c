@@ -163,6 +163,7 @@ static guint         igor_data_type_size (IgorDataType type);
 static GwyDataField* igor_read_data_field(const IgorFile *igorfile,
                                           const guchar *buffer,
                                           guint i,
+                                          const gchar *zunits,
                                           gboolean imaginary);
 static GwyContainer* igor_get_metadata   (IgorFile *igorfile);
 static GPtrArray*    read_channel_labels (const gchar *p,
@@ -173,7 +174,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Igor binary waves (.ibw)."),
     "Yeti <yeti@gwyddion.net>",
-    "0.2",
+    "0.3",
     "David Nečas (Yeti)",
     "2009",
 };
@@ -227,6 +228,8 @@ igor_load(const gchar *filename,
     gint xres, yres, nlayers;
     gsize expected_size, size = 0;
     gchar *note = NULL;
+    const gchar *zunits = NULL;
+    gchar key[64];
     guint i, nchannels;
     GQuark quark;
 
@@ -290,21 +293,6 @@ igor_load(const gchar *filename,
 
     container = gwy_container_new();
 
-    for (i = 0, nchannels = 0; i < nlayers; i++, nchannels++) {
-        dfield = igor_read_data_field(&igorfile, buffer, i, FALSE);
-        quark = gwy_app_get_data_key_for_id(nchannels);
-        gwy_container_set_object(container, quark, dfield);
-        g_object_unref(dfield);
-
-        if (wave5->type & IGOR_COMPLEX) {
-            nchannels++;
-            dfield = igor_read_data_field(&igorfile, buffer, i, TRUE);
-            quark = gwy_app_get_data_key_for_id(nchannels);
-            gwy_container_set_object(container, quark, dfield);
-            g_object_unref(dfield);
-        }
-    }
-
     p = buffer + igorfile.headers_size + expected_size;
     gwy_debug("remaning data size: %lu", (gulong)(size - (p - buffer)));
 
@@ -324,13 +312,38 @@ igor_load(const gchar *filename,
     for (i = 0; i < 2; i++)
         p += igorfile.header.dim_labels_size[i];
 
+    for (i = 0, nchannels = 0; i < nlayers; i++, nchannels++) {
+        if (hash) {
+            g_snprintf(key, sizeof(key), "Channel%uDataType", i/2 + 1);
+            if ((zunits = g_hash_table_lookup(hash, key)))
+                zunits = gwy_enuml_to_string(atoi(zunits),
+                                             "m", 1,
+                                             "m", 2,
+                                             "m", 3,
+                                             "m", 4,
+                                             "deg", 5,
+                                             NULL);
+        }
+        dfield = igor_read_data_field(&igorfile, buffer, i, zunits, FALSE);
+        quark = gwy_app_get_data_key_for_id(nchannels);
+        gwy_container_set_object(container, quark, dfield);
+        g_object_unref(dfield);
+
+        if (wave5->type & IGOR_COMPLEX) {
+            nchannels++;
+            dfield = igor_read_data_field(&igorfile, buffer, i, zunits, TRUE);
+            quark = gwy_app_get_data_key_for_id(nchannels);
+            gwy_container_set_object(container, quark, dfield);
+            g_object_unref(dfield);
+        }
+    }
+
     /* I have no idea why the channel names are under index 2 or why they are
      * numbered from 1.  This is just the way they do it at WaveMetrics. */
     expected_size = (MAX_WAVE_NAME5 + 1)*(nchannels + 1);
     if (igorfile.header.dim_labels_size[2] == expected_size
         && (p - buffer) + expected_size <= size) {
         GPtrArray *titles = read_channel_labels((const gchar*)p, nchannels);
-        gchar key[64];
 
         for (i = 0; i < nchannels; i++) {
             g_snprintf(key, sizeof(key), "/%d/data/title", i);
@@ -586,6 +599,7 @@ static GwyDataField*
 igor_read_data_field(const IgorFile *igorfile,
                      const guchar *buffer,
                      guint i,
+                     const gchar *zunits,
                      gboolean imaginary)
 {
     const IgorWaveHeader5 *wave5;
@@ -683,7 +697,7 @@ igor_read_data_field(const IgorFile *igorfile,
     gwy_si_unit_set_from_string(unit, wave5->dim_units[0]);
 
     unit = gwy_data_field_get_si_unit_z(dfield);
-    gwy_si_unit_set_from_string(unit, wave5->data_units);
+    gwy_si_unit_set_from_string(unit, zunits ? zunits : wave5->data_units);
 
     return dfield;
 }
