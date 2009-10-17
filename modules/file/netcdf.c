@@ -174,7 +174,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports network Common Data Form (netCDF) files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.3",
+    "0.4",
     "David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
@@ -260,8 +260,10 @@ gxsm_load(const gchar *filename,
         goto gxsm_load_fail;
     }
 
-    /* Look for variable "H".  This seems to be how GXSM calls data. */
-    if (!(var = cdffile_get_var(&cdffile, "H"))) {
+    /* Look for variable "H" or "FloatField".  This seems to be how GXSM calls
+     * data. */
+    if (!(var = cdffile_get_var(&cdffile, "H"))
+        && !(var = cdffile_get_var(&cdffile, "FloatField"))) {
         err_NO_DATA(error);
         goto gxsm_load_fail;
     }
@@ -315,7 +317,7 @@ gxsm_load(const gchar *filename,
         g_object_unref(siunit);
     }
     if ((siunit = read_real_size(&cdffile, "dz", &real, &power10))) {
-        /* on the other hand the units seem to be bogues here, take the range */
+        /* on the other hand the units seem to be bogus here, take the range */
         gwy_data_field_multiply(dfield, real);
         g_object_unref(siunit);
     }
