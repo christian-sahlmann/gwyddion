@@ -21,10 +21,9 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
-#ifdef __APPLE__
 #include "config.h"
-
 #include <gtk/gtk.h>
+#ifdef GDK_WINDOWING_QUARTZ
 #include <gdk/gdkkeysyms.h>
 #include <gdk/gdkquartz.h>
 #include <Carbon/Carbon.h>

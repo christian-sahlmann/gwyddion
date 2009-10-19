@@ -10,14 +10,6 @@ libgwyapp2includedir = $(pkgincludedir)/app
 uidatadir = $(pkgdatadir)/ui
 
 
-if OS_DARWIN
-mac_integration_src   = ige-mac-menu.c
-mac_integration_extra =
-else
-mac_integration_src   =
-mac_integration_extra = ige-mac-menu.c
-endif
-
 if MODULE_DEPENDENCIES
 libgwyapp_libadd = \
 	$(libgwymodule) \
@@ -67,8 +59,7 @@ EXTRA_DIST = \
 	makefile.msc.gwt \
 	libgwyapp2.def \
 	README.objdata \
-	toolbox.xml \
-	$(mac_integration_extra)
+	toolbox.xml
 
 BUILT_SOURCES = \
 	authors.h
@@ -132,13 +123,13 @@ libgwyapp2_la_SOURCES = \
 gwyddion_SOURCES = \
 	about.c \
 	gwyddion.c \
+	ige-mac-menu.c \
 	mac_integration.c \
 	meta.c \
 	remote.c \
 	splash.c \
 	tips.c \
-	toolbox.c \
-	$(mac_integration_src)
+	toolbox.c
 
 
 gwyddion_LDADD = @GTKGLEXT_LIBS@ @FFTW3_LIBS@ @UNIQUE_LIBS@ @BASIC_LIBS@ $(LIBXMU) \
