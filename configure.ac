@@ -344,7 +344,7 @@ GWY_CHECK_LIBM
 AC_MSG_CHECKING([for Gdk target])
 gdk_target=`$PKG_CONFIG --variable=target gtk+-2.0`
 AC_MSG_RESULT([$gdk_target])
-enable_remote=no
+remote_backend=none
 target_quartz=no
 pangoft2=pangoft2
 case "$gdk_target" in
@@ -357,28 +357,24 @@ case "$gdk_target" in
       LDFLAGS="$LDFLAGS $X_LIBS"
       AC_CHECK_LIB(Xmu, XmuClientWindow,
         [AC_CHECK_HEADER(X11/Xmu/WinUtil.h,
-          [have_xmu=yes;
-           LIBXMU="$X_LIBS $X_PRE_LIBS -lX11 -lXmu -lXt";
-           AC_DEFINE(HAVE_REMOTE_X11,1,
-                     [Define if we have X11 remote control available.])],
-          [XMU_WARN=" (needs libXmu headers)"])],
-        [XMU_WARN=" (needs libXmu)"],
+          [have_xmu=yes
+           remote_backend=x11
+           LIBXMU="$X_LIBS $X_PRE_LIBS -lX11 -lXmu -lXt"],
+          )],
+        [],
         [-lXt -lX11])
       CFLAGS="$XMU_ORIG_CFLAGS"
       LDFLAGS="$XMU_ORIG_LDFLAGS"
     else
       have_xmu=yes
+      remote_backend=x11
     fi
-    enable_remote="$have_xmu"
-    REMOTE_WARN="$XMU_WARN"
     ;;
   quartz)
-    REMOTE_WARN="(unavailable on $gdk_target)"
     target_quartz=yes
     pangoft2=
     ;;
   *)
-    REMOTE_WARN="(unavailable on $gdk_target)"
     ;;
 esac
 AC_SUBST(LIBXMU)
@@ -433,6 +429,7 @@ if test "x$enable_pygwy" != xno; then
   fi
   AC_SUBST([GTKSOURCEVIEW_DEPENDENCY])
 fi
+
 #############################################################################
 # GtkGLExt
 # Optional.
@@ -493,6 +490,25 @@ if test "x$enable_spml" != "xno"; then
 
 fi
 AM_CONDITIONAL([HAVE_XML2],[test x$enable_spml != xno])
+
+#############################################################################
+# libunique
+# Optional, a more modern remote control backend.
+GWY_WITH([unique],,[libunique remote control backend])
+if test "x$enable_unique" != "xno"; then
+  PKG_CHECK_MODULES(UNIQUE,[unique-1.0],
+                    [AC_DEFINE(HAVE_UNIQUE,1,
+                               [Define if we have the unique package.])],
+                    enable_unique=no)
+fi
+if test "x$enable_unique" != xno; then
+  remote_backend=unique
+fi
+
+#############################################################################
+# Choose the remote control backend.
+b=AS_TR_CPP([REMOTE_$remote_backend])
+AC_DEFINE_UNQUOTED([REMOTE_BACKEND],$b,[Define to the remote control backend.])
 
 #############################################################################
 # KDE4 and Qt4 (for KDE thumbnailer plug-in)
@@ -717,7 +733,7 @@ echo "  SMPL:                              $enable_spml$SPML_WARN"
 #echo "  Matlab MAT5:                       $enable_zlib$ZLIB_WARN"
 echo "  FFTW3:                             $enable_fftw3$FFTW3_WARN"
 echo "  OpenGL 3D widgets:                 $enable_gl$GL_WARN"
-echo "  Remote control:                    $enable_remote$REMOTE_WARN"
+echo "  Remote control:                    $remote_backend"
 echo "  Thumbnailers to build:             $THUMBNAILERS"
 echo "  Python interface (pygwy):          $enable_pygwy$PYGWY_WARN"
 if test x$enable_pygwy = xyes; then

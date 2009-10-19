@@ -50,20 +50,26 @@
 #include <stdlib.h>
 #include <string.h>
 #include <gtk/gtk.h>
+#include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwyenum.h>
+#include <libgwymodule/gwymodule-file.h>
+#include <app/file.h>
+#include "gwyddion.h"
 
-#ifdef HAVE_REMOTE_X11
+#if (REMOTE_BACKEND == REMOTE_X11)
 #include <gdk/gdkx.h>
 #include <X11/Xmu/WinUtil.h>
 #include <X11/Xatom.h>
 #endif
 
-#ifdef HAVE_REMOTE_WIN32
+#if (REMOTE_BACKEND == REMOTE_WIN32)
 #include <gdk/gdkwin32.h>
 #include <shlobj.h>
 #endif
 
-#include <libgwyddion/gwymacros.h>
-#include "gwyddion.h"
+#if (REMOTE_BACKEND == REMOTE_UNIQUE)
+#include <unique/unique.h>
+#endif
 
 static GdkWindow* remote_find_toolbox(GdkDisplay *display,
                                       guint32 *xid);
@@ -73,6 +79,7 @@ static gboolean   do_remote          (GdkDisplay *display,
                                       int argc,
                                       char **argv);
 
+G_GNUC_UNUSED
 static gboolean
 toolbox_timeout(G_GNUC_UNUSED gpointer data)
 {
@@ -82,6 +89,7 @@ toolbox_timeout(G_GNUC_UNUSED gpointer data)
     return TRUE;
 }
 
+G_GNUC_UNUSED
 static void
 source_selection_get(G_GNUC_UNUSED GtkWidget *widget,
                      GtkSelectionData *selection_data,
@@ -151,8 +159,33 @@ gwy_app_do_remote(GwyAppRemoteType type,
     exit(EXIT_SUCCESS);
 }
 
-#ifdef HAVE_REMOTE_WIN32
-#define GWY_REMOTE_IMPLEMENTED 1
+#if (REMOTE_BACKEND == REMOTE_WIN32)
+void
+gwy_app_remote_setup(GtkWidget *toolbox)
+{
+    GdkWindow *gdk_win;
+    HWND hwnd = 0;
+
+    gdk_win = gtk_widget_get_root_window(toolbox);
+    // Retrieve hWnd using gdk window
+    hwnd = GDK_WINDOW_HWND(toolbox->window);
+    // Create property and set it to 1
+    SetProp(hwnd, GWY_TOOLBOX_WM_ROLE, (HANDLE)1);
+    gwy_debug("SetProp to hWnd %d\n", hwnd);
+}
+
+void
+gwy_app_remote_finalize(GtkWidget *toolbox)
+{
+    HWND hwnd = 0;
+
+    // Retrieve hWnd
+    hwnd = GDK_WINDOW_HWND(gtk_widget_get_root_window(toolbox));
+    // Remove properties
+    RemoveProp(hwnd, GWY_TOOLBOX_WM_ROLE);
+    gwy_debug("RemoveProp to hWnd %d\n", hwnd);
+}
+
 /* Send WM_DROPFILES message to target window
    Return -1 when window could not be found or memory cannot be allocated
    for DnD operation */
@@ -256,9 +289,17 @@ remote_find_toolbox(GdkDisplay *display,
 }
 #endif
 
+#if (REMOTE_BACKEND == REMOTE_X11)
+void
+gwy_app_remote_setup(G_GNUC_UNUSED GtkWidget *toolbox)
+{
+}
 
-#ifdef HAVE_REMOTE_X11
-#define GWY_REMOTE_IMPLEMENTED 1
+void
+gwy_app_remote_finalize(G_GNUC_UNUSED GtkWidget *toolbox)
+{
+}
+
 static gboolean
 do_remote(GdkDisplay *display,
           GdkWindow *toolbox,
@@ -398,7 +439,150 @@ remote_find_toolbox(GdkDisplay *display,
 }
 #endif
 
-#ifndef GWY_REMOTE_IMPLEMENTED
+#if (REMOTE_BACKEND == REMOTE_UNIQUE)
+enum {
+    REMOTECMD_QUERY = 1,
+};
+
+static const GwyEnum commands[] = {
+    { "query-window", REMOTECMD_QUERY, },
+};
+
+static UniqueApp *uniqueapp = NULL;
+
+static UniqueResponse
+message_received(UniqueApp *uniqueapp_,
+                 gint command,
+                 UniqueMessageData *message_data,
+                 G_GNUC_UNUSED guint time_,
+                 G_GNUC_UNUSED gpointer user_data)
+{
+    gchar *filename, **uris;
+    guint i, nok = 0;
+
+    g_assert(uniqueapp_ == uniqueapp);
+    if (command != UNIQUE_OPEN)
+        return UNIQUE_RESPONSE_PASSTHROUGH;
+
+    uris = unique_message_data_get_uris(message_data);
+    for (i = 0; uris[i]; i++) {
+        filename = g_filename_from_uri(uris[i], NULL, NULL);
+        if (filename) {
+            if (gwy_file_detect(filename, FALSE, GWY_FILE_OPERATION_LOAD)) {
+                if (gwy_app_file_load(NULL, filename, NULL))
+                    nok++;
+            }
+            g_free(filename);
+        }
+    }
+    g_strfreev(uris);
+
+    return nok ? UNIQUE_RESPONSE_OK : UNIQUE_RESPONSE_FAIL;
+}
+
+void
+gwy_app_remote_setup(GtkWidget *toolbox)
+{
+    guint i;
+
+    if (!uniqueapp) {
+        uniqueapp = unique_app_new("net.gwyddion.Gwyddion", NULL);
+        for (i = 0; i < G_N_ELEMENTS(commands); i++)
+            unique_app_add_command(uniqueapp,
+                                   commands[i].name, commands[i].value);
+    }
+
+    /* Only connect signals if run from GUI and we are the first instance.
+     * The user can run more instances but these cannot be remotely
+     * controlled. */
+    if (toolbox) {
+        if (unique_app_is_running(uniqueapp)) {
+            gwy_object_unref(uniqueapp);
+            return;
+        }
+        g_signal_connect(uniqueapp, "message-received",
+                         G_CALLBACK(message_received), NULL);
+    }
+}
+
+void
+gwy_app_remote_finalize(G_GNUC_UNUSED GtkWidget *toolbox)
+{
+    gwy_object_unref(uniqueapp);
+}
+
+static gboolean
+do_remote(G_GNUC_UNUSED GdkDisplay *display,
+          G_GNUC_UNUSED GdkWindow *toolbox,
+          G_GNUC_UNUSED guint32 xid,
+          int argc,
+          char **argv)
+{
+    UniqueMessageData *message;
+    UniqueResponse response;
+    GPtrArray *file_list;
+    gchar *cwd;
+    gint i;
+
+    /* Build the file list. */
+    cwd = g_get_current_dir();
+    file_list = g_ptr_array_new();
+    for (i = 0; i < argc; i++) {
+        gchar *s, *t;
+
+        if (g_path_is_absolute(argv[i]))
+            s = g_filename_to_uri(argv[i], NULL, NULL);
+        else {
+            t = g_build_filename(cwd, argv[i], NULL);
+            s = g_filename_to_uri(t, NULL, NULL);
+            g_free(t);
+        }
+        g_ptr_array_add(file_list, s);
+    }
+    g_ptr_array_add(file_list, NULL);
+
+    message = unique_message_data_new();
+    if (unique_message_data_set_uris(message, (gchar**)file_list->pdata)) {
+        response = unique_app_send_message(uniqueapp, UNIQUE_OPEN, message);
+    }
+    else {
+        g_warning("unique_message_data_set_uris() failed.");
+    }
+
+    unique_message_data_free(message);
+    g_ptr_array_foreach(file_list, (GFunc)g_free, NULL);
+    g_ptr_array_free(file_list, TRUE);
+    gdk_notify_startup_complete();
+    gwy_app_remote_finalize(NULL);
+
+    return response == UNIQUE_RESPONSE_OK;
+}
+
+static GdkWindow*
+remote_find_toolbox(G_GNUC_UNUSED GdkDisplay *display,
+                    guint32 *xid)
+{
+    /* XXX: This all is very silly, must refactor the code. */
+    /* XXX: Also, if --remote-new starts the first instance, we create the
+     * UniqueApp twice. */
+    *xid = 0;
+    gwy_app_remote_setup(NULL);
+
+    return unique_app_is_running(uniqueapp) ? (GdkWindow*)uniqueapp : NULL;
+}
+#endif
+
+#if (REMOTE_BACKEND == REMOTE_NONE)
+void
+gwy_app_remote_setup(G_GNUC_UNUSED GtkWidget *toolbox)
+{
+}
+
+void
+gwy_app_remote_finalize(G_GNUC_UNUSED GtkWidget *toolbox)
+{
+}
+
 static gboolean
 do_remote(G_GNUC_UNUSED GdkDisplay *display,
           G_GNUC_UNUSED GdkWindow *toolbox,
@@ -422,4 +606,3 @@ remote_find_toolbox(G_GNUC_UNUSED GdkDisplay *display,
 #endif
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
-

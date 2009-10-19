@@ -30,6 +30,11 @@ G_BEGIN_DECLS
 
 #define GWY_TOOLBOX_WM_ROLE "gwyddion-toolbox"
 
+#define REMOTE_NONE   0
+#define REMOTE_X11    1
+#define REMOTE_WIN32  2
+#define REMOTE_UNIQUE 3
+
 typedef enum {
     GWY_APP_REMOTE_NONE = 0,
     GWY_APP_REMOTE_NEW,
@@ -37,6 +42,8 @@ typedef enum {
     GWY_APP_REMOTE_QUERY
 } GwyAppRemoteType;
 
+void       gwy_app_remote_setup             (GtkWidget *toolbox);
+void       gwy_app_remote_finalize          (GtkWidget *toolbox);
 void       gwy_app_do_remote                (GwyAppRemoteType type,
                                              int argc,
                                              char **argv);

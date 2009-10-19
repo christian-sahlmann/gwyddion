@@ -44,9 +44,7 @@ Recommended though optional, for basic desktop integration:
   http://www.freedesktop.org/software/desktop-file-utils
 
 Recommended though optional, for `remote control':
-- LibXmu (a part of X11, though packaged separately since Xorg 7.0), including
-  development files
-  http://www.x.org
+- libunique-1.0 or newer, including development files
 
 Recommended though optional, for Python scripting interface pygwy:
 - PyGTK2, including codegen, and all its dependencies
@@ -68,9 +66,14 @@ Optional, for SPML file support:
 - LibXML2, including development files
   http://xmlsoft.org/
 
-Optional, for Matlab MAT5 file support:
+Optional, for compressed Createc and Matlab MAT5 file support:
 - zlib, including development files
   http://www.gzip.org/zlib/
+
+Optional, for alternative `remote control' backend:
+- LibXmu (a part of X11, though packaged separately since Xorg 7.0), including
+  development files
+  http://www.x.org
 
 Optional, for development of plug-in in various languages:
 - Python-2.2 or newer

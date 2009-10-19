@@ -49,4 +49,4 @@
 #define HAVE_XML2 1
 
 /* Support for --remote-* options */
-#define HAVE_REMOTE_WIN32
+#define REMOTE_BACKEND REMOTE_WIN32

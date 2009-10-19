@@ -94,7 +94,7 @@ if OS_DARWIN
 carbon_cflags = -ObjC -framework AppKit -framework Carbon -framework ApplicationServices
 endif
 
-AM_CFLAGS = $(carbon_cflags) @FFTW3_CFLAGS@ @COMMON_CFLAGS@
+AM_CFLAGS = $(carbon_cflags) @FFTW3_CFLAGS@ @UNIQUE_CFLAGS@ @COMMON_CFLAGS@
 AM_CPPFLAGS = -I$(top_srcdir)
 
 # In following order do:
@@ -141,7 +141,7 @@ gwyddion_SOURCES = \
 	$(mac_integration_src)
 
 
-gwyddion_LDADD = @GTKGLEXT_LIBS@ @FFTW3_LIBS@ @BASIC_LIBS@ $(LIBXMU) \
+gwyddion_LDADD = @GTKGLEXT_LIBS@ @FFTW3_LIBS@ @UNIQUE_LIBS@ @BASIC_LIBS@ $(LIBXMU) \
 	libgwyapp2.la \
 	$(libgwymodule) \
 	$(libgwydgets) \

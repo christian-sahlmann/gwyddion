@@ -32,6 +32,7 @@
 #include <libgwymodule/gwymoduleloader.h>
 #include "app.h"
 #include "authors.h"
+#include "gwyddion.h"
 
 static void about_close  (void);
 static void fill_credits (GtkTextBuffer *buffer);
@@ -266,15 +267,18 @@ fill_features(GtkTextBuffer *buffer)
                       _("built-in SimpleFFT\n"), TRUE);
 #endif
 
+    b = FALSE;
+#if (REMOTE_BACKEND == REMOTE_NONE)
     cs = _("not available\n");
     b = TRUE;
-#ifdef HAVE_REMOTE_X11
+#elif (REMOTE_BACKEND == REMOTE_X11)
     cs = _("X11 protocol\n");
-    b = FALSE;
-#endif
-#ifdef HAVE_REMOTE_WIN32
+#elif (REMOTE_BACKEND == REMOTE_WIN32)
     cs = _("Win32 protocol\n");
-    b = FALSE;
+#elif (REMOTE_BACKEND == REMOTE_UNIQUE)
+    cs = _("LibUnique\n");
+#else
+#error "An unknown remote control backend."
 #endif
     add_credits_block(buffer, _("Remote Control"), cs, b);
 
