@@ -4786,6 +4786,7 @@ gwy_data_field_get_line_stats(GwyDataField *data_field,
                                        data_field->xres, data_field->yres,
                                        quantity, orientation);
 }
+
 /************************** Documentation ****************************/
 
 /**
