@@ -91,7 +91,7 @@ gwy_osx_open_file(gpointer data,
 static OSStatus
 appleEventHandler(const AppleEvent * event, AppleEvent * event2, long param)
 {
-#define BUFLEN 1024
+    enum { BUFLEN = 1024 };
     AEDescList docs;
 
     if (AEGetParamDesc(event, keyDirectObject, typeAEList, &docs) == noErr) {
