@@ -1500,19 +1500,21 @@ circumcircle_centre(const Point *a,
 }
 
 static void
-add_point_id(guint *vneighbours,
-             const guint *vindex,
-             guint id,
+add_point_id(const Triangulation *triangulation,
+             guint i,
+             guint ni,
+             guint *vneighbours,
+             gint offset,
              guint toadd)
 {
-    guint i;
+    const NeighbourBlock *nb;
+    guint j;
 
-    for (i = vindex[id]; i < vindex[id+1] && vneighbours[i] == UNDEF; i++) {
-        g_assert(vneighbours[i] != toadd);
-    }
-
-    g_assert(i < vindex[id+1]);
-    vneighbours[i] = toadd;
+    nb = triangulation->blocks + i;
+    j = find_neighbour(triangulation->neighbours + nb->pos, nb->len, ni);
+    g_assert(j != UNDEF);
+    j = (j + offset + nb->len) % nb->len;
+    vneighbours[j] = toadd;
 }
 
 static void
@@ -1522,14 +1524,16 @@ add_common_neighbour(guint *vneighbours,
                      guint ia, guint ib,
                      guint addat)
 {
-    guint i, j;
+    guint i, j, ni, nj;
 
-    for (i = vindex[ia]; i < vindex[ia+1] && vneighbours[i] != UNDEF; i++) {
-        if (vneighbours[i] == ignore)
+    for (i = vindex[ia]; i < vindex[ia+1]; i++) {
+        ni = vneighbours[i];
+        if (ni == ignore || ni == UNDEF)
             continue;
-        for (j = vindex[ib]; j < vindex[ib+1] && vneighbours[j] != UNDEF; j++) {
-            if (vneighbours[i] == vneighbours[j]) {
-                vneighbours[addat] = vneighbours[i];
+        for (j = vindex[ib]; j < vindex[ib+1]; j++) {
+            nj = vneighbours[j];
+            if (nj == ni) {
+                vneighbours[addat] = nj;
                 return;
             }
         }
@@ -1546,11 +1550,10 @@ add_infinity_neighbour(guint *vneighbours,
 {
     guint i, ni;
 
-    for (i = vindex[ia]; i < vindex[ia+1] && vneighbours[i] != UNDEF; i++) {
+    for (i = vindex[ia]; i < vindex[ia+1]; i++) {
         ni = vneighbours[i];
-        if (ni == ignore)
+        if (ni == ignore || ni == UNDEF)
             continue;
-
         if (vindex[ni+1] - vindex[ni] == 5) {
             vneighbours[addat] = ni;
             return;
@@ -1570,7 +1573,7 @@ delaunay_to_voronoi(Triangulation *triangulation,
     Point pt;
     const guint *neighbours;
     guint *vneighbours, *vindex;
-    guint i, j, n, ni, prev, nvoronoi, vnsize, vpos;
+    guint i, j, n, ni, prev, nvoronoi, vnsize, pos;
     gdouble h;
 
     /* This is exact if counting also the vertices in infinities (the formula
@@ -1587,14 +1590,14 @@ delaunay_to_voronoi(Triangulation *triangulation,
     /* We know exactly how many neighbours a Delaunay point will have so,
      * prefill the index. */
     vindex = g_new(guint, triangulation->npoints + nvoronoi + 1);
-    vpos = 0;
+    pos = 0;
     for (n = 0; n < triangulation->npoints; n++) {
-        vindex[n] = vpos;
-        vpos += triangulation->blocks[n].len;
+        vindex[n] = pos;
+        pos += triangulation->blocks[n].len;
         /* Boundary points will gain one neighbour as there are two Voronoi
          * points in infinity. */
         if (triangulation->bindex[n] != UNDEF)
-            vpos++;
+            pos++;
     }
 
     /* Now the Voronoi points.  In the first pass, create the points and
@@ -1615,15 +1618,18 @@ delaunay_to_voronoi(Triangulation *triangulation,
                      * neighbours. */
                     g_assert(n - triangulation->npoints < nvoronoi);
                     vpoints[n - triangulation->npoints] = pt;
-                    vindex[n] = vpos;
-                    vneighbours[vpos++] = i;
-                    vneighbours[vpos++] = prev;
-                    vneighbours[vpos++] = ni;
-                    vpos += 3;   /* Make space for the Voronoi neighbours. */
+                    vindex[n] = pos;
+                    vneighbours[pos + 1] = i;
+                    vneighbours[pos + 3] = prev;
+                    vneighbours[pos + 5] = ni;
+                    pos += 6;   /* Make space for the Voronoi neighbours. */
                     /* Conversely, add it to the neighbourhood of a, b and c. */
-                    add_point_id(vneighbours, vindex, i, n);
-                    add_point_id(vneighbours, vindex, ni, n);
-                    add_point_id(vneighbours, vindex, prev, n);
+                    add_point_id(triangulation, i, prev,
+                                 vneighbours + vindex[i], 0, n);
+                    add_point_id(triangulation, prev, ni,
+                                 vneighbours + vindex[prev], 0, n);
+                    add_point_id(triangulation, ni, i,
+                                 vneighbours + vindex[ni], 0, n);
                     n++;
                 }
             }
@@ -1646,42 +1652,40 @@ delaunay_to_voronoi(Triangulation *triangulation,
         /* Add a new Voronoi point and make a and b its neighbours. */
         g_assert(n - triangulation->npoints < nvoronoi);
         vpoints[n - triangulation->npoints] = pt;
-        vindex[n] = vpos;
-        vneighbours[vpos++] = i;
-        vneighbours[vpos++] = ni;
-        vpos += 3;   /* Make space for the Voronoi neighbours. */
+        vindex[n] = pos;
+        /* The neighbours need to be in the reverse order because we look from
+         * the outside (infinity) now. */
+        vneighbours[pos + 1] = ni;
+        vneighbours[pos + 3] = i;
+        pos += 5;   /* Make space for the Voronoi neighbours. */
         /* Conversely, add it to the neighbourhood of a and b. */
-        add_point_id(vneighbours, vindex, i, n);
-        add_point_id(vneighbours, vindex, ni, n);
+        add_point_id(triangulation, i, ni,
+                     vneighbours + vindex[i], -1, n);
+        add_point_id(triangulation, ni, i,
+                     vneighbours + vindex[ni], 1, n);
     }
 
-    g_assert(vpos == vnsize);
+    g_assert(pos == vnsize);
     g_assert(n == triangulation->npoints + nvoronoi);
-    vindex[n] = vpos;
+    vindex[n] = pos;
 
     /* Now we have created all the Voronoi points so we can add Voronoi
      * neighbours of Voronoi points. */
     for (i = triangulation->npoints;
          i < triangulation->npoints + nvoronoi;
          i++) {
-        vpos = vindex[i];
-        if (vindex[i+1] - vpos == 5) {
-            add_common_neighbour(vneighbours, vindex, i, vpos, vpos+1, vpos+2);
-            add_infinity_neighbour(vneighbours, vindex, i, vpos, vpos+3);
-            add_infinity_neighbour(vneighbours, vindex, i, vpos+1, vpos+4);
+        pos = vindex[i];
+        if (vindex[i+1] - pos == 5) {
+            add_common_neighbour(vneighbours, vindex, i, pos+1, pos+3, pos+2);
+            add_infinity_neighbour(vneighbours, vindex, i, pos+1, pos);
+            add_infinity_neighbour(vneighbours, vindex, i, pos+3, pos+4);
         }
         else {
-            add_common_neighbour(vneighbours, vindex, i, vpos, vpos+1, vpos+3);
-            add_common_neighbour(vneighbours, vindex, i, vpos+1, vpos+2, vpos+4);
-            add_common_neighbour(vneighbours, vindex, i, vpos+2, vpos, vpos+5);
+            add_common_neighbour(vneighbours, vindex, i, pos+1, pos+3, pos+2);
+            add_common_neighbour(vneighbours, vindex, i, pos+3, pos+5, pos+4);
+            add_common_neighbour(vneighbours, vindex, i, pos+5, pos+1, pos);
         }
     }
-
-    /* TODO: Sort vneighbours[] by angle.  But better it would be to directly
-     * create them so because we know how.  For neighbours of Voronoi points
-     * it is quite easy.  It is a bit more complicated for normal points, but
-     * we can put the Voronoi neighbours at positions given by where i, ni
-     * and prev are in their mutual neighbour blocks. */
 }
 
 static gboolean
