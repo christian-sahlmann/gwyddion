@@ -127,6 +127,9 @@ gwyddion_SOURCES = \
 	mac_integration.c \
 	meta.c \
 	remote.c \
+	remote-unique.c \
+	remote-win32.c \
+	remote-x11.c \
 	splash.c \
 	tips.c \
 	toolbox.c

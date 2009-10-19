@@ -632,9 +632,8 @@ gwy_app_toolbox_create(void)
     while (gtk_events_pending())
         gtk_main_iteration_do(FALSE);
 
-    gwy_app_remote_setup(toolbox);
-    g_signal_connect(toolbox, "destroy",
-                     G_CALLBACK(gwy_app_remote_finalize), NULL);
+    gwy_remote_setup(toolbox);
+    g_signal_connect(toolbox, "destroy", G_CALLBACK(gwy_remote_finalize), NULL);
 
     return toolbox;
 }

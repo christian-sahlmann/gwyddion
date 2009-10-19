@@ -62,11 +62,11 @@ gwy_osx_get_menu_from_widget(USED_ON_MAC GtkWidget *container)
 
                         if (GTK_IS_MENU_ITEM(subsubwidget)) {
                             gtk_widget_hide(widget);
-                            gtk_widget_ref(subsubwidget);
+                            g_object_ref(subsubwidget);
                             gtk_container_remove(GTK_CONTAINER(subwidget), subsubwidget);
                             gtk_menu_shell_append(GTK_MENU_SHELL(menubar),
                                                   subsubwidget);
-                            gtk_widget_unref(subsubwidget);
+                            g_object_unref(subsubwidget);
                         }
                     }
                 }
@@ -142,7 +142,7 @@ gwy_osx_init_handler(USED_ON_MAC int *argc)
 
     AEInstallEventHandler(kCoreEventClass,      // handle open file events
                           kAEOpenDocuments,
-                          (AEEventHandlerUPP) appleEventHandler, 0, false);
+                          (AEEventHandlerUPP)appleEventHandler, 0, false);
 #endif
 }
 
@@ -152,7 +152,7 @@ gwy_osx_remove_handler(void)
 #ifdef USE_MAC_INTEGRATION
     AERemoveEventHandler(kCoreEventClass,
                          kAEOpenDocuments,
-                         (AEEventHandlerUPP) appleEventHandler, false);
+                         (AEEventHandlerUPP)appleEventHandler, false);
 #endif
 }
 

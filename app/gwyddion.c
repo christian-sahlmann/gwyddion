@@ -109,7 +109,7 @@ main(int argc, char *argv[])
     setup_locale_from_win32_registry();
     gtk_init(&argc, &argv);
     debug_time(timer, "gtk_init()");
-    gwy_app_do_remote(app_options.remote, argc - 1, argv + 1);
+    gwy_remote_do(app_options.remote, argc - 1, argv + 1);
     gwy_app_init(&argc, &argv);
     debug_time(timer, "gwy_app_init()");
 

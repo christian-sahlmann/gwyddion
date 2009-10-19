@@ -35,6 +35,8 @@ G_BEGIN_DECLS
 #define REMOTE_WIN32  2
 #define REMOTE_UNIQUE 3
 
+typedef struct _GwyRemote GwyRemote;
+
 typedef enum {
     GWY_APP_REMOTE_NONE = 0,
     GWY_APP_REMOTE_NEW,
@@ -42,11 +44,17 @@ typedef enum {
     GWY_APP_REMOTE_QUERY
 } GwyAppRemoteType;
 
-void       gwy_app_remote_setup             (GtkWidget *toolbox);
-void       gwy_app_remote_finalize          (GtkWidget *toolbox);
-void       gwy_app_do_remote                (GwyAppRemoteType type,
-                                             int argc,
-                                             char **argv);
+void       gwy_remote_setup             (GtkWidget *toolbox);
+void       gwy_remote_finalize          (GtkWidget *toolbox);
+void       gwy_remote_do                (GwyAppRemoteType type,
+                                         int argc,
+                                         char **argv);
+GwyRemote* gwy_remote_get               (void);
+void       gwy_remote_free              (GwyRemote *remote);
+gboolean   gwy_remote_open_files        (GwyRemote *remote,
+                                         int argc,
+                                         char **argv);
+
 GtkWidget* gwy_app_toolbox_create           (void);
 GtkWidget* gwy_app_show_data_browser        (void);
 void       gwy_app_about                    (void);
