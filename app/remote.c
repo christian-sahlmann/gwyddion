@@ -59,8 +59,7 @@ gwy_remote_do(GwyAppRemoteType type,
 
         case GWY_APP_REMOTE_QUERY:
         if (remote) {
-            //printf("0x%08x\n", xid);
-            g_warning("Implement me!");
+            gwy_remote_print(remote);
             gwy_remote_free(remote);
             exit(EXIT_SUCCESS);
         }
@@ -111,6 +110,11 @@ gwy_remote_open_files(G_GNUC_UNUSED GwyRemote *remote,
      * NULL. */
     g_printerr("Remote control not implemented for this platform.\n");
     return FALSE;
+}
+
+void
+gwy_remote_print(G_GNUC_UNUSED GwyRemote *remote)
+{
 }
 #endif
 

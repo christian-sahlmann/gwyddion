@@ -30,16 +30,8 @@
 #include <gtk/gtk.h>
 #include <unique/unique.h>
 
-enum {
-    REMOTECMD_QUERY = 1,
-};
-
 struct _GwyRemote {
     UniqueApp *uniqueapp;
-};
-
-static const GwyEnum commands[] = {
-    { "query-window", REMOTECMD_QUERY, },
 };
 
 static UniqueApp *uniqueapp = NULL;
@@ -77,14 +69,8 @@ message_received(UniqueApp *uniqueapp_,
 void
 gwy_remote_setup(GtkWidget *toolbox)
 {
-    guint i;
-
-    if (!uniqueapp) {
+    if (!uniqueapp)
         uniqueapp = unique_app_new("net.gwyddion.Gwyddion", NULL);
-        for (i = 0; i < G_N_ELEMENTS(commands); i++)
-            unique_app_add_command(uniqueapp,
-                                   commands[i].name, commands[i].value);
-    }
 
     /* Only connect signals if run from GUI and we are the first instance.
      * The user can run more instances but these cannot be remotely
@@ -123,6 +109,7 @@ gwy_remote_get(void)
 void
 gwy_remote_free(GwyRemote *remote)
 {
+    gwy_remote_finalize(NULL);
     g_free(remote);
 }
 
@@ -171,9 +158,21 @@ gwy_remote_open_files(GwyRemote *remote,
     g_ptr_array_foreach(file_list, (GFunc)g_free, NULL);
     g_ptr_array_free(file_list, TRUE);
     gdk_notify_startup_complete();
-    gwy_remote_finalize(NULL);
 
     return response == UNIQUE_RESPONSE_OK;
+}
+
+void
+gwy_remote_print(GwyRemote *remote)
+{
+    if (remote) {
+        gchar *s;
+
+        g_return_if_fail(remote->uniqueapp == uniqueapp);
+        g_object_get(uniqueapp, "startup-id", &s, NULL);
+        g_printerr("%s\n", s);
+        g_free(s);
+    }
 }
 #endif
 

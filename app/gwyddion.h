@@ -54,6 +54,7 @@ void       gwy_remote_free              (GwyRemote *remote);
 gboolean   gwy_remote_open_files        (GwyRemote *remote,
                                          int argc,
                                          char **argv);
+void       gwy_remote_print             (GwyRemote *remote);
 
 GtkWidget* gwy_app_toolbox_create           (void);
 GtkWidget* gwy_app_show_data_browser        (void);
