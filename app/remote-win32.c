@@ -82,7 +82,7 @@ gwy_remote_get(void)
     if (hwnd != 0) {
         /* window found */
         gwy_debug("Drop window found, hwnd: %d", hwnd);
-        remote->winid = hwnd;
+        remote->winid = (GdkNativeWindow)hwnd;
         return remote;
     }
     else {
