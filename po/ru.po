@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2009-10-10 03:59+0200\n"
-"PO-Revision-Date: 2009-10-12 10:22+0300\n"
+"POT-Creation-Date: 2009-10-21 03:58+0200\n"
+"PO-Revision-Date: 2009-10-21 13:18+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@km.ru>\n"
 "Language-Team: russian <ru@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -406,10 +406,12 @@ msgid "Scale and space adaptive"
 msgstr "Адаптивная по масштабу и пространству"
 
 #: libprocess/gwyprocessenums.c:205
+#: modules/file/rawxyz.c:452
 msgid "Round"
 msgstr "Округление"
 
 #: libprocess/gwyprocessenums.c:206
+#: modules/file/rawxyz.c:453
 msgid "Linear"
 msgstr "Линейная"
 
@@ -523,7 +525,7 @@ msgstr "Циклическая оценка (цикл %d)"
 
 #: libprocess/morph_lib.c:624
 #: libprocess/morph_lib.c:778
-#, fuzzy, c-format
+#, c-format
 msgid "%d image locations produced refinement"
 msgstr "%d участков изображения были уточнены"
 
@@ -532,7 +534,7 @@ msgid "Searching for local maxima"
 msgstr "Поиск локальных максимумов"
 
 #: libprocess/morph_lib.c:744
-#, fuzzy, c-format
+#, c-format
 msgid "Found %d internal local maxima"
 msgstr "Найдено %d внутренних локальных максимумов"
 
@@ -982,7 +984,7 @@ msgid "_Reversed layout"
 msgstr "_Обратное расположение"
 
 #: libgwydgets/gwygraphwindow.c:140
-#: app/toolbox.c:113
+#: app/toolbox.c:103
 msgid "Graph"
 msgstr "График"
 
@@ -1101,6 +1103,7 @@ msgstr "_Добавить символ"
 
 #: libgwydgets/gwyscitext.c:273
 #: modules/file/rawfile.c:527
+#: modules/file/rawxyz.c:481
 msgid "Preview"
 msgstr "Предпросмотр"
 
@@ -1172,16 +1175,16 @@ msgstr "Имя:"
 msgid "Failure:"
 msgstr "Ошибка:"
 
-#: app/about.c:55
+#: app/about.c:56
 #, c-format
 msgid "About %s"
 msgstr "О программе %s"
 
-#: app/about.c:90
+#: app/about.c:91
 msgid "An SPM data visualization and analysis tool."
 msgstr "Инструмент визуализации и анализа данных СЗМ."
 
-#: app/about.c:100
+#: app/about.c:101
 #, c-format
 msgid ""
 "<i>%s</i>\n"
@@ -1190,69 +1193,73 @@ msgstr ""
 "<i>%s</i>\n"
 "Отчёты об ошибках направлять: <i>%s</i>"
 
-#: app/about.c:117
+#: app/about.c:118
 msgid "Credits"
 msgstr "Благодарности"
 
-#: app/about.c:134
+#: app/about.c:135
 msgid "License"
 msgstr "Лицензия"
 
-#: app/about.c:139
+#: app/about.c:140
 #, c-format
 msgid "%s is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version. For full license text see file COPYING included in the source tarball."
 msgstr "%s является свободным программным обеспечением; вы можете распространять и/или изменять его согласно условиям Стандартной Общественной Лицензии GNU (GNU GPL), опубликованной Фондом свободного программного обеспечения (FSF), либо Лицензии версии 2, либо (на ваше усмотрение) любой более поздней версии. Для получения полного текста лицензии смотрите файл COPYING в архиве исходного кода программы."
 
-#: app/about.c:162
+#: app/about.c:163
 msgid "Features"
 msgstr "Возможности"
 
-#: app/about.c:221
+#: app/about.c:222
 msgid "Developers"
 msgstr "Разработчики"
 
-#: app/about.c:222
+#: app/about.c:223
 msgid "Translators"
 msgstr "Переводчики"
 
-#: app/about.c:226
+#: app/about.c:227
 msgid "Development is supported by the Czech Metrology Institute: "
 msgstr "Разработка поддерживается Институтом метрологии Чехии: "
 
-#: app/about.c:253
-#: app/about.c:256
+#: app/about.c:254
+#: app/about.c:257
 msgid "OpenGL 3D View"
 msgstr "Трёхмерный вид OpenGL"
 
-#: app/about.c:257
-#: app/about.c:269
-#: app/about.c:288
+#: app/about.c:258
+#: app/about.c:272
+#: app/about.c:292
 msgid "not available\n"
 msgstr "не доступен\n"
 
-#: app/about.c:262
-#: app/about.c:265
+#: app/about.c:263
+#: app/about.c:266
 msgid "Fast Fourier Transform"
 msgstr "Быстрое преобразование Фурье"
 
-#: app/about.c:266
+#: app/about.c:267
 msgid "built-in SimpleFFT\n"
 msgstr "встроенное SimpleFFT\n"
 
-#: app/about.c:272
+#: app/about.c:275
 msgid "X11 protocol\n"
 msgstr "протокол X11\n"
 
-#: app/about.c:276
+#: app/about.c:277
 msgid "Win32 protocol\n"
 msgstr "протокол Win32\n"
 
 #: app/about.c:279
+msgid "LibUnique\n"
+msgstr ""
+
+#: app/about.c:283
 msgid "Remote Control"
 msgstr "Удалённое управление"
 
-#: app/about.c:283
 #: app/about.c:287
+#: app/about.c:291
 msgid "Python Scripting Interface"
 msgstr "Скриптовый интерфейс Python"
 
@@ -1652,12 +1659,12 @@ msgid "Hide tool dialog (Esc)"
 msgstr "Убрать диалог инструментов (Esc)"
 
 #: app/menu.c:492
-#: app/toolbox.c:618
+#: app/toolbox.c:604
 msgid "_Data Process"
 msgstr "_Обработка данных"
 
 #: app/menu.c:535
-#: app/toolbox.c:622
+#: app/toolbox.c:608
 msgid "_Graph"
 msgstr "_График"
 
@@ -1703,11 +1710,11 @@ msgstr "_Закрыть"
 msgid "Metadata of %s (%s)"
 msgstr "Метаданные %s (%s)"
 
-#: app/meta.c:489
+#: app/meta.c:495
 msgid "New item"
 msgstr "Новый элемент"
 
-#: app/meta.c:607
+#: app/meta.c:613
 msgid "Save Metadata"
 msgstr "Сохранить метаданные"
 
@@ -2016,123 +2023,123 @@ msgstr "_Пред. совет"
 msgid "_Next Tip"
 msgstr "_Следующий совет"
 
-#: app/toolbox.c:113
+#: app/toolbox.c:103
 msgid "View"
 msgstr "Вид"
 
-#: app/toolbox.c:113
+#: app/toolbox.c:103
 msgid "Data Process"
 msgstr "Обработка данных"
 
-#: app/toolbox.c:113
+#: app/toolbox.c:103
 msgid "Tools"
 msgstr "Инструменты"
 
-#: app/toolbox.c:169
+#: app/toolbox.c:159
 msgid "Display a 3D view of data"
 msgstr "Показать трехмерный вид данных"
 
-#: app/toolbox.c:176
+#: app/toolbox.c:166
 msgid "Zoom in"
 msgstr "Приблизить"
 
-#: app/toolbox.c:180
+#: app/toolbox.c:170
 msgid "Zoom 1:1"
 msgstr "Масштаб 1:1"
 
-#: app/toolbox.c:184
+#: app/toolbox.c:174
 msgid "Zoom out"
 msgstr "Отдалить"
 
-#: app/toolbox.c:611
+#: app/toolbox.c:597
 msgid "_File"
 msgstr "_Файл"
 
-#: app/toolbox.c:613
+#: app/toolbox.c:599
 msgid "_Edit"
 msgstr "_Правка"
 
-#: app/toolbox.c:625
+#: app/toolbox.c:611
 msgid "_Meta"
 msgstr "_Мета"
 
-#: app/toolbox.c:678
+#: app/toolbox.c:655
 msgid "/Show _Data Browser"
 msgstr "/Показать просмотр _данных"
 
-#: app/toolbox.c:686
+#: app/toolbox.c:663
 msgid "/_Metadata Browser"
 msgstr "/Просмотр _метаданных"
 
-#: app/toolbox.c:694
+#: app/toolbox.c:671
 msgid "/Module _Browser"
 msgstr "/_Просмотр модулей"
 
-#: app/toolbox.c:709
+#: app/toolbox.c:686
 msgid "/_Tip of the Day"
 msgstr "/_Совет дня"
 
-#: app/toolbox.c:717
+#: app/toolbox.c:694
 msgid "/_About Gwyddion"
 msgstr "О программе Gwyddion"
 
-#: app/toolbox.c:756
+#: app/toolbox.c:733
 msgid "/_Open..."
 msgstr "/_Открыть..."
 
-#: app/toolbox.c:764
+#: app/toolbox.c:741
 msgid "/_Merge..."
 msgstr "/Объ_единить..."
 
-#: app/toolbox.c:772
+#: app/toolbox.c:749
 msgid "/Open _Recent"
 msgstr "/_Последние файлы"
 
-#: app/toolbox.c:780
+#: app/toolbox.c:757
 msgid "/_Save"
 msgstr "/_Сохранить"
 
-#: app/toolbox.c:788
+#: app/toolbox.c:765
 msgid "/Save _As..."
 msgstr "/Сохранить _как..."
 
-#: app/toolbox.c:804
+#: app/toolbox.c:781
 msgid "/_Quit"
 msgstr "/_Выйти"
 
-#: app/toolbox.c:850
+#: app/toolbox.c:827
 msgid "/_Undo"
 msgstr "/_Отменить"
 
-#: app/toolbox.c:858
+#: app/toolbox.c:835
 msgid "/_Redo"
 msgstr "/_Повторить"
 
-#: app/toolbox.c:874
+#: app/toolbox.c:851
 msgid "/Default Mask _Color..."
 msgstr "/_Цвет маски по умолчанию..."
 
-#: app/toolbox.c:882
+#: app/toolbox.c:859
 msgid "/Color _Gradients..."
 msgstr "/Цветовые _градиенты..."
 
-#: app/toolbox.c:890
+#: app/toolbox.c:867
 msgid "/G_L Materials..."
 msgstr "/_Материалы OpenGL..."
 
-#: app/toolbox.c:1131
+#: app/toolbox.c:1092
 msgid "Change Default Mask Color"
 msgstr "Изменить цвет маски по умолчанию"
 
-#: app/toolbox.c:1159
+#: app/toolbox.c:1120
 msgid "OpenGL 3D graphics not available"
 msgstr "Трёхмерная графика OpenGL не доступна"
 
-#: app/toolbox.c:1166
+#: app/toolbox.c:1127
 msgid "Initialization of OpenGL failed.  Check output of <tt>glxinfo</tt> and warning messages printed to console during Gwyddion startup."
 msgstr "Инициализация OpenGL не удалась. Проверьте вывод <tt>glxinfo</tt> и предупреждения, которые выводились на консоль при старте Gwyddion."
 
-#: app/toolbox.c:1170
+#: app/toolbox.c:1131
 msgid "This version of Gwyddion was built without OpenGL support."
 msgstr "Эта версия Gwyddion была собрана без поддержки OpenGL"
 
@@ -2246,6 +2253,7 @@ msgstr "Экспортировать текст"
 #: modules/file/asciiexport.c:276
 #: modules/file/pixmap.c:2753
 #: modules/file/rawfile.c:720
+#: modules/file/rawxyz.c:440
 #: modules/process/fft_filter_1d.c:296
 #: modules/process/grain_dist.c:291
 #: modules/process/grain_mark.c:347
@@ -2377,7 +2385,7 @@ msgid "DME files (.img)"
 msgstr "Файлы DME (.img)"
 
 #: modules/file/dmefile.c:188
-#, fuzzy, c-format
+#, c-format
 msgid "Header is too short (only %d bytes)."
 msgstr "Заголовок слишком короткий (всего %d байт)."
 
@@ -2413,7 +2421,7 @@ msgid "File is not a %s file, it is seriously damaged, or it is of an unknown fo
 msgstr "Файл не является %s файлом, значительно повреждён или записан в неизвестной версии формата."
 
 #: modules/file/err.h:81
-#, fuzzy, c-format
+#, c-format
 msgid "Expected data size calculated from file headers is %u bytes, but the real size is %u bytes."
 msgstr "Ожидаемый размер данных, рассчитанный из данных заголовка, должен быть %u байт, но реальный размер %u байт."
 
@@ -2579,30 +2587,29 @@ msgstr "Файлы Hitachi AFM, старые (.afm)"
 msgid "Hitachi-AFM has not registered file type `%s'."
 msgstr "Hitachi-AFM не имеет зарегистрированного типа файла `%s'."
 
-#: modules/file/igorfile.c:174
+#: modules/file/igorfile.c:182
 msgid "Imports Igor binary waves (.ibw)."
 msgstr "Импортирует Igor binary waves (.ibw)."
 
-#: modules/file/igorfile.c:187
-#, fuzzy
+#: modules/file/igorfile.c:195
 msgid "Igor binary waves (.ibw)"
 msgstr "Двоичные волны Igor (.ibw)"
 
-#: modules/file/igorfile.c:244
+#: modules/file/igorfile.c:254
 #, c-format
 msgid "Format version is %d.  Only version 5 is supported."
 msgstr "Версия формата %d.  Поддерживается только версия 5."
 
-#: modules/file/igorfile.c:256
+#: modules/file/igorfile.c:266
 msgid "Only two-dimensional data are supported."
 msgstr "Поддерживаются только двумерные данные."
 
-#: modules/file/igorfile.c:268
+#: modules/file/igorfile.c:278
 #, c-format
 msgid "Number of data points %u does not match resolutions %u×%u×%u."
 msgstr "Число точек данных %u не соответствует разрешению %u×%u×%u."
 
-#: modules/file/igorfile.c:282
+#: modules/file/igorfile.c:292
 #, c-format
 msgid "Data size %u does not match the number of data points %u×%u."
 msgstr "Размер данных %u не соответствует числу точек данных %u×%u."
@@ -2660,18 +2667,18 @@ msgid "File end was reached while scanning tags."
 msgstr "В процессе поиска тегов был достигнут конец файла."
 
 #: modules/file/mapvue.c:641
-#, fuzzy, c-format
+#, c-format
 msgid "Expected tag %u size is %u bytes, but the actual size is %u bytes."
 msgstr "Ожидаемый размер тега %u должен быть %u байт, но реальный размер %u байт."
 
 #: modules/file/mapvue.c:655
-#, fuzzy, c-format
+#, c-format
 msgid "Tag %u size is %u bytes, which is not enough to hold the tag marker."
 msgstr "Размер тега %u - %u байт, что недостаточно чтобы содержать маркер тега."
 
 #: modules/file/mapvue.c:666
 #: modules/file/mapvue.c:679
-#, fuzzy, c-format
+#, c-format
 msgid "Tag %u size is %u bytes, which is not enough to hold the tag marker and size."
 msgstr "Размер тега %u - %u байт, что недостаточно чтобы содержать маркер тега и его размер."
 
@@ -2698,7 +2705,7 @@ msgid "Compressed data inside compressed data found."
 msgstr "Сжатые данные найдены внутри сжатых данных."
 
 #: modules/file/matfile.c:346
-#, fuzzy, c-format
+#, c-format
 msgid "Invalid short tag of type %u claims to consists of %u bytes."
 msgstr "Неверный короткий тег типа %u претендует что его длина %u байт."
 
@@ -2855,7 +2862,7 @@ msgid "DATA_INFO does not contain the expected columns: %s."
 msgstr "DATA_INFO не содержит ожидаемых столбцов: %s."
 
 #: modules/file/nanonis.c:306
-#, fuzzy, c-format
+#, c-format
 msgid "DATA_INFO line contains less than %d fields."
 msgstr "Строка DATA_INFO содержит меньше %d полей."
 
@@ -2954,22 +2961,22 @@ msgstr "Переменная `%s' ссылается на неверные ил�
 msgid "NetCDF records are not supported."
 msgstr "Записи NetCDF не поддерживаются."
 
-#: modules/file/netcdf.c:578
+#: modules/file/netcdf.c:580
 #, c-format
 msgid "File ended unexpectedly inside `%s'."
 msgstr "Файл неожиданно окончился внутри `%s'."
 
-#: modules/file/netcdf.c:587
+#: modules/file/netcdf.c:589
 #, c-format
 msgid "Expected `%s' array or `ABSENT'."
 msgstr "Ожидался массив `%s'  или `ABSENT'."
 
-#: modules/file/netcdf.c:595
+#: modules/file/netcdf.c:597
 #, c-format
 msgid "Array `%s' has non-zero number of elements in spite of being absent."
 msgstr "Массив `%s' содержит ненулевое количество элементов вместо того, чтобы отсутствовать."
 
-#: modules/file/netcdf.c:654
+#: modules/file/netcdf.c:656
 msgid "More than one record dimension found."
 msgstr "Найдена больше, чем одна запись о размерности."
 
@@ -3164,30 +3171,33 @@ msgstr "Импортировать "
 
 #: modules/file/pixmap.c:969
 #: modules/file/rawfile.c:600
+#: modules/file/rawxyz.c:317
 #: modules/process/dimensions.h:422
 msgid "Resolution"
 msgstr "Разрешение"
 
 #: modules/file/pixmap.c:976
 #: modules/file/rawfile.c:605
+#: modules/file/rawxyz.c:321
 #: modules/process/dimensions.h:428
 msgid "_Horizontal size:"
 msgstr "_Горизонтальный размер:"
 
 #: modules/file/pixmap.c:976
 #: modules/file/pixmap.c:983
-#, fuzzy
 msgid "px"
 msgstr "пикс."
 
 #: modules/file/pixmap.c:983
 #: modules/file/rawfile.c:612
+#: modules/file/rawxyz.c:336
 #: modules/process/dimensions.h:431
 msgid "_Vertical size:"
 msgstr "Вертика_льный размер:"
 
 #: modules/file/pixmap.c:1014
 #: modules/file/rawfile.c:623
+#: modules/file/rawxyz.c:360
 #: modules/process/dimensions.h:444
 msgid "Physical Dimensions"
 msgstr "Физические размеры"
@@ -3212,6 +3222,7 @@ msgstr "_Высота"
 
 #: modules/file/pixmap.c:1066
 #: modules/file/rawfile.c:675
+#: modules/file/rawxyz.c:351
 msgid "Identical _measures"
 msgstr "Одинаковый _масштаб"
 
@@ -3411,12 +3422,12 @@ msgid "Data tag is missing."
 msgstr "Тег данных отсутствует."
 
 #: modules/file/psia.c:509
-#, fuzzy, c-format
+#, c-format
 msgid "Header is too short (only %lu bytes)."
 msgstr "Заголовок слишком короткий (всего %lu байт)."
 
 #: modules/file/psia.c:622
-#, fuzzy, c-format
+#, c-format
 msgid "Spectroscopy header is too short (only %lu bytes)."
 msgstr "Заголовок спектроскопии слишком короткий (всего %lu байт)."
 
@@ -3502,6 +3513,7 @@ msgid "Presets"
 msgstr "Предустановки"
 
 #: modules/file/rawfile.c:541
+#: modules/file/rawxyz.c:494
 #: modules/process/convolution_filter.c:243
 #: modules/process/drift.c:227
 #: modules/process/edge.c:633
@@ -3525,12 +3537,8 @@ msgstr "О_бновить"
 msgid "<b>File</b>"
 msgstr "<b>Файл</b>"
 
-#: modules/file/rawfile.c:606
-#: modules/file/rawfile.c:613
-msgid "data samples"
-msgstr "отсчётов данных"
-
 #: modules/file/rawfile.c:617
+#: modules/file/rawxyz.c:396
 msgid "S_quare sample"
 msgstr "_Квадратный образец"
 
@@ -3599,7 +3607,6 @@ msgid "Start at _offset:"
 msgstr "Начать со сме_щения:"
 
 #: modules/file/rawfile.c:839
-#, fuzzy
 msgid "bytes"
 msgstr "байт"
 
@@ -3610,7 +3617,6 @@ msgstr "Размер с_эмплов"
 #: modules/file/rawfile.c:846
 #: modules/file/rawfile.c:854
 #: modules/file/rawfile.c:862
-#, fuzzy
 msgid "bits"
 msgstr "бит"
 
@@ -3685,7 +3691,7 @@ msgid "Preset _name:"
 msgstr "_Название предустановок"
 
 #: modules/file/rawfile.c:1122
-#, fuzzy, c-format
+#, c-format
 msgid ""
 "<b>Too short file</b>\n"
 "The format would require %u bytes long file (at least), but the length of `%s' is only %u bytes."
@@ -3784,9 +3790,80 @@ msgstr "Е_диницы Y:"
 msgid "Only files with two columns can be imported."
 msgstr "Могут быть импортированы файлы с двумя столбцами данных."
 
-#: modules/file/rawgraph.c:531
+#: modules/file/rawgraph.c:548
 msgid "Curve"
 msgstr "Кривая"
+
+#: modules/file/rawxyz.c:180
+msgid "Imports raw XYZ files."
+msgstr "Импортирует неформатированные файлы XYZ."
+
+#: modules/file/rawxyz.c:193
+msgid "Raw XYZ data"
+msgstr "Неформатированные данные XYZ"
+
+#: modules/file/rawxyz.c:220
+msgid "Raw XYZ data import must be run as interactive."
+msgstr "импорт неформатированных данных XYZ должен быть запущен в интерактивном режиме."
+
+#: modules/file/rawxyz.c:294
+msgid "Import XYZ Data"
+msgstr "Импорт данных XYZ"
+
+#: modules/file/rawxyz.c:364
+msgid "_X-range:"
+msgstr "Диапазон _X:"
+
+#: modules/file/rawxyz.c:380
+msgid "_Y-range:"
+msgstr "Диапазон _Y:"
+
+#: modules/file/rawxyz.c:404
+msgid "_Lateral units:"
+msgstr "Единицы _размера:"
+
+#: modules/file/rawxyz.c:421
+#: modules/process/dimensions.h:471
+msgid "_Value units:"
+msgstr "Единицы измерения _значения:"
+
+#: modules/file/rawxyz.c:444
+#: modules/process/drift.c:291
+#: modules/process/dwt.c:204
+#: modules/process/dwtanisotropy.c:201
+#: modules/process/fft_filter_1d.c:329
+#: modules/process/fft_profile.c:298
+#: modules/process/fractal.c:228
+#: modules/process/nanoindent_adjust.c:228
+#: modules/process/polydistort.c:268
+#: modules/process/rotate.c:293
+#: modules/process/scale.c:248
+#: modules/process/unrotate.c:282
+#: modules/tools/linestats.c:400
+#: modules/tools/profile.c:381
+#: modules/tools/roughness.c:880
+#: modules/tools/sfunctions.c:393
+msgid "_Interpolation type:"
+msgstr "Тип _интерполяции:"
+
+#: modules/file/rawxyz.c:460
+msgid "_Exterior type:"
+msgstr "Тип _внешней части:"
+
+#: modules/file/rawxyz.c:468
+#: modules/process/polydistort.c:277
+msgid "Border"
+msgstr "Граничный"
+
+#: modules/file/rawxyz.c:469
+#: modules/process/polydistort.c:278
+msgid "Mirror"
+msgstr "Зеркальный"
+
+#: modules/file/rawxyz.c:470
+#: modules/process/polydistort.c:279
+msgid "Periodic"
+msgstr "Периодический"
 
 #: modules/file/rhk-sm3.c:228
 msgid "Imports RHK Technology SM3 data files."
@@ -4093,7 +4170,7 @@ msgstr "Топография и спектроскопия"
 
 #: modules/file/stpfile.c:114
 msgid "Topography and SPS (scripted)"
-msgstr ""
+msgstr "Топография и спектроскопия (скрипт.)"
 
 #: modules/file/stpfile.c:115
 msgid "Electrochemical Current (Iec)"
@@ -4140,13 +4217,13 @@ msgid "AUX in 10"
 msgstr ""
 
 #: modules/file/stpfile.c:126
+#, fuzzy
 msgid "Topography and Flexgrid"
-msgstr ""
+msgstr "Топография и динамическая сетка"
 
 #: modules/file/stpfile.c:127
-#, fuzzy
 msgid "External"
-msgstr "Внешние"
+msgstr "Внешний"
 
 #: modules/file/stpfile.c:133
 msgid "Imports Molecular Imaging STP data files."
@@ -5201,10 +5278,6 @@ msgstr "Единицы измерения"
 msgid "_Dimension units:"
 msgstr "Единицы измерения _размера:"
 
-#: modules/process/dimensions.h:471
-msgid "_Value units:"
-msgstr "Единицы измерения _значения:"
-
 #: modules/process/dimensions.h:482
 msgid "_Like Current Channel"
 msgstr "Как _у текущего канала"
@@ -5236,24 +5309,6 @@ msgstr "Ди_апазон поиска:"
 #: modules/process/drift.c:281
 msgid "rows"
 msgstr "строк(и)"
-
-#: modules/process/drift.c:291
-#: modules/process/dwt.c:204
-#: modules/process/dwtanisotropy.c:201
-#: modules/process/fft_filter_1d.c:329
-#: modules/process/fft_profile.c:298
-#: modules/process/fractal.c:228
-#: modules/process/nanoindent_adjust.c:228
-#: modules/process/polydistort.c:268
-#: modules/process/rotate.c:293
-#: modules/process/scale.c:248
-#: modules/process/unrotate.c:282
-#: modules/tools/linestats.c:400
-#: modules/tools/profile.c:381
-#: modules/tools/roughness.c:880
-#: modules/tools/sfunctions.c:393
-msgid "_Interpolation type:"
-msgstr "Тип _интерполяции:"
 
 #: modules/process/drift.c:298
 msgid "Plot drift _graph"
@@ -7335,18 +7390,6 @@ msgstr "Полиномиально исказить"
 #: modules/tools/linestats.c:153
 msgid "Minimum"
 msgstr "Минимум"
-
-#: modules/process/polydistort.c:277
-msgid "Border"
-msgstr "Граничный"
-
-#: modules/process/polydistort.c:278
-msgid "Mirror"
-msgstr "Зеркальный"
-
-#: modules/process/polydistort.c:279
-msgid "Periodic"
-msgstr "Периодический"
 
 #: modules/process/polydistort.c:281
 msgid "_Exteriror type:"
