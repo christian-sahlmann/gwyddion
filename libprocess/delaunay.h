@@ -25,6 +25,8 @@
 
 G_BEGIN_DECLS
 
+#define GWY_DELAUNAY_NONE G_MAXUINT
+
 typedef struct {
     gdouble x;
     gdouble y;
@@ -37,12 +39,18 @@ typedef struct {
 } GwyDelaunayPointXYZ;
 
 typedef struct {
-    guint npoints;           /* number of point */
-    guint size;              /* size of neighbours[], equal to the last
-                                item of point_index[]. */
-    guint *index;            /* starts of neighbour lists, the @npoints+1-th
-                                item is equal to @neighbours_size */
+    guint npoints;
+    guint nsize;
+    guint blen;
+    guint nvpoints;
+    guint nvoronoi;
+    guint *index;
     guint *neighbours;
+    guint *boundary;
+    guint *bindex;
+    GwyDelaunayPointXY *vpoints;
+    guint *vindex;
+    guint *voronoi;
 } GwyDelaunayTriangulation;
 
 GwyDelaunayTriangulation* gwy_delaunay_triangulate(guint npoints,

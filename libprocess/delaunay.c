@@ -44,7 +44,7 @@
  */
 
 enum {
-    UNDEF = G_MAXUINT,
+    UNDEF = GWY_DELAUNAY_NONE,
     /* The work space and work queue can be resized, just choose some
      * reasonable initial more-or-less upper bound. */
     WORKSPACE = 32,
@@ -122,7 +122,7 @@ typedef struct {
     guint *orig_index;      /* Map from our ids to original point numbers. */
 } PointList;
 
-/* Information about blocks of neighbours in Triangulation. */
+/* Information about blocks of neighbours in Triangulator. */
 typedef struct {
     guint pos;
     guint len;
@@ -136,11 +136,7 @@ typedef struct {
     guint *neighbours;   /* Indices of neighbours points */
     guint nsize;     /* Allocated size of neighbours[] */
     guint nlen;      /* Used space in neighbours[] */
-    /* Used only in interpolation */
-    guint blen;      /* Number of boundary points */
-    guint *boundary; /* The boundary points */
-    guint *bindex;   /* Point position in boundary[] or UNDEF */
-} Triangulation;
+} Triangulator;
 
 typedef struct {
     Point centre;      /* Point in the side centre */
@@ -158,11 +154,11 @@ typedef struct {
 } Triangle;
 
 #ifdef DEBUG
-static void dump_neighbours(const Triangulation *triangulation);
-static void dump_triangulation(const Triangulation *triangulation);
-static void dump_points(const Triangulation *triangulation,
+static void dump_neighbours(const Triangulator *triangulator);
+static void dump_triangulator(const Triangulator *triangulator);
+static void dump_points(const Triangulator *triangulator,
                         guint npoints, gconstpointer points, gsize point_size);
-static guint test_reflexivity(const Triangulation *triangulation);
+static guint test_reflexivity(const Triangulator *triangulator);
 #endif
 
 /* Estimate how big block we want to allocate if we have @n neighbours.
@@ -573,9 +569,9 @@ work_space_destroy(WorkSpace *wspace)
 }
 
 /* Put back the wspace for the neighbourhood of a given point to
- * triangulation->neighbours[]. */
+ * triangulator->neighbours[]. */
 static void
-work_space_construct(const Triangulation *triangulation,
+work_space_construct(const Triangulator *triangulator,
                      const PointList *pointlist,
                      guint id,
                      WorkSpace *wspace)
@@ -585,8 +581,8 @@ work_space_construct(const Triangulation *triangulation,
     guint j;
     const guint *neighbours;
 
-    nb = triangulation->blocks + id;
-    neighbours = triangulation->neighbours + nb->pos;
+    nb = triangulator->blocks + id;
+    neighbours = triangulator->neighbours + nb->pos;
 
     work_space_ensure_size(wspace, nb->len);
     wspace->origin = pointlist->points[id];
@@ -674,11 +670,11 @@ work_space_cache_get(WorkSpaceCache *wscache,
     return wspace;
 }
 
-/* The slow path for wspace reintegration into triangulation->neighbours[].
+/* The slow path for wspace reintegration into triangulator->neighbours[].
  * Anything from reclaiming space in the next block to making neighbours[]
  * bigger can happen. */
 static guint*
-relocate_block(Triangulation *triangulation,
+relocate_block(Triangulator *triangulator,
                NeighbourBlock *nb,
                guint len)
 {
@@ -688,9 +684,9 @@ relocate_block(Triangulation *triangulation,
     /* Try to find space after the end of the current block.  We know
      * the blocks sizes are multiples of NEIGHBOURS, so only check if
      * the first item is UNDEF. */
-    neighbours = triangulation->neighbours + nb->pos;
+    neighbours = triangulator->neighbours + nb->pos;
     newsize = block_size(len + 2);
-    remaining = triangulation->nsize - nb->pos;
+    remaining = triangulator->nsize - nb->pos;
     for (j = nb->size;
          j < remaining && neighbours[j] == UNDEF && j < newsize;
          j++)
@@ -698,34 +694,34 @@ relocate_block(Triangulation *triangulation,
 
     if (j < len) {
         /* Must relocate the current block */
-        if (triangulation->nlen + newsize > triangulation->nsize) {
-            /* Must reallocate triangulation->neighbours */
-            j = triangulation->nsize;
-            triangulation->nsize = block_size(3*j/2);
-            triangulation->neighbours = g_renew(guint,
-                                                triangulation->neighbours,
-                                                triangulation->nsize);
-            neighbours = triangulation->neighbours + nb->pos;
-            block_clear(triangulation->neighbours + j,
-                        triangulation->nsize - j);
+        if (triangulator->nlen + newsize > triangulator->nsize) {
+            /* Must reallocate triangulator->neighbours */
+            j = triangulator->nsize;
+            triangulator->nsize = block_size(3*j/2);
+            triangulator->neighbours = g_renew(guint,
+                                                triangulator->neighbours,
+                                                triangulator->nsize);
+            neighbours = triangulator->neighbours + nb->pos;
+            block_clear(triangulator->neighbours + j,
+                        triangulator->nsize - j);
         }
         block_clear(neighbours, nb->len);
-        nb->pos = triangulation->nlen;
+        nb->pos = triangulator->nlen;
         nb->size = newsize;
         nb->len = 0;
-        triangulation->nlen += newsize;
-        neighbours = triangulation->neighbours + nb->pos;
+        triangulator->nlen += newsize;
+        neighbours = triangulator->neighbours + nb->pos;
     }
     else {
         nb->size = j;
-        triangulation->nlen = MAX(triangulation->nlen, nb->pos + j);
+        triangulator->nlen = MAX(triangulator->nlen, nb->pos + j);
     }
 
     return neighbours;
 }
 
 static void
-reintegrate_workspace(Triangulation *triangulation,
+reintegrate_workspace(Triangulator *triangulator,
                       guint id,
                       WorkSpace *wspace)
 {
@@ -733,10 +729,10 @@ reintegrate_workspace(Triangulation *triangulation,
     guint *neighbours;
     guint j;
 
-    nb = triangulation->blocks + id;
-    neighbours = triangulation->neighbours + nb->pos;
+    nb = triangulator->blocks + id;
+    neighbours = triangulator->neighbours + nb->pos;
     if (wspace->len > nb->size)
-        neighbours = relocate_block(triangulation, nb, wspace->len);
+        neighbours = relocate_block(triangulator, nb, wspace->len);
     nb->len = wspace->len;
     /* Copy the new id list to the block */
     for (j = 0; j < wspace->len; j++)
@@ -836,24 +832,24 @@ triangle_contains_point(Triangle *triangle,
  * triangle has become clockwise.  If TRUE is returned, then @opposite is
  * unchanged and the triangle is kept counter-clockwise. */
 static gboolean
-find_the_other_neighbour(const Triangulation *triangulation,
-                         gconstpointer points, gsize point_size,
-                         guint from,
-                         guint to,
-                         guint *opposite)
+find_the_other_neighbour_(const Triangulator *triangulator,
+                          gconstpointer points, gsize point_size,
+                          guint from,
+                          guint to,
+                          guint *opposite)
 {
     NeighbourBlock *nb;
     const Point *a, *b, *c;
     guint to_prev, from_next;
     const guint *neighbours;
 
-    nb = triangulation->blocks + from;
-    neighbours = triangulation->neighbours + nb->pos;
+    nb = triangulator->blocks + from;
+    neighbours = triangulator->neighbours + nb->pos;
     to_prev = prev_neighbour(neighbours, nb->len,
                              find_neighbour(neighbours, nb->len, to));
 
-    nb = triangulation->blocks + to;
-    neighbours = triangulation->neighbours + nb->pos;
+    nb = triangulator->blocks + to;
+    neighbours = triangulator->neighbours + nb->pos;
     from_next = next_neighbour(neighbours, nb->len,
                                find_neighbour(neighbours, nb->len, from));
 
@@ -880,12 +876,12 @@ find_the_other_neighbour(const Triangulation *triangulation,
 }
 
 static inline gboolean
-move_triangle_a(const Triangulation *triangulation,
-                gconstpointer points, gsize point_size,
-                Triangle *triangle)
+move_triangle_a_(const Triangulator *triangulator,
+                 gconstpointer points, gsize point_size,
+                 Triangle *triangle)
 {
-    if (find_the_other_neighbour(triangulation, points, point_size,
-                                 triangle->ib, triangle->ic, &triangle->ia)) {
+    if (find_the_other_neighbour_(triangulator, points, point_size,
+                                  triangle->ib, triangle->ic, &triangle->ia)) {
         GWY_SWAP(guint, triangle->ib, triangle->ic);
         GWY_SWAP(const PointXYZ*, triangle->b, triangle->c);
         return TRUE;
@@ -894,12 +890,12 @@ move_triangle_a(const Triangulation *triangulation,
 }
 
 static inline gboolean
-move_triangle_b(const Triangulation *triangulation,
-                gconstpointer points, gsize point_size,
-                Triangle *triangle)
+move_triangle_b_(const Triangulator *triangulator,
+                 gconstpointer points, gsize point_size,
+                 Triangle *triangle)
 {
-    if (find_the_other_neighbour(triangulation, points, point_size,
-                                 triangle->ic, triangle->ia, &triangle->ib)) {
+    if (find_the_other_neighbour_(triangulator, points, point_size,
+                                  triangle->ic, triangle->ia, &triangle->ib)) {
         GWY_SWAP(guint, triangle->ic, triangle->ia);
         GWY_SWAP(const PointXYZ*, triangle->c, triangle->a);
         return TRUE;
@@ -908,12 +904,12 @@ move_triangle_b(const Triangulation *triangulation,
 }
 
 static inline gboolean
-move_triangle_c(const Triangulation *triangulation,
-                gconstpointer points, gsize point_size,
-                Triangle *triangle)
+move_triangle_c_(const Triangulator *triangulator,
+                 gconstpointer points, gsize point_size,
+                 Triangle *triangle)
 {
-    if (find_the_other_neighbour(triangulation, points, point_size,
-                                 triangle->ia, triangle->ib, &triangle->ic)) {
+    if (find_the_other_neighbour_(triangulator, points, point_size,
+                                  triangle->ia, triangle->ib, &triangle->ic)) {
         GWY_SWAP(guint, triangle->ia, triangle->ib);
         GWY_SWAP(const PointXYZ*, triangle->a, triangle->b);
         return TRUE;
@@ -923,25 +919,20 @@ move_triangle_c(const Triangulation *triangulation,
 
 /* Initializes @triangle to any valid triangle containing point @hint. */
 static void
-make_valid_triangle(const Triangulation *triangulation,
+make_valid_triangle(const guint *neighbours, guint len,
                     gconstpointer points, gsize point_size,
                     Triangle *triangle,
                     guint hint)
 {
-    NeighbourBlock *nb;
     const Point *a = get_point(points, point_size, hint);
     const Point *b, *c;
     gdouble phib, phic;
-    const guint *neighbours;
     guint i;
 
     triangle->ia = hint;
-    nb = triangulation->blocks + hint;
-    neighbours = triangulation->neighbours + nb->pos;
-
-    for (i = 0; i < nb->len; i++) {
+    for (i = 0; i < len; i++) {
         triangle->ib = neighbours[i];
-        triangle->ic = next_neighbour(neighbours, nb->len, i);
+        triangle->ic = next_neighbour(neighbours, len, i);
 
         b = get_point(points, point_size, triangle->ib);
         phib = atan2(b->y - a->y, b->x - a->x);
@@ -955,6 +946,96 @@ make_valid_triangle(const Triangulation *triangulation,
     }
 
     g_assert_not_reached();
+}
+
+/* If TRUE is returned, then a neighbour on the other side was found and the
+ * triangle has become clockwise.  If TRUE is returned, then @opposite is
+ * unchanged and the triangle is kept counter-clockwise. */
+static gboolean
+find_the_other_neighbour(const GwyDelaunayTriangulation *triangulation,
+                         gconstpointer points, gsize point_size,
+                         guint from,
+                         guint to,
+                         guint *opposite)
+{
+    const Point *a, *b, *c;
+    guint to_prev, from_next, pos, len;
+    const guint *neighbours;
+
+    pos = triangulation->index[from];
+    len = triangulation->index[from + 1] - pos;
+    neighbours = triangulation->neighbours + pos;
+    to_prev = prev_neighbour(neighbours, len,
+                             find_neighbour(neighbours, len, to));
+
+    pos = triangulation->index[to];
+    len = triangulation->index[to + 1] - pos;
+    neighbours = triangulation->neighbours + pos;
+    from_next = next_neighbour(neighbours, len,
+                               find_neighbour(neighbours, len, from));
+
+    /* Now there are some silly few-point special cases.  If @opposite is in
+     * the centre of a triangle formed by @from, @to and the newly found point,
+     * then we have an apparent match but it is not the point we are looking
+     * for.  Check that the points really lies on the opposite side. */
+    if (from_next != to_prev || from_next == *opposite)
+        return FALSE;
+
+    a = get_point(points, point_size, from);
+    b = get_point(points, point_size, to);
+    c = get_point(points, point_size, to_prev);
+    /*
+    g_assert(!point_on_right_side(a, b,
+                                  get_point(points, point_size, *opposite)));
+                                  */
+
+    if (!point_on_right_side(a, b, c))
+        return FALSE;
+
+    *opposite = to_prev;
+    return TRUE;
+}
+
+static inline gboolean
+move_triangle_a(const GwyDelaunayTriangulation *triangulation,
+                gconstpointer points, gsize point_size,
+                Triangle *triangle)
+{
+    if (find_the_other_neighbour(triangulation, points, point_size,
+                                 triangle->ib, triangle->ic, &triangle->ia)) {
+        GWY_SWAP(guint, triangle->ib, triangle->ic);
+        GWY_SWAP(const PointXYZ*, triangle->b, triangle->c);
+        return TRUE;
+    }
+    return FALSE;
+}
+
+static inline gboolean
+move_triangle_b(const GwyDelaunayTriangulation *triangulation,
+                gconstpointer points, gsize point_size,
+                Triangle *triangle)
+{
+    if (find_the_other_neighbour(triangulation, points, point_size,
+                                 triangle->ic, triangle->ia, &triangle->ib)) {
+        GWY_SWAP(guint, triangle->ic, triangle->ia);
+        GWY_SWAP(const PointXYZ*, triangle->c, triangle->a);
+        return TRUE;
+    }
+    return FALSE;
+}
+
+static inline gboolean
+move_triangle_c(const GwyDelaunayTriangulation *triangulation,
+                gconstpointer points, gsize point_size,
+                Triangle *triangle)
+{
+    if (find_the_other_neighbour(triangulation, points, point_size,
+                                 triangle->ia, triangle->ib, &triangle->ic)) {
+        GWY_SWAP(guint, triangle->ia, triangle->ib);
+        GWY_SWAP(const PointXYZ*, triangle->a, triangle->b);
+        return TRUE;
+    }
+    return FALSE;
 }
 
 /* Calculate the intersection of dividing lines of the corner angles at a and b
@@ -1019,7 +1100,7 @@ side_intersection_distance(const PointXYZ *a, const PointXYZ *b,
 /* Find the side nearest to @pt.  The search must start from a boundary side,
  * if the side is not boundary, FALSE is returned. */
 static gboolean
-find_nearest_side(const Triangulation *triangulation,
+find_nearest_side(const GwyDelaunayTriangulation *triangulation,
                   gconstpointer points, gsize point_size,
                   guint *pia, guint *pib,
                   const Point *pt)
@@ -1096,7 +1177,51 @@ find_nearest_side(const Triangulation *triangulation,
  * contains the point.  If the right triangle is nearby, it is also found
  * reasonably fast. */
 static gboolean
-ensure_triangle(const Triangulation *triangulation,
+ensure_triangle_(const Triangulator *triangulator,
+                 gconstpointer points, gsize point_size,
+                 Triangle *triangle,
+                 const Point *pt)
+{
+    gboolean moved;
+    guint iter;
+
+    iter = 0;
+    while (!triangle_contains_point(triangle, pt)) {
+        if (triangle->da <= triangle->db) {
+            if (triangle->da <= triangle->dc)
+                moved = move_triangle_a_(triangulator, points, point_size,
+                                         triangle);
+            else
+                moved = move_triangle_c_(triangulator, points, point_size,
+                                         triangle);
+        }
+        else {
+            if (triangle->db <= triangle->dc)
+                moved = move_triangle_b_(triangulator, points, point_size,
+                                         triangle);
+            else
+                moved = move_triangle_c_(triangulator, points, point_size,
+                                         triangle);
+        }
+
+        if (!moved)
+            return FALSE;
+
+        make_triangle(triangle, points, point_size);
+        if (G_UNLIKELY(iter++ == triangulator->npoints)) {
+            triangle->ia = triangle->ib = triangle->ic = UNDEF;
+            return FALSE;
+        }
+    }
+
+    return TRUE;
+}
+
+/* Ensures @triangle contains point @pt.  A relatively quick test if it already
+ * contains the point.  If the right triangle is nearby, it is also found
+ * reasonably fast. */
+static gboolean
+ensure_triangle(const GwyDelaunayTriangulation *triangulation,
                 gconstpointer points, gsize point_size,
                 Triangle *triangle,
                 const Point *pt)
@@ -1137,9 +1262,9 @@ ensure_triangle(const Triangulation *triangulation,
 }
 
 static void
-compactify(const Triangulation *triangulation,
+compactify(const Triangulator *triangulator,
            const PointList *pointlist,
-           GwyDelaunayTriangulation *gwytri)
+           GwyDelaunayTriangulation *triangulation)
 {
     const NeighbourBlock *nb;
     const guint *neighbours, *orig_index;
@@ -1149,25 +1274,25 @@ compactify(const Triangulation *triangulation,
     orig_index = pointlist->orig_index;
 
     /* Construct the back-mapped point_index */
-    g_assert(triangulation->npoints == pointlist->npoints);
-    gwytri->npoints = triangulation->npoints;
-    gwytri->index = g_new0(guint, gwytri->npoints+1);
-    for (i = 0; i < triangulation->npoints; i++) {
+    g_assert(triangulator->npoints == pointlist->npoints);
+    triangulation->npoints = triangulator->npoints;
+    triangulation->index = g_new0(guint, triangulation->npoints+1);
+    for (i = 0; i < triangulator->npoints; i++) {
         iorig = orig_index[i];
-        gwytri->index[iorig] = triangulation->blocks[i].len;
+        triangulation->index[iorig] = triangulator->blocks[i].len;
     }
 
-    index_accumulate(gwytri->index, gwytri->npoints);
-    index_rewind(gwytri->index, gwytri->npoints);
+    index_accumulate(triangulation->index, triangulation->npoints);
+    index_rewind(triangulation->index, triangulation->npoints);
 
     /* Fill neighbours with back-mapped neighbour indices */
-    gwytri->size = gwytri->index[gwytri->npoints];
-    gwytri->neighbours = g_new(guint, gwytri->size);
-    for (i = 0; i < triangulation->npoints; i++) {
+    triangulation->nsize = triangulation->index[triangulation->npoints];
+    triangulation->neighbours = g_new(guint, triangulation->nsize);
+    for (i = 0; i < triangulator->npoints; i++) {
         iorig = orig_index[i];
-        nb = triangulation->blocks + i;
-        neighbours = triangulation->neighbours + nb->pos;
-        dest = gwytri->neighbours + gwytri->index[iorig];
+        nb = triangulator->blocks + i;
+        neighbours = triangulator->neighbours + nb->pos;
+        dest = triangulation->neighbours + triangulation->index[iorig];
         for (j = 0; j < nb->len; j++)
             dest[j] = orig_index[neighbours[j]];
     }
@@ -1177,7 +1302,7 @@ compactify(const Triangulation *triangulation,
  * FIXME: If they form a straight line, this will fail. */
 static gboolean
 create_first_triangle(const PointList *pointlist,
-                      Triangulation *triangulation,
+                      Triangulator *triangulator,
                       WorkSpace *wspace)
 {
     NeighbourBlock *nb;
@@ -1193,14 +1318,14 @@ create_first_triangle(const PointList *pointlist,
         }
         if (wspace->len + 1 != n3)
             return FALSE;
-        nb = triangulation->blocks + i;
+        nb = triangulator->blocks + i;
         nb->pos = i*NEIGHBOURS;
         nb->size = NEIGHBOURS;
         nb->len = 0;
-        reintegrate_workspace(triangulation, i, wspace);
+        reintegrate_workspace(triangulator, i, wspace);
     }
-    triangulation->npoints = i;
-    triangulation->nlen = i*NEIGHBOURS;
+    triangulator->npoints = i;
+    triangulator->nlen = i*NEIGHBOURS;
 
     return TRUE;
 }
@@ -1236,69 +1361,46 @@ work_queue_add(WorkQueue *queue,
     queue->len++;
 }
 
-static Triangulation*
-triangulation_new_from_pointlist(const PointList *pointlist)
+static Triangulator*
+triangulator_new_from_pointlist(const PointList *pointlist)
 {
-    Triangulation *triangulation;
+    Triangulator *triangulator;
 
-    triangulation = g_new0(Triangulation, 1);
+    triangulator = g_new0(Triangulator, 1);
     /* A reasonable estimate */
-    triangulation->nsize = 2*NEIGHBOURS*pointlist->npoints;
-    triangulation->blocks = g_new(NeighbourBlock, pointlist->npoints);
-    triangulation->neighbours = g_new(guint, triangulation->nsize);
-    block_clear(triangulation->neighbours, triangulation->nsize);
+    triangulator->nsize = 2*NEIGHBOURS*pointlist->npoints;
+    triangulator->blocks = g_new(NeighbourBlock, pointlist->npoints);
+    triangulator->neighbours = g_new(guint, triangulator->nsize);
+    block_clear(triangulator->neighbours, triangulator->nsize);
 
-    return triangulation;
-}
-
-static Triangulation*
-triangulation_new_from_finalized(GwyDelaunayTriangulation *gwytri)
-{
-    Triangulation *triangulation;
-    NeighbourBlock *nb;
-    guint i;
-
-    triangulation = g_new0(Triangulation, 1);
-    triangulation->npoints = gwytri->npoints;
-    triangulation->neighbours = gwytri->neighbours;
-    triangulation->nsize = triangulation->nlen = gwytri->size;
-    triangulation->blocks = g_new(NeighbourBlock, triangulation->npoints);
-    for (i = 0; i < triangulation->npoints; i++) {
-        nb = triangulation->blocks + i;
-        nb->pos = gwytri->index[i];
-        nb->size = nb->len = gwytri->index[i+1] - gwytri->index[i];
-    }
-
-    return triangulation;
+    return triangulator;
 }
 
 static void
-triangulation_free(Triangulation *triangulation)
+triangulator_free(Triangulator *triangulator)
 {
-    g_free(triangulation->blocks);
-    g_free(triangulation->neighbours);
-    g_free(triangulation->boundary);
-    g_free(triangulation->bindex);
-    g_free(triangulation);
+    g_free(triangulator->blocks);
+    g_free(triangulator->neighbours);
+    g_free(triangulator);
 }
 
-static Triangulation*
+static Triangulator*
 triangulate(const PointList *pointlist)
 {
-    Triangulation *triangulation;
+    Triangulator *triangulator;
     WorkSpaceCache *wscache;
     WorkSpace *wspace;
     Triangle triangle;
     WorkQueue queue;
     guint i, j;
 
-    triangulation = triangulation_new_from_pointlist(pointlist);
+    triangulator = triangulator_new_from_pointlist(pointlist);
     wscache = work_space_cache_new();
     work_queue_init(&queue);
 
     /* create_first_triangle() ends up with point 2 in the work space. */
     wspace = work_space_cache_get(wscache, 2);
-    if (!create_first_triangle(pointlist, triangulation, wspace))
+    if (!create_first_triangle(pointlist, triangulator, wspace))
         goto fail;
 
     for (i = 3; i < pointlist->npoints; i++) {
@@ -1307,11 +1409,13 @@ triangulate(const PointList *pointlist)
 
         /* Make a valid triangle.  The neighbour updates might turn a
          * previously valid triangle to an invalid one. */
-        make_valid_triangle(triangulation, pointlist->points, sizeof(Point),
+        nb = triangulator->blocks + (i - 1);
+        make_valid_triangle(triangulator->neighbours + nb->pos, nb->len,
+                            pointlist->points, sizeof(Point),
                             &triangle, i-1);
         /* Find the enclosing or the nearest (for outside points) triangle */
-        in = ensure_triangle(triangulation, pointlist->points, sizeof(Point),
-                             &triangle, pointlist->points + i);
+        in = ensure_triangle_(triangulator, pointlist->points, sizeof(Point),
+                              &triangle, pointlist->points + i);
         if (G_UNLIKELY(triangle.ia == UNDEF))
             goto fail;
         /* Put the three points to the queue as their neighbourhood needs
@@ -1328,7 +1432,7 @@ triangulate(const PointList *pointlist)
 
             wspace = work_space_cache_get(wscache, id);
             if (!wspace->len)
-                work_space_construct(triangulation, pointlist, id, wspace);
+                work_space_construct(triangulator, pointlist, id, wspace);
 
             /* FIXME: This permits spontaneous loss of relfectivity.
              * We should update the neighbours selfconsitently.  That is, we
@@ -1338,14 +1442,14 @@ triangulate(const PointList *pointlist)
              * point we should immediately remove the opposite neighbour
              * relation from neighbours[]. */
             /* Even then we fail miserably in ambiguous cases when we typically
-             * make both diagonals parts of the triangulation. */
+             * make both diagonals parts of the triangulator. */
             if (try_to_add_point(pointlist, i, wspace)) {
                 if (G_UNLIKELY(!wspace->len))
                     goto fail;
                 /* If we added point i among the neighbours of point id, any
                  * of the id's neighbours may also need updating. */
-                nb = triangulation->blocks + id;
-                neighbours = triangulation->neighbours + nb->pos;
+                nb = triangulator->blocks + id;
+                neighbours = triangulator->neighbours + nb->pos;
                 for (j = 0; j < nb->len; j++) {
                     ni = neighbours[j];
                     for (k = 0; k < queue.len; k++) {
@@ -1359,7 +1463,7 @@ triangulate(const PointList *pointlist)
                 }
                 queue.success[queue.pos] = TRUE;
 
-                reintegrate_workspace(triangulation, id, wspace);
+                reintegrate_workspace(triangulator, id, wspace);
             }
             /* Move id from todo part to processed part. */
             queue.pos++;
@@ -1383,86 +1487,90 @@ triangulate(const PointList *pointlist)
 
         /* Append an empty zero-length block, reintegrate_workspace() will fix
          * it to the required size. */
-        nb = triangulation->blocks + i;
-        nb->pos = triangulation->nlen;
+        nb = triangulator->blocks + i;
+        nb->pos = triangulator->nlen;
         nb->size = 0;
         nb->len = 0;
-        triangulation->npoints++;
-        reintegrate_workspace(triangulation, i, wspace);
+        triangulator->npoints++;
+        reintegrate_workspace(triangulator, i, wspace);
     }
 
     work_space_cache_free(wscache);
     work_queue_destroy(&queue);
 
-    return triangulation;
+    return triangulator;
 
 fail:
     work_space_cache_free(wscache);
     work_queue_destroy(&queue);
-    triangulation_free(triangulation);
+    triangulator_free(triangulator);
 
     return NULL;
 }
 
-/**
- * gwy_delaunay_triangulation_free:
- * @triangulation: Delaunay triangulation.
- *
- * Frees a triangulation created by gwy_delaunay_triangulate().
- *
- * Since: 2.18
- **/
-void
-gwy_delaunay_triangulation_free(GwyDelaunayTriangulation *triangulation)
+static gboolean
+find_boundary(GwyDelaunayTriangulation *triangulation,
+              gconstpointer points, gsize point_size)
 {
-    g_free(triangulation->index);
-    g_free(triangulation->neighbours);
-    g_free(triangulation);
-}
+    guint i, imin, bsize, expected_blen, pos, len;
+    const Point *pt;
+    const guint *neighbours;
+    gdouble xmin;
 
-/**
- * gwy_delaunay_triangulate:
- * @npoints: Number of points.
- * @points: Array of points.  They must be typecastable to @GwyDelaunayPointXY,
- *          however, they can be larger than that.  The actual struct size
- *          is indicated by @point_size.
- * @point_size: Size of point struct, in bytes.
- *
- * Finds Delaunay triangulation for a set of points in plane.
- *
- * The triangulation might not work in numerically unstable cases.  Also, no
- * points in the input set may coincide.
- *
- * Returns: A newly created triangulation, %NULL on failure.
- *
- * Since: 2.18
- **/
-GwyDelaunayTriangulation*
-gwy_delaunay_triangulate(guint npoints, gconstpointer points, gsize point_size)
-{
-    GwyDelaunayTriangulation *gwytri = NULL;
-    Triangulation *triangulation;
-    PointList pointlist;
+    triangulation->bindex = g_new(guint, triangulation->npoints);
+    block_clear(triangulation->bindex, triangulation->npoints);
+    /* If the triangulation is correct this formula holds, see the identities
+     * near the start of the file.  The use of @nsize requires a compactified
+     * triangulation! */
+    expected_blen = 3*(triangulation->npoints - 1) - triangulation->nsize/2;
+    bsize = expected_blen;
+    triangulation->boundary = g_new(guint, bsize);
+    triangulation->blen = 0;
 
-    g_return_val_if_fail(point_size >= sizeof(Point), NULL);
+    /* The leftmost point must lie on the boundary */
+    pt = get_point(points, point_size, 0);
+    xmin = pt->x;
+    imin = 0;
+    for (i = 1; i < triangulation->npoints; i++) {
+        pt = get_point(points, point_size, i);
+        if (pt->x < xmin) {
+            imin = i;
+            xmin = pt->x;
+        }
+    }
+    triangulation->bindex[imin] = triangulation->blen;
+    triangulation->boundary[triangulation->blen++] = imin;
+    if (triangulation->npoints == 1)
+        return TRUE;
 
-    build_compact_point_list(&pointlist, npoints, points, point_size);
-    triangulation = triangulate(&pointlist);
-    if (!triangulation)
-        goto fail;
-    gwytri = g_new0(GwyDelaunayTriangulation, 1);
-    compactify(triangulation, &pointlist, gwytri);
-    if (G_UNLIKELY(gwytri->size % 2 != 0)) {
-        gwy_delaunay_triangulation_free(gwytri);
-        gwytri = NULL;
+    /* Its neighbour with the lowest direction angle is the first side,
+     * Since the points are already sorted this way it suffices to take
+     * neighbours[0].  */
+    neighbours = triangulation->neighbours + triangulation->index[imin];
+    imin = neighbours[0];
+    triangulation->bindex[imin] = triangulation->blen;
+    triangulation->boundary[triangulation->blen++] = imin;
+    if (triangulation->npoints == 2)
+        return TRUE;
+
+    /* The remaining points are always next to the previous boundary point */
+    while (TRUE) {
+        i = triangulation->boundary[triangulation->blen-2];
+        pos = triangulation->index[imin];
+        len = triangulation->index[imin+1] - pos;
+        neighbours = triangulation->neighbours + pos;
+        i = next_neighbour(neighbours, len, find_neighbour(neighbours, len, i));
+        if (i == triangulation->boundary[0])
+            return triangulation->blen == bsize;
+        if (G_UNLIKELY(triangulation->blen == bsize))
+            return FALSE;
+        imin = i;
+        triangulation->bindex[imin] = triangulation->blen;
+        triangulation->boundary[triangulation->blen++] = imin;
     }
 
-fail:
-    triangulation_free(triangulation);
-    g_free(pointlist.orig_index);
-    g_free(pointlist.points);
-
-    return gwytri;
+    g_assert_not_reached();
+    return FALSE;
 }
 
 /* Calculate circumcircle centre for a triangle that is counter-clockwise at
@@ -1500,20 +1608,20 @@ circumcircle_centre(const Point *a,
 }
 
 static void
-add_point_id(const Triangulation *triangulation,
+add_point_id(const GwyDelaunayTriangulation *triangulation,
              guint i,
              guint ni,
              guint *vneighbours,
              gint offset,
              guint toadd)
 {
-    const NeighbourBlock *nb;
-    guint j;
+    guint pos, len, j;
 
-    nb = triangulation->blocks + i;
-    j = find_neighbour(triangulation->neighbours + nb->pos, nb->len, ni);
+    pos = triangulation->index[i];
+    len = triangulation->index[i+1] - pos;
+    j = find_neighbour(triangulation->neighbours + pos, len, ni);
     g_assert(j != UNDEF);
-    j = (j + offset + nb->len) % nb->len;
+    j = (j + offset + len) % len;
     vneighbours[j] = toadd;
 }
 
@@ -1563,41 +1671,41 @@ add_infinity_neighbour(guint *vneighbours,
 }
 
 static void
-delaunay_to_voronoi(Triangulation *triangulation,
+delaunay_to_voronoi(GwyDelaunayTriangulation *triangulation,
                     gconstpointer points, gsize point_size,
                     gdouble far_away)
 {
-    NeighbourBlock *nb;
     const Point *a, *b, *c;
     Point *vpoints;
     Point pt;
     const guint *neighbours;
-    guint *vneighbours, *vindex;
-    guint i, j, n, ni, prev, nvoronoi, vnsize, pos;
+    guint *voronoi, *vindex;
+    guint i, j, n, ni, prev, nvpoints, nvoronoi, pos, len, vpos;
     gdouble h;
 
     /* This is exact if counting also the vertices in infinities (the formula
      * is more understandably t+v).  See the identities at the begining of the
      * file. */
-    nvoronoi = 2*(triangulation->npoints - 1);
-    vpoints = g_new(Point, nvoronoi);
+    nvpoints = triangulation->nvpoints = 2*(triangulation->npoints - 1);
+    vpoints = triangulation->vpoints = g_new(Point, nvpoints);
     /* Voronoi points in infinity have only 5 neighbours but boundary Delaunay
      * points will gain one neigbour more, so this should be exact. */
-    vnsize = triangulation->nlen + 6*nvoronoi;
-    vneighbours = g_new(guint, vnsize);
-    block_clear(vneighbours, vnsize);
+    nvoronoi = triangulation->nvoronoi = triangulation->npoints + 6*nvpoints;
+    voronoi = triangulation->voronoi= g_new(guint, nvoronoi);
+    block_clear(voronoi, nvoronoi);
 
     /* We know exactly how many neighbours a Delaunay point will have so,
      * prefill the index. */
-    vindex = g_new(guint, triangulation->npoints + nvoronoi + 1);
-    pos = 0;
+    vindex = triangulation->vindex
+        = g_new(guint, triangulation->npoints + nvpoints + 1);
+    vpos = 0;
     for (n = 0; n < triangulation->npoints; n++) {
-        vindex[n] = pos;
-        pos += triangulation->blocks[n].len;
+        vindex[n] = vpos;
+        vpos += triangulation->index[n+1] - triangulation->index[n];
         /* Boundary points will gain one neighbour as there are two Voronoi
          * points in infinity. */
         if (triangulation->bindex[n] != UNDEF)
-            pos++;
+            vpos++;
     }
 
     /* Now the Voronoi points.  In the first pass, create the points and
@@ -1605,10 +1713,11 @@ delaunay_to_voronoi(Triangulation *triangulation,
      * resolved later.  */
     for (i = 0; i < triangulation->npoints; i++) {
         a = get_point(points, point_size, i);
-        nb = triangulation->blocks + i;
-        neighbours = triangulation->neighbours + nb->pos;
-        prev = neighbours[nb->len - 1];
-        for (j = 0; j < nb->len; j++) {
+        pos = triangulation->index[i];
+        len = triangulation->index[i+1] - pos;
+        neighbours = triangulation->neighbours + pos;
+        prev = neighbours[len - 1];
+        for (j = 0; j < len; j++) {
             ni = neighbours[i];
             if (prev > i && ni > i) {
                 b = get_point(points, point_size, prev);
@@ -1616,20 +1725,20 @@ delaunay_to_voronoi(Triangulation *triangulation,
                 if (circumcircle_centre(a, b, c, &pt)) {
                     /* Add a new Voronoi point and make a, b and c its
                      * neighbours. */
-                    g_assert(n - triangulation->npoints < nvoronoi);
+                    g_assert(n - triangulation->npoints < nvpoints);
                     vpoints[n - triangulation->npoints] = pt;
-                    vindex[n] = pos;
-                    vneighbours[pos + 1] = i;
-                    vneighbours[pos + 3] = prev;
-                    vneighbours[pos + 5] = ni;
-                    pos += 6;   /* Make space for the Voronoi neighbours. */
+                    vindex[n] = vpos;
+                    voronoi[vpos + 1] = i;
+                    voronoi[vpos + 3] = prev;
+                    voronoi[vpos + 5] = ni;
+                    vpos += 6;   /* Make space for the Voronoi neighbours. */
                     /* Conversely, add it to the neighbourhood of a, b and c. */
                     add_point_id(triangulation, i, prev,
-                                 vneighbours + vindex[i], 0, n);
+                                 voronoi + vindex[i], 0, n);
                     add_point_id(triangulation, prev, ni,
-                                 vneighbours + vindex[prev], 0, n);
+                                 voronoi + vindex[prev], 0, n);
                     add_point_id(triangulation, ni, i,
-                                 vneighbours + vindex[ni], 0, n);
+                                 voronoi + vindex[ni], 0, n);
                     n++;
                 }
             }
@@ -1650,122 +1759,112 @@ delaunay_to_voronoi(Triangulation *triangulation,
         pt.x = h*pt.x + 0.5*(a->x + b->x);
         pt.y = h*pt.y + 0.5*(a->y + b->y);
         /* Add a new Voronoi point and make a and b its neighbours. */
-        g_assert(n - triangulation->npoints < nvoronoi);
+        g_assert(n - triangulation->npoints < nvpoints);
         vpoints[n - triangulation->npoints] = pt;
-        vindex[n] = pos;
+        vindex[n] = vpos;
         /* The neighbours need to be in the reverse order because we look from
          * the outside (infinity) now. */
-        vneighbours[pos + 1] = ni;
-        vneighbours[pos + 3] = i;
-        pos += 5;   /* Make space for the Voronoi neighbours. */
+        voronoi[vpos + 1] = ni;
+        voronoi[vpos + 3] = i;
+        vpos += 5;   /* Make space for the Voronoi neighbours. */
         /* Conversely, add it to the neighbourhood of a and b. */
         add_point_id(triangulation, i, ni,
-                     vneighbours + vindex[i], -1, n);
+                     voronoi + vindex[i], -1, n);
         add_point_id(triangulation, ni, i,
-                     vneighbours + vindex[ni], 1, n);
+                     voronoi + vindex[ni], 1, n);
     }
 
-    g_assert(pos == vnsize);
-    g_assert(n == triangulation->npoints + nvoronoi);
-    vindex[n] = pos;
+    g_assert(vpos == nvoronoi);
+    g_assert(n == triangulation->npoints + nvpoints);
+    vindex[n] = vpos;
 
     /* Now we have created all the Voronoi points so we can add Voronoi
      * neighbours of Voronoi points. */
     for (i = triangulation->npoints;
-         i < triangulation->npoints + nvoronoi;
+         i < triangulation->npoints + nvpoints;
          i++) {
-        pos = vindex[i];
-        if (vindex[i+1] - pos == 5) {
-            add_common_neighbour(vneighbours, vindex, i, pos+1, pos+3, pos+2);
-            add_infinity_neighbour(vneighbours, vindex, i, pos+1, pos);
-            add_infinity_neighbour(vneighbours, vindex, i, pos+3, pos+4);
+        vpos = vindex[i];
+        if (vindex[i+1] - vpos == 5) {
+            add_common_neighbour(voronoi, vindex, i, vpos+1, vpos+3, vpos+2);
+            add_infinity_neighbour(voronoi, vindex, i, vpos+1, vpos);
+            add_infinity_neighbour(voronoi, vindex, i, vpos+3, vpos+4);
         }
         else {
-            add_common_neighbour(vneighbours, vindex, i, pos+1, pos+3, pos+2);
-            add_common_neighbour(vneighbours, vindex, i, pos+3, pos+5, pos+4);
-            add_common_neighbour(vneighbours, vindex, i, pos+5, pos+1, pos);
+            add_common_neighbour(voronoi, vindex, i, vpos+1, vpos+3, vpos+2);
+            add_common_neighbour(voronoi, vindex, i, vpos+3, vpos+5, vpos+4);
+            add_common_neighbour(voronoi, vindex, i, vpos+5, vpos+1, vpos);
         }
     }
 }
 
-static gboolean
-find_boundary(Triangulation *triangulation,
-              gconstpointer points, gsize point_size)
+/**
+ * gwy_delaunay_triangulation_free:
+ * @triangulation: Delaunay triangulation.
+ *
+ * Frees a triangulation created by gwy_delaunay_triangulate().
+ *
+ * Since: 2.18
+ **/
+void
+gwy_delaunay_triangulation_free(GwyDelaunayTriangulation *triangulation)
 {
-    const NeighbourBlock *nb;
-    guint i, imin, bsize, expected_blen;
-    gdouble xmin, x;
-    const Point *pt, *pt2;
-    const guint *neighbours;
+    g_free(triangulation->index);
+    g_free(triangulation->neighbours);
+    g_free(triangulation->boundary);
+    g_free(triangulation->bindex);
+    g_free(triangulation->vpoints);
+    g_free(triangulation->vindex);
+    g_free(triangulation->voronoi);
+    g_free(triangulation);
+}
 
-    triangulation->bindex = g_new(guint, triangulation->npoints);
-    for (i = 0; i < triangulation->npoints; i++)
-        triangulation->bindex[i] = UNDEF;
-    /* If the triangulation is correct this formula holds, see the identities
-     * near the start of the file.  The use of @nsize requires a compactified
-     * triangulation! */
-    expected_blen = 3*(triangulation->npoints - 1) - triangulation->nsize/2;
-    bsize = expected_blen;
-    triangulation->boundary = g_new(guint, bsize);
-    triangulation->blen = 0;
+/**
+ * gwy_delaunay_triangulate:
+ * @npoints: Number of points.
+ * @points: Array of points.  They must be typecastable to @GwyDelaunayPointXY,
+ *          however, they can be larger than that.  The actual struct size
+ *          is indicated by @point_size.
+ * @point_size: Size of point struct, in bytes.
+ *
+ * Finds Delaunay triangulation for a set of points in plane.
+ *
+ * The triangulation might not work in numerically unstable cases.  Also, no
+ * points in the input set may coincide.
+ *
+ * Returns: A newly created triangulation, %NULL on failure.
+ *
+ * Since: 2.18
+ **/
+GwyDelaunayTriangulation*
+gwy_delaunay_triangulate(guint npoints, gconstpointer points, gsize point_size)
+{
+    GwyDelaunayTriangulation *triangulation = NULL;
+    Triangulator *triangulator;
+    PointList pointlist;
 
-    /* The leftmost point must lie on the boundary */
-    pt = get_point(points, point_size, 0);
-    xmin = pt->x;
-    imin = 0;
-    for (i = 1; i < triangulation->npoints; i++) {
-        pt = get_point(points, point_size, i);
-        if (pt->x < xmin) {
-            imin = i;
-            xmin = pt->x;
-        }
-    }
-    triangulation->bindex[imin] = triangulation->blen;
-    triangulation->boundary[triangulation->blen++] = imin;
-    if (triangulation->npoints == 1)
-        return TRUE;
+    g_return_val_if_fail(point_size >= sizeof(Point), NULL);
 
-    /* Its neighbour with the lowest direction angle is the first side,
-     * FIXME: In principle, the points are already sorted this way so taking
-     * neighbours[0] should suffice.  */
-    nb = triangulation->blocks + imin;
-    neighbours = triangulation->neighbours + nb->pos;
-    pt = get_point(points, point_size, imin);
-    pt2 = get_point(points, point_size, neighbours[0]);
-    xmin = atan2(pt2->y - pt->y, pt2->x - pt->x);
-    imin = 0;
-    for (i = 1; i < nb->len; i++) {
-        pt2 = get_point(points, point_size, neighbours[i]);
-        x = atan2(pt2->y - pt->y, pt2->x - pt->x);
-        if (x < xmin) {
-            imin = i;
-            xmin = x;
-        }
-    }
-    imin = neighbours[imin];
-    triangulation->bindex[imin] = triangulation->blen;
-    triangulation->boundary[triangulation->blen++] = imin;
-    if (triangulation->npoints == 2)
-        return TRUE;
-
-    /* The remaining points are always next to the previous boundary point */
-    while (TRUE) {
-        i = triangulation->boundary[triangulation->blen-2];
-        nb = triangulation->blocks + imin;
-        neighbours = triangulation->neighbours + nb->pos;
-        i = next_neighbour(neighbours, nb->len,
-                           find_neighbour(neighbours, nb->len, i));
-        if (i == triangulation->boundary[0])
-            return triangulation->blen == bsize;
-        if (G_UNLIKELY(triangulation->blen == bsize))
-            return FALSE;
-        imin = i;
-        triangulation->bindex[imin] = triangulation->blen;
-        triangulation->boundary[triangulation->blen++] = imin;
+    build_compact_point_list(&pointlist, npoints, points, point_size);
+    triangulator = triangulate(&pointlist);
+    if (!triangulator)
+        goto fail;
+    triangulation = g_new0(GwyDelaunayTriangulation, 1);
+    compactify(triangulator, &pointlist, triangulation);
+    if (G_UNLIKELY(triangulation->nsize % 2 != 0)) {
+        gwy_delaunay_triangulation_free(triangulation);
+        triangulation = NULL;
+        goto fail;
     }
 
-    g_assert_not_reached();
-    return FALSE;
+    find_boundary(triangulation, points, point_size);
+    /* delaunay_to_voronoi(triangulation, points, point_size, 100.0); */
+
+fail:
+    triangulator_free(triangulator);
+    g_free(pointlist.orig_index);
+    g_free(pointlist.points);
+
+    return triangulation;
 }
 
 static inline gdouble
@@ -1777,7 +1876,7 @@ edist2_xyz_xy(const PointXYZ *p, const Point *q)
 }
 
 static inline gdouble
-tinterpolate_round(const Triangulation *triangulation,
+tinterpolate_round(const GwyDelaunayTriangulation *triangulation,
                    gconstpointer points, gsize point_size,
                    const Triangle *triangle,
                    const Point *pt)
@@ -1853,7 +1952,7 @@ sinterpolate1_linear(gconstpointer points, gsize point_size,
 }
 
 static inline gdouble
-sinterpolate(const Triangulation *triangulation,
+sinterpolate(const GwyDelaunayTriangulation *triangulation,
              gconstpointer points, gsize point_size,
              const Triangle *triangle, const Point *pt,
              GwyInterpolationType interpolation)
@@ -1911,13 +2010,12 @@ success:
  * Since: 2.18.
  **/
 gboolean
-gwy_delaunay_interpolate(GwyDelaunayTriangulation *gwytri,
+gwy_delaunay_interpolate(GwyDelaunayTriangulation *triangulation,
                          gconstpointer points,
                          gsize point_size,
-                         G_GNUC_UNUSED GwyInterpolationType interpolation,
+                         GwyInterpolationType interpolation,
                          GwyDataField *dfield)
 {
-    Triangulation *triangulation;
     guint xres, yres, i, j;
     gdouble qx, qy, xoff, yoff;
     gdouble *d;
@@ -1930,11 +2028,8 @@ gwy_delaunay_interpolate(GwyDelaunayTriangulation *gwytri,
     g_return_val_if_fail(interpolation == GWY_INTERPOLATION_LINEAR
                          || interpolation == GWY_INTERPOLATION_ROUND, FALSE);
 
-    triangulation = triangulation_new_from_finalized(gwytri);
-    if (!find_boundary(triangulation, points, point_size))
-        goto fail;
-
-    make_valid_triangle(triangulation, points, point_size, &triangle, 0);
+    make_valid_triangle(triangulation->neighbours, triangulation->index[1],
+                        points, point_size, &triangle, 0);
 
     xres = dfield->xres;
     yres = dfield->yres;
@@ -1968,8 +2063,6 @@ gwy_delaunay_interpolate(GwyDelaunayTriangulation *gwytri,
     ok = TRUE;
 
 fail:
-    triangulation->neighbours = NULL;   /* Owned by gwytri */
-    triangulation_free(triangulation);
     gwy_data_field_invalidate(dfield);
 
     return ok;
@@ -1978,20 +2071,20 @@ fail:
 #ifdef DEBUG
 G_GNUC_UNUSED
 static void
-dump_neighbours(const Triangulation *triangulation)
+dump_neighbours(const Triangulator *triangulator)
 {
     guint i, j;
 
-    for (i = 0; i < triangulation->nlen; i++) {
-        for (j = 0; j < triangulation->npoints; j++) {
-            if (triangulation->blocks[j].pos == i)
+    for (i = 0; i < triangulator->nlen; i++) {
+        for (j = 0; j < triangulator->npoints; j++) {
+            if (triangulator->blocks[j].pos == i)
                 g_print("(%u)", j);
         }
 
-        if (triangulation->neighbours[i] == UNDEF)
+        if (triangulator->neighbours[i] == UNDEF)
             g_print(".");
         else
-            g_print("%u", triangulation->neighbours[i]);
+            g_print("%u", triangulator->neighbours[i]);
         g_print(" ");
     }
     g_print("\n");
@@ -1999,23 +2092,23 @@ dump_neighbours(const Triangulation *triangulation)
 
 G_GNUC_UNUSED
 static void
-dump_triangulation(const Triangulation *triangulation)
+dump_triangulator(const Triangulator *triangulator)
 {
     NeighbourBlock *nb;
     guint i, j;
 
-    for (i = 0; i < triangulation->npoints; i++) {
-        nb = triangulation->blocks + i;
+    for (i = 0; i < triangulator->npoints; i++) {
+        nb = triangulator->blocks + i;
         g_print("%u:", i);
         for (j = 0; j < nb->len; j++)
-            g_print(" %u", triangulation->neighbours[nb->pos + j]);
+            g_print(" %u", triangulator->neighbours[nb->pos + j]);
         g_print("\n");
     }
 }
 
 G_GNUC_UNUSED
 static void
-dump_points(const Triangulation *triangulation,
+dump_points(const Triangulator *triangulator,
             guint npoints, gconstpointer points, gsize point_size)
 {
     NeighbourBlock *nb;
@@ -2033,9 +2126,9 @@ dump_points(const Triangulation *triangulation,
     fh = fopen("arrows.gpi", "w");
     //fprintf(fh, "set xtics %g\n", grid->dx);
     //fprintf(fh, "set ytics %g\n", grid->dy);
-    for (i = 0; i < triangulation->npoints; i++) {
-        nb = triangulation->blocks + i;
-        neighbours = triangulation->neighbours + nb->pos;
+    for (i = 0; i < triangulator->npoints; i++) {
+        nb = triangulator->blocks + i;
+        neighbours = triangulator->neighbours + nb->pos;
         for (j = 0; j < nb->len; j++) {
             ni = neighbours[j];
             if (ni > i) {
@@ -2051,19 +2144,19 @@ dump_points(const Triangulation *triangulation,
 
 G_GNUC_UNUSED
 static guint
-test_reflexivity(const Triangulation *triangulation)
+test_reflexivity(const Triangulator *triangulator)
 {
     NeighbourBlock *nb, *nbn;
     guint i, j, count;
     const guint *neighbours, *neighboursn;
 
     count = 0;
-    for (i = 0; i < triangulation->npoints; i++) {
-        nb = triangulation->blocks + i;
-        neighbours = triangulation->neighbours + nb->pos;
+    for (i = 0; i < triangulator->npoints; i++) {
+        nb = triangulator->blocks + i;
+        neighbours = triangulator->neighbours + nb->pos;
         for (j = 0; j < nb->len; j++) {
-            nbn = triangulation->blocks + neighbours[j];
-            neighboursn = triangulation->neighbours + nb->pos;
+            nbn = triangulator->blocks + neighbours[j];
+            neighboursn = triangulator->neighbours + nb->pos;
             if (find_neighbour(neighboursn, nbn->len, i) == UNDEF) {
                 g_printerr("Point %u has neighbour %u "
                            "but the reverse does not hold.\n",
@@ -2082,6 +2175,14 @@ test_reflexivity(const Triangulation *triangulation)
  * SECTION:delaunay
  * @title: Delaunay
  * @short_description: Delaunay triangulation and interpolation
+ **/
+
+/**
+ * GWY_DELAUNAY_NONE:
+ *
+ * Point index value representing no point.
+ *
+ * Since: 2.18
  **/
 
 /**
@@ -2109,14 +2210,31 @@ test_reflexivity(const Triangulation *triangulation)
  * GwyDelaunayTriangulation:
  * @npoints: The number of points, this is equal to the number of points
  *           passed to gwy_delaunay_triangulate().
- * @size: Size of @neighbours array, also equal to the last item of @index.
+ * @nsize: Size of @neighbours array, also equal to the last item of @index.
+ * @blen: Boundary length, the size of @boundary array.
+ * @nvpoints: Number of Voronoi triangulation points, the size of @vpoints
+ *            array.
  * @index: Positions where lists of neighbours for individual points start in
  *         @neighbours.  The array has @npoints+1 elements so, the neighbours
  *         of point @i are at positions @index[@i] to @index[@i+1]-1.
- * @neighbours: Lists of neigbours for invididual points, packed in a one large
- *              array.
+ * @neighbours: Lists of Delaunay neigbours for invididual points, packed in a
+ *              one large array.
+ * @boundary: Counter-clockwise list of boundary points, i.e. points lying on
+ *            the convex hull.
+ * @bindex: Point indices in @boundary for boundary points, %GWY_DELAUNAY_NONE
+ *          for inner points (i.e. points not lying on the convex hull).
+ * @vpoints: Points of the Voronoi triangulation, including points in the
+ *           infinity (in fact, just far from the original point set).
+ * @vindex: Positions where lists of neigbours for individual points, both
+ *          of the original set and Voronoi triangulation, reside.
+ * @voronoi: Lists of Voronoi triangulation neigbours, packed in one big array.
+ *           This includes both points from the original set with indices
+ *           starting from 0 and points of the Voronoi triangulation with
+ *           indices offset by @npoints.  Each triangle in the Voronoi
+ *           triangulation has exactly one vertex from the original point set
+ *           and two vertices from @vpoints.
  *
- * Delaunay triangulation representation.
+ * Delaunay and Voronoi triangulation representation.
  *
  * Since: 2.18
  **/
