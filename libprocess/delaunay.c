@@ -35,7 +35,7 @@
  * t ... number of triangles
  * b ... number of boundary edges
  *
- *    t = h - v + 1
+ *    t = h - (v - 1)
  *    b = 3*(v - 1) - h
  *
  * They are expressed using v and h because that's what we normally have
@@ -156,9 +156,23 @@ typedef struct {
 #ifdef DEBUG
 static void dump_neighbours(const Triangulator *triangulator);
 static void dump_triangulator(const Triangulator *triangulator);
-static void dump_points(const Triangulator *triangulator,
+static void dump_points_(const Triangulator *triangulator,
                         guint npoints, gconstpointer points, gsize point_size);
+static void dump_points(const GwyDelaunayTriangulation *triangulation,
+                        gconstpointer points, gsize point_size);
 static guint test_reflexivity(const Triangulator *triangulator);
+
+static void
+dump_block(const gchar *info,
+            guint id, const guint *nindex, const guint *neighbours)
+{
+    guint i;
+
+    g_printerr("[%u]%s", id, info);
+    for (i = nindex[id]; i < nindex[id+1]; i++)
+        g_printerr(" %u", neighbours[i]);
+    g_printerr("\n");
+}
 #endif
 
 /* Estimate how big block we want to allocate if we have @n neighbours.
@@ -230,7 +244,8 @@ static void
 build_compact_point_list(PointList *pointlist,
                          guint npoints,
                          gconstpointer points,
-                         gsize point_size)
+                         gsize point_size,
+                         gdouble *radius)
 {
     const Point *pt;
     gdouble xmin, xmax, ymin, ymax, xreal, yreal, step, xr, yr;
@@ -260,6 +275,7 @@ build_compact_point_list(PointList *pointlist,
 
     xreal = xmax - xmin;
     yreal = ymax - ymin;
+    *radius = hypot(xreal, yreal);
     xr = xreal/sqrt(npoints)*CELL_SIDE;
     yr = yreal/sqrt(npoints)*CELL_SIDE;
 
@@ -1599,8 +1615,9 @@ circumcircle_centre(const Point *a,
     det = 2*(ba.y*ca.x - ba.x*ca.y);
     /* FIXME */
     g_assert(det);
-    if (!det)
+    if (!det) {
         return FALSE;
+    }
 
     pt->x = a->x + (ba.y*ca2 - ca.y*ba2)/det;
     pt->y = a->y + (ca.x*ba2 - ba.x*ca2)/det;
@@ -1612,7 +1629,6 @@ add_point_id(const GwyDelaunayTriangulation *triangulation,
              guint i,
              guint ni,
              guint *vneighbours,
-             gint offset,
              guint toadd)
 {
     guint pos, len, j;
@@ -1621,7 +1637,7 @@ add_point_id(const GwyDelaunayTriangulation *triangulation,
     len = triangulation->index[i+1] - pos;
     j = find_neighbour(triangulation->neighbours + pos, len, ni);
     g_assert(j != UNDEF);
-    j = (j + offset + len) % len;
+    g_assert(vneighbours[j] == UNDEF);
     vneighbours[j] = toadd;
 }
 
@@ -1633,6 +1649,9 @@ add_common_neighbour(guint *vneighbours,
                      guint addat)
 {
     guint i, j, ni, nj;
+
+    ia = vneighbours[ia];
+    ib = vneighbours[ib];
 
     for (i = vindex[ia]; i < vindex[ia+1]; i++) {
         ni = vneighbours[i];
@@ -1658,6 +1677,8 @@ add_infinity_neighbour(guint *vneighbours,
 {
     guint i, ni;
 
+    ia = vneighbours[ia];
+
     for (i = vindex[ia]; i < vindex[ia+1]; i++) {
         ni = vneighbours[i];
         if (ni == ignore || ni == UNDEF)
@@ -1678,19 +1699,21 @@ delaunay_to_voronoi(GwyDelaunayTriangulation *triangulation,
     const Point *a, *b, *c;
     Point *vpoints;
     Point pt;
-    const guint *neighbours;
-    guint *voronoi, *vindex;
-    guint i, j, n, ni, prev, nvpoints, nvoronoi, pos, len, vpos;
+    guint *voronoi, *vindex, *neighbours, *remaining;
+    guint i, j, n, ni, next, prev, nvpoints, nvoronoi, pos, len, vpos, vm1;
+    guint blen;
     gdouble h;
 
+    blen = triangulation->blen;
     /* This is exact if counting also the vertices in infinities (the formula
-     * is more understandably t+v).  See the identities at the begining of the
+     * is more understandably t+b).  See the identities at the begining of the
      * file. */
-    nvpoints = triangulation->nvpoints = 2*(triangulation->npoints - 1);
+    vm1 = triangulation->npoints - 1;
+    nvpoints = triangulation->nvpoints = 2*vm1;
     vpoints = triangulation->vpoints = g_new(Point, nvpoints);
     /* Voronoi points in infinity have only 5 neighbours but boundary Delaunay
      * points will gain one neigbour more, so this should be exact. */
-    nvoronoi = triangulation->nvoronoi = triangulation->npoints + 6*nvpoints;
+    nvoronoi = triangulation->nvoronoi = 12*vm1 + triangulation->nsize;
     voronoi = triangulation->voronoi= g_new(guint, nvoronoi);
     block_clear(voronoi, nvoronoi);
 
@@ -1707,6 +1730,8 @@ delaunay_to_voronoi(GwyDelaunayTriangulation *triangulation,
         if (triangulation->bindex[n] != UNDEF)
             vpos++;
     }
+    /* We know the exact number of edges from original points. */
+    g_assert(vpos == 3*vm1 + triangulation->nsize/2);
 
     /* Now the Voronoi points.  In the first pass, create the points and
      * resolve Delaunay neighbours.  Mutual Voronoi point relations will be
@@ -1718,10 +1743,10 @@ delaunay_to_voronoi(GwyDelaunayTriangulation *triangulation,
         neighbours = triangulation->neighbours + pos;
         prev = neighbours[len - 1];
         for (j = 0; j < len; j++) {
-            ni = neighbours[i];
-            if (prev > i && ni > i) {
+            next = neighbours[j];
+            if (prev > i && next > i) {
                 b = get_point(points, point_size, prev);
-                c = get_point(points, point_size, ni);
+                c = get_point(points, point_size, next);
                 if (circumcircle_centre(a, b, c, &pt)) {
                     /* Add a new Voronoi point and make a, b and c its
                      * neighbours. */
@@ -1730,27 +1755,49 @@ delaunay_to_voronoi(GwyDelaunayTriangulation *triangulation,
                     vindex[n] = vpos;
                     voronoi[vpos + 1] = i;
                     voronoi[vpos + 3] = prev;
-                    voronoi[vpos + 5] = ni;
+                    voronoi[vpos + 5] = next;
                     vpos += 6;   /* Make space for the Voronoi neighbours. */
                     /* Conversely, add it to the neighbourhood of a, b and c. */
                     add_point_id(triangulation, i, prev,
-                                 voronoi + vindex[i], 0, n);
-                    add_point_id(triangulation, prev, ni,
-                                 voronoi + vindex[prev], 0, n);
-                    add_point_id(triangulation, ni, i,
-                                 voronoi + vindex[ni], 0, n);
+                                 voronoi + vindex[i], n);
+                    add_point_id(triangulation, prev, next,
+                                 voronoi + vindex[prev], n);
+                    add_point_id(triangulation, next, i,
+                                 voronoi + vindex[next], n);
                     n++;
                 }
             }
-            prev = ni;
+            prev = next;
         }
     }
 
+    /* Compactify the two free positions in neighbourhoods of boundary points.
+     * One is always at the end now because the new neighbourhood is one item
+     * longer but we did not take this into account.  The two free positions
+     * correspond to the infinity points of Voronoi grid and they should come
+     * together.  Then we can really place the first infinity neighbour to the
+     * position of the previous point in neighbours[] and the second infinity
+     * point to the following position. */
+    for (j = 0; j < blen; j++) {
+        i = triangulation->boundary[j];
+        pos = triangulation->vindex[i];
+        len = triangulation->vindex[i+1] - pos;
+        g_assert(len > 2);
+        neighbours = triangulation->voronoi + pos;
+        ni = find_neighbour(neighbours, len-1, UNDEF);
+        g_assert(ni != UNDEF);
+        for (i = len-1; i > ni+1; i--)
+            neighbours[i] = neighbours[i-1];
+        neighbours[i] = UNDEF;
+    }
+
     /* Continuing the first pass for the boundary points. */
-    for (i = 0; i < triangulation->blen; i++) {
-        ni = (i + 1) % triangulation->blen;
+    remaining = g_new(guint, blen);
+    for (j = 0; j < blen; j++) {
+        i = triangulation->boundary[j];
+        next = triangulation->boundary[(j + 1) % blen];
         a = get_point(points, point_size, i);
-        b = get_point(points, point_size, ni);
+        b = get_point(points, point_size, next);
         /* The point in infinity is in fact somewhere far away from the
          * centre of a-b line in the direction of the outer normal. */
         pt.x = b->y - a->y;
@@ -1764,19 +1811,31 @@ delaunay_to_voronoi(GwyDelaunayTriangulation *triangulation,
         vindex[n] = vpos;
         /* The neighbours need to be in the reverse order because we look from
          * the outside (infinity) now. */
-        voronoi[vpos + 1] = ni;
+        voronoi[vpos + 1] = next;
         voronoi[vpos + 3] = i;
         vpos += 5;   /* Make space for the Voronoi neighbours. */
-        /* Conversely, add it to the neighbourhood of a and b. */
-        add_point_id(triangulation, i, ni,
-                     voronoi + vindex[i], -1, n);
-        add_point_id(triangulation, ni, i,
-                     voronoi + vindex[ni], 1, n);
+        /* Conversely, add it to the neighbourhood of b and remember it for
+         * adding to the neighbourhood of a.  We only know the position when
+         * we have a point and the previous one so we would need another.  To
+         * preserve mental sanity, just remember the id now and add it later.
+         */
+        add_point_id(triangulation, next, i, voronoi + vindex[next], n);
+        remaining[j] = n;
+        n++;
     }
 
     g_assert(vpos == nvoronoi);
     g_assert(n == triangulation->npoints + nvpoints);
     vindex[n] = vpos;
+
+    for (j = 0; j < blen; j++) {
+        i = triangulation->boundary[j];
+        ni = find_neighbour(voronoi + vindex[i], vindex[i+1] - vindex[i],
+                            UNDEF);
+        g_assert(ni != UNDEF);
+        voronoi[vindex[i] + ni] = remaining[j];
+    }
+    g_free(remaining);
 
     /* Now we have created all the Voronoi points so we can add Voronoi
      * neighbours of Voronoi points. */
@@ -1841,10 +1900,11 @@ gwy_delaunay_triangulate(guint npoints, gconstpointer points, gsize point_size)
     GwyDelaunayTriangulation *triangulation = NULL;
     Triangulator *triangulator;
     PointList pointlist;
+    gdouble radius;
 
     g_return_val_if_fail(point_size >= sizeof(Point), NULL);
 
-    build_compact_point_list(&pointlist, npoints, points, point_size);
+    build_compact_point_list(&pointlist, npoints, points, point_size, &radius);
     triangulator = triangulate(&pointlist);
     if (!triangulator)
         goto fail;
@@ -1857,7 +1917,7 @@ gwy_delaunay_triangulate(guint npoints, gconstpointer points, gsize point_size)
     }
 
     find_boundary(triangulation, points, point_size);
-    /* delaunay_to_voronoi(triangulation, points, point_size, 100.0); */
+    delaunay_to_voronoi(triangulation, points, point_size, 100.0*radius);
 
 fail:
     triangulator_free(triangulator);
@@ -2108,8 +2168,8 @@ dump_triangulator(const Triangulator *triangulator)
 
 G_GNUC_UNUSED
 static void
-dump_points(const Triangulator *triangulator,
-            guint npoints, gconstpointer points, gsize point_size)
+dump_points_(const Triangulator *triangulator,
+             guint npoints, gconstpointer points, gsize point_size)
 {
     NeighbourBlock *nb;
     guint i, j, ni;
@@ -2124,12 +2184,44 @@ dump_points(const Triangulator *triangulator,
     fclose(fh);
 
     fh = fopen("arrows.gpi", "w");
-    //fprintf(fh, "set xtics %g\n", grid->dx);
-    //fprintf(fh, "set ytics %g\n", grid->dy);
     for (i = 0; i < triangulator->npoints; i++) {
         nb = triangulator->blocks + i;
         neighbours = triangulator->neighbours + nb->pos;
         for (j = 0; j < nb->len; j++) {
+            ni = neighbours[j];
+            if (ni > i) {
+                const Point *pt1 = get_point(points, point_size, i);
+                const Point *pt2 = get_point(points, point_size, ni);
+                fprintf(fh, "set arrow from %g,%g to %g,%g nohead ls 2\n",
+                        pt1->x, pt1->y, pt2->x, pt2->y);
+            }
+        }
+    }
+    fclose(fh);
+}
+
+G_GNUC_UNUSED
+static void
+dump_points(const GwyDelaunayTriangulation *triangulation,
+            gconstpointer points, gsize point_size)
+{
+    guint i, j, ni, pos, len;
+    const guint *neighbours;
+    FILE *fh;
+
+    fh = fopen("points.dat", "w");
+    for (i = 0; i < triangulation->npoints; i++) {
+        const Point *pt = get_point(points, point_size, i);
+        fprintf(fh, "%u %g %g\n", i, pt->x, pt->y);
+    }
+    fclose(fh);
+
+    fh = fopen("arrows.gpi", "w");
+    for (i = 0; i < triangulation->npoints; i++) {
+        pos = triangulation->index[i];
+        len = triangulation->index[i+1] - pos;
+        neighbours = triangulation->neighbours + pos;
+        for (j = 0; j < len; j++) {
             ni = neighbours[j];
             if (ni > i) {
                 const Point *pt1 = get_point(points, point_size, i);
