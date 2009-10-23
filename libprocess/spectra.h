@@ -1,5 +1,5 @@
 /*
- *  @(#) $Id: gwygraphmodel.c 7159 2006-12-09 22:12:13Z yeti-dn $
+ *  @(#) $Id$
  *  Copyright (C) 2006 Owain Davies, David Necas (Yeti), Petr Klapetek.
  *  E-mail: owain.davies@blueyonder.co.uk
  *               yeti@gwyddion.net, klapetek@gwyddion.net.
