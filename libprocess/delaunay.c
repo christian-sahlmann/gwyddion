@@ -63,6 +63,16 @@ enum {
 #define get_point_xyz(points, point_size, i) \
     (const PointXYZ*)((const gchar*)(points) + (i)*(point_size))
 
+#define get_vpoint(tri, points, point_size, i) \
+    ((i) >= (tri)->npoints \
+     ? (const Point*)((tri)->vpoints + ((i) - (tri)->npoints)) \
+     : (const Point*)((const gchar*)(points) + (i)*(point_size)))
+
+#define get_vpoint_xyz(tri, points, point_size, i) \
+    ((i) >= (tri)->npoints \
+     ? (const PointXYZ*)((tri)->vpoints + ((i) - (tri)->npoints)) \
+     : (const PointXYZ*)((const gchar*)(points) + (i)*(point_size)))
+
 /* Representation of input data, they must be typecastable to this but can
  * contain any more data in the structs. */
 typedef GwyDelaunayPointXY Point;
@@ -1974,6 +1984,196 @@ tinterpolate_round(const GwyDelaunayTriangulation *triangulation,
     return p->z;
 }
 
+/* If TRUE is returned, then a neighbour on the other side was found and the
+ * triangle has become clockwise.  If TRUE is returned, then @opposite is
+ * unchanged and the triangle is kept counter-clockwise. */
+static gboolean
+find_the_other_vneighbour(const GwyDelaunayTriangulation *triangulation,
+                          gconstpointer points, gsize point_size,
+                          guint from,
+                          guint to,
+                          guint *opposite)
+{
+    const Point *a, *b, *c;
+    guint to_prev, from_next, pos, len;
+    const guint *neighbours;
+
+    pos = triangulation->vindex[from];
+    len = triangulation->vindex[from + 1] - pos;
+    neighbours = triangulation->voronoi + pos;
+    to_prev = prev_neighbour(neighbours, len,
+                             find_neighbour(neighbours, len, to));
+
+    pos = triangulation->vindex[to];
+    len = triangulation->vindex[to + 1] - pos;
+    neighbours = triangulation->voronoi + pos;
+    from_next = next_neighbour(neighbours, len,
+                               find_neighbour(neighbours, len, from));
+
+    /* Now there are some silly few-point special cases.  If @opposite is in
+     * the centre of a triangle formed by @from, @to and the newly found point,
+     * then we have an apparent match but it is not the point we are looking
+     * for.  Check that the points really lies on the opposite side. */
+    if (from_next != to_prev || from_next == *opposite)
+        return FALSE;
+
+    a = get_vpoint(triangulation, points, point_size, from);
+    b = get_vpoint(triangulation, points, point_size, to);
+    c = get_vpoint(triangulation, points, point_size, to_prev);
+    /*
+    g_assert(!point_on_right_side(a, b,
+                                  get_point(points, point_size, *opposite)));
+                                  */
+
+    if (!point_on_right_side(a, b, c))
+        return FALSE;
+
+    *opposite = to_prev;
+    return TRUE;
+}
+
+static inline gboolean
+move_vtriangle_a(const GwyDelaunayTriangulation *triangulation,
+                 gconstpointer points, gsize point_size,
+                 Triangle *vtriangle)
+{
+    if (find_the_other_vneighbour(triangulation, points, point_size,
+                                  vtriangle->ib, vtriangle->ic,
+                                  &vtriangle->ia)) {
+        GWY_SWAP(guint, vtriangle->ib, vtriangle->ic);
+        GWY_SWAP(const PointXYZ*, vtriangle->b, vtriangle->c);
+        return TRUE;
+    }
+    return FALSE;
+}
+
+static inline gboolean
+move_vtriangle_b(const GwyDelaunayTriangulation *triangulation,
+                 gconstpointer points, gsize point_size,
+                 Triangle *vtriangle)
+{
+    if (find_the_other_vneighbour(triangulation, points, point_size,
+                                  vtriangle->ic, vtriangle->ia,
+                                  &vtriangle->ib)) {
+        GWY_SWAP(guint, vtriangle->ic, vtriangle->ia);
+        GWY_SWAP(const PointXYZ*, vtriangle->c, vtriangle->a);
+        return TRUE;
+    }
+    return FALSE;
+}
+
+static inline gboolean
+move_vtriangle_c(const GwyDelaunayTriangulation *triangulation,
+                 gconstpointer points, gsize point_size,
+                 Triangle *vtriangle)
+{
+    if (find_the_other_vneighbour(triangulation, points, point_size,
+                                  vtriangle->ia, vtriangle->ib,
+                                  &vtriangle->ic)) {
+        GWY_SWAP(guint, vtriangle->ia, vtriangle->ib);
+        GWY_SWAP(const PointXYZ*, vtriangle->a, vtriangle->b);
+        return TRUE;
+    }
+    return FALSE;
+}
+
+/* This assumes a counter-clockwise triangle */
+static void
+make_vtriangle(Triangle *triangle,
+               const GwyDelaunayTriangulation *triangulation,
+               gconstpointer points, gsize point_size)
+{
+    /* XXX: In the triangulation algoritm, the points are in fact only XY,
+     * but the Z members are never accessed so the typecast is all right. */
+    triangle->a = get_vpoint_xyz(triangulation, points, point_size,
+                                 triangle->ia);
+    triangle->b = get_vpoint_xyz(triangulation, points, point_size,
+                                 triangle->ib);
+    triangle->c = get_vpoint_xyz(triangulation, points, point_size,
+                                 triangle->ic);
+
+    make_triangle_side(&triangle->sa, triangle->b, triangle->c, triangle->a);
+    make_triangle_side(&triangle->sb, triangle->c, triangle->a, triangle->b);
+    make_triangle_side(&triangle->sc, triangle->a, triangle->b, triangle->c);
+}
+
+/* Ensures @triangle contains point @pt.  A relatively quick test if it already
+ * contains the point.  If the right triangle is nearby, it is also found
+ * reasonably fast. */
+static gboolean
+ensure_vtriangle(const GwyDelaunayTriangulation *triangulation,
+                 gconstpointer points, gsize point_size,
+                 Triangle *vtriangle,
+                 const Point *pt)
+{
+    gboolean moved;
+    guint iter;
+
+    iter = 0;
+    while (!triangle_contains_point(vtriangle, pt)) {
+        if (vtriangle->da <= vtriangle->db) {
+            if (vtriangle->da <= vtriangle->dc)
+                moved = move_vtriangle_a(triangulation, points, point_size,
+                                         vtriangle);
+            else
+                moved = move_vtriangle_c(triangulation, points, point_size,
+                                         vtriangle);
+        }
+        else {
+            if (vtriangle->db <= vtriangle->dc)
+                moved = move_vtriangle_b(triangulation, points, point_size,
+                                         vtriangle);
+            else
+                moved = move_vtriangle_c(triangulation, points, point_size,
+                                         vtriangle);
+        }
+
+        if (!moved)
+            return FALSE;
+
+        make_vtriangle(vtriangle, triangulation, points, point_size);
+        if (G_UNLIKELY(iter++ == triangulation->nvpoints)) {
+            vtriangle->ia = vtriangle->ib = vtriangle->ic = UNDEF;
+            return FALSE;
+        }
+    }
+
+    return TRUE;
+}
+
+static gboolean
+interpolate_round(GwyDelaunayTriangulation *triangulation,
+                  gconstpointer points,
+                  gsize point_size,
+                  Triangle *triangle,
+                  const Point *pt,
+                  gdouble *value)
+{
+    const PointXYZ *p = NULL;
+    Triangle vtriangle;
+    guint pos;
+
+    ensure_triangle(triangulation, points, point_size, triangle, pt);
+    if (G_UNLIKELY(triangle->ia == UNDEF))
+        return FALSE;
+
+    vtriangle.ia = triangle->ia;
+    pos = triangulation->vindex[vtriangle.ia];
+    vtriangle.ib = triangulation->voronoi[pos];
+    vtriangle.ic = triangulation->voronoi[pos+1];
+    make_vtriangle(&vtriangle, triangulation, points, point_size);
+    ensure_vtriangle(triangulation, points, point_size, &vtriangle, pt);
+    if (vtriangle.ia < triangulation->npoints)
+        p = get_point_xyz(points, point_size, vtriangle.ia);
+    else if (vtriangle.ib < triangulation->npoints)
+        p = get_point_xyz(points, point_size, vtriangle.ib);
+    else if (vtriangle.ic < triangulation->npoints)
+        p = get_point_xyz(points, point_size, vtriangle.ic);
+    *value = p ? p->z : 0.0;
+
+    return TRUE;
+}
+
 static inline gdouble
 tinterpolate_linear(const Triangle *triangle)
 {
@@ -1981,17 +2181,6 @@ tinterpolate_linear(const Triangle *triangle)
 
     return (triangle->da*triangle->a->z + triangle->db*triangle->b->z
             + triangle->dc*triangle->c->z)/wsum;
-}
-
-static inline gdouble
-sinterpolate1_round(gconstpointer points, gsize point_size,
-                    guint ia, guint ib,
-                    const Point *pt)
-{
-    const PointXYZ *a = get_point_xyz(points, point_size, ia);
-    const PointXYZ *b = get_point_xyz(points, point_size, ib);
-
-    return edist2_xyz_xy(a, pt) <= edist2_xyz_xy(b, pt) ? a->z : b->z;
 }
 
 static inline gdouble
@@ -2012,10 +2201,9 @@ sinterpolate1_linear(gconstpointer points, gsize point_size,
 }
 
 static inline gdouble
-sinterpolate(const GwyDelaunayTriangulation *triangulation,
-             gconstpointer points, gsize point_size,
-             const Triangle *triangle, const Point *pt,
-             GwyInterpolationType interpolation)
+sinterpolate_linear(const GwyDelaunayTriangulation *triangulation,
+                    gconstpointer points, gsize point_size,
+                    const Triangle *triangle, const Point *pt)
 {
     guint ia, ib;
 
@@ -2038,10 +2226,26 @@ sinterpolate(const GwyDelaunayTriangulation *triangulation,
     return 0.0;
 
 success:
-    if (interpolation == GWY_INTERPOLATION_LINEAR)
-        return sinterpolate1_linear(points, point_size, ia, ib, pt);
-    else
-        return sinterpolate1_round(points, point_size, ia, ib, pt);
+    return sinterpolate1_linear(points, point_size, ia, ib, pt);
+}
+
+static gboolean
+interpolate_linear(GwyDelaunayTriangulation *triangulation,
+                   gconstpointer points,
+                   gsize point_size,
+                   Triangle *triangle,
+                   const Point *pt,
+                   gdouble *value)
+{
+    if (ensure_triangle(triangulation, points, point_size, triangle, pt))
+        *value = tinterpolate_linear(triangle);
+    else {
+        if (G_UNLIKELY(triangle->ia == UNDEF))
+            return FALSE;
+        *value = sinterpolate_linear(triangulation, points, point_size,
+                                     triangle, pt);
+    }
+    return TRUE;
 }
 
 /**
@@ -2103,20 +2307,14 @@ gwy_delaunay_interpolate(GwyDelaunayTriangulation *triangulation,
         pt.y = yoff + qy*(i + 0.5);
         for (j = 0; j < xres; j++) {
             pt.x = xoff + qx*(j + 0.5);
-            if (ensure_triangle(triangulation, points, point_size,
-                                &triangle, &pt)) {
-                if (interpolation == GWY_INTERPOLATION_LINEAR)
-                    *d = tinterpolate_linear(&triangle);
-                else
-                    *d = tinterpolate_round(triangulation, points, point_size,
-                                            &triangle, &pt);
-            }
-            else {
-                if (G_UNLIKELY(triangle.ia == UNDEF))
-                    goto fail;
-                *d = sinterpolate(triangulation, points, point_size,
-                                  &triangle, &pt, interpolation);
-            }
+            if (interpolation == GWY_INTERPOLATION_LINEAR)
+                ok = interpolate_linear(triangulation, points, point_size,
+                                        &triangle, &pt, d);
+            else
+                ok = interpolate_round(triangulation, points, point_size,
+                                       &triangle, &pt, d);
+            if (!ok)
+                goto fail;
             d++;
         }
     }
