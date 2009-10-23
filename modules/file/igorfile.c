@@ -76,6 +76,15 @@ typedef enum {
     IGOR_UNSIGNED = 0x40,   /* Flag for integers */
 } IgorDataType;
 
+typedef enum {
+    ASYLUM_CHANNEL_HEIGHT     = 1,
+    ASYLUM_CHANNEL_AMPLITUDE  = 2,
+    ASYLUM_CHANNEL_Z_SENSOR   = 3,
+    ASYLUM_CHANNEL_DEFLECTION = 4,
+    ASYLUM_CHANNEL_PHASE      = 5,
+    ASYLUM_CHANNEL_CURRENT    = 14,
+} WavemetricsChannelType;
+
 /* The header fields we read, they are stored differently in different
  * versions */
 typedef struct {
@@ -326,11 +335,12 @@ igor_load(const gchar *filename,
             if ((zunits = g_hash_table_lookup(igorfile.meta, key))) {
                 channeltype = atoi(zunits);
                 zunits = gwy_enuml_to_string(channeltype,
-                                             "m", 1,
-                                             "m", 2,
-                                             "m", 3,
-                                             "m", 4,
-                                             "deg", 5,
+                                             "m", ASYLUM_CHANNEL_HEIGHT,
+                                             "m", ASYLUM_CHANNEL_AMPLITUDE,
+                                             "m", ASYLUM_CHANNEL_Z_SENSOR,
+                                             "m", ASYLUM_CHANNEL_DEFLECTION,
+                                             "deg", ASYLUM_CHANNEL_PHASE,
+                                             "A", ASYLUM_CHANNEL_CURRENT,
                                              NULL);
             }
             meta = igor_get_metadata(&igorfile, i/2 + 1);
