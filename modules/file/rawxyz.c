@@ -56,6 +56,10 @@ enum {
     UNDEF = G_MAXUINT
 };
 
+enum {
+    GWY_INTERPOLATION_FIELD = -1,
+};
+
 typedef struct {
     /* XXX: Not all values of interpolation and exterior are possible. */
     GwyInterpolationType interpolation;
@@ -149,8 +153,11 @@ static void          interpolation_changed(RawXYZControls *controls,
 static void          exterior_changed     (RawXYZControls *controls,
                                            GtkComboBox *combo);
 static void          preview              (RawXYZControls *controls);
-static GwyDataField* rawxyz_do(RawXYZFile *rfile,
-                               const RawXYZArgs *args);
+static GwyDataField* rawxyz_do            (RawXYZFile *rfile,
+                                           const RawXYZArgs *args);
+static void          interpolate_field    (guint npoints,
+                                           const GwyDelaunayPointXYZ *points,
+                                           GwyDataField *dfield);
 static void          extend_borders       (RawXYZFile *rfile,
                                            const RawXYZArgs *args,
                                            gdouble epsrel);
@@ -451,6 +458,7 @@ rawxyz_dialog(RawXYZArgs *args,
                                   args->interpolation,
                                   _("Round"), GWY_INTERPOLATION_ROUND,
                                   _("Linear"), GWY_INTERPOLATION_LINEAR,
+                                  _("Field"), GWY_INTERPOLATION_FIELD,
                                   NULL);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls.interpolation);
     gtk_table_attach(table, controls.interpolation, 1, 4, row, row+1,
@@ -826,12 +834,18 @@ rawxyz_do(RawXYZFile *rfile,
     g_object_unref(unitz);
 
     extend_borders(rfile, args, EPSREL);
-    triangulation = gwy_delaunay_triangulate(points->len, points->data,
-                                             sizeof(GwyDelaunayPointXYZ));
-    gwy_delaunay_interpolate(triangulation,
-                             points->data, sizeof(GwyDelaunayPointXYZ),
-                             args->interpolation, dfield);
-    gwy_delaunay_triangulation_free(triangulation);
+    if (args->interpolation == GWY_INTERPOLATION_FIELD) {
+        interpolate_field(points->len, (GwyDelaunayPointXYZ*)points->data,
+                          dfield);
+    }
+    else {
+        triangulation = gwy_delaunay_triangulate(points->len, points->data,
+                                                 sizeof(GwyDelaunayPointXYZ));
+        gwy_delaunay_interpolate(triangulation,
+                                 points->data, sizeof(GwyDelaunayPointXYZ),
+                                 args->interpolation, dfield);
+        gwy_delaunay_triangulation_free(triangulation);
+    }
 
     /* Fix the scales according to real units. */
     gwy_data_field_set_xreal(dfield, mag*(args->xmax - args->xmin));
@@ -841,6 +855,53 @@ rawxyz_do(RawXYZFile *rfile,
     gwy_data_field_multiply(dfield, pow10(zpow10));
 
     return dfield;
+}
+
+static void
+interpolate_field(guint npoints,
+                  const GwyDelaunayPointXYZ *points,
+                  GwyDataField *dfield)
+{
+    gdouble xoff, yoff, qx, qy;
+    guint xres, yres, i, j, k;
+    gdouble *d;
+
+    xres = gwy_data_field_get_xres(dfield);
+    yres = gwy_data_field_get_yres(dfield);
+    xoff = gwy_data_field_get_xoffset(dfield);
+    yoff = gwy_data_field_get_yoffset(dfield);
+    qx = gwy_data_field_get_xreal(dfield)/xres;
+    qy = gwy_data_field_get_yreal(dfield)/yres;
+    d = gwy_data_field_get_data(dfield);
+
+    for (i = 0; i < yres; i++) {
+        gdouble y = yoff + qy*(i + 0.5);
+
+        for (j = 0; j < xres; j++) {
+            gdouble x = xoff + qx*(j + 0.5);
+            gdouble w = 0.0;
+            gdouble s = 0.0;
+
+            for (k = 0; k < npoints; k++) {
+                const GwyDelaunayPointXYZ *pt = points + k;
+                gdouble dx = x - pt->x;
+                gdouble dy = y - pt->y;
+                gdouble r2 = dx*dx + dy*dy;
+
+                r2 *= r2;
+                if (G_UNLIKELY(r2 == 0.0)) {
+                    s = pt->z;
+                    w = 1.0;
+                    break;
+                }
+
+                r2 = 1.0/r2;
+                w += r2;
+                s += r2*pt->z;
+            }
+            *(d++) = s/w;
+        }
+    }
 }
 
 static void
@@ -1320,7 +1381,8 @@ static const gchar z_units_key[]       = "/module/rawxyz/z-units";
 static void
 rawxyz_sanitize_args(RawXYZArgs *args)
 {
-    if (args->interpolation != GWY_INTERPOLATION_ROUND)
+    if (args->interpolation != GWY_INTERPOLATION_ROUND
+        && args->interpolation != GWY_INTERPOLATION_FIELD)
         args->interpolation = GWY_INTERPOLATION_LINEAR;
     if (args->exterior != GWY_EXTERIOR_MIRROR_EXTEND
         && args->exterior != GWY_EXTERIOR_PERIODIC)
