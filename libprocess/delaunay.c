@@ -1623,18 +1623,16 @@ circumcircle_centre(const Point *a,
     ba2 = ba.x*ba.x + ba.y*ba.y;
     ca2 = ca.x*ca.x + ca.y*ca.y;
     det = 2*(ba.y*ca.x - ba.x*ca.y);
-    /* FIXME */
-    g_assert(det);
-    if (!det) {
+    /* XXX */
+    if (!det)
         return FALSE;
-    }
 
     pt->x = a->x + (ba.y*ca2 - ca.y*ba2)/det;
     pt->y = a->y + (ca.x*ba2 - ba.x*ca2)/det;
     return TRUE;
 }
 
-static void
+static gboolean
 add_point_id(const GwyDelaunayTriangulation *triangulation,
              guint i,
              guint ni,
@@ -1646,12 +1644,13 @@ add_point_id(const GwyDelaunayTriangulation *triangulation,
     pos = triangulation->index[i];
     len = triangulation->index[i+1] - pos;
     j = find_neighbour(triangulation->neighbours + pos, len, ni);
-    g_assert(j != UNDEF);
-    g_assert(vneighbours[j] == UNDEF);
+    if (G_UNLIKELY(j == UNDEF || vneighbours[j] != UNDEF))
+        return FALSE;
     vneighbours[j] = toadd;
+    return TRUE;
 }
 
-static void
+static gboolean
 add_common_neighbour(guint *vneighbours,
                      const guint *vindex,
                      guint ignore,
@@ -1671,14 +1670,14 @@ add_common_neighbour(guint *vneighbours,
             nj = vneighbours[j];
             if (nj == ni) {
                 vneighbours[addat] = nj;
-                return;
+                return TRUE;
             }
         }
     }
-    g_assert_not_reached();
+    return FALSE;
 }
 
-static void
+static gboolean
 add_infinity_neighbour(guint *vneighbours,
                        const guint *vindex,
                        guint ignore,
@@ -1695,13 +1694,13 @@ add_infinity_neighbour(guint *vneighbours,
             continue;
         if (vindex[ni+1] - vindex[ni] == 5) {
             vneighbours[addat] = ni;
-            return;
+            return TRUE;
         }
     }
-    g_assert_not_reached();
+    return FALSE;
 }
 
-static void
+static gboolean
 delaunay_to_voronoi(GwyDelaunayTriangulation *triangulation,
                     gconstpointer points, gsize point_size,
                     gdouble far_away)
@@ -1741,7 +1740,8 @@ delaunay_to_voronoi(GwyDelaunayTriangulation *triangulation,
             vpos++;
     }
     /* We know the exact number of edges from original points. */
-    g_assert(vpos == 3*vm1 + triangulation->nsize/2);
+    if (G_UNLIKELY(vpos != 3*vm1 + triangulation->nsize/2))
+        return FALSE;
 
     /* Now the Voronoi points.  In the first pass, create the points and
      * resolve Delaunay neighbours.  Mutual Voronoi point relations will be
@@ -1760,7 +1760,8 @@ delaunay_to_voronoi(GwyDelaunayTriangulation *triangulation,
                 if (circumcircle_centre(a, b, c, &pt)) {
                     /* Add a new Voronoi point and make a, b and c its
                      * neighbours. */
-                    g_assert(n - triangulation->npoints < nvpoints);
+                    if (G_UNLIKELY(n - triangulation->npoints == nvpoints))
+                        return FALSE;
                     vpoints[n - triangulation->npoints] = pt;
                     vindex[n] = vpos;
                     voronoi[vpos + 1] = i;
@@ -1768,12 +1769,13 @@ delaunay_to_voronoi(GwyDelaunayTriangulation *triangulation,
                     voronoi[vpos + 5] = next;
                     vpos += 6;   /* Make space for the Voronoi neighbours. */
                     /* Conversely, add it to the neighbourhood of a, b and c. */
-                    add_point_id(triangulation, i, prev,
-                                 voronoi + vindex[i], n);
-                    add_point_id(triangulation, prev, next,
-                                 voronoi + vindex[prev], n);
-                    add_point_id(triangulation, next, i,
-                                 voronoi + vindex[next], n);
+                    if (!add_point_id(triangulation, i, prev,
+                                      voronoi + vindex[i], n)
+                        || !add_point_id(triangulation, prev, next,
+                                         voronoi + vindex[prev], n)
+                        || !add_point_id(triangulation, next, i,
+                                         voronoi + vindex[next], n))
+                        return FALSE;
                     n++;
                 }
             }
@@ -1816,7 +1818,10 @@ delaunay_to_voronoi(GwyDelaunayTriangulation *triangulation,
         pt.x = h*pt.x + 0.5*(a->x + b->x);
         pt.y = h*pt.y + 0.5*(a->y + b->y);
         /* Add a new Voronoi point and make a and b its neighbours. */
-        g_assert(n - triangulation->npoints < nvpoints);
+        if (G_UNLIKELY(n - triangulation->npoints == nvpoints)) {
+            g_free(remaining);
+            return FALSE;
+        }
         vpoints[n - triangulation->npoints] = pt;
         vindex[n] = vpos;
         /* The neighbours need to be in the reverse order because we look from
@@ -1829,13 +1834,19 @@ delaunay_to_voronoi(GwyDelaunayTriangulation *triangulation,
          * we have a point and the previous one so we would need another.  To
          * preserve mental sanity, just remember the id now and add it later.
          */
-        add_point_id(triangulation, next, i, voronoi + vindex[next], n);
+        if (!add_point_id(triangulation, next, i, voronoi + vindex[next], n)) {
+            g_free(remaining);
+            return FALSE;
+        }
         remaining[j] = n;
         n++;
     }
 
-    g_assert(vpos == nvoronoi);
-    g_assert(n == triangulation->npoints + nvpoints);
+    if (G_UNLIKELY(vpos != nvoronoi
+                   || n != triangulation->npoints + nvpoints)) {
+        g_free(remaining);
+        return FALSE;
+    }
     vindex[n] = vpos;
 
     for (j = 0; j < blen; j++) {
@@ -1854,16 +1865,24 @@ delaunay_to_voronoi(GwyDelaunayTriangulation *triangulation,
          i++) {
         vpos = vindex[i];
         if (vindex[i+1] - vpos == 5) {
-            add_common_neighbour(voronoi, vindex, i, vpos+1, vpos+3, vpos+2);
-            add_infinity_neighbour(voronoi, vindex, i, vpos+1, vpos);
-            add_infinity_neighbour(voronoi, vindex, i, vpos+3, vpos+4);
+            if (!add_common_neighbour(voronoi, vindex, i, vpos+1, vpos+3,
+                                      vpos+2)
+                || !add_infinity_neighbour(voronoi, vindex, i, vpos+1, vpos)
+                || !add_infinity_neighbour(voronoi, vindex, i, vpos+3, vpos+4))
+                return FALSE;
         }
         else {
-            add_common_neighbour(voronoi, vindex, i, vpos+1, vpos+3, vpos+2);
-            add_common_neighbour(voronoi, vindex, i, vpos+3, vpos+5, vpos+4);
-            add_common_neighbour(voronoi, vindex, i, vpos+5, vpos+1, vpos);
+            if (!add_common_neighbour(voronoi, vindex, i, vpos+1, vpos+3,
+                                      vpos+2)
+                || !add_common_neighbour(voronoi, vindex, i, vpos+3, vpos+5,
+                                         vpos+4)
+                || !add_common_neighbour(voronoi, vindex, i, vpos+5, vpos+1,
+                                         vpos))
+                return FALSE;
         }
     }
+
+    return TRUE;
 }
 
 /**
@@ -1895,7 +1914,7 @@ gwy_delaunay_triangulation_free(GwyDelaunayTriangulation *triangulation)
  *          is indicated by @point_size.
  * @point_size: Size of point struct, in bytes.
  *
- * Finds Delaunay triangulation for a set of points in plane.
+ * Finds Delaunay and Voronoi triangulations for a set of points in plane.
  *
  * The triangulation might not work in numerically unstable cases.  Also, no
  * points in the input set may coincide.
@@ -1926,8 +1945,12 @@ gwy_delaunay_triangulate(guint npoints, gconstpointer points, gsize point_size)
         goto fail;
     }
 
-    find_boundary(triangulation, points, point_size);
-    delaunay_to_voronoi(triangulation, points, point_size, 100.0*radius);
+    if (!find_boundary(triangulation, points, point_size)
+        || !delaunay_to_voronoi(triangulation, points, point_size,
+                                100.0*radius)) {
+        gwy_delaunay_triangulation_free(triangulation);
+        triangulation = NULL;
+    }
 
 fail:
     triangulator_free(triangulator);
@@ -2271,7 +2294,7 @@ interpolate_linear(GwyDelaunayTriangulation *triangulation,
  *          numerical errors.  In the latter case the contents of @dfield is
  *          undefined.
  *
- * Since: 2.18.
+ * Since: 2.18
  **/
 gboolean
 gwy_delaunay_interpolate(GwyDelaunayTriangulation *triangulation,
