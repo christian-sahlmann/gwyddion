@@ -102,7 +102,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Nanonis SXM data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.7",
+    "0.8",
     "David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
@@ -358,9 +358,8 @@ read_data_field(GwyContainer *container,
                 SXMDirection dir,
                 const guchar **p)
 {
-    GwyDataField *dfield;
-    GwySIUnit *siunit;
-    gdouble *data;
+    GwyDataField *dfield, *mfield = NULL;
+    gdouble *data, *mdata;
     gint j;
     gchar key[32];
     gchar *s;
@@ -371,20 +370,44 @@ read_data_field(GwyContainer *container,
                                 FALSE);
     data = gwy_data_field_get_data(dfield);
 
-    for (j = 0; j < sxmfile->xres*sxmfile->yres; j++)
+    for (j = 0; j < sxmfile->xres*sxmfile->yres; j++) {
+        /* This is not a perfect NaN check, but Nanonis uses ff as the payload
+         * so look only for these. */
+        if (G_UNLIKELY(((*p)[0] & 0x7f) == 0x7f && (*p)[1] == 0xff))
+            break;
+
         *(data++) = gwy_get_gfloat_be(p);
+    }
 
-    siunit = gwy_si_unit_new("m");
-    gwy_data_field_set_si_unit_xy(dfield, siunit);
-    g_object_unref(siunit);
+    if (j < sxmfile->xres*sxmfile->yres) {
+        mfield = gwy_data_field_new_alike(dfield, TRUE);
+        mdata = gwy_data_field_get_data(mfield);
+        while (j < sxmfile->xres*sxmfile->yres) {
+            if (((*p)[0] & 0x7f) == 0x7f && (*p)[1] == 0xff) {
+                mdata[j] = -1.0;
+                *p += sizeof(gfloat);
+            }
+            else
+                *(data++) = gwy_get_gfloat_be(p);
+            j++;
+        }
+        gwy_data_field_add(mfield, 1.0);
+        gwy_app_channel_remove_bad_data(dfield, mfield);
+    }
 
-    siunit = gwy_si_unit_new(data_info->unit);
-    gwy_data_field_set_si_unit_z(dfield, siunit);
-    g_object_unref(siunit);
-
+    gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_xy(dfield), "m");
+    gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_z(dfield),
+                                data_info->unit);
     g_snprintf(key, sizeof(key), "/%d/data", *id);
     gwy_container_set_object_by_name(container, key, dfield);
     g_object_unref(dfield);
+
+    if (mfield) {
+        gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_xy(mfield), "m");
+        g_snprintf(key, sizeof(key), "/%d/mask", *id);
+        gwy_container_set_object_by_name(container, key, mfield);
+        g_object_unref(mfield);
+    }
 
     g_strlcat(key, "/title", sizeof(key));
     if (!dir)
