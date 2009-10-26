@@ -22,6 +22,8 @@ Modules:
 - NetCDF: Can read GXSM files with data in "FloatField" instead of "H".
 - Statistical quantities: The masked area can also be excluded.
 - Seiko: Supports more file types (with magic header SPIZ000AFM).
+- Nanonis: Missing data, repsetended by NaNs in the SXM files, are masked and
+  replaced with a neutral value upon import.
 - Pixmap export: TIFFs are written in binary mode, fixing broken exported
   images on MS Windows.
 - Pixmap export: It is possible to export data as 16bit grayscale images (at
