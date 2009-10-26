@@ -151,7 +151,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Creates or modifies a mask using other channels."),
     "Yeti <yeti@gwyddion.net>",
-    "1.0",
+    "1.1",
     "David Nečas (Yeti)",
     "2009",
 };
@@ -196,7 +196,7 @@ mark_dialog(MarkArgs *args,
             const GwyDataObjectId *target,
             GQuark mquark)
 {
-    GtkWidget *dialog, *hbox, *vbox, *label;
+    GtkWidget *dialog, *hbox, *vbox, *label, *vbox2;
     GtkTable *table;
     GtkTooltips *tips;
     MarkControls controls;
@@ -241,12 +241,27 @@ mark_dialog(MarkArgs *args,
     gtk_box_pack_start(GTK_BOX(hbox), vbox, FALSE, FALSE, 0);
 
     /* Source mask preview */
+    /* Silly, boxes do not have spacing *between* items... */
+    vbox2 = gtk_vbox_new(FALSE, 2);
+    gtk_box_pack_start(GTK_BOX(vbox), vbox2, FALSE, FALSE, 0);
+
     controls.view_source = gwy_data_view_new(controls.mydata);
-    gtk_box_pack_start(GTK_BOX(vbox), controls.view_source, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(vbox2), controls.view_source, FALSE, FALSE, 0);
+
+    label = gtk_label_new(_("Operand"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_box_pack_start(GTK_BOX(vbox2), label, FALSE, FALSE, 0);
 
     /* Result preview */
+    vbox2 = gtk_vbox_new(FALSE, 2);
+    gtk_box_pack_start(GTK_BOX(vbox), vbox2, FALSE, FALSE, 0);
+
     controls.view_result = gwy_data_view_new(controls.mydata);
-    gtk_box_pack_start(GTK_BOX(vbox), controls.view_result, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(vbox2), controls.view_result, FALSE, FALSE, 0);
+
+    label = gtk_label_new(_("Result"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_box_pack_start(GTK_BOX(vbox2), label, FALSE, FALSE, 0);
 
     /* Controls */
     table = GTK_TABLE(gtk_table_new(13, 4, FALSE));
