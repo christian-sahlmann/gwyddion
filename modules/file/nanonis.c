@@ -395,19 +395,19 @@ read_data_field(GwyContainer *container,
         gwy_app_channel_remove_bad_data(dfield, mfield);
     }
 
-    gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_xy(dfield), "m");
-    gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_z(dfield),
-                                data_info->unit);
-    g_snprintf(key, sizeof(key), "/%d/data", *id);
-    gwy_container_set_object_by_name(container, key, dfield);
-    g_object_unref(dfield);
-
     if (mfield) {
         gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_xy(mfield), "m");
         g_snprintf(key, sizeof(key), "/%d/mask", *id);
         gwy_container_set_object_by_name(container, key, mfield);
         g_object_unref(mfield);
     }
+
+    gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_xy(dfield), "m");
+    gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_z(dfield),
+                                data_info->unit);
+    g_snprintf(key, sizeof(key), "/%d/data", *id);
+    gwy_container_set_object_by_name(container, key, dfield);
+    g_object_unref(dfield);
 
     g_strlcat(key, "/title", sizeof(key));
     if (!dir)
