@@ -3,6 +3,7 @@ Application:
 - Translations updated: French, Russian.
 - Only file types that are not detected automaticaly are shown in the file
   open dialog.
+- A new remote control backend was added: LibUnique.
 
 Libraries:
 - libgwyapp: Functions to parse typical text headers of SPM files were added.
@@ -18,6 +19,7 @@ Modules:
 - Attocube (new): Imports Attocube Systems ASC files.
 - NanoScan (new): Imports NanoScan XML files.
 - Raw XYZ (new): Imports raw XYZ data and regularizes them to a grid.
+- IGOR: Support for Asylum Research files was substantialy improved.
 - NT-MDT: MDA frame support was improved.
 - NetCDF: Can read GXSM files with data in "FloatField" instead of "H".
 - Statistical quantities: The masked area can also be excluded.
@@ -29,9 +31,12 @@ Modules:
 - Pixmap export: It is possible to export data as 16bit grayscale images (at
   present for TIFF, PNG and PNM).
 - Object Synthesis: Cone, box and tent shapes were added.
+- Mark With: Marking result sometimes not corresponding to selected options
+  was fixed.
 
 Other:
 - Inclusion of wrong OpenGL header when building with Quartz backend was fixed.
+- Inclusion of gdkquartz headers when building for X11 on Mac was corrected.
 
 
 2.17 (2009-09-22)
