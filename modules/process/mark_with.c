@@ -522,14 +522,18 @@ static void
 mark_with_changed(GtkWidget *button,
                   MarkControls *controls)
 {
-    controls->args->mark_with = gwy_radio_button_get_value(button);
+    MarkArgs *args = controls->args;
 
+    if (!gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(button)))
+        return;
+
+    args->mark_with = gwy_radio_button_get_value(button);
     gwy_table_hscale_set_sensitive(GTK_OBJECT(controls->min),
-                                   controls->args->mark_with != MARK_WITH_MASK);
+                                   args->mark_with != MARK_WITH_MASK);
     gwy_table_hscale_set_sensitive(GTK_OBJECT(controls->max),
-                                   controls->args->mark_with != MARK_WITH_MASK);
+                                   args->mark_with != MARK_WITH_MASK);
 
-    channel_changed(GWY_DATA_CHOOSER(controls->channels[controls->args->mark_with]),
+    channel_changed(GWY_DATA_CHOOSER(controls->channels[args->mark_with]),
                     controls);
 }
 
@@ -547,6 +551,7 @@ channel_changed(GwyDataChooser *chooser,
     if (controls->args->update) {
         setup_source_view_data(controls);
         update_source_mask(controls);
+        perform_operation(controls);
     }
 }
 
