@@ -136,7 +136,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Generic convolution filter with a user-defined matrix."),
     "Yeti <yeti@gwyddion.net>",
-    "1.4",
+    "1.5",
     "David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
@@ -889,10 +889,12 @@ convolution_filter_fetch_coeff(ConvolutionControls *controls)
 }
 
 static void
-convolution_filter_hsym_changed(G_GNUC_UNUSED GtkToggleButton *button,
+convolution_filter_hsym_changed(GtkToggleButton *button,
                                 ConvolutionControls *controls)
 {
     if (controls->in_update)
+        return;
+    if (!gtk_toggle_button_get_active(button))
         return;
 
     controls->args->preset->hsym
@@ -904,10 +906,12 @@ convolution_filter_hsym_changed(G_GNUC_UNUSED GtkToggleButton *button,
 }
 
 static void
-convolution_filter_vsym_changed(G_GNUC_UNUSED GtkToggleButton *button,
+convolution_filter_vsym_changed(GtkToggleButton *button,
                                 ConvolutionControls *controls)
 {
     if (controls->in_update)
+        return;
+    if (!gtk_toggle_button_get_active(button))
         return;
 
     controls->args->preset->vsym
@@ -919,12 +923,14 @@ convolution_filter_vsym_changed(G_GNUC_UNUSED GtkToggleButton *button,
 }
 
 static void
-convolution_filter_size_changed(G_GNUC_UNUSED GtkToggleButton *button,
+convolution_filter_size_changed(GtkToggleButton *button,
                                 ConvolutionControls *controls)
 {
     guint newsize;
 
     if (controls->in_update)
+        return;
+    if (!gtk_toggle_button_get_active(button))
         return;
 
     newsize = gwy_radio_buttons_get_current(controls->sizes);

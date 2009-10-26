@@ -147,7 +147,7 @@ static GwyModuleInfo module_info = {
     N_("Several edge detection methods (Laplacian of Gaussian, Canny, "
        "and some experimental), creates presentation."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.10",
+    "1.11",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -794,9 +794,12 @@ zero_crossing_threshold_changed(GtkAdjustment *adj,
 }
 
 static void
-zero_crossing_display_changed(G_GNUC_UNUSED GtkToggleButton *radio,
+zero_crossing_display_changed(GtkToggleButton *radio,
                               ZeroCrossingControls *controls)
 {
+    if (!gtk_toggle_button_get_active(radio))
+        return;
+
     controls->display = gwy_radio_buttons_get_current(controls->display_group);
     zero_crossing_preview(controls, controls->args);
     switch (controls->display) {

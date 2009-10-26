@@ -104,7 +104,7 @@ static void          drift_dialog_update_values   (DriftControls *controls,
                                                    DriftArgs *args);
 static void          drift_invalidate             (GObject *obj,
                                                    DriftControls *controls);
-static void          preview_type_changed         (GtkWidget *button,
+static void          preview_type_changed         (GtkToggleButton *button,
                                                    DriftControls *controls);
 static void          preview                      (DriftControls *controls,
                                                    DriftArgs *args);
@@ -519,10 +519,13 @@ drift_invalidate(G_GNUC_UNUSED GObject *obj,
 }
 
 static void
-preview_type_changed(G_GNUC_UNUSED GtkWidget *button,
+preview_type_changed(GtkToggleButton *button,
                      DriftControls *controls)
 {
     GwyPixmapLayer *blayer, *mlayer;
+
+    if (button && !gtk_toggle_button_get_active(button))
+        return;
 
     controls->args->preview_type
         = gwy_radio_buttons_get_current(controls->preview_type);

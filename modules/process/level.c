@@ -63,7 +63,7 @@ static void      zero_mean           (GwyContainer *data,
 
 static gboolean  level_dialog        (LevelArgs *args,
                                       const gchar *title);
-static void      masking_changed     (G_GNUC_UNUSED GObject *unused,
+static void      masking_changed     (GtkToggleButton *button,
                                       LevelControls *controls);
 static void      level_load_args     (GwyContainer *container, LevelArgs *args);
 static void      level_save_args     (GwyContainer *container, LevelArgs *args);
@@ -78,7 +78,7 @@ static GwyModuleInfo module_info = {
     N_("Levels data by simple plane subtraction or by rotation, "
        "and fixes minimal or mean value to zero."),
     "Yeti <yeti@gwyddion.net>",
-    "1.6",
+    "1.7",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -307,8 +307,11 @@ level_dialog(LevelArgs *args,
 }
 
 static void
-masking_changed(G_GNUC_UNUSED GObject *unused, LevelControls *controls)
+masking_changed(GtkToggleButton *button, LevelControls *controls)
 {
+    if (!gtk_toggle_button_get_active(button))
+        return;
+
     controls->args->masking = gwy_radio_buttons_get_current(controls->masking);
 }
 

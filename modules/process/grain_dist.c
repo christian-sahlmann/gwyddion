@@ -111,7 +111,7 @@ static void grain_dist_dialog                   (GrainDistArgs *args,
                                                  GwyContainer *data,
                                                  GwyDataField *dfield,
                                                  GwyDataField *mfield);
-static void mode_changed_cb                     (GObject *unused,
+static void mode_changed_cb                     (GtkToggleButton *button,
                                                  GrainDistControls *controls);
 static void selected_changed_cb                 (GrainDistControls *controls);
 static void grain_dist_dialog_update_values     (GrainDistControls *controls,
@@ -146,7 +146,7 @@ static GwyModuleInfo module_info = {
     N_("Evaluates distribution of grains (continuous parts of mask)."),
     "Petr Klapetek <petr@klapetek.cz>, Sven Neumann <neumann@jpk.com>, "
         "Yeti <yeti@gwyddion.net>",
-    "3.6",
+    "3.7",
     "David Nečas (Yeti) & Petr Klapetek & Sven Neumann",
     "2003",
 };
@@ -362,9 +362,12 @@ grain_dist_dialog(GrainDistArgs *args,
 }
 
 static void
-mode_changed_cb(G_GNUC_UNUSED GObject *unused,
+mode_changed_cb(GtkToggleButton *button,
                 GrainDistControls *controls)
 {
+    if (!gtk_toggle_button_get_active(button))
+        return;
+
     grain_dist_dialog_update_values(controls, controls->args);
     grain_dist_dialog_update_sensitivity(controls, controls->args);
 }

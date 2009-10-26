@@ -111,7 +111,7 @@ static void       distort_dialog_update_controls(DistortControls *controls,
 static void       distort_coeff_changed         (GtkEntry *entry,
                                                  DistortControls *controls);
 static void       distort_invalidate            (DistortControls *controls);
-static void       preview_type_changed          (GtkWidget *button,
+static void       preview_type_changed          (GtkToggleButton *button,
                                                  DistortControls *controls);
 static void       preview                       (DistortControls *controls,
                                                  DistortArgs *args);
@@ -619,10 +619,13 @@ distort_invalidate(DistortControls *controls)
 }
 
 static void
-preview_type_changed(G_GNUC_UNUSED GtkWidget *button,
+preview_type_changed(GtkToggleButton *button,
                      DistortControls *controls)
 {
     GwyPixmapLayer *blayer;
+
+    if (button && !gtk_toggle_button_get_active(button))
+        return;
 
     controls->args->preview_type
         = gwy_radio_buttons_get_current(controls->preview_type);
@@ -815,4 +818,3 @@ distort_save_args(GwyContainer *container,
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
-

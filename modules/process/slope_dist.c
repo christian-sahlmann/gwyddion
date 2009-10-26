@@ -70,7 +70,7 @@ static void           slope_dialog_update_values  (SlopeControls *controls,
                                                    SlopeArgs *args);
 static void           slope_fit_plane_cb          (GtkToggleButton *check,
                                                    SlopeControls *controls);
-static void           slope_output_type_cb        (GtkWidget *radio,
+static void           slope_output_type_cb        (GtkToggleButton *radio,
                                                    SlopeControls *controls);
 static GwyDataField*  slope_do_2d                 (GwyDataField *dfield,
                                                    SlopeArgs *args);
@@ -107,7 +107,7 @@ static GwyModuleInfo module_info = {
     N_("Calculates one- or two-dimensional distribution of slopes "
        "or graph of their angular distribution."),
     "Yeti <yeti@gwyddion.net>",
-    "1.11",
+    "1.12",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -335,10 +335,13 @@ slope_fit_plane_cb(GtkToggleButton *check,
 }
 
 static void
-slope_output_type_cb(G_GNUC_UNUSED GtkWidget *button,
+slope_output_type_cb(GtkToggleButton *button,
                      SlopeControls *controls)
 {
     SlopeOutput otype;
+
+    if (!gtk_toggle_button_get_active(button))
+        return;
 
     otype = gwy_radio_buttons_get_current(controls->output_type_group);
     gtk_widget_set_sensitive(controls->logscale, otype == SLOPE_DIST_2D_DIST);

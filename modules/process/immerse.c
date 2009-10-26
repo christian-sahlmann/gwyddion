@@ -127,9 +127,9 @@ static void     immerse_find_maximum        (GwyDataField *score,
                                              gint *col,
                                              gint *row);
 static void     immerse_do                  (ImmerseArgs *args);
-static void     immerse_sampling_changed    (GtkWidget *button,
+static void     immerse_sampling_changed    (GtkToggleButton *button,
                                              ImmerseControls *controls);
-static void     immerse_leveling_changed    (GtkWidget *button,
+static void     immerse_leveling_changed    (GtkToggleButton *button,
                                              ImmerseControls *controls);
 static void     immerse_frame_toggled       (GtkToggleButton *check,
                                              ImmerseControls *controls);
@@ -173,7 +173,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Immerse high resolution detail into overall image."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "2.2",
+    "2.3",
     "David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
@@ -802,17 +802,23 @@ immerse_do(ImmerseArgs *args)
 }
 
 static void
-immerse_sampling_changed(G_GNUC_UNUSED GtkWidget *button,
+immerse_sampling_changed(GtkToggleButton *button,
                          ImmerseControls *controls)
 {
+    if (!gtk_toggle_button_get_active(button))
+        return;
+
     controls->args->sampling
         = gwy_radio_buttons_get_current(controls->sampling);
 }
 
 static void
-immerse_leveling_changed(G_GNUC_UNUSED GtkWidget *button,
+immerse_leveling_changed(GtkToggleButton *button,
                          ImmerseControls *controls)
 {
+    if (!gtk_toggle_button_get_active(button))
+        return;
+
     controls->args->leveling
         = gwy_radio_buttons_get_current(controls->leveling);
 }

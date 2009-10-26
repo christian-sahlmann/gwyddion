@@ -50,7 +50,7 @@ static gboolean facet_level_coeffs(GwyDataField *dfield,
                                    gdouble *by);
 static gboolean level_dialog      (LevelArgs *args,
                                    const gchar *title);
-static void     masking_changed   (G_GNUC_UNUSED GObject *unused,
+static void     masking_changed   (GtkToggleButton *button,
                                    LevelControls *controls);
 static void     level_load_args   (GwyContainer *container,
                                    LevelArgs *args);
@@ -67,7 +67,7 @@ static GwyModuleInfo module_info = {
     N_("Automatic facet-orientation based levelling. "
        "Levels data to make facets point up."),
     "Yeti <yeti@gwyddion.net>",
-    "2.1",
+    "2.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -337,8 +337,11 @@ level_dialog(LevelArgs *args,
 }
 
 static void
-masking_changed(G_GNUC_UNUSED GObject *unused, LevelControls *controls)
+masking_changed(GtkToggleButton *button, LevelControls *controls)
 {
+    if (!gtk_toggle_button_get_active(button))
+        return;
+
     controls->args->masking = gwy_radio_buttons_get_current(controls->masking);
 }
 
