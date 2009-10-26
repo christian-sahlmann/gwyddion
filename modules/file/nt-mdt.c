@@ -77,7 +77,8 @@ typedef enum {
     MDT_FRAME_TEXT         = 3,
     MDT_FRAME_OLD_MDA      = 105,
     MDT_FRAME_MDA          = 106,
-    MDT_FRAME_PALETTE      = 107
+    MDT_FRAME_PALETTE      = 107,
+    MDT_FRAME_IV           = 201
 } MDTFrameType;
 
 typedef enum {
@@ -384,6 +385,7 @@ static gboolean       mdt_real_load         (const guchar *buffer,
                                              MDTFile *mdtfile,
                                              GError **error);
 static GwyDataField*  extract_scanned_data  (MDTScannedDataFrame *dataframe);
+static GwyGraphModel* extract_scanned_spectrum (MDTScannedDataFrame *dataframe);
 static GwyDataField*  extract_mda_data      (MDTMDAFrame *dataframe);
 static GwyGraphModel* extract_mda_spectrum  (MDTMDAFrame *dataframe);
 
@@ -766,6 +768,34 @@ mdt_load(const gchar *filename,
                 n++;
             }
         }
+        else if (mdtfile.frames[i].type == MDT_FRAME_SPECTROSCOPY) {
+            MDTScannedDataFrame *sdframe;
+            GwyGraphModel *gmodel;
+
+            sdframe = (MDTScannedDataFrame*)mdtfile.frames[i].frame_data;
+            gmodel = extract_scanned_spectrum(sdframe);
+            g_string_printf(key, "/0/graph/graph/%d", n+1);
+            gwy_container_set_object_by_name(data, key->str, gmodel);
+            g_object_unref(gmodel);
+
+            if (sdframe->title) {
+                g_string_append(key, "/title");
+                gwy_container_set_string_by_name(data, key->str,
+                                                 g_strndup(sdframe->title,
+                                                           sdframe->title_len));
+            }
+            else
+                gwy_app_channel_title_fall_back(data, n);
+
+            meta = mdt_get_metadata(&mdtfile, n);
+            mdt_add_frame_metadata(sdframe, meta);
+            g_string_printf(key, "/%d/meta", n);
+            gwy_container_set_object_by_name(data, key->str, meta);
+            g_object_unref(meta);
+
+            n++;
+
+        }
     }
     g_string_free(key, TRUE);
     gwy_file_abandon_contents(buffer, size, NULL);
@@ -796,59 +826,62 @@ mdt_get_metadata(MDTFile *mdtfile,
 
     g_return_val_if_fail(i <= mdtfile->last_frame, meta);
     frame = mdtfile->frames + i;
-    g_return_val_if_fail(frame->type == MDT_FRAME_SCANNED, meta);
-    sdframe = (MDTScannedDataFrame*)frame->frame_data;
+    if((frame->type == MDT_FRAME_SCANNED) ||
+       (frame->type == MDT_FRAME_SPECTROSCOPY) ||
+       (frame->type == MDT_FRAME_IV)) {
+		sdframe = (MDTScannedDataFrame*)frame->frame_data;
 
-    s = g_string_new(NULL);
-    g_string_printf(s, "%d-%02d-%02d %02d:%02d:%02d",
-                    frame->year, frame->month, frame->day,
-                    frame->hour, frame->min, frame->sec);
-    gwy_container_set_string_by_name(meta, "Date", g_strdup(s->str));
+		s = g_string_new(NULL);
+		g_string_printf(s, "%d-%02d-%02d %02d:%02d:%02d",
+						frame->year, frame->month, frame->day,
+						frame->hour, frame->min, frame->sec);
+		gwy_container_set_string_by_name(meta, "Date", g_strdup(s->str));
 
-    g_string_printf(s, "%d.%d",
-                    frame->version/0x100, frame->version % 0x100);
-    gwy_container_set_string_by_name(meta, "Version", g_strdup(s->str));
+		g_string_printf(s, "%d.%d",
+						frame->version/0x100, frame->version % 0x100);
+		gwy_container_set_string_by_name(meta, "Version", g_strdup(s->str));
 
-    g_string_printf(s, "%s, %s %s %s",
-                    (sdframe->scan_dir & 0x01) ? "Horizontal" : "Vertical",
-                    (sdframe->scan_dir & 0x02) ? "Left" : "Right",
-                    (sdframe->scan_dir & 0x04) ? "Bottom" : "Top",
-                    (sdframe->scan_dir & 0x80) ? " (double pass)" : "");
-    gwy_container_set_string_by_name(meta, "Scan direction", g_strdup(s->str));
+		g_string_printf(s, "%s, %s %s %s",
+						(sdframe->scan_dir & 0x01) ? "Horizontal" : "Vertical",
+						(sdframe->scan_dir & 0x02) ? "Left" : "Right",
+						(sdframe->scan_dir & 0x04) ? "Bottom" : "Top",
+						(sdframe->scan_dir & 0x80) ? " (double pass)" : "");
+		gwy_container_set_string_by_name(meta, "Scan direction", g_strdup(s->str));
 
-    HASH_SET_META("%d", sdframe->adc_index + 1, "ADC index");
-    HASH_SET_META("%d", sdframe->mode, "Mode");
-    HASH_SET_META("%d", sdframe->ndacq, "Step (DAC)");
-    HASH_SET_META("%.2f nm", sdframe->step_length/Nano, "Step length");
-    HASH_SET_META("%.0f nm/s", sdframe->velocity/Nano, "Scan velocity");
-    HASH_SET_META("%.2f nA", sdframe->setpoint/Nano, "Setpoint value");
-    HASH_SET_META("%.2f V", sdframe->bias_voltage, "Bias voltage");
+		HASH_SET_META("%d", sdframe->adc_index + 1, "ADC index");
+		HASH_SET_META("%d", sdframe->mode, "Mode");
+		HASH_SET_META("%d", sdframe->ndacq, "Step (DAC)");
+		HASH_SET_META("%.2f nm", sdframe->step_length/Nano, "Step length");
+		HASH_SET_META("%.0f nm/s", sdframe->velocity/Nano, "Scan velocity");
+		HASH_SET_META("%.2f nA", sdframe->setpoint/Nano, "Setpoint value");
+		HASH_SET_META("%.2f V", sdframe->bias_voltage, "Bias voltage");
 
-    g_string_free(s, TRUE);
+		g_string_free(s, TRUE);
 
-    if ((v = gwy_enuml_to_string(sdframe->channel_index,
-                                 "Off", MDT_ADC_MODE_OFF,
-                                 "Height", MDT_ADC_MODE_HEIGHT,
-                                 "DFL", MDT_ADC_MODE_DFL,
-                                 "Lateral F", MDT_ADC_MODE_LATERAL_F,
-                                 "Bias V", MDT_ADC_MODE_BIAS_V,
-                                 "Current", MDT_ADC_MODE_CURRENT,
-                                 "FB-Out", MDT_ADC_MODE_FB_OUT,
-                                 "MAG", MDT_ADC_MODE_MAG,
-                                 "MAG*Sin", MDT_ADC_MODE_MAG_SIN,
-                                 "MAG*Cos", MDT_ADC_MODE_MAG_COS,
-                                 "RMS", MDT_ADC_MODE_RMS,
-                                 "CalcMag", MDT_ADC_MODE_CALCMAG,
-                                 "Phase1", MDT_ADC_MODE_PHASE1,
-                                 "Phase2", MDT_ADC_MODE_PHASE2,
-                                 "CalcPhase", MDT_ADC_MODE_CALCPHASE,
-                                 "Ex1", MDT_ADC_MODE_EX1,
-                                 "Ex2", MDT_ADC_MODE_EX2,
-                                 "HvX", MDT_ADC_MODE_HVX,
-                                 "HvY", MDT_ADC_MODE_HVY,
-                                 "Snap Back", MDT_ADC_MODE_SNAP_BACK,
-                                 NULL)))
-        gwy_container_set_string_by_name(meta, "ADC Mode", g_strdup(v));
+		if ((v = gwy_enuml_to_string(sdframe->channel_index,
+									"Off", MDT_ADC_MODE_OFF,
+									"Height", MDT_ADC_MODE_HEIGHT,
+									"DFL", MDT_ADC_MODE_DFL,
+									"Lateral F", MDT_ADC_MODE_LATERAL_F,
+									"Bias V", MDT_ADC_MODE_BIAS_V,
+									"Current", MDT_ADC_MODE_CURRENT,
+									"FB-Out", MDT_ADC_MODE_FB_OUT,
+									"MAG", MDT_ADC_MODE_MAG,
+									"MAG*Sin", MDT_ADC_MODE_MAG_SIN,
+									"MAG*Cos", MDT_ADC_MODE_MAG_COS,
+									"RMS", MDT_ADC_MODE_RMS,
+									"CalcMag", MDT_ADC_MODE_CALCMAG,
+									"Phase1", MDT_ADC_MODE_PHASE1,
+									"Phase2", MDT_ADC_MODE_PHASE2,
+									"CalcPhase", MDT_ADC_MODE_CALCPHASE,
+									"Ex1", MDT_ADC_MODE_EX1,
+									"Ex2", MDT_ADC_MODE_EX2,
+									"HvX", MDT_ADC_MODE_HVX,
+									"HvY", MDT_ADC_MODE_HVY,
+									"Snap Back", MDT_ADC_MODE_SNAP_BACK,
+									NULL)))
+			gwy_container_set_string_by_name(meta, "ADC Mode", g_strdup(v));
+	}
 
     return meta;
 }
@@ -1320,6 +1353,7 @@ mdt_real_load(const guchar *buffer,
 
         switch (frame->type) {
             case MDT_FRAME_SCANNED:
+            case MDT_FRAME_SPECTROSCOPY:            
             if (frame->var_size < AXIS_SCALES_SIZE + SCAN_VARS_MIN_SIZE) {
                 g_set_error(error, GWY_MODULE_FILE_ERROR,
                             GWY_MODULE_FILE_ERROR_DATA,
@@ -1332,10 +1366,6 @@ mdt_real_load(const guchar *buffer,
                                        frame->size, frame->var_size, error))
                 return FALSE;
             frame->frame_data = scannedframe;
-            break;
-
-            case MDT_FRAME_SPECTROSCOPY:
-            gwy_debug("Spectroscropy frames make little sense to read now");
             break;
 
             case MDT_FRAME_TEXT:
@@ -1421,6 +1451,76 @@ extract_scanned_data(MDTScannedDataFrame *dataframe)
     gwy_data_field_invert(dfield, TRUE, FALSE, FALSE);
 
     return dfield;
+}
+
+static GwyGraphModel* extract_scanned_spectrum (MDTScannedDataFrame *dataframe)
+{
+    GwyGraphCurveModel *spectra;
+    GwyGraphModel *gmodel;
+    GwySIUnit *siunitx, *siunitz;
+    guint i, res;
+    gdouble *xdata, *ydata;
+    gdouble xreal, zscale;
+    gdouble deltax; 
+    gint power10x, power10z;
+    const gint16 *p;
+    const gchar *unit, *framename;
+
+    unit = gwy_flat_enum_to_string(dataframe->x_scale.unit,
+                                   G_N_ELEMENTS(mdt_units),
+                                   mdt_units, mdt_units_name);
+    siunitx = gwy_si_unit_new_parse(unit, &power10x);
+    xreal = dataframe->fm_xres*pow10(power10x)*dataframe->x_scale.step;
+    deltax = pow10(power10x)*dataframe->x_scale.step;
+    if (deltax == 0.0)
+        deltax = 1.0;
+
+    unit = gwy_flat_enum_to_string(dataframe->z_scale.unit,
+                                   G_N_ELEMENTS(mdt_units),
+                                   mdt_units, mdt_units_name);
+    siunitz = gwy_si_unit_new_parse(unit, &power10z);
+    zscale = pow10(power10z)*dataframe->z_scale.step;
+    
+    if (dataframe->title_len && dataframe->title)
+        framename = g_strndup(dataframe->title, dataframe->title_len);
+    else
+        framename = g_strdup("Unknown spectrum");
+
+    spectra = gwy_graph_curve_model_new();
+    g_object_set(spectra,
+                 "description", framename,
+                 "mode", GWY_GRAPH_CURVE_LINE,
+                 NULL);
+
+    res = dataframe->fm_xres;
+
+    xdata = (gdouble *)g_malloc(res*sizeof(gdouble));
+    ydata = (gdouble *)g_malloc(res*sizeof(gdouble));
+        
+    p = (gint16*)dataframe->image;
+    for (i = 0; i < dataframe->fm_xres; i++) {
+        xdata[i] = i*deltax;
+        ydata[i] = pow10(power10z)*dataframe->z_scale.offset + 
+                    zscale*GINT16_FROM_LE(p[i]);
+    }
+
+    gwy_graph_curve_model_set_data(spectra, xdata, ydata, res);
+
+    gmodel = gwy_graph_model_new();
+    g_object_set(gmodel,
+                 "title", framename,
+                 "si-unit-x", siunitx,
+                 "si-unit-y", siunitz,
+                 NULL);
+    gwy_graph_model_add_curve(gmodel, spectra);
+    g_object_unref(spectra);
+    g_object_unref(siunitx);
+    g_object_unref(siunitz);
+    g_free(xdata);
+    g_free(ydata);
+    g_free(framename);
+
+    return gmodel;
 }
 
 static gint
