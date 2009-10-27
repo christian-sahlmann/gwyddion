@@ -170,8 +170,11 @@ static void dump_points_(const Triangulator *triangulator,
                         guint npoints, gconstpointer points, gsize point_size);
 static void dump_points(const GwyDelaunayTriangulation *triangulation,
                         gconstpointer points, gsize point_size);
+static void dump_voronoi(const GwyDelaunayTriangulation *triangulation,
+                         gconstpointer points, gsize point_size);
 static guint test_reflexivity(const Triangulator *triangulator);
 
+G_GNUC_UNUSED
 static void
 dump_block(const gchar *info,
             guint id, const guint *nindex, const guint *neighbours)
@@ -1544,8 +1547,7 @@ find_boundary(GwyDelaunayTriangulation *triangulation,
     triangulation->bindex = g_new(guint, triangulation->npoints);
     block_clear(triangulation->bindex, triangulation->npoints);
     /* If the triangulation is correct this formula holds, see the identities
-     * near the start of the file.  The use of @nsize requires a compactified
-     * triangulation! */
+     * near the start of the file.  */
     expected_blen = 3*(triangulation->npoints - 1) - triangulation->nsize/2;
     bsize = expected_blen;
     triangulation->boundary = g_new(guint, bsize);
@@ -1708,7 +1710,7 @@ delaunay_to_voronoi(GwyDelaunayTriangulation *triangulation,
     guint *voronoi, *vindex, *neighbours, *remaining;
     guint i, j, n, ni, next, prev, nvpoints, nvoronoi, pos, len, vpos, vm1;
     guint blen;
-    gdouble h, xmin, xmax, ymin, ymax, radius, far_away;
+    gdouble h, xmin, xmax, ymin, ymax, far_away;
 
     blen = triangulation->blen;
     /* This is exact if counting also the vertices in infinities (the formula
@@ -1792,7 +1794,7 @@ delaunay_to_voronoi(GwyDelaunayTriangulation *triangulation,
     /* Base the notion of what is sufficiently far away on the inner Voronoi
      * points.  They can be relatively far away too as the boundary triangles
      * tend to be quite flat. */
-    far_away = 100.0*hypot(xmax - xmin, ymax - ymin);
+    far_away = 2.0*hypot(xmax - xmin, ymax - ymin);
 
     /* Compactify the two free positions in neighbourhoods of boundary points.
      * One is always at the end now because the new neighbourhood is one item
@@ -1960,6 +1962,9 @@ gwy_delaunay_triangulate(guint npoints, gconstpointer points, gsize point_size)
         gwy_delaunay_triangulation_free(triangulation);
         triangulation = NULL;
     }
+
+    //dump_points(triangulation, points, point_size);
+    //dump_voronoi(triangulation, points, point_size);
 
 fail:
     triangulator_free(triangulator);
@@ -2458,6 +2463,51 @@ dump_points(const GwyDelaunayTriangulation *triangulation,
                 const Point *pt2 = get_point(points, point_size, ni);
                 fprintf(fh, "set arrow from %g,%g to %g,%g nohead ls 2\n",
                         pt1->x, pt1->y, pt2->x, pt2->y);
+            }
+        }
+    }
+    fclose(fh);
+}
+
+G_GNUC_UNUSED
+static void
+dump_voronoi(const GwyDelaunayTriangulation *triangulation,
+             gconstpointer points, gsize point_size)
+{
+    guint i, j, ni, pos, len, npts;
+    const guint *neighbours;
+    FILE *fh;
+
+    npts = triangulation->npoints;
+
+    fh = fopen("vpoints.dat", "w");
+    for (i = 0; i < triangulation->nvpoints; i++) {
+        const Point *pt = triangulation->vpoints + i;
+        fprintf(fh, "%u %g %g\n", i, pt->x, pt->y);
+    }
+    fclose(fh);
+
+    fh = fopen("varrows.gpi", "w");
+    for (i = 0; i < triangulation->nvpoints; i++) {
+        pos = triangulation->vindex[i + npts];
+        len = triangulation->vindex[i+1 + npts] - pos;
+        neighbours = triangulation->voronoi + pos;
+        for (j = 0; j < len; j++) {
+            ni = neighbours[j];
+            if (ni < npts) {
+                const Point *pt1 = triangulation->vpoints + i;
+                const Point *pt2 = get_point(points, point_size, ni);
+                fprintf(fh, "set arrow from %g,%g to %g,%g nohead ls 5\n",
+                        pt1->x, pt1->y, pt2->x, pt2->y);
+            }
+            else {
+                ni -= npts;
+                if (ni > i) {
+                    const Point *pt1 = triangulation->vpoints + i;
+                    const Point *pt2 = triangulation->vpoints + ni;
+                    fprintf(fh, "set arrow from %g,%g to %g,%g nohead ls 4\n",
+                            pt1->x, pt1->y, pt2->x, pt2->y);
+                }
             }
         }
     }
