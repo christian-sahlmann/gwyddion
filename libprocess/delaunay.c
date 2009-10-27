@@ -254,8 +254,7 @@ static void
 build_compact_point_list(PointList *pointlist,
                          guint npoints,
                          gconstpointer points,
-                         gsize point_size,
-                         gdouble *radius)
+                         gsize point_size)
 {
     const Point *pt;
     gdouble xmin, xmax, ymin, ymax, xreal, yreal, step, xr, yr;
@@ -285,7 +284,6 @@ build_compact_point_list(PointList *pointlist,
 
     xreal = xmax - xmin;
     yreal = ymax - ymin;
-    *radius = hypot(xreal, yreal);
     xr = xreal/sqrt(npoints)*CELL_SIDE;
     yr = yreal/sqrt(npoints)*CELL_SIDE;
 
@@ -1702,8 +1700,7 @@ add_infinity_neighbour(guint *vneighbours,
 
 static gboolean
 delaunay_to_voronoi(GwyDelaunayTriangulation *triangulation,
-                    gconstpointer points, gsize point_size,
-                    gdouble far_away)
+                    gconstpointer points, gsize point_size)
 {
     const Point *a, *b, *c;
     Point *vpoints;
@@ -1711,7 +1708,7 @@ delaunay_to_voronoi(GwyDelaunayTriangulation *triangulation,
     guint *voronoi, *vindex, *neighbours, *remaining;
     guint i, j, n, ni, next, prev, nvpoints, nvoronoi, pos, len, vpos, vm1;
     guint blen;
-    gdouble h;
+    gdouble h, xmin, xmax, ymin, ymax, radius, far_away;
 
     blen = triangulation->blen;
     /* This is exact if counting also the vertices in infinities (the formula
@@ -1746,6 +1743,8 @@ delaunay_to_voronoi(GwyDelaunayTriangulation *triangulation,
     /* Now the Voronoi points.  In the first pass, create the points and
      * resolve Delaunay neighbours.  Mutual Voronoi point relations will be
      * resolved later.  */
+    xmin = ymin = G_MAXDOUBLE;
+    xmax = ymax = -G_MAXDOUBLE;
     for (i = 0; i < triangulation->npoints; i++) {
         a = get_point(points, point_size, i);
         pos = triangulation->index[i];
@@ -1758,6 +1757,14 @@ delaunay_to_voronoi(GwyDelaunayTriangulation *triangulation,
                 b = get_point(points, point_size, prev);
                 c = get_point(points, point_size, next);
                 if (circumcircle_centre(a, b, c, &pt)) {
+                    if (pt.x < xmin)
+                        xmin = pt.x;
+                    if (pt.x > xmax)
+                        xmax = pt.x;
+                    if (pt.y < ymin)
+                        ymin = pt.y;
+                    if (pt.y > ymax)
+                        ymax = pt.y;
                     /* Add a new Voronoi point and make a, b and c its
                      * neighbours. */
                     if (G_UNLIKELY(n - triangulation->npoints == nvpoints))
@@ -1782,6 +1789,10 @@ delaunay_to_voronoi(GwyDelaunayTriangulation *triangulation,
             prev = next;
         }
     }
+    /* Base the notion of what is sufficiently far away on the inner Voronoi
+     * points.  They can be relatively far away too as the boundary triangles
+     * tend to be quite flat. */
+    far_away = 100.0*hypot(xmax - xmin, ymax - ymin);
 
     /* Compactify the two free positions in neighbourhoods of boundary points.
      * One is always at the end now because the new neighbourhood is one item
@@ -1929,11 +1940,10 @@ gwy_delaunay_triangulate(guint npoints, gconstpointer points, gsize point_size)
     GwyDelaunayTriangulation *triangulation = NULL;
     Triangulator *triangulator;
     PointList pointlist;
-    gdouble radius;
 
     g_return_val_if_fail(point_size >= sizeof(Point), NULL);
 
-    build_compact_point_list(&pointlist, npoints, points, point_size, &radius);
+    build_compact_point_list(&pointlist, npoints, points, point_size);
     triangulator = triangulate(&pointlist);
     if (!triangulator)
         goto fail;
@@ -1946,8 +1956,7 @@ gwy_delaunay_triangulate(guint npoints, gconstpointer points, gsize point_size)
     }
 
     if (!find_boundary(triangulation, points, point_size)
-        || !delaunay_to_voronoi(triangulation, points, point_size,
-                                100.0*radius)) {
+        || !delaunay_to_voronoi(triangulation, points, point_size)) {
         gwy_delaunay_triangulation_free(triangulation);
         triangulation = NULL;
     }
