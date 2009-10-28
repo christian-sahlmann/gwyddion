@@ -699,7 +699,7 @@ mdt_load(const gchar *filename,
     GwyContainer *meta, *data = NULL;
     MDTFile mdtfile;
     GString *key;
-    guint n,i;
+    guint n, i;
 
     gwy_debug("");
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
@@ -748,7 +748,7 @@ mdt_load(const gchar *filename,
             gwy_debug("dimensions %d ; measurands %d",
                       mdaframe->nDimensions, mdaframe->nMesurands);
             if (mdaframe->nDimensions == 2 && mdaframe->nMesurands == 1) {
-                // scan
+                /* scan */
                 dfield = extract_mda_data(mdaframe);
                 g_string_printf(key, "/%d/data", n);
                 gwy_container_set_object_by_name(data, key->str, dfield);
@@ -756,9 +756,9 @@ mdt_load(const gchar *filename,
                 gwy_app_channel_title_fall_back(data, n);
                 n++;
             }
-            else if ((mdaframe->nDimensions == 0 && mdaframe->nMesurands == 2) ||
-                     (mdaframe->nDimensions == 1 && mdaframe->nMesurands == 1)) {
-                // raman spectra
+            else if ((mdaframe->nDimensions == 0 && mdaframe->nMesurands == 2)
+                  || (mdaframe->nDimensions == 1 && mdaframe->nMesurands == 1)) {
+                /* raman spectra */
                 GwyGraphModel *gmodel;
 
                 gmodel = extract_mda_spectrum(mdaframe);
@@ -794,7 +794,6 @@ mdt_load(const gchar *filename,
             g_object_unref(meta);
 
             n++;
-
         }
     }
     g_string_free(key, TRUE);
@@ -826,62 +825,62 @@ mdt_get_metadata(MDTFile *mdtfile,
 
     g_return_val_if_fail(i <= mdtfile->last_frame, meta);
     frame = mdtfile->frames + i;
-    if((frame->type == MDT_FRAME_SCANNED) ||
-       (frame->type == MDT_FRAME_SPECTROSCOPY) ||
-       (frame->type == MDT_FRAME_IV)) {
-		sdframe = (MDTScannedDataFrame*)frame->frame_data;
+    if((frame->type == MDT_FRAME_SCANNED)
+    || (frame->type == MDT_FRAME_SPECTROSCOPY)
+    || (frame->type == MDT_FRAME_IV)) {
+        sdframe = (MDTScannedDataFrame*)frame->frame_data;
 
-		s = g_string_new(NULL);
-		g_string_printf(s, "%d-%02d-%02d %02d:%02d:%02d",
-						frame->year, frame->month, frame->day,
-						frame->hour, frame->min, frame->sec);
-		gwy_container_set_string_by_name(meta, "Date", g_strdup(s->str));
+        s = g_string_new(NULL);
+        g_string_printf(s, "%d-%02d-%02d %02d:%02d:%02d",
+                        frame->year, frame->month, frame->day,
+                        frame->hour, frame->min, frame->sec);
+        gwy_container_set_string_by_name(meta, "Date", g_strdup(s->str));
 
-		g_string_printf(s, "%d.%d",
-						frame->version/0x100, frame->version % 0x100);
-		gwy_container_set_string_by_name(meta, "Version", g_strdup(s->str));
+        g_string_printf(s, "%d.%d",
+                        frame->version/0x100, frame->version % 0x100);
+        gwy_container_set_string_by_name(meta, "Version", g_strdup(s->str));
 
-		g_string_printf(s, "%s, %s %s %s",
-						(sdframe->scan_dir & 0x01) ? "Horizontal" : "Vertical",
-						(sdframe->scan_dir & 0x02) ? "Left" : "Right",
-						(sdframe->scan_dir & 0x04) ? "Bottom" : "Top",
-						(sdframe->scan_dir & 0x80) ? " (double pass)" : "");
-		gwy_container_set_string_by_name(meta, "Scan direction", g_strdup(s->str));
+        g_string_printf(s, "%s, %s %s %s",
+                        (sdframe->scan_dir & 0x01) ? "Horizontal" : "Vertical",
+                        (sdframe->scan_dir & 0x02) ? "Left" : "Right",
+                        (sdframe->scan_dir & 0x04) ? "Bottom" : "Top",
+                        (sdframe->scan_dir & 0x80) ? " (double pass)" : "");
+        gwy_container_set_string_by_name(meta, "Scan direction", g_strdup(s->str));
 
-		HASH_SET_META("%d", sdframe->adc_index + 1, "ADC index");
-		HASH_SET_META("%d", sdframe->mode, "Mode");
-		HASH_SET_META("%d", sdframe->ndacq, "Step (DAC)");
-		HASH_SET_META("%.2f nm", sdframe->step_length/Nano, "Step length");
-		HASH_SET_META("%.0f nm/s", sdframe->velocity/Nano, "Scan velocity");
-		HASH_SET_META("%.2f nA", sdframe->setpoint/Nano, "Setpoint value");
-		HASH_SET_META("%.2f V", sdframe->bias_voltage, "Bias voltage");
+        HASH_SET_META("%d", sdframe->adc_index + 1, "ADC index");
+        HASH_SET_META("%d", sdframe->mode, "Mode");
+        HASH_SET_META("%d", sdframe->ndacq, "Step (DAC)");
+        HASH_SET_META("%.2f nm", sdframe->step_length/Nano, "Step length");
+        HASH_SET_META("%.0f nm/s", sdframe->velocity/Nano, "Scan velocity");
+        HASH_SET_META("%.2f nA", sdframe->setpoint/Nano, "Setpoint value");
+        HASH_SET_META("%.2f V", sdframe->bias_voltage, "Bias voltage");
 
-		g_string_free(s, TRUE);
+        g_string_free(s, TRUE);
 
-		if ((v = gwy_enuml_to_string(sdframe->channel_index,
-									"Off", MDT_ADC_MODE_OFF,
-									"Height", MDT_ADC_MODE_HEIGHT,
-									"DFL", MDT_ADC_MODE_DFL,
-									"Lateral F", MDT_ADC_MODE_LATERAL_F,
-									"Bias V", MDT_ADC_MODE_BIAS_V,
-									"Current", MDT_ADC_MODE_CURRENT,
-									"FB-Out", MDT_ADC_MODE_FB_OUT,
-									"MAG", MDT_ADC_MODE_MAG,
-									"MAG*Sin", MDT_ADC_MODE_MAG_SIN,
-									"MAG*Cos", MDT_ADC_MODE_MAG_COS,
-									"RMS", MDT_ADC_MODE_RMS,
-									"CalcMag", MDT_ADC_MODE_CALCMAG,
-									"Phase1", MDT_ADC_MODE_PHASE1,
-									"Phase2", MDT_ADC_MODE_PHASE2,
-									"CalcPhase", MDT_ADC_MODE_CALCPHASE,
-									"Ex1", MDT_ADC_MODE_EX1,
-									"Ex2", MDT_ADC_MODE_EX2,
-									"HvX", MDT_ADC_MODE_HVX,
-									"HvY", MDT_ADC_MODE_HVY,
-									"Snap Back", MDT_ADC_MODE_SNAP_BACK,
-									NULL)))
-			gwy_container_set_string_by_name(meta, "ADC Mode", g_strdup(v));
-	}
+        if ((v = gwy_enuml_to_string(sdframe->channel_index,
+                                    "Off", MDT_ADC_MODE_OFF,
+                                    "Height", MDT_ADC_MODE_HEIGHT,
+                                    "DFL", MDT_ADC_MODE_DFL,
+                                    "Lateral F", MDT_ADC_MODE_LATERAL_F,
+                                    "Bias V", MDT_ADC_MODE_BIAS_V,
+                                    "Current", MDT_ADC_MODE_CURRENT,
+                                    "FB-Out", MDT_ADC_MODE_FB_OUT,
+                                    "MAG", MDT_ADC_MODE_MAG,
+                                    "MAG*Sin", MDT_ADC_MODE_MAG_SIN,
+                                    "MAG*Cos", MDT_ADC_MODE_MAG_COS,
+                                    "RMS", MDT_ADC_MODE_RMS,
+                                    "CalcMag", MDT_ADC_MODE_CALCMAG,
+                                    "Phase1", MDT_ADC_MODE_PHASE1,
+                                    "Phase2", MDT_ADC_MODE_PHASE2,
+                                    "CalcPhase", MDT_ADC_MODE_CALCPHASE,
+                                    "Ex1", MDT_ADC_MODE_EX1,
+                                    "Ex2", MDT_ADC_MODE_EX2,
+                                    "HvX", MDT_ADC_MODE_HVX,
+                                    "HvY", MDT_ADC_MODE_HVY,
+                                    "Snap Back", MDT_ADC_MODE_SNAP_BACK,
+                                    NULL)))
+            gwy_container_set_string_by_name(meta, "ADC Mode", g_strdup(v));
+    }
 
     return meta;
 }
@@ -1353,7 +1352,7 @@ mdt_real_load(const guchar *buffer,
 
         switch (frame->type) {
             case MDT_FRAME_SCANNED:
-            case MDT_FRAME_SPECTROSCOPY:            
+            case MDT_FRAME_SPECTROSCOPY:
             if (frame->var_size < AXIS_SCALES_SIZE + SCAN_VARS_MIN_SIZE) {
                 g_set_error(error, GWY_MODULE_FILE_ERROR,
                             GWY_MODULE_FILE_ERROR_DATA,
@@ -1461,10 +1460,11 @@ static GwyGraphModel* extract_scanned_spectrum (MDTScannedDataFrame *dataframe)
     guint i, res;
     gdouble *xdata, *ydata;
     gdouble xreal, zscale;
-    gdouble deltax; 
+    gdouble deltax;
     gint power10x, power10z;
     const gint16 *p;
-    const gchar *unit, *framename;
+    const gchar *unit;
+    gchar *framename;
 
     unit = gwy_flat_enum_to_string(dataframe->x_scale.unit,
                                    G_N_ELEMENTS(mdt_units),
@@ -1480,7 +1480,7 @@ static GwyGraphModel* extract_scanned_spectrum (MDTScannedDataFrame *dataframe)
                                    mdt_units, mdt_units_name);
     siunitz = gwy_si_unit_new_parse(unit, &power10z);
     zscale = pow10(power10z)*dataframe->z_scale.step;
-    
+
     if (dataframe->title_len && dataframe->title)
         framename = g_strndup(dataframe->title, dataframe->title_len);
     else
@@ -1496,12 +1496,12 @@ static GwyGraphModel* extract_scanned_spectrum (MDTScannedDataFrame *dataframe)
 
     xdata = (gdouble *)g_malloc(res*sizeof(gdouble));
     ydata = (gdouble *)g_malloc(res*sizeof(gdouble));
-        
+
     p = (gint16*)dataframe->image;
     for (i = 0; i < dataframe->fm_xres; i++) {
         xdata[i] = i*deltax;
-        ydata[i] = pow10(power10z)*dataframe->z_scale.offset + 
-                    zscale*GINT16_FROM_LE(p[i]);
+        ydata[i] = pow10(power10z)*dataframe->z_scale.offset
+                 + zscale*GINT16_FROM_LE(p[i]);
     }
 
     gwy_graph_curve_model_set_data(spectra, xdata, ydata, res);
@@ -1823,7 +1823,7 @@ extract_mda_spectrum(MDTMDAFrame *dataframe)
                     const guchar *tp = (const guchar *)p;
 
                     xdata[i] = xscale * (*tp);
-                    p+=sizeof(guchar)/sizeof(gchar);
+                    p += sizeof(guchar)/sizeof(gchar);
                 }
                 break;
 
@@ -1832,7 +1832,7 @@ extract_mda_spectrum(MDTMDAFrame *dataframe)
                     const gint16 *tp = (const gint16 *)p;
 
                     xdata[i] = xscale * GINT16_FROM_LE(*tp);
-                    p+=sizeof(gint16)/sizeof(gchar);
+                    p += sizeof(gint16)/sizeof(gchar);
                 }
                 break;
 
@@ -1841,7 +1841,7 @@ extract_mda_spectrum(MDTMDAFrame *dataframe)
                     const guint16 *tp = (const guint16 *)p;
 
                     xdata[i] = xscale * GUINT16_FROM_LE(*tp);
-                    p+=sizeof(guint16)/sizeof(gchar);
+                    p += sizeof(guint16)/sizeof(gchar);
                 }
                 break;
 
@@ -1850,7 +1850,7 @@ extract_mda_spectrum(MDTMDAFrame *dataframe)
                     const gint32 *tp = (const gint32 *)p;
 
                     xdata[i] = xscale * GINT32_FROM_LE(*tp);
-                    p+=sizeof(gint32)/sizeof(gchar);
+                    p += sizeof(gint32)/sizeof(gchar);
                 }
                 break;
 
@@ -1858,7 +1858,7 @@ extract_mda_spectrum(MDTMDAFrame *dataframe)
                 {
                     const guint32 *tp = (const guint32 *)p;
                     xdata[i] = xscale * GUINT32_FROM_LE(*tp);
-                    p+=sizeof(guint32)/sizeof(gchar);
+                    p += sizeof(guint32)/sizeof(gchar);
                 }
                 break;
 
@@ -1869,7 +1869,7 @@ extract_mda_spectrum(MDTMDAFrame *dataframe)
                     /* for some reason, MSVC6 spits an unsigned int64 conversion
                      * error also here */
                     xdata[i] = xscale * (gint64)GINT64_FROM_LE(*tp);
-                    p+=sizeof(gint64)/sizeof(gchar);
+                    p += sizeof(gint64)/sizeof(gchar);
                 }
                 break;
 
@@ -1885,7 +1885,7 @@ extract_mda_spectrum(MDTMDAFrame *dataframe)
 #else
                     xdata[i] = xscale * GUINT64_FROM_LE(*tp);
 #endif
-                    p+=sizeof(guint64)/sizeof(gchar);
+                    p += sizeof(guint64)/sizeof(gchar);
                 }
                 break;
 
@@ -1916,7 +1916,7 @@ extract_mda_spectrum(MDTMDAFrame *dataframe)
                 const guchar *tp = (const guchar *)p;
 
                 ydata[i] = yscale * (*tp);
-                p+=sizeof(guchar)/sizeof(gchar);
+                p += sizeof(guchar)/sizeof(gchar);
             }
             break;
 
@@ -1925,7 +1925,7 @@ extract_mda_spectrum(MDTMDAFrame *dataframe)
                 const gint16 *tp = (const gint16 *)p;
 
                 ydata[i] = yscale * GINT16_FROM_LE(*tp);
-                p+=sizeof(gint16)/sizeof(gchar);
+                p += sizeof(gint16)/sizeof(gchar);
             }
             break;
 
@@ -1934,7 +1934,7 @@ extract_mda_spectrum(MDTMDAFrame *dataframe)
                 const guint16 *tp = (const guint16 *)p;
 
                 ydata[i] = yscale * GUINT16_FROM_LE(*tp);
-                p+=sizeof(guint16)/sizeof(gchar);
+                p += sizeof(guint16)/sizeof(gchar);
             }
             break;
 
@@ -1943,7 +1943,7 @@ extract_mda_spectrum(MDTMDAFrame *dataframe)
                 const gint32 *tp = (const gint32 *)p;
 
                 ydata[i] = yscale * GINT32_FROM_LE(*tp);
-                p+=sizeof(gint32)/sizeof(gchar);
+                p += sizeof(gint32)/sizeof(gchar);
             }
             break;
 
@@ -1951,7 +1951,7 @@ extract_mda_spectrum(MDTMDAFrame *dataframe)
             {
                 const guint32 *tp = (const guint32 *)p;
                 ydata[i] = yscale * GUINT32_FROM_LE(*tp);
-                p+=sizeof(guint32)/sizeof(gchar);
+                p += sizeof(guint32)/sizeof(gchar);
             }
             break;
 
@@ -1962,7 +1962,7 @@ extract_mda_spectrum(MDTMDAFrame *dataframe)
                 /* for some reason, MSVC6 spits an unsigned int64 conversion
                  * error also here */
                 ydata[i] = yscale * (gint64)GINT64_FROM_LE(*tp);
-                p+=sizeof(gint64)/sizeof(gchar);
+                p += sizeof(gint64)/sizeof(gchar);
             }
             break;
 
@@ -1978,7 +1978,7 @@ extract_mda_spectrum(MDTMDAFrame *dataframe)
 #else
                 ydata[i] = yscale * GUINT64_FROM_LE(*tp);
 #endif
-                p+=sizeof(guint64)/sizeof(gchar);
+                p += sizeof(guint64)/sizeof(gchar);
             }
             break;
 
@@ -2002,7 +2002,7 @@ extract_mda_spectrum(MDTMDAFrame *dataframe)
         if (xAxis->commentLen && xAxis->comment) {
             params.data = xdata;
             params.res = res;
-            params.flag=MDT_XML_NONE;
+            params.flag = MDT_XML_NONE;
             context = g_markup_parse_context_new(&parser, TREAT_CDATA_AS_TEXT,
                                                  &params, NULL);
             if (!g_markup_parse_context_parse(context, xAxis->comment, xAxis->commentLen, &err)
@@ -2051,24 +2051,24 @@ start_element(G_GNUC_UNUSED GMarkupParseContext *context,
         /* error */
     }
     else {
-        if (gwy_strequal(element_name,"Parameter")) {
+        if (gwy_strequal(element_name, "Parameter")) {
             while (*name_cursor) {
-                if (gwy_strequal (*name_cursor, "Name") &&
-                    gwy_strequal (*value_cursor, "LaserWL")) {
+                if (gwy_strequal(*name_cursor, "Name")
+                 && gwy_strequal(*value_cursor, "LaserWL")) {
                     params->flag = MDT_XML_LASER_WAVELENGTH;
                 }
-                else if (gwy_strequal (*name_cursor, "Name") &&
-                         gwy_strequal (*value_cursor, "UserUnits"))
+                else if (gwy_strequal(*name_cursor, "Name")
+                      && gwy_strequal(*value_cursor, "UserUnits"))
                     params->flag = MDT_XML_UNITS;
 
                 name_cursor++;
                 value_cursor++;
             }
         }
-        else if (gwy_strequal(element_name,"Array")) {
+        else if (gwy_strequal(element_name, "Array")) {
             params->flag = MDT_XML_DATAARRAY;
             while (*name_cursor) {
-                if (gwy_strequal (*name_cursor,"Count"))
+                if (gwy_strequal(*name_cursor, "Count"))
                     params->res = atoi(*value_cursor);
 
                 name_cursor++;
@@ -2116,20 +2116,20 @@ parse_text(G_GNUC_UNUSED GMarkupParseContext *context,
         if (!params->res) {
             /* Error */
         }
-        else
-            for (i=0;i < params->res;i++) {
-                wavelength = g_ascii_strtod(g_strdelimit(line,",.",'.'),&line);
-                line+=2; /* skip ". " between values */
+        else {
+            for (i = 0; i < params->res; i++) {
+                wavelength = g_ascii_strtod(g_strdelimit(line, ",.", '.'), &line);
+                line += 2; /* skip ". " between values */
                 if (params->units == 1) { /* nm */
                     params->data[i] = 1e-9 * wavelength;
                 }
                 else if (params->units == 2
-                         &&   params->laser_wavelength > 0.0) {
+                      && params->laser_wavelength > 0.0) {
                     /* 1/cm and nonzero laser wavelength */
-                    params->data[i] = 1e9 *
-                        (1 / params->laser_wavelength - 1 / wavelength);
+                    params->data[i] = 1e9 * (1 / params->laser_wavelength - 1 / wavelength);
                 }
             }
+        }
     }
 }
 
