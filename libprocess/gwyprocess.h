@@ -31,7 +31,6 @@
 #include <libprocess/cwt.h>
 #include <libprocess/datafield.h>
 #include <libprocess/dataline.h>
-#include <libprocess/delaunay.h>
 #include <libprocess/dwt.h>
 #include <libprocess/elliptic.h>
 #include <libprocess/filters.h>
@@ -46,6 +45,7 @@
 #include <libprocess/stats.h>
 #include <libprocess/level.h>
 #include <libprocess/tip.h>
+#include <libprocess/triangulation.h>
 
 G_BEGIN_DECLS
 

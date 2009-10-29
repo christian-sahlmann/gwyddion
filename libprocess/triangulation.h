@@ -18,14 +18,14 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-#ifndef __GWY_PROCESS_DELAUNAY_H__
-#define __GWY_PROCESS_DELAUNAY_H__ 1
+#ifndef __GWY_PROCESS_TRIANGULATION_H__
+#define __GWY_PROCESS_TRIANGULATION_H__ 1
 
 #include <libprocess/datafield.h>
 
 G_BEGIN_DECLS
 
-#define GWY_DELAUNAY_NONE G_MAXUINT
+#define GWY_TRIANGULATION_NONE G_MAXUINT
 
 typedef struct {
     gdouble x;
@@ -67,6 +67,6 @@ gboolean gwy_delaunay_interpolate(GwyDelaunayTriangulation *triangulation,
 
 G_END_DECLS
 
-#endif /* __GWY_PROCESS_DELAUNAY_H__ */
+#endif /* __GWY_PROCESS_TRIANGULATION_H__ */
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

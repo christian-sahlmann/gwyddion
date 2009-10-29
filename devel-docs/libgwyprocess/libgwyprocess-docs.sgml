@@ -20,7 +20,6 @@
   <xi:include href="xml/correlation.xml"/>
   <xi:include href="xml/cwt.xml"/>
   <xi:include href="xml/dwt.xml"/>
-  <xi:include href="xml/delaunay.xml"/>
   <xi:include href="xml/elliptic.xml"/>
   <xi:include href="xml/filters.xml"/>
   <xi:include href="xml/fractals.xml"/>
@@ -34,6 +33,7 @@
   <xi:include href="xml/simplefft.xml"/>
   <xi:include href="xml/stats.xml"/>
   <xi:include href="xml/tip.xml"/>
+  <xi:include href="xml/triangulation.xml"/>
   <xi:include href="xml/gwyprocess.xml"/>
   <xi:include href="xml/gwyprocessenums.xml"/>
 </book>

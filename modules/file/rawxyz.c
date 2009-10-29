@@ -33,7 +33,7 @@
 #include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwyutils.h>
 #include <libprocess/stats.h>
-#include <libprocess/delaunay.h>
+#include <libprocess/triangulation.h>
 #include <libdraw/gwypixfield.h>
 #include <libdraw/gwygradient.h>
 #include <libgwydgets/gwydgetutils.h>

@@ -26,7 +26,7 @@
 #include <math.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
-#include <libprocess/delaunay.h>
+#include <libprocess/triangulation.h>
 
 /*
  * Some identities for planar triangulations
@@ -44,7 +44,7 @@
  */
 
 enum {
-    UNDEF = GWY_DELAUNAY_NONE,
+    UNDEF = GWY_TRIANGULATION_NONE,
     /* The work space and work queue can be resized, just choose some
      * reasonable initial more-or-less upper bound. */
     WORKSPACE = 32,
@@ -2551,13 +2551,13 @@ test_reflexivity(const Triangulator *triangulator)
 /************************** Documentation ****************************/
 
 /**
- * SECTION:delaunay
- * @title: Delaunay
- * @short_description: Delaunay triangulation and interpolation
+ * SECTION:triangulation
+ * @title: triangulation
+ * @short_description: Delaunay and Voronoi triangulation and interpolation
  **/
 
 /**
- * GWY_DELAUNAY_NONE:
+ * GWY_TRIANGULATION_NONE:
  *
  * Point index value representing no point.
  *
@@ -2600,7 +2600,8 @@ test_reflexivity(const Triangulator *triangulator)
  *              one large array.
  * @boundary: Counter-clockwise list of boundary points, i.e. points lying on
  *            the convex hull.
- * @bindex: Point indices in @boundary for boundary points, %GWY_DELAUNAY_NONE
+ * @bindex: Point indices in @boundary for boundary points,
+ *          %GWY_TRIANGULATION_NONE
  *          for inner points (i.e. points not lying on the convex hull).
  * @vpoints: Points of the Voronoi triangulation, including points in the
  *           infinity (in fact, just far from the original point set).

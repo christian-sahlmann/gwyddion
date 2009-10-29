@@ -17,7 +17,6 @@ libgwyprocess2include_HEADERS = \
 	cwt.h \
 	datafield.h \
 	dataline.h \
-	delaunay.h \
 	dwt.h \
 	elliptic.h \
 	filters.h \
@@ -35,7 +34,8 @@ libgwyprocess2include_HEADERS = \
 	simplefft.h \
 	spectra.h \
 	stats.h \
-	tip.h
+	tip.h \
+	triangulation.h
 
 noinst_HEADERS = \
 	morph_lib.h \
@@ -82,7 +82,6 @@ libgwyprocess2_la_SOURCES = \
 	cwt.c \
 	datafield.c \
 	dataline.c \
-	delaunay.c \
 	dwt.c \
 	elliptic.c \
 	filters.c \
@@ -101,7 +100,8 @@ libgwyprocess2_la_SOURCES = \
 	simplefft.c \
 	spectra.c \
 	stats.c \
-	tip.c
+	tip.c \
+	triangulation.h
 
 clean-local:
 	rm -f core.* *~
