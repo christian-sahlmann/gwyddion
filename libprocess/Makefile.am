@@ -101,7 +101,7 @@ libgwyprocess2_la_SOURCES = \
 	spectra.c \
 	stats.c \
 	tip.c \
-	triangulation.h
+	triangulation.c
 
 clean-local:
 	rm -f core.* *~
