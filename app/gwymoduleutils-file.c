@@ -156,7 +156,7 @@ gwy_app_channel_title_fall_back(GwyContainer *data,
  * gwy_app_channel_remove_bad_data:
  * @dfield: A data field.  The values of bad data points are ignored and might
  *          be even left uninitialized.
- * @mfield: A mask field containing 1.0 in place of good data points, 1.0 in
+ * @mfield: A mask field containing 1.0 in place of good data points, 0.0 in
  *          place of bad points.  It will be inverted to become the mask of
  *          bad points.
  *
