@@ -1794,7 +1794,7 @@ delaunay_to_voronoi(GwyDelaunayTriangulation *triangulation,
     /* Base the notion of what is sufficiently far away on the inner Voronoi
      * points.  They can be relatively far away too as the boundary triangles
      * tend to be quite flat. */
-    far_away = 2.0*hypot(xmax - xmin, ymax - ymin);
+    far_away = 10.0*hypot(xmax - xmin, ymax - ymin);
 
     /* Compactify the two free positions in neighbourhoods of boundary points.
      * One is always at the end now because the new neighbourhood is one item
@@ -1826,7 +1826,7 @@ delaunay_to_voronoi(GwyDelaunayTriangulation *triangulation,
         /* The point in infinity is in fact somewhere far away from the
          * centre of a-b line in the direction of the outer normal. */
         pt.x = b->y - a->y;
-        pt.y = a->x - a->y;
+        pt.y = a->x - b->x;
         h = far_away/hypot(pt.x, pt.y);
         pt.x = h*pt.x + 0.5*(a->x + b->x);
         pt.y = h*pt.y + 0.5*(a->y + b->y);
@@ -1962,9 +1962,6 @@ gwy_delaunay_triangulate(guint npoints, gconstpointer points, gsize point_size)
         gwy_delaunay_triangulation_free(triangulation);
         triangulation = NULL;
     }
-
-    //dump_points(triangulation, points, point_size);
-    //dump_voronoi(triangulation, points, point_size);
 
 fail:
     triangulator_free(triangulator);
@@ -2464,6 +2461,16 @@ dump_points(const GwyDelaunayTriangulation *triangulation,
                 fprintf(fh, "set arrow from %g,%g to %g,%g nohead ls 2\n",
                         pt1->x, pt1->y, pt2->x, pt2->y);
             }
+        }
+    }
+    for (j = 0; j < triangulation->blen; j++) {
+        i = triangulation->boundary[j];
+        ni = triangulation->boundary[(j + 1) % triangulation->blen];
+        {
+            const Point *pt1 = get_point(points, point_size, i);
+            const Point *pt2 = get_point(points, point_size, ni);
+            fprintf(fh, "set arrow from %g,%g to %g,%g nohead ls 6\n",
+                    pt1->x, pt1->y, pt2->x, pt2->y);
         }
     }
     fclose(fh);
