@@ -156,7 +156,7 @@ static void          preview              (RawXYZControls *controls);
 static GwyDataField* rawxyz_do            (RawXYZFile *rfile,
                                            const RawXYZArgs *args);
 static void          interpolate_field    (guint npoints,
-                                           const GwyDelaunayPointXYZ *points,
+                                           const GwyTriangulationPointXYZ *points,
                                            GwyDataField *dfield);
 static void          extend_borders       (RawXYZFile *rfile,
                                            const RawXYZArgs *args,
@@ -813,7 +813,6 @@ rawxyz_do(RawXYZFile *rfile,
           const RawXYZArgs *args)
 {
     GArray *points = rfile->points;
-    GwyDelaunayTriangulation *triangulation;
     GwySIUnit *unitxy, *unitz;
     GwyDataField *dfield;
     gint xypow10, zpow10;
@@ -835,16 +834,16 @@ rawxyz_do(RawXYZFile *rfile,
 
     extend_borders(rfile, args, EPSREL);
     if (args->interpolation == GWY_INTERPOLATION_FIELD) {
-        interpolate_field(points->len, (GwyDelaunayPointXYZ*)points->data,
+        interpolate_field(points->len, (GwyTriangulationPointXYZ*)points->data,
                           dfield);
     }
     else {
-        triangulation = gwy_delaunay_triangulate(points->len, points->data,
-                                                 sizeof(GwyDelaunayPointXYZ));
-        gwy_delaunay_interpolate(triangulation,
-                                 points->data, sizeof(GwyDelaunayPointXYZ),
-                                 args->interpolation, dfield);
-        gwy_delaunay_triangulation_free(triangulation);
+        GwyTriangulation *triangulation = gwy_triangulation_new();
+        gwy_triangulation_triangulate(triangulation, points->len, points->data,
+                                      sizeof(GwyTriangulationPointXYZ));
+        gwy_triangulation_interpolate(triangulation, args->interpolation,
+                                      dfield);
+        g_object_unref(triangulation);
     }
 
     /* Fix the scales according to real units. */
@@ -859,7 +858,7 @@ rawxyz_do(RawXYZFile *rfile,
 
 static void
 interpolate_field(guint npoints,
-                  const GwyDelaunayPointXYZ *points,
+                  const GwyTriangulationPointXYZ *points,
                   GwyDataField *dfield)
 {
     gdouble xoff, yoff, qx, qy;
@@ -883,7 +882,7 @@ interpolate_field(guint npoints,
             gdouble s = 0.0;
 
             for (k = 0; k < npoints; k++) {
-                const GwyDelaunayPointXYZ *pt = points + k;
+                const GwyTriangulationPointXYZ *pt = points + k;
                 gdouble dx = x - pt->x;
                 gdouble dy = y - pt->y;
                 gdouble r2 = dx*dx + dy*dy;
@@ -929,9 +928,9 @@ extend_borders(RawXYZFile *rfile,
      * create at most 3 full copies (4 halves and 4 quarters) of the base set.
      * Anyone asking for more is either clueless or malicious. */
     for (i = 0; i < rfile->nbasepoints; i++) {
-        const GwyDelaunayPointXYZ *pt = &g_array_index(rfile->points,
-                                                       GwyDelaunayPointXYZ, i);
-        GwyDelaunayPointXYZ pt2;
+        const GwyTriangulationPointXYZ *pt = &g_array_index(rfile->points,
+                                                       GwyTriangulationPointXYZ, i);
+        GwyTriangulationPointXYZ pt2;
         gdouble txl, txr, tyt, tyb;
         gboolean txlok, txrok, tytok, tybok;
 
@@ -1024,9 +1023,9 @@ read_points(gchar *p)
     GArray *points;
     gchar *line, *end;
 
-    points = g_array_new(FALSE, FALSE, sizeof(GwyDelaunayPointXYZ));
+    points = g_array_new(FALSE, FALSE, sizeof(GwyTriangulationPointXYZ));
     for (line = gwy_str_next_line(&p); line; line = gwy_str_next_line(&p)) {
-        GwyDelaunayPointXYZ pt;
+        GwyTriangulationPointXYZ pt;
 
         if (!line[0] || line[0] == '#')
             continue;
@@ -1166,8 +1165,8 @@ work_queue_ensure(WorkQueue *queue,
 }
 
 static inline gdouble
-point_dist2(const GwyDelaunayPointXYZ *p,
-            const GwyDelaunayPointXYZ *q)
+point_dist2(const GwyTriangulationPointXYZ *p,
+            const GwyTriangulationPointXYZ *q)
 {
     gdouble dx = p->x - q->x;
     gdouble dy = p->y - q->y;
@@ -1177,11 +1176,11 @@ point_dist2(const GwyDelaunayPointXYZ *p,
 
 static gboolean
 maybe_add_point(WorkQueue *pointqueue,
-                const GwyDelaunayPointXYZ *newpoints,
+                const GwyTriangulationPointXYZ *newpoints,
                 guint ii,
                 gdouble eps2)
 {
-    const GwyDelaunayPointXYZ *pt;
+    const GwyTriangulationPointXYZ *pt;
     guint i;
 
     pt = newpoints + pointqueue->id[ii];
@@ -1203,14 +1202,14 @@ analyse_points(RawXYZFile *rfile,
                double epsrel)
 {
     WorkQueue cellqueue, pointqueue;
-    GwyDelaunayPointXYZ *points, *newpoints, *pt;
+    GwyTriangulationPointXYZ *points, *newpoints, *pt;
     gdouble xreal, yreal, eps, eps2, xr, yr, step;
     guint npoints, i, ii, j, ig, xres, yres, ncells, oldpos;
     guint *cell_index;
 
     /* Calculate data ranges */
     npoints = rfile->norigpoints = rfile->points->len;
-    points = (GwyDelaunayPointXYZ*)rfile->points->data;
+    points = (GwyTriangulationPointXYZ*)rfile->points->data;
     rfile->xmin = rfile->xmax = points[0].x;
     rfile->ymin = rfile->ymax = points[0].y;
     rfile->zmin = rfile->zmax = points[0].z;
@@ -1270,7 +1269,7 @@ analyse_points(RawXYZFile *rfile,
 
     index_accumulate(cell_index, xres*yres);
     index_rewind(cell_index, xres*yres);
-    newpoints = g_new(GwyDelaunayPointXYZ, npoints);
+    newpoints = g_new(GwyTriangulationPointXYZ, npoints);
 
     /* Sort points by cell */
     for (i = 0; i < npoints; i++) {
@@ -1352,7 +1351,7 @@ analyse_points(RawXYZFile *rfile,
 
         /* Calculate the representant of all contributing points. */
         {
-            GwyDelaunayPointXYZ avg = { 0.0, 0.0, 0.0 };
+            GwyTriangulationPointXYZ avg = { 0.0, 0.0, 0.0 };
 
             for (ii = 0; ii < pointqueue.pos; ii++) {
                 pt = newpoints + pointqueue.id[ii];
