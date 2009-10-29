@@ -153,8 +153,10 @@ static void          interpolation_changed(RawXYZControls *controls,
 static void          exterior_changed     (RawXYZControls *controls,
                                            GtkComboBox *combo);
 static void          preview              (RawXYZControls *controls);
+static void          triangulation_info   (RawXYZControls *controls);
 static GwyDataField* rawxyz_do            (RawXYZFile *rfile,
-                                           const RawXYZArgs *args);
+                                           const RawXYZArgs *args,
+                                           GError **error);
 static void          interpolate_field    (guint npoints,
                                            const GwyTriangulationPointXYZ *points,
                                            GwyDataField *dfield);
@@ -253,11 +255,13 @@ rawxyz_load(const gchar *filename,
         goto fail;
     }
 
-    dfield = rawxyz_do(&rfile, &args);
-    container = gwy_container_new();
-    gwy_container_set_object_by_name(container, "/0/data", dfield);
-    gwy_container_set_string_by_name(container, "/0/data/title",
-                                     g_strdup("Regularized XYZ"));
+    dfield = rawxyz_do(&rfile, &args, error);
+    if (dfield) {
+        container = gwy_container_new();
+        gwy_container_set_object_by_name(container, "/0/data", dfield);
+        gwy_container_set_string_by_name(container, "/0/data/title",
+                                         g_strdup("Regularized XYZ"));
+    }
 
 fail:
     rawxyz_free(&rfile);
@@ -507,6 +511,7 @@ rawxyz_dialog(RawXYZArgs *args,
     gtk_label_set_line_wrap(GTK_LABEL(controls.error), TRUE);
     gtk_widget_set_size_request(controls.error, PREVIEW_SIZE, -1);
     gtk_box_pack_start(GTK_BOX(vbox), controls.error, FALSE, FALSE, 0);
+    triangulation_info(&controls);
 
     g_signal_connect_swapped(controls.xy_units, "changed",
                              G_CALLBACK(xyunits_changed), &controls);
@@ -786,6 +791,7 @@ preview(RawXYZControls *controls)
     GtkWidget *entry;
     gdouble avg, rms;
     gint xres, yres;
+    GError *error = NULL;
 
     entry = gtk_window_get_focus(GTK_WINDOW(controls->dialog));
     if (entry && GTK_IS_ENTRY(entry))
@@ -795,27 +801,54 @@ preview(RawXYZControls *controls)
     yres = args->yres;
     args->xres = PREVIEW_SIZE*xres/MAX(xres, yres);
     args->yres = PREVIEW_SIZE*yres/MAX(xres, yres);
-    dfield = rawxyz_do(controls->rfile, args);
+    dfield = rawxyz_do(controls->rfile, args, &error);
     pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, 8,
                             args->xres, args->yres);
     args->xres = xres;
     args->yres = yres;
-    avg = gwy_data_field_get_avg(dfield);
-    rms = gwy_data_field_get_rms(dfield);
-    gwy_pixbuf_draw_data_field(pixbuf, dfield, controls->gradient);
+    if (dfield) {
+        triangulation_info(controls);
+        avg = gwy_data_field_get_avg(dfield);
+        rms = gwy_data_field_get_rms(dfield);
+        gwy_pixbuf_draw_data_field(pixbuf, dfield, controls->gradient);
+        g_object_unref(dfield);
+    }
+    else {
+        gtk_label_set_text(GTK_LABEL(controls->error), error->message);
+        g_clear_error(&error);
+        gdk_pixbuf_fill(pixbuf, 0x00000000);
+    }
     gtk_image_set_from_pixbuf(GTK_IMAGE(controls->preview), pixbuf);
     g_object_unref(pixbuf);
-    g_object_unref(dfield);
+}
+
+static void
+triangulation_info(RawXYZControls *controls)
+{
+    RawXYZFile *rfile;
+    gchar *s;
+
+    rfile = controls->rfile;
+    s = g_strdup_printf(_("Points read from file: %u\n"
+                          "Merged as too close: %u\n"
+                          "Added on the boundaries: %u"),
+                        rfile->norigpoints,
+                        rfile->norigpoints - rfile->nbasepoints,
+                        rfile->points->len - rfile->nbasepoints);
+    gtk_label_set_text(GTK_LABEL(controls->error), s);
+    g_free(s);
 }
 
 static GwyDataField*
 rawxyz_do(RawXYZFile *rfile,
-          const RawXYZArgs *args)
+          const RawXYZArgs *args,
+          GError **error)
 {
     GArray *points = rfile->points;
     GwySIUnit *unitxy, *unitz;
     GwyDataField *dfield;
     gint xypow10, zpow10;
+    gboolean ok;
     gdouble mag;
 
     unitxy = gwy_si_unit_new_parse(args->xy_units, &xypow10);
@@ -836,14 +869,25 @@ rawxyz_do(RawXYZFile *rfile,
     if (args->interpolation == GWY_INTERPOLATION_FIELD) {
         interpolate_field(points->len, (GwyTriangulationPointXYZ*)points->data,
                           dfield);
+        ok = TRUE;
     }
     else {
         GwyTriangulation *triangulation = gwy_triangulation_new();
-        gwy_triangulation_triangulate(triangulation, points->len, points->data,
-                                      sizeof(GwyTriangulationPointXYZ));
-        gwy_triangulation_interpolate(triangulation, args->interpolation,
-                                      dfield);
+        ok = (gwy_triangulation_triangulate(triangulation,
+                                           points->len, points->data,
+                                           sizeof(GwyTriangulationPointXYZ))
+              && gwy_triangulation_interpolate(triangulation,
+                                               args->interpolation, dfield));
         g_object_unref(triangulation);
+    }
+
+    if (!ok) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR,
+                    GWY_MODULE_FILE_ERROR_SPECIFIC,
+                    _("XYZ data regularization failed due to numerical "
+                      "instability."));
+        g_object_unref(dfield);
+        return NULL;
     }
 
     /* Fix the scales according to real units. */
