@@ -1178,14 +1178,17 @@ point_dist2(const GwyDelaunayPointXYZ *p,
 static gboolean
 maybe_add_point(WorkQueue *pointqueue,
                 const GwyDelaunayPointXYZ *newpoints,
-                guint id,
+                guint ii,
                 gdouble eps2)
 {
+    const GwyDelaunayPointXYZ *pt;
     guint i;
 
+    pt = newpoints + pointqueue->id[ii];
     for (i = 0; i < pointqueue->pos; i++) {
-        if (point_dist2(newpoints + id, newpoints + pointqueue->id[i]) < eps2) {
-            GWY_SWAP(guint, pointqueue->id[i], pointqueue->id[pointqueue->pos]);
+        if (point_dist2(pt, newpoints + pointqueue->id[i]) < eps2) {
+            GWY_SWAP(guint,
+                     pointqueue->id[ii], pointqueue->id[pointqueue->pos]);
             pointqueue->pos++;
             return TRUE;
         }
@@ -1202,7 +1205,7 @@ analyse_points(RawXYZFile *rfile,
     WorkQueue cellqueue, pointqueue;
     GwyDelaunayPointXYZ *points, *newpoints, *pt;
     gdouble xreal, yreal, eps, eps2, xr, yr, step;
-    guint npoints, i, j, ig, xres, yres, ncells, oldpos;
+    guint npoints, i, ii, j, ig, xres, yres, ncells, oldpos;
     guint *cell_index;
 
     /* Calculate data ranges */
@@ -1211,7 +1214,7 @@ analyse_points(RawXYZFile *rfile,
     rfile->xmin = rfile->xmax = points[0].x;
     rfile->ymin = rfile->ymax = points[0].y;
     rfile->zmin = rfile->zmax = points[0].z;
-    for (i = 0; i < npoints; i++) {
+    for (i = 1; i < npoints; i++) {
         pt = points + i;
 
         if (pt->x < rfile->xmin)
@@ -1334,25 +1337,25 @@ analyse_points(RawXYZFile *rfile,
              * the currently merged group. */
             while (cellqueue.pos < cellqueue.len) {
                 j = cellqueue.id[cellqueue.pos];
-                for (i = cell_index[j]; i < cell_index[j+1]; i++) {
-                    if (newpoints[i].z != G_MAXDOUBLE)
-                        work_queue_add(&pointqueue, i);
+                for (ii = cell_index[j]; ii < cell_index[j+1]; ii++) {
+                    if (newpoints[ii].z != G_MAXDOUBLE)
+                        work_queue_add(&pointqueue, ii);
                 }
                 cellqueue.pos++;
             }
 
             /* Compare all not-in-group points with all group points, adding
              * them to the group on success. */
-            for (i = pointqueue.pos; i < pointqueue.len; i++)
-                maybe_add_point(&pointqueue, newpoints, i, eps2);
+            for (ii = pointqueue.pos; ii < pointqueue.len; ii++)
+                maybe_add_point(&pointqueue, newpoints, ii, eps2);
         } while (oldpos != pointqueue.pos);
 
         /* Calculate the representant of all contributing points. */
         {
             GwyDelaunayPointXYZ avg = { 0.0, 0.0, 0.0 };
 
-            for (i = 0; i < pointqueue.pos; i++) {
-                pt = newpoints + pointqueue.id[i];
+            for (ii = 0; ii < pointqueue.pos; ii++) {
+                pt = newpoints + pointqueue.id[ii];
                 avg.x += pt->x;
                 avg.y += pt->y;
                 avg.z += pt->z;
