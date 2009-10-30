@@ -39,6 +39,7 @@ GPtrArray *files_array = NULL;
 void
 gwy_osx_get_menu_from_widget(USED_ON_MAC GtkWidget *container)
 {
+#ifdef GDK_WINDOWING_QUARTZ
 #ifdef USE_MAC_INTEGRATION
     GList *children;            //,*subchildren,*subsubchildren;
     GList *l, *ll, *lll;
@@ -76,6 +77,7 @@ gwy_osx_get_menu_from_widget(USED_ON_MAC GtkWidget *container)
     gtk_container_add(GTK_CONTAINER(container), menubar);
     gtk_widget_hide(menubar);
     ige_mac_menu_set_menu_bar(GTK_MENU_SHELL(menubar));
+#endif
 #endif
 }
 
