@@ -51,6 +51,8 @@
  * for identical point detection and border extension. */
 #define CELL_SIDE 1.6
 
+#define EXTENSION ".xyz"
+
 enum {
     PREVIEW_SIZE = 240,
     UNDEF = G_MAXUINT
@@ -134,6 +136,8 @@ typedef struct {
 } WorkQueue;
 
 static gboolean      module_register        (void);
+static gint          rawxyz_detect          (const GwyFileDetectInfo *fileinfo,
+                                             gboolean only_name);
 static GwyContainer* rawxyz_load            (const gchar *filename,
                                              GwyRunType mode,
                                              GError **error);
@@ -228,12 +232,60 @@ module_register(void)
 {
     gwy_file_func_register("rawxyz",
                            N_("Raw XYZ data"),
-                           NULL,
+                           (GwyFileDetectFunc)&rawxyz_detect,
                            (GwyFileLoadFunc)&rawxyz_load,
                            NULL,
                            NULL);
+    /* We provide a detection function, but the loading method tries a bit
+     * harder, so let the user choose explicitly. */
+    gwy_file_func_set_is_detectable("rawxyz", FALSE);
 
     return TRUE;
+}
+
+static gint
+rawxyz_detect(const GwyFileDetectInfo *fileinfo,
+              gboolean only_name)
+{
+    const gchar *s;
+    gchar *end;
+    guint i;
+
+    if (only_name)
+        return g_str_has_suffix(fileinfo->name_lowercase, EXTENSION) ? 20 : 0;
+
+    s = fileinfo->head;
+    for (i = 0; i < 6; i++) {
+        g_ascii_strtod(s, &end);
+        if (end == s) {
+            /* If we encounter garbage at the first line, give it a one more
+             * chance. */
+            if (i || !(s = strchr(s, '\n')))
+                return 0;
+            goto next_line;
+        }
+        s = end;
+        g_ascii_strtod(s, &end);
+        if (end == s)
+            return 0;
+        s = end;
+        g_ascii_strtod(s, &end);
+        if (end == s)
+            return 0;
+
+        s = end;
+        while (*s == ' ' || *s == '\t')
+            s++;
+        if (*s != '\n' && *s != '\r')
+            return 0;
+
+next_line:
+        do {
+            s++;
+        } while (g_ascii_isspace(*s));
+    }
+
+    return 50;
 }
 
 static GwyContainer*
