@@ -60,6 +60,12 @@ enum {
     GWY_INTERPOLATION_FIELD = -1,
 };
 
+typedef enum {
+    RAW_XYZ_IRREGULAR = 0,
+    RAW_XYZ_REGULAR_X = 1,   /* X is fast axis */
+    RAW_XYZ_REGULAR_Y = 2,   /* Y is fast axis */
+} RawXYZRegularType;
+
 typedef struct {
     /* XXX: Not all values of interpolation and exterior are possible. */
     GwyInterpolationType interpolation;
@@ -88,6 +94,11 @@ typedef struct {
     gdouble step;
     gdouble zmin;
     gdouble zmax;
+    RawXYZRegularType regular;
+    guint regular_xres;
+    guint regular_yres;
+    gdouble xstep;
+    gdouble ystep;
 } RawXYZFile;
 
 typedef struct {
@@ -169,6 +180,7 @@ static void          initialize_ranges    (const RawXYZFile *rfile,
                                            RawXYZArgs *args);
 static void          analyse_points       (RawXYZFile *rfile,
                                            double epsrel);
+static gboolean      check_regular_grid   (RawXYZFile *rfile);
 static void          rawxyz_load_args     (GwyContainer *container,
                                            RawXYZArgs *args);
 static void          rawxyz_save_args     (GwyContainer *container,
@@ -829,12 +841,20 @@ triangulation_info(RawXYZControls *controls)
     gchar *s;
 
     rfile = controls->rfile;
-    s = g_strdup_printf(_("Points read from file: %u\n"
-                          "Merged as too close: %u\n"
-                          "Added on the boundaries: %u"),
-                        rfile->norigpoints,
-                        rfile->norigpoints - rfile->nbasepoints,
-                        rfile->points->len - rfile->nbasepoints);
+    if (rfile->regular == RAW_XYZ_IRREGULAR) {
+        s = g_strdup_printf(_("Points read from file: %u\n"
+                              "Merged as too close: %u\n"
+                              "Added on the boundaries: %u"),
+                            rfile->norigpoints,
+                            rfile->norigpoints - rfile->nbasepoints,
+                            rfile->points->len - rfile->nbasepoints);
+    }
+    else {
+        s = g_strdup_printf(_("Points read from file: %u\n"
+                              "Points in a regular grid: %u×%u"),
+                            rfile->norigpoints,
+                            rfile->regular_xres, rfile->regular_yres);
+    }
     gtk_label_set_text(GTK_LABEL(controls->error), s);
     g_free(s);
 }
@@ -972,8 +992,8 @@ extend_borders(RawXYZFile *rfile,
      * create at most 3 full copies (4 halves and 4 quarters) of the base set.
      * Anyone asking for more is either clueless or malicious. */
     for (i = 0; i < rfile->nbasepoints; i++) {
-        const GwyTriangulationPointXYZ *pt = &g_array_index(rfile->points,
-                                                       GwyTriangulationPointXYZ, i);
+        const GwyTriangulationPointXYZ *pt
+            = &g_array_index(rfile->points, GwyTriangulationPointXYZ, i);
         GwyTriangulationPointXYZ pt2;
         gdouble txl, txr, tyt, tyb;
         gboolean txlok, txrok, tytok, tybok;
@@ -1124,8 +1144,10 @@ initialize_ranges(const RawXYZFile *rfile,
     args->xmax = rfile->xmax;
     args->ymin = rfile->ymin;
     args->ymax = rfile->ymax;
-    round_to_nice(&args->xmin, &args->xmax);
-    round_to_nice(&args->ymin, &args->ymax);
+    if (rfile->regular == RAW_XYZ_IRREGULAR) {
+        round_to_nice(&args->xmin, &args->xmax);
+        round_to_nice(&args->ymin, &args->ymax);
+    }
 }
 
 static inline guint
@@ -1276,6 +1298,9 @@ analyse_points(RawXYZFile *rfile,
             rfile->zmax = pt->z;
     }
 
+    if (check_regular_grid(rfile))
+        return;
+
     xreal = rfile->xmax - rfile->xmin;
     yreal = rfile->ymax - rfile->ymin;
 
@@ -1417,6 +1442,88 @@ analyse_points(RawXYZFile *rfile,
     g_free(newpoints);
 
     rfile->nbasepoints = rfile->points->len;
+}
+
+static gboolean
+check_regular_grid(RawXYZFile *rfile)
+{
+    GwyTriangulationPointXYZ *pt1, *pt2;
+    gdouble xstep, ystep, xeps, yeps;
+    guint xres, yres, i, j;
+
+    rfile->regular = RAW_XYZ_IRREGULAR;
+
+    if (rfile->points->len < 4)
+        return FALSE;
+
+    pt1 = &g_array_index(rfile->points, GwyTriangulationPointXYZ, 0);
+    pt2 = &g_array_index(rfile->points, GwyTriangulationPointXYZ, 1);
+    if (pt1->x == pt2->x) {
+        for (i = 2; i < rfile->points->len; i++) {
+            pt2 = &g_array_index(rfile->points, GwyTriangulationPointXYZ, i);
+            if (pt2->x != pt1->x)
+                break;
+        }
+        yres = rfile->regular_yres = i;
+        xres = rfile->regular_xres = rfile->points->len/yres;
+        rfile->regular = RAW_XYZ_REGULAR_Y;
+    }
+    else if (pt1->y == pt2->y) {
+        for (j = 2; j < rfile->points->len; j++) {
+            pt2 = &g_array_index(rfile->points, GwyTriangulationPointXYZ, j);
+            if (pt2->y != pt1->y)
+                break;
+        }
+        xres = rfile->regular_xres = j;
+        yres = rfile->regular_yres = rfile->points->len/xres;
+        rfile->regular = RAW_XYZ_REGULAR_X;
+    }
+    else
+        return FALSE;
+
+    if (rfile->points->len % xres
+        || rfile->points->len % yres
+        || xres < 2
+        || yres < 2) {
+        rfile->regular = RAW_XYZ_IRREGULAR;
+        return FALSE;
+    }
+
+    pt2 = &g_array_index(rfile->points, GwyTriangulationPointXYZ,
+                         rfile->points->len-1);
+    xstep = rfile->xstep = (pt2->x - pt1->x)/(xres - 1);
+    ystep = rfile->ystep = (pt2->y - pt1->y)/(yres - 1);
+    xeps = 0.001*fabs(xstep);
+    yeps = 0.001*fabs(ystep);
+
+    if (rfile->regular == RAW_XYZ_REGULAR_X) {
+        for (i = 0; i < yres; i++) {
+            for (j = 0; j < xres; j++) {
+                pt2 = &g_array_index(rfile->points, GwyTriangulationPointXYZ,
+                                     i*xres + j);
+                if (fabs(pt2->x - pt1->x - j*xstep) > xeps
+                    || fabs(pt2->y - pt1->y - i*ystep) > yeps) {
+                    rfile->regular = RAW_XYZ_IRREGULAR;
+                    return FALSE;
+                }
+            }
+        }
+    }
+    else {
+        for (j = 0; j < xres; j++) {
+            for (i = 0; i < yres; i++) {
+                pt2 = &g_array_index(rfile->points, GwyTriangulationPointXYZ,
+                                     j*yres + i);
+                if (fabs(pt2->x - pt1->x - j*xstep) > xeps
+                    || fabs(pt2->y - pt1->y - i*ystep) > yeps) {
+                    rfile->regular = RAW_XYZ_IRREGULAR;
+                    return FALSE;
+                }
+            }
+        }
+    }
+
+    return TRUE;
 }
 
 static const gchar exterior_key[]      = "/module/rawxyz/exterior";
