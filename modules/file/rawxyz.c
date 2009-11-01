@@ -1224,7 +1224,7 @@ work_queue_ensure(WorkQueue *queue,
     guint i;
 
     for (i = 0; i < queue->len; i++) {
-        if (queue->id[i] == i)
+        if (queue->id[i] == id)
             return;
     }
     work_queue_add(queue, id);
