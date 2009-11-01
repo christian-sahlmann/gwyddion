@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2009-10-26 03:58+0100\n"
-"PO-Revision-Date: 2009-10-28 20:59+0300\n"
+"POT-Creation-Date: 2009-11-01 03:58+0100\n"
+"PO-Revision-Date: 2009-11-01 10:46+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@km.ru>\n"
 "Language-Team: russian <ru@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -406,12 +406,12 @@ msgid "Scale and space adaptive"
 msgstr "Адаптивная по масштабу и пространству"
 
 #: libprocess/gwyprocessenums.c:205
-#: modules/file/rawxyz.c:459
+#: modules/file/rawxyz.c:475
 msgid "Round"
 msgstr "Округление"
 
 #: libprocess/gwyprocessenums.c:206
-#: modules/file/rawxyz.c:460
+#: modules/file/rawxyz.c:476
 msgid "Linear"
 msgstr "Линейная"
 
@@ -1103,7 +1103,7 @@ msgstr "_Добавить символ"
 
 #: libgwydgets/gwyscitext.c:273
 #: modules/file/rawfile.c:527
-#: modules/file/rawxyz.c:489
+#: modules/file/rawxyz.c:505
 msgid "Preview"
 msgstr "Предпросмотр"
 
@@ -1143,7 +1143,7 @@ msgstr "Название и версия:"
 
 #: libgwymodule/gwymodulebrowser.c:246
 #: libgwymodule/gwymodulebrowser.c:269
-#: modules/process/grain_dist.c:702
+#: modules/process/grain_dist.c:705
 msgid "File:"
 msgstr "Файл:"
 
@@ -2253,7 +2253,7 @@ msgstr "Экспортировать текст"
 #: modules/file/asciiexport.c:276
 #: modules/file/pixmap.c:2753
 #: modules/file/rawfile.c:720
-#: modules/file/rawxyz.c:447
+#: modules/file/rawxyz.c:463
 #: modules/process/fft_filter_1d.c:296
 #: modules/process/grain_dist.c:291
 #: modules/process/grain_mark.c:347
@@ -2587,29 +2587,29 @@ msgstr "Файлы Hitachi AFM, старые (.afm)"
 msgid "Hitachi-AFM has not registered file type `%s'."
 msgstr "Hitachi-AFM не имеет зарегистрированного типа файла `%s'."
 
-#: modules/file/igorfile.c:191
+#: modules/file/igorfile.c:259
 msgid "Imports Igor binary waves (.ibw)."
 msgstr "Импортирует Igor binary waves (.ibw)."
 
-#: modules/file/igorfile.c:204
+#: modules/file/igorfile.c:272
 msgid "Igor binary waves (.ibw)"
 msgstr "Двоичные волны Igor (.ibw)"
 
-#: modules/file/igorfile.c:263
+#: modules/file/igorfile.c:345
 #, c-format
 msgid "Format version is %d.  Only version 5 is supported."
 msgstr "Версия формата %d.  Поддерживается только версия 5."
 
-#: modules/file/igorfile.c:275
+#: modules/file/igorfile.c:357
 msgid "Only two-dimensional data are supported."
 msgstr "Поддерживаются только двумерные данные."
 
-#: modules/file/igorfile.c:287
+#: modules/file/igorfile.c:369
 #, c-format
 msgid "Number of data points %u does not match resolutions %u×%u×%u."
 msgstr "Число точек данных %u не соответствует разрешению %u×%u×%u."
 
-#: modules/file/igorfile.c:301
+#: modules/file/igorfile.c:383
 #, c-format
 msgid "Data size %u does not match the number of data points %u×%u."
 msgstr "Размер данных %u не соответствует числу точек данных %u×%u."
@@ -2866,7 +2866,7 @@ msgstr "DATA_INFO не содержит ожидаемых столбцов: %s.
 msgid "DATA_INFO line contains less than %d fields."
 msgstr "Строка DATA_INFO содержит меньше %d полей."
 
-#: modules/file/nanonis.c:454
+#: modules/file/nanonis.c:477
 msgid "Missing data start marker \\x1a\\x04."
 msgstr "Отсутствует маркер начала данных \\x1a\\x04."
 
@@ -2980,33 +2980,33 @@ msgstr "Массив `%s' содержит ненулевое количеств
 msgid "More than one record dimension found."
 msgstr "Найдена больше, чем одна запись о размерности."
 
-#: modules/file/nt-mdt.c:632
+#: modules/file/nt-mdt.c:634
 msgid "Imports NT-MDT data files."
 msgstr "Импорт файлов данных NT-MDT"
 
-#: modules/file/nt-mdt.c:645
+#: modules/file/nt-mdt.c:647
 msgid "NT-MDT files (.mdt)"
 msgstr "Файлы NT-MDT (.mdt)"
 
-#: modules/file/nt-mdt.c:1014
+#: modules/file/nt-mdt.c:1046
 msgid "Frame is too short for Frame Mode."
 msgstr "Фрейм слишком короткий для режима фреймов."
 
-#: modules/file/nt-mdt.c:1028
+#: modules/file/nt-mdt.c:1060
 msgid "Frame is too short for dots or data."
 msgstr "Фрейм слишком короткий для точек или данных."
 
-#: modules/file/nt-mdt.c:1285
+#: modules/file/nt-mdt.c:1317
 #, c-format
 msgid "End of file reached in frame header #%u."
 msgstr "Достигнут конец файла в заголовке фрейма #%u."
 
-#: modules/file/nt-mdt.c:1293
+#: modules/file/nt-mdt.c:1325
 #, c-format
 msgid "End of file reached in frame data #%u."
 msgstr "Достигнут конец файла в данных фрейма #%u."
 
-#: modules/file/nt-mdt.c:1326
+#: modules/file/nt-mdt.c:1359
 #, c-format
 msgid "Frame #%u is too short for scanned data header."
 msgstr "Фрейм #%u слишком короткий чтобы быть заголовком сканированных данных."
@@ -3171,14 +3171,14 @@ msgstr "Импортировать "
 
 #: modules/file/pixmap.c:969
 #: modules/file/rawfile.c:600
-#: modules/file/rawxyz.c:324
+#: modules/file/rawxyz.c:340
 #: modules/process/dimensions.h:422
 msgid "Resolution"
 msgstr "Разрешение"
 
 #: modules/file/pixmap.c:976
 #: modules/file/rawfile.c:605
-#: modules/file/rawxyz.c:328
+#: modules/file/rawxyz.c:344
 #: modules/process/dimensions.h:428
 msgid "_Horizontal size:"
 msgstr "_Горизонтальный размер:"
@@ -3190,14 +3190,14 @@ msgstr "пикс."
 
 #: modules/file/pixmap.c:983
 #: modules/file/rawfile.c:612
-#: modules/file/rawxyz.c:343
+#: modules/file/rawxyz.c:359
 #: modules/process/dimensions.h:431
 msgid "_Vertical size:"
 msgstr "Вертика_льный размер:"
 
 #: modules/file/pixmap.c:1014
 #: modules/file/rawfile.c:623
-#: modules/file/rawxyz.c:367
+#: modules/file/rawxyz.c:383
 #: modules/process/dimensions.h:444
 msgid "Physical Dimensions"
 msgstr "Физические размеры"
@@ -3222,7 +3222,7 @@ msgstr "_Высота"
 
 #: modules/file/pixmap.c:1066
 #: modules/file/rawfile.c:675
-#: modules/file/rawxyz.c:358
+#: modules/file/rawxyz.c:374
 msgid "Identical _measures"
 msgstr "Одинаковый _масштаб"
 
@@ -3513,7 +3513,7 @@ msgid "Presets"
 msgstr "Предустановки"
 
 #: modules/file/rawfile.c:541
-#: modules/file/rawxyz.c:502
+#: modules/file/rawxyz.c:518
 #: modules/process/convolution_filter.c:243
 #: modules/process/drift.c:227
 #: modules/process/edge.c:633
@@ -3538,7 +3538,7 @@ msgid "<b>File</b>"
 msgstr "<b>Файл</b>"
 
 #: modules/file/rawfile.c:617
-#: modules/file/rawxyz.c:403
+#: modules/file/rawxyz.c:419
 msgid "S_quare sample"
 msgstr "_Квадратный образец"
 
@@ -3794,40 +3794,40 @@ msgstr "Могут быть импортированы файлы с двумя 
 msgid "Curve"
 msgstr "Кривая"
 
-#: modules/file/rawxyz.c:187
+#: modules/file/rawxyz.c:201
 msgid "Imports raw XYZ files."
 msgstr "Импортирует неформатированные файлы XYZ."
 
-#: modules/file/rawxyz.c:200
+#: modules/file/rawxyz.c:214
 msgid "Raw XYZ data"
 msgstr "Неформатированные данные XYZ"
 
-#: modules/file/rawxyz.c:227
+#: modules/file/rawxyz.c:241
 msgid "Raw XYZ data import must be run as interactive."
 msgstr "импорт неформатированных данных XYZ должен быть запущен в интерактивном режиме."
 
-#: modules/file/rawxyz.c:301
+#: modules/file/rawxyz.c:317
 msgid "Import XYZ Data"
 msgstr "Импорт данных XYZ"
 
-#: modules/file/rawxyz.c:371
+#: modules/file/rawxyz.c:387
 msgid "_X-range:"
 msgstr "Диапазон _X:"
 
-#: modules/file/rawxyz.c:387
+#: modules/file/rawxyz.c:403
 msgid "_Y-range:"
 msgstr "Диапазон _Y:"
 
-#: modules/file/rawxyz.c:411
+#: modules/file/rawxyz.c:427
 msgid "_Lateral units:"
 msgstr "Единицы _размера:"
 
-#: modules/file/rawxyz.c:428
+#: modules/file/rawxyz.c:444
 #: modules/process/dimensions.h:471
 msgid "_Value units:"
 msgstr "Единицы измерения _значения:"
 
-#: modules/file/rawxyz.c:451
+#: modules/file/rawxyz.c:467
 #: modules/process/drift.c:291
 #: modules/process/dwt.c:204
 #: modules/process/dwtanisotropy.c:201
@@ -3846,29 +3846,52 @@ msgstr "Единицы измерения _значения:"
 msgid "_Interpolation type:"
 msgstr "Тип _интерполяции:"
 
-#: modules/file/rawxyz.c:461
-#, fuzzy
+#: modules/file/rawxyz.c:477
 msgid "Field"
 msgstr "Поле"
 
-#: modules/file/rawxyz.c:468
+#: modules/file/rawxyz.c:484
 msgid "_Exterior type:"
 msgstr "Тип _внешней части:"
 
-#: modules/file/rawxyz.c:476
+#: modules/file/rawxyz.c:492
 #: modules/process/polydistort.c:277
 msgid "Border"
 msgstr "Граничный"
 
-#: modules/file/rawxyz.c:477
+#: modules/file/rawxyz.c:493
 #: modules/process/polydistort.c:278
 msgid "Mirror"
 msgstr "Зеркальный"
 
-#: modules/file/rawxyz.c:478
+#: modules/file/rawxyz.c:494
 #: modules/process/polydistort.c:279
 msgid "Periodic"
 msgstr "Периодический"
+
+#: modules/file/rawxyz.c:845
+#, c-format
+msgid ""
+"Points read from file: %u\n"
+"Merged as too close: %u\n"
+"Added on the boundaries: %u"
+msgstr ""
+"Точек считано из файла: %u\n"
+"Объединено как слишком близких: %u\n"
+"Добавлено на границе: %u"
+
+#: modules/file/rawxyz.c:853
+#, c-format
+msgid ""
+"Points read from file: %u\n"
+"Points in a regular grid: %u×%u"
+msgstr ""
+"Точек считано из файла: %u\n"
+"Точки на правильной сетке: %u×%u"
+
+#: modules/file/rawxyz.c:907
+msgid "XYZ data regularization failed due to numerical instability."
+msgstr "Упорядочение XYZ-данных закончилось неудачно из-за численной нестабильности."
 
 #: modules/file/rhk-sm3.c:228
 msgid "Imports RHK Technology SM3 data files."
@@ -4222,7 +4245,6 @@ msgid "AUX in 10"
 msgstr ""
 
 #: modules/file/stpfile.c:126
-#, fuzzy
 msgid "Topography and Flexgrid"
 msgstr "Топография и динамическая сетка"
 
@@ -5222,7 +5244,7 @@ msgid "Masking Mode"
 msgstr "Режим использования маски"
 
 #: modules/process/curvature.c:802
-#: modules/process/grain_dist.c:830
+#: modules/process/grain_dist.c:833
 #: modules/tools/distance.c:221
 #: modules/tools/roughness.c:835
 #: modules/tools/stats.c:399
@@ -5230,7 +5252,7 @@ msgid "Save table to a file"
 msgstr "Сохранить таблицу в файл"
 
 #: modules/process/curvature.c:807
-#: modules/process/grain_dist.c:835
+#: modules/process/grain_dist.c:838
 #: modules/tools/distance.c:226
 #: modules/tools/roughness.c:840
 #: modules/tools/stats.c:404
@@ -5550,7 +5572,7 @@ msgstr "Найденная с_тупень"
 #: modules/process/fft_synth.c:586
 #: modules/process/grain_mark.c:380
 #: modules/process/grain_rem_threshold.c:357
-#: modules/process/mark_with.c:344
+#: modules/process/mark_with.c:359
 #: modules/process/obj_synth.c:768
 #: modules/process/polydistort.c:334
 #: modules/process/scars.c:575
@@ -5990,6 +6012,7 @@ msgstr "Тип предпросмотра:"
 
 #: modules/process/fit_2d.c:328
 #: modules/process/fractal.c:283
+#: modules/process/mark_with.c:262
 msgid "Result"
 msgstr "Результат"
 
@@ -6296,56 +6319,56 @@ msgstr "Строить _графики"
 msgid "Grain Distributions"
 msgstr "Распределения зёрен"
 
-#: modules/process/grain_dist.c:482
+#: modules/process/grain_dist.c:485
 msgid "noun|count"
 msgstr "число"
 
-#: modules/process/grain_dist.c:550
+#: modules/process/grain_dist.c:553
 msgid "Export Raw Grain Values"
 msgstr "Экспортировать необработанные данные зёрен"
 
-#: modules/process/grain_dist.c:657
+#: modules/process/grain_dist.c:660
 msgid "Save Grain Statistics"
 msgstr "Сохранить статистику зёрен"
 
-#: modules/process/grain_dist.c:708
+#: modules/process/grain_dist.c:711
 msgid "Data channel:"
 msgstr "Канал данных:"
 
-#: modules/process/grain_dist.c:737
-#: modules/process/grain_dist.c:809
+#: modules/process/grain_dist.c:740
+#: modules/process/grain_dist.c:812
 msgid "Grain Statistics"
 msgstr "Статистика зёрен"
 
-#: modules/process/grain_dist.c:749
+#: modules/process/grain_dist.c:752
 msgid "Number of grains:"
 msgstr "Число зёрен:"
 
-#: modules/process/grain_dist.c:758
+#: modules/process/grain_dist.c:761
 msgid "Total projected area (abs.):"
 msgstr "Общая площадь проекции (абс.):"
 
-#: modules/process/grain_dist.c:762
+#: modules/process/grain_dist.c:765
 msgid "Total projected area (rel.):"
 msgstr "Общая площадь проекции (отн.):"
 
-#: modules/process/grain_dist.c:768
+#: modules/process/grain_dist.c:771
 msgid "Mean grain area:"
 msgstr "Средняя площадь зерна:"
 
-#: modules/process/grain_dist.c:774
+#: modules/process/grain_dist.c:777
 msgid "Mean grain size:"
 msgstr "Средний размер зерна:"
 
-#: modules/process/grain_dist.c:783
+#: modules/process/grain_dist.c:786
 msgid "Total grain volume (zero):"
 msgstr "Общий объём зерна (нуль):"
 
-#: modules/process/grain_dist.c:789
+#: modules/process/grain_dist.c:792
 msgid "Total grain volume (minimum):"
 msgstr "Общий объём зерна (минимум):"
 
-#: modules/process/grain_dist.c:795
+#: modules/process/grain_dist.c:798
 msgid "Total grain volume (laplacian):"
 msgstr "Общий объём зерна (по Лапласу):"
 
@@ -6989,51 +7012,55 @@ msgstr "Изменение и комбинирование масок"
 msgid "Mark With"
 msgstr "Пометить с помощью"
 
-#: modules/process/mark_with.c:259
+#: modules/process/mark_with.c:251
+msgid "Operand"
+msgstr "Операнд"
+
+#: modules/process/mark_with.c:274
 msgid "Operation:"
 msgstr "Операция:"
 
-#: modules/process/mark_with.c:267
+#: modules/process/mark_with.c:282
 msgid "Se_t mask"
 msgstr "_Установить маску"
 
-#: modules/process/mark_with.c:268
+#: modules/process/mark_with.c:283
 msgid "_Add mask"
 msgstr "_Добавить маску"
 
-#: modules/process/mark_with.c:269
+#: modules/process/mark_with.c:284
 msgid "_Subtract mask"
 msgstr "_Вычесть маску"
 
-#: modules/process/mark_with.c:270
+#: modules/process/mark_with.c:285
 msgid "_Intersect masks"
 msgstr "_Пересечение масок"
 
-#: modules/process/mark_with.c:276
+#: modules/process/mark_with.c:291
 msgid "Mark with:"
 msgstr "Пометить с помощью:"
 
-#: modules/process/mark_with.c:284
+#: modules/process/mark_with.c:299
 msgid "with|_Mask"
 msgstr "_Маски"
 
-#: modules/process/mark_with.c:286
+#: modules/process/mark_with.c:301
 msgid "with|_Data"
 msgstr "Данн_ых"
 
-#: modules/process/mark_with.c:288
+#: modules/process/mark_with.c:303
 msgid "with|_Presentation"
 msgstr "П_резентации"
 
-#: modules/process/mark_with.c:319
+#: modules/process/mark_with.c:334
 msgid "Marked data range:"
 msgstr "Помеченный диапазон данных:"
 
-#: modules/process/mark_with.c:327
+#: modules/process/mark_with.c:342
 msgid "_Minimum:"
 msgstr "М_инимум:"
 
-#: modules/process/mark_with.c:336
+#: modules/process/mark_with.c:351
 msgid "M_aximum:"
 msgstr "М_аксимум:"
 
@@ -7685,20 +7712,20 @@ msgstr "График _наклонов (θ)"
 msgid "Slope Distribution"
 msgstr "Распределение наклонов"
 
-#: modules/process/slope_dist.c:428
+#: modules/process/slope_dist.c:431
 msgid "Angular Slope Distribution"
 msgstr "Распределение наклонов по углам"
 
-#: modules/process/slope_dist.c:438
+#: modules/process/slope_dist.c:441
 #: modules/process/tilt.c:174
 msgid "Slopes"
 msgstr "Наклоны"
 
-#: modules/process/slope_dist.c:493
+#: modules/process/slope_dist.c:496
 msgid "Inclination Distribution"
 msgstr "Распределение наклона"
 
-#: modules/process/slope_dist.c:503
+#: modules/process/slope_dist.c:506
 msgid "Inclinations"
 msgstr "Наклоны"
 
