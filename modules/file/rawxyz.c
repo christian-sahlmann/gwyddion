@@ -133,58 +133,74 @@ typedef struct {
     guint size;
 } WorkQueue;
 
-static gboolean      module_register      (void);
-static GwyContainer* rawxyz_load          (const gchar *filename,
-                                           GwyRunType mode,
-                                           GError **error);
-static gboolean      rawxyz_dialog        (RawXYZArgs *arg,
-                                           RawXYZFile *rfile);
-static void          xyunits_changed      (RawXYZControls *controls,
-                                           GtkEntry *entry);
-static void          zunits_changed       (RawXYZControls *controls,
-                                           GtkEntry *entry);
-static void          xres_changed         (RawXYZControls *controls,
-                                           GtkAdjustment *adj);
-static void          yres_changed         (RawXYZControls *controls,
-                                           GtkAdjustment *adj);
-static void          xmin_changed         (RawXYZControls *controls,
-                                           GtkAdjustment *adj);
-static void          xmax_changed         (RawXYZControls *controls,
-                                           GtkAdjustment *adj);
-static void          ymin_changed         (RawXYZControls *controls,
-                                           GtkAdjustment *adj);
-static void          ymax_changed         (RawXYZControls *controls,
-                                           GtkAdjustment *adj);
-static void          xydimeq_changed      (RawXYZControls *controls,
-                                           GtkToggleButton *button);
-static void          xymeasureeq_changed  (RawXYZControls *controls,
-                                           GtkToggleButton *button);
-static void          interpolation_changed(RawXYZControls *controls,
-                                           GtkComboBox *combo);
-static void          exterior_changed     (RawXYZControls *controls,
-                                           GtkComboBox *combo);
-static void          preview              (RawXYZControls *controls);
-static void          triangulation_info   (RawXYZControls *controls);
-static GwyDataField* rawxyz_do            (RawXYZFile *rfile,
-                                           const RawXYZArgs *args,
-                                           GError **error);
-static void          interpolate_field    (guint npoints,
-                                           const GwyTriangulationPointXYZ *points,
-                                           GwyDataField *dfield);
-static void          extend_borders       (RawXYZFile *rfile,
-                                           const RawXYZArgs *args,
-                                           gdouble epsrel);
-static void          rawxyz_free          (RawXYZFile *rfile);
-static GArray*       read_points          (gchar *p);
-static void          initialize_ranges    (const RawXYZFile *rfile,
-                                           RawXYZArgs *args);
-static void          analyse_points       (RawXYZFile *rfile,
-                                           double epsrel);
-static gboolean      check_regular_grid   (RawXYZFile *rfile);
-static void          rawxyz_load_args     (GwyContainer *container,
-                                           RawXYZArgs *args);
-static void          rawxyz_save_args     (GwyContainer *container,
-                                           RawXYZArgs *args);
+static gboolean      module_register        (void);
+static GwyContainer* rawxyz_load            (const gchar *filename,
+                                             GwyRunType mode,
+                                             GError **error);
+static gboolean      rawxyz_dialog          (RawXYZArgs *arg,
+                                             RawXYZFile *rfile);
+static gint          construct_resolutions  (RawXYZControls *controls,
+                                             GtkTable *table,
+                                             gint row);
+static gint          construct_physical_dims(RawXYZControls *controls,
+                                             GtkTable *table,
+                                             gint row);
+static gint          construct_units        (RawXYZControls *controls,
+                                             GtkTable *table,
+                                             gint row);
+static gint          construct_options      (RawXYZControls *controls,
+                                             GtkTable *table,
+                                             gint row);
+static void          xyunits_changed        (RawXYZControls *controls,
+                                             GtkEntry *entry);
+static void          zunits_changed         (RawXYZControls *controls,
+                                             GtkEntry *entry);
+static void          xres_changed           (RawXYZControls *controls,
+                                             GtkAdjustment *adj);
+static void          yres_changed           (RawXYZControls *controls,
+                                             GtkAdjustment *adj);
+static void          xmin_changed           (RawXYZControls *controls,
+                                             GtkAdjustment *adj);
+static void          xmax_changed           (RawXYZControls *controls,
+                                             GtkAdjustment *adj);
+static void          ymin_changed           (RawXYZControls *controls,
+                                             GtkAdjustment *adj);
+static void          ymax_changed           (RawXYZControls *controls,
+                                             GtkAdjustment *adj);
+static void          xydimeq_changed        (RawXYZControls *controls,
+                                             GtkToggleButton *button);
+static void          xymeasureeq_changed    (RawXYZControls *controls,
+                                             GtkToggleButton *button);
+static void          interpolation_changed  (RawXYZControls *controls,
+                                             GtkComboBox *combo);
+static void          exterior_changed       (RawXYZControls *controls,
+                                             GtkComboBox *combo);
+static void          preview                (RawXYZControls *controls);
+static void          triangulation_info     (RawXYZControls *controls);
+static GwyDataField* rawxyz_do              (RawXYZFile *rfile,
+                                             const RawXYZArgs *args,
+                                             GError **error);
+static void          fill_field_x           (const GwyTriangulationPointXYZ *points,
+                                             GwyDataField *dfield);
+static void          fill_field_y           (const GwyTriangulationPointXYZ *points,
+                                             GwyDataField *dfield);
+static void          interpolate_field      (guint npoints,
+                                             const GwyTriangulationPointXYZ *points,
+                                             GwyDataField *dfield);
+static void          extend_borders         (RawXYZFile *rfile,
+                                             const RawXYZArgs *args,
+                                             gdouble epsrel);
+static void          rawxyz_free            (RawXYZFile *rfile);
+static GArray*       read_points            (gchar *p);
+static void          initialize_ranges      (const RawXYZFile *rfile,
+                                             RawXYZArgs *args);
+static void          analyse_points         (RawXYZFile *rfile,
+                                             double epsrel);
+static gboolean      check_regular_grid     (RawXYZFile *rfile);
+static void          rawxyz_load_args       (GwyContainer *container,
+                                             RawXYZArgs *args);
+static void          rawxyz_save_args       (GwyContainer *container,
+                                             RawXYZArgs *args);
 
 static const RawXYZArgs rawxyz_defaults = {
     GWY_INTERPOLATION_LINEAR, GWY_EXTERIOR_MIRROR_EXTEND,
@@ -285,10 +301,9 @@ static gboolean
 rawxyz_dialog(RawXYZArgs *args,
               RawXYZFile *rfile)
 {
-    GtkWidget *dialog, *vbox, *align, *label, *spin, *hbox, *button;
+    GtkWidget *dialog, *vbox, *align, *label, *hbox;
     GtkTable *table;
     RawXYZControls controls;
-    GdkPixbuf *pixbuf;
     gint row, response;
 
     controls.args = args;
@@ -336,167 +351,13 @@ rawxyz_dialog(RawXYZArgs *args,
     gtk_container_add(GTK_CONTAINER(align), GTK_WIDGET(table));
     row = 0;
 
-    /* Resolution */
-    gtk_table_attach(table, gwy_label_new_header(_("Resolution")),
-                     0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
-    row++;
-
-    label = gtk_label_new_with_mnemonic(_("_Horizontal size:"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(table, label, 0, 1, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
-    controls.xres = gtk_adjustment_new(args->xres, 2, 16384, 1, 100, 0);
-    spin = gtk_spin_button_new(GTK_ADJUSTMENT(controls.xres), 0, 0);
-    gtk_label_set_mnemonic_widget(GTK_LABEL(label), spin);
-    gtk_table_attach(table, spin, 1, 2, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
-    label = gtk_label_new("px");
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(table, label, 2, 3, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
-    row++;
-
-    label = gtk_label_new_with_mnemonic(_("_Vertical size:"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(table, label, 0, 1, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
-    controls.yres = gtk_adjustment_new(args->yres, 2, 16384, 1, 100, 0);
-    spin = gtk_spin_button_new(GTK_ADJUSTMENT(controls.yres), 0, 0);
-    gtk_label_set_mnemonic_widget(GTK_LABEL(label), spin);
-    gtk_table_attach(table, spin, 1, 2, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
-    label = gtk_label_new("px");
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(table, label, 2, 3, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
-    row++;
-
-    button = gtk_check_button_new_with_mnemonic(_("Identical _measures"));
-    controls.xymeasureeq = button;
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(button), args->xymeasureeq);
-    gtk_table_attach(table, button, 0, 4, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
-    gtk_table_set_row_spacing(table, row, 8);
-    row++;
-
-    /* Resolution */
-    gtk_table_attach(table, gwy_label_new_header(_("Physical Dimensions")),
-                     0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
-    row++;
-
-    label = gtk_label_new_with_mnemonic(_("_X-range:"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(table, label, 0, 1, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
-    controls.xmin = gtk_adjustment_new(args->xmin, -1000.0, 1000.0, 1, 10, 0);
-    spin = gtk_spin_button_new(GTK_ADJUSTMENT(controls.xmin), 0, 3);
-    gtk_label_set_mnemonic_widget(GTK_LABEL(label), spin);
-    gtk_table_attach(table, spin, 1, 2, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
-    gtk_table_attach(table, gtk_label_new("–"), 2, 3, row, row+1, 0, 0, 0, 0);
-    controls.xmax = gtk_adjustment_new(args->xmax, -1000.0, 1000.0, 1, 10, 0);
-    spin = gtk_spin_button_new(GTK_ADJUSTMENT(controls.xmax), 0, 3);
-    gtk_table_attach(table, spin, 3, 4, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
-    row++;
-
-    label = gtk_label_new_with_mnemonic(_("_Y-range:"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(table, label, 0, 1, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
-    controls.ymin = gtk_adjustment_new(args->ymin, -1000.0, 1000.0, 1, 10, 0);
-    spin = gtk_spin_button_new(GTK_ADJUSTMENT(controls.ymin), 0, 3);
-    gtk_label_set_mnemonic_widget(GTK_LABEL(label), spin);
-    gtk_table_attach(table, spin, 1, 2, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
-    gtk_table_attach(table, gtk_label_new("–"), 2, 3, row, row+1, 0, 0, 0, 0);
-    controls.ymax = gtk_adjustment_new(args->ymax, -1000.0, 1000.0, 1, 10, 0);
-    spin = gtk_spin_button_new(GTK_ADJUSTMENT(controls.ymax), 0, 3);
-    gtk_table_attach(table, spin, 3, 4, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
-    row++;
-
-    button = gtk_check_button_new_with_mnemonic(_("S_quare sample"));
-    controls.xydimeq = button;
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(button), args->xydimeq);
-    gtk_table_attach(table, button, 0, 4, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
-    gtk_table_set_row_spacing(table, row, 8);
-    row++;
-
-    label = gtk_label_new_with_mnemonic(_("_Lateral units:"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(table, label, 0, 1, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
-    controls.xy_units = gtk_entry_new();
-    gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls.xy_units);
-    gtk_entry_set_text(GTK_ENTRY(controls.xy_units), args->xy_units);
-    gtk_entry_set_width_chars(GTK_ENTRY(controls.xy_units), 6);
-    gtk_table_attach(table, controls.xy_units, 1, 2, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
-    controls.xy_units_parsed = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(controls.xy_units_parsed), args->xy_units);
-    gtk_misc_set_alignment(GTK_MISC(controls.xy_units_parsed), 0.0, 0.5);
-    gtk_table_attach(table, controls.xy_units_parsed, 3, 4, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
-    row++;
-
-    label = gtk_label_new_with_mnemonic(_("_Value units:"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(table, label, 0, 1, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
-    controls.z_units = gtk_entry_new();
-    gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls.z_units);
-    gtk_entry_set_text(GTK_ENTRY(controls.z_units), args->z_units);
-    gtk_entry_set_width_chars(GTK_ENTRY(controls.z_units), 6);
-    gtk_table_attach(table, controls.z_units, 1, 2, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
-    controls.z_units_parsed = gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(controls.z_units_parsed), args->z_units);
-    gtk_misc_set_alignment(GTK_MISC(controls.z_units_parsed), 0.0, 0.5);
-    gtk_table_attach(table, controls.z_units_parsed, 3, 4, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
-    gtk_table_set_row_spacing(table, row, 8);
-    row++;
-
-    /* Options */
-    gtk_table_attach(table, gwy_label_new_header(_("Options")),
-                     0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
-    row++;
-
-    label = gtk_label_new_with_mnemonic(_("_Interpolation type:"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(table, label, 0, 1, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
-
-    controls.interpolation
-        = gwy_enum_combo_box_newl(NULL, NULL,
-                                  args->interpolation,
-                                  _("Round"), GWY_INTERPOLATION_ROUND,
-                                  _("Linear"), GWY_INTERPOLATION_LINEAR,
-                                  _("Field"), GWY_INTERPOLATION_FIELD,
-                                  NULL);
-    gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls.interpolation);
-    gtk_table_attach(table, controls.interpolation, 1, 4, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
-    row++;
-
-    label = gtk_label_new_with_mnemonic(_("_Exterior type:"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_table_attach(table, label, 0, 1, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
-
-    controls.exterior
-        = gwy_enum_combo_box_newl(NULL, NULL,
-                                  args->exterior,
-                                  _("Border"), GWY_EXTERIOR_BORDER_EXTEND,
-                                  _("Mirror"), GWY_EXTERIOR_MIRROR_EXTEND,
-                                  _("Periodic"), GWY_EXTERIOR_PERIODIC,
-                                  NULL);
-    gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls.exterior);
-    gtk_table_attach(table, controls.exterior, 1, 4, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
-    row++;
+    if (rfile->regular == RAW_XYZ_IRREGULAR) {
+        row = construct_resolutions(&controls, table, row);
+        row = construct_physical_dims(&controls, table, row);
+    }
+    row = construct_units(&controls, table, row);
+    if (rfile->regular == RAW_XYZ_IRREGULAR)
+        row = construct_options(&controls, table, row);
 
     /* Right column */
     vbox = gtk_vbox_new(FALSE, 2);
@@ -509,48 +370,55 @@ rawxyz_dialog(RawXYZArgs *args,
     controls.preview = gtk_image_new();
     gtk_box_pack_start(GTK_BOX(vbox), controls.preview, FALSE, FALSE, 0);
 
-    pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, 8,
-                            PREVIEW_SIZE, PREVIEW_SIZE);
-    gdk_pixbuf_fill(pixbuf, 0);
-    gtk_image_set_from_pixbuf(GTK_IMAGE(controls.preview), pixbuf);
-    g_object_unref(pixbuf);
+    if (rfile->regular == RAW_XYZ_IRREGULAR) {
+        GdkPixbuf *pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, 8,
+                                           PREVIEW_SIZE, PREVIEW_SIZE);
+        gdk_pixbuf_fill(pixbuf, 0);
+        gtk_image_set_from_pixbuf(GTK_IMAGE(controls.preview), pixbuf);
+        g_object_unref(pixbuf);
 
-    controls.do_preview = gtk_button_new_with_mnemonic(_("_Update"));
-    gtk_box_pack_start(GTK_BOX(vbox), controls.do_preview, FALSE, FALSE, 4);
+        controls.do_preview = gtk_button_new_with_mnemonic(_("_Update"));
+        gtk_box_pack_start(GTK_BOX(vbox), controls.do_preview, FALSE, FALSE, 4);
+    }
 
     controls.error = gtk_label_new(NULL);
     gtk_misc_set_alignment(GTK_MISC(controls.error), 0.0, 0.0);
     gtk_label_set_line_wrap(GTK_LABEL(controls.error), TRUE);
     gtk_widget_set_size_request(controls.error, PREVIEW_SIZE, -1);
     gtk_box_pack_start(GTK_BOX(vbox), controls.error, FALSE, FALSE, 0);
-    triangulation_info(&controls);
+    if (rfile->regular == RAW_XYZ_IRREGULAR)
+        triangulation_info(&controls);
+    else
+        preview(&controls);
 
     g_signal_connect_swapped(controls.xy_units, "changed",
                              G_CALLBACK(xyunits_changed), &controls);
     g_signal_connect_swapped(controls.z_units, "changed",
                              G_CALLBACK(zunits_changed), &controls);
-    g_signal_connect_swapped(controls.do_preview, "clicked",
-                             G_CALLBACK(preview), &controls);
-    g_signal_connect_swapped(controls.xres, "value-changed",
-                             G_CALLBACK(xres_changed), &controls);
-    g_signal_connect_swapped(controls.yres, "value-changed",
-                             G_CALLBACK(yres_changed), &controls);
-    g_signal_connect_swapped(controls.xmin, "value-changed",
-                             G_CALLBACK(xmin_changed), &controls);
-    g_signal_connect_swapped(controls.xmax, "value-changed",
-                             G_CALLBACK(xmax_changed), &controls);
-    g_signal_connect_swapped(controls.ymin, "value-changed",
-                             G_CALLBACK(ymin_changed), &controls);
-    g_signal_connect_swapped(controls.ymax, "value-changed",
-                             G_CALLBACK(ymax_changed), &controls);
-    g_signal_connect_swapped(controls.xydimeq, "toggled",
-                             G_CALLBACK(xydimeq_changed), &controls);
-    g_signal_connect_swapped(controls.xymeasureeq, "toggled",
-                             G_CALLBACK(xymeasureeq_changed), &controls);
-    g_signal_connect_swapped(controls.interpolation, "changed",
-                             G_CALLBACK(interpolation_changed), &controls);
-    g_signal_connect_swapped(controls.exterior, "changed",
-                             G_CALLBACK(exterior_changed), &controls);
+    if (rfile->regular == RAW_XYZ_IRREGULAR) {
+        g_signal_connect_swapped(controls.do_preview, "clicked",
+                                 G_CALLBACK(preview), &controls);
+        g_signal_connect_swapped(controls.xres, "value-changed",
+                                 G_CALLBACK(xres_changed), &controls);
+        g_signal_connect_swapped(controls.yres, "value-changed",
+                                 G_CALLBACK(yres_changed), &controls);
+        g_signal_connect_swapped(controls.xmin, "value-changed",
+                                 G_CALLBACK(xmin_changed), &controls);
+        g_signal_connect_swapped(controls.xmax, "value-changed",
+                                 G_CALLBACK(xmax_changed), &controls);
+        g_signal_connect_swapped(controls.ymin, "value-changed",
+                                 G_CALLBACK(ymin_changed), &controls);
+        g_signal_connect_swapped(controls.ymax, "value-changed",
+                                 G_CALLBACK(ymax_changed), &controls);
+        g_signal_connect_swapped(controls.xydimeq, "toggled",
+                                 G_CALLBACK(xydimeq_changed), &controls);
+        g_signal_connect_swapped(controls.xymeasureeq, "toggled",
+                                 G_CALLBACK(xymeasureeq_changed), &controls);
+        g_signal_connect_swapped(controls.interpolation, "changed",
+                                 G_CALLBACK(interpolation_changed), &controls);
+        g_signal_connect_swapped(controls.exterior, "changed",
+                                 G_CALLBACK(exterior_changed), &controls);
+    }
     controls.in_update = FALSE;
 
     gtk_widget_show_all(dialog);
@@ -579,6 +447,209 @@ rawxyz_dialog(RawXYZArgs *args,
     gwy_resource_release(GWY_RESOURCE(controls.gradient));
 
     return TRUE;
+}
+
+static gint
+construct_resolutions(RawXYZControls *controls,
+                      GtkTable *table,
+                      gint row)
+{
+    RawXYZArgs *args = controls->args;
+    GtkWidget *spin, *label, *button;
+
+    gtk_table_attach(table, gwy_label_new_header(_("Resolution")),
+                     0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    row++;
+
+    label = gtk_label_new_with_mnemonic(_("_Horizontal size:"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(table, label, 0, 1, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    controls->xres = gtk_adjustment_new(args->xres, 2, 16384, 1, 100, 0);
+    spin = gtk_spin_button_new(GTK_ADJUSTMENT(controls->xres), 0, 0);
+    gtk_label_set_mnemonic_widget(GTK_LABEL(label), spin);
+    gtk_table_attach(table, spin, 1, 2, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    label = gtk_label_new("px");
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(table, label, 2, 3, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    row++;
+
+    label = gtk_label_new_with_mnemonic(_("_Vertical size:"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(table, label, 0, 1, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    controls->yres = gtk_adjustment_new(args->yres, 2, 16384, 1, 100, 0);
+    spin = gtk_spin_button_new(GTK_ADJUSTMENT(controls->yres), 0, 0);
+    gtk_label_set_mnemonic_widget(GTK_LABEL(label), spin);
+    gtk_table_attach(table, spin, 1, 2, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    label = gtk_label_new("px");
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(table, label, 2, 3, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    row++;
+
+    button = gtk_check_button_new_with_mnemonic(_("Identical _measures"));
+    controls->xymeasureeq = button;
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(button), args->xymeasureeq);
+    gtk_table_attach(table, button, 0, 4, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    gtk_table_set_row_spacing(table, row, 8);
+    row++;
+
+    return row;
+}
+
+static gint
+construct_physical_dims(RawXYZControls *controls,
+                        GtkTable *table,
+                        gint row)
+{
+    RawXYZArgs *args = controls->args;
+    GtkWidget *spin, *label, *button;
+
+    gtk_table_attach(table, gwy_label_new_header(_("Physical Dimensions")),
+                     0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    row++;
+
+    label = gtk_label_new_with_mnemonic(_("_X-range:"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(table, label, 0, 1, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    controls->xmin = gtk_adjustment_new(args->xmin, -1000.0, 1000.0, 1, 10, 0);
+    spin = gtk_spin_button_new(GTK_ADJUSTMENT(controls->xmin), 0, 3);
+    gtk_label_set_mnemonic_widget(GTK_LABEL(label), spin);
+    gtk_table_attach(table, spin, 1, 2, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    gtk_table_attach(table, gtk_label_new("–"), 2, 3, row, row+1, 0, 0, 0, 0);
+    controls->xmax = gtk_adjustment_new(args->xmax, -1000.0, 1000.0, 1, 10, 0);
+    spin = gtk_spin_button_new(GTK_ADJUSTMENT(controls->xmax), 0, 3);
+    gtk_table_attach(table, spin, 3, 4, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    row++;
+
+    label = gtk_label_new_with_mnemonic(_("_Y-range:"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(table, label, 0, 1, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    controls->ymin = gtk_adjustment_new(args->ymin, -1000.0, 1000.0, 1, 10, 0);
+    spin = gtk_spin_button_new(GTK_ADJUSTMENT(controls->ymin), 0, 3);
+    gtk_label_set_mnemonic_widget(GTK_LABEL(label), spin);
+    gtk_table_attach(table, spin, 1, 2, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    gtk_table_attach(table, gtk_label_new("–"), 2, 3, row, row+1, 0, 0, 0, 0);
+    controls->ymax = gtk_adjustment_new(args->ymax, -1000.0, 1000.0, 1, 10, 0);
+    spin = gtk_spin_button_new(GTK_ADJUSTMENT(controls->ymax), 0, 3);
+    gtk_table_attach(table, spin, 3, 4, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    row++;
+
+    button = gtk_check_button_new_with_mnemonic(_("S_quare sample"));
+    controls->xydimeq = button;
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(button), args->xydimeq);
+    gtk_table_attach(table, button, 0, 4, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    gtk_table_set_row_spacing(table, row, 8);
+    row++;
+
+    return row;
+}
+
+static gint
+construct_units(RawXYZControls *controls,
+                GtkTable *table,
+                gint row)
+{
+    RawXYZArgs *args = controls->args;
+    GtkWidget *label;
+
+    label = gtk_label_new_with_mnemonic(_("_Lateral units:"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(table, label, 0, 1, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    controls->xy_units = gtk_entry_new();
+    gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls->xy_units);
+    gtk_entry_set_text(GTK_ENTRY(controls->xy_units), args->xy_units);
+    gtk_entry_set_width_chars(GTK_ENTRY(controls->xy_units), 6);
+    gtk_table_attach(table, controls->xy_units, 1, 2, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    controls->xy_units_parsed = gtk_label_new(NULL);
+    gtk_label_set_markup(GTK_LABEL(controls->xy_units_parsed), args->xy_units);
+    gtk_misc_set_alignment(GTK_MISC(controls->xy_units_parsed), 0.0, 0.5);
+    gtk_table_attach(table, controls->xy_units_parsed, 3, 4, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    row++;
+
+    label = gtk_label_new_with_mnemonic(_("_Value units:"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(table, label, 0, 1, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    controls->z_units = gtk_entry_new();
+    gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls->z_units);
+    gtk_entry_set_text(GTK_ENTRY(controls->z_units), args->z_units);
+    gtk_entry_set_width_chars(GTK_ENTRY(controls->z_units), 6);
+    gtk_table_attach(table, controls->z_units, 1, 2, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    controls->z_units_parsed = gtk_label_new(NULL);
+    gtk_label_set_markup(GTK_LABEL(controls->z_units_parsed), args->z_units);
+    gtk_misc_set_alignment(GTK_MISC(controls->z_units_parsed), 0.0, 0.5);
+    gtk_table_attach(table, controls->z_units_parsed, 3, 4, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    gtk_table_set_row_spacing(table, row, 8);
+    row++;
+
+    return row;
+}
+
+static gint
+construct_options(RawXYZControls *controls,
+                  GtkTable *table,
+                  gint row)
+{
+    RawXYZArgs *args = controls->args;
+    GtkWidget *label;
+
+    gtk_table_attach(table, gwy_label_new_header(_("Options")),
+                     0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    row++;
+
+    label = gtk_label_new_with_mnemonic(_("_Interpolation type:"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(table, label, 0, 1, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+
+    controls->interpolation
+        = gwy_enum_combo_box_newl(NULL, NULL,
+                                  args->interpolation,
+                                  _("Round"), GWY_INTERPOLATION_ROUND,
+                                  _("Linear"), GWY_INTERPOLATION_LINEAR,
+                                  _("Field"), GWY_INTERPOLATION_FIELD,
+                                  NULL);
+    gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls->interpolation);
+    gtk_table_attach(table, controls->interpolation, 1, 4, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    row++;
+
+    label = gtk_label_new_with_mnemonic(_("_Exterior type:"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(table, label, 0, 1, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+
+    controls->exterior
+        = gwy_enum_combo_box_newl(NULL, NULL,
+                                  args->exterior,
+                                  _("Border"), GWY_EXTERIOR_BORDER_EXTEND,
+                                  _("Mirror"), GWY_EXTERIOR_MIRROR_EXTEND,
+                                  _("Periodic"), GWY_EXTERIOR_PERIODIC,
+                                  NULL);
+    gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls->exterior);
+    gtk_table_attach(table, controls->exterior, 1, 4, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    row++;
+
+    return row;
 }
 
 static void
@@ -787,7 +858,7 @@ interpolation_changed(RawXYZControls *controls,
 
 static void
 exterior_changed(RawXYZControls *controls,
-                      GtkComboBox *combo)
+                 GtkComboBox *combo)
 {
     RawXYZArgs *args = controls->args;
 
@@ -814,6 +885,9 @@ preview(RawXYZControls *controls)
     args->xres = PREVIEW_SIZE*xres/MAX(xres, yres);
     args->yres = PREVIEW_SIZE*yres/MAX(xres, yres);
     dfield = rawxyz_do(controls->rfile, args, &error);
+    /* Regular grids are always created at full size. */
+    gwy_data_field_resample(dfield, args->xres, args->yres,
+                            GWY_INTERPOLATION_KEY);
     pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, 8,
                             args->xres, args->yres);
     args->xres = xres;
@@ -851,7 +925,7 @@ triangulation_info(RawXYZControls *controls)
     }
     else {
         s = g_strdup_printf(_("Points read from file: %u\n"
-                              "Points in a regular grid: %u×%u"),
+                              "Points form a regular grid: %u×%u"),
                             rfile->norigpoints,
                             rfile->regular_xres, rfile->regular_yres);
     }
@@ -867,14 +941,19 @@ rawxyz_do(RawXYZFile *rfile,
     GArray *points = rfile->points;
     GwySIUnit *unitxy, *unitz;
     GwyDataField *dfield;
-    gint xypow10, zpow10;
-    gboolean ok;
+    gint xypow10, zpow10, xres, yres;
+    gboolean ok = TRUE;
     gdouble mag;
+
+    xres = ((rfile->regular == RAW_XYZ_IRREGULAR)
+            ? args->xres : rfile->regular_xres);
+    yres = ((rfile->regular == RAW_XYZ_IRREGULAR)
+            ? args->yres : rfile->regular_yres);
 
     unitxy = gwy_si_unit_new_parse(args->xy_units, &xypow10);
     mag = pow10(xypow10);
     unitz = gwy_si_unit_new_parse(args->z_units, &zpow10);
-    dfield = gwy_data_field_new(args->xres, args->yres,
+    dfield = gwy_data_field_new(xres, yres,
                                 args->xmax - args->xmin,
                                 args->ymax - args->ymin,
                                 FALSE);
@@ -885,17 +964,23 @@ rawxyz_do(RawXYZFile *rfile,
     g_object_unref(unitxy);
     g_object_unref(unitz);
 
-    extend_borders(rfile, args, EPSREL);
-    if (args->interpolation == GWY_INTERPOLATION_FIELD) {
-        interpolate_field(points->len, (GwyTriangulationPointXYZ*)points->data,
+    if (rfile->regular == RAW_XYZ_REGULAR_X)
+        fill_field_x((const GwyTriangulationPointXYZ*)points->data, dfield);
+    else if (rfile->regular == RAW_XYZ_REGULAR_Y)
+        fill_field_y((const GwyTriangulationPointXYZ*)points->data, dfield);
+    else if (args->interpolation == GWY_INTERPOLATION_FIELD) {
+        extend_borders(rfile, args, EPSREL);
+        interpolate_field(points->len,
+                          (const GwyTriangulationPointXYZ*)points->data,
                           dfield);
-        ok = TRUE;
     }
     else {
         GwyTriangulation *triangulation = gwy_triangulation_new();
+
+        extend_borders(rfile, args, EPSREL);
         ok = (gwy_triangulation_triangulate(triangulation,
-                                           points->len, points->data,
-                                           sizeof(GwyTriangulationPointXYZ))
+                                            points->len, points->data,
+                                            sizeof(GwyTriangulationPointXYZ))
               && gwy_triangulation_interpolate(triangulation,
                                                args->interpolation, dfield));
         g_object_unref(triangulation);
@@ -918,6 +1003,35 @@ rawxyz_do(RawXYZFile *rfile,
     gwy_data_field_multiply(dfield, pow10(zpow10));
 
     return dfield;
+}
+
+static void
+fill_field_x(const GwyTriangulationPointXYZ *points,
+             GwyDataField *dfield)
+{
+    gint xres = gwy_data_field_get_xres(dfield);
+    gint yres = gwy_data_field_get_yres(dfield);
+    gdouble *d = gwy_data_field_get_data(dfield);
+    gint i;
+
+    for (i = 0; i < xres*yres; i++)
+        d[i] = points[i].z;
+}
+
+static void
+fill_field_y(const GwyTriangulationPointXYZ *points,
+             GwyDataField *dfield)
+{
+    gint xres = gwy_data_field_get_xres(dfield);
+    gint yres = gwy_data_field_get_yres(dfield);
+    gdouble *d = gwy_data_field_get_data(dfield);
+    gint i, j;
+
+    for (j = 0; j < xres; j++) {
+        for (i = 0; i < yres; i++) {
+            d[i*xres + j] = points[j*yres + i].z;
+        }
+    }
 }
 
 static void
@@ -1147,6 +1261,10 @@ initialize_ranges(const RawXYZFile *rfile,
     if (rfile->regular == RAW_XYZ_IRREGULAR) {
         round_to_nice(&args->xmin, &args->xmax);
         round_to_nice(&args->ymin, &args->ymax);
+    }
+    else {
+        args->xres = rfile->regular_xres;
+        args->yres = rfile->regular_yres;
     }
 }
 
