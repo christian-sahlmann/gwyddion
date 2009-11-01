@@ -155,6 +155,8 @@ static gint          construct_units        (RawXYZControls *controls,
 static gint          construct_options      (RawXYZControls *controls,
                                              GtkTable *table,
                                              gint row);
+static void          update_unit_label      (GtkLabel *label,
+                                             const gchar *unitstring);
 static void          xyunits_changed        (RawXYZControls *controls,
                                              GtkEntry *entry);
 static void          zunits_changed         (RawXYZControls *controls,
@@ -408,6 +410,8 @@ rawxyz_dialog(RawXYZArgs *args,
         row = construct_physical_dims(&controls, table, row);
     }
     row = construct_units(&controls, table, row);
+    update_unit_label(GTK_LABEL(controls.xy_units_parsed), args->xy_units);
+    update_unit_label(GTK_LABEL(controls.z_units_parsed), args->z_units);
     if (rfile->regular == RAW_XYZ_IRREGULAR)
         row = construct_options(&controls, table, row);
 
