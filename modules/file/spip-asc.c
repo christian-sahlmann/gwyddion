@@ -74,7 +74,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports SPIP ASC files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.1",
+    "0.2",
     "David Nečas (Yeti)",
     "2009",
 };
@@ -109,6 +109,24 @@ asc_detect(const GwyFileDetectInfo *fileinfo,
     return 100;
 }
 
+static gboolean
+header_error(G_GNUC_UNUSED const GwyTextHeaderContext *context,
+             GError *error,
+             G_GNUC_UNUSED gpointer user_data)
+{
+    return error->code == GWY_TEXT_HEADER_ERROR_TERMINATOR;
+}
+
+static void
+header_end(G_GNUC_UNUSED const GwyTextHeaderContext *context,
+           gsize length,
+           gpointer user_data)
+{
+    gchar **pp = (gchar**)user_data;
+
+    *pp += length;
+}
+
 static GwyContainer*
 asc_load(const gchar *filename,
          G_GNUC_UNUSED GwyRunType mode,
@@ -116,6 +134,7 @@ asc_load(const gchar *filename,
 {
     GwyContainer *container = NULL;
     GwyDataField *dfield = NULL, *mfield = NULL;
+    GwyTextHeaderParser parser;
     GwySIUnit *unit;
     gchar *line, *p, *value, *buffer = NULL;
     GHashTable *hash = NULL;
@@ -137,41 +156,16 @@ asc_load(const gchar *filename,
         goto fail;
     }
 
-    hash = g_hash_table_new(g_str_hash, g_str_equal);
-    while ((line = gwy_str_next_line(&p))) {
-        g_strstrip(line);
-        if (!line[0])
-            continue;
-
-        if (line[0] != '#') {
-            g_warning("Strange line not starting with #");
-            continue;
-        }
-
-        do {
-            line++;
-        } while (g_ascii_isspace(line[0]));
-
-        if (gwy_strequal(line, "Start of Data:"))
-            break;
-
-        value = strchr(line, '=');
-        if (!value)
-            continue;
-
-        *value = '\0';
-        do {
-            value++;
-        } while (g_ascii_isspace(value[0]));
-
-        g_strchomp(line);
-        for (i = 0; line[i]; i++)
-            line[i] = g_ascii_tolower(line[i]);
-
-        gwy_debug("<%s> = <%s>\n", line, value);
-        g_hash_table_insert(hash, line, value);
+    gwy_clear(&parser, 1);
+    parser.line_prefix = "#";
+    parser.key_value_separator = "=";
+    parser.terminator = "# Start of Data:";
+    parser.error = &header_error;
+    parser.end = &header_end;
+    if (!(hash = gwy_text_header_parse(p, &parser, &p, &err))) {
+        g_propagate_error(error, err);
+        goto fail;
     }
-
     if (!require_keys(hash, error,
                       "x-pixels", "y-pixels", "x-length", "y-length",
                       NULL))
@@ -210,8 +204,11 @@ asc_load(const gchar *filename,
         g_object_unref(unit);
         q = pow10(power10);
     }
-    else if ((value = g_hash_table_lookup(hash, "bit2nm"))) {
+    else if ((value = g_hash_table_lookup(hash, "Bit2nm"))) {
         q = Nanometer * g_ascii_strtod(value, NULL);
+        unit = gwy_si_unit_new("m");
+        gwy_data_field_set_si_unit_z(dfield, unit);
+        g_object_unref(unit);
     }
     else
         q = 1.0;
@@ -248,7 +245,8 @@ asc_load(const gchar *filename,
 
 fail:
     g_free(buffer);
-    g_hash_table_destroy(hash);
+    if (hash)
+        g_hash_table_destroy(hash);
 
     return container;
 }
