@@ -62,6 +62,7 @@ file_LTLIBRARIES = \
 	opdfile.la \
 	pixmap.la \
 	pnifile.la \
+	pltfile.la \
 	psia.la \
 	quesant.la \
 	rawfile.la \
@@ -155,6 +156,7 @@ omicronmatrix_la_SOURCES = omicronmatrix.c
 opdfile_la_SOURCES       = opdfile.c
 pixmap_la_SOURCES        = pixmap.c
 pnifile_la_SOURCES       = pnifile.c
+pltfile_la_SOURCES       = pltfile.c
 psia_la_SOURCES          = psia.c gwytiff.h
 quesant_la_SOURCES       = quesant.c
 rawfile_la_SOURCES       = rawfile.c rawfilepreset.h
