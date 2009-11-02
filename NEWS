@@ -33,6 +33,7 @@ Modules:
   images on MS Windows.
 - Pixmap export: It is possible to export data as 16bit grayscale images (at
   present for TIFF, PNG and PNM).
+- ASCII export: It is possible to set precision of exported values.
 - Object Synthesis: Cone, box and tent shapes were added.
 - Mark With: Marking result sometimes not corresponding to selected options
   was fixed.
