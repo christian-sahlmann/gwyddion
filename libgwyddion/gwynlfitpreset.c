@@ -48,7 +48,7 @@ gauss_func(gdouble x,
     }
     *fres = TRUE;
     c = (x - b[0])/b[3];
-    return b[2] * exp(-c*c/2) + b[1];
+    return b[2] * exp(-c*c) + b[1];
 }
 
 static void
@@ -76,7 +76,7 @@ gauss_guess(gint n_dat,
     }
     param[2] -= param[1];
     param[0] = x[imax];
-    param[3] = (x[n_dat-1] - x[0])/4;
+    param[3] = (x[n_dat-1] - x[0])/2/G_SQRT2;
 
     *fres = TRUE;
 }
