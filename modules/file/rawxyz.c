@@ -19,7 +19,7 @@
 
 /**
  * [FILE-MAGIC-USERGUIDE]
- * Raw XYZ data
+ * XYZ data
  * .xyz .dat
  * Read[1]
  * [1] XYZ data are interpolated to a regular grid upon import.
@@ -220,7 +220,7 @@ static const RawXYZArgs rawxyz_defaults = {
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    N_("Imports raw XYZ files."),
+    N_("Imports raw XYZ data files."),
     "Yeti <yeti@gwyddion.net>",
     "1.0",
     "David Nečas (Yeti)",
@@ -233,7 +233,7 @@ static gboolean
 module_register(void)
 {
     gwy_file_func_register("rawxyz",
-                           N_("Raw XYZ data"),
+                           N_("XYZ data files"),
                            (GwyFileDetectFunc)&rawxyz_detect,
                            (GwyFileLoadFunc)&rawxyz_load,
                            NULL,
