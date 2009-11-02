@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2009-11-01 03:58+0100\n"
-"PO-Revision-Date: 2009-11-01 10:46+0300\n"
+"POT-Creation-Date: 2009-11-02 03:59+0100\n"
+"PO-Revision-Date: 2009-11-02 09:26+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@km.ru>\n"
 "Language-Team: russian <ru@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -406,12 +406,12 @@ msgid "Scale and space adaptive"
 msgstr "Адаптивная по масштабу и пространству"
 
 #: libprocess/gwyprocessenums.c:205
-#: modules/file/rawxyz.c:475
+#: modules/file/rawxyz.c:682
 msgid "Round"
 msgstr "Округление"
 
 #: libprocess/gwyprocessenums.c:206
-#: modules/file/rawxyz.c:476
+#: modules/file/rawxyz.c:683
 msgid "Linear"
 msgstr "Линейная"
 
@@ -1103,7 +1103,7 @@ msgstr "_Добавить символ"
 
 #: libgwydgets/gwyscitext.c:273
 #: modules/file/rawfile.c:527
-#: modules/file/rawxyz.c:505
+#: modules/file/rawxyz.c:422
 msgid "Preview"
 msgstr "Предпросмотр"
 
@@ -2253,7 +2253,7 @@ msgstr "Экспортировать текст"
 #: modules/file/asciiexport.c:276
 #: modules/file/pixmap.c:2753
 #: modules/file/rawfile.c:720
-#: modules/file/rawxyz.c:463
+#: modules/file/rawxyz.c:670
 #: modules/process/fft_filter_1d.c:296
 #: modules/process/grain_dist.c:291
 #: modules/process/grain_mark.c:347
@@ -3171,14 +3171,14 @@ msgstr "Импортировать "
 
 #: modules/file/pixmap.c:969
 #: modules/file/rawfile.c:600
-#: modules/file/rawxyz.c:340
+#: modules/file/rawxyz.c:516
 #: modules/process/dimensions.h:422
 msgid "Resolution"
 msgstr "Разрешение"
 
 #: modules/file/pixmap.c:976
 #: modules/file/rawfile.c:605
-#: modules/file/rawxyz.c:344
+#: modules/file/rawxyz.c:520
 #: modules/process/dimensions.h:428
 msgid "_Horizontal size:"
 msgstr "_Горизонтальный размер:"
@@ -3190,14 +3190,14 @@ msgstr "пикс."
 
 #: modules/file/pixmap.c:983
 #: modules/file/rawfile.c:612
-#: modules/file/rawxyz.c:359
+#: modules/file/rawxyz.c:535
 #: modules/process/dimensions.h:431
 msgid "_Vertical size:"
 msgstr "Вертика_льный размер:"
 
 #: modules/file/pixmap.c:1014
 #: modules/file/rawfile.c:623
-#: modules/file/rawxyz.c:383
+#: modules/file/rawxyz.c:569
 #: modules/process/dimensions.h:444
 msgid "Physical Dimensions"
 msgstr "Физические размеры"
@@ -3222,7 +3222,7 @@ msgstr "_Высота"
 
 #: modules/file/pixmap.c:1066
 #: modules/file/rawfile.c:675
-#: modules/file/rawxyz.c:374
+#: modules/file/rawxyz.c:550
 msgid "Identical _measures"
 msgstr "Одинаковый _масштаб"
 
@@ -3513,7 +3513,7 @@ msgid "Presets"
 msgstr "Предустановки"
 
 #: modules/file/rawfile.c:541
-#: modules/file/rawxyz.c:518
+#: modules/file/rawxyz.c:436
 #: modules/process/convolution_filter.c:243
 #: modules/process/drift.c:227
 #: modules/process/edge.c:633
@@ -3538,7 +3538,7 @@ msgid "<b>File</b>"
 msgstr "<b>Файл</b>"
 
 #: modules/file/rawfile.c:617
-#: modules/file/rawxyz.c:419
+#: modules/file/rawxyz.c:605
 msgid "S_quare sample"
 msgstr "_Квадратный образец"
 
@@ -3794,40 +3794,40 @@ msgstr "Могут быть импортированы файлы с двумя 
 msgid "Curve"
 msgstr "Кривая"
 
-#: modules/file/rawxyz.c:201
+#: modules/file/rawxyz.c:223
 msgid "Imports raw XYZ files."
 msgstr "Импортирует неформатированные файлы XYZ."
 
-#: modules/file/rawxyz.c:214
+#: modules/file/rawxyz.c:236
 msgid "Raw XYZ data"
 msgstr "Неформатированные данные XYZ"
 
-#: modules/file/rawxyz.c:241
+#: modules/file/rawxyz.c:311
 msgid "Raw XYZ data import must be run as interactive."
 msgstr "импорт неформатированных данных XYZ должен быть запущен в интерактивном режиме."
 
-#: modules/file/rawxyz.c:317
+#: modules/file/rawxyz.c:386
 msgid "Import XYZ Data"
 msgstr "Импорт данных XYZ"
 
-#: modules/file/rawxyz.c:387
+#: modules/file/rawxyz.c:573
 msgid "_X-range:"
 msgstr "Диапазон _X:"
 
-#: modules/file/rawxyz.c:403
+#: modules/file/rawxyz.c:589
 msgid "_Y-range:"
 msgstr "Диапазон _Y:"
 
-#: modules/file/rawxyz.c:427
+#: modules/file/rawxyz.c:624
 msgid "_Lateral units:"
 msgstr "Единицы _размера:"
 
-#: modules/file/rawxyz.c:444
+#: modules/file/rawxyz.c:641
 #: modules/process/dimensions.h:471
 msgid "_Value units:"
 msgstr "Единицы измерения _значения:"
 
-#: modules/file/rawxyz.c:467
+#: modules/file/rawxyz.c:674
 #: modules/process/drift.c:291
 #: modules/process/dwt.c:204
 #: modules/process/dwtanisotropy.c:201
@@ -3846,30 +3846,30 @@ msgstr "Единицы измерения _значения:"
 msgid "_Interpolation type:"
 msgstr "Тип _интерполяции:"
 
-#: modules/file/rawxyz.c:477
+#: modules/file/rawxyz.c:684
 msgid "Field"
 msgstr "Поле"
 
-#: modules/file/rawxyz.c:484
+#: modules/file/rawxyz.c:691
 msgid "_Exterior type:"
 msgstr "Тип _внешней части:"
 
-#: modules/file/rawxyz.c:492
+#: modules/file/rawxyz.c:699
 #: modules/process/polydistort.c:277
 msgid "Border"
 msgstr "Граничный"
 
-#: modules/file/rawxyz.c:493
+#: modules/file/rawxyz.c:700
 #: modules/process/polydistort.c:278
 msgid "Mirror"
 msgstr "Зеркальный"
 
-#: modules/file/rawxyz.c:494
+#: modules/file/rawxyz.c:701
 #: modules/process/polydistort.c:279
 msgid "Periodic"
 msgstr "Периодический"
 
-#: modules/file/rawxyz.c:845
+#: modules/file/rawxyz.c:975
 #, c-format
 msgid ""
 "Points read from file: %u\n"
@@ -3880,16 +3880,16 @@ msgstr ""
 "Объединено как слишком близких: %u\n"
 "Добавлено на границе: %u"
 
-#: modules/file/rawxyz.c:853
+#: modules/file/rawxyz.c:983
 #, c-format
 msgid ""
 "Points read from file: %u\n"
-"Points in a regular grid: %u×%u"
+"Points form a regular grid: %u×%u"
 msgstr ""
 "Точек считано из файла: %u\n"
-"Точки на правильной сетке: %u×%u"
+"Точки формируют правильную сетку: %u×%u"
 
-#: modules/file/rawxyz.c:907
+#: modules/file/rawxyz.c:1048
 msgid "XYZ data regularization failed due to numerical instability."
 msgstr "Упорядочение XYZ-данных закончилось неудачно из-за численной нестабильности."
 
