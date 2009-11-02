@@ -898,7 +898,7 @@ read_channel_data(const gchar *value, gsize value_len,
 
     if (maxlen < npixels*sizeof(gfloat)) {
         g_set_error(error, G_MARKUP_ERROR, G_MARKUP_ERROR_INVALID_CONTENT,
-                    _("Wrong size of of Base64 encoded data."));
+                    _("Wrong size of Base64 encoded data."));
         return NULL;
     }
 
@@ -906,7 +906,7 @@ read_channel_data(const gchar *value, gsize value_len,
     len = decode_base64((const guchar*)value, value_len, (guchar*)mem);
     if (len != npixels*sizeof(gfloat)) {
         g_set_error(error, G_MARKUP_ERROR, G_MARKUP_ERROR_INVALID_CONTENT,
-                    _("Wrong size of of Base64 encoded data."));
+                    _("Wrong size of Base64 encoded data."));
         g_free(mem);
         return NULL;
     }
