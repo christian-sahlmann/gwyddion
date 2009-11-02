@@ -14,11 +14,14 @@ Libraries:
 - libgwyprocess: GwyMaskingType has a public GwyEnum.
 - libgwydgets: gwy_radio_buttons_create() accepts also implicitely terminated
   value-name tables.
+- libgwyddion: Gaussian fitting parameter b meaning was corrected to correspond
+  to the formula.
 
 Modules:
 - Attocube (new): Imports Attocube Systems ASC files.
 - NanoScan (new): Imports NanoScan XML files.
-- Raw XYZ (new): Imports raw XYZ data and regularizes them to a grid.
+- PLT (new): Imports Nanosurf PLT files.
+- Raw XYZ (new): Imports XYZ data and regularizes them to a grid.
 - IGOR: Support for Asylum Research files was substantialy improved.
 - NT-MDT: MDA frame support was improved.
 - NetCDF: Can read GXSM files with data in "FloatField" instead of "H".
