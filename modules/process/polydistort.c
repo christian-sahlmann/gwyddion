@@ -278,7 +278,7 @@ distort_dialog(DistortArgs *args,
                                   _("Mirror"), GWY_EXTERIOR_MIRROR_EXTEND,
                                   _("Periodic"), GWY_EXTERIOR_PERIODIC,
                                   NULL);
-    gwy_table_attach_hscale(table, row, _("_Exteriror type:"), NULL,
+    gwy_table_attach_hscale(table, row, _("_Exterior type:"), NULL,
                             GTK_OBJECT(controls.exterior),
                             GWY_HSCALE_WIDGET_NO_EXPAND);
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
