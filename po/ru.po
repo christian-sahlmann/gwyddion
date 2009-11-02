@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
 "POT-Creation-Date: 2009-11-02 03:59+0100\n"
-"PO-Revision-Date: 2009-11-02 09:26+0300\n"
+"PO-Revision-Date: 2009-11-02 21:03+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@km.ru>\n"
 "Language-Team: russian <ru@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -72,7 +72,7 @@ msgstr "Гауссова"
 
 #: libgwyddion/gwynlfitpreset.c:1206
 msgid "Gaussian (PSDF)"
-msgstr "Гауссова (PSDF)"
+msgstr "Гауссова (ФСПМ)"
 
 #: libgwyddion/gwynlfitpreset.c:1220
 msgid "Gaussian (ACF)"
@@ -92,7 +92,7 @@ msgstr "Экспоненциальная"
 
 #: libgwyddion/gwynlfitpreset.c:1275
 msgid "Exponential (PSDF)"
-msgstr "Экспоненциальная (PSDF)"
+msgstr "Экспоненциальная (ФСПМ)"
 
 #: libgwyddion/gwynlfitpreset.c:1289
 msgid "Exponential (ACF)"
@@ -136,7 +136,7 @@ msgstr "Лоренцева"
 
 #: libgwyddion/gwynlfitpreset.c:1427
 msgid "Sinc"
-msgstr ""
+msgstr "Sinc"
 
 #: libprocess/cdline.c:496
 msgid "Edge height (right)"
@@ -445,23 +445,23 @@ msgstr "Нет"
 
 #: libprocess/gwyprocessenums.c:244
 msgid "Hann"
-msgstr ""
+msgstr "Ханн"
 
 #: libprocess/gwyprocessenums.c:245
 msgid "Hamming"
-msgstr ""
+msgstr "Хэмминг"
 
 #: libprocess/gwyprocessenums.c:246
 msgid "Blackmann"
-msgstr ""
+msgstr "Блэкмен"
 
 #: libprocess/gwyprocessenums.c:247
 msgid "Lanzcos"
-msgstr ""
+msgstr "Ланцош"
 
 #: libprocess/gwyprocessenums.c:248
 msgid "Welch"
-msgstr ""
+msgstr "Велч"
 
 #: libprocess/gwyprocessenums.c:249
 msgid "Rect"
@@ -469,7 +469,7 @@ msgstr "Прямоугольное"
 
 #: libprocess/gwyprocessenums.c:250
 msgid "Nuttall"
-msgstr ""
+msgstr "Наттолл"
 
 #: libprocess/gwyprocessenums.c:251
 msgid "Flat-top"
@@ -1057,9 +1057,8 @@ msgid "Angle"
 msgstr "Угол"
 
 #: libgwydgets/gwyoptionmenus.c:453
-#, fuzzy
 msgid "Preferred"
-msgstr "Желаемое"
+msgstr "Предпочтительное"
 
 #: libgwydgets/gwyoptionmenus.c:467
 #: app/meta.c:285
@@ -1252,7 +1251,7 @@ msgstr "протокол Win32\n"
 
 #: app/about.c:279
 msgid "LibUnique\n"
-msgstr ""
+msgstr "LibUnique\n"
 
 #: app/about.c:283
 msgid "Remote Control"
@@ -1516,7 +1515,7 @@ msgstr "Показать только загружаемые файлы"
 
 #: app/gwyappfilechooser.c:745
 msgid "…"
-msgstr ""
+msgstr "…"
 
 #: app/gwyappfilechooser.c:893
 msgid "Cannot preview"
@@ -1981,7 +1980,7 @@ msgstr "Инструмент \"Статистические величины\" �
 
 #: app/tips.c:308
 msgid "Beside height and angle distributions, Statistical Functions tool calculates also correlation functions, power spectrum density (PSDF) and some more exotic functions."
-msgstr "Помимо распределений высот и углов, инструмент \"Статистические функции\" также рассчитывает функции корреляции, плотности спектра мощности (PSDF) и некоторые более экзотичные функции."
+msgstr "Помимо распределений высот и углов, инструмент \"Статистические функции\" также рассчитывает функции корреляции, спектральной плотности мощности (ФСПМ, PSDF) и некоторые более экзотичные функции."
 
 #: app/tips.c:314
 msgid "Path Level tool levels misaligned rows by lining them up along manually selected lines.  If there are no large features automatic Median Line Correction usually works well."
