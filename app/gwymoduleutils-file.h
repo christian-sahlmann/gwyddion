@@ -350,6 +350,9 @@ typedef struct {
                            const gchar *name,
                            gpointer user_data,
                            GError **error);
+    void (*end)(const GwyTextHeaderContext *context,
+                gsize length,
+                gpointer user_data);
     gboolean (*error)(const GwyTextHeaderContext *context,
                       GError *error,
                       gpointer user_data);

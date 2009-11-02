@@ -303,7 +303,7 @@ gwy_text_header_parse(gchar *header,
                       GError **error)
 {
     GwyTextHeaderContext context;
-    gchar *line;
+    gchar *line, *header_start;
     const gchar *section_prefix = NULL, *section_suffix = NULL,
                 *endsect_prefix = NULL, *endsect_suffix = NULL,
                 **comments = NULL;
@@ -314,6 +314,8 @@ gwy_text_header_parse(gchar *header,
     guint j, ncomments = 0;
     gboolean free_keys = FALSE;
 
+    g_return_val_if_fail(header, NULL);
+    g_return_val_if_fail(parser, NULL);
     g_return_val_if_fail(parser->section_template
                          || !parser->endsection_template,
                          NULL);
@@ -321,6 +323,8 @@ gwy_text_header_parse(gchar *header,
                          NULL);
     g_return_val_if_fail(parser->item || !parser->destroy_key, NULL);
     g_return_val_if_fail(parser->item || !parser->destroy_value, NULL);
+
+    header_start = header;
 
     /* Split section templates to prefix and suffix. */
     if (parser->section_template) {
@@ -570,6 +574,9 @@ gwy_text_header_parse(gchar *header,
         g_hash_table_destroy(context.hash);
         return NULL;
     }
+
+    if (parser->end)
+        parser->end(&context, header - header_start, context.user_data);
 
     return context.hash;
 }
@@ -977,7 +984,10 @@ gwy_text_header_context_get_lineno(const GwyTextHeaderContext *context)
  *                    constructing hash table keys.  It is invalid to set
  *                    @section_accessor without setting @section_template.
  *                    Typically, "::" is used.
- * @line_prefix: Mandatory prefix of each line.
+ * @line_prefix: Mandatory prefix of each line.  Note this applies only to
+ *               key-value lines.  The templates, such comments, sections and
+ *               terminators, must still include @line_prefix if they start
+ *               with it.
  * @key_value_separator: The string separating keys and values on each line.
  *                       Typically, "=" or ":" is used.  When left %NULL,
  *                       whitespace plays the role of the separator.  Of
@@ -993,10 +1003,12 @@ gwy_text_header_context_get_lineno(const GwyTextHeaderContext *context)
  *           it raises an error.
  * @endsection: Callback called when a section end.  It must return %FALSE if
  *              it raises an error.
+ * @end: Callback called when the parsing finishes successfully, @length
+ *       contains the length of parsed text in bytes.
  * @error: Callback called when an error occurs, including errors raised by
  *         other user callbacks.  If it returns %TRUE the error is considered
  *         fatal and the parsing terminates immediately.  If it is left unset
- *         no errors are fatal hence no errors reported to the caller.
+ *         no errors are fatal hence no errors are reported to the caller.
  * @destroy_key: Function to destroy keys, passed to g_hash_table_new_full().
  *               It is invalid to set @destroy_key if @item callback is not
  *               set.
