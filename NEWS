@@ -1,6 +1,6 @@
-2.18 (0000-00-00)
+2.18 (2009-11-03)
 Application:
-- Translations updated: French, Russian.
+- Translations updated: Czech, French, Russian.
 - Only file types that are not detected automaticaly are shown in the file
   open dialog.
 - A new remote control backend was added: LibUnique.
