@@ -4,7 +4,7 @@ msgstr ""
 "Project-Id-Version: Gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
 "POT-Creation-Date: 2009-11-02 23:55+0100\n"
-"PO-Revision-Date: 2009-11-02 23:56+0100\n"
+"PO-Revision-Date: 2009-11-03 10:39+0100\n"
 "Last-Translator: Yeti <yeti@gwyddion.net>\n"
 "Language-Team: Czech\n"
 "MIME-Version: 1.0\n"
@@ -1521,7 +1521,7 @@ msgstr "Prázdné jméno sekce v hlavičce na řádku %u."
 #: app/gwymoduleutils-file.c:508
 #, c-format
 msgid "Header line %u lacks prefix %s."
-msgstr "Na řádku %s hlavičky chybí prefix %s."
+msgstr "Na řádku %u hlavičky chybí prefix %s."
 
 #: app/gwymoduleutils-file.c:533
 #, c-format
