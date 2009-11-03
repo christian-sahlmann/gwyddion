@@ -294,7 +294,7 @@ make_noise(GwyTextHeaderContext *context,
  * Returns: A newly created hash table with values indexed by they keys found
  *          in the header.
  *
- * Since: 2.18.
+ * Since: 2.18
  **/
 GHashTable*
 gwy_text_header_parse(gchar *header,
