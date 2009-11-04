@@ -132,6 +132,10 @@ gwy_remote_get(void)
     }
 
     XFree(xchildren);
+    if (!remote->winid) {
+        gwy_remote_free(remote);
+        remote = NULL;
+    }
 
     return remote;
 }
