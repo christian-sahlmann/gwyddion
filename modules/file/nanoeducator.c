@@ -408,7 +408,7 @@ nanoedu_load(const gchar *filename,
         nobjects++;
     }
 
-    /* Additonal, but in fact alternative, data: one-line scans */
+    /* Additional, but in fact alternative, data: one-line scans */
     if (header.topo_nx && header.topo_ny
         && params.aqui_add == NANOEDU_SCANNER_TRAINING) {
         if (err_DIMENSION(error, header.topo_nx)
@@ -450,7 +450,7 @@ nanoedu_load(const gchar *filename,
         goto finish;
     }
 
-    /* Additonal data: spectra */
+    /* Additional data: spectra */
     if (params.aqui_spectr
         && params.n_spectra_lines && params.n_spectrum_points) {
         if (err_DIMENSION(error, params.n_spectra_lines)
@@ -479,7 +479,8 @@ nanoedu_load(const gchar *filename,
                                               Nanometer*q, scale*header.topo_ny,
                                               Nanometer*qx, Nanometer*qy,
                                               error);
-        else if (params.amp_modulation == 1)
+        else if ((params.amp_modulation == 1)
+              || (params.amp_modulation == 4))
             spectra = nanoedu_read_iz_spectra(buffer + header.point_offset,
                                               size - header.point_offset,
                                               buffer + header.spec_offset,
