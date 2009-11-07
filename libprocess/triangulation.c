@@ -2054,45 +2054,6 @@ edist2_xyz_xy(const PointXYZ *p, const Point *q)
     return dx*dx + dy*dy;
 }
 
-static inline gdouble
-tinterpolate_round(const Triangulation *triangulation,
-                   gconstpointer points, gsize point_size,
-                   const Triangle *triangle,
-                   const Point *pt)
-{
-    const PointXYZ *p;
-    gdouble d2min, d2[6];
-    guint i, j, n = 0, id[6];
-
-    id[n] = triangle->ia;
-    d2[n++] = edist2_xyz_xy(triangle->a, pt);
-    id[n] = triangle->ib;
-    d2[n++] = edist2_xyz_xy(triangle->b, pt);
-    id[n] = triangle->ic;
-    d2[n++] = edist2_xyz_xy(triangle->c, pt);
-
-    for (j = 0; j < 3; j++) {
-        i = id[j];
-        if (find_the_other_neighbour(triangulation,
-                                     id[(j + 1) % 3], id[(j + 2) % 3], &i)) {
-            id[n] = i;
-            d2[n++] = edist2_xyz_xy(get_point_xyz(points, point_size, i), pt);
-        }
-    }
-
-    i = 0;
-    d2min = d2[0];
-    for (j = 1; j < n; j++) {
-        if (d2[j] < d2min) {
-            d2min = d2[j];
-            i = j;
-        }
-    }
-
-    p = get_point_xyz(points, point_size, id[i]);
-    return p->z;
-}
-
 /* If TRUE is returned, then a neighbour on the other side was found and the
  * triangle has become clockwise.  If TRUE is returned, then @opposite is
  * unchanged and the triangle is kept counter-clockwise. */
@@ -2230,38 +2191,71 @@ ensure_vtriangle(const Triangulation *triangulation,
     return TRUE;
 }
 
+/* Initializes @vtriangle to any valid triangle containing point @hint. */
+static void
+make_valid_vtriangle(const Triangulation *triangulation,
+                     Triangle *vtriangle,
+                     guint hint)
+{
+    const Point *a = get_vpoint(triangulation, hint);
+    const Point *b, *c;
+    const guint *neighbours;
+    gdouble phib, phic;
+    guint i, len;
+
+    vtriangle->ia = i = hint;
+    neighbours = triangulation->voronoi + triangulation->vindex[i];
+    len = triangulation->vindex[i+1] - triangulation->vindex[i];
+    for (i = 0; i < len; i++) {
+        vtriangle->ib = neighbours[i];
+        vtriangle->ic = next_neighbour(neighbours, len, i);
+
+        b = get_vpoint(triangulation, vtriangle->ib);
+        phib = atan2(b->y - a->y, b->x - a->x);
+        c = get_vpoint(triangulation, vtriangle->ic);
+        phic = atan2(c->y - a->y, c->x - a->x);
+
+        if (ccw_angle_convex(phib, phic)) {
+            make_vtriangle(vtriangle, triangulation);
+            return;
+        }
+    }
+
+    g_assert_not_reached();
+}
+
 static gboolean
 interpolate_round(Triangulation *triangulation,
-                  Triangle *triangle,
+                  Triangle *vtriangle,
                   const Point *pt,
                   gdouble *value)
 {
     const PointXYZ *p = NULL;
-    Triangle vtriangle;
-    guint pos;
 
-    ensure_triangle(triangulation, triangle, pt);
-    if (G_UNLIKELY(triangle->ia == UNDEF))
+    ensure_vtriangle(triangulation, vtriangle, pt);
+    if (G_UNLIKELY(vtriangle->ia == UNDEF)) {
+        *value = 0.0;
         return FALSE;
+    }
 
-    vtriangle.ia = triangle->ia;
-    pos = triangulation->vindex[vtriangle.ia];
-    vtriangle.ib = triangulation->voronoi[pos];
-    vtriangle.ic = triangulation->voronoi[pos+1];
-    make_vtriangle(&vtriangle, triangulation);
-    ensure_vtriangle(triangulation, &vtriangle, pt);
-    if (vtriangle.ia < triangulation->npoints)
+    if (vtriangle->ia < triangulation->npoints)
         p = get_point_xyz(triangulation->points, triangulation->point_size,
-                          vtriangle.ia);
-    else if (vtriangle.ib < triangulation->npoints)
+                          vtriangle->ia);
+    else if (vtriangle->ib < triangulation->npoints)
         p = get_point_xyz(triangulation->points, triangulation->point_size,
-                          vtriangle.ib);
-    else if (vtriangle.ic < triangulation->npoints)
+                          vtriangle->ib);
+    else if (vtriangle->ic < triangulation->npoints)
         p = get_point_xyz(triangulation->points, triangulation->point_size,
-                          vtriangle.ic);
-    *value = p ? p->z : 0.0;
+                          vtriangle->ic);
 
-    return TRUE;
+    if (p) {
+        *value = p->z;
+        return TRUE;
+    }
+    else {
+        *value = 0.0;
+        return FALSE;
+    }
 }
 
 static inline gdouble
@@ -2375,9 +2369,12 @@ gwy_triangulation_interpolate(GwyTriangulation *object,
     g_return_val_if_fail(interpolation == GWY_INTERPOLATION_LINEAR
                          || interpolation == GWY_INTERPOLATION_ROUND, FALSE);
 
-    make_valid_triangle(triangulation->neighbours, triangulation->index[1],
-                        triangulation->points, triangulation->point_size,
-                        &triangle, 0);
+    if (interpolation == GWY_INTERPOLATION_LINEAR)
+        make_valid_triangle(triangulation->neighbours, triangulation->index[1],
+                            triangulation->points, triangulation->point_size,
+                            &triangle, 0);
+    else
+        make_valid_vtriangle(triangulation, &triangle, 0);
 
     xres = dfield->xres;
     yres = dfield->yres;
