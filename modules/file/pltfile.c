@@ -23,7 +23,7 @@
  *   <comment>Nanosurf PLT data</comment>
  *   <magic priority="80">
  *     <match type="string" offset="0" value="#Channel: ">
- *       <match type="string" offset="12-32" value="#Frame  :"/>
+ *       <match type="string" offset="12:32" value="#Frame  :"/>
  *     </match>
  *   </magic>
  *   <glob pattern="*.plt"/>
