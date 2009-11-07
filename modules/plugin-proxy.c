@@ -635,7 +635,7 @@ proc_find_plugin(const gchar *name,
         return NULL;
     }
     if (!(info->run & run)) {
-        g_critical("Plug-in `%s' doesn't suport this run mode.", name);
+        g_critical("Plug-in `%s' doesn't support this run mode.", name);
         return NULL;
     }
 
@@ -953,7 +953,7 @@ file_find_plugin(const gchar *name,
         return NULL;
     }
     if (!(info->run & run)) {
-        g_critical("Plug-in `%s' doesn't suport this operation.", name);
+        g_critical("Plug-in `%s' doesn't support this operation.", name);
         return NULL;
     }
 

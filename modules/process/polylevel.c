@@ -132,7 +132,7 @@ module_register(void)
                               GWY_STOCK_POLYNOM,
                               POLYLEVEL_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
-                              N_("Remove polynomial backgroud"));
+                              N_("Remove polynomial background"));
 
     return TRUE;
 }

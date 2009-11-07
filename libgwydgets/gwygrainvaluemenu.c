@@ -205,7 +205,7 @@ gwy_grain_value_tree_view_new(gboolean show_id,
         }
         else {
             g_warning("Unknown column `%s'", first_column);
-            title = "Unknonw";
+            title = "Unknown";
         }
 
         gtk_tree_view_column_set_title(column, title);
