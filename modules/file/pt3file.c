@@ -1,5 +1,5 @@
 /*
- *  $Id: metropro.c 10195 2009-10-01 23:04:26Z yeti-dn $
+ *  $Id$
  *  Copyright (C) 2009 David Necas (Yeti).
  *  E-mail: yeti@gwyddion.net.
  *
