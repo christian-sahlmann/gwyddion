@@ -64,6 +64,7 @@ file_LTLIBRARIES = \
 	pnifile.la \
 	pltfile.la \
 	psia.la \
+	pt3file.la \
 	quesant.la \
 	rawfile.la \
 	rawgraph.la \
@@ -158,6 +159,7 @@ pixmap_la_SOURCES        = pixmap.c
 pnifile_la_SOURCES       = pnifile.c
 pltfile_la_SOURCES       = pltfile.c
 psia_la_SOURCES          = psia.c gwytiff.h
+pt3file_la_SOURCES       = pt3file.c
 quesant_la_SOURCES       = quesant.c
 rawfile_la_SOURCES       = rawfile.c rawfilepreset.h
 rawgraph_la_SOURCES      = rawgraph.c
