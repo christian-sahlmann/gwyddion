@@ -119,7 +119,7 @@ SI_prefixes[] = {
 
 /* Units that can conflict with prefixes */
 static const gchar *known_units[] = {
-    "deg", "Pa", "cd", "mol", "cal", "px", "pt", "cps"
+    "deg", "Pa", "cd", "mol", "cal", "px", "pt", "cps", "counts",
 };
 
 /* Unit formats */
