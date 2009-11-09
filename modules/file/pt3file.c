@@ -39,6 +39,7 @@
  **/
 #define DEBUG 1
 #include <string.h>
+#include <stdio.h>
 #include "config.h"
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
@@ -56,9 +57,12 @@
 #define EXTENSION ".pt3"
 
 enum {
-    HEADER_MIN_SIZE = 722,
+    HEADER_MIN_SIZE = 728 + 8,   /* 8 for dimensions + instrument */
     BOARD_SIZE = 150,
-    CRLF_OFFSET = 0x46,
+    CRLF_OFFSET = 70,
+    IMAGING_PIE710_SIZE = 60,
+    IMAGING_KDT180_SIZE = 44,
+    IMAGING_LSM_SIZE = 32,
 };
 
 typedef enum {
@@ -83,6 +87,23 @@ typedef enum {
     PICO_HARP_INPUT_FALLING = 0,
     PICO_HARP_INPUT_RISING  = 1,
 } PicoHarpInputEdge;
+
+typedef enum {
+    PICO_HARP_PIE710 = 1,
+    PICO_HARP_KDT180 = 2,
+    PICO_HARP_LSM    = 3,
+} PicoHarpInstrument;
+
+typedef struct {
+    guint channel;
+    guint time;
+} PicoHarpT2Record;
+
+typedef struct {
+    guint channel;
+    guint time;
+    guint nsync;
+} PicoHarpT3Record;
 
 typedef struct {
     guint map_to;
@@ -118,6 +139,66 @@ typedef struct {
     gboolean router_enabled;
     PicoHarpRTChannel rt_channel[4];
 } PicoHarpBoard;
+
+typedef struct {
+    guint dimensions;
+    PicoHarpInstrument instrument;
+    guint xres;
+    guint yres;
+    gboolean bidirectional;
+} PicoHarpCommonImagingHeader;
+
+/* XXX: The fields are not in file order here, we try to maximize the number
+ * of items in common. */
+typedef struct {
+    guint dimensions;
+    PicoHarpInstrument instrument;
+    guint xres;
+    guint yres;
+    gboolean bidirectional;
+    guint time_per_pixel;    /* [0.2ms] */
+    guint acceleration;      /* interval length in % of total width */
+    guint reserved;
+    gdouble xoff;            /* [µm] */
+    gdouble yoff;            /* [µm] */
+    gdouble pix_resol;       /* [µm/px] */
+    gdouble t_start_to;
+    gdouble t_stop_to;
+    gdouble t_start_from;
+    gdouble t_stop_from;
+} PicoHarpPIE710ImagingHeader;
+
+typedef struct {
+    guint dimensions;
+    PicoHarpInstrument instrument;
+    guint xres;
+    guint yres;
+    gboolean bidirectional;
+    guint velocity;          /* [ticks/s] */
+    guint acceleration;      /* [ticks/s²] */
+    guint reserved;
+    gdouble xoff;            /* [µm] */
+    gdouble yoff;            /* [µm] */
+    gdouble pix_resol;       /* [µm/px] */
+} PicoHarpKDT180ImagingHeader;
+
+typedef struct {
+    guint dimensions;
+    PicoHarpInstrument instrument;
+    guint xres;
+    guint yres;
+    gboolean bidirectional;
+    guint frame_trigger_index;
+    guint line_start_trigger_index;
+    guint line_stop_trigger_index;
+} PicoHarpLSMImagingHeader;
+
+typedef union {
+    PicoHarpCommonImagingHeader common;
+    PicoHarpPIE710ImagingHeader pie710;
+    PicoHarpKDT180ImagingHeader kdt180;
+    PicoHarpLSMImagingHeader lsm;
+} PicoHarpImagingHeader;
 
 typedef struct {
     gchar ident[16];
@@ -163,22 +244,30 @@ typedef struct {
     guint stop_after;
     PicoHarpStopReason stop_reason;
     guint number_of_records;
-    guint spec_header_length;
+    guint spec_header_length;    /* stored value has units [4bytes], but we
+                                    recalculate it upon reading */
+    PicoHarpImagingHeader imaging;
 } PicoHarpFile;
 
-static gboolean      module_register      (void);
-static gint          pt3file_detect      (const GwyFileDetectInfo *fileinfo,
-                                           gboolean only_name);
-static GwyContainer* pt3file_load        (const gchar *filename,
-                                           GwyRunType mode,
-                                           GError **error);
-static gboolean      pt3file_read_header (const guchar *buffer,
-                                           gsize size,
-                                           PicoHarpFile *pt3file,
-                                           GError **error);
-static const guchar* pt3file_read_board(PicoHarpBoard *board,
-                                        const guchar *p);
-static GwyContainer* pt3file_get_metadata(PicoHarpFile *pt3file);
+static gboolean      module_register           (void);
+static gint          pt3file_detect            (const GwyFileDetectInfo *fileinfo,
+                                                gboolean only_name);
+static GwyContainer* pt3file_load              (const gchar *filename,
+                                                GwyRunType mode,
+                                                GError **error);
+static gsize         pt3file_read_header       (const guchar *buffer,
+                                                gsize size,
+                                                PicoHarpFile *pt3file,
+                                                GError **error);
+static const guchar* pt3file_read_board        (PicoHarpBoard *board,
+                                                const guchar *p);
+static const guchar* read_pie710_imaging_header(PicoHarpImagingHeader *header,
+                                                const guchar *p);
+static const guchar* read_kdt180_imaging_header(PicoHarpImagingHeader *header,
+                                                const guchar *p);
+static const guchar* read_lsm_imaging_header   (PicoHarpImagingHeader *header,
+                                                const guchar *p);
+static GwyContainer* pt3file_get_metadata      (PicoHarpFile *pt3file);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -225,6 +314,32 @@ pt3file_detect(const GwyFileDetectInfo *fileinfo,
     return score;
 }
 
+static inline const guchar*
+read_t2_record(PicoHarpT2Record *rec,
+               const guchar *p)
+{
+    guint32 r = gwy_get_guint32_le(&p);
+
+    rec->time = r & 0x0fffffffU;
+    rec->channel = r >> 28;
+
+    return p;
+}
+
+static inline const guchar*
+read_t3_record(PicoHarpT3Record *rec,
+               const guchar *p)
+{
+    guint32 r = gwy_get_guint32_le(&p);
+
+    rec->nsync = r & 0x0000ffffU;
+    r = r >> 16;
+    rec->time = r & 0x000000fffU;
+    rec->channel = r >> 12;
+
+    return p;
+}
+
 static GwyContainer*
 pt3file_load(const gchar *filename,
              G_GNUC_UNUSED GwyRunType mode,
@@ -234,16 +349,27 @@ pt3file_load(const gchar *filename,
     GwyContainer *meta, *container = NULL;
     GwyDataField *dfield = NULL;
     guchar *buffer = NULL;
-    gsize size = 0;
+    const guchar *p;
+    gsize header_len, size = 0;
     GError *err = NULL;
+    guint i;
 
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
         err_GET_FILE_CONTENTS(error, &err);
         return NULL;
     }
 
-    if (!pt3file_read_header(buffer, size, &pt3file, error))
+    gwy_clear(&pt3file, 1);
+    if (!(header_len = pt3file_read_header(buffer, size, &pt3file, error)))
         return NULL;
+
+    p = buffer + header_len;
+    for (i = 0; i < pt3file.number_of_records; i++) {
+        PicoHarpT3Record rec;
+
+        p = read_t3_record(&rec, p);
+        /*printf("%u %u %u\n", rec.channel, rec.time, rec.nsync);*/
+    }
 
     /*
     expected = pt3file.header_size
@@ -268,19 +394,22 @@ pt3file_load(const gchar *filename,
     return container;
 }
 
-static gboolean
+static gsize
 pt3file_read_header(const guchar *buffer,
                     gsize size,
                     PicoHarpFile *pt3file,
                     GError **error)
 {
+    const guchar* (*read_imaging_header)(PicoHarpImagingHeader *header,
+                                         const guchar *p);
+    PicoHarpInstrument instr;
     const guchar *p;
-    guint i;
+    guint i, expected_size;
 
     p = buffer;
     if (size < HEADER_MIN_SIZE + 2) {
         err_TOO_SHORT(error);
-        return FALSE;
+        return 0;
     }
 
     get_CHARARRAY(pt3file->ident, &p);
@@ -299,26 +428,34 @@ pt3file_read_header(const guchar *buffer,
         || pt3file->crlf[0] != '\r'
         || pt3file->crlf[1] != '\n') {
         err_FILE_TYPE(error, "PicoHarp");
-        return FALSE;
+        return 0;
     }
 
     pt3file->number_of_curves = gwy_get_guint32_le(&p);
+    gwy_debug("number_of_curves: %u", pt3file->number_of_curves);
     pt3file->bits_per_record = gwy_get_guint32_le(&p);
+    gwy_debug("bits_per_record: %u", pt3file->bits_per_record);
     pt3file->routing_channels = gwy_get_guint32_le(&p);
+    gwy_debug("routing_channels: %u", pt3file->routing_channels);
     pt3file->number_of_boards = gwy_get_guint32_le(&p);
+    gwy_debug("number_of_boards: %u", pt3file->number_of_boards);
     if (pt3file->number_of_boards != 1) {
         g_warning("Number of boards is %u instead of 1.  Reading one.",
                   pt3file->number_of_boards);
 
         pt3file->number_of_boards = MAX(pt3file->number_of_boards, 1);
         if (size < HEADER_MIN_SIZE + BOARD_SIZE*pt3file->number_of_boards) {
-            err_TOO_SHORT(error);
-            return FALSE;
+            g_set_error(error, GWY_MODULE_FILE_ERROR,
+                        GWY_MODULE_FILE_ERROR_DATA,
+                        _("File header is truncated"));
+            return 0;
         }
     }
     pt3file->active_curve = gwy_get_guint32_le(&p);
     pt3file->measurement_mode = gwy_get_guint32_le(&p);
+    gwy_debug("measurement_mode: %u", pt3file->measurement_mode);
     pt3file->sub_mode = gwy_get_guint32_le(&p);
+    gwy_debug("sub_mode: %u", pt3file->sub_mode);
     pt3file->range_no = gwy_get_guint32_le(&p);
     pt3file->offset = gwy_get_gint32_le(&p);
     pt3file->acquisition_time = gwy_get_guint32_le(&p);
@@ -354,10 +491,77 @@ pt3file_read_header(const guchar *buffer,
     pt3file->stop_after = gwy_get_guint32_le(&p);
     pt3file->stop_reason = gwy_get_guint32_le(&p);
     pt3file->number_of_records = gwy_get_guint32_le(&p);
-    pt3file->spec_header_length = gwy_get_guint32_le(&p);
+    gwy_debug("number_of_records: %u", pt3file->number_of_records);
+    pt3file->spec_header_length = 4*gwy_get_guint32_le(&p);
     gwy_debug("spec_header_length: %u", pt3file->spec_header_length);
+    gwy_debug("now at pos 0x%0lx", (gulong)(p - buffer));
 
-    return TRUE;
+    if (pt3file->measurement_mode != 2
+        && pt3file->measurement_mode != 3) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Measurement mode must be 2 or 3; %u is invalid."),
+                    pt3file->measurement_mode);
+        return 0;
+    }
+    if (pt3file->sub_mode != PICO_HARP_IMAGE) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Only area imaging files are supported."));
+        return 0;
+    }
+    if (pt3file->bits_per_record != 32) {
+        err_BPP(error, pt3file->bits_per_record);
+        return 0;
+    }
+
+    pt3file->imaging.common.dimensions = gwy_get_guint32_le(&p);
+    gwy_debug("imaging dimensions: %u", pt3file->imaging.common.dimensions);
+    if (pt3file->imaging.common.dimensions != 3) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Only area imaging files are supported."));
+        return 0;
+    }
+    pt3file->imaging.common.instrument = instr = gwy_get_guint32_le(&p);
+    gwy_debug("imaging instrument: %u", pt3file->imaging.common.instrument);
+    if (instr == PICO_HARP_PIE710) {
+        expected_size = IMAGING_PIE710_SIZE;
+        read_imaging_header = &read_pie710_imaging_header;
+    }
+    else if (instr == PICO_HARP_KDT180) {
+        expected_size = IMAGING_KDT180_SIZE;
+        read_imaging_header = &read_kdt180_imaging_header;
+    }
+    else if (instr == PICO_HARP_LSM) {
+        expected_size = IMAGING_LSM_SIZE;
+        read_imaging_header = &read_lsm_imaging_header;
+    }
+    else {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Invalid or unsupported instrument number %u."),
+                    instr);
+        return 0;
+    }
+
+    if (pt3file->spec_header_length != expected_size) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Wrong imagining header size: %u instead of %u."),
+                    pt3file->spec_header_length, expected_size);
+        return 0;
+    }
+    if ((p - buffer) + expected_size > size) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("File header is truncated"));
+        return 0;
+    }
+
+    p = read_imaging_header(&pt3file->imaging, p);
+    gwy_debug("xres: %u", pt3file->imaging.common.xres);
+    gwy_debug("yres: %u", pt3file->imaging.common.yres);
+
+    if (err_DIMENSION(error, pt3file->imaging.common.xres)
+        || err_DIMENSION(error, pt3file->imaging.common.xres))
+        return 0;
+
+    return (gsize)(p - buffer);
 }
 
 static const guchar*
@@ -388,6 +592,61 @@ pt3file_read_board(PicoHarpBoard *board,
         board->rt_channel[i].cfd_level = gwy_get_gint32_le(&p);
         board->rt_channel[i].cfd_zero_cross = gwy_get_gint32_le(&p);
     }
+
+    return p;
+}
+
+static const guchar*
+read_pie710_imaging_header(PicoHarpImagingHeader *header,
+                           const guchar *p)
+{
+    header->pie710.time_per_pixel = gwy_get_guint32_le(&p);
+    header->pie710.acceleration = gwy_get_guint32_le(&p);
+    header->pie710.bidirectional = !!gwy_get_guint32_le(&p);
+    header->pie710.reserved = gwy_get_guint32_le(&p);
+    header->pie710.xoff = gwy_get_gfloat_le(&p);
+    header->pie710.yoff = gwy_get_gfloat_le(&p);
+    header->pie710.xres = gwy_get_guint32_le(&p);
+    header->pie710.yres = gwy_get_guint32_le(&p);
+    header->pie710.pix_resol = gwy_get_gfloat_le(&p);
+    header->pie710.t_start_to = gwy_get_gfloat_le(&p);
+    header->pie710.t_stop_to = gwy_get_gfloat_le(&p);
+    header->pie710.t_start_from = gwy_get_gfloat_le(&p);
+    header->pie710.t_stop_from = gwy_get_gfloat_le(&p);
+    gwy_debug("%g %g %g %g",
+              header->pie710.t_start_to, header->pie710.t_stop_to,
+              header->pie710.t_start_from, header->pie710.t_stop_from);
+
+    return p;
+}
+
+static const guchar*
+read_kdt180_imaging_header(PicoHarpImagingHeader *header,
+                           const guchar *p)
+{
+    header->kdt180.velocity = gwy_get_guint32_le(&p);
+    header->kdt180.acceleration = gwy_get_guint32_le(&p);
+    header->kdt180.bidirectional = !!gwy_get_guint32_le(&p);
+    header->kdt180.reserved = gwy_get_guint32_le(&p);
+    header->kdt180.xoff = gwy_get_gfloat_le(&p);
+    header->kdt180.yoff = gwy_get_gfloat_le(&p);
+    header->kdt180.xres = gwy_get_guint32_le(&p);
+    header->kdt180.yres = gwy_get_guint32_le(&p);
+    header->kdt180.pix_resol = gwy_get_gfloat_le(&p);
+
+    return p;
+}
+
+static const guchar*
+read_lsm_imaging_header(PicoHarpImagingHeader *header,
+                        const guchar *p)
+{
+    header->lsm.frame_trigger_index = gwy_get_guint32_le(&p);
+    header->lsm.line_start_trigger_index = gwy_get_guint32_le(&p);
+    header->lsm.line_stop_trigger_index = gwy_get_guint32_le(&p);
+    header->lsm.bidirectional = !!gwy_get_guint32_le(&p);
+    header->lsm.xres = gwy_get_guint32_le(&p);
+    header->lsm.yres = gwy_get_guint32_le(&p);
 
     return p;
 }
