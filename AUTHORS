@@ -42,6 +42,10 @@ Matthew Caldwell <m.caldwell@ucl.ac.uk>
     IonScope SICM file import.
 Андрей Груздев <gruzdev@ntmdt.ru>
     Mac OS X integration.
+Даниил Браташов <dn2010@gmail.com>
+    NT-MDT MDA frame import.
+Luke Somers <lsomers@sas.upenn.edu>
+    Median difference line correction.
 
 
 === Translators ===
