@@ -1,7 +1,7 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
- *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
+ *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek, Luke Somers.
+ *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net, lsomers@sas.upenn.edu.
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -43,6 +43,8 @@ static void     line_correct_modus                 (GwyContainer *data,
                                                     GwyRunType run);
 static void     line_correct_median                (GwyContainer *data,
                                                     GwyRunType run);
+static void     line_correct_median_difference     (GwyContainer *data,
+                                                    GwyRunType run);
 static void     line_correct_match                 (GwyContainer *data,
                                                     GwyRunType run);
 static void     line_correct_step                  (GwyContainer *data,
@@ -60,9 +62,9 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Corrects line defects (mostly experimental algorithms)."),
-    "Yeti <yeti@gwyddion.net>",
-    "1.6",
-    "David Nečas (Yeti) & Petr Klapetek",
+    "Yeti <yeti@gwyddion.net>, Luke Somers <lsomers@sas.upenn.edu>",
+    "1.7",
+    "David Nečas (Yeti) & Petr Klapetek & Luke Somers",
     "2004",
 };
 
@@ -85,6 +87,14 @@ module_register(void)
                               LINECORR_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
                               N_("Correct lines by matching height median"));
+    gwy_process_func_register("line_correct_median_difference",
+                              (GwyProcessFunc)&line_correct_median_difference,
+                              N_("/_Correct Data/Median Di_fference Line Correction"),
+                              GWY_STOCK_LINE_LEVEL,
+                              LINECORR_RUN_MODES,
+                              GWY_MENU_FLAG_DATA,
+                              N_("Correct lines by zeroing median "
+                                 "of differences between neighbor lines"));
     gwy_process_func_register("line_correct_match",
                               (GwyProcessFunc)&line_correct_match,
                               N_("/_Correct Data/Ma_tch Line Correction"),
@@ -176,6 +186,44 @@ line_correct_median(GwyContainer *data, GwyRunType run)
 
     g_object_unref(modi);
     g_object_unref(line);
+    gwy_data_field_data_changed(dfield);
+}
+
+static void
+line_correct_median_difference(GwyContainer *data, GwyRunType run)
+{
+    GwyDataField *dfield;
+    GwyDataLine *line1, *line2, *diffs;
+    gint xres, yres, i, j;
+    GQuark dquark;
+
+    g_return_if_fail(run & GWY_RUN_IMMEDIATE);
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
+                                     GWY_APP_DATA_FIELD_KEY, &dquark,
+                                     0);
+    g_return_if_fail(dfield && dquark);
+    gwy_app_undo_qcheckpointv(data, 1, &dquark);
+
+    xres = gwy_data_field_get_xres(dfield);
+    line1 = gwy_data_line_new(xres, 1.0, FALSE);
+    line2 = gwy_data_line_new(xres, 1.0, FALSE);
+    diffs = gwy_data_line_new(xres, 1.0, FALSE);
+    yres = gwy_data_field_get_yres(dfield);
+
+    for (i = 1; i < yres; i++) {
+        gwy_data_field_get_row(dfield, line1, i-1);
+        gwy_data_field_get_row(dfield, line2, i);
+        for (j = 0; j < xres; j++) {
+            gwy_data_line_set_val(diffs, j, gwy_data_line_get_val(line1,j)
+                                  - gwy_data_line_get_val(line2,j));
+        }
+        gwy_data_field_area_add(dfield, 0, i, xres, 1,
+                                gwy_data_line_get_median(diffs));
+    }
+
+    g_object_unref(line1);
+    g_object_unref(line2);
+    g_object_unref(diffs);
     gwy_data_field_data_changed(dfield);
 }
 
