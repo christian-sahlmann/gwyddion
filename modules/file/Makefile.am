@@ -23,6 +23,7 @@ matfile_sources = matfile.c
 filedir = $(pkglibdir)/modules/file
 
 file_LTLIBRARIES = \
+	aistfile.la \
 	apefile.la \
 	asciiexport.la \
 	assing-afm.la \
@@ -120,6 +121,7 @@ module_libadd = \
 endif
 
 apefile_la_SOURCES       = apefile.c
+aistfile_la_SOURCES      = aistfile.c
 asciiexport_la_SOURCES   = asciiexport.c
 assing_afm_la_SOURCES    = assing-afm.c
 attocube_la_SOURCES      = attocube.c
