@@ -174,7 +174,7 @@ line_correct_median(GwyContainer *data, GwyRunType run)
 
     for (i = 0; i < yres; i++) {
         gwy_data_field_get_row(dfield, line, i);
-        median = gwy_data_line_get_median(line);
+        median = gwy_math_median(xres, gwy_data_line_get_data(line));
         gwy_data_line_set_val(modi, i, median);
     }
     median = gwy_data_line_get_median(modi);
@@ -193,8 +193,9 @@ static void
 line_correct_median_difference(GwyContainer *data, GwyRunType run)
 {
     GwyDataField *dfield;
-    GwyDataLine *line1, *line2, *diffs;
+    gdouble *diffs, *row, *prev;
     gint xres, yres, i, j;
+    gdouble median;
     GQuark dquark;
 
     g_return_if_fail(run & GWY_RUN_IMMEDIATE);
@@ -205,25 +206,21 @@ line_correct_median_difference(GwyContainer *data, GwyRunType run)
     gwy_app_undo_qcheckpointv(data, 1, &dquark);
 
     xres = gwy_data_field_get_xres(dfield);
-    line1 = gwy_data_line_new(xres, 1.0, FALSE);
-    line2 = gwy_data_line_new(xres, 1.0, FALSE);
-    diffs = gwy_data_line_new(xres, 1.0, FALSE);
     yres = gwy_data_field_get_yres(dfield);
+    row = gwy_data_field_get_data(dfield);
+    diffs = g_new(gdouble, xres);
 
     for (i = 1; i < yres; i++) {
-        gwy_data_field_get_row(dfield, line1, i-1);
-        gwy_data_field_get_row(dfield, line2, i);
-        for (j = 0; j < xres; j++) {
-            gwy_data_line_set_val(diffs, j, gwy_data_line_get_val(line1,j)
-                                  - gwy_data_line_get_val(line2,j));
-        }
-        gwy_data_field_area_add(dfield, 0, i, xres, 1,
-                                gwy_data_line_get_median(diffs));
+        prev = row;
+        row += xres;
+        for (j = 0; j < xres; j++)
+            diffs[j] = prev[j] - row[j];
+        median = gwy_math_median(xres, diffs);
+        for (j = 0; j < xres; j++)
+            row[j] += median;
     }
 
-    g_object_unref(line1);
-    g_object_unref(line2);
-    g_object_unref(diffs);
+    g_free(diffs);
     gwy_data_field_data_changed(dfield);
 }
 
