@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2009-11-03 10:54+0100\n"
-"PO-Revision-Date: 2009-11-03 20:44+0300\n"
+"POT-Creation-Date: 2009-11-11 03:59+0100\n"
+"PO-Revision-Date: 2009-11-11 09:21+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -247,7 +247,7 @@ msgstr "Объём между нулевой плоскостью и повер�
 
 #: libprocess/gwygrainvalue.c:197
 msgid "Grain minimum basis volume"
-msgstr "Объём между поверхностью и плоскостью, проходящей через минимум"
+msgstr "Объём между поверхностью и плоскостью, проходящей через минимум зерна"
 
 #: libprocess/gwygrainvalue.c:206
 msgid "Laplacian background basis volume"
@@ -2210,14 +2210,6 @@ msgstr "Вторичный элемент данных не имеет перв�
 msgid "Please wait"
 msgstr "Подождите, пожалуйста "
 
-#: modules/file/aistfile.c:53
-msgid "Imports AIST-NT data files."
-msgstr "Импорт файлов данных AIST-NT"
-
-#: modules/file/aistfile.c:66
-msgid "AIST-NT files (.aist)"
-msgstr "Файлы AIST-NT (.aist)"
-
 #: modules/file/apefile.c:168
 msgid "Imports APE (Applied Physics and Engineering) data files."
 msgstr "Импортирует файлы данных APE (Applied Physics and Engineering)."
@@ -2780,7 +2772,7 @@ msgstr "версия формата"
 
 #: modules/file/nanoeducator.c:383
 #: modules/file/nanoeducator.c:420
-#: modules/file/nanoeducator.c:524
+#: modules/file/nanoeducator.c:525
 msgid "Image data starts past the end of file."
 msgstr "Данные изображения начинаются после конца файла."
 
@@ -2788,36 +2780,38 @@ msgstr "Данные изображения начинаются после ко
 msgid "Spectra data starts past the end of file."
 msgstr "Данные спектроскопии начинаются после конца файла."
 
-#: modules/file/nanoeducator.c:629
+#: modules/file/nanoeducator.c:630
 #: modules/file/opdfile.c:268
+#: modules/file/pt3file.c:450
+#: modules/file/pt3file.c:552
 #: modules/file/sensofar.c:256
 msgid "File header is truncated"
 msgstr "Заголовок файла усечён"
 
-#: modules/file/nanoeducator.c:688
+#: modules/file/nanoeducator.c:689
 msgid "Parameter header is truncated"
 msgstr "Заголовок параметров усечён"
 
-#: modules/file/nanoeducator.c:913
+#: modules/file/nanoeducator.c:914
 #: modules/process/curvature.c:489
 #: modules/tools/profile.c:535
 #, c-format
 msgid "Profile %d"
 msgstr "Профиль %d"
 
-#: modules/file/nanoeducator.c:956
+#: modules/file/nanoeducator.c:957
 msgid "The number of spectra coordinates does not match the number of spectra."
 msgstr "Число координат спектров не соответствует числу спектров."
 
-#: modules/file/nanoeducator.c:1053
+#: modules/file/nanoeducator.c:1054
 msgid "F-D spectra"
 msgstr "Спектры сила-расстояние"
 
-#: modules/file/nanoeducator.c:1152
+#: modules/file/nanoeducator.c:1153
 msgid "I-V spectra"
 msgstr "Спектры ВАХ"
 
-#: modules/file/nanoeducator.c:1251
+#: modules/file/nanoeducator.c:1252
 msgid "I-Z spectra"
 msgstr "Спектры I-Z"
 
@@ -2987,33 +2981,33 @@ msgstr "Массив `%s' содержит ненулевое количеств
 msgid "More than one record dimension found."
 msgstr "Найдена больше, чем одна запись о размерности."
 
-#: modules/file/nt-mdt.c:634
+#: modules/file/nt-mdt.c:650
 msgid "Imports NT-MDT data files."
 msgstr "Импорт файлов данных NT-MDT"
 
-#: modules/file/nt-mdt.c:647
+#: modules/file/nt-mdt.c:663
 msgid "NT-MDT files (.mdt)"
 msgstr "Файлы NT-MDT (.mdt)"
 
-#: modules/file/nt-mdt.c:1046
+#: modules/file/nt-mdt.c:1074
 msgid "Frame is too short for Frame Mode."
 msgstr "Фрейм слишком короткий для режима фреймов."
 
-#: modules/file/nt-mdt.c:1060
+#: modules/file/nt-mdt.c:1088
 msgid "Frame is too short for dots or data."
 msgstr "Фрейм слишком короткий для точек или данных."
 
-#: modules/file/nt-mdt.c:1317
+#: modules/file/nt-mdt.c:1345
 #, c-format
 msgid "End of file reached in frame header #%u."
 msgstr "Достигнут конец файла в заголовке фрейма #%u."
 
-#: modules/file/nt-mdt.c:1325
+#: modules/file/nt-mdt.c:1353
 #, c-format
 msgid "End of file reached in frame data #%u."
 msgstr "Достигнут конец файла в данных фрейма #%u."
 
-#: modules/file/nt-mdt.c:1359
+#: modules/file/nt-mdt.c:1388
 #, c-format
 msgid "Frame #%u is too short for scanned data header."
 msgstr "Фрейм #%u слишком короткий чтобы быть заголовком сканированных данных."
@@ -3445,6 +3439,34 @@ msgstr "Заголовок слишком короткий (всего %lu ба�
 #, c-format
 msgid "Spectroscopy header is too short (only %lu bytes)."
 msgstr "Заголовок спектроскопии слишком короткий (всего %lu байт)."
+
+#: modules/file/pt3file.c:275
+msgid "Imports SymPhoTime data files, version 2.0."
+msgstr "Импортирует файлы данных SymPhoTime, версии 2.0."
+
+#: modules/file/pt3file.c:288
+msgid "PicoHarp files (.pt3)"
+msgstr "Файлы PicoHarp (.pt3)"
+
+#: modules/file/pt3file.c:502
+#, c-format
+msgid "Measurement mode must be 2 or 3; %u is invalid."
+msgstr "Режим измерений должен быть или 2, или 3; %u - неправильный."
+
+#: modules/file/pt3file.c:508
+#: modules/file/pt3file.c:520
+msgid "Only area imaging files are supported."
+msgstr "Поддерживаются только файлы изображения области."
+
+#: modules/file/pt3file.c:539
+#, c-format
+msgid "Invalid or unsupported instrument number %u."
+msgstr "Неправильный или неподдерживаемый номер инструмента %u."
+
+#: modules/file/pt3file.c:546
+#, c-format
+msgid "Wrong imagining header size: %u instead of %u."
+msgstr "Неверный размер заголовка изображения: %u вместо %u."
 
 #: modules/file/quesant.c:64
 msgid "Imports Quesant file format."
@@ -6341,7 +6363,7 @@ msgstr "число"
 
 #: modules/process/grain_dist.c:553
 msgid "Export Raw Grain Values"
-msgstr "Экспортировать необработанные данные зёрен"
+msgstr "Экспортировать необработанные значения зёрен"
 
 #: modules/process/grain_dist.c:660
 msgid "Save Grain Statistics"
@@ -6948,39 +6970,47 @@ msgstr "Выровнять по плоскости"
 msgid "Level Rotate"
 msgstr "Выравнивание поворотом"
 
-#: modules/process/linecorrect.c:62
+#: modules/process/linecorrect.c:64
 msgid "Corrects line defects (mostly experimental algorithms)."
 msgstr "Исправление дефектов линий (большая часть алгоритмов экспериментальна)"
 
-#: modules/process/linecorrect.c:76
+#: modules/process/linecorrect.c:78
 msgid "/_Correct Data/M_odus Line Correction"
 msgstr "/Исправить _данные/Линейная коррекция по м_оде"
 
-#: modules/process/linecorrect.c:80
+#: modules/process/linecorrect.c:82
 msgid "Correct lines by matching height modus"
 msgstr "Исправить линии выравниванием моды высоты"
 
-#: modules/process/linecorrect.c:83
+#: modules/process/linecorrect.c:85
 msgid "/_Correct Data/M_edian Line Correction"
-msgstr "/Исправить _данные/Линейная коррекция по м_едиане"
+msgstr "/Исправить _данные/Линейная коррекция по ср_единному"
 
-#: modules/process/linecorrect.c:87
+#: modules/process/linecorrect.c:89
 msgid "Correct lines by matching height median"
 msgstr "Корректировать линии выравниванием срединного значения высоты"
 
-#: modules/process/linecorrect.c:90
+#: modules/process/linecorrect.c:92
+msgid "/_Correct Data/Median Di_fference Line Correction"
+msgstr "/Исправить _данные/Линейная коррекция по срединному р_азности"
+
+#: modules/process/linecorrect.c:96
+msgid "Correct lines by zeroing median of differences between neighbor lines"
+msgstr "Исправляет линии путём обнуления срединного значения разности между соседними линиями"
+
+#: modules/process/linecorrect.c:100
 msgid "/_Correct Data/Ma_tch Line Correction"
 msgstr "/Исправить _данные/_Линейная коррекция подбором"
 
-#: modules/process/linecorrect.c:94
+#: modules/process/linecorrect.c:104
 msgid "Correct lines by matching flat segments"
 msgstr "Исправить линии выравниванием плоских сегментов"
 
-#: modules/process/linecorrect.c:97
+#: modules/process/linecorrect.c:107
 msgid "/_Correct Data/Ste_p Line Correction"
 msgstr "/Исправить _данные/Линейная коррекция _ступенек"
 
-#: modules/process/linecorrect.c:101
+#: modules/process/linecorrect.c:111
 msgid "Correct steps in lines"
 msgstr "Исправить ступеньки в линиях"
 
@@ -7472,7 +7502,7 @@ msgid "/_Level/_Polynomial Background..."
 msgstr "/_Выравнивание/П_олиномиальный фон..."
 
 #: modules/process/polylevel.c:135
-msgid "Remove polynomial backgroud"
+msgid "Remove polynomial background"
 msgstr "Убрать полиномиальный фон"
 
 #: modules/process/polylevel.c:361
@@ -8990,9 +9020,4 @@ msgstr ""
 "Площадь проекции:    %s\n"
 "Наклон θ:     %s\n"
 "Наклон φ:     %s\n"
-
-#~ msgid "Raw XYZ data"
-#~ msgstr "Неформатированные данные XYZ"
-#~ msgid "_Exteriror type:"
-#~ msgstr "Из_вне:"
 
