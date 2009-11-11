@@ -649,7 +649,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports NT-MDT data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.12",
+    "0.13",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -1116,7 +1116,7 @@ mdt_scanned_data_vars(const guchar *p,
         guint len = gwy_get_guint32_le(&p);
 
         if (len && (guint)(frame_size - (p - fstart)) >= len) {
-            frame->xmlstuff = g_convert((const gchar*)p, len, "UTF-8", "UTF-16",
+            frame->xmlstuff = g_convert((const gchar*)p, len, "UTF-8", "UTF-16LE",
                                         NULL, NULL, NULL);
             p += len;
         }
@@ -1253,7 +1253,7 @@ mdt_mda_vars(const guchar *p,
 
     if (CommSize && (guint) (frame_size - (p - fstart)) >= CommSize) {
         frame->xmlstuff =
-            g_convert((const gchar *)p, CommSize, "UTF-8", "UTF-16", NULL, NULL,
+            g_convert((const gchar *)p, CommSize, "UTF-8", "UTF-16LE", NULL, NULL,
                       NULL);
         p += CommSize;
     }
