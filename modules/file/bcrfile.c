@@ -53,6 +53,11 @@
 #include <string.h>
 #include <stdlib.h>
 #include <string.h>
+
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
+
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwyutils.h>
@@ -201,12 +206,12 @@ bcrfile_load(const gchar *filename,
         gunichar2 *s;
 
         header_size = 2*HEADER_SIZE;
-#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+#if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
         s = (gunichar2*)g_memdup(buffer, header_size);
 #endif
-#if G_BYTE_ORDER == G_BIG_ENDIAN
+#if (G_BYTE_ORDER == G_BIG_ENDIAN)
         s = g_new(gunichar2, HEADER_SIZE);
-        gwy_memcpy_byte_swap(buffer, s, sizeof(gunichar2), HEADER_SIZE, 1);
+        swab(buffer, s, header_size);
 #endif
         header = g_utf16_to_utf8(s, HEADER_SIZE, 0, 0, &err);
         g_free(s);
