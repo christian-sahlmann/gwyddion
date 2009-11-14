@@ -26,13 +26,17 @@
  * big-endian byte order (because people at TrollTech think it is more portable
  * or something) while AIST does not go that far as to think about byte order
  * so they dump stuff to QByteArrays in the native order which happens to be
- * little-endian because they run it on x86.  Now choose.
+ * little-endian because they run it on x86.  Bite me.
  */
 
 /*
  * TODO:
  * How to detect the format?  Is the top-level node always called noname?
  * How to parse the units?  Their idea of units is something like `Ox [um]'.
+ * How to interpret curve data?  It seems to be just a single list of values.
+ * What is the meaning of view data component?
+ * What it the meaning of the advanced data at the end?
+ * What is the bit order, alignment and interpretation of the mask bitmap?
  */
 #define DEBUG 1
 #include "config.h"
@@ -52,13 +56,10 @@
 #include <app/gwymoduleutils-file.h>
 
 #include "err.h"
-#include "get.h"
 
 #define EXTENSION ".aist"
 
-#define Micrometer 1e-6
-
-#define MAGIC "\x00\x00"
+#define MAGIC "\000\000\000\000\014\000n\000o\000n\000a\000m\000e"
 #define MAGIC_SIZE (sizeof(MAGIC)-1)
 
 typedef struct {
@@ -76,16 +77,23 @@ typedef struct {
 } AistRaster;
 
 typedef struct {
+    AistCommon common;
+    guint res;
+    gchar *xunits, *yunits;
+} AistCurve;
+
+typedef struct {
     GwyContainer *container;
     gint channel_id;
+    gint graph_id;
 } AistContext;
 
-static gboolean       module_register        (void);
-static gint           aist_detect         (const GwyFileDetectInfo *fileinfo,
-                                              gboolean only_name);
-static GwyContainer*  aist_load           (const gchar *filename,
-                                              GwyRunType mode,
-                                              GError **error);
+static gboolean      module_register(void);
+static gint          aist_detect    (const GwyFileDetectInfo *fileinfo,
+                                     gboolean only_name);
+static GwyContainer* aist_load      (const gchar *filename,
+                                     GwyRunType mode,
+                                     GError **error);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -114,19 +122,16 @@ module_register(void)
 
 static gint
 aist_detect(const GwyFileDetectInfo *fileinfo,
-               gboolean only_name)
+            gboolean only_name)
 {
     gint score = 0;
 
     if (only_name)
         return (g_str_has_suffix(fileinfo->name_lowercase, EXTENSION)) ? 10 : 0;
 
-    /* FIXME FIXME FIXME
-     * They do not have anything resembling magic header and the data size is
-     * not written anywhere either. */
     if (fileinfo->buffer_len > MAGIC_SIZE
         && memcmp(fileinfo->head, MAGIC, MAGIC_SIZE) == 0)
-        score = 50;
+        score = 100;
 
     return score;
 }
@@ -212,7 +217,7 @@ read_qt_bool(const guchar **p, gsize *size, gboolean *value)
     return TRUE;
 }
 
-/* NB: Returned value is a direct pointer to the input buffer! */
+/* NB: Returned value is a direct pointer to the input buffer.  Do not free! */
 static gboolean
 read_qt_byte_array(const guchar **p, gsize *size,
                    guint *len, const guchar **value)
@@ -253,6 +258,66 @@ read_aist_common(const guchar **p, gsize *size,
     return TRUE;
 }
 
+/* Lateral units are a weird thing but they contain the actual units in
+ * bracket somewhere. */
+static GwySIUnit*
+extract_units(const gchar *label,
+              gdouble *q)
+{
+    GwySIUnit *unit;
+    gint power10;
+    const gchar *s;
+    gchar *t;
+
+    if ((s = strchr(label, '['))) {
+        t = g_strdup(s + 1);
+        if (strchr(t, ']'))
+            *strchr(t, ']') = '\0';
+        unit = gwy_si_unit_new_parse(t, &power10);
+        g_free(t);
+    }
+    else
+        unit = gwy_si_unit_new_parse(label, &power10);
+
+    *q = pow10(power10);
+    return unit;
+}
+
+static GwyDataField*
+make_mask_field(GwyDataField *dfield,
+                const guchar *data)
+{
+    GwyDataField *mfield;
+    guint xres, yres, i, j, rowstride;
+    const guchar *datarow;
+    gdouble *d;
+
+    xres = gwy_data_field_get_xres(dfield);
+    yres = gwy_data_field_get_yres(dfield);
+    /* FIXME */
+    rowstride = xres;
+
+    /* Do not create the mask if it is all zero. */
+    for (i = 0; i < rowstride*yres; i++) {
+        if (!data[i])
+            break;
+    }
+    if (i == rowstride*yres)
+        return NULL;
+
+    mfield = gwy_data_field_new_alike(dfield, FALSE);
+    d = gwy_data_field_get_data(mfield);
+
+    for (i = 0; i < yres; i++) {
+        datarow = data + (yres-1 - i)*rowstride;
+        for (j = 0; j < xres; j++) {
+            *(d++) = !datarow[j];
+        }
+    }
+
+    return mfield;
+}
+
 static gboolean
 read_aist_raster(const guchar **p, gsize *size, AistContext *context)
 {
@@ -261,12 +326,11 @@ read_aist_raster(const guchar **p, gsize *size, AistContext *context)
     GwySIUnit *xyunit, *zunit;
     gboolean ok = FALSE;
     guint i, j, n, len;
-    gint power10xy, power10z;
     const guchar *data;
     gchar *s;
     gchar key[32];
     gdouble *d;
-    gdouble q;
+    gdouble qxy, qz;
 
     gwy_clear(&raster, 1);
 
@@ -292,41 +356,25 @@ read_aist_raster(const guchar **p, gsize *size, AistContext *context)
     if (len != n*sizeof(gdouble))
         goto fail;
 
-    /* Lateral units are a weird thing but they contain the actual units in
-     * bracket somewhere. */
-    s = strchr(raster.xunits, '[');
-    if (s) {
-        s = g_strdup(s + 1);
-        if (strchr(s, ']'))
-            *strchr(s, ']') = '\0';
-        xyunit = gwy_si_unit_new_parse(s, &power10xy);
-        g_free(s);
-    }
-    else {
-        xyunit = gwy_si_unit_new("m");
-        power10xy = -6;
-    }
-    q = pow10(power10xy);
-
+    xyunit = extract_units(raster.xunits, &qxy);
+    zunit = extract_units(raster.zunits, &qz);
     dfield = gwy_data_field_new(raster.xres, raster.yres,
-                                q*fabs(raster.right - raster.left),
-                                q*fabs(raster.bottom - raster.top),
+                                qxy*fabs(raster.right - raster.left),
+                                qxy*fabs(raster.bottom - raster.top),
                                 FALSE);
     gwy_data_field_set_si_unit_xy(dfield, xyunit);
-    g_object_unref(xyunit);
-    gwy_data_field_set_xoffset(dfield, q*MIN(raster.left, raster.right));
-    gwy_data_field_set_yoffset(dfield, q*MIN(raster.top, raster.bottom));
-
-    zunit = gwy_si_unit_new_parse(raster.zunits, &power10z);
-    q = pow10(power10z);
     gwy_data_field_set_si_unit_z(dfield, zunit);
+    gwy_data_field_set_xoffset(dfield, qxy*MIN(raster.left, raster.right));
+    gwy_data_field_set_yoffset(dfield, qxy*MIN(raster.top, raster.bottom));
+
+    g_object_unref(xyunit);
     g_object_unref(zunit);
 
     d = gwy_data_field_get_data(dfield);
     for (i = 0; i < raster.yres; i++) {
         for (j = 0; j < raster.xres; j++) {
             d[(raster.yres-1 - i)*raster.xres + j]
-                = q*gwy_get_gdouble_le(&data);
+                = qz*gwy_get_gdouble_le(&data);
         }
     }
 
@@ -341,20 +389,84 @@ read_aist_raster(const guchar **p, gsize *size, AistContext *context)
     g_snprintf(key, sizeof(key), "/%d/data/title", context->channel_id);
     gwy_container_set_string_by_name(context->container, key, s);
 
+    g_snprintf(key, sizeof(key), "/%d/mask", context->channel_id);
+
     context->channel_id++;
 
-    /* TODO: read the other fields (the former is a bitmap) */
-    if (!read_qt_byte_array(p, size, &len, &data)
-        || !read_qt_byte_array(p, size, &len, &data))
-        goto fail;
-
+    /* At this moment we consider the loading successful. */
     ok = TRUE;
+
+    /* The mask raster is byte-valued. */
+    if (read_qt_byte_array(p, size, &len, &data)) {
+        if (len == raster.xres*raster.yres) {
+            dfield = make_mask_field(dfield, data);
+            if (dfield) {
+                gwy_container_set_object_by_name(context->container, key,
+                                                 dfield);
+                g_object_unref(dfield);
+            }
+        }
+
+        /* TODO: what is this so-called view data? */
+        read_qt_byte_array(p, size, &len, &data);
+    }
 
 fail:
     free_aist_common(&raster.common);
     g_free(raster.xunits);
     g_free(raster.yunits);
     g_free(raster.zunits);
+    return ok;
+}
+
+static gboolean
+read_aist_curve(const guchar **p, gsize *size, AistContext *context)
+{
+    AistCurve curve;
+    GwySIUnit *xunit, *yunit;
+    gboolean ok = FALSE;
+    guint len;
+    const guchar *data;
+    gdouble qx, qy;
+
+    gwy_clear(&curve, 1);
+
+    gwy_debug("reading common");
+    if (!read_aist_common(p, size, &curve.common))
+        goto fail;
+
+    gwy_debug("reading curve");
+    if (!read_qt_int(p, size, &curve.res))
+        goto fail;
+
+    if (!read_qt_byte_array(p, size, &len, &data))
+        goto fail;
+    if (len != curve.res*sizeof(gdouble))
+        goto fail;
+
+    /* There's another array after that, then the units. */
+    if (!read_qt_byte_array(p, size, &len, &data))
+        goto fail;
+
+    if (!read_qt_string(p, size, &curve.xunits)
+        || !read_qt_string(p, size, &curve.yunits))
+    xunit = extract_units(curve.xunits, &qx);
+    yunit = extract_units(curve.yunits, &qy);
+
+    /* TODO: Do something useful with the data.
+     * How we create a y vs. x graph of it? */
+
+    g_object_unref(xunit);
+    g_object_unref(yunit);
+
+    context->graph_id++;
+
+    ok = TRUE;
+
+fail:
+    free_aist_common(&curve.common);
+    g_free(curve.xunits);
+    g_free(curve.yunits);
     return ok;
 }
 
@@ -384,6 +496,11 @@ read_aist_data(const guchar **p, gsize *size, AistContext *context)
     if (gwy_strequal(type, "raster")) {
         gwy_debug("raster data");
         if (!read_aist_raster(&datap, &datasize, context))
+            goto fail;
+    }
+    else if (gwy_strequal(type, "curve")) {
+        gwy_debug("curve data");
+        if (!read_aist_curve(&datap, &datasize, context))
             goto fail;
     }
 
@@ -450,6 +567,7 @@ aist_load(const gchar *filename,
 
     context.container = gwy_container_new();
     context.channel_id = 0;
+    context.graph_id = 0;
     read_aist_tree(&p, &remaining, &context);
 
     gwy_file_abandon_contents(buffer, size, NULL);
