@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2009-11-04 10:08+0300\n"
+"POT-Creation-Date: 2009-11-03 10:54+0100\n"
 "PO-Revision-Date: 2007-03-14 17:40+0100\n"
 "Last-Translator: Philipp Leufke <webmaster@leufke.info>\n"
 "Language-Team: deutsch <de@li.org>\n"
@@ -2348,6 +2348,16 @@ msgstr ""
 msgid "Please wait"
 msgstr "Bitte warten"
 
+#: modules/file/aistfile.c:53
+#, fuzzy
+msgid "Imports AIST-NT data files."
+msgstr "Importiert Createc-Daten."
+
+#: modules/file/aistfile.c:66
+#, fuzzy
+msgid "AIST-NT files (.aist)"
+msgstr "APE-Dateien (.dat)"
+
 #: modules/file/apefile.c:168
 msgid "Imports APE (Applied Physics and Engineering) data files."
 msgstr "Importiert APE-Dateien (Applied Physics and Engineering)."
@@ -3136,33 +3146,33 @@ msgstr ""
 msgid "More than one record dimension found."
 msgstr ""
 
-#: modules/file/nt-mdt.c:650
+#: modules/file/nt-mdt.c:634
 msgid "Imports NT-MDT data files."
 msgstr ""
 
-#: modules/file/nt-mdt.c:663
+#: modules/file/nt-mdt.c:647
 msgid "NT-MDT files (.mdt)"
 msgstr ""
 
-#: modules/file/nt-mdt.c:1085
+#: modules/file/nt-mdt.c:1046
 msgid "Frame is too short for Frame Mode."
 msgstr ""
 
-#: modules/file/nt-mdt.c:1099
+#: modules/file/nt-mdt.c:1060
 msgid "Frame is too short for dots or data."
 msgstr ""
 
-#: modules/file/nt-mdt.c:1356
+#: modules/file/nt-mdt.c:1317
 #, c-format
 msgid "End of file reached in frame header #%u."
 msgstr ""
 
-#: modules/file/nt-mdt.c:1364
+#: modules/file/nt-mdt.c:1325
 #, c-format
 msgid "End of file reached in frame data #%u."
 msgstr ""
 
-#: modules/file/nt-mdt.c:1399
+#: modules/file/nt-mdt.c:1359
 #, c-format
 msgid "Frame #%u is too short for scanned data header."
 msgstr ""
@@ -9288,14 +9298,6 @@ msgid ""
 "Inclination θ:     %s\n"
 "Inclination φ:     %s\n"
 msgstr ""
-
-#, fuzzy
-#~ msgid "Imports AIST-NT data files."
-#~ msgstr "Importiert Createc-Daten."
-
-#, fuzzy
-#~ msgid "AIST-NT files (.aist)"
-#~ msgstr "APE-Dateien (.dat)"
 
 #~ msgid "_Exclude region under mask"
 #~ msgstr "Bereich _unter Maske ausschließen"

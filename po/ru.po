@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
 "POT-Creation-Date: 2009-11-14 03:59+0100\n"
-"PO-Revision-Date: 2009-11-14 19:17+0300\n"
+"PO-Revision-Date: 2009-11-14 19:40+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -3094,7 +3094,7 @@ msgstr "Portable Pixmap (.ppm,.pnm)"
 
 #: modules/file/pixmap.c:356
 msgid "Windows or OS2 Bitmap (.bmp)"
-msgstr "Windows or OS2 Bitmap (.bmp)"
+msgstr "Bitmap из Windows или OS2 (.bmp)"
 
 #: modules/file/pixmap.c:362
 msgid "TARGA (.tga,.targa)"

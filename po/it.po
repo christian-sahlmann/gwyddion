@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: it\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2009-11-04 10:08+0300\n"
+"POT-Creation-Date: 2009-11-03 10:54+0100\n"
 "PO-Revision-Date: 2007-11-27 13:56+0100\n"
 "Last-Translator: Livia_lab <l.dellaseta@biosensing.net>\n"
 "Language-Team:  <it@li.org>\n"
@@ -2247,6 +2247,16 @@ msgstr "L'oggetto dati secondari non ha dati primari"
 msgid "Please wait"
 msgstr "Attendere"
 
+#: modules/file/aistfile.c:53
+#, fuzzy
+msgid "Imports AIST-NT data files."
+msgstr "Importa file dati NT-MDT."
+
+#: modules/file/aistfile.c:66
+#, fuzzy
+msgid "AIST-NT files (.aist)"
+msgstr "file SIS (.sis)"
+
 #: modules/file/apefile.c:168
 msgid "Imports APE (Applied Physics and Engineering) data files."
 msgstr "Importa file dati APE (Applied Physics and Engineering)."
@@ -3035,33 +3045,33 @@ msgstr ""
 msgid "More than one record dimension found."
 msgstr "Più di una dimensione della registrazione non trovata."
 
-#: modules/file/nt-mdt.c:650
+#: modules/file/nt-mdt.c:634
 msgid "Imports NT-MDT data files."
 msgstr "Importa file dati NT-MDT."
 
-#: modules/file/nt-mdt.c:663
+#: modules/file/nt-mdt.c:647
 msgid "NT-MDT files (.mdt)"
 msgstr "File NT-MDT (.mdt)"
 
-#: modules/file/nt-mdt.c:1085
+#: modules/file/nt-mdt.c:1046
 msgid "Frame is too short for Frame Mode."
 msgstr "Frame troppo corta per modalità frame"
 
-#: modules/file/nt-mdt.c:1099
+#: modules/file/nt-mdt.c:1060
 msgid "Frame is too short for dots or data."
 msgstr "Frame troppo corta per punti o dati."
 
-#: modules/file/nt-mdt.c:1356
+#: modules/file/nt-mdt.c:1317
 #, c-format
 msgid "End of file reached in frame header #%u."
 msgstr "Termine file raggiunto nell'intestazione frame  #%u."
 
-#: modules/file/nt-mdt.c:1364
+#: modules/file/nt-mdt.c:1325
 #, c-format
 msgid "End of file reached in frame data #%u."
 msgstr "Termine file raggiunto in dati frame #%u."
 
-#: modules/file/nt-mdt.c:1399
+#: modules/file/nt-mdt.c:1359
 #, c-format
 msgid "Frame #%u is too short for scanned data header."
 msgstr "Frame #%u troppo corto per intestazione dati scansionati."
@@ -9164,14 +9174,6 @@ msgstr ""
 "Area Proiettata:    %s\n"
 "Inclinazione  θ:   %s\n"
 "Inclinazione φ:   %s\n"
-
-#, fuzzy
-#~ msgid "Imports AIST-NT data files."
-#~ msgstr "Importa file dati NT-MDT."
-
-#, fuzzy
-#~ msgid "AIST-NT files (.aist)"
-#~ msgstr "file SIS (.sis)"
 
 #~ msgid "data samples"
 #~ msgstr "Dati campione"

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: French localization\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2009-11-04 10:08+0300\n"
+"POT-Creation-Date: 2009-11-03 10:54+0100\n"
 "PO-Revision-Date: 2009-10-07 15:37+0100\n"
 "Last-Translator: François RIGUET <francheu@caramail.com>\n"
 "Language-Team: François RIGUET <francheu@caramail.com>\n"
@@ -2332,6 +2332,16 @@ msgstr "L'élément de données secondaires n'a pas de données primaires"
 msgid "Please wait"
 msgstr "Patientez s'il vous plaît"
 
+#: modules/file/aistfile.c:53
+#, fuzzy
+msgid "Imports AIST-NT data files."
+msgstr "Importe les fichiers NT-MDT."
+
+#: modules/file/aistfile.c:66
+#, fuzzy
+msgid "AIST-NT files (.aist)"
+msgstr "SIS (.sis)"
+
 #: modules/file/apefile.c:168
 msgid "Imports APE (Applied Physics and Engineering) data files."
 msgstr "Importe les fichiers de données APE (Applied Physics and Engineering)."
@@ -3123,33 +3133,33 @@ msgstr "Le tableau `%s', bien qu'absent, possède un nombre d'élément non nul.
 msgid "More than one record dimension found."
 msgstr "Plus d'une dimension d'enregistrement a été trouvée."
 
-#: modules/file/nt-mdt.c:650
+#: modules/file/nt-mdt.c:634
 msgid "Imports NT-MDT data files."
 msgstr "Importe les fichiers NT-MDT."
 
-#: modules/file/nt-mdt.c:663
+#: modules/file/nt-mdt.c:647
 msgid "NT-MDT files (.mdt)"
 msgstr "NT-MDT (.mdt)"
 
-#: modules/file/nt-mdt.c:1085
+#: modules/file/nt-mdt.c:1046
 msgid "Frame is too short for Frame Mode."
 msgstr "la trame est trop courte pour le mode trame."
 
-#: modules/file/nt-mdt.c:1099
+#: modules/file/nt-mdt.c:1060
 msgid "Frame is too short for dots or data."
 msgstr "la trame est trop courte pour des points ou des données."
 
-#: modules/file/nt-mdt.c:1356
+#: modules/file/nt-mdt.c:1317
 #, c-format
 msgid "End of file reached in frame header #%u."
 msgstr "Fin du fichier atteinte dans l'en-tête #%u."
 
-#: modules/file/nt-mdt.c:1364
+#: modules/file/nt-mdt.c:1325
 #, c-format
 msgid "End of file reached in frame data #%u."
 msgstr "Fin du fichier atteinte dans les données #%u."
 
-#: modules/file/nt-mdt.c:1399
+#: modules/file/nt-mdt.c:1359
 #, c-format
 msgid "Frame #%u is too short for scanned data header."
 msgstr "La trame #%u est trop courte pour l'en-tête des données scannées."
@@ -9104,14 +9114,6 @@ msgstr ""
 "Surface projetée :  %s\n"
 "Inclinaison θ:      %s\n"
 "Inclinaison φ:      %s\n"
-
-#, fuzzy
-#~ msgid "Imports AIST-NT data files."
-#~ msgstr "Importe les fichiers NT-MDT."
-
-#, fuzzy
-#~ msgid "AIST-NT files (.aist)"
-#~ msgstr "SIS (.sis)"
 
 #~ msgid "data samples"
 #~ msgstr "Echantillons de données"
