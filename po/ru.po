@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2009-11-11 03:59+0100\n"
-"PO-Revision-Date: 2009-11-11 09:21+0300\n"
+"POT-Creation-Date: 2009-11-14 03:59+0100\n"
+"PO-Revision-Date: 2009-11-14 19:17+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -396,14 +396,12 @@ msgid "Universal"
 msgstr "Универсальная"
 
 #: libprocess/gwyprocessenums.c:166
-#, fuzzy
 msgid "Scale adaptive"
-msgstr "Адаптивная по масштабу"
+msgstr "Адаптивное по масштабу"
 
 #: libprocess/gwyprocessenums.c:167
-#, fuzzy
 msgid "Scale and space adaptive"
-msgstr "Адаптивная по масштабу и пространству"
+msgstr "Адаптивное по масштабу и пространству"
 
 #: libprocess/gwyprocessenums.c:205
 #: modules/file/rawxyz.c:682
@@ -2210,6 +2208,14 @@ msgstr "Вторичный элемент данных не имеет перв�
 msgid "Please wait"
 msgstr "Подождите, пожалуйста "
 
+#: modules/file/aistfile.c:72
+msgid "Imports AIST-NT data files."
+msgstr "Импорт файлов данных AIST-NT"
+
+#: modules/file/aistfile.c:85
+msgid "AIST-NT files (.aist)"
+msgstr "Файлы AIST-NT (.aist)"
+
 #: modules/file/apefile.c:168
 msgid "Imports APE (Applied Physics and Engineering) data files."
 msgstr "Импортирует файлы данных APE (Applied Physics and Engineering)."
@@ -2292,20 +2298,20 @@ msgstr "Импортирует файлы Attocube Systems ASC."
 msgid "Attocube ASCII files (.asc)"
 msgstr "ASCII файлы Attocube (.asc)"
 
-#: modules/file/bcrfile.c:125
+#: modules/file/bcrfile.c:130
 msgid "Imports Image Metrology BCR data files."
 msgstr "Импортирует файлы данных Image Metrology BCR."
 
-#: modules/file/bcrfile.c:138
+#: modules/file/bcrfile.c:143
 msgid "BCR files (.bcr, .bcrf)"
 msgstr "Файлы BCR (.bcr, .bcrf)"
 
-#: modules/file/bcrfile.c:216
+#: modules/file/bcrfile.c:221
 #, c-format
 msgid "File header is not convertible from UTF-16: %s"
 msgstr "Заголовок файла не может быть сконвертирован из UTF-16: %s"
 
-#: modules/file/bcrfile.c:289
+#: modules/file/bcrfile.c:294
 #, c-format
 msgid "Unknown file type header: `%s'."
 msgstr "Неизвестный заголовок типа файла: `%s'."
@@ -3072,7 +3078,7 @@ msgstr "Неполные данные в блоке %s"
 
 #: modules/file/pixmap.c:332
 msgid "Portable Network Graphics (.png)"
-msgstr ""
+msgstr "Portable Network Graphics (.png)"
 
 #: modules/file/pixmap.c:338
 msgid "JPEG (.jpeg,.jpg)"
@@ -3084,11 +3090,11 @@ msgstr "TIFF (.tiff,.tif)"
 
 #: modules/file/pixmap.c:350
 msgid "Portable Pixmap (.ppm,.pnm)"
-msgstr ""
+msgstr "Portable Pixmap (.ppm,.pnm)"
 
 #: modules/file/pixmap.c:356
 msgid "Windows or OS2 Bitmap (.bmp)"
-msgstr ""
+msgstr "Windows or OS2 Bitmap (.bmp)"
 
 #: modules/file/pixmap.c:362
 msgid "TARGA (.tga,.targa)"
@@ -3096,7 +3102,7 @@ msgstr "TARGA (.tga,.targa)"
 
 #: modules/file/pixmap.c:375
 msgid "Graphics Interchange Format (.gif)"
-msgstr ""
+msgstr "Graphics Interchange Format (.gif)"
 
 #: modules/file/pixmap.c:379
 msgid "JPEG 2000 (.jpx)"
@@ -4248,39 +4254,39 @@ msgstr "Трение или фаза"
 
 #: modules/file/stpfile.c:117
 msgid "AUX in BNC"
-msgstr ""
+msgstr "AUX в BNC"
 
 #: modules/file/stpfile.c:118
 msgid "AUX in 3 (Sum)"
-msgstr ""
+msgstr "AUX в 3 (Сумма)"
 
 #: modules/file/stpfile.c:119
 msgid "AUX in 4 (Raw Deflection)"
-msgstr ""
+msgstr "AUX в 4 (Прямое отклонение)"
 
 #: modules/file/stpfile.c:120
 msgid "AUX in 5 (PicoPlus Aux BNC)"
-msgstr ""
+msgstr "AUX в 5 (PicoPlus Aux BNC)"
 
 #: modules/file/stpfile.c:121
 msgid "AUX in 6 (Surface Potential)"
-msgstr ""
+msgstr "AUX в 6 (Поверхностный потенциал)"
 
 #: modules/file/stpfile.c:122
 msgid "AUX in 7"
-msgstr ""
+msgstr "AUX в 7"
 
 #: modules/file/stpfile.c:123
 msgid "AUX in 8"
-msgstr ""
+msgstr "AUX в 8"
 
 #: modules/file/stpfile.c:124
 msgid "AUX in 9"
-msgstr ""
+msgstr "AUX в 9"
 
 #: modules/file/stpfile.c:125
 msgid "AUX in 10"
-msgstr ""
+msgstr "AUX в 10"
 
 #: modules/file/stpfile.c:126
 msgid "Topography and Flexgrid"

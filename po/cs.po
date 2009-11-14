@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2009-11-03 10:54+0100\n"
+"POT-Creation-Date: 2009-11-04 10:08+0300\n"
 "PO-Revision-Date: 2009-11-03 10:39+0100\n"
 "Last-Translator: Yeti <yeti@gwyddion.net>\n"
 "Language-Team: Czech\n"
@@ -2301,16 +2301,6 @@ msgstr "Sekundární data nemají žádná odpovídající primární data"
 msgid "Please wait"
 msgstr "Čekej, prosím"
 
-#: modules/file/aistfile.c:53
-#, fuzzy
-msgid "Imports AIST-NT data files."
-msgstr "Načítá datové soubory NT-MDT."
-
-#: modules/file/aistfile.c:66
-#, fuzzy
-msgid "AIST-NT files (.aist)"
-msgstr "SIS soubory (.sis)"
-
 #: modules/file/apefile.c:168
 msgid "Imports APE (Applied Physics and Engineering) data files."
 msgstr "Načítá datové soubory APE (Applied Physics and Engineering)."
@@ -3079,33 +3069,33 @@ msgstr "Pole „%s“ má nenulový počet prvků, ačkoli není přítomno."
 msgid "More than one record dimension found."
 msgstr "Více než jedna dimenze je „record“."
 
-#: modules/file/nt-mdt.c:634
+#: modules/file/nt-mdt.c:650
 msgid "Imports NT-MDT data files."
 msgstr "Načítá datové soubory NT-MDT."
 
-#: modules/file/nt-mdt.c:647
+#: modules/file/nt-mdt.c:663
 msgid "NT-MDT files (.mdt)"
 msgstr "NT-MDT soubory (.mdt)"
 
-#: modules/file/nt-mdt.c:1046
+#: modules/file/nt-mdt.c:1085
 msgid "Frame is too short for Frame Mode."
 msgstr "Rám je příliš krátký pro daný Frame Mode."
 
-#: modules/file/nt-mdt.c:1060
+#: modules/file/nt-mdt.c:1099
 msgid "Frame is too short for dots or data."
 msgstr "Rám je příliš krátký pro body či data."
 
-#: modules/file/nt-mdt.c:1317
+#: modules/file/nt-mdt.c:1356
 #, c-format
 msgid "End of file reached in frame header #%u."
 msgstr "Soubor skončil v hlavičce rámu č. %u."
 
-#: modules/file/nt-mdt.c:1325
+#: modules/file/nt-mdt.c:1364
 #, c-format
 msgid "End of file reached in frame data #%u."
 msgstr "Soubor skončil v datech rámu č. %u."
 
-#: modules/file/nt-mdt.c:1359
+#: modules/file/nt-mdt.c:1399
 #, c-format
 msgid "Frame #%u is too short for scanned data header."
 msgstr "Rám č. %u je příliš krátký pro hlavičku dat skenu."
@@ -9009,3 +8999,11 @@ msgstr ""
 "Projektovaná plocha: %s\n"
 "θ sklonu:            %s\n"
 "φ sklonu:            %s\n"
+
+#, fuzzy
+#~ msgid "Imports AIST-NT data files."
+#~ msgstr "Načítá datové soubory NT-MDT."
+
+#, fuzzy
+#~ msgid "AIST-NT files (.aist)"
+#~ msgstr "SIS soubory (.sis)"
