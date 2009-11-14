@@ -17,11 +17,27 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
+
+/*
+ * Warning: Madness ahead.
+ *
+ * Files are saved and loaded using Qt serialization facilities but
+ * inconsistently so, data stored by the Qt serialization layer are in
+ * big-endian byte order (because people at TrollTech think it is more portable
+ * or something) while AIST does not go that far as to think about byte order
+ * so they dump stuff to QByteArrays in the native order which happens to be
+ * little-endian because they run it on x86.  Now choose.
+ */
+
+/*
+ * TODO:
+ * How to detect the format?  Is the top-level node always called noname?
+ * How to parse the units?  Their idea of units is something like `Ox [um]'.
+ */
 #define DEBUG 1
 #include "config.h"
 #include <string.h>
 #include <stdlib.h>
-#include <stdarg.h>
 
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
@@ -32,6 +48,7 @@
 #include <libgwyddion/gwymath.h>
 #include <libprocess/datafield.h>
 #include <libgwymodule/gwymodule-file.h>
+#include <app/data-browser.h>
 #include <app/gwymoduleutils-file.h>
 
 #include "err.h"
@@ -39,8 +56,7 @@
 
 #define EXTENSION ".aist"
 
-#define Nanometer 1e-9
-#define NanoAmpere 1e-9
+#define Micrometer 1e-6
 
 #define MAGIC "\x00\x00"
 #define MAGIC_SIZE (sizeof(MAGIC)-1)
@@ -58,6 +74,11 @@ typedef struct {
     gdouble left, right, top, bottom;
     gchar *xunits, *yunits, *zunits;
 } AistRaster;
+
+typedef struct {
+    GwyContainer *container;
+    gint channel_id;
+} AistContext;
 
 static gboolean       module_register        (void);
 static gint           aist_detect         (const GwyFileDetectInfo *fileinfo,
@@ -191,6 +212,26 @@ read_qt_bool(const guchar **p, gsize *size, gboolean *value)
     return TRUE;
 }
 
+/* NB: Returned value is a direct pointer to the input buffer! */
+static gboolean
+read_qt_byte_array(const guchar **p, gsize *size,
+                   guint *len, const guchar **value)
+{
+    *value = NULL;
+    if (!read_qt_int(p, size, len))
+        return FALSE;
+
+    if (*size < *len)
+        return FALSE;
+
+    gwy_debug("QByteArray of length %u", *len);
+    *value = *p;
+    *size -= *len;
+    (*p) += *len;
+
+    return TRUE;
+}
+
 static void
 free_aist_common(AistCommon *common)
 {
@@ -213,10 +254,19 @@ read_aist_common(const guchar **p, gsize *size,
 }
 
 static gboolean
-read_aist_raster(const guchar **p, gsize *size)
+read_aist_raster(const guchar **p, gsize *size, AistContext *context)
 {
     AistRaster raster;
+    GwyDataField *dfield;
+    GwySIUnit *xyunit, *zunit;
     gboolean ok = FALSE;
+    guint i, j, n, len;
+    gint power10xy, power10z;
+    const guchar *data;
+    gchar *s;
+    gchar key[32];
+    gdouble *d;
+    gdouble q;
 
     gwy_clear(&raster, 1);
 
@@ -236,7 +286,67 @@ read_aist_raster(const guchar **p, gsize *size)
         || !read_qt_string(p, size, &raster.zunits))
         goto fail;
 
-    /* TODO: Read the fields. */
+    if (!read_qt_byte_array(p, size, &len, &data))
+        goto fail;
+    n = raster.xres * raster.yres;
+    if (len != n*sizeof(gdouble))
+        goto fail;
+
+    /* Lateral units are a weird thing but they contain the actual units in
+     * bracket somewhere. */
+    s = strchr(raster.xunits, '[');
+    if (s) {
+        s = g_strdup(s + 1);
+        if (strchr(s, ']'))
+            *strchr(s, ']') = '\0';
+        xyunit = gwy_si_unit_new_parse(s, &power10xy);
+        g_free(s);
+    }
+    else {
+        xyunit = gwy_si_unit_new("m");
+        power10xy = -6;
+    }
+    q = pow10(power10xy);
+
+    dfield = gwy_data_field_new(raster.xres, raster.yres,
+                                q*fabs(raster.right - raster.left),
+                                q*fabs(raster.bottom - raster.top),
+                                FALSE);
+    gwy_data_field_set_si_unit_xy(dfield, xyunit);
+    g_object_unref(xyunit);
+    gwy_data_field_set_xoffset(dfield, q*MIN(raster.left, raster.right));
+    gwy_data_field_set_yoffset(dfield, q*MIN(raster.top, raster.bottom));
+
+    zunit = gwy_si_unit_new_parse(raster.zunits, &power10z);
+    q = pow10(power10z);
+    gwy_data_field_set_si_unit_z(dfield, zunit);
+    g_object_unref(zunit);
+
+    d = gwy_data_field_get_data(dfield);
+    for (i = 0; i < raster.yres; i++) {
+        for (j = 0; j < raster.xres; j++) {
+            d[(raster.yres-1 - i)*raster.xres + j]
+                = q*gwy_get_gdouble_le(&data);
+        }
+    }
+
+    g_snprintf(key, sizeof(key), "/%d/data", context->channel_id);
+    gwy_container_set_object_by_name(context->container, key, dfield);
+    g_object_unref(dfield);
+
+    if ((s = strchr(raster.common.name, '[')))
+        s = g_strchomp(g_strndup(raster.common.name, s - raster.common.name));
+    else
+        s = g_strdup(raster.common.name);
+    g_snprintf(key, sizeof(key), "/%d/data/title", context->channel_id);
+    gwy_container_set_string_by_name(context->container, key, s);
+
+    context->channel_id++;
+
+    /* TODO: read the other fields (the former is a bitmap) */
+    if (!read_qt_byte_array(p, size, &len, &data)
+        || !read_qt_byte_array(p, size, &len, &data))
+        goto fail;
 
     ok = TRUE;
 
@@ -249,7 +359,7 @@ fail:
 }
 
 static gboolean
-read_aist_data(const guchar **p, gsize *size)
+read_aist_data(const guchar **p, gsize *size, AistContext *context)
 {
     gchar *type = NULL;
     gboolean ok = FALSE;
@@ -266,13 +376,16 @@ read_aist_data(const guchar **p, gsize *size)
 
     datasize = len;
     datap = *p;
-    if (gwy_strequal(type, "raster")) {
-        gwy_debug("raster data");
-        read_aist_raster(&datap, &datasize);
-    }
 
+    /* Do this even if we fail, data are skippable. */
     *size -= datasize;
     *p += datasize;
+
+    if (gwy_strequal(type, "raster")) {
+        gwy_debug("raster data");
+        if (!read_aist_raster(&datap, &datasize, context))
+            goto fail;
+    }
 
     ok = TRUE;
 
@@ -282,7 +395,7 @@ fail:
 }
 
 static gboolean
-read_aist_tree(const guchar **p, gsize *size)
+read_aist_tree(const guchar **p, gsize *size, AistContext *context)
 {
     gboolean is_data_node;
     gchar *name = NULL;
@@ -294,7 +407,7 @@ read_aist_tree(const guchar **p, gsize *size)
 
     if (is_data_node) {
         gwy_debug("reading data");
-        if (!read_aist_data(p, size))
+        if (!read_aist_data(p, size, context))
             goto fail;
     }
 
@@ -304,7 +417,7 @@ read_aist_tree(const guchar **p, gsize *size)
 
     for (i = 0; i < nchildren; i++) {
         gwy_debug("recursing");
-        ok = read_aist_tree(p, size);
+        ok = read_aist_tree(p, size, context);
         gwy_debug("returned");
         if (!ok)
             goto fail;
@@ -321,7 +434,7 @@ aist_load(const gchar *filename,
           G_GNUC_UNUSED GwyRunType mode,
           GError **error)
 {
-    GwyContainer *container = NULL;
+    AistContext context;
     guchar *buffer = NULL;
     const guchar *p;
     gsize remaining, size = 0;
@@ -334,12 +447,20 @@ aist_load(const gchar *filename,
 
     p = buffer;
     remaining = size;
-    read_aist_tree(&p, &remaining);
 
-    err_NO_DATA(error);
+    context.container = gwy_container_new();
+    context.channel_id = 0;
+    read_aist_tree(&p, &remaining, &context);
+
     gwy_file_abandon_contents(buffer, size, NULL);
 
-    return container;
+    if (context.channel_id == 0) {
+        g_object_unref(context.container);
+        context.container = NULL;
+        err_NO_DATA(error);
+    }
+
+    return context.container;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
