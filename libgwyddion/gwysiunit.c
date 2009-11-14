@@ -119,7 +119,7 @@ SI_prefixes[] = {
 
 /* Units that can conflict with prefixes */
 static const gchar *known_units[] = {
-    "deg", "Pa", "cd", "mol", "cal", "px", "pt", "cps", "counts",
+    "deg", "Pa", "cd", "mol", "cal", "px", "pt", "cps",
 };
 
 /* Unit formats */
@@ -810,6 +810,10 @@ gwy_si_unit_parse(GwySIUnit *siunit,
                  || gwy_strequal(buf->str, "AA")
                  || gwy_strequal(buf->str, "Ang"))
             g_string_assign(buf, "Å");
+        else if (gwy_strequal(buf->str, "a.u.")
+                 || gwy_strequal(buf->str, "a. u.")
+                 || gwy_strequal(buf->str, "counts"))
+            g_string_assign(buf, "");
 
         /* get prefix, but be careful not to split mol to mili-ol */
         pfpower = 0;
