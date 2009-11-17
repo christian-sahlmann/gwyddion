@@ -38,7 +38,7 @@
  * What it the meaning of the advanced data at the end?
  * What is the bit order, alignment and interpretation of the mask bitmap?
  */
-#define DEBUG 1
+
 #include "config.h"
 #include <string.h>
 #include <stdlib.h>
