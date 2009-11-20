@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
 "POT-Creation-Date: 2009-11-14 03:59+0100\n"
-"PO-Revision-Date: 2009-11-14 19:40+0300\n"
+"PO-Revision-Date: 2009-11-20 19:44+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -415,7 +415,7 @@ msgstr "Линейная"
 
 #: libprocess/gwyprocessenums.c:207
 msgid "Key"
-msgstr "Бикубическая"
+msgstr "Кубическая"
 
 #: libprocess/gwyprocessenums.c:208
 msgid "BSpline"
@@ -423,15 +423,15 @@ msgstr "Бета-сплайн"
 
 #: libprocess/gwyprocessenums.c:209
 msgid "OMOMS"
-msgstr ""
+msgstr "OMOMS"
 
 #: libprocess/gwyprocessenums.c:210
 msgid "NNA"
-msgstr ""
+msgstr "АБС"
 
 #: libprocess/gwyprocessenums.c:211
 msgid "Schaum"
-msgstr ""
+msgstr "Шаум"
 
 #: libprocess/gwyprocessenums.c:243
 #: app/datachooser.c:170
