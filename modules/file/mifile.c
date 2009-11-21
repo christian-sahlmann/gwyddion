@@ -164,7 +164,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Molecular Imaging MI data files."),
     "Chris Anderson <sidewinder.asu@gmail.com>",
-    "0.12",
+    "0.13",
     "Chris Anderson, Molecular Imaging Corp.",
     "2006",
 };
@@ -541,7 +541,7 @@ read_data_field_bin(GwyDataField *dfield,
     for (i = 0; i < yres; i++) {
         row = (const gint16*)midata->data + (yres-1 - i)*xres;
         for (j = 0; j < xres; j++)
-            data[i*xres + j] = GINT16_FROM_LE(row[j]);
+            data[i*xres + j] = GINT16_FROM_LE(row[j])/32768.0;
     }
 }
 
@@ -559,7 +559,7 @@ read_data_field_bin32(GwyDataField *dfield,
     for (i = 0; i < yres; i++) {
         row = (const gint32*)midata->data + (yres-1 - i)*xres;
         for (j = 0; j < xres; j++)
-            data[i*xres + j] = GINT32_FROM_LE(row[j]);
+            data[i*xres + j] = GINT32_FROM_LE(row[j])/2147483648.0;
     }
 }
 
@@ -578,7 +578,7 @@ read_data_field_text(GwyDataField *dfield,
     for (i = 0; i < xres*yres; i++) {
         gchar *end;
 
-        data[i] = strtol(buf + *pos, &end, 10);
+        data[i] = strtol(buf + *pos, &end, 10)/32768.0;
         *pos = (const gchar*)end - buf;
     }
 }
@@ -770,7 +770,7 @@ process_metadata(MIFile *mifile,
     gchar *bufferUnit;
     GwySIUnit *siunit;
     gint power10;
-    gdouble bufferRange, conversion;
+    gdouble bufferRange;
     GString *str;
     gchar *p;
     guint i;
@@ -813,11 +813,8 @@ process_metadata(MIFile *mifile,
         gwy_data_field_set_si_unit_z(dfield, siunit);
         g_object_unref(siunit);
     }
-    if (mifile_get_double(data->meta, "bufferRange", &bufferRange)) {
-        bufferRange *= pow10(power10);
-        conversion = bufferRange / 32768;
-        gwy_data_field_multiply(dfield, conversion);
-    }
+    if (mifile_get_double(data->meta, "bufferRange", &bufferRange))
+        gwy_data_field_multiply(dfield, bufferRange * pow10(power10));
 
     /* Fix x-y value scale */
     siunit = gwy_si_unit_new("m");
