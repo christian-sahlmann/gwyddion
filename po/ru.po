@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2009-11-14 03:59+0100\n"
-"PO-Revision-Date: 2009-11-20 19:44+0300\n"
+"POT-Creation-Date: 2009-11-23 03:59+0100\n"
+"PO-Revision-Date: 2009-11-23 18:35+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -1667,7 +1667,7 @@ msgstr "_График"
 
 #: app/menu.c:568
 msgid "Re-show Last"
-msgstr "Перепоказать последний"
+msgstr "Повторить с настройкой последний"
 
 #: app/menu.c:583
 msgid "Repeat Last"
@@ -2208,11 +2208,11 @@ msgstr "Вторичный элемент данных не имеет перв�
 msgid "Please wait"
 msgstr "Подождите, пожалуйста "
 
-#: modules/file/aistfile.c:72
+#: modules/file/aistfile.c:101
 msgid "Imports AIST-NT data files."
 msgstr "Импорт файлов данных AIST-NT"
 
-#: modules/file/aistfile.c:85
+#: modules/file/aistfile.c:114
 msgid "AIST-NT files (.aist)"
 msgstr "Файлы AIST-NT (.aist)"
 
@@ -2347,9 +2347,9 @@ msgstr "Экспортированные данные Burleigh (.txt, .bin)"
 
 #: modules/file/burleigh_exp.c:225
 #: modules/file/burleigh_exp.c:266
-#: modules/file/nanoscope.c:809
+#: modules/file/nanoscope.c:808
 #: modules/file/omicron.c:363
-#: modules/file/shimadzu.c:407
+#: modules/file/shimadzu.c:406
 msgid "Missing colon in header line."
 msgstr "Пропущено двоеточие в строке заголовка."
 
@@ -2367,7 +2367,7 @@ msgid "Neither `%s' nor `%s' header field found."
 msgstr "Не найдено ни `%s', ни `%s' поля заголовка."
 
 #: modules/file/createc.c:520
-#: modules/file/matfile.c:597
+#: modules/file/matfile.c:596
 #, c-format
 msgid "zlib initialization failed with error %d, cannot decompress data."
 msgstr "Инициализация zlib закончилась с ошибкой %d, не удалось распаковать данные."
@@ -2485,7 +2485,7 @@ msgid "Garbage before first header section."
 msgstr "Мусор перед первой частью заголовка."
 
 #: modules/file/ezdfile.c:312
-#: modules/file/nanoscope-ii.c:252
+#: modules/file/nanoscope-ii.c:251
 msgid "Malformed header line (missing =)."
 msgstr "Искаженная строка заголовка (отсутствует =)."
 
@@ -2528,8 +2528,8 @@ msgstr "Были найдены некорректные позиции тего
 #: modules/file/gwytiff.h:618
 #: modules/file/gwytiff.h:677
 #: modules/file/gwytiff.h:693
-#: modules/file/mapvue.c:451
-#: modules/file/mapvue.c:456
+#: modules/file/mapvue.c:450
+#: modules/file/mapvue.c:455
 #, c-format
 msgid "Required tag %u was not found."
 msgstr "Требуемый тег %u не был найден."
@@ -2545,9 +2545,9 @@ msgid "Planar configuration %u is not supported."
 msgstr "Двумерная конфигурация %u не поддерживается."
 
 #: modules/file/gwytiff.h:719
-#: modules/file/matfile.c:276
-#: modules/file/matfile.c:298
-#: modules/file/psia.c:343
+#: modules/file/matfile.c:275
+#: modules/file/matfile.c:297
+#: modules/file/psia.c:342
 msgid "File is truncated."
 msgstr "Файл усечен."
 
@@ -2619,19 +2619,19 @@ msgstr "Число точек данных %u не соответствует р
 msgid "Data size %u does not match the number of data points %u×%u."
 msgstr "Размер данных %u не соответствует числу точек данных %u×%u."
 
-#: modules/file/intematix.c:129
+#: modules/file/intematix.c:128
 msgid "Imports Intematix SDF data files."
 msgstr "Импортирует файлы данных Intematix SDF."
 
-#: modules/file/intematix.c:142
+#: modules/file/intematix.c:141
 msgid "Intematix SDF data files (.sdf)"
 msgstr "Файлы данных Intematix SDF (.sdf)"
 
-#: modules/file/intematix.c:308
+#: modules/file/intematix.c:307
 msgid "Parameter tag set is incomplete."
 msgstr "Набор тегов параметров неполон."
 
-#: modules/file/intematix.c:313
+#: modules/file/intematix.c:312
 msgid "image depth"
 msgstr "глубина изображения"
 
@@ -2659,62 +2659,62 @@ msgstr "Изображения сканирований JPK (.jpk)"
 msgid "File does not contain grid dimensions."
 msgstr "Файл не содержит размеров сетки"
 
-#: modules/file/mapvue.c:380
+#: modules/file/mapvue.c:379
 msgid "Imports MapVue data files (.map)."
 msgstr "Импортирует файлы данных MapVue (.map)."
 
-#: modules/file/mapvue.c:393
+#: modules/file/mapvue.c:392
 msgid "MapVue files (.map)"
 msgstr "Файлы MapVue (.map)"
 
-#: modules/file/mapvue.c:629
+#: modules/file/mapvue.c:628
 msgid "File end was reached while scanning tags."
 msgstr "В процессе поиска тегов был достигнут конец файла."
 
-#: modules/file/mapvue.c:641
+#: modules/file/mapvue.c:640
 #, c-format
 msgid "Expected tag %u size is %u bytes, but the actual size is %u bytes."
 msgstr "Ожидаемый размер тега %u должен быть %u байт, но реальный размер %u байт."
 
-#: modules/file/mapvue.c:655
+#: modules/file/mapvue.c:654
 #, c-format
 msgid "Tag %u size is %u bytes, which is not enough to hold the tag marker."
 msgstr "Размер тега %u - %u байт, что недостаточно чтобы содержать маркер тега."
 
-#: modules/file/mapvue.c:666
-#: modules/file/mapvue.c:679
+#: modules/file/mapvue.c:665
+#: modules/file/mapvue.c:678
 #, c-format
 msgid "Tag %u size is %u bytes, which is not enough to hold the tag marker and size."
 msgstr "Размер тега %u - %u байт, что недостаточно чтобы содержать маркер тега и его размер."
 
-#: modules/file/mapvue.c:690
+#: modules/file/mapvue.c:689
 #, c-format
 msgid "Tag marker is missing on an unknown tag %u."
 msgstr "Маркер тега отсутствует на неизвестном теге %u."
 
-#: modules/file/mapvue.c:709
-#: modules/file/mapvue.c:719
+#: modules/file/mapvue.c:708
+#: modules/file/mapvue.c:718
 msgid "Character array does not fit into the file."
 msgstr "Массив символов не помещается в файл."
 
-#: modules/file/matfile.c:223
+#: modules/file/matfile.c:222
 msgid "Imports Matlab MAT files v5."
 msgstr "Импортирует файлы Matlab MAT v5."
 
-#: modules/file/matfile.c:236
+#: modules/file/matfile.c:235
 msgid "Matlab MAT 5 files (.mat)"
 msgstr "Файлы Matlab MAT 5 (.mat)"
 
-#: modules/file/matfile.c:308
+#: modules/file/matfile.c:307
 msgid "Compressed data inside compressed data found."
 msgstr "Сжатые данные найдены внутри сжатых данных."
 
-#: modules/file/matfile.c:346
+#: modules/file/matfile.c:345
 #, c-format
 msgid "Invalid short tag of type %u claims to consists of %u bytes."
 msgstr "Неверный короткий тег типа %u претендует что его длина %u байт."
 
-#: modules/file/matfile.c:611
+#: modules/file/matfile.c:610
 #, c-format
 msgid "Decompression of compressed variable failed with error %d."
 msgstr "Распаковка сжатой переменной закончилась с ошибкой %d."
@@ -2763,30 +2763,30 @@ msgstr "Файлы данных PicoView (.mi)"
 msgid "Spectroscopy Graph"
 msgstr "График спектроскопии"
 
-#: modules/file/nanoeducator.c:284
+#: modules/file/nanoeducator.c:283
 msgid "Imports Nanoeducator data files."
 msgstr "Импортирует файлы данных Nanoeducator."
 
-#: modules/file/nanoeducator.c:297
+#: modules/file/nanoeducator.c:296
 msgid "Nanoeducator files (.mspm, .spm, .stm)"
 msgstr "Файлы Nanoeducator (.mspm, .spm, .stm)"
 
-#: modules/file/nanoeducator.c:355
+#: modules/file/nanoeducator.c:354
 #: modules/file/unisoku.c:283
 msgid "format version"
 msgstr "версия формата"
 
-#: modules/file/nanoeducator.c:383
-#: modules/file/nanoeducator.c:420
-#: modules/file/nanoeducator.c:525
+#: modules/file/nanoeducator.c:382
+#: modules/file/nanoeducator.c:419
+#: modules/file/nanoeducator.c:524
 msgid "Image data starts past the end of file."
 msgstr "Данные изображения начинаются после конца файла."
 
-#: modules/file/nanoeducator.c:462
+#: modules/file/nanoeducator.c:461
 msgid "Spectra data starts past the end of file."
 msgstr "Данные спектроскопии начинаются после конца файла."
 
-#: modules/file/nanoeducator.c:630
+#: modules/file/nanoeducator.c:629
 #: modules/file/opdfile.c:268
 #: modules/file/pt3file.c:450
 #: modules/file/pt3file.c:552
@@ -2794,30 +2794,30 @@ msgstr "Данные спектроскопии начинаются после 
 msgid "File header is truncated"
 msgstr "Заголовок файла усечён"
 
-#: modules/file/nanoeducator.c:689
+#: modules/file/nanoeducator.c:688
 msgid "Parameter header is truncated"
 msgstr "Заголовок параметров усечён"
 
-#: modules/file/nanoeducator.c:914
+#: modules/file/nanoeducator.c:913
 #: modules/process/curvature.c:489
 #: modules/tools/profile.c:535
 #, c-format
 msgid "Profile %d"
 msgstr "Профиль %d"
 
-#: modules/file/nanoeducator.c:957
+#: modules/file/nanoeducator.c:956
 msgid "The number of spectra coordinates does not match the number of spectra."
 msgstr "Число координат спектров не соответствует числу спектров."
 
-#: modules/file/nanoeducator.c:1054
+#: modules/file/nanoeducator.c:1053
 msgid "F-D spectra"
 msgstr "Спектры сила-расстояние"
 
-#: modules/file/nanoeducator.c:1153
+#: modules/file/nanoeducator.c:1152
 msgid "I-V spectra"
 msgstr "Спектры ВАХ"
 
-#: modules/file/nanoeducator.c:1252
+#: modules/file/nanoeducator.c:1251
 msgid "I-Z spectra"
 msgstr "Спектры I-Z"
 
@@ -2899,27 +2899,27 @@ msgstr "Элемент верхнего уровня не ‘scan’."
 msgid "Wrong size of Base64 encoded data."
 msgstr "Неправильный размер данных, кодированных Base64."
 
-#: modules/file/nanoscope-ii.c:80
+#: modules/file/nanoscope-ii.c:79
 msgid "Imports Digital Instruments Nanoscope II data files."
 msgstr "Импортирует файлы данных Digital Instruments Nanoscope II."
 
-#: modules/file/nanoscope-ii.c:93
+#: modules/file/nanoscope-ii.c:92
 msgid "Nanoscope II files"
 msgstr "Файлы Nanoscope II"
 
-#: modules/file/nanoscope.c:146
+#: modules/file/nanoscope.c:145
 msgid "Imports Veeco (Digital Instruments) Nanoscope data files, version 3 or newer."
 msgstr "Импортирует файлы данных Veeco (Digital Instruments) Nanoscope версии 3 или более новой."
 
-#: modules/file/nanoscope.c:160
+#: modules/file/nanoscope.c:159
 msgid "Nanoscope III files"
 msgstr "Файлы Nanoscope III"
 
-#: modules/file/nanoscope.c:221
+#: modules/file/nanoscope.c:220
 msgid "File is not a Nanoscope file, or it is a unknown subtype."
 msgstr "Файл не является файлом Nanoscope или неизвестного подтипа."
 
-#: modules/file/nanoscope.c:228
+#: modules/file/nanoscope.c:227
 msgid ""
 "File has been damaged by change of line endings, resulting in corruption of the binary part of the file.\n"
 "\n"
@@ -2929,17 +2929,17 @@ msgstr ""
 "\n"
 "Обычно это происходит если файл был воспринят как текст при передаче по электронной почте в несжатом виде, по FTP в ASCII-режиме (используйте binary), сжат с помощью команды 'Послать в сжатую папку' в некоторых версиях MS Windows, или при других способах передачи файла, которые используют платформо-независимое сохранение текста."
 
-#: modules/file/nanoscope.c:475
-#: modules/file/nanoscope.c:491
+#: modules/file/nanoscope.c:474
+#: modules/file/nanoscope.c:490
 msgid "Cannot parse `Scan size' field."
 msgstr "Не удаётся распознать поле `Scan size'."
 
-#: modules/file/nanoscope.c:720
+#: modules/file/nanoscope.c:719
 #, c-format
 msgid "Garbage after data sample #%d."
 msgstr "Мусор после элемента данных #%d."
 
-#: modules/file/nanoscope.c:799
+#: modules/file/nanoscope.c:798
 msgid "Truncated header line."
 msgstr "Обрезанная строка заголовка."
 
@@ -3424,24 +3424,24 @@ msgstr "Импорт файлов данных Pacific Nanotechnology PNI."
 msgid "PNI files (.pni)"
 msgstr "Файлы PNI (.pni)"
 
-#: modules/file/psia.c:237
+#: modules/file/psia.c:236
 msgid "Imports PSIA data files."
 msgstr "Импортирует файлы данных PSIA."
 
-#: modules/file/psia.c:250
+#: modules/file/psia.c:249
 msgid "PSIA data files (.tiff)"
 msgstr "Файлы данных PSIA (.tiff)"
 
-#: modules/file/psia.c:333
+#: modules/file/psia.c:332
 msgid "Data tag is missing."
 msgstr "Тег данных отсутствует."
 
-#: modules/file/psia.c:509
+#: modules/file/psia.c:508
 #, c-format
 msgid "Header is too short (only %lu bytes)."
 msgstr "Заголовок слишком короткий (всего %lu байт)."
 
-#: modules/file/psia.c:622
+#: modules/file/psia.c:621
 #, c-format
 msgid "Spectroscopy header is too short (only %lu bytes)."
 msgstr "Заголовок спектроскопии слишком короткий (всего %lu байт)."
@@ -4109,15 +4109,15 @@ msgstr "Импортирует текстовые файлы Sensolytics."
 msgid "Sensolytics text files (.dat)"
 msgstr "Текстовые файлы Sensolytics (.dat)"
 
-#: modules/file/shimadzu.c:98
+#: modules/file/shimadzu.c:97
 msgid "Imports Shimadzu SPM data files, version 2."
 msgstr "Импортирует файлы данных Shimadzu SPM, версии 2."
 
-#: modules/file/shimadzu.c:111
+#: modules/file/shimadzu.c:110
 msgid "Shimadzu files"
 msgstr "Файлы Shimadzu"
 
-#: modules/file/shimadzu.c:318
+#: modules/file/shimadzu.c:317
 #, c-format
 msgid "Cannot parse data values after %d of %d."
 msgstr "Невозможно распознать значения данных после %d из %d."
@@ -5325,11 +5325,11 @@ msgstr "расчитать непрерывное вейвлет-преобра�
 
 #: modules/process/cwt.c:120
 msgid "CWT"
-msgstr ""
+msgstr "CWT"
 
 #: modules/process/cwt.c:131
 msgid "2D CWT"
-msgstr ""
+msgstr "2D CWT"
 
 #: modules/process/cwt.c:155
 #: modules/process/dwt.c:183
@@ -5450,11 +5450,11 @@ msgstr "%s: Данные должны быть квадратом."
 
 #: modules/process/dwt.c:145
 msgid "DWT"
-msgstr ""
+msgstr "DWT"
 
 #: modules/process/dwt.c:163
 msgid "2D DWT"
-msgstr ""
+msgstr "2D DWT"
 
 #: modules/process/dwt.c:189
 #, c-format
@@ -8345,7 +8345,7 @@ msgstr "Ra"
 
 #: modules/tools/linestats.c:159
 msgid "Rq (RMS)"
-msgstr ""
+msgstr "Rq (Ср. квадр.)"
 
 #: modules/tools/linestats.c:160
 msgid "Rz"
