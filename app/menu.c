@@ -852,6 +852,7 @@ gwy_app_menu_recent_files_update(GList *recent_files)
         }
         else {
             item = gtk_image_menu_item_new_with_mnemonic(label);
+            g_object_set(item, "always-show-image", TRUE, NULL);
             gwy_debug("creating item %p for <%s> [#%d]", item, s, i);
             g_object_set_qdata_full(G_OBJECT(item), quark, g_strdup(filename),
                                     g_free);
@@ -877,6 +878,7 @@ gwy_app_menu_recent_files_update(GList *recent_files)
         }
         else {
             item = gtk_image_menu_item_new_with_mnemonic("Thou Canst See This");
+            g_object_set(item, "always-show-image", TRUE, NULL);
             gwy_debug("adding hidden item %p [#%d]", item, i);
             gtk_menu_shell_append(GTK_MENU_SHELL(recent_files_menu), item);
             g_signal_connect(item, "activate",
