@@ -4,9 +4,11 @@ Application:
   is running (affecting most desktop launchers and menus) was fixed.
 
 Modules:
+- AIST-NT (new): Imports AIST-NT files.
 - Line correction: New Median difference line correction method was added.
 - NT-MDT: Curves frames are imported, point positions are still wrong though.
 - Nanoeducator: I-Z spectra written by newer software are supported.
+- MI file: Wrong scaling of 32bit files was corrected.
 
 
 2.18 (2009-11-03)
