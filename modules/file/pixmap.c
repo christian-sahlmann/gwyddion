@@ -422,7 +422,7 @@ static GwyModuleInfo module_info = {
        "PNG, JPEG, TIFF, PPM, BMP, TARGA. "
        "Import support relies on GDK and thus may be installation-dependent."),
     "Yeti <yeti@gwyddion.net>",
-    "7.6",
+    "7.7",
     "David Nečas (Yeti)",
     "2004-2009",
 };
@@ -3292,6 +3292,15 @@ scalebar(gint size,
     lw = ZOOM2LW(zoom);
     width = GWY_ROUND(size*p);
     height = PANGO_PIXELS(logical.height) + tick;
+
+    if (height < 2 || width < 2 || height > 16384 || width > 16384) {
+        g_warning("Will not create scalebar of size %dx%d, we got the "
+                  "scaling terribly wrong somewhere.", width, height);
+        pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, TRUE, BITS_PER_SAMPLE,
+                                1, 1);
+        gdk_pixbuf_fill(pixbuf, 0x00000000);
+        return pixbuf;
+    }
 
     drawable = prepare_drawable(width, height, lw, &gc);
 
