@@ -169,6 +169,7 @@ gwy_menu_resource(const ResourceInfo *rinfo,
     gtk_icon_size_lookup(GTK_ICON_SIZE_MENU, &width, &height);
     width = 5*height;
     menu = gtk_menu_new();
+    g_object_set(menu, "reserve-toggle-size", 0, NULL);
     for (i = 0;
          (resource = gwy_inventory_get_nth_item(rinfo->inventory, i));
          i++) {
