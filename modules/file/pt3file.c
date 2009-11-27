@@ -46,6 +46,7 @@
 #include <libgwyddion/gwyutils.h>
 #include <libprocess/datafield.h>
 #include <libgwymodule/gwymodule-file.h>
+#include <app/data-browser.h>
 #include <app/gwymoduleutils-file.h>
 
 #include "get.h"
@@ -249,6 +250,12 @@ typedef struct {
     PicoHarpImagingHeader imaging;
 } PicoHarpFile;
 
+typedef struct {
+    guint i;
+    guint64 globaltime;
+    guint64 start, stop;
+} LineTrigger;
+
 static gboolean      module_register           (void);
 static gint          pt3file_detect            (const GwyFileDetectInfo *fileinfo,
                                                 gboolean only_name);
@@ -266,6 +273,12 @@ static const guchar* read_pie710_imaging_header(PicoHarpImagingHeader *header,
 static const guchar* read_kdt180_imaging_header(PicoHarpImagingHeader *header,
                                                 const guchar *p);
 static const guchar* read_lsm_imaging_header   (PicoHarpImagingHeader *header,
+                                                const guchar *p);
+static LineTrigger*  pt3file_scan_line_triggers(const PicoHarpFile *pt3file,
+                                                const guchar *p,
+                                                GError **error);
+static GwyDataField* pt3file_extract_counts    (const PicoHarpFile *pt3file,
+                                                const LineTrigger *linetriggers,
                                                 const guchar *p);
 static GwyContainer* pt3file_get_metadata      (PicoHarpFile *pt3file);
 
@@ -352,7 +365,7 @@ pt3file_load(const gchar *filename,
     const guchar *p;
     gsize header_len, size = 0;
     GError *err = NULL;
-    guint i;
+    LineTrigger *linetriggers = NULL;
 
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
         err_GET_FILE_CONTENTS(error, &err);
@@ -361,35 +374,26 @@ pt3file_load(const gchar *filename,
 
     gwy_clear(&pt3file, 1);
     if (!(header_len = pt3file_read_header(buffer, size, &pt3file, error)))
-        return NULL;
+        goto fail;
 
+    if (err_SIZE_MISMATCH
+        (error, header_len + pt3file.number_of_records*sizeof(guint32), size,
+         FALSE))
+        goto fail;
+
+    /* Scan the records and find the line triggers */
     p = buffer + header_len;
-    for (i = 0; i < pt3file.number_of_records; i++) {
-        PicoHarpT3Record rec;
+    if (!(linetriggers = pt3file_scan_line_triggers(&pt3file, p, error)))
+        goto fail;
 
-        p = read_t3_record(&rec, p);
-        /*printf("%u %u %u\n", rec.channel, rec.time, rec.nsync);*/
-    }
-
-    /*
-    expected = pt3file.header_size
-               + 2*pt3file.nbuckets*pt3file.intens_xres*pt3file.intens_yres
-               + 4*pt3file.phase_xres*pt3file.phase_yres;
-    if (err_SIZE_MISMATCH(error, expected, size, TRUE)) {
-        gwy_file_abandon_contents(buffer, size, NULL);
-        return NULL;
-    }
-
-    gwy_file_abandon_contents(buffer, size, NULL);
-    if (!n) {
-        err_NO_DATA(error);
-        return NULL;
-    }
-
-    key = g_string_new(NULL);
-    */
-
+    dfield = pt3file_extract_counts(&pt3file, linetriggers, p);
     container = gwy_container_new();
+    gwy_container_set_object(container, gwy_app_get_data_key_for_id(0), dfield);
+    g_object_unref(dfield);
+
+fail:
+    g_free(linetriggers);
+    gwy_file_abandon_contents(buffer, size, NULL);
 
     return container;
 }
@@ -649,6 +653,128 @@ read_lsm_imaging_header(PicoHarpImagingHeader *header,
     header->lsm.yres = gwy_get_guint32_le(&p);
 
     return p;
+}
+
+static LineTrigger*
+pt3file_scan_line_triggers(const PicoHarpFile *pt3file,
+                           const guchar *p,
+                           GError **error)
+{
+    LineTrigger *linetriggers;
+    guint64 globaltime, globalbase;
+    guint xres, yres, i, lineno, n;
+
+    globaltime = globalbase = 0;
+    xres = pt3file->imaging.common.xres;
+    yres = pt3file->imaging.common.yres;
+    linetriggers = g_new(LineTrigger, yres);
+    n = pt3file->number_of_records;
+    for (i = lineno = 0; i < n; i++) {
+        PicoHarpT3Record rec;
+
+        p = read_t3_record(&rec, p);
+        if (rec.channel == 15 && rec.nsync == 0 && rec.time == 0) {
+            globalbase += 0x10000;
+            continue;
+        }
+        globaltime = globalbase | rec.nsync;
+        if (rec.channel == 15) {
+            if (rec.time == 4) {
+                if (lineno < yres) {
+                    linetriggers[lineno].i = i;
+                    linetriggers[lineno].globaltime = globaltime;
+                }
+                lineno++;
+            }
+        }
+    }
+
+    if (lineno != yres) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR,
+                    GWY_MODULE_FILE_ERROR_DATA,
+                    _("Number of line triggers %u does not match the number "
+                      "of scan lines %u."),
+                    lineno, yres);
+        g_free(linetriggers);
+        return NULL;
+    }
+
+    if (pt3file->imaging.common.instrument == PICO_HARP_PIE710) {
+        gdouble start = pt3file->imaging.pie710.t_start_to;
+        gdouble stop = pt3file->imaging.pie710.t_stop_to;
+        for (lineno = 0; lineno < yres; lineno++) {
+            n = (lineno == yres-1) ? lineno-1 : lineno;
+            n = linetriggers[n+1].globaltime - linetriggers[n].globaltime;
+            linetriggers[lineno].start = (linetriggers[lineno].globaltime
+                                          + start*n);
+            linetriggers[lineno].stop = (linetriggers[lineno].globaltime
+                                         + stop*n);
+        }
+    }
+    else {
+        for (lineno = 0; lineno < yres; lineno++) {
+            /* XXX: off-by-1 crash */
+            linetriggers[lineno].start = linetriggers[lineno].globaltime;
+            linetriggers[lineno].stop = linetriggers[lineno+1].globaltime;
+        }
+    }
+
+    return linetriggers;
+}
+
+static GwyDataField*
+pt3file_extract_counts(const PicoHarpFile *pt3file,
+                       const LineTrigger *linetriggers,
+                       const guchar *p)
+{
+    GwyDataField *dfield;
+    guint xres, yres, i, lineno, pixno, n;
+    guint64 globaltime, globalbase;
+    gdouble pix_resol;
+    gdouble *d;
+
+    xres = pt3file->imaging.common.xres;
+    yres = pt3file->imaging.common.yres;
+    n = pt3file->number_of_records;
+    if (pt3file->imaging.common.instrument == PICO_HARP_PIE710)
+        pix_resol = pt3file->imaging.pie710.pix_resol;
+    else if (pt3file->imaging.common.instrument == PICO_HARP_KDT180)
+        pix_resol = pt3file->imaging.kdt180.pix_resol;
+    else {
+        g_return_val_if_reached(NULL);
+    }
+    pix_resol *= 1e-6;
+
+    dfield = gwy_data_field_new(xres, yres, pix_resol*xres, pix_resol*yres,
+                                TRUE);
+    gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_xy(dfield), "m");
+    d = gwy_data_field_get_data(dfield);
+
+    for (i = lineno = 0; i < n; i++) {
+        PicoHarpT3Record rec;
+
+        p = read_t3_record(&rec, p);
+        if (rec.channel == 15) {
+            if (rec.nsync == 0 && rec.time == 0)
+                globalbase += 0x10000;
+            continue;
+        }
+        globaltime = globalbase | rec.nsync;
+        while (lineno < yres && globaltime >= linetriggers[lineno].stop)
+            lineno++;
+        if (lineno == yres)
+            break;
+
+        if (globaltime >= linetriggers[lineno].start
+            && globaltime < linetriggers[lineno].stop) {
+            pixno = (xres*(globaltime - linetriggers[lineno].start)
+                     /(linetriggers[lineno].stop - linetriggers[lineno].start));
+            pixno = MIN(pixno, xres-1);
+            d[xres*lineno + pixno] += 1.0;
+        }
+    }
+
+    return dfield;
 }
 
 static GwyContainer*
