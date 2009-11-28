@@ -37,7 +37,7 @@
  * .pt3
  * Read
  **/
-#define DEBUG 1
+
 #include <string.h>
 #include <stdio.h>
 #include "config.h"
@@ -381,6 +381,19 @@ pt3file_load(const gchar *filename,
          FALSE))
         goto fail;
 
+    if (pt3file.measurement_mode != 3) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("T2 measurement mode is not implemented."));
+        goto fail;
+    }
+    if (pt3file.imaging.common.instrument != PICO_HARP_PIE710
+        && pt3file.imaging.common.instrument != PICO_HARP_KDT180) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Only PI E710 and KDT180-100-Im imaging formats are "
+                      "implemented."));
+        goto fail;
+    }
+
     /* Scan the records and find the line triggers */
     p = buffer + header_len;
     if (!(linetriggers = pt3file_scan_line_triggers(&pt3file, p, error)))
@@ -388,8 +401,14 @@ pt3file_load(const gchar *filename,
 
     dfield = pt3file_extract_counts(&pt3file, linetriggers, p);
     container = gwy_container_new();
-    gwy_container_set_object(container, gwy_app_get_data_key_for_id(0), dfield);
+    gwy_container_set_object_by_name(container, "/0/data", dfield);
     g_object_unref(dfield);
+    gwy_container_set_string_by_name(container, "/0/data/title",
+                                     g_strdup("Photon count"));
+
+    meta = pt3file_get_metadata(&pt3file);
+    gwy_container_set_object_by_name(container, "/0/meta", meta);
+    g_object_unref(meta);
 
 fail:
     g_free(linetriggers);
@@ -451,7 +470,7 @@ pt3file_read_header(const guchar *buffer,
         if (size < HEADER_MIN_SIZE + BOARD_SIZE*pt3file->number_of_boards) {
             g_set_error(error, GWY_MODULE_FILE_ERROR,
                         GWY_MODULE_FILE_ERROR_DATA,
-                        _("File header is truncated"));
+                        _("File header is truncated."));
             return 0;
         }
     }
@@ -540,20 +559,20 @@ pt3file_read_header(const guchar *buffer,
     }
     else {
         g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                    _("Invalid or unsupported instrument number %u."),
+                    _("Unknown instrument number %u."),
                     instr);
         return 0;
     }
 
     if (pt3file->spec_header_length != expected_size) {
         g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                    _("Wrong imagining header size: %u instead of %u."),
+                    _("Wrong imaging header size: %u instead of %u."),
                     pt3file->spec_header_length, expected_size);
         return 0;
     }
     if ((p - buffer) + expected_size > size) {
         g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                    _("File header is truncated"));
+                    _("File header is truncated."));
         return 0;
     }
 
@@ -700,22 +719,35 @@ pt3file_scan_line_triggers(const PicoHarpFile *pt3file,
     }
 
     if (pt3file->imaging.common.instrument == PICO_HARP_PIE710) {
-        gdouble start = pt3file->imaging.pie710.t_start_to;
-        gdouble stop = pt3file->imaging.pie710.t_stop_to;
+        gdouble tstart = pt3file->imaging.pie710.t_start_to;
+        gdouble tstop = pt3file->imaging.pie710.t_stop_to;
+        gdouble fstart = pt3file->imaging.pie710.t_start_from;
+        gdouble fstop = pt3file->imaging.pie710.t_stop_from;
         for (lineno = 0; lineno < yres; lineno++) {
             n = (lineno == yres-1) ? lineno-1 : lineno;
             n = linetriggers[n+1].globaltime - linetriggers[n].globaltime;
-            linetriggers[lineno].start = (linetriggers[lineno].globaltime
-                                          + start*n);
-            linetriggers[lineno].stop = (linetriggers[lineno].globaltime
-                                         + stop*n);
+            if (lineno % 2 == 0 || !pt3file->imaging.common.bidirectional) {
+                linetriggers[lineno].start = (linetriggers[lineno].globaltime
+                                              + tstart*n);
+                linetriggers[lineno].stop = (linetriggers[lineno].globaltime
+                                             + tstop*n);
+            }
+            else {
+                linetriggers[lineno].start = (linetriggers[lineno].globaltime
+                                              + (fstart - 1.0)*n);
+                linetriggers[lineno].stop = (linetriggers[lineno].globaltime
+                                             + (fstop - 1.0)*n);
+            }
         }
     }
     else {
         for (lineno = 0; lineno < yres; lineno++) {
-            /* XXX: off-by-1 crash */
             linetriggers[lineno].start = linetriggers[lineno].globaltime;
-            linetriggers[lineno].stop = linetriggers[lineno+1].globaltime;
+            if (lineno < yres-1)
+                linetriggers[lineno].stop = linetriggers[lineno+1].globaltime;
+            else
+                linetriggers[lineno].stop = (2*linetriggers[lineno].globaltime -
+                                             linetriggers[lineno-1].globaltime);
         }
     }
 
@@ -742,6 +774,10 @@ pt3file_extract_counts(const PicoHarpFile *pt3file,
         pix_resol = pt3file->imaging.kdt180.pix_resol;
     else {
         g_return_val_if_reached(NULL);
+    }
+    if (!(pix_resol = fabs(pix_resol))) {
+        g_warning("Pixel size is 0.0, fixing to 1.0");
+        pix_resol = 1.0;
     }
     pix_resol *= 1e-6;
 
@@ -770,12 +806,24 @@ pt3file_extract_counts(const PicoHarpFile *pt3file,
             pixno = (xres*(globaltime - linetriggers[lineno].start)
                      /(linetriggers[lineno].stop - linetriggers[lineno].start));
             pixno = MIN(pixno, xres-1);
-            d[xres*lineno + pixno] += 1.0;
+            if (pt3file->imaging.common.bidirectional && lineno % 2)
+                d[xres*lineno + (xres-1 - pixno)] += 1.0;
+            else
+                d[xres*lineno + pixno] += 1.0;
         }
     }
 
     return dfield;
 }
+
+#define add_meta_str(name, field) \
+    gwy_container_set_string_by_name(meta, name, \
+                                     g_strndup(pt3file->field, \
+                                               sizeof(pt3file->field)))
+
+#define add_meta_uint(name, field) \
+    gwy_container_set_string_by_name(meta, name, \
+                                     g_strdup_printf("%u", pt3file->field)) \
 
 static GwyContainer*
 pt3file_get_metadata(PicoHarpFile *pt3file)
@@ -783,6 +831,33 @@ pt3file_get_metadata(PicoHarpFile *pt3file)
     GwyContainer *meta;
 
     meta = gwy_container_new();
+
+    add_meta_str("Format Version", format_version);
+    add_meta_str("Creator Name", creator_name);
+    add_meta_str("Creator Version", creator_version);
+    add_meta_str("Date", file_time);
+    add_meta_str("Comment", comment);
+    add_meta_str("Hardware", board.hardware_ident);
+    add_meta_str("Hardware Version", board.hardware_version);
+
+    gwy_container_set_string_by_name
+        (meta, "Measurement Mode",
+         g_strdup_printf("%u", pt3file->measurement_mode));
+    gwy_container_set_string_by_name
+        (meta, "Offset", g_strdup_printf("%d ns", pt3file->offset));
+    gwy_container_set_string_by_name
+        (meta, "Acquisition Time",
+         g_strdup_printf("%d ms", pt3file->acquisition_time));
+    gwy_container_set_string_by_name
+        (meta, "Hardware Serial Number",
+         g_strdup_printf("%u", pt3file->board.hardware_serial));
+    gwy_container_set_string_by_name
+        (meta, "Imaging Device",
+         g_strdup(gwy_enuml_to_string(pt3file->imaging.common.instrument,
+                                      "PI E710", 1,
+                                      "KDT180-100-Im", 2,
+                                      "LSM", 3,
+                                      NULL)));
 
     return meta;
 }
