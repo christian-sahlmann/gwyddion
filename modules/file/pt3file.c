@@ -256,31 +256,33 @@ typedef struct {
     guint64 start, stop;
 } LineTrigger;
 
-static gboolean      module_register           (void);
-static gint          pt3file_detect            (const GwyFileDetectInfo *fileinfo,
-                                                gboolean only_name);
-static GwyContainer* pt3file_load              (const gchar *filename,
-                                                GwyRunType mode,
-                                                GError **error);
-static gsize         pt3file_read_header       (const guchar *buffer,
-                                                gsize size,
-                                                PicoHarpFile *pt3file,
-                                                GError **error);
-static const guchar* pt3file_read_board        (PicoHarpBoard *board,
-                                                const guchar *p);
-static const guchar* read_pie710_imaging_header(PicoHarpImagingHeader *header,
-                                                const guchar *p);
-static const guchar* read_kdt180_imaging_header(PicoHarpImagingHeader *header,
-                                                const guchar *p);
-static const guchar* read_lsm_imaging_header   (PicoHarpImagingHeader *header,
-                                                const guchar *p);
-static LineTrigger*  pt3file_scan_line_triggers(const PicoHarpFile *pt3file,
-                                                const guchar *p,
-                                                GError **error);
-static GwyDataField* pt3file_extract_counts    (const PicoHarpFile *pt3file,
-                                                const LineTrigger *linetriggers,
-                                                const guchar *p);
-static GwyContainer* pt3file_get_metadata      (PicoHarpFile *pt3file);
+static gboolean       module_register           (void);
+static gint           pt3file_detect            (const GwyFileDetectInfo *fileinfo,
+                                                 gboolean only_name);
+static GwyContainer*  pt3file_load              (const gchar *filename,
+                                                 GwyRunType mode,
+                                                 GError **error);
+static gsize          pt3file_read_header       (const guchar *buffer,
+                                                 gsize size,
+                                                 PicoHarpFile *pt3file,
+                                                 GError **error);
+static const guchar*  pt3file_read_board        (PicoHarpBoard *board,
+                                                 const guchar *p);
+static const guchar*  read_pie710_imaging_header(PicoHarpImagingHeader *header,
+                                                 const guchar *p);
+static const guchar*  read_kdt180_imaging_header(PicoHarpImagingHeader *header,
+                                                 const guchar *p);
+static const guchar*  read_lsm_imaging_header   (PicoHarpImagingHeader *header,
+                                                 const guchar *p);
+static LineTrigger*   pt3file_scan_line_triggers(const PicoHarpFile *pt3file,
+                                                 const guchar *p,
+                                                 GError **error);
+static GwyDataField*  pt3file_extract_counts    (const PicoHarpFile *pt3file,
+                                                 const LineTrigger *linetriggers,
+                                                 const guchar *p);
+static GwyGraphModel* pt3file_extract_decay     (const PicoHarpFile *pt3file,
+                                                 const guchar *p);
+static GwyContainer*  pt3file_get_metadata      (PicoHarpFile *pt3file);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -361,6 +363,7 @@ pt3file_load(const gchar *filename,
     PicoHarpFile pt3file;
     GwyContainer *meta, *container = NULL;
     GwyDataField *dfield = NULL;
+    GwyGraphModel *gmodel = NULL;
     guchar *buffer = NULL;
     const guchar *p;
     gsize header_len, size = 0;
@@ -399,8 +402,9 @@ pt3file_load(const gchar *filename,
     if (!(linetriggers = pt3file_scan_line_triggers(&pt3file, p, error)))
         goto fail;
 
-    dfield = pt3file_extract_counts(&pt3file, linetriggers, p);
     container = gwy_container_new();
+
+    dfield = pt3file_extract_counts(&pt3file, linetriggers, p);
     gwy_container_set_object_by_name(container, "/0/data", dfield);
     g_object_unref(dfield);
     gwy_container_set_string_by_name(container, "/0/data/title",
@@ -409,6 +413,10 @@ pt3file_load(const gchar *filename,
     meta = pt3file_get_metadata(&pt3file);
     gwy_container_set_object_by_name(container, "/0/meta", meta);
     g_object_unref(meta);
+
+    gmodel = pt3file_extract_decay(&pt3file, p);
+    gwy_container_set_object_by_name(container, "/0/graph/graph/1", gmodel);
+    g_object_unref(gmodel);
 
 fail:
     g_free(linetriggers);
@@ -820,6 +828,68 @@ pt3file_extract_counts(const PicoHarpFile *pt3file,
     }
 
     return dfield;
+}
+
+static GwyGraphModel*
+pt3file_extract_decay(const PicoHarpFile *pt3file,
+                      const guchar *buf)
+{
+    GwyGraphModel *gmodel;
+    GwyGraphCurveModel *gcmodel;
+    GwySIUnit *siunit;
+    gdouble *xdata, *ydata;
+    guint maxtime, n, i;
+    const guchar *p;
+
+    n = pt3file->number_of_records;
+
+    maxtime = 0;
+    p = buf;
+    for (i = 0; i < n; i++) {
+        PicoHarpT3Record rec;
+
+        p = read_t3_record(&rec, p);
+        if (rec.channel != 15 && rec.time > maxtime)
+            maxtime = rec.time;
+    }
+
+    xdata = g_new(gdouble, maxtime+1);
+    for (i = 0; i <= maxtime; i++)
+        xdata[i] = 1e-9*i*pt3file->board.resolution;
+    ydata = g_new0(gdouble, maxtime+1);
+
+    p = buf;
+    for (i = 0; i < n; i++) {
+        PicoHarpT3Record rec;
+
+        p = read_t3_record(&rec, p);
+        if (rec.channel != 15)
+            ydata[rec.time] += 1.0;
+    }
+
+    gcmodel = gwy_graph_curve_model_new();
+    g_object_set(gcmodel,
+                 "mode", GWY_GRAPH_CURVE_LINE,
+                 "description", "Fluorescence decay",
+                 NULL);
+    gwy_graph_curve_model_set_data(gcmodel, xdata, ydata, maxtime+1);
+    g_free(ydata);
+    g_free(xdata);
+
+    siunit = gwy_si_unit_new("s");
+
+    gmodel = gwy_graph_model_new();
+    g_object_set(gmodel,
+                 "title", "Fluorescence decay",
+                 "si-unit-x", siunit,
+                 "axis-label-bottom", "time",
+                 "axis-label-left", "count",
+                 NULL);
+    gwy_graph_model_add_curve(gmodel, gcmodel);
+    g_object_unref(gcmodel);
+    g_object_unref(siunit);
+
+    return gmodel;
 }
 
 #define add_meta_str(name, field) \
