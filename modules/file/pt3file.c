@@ -636,6 +636,8 @@ read_pie710_imaging_header(PicoHarpImagingHeader *header,
     header->pie710.t_stop_to = gwy_get_gfloat_le(&p);
     header->pie710.t_start_from = gwy_get_gfloat_le(&p);
     header->pie710.t_stop_from = gwy_get_gfloat_le(&p);
+    gwy_debug("accel %u, bidirectional: %d",
+              header->pie710.acceleration, header->pie710.bidirectional);
     gwy_debug("%g %g %g %g",
               header->pie710.t_start_to, header->pie710.t_stop_to,
               header->pie710.t_start_from, header->pie710.t_stop_from);
@@ -656,6 +658,8 @@ read_kdt180_imaging_header(PicoHarpImagingHeader *header,
     header->kdt180.xres = gwy_get_guint32_le(&p);
     header->kdt180.yres = gwy_get_guint32_le(&p);
     header->kdt180.pix_resol = gwy_get_gfloat_le(&p);
+    gwy_debug("accel %u, bidirectional: %d",
+              header->pie710.acceleration, header->pie710.bidirectional);
 
     return p;
 }
@@ -708,10 +712,10 @@ pt3file_scan_line_triggers(const PicoHarpFile *pt3file,
         }
     }
 
-    if (lineno != yres) {
+    if (lineno < yres) {
         g_set_error(error, GWY_MODULE_FILE_ERROR,
                     GWY_MODULE_FILE_ERROR_DATA,
-                    _("Number of line triggers %u does not match the number "
+                    _("Number of line triggers %u is smaller than the number "
                       "of scan lines %u."),
                     lineno, yres);
         g_free(linetriggers);
@@ -723,31 +727,33 @@ pt3file_scan_line_triggers(const PicoHarpFile *pt3file,
         gdouble tstop = pt3file->imaging.pie710.t_stop_to;
         gdouble fstart = pt3file->imaging.pie710.t_start_from;
         gdouble fstop = pt3file->imaging.pie710.t_stop_from;
+        gdouble a = pt3file->imaging.pie710.acceleration/100.0;
+        a /= (1.0 + 2*a);
         for (lineno = 0; lineno < yres; lineno++) {
+            LineTrigger *ltr = linetriggers + lineno;
             n = (lineno == yres-1) ? lineno-1 : lineno;
             n = linetriggers[n+1].globaltime - linetriggers[n].globaltime;
             if (lineno % 2 == 0 || !pt3file->imaging.common.bidirectional) {
-                linetriggers[lineno].start = (linetriggers[lineno].globaltime
-                                              + tstart*n);
-                linetriggers[lineno].stop = (linetriggers[lineno].globaltime
-                                             + tstop*n);
+                ltr->start = (ltr->globaltime + tstart*n*(1.0 - 2*a) + a*n);
+                ltr->stop = (ltr->globaltime + tstop*n*(1.0 - 2*a) + a*n);
             }
             else {
-                linetriggers[lineno].start = (linetriggers[lineno].globaltime
-                                              + (fstart - 1.0)*n);
-                linetriggers[lineno].stop = (linetriggers[lineno].globaltime
-                                             + (fstop - 1.0)*n);
+                ltr->start = (ltr->globaltime + (fstart - 1.0)*n*(1.0 - 2*a)
+                              + a*n);
+                ltr->stop = (ltr->globaltime + (fstop - 1.0)*n*(1.0 - 2*a)
+                             + a*n);
             }
         }
     }
     else {
+        gdouble a = pt3file->imaging.pie710.acceleration/100.0;
+        a /= (1.0 + 2*a);
         for (lineno = 0; lineno < yres; lineno++) {
-            linetriggers[lineno].start = linetriggers[lineno].globaltime;
-            if (lineno < yres-1)
-                linetriggers[lineno].stop = linetriggers[lineno+1].globaltime;
-            else
-                linetriggers[lineno].stop = (2*linetriggers[lineno].globaltime -
-                                             linetriggers[lineno-1].globaltime);
+            LineTrigger *ltr = linetriggers + lineno;
+            n = (lineno == yres-1) ? lineno-1 : lineno;
+            n = linetriggers[n+1].globaltime - linetriggers[n].globaltime;
+            ltr->start = ltr->globaltime + a*n;
+            ltr->stop = ltr->globaltime + (1.0 - 2*a)*n;
         }
     }
 
