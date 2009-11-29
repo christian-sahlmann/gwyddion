@@ -2106,11 +2106,11 @@ gwy_data_field_get_profile(GwyDataField *data_field,
     for (k = 0; k < res; k++) {
         mid = data_line->data[k];
         sum = 0;
+        srcol = scol + 0.5 + k*cosa;
+        srrow = srow + 0.5 + k*sina;
         for (j = -thickness/2; j < thickness - thickness/2; j++) {
-            srcol = scol + 0.5 + k*cosa;
-            srrow = srow + 0.5 + k*sina;
             col = srcol + j*sina;
-            row = srrow + j*cosa;
+            row = srrow - j*cosa;
             if (col >= 0 && col < (xres-1)
                 && row >= 0 && row < (yres-1)) {
                 sum += gwy_data_field_get_dval(data_field,
