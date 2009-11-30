@@ -775,7 +775,7 @@ pt3file_extract_counts(const PicoHarpFile *pt3file,
 {
     GwyDataField *dfield;
     guint xres, yres, i, lineno, pixno, n;
-    guint64 globaltime, globalbase;
+    guint64 globaltime, globalbase, start, stop;
     gdouble pix_resol;
     gdouble *d;
 
@@ -800,7 +800,10 @@ pt3file_extract_counts(const PicoHarpFile *pt3file,
     gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_xy(dfield), "m");
     d = gwy_data_field_get_data(dfield);
 
-    for (i = lineno = 0; i < n; i++) {
+    lineno = 0;
+    start = linetriggers[lineno].start;
+    stop = linetriggers[lineno].stop;
+    for (i = 0; i < n; i++) {
         PicoHarpT3Record rec;
 
         p = read_t3_record(&rec, p);
@@ -810,15 +813,16 @@ pt3file_extract_counts(const PicoHarpFile *pt3file,
             continue;
         }
         globaltime = globalbase | rec.nsync;
-        while (lineno < yres && globaltime >= linetriggers[lineno].stop)
+        while (lineno < yres && globaltime >= linetriggers[lineno].stop) {
             lineno++;
-        if (lineno == yres)
-            break;
+            if (lineno == yres)
+                break;
+            start = linetriggers[lineno].start;
+            stop = linetriggers[lineno].stop;
+        }
 
-        if (globaltime >= linetriggers[lineno].start
-            && globaltime < linetriggers[lineno].stop) {
-            pixno = (xres*(globaltime - linetriggers[lineno].start)
-                     /(linetriggers[lineno].stop - linetriggers[lineno].start));
+        if (globaltime >= start && globaltime < stop) {
+            pixno = (xres*(globaltime - start)/(stop - start));
             pixno = MIN(pixno, xres-1);
             if (pt3file->imaging.common.bidirectional && lineno % 2)
                 d[xres*lineno + (xres-1 - pixno)] += 1.0;
