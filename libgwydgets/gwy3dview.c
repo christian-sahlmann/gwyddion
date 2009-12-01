@@ -1403,8 +1403,9 @@ gwy_3d_view_realize(GtkWidget *widget)
     attributes.colormap = gtk_widget_get_colormap(widget);
     attributes.event_mask = gtk_widget_get_events(widget)
                            | GDK_EXPOSURE_MASK
+                           | GDK_POINTER_MOTION_MASK
+                           | GDK_POINTER_MOTION_HINT_MASK
                            | GDK_BUTTON1_MOTION_MASK
-                           | GDK_BUTTON2_MOTION_MASK
                            | GDK_BUTTON_PRESS_MASK
                            | GDK_BUTTON_RELEASE_MASK
                            | GDK_VISIBILITY_NOTIFY_MASK;
@@ -1619,22 +1620,25 @@ gwy_3d_view_button_press(GtkWidget *widget,
 
 static gboolean
 gwy_3d_view_motion_notify(GtkWidget *widget,
-                          GdkEventMotion *event)
+                          G_GNUC_UNUSED GdkEventMotion *event)
 {
     Gwy3DView *gwy3dview;
+    GdkModifierType mods;
     gdouble h, dx, dy, val;
+    gint ex, ey;
 
+    gdk_window_get_pointer(widget->window, &ex, &ey, &mods);
     h = widget->allocation.height;
     gwy3dview = GWY_3D_VIEW(widget);
-    dx = event->x - gwy3dview->mouse_begin_x;
-    dy = event->y - gwy3dview->mouse_begin_y;
-    gwy3dview->mouse_begin_x = event->x;
-    gwy3dview->mouse_begin_y = event->y;
+    dx = ex - gwy3dview->mouse_begin_x;
+    dy = ey - gwy3dview->mouse_begin_y;
+    gwy3dview->mouse_begin_x = ex;
+    gwy3dview->mouse_begin_y = ey;
 
     gwy_debug("motion event: (%lf, %lf), shape=%d",
-              event->x, event->y, gwy3dview->shape_current);
+              ex, ey, gwy3dview->shape_current);
 
-    if (event->state & GDK_BUTTON1_MASK) {
+    if (mods & GDK_BUTTON1_MASK) {
         switch (gwy3dview->movement) {
             case GWY_3D_MOVEMENT_NONE:
             break;
