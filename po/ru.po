@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2009-11-29 03:59+0100\n"
-"PO-Revision-Date: 2009-11-29 08:34+0300\n"
+"POT-Creation-Date: 2009-12-01 03:59+0100\n"
+"PO-Revision-Date: 2009-12-01 20:14+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -16,6 +16,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Poedit-Language: Russian\n"
 "X-Poedit-Country: RUSSIAN FEDERATION\n"
+"X-Poedit-SourceCharset: utf-8\n"
 
 #: libgwyddion/gwyfdcurvepreset.c:745
 msgid "vdW: semisphere"
@@ -3444,51 +3445,51 @@ msgstr "Заголовок слишком короткий (всего %lu ба�
 msgid "Spectroscopy header is too short (only %lu bytes)."
 msgstr "Заголовок спектроскопии слишком короткий (всего %lu байт)."
 
-#: modules/file/pt3file.c:288
+#: modules/file/pt3file.c:290
 msgid "Imports SymPhoTime data files, version 2.0."
 msgstr "Импортирует файлы данных SymPhoTime, версии 2.0."
 
-#: modules/file/pt3file.c:301
+#: modules/file/pt3file.c:303
 msgid "PicoHarp files (.pt3)"
 msgstr "Файлы PicoHarp (.pt3)"
 
-#: modules/file/pt3file.c:386
+#: modules/file/pt3file.c:389
 msgid "T2 measurement mode is not implemented."
 msgstr "Режим измерения T2 не реализованю"
 
-#: modules/file/pt3file.c:392
+#: modules/file/pt3file.c:395
 msgid "Only PI E710 and KDT180-100-Im imaging formats are implemented."
 msgstr "Реализованы только форматы изображений PI E710 и KDT180-100-Im."
 
-#: modules/file/pt3file.c:473
-#: modules/file/pt3file.c:575
+#: modules/file/pt3file.c:481
+#: modules/file/pt3file.c:583
 msgid "File header is truncated."
 msgstr "Заголовок файла усечён."
 
-#: modules/file/pt3file.c:525
+#: modules/file/pt3file.c:533
 #, c-format
 msgid "Measurement mode must be 2 or 3; %u is invalid."
 msgstr "Режим измерений должен быть или 2, или 3; %u - неправильный."
 
-#: modules/file/pt3file.c:531
-#: modules/file/pt3file.c:543
+#: modules/file/pt3file.c:539
+#: modules/file/pt3file.c:551
 msgid "Only area imaging files are supported."
 msgstr "Поддерживаются только файлы изображения области."
 
-#: modules/file/pt3file.c:562
+#: modules/file/pt3file.c:570
 #, c-format
 msgid "Unknown instrument number %u."
 msgstr "Неизвестный номер инструмента %u."
 
-#: modules/file/pt3file.c:569
+#: modules/file/pt3file.c:577
 #, c-format
 msgid "Wrong imaging header size: %u instead of %u."
 msgstr "Неправильный размер заголовка изображения: %u вместо %u."
 
-#: modules/file/pt3file.c:714
+#: modules/file/pt3file.c:726
 #, c-format
-msgid "Number of line triggers %u does not match the number of scan lines %u."
-msgstr "Число триггеров строк %u не соответствует числу сканированных строк %u."
+msgid "Number of line triggers %u is smaller than the number of scan lines %u."
+msgstr "Число триггеров строк %u меньше числа сканированных строк %u."
 
 #: modules/file/quesant.c:64
 msgid "Imports Quesant file format."
@@ -3552,7 +3553,7 @@ msgstr "Импорт неизвестных файлов данных"
 
 #: modules/file/rawfile.c:355
 msgid "Raw data import must be run as interactive."
-msgstr "импорт неизвестных данных должен быть запущен в интерактивном режиме."
+msgstr "Импорт неизвестных данных должен быть запущен в интерактивном режиме."
 
 #: modules/file/rawfile.c:397
 msgid "Read Raw File"
@@ -3659,7 +3660,7 @@ msgstr "Десятичный разделитель - _запятая"
 
 #: modules/file/rawfile.c:823
 msgid "Byte s_wap pattern:"
-msgstr "_Шаблон перестановки байт:"
+msgstr "_Шаблон перестановки байтов:"
 
 #: modules/file/rawfile.c:838
 msgid "Start at _offset:"
@@ -3671,7 +3672,7 @@ msgstr "байт"
 
 #: modules/file/rawfile.c:845
 msgid "_Sample size:"
-msgstr "Размер с_эмплов"
+msgstr "Р_азмер отсчёта:"
 
 #: modules/file/rawfile.c:846
 #: modules/file/rawfile.c:854
@@ -3689,11 +3690,11 @@ msgstr "После ка_ждой строки пропустить:"
 
 #: modules/file/rawfile.c:867
 msgid "_Reverse bits in bytes"
-msgstr "О_братить порядок бит в байтах:"
+msgstr "Обратить порядок битов в ба_йтах:"
 
 #: modules/file/rawfile.c:872
 msgid "Reverse bi_ts in samples"
-msgstr "Обратить порядок бит в отс_чётах:"
+msgstr "Обратить порядок битов в отс_чётах:"
 
 #: modules/file/rawfile.c:877
 msgid "Samples are si_gned"
@@ -3747,7 +3748,7 @@ msgstr "_Переименовать"
 
 #: modules/file/rawfile.c:1038
 msgid "Preset _name:"
-msgstr "_Название предустановок"
+msgstr "_Название предустановки:"
 
 #: modules/file/rawfile.c:1122
 #, c-format
@@ -4855,8 +4856,9 @@ msgid "Calculate 2D autocorrelation function"
 msgstr "Рассчитать двумерную функцию автокорреляции"
 
 #: modules/process/acf2d.c:75
+#, fuzzy
 msgid "2D ACF"
-msgstr ""
+msgstr "двумерная ФАК"
 
 #: modules/process/angle_dist.c:99
 msgid "Calculates two-dimensional distribution of angles, that is projections of slopes to all directions."
@@ -5539,7 +5541,7 @@ msgstr "Презентация поиска кромок по локальном
 
 #: modules/process/edge.c:185
 msgid "/_Presentation/_Edge Detection/RMS _Edge"
-msgstr "/_Презентации/Поиск _края/Среднеквадратичное _отклонение кромки"
+msgstr "/_Презентации/Поиск _края/Кромка среднеквадратичного _отклонения"
 
 #: modules/process/edge.c:189
 msgid "Local RMS value based step detection with postprocessing"
@@ -5551,7 +5553,7 @@ msgstr "/_Презентации/Поиск _края/Локальная _нел
 
 #: modules/process/edge.c:197
 msgid "Local nonlinearity based edge detection presentation"
-msgstr "Презентация поиска кромок по локальной нелинейности"
+msgstr "Презентация поиска краёв по локальной нелинейности"
 
 #: modules/process/edge.c:201
 msgid "/_Presentation/_Edge Detection/_Hough Lines"
@@ -8733,11 +8735,12 @@ msgstr "Волнистость"
 #: modules/tools/roughness.c:796
 #, fuzzy
 msgid "ADF"
-msgstr "АПД"
+msgstr "ФРА"
 
 #: modules/tools/roughness.c:797
+#, fuzzy
 msgid "BRC"
-msgstr ""
+msgstr "ОДП"
 
 #: modules/tools/roughness.c:798
 #: modules/tools/roughness.c:1397
@@ -8850,12 +8853,14 @@ msgid "Cum. distribution of angles"
 msgstr "Интегр. распределение углов"
 
 #: modules/tools/sfunctions.c:168
+#, fuzzy
 msgid "ACF"
-msgstr ""
+msgstr "ФАК"
 
 #: modules/tools/sfunctions.c:169
+#, fuzzy
 msgid "HHCF"
-msgstr ""
+msgstr "ФКВВ"
 
 #: modules/tools/sfunctions.c:170
 msgid "PSDF"
