@@ -94,9 +94,10 @@
 #define MAGIC5 "fileformat = bcrf\r\n"
 #define MAGIC_SIZE5 (sizeof(MAGIC5) - 1)
 
-
 #define MAGIC_SIZE \
     (MAX(MAX(MAX(MAGIC_SIZE1, MAGIC_SIZE2), MAX(MAGIC_SIZE3, MAGIC_SIZE4)), MAGIC_SIZE5))
+
+#define HEADER_SIZE_MAGIC "h\000e\000a\000d\000e\000r\000s\000i\000z\000e\000"
 
 /* values are bytes per pixel */
 typedef enum {
@@ -110,6 +111,8 @@ static gint          bcrfile_detect      (const GwyFileDetectInfo *fileinfo,
 static GwyContainer* bcrfile_load        (const gchar *filename,
                                           GwyRunType mode,
                                           GError **error);
+static void          find_header_size    (const guchar *buffer,
+                                          gsize *header_size);
 static GwyDataField* file_load_real      (const guchar *buffer,
                                           gsize size,
                                           gsize header_size,
@@ -129,7 +132,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Image Metrology BCR data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.12",
+    "0.13",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -206,6 +209,7 @@ bcrfile_load(const gchar *filename,
         gunichar2 *s;
 
         header_size = 2*HEADER_SIZE;
+        find_header_size(buffer, &header_size);
 #if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
         s = (gunichar2*)g_memdup(buffer, header_size);
 #endif
@@ -224,6 +228,7 @@ bcrfile_load(const gchar *filename,
 
             return NULL;
         }
+
     }
     else {
         header_size = HEADER_SIZE;
@@ -262,6 +267,43 @@ bcrfile_load(const gchar *filename,
     g_free(header);
 
     return container;
+}
+
+/* Newer files contain header size embedded in the header.  Change header_size
+ * if we find it. */
+static void
+find_header_size(const guchar *buffer,
+                 gsize *header_size)
+{
+    gsize size = 0;
+    const guchar *s;
+    guint16 c;
+
+    s = gwy_memmem(buffer, *header_size,
+                   HEADER_SIZE_MAGIC, sizeof(HEADER_SIZE_MAGIC)-1);
+    if (!s)
+        return;
+
+    s += sizeof(HEADER_SIZE_MAGIC)-1;
+    while (s - buffer < *header_size && (c = gwy_get_guint16_le(&s) == ' '))
+        ;
+    s -= sizeof(guint16);
+    while (s - buffer < *header_size && (c = gwy_get_guint16_le(&s) == '='))
+        ;
+    s -= sizeof(guint16);
+    while (s - buffer < *header_size && (c = gwy_get_guint16_le(&s) == ' '))
+        ;
+    s -= sizeof(guint16);
+    while (s - buffer < *header_size
+           && (c = gwy_get_guint16_le(&s))
+           && g_ascii_isdigit(c)) {
+        size *= 10;
+        size += c - '0';
+    }
+    if (size > 0) {
+        gwy_debug("header size found in the file: %lu", (gulong)size);
+        *header_size = 2*size;
+    }
 }
 
 static GwyDataField*
