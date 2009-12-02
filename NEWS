@@ -2,15 +2,21 @@
 Application:
 - Not starting a new instance of Gwyddion with --remote-new on X11 when none
   is running (affecting most desktop launchers and menus) was fixed.
+- Thumbnails in recent file menu are shown even if menu icons are globally
+  disabled in Gtk+.
+
+Libraries:
+- libgwydgets: Rotating and scaling 3D views with mouse works with Gtk+ 2.18.
 
 Modules:
 - AIST-NT (new): Imports AIST-NT files.
 - Line correction: New Median difference line correction method was added.
 - NT-MDT: Curves frames are imported, point positions are still wrong though.
 - Nanoeducator: I-Z spectra written by newer software are supported.
+- BCR: Files with long header and header size specified within are supported.
 - MI file: Wrong scaling of 32bit files was corrected.
-- Profile: wrong application of thickness in profiles different from horizontal
-or vertical direction corrected.
+- Profile: Wrong application of thickness in profiles different from
+  horizontal or vertical direction corrected.
 
 
 2.18 (2009-11-03)
