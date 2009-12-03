@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
 "POT-Creation-Date: 2009-12-01 03:59+0100\n"
-"PO-Revision-Date: 2009-12-01 20:14+0300\n"
+"PO-Revision-Date: 2009-12-03 20:55+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -394,15 +394,15 @@ msgstr "Добеши 20"
 
 #: libprocess/gwyprocessenums.c:165
 msgid "Universal"
-msgstr "Универсальная"
+msgstr "Универсальный"
 
 #: libprocess/gwyprocessenums.c:166
 msgid "Scale adaptive"
-msgstr "Адаптивное по масштабу"
+msgstr "Адаптивный по масштабу"
 
 #: libprocess/gwyprocessenums.c:167
 msgid "Scale and space adaptive"
-msgstr "Адаптивное по масштабу и пространству"
+msgstr "Адаптивный по масштабу и пространству"
 
 #: libprocess/gwyprocessenums.c:205
 #: modules/file/rawxyz.c:682
@@ -1795,7 +1795,7 @@ msgstr "Нажатие Shift ограничивает формы выбранн�
 
 #: app/tips.c:66
 msgid "If multiple regions are selected on a graph, e.g. in 1D FFT Filtering, individual regions can be deleted by clicking on them with the right mouse button."
-msgstr "если на графике выделено несколько областей, например, в одномерной фильтрации БПФ, отдельные области могут быть удалены нажатием по ним с зажатой правой кнопкой мыши."
+msgstr "Если на графике выделено несколько областей, например, в одномерной фильтрации БПФ, отдельные области могут быть удалены нажатием по ним с зажатой правой кнопкой мыши."
 
 #: app/tips.c:72
 msgid "Data presentations created by functions in Data Process → Presentation do not change the underlying data.  All subsequent operations still apply to the underlying data."
@@ -6042,7 +6042,7 @@ msgstr "Ново_е"
 #: modules/process/fft_synth.c:621
 #: modules/process/obj_synth.c:803
 msgid "Randomize"
-msgstr "Рандомизировать"
+msgstr "Сделать случайным"
 
 #: modules/process/fit_2d.c:171
 msgid "2D fitting"
@@ -8497,7 +8497,7 @@ msgstr "_Ужать"
 
 #: modules/tools/maskedit.c:446
 msgid "_Amount:"
-msgstr "_Величина:"
+msgstr "_Количество:"
 
 #: modules/tools/maskedit.c:453
 msgid "Shrink from _border"
