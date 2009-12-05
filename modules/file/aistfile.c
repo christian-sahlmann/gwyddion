@@ -29,12 +29,6 @@
  * little-endian because they run it on x86.  Bite me.
  */
 
-/*
- * TODO:
- * How to detect the format?  The top-level node is *usually* called noname,
- * but there must be a better way.
- */
-
 #include "config.h"
 #include <string.h>
 #include <stdlib.h>
