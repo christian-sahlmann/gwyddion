@@ -31,12 +31,8 @@
 
 /*
  * TODO:
- * How to detect the format?  Is the top-level node always called noname?
- * How to parse the units?  Their idea of units is something like `Ox [um]'.
- * How to interpret curve data?  It seems to be just a single list of values.
- * What is the meaning of view data component?
- * What it the meaning of the advanced data at the end?
- * What is the bit order, alignment and interpretation of the mask bitmap?
+ * How to detect the format?  The top-level node is *usually* called noname,
+ * but there must be a better way.
  */
 
 #include "config.h"
@@ -58,9 +54,6 @@
 #include "err.h"
 
 #define EXTENSION ".aist"
-
-#define MAGIC "\000\000\000\000\014\000n\000o\000n\000a\000m\000e"
-#define MAGIC_SIZE (sizeof(MAGIC)-1)
 
 typedef struct {
     guint id;
@@ -88,19 +81,38 @@ typedef struct {
     gint graph_id;
 } AistContext;
 
-static gboolean      module_register(void);
-static gint          aist_detect    (const GwyFileDetectInfo *fileinfo,
-                                     gboolean only_name);
-static GwyContainer* aist_load      (const gchar *filename,
-                                     GwyRunType mode,
-                                     GError **error);
+static gboolean      module_register   (void);
+static gint          aist_detect       (const GwyFileDetectInfo *fileinfo,
+                                        gboolean only_name);
+static GwyContainer* aist_load         (const gchar *filename,
+                                        GwyRunType mode,
+                                        GError **error);
+static gboolean      read_qt_bool      (const guchar **p,
+                                        gsize *size,
+                                        gboolean *value);
+static gboolean      read_qt_byte      (const guchar **p,
+                                        gsize *size,
+                                        guint *value);
+static gboolean      read_qt_int       (const guchar **p,
+                                        gsize *size,
+                                        guint *value);
+static gboolean      read_qt_double    (const guchar **p,
+                                        gsize *size,
+                                        gdouble *value);
+static gboolean      read_qt_string    (const guchar **p,
+                                        gsize *size,
+                                        gchar **value);
+static gboolean      read_qt_byte_array(const guchar **p,
+                                        gsize *size,
+                                        guint *len,
+                                        const guchar **value);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Imports AIST-NT data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.1",
+    "0.2",
     "David Nečas (Yeti)",
     "2009",
 };
@@ -125,116 +137,47 @@ aist_detect(const GwyFileDetectInfo *fileinfo,
             gboolean only_name)
 {
     gint score = 0;
+    const guchar *buf = fileinfo->head;
+    gsize size = fileinfo->buffer_len;
+    guint is_data_node;
 
     if (only_name)
         return (g_str_has_suffix(fileinfo->name_lowercase, EXTENSION)) ? 10 : 0;
 
-    if (fileinfo->buffer_len > MAGIC_SIZE
-        && memcmp(fileinfo->head, MAGIC, MAGIC_SIZE) == 0)
-        score = 100;
+    /* The first byte is a boolean, it must be 0 or 1.  This is unfortunately
+     * the only quick means to filter-out non-AIST files. */
+    if (!read_qt_byte(&buf, &size, &is_data_node) || is_data_node > 1)
+        return 0;
+
+    /* A silly detection method.  Try to start reading and check if the stuff
+     * looks like the nodes we expect.  Reading the strings looks dangerous.
+     * Fortnately we know buffer_len is small so it won't try to allocate
+     * 2GB of memory for the UTF-8 representation.  */
+    if (is_data_node) {
+        gchar *type = NULL;
+        guint len;
+
+        if (read_qt_string(&buf, &size, &type)
+            && read_qt_int(&buf, &size, &len)) {
+            if (gwy_stramong(type, "raster", "curve", "settings", NULL))
+                score = 85;
+        }
+        g_free(type);
+    }
+    else {
+        gchar *name = NULL;
+        guint nchildren;
+
+        if (read_qt_string(&buf, &size, &name)
+            && read_qt_int(&buf, &size, &nchildren)
+            && read_qt_byte(&buf, &size, &is_data_node)) {
+            if (is_data_node <= 1 && nchildren <= 0xff && strlen(name) <= 0xff)
+                score = 80;
+        }
+        g_free(name);
+    }
 
     return score;
-}
-
-static gboolean
-read_qt_string(const guchar **p, gsize *size, gchar **value)
-{
-    const gunichar2 *utf16native;
-    gunichar2 *must_free;
-    guint len;
-
-    *value = NULL;
-
-    if (*size < sizeof(guint32))
-        return FALSE;
-
-    len = gwy_get_guint32_be(p);
-    *size -= sizeof(guint32);
-    gwy_debug("QString length: %u", len);
-
-    if (*size < len || len % sizeof(gunichar2))
-        return FALSE;
-
-#if (G_BYTE_ORDER == G_BIG_ENDIAN)
-    utf16native = (const gunichar2*)(*p);
-    must_free = NULL;
-#endif
-#if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
-    utf16native = must_free = g_new(gunichar2, len/sizeof(gunichar2));
-    swab(*p, must_free, len);
-#endif
-    *value = g_utf16_to_utf8(utf16native, len/sizeof(gunichar2), NULL, NULL,
-                             NULL);
-    gwy_debug("QString data: <%s>", *value);
-    g_free(must_free);
-
-    *size -= len;
-    *p += len;
-
-    return TRUE;
-}
-
-static gboolean
-read_qt_int(const guchar **p, gsize *size, guint *value)
-{
-    *value = 0;
-    if (*size < sizeof(guint32))
-        return FALSE;
-
-    *value = gwy_get_guint32_be(p);
-    gwy_debug("QInt data: %u", *value);
-    *size -= sizeof(guint32);
-
-    return TRUE;
-}
-
-static gboolean
-read_qt_double(const guchar **p, gsize *size, gdouble *value)
-{
-    *value = 0;
-    if (*size < sizeof(gdouble))
-        return FALSE;
-
-    *value = gwy_get_gdouble_be(p);
-    gwy_debug("QDouble data: %g", *value);
-    *size -= sizeof(gdouble);
-
-    return TRUE;
-}
-
-static gboolean
-read_qt_bool(const guchar **p, gsize *size, gboolean *value)
-{
-    *value = FALSE;
-    if (*size < sizeof(guchar))
-        return FALSE;
-
-    *value = !!**p;
-    gwy_debug("QBool data: %d", *value);
-    *size -= sizeof(guchar);
-    (*p)++;
-
-    return TRUE;
-}
-
-/* NB: Returned value is a direct pointer to the input buffer.  Do not free! */
-static gboolean
-read_qt_byte_array(const guchar **p, gsize *size,
-                   guint *len, const guchar **value)
-{
-    *value = NULL;
-    if (!read_qt_int(p, size, len))
-        return FALSE;
-
-    if (*size < *len)
-        return FALSE;
-
-    gwy_debug("QByteArray of length %u", *len);
-    *value = *p;
-    *size -= *len;
-    (*p) += *len;
-
-    return TRUE;
 }
 
 static void
@@ -259,7 +202,8 @@ read_aist_common(const guchar **p, gsize *size,
 }
 
 /* Lateral units are a weird thing but they contain the actual units in
- * bracket somewhere. */
+ * bracket somewhere.   If there are no brackes, try to interpret the entire
+ * string as units -- I've been told this is the right thing.  */
 static GwySIUnit*
 extract_units(const gchar *label,
               gdouble *q)
@@ -294,7 +238,6 @@ make_mask_field(GwyDataField *dfield,
 
     xres = gwy_data_field_get_xres(dfield);
     yres = gwy_data_field_get_yres(dfield);
-    /* FIXME */
     rowstride = xres;
 
     /* Do not create the mask if it is all zero. */
@@ -396,18 +339,22 @@ read_aist_raster(const guchar **p, gsize *size, AistContext *context)
     /* At this moment we consider the loading successful. */
     ok = TRUE;
 
-    /* The mask raster is byte-valued. */
+    /* The mask raster is byte-valued.   It contains nonzeroes in points that
+     * were measured (the opposite of how we normally create masks upon
+     * import). */
     if (read_qt_byte_array(p, size, &len, &data)) {
         if (len == raster.xres*raster.yres) {
             dfield = make_mask_field(dfield, data);
             if (dfield) {
+                /* TODO: Must fill the unmeasured point with a neutral value. */
                 gwy_container_set_object_by_name(context->container, key,
                                                  dfield);
                 g_object_unref(dfield);
             }
         }
 
-        /* TODO: what is this so-called view data? */
+        /* Here's something called view data.  It means the data was processed
+         * (by whatever means) hence we are not interesed in it. */
         read_qt_byte_array(p, size, &len, &data);
     }
 
@@ -423,11 +370,16 @@ static gboolean
 read_aist_curve(const guchar **p, gsize *size, AistContext *context)
 {
     AistCurve curve;
+    GwyGraphModel *gmodel;
+    GwyGraphCurveModel *gcmodel;
     GwySIUnit *xunit, *yunit;
     gboolean ok = FALSE;
-    guint len;
-    const guchar *data;
+    guint len, viewlen;
+    const guchar *data, *viewdata;
+    const gdouble *xdata, *ydata;
+    gdouble *must_free = NULL;
     gdouble qx, qy;
+    GQuark quark;
 
     gwy_clear(&curve, 1);
 
@@ -441,23 +393,55 @@ read_aist_curve(const guchar **p, gsize *size, AistContext *context)
 
     if (!read_qt_byte_array(p, size, &len, &data))
         goto fail;
-    if (len != curve.res*sizeof(gdouble))
+    if (len != 2*curve.res*sizeof(gdouble))
         goto fail;
 
-    /* There's another array after that, then the units. */
-    if (!read_qt_byte_array(p, size, &len, &data))
+    /* Again something called view data.  Skip it.  The units follow. */
+    if (!read_qt_byte_array(p, size, &viewlen, &viewdata))
         goto fail;
 
     if (!read_qt_string(p, size, &curve.xunits)
         || !read_qt_string(p, size, &curve.yunits))
+        goto fail;
+
     xunit = extract_units(curve.xunits, &qx);
     yunit = extract_units(curve.yunits, &qy);
 
-    /* TODO: Do something useful with the data.
-     * How we create a y vs. x graph of it? */
+    /* The data are already stored as doubles in the correct order, so save
+     * work if also the endianess matches. */
+    if (G_BYTE_ORDER == G_BIG_ENDIAN) {
+        must_free = g_new(gdouble, 2*curve.res);
+        xdata = must_free;
+        ydata = xdata + curve.res;
+        gwy_memcpy_byte_swap(data, (guchar*)must_free, 8, 2*curve.res, 7);
+    }
+    else if (G_BYTE_ORDER == G_LITTLE_ENDIAN) {
+        xdata = (const gdouble*)data;
+        ydata = xdata + curve.res;
+    }
 
+    gcmodel = gwy_graph_curve_model_new();
+    gwy_graph_curve_model_set_data(gcmodel, xdata, ydata, curve.res);
+    g_object_set(gcmodel,
+                 "mode", GWY_GRAPH_CURVE_LINE,
+                 "description", curve.common.description,
+                 NULL);
+    g_free(must_free);
+
+    gmodel = gwy_graph_model_new();
+    gwy_graph_model_add_curve(gmodel, gcmodel);
+    g_object_unref(gcmodel);
+    g_object_set(gmodel,
+                 "title", curve.common.name,
+                 "si-unit-x", xunit,
+                 "si-unit-y", yunit,
+                 NULL);
     g_object_unref(xunit);
     g_object_unref(yunit);
+
+    quark = gwy_app_get_graph_key_for_id(context->graph_id+1);
+    gwy_container_set_object(context->container, quark, gmodel);
+    g_object_unref(gmodel);
 
     context->graph_id++;
 
@@ -579,6 +563,127 @@ aist_load(const gchar *filename,
     }
 
     return context.container;
+}
+
+static gboolean
+read_qt_string(const guchar **p, gsize *size, gchar **value)
+{
+    const gunichar2 *utf16native;
+    gunichar2 *must_free;
+    guint len;
+
+    *value = NULL;
+
+    if (*size < sizeof(guint32))
+        return FALSE;
+
+    len = gwy_get_guint32_be(p);
+    *size -= sizeof(guint32);
+    gwy_debug("QString length: %u", len);
+
+    if (*size < len || len % sizeof(gunichar2))
+        return FALSE;
+
+    if (!len) {
+        *value = g_strdup("");
+        return TRUE;
+    }
+
+    if (G_BYTE_ORDER == G_BIG_ENDIAN) {
+        utf16native = (const gunichar2*)(*p);
+        must_free = NULL;
+    }
+    else if (G_BYTE_ORDER == G_LITTLE_ENDIAN) {
+        utf16native = must_free = g_new(gunichar2, len/sizeof(gunichar2));
+        swab(*p, must_free, len);
+    }
+    *value = g_utf16_to_utf8(utf16native, len/sizeof(gunichar2), NULL, NULL,
+                             NULL);
+    gwy_debug("QString data: <%s>", *value);
+    g_free(must_free);
+
+    *size -= len;
+    *p += len;
+
+    return TRUE;
+}
+
+static gboolean
+read_qt_int(const guchar **p, gsize *size, guint *value)
+{
+    *value = 0;
+    if (*size < sizeof(guint32))
+        return FALSE;
+
+    *value = gwy_get_guint32_be(p);
+    gwy_debug("QInt data: %u", *value);
+    *size -= sizeof(guint32);
+
+    return TRUE;
+}
+
+static gboolean
+read_qt_double(const guchar **p, gsize *size, gdouble *value)
+{
+    *value = 0;
+    if (*size < sizeof(gdouble))
+        return FALSE;
+
+    *value = gwy_get_gdouble_be(p);
+    gwy_debug("QDouble data: %g", *value);
+    *size -= sizeof(gdouble);
+
+    return TRUE;
+}
+
+static gboolean
+read_qt_bool(const guchar **p, gsize *size, gboolean *value)
+{
+    *value = FALSE;
+    if (*size < sizeof(guchar))
+        return FALSE;
+
+    *value = !!**p;
+    gwy_debug("QBool data: %d", *value);
+    *size -= sizeof(guchar);
+    (*p)++;
+
+    return TRUE;
+}
+
+static gboolean
+read_qt_byte(const guchar **p, gsize *size, guint *value)
+{
+    *value = FALSE;
+    if (*size < sizeof(guchar))
+        return FALSE;
+
+    *value = **p;
+    gwy_debug("QByte data: %d", *value);
+    *size -= sizeof(guchar);
+    (*p)++;
+
+    return TRUE;
+}
+
+/* NB: Returned value is a direct pointer to the input buffer.  Do not free! */
+static gboolean
+read_qt_byte_array(const guchar **p, gsize *size,
+                   guint *len, const guchar **value)
+{
+    *value = NULL;
+    if (!read_qt_int(p, size, len))
+        return FALSE;
+
+    if (*size < *len)
+        return FALSE;
+
+    gwy_debug("QByteArray of length %u", *len);
+    *value = *p;
+    *size -= *len;
+    (*p) += *len;
+
+    return TRUE;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
