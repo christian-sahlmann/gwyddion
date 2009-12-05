@@ -248,7 +248,7 @@ make_mask_field(GwyDataField *dfield,
     for (i = 0; i < yres; i++) {
         datarow = data + (yres-1 - i)*rowstride;
         for (j = 0; j < xres; j++) {
-            *(d++) = !datarow[j];
+            *(d++) = datarow[j];
         }
     }
 
@@ -259,7 +259,7 @@ static gboolean
 read_aist_raster(const guchar **p, gsize *size, AistContext *context)
 {
     AistRaster raster;
-    GwyDataField *dfield;
+    GwyDataField *dfield, *mfield;
     GwySIUnit *xyunit, *zunit;
     gboolean ok = FALSE;
     guint i, j, n, len;
@@ -338,12 +338,12 @@ read_aist_raster(const guchar **p, gsize *size, AistContext *context)
      * import). */
     if (read_qt_byte_array(p, size, &len, &data)) {
         if (len == raster.xres*raster.yres) {
-            dfield = make_mask_field(dfield, data);
-            if (dfield) {
-                /* TODO: Must fill the unmeasured point with a neutral value. */
+            mfield = make_mask_field(dfield, data);
+            if (mfield) {
+                gwy_app_channel_remove_bad_data(dfield, mfield);
                 gwy_container_set_object_by_name(context->container, key,
-                                                 dfield);
-                g_object_unref(dfield);
+                                                 mfield);
+                g_object_unref(mfield);
             }
         }
 
