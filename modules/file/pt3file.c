@@ -803,6 +803,7 @@ pt3file_extract_counts(const PicoHarpFile *pt3file,
     lineno = 0;
     start = linetriggers[lineno].start;
     stop = linetriggers[lineno].stop;
+    globaltime = globalbase = 0;
     for (i = 0; i < n; i++) {
         PicoHarpT3Record rec;
 
