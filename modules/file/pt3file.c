@@ -742,14 +742,14 @@ pt3file_scan_line_triggers(const PicoHarpFile *pt3file,
             n = (lineno == yres-1) ? lineno-1 : lineno;
             n = linetriggers[n+1].globaltime - linetriggers[n].globaltime;
             if (lineno % 2 == 0 || !pt3file->imaging.common.bidirectional) {
-                ltr->start = (ltr->globaltime + tstart*n*(1.0 - 2*a) + a*n);
-                ltr->stop = (ltr->globaltime + tstop*n*(1.0 - 2*a) + a*n);
+                ltr->start = (ltr->globaltime + (guint64)(tstart*n*(1.0 - 2*a) + a*n));
+                ltr->stop = (ltr->globaltime + (guint64)(tstop*n*(1.0 - 2*a) + a*n));
             }
             else {
-                ltr->start = (ltr->globaltime + (fstart - 1.0)*n*(1.0 - 2*a)
-                              + a*n);
-                ltr->stop = (ltr->globaltime + (fstop - 1.0)*n*(1.0 - 2*a)
-                             + a*n);
+                ltr->start = (ltr->globaltime + (guint64)((fstart - 1.0)*n*(1.0 - 2*a)
+                              + a*n));
+                ltr->stop = (ltr->globaltime + (guint64)((fstop - 1.0)*n*(1.0 - 2*a)
+                             + a*n));
             }
         }
     }
@@ -760,8 +760,8 @@ pt3file_scan_line_triggers(const PicoHarpFile *pt3file,
             LineTrigger *ltr = linetriggers + lineno;
             n = (lineno == yres-1) ? lineno-1 : lineno;
             n = linetriggers[n+1].globaltime - linetriggers[n].globaltime;
-            ltr->start = ltr->globaltime + a*n;
-            ltr->stop = ltr->globaltime + (1.0 - 2*a)*n;
+            ltr->start = ltr->globaltime + (guint64)(a*n);
+            ltr->stop = ltr->globaltime + (guint64)((1.0 - 2*a)*n);
         }
     }
 
