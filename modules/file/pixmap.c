@@ -461,6 +461,7 @@ module_register(void)
              * to import Flash to Gwyddion? */
             || gwy_strequal(fmtname, "swf")
             || gwy_strequal(fmtname, "xbm")
+            || gwy_strequal(fmtname, "Digital camera RAW")
             || gwy_strequal(fmtname, "svg")) {
             g_free(fmtname);
             continue;
