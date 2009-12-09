@@ -58,6 +58,7 @@ file_LTLIBRARIES = \
 	netcdf.la \
 	nt-mdt.la \
 	omicron.la \
+	omicronflat.la \
 	omicronmatrix.la \
 	ols.la \
 	opdfile.la \
@@ -155,6 +156,7 @@ netcdf_la_SOURCES        = netcdf.c
 nt_mdt_la_SOURCES        = nt-mdt.c
 ols_la_SOURCES           = ols.c gwytiff.h
 omicron_la_SOURCES       = omicron.c
+omicronflat_la_SOURCES   = omicronflat.c
 omicronmatrix_la_SOURCES = omicronmatrix.c
 opdfile_la_SOURCES       = opdfile.c
 pixmap_la_SOURCES        = pixmap.c
