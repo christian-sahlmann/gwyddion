@@ -22,6 +22,7 @@ Unimplemented stuff:
 Release checklist:
 - must build on Linux from tarballs
 - must build on MS Windows
+- update user guide module map
 - update translations (make update-po in po; remember to commit and tag the
   really final versions, making dists in general updates po again)
 - make sure global library headers (libfoo.h) include all other public
