@@ -51,7 +51,7 @@ enum {
     PROP_LAST
 };
 
-static void     gwy_vector_layer_destroy             (GtkObject *object);
+static void     gwy_vector_layer_dispose             (GObject *object);
 static void     gwy_vector_layer_set_property        (GObject *object,
                                                       guint prop_id,
                                                       const GValue *value,
@@ -84,13 +84,11 @@ static void
 gwy_vector_layer_class_init(GwyVectorLayerClass *klass)
 {
     GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
-    GtkObjectClass *object_class = GTK_OBJECT_CLASS(klass);
     GwyDataViewLayerClass *layer_class = GWY_DATA_VIEW_LAYER_CLASS(klass);
 
     gobject_class->set_property = gwy_vector_layer_set_property;
     gobject_class->get_property = gwy_vector_layer_get_property;
-
-    object_class->destroy = gwy_vector_layer_destroy;
+    gobject_class->dispose = gwy_vector_layer_dispose;
 
     layer_class->plugged = gwy_vector_layer_plugged;
     layer_class->unplugged = gwy_vector_layer_unplugged;
@@ -111,7 +109,7 @@ gwy_vector_layer_class_init(GwyVectorLayerClass *klass)
      **/
     vector_layer_signals[OBJECT_CHOSEN]
         = g_signal_new("object-chosen",
-                       G_OBJECT_CLASS_TYPE(object_class),
+                       G_OBJECT_CLASS_TYPE(klass),
                        G_SIGNAL_RUN_FIRST,
                        G_STRUCT_OFFSET(GwyVectorLayerClass, object_chosen),
                        NULL, NULL,
@@ -160,7 +158,7 @@ gwy_vector_layer_init(GwyVectorLayer *layer)
 }
 
 static void
-gwy_vector_layer_destroy(GtkObject *object)
+gwy_vector_layer_dispose(GObject *object)
 {
     GwyVectorLayer *layer;
 
@@ -168,7 +166,7 @@ gwy_vector_layer_destroy(GtkObject *object)
     gwy_object_unref(layer->gc);
     gwy_object_unref(layer->layout);
 
-    GTK_OBJECT_CLASS(gwy_vector_layer_parent_class)->destroy(object);
+    G_OBJECT_CLASS(gwy_vector_layer_parent_class)->dispose(object);
 }
 
 static void

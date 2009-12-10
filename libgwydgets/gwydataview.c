@@ -905,6 +905,8 @@ gwy_data_view_set_layer(GwyDataView *data_view,
         }
         if (GTK_WIDGET_REALIZED(GTK_WIDGET(data_view)))
             gwy_data_view_layer_unrealize(GWY_DATA_VIEW_LAYER(*which_layer));
+        /* XXX: The order must be send signal first, really unplug later.
+         * Other things expect it... */
         gwy_data_view_layer_unplugged(*which_layer);
         (*which_layer)->parent = NULL;
         g_object_unref(*which_layer);

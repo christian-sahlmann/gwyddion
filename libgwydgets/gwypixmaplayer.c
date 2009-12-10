@@ -44,7 +44,7 @@ static void gwy_pixmap_layer_get_property       (GObject *object,
                                                  guint prop_id,
                                                  GValue *value,
                                                  GParamSpec *pspec);
-static void gwy_pixmap_layer_destroy            (GtkObject *object);
+static void gwy_pixmap_layer_dispose            (GObject *object);
 static void gwy_pixmap_layer_plugged            (GwyDataViewLayer *layer);
 static void gwy_pixmap_layer_unplugged          (GwyDataViewLayer *layer);
 static void gwy_pixmap_layer_item_changed       (GwyPixmapLayer *pixmap_layer);
@@ -60,14 +60,12 @@ G_DEFINE_ABSTRACT_TYPE(GwyPixmapLayer, gwy_pixmap_layer,
 static void
 gwy_pixmap_layer_class_init(GwyPixmapLayerClass *klass)
 {
-    GtkObjectClass *object_class = GTK_OBJECT_CLASS(klass);
     GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
     GwyDataViewLayerClass *layer_class = GWY_DATA_VIEW_LAYER_CLASS(klass);
 
     gobject_class->set_property = gwy_pixmap_layer_set_property;
     gobject_class->get_property = gwy_pixmap_layer_get_property;
-
-    object_class->destroy = gwy_pixmap_layer_destroy;
+    gobject_class->dispose = gwy_pixmap_layer_dispose;
 
     layer_class->plugged = gwy_pixmap_layer_plugged;
     layer_class->unplugged = gwy_pixmap_layer_unplugged;
@@ -93,7 +91,7 @@ gwy_pixmap_layer_init(G_GNUC_UNUSED GwyPixmapLayer *layer)
 }
 
 static void
-gwy_pixmap_layer_destroy(GtkObject *object)
+gwy_pixmap_layer_dispose(GObject *object)
 {
     GwyPixmapLayer *layer;
 
@@ -101,7 +99,7 @@ gwy_pixmap_layer_destroy(GtkObject *object)
     gwy_object_unref(layer->data_field);
     gwy_object_unref(layer->pixbuf);
 
-    GTK_OBJECT_CLASS(gwy_pixmap_layer_parent_class)->destroy(object);
+    G_OBJECT_CLASS(gwy_pixmap_layer_parent_class)->dispose(object);
 }
 
 static void
