@@ -119,7 +119,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Thermicroscopes SpmLab R3 to R7 data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.9",
+    "0.10",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -187,7 +187,7 @@ spmlab_load(const gchar *filename,
     gsize size = 0;
     GError *err = NULL;
     GwyDataField *dfield = NULL;
-    gchar *title;
+    gchar *title = NULL;
     gint dir;
 
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
@@ -230,8 +230,7 @@ spmlab_load(const gchar *filename,
     g_object_unref(dfield);
 
     if (title)
-        gwy_container_set_string_by_name(container, "/0/data/title",
-                                         g_strdup(title));
+        gwy_container_set_string_by_name(container, "/0/data/title", title);
     else
         gwy_app_channel_title_fall_back(container, 0);
 
