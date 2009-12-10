@@ -7,9 +7,13 @@ Application:
 
 Libraries:
 - libgwydgets: Rotating and scaling 3D views with mouse works with Gtk+ 2.18.
+- libgwyapp: Massive leaks of GwyDataField references and, consequently,
+  memory in data browser thumbnail creation (introduced in 2.14) was fixed.
 
 Modules:
 - AIST-NT (new): Imports AIST-NT files.
+- PT3 (new): Import SymPhoTime PT3 files.
+- Omicron flat (new): Import Omicron flat files.
 - Line correction: New Median difference line correction method was added.
 - NT-MDT: Curves frames are imported, point positions are still wrong though.
 - Nanoeducator: I-Z spectra written by newer software are supported.
