@@ -671,10 +671,6 @@ omicronflat_load(const gchar *filename, G_GNUC_UNUSED GwyRunType mode, GError **
                                             (guchar*)g_strdup("reTrace down"));
         }
 
-        g_object_unref(dfield_tup);
-        g_object_unref(dfield_retup);
-        g_object_unref(dfield_tdown);
-        g_object_unref(dfield_retdown);
     }
 
 
@@ -867,6 +863,10 @@ omicronflat_load(const gchar *filename, G_GNUC_UNUSED GwyRunType mode, GError **
 
     gwy_container_set_object_by_name(container, "/0/meta", metadata);
 
+    g_object_unref(dfield_tup);
+    g_object_unref(dfield_retup);
+    g_object_unref(dfield_tdown);
+    g_object_unref(dfield_retdown);
     g_free(instance_name);
     g_free(unit_str);
     g_free(name_str);
@@ -880,6 +880,10 @@ omicronflat_load(const gchar *filename, G_GNUC_UNUSED GwyRunType mode, GError **
 fail:
     gwy_debug("The file is either corrupted, or has an unknown/unhandled format. Module failed to read the file, you can blame the programmer… or help him…");
 
+    gwy_object_unref(dfield_tup);
+    gwy_object_unref(dfield_retup);
+    gwy_object_unref(dfield_tdown);
+    gwy_object_unref(dfield_retdown);
     g_free(instance_name);
     g_free(name_str);
     g_object_unref(metainfo);
