@@ -811,7 +811,9 @@ omicronflat_load(const gchar *filename, G_GNUC_UNUSED GwyRunType mode, GError **
                 goto fail;
             }
             gwy_debug("%s %s", key, gwy_container_get_string_by_name(metadata, key));
+            g_free(name_str);
         }
+        g_free(instance_name);
     }
 
     if (fp_end < (gsize)fp + 4) {
@@ -847,11 +849,11 @@ omicronflat_load(const gchar *filename, G_GNUC_UNUSED GwyRunType mode, GError **
             }
             g_snprintf(key, sizeof(key), "Depl:%s:%s", instance_name, name_str);
             gwy_container_set_string_by_name(metadata, key, value);
-            g_free(instance_name);
             g_free(name_str);
             instance_name = NULL;
             name_str = NULL;
         }
+        g_free(instance_name);
     }
 
 #ifdef DEBUG
