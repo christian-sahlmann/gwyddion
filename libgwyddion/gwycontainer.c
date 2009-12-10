@@ -226,7 +226,7 @@ value_destroy_func(gpointer data)
               val, G_VALUE_HOLDS_OBJECT(val), G_VALUE_TYPE_NAME(val));
     if (G_VALUE_HOLDS_OBJECT(val)) {
         obj = G_OBJECT(g_value_peek_pointer(val));
-        gwy_debug("refcount = %d", obj->ref_count);
+        gwy_debug("%s refcount = %d", G_OBJECT_TYPE_NAME(obj), obj->ref_count);
     }
 #endif
     g_value_unset(val);
