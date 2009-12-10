@@ -367,11 +367,13 @@ omicronflat_load(const gchar *filename, G_GNUC_UNUSED GwyRunType mode, GError **
     tffParams = gwy_container_new();
     s = flat_readstring(&fp, fp_end, &tmperr);
     if (tmperr != NULL) {
+        g_free(s);
         g_propagate_error(error, tmperr);
         goto fail;
     }
     gwy_debug("TransferFunctionName %s", s);
     gwy_container_set_string_by_name(tffParams, "tff_name", s );
+    g_free(s);
 
     gwy_container_set_string_by_name(metainfo, "/channel/units", flat_readstring(&fp, fp_end, &tmperr));
     if (tmperr != NULL) {
@@ -390,11 +392,13 @@ omicronflat_load(const gchar *filename, G_GNUC_UNUSED GwyRunType mode, GError **
     for (i = 0; i < max; ++i) {
         s = flat_readstring(&fp, fp_end, &tmperr);
         if (tmperr != NULL) {
+            g_free(s);
             g_propagate_error(error, tmperr);
             goto fail;
         }
 
         if (fp_end < (gsize)fp + 8) {
+            g_free(s);
             err_FILE_TYPE(error, "Omicron Flat");
             goto fail;
         }
@@ -402,6 +406,7 @@ omicronflat_load(const gchar *filename, G_GNUC_UNUSED GwyRunType mode, GError **
         d = gwy_get_gdouble_le(&fp);
         gwy_debug("%s = %11.4e", s, d);
         gwy_container_set_double_by_name(tffParams, (gchar*)s, d);
+        g_free(s);
     }
 
     if (fp_end < (gsize)fp + 4) {
@@ -799,11 +804,13 @@ omicronflat_load(const gchar *filename, G_GNUC_UNUSED GwyRunType mode, GError **
             // Values is encoded in a unicode string
             unit_str = flat_readstring(&fp, fp_end, &tmperr);
             if (tmperr != NULL) {
+                g_free(unit_str);
                 g_propagate_error(error, tmperr);
                 goto fail;
             }
 
             g_snprintf(key, sizeof(key), "Exp:%s:%s [%s]", instance_name, name_str, unit_str);
+            g_free(unit_str);
 
             gwy_container_set_string_by_name(metadata, key, flat_readstring(&fp, fp_end, &tmperr) );
             if (tmperr != NULL) {
@@ -812,8 +819,10 @@ omicronflat_load(const gchar *filename, G_GNUC_UNUSED GwyRunType mode, GError **
             }
             gwy_debug("%s %s", key, gwy_container_get_string_by_name(metadata, key));
             g_free(name_str);
+            name_str = NULL;
         }
         g_free(instance_name);
+        instance_name = NULL;
     }
 
     if (fp_end < (gsize)fp + 4) {
@@ -850,10 +859,10 @@ omicronflat_load(const gchar *filename, G_GNUC_UNUSED GwyRunType mode, GError **
             g_snprintf(key, sizeof(key), "Depl:%s:%s", instance_name, name_str);
             gwy_container_set_string_by_name(metadata, key, value);
             g_free(name_str);
-            instance_name = NULL;
             name_str = NULL;
         }
         g_free(instance_name);
+        instance_name = NULL;
     }
 
 #ifdef DEBUG
