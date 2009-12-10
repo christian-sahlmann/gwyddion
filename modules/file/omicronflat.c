@@ -851,6 +851,10 @@ omicronflat_load(const gchar *filename, G_GNUC_UNUSED GwyRunType mode, GError **
             }
             g_snprintf(key, sizeof(key), "Depl:%s:%s", instance_name, name_str);
             gwy_container_set_string_by_name(metadata, key, value);
+            g_free(instance_name);
+            g_free(name_str);
+            instance_name = NULL;
+            name_str = NULL;
         }
     }
 
@@ -866,9 +870,7 @@ omicronflat_load(const gchar *filename, G_GNUC_UNUSED GwyRunType mode, GError **
     g_free(instance_name);
     g_free(unit_str);
     g_free(name_str);
-    g_free(value);
     g_free(s);
-    // FIXME gives double free somewhere
     g_object_unref(metadata);
     g_object_unref(metainfo);
     gwy_file_abandon_contents(file_buffer, file_buffer_size, NULL);
@@ -878,9 +880,11 @@ omicronflat_load(const gchar *filename, G_GNUC_UNUSED GwyRunType mode, GError **
 fail:
     gwy_debug("The file is either corrupted, or has an unknown/unhandled format. Module failed to read the file, you can blame the programmer… or help him…");
 
+    g_free(instance_name);
+    g_free(name_str);
     g_object_unref(metainfo);
     g_object_unref(metadata);
-    if (s != NULL) g_free(s);
+    g_free(s);
     gwy_file_abandon_contents(file_buffer, file_buffer_size, NULL);
 
     return NULL;
