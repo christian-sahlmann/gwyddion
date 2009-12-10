@@ -1711,6 +1711,7 @@ gwy_app_data_browser_render_channel(G_GNUC_UNUSED GtkTreeViewColumn *column,
                        -1);
 
     container = g_object_get_qdata(object, container_quark);
+    g_object_unref(object);
 
     if (pixbuf) {
         pbuf_timestamp = (gdouble*)g_object_get_data(G_OBJECT(pixbuf),
