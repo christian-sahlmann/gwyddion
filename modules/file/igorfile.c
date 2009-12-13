@@ -65,6 +65,12 @@ enum {
 };
 
 typedef enum {
+    IGOR_BASE = 0,
+    IGOR_ASYLUM_MPF3D = 1,
+    IGOR_ASYLUM_FORCE = 2,
+} IgorFileProducerVariant;
+
+typedef enum {
     IGOR_TEXT     = 0x00,
     IGOR_COMPLEX  = 0x01,   /* Flag */
     IGOR_SINGLE   = 0x02,
@@ -74,33 +80,6 @@ typedef enum {
     IGOR_INT32    = 0x20,
     IGOR_UNSIGNED = 0x40,   /* Flag for integers */
 } IgorDataType;
-
-typedef enum {
-    ASYLUM_CHANNEL_HEIGHT      = 1,
-    ASYLUM_CHANNEL_AMPLITUDE   = 2,
-    ASYLUM_CHANNEL_DEFLECTION  = 3,
-    ASYLUM_CHANNEL_PHASE       = 4,
-    ASYLUM_CHANNEL_Z_SENSOR    = 5,
-    ASYLUM_CHANNEL_USER0_IN    = 6,
-    ASYLUM_CHANNEL_USER1_IN    = 7,
-    ASYLUM_CHANNEL_USER2_IN    = 8,
-    ASYLUM_CHANNEL_INPUT_I     = 9,
-    ASYLUM_CHANNEL_INPUT_Q     = 10,
-    ASYLUM_CHANNEL_LATERAL     = 11,
-    ASYLUM_CHANNEL_FREQUENCY   = 12,
-    ASYLUM_CHANNEL_DISSIPATION = 13,
-    ASYLUM_CHANNEL_CURRENT     = 14,
-    ASYLUM_CHANNEL_CURRENT2    = 15,
-    ASYLUM_CHANNEL_USER        = 16,
-    ASYLUM_CHANNEL_COUNT       = 17,
-    ASYLUM_CHANNEL_POTENTIAL   = 18,
-} AsylumChannelType;
-
-typedef enum {
-    ASYLUM_FORWARD  = 1,
-    ASYLUM_BACKWARD = 2,
-    ASYLUM_BOTH     = ASYLUM_FORWARD | ASYLUM_BACKWARD,
-} AsylumDirectionFlags;
 
 /* The header fields we read, they are stored differently in different
  * versions */
@@ -158,9 +137,7 @@ typedef struct {
 } IgorWaveHeader5;
 
 typedef struct {
-    AsylumChannelType type;
-    AsylumDirectionFlags dirs;
-    const gchar *name;
+    gchar *name;
     const gchar *units;
 } AsylumChannelInfo;
 
@@ -171,94 +148,56 @@ typedef struct {
     gint32 (*get_gint32)(const guchar **p);
     gfloat (*get_gfloat)(const guchar **p);
     gdouble (*get_gdouble)(const guchar **p);
+    IgorFileProducerVariant variant;
     guint wave_header_size;
     guint headers_size;
     guint type_size;
     IgorBinHeader header;
     IgorWaveHeader5 wave5;
+    guint nchannels;
+    /* Maybe only in Asylum Research files.  Titles dynamically allocated. */
+    GPtrArray *titles;
     /* Only in Asylum Research files... */
     GHashTable *meta;
-    guint nchannel_types;
     AsylumChannelInfo *channel_info;
     /* Processing data */
     const gchar **ignore_prefixes;
     GwyContainer *channelmeta;
 } IgorFile;
 
-static gboolean      module_register     (void);
-static gint          igor_detect         (const GwyFileDetectInfo *fileinfo,
-                                          gboolean only_name);
-static GwyContainer* igor_load           (const gchar *filename,
-                                          GwyRunType mode,
-                                          GError **error);
-static guint         igor_read_headers   (IgorFile *igorfile,
-                                          const guchar *buffer,
-                                          gsize size,
-                                          gboolean check_only,
-                                          GError **error);
-static guint         igor_checksum       (gconstpointer buffer,
-                                          gsize size,
-                                          gboolean lsb);
-static guint         igor_data_type_size (IgorDataType type);
-static GwyDataField* igor_read_data_field(const IgorFile *igorfile,
-                                          const guchar *buffer,
-                                          guint i,
-                                          const gchar *zunits,
-                                          gboolean imaginary);
-static GwyContainer* igor_get_metadata   (IgorFile *igorfile,
-                                          guint id);
-static GPtrArray*    read_channel_labels (const gchar *p,
-                                          guint n);
-
-/* Note some channels have units specified in the file. */
-static const GwyEnum asylum_channel_units[] = {
-    { "m",   ASYLUM_CHANNEL_HEIGHT,      },
-    { "m",   ASYLUM_CHANNEL_AMPLITUDE,   },
-    { "m",   ASYLUM_CHANNEL_Z_SENSOR,    },
-    { "m",   ASYLUM_CHANNEL_DEFLECTION,  },
-    { "deg", ASYLUM_CHANNEL_PHASE,       },
-    { "V",   ASYLUM_CHANNEL_USER0_IN,    },
-    { "V",   ASYLUM_CHANNEL_USER1_IN,    },
-    { "V",   ASYLUM_CHANNEL_USER2_IN,    },
-    { "V",   ASYLUM_CHANNEL_INPUT_I,     },
-    { "V",   ASYLUM_CHANNEL_INPUT_Q,     },
-    { "V",   ASYLUM_CHANNEL_LATERAL,     },
-    { "Hz",  ASYLUM_CHANNEL_FREQUENCY,   },
-    { "V",   ASYLUM_CHANNEL_DISSIPATION, },
-    { "A",   ASYLUM_CHANNEL_CURRENT,     },
-    { "A",   ASYLUM_CHANNEL_CURRENT2,    },
-    { "",    ASYLUM_CHANNEL_USER,        },
-    { "",    ASYLUM_CHANNEL_COUNT,       },
-    { "V",   ASYLUM_CHANNEL_POTENTIAL,   },
-};
-
-static const GwyEnum asylum_channel_names[] = {
-    { "Height",      ASYLUM_CHANNEL_HEIGHT,      },
-    { "Amplitude",   ASYLUM_CHANNEL_AMPLITUDE,   },
-    { "ZSensor",     ASYLUM_CHANNEL_Z_SENSOR,    },
-    { "Deflection",  ASYLUM_CHANNEL_DEFLECTION,  },
-    { "Phase",       ASYLUM_CHANNEL_PHASE,       },
-    { "UserIn0",     ASYLUM_CHANNEL_USER0_IN,    },
-    { "UserIn1",     ASYLUM_CHANNEL_USER1_IN,    },
-    { "UserIn2",     ASYLUM_CHANNEL_USER2_IN,    },
-    { "InputI",      ASYLUM_CHANNEL_INPUT_I,     },
-    { "InputQ",      ASYLUM_CHANNEL_INPUT_Q,     },
-    { "Lateral",     ASYLUM_CHANNEL_LATERAL,     },
-    { "Frequency",   ASYLUM_CHANNEL_FREQUENCY,   },
-    { "Dissipation", ASYLUM_CHANNEL_DISSIPATION, },
-    { "Current",     ASYLUM_CHANNEL_CURRENT,     },
-    { "Current2",    ASYLUM_CHANNEL_CURRENT2,    },
-    { "UserCalc",    ASYLUM_CHANNEL_USER,        },
-    { "Count",       ASYLUM_CHANNEL_COUNT,       },
-    { "Potential",   ASYLUM_CHANNEL_POTENTIAL,   },
-};
+static gboolean      module_register       (void);
+static gint          igor_detect           (const GwyFileDetectInfo *fileinfo,
+                                            gboolean only_name);
+static GwyContainer* igor_load             (const gchar *filename,
+                                            GwyRunType mode,
+                                            GError **error);
+static guint         igor_read_headers     (IgorFile *igorfile,
+                                            const guchar *buffer,
+                                            gsize size,
+                                            gboolean check_only,
+                                            GError **error);
+static guint         igor_checksum         (gconstpointer buffer,
+                                            gsize size,
+                                            gboolean lsb);
+static guint         igor_data_type_size   (IgorDataType type);
+static GwyDataField* igor_read_data_field  (const IgorFile *igorfile,
+                                            const guchar *buffer,
+                                            guint i,
+                                            const gchar *zunits,
+                                            gboolean imaginary);
+static GwyContainer* igor_get_metadata     (IgorFile *igorfile,
+                                            guint id);
+static GPtrArray*    read_channel_labels   (const gchar *p,
+                                            guint n);
+static gchar*        canonicalize_title    (const gchar *title);
+static const gchar*  channel_title_to_units(const gchar *title);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Imports Igor binary waves (.ibw)."),
     "Yeti <yeti@gwyddion.net>",
-    "0.3",
+    "0.4",
     "David Nečas (Yeti)",
     "2009",
 };
@@ -280,7 +219,7 @@ module_register(void)
 
 static gint
 igor_detect(const GwyFileDetectInfo *fileinfo,
-               gboolean only_name)
+            gboolean only_name)
 {
     if (only_name)
         return g_str_has_suffix(fileinfo->name_lowercase, EXTENSION) ? 10 : 0;
@@ -296,19 +235,6 @@ igor_detect(const GwyFileDetectInfo *fileinfo,
     return 0;
 }
 
-static int
-compare_asylum_channel_info(const void *a, const void *b)
-{
-    const AsylumChannelInfo *ca = (const AsylumChannelInfo*)a;
-    const AsylumChannelInfo *cb = (const AsylumChannelInfo*)b;
-
-    if (ca->type < cb->type)
-        return -1;
-    if (ca->type > cb->type)
-        return 1;
-    return 0;
-}
-
 static GwyContainer*
 igor_load(const gchar *filename,
           G_GNUC_UNUSED GwyRunType mode,
@@ -319,15 +245,14 @@ igor_load(const gchar *filename,
     GwyTextHeaderParser parser;
     IgorFile igorfile;
     IgorWaveHeader5 *wave5;
-    struct { guint i; guint dir; } chindex = { 0, 0 };
     GError *err = NULL;
     guchar *p, *buffer = NULL;
-    gint xres, yres, nlayers;
+    gint xres, yres;
     gsize expected_size, size = 0;
     gchar *note = NULL;
-    const gchar *zunits = NULL, *value;
+    const gchar *value;
     gchar key[64];
-    guint i, nchannels;
+    guint i, chid;
     GQuark quark;
 
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
@@ -347,12 +272,19 @@ igor_load(const gchar *filename,
         goto fail;
     }
 
-    /* Must have exactly 3 dims: xres, yres, nlayers */
+    /* Detect Asylum research files, leave it at generic if not detected. */
+    if (memcmp(buffer + size-5, "MFP3D", 5) == 0)
+        igorfile.variant = IGOR_ASYLUM_MPF3D;
+    else if (memcmp(buffer + size-5, "Force", 5) == 0)
+        igorfile.variant = IGOR_ASYLUM_FORCE;
+    gwy_debug("producer variant %u", igorfile.variant);
+
+    /* Must have exactly 3 dims: xres, yres, nchannels */
     wave5 = &igorfile.wave5;
     xres = wave5->n_dim[0];
     yres = wave5->n_dim[1];
-    nlayers = wave5->n_dim[2];
-    if (!xres || !yres || !nlayers || wave5->n_dim[3]) {
+    igorfile.nchannels = wave5->n_dim[2];
+    if (!xres || !yres || !igorfile.nchannels || wave5->n_dim[3]) {
         g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
                     _("Only two-dimensional data are supported."));
         goto fail;
@@ -364,11 +296,11 @@ igor_load(const gchar *filename,
         goto fail;
     }
 
-    if (wave5->npts != xres*yres*nlayers) {
+    if (wave5->npts != xres*yres*igorfile.nchannels) {
         g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
                     _("Number of data points %u does not match resolutions "
                       "%u×%u×%u."),
-                    wave5->npts, xres, yres, nlayers);
+                    wave5->npts, xres, yres, igorfile.nchannels);
         goto fail;
     }
 
@@ -395,157 +327,107 @@ igor_load(const gchar *filename,
     gwy_debug("remaning data size: %lu", (gulong)(size - (p - buffer)));
 
     p += igorfile.header.formula_size;
-    if (igorfile.header.note_size &&
-        (p - buffer) + igorfile.header.note_size <= size) {
-        /* This might be useful only for Asylum Research files */
+    if ((igorfile.variant == IGOR_ASYLUM_FORCE
+         || igorfile.variant == IGOR_ASYLUM_MPF3D)
+        && igorfile.header.note_size
+        && (p - buffer) + igorfile.header.note_size <= size) {
         note = g_strndup((const gchar*)p, size);
         gwy_clear(&parser, 1);
         parser.key_value_separator = ":";
         igorfile.meta = gwy_text_header_parse(note, &parser, NULL, NULL);
     }
     p += igorfile.header.note_size;
+
+    /* FIXME: Support extended units for non-Asylum files! */
     p += igorfile.header.data_e_units_size;
     for (i = 0; i < MAXDIMS; i++)
         p += igorfile.header.dim_e_units_size[i];
+
+    /* Skip labels of x and y dimension, we don't know what to do with them. */
     for (i = 0; i < 2; i++)
         p += igorfile.header.dim_labels_size[i];
 
-    if (igorfile.meta) {
-        /* Count asylum channel types. */
-        while (TRUE) {
-            g_snprintf(key, sizeof(key), "Channel%uDataType",
-                       igorfile.nchannel_types + 1);
-            value = g_hash_table_lookup(igorfile.meta, key);
-            if (!value || !atoi(value))
-                break;
-
-            igorfile.nchannel_types++;
-        }
+    /* FIXME: The labels are mandatory only in Asylum Research files. */
+    expected_size = (MAX_WAVE_NAME5 + 1)*(igorfile.nchannels + 1);
+    if (igorfile.header.dim_labels_size[2] != expected_size
+        || (p - buffer) + expected_size >= size) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Cannot read channel labels."));
+        goto fail;
     }
+    igorfile.titles = read_channel_labels(p, igorfile.nchannels+1);
+    p += igorfile.header.dim_labels_size[2];
 
-    if (igorfile.nchannel_types) {
-        guint expecting_channels = 0;
-
-        /* Gather channel information. */
-        igorfile.channel_info = g_new(AsylumChannelInfo,
-                                      igorfile.nchannel_types);
-        for (i = 0; i < igorfile.nchannel_types; i++) {
+    if (igorfile.meta) {
+        igorfile.channel_info = g_new(AsylumChannelInfo, igorfile.nchannels);
+        for (i = 0; i < igorfile.nchannels; i++) {
             AsylumChannelInfo *chinfo = igorfile.channel_info + i;
+            const gchar *title = g_ptr_array_index(igorfile.titles, i+1);
 
-            g_snprintf(key, sizeof(key), "Channel%uDataType", i + 1);
-            value = g_hash_table_lookup(igorfile.meta, key);
-            chinfo->type = atoi(value);
-            if (!chinfo->type) {
-                i--;
-                continue;
-            }
-            chinfo->name = gwy_enum_to_string(chinfo->type,
-                                              asylum_channel_names,
-                                              G_N_ELEMENTS(asylum_channel_names));
-            g_snprintf(key, sizeof(key), "%sCapture", chinfo->name);
-            value = g_hash_table_lookup(igorfile.meta, key);
-            if (value) {
-                chinfo->dirs = atoi(value);
-                expecting_channels += (!!(chinfo->dirs & ASYLUM_FORWARD)
-                                       + !!(chinfo->dirs & ASYLUM_BACKWARD));
-            }
-            else
-                g_warning("Unknown channel type %s.", chinfo->name);
-
+            chinfo->name = canonicalize_title(title);
             g_snprintf(key, sizeof(key), "%sUnit", chinfo->name);
             value = g_hash_table_lookup(igorfile.meta, key);
             if (value)
                 chinfo->units = value;
-            else {
-                chinfo->units
-                    = gwy_enum_to_string(chinfo->type,
-                                         asylum_channel_units,
-                                         G_N_ELEMENTS(asylum_channel_units));
-            }
+            else
+                chinfo->units = channel_title_to_units(chinfo->name);
         }
-
-        if (expecting_channels != nlayers) {
-            g_warning("Number of layers %u differs from expected number of "
-                      "channels %u.", nlayers, expecting_channels);
-            /* At least don't read beyond...
-             * FIXME: Does not handle complex types. */
-            nlayers = MIN(expecting_channels, nlayers);
-        }
-
-        /* XXX: The channel must be sorted numerically.  Channel3Datatype
-         * is *NOT* the type of the third channel.  The type of the third
-         * channel is the channel id that is third in the numerical sequence. */
-        qsort(igorfile.channel_info, igorfile.nchannel_types,
-              sizeof(AsylumChannelInfo), compare_asylum_channel_info);
     }
 
-    for (i = 0, nchannels = 0; i < nlayers; i++, nchannels++) {
-        if (igorfile.nchannel_types) {
-            AsylumChannelInfo *chinfo = igorfile.channel_info + chindex.i;
+    for (i = chid = 0; i < igorfile.nchannels; i++, chid++) {
+        const gchar *title = g_ptr_array_index(igorfile.titles, i+1);
+        const gchar *zunits = NULL;
 
-            g_assert(chindex.i < igorfile.nchannel_types);
+        if (igorfile.channel_info) {
+            AsylumChannelInfo *chinfo = igorfile.channel_info + i;
             zunits = chinfo->units;
-            meta = igor_get_metadata(&igorfile, chindex.i + 1);
-            if (chindex.dir == 1 || chinfo->dirs != ASYLUM_BOTH) {
-                chindex.dir = 0;
-                chindex.i++;
-            }
-            else {
-                chindex.dir++;
-            }
+            meta = igor_get_metadata(&igorfile, i + 1);
         }
         dfield = igor_read_data_field(&igorfile, buffer, i, zunits, FALSE);
-        quark = gwy_app_get_data_key_for_id(nchannels);
+        quark = gwy_app_get_data_key_for_id(chid);
         gwy_container_set_object(container, quark, dfield);
         g_object_unref(dfield);
         if (meta) {
-            g_snprintf(key, sizeof(key), "/%d/meta", nchannels);
+            g_snprintf(key, sizeof(key), "/%d/meta", chid);
             gwy_container_set_object_by_name(container, key, meta);
         }
 
+        g_snprintf(key, sizeof(key), "/%d/data/title", chid);
+        gwy_container_set_string_by_name(container, key, g_strdup(title));
+
         if (wave5->type & IGOR_COMPLEX) {
-            nchannels++;
+            chid++;
             dfield = igor_read_data_field(&igorfile, buffer, i, zunits, TRUE);
-            quark = gwy_app_get_data_key_for_id(nchannels);
+            quark = gwy_app_get_data_key_for_id(chid);
             gwy_container_set_object(container, quark, dfield);
             g_object_unref(dfield);
             if (meta) {
-                g_snprintf(key, sizeof(key), "/%d/meta", nchannels);
+                g_snprintf(key, sizeof(key), "/%d/meta", chid);
                 /* container still holds a reference */
                 g_object_unref(meta);
                 meta = gwy_container_duplicate(meta);
                 gwy_container_set_object_by_name(container, key, meta);
             }
+            g_snprintf(key, sizeof(key), "/%d/data/title", chid);
+            gwy_container_set_string_by_name(container, key, g_strdup(title));
         }
         gwy_object_unref(meta);
     }
 
-    /* I have no idea why the channel names are under index 2 or why they are
-     * numbered from 1.  This is just the way they do it at Asylum Research. */
-    expected_size = (MAX_WAVE_NAME5 + 1)*(nchannels + 1);
-    if (igorfile.header.dim_labels_size[2] == expected_size
-        && (p - buffer) + expected_size <= size) {
-        GPtrArray *titles = read_channel_labels((const gchar*)p, nchannels);
-
-        for (i = 0; i < nchannels; i++) {
-            g_snprintf(key, sizeof(key), "/%d/data/title", i);
-            gwy_container_set_string_by_name(container, key,
-                                             g_ptr_array_index(titles, i));
-        }
-        /* Do not free the individual titles, the container has eaten them. */
-        g_ptr_array_free(titles, TRUE);
-    }
-
-    for (i = 2; i < MAXDIMS; i++)
-        p += igorfile.header.dim_labels_size[i];
-
 fail:
     gwy_file_abandon_contents(buffer, size, NULL);
     g_free(note);
-    if (igorfile.channel_info)
+    if (igorfile.channel_info) {
+        for (i = 0; i < igorfile.nchannels; i++)
+            g_free(igorfile.channel_info[i].name);
         g_free(igorfile.channel_info);
+    }
     if (igorfile.meta)
         g_hash_table_destroy(igorfile.meta);
+    if (igorfile.titles) {
+        g_ptr_array_foreach(igorfile.titles, (GFunc)g_free, NULL);
+        g_ptr_array_free(igorfile.titles, TRUE);
+    }
 
     return container;
 }
@@ -894,12 +776,62 @@ read_channel_labels(const gchar *p,
     guint i;
 
     for (i = 0; i < n; i++) {
-        g_ptr_array_add(array, g_strndup(p + (i + 1)*(MAX_WAVE_NAME5 + 1),
-                                         MAX_WAVE_NAME5));
+        g_ptr_array_add(array,
+                        g_strndup(p + i*(MAX_WAVE_NAME5 + 1), MAX_WAVE_NAME5));
         gwy_debug("label%u=%s", i, (gchar*)g_ptr_array_index(array, i));
     }
 
     return array;
+}
+
+static gchar*
+canonicalize_title(const gchar *title)
+{
+    gchar *name, *s;
+    guint len;
+
+    name = g_strdup(title);
+    len = strlen(name);
+
+    if ((s = strstr(name, "Mod"))) {
+        gchar *t = s + strlen("Mod");
+        while (g_ascii_isdigit(*t))
+            t++;
+        if (!*t)
+            *s = '\0';
+        len = s - name;
+    }
+
+    if (g_str_has_suffix(name, "Trace"))
+        name[len - strlen("Trace")] = '\0';
+    else if (g_str_has_suffix(name, "Retrace"))
+        name[len - strlen("Retrace")] = '\0';
+
+    return name;
+}
+
+static const gchar*
+channel_title_to_units(const gchar *title)
+{
+    if (g_str_has_prefix(title, "Height")
+        || g_str_has_prefix(title, "ZSensor")
+        || g_str_has_prefix(title, "Deflection")
+        || g_str_has_prefix(title, "Amplitude"))
+        return "m";
+    if (g_str_has_prefix(title, "Phase"))
+        return "deg";
+    if (g_str_has_prefix(title, "Current"))
+        return "A";
+    if (g_str_has_prefix(title, "Frequency"))
+        return "Hz";
+    if (g_str_has_prefix(title, "Capacitance"))
+        return "F";
+    if (g_str_has_prefix(title, "Potential"))
+        return "V";
+    if (g_str_has_prefix(title, "Count"))
+        return "";
+    /* Everything else is in Volts. */
+    return "V";
 }
 
 static void
@@ -914,7 +846,7 @@ gather_channel_meta(gpointer hkey,
 
     if (!*value)
         return;
-    for (i = 0; i < igorfile->nchannel_types; i++) {
+    for (i = 0; i < igorfile->nchannels; i++) {
         if (g_str_has_prefix(key, igorfile->channel_info[i].name))
             return;
     }
@@ -928,7 +860,8 @@ gather_channel_meta(gpointer hkey,
     else
         value = g_convert(value, -1, "UTF-8", "ISO-8859-1", NULL, NULL, NULL);
 
-    gwy_container_set_string_by_name(igorfile->channelmeta, key, value);
+    if (value)
+        gwy_container_set_string_by_name(igorfile->channelmeta, key, value);
 }
 
 static GwyContainer*
