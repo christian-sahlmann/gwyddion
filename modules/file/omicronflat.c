@@ -1,5 +1,5 @@
 /*
- *  $Id: spmlab.c 10739 2009-12-10 16:11:37Z yeti-dn $
+ *  $Id$
  *  Copyright © 2009 François Bianco (fbianco) – Université de Genève, Suisse
  *  E-mail: francois.bianco@unige.ch
  *
@@ -222,7 +222,6 @@ omicronflat_load(const gchar *filename, G_GNUC_UNUSED GwyRunType mode, GError **
     gsize file_buffer_size;
     gsize fp_end;
     GError *err = NULL;
-    gchar *error_msg = NULL;
 
     guchar* s = NULL;
     gchar key[100];
@@ -423,7 +422,6 @@ omicronflat_load(const gchar *filename, G_GNUC_UNUSED GwyRunType mode, GError **
     }
     gwy_debug("TransferFunctionName %s", s);
     gwy_container_set_string_by_name(tffParams, "tff_name", s);
-    g_free(s);
 
     gwy_container_set_string_by_name(metainfo, "/channel/units",
                                      flat_readstring(&fp, fp_end, &tmperr));
@@ -533,36 +531,36 @@ omicronflat_load(const gchar *filename, G_GNUC_UNUSED GwyRunType mode, GError **
     else if (IS_CITS) {
         // FIXME
         gwy_debug("File is planes form a volume CITS data cube ");
-        error_msg = _("constant current tunnel spectroscopy (CITS)");
-        err_DATA_TYPE(error, *error_msg );
-        g_free(error_msg);
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Constant current tunnel spectroscopy (CITS) "
+                      "is not supported."));
         goto fail;
     }
     // Else if the file contains "spectroscopy curves (SPS)"
     else if (IS_SPS) {
         // FIXME
         gwy_debug("File is spectroscopy curves (SPS) ");
-        error_msg = _("single point spectroscopy (SPS)");
-        err_DATA_TYPE(error, *error_msg );
-        g_free(error_msg);
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Single point spectroscopy (SPS) "
+                      "is not supported."));
         goto fail;
     }
     // Else if the file contains "Force/distance curves" (1D data)
     else if (IS_FORCE_DIST) {
         // FIXME
         gwy_debug("File is force/distance curves ");
-        error_msg = _("force/distance curves");
-        err_DATA_TYPE(error, *error_msg );
-        g_free(error_msg);
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Force-distance curve "
+                      "are not supported."));
         goto fail;
     }
     // Else if the file contains "Temporally varying signal acquired over time"
     else if (IS_TIME_VARYING) {
         // FIXME
         gwy_debug("File is Temporally varying signal acquired over time ");
-        error_msg = _("temporally varying signal acquired over time");
-        err_DATA_TYPE(error, *error_msg );
-        g_free(error_msg);
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Temporally varying signal "
+                      "is not supported."));
         goto fail;
     }
     else {
@@ -944,6 +942,7 @@ omicronflat_load(const gchar *filename, G_GNUC_UNUSED GwyRunType mode, GError **
             gwy_container_set_string_by_name(metadata, key, value);
             g_free(name_str);
             name_str = NULL;
+            value = NULL;
         }
         g_free(instance_name);
         instance_name = NULL;
@@ -981,6 +980,7 @@ fail:
     gwy_object_unref(dfield_retdown);
     g_free(instance_name);
     g_free(name_str);
+    g_free(value);
     g_object_unref(metainfo);
     g_object_unref(metadata);
     g_free(s);
