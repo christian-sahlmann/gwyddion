@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2009-12-12 03:59+0100\n"
-"PO-Revision-Date: 2009-12-12 10:38+0300\n"
+"POT-Creation-Date: 2009-12-14 03:59+0100\n"
+"PO-Revision-Date: 2009-12-14 12:16+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -2593,32 +2593,36 @@ msgstr "Файлы Hitachi AFM, старые (.afm)"
 msgid "Hitachi-AFM has not registered file type `%s'."
 msgstr "Hitachi-AFM не имеет зарегистрированного типа файла `%s'."
 
-#: modules/file/igorfile.c:259
+#: modules/file/igorfile.c:198
 msgid "Imports Igor binary waves (.ibw)."
 msgstr "Импортирует Igor binary waves (.ibw)."
 
-#: modules/file/igorfile.c:272
+#: modules/file/igorfile.c:211
 msgid "Igor binary waves (.ibw)"
 msgstr "Двоичные волны Igor (.ibw)"
 
-#: modules/file/igorfile.c:345
+#: modules/file/igorfile.c:270
 #, c-format
 msgid "Format version is %d.  Only version 5 is supported."
 msgstr "Версия формата %d.  Поддерживается только версия 5."
 
-#: modules/file/igorfile.c:357
+#: modules/file/igorfile.c:289
 msgid "Only two-dimensional data are supported."
 msgstr "Поддерживаются только двумерные данные."
 
-#: modules/file/igorfile.c:369
+#: modules/file/igorfile.c:301
 #, c-format
 msgid "Number of data points %u does not match resolutions %u×%u×%u."
 msgstr "Число точек данных %u не соответствует разрешению %u×%u×%u."
 
-#: modules/file/igorfile.c:383
+#: modules/file/igorfile.c:315
 #, c-format
 msgid "Data size %u does not match the number of data points %u×%u."
 msgstr "Размер данных %u не соответствует числу точек данных %u×%u."
+
+#: modules/file/igorfile.c:355
+msgid "Cannot read channel labels."
+msgstr "Не удаётся прочесть метки каналов."
 
 #: modules/file/intematix.c:128
 msgid "Imports Intematix SDF data files."
@@ -3041,33 +3045,29 @@ msgstr "Строка заголовка начинается с двоеточи
 msgid "Channel information ended unexpectedly."
 msgstr "Информация о канале неожиданно закончилась."
 
-#: modules/file/omicronflat.c:93
+#: modules/file/omicronflat.c:116
 msgid "Imports Omicron flat files."
 msgstr "Импортирует плоские файлы Omicron"
 
-#: modules/file/omicronflat.c:106
+#: modules/file/omicronflat.c:129
 msgid "Omicron flat files (*.*_flat)"
 msgstr "Плоские файлы Omicron (*.*_flat)"
 
-#: modules/file/omicronflat.c:475
-msgid "constant current tunnel spectroscopy (CITS)"
-msgstr "туннельная спектроскопия постоянного тока (CITS)"
+#: modules/file/omicronflat.c:535
+msgid "Constant current tunnel spectroscopy (CITS) is not supported."
+msgstr "Туннельная спектроскопия постоянного тока (CITS) не поддерживается."
 
-#: modules/file/omicronflat.c:484
-msgid "single point spectroscopy (SPS)"
-msgstr "спектроскопия в точке (SPS)"
+#: modules/file/omicronflat.c:544
+msgid "Single point spectroscopy (SPS) is not supported."
+msgstr "Спектроскопия в точке (SPS) не поддерживается."
 
-#: modules/file/omicronflat.c:493
-msgid "force/distance curves"
-msgstr "кривые сила/расстояние"
+#: modules/file/omicronflat.c:553
+msgid "Force-distance curve are not supported."
+msgstr "Кривые сила-расстояние не поддерживаются."
 
-#: modules/file/omicronflat.c:502
-msgid "temporally varying signal acquired over time"
-msgstr "меняющийся во времени сигнал в зависимости от времени"
-
-#: modules/file/omicronflat.c:556
-msgid "Unknown transfer function, importing raw data without scaling."
-msgstr "Неизвестна функция переноса, импортируются необработанные данные без масштабирования."
+#: modules/file/omicronflat.c:562
+msgid "Temporally varying signal is not supported."
+msgstr "Меняющийся во времени сигнал не поддерживается."
 
 #: modules/file/omicronmatrix.c:184
 msgid "Omicron MATRIX (param.mtrx & data.mtrx)"
@@ -4884,7 +4884,6 @@ msgid "Calculate 2D autocorrelation function"
 msgstr "Рассчитать двумерную функцию автокорреляции"
 
 #: modules/process/acf2d.c:75
-#, fuzzy
 msgid "2D ACF"
 msgstr "двумерная ФАК"
 
@@ -8761,14 +8760,12 @@ msgid "Waviness"
 msgstr "Волнистость"
 
 #: modules/tools/roughness.c:796
-#, fuzzy
 msgid "ADF"
 msgstr "ФРА"
 
 #: modules/tools/roughness.c:797
-#, fuzzy
 msgid "BRC"
-msgstr "ОДП"
+msgstr "ООК"
 
 #: modules/tools/roughness.c:798
 #: modules/tools/roughness.c:1397
@@ -8881,12 +8878,10 @@ msgid "Cum. distribution of angles"
 msgstr "Интегр. распределение углов"
 
 #: modules/tools/sfunctions.c:168
-#, fuzzy
 msgid "ACF"
 msgstr "ФАК"
 
 #: modules/tools/sfunctions.c:169
-#, fuzzy
 msgid "HHCF"
 msgstr "ФКВВ"
 
@@ -9075,4 +9070,11 @@ msgstr ""
 "Площадь проекции:    %s\n"
 "Наклон θ:     %s\n"
 "Наклон φ:     %s\n"
+
+#~ msgid "force/distance curves"
+#~ msgstr "кривые сила/расстояние"
+#~ msgid "Unknown transfer function, importing raw data without scaling."
+#~ msgstr ""
+#~ "Неизвестна функция переноса, импортируются необработанные данные без "
+#~ "масштабирования."
 
