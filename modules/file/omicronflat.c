@@ -35,6 +35,13 @@
  * </mime-type>
  **/
 
+/**
+ * [FILE-MAGIC-USERGUIDE]
+ * Omicron flat format
+ * .*_flat
+ * Read
+ **/
+
 #include <stdlib.h>
 #include <string.h>
 #include <libgwyddion/gwymacros.h>

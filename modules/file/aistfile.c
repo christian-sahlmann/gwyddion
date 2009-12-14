@@ -29,6 +29,22 @@
  * little-endian because they run it on x86.  Bite me.
  */
 
+/**
+ * [FILE-MAGIC-FREEDESKTOP]
+ * <mime-type type="application/x-aist-nt-spm">
+ *   <comment>AIST-NT SPM data</comment>
+ *   <glob pattern="*.aist"/>
+ *   <glob pattern="*.AIST"/>
+ * </mime-type>
+ **/
+
+/**
+ * [FILE-MAGIC-USERGUIDE]
+ * AIST-NT
+ * .aist
+ * Read
+ **/
+
 #include "config.h"
 #include <string.h>
 #include <stdlib.h>
