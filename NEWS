@@ -1,4 +1,4 @@
-2.19 (0000-00-00)
+2.19 (2009-12-11)
 Application:
 - Translations updated: Czech, French, Russian.
 - Not starting a new instance of Gwyddion with --remote-new on X11 when none
