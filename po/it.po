@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: it\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2009-11-03 10:54+0100\n"
+"POT-Creation-Date: 2009-12-15 11:11+0100\n"
 "PO-Revision-Date: 2007-11-27 13:56+0100\n"
 "Last-Translator: Livia_lab <l.dellaseta@biosensing.net>\n"
 "Language-Team:  <it@li.org>\n"
@@ -59,8 +59,8 @@ msgid "vdW: paraboloid"
 msgstr ""
 
 #: libgwyddion/gwyinventory.c:1310 libgwydgets/gwygraphwindow.c:603
-#: app/data-browser.c:1445 app/data-browser.c:2174 app/data-browser.c:2936
-#: app/data-browser.c:3095 app/data-browser.c:4982 app/resource-editor.c:366
+#: app/data-browser.c:1445 app/data-browser.c:2175 app/data-browser.c:2937
+#: app/data-browser.c:3096 app/data-browser.c:4983 app/resource-editor.c:366
 #: modules/process/convolution_filter.c:700
 msgid "Untitled"
 msgstr "Senza titolo"
@@ -720,8 +720,8 @@ msgstr "Dimensione:"
 msgid "pixels"
 msgstr "pixel"
 
-#: libgwydgets/gwy3dwindow.c:1027 modules/file/pixmap.c:946
-#: modules/file/pixmap.c:2664 modules/file/rawfile.c:398
+#: libgwydgets/gwy3dwindow.c:1027 modules/file/pixmap.c:947
+#: modules/file/pixmap.c:2665 modules/file/rawfile.c:398
 #: modules/process/angle_dist.c:170 modules/process/calibrate.c:295
 #: modules/process/curvature.c:650 modules/process/cwt.c:132
 #: modules/process/drift.c:230 modules/process/dwt.c:164
@@ -766,7 +766,7 @@ msgstr "Testo Etichetta"
 msgid "More..."
 msgstr "Altri..."
 
-#: libgwydgets/gwydatawindow.c:906 libgwydgets/gwyoptionmenus.c:825
+#: libgwydgets/gwydatawindow.c:906 libgwydgets/gwyoptionmenus.c:826
 msgid "Choose Color Gradient"
 msgstr "Scelta Gradiente Colore"
 
@@ -983,7 +983,7 @@ msgid "Length"
 msgstr "Lunghezza"
 
 #: libgwydgets/gwygraphwindowmeasuredialog.c:283
-#: libgwydgets/gwygraphwindowmeasuredialog.c:443 app/gwyplaintool.c:1020
+#: libgwydgets/gwygraphwindowmeasuredialog.c:443 app/gwyplaintool.c:1022
 #: modules/process/obj_synth.c:578
 msgid "Height"
 msgstr "Altezza"
@@ -1005,25 +1005,25 @@ msgstr "Metodo:"
 msgid "Angle"
 msgstr "Angolo"
 
-#: libgwydgets/gwyoptionmenus.c:453
+#: libgwydgets/gwyoptionmenus.c:454
 msgid "Preferred"
 msgstr "Preferiti"
 
-#: libgwydgets/gwyoptionmenus.c:467 app/meta.c:285 modules/file/rawfile.c:957
+#: libgwydgets/gwyoptionmenus.c:468 app/meta.c:285 modules/file/rawfile.c:957
 #: modules/process/convolution_filter.c:547
 #: modules/tools/selectionmanager.c:289
 msgid "Name"
 msgstr "Nome"
 
-#: libgwydgets/gwyoptionmenus.c:824
+#: libgwydgets/gwyoptionmenus.c:825
 msgid "Color Gradient"
 msgstr "Gradiente Colore"
 
-#: libgwydgets/gwyoptionmenus.c:839
+#: libgwydgets/gwyoptionmenus.c:840
 msgid "GL Material"
 msgstr "Materiale GL"
 
-#: libgwydgets/gwyoptionmenus.c:840
+#: libgwydgets/gwyoptionmenus.c:841
 msgid "Choose GL Material"
 msgstr "Scelta Materiale GL"
 
@@ -1052,7 +1052,7 @@ msgstr ""
 msgid "Preview"
 msgstr "Anteprima"
 
-#: libgwymodule/gwymodule-file.c:516 modules/file/pixmap.c:722
+#: libgwymodule/gwymodule-file.c:516 modules/file/pixmap.c:723
 #, c-format
 msgid "Cannot open file for reading: %s."
 msgstr "Non è possibile aprire il file in lettura: %s."
@@ -1270,39 +1270,39 @@ msgstr "Dimensioni pixel quadrati"
 msgid "_Physically Square"
 msgstr "Dimensioni reali quadrate"
 
-#: app/data-browser.c:3634
+#: app/data-browser.c:3635
 msgid "Extract to a new file"
 msgstr "Estrazione in nuovo file"
 
-#: app/data-browser.c:3635
+#: app/data-browser.c:3636
 msgid "Duplicate"
 msgstr "Duplica"
 
-#: app/data-browser.c:3636
+#: app/data-browser.c:3637
 msgid "Delete"
 msgstr "Elimina"
 
-#: app/data-browser.c:3680
+#: app/data-browser.c:3681
 msgid "Data Browser"
 msgstr "Navigatore dati"
 
-#: app/data-browser.c:3703
+#: app/data-browser.c:3704
 msgid "Close file"
 msgstr "Chiudi file"
 
-#: app/data-browser.c:3716
+#: app/data-browser.c:3717
 msgid "Channels"
 msgstr "Canali"
 
-#: app/data-browser.c:3730
+#: app/data-browser.c:3731
 msgid "Graphs"
 msgstr "Grafici"
 
-#: app/data-browser.c:3744
+#: app/data-browser.c:3745
 msgid "Spectra"
 msgstr "Spettri"
 
-#: app/data-browser.c:5020
+#: app/data-browser.c:5021
 #, c-format
 msgid "Unknown channel %d"
 msgstr "Canale sconosciuto %d"
@@ -1570,11 +1570,11 @@ msgstr ""
 msgid "Cannot write to file: %s."
 msgstr "Impossibile scrivere su file: %s."
 
-#: app/gwyplaintool.c:567
+#: app/gwyplaintool.c:569
 msgid "<big><b>Missing layer module.</b></big>"
 msgstr "<big><b>Mudulo di livello mancante</b></big>"
 
-#: app/gwyplaintool.c:573
+#: app/gwyplaintool.c:575
 #, c-format
 msgid ""
 "This tool requires layer of type %s to work, which does not seem to be "
@@ -1583,22 +1583,22 @@ msgstr ""
 "Questo strumento necessita di un layer di tipo  %s , che non sembra essere "
 "installato. Controllare l'installazione."
 
-#: app/gwyplaintool.c:791
+#: app/gwyplaintool.c:793
 #, fuzzy
 msgid "Clear selected objects"
 msgstr "Cancella oggetto selezionato"
 
-#: app/gwyplaintool.c:1002
+#: app/gwyplaintool.c:1004
 msgid "Origin"
 msgstr "Origine"
 
-#: app/gwyplaintool.c:1013 modules/file/rawfile.c:959
+#: app/gwyplaintool.c:1015 modules/file/rawfile.c:959
 #: modules/process/convolution_filter.c:358
 #: modules/process/convolution_filter.c:562 modules/process/obj_synth.c:522
 msgid "Size"
 msgstr "Dimensioni"
 
-#: app/gwyplaintool.c:1016
+#: app/gwyplaintool.c:1018
 msgid "Width"
 msgstr "Larghezza"
 
@@ -1634,7 +1634,7 @@ msgstr "Ripeti"
 msgid "Re-show"
 msgstr "Mostra di nuovo"
 
-#: app/menu.c:902
+#: app/menu.c:904
 msgid "_Document history"
 msgstr "Cronologia"
 
@@ -2247,12 +2247,12 @@ msgstr "L'oggetto dati secondari non ha dati primari"
 msgid "Please wait"
 msgstr "Attendere"
 
-#: modules/file/aistfile.c:53
+#: modules/file/aistfile.c:123
 #, fuzzy
 msgid "Imports AIST-NT data files."
 msgstr "Importa file dati NT-MDT."
 
-#: modules/file/aistfile.c:66
+#: modules/file/aistfile.c:136
 #, fuzzy
 msgid "AIST-NT files (.aist)"
 msgstr "file SIS (.sis)"
@@ -2293,7 +2293,7 @@ msgstr "unità valore:"
 msgid "Export Text"
 msgstr "Esporta Testo"
 
-#: modules/file/asciiexport.c:276 modules/file/pixmap.c:2753
+#: modules/file/asciiexport.c:276 modules/file/pixmap.c:2754
 #: modules/file/rawfile.c:720 modules/file/rawxyz.c:670
 #: modules/process/fft_filter_1d.c:296 modules/process/grain_dist.c:291
 #: modules/process/grain_mark.c:347 modules/process/grain_rem_threshold.c:324
@@ -2333,20 +2333,20 @@ msgstr "Importa file dati PSIA"
 msgid "Attocube ASCII files (.asc)"
 msgstr "file SIS (.sis)"
 
-#: modules/file/bcrfile.c:125
+#: modules/file/bcrfile.c:133
 msgid "Imports Image Metrology BCR data files."
 msgstr "Importa file dati BCR Image Metrology."
 
-#: modules/file/bcrfile.c:138
+#: modules/file/bcrfile.c:146
 msgid "BCR files (.bcr, .bcrf)"
 msgstr "File BCR (.bcr, .bcrf)"
 
-#: modules/file/bcrfile.c:216
+#: modules/file/bcrfile.c:225
 #, c-format
 msgid "File header is not convertible from UTF-16: %s"
 msgstr "L'intestazione del file non è convertibile da UTF-16: %s"
 
-#: modules/file/bcrfile.c:289
+#: modules/file/bcrfile.c:336
 #, c-format
 msgid "Unknown file type header: `%s'."
 msgstr "Intestazione tipo file sconosciuta: `%s'."
@@ -2383,8 +2383,8 @@ msgid "Burleigh exported data (.txt, .bin)"
 msgstr ""
 
 #: modules/file/burleigh_exp.c:225 modules/file/burleigh_exp.c:266
-#: modules/file/nanoscope.c:809 modules/file/omicron.c:363
-#: modules/file/shimadzu.c:407
+#: modules/file/nanoscope.c:808 modules/file/omicron.c:363
+#: modules/file/shimadzu.c:406
 msgid "Missing colon in header line."
 msgstr "\":\" mancanti nel file intestazione."
 
@@ -2401,7 +2401,7 @@ msgstr "file Createc (.dat)"
 msgid "Neither `%s' nor `%s' header field found."
 msgstr "Campi intestazione  `%s' o `%s' non trovati."
 
-#: modules/file/createc.c:520 modules/file/matfile.c:597
+#: modules/file/createc.c:520 modules/file/matfile.c:596
 #, c-format
 msgid "zlib initialization failed with error %d, cannot decompress data."
 msgstr ""
@@ -2532,7 +2532,7 @@ msgstr "File Nanosurf (.ezd, .nid)"
 msgid "Garbage before first header section."
 msgstr "Dati invalidi prima della prima sezione dell'intestazione."
 
-#: modules/file/ezdfile.c:312 modules/file/nanoscope-ii.c:252
+#: modules/file/ezdfile.c:312 modules/file/nanoscope-ii.c:251
 msgid "Malformed header line (missing =)."
 msgstr "Linea intestazione mal definita (mancante =)"
 
@@ -2573,7 +2573,7 @@ msgstr "Trovate posizioni tag data non valide"
 
 #: modules/file/gwytiff.h:611 modules/file/gwytiff.h:618
 #: modules/file/gwytiff.h:677 modules/file/gwytiff.h:693
-#: modules/file/mapvue.c:451 modules/file/mapvue.c:456
+#: modules/file/mapvue.c:450 modules/file/mapvue.c:455
 #, c-format
 msgid "Required tag %u was not found."
 msgstr ""
@@ -2588,8 +2588,8 @@ msgstr "Formato file versione  %.1f  non supportato."
 msgid "Planar configuration %u is not supported."
 msgstr "Formato file versione  %.1f  non supportato."
 
-#: modules/file/gwytiff.h:719 modules/file/matfile.c:276
-#: modules/file/matfile.c:298 modules/file/psia.c:343
+#: modules/file/gwytiff.h:719 modules/file/matfile.c:275
+#: modules/file/matfile.c:297 modules/file/psia.c:342
 #, fuzzy
 msgid "File is truncated."
 msgstr "Intestazione del file troppo corta."
@@ -2635,47 +2635,52 @@ msgstr "File Hitachi AFM , vecchi (.afm)"
 msgid "Hitachi-AFM has not registered file type `%s'."
 msgstr "Hitachi-AFM non ha un tipo file registrato `%s'."
 
-#: modules/file/igorfile.c:259
+#: modules/file/igorfile.c:198
 msgid "Imports Igor binary waves (.ibw)."
 msgstr ""
 
-#: modules/file/igorfile.c:272
+#: modules/file/igorfile.c:211
 msgid "Igor binary waves (.ibw)"
 msgstr ""
 
-#: modules/file/igorfile.c:345
+#: modules/file/igorfile.c:270
 #, fuzzy, c-format
 msgid "Format version is %d.  Only version 5 is supported."
 msgstr "Formato file versione  %.1f  non supportato."
 
-#: modules/file/igorfile.c:357
+#: modules/file/igorfile.c:289
 #, fuzzy
 msgid "Only two-dimensional data are supported."
 msgstr "Sono supportati solo file immagine e file linea"
 
-#: modules/file/igorfile.c:369
+#: modules/file/igorfile.c:301
 #, fuzzy, c-format
 msgid "Number of data points %u does not match resolutions %u×%u×%u."
 msgstr "La grandezza dei dati %u non corrisponde alle dimensioni (%u×%u)."
 
-#: modules/file/igorfile.c:383
+#: modules/file/igorfile.c:315
 #, fuzzy, c-format
 msgid "Data size %u does not match the number of data points %u×%u."
 msgstr "La grandezza dei dati %u non corrisponde alle dimensioni (%u×%u)."
 
-#: modules/file/intematix.c:129
+#: modules/file/igorfile.c:355
+#, fuzzy
+msgid "Cannot read channel labels."
+msgstr "Parse impossibile delle dimensioni campo scansione."
+
+#: modules/file/intematix.c:128
 msgid "Imports Intematix SDF data files."
 msgstr "Importa file dati Intermatix SDF"
 
-#: modules/file/intematix.c:142
+#: modules/file/intematix.c:141
 msgid "Intematix SDF data files (.sdf)"
 msgstr "file dati Intermatix SDF (.sdf)"
 
-#: modules/file/intematix.c:308
+#: modules/file/intematix.c:307
 msgid "Parameter tag set is incomplete."
 msgstr ""
 
-#: modules/file/intematix.c:313
+#: modules/file/intematix.c:312
 msgid "image depth"
 msgstr "Profondità immagine"
 
@@ -2703,67 +2708,67 @@ msgstr "Immagini scansione JPK (.jpk)"
 msgid "File does not contain grid dimensions."
 msgstr "Il file non contiene le dimensioni della griglia."
 
-#: modules/file/mapvue.c:380
+#: modules/file/mapvue.c:379
 #, fuzzy
 msgid "Imports MapVue data files (.map)."
 msgstr "Importa file dati Surf"
 
-#: modules/file/mapvue.c:393
+#: modules/file/mapvue.c:392
 #, fuzzy
 msgid "MapVue files (.map)"
 msgstr "File DME  (.img)"
 
-#: modules/file/mapvue.c:629
+#: modules/file/mapvue.c:628
 msgid "File end was reached while scanning tags."
 msgstr ""
 
-#: modules/file/mapvue.c:641
+#: modules/file/mapvue.c:640
 #, fuzzy, c-format
 msgid "Expected tag %u size is %u bytes, but the actual size is %u bytes."
 msgstr ""
 "Dimensione file aspettata dall'intestazione del file è %u bytes, ma la "
 "dimensione reale è %u bytes"
 
-#: modules/file/mapvue.c:655
+#: modules/file/mapvue.c:654
 #, c-format
 msgid "Tag %u size is %u bytes, which is not enough to hold the tag marker."
 msgstr ""
 
-#: modules/file/mapvue.c:666 modules/file/mapvue.c:679
+#: modules/file/mapvue.c:665 modules/file/mapvue.c:678
 #, c-format
 msgid ""
 "Tag %u size is %u bytes, which is not enough to hold the tag marker and size."
 msgstr ""
 
-#: modules/file/mapvue.c:690
+#: modules/file/mapvue.c:689
 #, c-format
 msgid "Tag marker is missing on an unknown tag %u."
 msgstr ""
 
-#: modules/file/mapvue.c:709 modules/file/mapvue.c:719
+#: modules/file/mapvue.c:708 modules/file/mapvue.c:718
 msgid "Character array does not fit into the file."
 msgstr ""
 
-#: modules/file/matfile.c:223
+#: modules/file/matfile.c:222
 #, fuzzy
 msgid "Imports Matlab MAT files v5."
 msgstr "Importa file dati JEOL."
 
-#: modules/file/matfile.c:236
+#: modules/file/matfile.c:235
 #, fuzzy
 msgid "Matlab MAT 5 files (.mat)"
 msgstr "File DME  (.img)"
 
-#: modules/file/matfile.c:308
+#: modules/file/matfile.c:307
 msgid "Compressed data inside compressed data found."
 msgstr ""
 
-#: modules/file/matfile.c:346
+#: modules/file/matfile.c:345
 #, c-format
 msgid "Invalid short tag of type %u claims to consists of %u bytes."
 msgstr ""
 
-#: modules/file/matfile.c:611
+#: modules/file/matfile.c:610
 #, c-format
 msgid "Decompression of compressed variable failed with error %d."
 msgstr ""
@@ -2815,26 +2820,26 @@ msgstr "File Dati PicoView (.mi)"
 msgid "Spectroscopy Graph"
 msgstr "Grafico Spettroscopia"
 
-#: modules/file/nanoeducator.c:284
+#: modules/file/nanoeducator.c:283
 #, fuzzy
 msgid "Imports Nanoeducator data files."
 msgstr "Importa file dati WSxM Nanotec "
 
-#: modules/file/nanoeducator.c:297
+#: modules/file/nanoeducator.c:296
 #, fuzzy
 msgid "Nanoeducator files (.mspm, .spm, .stm)"
 msgstr "File Nanotop (.spm)"
 
-#: modules/file/nanoeducator.c:355 modules/file/unisoku.c:283
+#: modules/file/nanoeducator.c:354 modules/file/unisoku.c:283
 msgid "format version"
 msgstr "Versione formato"
 
-#: modules/file/nanoeducator.c:383 modules/file/nanoeducator.c:420
+#: modules/file/nanoeducator.c:382 modules/file/nanoeducator.c:419
 #: modules/file/nanoeducator.c:524
 msgid "Image data starts past the end of file."
 msgstr ""
 
-#: modules/file/nanoeducator.c:462
+#: modules/file/nanoeducator.c:461
 msgid "Spectra data starts past the end of file."
 msgstr ""
 
@@ -2953,30 +2958,30 @@ msgstr ""
 msgid "Wrong size of Base64 encoded data."
 msgstr ""
 
-#: modules/file/nanoscope-ii.c:80
+#: modules/file/nanoscope-ii.c:79
 msgid "Imports Digital Instruments Nanoscope II data files."
 msgstr "Importa file dati Digital Instruments Nanoscope II "
 
-#: modules/file/nanoscope-ii.c:93
+#: modules/file/nanoscope-ii.c:92
 msgid "Nanoscope II files"
 msgstr "File Nanoscope II"
 
-#: modules/file/nanoscope.c:146
+#: modules/file/nanoscope.c:145
 msgid ""
 "Imports Veeco (Digital Instruments) Nanoscope data files, version 3 or newer."
 msgstr ""
 "Importa file dati Veeco (Digital Instruments) Nanoscope versione 3 or "
 "successive."
 
-#: modules/file/nanoscope.c:160
+#: modules/file/nanoscope.c:159
 msgid "Nanoscope III files"
 msgstr "File Nanoscope III"
 
-#: modules/file/nanoscope.c:221
+#: modules/file/nanoscope.c:220
 msgid "File is not a Nanoscope file, or it is a unknown subtype."
 msgstr "File non di tipo Nanoscope o di sottotipo sconosciuto."
 
-#: modules/file/nanoscope.c:228
+#: modules/file/nanoscope.c:227
 msgid ""
 "File has been damaged by change of line endings, resulting in corruption of "
 "the binary part of the file.\n"
@@ -2987,16 +2992,16 @@ msgid ""
 "transfer that attempts to store text platform-independently."
 msgstr ""
 
-#: modules/file/nanoscope.c:475 modules/file/nanoscope.c:491
+#: modules/file/nanoscope.c:474 modules/file/nanoscope.c:490
 msgid "Cannot parse `Scan size' field."
 msgstr "Parse impossibile delle dimensioni campo scansione."
 
-#: modules/file/nanoscope.c:720
+#: modules/file/nanoscope.c:719
 #, c-format
 msgid "Garbage after data sample #%d."
 msgstr "Dati invalidi dopo dati campione #%d."
 
-#: modules/file/nanoscope.c:799
+#: modules/file/nanoscope.c:798
 msgid "Truncated header line."
 msgstr "Linea intestazione troncata."
 
@@ -3045,33 +3050,33 @@ msgstr ""
 msgid "More than one record dimension found."
 msgstr "Più di una dimensione della registrazione non trovata."
 
-#: modules/file/nt-mdt.c:634
+#: modules/file/nt-mdt.c:650
 msgid "Imports NT-MDT data files."
 msgstr "Importa file dati NT-MDT."
 
-#: modules/file/nt-mdt.c:647
+#: modules/file/nt-mdt.c:663
 msgid "NT-MDT files (.mdt)"
 msgstr "File NT-MDT (.mdt)"
 
-#: modules/file/nt-mdt.c:1046
+#: modules/file/nt-mdt.c:1074
 msgid "Frame is too short for Frame Mode."
 msgstr "Frame troppo corta per modalità frame"
 
-#: modules/file/nt-mdt.c:1060
+#: modules/file/nt-mdt.c:1088
 msgid "Frame is too short for dots or data."
 msgstr "Frame troppo corta per punti o dati."
 
-#: modules/file/nt-mdt.c:1317
+#: modules/file/nt-mdt.c:1345
 #, c-format
 msgid "End of file reached in frame header #%u."
 msgstr "Termine file raggiunto nell'intestazione frame  #%u."
 
-#: modules/file/nt-mdt.c:1325
+#: modules/file/nt-mdt.c:1353
 #, c-format
 msgid "End of file reached in frame data #%u."
 msgstr "Termine file raggiunto in dati frame #%u."
 
-#: modules/file/nt-mdt.c:1359
+#: modules/file/nt-mdt.c:1388
 #, c-format
 msgid "Frame #%u is too short for scanned data header."
 msgstr "Frame #%u troppo corto per intestazione dati scansionati."
@@ -3100,6 +3105,35 @@ msgstr "Linea intestazione inizia con \":\""
 #: modules/file/omicron.c:460
 msgid "Channel information ended unexpectedly."
 msgstr "Informazione di canale interrotta inaspettatamente."
+
+#: modules/file/omicronflat.c:123
+#, fuzzy
+msgid "Imports Omicron flat files."
+msgstr "Importa file dati JEOL."
+
+#: modules/file/omicronflat.c:136
+#, fuzzy
+msgid "Omicron flat files (*.*_flat)"
+msgstr "File Omicron (.par + data)"
+
+#: modules/file/omicronflat.c:542
+msgid "Constant current tunnel spectroscopy (CITS) is not supported."
+msgstr ""
+
+#: modules/file/omicronflat.c:551
+#, fuzzy
+msgid "Single point spectroscopy (SPS) is not supported."
+msgstr "Formato file versione  %.1f  non supportato."
+
+#: modules/file/omicronflat.c:560
+#, fuzzy
+msgid "Force-distance curve are not supported."
+msgstr "Annotazioni NetCDF non supportate."
+
+#: modules/file/omicronflat.c:569
+#, fuzzy
+msgid "Temporally varying signal is not supported."
+msgstr "Formato file versione  %.1f  non supportato."
 
 #: modules/file/omicronmatrix.c:184
 #, fuzzy
@@ -3201,273 +3235,273 @@ msgstr ""
 "TARGA. L'importazione si basa su GDK per cui potrebbe dipendere dal tipo di "
 "installazione."
 
-#: modules/file/pixmap.c:708
+#: modules/file/pixmap.c:709
 msgid "Pixmap image import must be run as interactive."
 msgstr ""
 "L'importazione di immagini Pixmap deve essere lanciata in modo interattivo."
 
-#: modules/file/pixmap.c:716
+#: modules/file/pixmap.c:717
 #, c-format
 msgid "Pixmap has not registered file type `%s'."
 msgstr "Pixmap non ha un file tipo registrato `%s'."
 
-#: modules/file/pixmap.c:730
+#: modules/file/pixmap.c:731
 #, c-format
 msgid "Cannot get pixbuf loader: %s."
 msgstr ""
 
-#: modules/file/pixmap.c:742 modules/file/pixmap.c:752
+#: modules/file/pixmap.c:743 modules/file/pixmap.c:753
 #, c-format
 msgid "Pixbuf loader refused data: %s."
 msgstr ""
 
-#: modules/file/pixmap.c:914
+#: modules/file/pixmap.c:915
 #, fuzzy
 msgid "Red"
 msgstr "/_Ripeti"
 
-#: modules/file/pixmap.c:915
+#: modules/file/pixmap.c:916
 msgid "Green"
 msgstr ""
 
-#: modules/file/pixmap.c:916
+#: modules/file/pixmap.c:917
 #, fuzzy
 msgid "Blue"
 msgstr "Valore"
 
-#: modules/file/pixmap.c:917
+#: modules/file/pixmap.c:918
 #, fuzzy
 msgid "Value (max)"
 msgstr "Valore scala:"
 
-#: modules/file/pixmap.c:918
+#: modules/file/pixmap.c:919
 msgid "RGB sum"
 msgstr ""
 
-#: modules/file/pixmap.c:919
+#: modules/file/pixmap.c:920
 msgid "Alpha"
 msgstr ""
 
-#: modules/file/pixmap.c:943
+#: modules/file/pixmap.c:944
 msgid "Import "
 msgstr "Importa"
 
-#: modules/file/pixmap.c:969 modules/file/rawfile.c:600
+#: modules/file/pixmap.c:970 modules/file/rawfile.c:600
 #: modules/file/rawxyz.c:516 modules/process/dimensions.h:422
 msgid "Resolution"
 msgstr "Risoluzione"
 
-#: modules/file/pixmap.c:976 modules/file/rawfile.c:605
+#: modules/file/pixmap.c:977 modules/file/rawfile.c:605
 #: modules/file/rawxyz.c:520 modules/process/dimensions.h:428
 msgid "_Horizontal size:"
 msgstr "Dimensione orizzontale:"
 
-#: modules/file/pixmap.c:976 modules/file/pixmap.c:983
+#: modules/file/pixmap.c:977 modules/file/pixmap.c:984
 msgid "px"
 msgstr "px"
 
-#: modules/file/pixmap.c:983 modules/file/rawfile.c:612
+#: modules/file/pixmap.c:984 modules/file/rawfile.c:612
 #: modules/file/rawxyz.c:535 modules/process/dimensions.h:431
 msgid "_Vertical size:"
 msgstr "Dimensione verticale:"
 
-#: modules/file/pixmap.c:1014 modules/file/rawfile.c:623
+#: modules/file/pixmap.c:1015 modules/file/rawfile.c:623
 #: modules/file/rawxyz.c:569 modules/process/dimensions.h:444
 msgid "Physical Dimensions"
 msgstr "Dimensioni fisiche"
 
-#: modules/file/pixmap.c:1024
+#: modules/file/pixmap.c:1025
 msgid "_Width"
 msgstr "Larghezza"
 
-#: modules/file/pixmap.c:1046 modules/file/pixmap.c:1101
+#: modules/file/pixmap.c:1047 modules/file/pixmap.c:1102
 #: modules/file/rawfile.c:655 modules/file/rawfile.c:711
 #: modules/process/calibrate.c:338 modules/process/calibrate.c:419
 #: modules/process/dimensions.h:156
 msgid "Change"
 msgstr "Cambia"
 
-#: modules/file/pixmap.c:1059
+#: modules/file/pixmap.c:1060
 msgid "H_eight"
 msgstr "Altezza"
 
-#: modules/file/pixmap.c:1066 modules/file/rawfile.c:675
+#: modules/file/pixmap.c:1067 modules/file/rawfile.c:675
 #: modules/file/rawxyz.c:550
 msgid "Identical _measures"
 msgstr "Misure Identiche"
 
-#: modules/file/pixmap.c:1078 modules/file/rawfile.c:687
+#: modules/file/pixmap.c:1079 modules/file/rawfile.c:687
 msgid "_Z-scale (per sample unit):"
 msgstr "_Scala Z (per unità di campione):"
 
-#: modules/file/pixmap.c:1111
+#: modules/file/pixmap.c:1112
 msgid ""
 "Warning: Colorful images cannot be reliably mapped to meaningful values."
 msgstr ""
 "Attenzione: Immagini molto colorate non possono essere convertite in modo "
 "affidabile ad una mappatura che abbia valori significativi"
 
-#: modules/file/pixmap.c:1129
+#: modules/file/pixmap.c:1130
 msgid "Use"
 msgstr "Uso"
 
-#: modules/file/pixmap.c:1129
+#: modules/file/pixmap.c:1130
 msgid "as data"
 msgstr "come dati"
 
-#: modules/file/pixmap.c:1325 modules/file/rawfile.c:1326
+#: modules/file/pixmap.c:1326 modules/file/rawfile.c:1326
 #: modules/process/calibrate.c:815 modules/process/dimensions.h:190
 msgid "Change Units"
 msgstr "Cambia unità"
 
-#: modules/file/pixmap.c:1339 modules/file/rawfile.c:1340
+#: modules/file/pixmap.c:1340 modules/file/rawfile.c:1340
 #: modules/process/calibrate.c:829 modules/process/dimensions.h:203
 msgid "New _units:"
 msgstr "Nuove unità:"
 
-#: modules/file/pixmap.c:1405 modules/file/pixmap.c:1415
+#: modules/file/pixmap.c:1406 modules/file/pixmap.c:1416
 #, c-format
 msgid "libpng initialization error (in %s)"
 msgstr ""
 
-#: modules/file/pixmap.c:1426
+#: modules/file/pixmap.c:1427
 msgid "libpng error occured"
 msgstr ""
 
-#: modules/file/pixmap.c:1493 modules/file/pixmap.c:1521
+#: modules/file/pixmap.c:1494 modules/file/pixmap.c:1522
 #, c-format
 msgid "Pixbuf save failed: %s."
 msgstr "Salvataggio pixbuf fallito: %s."
 
-#: modules/file/pixmap.c:1866
+#: modules/file/pixmap.c:1867
 msgid "Image is too large to be stored as TARGA."
 msgstr "Immagine troppo grande per essere salvata come TARGA."
 
-#: modules/file/pixmap.c:1944
+#: modules/file/pixmap.c:1945
 msgid "Data must be displayed in a window for pixmap export."
 msgstr ""
 "I dati devono essere mostrati in una finestra per esssere esportati come "
 "pixmap"
 
-#: modules/file/pixmap.c:2602
+#: modules/file/pixmap.c:2603
 msgid "Change Inset Color"
 msgstr "Cambia colore "
 
-#: modules/file/pixmap.c:2661
+#: modules/file/pixmap.c:2662
 #, c-format
 msgid "Export %s"
 msgstr "Esporta %s"
 
-#: modules/file/pixmap.c:2692
+#: modules/file/pixmap.c:2693
 msgid "Scaling"
 msgstr "Ridimensionamento"
 
-#: modules/file/pixmap.c:2701
+#: modules/file/pixmap.c:2702
 msgid "_Zoom:"
 msgstr "Ingrandisci:"
 
-#: modules/file/pixmap.c:2710 modules/file/rawfile.c:632
+#: modules/file/pixmap.c:2711 modules/file/rawfile.c:632
 #: modules/process/crosscor.c:197 modules/process/dimensions.h:450
 #: modules/process/tip_blind.c:264
 msgid "_Width:"
 msgstr "Larghezza:"
 
-#: modules/file/pixmap.c:2719 modules/process/grain_mark.c:312
+#: modules/file/pixmap.c:2720 modules/process/grain_mark.c:312
 #: modules/process/grain_rem_threshold.c:280 modules/process/obj_synth.c:584
 #: modules/process/tip_blind.c:271
 msgid "_Height:"
 msgstr "Altezza:"
 
-#: modules/file/pixmap.c:2728
+#: modules/file/pixmap.c:2729
 msgid "Scale text _proportionally"
 msgstr "Scala testo _in proporzione"
 
-#: modules/file/pixmap.c:2743
+#: modules/file/pixmap.c:2744
 msgid "_Font size:"
 msgstr "_Dimensione carattere:"
 
-#: modules/file/pixmap.c:2757
+#: modules/file/pixmap.c:2758
 msgid "Draw _mask"
 msgstr "Disegna _Maschera"
 
-#: modules/file/pixmap.c:2766
+#: modules/file/pixmap.c:2767
 msgid "Draw _selection"
 msgstr "Disegna _selezione"
 
-#: modules/file/pixmap.c:2782
+#: modules/file/pixmap.c:2783
 msgid "Grayscale Mode"
 msgstr ""
 
-#: modules/file/pixmap.c:2786
+#: modules/file/pixmap.c:2787
 msgid "Export as 1_6 bit grayscale"
 msgstr ""
 
-#: modules/file/pixmap.c:2812
+#: modules/file/pixmap.c:2813
 #, fuzzy
 msgid "Lateral Scale"
 msgstr "Scala laterale:"
 
-#: modules/file/pixmap.c:2819 modules/file/pixmap.c:2915
+#: modules/file/pixmap.c:2820 modules/file/pixmap.c:2916
 #: modules/process/immerse.c:367
 msgid "_None"
 msgstr "_Nessuno"
 
-#: modules/file/pixmap.c:2820
+#: modules/file/pixmap.c:2821
 msgid "_Rulers"
 msgstr "_Righelli"
 
-#: modules/file/pixmap.c:2821
+#: modules/file/pixmap.c:2822
 msgid "_Inset scale bar"
 msgstr ""
 
-#: modules/file/pixmap.c:2826
+#: modules/file/pixmap.c:2827
 #, fuzzy
 msgid "Color:"
 msgstr "Colore"
 
-#: modules/file/pixmap.c:2842 modules/process/immerse.c:323
+#: modules/file/pixmap.c:2843 modules/process/immerse.c:323
 msgid "Position:"
 msgstr "Posizione:"
 
-#: modules/file/pixmap.c:2847
+#: modules/file/pixmap.c:2848
 #, fuzzy
 msgid "left"
 msgstr "Sinistra"
 
-#: modules/file/pixmap.c:2851
+#: modules/file/pixmap.c:2852
 #, fuzzy
 msgid "center"
 msgstr "Centro delle X"
 
-#: modules/file/pixmap.c:2855
+#: modules/file/pixmap.c:2856
 #, fuzzy
 msgid "right"
 msgstr "Destra"
 
-#: modules/file/pixmap.c:2860
+#: modules/file/pixmap.c:2861
 msgid "top"
 msgstr ""
 
-#: modules/file/pixmap.c:2872
+#: modules/file/pixmap.c:2873
 msgid "bottom"
 msgstr ""
 
-#: modules/file/pixmap.c:2883
+#: modules/file/pixmap.c:2884
 #, fuzzy
 msgid "_Length:"
 msgstr "Lunghezza"
 
-#: modules/file/pixmap.c:2900
+#: modules/file/pixmap.c:2901
 #, fuzzy
 msgid "_Auto"
 msgstr "Autore"
 
-#: modules/file/pixmap.c:2908
+#: modules/file/pixmap.c:2909
 #, fuzzy
 msgid "Value Scale"
 msgstr "Valore scala:"
 
-#: modules/file/pixmap.c:2916
+#: modules/file/pixmap.c:2917
 msgid "_False color ruler"
 msgstr "Righello _Falsi colori"
 
@@ -3489,27 +3523,76 @@ msgstr "Importa file dati PNI Pacific Nanotechnology."
 msgid "PNI files (.pni)"
 msgstr "File PNI (.pni)"
 
-#: modules/file/psia.c:237
+#: modules/file/psia.c:236
 msgid "Imports PSIA data files."
 msgstr "Importa file dati PSIA"
 
-#: modules/file/psia.c:250
+#: modules/file/psia.c:249
 msgid "PSIA data files (.tiff)"
 msgstr "File dati PSIA (.tiff)"
 
-#: modules/file/psia.c:333
+#: modules/file/psia.c:332
 msgid "Data tag is missing."
 msgstr "Il tag dei dati è mancante"
 
-#: modules/file/psia.c:509
+#: modules/file/psia.c:508
 #, fuzzy, c-format
 msgid "Header is too short (only %lu bytes)."
 msgstr "Intestazione file troppo corta (solo %d bytes)."
 
-#: modules/file/psia.c:622
+#: modules/file/psia.c:621
 #, fuzzy, c-format
 msgid "Spectroscopy header is too short (only %lu bytes)."
 msgstr "Intestazione file troppo corta (solo %d bytes)."
+
+#: modules/file/pt3file.c:290
+#, fuzzy
+msgid "Imports SymPhoTime data files, version 2.0."
+msgstr "Importa file dati Shimadzu SPM versione 2."
+
+#: modules/file/pt3file.c:303
+#, fuzzy
+msgid "PicoHarp files (.pt3)"
+msgstr "File DME  (.img)"
+
+#: modules/file/pt3file.c:389
+#, fuzzy
+msgid "T2 measurement mode is not implemented."
+msgstr "Il tipo dati %d non è valido o non supportato."
+
+#: modules/file/pt3file.c:395
+msgid "Only PI E710 and KDT180-100-Im imaging formats are implemented."
+msgstr ""
+
+#: modules/file/pt3file.c:481 modules/file/pt3file.c:583
+#, fuzzy
+msgid "File header is truncated."
+msgstr "Intestazione del file troppo corta."
+
+#: modules/file/pt3file.c:533
+#, c-format
+msgid "Measurement mode must be 2 or 3; %u is invalid."
+msgstr ""
+
+#: modules/file/pt3file.c:539 modules/file/pt3file.c:551
+#, fuzzy
+msgid "Only area imaging files are supported."
+msgstr "Sono supportati solo file immagine e file linea"
+
+#: modules/file/pt3file.c:570
+#, fuzzy, c-format
+msgid "Unknown instrument number %u."
+msgstr "Versione formato  %c sconosciuta."
+
+#: modules/file/pt3file.c:577
+#, c-format
+msgid "Wrong imaging header size: %u instead of %u."
+msgstr ""
+
+#: modules/file/pt3file.c:726
+#, c-format
+msgid "Number of line triggers %u is smaller than the number of scan lines %u."
+msgstr ""
 
 #: modules/file/quesant.c:64
 #, fuzzy
@@ -4151,15 +4234,15 @@ msgstr "Importa file dati WSxM Nanotec "
 msgid "Sensolytics text files (.dat)"
 msgstr "file Createc (.dat)"
 
-#: modules/file/shimadzu.c:98
+#: modules/file/shimadzu.c:97
 msgid "Imports Shimadzu SPM data files, version 2."
 msgstr "Importa file dati Shimadzu SPM versione 2."
 
-#: modules/file/shimadzu.c:111
+#: modules/file/shimadzu.c:110
 msgid "Shimadzu files"
 msgstr "File Shimadzu"
 
-#: modules/file/shimadzu.c:318
+#: modules/file/shimadzu.c:317
 #, c-format
 msgid "Cannot parse data values after %d of %d."
 msgstr ""
@@ -7063,39 +7146,48 @@ msgstr "Livello Piano"
 msgid "Level Rotate"
 msgstr "Ruota Livello"
 
-#: modules/process/linecorrect.c:62
+#: modules/process/linecorrect.c:64
 msgid "Corrects line defects (mostly experimental algorithms)."
 msgstr "Corregge i difetti lineari (per lo più algoritmi sperimentali)."
 
-#: modules/process/linecorrect.c:76
+#: modules/process/linecorrect.c:78
 msgid "/_Correct Data/M_odus Line Correction"
 msgstr "/_Correzione Dati/Modalità Correzione lineare"
 
-#: modules/process/linecorrect.c:80
+#: modules/process/linecorrect.c:82
 msgid "Correct lines by matching height modus"
 msgstr "Correzione linee con il metodo dell'accoppiamento delle altezze"
 
-#: modules/process/linecorrect.c:83
+#: modules/process/linecorrect.c:85
 msgid "/_Correct Data/M_edian Line Correction"
 msgstr "/_Correzione Dati/Correzione linea mediana"
 
-#: modules/process/linecorrect.c:87
+#: modules/process/linecorrect.c:89
 msgid "Correct lines by matching height median"
 msgstr "Correzione linee per accoppiamento linea mediana"
 
-#: modules/process/linecorrect.c:90
+#: modules/process/linecorrect.c:92
+#, fuzzy
+msgid "/_Correct Data/Median Di_fference Line Correction"
+msgstr "/_Correzione Dati/Correzione linea mediana"
+
+#: modules/process/linecorrect.c:96
+msgid "Correct lines by zeroing median of differences between neighbor lines"
+msgstr ""
+
+#: modules/process/linecorrect.c:100
 msgid "/_Correct Data/Ma_tch Line Correction"
 msgstr "/_Correzione Dati/Accoppia Correzione lineare"
 
-#: modules/process/linecorrect.c:94
+#: modules/process/linecorrect.c:104
 msgid "Correct lines by matching flat segments"
 msgstr "Correzione linee per accoppiamento segmenti piatti"
 
-#: modules/process/linecorrect.c:97
+#: modules/process/linecorrect.c:107
 msgid "/_Correct Data/Ste_p Line Correction"
 msgstr "/_Correzione Dati/ Correzione Ste_p Line  "
 
-#: modules/process/linecorrect.c:101
+#: modules/process/linecorrect.c:111
 msgid "Correct steps in lines"
 msgstr "Correzione step nelle linee "
 
@@ -7610,7 +7702,8 @@ msgid "/_Level/_Polynomial Background..."
 msgstr "/_Livella/Sottofondo polinomiale..."
 
 #: modules/process/polylevel.c:135
-msgid "Remove polynomial backgroud"
+#, fuzzy
+msgid "Remove polynomial background"
 msgstr "Rimozione sottofondo polinomiale"
 
 #: modules/process/polylevel.c:361
@@ -9247,10 +9340,6 @@ msgstr ""
 
 #~ msgid "Output"
 #~ msgstr "Output"
-
-#, fuzzy
-#~ msgid "Data type '%d' is not implemented."
-#~ msgstr "Il tipo dati %d non è valido o non supportato."
 
 #~ msgid "Plane Fit Mode"
 #~ msgstr "Adattamento Planare"
