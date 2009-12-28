@@ -67,7 +67,7 @@ static GwyModuleInfo module_info = {
     N_("Automatic facet-orientation based levelling. "
        "Levels data to make facets point up."),
     "Yeti <yeti@gwyddion.net>",
-    "2.2",
+    "2.3",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -214,8 +214,8 @@ facet_level_coeffs(GwyDataField *dfield, GwyDataField *mfield,
                     && newmrow[j] >= 1.0 && mrow[j] >= 1.0
                     && newmrow[j-1] >= 1.0 && mrow[j-1] >= 1.0)
                 || (masking_type == GWY_MASK_EXCLUDE
-                    && newmrow[j] <= 1.0 && mrow[j] <= 1.0
-                    && newmrow[j-1] <= 1.0 && mrow[j-1] <= 1.0)) {
+                    && newmrow[j] <= 0.0 && mrow[j] <= 0.0
+                    && newmrow[j-1] <= 0.0 && mrow[j-1] <= 0.0)) {
                 n++;
                 vx = 0.5*(newrow[j] + row[j] - newrow[j-1] - row[j-1])/xr;
                 vy = 0.5*(newrow[j-1] + newrow[j] - row[j-1] - row[j])/yr;
@@ -228,7 +228,7 @@ facet_level_coeffs(GwyDataField *dfield, GwyDataField *mfield,
     if (n < 4)
         return FALSE;
 
-    sigma2 = 0.05*sigma2/(xres*yres);
+    sigma2 = 0.05*sigma2/n;
 
     sumvx = sumvy = sumvz = 0.0;
     newrow = data;
@@ -245,8 +245,8 @@ facet_level_coeffs(GwyDataField *dfield, GwyDataField *mfield,
                     && newmrow[j] >= 1.0 && mrow[j] >= 1.0
                     && newmrow[j-1] >= 1.0 && mrow[j-1] >= 1.0)
                 || (masking_type == GWY_MASK_EXCLUDE
-                    && newmrow[j] <= 1.0 && mrow[j] <= 1.0
-                    && newmrow[j-1] <= 1.0 && mrow[j-1] <= 1.0)) {
+                    && newmrow[j] <= 0.0 && mrow[j] <= 0.0
+                    && newmrow[j-1] <= 0.0 && mrow[j-1] <= 0.0)) {
                 vx = 0.5*(newrow[j] + row[j] - newrow[j-1] - row[j-1])/xr;
                 vy = 0.5*(newrow[j-1] + newrow[j] - row[j-1] - row[j])/yr;
                 /* XXX: I thought q alone (i.e., normal normalization) would
