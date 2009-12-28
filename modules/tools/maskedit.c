@@ -121,7 +121,7 @@ static GwyModuleInfo module_info = {
     N_("Mask editor tool, allows to interactively add or remove parts "
        "of mask."),
     "Yeti <yeti@gwyddion.net>",
-    "2.7",
+    "2.8",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -721,7 +721,7 @@ gwy_tool_mask_editor_grow(GwyToolMaskEditor *tool)
              * in the last iteration, i.e. grains[k] == 0 but mask[k] != 0 */
             for (i = 0; i < yres; i++) {
                 for (j = 0; j < xres; j++) {
-                    gint g1, g2, g3, g4;
+                    gint g1, g2, g3, g4, gno;
                     gint k = i*xres + j;
 
                     if (grains[k] || data[k] <= 0.0)
@@ -731,16 +731,14 @@ gwy_tool_mask_editor_grow(GwyToolMaskEditor *tool)
                     g2 = j > 0      ? grains[k-1]    : 0;
                     g3 = j < xres-1 ? grains[k+1]    : 0;
                     g4 = i < yres-1 ? grains[k+xres] : 0;
-                    if ((!g1 || !g2 || g1 == g2)
-                        && (!g2 || !g3 || g2 == g3)
-                        && (!g3 || !g4 || g3 == g4)
-                        && (!g4 || !g1 || g4 == g1)
-                        && (!g3 || !g1 || g3 == g1)
-                        && (!g4 || !g2 || g4 == g2)) {
-                        /* All are equal or zeroes, therefore bitwise or
-                         * gives the nonzero value sought. */
-                        grains[k] = g1 | g2 | g3 | g4;
-                        continue;
+                    /* If all are equal or zeroes bitwise or
+                     * gives us the nonzero value sought. */
+                    gno = g1 | g2 | g3 | g4;
+                    if ((!g1 || g1 == gno)
+                        && (!g2 || g2 == gno)
+                        && (!g3 || g3 == gno)
+                        && (!g4 || g4 == gno)) {
+                        grains[k] = gno;
                     }
                     else {
                         /* Now we have a conflict and it has to be resolved.
