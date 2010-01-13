@@ -1,6 +1,6 @@
 /*
  *  IonScope SICM file format importer
- *  Copyright (C) 2008 Matthew Caldwell.
+ *  Copyright (C) 2008-2010 Matthew Caldwell.
  *  E-mail: m.caldwell@ucl.ac.uk
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -142,7 +142,22 @@ typedef struct _SICMImage
     
     gint16  loopMode;                   /* 615 */
     
-    guchar  space[49];                  /* 617 */
+    /* Hopping Mode Record */
+    guint16 hopAmp;                     /* 617 */
+    guint16 riseRate;                   /* 619 */
+    guint16 riseToFallTime;             /* 621 */
+    guint16 fallRate;                   /* 623 */
+    gint16  dcSetPoint;                 /* 625 */
+    guchar  prescanSqrSize;             /* 627 */
+    guint16 prescanHopAmp;              /* 628 */
+    guint16 minHopAmp;                  /* 630 */
+    guchar  absHopMode;                 /* 632 */
+    guchar  fastPrescanMode;            /* 633 */
+    guchar  resLevels[8];               /* 634 */
+    guint16 resThresholds[8];           /* 642 */
+    guchar  numResLevels;               /* 658 */
+    
+    guchar  space[7];                   /* 659 */
     
     /* Info Strings */
     guchar  modeStr[41];                /* 666 */
@@ -177,9 +192,9 @@ static GwyModuleInfo module_info =
     &module_register,
     N_("Imports IonScope SICM data files."),
     "Matthew Caldwell <m.caldwell@ucl.ac.uk>",
-    "1.0",
+    "1.1",
     "Matthew Caldwell",
-    "2007",
+    "2008",
 };
 GWY_MODULE_QUERY(module_info)
 
@@ -362,9 +377,25 @@ static GwyContainer* sicm_load ( const gchar *filename,
 
     sicm.loopMode = gwy_get_gint16_le(&p);
     
-    memcpy(sicm.space, p+1, 48);
-    sicm.space[48] = 0;
-    p += 49;
+    sicm.hopAmp = gwy_get_guint16_le(&p);
+    sicm.riseRate = gwy_get_guint16_le(&p);
+    sicm.riseToFallTime = gwy_get_guint16_le(&p);
+    sicm.fallRate = gwy_get_guint16_le(&p);
+    sicm.dcSetPoint = gwy_get_gint16_le(&p);
+    sicm.prescanSqrSize = *p++;
+    sicm.prescanHopAmp = gwy_get_guint16_le(&p);
+    sicm.minHopAmp = gwy_get_guint16_le(&p);
+    sicm.absHopMode = *p++;
+    sicm.fastPrescanMode = *p++;
+    for ( i = 0; i < 8; ++i )
+        sicm.resLevels[i] = *p++;
+    for ( i = 0; i < 8; ++i )
+        sicm.resThresholds[i] = gwy_get_guint16_le(&p);
+    sicm.numResLevels = *p++;
+    
+    memcpy(sicm.space, p+1, 6);
+    sicm.space[6] = 0;
+    p += 7;
     
     memcpy(sicm.modeStr, p+1, 40);
     sicm.modeStr[40] = 0;
@@ -605,13 +636,62 @@ static GwyContainer* sicm_load ( const gchar *filename,
                                      g_strdup(sicm.fitting ? "yes" : "no"));
     gwy_container_set_string_by_name(meta,
                                      "Polarity",
-                                     g_strdup(sicm.fitting ? "positive" : "negative"));
+                                     g_strdup(sicm.polarity ? "positive" : "negative"));
     gwy_container_set_string_by_name(meta,
                                      "~ 1D Scan",
-                                     g_strdup(sicm.fitting ? "yes" : "no"));
+                                     g_strdup(sicm.scan1D ? "yes" : "no"));
     gwy_container_set_string_by_name(meta,
                                      "Start Center",
-                                     g_strdup(sicm.fitting ? "yes" : "no"));
+                                     g_strdup(sicm.startCenter ? "yes" : "no"));
+    
+    /* Format has been updated to add fields that are only valid in hopping mode.
+       We prefix these with an asterisk so they sort together.
+       In earlier versions this part of the header was left empty,
+       so for older files all these fields will be zero even when
+       hopping was used. */
+    gwy_container_set_string_by_name(meta,
+                                     "* Hop Amplitude",
+                                     g_strdup_printf("%d nm", sicm.hopAmp));
+    gwy_container_set_string_by_name(meta,
+                                     "* Rise Rate",
+                                     g_strdup_printf("%d nm/ms", sicm.riseRate));
+    gwy_container_set_string_by_name(meta,
+                                     "* Rise-to-Fall Time",
+                                     g_strdup_printf("%d ms", sicm.riseToFallTime));
+    gwy_container_set_string_by_name(meta,
+                                     "* Fall Rate",
+                                     g_strdup_printf("%d nm/ms", sicm.fallRate));
+    gwy_container_set_string_by_name(meta,
+                                     "* DC Break Set Point",
+                                     g_strdup_printf("%d permille", sicm.dcSetPoint));
+    gwy_container_set_string_by_name(meta,
+                                     "* Prescan Square Size",
+                                     g_strdup_printf("%d pixels", sicm.prescanSqrSize));
+    gwy_container_set_string_by_name(meta,
+                                     "* Prescan Hop Amplitude",
+                                     g_strdup_printf("%d nm", sicm.prescanHopAmp));
+    gwy_container_set_string_by_name(meta,
+                                     "* Minimum Hop Amplitude",
+                                     g_strdup_printf("%d nm", sicm.minHopAmp));
+    gwy_container_set_string_by_name(meta,
+                                     "* Absolute Hopping Mode",
+                                     g_strdup(sicm.absHopMode ? "yes" : "no"));
+    gwy_container_set_string_by_name(meta,
+                                     "* Fast Prescan Mode",
+                                     g_strdup(sicm.fastPrescanMode ? "yes" : "no"));
+    gwy_container_set_string_by_name(meta,
+                                     "* Resolution Levels",
+                                     g_strdup_printf("[%d, %d, %d, %d, %d, %d, %d, %d] (pixels)",
+                                     sicm.resLevels[0], sicm.resLevels[1], sicm.resLevels[2], sicm.resLevels[3],
+                                     sicm.resLevels[4], sicm.resLevels[4], sicm.resLevels[6], sicm.resLevels[7]));
+    gwy_container_set_string_by_name(meta,
+                                     "* Resolution Thresholds",
+                                     g_strdup_printf("[%d, %d, %d, %d, %d, %d, %d, %d] (nm)",
+                                     sicm.resThresholds[0], sicm.resThresholds[1], sicm.resThresholds[2], sicm.resThresholds[3],
+                                     sicm.resThresholds[4], sicm.resThresholds[4], sicm.resThresholds[6], sicm.resThresholds[7]));
+    gwy_container_set_string_by_name(meta,
+                                     "* Resolution Levels Used",
+                                     g_strdup_printf("%d", sicm.numResLevels));
                                      
     gwy_container_set_object_by_name(container, "/0/meta", meta);
     g_object_unref(meta);
