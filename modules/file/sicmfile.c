@@ -192,9 +192,9 @@ static GwyModuleInfo module_info =
     &module_register,
     N_("Imports IonScope SICM data files."),
     "Matthew Caldwell <m.caldwell@ucl.ac.uk>",
-    "1.1",
+    "1.2",
     "Matthew Caldwell",
-    "2008",
+    "2007-2010",
 };
 GWY_MODULE_QUERY(module_info)
 
@@ -438,7 +438,7 @@ static GwyContainer* sicm_load ( const gchar *filename,
             /* topography: scale to piezo range, which we don't explicitly
                know but can determine from sensitivity and voltage range
                with a 1e-6 factor to convert from microns to metres */
-            scaling = sicm.piezoCalZ * sicm.fsdHVA * sicm.fsdDAC * 1e-6 / 65534.0;
+            scaling = sicm.piezoCalZ * sicm.fsdHVA * sicm.fsdDAC * 1e-6 / 32767.0;
             unit_name = "m";
     }
     
