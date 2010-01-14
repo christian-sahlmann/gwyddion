@@ -4,7 +4,7 @@ msgstr ""
 "Project-Id-Version: Gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
 "POT-Creation-Date: 2009-12-15 11:11+0100\n"
-"PO-Revision-Date: 2009-12-14 00:00+0100\n"
+"PO-Revision-Date: 2010-01-14 23:20+0100\n"
 "Last-Translator: Yeti <yeti@gwyddion.net>\n"
 "Language-Team: Czech\n"
 "MIME-Version: 1.0\n"
@@ -665,7 +665,7 @@ msgstr "_Text:"
 
 #: libgwydgets/gwy3dwindow.c:980
 msgid "Move label"
-msgstr "Pos_uň popisek"
+msgstr "Posuň popisek"
 
 #: libgwydgets/gwy3dwindow.c:989
 msgid "_Horizontally:"
