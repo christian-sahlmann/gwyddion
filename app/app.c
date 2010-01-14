@@ -437,7 +437,7 @@ gwy_app_save_3d_export(GtkWidget *dialog,
                        gint response,
                        Gwy3DWindow *gwy3dwindow)
 {
-    gchar *filename_sys, *filename_utf8;
+    gchar *filename_sys, *filename_utf8, *s, *filetype = NULL;
     GdkPixbuf *pixbuf;
     GtkWidget *gwy3dview;
     GError *err = NULL;
@@ -453,7 +453,19 @@ gwy_app_save_3d_export(GtkWidget *dialog,
 
     pixbuf = gwy_3d_view_get_pixbuf(GWY_3D_VIEW(gwy3dview));
     filename_utf8 = g_filename_to_utf8(filename_sys, -1, NULL, NULL, NULL);
-    if (!gdk_pixbuf_save(pixbuf, filename_sys, "png", &err, NULL)) {
+    if ((s = strrchr(filename_utf8, '.'))) {
+        filetype = g_ascii_strdown(s+1, -1);
+        if (gwy_strequal(filetype, "jpg")) {
+            g_free(filetype);
+            filetype = g_strdup("jpeg");
+        }
+        else if (gwy_strequal(filetype, "tif")) {
+            g_free(filetype);
+            filetype = g_strdup("tiff");
+        }
+    }
+    if (!gdk_pixbuf_save(pixbuf, filename_sys, filetype ? filetype : "png",
+                         &err, NULL)) {
         dialog = gtk_message_dialog_new(NULL,
                                         GTK_DIALOG_DESTROY_WITH_PARENT,
                                         GTK_MESSAGE_ERROR,
@@ -466,6 +478,7 @@ gwy_app_save_3d_export(GtkWidget *dialog,
         gtk_widget_destroy(dialog);
         g_clear_error(&err);
     }
+    g_free(filetype);
     g_free(filename_sys);
     g_object_unref(pixbuf);
     g_free(g_object_get_data(G_OBJECT(gwy3dwindow), "gwy-app-export-filename"));
