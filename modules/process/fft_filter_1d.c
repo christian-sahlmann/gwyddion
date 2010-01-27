@@ -126,7 +126,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("FFT filtering"),
     "Petr Klapetek <petr@klapetek.cz>",
-    "2.3",
+    "2.4",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -419,6 +419,8 @@ restore_ps(Fftf1dControls *controls, Fftf1dArgs *args)
     gwy_data_line_fill(controls->weights, 1);
     gwy_data_line_resample(dline, MAX_PREV, args->interpolation);
 
+    /* use magnitude instead of power so lesser components become visible */
+    gwy_data_line_sqrt(dline);
     gwy_data_line_multiply(dline, 1.0/gwy_data_line_get_max(dline));
 
     gwy_graph_model_remove_all_curves(controls->gmodel);
@@ -427,7 +429,7 @@ restore_ps(Fftf1dControls *controls, Fftf1dArgs *args)
     gwy_graph_curve_model_set_data_from_dataline(cmodel, dline, 0, 0);
     g_object_set(cmodel,
                  "mode", GWY_GRAPH_CURVE_LINE,
-                 "description", "PSDF",
+                 "description", "Fourier Modulus Density",
                   NULL);
 
     gwy_graph_model_add_curve(controls->gmodel, cmodel);

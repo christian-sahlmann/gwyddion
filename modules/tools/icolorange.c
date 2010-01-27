@@ -121,7 +121,7 @@ static GwyModuleInfo module_info = {
        "color scale should map to, either on data or on height distribution "
        "histogram."),
     "Yeti <yeti@gwyddion.net>",
-    "3.9",
+    "3.10",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -823,6 +823,9 @@ gwy_tool_color_range_update_histogram(GwyToolColorRange *tool)
     }
 
     gwy_data_field_dh(plain_tool->data_field, tool->heightdist, 0);
+    /* rescale to sqrt to make more readable  */
+    gwy_data_line_sqrt(tool->heightdist);
+  
     gwy_graph_curve_model_set_data_from_dataline(cmodel, tool->heightdist,
                                                  0, 0);
 }

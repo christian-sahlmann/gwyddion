@@ -188,7 +188,7 @@ void           gwy_data_line_subtract_polynom      (GwyDataLine *data_line,
                                                     gint n,
                                                     const gdouble *coeffs);
 void           gwy_data_line_cumulate              (GwyDataLine *data_line);
-
+void           gwy_data_line_sqrt                  (GwyDataLine *data_line);
 
 G_END_DECLS
 

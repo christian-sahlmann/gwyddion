@@ -1586,6 +1586,26 @@ gwy_data_line_cumulate(GwyDataLine *data_line)
     }
 }
 
+/**
+ * gwy_data_line_sqrt:
+ * @data_line: A data line.
+ *
+ * Applies sqrt() to each element in a data line.
+ **/
+void
+gwy_data_line_sqrt(GwyDataLine *data_line)
+{
+    int i, res;
+    gdouble *data;
+    g_return_if_fail(GWY_IS_DATA_LINE(data_line));
+
+    data = data_line->data;
+    res = data_line->res;
+    for (i = 0; i < res; i++) {
+        data[i] = sqrt(data[i]);
+    }
+}
+
 
 /************************** Documentation ****************************/
 
