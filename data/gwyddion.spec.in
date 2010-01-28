@@ -66,6 +66,12 @@ BuildRequires: gtksourceview-devel
 %define configureopts --enable-library-bloat
 %endif
 
+# Default the fftw package name to something, hoping the distro provides that.
+%if! %{fftw3}
+%define fftw3 fftw
+%define fftw3devel fftw-devel
+%endif
+
 %if %{enable_kde4_thumbnailer}
 BuildRequires: %{kde4libs}-devel >= 4.0
 %endif
