@@ -63,7 +63,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Quesant file format."),
     "Jan Hořák <xhorak@gmail.com>, Yeti <yeti@gwyddion.net>",
-    "0.2",
+    "0.3",
     "David Nečas (Yeti) & Jan Hořák",
     "2008",
 };
@@ -156,8 +156,9 @@ read_file_info(const guchar *buffer, gsize size,
 
         gwy_debug("%s: 0x%04x", key, value);
 
-        /* Do not take values past the end of file into account at all. */
-        if (value >= size)
+        /* Do not take values past the end of file and zeros into account at
+         * all.   The software seems to sometimes emit silly extra fields. */
+        if (!value || value >= size)
             continue;
 
         else if (gwy_strequal(key, "DESC"))
