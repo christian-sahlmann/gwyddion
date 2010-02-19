@@ -2311,18 +2311,19 @@ gwy_container_transfer(GwyContainer *source,
                        "gwy_container_transfer().");
             break;
         }
-        if (!force && g_hash_table_lookup(dest->values, l->data))
+        g_string_truncate(key, dpflen);
+        g_string_append(key,
+                        g_quark_to_string(GPOINTER_TO_UINT(l->data))
+                        + pfdata.prefix_length);
+        quark = g_quark_from_string(key->str);
+
+        if (!force && g_hash_table_lookup(dest->values, quark))
             continue;
 
         copy = g_new0(GValue, 1);
         g_value_init(copy, G_VALUE_TYPE(val));
         g_value_copy(val, copy);
 
-        g_string_truncate(key, dpflen);
-        g_string_append(key,
-                        g_quark_to_string(GPOINTER_TO_UINT(l->data))
-                        + pfdata.prefix_length);
-        quark = g_quark_from_string(key->str);
         g_hash_table_insert(dest->values, GUINT_TO_POINTER(quark), copy);
         g_signal_emit(dest, container_signals[ITEM_CHANGED], quark, quark);
         pfdata.count++;
