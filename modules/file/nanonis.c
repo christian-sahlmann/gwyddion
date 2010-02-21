@@ -88,6 +88,10 @@ typedef struct {
      * files of 3D data.  We cannot trust direction filed then as it's set to
      * `both' although the file contains one direction only. */
     gboolean bogus_scan_time;
+    /* TRUE if we have just read a comment header and its first line.  If the
+     * next line is not tag, do not complain and consider it to be a part of
+     * the comment as they apparently can be mutiline.  This is a kluge. */
+    gboolean in_comment;
 } SXMFile;
 
 static gboolean      module_register(void);
@@ -102,7 +106,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Nanonis SXM data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.8",
+    "0.9",
     "David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
@@ -216,12 +220,26 @@ sxm_read_tag(SXMFile *sxmfile,
 
     len = strlen(line);
     if (len < 3 || line[0] != ':' || line[len-1] != ':') {
+        if (sxmfile->in_comment) {
+            /* Add the line to the comment if we are inside a comment. */
+            gchar *comment, *newcomment;
+
+            comment = g_hash_table_lookup(sxmfile->meta, "COMMENT");
+            g_assert(comment);
+
+            newcomment = g_strconcat(comment, " ", line, NULL);
+            g_hash_table_remove(sxmfile->meta, "COMMENT");
+            g_free(comment);
+            g_hash_table_insert(sxmfile->meta, "COMMENT", newcomment);
+            return TRUE;
+        }
         g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
                     _("Garbage was found in place of tag header line."));
         return FALSE;
     }
     tag = line+1;
     line[len-1] = '\0';
+    sxmfile->in_comment = FALSE;
     gwy_debug("tag: <%s>", tag);
 
     if (gwy_strequal(tag, "SCANIT_END")) {
@@ -343,6 +361,19 @@ sxm_read_tag(SXMFile *sxmfile,
 
     if (!(line = get_next_line_with_error(p, error)))
         return FALSE;
+
+    if (gwy_strequal(tag, "COMMENT")) {
+        gchar *comment;
+
+        sxmfile->in_comment = TRUE;
+        if ((comment = g_hash_table_lookup(sxmfile->meta, tag))) {
+            g_hash_table_remove(sxmfile->meta, tag);
+            g_free(comment);
+        }
+        /* XXX: Comments are built per partes and hence we have to allocate
+         * them. */
+        line = g_strdup(line);
+    }
 
     g_hash_table_insert(sxmfile->meta, tag, line);
     gwy_debug("value: <%s>", line);
@@ -675,6 +706,8 @@ sxm_load(const gchar *filename,
 
     sxm_free_z_controller(&sxmfile);
     g_free(sxmfile.data_info);
+    if ((s = g_hash_table_lookup(sxmfile.meta, "COMMENT")))
+        g_free(s);
     g_hash_table_destroy(sxmfile.meta);
     g_free(header);
     gwy_file_abandon_contents(buffer, size, NULL);
