@@ -100,6 +100,8 @@ static gint          sxm_detect     (const GwyFileDetectInfo *fileinfo,
 static GwyContainer* sxm_load       (const gchar *filename,
                                      GwyRunType mode,
                                      GError **error);
+static GwyContainer* sxm_build_meta (const SXMFile *sxmfile,
+                                     guint id);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -389,6 +391,7 @@ read_data_field(GwyContainer *container,
                 SXMDirection dir,
                 const guchar **p)
 {
+    GwyContainer *meta;
     GwyDataField *dfield, *mfield = NULL;
     gdouble *data, *mdata;
     gint j;
@@ -451,6 +454,12 @@ read_data_field(GwyContainer *container,
                                 dir == DIR_BACKWARD ? "Backward" : "Forward");
         gwy_container_set_string_by_name(container, key, title);
         /* Don't free title, container eats it */
+    }
+
+    if ((meta = sxm_build_meta(sxmfile, *id))) {
+        g_snprintf(key, sizeof(key), "/%d/meta", *id);
+        gwy_container_set_object_by_name(container, key, meta);
+        g_object_unref(meta);
     }
 
     gwy_app_channel_check_nonsquare(container, *id);
@@ -713,6 +722,60 @@ sxm_load(const gchar *filename,
     gwy_file_abandon_contents(buffer, size, NULL);
 
     return container;
+}
+
+static inline gchar*
+reformat_float(const gchar *format,
+               const gchar *value)
+{
+    gdouble v = g_ascii_strtod(value, NULL);
+    return g_strdup_printf(format, v);
+}
+
+static GwyContainer*
+sxm_build_meta(const SXMFile *sxmfile,
+               G_GNUC_UNUSED guint id)
+{
+    GwyContainer *meta = gwy_container_new();
+    const gchar *value;
+
+    if ((value = g_hash_table_lookup(sxmfile->meta, "COMMENT")))
+        gwy_container_set_string_by_name(meta, "Comment", g_strdup(value));
+    if ((value = g_hash_table_lookup(sxmfile->meta, "REC_DATE")))
+        gwy_container_set_string_by_name(meta, "Date", g_strdup(value));
+    if ((value = g_hash_table_lookup(sxmfile->meta, "REC_TIME")))
+        gwy_container_set_string_by_name(meta, "Time", g_strdup(value));
+    if ((value = g_hash_table_lookup(sxmfile->meta, "REC_TEMP")))
+        gwy_container_set_string_by_name(meta, "Temperature",
+                                         reformat_float("%g K", value));
+    if ((value = g_hash_table_lookup(sxmfile->meta, "ACQ_TIME")))
+        gwy_container_set_string_by_name(meta, "Acquistion time",
+                                         reformat_float("%g s", value));
+    if ((value = g_hash_table_lookup(sxmfile->meta, "SCAN_FILE")))
+        gwy_container_set_string_by_name(meta, "File name", g_strdup(value));
+    if ((value = g_hash_table_lookup(sxmfile->meta, "BIAS")))
+        gwy_container_set_string_by_name(meta, "Bias",
+                                         reformat_float("%g V", value));
+    if ((value = g_hash_table_lookup(sxmfile->meta, "SCAN_DIR")))
+        gwy_container_set_string_by_name(meta, "Direction", g_strdup(value));
+
+    if (sxmfile->z_controller_headers && sxmfile->z_controller_values) {
+        gchar **cvalues = sxmfile->z_controller_values;
+        gchar **cheaders = sxmfile->z_controller_headers;
+        guint i;
+
+        for (i = 0; cheaders[i] && cvalues[i]; i++) {
+            gchar *key = g_strconcat("Z controller ", cheaders[i], NULL);
+            gwy_container_set_string_by_name(meta, key, g_strdup(cvalues[i]));
+            g_free(key);
+        }
+    }
+
+    if (gwy_container_get_n_items(meta))
+        return meta;
+
+    g_object_unref(meta);
+    return NULL;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
