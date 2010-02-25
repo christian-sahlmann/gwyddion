@@ -1,3 +1,22 @@
+2.20 (0000-00-00)
+Application:
+- Translations updated: French.
+- It is possible to export 3D as image also to other support pixmap formats,
+  the format is determined by the extension.
+
+Modules:
+- SICM: Value scale was corrected and some more metadata fields are read now.
+- Facet level: Bugs when masking was used were fixed, namely in Exclude mode.
+- 1D FFT Filter, Color Range tool: square root of the density is shown on
+  graphs to visualize smaller peaks better.
+- Nanonis: Files with multi-line comments can be imported, metadata support
+  was added.
+- Omicron: Metadata values are imported from parameter files.
+- Quesant: Null file part offsets are ignored in the header, fixing import of
+  some files.
+- NT-MDT: Z value offsets are honoured in imported data.
+
+
 2.19 (2009-12-11)
 Application:
 - Translations updated: Czech, French, Russian.
