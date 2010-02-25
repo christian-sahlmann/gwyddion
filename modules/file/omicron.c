@@ -137,6 +137,7 @@ static GwyDataField* omicron_read_data          (OmicronFile *ofile,
 static GwySpectra*   omicron_read_cs_data       (OmicronFile *ofile,
                                                  OmicronSpectroChannel *channel,
                                                  GError **error);
+static GwyContainer* omicron_make_meta          (OmicronFile *ofile);
 static void          omicron_file_free          (OmicronFile *ofile);
 
 static GwyModuleInfo module_info = {
@@ -144,7 +145,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Omicron data files (two-part .par + .tf*, .tb*, .sf*, .sb*)."),
     "Yeti <yeti@gwyddion.net>",
-    "0.6",
+    "0.7",
     "David Nečas (Yeti) & Petr Klapetek & Markus Pristovsek",
     "2006",
 };
@@ -213,7 +214,7 @@ omicron_load(const gchar *filename,
              GError **error)
 {
     OmicronFile ofile;
-    GwyContainer *container = NULL;
+    GwyContainer *container = NULL, *meta;
     gchar *text = NULL;
     GError *err = NULL;
     GwyDataField *dfield = NULL;
@@ -266,6 +267,12 @@ omicron_load(const gchar *filename,
             else
                 s = g_strdup(channel->name);
             gwy_container_set_string_by_name(container, key, s);
+        }
+
+        if ((meta = omicron_make_meta(&ofile))) {
+            g_snprintf(key, sizeof(key), "/%u/meta", i);
+            gwy_container_set_object_by_name(container, key, meta);
+            g_object_unref(meta);
         }
     }
 
@@ -372,10 +379,26 @@ omicron_read_header(gchar *buffer,
         *val = '\0';
         val++;
         g_strstrip(line);
-        /* FIXME: what about `;[units]' comments? */
         comment = strchr(val, ';');
         if (comment) {
-            *comment = '\0';
+            /* If the coment has the form ;[units], move the [units] part after
+             * the number. */
+            if (comment[1] == '[' && (g_ascii_isalpha(comment[2])
+                                      || comment[2] == '%')) {
+                gchar *c, *s = comment-1;
+
+                while (g_ascii_isspace(*s))
+                    s--;
+                s++;
+
+                c = comment + 1;
+                *c = ' ';
+                while (*c && *c != ']')
+                    *(s++) = *(c++);
+                *s = '\0';
+            }
+            else
+                *comment = '\0';
             comment++;
             g_strstrip(comment);
         }
@@ -909,6 +932,29 @@ omicron_read_cs_data(OmicronFile *ofile,
     g_free(buffer);
 
     return spectra;
+}
+
+static void
+add_meta(gpointer key, gpointer value, gpointer user_data)
+{
+    const gchar *strkey = (const gchar*)key;
+    const gchar *strvalue = (const gchar*)value;
+    GwyContainer *meta = (GwyContainer*)user_data;
+
+    gwy_container_set_string_by_name(meta, strkey, g_strdup(strvalue));
+}
+
+static GwyContainer*
+omicron_make_meta(OmicronFile *ofile)
+{
+    GwyContainer *meta = gwy_container_new();
+
+    g_hash_table_foreach(ofile->meta, add_meta, meta);
+    if (gwy_container_get_n_items(meta))
+        return meta;
+    g_object_unref(meta);
+
+    return NULL;
 }
 
 static void
