@@ -1430,6 +1430,8 @@ gwy_data_field_area_fit_poly(GwyDataField *data_field,
 
     if (!coeffs)
         coeffs = g_new0(gdouble, nterms);
+    else
+        gwy_clear(coeffs, nterms);
 
     p = g_new(gdouble, nterms);
     m = g_new0(gdouble, nterms*(nterms + 1)/2);
