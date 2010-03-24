@@ -3306,7 +3306,8 @@ scalebar(gint size,
     drawable = prepare_drawable(width, height, lw, &gc);
 
     gdk_draw_line(drawable, gc, lw/2, 0, lw/2, tick);
-    gdk_draw_line(drawable, gc, width-1 - lw/2, 0, width-1 - lw/2, tick);
+    gdk_draw_line(drawable, gc, (gint)(width - lw/2.0),
+                  0, (gint)(width  - lw/2.0), tick);
     gdk_draw_line(drawable, gc, 0, tick/2, width, tick/2);
 
     gdk_draw_layout(drawable, gc,
