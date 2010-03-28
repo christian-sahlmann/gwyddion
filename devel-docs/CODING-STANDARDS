@@ -7,9 +7,9 @@ General:
   and its role in the program.
 
   [Rationale:
-  The more global is an identified, the higher is the chance it's needed
+  The more global is an identifier, the higher is the chance it's needed
   in different context and the chance of name clash.  So the name has
-  to be more descriptive.  On the other hand, core readability is not
+  to be more descriptive.  On the other hand, code readability is not
   improved by calling a temporary loop counter intTemporaryLoopCounter2
   instead of i, quite the contrary.]
 
