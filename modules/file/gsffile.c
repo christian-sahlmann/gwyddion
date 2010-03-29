@@ -39,6 +39,8 @@
 #include "config.h"
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
+#include <glib/gstdio.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwyutils.h>
@@ -58,7 +60,7 @@ static gint          gsf_detect      (const GwyFileDetectInfo *fileinfo,
 static GwyContainer* gsf_load        (const gchar *filename,
                                       GwyRunType mode,
                                       GError **error);
-static gboolean      gsf_export      (GwyContainer *data,
+static gboolean      gsf_export      (GwyContainer *container,
                                       const gchar *filename,
                                       GwyRunType mode,
                                       GError **error);
@@ -72,6 +74,9 @@ static gdouble       read_real_size  (GHashTable *hash,
                                       const gchar *key);
 static gdouble       read_real_offset(GHashTable *hash,
                                       const gchar *key);
+static void          append_num      (GString *str,
+                                      const gchar *key,
+                                      gdouble d);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -286,13 +291,125 @@ read_real_offset(GHashTable *hash,
 }
 
 static gboolean
-gsf_export(GwyContainer *data,
+gsf_export(GwyContainer *container,
            const gchar *filename,
-           GwyRunType mode,
+           G_GNUC_UNUSED GwyRunType mode,
            GError **error)
 {
-    g_warning("Implement me!\n");
+    gchar zeroes[4] = { 0, 0, 0, 0 };
+    GString *header = NULL;
+    gfloat *dfl = NULL;
+    guint i, xres, yres, padding;
+    gint id;
+    GwyDataField *dfield;
+    const gdouble *d;
+    gdouble v;
+    gchar *s;
+    GwySIUnit *unit, *emptyunit;
+    FILE *fh;
+
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
+                                     GWY_APP_DATA_FIELD_ID, &id,
+                                     0);
+    if (!dfield) {
+        err_NO_CHANNEL_EXPORT(error);
+        return FALSE;
+    }
+
+    if (!(fh = g_fopen(filename, "wb"))) {
+        err_OPEN_WRITE(error);
+        return FALSE;
+    }
+
+    xres = gwy_data_field_get_xres(dfield);
+    yres = gwy_data_field_get_yres(dfield);
+
+    header = g_string_new(MAGIC);
+    g_string_append_printf(header, "XRes = %u\n", xres);
+    g_string_append_printf(header, "YRes = %u\n", yres);
+    append_num(header, "XReal", gwy_data_field_get_xreal(dfield));
+    append_num(header, "YReal", gwy_data_field_get_yreal(dfield));
+    if ((v = gwy_data_field_get_xoffset(dfield)))
+        append_num(header, "XOffset", v);
+    if ((v = gwy_data_field_get_yoffset(dfield)))
+        append_num(header, "YOffset", v);
+
+    emptyunit = gwy_si_unit_new(NULL);
+    unit = gwy_data_field_get_si_unit_xy(dfield);
+    if (!gwy_si_unit_equal(unit, emptyunit)) {
+        s = gwy_si_unit_get_string(unit, GWY_SI_UNIT_FORMAT_PLAIN);
+        g_string_append_printf(header, "XYUnits = %s\n", s);
+        g_free(s);
+    }
+    unit = gwy_data_field_get_si_unit_z(dfield);
+    if (!gwy_si_unit_equal(unit, emptyunit)) {
+        s = gwy_si_unit_get_string(unit, GWY_SI_UNIT_FORMAT_PLAIN);
+        g_string_append_printf(header, "ZUnits = %s\n", s);
+        g_free(s);
+    }
+    g_object_unref(emptyunit);
+
+    s = gwy_app_get_data_field_title(container, id);
+    g_string_append_printf(header, "Title = %s\n", s);
+    g_free(s);
+
+    if (fwrite(header->str, 1, header->len, fh) != header->len) {
+        err_WRITE(error);
+        goto fail;
+    }
+
+    padding = 4 - (header->len % 4);
+    if (fwrite(zeroes, 1, padding, fh) != padding) {
+        err_WRITE(error);
+        goto fail;
+    }
+    g_string_free(header, TRUE);
+    header = NULL;
+
+    dfl = g_new(gfloat, xres*yres);
+    d = gwy_data_field_get_data_const(dfield);
+    for (i = 0; i < xres*yres; i++) {
+        union { guchar pp[4]; float f; } z;
+        z.f = d[i];
+#if (G_BYTE_ORDER == G_BIG_ENDIAN)
+        GWY_SWAP(guchar, z.pp[0], z.pp[3]);
+        GWY_SWAP(guchar, z.pp[1], z.pp[2]);
+#endif
+        dfl[i] = z.f;
+    }
+
+    if (fwrite(dfl, sizeof(gfloat), xres*yres, fh) != xres*yres) {
+        err_WRITE(error);
+        goto fail;
+    }
+    g_free(dfl);
+    fclose(fh);
+
     return TRUE;
+
+fail:
+    if (fh)
+        fclose(fh);
+    g_unlink(filename);
+    if (header)
+        g_string_free(header, TRUE);
+    g_free(dfl);
+
+    return FALSE;
+}
+
+static void
+append_num(GString *str,
+           const gchar *key,
+           gdouble d)
+{
+    gchar buf[32];
+
+    g_string_append(str, key);
+    g_string_append(str, " = ");
+    g_ascii_formatd(buf, sizeof(buf), "%.6g", d);
+    g_string_append(str, buf);
+    g_string_append_c(str, '\n');
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
