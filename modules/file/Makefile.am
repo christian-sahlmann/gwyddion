@@ -36,6 +36,7 @@ file_LTLIBRARIES = \
 	dmefile.la \
 	ezdfile.la \
 	ecsfile.la \
+	gsffile.la \
 	gwyfile.la \
 	hdf4file.la \
 	hitachi-afm.la \
@@ -134,6 +135,7 @@ createc_la_SOURCES       = createc.c
 dmefile_la_SOURCES       = dmefile.c
 ecsfile_la_SOURCES       = ecsfile.c
 ezdfile_la_SOURCES       = ezdfile.c
+gsffile_la_SOURCES       = gsffile.c
 gwyfile_la_SOURCES       = gwyfile.c
 hdf4file_la_SOURCES      = hdf4file.c
 hitachi_afm_la_SOURCES   = hitachi-afm.c
