@@ -48,6 +48,8 @@ François Bianco <francois.bianco@unige.ch>
     Omicron flat file format import.
 Luke Somers <lsomers@sas.upenn.edu>
     Median difference line correction.
+Vojtěch Salajka <xsalaj02@stud.fit.vutbr.cz>
+    Numbered ticks and other color axis improvements.
 
 
 === Translators ===
