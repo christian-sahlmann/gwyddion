@@ -5,10 +5,12 @@ Application:
   the format is determined by the extension.
 
 Libraries:
-- gwy_data_field_fit_poly() and gwy_data_field_area_fit_poly() work without
-  coeffs array preinitialized to zeroes
+- libgwyprocess: gwy_data_field_fit_poly() and gwy_data_field_area_fit_poly()
+  work without coeffs array preinitialized to zeroes
+- libgwydgets: GwyColorAxis can show numbered ticks.
 
 Modules:
+- GSF (new): Gwyddion Simple Field single-channel file reading and exporting.
 - SICM: Value scale was corrected and some more metadata fields are read now.
 - Facet level: Bugs when masking was used were fixed, namely in Exclude mode.
 - 1D FFT Filter, Color Range tool: square root of the density is shown on
