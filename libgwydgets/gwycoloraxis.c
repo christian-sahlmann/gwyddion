@@ -57,7 +57,8 @@ static gboolean gwy_color_axis_expose       (GtkWidget *widget,
 static void     gwy_color_axis_adjust       (GwyColorAxis *axis,
                                              gint width,
                                              gint height);
-static void     gwy_color_axis_draw_labels  (GwyColorAxis *axis);
+static void     gwy_color_axis_draw_labels  (GwyColorAxis *axis, gint prec);
+static gint     gwy_color_axis_step_to_prec (gdouble d);
 static void     gwy_color_axis_draw_ticks   (GwyColorAxis *axis);
 static void     gwy_color_axis_update       (GwyColorAxis *axis);
 static void     gwy_color_axis_changed      (GwyColorAxis *axis);
@@ -348,7 +349,7 @@ gwy_color_axis_size_request(GtkWidget *widget,
     }
     else {
         requisition->width = 100;
-        requisition->height = 80;
+        requisition->height = 50;
     }
 }
 
@@ -376,7 +377,7 @@ gwy_color_axis_size_allocate(GtkWidget *widget,
 static void
 gwy_color_axis_adjust(GwyColorAxis *axis, gint width, gint height)
 {
-    gint i, j, rowstride, palsize, dval;
+    gint i, j, rowstride, palsize, dval, x, y, pali;
     guchar *pixels, *line;
     const guchar *samples, *s;
     gdouble cor;
@@ -412,18 +413,249 @@ gwy_color_axis_adjust(GwyColorAxis *axis, gint width, gint height)
         }
     }
     else {
-        cor = (palsize - 1.0)/width;
-        for (i = 0; i < height; i++) {
-            line = pixels + i*rowstride;
-            for (j = 0; j < axis->stripe_width*height; j += height) {
-                dval = (gint)((j/height)*cor + 0.5);
-                s = samples + 4*dval;
+        for (y = 0; y < axis->stripe_width; ++y) {
+            line = pixels+y*rowstride;
+            for (x = 0; x < width; ++x) {
+                pali = x/((gdouble)(width))*palsize;
+                if (pali >= palsize)
+                    pali = palsize - 1;
+                if (pali < 0)
+                    pali = 0;
+                s = samples+4*pali;
                 *(line++) = *(s++);
                 *(line++) = *(s++);
                 *(line++) = *s;
             }
         }
     }
+}
+
+/* auxilliary function to compute decimal points from tickdist */
+static gint
+gwy_color_axis_step_to_prec(gdouble d) {
+    gdouble resd = log10(7.5)-log10(d);
+    if (resd != resd)
+        return 1;
+    if (resd > 1e20)
+        return 1;
+    if (resd < 1.0)
+        resd = 1.0;
+    return (gint) floor(resd);
+}
+
+static void
+gwy_color_axis_draw_labels_ticks(GwyColorAxis *axis) {
+    GtkWidget *widget;
+    gint xthickness, ythickness, width, height, swidth, off, tlength, size, pos,
+        prec = 1, mintdist = MIN_TICK_DISTANCE;
+    gdouble scale, x, x2, m, tickdist, max;    
+    GString *strlabel;
+    PangoLayout *layoutlabel;
+    PangoRectangle rectlabel;    
+    GdkGC *gc;
+    GwySIValueFormat *format = NULL;
+
+    gwy_debug("labels_visible: %d", axis->labels_visible);
+    gwy_debug("ticks_style: %d", axis->ticks_style);
+    widget = GTK_WIDGET(axis);
+    if (!axis->labels_visible) {
+        axis->labelb_size = 1;
+        axis->labele_size = 1;
+        /*return;*/
+    }
+
+    xthickness = widget->style->xthickness;
+    ythickness = widget->style->ythickness;
+    width = widget->allocation.width;
+    height = widget->allocation.height;
+    swidth = axis->stripe_width;
+    off = swidth + 1
+          + ((axis->orientation == GTK_ORIENTATION_VERTICAL)
+             ? xthickness : ythickness);
+    tlength = axis->tick_length;    
+
+    /* Draw frame around false color scale and boundary marks */
+    gc = widget->style->fg_gc[GTK_WIDGET_STATE(widget)];
+    if (axis->orientation == GTK_ORIENTATION_VERTICAL) {
+        gdk_draw_rectangle(widget->window, gc, FALSE, 0, 0, swidth, height - 1);
+        gdk_draw_line(widget->window, gc,
+                      swidth, 0, swidth + tlength, 0);
+        gdk_draw_line(widget->window, gc,
+                      swidth, height - 1, swidth + tlength, height - 1);
+        size = height;
+    }
+    else {
+        gdk_draw_rectangle(widget->window, gc, FALSE, 0, 0, width - 1, swidth);
+        gdk_draw_line(widget->window, gc,
+                      0, swidth, 0, swidth + tlength);
+        gdk_draw_line(widget->window, gc,
+                      width - 1, swidth, width - 1, swidth + tlength);
+        size = width;
+    }
+    
+    /* Don't attempt to draw anything if rounding errors are too large or
+     * scale calculation can overflow */
+    x = axis->max - axis->min;
+    max = MAX(fabs(axis->min), fabs(axis->max));
+    if (x < 1e-15*max || x <= 1e4*G_MINDOUBLE || max >= 1e-4*G_MAXDOUBLE)
+        return; /*  */
+    
+    
+    strlabel = g_string_new(NULL);
+    layoutlabel = gtk_widget_create_pango_layout(widget, "");
+    format = gwy_si_unit_get_format(axis->siunit, GWY_SI_UNIT_FORMAT_VFMARKUP, 
+        max, NULL);
+    
+    if (axis->ticks_style == GWY_TICKS_STYLE_AUTO) {
+        scale = size/(axis->max - axis->min);
+        x = MIN_TICK_DISTANCE/scale;
+        m = pow10(floor(log10(x)));
+        x /= m;
+        gwy_debug("scale: %g x: %g m: %g", scale, x, m);
+        if (x == 1.0)
+            x = 1.0;
+        else if (x <= 2.0)
+            x = 2.0;
+        else if (x <= 5.0)
+            x = 5.0;
+        else
+            x = 10.0;
+        tickdist = x*m;
+        x = floor(axis->min/tickdist)*tickdist;
+        max = ceil(axis->max/tickdist)*tickdist;
+        /* if labels_visible, then compute precision */
+        if (axis->labels_visible) {
+            prec = gwy_color_axis_step_to_prec(tickdist/format->magnitude);
+            gwy_debug("precision 1: %d; %g", prec, tickdist/format->magnitude);
+            /* if horizontal, then recompute tickdist */    
+            if (axis->orientation == GTK_ORIENTATION_HORIZONTAL) {
+                /* compute maximum size of all labels */
+                x2 = x;
+                while (x2 <= max) {
+                    /* Spaces here in format string cause gap size between tick 
+                     * labels in horizontal color axis */
+                    g_string_printf(strlabel, "%3.*f  ", prec, 
+                        x2/format->magnitude);                    
+                    pango_layout_set_markup(layoutlabel, strlabel->str, 
+                        strlabel->len);
+                    pango_layout_get_pixel_extents(layoutlabel, NULL, 
+                        &rectlabel);
+                    if (rectlabel.width > mintdist)
+                        mintdist = rectlabel.width;
+                    x2 += tickdist;
+                }
+                /* tickdist recomputation */
+                x = mintdist/scale;
+                m = pow10(floor(log10(x)));
+                x /= m;
+                gwy_debug("scale: %g x: %g m: %g", scale, x, m);
+                if (x == 1.0)
+                    x = 1.0;
+                else if (x <= 2.0)
+                    x = 2.0;
+                else if (x <= 5.0)
+                    x = 5.0;
+                else
+                    x = 10.0;
+                tickdist = x*m;
+                x = floor(axis->min/tickdist)*tickdist;
+                max = ceil(axis->max/tickdist)*tickdist;
+                prec = gwy_color_axis_step_to_prec(tickdist/format->magnitude);
+                gwy_debug("precision 2: %d; %g", prec, 
+                    tickdist/format->magnitude);
+            }
+            /* draw min and max label; non-drawing when not labels_visible 
+             * dealt with inside the function */
+            gwy_color_axis_draw_labels(axis, prec);     
+        }
+        gwy_debug("tickdist: %g x: %g max: %g", tickdist, x, max);
+        if (axis->orientation == GTK_ORIENTATION_VERTICAL) {
+            while (x <= max) {
+                pos = size-1 - GWY_ROUND((x - axis->min)*scale);
+                if (pos > axis->labelb_size && pos < size-1-axis->labele_size) {
+                    gdk_draw_line(widget->window, gc, swidth, pos,
+                        swidth + tlength/2, pos);                    
+                    /* draw only if labels_visible */
+                    if (axis->labels_visible) {
+                        g_string_printf(strlabel, "%3.*f", prec,
+                            x/format->magnitude);
+                        pango_layout_set_markup(layoutlabel, strlabel->str,
+                            strlabel->len);
+                        pango_layout_get_pixel_extents(layoutlabel, NULL,
+                            &rectlabel);
+                        /* prevent drawing over maximum label */
+                        if (pos-rectlabel.height > axis->labelb_size)
+                            gdk_draw_layout(widget->window, gc, off,
+                                pos-rectlabel.height, layoutlabel);
+                    }
+                }
+                x += tickdist;
+            }
+        }
+        else {
+            while (x <= max) {
+                pos = GWY_ROUND((x - axis->min)*scale);
+                if (pos > axis->labelb_size && pos < size-1-axis->labele_size) {
+                    gdk_draw_line(widget->window, gc, pos, swidth, pos, 
+                        swidth + tlength/2);                    
+                    /* draw only if labels_visible */
+                    if (axis->labels_visible) {
+                        g_string_printf(strlabel, "%3.*f", prec, 
+                            x/format->magnitude);                    
+                        pango_layout_set_markup(layoutlabel, strlabel->str, 
+                            strlabel->len);
+                        pango_layout_get_pixel_extents(layoutlabel, NULL, 
+                            &rectlabel);
+                        /* prevent drawing over maximum label */
+                        if (pos+rectlabel.width < size-1-axis->labele_size)
+                            gdk_draw_layout(widget->window, gc, pos, off, 
+                                layoutlabel);
+                    }
+                }
+                x += tickdist;
+            }
+        }
+    }
+    else if (axis->ticks_style == GWY_TICKS_STYLE_NONE) {
+        gwy_color_axis_draw_labels(axis, 1);  
+    }
+    else if (axis->ticks_style == GWY_TICKS_STYLE_CENTER) {
+        gwy_color_axis_draw_labels(axis, 1);  
+        x2 = (axis->max+axis->min)*0.5;
+        if (axis->orientation == GTK_ORIENTATION_VERTICAL) {
+            pos = height/2;
+            gdk_draw_line(widget->window, gc,
+                          swidth, height/2, swidth + tlength/2, height/2);
+            if (axis->labels_visible) {
+                g_string_printf(strlabel, "%3.1f", x2/format->magnitude);
+                pango_layout_set_markup(layoutlabel, strlabel->str, 
+                    strlabel->len);
+                pango_layout_get_pixel_extents(layoutlabel, NULL, &rectlabel);
+                /* prevent drawing over maximum label */
+                if (pos-rectlabel.height > axis->labelb_size)
+                    gdk_draw_layout(widget->window, gc, off, 
+                        pos-rectlabel.height, layoutlabel);
+            }
+        }
+        else {
+            pos = width/2;
+            gdk_draw_line(widget->window, gc,
+                          width/2, swidth, width/2, swidth + tlength/2);
+            if (axis->labels_visible) {
+                g_string_printf(strlabel, "%3.1f  ", x2/format->magnitude);                    
+                pango_layout_set_markup(layoutlabel, strlabel->str, 
+                    strlabel->len);
+                pango_layout_get_pixel_extents(layoutlabel, NULL, &rectlabel);
+                /* prevent drawing over maximum label */
+                if (pos+rectlabel.width < size-1-axis->labele_size)
+                    gdk_draw_layout(widget->window, gc, pos, off, layoutlabel);
+            }
+        }
+    }
+    if (format)
+        gwy_si_unit_value_format_free(format);
+    g_string_free(strlabel, TRUE);
+    g_object_unref(layoutlabel);
 }
 
 static gboolean
@@ -446,7 +678,7 @@ gwy_color_axis_expose(GtkWidget *widget,
     if (axis->orientation == GTK_ORIENTATION_HORIZONTAL)
         gdk_draw_pixbuf(widget->window, gc, axis->stripe,
                         0, 0,
-                        0, widget->allocation.height - axis->stripe_width - 1,
+                        0, 0,
                         gdk_pixbuf_get_width(axis->stripe),
                         gdk_pixbuf_get_height(axis->stripe),
                         GDK_RGB_DITHER_NONE, 0, 0);
@@ -457,25 +689,21 @@ gwy_color_axis_expose(GtkWidget *widget,
                         gdk_pixbuf_get_width(axis->stripe),
                         gdk_pixbuf_get_height(axis->stripe),
                         GDK_RGB_DITHER_NONE, 0, 0);
-
-    gwy_color_axis_draw_labels(axis);
-    gwy_color_axis_draw_ticks(axis);
-
+    gwy_color_axis_draw_labels_ticks(axis);
     return FALSE;
 }
 
 static void
-gwy_color_axis_draw_labels(GwyColorAxis *axis)
+gwy_color_axis_draw_labels(GwyColorAxis *axis, gint prec)
 {
     GtkWidget *widget;
-    PangoLayout *layoutmax, *layoutmin;
+    PangoLayout *layoutmax, *layoutmin, *layoutunits;
     GwySIValueFormat *format = NULL;
-    GString *strmin, *strmax;
+    GString *strmin, *strmax, *strunits;
     GdkGC *gc;
-    PangoRectangle rectmin, rectmax;
+    PangoRectangle rectmin, rectmax, rectunits;
     gint xthickness, ythickness, width, height, swidth, off;
-    gdouble max;
-    gboolean twoline_layout = FALSE;
+    gdouble max, max_label_aux;
 
     gwy_debug("labels_visible: %d", axis->labels_visible);
     widget = GTK_WIDGET(axis);
@@ -499,44 +727,43 @@ gwy_color_axis_draw_labels(GwyColorAxis *axis)
     strmin = g_string_new(NULL);
     strmax = g_string_new(NULL);
     max = MAX(fabs(axis->min), fabs(axis->max));
+    format = gwy_si_unit_get_format(axis->siunit,
+        GWY_SI_UNIT_FORMAT_VFMARKUP, max, NULL);
+    /* min label */
     if (max == 0) {
         g_string_assign(strmin, "0.0");
-        g_string_assign(strmax, "0.0");
     }
     else {
-        format = gwy_si_unit_get_format(axis->siunit,
-                                        GWY_SI_UNIT_FORMAT_VFMARKUP, max, NULL);
-        g_string_printf(strmin, "%3.1f %s",
-                        axis->min/format->magnitude, format->units);
-        g_string_printf(strmax, "%3.1f %s",
-                        axis->max/format->magnitude, format->units);
+        g_string_printf(strmin, "%3.*f  ", prec,
+                        axis->min/format->magnitude);
     }
-
-    /* Measure text */
-    layoutmax = gtk_widget_create_pango_layout(widget, "");
-    pango_layout_set_markup(layoutmax, strmax->str, strmax->len);
-    pango_layout_get_pixel_extents(layoutmax, NULL, &rectmax);
-    if (axis->orientation == GTK_ORIENTATION_VERTICAL
-        && rectmax.width + off > width)
-        twoline_layout = TRUE;
-
     layoutmin = gtk_widget_create_pango_layout(widget, "");
     pango_layout_set_markup(layoutmin, strmin->str, strmin->len);
     pango_layout_get_pixel_extents(layoutmin, NULL, &rectmin);
-    if (axis->orientation == GTK_ORIENTATION_VERTICAL
-        && rectmin.width + off > width)
-        twoline_layout = TRUE;
 
-    if (twoline_layout) {
-        g_string_printf(strmax, "%3.1f\n%s",
-                        axis->max/format->magnitude, format->units);
+    /* max label */
+    if (max == 0)
+        max_label_aux = 0.0;
+    else
+        max_label_aux = axis->max/format->magnitude;
+    layoutmax = gtk_widget_create_pango_layout(widget, "");
+    if (axis->orientation == GTK_ORIENTATION_VERTICAL) {
+        g_string_printf(strmax, "%3.*f %s", prec, max_label_aux, format->units);
+        /* Measure text */        
         pango_layout_set_markup(layoutmax, strmax->str, strmax->len);
         pango_layout_get_pixel_extents(layoutmax, NULL, &rectmax);
-
-        g_string_printf(strmin, "%3.1f\n%s",
-                        axis->min/format->magnitude, format->units);
-        pango_layout_set_markup(layoutmin, strmin->str, strmin->len);
-        pango_layout_get_pixel_extents(layoutmin, NULL, &rectmin);
+        if (rectmax.width + off > width) {
+            /* twoline layout */
+            g_string_printf(strmax, "%3.*f\n%s", prec,
+                        axis->max/format->magnitude, format->units);
+            pango_layout_set_markup(layoutmax, strmax->str, strmax->len);
+            pango_layout_get_pixel_extents(layoutmax, NULL, &rectmax);
+        }
+    }
+    else {
+        g_string_printf(strmax, "%3.*f", prec, max_label_aux);
+        pango_layout_set_markup(layoutmax, strmax->str, strmax->len);
+        pango_layout_get_pixel_extents(layoutmax, NULL, &rectmax);
     }
 
     /* Draw text */
@@ -547,8 +774,9 @@ gwy_color_axis_draw_labels(GwyColorAxis *axis)
         axis->labelb_size = rectmax.height;
     }
     else {
-        gdk_draw_layout(widget->window, gc, xthickness, off, layoutmax);
-        axis->labelb_size = rectmax.width;
+        gdk_draw_layout(widget->window, gc, 
+                        width - rectmax.width - xthickness, off, layoutmax);
+        axis->labele_size = rectmax.width;
     }
 
     if (axis->orientation == GTK_ORIENTATION_VERTICAL) {
@@ -559,9 +787,22 @@ gwy_color_axis_draw_labels(GwyColorAxis *axis)
     }
     else {
         gdk_draw_layout(widget->window, gc,
-                        width - rectmin.width - xthickness, off,
+                        xthickness, off,
                         layoutmin);
-        axis->labele_size = rectmin.width;
+        axis->labelb_size = rectmin.width;
+    }
+
+    if (axis->orientation == GTK_ORIENTATION_HORIZONTAL) {
+        /* Draw units separately */
+        strunits = g_string_new(NULL);
+        layoutunits = gtk_widget_create_pango_layout(widget, "");
+        g_string_printf(strunits, "%s", format->units);
+        pango_layout_set_markup(layoutunits, strunits->str, strunits->len);
+        pango_layout_get_pixel_extents(layoutunits, NULL, &rectunits);
+        gdk_draw_layout(widget->window, gc, width-rectunits.width-xthickness,
+            off+rectmax.height, layoutunits);
+        g_object_unref(layoutunits);
+        g_string_free(strunits, TRUE);
     }
 
     g_object_unref(layoutmin);
@@ -570,109 +811,6 @@ gwy_color_axis_draw_labels(GwyColorAxis *axis)
     g_string_free(strmax, TRUE);
     if (format)
         gwy_si_unit_value_format_free(format);
-}
-
-static void
-gwy_color_axis_draw_ticks(GwyColorAxis *axis)
-{
-    GtkWidget *widget;
-    gint width, height, swidth, tlength, size, pos;
-    gdouble scale, x, m, tickdist, max;
-    GdkGC *gc;
-
-    gwy_debug("ticks_style: %d", axis->ticks_style);
-    widget = GTK_WIDGET(axis);
-
-    tlength = axis->tick_length;
-    width = widget->allocation.width;
-    height = widget->allocation.height;
-    swidth = axis->stripe_width;
-
-    /* Draw frame around false color scale and boundary marks */
-    gc = widget->style->fg_gc[GTK_WIDGET_STATE(widget)];
-    if (axis->orientation == GTK_ORIENTATION_VERTICAL) {
-        gdk_draw_rectangle(widget->window, gc, FALSE, 0, 0, swidth, height - 1);
-        gdk_draw_line(widget->window, gc,
-                      swidth, 0, swidth + tlength, 0);
-        gdk_draw_line(widget->window, gc,
-                      swidth, height - 1, swidth + tlength, height - 1);
-        size = height;
-    }
-    else {
-        gdk_draw_rectangle(widget->window, gc, FALSE, 0, 0, width - 1, swidth);
-        gdk_draw_line(widget->window, gc,
-                      0, swidth, 0, swidth + tlength);
-        gdk_draw_line(widget->window, gc,
-                      width - 1, swidth, width - 1, swidth + tlength);
-        size = width;
-    }
-
-    /* Don't attempt to draw anything if rounding errors are too large or
-     * scale calculation can overflow */
-    x = axis->max - axis->min;
-    max = MAX(fabs(axis->min), fabs(axis->max));
-    if (x < 1e-15*max || x <= 1e4*G_MINDOUBLE || max >= 1e-4*G_MAXDOUBLE)
-        return;
-
-    switch (axis->ticks_style) {
-        case GWY_TICKS_STYLE_NONE:
-        break;
-
-        case GWY_TICKS_STYLE_CENTER:
-        if (axis->orientation == GTK_ORIENTATION_VERTICAL) {
-            gdk_draw_line(widget->window, gc,
-                          swidth, height/2, swidth + tlength/2, height/2);
-        }
-        else {
-            gdk_draw_line(widget->window, gc,
-                          width/2, swidth, width/2, swidth + tlength/2);
-        }
-        break;
-
-        case GWY_TICKS_STYLE_AUTO:
-        /* Draw `minor' ticks */
-        scale = size/(axis->max - axis->min);
-        x = MIN_TICK_DISTANCE/scale;
-        m = pow10(floor(log10(x)));
-        x /= m;
-        gwy_debug("scale: %g x: %g m: %g", scale, x, m);
-        if (x == 1.0)
-            x = 1.0;
-        else if (x <= 2.0)
-            x = 2.0;
-        else if (x <= 5.0)
-            x = 5.0;
-        else
-            x = 10.0;
-
-        tickdist = x*m;
-        x = floor(axis->min/tickdist)*tickdist;
-        max = ceil(axis->max/tickdist)*tickdist;
-        gwy_debug("tickdist: %g x: %g max: %g", tickdist, x, max);
-        if (axis->orientation == GTK_ORIENTATION_VERTICAL) {
-            while (x <= max) {
-                pos = size-1 - GWY_ROUND((x - axis->min)*scale);
-                if (pos > axis->labelb_size && pos < size-1 - axis->labele_size)
-                    gdk_draw_line(widget->window, gc,
-                                  swidth, pos, swidth + tlength/2, pos);
-                x += tickdist;
-            }
-        }
-        else {
-            while (x <= max) {
-                pos = GWY_ROUND((x - axis->min)*scale);
-                if (pos > axis->labelb_size && pos < size-1 - axis->labele_size)
-                    gdk_draw_line(widget->window, gc,
-                                  pos, swidth, pos, swidth + tlength/2);
-                x += tickdist;
-            }
-        }
-        break;
-
-        default:
-        g_return_if_reached();
-        break;
-    }
 }
 
 /**
