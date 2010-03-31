@@ -59,7 +59,6 @@ static void     gwy_color_axis_adjust       (GwyColorAxis *axis,
                                              gint height);
 static void     gwy_color_axis_draw_labels  (GwyColorAxis *axis, gint prec);
 static gint     gwy_color_axis_step_to_prec (gdouble d);
-static void     gwy_color_axis_draw_ticks   (GwyColorAxis *axis);
 static void     gwy_color_axis_update       (GwyColorAxis *axis);
 static void     gwy_color_axis_changed      (GwyColorAxis *axis);
 
