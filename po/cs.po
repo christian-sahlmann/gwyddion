@@ -3,8 +3,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2009-12-15 11:11+0100\n"
-"PO-Revision-Date: 2010-01-14 23:20+0100\n"
+"POT-Creation-Date: 2010-03-31 10:48+0200\n"
+"PO-Revision-Date: 2010-04-01 13:45+0200\n"
 "Last-Translator: Yeti <yeti@gwyddion.net>\n"
 "Language-Team: Czech\n"
 "MIME-Version: 1.0\n"
@@ -1206,28 +1206,28 @@ msgstr "Nastavit výchozí"
 msgid "Set the current view setup as the default"
 msgstr "Nastavit současné uspořádání pohledu jako výchozí"
 
-#: app/app.c:461
+#: app/app.c:473
 #, c-format
 msgid "Saving of 3D view to `%s' failed"
 msgstr "Uložení 3D pohledu do „%s“ se nezdařilo"
 
-#: app/app.c:504
+#: app/app.c:517
 msgid "Export 3D View"
 msgstr "Exportovat trojrozměrný pohled"
 
-#: app/app.c:664
+#: app/app.c:677
 msgid "Mask _Color..."
 msgstr "_Barva masky..."
 
-#: app/app.c:680
+#: app/app.c:693
 msgid "Zoom _1:1"
 msgstr "Zvětšit _1:1"
 
-#: app/app.c:877
+#: app/app.c:890
 msgid "Pi_xelwise Square"
 msgstr "Čtvercové pi_xely"
 
-#: app/app.c:887
+#: app/app.c:900
 msgid "_Physically Square"
 msgstr "_Fyzicky čtvercový"
 
@@ -2430,7 +2430,7 @@ msgid "Burleigh exported data (.txt, .bin)"
 msgstr "Burleight exportovaná data (.txt, .bin)"
 
 #: modules/file/burleigh_exp.c:225 modules/file/burleigh_exp.c:266
-#: modules/file/nanoscope.c:808 modules/file/omicron.c:363
+#: modules/file/nanoscope.c:808 modules/file/omicron.c:370
 #: modules/file/shimadzu.c:406
 msgid "Missing colon in header line."
 msgstr "V řádku hlavičky schází dvojtečka."
@@ -2588,6 +2588,19 @@ msgstr "První sekce není DataSet"
 #: modules/file/ezdfile.c:403
 msgid "GroupCount in [DataSet]"
 msgstr "GroupCount v [DataSet]"
+
+#: modules/file/gsffile.c:84
+msgid "Reads and exports Gwyddion Simple Field files."
+msgstr "Načítá a exportuje soubory typu Gwyddion Simple Field"
+
+#: modules/file/gsffile.c:97
+msgid "Gwyddion Simple Field (.gsf)"
+msgstr "Gwyddion Simple Field (.gsf)"
+
+#: modules/file/gsffile.c:152 modules/file/pt3file.c:481
+#: modules/file/pt3file.c:583
+msgid "File header is truncated."
+msgstr "Hlavička souboru je uříznutá."
 
 #: modules/file/gwyfile.c:96
 msgid "Loads and saves Gwyddion native data files (serialized objects)."
@@ -2931,34 +2944,34 @@ msgstr "Hodnota HeaderLength %u se liší od skutečné délky hlavičky %u"
 msgid "Expected header start marker ‘%s’ but found ‘%s’."
 msgstr "Namísto očekávané značky začátku hlavičky „%s“ bylo nalezeno „%s“."
 
-#: modules/file/nanonis.c:103
+#: modules/file/nanonis.c:109
 msgid "Imports Nanonis SXM data files."
 msgstr "Načítá datové soubory SXM Nanonis."
 
-#: modules/file/nanonis.c:123
+#: modules/file/nanonis.c:129
 msgid "Nanonis SXM files (.sxm)"
 msgstr "Nanonis SXM soubory (.sxm)"
 
-#: modules/file/nanonis.c:157 modules/file/omicron.c:451
+#: modules/file/nanonis.c:163 modules/file/omicron.c:474
 #: modules/file/unisoku.c:260
 msgid "File header ended unexpectedly."
 msgstr "Hlavička souboru neočekávaně skončila."
 
-#: modules/file/nanonis.c:220
+#: modules/file/nanonis.c:239
 msgid "Garbage was found in place of tag header line."
 msgstr "Na místě řádku hlavičky se značkou jsou nesmysly."
 
-#: modules/file/nanonis.c:281
+#: modules/file/nanonis.c:301
 #, c-format
 msgid "DATA_INFO does not contain the expected columns: %s."
 msgstr "DATA_INFO neobsahuje očekávané sloupce: %s."
 
-#: modules/file/nanonis.c:306
+#: modules/file/nanonis.c:326
 #, c-format
 msgid "DATA_INFO line contains less than %d fields."
 msgstr "Řádek DATA_INFO obsahuje méně než %d položek."
 
-#: modules/file/nanonis.c:477
+#: modules/file/nanonis.c:517
 msgid "Missing data start marker \\x1a\\x04."
 msgstr "Schází značka začátku dat \\x1a\\x04."
 
@@ -3120,20 +3133,20 @@ msgstr "Načítá datové soubory OLS."
 msgid "Olympus LEXT OLS3000 (.ols)"
 msgstr "Olympus LEXT OLS3000 (.ols)"
 
-#: modules/file/omicron.c:145
+#: modules/file/omicron.c:146
 msgid "Imports Omicron data files (two-part .par + .tf*, .tb*, .sf*, .sb*)."
 msgstr ""
 "Načítá datové soubory Omicron (dvoudílné .par + .tf*, .tb*, .sf*, .sb*)."
 
-#: modules/file/omicron.c:158
+#: modules/file/omicron.c:159
 msgid "Omicron files (.par + data)"
 msgstr "Omicron soubory (.par + data)"
 
-#: modules/file/omicron.c:369
+#: modules/file/omicron.c:376
 msgid "Header line starts with a colon."
 msgstr "Řádek hlavičky začíná dvojteckou."
 
-#: modules/file/omicron.c:460
+#: modules/file/omicron.c:483
 msgid "Channel information ended unexpectedly."
 msgstr "Informace o kanálu neočekávaně skončily."
 
@@ -3563,10 +3576,6 @@ msgstr "Měřicí mód T2 není implementován"
 #: modules/file/pt3file.c:395
 msgid "Only PI E710 and KDT180-100-Im imaging formats are implemented."
 msgstr "Pouze zobrazovací formáty PI E710 a KDT180-100-Im jsou implementovány."
-
-#: modules/file/pt3file.c:481 modules/file/pt3file.c:583
-msgid "File header is truncated."
-msgstr "Hlavička souboru je uříznutá."
 
 #: modules/file/pt3file.c:533
 #, c-format
@@ -4183,11 +4192,11 @@ msgstr "V místě očekávané položky „%s“ byl nalezen neplatný řádek."
 msgid "End of file reached when reading sample #%d of %d"
 msgstr "Soubor skončil při čtení vzorku č. %d z %d."
 
-#: modules/file/seiko.c:82
+#: modules/file/seiko.c:87
 msgid "Imports Seiko XQB, XQD and XQT files."
 msgstr "Načítá XQD, XQD a XQT soubory Seiko."
 
-#: modules/file/seiko.c:95
+#: modules/file/seiko.c:100
 msgid "Seiko files (.xqb, .xqd, .xqt)"
 msgstr "Seiko soubory (.xqb, .xqd, .xqt)"
 
@@ -4224,11 +4233,11 @@ msgstr "Shimadzu soubory"
 msgid "Cannot parse data values after %d of %d."
 msgstr "Nelze přečíst datové hodnoty po %d (z %d)."
 
-#: modules/file/sicmfile.c:178
+#: modules/file/sicmfile.c:193
 msgid "Imports IonScope SICM data files."
 msgstr "Načítá datové soubory IonScope SICM."
 
-#: modules/file/sicmfile.c:192
+#: modules/file/sicmfile.c:207
 msgid "IonScope SICM files (.img)"
 msgstr "IonScope SICM soubory (.img)"
 
@@ -5861,7 +5870,7 @@ msgstr "Typ _potlačení:"
 msgid "_Filter type:"
 msgstr "Typ _filtru:"
 
-#: modules/process/fft_filter_1d.c:531
+#: modules/process/fft_filter_1d.c:533
 msgid "1D FFT Filtered Data"
 msgstr "1D FFT filtrovaná data"
 
