@@ -2275,8 +2275,8 @@ gwy_data_field_area_rpsdf(GwyDataField *data_field,
             guint kk = i*width + j;
 
             v = re[kk]*re[kk] + im[kk]*im[kk];
-            r = 2*G_PI*hypot(MIN(i, height-1-i)/yreal,
-                             MIN(j, width-1-j)/xreal)*size/target_line->real;
+            r = 2*G_PI*hypot(MIN(i, height-i)/yreal,
+                             MIN(j, width-j)/xreal)*size/target_line->real;
             k = floor(r);
             if (k+1 >= size)
                 continue;
