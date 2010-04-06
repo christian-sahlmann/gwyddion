@@ -2270,11 +2270,13 @@ gwy_data_field_area_rpsdf(GwyDataField *data_field,
                               TRUE, 2);
     re = re_field->data;
     im = im_field->data;
-    for (i = 0; i < height/2; i++) {
-        for (j = 0; j < width/2; j++) {
-            v = re[i*width + j]*re[i*width + j]
-                + im[i*width + j]*im[i*width + j];
-            r = 2*G_PI*hypot(i/yreal, j/xreal)*size/target_line->real;
+    for (i = 0; i < height; i++) {
+        for (j = 0; j < width; j++) {
+            guint kk = i*width + j;
+
+            v = re[kk]*re[kk] + im[kk]*im[kk];
+            r = 2*G_PI*hypot(MIN(i, height-1-i)/yreal,
+                             MIN(j, width-1-j)/xreal)*size/target_line->real;
             k = floor(r);
             if (k+1 >= size)
                 continue;
@@ -2294,7 +2296,7 @@ gwy_data_field_area_rpsdf(GwyDataField *data_field,
     r *= target_line->real/size;  /* target_line discretization */
     r *= 2*G_PI/(width*height);  /* FIXME FIXME FIXME: random number */
     /* Leave out the zeroth item which is always zero and prevents
-     * logarithmization */
+     * logarithmization by moving everything one item to the left */
     for (i = 0; i < size-1; i++) {
         if (weight[i+1])
             target[i] = (i+1)*r*target[i+1]/weight[i+1];
