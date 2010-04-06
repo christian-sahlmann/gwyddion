@@ -6,7 +6,9 @@ Application:
 
 Libraries:
 - libgwyprocess: gwy_data_field_fit_poly() and gwy_data_field_area_fit_poly()
-  work without coeffs array preinitialized to zeroes
+  work without coeffs array preinitialized to zeroes.
+- libgwyprocess: Radial PSDF calculation uses all necessary DFT coefficients,
+  correcting the calculation for anisotropic images.
 - libgwydgets: GwyColorAxis can show numbered ticks.
 
 Modules:
