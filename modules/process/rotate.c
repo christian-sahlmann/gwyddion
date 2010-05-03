@@ -85,7 +85,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Rotates data by arbitrary angle."),
     "Yeti <yeti@gwyddion.net>",
-    "1.9",
+    "1.10",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -280,7 +280,7 @@ rotate_dialog(RotateArgs *args,
     gtk_box_pack_start(GTK_BOX(hbox), table, TRUE, TRUE, 0);
 
     controls.angle = gtk_adjustment_new(args->angle*180.0/G_PI,
-                                        -360, 360, 1, 30, 0);
+                                        -360, 360, 0.1, 30, 0);
     gwy_table_attach_hscale(table, 0, _("Rotate by _angle:"), _("deg"),
                             controls.angle, 0);
     g_signal_connect(controls.angle, "value-changed",
