@@ -122,7 +122,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Omicron flat files."),
     "fbianco  < francois.bianco@unige.ch > ",
-    "0.1",
+    "0.11",
     "François Bianco",
     "2009",
 };
@@ -895,7 +895,7 @@ omicronflat_load(const gchar *filename, G_GNUC_UNUSED GwyRunType mode, GError **
                 goto fail;
             }
 
-            g_snprintf(key, sizeof(key), "Exp:%s:%s [%s]", 
+            g_snprintf(key, sizeof(key), "Exp:%s:%s [%s]",
                        instance_name, name_str, unit_str);
             g_free(unit_str);
 
@@ -969,7 +969,6 @@ omicronflat_load(const gchar *filename, G_GNUC_UNUSED GwyRunType mode, GError **
     g_object_unref(dfield_tdown);
     g_object_unref(dfield_retdown);
     g_free(instance_name);
-    g_free(unit_str);
     g_free(name_str);
     g_free(s);
     g_object_unref(metadata);
