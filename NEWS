@@ -23,6 +23,9 @@ Modules:
 - Quesant: Null file part offsets are ignored in the header, fixing import of
   some files.
 - NT-MDT: Z value offsets are honoured in imported data.
+- Shimadzu: Bogus warning that Z offset units differ from Z scale units was
+  fixed.
+- Rotate: Rotation angle can be a fractional number.
 
 
 2.19 (2009-12-11)
