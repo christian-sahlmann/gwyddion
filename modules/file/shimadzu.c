@@ -96,7 +96,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Shimadzu SPM data files, version 2."),
     "Yeti <yeti@gwyddion.net>",
-    "0.2",
+    "0.3",
     "David Nečas (Yeti)",
     "2007",
 };
@@ -522,7 +522,7 @@ get_scales(GHashTable *hash,
     if ((p = g_hash_table_lookup(hash, "OffsetZ"))) {
         *zoff = g_ascii_strtod(p, &p);
         gwy_si_unit_set_from_string_parse(unit, p, &power10);
-        if (!gwy_si_unit_equal(unit, si_unit_z))
+        if (gwy_si_unit_equal(unit, si_unit_z))
             *zoff *= pow10(power10);
         else {
             g_warning("Z offset units differ from Z size units, ignoring.");
