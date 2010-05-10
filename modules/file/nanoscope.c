@@ -1020,6 +1020,13 @@ read_hash(gchar **buffer,
         value = parse_value(line, colon);
         if (value)
             g_hash_table_insert(hash, line, value);
+
+        while ((*buffer)[0] == '\r') {
+            g_warning("Possibly split line encountered.  "
+                      "Trying to synchronize.");
+            line = gwy_str_next_line(buffer) + 1;
+            line = gwy_str_next_line(buffer) + 1;
+        }
     }
 
     /* Fix random stuff in Nanoscope E files */
