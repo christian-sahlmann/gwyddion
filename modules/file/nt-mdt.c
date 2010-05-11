@@ -408,7 +408,8 @@ static GwySpectra*    extract_sps_curve     (MDTScannedDataFrame *dataframe);
 static GwyDataField*  extract_mda_data      (MDTMDAFrame *dataframe);
 static GwyGraphModel* extract_mda_spectrum  (MDTMDAFrame *dataframe);
 #ifdef RAMAN_IMAGE
-static GwyDataField * extract_raman_image   (MDTMDAFrame *dataframe); 
+static GwyDataField * extract_raman_image   (MDTMDAFrame *dataframe, 
+                                             GwyRunType mode); 
 #endif
 
 static void          start_element       (GMarkupParseContext *context,
@@ -793,7 +794,7 @@ mdt_load(const gchar *filename,
             else if (mdaframe->nDimensions == 3 && mdaframe->nMesurands == 3) {
                 /* raman images */
                 #ifdef RAMAN_IMAGE
-                dfield = extract_raman_image(mdaframe);
+                dfield = extract_raman_image(mdaframe, mode);
                 g_string_printf(key, "/%d/data", n);
                 gwy_container_set_object_by_name(data, key->str, dfield);
                 g_object_unref(dfield);
@@ -2194,7 +2195,8 @@ extract_mda_spectrum(MDTMDAFrame *dataframe)
 }
 
 #ifdef RAMAN_IMAGE
-static GwyDataField * extract_raman_image (MDTMDAFrame *dataframe)
+static GwyDataField * extract_raman_image (MDTMDAFrame *dataframe, 
+                                           GwyRunType mode) 
 {
     guint xsize, ysize;
     const guchar *p, *px;
@@ -2309,14 +2311,14 @@ static GwyDataField * extract_raman_image (MDTMDAFrame *dataframe)
     };
     
     gdouble xr = 3.240479;
-	gdouble xg = -0.969256;
-	gdouble xb = 0.055648;
-	gdouble yr = -1.53715;
-	gdouble yg = 1.875992;
-	gdouble yb = -0.204043;
-	gdouble zr = -0.498535;
-	gdouble zg = 0.041556;
-	gdouble zb = 1.057311;    
+    gdouble xg = -0.969256;
+    gdouble xb = 0.055648;
+    gdouble yr = -1.53715;
+    gdouble yg = 1.875992;
+    gdouble yb = -0.204043;
+    gdouble zr = -0.498535;
+    gdouble zg = 0.041556;
+    gdouble zb = 1.057311;    
 
     MDTMDACalibration *xAxis = &dataframe->dimensions[0],
         *yAxis = &dataframe->dimensions[1], *zAxis = &dataframe->mesurands[0];
@@ -2367,17 +2369,20 @@ static GwyDataField * extract_raman_image (MDTMDAFrame *dataframe)
     ysize = (dataframe->dimensions[1].maxIndex
            - dataframe->dimensions[1].minIndex+1);
     
-    dialog = gtk_dialog_new_with_buttons(_("Raman Image"), NULL, 0,
-                                         GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-                                         GTK_STOCK_OK, GTK_RESPONSE_OK,
-                                         NULL);
-    gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
-    gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
-
+    if (mode == GWY_RUN_INTERACTIVE) {
+        dialog = gtk_dialog_new_with_buttons(_("Raman Image"), NULL, 0,
+                                 GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
+                                 GTK_STOCK_OK, GTK_RESPONSE_OK,
+                                 NULL);
+        gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
+        gtk_dialog_set_default_response(GTK_DIALOG(dialog),
+                                        GTK_RESPONSE_OK);
+    }
+    
     image = gtk_image_new();
 
     pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, 8,
-                            xsize, ysize);
+                                xsize, ysize);
     gdk_pixbuf_fill(pixbuf, 0);
 
     pixels = gdk_pixbuf_get_pixels(pixbuf);
@@ -2394,49 +2399,49 @@ static GwyDataField * extract_raman_image (MDTMDAFrame *dataframe)
     
     for (i=0;i<ysize;i++) {
         for (j=0;j<xsize;j++) {
-			x = 0;
-			y = 0;
-			z = 0;
+            x = 0;
+            y = 0;
+            z = 0;
             for(k=0;k<1024;k++) {
                 yspectra[k]=(gdouble)gwy_get_gfloat_le(&p);
                 if (yspectra[k] > 1e-9) /* not a black pixel */
                     yspectra[k] -= 550.0; /* background noise */
                 l = (gint)((xspectra[k] - 360.0)/5);
                 if ((l >= 0) && (l < 85) && (k<1023)) {
-					x += yspectra[k]*cie_2deg_xyz[l][0]
-					    *(xspectra[k+1]-xspectra[k]);
-					y += yspectra[k]*cie_2deg_xyz[l][1]
-					    *(xspectra[k+1]-xspectra[k]);
-					z += yspectra[k]*cie_2deg_xyz[l][2]
-					    *(xspectra[k+1]-xspectra[k]);
-				}
+                    x += yspectra[k]*cie_2deg_xyz[l][0]
+                        *(xspectra[k+1]-xspectra[k]);
+                    y += yspectra[k]*cie_2deg_xyz[l][1]
+                        *(xspectra[k+1]-xspectra[k]);
+                    z += yspectra[k]*cie_2deg_xyz[l][2]
+                        *(xspectra[k+1]-xspectra[k]);
+                }
             }
-			
+            
             xyzsum = x + y + z;
-			xyzmax = (xyzsum > xyzmax) ? xyzsum : xyzmax;
-			*(data++) = xyzsum;            
+            xyzmax = (xyzsum > xyzmax) ? xyzsum : xyzmax;
+            *(data++) = xyzsum;            
             x /= xyzsum;
             y /= xyzsum;
             z /= xyzsum;
             r = xr*x + yr*y + zr*z;
-			g = xg*x + yg*y + zg*z;
-			b = xb*x + yb*y + zb*z;
-			wmin = (r < g) ? r : g;
-			wmin = (wmin < b) ? wmin : b;
-			if (wmin < 0.0) {
-				r += wmin;
-				g += wmin;
-				b += wmin;
-			}
-			wmax = (r > g) ? r : g;
-			wmax = (wmax > b) ? wmax : b;
-			if (wmax > 1.0) {
-				r /= wmax;
-				g /= wmax;
-				b /= wmax;
-			}
+            g = xg*x + yg*y + zg*z;
+            b = xb*x + yb*y + zb*z;
+            wmin = (r < g) ? r : g;
+            wmin = (wmin < b) ? wmin : b;
+            if (wmin < 0.0) {
+                r += wmin;
+                g += wmin;
+                b += wmin;
+            }
+            wmax = (r > g) ? r : g;
+            wmax = (wmax > b) ? wmax : b;
+            if (wmax > 1.0) {
+                r /= wmax;
+                g /= wmax;
+                b /= wmax;
+            }
 
-			pixels[i*rowstride+3*j]   = (guchar)(r*256.0);
+            pixels[i*rowstride+3*j]   = (guchar)(r*256.0);
             pixels[i*rowstride+3*j+1] = (guchar)(g*256.0);
             pixels[i*rowstride+3*j+2] = (guchar)(b*256.0);
         }
@@ -2445,38 +2450,42 @@ static GwyDataField * extract_raman_image (MDTMDAFrame *dataframe)
     data = gwy_data_field_get_data(dfield);
     for (i=0;i<ysize;i++) {
         for (j=0;j<xsize;j++) {
-			*(data) /= xyzmax;
-			y = *(data++);
-			pixels[i*rowstride+3*j] *= y;
-			pixels[i*rowstride+3*j+1] *= y;
-			pixels[i*rowstride+3*j+2] *= y;
-		}
+            *(data) /= xyzmax;
+            y = *(data++);
+            pixels[i*rowstride+3*j] *= y;
+            pixels[i*rowstride+3*j+1] *= y;
+            pixels[i*rowstride+3*j+2] *= y;
+        }
     }    
     gtk_image_set_from_pixbuf(GTK_IMAGE(image), pixbuf);
     g_object_unref(pixbuf);
-    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), image, TRUE, TRUE, 0);
-    gtk_widget_show_all(dialog);
-    do {
-        response = gtk_dialog_run(GTK_DIALOG(dialog));
-        switch (response) {
-            case GTK_RESPONSE_CANCEL:
-            case GTK_RESPONSE_DELETE_EVENT:
-            gtk_widget_destroy(dialog);
+    
+    if (mode == GWY_RUN_INTERACTIVE) {
+        gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), image,
+                           TRUE, TRUE, 0);
+        gtk_widget_show_all(dialog);
+        do {
+            response = gtk_dialog_run(GTK_DIALOG(dialog));
+            switch (response) {
+                case GTK_RESPONSE_CANCEL:
+                case GTK_RESPONSE_DELETE_EVENT:
+                    gtk_widget_destroy(dialog);
 
-            case GTK_RESPONSE_NONE:
-            return FALSE;
-            break;
+                case GTK_RESPONSE_NONE:
+                    return FALSE;
+                break;
 
-            case GTK_RESPONSE_OK:
-            break;
+                case GTK_RESPONSE_OK:
+                break;
 
-            default:
-            g_assert_not_reached();
-            break;
-        }
-    } while (response != GTK_RESPONSE_OK);
+                default:
+                    g_assert_not_reached();
+                break;
+            }
+        } while (response != GTK_RESPONSE_OK);
 
-    gtk_widget_destroy(dialog);
+        gtk_widget_destroy(dialog);
+    }
     
     return dfield;
 }
