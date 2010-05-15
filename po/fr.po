@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: French localization\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2009-12-15 11:11+0100\n"
-"PO-Revision-Date: 2010-02-14 13:10+0100\n"
+"POT-Creation-Date: 2010-05-15 03:59+0200\n"
+"PO-Revision-Date: 2010-05-15 13:46+0100\n"
 "Last-Translator: François RIGUET <francheu@caramail.com>\n"
 "Language-Team: François RIGUET <francheu@caramail.com>\n"
 "MIME-Version: 1.0\n"
@@ -1289,28 +1289,28 @@ msgstr "Enregistrer comme défaut"
 msgid "Set the current view setup as the default"
 msgstr "Enregistre la configuration comme défaut"
 
-#: app/app.c:461
+#: app/app.c:473
 #, c-format
 msgid "Saving of 3D view to `%s' failed"
 msgstr "L'enregistrement de la vue 3D `%s' a échoué"
 
-#: app/app.c:504
+#: app/app.c:517
 msgid "Export 3D View"
 msgstr "Exporter la vue 3D"
 
-#: app/app.c:664
+#: app/app.c:677
 msgid "Mask _Color..."
 msgstr "_Couleur du masque..."
 
-#: app/app.c:680
+#: app/app.c:693
 msgid "Zoom _1:1"
 msgstr "Zoom _1:1"
 
-#: app/app.c:877
+#: app/app.c:890
 msgid "Pi_xelwise Square"
 msgstr "Pi_xels carrés"
 
-#: app/app.c:887
+#: app/app.c:900
 msgid "_Physically Square"
 msgstr "_Pixels réels"
 
@@ -2348,8 +2348,8 @@ msgstr "Burleigh données exportées (.txt, .bin)"
 
 #: modules/file/burleigh_exp.c:225
 #: modules/file/burleigh_exp.c:266
-#: modules/file/nanoscope.c:808
-#: modules/file/omicron.c:363
+#: modules/file/nanoscope.c:1013
+#: modules/file/omicron.c:370
 #: modules/file/shimadzu.c:406
 msgid "Missing colon in header line."
 msgstr "Il manque une colonne dans la ligne d'en-tête."
@@ -2497,6 +2497,20 @@ msgstr "La première section n'est pas un DataSet"
 #: modules/file/ezdfile.c:403
 msgid "GroupCount in [DataSet]"
 msgstr "GroupCount dans [DataSet]"
+
+#: modules/file/gsffile.c:84
+msgid "Reads and exports Gwyddion Simple Field files."
+msgstr "Lit et exporte"
+
+#: modules/file/gsffile.c:97
+msgid "Gwyddion Simple Field (.gsf)"
+msgstr "Gwyddion Simple Field (.gsf)"
+
+#: modules/file/gsffile.c:152
+#: modules/file/pt3file.c:481
+#: modules/file/pt3file.c:583
+msgid "File header is truncated."
+msgstr "L'en-tête de fichier est tronqué."
 
 #: modules/file/gwyfile.c:96
 msgid "Loads and saves Gwyddion native data files (serialized objects)."
@@ -2848,35 +2862,35 @@ msgstr "La valeur HeaderLength %u est différente de la longueur réelle de l'en
 msgid "Expected header start marker ‘%s’ but found ‘%s’."
 msgstr "Le marqueur de début d'en-tête attendu est ‘%s’ mais ‘%s’ a été trouvé."
 
-#: modules/file/nanonis.c:103
+#: modules/file/nanonis.c:109
 msgid "Imports Nanonis SXM data files."
 msgstr "Importe les fichiers Nanonis SXM."
 
-#: modules/file/nanonis.c:123
+#: modules/file/nanonis.c:129
 msgid "Nanonis SXM files (.sxm)"
 msgstr "Nanonis SXM (.sxm)"
 
-#: modules/file/nanonis.c:157
-#: modules/file/omicron.c:451
+#: modules/file/nanonis.c:163
+#: modules/file/omicron.c:474
 #: modules/file/unisoku.c:260
 msgid "File header ended unexpectedly."
 msgstr "L'en-tête de se termine de manière inattendue."
 
-#: modules/file/nanonis.c:220
+#: modules/file/nanonis.c:239
 msgid "Garbage was found in place of tag header line."
 msgstr "Des éléments inutiles ont été trouvés à la place de la balise de la ligne d'en-tête."
 
-#: modules/file/nanonis.c:281
+#: modules/file/nanonis.c:301
 #, c-format
 msgid "DATA_INFO does not contain the expected columns: %s."
 msgstr "DATA_INFO ne contient pas les colonnes atendues : %s."
 
-#: modules/file/nanonis.c:306
+#: modules/file/nanonis.c:326
 #, c-format
 msgid "DATA_INFO line contains less than %d fields."
 msgstr "La ligne DATA_INFO contient moins de %d champs."
 
-#: modules/file/nanonis.c:477
+#: modules/file/nanonis.c:517
 msgid "Missing data start marker \\x1a\\x04."
 msgstr "Marqueur de début de données \\x1a\\x04 absent."
 
@@ -2910,19 +2924,19 @@ msgstr "Importe les fichiers Digital Instruments Nanoscope II."
 msgid "Nanoscope II files"
 msgstr "Nanoscope II"
 
-#: modules/file/nanoscope.c:145
+#: modules/file/nanoscope.c:160
 msgid "Imports Veeco (Digital Instruments) Nanoscope data files, version 3 or newer."
 msgstr "Importe les fichiers Veeco (Digital Instruments) Nanoscope, version 3 ou plus."
 
-#: modules/file/nanoscope.c:159
+#: modules/file/nanoscope.c:174
 msgid "Nanoscope III files"
 msgstr "Nanoscope III"
 
-#: modules/file/nanoscope.c:220
+#: modules/file/nanoscope.c:238
 msgid "File is not a Nanoscope file, or it is a unknown subtype."
 msgstr "Le fichier n'est pas un fichier Nanoscope, ou est d'un sous-type inconnu."
 
-#: modules/file/nanoscope.c:227
+#: modules/file/nanoscope.c:245
 msgid ""
 "File has been damaged by change of line endings, resulting in corruption of the binary part of the file.\n"
 "\n"
@@ -2932,17 +2946,19 @@ msgstr ""
 "\n"
 "Cela arrive typiquement lorsque le fichier est traité comme du texte lors d'un envoi incompressé par e-mail, un transfert FTP en mode ascii (uilisez le binaire), compressé avec ‘Envoyer vers un dossier compressé’ dans certaines versions de MS Windows, ou tout autre transfert de fichier qui essaie d'enregistrer en texte indépendamment de la plateforme."
 
-#: modules/file/nanoscope.c:474
-#: modules/file/nanoscope.c:490
+#: modules/file/nanoscope.c:509
+#: modules/file/nanoscope.c:525
+#: modules/file/nanoscope.c:771
+#: modules/file/nanoscope.c:779
 msgid "Cannot parse `Scan size' field."
 msgstr "Impossible d'analyser le champ `Scan size'."
 
-#: modules/file/nanoscope.c:719
+#: modules/file/nanoscope.c:924
 #, c-format
 msgid "Garbage after data sample #%d."
 msgstr "Données erronées après l'échantillon #%d."
 
-#: modules/file/nanoscope.c:798
+#: modules/file/nanoscope.c:1003
 msgid "Truncated header line."
 msgstr "Ligne d'en-tête tronquée."
 
@@ -2990,36 +3006,40 @@ msgstr "Le tableau `%s', bien qu'absent, possède un nombre d'élément non nul.
 msgid "More than one record dimension found."
 msgstr "Plus d'une dimension d'enregistrement a été trouvée."
 
-#: modules/file/nt-mdt.c:650
+#: modules/file/nt-mdt.c:658
 msgid "Imports NT-MDT data files."
 msgstr "Importe les fichiers NT-MDT."
 
-#: modules/file/nt-mdt.c:663
+#: modules/file/nt-mdt.c:671
 msgid "NT-MDT files (.mdt)"
 msgstr "NT-MDT (.mdt)"
 
-#: modules/file/nt-mdt.c:1074
+#: modules/file/nt-mdt.c:1093
 msgid "Frame is too short for Frame Mode."
 msgstr "la trame est trop courte pour le mode trame."
 
-#: modules/file/nt-mdt.c:1088
+#: modules/file/nt-mdt.c:1107
 msgid "Frame is too short for dots or data."
 msgstr "la trame est trop courte pour des points ou des données."
 
-#: modules/file/nt-mdt.c:1345
+#: modules/file/nt-mdt.c:1364
 #, c-format
 msgid "End of file reached in frame header #%u."
 msgstr "Fin du fichier atteinte dans l'en-tête #%u."
 
-#: modules/file/nt-mdt.c:1353
+#: modules/file/nt-mdt.c:1372
 #, c-format
 msgid "End of file reached in frame data #%u."
 msgstr "Fin du fichier atteinte dans les données #%u."
 
-#: modules/file/nt-mdt.c:1388
+#: modules/file/nt-mdt.c:1407
 #, c-format
 msgid "Frame #%u is too short for scanned data header."
 msgstr "La trame #%u est trop courte pour l'en-tête des données scannées."
+
+#: modules/file/nt-mdt.c:2373
+msgid "Raman Image"
+msgstr "Image Raman"
 
 #: modules/file/ols.c:66
 msgid "Imports OLS data files."
@@ -3029,19 +3049,19 @@ msgstr "Importe les fichiers OLS."
 msgid "Olympus LEXT OLS3000 (.ols)"
 msgstr "Olympus LEXT OLS3000 (.ols)"
 
-#: modules/file/omicron.c:145
+#: modules/file/omicron.c:146
 msgid "Imports Omicron data files (two-part .par + .tf*, .tb*, .sf*, .sb*)."
 msgstr "Importe les fichiers Omicron (2 parties .par + .tf*, .tb*, .sf*, .sb*)."
 
-#: modules/file/omicron.c:158
+#: modules/file/omicron.c:159
 msgid "Omicron files (.par + data)"
 msgstr "Omicron (.par + données)"
 
-#: modules/file/omicron.c:369
+#: modules/file/omicron.c:376
 msgid "Header line starts with a colon."
 msgstr "La ligne d'en-tête commence par un double point."
 
-#: modules/file/omicron.c:460
+#: modules/file/omicron.c:483
 msgid "Channel information ended unexpectedly."
 msgstr "Les informations sur le canal s'arrêtent de manière inattendue."
 
@@ -3488,11 +3508,6 @@ msgstr "Le mode de mesure T2 n'est pas implémenté."
 #: modules/file/pt3file.c:395
 msgid "Only PI E710 and KDT180-100-Im imaging formats are implemented."
 msgstr "Seuls les formats d'image PI E710 et KDT180-100-Im sont implémentés."
-
-#: modules/file/pt3file.c:481
-#: modules/file/pt3file.c:583
-msgid "File header is truncated."
-msgstr "L'en-tête de fichier est tronqué."
 
 #: modules/file/pt3file.c:533
 #, c-format
@@ -4165,11 +4180,11 @@ msgstr "Shimadzu"
 msgid "Cannot parse data values after %d of %d."
 msgstr "Impossible d'analyser les valeurs de données après %d sur %d."
 
-#: modules/file/sicmfile.c:178
+#: modules/file/sicmfile.c:193
 msgid "Imports IonScope SICM data files."
 msgstr "Importe les fichiers Ionscope SICM."
 
-#: modules/file/sicmfile.c:192
+#: modules/file/sicmfile.c:207
 msgid "IonScope SICM files (.img)"
 msgstr "IonScope SICM (.img)"
 
@@ -5842,7 +5857,7 @@ msgstr "Type de _suppression :"
 msgid "_Filter type:"
 msgstr "Type de _filtre :"
 
-#: modules/process/fft_filter_1d.c:531
+#: modules/process/fft_filter_1d.c:533
 msgid "1D FFT Filtered Data"
 msgstr "Données filtrées après FFT 1D"
 
@@ -6723,13 +6738,14 @@ msgid "Impression"
 msgstr "Impression"
 
 #: modules/process/indent_analyze.c:282
+#, fuzzy
 msgid "Inner Pile-up"
-msgstr ""
+msgstr "Enfoncement"
 
 #: modules/process/indent_analyze.c:283
 #, fuzzy
 msgid "Outer Pile-up"
-msgstr "Débordement externe"
+msgstr "Débordement"
 
 #: modules/process/indent_analyze.c:284
 msgid "Special points"
@@ -6832,22 +6848,24 @@ msgid "Indent. A<sub>p</sub>"
 msgstr "Indentation A<sub>p</sub>"
 
 #: modules/process/indent_analyze.c:590
+#, fuzzy
 msgid "Inner Pile-Up A<sub>d</sub>"
-msgstr ""
+msgstr "Enfoncement A<sub>d</sub>"
 
 #: modules/process/indent_analyze.c:599
+#, fuzzy
 msgid "Inner Pile-Up A<sub>p</sub>"
-msgstr ""
+msgstr "Enfoncement A<sub>p</sub>"
 
 #: modules/process/indent_analyze.c:608
 #, fuzzy
 msgid "Outer Pile-Up A<sub>d</sub>"
-msgstr "Débordement externe A<sub>d</sub>"
+msgstr "Débordement A<sub>d</sub>"
 
 #: modules/process/indent_analyze.c:617
 #, fuzzy
 msgid "Outer Pile-Up A<sub>p</sub>"
-msgstr "Débordement externe A<sub>p</sub>"
+msgstr "Débordement  A<sub>p</sub>"
 
 #: modules/process/indent_analyze.c:651
 msgid "Indentaion statistics"
@@ -6949,16 +6967,18 @@ msgid "Volume      %g\n"
 msgstr "Volume :      %g\n"
 
 #: modules/process/indent_analyze.c:1676
-#, c-format
+#, fuzzy, c-format
 msgid ""
 "\n"
 "Indentation - Inner Pile-Up\n"
 msgstr ""
+"\n"
+"Indentation - Enfoncement\n"
 
 #: modules/process/indent_analyze.c:1682
 #, fuzzy, c-format
 msgid "Indentation - Outer Pile-Up\n"
-msgstr "Indentation - Débordement externe (pile-up)\n"
+msgstr "Indentation - Débordement\n"
 
 #: modules/process/laplace.c:40
 msgid "Removes data under mask, interpolating them with Laplace equation solution."
