@@ -54,9 +54,7 @@
 #include <glib.h>
 #include <glib/gprintf.h>
 
-#ifdef RAMAN_IMAGE
 #include <gtk/gtk.h>
-#endif
 
 #include "err.h"
 #include "get.h"
@@ -407,10 +405,8 @@ static GwyGraphModel* extract_scanned_spectrum (MDTScannedDataFrame *dataframe);
 static GwySpectra*    extract_sps_curve     (MDTScannedDataFrame *dataframe);
 static GwyDataField*  extract_mda_data      (MDTMDAFrame *dataframe);
 static GwyGraphModel* extract_mda_spectrum  (MDTMDAFrame *dataframe);
-#ifdef RAMAN_IMAGE
-static GwyDataField * extract_raman_image   (MDTMDAFrame *dataframe, 
-                                             GwyRunType mode); 
-#endif
+static GwyDataField * extract_raman_image   (MDTMDAFrame *dataframe,
+                                             GwyRunType mode);
 
 static void          start_element       (GMarkupParseContext *context,
                                           const gchar *element_name,
@@ -793,14 +789,20 @@ mdt_load(const gchar *filename,
             }
             else if (mdaframe->nDimensions == 3 && mdaframe->nMesurands == 3) {
                 /* raman images */
-                #ifdef RAMAN_IMAGE
                 dfield = extract_raman_image(mdaframe, mode);
                 g_string_printf(key, "/%d/data", n);
                 gwy_container_set_object_by_name(data, key->str, dfield);
                 g_object_unref(dfield);
-                gwy_app_channel_title_fall_back(data, n);
+                if (mdaframe->title) {
+                g_string_append(key, "/title");
+                    gwy_container_set_string_by_name(data, key->str,
+                                              g_strndup(mdaframe->title,
+                                              mdaframe->title_len));
+                }
+                else
+                    gwy_app_channel_title_fall_back(data, n);
+
                 n++;
-                #endif
             }
         }
         else if (mdtfile.frames[i].type == MDT_FRAME_SPECTROSCOPY) {
@@ -2194,9 +2196,8 @@ extract_mda_spectrum(MDTMDAFrame *dataframe)
     return gmodel;
 }
 
-#ifdef RAMAN_IMAGE
-static GwyDataField * extract_raman_image (MDTMDAFrame *dataframe, 
-                                           GwyRunType mode) 
+static GwyDataField * extract_raman_image (MDTMDAFrame *dataframe,
+                                           GwyRunType mode)
 {
     guint xsize, ysize;
     const guchar *p, *px;
@@ -2204,14 +2205,14 @@ static GwyDataField * extract_raman_image (MDTMDAFrame *dataframe,
     gint l;
     gdouble xspectra[1024],yspectra[1024];
     gdouble r, g, b, x, y, z, xyzsum, wmin, wmax;
-    gdouble xyzmax;
-    
+    gdouble ymax;
+
     GtkWidget *dialog, *image;
     GdkPixbuf *pixbuf;
     gint rowstride;
     guchar *pixels;
     guint response;
-    
+
     GwyDataField *dfield;
     gdouble *data;
     gdouble xreal, yreal, zscale;
@@ -2219,7 +2220,7 @@ static GwyDataField * extract_raman_image (MDTMDAFrame *dataframe,
     GwySIUnit *siunitxy, *siunitz;
     const gchar *cunit;
     gchar *unit;
-    
+
     /* CIE 2deg xyz functions for standart observer (360-780 nm)   */
     /* from http://www.cis.rit.edu/mcsl/online/CIE/StdObsFuncs.htm */
     static gdouble cie_2deg_xyz[85][3] = {
@@ -2309,7 +2310,7 @@ static GwyDataField * extract_raman_image (MDTMDAFrame *dataframe,
     {0.000059, 0.000021, 0.000000},
     {0.000042, 0.000015, 0.000000},
     };
-    
+
     gdouble xr = 3.240479;
     gdouble xg = -0.969256;
     gdouble xb = 0.055648;
@@ -2318,10 +2319,11 @@ static GwyDataField * extract_raman_image (MDTMDAFrame *dataframe,
     gdouble yb = -0.204043;
     gdouble zr = -0.498535;
     gdouble zg = 0.041556;
-    gdouble zb = 1.057311;    
+    gdouble zb = 1.057311;
 
     MDTMDACalibration *xAxis = &dataframe->dimensions[0],
-        *yAxis = &dataframe->dimensions[1], *zAxis = &dataframe->mesurands[0];
+                      *yAxis = &dataframe->dimensions[1],
+                      *zAxis = &dataframe->mesurands[0];
 
     if (xAxis->unit && xAxis->unitLen) {
         unit = g_strndup(xAxis->unit, xAxis->unitLen);
@@ -2353,9 +2355,14 @@ static GwyDataField * extract_raman_image (MDTMDAFrame *dataframe,
     yreal = pow10(power10xy) * yAxis->scale;
     zscale = pow10(power10z) * zAxis->scale;
 
-    dfield = gwy_data_field_new(xAxis->maxIndex - xAxis->minIndex + 1,
-                                yAxis->maxIndex - yAxis->minIndex + 1,
-                                xreal, yreal, FALSE);
+    xsize = (dataframe->dimensions[0].maxIndex
+           - dataframe->dimensions[0].minIndex + 1);
+    ysize = (dataframe->dimensions[1].maxIndex
+           - dataframe->dimensions[1].minIndex + 1);
+
+	/* FIXME: real size is wrong */
+    dfield = gwy_data_field_new(xsize, ysize,
+                                xreal*xsize, yreal*ysize, FALSE);
 
     gwy_data_field_set_si_unit_xy(dfield, siunitxy);
     g_object_unref(siunitxy);
@@ -2363,12 +2370,7 @@ static GwyDataField * extract_raman_image (MDTMDAFrame *dataframe,
     g_object_unref(siunitz);
 
     data = gwy_data_field_get_data(dfield);
-   
-    xsize = (dataframe->dimensions[0].maxIndex
-           - dataframe->dimensions[0].minIndex+1);
-    ysize = (dataframe->dimensions[1].maxIndex
-           - dataframe->dimensions[1].minIndex+1);
-    
+
     if (mode == GWY_RUN_INTERACTIVE) {
         dialog = gtk_dialog_new_with_buttons(_("Raman Image"), NULL, 0,
                                  GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
@@ -2378,7 +2380,7 @@ static GwyDataField * extract_raman_image (MDTMDAFrame *dataframe,
         gtk_dialog_set_default_response(GTK_DIALOG(dialog),
                                         GTK_RESPONSE_OK);
     }
-    
+
     image = gtk_image_new();
 
     pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, 8,
@@ -2387,16 +2389,16 @@ static GwyDataField * extract_raman_image (MDTMDAFrame *dataframe,
 
     pixels = gdk_pixbuf_get_pixels(pixbuf);
     rowstride = gdk_pixbuf_get_rowstride(pixbuf);
-    
-    xyzmax = 0.0;
-    
+
+    ymax = 0.0;
+
     p = (guchar *)dataframe->image;
     px = p + 1024*xsize*ysize*sizeof(gfloat);
     for (k=0;k<1024;k++)
         {
             xspectra[k] = (gdouble)gwy_get_gfloat_le(&px);
         }
-    
+
     for (i=0;i<ysize;i++) {
         for (j=0;j<xsize;j++) {
             x = 0;
@@ -2416,10 +2418,13 @@ static GwyDataField * extract_raman_image (MDTMDAFrame *dataframe,
                         *(xspectra[k+1]-xspectra[k]);
                 }
             }
-            
+
+            x /= 1024.0;
+            y /= 1024.0;
+            z /= 1024.0;
+            ymax = (y > ymax) ? y : ymax;
+            *(data++) = y;
             xyzsum = x + y + z;
-            xyzmax = (xyzsum > xyzmax) ? xyzsum : xyzmax;
-            *(data++) = xyzsum;            
             x /= xyzsum;
             y /= xyzsum;
             z /= xyzsum;
@@ -2429,6 +2434,7 @@ static GwyDataField * extract_raman_image (MDTMDAFrame *dataframe,
             wmin = (r < g) ? r : g;
             wmin = (wmin < b) ? wmin : b;
             if (wmin < 0.0) {
+                wmin = -wmin;
                 r += wmin;
                 g += wmin;
                 b += wmin;
@@ -2441,25 +2447,25 @@ static GwyDataField * extract_raman_image (MDTMDAFrame *dataframe,
                 b /= wmax;
             }
 
-            pixels[i*rowstride+3*j]   = (guchar)(r*256.0);
-            pixels[i*rowstride+3*j+1] = (guchar)(g*256.0);
-            pixels[i*rowstride+3*j+2] = (guchar)(b*256.0);
+            pixels[i*rowstride+3*j]   = (guchar)(r*255.0);
+            pixels[i*rowstride+3*j+1] = (guchar)(g*255.0);
+            pixels[i*rowstride+3*j+2] = (guchar)(b*255.0);
         }
     }
 
     data = gwy_data_field_get_data(dfield);
     for (i=0;i<ysize;i++) {
         for (j=0;j<xsize;j++) {
-            *(data) /= xyzmax;
-            y = *(data++);
+            y = *(data++)/ymax;
             pixels[i*rowstride+3*j] *= y;
             pixels[i*rowstride+3*j+1] *= y;
             pixels[i*rowstride+3*j+2] *= y;
         }
-    }    
+    }
     gtk_image_set_from_pixbuf(GTK_IMAGE(image), pixbuf);
     g_object_unref(pixbuf);
-    
+
+	/* FIXME: this is temporary code to show raman images, need rework */
     if (mode == GWY_RUN_INTERACTIVE) {
         gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), image,
                            TRUE, TRUE, 0);
@@ -2486,10 +2492,9 @@ static GwyDataField * extract_raman_image (MDTMDAFrame *dataframe,
 
         gtk_widget_destroy(dialog);
     }
-    
+
     return dfield;
 }
-#endif
 
 static void
 start_element(G_GNUC_UNUSED GMarkupParseContext *context,
