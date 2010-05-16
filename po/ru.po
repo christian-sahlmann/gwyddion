@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2010-03-30 03:58+0200\n"
-"PO-Revision-Date: 2010-03-30 23:24+0300\n"
+"POT-Creation-Date: 2010-05-16 03:59+0200\n"
+"PO-Revision-Date: 2010-05-16 09:13+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -2348,7 +2348,7 @@ msgstr "Экспортированные данные Burleigh (.txt, .bin)"
 
 #: modules/file/burleigh_exp.c:225
 #: modules/file/burleigh_exp.c:266
-#: modules/file/nanoscope.c:808
+#: modules/file/nanoscope.c:1013
 #: modules/file/omicron.c:370
 #: modules/file/shimadzu.c:406
 msgid "Missing colon in header line."
@@ -2924,19 +2924,19 @@ msgstr "Импортирует файлы данных Digital Instruments Nanos
 msgid "Nanoscope II files"
 msgstr "Файлы Nanoscope II"
 
-#: modules/file/nanoscope.c:145
+#: modules/file/nanoscope.c:160
 msgid "Imports Veeco (Digital Instruments) Nanoscope data files, version 3 or newer."
 msgstr "Импортирует файлы данных Veeco (Digital Instruments) Nanoscope версии 3 или более новой."
 
-#: modules/file/nanoscope.c:159
+#: modules/file/nanoscope.c:174
 msgid "Nanoscope III files"
 msgstr "Файлы Nanoscope III"
 
-#: modules/file/nanoscope.c:220
+#: modules/file/nanoscope.c:238
 msgid "File is not a Nanoscope file, or it is a unknown subtype."
 msgstr "Файл не является файлом Nanoscope или неизвестного подтипа."
 
-#: modules/file/nanoscope.c:227
+#: modules/file/nanoscope.c:245
 msgid ""
 "File has been damaged by change of line endings, resulting in corruption of the binary part of the file.\n"
 "\n"
@@ -2946,17 +2946,19 @@ msgstr ""
 "\n"
 "Обычно это происходит если файл был воспринят как текст при передаче по электронной почте в несжатом виде, по FTP в ASCII-режиме (используйте binary), сжат с помощью команды 'Послать в сжатую папку' в некоторых версиях MS Windows, или при других способах передачи файла, которые используют платформо-независимое сохранение текста."
 
-#: modules/file/nanoscope.c:474
-#: modules/file/nanoscope.c:490
+#: modules/file/nanoscope.c:509
+#: modules/file/nanoscope.c:525
+#: modules/file/nanoscope.c:771
+#: modules/file/nanoscope.c:779
 msgid "Cannot parse `Scan size' field."
 msgstr "Не удаётся распознать поле `Scan size'."
 
-#: modules/file/nanoscope.c:719
+#: modules/file/nanoscope.c:924
 #, c-format
 msgid "Garbage after data sample #%d."
 msgstr "Мусор после элемента данных #%d."
 
-#: modules/file/nanoscope.c:798
+#: modules/file/nanoscope.c:1003
 msgid "Truncated header line."
 msgstr "Обрезанная строка заголовка."
 
@@ -3004,36 +3006,40 @@ msgstr "Массив `%s' содержит ненулевое количеств
 msgid "More than one record dimension found."
 msgstr "Найдена больше, чем одна запись о размерности."
 
-#: modules/file/nt-mdt.c:650
+#: modules/file/nt-mdt.c:658
 msgid "Imports NT-MDT data files."
 msgstr "Импорт файлов данных NT-MDT"
 
-#: modules/file/nt-mdt.c:663
+#: modules/file/nt-mdt.c:671
 msgid "NT-MDT files (.mdt)"
 msgstr "Файлы NT-MDT (.mdt)"
 
-#: modules/file/nt-mdt.c:1074
+#: modules/file/nt-mdt.c:1093
 msgid "Frame is too short for Frame Mode."
 msgstr "Фрейм слишком короткий для режима фреймов."
 
-#: modules/file/nt-mdt.c:1088
+#: modules/file/nt-mdt.c:1107
 msgid "Frame is too short for dots or data."
 msgstr "Фрейм слишком короткий для точек или данных."
 
-#: modules/file/nt-mdt.c:1345
+#: modules/file/nt-mdt.c:1364
 #, c-format
 msgid "End of file reached in frame header #%u."
 msgstr "Достигнут конец файла в заголовке фрейма #%u."
 
-#: modules/file/nt-mdt.c:1353
+#: modules/file/nt-mdt.c:1372
 #, c-format
 msgid "End of file reached in frame data #%u."
 msgstr "Достигнут конец файла в данных фрейма #%u."
 
-#: modules/file/nt-mdt.c:1388
+#: modules/file/nt-mdt.c:1407
 #, c-format
 msgid "Frame #%u is too short for scanned data header."
 msgstr "Фрейм #%u слишком короткий чтобы быть заголовком сканированных данных."
+
+#: modules/file/nt-mdt.c:2373
+msgid "Raman Image"
+msgstr "Изображение комбинационного рассеяния"
 
 #: modules/file/ols.c:66
 msgid "Imports OLS data files."
@@ -9082,8 +9088,8 @@ msgstr ""
 
 #~ msgid "force/distance curves"
 #~ msgstr "кривые сила/расстояние"
+
 #~ msgid "Unknown transfer function, importing raw data without scaling."
 #~ msgstr ""
 #~ "Неизвестна функция переноса, импортируются необработанные данные без "
 #~ "масштабирования."
-
