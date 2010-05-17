@@ -55,6 +55,7 @@
 #include <glib/gprintf.h>
 
 #include <gtk/gtk.h>
+#include <gdk-pixbuf/gdk-pixbuf.h>
 
 #include "err.h"
 #include "get.h"
