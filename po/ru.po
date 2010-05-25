@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2010-05-16 03:59+0200\n"
-"PO-Revision-Date: 2010-05-16 09:13+0300\n"
+"POT-Creation-Date: 2010-05-25 03:59+0200\n"
+"PO-Revision-Date: 2010-05-25 11:22+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -3006,38 +3006,38 @@ msgstr "Массив `%s' содержит ненулевое количеств
 msgid "More than one record dimension found."
 msgstr "Найдена больше, чем одна запись о размерности."
 
-#: modules/file/nt-mdt.c:658
+#: modules/file/nt-mdt.c:655
 msgid "Imports NT-MDT data files."
 msgstr "Импорт файлов данных NT-MDT"
 
-#: modules/file/nt-mdt.c:671
+#: modules/file/nt-mdt.c:668
 msgid "NT-MDT files (.mdt)"
 msgstr "Файлы NT-MDT (.mdt)"
 
-#: modules/file/nt-mdt.c:1093
+#: modules/file/nt-mdt.c:1096
 msgid "Frame is too short for Frame Mode."
 msgstr "Фрейм слишком короткий для режима фреймов."
 
-#: modules/file/nt-mdt.c:1107
+#: modules/file/nt-mdt.c:1110
 msgid "Frame is too short for dots or data."
 msgstr "Фрейм слишком короткий для точек или данных."
 
-#: modules/file/nt-mdt.c:1364
+#: modules/file/nt-mdt.c:1367
 #, c-format
 msgid "End of file reached in frame header #%u."
 msgstr "Достигнут конец файла в заголовке фрейма #%u."
 
-#: modules/file/nt-mdt.c:1372
+#: modules/file/nt-mdt.c:1375
 #, c-format
 msgid "End of file reached in frame data #%u."
 msgstr "Достигнут конец файла в данных фрейма #%u."
 
-#: modules/file/nt-mdt.c:1407
+#: modules/file/nt-mdt.c:1410
 #, c-format
 msgid "Frame #%u is too short for scanned data header."
 msgstr "Фрейм #%u слишком короткий чтобы быть заголовком сканированных данных."
 
-#: modules/file/nt-mdt.c:2373
+#: modules/file/nt-mdt.c:2376
 msgid "Raman Image"
 msgstr "Изображение комбинационного рассеяния"
 
@@ -4522,7 +4522,7 @@ msgstr "Сохранить отчёт аппроксимации"
 #: modules/graph/graph_fdfit.c:693
 #: modules/graph/graph_fit.c:717
 msgid "noun|Fit"
-msgstr "Аппроксимировать"
+msgstr "Аппроксимация"
 
 #: modules/graph/graph_cd.c:538
 #: modules/graph/graph_fdfit.c:733
@@ -9086,10 +9086,3 @@ msgstr ""
 "Наклон θ:     %s\n"
 "Наклон φ:     %s\n"
 
-#~ msgid "force/distance curves"
-#~ msgstr "кривые сила/расстояние"
-
-#~ msgid "Unknown transfer function, importing raw data without scaling."
-#~ msgstr ""
-#~ "Неизвестна функция переноса, импортируются необработанные данные без "
-#~ "масштабирования."
