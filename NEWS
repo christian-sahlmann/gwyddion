@@ -5,6 +5,8 @@ Application:
   the format is determined by the extension.
 
 Libraries:
+- libgwyprocess: Deserialization of spectra when there are selected curves
+  actually works now.
 - libgwyprocess: gwy_data_field_fit_poly() and gwy_data_field_area_fit_poly()
   work without coeffs array preinitialized to zeroes.
 - libgwyprocess: Radial PSDF calculation uses all necessary DFT coefficients,

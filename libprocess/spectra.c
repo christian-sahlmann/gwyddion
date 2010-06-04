@@ -403,7 +403,7 @@ gwy_spectra_deserialize(const guchar *buffer,
 
     isize = 8*sizeof(guint32);
     if (2*ncurves != ncoords
-        || (nselected && (nselected + isize-1)/isize != ncurves)) {
+        || (nselected && (ncurves + isize-1)/isize != nselected)) {
         g_critical("Serialized coordinate, data and selection array size "
                    "mismatch");
         for (i = 0; i < ncurves; i++)
