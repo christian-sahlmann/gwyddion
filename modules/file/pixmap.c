@@ -293,6 +293,7 @@ static GdkPixbuf*        vruler                    (gint size,
                                                     gdouble zoom,
                                                     gdouble offset,
                                                     GwySIUnit *siunit);
+static gint              gwy_pixmap_step_to_prec   (gdouble d);
 static GdkPixbuf*        fmscale                   (gint size,
                                                     gdouble bot,
                                                     gdouble top,
@@ -422,7 +423,7 @@ static GwyModuleInfo module_info = {
        "PNG, JPEG, TIFF, PPM, BMP, TARGA. "
        "Import support relies on GDK and thus may be installation-dependent."),
     "Yeti <yeti@gwyddion.net>",
-    "7.7",
+    "7.8",
     "David Nečas (Yeti)",
     "2004-2009",
 };
@@ -3196,6 +3197,19 @@ vruler(gint size,
     return pixbuf;
 }
 
+/* auxilliary function to compute decimal points from tickdist */
+static gint
+gwy_pixmap_step_to_prec(gdouble d) {
+    gdouble resd = log10(7.5)-log10(d);
+    if (resd != resd)
+        return 1;
+    if (resd > 1e20)
+        return 1;
+    if (resd < 1.0)
+        resd = 1.0;
+    return (gint) floor(resd);
+}
+
 static GdkPixbuf*
 fmscale(gint size,
         gdouble bot,
@@ -3208,45 +3222,98 @@ fmscale(gint size,
     GdkDrawable *drawable;
     GdkPixbuf *pixbuf;
     GdkGC *gc;
-    gdouble x;
+    gdouble x_max;
+    gdouble scale, x, m, tickdist, max;
     GwySIValueFormat *format;
     GString *s;
     gint l, tick, width, lw;
+    gint units_width, label_height, mintickdist, prec = 1, pos, bool_draw = 1;    
 
     s = g_string_new(NULL);
     layout = prepare_layout(zoom);
 
-    x = MAX(fabs(bot), fabs(top));
+    x_max = MAX(fabs(bot), fabs(top));
     format = gwy_si_unit_get_format(siunit, GWY_SI_UNIT_FORMAT_VFMARKUP,
-                                    x, NULL);
+                                    x_max, NULL);
+    format_layout(layout, &logical1, s, " %s", format->units);
+    units_width = PANGO_PIXELS(logical1.width);
+    label_height = PANGO_PIXELS(logical1.height);
+    mintickdist = label_height*1.5; /* mintickdist is in pixels; tickdist is in
+                                     * meters or whichever basic unit */
+    /* prec computation starts here */  
+    /* Don't attempt to draw anything if rounding errors are too large or
+     * scale calculation can overflow */
+    x = top - bot;
+    max = MAX(fabs(bot), fabs(top));
+    if (x < 1e-15*max || x <= 1e4*G_MINDOUBLE || max >= 1e-4*G_MAXDOUBLE)
+        bool_draw = 0;      
+    scale = size/(top - bot);
+    x = mintickdist/scale;
+    m = pow10(floor(log10(x)));
+    x /= m;
+    if (x == 1.0)
+        x = 1.0;
+    else if (x <= 2.0)
+        x = 2.0;
+    else if (x <= 5.0)
+        x = 5.0;
+    else
+        x = 10.0;
+    tickdist = x*m;
+    x = floor(bot/tickdist)*tickdist;
+    max = ceil(top/tickdist)*tickdist;
+    prec = gwy_pixmap_step_to_prec(tickdist/format->magnitude);
+    /* prec computation ends here */    
+    
     format_layout(layout, &logical1, s, "%.*f %s",
-                  format->precision, top/format->magnitude, format->units);
+                  prec, top/format->magnitude, format->units);
     format_layout(layout, &logical2, s, "%.*f %s",
-                  format->precision, bot/format->magnitude, format->units);
+                  prec, bot/format->magnitude, format->units);
 
     l = MAX(PANGO_PIXELS(logical1.width), PANGO_PIXELS(logical2.width));
-    tick = zoom*TICK_LENGTH;
-    lw = ZOOM2LW(zoom);
+    tick = zoom*TICK_LENGTH; /* physical tick length */
+    lw = ZOOM2LW(zoom); /* line width */
     width = l + 2*zoom + tick + 2;
-    drawable = prepare_drawable(width, size, lw, &gc);
-
-    format_layout(layout, &logical1, s, "%.*f %s",
-                  format->precision, bot/format->magnitude, format->units);
+    drawable = prepare_drawable(width, size, lw, &gc);    
+    
+    /* bottom text and line */
+    format_layout(layout, &logical1, s, "%.*f",
+                  prec, bot/format->magnitude);
     gdk_draw_layout(drawable, gc,
-                    width - PANGO_PIXELS(logical1.width) - 2,
+                    width - PANGO_PIXELS(logical1.width) - 2 -units_width,
                     size - 1 - PANGO_PIXELS(logical1.height),
                     layout);
     gdk_draw_line(drawable, gc, 0, size - (lw + 1)/2, tick, size - (lw + 1)/2);
-
+    /* end of bottom text and line */    
+    
+    /* top text start */
     format_layout(layout, &logical1, s, "%.*f %s",
-                  format->precision, top/format->magnitude, format->units);
+                  prec, top/format->magnitude, format->units);
     gdk_draw_layout(drawable, gc,
                     width - PANGO_PIXELS(logical1.width) - 2, 1,
-                    layout);
-    gdk_draw_line(drawable, gc, 0, lw/2, tick, lw/2);
+                    layout); /* top text end */
+    gdk_draw_line(drawable, gc, 0, lw/2, tick, lw/2); /* top line */
 
-    gdk_draw_line(drawable, gc, 0, size/2, tick/2, size/2);
-
+    /* tick in the middle - don't draw it anymore */
+    /*gdk_draw_line(drawable, gc, 0, size/2, tick/2, size/2);*/ 
+    
+    /* the rest of the ticks is drawn here (other than bot, top) */
+    while (bool_draw && x <= max) {
+        pos = size-1 - GWY_ROUND((x - bot)*scale);
+        if (pos > label_height && pos < size-1-label_height) {
+            gdk_draw_line(drawable, gc, 0, pos, tick/2, pos);
+            format_layout(layout, &logical1, s, "%.*f",
+                  prec, x/format->magnitude);
+            if (pos - PANGO_PIXELS(logical1.height) > label_height) {
+                gdk_draw_layout(drawable, gc,
+                        width - PANGO_PIXELS(logical1.width) - 2 -units_width,
+                        pos - PANGO_PIXELS(logical1.height),
+                        layout);
+            }
+        }
+        x += tickdist;
+    }    
+    /* all drawing is finished here */
     pixbuf = gdk_pixbuf_get_from_drawable(NULL, drawable, NULL,
                                           0, 0, 0, 0, width, size);
 
