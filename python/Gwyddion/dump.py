@@ -87,7 +87,7 @@ def read(filename):
         if m:
             data[m.group('key')] = m.group('val')
             continue
-        raise 'Can\'t understand input'
+        raise ValueError, 'Malformed header'
     fh.close()
     return data
 
