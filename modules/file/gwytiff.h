@@ -79,6 +79,7 @@ enum {
     GWY_TIFFTAG_SOFTWARE          = 305,
     GWY_TIFFTAG_DATE_TIME         = 306,
     GWY_TIFFTAG_ARTIST            = 315,
+    GWY_TIFFTAG_SAMPLE_FORMAT     = 339
 } GwyTIFFTag;
 
 /* Values of some standard tags.
@@ -109,6 +110,13 @@ typedef enum {
     GWY_TIFF_PLANAR_CONFIG_CONTIGNUOUS = 1,
     GWY_TIFF_PLANAR_CONFIG_SEPARATE = 2,
 } GwyTIFFPlanarConfig;
+
+typedef enum {
+    GWY_TIFF_SAMPLE_FORMAT_UNSIGNED_INTEGER = 1,
+    GWY_TIFF_SAMPLE_FORMAT_SIGNED_INTEGER = 2,
+    GWY_TIFF_SAMPLE_FORMAT_FLOAT = 3,
+    GWY_TIFF_SAMPLE_FORMAT_UNDEFINED = 4
+} GwyTIFFSampleFormat;
 
 /* TIFF structure representation */
 typedef struct {
@@ -142,6 +150,7 @@ typedef struct {
     /* private */
     guint rowstride;
     guint *offsets;
+    guint sample_format;
 } GwyTIFFImageReader;
 
 /* Does not need to free tags on failure, the caller takes care of it. */
@@ -635,6 +644,12 @@ gwy_tiff_get_image_reader(const GwyTIFF *tiff,
                            &reader.stripe_rows))
         reader.stripe_rows = reader.height;
 
+    /*
+     * The data sample type (default is unsigned integer)
+     */
+    if (!gwy_tiff_get_uint(tiff, dirno, GWY_TIFFTAG_SAMPLE_FORMAT, &reader.sample_format))
+        reader.sample_format = GWY_TIFF_SAMPLE_FORMAT_UNSIGNED_INTEGER;
+
     /* Integer fields specifying data in a format we do not support */
     if (gwy_tiff_get_uint(tiff, dirno, GWY_TIFFTAG_COMPRESSION, &i)
         && i != GWY_TIFF_COMPRESSION_NONE) {
@@ -648,10 +663,17 @@ gwy_tiff_get_image_reader(const GwyTIFF *tiff,
                     _("Planar configuration %u is not supported."), i);
         return NULL;
     }
-    if (reader.bits_per_sample != 16) {
+    if (reader.bits_per_sample != 16 && reader.bits_per_sample != 32) {
         err_BPP(error, reader.bits_per_sample);
         return NULL;
     }
+    if (reader.sample_format != GWY_TIFF_SAMPLE_FORMAT_UNSIGNED_INTEGER
+        &&  reader.sample_format != GWY_TIFF_SAMPLE_FORMAT_SIGNED_INTEGER) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Unsupported sample format"));
+        return NULL;
+    }
+
     if (reader.samples_per_pixel != 1) {
         err_UNSUPPORTED(error, "SamplesPerPixel");
         return NULL;
@@ -746,8 +768,25 @@ gwy_tiff_read_image_row(const GwyTIFF *tiff,
 
     switch (reader->bits_per_sample) {
         case 16:
-        for (i = 0; i < reader->width; i++)
-            dest[i] = z0 + q*tiff->get_guint16(&p);
+        if (reader->sample_format == GWY_TIFF_SAMPLE_FORMAT_UNSIGNED_INTEGER) {
+            for (i = 0; i < reader->width; i++)
+                dest[i] = z0 + q*tiff->get_guint16(&p);
+        }
+        else if (reader->sample_format == GWY_TIFF_SAMPLE_FORMAT_SIGNED_INTEGER) {
+            for (i = 0; i < reader->width; i++)
+                dest[i] = z0 + q*tiff->get_gint16(&p);
+        }
+        break;
+
+        case 32:
+        if (reader->sample_format == GWY_TIFF_SAMPLE_FORMAT_UNSIGNED_INTEGER) {
+            for (i = 0; i < reader->width; i++)
+                dest[i] = z0 + q*tiff->get_guint32(&p);
+        }
+        else if (reader->sample_format == GWY_TIFF_SAMPLE_FORMAT_SIGNED_INTEGER) {
+            for (i = 0; i < reader->width; i++)
+                dest[i] = z0 + q*tiff->get_gint32(&p);
+        }
         break;
 
         default:

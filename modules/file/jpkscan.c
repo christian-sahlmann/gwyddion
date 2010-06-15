@@ -206,7 +206,7 @@ jpkscan_load(const gchar *filename,
         switch (photo) {
             case GWY_TIFF_PHOTOMETRIC_MIN_IS_BLACK:
             case GWY_TIFF_PHOTOMETRIC_MIN_IS_WHITE:
-            if (reader->bits_per_sample == 16)
+            if (reader->bits_per_sample == 16 || reader->bits_per_sample == 32)
                 break;
 
             default:
