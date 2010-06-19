@@ -2374,7 +2374,6 @@ static GwyDataField * extract_raman_image (MDTMDAFrame *dataframe,
 
     if (mode == GWY_RUN_INTERACTIVE) {
         dialog = gtk_dialog_new_with_buttons(_("Raman Image"), NULL, 0,
-                                 GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                  GTK_STOCK_OK, GTK_RESPONSE_OK,
                                  NULL);
         gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
@@ -2473,23 +2472,8 @@ static GwyDataField * extract_raman_image (MDTMDAFrame *dataframe,
         gtk_widget_show_all(dialog);
         do {
             response = gtk_dialog_run(GTK_DIALOG(dialog));
-            switch (response) {
-                case GTK_RESPONSE_CANCEL:
-                case GTK_RESPONSE_DELETE_EVENT:
-                    gtk_widget_destroy(dialog);
-
-                case GTK_RESPONSE_NONE:
-                    return FALSE;
-                break;
-
-                case GTK_RESPONSE_OK:
-                break;
-
-                default:
-                    g_assert_not_reached();
-                break;
-            }
-        } while (response != GTK_RESPONSE_OK);
+        } while ((response != GTK_RESPONSE_OK) && 
+                 (response != GTK_RESPONSE_DELETE_EVENT));
 
         gtk_widget_destroy(dialog);
     }
