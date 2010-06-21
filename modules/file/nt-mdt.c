@@ -1725,7 +1725,8 @@ extract_mda_data(MDTMDAFrame * dataframe)
     gchar *unit;
 
     MDTMDACalibration *xAxis = &dataframe->dimensions[0],
-        *yAxis = &dataframe->dimensions[1], *zAxis = &dataframe->mesurands[0];
+        *yAxis = &dataframe->dimensions[1],
+        *zAxis = &dataframe->mesurands[0];
 
     if (xAxis->unit && xAxis->unitLen) {
         unit = g_strndup(xAxis->unit, xAxis->unitLen);
@@ -1760,9 +1761,9 @@ extract_mda_data(MDTMDAFrame * dataframe)
     dfield = gwy_data_field_new(xAxis->maxIndex - xAxis->minIndex + 1,
                                 yAxis->maxIndex - yAxis->minIndex + 1,
                                 xreal, yreal, FALSE);
-    total =
-        (xAxis->maxIndex - xAxis->minIndex + 1) * (yAxis->maxIndex -
-                                                   yAxis->minIndex + 1);
+    total
+        = (xAxis->maxIndex - xAxis->minIndex + 1) * (yAxis->maxIndex
+                                                 - yAxis->minIndex + 1);
     gwy_data_field_set_si_unit_xy(dfield, siunitxy);
     g_object_unref(siunitxy);
     gwy_data_field_set_si_unit_z(dfield, siunitz);
@@ -2600,7 +2601,9 @@ parse_text(G_GNUC_UNUSED GMarkupParseContext *context,
                 else if (params->units == 2
                       && params->laser_wavelength > 0.0) {
                     /* 1/cm and nonzero laser wavelength */
-                    params->data[i] = 1e9 * (1 / params->laser_wavelength - 1 / wavelength);
+                    params->data[i]
+                        = 1e9 * (1 / params->laser_wavelength
+                        - 1 / wavelength);
                 }
             }
         }
