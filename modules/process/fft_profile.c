@@ -131,7 +131,7 @@ module_register(void)
 {
     gwy_process_func_register("fft_profile",
                               (GwyProcessFunc)&fft_profile,
-                              N_("/_Statistics/_PDSF Section..."),
+                              N_("/_Statistics/_PSDF Section..."),
                               GWY_STOCK_GRAPH_HALFGAUSS,
                               PROF_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
