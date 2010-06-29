@@ -166,6 +166,11 @@ require_keys(GHashTable *hash,
     va_list ap;
     const gchar *key;
 
+    if (!hash) {
+        err_MISSING_FIELD(error, key);
+        return FALSE;
+    }
+
     va_start(ap, error);
     while ((key = va_arg(ap, const gchar *))) {
         if (!g_hash_table_lookup(hash, key)) {
