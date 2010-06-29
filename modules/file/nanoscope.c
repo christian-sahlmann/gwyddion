@@ -780,6 +780,9 @@ hash_to_curve(GHashTable *hash,
         return NULL;
     }
     gwy_debug("x unit: <%s>", un);
+    /* FIXME FIXME FIXME */
+    un[0] = 'V';
+    un[1] = '\0';
     unitx = gwy_si_unit_new_parse(un, &power10);
     q = pow10(power10);
     xreal *= q;
@@ -803,6 +806,8 @@ hash_to_curve(GHashTable *hash,
             size_ok = TRUE;
             use_global = TRUE;
         }
+
+        gwy_debug("size=%u, xres=%u, gxres=%u, bpp=%u", (guint)size, xres, gxres, bpp);
 
         /* If they don't match exactly, try whether they at least fit inside */
         if (!size_ok && size > bpp*MAX(2*xres, 2*gxres)) {
@@ -850,11 +855,16 @@ hash_to_curve(GHashTable *hash,
     unitz = get_physical_scale(hash, scannerlist, scanlist, has_version,
                                &q, error);
                                */
-    unitz = gwy_si_unit_new(NULL);
+    unitz = gwy_si_unit_new("A");
     if (!unitz)
         return NULL;
 
     gmodel = gwy_graph_model_new();
+    g_object_set(gmodel,
+                 "title", "I-V spectrum",
+                 "axis-label-bottom", "voltage",
+                 "axis-label-left", "current",
+                 NULL);
 
     dline = gwy_data_line_new(xres, xreal, FALSE);
     gwy_data_line_set_si_unit_y(dline, unitz);
@@ -872,6 +882,11 @@ hash_to_curve(GHashTable *hash,
         }
         gcmodel = gwy_graph_curve_model_new();
         gwy_graph_curve_model_set_data_from_dataline(gcmodel, dline, 0, 0);
+        g_object_set(gcmodel,
+                     "mode", GWY_GRAPH_CURVE_LINE,
+                     "color", gwy_graph_get_preset_color(0),
+                     "description", "Trace",
+                     NULL);
         gwy_graph_model_add_curve(gmodel, gcmodel);
         g_object_unref(gcmodel);
 
@@ -882,6 +897,11 @@ hash_to_curve(GHashTable *hash,
             return NULL;
         }
         gcmodel = gwy_graph_curve_model_new();
+        g_object_set(gcmodel,
+                     "mode", GWY_GRAPH_CURVE_LINE,
+                     "color", gwy_graph_get_preset_color(1),
+                     "description", "Retrace",
+                     NULL);
         gwy_graph_curve_model_set_data_from_dataline(gcmodel, dline, 0, 0);
         gwy_graph_model_add_curve(gmodel, gcmodel);
         g_object_unref(gcmodel);
@@ -963,6 +983,7 @@ read_binary_data(gint n, gdouble *data,
 
             for (i = 0; i < n; i++)
                 data[i] = q*GINT32_FROM_LE(p[i]);
+
         }
         break;
 
