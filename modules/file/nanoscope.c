@@ -35,7 +35,7 @@
  * .001 .002 etc.
  * Read
  **/
-#define DEBUG 1
+
 #include "config.h"
 #include <errno.h>
 #include <string.h>
@@ -103,56 +103,60 @@ typedef struct {
     GwyGraphModel *graph_model;
 } NanoscopeData;
 
-static gboolean        module_register       (void);
-static gint            nanoscope_detect      (const GwyFileDetectInfo *fileinfo,
-                                              gboolean only_name);
-static GwyContainer*   nanoscope_load        (const gchar *filename,
-                                              GwyRunType mode,
-                                              GError **error);
-static GwyDataField*   hash_to_data_field    (GHashTable *hash,
-                                              GHashTable *scannerlist,
-                                              GHashTable *scanlist,
-                                              NanoscopeFileType file_type,
-                                              gboolean has_version,
-                                              guint bufsize,
-                                              gchar *buffer,
-                                              gint gxres,
-                                              gint gyres,
-                                              gchar **p,
-                                              GError **error);
-static GwyGraphModel*  hash_to_curve         (GHashTable *hash,
-                                              GHashTable *forcelist,
-                                              GHashTable *scanlist,
-                                              NanoscopeFileType file_type,
-                                              guint bufsize,
-                                              gchar *buffer,
-                                              gint gxres,
-                                              GError **error);
-static gboolean        read_text_data        (gint n,
-                                              gdouble *data,
-                                              gchar **buffer,
-                                              gint bpp,
-                                              GError **error);
-static gboolean        read_binary_data      (gint n,
-                                              gdouble *data,
-                                              gchar *buffer,
-                                              gint bpp,
-                                              GError **error);
-static GHashTable*     read_hash             (gchar **buffer,
-                                              GError **error);
-static void            get_scan_list_res     (GHashTable *hash,
-                                              gint *xres,
-                                              gint *yres);
-static GwySIUnit*      get_physical_scale    (GHashTable *hash,
-                                              GHashTable *scannerlist,
-                                              GHashTable *scanlist,
-                                              gboolean has_version,
-                                              gdouble *scale,
-                                              GError **error);
-static GwyContainer*   nanoscope_get_metadata(GHashTable *hash,
-                                              GList *list);
-static NanoscopeValue* parse_value           (const gchar *key,
-                                              gchar *line);
+static gboolean        module_register        (void);
+static gint            nanoscope_detect       (const GwyFileDetectInfo *fileinfo,
+                                               gboolean only_name);
+static GwyContainer*   nanoscope_load         (const gchar *filename,
+                                               GwyRunType mode,
+                                               GError **error);
+static GwyDataField*   hash_to_data_field     (GHashTable *hash,
+                                               GHashTable *scannerlist,
+                                               GHashTable *scanlist,
+                                               NanoscopeFileType file_type,
+                                               gboolean has_version,
+                                               guint bufsize,
+                                               gchar *buffer,
+                                               gint gxres,
+                                               gint gyres,
+                                               gchar **p,
+                                               GError **error);
+static GwyGraphModel*  hash_to_curve          (GHashTable *hash,
+                                               GHashTable *forcelist,
+                                               GHashTable *scanlist,
+                                               NanoscopeFileType file_type,
+                                               guint bufsize,
+                                               gchar *buffer,
+                                               gint gxres,
+                                               GError **error);
+static gboolean        read_text_data         (gint n,
+                                               gdouble *data,
+                                               gchar **buffer,
+                                               gint bpp,
+                                               GError **error);
+static gboolean        read_binary_data       (gint n,
+                                               gdouble *data,
+                                               gchar *buffer,
+                                               gint bpp,
+                                               GError **error);
+static GHashTable*     read_hash              (gchar **buffer,
+                                               GError **error);
+static void            get_scan_list_res      (GHashTable *hash,
+                                               gint *xres,
+                                               gint *yres);
+static GwySIUnit*      get_physical_scale     (GHashTable *hash,
+                                               GHashTable *scannerlist,
+                                               GHashTable *scanlist,
+                                               gboolean has_version,
+                                               gdouble *scale,
+                                               GError **error);
+static GwySIUnit*      get_tuna_physical_scale(GHashTable *hash,
+                                               GHashTable *scanlist,
+                                               gdouble *scale,
+                                               GError **error);
+static GwyContainer*   nanoscope_get_metadata (GHashTable *hash,
+                                               GList *list);
+static NanoscopeValue* parse_value            (const gchar *key,
+                                               gchar *line);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -160,7 +164,7 @@ static GwyModuleInfo module_info = {
     N_("Imports Veeco (Digital Instruments) Nanoscope data files, "
        "version 3 or newer."),
     "Yeti <yeti@gwyddion.net>",
-    "0.25",
+    "0.26",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -747,8 +751,8 @@ hash_to_curve(GHashTable *hash,
     GwyGraphModel *gmodel;
     GwyGraphCurveModel *gcmodel;
     GwySIUnit *unitz, *unitx;
-    gchar *s, *end;
-    gint xres, bpp, offset, size, power10;
+    gchar *end;
+    gint xres, bpp, offset, size;
     gdouble xreal, xoff, q;
     gdouble *data;
     gboolean size_ok, use_global;
@@ -778,6 +782,7 @@ hash_to_curve(GHashTable *hash,
     val = g_hash_table_lookup(forcelist, "@4:Ramp Begin DC Sample Bias");
     xoff = g_ascii_strtod(val->hard_value_str, &end);
     xreal -= xoff;
+    /* XXX: This is gross.  But anyway we only read I-V... */
     unitx = gwy_si_unit_new("V");
 
     offset = size = 0;
@@ -835,11 +840,7 @@ hash_to_curve(GHashTable *hash,
     }
 
     q = 1.0;
-    /*
-    unitz = get_physical_scale(hash, scannerlist, scanlist, has_version,
-                               &q, error);
-                               */
-    unitz = gwy_si_unit_new("A");
+    unitz = get_tuna_physical_scale(hash, scanlist, &q, error);
     if (!unitz)
         return NULL;
 
@@ -865,6 +866,7 @@ hash_to_curve(GHashTable *hash,
             g_object_unref(gmodel);
             return NULL;
         }
+        gwy_data_line_multiply(dline, q);
         gcmodel = gwy_graph_curve_model_new();
         gwy_graph_curve_model_set_data_from_dataline(gcmodel, dline, 0, 0);
         g_object_set(gcmodel,
@@ -881,6 +883,7 @@ hash_to_curve(GHashTable *hash,
             g_object_unref(gmodel);
             return NULL;
         }
+        gwy_data_line_multiply(dline, q);
         gcmodel = gwy_graph_curve_model_new();
         g_object_set(gcmodel,
                      "mode", GWY_GRAPH_CURVE_LINE,
@@ -901,6 +904,66 @@ hash_to_curve(GHashTable *hash,
     g_object_unref(dline);
 
     return gmodel;
+}
+
+/*
+ * get HardValue from Ciao force image list/@4:Z scale -> HARD
+ * get SoftScale from Ciao force image list/@4:Z scale -> SENS
+ * get \@SENS in Ciao scan list -> SOFT
+ * the factor is HARD*SOFT
+ */
+
+static GwySIUnit*
+get_tuna_physical_scale(GHashTable *hash,
+                        GHashTable *scanlist,
+                        gdouble *scale,
+                        GError **error)
+{
+    GwySIUnit *siunit, *siunit2;
+    NanoscopeValue *val, *sval;
+    gchar *key;
+    gint q;
+
+    if (!(val = g_hash_table_lookup(hash, "@4:Z scale"))) {
+        err_MISSING_FIELD(error, "Z scale");
+        return NULL;
+    }
+
+    /* Resolve reference to a soft scale */
+    if (val->soft_scale) {
+        key = g_strdup_printf("@%s", val->soft_scale);
+        if ((!scanlist || !(sval = g_hash_table_lookup(scanlist, key)))) {
+            g_warning("`%s' not found", key);
+            g_free(key);
+            /* XXX */
+            *scale = val->hard_value;
+            return gwy_si_unit_new("");
+        }
+
+        *scale = val->hard_value*sval->hard_value;
+
+        siunit = gwy_si_unit_new_parse(sval->hard_value_units, &q);
+        siunit2 = gwy_si_unit_new("V");
+        gwy_si_unit_multiply(siunit, siunit2, siunit);
+        gwy_debug("Scale1 = %g V/LSB", val->hard_value);
+        gwy_debug("Scale2 = %g %s",
+                  sval->hard_value, sval->hard_value_units);
+        *scale *= pow10(q);
+        gwy_debug("Total scale = %g %s/LSB",
+                  *scale, gwy_si_unit_get_string(siunit,
+                                                 GWY_SI_UNIT_FORMAT_PLAIN));
+        g_object_unref(siunit2);
+        g_free(key);
+    }
+    else {
+        /* FIXME: Is this possible for I-V too? */
+        /* We have '@4:Z scale' but the reference to soft scale is missing,
+         * the quantity is something in the hard units (seen for Potential). */
+        siunit = gwy_si_unit_new_parse(val->hard_value_units, &q);
+        *scale = val->hard_value * pow10(q);
+    }
+
+    return siunit;
 }
 
 static gboolean
