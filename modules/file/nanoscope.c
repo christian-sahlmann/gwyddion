@@ -121,7 +121,7 @@ static GwyDataField*   hash_to_data_field    (GHashTable *hash,
                                               gchar **p,
                                               GError **error);
 static GwyGraphModel*  hash_to_curve         (GHashTable *hash,
-                                              GHashTable *scannerlist,
+                                              GHashTable *forcelist,
                                               GHashTable *scanlist,
                                               NanoscopeFileType file_type,
                                               guint bufsize,
@@ -212,7 +212,7 @@ nanoscope_load(const gchar *filename,
     NanoscopeFileType file_type;
     NanoscopeData *ndata;
     NanoscopeValue *val;
-    GHashTable *hash, *scannerlist = NULL, *scanlist = NULL;
+    GHashTable *hash, *scannerlist = NULL, *scanlist = NULL, *forcelist = NULL;
     GList *l, *list = NULL;
     gint i, xres = 0, yres = 0;
     gboolean ok, has_version = FALSE;
@@ -293,13 +293,17 @@ nanoscope_load(const gchar *filename,
             get_scan_list_res(hash, &xres, &yres);
             scanlist = hash;
         }
+        if (gwy_stramong(self, "Ciao force list", NULL)) {
+            get_scan_list_res(hash, &xres, &yres);
+            forcelist = hash;
+        }
         if (!gwy_stramong(self, "Ciao image list", "AFM image list",
                           "STM image list", "NCAFM image list",
                           "Ciao force image list", NULL))
             continue;
 
         if (file_type == NANOSCOPE_FILE_TYPE_FORCE_BIN) {
-            ndata->graph_model = hash_to_curve(hash, scannerlist, scanlist,
+            ndata->graph_model = hash_to_curve(hash, forcelist, scanlist,
                                                file_type,
                                                size, buffer,
                                                xres,
@@ -730,7 +734,7 @@ get_physical_scale(GHashTable *hash,
 
 static GwyGraphModel*
 hash_to_curve(GHashTable *hash,
-              GHashTable *scannerlist,
+              GHashTable *forcelist,
               GHashTable *scanlist,
               NanoscopeFileType file_type,
               guint bufsize,
@@ -744,13 +748,18 @@ hash_to_curve(GHashTable *hash,
     GwyGraphCurveModel *gcmodel;
     GwySIUnit *unitz, *unitx;
     gchar *s, *end;
-    gchar un[5];
     gint xres, bpp, offset, size, power10;
-    gdouble xreal, q;
+    gdouble xreal, xoff, q;
     gdouble *data;
     gboolean size_ok, use_global;
 
     if (!require_keys(hash, error, "Samps/line", "Data offset", "Data length",
+                      NULL))
+        return NULL;
+
+    if (!require_keys(forcelist, error,
+                      "@4:Ramp Begin DC Sample Bias",
+                      "@4:Ramp End DC Sample Bias",
                       NULL))
         return NULL;
 
@@ -764,28 +773,12 @@ hash_to_curve(GHashTable *hash,
     bpp = val ? GWY_ROUND(val->hard_value) : 2;
 
     /* scan size */
-    val = g_hash_table_lookup(scanlist, "Scan size");
+    val = g_hash_table_lookup(forcelist, "@4:Ramp End DC Sample Bias");
     xreal = g_ascii_strtod(val->hard_value_str, &end);
-    if (errno || *end != ' ') {
-        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                    _("Cannot parse `Scan size' field."));
-        return NULL;
-    }
-    gwy_debug("xreal = %g", xreal);
-    while (g_ascii_isspace(*end))
-        end++;
-    if (sscanf(end, "%4s", un) != 1) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                    _("Cannot parse `Scan size' field."));
-        return NULL;
-    }
-    gwy_debug("x unit: <%s>", un);
-    /* FIXME FIXME FIXME */
-    un[0] = 'V';
-    un[1] = '\0';
-    unitx = gwy_si_unit_new_parse(un, &power10);
-    q = pow10(power10);
-    xreal *= q;
+    val = g_hash_table_lookup(forcelist, "@4:Ramp Begin DC Sample Bias");
+    xoff = g_ascii_strtod(val->hard_value_str, &end);
+    xreal -= xoff;
+    unitx = gwy_si_unit_new("V");
 
     offset = size = 0;
     if (file_type == NANOSCOPE_FILE_TYPE_FORCE_BIN) {
@@ -825,17 +818,8 @@ hash_to_curve(GHashTable *hash,
             return NULL;
         }
 
-        if (use_global) {
-            if (gxres) {
-                xreal *= (gdouble)gxres/xres;
-                xres = gxres;
-            }
-        }
-        else {
-            /* Reported by Peter Eaton.  No test case that would contradict
-             * this known. */
-            xreal *= xres;
-        }
+        if (use_global && gxres)
+            xres = gxres;
 
         if (err_DIMENSION(error, xres))
             return NULL;
@@ -867,6 +851,7 @@ hash_to_curve(GHashTable *hash,
                  NULL);
 
     dline = gwy_data_line_new(xres, xreal, FALSE);
+    gwy_data_line_set_offset(dline, xoff);
     gwy_data_line_set_si_unit_y(dline, unitz);
     g_object_unref(unitz);
     gwy_data_line_set_si_unit_x(dline, unitx);
