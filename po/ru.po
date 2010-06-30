@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2010-06-20 03:59+0200\n"
-"PO-Revision-Date: 2010-06-20 10:53+0300\n"
+"POT-Creation-Date: 2010-06-30 03:58+0200\n"
+"PO-Revision-Date: 2010-06-30 10:08+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -2348,7 +2348,7 @@ msgstr "Экспортированные данные Burleigh (.txt, .bin)"
 
 #: modules/file/burleigh_exp.c:225
 #: modules/file/burleigh_exp.c:266
-#: modules/file/nanoscope.c:1013
+#: modules/file/nanoscope.c:1082
 #: modules/file/omicron.c:370
 #: modules/file/shimadzu.c:406
 msgid "Missing colon in header line."
@@ -2472,6 +2472,10 @@ msgstr "В файле отсутствует канал, который можн
 #: modules/file/err.h:158
 msgid "File import was cancelled by user."
 msgstr "Импорт файла отменён пользователем"
+
+#: modules/file/err.h:171
+msgid "Missing header."
+msgstr "Отсутствует заголовок."
 
 #: modules/file/ezdfile.c:123
 msgid "Imports Nanosurf EZD and NID data files."
@@ -2928,19 +2932,19 @@ msgstr "Импортирует файлы данных Digital Instruments Nanos
 msgid "Nanoscope II files"
 msgstr "Файлы Nanoscope II"
 
-#: modules/file/nanoscope.c:160
+#: modules/file/nanoscope.c:164
 msgid "Imports Veeco (Digital Instruments) Nanoscope data files, version 3 or newer."
 msgstr "Импортирует файлы данных Veeco (Digital Instruments) Nanoscope версии 3 или более новой."
 
-#: modules/file/nanoscope.c:174
+#: modules/file/nanoscope.c:178
 msgid "Nanoscope III files"
 msgstr "Файлы Nanoscope III"
 
-#: modules/file/nanoscope.c:238
+#: modules/file/nanoscope.c:242
 msgid "File is not a Nanoscope file, or it is a unknown subtype."
 msgstr "Файл не является файлом Nanoscope или неизвестного подтипа."
 
-#: modules/file/nanoscope.c:245
+#: modules/file/nanoscope.c:249
 msgid ""
 "File has been damaged by change of line endings, resulting in corruption of the binary part of the file.\n"
 "\n"
@@ -2950,19 +2954,17 @@ msgstr ""
 "\n"
 "Обычно это происходит если файл был воспринят как текст при передаче по электронной почте в несжатом виде, по FTP в ASCII-режиме (используйте binary), сжат с помощью команды 'Послать в сжатую папку' в некоторых версиях MS Windows, или при других способах передачи файла, которые используют платформо-независимое сохранение текста."
 
-#: modules/file/nanoscope.c:509
-#: modules/file/nanoscope.c:525
-#: modules/file/nanoscope.c:771
-#: modules/file/nanoscope.c:779
+#: modules/file/nanoscope.c:517
+#: modules/file/nanoscope.c:533
 msgid "Cannot parse `Scan size' field."
 msgstr "Не удаётся распознать поле `Scan size'."
 
-#: modules/file/nanoscope.c:924
+#: modules/file/nanoscope.c:992
 #, c-format
 msgid "Garbage after data sample #%d."
 msgstr "Мусор после элемента данных #%d."
 
-#: modules/file/nanoscope.c:1003
+#: modules/file/nanoscope.c:1072
 msgid "Truncated header line."
 msgstr "Обрезанная строка заголовка."
 
@@ -3041,7 +3043,7 @@ msgstr "Достигнут конец файла в данных фрейма #%
 msgid "Frame #%u is too short for scanned data header."
 msgstr "Фрейм #%u слишком короткий чтобы быть заголовком сканированных данных."
 
-#: modules/file/nt-mdt.c:2376
+#: modules/file/nt-mdt.c:2404
 msgid "Raman Image"
 msgstr "Изображение комбинационного рассеяния"
 
@@ -5984,7 +5986,7 @@ msgid "Reads radial sections of two-dimensional power spectrum density function.
 msgstr "Читает радиальные сечения функции спектральной плотности мощности (ФСПМ)."
 
 #: modules/process/fft_profile.c:134
-msgid "/_Statistics/_PDSF Section..."
+msgid "/_Statistics/_PSDF Section..."
 msgstr "/_Статистика/Сечение _ФСПМ..."
 
 #: modules/process/fft_profile.c:138
