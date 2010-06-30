@@ -1,4 +1,4 @@
-2.20 (0000-00-00)
+2.20 (2010-06-30)
 Application:
 - Translations updated: French.
 - It is possible to export 3D as image also to other support pixmap formats,
@@ -27,6 +27,8 @@ Modules:
 - NT-MDT: Z value offsets are honoured in imported data.
 - Shimadzu: Bogus warning that Z offset units differ from Z scale units was
   fixed.
+- Nanoscope: Some import support for I-V spectra was added.
+- Pixmap export: False color scale ticks are numbered.
 - Rotate: Rotation angle can be a fractional number.
 
 
