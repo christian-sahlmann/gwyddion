@@ -56,6 +56,7 @@ graph_fdfit	graph-processing
 graph_fit	graph-processing	graph-fit
 graph_level	graph-processing
 graph_stats	graph-processing
+gsffile	gsf
 gwyfile	managing-files
 hdf4file	managing-files
 hitachi-afm	managing-files
