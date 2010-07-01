@@ -1,6 +1,6 @@
 2.20 (2010-06-30)
 Application:
-- Translations updated: French.
+- Translations updated: French, Russian.
 - It is possible to export 3D as image also to other support pixmap formats,
   the format is determined by the extension.
 
@@ -28,6 +28,7 @@ Modules:
 - Shimadzu: Bogus warning that Z offset units differ from Z scale units was
   fixed.
 - Nanoscope: Some import support for I-V spectra was added.
+- JPK: Support for 32bit data was added.
 - Pixmap export: False color scale ticks are numbered.
 - Rotate: Rotation angle can be a fractional number.
 
