@@ -33,7 +33,8 @@
  * [FILE-MAGIC-USERGUIDE]
  * Veeco Nanoscope III
  * .001 .002 etc.
- * Read
+ * Read SPS:Limited[1]
+ * [1] Spectra curves are imported as graphs, positional information is lost.
  **/
 
 #include "config.h"
