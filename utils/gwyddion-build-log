@@ -114,7 +114,7 @@ if x: print '\\n'.join(x)" \
 }
 
 function extract_documentation_stats() {
-   logfile=build_documentation.log
+   logfile=documentation_stats.log
    htmlfile=documentation_stats.html
    $projectdir/utils/documentation-stats.py <$logfile >$htmlfile
 }

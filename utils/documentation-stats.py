@@ -1,38 +1,20 @@
 #!/usr/bin/python
 import re, sys
 
-stat_types = {
-    'documented': 'good',
-    'incomplete': 'fuzzy',
-    'not documented': 'bad'
-}
+stat_types = 'good', 'fuzzy', 'bad'
 total_width = 200
 
 def parse(fh):
     stats = []
-    group = None
     for line in fh:
-        m = re.match(r'make(?:\[\d+\]): Entering directory `.*/(?P<group>.*)\'\n', line)
-        if m:
-            group = m.group('group')
-            continue
-
-        m = re.match(r'\d+% symbol docs coverage \((?P<stats>.*)\)\n', line)
-        if not m:
-            continue
-
-        assert group
-        stat = {'group': group}
-
-        sum = 0
-        for x in stat_types:
-            m = re.search(r'\b(?P<count>\d+)( symbols?)? %s' % x, line)
-            if m:
-                stat[x] = int(m.group('count'))
-                sum += stat[x]
-        stat['total'] = sum
+        line = line.split()
+        group = line[0]
+        del line[0]
+        line = [int(x) for x in line]
+        stat = {'group': group, 'total': sum(line)}
+        for i, x in enumerate(stat_types):
+            stat[x] = line[i]
         stats.append(stat)
-
     return stats
 
 def format_row(stat):
@@ -74,12 +56,11 @@ def format_row(stat):
             w[mx] += 1
             sw += 1
 
-    t = dict([(z[1], z[0]) for z in stat_types.items()])
-    for x in t['good'], t['fuzzy'], t['bad']:
+    for x in stat_types:
         if not stat.has_key(x):
             stats.append(statfmt % (0, 0.0))
             continue
-        box.append(boxfmt % (stat_types[x], w[x]))
+        box.append(boxfmt % (x, w[x]))
         stats.append(statfmt % (stat[x], stat[x]/sum*100.0))
 
     return rowfmt % (stat['group'], '\n'.join(stats), sum, ''.join(box))

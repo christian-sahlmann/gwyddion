@@ -84,6 +84,12 @@ function build_documentation() {
   cd ./devel-docs
   sed -i -e 's:^###NIGHT-BUILD###::' Makefile
   make -k docs
+  for x in libgwy*; do
+    fully=$(sed 's/^\([0-9]\+\) symbols* documented.*/\1/;t;d' $x/$x-undocumented.txt)
+    partially=$(sed 's/^\([0-9]\+\) symbols* incomplete.*/\1/;t;d' $x/$x-undocumented.txt)
+    missing=$(sed 's/^\([0-9]\+\) \(symbols* \)\?not documented.*/\1/;t;d' $x/$x-undocumented.txt)
+    echo $x ${fully:-0} ${partially:-0} ${missing:-0}
+  done >$logdir/documentation_stats.log
 }
 
 
