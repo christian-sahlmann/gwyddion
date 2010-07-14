@@ -402,10 +402,13 @@ static gboolean       mdt_real_load         (const guchar *buffer,
                                              MDTFile *mdtfile,
                                              GError **error);
 static GwyDataField*  extract_scanned_data  (MDTScannedDataFrame *dataframe);
-static GwyGraphModel* extract_scanned_spectrum (MDTScannedDataFrame *dataframe);
-static GwySpectra*    extract_sps_curve     (MDTScannedDataFrame *dataframe);
+static GwyGraphModel* extract_scanned_spectrum (MDTScannedDataFrame *dataframe,
+                                                guint number);
+static GwySpectra*    extract_sps_curve     (MDTScannedDataFrame *dataframe,
+                                             guint number);
 static GwyDataField*  extract_mda_data      (MDTMDAFrame *dataframe);
-static GwyGraphModel* extract_mda_spectrum  (MDTMDAFrame *dataframe);
+static GwyGraphModel* extract_mda_spectrum  (MDTMDAFrame *dataframe,
+                                             guint number);
 static GwyDataField * extract_raman_image   (MDTMDAFrame *dataframe,
                                              GwyRunType mode);
 
@@ -419,7 +422,7 @@ static void          end_element         (GMarkupParseContext *context,
                                           const gchar *element_name,
                                           gpointer user_data,
                                           GError **error);
-static void          parse_text                (GMarkupParseContext *context,
+static void          parse_text          (GMarkupParseContext *context,
                                           const gchar *text,
                                           gsize text_len,
                                           gpointer user_data,
@@ -749,8 +752,9 @@ mdt_load(const gchar *filename,
             if (sdframe->title) {
                 g_string_append(key, "/title");
                 gwy_container_set_string_by_name(data, key->str,
-                                                 g_strndup(sdframe->title,
-                                                           sdframe->title_len));
+                        g_strdup_printf("%.*s (%u)",
+                                        sdframe->title_len,
+                                        sdframe->title, i+1));
             }
             else
                 gwy_app_channel_title_fall_back(data, n);
@@ -782,7 +786,7 @@ mdt_load(const gchar *filename,
                 /* raman spectra */
                 GwyGraphModel *gmodel;
 
-                gmodel = extract_mda_spectrum(mdaframe);
+                gmodel = extract_mda_spectrum(mdaframe, i+1);
                 g_string_printf(key, "/0/graph/graph/%d", n+1);
                 gwy_container_set_object_by_name(data, key->str, gmodel);
                 g_object_unref(gmodel);
@@ -797,8 +801,9 @@ mdt_load(const gchar *filename,
                 if (mdaframe->title) {
                 g_string_append(key, "/title");
                     gwy_container_set_string_by_name(data, key->str,
-                                              g_strndup(mdaframe->title,
-                                              mdaframe->title_len));
+                            g_strdup_printf("%.*s (%u)",
+                                            mdaframe->title_len,
+                                            mdaframe->title, i+1));
                 }
                 else
                     gwy_app_channel_title_fall_back(data, n);
@@ -811,17 +816,10 @@ mdt_load(const gchar *filename,
             GwyGraphModel *gmodel;
 
             sdframe = (MDTScannedDataFrame*)mdtfile.frames[i].frame_data;
-            gmodel = extract_scanned_spectrum(sdframe);
+            gmodel = extract_scanned_spectrum(sdframe, i+1);
             g_string_printf(key, "/0/graph/graph/%d", n+1);
             gwy_container_set_object_by_name(data, key->str, gmodel);
             g_object_unref(gmodel);
-
-            if (sdframe->title) {
-                g_string_append(key, "/title");
-                gwy_container_set_string_by_name(data, key->str,
-                                                 g_strndup(sdframe->title,
-                                                           sdframe->title_len));
-            }
 
             n++;
         }
@@ -830,17 +828,10 @@ mdt_load(const gchar *filename,
             GwySpectra *gspectra;
 
             sdframe = (MDTScannedDataFrame*)mdtfile.frames[i].frame_data;
-            gspectra = extract_sps_curve(sdframe);
+            gspectra = extract_sps_curve(sdframe, i+1);
             g_string_printf(key, "/sps/%d", n);
             gwy_container_set_object_by_name(data, key->str, gspectra);
             g_object_unref(gspectra);
-
-            if (sdframe->title) {
-                g_string_append(key, "/title");
-                gwy_container_set_string_by_name(data, key->str,
-                                                 g_strndup(sdframe->title,
-                                                           sdframe->title_len));
-            }
 
             n++;
         }
@@ -1504,7 +1495,8 @@ extract_scanned_data(MDTScannedDataFrame *dataframe)
     return dfield;
 }
 
-static GwyGraphModel* extract_scanned_spectrum (MDTScannedDataFrame *dataframe)
+static GwyGraphModel* extract_scanned_spectrum (MDTScannedDataFrame *dataframe,
+                                                guint number)
 {
     GwyGraphCurveModel *spectra;
     GwyGraphModel *gmodel;
@@ -1534,9 +1526,11 @@ static GwyGraphModel* extract_scanned_spectrum (MDTScannedDataFrame *dataframe)
     zscale = pow10(power10z)*dataframe->z_scale.step;
 
     if (dataframe->title_len && dataframe->title)
-        framename = g_strndup(dataframe->title, dataframe->title_len);
+        framename = g_strdup_printf("%.*s (%u)",
+                                    dataframe->title_len,
+                                    dataframe->title, number);
     else
-        framename = g_strdup("Unknown spectrum");
+        framename = g_strdup_printf("Unknown spectrum (%d)", number);
 
     spectra = gwy_graph_curve_model_new();
     g_object_set(spectra,
@@ -1575,7 +1569,8 @@ static GwyGraphModel* extract_scanned_spectrum (MDTScannedDataFrame *dataframe)
     return gmodel;
 }
 
-static GwySpectra* extract_sps_curve (MDTScannedDataFrame *dataframe)
+static GwySpectra* extract_sps_curve (MDTScannedDataFrame *dataframe,
+                                      guint number)
 {
     GwySpectra *spectra;
     GwyDataLine *dline;
@@ -1671,9 +1666,11 @@ static GwySpectra* extract_sps_curve (MDTScannedDataFrame *dataframe)
     }
 
     if (dataframe->title_len && dataframe->title)
-        framename = g_strndup(dataframe->title, dataframe->title_len);
+        framename = g_strdup_printf("%.*s (%u)",
+                                    dataframe->title_len,
+                                    dataframe->title, number);
     else
-        framename = g_strdup("Unknown spectrum");
+        framename = g_strdup_printf("Unknown spectrum (%d)", number);
     gwy_spectra_set_title(spectra, framename);
     g_free(framename);
 
@@ -1888,7 +1885,7 @@ extract_mda_data(MDTMDAFrame * dataframe)
 }
 
 static GwyGraphModel*
-extract_mda_spectrum(MDTMDAFrame *dataframe)
+extract_mda_spectrum(MDTMDAFrame *dataframe, guint number)
 {
     gint res;
     GwyGraphCurveModel *spectra;
@@ -1911,9 +1908,11 @@ extract_mda_spectrum(MDTMDAFrame *dataframe)
     GError *err = NULL;
 
     if (dataframe->title_len && dataframe->title)
-        framename = g_strndup(dataframe->title, dataframe->title_len);
+        framename = g_strdup_printf("%.*s (%u)",
+                                    dataframe->title_len,
+                                    dataframe->title, number);
     else
-        framename = g_strdup("Unknown spectrum");
+        framename = g_strdup_printf("Unknown spectrum (%d)", number);
 
     if (dataframe->nDimensions) {
         xAxis = &dataframe->dimensions[0],
