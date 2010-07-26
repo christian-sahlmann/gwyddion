@@ -174,7 +174,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports binary MetroPro (Zygo) data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.5",
+    "0.6",
     "David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
@@ -254,9 +254,9 @@ mprofile_load(const gchar *filename,
     key = g_string_new(NULL);
     container = gwy_container_new();
     for (i = 0; i < n; i++) {
-        if (i < mprofile.nbuckets) {
-            dfield = mprofile.intensity_data[i];
-            vpmask = mprofile.intensity_mask[i];
+        if (i > 0) {
+            dfield = mprofile.intensity_data[i-1];
+            vpmask = mprofile.intensity_mask[i-1];
             title = "Intensity";
         }
         else {
