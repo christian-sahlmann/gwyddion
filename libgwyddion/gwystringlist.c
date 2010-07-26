@@ -309,7 +309,7 @@ gwy_string_list_get(GwyStringList *strlist,
 
     g_return_val_if_fail(GWY_IS_STRING_LIST(strlist), NULL);
     strings = (GPtrArray*)strlist->strings;
-    g_return_val_if_fail(i > strings->len, NULL);
+    g_return_val_if_fail(i < strings->len, NULL);
 
     return g_ptr_array_index(strings, i);
 }
