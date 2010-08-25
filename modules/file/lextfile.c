@@ -46,6 +46,9 @@
 #include "err.h"
 #include "gwytiff.h"
 
+/* Really.  They use factor 1e-6 and the value is in microns. */
+#define Picometer 1e-12
+
 #ifdef HAVE_MEMRCHR
 #define strlenrchr(s,c,len) (gchar*)memrchr((s),(c),(len))
 #else
@@ -186,7 +189,7 @@ end_element(G_GNUC_UNUSED GMarkupParseContext *context,
 static void
 text(G_GNUC_UNUSED GMarkupParseContext *context,
      const gchar *value,
-     gsize value_len,
+     G_GNUC_UNUSED gsize value_len,
      gpointer user_data,
      G_GNUC_UNUSED GError **error)
 {
@@ -196,11 +199,22 @@ text(G_GNUC_UNUSED GMarkupParseContext *context,
 
     g_strstrip(val);
     if (*val) {
-        g_printerr("<%s> <%s>\n", path, val);
+        gwy_debug("<%s> <%s>", path, val);
         g_hash_table_replace(lfile->hash, g_strdup(path), val);
     }
     else
         g_free(val);
+}
+
+static void
+titlecase_channel_name(gchar *name)
+{
+    *name = g_ascii_toupper(*name);
+    name++;
+    while (*name) {
+        *name = g_ascii_tolower(*name);
+        name++;
+    }
 }
 
 static GwyContainer*
@@ -214,15 +228,11 @@ lext_load_tiff(const GwyTIFF *tiff, GError **error)
     GHashTable *hash = NULL;
     GMarkupParseContext *context = NULL;
     LextFile lfile;
-    gint i, power10;
     gchar *comment = NULL;
-    const gchar *s1;
-    gchar *s2;
+    gchar *title = NULL;
+    const gchar *value;
     GError *err = NULL;
     guint dir_num = 0;
-    gdouble *data;
-    double z_axis = 1.0, xy_axis, factor;
-    GQuark quark;
     GString *key;
 
     /* Comment with parameters is common for all data fields */
@@ -248,52 +258,74 @@ lext_load_tiff(const GwyTIFF *tiff, GError **error)
     }
 
     for (dir_num = 0; dir_num < gwy_tiff_get_n_dirs(tiff); dir_num++) {
+        double xscale, yscale, zfactor;
+        GQuark quark;
+        gdouble *data;
+        gint i;
+
+        g_free(title);
+        title = NULL;
+
+        if (!gwy_tiff_get_string(tiff, dir_num, GWY_TIFFTAG_IMAGE_DESCRIPTION,
+                                 &title)) {
+            g_warning("Directory %u has no ImageDescription.", dir_num);
+            continue;
+        }
+
+        /* Ignore the first directory, thumbnail and anything called INVALID */
+        if (dir_num == 0)
+            continue;
+        gwy_debug("Channel <%s>", title);
+        titlecase_channel_name(title);
+        if (gwy_stramong(title, "Thumbnail", "Invalid", NULL))
+            continue;
+
         reader = gwy_tiff_image_reader_free(reader);
         /* Request a reader, this ensures dimensions and stuff are defined. */
         reader = gwy_tiff_get_image_reader(tiff, dir_num, &err);
         if (!reader) {
-            g_warning("Ignoring directory %u: %s.", dir_num, err->message);
+            g_warning("Ignoring directory %u: %s", dir_num, err->message);
             g_clear_error(&err);
             continue;
         }
-        g_string_printf(key, "Data %u Info::XY Convert Value", dir_num+1);
-        if (!(s1 = g_hash_table_lookup(hash, key->str))) {
-            g_warning("Cannot find 'XY Convert Value' for data %u.", dir_num+1);
-            continue;
-        }
-        xy_axis = g_ascii_strtod(s1, NULL);
-        if (!((xy_axis = fabs(xy_axis)) > 0)) {
-            g_warning("Real size step is 0.0, fixing to 1.0");
-            xy_axis = 1.0;
-        }
-        g_string_printf(key, "Data %u Info::Z Convert Value", dir_num+1);
-        if (!(s1 = g_hash_table_lookup(hash, key->str))) {
-            g_warning("Cannot find 'Z Convert Value' for data %u.", dir_num+1);
-            continue;
-        }
-        z_axis = g_ascii_strtod(s1, NULL);
 
-        siunit = gwy_si_unit_new_parse("nm", &power10);
+        g_string_printf(key, "/TiffTagDescData/%sInfo/%sDataPerPixelX",
+                        title, title);
+        if (!(value = g_hash_table_lookup(hash, (gpointer)key->str))) {
+            g_warning("Cannot find %s", key->str);
+        }
+        xscale = Picometer * g_ascii_strtod(value, NULL);
+
+        g_string_printf(key, "/TiffTagDescData/%sInfo/%sDataPerPixelY",
+                        title, title);
+        if (!(value = g_hash_table_lookup(hash, (gpointer)key->str))) {
+            g_warning("Cannot find %s", key->str);
+        }
+        yscale = Picometer * g_ascii_strtod(value, NULL);
+
+        g_string_printf(key, "/TiffTagDescData/%sInfo/%sDataPerPixelZ",
+                        title, title);
+        if (!(value = g_hash_table_lookup(hash, (gpointer)key->str))) {
+            g_warning("Cannot find %s", key->str);
+        }
+        zfactor = Picometer * g_ascii_strtod(value, NULL);
+
+        siunit = gwy_si_unit_new("m");
         dfield = gwy_data_field_new(reader->width, reader->height,
-                                    reader->width * xy_axis * pow10(power10),
-                                    reader->height * xy_axis * pow10(power10),
+                                    reader->width * xscale,
+                                    reader->height * yscale,
                                     FALSE);
         // units
         gwy_data_field_set_si_unit_xy(dfield, siunit);
         g_object_unref(siunit);
 
-        if (dir_num == 1)
-            siunit = gwy_si_unit_new_parse("nm", &power10);
-        else
-            siunit = gwy_si_unit_new_parse("1e-6", &power10);
+        siunit = gwy_si_unit_new("m");
         gwy_data_field_set_si_unit_z(dfield, siunit);
         g_object_unref(siunit);
 
-        factor = z_axis * pow10(power10);
         data = gwy_data_field_get_data(dfield);
-
         for (i = 0; i < reader->height; i++)
-            gwy_tiff_read_image_row(tiff, reader, i, factor, 0.0,
+            gwy_tiff_read_image_row(tiff, reader, i, zfactor, 0.0,
                                     data + i*reader->width);
 
         /* add read datafield to container */
@@ -303,26 +335,16 @@ lext_load_tiff(const GwyTIFF *tiff, GError **error)
         quark = gwy_app_get_data_key_for_id(dir_num);
         gwy_container_set_object(container, quark, dfield);
 
-        /* Channel 0 is texture */
-        if (dir_num == 0) {
-            s2 = g_strdup_printf("%s/title", g_quark_to_string(quark));
-            gwy_container_set_string_by_name(container, s2,
-                                             g_strdup("Texture"));
-            g_free(s2);
-        }
-        /* Channel 1 is topography */
-        else if (dir_num == 1) {
-            s2 = g_strdup_printf("%s/title", g_quark_to_string(quark));
-            gwy_container_set_string_by_name(container, s2,
-                                             g_strdup("Height"));
-            g_free(s2);
-        }
+        g_string_printf(key, "/%u/data/title", dir_num);
+        gwy_container_set_string_by_name(container, key->str, title);
+        title = NULL;
 
         // free resources
         g_object_unref(dfield);
     }
 
 fail:
+    g_free(title);
     g_free(comment);
     if (reader) {
         gwy_tiff_image_reader_free(reader);
