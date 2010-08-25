@@ -44,6 +44,7 @@ file_LTLIBRARIES = \
 	intematix.la \
 	jeol.la \
 	jpkscan.la \
+	lextfile.la \
 	mapvue.la \
 	$(matfile_module) \
 	metropro.la \
@@ -143,6 +144,7 @@ igorfile_la_SOURCES      = igorfile.c
 intematix_la_SOURCES     = intematix.c gwytiff.h
 jeol_la_SOURCES          = jeol.c
 jpkscan_la_SOURCES       = jpkscan.c jpk.h gwytiff.h
+lextfile_la_SOURCES      = lextfile.c gwytiff.h
 mapvue_la_SOURCES        = mapvue.c
 metropro_la_SOURCES      = metropro.c
 microprof_la_SOURCES     = microprof.c
