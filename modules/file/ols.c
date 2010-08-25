@@ -173,7 +173,7 @@ ols_load_tiff(const GwyTIFF *tiff, GError **error)
         /* Request a reader, this ensures dimensions and stuff are defined. */
         reader = gwy_tiff_get_image_reader(tiff, dir_num, &err);
         if (!reader) {
-            g_warning("Ignoring directory %u: %s.", dir_num, err->message);
+            g_warning("Ignoring directory %u: %s", dir_num, err->message);
             g_clear_error(&err);
             continue;
         }
