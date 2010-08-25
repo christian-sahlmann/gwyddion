@@ -1,6 +1,6 @@
 /*
- *  @(#) $Id: lext.c 10195 2009-10-01 23:04:26Z yeti-dn $
- *  Copyright (C) 2006 David Necas (Yeti), Petr Klapetek.
+ *  @(#) $Id$
+ *  Copyright (C) 2010 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -84,10 +84,10 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     module_register,
     N_("Imports LEXT data files."),
-    "Jan Hořák <xhorak@gmail.com>, Yeti <yeti@gwyddion.net>",
-    "0.8",
+    "Yeti <yeti@gwyddion.net>",
+    "0.1",
     "David Nečas (Yeti) & Petr Klapetek",
-    "2008",
+    "2010",
 };
 
 GWY_MODULE_QUERY(module_info)
@@ -308,7 +308,7 @@ lext_load_tiff(const GwyTIFF *tiff, GError **error)
         if (!(value = g_hash_table_lookup(hash, (gpointer)key->str))) {
             g_warning("Cannot find %s", key->str);
         }
-        zfactor = Picometer * g_ascii_strtod(value, NULL);
+        zfactor = g_ascii_strtod(value, NULL);
 
         siunit = gwy_si_unit_new("m");
         dfield = gwy_data_field_new(reader->width, reader->height,
@@ -319,7 +319,16 @@ lext_load_tiff(const GwyTIFF *tiff, GError **error)
         gwy_data_field_set_si_unit_xy(dfield, siunit);
         g_object_unref(siunit);
 
-        siunit = gwy_si_unit_new("m");
+        if (gwy_strequal(title, "Height")) {
+            siunit = gwy_si_unit_new("m");
+            zfactor *= Picometer;
+        }
+        else if (gwy_strequal(title, "Intensity")) {
+            siunit = gwy_si_unit_new(NULL);
+        }
+        else
+            siunit = gwy_si_unit_new(NULL);
+
         gwy_data_field_set_si_unit_z(dfield, siunit);
         g_object_unref(siunit);
 
