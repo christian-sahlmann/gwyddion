@@ -67,7 +67,7 @@ static GwyAppUndo* gwy_undo_get_for_data           (GwyContainer *data,
                                                     gboolean do_create);
 
 static GList *container_list = NULL;
-static gboolean undo_enabled = TRUE;
+static gboolean undo_disabled = FALSE;
 
 /**
  * gwy_app_undo_checkpoint:
@@ -90,7 +90,7 @@ gwy_app_undo_checkpoint(GwyContainer *data,
     guint i, n;
     gulong id;
 
-    if (!undo_enabled)
+    if (undo_disabled)
         return 0;
 
     n = 0;
@@ -165,7 +165,7 @@ gwy_app_undo_qcheckpoint(GwyContainer *data,
     guint i, n;
     gulong id;
 
-    if (!undo_enabled)
+    if (undo_disabled)
         return 0;
 
     n = 0;
@@ -287,7 +287,7 @@ gwy_undo_checkpoint(GwyContainer *data,
     guint i, n;
     gulong id;
 
-    if (!undo_enabled)
+    if (undo_disabled)
         return 0;
 
     n = 0;
@@ -329,7 +329,7 @@ gwy_undo_qcheckpoint(GwyContainer *data,
     guint i, n;
     gulong id;
 
-    if (!undo_enabled)
+    if (undo_disabled)
         return 0;
 
     n = 0;
@@ -373,7 +373,7 @@ gwy_undo_checkpointv(GwyContainer *data,
     GQuark *qkeys;
     guint i, j;
 
-    if (!UNDO_LEVELS || !undo_enabled)
+    if (!UNDO_LEVELS || undo_disabled)
         return 0;
 
     g_return_val_if_fail(GWY_IS_CONTAINER(data), 0UL);
@@ -418,7 +418,7 @@ gwy_undo_qcheckpointv(GwyContainer *data,
     GList *available;
     guint i, j;
 
-    if (!UNDO_LEVELS || !undo_enabled)
+    if (!UNDO_LEVELS || undo_disabled)
         return 0;
 
     g_return_val_if_fail(GWY_IS_CONTAINER(data), 0UL);
@@ -552,7 +552,7 @@ gwy_undo_undo_container(GwyContainer *data)
     GwyAppUndoLevel *level;
     GList *l;
 
-    if (!undo_enabled)
+    if (undo_disabled)
         return;
 
     appundo = gwy_undo_get_for_data(data, FALSE);
@@ -583,7 +583,7 @@ gwy_undo_redo_container(GwyContainer *data)
     GwyAppUndoLevel *level;
     GList *l;
 
-    if (!undo_enabled)
+    if (undo_disabled)
         return;
 
     appundo = gwy_undo_get_for_data(data, FALSE);
@@ -779,7 +779,7 @@ gwy_app_undo_container_finalized(gpointer userdata,
 
     // We could also remove the weak refs when disabling undo, but this seems
     // easier.
-    if (!undo_enabled)
+    if (undo_disabled)
         return;
 
     gwy_debug("Freeing undo for Container %p", deceased_data);
@@ -913,7 +913,7 @@ gwy_undo_container_remove(GwyContainer *data,
 {
     GwyAppUndo *appundo;
 
-    if (!undo_enabled)
+    if (undo_disabled)
         return;
 
     gwy_debug("Removing undo for Container %p and prefix %s", data, prefix);
@@ -946,7 +946,7 @@ gwy_undo_container_remove(GwyContainer *data,
 gboolean
 gwy_undo_get_enabled(void)
 {
-    return undo_enabled;
+    return !undo_disabled;
 }
 
 /**
@@ -967,9 +967,9 @@ gwy_undo_get_enabled(void)
 void
 gwy_undo_set_enabled(gboolean setting)
 {
-    undo_enabled = setting;
+    undo_disabled = !setting;
     /* Remove all data when disabling */
-    if (!undo_enabled) {
+    if (undo_disabled) {
         while (container_list) {
             GwyAppUndo *appundo = (GwyAppUndo*)container_list->data;
             container_list = g_list_delete_link(container_list, container_list);
