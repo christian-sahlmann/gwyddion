@@ -67,6 +67,7 @@ static GwyAppUndo* gwy_undo_get_for_data           (GwyContainer *data,
                                                     gboolean do_create);
 
 static GList *container_list = NULL;
+static gboolean undo_enabled = TRUE;
 
 /**
  * gwy_app_undo_checkpoint:
@@ -78,7 +79,7 @@ static GList *container_list = NULL;
  * In addition to what gwy_undo_checkpoint() does, this function takes care
  * of updating application controls state.
  *
- * Returns: Undo level id.  Not useful (yet).
+ * Returns: Undo level id (zero if undo/redo is disabled).  Not useful (yet).
  **/
 gulong
 gwy_app_undo_checkpoint(GwyContainer *data,
@@ -88,6 +89,9 @@ gwy_app_undo_checkpoint(GwyContainer *data,
     GQuark *keys;
     guint i, n;
     gulong id;
+
+    if (!undo_enabled)
+        return 0;
 
     n = 0;
     va_start(ap, data);
@@ -132,7 +136,6 @@ gwy_app_undo_checkpointv(GwyContainer *data,
 {
     gulong id;
 
-
     id = gwy_undo_checkpointv(data, n, keys);
     if (id)
         gwy_app_sensitivity_set_state(GWY_MENU_FLAG_UNDO | GWY_MENU_FLAG_REDO,
@@ -161,6 +164,9 @@ gwy_app_undo_qcheckpoint(GwyContainer *data,
     GQuark *keys;
     guint i, n;
     gulong id;
+
+    if (!undo_enabled)
+        return 0;
 
     n = 0;
     va_start(ap, data);
@@ -205,7 +211,6 @@ gwy_app_undo_qcheckpointv(GwyContainer *data,
 {
     gulong id;
 
-
     id = gwy_undo_qcheckpointv(data, n, keys);
     if (id)
         gwy_app_sensitivity_set_state(GWY_MENU_FLAG_UNDO | GWY_MENU_FLAG_REDO,
@@ -232,6 +237,8 @@ gwy_app_undo_undo_container(GwyContainer *data)
 
     gwy_undo_undo_container(data);
     appundo = gwy_undo_get_for_data(data, FALSE);
+    if (!appundo)
+        return;
     gwy_app_sensitivity_set_state(GWY_MENU_FLAG_UNDO | GWY_MENU_FLAG_REDO,
                                   GWY_MENU_FLAG_REDO
                                   | (appundo->undo ? GWY_MENU_FLAG_UNDO : 0));
@@ -255,6 +262,8 @@ gwy_app_undo_redo_container(GwyContainer *data)
 
     gwy_undo_redo_container(data);
     appundo = gwy_undo_get_for_data(data, FALSE);
+    if (!appundo)
+        return;
     gwy_app_sensitivity_set_state(GWY_MENU_FLAG_UNDO | GWY_MENU_FLAG_REDO,
                                   GWY_MENU_FLAG_UNDO
                                   | (appundo->redo ? GWY_MENU_FLAG_REDO : 0));
@@ -277,6 +286,9 @@ gwy_undo_checkpoint(GwyContainer *data,
     GQuark *keys;
     guint i, n;
     gulong id;
+
+    if (!undo_enabled)
+        return 0;
 
     n = 0;
     va_start(ap, data);
@@ -316,6 +328,9 @@ gwy_undo_qcheckpoint(GwyContainer *data,
     GQuark *keys;
     guint i, n;
     gulong id;
+
+    if (!undo_enabled)
+        return 0;
 
     n = 0;
     va_start(ap, data);
@@ -358,7 +373,7 @@ gwy_undo_checkpointv(GwyContainer *data,
     GQuark *qkeys;
     guint i, j;
 
-    if (!UNDO_LEVELS)
+    if (!UNDO_LEVELS || !undo_enabled)
         return 0;
 
     g_return_val_if_fail(GWY_IS_CONTAINER(data), 0UL);
@@ -403,7 +418,7 @@ gwy_undo_qcheckpointv(GwyContainer *data,
     GList *available;
     guint i, j;
 
-    if (!UNDO_LEVELS)
+    if (!UNDO_LEVELS || !undo_enabled)
         return 0;
 
     g_return_val_if_fail(GWY_IS_CONTAINER(data), 0UL);
@@ -537,6 +552,9 @@ gwy_undo_undo_container(GwyContainer *data)
     GwyAppUndoLevel *level;
     GList *l;
 
+    if (!undo_enabled)
+        return;
+
     appundo = gwy_undo_get_for_data(data, FALSE);
     g_return_if_fail(appundo && appundo->undo);
 
@@ -564,6 +582,9 @@ gwy_undo_redo_container(GwyContainer *data)
     GwyAppUndo *appundo;
     GwyAppUndoLevel *level;
     GList *l;
+
+    if (!undo_enabled)
+        return;
 
     appundo = gwy_undo_get_for_data(data, FALSE);
     g_return_if_fail(appundo && appundo->redo);
@@ -756,6 +777,11 @@ gwy_app_undo_container_finalized(gpointer userdata,
     GList *item = (GList*)userdata;
     GwyAppUndo *appundo = (GwyAppUndo*)item->data;
 
+    // We could also remove the weak refs when disabling undo, but this seems
+    // easier.
+    if (!undo_enabled)
+        return;
+
     gwy_debug("Freeing undo for Container %p", deceased_data);
     g_assert(appundo->container == (gpointer)deceased_data);
     container_list = g_list_delete_link(container_list, item);
@@ -887,6 +913,9 @@ gwy_undo_container_remove(GwyContainer *data,
 {
     GwyAppUndo *appundo;
 
+    if (!undo_enabled)
+        return;
+
     gwy_debug("Removing undo for Container %p and prefix %s", data, prefix);
     appundo = gwy_undo_get_for_data(data, FALSE);
     if (!appundo)
@@ -903,6 +932,54 @@ gwy_undo_container_remove(GwyContainer *data,
 
     appundo->undo = gwy_undo_container_remove_from_list(appundo->undo, prefix);
     appundo->redo = gwy_undo_container_remove_from_list(appundo->redo, prefix);
+}
+
+/**
+ * gwy_undo_get_enabled:
+ *
+ * Reports whether undo/redo is globally enabled.
+ *
+ * Returns: %TRUE if undo/redo is enabled, %FALSE if it is disabled.
+ *
+ * Since: 2.21
+ **/
+gboolean
+gwy_undo_get_enabled(void)
+{
+    return undo_enabled;
+}
+
+/**
+ * gwy_undo_set_enabled:
+ * @setting: %TRUE to enable undo, %FALSE to disable it.
+ *
+ * Globally enables or disables undo/redo.
+ *
+ * By default, undo/redo is enabled.
+ *
+ * If undo/redo is disabled undo information manipulating functions such as
+ * gwy_app_undo_qcheckpoint() become no-op and
+ * gwy_undo_container_get_modified() always returns zero. Disabling undo also
+ * removes saved undo data of all containers.
+ *
+ * Since: 2.21
+ **/
+void
+gwy_undo_set_enabled(gboolean setting)
+{
+    undo_enabled = setting;
+    /* Remove all data when disabling */
+    if (!undo_enabled) {
+        while (container_list) {
+            GwyAppUndo *appundo = (GwyAppUndo*)container_list->data;
+            container_list = g_list_delete_link(container_list, container_list);
+            gwy_app_undo_list_free(appundo->redo);
+            gwy_app_undo_list_free(appundo->undo);
+            g_free(appundo);
+        }
+        gwy_app_sensitivity_set_state(GWY_MENU_FLAG_UNDO | GWY_MENU_FLAG_REDO,
+                                      0);
+    }
 }
 
 /************************** Documentation ****************************/

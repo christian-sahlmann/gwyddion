@@ -1,4 +1,8 @@
 2.21 (0000-00-00)
+Libraries:
+- libgwyapp: It is possible to disable undo globally, undo/redo operations
+  then become no-op.
+
 Modules:
 - LEXT (new): Olympus LEXT 4000OLS data import.
 

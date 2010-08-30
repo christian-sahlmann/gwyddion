@@ -56,6 +56,8 @@ gint     gwy_undo_container_get_modified  (GwyContainer *data);
 void     gwy_undo_container_set_unmodified(GwyContainer *data);
 void     gwy_undo_container_remove        (GwyContainer *data,
                                            const gchar *prefix);
+gboolean gwy_undo_get_enabled             (void);
+void     gwy_undo_set_enabled             (gboolean setting);
 
 G_END_DECLS
 
