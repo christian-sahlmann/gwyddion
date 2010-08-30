@@ -137,6 +137,8 @@ void     gwy_app_data_browser_show_3d       (GwyContainer *data,
                                              gint id);
 GtkWindow* gwy_app_find_window_for_channel  (GwyContainer *data,
                                              gint id);
+gboolean gwy_app_data_browser_get_gui_enabled(void);
+void     gwy_app_data_browser_set_gui_enabled(gboolean setting);
 
 G_END_DECLS
 

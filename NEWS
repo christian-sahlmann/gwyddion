@@ -2,6 +2,7 @@
 Libraries:
 - libgwyapp: It is possible to disable undo globally, undo/redo operations
   then become no-op.
+- libgwyapp: It is possible to disable creation of windows by data-browser.
 
 Modules:
 - LEXT (new): Olympus LEXT 4000OLS data import.

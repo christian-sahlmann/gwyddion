@@ -199,6 +199,7 @@ static GQuark graph_window_quark = 0;
 
 /* The data browser */
 static GwyAppDataBrowser *gwy_app_data_browser = NULL;
+static gboolean gui_disabled = FALSE;
 
 /* Use doubles for timestamps.  They have 53bit mantisa, which is sufficient
  * for microsecond precision. */
@@ -2615,6 +2616,9 @@ gwy_app_data_browser_show_3d(GwyContainer *data,
     proxy = gwy_app_data_browser_get_proxy(browser, data, FALSE);
     g_return_if_fail(proxy);
 
+    if (gui_disabled)
+        return;
+
     item = gwy_app_data_proxy_get_3d(proxy, id);
     if (item)
         window3d = GTK_WIDGET(((GwyApp3DAssociation*)item->data)->window);
@@ -4214,6 +4218,9 @@ gwy_app_data_browser_reset_visibility(GwyContainer *data,
 
     g_return_val_if_fail(GWY_IS_CONTAINER(data), FALSE);
 
+    if (gui_disabled)
+        return FALSE;
+
     if ((browser = gwy_app_data_browser))
         proxy = gwy_app_data_browser_get_proxy(browser, data, FALSE);
 
@@ -4737,7 +4744,7 @@ gwy_app_data_browser_add_data_field(GwyDataField *dfield,
      * Among other things, it will update proxy->lists[PAGE_CHANNELS].last. */
     gwy_container_set_object_by_name(proxy->container, key, dfield);
 
-    if (showit) {
+    if (showit && !gui_disabled) {
         gwy_app_data_proxy_find_object(list->store, list->last, &iter);
         gwy_app_data_proxy_channel_set_visible(proxy, &iter, TRUE);
     }
@@ -4786,7 +4793,7 @@ gwy_app_data_browser_add_graph_model(GwyGraphModel *gmodel,
      * Among other things, it will update proxy->lists[PAGE_GRAPHS].last. */
     gwy_container_set_object(proxy->container, quark, gmodel);
 
-    if (showit) {
+    if (showit && !gui_disabled) {
         gwy_app_data_proxy_find_object(list->store, list->last, &iter);
         gwy_app_data_proxy_graph_set_visible(proxy, &iter, TRUE);
     }
@@ -4837,7 +4844,7 @@ gwy_app_data_browser_add_spectra(GwySpectra *spectra,
      * Among other things, it will update proxy->lists[PAGE_SPECTRA].last. */
     gwy_container_set_object_by_name(proxy->container, key, spectra);
 
-    if (showit) {
+    if (showit && !gui_disabled) {
         gwy_app_data_proxy_find_object(list->store, list->last, &iter);
         /* FIXME */
         g_warning("Cannot make spectra visible");
@@ -5752,6 +5759,9 @@ gwy_app_data_browser_restore(void)
     GwyContainer *settings;
     gboolean visible = TRUE;
 
+    if (gui_disabled)
+        return;
+
     browser = gwy_app_get_data_browser();
     if (!browser->window)
         gwy_app_data_browser_construct_window(browser);
@@ -6040,6 +6050,59 @@ gwy_app_get_graph_thumbnail(GwyContainer *data,
      * screen... */
 
     return NULL;
+}
+
+/**
+ * gwy_app_data_browser_get_gui_enabled:
+ *
+ * Reports whether creation of windows by the data-browser is enabled.
+ *
+ * Returns: %TRUE if the data-browser is permitted to create windows, %FALSE
+ *          if it is not.
+ *
+ * Since: 2.21
+ **/
+gboolean
+gwy_app_data_browser_get_gui_enabled(void)
+{
+    return !gui_disabled;
+}
+
+/**
+ * gwy_app_data_browser_set_gui_enabled:
+ * @setting: %TRUE to enable creation of widgets by the data-browser,
+ *           %FALSE to disable it.
+ *
+ * Globally enables or disables creation of widgets by the data-browser.
+ *
+ * By default, the data-browser creates windows for data objects automatically,
+ * for instance when reconstructing view of a loaded file, after a module
+ * function creates a new channel or graph or when it is explicitly asked so
+ * by gwy_app_data_browser_show_3d().  Non-GUI applications that run module
+ * functions usually wish to disable GUI.
+ *
+ * If GUI is disabled the data browser never creates windows showing data
+ * objects and also gwy_app_data_browser_show() becomes no-op.
+ *
+ * Disabling GUI after widgets have been already created is a bad idea.
+ * Hence you should do so before loading files or calling module functions.
+ *
+ * Since: 2.21
+ **/
+void
+gwy_app_data_browser_set_gui_enabled(gboolean setting)
+{
+    GwyAppDataBrowser *browser;
+
+    browser = gwy_app_data_browser;
+    if (!gui_disabled && !setting && browser && browser->window) {
+        g_warning("Disabling GUI when widgets have been already constructed. "
+                  "This does not really work.");
+        gtk_widget_hide(browser->window);
+    }
+
+    gui_disabled = !setting;
+
 }
 
 /************************** Documentation ****************************/
