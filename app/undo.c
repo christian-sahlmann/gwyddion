@@ -955,7 +955,8 @@ gwy_undo_get_enabled(void)
  *
  * Globally enables or disables undo/redo.
  *
- * By default, undo/redo is enabled.
+ * By default, undo/redo is enabled.  Non-GUI application that run module
+ * functions may wish to disable it to conserve resources.
  *
  * If undo/redo is disabled undo information manipulating functions such as
  * gwy_app_undo_qcheckpoint() become no-op and
