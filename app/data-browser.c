@@ -5303,8 +5303,10 @@ gwy_app_data_browser_get_current(GwyAppWhat what,
 
 static gint*
 gwy_app_data_list_get_object_ids(GwyContainer *data,
-                                 guint pageno)
+                                 guint pageno,
+                                 const gchar *titleglob)
 {
+    GPatternSpec *pattern = NULL;
     GwyAppDataBrowser *browser;
     GwyAppDataProxy *proxy;
     GtkTreeModel *model;
@@ -5316,64 +5318,91 @@ gwy_app_data_list_get_object_ids(GwyContainer *data,
     proxy = gwy_app_data_browser_get_proxy(browser, data, FALSE);
     if (!proxy) {
         g_warning("Nothing is known about Container %p", data);
-        return NULL;
+        /* Returning NULL would likely make the caller crash, avoid that. */
+        ids = g_new(gint, 1);
+        ids[0] = -1;
+        return ids;
     }
+
+    if (titleglob)
+        pattern = g_pattern_spec_new(titleglob);
 
     model = GTK_TREE_MODEL(proxy->lists[pageno].store);
     n = gtk_tree_model_iter_n_children(model, NULL);
     ids = g_new(gint, n+1);
-    ids[n] = -1;
     if (n) {
         n = 0;
         gtk_tree_model_get_iter_first(model, &iter);
         do {
+            gboolean ok = FALSE;
+
             gtk_tree_model_get(model, &iter, MODEL_ID, ids + n, -1);
-            n++;
+            if (pattern) {
+                if (pageno == PAGE_CHANNELS) {
+                    const gchar *title
+                        = gwy_app_data_browser_figure_out_channel_title(data,
+                                                                        ids[n]);
+                    ok = g_pattern_match_string(pattern, title);
+                }
+                else if (pageno == PAGE_GRAPHS || pageno == PAGE_SPECTRA) {
+                    GObject *object;
+                    gchar *title;
+
+                    gtk_tree_model_get(model, &iter, MODEL_OBJECT, &object, -1);
+                    g_object_get(object, "title", &title, NULL);
+                    ok = g_pattern_match_string(pattern, title);
+                    g_free(title);
+                    g_object_unref(object);
+                }
+            }
+            else
+                ok = TRUE;
+
+            if (ok)
+                n++;
         } while (gtk_tree_model_iter_next(model, &iter));
     }
+    ids[n] = -1;
+
+    if (pattern)
+        g_pattern_spec_free(pattern);
 
     return ids;
 }
 
 /**
  * gwy_app_data_browser_get_data_ids:
- * @data: A data container.
+ * @data: A data container managed by the data-browser.
  *
  * Gets the list of all channels in a data container.
- *
- * The container must be known to the data browser.
  *
  * Returns: A newly allocated array with channel ids, -1 terminated.
  **/
 gint*
 gwy_app_data_browser_get_data_ids(GwyContainer *data)
 {
-    return gwy_app_data_list_get_object_ids(data, PAGE_CHANNELS);
+    return gwy_app_data_list_get_object_ids(data, PAGE_CHANNELS, NULL);
 }
 
 /**
  * gwy_app_data_browser_get_graph_ids:
- * @data: A data container.
+ * @data: A data container managed by the data-browser.
  *
  * Gets the list of all graphs in a data container.
- *
- * The container must be known to the data browser.
  *
  * Returns: A newly allocated array with graph ids, -1 terminated.
  **/
 gint*
 gwy_app_data_browser_get_graph_ids(GwyContainer *data)
 {
-    return gwy_app_data_list_get_object_ids(data, PAGE_GRAPHS);
+    return gwy_app_data_list_get_object_ids(data, PAGE_GRAPHS, NULL);
 }
 
 /**
  * gwy_app_data_browser_get_spectra_ids:
- * @data: A data container.
+ * @data: A data container managed by the data-browser.
  *
  * Gets the list of all spectra in a data container.
- *
- * The container must be known to the data browser.
  *
  * Returns: A newly allocated array with spectrum ids, -1 terminated.
  *
@@ -5382,7 +5411,7 @@ gwy_app_data_browser_get_graph_ids(GwyContainer *data)
 gint*
 gwy_app_data_browser_get_spectra_ids(GwyContainer *data)
 {
-    return gwy_app_data_list_get_object_ids(data, PAGE_SPECTRA);
+    return gwy_app_data_list_get_object_ids(data, PAGE_SPECTRA, NULL);
 }
 
 /**
@@ -6103,6 +6132,66 @@ gwy_app_data_browser_set_gui_enabled(gboolean setting)
 
     gui_disabled = !setting;
 
+}
+
+/**
+ * gwy_app_data_browser_find_data_by_title:
+ * @data: A data container managed by the data-browser.
+ * @titleglob: Pattern, as used by #GPatternSpec, to match the channel titles
+ *             against.
+ *
+ * Gets the list of all channels in a data container whose titles match the
+ * specified pattern.
+ *
+ * Returns: A newly allocated array with channel ids, -1 terminated.
+ *
+ * Since: 2.21
+ **/
+gint*
+gwy_app_data_browser_find_data_by_title(GwyContainer *data,
+                                        const gchar *titleglob)
+{
+    return gwy_app_data_list_get_object_ids(data, PAGE_CHANNELS, titleglob);
+}
+
+/**
+ * gwy_app_data_browser_find_graphs_by_title:
+ * @data: A data container managed by the data-browser.
+ * @titleglob: Pattern, as used by #GPatternSpec, to match the graph titles
+ *             against.
+ *
+ * Gets the list of all graphs in a data container whose titles match the
+ * specified pattern.
+ *
+ * Returns: A newly allocated array with graph ids, -1 terminated.
+ *
+ * Since: 2.21
+ **/
+gint*
+gwy_app_data_browser_find_graphs_by_title(GwyContainer *data,
+                                          const gchar *titleglob)
+{
+    return gwy_app_data_list_get_object_ids(data, PAGE_GRAPHS, titleglob);
+}
+
+/**
+ * gwy_app_data_browser_find_spectra_by_title:
+ * @data: A data container managed by the data-browser.
+ * @titleglob: Pattern, as used by #GPatternSpec, to match the spectra titles
+ *             against.
+ *
+ * Gets the list of all spectra in a data container whose titles match the
+ * specified pattern.
+ *
+ * Returns: A newly allocated array with spectra ids, -1 terminated.
+ *
+ * Since: 2.21
+ **/
+gint*
+gwy_app_data_browser_find_spectra_by_title(GwyContainer *data,
+                                           const gchar *titleglob)
+{
+    return gwy_app_data_list_get_object_ids(data, PAGE_SPECTRA, titleglob);
 }
 
 /************************** Documentation ****************************/
