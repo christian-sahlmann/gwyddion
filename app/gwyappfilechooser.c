@@ -410,8 +410,6 @@ gwy_app_file_chooser_type_changed(GwyAppFileChooser *chooser,
 {
     GtkTreeModel *model;
     GtkTreeIter iter;
-    gboolean active = FALSE;
-    gchar *key;
 
     if (!gtk_tree_selection_get_selected(selection, &model, &iter))
         return;
