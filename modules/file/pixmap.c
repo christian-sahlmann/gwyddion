@@ -3227,7 +3227,7 @@ fmscale(gint size,
     GwySIValueFormat *format;
     GString *s;
     gint l, tick, width, lw;
-    gint units_width, label_height, mintickdist, prec = 1, pos, bool_draw = 1;    
+    gint units_width, label_height, mintickdist, prec = 1, pos, bool_draw = 1;
 
     s = g_string_new(NULL);
     layout = prepare_layout(zoom);
@@ -3240,13 +3240,13 @@ fmscale(gint size,
     label_height = PANGO_PIXELS(logical1.height);
     mintickdist = label_height*1.5; /* mintickdist is in pixels; tickdist is in
                                      * meters or whichever basic unit */
-    /* prec computation starts here */  
+    /* prec computation starts here */
     /* Don't attempt to draw anything if rounding errors are too large or
      * scale calculation can overflow */
     x = top - bot;
     max = MAX(fabs(bot), fabs(top));
     if (x < 1e-15*max || x <= 1e4*G_MINDOUBLE || max >= 1e-4*G_MAXDOUBLE)
-        bool_draw = 0;      
+        bool_draw = 0;
     scale = size/(top - bot);
     x = mintickdist/scale;
     m = pow10(floor(log10(x)));
@@ -3263,8 +3263,8 @@ fmscale(gint size,
     x = floor(bot/tickdist)*tickdist;
     max = ceil(top/tickdist)*tickdist;
     prec = gwy_pixmap_step_to_prec(tickdist/format->magnitude);
-    /* prec computation ends here */    
-    
+    /* prec computation ends here */
+
     format_layout(layout, &logical1, s, "%.*f %s",
                   prec, top/format->magnitude, format->units);
     format_layout(layout, &logical2, s, "%.*f %s",
@@ -3274,8 +3274,8 @@ fmscale(gint size,
     tick = zoom*TICK_LENGTH; /* physical tick length */
     lw = ZOOM2LW(zoom); /* line width */
     width = l + 2*zoom + tick + 2;
-    drawable = prepare_drawable(width, size, lw, &gc);    
-    
+    drawable = prepare_drawable(width, size, lw, &gc);
+
     /* bottom text and line */
     format_layout(layout, &logical1, s, "%.*f",
                   prec, bot/format->magnitude);
@@ -3284,8 +3284,8 @@ fmscale(gint size,
                     size - 1 - PANGO_PIXELS(logical1.height),
                     layout);
     gdk_draw_line(drawable, gc, 0, size - (lw + 1)/2, tick, size - (lw + 1)/2);
-    /* end of bottom text and line */    
-    
+    /* end of bottom text and line */
+
     /* top text start */
     format_layout(layout, &logical1, s, "%.*f %s",
                   prec, top/format->magnitude, format->units);
@@ -3295,8 +3295,8 @@ fmscale(gint size,
     gdk_draw_line(drawable, gc, 0, lw/2, tick, lw/2); /* top line */
 
     /* tick in the middle - don't draw it anymore */
-    /*gdk_draw_line(drawable, gc, 0, size/2, tick/2, size/2);*/ 
-    
+    /*gdk_draw_line(drawable, gc, 0, size/2, tick/2, size/2);*/
+
     /* the rest of the ticks is drawn here (other than bot, top) */
     while (bool_draw && x <= max) {
         pos = size-1 - GWY_ROUND((x - bot)*scale);
@@ -3312,7 +3312,7 @@ fmscale(gint size,
             }
         }
         x += tickdist;
-    }    
+    }
     /* all drawing is finished here */
     pixbuf = gdk_pixbuf_get_from_drawable(NULL, drawable, NULL,
                                           0, 0, 0, 0, width, size);
