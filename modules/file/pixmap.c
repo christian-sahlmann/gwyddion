@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2004-2009 David Necas (Yeti).
+ *  Copyright (C) 2004-2010 David Necas (Yeti).
  *  E-mail: yeti@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -423,9 +423,9 @@ static GwyModuleInfo module_info = {
        "PNG, JPEG, TIFF, PPM, BMP, TARGA. "
        "Import support relies on GDK and thus may be installation-dependent."),
     "Yeti <yeti@gwyddion.net>",
-    "7.8",
+    "7.9",
     "David Nečas (Yeti)",
-    "2004-2009",
+    "2004-2010",
 };
 
 GWY_MODULE_QUERY(module_info)
@@ -2099,14 +2099,14 @@ pixmap_draw_presentational(GwyContainer *data,
 
     if (args->xytype == PIXMAP_RULERS) {
         hrpixbuf = hruler(zwidth + 2*lw, border,
-                        gwy_data_field_get_xreal(args->dfield),
-                        fontzoom, gwy_data_field_get_xoffset(args->dfield),
-                        siunit_xy);
+                          gwy_data_field_get_xreal(args->dfield),
+                          fontzoom, gwy_data_field_get_xoffset(args->dfield),
+                          siunit_xy);
         hrh = gdk_pixbuf_get_height(hrpixbuf);
         vrpixbuf = vruler(zheight + 2*lw, border,
-                        gwy_data_field_get_yreal(args->dfield),
-                        fontzoom, gwy_data_field_get_yoffset(args->dfield),
-                        siunit_xy);
+                          gwy_data_field_get_yreal(args->dfield),
+                          fontzoom, gwy_data_field_get_yoffset(args->dfield),
+                          siunit_xy);
         vrw = gdk_pixbuf_get_width(vrpixbuf);
     }
     else {
@@ -3040,6 +3040,7 @@ hruler(gint size,
     GString *s;
     gint l, n, ix;
     gint tick, height, lw;
+    gboolean units_placed;
 
     s = g_string_new(NULL);
     layout = prepare_layout(zoom);
@@ -3048,13 +3049,12 @@ hruler(gint size,
                                                     GWY_SI_UNIT_FORMAT_VFMARKUP,
                                                     real, real/12,
                                                     NULL);
-    format_layout(layout, &logical1, s, "%.*f",
-                  format->precision, -real/format->magnitude);
-    format_layout(layout, &logical2, s, "%.*f %s",
-                  format->precision, 0.0, format->units);
-
     offset /= format->magnitude;
     real /= format->magnitude;
+    format_layout(layout, &logical1, s, "%.*f",
+                  format->precision, -real);
+    format_layout(layout, &logical2, s, "%.*f %s",
+                  format->precision, offset, format->units);
 
     l = MAX(PANGO_PIXELS(logical1.width), PANGO_PIXELS(logical2.width));
     n = CLAMP(size/l, 1, 10);
@@ -3082,13 +3082,15 @@ hruler(gint size,
     to = real + offset;
     to = floor(to/(base*step) + 1e-15)*(base*step);
 
+    units_placed = FALSE;
     for (x = from; x <= to; x += base*step) {
         if (fabs(x) < 1e-15*base*step)
             x = 0.0;
         format_layout(layout, &logical1, s, "%.*f%s%s",
                       format->precision, x,
-                      x ? "" : " ",
-                      x ? "" : format->units);
+                      units_placed ? "" : " ",
+                      units_placed ? "" : format->units);
+        units_placed = TRUE;
         ix = (x - offset)/real*size + lw/2;
         if (ix + PANGO_PIXELS(logical1.width) <= size + extra/4)
             gdk_draw_layout(drawable, gc,
@@ -3137,14 +3139,13 @@ vruler(gint size,
                                                     NULL);
 
     /* note the algorithm is the same to force consistency between axes,
-     * even though the vertical one could be filled with tick more densely */
-    format_layout(layout, &logical1, s, "%.*f",
-                  format->precision, -real/format->magnitude);
-    format_layout(layout, &logical2, s, "%.*f %s",
-                  format->precision, 0.0, format->units);
-
+     * even though the vertical one could be filled with ticks more densely */
     offset /= format->magnitude;
     real /= format->magnitude;
+    format_layout(layout, &logical1, s, "%.*f",
+                  format->precision, -real);
+    format_layout(layout, &logical2, s, "%.*f %s",
+                  format->precision, offset, format->units);
 
     l = MAX(PANGO_PIXELS(logical1.width), PANGO_PIXELS(logical2.width));
     n = CLAMP(size/l, 1, 10);
