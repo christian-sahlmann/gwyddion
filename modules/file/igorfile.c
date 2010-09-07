@@ -188,7 +188,7 @@ static GwyDataField* igor_read_data_field  (const IgorFile *igorfile,
 static GwyContainer* igor_get_metadata     (IgorFile *igorfile,
                                             guint id);
 static GPtrArray*    read_channel_labels   (const gchar *p,
-                                            guint n);
+                                            guint n, guint l);
 static gchar*        canonicalize_title    (const gchar *title);
 static const gchar*  channel_title_to_units(const gchar *title);
 
@@ -197,7 +197,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Igor binary waves (.ibw)."),
     "Yeti <yeti@gwyddion.net>",
-    "0.4",
+    "0.5",
     "David Nečas (Yeti)",
     "2009",
 };
@@ -254,6 +254,7 @@ igor_load(const gchar *filename,
     gchar key[64];
     guint i, chid;
     GQuark quark;
+    guint nlabels;
 
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
         err_GET_FILE_CONTENTS(error, &err);
@@ -284,6 +285,8 @@ igor_load(const gchar *filename,
     xres = wave5->n_dim[0];
     yres = wave5->n_dim[1];
     igorfile.nchannels = wave5->n_dim[2];
+    if (igorfile.nchannels==0) igorfile.nchannels=1;
+
     if (!xres || !yres || !igorfile.nchannels || wave5->n_dim[3]) {
         g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
                     _("Only two-dimensional data are supported."));
@@ -321,8 +324,6 @@ igor_load(const gchar *filename,
                           FALSE))
         goto fail;
 
-    container = gwy_container_new();
-
     p = buffer + igorfile.headers_size + expected_size;
     gwy_debug("remaning data size: %lu", (gulong)(size - (p - buffer)));
 
@@ -348,14 +349,14 @@ igor_load(const gchar *filename,
         p += igorfile.header.dim_labels_size[i];
 
     /* FIXME: The labels are mandatory only in Asylum Research files. */
-    expected_size = (MAX_WAVE_NAME5 + 1)*(igorfile.nchannels + 1);
-    if (igorfile.header.dim_labels_size[2] != expected_size
-        || (p - buffer) + expected_size >= size) {
+    nlabels=igorfile.header.dim_labels_size[2]/(MAX_WAVE_NAME5+1);
+    expected_size = (MAX_WAVE_NAME5 + 1)*(nlabels);
+    if ( (p - buffer) + expected_size > size ) {
         g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
                     _("Cannot read channel labels."));
         goto fail;
     }
-    igorfile.titles = read_channel_labels(p, igorfile.nchannels+1);
+    igorfile.titles = read_channel_labels(p, igorfile.nchannels+1, nlabels);
     p += igorfile.header.dim_labels_size[2];
 
     if (igorfile.meta) {
@@ -373,6 +374,8 @@ igor_load(const gchar *filename,
                 chinfo->units = channel_title_to_units(chinfo->name);
         }
     }
+
+    container = gwy_container_new();
 
     for (i = chid = 0; i < igorfile.nchannels; i++, chid++) {
         const gchar *title = g_ptr_array_index(igorfile.titles, i+1);
@@ -392,8 +395,11 @@ igor_load(const gchar *filename,
             gwy_container_set_object_by_name(container, key, meta);
         }
 
-        g_snprintf(key, sizeof(key), "/%d/data/title", chid);
-        gwy_container_set_string_by_name(container, key, g_strdup(title));
+        if(title) {
+            g_snprintf(key, sizeof(key), "/%d/data/title", chid);
+            gwy_container_set_string_by_name(container, key, g_strdup(title));
+        }
+        gwy_app_channel_title_fall_back(container,chid);
 
         if (wave5->type & IGOR_COMPLEX) {
             chid++;
@@ -408,8 +414,12 @@ igor_load(const gchar *filename,
                 meta = gwy_container_duplicate(meta);
                 gwy_container_set_object_by_name(container, key, meta);
             }
-            g_snprintf(key, sizeof(key), "/%d/data/title", chid);
-            gwy_container_set_string_by_name(container, key, g_strdup(title));
+
+            if (title) {
+                g_snprintf(key, sizeof(key), "/%d/data/title", chid);
+                gwy_container_set_string_by_name(container, key, g_strdup(title));
+            };
+            gwy_app_channel_title_fall_back(container,chid);
         }
         gwy_object_unref(meta);
     }
@@ -599,7 +609,7 @@ igor_read_headers(IgorFile *igorfile,
         gwy_debug("data_units: <%s>", wave5->data_units);
         for (i = 0; i < MAXDIMS; i++) {
             get_CHARARRAY0(wave5->dim_units[i], &p);
-            gwy_debug("dim_units[%u]: <%s>", i, wave5->data_units);
+            gwy_debug("dim_units[%u]: <%s>", i, wave5->dim_units[i]);
         }
         wave5->fs_valid = !!igorfile->get_guint16(&p);
         wave5->whpad3 = igorfile->get_guint16(&p);
@@ -674,6 +684,8 @@ igor_read_data_field(const IgorFile *igorfile,
     GwySIUnit *unit;
     gdouble *data;
     const guchar *p;
+    gint power10;
+    gdouble q;
 
     wave5 = &igorfile->wave5;
     xres = wave5->n_dim[0];
@@ -691,12 +703,23 @@ igor_read_data_field(const IgorFile *igorfile,
     if (imaginary)
         p += skip;
 
+    /* TODO: Support extended units */
+    unit = gwy_data_field_get_si_unit_xy(dfield);
+    gwy_si_unit_set_from_string_parse(unit, wave5->dim_units[0], &power10);
+    gwy_data_field_set_xreal(dfield, pow10(power10)*wave5->sfA[0]*xres);
+    gwy_data_field_set_yreal(dfield, pow10(power10)*wave5->sfA[1]*yres);
+
+    unit = gwy_data_field_get_si_unit_z(dfield);
+    gwy_si_unit_set_from_string_parse(unit, zunits ? zunits : wave5->data_units,
+                                      &power10);
+    q = pow10(power10);
+
     switch (wave5->type) {
         case IGOR_INT8:
         {
             const gint8 *ps = (const gint8*)buffer;
             while (n--) {
-                *(data++) = *(ps++);
+                *(data++) = *(ps++) * q;
                 ps += skip;
             }
         }
@@ -704,49 +727,49 @@ igor_read_data_field(const IgorFile *igorfile,
 
         case IGOR_INT8 | IGOR_UNSIGNED:
         while (n--) {
-            *(data++) = *(p++);
+            *(data++) = *(p++) * q;
             p += skip;
         }
         break;
 
         case IGOR_INT16:
         while (n--) {
-            *(data++) = igorfile->get_gint16(&p);
+            *(data++) = igorfile->get_gint16(&p) * q;
             p += skip;
         }
         break;
 
         case IGOR_INT16 | IGOR_UNSIGNED:
         while (n--) {
-            *(data++) = igorfile->get_guint16(&p);
+            *(data++) = igorfile->get_guint16(&p) * q;
             p += skip;
         }
         break;
 
         case IGOR_INT32:
         while (n--) {
-            *(data++) = igorfile->get_gint32(&p);
+            *(data++) = igorfile->get_gint32(&p) * q;
             p += skip;
         }
         break;
 
         case IGOR_INT32 | IGOR_UNSIGNED:
         while (n--) {
-            *(data++) = igorfile->get_guint32(&p);
+            *(data++) = igorfile->get_guint32(&p) * q;
             p += skip;
         }
         break;
 
         case IGOR_SINGLE:
         while (n--) {
-            *(data++) = igorfile->get_gfloat(&p);
+            *(data++) = igorfile->get_gfloat(&p) * q;
             p += skip;
         }
         break;
 
         case IGOR_DOUBLE:
         while (n--) {
-            *(data++) = igorfile->get_gdouble(&p);
+            *(data++) = igorfile->get_gdouble(&p) * q;
             p += skip;
         }
         break;
@@ -758,28 +781,25 @@ igor_read_data_field(const IgorFile *igorfile,
 
     gwy_data_field_invert(dfield, TRUE, FALSE, FALSE);
 
-    /* TODO: Support extended units */
-    unit = gwy_data_field_get_si_unit_xy(dfield);
-    gwy_si_unit_set_from_string(unit, wave5->dim_units[0]);
-
-    unit = gwy_data_field_get_si_unit_z(dfield);
-    gwy_si_unit_set_from_string(unit, zunits ? zunits : wave5->data_units);
-
     return dfield;
 }
 
 static GPtrArray*
 read_channel_labels(const gchar *p,
-                    guint n)
+                    guint n, guint l)
 {
     GPtrArray *array = g_ptr_array_sized_new(n);
     guint i;
 
-    for (i = 0; i < n; i++) {
+    for (i = 0; i < l; i++) {
         g_ptr_array_add(array,
                         g_strndup(p + i*(MAX_WAVE_NAME5 + 1), MAX_WAVE_NAME5));
         gwy_debug("label%u=%s", i, (gchar*)g_ptr_array_index(array, i));
     }
+    for (i = l; i < n; i++) {
+      g_ptr_array_add(array,NULL);
+      gwy_debug("label%u=NULL", i);
+    };
 
     return array;
 }
