@@ -6,6 +6,9 @@ Libraries:
 
 Modules:
 - LEXT (new): Olympus LEXT 4000OLS data import.
+- IGOR: Support for non-Asylum-Research files was improved.
+- Pixmap export: The horizontal ruler always displays units now, even if the
+  x-range does not include zero.
 
 
 2.20 (2010-06-30)
