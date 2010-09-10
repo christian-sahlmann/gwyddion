@@ -113,6 +113,7 @@ static void  gwy_tool_mask_editor_remove             (GwyToolMaskEditor *tool);
 static void  gwy_tool_mask_editor_fill               (GwyToolMaskEditor *tool);
 static void  gwy_tool_mask_editor_grow               (GwyToolMaskEditor *tool);
 static void  gwy_tool_mask_editor_shrink             (GwyToolMaskEditor *tool);
+static void  gwy_tool_mask_editor_fill_voids         (GwyToolMaskEditor *tool);
 static void  gwy_tool_mask_editor_selection_finished (GwyPlainTool *plain_tool);
 
 static GwyModuleInfo module_info = {
@@ -121,7 +122,7 @@ static GwyModuleInfo module_info = {
     N_("Mask editor tool, allows to interactively add or remove parts "
        "of mask."),
     "Yeti <yeti@gwyddion.net>",
-    "2.8",
+    "2.9",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -404,6 +405,14 @@ gwy_tool_mask_editor_init_dialog(GwyToolMaskEditor *tool)
     gtk_box_pack_start(hbox, button, FALSE, FALSE, 0);
     g_signal_connect_swapped(button, "clicked",
                              G_CALLBACK(gwy_tool_mask_editor_fill), tool);
+
+    button = gtk_button_new_with_mnemonic(_("Fill _Voids"));
+    gtk_size_group_add_widget(sizegroup, button);
+    gwy_sensitivity_group_add_widget(tool->sensgroup, button,
+                                     SENS_DATA | SENS_MASK);
+    gtk_box_pack_start(hbox, button, FALSE, FALSE, 0);
+    g_signal_connect_swapped(button, "clicked",
+                             G_CALLBACK(gwy_tool_mask_editor_fill_voids), tool);
 
     label = gtk_label_new(NULL);
     gtk_box_pack_start(hbox, label, TRUE, TRUE, 0);
@@ -837,6 +846,60 @@ gwy_tool_mask_editor_shrink(GwyToolMaskEditor *tool)
     }
     g_free(buffer);
     g_free(prow);
+
+    gwy_data_field_data_changed(plain_tool->mask_field);
+}
+
+static void
+gwy_tool_mask_editor_fill_voids(GwyToolMaskEditor *tool)
+{
+    GwyPlainTool *plain_tool;
+    GwyDataField *voids;
+    GQuark quark;
+    gdouble *data;
+    gint xres, yres;
+    gint i, j, k;
+    gint *vgrains;
+    gboolean *unbound_vgrains;
+    guint nvgrains;
+
+    plain_tool = GWY_PLAIN_TOOL(tool);
+    g_return_if_fail(plain_tool->mask_field);
+
+    quark = gwy_app_get_mask_key_for_id(plain_tool->id);
+    gwy_app_undo_qcheckpointv(plain_tool->container, 1, &quark);
+
+    xres = gwy_data_field_get_xres(plain_tool->mask_field);
+    yres = gwy_data_field_get_yres(plain_tool->mask_field);
+    data = gwy_data_field_get_data(plain_tool->mask_field);
+
+    voids = gwy_data_field_duplicate(plain_tool->mask_field);
+    gwy_data_field_multiply(voids, -1.0);
+    gwy_data_field_add(voids, 1.0);
+    vgrains = g_new0(gint, xres*yres);
+    nvgrains = gwy_data_field_number_grains(voids, vgrains);
+    g_object_unref(voids);
+    unbound_vgrains = g_new0(gboolean, nvgrains+1);
+
+    for (i = 0; i < xres; i++) {
+        unbound_vgrains[vgrains[i]] = TRUE;
+        unbound_vgrains[vgrains[xres*(yres - 1) + i]] = TRUE;
+    }
+    for (j = 0; j < yres; j++) {
+        unbound_vgrains[vgrains[j*xres]] = TRUE;
+        unbound_vgrains[vgrains[j*xres + xres-1]] = TRUE;
+    }
+
+    k = 0;
+    for (i = 0; i < yres; i++) {
+        for (j = 0; j < xres; j++) {
+            if (!data[k] && !unbound_vgrains[vgrains[k]])
+                data[k] = 1.0;
+            k++;
+        }
+    }
+    g_free(unbound_vgrains);
+    g_free(vgrains);
 
     gwy_data_field_data_changed(plain_tool->mask_field);
 }
