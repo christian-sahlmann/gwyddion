@@ -42,6 +42,7 @@ process_LTLIBRARIES = \
 	mark_with.la \
 	maskcor.la \
 	maskops.la \
+	mcrop.la \
 	median-bg.la \
 	merge.la \
 	obj_synth.la \
@@ -132,6 +133,7 @@ local_contrast_la_SOURCES      = local_contrast.c
 mark_with_la_SOURCES           = mark_with.c
 maskcor_la_SOURCES             = maskcor.c
 maskops_la_SOURCES             = maskops.c
+mcrop_la_SOURCES	       = mcrop.c
 median_bg_la_SOURCES           = median-bg.c
 merge_la_SOURCES               = merge.c
 #nanoindent_adjust_la_SOURCES  = nanoindent_adjust.c
