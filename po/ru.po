@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2010-09-01 03:58+0200\n"
-"PO-Revision-Date: 2010-09-01 13:46+0300\n"
+"POT-Creation-Date: 2010-09-14 03:58+0200\n"
+"PO-Revision-Date: 2010-09-14 08:54+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -1500,23 +1500,23 @@ msgstr "_Тип файла: %s, отфильтровано"
 msgid "File _type: %s"
 msgstr "_Тип файла: %s"
 
-#: app/gwyappfilechooser.c:480
+#: app/gwyappfilechooser.c:478
 msgid "Automatic by extension"
 msgstr "Определять по расширению"
 
-#: app/gwyappfilechooser.c:489
+#: app/gwyappfilechooser.c:487
 msgid "Automatically detected"
 msgstr "Автоматически определённый"
 
-#: app/gwyappfilechooser.c:540
+#: app/gwyappfilechooser.c:538
 msgid "Show only loadable files"
 msgstr "Показать только загружаемые файлы"
 
-#: app/gwyappfilechooser.c:745
+#: app/gwyappfilechooser.c:743
 msgid "…"
 msgstr "…"
 
-#: app/gwyappfilechooser.c:893
+#: app/gwyappfilechooser.c:891
 msgid "Cannot preview"
 msgstr "Нельзя просмотреть."
 
@@ -2623,26 +2623,26 @@ msgstr "Импортирует Igor binary waves (.ibw)."
 msgid "Igor binary waves (.ibw)"
 msgstr "Двоичные волны Igor (.ibw)"
 
-#: modules/file/igorfile.c:270
+#: modules/file/igorfile.c:271
 #, c-format
 msgid "Format version is %d.  Only version 5 is supported."
 msgstr "Версия формата %d.  Поддерживается только версия 5."
 
-#: modules/file/igorfile.c:289
+#: modules/file/igorfile.c:292
 msgid "Only two-dimensional data are supported."
 msgstr "Поддерживаются только двумерные данные."
 
-#: modules/file/igorfile.c:301
+#: modules/file/igorfile.c:304
 #, c-format
 msgid "Number of data points %u does not match resolutions %u×%u×%u."
 msgstr "Число точек данных %u не соответствует разрешению %u×%u×%u."
 
-#: modules/file/igorfile.c:315
+#: modules/file/igorfile.c:318
 #, c-format
 msgid "Data size %u does not match the number of data points %u×%u."
 msgstr "Размер данных %u не соответствует числу точек данных %u×%u."
 
-#: modules/file/igorfile.c:355
+#: modules/file/igorfile.c:356
 msgid "Cannot read channel labels."
 msgstr "Не удаётся прочесть метки каналов."
 
@@ -5941,7 +5941,7 @@ msgid "_Undo"
 msgstr "_Отменить"
 
 #: modules/process/fft_filter_2d.c:489
-#: modules/tools/maskedit.c:393
+#: modules/tools/maskedit.c:394
 msgid "_Remove"
 msgstr "_Удалить"
 
@@ -6596,6 +6596,7 @@ msgstr "Размер _капли:"
 
 #: modules/process/grain_wshed.c:501
 #: modules/process/maskcor.c:327
+#: modules/process/mcrop.c:323
 #: modules/process/merge.c:686
 #: modules/process/tip_blind.c:558
 #: modules/process/tipops.c:307
@@ -7233,6 +7234,7 @@ msgid "Correlation _method:"
 msgstr "_Метод корреляции:"
 
 #: modules/process/maskcor.c:329
+#: modules/process/mcrop.c:325
 #: modules/process/merge.c:688
 msgid "Correlating"
 msgstr "Коррелируется"
@@ -7268,6 +7270,26 @@ msgstr "Извлечь маску в новый канал"
 #: modules/process/maskops.c:137
 msgid "Mask"
 msgstr "Маска"
+
+#: modules/process/mcrop.c:70
+msgid "Crops non-intersecting regions of two images."
+msgstr "Обрезает непересекающиеся области двух изображений"
+
+#: modules/process/mcrop.c:84
+msgid "/M_ultidata/Mutual C_rop..."
+msgstr "/М_ножественные данные/Взаимно _кадрировать..."
+
+#: modules/process/mcrop.c:88
+msgid "Crop non-intersecting regions of two images"
+msgstr "Обрезать непересекающиеся области двух изображений"
+
+#: modules/process/mcrop.c:156
+msgid "Mutual Crop"
+msgstr "Взаимно кадрировать"
+
+#: modules/process/mcrop.c:177
+msgid "_Select second argument:"
+msgstr "_Второй аргумент:"
 
 #: modules/process/median-bg.c:80
 msgid "Subtracts background using a rank-based algorithm."
@@ -8480,91 +8502,95 @@ msgstr "<b>Параметры</b>"
 msgid "_Instant updates"
 msgstr "_Обновлять сразу"
 
-#: modules/tools/maskedit.c:121
+#: modules/tools/maskedit.c:122
 msgid "Mask editor tool, allows to interactively add or remove parts of mask."
 msgstr "Редактор маски, позволяет интерактивно добавлять и удалять части маски."
 
-#: modules/tools/maskedit.c:169
+#: modules/tools/maskedit.c:170
 msgid "Mask Editor"
 msgstr "Редактор маски"
 
-#: modules/tools/maskedit.c:170
+#: modules/tools/maskedit.c:171
 msgid "Edit mask"
 msgstr "Редактировать маску"
 
-#: modules/tools/maskedit.c:254
+#: modules/tools/maskedit.c:255
 msgid "Set mask to selection"
 msgstr "Установить маску равной выделенному"
 
-#: modules/tools/maskedit.c:259
+#: modules/tools/maskedit.c:260
 msgid "Add selection to mask"
 msgstr "Добавить выделенное к маске"
 
-#: modules/tools/maskedit.c:264
+#: modules/tools/maskedit.c:265
 msgid "Subtract selection from mask"
 msgstr "Вычесть выделенное из маски"
 
-#: modules/tools/maskedit.c:269
+#: modules/tools/maskedit.c:270
 msgid "Intersect selection with mask"
 msgstr "Пересечение выделенного и маски"
 
-#: modules/tools/maskedit.c:276
+#: modules/tools/maskedit.c:277
 msgid "Rectangular shapes"
 msgstr "Прямоугольные формы"
 
-#: modules/tools/maskedit.c:281
+#: modules/tools/maskedit.c:282
 msgid "Elliptic shapes"
 msgstr "Эллиптические формы"
 
-#: modules/tools/maskedit.c:286
+#: modules/tools/maskedit.c:287
 msgid "Thin lines"
 msgstr "Тонкие линии"
 
-#: modules/tools/maskedit.c:313
+#: modules/tools/maskedit.c:314
 msgid "Editor"
 msgstr "Редактор"
 
-#: modules/tools/maskedit.c:318
+#: modules/tools/maskedit.c:319
 msgid "Mode:"
 msgstr "Режим:"
 
-#: modules/tools/maskedit.c:347
+#: modules/tools/maskedit.c:348
 msgid "Shape:"
 msgstr "Форма:"
 
-#: modules/tools/maskedit.c:377
+#: modules/tools/maskedit.c:378
 msgid "Actions"
 msgstr "Действия"
 
-#: modules/tools/maskedit.c:385
+#: modules/tools/maskedit.c:386
 msgid "_Invert"
 msgstr "_Инвертировать"
 
-#: modules/tools/maskedit.c:401
+#: modules/tools/maskedit.c:402
 msgid "_Fill"
 msgstr "_Заполнить"
 
-#: modules/tools/maskedit.c:414
+#: modules/tools/maskedit.c:409
+msgid "Fill _Voids"
+msgstr "З_аполнить Пустоты"
+
+#: modules/tools/maskedit.c:423
 msgid "Grow/Shrink"
 msgstr "Растянуть/Ужать"
 
-#: modules/tools/maskedit.c:423
+#: modules/tools/maskedit.c:432
 msgid "_Grow"
 msgstr "_Растянуть"
 
-#: modules/tools/maskedit.c:431
+#: modules/tools/maskedit.c:440
 msgid "Shrin_k"
 msgstr "_Ужать"
 
-#: modules/tools/maskedit.c:446
+#: modules/tools/maskedit.c:455
 msgid "_Amount:"
 msgstr "_Количество:"
 
-#: modules/tools/maskedit.c:453
+#: modules/tools/maskedit.c:462
 msgid "Shrink from _border"
 msgstr "Ужать от _границы"
 
-#: modules/tools/maskedit.c:464
+#: modules/tools/maskedit.c:473
 msgid "_Prevent grain merging by growing"
 msgstr "_Предотвращать слияние зёрен при растяжении"
 
