@@ -7,6 +7,8 @@ Libraries:
   pattern.
 
 Modules:
+- Mutual Crop (new): Crop two shifted channels to the common area (found using
+  correlation search).
 - LEXT (new): Olympus LEXT 4000OLS data import.
 - IGOR: Support for non-Asylum-Research files was improved.
 - Pixmap export: The horizontal ruler always displays units now, even if the
