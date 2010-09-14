@@ -140,6 +140,9 @@ mcrop_data_filter(GwyContainer *data, gint id, gpointer user_data)
     quark = gwy_app_get_data_key_for_id(object->id);
     op2 = GWY_DATA_FIELD(gwy_container_get_object(object->data, quark));
 
+    if (op1 == op2)
+        return FALSE;
+
     return !gwy_data_field_check_compatibility(op1, op2,
                                                GWY_DATA_COMPATIBILITY_MEASURE
                                                | GWY_DATA_COMPATIBILITY_LATERAL
