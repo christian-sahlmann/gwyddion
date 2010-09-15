@@ -102,7 +102,7 @@ module_register(void)
 {
     gwy_process_func_register("scale",
                               (GwyProcessFunc)&scale,
-                              N_("/_Basic Operations/Scale..."),
+                              N_("/_Basic Operations/_Scale..."),
                               GWY_STOCK_SCALE,
                               SCALE_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
