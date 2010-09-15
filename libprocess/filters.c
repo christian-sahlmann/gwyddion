@@ -294,8 +294,8 @@ gwy_data_field_clamp(GwyDataField *data_field,
     if (tot) {
         /* We can precompute stats */
         data_field->cached &= CBIT(MIN) | CBIT(MAX) | CBIT(MED);
-        CVAL(data_field, MIN) = MIN(bottom, CVAL(data_field, MIN));
-        CVAL(data_field, MAX) = MAX(top, CVAL(data_field, MAX));
+        CVAL(data_field, MIN) = MAX(bottom, CVAL(data_field, MIN));
+        CVAL(data_field, MAX) = MIN(top, CVAL(data_field, MAX));
         if (CTEST(data_field, MED)
             && (CVAL(data_field, MED) < bottom || CVAL(data_field, MED) > top))
             data_field->cached &= ~CBIT(MED);
