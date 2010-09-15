@@ -56,6 +56,7 @@ process_LTLIBRARIES = \
 	shade.la \
 	slope_dist.la \
 	sphere-revolve.la \
+	threshold.la \
 	tilt.la \
 	tip_blind.la \
 	tip_model.la \
@@ -133,7 +134,7 @@ local_contrast_la_SOURCES      = local_contrast.c
 mark_with_la_SOURCES           = mark_with.c
 maskcor_la_SOURCES             = maskcor.c
 maskops_la_SOURCES             = maskops.c
-mcrop_la_SOURCES	       = mcrop.c
+mcrop_la_SOURCES               = mcrop.c
 median_bg_la_SOURCES           = median-bg.c
 merge_la_SOURCES               = merge.c
 #nanoindent_adjust_la_SOURCES  = nanoindent_adjust.c
@@ -149,6 +150,7 @@ shade_la_SOURCES               = shade.c
 slope_dist_la_SOURCES          = slope_dist.c
 sphere_revolve_la_SOURCES      = sphere-revolve.c
 #superresolution_la_SOURCES    = superresolution.c
+threshold_la_SOURCES           = threshold.c
 tilt_la_SOURCES                = tilt.c
 tip_blind_la_SOURCES           = tip_blind.c
 tip_model_la_SOURCES           = tip_model.c
