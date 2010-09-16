@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2010-09-14 03:58+0200\n"
-"PO-Revision-Date: 2010-09-14 08:54+0300\n"
+"POT-Creation-Date: 2010-09-16 03:58+0200\n"
+"PO-Revision-Date: 2010-09-16 23:45+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -1955,11 +1955,11 @@ msgstr "Нажатие Esc скрывает окна инструментов."
 
 #: app/tips.c:278
 msgid "Read Value tool displays also the local facet normal."
-msgstr "Инструмент Считать данные также показывает направление нормали к локальной грани."
+msgstr "Инструмент считать значение также показывает направление нормали к локальной грани."
 
 #: app/tips.c:282
 msgid "Read Value tool can shift data to make <i>z</i>=0 plane pass through the selected point."
-msgstr "Инструмент Считать значение может сдвинуть данные так. чтобы плоскость <i>z</i>=0 проходила через выбранную точку."
+msgstr "Инструмент считать значение может сдвинуть данные так. чтобы плоскость <i>z</i>=0 проходила через выбранную точку."
 
 #: app/tips.c:287
 msgid "Individual lines can be deleted in Distance tool by selecting them in the list and pressing Delete."
@@ -5089,7 +5089,7 @@ msgstr "Перекалибровывает пространственное ра
 
 #: modules/process/calibrate.c:159
 msgid "/_Basic Operations/_Recalibrate..."
-msgstr "/_Базовые действия/_Перекалибровать..."
+msgstr "/_Базовые действия/П_ерекалибровать..."
 
 #: modules/process/calibrate.c:163
 msgid "Recalibrate data"
@@ -6596,7 +6596,7 @@ msgstr "Размер _капли:"
 
 #: modules/process/grain_wshed.c:501
 #: modules/process/maskcor.c:327
-#: modules/process/mcrop.c:323
+#: modules/process/mcrop.c:326
 #: modules/process/merge.c:686
 #: modules/process/tip_blind.c:558
 #: modules/process/tipops.c:307
@@ -7234,7 +7234,7 @@ msgid "Correlation _method:"
 msgstr "_Метод корреляции:"
 
 #: modules/process/maskcor.c:329
-#: modules/process/mcrop.c:325
+#: modules/process/mcrop.c:328
 #: modules/process/merge.c:688
 msgid "Correlating"
 msgstr "Коррелируется"
@@ -7283,11 +7283,11 @@ msgstr "/М_ножественные данные/Взаимно _кадриро
 msgid "Crop non-intersecting regions of two images"
 msgstr "Обрезать непересекающиеся области двух изображений"
 
-#: modules/process/mcrop.c:156
+#: modules/process/mcrop.c:159
 msgid "Mutual Crop"
 msgstr "Взаимно кадрировать"
 
-#: modules/process/mcrop.c:177
+#: modules/process/mcrop.c:180
 msgid "_Select second argument:"
 msgstr "_Второй аргумент:"
 
@@ -7721,8 +7721,8 @@ msgid "Scales data by arbitrary factor."
 msgstr "Масштабирует данные на определённый множитель."
 
 #: modules/process/scale.c:105
-msgid "/_Basic Operations/Scale..."
-msgstr "/_Базовые действия/Масштабировать..."
+msgid "/_Basic Operations/_Scale..."
+msgstr "/_Базовые действия/_Масштабировать..."
 
 #: modules/process/scale.c:109
 msgid "Scale data"
@@ -7937,6 +7937,42 @@ msgstr "Взаимная корреляция..."
 #: modules/process/superresolution.c:554
 msgid "Interpolating..."
 msgstr "Интерполируется..."
+
+#: modules/process/threshold.c:94
+msgid "Limit the data range using a lower/upper threshold."
+msgstr "Ограничивает диапазон данных используя порог сверху и снизу."
+
+#: modules/process/threshold.c:108
+msgid "/_Basic Operations/Threshol_d..."
+msgstr "/_Базовые действия/_Порог..."
+
+#: modules/process/threshold.c:112
+msgid "Limit data range"
+msgstr "Ограничить диапазон данных"
+
+#: modules/process/threshold.c:237
+msgid "Threshold"
+msgstr "Порог"
+
+#: modules/process/threshold.c:281
+msgid "Thresholds"
+msgstr "Пороги"
+
+#: modules/process/threshold.c:286
+msgid "_Lower:"
+msgstr "С_низу:"
+
+#: modules/process/threshold.c:292
+msgid "_Upper:"
+msgstr "С_верху:"
+
+#: modules/process/threshold.c:298
+msgid "Set to Full Range"
+msgstr "Полный диапазон"
+
+#: modules/process/threshold.c:306
+msgid "Set to Display Range"
+msgstr "Отображаемый диапазон"
 
 #: modules/process/tilt.c:73
 msgid "Tilts image by specified amount."
