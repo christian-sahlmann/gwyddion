@@ -90,6 +90,7 @@ static void       gwy_app_file_chooser_add_preview    (GwyAppFileChooser *choose
 static void       gwy_app_file_chooser_update_preview (GwyAppFileChooser *chooser);
 static gboolean   gwy_app_file_chooser_do_full_preview(gpointer user_data);
 static void       gwy_app_file_chooser_free_preview   (GwyAppFileChooser *chooser);
+static void       ensure_gtk_recently_used            (void);
 
 G_DEFINE_TYPE(GwyAppFileChooser, _gwy_app_file_chooser,
               GTK_TYPE_FILE_CHOOSER_DIALOG)
@@ -227,6 +228,8 @@ _gwy_app_file_chooser_get(GtkFileChooserAction action)
 
     if (*instance)
         return *instance;
+
+    ensure_gtk_recently_used();
 
     chooser = g_object_new(GWY_TYPE_APP_FILE_CHOOSER,
                            "title", title,
@@ -981,6 +984,35 @@ gwy_app_file_chooser_free_preview(GwyAppFileChooser *chooser)
     chooser->preview_name_sys = NULL;
 
     gwy_object_unref(chooser->preview_data);
+}
+
+/* Work around crashes in the file open dialog in some Gtk+ versions if no
+ * .recently-used.xbel is present. */
+static void
+ensure_gtk_recently_used(void)
+{
+    static gboolean ensured = FALSE;
+    gchar *filename = NULL;
+
+    if (ensured)
+        return;
+
+    /* Gtk+ 2.12 implies GBookmarkFile is also available. */
+#if GTK_CHECK_VERSION(2,12,0)
+    filename = g_build_filename(g_get_home_dir(), ".recently-used.xbel", NULL);
+    if (!g_file_test(filename, G_FILE_TEST_EXISTS)) {
+        GBookmarkFile *bookmarkfile = g_bookmark_file_new();
+        GError *error = NULL;
+
+        if (!g_bookmark_file_to_file(bookmarkfile, filename, &error)) {
+            g_warning("Failed to create %s: %s", filename, error->message);
+            g_clear_error(&error);
+        }
+        g_object_unref(bookmarkfile);
+    }
+#endif
+    g_free(filename);
+    ensured = TRUE;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
