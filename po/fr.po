@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: French localization\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2010-06-30 11:38+0200\n"
-"PO-Revision-Date: 2010-07-01 01:07+0100\n"
+"POT-Creation-Date: 2010-09-18 03:58+0200\n"
+"PO-Revision-Date: 2010-09-18 18:13+0100\n"
 "Last-Translator: François RIGUET <francheu@caramail.com>\n"
 "Language-Team: François RIGUET <francheu@caramail.com>\n"
 "MIME-Version: 1.0\n"
@@ -56,11 +56,11 @@ msgstr "vdW : parabole"
 
 #: libgwyddion/gwyinventory.c:1310
 #: libgwydgets/gwygraphwindow.c:603
-#: app/data-browser.c:1445
-#: app/data-browser.c:2175
-#: app/data-browser.c:2937
-#: app/data-browser.c:3096
-#: app/data-browser.c:4983
+#: app/data-browser.c:1446
+#: app/data-browser.c:2176
+#: app/data-browser.c:2941
+#: app/data-browser.c:3100
+#: app/data-browser.c:4990
 #: app/resource-editor.c:366
 #: modules/process/convolution_filter.c:700
 msgid "Untitled"
@@ -1314,39 +1314,39 @@ msgstr "Pi_xels carrés"
 msgid "_Physically Square"
 msgstr "_Pixels réels"
 
-#: app/data-browser.c:3635
+#: app/data-browser.c:3639
 msgid "Extract to a new file"
 msgstr "Extraire en tant que nouveau fichier"
 
-#: app/data-browser.c:3636
+#: app/data-browser.c:3640
 msgid "Duplicate"
 msgstr "Dupliquer"
 
-#: app/data-browser.c:3637
+#: app/data-browser.c:3641
 msgid "Delete"
 msgstr "Supprimer"
 
-#: app/data-browser.c:3681
+#: app/data-browser.c:3685
 msgid "Data Browser"
 msgstr "Navigateur de Données"
 
-#: app/data-browser.c:3704
+#: app/data-browser.c:3708
 msgid "Close file"
 msgstr "Fermer le fichier"
 
-#: app/data-browser.c:3717
+#: app/data-browser.c:3721
 msgid "Channels"
 msgstr "Canaux"
 
-#: app/data-browser.c:3731
+#: app/data-browser.c:3735
 msgid "Graphs"
 msgstr "Graphes"
 
-#: app/data-browser.c:3745
+#: app/data-browser.c:3749
 msgid "Spectra"
 msgstr "Spectres"
 
-#: app/data-browser.c:5021
+#: app/data-browser.c:5028
 #, c-format
 msgid "Unknown channel %d"
 msgstr "Canal inconnu %d"
@@ -1388,7 +1388,7 @@ msgid "Merge File"
 msgstr "Fusionner un fichier"
 
 #: app/file.c:351
-#: app/gwyappfilechooser.c:215
+#: app/gwyappfilechooser.c:216
 msgid "Open File"
 msgstr "Ouvrir un fichier"
 
@@ -1486,37 +1486,37 @@ msgstr "_Courbe"
 msgid "_Snap to control points"
 msgstr "_S'accrocher aux points de contrôle"
 
-#: app/gwyappfilechooser.c:220
+#: app/gwyappfilechooser.c:221
 msgid "Save File"
 msgstr "Enregistrer le fichier"
 
-#: app/gwyappfilechooser.c:398
+#: app/gwyappfilechooser.c:401
 #, c-format
 msgid "File _type: %s, filtered"
 msgstr "_Type de fichier : %s, filtré"
 
-#: app/gwyappfilechooser.c:400
+#: app/gwyappfilechooser.c:403
 #, c-format
 msgid "File _type: %s"
 msgstr "_Type de fichier : %s"
 
-#: app/gwyappfilechooser.c:480
+#: app/gwyappfilechooser.c:481
 msgid "Automatic by extension"
 msgstr "Automatique par extension"
 
-#: app/gwyappfilechooser.c:489
+#: app/gwyappfilechooser.c:490
 msgid "Automatically detected"
 msgstr "Détection automatique"
 
-#: app/gwyappfilechooser.c:540
+#: app/gwyappfilechooser.c:541
 msgid "Show only loadable files"
 msgstr "Ne montrer que les fichiers chargeables"
 
-#: app/gwyappfilechooser.c:745
+#: app/gwyappfilechooser.c:746
 msgid "…"
 msgstr "…"
 
-#: app/gwyappfilechooser.c:893
+#: app/gwyappfilechooser.c:894
 msgid "Cannot preview"
 msgstr "Impossible de prévisualiser"
 
@@ -2254,7 +2254,7 @@ msgstr "Unités :"
 #: modules/file/asciiexport.c:265
 #: modules/graph/graph_export_ascii.c:110
 msgid "Export Text"
-msgstr "Exporter le texte"
+msgstr "Exporter au format texte"
 
 #: modules/file/asciiexport.c:276
 #: modules/file/pixmap.c:2755
@@ -2348,7 +2348,7 @@ msgstr "Burleigh données exportées (.txt, .bin)"
 
 #: modules/file/burleigh_exp.c:225
 #: modules/file/burleigh_exp.c:266
-#: modules/file/nanoscope.c:1082
+#: modules/file/nanoscope.c:1083
 #: modules/file/omicron.c:370
 #: modules/file/shimadzu.c:406
 msgid "Missing colon in header line."
@@ -2623,26 +2623,26 @@ msgstr "Importe les waveformes Igor binaires (.ibw)."
 msgid "Igor binary waves (.ibw)"
 msgstr "Igor waveforms binaires (.ibw)"
 
-#: modules/file/igorfile.c:270
+#: modules/file/igorfile.c:271
 #, c-format
 msgid "Format version is %d.  Only version 5 is supported."
 msgstr "La version de format est %d. Seule la version 5 est supportée."
 
-#: modules/file/igorfile.c:289
+#: modules/file/igorfile.c:292
 msgid "Only two-dimensional data are supported."
 msgstr "Seules les données bi-dimensionnelles sont supportés."
 
-#: modules/file/igorfile.c:301
+#: modules/file/igorfile.c:304
 #, c-format
 msgid "Number of data points %u does not match resolutions %u×%u×%u."
 msgstr "Le nombre de points de données %u ne correspond pas à la résolution %u×%u×%u."
 
-#: modules/file/igorfile.c:315
+#: modules/file/igorfile.c:318
 #, c-format
 msgid "Data size %u does not match the number of data points %u×%u."
 msgstr "La taille des données %u ne correspond pas au nombre de points de données %u×%u."
 
-#: modules/file/igorfile.c:355
+#: modules/file/igorfile.c:356
 msgid "Cannot read channel labels."
 msgstr "Impossible de lire les labels des canaux."
 
@@ -2685,6 +2685,24 @@ msgstr "JPK image de scan (.jpk)"
 #: modules/file/jpkscan.c:165
 msgid "File does not contain grid dimensions."
 msgstr "Le fichier ne contient pas les dimensions de la grille."
+
+#: modules/file/lextfile.c:86
+msgid "Imports LEXT data files."
+msgstr "Importe les fichiers LEXT."
+
+#: modules/file/lextfile.c:99
+msgid "Olympus LEXT OLS4000 (.lext)"
+msgstr "Olympus LEXT OLS4000 (.lext)"
+
+#: modules/file/lextfile.c:166
+msgid "Top-level element is not ‘TiffTagDescData’."
+msgstr "L'élément de premier niveau n'est pas ‘TiffTagDescData’."
+
+#: modules/file/lextfile.c:255
+#: modules/file/nanoscan.c:273
+#, c-format
+msgid "XML parsing failed: %s"
+msgstr "L'analyse du fichier XML à échoué : %s"
 
 #: modules/file/mapvue.c:379
 msgid "Imports MapVue data files (.map)."
@@ -2910,11 +2928,6 @@ msgstr "Importe les fichiers NanoScan XML."
 msgid "NanoScan XML files (.xml)"
 msgstr "NanoScan XML (.xml)"
 
-#: modules/file/nanoscan.c:273
-#, c-format
-msgid "XML parsing failed: %s"
-msgstr "L'analyse du fichier XML à échoué : %s"
-
 #: modules/file/nanoscan.c:676
 msgid "Top-level element is not ‘scan’."
 msgstr "Le premier élément n'est pas un ‘scan’."
@@ -2932,19 +2945,19 @@ msgstr "Importe les fichiers Digital Instruments Nanoscope II."
 msgid "Nanoscope II files"
 msgstr "Nanoscope II"
 
-#: modules/file/nanoscope.c:164
+#: modules/file/nanoscope.c:165
 msgid "Imports Veeco (Digital Instruments) Nanoscope data files, version 3 or newer."
 msgstr "Importe les fichiers Veeco (Digital Instruments) Nanoscope, version 3 ou plus."
 
-#: modules/file/nanoscope.c:178
+#: modules/file/nanoscope.c:179
 msgid "Nanoscope III files"
 msgstr "Nanoscope III"
 
-#: modules/file/nanoscope.c:242
+#: modules/file/nanoscope.c:243
 msgid "File is not a Nanoscope file, or it is a unknown subtype."
 msgstr "Le fichier n'est pas un fichier Nanoscope, ou est d'un sous-type inconnu."
 
-#: modules/file/nanoscope.c:249
+#: modules/file/nanoscope.c:250
 msgid ""
 "File has been damaged by change of line endings, resulting in corruption of the binary part of the file.\n"
 "\n"
@@ -2954,17 +2967,17 @@ msgstr ""
 "\n"
 "Cela arrive typiquement lorsque le fichier est traité comme du texte lors d'un envoi incompressé par e-mail, un transfert FTP en mode ascii (uilisez le binaire), compressé avec ‘Envoyer vers un dossier compressé’ dans certaines versions de MS Windows, ou tout autre transfert de fichier qui essaie d'enregistrer en texte indépendamment de la plateforme."
 
-#: modules/file/nanoscope.c:517
-#: modules/file/nanoscope.c:533
+#: modules/file/nanoscope.c:518
+#: modules/file/nanoscope.c:534
 msgid "Cannot parse `Scan size' field."
 msgstr "Impossible d'analyser le champ `Scan size'."
 
-#: modules/file/nanoscope.c:992
+#: modules/file/nanoscope.c:993
 #, c-format
 msgid "Garbage after data sample #%d."
 msgstr "Données erronées après l'échantillon #%d."
 
-#: modules/file/nanoscope.c:1072
+#: modules/file/nanoscope.c:1073
 msgid "Truncated header line."
 msgstr "Ligne d'en-tête tronquée."
 
@@ -3012,38 +3025,38 @@ msgstr "Le tableau `%s', bien qu'absent, possède un nombre d'élément non nul.
 msgid "More than one record dimension found."
 msgstr "Plus d'une dimension d'enregistrement a été trouvée."
 
-#: modules/file/nt-mdt.c:655
+#: modules/file/nt-mdt.c:658
 msgid "Imports NT-MDT data files."
 msgstr "Importe les fichiers NT-MDT."
 
-#: modules/file/nt-mdt.c:668
+#: modules/file/nt-mdt.c:671
 msgid "NT-MDT files (.mdt)"
 msgstr "NT-MDT (.mdt)"
 
-#: modules/file/nt-mdt.c:1096
+#: modules/file/nt-mdt.c:1087
 msgid "Frame is too short for Frame Mode."
 msgstr "la trame est trop courte pour le mode trame."
 
-#: modules/file/nt-mdt.c:1110
+#: modules/file/nt-mdt.c:1101
 msgid "Frame is too short for dots or data."
 msgstr "la trame est trop courte pour des points ou des données."
 
-#: modules/file/nt-mdt.c:1367
+#: modules/file/nt-mdt.c:1358
 #, c-format
 msgid "End of file reached in frame header #%u."
 msgstr "Fin du fichier atteinte dans l'en-tête #%u."
 
-#: modules/file/nt-mdt.c:1375
+#: modules/file/nt-mdt.c:1366
 #, c-format
 msgid "End of file reached in frame data #%u."
 msgstr "Fin du fichier atteinte dans les données #%u."
 
-#: modules/file/nt-mdt.c:1410
+#: modules/file/nt-mdt.c:1401
 #, c-format
 msgid "Frame #%u is too short for scanned data header."
 msgstr "La trame #%u est trop courte pour l'en-tête des données scannées."
 
-#: modules/file/nt-mdt.c:2404
+#: modules/file/nt-mdt.c:2403
 msgid "Raman Image"
 msgstr "Image Raman"
 
@@ -3598,15 +3611,15 @@ msgstr "IEEE double précision"
 
 #: modules/file/rawfile.c:313
 msgid "Raw data files"
-msgstr "Texte brut"
+msgstr "Données ASCII ou binaires"
 
 #: modules/file/rawfile.c:355
 msgid "Raw data import must be run as interactive."
-msgstr "L'import des fichiers texte brut doit être fait de manière interactive."
+msgstr "L'import des fichiers ASCII ou binaires doit être fait de manière interactive."
 
 #: modules/file/rawfile.c:397
 msgid "Read Raw File"
-msgstr "Lire le fichier brut"
+msgstr "Lire le fichier ASCII ou binaire"
 
 #: modules/file/rawfile.c:424
 msgid "Information"
@@ -3659,7 +3672,7 @@ msgstr "Hauteur :"
 
 #: modules/file/rawfile.c:723
 msgid "_Automatically offer raw data import of unknown files"
-msgstr "Proposer _automatiquement l'import des fichiers texte brut pour les fichiers de type inconnu"
+msgstr "Proposer _automatiquement l'import des fichiers ASCII ou binaires pour les fichiers de type inconnu"
 
 #: modules/file/rawfile.c:752
 msgid "_Text data"
@@ -4632,7 +4645,7 @@ msgstr "Exporte le graphe dans un fichier texte."
 
 #: modules/graph/graph_export_ascii.c:82
 msgid "/Export _Text..."
-msgstr "/Exporter le _texte..."
+msgstr "/Exporter au format _texte..."
 
 #: modules/graph/graph_export_ascii.c:85
 msgid "Export graph data to a text file"
@@ -4656,7 +4669,7 @@ msgstr "Exporter le graphe en image bitmap"
 
 #: modules/graph/graph_export_bitmap.c:48
 msgid "/Export _Bitmap"
-msgstr "/Exporter le _bitmap"
+msgstr "/Exporter en _bitmap"
 
 #: modules/graph/graph_export_bitmap.c:51
 msgid "Export graph to a raster image"
@@ -4668,7 +4681,7 @@ msgstr "Exporter le graphe au format postscript"
 
 #: modules/graph/graph_export_vector.c:50
 msgid "/Export _PostScript"
-msgstr "/Exporter le _PostScript"
+msgstr "/Exporter en _PostScript"
 
 #: modules/graph/graph_export_vector.c:53
 msgid "Export graph to a vector image"
@@ -5134,7 +5147,7 @@ msgstr "Facteur de calibration _X :"
 
 #: modules/process/calibrate.c:458
 msgid "_Y calibration factor:"
-msgstr "Facteur de calibration _Z :"
+msgstr "Facteur de calibration _Y :"
 
 #: modules/process/calibrate.c:466
 msgid "_Z calibration factor:"
@@ -5926,7 +5939,7 @@ msgid "_Undo"
 msgstr "_Annuler"
 
 #: modules/process/fft_filter_2d.c:489
-#: modules/tools/maskedit.c:393
+#: modules/tools/maskedit.c:394
 msgid "_Remove"
 msgstr "Supprimer"
 
@@ -6417,7 +6430,7 @@ msgstr "Statistiques basiques des grains"
 
 #: modules/process/grain_dist.c:223
 msgid "_Export raw data"
-msgstr "_Exporter les données brutes"
+msgstr "_Exporter les données"
 
 #: modules/process/grain_dist.c:224
 msgid "Plot _graphs"
@@ -6581,6 +6594,7 @@ msgstr "Taille de g_outte :"
 
 #: modules/process/grain_wshed.c:501
 #: modules/process/maskcor.c:327
+#: modules/process/mcrop.c:326
 #: modules/process/merge.c:686
 #: modules/process/tip_blind.c:558
 #: modules/process/tipops.c:307
@@ -7224,6 +7238,7 @@ msgid "Correlation _method:"
 msgstr "_Méthode de corrélation"
 
 #: modules/process/maskcor.c:329
+#: modules/process/mcrop.c:328
 #: modules/process/merge.c:688
 msgid "Correlating"
 msgstr "Corrélation"
@@ -7259,6 +7274,26 @@ msgstr "Extrait le masque vers un nouveau canal"
 #: modules/process/maskops.c:137
 msgid "Mask"
 msgstr "Masque"
+
+#: modules/process/mcrop.c:70
+msgid "Crops non-intersecting regions of two images."
+msgstr "Rogne les régions non croisées de deux images."
+
+#: modules/process/mcrop.c:84
+msgid "/M_ultidata/Mutual C_rop..."
+msgstr "/M_ultidonnées/_Rognage mutuel..."
+
+#: modules/process/mcrop.c:88
+msgid "Crop non-intersecting regions of two images"
+msgstr "Rogne les régions non croisées de deux images"
+
+#: modules/process/mcrop.c:159
+msgid "Mutual Crop"
+msgstr "Rognage mutuel"
+
+#: modules/process/mcrop.c:180
+msgid "_Select second argument:"
+msgstr "_Sélectionner le second argument :"
 
 #: modules/process/median-bg.c:80
 msgid "Subtracts background using a rank-based algorithm."
@@ -7690,7 +7725,7 @@ msgid "Scales data by arbitrary factor."
 msgstr "Met les données à l'échelle selon un facteur quelconque."
 
 #: modules/process/scale.c:105
-msgid "/_Basic Operations/Scale..."
+msgid "/_Basic Operations/_Scale..."
 msgstr "/Opérations _Basiques/Echelle..."
 
 #: modules/process/scale.c:109
@@ -7906,6 +7941,42 @@ msgstr "Corrélation croisée..."
 #: modules/process/superresolution.c:554
 msgid "Interpolating..."
 msgstr "Interpolation..."
+
+#: modules/process/threshold.c:94
+msgid "Limit the data range using a lower/upper threshold."
+msgstr "Limiter la plage de données en utilisant des seuils haut/bas."
+
+#: modules/process/threshold.c:108
+msgid "/_Basic Operations/Threshol_d..."
+msgstr "/Opérations _Basiques/Seuil..."
+
+#: modules/process/threshold.c:112
+msgid "Limit data range"
+msgstr "Limiter la plages de données"
+
+#: modules/process/threshold.c:237
+msgid "Threshold"
+msgstr "Seuil"
+
+#: modules/process/threshold.c:281
+msgid "Thresholds"
+msgstr "Seuils"
+
+#: modules/process/threshold.c:286
+msgid "_Lower:"
+msgstr "Bas :"
+
+#: modules/process/threshold.c:292
+msgid "_Upper:"
+msgstr "Ha_ut :"
+
+#: modules/process/threshold.c:298
+msgid "Set to Full Range"
+msgstr "Utiliser la plage des données complète"
+
+#: modules/process/threshold.c:306
+msgid "Set to Display Range"
+msgstr "Utiliser la plage de données affichée"
 
 #: modules/process/tilt.c:73
 msgid "Tilts image by specified amount."
@@ -8471,91 +8542,95 @@ msgstr "<b>Options</b>"
 msgid "_Instant updates"
 msgstr "Mises à jour instantanées"
 
-#: modules/tools/maskedit.c:121
+#: modules/tools/maskedit.c:122
 msgid "Mask editor tool, allows to interactively add or remove parts of mask."
 msgstr "Outil d'édition de masque, permet d'ajouter ou d'enlever des parties du masque de manière interactive"
 
-#: modules/tools/maskedit.c:169
+#: modules/tools/maskedit.c:170
 msgid "Mask Editor"
 msgstr "Editeur de masque"
 
-#: modules/tools/maskedit.c:170
+#: modules/tools/maskedit.c:171
 msgid "Edit mask"
 msgstr "Editer le masque"
 
-#: modules/tools/maskedit.c:254
+#: modules/tools/maskedit.c:255
 msgid "Set mask to selection"
 msgstr "Définir la sélection comme masque"
 
-#: modules/tools/maskedit.c:259
+#: modules/tools/maskedit.c:260
 msgid "Add selection to mask"
 msgstr "Ajouter la sélection au masque"
 
-#: modules/tools/maskedit.c:264
+#: modules/tools/maskedit.c:265
 msgid "Subtract selection from mask"
 msgstr "Soustraire la sélection du masque"
 
-#: modules/tools/maskedit.c:269
+#: modules/tools/maskedit.c:270
 msgid "Intersect selection with mask"
 msgstr "Insérer la sélection avec un masque"
 
-#: modules/tools/maskedit.c:276
+#: modules/tools/maskedit.c:277
 msgid "Rectangular shapes"
 msgstr "Rectangles"
 
-#: modules/tools/maskedit.c:281
+#: modules/tools/maskedit.c:282
 msgid "Elliptic shapes"
 msgstr "Ellipses"
 
-#: modules/tools/maskedit.c:286
+#: modules/tools/maskedit.c:287
 msgid "Thin lines"
 msgstr "Lignes"
 
-#: modules/tools/maskedit.c:313
+#: modules/tools/maskedit.c:314
 msgid "Editor"
 msgstr "Editeur"
 
-#: modules/tools/maskedit.c:318
+#: modules/tools/maskedit.c:319
 msgid "Mode:"
 msgstr "Mode :"
 
-#: modules/tools/maskedit.c:347
+#: modules/tools/maskedit.c:348
 msgid "Shape:"
 msgstr "Forme :"
 
-#: modules/tools/maskedit.c:377
+#: modules/tools/maskedit.c:378
 msgid "Actions"
 msgstr "Actions"
 
-#: modules/tools/maskedit.c:385
+#: modules/tools/maskedit.c:386
 msgid "_Invert"
 msgstr "_Inverser"
 
-#: modules/tools/maskedit.c:401
+#: modules/tools/maskedit.c:402
 msgid "_Fill"
 msgstr "Remplir"
 
-#: modules/tools/maskedit.c:414
+#: modules/tools/maskedit.c:409
+msgid "Fill _Voids"
+msgstr "Remplir les _vides"
+
+#: modules/tools/maskedit.c:423
 msgid "Grow/Shrink"
 msgstr "Dilater / Eroder"
 
-#: modules/tools/maskedit.c:423
+#: modules/tools/maskedit.c:432
 msgid "_Grow"
 msgstr "Dilater"
 
-#: modules/tools/maskedit.c:431
+#: modules/tools/maskedit.c:440
 msgid "Shrin_k"
 msgstr "Eroder"
 
-#: modules/tools/maskedit.c:446
+#: modules/tools/maskedit.c:455
 msgid "_Amount:"
 msgstr "Qu_antité :"
 
-#: modules/tools/maskedit.c:453
+#: modules/tools/maskedit.c:462
 msgid "Shrink from _border"
 msgstr "Eroder à partir du _bord"
 
-#: modules/tools/maskedit.c:464
+#: modules/tools/maskedit.c:473
 msgid "_Prevent grain merging by growing"
 msgstr "Em_pêcher la fusion de grains lors d'une dilatation"
 
