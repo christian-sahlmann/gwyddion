@@ -70,6 +70,9 @@ typedef enum {
 
 typedef void (*GwyAppDataForeachFunc)(GwyContainer *data,
                                       gpointer user_data);
+typedef void (*GwyAppDataWatchFunc)(GwyContainer *data,
+                                    gint id,
+                                    gpointer user_data);
 
 void   gwy_app_data_browser_add             (GwyContainer *data);
 void   gwy_app_data_browser_remove          (GwyContainer *data);
@@ -106,6 +109,11 @@ void   gwy_app_data_clear_selections        (GwyContainer *data,
                                              gint id);
 void   gwy_app_data_browser_foreach         (GwyAppDataForeachFunc function,
                                              gpointer user_data);
+
+gulong gwy_app_data_browser_add_channel_watch   (GwyAppDataWatchFunc function,
+                                                 gpointer user_data);
+void   gwy_app_data_browser_remove_channel_watch(gulong id);
+
 void   gwy_app_sync_data_items              (GwyContainer *source,
                                              GwyContainer *dest,
                                              gint from_id,

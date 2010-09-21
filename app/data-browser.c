@@ -112,6 +112,12 @@ typedef struct {
     gint id;
 } GwyApp3DAssociation;
 
+typedef struct {
+    GwyAppDataWatchFunc function;
+    gpointer user_data;
+    gulong id;
+} GwyAppWatcherData;
+
 /* The data browser */
 struct _GwyAppDataBrowser {
     GList *proxy_list;
@@ -200,6 +206,13 @@ static GQuark graph_window_quark = 0;
 /* The data browser */
 static GwyAppDataBrowser *gwy_app_data_browser = NULL;
 static gboolean gui_disabled = FALSE;
+
+static gulong watcher_id = 0;
+static GList *channel_watchers = NULL;
+/*
+static GList *graph_watchers = NULL;
+static GList *spectra_watchers = NULL;
+*/
 
 /* Use doubles for timestamps.  They have 53bit mantisa, which is sufficient
  * for microsecond precision. */
@@ -553,8 +566,6 @@ gwy_app_data_proxy_switch_object_data(G_GNUC_UNUSED GwyAppDataProxy *proxy,
  * @proxy: Data proxy.
  *
  * Updates channel display in the data browser when channel data change.
- *
- * (Currently does not do anything.)
  **/
 static void
 gwy_app_data_proxy_channel_changed(GwyDataField *channel,
@@ -578,6 +589,7 @@ gwy_app_data_proxy_channel_changed(GwyDataField *channel,
     gtk_list_store_set(proxy->lists[PAGE_CHANNELS].store, &iter,
                        MODEL_TIMESTAMP, gwy_get_timestamp(),
                        -1);
+    /* XXXXXX */
 }
 
 /**
@@ -6194,12 +6206,133 @@ gwy_app_data_browser_find_spectra_by_title(GwyContainer *data,
     return gwy_app_data_list_get_object_ids(data, PAGE_SPECTRA, titleglob);
 }
 
+static gulong
+gwy_app_data_browser_add_watch(GList **list,
+                               GwyAppDataWatchFunc function,
+                               gpointer user_data)
+{
+    GwyAppWatcherData *wdata;
+
+    g_return_val_if_fail(function, 0);
+    wdata = g_new(GwyAppWatcherData, 1);
+    wdata->function = function;
+    wdata->user_data = user_data;
+    wdata->id = ++watcher_id;
+    *list = g_list_append(*list, wdata);
+
+    return wdata->id;
+}
+
+static void
+gwy_app_data_browser_remove_watch(GList **list,
+                                  gulong id)
+{
+    GList *l;
+
+    for (l = *list; l; l = g_list_next(l)) {
+        GwyAppWatcherData *wdata = (GwyAppWatcherData*)l->data;
+
+        if (wdata->id == id) {
+            *list = g_list_delete_link(*list, l);
+            return;
+        }
+    }
+    g_warning("Cannot find watch with id %lu.", id);
+}
+
+/**
+ * gwy_app_data_browser_add_channel_watch:
+ * @function: Function to call when a channel changes.
+ * @user_data: User data to pass to @function.
+ *
+ * Adds a watch function called when a channel changes.
+ *
+ * The function is called whenever a channel is added, removed, its data
+ * changes or its metadata such as the title changes.
+ *
+ * Returns: The id of the added watch func that can be used to remove it later
+ *          using gwy_app_data_browser_remove_channel_watch().
+ *
+ * Since 2.21.
+ **/
+gulong
+gwy_app_data_browser_add_channel_watch(GwyAppDataWatchFunc function,
+                                       gpointer user_data)
+{
+    return gwy_app_data_browser_add_watch(&channel_watchers,
+                                          function, user_data);
+}
+
+/**
+ * gwy_app_data_browser_remove_channel_watch:
+ * @id: Watch function id, as returned by
+ *      gwy_app_data_browser_add_channel_watch().
+ *
+ * Removes a channel watch function.
+ *
+ * Since: 2.21
+ **/
+void
+gwy_app_data_browser_remove_channel_watch(gulong id)
+{
+    gwy_app_data_browser_remove_watch(&channel_watchers, id);
+}
+
+/*
+gulong
+gwy_app_data_browser_add_graph_watch(GwyAppDataWatchFunc function,
+                                     gpointer user_data)
+{
+    return gwy_app_data_browser_add_watch(&graph_watchers,
+                                          function, user_data);
+}
+
+void
+gwy_app_data_browser_remove_graph_watch(gulong id)
+{
+    gwy_app_data_browser_remove_watch(&graph_watchers, id);
+}
+
+gulong
+gwy_app_data_browser_add_spectra_watch(GwyAppDataWatchFunc function,
+                                       gpointer user_data)
+{
+    return gwy_app_data_browser_add_watch(&spectra_watchers,
+                                          function, user_data);
+}
+
+void
+gwy_app_data_browser_remove_spectra_watch(gulong id)
+{
+    gwy_app_data_browser_remove_watch(&spectra_watchers, id);
+}
+*/
+
 /************************** Documentation ****************************/
 
 /**
  * SECTION:data-browser
  * @title: data-browser
  * @short_description: Data browser
+ **/
+
+/**
+ * GwyAppDataForeachFunc:
+ * @data: A data container managed by the data-browser.
+ * @user_data: User data passed to gwy_app_data_browser_foreach().
+ *
+ * Type of function passed to gwy_app_data_browser_foreach().
+ **/
+
+/**
+ * GwyAppDataWatchFunc:
+ * @data: A data container managed by the data-browser.
+ * @id: Object (channel) id in the container.
+ * @user_data: User data passed to gwy_app_data_browser_add_channel_watch().
+ *
+ * Type of function passed to gwy_app_data_browser_add_channel_watch().
+ *
+ * Since: 2.21
  **/
 
 /**
