@@ -998,7 +998,7 @@ ensure_gtk_recently_used(void)
         return;
 
     /* Gtk+ 2.12 implies GBookmarkFile is also available. */
-#if GTK_CHECK_VERSION(2,12,0)
+#if (GTK_CHECK_VERSION(2,12,0))
     filename = g_build_filename(g_get_home_dir(), ".recently-used.xbel", NULL);
     if (!g_file_test(filename, G_FILE_TEST_EXISTS)) {
         GBookmarkFile *bookmarkfile = g_bookmark_file_new();
