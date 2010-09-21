@@ -412,13 +412,13 @@ _gwy_app_3d_window_setup(Gwy3DWindow *window3d)
     view3d = GWY_3D_VIEW(gwy_3d_window_get_3d_view(window3d));
     tooltips = gwy_3d_window_class_get_tooltips();
 
-    button = gwy_stock_like_button_new(_("Export"), GTK_STOCK_SAVE);
+    button = gwy_stock_like_button_new(_("Save"), GTK_STOCK_SAVE);
     gtk_tooltips_set_tip(tooltips, button,
-                         _("Export 3D view to PNG image"), NULL);
+                         _("Save 3D view to an image"), NULL);
     gwy_3d_window_add_action_widget(GWY_3D_WINDOW(window3d), button);
     gwy_3d_window_add_small_toolbar_button(GWY_3D_WINDOW(window3d),
                                            GTK_STOCK_SAVE,
-                                           _("Export 3D view to PNG image"),
+                                           _("Save 3D view to an image"),
                                            G_CALLBACK(gwy_app_3d_window_export),
                                            window3d);
     g_signal_connect_swapped(button, "clicked",
