@@ -195,6 +195,9 @@ static GdkPixbuf* gwy_app_get_graph_thumbnail(GwyContainer *data,
                                               gint id,
                                               gint max_width,
                                               gint max_height);
+static void gwy_app_data_browser_notify_watch(GList *watchers,
+                                              GwyContainer *container,
+                                              gint id);
 
 static GQuark container_quark    = 0;
 static GQuark own_key_quark      = 0;
@@ -589,7 +592,7 @@ gwy_app_data_proxy_channel_changed(GwyDataField *channel,
     gtk_list_store_set(proxy->lists[PAGE_CHANNELS].store, &iter,
                        MODEL_TIMESTAMP, gwy_get_timestamp(),
                        -1);
-    /* XXXXXX */
+    gwy_app_data_browser_notify_watch(channel_watchers, proxy->container, id);
 }
 
 /**
@@ -603,16 +606,16 @@ gwy_app_data_proxy_channel_changed(GwyDataField *channel,
  **/
 static void
 gwy_app_data_proxy_connect_channel(GwyAppDataProxy *proxy,
-                                   gint i,
+                                   gint id,
                                    GtkTreeIter *iter,
                                    GObject *object)
 {
     gchar key[24];
     GQuark quark;
 
-    gwy_app_data_proxy_add_object(&proxy->lists[PAGE_CHANNELS], i, iter,
+    gwy_app_data_proxy_add_object(&proxy->lists[PAGE_CHANNELS], id, iter,
                                   object);
-    g_snprintf(key, sizeof(key), "/%d/data", i);
+    g_snprintf(key, sizeof(key), "/%d/data", id);
     gwy_debug("%p: %d in %p", object, i, proxy->container);
     quark = g_quark_from_string(key);
     g_object_set_qdata(object, container_quark, proxy->container);
@@ -620,6 +623,7 @@ gwy_app_data_proxy_connect_channel(GwyAppDataProxy *proxy,
 
     g_signal_connect(object, "data-changed",
                      G_CALLBACK(gwy_app_data_proxy_channel_changed), proxy);
+    gwy_app_data_browser_notify_watch(channel_watchers, proxy->container, id);
 }
 
 /**
@@ -635,9 +639,11 @@ gwy_app_data_proxy_disconnect_channel(GwyAppDataProxy *proxy,
                                       GtkTreeIter *iter)
 {
     GObject *object;
+    gint id;
 
     gtk_tree_model_get(GTK_TREE_MODEL(proxy->lists[PAGE_CHANNELS].store), iter,
                        MODEL_OBJECT, &object,
+                       MODEL_ID, &id,
                        -1);
     gwy_debug("%p: from %p", object, proxy->container);
     g_object_set_qdata(object, container_quark, NULL);
@@ -647,6 +653,7 @@ gwy_app_data_proxy_disconnect_channel(GwyAppDataProxy *proxy,
                                          proxy);
     g_object_unref(object);
     gtk_list_store_remove(proxy->lists[PAGE_CHANNELS].store, iter);
+    gwy_app_data_browser_notify_watch(channel_watchers, proxy->container, id);
 }
 
 /**
@@ -664,9 +671,11 @@ gwy_app_data_proxy_reconnect_channel(GwyAppDataProxy *proxy,
                                      GObject *object)
 {
     GObject *old;
+    gint id;
 
     gtk_tree_model_get(GTK_TREE_MODEL(proxy->lists[PAGE_CHANNELS].store), iter,
                        MODEL_OBJECT, &old,
+                       MODEL_ID, &id,
                        -1);
     g_signal_handlers_disconnect_by_func(old,
                                          gwy_app_data_proxy_channel_changed,
@@ -678,6 +687,7 @@ gwy_app_data_proxy_reconnect_channel(GwyAppDataProxy *proxy,
     g_signal_connect(object, "data-changed",
                      G_CALLBACK(gwy_app_data_proxy_channel_changed), proxy);
     g_object_unref(old);
+    gwy_app_data_browser_notify_watch(channel_watchers, proxy->container, id);
 }
 
 /**
@@ -6206,8 +6216,29 @@ gwy_app_data_browser_find_spectra_by_title(GwyContainer *data,
     return gwy_app_data_list_get_object_ids(data, PAGE_SPECTRA, titleglob);
 }
 
+static void
+gwy_app_data_browser_notify_watch(GList *watchers,
+                                  GwyContainer *container,
+                                  gint id)
+{
+    g_printerr("NOTIFY WATCH %p %d\n", container, id);
+    while (watchers) {
+        GwyAppWatcherData *wdata = (GwyAppWatcherData*)watchers->data;
+        wdata->function(container, id, wdata->user_data);
+        watchers = g_list_next(watchers);
+    }
+}
+
+/*
+ * FIXME:
+ * GwyAppDataWatchFunc needs a `what-happened' argument because when a file is
+ * removed from data-browser the individual channels are not removed from it
+ * (and we cannot remove them because the container can be still owned by
+ * something else).  So it is necessary to notify the watcher that an object
+ * is removed although it is, in fact, present.
+ */
 static gulong
-gwy_app_data_browser_add_watch(GList **list,
+gwy_app_data_browser_add_watch(GList **watchers,
                                GwyAppDataWatchFunc function,
                                gpointer user_data)
 {
@@ -6218,22 +6249,22 @@ gwy_app_data_browser_add_watch(GList **list,
     wdata->function = function;
     wdata->user_data = user_data;
     wdata->id = ++watcher_id;
-    *list = g_list_append(*list, wdata);
+    *watchers = g_list_append(*watchers, wdata);
 
     return wdata->id;
 }
 
 static void
-gwy_app_data_browser_remove_watch(GList **list,
+gwy_app_data_browser_remove_watch(GList **watchers,
                                   gulong id)
 {
     GList *l;
 
-    for (l = *list; l; l = g_list_next(l)) {
+    for (l = *watchers; l; l = g_list_next(l)) {
         GwyAppWatcherData *wdata = (GwyAppWatcherData*)l->data;
 
         if (wdata->id == id) {
-            *list = g_list_delete_link(*list, l);
+            *watchers = g_list_delete_link(*watchers, l);
             return;
         }
     }
@@ -6248,7 +6279,8 @@ gwy_app_data_browser_remove_watch(GList **list,
  * Adds a watch function called when a channel changes.
  *
  * The function is called whenever a channel is added, removed, its data
- * changes or its metadata such as the title changes.
+ * changes or its metadata such as the title changes.  If a channel is removed
+ * it no longer exists when the function is called.
  *
  * Returns: The id of the added watch func that can be used to remove it later
  *          using gwy_app_data_browser_remove_channel_watch().
