@@ -6254,14 +6254,6 @@ gwy_app_data_browser_notify_watch(GList *watchers,
     }
 }
 
-/*
- * FIXME:
- * GwyAppDataWatchFunc needs a `what-happened' argument because when a file is
- * removed from data-browser the individual channels are not removed from it
- * (and we cannot remove them because the container can be still owned by
- * something else).  So it is necessary to notify the watcher that an object
- * is removed although it is, in fact, present.
- */
 static gulong
 gwy_app_data_browser_add_watch(GList **watchers,
                                GwyAppDataWatchFunc function,
