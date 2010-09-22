@@ -44,6 +44,10 @@ struct _GwyDataChooser {
 
     GtkTreeIter none_iter;
     gchar *none_label;
+
+    GList *events;
+    gulong watcher_id;
+    guint update_id;
 };
 
 struct _GwyDataChooserClass {
@@ -55,6 +59,12 @@ struct _GwyDataChooserClass {
  * Implementation.
  *
  *****************************************************************************/
+
+typedef struct {
+    GwyContainer *container;
+    gint id;
+    GwyDataWatchEventType event_type;
+} GwyDataChooserEvent;
 
 /* To avoid "row-changed" when values are actually filled in.  Filling rows
  * inside a cell renderer causes an obscure Gtk+ crash. */
@@ -76,6 +86,7 @@ static gboolean gwy_data_chooser_is_visible     (GtkTreeModel *model,
                                                  GtkTreeIter *iter,
                                                  gpointer data);
 static void     gwy_data_chooser_choose_whatever(GwyDataChooser *chooser);
+static void     gwy_data_chooser_remove_events  (GwyDataChooser *chooser);
 
 G_DEFINE_TYPE(GwyDataChooser, gwy_data_chooser, GTK_TYPE_COMBO_BOX)
 
@@ -105,6 +116,14 @@ gwy_data_chooser_finalize(GObject *object)
 }
 
 static void
+proxy_free(Proxy *proxy)
+{
+    gwy_object_unref(proxy->thumb);
+    g_free(proxy->name);
+    g_free(proxy);
+}
+
+static void
 gwy_data_chooser_free_proxies(GtkListStore *store)
 {
     GtkTreeModel *model;
@@ -117,9 +136,7 @@ gwy_data_chooser_free_proxies(GtkListStore *store)
 
     do {
         gtk_tree_model_get(model, &iter, MODEL_COLUMN_PROXY, &proxy, -1);
-        gwy_object_unref(proxy->thumb);
-        g_free(proxy->name);
-        g_free(proxy);
+        proxy_free(proxy);
     } while (gtk_tree_model_iter_next(model, &iter));
 }
 
@@ -139,6 +156,12 @@ gwy_data_chooser_destroy(GtkObject *object)
         gwy_object_unref(chooser->filter);
         gwy_object_unref(chooser->store);
     }
+    if (chooser->watcher_id) {
+        gwy_app_data_browser_remove_channel_watch(chooser->watcher_id);
+        chooser->watcher_id = 0;
+    }
+    if (chooser->update_id)
+        g_source_remove(chooser->update_id);
 
     GTK_OBJECT_CLASS(gwy_data_chooser_parent_class)->destroy(object);
 }
@@ -395,6 +418,183 @@ gwy_data_chooser_choose_whatever(GwyDataChooser *chooser)
         gtk_combo_box_set_active_iter(combo, &iter);
 }
 
+/* Used as destroy_func of gwy_data_chooser_process_events() */
+static void
+gwy_data_chooser_remove_events(GwyDataChooser *chooser)
+{
+    while (chooser->events) {
+        g_free(chooser->events->data);
+        chooser->events = g_list_delete_link(chooser->events, chooser->events);
+    }
+    chooser->update_id = 0;
+}
+
+/* Returns TRUE if we find the item exactly, otherwise it finds the position
+ * where to insert the item at */
+static gboolean
+gwy_data_chooser_find_data(GwyDataChooser *chooser,
+                           GwyContainer *container,
+                           gint id,
+                           gint *position)
+{
+    GtkTreeModel *model = GTK_TREE_MODEL(chooser->store);
+    GtkTreeIter iter;
+
+    *position = 0;
+    if (!gtk_tree_model_get_iter_first(model, &iter))
+        return FALSE;
+
+    do {
+        GwyContainer *container2;
+        gint id2;
+
+        gtk_tree_model_get(model, &iter,
+                           MODEL_COLUMN_CONTAINER, &container2,
+                           MODEL_COLUMN_ID, &id2,
+                           -1);
+        g_object_unref(container);
+        if (container2 == container && id2 == id)
+            return TRUE;
+        if (container2 > container || (container2 == container && id2 > id))
+            return FALSE;
+        (*position)++;
+    } while (gtk_tree_model_iter_next(model, &iter));
+
+    return FALSE;
+}
+
+static gboolean
+gwy_data_chooser_process_events(gpointer user_data)
+{
+    GwyDataChooser *chooser = (GwyDataChooser*)user_data;
+    GtkTreeModel *model = GTK_TREE_MODEL(chooser->store);
+    GtkTreeIter iter;
+    GList *item;
+
+    chooser->events = g_list_reverse(chooser->events);
+    for (item = chooser->events; item; item = g_list_next(item)) {
+        GwyDataChooserEvent *event = (GwyDataChooserEvent*)item->data;
+        gboolean found;
+        gint position;
+        Proxy *proxy;
+
+        found = gwy_data_chooser_find_data(chooser, event->container, event->id,
+                                           &position);
+
+        if (found) {
+            if (event->event_type == GWY_DATA_WATCH_EVENT_ADDED) {
+                g_warning("Attempted to add an item already present %p, %d.",
+                          event->container, event->id);
+                event->event_type = GWY_DATA_WATCH_EVENT_CHANGED;
+            }
+        }
+        else {
+            if (event->event_type == GWY_DATA_WATCH_EVENT_CHANGED) {
+                g_warning("Attempted to change an item not present yet %p, %d.",
+                          event->container, event->id);
+                event->event_type = GWY_DATA_WATCH_EVENT_ADDED;
+            }
+            if (event->event_type == GWY_DATA_WATCH_EVENT_REMOVED) {
+                g_warning("Attempted to remove a nonexistent item %p, %d.",
+                          event->container, event->id);
+                continue;
+            }
+        }
+
+
+        if (event->event_type == GWY_DATA_WATCH_EVENT_ADDED) {
+            proxy = g_new0(Proxy, 1);
+            gtk_list_store_insert_with_values(chooser->store, &iter, position,
+                                              MODEL_COLUMN_CONTAINER, event->container,
+                                              MODEL_COLUMN_ID, event->id,
+                                              MODEL_COLUMN_PROXY, proxy,
+                                              -1);
+        }
+        else if (event->event_type == GWY_DATA_WATCH_EVENT_CHANGED) {
+            gtk_tree_model_iter_nth_child(model, &iter, NULL, position);
+            gtk_tree_model_get(model, &iter, MODEL_COLUMN_PROXY, &proxy, -1);
+            proxy_free(proxy);
+            proxy = g_new0(Proxy, 1);
+            gtk_list_store_set(chooser->store, &iter,
+                               MODEL_COLUMN_PROXY, proxy,
+                               -1);
+        }
+        else if (event->event_type == GWY_DATA_WATCH_EVENT_REMOVED) {
+            gtk_tree_model_iter_nth_child(model, &iter, NULL, position);
+            gtk_tree_model_get(model, &iter, MODEL_COLUMN_PROXY, &proxy, -1);
+            proxy_free(proxy);
+            gtk_list_store_remove(chooser->store, &iter);
+        }
+        else {
+            g_assert_not_reached();
+        }
+    }
+
+    return FALSE;
+}
+
+static void
+gwy_data_chooser_receive_event(GwyContainer *data,
+                               gint id,
+                               GwyDataWatchEventType event_type,
+                               gpointer user_data)
+{
+    GwyDataChooser *chooser = (GwyDataChooser*)user_data;
+    GwyDataChooserEvent *event = NULL;
+    GList *item;
+
+    /* Find if we already have an event on the same object. */
+    for (item = chooser->events; item; item = g_list_next(item)) {
+        event = (GwyDataChooserEvent*)item->data;
+        if (event->container == data && event->id == id)
+            break;
+    }
+
+    if (event) {
+        if (event_type == GWY_DATA_WATCH_EVENT_REMOVED) {
+            if (event->event_type == GWY_DATA_WATCH_EVENT_REMOVED)
+                g_warning("Got event REMOVED twice on %p, %d.", data, id);
+            else if (event->event_type == GWY_DATA_WATCH_EVENT_ADDED) {
+                /* Got rid of the data altogether, as we do not display it. */
+                chooser->events = g_list_delete_link(chooser->events, item);
+                return;
+            }
+            else
+                event->event_type = event_type;
+        }
+        else if (event_type == GWY_DATA_WATCH_EVENT_ADDED) {
+            g_warning("Got event ADDED on existing item %p, %d.", data, id);
+        }
+        else if (event_type == GWY_DATA_WATCH_EVENT_CHANGED) {
+            if (event->event_type == GWY_DATA_WATCH_EVENT_REMOVED)
+                g_warning("Got event CHANGED after REMOVED on %p, %d.",
+                          data, id);
+            /* Keep the item type.   ADDED is as good as CHANGED for the update
+             * processing and it permits removal when a later REMOVED comes. */
+        }
+        else {
+            g_assert_not_reached();
+        }
+    }
+    else {
+        event = g_new(GwyDataChooserEvent, 1);
+        event->container = data;
+        event->id = id;
+        event->event_type = event_type;
+        /* Use g_list_prepend() for efficiency; we revert the order when we
+         * process the items. */
+        chooser->events = g_list_prepend(chooser->events, event);
+    }
+
+    if (chooser->events && !chooser->update_id) {
+        guint sid;
+        sid = g_idle_add_full(G_PRIORITY_HIGH_IDLE,
+                              gwy_data_chooser_process_events, chooser,
+                              (GDestroyNotify)&gwy_data_chooser_remove_events);
+        chooser->update_id = sid;
+    }
+}
+
 /*****************************************************************************
  *
  * Channels.
@@ -479,6 +679,16 @@ gwy_data_chooser_channels_render_icon(G_GNUC_UNUSED GtkCellLayout *layout,
     g_object_set(renderer, "pixbuf", proxy->thumb, NULL);
 }
 
+static void
+gwy_data_chooser_channels_setup_watcher(GwyDataChooser *chooser)
+{
+    gint id;
+
+    id = gwy_app_data_browser_add_channel_watch(gwy_data_chooser_receive_event,
+                                                chooser);
+    chooser->watcher_id = id;
+}
+
 /**
  * gwy_data_chooser_new_channels:
  *
@@ -512,6 +722,7 @@ gwy_data_chooser_new_channels(void)
                                        chooser, NULL);
 
     gwy_data_chooser_choose_whatever(chooser);
+    gwy_data_chooser_channels_setup_watcher(chooser);
 
     return (GtkWidget*)chooser;
 }
