@@ -6247,7 +6247,6 @@ gwy_app_data_browser_notify_watch(GList *watchers,
                                   gint id,
                                   GwyDataWatchEventType event)
 {
-    g_printerr("NOTIFY WATCH %p %d\n", container, id);
     while (watchers) {
         GwyAppWatcherData *wdata = (GwyAppWatcherData*)watchers->data;
         wdata->function(container, id, event, wdata->user_data);
