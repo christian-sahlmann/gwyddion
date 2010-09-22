@@ -68,10 +68,17 @@ typedef enum {
     GWY_VISIBILITY_RESET_HIDE_ALL
 } GwyVisibilityResetType;
 
+typedef enum {
+    GWY_DATA_WATCH_EVENT_ADDED,
+    GWY_DATA_WATCH_EVENT_CHANGED,
+    GWY_DATA_WATCH_EVENT_REMOVED
+} GwyDataWatchEventType;
+
 typedef void (*GwyAppDataForeachFunc)(GwyContainer *data,
                                       gpointer user_data);
 typedef void (*GwyAppDataWatchFunc)(GwyContainer *data,
                                     gint id,
+                                    GwyDataWatchEventType event,
                                     gpointer user_data);
 
 void   gwy_app_data_browser_add             (GwyContainer *data);

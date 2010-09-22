@@ -197,7 +197,8 @@ static GdkPixbuf* gwy_app_get_graph_thumbnail(GwyContainer *data,
                                               gint max_height);
 static void gwy_app_data_browser_notify_watch(GList *watchers,
                                               GwyContainer *container,
-                                              gint id);
+                                              gint id,
+                                              GwyDataWatchEventType event);
 
 static GQuark container_quark    = 0;
 static GQuark own_key_quark      = 0;
@@ -592,7 +593,8 @@ gwy_app_data_proxy_channel_changed(GwyDataField *channel,
     gtk_list_store_set(proxy->lists[PAGE_CHANNELS].store, &iter,
                        MODEL_TIMESTAMP, gwy_get_timestamp(),
                        -1);
-    gwy_app_data_browser_notify_watch(channel_watchers, proxy->container, id);
+    gwy_app_data_browser_notify_watch(channel_watchers, proxy->container, id,
+                                      GWY_DATA_WATCH_EVENT_CHANGED);
 }
 
 /**
@@ -623,7 +625,8 @@ gwy_app_data_proxy_connect_channel(GwyAppDataProxy *proxy,
 
     g_signal_connect(object, "data-changed",
                      G_CALLBACK(gwy_app_data_proxy_channel_changed), proxy);
-    gwy_app_data_browser_notify_watch(channel_watchers, proxy->container, id);
+    gwy_app_data_browser_notify_watch(channel_watchers, proxy->container, id,
+                                      GWY_DATA_WATCH_EVENT_ADDED);
 }
 
 /**
@@ -653,7 +656,8 @@ gwy_app_data_proxy_disconnect_channel(GwyAppDataProxy *proxy,
                                          proxy);
     g_object_unref(object);
     gtk_list_store_remove(proxy->lists[PAGE_CHANNELS].store, iter);
-    gwy_app_data_browser_notify_watch(channel_watchers, proxy->container, id);
+    gwy_app_data_browser_notify_watch(channel_watchers, proxy->container, id,
+                                      GWY_DATA_WATCH_EVENT_REMOVED);
 }
 
 /**
@@ -687,7 +691,8 @@ gwy_app_data_proxy_reconnect_channel(GwyAppDataProxy *proxy,
     g_signal_connect(object, "data-changed",
                      G_CALLBACK(gwy_app_data_proxy_channel_changed), proxy);
     g_object_unref(old);
-    gwy_app_data_browser_notify_watch(channel_watchers, proxy->container, id);
+    gwy_app_data_browser_notify_watch(channel_watchers, proxy->container, id,
+                                      GWY_DATA_WATCH_EVENT_CHANGED);
 }
 
 /**
@@ -1308,6 +1313,24 @@ gwy_app_data_proxy_item_changed(GwyContainer *data,
                        -1);
 }
 
+static void
+gwy_app_data_proxy_watch_remove_all(GList *watchers,
+                                    gint page,
+                                    GwyAppDataProxy *proxy)
+{
+    GtkTreeModel *model = GTK_TREE_MODEL(proxy->lists[page].store);
+    GtkTreeIter iter;
+    gint id;
+
+    if (gtk_tree_model_get_iter_first(model, &iter)) {
+        do {
+            gtk_tree_model_get(model, &iter, MODEL_ID, &id, -1);
+            gwy_app_data_browser_notify_watch(watchers, proxy->container, id,
+                                              GWY_DATA_WATCH_EVENT_REMOVED);
+        } while (gtk_tree_model_iter_next(model, &iter));
+    }
+}
+
 /**
  * gwy_app_data_proxy_finalize:
  * @user_data: A data proxy.
@@ -1326,6 +1349,8 @@ gwy_app_data_proxy_finalize(gpointer user_data)
     GwyAppDataBrowser *browser;
 
     proxy->finalize_id = 0;
+
+    gwy_app_data_proxy_watch_remove_all(channel_watchers, PAGE_CHANNELS, proxy);
 
     if (gwy_app_data_proxy_visible_count(proxy)) {
         g_assert(gwy_app_data_browser_get_proxy(gwy_app_data_browser,
@@ -6219,12 +6244,13 @@ gwy_app_data_browser_find_spectra_by_title(GwyContainer *data,
 static void
 gwy_app_data_browser_notify_watch(GList *watchers,
                                   GwyContainer *container,
-                                  gint id)
+                                  gint id,
+                                  GwyDataWatchEventType event)
 {
     g_printerr("NOTIFY WATCH %p %d\n", container, id);
     while (watchers) {
         GwyAppWatcherData *wdata = (GwyAppWatcherData*)watchers->data;
-        wdata->function(container, id, wdata->user_data);
+        wdata->function(container, id, event, wdata->user_data);
         watchers = g_list_next(watchers);
     }
 }
@@ -6280,7 +6306,7 @@ gwy_app_data_browser_remove_watch(GList **watchers,
  *
  * The function is called whenever a channel is added, removed, its data
  * changes or its metadata such as the title changes.  If a channel is removed
- * it no longer exists when the function is called.
+ * it may longer exist when the function is called.
  *
  * Returns: The id of the added watch func that can be used to remove it later
  *          using gwy_app_data_browser_remove_channel_watch().
@@ -6363,6 +6389,17 @@ gwy_app_data_browser_remove_spectra_watch(gulong id)
  * @user_data: User data passed to gwy_app_data_browser_add_channel_watch().
  *
  * Type of function passed to gwy_app_data_browser_add_channel_watch().
+ *
+ * Since: 2.21
+ **/
+
+/**
+ * GwyDataWatchEventType:
+ * @GWY_DATA_WATCH_EVENT_ADDED: A new data object has appeared.
+ * @GWY_DATA_WATCH_EVENT_CHANGED: A data object has changed.
+ * @GWY_DATA_WATCH_EVENT_REMOVED: A data object has been removed.
+ *
+ * Type of event reported to #GwyAppDataWatchFunc watcher functions.
  *
  * Since: 2.21
  **/
