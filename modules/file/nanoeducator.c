@@ -242,7 +242,6 @@ static GwySpectra*    nanoedu_read_fd_spectra(const guchar *pos_buffer,
                                               gsize pos_size,
                                               const guchar *data_buffer,
                                               gsize data_size,
-                                              gint version,
                                               gint nspectra,
                                               gint res,
                                               gdouble xy_step,
@@ -254,7 +253,6 @@ static GwySpectra*    nanoedu_read_iv_spectra(const guchar *pos_buffer,
                                               gsize pos_size,
                                               const guchar *data_buffer,
                                               gsize data_size,
-                                              gint version,
                                               gint nspectra,
                                               gint res,
                                               gdouble yreal,
@@ -266,7 +264,6 @@ static GwySpectra*    nanoedu_read_iz_spectra(const guchar *pos_buffer,
                                               gsize pos_size,
                                               const guchar *data_buffer,
                                               gsize data_size,
-                                              gint version,
                                               gint nspectra,
                                               gint res,
                                               gdouble xy_step,
@@ -469,22 +466,20 @@ nanoedu_load(const gchar *filename,
          * other discriminating quantity in the headers. */
         if (params.probe_type == 0)
             spectra = nanoedu_read_fd_spectra(buffer + header.point_offset,
-                                              size - header.point_offset,
+                                              header.spec_offset - header.point_offset,
                                               buffer + header.spec_offset,
                                               size - header.spec_offset,
-                                              header.version,
                                               params.n_spectra_lines,
                                               params.n_spectrum_points,
                                               Nanometer*q, scale*header.topo_ny,
                                               Nanometer*qx, Nanometer*qy,
                                               error);
-        else if ((params.amp_modulation == 1)
-              || (params.amp_modulation == 4))
+        else if (size - header.spec_offset
+            == 4 * params.n_spectra_lines * params.n_spectrum_points)
             spectra = nanoedu_read_iz_spectra(buffer + header.point_offset,
-                                              size - header.point_offset,
+                                              header.spec_offset - header.point_offset,
                                               buffer + header.spec_offset,
                                               size - header.spec_offset,
-                                              header.version,
                                               params.n_spectra_lines,
                                               params.n_spectrum_points,
                                               Nanometer*q, scale*header.topo_ny,
@@ -492,10 +487,9 @@ nanoedu_load(const gchar *filename,
                                               error);
         else
             spectra = nanoedu_read_iv_spectra(buffer + header.point_offset,
-                                              size - header.point_offset,
+                                              header.spec_offset - header.point_offset,
                                               buffer + header.spec_offset,
                                               size - header.spec_offset,
-                                              header.version,
                                               params.n_spectra_lines,
                                               params.n_spectrum_points,
                                               scale*header.topo_ny,
@@ -928,41 +922,13 @@ nanoedu_read_graph(const guchar *buffer,
 }
 
 static guint
-check_spectra_size(guint version, guint nspectra,
-                   const gint16 *p16, gsize pos_size,
-                   GError **error)
+check_spectra_size(guint nspectra,
+                   gsize pos_size)
 {
-    guint i, n, speccount, pointstep;
+    guint pointstep;
 
-    /* In versions up to 13, there are only (X, Y) spectra positions.
-     * In version 14+, there are (X, Y, N) triplets where N denotes the number
-     * of spectra measured in the point.  Since the number of spectra can
-     * differ from point to point in v14+, check if the counts sum up first. */
-    if (version >= 14) {
-        /* The maximum number of coodinates that can be there.
-         * FIXME: This is too optimistic, pos_size can extend to the end of
-         * the file. */
-        pointstep = 3;
-        n = pos_size/(2*pointstep);
-
-        for (i = speccount = 0; i < n && speccount < nspectra; i++) {
-            speccount += GINT16_FROM_LE(p16[pointstep*i + 2]);
-            if (speccount >= nspectra)
-                break;
-        }
-        if (speccount != nspectra) {
-            g_set_error(error, GWY_MODULE_FILE_ERROR,
-                        GWY_MODULE_FILE_ERROR_DATA,
-                        _("The number of spectra coordinates does "
-                          "not match the number of spectra."));
-            return 0;
-        }
-    }
-    else {
-        pointstep = 2;
-        if (err_SIZE_MISMATCH(error, pointstep*2*nspectra, pos_size, FALSE))
-            return 0;
-    }
+    pointstep = pos_size / nspectra / 2;
+    gwy_debug("pointstep = %d", pointstep);
 
     return pointstep;
 }
@@ -1018,7 +984,6 @@ make_fd_spectrum(gint res, gdouble xy_step, const gint16 *d16, gboolean flip)
 static GwySpectra*
 nanoedu_read_fd_spectra(const guchar *pos_buffer, gsize pos_size,
                         const guchar *data_buffer, gsize data_size,
-                        gint version,
                         gint nspectra, gint res,
                         gdouble xy_step, gdouble yreal,
                         gdouble xscale, gdouble yscale,
@@ -1033,8 +998,7 @@ nanoedu_read_fd_spectra(const guchar *pos_buffer, gsize pos_size,
     gdouble x, y;
     gdouble *data;
 
-    if (!(pointstep = check_spectra_size(version, nspectra, p16, pos_size,
-                                         error)))
+    if (!(pointstep = check_spectra_size(nspectra, pos_size)))
         return NULL;
 
     if (err_SIZE_MISMATCH(error, 2*4*nspectra*res, data_size, FALSE))
@@ -1122,7 +1086,6 @@ make_iv_spectrum(gint res, gdouble xy_step,
 static GwySpectra*
 nanoedu_read_iv_spectra(const guchar *pos_buffer, gsize pos_size,
                         const guchar *data_buffer, gsize data_size,
-                        gint version,
                         gint nspectra, gint res,
                         gdouble yreal,
                         gdouble xscale, gdouble yscale,
@@ -1138,8 +1101,7 @@ nanoedu_read_iv_spectra(const guchar *pos_buffer, gsize pos_size,
     gdouble x, y;
     gdouble *data;
 
-    if (!(pointstep = check_spectra_size(version, nspectra, p16, pos_size,
-                                         error)))
+    if (!(pointstep = check_spectra_size(nspectra, pos_size)))
         return NULL;
 
     if (err_SIZE_MISMATCH(error, 2*4*nspectra*res, data_size, FALSE))
@@ -1222,7 +1184,6 @@ make_iz_spectrum(gint res, gdouble xy_step,
 static GwySpectra*
 nanoedu_read_iz_spectra(const guchar *pos_buffer, gsize pos_size,
                         const guchar *data_buffer, gsize data_size,
-                        gint version,
                         gint nspectra, gint res,
                         gdouble xy_step, gdouble yreal,
                         gdouble xscale, gdouble yscale,
@@ -1237,8 +1198,7 @@ nanoedu_read_iz_spectra(const guchar *pos_buffer, gsize pos_size,
     gdouble x, y;
     gdouble *data;
 
-    if (!(pointstep = check_spectra_size(version, nspectra, p16, pos_size,
-                                         error)))
+    if (!(pointstep = check_spectra_size(nspectra, pos_size)))
         return NULL;
 
     if (err_SIZE_MISMATCH(error, 4*nspectra*res, data_size, FALSE))
