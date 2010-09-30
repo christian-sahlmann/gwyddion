@@ -929,6 +929,10 @@ check_spectra_size(guint nspectra,
 
     pointstep = pos_size / nspectra / 2;
     gwy_debug("pointstep = %d", pointstep);
+    
+    if (pointstep < 2) {
+		pointstep = 0;
+	}
 
     return pointstep;
 }
