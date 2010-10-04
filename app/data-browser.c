@@ -1251,10 +1251,14 @@ gwy_app_data_proxy_item_changed(GwyContainer *data,
         pageno = PAGE_CHANNELS;
         list = &proxy->lists[pageno];
         found = gwy_app_data_proxy_find_object(list->store, id, &iter);
-        if (found)
+        if (found) {
             gtk_tree_model_get(GTK_TREE_MODEL(list->store), &iter,
                                MODEL_WIDGET, &data_view,
                                -1);
+            gwy_app_data_browser_notify_watch(channel_watchers,
+                                              proxy->container, id,
+                                              GWY_DATA_WATCH_EVENT_CHANGED);
+        }
         /* XXX: This is not a good place to do that, DataProxy should be
          * non-GUI */
         if (data_view) {
@@ -1274,10 +1278,14 @@ gwy_app_data_proxy_item_changed(GwyContainer *data,
         pageno = PAGE_CHANNELS;
         list = &proxy->lists[pageno];
         found = gwy_app_data_proxy_find_object(list->store, id, &iter);
-        if (found)
+        if (found) {
             gtk_tree_model_get(GTK_TREE_MODEL(list->store), &iter,
                                MODEL_WIDGET, &data_view,
                                -1);
+            gwy_app_data_browser_notify_watch(channel_watchers,
+                                              proxy->container, id,
+                                              GWY_DATA_WATCH_EVENT_CHANGED);
+        }
         /* XXX: This is not a good place to do that, DataProxy should be
          * non-GUI */
         if (data_view) {
@@ -1290,14 +1298,21 @@ gwy_app_data_proxy_item_changed(GwyContainer *data,
         break;
 
         case KEY_IS_PALETTE:
+        case KEY_IS_RANGE:
         case KEY_IS_MASK_COLOR:
         case KEY_IS_REAL_SQUARE:
         pageno = PAGE_CHANNELS;
         list = &proxy->lists[pageno];
         found = gwy_app_data_proxy_find_object(list->store, id, &iter);
-        /* Prevent thumbnail update */
-        if (!found)
+        if (found) {
+            gwy_app_data_browser_notify_watch(channel_watchers,
+                                              proxy->container, id,
+                                              GWY_DATA_WATCH_EVENT_CHANGED);
+        }
+        else {
+            /* Prevent thumbnail update */
             pageno = -1;
+        }
         break;
 
         default:
