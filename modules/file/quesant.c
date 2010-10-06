@@ -49,8 +49,6 @@
 #define MAGIC_SIZE (sizeof(MAGIC) - 1)
 #define HEADER_SIZE 0x148
 
-typedef char bool;
-
 static gboolean        module_register       (void);
 static gint            quesant_detect       (const GwyFileDetectInfo *fileinfo,
                                               gboolean only_name);
