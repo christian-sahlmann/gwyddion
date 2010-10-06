@@ -49,6 +49,7 @@ file_LTLIBRARIES = \
 	$(matfile_module) \
 	metropro.la \
 	microprof.la \
+	miffile.la \
 	mifile.la \
 	nanoeducator.la \
 	nanonics.la \
@@ -148,6 +149,7 @@ lextfile_la_SOURCES      = lextfile.c gwytiff.h
 mapvue_la_SOURCES        = mapvue.c
 metropro_la_SOURCES      = metropro.c
 microprof_la_SOURCES     = microprof.c
+miffile_la_SOURCES       = miffile.c
 mifile_la_SOURCES        = mifile.c
 nanoeducator_la_SOURCES  = nanoeducator.c
 nanonics_la_SOURCES      = nanonics.c
