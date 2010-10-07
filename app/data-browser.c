@@ -614,6 +614,7 @@ gwy_app_data_proxy_connect_channel(GwyAppDataProxy *proxy,
 {
     gchar key[24];
     GQuark quark;
+    gint i;
 
     gwy_app_data_proxy_add_object(&proxy->lists[PAGE_CHANNELS], id, iter,
                                   object);
