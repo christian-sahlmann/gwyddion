@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2010-09-16 03:58+0200\n"
-"PO-Revision-Date: 2010-09-16 23:45+0300\n"
+"POT-Creation-Date: 2010-10-07 03:58+0200\n"
+"PO-Revision-Date: 2010-10-07 12:48+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -56,11 +56,11 @@ msgstr "vdW: параболоид"
 
 #: libgwyddion/gwyinventory.c:1310
 #: libgwydgets/gwygraphwindow.c:603
-#: app/data-browser.c:1446
-#: app/data-browser.c:2176
-#: app/data-browser.c:2941
-#: app/data-browser.c:3100
-#: app/data-browser.c:4990
+#: app/data-browser.c:1508
+#: app/data-browser.c:2238
+#: app/data-browser.c:3003
+#: app/data-browser.c:3162
+#: app/data-browser.c:5052
 #: app/resource-editor.c:366
 #: modules/process/convolution_filter.c:700
 msgid "Untitled"
@@ -435,8 +435,8 @@ msgid "Schaum"
 msgstr "Шаум"
 
 #: libprocess/gwyprocessenums.c:243
-#: app/datachooser.c:170
-#: app/datachooser.c:372
+#: app/datachooser.c:193
+#: app/datachooser.c:395
 #: modules/process/convolution_filter.c:129
 #: modules/process/merge.c:135
 msgid "None"
@@ -1273,13 +1273,13 @@ msgstr ""
 "Действительно выйти?"
 
 #: app/app.c:415
-msgid "Export"
-msgstr "Экспорт"
+msgid "Save"
+msgstr "Сохранить"
 
 #: app/app.c:417
 #: app/app.c:421
-msgid "Export 3D view to PNG image"
-msgstr "Экспортировать трёхмерный вид в изображение PNG"
+msgid "Save 3D view to an image"
+msgstr "Сохранить трёхмерный вид в изображение"
 
 #: app/app.c:427
 msgid "Set as Default"
@@ -1314,39 +1314,39 @@ msgstr "Квадратный _попиксельно"
 msgid "_Physically Square"
 msgstr "Квадратный _физически"
 
-#: app/data-browser.c:3639
+#: app/data-browser.c:3701
 msgid "Extract to a new file"
 msgstr "Извлечь в новый файл"
 
-#: app/data-browser.c:3640
+#: app/data-browser.c:3702
 msgid "Duplicate"
 msgstr "Сделать копию"
 
-#: app/data-browser.c:3641
+#: app/data-browser.c:3703
 msgid "Delete"
 msgstr "Удалить"
 
-#: app/data-browser.c:3685
+#: app/data-browser.c:3747
 msgid "Data Browser"
 msgstr "Просмотр данных"
 
-#: app/data-browser.c:3708
+#: app/data-browser.c:3770
 msgid "Close file"
 msgstr "Закрыть файл"
 
-#: app/data-browser.c:3721
+#: app/data-browser.c:3783
 msgid "Channels"
 msgstr "Каналы"
 
-#: app/data-browser.c:3735
+#: app/data-browser.c:3797
 msgid "Graphs"
 msgstr "Графики"
 
-#: app/data-browser.c:3749
+#: app/data-browser.c:3811
 msgid "Spectra"
 msgstr "Спектры"
 
-#: app/data-browser.c:5028
+#: app/data-browser.c:5090
 #, c-format
 msgid "Unknown channel %d"
 msgstr "Неизвестный канал %d"
@@ -1388,7 +1388,7 @@ msgid "Merge File"
 msgstr "Объединить файлы"
 
 #: app/file.c:351
-#: app/gwyappfilechooser.c:215
+#: app/gwyappfilechooser.c:216
 msgid "Open File"
 msgstr "Открыть файл"
 
@@ -1486,37 +1486,37 @@ msgstr "_Кривая"
 msgid "_Snap to control points"
 msgstr "_Притягиваться к контрольным точкам"
 
-#: app/gwyappfilechooser.c:220
+#: app/gwyappfilechooser.c:221
 msgid "Save File"
 msgstr "Сохранить файл"
 
-#: app/gwyappfilechooser.c:398
+#: app/gwyappfilechooser.c:401
 #, c-format
 msgid "File _type: %s, filtered"
 msgstr "_Тип файла: %s, отфильтровано"
 
-#: app/gwyappfilechooser.c:400
+#: app/gwyappfilechooser.c:403
 #, c-format
 msgid "File _type: %s"
 msgstr "_Тип файла: %s"
 
-#: app/gwyappfilechooser.c:478
+#: app/gwyappfilechooser.c:481
 msgid "Automatic by extension"
 msgstr "Определять по расширению"
 
-#: app/gwyappfilechooser.c:487
+#: app/gwyappfilechooser.c:490
 msgid "Automatically detected"
 msgstr "Автоматически определённый"
 
-#: app/gwyappfilechooser.c:538
+#: app/gwyappfilechooser.c:541
 msgid "Show only loadable files"
 msgstr "Показать только загружаемые файлы"
 
-#: app/gwyappfilechooser.c:743
+#: app/gwyappfilechooser.c:746
 msgid "…"
 msgstr "…"
 
-#: app/gwyappfilechooser.c:891
+#: app/gwyappfilechooser.c:894
 msgid "Cannot preview"
 msgstr "Нельзя просмотреть."
 
@@ -2796,6 +2796,18 @@ msgstr "Текстовые файлы MicroProf FRT (.txt)"
 msgid "File contains less than XSize*YSize data points."
 msgstr "Файл содержит меньше точек данных, чем XSize*YSize."
 
+#: modules/file/miffile.c:78
+msgid "Imports DME MIF data files."
+msgstr "Импортирует файлы данных DME MIF."
+
+#: modules/file/miffile.c:91
+msgid "DME MIF files (.mif)"
+msgstr "Файлы DME MIF (.mif)"
+
+#: modules/file/miffile.c:153
+msgid "File information block is outside the file."
+msgstr "Блок информации о файле не находится внутри файла."
+
 #: modules/file/mifile.c:165
 msgid "Imports Molecular Imaging MI data files."
 msgstr "Импортирует файлы данных Molecular Imaging MI."
@@ -2808,59 +2820,55 @@ msgstr "Файлы данных PicoView (.mi)"
 msgid "Spectroscopy Graph"
 msgstr "График спектроскопии"
 
-#: modules/file/nanoeducator.c:283
+#: modules/file/nanoeducator.c:280
 msgid "Imports Nanoeducator data files."
 msgstr "Импортирует файлы данных Nanoeducator."
 
-#: modules/file/nanoeducator.c:296
+#: modules/file/nanoeducator.c:293
 msgid "Nanoeducator files (.mspm, .spm, .stm)"
 msgstr "Файлы Nanoeducator (.mspm, .spm, .stm)"
 
-#: modules/file/nanoeducator.c:354
+#: modules/file/nanoeducator.c:351
 #: modules/file/unisoku.c:283
 msgid "format version"
 msgstr "версия формата"
 
-#: modules/file/nanoeducator.c:382
-#: modules/file/nanoeducator.c:419
-#: modules/file/nanoeducator.c:524
+#: modules/file/nanoeducator.c:379
+#: modules/file/nanoeducator.c:416
+#: modules/file/nanoeducator.c:518
 msgid "Image data starts past the end of file."
 msgstr "Данные изображения начинаются после конца файла."
 
-#: modules/file/nanoeducator.c:461
+#: modules/file/nanoeducator.c:458
 msgid "Spectra data starts past the end of file."
 msgstr "Данные спектроскопии начинаются после конца файла."
 
-#: modules/file/nanoeducator.c:629
+#: modules/file/nanoeducator.c:623
 #: modules/file/opdfile.c:268
 #: modules/file/sensofar.c:256
 msgid "File header is truncated"
 msgstr "Заголовок файла усечён"
 
-#: modules/file/nanoeducator.c:688
+#: modules/file/nanoeducator.c:682
 msgid "Parameter header is truncated"
 msgstr "Заголовок параметров усечён"
 
-#: modules/file/nanoeducator.c:913
+#: modules/file/nanoeducator.c:907
 #: modules/process/curvature.c:489
 #: modules/tools/profile.c:535
 #, c-format
 msgid "Profile %d"
 msgstr "Профиль %d"
 
-#: modules/file/nanoeducator.c:956
-msgid "The number of spectra coordinates does not match the number of spectra."
-msgstr "Число координат спектров не соответствует числу спектров."
-
-#: modules/file/nanoeducator.c:1053
+#: modules/file/nanoeducator.c:1021
 msgid "F-D spectra"
 msgstr "Спектры сила-расстояние"
 
-#: modules/file/nanoeducator.c:1152
+#: modules/file/nanoeducator.c:1118
 msgid "I-V spectra"
 msgstr "Спектры ВАХ"
 
-#: modules/file/nanoeducator.c:1251
+#: modules/file/nanoeducator.c:1215
 msgid "I-Z spectra"
 msgstr "Спектры I-Z"
 
@@ -3553,11 +3561,11 @@ msgstr "Неправильный размер заголовка изображ�
 msgid "Number of line triggers %u is smaller than the number of scan lines %u."
 msgstr "Число триггеров строк %u меньше числа сканированных строк %u."
 
-#: modules/file/quesant.c:64
+#: modules/file/quesant.c:62
 msgid "Imports Quesant file format."
 msgstr "Импортирует файловый формат Quesant."
 
-#: modules/file/quesant.c:77
+#: modules/file/quesant.c:75
 msgid "Quesant files (.afm)"
 msgstr "Файлы Quesant (.afm)"
 
@@ -4624,6 +4632,28 @@ msgstr "Обрезать график"
 #: modules/graph/graph_cut.c:179
 msgid "Cut _all curves"
 msgstr "Обрезать _все кривые"
+
+#: modules/graph/graph_dos_spectrum.c:41
+msgid "DOS Spectrum"
+msgstr "Спектр плотности состояний"
+
+#: modules/graph/graph_dos_spectrum.c:55
+msgid "/_DOS Spectrum"
+msgstr "/_Спектр плотности состояний"
+
+#: modules/graph/graph_dos_spectrum.c:58
+msgid "Calculate DOS spectrum from I-V tunneling spectroscopy"
+msgstr "Рассчитывает спектр плотности состояний из ВАХ туннельного контакта."
+
+#: modules/graph/graph_dos_spectrum.c:95
+#, c-format
+msgid "%s: Graph should be I-V spectroscopy."
+msgstr "%s: график должен быть ВАХ."
+
+#: modules/graph/graph_dos_spectrum.c:114
+#, c-format
+msgid "DOS Spectrum for \"%s\""
+msgstr "Спектр плотности состояний для  \"%s\""
 
 #: modules/graph/graph_export_ascii.c:52
 msgid "Plain text"
