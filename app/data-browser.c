@@ -600,7 +600,7 @@ gwy_app_data_proxy_channel_changed(GwyDataField *channel,
 /**
  * gwy_app_data_proxy_connect_channel:
  * @proxy: Data proxy.
- * @i: Channel id.
+ * @id: Channel id.
  * @object: The data field to add (passed as #GObject).
  *
  * Adds a data field as channel of specified id, setting qdata and connecting
@@ -614,12 +614,11 @@ gwy_app_data_proxy_connect_channel(GwyAppDataProxy *proxy,
 {
     gchar key[24];
     GQuark quark;
-    gint i;
 
     gwy_app_data_proxy_add_object(&proxy->lists[PAGE_CHANNELS], id, iter,
                                   object);
     g_snprintf(key, sizeof(key), "/%d/data", id);
-    gwy_debug("%p: %d in %p", object, i, proxy->container);
+    gwy_debug("%p: %d in %p", object, id, proxy->container);
     quark = g_quark_from_string(key);
     g_object_set_qdata(object, container_quark, proxy->container);
     g_object_set_qdata(object, own_key_quark, GUINT_TO_POINTER(quark));
