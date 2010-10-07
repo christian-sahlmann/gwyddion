@@ -46,12 +46,69 @@
 
 #define MAGIC "MIF\x01\x00"
 #define MAGIC_SIZE (sizeof(MAGIC) - 1)
-#define HEADER_SIZE 491
+
+enum {
+    HEADER_SIZE = 491,
+    BLOCK_SIZE = 2*4,
+    INFO_ITEM_SIZE = BLOCK_SIZE + 1,
+    INFO_N_IMAGES = 512,
+    MAX_CURVES = 1024,
+};
 
 typedef struct {
     gsize offset;
     gsize size;
 } MIFBlock;
+
+typedef struct {
+    MIFBlock image;
+    guint image_type;
+} MIFInfoItem;
+
+typedef struct {
+    gdouble x, y;
+} MIFPoint;
+
+typedef struct {
+    guint xres, yres;
+    gdouble xreal, yreal;
+    gdouble xoff, yoff;
+    gdouble xscandir, yscandir;
+    gdouble scan_speed;
+    gdouble loop_gain;
+    guint sample_pause;
+    guint loop_filter;
+    guint lead_filter;
+    guint loop_lag_mix;
+} MIFScanSetup;
+
+typedef struct {
+    gdouble scan_in_to_meter;
+    gdouble xcal, ycal, zcal;
+    guint direction;
+    guint signal;
+    guint scan_head;
+    guint scan_head_code;
+    guint contact_mode;
+    guint detector;
+} MIFImageConfiguration;
+
+typedef struct {
+    gchar time[19];
+    gchar title[20];
+    gchar comment[255];
+    MIFScanSetup setup;
+    MIFImageConfiguration configuration;
+    gdouble tunnel_current;
+    gdouble bias_voltage;
+    gdouble force;
+    gdouble low_fraction;
+    gdouble high_fraction;
+    gboolean as_measured;
+    gboolean unit_is_valid;
+    guint n_curves;
+    MIFPoint curve_points[MAX_CURVES];
+} MIFImageHeader;
 
 typedef struct {
     gchar magic[3];
@@ -64,6 +121,10 @@ typedef struct {
     gchar unused[200];
 } MIFHeader;
 
+typedef struct {
+    MIFHeader header;
+    MIFInfoItem images[INFO_N_IMAGES];
+} MIFFile;
 
 static gboolean        module_register       (void);
 static gint            mif_detect       (const GwyFileDetectInfo *fileinfo,
@@ -157,6 +218,35 @@ mif_read_header(const guchar *buffer,
     return TRUE;
 }
 
+static gboolean
+mif_read_image_items(MIFInfoItem *items,
+                     const guchar *buffer,
+                     G_GNUC_UNUSED gsize size,
+                     const MIFBlock *block,
+                     GError **error)
+{
+    const guchar *p;
+    guint i;
+    gsize item_size;
+
+    item_size = block->size/INFO_N_IMAGES;
+    gwy_debug("item_size: %zu", item_size);
+    if (item_size < INFO_ITEM_SIZE || block->size % INFO_N_IMAGES) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("File information block size is invalid."));
+        return FALSE;
+    }
+
+    for (i = 0; i < INFO_N_IMAGES; i++) {
+        p = buffer + block->offset + i*item_size;
+        items[i].image.offset = gwy_get_guint32_le(&p);
+        items[i].image.size = gwy_get_guint32_le(&p);
+        items[i].image_type = *(p++);
+        gwy_debug("item #%u: type: %u, offset: %zu, size: %zu", i, items[i].image_type, items[i].image.offset, items[i].image.size);
+    }
+
+    return TRUE;
+}
 
 static GwyContainer*
 mif_load(const gchar *filename,
@@ -169,7 +259,7 @@ mif_load(const gchar *filename,
     GError *err = NULL;
     GwySIUnit *units = NULL;
     gint32 power10;
-    MIFHeader header;
+    MIFFile mfile;
     GwyDataField *dfield;
 
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
@@ -177,11 +267,15 @@ mif_load(const gchar *filename,
         return NULL;
     }
 
-    if (!mif_read_header(buffer, size, &header, error)) {
+    if (!mif_read_header(buffer, size, &mfile.header, error)) {
         gwy_file_abandon_contents(buffer, size, NULL);
         return NULL;
     }
-
+    if (!mif_read_image_items(mfile.images, buffer, size, &mfile.header.info,
+                              error)) {
+        gwy_file_abandon_contents(buffer, size, NULL);
+        return NULL;
+    }
 
     gwy_file_abandon_contents(buffer, size, NULL);
     err_NO_DATA(error);
