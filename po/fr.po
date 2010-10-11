@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: French localization\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2010-09-18 03:58+0200\n"
-"PO-Revision-Date: 2010-09-18 18:13+0100\n"
+"POT-Creation-Date: 2010-10-11 03:58+0200\n"
+"PO-Revision-Date: 2010-10-11 22:53+0100\n"
 "Last-Translator: François RIGUET <francheu@caramail.com>\n"
 "Language-Team: François RIGUET <francheu@caramail.com>\n"
 "MIME-Version: 1.0\n"
@@ -56,11 +56,11 @@ msgstr "vdW : parabole"
 
 #: libgwyddion/gwyinventory.c:1310
 #: libgwydgets/gwygraphwindow.c:603
-#: app/data-browser.c:1446
-#: app/data-browser.c:2176
-#: app/data-browser.c:2941
-#: app/data-browser.c:3100
-#: app/data-browser.c:4990
+#: app/data-browser.c:1508
+#: app/data-browser.c:2238
+#: app/data-browser.c:3003
+#: app/data-browser.c:3162
+#: app/data-browser.c:5052
 #: app/resource-editor.c:366
 #: modules/process/convolution_filter.c:700
 msgid "Untitled"
@@ -435,8 +435,8 @@ msgid "Schaum"
 msgstr "Schaum"
 
 #: libprocess/gwyprocessenums.c:243
-#: app/datachooser.c:170
-#: app/datachooser.c:372
+#: app/datachooser.c:193
+#: app/datachooser.c:395
 #: modules/process/convolution_filter.c:129
 #: modules/process/merge.c:135
 msgid "None"
@@ -1273,13 +1273,13 @@ msgstr ""
 "Souhaitez-vous vraiment quitter ?"
 
 #: app/app.c:415
-msgid "Export"
-msgstr "Exporter"
+msgid "Save"
+msgstr "Enregistrer"
 
 #: app/app.c:417
 #: app/app.c:421
-msgid "Export 3D view to PNG image"
-msgstr "Exporter la vue 3D en image PNG"
+msgid "Save 3D view to an image"
+msgstr "Exporter la vue 3D en image"
 
 #: app/app.c:427
 msgid "Set as Default"
@@ -1314,39 +1314,39 @@ msgstr "Pi_xels carrés"
 msgid "_Physically Square"
 msgstr "_Pixels réels"
 
-#: app/data-browser.c:3639
+#: app/data-browser.c:3701
 msgid "Extract to a new file"
 msgstr "Extraire en tant que nouveau fichier"
 
-#: app/data-browser.c:3640
+#: app/data-browser.c:3702
 msgid "Duplicate"
 msgstr "Dupliquer"
 
-#: app/data-browser.c:3641
+#: app/data-browser.c:3703
 msgid "Delete"
 msgstr "Supprimer"
 
-#: app/data-browser.c:3685
+#: app/data-browser.c:3747
 msgid "Data Browser"
 msgstr "Navigateur de Données"
 
-#: app/data-browser.c:3708
+#: app/data-browser.c:3770
 msgid "Close file"
 msgstr "Fermer le fichier"
 
-#: app/data-browser.c:3721
+#: app/data-browser.c:3783
 msgid "Channels"
 msgstr "Canaux"
 
-#: app/data-browser.c:3735
+#: app/data-browser.c:3797
 msgid "Graphs"
 msgstr "Graphes"
 
-#: app/data-browser.c:3749
+#: app/data-browser.c:3811
 msgid "Spectra"
 msgstr "Spectres"
 
-#: app/data-browser.c:5028
+#: app/data-browser.c:5090
 #, c-format
 msgid "Unknown channel %d"
 msgstr "Canal inconnu %d"
@@ -2796,6 +2796,22 @@ msgstr "MicroProf FRT texte (.txt)"
 msgid "File contains less than XSize*YSize data points."
 msgstr "Le fichier contient moins de TailleX*TailleY points de données."
 
+#: modules/file/miffile.c:139
+msgid "Imports DME MIF data files."
+msgstr "Importe les fichiers DME MIF."
+
+#: modules/file/miffile.c:152
+msgid "DME MIF files (.mif)"
+msgstr "DME MIF (.mif)"
+
+#: modules/file/miffile.c:214
+msgid "File information block is outside the file."
+msgstr "Le bloc d'information de fichier est en dehors du fichier."
+
+#: modules/file/miffile.c:236
+msgid "File information block size is invalid."
+msgstr "La taille du bloc d'information de fichier est invalide."
+
 #: modules/file/mifile.c:165
 msgid "Imports Molecular Imaging MI data files."
 msgstr "Importe les fichiers Molecular Imaging MI."
@@ -2808,59 +2824,55 @@ msgstr "PicoView (.mi)"
 msgid "Spectroscopy Graph"
 msgstr "Courbe de spectrosopie"
 
-#: modules/file/nanoeducator.c:283
+#: modules/file/nanoeducator.c:280
 msgid "Imports Nanoeducator data files."
 msgstr "Importe les fichiers Nanoeducator."
 
-#: modules/file/nanoeducator.c:296
+#: modules/file/nanoeducator.c:293
 msgid "Nanoeducator files (.mspm, .spm, .stm)"
 msgstr "Nanoeducator (.spm)"
 
-#: modules/file/nanoeducator.c:354
+#: modules/file/nanoeducator.c:351
 #: modules/file/unisoku.c:283
 msgid "format version"
 msgstr "version de format"
 
-#: modules/file/nanoeducator.c:382
-#: modules/file/nanoeducator.c:419
-#: modules/file/nanoeducator.c:524
+#: modules/file/nanoeducator.c:379
+#: modules/file/nanoeducator.c:416
+#: modules/file/nanoeducator.c:518
 msgid "Image data starts past the end of file."
 msgstr "Les données de l'image commencent après la fin du fichier."
 
-#: modules/file/nanoeducator.c:461
+#: modules/file/nanoeducator.c:458
 msgid "Spectra data starts past the end of file."
 msgstr "Les données du spectre commencent après la fin du fichier."
 
-#: modules/file/nanoeducator.c:629
+#: modules/file/nanoeducator.c:623
 #: modules/file/opdfile.c:268
 #: modules/file/sensofar.c:256
 msgid "File header is truncated"
 msgstr "L'en-tête de fichier est tronqué."
 
-#: modules/file/nanoeducator.c:688
+#: modules/file/nanoeducator.c:682
 msgid "Parameter header is truncated"
 msgstr "L'en-tête de paramètre est tronqué."
 
-#: modules/file/nanoeducator.c:913
+#: modules/file/nanoeducator.c:907
 #: modules/process/curvature.c:489
 #: modules/tools/profile.c:535
 #, c-format
 msgid "Profile %d"
 msgstr "Profil %d"
 
-#: modules/file/nanoeducator.c:956
-msgid "The number of spectra coordinates does not match the number of spectra."
-msgstr "Le nombre de coordonnées de spectres ne correspond pas au nombre de spectres."
-
-#: modules/file/nanoeducator.c:1053
+#: modules/file/nanoeducator.c:1021
 msgid "F-D spectra"
 msgstr "Spectres F-D"
 
-#: modules/file/nanoeducator.c:1152
+#: modules/file/nanoeducator.c:1118
 msgid "I-V spectra"
 msgstr "Spectres I-V"
 
-#: modules/file/nanoeducator.c:1251
+#: modules/file/nanoeducator.c:1215
 msgid "I-Z spectra"
 msgstr "Spectres I-Z"
 
@@ -3553,11 +3565,11 @@ msgstr "La taille de l'en-tête de l'image est erroné : %u au lieu de %u."
 msgid "Number of line triggers %u is smaller than the number of scan lines %u."
 msgstr "Le nombre de marqueurs de début de ligne %u est inférieur au nombre de lignes de scan %u."
 
-#: modules/file/quesant.c:64
+#: modules/file/quesant.c:62
 msgid "Imports Quesant file format."
 msgstr "Importe les fichiers Quesant."
 
-#: modules/file/quesant.c:77
+#: modules/file/quesant.c:75
 msgid "Quesant files (.afm)"
 msgstr "Quesant (.afm)"
 
@@ -4622,6 +4634,28 @@ msgstr "Couper le graphe"
 #: modules/graph/graph_cut.c:179
 msgid "Cut _all curves"
 msgstr "Couper toute les courbes"
+
+#: modules/graph/graph_dos_spectrum.c:41
+msgid "DOS Spectrum"
+msgstr "Spectre DOS"
+
+#: modules/graph/graph_dos_spectrum.c:55
+msgid "/_DOS Spectrum"
+msgstr "/Spectre _DOS"
+
+#: modules/graph/graph_dos_spectrum.c:58
+msgid "Calculate DOS spectrum from I-V tunneling spectroscopy"
+msgstr "Calculer un spectre DOS à partir d'une spectroscopie à effet tunnel "
+
+#: modules/graph/graph_dos_spectrum.c:95
+#, c-format
+msgid "%s: Graph should be I-V spectroscopy."
+msgstr "%s: le graphe doit être un spectre I-V."
+
+#: modules/graph/graph_dos_spectrum.c:114
+#, c-format
+msgid "DOS Spectrum for \"%s\""
+msgstr "Spectre DOS pour \"%s\""
 
 #: modules/graph/graph_export_ascii.c:52
 msgid "Plain text"
@@ -9171,6 +9205,13 @@ msgstr ""
 "Inclinaison θ:      %s\n"
 "Inclinaison φ:      %s\n"
 
+#~ msgid "Export"
+#~ msgstr "Exporter"
+#~ msgid ""
+#~ "The number of spectra coordinates does not match the number of spectra."
+#~ msgstr ""
+#~ "Le nombre de coordonnées de spectres ne correspond pas au nombre de "
+#~ "spectres."
 #~ msgid "data samples"
 #~ msgstr "Echantillons de données"
 #~ msgid "_Exclude region under mask"
