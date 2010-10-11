@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: French localization\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
 "POT-Creation-Date: 2010-10-11 03:58+0200\n"
-"PO-Revision-Date: 2010-10-11 22:53+0100\n"
+"PO-Revision-Date: 2010-10-11 23:27+0100\n"
 "Last-Translator: François RIGUET <francheu@caramail.com>\n"
 "Language-Team: François RIGUET <francheu@caramail.com>\n"
 "MIME-Version: 1.0\n"
@@ -6792,12 +6792,10 @@ msgid "Impression"
 msgstr "Impression"
 
 #: modules/process/indent_analyze.c:282
-#, fuzzy
 msgid "Inner Pile-up"
 msgstr "Enfoncement"
 
 #: modules/process/indent_analyze.c:283
-#, fuzzy
 msgid "Outer Pile-up"
 msgstr "Débordement"
 
@@ -6902,22 +6900,18 @@ msgid "Indent. A<sub>p</sub>"
 msgstr "Indentation A<sub>p</sub>"
 
 #: modules/process/indent_analyze.c:590
-#, fuzzy
 msgid "Inner Pile-Up A<sub>d</sub>"
 msgstr "Enfoncement A<sub>d</sub>"
 
 #: modules/process/indent_analyze.c:599
-#, fuzzy
 msgid "Inner Pile-Up A<sub>p</sub>"
 msgstr "Enfoncement A<sub>p</sub>"
 
 #: modules/process/indent_analyze.c:608
-#, fuzzy
 msgid "Outer Pile-Up A<sub>d</sub>"
 msgstr "Débordement A<sub>d</sub>"
 
 #: modules/process/indent_analyze.c:617
-#, fuzzy
 msgid "Outer Pile-Up A<sub>p</sub>"
 msgstr "Débordement  A<sub>p</sub>"
 
@@ -7021,7 +7015,7 @@ msgid "Volume      %g\n"
 msgstr "Volume :      %g\n"
 
 #: modules/process/indent_analyze.c:1676
-#, fuzzy, c-format
+#, c-format
 msgid ""
 "\n"
 "Indentation - Inner Pile-Up\n"
@@ -7030,7 +7024,7 @@ msgstr ""
 "Indentation - Enfoncement\n"
 
 #: modules/process/indent_analyze.c:1682
-#, fuzzy, c-format
+#, c-format
 msgid "Indentation - Outer Pile-Up\n"
 msgstr "Indentation - Débordement\n"
 
