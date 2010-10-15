@@ -62,6 +62,9 @@
 #define MAGIC "MIF\x01\x00"
 #define MAGIC_SIZE (sizeof(MAGIC) - 1)
 
+#define gwy_debug_chars(s, f) gwy_debug(#f ": %.*s", (guint)sizeof(s->f), s->f)
+#define gwy_debug_bool(s, f) gwy_debug(#f ": %s", (s->f) ? "TRUE" : "FALSE");
+
 enum {
     HEADER_SIZE = 491,
     BLOCK_SIZE = 2*4,
@@ -72,6 +75,9 @@ enum {
     SCAN_SETUP_SIZE_1_2 = 2*(4 + 8 + 8 + 8) + 4 + 2 + 4 + 3*16,
     SCAN_SETUP_SIZE_1_3 = 2*(4 + 8 + 8 + 8) + 4 + 2 + 1 + 4 + 1 + 1 + 1,
     IMAGE_CONFIGURATION_SIZE_1_3 = 8 + 3*8 + 3*1 + 1 + 1 + 1 + 1 + 4 + 2*1 + 50,
+    AXIS_INFO_SIZE_1_0 = 16 + 4 + 1,
+    AXIS_INFO_SIZE_1_1 = 16 + 10 + 1,
+    ID_SIZE = 3*4 + 40,
 };
 
 typedef struct {
@@ -119,7 +125,7 @@ typedef struct {
 } MIFImageConfiguration;
 
 typedef struct {
-    guint units;
+    guchar units[16];
     gchar units_str_1_0[4];
     gchar units_str_1_1[10];
     gboolean show;
@@ -218,6 +224,22 @@ mif_detect(const GwyFileDetectInfo *fileinfo, gboolean only_name)
 }
 
 static gboolean
+err_IMAGE_HEADER_TOO_SHORT(GError **error)
+{
+    g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                _("Image header record is too short."));
+    return FALSE;
+}
+
+static gboolean
+err_AXIS_INFO_TOO_SHORT(GError **error)
+{
+    g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                _("Axis display info record is too short."));
+    return FALSE;
+}
+
+static gboolean
 mif_read_header(const guchar *buffer,
                 gsize size,
                 MIFHeader *header,
@@ -263,6 +285,17 @@ mif_read_header(const guchar *buffer,
     return TRUE;
 }
 
+static void
+mif_read_block(MIFBlock *block,
+               const guchar **p)
+{
+    block->offset = gwy_get_guint32_le(p);
+    block->size = gwy_get_guint32_le(p);
+    if (block->size) {
+        gwy_debug("offset: %zu (0x%zx), size: %zu (0x%zx)", block->offset, block->offset, block->size, block->size);
+    }
+}
+
 static gboolean
 mif_read_image_items(MIFInfoItem *items,
                      const guchar *buffer,
@@ -284,8 +317,7 @@ mif_read_image_items(MIFInfoItem *items,
 
     for (i = 0; i < INFO_N_IMAGES; i++) {
         p = buffer + block->offset + i*item_size;
-        items[i].image.offset = gwy_get_guint32_le(&p);
-        items[i].image.size = gwy_get_guint32_le(&p);
+        mif_read_block(&items[i].image, &p);
         items[i].image_type = *(p++);
         if (items[i].image.size || items[i].image_type) {
             gwy_debug("item #%u: type: %u, offset: %zu, size: %zu", i, items[i].image_type, items[i].image.offset, items[i].image.size);
@@ -295,11 +327,66 @@ mif_read_image_items(MIFInfoItem *items,
     return TRUE;
 }
 
-static void
-err_IMAGE_HEADER_TOO_SHORT(GError **error)
+static gboolean
+mif_read_axis_info(MIFAxisInfo *axis,
+                   const guchar **p,
+                   gsize size,
+                   guint file_version,
+                   GError **error)
 {
-    g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                _("Image header record is too short."));
+    gwy_clear(axis, 1);
+
+    if (file_version >= 0x105) {
+        if (size < AXIS_INFO_SIZE_1_1)
+            return err_AXIS_INFO_TOO_SHORT(error);
+
+        get_CHARARRAY(axis->units, p);
+        gwy_debug_chars(axis, units);
+        get_CHARARRAY(axis->units_str_1_1, p);
+        gwy_debug_chars(axis, units_str_1_1);
+        axis->show = *((*p)++);
+        gwy_debug_bool(axis, show);
+    }
+    else if (file_version >= 0x104) {
+        if (size < AXIS_INFO_SIZE_1_0)
+            return err_AXIS_INFO_TOO_SHORT(error);
+
+        get_CHARARRAY(axis->units, p);
+        gwy_debug_chars(axis, units);
+        get_CHARARRAY(axis->units_str_1_0, p);
+        gwy_debug_chars(axis, units_str_1_0);
+        axis->show = *((*p)++);
+        gwy_debug_bool(axis, show);
+    }
+    else {
+        g_return_val_if_reached(FALSE);
+    }
+    return TRUE;
+}
+
+G_GNUC_UNUSED
+static gboolean
+mif_read_id(MIFUniqueID *id,
+            const guchar **p,
+            gsize size,
+            GError **error)
+{
+    gwy_clear(id, 1);
+
+    if (size < ID_SIZE) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Unique id record is too short."));
+        return FALSE;
+    }
+
+    id->ms = gwy_get_guint32_le(p);
+    id->ls = gwy_get_guint32_le(p);
+    gwy_debug("id: %08x %08x", id->ms, id->ls);
+    id->index = gwy_get_guint32_le(p);
+    gwy_debug("index: %u", id->index);
+    get_CHARARRAY(id->workstation, p);
+    gwy_debug_chars(id, workstation);
+    return TRUE;
 }
 
 static gboolean
@@ -310,10 +397,8 @@ mif_read_scan_setup(MIFScanSetup *setup,
                     GError **error)
 {
     if (file_version >= 0x103 && file_version <= 0x107) {
-        if (size < SCAN_SETUP_SIZE_1_2) {
-            err_IMAGE_HEADER_TOO_SHORT(error);
-            return FALSE;
-        }
+        if (size < SCAN_SETUP_SIZE_1_2)
+            return err_IMAGE_HEADER_TOO_SHORT(error);
         setup->xres = gwy_get_guint32_le(p);
         setup->yres = gwy_get_guint32_le(p);
         gwy_debug("xres: %u, yres: %u", setup->xres, setup->yres);
@@ -333,11 +418,11 @@ mif_read_scan_setup(MIFScanSetup *setup,
         setup->loop_gain = gwy_get_gfloat_le(p);
         gwy_debug("loop_gain: %g", setup->loop_gain);
         get_CHARARRAY(setup->loop_filter, p);
-        gwy_debug("loop_filter: %.*s", (guint)sizeof(setup->loop_filter), setup->loop_filter);
+        gwy_debug_chars(setup, loop_filter);
         get_CHARARRAY(setup->lead_filter, p);
-        gwy_debug("lead_filter: %.*s", (guint)sizeof(setup->lead_filter), setup->lead_filter);
+        gwy_debug_chars(setup, lead_filter);
         get_CHARARRAY(setup->lead_lag_mix, p);
-        gwy_debug("lead_lag_mix: %.*s", (guint)sizeof(setup->lead_lag_mix), setup->lead_lag_mix);
+        gwy_debug_chars(setup, lead_lag_mix);
     }
     else {
         g_return_val_if_reached(FALSE);
@@ -354,10 +439,8 @@ mif_read_image_configuration(MIFImageConfiguration *config,
                              GError **error)
 {
     if (file_version >= 0x107 && file_version <= 0x109) {
-        if (size < IMAGE_CONFIGURATION_SIZE_1_3) {
-            err_IMAGE_HEADER_TOO_SHORT(error);
-            return FALSE;
-        }
+        if (size < IMAGE_CONFIGURATION_SIZE_1_3)
+            return err_IMAGE_HEADER_TOO_SHORT(error);
         config->scan_int_to_meter = gwy_get_gdouble_le(p);
         gwy_debug("scan_int_to_meter: %g", config->scan_int_to_meter);
         config->xcal = gwy_get_gdouble_le(p);
@@ -365,24 +448,24 @@ mif_read_image_configuration(MIFImageConfiguration *config,
         config->zcal = gwy_get_gdouble_le(p);
         gwy_debug("calibration: %g %g %g", config->xcal, config->ycal, config->zcal);
         get_CHARARRAY(config->direction, p);
-        gwy_debug("direction: %.*s", (guint)sizeof(config->direction), config->direction);
+        gwy_debug_chars(config, direction);
         get_CHARARRAY(config->signal, p);
-        gwy_debug("signal: %.*s", (guint)sizeof(config->signal), config->signal);
+        gwy_debug_chars(config, signal);
         get_CHARARRAY(config->scan_head, p);
-        gwy_debug("scan_head: %.*s", (guint)sizeof(config->scan_head), config->scan_head);
+        gwy_debug_chars(config, scan_head);
         config->scan_head_code = *((*p)++);
         get_CHARARRAY(config->scan_mode, p);
-        gwy_debug("scan_mode: %.*s", (guint)sizeof(config->scan_mode), config->scan_mode);
+        gwy_debug_chars(config, scan_mode);
         config->z_linearized = !!*((*p)++);
-        gwy_debug("z_linearized: %s", config->z_linearized ? "TRUE" : "FALSE");
+        gwy_debug_bool(config, z_linearized);
         config->z_correction = gwy_get_gfloat_le(p);
         gwy_debug("z_correction: %g", config->z_correction);
         config->is_zcorrected = !!*((*p)++);
-        gwy_debug("is_zcorrected: %s", config->is_zcorrected ? "TRUE" : "FALSE");
+        gwy_debug_bool(config, is_zcorrected);
         config->is_flattened = !!*((*p)++);
-        gwy_debug("is_flattened: %s", config->is_flattened ? "TRUE" : "FALSE");
+        gwy_debug_bool(config, is_flattened);
         get_CHARARRAY(config->scan_head_name, p);
-        gwy_debug("scan_head_name: %.*s", (guint)sizeof(config->scan_head_name), config->scan_head_name);
+        gwy_debug_chars(config, scan_head_name);
     }
     else {
         g_return_val_if_reached(FALSE);
@@ -393,54 +476,61 @@ mif_read_image_configuration(MIFImageConfiguration *config,
 
 static gboolean
 mif_read_image_header(MIFImageHeader *header,
-                      const guchar *buffer,
+                      const guchar **p,
                       gsize size,
                       guint file_version,
                       GError **error)
 {
-    const guchar *p = buffer;
+    const guchar *buffer = *p;
     guint i;
 
     gwy_clear(header, 1);
 
-    if (size < IMAGE_HEADER_START_SIZE) {
-        err_IMAGE_HEADER_TOO_SHORT(error);
-        return FALSE;
-    }
-    get_CHARARRAY(header->time, &p);
-    get_CHARARRAY(header->title, &p);
-    get_CHARARRAY(header->comment, &p);
+    if (size < IMAGE_HEADER_START_SIZE)
+        return err_IMAGE_HEADER_TOO_SHORT(error);
+    get_CHARARRAY(header->time, p);
+    get_CHARARRAY(header->title, p);
+    get_CHARARRAY(header->comment, p);
     gwy_debug("image <%.*s>", (guint)sizeof(header->title), header->title);
 
     if (!mif_read_scan_setup(&header->setup,
-                             &p, size - (p - buffer), file_version,
+                             p, size - (*p - buffer), file_version,
                              error))
         return FALSE;
     if (!mif_read_image_configuration(&header->configuration,
-                                      &p, size - (p - buffer), file_version,
+                                      p, size - (*p - buffer), file_version,
                                       error))
         return FALSE;
 
     if (file_version == 0x107) {
         /* TODO: Check size */
-        header->tunnel_current = gwy_get_gfloat_le(&p);
+        header->tunnel_current = gwy_get_gfloat_le(p);
         gwy_debug("tunnel_current: %g", header->tunnel_current);
-        header->bias_voltage = gwy_get_gfloat_le(&p);
+        header->bias_voltage = gwy_get_gfloat_le(p);
         gwy_debug("bias_voltage: %g", header->bias_voltage);
-        header->force = gwy_get_gfloat_le(&p);
+        header->force = gwy_get_gfloat_le(p);
         gwy_debug("force: %g", header->force);
-        header->as_measured = !!*(p++);
-        gwy_debug("as_measured: %s", header->as_measured ? "TRUE" : "FALSE");
-        header->n_curves = gwy_get_guint32_le(&p);
+        header->as_measured = *((*p)++);
+        gwy_debug_bool(header, as_measured);
+        header->n_curves = gwy_get_guint32_le(p);
         gwy_debug("n_curves: %u", header->n_curves);
         for (i = 0; i < MAX_CURVES; i++) {
-            header->curve_points[i].x = gwy_get_guint32_le(&p);
-            header->curve_points[i].y = gwy_get_guint32_le(&p);
+            header->curve_points[i].x = gwy_get_guint32_le(p);
+            header->curve_points[i].y = gwy_get_guint32_le(p);
         }
-        header->low_fraction = gwy_get_gfloat_le(&p);
-        header->high_fraction = gwy_get_gfloat_le(&p);
+        header->low_fraction = gwy_get_gfloat_le(p);
+        header->high_fraction = gwy_get_gfloat_le(p);
         gwy_debug("low_fraction: %g, high_fraction: %g", header->low_fraction, header->high_fraction);
-        /* TODO: ZAxis, ImageID */
+
+        if (!mif_read_axis_info(&header->z_axis,
+                                p, size - (*p - buffer), file_version, error))
+            return FALSE;
+
+        if (!mif_read_id(&header->id.primary, p, size - (*p - buffer),
+                         error)
+            || !mif_read_id(&header->id.secondary, p, size - (*p - buffer),
+                            error))
+            return FALSE;
     }
     else {
         g_return_val_if_reached(FALSE);
@@ -480,9 +570,13 @@ mif_load(const gchar *filename,
         return NULL;
     }
 
-    for (i = 0; i < INFO_N_IMAGES; i++) {
+    /* FIXME: Only v1.7! */
+    for (i = 0; i < mfile.header.nimages; i++) {
         MIFInfoItem *item = mfile.images + i;
         MIFImageHeader image_header;
+        MIFBlock raster, macro_geometry, preview, image, curve, calc;
+        guint ncalculations;
+        const guchar *p = buffer + item->image.offset;
 
         if (!item->image.size)
             continue;
@@ -491,12 +585,25 @@ mif_load(const gchar *filename,
             return FALSE;
         }
 
-        if (!mif_read_image_header(&image_header,
-                                   buffer + item->image.offset,
-                                   item->image.size,
+        /* XXX: We cannot use item->image.size because it's bogus, i.e.
+         * too short. */
+        if (!mif_read_image_header(&image_header, &p, size - (p - buffer),
                                    mfile.header.file_version,
                                    error))
             goto fail;
+
+        if (p - buffer + 52 > size) {
+            err_IMAGE_HEADER_TOO_SHORT(error);
+            goto fail;
+        }
+
+        mif_read_block(&raster, &p);
+        mif_read_block(&macro_geometry, &p);
+        mif_read_block(&preview, &p);
+        mif_read_block(&image, &p);
+        mif_read_block(&curve, &p);
+        ncalculations = gwy_get_guint32_le(&p);
+        mif_read_block(&calc, &p);
     }
 
     err_NO_DATA(error);
