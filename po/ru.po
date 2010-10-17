@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2010-10-07 03:58+0200\n"
-"PO-Revision-Date: 2010-10-07 12:48+0300\n"
+"POT-Creation-Date: 2010-10-17 03:59+0200\n"
+"PO-Revision-Date: 2010-10-17 13:09+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -2796,17 +2796,33 @@ msgstr "Текстовые файлы MicroProf FRT (.txt)"
 msgid "File contains less than XSize*YSize data points."
 msgstr "Файл содержит меньше точек данных, чем XSize*YSize."
 
-#: modules/file/miffile.c:78
+#: modules/file/miffile.c:190
 msgid "Imports DME MIF data files."
 msgstr "Импортирует файлы данных DME MIF."
 
-#: modules/file/miffile.c:91
+#: modules/file/miffile.c:203
 msgid "DME MIF files (.mif)"
 msgstr "Файлы DME MIF (.mif)"
 
-#: modules/file/miffile.c:153
+#: modules/file/miffile.c:230
+msgid "Image header record is too short."
+msgstr "Заголовок изображения слишком короткий."
+
+#: modules/file/miffile.c:238
+msgid "Axis display info record is too short."
+msgstr "Заголовок с информацией об отображении осей слишком короток."
+
+#: modules/file/miffile.c:281
 msgid "File information block is outside the file."
 msgstr "Блок информации о файле не находится внутри файла."
+
+#: modules/file/miffile.c:314
+msgid "File information block size is invalid."
+msgstr "Размер блока информации о файле неверен."
+
+#: modules/file/miffile.c:378
+msgid "Unique id record is too short."
+msgstr "Уникальный идентификатор слишком короткий."
 
 #: modules/file/mifile.c:165
 msgid "Imports Molecular Imaging MI data files."
@@ -3092,27 +3108,19 @@ msgstr "Строка заголовка начинается с двоеточи
 msgid "Channel information ended unexpectedly."
 msgstr "Информация о канале неожиданно закончилась."
 
-#: modules/file/omicronflat.c:123
+#: modules/file/omicronflat.c:149
 msgid "Imports Omicron flat files."
 msgstr "Импортирует плоские файлы Omicron"
 
-#: modules/file/omicronflat.c:136
+#: modules/file/omicronflat.c:162
 msgid "Omicron flat files (*.*_flat)"
 msgstr "Плоские файлы Omicron (*.*_flat)"
 
-#: modules/file/omicronflat.c:542
-msgid "Constant current tunnel spectroscopy (CITS) is not supported."
-msgstr "Туннельная спектроскопия постоянного тока (CITS) не поддерживается."
-
-#: modules/file/omicronflat.c:551
-msgid "Single point spectroscopy (SPS) is not supported."
-msgstr "Спектроскопия в точке (SPS) не поддерживается."
-
-#: modules/file/omicronflat.c:560
+#: modules/file/omicronflat.c:1560
 msgid "Force-distance curve are not supported."
 msgstr "Кривые сила-расстояние не поддерживаются."
 
-#: modules/file/omicronflat.c:569
+#: modules/file/omicronflat.c:1569
 msgid "Temporally varying signal is not supported."
 msgstr "Меняющийся во времени сигнал не поддерживается."
 
