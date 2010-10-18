@@ -1479,19 +1479,19 @@ gwy_data_field_invert(GwyDataField *data_field,
         avg = gwy_data_field_get_avg(data_field);
         data = data_field->data;
         for (i = 0; i < n; i++)
-            data[i] = avg - data[i];
+            data[i] = 2.0 * avg - data[i];
 
         /* We can transform stats */
         data_field->cached &= CBIT(MIN) | CBIT(MAX) | CBIT(SUM) | CBIT(RMS)
                               | CBIT(MED) | CBIT(ARF) | CBIT(ART) | CBIT(ARE);
-        CVAL(data_field, MIN) = avg - CVAL(data_field, MIN);
-        CVAL(data_field, MAX) = avg - CVAL(data_field, MAX);
+        CVAL(data_field, MIN) = 2.0 * avg - CVAL(data_field, MIN);
+        CVAL(data_field, MAX) = 2.0 * avg - CVAL(data_field, MAX);
         GWY_SWAP(gdouble, CVAL(data_field, MIN), CVAL(data_field, MAX));
-        CVAL(data_field, SUM) = n*avg - CVAL(data_field, SUM);
+        CVAL(data_field, SUM) = 2.0 * n * avg - CVAL(data_field, SUM);
         /* RMS doesn't change */
-        CVAL(data_field, MED) = avg - CVAL(data_field, MED);
-        CVAL(data_field, ARF) = avg - CVAL(data_field, ARF);
-        CVAL(data_field, ART) = avg - CVAL(data_field, ART);
+        CVAL(data_field, MED) = 2.0 * avg - CVAL(data_field, MED);
+        CVAL(data_field, ARF) = 2.0 * avg - CVAL(data_field, ARF);
+        CVAL(data_field, ART) = 2.0 * avg - CVAL(data_field, ART);
         GWY_SWAP(gdouble, CVAL(data_field, ARF), CVAL(data_field, ART));
         /* Area doesn't change */
     }
