@@ -321,13 +321,13 @@ typedef struct {
     const gchar *author;
 
 //  guint32 totLen;
-    gdouble    accuracy ;
-    gdouble    scale ;
-    gdouble    bias ;
+    gdouble    accuracy;
+    gdouble    scale;
+    gdouble    bias;
     guint64    minIndex;
     guint64    maxIndex;
-    gint32    dataType ;
-    guint64 siUnit;
+    gint32     dataType;
+    guint64    siUnit;
 } MDTMDACalibration;
 
 typedef struct {
@@ -1545,7 +1545,7 @@ static GwyGraphModel* extract_scanned_spectrum (MDTScannedDataFrame *dataframe,
 
     p = (gint16*)dataframe->image;
     for (i = 0; i < dataframe->fm_xres; i++) {
-        xdata[i] = i*deltax;
+        xdata[i] = i*deltax + pow10(power10x)*dataframe->x_scale.offset;
         ydata[i] = pow10(power10z)*dataframe->z_scale.offset
                  + zscale*GINT16_FROM_LE(p[i]);
     }
