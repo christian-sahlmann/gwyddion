@@ -34,8 +34,9 @@ file_LTLIBRARIES = \
 	burleigh_exp.la \
 	createc.la \
 	dmefile.la \
-	ezdfile.la \
 	ecsfile.la \
+	ezdfile.la \
+	gdeffile.la \
 	gsffile.la \
 	gwyfile.la \
 	hdf4file.la \
@@ -137,6 +138,7 @@ createc_la_SOURCES       = createc.c
 dmefile_la_SOURCES       = dmefile.c
 ecsfile_la_SOURCES       = ecsfile.c
 ezdfile_la_SOURCES       = ezdfile.c
+gdeffile_la_SOURCES      = gdeffile.c
 gsffile_la_SOURCES       = gsffile.c
 gwyfile_la_SOURCES       = gwyfile.c
 hdf4file_la_SOURCES      = hdf4file.c
