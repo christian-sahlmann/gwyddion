@@ -287,12 +287,13 @@ mif_read_header(const guchar *buffer,
 
 static void
 mif_read_block(MIFBlock *block,
+               G_GNUC_UNUSED const gchar *name,
                const guchar **p)
 {
     block->offset = gwy_get_guint32_le(p);
     block->size = gwy_get_guint32_le(p);
     if (block->size) {
-        gwy_debug("offset: %zu (0x%zx), size: %zu (0x%zx)", block->offset, block->offset, block->size, block->size);
+        gwy_debug("%s offset: %zu (0x%zx), size: %zu (0x%zx)", name, block->offset, block->offset, block->size, block->size);
     }
 }
 
@@ -317,7 +318,7 @@ mif_read_image_items(MIFInfoItem *items,
 
     for (i = 0; i < INFO_N_IMAGES; i++) {
         p = buffer + block->offset + i*item_size;
-        mif_read_block(&items[i].image, &p);
+        mif_read_block(&items[i].image, "item", &p);
         items[i].image_type = *(p++);
         if (items[i].image.size || items[i].image_type) {
             gwy_debug("item #%u: type: %u, offset: %zu, size: %zu", i, items[i].image_type, items[i].image.offset, items[i].image.size);
@@ -586,7 +587,10 @@ mif_load(const gchar *filename,
         }
 
         /* XXX: We cannot use item->image.size because it's bogus, i.e.
-         * too short. */
+         * too short.  Apparently there is some unaccounted-for space until
+         * the next block starts, 120 bytes for v1.7 files, after the image
+         * header which is in fact still occupied by the image header.
+         * MIFBlock says 714 bytes but the true size is 834 = 714 + 120. */
         if (!mif_read_image_header(&image_header, &p, size - (p - buffer),
                                    mfile.header.file_version,
                                    error))
@@ -597,13 +601,15 @@ mif_load(const gchar *filename,
             goto fail;
         }
 
-        mif_read_block(&raster, &p);
-        mif_read_block(&macro_geometry, &p);
-        mif_read_block(&preview, &p);
-        mif_read_block(&image, &p);
-        mif_read_block(&curve, &p);
+        mif_read_block(&raster, "raster", &p);
+        mif_read_block(&macro_geometry, "macro_geometry", &p);
+        mif_read_block(&preview, "preview", &p);
+        mif_read_block(&image, "image", &p);
+        mif_read_block(&curve, "curve", &p);
         ncalculations = gwy_get_guint32_le(&p);
-        mif_read_block(&calc, &p);
+        mif_read_block(&calc, "calc", &p);
+
+        g_printerr("TRUE SIZE: %u\n", (guint)(p - (buffer + item->image.offset)));
     }
 
     err_NO_DATA(error);
