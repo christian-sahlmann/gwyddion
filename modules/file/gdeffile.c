@@ -86,13 +86,15 @@ typedef struct {
     GDEFVariableType type;
     /* Internal, calculated. */
     gsize size;
-    const guchar *data;
+    gconstpointer data;
+    /*
     union {
         guint u;
         gint i;
         gdouble d;
         guchar c;
     } value;
+    */
 } GDEFVariable;
 
 typedef struct _GDEFControlBlock GDEFControlBlock;
@@ -258,28 +260,15 @@ gdef_read_variable(GDEFVariable *variable,
     return TRUE;
 }
 
-static GwyContainer*
-gdef_load(const gchar *filename,
-          G_GNUC_UNUSED GwyRunType mode,
-          GError **error)
+static GDEFControlBlock*
+gdef_read_variable_lists(const guchar **p,
+                         gsize size,
+                         guint depth,
+                         GError **error)
 {
-    GwyContainer *container = NULL;
-    guchar *buffer = NULL;
-    const guchar *p;
-    gsize size = 0;
-    GError *err = NULL;
-    GDEFHeader header;
     GDEFControlBlock *block, *first_block = NULL, *last_block = NULL;
+    const guchar *buffer = *p;
     guint i;
-
-    if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
-        err_GET_FILE_CONTENTS(error, &err);
-        return NULL;
-    }
-
-    p = buffer;
-    if (!gdef_read_header(&header, &p, size, error))
-        goto fail;
 
     do {
         block = g_new0(GDEFControlBlock, 1);
@@ -291,7 +280,7 @@ gdef_load(const gchar *filename,
             last_block = block;
         }
 
-        if (!gdef_read_control_block(block, &p, size - (p - buffer), error))
+        if (!gdef_read_control_block(block, p, size - (*p - buffer), error))
             goto fail;
 
         block->variables = g_new0(GDEFVariable, block->n_variables);
@@ -299,34 +288,45 @@ gdef_load(const gchar *filename,
             GDEFVariable *var = block->variables + i;
 
             if (!gdef_read_variable(block->variables + i,
-                                    &p, size - (p - buffer), error))
+                                    p, size - (*p - buffer), error))
                 goto fail;
 
             if (var->type == VAR_DATABLOCK) {
-                g_printerr("Cannot handle DATABLOCK yet!\n");
-                /* TODO: If the varialbe is DATABLOCK, the inner CB is here,
-                 * not in the data part. */
+                gwy_debug("ENTER nested datablock (%u)", depth+1);
+                var->data = gdef_read_variable_lists(p, size - (*p - buffer),
+                                                     depth + 1,
+                                                     error);
+                gwy_debug("EXIT nested datablock (%u)", depth+1);
             }
         }
+        /* FIXME: Apparently, unlike in .gwy, the data are always stored at the
+         * top level, i.e. the data of all nested blocks follow the
+         * corresponding top-level block. */
+        if (depth > 0)
+            continue;
+
         for (i = 0; i < block->n_variables; i++) {
             GDEFVariable *var = block->variables + i;
 
-            var->data = p;
-            var->size = type_sizes[var->type];
+            var->data = *p;
+            var->size = type_sizes[var->type] * block->n_data;
+            *p += var->size;
+
+#if 0
             if (var->type == VAR_INTEGER)
-                var->value.i = gwy_get_gint32_le(&p);
+                var->value.i = gwy_get_gint32_le(p);
             else if (var->type == VAR_FLOAT)
-                var->value.d = gwy_get_gfloat_le(&p);
+                var->value.d = gwy_get_gfloat_le(p);
             else if (var->type == VAR_DOUBLE)
-                var->value.d = gwy_get_gdouble_le(&p);
+                var->value.d = gwy_get_gdouble_le(p);
             else if (var->type == VAR_WORD)
-                var->value.u = gwy_get_guint16_le(&p);
+                var->value.u = gwy_get_guint16_le(p);
             else if (var->type == VAR_DWORD)
-                var->value.u = gwy_get_guint32_le(&p);
+                var->value.u = gwy_get_guint32_le(p);
             else if (var->type == VAR_CHAR)
-                var->value.c = *(p++);
+                var->value.c = *((*p)++);
             else if (var->type == VAR_DATABLOCK) {
-                g_printerr("Cannot handle DATABLOCK yet!\n");
+                /* g_printerr("Cannot handle DATABLOCK yet!\n"); */
             }
             else {
                 g_assert_not_reached();
@@ -342,8 +342,41 @@ gdef_load(const gchar *filename,
             else if (var->type == VAR_CHAR) {
                 gwy_debug("%.*s = %c", VAR_NAME_SIZE, var->name, var->value.c);
             }
+#endif
         }
     } while (block->next);
+
+    return first_block;
+
+fail:
+    /* TODO: free the blocks */
+    return NULL;
+}
+
+static GwyContainer*
+gdef_load(const gchar *filename,
+          G_GNUC_UNUSED GwyRunType mode,
+          GError **error)
+{
+    GwyContainer *container = NULL;
+    guchar *buffer = NULL;
+    const guchar *p;
+    gsize size = 0;
+    GError *err = NULL;
+    GDEFHeader header;
+    GDEFControlBlock *first_block = NULL;
+
+    if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
+        err_GET_FILE_CONTENTS(error, &err);
+        return NULL;
+    }
+
+    p = buffer;
+    gwy_debug("buffer: %p", buffer);
+    if (!gdef_read_header(&header, &p, size, error))
+        goto fail;
+
+    first_block = gdef_read_variable_lists(&p, size - (p - buffer), 0, error);
 
     err_NO_DATA(error);
 
