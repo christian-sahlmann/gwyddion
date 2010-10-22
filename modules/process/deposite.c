@@ -1,5 +1,5 @@
 /*
- *  @(#) $Id: grain_deposite.c 8476 2007-08-25 13:51:01Z yeti-dn $
+ *  @(#) $Id: grain_deposit.c 8476 2007-08-25 13:51:01Z yeti-dn $
  *  Copyright (C) 2004 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
@@ -17,25 +17,6 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 michaelablahutovaUSA
  */
-
-
-// dokoncit gui, realisticky pocet castic, reset
-// 
-// udelat primitivni andersonuv termostat (spis nahodnou random walk v sile)
-//
-// lj na z-ovou osu (pridat silu od roviny)
-//
-// castice davat nad povrch, postupne, klidne i na stejna mista
-
-// LJ potencial pro castici, nebo neco podobneho, vyhodnocovat silu z nejblizsiho objemoveho okoli
-// zastavit pro silu vetsi nez threshold, zacit kousek nad povrchem a pulit interval.
-//
-// jen objemove vyhodnocovat jestli tam neni povrch ve vzdalenosti R od stredu koule 
-// (jednodussi varianta), zacit kousek nad povrchem, metodou puleni intervalu najit rozhrani
-//
-// udelat pro castici dilaci casti povrchu pod ni (nebo celeho), pak uz jen vzit vysku
-// v danem bode, pripadne posouvat jen bod (coz je stred koule) po povrchu (nejjednodussi na relaxaci,
-// nepouzije se presne poloha kterou jsme nahodnym cislem zvolili?)
 
 
 
@@ -59,7 +40,7 @@
 #include <stdlib.h>
 #include <time.h>
 
-#define DEPOSITE_RUN_MODES (GWY_RUN_INTERACTIVE)
+#define DEPOSIT_RUN_MODES (GWY_RUN_INTERACTIVE)
 
 enum {
     PREVIEW_SIZE = 400
@@ -77,7 +58,7 @@ typedef struct {
     gdouble revise;
     /* interface only */
     gboolean computed;
-} DepositeArgs;
+} DepositArgs;
 
 typedef struct {
     GtkWidget *dialog;
@@ -92,40 +73,40 @@ typedef struct {
     GtkObject *revise;
     GwyContainer *mydata;
     GwyDataField *old_dfield;
-    DepositeArgs *args;
+    DepositArgs *args;
 
     gboolean in_init;
-} DepositeControls;
+} DepositControls;
 
 static gboolean    module_register            (void);
-static void        deposite                 (GwyContainer *data,
+static void        deposit                 (GwyContainer *data,
                                                GwyRunType run);
-static void        deposite_dialog                (DepositeArgs *args,
+static void        deposit_dialog                (DepositArgs *args,
                                                GwyContainer *data,
                                                GwyDataField *dfield,
                                                gint id);
-static void        deposite_dialog_update_controls(DepositeControls *controls,
-                                               DepositeArgs *args);
-static void        deposite_dialog_update_values  (DepositeControls *controls,
-                                               DepositeArgs *args);
-static void        update_threshold_size     (DepositeControls *controls);
-//static void        update_threshold_width     (DepositeControls *controls);
-static void        deposite_invalidate            (DepositeControls *controls);
-static void        deposite_invalidate2           (gpointer whatever,
-                                               DepositeControls *controls);
-static void        preview                    (DepositeControls *controls,
-                                               DepositeArgs *args);
+static void        deposit_dialog_update_controls(DepositControls *controls,
+                                               DepositArgs *args);
+static void        deposit_dialog_update_values  (DepositControls *controls,
+                                               DepositArgs *args);
+static void        update_threshold_size     (DepositControls *controls);
+//static void        update_threshold_width     (DepositControls *controls);
+static void        deposit_invalidate            (DepositControls *controls);
+static void        deposit_invalidate2           (gpointer whatever,
+                                               DepositControls *controls);
+static void        preview                    (DepositControls *controls,
+                                               DepositArgs *args);
 static void        mask_process               (GwyDataField *dfield,
                                                GwyDataField *maskfield,
-                                               DepositeArgs *args);
-static void        deposite_load_args             (GwyContainer *container,
-                                               DepositeArgs *args);
-static void        deposite_save_args             (GwyContainer *container,
-                                               DepositeArgs *args);
-static void        deposite_sanitize_args         (DepositeArgs *args);
+                                               DepositArgs *args);
+static void        deposit_load_args             (GwyContainer *container,
+                                               DepositArgs *args);
+static void        deposit_save_args             (GwyContainer *container,
+                                               DepositArgs *args);
+static void        deposit_sanitize_args         (DepositArgs *args);
 
 
-static const DepositeArgs deposite_defaults = {
+static const DepositArgs deposit_defaults = {
     0,
     0,
     0,
@@ -147,33 +128,33 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(void)
 {
-    gwy_process_func_register("deposite",
-                              (GwyProcessFunc)&deposite,
-                              N_("/_Synthetic/_Deposite particles..."),
+    gwy_process_func_register("deposit",
+                              (GwyProcessFunc)&deposit,
+                              N_("/_Synthetic/_Deposit particles..."),
                               GWY_STOCK_GRAINS,
-                              DEPOSITE_RUN_MODES,
+                              DEPOSIT_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
-                              N_("Deposite spherical particles"));
+                              N_("Deposit spherical particles"));
 
     return TRUE;
 }
 
 static void
-deposite(GwyContainer *data, GwyRunType run)
+deposit(GwyContainer *data, GwyRunType run)
 {
-    DepositeArgs args;
+    DepositArgs args;
     GwyDataField *dfield;
     gint id;
 
-    g_return_if_fail(run & DEPOSITE_RUN_MODES);
-    deposite_load_args(gwy_app_settings_get(), &args);
+    g_return_if_fail(run & DEPOSIT_RUN_MODES);
+    deposit_load_args(gwy_app_settings_get(), &args);
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
                                      GWY_APP_DATA_FIELD_ID, &id,
                                      0);
     g_return_if_fail(dfield);
 
-    deposite_dialog(&args, data, dfield, id);
-    deposite_save_args(gwy_app_settings_get(), &args);
+    deposit_dialog(&args, data, dfield, id);
+    deposit_save_args(gwy_app_settings_get(), &args);
 }
 
 static void
@@ -187,27 +168,27 @@ table_attach_threshold(GtkWidget *table, gint *row, const gchar *name,
     spin = gwy_table_attach_hscale(table, *row, name, "%", *adj,
                                    GWY_HSCALE_DEFAULT);
     g_signal_connect_swapped(*adj, "value-changed",
-                             G_CALLBACK(deposite_invalidate), data);
+                             G_CALLBACK(deposit_invalidate), data);
     (*row)++;
 }
 
 
 
 static void
-deposite_dialog(DepositeArgs *args,
+deposit_dialog(DepositArgs *args,
             GwyContainer *data,
             GwyDataField *dfield,
             gint id)
 {
     GtkWidget *dialog, *table, *hbox, *label, *pivot;
-    DepositeControls controls;
+    DepositControls controls;
     gint response;
     GwyPixmapLayer *layer;
     gint row, newid;
     GwyDataField *rfield;
 
     controls.args = args;
-    dialog = gtk_dialog_new_with_buttons(_("Deposite spherical particles"), NULL, 0,
+    dialog = gtk_dialog_new_with_buttons(_("Deposit spherical particles"), NULL, 0,
                                          NULL);
     gtk_dialog_add_action_widget(GTK_DIALOG(dialog),
                                  gwy_stock_like_button_new(_("_Start"),
@@ -326,7 +307,7 @@ deposite_dialog(DepositeArgs *args,
     gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
 
 
-    deposite_invalidate(&controls);
+    deposit_invalidate(&controls);
     update_threshold_size(&controls);
     //update_threshold_width(&controls);
 
@@ -340,7 +321,7 @@ deposite_dialog(DepositeArgs *args,
         switch (response) {
             case GTK_RESPONSE_CANCEL:
             case GTK_RESPONSE_DELETE_EVENT:
-            deposite_dialog_update_values(&controls, args);
+            deposit_dialog_update_values(&controls, args);
             gtk_widget_destroy(dialog);
             case GTK_RESPONSE_NONE:
             g_object_unref(controls.mydata);
@@ -353,15 +334,15 @@ deposite_dialog(DepositeArgs *args,
             break;
 
             case RESPONSE_RESET:
-            *args = deposite_defaults;
-            deposite_dialog_update_controls(&controls, args);
+            *args = deposit_defaults;
+            deposit_dialog_update_controls(&controls, args);
             controls.in_init = TRUE;
             preview(&controls, args);
             controls.in_init = FALSE;
             break;
 
             case RESPONSE_PREVIEW:
-            deposite_dialog_update_values(&controls, args);
+            deposit_dialog_update_values(&controls, args);
             preview(&controls, args);
             break;
 
@@ -371,7 +352,7 @@ deposite_dialog(DepositeArgs *args,
         }
     } while (response != GTK_RESPONSE_OK);
 
-    deposite_dialog_update_values(&controls, args);
+    deposit_dialog_update_values(&controls, args);
     gwy_app_sync_data_items(controls.mydata, data, 0, id, FALSE,
                             GWY_DATA_ITEM_MASK_COLOR,
                             0);
@@ -398,8 +379,8 @@ deposite_dialog(DepositeArgs *args,
 }
 
 static void
-deposite_dialog_update_controls(DepositeControls *controls,
-                            DepositeArgs *args)
+deposit_dialog_update_controls(DepositControls *controls,
+                            DepositArgs *args)
 {
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->size),
                              args->size);
@@ -412,8 +393,8 @@ deposite_dialog_update_controls(DepositeControls *controls,
 }
 
 static void
-deposite_dialog_update_values(DepositeControls *controls,
-                          DepositeArgs *args)
+deposit_dialog_update_values(DepositControls *controls,
+                          DepositArgs *args)
 {
     args->size
         = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->size));
@@ -428,14 +409,14 @@ deposite_dialog_update_values(DepositeControls *controls,
 }
 
 static void
-deposite_invalidate(DepositeControls *controls)
+deposit_invalidate(DepositControls *controls)
 {
     controls->args->computed = FALSE;
 
 }
 
 static void
-update_threshold_size(DepositeControls *controls)
+update_threshold_size(DepositControls *controls)
 {
     gdouble v;
     gchar *s;
@@ -453,7 +434,7 @@ update_threshold_size(DepositeControls *controls)
 
 /*
 static void
-update_threshold_width(DepositeControls *controls)
+update_threshold_width(DepositControls *controls)
 {
     gdouble v;
     gchar *s;
@@ -474,9 +455,9 @@ update_threshold_width(DepositeControls *controls)
 
 
 static void
-deposite_invalidate2(G_GNUC_UNUSED gpointer whatever, DepositeControls *controls)
+deposit_invalidate2(G_GNUC_UNUSED gpointer whatever, DepositControls *controls)
 {
-    deposite_invalidate(controls);
+    deposit_invalidate(controls);
 }
 
 
@@ -562,8 +543,8 @@ showit(GwyDataField *lfield, GwyDataField *dfield, gdouble *rdisizes, gdouble *r
  
 
 static void
-preview(DepositeControls *controls,
-        DepositeArgs *args)
+preview(DepositControls *controls,
+        DepositArgs *args)
 {
     GwyDataField *dfield, *lfield, *zlfield, *zdfield;
     gint xres, yres, oxres, oyres;
@@ -595,7 +576,7 @@ preview(DepositeControls *controls,
     gint max = 5000000;
     gdouble rxv, ryv, rzv, timestep = 3e-7; //5e-7
 
-    deposite_dialog_update_values(controls, args);
+    deposit_dialog_update_values(controls, args);
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
                                                              "/0/data"));
 
@@ -738,8 +719,8 @@ preview(DepositeControls *controls,
             ndata++;
         }
     };
-//    if (i==max) printf("Maximum reached, only %d particles deposited instead of %d\n", ndata, presetval);
-//    else printf("%d particles deposited\n", ndata);
+//    if (i==max) printf("Maximum reached, only %d particles depositd instead of %d\n", ndata, presetval);
+//    else printf("%d particles depositd\n", ndata);
 
     /*refresh shown data and integer positions (necessary in md calculation)*/
     gwy_data_field_copy(zlfield, lfield, 0);
@@ -906,13 +887,13 @@ preview(DepositeControls *controls,
 
 }
 
-static const gchar size_key[]  = "/module/grain_deposite/size";
-static const gchar width_key[]  = "/module/grain_deposite/width";
-static const gchar coverage_key[]   = "/module/grain_deposite/coverage";
-static const gchar revise_key[]    = "/module/grain_deposite/revise";
+static const gchar size_key[]  = "/module/grain_deposit/size";
+static const gchar width_key[]  = "/module/grain_deposit/width";
+static const gchar coverage_key[]   = "/module/grain_deposit/coverage";
+static const gchar revise_key[]    = "/module/grain_deposit/revise";
 
 static void
-deposite_sanitize_args(DepositeArgs *args)
+deposit_sanitize_args(DepositArgs *args)
 {
     args->size = CLAMP(args->size, 0.0, 100.0);
 //    args->width = CLAMP(args->width, 0.0, 100.0);
@@ -921,21 +902,21 @@ deposite_sanitize_args(DepositeArgs *args)
 }
 
 static void
-deposite_load_args(GwyContainer *container,
-               DepositeArgs *args)
+deposit_load_args(GwyContainer *container,
+               DepositArgs *args)
 {
-    *args = deposite_defaults;
+    *args = deposit_defaults;
 
     gwy_container_gis_double_by_name(container, size_key, &args->size);
 //    gwy_container_gis_double_by_name(container, width_key, &args->width);
     gwy_container_gis_double_by_name(container, coverage_key, &args->coverage);
     gwy_container_gis_double_by_name(container, revise_key, &args->revise);
-    deposite_sanitize_args(args);
+    deposit_sanitize_args(args);
 }
 
 static void
-deposite_save_args(GwyContainer *container,
-               DepositeArgs *args)
+deposit_save_args(GwyContainer *container,
+               DepositArgs *args)
 {
     gwy_container_set_double_by_name(container, size_key, args->size);
 //    gwy_container_set_double_by_name(container, width_key, args->width);
