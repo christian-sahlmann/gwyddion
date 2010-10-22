@@ -48,9 +48,6 @@
 #define MAGIC "GDEF"
 #define MAGIC_SIZE (sizeof(MAGIC) - 1)
 
-#define gwy_debug_chars(s, f) gwy_debug(#f ": %.*s", (guint)sizeof(s->f), s->f)
-#define gwy_debug_bool(s, f) gwy_debug(#f ": %s", (s->f) ? "TRUE" : "FALSE");
-
 enum {
     HEADER_SIZE = 4 + 2 + 2/*align*/ + 4 + 4,
     CONTROL_BLOCK_SIZE = 2 + 2/*align*/ + 4 + 4 + 1 + 3/*align*/,
@@ -86,15 +83,7 @@ typedef struct {
     GDEFVariableType type;
     /* Internal, calculated. */
     gsize size;
-    gconstpointer data;
-    /*
-    union {
-        guint u;
-        gint i;
-        gdouble d;
-        guchar c;
-    } value;
-    */
+    gconstpointer data;  /* for nested blocks, it points to GDEFControlBlock! */
 } GDEFVariable;
 
 typedef struct _GDEFControlBlock GDEFControlBlock;
@@ -248,9 +237,8 @@ gdef_read_variable(GDEFVariable *variable,
     }
 
     get_CHARARRAY(variable->name, p);
-    gwy_debug_chars(variable, name);
     variable->type = gwy_get_guint32_le(p);
-    gwy_debug("type: %u", variable->type);
+    gwy_debug("name: %.*s, type: %u", VAR_NAME_SIZE, variable->name, variable->type);
     if (variable->type >= VAR_NVARS || variable->type == VAR_STRING) {
         g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
                     _("Unknown variable type %u."), variable->type);
@@ -258,6 +246,90 @@ gdef_read_variable(GDEFVariable *variable,
     }
 
     return TRUE;
+}
+
+static gboolean
+gdef_read_variable_data(GDEFControlBlock *block,
+                        const guchar **p,
+                        gsize size,
+                        guint depth,
+                        GError **error)
+{
+    const guchar *buffer = *p;
+    guint i, ib = 0;
+
+    do {
+        gwy_debug("block #%u", ib);
+        for (i = 0; i < block->n_variables; i++) {
+            GDEFVariable *var = block->variables + i;
+
+            if (var->type == VAR_DATABLOCK) {
+                GDEFControlBlock *nestedblock = (GDEFControlBlock*)var->data;
+                const guchar *q = *p;
+                gboolean ok;
+
+                gwy_debug("ENTER nested data (%u)", depth+1);
+                ok = gdef_read_variable_data(nestedblock,
+                                             p, size - (*p - buffer),
+                                             depth+1, error);
+                gwy_debug("EXIT nested data (%u)", depth+1);
+                if (!ok)
+                    return FALSE;
+
+                var->size = q - *p;
+            }
+            else {
+                var->data = *p;
+                var->size = type_sizes[var->type] * block->n_data;
+                gwy_debug("%.*s has size %zu",
+                          VAR_NAME_SIZE, var->name, var->size);
+                if (var->size + (*p - buffer) > size) {
+                    g_set_error(error, GWY_MODULE_FILE_ERROR,
+                                GWY_MODULE_FILE_ERROR_DATA,
+                                _("Data of variable %.*s is truncated."),
+                                VAR_NAME_SIZE, var->name);
+                    return FALSE;
+                }
+                *p += var->size;
+            }
+        }
+        ib++;
+        /* recurse only in the nested levels */
+    } while ((block = block->next) && depth);
+
+    return TRUE;
+
+#if 0
+        if (var->type == VAR_INTEGER)
+            var->value.i = gwy_get_gint32_le(p);
+        else if (var->type == VAR_FLOAT)
+            var->value.d = gwy_get_gfloat_le(p);
+        else if (var->type == VAR_DOUBLE)
+            var->value.d = gwy_get_gdouble_le(p);
+        else if (var->type == VAR_WORD)
+            var->value.u = gwy_get_guint16_le(p);
+        else if (var->type == VAR_DWORD)
+            var->value.u = gwy_get_guint32_le(p);
+        else if (var->type == VAR_CHAR)
+            var->value.c = *((*p)++);
+        else if (var->type == VAR_DATABLOCK) {
+            /* g_printerr("Cannot handle DATABLOCK yet!\n"); */
+        }
+        else {
+            g_assert_not_reached();
+        }
+
+        if (var->type == VAR_INTEGER || var->type == VAR_WORD
+            || var->type == VAR_DWORD) {
+            gwy_debug("%.*s = %u", VAR_NAME_SIZE, var->name, var->value.u);
+        }
+        else if (var->type == VAR_FLOAT || var->type == VAR_DOUBLE) {
+            gwy_debug("%.*s = %g", VAR_NAME_SIZE, var->name, var->value.d);
+        }
+        else if (var->type == VAR_CHAR) {
+            gwy_debug("%.*s = %c", VAR_NAME_SIZE, var->name, var->value.c);
+        }
+#endif
 }
 
 static GDEFControlBlock*
@@ -292,57 +364,22 @@ gdef_read_variable_lists(const guchar **p,
                 goto fail;
 
             if (var->type == VAR_DATABLOCK) {
-                gwy_debug("ENTER nested datablock (%u)", depth+1);
+                gwy_debug("ENTER nested variables (%u)", depth+1);
                 var->data = gdef_read_variable_lists(p, size - (*p - buffer),
                                                      depth + 1,
                                                      error);
-                gwy_debug("EXIT nested datablock (%u)", depth+1);
+                gwy_debug("EXIT nested variables (%u)", depth+1);
+                if (!var->data)
+                    goto fail;
             }
         }
         /* FIXME: Apparently, unlike in .gwy, the data are always stored at the
          * top level, i.e. the data of all nested blocks follow the
          * corresponding top-level block. */
-        if (depth > 0)
-            continue;
-
-        for (i = 0; i < block->n_variables; i++) {
-            GDEFVariable *var = block->variables + i;
-
-            var->data = *p;
-            var->size = type_sizes[var->type] * block->n_data;
-            *p += var->size;
-
-#if 0
-            if (var->type == VAR_INTEGER)
-                var->value.i = gwy_get_gint32_le(p);
-            else if (var->type == VAR_FLOAT)
-                var->value.d = gwy_get_gfloat_le(p);
-            else if (var->type == VAR_DOUBLE)
-                var->value.d = gwy_get_gdouble_le(p);
-            else if (var->type == VAR_WORD)
-                var->value.u = gwy_get_guint16_le(p);
-            else if (var->type == VAR_DWORD)
-                var->value.u = gwy_get_guint32_le(p);
-            else if (var->type == VAR_CHAR)
-                var->value.c = *((*p)++);
-            else if (var->type == VAR_DATABLOCK) {
-                /* g_printerr("Cannot handle DATABLOCK yet!\n"); */
-            }
-            else {
-                g_assert_not_reached();
-            }
-
-            if (var->type == VAR_INTEGER || var->type == VAR_WORD
-                || var->type == VAR_DWORD) {
-                gwy_debug("%.*s = %u", VAR_NAME_SIZE, var->name, var->value.u);
-            }
-            else if (var->type == VAR_FLOAT || var->type == VAR_DOUBLE) {
-                gwy_debug("%.*s = %g", VAR_NAME_SIZE, var->name, var->value.d);
-            }
-            else if (var->type == VAR_CHAR) {
-                gwy_debug("%.*s = %c", VAR_NAME_SIZE, var->name, var->value.c);
-            }
-#endif
+        if (depth == 0) {
+            if (!gdef_read_variable_data(block, p, size - (*p - buffer), depth,
+                                         error))
+                goto fail;
         }
     } while (block->next);
 
