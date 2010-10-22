@@ -17,7 +17,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
-
+/* TODO: metadata */
 /**
  * [FILE-MAGIC-FREEDESKTOP]
  * <mime-type type="application/x-gdef-spm">
@@ -34,7 +34,7 @@
  * .gdf
  * Read
  **/
-#define DEBUG 1
+
 #include "config.h"
 #include <stdio.h>
 #include <time.h>
@@ -84,7 +84,7 @@ typedef struct {
 } GDEFHeader;
 
 typedef struct {
-    /* includes 2 bytes of alignment */
+    /* includes 2 bytes of alignment which we use for nul-termination */
     gchar name[VAR_NAME_SIZE+2];
     GDEFVariableType type;
     /* Internal, calculated. */
@@ -243,7 +243,8 @@ gdef_read_variable(GDEFVariable *variable,
     }
 
     get_CHARARRAY(variable->name, p);
-    variable->name[VAR_NAME_SIZE] = '\0';    /* creatively use the padding */
+    /* creatively use the padding to terminate the string */
+    variable->name[VAR_NAME_SIZE] = '\0';
     variable->type = gwy_get_guint32_le(p);
     gwy_debug("name: %s, type: %u", variable->name, variable->type);
     if (variable->type >= VAR_NVARS || variable->type == VAR_STRING) {
@@ -289,14 +290,14 @@ gdef_read_variable_data(GDEFControlBlock *block,
                 var->data = *p;
                 var->size = type_sizes[var->type] * block->n_data;
                 gwy_debug("%s has size %zu", var->name, var->size);
-                if (var->size + (*p - buffer) > size) {
+                *p += var->size;
+                if (*p > buffer + size) {
                     g_set_error(error, GWY_MODULE_FILE_ERROR,
                                 GWY_MODULE_FILE_ERROR_DATA,
                                 _("Data of variable %s is truncated."),
                                 var->name);
                     return FALSE;
                 }
-                *p += var->size;
             }
         }
         ib++;
@@ -304,38 +305,6 @@ gdef_read_variable_data(GDEFControlBlock *block,
     } while ((block = block->next) && depth);
 
     return TRUE;
-
-#if 0
-        if (var->type == VAR_INTEGER)
-            var->value.i = gwy_get_gint32_le(p);
-        else if (var->type == VAR_FLOAT)
-            var->value.d = gwy_get_gfloat_le(p);
-        else if (var->type == VAR_DOUBLE)
-            var->value.d = gwy_get_gdouble_le(p);
-        else if (var->type == VAR_WORD)
-            var->value.u = gwy_get_guint16_le(p);
-        else if (var->type == VAR_DWORD)
-            var->value.u = gwy_get_guint32_le(p);
-        else if (var->type == VAR_CHAR)
-            var->value.c = *((*p)++);
-        else if (var->type == VAR_DATABLOCK) {
-            /* g_printerr("Cannot handle DATABLOCK yet!\n"); */
-        }
-        else {
-            g_assert_not_reached();
-        }
-
-        if (var->type == VAR_INTEGER || var->type == VAR_WORD
-            || var->type == VAR_DWORD) {
-            gwy_debug("%.*s = %u", VAR_NAME_SIZE, var->name, var->value.u);
-        }
-        else if (var->type == VAR_FLOAT || var->type == VAR_DOUBLE) {
-            gwy_debug("%.*s = %g", VAR_NAME_SIZE, var->name, var->value.d);
-        }
-        else if (var->type == VAR_CHAR) {
-            gwy_debug("%.*s = %c", VAR_NAME_SIZE, var->name, var->value.c);
-        }
-#endif
 }
 
 static void
@@ -445,7 +414,6 @@ gdef_find_variable(GDEFControlBlock *block,
     return NULL;
 }
 
-G_GNUC_UNUSED
 static gint
 gdef_get_int_var(GDEFVariable *var)
 {
@@ -461,8 +429,7 @@ gdef_get_int_var(GDEFVariable *var)
     g_return_val_if_reached(0);
 }
 
-G_GNUC_UNUSED
-static gint
+static gdouble
 gdef_get_real_var(GDEFVariable *var)
 {
     const guchar *p = var->data;
@@ -475,7 +442,6 @@ gdef_get_real_var(GDEFVariable *var)
     g_return_val_if_reached(0);
 }
 
-G_GNUC_UNUSED
 static gchar*
 gdef_get_string_var(GDEFVariable *var)
 {
@@ -488,13 +454,15 @@ gdef_get_string_var(GDEFVariable *var)
 static GwyDataField*
 gdef_read_channel(GDEFControlBlock *block)
 {
-    GDEFVariable *xres_var, *yres_var, *zunit_var, *data_var, *value_var;
+    GDEFVariable *xres_var, *yres_var, *xreal_var, *yreal_var,
+                 *zunit_var, *data_var, *value_var;
     GDEFControlBlock *datablock;
     GwyDataField *dfield;
     GwySIUnit *siunit;
     gdouble *data;
     const guchar *rawdata;
     gchar *unit;
+    gdouble xreal, yreal;
     gint xres, yres, i;
 
     if (block->n_data != 1)
@@ -502,6 +470,8 @@ gdef_read_channel(GDEFControlBlock *block)
 
     if (!(xres_var = gdef_find_variable(block, "Columns", VAR_INTEGRAL))
         || !(yres_var = gdef_find_variable(block, "Lines", VAR_INTEGRAL))
+        || !(xreal_var = gdef_find_variable(block, "MaxWidth", VAR_REAL))
+        || !(yreal_var = gdef_find_variable(block, "MaxHeight", VAR_REAL))
         || !(zunit_var = gdef_find_variable(block, "ZUnit", VAR_CHAR))
         || !(data_var = gdef_find_variable(block, "Data", VAR_DATABLOCK)))
         return FALSE;
@@ -512,13 +482,37 @@ gdef_read_channel(GDEFControlBlock *block)
 
     xres = gdef_get_int_var(xres_var);
     yres = gdef_get_int_var(yres_var);
+    if (err_DIMENSION(NULL, xres) || err_DIMENSION(NULL, yres)) {
+        g_warning("Dimensions %d x %d are invalid.", xres, yres);
+        return FALSE;
+    }
+
+    if (value_var->size != 4*xres*yres) {
+        g_warning("Data size does not match Lines and Columns.");
+        return FALSE;
+    }
+
+    xreal = fabs(gdef_get_real_var(xreal_var));
+    yreal = fabs(gdef_get_real_var(yreal_var));
+    gwy_debug("xreal: %g, yreal: %g", xreal, yreal);
+    /* Use negated positive conditions to catch NaNs */
+    if (!(xreal > 0.0)) {
+        g_warning("Real x size is 0.0, fixing to 1.0");
+        xreal = 1.0;
+    }
+    if (!(yreal > 0.0)) {
+        g_warning("Real y size is 0.0, fixing to 1.0");
+        yreal = 1.0;
+    }
+
     unit = gdef_get_string_var(zunit_var);
 
-    dfield = gwy_data_field_new(xres, yres, 1.0, 1.0, FALSE);
+    dfield = gwy_data_field_new(xres, yres, xreal, yreal, FALSE);
     siunit = gwy_data_field_get_si_unit_xy(dfield);
     gwy_si_unit_set_from_string(siunit, "m");
     siunit = gwy_data_field_get_si_unit_z(dfield);
-    gwy_si_unit_set_from_string(siunit, unit);
+    /* XXX: Unspecified units seems to stand for metres. */
+    gwy_si_unit_set_from_string(siunit, unit && strlen(unit) ? unit : "m");
     g_free(unit);
 
     data = gwy_data_field_get_data(dfield);
@@ -559,6 +553,15 @@ gdef_load(const gchar *filename,
     i = 0;
     for (block = blocks; block; block = block->next) {
         GwyDataField *dfield;
+#ifdef DEBUG
+        guint j;
+
+        for (j = 0; j < block->n_variables; j++) {
+            GDEFVariable *var = block->variables + j;
+            if (var->type != VAR_DATABLOCK)
+                gwy_debug("%s 0x%08x", var->name, (guint)((const guchar*)var->data - buffer));
+        }
+#endif
 
         if ((dfield = gdef_read_channel(block))) {
             if (!container)
@@ -567,6 +570,7 @@ gdef_load(const gchar *filename,
             quark = gwy_app_get_data_key_for_id(i);
             gwy_container_set_object(container, quark, dfield);
             g_object_unref(dfield);
+            gwy_app_channel_title_fall_back(container, i);
             i++;
         }
     }
