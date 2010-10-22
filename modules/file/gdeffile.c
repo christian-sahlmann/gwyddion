@@ -41,6 +41,7 @@
 #include <libgwyddion/gwymath.h>
 #include <libprocess/datafield.h>
 #include <app/gwymoduleutils-file.h>
+#include <app/data-browser.h>
 
 #include "err.h"
 #include "get.h"
@@ -57,6 +58,11 @@ enum {
 
 /* XXX: String type seems unimplemented in the original as well. */
 typedef enum {
+    /* our markers, not actually present in GDEF */
+    VAR_REAL        = -3,
+    VAR_INTEGRAL    = -2,
+    VAR_UNSPECIFIED = -1,
+    /* GDEF types */
     VAR_INTEGER   = 0,
     VAR_FLOAT     = 1,
     VAR_DOUBLE    = 2,
@@ -78,7 +84,7 @@ typedef struct {
 } GDEFHeader;
 
 typedef struct {
-    /* includes alignment */
+    /* includes 2 bytes of alignment */
     gchar name[VAR_NAME_SIZE+2];
     GDEFVariableType type;
     /* Internal, calculated. */
@@ -237,8 +243,9 @@ gdef_read_variable(GDEFVariable *variable,
     }
 
     get_CHARARRAY(variable->name, p);
+    variable->name[VAR_NAME_SIZE] = '\0';    /* creatively use the padding */
     variable->type = gwy_get_guint32_le(p);
-    gwy_debug("name: %.*s, type: %u", VAR_NAME_SIZE, variable->name, variable->type);
+    gwy_debug("name: %s, type: %u", variable->name, variable->type);
     if (variable->type >= VAR_NVARS || variable->type == VAR_STRING) {
         g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
                     _("Unknown variable type %u."), variable->type);
@@ -281,13 +288,12 @@ gdef_read_variable_data(GDEFControlBlock *block,
             else {
                 var->data = *p;
                 var->size = type_sizes[var->type] * block->n_data;
-                gwy_debug("%.*s has size %zu",
-                          VAR_NAME_SIZE, var->name, var->size);
+                gwy_debug("%s has size %zu", var->name, var->size);
                 if (var->size + (*p - buffer) > size) {
                     g_set_error(error, GWY_MODULE_FILE_ERROR,
                                 GWY_MODULE_FILE_ERROR_DATA,
-                                _("Data of variable %.*s is truncated."),
-                                VAR_NAME_SIZE, var->name);
+                                _("Data of variable %s is truncated."),
+                                var->name);
                     return FALSE;
                 }
                 *p += var->size;
@@ -332,6 +338,26 @@ gdef_read_variable_data(GDEFControlBlock *block,
 #endif
 }
 
+static void
+gdef_free_control_block_list(GDEFControlBlock *block)
+{
+    guint i;
+
+    while (block) {
+        GDEFControlBlock *next = block->next;
+
+        for (i = 0; i < block->n_variables; i++) {
+            GDEFVariable *var = block->variables + i;
+
+            if (var->type == VAR_DATABLOCK)
+                gdef_free_control_block_list((GDEFControlBlock*)var->data);
+        }
+        g_free(block->variables);
+        g_free(block);
+        block = next;
+    }
+}
+
 static GDEFControlBlock*
 gdef_read_variable_lists(const guchar **p,
                          gsize size,
@@ -373,9 +399,10 @@ gdef_read_variable_lists(const guchar **p,
                     goto fail;
             }
         }
-        /* FIXME: Apparently, unlike in .gwy, the data are always stored at the
-         * top level, i.e. the data of all nested blocks follow the
-         * corresponding top-level block. */
+        /* Unlike in .gwy, the data are always stored at the top level, i.e.
+         * the data of all nested blocks follow the corresponding top-level
+         * block.  So we have to postpone data reading until we get to the
+         * top level again. */
         if (depth == 0) {
             if (!gdef_read_variable_data(block, p, size - (*p - buffer), depth,
                                          error))
@@ -386,8 +413,120 @@ gdef_read_variable_lists(const guchar **p,
     return first_block;
 
 fail:
-    /* TODO: free the blocks */
+    block->next = NULL;
+    gdef_free_control_block_list(first_block);
     return NULL;
+}
+
+static GDEFVariable*
+gdef_find_variable(GDEFControlBlock *block,
+                   const gchar *name,
+                   GDEFVariableType type)
+{
+    guint i;
+
+    for (i = 0; i < block->n_variables; i++) {
+        GDEFVariable *var = block->variables + i;
+
+        if (gwy_strequal(var->name, name)) {
+            if (type == VAR_UNSPECIFIED)
+                return var;
+            if (type == VAR_INTEGRAL && (var->type == VAR_WORD
+                                         || var->type == VAR_INTEGER
+                                         || var->type == VAR_DWORD))
+                return var;
+            if (type == VAR_REAL && (var->type == VAR_FLOAT
+                                              || var->type == VAR_DOUBLE))
+                return var;
+            if (var->type == type)
+                return var;
+        }
+    }
+    return NULL;
+}
+
+G_GNUC_UNUSED
+static gint
+gdef_get_int_var(GDEFVariable *var)
+{
+    const guchar *p = var->data;
+
+    if (var->type == VAR_INTEGER)
+        return gwy_get_gint32_le(&p);
+    if (var->type == VAR_WORD)
+        return gwy_get_guint16_le(&p);
+    if (var->type == VAR_DWORD)
+        return gwy_get_guint16_le(&p);
+
+    g_return_val_if_reached(0);
+}
+
+G_GNUC_UNUSED
+static gint
+gdef_get_real_var(GDEFVariable *var)
+{
+    const guchar *p = var->data;
+
+    if (var->type == VAR_FLOAT)
+        return gwy_get_gfloat_le(&p);
+    if (var->type == VAR_DOUBLE)
+        return gwy_get_gdouble_le(&p);
+
+    g_return_val_if_reached(0);
+}
+
+G_GNUC_UNUSED
+static gchar*
+gdef_get_string_var(GDEFVariable *var)
+{
+    if (var->type == VAR_CHAR)
+        return g_strndup(var->data, var->size);
+
+    g_return_val_if_reached(NULL);
+}
+
+static GwyDataField*
+gdef_read_channel(GDEFControlBlock *block)
+{
+    GDEFVariable *xres_var, *yres_var, *zunit_var, *data_var, *value_var;
+    GDEFControlBlock *datablock;
+    GwyDataField *dfield;
+    GwySIUnit *siunit;
+    gdouble *data;
+    const guchar *rawdata;
+    gchar *unit;
+    gint xres, yres, i;
+
+    if (block->n_data != 1)
+        return FALSE;
+
+    if (!(xres_var = gdef_find_variable(block, "Columns", VAR_INTEGRAL))
+        || !(yres_var = gdef_find_variable(block, "Lines", VAR_INTEGRAL))
+        || !(zunit_var = gdef_find_variable(block, "ZUnit", VAR_CHAR))
+        || !(data_var = gdef_find_variable(block, "Data", VAR_DATABLOCK)))
+        return FALSE;
+
+    datablock = (GDEFControlBlock*)data_var->data;
+    if (!(value_var = gdef_find_variable(datablock, "Value", VAR_FLOAT)))
+        return FALSE;
+
+    xres = gdef_get_int_var(xres_var);
+    yres = gdef_get_int_var(yres_var);
+    unit = gdef_get_string_var(zunit_var);
+
+    dfield = gwy_data_field_new(xres, yres, 1.0, 1.0, FALSE);
+    siunit = gwy_data_field_get_si_unit_xy(dfield);
+    gwy_si_unit_set_from_string(siunit, "m");
+    siunit = gwy_data_field_get_si_unit_z(dfield);
+    gwy_si_unit_set_from_string(siunit, unit);
+    g_free(unit);
+
+    data = gwy_data_field_get_data(dfield);
+    rawdata = value_var->data;
+    for (i = 0; i < xres*yres; i++)
+        data[i] = gwy_get_gfloat_le(&rawdata);
+
+    return dfield;
 }
 
 static GwyContainer*
@@ -401,7 +540,9 @@ gdef_load(const gchar *filename,
     gsize size = 0;
     GError *err = NULL;
     GDEFHeader header;
-    GDEFControlBlock *first_block = NULL;
+    GDEFControlBlock *block, *blocks = NULL;
+    GQuark quark;
+    guint i;
 
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
         err_GET_FILE_CONTENTS(error, &err);
@@ -412,14 +553,32 @@ gdef_load(const gchar *filename,
     gwy_debug("buffer: %p", buffer);
     if (!gdef_read_header(&header, &p, size, error))
         goto fail;
+    if (!(blocks = gdef_read_variable_lists(&p, size - (p - buffer), 0, error)))
+        goto fail;
 
-    first_block = gdef_read_variable_lists(&p, size - (p - buffer), 0, error);
+    i = 0;
+    for (block = blocks; block; block = block->next) {
+        GwyDataField *dfield;
 
-    err_NO_DATA(error);
+        if ((dfield = gdef_read_channel(block))) {
+            if (!container)
+                container = gwy_container_new();
+
+            quark = gwy_app_get_data_key_for_id(i);
+            gwy_container_set_object(container, quark, dfield);
+            g_object_unref(dfield);
+            i++;
+        }
+    }
+
+    if (!container)
+        err_NO_DATA(error);
 
 fail:
-    g_free(header.description);
     gwy_file_abandon_contents(buffer, size, NULL);
+    g_free(header.description);
+    gdef_free_control_block_list(blocks);
+
     return container;
 }
 
