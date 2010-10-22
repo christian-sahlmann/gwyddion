@@ -19,7 +19,7 @@ process_LTLIBRARIES = \
 	cwt.la \
         dafm.la \
         dafm_zpiezo.la \
-        deposite.la \
+        deposit.la \
 	drift.la \
 	dwt.la \
 	dwtanisotropy.la \
@@ -121,7 +121,7 @@ crosscor_la_SOURCES = crosscor.c
 cwt_la_SOURCES = cwt.c
 dafm_la_SOURCES = dafm.c
 dafm_zpiezo_la_SOURCES = dafm_zpiezo.c
-deposite_la_SOURCES = deposite.c
+deposit_la_SOURCES = deposit.c
 drift_la_SOURCES = drift.c
 dwt_la_SOURCES = dwt.c
 dwtanisotropy_la_SOURCES = dwtanisotropy.c
