@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2010-10-17 03:59+0200\n"
-"PO-Revision-Date: 2010-10-17 13:09+0300\n"
+"POT-Creation-Date: 2010-10-21 03:58+0200\n"
+"PO-Revision-Date: 2010-10-23 21:12+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -2502,6 +2502,44 @@ msgstr "Первая секция не DataSet"
 msgid "GroupCount in [DataSet]"
 msgstr "GroupCount в [DataSet]"
 
+#: modules/file/gdeffile.c:113
+msgid "Imports DME GDEF data files."
+msgstr "Импортирует файлы данных DME GDEF."
+
+#: modules/file/gdeffile.c:126
+msgid "DME GDEF files (.gdf)"
+msgstr "Файлы DME GDEF (.gdf)"
+
+#: modules/file/gdeffile.c:159
+#: modules/file/gdeffile.c:183
+#: modules/file/gsffile.c:152
+#: modules/file/pt3file.c:481
+#: modules/file/pt3file.c:583
+msgid "File header is truncated."
+msgstr "Заголовок файла усечён."
+
+#: modules/file/gdeffile.c:171
+#, c-format
+msgid "File version %u.%u is not supported."
+msgstr "Версия файла %u.%u не поддерживается."
+
+#: modules/file/gdeffile.c:204
+msgid "Control block is truncated."
+msgstr "Блок управления неполон."
+
+#: modules/file/gdeffile.c:211
+msgid "Control block mark is not CB, file is damaged."
+msgstr "Метка блока управления не CB, файл повреждён."
+
+#: modules/file/gdeffile.c:236
+msgid "Variable record is truncated."
+msgstr "Запись переменных неполна."
+
+#: modules/file/gdeffile.c:246
+#, c-format
+msgid "Unknown variable type %u."
+msgstr "Неизвестный тип переменной %u."
+
 #: modules/file/gsffile.c:84
 msgid "Reads and exports Gwyddion Simple Field files."
 msgstr "Читает и сохраняет файлы с простым полем Gwyddion (Gwyddion Simple Field)."
@@ -2509,12 +2547,6 @@ msgstr "Читает и сохраняет файлы с простым поле
 #: modules/file/gsffile.c:97
 msgid "Gwyddion Simple Field (.gsf)"
 msgstr "Простое поле Gwyddion (.gsf)"
-
-#: modules/file/gsffile.c:152
-#: modules/file/pt3file.c:481
-#: modules/file/pt3file.c:583
-msgid "File header is truncated."
-msgstr "Заголовок файла усечён."
 
 #: modules/file/gwyfile.c:96
 msgid "Loads and saves Gwyddion native data files (serialized objects)."
@@ -2816,11 +2848,11 @@ msgstr "Заголовок с информацией об отображении
 msgid "File information block is outside the file."
 msgstr "Блок информации о файле не находится внутри файла."
 
-#: modules/file/miffile.c:314
+#: modules/file/miffile.c:315
 msgid "File information block size is invalid."
 msgstr "Размер блока информации о файле неверен."
 
-#: modules/file/miffile.c:378
+#: modules/file/miffile.c:379
 msgid "Unique id record is too short."
 msgstr "Уникальный идентификатор слишком короткий."
 
