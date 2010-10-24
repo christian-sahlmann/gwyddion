@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2010-10-21 03:58+0200\n"
-"PO-Revision-Date: 2010-10-23 21:12+0300\n"
+"POT-Creation-Date: 2010-10-24 13:21+0400\n"
+"PO-Revision-Date: 2010-10-24 14:08+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -751,6 +751,7 @@ msgstr "точек"
 #: modules/process/calibrate.c:295
 #: modules/process/curvature.c:650
 #: modules/process/cwt.c:132
+#: modules/process/deposit.c:197
 #: modules/process/drift.c:230
 #: modules/process/dwt.c:164
 #: modules/process/dwtanisotropy.c:183
@@ -2502,43 +2503,48 @@ msgstr "Первая секция не DataSet"
 msgid "GroupCount in [DataSet]"
 msgstr "GroupCount в [DataSet]"
 
-#: modules/file/gdeffile.c:113
+#: modules/file/gdeffile.c:123
 msgid "Imports DME GDEF data files."
 msgstr "Импортирует файлы данных DME GDEF."
 
-#: modules/file/gdeffile.c:126
+#: modules/file/gdeffile.c:136
 msgid "DME GDEF files (.gdf)"
 msgstr "Файлы DME GDEF (.gdf)"
 
-#: modules/file/gdeffile.c:159
-#: modules/file/gdeffile.c:183
+#: modules/file/gdeffile.c:169
+#: modules/file/gdeffile.c:193
 #: modules/file/gsffile.c:152
 #: modules/file/pt3file.c:481
 #: modules/file/pt3file.c:583
 msgid "File header is truncated."
 msgstr "Заголовок файла усечён."
 
-#: modules/file/gdeffile.c:171
+#: modules/file/gdeffile.c:181
 #, c-format
 msgid "File version %u.%u is not supported."
 msgstr "Версия файла %u.%u не поддерживается."
 
-#: modules/file/gdeffile.c:204
+#: modules/file/gdeffile.c:212
 msgid "Control block is truncated."
 msgstr "Блок управления неполон."
 
-#: modules/file/gdeffile.c:211
+#: modules/file/gdeffile.c:219
 msgid "Control block mark is not CB, file is damaged."
 msgstr "Метка блока управления не CB, файл повреждён."
 
-#: modules/file/gdeffile.c:236
+#: modules/file/gdeffile.c:241
 msgid "Variable record is truncated."
 msgstr "Запись переменных неполна."
 
-#: modules/file/gdeffile.c:246
+#: modules/file/gdeffile.c:252
 #, c-format
 msgid "Unknown variable type %u."
 msgstr "Неизвестный тип переменной %u."
+
+#: modules/file/gdeffile.c:297
+#, c-format
+msgid "Data of variable %s is truncated."
+msgstr "Данные переменной %s усечёны."
 
 #: modules/file/gsffile.c:84
 msgid "Reads and exports Gwyddion Simple Field files."
@@ -5485,6 +5491,43 @@ msgstr "2D CWT"
 #: modules/process/dwtanisotropy.c:208
 msgid "_Wavelet type:"
 msgstr "Тип _вейвлета:"
+
+#: modules/process/deposit.c:119
+msgid "Simulate spherical particle deposition."
+msgstr "Моделирует осаждение сферических частиц"
+
+#: modules/process/deposit.c:133
+msgid "/_Synthetic/_Deposit particles..."
+msgstr "/Син_тез/Осадить _частицы..."
+
+#: modules/process/deposit.c:137
+#: modules/process/deposit.c:191
+msgid "Deposit spherical particles"
+msgstr "Осадить сферические частицы"
+
+#: modules/process/deposit.c:194
+msgid "_Start"
+msgstr "_Начать"
+
+#: modules/process/deposit.c:240
+msgid "Deposition parameters:"
+msgstr "Параметры осаждения:"
+
+#: modules/process/deposit.c:244
+msgid "_Size"
+msgstr "_Размер"
+
+#: modules/process/deposit.c:299
+msgid "_Coverage:"
+msgstr "Процент по_крытия:"
+
+#: modules/process/deposit.c:303
+msgid "_Revise after settle"
+msgstr "_Перечитать после осаждения"
+
+#: modules/process/deposit.c:375
+msgid "Particles"
+msgstr "Частицы"
 
 #: modules/process/dimensions.h:434
 msgid "S_quare image"
