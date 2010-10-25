@@ -2197,7 +2197,8 @@ extract_mda_spectrum(MDTMDAFrame *dataframe, guint number)
     return gmodel;
 }
 
-gboolean resize_image(GtkWidget *widget, GdkEvent *event, GtkWidget *window)
+static gboolean
+resize_image(GtkWidget *widget, GdkEvent *event, GtkWidget *window)
 {
     gint oldwidth, oldheight, newwidth, newheight;
     gfloat mult;
