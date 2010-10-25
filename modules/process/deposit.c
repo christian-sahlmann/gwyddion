@@ -462,7 +462,7 @@ deposit_invalidate2(G_GNUC_UNUSED gpointer whatever, DepositControls *controls)
 
 
 /*integrate over some volume around particle (ax, ay, az), if there is substrate, add this to potential*/
-gdouble
+static gdouble
 integrate_lj_substrate(GwyDataField *lfield, gdouble ax, gdouble ay, gdouble az, gdouble size)
 {
     /*make l-j only from idealistic substrate now*/
@@ -479,7 +479,7 @@ integrate_lj_substrate(GwyDataField *lfield, gdouble ax, gdouble ay, gdouble az,
 
 
 /*lj potential between two particles*/
-gdouble
+static gdouble
 get_lj_potential_spheres(gdouble ax, gdouble ay, gdouble az, gdouble bx, gdouble by, gdouble bz, gdouble size)
 {
     gdouble sigma = 1.7*size;
