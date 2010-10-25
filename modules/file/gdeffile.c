@@ -390,26 +390,30 @@ fail:
 static GDEFVariable*
 gdef_find_variable(GDEFControlBlock *block,
                    const gchar *name,
-                   GDEFVariableType type)
+                   GDEFVariableType type,
+                   gboolean iterate)
 {
     guint i;
 
-    for (i = 0; i < block->n_variables; i++) {
-        GDEFVariable *var = block->variables + i;
+    while (block) {
+        for (i = 0; i < block->n_variables; i++) {
+            GDEFVariable *var = block->variables + i;
 
-        if (gwy_strequal(var->name, name)) {
-            if (type == VAR_UNSPECIFIED)
-                return var;
-            if (type == VAR_INTEGRAL && (var->type == VAR_WORD
-                                         || var->type == VAR_INTEGER
-                                         || var->type == VAR_DWORD))
-                return var;
-            if (type == VAR_REAL && (var->type == VAR_FLOAT
-                                              || var->type == VAR_DOUBLE))
-                return var;
-            if (var->type == type)
-                return var;
+            if (gwy_strequal(var->name, name)) {
+                if (type == VAR_UNSPECIFIED)
+                    return var;
+                if (type == VAR_INTEGRAL && (var->type == VAR_WORD
+                                             || var->type == VAR_INTEGER
+                                             || var->type == VAR_DWORD))
+                    return var;
+                if (type == VAR_REAL && (var->type == VAR_FLOAT
+                                         || var->type == VAR_DOUBLE))
+                    return var;
+                if (var->type == type)
+                    return var;
+            }
         }
+        block = iterate ? block->next : NULL;
     }
     return NULL;
 }
@@ -425,6 +429,8 @@ gdef_get_int_var(GDEFVariable *var)
         return gwy_get_guint16_le(&p);
     if (var->type == VAR_DWORD)
         return gwy_get_guint16_le(&p);
+    if (var->type == VAR_CHAR)
+        return *p;
 
     g_return_val_if_reached(0);
 }
@@ -461,23 +467,23 @@ gdef_read_channel(GDEFControlBlock *block)
     GwySIUnit *siunit;
     gdouble *data;
     const guchar *rawdata;
-    gchar *unit;
+    const gchar *unit;
     gdouble xreal, yreal;
     gint xres, yres, i;
 
     if (block->n_data != 1)
         return FALSE;
 
-    if (!(xres_var = gdef_find_variable(block, "Columns", VAR_INTEGRAL))
-        || !(yres_var = gdef_find_variable(block, "Lines", VAR_INTEGRAL))
-        || !(xreal_var = gdef_find_variable(block, "MaxWidth", VAR_REAL))
-        || !(yreal_var = gdef_find_variable(block, "MaxHeight", VAR_REAL))
-        || !(zunit_var = gdef_find_variable(block, "ZUnit", VAR_CHAR))
-        || !(data_var = gdef_find_variable(block, "Data", VAR_DATABLOCK)))
+    if (!(xres_var = gdef_find_variable(block, "Columns", VAR_INTEGRAL, FALSE))
+        || !(yres_var = gdef_find_variable(block, "Lines", VAR_INTEGRAL, FALSE))
+        || !(xreal_var = gdef_find_variable(block, "MaxWidth", VAR_REAL, FALSE))
+        || !(yreal_var = gdef_find_variable(block, "MaxHeight", VAR_REAL, FALSE))
+        || !(zunit_var = gdef_find_variable(block, "ZUnit", VAR_CHAR, FALSE))
+        || !(data_var = gdef_find_variable(block, "Data", VAR_DATABLOCK, FALSE)))
         return FALSE;
 
     datablock = (GDEFControlBlock*)data_var->data;
-    if (!(value_var = gdef_find_variable(datablock, "Value", VAR_FLOAT)))
+    if (!(value_var = gdef_find_variable(datablock, "Value", VAR_FLOAT, TRUE)))
         return FALSE;
 
     xres = gdef_get_int_var(xres_var);
@@ -505,15 +511,20 @@ gdef_read_channel(GDEFControlBlock *block)
         yreal = 1.0;
     }
 
-    unit = gdef_get_string_var(zunit_var);
-
     dfield = gwy_data_field_new(xres, yres, xreal, yreal, FALSE);
     siunit = gwy_data_field_get_si_unit_xy(dfield);
     gwy_si_unit_set_from_string(siunit, "m");
     siunit = gwy_data_field_get_si_unit_z(dfield);
-    /* XXX: Unspecified units seems to stand for metres. */
-    gwy_si_unit_set_from_string(siunit, unit && strlen(unit) ? unit : "m");
-    g_free(unit);
+    unit = gwy_enuml_to_string(gdef_get_int_var(zunit_var),
+                               "m", 0,
+                               "V", 1,
+                               "A", 2,
+                               "N", 3,
+                               "deg", 4,
+                               "", 5,
+                               "1/m", 6,
+                               NULL);
+    gwy_si_unit_set_from_string(siunit, unit);
 
     data = gwy_data_field_get_data(dfield);
     rawdata = value_var->data;
@@ -521,6 +532,23 @@ gdef_read_channel(GDEFControlBlock *block)
         data[i] = gwy_get_gfloat_le(&rawdata);
 
     return dfield;
+}
+
+static gchar*
+gdef_read_channel_comment(GDEFControlBlock *block)
+{
+    GDEFVariable *data_var, *comment_var;
+    GDEFControlBlock *datablock;
+
+    data_var = gdef_find_variable(block, "Data", VAR_DATABLOCK, FALSE);
+    g_return_val_if_fail(data_var, NULL);
+
+    datablock = (GDEFControlBlock*)data_var->data;
+    comment_var = gdef_find_variable(datablock, "Comment", VAR_CHAR, TRUE);
+    if (!comment_var)
+        return NULL;
+
+    return gdef_get_string_var(comment_var);
 }
 
 static GwyContainer*
@@ -535,7 +563,9 @@ gdef_load(const gchar *filename,
     GError *err = NULL;
     GDEFHeader header;
     GDEFControlBlock *block, *blocks = NULL;
+    GDEFVariable *var;
     GQuark quark;
+    gchar *key, *title;
     guint i;
 
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
@@ -557,7 +587,7 @@ gdef_load(const gchar *filename,
         guint j;
 
         for (j = 0; j < block->n_variables; j++) {
-            GDEFVariable *var = block->variables + j;
+            var = block->variables + j;
             if (var->type != VAR_DATABLOCK)
                 gwy_debug("%s 0x%08x", var->name, (guint)((const guchar*)var->data - buffer));
         }
@@ -570,7 +600,35 @@ gdef_load(const gchar *filename,
             quark = gwy_app_get_data_key_for_id(i);
             gwy_container_set_object(container, quark, dfield);
             g_object_unref(dfield);
-            gwy_app_channel_title_fall_back(container, i);
+
+            var = gdef_find_variable(block, "SourceChannel", VAR_INTEGRAL, FALSE);
+            if (var) {
+                title = gwy_enuml_to_string(gdef_get_int_var(var),
+                                            "Light Level", 0,
+                                            "Lateral Bending", 1,
+                                            "Amplitude", 2,
+                                            "X Sensor", 3,
+                                            "Y Sensor", 4,
+                                            "Loop Output", 5,
+                                            "Selftest", 6,
+                                            "Ext. Input 1", 7,
+                                            "Ext. Input 2", 8,
+                                            "Bending", 9,
+                                            "Error Signal", 10,
+                                            "Topography", 11,
+                                            "Phase", 12,
+                                            "Filtered Bending", 13,
+                                            "Current", 14,
+                                            "Z Sensor", 15,
+                                            "Unknown", 16,
+                                            NULL);
+                key = g_strdup_printf("/%d/data/title", i);
+                gwy_container_set_string_by_name(container, key,
+                                                 g_strdup(title));
+            }
+            else {
+                gwy_app_channel_title_fall_back(container, i);
+            }
             i++;
         }
     }
