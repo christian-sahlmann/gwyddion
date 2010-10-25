@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: French localization\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2010-10-11 03:58+0200\n"
-"PO-Revision-Date: 2010-10-11 23:27+0100\n"
+"POT-Creation-Date: 2010-10-25 03:58+0200\n"
+"PO-Revision-Date: 2010-10-25 22:05+0100\n"
 "Last-Translator: François RIGUET <francheu@caramail.com>\n"
 "Language-Team: François RIGUET <francheu@caramail.com>\n"
 "MIME-Version: 1.0\n"
@@ -751,6 +751,7 @@ msgstr "pixels"
 #: modules/process/calibrate.c:295
 #: modules/process/curvature.c:650
 #: modules/process/cwt.c:132
+#: modules/process/deposit.c:197
 #: modules/process/drift.c:230
 #: modules/process/dwt.c:164
 #: modules/process/dwtanisotropy.c:183
@@ -2502,6 +2503,49 @@ msgstr "La première section n'est pas un DataSet"
 msgid "GroupCount in [DataSet]"
 msgstr "GroupCount dans [DataSet]"
 
+#: modules/file/gdeffile.c:123
+msgid "Imports DME GDEF data files."
+msgstr "Importe les fichiers DME GDEF."
+
+#: modules/file/gdeffile.c:136
+msgid "DME GDEF files (.gdf)"
+msgstr "DME GDEF (.gdf)"
+
+#: modules/file/gdeffile.c:169
+#: modules/file/gdeffile.c:193
+#: modules/file/gsffile.c:152
+#: modules/file/pt3file.c:481
+#: modules/file/pt3file.c:583
+msgid "File header is truncated."
+msgstr "L'en-tête de fichier est tronqué."
+
+#: modules/file/gdeffile.c:181
+#, c-format
+msgid "File version %u.%u is not supported."
+msgstr "La version de fichier %u.%u n'est pas supporté."
+
+#: modules/file/gdeffile.c:212
+msgid "Control block is truncated."
+msgstr "Le bloc de contrôle est tronqué."
+
+#: modules/file/gdeffile.c:219
+msgid "Control block mark is not CB, file is damaged."
+msgstr "La marque de bloc de contrôle n'est pas CB, le fichier est endommagé."
+
+#: modules/file/gdeffile.c:241
+msgid "Variable record is truncated."
+msgstr "L'enregistrement de la variable est tronqué."
+
+#: modules/file/gdeffile.c:252
+#, c-format
+msgid "Unknown variable type %u."
+msgstr "Type de variable %u inconnu."
+
+#: modules/file/gdeffile.c:297
+#, c-format
+msgid "Data of variable %s is truncated."
+msgstr "La donnée de la variable %s est tronquée."
+
 #: modules/file/gsffile.c:84
 msgid "Reads and exports Gwyddion Simple Field files."
 msgstr "Lit et exporte"
@@ -2509,12 +2553,6 @@ msgstr "Lit et exporte"
 #: modules/file/gsffile.c:97
 msgid "Gwyddion Simple Field (.gsf)"
 msgstr "Gwyddion Simple Field (.gsf)"
-
-#: modules/file/gsffile.c:152
-#: modules/file/pt3file.c:481
-#: modules/file/pt3file.c:583
-msgid "File header is truncated."
-msgstr "L'en-tête de fichier est tronqué."
 
 #: modules/file/gwyfile.c:96
 msgid "Loads and saves Gwyddion native data files (serialized objects)."
@@ -2796,21 +2834,33 @@ msgstr "MicroProf FRT texte (.txt)"
 msgid "File contains less than XSize*YSize data points."
 msgstr "Le fichier contient moins de TailleX*TailleY points de données."
 
-#: modules/file/miffile.c:139
+#: modules/file/miffile.c:190
 msgid "Imports DME MIF data files."
 msgstr "Importe les fichiers DME MIF."
 
-#: modules/file/miffile.c:152
+#: modules/file/miffile.c:203
 msgid "DME MIF files (.mif)"
 msgstr "DME MIF (.mif)"
 
-#: modules/file/miffile.c:214
+#: modules/file/miffile.c:230
+msgid "Image header record is too short."
+msgstr "L'en-tête d'image est trop court."
+
+#: modules/file/miffile.c:238
+msgid "Axis display info record is too short."
+msgstr "L'information d'affichage des axes est trop courte."
+
+#: modules/file/miffile.c:281
 msgid "File information block is outside the file."
 msgstr "Le bloc d'information de fichier est en dehors du fichier."
 
-#: modules/file/miffile.c:236
+#: modules/file/miffile.c:315
 msgid "File information block size is invalid."
 msgstr "La taille du bloc d'information de fichier est invalide."
+
+#: modules/file/miffile.c:379
+msgid "Unique id record is too short."
+msgstr "L'identifiant unique est trop court."
 
 #: modules/file/mifile.c:165
 msgid "Imports Molecular Imaging MI data files."
@@ -3096,27 +3146,19 @@ msgstr "La ligne d'en-tête commence par un double point."
 msgid "Channel information ended unexpectedly."
 msgstr "Les informations sur le canal s'arrêtent de manière inattendue."
 
-#: modules/file/omicronflat.c:123
+#: modules/file/omicronflat.c:149
 msgid "Imports Omicron flat files."
 msgstr "Importe les fichiers Omicron flat."
 
-#: modules/file/omicronflat.c:136
+#: modules/file/omicronflat.c:162
 msgid "Omicron flat files (*.*_flat)"
 msgstr "Omicron flat (*.*_flat)"
 
-#: modules/file/omicronflat.c:542
-msgid "Constant current tunnel spectroscopy (CITS) is not supported."
-msgstr "La spectroscopie à courant tunnel constant (CITS) n'est pas supportée."
-
-#: modules/file/omicronflat.c:551
-msgid "Single point spectroscopy (SPS) is not supported."
-msgstr "La specroscopie ponctuelle (SPS) n'est pas supportée."
-
-#: modules/file/omicronflat.c:560
+#: modules/file/omicronflat.c:1560
 msgid "Force-distance curve are not supported."
 msgstr "La courbe force-distance n'est pas supportée."
 
-#: modules/file/omicronflat.c:569
+#: modules/file/omicronflat.c:1569
 msgid "Temporally varying signal is not supported."
 msgstr "Les signaux variant temporellement ne sont pas supporté."
 
@@ -5447,6 +5489,43 @@ msgstr "Transformée continue en ondelettes 2D (2D CWT)"
 #: modules/process/dwtanisotropy.c:208
 msgid "_Wavelet type:"
 msgstr "Type d'ondelette :"
+
+#: modules/process/deposit.c:119
+msgid "Simulate spherical particle deposition."
+msgstr "Simuler un dépôt de particules sphériques."
+
+#: modules/process/deposit.c:133
+msgid "/_Synthetic/_Deposit particles..."
+msgstr "/S_ynthèse/Dépôt de particule_s..."
+
+#: modules/process/deposit.c:137
+#: modules/process/deposit.c:191
+msgid "Deposit spherical particles"
+msgstr "Dépôt de particules sphériques"
+
+#: modules/process/deposit.c:194
+msgid "_Start"
+msgstr "Début"
+
+#: modules/process/deposit.c:240
+msgid "Deposition parameters:"
+msgstr "Paramètres de dépôt :"
+
+#: modules/process/deposit.c:244
+msgid "_Size"
+msgstr "Taille"
+
+#: modules/process/deposit.c:299
+msgid "_Coverage:"
+msgstr "_Couverture :"
+
+#: modules/process/deposit.c:303
+msgid "_Revise after settle"
+msgstr ""
+
+#: modules/process/deposit.c:375
+msgid "Particles"
+msgstr "Particules"
 
 #: modules/process/dimensions.h:434
 msgid "S_quare image"
@@ -9199,6 +9278,11 @@ msgstr ""
 "Inclinaison θ:      %s\n"
 "Inclinaison φ:      %s\n"
 
+#~ msgid "Constant current tunnel spectroscopy (CITS) is not supported."
+#~ msgstr ""
+#~ "La spectroscopie à courant tunnel constant (CITS) n'est pas supportée."
+#~ msgid "Single point spectroscopy (SPS) is not supported."
+#~ msgstr "La specroscopie ponctuelle (SPS) n'est pas supportée."
 #~ msgid "Export"
 #~ msgstr "Exporter"
 #~ msgid ""
