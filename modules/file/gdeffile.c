@@ -460,7 +460,7 @@ gdef_get_string_var(GDEFVariable *var)
 static GwyDataField*
 gdef_read_channel(GDEFControlBlock *block)
 {
-    GDEFVariable *xres_var, *yres_var, *xreal_var, *yreal_var,
+    GDEFVariable *xres_var, *yres_var, *ymis_var, *xreal_var, *yreal_var,
                  *zunit_var, *data_var, *value_var;
     GDEFControlBlock *datablock;
     GwyDataField *dfield;
@@ -469,13 +469,14 @@ gdef_read_channel(GDEFControlBlock *block)
     const guchar *rawdata;
     const gchar *unit;
     gdouble xreal, yreal;
-    gint xres, yres, i;
+    gint xres, yres, ymis, i;
 
     if (block->n_data != 1)
         return FALSE;
 
     if (!(xres_var = gdef_find_variable(block, "Columns", VAR_INTEGRAL, FALSE))
         || !(yres_var = gdef_find_variable(block, "Lines", VAR_INTEGRAL, FALSE))
+        || !(ymis_var = gdef_find_variable(block, "MissingLines", VAR_INTEGRAL, FALSE))
         || !(xreal_var = gdef_find_variable(block, "MaxWidth", VAR_REAL, FALSE))
         || !(yreal_var = gdef_find_variable(block, "MaxHeight", VAR_REAL, FALSE))
         || !(zunit_var = gdef_find_variable(block, "ZUnit", VAR_CHAR, FALSE))
@@ -488,12 +489,17 @@ gdef_read_channel(GDEFControlBlock *block)
 
     xres = gdef_get_int_var(xres_var);
     yres = gdef_get_int_var(yres_var);
-    if (err_DIMENSION(NULL, xres) || err_DIMENSION(NULL, yres)) {
-        g_warning("Dimensions %d x %d are invalid.", xres, yres);
+    ymis = gdef_get_int_var(ymis_var);
+    if (err_DIMENSION(NULL, xres)
+        || err_DIMENSION(NULL, yres)
+        || ymis >= yres) {
+        g_warning("Dimensions %d x %d are invalid.", xres, yres - ymis);
         return FALSE;
     }
 
-    if (value_var->size != 4*xres*yres) {
+    /* Not sure about missing lines, so use an inequality in this case. */
+    if ((ymis == 0 && value_var->size != 4*xres*yres)
+        || (ymis && value_var->size < 4*xres*(yres - ymis))) {
         g_warning("Data size does not match Lines and Columns.");
         return FALSE;
     }
@@ -511,7 +517,7 @@ gdef_read_channel(GDEFControlBlock *block)
         yreal = 1.0;
     }
 
-    dfield = gwy_data_field_new(xres, yres, xreal, yreal, FALSE);
+    dfield = gwy_data_field_new(xres, yres - ymis, xreal, yreal, FALSE);
     siunit = gwy_data_field_get_si_unit_xy(dfield);
     gwy_si_unit_set_from_string(siunit, "m");
     siunit = gwy_data_field_get_si_unit_z(dfield);
@@ -528,7 +534,7 @@ gdef_read_channel(GDEFControlBlock *block)
 
     data = gwy_data_field_get_data(dfield);
     rawdata = value_var->data;
-    for (i = 0; i < xres*yres; i++)
+    for (i = 0; i < xres*(yres - ymis); i++)
         data[i] = gwy_get_gfloat_le(&rawdata);
 
     return dfield;
