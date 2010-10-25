@@ -12,7 +12,6 @@ process_LTLIBRARIES = \
 	crosscor.la \
 	curvature.la \
 	cwt.la \
-	deposit.la \
 	drift.la \
 	dwt.la \
 	dwtanisotropy.la \
@@ -105,7 +104,7 @@ convolution_filter_la_SOURCES  = convolution_filter.c convolutionfilterpreset.h
 crosscor_la_SOURCES            = crosscor.c
 cwt_la_SOURCES                 = cwt.c
 curvature_la_SOURCES           = curvature.c
-deposit_la_SOURCES             = deposit.c
+#deposit_la_SOURCES             = deposit.c
 drift_la_SOURCES               = drift.c
 dwt_la_SOURCES                 = dwt.c
 dwtanisotropy_la_SOURCES       = dwtanisotropy.c

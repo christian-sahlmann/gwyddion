@@ -1,4 +1,4 @@
-2.21 (2010-10-26)
+2.21.20101025 (2010-10-26)
 Libraries:
 - libgwyapp: It is possible to disable undo globally, undo/redo operations
   then become no-op.
@@ -13,7 +13,6 @@ Libraries:
 Modules:
 - LEXT (new): Olympus LEXT 4000OLS data import.
 - GDEF (new): DME GDEF data import.
-- Deposit (new): Simple particle deposition simulation.
 - Mutual Crop (new): Crop two shifted channels to the common area (found using
   correlation search).
 - Threshold (new): Limit data to specified range by cutting values outside it.
