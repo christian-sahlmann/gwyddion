@@ -1,19 +1,29 @@
-2.21 (0000-00-00)
+2.21 (2010-10-26)
 Libraries:
 - libgwyapp: It is possible to disable undo globally, undo/redo operations
   then become no-op.
 - libgwyapp: It is possible to disable creation of windows by data-browser.
 - libgwyapp: Channels, graphs and spectra can be searched using a GPatternSpec
   pattern.
+- libgwyprocess: gwy_data_field_clamp() and gwy_data_field_invert() correctly
+  update cached minimum and maximum field values.
+- libgwyapp: GwyAppDataChooser channel chooser dynamically reflects the set
+  of channels.
 
 Modules:
+- LEXT (new): Olympus LEXT 4000OLS data import.
+- GDEF (new): DME GDEF data import.
+- Deposit (new): Simple particle deposition simulation.
 - Mutual Crop (new): Crop two shifted channels to the common area (found using
   correlation search).
-- LEXT (new): Olympus LEXT 4000OLS data import.
+- Threshold (new): Limit data to specified range by cutting values outside it.
+- Graph DOS spectrum (new): Calculates DOS spectrum from I-V tunneling
+  spectroscopy.
 - IGOR: Support for non-Asylum-Research files was improved.
 - Pixmap export: The horizontal ruler always displays units now, even if the
   x-range does not include zero.
 - Mask editor tool: New operation Fill Voids fills holes in masked areas.
+- NT-MDT: Offset of x-asis in non-MDA spectroscopy frames was corrected.
 
 
 2.20 (2010-06-30)
