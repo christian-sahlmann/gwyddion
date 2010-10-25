@@ -1,5 +1,6 @@
 # vim: set ts=28 :
 acf2d	statistical-analysis	autocorrelation-2d
+aistfile	managing-files
 angle_dist	statistical-analysis	angle-distribution
 apefile	managing-files
 arithmetic	multidata	data-arithmetic
@@ -19,6 +20,7 @@ crop	basic-operations	crop
 crosscor	multidata	cross-correlation
 curvature	leveling	curvature
 cwt	integral-transforms	cwt
+deposit	synthetic
 distance	basic-operations	distance
 dmefile	managing-files
 drift	edit-extended	drift-compensation
@@ -39,6 +41,7 @@ filter	filters-presentations	basic-filters
 fit_2d	leveling-and-background	fit-sphere
 fraccor	editing-correction	fractal-correction
 fractal	fractal-analysis	fractal-dimension
+gdeffile	managing-files
 gradient	filters-presentations	gradient
 grain_cross	grain-analysis	grain-correlation
 grain_dist	grain-analysis	grain-distributions
@@ -49,6 +52,7 @@ grainmeasure	grain-analysis	grain-measure
 grainremover	editing-correction
 graph_cd	graph-processing	graph-critical-dimension
 graph_cut	graph-processing
+graph_dos_spectrum	graph-processing	graph-dos-spectrum
 graph_export_ascii	graph-processing
 graph_export_bitmap	graph-processing
 graph_export_vector	graph-processing
@@ -70,6 +74,7 @@ jpkscan	managing-files
 laplace	editing-correction	remove-data-under-mask
 level	leveling-and-background	plane-level
 level3	leveling-and-background	three-point-level
+lextfile	managing-files
 line	selections
 linecorrect	editing-correction	line-correction
 linestats	statistical-analysis	line-stats
@@ -80,10 +85,12 @@ maskcor	multidata	mask-by-correlation
 maskedit	modules-tools	tool-mask-editor
 maskops	presentations-masks
 matfile	managing-files
+mcrop	multidata	mutual-crop
 median-bg	leveling-and-background	median-background
 merge	multidata	merge
 metropro	managing-files
 microprof	managing-files
+miffile	managing-files
 mifile	managing-files
 nanoeducator	managing-files
 nanonics	managing-files
@@ -97,6 +104,7 @@ nt-mdt	managing-files
 obj_synth	synthetic	object-synthetis
 ols	managing-files
 omicron	managing-files
+omicronflat	managing-files
 omicronmatrix	managing-files
 opdfile	managing-files
 outliers	editing-correction	mask-of-outliers
@@ -112,6 +120,7 @@ polynom	editing-correction	line-polynomial
 presentationops	filters-presentations	presentationops
 profile	basic-operations	profile
 psia	managing-files
+pt3file	managing-files
 quesant	managing-files
 rawfile	raw-file-import
 rawgraph	specific-data-import
@@ -147,6 +156,7 @@ stats	statistical-analysis	stat-quantities
 stmprg	managing-files
 stpfile	managing-files
 surffile	managing-files
+threshold	basic-operations
 tilt	leveling-and-background
 tip_blind	tip-convolution-artefacts	tip-blind-estimate
 tip_model	tip-convolution-artefacts	tip-model
@@ -155,6 +165,3 @@ unisoku	managing-files
 unrotate	editing-correction	unrotate
 witfile	managing-files
 wsxmfile	managing-files
-aistfile	managing-files
-pt3file	managing-files
-omicronflat	managing-files
