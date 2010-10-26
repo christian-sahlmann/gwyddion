@@ -1,4 +1,4 @@
-2.21.20101025 (2010-10-26)
+2.21 (2010-10-26)
 Libraries:
 - libgwyapp: It is possible to disable undo globally, undo/redo operations
   then become no-op.
