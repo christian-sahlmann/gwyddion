@@ -5,10 +5,11 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2010-06-30 11:38+0200\n"
+"POT-Creation-Date: 2010-10-25 11:48+0200\n"
 "PO-Revision-Date: 2007-03-14 17:40+0100\n"
 "Last-Translator: Philipp Leufke <webmaster@leufke.info>\n"
 "Language-Team: deutsch <de@li.org>\n"
+"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -57,8 +58,8 @@ msgid "vdW: paraboloid"
 msgstr ""
 
 #: libgwyddion/gwyinventory.c:1310 libgwydgets/gwygraphwindow.c:603
-#: app/data-browser.c:1445 app/data-browser.c:2175 app/data-browser.c:2937
-#: app/data-browser.c:3096 app/data-browser.c:4983 app/resource-editor.c:366
+#: app/data-browser.c:1508 app/data-browser.c:2238 app/data-browser.c:3003
+#: app/data-browser.c:3162 app/data-browser.c:5052 app/resource-editor.c:366
 #: modules/process/convolution_filter.c:700
 msgid "Untitled"
 msgstr "Unbenannt"
@@ -442,8 +443,8 @@ msgstr "NNA"
 msgid "Schaum"
 msgstr "Schaum"
 
-#: libprocess/gwyprocessenums.c:243 app/datachooser.c:170
-#: app/datachooser.c:372 modules/process/convolution_filter.c:129
+#: libprocess/gwyprocessenums.c:243 app/datachooser.c:193
+#: app/datachooser.c:395 modules/process/convolution_filter.c:129
 #: modules/process/merge.c:135
 #, fuzzy
 msgid "None"
@@ -754,21 +755,21 @@ msgstr "Pixel"
 #: modules/file/pixmap.c:2666 modules/file/rawfile.c:398
 #: modules/process/angle_dist.c:170 modules/process/calibrate.c:295
 #: modules/process/curvature.c:650 modules/process/cwt.c:132
-#: modules/process/drift.c:230 modules/process/dwt.c:164
-#: modules/process/dwtanisotropy.c:183 modules/process/edge.c:636
-#: modules/process/facet-level.c:283 modules/process/facet_analysis.c:272
-#: modules/process/fft.c:272 modules/process/fft_filter_2d.c:396
-#: modules/process/fft_synth.c:310 modules/process/fractal.c:206
-#: modules/process/grain_mark.c:265 modules/process/grain_rem_threshold.c:224
-#: modules/process/grain_wshed.c:182 modules/process/hough.c:175
-#: modules/process/level.c:253 modules/process/local_contrast.c:126
-#: modules/process/median-bg.c:176 modules/process/obj_synth.c:423
-#: modules/process/polydistort.c:219 modules/process/polylevel.c:376
-#: modules/process/rotate.c:264 modules/process/scale.c:193
-#: modules/process/scars.c:469 modules/process/shade.c:214
-#: modules/process/slope_dist.c:201 modules/process/sphere-revolve.c:215
-#: modules/process/tilt.c:156 modules/process/tip_model.c:170
-#: modules/process/unrotate.c:226
+#: modules/process/deposit.c:197 modules/process/drift.c:230
+#: modules/process/dwt.c:164 modules/process/dwtanisotropy.c:183
+#: modules/process/edge.c:636 modules/process/facet-level.c:283
+#: modules/process/facet_analysis.c:272 modules/process/fft.c:272
+#: modules/process/fft_filter_2d.c:396 modules/process/fft_synth.c:310
+#: modules/process/fractal.c:206 modules/process/grain_mark.c:265
+#: modules/process/grain_rem_threshold.c:224 modules/process/grain_wshed.c:182
+#: modules/process/hough.c:175 modules/process/level.c:253
+#: modules/process/local_contrast.c:126 modules/process/median-bg.c:176
+#: modules/process/obj_synth.c:423 modules/process/polydistort.c:219
+#: modules/process/polylevel.c:376 modules/process/rotate.c:264
+#: modules/process/scale.c:193 modules/process/scars.c:469
+#: modules/process/shade.c:214 modules/process/slope_dist.c:201
+#: modules/process/sphere-revolve.c:215 modules/process/tilt.c:156
+#: modules/process/tip_model.c:170 modules/process/unrotate.c:226
 msgid "_Reset"
 msgstr "_Zurücksetzen"
 
@@ -1301,12 +1302,13 @@ msgstr ""
 "Wollen Sie das Programm wirklich beenden?"
 
 #: app/app.c:415
-msgid "Export"
-msgstr "Exportieren"
+#, fuzzy
+msgid "Save"
+msgstr "/_Speichern"
 
 #: app/app.c:417 app/app.c:421
 #, fuzzy
-msgid "Export 3D view to PNG image"
+msgid "Save 3D view to an image"
 msgstr "3D-Ansicht ins  PNG-Format exportieren"
 
 #: app/app.c:427
@@ -1342,42 +1344,42 @@ msgstr ""
 msgid "_Physically Square"
 msgstr ""
 
-#: app/data-browser.c:3635
+#: app/data-browser.c:3701
 msgid "Extract to a new file"
 msgstr "In neue Datei extrahieren"
 
-#: app/data-browser.c:3636
+#: app/data-browser.c:3702
 msgid "Duplicate"
 msgstr "_Duplizieren"
 
-#: app/data-browser.c:3637
+#: app/data-browser.c:3703
 #, fuzzy
 msgid "Delete"
 msgstr "_Löschen"
 
-#: app/data-browser.c:3681
+#: app/data-browser.c:3747
 #, fuzzy
 msgid "Data Browser"
 msgstr "Daten-Browser"
 
-#: app/data-browser.c:3704
+#: app/data-browser.c:3770
 #, fuzzy
 msgid "Close file"
 msgstr "Datei _schleißen"
 
-#: app/data-browser.c:3717
+#: app/data-browser.c:3783
 msgid "Channels"
 msgstr "Kanäle"
 
-#: app/data-browser.c:3731
+#: app/data-browser.c:3797
 msgid "Graphs"
 msgstr "Graphen"
 
-#: app/data-browser.c:3745
+#: app/data-browser.c:3811
 msgid "Spectra"
 msgstr ""
 
-#: app/data-browser.c:5021
+#: app/data-browser.c:5090
 #, c-format
 msgid "Unknown channel %d"
 msgstr "Unbekannter Kanal %d"
@@ -1412,7 +1414,7 @@ msgstr "Das Öffnen von `%s' ist fehlgeschlagen"
 msgid "Merge File"
 msgstr "Zusammengefügte Bilder"
 
-#: app/file.c:351 app/gwyappfilechooser.c:215
+#: app/file.c:351 app/gwyappfilechooser.c:216
 msgid "Open File"
 msgstr "Datei öffnen"
 
@@ -1515,38 +1517,38 @@ msgstr "_Kurve"
 msgid "_Snap to control points"
 msgstr "An Kontrollpunkten ein_rasten"
 
-#: app/gwyappfilechooser.c:220
+#: app/gwyappfilechooser.c:221
 msgid "Save File"
 msgstr "Datei Speichern"
 
-#: app/gwyappfilechooser.c:398
+#: app/gwyappfilechooser.c:401
 #, c-format
 msgid "File _type: %s, filtered"
 msgstr "Datei_typ: %s, gefiltert"
 
-#: app/gwyappfilechooser.c:400
+#: app/gwyappfilechooser.c:403
 #, fuzzy, c-format
 msgid "File _type: %s"
 msgstr "Datei_typ:"
 
-#: app/gwyappfilechooser.c:480
+#: app/gwyappfilechooser.c:481
 msgid "Automatic by extension"
 msgstr "Automatisch, nach Dateiendung"
 
-#: app/gwyappfilechooser.c:489
+#: app/gwyappfilechooser.c:490
 msgid "Automatically detected"
 msgstr "Automatisch erkennen"
 
-#: app/gwyappfilechooser.c:540
+#: app/gwyappfilechooser.c:541
 #, fuzzy
 msgid "Show only loadable files"
 msgstr "Nur ladbare Dateien des ausgewählten Typs anzeigen"
 
-#: app/gwyappfilechooser.c:745
+#: app/gwyappfilechooser.c:746
 msgid "…"
 msgstr "..."
 
-#: app/gwyappfilechooser.c:893
+#: app/gwyappfilechooser.c:894
 msgid "Cannot preview"
 msgstr "Keine Vorschau möglich"
 
@@ -2487,7 +2489,7 @@ msgid "Burleigh exported data (.txt, .bin)"
 msgstr ""
 
 #: modules/file/burleigh_exp.c:225 modules/file/burleigh_exp.c:266
-#: modules/file/nanoscope.c:1082 modules/file/omicron.c:370
+#: modules/file/nanoscope.c:1083 modules/file/omicron.c:370
 #: modules/file/shimadzu.c:406
 msgid "Missing colon in header line."
 msgstr ""
@@ -2576,8 +2578,8 @@ msgid ""
 "Expected data size calculated from file headers is %u bytes, but the real "
 "size is %u bytes."
 msgstr ""
-"Erwartete Dateigröße aus Dateikopf ist %u Bytes, die reale Größe ist jedoch %"
-"u Bytes."
+"Erwartete Dateigröße aus Dateikopf ist %u Bytes, die reale Größe ist jedoch "
+"%u Bytes."
 
 #: modules/file/err.h:94
 #, c-format
@@ -2655,6 +2657,52 @@ msgstr ""
 msgid "GroupCount in [DataSet]"
 msgstr ""
 
+#: modules/file/gdeffile.c:123
+#, fuzzy
+msgid "Imports DME GDEF data files."
+msgstr "Importiert Createc-Daten."
+
+#: modules/file/gdeffile.c:136
+#, fuzzy
+msgid "DME GDEF files (.gdf)"
+msgstr "APE-Dateien (.dat)"
+
+#: modules/file/gdeffile.c:169 modules/file/gdeffile.c:193
+#: modules/file/gsffile.c:152 modules/file/pt3file.c:481
+#: modules/file/pt3file.c:583
+#, fuzzy
+msgid "File header is truncated."
+msgstr "Die Datei ist leer."
+
+#: modules/file/gdeffile.c:181
+#, fuzzy, c-format
+msgid "File version %u.%u is not supported."
+msgstr "Das Dateiformat der Version %.1f wird nicht unterstützt."
+
+#: modules/file/gdeffile.c:212
+#, fuzzy
+msgid "Control block is truncated."
+msgstr "Die Datei ist leer."
+
+#: modules/file/gdeffile.c:219
+msgid "Control block mark is not CB, file is damaged."
+msgstr ""
+
+#: modules/file/gdeffile.c:241
+#, fuzzy
+msgid "Variable record is truncated."
+msgstr "Die Datei ist leer."
+
+#: modules/file/gdeffile.c:252
+#, fuzzy, c-format
+msgid "Unknown variable type %u."
+msgstr "Unbekannte Dateityp-Kopfzeile: `%s'."
+
+#: modules/file/gdeffile.c:297
+#, fuzzy, c-format
+msgid "Data of variable %s is truncated."
+msgstr "Die Datei ist leer."
+
 #: modules/file/gsffile.c:84
 msgid "Reads and exports Gwyddion Simple Field files."
 msgstr ""
@@ -2662,12 +2710,6 @@ msgstr ""
 #: modules/file/gsffile.c:97
 msgid "Gwyddion Simple Field (.gsf)"
 msgstr ""
-
-#: modules/file/gsffile.c:152 modules/file/pt3file.c:481
-#: modules/file/pt3file.c:583
-#, fuzzy
-msgid "File header is truncated."
-msgstr "Die Datei ist leer."
 
 #: modules/file/gwyfile.c:96
 msgid "Loads and saves Gwyddion native data files (serialized objects)."
@@ -2773,26 +2815,26 @@ msgstr ""
 msgid "Igor binary waves (.ibw)"
 msgstr ""
 
-#: modules/file/igorfile.c:270
+#: modules/file/igorfile.c:271
 #, fuzzy, c-format
 msgid "Format version is %d.  Only version 5 is supported."
 msgstr "Das Dateiformat der Version %.1f wird nicht unterstützt."
 
-#: modules/file/igorfile.c:289
+#: modules/file/igorfile.c:292
 msgid "Only two-dimensional data are supported."
 msgstr ""
 
-#: modules/file/igorfile.c:301
+#: modules/file/igorfile.c:304
 #, c-format
 msgid "Number of data points %u does not match resolutions %u×%u×%u."
 msgstr ""
 
-#: modules/file/igorfile.c:315
+#: modules/file/igorfile.c:318
 #, c-format
 msgid "Data size %u does not match the number of data points %u×%u."
 msgstr ""
 
-#: modules/file/igorfile.c:355
+#: modules/file/igorfile.c:356
 #, fuzzy
 msgid "Cannot read channel labels."
 msgstr "Temporäre Datei kann nicht gelesen werden: %s."
@@ -2841,6 +2883,24 @@ msgstr ""
 msgid "File does not contain grid dimensions."
 msgstr ""
 
+#: modules/file/lextfile.c:86
+#, fuzzy
+msgid "Imports LEXT data files."
+msgstr "Importiert Createc-Daten."
+
+#: modules/file/lextfile.c:99
+msgid "Olympus LEXT OLS4000 (.lext)"
+msgstr ""
+
+#: modules/file/lextfile.c:166
+msgid "Top-level element is not ‘TiffTagDescData’."
+msgstr ""
+
+#: modules/file/lextfile.c:255 modules/file/nanoscan.c:273
+#, c-format
+msgid "XML parsing failed: %s"
+msgstr ""
+
 #: modules/file/mapvue.c:379
 #, fuzzy
 msgid "Imports MapVue data files (.map)."
@@ -2859,8 +2919,8 @@ msgstr ""
 #, fuzzy, c-format
 msgid "Expected tag %u size is %u bytes, but the actual size is %u bytes."
 msgstr ""
-"Erwartete Dateigröße aus Dateikopf ist %u Bytes, die reale Größe ist jedoch %"
-"u Bytes."
+"Erwartete Dateigröße aus Dateikopf ist %u Bytes, die reale Größe ist jedoch "
+"%u Bytes."
 
 #: modules/file/mapvue.c:654
 #, c-format
@@ -2940,6 +3000,36 @@ msgstr "Importiert Createc-Daten."
 msgid "File contains less than XSize*YSize data points."
 msgstr ""
 
+#: modules/file/miffile.c:190
+#, fuzzy
+msgid "Imports DME MIF data files."
+msgstr "Importiert Createc-Daten."
+
+#: modules/file/miffile.c:203
+#, fuzzy
+msgid "DME MIF files (.mif)"
+msgstr "APE-Dateien (.dat)"
+
+#: modules/file/miffile.c:230
+msgid "Image header record is too short."
+msgstr ""
+
+#: modules/file/miffile.c:238
+msgid "Axis display info record is too short."
+msgstr ""
+
+#: modules/file/miffile.c:281
+msgid "File information block is outside the file."
+msgstr ""
+
+#: modules/file/miffile.c:315
+msgid "File information block size is invalid."
+msgstr ""
+
+#: modules/file/miffile.c:379
+msgid "Unique id record is too short."
+msgstr ""
+
 #: modules/file/mifile.c:165
 msgid "Imports Molecular Imaging MI data files."
 msgstr ""
@@ -2952,56 +3042,52 @@ msgstr ""
 msgid "Spectroscopy Graph"
 msgstr ""
 
-#: modules/file/nanoeducator.c:283
+#: modules/file/nanoeducator.c:280
 #, fuzzy
 msgid "Imports Nanoeducator data files."
 msgstr "Importiert Createc-Daten."
 
-#: modules/file/nanoeducator.c:296
+#: modules/file/nanoeducator.c:293
 msgid "Nanoeducator files (.mspm, .spm, .stm)"
 msgstr ""
 
-#: modules/file/nanoeducator.c:354 modules/file/unisoku.c:283
+#: modules/file/nanoeducator.c:351 modules/file/unisoku.c:283
 msgid "format version"
 msgstr ""
 
-#: modules/file/nanoeducator.c:382 modules/file/nanoeducator.c:419
-#: modules/file/nanoeducator.c:524
+#: modules/file/nanoeducator.c:379 modules/file/nanoeducator.c:416
+#: modules/file/nanoeducator.c:518
 msgid "Image data starts past the end of file."
 msgstr ""
 
-#: modules/file/nanoeducator.c:461
+#: modules/file/nanoeducator.c:458
 msgid "Spectra data starts past the end of file."
 msgstr ""
 
-#: modules/file/nanoeducator.c:629 modules/file/opdfile.c:268
+#: modules/file/nanoeducator.c:623 modules/file/opdfile.c:268
 #: modules/file/sensofar.c:256
 msgid "File header is truncated"
 msgstr ""
 
-#: modules/file/nanoeducator.c:688
+#: modules/file/nanoeducator.c:682
 msgid "Parameter header is truncated"
 msgstr ""
 
-#: modules/file/nanoeducator.c:913 modules/process/curvature.c:489
+#: modules/file/nanoeducator.c:907 modules/process/curvature.c:489
 #: modules/tools/profile.c:535
 #, c-format
 msgid "Profile %d"
 msgstr ""
 
-#: modules/file/nanoeducator.c:956
-msgid "The number of spectra coordinates does not match the number of spectra."
-msgstr ""
-
-#: modules/file/nanoeducator.c:1053
+#: modules/file/nanoeducator.c:1021
 msgid "F-D spectra"
 msgstr ""
 
-#: modules/file/nanoeducator.c:1152
+#: modules/file/nanoeducator.c:1118
 msgid "I-V spectra"
 msgstr ""
 
-#: modules/file/nanoeducator.c:1251
+#: modules/file/nanoeducator.c:1215
 msgid "I-Z spectra"
 msgstr ""
 
@@ -3071,11 +3157,6 @@ msgstr "Importiert Createc-Daten."
 msgid "NanoScan XML files (.xml)"
 msgstr "Nanosurf-Dateien (.ezd, .nid)"
 
-#: modules/file/nanoscan.c:273
-#, c-format
-msgid "XML parsing failed: %s"
-msgstr ""
-
 #: modules/file/nanoscan.c:676
 msgid "Top-level element is not ‘scan’."
 msgstr ""
@@ -3093,20 +3174,20 @@ msgstr "Importiert Nanosurf EZD- und NID-Daten."
 msgid "Nanoscope II files"
 msgstr ""
 
-#: modules/file/nanoscope.c:164
+#: modules/file/nanoscope.c:165
 msgid ""
 "Imports Veeco (Digital Instruments) Nanoscope data files, version 3 or newer."
 msgstr ""
 
-#: modules/file/nanoscope.c:178
+#: modules/file/nanoscope.c:179
 msgid "Nanoscope III files"
 msgstr ""
 
-#: modules/file/nanoscope.c:242
+#: modules/file/nanoscope.c:243
 msgid "File is not a Nanoscope file, or it is a unknown subtype."
 msgstr ""
 
-#: modules/file/nanoscope.c:249
+#: modules/file/nanoscope.c:250
 msgid ""
 "File has been damaged by change of line endings, resulting in corruption of "
 "the binary part of the file.\n"
@@ -3117,16 +3198,16 @@ msgid ""
 "transfer that attempts to store text platform-independently."
 msgstr ""
 
-#: modules/file/nanoscope.c:517 modules/file/nanoscope.c:533
+#: modules/file/nanoscope.c:518 modules/file/nanoscope.c:534
 msgid "Cannot parse `Scan size' field."
 msgstr ""
 
-#: modules/file/nanoscope.c:992
+#: modules/file/nanoscope.c:993
 #, c-format
 msgid "Garbage after data sample #%d."
 msgstr ""
 
-#: modules/file/nanoscope.c:1072
+#: modules/file/nanoscope.c:1073
 msgid "Truncated header line."
 msgstr ""
 
@@ -3174,33 +3255,33 @@ msgstr ""
 msgid "More than one record dimension found."
 msgstr ""
 
-#: modules/file/nt-mdt.c:655
+#: modules/file/nt-mdt.c:658
 msgid "Imports NT-MDT data files."
 msgstr ""
 
-#: modules/file/nt-mdt.c:668
+#: modules/file/nt-mdt.c:671
 msgid "NT-MDT files (.mdt)"
 msgstr ""
 
-#: modules/file/nt-mdt.c:1096
+#: modules/file/nt-mdt.c:1087
 msgid "Frame is too short for Frame Mode."
 msgstr ""
 
-#: modules/file/nt-mdt.c:1110
+#: modules/file/nt-mdt.c:1101
 msgid "Frame is too short for dots or data."
 msgstr ""
 
-#: modules/file/nt-mdt.c:1367
+#: modules/file/nt-mdt.c:1358
 #, c-format
 msgid "End of file reached in frame header #%u."
 msgstr ""
 
-#: modules/file/nt-mdt.c:1375
+#: modules/file/nt-mdt.c:1366
 #, c-format
 msgid "End of file reached in frame data #%u."
 msgstr ""
 
-#: modules/file/nt-mdt.c:1410
+#: modules/file/nt-mdt.c:1401
 #, c-format
 msgid "Frame #%u is too short for scanned data header."
 msgstr ""
@@ -3235,31 +3316,22 @@ msgstr ""
 msgid "Channel information ended unexpectedly."
 msgstr ""
 
-#: modules/file/omicronflat.c:123
+#: modules/file/omicronflat.c:149
 #, fuzzy
 msgid "Imports Omicron flat files."
 msgstr "Importiert Createc-Daten."
 
-#: modules/file/omicronflat.c:136
+#: modules/file/omicronflat.c:162
 #, fuzzy
 msgid "Omicron flat files (*.*_flat)"
 msgstr "Createc-Dateien (.dat)"
 
-#: modules/file/omicronflat.c:542
-msgid "Constant current tunnel spectroscopy (CITS) is not supported."
-msgstr ""
-
-#: modules/file/omicronflat.c:551
-#, fuzzy
-msgid "Single point spectroscopy (SPS) is not supported."
-msgstr "Das Dateiformat der Version %.1f wird nicht unterstützt."
-
-#: modules/file/omicronflat.c:560
+#: modules/file/omicronflat.c:1560
 #, fuzzy
 msgid "Force-distance curve are not supported."
 msgstr "Das Dateiformat der Version %.1f wird nicht unterstützt."
 
-#: modules/file/omicronflat.c:569
+#: modules/file/omicronflat.c:1569
 #, fuzzy
 msgid "Temporally varying signal is not supported."
 msgstr "Das Dateiformat der Version %.1f wird nicht unterstützt."
@@ -3714,12 +3786,12 @@ msgstr ""
 msgid "Number of line triggers %u is smaller than the number of scan lines %u."
 msgstr ""
 
-#: modules/file/quesant.c:64
+#: modules/file/quesant.c:62
 #, fuzzy
 msgid "Imports Quesant file format."
 msgstr "Importiert Createc-Daten."
 
-#: modules/file/quesant.c:77
+#: modules/file/quesant.c:75
 #, fuzzy
 msgid "Quesant files (.afm)"
 msgstr "Createc-Dateien (.dat)"
@@ -3968,8 +4040,8 @@ msgstr ""
 #, c-format
 msgid ""
 "<b>Too short file</b>\n"
-"The format would require %u bytes long file (at least), but the length of `%"
-"s' is only %u bytes."
+"The format would require %u bytes long file (at least), but the length of `"
+"%s' is only %u bytes."
 msgstr ""
 
 #: modules/file/rawfile.c:1138
@@ -4765,6 +4837,29 @@ msgstr "Graph"
 
 #: modules/graph/graph_cut.c:179
 msgid "Cut _all curves"
+msgstr ""
+
+#: modules/graph/graph_dos_spectrum.c:41
+#, fuzzy
+msgid "DOS Spectrum"
+msgstr "Spektraldichtefunktion"
+
+#: modules/graph/graph_dos_spectrum.c:55
+msgid "/_DOS Spectrum"
+msgstr ""
+
+#: modules/graph/graph_dos_spectrum.c:58
+msgid "Calculate DOS spectrum from I-V tunneling spectroscopy"
+msgstr ""
+
+#: modules/graph/graph_dos_spectrum.c:95
+#, c-format
+msgid "%s: Graph should be I-V spectroscopy."
+msgstr ""
+
+#: modules/graph/graph_dos_spectrum.c:114
+#, c-format
+msgid "DOS Spectrum for \"%s\""
 msgstr ""
 
 #: modules/graph/graph_export_ascii.c:52
@@ -5578,6 +5673,46 @@ msgstr "2D CWT"
 msgid "_Wavelet type:"
 msgstr "_Wavelet-Typ:"
 
+#: modules/process/deposit.c:119
+msgid "Simulate spherical particle deposition."
+msgstr ""
+
+#: modules/process/deposit.c:133
+msgid "/_Synthetic/_Deposit particles..."
+msgstr ""
+
+#: modules/process/deposit.c:137 modules/process/deposit.c:191
+msgid "Deposit spherical particles"
+msgstr ""
+
+#: modules/process/deposit.c:194
+#, fuzzy
+msgid "_Start"
+msgstr "Stern"
+
+#: modules/process/deposit.c:240
+#, fuzzy
+msgid "Deposition parameters:"
+msgstr "Fit-Parameter"
+
+#: modules/process/deposit.c:244
+#, fuzzy
+msgid "_Size"
+msgstr "_Größe:"
+
+#: modules/process/deposit.c:299
+#, fuzzy
+msgid "_Coverage:"
+msgstr "_Minimalwert"
+
+#: modules/process/deposit.c:303
+msgid "_Revise after settle"
+msgstr ""
+
+#: modules/process/deposit.c:375
+msgid "Particles"
+msgstr ""
+
 #: modules/process/dimensions.h:434
 #, fuzzy
 msgid "S_quare image"
@@ -6148,7 +6283,7 @@ msgstr "Filtermaske"
 msgid "_Undo"
 msgstr "_Rückgängig"
 
-#: modules/process/fft_filter_2d.c:489 modules/tools/maskedit.c:393
+#: modules/process/fft_filter_2d.c:489 modules/tools/maskedit.c:394
 msgid "_Remove"
 msgstr "_Entfernen"
 
@@ -6815,8 +6950,8 @@ msgid "Dr_op size:"
 msgstr "Tropfen_größe:"
 
 #: modules/process/grain_wshed.c:501 modules/process/maskcor.c:327
-#: modules/process/merge.c:686 modules/process/tip_blind.c:558
-#: modules/process/tipops.c:307
+#: modules/process/mcrop.c:326 modules/process/merge.c:686
+#: modules/process/tip_blind.c:558 modules/process/tipops.c:307
 msgid "Initializing"
 msgstr "Initialisiere"
 
@@ -7498,7 +7633,8 @@ msgstr "Korrelations-Wert"
 msgid "Correlation _method:"
 msgstr "Korrelations_methode:"
 
-#: modules/process/maskcor.c:329 modules/process/merge.c:688
+#: modules/process/maskcor.c:329 modules/process/mcrop.c:328
+#: modules/process/merge.c:688
 msgid "Correlating"
 msgstr "Korreliere"
 
@@ -7533,6 +7669,28 @@ msgstr "Maske in neuen Kanal extrahieren"
 #: modules/process/maskops.c:137
 msgid "Mask"
 msgstr "Maske"
+
+#: modules/process/mcrop.c:70
+msgid "Crops non-intersecting regions of two images."
+msgstr ""
+
+#: modules/process/mcrop.c:84
+#, fuzzy
+msgid "/M_ultidata/Mutual C_rop..."
+msgstr "/M_ultidaten/_Zusammenfügen..."
+
+#: modules/process/mcrop.c:88
+msgid "Crop non-intersecting regions of two images"
+msgstr ""
+
+#: modules/process/mcrop.c:159
+msgid "Mutual Crop"
+msgstr ""
+
+#: modules/process/mcrop.c:180
+#, fuzzy
+msgid "_Select second argument:"
+msgstr "_Auswahlmodus:"
 
 #: modules/process/median-bg.c:80
 msgid "Subtracts background using a rank-based algorithm."
@@ -7983,7 +8141,8 @@ msgid "Scales data by arbitrary factor."
 msgstr "Skaliert Datensatz mit beliebigen Faktor."
 
 #: modules/process/scale.c:105
-msgid "/_Basic Operations/Scale..."
+#, fuzzy
+msgid "/_Basic Operations/_Scale..."
 msgstr "/_Grundfunktionen/_Skalieren..."
 
 #: modules/process/scale.c:109
@@ -8207,6 +8366,46 @@ msgstr ""
 #: modules/process/superresolution.c:554
 msgid "Interpolating..."
 msgstr "Interpoliere..."
+
+#: modules/process/threshold.c:94
+msgid "Limit the data range using a lower/upper threshold."
+msgstr ""
+
+#: modules/process/threshold.c:108
+#, fuzzy
+msgid "/_Basic Operations/Threshol_d..."
+msgstr "/_Grundfunktionen/_Skalieren..."
+
+#: modules/process/threshold.c:112
+#, fuzzy
+msgid "Limit data range"
+msgstr "Fehlerzeilen markieren"
+
+#: modules/process/threshold.c:237
+#, fuzzy
+msgid "Threshold"
+msgstr "_Schwellwert:"
+
+#: modules/process/threshold.c:281
+#, fuzzy
+msgid "Thresholds"
+msgstr "_Schwellwert:"
+
+#: modules/process/threshold.c:286
+msgid "_Lower:"
+msgstr ""
+
+#: modules/process/threshold.c:292
+msgid "_Upper:"
+msgstr ""
+
+#: modules/process/threshold.c:298
+msgid "Set to Full Range"
+msgstr ""
+
+#: modules/process/threshold.c:306
+msgid "Set to Display Range"
+msgstr ""
 
 #: modules/process/tilt.c:73
 msgid "Tilts image by specified amount."
@@ -8791,94 +8990,98 @@ msgstr ""
 msgid "_Instant updates"
 msgstr "_Sofort aktualisieren"
 
-#: modules/tools/maskedit.c:121
+#: modules/tools/maskedit.c:122
 msgid "Mask editor tool, allows to interactively add or remove parts of mask."
 msgstr ""
 
-#: modules/tools/maskedit.c:169
+#: modules/tools/maskedit.c:170
 msgid "Mask Editor"
 msgstr ""
 
-#: modules/tools/maskedit.c:170
+#: modules/tools/maskedit.c:171
 msgid "Edit mask"
 msgstr ""
 
-#: modules/tools/maskedit.c:254
+#: modules/tools/maskedit.c:255
 msgid "Set mask to selection"
 msgstr ""
 
-#: modules/tools/maskedit.c:259
+#: modules/tools/maskedit.c:260
 msgid "Add selection to mask"
 msgstr ""
 
-#: modules/tools/maskedit.c:264
+#: modules/tools/maskedit.c:265
 msgid "Subtract selection from mask"
 msgstr ""
 
-#: modules/tools/maskedit.c:269
+#: modules/tools/maskedit.c:270
 msgid "Intersect selection with mask"
 msgstr ""
 
-#: modules/tools/maskedit.c:276
+#: modules/tools/maskedit.c:277
 msgid "Rectangular shapes"
 msgstr ""
 
-#: modules/tools/maskedit.c:281
+#: modules/tools/maskedit.c:282
 msgid "Elliptic shapes"
 msgstr ""
 
-#: modules/tools/maskedit.c:286
+#: modules/tools/maskedit.c:287
 #, fuzzy
 msgid "Thin lines"
 msgstr "_Glanz:"
 
-#: modules/tools/maskedit.c:313
+#: modules/tools/maskedit.c:314
 #, fuzzy
 msgid "Editor"
 msgstr "_Bearbeiten"
 
-#: modules/tools/maskedit.c:318
+#: modules/tools/maskedit.c:319
 msgid "Mode:"
 msgstr ""
 
-#: modules/tools/maskedit.c:347
+#: modules/tools/maskedit.c:348
 msgid "Shape:"
 msgstr ""
 
-#: modules/tools/maskedit.c:377
+#: modules/tools/maskedit.c:378
 #, fuzzy
 msgid "Actions"
 msgstr "Kreuzungen"
 
-#: modules/tools/maskedit.c:385
+#: modules/tools/maskedit.c:386
 msgid "_Invert"
 msgstr ""
 
-#: modules/tools/maskedit.c:401
+#: modules/tools/maskedit.c:402
 msgid "_Fill"
 msgstr "_Ausfüllen"
 
-#: modules/tools/maskedit.c:414
-msgid "Grow/Shrink"
+#: modules/tools/maskedit.c:409
+msgid "Fill _Voids"
 msgstr ""
 
 #: modules/tools/maskedit.c:423
+msgid "Grow/Shrink"
+msgstr ""
+
+#: modules/tools/maskedit.c:432
 msgid "_Grow"
 msgstr ""
 
-#: modules/tools/maskedit.c:431
+#: modules/tools/maskedit.c:440
 msgid "Shrin_k"
 msgstr ""
 
-#: modules/tools/maskedit.c:446
+#: modules/tools/maskedit.c:455
 msgid "_Amount:"
 msgstr ""
 
-#: modules/tools/maskedit.c:453
+#: modules/tools/maskedit.c:462
 msgid "Shrink from _border"
 msgstr ""
 
-#: modules/tools/maskedit.c:464
+#: modules/tools/maskedit.c:473
 msgid "_Prevent grain merging by growing"
 msgstr ""
 
@@ -9413,6 +9616,13 @@ msgid ""
 "Inclination θ:     %s\n"
 "Inclination φ:     %s\n"
 msgstr ""
+
+#~ msgid "Export"
+#~ msgstr "Exportieren"
+
+#, fuzzy
+#~ msgid "Single point spectroscopy (SPS) is not supported."
+#~ msgstr "Das Dateiformat der Version %.1f wird nicht unterstützt."
 
 #~ msgid "_Exclude region under mask"
 #~ msgstr "Bereich _unter Maske ausschließen"
