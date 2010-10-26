@@ -17,7 +17,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
-/* TODO: metadata */
+
 /**
  * [FILE-MAGIC-FREEDESKTOP]
  * <mime-type type="application/x-gdef-spm">
@@ -122,7 +122,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports DME GDEF data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.1",
+    "0.2",
     "David Nečas (Yeti)",
     "2010",
 };
@@ -469,7 +469,8 @@ gdef_read_channel(GDEFControlBlock *block)
     const guchar *rawdata;
     const gchar *unit;
     gdouble xreal, yreal;
-    gint xres, yres, ymis, i;
+    gint xres, yres, ymis;
+    guint i, j, n;
 
     if (block->n_data != 1)
         return FALSE;
@@ -498,8 +499,8 @@ gdef_read_channel(GDEFControlBlock *block)
     }
 
     /* Not sure about missing lines, so use an inequality in this case. */
-    if ((ymis == 0 && value_var->size != 4*xres*yres)
-        || (ymis && value_var->size < 4*xres*(yres - ymis))) {
+    n = xres*(yres - ymis);
+    if ((!ymis && value_var->size != 4*n) || (ymis && value_var->size < 4*n)) {
         g_warning("Data size does not match Lines and Columns.");
         return FALSE;
     }
@@ -534,8 +535,13 @@ gdef_read_channel(GDEFControlBlock *block)
 
     data = gwy_data_field_get_data(dfield);
     rawdata = value_var->data;
-    for (i = 0; i < xres*(yres - ymis); i++)
-        data[i] = gwy_get_gfloat_le(&rawdata);
+    /* flip the data vertically */
+    for (i = 0; i < yres - ymis; i++) {
+        gdouble *row = data + (yres-ymis-1 - i)*xres;
+        for (j = xres; j; j--) {
+            *(row++) = gwy_get_gfloat_le(&rawdata);
+        }
+    }
 
     return dfield;
 }
