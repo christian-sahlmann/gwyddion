@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: French localization\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
 "POT-Creation-Date: 2010-10-25 11:48+0200\n"
-"PO-Revision-Date: 2010-10-25 22:05+0100\n"
+"PO-Revision-Date: 2010-10-27 22:38+0100\n"
 "Last-Translator: François RIGUET <francheu@caramail.com>\n"
 "Language-Team: François RIGUET <francheu@caramail.com>\n"
 "Language: \n"
@@ -3976,7 +3976,7 @@ msgstr "Charger"
 
 #: modules/file/rawfile.c:1014
 msgid "_Store"
-msgstr "Enreg_strer"
+msgstr "Enregi_strer"
 
 #: modules/file/rawfile.c:1020
 msgid "_Rename"
