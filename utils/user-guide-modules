@@ -136,7 +136,7 @@ scale	basic-operations	scale
 scars	editing-correction	remove-scars
 sdfile	managing-files
 seiko	managing-files
-selectionmanager	selections
+selectionmanager	selections	selection-manager
 sensofar	managing-files
 sensolytics	managing-files
 sfunctions	statistical-analysis	sfunctions
@@ -156,7 +156,7 @@ stats	statistical-analysis	stat-quantities
 stmprg	managing-files
 stpfile	managing-files
 surffile	managing-files
-threshold	basic-operations
+threshold	basic-operations	limit-range
 tilt	leveling-and-background
 tip_blind	tip-convolution-artefacts	tip-blind-estimate
 tip_model	tip-convolution-artefacts	tip-model
