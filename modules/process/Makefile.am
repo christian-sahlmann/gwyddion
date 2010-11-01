@@ -48,6 +48,7 @@ process_LTLIBRARIES = \
 	noise_synth.la \
 	obj_synth.la \
 	outliers.la \
+	pat_synth.la \
 	polylevel.la \
 	polydistort.la \
 	presentationops.la \
@@ -143,6 +144,7 @@ merge_la_SOURCES               = merge.c
 noise_synth_la_SOURCES         = noise_synth.c dimensions.h
 obj_synth_la_SOURCES           = obj_synth.c dimensions.h
 outliers_la_SOURCES            = outliers.c
+pat_synth_la_SOURCES           = pat_synth.c dimensions.h
 polylevel_la_SOURCES           = polylevel.c
 polydistort_la_SOURCES         = polydistort.c
 presentationops_la_SOURCES     = presentationops.c
