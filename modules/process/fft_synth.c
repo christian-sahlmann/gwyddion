@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2007,2009 David Necas (Yeti).
+ *  Copyright (C) 2007,2009,2010 David Necas (Yeti).
  *  E-mail: yeti@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -24,6 +24,7 @@
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libprocess/stats.h>
+#include <libprocess/arithmetic.h>
 #include <libprocess/inttrans.h>
 #include <libgwydgets/gwydataview.h>
 #include <libgwydgets/gwylayer-basic.h>
@@ -76,6 +77,7 @@ typedef struct {
     GtkWidget *randomize;
     GtkObject *sigma;
     GtkWidget *sigma_units;
+    GtkWidget *sigma_init;
     GtkObject *freq_min;
     GtkWidget *freq_min_value;
     GtkWidget *freq_min_units;
@@ -89,11 +91,15 @@ typedef struct {
     GtkWidget *power_enable;
     GtkObject *power_p;
     GwyContainer *mydata;
+    GwyDataField *surface;
+    gdouble zscale;
 
     GwyDataField *in_re;
     GwyDataField *in_im;
     GwyDataField *out_im;
+    GwyDataField *out_re;
     gboolean in_init;
+    gulong sid;
 } FFTSynthControls;
 
 static gboolean   module_register        (void);
@@ -125,6 +131,7 @@ static void       seed_changed           (FFTSynthControls *controls,
 static void       randomize_seed         (GtkAdjustment *adj);
 static void       sigma_changed          (FFTSynthControls *controls,
                                           GtkAdjustment *adj);
+static void       sigma_init_clicked     (FFTSynthControls *controls);
 static void       freq_min_changed       (FFTSynthControls *controls,
                                           GtkAdjustment *adj);
 static void       update_freq_min_value  (FFTSynthControls *controls);
@@ -144,6 +151,7 @@ static void       update_value_label     (GtkLabel *label,
                                           const GwySIValueFormat *vf,
                                           gdouble value);
 static void       fft_synth_invalidate   (FFTSynthControls *controls);
+static gboolean   preview_gsource        (gpointer user_data);
 static void       preview                (FFTSynthControls *controls);
 static void       fft_synth_do           (const FFTSynthArgs *args,
                                           GwyDataField *in_re,
@@ -173,7 +181,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Generates random surfaces using spectral synthesis."),
     "Yeti <yeti@gwyddion.net>",
-    "1.0",
+    "1.1",
     "David Nečas (Yeti)",
     "2009",
 };
@@ -231,39 +239,58 @@ run_noninteractive(FFTSynthArgs *args,
     GwyDataField *in_re, *in_im, *out_re, *out_im;
     GwySIUnit *siunit;
     gboolean replace = dimsargs->replace && dfield;
-    gdouble mag;
+    gboolean add = dimsargs->add && dfield;
+    gdouble mag, rms;
     gint newid;
 
     if (args->randomize)
         args->seed = g_random_int() & 0x7fffffff;
 
-    mag = pow10(dimsargs->xypow10) * dimsargs->measure;
-    if (replace)
+    if (replace) {
         gwy_app_undo_qcheckpointv(data, 1, &quark);
-    in_re = gwy_data_field_new(dimsargs->xres, dimsargs->yres,
-                               mag*dimsargs->xres, mag*dimsargs->yres,
-                               FALSE);
-    in_im = gwy_data_field_new_alike(in_re, FALSE);
-    out_re = replace ? dfield : gwy_data_field_new_alike(in_re, FALSE);
-    out_im = gwy_data_field_new_alike(in_re, FALSE);
+        out_re = gwy_data_field_new_alike(dfield, FALSE);
+    }
+    else {
+        if (add)
+            out_re = gwy_data_field_new_alike(dfield, FALSE);
+        else {
+            mag = pow10(dimsargs->xypow10) * dimsargs->measure;
+            out_re = gwy_data_field_new(dimsargs->xres, dimsargs->yres,
+                                        mag*dimsargs->xres, mag*dimsargs->yres,
+                                        FALSE);
+
+            siunit = gwy_data_field_get_si_unit_xy(out_re);
+            gwy_si_unit_set_from_string(siunit, dimsargs->xyunits);
+
+            siunit = gwy_data_field_get_si_unit_z(out_re);
+            gwy_si_unit_set_from_string(siunit, dimsargs->zunits);
+        }
+    }
+
+    in_re = gwy_data_field_new_alike(out_re, FALSE);
+    in_im = gwy_data_field_new_alike(out_re, FALSE);
+    out_im = gwy_data_field_new_alike(out_re, FALSE);
     fft_synth_do(args, in_re, in_im, out_re, out_im);
     g_object_unref(in_re);
     g_object_unref(in_im);
     g_object_unref(out_im);
 
-    mag = gwy_data_field_get_rms(out_re);
-    if (mag)
-        gwy_data_field_multiply(out_re,
-                                pow10(dimsargs->zpow10)*args->sigma/mag);
+    mag = pow10(dimsargs->zpow10);
+    rms = gwy_data_field_get_rms(out_re);
+    if (rms)
+        gwy_data_field_multiply(out_re, args->sigma*mag/rms);
 
-    if (dimsargs->replace)
-        gwy_data_field_data_changed(out_re);
+    if (replace) {
+        if (add)
+            gwy_data_field_sum_fields(dfield, dfield, out_re);
+        else
+            gwy_data_field_copy(out_re, dfield, FALSE);
+
+        gwy_data_field_data_changed(dfield);
+    }
     else {
-        siunit = gwy_data_field_get_si_unit_xy(out_re);
-        gwy_si_unit_set_from_string(siunit, dimsargs->xyunits);
-
-        siunit = gwy_data_field_get_si_unit_z(out_re);
-        gwy_si_unit_set_from_string(siunit, dimsargs->zunits);
+        if (add)
+            gwy_data_field_sum_fields(out_re, dfield, out_re);
 
         if (data) {
             newid = gwy_app_data_browser_add_data_field(out_re, data, TRUE);
@@ -283,8 +310,8 @@ run_noninteractive(FFTSynthArgs *args,
         }
 
         gwy_app_set_data_field_title(data, newid, _("Generated"));
-        g_object_unref(out_re);
     }
+    g_object_unref(out_re);
 }
 
 static gboolean
@@ -297,8 +324,9 @@ fft_synth_dialog(FFTSynthArgs *args,
     GtkWidget *dialog, *table, *vbox, *hbox, *notebook, *spin;
     FFTSynthControls controls;
     GwyDataField *dfield;
-    gint response;
     GwyPixmapLayer *layer;
+    gboolean finished;
+    gint response;
     gint row;
 
     gwy_clear(&controls, 1);
@@ -332,6 +360,13 @@ fft_synth_dialog(FFTSynthArgs *args,
         gwy_app_sync_data_items(data, controls.mydata, id, 0, FALSE,
                                 GWY_DATA_ITEM_PALETTE,
                                 0);
+    if (dfield_template) {
+        controls.surface = gwy_data_field_new_resampled(dfield_template,
+                                                        PREVIEW_SIZE,
+                                                        PREVIEW_SIZE,
+                                                        GWY_INTERPOLATION_KEY);
+        controls.zscale = gwy_data_field_get_rms(dfield_template);
+    }
     controls.view = gwy_data_view_new(controls.mydata);
     layer = gwy_layer_basic_new();
     g_object_set(layer,
@@ -370,8 +405,11 @@ fft_synth_dialog(FFTSynthArgs *args,
     gtk_notebook_append_page(GTK_NOTEBOOK(notebook),
                              gwy_dimensions_get_widget(controls.dims),
                              gtk_label_new(_("Dimensions")));
+    if (controls.dims->add)
+        g_signal_connect_swapped(controls.dims->add, "toggled",
+                                 G_CALLBACK(fft_synth_invalidate), &controls);
 
-    table = gtk_table_new(12, 5, FALSE);
+    table = gtk_table_new(12 + (dfield_template ? 1 : 0), 5, FALSE);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
@@ -388,8 +426,18 @@ fft_synth_dialog(FFTSynthArgs *args,
     controls.sigma_units = gwy_table_hscale_get_units(controls.sigma);
     g_signal_connect_swapped(controls.sigma, "value-changed",
                              G_CALLBACK(sigma_changed), &controls);
-    gtk_table_set_row_spacing(GTK_TABLE(table), row, 12);
     row++;
+
+    if (dfield_template) {
+        controls.sigma_init
+            = gtk_button_new_with_mnemonic(_("_Like Current Channel"));
+        g_signal_connect_swapped(controls.sigma_init, "clicked",
+                                 G_CALLBACK(sigma_init_clicked), &controls);
+        gtk_table_attach(GTK_TABLE(table), controls.sigma_init,
+                         1, 3, row, row+1, GTK_FILL, 0, 0, 0);
+        row++;
+    }
+    gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 12);
 
     controls.freq_min = gtk_adjustment_new(args->freq_min,
                                            0.0, G_SQRT2*G_PI, 0.001, 0.1, 0);
@@ -492,7 +540,8 @@ fft_synth_dialog(FFTSynthArgs *args,
     gtk_notebook_set_current_page(GTK_NOTEBOOK(notebook), args->active_page);
     fft_synth_invalidate(&controls);
 
-    while (TRUE) {
+    finished = FALSE;
+    while (!finished) {
         response = gtk_dialog_run(GTK_DIALOG(dialog));
         switch (response) {
             case GTK_RESPONSE_CANCEL:
@@ -500,14 +549,7 @@ fft_synth_dialog(FFTSynthArgs *args,
             case GTK_RESPONSE_OK:
             gtk_widget_destroy(dialog);
             case GTK_RESPONSE_NONE:
-            g_object_unref(controls.mydata);
-            gwy_dimensions_free(controls.dims);
-            gwy_object_unref(controls.in_re);
-            gwy_object_unref(controls.in_im);
-            gwy_object_unref(controls.out_im);
-            if (controls.freqvf)
-                gwy_si_unit_value_format_free(controls.freqvf);
-            return response == GTK_RESPONSE_OK;
+            finished = TRUE;
             break;
 
             case RESPONSE_RESET:
@@ -530,6 +572,22 @@ fft_synth_dialog(FFTSynthArgs *args,
             break;
         }
     }
+
+    if (controls.sid) {
+        g_source_remove(controls.sid);
+        controls.sid = 0;
+    }
+    g_object_unref(controls.mydata);
+    gwy_dimensions_free(controls.dims);
+    gwy_object_unref(controls.surface);
+    gwy_object_unref(controls.in_re);
+    gwy_object_unref(controls.in_im);
+    gwy_object_unref(controls.out_im);
+    gwy_object_unref(controls.out_re);
+    if (controls.freqvf)
+        gwy_si_unit_value_format_free(controls.freqvf);
+
+    return response == GTK_RESPONSE_OK;
 }
 
 static void
@@ -684,7 +742,15 @@ sigma_changed(FFTSynthControls *controls,
               GtkAdjustment *adj)
 {
     controls->args->sigma = gtk_adjustment_get_value(adj);
-    /* Sigma is not observable on the preview, don't do anything. */
+    fft_synth_invalidate(controls);
+}
+
+static void
+sigma_init_clicked(FFTSynthControls *controls)
+{
+    gdouble mag = pow10(controls->dims->args->zpow10);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->sigma),
+                             controls->zscale/mag);
 }
 
 static void
@@ -782,8 +848,21 @@ static void
 fft_synth_invalidate(FFTSynthControls *controls)
 {
     /* create preview if instant updates are on */
-    if (controls->args->update && !controls->in_init)
-        preview(controls);
+    if (controls->args->update && !controls->in_init && !controls->sid) {
+        controls->sid = g_idle_add_full(G_PRIORITY_LOW, preview_gsource,
+                                        controls, NULL);
+    }
+}
+
+static gboolean
+preview_gsource(gpointer user_data)
+{
+    FFTSynthControls *controls = (FFTSynthControls*)user_data;
+    controls->sid = 0;
+
+    preview(controls);
+
+    return FALSE;
 }
 
 #ifdef HAVE_SINCOS
@@ -800,8 +879,9 @@ _gwy_sincos(gdouble x, gdouble *s, gdouble *c)
 static void
 preview(FFTSynthControls *controls)
 {
-    const FFTSynthArgs *args = controls->args;
+    FFTSynthArgs *args = controls->args;
     GwyDataField *dfield;
+    gdouble mag, rms;
 
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
                                                              "/0/data"));
@@ -810,10 +890,23 @@ preview(FFTSynthControls *controls)
         controls->in_re = gwy_data_field_new_alike(dfield, FALSE);
         controls->in_im = gwy_data_field_new_alike(dfield, FALSE);
         controls->out_im = gwy_data_field_new_alike(dfield, FALSE);
+        controls->out_re = gwy_data_field_new_alike(dfield, FALSE);
     }
 
     fft_synth_do(args, controls->in_re, controls->in_im,
-                 dfield, controls->out_im);
+                 controls->out_re, controls->out_im);
+
+    mag = pow10(controls->dims->args->zpow10);
+    rms = gwy_data_field_get_rms(controls->out_re);
+    if (rms)
+        gwy_data_field_multiply(controls->out_re, args->sigma*mag/rms);
+
+    if (controls->dims->args->add && controls->surface)
+        gwy_data_field_sum_fields(dfield, controls->out_re, controls->surface);
+    else
+        gwy_data_field_copy(controls->out_re, dfield, FALSE);
+
+    gwy_data_field_data_changed(dfield);
 }
 
 static void
@@ -884,8 +977,6 @@ fft_synth_do(const FFTSynthArgs *args,
                              GWY_TRANSFORM_DIRECTION_BACKWARD);
 
     g_rand_free(rng);
-    gwy_data_field_data_changed(out_re);
-    gwy_data_field_data_changed(out_im);
 }
 
 static const gchar prefix[]           = "/module/fft_synth";
