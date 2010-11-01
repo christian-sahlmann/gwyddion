@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2009 David Necas (Yeti).
+ *  Copyright (C) 2009,2010 David Necas (Yeti).
  *  E-mail: yeti@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -73,6 +73,8 @@ typedef enum {
     OBJ_SYNTH_BOX      = 6,
     OBJ_SYNTH_CONE     = 7,
     OBJ_SYNTH_TENT     = 8,
+    OBJ_SYNTH_DIAMOND  = 9,
+    OBJ_SYNTH_GAUSSIAN = 10,
     OBJ_SYNTH_NTYPES
 } ObjSynthType;
 
@@ -93,6 +95,8 @@ typedef void (*CreateFeatureFunc)(ObjSynthObject *feature,
 
 typedef gdouble (*GetCoverageFunc)(gdouble aspect);
 
+/* This scheme makes the object type list easily reordeable in the GUI without
+ * changing the ids.  */
 typedef struct {
     ObjSynthType type;
     const gchar *name;
@@ -129,7 +133,6 @@ typedef struct {
     ObjSynthArgs *args;
     GwyDimensions *dims;
     RandGenSet *rngset;
-    gdouble pxsize;
     GtkWidget *dialog;
     GtkWidget *view;
     GtkWidget *update;
@@ -145,6 +148,7 @@ typedef struct {
     GtkObject *aspect_noise;
     GtkObject *height;
     GtkWidget *height_units;
+    GtkWidget *height_init;
     GtkWidget *height_bound;
     GtkObject *height_noise;
     GtkObject *angle;
@@ -153,7 +157,11 @@ typedef struct {
     GtkWidget *coverage_value;
     GtkWidget *coverage_units;
     GwyContainer *mydata;
+    GwyDataField *surface;
+    gdouble pxsize;
+    gdouble zscale;
     gboolean in_init;
+    gulong sid;
 } ObjSynthControls;
 
 static gboolean    module_register      (void);
@@ -199,6 +207,7 @@ static void        aspect_noise_changed (ObjSynthControls *controls,
                                          GtkAdjustment *adj);
 static void        height_changed       (ObjSynthControls *controls,
                                          GtkAdjustment *adj);
+static void        height_init_clicked  (ObjSynthControls *controls);
 static void        height_bound_changed (ObjSynthControls *controls,
                                          GtkToggleButton *button);
 static void        height_noise_changed (ObjSynthControls *controls,
@@ -214,6 +223,7 @@ static void        update_value_label   (GtkLabel *label,
                                          const GwySIValueFormat *vf,
                                          gdouble value);
 static void        obj_synth_invalidate (ObjSynthControls *controls);
+static gboolean    preview_gsource      (gpointer user_data);
 static void        preview              (ObjSynthControls *controls);
 static void        obj_synth_do         (const ObjSynthArgs *args,
                                          RandGenSet *rngset,
@@ -255,6 +265,8 @@ DECLARE_OBJECT(doughnut);
 DECLARE_OBJECT(thedron);
 DECLARE_OBJECT(cone);
 DECLARE_OBJECT(tent);
+DECLARE_OBJECT(diamond);
+DECLARE_OBJECT(gaussian);
 
 static const ObjSynthArgs obj_synth_defaults = {
     PAGE_DIMENSIONS,
@@ -274,10 +286,12 @@ static const ObjSynthFeature features[] = {
     { OBJ_SYNTH_BOX,      N_("Boxes"),        &create_box,      &getcov_box,      },
     { OBJ_SYNTH_CONE,     N_("Cones"),        &create_cone,     &getcov_cone,     },
     { OBJ_SYNTH_PYRAMID,  N_("Pyramids"),     &create_pyramid,  &getcov_pyramid,  },
+    { OBJ_SYNTH_DIAMOND,  N_("Diamonds"),     &create_diamond,  &getcov_diamond,  },
     { OBJ_SYNTH_4HEDRON,  N_("Tetrahedrons"), &create_thedron,  &getcov_thedron,  },
     { OBJ_SYNTH_NUGGET,   N_("Nuggets"),      &create_nugget,   &getcov_nugget,   },
     { OBJ_SYNTH_THATCH,   N_("Thatches"),     &create_thatch,   &getcov_thatch,   },
     { OBJ_SYNTH_TENT,     N_("Tents"),        &create_tent,     &getcov_tent,     },
+    { OBJ_SYNTH_GAUSSIAN, N_("Gaussians"),    &create_gaussian, &getcov_gaussian, },
     { OBJ_SYNTH_DOUGHNUT, N_("Dougnuts"),     &create_doughnut, &getcov_doughnut, },
 };
 
@@ -286,7 +300,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Generates randomly patterned surfaces by placing objects."),
     "Yeti <yeti@gwyddion.net>",
-    "1.1",
+    "1.2",
     "David Nečas (Yeti)",
     "2009",
 };
@@ -347,35 +361,44 @@ run_noninteractive(ObjSynthArgs *args,
 {
     GwySIUnit *siunit;
     gboolean replace = dimsargs->replace && dfield;
+    gboolean add = dimsargs->add && dfield;
     gdouble mag;
     gint newid;
 
     if (args->randomize)
         args->seed = g_random_int() & 0x7fffffff;
 
-    mag = pow10(dimsargs->xypow10) * dimsargs->measure;
-    if (replace)
+    if (replace) {
+        /* Always take a reference so that we can always unref. */
+        g_object_ref(dfield);
+
         gwy_app_undo_qcheckpointv(data, 1, &quark);
-    else
-        dfield = gwy_data_field_new(dimsargs->xres, dimsargs->yres,
-                                    mag*dimsargs->xres, mag*dimsargs->yres,
-                                    FALSE);
-    obj_synth_do(args, rngset, dfield);
-
-    mag = gwy_data_field_get_rms(dfield);
-    if (mag)
-        gwy_data_field_multiply(dfield,
-                                pow10(dimsargs->zpow10)*args->height/mag);
-
-    if (dimsargs->replace)
-        gwy_data_field_data_changed(dfield);
+        if (!add)
+            gwy_data_field_clear(dfield);
+    }
     else {
-        siunit = gwy_data_field_get_si_unit_xy(dfield);
-        gwy_si_unit_set_from_string(siunit, dimsargs->xyunits);
+        if (add)
+            dfield = gwy_data_field_duplicate(dfield);
+        else {
+            mag = pow10(dimsargs->xypow10) * dimsargs->measure;
+            dfield = gwy_data_field_new(dimsargs->xres, dimsargs->yres,
+                                        mag*dimsargs->xres, mag*dimsargs->yres,
+                                        FALSE);
 
-        siunit = gwy_data_field_get_si_unit_z(dfield);
-        gwy_si_unit_set_from_string(siunit, dimsargs->zunits);
+            siunit = gwy_data_field_get_si_unit_xy(dfield);
+            gwy_si_unit_set_from_string(siunit, dimsargs->xyunits);
 
+            siunit = gwy_data_field_get_si_unit_z(dfield);
+            gwy_si_unit_set_from_string(siunit, dimsargs->zunits);
+        }
+    }
+
+    mag = pow10(dimsargs->zpow10);
+    args->height *= mag;
+    obj_synth_do(args, rngset, dfield);
+    args->height /= mag;
+
+    if (!replace) {
         if (data) {
             newid = gwy_app_data_browser_add_data_field(dfield, data, TRUE);
             gwy_app_sync_data_items(data, data, oldid, newid, FALSE,
@@ -394,8 +417,8 @@ run_noninteractive(ObjSynthArgs *args,
         }
 
         gwy_app_set_data_field_title(data, newid, _("Generated"));
-        g_object_unref(dfield);
     }
+    g_object_unref(dfield);
 }
 
 static gboolean
@@ -409,8 +432,9 @@ obj_synth_dialog(ObjSynthArgs *args,
     GtkWidget *dialog, *table, *vbox, *hbox, *notebook, *spin;
     ObjSynthControls controls;
     GwyDataField *dfield;
-    gint response;
     GwyPixmapLayer *layer;
+    gboolean finished;
+    gint response;
     gint row;
 
     gwy_clear(&controls, 1);
@@ -445,6 +469,13 @@ obj_synth_dialog(ObjSynthArgs *args,
         gwy_app_sync_data_items(data, controls.mydata, id, 0, FALSE,
                                 GWY_DATA_ITEM_PALETTE,
                                 0);
+    if (dfield_template) {
+        controls.surface = gwy_data_field_new_resampled(dfield_template,
+                                                        PREVIEW_SIZE,
+                                                        PREVIEW_SIZE,
+                                                        GWY_INTERPOLATION_KEY);
+        controls.zscale = 3.0*gwy_data_field_get_rms(dfield_template);
+    }
     controls.view = gwy_data_view_new(controls.mydata);
     layer = gwy_layer_basic_new();
     g_object_set(layer,
@@ -483,8 +514,11 @@ obj_synth_dialog(ObjSynthArgs *args,
     gtk_notebook_append_page(GTK_NOTEBOOK(notebook),
                              gwy_dimensions_get_widget(controls.dims),
                              gtk_label_new(_("Dimensions")));
+    if (controls.dims->add)
+        g_signal_connect_swapped(controls.dims->add, "toggled",
+                                 G_CALLBACK(obj_synth_invalidate), &controls);
 
-    table = gtk_table_new(17, 4, FALSE);
+    table = gtk_table_new(17 + (dfield_template ? 1 : 0), 4, FALSE);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
@@ -498,11 +532,11 @@ obj_synth_dialog(ObjSynthArgs *args,
     row++;
 
     controls.coverage = gtk_adjustment_new(args->coverage,
-                                           0.05, 12.0, 0.1, 1.0, 0);
+                                           0.001, 12.0, 0.001, 1.0, 0);
     spin = gwy_table_attach_hscale(table, row, _("Co_verage:"), NULL,
                                    controls.coverage, GWY_HSCALE_SQRT);
     gtk_spin_button_set_snap_to_ticks(GTK_SPIN_BUTTON(spin), FALSE);
-    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 2);
+    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 3);
     g_signal_connect_swapped(controls.coverage, "value-changed",
                              G_CALLBACK(coverage_changed), &controls);
     row++;
@@ -557,7 +591,7 @@ obj_synth_dialog(ObjSynthArgs *args,
     row++;
 
     controls.aspect = gtk_adjustment_new(args->aspect,
-                                         0.2, 5.0, 0.1, 1.0, 0);
+                                         0.2, 5.0, 0.01, 1.0, 0);
     gwy_table_attach_hscale(table, row, _("_Aspect ratio:"), NULL,
                             controls.aspect, GWY_HSCALE_LOG);
     g_signal_connect_swapped(controls.aspect, "value-changed",
@@ -590,8 +624,18 @@ obj_synth_dialog(ObjSynthArgs *args,
                              G_CALLBACK(height_changed), &controls);
     row++;
 
-    controls.height_bound = gtk_check_button_new_with_mnemonic(_("Scales "
-                                                                 "_with size"));
+    if (dfield_template) {
+        controls.height_init
+            = gtk_button_new_with_mnemonic(_("_Like Current Channel"));
+        g_signal_connect_swapped(controls.height_init, "clicked",
+                                 G_CALLBACK(height_init_clicked), &controls);
+        gtk_table_attach(GTK_TABLE(table), controls.height_init,
+                         1, 3, row, row+1, GTK_FILL, 0, 0, 0);
+        row++;
+    }
+
+    controls.height_bound
+        = gtk_check_button_new_with_mnemonic(_("Scales _with size"));
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.height_bound),
                                  args->height_bound);
     g_signal_connect_swapped(controls.height_bound, "toggled",
@@ -639,7 +683,8 @@ obj_synth_dialog(ObjSynthArgs *args,
     gtk_notebook_set_current_page(GTK_NOTEBOOK(notebook), args->active_page);
     obj_synth_invalidate(&controls);
 
-    while (TRUE) {
+    finished = FALSE;
+    while (!finished) {
         response = gtk_dialog_run(GTK_DIALOG(dialog));
         switch (response) {
             case GTK_RESPONSE_CANCEL:
@@ -647,9 +692,7 @@ obj_synth_dialog(ObjSynthArgs *args,
             case GTK_RESPONSE_OK:
             gtk_widget_destroy(dialog);
             case GTK_RESPONSE_NONE:
-            g_object_unref(controls.mydata);
-            gwy_dimensions_free(controls.dims);
-            return response == GTK_RESPONSE_OK;
+            finished = TRUE;
             break;
 
             case RESPONSE_RESET:
@@ -672,6 +715,16 @@ obj_synth_dialog(ObjSynthArgs *args,
             break;
         }
     }
+
+    if (controls.sid) {
+        g_source_remove(controls.sid);
+        controls.sid = 0;
+    }
+    g_object_unref(controls.mydata);
+    gwy_object_unref(controls.surface);
+    gwy_dimensions_free(controls.dims);
+
+    return response == GTK_RESPONSE_OK;
 }
 
 static const ObjSynthFeature*
@@ -683,7 +736,7 @@ get_feature(guint type)
         if (features[i].type == type)
             return features + i;
     }
-    g_warning("Unknown featue %u\n", type);
+    g_warning("Unknown feature %u\n", type);
 
     return features + 0;
 }
@@ -901,7 +954,15 @@ height_changed(ObjSynthControls *controls,
                GtkAdjustment *adj)
 {
     controls->args->height = gtk_adjustment_get_value(adj);
-    /* Height is not observable on the preview, don't do anything. */
+    obj_synth_invalidate(controls);
+}
+
+static void
+height_init_clicked(ObjSynthControls *controls)
+{
+    gdouble mag = pow10(controls->dims->args->zpow10);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->height),
+                             controls->zscale/mag);
 }
 
 static void
@@ -972,19 +1033,40 @@ static void
 obj_synth_invalidate(ObjSynthControls *controls)
 {
     /* create preview if instant updates are on */
-    if (controls->args->update && !controls->in_init)
-        preview(controls);
+    if (controls->args->update && !controls->in_init && !controls->sid) {
+        controls->sid = g_idle_add_full(G_PRIORITY_LOW, preview_gsource,
+                                        controls, NULL);
+    }
+}
+
+static gboolean
+preview_gsource(gpointer user_data)
+{
+    ObjSynthControls *controls = (ObjSynthControls*)user_data;
+    controls->sid = 0;
+
+    preview(controls);
+
+    return FALSE;
 }
 
 static void
 preview(ObjSynthControls *controls)
 {
-    const ObjSynthArgs *args = controls->args;
+    ObjSynthArgs *args = controls->args;
     GwyDataField *dfield;
+    gdouble mag = pow10(controls->dims->args->zpow10);
 
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
                                                              "/0/data"));
+    if (controls->dims->args->add && controls->surface)
+        gwy_data_field_copy(controls->surface, dfield, FALSE);
+    else
+        gwy_data_field_clear(dfield);
+
+    args->height *= mag;
     obj_synth_do(args, controls->rngset, dfield);
+    args->height /= mag;
 }
 
 static void
@@ -1009,7 +1091,6 @@ obj_synth_do(const ObjSynthArgs *args,
     rand_gen_set_init(rngset, args->seed);
     indices = g_new(gint, ncells);
 
-    gwy_data_field_clear(dfield);
     for (i = 0; i < niters; i++) {
         object_synth_iter(dfield, &object, args, rngset,
                           nxcells, nycells, i+1, i+1, ncells, indices);
@@ -1196,6 +1277,39 @@ create_pyramid(ObjSynthObject *feature,
             xc = (x*c - y*s)/a;
             yc = (x*s + y*c)/b;
             r = 1.0 - MAX(fabs(xc), fabs(yc));
+            z[i*xres + j] = (r > 0.0) ? height*r : 0.0;
+        }
+    }
+}
+
+static void
+create_diamond(ObjSynthObject *feature,
+               gdouble size,
+               gdouble aspect,
+               gdouble height,
+               gdouble angle)
+{
+    gdouble a, b, c, s, r, x, y, xc, yc;
+    gint xres, yres, i, j;
+    gdouble *z;
+
+    a = size*sqrt(aspect);
+    b = size/sqrt(aspect);
+    c = cos(angle);
+    s = sin(angle);
+    xres = (gint)ceil(2*MAX(a*fabs(c), b*fabs(s)) + 1) | 1;
+    yres = (gint)ceil(2*MAX(a*fabs(s), b*fabs(c)) + 1) | 1;
+
+    obj_synth_object_resize(feature, xres, yres);
+    z = feature->data;
+    for (i = 0; i < yres; i++) {
+        y = i - yres/2;
+        for (j = 0; j < xres; j++) {
+            x = j - xres/2;
+
+            xc = (x*c - y*s)/a;
+            yc = (x*s + y*c)/b;
+            r = 1.0 - (fabs(xc) + fabs(yc));
             z[i*xres + j] = (r > 0.0) ? height*r : 0.0;
         }
     }
@@ -1419,6 +1533,39 @@ create_doughnut(ObjSynthObject *feature,
 }
 
 static void
+create_gaussian(ObjSynthObject *feature,
+                gdouble size,
+                gdouble aspect,
+                gdouble height,
+                gdouble angle)
+{
+    gdouble a, b, c, s, r, x, y, xc, yc;
+    gint xres, yres, i, j;
+    gdouble *z;
+
+    a = size*sqrt(aspect);
+    b = size/sqrt(aspect);
+    c = cos(angle);
+    s = sin(angle);
+    xres = (gint)ceil(8*hypot(a*c, b*s) + 1) | 1;
+    yres = (gint)ceil(8*hypot(a*s, b*c) + 1) | 1;
+
+    obj_synth_object_resize(feature, xres, yres);
+    z = feature->data;
+    for (i = 0; i < yres; i++) {
+        y = i - yres/2;
+        for (j = 0; j < xres; j++) {
+            x = j - xres/2;
+
+            xc = (x*c - y*s)/a;
+            yc = (x*s + y*c)/b;
+            r = exp(-4.0*(xc*xc + yc*yc));
+            z[i*xres + j] = height*r;
+        }
+    }
+}
+
+static void
 create_thedron(ObjSynthObject *feature,
                gdouble size,
                gdouble aspect,
@@ -1531,6 +1678,12 @@ getcov_pyramid(G_GNUC_UNUSED gdouble aspect)
 }
 
 static gdouble
+getcov_diamond(G_GNUC_UNUSED gdouble aspect)
+{
+    return 0.5;
+}
+
+static gdouble
 getcov_box(G_GNUC_UNUSED gdouble aspect)
 {
     return 1.0;
@@ -1564,6 +1717,14 @@ static gdouble
 getcov_doughnut(G_GNUC_UNUSED gdouble aspect)
 {
     return G_PI/4.0 * 24.0/25.0;
+}
+
+static gdouble
+getcov_gaussian(G_GNUC_UNUSED gdouble aspect)
+{
+    /* Just an `effective' value estimate, returning 1 would make the gaussians
+     * too tiny wrt to other objects */
+    return G_PI/8.0;
 }
 
 static gdouble
@@ -1649,7 +1810,7 @@ obj_synth_sanitize_args(ObjSynthArgs *args)
     args->height_bound = !!args->height_bound;
     args->angle = CLAMP(args->angle, -G_PI, G_PI);
     args->angle_noise = CLAMP(args->angle_noise, 0.0, 1.0);
-    args->coverage = CLAMP(args->coverage, 0.05, 12.0);
+    args->coverage = CLAMP(args->coverage, 0.001, 12.0);
 }
 
 static void
