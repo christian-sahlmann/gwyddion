@@ -1,3 +1,11 @@
+2.22 (0000-00-00)
+Modules:
+- Object Synthesis: Objects can be placed onto an existing surface, two
+  new shapes (diamond and Gaussian) were added, other small improvements.
+- Spectral Synthesis: Generated data can be added to an existing surface.
+- GDEF: Vertically flipped data was corrected.
+
+
 2.21 (2010-10-26)
 Libraries:
 - libgwyapp: It is possible to disable undo globally, undo/redo operations
