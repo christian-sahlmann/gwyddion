@@ -45,6 +45,7 @@ process_LTLIBRARIES = \
 	mcrop.la \
 	median-bg.la \
 	merge.la \
+	noise_synth.la \
 	obj_synth.la \
 	outliers.la \
 	polylevel.la \
@@ -139,6 +140,7 @@ mcrop_la_SOURCES               = mcrop.c
 median_bg_la_SOURCES           = median-bg.c
 merge_la_SOURCES               = merge.c
 #nanoindent_adjust_la_SOURCES  = nanoindent_adjust.c
+noise_synth_la_SOURCES         = noise_synth.c dimensions.h
 obj_synth_la_SOURCES           = obj_synth.c dimensions.h
 outliers_la_SOURCES            = outliers.c
 polylevel_la_SOURCES           = polylevel.c
