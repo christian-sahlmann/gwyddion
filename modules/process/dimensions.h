@@ -35,10 +35,12 @@ typedef struct {
     gchar *zunits;
     gint xypow10;
     gint zpow10;
-    gboolean replace;
+    gboolean replace;    /* do not create a new channel */
+    gboolean add;        /* starts from the current, but may create new */
 } GwyDimensionArgs;
 
-#define GWY_DIMENSION_ARGS_INIT { 256, 256, 1.0, NULL, NULL, 0, 0, FALSE }
+#define GWY_DIMENSION_ARGS_INIT \
+    { 256, 256, 1.0, NULL, NULL, 0, 0, FALSE, FALSE }
 
 typedef struct {
     GwyDimensionArgs *args;
@@ -63,6 +65,7 @@ typedef struct {
     GtkWidget *zpow10;
     GtkWidget *zunits;
     GtkWidget *replace;
+    GtkWidget *add;
     gboolean in_update;
 } GwyDimensions;
 
@@ -375,16 +378,34 @@ static void
 gwy_dimensions_replace(GwyDimensions *dims,
                        GtkWidget *toggle)
 {
-    gboolean replace;
+    gboolean replace, sens;
 
     replace = toggle && gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(toggle));
 
     dims->args->replace = replace;
     if (replace)
         gwy_dimensions_use_template(dims);
+    sens = !dims->args->replace && !dims->args->add;
     gwy_sensitivity_group_set_state(dims->sensgroup,
                                     GWY_DIMENSIONS_SENS,
-                                    replace ? 0 : GWY_DIMENSIONS_SENS);
+                                    sens ? GWY_DIMENSIONS_SENS : 0);
+}
+
+static void
+gwy_dimensions_add(GwyDimensions *dims,
+                   GtkWidget *toggle)
+{
+    gboolean add, sens;
+
+    add = toggle && gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(toggle));
+
+    dims->args->add = add;
+    if (add)
+        gwy_dimensions_use_template(dims);
+    sens = !dims->args->replace && !dims->args->add;
+    gwy_sensitivity_group_set_state(dims->sensgroup,
+                                    GWY_DIMENSIONS_SENS,
+                                    sens ? GWY_DIMENSIONS_SENS : 0);
 }
 
 static GwyDimensions*
@@ -404,14 +425,14 @@ gwy_dimensions_new(GwyDimensionArgs *args,
     dims->xyvf = gwy_si_unit_get_format_for_power10(dims->xysiunit,
                                                     GWY_SI_UNIT_FORMAT_VFMARKUP,
                                                     args->xypow10, NULL);
-    dims->xyvf->precision = 2;
+    dims->xyvf->precision = 3;
     dims->zsiunit = gwy_si_unit_new(dims->args->zunits);
     dims->zvf = gwy_si_unit_get_format_for_power10(dims->zsiunit,
                                                    GWY_SI_UNIT_FORMAT_VFMARKUP,
                                                    args->zpow10, NULL);
-    dims->zvf->precision = 2;
+    dims->zvf->precision = 3;
 
-    dims->table = gtk_table_new(10 + (dims->template_ ? 2 : 0), 3, FALSE);
+    dims->table = gtk_table_new(10 + (dims->template_ ? 4 : 0), 3, FALSE);
     table = GTK_TABLE(dims->table);
     gtk_table_set_row_spacings(table, 2);
     gtk_table_set_col_spacings(table, 6);
@@ -474,15 +495,16 @@ gwy_dimensions_new(GwyDimensionArgs *args,
 
     /* Template */
     if (dims->template_) {
-        GtkWidget *align = gtk_alignment_new(0.0, 0.5, 0.0, 0.0);
-
         gtk_table_set_row_spacing(table, row-1, 12);
-        gtk_table_attach(table, align, 0, 3, row, row+1, GTK_FILL, 0, 0, 0);
 
-        button = gtk_button_new_with_mnemonic(_("_Like Current Channel"));
+        label = gwy_label_new_header(_("Current Channel"));
+        gtk_table_attach(table, label, 0, 3, row, row+1, GTK_FILL, 0, 0, 0);
+        row++;
+
+        button = gtk_button_new_with_mnemonic(_("_Take Dimensions from Current Channel"));
         gwy_sensitivity_group_add_widget(sensgroup, button,
                                          GWY_DIMENSIONS_SENS);
-        gtk_container_add(GTK_CONTAINER(align), button);
+        gtk_table_attach(table, button, 0, 3, row, row+1, GTK_FILL, 0, 0, 0);
         g_signal_connect_swapped(button, "clicked",
                                  G_CALLBACK(gwy_dimensions_use_template), dims);
         row++;
@@ -494,6 +516,15 @@ gwy_dimensions_new(GwyDimensionArgs *args,
         gtk_table_attach(table, button, 0, 3, row, row+1, GTK_FILL, 0, 0, 0);
         g_signal_connect_swapped(button, "toggled",
                                  G_CALLBACK(gwy_dimensions_replace), dims);
+        row++;
+
+        button = gtk_check_button_new_with_mnemonic(_("_Start from the current "
+                                                      "channel"));
+        dims->add = button;
+        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(button), args->add);
+        gtk_table_attach(table, button, 0, 3, row, row+1, GTK_FILL, 0, 0, 0);
+        g_signal_connect_swapped(button, "toggled",
+                                 G_CALLBACK(gwy_dimensions_add), dims);
         row++;
     }
 
@@ -518,6 +549,8 @@ gwy_dimensions_new(GwyDimensionArgs *args,
                              G_CALLBACK(gwy_dimensions_zpow10_changed), dims);
 
     gwy_dimensions_replace(dims, dims->replace);
+    /* FIXME: Necessary? */
+    gwy_dimensions_add(dims, dims->add);
 
     return dims;
 }
@@ -610,6 +643,9 @@ gwy_dimensions_load_args(GwyDimensionArgs *args,
     g_string_append(g_string_truncate(key, len), "replace");
     gwy_container_gis_boolean_by_name(settings, key->str, &args->replace);
 
+    g_string_append(g_string_truncate(key, len), "add");
+    gwy_container_gis_boolean_by_name(settings, key->str, &args->add);
+
     g_string_free(key, TRUE);
 }
 
@@ -652,6 +688,9 @@ gwy_dimensions_save_args(const GwyDimensionArgs *args,
 
     g_string_append(g_string_truncate(key, len), "replace");
     gwy_container_set_boolean_by_name(settings, key->str, args->replace);
+
+    g_string_append(g_string_truncate(key, len), "add");
+    gwy_container_set_boolean_by_name(settings, key->str, args->add);
 
     g_string_free(key, TRUE);
 }
