@@ -318,7 +318,7 @@ run_noninteractive(PatSynthArgs *args,
             gdouble mag = pow10(dimsargs->xypow10) * dimsargs->measure;
             dfield = gwy_data_field_new(dimsargs->xres, dimsargs->yres,
                                         mag*dimsargs->xres, mag*dimsargs->yres,
-                                        FALSE);
+                                        TRUE);
 
             siunit = gwy_data_field_get_si_unit_xy(dfield);
             gwy_si_unit_set_from_string(siunit, dimsargs->xyunits);
