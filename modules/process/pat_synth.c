@@ -65,9 +65,10 @@ enum {
 };
 
 typedef enum {
-    RNG_FLAT   = 0,
-    RNG_SLOPE  = 1,
-    RNG_HEIGHT = 2,
+    RNG_FLAT      = 0,
+    RNG_SLOPE     = 1,
+    RNG_HEIGHT    = 2,
+    RNG_DISPLAC_X = 3,
     RNG_NRNGS
 } ObjSynthRng;
 
@@ -183,6 +184,9 @@ static void        pat_synth_do         (const PatSynthArgs *args,
                                          const GwyDimensionArgs *dimsargs,
                                          RandGenSet *rngset,
                                          GwyDataField *dfield);
+static GwyDataField* make_displacement_map(guint xres, guint yres,
+                                           gdouble sigma, gdouble tau,
+                                           GRand *rng);
 static RandGenSet* rand_gen_set_new     (guint n);
 static void        rand_gen_set_init    (RandGenSet *rngset,
                                          guint seed);
@@ -702,6 +706,18 @@ double_changed(PatSynthControls *controls,
 }
 
 static void
+angle_changed(PatSynthControls *controls,
+              GtkAdjustment *adj)
+{
+    GObject *object = G_OBJECT(adj);
+    gdouble *target = g_object_get_data(object, "target");
+
+    g_return_if_fail(target);
+    *target = G_PI/180.0 * gtk_adjustment_get_value(adj);
+    pat_synth_invalidate(controls);
+}
+
+static void
 update_value_label(GtkLabel *label,
                    const GwySIValueFormat *vf,
                    gdouble value)
@@ -837,7 +853,6 @@ attach_height(PatSynthControls *controls,
 {
     GtkWidget *spin;
 
-
     *adj = gtk_adjustment_new(*target, 0.0001, 10000.0, 0.1, 10.0, 0);
     g_object_set_data(G_OBJECT(*adj), "target", target);
 
@@ -851,6 +866,35 @@ attach_height(PatSynthControls *controls,
     *punits = gwy_table_hscale_get_units(*adj);
     g_signal_connect_swapped(*adj, "value-changed",
                              G_CALLBACK(double_changed), controls);
+    row++;
+
+    return row;
+}
+
+static gint
+attach_orientation(PatSynthControls *controls,
+                   gint row,
+                   GtkObject **adj,
+                   gdouble *target)
+{
+    GtkWidget *spin;
+
+    gtk_table_set_row_spacing(controls->table, row-1, 12);
+    gtk_table_attach(controls->table, gwy_label_new_header(_("Orientation")),
+                     0, 3, row, row+1, GTK_FILL, 0, 0, 0);
+    row++;
+
+    *adj = gtk_adjustment_new(*target * 180.0/G_PI,
+                              -180.0, 180.0, 1.0, 10.0, 0);
+    g_object_set_data(G_OBJECT(*adj), "target", target);
+
+    spin = gwy_table_attach_hscale(GTK_WIDGET(controls->table),
+                                   row, _("Orien_tation:"), "deg", *adj,
+                                   GWY_HSCALE_DEFAULT);
+    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 1);
+    g_signal_connect_swapped(*adj, "value-changed",
+                             G_CALLBACK(angle_changed), controls);
+
     row++;
 
     return row;
@@ -880,6 +924,61 @@ attach_variance(PatSynthControls *controls,
     return row;
 }
 
+static gint
+attach_deformation(PatSynthControls *controls,
+                   gint row,
+                   GtkObject **adj_sigma,
+                   gdouble *target_sigma,
+                   GtkObject **adj_tau,
+                   gdouble *target_tau,
+                   GtkWidget **pvalue_tau,
+                   GtkWidget **punits_tau)
+{
+    GtkWidget *spin;
+
+    gtk_table_set_row_spacing(controls->table, row-1, 12);
+    gtk_table_attach(controls->table, gwy_label_new_header(_("Deformation")),
+                     0, 3, row, row+1, GTK_FILL, 0, 0, 0);
+    row++;
+
+    *adj_sigma = gtk_adjustment_new(*target_sigma, 0.0, 100.0, 0.01, 1.0, 0);
+    g_object_set_data(G_OBJECT(*adj_sigma), "target", target_sigma);
+
+    spin = gwy_table_attach_hscale(GTK_WIDGET(controls->table),
+                                   row, _("_Amplitude:"), NULL, *adj_sigma,
+                                   GWY_HSCALE_LOG);
+    row++;
+
+    *adj_tau = gtk_adjustment_new(*target_tau, 0.0, 100.0, 0.01, 1.0, 0);
+    g_object_set_data(G_OBJECT(*adj_tau), "target", target_tau);
+
+    spin = gwy_table_attach_hscale(GTK_WIDGET(controls->table),
+                                   row, _("_Lateral scale:"), "px", *adj_tau,
+                                   GWY_HSCALE_LOG);
+    row++;
+
+    *pvalue_tau = gtk_label_new(NULL);
+    gtk_misc_set_alignment(GTK_MISC(*pvalue_tau), 1.0, 0.5);
+    gtk_table_attach(controls->table, *pvalue_tau,
+                     2, 3, row, row+1, GTK_FILL, 0, 0, 0);
+    g_object_set_data(G_OBJECT(*adj_tau), "value-label", *pvalue_tau);
+
+    *punits_tau = gtk_label_new(NULL);
+    gtk_misc_set_alignment(GTK_MISC(*punits_tau), 0.0, 0.5);
+    gtk_table_attach(controls->table, *punits_tau,
+                     3, 4, row, row+1, GTK_FILL, 0, 0, 0);
+    row++;
+
+    g_signal_connect_swapped(*adj_sigma, "value-changed",
+                             G_CALLBACK(double_changed), controls);
+    g_signal_connect_swapped(*adj_tau, "value-changed",
+                             G_CALLBACK(double_changed), controls);
+    g_signal_connect_swapped(*adj_tau, "value-changed",
+                             G_CALLBACK(update_lateral), controls);
+
+    return row;
+}
+
 /* Gauss-like distribution with range limited to [1-range, 1+range] */
 static inline gdouble
 rand_gen_set_mult(RandGenSet *rngset,
@@ -895,100 +994,6 @@ rand_gen_set_mult(RandGenSet *rngset,
                         + g_rand_double(rng) - g_rand_double(rng))/2.0;
                         */
     return 1.0 + range*(g_rand_double(rng) - g_rand_double(rng));
-}
-
-typedef struct {
-    gdouble flat;
-    gdouble flat_noise;
-    gdouble slope;
-    gdouble slope_noise;
-    gdouble height;
-    gdouble height_noise;
-} PatSynthArgsSteps;
-
-typedef struct {
-    PatSynthArgsSteps *args;
-    GtkObject *flat;
-    GtkWidget *flat_value;
-    GtkWidget *flat_units;
-    GtkObject *flat_noise;
-    GtkObject *slope;
-    GtkWidget *slope_value;
-    GtkWidget *slope_units;
-    GtkObject *slope_noise;
-    GtkObject *height;
-    GtkWidget *height_units;
-    GtkObject *height_noise;
-} PatSynthControlsSteps;
-
-static gpointer
-create_gui_steps(PatSynthControls *controls)
-{
-    PatSynthControlsSteps *pcontrols;
-    PatSynthArgsSteps *pargs;
-    gint row;
-
-    row = extend_table(controls->table, 4+4+3);
-    pcontrols = g_new0(PatSynthControlsSteps, 1);
-    pargs = pcontrols->args = controls->args->pattern_args;
-
-    gtk_table_set_row_spacing(controls->table, row-1, 12);
-    gtk_table_attach(controls->table, gwy_label_new_header(_("Flat")),
-                     0, 3, row, row+1, GTK_FILL, 0, 0, 0);
-    row++;
-
-    pcontrols->flat = gtk_adjustment_new(pargs->flat,
-                                         1.0, 1000.0, 0.01, 10.0, 0);
-    row = attach_lateral(controls, row, pcontrols->flat, &pargs->flat,
-                         _("_Flat length:"), GWY_HSCALE_SQRT,
-                         NULL,
-                         &pcontrols->flat_value,
-                         &pcontrols->flat_units);
-    row = attach_variance(controls, row,
-                          &pcontrols->flat_noise, &pargs->flat_noise);
-
-    gtk_table_set_row_spacing(controls->table, row-1, 12);
-    gtk_table_attach(controls->table, gwy_label_new_header(_("Slope")),
-                     0, 3, row, row+1, GTK_FILL, 0, 0, 0);
-    row++;
-
-    pcontrols->slope = gtk_adjustment_new(pargs->slope,
-                                          0.0, 1000.0, 0.01, 10.0, 0);
-    row = attach_lateral(controls, row, pcontrols->slope, &pargs->slope,
-                         _("_Slope length:"), GWY_HSCALE_DEFAULT,
-                         NULL,
-                         &pcontrols->slope_value,
-                         &pcontrols->slope_units);
-    row = attach_variance(controls, row,
-                          &pcontrols->slope_noise, &pargs->slope_noise);
-
-    gtk_table_set_row_spacing(controls->table, row-1, 12);
-    gtk_table_attach(controls->table, gwy_label_new_header(_("Height")),
-                     0, 3, row, row+1, GTK_FILL, 0, 0, 0);
-    row++;
-
-    row = attach_height(controls, row,
-                        &pcontrols->height, &pargs->height,
-                        _("_Height:"), NULL, &pcontrols->height_units);
-    row = attach_variance(controls, row,
-                          &pcontrols->height_noise, &pargs->height_noise);
-
-    return pcontrols;
-}
-
-static void
-dimensions_changed_steps(PatSynthControls *controls)
-{
-    PatSynthControlsSteps *pcontrols = controls->pattern_controls;
-    GwyDimensions *dims = controls->dims;
-
-    gtk_label_set_markup(GTK_LABEL(pcontrols->flat_units), dims->xyvf->units);
-    update_lateral(controls, GTK_ADJUSTMENT(pcontrols->flat));
-
-    gtk_label_set_markup(GTK_LABEL(pcontrols->slope_units), dims->xyvf->units);
-    update_lateral(controls, GTK_ADJUSTMENT(pcontrols->slope));
-
-    gtk_label_set_markup(GTK_LABEL(pcontrols->height_units), dims->zvf->units);
 }
 
 static guint
@@ -1013,6 +1018,117 @@ bisect_lower(const gdouble *a, guint n, gdouble x)
     return lo;
 }
 
+typedef struct {
+    gdouble flat;
+    gdouble flat_noise;
+    gdouble slope;
+    gdouble slope_noise;
+    gdouble height;
+    gdouble height_noise;
+    gdouble angle;
+    gdouble sigma;
+    gdouble tau;
+} PatSynthArgsSteps;
+
+typedef struct {
+    PatSynthArgsSteps *args;
+    GtkObject *flat;
+    GtkWidget *flat_value;
+    GtkWidget *flat_units;
+    GtkObject *flat_noise;
+    GtkObject *slope;
+    GtkWidget *slope_value;
+    GtkWidget *slope_units;
+    GtkObject *slope_noise;
+    GtkObject *height;
+    GtkWidget *height_units;
+    GtkObject *height_noise;
+    GtkObject *angle;
+    GtkObject *sigma;
+    GtkObject *tau;
+    GtkWidget *tau_value;
+    GtkWidget *tau_units;
+} PatSynthControlsSteps;
+
+static gpointer
+create_gui_steps(PatSynthControls *controls)
+{
+    PatSynthControlsSteps *pcontrols;
+    PatSynthArgsSteps *pargs;
+    gint row;
+
+    row = extend_table(controls->table, 4+4+3+2+4);
+    pcontrols = g_new0(PatSynthControlsSteps, 1);
+    pargs = pcontrols->args = controls->args->pattern_args;
+
+    gtk_table_set_row_spacing(controls->table, row-1, 12);
+    gtk_table_attach(controls->table, gwy_label_new_header(_("Flat")),
+                     0, 3, row, row+1, GTK_FILL, 0, 0, 0);
+    row++;
+
+    pcontrols->flat = gtk_adjustment_new(pargs->flat,
+                                         1.0, 1000.0, 0.01, 10.0, 0);
+    row = attach_lateral(controls, row, pcontrols->flat, &pargs->flat,
+                         _("_Flat length:"), GWY_HSCALE_LOG,
+                         NULL,
+                         &pcontrols->flat_value,
+                         &pcontrols->flat_units);
+    row = attach_variance(controls, row,
+                          &pcontrols->flat_noise, &pargs->flat_noise);
+
+    gtk_table_set_row_spacing(controls->table, row-1, 12);
+    gtk_table_attach(controls->table, gwy_label_new_header(_("Slope")),
+                     0, 3, row, row+1, GTK_FILL, 0, 0, 0);
+    row++;
+
+    pcontrols->slope = gtk_adjustment_new(pargs->slope,
+                                          0.0, 1000.0, 0.01, 10.0, 0);
+    row = attach_lateral(controls, row, pcontrols->slope, &pargs->slope,
+                         _("_Slope length:"), GWY_HSCALE_SQRT,
+                         NULL,
+                         &pcontrols->slope_value,
+                         &pcontrols->slope_units);
+    row = attach_variance(controls, row,
+                          &pcontrols->slope_noise, &pargs->slope_noise);
+
+    gtk_table_set_row_spacing(controls->table, row-1, 12);
+    gtk_table_attach(controls->table, gwy_label_new_header(_("Height")),
+                     0, 3, row, row+1, GTK_FILL, 0, 0, 0);
+    row++;
+
+    row = attach_height(controls, row,
+                        &pcontrols->height, &pargs->height,
+                        _("_Height:"), NULL, &pcontrols->height_units);
+    row = attach_variance(controls, row,
+                          &pcontrols->height_noise, &pargs->height_noise);
+
+    row = attach_orientation(controls, row,
+                             &pcontrols->angle, &pargs->angle);
+
+    row = attach_deformation(controls, row,
+                             &pcontrols->sigma, &pargs->sigma,
+                             &pcontrols->tau, &pargs->tau,
+                             &pcontrols->tau_value, &pcontrols->tau_units);
+
+    return pcontrols;
+}
+
+static void
+dimensions_changed_steps(PatSynthControls *controls)
+{
+    PatSynthControlsSteps *pcontrols = controls->pattern_controls;
+    GwyDimensions *dims = controls->dims;
+
+    gtk_label_set_markup(GTK_LABEL(pcontrols->flat_units), dims->xyvf->units);
+    gtk_label_set_markup(GTK_LABEL(pcontrols->slope_units), dims->xyvf->units);
+    gtk_label_set_markup(GTK_LABEL(pcontrols->tau_units), dims->xyvf->units);
+    gtk_label_set_markup(GTK_LABEL(pcontrols->height_units), dims->zvf->units);
+
+    update_lateral(controls, GTK_ADJUSTMENT(pcontrols->flat));
+    update_lateral(controls, GTK_ADJUSTMENT(pcontrols->slope));
+    update_lateral(controls, GTK_ADJUSTMENT(pcontrols->tau));
+}
+
 static void
 make_pattern_steps(const PatSynthArgs *args,
                    const GwyDimensionArgs *dimsargs,
@@ -1020,9 +1136,10 @@ make_pattern_steps(const PatSynthArgs *args,
                    GwyDataField *dfield)
 {
     const PatSynthArgsSteps *pargs = args->pattern_args;
+    GwyDataField *displacement_x;
     guint n, i, j, k, xres, yres;
-    gdouble *abscissa, *height, *data;
-    gdouble h;
+    gdouble *abscissa, *height, *data, *dx_data;
+    gdouble h, c, s, x, xu, yu, xoff, yoff;
 
     h = pargs->height * pow10(dimsargs->zpow10);
 
@@ -1034,11 +1151,12 @@ make_pattern_steps(const PatSynthArgs *args,
     abscissa = g_new(gdouble, 2*n);
     height = g_new(gdouble, n);
 
-    abscissa[0] = 0.0;
+    abscissa[0] = -0.6*hypot(xres, yres) - 7;
     abscissa[1] = pargs->flat;
     if (pargs->flat && pargs->flat_noise)
         abscissa[1] *= rand_gen_set_mult(rngset, RNG_FLAT,
                                          pargs->flat_noise);
+    abscissa[1] += abscissa[0];
     height[0] = 0.0;
 
     for (k = 1; k < n; k++) {
@@ -1061,11 +1179,23 @@ make_pattern_steps(const PatSynthArgs *args,
         height[k] += height[k-1];
     }
 
+    displacement_x = make_displacement_map(xres, yres,
+                                           pargs->sigma, pargs->tau,
+                                           rngset->rng[RNG_DISPLAC_X]);
+    dx_data = gwy_data_field_get_data(displacement_x);
+
+    c = cos(pargs->angle);
+    s = sin(pargs->angle);
+    xoff = 0.5*((1.0 - c)*xres + s*yres);
+    yoff = 0.5*(-s*yres + (1.0 - c)*yres);
     for (i = 0; i < yres; i++) {
         for (j = 0; j < xres; j++) {
             gdouble v;
 
-            k = bisect_lower(abscissa, 2*n, j);
+            xu = xoff + j*c - i*s;
+            yu = yoff + j*s + i*c;
+            x = xu + dx_data[i*xres + j];
+            k = bisect_lower(abscissa, 2*n, x);
             if (k % 2 == 0)
                 v = height[k/2];
             else {
@@ -1073,17 +1203,18 @@ make_pattern_steps(const PatSynthArgs *args,
                     v = height[k/2];
                 else {
                     gdouble d = abscissa[k+1] - abscissa[k];
-                    gdouble q = G_LIKELY(d) ? (j - abscissa[k])/d : 0.5;
+                    gdouble q = G_LIKELY(d) ? (x - abscissa[k])/d : 0.5;
 
                     v = (1.0 - q)*height[k/2] + q*height[k/2 + 1];
                 }
             }
-            data[i*xres + j] = v;
+            data[i*xres + j] += v;
         }
     }
 
     g_free(height);
     g_free(abscissa);
+    g_object_unref(displacement_x);
 }
 
 static gpointer
@@ -1101,21 +1232,39 @@ load_args_steps(GwyContainer *settings)
 
     g_string_append(g_string_truncate(key, len), "flat");
     gwy_container_gis_double_by_name(settings, key->str, &pargs->flat);
+    pargs->flat = CLAMP(pargs->flat, 1.0, 1000.0);
 
     g_string_append(g_string_truncate(key, len), "flat_noise");
     gwy_container_gis_double_by_name(settings, key->str, &pargs->flat_noise);
+    pargs->flat_noise = CLAMP(pargs->flat_noise, 0.0, 1.0);
 
     g_string_append(g_string_truncate(key, len), "slope");
     gwy_container_gis_double_by_name(settings, key->str, &pargs->slope);
+    pargs->slope = CLAMP(pargs->slope, 0.0, 1000.0);
 
     g_string_append(g_string_truncate(key, len), "slope_noise");
     gwy_container_gis_double_by_name(settings, key->str, &pargs->slope_noise);
+    pargs->slope_noise = CLAMP(pargs->slope_noise, 0.0, 1.0);
 
     g_string_append(g_string_truncate(key, len), "height");
     gwy_container_gis_double_by_name(settings, key->str, &pargs->height);
+    pargs->height = CLAMP(pargs->height, 0.0001, 10000.0);
 
     g_string_append(g_string_truncate(key, len), "height_noise");
     gwy_container_gis_double_by_name(settings, key->str, &pargs->height_noise);
+    pargs->height_noise = CLAMP(pargs->height_noise, 0.0, 1.0);
+
+    g_string_append(g_string_truncate(key, len), "angle");
+    gwy_container_gis_double_by_name(settings, key->str, &pargs->angle);
+    pargs->angle = CLAMP(pargs->angle, -G_PI, G_PI);
+
+    g_string_append(g_string_truncate(key, len), "sigma");
+    gwy_container_gis_double_by_name(settings, key->str, &pargs->sigma);
+    pargs->sigma = CLAMP(pargs->sigma, 0.0, 100.0);
+
+    g_string_append(g_string_truncate(key, len), "tau");
+    gwy_container_gis_double_by_name(settings, key->str, &pargs->tau);
+    pargs->tau = CLAMP(pargs->tau, 0.1, 1000.0);
 
     g_string_free(key, TRUE);
 
@@ -1152,7 +1301,52 @@ save_args_steps(gpointer p,
     g_string_append(g_string_truncate(key, len), "height_noise");
     gwy_container_set_double_by_name(settings, key->str, pargs->height_noise);
 
+    g_string_append(g_string_truncate(key, len), "angle");
+    gwy_container_set_double_by_name(settings, key->str, pargs->angle);
+
+    g_string_append(g_string_truncate(key, len), "sigma");
+    gwy_container_set_double_by_name(settings, key->str, pargs->sigma);
+
+    g_string_append(g_string_truncate(key, len), "tau");
+    gwy_container_set_double_by_name(settings, key->str, pargs->tau);
+
     g_string_free(key, TRUE);
+}
+
+static GwyDataField*
+make_displacement_map(guint xres, guint yres,
+                      gdouble sigma, gdouble tau,
+                      GRand *rng)
+{
+    GwyDataField *grid, *dfield;
+    gint i, j;
+    gdouble q;
+    gdouble *data;
+    gint n = 401;
+
+    if (!sigma)
+        return gwy_data_field_new(xres, yres, 1.0, 1.0, TRUE);
+
+    grid = gwy_data_field_new(n, n, 1.0, 1.0, FALSE);
+    data = gwy_data_field_get_data(grid);
+    q = 2.0*sigma*tau;
+
+    data[n/2*(n + 1)] = q*(g_rand_double(rng) - 0.5);
+    for (i = 1; i <= n/2; i++) {
+        for (j = 0; j < 2*i; j++) {
+            data[(n/2 - i + j)*n + n/2 - i] = q*(g_rand_double(rng) - 0.5);
+            data[(n/2 + i)*n + n/2 - i + j] = q*(g_rand_double(rng) - 0.5);
+            data[(n/2 + i - j)*n + n/2 + i] = q*(g_rand_double(rng) - 0.5);
+            data[(n/2 - i)*n + n/2 + i - j] = q*(g_rand_double(rng) - 0.5);
+        }
+    }
+    gwy_data_field_filter_gaussian(grid, tau);
+
+    dfield = gwy_data_field_new_resampled(grid, xres, yres,
+                                          GWY_INTERPOLATION_KEY);
+    g_object_unref(grid);
+
+    return dfield;
 }
 
 static RandGenSet*
