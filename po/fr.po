@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: French localization\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2010-11-02 03:58+0100\n"
-"PO-Revision-Date: 2010-11-02 22:58+0100\n"
+"POT-Creation-Date: 2010-11-03 03:58+0100\n"
+"PO-Revision-Date: 2010-11-03 22:08+0100\n"
 "Last-Translator: François RIGUET <francheu@caramail.com>\n"
 "Language-Team: François RIGUET <francheu@caramail.com>\n"
 "MIME-Version: 1.0\n"
@@ -317,6 +317,7 @@ msgid "Boundary"
 msgstr "Dimensions"
 
 #: libprocess/gwygrainvalue.c:918
+#: modules/process/pat_synth.c:1080
 #: modules/tools/linestats.c:156
 msgid "Slope"
 msgstr "Pente"
@@ -775,7 +776,7 @@ msgstr "pixels"
 #: modules/process/median-bg.c:176
 #: modules/process/noise_synth.c:351
 #: modules/process/obj_synth.c:447
-#: modules/process/pat_synth.c:336
+#: modules/process/pat_synth.c:383
 #: modules/process/polydistort.c:219
 #: modules/process/polylevel.c:376
 #: modules/process/rotate.c:264
@@ -1042,6 +1043,7 @@ msgstr "Longueur"
 #: libgwydgets/gwygraphwindowmeasuredialog.c:443
 #: app/gwyplaintool.c:1022
 #: modules/process/obj_synth.c:612
+#: modules/process/pat_synth.c:1095
 msgid "Height"
 msgstr "Hauteur"
 
@@ -3443,6 +3445,7 @@ msgstr "Largeur :"
 #: modules/process/grain_mark.c:312
 #: modules/process/grain_rem_threshold.c:280
 #: modules/process/obj_synth.c:618
+#: modules/process/pat_synth.c:1101
 #: modules/process/tip_blind.c:271
 msgid "_Height:"
 msgstr "_Hauteur :"
@@ -3707,7 +3710,7 @@ msgstr "Préréglages"
 #: modules/process/mark_with.c:212
 #: modules/process/noise_synth.c:605
 #: modules/process/obj_synth.c:817
-#: modules/process/pat_synth.c:546
+#: modules/process/pat_synth.c:579
 #: modules/process/polydistort.c:214
 #: modules/process/scars.c:466
 #: modules/process/tip_model.c:167
@@ -5826,7 +5829,7 @@ msgstr "Pas dét_ecté"
 #: modules/process/mark_with.c:359
 #: modules/process/noise_synth.c:609
 #: modules/process/obj_synth.c:821
-#: modules/process/pat_synth.c:550
+#: modules/process/pat_synth.c:583
 #: modules/process/polydistort.c:334
 #: modules/process/scars.c:575
 msgid "I_nstant updates"
@@ -6176,7 +6179,7 @@ msgstr "Générer une surface en utilisant la synthèse spectrale"
 #: modules/process/fft_synth.c:312
 #: modules/process/noise_synth.c:326
 #: modules/process/obj_synth.c:419
-#: modules/process/pat_synth.c:310
+#: modules/process/pat_synth.c:355
 msgid "Generated"
 msgstr "Généré"
 
@@ -6187,14 +6190,14 @@ msgstr "Synthèse spectrale"
 #: modules/process/fft_synth.c:407
 #: modules/process/noise_synth.c:421
 #: modules/process/obj_synth.c:516
-#: modules/process/pat_synth.c:405
+#: modules/process/pat_synth.c:452
 msgid "Dimensions"
 msgstr "Dimensions"
 
 #: modules/process/fft_synth.c:417
 #: modules/process/noise_synth.c:431
 #: modules/process/obj_synth.c:526
-#: modules/process/pat_synth.c:415
+#: modules/process/pat_synth.c:463
 msgid "Generator"
 msgstr "Générateur"
 
@@ -6236,21 +6239,21 @@ msgstr "Puissance :"
 #: modules/process/fft_synth.c:662
 #: modules/process/noise_synth.c:627
 #: modules/process/obj_synth.c:839
-#: modules/process/pat_synth.c:568
+#: modules/process/pat_synth.c:601
 msgid "R_andom seed:"
 msgstr "Graine _aléatoire :"
 
 #: modules/process/fft_synth.c:668
 #: modules/process/noise_synth.c:633
 #: modules/process/obj_synth.c:845
-#: modules/process/pat_synth.c:574
+#: modules/process/pat_synth.c:607
 msgid "seed|_New"
 msgstr "_Nouvelle"
 
 #: modules/process/fft_synth.c:679
 #: modules/process/noise_synth.c:644
 #: modules/process/obj_synth.c:856
-#: modules/process/pat_synth.c:585
+#: modules/process/pat_synth.c:618
 msgid "Randomize"
 msgstr "Randomiser"
 
@@ -7715,6 +7718,7 @@ msgstr "Dimen_sion :"
 #: modules/process/obj_synth.c:603
 #: modules/process/obj_synth.c:649
 #: modules/process/obj_synth.c:672
+#: modules/process/pat_synth.c:915
 msgid "Variance:"
 msgstr "Variance :"
 
@@ -7731,10 +7735,12 @@ msgid "Scales _with size"
 msgstr "Mettre à l'échelle avec la taille"
 
 #: modules/process/obj_synth.c:657
+#: modules/process/pat_synth.c:883
 msgid "Orientation"
 msgstr "Orientation"
 
 #: modules/process/obj_synth.c:663
+#: modules/process/pat_synth.c:892
 msgid "Orien_tation:"
 msgstr "Orien_tation :"
 
@@ -7750,42 +7756,55 @@ msgstr "/_Correction des Données/Masquer les p_oints aberrants"
 msgid "Mark data farther than 3σ from mean value"
 msgstr "Marque les données éloignées de plus de 3σ de la valeur moyenne"
 
-#: modules/process/pat_synth.c:189
+#: modules/process/pat_synth.c:215
 msgid "Steps"
 msgstr "Sauts"
 
-#: modules/process/pat_synth.c:195
+#: modules/process/pat_synth.c:221
 msgid "Generates surfaces representing simple patterns (steps, trenches, ...)."
 msgstr "Génère une surface à partir de motifs simples (sauts, tranchées...)."
 
-#: modules/process/pat_synth.c:210
+#: modules/process/pat_synth.c:236
 msgid "/S_ynthetic/_Pattern..."
 msgstr "/S_ynthèse/Motifs..."
 
-#: modules/process/pat_synth.c:214
+#: modules/process/pat_synth.c:240
 msgid "Generate patterned surface"
 msgstr "Générer une surface à partir de motifs"
 
-#: modules/process/pat_synth.c:334
+#: modules/process/pat_synth.c:381
 msgid "Pattern"
 msgstr "Motif"
 
-#: modules/process/pat_synth.c:419
+#: modules/process/pat_synth.c:467
 msgid "_Pattern:"
 msgstr "Motif :"
 
-#: modules/process/pat_synth.c:816
-msgid "Ideal Geometry"
-msgstr "Géométrie idéale"
+#: modules/process/pat_synth.c:940
+msgid "Deformation"
+msgstr "Déformation"
 
-#: modules/process/pat_synth.c:824
+#: modules/process/pat_synth.c:948
+msgid "_Amplitude:"
+msgstr "_Amplitude :"
+
+#: modules/process/pat_synth.c:956
+msgid "_Lateral scale:"
+msgstr "Echelle _latérale :"
+
+#: modules/process/pat_synth.c:1065
 #, fuzzy
-msgid "Pitch:"
-msgstr "Pas :"
+msgid "Flat"
+msgstr "Plat"
 
-#: modules/process/pat_synth.c:833
-msgid "Sloping part:"
-msgstr ""
+#: modules/process/pat_synth.c:1072
+#, fuzzy
+msgid "_Flat length:"
+msgstr "Longueur du plat :"
+
+#: modules/process/pat_synth.c:1087
+msgid "_Slope length:"
+msgstr "Longueur de la pente :"
 
 #: modules/process/polydistort.c:140
 msgid "Apllies polynomial distortion in the horizontal plane."
@@ -9401,6 +9420,12 @@ msgstr ""
 "Inclinaison θ:      %s\n"
 "Inclinaison φ:      %s\n"
 
+#~ msgid "Ideal Geometry"
+#~ msgstr "Géométrie idéale"
+
+#, fuzzy
+#~ msgid "Pitch:"
+#~ msgstr "Pas :"
 #~ msgid "Constant current tunnel spectroscopy (CITS) is not supported."
 #~ msgstr ""
 #~ "La spectroscopie à courant tunnel constant (CITS) n'est pas supportée."
