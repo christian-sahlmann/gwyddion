@@ -1438,7 +1438,7 @@ create_gui_ridges(PatSynthControls *controls)
     pcontrols->top = gtk_adjustment_new(pargs->top,
                                         0.1, 1000.0, 0.01, 10.0, 0);
     row = attach_lateral(controls, row, pcontrols->top, &pargs->top,
-                         _("_Flat width:"), GWY_HSCALE_LOG,
+                         _("Flat _top width:"), GWY_HSCALE_LOG,
                          NULL,
                          &pcontrols->top_value,
                          &pcontrols->top_units);
@@ -1453,7 +1453,7 @@ create_gui_ridges(PatSynthControls *controls)
     pcontrols->bottom = gtk_adjustment_new(pargs->bottom,
                                            0.1, 1000.0, 0.01, 10.0, 0);
     row = attach_lateral(controls, row, pcontrols->bottom, &pargs->bottom,
-                         _("_Flat width:"), GWY_HSCALE_LOG,
+                         _("Flat _bottom width:"), GWY_HSCALE_LOG,
                          NULL,
                          &pcontrols->bottom_value,
                          &pcontrols->bottom_units);
