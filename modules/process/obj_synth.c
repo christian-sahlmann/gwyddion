@@ -905,6 +905,7 @@ feature_type_selected(GtkComboBox *combo,
                       ObjSynthControls *controls)
 {
     controls->args->type = gwy_enum_combo_box_get_active(combo);
+    update_coverage_value(controls);
     obj_synth_invalidate(controls);
 }
 
@@ -914,6 +915,7 @@ size_changed(ObjSynthControls *controls,
 {
     controls->args->size = gtk_adjustment_get_value(adj);
     update_size_value(controls);
+    update_coverage_value(controls);
     obj_synth_invalidate(controls);
 }
 
@@ -930,6 +932,7 @@ size_noise_changed(ObjSynthControls *controls,
                    GtkAdjustment *adj)
 {
     controls->args->size_noise = gtk_adjustment_get_value(adj);
+    update_coverage_value(controls);
     obj_synth_invalidate(controls);
 }
 
@@ -938,6 +941,7 @@ aspect_changed(ObjSynthControls *controls,
                GtkAdjustment *adj)
 {
     controls->args->aspect = gtk_adjustment_get_value(adj);
+    update_coverage_value(controls);
     obj_synth_invalidate(controls);
 }
 
