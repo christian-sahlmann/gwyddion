@@ -65,17 +65,21 @@ enum {
     PAGE_NPAGES
 };
 
+/* Each pattern has its own set of parameters but many are common so they get
+ * the same symbolic name in ObjSynthRng for simpliciy. */
 typedef enum {
     RNG_FLAT      = 0,
+    RNG_TOP       = 0,
     RNG_SLOPE     = 1,
-    RNG_HEIGHT    = 2,
-    RNG_DISPLAC_X = 3,
+    RNG_BOTTOM    = 2,
+    RNG_HEIGHT    = 3,
+    RNG_DISPLAC_X = 4,
     RNG_NRNGS
 } ObjSynthRng;
 
 typedef enum {
-    PAT_SYNTH_STEPS    = 0,
-    PAT_SYNTH_TRENCHES = 1,
+    PAT_SYNTH_STEPS  = 0,
+    PAT_SYNTH_RIDGES = 1,
     PAT_SYNTH_NTYPES
 } PatSynthType;
 
@@ -199,6 +203,16 @@ static RandGenSet*   rand_gen_set_new     (guint n);
 static void          rand_gen_set_init    (RandGenSet *rngset,
                                            guint seed);
 static void          rand_gen_set_free    (RandGenSet *rngset);
+static void          load_arg_double      (GwyContainer *settings,
+                                           GString *key,
+                                           const gchar *name,
+                                           gdouble min,
+                                           gdouble max,
+                                           gdouble *value);
+static void          save_arg_double      (GwyContainer *settings,
+                                           GString *key,
+                                           const gchar *name,
+                                           gdouble value);
 static void          pat_synth_load_args  (GwyContainer *container,
                                            PatSynthArgs *args,
                                            GwyDimensionArgs *dimsargs);
@@ -207,7 +221,7 @@ static void          pat_synth_save_args  (GwyContainer *container,
                                            const GwyDimensionArgs *dimsargs);
 
 DECLARE_PATTERN(steps);
-DECLARE_PATTERN(trenches);
+DECLARE_PATTERN(ridges);
 
 static const gchar prefix[] = "/module/pat_synth";
 
@@ -221,15 +235,15 @@ static const PatSynthArgs pat_synth_defaults = {
 static const GwyDimensionArgs dims_defaults = GWY_DIMENSION_ARGS_INIT;
 
 static const PatSynthPattern patterns[] = {
-    { PAT_SYNTH_STEPS,    N_("Steps"),    PATTERN_FUNCS(steps),    },
-    { PAT_SYNTH_TRENCHES, N_("Trenches"), PATTERN_FUNCS(trenches), },
+    { PAT_SYNTH_STEPS,  N_("Steps"),  PATTERN_FUNCS(steps),  },
+    { PAT_SYNTH_RIDGES, N_("Ridges"), PATTERN_FUNCS(ridges), },
 };
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Generates surfaces representing simple patterns "
-       "(steps, trenches, ...)."),
+       "(steps, ridges, ...)."),
     "Yeti <yeti@gwyddion.net>",
     "1.0",
     "David Nečas (Yeti)",
@@ -1078,6 +1092,28 @@ bisect_lower(const gdouble *a, guint n, gdouble x)
     return lo;
 }
 
+static inline void
+generate(gdouble *a, gdouble base, gdouble noise,
+         RandGenSet *rngset, gint id)
+{
+    gdouble v = base;
+
+    if (base && noise)
+        v *= rand_gen_set_mult(rngset, id, noise);
+    *a = v;
+}
+
+static inline void
+accumulate(gdouble *a, gdouble base, gdouble noise,
+           RandGenSet *rngset, gint id)
+{
+    gdouble v = base;
+
+    if (base && noise)
+        v *= rand_gen_set_mult(rngset, id, noise);
+    *a = v + *(a - 1);
+}
+
 typedef struct {
     gdouble flat;
     gdouble flat_noise;
@@ -1135,9 +1171,9 @@ create_gui_steps(PatSynthControls *controls)
     row++;
 
     pcontrols->flat = gtk_adjustment_new(pargs->flat,
-                                         1.0, 1000.0, 0.01, 10.0, 0);
+                                         0.1, 1000.0, 0.01, 10.0, 0);
     row = attach_lateral(controls, row, pcontrols->flat, &pargs->flat,
-                         _("_Flat length:"), GWY_HSCALE_LOG,
+                         _("_Flat width:"), GWY_HSCALE_LOG,
                          NULL,
                          &pcontrols->flat_value,
                          &pcontrols->flat_units);
@@ -1152,7 +1188,7 @@ create_gui_steps(PatSynthControls *controls)
     pcontrols->slope = gtk_adjustment_new(pargs->slope,
                                           0.0, 1000.0, 0.01, 10.0, 0);
     row = attach_lateral(controls, row, pcontrols->slope, &pargs->slope,
-                         _("_Slope length:"), GWY_HSCALE_SQRT,
+                         _("_Slope width:"), GWY_HSCALE_SQRT,
                          NULL,
                          &pcontrols->slope_value,
                          &pcontrols->slope_units);
@@ -1207,7 +1243,7 @@ make_pattern_steps(const PatSynthArgs *args,
     GwyDataField *displacement_x;
     guint n, i, j, k, xres, yres;
     gdouble *abscissa, *height, *data, *dx_data;
-    gdouble h, c, s, x, xu, yu, xoff, yoff;
+    gdouble h, c, s, xoff, yoff;
 
     h = pargs->height * pow10(dimsargs->zpow10);
 
@@ -1215,37 +1251,25 @@ make_pattern_steps(const PatSynthArgs *args,
     yres = gwy_data_field_get_yres(dfield);
     data = gwy_data_field_get_data(dfield);
 
-    n = GWY_ROUND(1.4*hypot(xres, yres)/(pargs->flat + pargs->slope) + 15);
+    n = GWY_ROUND(1.5*hypot(xres, yres)/(pargs->flat + pargs->slope) + 16);
     abscissa = g_new(gdouble, 2*n);
-    height = g_new(gdouble, n);
+    height = g_new(gdouble, n+1);
 
-    abscissa[0] = -0.7*hypot(xres, yres) - 7;
-    abscissa[1] = pargs->flat;
-    if (pargs->flat && pargs->flat_noise)
-        abscissa[1] *= rand_gen_set_mult(rngset, RNG_FLAT,
-                                         pargs->flat_noise);
-    abscissa[1] += abscissa[0];
+    abscissa[0] = -0.75*hypot(xres, yres) - 8;
+    accumulate(abscissa + 1, pargs->slope, pargs->slope_noise,
+               rngset, RNG_SLOPE);
     height[0] = 0.0;
 
     for (k = 1; k < n; k++) {
-        abscissa[2*k] = pargs->slope;
-        if (pargs->slope && pargs->slope_noise)
-            abscissa[2*k] *= rand_gen_set_mult(rngset, RNG_SLOPE,
-                                               pargs->slope_noise);
-        abscissa[2*k] += abscissa[2*k - 1];
-
-        abscissa[2*k + 1] = pargs->flat;
-        if (pargs->flat && pargs->flat_noise)
-            abscissa[2*k + 1] *= rand_gen_set_mult(rngset, RNG_FLAT,
-                                                   pargs->flat_noise);
-        abscissa[2*k + 1] += abscissa[2*k];
-
-        height[k] = h;
-        if (pargs->height && pargs->height_noise)
-            height[k] *= rand_gen_set_mult(rngset, RNG_HEIGHT,
-                                           pargs->height_noise);
-        height[k] += height[k-1];
+        accumulate(abscissa + 2*k, pargs->flat, pargs->flat_noise,
+                   rngset, RNG_FLAT);
+        accumulate(abscissa + 2*k + 1, pargs->slope, pargs->slope_noise,
+                   rngset, RNG_SLOPE);
+        accumulate(height + k, pargs->height, pargs->height_noise,
+                   rngset, RNG_HEIGHT);
     }
+    accumulate(height + n, pargs->height, pargs->height_noise,
+               rngset, RNG_HEIGHT);
 
     displacement_x = make_displacement_map(xres, yres,
                                            pargs->sigma, pargs->tau,
@@ -1258,24 +1282,21 @@ make_pattern_steps(const PatSynthArgs *args,
     yoff = 0.5*(-s*yres + (1.0 - c)*yres);
     for (i = 0; i < yres; i++) {
         for (j = 0; j < xres; j++) {
-            gdouble v;
+            gdouble v, x, xu, yu, d, q;
+            guint kmod;
 
             xu = xoff + j*c - i*s;
             yu = yoff + j*s + i*c;
             x = xu + dx_data[i*xres + j];
             k = bisect_lower(abscissa, 2*n, x);
-            if (k % 2 == 0)
-                v = height[k/2];
-            else {
-                if (G_UNLIKELY(k == 2*n - 1))
-                    v = height[k/2];
-                else {
-                    gdouble d = abscissa[k+1] - abscissa[k];
-                    gdouble q = G_LIKELY(d) ? (x - abscissa[k])/d : 0.5;
-
-                    v = (1.0 - q)*height[k/2] + q*height[k/2 + 1];
-                }
+            kmod = k % 2;
+            if (!kmod) {
+                d = abscissa[k+1] - abscissa[k];
+                q = G_LIKELY(d) ? (x - abscissa[k])/d : 0.5;
+                v = (1.0 - q)*height[k/2] + q*height[k/2 + 1];
             }
+            else
+                v = height[k/2];
             data[i*xres + j] += v;
         }
     }
@@ -1290,50 +1311,19 @@ load_args_steps(GwyContainer *settings)
 {
     PatSynthArgsSteps *pargs;
     GString *key;
-    guint len;
-
-    key = g_string_new(prefix);
-    g_string_append(key, "/steps/");
-    len = key->len;
 
     pargs = g_memdup(&pat_synth_defaults_steps, sizeof(PatSynthArgsSteps));
-
-    g_string_append(g_string_truncate(key, len), "flat");
-    gwy_container_gis_double_by_name(settings, key->str, &pargs->flat);
-    pargs->flat = CLAMP(pargs->flat, 1.0, 1000.0);
-
-    g_string_append(g_string_truncate(key, len), "flat_noise");
-    gwy_container_gis_double_by_name(settings, key->str, &pargs->flat_noise);
-    pargs->flat_noise = CLAMP(pargs->flat_noise, 0.0, 1.0);
-
-    g_string_append(g_string_truncate(key, len), "slope");
-    gwy_container_gis_double_by_name(settings, key->str, &pargs->slope);
-    pargs->slope = CLAMP(pargs->slope, 0.0, 1000.0);
-
-    g_string_append(g_string_truncate(key, len), "slope_noise");
-    gwy_container_gis_double_by_name(settings, key->str, &pargs->slope_noise);
-    pargs->slope_noise = CLAMP(pargs->slope_noise, 0.0, 1.0);
-
-    g_string_append(g_string_truncate(key, len), "height");
-    gwy_container_gis_double_by_name(settings, key->str, &pargs->height);
-    pargs->height = CLAMP(pargs->height, 0.0001, 10000.0);
-
-    g_string_append(g_string_truncate(key, len), "height_noise");
-    gwy_container_gis_double_by_name(settings, key->str, &pargs->height_noise);
-    pargs->height_noise = CLAMP(pargs->height_noise, 0.0, 1.0);
-
-    g_string_append(g_string_truncate(key, len), "angle");
-    gwy_container_gis_double_by_name(settings, key->str, &pargs->angle);
-    pargs->angle = CLAMP(pargs->angle, -G_PI, G_PI);
-
-    g_string_append(g_string_truncate(key, len), "sigma");
-    gwy_container_gis_double_by_name(settings, key->str, &pargs->sigma);
-    pargs->sigma = CLAMP(pargs->sigma, 0.0, 100.0);
-
-    g_string_append(g_string_truncate(key, len), "tau");
-    gwy_container_gis_double_by_name(settings, key->str, &pargs->tau);
-    pargs->tau = CLAMP(pargs->tau, 0.1, 1000.0);
-
+    key = g_string_new(prefix);
+    g_string_append(key, "/steps/");
+    load_arg_double(settings, key, "flat", 0.1, 1000.0, &pargs->flat);
+    load_arg_double(settings, key, "flat_noise", 0.0, 1.0, &pargs->flat_noise);
+    load_arg_double(settings, key, "slope", 0.0, 1000.0, &pargs->slope);
+    load_arg_double(settings, key, "slope_noise", 0.0, 1.0, &pargs->slope_noise);
+    load_arg_double(settings, key, "height", 0.0001, 10000.0, &pargs->height);
+    load_arg_double(settings, key, "height_noise", 0.0, 1.0, &pargs->height_noise);
+    load_arg_double(settings, key, "angle", -G_PI, G_PI, &pargs->angle);
+    load_arg_double(settings, key, "sigma", 0.0, 100.0, &pargs->sigma);
+    load_arg_double(settings, key, "tau", 0.1, 1000.0, &pargs->tau);
     g_string_free(key, TRUE);
 
     return pargs;
@@ -1345,39 +1335,18 @@ save_args_steps(gpointer p,
 {
     PatSynthArgsSteps *pargs = p;
     GString *key;
-    guint len;
 
     key = g_string_new(prefix);
     g_string_append(key, "/steps/");
-    len = key->len;
-
-    g_string_append(g_string_truncate(key, len), "flat");
-    gwy_container_set_double_by_name(settings, key->str, pargs->flat);
-
-    g_string_append(g_string_truncate(key, len), "flat_noise");
-    gwy_container_set_double_by_name(settings, key->str, pargs->flat_noise);
-
-    g_string_append(g_string_truncate(key, len), "slope");
-    gwy_container_set_double_by_name(settings, key->str, pargs->slope);
-
-    g_string_append(g_string_truncate(key, len), "slope_noise");
-    gwy_container_set_double_by_name(settings, key->str, pargs->slope_noise);
-
-    g_string_append(g_string_truncate(key, len), "height");
-    gwy_container_set_double_by_name(settings, key->str, pargs->height);
-
-    g_string_append(g_string_truncate(key, len), "height_noise");
-    gwy_container_set_double_by_name(settings, key->str, pargs->height_noise);
-
-    g_string_append(g_string_truncate(key, len), "angle");
-    gwy_container_set_double_by_name(settings, key->str, pargs->angle);
-
-    g_string_append(g_string_truncate(key, len), "sigma");
-    gwy_container_set_double_by_name(settings, key->str, pargs->sigma);
-
-    g_string_append(g_string_truncate(key, len), "tau");
-    gwy_container_set_double_by_name(settings, key->str, pargs->tau);
-
+    save_arg_double(settings, key, "flat", pargs->flat);
+    save_arg_double(settings, key, "flat_noise", pargs->flat_noise);
+    save_arg_double(settings, key, "slope", pargs->slope);
+    save_arg_double(settings, key, "slope_noise", pargs->slope_noise);
+    save_arg_double(settings, key, "height", pargs->height);
+    save_arg_double(settings, key, "height_noise", pargs->height_noise);
+    save_arg_double(settings, key, "angle", pargs->angle);
+    save_arg_double(settings, key, "sigma", pargs->sigma);
+    save_arg_double(settings, key, "tau", pargs->tau);
     g_string_free(key, TRUE);
 }
 
@@ -1404,35 +1373,118 @@ reset_steps(gpointer p)
 }
 
 typedef struct {
+    gdouble top;
+    gdouble top_noise;
+    gdouble bottom;
+    gdouble bottom_noise;
+    gdouble slope;
+    gdouble slope_noise;
+    gdouble height;
+    gdouble height_noise;
     gdouble angle;
     gdouble sigma;
     gdouble tau;
-} PatSynthArgsTrenches;
+} PatSynthArgsRidges;
 
 typedef struct {
-    PatSynthArgsTrenches *args;
+    PatSynthArgsRidges *args;
+    GtkObject *top;
+    GtkWidget *top_value;
+    GtkWidget *top_units;
+    GtkObject *top_noise;
+    GtkObject *bottom;
+    GtkWidget *bottom_value;
+    GtkWidget *bottom_units;
+    GtkObject *bottom_noise;
+    GtkObject *slope;
+    GtkWidget *slope_value;
+    GtkWidget *slope_units;
+    GtkObject *slope_noise;
+    GtkObject *height;
+    GtkWidget *height_units;
+    GtkObject *height_noise;
     GtkObject *angle;
     GtkObject *sigma;
     GtkObject *tau;
     GtkWidget *tau_value;
     GtkWidget *tau_units;
-} PatSynthControlsTrenches;
+} PatSynthControlsRidges;
 
-static const PatSynthArgsTrenches pat_synth_defaults_trenches = {
+static const PatSynthArgsRidges pat_synth_defaults_ridges = {
+    10.0, 0.0,
+    10.0, 0.0,
+    1.0, 0.0,
+    1.0, 0.0,
     0.0,
     0.0, 10.0,
 };
 
 static gpointer
-create_gui_trenches(PatSynthControls *controls)
+create_gui_ridges(PatSynthControls *controls)
 {
-    PatSynthControlsTrenches *pcontrols;
-    PatSynthArgsTrenches *pargs;
+    PatSynthControlsRidges *pcontrols;
+    PatSynthArgsRidges *pargs;
     gint row;
 
-    row = extend_table(controls->table, 2+4);
-    pcontrols = g_new0(PatSynthControlsTrenches, 1);
+    row = extend_table(controls->table, 4+4+4+3+2+4);
+    pcontrols = g_new0(PatSynthControlsRidges, 1);
     pargs = pcontrols->args = controls->args->pattern_args;
+
+    gtk_table_set_row_spacing(controls->table, row-1, 12);
+    gtk_table_attach(controls->table, gwy_label_new_header(_("Top")),
+                     0, 3, row, row+1, GTK_FILL, 0, 0, 0);
+    row++;
+
+    pcontrols->top = gtk_adjustment_new(pargs->top,
+                                        0.1, 1000.0, 0.01, 10.0, 0);
+    row = attach_lateral(controls, row, pcontrols->top, &pargs->top,
+                         _("_Flat width:"), GWY_HSCALE_LOG,
+                         NULL,
+                         &pcontrols->top_value,
+                         &pcontrols->top_units);
+    row = attach_variance(controls, row,
+                          &pcontrols->top_noise, &pargs->top_noise);
+
+    gtk_table_set_row_spacing(controls->table, row-1, 12);
+    gtk_table_attach(controls->table, gwy_label_new_header(_("Bottom")),
+                     0, 3, row, row+1, GTK_FILL, 0, 0, 0);
+    row++;
+
+    pcontrols->bottom = gtk_adjustment_new(pargs->bottom,
+                                           0.1, 1000.0, 0.01, 10.0, 0);
+    row = attach_lateral(controls, row, pcontrols->bottom, &pargs->bottom,
+                         _("_Flat width:"), GWY_HSCALE_LOG,
+                         NULL,
+                         &pcontrols->bottom_value,
+                         &pcontrols->bottom_units);
+    row = attach_variance(controls, row,
+                          &pcontrols->bottom_noise, &pargs->bottom_noise);
+
+    gtk_table_set_row_spacing(controls->table, row-1, 12);
+    gtk_table_attach(controls->table, gwy_label_new_header(_("Slope")),
+                     0, 3, row, row+1, GTK_FILL, 0, 0, 0);
+    row++;
+
+    pcontrols->slope = gtk_adjustment_new(pargs->slope,
+                                          0.0, 1000.0, 0.01, 10.0, 0);
+    row = attach_lateral(controls, row, pcontrols->slope, &pargs->slope,
+                         _("_Slope width:"), GWY_HSCALE_SQRT,
+                         NULL,
+                         &pcontrols->slope_value,
+                         &pcontrols->slope_units);
+    row = attach_variance(controls, row,
+                          &pcontrols->slope_noise, &pargs->slope_noise);
+
+    gtk_table_set_row_spacing(controls->table, row-1, 12);
+    gtk_table_attach(controls->table, gwy_label_new_header(_("Height")),
+                     0, 3, row, row+1, GTK_FILL, 0, 0, 0);
+    row++;
+
+    row = attach_height(controls, row,
+                        &pcontrols->height, &pargs->height,
+                        _("_Height:"), NULL, &pcontrols->height_units);
+    row = attach_variance(controls, row,
+                          &pcontrols->height_noise, &pargs->height_noise);
 
     row = attach_orientation(controls, row,
                              &pcontrols->angle, &pargs->angle);
@@ -1446,29 +1498,34 @@ create_gui_trenches(PatSynthControls *controls)
 }
 
 static void
-dimensions_changed_trenches(PatSynthControls *controls)
+dimensions_changed_ridges(PatSynthControls *controls)
 {
-    PatSynthControlsTrenches *pcontrols = controls->pattern_controls;
+    PatSynthControlsRidges *pcontrols = controls->pattern_controls;
     GwyDimensions *dims = controls->dims;
 
+    gtk_label_set_markup(GTK_LABEL(pcontrols->top_units), dims->xyvf->units);
+    gtk_label_set_markup(GTK_LABEL(pcontrols->bottom_units), dims->xyvf->units);
+    gtk_label_set_markup(GTK_LABEL(pcontrols->slope_units), dims->xyvf->units);
+    gtk_label_set_markup(GTK_LABEL(pcontrols->height_units), dims->zvf->units);
     gtk_label_set_markup(GTK_LABEL(pcontrols->tau_units), dims->xyvf->units);
 
+    update_lateral(controls, GTK_ADJUSTMENT(pcontrols->top));
+    update_lateral(controls, GTK_ADJUSTMENT(pcontrols->bottom));
+    update_lateral(controls, GTK_ADJUSTMENT(pcontrols->slope));
     update_lateral(controls, GTK_ADJUSTMENT(pcontrols->tau));
 }
 
 static void
-make_pattern_trenches(const PatSynthArgs *args,
-                      const GwyDimensionArgs *dimsargs,
-                      RandGenSet *rngset,
-                      GwyDataField *dfield)
+make_pattern_ridges(const PatSynthArgs *args,
+                    const GwyDimensionArgs *dimsargs,
+                    RandGenSet *rngset,
+                    GwyDataField *dfield)
 {
-    const PatSynthArgsTrenches *pargs = args->pattern_args;
+    const PatSynthArgsRidges *pargs = args->pattern_args;
     GwyDataField *displacement_x;
-
-    /*
     guint n, i, j, k, xres, yres;
     gdouble *abscissa, *height, *data, *dx_data;
-    gdouble h, c, s, x, xu, yu, xoff, yoff;
+    gdouble h, c, s, xoff, yoff;
 
     h = pargs->height * pow10(dimsargs->zpow10);
 
@@ -1476,37 +1533,34 @@ make_pattern_trenches(const PatSynthArgs *args,
     yres = gwy_data_field_get_yres(dfield);
     data = gwy_data_field_get_data(dfield);
 
-    n = GWY_ROUND(1.4*hypot(xres, yres)/(pargs->flat + pargs->slope) + 15);
-    abscissa = g_new(gdouble, 2*n);
-    height = g_new(gdouble, n);
+    n = GWY_ROUND(1.5*hypot(xres, yres)/(pargs->top + pargs->bottom
+                                         + 2*pargs->slope) + 16);
+    abscissa = g_new(gdouble, 4*n);
+    height = g_new(gdouble, n+1);
 
-    abscissa[0] = -0.7*hypot(xres, yres) - 7;
-    abscissa[1] = pargs->flat;
-    if (pargs->flat && pargs->flat_noise)
-        abscissa[1] *= rand_gen_set_mult(rngset, RNG_FLAT,
-                                         pargs->flat_noise);
-    abscissa[1] += abscissa[0];
+    abscissa[0] = -0.75*hypot(xres, yres) - 8;
+    accumulate(abscissa + 1, pargs->slope, pargs->slope_noise,
+               rngset, RNG_SLOPE);
+    accumulate(abscissa + 2, pargs->bottom, pargs->bottom_noise,
+               rngset, RNG_BOTTOM);
+    accumulate(abscissa + 3, pargs->slope, pargs->slope_noise,
+               rngset, RNG_SLOPE);
     height[0] = 0.0;
 
     for (k = 1; k < n; k++) {
-        abscissa[2*k] = pargs->slope;
-        if (pargs->slope && pargs->slope_noise)
-            abscissa[2*k] *= rand_gen_set_mult(rngset, RNG_SLOPE,
-                                               pargs->slope_noise);
-        abscissa[2*k] += abscissa[2*k - 1];
-
-        abscissa[2*k + 1] = pargs->flat;
-        if (pargs->flat && pargs->flat_noise)
-            abscissa[2*k + 1] *= rand_gen_set_mult(rngset, RNG_FLAT,
-                                                   pargs->flat_noise);
-        abscissa[2*k + 1] += abscissa[2*k];
-
-        height[k] = h;
-        if (pargs->height && pargs->height_noise)
-            height[k] *= rand_gen_set_mult(rngset, RNG_HEIGHT,
-                                           pargs->height_noise);
-        height[k] += height[k-1];
+        accumulate(abscissa + 4*k, pargs->top, pargs->top_noise,
+                   rngset, RNG_TOP);
+        accumulate(abscissa + 4*k + 1, pargs->slope, pargs->slope_noise,
+                   rngset, RNG_SLOPE);
+        accumulate(abscissa + 4*k + 2, pargs->bottom, pargs->bottom_noise,
+                   rngset, RNG_BOTTOM);
+        accumulate(abscissa + 4*k + 3, pargs->slope, pargs->slope_noise,
+                   rngset, RNG_SLOPE);
+        generate(height + k, pargs->height, pargs->height_noise,
+                 rngset, RNG_HEIGHT);
     }
+    generate(height + n, pargs->height, pargs->height_noise,
+             rngset, RNG_HEIGHT);
 
     displacement_x = make_displacement_map(xres, yres,
                                            pargs->sigma, pargs->tau,
@@ -1519,24 +1573,28 @@ make_pattern_trenches(const PatSynthArgs *args,
     yoff = 0.5*(-s*yres + (1.0 - c)*yres);
     for (i = 0; i < yres; i++) {
         for (j = 0; j < xres; j++) {
-            gdouble v;
+            gdouble v, x, xu, yu, d, q;
+            guint kmod;
 
             xu = xoff + j*c - i*s;
             yu = yoff + j*s + i*c;
             x = xu + dx_data[i*xres + j];
-            k = bisect_lower(abscissa, 2*n, x);
-            if (k % 2 == 0)
-                v = height[k/2];
-            else {
-                if (G_UNLIKELY(k == 2*n - 1))
-                    v = height[k/2];
-                else {
-                    gdouble d = abscissa[k+1] - abscissa[k];
-                    gdouble q = G_LIKELY(d) ? (x - abscissa[k])/d : 0.5;
-
-                    v = (1.0 - q)*height[k/2] + q*height[k/2 + 1];
-                }
+            k = bisect_lower(abscissa, 4*n, x);
+            kmod = k % 4;
+            if (kmod == 0) {
+                d = abscissa[k+1] - abscissa[k];
+                q = G_LIKELY(d) ? (x - abscissa[k])/d : 0.5;
+                v = (1.0 - q)*height[k/4];
             }
+            else if (kmod == 1)
+                v = 0.0;
+            else if (kmod == 2) {
+                d = abscissa[k+1] - abscissa[k];
+                q = G_LIKELY(d) ? (x - abscissa[k])/d : 0.5;
+                v = q*height[k/4 + 1];
+            }
+            else
+                v = height[k/4 + 1];
             data[i*xres + j] += v;
         }
     }
@@ -1544,72 +1602,76 @@ make_pattern_trenches(const PatSynthArgs *args,
     g_free(height);
     g_free(abscissa);
     g_object_unref(displacement_x);
-
-    */
 }
 
 static gpointer
-load_args_trenches(GwyContainer *settings)
+load_args_ridges(GwyContainer *settings)
 {
-    PatSynthArgsTrenches *pargs;
+    PatSynthArgsRidges *pargs;
     GString *key;
-    guint len;
 
+    pargs = g_memdup(&pat_synth_defaults_ridges, sizeof(PatSynthArgsRidges));
     key = g_string_new(prefix);
-    g_string_append(key, "/steps/");
-    len = key->len;
-
-    pargs = g_memdup(&pat_synth_defaults_steps, sizeof(PatSynthArgsTrenches));
-
-    g_string_append(g_string_truncate(key, len), "angle");
-    gwy_container_gis_double_by_name(settings, key->str, &pargs->angle);
-    pargs->angle = CLAMP(pargs->angle, -G_PI, G_PI);
-
-    g_string_append(g_string_truncate(key, len), "sigma");
-    gwy_container_gis_double_by_name(settings, key->str, &pargs->sigma);
-    pargs->sigma = CLAMP(pargs->sigma, 0.0, 100.0);
-
-    g_string_append(g_string_truncate(key, len), "tau");
-    gwy_container_gis_double_by_name(settings, key->str, &pargs->tau);
-    pargs->tau = CLAMP(pargs->tau, 0.1, 1000.0);
-
+    g_string_append(key, "/ridges/");
+    load_arg_double(settings, key, "top", 0.1, 1000.0, &pargs->top);
+    load_arg_double(settings, key, "top_noise", 0.0, 1.0, &pargs->top_noise);
+    load_arg_double(settings, key, "bottom", 0.1, 1000.0, &pargs->bottom);
+    load_arg_double(settings, key, "bottom_noise", 0.0, 1.0, &pargs->bottom_noise);
+    load_arg_double(settings, key, "slope", 0.0, 1000.0, &pargs->slope);
+    load_arg_double(settings, key, "slope_noise", 0.0, 1.0, &pargs->slope_noise);
+    load_arg_double(settings, key, "height", 0.0001, 10000.0, &pargs->height);
+    load_arg_double(settings, key, "height_noise", 0.0, 1.0, &pargs->height_noise);
+    load_arg_double(settings, key, "angle", -G_PI, G_PI, &pargs->angle);
+    load_arg_double(settings, key, "sigma", 0.0, 100.0, &pargs->sigma);
+    load_arg_double(settings, key, "tau", 0.1, 1000.0, &pargs->tau);
     g_string_free(key, TRUE);
 
     return pargs;
 }
 
 static void
-save_args_trenches(gpointer p,
-                GwyContainer *settings)
+save_args_ridges(gpointer p,
+                 GwyContainer *settings)
 {
-    PatSynthArgsTrenches *pargs = p;
+    PatSynthArgsRidges *pargs = p;
     GString *key;
-    guint len;
 
     key = g_string_new(prefix);
-    g_string_append(key, "/steps/");
-    len = key->len;
-
-    g_string_append(g_string_truncate(key, len), "angle");
-    gwy_container_set_double_by_name(settings, key->str, pargs->angle);
-
-    g_string_append(g_string_truncate(key, len), "sigma");
-    gwy_container_set_double_by_name(settings, key->str, pargs->sigma);
-
-    g_string_append(g_string_truncate(key, len), "tau");
-    gwy_container_set_double_by_name(settings, key->str, pargs->tau);
-
+    g_string_append(key, "/ridges/");
+    save_arg_double(settings, key, "top", pargs->top);
+    save_arg_double(settings, key, "top_noise", pargs->top_noise);
+    save_arg_double(settings, key, "bottom", pargs->bottom);
+    save_arg_double(settings, key, "bottom_noise", pargs->bottom_noise);
+    save_arg_double(settings, key, "slope", pargs->slope);
+    save_arg_double(settings, key, "slope_noise", pargs->slope_noise);
+    save_arg_double(settings, key, "height", pargs->height);
+    save_arg_double(settings, key, "height_noise", pargs->height_noise);
+    save_arg_double(settings, key, "angle", pargs->angle);
+    save_arg_double(settings, key, "sigma", pargs->sigma);
+    save_arg_double(settings, key, "tau", pargs->tau);
     g_string_free(key, TRUE);
 }
 
 static void
-reset_trenches(gpointer p)
+reset_ridges(gpointer p)
 {
-    PatSynthControlsTrenches *pcontrols = p;
-    PatSynthArgsTrenches *pargs = pcontrols->args;
+    PatSynthControlsRidges *pcontrols = p;
+    PatSynthArgsRidges *pargs = pcontrols->args;
 
-    *pargs = pat_synth_defaults_trenches;
+    *pargs = pat_synth_defaults_ridges;
 
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(pcontrols->top), pargs->top);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(pcontrols->top_noise),
+                             pargs->top_noise);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(pcontrols->top), pargs->top);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(pcontrols->top_noise),
+                             pargs->top_noise);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(pcontrols->slope), pargs->slope);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(pcontrols->slope_noise),
+                             pargs->slope_noise);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(pcontrols->height), pargs->height);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(pcontrols->height_noise),
+                             pargs->height_noise);
     gtk_adjustment_set_value(GTK_ADJUSTMENT(pcontrols->angle), pargs->angle);
     gtk_adjustment_set_value(GTK_ADJUSTMENT(pcontrols->sigma), pargs->sigma);
     gtk_adjustment_set_value(GTK_ADJUSTMENT(pcontrols->tau), pargs->tau);
@@ -1718,6 +1780,29 @@ rand_gen_set_free(RandGenSet *rngset)
         g_rand_free(rngset->rng[i]);
     g_free(rngset->rng);
     g_free(rngset);
+}
+
+static void
+load_arg_double(GwyContainer *settings, GString *key, const gchar *name,
+                gdouble min, gdouble max, gdouble *value)
+{
+    guint len = key->len;
+
+    g_string_append(key, name);
+    gwy_container_gis_double_by_name(settings, key->str, value);
+    *value = CLAMP(*value, min, max);
+    g_string_truncate(key, len);
+}
+
+static void
+save_arg_double(GwyContainer *settings, GString *key, const gchar *name,
+                gdouble value)
+{
+    guint len = key->len;
+
+    g_string_append(key, name);
+    gwy_container_set_double_by_name(settings, key->str, value);
+    g_string_truncate(key, len);
 }
 
 static const gchar active_page_key[] = "/module/pat_synth/active_page";
