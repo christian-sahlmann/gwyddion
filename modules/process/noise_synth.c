@@ -116,52 +116,54 @@ typedef struct {
     gulong sid;
 } NoiseSynthControls;
 
-static gboolean   module_register           (void);
-static void       noise_synth               (GwyContainer *data,
-                                             GwyRunType run);
-static void       run_noninteractive        (NoiseSynthArgs *args,
-                                             const GwyDimensionArgs *dimsargs,
-                                             GwyContainer *data,
-                                             GwyDataField *dfield,
-                                             gint oldid,
-                                             GQuark quark);
-static gboolean   noise_synth_dialog        (NoiseSynthArgs *args,
-                                             GwyDimensionArgs *dimsargs,
-                                             GwyContainer *data,
-                                             GwyDataField *dfield,
-                                             gint id);
-static GtkWidget* distribution_selector_new (NoiseSynthControls *controls);
-static void       update_controls           (NoiseSynthControls *controls,
-                                             NoiseSynthArgs *args);
-static GtkWidget* random_seed_new           (GtkAdjustment *adj);
-static GtkWidget* randomize_new             (gboolean *randomize);
-static GtkWidget* instant_updates_new       (GtkWidget **update,
-                                             GtkWidget **instant,
-                                             gboolean *state);
-static void       page_switched             (NoiseSynthControls *controls,
-                                             GtkNotebookPage *page,
-                                             gint pagenum);
-static void       seed_changed              (NoiseSynthControls *controls,
-                                             GtkAdjustment *adj);
-static void       randomize_seed            (GtkAdjustment *adj);
-static void       distribution_type_selected(GtkComboBox *combo,
-                                             NoiseSynthControls *controls);
-static void       direction_type_changed    (GtkWidget *button,
-                                             NoiseSynthControls *controls);
-static void       sigma_changed             (NoiseSynthControls *controls,
-                                             GtkAdjustment *adj);
-static void       sigma_init_clicked        (NoiseSynthControls *controls);
-static void       noise_synth_invalidate    (NoiseSynthControls *controls);
-static gboolean   preview_gsource           (gpointer user_data);
-static void       preview                   (NoiseSynthControls *controls);
-static void       noise_synth_do            (const NoiseSynthArgs *args,
-                                             GwyDataField *dfield);
-static void       noise_synth_load_args     (GwyContainer *container,
-                                             NoiseSynthArgs *args,
-                                             GwyDimensionArgs *dimsargs);
-static void       noise_synth_save_args     (GwyContainer *container,
-                                             const NoiseSynthArgs *args,
-                                             const GwyDimensionArgs *dimsargs);
+static gboolean      module_register           (void);
+static void          noise_synth               (GwyContainer *data,
+                                                GwyRunType run);
+static void          run_noninteractive        (NoiseSynthArgs *args,
+                                                const GwyDimensionArgs *dimsargs,
+                                                GwyContainer *data,
+                                                GwyDataField *dfield,
+                                                gint oldid,
+                                                GQuark quark);
+static gboolean      noise_synth_dialog        (NoiseSynthArgs *args,
+                                                GwyDimensionArgs *dimsargs,
+                                                GwyContainer *data,
+                                                GwyDataField *dfield,
+                                                gint id);
+static GwyDataField* surface_for_preview       (GwyDataField *dfield,
+                                                guint size);
+static GtkWidget*    distribution_selector_new (NoiseSynthControls *controls);
+static void          update_controls           (NoiseSynthControls *controls,
+                                                NoiseSynthArgs *args);
+static GtkWidget*    random_seed_new           (GtkAdjustment *adj);
+static GtkWidget*    randomize_new             (gboolean *randomize);
+static GtkWidget*    instant_updates_new       (GtkWidget **update,
+                                                GtkWidget **instant,
+                                                gboolean *state);
+static void          page_switched             (NoiseSynthControls *controls,
+                                                GtkNotebookPage *page,
+                                                gint pagenum);
+static void          seed_changed              (NoiseSynthControls *controls,
+                                                GtkAdjustment *adj);
+static void          randomize_seed            (GtkAdjustment *adj);
+static void          distribution_type_selected(GtkComboBox *combo,
+                                                NoiseSynthControls *controls);
+static void          direction_type_changed    (GtkWidget *button,
+                                                NoiseSynthControls *controls);
+static void          sigma_changed             (NoiseSynthControls *controls,
+                                                GtkAdjustment *adj);
+static void          sigma_init_clicked        (NoiseSynthControls *controls);
+static void          noise_synth_invalidate    (NoiseSynthControls *controls);
+static gboolean      preview_gsource           (gpointer user_data);
+static void          preview                   (NoiseSynthControls *controls);
+static void          noise_synth_do            (const NoiseSynthArgs *args,
+                                                GwyDataField *dfield);
+static void          noise_synth_load_args     (GwyContainer *container,
+                                                NoiseSynthArgs *args,
+                                                GwyDimensionArgs *dimsargs);
+static void          noise_synth_save_args     (GwyContainer *container,
+                                                const NoiseSynthArgs *args,
+                                                const GwyDimensionArgs *dimsargs);
 
 DECLARE_NOISE(gaussian);
 DECLARE_NOISE(exp);
@@ -375,10 +377,7 @@ noise_synth_dialog(NoiseSynthArgs *args,
                                 GWY_DATA_ITEM_PALETTE,
                                 0);
     if (dfield_template) {
-        controls.surface = gwy_data_field_new_resampled(dfield_template,
-                                                        PREVIEW_SIZE,
-                                                        PREVIEW_SIZE,
-                                                        GWY_INTERPOLATION_KEY);
+        controls.surface = surface_for_preview(dfield_template, PREVIEW_SIZE);
         controls.zscale = gwy_data_field_get_rms(dfield_template);
     }
     controls.view = gwy_data_view_new(controls.mydata);
@@ -524,6 +523,40 @@ noise_synth_dialog(NoiseSynthArgs *args,
     gwy_dimensions_free(controls.dims);
 
     return response == GTK_RESPONSE_OK;
+}
+
+/* Create a square base surface for preview generation of an exact size */
+static GwyDataField*
+surface_for_preview(GwyDataField *dfield,
+                    guint size)
+{
+    GwyDataField *retval;
+    gint xres, yres, xoff, yoff;
+
+    xres = gwy_data_field_get_xres(dfield);
+    yres = gwy_data_field_get_yres(dfield);
+
+    /* If the field is large enough, just cut an area from the centre. */
+    if (xres >= size && yres >= size) {
+        xoff = (xres - size)/2;
+        yoff = (yres - size)/2;
+        return gwy_data_field_area_extract(dfield, xoff, yoff, size, size);
+    }
+
+    if (xres <= yres) {
+        yoff = (yres - xres)/2;
+        dfield = gwy_data_field_area_extract(dfield, 0, yoff, xres, xres);
+    }
+    else {
+        xoff = (xres - yres)/2;
+        dfield = gwy_data_field_area_extract(dfield, xoff, 0, yres, yres);
+    }
+
+    retval = gwy_data_field_new_resampled(dfield, size, size,
+                                          GWY_INTERPOLATION_KEY);
+    g_object_unref(dfield);
+
+    return retval;
 }
 
 static const NoiseSynthGenerator*

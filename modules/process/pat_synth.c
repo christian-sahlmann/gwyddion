@@ -149,6 +149,8 @@ struct _PatSynthControls {
 static gboolean      module_register      (void);
 static void          pat_synth            (GwyContainer *data,
                                            GwyRunType run);
+static GwyDataField* surface_for_preview  (GwyDataField *dfield,
+                                           guint size);
 static void          run_noninteractive   (PatSynthArgs *args,
                                            const GwyDimensionArgs *dimsargs,
                                            RandGenSet *rngset,
@@ -277,6 +279,40 @@ pat_synth(GwyContainer *data, GwyRunType run)
 
     rand_gen_set_free(rngset);
     gwy_dimensions_free_args(&dimsargs);
+}
+
+/* Create a square base surface for preview generation of an exact size */
+static GwyDataField*
+surface_for_preview(GwyDataField *dfield,
+                    guint size)
+{
+    GwyDataField *retval;
+    gint xres, yres, xoff, yoff;
+
+    xres = gwy_data_field_get_xres(dfield);
+    yres = gwy_data_field_get_yres(dfield);
+
+    /* If the field is large enough, just cut an area from the centre. */
+    if (xres >= size && yres >= size) {
+        xoff = (xres - size)/2;
+        yoff = (yres - size)/2;
+        return gwy_data_field_area_extract(dfield, xoff, yoff, size, size);
+    }
+
+    if (xres <= yres) {
+        yoff = (yres - xres)/2;
+        dfield = gwy_data_field_area_extract(dfield, 0, yoff, xres, xres);
+    }
+    else {
+        xoff = (xres - yres)/2;
+        dfield = gwy_data_field_area_extract(dfield, xoff, 0, yres, yres);
+    }
+
+    retval = gwy_data_field_new_resampled(dfield, size, size,
+                                          GWY_INTERPOLATION_KEY);
+    g_object_unref(dfield);
+
+    return retval;
 }
 
 static const PatSynthPattern*
@@ -414,10 +450,7 @@ pat_synth_dialog(PatSynthArgs *args,
                                 GWY_DATA_ITEM_PALETTE,
                                 0);
     if (dfield_template) {
-        controls.surface = gwy_data_field_new_resampled(dfield_template,
-                                                        PREVIEW_SIZE,
-                                                        PREVIEW_SIZE,
-                                                        GWY_INTERPOLATION_KEY);
+        controls.surface = surface_for_preview(dfield_template, PREVIEW_SIZE);
         controls.zscale = 3.0*gwy_data_field_get_rms(dfield_template);
     }
     controls.view = gwy_data_view_new(controls.mydata);

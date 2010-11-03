@@ -102,68 +102,70 @@ typedef struct {
     gulong sid;
 } FFTSynthControls;
 
-static gboolean   module_register        (void);
-static void       fft_synth              (GwyContainer *data,
-                                          GwyRunType run);
-static void       run_noninteractive     (FFTSynthArgs *args,
-                                          const GwyDimensionArgs *dimsargs,
-                                          GwyContainer *data,
-                                          GwyDataField *dfield,
-                                          gint oldid,
-                                          GQuark quark);
-static gboolean   fft_synth_dialog       (FFTSynthArgs *args,
-                                          GwyDimensionArgs *dimsargs,
-                                          GwyContainer *data,
-                                          GwyDataField *dfield,
-                                          gint id);
-static void       update_controls        (FFTSynthControls *controls,
-                                          FFTSynthArgs *args);
-static GtkWidget* random_seed_new        (GtkAdjustment *adj);
-static GtkWidget* randomize_new          (gboolean *randomize);
-static GtkWidget* instant_updates_new    (GtkWidget **update,
-                                          GtkWidget **instant,
-                                          gboolean *state);
-static void       page_switched          (FFTSynthControls *controls,
-                                          GtkNotebookPage *page,
-                                          gint pagenum);
-static void       seed_changed           (FFTSynthControls *controls,
-                                          GtkAdjustment *adj);
-static void       randomize_seed         (GtkAdjustment *adj);
-static void       sigma_changed          (FFTSynthControls *controls,
-                                          GtkAdjustment *adj);
-static void       sigma_init_clicked     (FFTSynthControls *controls);
-static void       freq_min_changed       (FFTSynthControls *controls,
-                                          GtkAdjustment *adj);
-static void       update_freq_min_value  (FFTSynthControls *controls);
-static void       freq_max_changed       (FFTSynthControls *controls,
-                                          GtkAdjustment *adj);
-static void       update_freq_max_value  (FFTSynthControls *controls);
-static void       gauss_enable_changed   (FFTSynthControls *controls,
-                                          GtkToggleButton *button);
-static void       gauss_tau_changed      (FFTSynthControls *controls,
-                                          GtkAdjustment *adj);
-static void       update_gauss_tau_value (FFTSynthControls *controls);
-static void       power_enable_changed   (FFTSynthControls *controls,
-                                          GtkToggleButton *button);
-static void       power_p_changed        (FFTSynthControls *controls,
-                                          GtkAdjustment *adj);
-static void       update_value_label     (GtkLabel *label,
-                                          const GwySIValueFormat *vf,
-                                          gdouble value);
-static void       fft_synth_invalidate   (FFTSynthControls *controls);
-static gboolean   preview_gsource        (gpointer user_data);
-static void       preview                (FFTSynthControls *controls);
-static void       fft_synth_do           (const FFTSynthArgs *args,
-                                          GwyDataField *in_re,
-                                          GwyDataField *in_im,
-                                          GwyDataField *out_re,
-                                          GwyDataField *out_im);
-static void       fft_synth_load_args    (GwyContainer *container,
-                                          FFTSynthArgs *args,
-                                          GwyDimensionArgs *dimsargs);
-static void       fft_synth_save_args    (GwyContainer *container,
-                                          const FFTSynthArgs *args,
-                                          const GwyDimensionArgs *dimsargs);
+static gboolean      module_register       (void);
+static void          fft_synth             (GwyContainer *data,
+                                            GwyRunType run);
+static void          run_noninteractive    (FFTSynthArgs *args,
+                                            const GwyDimensionArgs *dimsargs,
+                                            GwyContainer *data,
+                                            GwyDataField *dfield,
+                                            gint oldid,
+                                            GQuark quark);
+static gboolean      fft_synth_dialog      (FFTSynthArgs *args,
+                                            GwyDimensionArgs *dimsargs,
+                                            GwyContainer *data,
+                                            GwyDataField *dfield,
+                                            gint id);
+static GwyDataField* surface_for_preview   (GwyDataField *dfield,
+                                            guint size);
+static void          update_controls       (FFTSynthControls *controls,
+                                            FFTSynthArgs *args);
+static GtkWidget*    random_seed_new       (GtkAdjustment *adj);
+static GtkWidget*    randomize_new         (gboolean *randomize);
+static GtkWidget*    instant_updates_new   (GtkWidget **update,
+                                            GtkWidget **instant,
+                                            gboolean *state);
+static void          page_switched         (FFTSynthControls *controls,
+                                            GtkNotebookPage *page,
+                                            gint pagenum);
+static void          seed_changed          (FFTSynthControls *controls,
+                                            GtkAdjustment *adj);
+static void          randomize_seed        (GtkAdjustment *adj);
+static void          sigma_changed         (FFTSynthControls *controls,
+                                            GtkAdjustment *adj);
+static void          sigma_init_clicked    (FFTSynthControls *controls);
+static void          freq_min_changed      (FFTSynthControls *controls,
+                                            GtkAdjustment *adj);
+static void          update_freq_min_value (FFTSynthControls *controls);
+static void          freq_max_changed      (FFTSynthControls *controls,
+                                            GtkAdjustment *adj);
+static void          update_freq_max_value (FFTSynthControls *controls);
+static void          gauss_enable_changed  (FFTSynthControls *controls,
+                                            GtkToggleButton *button);
+static void          gauss_tau_changed     (FFTSynthControls *controls,
+                                            GtkAdjustment *adj);
+static void          update_gauss_tau_value(FFTSynthControls *controls);
+static void          power_enable_changed  (FFTSynthControls *controls,
+                                            GtkToggleButton *button);
+static void          power_p_changed       (FFTSynthControls *controls,
+                                            GtkAdjustment *adj);
+static void          update_value_label    (GtkLabel *label,
+                                            const GwySIValueFormat *vf,
+                                            gdouble value);
+static void          fft_synth_invalidate  (FFTSynthControls *controls);
+static gboolean      preview_gsource       (gpointer user_data);
+static void          preview               (FFTSynthControls *controls);
+static void          fft_synth_do          (const FFTSynthArgs *args,
+                                            GwyDataField *in_re,
+                                            GwyDataField *in_im,
+                                            GwyDataField *out_re,
+                                            GwyDataField *out_im);
+static void          fft_synth_load_args   (GwyContainer *container,
+                                            FFTSynthArgs *args,
+                                            GwyDimensionArgs *dimsargs);
+static void          fft_synth_save_args   (GwyContainer *container,
+                                            const FFTSynthArgs *args,
+                                            const GwyDimensionArgs *dimsargs);
 
 static const FFTSynthArgs fft_synth_defaults = {
     PAGE_DIMENSIONS,
@@ -361,10 +363,7 @@ fft_synth_dialog(FFTSynthArgs *args,
                                 GWY_DATA_ITEM_PALETTE,
                                 0);
     if (dfield_template) {
-        controls.surface = gwy_data_field_new_resampled(dfield_template,
-                                                        PREVIEW_SIZE,
-                                                        PREVIEW_SIZE,
-                                                        GWY_INTERPOLATION_KEY);
+        controls.surface = surface_for_preview(dfield_template, PREVIEW_SIZE);
         controls.zscale = gwy_data_field_get_rms(dfield_template);
     }
     controls.view = gwy_data_view_new(controls.mydata);
@@ -590,6 +589,39 @@ fft_synth_dialog(FFTSynthArgs *args,
     return response == GTK_RESPONSE_OK;
 }
 
+/* Create a square base surface for preview generation of an exact size */
+static GwyDataField*
+surface_for_preview(GwyDataField *dfield,
+                    guint size)
+{
+    GwyDataField *retval;
+    gint xres, yres, xoff, yoff;
+
+    xres = gwy_data_field_get_xres(dfield);
+    yres = gwy_data_field_get_yres(dfield);
+
+    /* If the field is large enough, just cut an area from the centre. */
+    if (xres >= size && yres >= size) {
+        xoff = (xres - size)/2;
+        yoff = (yres - size)/2;
+        return gwy_data_field_area_extract(dfield, xoff, yoff, size, size);
+    }
+
+    if (xres <= yres) {
+        yoff = (yres - xres)/2;
+        dfield = gwy_data_field_area_extract(dfield, 0, yoff, xres, xres);
+    }
+    else {
+        xoff = (xres - yres)/2;
+        dfield = gwy_data_field_area_extract(dfield, xoff, 0, yres, yres);
+    }
+
+    retval = gwy_data_field_new_resampled(dfield, size, size,
+                                          GWY_INTERPOLATION_KEY);
+    g_object_unref(dfield);
+
+    return retval;
+}
 static void
 update_controls(FFTSynthControls *controls,
                 FFTSynthArgs *args)
