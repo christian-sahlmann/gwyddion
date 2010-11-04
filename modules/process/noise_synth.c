@@ -182,25 +182,25 @@ static const GwyDimensionArgs dims_defaults = GWY_DIMENSION_ARGS_INIT;
 static const NoiseSynthGenerator generators[] = {
     {
         NOISE_DISTRIBUTION_GAUSSIAN,
-        N_("Gaussian"),
+        N_("distribution|Gaussian"),
         { &noise_gaussian_both, &noise_gaussian_up, &noise_gaussian_down, },
         rand_gen_gaussian,
     },
     {
         NOISE_DISTRIBUTION_EXPONENTIAL,
-        N_("Exponential"),
+        N_("distribution|Exponential"),
         { &noise_exp_both, &noise_exp_up, &noise_exp_down, },
         rand_gen_exp,
     },
     {
         NOISE_DISTRIBUTION_UNIFORM,
-        N_("Uniform"),
+        N_("distribution|Uniform"),
         { &noise_uniform_both, &noise_uniform_up, &noise_uniform_down, },
         rand_gen_uniform,
     },
     {
         NOISE_DISTRIBUTION_TRIANGULAR,
-        N_("Triangular"),
+        N_("distribution|Triangular"),
         { &noise_triangle_both, &noise_triangle_up, &noise_triangle_down, },
         rand_gen_triangle,
     },
