@@ -41,7 +41,7 @@
     static gdouble getcov_##name(gdouble aspect)
 
 enum {
-    PREVIEW_SIZE = 320,
+    PREVIEW_SIZE = 400,
 };
 
 enum {

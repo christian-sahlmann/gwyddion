@@ -45,7 +45,7 @@
     static gdouble rand_gen_##name(GRand *rng, gdouble sigma)
 
 enum {
-    PREVIEW_SIZE = 320,
+    PREVIEW_SIZE = 400,
 };
 
 enum {
