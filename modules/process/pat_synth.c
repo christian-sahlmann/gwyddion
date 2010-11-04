@@ -1243,7 +1243,7 @@ make_pattern_steps(const PatSynthArgs *args,
     GwyDataField *displacement_x;
     guint n, i, j, k, xres, yres;
     gdouble *abscissa, *height, *data, *dx_data;
-    gdouble h, c, s, xoff, yoff;
+    gdouble h, c, s, xoff, yoff, range;
 
     h = pargs->height * pow10(dimsargs->zpow10);
 
@@ -1251,11 +1251,12 @@ make_pattern_steps(const PatSynthArgs *args,
     yres = gwy_data_field_get_yres(dfield);
     data = gwy_data_field_get_data(dfield);
 
-    n = GWY_ROUND(1.5*hypot(xres, yres)/(pargs->flat + pargs->slope) + 16);
+    range = (hypot(xres, yres) + pargs->sigma)/(pargs->flat + pargs->slope);
+    n = GWY_ROUND(2.0*range + 16);
     abscissa = g_new(gdouble, 2*n);
     height = g_new(gdouble, n+1);
 
-    abscissa[0] = -0.75*hypot(xres, yres) - 8;
+    abscissa[0] = -range - 8;
     accumulate(abscissa + 1, pargs->slope, pargs->slope_noise,
                rngset, RNG_SLOPE);
     height[0] = 0.0;
@@ -1525,7 +1526,7 @@ make_pattern_ridges(const PatSynthArgs *args,
     GwyDataField *displacement_x;
     guint n, i, j, k, xres, yres;
     gdouble *abscissa, *height, *data, *dx_data;
-    gdouble h, c, s, xoff, yoff;
+    gdouble h, c, s, xoff, yoff, range;
 
     h = pargs->height * pow10(dimsargs->zpow10);
 
@@ -1533,12 +1534,13 @@ make_pattern_ridges(const PatSynthArgs *args,
     yres = gwy_data_field_get_yres(dfield);
     data = gwy_data_field_get_data(dfield);
 
-    n = GWY_ROUND(1.5*hypot(xres, yres)/(pargs->top + pargs->bottom
-                                         + 2*pargs->slope) + 16);
+    range = (hypot(xres, yres) + pargs->sigma)/(pargs->top + 2*pargs->slope
+                                                + pargs->bottom);
+    n = GWY_ROUND(2.0*range + 16);
     abscissa = g_new(gdouble, 4*n);
     height = g_new(gdouble, n+1);
 
-    abscissa[0] = -0.75*hypot(xres, yres) - 8;
+    abscissa[0] = -range - 8;
     accumulate(abscissa + 1, pargs->slope, pargs->slope_noise,
                rngset, RNG_SLOPE);
     accumulate(abscissa + 2, pargs->bottom, pargs->bottom_noise,
@@ -1730,9 +1732,9 @@ make_displacement_map(guint xres, guint yres,
 
     gn = GWY_ROUND(1.0/tau*n);
     gn = MAX(gn, 2);
-    grid = gwy_data_field_new(gn, gn, 1.0, 1.0, FALSE);
-    fill_displacement_map(grid, rng, q);
     r = (gdouble)gn/n;
+    grid = gwy_data_field_new(gn, gn, 1.0, 1.0, FALSE);
+    fill_displacement_map(grid, rng, q*r);
     gwy_data_field_filter_gaussian(grid, r*tau);
     dfield = gwy_data_field_new_resampled(grid, n, n, GWY_INTERPOLATION_KEY);
     g_object_unref(grid);
