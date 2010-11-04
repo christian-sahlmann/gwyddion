@@ -688,13 +688,6 @@ gwy_data_field_area_convolve(GwyDataField *data_field,
                      && col + width <= xres
                      && row + height <= yres);
 
-    if (kxres > 3*width || kyres > 3*height) {
-        g_warning("Kernel size (%d x %d) more than 3 times larger "
-                  "than field area size (%d x %d).",
-                  kxres, kyres, width, height);
-        return;
-    }
-
     if (kxres == 3 && kyres == 3) {
         gwy_data_field_area_convolve_3x3(data_field, kernel_field->data,
                                          col, row, width, height);
@@ -755,13 +748,15 @@ gwy_data_field_area_hconvolve(GwyDataField *data_field,
                               gint col, gint row,
                               gint width, gint height)
 {
-    gint kres, i, j, k, pos;
+    gint kres, mres, k0, i, j, k, pos;
     const gdouble *kernel;
     gdouble *buf, *drow;
     gdouble d;
 
     kres = kernel_line->res;
     kernel = kernel_line->data;
+    mres = 2*width;
+    k0 = (kres/2 + 1)*mres;
     buf = g_new(gdouble, kres);
 
     for (i = 0; i < height; i++) {
@@ -769,8 +764,8 @@ gwy_data_field_area_hconvolve(GwyDataField *data_field,
         /* Initialize with a triangluar sums, mirror-extend */
         gwy_clear(buf, kres);
         for (j = 0; j < kres; j++) {
-            k = j - kres/2;
-            d = drow[k >= 0 ? k : -k-1];
+            k = (j - kres/2 + k0) % mres;
+            d = drow[k < width ? k : mres-1 - k];
             for (k = 0; k <= j; k++)
                 buf[k] += kernel[j - k]*d;
         }
@@ -781,8 +776,8 @@ gwy_data_field_area_hconvolve(GwyDataField *data_field,
             drow[j] = buf[pos];
             buf[pos] = 0.0;
             pos = (pos + 1) % kres;
-            k = j + kres - kres/2;
-            d = drow[k < width ? k : 2*width-1 - k];
+            k = (j + kres - kres/2 + k0) % mres;
+            d = drow[G_LIKELY(k < width) ? k : mres-1 - k];
             for (k = pos; k < kres; k++)
                 buf[k] += kernel[kres-1 - (k - pos)]*d;
             for (k = 0; k < pos; k++)
@@ -799,7 +794,7 @@ gwy_data_field_area_vconvolve(GwyDataField *data_field,
                               gint col, gint row,
                               gint width, gint height)
 {
-    gint kres, xres, i, j, k, pos;
+    gint kres, xres, mres, k0, i, j, k, pos;
     const gdouble *kernel;
     gdouble *buf, *dcol;
     gdouble d;
@@ -807,6 +802,8 @@ gwy_data_field_area_vconvolve(GwyDataField *data_field,
     kres = kernel_line->res;
     kernel = kernel_line->data;
     xres = data_field->xres;
+    mres = 2*height;
+    k0 = (kres/2 + 1)*mres;
     buf = g_new(gdouble, kres);
 
     /* This looks like a bad memory access pattern.  And for small kernels it
@@ -818,8 +815,8 @@ gwy_data_field_area_vconvolve(GwyDataField *data_field,
         /* Initialize with a triangluar sums, mirror-extend */
         gwy_clear(buf, kres);
         for (i = 0; i < kres; i++) {
-            k = i - kres/2;
-            d = dcol[k >= 0 ? k*xres : (-k-1)*xres];
+            k = (i - kres/2 + k0) % mres;
+            d = dcol[k < height ? k*xres : (mres-1 - k)*xres];
             for (k = 0; k <= i; k++)
                 buf[k] += kernel[i - k]*d;
         }
@@ -830,8 +827,8 @@ gwy_data_field_area_vconvolve(GwyDataField *data_field,
             dcol[i*xres] = buf[pos];
             buf[pos] = 0.0;
             pos = (pos + 1) % kres;
-            k = i + kres - kres/2;
-            d = dcol[k < height ? k*xres : (2*height-1 - k)*xres];
+            k = (i + kres - kres/2 + k0) % mres;
+            d = dcol[G_LIKELY(k < height) ? k*xres : (mres-1 - k)*xres];
             for (k = pos; k < kres; k++)
                 buf[k] += kernel[kres-1 - (k - pos)]*d;
             for (k = 0; k < pos; k++)
@@ -888,21 +885,11 @@ gwy_data_field_area_convolve_1d(GwyDataField *data_field,
 
     switch (orientation) {
         case GWY_ORIENTATION_HORIZONTAL:
-        if (kres > 3*width) {
-            g_warning("Kernel width %d more than 3 times larger "
-                      "than field area width %d.", kres, width);
-            return;
-        }
         gwy_data_field_area_hconvolve(data_field, kernel_line,
                                       col, row, width, height);
         break;
 
         case GWY_ORIENTATION_VERTICAL:
-        if (kres > 3*height) {
-            g_warning("Kernel height %d more than 3 times larger "
-                      "than field area height %d.", kres, height);
-            return;
-        }
         gwy_data_field_area_vconvolve(data_field, kernel_line,
                                       col, row, width, height);
         break;
