@@ -51,9 +51,10 @@ typedef enum {
 } MaskEditMode;
 
 typedef enum {
-    MASK_SHAPE_RECTANGLE = 0,
-    MASK_SHAPE_ELLIPSE   = 1,
-    MASK_SHAPE_LINE      = 2,
+    MASK_SHAPE_RECTANGLE  = 0,
+    MASK_SHAPE_ELLIPSE    = 1,
+    MASK_SHAPE_LINE       = 2,
+    MASK_SHAPE_PAINTBRUSH = 3,
     MASK_NSHAPES
 } MaskEditShape;
 
@@ -82,6 +83,9 @@ struct _GwyToolMaskEditor {
     GtkObject *gsamount;
     GtkWidget *from_border;
     GtkWidget *prevent_merge;
+
+    /* paintrbrush only */
+    gboolean drawing_started;
 
     /* potential class data */
     GType layer_types[MASK_NSHAPES];
@@ -115,6 +119,8 @@ static void  gwy_tool_mask_editor_grow               (GwyToolMaskEditor *tool);
 static void  gwy_tool_mask_editor_shrink             (GwyToolMaskEditor *tool);
 static void  gwy_tool_mask_editor_fill_voids         (GwyToolMaskEditor *tool);
 static void  gwy_tool_mask_editor_selection_finished (GwyPlainTool *plain_tool);
+static void  gwy_tool_mask_editor_selection_changed  (GwyPlainTool *plain_tool,
+                                                      gint hint);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -122,13 +128,13 @@ static GwyModuleInfo module_info = {
     N_("Mask editor tool, allows to interactively add or remove parts "
        "of mask."),
     "Yeti <yeti@gwyddion.net>",
-    "2.9",
+    "2.10",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
 
 static const gchar *const shape_selection_names[MASK_NSHAPES] = {
-    "rectangle", "ellipse", "line",
+    "rectangle", "ellipse", "line", "point",
 };
 
 static const gchar mode_key[]          = "/module/maskeditor/mode";
@@ -173,6 +179,7 @@ gwy_tool_mask_editor_class_init(GwyToolMaskEditorClass *klass)
     tool_class->data_switched = gwy_tool_mask_editor_data_switched;
 
     ptool_class->mask_changed = gwy_tool_mask_editor_mask_changed;
+    ptool_class->selection_changed = gwy_tool_mask_editor_selection_changed;
     ptool_class->selection_finished = gwy_tool_mask_editor_selection_finished;
 }
 
@@ -203,7 +210,7 @@ static void
 gwy_tool_mask_editor_init(GwyToolMaskEditor *tool)
 {
     static const gchar *const shape_layer_types[MASK_NSHAPES] = {
-        "GwyLayerRectangle", "GwyLayerEllipse", "GwyLayerLine",
+        "GwyLayerRectangle", "GwyLayerEllipse", "GwyLayerLine", "GwyLayerPoint"
     };
 
     GwyPlainTool *plain_tool;
@@ -285,6 +292,11 @@ gwy_tool_mask_editor_init_dialog(GwyToolMaskEditor *tool)
             MASK_SHAPE_LINE,
             GWY_STOCK_MASK_LINE,
             N_("Thin lines"),
+        },
+        {
+            MASK_SHAPE_PAINTBRUSH,
+            GWY_STOCK_MASK,
+            N_("Paintbrush"),
         },
     };
 
@@ -573,6 +585,14 @@ gwy_tool_mask_editor_setup_layer(GwyToolMaskEditor *tool)
                      "line-numbers", FALSE,
                      "thickness", 1,
                      NULL);
+    if (tool->args.shape == MASK_SHAPE_PAINTBRUSH) {
+        /* TODO: Set marker radius
+        g_object_set(plain_tool->layer,
+                     "line-numbers", FALSE,
+                     "thickness", 1,
+                     NULL);
+                     */
+    }
     gwy_selection_set_max_objects(plain_tool->selection, 1);
 }
 
@@ -1038,8 +1058,15 @@ gwy_tool_mask_editor_selection_finished(GwyPlainTool *plain_tool)
     g_return_if_fail(plain_tool->data_field);
 
     tool = GWY_TOOL_MASK_EDITOR(plain_tool);
+    tool->drawing_started = FALSE;
     if (!gwy_selection_get_object(plain_tool->selection, 0, sel))
         return;
+
+    if (tool->args.shape == MASK_SHAPE_PAINTBRUSH) {
+        /* The mask has been already modified. */
+        gwy_selection_clear(plain_tool->selection);
+        return;
+    }
 
     isel[0] = floor(gwy_data_field_rtoj(plain_tool->data_field, sel[0]));
     isel[1] = floor(gwy_data_field_rtoi(plain_tool->data_field, sel[1]));
@@ -1171,6 +1198,52 @@ gwy_tool_mask_editor_selection_finished(GwyPlainTool *plain_tool)
     gwy_selection_clear(plain_tool->selection);
     if (mfield)
         gwy_data_field_data_changed(mfield);
+}
+
+static void
+gwy_tool_mask_editor_selection_changed(GwyPlainTool *plain_tool,
+                                       G_GNUC_UNUSED gint hint)
+{
+    GwyDataField *mfield;
+    GwyToolMaskEditor *tool;
+    GQuark quark;
+    gint xres, yres;
+    gdouble *data;
+    gdouble sel[2];
+    gint isel[2];
+
+    tool = GWY_TOOL_MASK_EDITOR(plain_tool);
+    if (tool->args.shape != MASK_SHAPE_PAINTBRUSH)
+        return;
+
+    /* Apparently this gets called also during the tool destruction. */
+    if (!plain_tool->data_field || !plain_tool->selection
+        || !gwy_selection_get_object(plain_tool->selection, 0, sel)) {
+        tool->drawing_started = FALSE;
+        return;
+    }
+
+    isel[0] = floor(gwy_data_field_rtoj(plain_tool->data_field, sel[0]));
+    isel[1] = floor(gwy_data_field_rtoi(plain_tool->data_field, sel[1]));
+
+    quark = gwy_app_get_mask_key_for_id(plain_tool->id);
+    if (!tool->drawing_started) {
+        gwy_app_undo_qcheckpointv(plain_tool->container, 1, &quark);
+        tool->drawing_started = TRUE;
+    }
+    mfield = gwy_tool_mask_editor_maybe_add_mask(plain_tool, quark);
+    xres = gwy_data_field_get_xres(mfield);
+    yres = gwy_data_field_get_yres(mfield);
+    data = gwy_data_field_get_data(mfield);
+    if (isel[0] >= 0 && isel[0] < xres && isel[1] >= 0 && isel[1] < yres) {
+        if (tool->args.mode == MASK_EDIT_REMOVE)
+            gwy_data_field_circular_area_fill(mfield, isel[0], isel[1], 3.5,
+                                              0.0);
+        else
+            gwy_data_field_circular_area_fill(mfield, isel[0], isel[1], 3.5,
+                                              1.0);
+        gwy_data_field_data_changed(mfield);
+    }
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
