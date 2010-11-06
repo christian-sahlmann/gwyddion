@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: French localization\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2010-11-03 03:58+0100\n"
-"PO-Revision-Date: 2010-11-03 22:08+0100\n"
+"POT-Creation-Date: 2010-11-06 03:58+0100\n"
+"PO-Revision-Date: 2010-11-06 19:47+0100\n"
 "Last-Translator: François RIGUET <francheu@caramail.com>\n"
 "Language-Team: François RIGUET <francheu@caramail.com>\n"
 "MIME-Version: 1.0\n"
@@ -69,7 +69,6 @@ msgstr "Sans titre"
 
 #: libgwyddion/gwynlfitpreset.c:1190
 #: libprocess/gwyprocessenums.c:100
-#: modules/process/noise_synth.c:183
 msgid "Gaussian"
 msgstr "Gaussienne"
 
@@ -90,7 +89,6 @@ msgid "Gaussian (RPSDF)"
 msgstr "Gaussienne (RPSDF)"
 
 #: libgwyddion/gwynlfitpreset.c:1262
-#: modules/process/noise_synth.c:189
 msgid "Exponential"
 msgstr "Exponentielle"
 
@@ -317,7 +315,8 @@ msgid "Boundary"
 msgstr "Dimensions"
 
 #: libprocess/gwygrainvalue.c:918
-#: modules/process/pat_synth.c:1080
+#: modules/process/pat_synth.c:1184
+#: modules/process/pat_synth.c:1465
 #: modules/tools/linestats.c:156
 msgid "Slope"
 msgstr "Pente"
@@ -343,7 +342,6 @@ msgid "Parallel"
 msgstr "Parallèle"
 
 #: libprocess/gwyprocessenums.c:80
-#: modules/process/noise_synth.c:201
 msgid "Triangular"
 msgstr "Triangulaire"
 
@@ -765,7 +763,7 @@ msgstr "pixels"
 #: modules/process/facet_analysis.c:272
 #: modules/process/fft.c:272
 #: modules/process/fft_filter_2d.c:396
-#: modules/process/fft_synth.c:338
+#: modules/process/fft_synth.c:340
 #: modules/process/fractal.c:206
 #: modules/process/grain_mark.c:265
 #: modules/process/grain_rem_threshold.c:224
@@ -774,9 +772,9 @@ msgstr "pixels"
 #: modules/process/level.c:253
 #: modules/process/local_contrast.c:126
 #: modules/process/median-bg.c:176
-#: modules/process/noise_synth.c:351
-#: modules/process/obj_synth.c:447
-#: modules/process/pat_synth.c:383
+#: modules/process/noise_synth.c:353
+#: modules/process/obj_synth.c:449
+#: modules/process/pat_synth.c:441
 #: modules/process/polydistort.c:219
 #: modules/process/polylevel.c:376
 #: modules/process/rotate.c:264
@@ -1042,8 +1040,9 @@ msgstr "Longueur"
 #: libgwydgets/gwygraphwindowmeasuredialog.c:283
 #: libgwydgets/gwygraphwindowmeasuredialog.c:443
 #: app/gwyplaintool.c:1022
-#: modules/process/obj_synth.c:612
-#: modules/process/pat_synth.c:1095
+#: modules/process/obj_synth.c:611
+#: modules/process/pat_synth.c:1199
+#: modules/process/pat_synth.c:1480
 msgid "Height"
 msgstr "Hauteur"
 
@@ -1649,7 +1648,7 @@ msgstr "Origine"
 #: modules/file/rawfile.c:959
 #: modules/process/convolution_filter.c:358
 #: modules/process/convolution_filter.c:562
-#: modules/process/obj_synth.c:556
+#: modules/process/obj_synth.c:555
 msgid "Size"
 msgstr "Taille"
 
@@ -3444,8 +3443,9 @@ msgstr "Largeur :"
 #: modules/file/pixmap.c:2721
 #: modules/process/grain_mark.c:312
 #: modules/process/grain_rem_threshold.c:280
-#: modules/process/obj_synth.c:618
-#: modules/process/pat_synth.c:1101
+#: modules/process/obj_synth.c:617
+#: modules/process/pat_synth.c:1205
+#: modules/process/pat_synth.c:1486
 #: modules/process/tip_blind.c:271
 msgid "_Height:"
 msgstr "_Hauteur :"
@@ -3703,14 +3703,14 @@ msgstr "Préréglages"
 #: modules/process/drift.c:227
 #: modules/process/edge.c:633
 #: modules/process/fft_filter_1d.c:197
-#: modules/process/fft_synth.c:640
+#: modules/process/fft_synth.c:672
 #: modules/process/grain_mark.c:262
 #: modules/process/grain_rem_threshold.c:221
 #: modules/process/grain_wshed.c:179
 #: modules/process/mark_with.c:212
-#: modules/process/noise_synth.c:605
-#: modules/process/obj_synth.c:817
-#: modules/process/pat_synth.c:579
+#: modules/process/noise_synth.c:638
+#: modules/process/obj_synth.c:850
+#: modules/process/pat_synth.c:634
 #: modules/process/polydistort.c:214
 #: modules/process/scars.c:466
 #: modules/process/tip_model.c:167
@@ -5823,13 +5823,13 @@ msgstr "Pas dét_ecté"
 
 #: modules/process/edge.c:714
 #: modules/process/fft_filter_1d.c:334
-#: modules/process/fft_synth.c:644
+#: modules/process/fft_synth.c:676
 #: modules/process/grain_mark.c:380
 #: modules/process/grain_rem_threshold.c:357
 #: modules/process/mark_with.c:359
-#: modules/process/noise_synth.c:609
-#: modules/process/obj_synth.c:821
-#: modules/process/pat_synth.c:583
+#: modules/process/noise_synth.c:642
+#: modules/process/obj_synth.c:854
+#: modules/process/pat_synth.c:638
 #: modules/process/polydistort.c:334
 #: modules/process/scars.c:575
 msgid "I_nstant updates"
@@ -6074,7 +6074,7 @@ msgid "_Undo"
 msgstr "_Annuler"
 
 #: modules/process/fft_filter_2d.c:489
-#: modules/tools/maskedit.c:394
+#: modules/tools/maskedit.c:406
 msgid "_Remove"
 msgstr "Supprimer"
 
@@ -6164,96 +6164,96 @@ msgstr "Courbes _séparées"
 msgid "PSDF %.0f°"
 msgstr "PSD %.0f°"
 
-#: modules/process/fft_synth.c:182
+#: modules/process/fft_synth.c:184
 msgid "Generates random surfaces using spectral synthesis."
 msgstr "Générer des surfaces aléatoires en utilisant la synthèse spectrale"
 
-#: modules/process/fft_synth.c:196
+#: modules/process/fft_synth.c:198
 msgid "/S_ynthetic/_Spectral..."
 msgstr "/S_ynthèse/_Spectre..."
 
-#: modules/process/fft_synth.c:200
+#: modules/process/fft_synth.c:202
 msgid "Generate surface using spectral synthesis"
 msgstr "Générer une surface en utilisant la synthèse spectrale"
 
-#: modules/process/fft_synth.c:312
-#: modules/process/noise_synth.c:326
-#: modules/process/obj_synth.c:419
-#: modules/process/pat_synth.c:355
+#: modules/process/fft_synth.c:314
+#: modules/process/noise_synth.c:328
+#: modules/process/obj_synth.c:421
+#: modules/process/pat_synth.c:413
 msgid "Generated"
 msgstr "Généré"
 
-#: modules/process/fft_synth.c:336
+#: modules/process/fft_synth.c:338
 msgid "Spectral Synthesis"
 msgstr "Synthèse spectrale"
 
-#: modules/process/fft_synth.c:407
-#: modules/process/noise_synth.c:421
-#: modules/process/obj_synth.c:516
-#: modules/process/pat_synth.c:452
+#: modules/process/fft_synth.c:406
+#: modules/process/noise_synth.c:420
+#: modules/process/obj_synth.c:515
+#: modules/process/pat_synth.c:507
 msgid "Dimensions"
 msgstr "Dimensions"
 
-#: modules/process/fft_synth.c:417
-#: modules/process/noise_synth.c:431
-#: modules/process/obj_synth.c:526
-#: modules/process/pat_synth.c:463
+#: modules/process/fft_synth.c:416
+#: modules/process/noise_synth.c:430
+#: modules/process/obj_synth.c:525
+#: modules/process/pat_synth.c:518
 msgid "Generator"
 msgstr "Générateur"
 
-#: modules/process/fft_synth.c:422
-#: modules/process/noise_synth.c:459
+#: modules/process/fft_synth.c:421
+#: modules/process/noise_synth.c:458
 msgid "_RMS:"
 msgstr "_RMS :"
 
-#: modules/process/fft_synth.c:433
-#: modules/process/noise_synth.c:470
-#: modules/process/obj_synth.c:629
+#: modules/process/fft_synth.c:432
+#: modules/process/noise_synth.c:469
+#: modules/process/obj_synth.c:628
 msgid "_Like Current Channel"
 msgstr "Identique au canal courant"
 
-#: modules/process/fft_synth.c:444
+#: modules/process/fft_synth.c:443
 msgid "M_inimum frequency:"
 msgstr "Fréquence m_inimum :"
 
-#: modules/process/fft_synth.c:464
+#: modules/process/fft_synth.c:463
 msgid "Ma_ximum frequency:"
 msgstr "Fréquence ma_ximum :"
 
-#: modules/process/fft_synth.c:484
+#: modules/process/fft_synth.c:483
 msgid "Enable _Gaussian multiplier"
 msgstr "Activer le multipicateur _Gaussien"
 
-#: modules/process/fft_synth.c:495
+#: modules/process/fft_synth.c:494
 msgid "_Autocorrelation length:"
 msgstr "Longueur d'_autocorrélation :"
 
-#: modules/process/fft_synth.c:517
+#: modules/process/fft_synth.c:516
 msgid "Enable _power multiplier"
 msgstr "Activer le multiplicateur _puissance"
 
-#: modules/process/fft_synth.c:528
+#: modules/process/fft_synth.c:527
 msgid "Po_wer:"
 msgstr "Puissance :"
 
-#: modules/process/fft_synth.c:662
-#: modules/process/noise_synth.c:627
-#: modules/process/obj_synth.c:839
-#: modules/process/pat_synth.c:601
+#: modules/process/fft_synth.c:694
+#: modules/process/noise_synth.c:660
+#: modules/process/obj_synth.c:872
+#: modules/process/pat_synth.c:656
 msgid "R_andom seed:"
 msgstr "Graine _aléatoire :"
 
-#: modules/process/fft_synth.c:668
-#: modules/process/noise_synth.c:633
-#: modules/process/obj_synth.c:845
-#: modules/process/pat_synth.c:607
+#: modules/process/fft_synth.c:700
+#: modules/process/noise_synth.c:666
+#: modules/process/obj_synth.c:878
+#: modules/process/pat_synth.c:662
 msgid "seed|_New"
 msgstr "_Nouvelle"
 
-#: modules/process/fft_synth.c:679
-#: modules/process/noise_synth.c:644
-#: modules/process/obj_synth.c:856
-#: modules/process/pat_synth.c:618
+#: modules/process/fft_synth.c:711
+#: modules/process/noise_synth.c:677
+#: modules/process/obj_synth.c:889
+#: modules/process/pat_synth.c:673
 msgid "Randomize"
 msgstr "Randomiser"
 
@@ -7598,149 +7598,161 @@ msgstr "La sonde a un rapport plage/résolution différent de l'image. La sonde 
 msgid "Immersed detail data"
 msgstr "Données du détail incrusté"
 
-#: modules/process/noise_synth.c:195
-msgid "Uniform"
+#: modules/process/noise_synth.c:185
+msgid "distribution|Gaussian"
+msgstr "Gaussienne"
+
+#: modules/process/noise_synth.c:191
+msgid "distribution|Exponential"
+msgstr "Exponentielle"
+
+#: modules/process/noise_synth.c:197
+msgid "distribution|Uniform"
 msgstr "Uniforme"
 
-#: modules/process/noise_synth.c:210
+#: modules/process/noise_synth.c:203
+msgid "distribution|Triangular"
+msgstr "Triangulaire"
+
+#: modules/process/noise_synth.c:212
 msgid "Generates uncorrelated random noise."
 msgstr "Génère un bruit aléatoire non corrélé."
 
-#: modules/process/noise_synth.c:224
+#: modules/process/noise_synth.c:226
 msgid "/S_ynthetic/_Noise..."
 msgstr "/S_ynthèse/Bruit..."
 
-#: modules/process/noise_synth.c:228
+#: modules/process/noise_synth.c:230
 msgid "Generate surface of uncorrelated noise"
 msgstr "Générer une surface à partir d'un bruit non corrélé"
 
-#: modules/process/noise_synth.c:349
+#: modules/process/noise_synth.c:351
 msgid "Random Noise"
 msgstr "Bruit aléatoire"
 
-#: modules/process/noise_synth.c:435
+#: modules/process/noise_synth.c:434
 msgid "_Distribution:"
 msgstr "_Distribution : "
 
-#: modules/process/noise_synth.c:440
+#: modules/process/noise_synth.c:439
 msgid "Direction:"
 msgstr "Direction :"
 
-#: modules/process/noise_synth.c:449
+#: modules/process/noise_synth.c:448
 msgid "S_ymmetrical"
 msgstr "S_ymétrique"
 
-#: modules/process/noise_synth.c:450
+#: modules/process/noise_synth.c:449
 msgid "One-sided _positive"
 msgstr ""
 
-#: modules/process/noise_synth.c:451
+#: modules/process/noise_synth.c:450
 msgid "One-sided _negative"
 msgstr ""
 
-#: modules/process/obj_synth.c:285
+#: modules/process/obj_synth.c:287
 msgid "Spheres"
 msgstr "Sphères"
 
-#: modules/process/obj_synth.c:286
+#: modules/process/obj_synth.c:288
 msgid "Boxes"
 msgstr "Boîtes"
 
-#: modules/process/obj_synth.c:287
+#: modules/process/obj_synth.c:289
 msgid "Cones"
 msgstr "Cônes"
 
-#: modules/process/obj_synth.c:288
+#: modules/process/obj_synth.c:290
 msgid "Pyramids"
 msgstr "Pyramides"
 
-#: modules/process/obj_synth.c:289
+#: modules/process/obj_synth.c:291
 msgid "Diamonds"
 msgstr "Losanges"
 
-#: modules/process/obj_synth.c:290
+#: modules/process/obj_synth.c:292
 msgid "Tetrahedrons"
 msgstr "Tétraèdres"
 
-#: modules/process/obj_synth.c:291
+#: modules/process/obj_synth.c:293
 msgid "Nuggets"
 msgstr "Pépites"
 
-#: modules/process/obj_synth.c:292
+#: modules/process/obj_synth.c:294
 msgid "Thatches"
 msgstr "Chaumes"
 
-#: modules/process/obj_synth.c:293
+#: modules/process/obj_synth.c:295
 msgid "Tents"
 msgstr "Tentes"
 
-#: modules/process/obj_synth.c:294
+#: modules/process/obj_synth.c:296
 msgid "Gaussians"
 msgstr "Gaussiennes"
 
-#: modules/process/obj_synth.c:295
+#: modules/process/obj_synth.c:297
 msgid "Dougnuts"
 msgstr "Beignets"
 
-#: modules/process/obj_synth.c:301
+#: modules/process/obj_synth.c:303
 msgid "Generates randomly patterned surfaces by placing objects."
 msgstr "Génère des motifs de surface aléatoire en plçant des objets."
 
-#: modules/process/obj_synth.c:315
+#: modules/process/obj_synth.c:317
 msgid "/S_ynthetic/_Objects..."
 msgstr "/S_ynthèse/_Objets..."
 
-#: modules/process/obj_synth.c:319
+#: modules/process/obj_synth.c:321
 msgid "Generate surface of randomly placed objects"
 msgstr "Générer une surface avec des objets placés aléatoirement"
 
-#: modules/process/obj_synth.c:445
+#: modules/process/obj_synth.c:447
 msgid "Random Objects"
 msgstr "Objets aléatoires"
 
-#: modules/process/obj_synth.c:530
+#: modules/process/obj_synth.c:529
 msgid "_Shape:"
 msgstr "Forme :"
 
-#: modules/process/obj_synth.c:536
+#: modules/process/obj_synth.c:535
 msgid "Co_verage:"
 msgstr "Couverture :"
 
-#: modules/process/obj_synth.c:549
+#: modules/process/obj_synth.c:548
 msgid "obj."
 msgstr "obj."
 
-#: modules/process/obj_synth.c:561
+#: modules/process/obj_synth.c:560
 msgid "_Size:"
 msgstr "Dimen_sion :"
 
-#: modules/process/obj_synth.c:580
-#: modules/process/obj_synth.c:603
-#: modules/process/obj_synth.c:649
-#: modules/process/obj_synth.c:672
-#: modules/process/pat_synth.c:915
+#: modules/process/obj_synth.c:579
+#: modules/process/obj_synth.c:602
+#: modules/process/obj_synth.c:648
+#: modules/process/obj_synth.c:671
+#: modules/process/pat_synth.c:989
 msgid "Variance:"
 msgstr "Variance :"
 
-#: modules/process/obj_synth.c:589
+#: modules/process/obj_synth.c:588
 msgid "Aspect Ratio"
 msgstr "Rapport d'aspect"
 
-#: modules/process/obj_synth.c:595
+#: modules/process/obj_synth.c:594
 msgid "_Aspect ratio:"
 msgstr "Rapport d'_aspect :"
 
-#: modules/process/obj_synth.c:638
+#: modules/process/obj_synth.c:637
 msgid "Scales _with size"
 msgstr "Mettre à l'échelle avec la taille"
 
-#: modules/process/obj_synth.c:657
-#: modules/process/pat_synth.c:883
+#: modules/process/obj_synth.c:656
+#: modules/process/pat_synth.c:957
 msgid "Orientation"
 msgstr "Orientation"
 
-#: modules/process/obj_synth.c:663
-#: modules/process/pat_synth.c:892
+#: modules/process/obj_synth.c:662
+#: modules/process/pat_synth.c:966
 msgid "Orien_tation:"
 msgstr "Orien_tation :"
 
@@ -7756,55 +7768,79 @@ msgstr "/_Correction des Données/Masquer les p_oints aberrants"
 msgid "Mark data farther than 3σ from mean value"
 msgstr "Marque les données éloignées de plus de 3σ de la valeur moyenne"
 
-#: modules/process/pat_synth.c:215
+#: modules/process/pat_synth.c:238
 msgid "Steps"
 msgstr "Sauts"
 
-#: modules/process/pat_synth.c:221
-msgid "Generates surfaces representing simple patterns (steps, trenches, ...)."
-msgstr "Génère une surface à partir de motifs simples (sauts, tranchées...)."
+#: modules/process/pat_synth.c:239
+#, fuzzy
+msgid "Ridges"
+msgstr "Crêtes"
 
-#: modules/process/pat_synth.c:236
+#: modules/process/pat_synth.c:245
+#, fuzzy
+msgid "Generates surfaces representing simple patterns (steps, ridges, ...)."
+msgstr "Génère une surface à partir de motifs simples (sauts, crêtes...)."
+
+#: modules/process/pat_synth.c:260
 msgid "/S_ynthetic/_Pattern..."
 msgstr "/S_ynthèse/Motifs..."
 
-#: modules/process/pat_synth.c:240
+#: modules/process/pat_synth.c:264
 msgid "Generate patterned surface"
 msgstr "Générer une surface à partir de motifs"
 
-#: modules/process/pat_synth.c:381
+#: modules/process/pat_synth.c:439
 msgid "Pattern"
 msgstr "Motif"
 
-#: modules/process/pat_synth.c:467
+#: modules/process/pat_synth.c:522
 msgid "_Pattern:"
 msgstr "Motif :"
 
-#: modules/process/pat_synth.c:940
+#: modules/process/pat_synth.c:1014
 msgid "Deformation"
 msgstr "Déformation"
 
-#: modules/process/pat_synth.c:948
+#: modules/process/pat_synth.c:1022
 msgid "_Amplitude:"
 msgstr "_Amplitude :"
 
-#: modules/process/pat_synth.c:956
+#: modules/process/pat_synth.c:1030
 msgid "_Lateral scale:"
 msgstr "Echelle _latérale :"
 
-#: modules/process/pat_synth.c:1065
+#: modules/process/pat_synth.c:1169
 #, fuzzy
 msgid "Flat"
 msgstr "Plat"
 
-#: modules/process/pat_synth.c:1072
+#: modules/process/pat_synth.c:1176
 #, fuzzy
-msgid "_Flat length:"
+msgid "_Flat width:"
 msgstr "Longueur du plat :"
 
-#: modules/process/pat_synth.c:1087
-msgid "_Slope length:"
+#: modules/process/pat_synth.c:1191
+#: modules/process/pat_synth.c:1472
+#, fuzzy
+msgid "_Slope width:"
 msgstr "Longueur de la pente :"
+
+#: modules/process/pat_synth.c:1435
+msgid "Top"
+msgstr "Haut"
+
+#: modules/process/pat_synth.c:1442
+msgid "Flat _top width:"
+msgstr ""
+
+#: modules/process/pat_synth.c:1450
+msgid "Bottom"
+msgstr "Bas"
+
+#: modules/process/pat_synth.c:1457
+msgid "Flat _bottom width:"
+msgstr ""
 
 #: modules/process/polydistort.c:140
 msgid "Apllies polynomial distortion in the horizontal plane."
@@ -8791,95 +8827,99 @@ msgstr "<b>Options</b>"
 msgid "_Instant updates"
 msgstr "Mises à jour instantanées"
 
-#: modules/tools/maskedit.c:122
+#: modules/tools/maskedit.c:128
 msgid "Mask editor tool, allows to interactively add or remove parts of mask."
 msgstr "Outil d'édition de masque, permet d'ajouter ou d'enlever des parties du masque de manière interactive"
 
-#: modules/tools/maskedit.c:170
+#: modules/tools/maskedit.c:176
 msgid "Mask Editor"
 msgstr "Editeur de masque"
 
-#: modules/tools/maskedit.c:171
+#: modules/tools/maskedit.c:177
 msgid "Edit mask"
 msgstr "Editer le masque"
 
-#: modules/tools/maskedit.c:255
+#: modules/tools/maskedit.c:262
 msgid "Set mask to selection"
 msgstr "Définir la sélection comme masque"
 
-#: modules/tools/maskedit.c:260
+#: modules/tools/maskedit.c:267
 msgid "Add selection to mask"
 msgstr "Ajouter la sélection au masque"
 
-#: modules/tools/maskedit.c:265
+#: modules/tools/maskedit.c:272
 msgid "Subtract selection from mask"
 msgstr "Soustraire la sélection du masque"
 
-#: modules/tools/maskedit.c:270
+#: modules/tools/maskedit.c:277
 msgid "Intersect selection with mask"
 msgstr "Insérer la sélection avec un masque"
 
-#: modules/tools/maskedit.c:277
+#: modules/tools/maskedit.c:284
 msgid "Rectangular shapes"
 msgstr "Rectangles"
 
-#: modules/tools/maskedit.c:282
+#: modules/tools/maskedit.c:289
 msgid "Elliptic shapes"
 msgstr "Ellipses"
 
-#: modules/tools/maskedit.c:287
+#: modules/tools/maskedit.c:294
 msgid "Thin lines"
 msgstr "Lignes"
 
-#: modules/tools/maskedit.c:314
+#: modules/tools/maskedit.c:299
+msgid "Paintbrush"
+msgstr "Pinceau"
+
+#: modules/tools/maskedit.c:326
 msgid "Editor"
 msgstr "Editeur"
 
-#: modules/tools/maskedit.c:319
+#: modules/tools/maskedit.c:331
 msgid "Mode:"
 msgstr "Mode :"
 
-#: modules/tools/maskedit.c:348
+#: modules/tools/maskedit.c:360
 msgid "Shape:"
 msgstr "Forme :"
 
-#: modules/tools/maskedit.c:378
+#: modules/tools/maskedit.c:390
 msgid "Actions"
 msgstr "Actions"
 
-#: modules/tools/maskedit.c:386
+#: modules/tools/maskedit.c:398
 msgid "_Invert"
 msgstr "_Inverser"
 
-#: modules/tools/maskedit.c:402
+#: modules/tools/maskedit.c:414
 msgid "_Fill"
 msgstr "Remplir"
 
-#: modules/tools/maskedit.c:409
+#: modules/tools/maskedit.c:421
 msgid "Fill _Voids"
 msgstr "Remplir les _vides"
 
-#: modules/tools/maskedit.c:423
+#: modules/tools/maskedit.c:435
 msgid "Grow/Shrink"
 msgstr "Dilater / Eroder"
 
-#: modules/tools/maskedit.c:432
+#: modules/tools/maskedit.c:444
 msgid "_Grow"
 msgstr "Dilater"
 
-#: modules/tools/maskedit.c:440
+#: modules/tools/maskedit.c:452
 msgid "Shrin_k"
 msgstr "Eroder"
 
-#: modules/tools/maskedit.c:455
+#: modules/tools/maskedit.c:467
 msgid "_Amount:"
 msgstr "Qu_antité :"
 
-#: modules/tools/maskedit.c:462
+#: modules/tools/maskedit.c:474
 msgid "Shrink from _border"
 msgstr "Eroder à partir du _bord"
 
-#: modules/tools/maskedit.c:473
+#: modules/tools/maskedit.c:485
 msgid "_Prevent grain merging by growing"
 msgstr "Em_pêcher la fusion de grains lors d'une dilatation"
 
@@ -9420,6 +9460,8 @@ msgstr ""
 "Inclinaison θ:      %s\n"
 "Inclinaison φ:      %s\n"
 
+#~ msgid "Uniform"
+#~ msgstr "Uniforme"
 #~ msgid "Ideal Geometry"
 #~ msgstr "Géométrie idéale"
 
