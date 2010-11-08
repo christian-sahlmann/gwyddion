@@ -102,6 +102,7 @@ typedef struct {
     GtkWidget *update;
     GtkWidget *update_now;
     GtkObject *seed;
+    GtkTable *table;
     GtkWidget *randomize;
     GtkWidget *distribution;
     GSList *direction;
@@ -111,6 +112,7 @@ typedef struct {
     GwyContainer *mydata;
     GwyDataField *surface;
     GwyDataField *noise;
+    gdouble pxsize;
     gdouble zscale;
     gboolean in_init;
     gulong sid;
@@ -130,33 +132,23 @@ static gboolean      noise_synth_dialog        (NoiseSynthArgs *args,
                                                 GwyContainer *data,
                                                 GwyDataField *dfield,
                                                 gint id);
-static GwyDataField* surface_for_preview       (GwyDataField *dfield,
-                                                guint size);
 static GtkWidget*    distribution_selector_new (NoiseSynthControls *controls);
 static void          update_controls           (NoiseSynthControls *controls,
                                                 NoiseSynthArgs *args);
-static GtkWidget*    random_seed_new           (GtkAdjustment *adj);
-static GtkWidget*    randomize_new             (gboolean *randomize);
-static GtkWidget*    instant_updates_new       (GtkWidget **update,
-                                                GtkWidget **instant,
-                                                gboolean *state);
 static void          page_switched             (NoiseSynthControls *controls,
                                                 GtkNotebookPage *page,
                                                 gint pagenum);
-static void          seed_changed              (NoiseSynthControls *controls,
-                                                GtkAdjustment *adj);
-static void          randomize_seed            (GtkAdjustment *adj);
+static void          update_values             (NoiseSynthControls *controls);
 static void          distribution_type_selected(GtkComboBox *combo,
                                                 NoiseSynthControls *controls);
 static void          direction_type_changed    (GtkWidget *button,
                                                 NoiseSynthControls *controls);
-static void          sigma_changed             (NoiseSynthControls *controls,
-                                                GtkAdjustment *adj);
 static void          sigma_init_clicked        (NoiseSynthControls *controls);
 static void          noise_synth_invalidate    (NoiseSynthControls *controls);
 static gboolean      preview_gsource           (gpointer user_data);
 static void          preview                   (NoiseSynthControls *controls);
 static void          noise_synth_do            (const NoiseSynthArgs *args,
+                                                const GwyDimensionArgs *dimsargs,
                                                 GwyDataField *dfield);
 static void          noise_synth_load_args     (GwyContainer *container,
                                                 NoiseSynthArgs *args,
@@ -164,6 +156,12 @@ static void          noise_synth_load_args     (GwyContainer *container,
 static void          noise_synth_save_args     (GwyContainer *container,
                                                 const NoiseSynthArgs *args,
                                                 const GwyDimensionArgs *dimsargs);
+
+#define GWY_SYNTH_CONTROLS NoiseSynthControls
+#define GWY_SYNTH_INVALIDATE(controls) \
+    noise_synth_invalidate(controls)
+
+#include "synth.h"
 
 DECLARE_NOISE(gaussian);
 DECLARE_NOISE(exp);
@@ -269,7 +267,6 @@ run_noninteractive(NoiseSynthArgs *args,
     GwySIUnit *siunit;
     gboolean replace = dimsargs->replace && dfield;
     gboolean add = dimsargs->add && dfield;
-    gdouble mag;
     gint newid;
 
     if (args->randomize)
@@ -287,7 +284,7 @@ run_noninteractive(NoiseSynthArgs *args,
         if (add)
             dfield = gwy_data_field_duplicate(dfield);
         else {
-            mag = pow10(dimsargs->xypow10) * dimsargs->measure;
+            gdouble mag = pow10(dimsargs->xypow10) * dimsargs->measure;
             dfield = gwy_data_field_new(dimsargs->xres, dimsargs->yres,
                                         mag*dimsargs->xres, mag*dimsargs->yres,
                                         TRUE);
@@ -300,10 +297,7 @@ run_noninteractive(NoiseSynthArgs *args,
         }
     }
 
-    mag = pow10(dimsargs->zpow10);
-    args->sigma *= mag;
-    noise_synth_do(args, dfield);
-    args->sigma /= mag;
+    noise_synth_do(args, dimsargs, dfield);
 
     if (replace)
         gwy_data_field_data_changed(dfield);
@@ -337,7 +331,7 @@ noise_synth_dialog(NoiseSynthArgs *args,
                  GwyDataField *dfield_template,
                  gint id)
 {
-    GtkWidget *dialog, *table, *vbox, *hbox, *notebook, *spin, *label;
+    GtkWidget *dialog, *table, *vbox, *hbox, *notebook, *label;
     NoiseSynthControls controls;
     GwyDataField *dfield;
     GwyPixmapLayer *layer;
@@ -377,7 +371,8 @@ noise_synth_dialog(NoiseSynthArgs *args,
                                 GWY_DATA_ITEM_PALETTE,
                                 0);
     if (dfield_template) {
-        controls.surface = surface_for_preview(dfield_template, PREVIEW_SIZE);
+        controls.surface = gwy_synth_surface_for_preview(dfield_template,
+                                                         PREVIEW_SIZE);
         controls.zscale = gwy_data_field_get_rms(dfield_template);
     }
     controls.view = gwy_data_view_new(controls.mydata);
@@ -391,22 +386,19 @@ noise_synth_dialog(NoiseSynthArgs *args,
     gtk_box_pack_start(GTK_BOX(vbox), controls.view, FALSE, FALSE, 0);
 
     gtk_box_pack_start(GTK_BOX(vbox),
-                       instant_updates_new(&controls.update_now,
-                                           &controls.update, &args->update),
+                       gwy_synth_instant_updates_new(&controls,
+                                                     &controls.update_now,
+                                                     &controls.update,
+                                                     &args->update),
                        FALSE, FALSE, 0);
-    g_signal_connect_swapped(controls.update, "toggled",
-                             G_CALLBACK(noise_synth_invalidate), &controls);
     g_signal_connect_swapped(controls.update_now, "clicked",
                              G_CALLBACK(preview), &controls);
 
-    controls.seed = gtk_adjustment_new(args->seed, 1, 0x7fffffff, 1, 10, 0);
     gtk_box_pack_start(GTK_BOX(vbox),
-                       random_seed_new(GTK_ADJUSTMENT(controls.seed)),
+                       gwy_synth_random_seed_new(&controls.seed, &args->seed),
                        FALSE, FALSE, 0);
-    g_signal_connect_swapped(controls.seed, "value-changed",
-                             G_CALLBACK(seed_changed), &controls);
 
-    controls.randomize = randomize_new(&args->randomize);
+    controls.randomize = gwy_synth_randomize_new(&args->randomize);
     gtk_box_pack_start(GTK_BOX(vbox), controls.randomize, FALSE, FALSE, 0);
 
     notebook = gtk_notebook_new();
@@ -423,8 +415,9 @@ noise_synth_dialog(NoiseSynthArgs *args,
                                  G_CALLBACK(noise_synth_invalidate), &controls);
 
     table = gtk_table_new(6 + (dfield_template ? 1 : 0), 4, FALSE);
-    gtk_table_set_row_spacings(GTK_TABLE(table), 2);
-    gtk_table_set_col_spacings(GTK_TABLE(table), 6);
+    controls.table = GTK_TABLE(table);
+    gtk_table_set_row_spacings(controls.table, 2);
+    gtk_table_set_col_spacings(controls.table, 6);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_notebook_append_page(GTK_NOTEBOOK(notebook), table,
                              gtk_label_new(_("Generator")));
@@ -453,16 +446,9 @@ noise_synth_dialog(NoiseSynthArgs *args,
                                             GTK_TABLE(table), 3, row);
     gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
 
-    controls.sigma = gtk_adjustment_new(args->sigma,
-                                        0.0001, 10000.0, 0.1, 10.0, 0);
-    spin = gwy_table_attach_hscale(table, row, _("_RMS:"), "",
-                                   controls.sigma, GWY_HSCALE_LOG);
-    gtk_spin_button_set_snap_to_ticks(GTK_SPIN_BUTTON(spin), FALSE);
-    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 4);
-    controls.sigma_units = gwy_table_hscale_get_units(controls.sigma);
-    g_signal_connect_swapped(controls.sigma, "value-changed",
-                             G_CALLBACK(sigma_changed), &controls);
-    row++;
+    row = gwy_synth_attach_height(&controls, row,
+                                  &controls.sigma, &args->sigma,
+                                  _("_RMS:"), NULL, &controls.sigma_units);
 
     if (dfield_template) {
         controls.sigma_init
@@ -478,6 +464,7 @@ noise_synth_dialog(NoiseSynthArgs *args,
     controls.in_init = FALSE;
     /* Must be done when widgets are shown, see GtkNotebook docs */
     gtk_notebook_set_current_page(GTK_NOTEBOOK(notebook), args->active_page);
+    update_values(&controls);
     noise_synth_invalidate(&controls);
 
     finished = FALSE;
@@ -523,40 +510,6 @@ noise_synth_dialog(NoiseSynthArgs *args,
     gwy_dimensions_free(controls.dims);
 
     return response == GTK_RESPONSE_OK;
-}
-
-/* Create a square base surface for preview generation of an exact size */
-static GwyDataField*
-surface_for_preview(GwyDataField *dfield,
-                    guint size)
-{
-    GwyDataField *retval;
-    gint xres, yres, xoff, yoff;
-
-    xres = gwy_data_field_get_xres(dfield);
-    yres = gwy_data_field_get_yres(dfield);
-
-    /* If the field is large enough, just cut an area from the centre. */
-    if (xres >= size && yres >= size) {
-        xoff = (xres - size)/2;
-        yoff = (yres - size)/2;
-        return gwy_data_field_area_extract(dfield, xoff, yoff, size, size);
-    }
-
-    if (xres <= yres) {
-        yoff = (yres - xres)/2;
-        dfield = gwy_data_field_area_extract(dfield, 0, yoff, xres, xres);
-    }
-    else {
-        xoff = (xres - yres)/2;
-        dfield = gwy_data_field_area_extract(dfield, xoff, 0, yres, yres);
-    }
-
-    retval = gwy_data_field_new_resampled(dfield, size, size,
-                                          GWY_INTERPOLATION_KEY);
-    g_object_unref(dfield);
-
-    return retval;
 }
 
 static const NoiseSynthGenerator*
@@ -613,75 +566,6 @@ update_controls(NoiseSynthControls *controls,
 }
 
 static void
-toggle_update_boolean(GtkToggleButton *toggle,
-                      gboolean *var)
-{
-    *var = gtk_toggle_button_get_active(toggle);
-}
-
-static void
-toggle_make_insensitive(GtkToggleButton *toggle,
-                        GtkWidget *widget)
-{
-    gtk_widget_set_sensitive(widget, !gtk_toggle_button_get_active(toggle));
-}
-
-static GtkWidget*
-instant_updates_new(GtkWidget **update,
-                    GtkWidget **instant,
-                    gboolean *state)
-{
-    GtkWidget *hbox;
-
-    hbox = gtk_hbox_new(FALSE, 6);
-
-    *update = gtk_button_new_with_mnemonic(_("_Update"));
-    gtk_widget_set_sensitive(*update, !*state);
-    gtk_box_pack_start(GTK_BOX(hbox), *update, FALSE, FALSE, 0);
-
-    *instant = gtk_check_button_new_with_mnemonic(_("I_nstant updates"));
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(*instant), *state);
-    gtk_box_pack_start(GTK_BOX(hbox), *instant, FALSE, FALSE, 0);
-    g_signal_connect(*instant, "toggled",
-                     G_CALLBACK(toggle_update_boolean), state);
-    g_signal_connect(*instant, "toggled",
-                     G_CALLBACK(toggle_make_insensitive), *update);
-
-    return hbox;
-}
-
-static GtkWidget*
-random_seed_new(GtkAdjustment *adj)
-{
-    GtkWidget *hbox, *button, *label, *spin;
-
-    hbox = gtk_hbox_new(FALSE, 6);
-
-    label = gtk_label_new_with_mnemonic(_("R_andom seed:"));
-    gtk_box_pack_start(GTK_BOX(hbox), label, FALSE, FALSE, 0);
-    spin = gtk_spin_button_new(adj, 0, 0);
-    gtk_label_set_mnemonic_widget(GTK_LABEL(label), spin);
-    gtk_box_pack_start(GTK_BOX(hbox), spin, FALSE, FALSE, 0);
-
-    button = gtk_button_new_with_mnemonic(gwy_sgettext("seed|_New"));
-    gtk_box_pack_start(GTK_BOX(hbox), button, FALSE, FALSE, 0);
-    g_signal_connect_swapped(button, "clicked",
-                             G_CALLBACK(randomize_seed), adj);
-
-    return hbox;
-}
-
-static GtkWidget*
-randomize_new(gboolean *randomize)
-{
-    GtkWidget *button = gtk_check_button_new_with_mnemonic(_("Randomize"));
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(button), *randomize);
-    g_signal_connect(button, "toggled",
-                     G_CALLBACK(toggle_update_boolean), randomize);
-    return button;
-}
-
-static void
 page_switched(NoiseSynthControls *controls,
               G_GNUC_UNUSED GtkNotebookPage *page,
               gint pagenum)
@@ -691,28 +575,19 @@ page_switched(NoiseSynthControls *controls,
 
     controls->args->active_page = pagenum;
 
-    if (pagenum == PAGE_GENERATOR) {
-        GwyDimensions *dims = controls->dims;
-
-        if (controls->sigma_units)
-            gtk_label_set_markup(GTK_LABEL(controls->sigma_units),
-                                 dims->zvf->units);
-    }
+    if (pagenum == PAGE_GENERATOR)
+        update_values(controls);
 }
 
 static void
-seed_changed(NoiseSynthControls *controls,
-             GtkAdjustment *adj)
+update_values(NoiseSynthControls *controls)
 {
-    controls->args->seed = gwy_adjustment_get_int(adj);
-    noise_synth_invalidate(controls);
-}
+    GwyDimensions *dims = controls->dims;
 
-static void
-randomize_seed(GtkAdjustment *adj)
-{
-    /* Use the GLib's global PRNG for seeding */
-    gtk_adjustment_set_value(adj, g_random_int() & 0x7fffffff);
+    controls->pxsize = dims->args->measure * pow10(dims->args->xypow10);
+    if (controls->sigma_units)
+        gtk_label_set_markup(GTK_LABEL(controls->sigma_units),
+                             dims->zvf->units);
 }
 
 static void
@@ -728,14 +603,6 @@ direction_type_changed(GtkWidget *button,
                        NoiseSynthControls *controls)
 {
     controls->args->direction = gwy_radio_button_get_value(button);
-    noise_synth_invalidate(controls);
-}
-
-static void
-sigma_changed(NoiseSynthControls *controls,
-               GtkAdjustment *adj)
-{
-    controls->args->sigma = gtk_adjustment_get_value(adj);
     noise_synth_invalidate(controls);
 }
 
@@ -773,7 +640,6 @@ preview(NoiseSynthControls *controls)
 {
     NoiseSynthArgs *args = controls->args;
     GwyDataField *dfield;
-    gdouble mag = pow10(controls->dims->args->zpow10);
 
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
                                                              "/0/data"));
@@ -782,21 +648,21 @@ preview(NoiseSynthControls *controls)
     else
         gwy_data_field_clear(dfield);
 
-    args->sigma *= mag;
-    noise_synth_do(args, dfield);
-    args->sigma /= mag;
+    noise_synth_do(args, controls->dims->args, dfield);
 
     gwy_data_field_data_changed(dfield);
 }
 
 static void
 noise_synth_do(const NoiseSynthArgs *args,
+               const GwyDimensionArgs *dimsargs,
                GwyDataField *dfield)
 {
     const NoiseSynthGenerator *generator;
     PointNoiseFunc point_noise;
     GRand *rng;
     gdouble *data;
+    gdouble sigma;
     gint xres, yres, i;
 
     generator = get_point_noise_generator(args->distribution);
@@ -810,16 +676,17 @@ noise_synth_do(const NoiseSynthArgs *args,
     xres = gwy_data_field_get_xres(dfield);
     yres = gwy_data_field_get_yres(dfield);
     data = gwy_data_field_get_data(dfield);
+    sigma = args->sigma * pow10(dimsargs->zpow10);
 
     for (i = 0; i < xres*yres; i++)
-        data[i] += point_noise(rng, args->sigma);
+        data[i] += point_noise(rng, sigma);
 
     g_rand_free(rng);
 }
 
 static gdouble
 rand_gen_gaussian(GRand *rng,
-               gdouble sigma)
+                  gdouble sigma)
 {
     static gboolean have_spare = FALSE;
     static gdouble spare;

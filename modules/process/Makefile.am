@@ -38,6 +38,7 @@ process_LTLIBRARIES = \
 	laplace.la \
 	level.la \
 	linecorrect.la \
+	lno_synth.la \
 	local_contrast.la \
 	mark_with.la \
 	maskcor.la \
@@ -117,7 +118,7 @@ fft_filter_1d_la_SOURCES       = fft_filter_1d.c
 fft_filter_2d_la_SOURCES       = fft_filter_2d.c
 fft_profile_la_SOURCES         = fft_profile.c
 fft_la_SOURCES                 = fft.c
-fft_synth_la_SOURCES           = fft_synth.c dimensions.h
+fft_synth_la_SOURCES           = fft_synth.c dimensions.h synth.h
 fit_2d_la_SOURCES              = fit_2d.c
 fractal_la_SOURCES             = fractal.c
 fraccor_la_SOURCES             = fraccor.c
@@ -133,6 +134,7 @@ indent_analyze_la_SOURCES      = indent_analyze.c
 laplace_la_SOURCES             = laplace.c
 level_la_SOURCES               = level.c
 linecorrect_la_SOURCES         = linecorrect.c
+lno_synth_la_SOURCES           = lno_synth.c dimensions.h synth.h
 local_contrast_la_SOURCES      = local_contrast.c
 mark_with_la_SOURCES           = mark_with.c
 maskcor_la_SOURCES             = maskcor.c
@@ -141,10 +143,10 @@ mcrop_la_SOURCES               = mcrop.c
 median_bg_la_SOURCES           = median-bg.c
 merge_la_SOURCES               = merge.c
 #nanoindent_adjust_la_SOURCES  = nanoindent_adjust.c
-noise_synth_la_SOURCES         = noise_synth.c dimensions.h
-obj_synth_la_SOURCES           = obj_synth.c dimensions.h
+noise_synth_la_SOURCES         = noise_synth.c dimensions.h synth.h
+obj_synth_la_SOURCES           = obj_synth.c dimensions.h synth.h
 outliers_la_SOURCES            = outliers.c
-pat_synth_la_SOURCES           = pat_synth.c dimensions.h
+pat_synth_la_SOURCES           = pat_synth.c dimensions.h synth.h
 polylevel_la_SOURCES           = polylevel.c
 polydistort_la_SOURCES         = polydistort.c
 presentationops_la_SOURCES     = presentationops.c
