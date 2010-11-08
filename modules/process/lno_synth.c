@@ -452,7 +452,7 @@ lno_synth_dialog(LNoSynthArgs *args,
     dfield = gwy_data_field_new(PREVIEW_SIZE, PREVIEW_SIZE,
                                 dimsargs->measure*PREVIEW_SIZE,
                                 dimsargs->measure*PREVIEW_SIZE,
-                                FALSE);
+                                TRUE);
     gwy_container_set_object_by_name(controls.mydata, "/0/data", dfield);
     if (data)
         gwy_app_sync_data_items(data, controls.mydata, id, 0, FALSE,

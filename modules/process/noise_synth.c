@@ -363,7 +363,7 @@ noise_synth_dialog(NoiseSynthArgs *args,
     dfield = gwy_data_field_new(PREVIEW_SIZE, PREVIEW_SIZE,
                                 dimsargs->measure*PREVIEW_SIZE,
                                 dimsargs->measure*PREVIEW_SIZE,
-                                FALSE);
+                                TRUE);
     gwy_container_set_object_by_name(controls.mydata, "/0/data", dfield);
     controls.noise = gwy_data_field_new_alike(dfield, FALSE);
     if (data)
