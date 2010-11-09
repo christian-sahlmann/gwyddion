@@ -7,6 +7,7 @@ icondatadir = $(datadir)/icons/hicolor/48x48/apps
 # Since 2.7: path_level spectrum iso_roughness grains_measure gl_material
 # Since 2.7: color_range_auto color_range_full color_range_fixed
 # Since 2.7: color_range_adaptive mask_line
+# Since 2.22: mask_fill_draw mask_fill_erase mask_paint_draw mask_paint_erase
 
 # If you add new stock icons here, add them to a `Since' line above and run
 # ./utils/stockgen.py from the top-level directory to update source code
@@ -82,10 +83,14 @@ pixmapdata_DATA = \
 	gwy_mask_editor-24.png \
 	gwy_mask_exclude-24.png \
 	gwy_mask_exclude_circle-24.png \
+	gwy_mask_fill_draw-24.png \
+	gwy_mask_fill_erase-24.png \
 	gwy_mask_grow-24.png \
 	gwy_mask_intersect-24.png \
 	gwy_mask_invert-24.png \
 	gwy_mask_line-24.png \
+	gwy_mask_paint_draw-24.png \
+	gwy_mask_paint_erase-24.png \
 	gwy_mask_rect_exclusive-24.png \
 	gwy_mask_rect_inclusive-24.png \
 	gwy_mask_remove-24.png \

@@ -744,6 +744,24 @@ free_the_icon_factory(void)
  **/
 
 /**
+ * GWY_STOCK_MASK_FILL_DRAW:
+ *
+ * The "Mask-Fill-Draw" stock icon.
+ * <inlinegraphic fileref="gwy_mask_fill_draw-24.png" format="PNG"/>
+ *
+ * Since: 2.22
+ **/
+
+/**
+ * GWY_STOCK_MASK_FILL_ERASE:
+ *
+ * The "Mask-Fill-Erase" stock icon.
+ * <inlinegraphic fileref="gwy_mask_fill_erase-24.png" format="PNG"/>
+ *
+ * Since: 2.22
+ **/
+
+/**
  * GWY_STOCK_MASK_GROW:
  *
  * The "Mask-Grow" stock icon.
@@ -771,6 +789,24 @@ free_the_icon_factory(void)
  * <inlinegraphic fileref="gwy_mask_line-24.png" format="PNG"/>
  *
  * Since: 2.7
+ **/
+
+/**
+ * GWY_STOCK_MASK_PAINT_DRAW:
+ *
+ * The "Mask-Paint-Draw" stock icon.
+ * <inlinegraphic fileref="gwy_mask_paint_draw-24.png" format="PNG"/>
+ *
+ * Since: 2.22
+ **/
+
+/**
+ * GWY_STOCK_MASK_PAINT_ERASE:
+ *
+ * The "Mask-Paint-Erase" stock icon.
+ * <inlinegraphic fileref="gwy_mask_paint_erase-24.png" format="PNG"/>
+ *
+ * Since: 2.22
  **/
 
 /**
