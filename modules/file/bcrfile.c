@@ -132,7 +132,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Image Metrology BCR data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.13",
+    "0.14",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -396,15 +396,13 @@ file_load_real(const guchar *buffer,
     g_object_unref(siunit1);
     q = pow10(power10);
 
-    if (type == BCR_FILE_INT16
-        && (s = g_hash_table_lookup(meta, "bit2nm"))
-        && (qq = g_ascii_strtod(s, NULL)) > 0)
-        gwy_data_field_multiply(dfield, q*qq);
-    /*
-    else
-       FIXME: ignoring powers of 10 is the right thing when zunit is unset,
-       but otherwise?
-     */
+    if (type == BCR_FILE_INT16) {
+        if ((s = g_hash_table_lookup(meta, "bit2nm"))
+            && (qq = g_ascii_strtod(s, NULL)) > 0)
+            gwy_data_field_multiply(dfield, q*qq);
+    }
+    else if (type == BCR_FILE_FLOAT)
+        gwy_data_field_multiply(dfield, q);
 
     if ((s = g_hash_table_lookup(meta, "zmin"))
         && (qq = g_ascii_strtod(s, NULL)) > 0)
@@ -529,7 +527,6 @@ read_data_field(const guchar *buffer,
                     data[i] = v;
             }
         }
-        gwy_data_field_multiply(dfield, 1e-9);
         break;
 
         default:
