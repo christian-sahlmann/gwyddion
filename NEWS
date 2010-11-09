@@ -1,8 +1,17 @@
 2.22 (0000-00-00)
+Libraries:
+- libgwyprocess: Odd behaviour of 1D convolution and Gaussian filters for
+  kernels much larger than data were corrected to full mirroring.
+
 Modules:
+- Pattern Synthesis (new): Creates regular patterns such as steps of ridges.
+- Noise Synthesis (new): Generates uncorrelated point noise.
+- Line Noise Synthesis (new): Generates line noise (steps or scars).
 - Object Synthesis: Objects can be placed onto an existing surface, two
   new shapes (diamond and Gaussian) were added, other small improvements.
 - Spectral Synthesis: Generated data can be added to an existing surface.
+- Mask Editor tool: New editting tools were added: paintbrush, eraser,
+  and bucket filling and unfilling.
 - GDEF: Vertically flipped data was corrected.
 
 
