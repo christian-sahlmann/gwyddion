@@ -395,7 +395,8 @@ noise_synth_dialog(NoiseSynthArgs *args,
                              G_CALLBACK(preview), &controls);
 
     gtk_box_pack_start(GTK_BOX(vbox),
-                       gwy_synth_random_seed_new(&controls.seed, &args->seed),
+                       gwy_synth_random_seed_new(&controls,
+                                                 &controls.seed, &args->seed),
                        FALSE, FALSE, 0);
 
     controls.randomize = gwy_synth_randomize_new(&args->randomize);

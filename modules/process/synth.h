@@ -94,7 +94,8 @@ static GtkWidget*    gwy_synth_instant_updates_new   (GWY_SYNTH_CONTROLS *contro
                                                       GtkWidget **pinstant,
                                                       gboolean *target);
 static void          gwy_synth_randomize_seed        (GtkAdjustment *adj);
-static GtkWidget*    gwy_synth_random_seed_new       (GtkObject **adj,
+static GtkWidget*    gwy_synth_random_seed_new       (GWY_SYNTH_CONTROLS *controls,
+                                                      GtkObject **adj,
                                                       gint *target);
 static GtkWidget*    gwy_synth_randomize_new         (gboolean *target);
 static GwyDataField* gwy_synth_surface_for_preview   (GwyDataField *dfield,
@@ -472,7 +473,8 @@ gwy_synth_randomize_seed(GtkAdjustment *adj)
 
 G_GNUC_UNUSED
 static GtkWidget*
-gwy_synth_random_seed_new(GtkObject **adj,
+gwy_synth_random_seed_new(GWY_SYNTH_CONTROLS *controls,
+                          GtkObject **adj,
                           gint *target)
 {
     GtkWidget *hbox, *button, *label, *spin;
@@ -480,6 +482,9 @@ gwy_synth_random_seed_new(GtkObject **adj,
     hbox = gtk_hbox_new(FALSE, 6);
 
     *adj = gtk_adjustment_new(*target, 1, 0x7fffffff, 1, 10, 0);
+    g_object_set_data(G_OBJECT(*adj), "target", target);
+    g_signal_connect_swapped(*adj, "value-changed",
+                             G_CALLBACK(gwy_synth_double_changed), controls);
 
     label = gtk_label_new_with_mnemonic(_("R_andom seed:"));
     gtk_box_pack_start(GTK_BOX(hbox), label, FALSE, FALSE, 0);
@@ -489,7 +494,6 @@ gwy_synth_random_seed_new(GtkObject **adj,
 
     button = gtk_button_new_with_mnemonic(gwy_sgettext("seed|_New"));
     gtk_box_pack_start(GTK_BOX(hbox), button, FALSE, FALSE, 0);
-    g_object_set_data(G_OBJECT(*adj), "target", target);
     g_signal_connect_swapped(button, "clicked",
                              G_CALLBACK(gwy_synth_randomize_seed), *adj);
 
@@ -500,7 +504,7 @@ G_GNUC_UNUSED
 static GtkWidget*
 gwy_synth_randomize_new(gboolean *target)
 {
-    GtkWidget *button = gtk_check_button_new_with_mnemonic(_("_Randomize"));
+    GtkWidget *button = gtk_check_button_new_with_mnemonic(_("Randomi_ze"));
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(button), *target);
     g_signal_connect(button, "toggled",
                      G_CALLBACK(gwy_synth_boolean_changed_silent), target);
