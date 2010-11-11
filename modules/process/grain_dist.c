@@ -78,7 +78,6 @@ typedef struct {
 
     /* To mask impossible quantitities without really resetting the bits */
     gboolean units_equal;
-    guint bitmask;
 } GrainDistArgs;
 
 typedef struct {
@@ -137,7 +136,6 @@ static const GrainDistArgs grain_dist_defaults = {
     FALSE,
     120,
     FALSE,
-    0xffffffffU,
 };
 
 static GwyModuleInfo module_info = {
@@ -146,7 +144,7 @@ static GwyModuleInfo module_info = {
     N_("Evaluates distribution of grains (continuous parts of mask)."),
     "Petr Klapetek <petr@klapetek.cz>, Sven Neumann <neumann@jpk.com>, "
         "Yeti <yeti@gwyddion.net>",
-    "3.7",
+    "3.8",
     "David Nečas (Yeti) & Petr Klapetek & Sven Neumann",
     "2003",
 };
@@ -199,11 +197,6 @@ grain_dist(GwyContainer *data, GwyRunType run)
     siunitxy = gwy_data_field_get_si_unit_xy(dfield);
     siunitz = gwy_data_field_get_si_unit_z(dfield);
     args.units_equal = gwy_si_unit_equal(siunitxy, siunitz);
-    args.bitmask = 0xffffffffU;
-    /* FIXME: Do this generically with gwy_grain_quantity_needs_same_units() */
-    if (!args.units_equal)
-        args.bitmask ^= ((1 << GWY_GRAIN_VALUE_SURFACE_AREA)
-                         | (1 << GWY_GRAIN_VALUE_SLOPE_THETA));
 
     if (run == GWY_RUN_IMMEDIATE)
         grain_dist_run(&args, data, dfield, mfield);
