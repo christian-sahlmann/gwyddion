@@ -63,7 +63,7 @@ typedef struct {
 
 typedef struct {
     CurvatureArgs *args;
-    double params[PARAM_NPARAMS];
+    gdouble params[PARAM_NPARAMS];
     GwySIUnit *unit;
     GtkWidget *dialog;
     GSList *masking_group;
@@ -320,7 +320,7 @@ static gboolean
 curvature_calculate(GwyDataField *dfield,
                     GwyDataField *mask,
                     const CurvatureArgs *args,
-                    double *params,
+                    gdouble *params,
                     Intersection *i1,
                     Intersection *i2)
 {
