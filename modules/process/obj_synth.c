@@ -758,11 +758,15 @@ height_init_clicked(ObjSynthControls *controls)
 static void
 update_coverage_value(ObjSynthControls *controls)
 {
-    glong nobjects = calculate_n_objects(controls->args,
-                                         controls->dims->args->xres,
-                                         controls->dims->args->yres);
+    glong nobjects;
     guchar buf[32];
 
+    if (controls->in_init)
+        return;
+
+    nobjects = calculate_n_objects(controls->args,
+                                   controls->dims->args->xres,
+                                   controls->dims->args->yres);
     g_snprintf(buf, sizeof(buf), "%ld", nobjects);
     gtk_label_set_text(GTK_LABEL(controls->coverage_value), buf);
 }
