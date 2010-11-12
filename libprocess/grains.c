@@ -29,6 +29,12 @@
 #include <libprocess/correct.h>
 #include <libprocess/grains.h>
 
+#if GLIB_CHECK_VERSION(2, 10, 0)
+#define ONE G_GUINT64_CONSTANT(1)
+#else
+#define ONE G_GINT64_CONSTANT(1U)
+#endif
+
 typedef struct {
     gint i;
     gint j;
@@ -1037,6 +1043,89 @@ grain_volume_laplace(GwyDataField *data_field,
     return vol;
 }
 
+static gdouble
+curvature_calculate(const gdouble *coeffs,
+                    GwyGrainQuantity quantity)
+{
+    gdouble a, bx, by, cxx, cxy, cyy, kx, ky;
+    gdouble z_0, x_0, y_0, phi;
+
+    a = coeffs[0];
+    bx = coeffs[1];
+    by = coeffs[2];
+    cxx = coeffs[3];
+    cxy = coeffs[4];
+    cyy = coeffs[5];
+
+    /* Eliminate the mixed term */
+    if (fabs(cxx) + fabs(cxy) + fabs(cyy)
+        <= 1e-14*(fabs(bx) + fabs(by))) {
+        /* Linear gradient */
+        phi = 0.0;
+        kx = ky = 0.0;
+        x_0 = y_0 = 0.0;
+        z_0 = a;
+    }
+    else {
+        /* At least one quadratic term */
+        gdouble cm = cxx - cyy;
+        gdouble cp = cxx + cyy;
+        gdouble bx1, by1, xc, yc;
+
+        phi = 0.5*atan2(cxy, cm);
+        kx = cp + hypot(cm, cxy);
+        ky = cp - hypot(cm, cxy);
+        bx1 = bx*cos(phi) + by*sin(phi);
+        by1 = -bx*sin(phi) + by*cos(phi);
+
+        /* Eliminate linear terms */
+        if (fabs(kx) < 1e-14*fabs(ky)) {
+            /* Only y quadratic term */
+            xc = 0.0;
+            yc = -by1/ky;
+        }
+        else if (fabs(ky) < 1e-14*fabs(kx)) {
+            /* Only x quadratic term */
+            xc = -bx1/kx;
+            yc = 0.0;
+        }
+        else {
+            /* Two quadratic terms */
+            xc = -bx1/kx;
+            yc = -by1/ky;
+        }
+        z_0 = a + xc*bx1 + yc*by1 + xc*xc*kx + yc*yc*ky;
+        x_0 = xc*cos(phi) - yc*sin(phi);
+        y_0 = xc*sin(phi) + yc*cos(phi);
+    }
+
+    if (kx > ky) {
+        GWY_SWAP(gdouble, kx, ky);
+        phi += G_PI/2.0;
+    }
+
+    if (quantity == GWY_GRAIN_VALUE_CURVATURE_CENTER_X)
+        return x_0;
+    else if (quantity == GWY_GRAIN_VALUE_CURVATURE_CENTER_Y)
+        return y_0;
+    else if (quantity == GWY_GRAIN_VALUE_CURVATURE_CENTER_Z)
+        return z_0;
+    else if (quantity == GWY_GRAIN_VALUE_CURVATURE1)
+        return kx;
+    else if (quantity == GWY_GRAIN_VALUE_CURVATURE2)
+        return ky;
+    else if (quantity == GWY_GRAIN_VALUE_CURVATURE_ANGLE1) {
+        phi = fmod(phi, G_PI);
+        return (phi > G_PI/2.0) ? phi - G_PI : phi;
+    }
+    else if (quantity == GWY_GRAIN_VALUE_CURVATURE_ANGLE2) {
+        phi = fmod(phi + G_PI/2.0, G_PI);
+        return (phi > G_PI/2.0) ? phi - G_PI : phi;
+    }
+
+    g_return_val_if_reached(0.0);
+}
+
 /**
  * gwy_data_field_grains_get_values:
  * @data_field: Data field used for marking.  For some quantities its values
@@ -1403,9 +1492,8 @@ gwy_data_field_grains_get_values(GwyDataField *data_field,
                 sizes[gno]++;
             }
         }
-        q = data_field->xreal/xres;
         for (i = 0; i <= ngrains; i++)
-            values[i] = q*(values[i]/sizes[i] + 0.5) + data_field->xoff;
+            values[i] = qh*(values[i]/sizes[i] + 0.5) + data_field->xoff;
         g_free(sizes);
         break;
 
@@ -1419,9 +1507,8 @@ gwy_data_field_grains_get_values(GwyDataField *data_field,
                 sizes[gno]++;
             }
         }
-        q = data_field->yreal/yres;
         for (i = 0; i <= ngrains; i++)
-            values[i] = q*(values[i]/sizes[i] + 0.5) + data_field->yoff;
+            values[i] = qv*(values[i]/sizes[i] + 0.5) + data_field->yoff;
         g_free(sizes);
         break;
 
@@ -1499,10 +1586,9 @@ gwy_data_field_grains_get_values(GwyDataField *data_field,
                 gno = grains[i*xres + j];
                 if (gno) {
                     gdouble *t = tmp + 8*gno;
-                    gdouble z;
+                    gdouble z = d[i*xres + j];
 
                     sizes[gno]++;
-                    z = d[i*xres + j];
                     *(t++) += j;
                     *(t++) += i;
                     *(t++) += z;
@@ -1517,15 +1603,16 @@ gwy_data_field_grains_get_values(GwyDataField *data_field,
         for (i = 1; i <= ngrains; i++) {
             gdouble x, y, z, xx, yy, xy, xz, yz, det, bx, by;
             gdouble *t = tmp + 8*i;
+            guint n = sizes[i];
 
-            x = t[0]/sizes[i];
-            y = t[1]/sizes[i];
-            z = t[2]/sizes[i];
-            xx = t[3]/sizes[i];
-            xy = t[4]/sizes[i];
-            yy = t[5]/sizes[i];
-            xz = t[6]/sizes[i];
-            yz = t[7]/sizes[i];
+            x = t[0]/n;
+            y = t[1]/n;
+            z = t[2]/n;
+            xx = t[3]/n;
+            xy = t[4]/n;
+            yy = t[5]/n;
+            xz = t[6]/n;
+            yz = t[7]/n;
             det = xx*yy + 2*x*y*xy - xx*y*y - x*x*yy - xy*xy;
             bx = (xz*yy + y*xy*z + x*y*yz - y*y*xz - x*yy*z - xy*yz)/(qh*det);
             by = (yz*xx + x*xy*z + x*y*xz - x*x*yz - xx*y*z - xy*xz)/(qv*det);
@@ -1533,6 +1620,133 @@ gwy_data_field_grains_get_values(GwyDataField *data_field,
                 values[i] = atan(hypot(bx, by));
             else
                 values[i] = atan2(by, -bx);
+        }
+        g_free(tmp);
+        g_free(sizes);
+        break;
+
+        case GWY_GRAIN_VALUE_CURVATURE_CENTER_X:
+        case GWY_GRAIN_VALUE_CURVATURE_CENTER_Y:
+        case GWY_GRAIN_VALUE_CURVATURE_CENTER_Z:
+        case GWY_GRAIN_VALUE_CURVATURE1:
+        case GWY_GRAIN_VALUE_CURVATURE2:
+        case GWY_GRAIN_VALUE_CURVATURE_ANGLE1:
+        case GWY_GRAIN_VALUE_CURVATURE_ANGLE2:
+        sizes = g_new0(gint, ngrains + 1);
+        /* First two are x and y; we calculate them first an then perform all
+         * other calculations in grain-centre coordinate system.  This makes
+         * the equations better-conditioned and also provides natural
+         * coordinate fallbacks for the uncurved directions. */
+        tmp = g_new0(gdouble, 20*(ngrains + 1));
+        values[0] = 0.0;
+        for (i = 0; i < yres; i++) {
+            for (j = 0; j < xres; j++) {
+                gno = grains[i*xres + j];
+                if (gno) {
+                    gdouble *t = tmp + 20*gno;
+
+                    sizes[gno]++;
+                    *(t++) += j;     /* 0  */
+                    *(t++) += i;     /* 1  */
+                }
+            }
+        }
+        for (i = 1; i <= ngrains; i++) {
+            gdouble *t = tmp + 20*i;
+            guint n = sizes[i];
+
+            t[0] = qh*(t[0]/n + 0.5);
+            t[1] = qv*(t[1]/n + 0.5);
+        }
+        /* Once we have the centres (in physical, but unoffset coordinates)
+         * calculate the other mean values that will actually enter the
+         * equations. */
+        for (i = 0; i < yres; i++) {
+            for (j = 0; j < xres; j++) {
+                gno = grains[i*xres + j];
+                if (gno) {
+                    gdouble *t = tmp + 20*gno;
+                    gdouble x = qh*(j + 0.5) - t[0];
+                    gdouble y = qv*(i + 0.5) - t[1];
+                    gdouble z = d[i*xres + j];
+                    gdouble x2 = x*x, xy = x*y, y2 = y*y;
+
+                    t += 2;
+                    *(t++) += x2;    /* 2  */
+                    *(t++) += xy;    /* 3  */
+                    *(t++) += y2;    /* 4  */
+                    *(t++) += x2*x;  /* 5  */
+                    *(t++) += x2*y;  /* 6  */
+                    *(t++) += x*y2;  /* 7  */
+                    *(t++) += y2*y;  /* 8  */
+                    *(t++) += x2*x2; /* 9  */
+                    *(t++) += x2*xy; /* 10 */
+                    *(t++) += x2*y2; /* 11 */
+                    *(t++) += xy*y2; /* 12 */
+                    *(t++) += y2*y2; /* 13 */
+                    *(t++) += z;     /* 14 */
+                    *(t++) += x*z;   /* 15 */
+                    *(t++) += y*z;   /* 16 */
+                    *(t++) += x2*z;  /* 17 */
+                    *(t++) += xy*z;  /* 18 */
+                    *(t++) += y2*z;  /* 19 */
+                }
+            }
+        }
+        for (i = 1; i <= ngrains; i++) {
+            /* a:
+             *  0 [<1>
+             *  1  <x>   <x²>
+             *  3  <y>   <xy>   <y²>
+             *  6  <x²>  <x³>   <x²y>  <x⁴>
+             * 10  <xy>  <x²y>  <xy²>  <x³y>   <x²y²>
+             * 15  <y²>  <xy²>  <y³>   <x²y²>  <xy³>   <y⁴>]
+             * b: [<z>  <xz>  <yz>  <x²z>  <xyz>  <y²z>]
+             */
+            gdouble a[21], b[6];
+            gdouble *t = tmp + 20*i;
+            guint n = sizes[i];
+
+            if (n >= 6) {
+                a[0] = 1.0;
+                a[1] = a[3] = 0.0;
+                a[2] = a[6] = t[2]/n;
+                a[4] = a[10] = t[3]/n;
+                a[5] = a[15] = t[4]/n;
+                a[7] = t[5]/n;
+                a[8] = a[11] = t[6]/n;
+                a[9] = t[9]/n;
+                a[12] = a[16] = t[7]/n;
+                a[13] = t[10]/n;
+                a[14] = a[18] = t[11]/n;
+                a[17] = t[8]/n;
+                a[19] = t[12]/n;
+                a[20] = t[13]/n;
+                if (gwy_math_choleski_decompose(6, a)) {
+                    for (j = 0; j < 6; j++)
+                        b[j] = t[14 + j]/n;
+                    gwy_math_choleski_solve(6, a, b);
+                }
+                else
+                    n = 0;
+            }
+
+            if (n >= 6) {
+                values[i] = curvature_calculate(b, quantity);
+            }
+            else {
+                /* Fallbacks for small/flat grains */
+                if (quantity == GWY_GRAIN_VALUE_CURVATURE_CENTER_Z)
+                    values[i] = t[14]/n;
+                else if (quantity == GWY_GRAIN_VALUE_CURVATURE_ANGLE2)
+                    values[i] = G_PI/2.0;
+                else
+                    values[i] = 0.0;
+            }
+            if (quantity == GWY_GRAIN_VALUE_CURVATURE_CENTER_X)
+                values[i] += t[0] + data_field->xoff;
+            if (quantity == GWY_GRAIN_VALUE_CURVATURE_CENTER_Y)
+                values[i] += t[1] + data_field->yoff;
         }
         g_free(tmp);
         g_free(sizes);
@@ -1563,32 +1777,39 @@ gboolean
 gwy_grain_quantity_needs_same_units(GwyGrainQuantity quantity)
 {
     enum {
-        no_same_units = ((1 << GWY_GRAIN_VALUE_PROJECTED_AREA)
-                         | (1 << GWY_GRAIN_VALUE_EQUIV_SQUARE_SIDE)
-                         | (1 << GWY_GRAIN_VALUE_EQUIV_DISC_RADIUS)
-                         | (1 << GWY_GRAIN_VALUE_MAXIMUM)
-                         | (1 << GWY_GRAIN_VALUE_MINIMUM)
-                         | (1 << GWY_GRAIN_VALUE_MEAN)
-                         | (1 << GWY_GRAIN_VALUE_MEDIAN)
-                         | (1 << GWY_GRAIN_VALUE_HALF_HEIGHT_AREA)
-                         | (1 << GWY_GRAIN_VALUE_FLAT_BOUNDARY_LENGTH)
-                         | (1 << GWY_GRAIN_VALUE_MINIMUM_BOUND_SIZE)
-                         | (1 << GWY_GRAIN_VALUE_MINIMUM_BOUND_ANGLE)
-                         | (1 << GWY_GRAIN_VALUE_MAXIMUM_BOUND_SIZE)
-                         | (1 << GWY_GRAIN_VALUE_MAXIMUM_BOUND_ANGLE)
-                         | (1 << GWY_GRAIN_VALUE_CENTER_X)
-                         | (1 << GWY_GRAIN_VALUE_CENTER_Y)
-                         | (1 << GWY_GRAIN_VALUE_VOLUME_0)
-                         | (1 << GWY_GRAIN_VALUE_VOLUME_MIN)
-                         | (1 << GWY_GRAIN_VALUE_VOLUME_LAPLACE)
-                         | (1 << GWY_GRAIN_VALUE_SLOPE_PHI)),
-        same_units = ((1 << GWY_GRAIN_VALUE_SLOPE_THETA)
-                      | (1 << GWY_GRAIN_VALUE_SURFACE_AREA))
+        no_same_units = ((ONE << GWY_GRAIN_VALUE_PROJECTED_AREA)
+                         | (ONE << GWY_GRAIN_VALUE_EQUIV_SQUARE_SIDE)
+                         | (ONE << GWY_GRAIN_VALUE_EQUIV_DISC_RADIUS)
+                         | (ONE << GWY_GRAIN_VALUE_MAXIMUM)
+                         | (ONE << GWY_GRAIN_VALUE_MINIMUM)
+                         | (ONE << GWY_GRAIN_VALUE_MEAN)
+                         | (ONE << GWY_GRAIN_VALUE_MEDIAN)
+                         | (ONE << GWY_GRAIN_VALUE_HALF_HEIGHT_AREA)
+                         | (ONE << GWY_GRAIN_VALUE_FLAT_BOUNDARY_LENGTH)
+                         | (ONE << GWY_GRAIN_VALUE_MINIMUM_BOUND_SIZE)
+                         | (ONE << GWY_GRAIN_VALUE_MINIMUM_BOUND_ANGLE)
+                         | (ONE << GWY_GRAIN_VALUE_MAXIMUM_BOUND_SIZE)
+                         | (ONE << GWY_GRAIN_VALUE_MAXIMUM_BOUND_ANGLE)
+                         | (ONE << GWY_GRAIN_VALUE_CENTER_X)
+                         | (ONE << GWY_GRAIN_VALUE_CENTER_Y)
+                         | (ONE << GWY_GRAIN_VALUE_VOLUME_0)
+                         | (ONE << GWY_GRAIN_VALUE_VOLUME_MIN)
+                         | (ONE << GWY_GRAIN_VALUE_VOLUME_LAPLACE)
+                         | (ONE << GWY_GRAIN_VALUE_SLOPE_PHI)
+                         | (ONE << GWY_GRAIN_VALUE_CURVATURE_CENTER_X)
+                         | (ONE << GWY_GRAIN_VALUE_CURVATURE_CENTER_Y)
+                         | (ONE << GWY_GRAIN_VALUE_CURVATURE_CENTER_Z)
+                         | (ONE << GWY_GRAIN_VALUE_CURVATURE_ANGLE1)
+                         | (ONE << GWY_GRAIN_VALUE_CURVATURE_ANGLE2)),
+        same_units = ((ONE << GWY_GRAIN_VALUE_SLOPE_THETA)
+                      | (ONE << GWY_GRAIN_VALUE_SURFACE_AREA)
+                      | (ONE << GWY_GRAIN_VALUE_CURVATURE1)
+                      | (ONE << GWY_GRAIN_VALUE_CURVATURE2))
     };
 
-    if ((1 << quantity) & no_same_units)
+    if ((ONE << quantity) & no_same_units)
         return FALSE;
-    if ((1 << quantity) & same_units)
+    if ((ONE << quantity) & same_units)
         return TRUE;
     g_return_val_if_reached(FALSE);
 }
@@ -1616,41 +1837,50 @@ gwy_grain_quantity_get_units(GwyGrainQuantity quantity,
                              GwySIUnit *result)
 {
     enum {
-        coord_units = ((1 << GWY_GRAIN_VALUE_EQUIV_SQUARE_SIDE)
-                       | (1 << GWY_GRAIN_VALUE_EQUIV_DISC_RADIUS)
-                       | (1 << GWY_GRAIN_VALUE_FLAT_BOUNDARY_LENGTH)
-                       | (1 << GWY_GRAIN_VALUE_MINIMUM_BOUND_SIZE)
-                       | (1 << GWY_GRAIN_VALUE_MAXIMUM_BOUND_SIZE)
-                       | (1 << GWY_GRAIN_VALUE_CENTER_X)
-                       | (1 << GWY_GRAIN_VALUE_CENTER_Y)),
-        value_units = ((1 << GWY_GRAIN_VALUE_MAXIMUM)
-                       | (1 << GWY_GRAIN_VALUE_MINIMUM)
-                       | (1 << GWY_GRAIN_VALUE_MEAN)
-                       | (1 << GWY_GRAIN_VALUE_MEDIAN)),
-        area_units = ((1 << GWY_GRAIN_VALUE_PROJECTED_AREA)
-                      | (1 << GWY_GRAIN_VALUE_HALF_HEIGHT_AREA)
-                      | (1 << GWY_GRAIN_VALUE_SURFACE_AREA)),
-        volume_units = ((1 << GWY_GRAIN_VALUE_VOLUME_0)
-                        | (1 << GWY_GRAIN_VALUE_VOLUME_MIN)
-                        | (1 << GWY_GRAIN_VALUE_VOLUME_LAPLACE)),
-        angle_units = ((1 << GWY_GRAIN_VALUE_MINIMUM_BOUND_ANGLE)
-                       | (1 << GWY_GRAIN_VALUE_MAXIMUM_BOUND_ANGLE)
-                       | (1 << GWY_GRAIN_VALUE_SLOPE_PHI)
-                       | (1 << GWY_GRAIN_VALUE_SLOPE_THETA)),
+        coord_units = ((ONE << GWY_GRAIN_VALUE_EQUIV_SQUARE_SIDE)
+                       | (ONE << GWY_GRAIN_VALUE_EQUIV_DISC_RADIUS)
+                       | (ONE << GWY_GRAIN_VALUE_FLAT_BOUNDARY_LENGTH)
+                       | (ONE << GWY_GRAIN_VALUE_MINIMUM_BOUND_SIZE)
+                       | (ONE << GWY_GRAIN_VALUE_MAXIMUM_BOUND_SIZE)
+                       | (ONE << GWY_GRAIN_VALUE_CENTER_X)
+                       | (ONE << GWY_GRAIN_VALUE_CENTER_Y)
+                       | (ONE << GWY_GRAIN_VALUE_CURVATURE_CENTER_X)
+                       | (ONE << GWY_GRAIN_VALUE_CURVATURE_CENTER_Y)),
+        icoord_units = ((ONE << GWY_GRAIN_VALUE_CURVATURE1)
+                       | (ONE << GWY_GRAIN_VALUE_CURVATURE2)),
+        value_units = ((ONE << GWY_GRAIN_VALUE_MAXIMUM)
+                       | (ONE << GWY_GRAIN_VALUE_MINIMUM)
+                       | (ONE << GWY_GRAIN_VALUE_MEAN)
+                       | (ONE << GWY_GRAIN_VALUE_MEDIAN)
+                       | (ONE << GWY_GRAIN_VALUE_CURVATURE_CENTER_Z)),
+        area_units = ((ONE << GWY_GRAIN_VALUE_PROJECTED_AREA)
+                      | (ONE << GWY_GRAIN_VALUE_HALF_HEIGHT_AREA)
+                      | (ONE << GWY_GRAIN_VALUE_SURFACE_AREA)),
+        volume_units = ((ONE << GWY_GRAIN_VALUE_VOLUME_0)
+                        | (ONE << GWY_GRAIN_VALUE_VOLUME_MIN)
+                        | (ONE << GWY_GRAIN_VALUE_VOLUME_LAPLACE)),
+        angle_units = ((ONE << GWY_GRAIN_VALUE_MINIMUM_BOUND_ANGLE)
+                       | (ONE << GWY_GRAIN_VALUE_MAXIMUM_BOUND_ANGLE)
+                       | (ONE << GWY_GRAIN_VALUE_SLOPE_PHI)
+                       | (ONE << GWY_GRAIN_VALUE_SLOPE_THETA)
+                       | (ONE << GWY_GRAIN_VALUE_CURVATURE_ANGLE1)
+                       | (ONE << GWY_GRAIN_VALUE_CURVATURE_ANGLE2))
     };
 
     g_return_val_if_fail(GWY_IS_SI_UNIT(siunitxy), result);
     g_return_val_if_fail(GWY_IS_SI_UNIT(siunitz), result);
 
-    if ((1 << quantity) & coord_units)
+    if ((ONE << quantity) & coord_units)
         return gwy_si_unit_power(siunitxy, 1, result);
-    if ((1 << quantity) & value_units)
+    if ((ONE << quantity) & icoord_units)
+        return gwy_si_unit_power(siunitxy, -1, result);
+    if ((ONE << quantity) & value_units)
         return gwy_si_unit_power(siunitz, 1, result);
-    if ((1 << quantity) & area_units)
+    if ((ONE << quantity) & area_units)
         return gwy_si_unit_power(siunitxy, 2, result);
-    if ((1 << quantity) & volume_units)
+    if ((ONE << quantity) & volume_units)
         return gwy_si_unit_power_multiply(siunitxy, 2, siunitz, 1, result);
-    if ((1 << quantity) & angle_units) {
+    if ((ONE << quantity) & angle_units) {
         if (!result)
             return gwy_si_unit_new(NULL);
         gwy_si_unit_set_from_string(result, NULL);

@@ -409,6 +409,33 @@ gwy_masking_type_get_enum(void)
  *                                    boundary.  (Since: 2.12)
  * @GWY_GRAIN_VALUE_BOUNDARY_MAXIMUM: Maximum value in the grain inner
  *                                    boundary.  (Since: 2.12)
+ * @GWY_GRAIN_VALUE_CURVATURE_CENTER_X: Grain curvature centre horizontal
+ *                                      position.  For too small or flat grains
+ *                                      it reduces to the horizontal position
+ *                                      of geometrical centre.
+ *                                      (Since: 2.22)
+ * @GWY_GRAIN_VALUE_CURVATURE_CENTER_Y: Grain curvature centre vertical
+ *                                      position.  For too small or flat grains
+ *                                      it reduces to the vertical position
+ *                                      of geometrical centre.
+ *                                      (Since: 2.22)
+ * @GWY_GRAIN_VALUE_CURVATURE_CENTER_Z: The value at curvature centre.  Note
+ *                                      this is the value in the origin of the
+ *                                      fitted quadratic surface, not at the
+ *                                      real surface.
+ *                                      (Since: 2.22)
+ * @GWY_GRAIN_VALUE_CURVATURE1: Smaller grain curvature.
+ *                              (Since: 2.22)
+ * @GWY_GRAIN_VALUE_CURVATURE2: Larger grain curvature.
+ *                              (Since: 2.22)
+ * @GWY_GRAIN_VALUE_CURVATURE_ANGLE1: Direction of the smaller grain curvature
+ *                                    radius.  If the grain is flat or too
+ *                                    small the angle is reported as 0.
+ *                                    (Since: 2.22)
+ * @GWY_GRAIN_VALUE_CURVATURE_ANGLE2: Direction of the larger grain curvature
+ *                                    radius.  If the grain is flat or too
+ *                                    small the angle is reported as π/2.
+ *                                    (Since: 2.22)
  *
  * Grain quantity to request from gwy_data_field_grains_get_distribution()
  * and similar functions.

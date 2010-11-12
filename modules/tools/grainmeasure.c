@@ -91,7 +91,7 @@ static GwyModuleInfo module_info = {
     N_("Grain measurement tool, calculates characteristics of selected "
        "countinous parts of mask."),
     "Yeti <yeti@gwyddion.net>",
-    "1.4",
+    "1.5",
     "David Nečas (Yeti)",
     "2007",
 };
@@ -217,7 +217,7 @@ render_value(G_GNUC_UNUSED GtkTreeViewColumn *column,
     }
 
     /* FIXME: Magic number, see top of gwygrainvalue.c */
-    if ((gint)gwy_grain_value_get_quantity(gvalue) > 31) {
+    if ((gint)gwy_grain_value_get_quantity(gvalue) > 62) {
         g_snprintf(buf, sizeof(buf), "%d", tool->gno);
         g_object_set(renderer, "text", buf, NULL);
         return;

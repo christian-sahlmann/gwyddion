@@ -29,7 +29,7 @@
 
 /* We know they are usable as bits */
 enum {
-    MAXBUILTINS = 33,
+    MAXBUILTINS = 64,
     GWY_GRAIN_QUANTITY_ID = MAXBUILTINS-1
 };
 
@@ -271,6 +271,69 @@ grain_values[] = {
         {
             GWY_GRAIN_VALUE_GROUP_SLOPE,
             "<i>φ</i>", "phi", NULL,
+            0, 0, GWY_GRAIN_VALUE_IS_ANGLE, 0,
+        }
+    },
+    {
+        N_("Curvature center x position"),
+        GWY_GRAIN_VALUE_CURVATURE_CENTER_X,
+        {
+            GWY_GRAIN_VALUE_GROUP_CURVATURE,
+            "<i>x</i><sub>0</sub>", "x_0", NULL,
+            1, 0, 0, 0,
+        }
+    },
+    {
+        N_("Curvature center y position"),
+        GWY_GRAIN_VALUE_CURVATURE_CENTER_Y,
+        {
+            GWY_GRAIN_VALUE_GROUP_CURVATURE,
+            "<i>y</i><sub>0</sub>", "y_0", NULL,
+            1, 0, 0, 0,
+        }
+    },
+    {
+        N_("Curvature center z value"),
+        GWY_GRAIN_VALUE_CURVATURE_CENTER_Z,
+        {
+            GWY_GRAIN_VALUE_GROUP_CURVATURE,
+            "<i>z</i><sub>0</sub>", "z_0", NULL,
+            0, 1, 0, 0,
+        }
+    },
+    {
+        N_("Curvature 1"),
+        GWY_GRAIN_VALUE_CURVATURE1,
+        {
+            GWY_GRAIN_VALUE_GROUP_CURVATURE,
+            "<i>κ</i><sub>1</sub>", "kappa_1", NULL,
+            -1, 0, GWY_GRAIN_VALUE_SAME_UNITS, 0,
+        }
+    },
+    {
+        N_("Curvature 2"),
+        GWY_GRAIN_VALUE_CURVATURE2,
+        {
+            GWY_GRAIN_VALUE_GROUP_CURVATURE,
+            "<i>κ</i><sub>2</sub>", "kappa_2", NULL,
+            -1, 0, GWY_GRAIN_VALUE_SAME_UNITS, 0,
+        }
+    },
+    {
+        N_("Curvature angle 1"),
+        GWY_GRAIN_VALUE_CURVATURE_ANGLE1,
+        {
+            GWY_GRAIN_VALUE_GROUP_CURVATURE,
+            "<i>φ</i><sub>1</sub>", "phi_1", NULL,
+            0, 0, GWY_GRAIN_VALUE_IS_ANGLE, 0,
+        }
+    },
+    {
+        N_("Curvature angle 2"),
+        GWY_GRAIN_VALUE_CURVATURE_ANGLE2,
+        {
+            GWY_GRAIN_VALUE_GROUP_CURVATURE,
+            "<i>φ</i><sub>2</sub>", "phi_2", NULL,
             0, 0, GWY_GRAIN_VALUE_IS_ANGLE, 0,
         }
     },
@@ -916,6 +979,7 @@ gwy_grain_value_group_name(GwyGrainValueGroup group)
         N_("Volume"),
         N_("Boundary"),
         N_("Slope"),
+        N_("Curvature"),
     };
 
     if (group == GWY_GRAIN_VALUE_GROUP_USER)
