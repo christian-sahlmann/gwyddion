@@ -610,7 +610,7 @@ AC_CHECK_HEADERS( \
 #############################################################################
 # Check for library functions.
 AC_FUNC_MMAP
-GWY_CHECK_MATH_FUNCS([cbrt hypot pow10 acosh asinh atanh])
+GWY_CHECK_MATH_FUNCS([cbrt hypot pow10 acosh asinh atanh isinf isnan])
 AC_CHECK_FUNCS([sincos _fpclass memrchr])
 dnl FIXME: We need C99 for this.  But we must be able to switch off its
 dnl aliasing rules which at this moment we can do for GCC only.  That's too
@@ -691,7 +691,7 @@ _______EOF
   echo '/* Math functions become available when gwymathfallback.h is included. */' >>$outfile
   echo '/* In 2.x also when gwymath.h is included. */' >>$outfile
 
-GWY_OUTPUT_MATH_FUNCS([cbrt hypot pow10 acosh asinh atanh], [$outfile])
+GWY_OUTPUT_MATH_FUNCS([cbrt hypot pow10 acosh asinh atanh isinf isnan], [$outfile])
   cat >>$outfile <<_______EOF
 
 #endif /* __GWY_CONFIG_H__ */
@@ -713,6 +713,8 @@ _______EOF
   gwy_math_acosh=$gwy_math_acosh
   gwy_math_asinh=$gwy_math_asinh
   gwy_math_atanh=$gwy_math_atanh
+  gwy_math_isinf=$gwy_math_isinf
+  gwy_math_isnan=$gwy_math_isnan
 ])
 
 if test "$os_darwin" = yes; then

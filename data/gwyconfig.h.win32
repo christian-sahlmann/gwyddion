@@ -30,6 +30,13 @@
 /* Define to 1 if you have the atanh() function. */
 #undef GWY_HAVE_ATANH
 
+/* Define to 1 if you have the isinf() function. */
+#define GWY_HAVE_ISINF 1
+#define isinf(x) (!_finite(x))
+
+/* Define to 1 if you have the isnan() function. */
+#define GWY_HAVE_ISNAN 1
+#define isnan _isnan
 
 #endif /* __GWY_CONFIG_H__ */
 

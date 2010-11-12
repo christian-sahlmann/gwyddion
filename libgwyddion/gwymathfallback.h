@@ -22,7 +22,8 @@
 #define __GWY_MATH_FALLBACK_H__
 
 #include <math.h>
-#include <glib/gutils.h>
+#include <float.h>
+#include <glib.h>
 #include <gwyconfig.h>
 
 G_BEGIN_DECLS
@@ -78,6 +79,24 @@ gwy_math_fallback_atanh(double x)
     return /**/ log((1.0 + x)/(1.0 - x));
 }
 
+static inline double
+gwy_math_fallback_isinf(double x)
+{
+    GDoubleIEEE754 /**/ dbl;
+    dbl.v_double = x;
+    return /**/ (dbl.mpn.biased_exponent == 0x7ff
+                 && !dbl.mpn.mantissa_high && !dbl.mpn.mantissa_low);
+}
+
+static inline double
+gwy_math_fallback_isnan(double x)
+{
+    GDoubleIEEE754 /**/ dbl;
+    dbl.v_double = x;
+    return /**/ (dbl.mpn.biased_exponent == 0x7ff
+                 && (dbl.mpn.mantissa_high || dbl.mpn.mantissa_low));
+}
+
 #ifndef GWY_MATH_NAMESPACE_CLEAN
 
 #ifndef GWY_HAVE_POW10
@@ -105,6 +124,18 @@ gwy_math_fallback_atanh(double x)
 #endif  /* GWY_HAVE_ATANH */
 
 #endif /* GWY_MATH_NAMESPACE_CLEAN */
+
+#ifdef GWY_HAVE_ISINF
+#define gwy_isinf isinf
+#else
+#define gwy_isinf gwy_math_fallback_isinf
+#endif  /* GWY_HAVE_ISINF */
+
+#ifdef GWY_HAVE_ISNAN
+#define gwy_isnan isnan
+#else
+#define gwy_isnan gwy_math_fallback_isnan
+#endif  /* GWY_HAVE_ISNAN */
 
 G_END_DECLS
 
