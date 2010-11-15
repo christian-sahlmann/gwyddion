@@ -26,6 +26,13 @@
 #include <libprocess/gwygrainvalue.h>
 #include <libgwydgets/gwygrainvaluemenu.h>
 
+typedef enum {
+    GROUP_STATE_EMPTY = 0,
+    GROUP_STATE_OFF = 1 << 0,
+    GROUP_STATE_ON =  1 << 1,
+    GROUP_STATE_INCONSISTENT = GROUP_STATE_OFF | GROUP_STATE_ON
+} GroupState;
+
 static void
 gwy_grain_value_tree_view_expand_enabled(GtkTreeView *treeview);
 
@@ -41,6 +48,7 @@ static gboolean      restore_enabled               (GtkTreeModel *model,
                                                     GtkTreePath *path,
                                                     GtkTreeIter *iter,
                                                     gpointer user_data);
+static void          update_group_states           (GtkTreeModel *model);
 static gboolean      expand_enabled                (GtkTreeModel *model,
                                                     GtkTreePath *path,
                                                     GtkTreeIter *iter,
@@ -91,6 +99,9 @@ static void          inventory_item_deleted        (GwyInventory *inventory,
 static gboolean      find_grain_value              (GtkTreeModel *model,
                                                     GwyGrainValue *gvalue,
                                                     GtkTreeIter *iter);
+static gboolean      find_grain_group(GtkTreeModel *model,
+                 GwyGrainValueGroup group,
+                 GtkTreeIter *iter);
 static void          grain_value_store_finalized   (gpointer inventory,
                                                     GObject *store);
 
@@ -100,6 +111,7 @@ typedef struct {
 } GrainValueViewPrivate;
 
 typedef struct {
+    GroupState group_states[GWY_GRAIN_VALUE_GROUP_USER+1];
     GtkTreeIter user_group_iter;
     guint user_start_pos;
 } GrainValueStorePrivate;
@@ -460,6 +472,7 @@ gwy_grain_value_tree_view_set_enabled(GtkTreeView *treeview,
 
     model = gtk_tree_view_get_model(treeview);
     gtk_tree_model_foreach(model, restore_enabled, names);
+    update_group_states(model);
     gwy_grain_value_tree_view_expand_enabled(treeview);
 }
 
@@ -495,6 +508,65 @@ restore_enabled(GtkTreeModel *model,
     }
 
     return FALSE;
+}
+
+static gboolean
+update_state(GtkTreeModel *model,
+             G_GNUC_UNUSED GtkTreePath *path,
+             GtkTreeIter *iter,
+             gpointer user_data)
+{
+    GwyGrainValueGroup group;
+    GwyGrainValue *gvalue;
+    gboolean enabled;
+    GroupState *states = (GroupState*)user_data;
+
+    gtk_tree_model_get(model, iter,
+                       GWY_GRAIN_VALUE_STORE_COLUMN_ITEM, &gvalue,
+                       GWY_GRAIN_VALUE_STORE_COLUMN_GROUP, &group,
+                       GWY_GRAIN_VALUE_STORE_COLUMN_ENABLED, &enabled,
+                       -1);
+    if (gvalue) {
+        if (enabled)
+            states[group] |= GROUP_STATE_ON;
+        else
+            states[group] |= GROUP_STATE_OFF;
+        g_object_unref(gvalue);
+    }
+
+    return FALSE;
+}
+
+/* This is called only explicitly as we always know the enabled state changes
+ * because we always do it and otherwise we would have to prevent recursion. */
+static void
+update_group_states(GtkTreeModel *model)
+{
+    GroupState group_states[GWY_GRAIN_VALUE_GROUP_USER+1];
+    GrainValueStorePrivate *priv;
+    GtkTreeIter iter;
+
+    gwy_clear(group_states, GWY_GRAIN_VALUE_GROUP_USER+1);
+
+    gtk_tree_model_foreach(model, update_state, group_states);
+    if (!gtk_tree_model_get_iter_first(model, &iter))
+        return;
+
+    priv = g_object_get_qdata(G_OBJECT(model), priv_quark);
+    do {
+        GwyGrainValueGroup group;
+        GtkTreePath *path;
+
+        gtk_tree_model_get(model, &iter,
+                           GWY_GRAIN_VALUE_STORE_COLUMN_GROUP, &group,
+                           -1);
+        if (group_states[group] != priv->group_states[group]) {
+            priv->group_states[group] = group_states[group];
+            path = gtk_tree_model_get_path(model, &iter);
+            gtk_tree_model_row_changed(model, path, &iter);
+            gtk_tree_path_free(path);
+        }
+    } while (gtk_tree_model_iter_next(model, &iter));
 }
 
 /* This was meant to be public, but we would prefer to inhibit the expansion of
@@ -734,20 +806,37 @@ render_enabled(G_GNUC_UNUSED GtkTreeViewColumn *column,
 {
     GtkTreeView *treeview = (GtkTreeView*)user_data;
     GwyGrainValue *gvalue;
+    GwyGrainValueGroup group;
     gboolean enabled, good_units;
 
     gtk_tree_model_get(model, iter,
                        GWY_GRAIN_VALUE_STORE_COLUMN_ITEM, &gvalue,
+                       GWY_GRAIN_VALUE_STORE_COLUMN_GROUP, &group,
                        GWY_GRAIN_VALUE_STORE_COLUMN_ENABLED, &enabled,
                        -1);
     if (!gvalue) {
-        g_object_set(renderer, "visible", FALSE, "activatable", FALSE, NULL);
+        GroupState state;
+        GrainValueStorePrivate *priv;
+
+        priv = g_object_get_qdata(G_OBJECT(model), priv_quark);
+        state = priv->group_states[group];
+        if (state == GROUP_STATE_EMPTY || state == GROUP_STATE_OFF)
+            g_object_set(renderer,
+                         "activatable", TRUE,
+                         "active", FALSE,
+                         "inconsistent", FALSE,
+                         NULL);
+        else
+            g_object_set(renderer,
+                         "activatable", TRUE,
+                         "active", TRUE,
+                         "inconsistent", state & GROUP_STATE_OFF,
+                         NULL);
         return;
     }
 
     good_units = units_are_good(treeview, gvalue);
     g_object_set(renderer,
-                 "visible", TRUE,
                  "active", enabled,
                  "sensitive", good_units,
                  "activatable", good_units,
@@ -761,7 +850,10 @@ enabled_activated(GtkCellRendererToggle *renderer,
                   gchar *strpath,
                   GtkTreeModel *model)
 {
+    GtkTreeStore *store;
+    GwyGrainValue *gvalue;
     GtkTreePath *path;
+    GwyGrainValueGroup group;
     GtkTreeIter iter;
     gboolean enabled;
 
@@ -769,10 +861,34 @@ enabled_activated(GtkCellRendererToggle *renderer,
     gtk_tree_model_get_iter(model, &iter, path);
     gtk_tree_path_free(path);
 
-    g_object_get(renderer, "active", &enabled, NULL);
-    gtk_tree_store_set(GTK_TREE_STORE(model), &iter,
-                       GWY_GRAIN_VALUE_STORE_COLUMN_ENABLED, !enabled,
+    gtk_tree_model_get(model, &iter,
+                       GWY_GRAIN_VALUE_STORE_COLUMN_ITEM, &gvalue,
+                       GWY_GRAIN_VALUE_STORE_COLUMN_GROUP, &group,
                        -1);
+
+    g_object_get(renderer, "active", &enabled, NULL);
+    store = GTK_TREE_STORE(model);
+
+    if (gvalue) {
+        gtk_tree_store_set(store, &iter,
+                           GWY_GRAIN_VALUE_STORE_COLUMN_ENABLED, !enabled,
+                           -1);
+        g_object_unref(gvalue);
+    }
+    else {
+        GtkTreeIter siter;
+
+        if (!find_grain_group(model, group, &siter)
+            || !gtk_tree_model_iter_children(model, &iter, &siter))
+            return;
+
+        do {
+            gtk_tree_store_set(store, &iter,
+                               GWY_GRAIN_VALUE_STORE_COLUMN_ENABLED, !enabled,
+                               -1);
+        } while (gtk_tree_model_iter_next(model, &iter));
+    }
+    update_group_states(model);
 }
 
 static gboolean
@@ -949,27 +1065,35 @@ inventory_item_deleted(G_GNUC_UNUSED GwyInventory *inventory,
 }
 
 static gboolean
+find_grain_group(GtkTreeModel *model,
+                 GwyGrainValueGroup group,
+                 GtkTreeIter *iter)
+{
+    GwyGrainValueGroup igroup;
+
+    if (!gtk_tree_model_get_iter_first(model, iter))
+        return FALSE;
+
+    do {
+        gtk_tree_model_get(model, iter,
+                           GWY_GRAIN_VALUE_STORE_COLUMN_GROUP, &igroup,
+                           -1);
+        if (igroup == group)
+            return TRUE;
+    } while (gtk_tree_model_iter_next(model, iter));
+
+    return FALSE;
+}
+
+static gboolean
 find_grain_value(GtkTreeModel *model,
                  GwyGrainValue *gvalue,
                  GtkTreeIter *iter)
 {
-    GwyGrainValueGroup group, igroup;
     GwyGrainValue *igvalue;
     GtkTreeIter siter;
 
-    if (!gtk_tree_model_get_iter_first(model, &siter))
-        return FALSE;
-
-    group = gwy_grain_value_get_group(gvalue);
-    do {
-        gtk_tree_model_get(model, &siter,
-                           GWY_GRAIN_VALUE_STORE_COLUMN_GROUP, &igroup,
-                           -1);
-        if (igroup == group)
-            break;
-    } while (gtk_tree_model_iter_next(model, &siter));
-
-    if (igroup != group
+    if (!find_grain_group(model, gwy_grain_value_get_group(gvalue), &siter)
         || !gtk_tree_model_iter_children(model, iter, &siter))
         return FALSE;
 
