@@ -103,6 +103,12 @@ gdouble*     gwy_data_field_grains_get_values      (GwyDataField *data_field,
                                                     gint ngrains,
                                                     const gint *grains,
                                                     GwyGrainQuantity quantity);
+gdouble**    gwy_data_field_grains_get_quantities  (GwyDataField *data_field,
+                                                    gdouble **values,
+                                                    const GwyGrainQuantity *quantities,
+                                                    guint nquantities,
+                                                    guint ngrains,
+                                                    const gint *grains);
 gboolean     gwy_grain_quantity_needs_same_units   (GwyGrainQuantity quantity);
 GwySIUnit*   gwy_grain_quantity_get_units          (GwyGrainQuantity quantity,
                                                     GwySIUnit *siunitxy,

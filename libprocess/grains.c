@@ -1901,16 +1901,17 @@ calculate_grain_aux(GwyDataField *data_field,
 }
 
 /**
- * gwy_data_field_grains_get_all_values:
+ * gwy_data_field_grains_get_quantities:
  * @data_field: Data field used for marking.  For some quantities its values
  *              are not used, but its dimensions determine the dimensions of
  *              @grains.
- * @values: Array of @nquantities*(@ngrains+1) items to put the calculated
- *          grain values to.  Each block of size @ngrains+1 in the array
- *          corresponds to one requested quantity.  %NULL can be passed to
- *          allocate and return a new array.
+ * @values: Array of @nquantities pointers to blocks of length @ngrains+1 to
+ *          put the calculated grain values to.  Each block corresponds to one
+ *          requested quantity.  %NULL can be passed to allocate and return a
+ *          new array.
  * @quantities: Array of @nquantities items that specify the requested
- *              #GwyGrainQuantity to put to corresponding blocks in @values.
+ *              #GwyGrainQuantity to put to corresponding items in @values.
+ *              Quantities can repeat.
  * @nquantities: The number of requested different grain values.
  * @grains: Grain numbers filled with gwy_data_field_number_grains().
  * @ngrains: The number of grains as returned by
@@ -1923,13 +1924,14 @@ calculate_grain_aux(GwyDataField *data_field,
  * gwy_data_field_grains_get_values() can do lot of repeated work in such case.
  *
  * Returns: @values itself if it was not %NULL, otherwise a newly allocated
- *          array that caller has to free.
+ *          array that caller has to free with g_free(), including the
+ *          contained arrays.
  *
  * Since: 2.22
  **/
-gdouble*
-gwy_data_field_grains_get_all_values(GwyDataField *data_field,
-                                     gdouble *values,
+gdouble**
+gwy_data_field_grains_get_quantities(GwyDataField *data_field,
+                                     gdouble **values,
                                      const GwyGrainQuantity *quantities,
                                      guint nquantities,
                                      guint ngrains,
@@ -1985,6 +1987,7 @@ gwy_data_field_grains_get_all_values(GwyDataField *data_field,
         NEED_QUADRATIC,
         NEED_QUADRATIC,
     };
+
     gdouble *quantity_data[NQ];
     gboolean seen[NQ];
     GList *l, *buffers = NULL;
@@ -2004,8 +2007,11 @@ gwy_data_field_grains_get_all_values(GwyDataField *data_field,
         return values;
     g_return_val_if_fail(quantities, NULL);
 
-    if (!values)
-        values = g_new0(gdouble, nquantities*(ngrains + 1));
+    if (!values) {
+        values = g_new(gdouble*, nquantities);
+        for (i = 0; i < nquantities; i++)
+            values[i] = g_new0(gdouble, ngrains + 1);
+    }
 
     xres = data_field->xres;
     yres = data_field->yres;
@@ -2024,7 +2030,7 @@ gwy_data_field_grains_get_all_values(GwyDataField *data_field,
         /* Take the first if the same quantity is requested multiple times.
          * We will deal with this later. */
         if (!quantity_data[quantity])
-            quantity_data[quantity] = values + i*(ngrains + 1);
+            quantity_data[quantity] = values[i];
     }
 
     /* Figure out the auxiliary data to calculate.  Do this after we gathered
@@ -2524,7 +2530,7 @@ gwy_data_field_grains_get_all_values(GwyDataField *data_field,
             continue;
 
         if (seen[quantity]) {
-            memcpy(values + i*(ngrains + 1), quantity_data[quantity],
+            memcpy(values[i], quantity_data[quantity],
                    (ngrains + 1)*sizeof(gdouble));
         }
         seen[quantity] = TRUE;
