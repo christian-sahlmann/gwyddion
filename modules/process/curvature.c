@@ -327,10 +327,8 @@ curvature_calculate(GwyDataField *dfield,
     enum { DEGREE = 2 };
     enum { A, BX, CXX, BY, CXY, CYY, NTERMS };
     gint term_powers[2*NTERMS];
-    gdouble coeffs[NTERMS];
-    gdouble xreal, yreal, qx, qy;
-    gdouble a, a1, bx, by, cxx, cxy, cyy, cx, cy;
-    gdouble x_0, y_0, phi;
+    gdouble coeffs[NTERMS], ccoeffs[NTERMS];
+    gdouble xreal, yreal, qx, qy, q, mx, my;
     gint xres, yres, i, j, k;
     gboolean ok;
 
@@ -349,79 +347,33 @@ curvature_calculate(GwyDataField *dfield,
               coeffs[A], coeffs[BX], coeffs[BY],
               coeffs[CXX], coeffs[CXY], coeffs[CYY]);
 
-    /* Transform coeffs from normalized coordinates to real coordinates */
+    /* Transform coeffs from normalized coordinates to coordinates that are
+     * still numerically around 1 but have the right aspect ratio. */
     xres = gwy_data_field_get_xres(dfield);
     yres = gwy_data_field_get_yres(dfield);
     xreal = gwy_data_field_get_xreal(dfield);
     yreal = gwy_data_field_get_yreal(dfield);
     qx = 2.0/xreal*xres/(xres - 1.0);
     qy = 2.0/yreal*yres/(yres - 1.0);
+    q = sqrt(qx*qy);
+    mx = sqrt(qx/qy);
+    my = sqrt(qy/qx);
 
-    a1 = coeffs[A];
-    bx = qx*coeffs[BX];
-    by = qy*coeffs[BY];
-    cxx = qx*qx*coeffs[CXX];
-    cxy = qx*qy*coeffs[CXY];
-    cyy = qy*qy*coeffs[CYY];
-
-    /* Eliminate the mixed term */
-    if (fabs(cxx) + fabs(cxy) + fabs(cyy)
-        <= 1e-14*(fabs(bx)/xreal + fabs(by)/yreal)) {
-        /* Linear gradient */
-        phi = 0.0;
-        cx = cy = 0.0;
-        x_0 = y_0 = 0.0;
-        a = a1;
-    }
-    else {
-        /* At least one quadratic term */
-        gdouble cm = cxx - cyy;
-        gdouble cp = cxx + cyy;
-        gdouble bx1, by1, xc, yc;
-
-        phi = 0.5*atan2(cxy, cm);
-        cx = cp + hypot(cm, cxy);
-        cy = cp - hypot(cm, cxy);
-        bx1 = bx*cos(phi) + by*sin(phi);
-        by1 = -bx*sin(phi) + by*cos(phi);
-
-        /* Eliminate linear terms */
-        if (fabs(cx) < 1e-14*fabs(cy)) {
-            /* Only y quadratic term */
-            xc = 0.0;
-            yc = -by1/cy;
-        }
-        else if (fabs(cy) < 1e-14*fabs(cx)) {
-            /* Only x quadratic term */
-            xc = -bx1/cx;
-            yc = 0.0;
-        }
-        else {
-            /* Two quadratic terms */
-            xc = -bx1/cx;
-            yc = -by1/cy;
-        }
-        a = a1 + xc*bx1 + yc*by1 + xc*xc*cx + yc*yc*cy;
-        x_0 = xc*cos(phi) - yc*sin(phi);
-        y_0 = xc*sin(phi) + yc*cos(phi);
-    }
-
-    /* Shift to coordinate system with [0,0] in the corner */
-    x_0 += 0.5*xreal;
-    y_0 += 0.5*yreal;
-    gwy_debug("x0=%g, y0=%g", x_0, y_0);
-
-    params[PARAM_X0] = x_0;
-    params[PARAM_Y0] = y_0;
-    params[PARAM_A] = a;
-    params[PARAM_R1] = 1.0/cx;
-    params[PARAM_R2] = 1.0/cy;
-    params[PARAM_PHI1] = fmod(phi, G_PI);
-    if (params[PARAM_PHI1] > G_PI/2.0)
-        params[PARAM_PHI1] -= G_PI;
-    params[PARAM_PHI2] = fmod(phi + G_PI/2.0, G_PI);
-    if (params[PARAM_PHI2] > G_PI/2.0)
-        params[PARAM_PHI2] -= G_PI;
+    ccoeffs[0] = coeffs[A];
+    ccoeffs[1] = mx*coeffs[BX];
+    ccoeffs[2] = my*coeffs[BY];
+    ccoeffs[3] = mx*mx*coeffs[CXX];
+    ccoeffs[4] = coeffs[CXY];
+    ccoeffs[5] = my*my*coeffs[CYY];
+    gwy_math_curvature(ccoeffs,
+                       params + PARAM_R1, params + PARAM_R2,
+                       params + PARAM_PHI1, params + PARAM_PHI2,
+                       params + PARAM_X0, params + PARAM_Y0, params + PARAM_A);
+    /* Transform to physical values. */
+    params[PARAM_R1] = 1.0/(q*q*params[PARAM_R1]);
+    params[PARAM_R2] = 1.0/(q*q*params[PARAM_R2]);
+    params[PARAM_X0] = params[PARAM_X0]/q + 0.5*xreal;
+    params[PARAM_Y0] = params[PARAM_Y0]/q + 0.5*yreal;
 
     ok = TRUE;
     for (i = 0; i < 2; i++) {
