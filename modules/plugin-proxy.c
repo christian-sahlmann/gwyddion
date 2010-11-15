@@ -155,7 +155,7 @@ static GwyModuleInfo module_info = {
        "running external programs (plug-ins) on data pretending they are "
        "data processing or file loading/saving modules."),
     "Yeti <yeti@gwyddion.net>",
-    "3.7",
+    "3.8",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -1260,7 +1260,7 @@ text_dump_import(gchar *buffer,
                  gsize size,
                  GError **error)
 {
-    gchar *val, *key, *pos, *line;
+    gchar *val, *key, *pos, *line, *title;
     GwyContainer *data;
     GwyDataField *dfield;
     gdouble xreal, yreal;
@@ -1384,6 +1384,13 @@ text_dump_import(gchar *buffer,
         }
         g_free(key);
 
+        key = g_strconcat(line, "/title", NULL);
+        title = NULL;
+        gwy_container_gis_string_by_name(data, key, (const guchar**)&title);
+        /* We got the contained string but that would disappear. */
+        title = g_strdup(title);
+        g_free(key);
+
         n = xres*yres*sizeof(gdouble);
         if ((gsize)(pos - buffer) + n + 3 > size) {
             g_set_error(error, GWY_MODULE_FILE_ERROR,
@@ -1416,6 +1423,12 @@ text_dump_import(gchar *buffer,
         gwy_container_remove_by_prefix(data, line);
         gwy_container_set_object_by_name(data, line, dfield);
         g_object_unref(dfield);
+
+        if (title) {
+            key = g_strconcat(line, "/title", NULL);
+            gwy_container_set_string_by_name(data, key, title);
+            g_free(key);
+        }
     }
     return data;
 
