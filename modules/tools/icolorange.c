@@ -121,7 +121,7 @@ static GwyModuleInfo module_info = {
        "color scale should map to, either on data or on height distribution "
        "histogram."),
     "Yeti <yeti@gwyddion.net>",
-    "3.10",
+    "3.11",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -459,14 +459,16 @@ gwy_tool_color_range_data_switched(GwyTool *gwytool,
     tool = GWY_TOOL_COLOR_RANGE(gwytool);
     gwy_tool_color_range_update_histogram(tool);
     range_type = gwy_tool_color_range_get_range_type(tool);
-    if (range_type == GWY_LAYER_BASIC_RANGE_FIXED) {
-        gdouble sel[2];
+    if (data_view) {
+        if (range_type == GWY_LAYER_BASIC_RANGE_FIXED) {
+            gdouble sel[2];
 
-        gwy_tool_color_range_get_min_max(tool, sel);
-        gwy_selection_set_data(tool->graph_selection, 1, sel);
+            gwy_tool_color_range_get_min_max(tool, sel);
+            gwy_selection_set_data(tool->graph_selection, 1, sel);
+        }
+        else
+            gwy_selection_clear(tool->graph_selection);
     }
-    else
-        gwy_selection_clear(tool->graph_selection);
     gwy_radio_buttons_set_current(tool->modelist, range_type);
     gwy_tool_color_range_update_fullrange(tool);
     gwy_tool_color_range_set_min_max(tool);
