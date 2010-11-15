@@ -622,13 +622,33 @@ gwy_module_lookup(const gchar *name)
  * GWY_MODULE_QUERY:
  * @mod_info: The #GwyModuleInfo structure to return as module info.
  *
- * The declaration of module info query (the ONLY exported symbol from
- * a module).
+ * The module query must be the ONLY exported symbol from a module.
  *
  * This macro does The Right Thing necessary to export module info in a way
  * Gwyddion understands it. Put #GWY_MODULE_QUERY with the module info
  * (#GwyModuleInfo) of your module as its argument on a line (with NO
  * semicolon after).
+ **/
+
+/**
+ * GWY_MODULE_QUERY_BUILTIN:
+ * @mod_info: The #GwyModuleInfo structure to return as module info.
+ * @name: Module name.  This is the base name of the source file with dashes
+ *        and other non-identifier characters changed to underscores.  For
+ *        instance module "nt-mdt.c" should pass nt_mdt.
+ *
+ * The declaration of module info query for built-in modules.
+ *
+ * See GWY_MODULE_QUERY() for discussion.  Using this macro instead of
+ * GWY_MODULE_QUERY() changes the name of the exported query function and
+ * enables integrating the module into the gwyddion executable.  This obviously
+ * makes sense only for core modules that are distributed with Gwyddion,
+ * however, it does no harm in third party modules as this macro functions
+ * differently from GWY_MODULE_QUERY() only if preprocessor symbol
+ * %GWY_MODULE_IS_BUILTIN is defined (which you do not do in an external
+ * module).
+ *
+ * Since: 2.22
  **/
 
 /**
