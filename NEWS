@@ -2,6 +2,11 @@
 Libraries:
 - libgwyprocess: Odd behaviour of 1D convolution and Gaussian filters for
   kernels much larger than data were corrected to full mirroring.
+- libgwyprocess: New grain quantities related to curvature were added.
+- libgwyddion: Portable isinf and insnan (gwy_isinf() and gwy_isnan()) were
+  added.
+- libgwyddion: gwy_math_curvature() calculating curvature parameters from a
+  quadratic surface polynomial coefficients was added.
 
 Modules:
 - Pattern Synthesis (new): Creates regular patterns such as steps of ridges.
@@ -12,7 +17,13 @@ Modules:
 - Spectral Synthesis: Generated data can be added to an existing surface.
 - Mask Editor tool: New editting tools were added: paintbrush, eraser,
   and bucket filling and unfilling.
+- Arithmetic: Has a preview, expressions can work with mask values, units of
+  the result can be speficied, the number of fields was increased to 8.
+- BCR: Z-axis scaling for non-topography floating point data was corrected.
 - GDEF: Vertically flipped data was corrected.
+- Color range tool: Critical warning/crashe when Fixed mode is set default
+  and the file is closed was fixed.
+- Plug-in proxy: Channel title read from dump files is retained now.
 
 
 2.21 (2010-10-26)
