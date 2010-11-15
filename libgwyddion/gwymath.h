@@ -83,6 +83,14 @@ gboolean gwy_math_choleski_decompose   (gint n,
 void     gwy_math_choleski_solve       (gint n,
                                         const gdouble *decomp,
                                         gdouble *rhs);
+guint    gwy_math_curvature            (const gdouble *coeffs,
+                                        gdouble *kappa1,
+                                        gdouble *kappa2,
+                                        gdouble *phi1,
+                                        gdouble *phi2,
+                                        gdouble *xc,
+                                        gdouble *yc,
+                                        gdouble *zc);
 gdouble  gwy_math_median               (gsize n,
                                         gdouble *array);
 void     gwy_math_sort                 (gsize n,

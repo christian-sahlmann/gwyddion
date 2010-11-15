@@ -658,6 +658,126 @@ gwy_math_median(gsize n, gdouble *array)
     }
 }
 
+/*
+ * gwy_math_curvature:
+ * @coeffs: Array of the six polynomial coefficients of a quadratic surface in
+ *          the following order: 1, x, y, x², xy, y².
+ * @kappa1: Location to store the smaller curvature to.
+ * @kappa2: Location to store the larger curvature to.
+ * @phi1: Location to store the direction of the smaller curvature to.
+ * @phi2: Location to store the direction of the larger curvature to.
+ * @xc: Location to store x-coordinate of the centre of the quadratic surface.
+ * @yc: Location to store y-coordinate of the centre of the quadratic surface.
+ * @zc: Location to store value at the centre of the quadratic surface.
+ * @returns: The number of curved dimensions (0 to 2).
+ *
+ * Calculates curvature parameters from two-dimensional quadratic polynomial
+ * coefficients.
+ *
+ * If the quadratic surface was obtained by fitting the dimensions of the
+ * fitted area should not differ, in the lateral coordinates used, by many
+ * orders from 1.  Otherwise the recognition of flat surfaces might not work.
+ *
+ * Curvatures have signs, positive mean a concave (cup-like) surface, negative
+ * mean a convex (cap-like) surface.  They are ordered including the sign.
+ *
+ * Directions are angles from the interval (-π/2, π/2].
+ *
+ * If the quadratic surface is degenerate, i.e. flat in at least one direction,
+ * the centre is undefined.  The centre is then chosen as the closest point
+ * the origin of coordinates.  For flat surfaces this means the origin is
+ * simply returned as the centre position.  Consequently, you should use
+ * Cartesian coordinates with origin in a natural centre, for instance centre
+ * of image or grain.
+ *
+ * Since: 2.22
+ **/
+guint
+gwy_math_curvature(const gdouble *coeffs,
+                   gdouble *pkappa1,
+                   gdouble *pkappa2,
+                   gdouble *pphi1,
+                   gdouble *pphi2,
+                   gdouble *pxc,
+                   gdouble *pyc,
+                   gdouble *pzc)
+{
+    gdouble a = coeffs[0], bx = coeffs[1], by = coeffs[2],
+            cxx = coeffs[3], cxy = coeffs[4], cyy = coeffs[5];
+    gdouble cm, cp, bx1, by1, xc, yc, phi, cx, cy;
+    guint degree;
+
+    /* Eliminate the mixed term */
+    if (fabs(cxx) + fabs(cxy) + fabs(cyy) <= 1e-14*(fabs(bx) + fabs(by))) {
+        /* Linear gradient */
+        if (pkappa1)
+            *pkappa1 = 0.0;
+        if (pkappa2)
+            *pkappa2 = 0.0;
+        if (pxc)
+            *pxc = 0.0;
+        if (pyc)
+            *pyc = 0.0;
+        if (pzc)
+            *pzc = a;
+        if (pphi1)
+            *pphi1 = 0.0;
+        if (pphi2)
+            *pphi2 = G_PI/2.0;
+        return 0;
+    }
+
+    /* At least one quadratic term */
+    cm = cxx - cyy;
+    cp = cxx + cyy;
+    phi = 0.5*atan2(cxy, cm);
+    cx = cp + hypot(cm, cxy);
+    cy = cp - hypot(cm, cxy);
+    bx1 = bx*cos(phi) + by*sin(phi);
+    by1 = -bx*sin(phi) + by*cos(phi);
+
+    /* Eliminate linear terms */
+    if (fabs(cx) < 1e-14*fabs(cy)) {
+        /* Only y quadratic term */
+        xc = 0.0;
+        yc = -by1/cy;
+        degree = 1;
+    }
+    else if (fabs(cy) < 1e-14*fabs(cx)) {
+        /* Only x quadratic term */
+        xc = -bx1/cx;
+        yc = 0.0;
+        degree = 1;
+    }
+    else {
+        /* Two quadratic terms */
+        xc = -bx1/cx;
+        yc = -by1/cy;
+        degree = 2;
+    }
+
+    if (pkappa1)
+        *pkappa1 = cx;
+    if (pkappa2)
+        *pkappa2 = cy;
+    if (pxc)
+        *pxc = xc*cos(phi) - yc*sin(phi);
+    if (pyc)
+        *pyc = xc*sin(phi) + yc*cos(phi);
+    if (pzc)
+        *pzc = a + xc*bx1 + yc*by1 + xc*xc*cx + yc*yc*cy;
+    if (pphi1) {
+        gdouble phi1 = fmod(phi, G_PI);
+        *pphi1 = (phi1 > G_PI/2.0) ? phi1 - G_PI : phi1;
+    }
+    if (pphi2) {
+        gdouble phi2 = fmod(phi + G_PI/2.0, G_PI);
+        *pphi2 = (phi2 > G_PI/2.0) ? phi2 - G_PI : phi2;
+    }
+
+    return degree;
+}
+
 /* Note: The implementation was specialized for doubles and a few things were
  * renamed, otherwise it has not changed.  It is about twice faster than the
  * generic version. */
@@ -975,7 +1095,7 @@ jump_over: ;
 /**
  * cbrt:
  *
- * Macro defined to gwy_math_callback_cbrt() if the platform does not provide
+ * Macro defined to gwy_math_fallback_cbrt() if the platform does not provide
  * <function>cbrt</function>.
  **/
 
@@ -993,7 +1113,7 @@ jump_over: ;
 /**
  * pow10:
  *
- * Macro defined to gwy_math_callback_pow10() if the platform does not provide
+ * Macro defined to gwy_math_fallback_pow10() if the platform does not provide
  * <function>pow10</function>.
  **/
 
@@ -1013,7 +1133,7 @@ jump_over: ;
 /**
  * hypot:
  *
- * Macro defined to gwy_math_callback_hypot() if the platform does not provide
+ * Macro defined to gwy_math_fallback_hypot() if the platform does not provide
  * <function>hypot</function>.
  **/
 
@@ -1031,7 +1151,7 @@ jump_over: ;
 /**
  * acosh:
  *
- * Macro defined to gwy_math_callback_acosh() if the platform does not provide
+ * Macro defined to gwy_math_fallback_acosh() if the platform does not provide
  * <function>acosh</function>.
  **/
 
@@ -1049,7 +1169,7 @@ jump_over: ;
 /**
  * asinh:
  *
- * Macro defined to gwy_math_callback_asinh() if the platform does not provide
+ * Macro defined to gwy_math_fallback_asinh() if the platform does not provide
  * <function>asinh</function>.
  **/
 
@@ -1067,8 +1187,48 @@ jump_over: ;
 /**
  * atanh:
  *
- * Macro defined to gwy_math_callback_atanh() if the platform does not provide
+ * Macro defined to gwy_math_fallback_atanh() if the platform does not provide
  * <function>atanh</function>.
+ **/
+
+/**
+ * gwy_math_fallback_isnan:
+ * @x: Floating point number.
+ * @returns: %TRUE if @x is infinity, %FALSE otherwise.
+ *
+ * Fallback for the standard mathematical function
+ * <function>isnan</function>.
+ *
+ * Since: 2.22
+ **/
+
+/**
+ * gwy_isnan:
+ *
+ * Macro defined to working isnan() implementation, either a system one or
+ * gwy_math_callback_isnan().
+ *
+ * Since: 2.22
+ **/
+
+/**
+ * gwy_math_fallback_isinf:
+ * @x: Floating point number.
+ * @returns: %TRUE if @x is infinity, %FALSE otherwise.
+ *
+ * Fallback for the standard mathematical function
+ * <function>isinf</function>.
+ *
+ * Since: 2.22
+ **/
+
+/**
+ * gwy_isinf:
+ *
+ * Macro defined to working isinf() implementation, either a system one or
+ * gwy_math_callback_isinf().
+ *
+ * Since: 2.22
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
