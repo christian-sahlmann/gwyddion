@@ -329,8 +329,12 @@ AC_SUBST(WARNING_NOUNUSED_PAR)
 #############################################################################
 # Base libraries: X, Gtk+.
 AC_PATH_XTRA
-test "x$x_includes" = "x" || CPPFLAGS="$CPPFLAGS -I$x_includes"
-test "x$x_libraries" = "x" || LDFLAGS="$LDFLAGS -L$x_libraries"
+if test "x$x_includes" != x && test "x$x_includes" != xNONE; then
+  CPPFLAGS="$CPPFLAGS -I$x_includes"
+fi
+if test "x$x_libraries" != x && text "x$x_libraries" != xNONE; then
+  LDFLAGS="$LDFLAGS -L$x_libraries"
+fi
 
 # A dummy Gtk+ check, we perform another when we know whether to request
 # pangoft2 or not.
@@ -597,7 +601,6 @@ AC_SUBST(KDE4_LIBS)
 AC_MSG_CHECKING([for anyone actually reading this nonsense])
 AC_MSG_RESULT([no])
 AC_CHECK_HEADERS( \
-  fcntl.h \
   stdbool.h \
   sys/stat.h \
   sys/types.h \
@@ -609,7 +612,6 @@ AC_CHECK_HEADERS( \
 
 #############################################################################
 # Check for library functions.
-AC_FUNC_MMAP
 GWY_CHECK_MATH_FUNCS([cbrt hypot pow10 acosh asinh atanh isinf isnan])
 AC_CHECK_FUNCS([sincos _fpclass memrchr])
 dnl FIXME: We need C99 for this.  But we must be able to switch off its
