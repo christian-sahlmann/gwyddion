@@ -1043,95 +1043,12 @@ grain_volume_laplace(GwyDataField *data_field,
     return vol;
 }
 
-static gdouble
-curvature_calculate(const gdouble *coeffs,
-                    GwyGrainQuantity quantity)
-{
-    gdouble a, bx, by, cxx, cxy, cyy, kx, ky;
-    gdouble z_0, x_0, y_0, phi;
-
-    a = coeffs[0];
-    bx = coeffs[1];
-    by = coeffs[2];
-    cxx = coeffs[3];
-    cxy = coeffs[4];
-    cyy = coeffs[5];
-
-    /* Eliminate the mixed term */
-    if (fabs(cxx) + fabs(cxy) + fabs(cyy)
-        <= 1e-14*(fabs(bx) + fabs(by))) {
-        /* Linear gradient */
-        phi = 0.0;
-        kx = ky = 0.0;
-        x_0 = y_0 = 0.0;
-        z_0 = a;
-    }
-    else {
-        /* At least one quadratic term */
-        gdouble cm = cxx - cyy;
-        gdouble cp = cxx + cyy;
-        gdouble bx1, by1, xc, yc;
-
-        phi = 0.5*atan2(cxy, cm);
-        kx = cp + hypot(cm, cxy);
-        ky = cp - hypot(cm, cxy);
-        bx1 = bx*cos(phi) + by*sin(phi);
-        by1 = -bx*sin(phi) + by*cos(phi);
-
-        /* Eliminate linear terms */
-        if (fabs(kx) < 1e-14*fabs(ky)) {
-            /* Only y quadratic term */
-            xc = 0.0;
-            yc = -by1/ky;
-        }
-        else if (fabs(ky) < 1e-14*fabs(kx)) {
-            /* Only x quadratic term */
-            xc = -bx1/kx;
-            yc = 0.0;
-        }
-        else {
-            /* Two quadratic terms */
-            xc = -bx1/kx;
-            yc = -by1/ky;
-        }
-        z_0 = a + xc*bx1 + yc*by1 + xc*xc*kx + yc*yc*ky;
-        x_0 = xc*cos(phi) - yc*sin(phi);
-        y_0 = xc*sin(phi) + yc*cos(phi);
-    }
-
-    if (kx > ky) {
-        GWY_SWAP(gdouble, kx, ky);
-        phi += G_PI/2.0;
-    }
-
-    if (quantity == GWY_GRAIN_VALUE_CURVATURE_CENTER_X)
-        return x_0;
-    else if (quantity == GWY_GRAIN_VALUE_CURVATURE_CENTER_Y)
-        return y_0;
-    else if (quantity == GWY_GRAIN_VALUE_CURVATURE_CENTER_Z)
-        return z_0;
-    else if (quantity == GWY_GRAIN_VALUE_CURVATURE1)
-        return kx;
-    else if (quantity == GWY_GRAIN_VALUE_CURVATURE2)
-        return ky;
-    else if (quantity == GWY_GRAIN_VALUE_CURVATURE_ANGLE1) {
-        phi = fmod(phi, G_PI);
-        return (phi > G_PI/2.0) ? phi - G_PI : phi;
-    }
-    else if (quantity == GWY_GRAIN_VALUE_CURVATURE_ANGLE2) {
-        phi = fmod(phi + G_PI/2.0, G_PI);
-        return (phi > G_PI/2.0) ? phi - G_PI : phi;
-    }
-
-    g_return_val_if_reached(0.0);
-}
-
 /**
  * gwy_data_field_grains_get_values:
  * @data_field: Data field used for marking.  For some quantities its values
  *              are not used, but its dimensions determine the dimensions of
  *              @grains.
- * @values: An array of size @ngrains+1 to put grain values to.  It can be
+ * @values: Array of size @ngrains+1 to put grain values to.  It can be
  *          %NULL to allocate and return a new array.
  * @grains: Grain numbers filled with gwy_data_field_number_grains().
  * @ngrains: The number of grains as returned by
@@ -1144,7 +1061,7 @@ curvature_calculate(const gdouble *coeffs,
  * gwy_data_field_grains_get_distribution().
  *
  * The array @values will be filled with the requested grain value for each
- * individual grain (0th item of @values which do not correspond to any grain
+ * individual grain (0th item of @values which does not correspond to any grain
  * will be overwritten with an arbitrary value and should be ignored).
  *
  * The grain numbers serve as indices in @values.  Therefore as long as the
@@ -1632,6 +1549,8 @@ gwy_data_field_grains_get_values(GwyDataField *data_field,
         case GWY_GRAIN_VALUE_CURVATURE2:
         case GWY_GRAIN_VALUE_CURVATURE_ANGLE1:
         case GWY_GRAIN_VALUE_CURVATURE_ANGLE2:
+        /* q is some mean pixel dimension */
+        q = sqrt(qh*qv);
         sizes = g_new0(gint, ngrains + 1);
         /* First two are x and y; we calculate them first an then perform all
          * other calculations in grain-centre coordinate system.  This makes
@@ -1726,13 +1645,51 @@ gwy_data_field_grains_get_values(GwyDataField *data_field,
                     for (j = 0; j < 6; j++)
                         b[j] = t[14 + j]/n;
                     gwy_math_choleski_solve(6, a, b);
+                    /* Make order of lateral dimensions reasonably close to 1
+                     * for detection of flatness in gwy_math_curvature(). */
+                    b[1] *= q;
+                    b[2] *= q;
+                    b[3] *= q*q;
+                    b[4] *= q*q;
+                    b[5] *= q*q;
                 }
                 else
                     n = 0;
             }
 
             if (n >= 6) {
-                values[i] = curvature_calculate(b, quantity);
+                if (quantity == GWY_GRAIN_VALUE_CURVATURE_CENTER_X) {
+                    gwy_math_curvature(b, NULL, NULL, NULL, NULL,
+                                       values + i, NULL, NULL);
+                    values[i] *= q;
+                }
+                else if (quantity == GWY_GRAIN_VALUE_CURVATURE_CENTER_Y) {
+                    gwy_math_curvature(b, NULL, NULL, NULL, NULL,
+                                       NULL, values + i, NULL);
+                    values[i] *= q;
+                }
+                else if (quantity == GWY_GRAIN_VALUE_CURVATURE_CENTER_Z) {
+                    gwy_math_curvature(b, NULL, NULL, NULL, NULL,
+                                       NULL, NULL, values + i);
+                }
+                else if (quantity == GWY_GRAIN_VALUE_CURVATURE1) {
+                    gwy_math_curvature(b, values + i, NULL, NULL, NULL,
+                                       NULL, NULL, NULL);
+                    values[i] /= q*q;
+                }
+                else if (quantity == GWY_GRAIN_VALUE_CURVATURE2) {
+                    gwy_math_curvature(b, NULL, values + i, NULL, NULL,
+                                       NULL, NULL, NULL);
+                    values[i] /= q*q;
+                }
+                else if (quantity == GWY_GRAIN_VALUE_CURVATURE_ANGLE1) {
+                    gwy_math_curvature(b, NULL, NULL, values + i, NULL,
+                                       NULL, NULL, NULL);
+                }
+                else if (quantity == GWY_GRAIN_VALUE_CURVATURE_ANGLE2) {
+                    gwy_math_curvature(b, NULL, NULL, NULL, values + i,
+                                       NULL, NULL, NULL);
+                }
             }
             else {
                 /* Fallbacks for small/flat grains */
@@ -1757,6 +1714,827 @@ gwy_data_field_grains_get_values(GwyDataField *data_field,
         gwy_clear(values, ngrains + 1);
         break;
     }
+
+    return values;
+}
+
+static gdouble*
+ensure_buffer(GwyGrainQuantity quantity,
+              gdouble **quantity_data,
+              guint ngrains,
+              gdouble fillvalue,
+              GList **buffers)
+{
+    gdouble *buf;
+
+    if (quantity_data[quantity])
+        return quantity_data[quantity];
+
+    if (fillvalue) {
+        guint gno;
+
+        buf = g_new(gdouble, ngrains + 1);
+        for (gno = ngrains+1; gno; gno--)
+            *(buf++) = fillvalue;
+    }
+    else
+        buf = g_new0(gdouble, ngrains + 1);
+
+    *buffers = g_list_prepend(*buffers, buf);
+    return buf;
+}
+
+/* Note all coordinates are pixel-wise, not real.  For linear and quadratic,
+ * the origin is always the grain centre. */
+static void
+calculate_grain_aux(GwyDataField *data_field,
+                    const gint *grains,
+                    guint ngrains,
+                    gint *sizes, gint *boundpos,
+                    gdouble *min, gdouble *max,
+                    gdouble *xvalue, gdouble *yvalue, gdouble *zvalue,
+                    gdouble *linear, gdouble *quadratic)
+{
+    guint xres, yres, i, j, k, n, gno, nn;
+    gdouble z;
+    const gdouble *d;
+    const gint *g;
+    gdouble *t;
+
+    xres = data_field->xres;
+    yres = data_field->yres;
+    nn = xres*yres;
+
+    if (sizes) {
+        for (k = nn, g = grains; k; k--, g++) {
+            gno = *g;
+            sizes[gno]++;
+        }
+    }
+    if (boundpos) {
+        for (k = nn, g = grains; k; k--, g++) {
+            gno = *g;
+            if (boundpos[gno] == -1)
+                boundpos[gno] = k;
+        }
+    }
+    if (min) {
+        for (k = nn, g = grains, d = data_field->data; k; k--, g++, d++) {
+            gno = *g;
+            z = *d;
+            if (z < min[gno])
+                min[gno] = z;
+        }
+    }
+    if (max) {
+        for (k = nn, g = grains, d = data_field->data; k; k--, g++, d++) {
+            gno = *g;
+            z = *d;
+            if (z > max[gno])
+                max[gno] = z;
+        }
+    }
+    if (zvalue) {
+        g_assert(sizes);
+        for (k = nn, g = grains, d = data_field->data; k; k--, g++, d++) {
+            gno = *g;
+            z = *d;
+            zvalue[gno] += z;
+        }
+        for (gno = 0; gno <= ngrains; gno++) {
+            n = sizes[gno];
+            zvalue[gno] /= n;
+        }
+    }
+    if (xvalue) {
+        g_assert(sizes);
+        g = grains;
+        for (i = 0; i < yres; i++) {
+            for (j = 0; j < xres; j++, g++) {
+                gno = *g;
+                xvalue[gno] += j;
+            }
+        }
+        for (gno = 0; gno <= ngrains; gno++) {
+            n = sizes[gno];
+            xvalue[gno] /= n;
+        }
+    }
+    if (yvalue) {
+        g_assert(sizes);
+        g = grains;
+        for (i = 0; i < yres; i++) {
+            for (j = 0; j < xres; j++, g++) {
+                gno = *g;
+                yvalue[gno] += i;
+            }
+        }
+        for (gno = 0; gno <= ngrains; gno++) {
+            n = sizes[gno];
+            yvalue[gno] /= n;
+        }
+    }
+    if (linear) {
+        g_assert(sizes && xvalue && yvalue);
+        g = grains;
+        d = data_field->data;
+        for (i = 0; i < yres; i++) {
+            for (j = 0; j < xres; j++, g++, d++) {
+                gdouble x, y;
+
+                gno = *g;
+                t = linear + 5*gno;
+                x = j - xvalue[gno];
+                y = i - yvalue[gno];
+                z = *d;
+                *(t++) = x*x;
+                *(t++) = x*y;
+                *(t++) = y*y;
+                *(t++) = x*z;
+                *t = y*z;
+            }
+        }
+        for (gno = 0; gno <= ngrains; gno++) {
+            t = linear + 5*gno;
+            n = sizes[gno];
+            for (k = 5; k; k--, t++)
+                *t /= n;
+        }
+    }
+    if (quadratic) {
+        g_assert(sizes && xvalue && yvalue);
+        g = grains;
+        d = data_field->data;
+        for (i = 0; i < yres; i++) {
+            for (j = 0; j < xres; j++, g++, d++) {
+                gdouble x, y, x2, y2, xy;
+
+                gno = *g;
+                t = quadratic + 12*gno;
+                x = j - xvalue[gno];
+                y = i - yvalue[gno];
+                x2 = x*x;
+                xy = x*y;
+                y2 = y*y;
+                z = *d;
+                *(t++) = x2*x;
+                *(t++) = x2*y;
+                *(t++) = x*y2;
+                *(t++) = y*y2;
+                *(t++) = x2*x2;
+                *(t++) = x2*xy;
+                *(t++) = x2*y2;
+                *(t++) = xy*y2;
+                *(t++) = y2*y2;
+                *(t++) = x2*z;
+                *(t++) = xy*z;
+                *t = y2*z;
+            }
+        }
+        for (gno = 0; gno <= ngrains; gno++) {
+            t = quadratic + 12*gno;
+            n = sizes[gno];
+            for (k = 12; k; k--, t++)
+                *t /= n;
+        }
+    }
+}
+
+/**
+ * gwy_data_field_grains_get_all_values:
+ * @data_field: Data field used for marking.  For some quantities its values
+ *              are not used, but its dimensions determine the dimensions of
+ *              @grains.
+ * @values: Array of @nquantities*(@ngrains+1) items to put the calculated
+ *          grain values to.  Each block of size @ngrains+1 in the array
+ *          corresponds to one requested quantity.  %NULL can be passed to
+ *          allocate and return a new array.
+ * @quantities: Array of @nquantities items that specify the requested
+ *              #GwyGrainQuantity to put to corresponding blocks in @values.
+ * @nquantities: The number of requested different grain values.
+ * @grains: Grain numbers filled with gwy_data_field_number_grains().
+ * @ngrains: The number of grains as returned by
+ *           gwy_data_field_number_grains().
+ *
+ * Calculates multiple characteristics of grains simultaneously.
+ *
+ * See gwy_data_field_grains_get_values() for some discussion.  This function
+ * is more efficient if several grain quantities need to be calculated since
+ * gwy_data_field_grains_get_values() can do lot of repeated work in such case.
+ *
+ * Returns: @values itself if it was not %NULL, otherwise a newly allocated
+ *          array that caller has to free.
+ *
+ * Since: 2.22
+ **/
+gdouble*
+gwy_data_field_grains_get_all_values(GwyDataField *data_field,
+                                     gdouble *values,
+                                     const GwyGrainQuantity *quantities,
+                                     guint nquantities,
+                                     guint ngrains,
+                                     const gint *grains)
+{
+    /* The number of built-in quantities. */
+    enum { NQ = 34 };
+    enum {
+        NEED_SIZES = 1 << 0,
+        NEED_BOUNDPOS = 1 << 1,
+        NEED_MIN = 1 << 2,
+        NEED_MAX = 1 << 3,
+        NEED_XVALUE = (1 << 4) | NEED_SIZES,
+        NEED_YVALUE = (1 << 5) | NEED_SIZES,
+        NEED_ZVALUE = (1 << 6) | NEED_SIZES,
+        NEED_LINEAR = (1 << 7) | NEED_ZVALUE | NEED_XVALUE | NEED_YVALUE,
+        NEED_QUADRATIC = (1 << 8) | NEED_LINEAR,
+        INVALID = G_MAXUINT
+    };
+    static const guint need_aux[NQ] = {
+        NEED_SIZES,
+        NEED_SIZES,
+        NEED_SIZES,
+        0,
+        NEED_MIN,
+        NEED_MAX,
+        NEED_ZVALUE,
+        NEED_SIZES,
+        INVALID,
+        NEED_MIN | NEED_MAX,
+        0,
+        INVALID,
+        NEED_BOUNDPOS,
+        NEED_BOUNDPOS,
+        NEED_BOUNDPOS,
+        NEED_BOUNDPOS,
+        NEED_XVALUE,
+        NEED_YVALUE,
+        0,
+        NEED_MIN,
+        0,
+        INVALID,
+        INVALID,
+        NEED_LINEAR,
+        NEED_LINEAR,
+        0,
+        0,
+        NEED_QUADRATIC,
+        NEED_QUADRATIC,
+        NEED_QUADRATIC,
+        NEED_QUADRATIC,
+        NEED_QUADRATIC,
+        NEED_QUADRATIC,
+        NEED_QUADRATIC,
+    };
+    gdouble *quantity_data[NQ];
+    gboolean seen[NQ];
+    GList *l, *buffers = NULL;
+    guint *sizes = NULL;
+    gint *boundpos = NULL;
+    gdouble *xvalue = NULL, *yvalue = NULL, *zvalue = NULL,
+            *min = NULL, *max = NULL,
+            *linear = NULL, *quadratic = NULL;
+    const gdouble *d;
+    gdouble *p;
+    gdouble qh, qv, qarea, qdiag, qgeom;
+    guint xres, yres, i, j, k, nn, gno;
+
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), NULL);
+    g_return_val_if_fail(grains, NULL);
+    if (!nquantities)
+        return values;
+    g_return_val_if_fail(quantities, NULL);
+
+    if (!values)
+        values = g_new0(gdouble, nquantities*(ngrains + 1));
+
+    xres = data_field->xres;
+    yres = data_field->yres;
+    nn = xres*yres;
+    gwy_debug("ngrains: %d, nn: %d", ngrains, nn);
+
+    /* Figure out which quantities are requested. */
+    gwy_clear(quantity_data, NQ);
+    for (i = 0; i < nquantities; i++) {
+        GwyGrainQuantity quantity = quantities[i];
+
+        if ((guint)quantity >= NQ || need_aux[quantity] == INVALID) {
+            g_warning("Invalid built-in grain quantity number %u.", quantity);
+            continue;
+        }
+        /* Take the first if the same quantity is requested multiple times.
+         * We will deal with this later. */
+        if (!quantity_data[quantity])
+            quantity_data[quantity] = values + i*(ngrains + 1);
+    }
+
+    /* Figure out the auxiliary data to calculate.  Do this after we gathered
+     * all quantities as some auxiliary data are in fact quantities too. */
+    for (i = 0; i < nquantities; i++) {
+        GwyGrainQuantity quantity = quantities[i];
+        guint need;
+
+        if ((guint)quantity >= NQ || need_aux[quantity] == INVALID)
+            continue;
+
+        need = need_aux[quantity];
+        /* Integer data */
+        if ((need & NEED_SIZES) && !sizes) {
+            sizes = g_new0(guint, ngrains + 1);
+            buffers = g_list_prepend(buffers, sizes);
+        }
+        if ((need & NEED_BOUNDPOS) && !boundpos) {
+            boundpos = g_new(gint, ngrains + 1);
+            buffers = g_list_prepend(buffers, boundpos);
+            for (i = 0; i <= nn; i++)
+                boundpos[i] = -1;
+        }
+        /* Floating point data that coincide with some quantity */
+        if (need & NEED_MIN)
+            min = ensure_buffer(GWY_GRAIN_VALUE_MINIMUM, quantity_data,
+                                ngrains, G_MAXDOUBLE, &buffers);
+        if (need & NEED_MAX)
+            max = ensure_buffer(GWY_GRAIN_VALUE_MAXIMUM, quantity_data,
+                                ngrains, -G_MAXDOUBLE, &buffers);
+        if (need & NEED_XVALUE)
+            xvalue = ensure_buffer(GWY_GRAIN_VALUE_CENTER_X, quantity_data,
+                                   ngrains, 0.0, &buffers);
+        if (need & NEED_YVALUE)
+            yvalue = ensure_buffer(GWY_GRAIN_VALUE_CENTER_Y, quantity_data,
+                                   ngrains, 0.0, &buffers);
+        if (need & NEED_ZVALUE)
+            zvalue = ensure_buffer(GWY_GRAIN_VALUE_MEAN, quantity_data,
+                                   ngrains, 0.0, &buffers);
+        /* Complex floating point data */
+        if ((need & NEED_LINEAR) & !linear) {
+            linear = g_new0(gdouble, 5*(ngrains + 1));
+            buffers = g_list_prepend(buffers, linear);
+        }
+        if ((need & NEED_QUADRATIC) & !quadratic) {
+            quadratic = g_new0(gdouble, 12*(ngrains + 1));
+            buffers = g_list_prepend(buffers, quadratic);
+        }
+    }
+
+    /* Calculate auxiliary quantities (in pixel lateral coordinates) */
+    calculate_grain_aux(data_field, grains, ngrains, sizes, boundpos,
+                        min, max, xvalue, yvalue, zvalue, linear, quadratic);
+
+    d = data_field->data;
+    qh = gwy_data_field_get_xmeasure(data_field);
+    qv = gwy_data_field_get_ymeasure(data_field);
+    qdiag = hypot(qh, qv);
+    qarea = qh*qv;
+    qgeom = sqrt(qarea);
+
+    /* Calculate specific requested quantities */
+    if ((p = quantity_data[GWY_GRAIN_VALUE_PROJECTED_AREA])) {
+        for (gno = 0; gno <= ngrains; gno++)
+            p[gno] = qarea*sizes[gno];
+    }
+    if ((p = quantity_data[GWY_GRAIN_VALUE_EQUIV_SQUARE_SIDE])) {
+        for (gno = 0; gno <= ngrains; gno++)
+            p[gno] = sqrt(qarea*sizes[gno]);
+    }
+    if ((p = quantity_data[GWY_GRAIN_VALUE_EQUIV_DISC_RADIUS])) {
+        for (gno = 0; gno <= ngrains; gno++)
+            p[gno] = sqrt(qarea/G_PI*sizes[gno]);
+    }
+    if ((p = quantity_data[GWY_GRAIN_VALUE_SURFACE_AREA])) {
+        gdouble qh2 = qh*qh, qv2 = qv*qv;
+
+        gwy_clear(p, ngrains + 1);
+        /* Every contribution is calculated twice -- for each pixel (vertex)
+         * participating to a particular triangle */
+        for (i = 0; i < yres; i++) {
+            for (j = 0; j < xres; j++) {
+                gint ix, ipx, imx, jp, jm;
+                gdouble c;
+
+                ix = i*xres;
+                if (!(gno = grains[ix + j]))
+                    continue;
+
+                imx = (i > 0) ? ix-xres : ix;
+                ipx = (i < yres-1) ? ix+xres : ix;
+                jm = (j > 0) ? j-1 : j;
+                jp = (j < yres-1) ? j+1 : j;
+
+                c = (d[ix + j] + d[ix + jm] + d[imx + jm] + d[imx + j])/2.0;
+                p[gno] += square_area2w_1c(d[ix + j], d[ix + jm],
+                                           d[imx + j], c, qh2, qv2);
+
+                c = (d[ix + j] + d[ix + jp] + d[imx + jp] + d[imx + j])/2.0;
+                p[gno] += square_area2w_1c(d[ix + j], d[ix + jp],
+                                           d[imx + j], c, qh2, qv2);
+
+                c = (d[ix + j] + d[ix + jm] + d[ipx + jm] + d[ipx + j])/2.0;
+                p[gno] += square_area2w_1c(d[ix + j], d[ix + jm],
+                                           d[ipx + j], c, qh2, qv2);
+
+                c = (d[ix + j] + d[ix + jp] + d[ipx + jp] + d[ipx + j])/2.0;
+                p[gno] += square_area2w_1c(d[ix + j], d[ix + jp],
+                                           d[ipx + j], c, qh2, qv2);
+            }
+        }
+        for (gno = 0; gno <= ngrains; gno++)
+            p[gno] *= qarea/8.0;
+    }
+    /* GWY_GRAIN_VALUE_MINIMUM is calculated directly. */
+    /* GWY_GRAIN_VALUE_MAXIMUM is calculated directly. */
+    /* GWY_GRAIN_VALUE_MEAN is calculated directly. */
+    if ((p = quantity_data[GWY_GRAIN_VALUE_MEDIAN])) {
+        guint *csizes = g_new0(guint, ngrains + 1);
+        guint *pos = g_new0(guint, ngrains + 1);
+        gdouble *tmp;
+
+        /* Find cumulative sizes (we care only about grains, ignore the
+         * outside-grains area) */
+        csizes[0] = 0;
+        csizes[1] = sizes[1];
+        for (gno = 2; gno <= ngrains; gno++)
+            csizes[gno] = sizes[gno] + sizes[gno-1];
+
+        tmp = g_new(gdouble, csizes[ngrains]);
+        /* Find where each grain starts in tmp sorted by grain # */
+        for (gno = 1; gno <= ngrains; gno++)
+            pos[gno] = csizes[gno-1];
+        /* Sort values by grain # to tmp */
+        for (k = 0; k < nn; k++) {
+            if ((gno = grains[k])) {
+                tmp[pos[gno]] = d[k];
+                pos[gno]++;
+            }
+        }
+        /* Find medians of each block */
+        for (gno = 1; gno <= ngrains; gno++)
+            p[gno] = gwy_math_median(csizes[gno] - csizes[gno-1],
+                                     tmp + csizes[gno-1]);
+        /* Finalize */
+        g_free(csizes);
+        g_free(pos);
+        g_free(tmp);
+    }
+    if ((p = quantity_data[GWY_GRAIN_VALUE_HALF_HEIGHT_AREA])) {
+        gdouble *zhalf;
+        guint *zhsizes;
+
+        /* Find the grain half-heights, i.e. (z_min + z_max)/2, first */
+        zhalf = g_new(gdouble, ngrains + 1);
+        for (gno = 0; gno <= ngrains; gno++)
+            zhalf[gno] = (min[gno] + max[gno])/2.0;
+        /* Calculate the area of pixels above the half-heights */
+        zhsizes = g_new0(gint, ngrains + 1);
+        for (k = 0; k < nn; k++) {
+            gno = grains[k];
+            if (d[k] >= zhalf[gno])
+                zhsizes[gno]++;
+        }
+        for (gno = 0; gno <= ngrains; gno++)
+            p[gno] = qarea*zhsizes[gno];
+        /* Finalize */
+        g_free(zhalf);
+        g_free(sizes);
+    }
+    if ((p = quantity_data[GWY_GRAIN_VALUE_FLAT_BOUNDARY_LENGTH])) {
+        gwy_clear(p, ngrains + 1);
+        /* Note the cycles go to xres and yres inclusive as we calculate the
+         * boundary, not pixel interiors. */
+        for (i = 0; i <= yres; i++) {
+            for (j = 0; j <= xres; j++) {
+                gint g1, g2, g3, g4, f;
+
+                /* Hope compiler will optimize this mess... */
+                g1 = (i > 0 && j > 0) ? grains[i*xres + j - xres - 1] : 0;
+                g2 = (i > 0 && j < xres) ? grains[i*xres + j - xres] : 0;
+                g3 = (i < yres && j > 0) ? grains[i*xres + j - 1] : 0;
+                g4 = (i < yres && j < xres) ? grains[i*xres + j] : 0;
+                f = (g1 > 0) + (g2 > 0) + (g3 > 0) + (g4 > 0);
+                if (f == 0 || f == 4)
+                    continue;
+
+                if (f == 1 || f == 3) {
+                    /* Try to avoid too many if-thens by using the fact they
+                     * are all either zero or an identical value */
+                    p[g1 | g2 | g3 | g4] += qdiag/2.0;
+                }
+                else if (g1 && g4) {
+                    /* This works for both g1 == g4 and g1 != g4 */
+                    p[g1] += qdiag/2.0;
+                    p[g4] += qdiag/2.0;
+                }
+                else if (g2 && g3) {
+                    /* This works for both g2 == g3 and g2 != g3 */
+                    p[g2] += qdiag/2.0;
+                    p[g3] += qdiag/2.0;
+                }
+                else if (g1 == g2)
+                    p[g1 | g3] += qh;
+                else if (g1 == g3)
+                    p[g1 | g2] += qv;
+                else {
+                    g_assert_not_reached();
+                }
+            }
+        }
+    }
+    if (quantity_data[GWY_GRAIN_VALUE_BOUNDARY_MINIMUM]
+        || quantity_data[GWY_GRAIN_VALUE_BOUNDARY_MAXIMUM]) {
+        gdouble *pmin = quantity_data[GWY_GRAIN_VALUE_BOUNDARY_MINIMUM];
+        gdouble *pmax = quantity_data[GWY_GRAIN_VALUE_BOUNDARY_MAXIMUM];
+
+        if (pmin) {
+            for (gno = 0; gno <= ngrains; gno++)
+                pmin[gno] = G_MAXDOUBLE;
+        }
+        if (pmax) {
+            for (gno = 0; gno <= ngrains; gno++)
+                pmax[gno] = -G_MAXDOUBLE;
+        }
+
+        for (i = 0; i < yres; i++) {
+            for (j = 0; j < xres; j++) {
+                gdouble z;
+
+                /* Processing of the none-grain boundary is waste of time. */
+                if (!(gno = grains[i*xres + j]))
+                    continue;
+
+                if (i && j && i < yres-1 && j < xres - 1
+                    && grains[(i - 1)*xres + j] == gno
+                    && grains[i*xres + j - 1] == gno
+                    && grains[i*xres + j + 1] == gno
+                    && grains[(i + 1)*xres + j] == gno)
+                    continue;
+
+                z = d[i*xres + j];
+                if (pmin && z < pmin[gno])
+                    pmin[gno] = z;
+                if (pmax && z > pmax[gno])
+                    pmax[gno] = z;
+            }
+        }
+    }
+    if (quantity_data[GWY_GRAIN_VALUE_MINIMUM_BOUND_SIZE]
+        || quantity_data[GWY_GRAIN_VALUE_MINIMUM_BOUND_ANGLE]
+        || quantity_data[GWY_GRAIN_VALUE_MAXIMUM_BOUND_SIZE]
+        || quantity_data[GWY_GRAIN_VALUE_MAXIMUM_BOUND_ANGLE]) {
+        gdouble *psmin = quantity_data[GWY_GRAIN_VALUE_MINIMUM_BOUND_SIZE];
+        gdouble *psmax = quantity_data[GWY_GRAIN_VALUE_MAXIMUM_BOUND_SIZE];
+        gdouble *pamin = quantity_data[GWY_GRAIN_VALUE_MINIMUM_BOUND_ANGLE];
+        gdouble *pamax = quantity_data[GWY_GRAIN_VALUE_MAXIMUM_BOUND_ANGLE];
+        GArray *vertices;
+
+        /* Find the complete convex hulls */
+        vertices = g_array_new(FALSE, FALSE, sizeof(GridPoint));
+        for (gno = 1; gno <= ngrains; gno++) {
+            gdouble dx, dy;
+
+            find_grain_convex_hull(xres, yres, grains, boundpos[gno], vertices);
+            if (psmin || pamin) {
+                grain_minimum_bound(vertices, qh, qv, &dx, &dy);
+                if (psmin)
+                    psmin[gno] = hypot(dx, dy);
+                if (pamin) {
+                    pamin[gno] = atan2(-dy, dx);
+                    if (pamin[gno] <= -G_PI/2.0)
+                        pamin[gno] += G_PI;
+                    else if (pamin[gno] > G_PI/2.0)
+                        pamin[gno] -= G_PI;
+                }
+            }
+            if (psmax || pamax) {
+                grain_maximum_bound(vertices, qh, qv, &dx, &dy);
+                if (psmax)
+                    psmax[gno] = hypot(dx, dy);
+                if (pamax) {
+                    pamax[gno] = atan2(-dy, dx);
+                    if (pamax[gno] <= -G_PI/2.0)
+                        pamax[gno] += G_PI;
+                    else if (pamax[gno] > G_PI/2.0)
+                        pamax[gno] -= G_PI;
+                }
+            }
+        }
+        /* Finalize */
+        g_array_free(vertices, TRUE);
+    }
+    if ((p = quantity_data[GWY_GRAIN_VALUE_CENTER_X])) {
+        for (gno = 0; gno <= ngrains; gno++)
+            p[gno] = qh*(p[gno] + 0.5) + data_field->xoff;
+    }
+    if ((p = quantity_data[GWY_GRAIN_VALUE_CENTER_Y])) {
+        for (gno = 0; gno <= ngrains; gno++)
+            p[gno] = qv*(p[gno] + 0.5) + data_field->yoff;
+    }
+    if (quantity_data[GWY_GRAIN_VALUE_VOLUME_0]
+        || quantity_data[GWY_GRAIN_VALUE_VOLUME_MIN]) {
+        gdouble *pv0 = quantity_data[GWY_GRAIN_VALUE_VOLUME_0];
+        gdouble *pvm = quantity_data[GWY_GRAIN_VALUE_VOLUME_MIN];
+
+        if (pv0)
+            gwy_clear(pv0, ngrains + 1);
+        if (pvm)
+            gwy_clear(pvm, ngrains + 1);
+
+        for (i = 0; i < yres; i++) {
+            for (j = 0; j < xres; j++) {
+                gint ix, ipx, imx, jp, jm;
+                gdouble v;
+
+                ix = i*xres;
+                if (!(gno = grains[ix + j]))
+                    continue;
+
+                imx = (i > 0) ? ix-xres : ix;
+                ipx = (i < yres-1) ? ix+xres : ix;
+                jm = (j > 0) ? j-1 : j;
+                jp = (j < yres-1) ? j+1 : j;
+
+                v = (52.0*d[ix + j] + 10.0*(d[imx + j] + d[ix + jm]
+                                            + d[ix + jp] + d[ipx + j])
+                     + (d[imx + jm] + d[imx + jp] + d[ipx + jm] + d[ipx + jp]));
+
+                /* We know the basis would appear with total weight -96 so
+                 * don't bother subtracting it from individual heights */
+                if (pv0)
+                    pv0[gno] += v;
+                if (pvm)
+                    pvm[gno] += v - 96.0*min[gno];
+            }
+        }
+        if (pv0) {
+            for (gno = 1; gno <= ngrains; gno++)
+                pv0[gno] *= qarea/96.0;
+        }
+        if (pvm) {
+            for (gno = 1; gno <= ngrains; gno++)
+                pvm[gno] *= qarea/96.0;
+        }
+    }
+    if ((p = quantity_data[GWY_GRAIN_VALUE_VOLUME_LAPLACE])) {
+        gint *bbox;
+
+        gwy_clear(p, ngrains + 1);
+        /* Fail gracefully when there is one big `grain' over all data.
+         * FIXME: Is this correct?  The grain can touch all sides but still
+         * have an exterior. */
+        bbox = gwy_data_field_get_grain_bounding_boxes(data_field,
+                                                       ngrains, grains, NULL);
+        if (ngrains == 1
+            && (bbox[4] == 0 && bbox[5] == 0
+                && bbox[6] == xres && bbox[7] == yres)) {
+            g_warning("Cannot interpolate from exterior of the grain when it "
+                      "has no exterior.");
+        }
+        else {
+            for (gno = 1; gno <= ngrains; gno++)
+                p[gno] = qarea/96.0*grain_volume_laplace(data_field, grains,
+                                                         gno, bbox + 4*gno);
+        }
+        g_free(bbox);
+    }
+    if (quantity_data[GWY_GRAIN_VALUE_SLOPE_THETA]
+        || quantity_data[GWY_GRAIN_VALUE_SLOPE_PHI]) {
+        gdouble *ptheta = quantity_data[GWY_GRAIN_VALUE_SLOPE_THETA];
+        gdouble *pphi = quantity_data[GWY_GRAIN_VALUE_SLOPE_PHI];
+
+        for (gno = 1; gno <= ngrains; gno++) {
+            gdouble z, xx, yy, xy, xz, yz, det, bx, by;
+            gdouble *lin = linear + 5*gno;
+
+            z = zvalue[gno];
+            xx = lin[0];
+            xy = lin[1];
+            yy = lin[2];
+            xz = lin[3];
+            yz = lin[4];
+            det = xx*yy - xy*xy;
+            if (det) {
+                bx = (xz*yy - xy*yz)/(qh*det);
+                by = (yz*xx - xy*xz)/(qv*det);
+                if (ptheta)
+                    ptheta[gno] = atan(hypot(bx, by));
+                if (pphi)
+                    pphi[gno] = atan2(by, -bx);
+            }
+            else {
+                if (ptheta)
+                    ptheta[gno] = 0.0;
+                if (pphi)
+                    pphi[gno] = 0.0;
+            }
+        }
+    }
+    if (quantity_data[GWY_GRAIN_VALUE_CURVATURE_CENTER_X]
+        || quantity_data[GWY_GRAIN_VALUE_CURVATURE_CENTER_Y]
+        || quantity_data[GWY_GRAIN_VALUE_CURVATURE_CENTER_Z]
+        || quantity_data[GWY_GRAIN_VALUE_CURVATURE1]
+        || quantity_data[GWY_GRAIN_VALUE_CURVATURE2]
+        || quantity_data[GWY_GRAIN_VALUE_CURVATURE_ANGLE1]
+        || quantity_data[GWY_GRAIN_VALUE_CURVATURE_ANGLE2]) {
+        gdouble *px = quantity_data[GWY_GRAIN_VALUE_CURVATURE_CENTER_X];
+        gdouble *py = quantity_data[GWY_GRAIN_VALUE_CURVATURE_CENTER_Y];
+        gdouble *pz = quantity_data[GWY_GRAIN_VALUE_CURVATURE_CENTER_Z];
+        gdouble *pk1 = quantity_data[GWY_GRAIN_VALUE_CURVATURE1];
+        gdouble *pk2 = quantity_data[GWY_GRAIN_VALUE_CURVATURE2];
+        gdouble *pa1 = quantity_data[GWY_GRAIN_VALUE_CURVATURE_ANGLE1];
+        gdouble *pa2 = quantity_data[GWY_GRAIN_VALUE_CURVATURE_ANGLE2];
+        gdouble mx = sqrt(qh/qv), my = sqrt(qv/qh);
+
+        for (gno = 1; gno <= ngrains; gno++) {
+            /* a:
+             *  0 [<1>
+             *  1  <x>   <x²>
+             *  3  <y>   <xy>   <y²>
+             *  6  <x²>  <x³>   <x²y>  <x⁴>
+             * 10  <xy>  <x²y>  <xy²>  <x³y>   <x²y²>
+             * 15  <y²>  <xy²>  <y³>   <x²y²>  <xy³>   <y⁴>]
+             * b: [<z>  <xz>  <yz>  <x²z>  <xyz>  <y²z>]
+             */
+            gdouble a[21], b[6];
+            gdouble *lin = linear + 5*gno, *quad = quadratic + 12*gno;
+            guint n = sizes[gno];
+
+            if (n >= 6) {
+                a[0] = 1.0;
+                a[1] = a[3] = 0.0;
+                a[2] = a[6] = lin[0];
+                a[4] = a[10] = lin[1];
+                a[5] = a[15] = lin[2];
+                a[7] = quad[0];
+                a[8] = a[11] = quad[1];
+                a[9] = quad[4];
+                a[12] = a[16] = quad[2];
+                a[13] = quad[5];
+                a[14] = a[18] = quad[6];
+                a[17] = quad[3];
+                a[19] = quad[7];
+                a[20] = quad[8];
+                if (gwy_math_choleski_decompose(6, a)) {
+                    b[0] = zvalue[gno];
+                    b[1] = lin[3];
+                    b[2] = lin[4];
+                    b[3] = quad[9];
+                    b[4] = quad[10];
+                    b[5] = quad[11];
+                    gwy_math_choleski_solve(6, a, b);
+                    /* Get pixel aspect ratio right while keeping pixel size
+                     * around 1. */
+                    b[1] /= mx;
+                    b[2] /= my;
+                    b[3] /= mx*mx;
+                    b[5] /= my*my;
+                }
+                else
+                    n = 0;
+            }
+
+            /* Recycle a[] for the curvature parameters. */
+            if (n >= 6)
+                gwy_math_curvature(b, a+0, a+1, a+2, a+3, a+4, a+5, a+6);
+            else {
+                a[0] = a[1] = a[2] = a[4] = a[5] = 0.0;
+                a[3] = G_PI/2.0;
+                a[6] = zvalue[gno];
+            }
+            if (pk1)
+                pk1[gno] = a[0]/(qgeom*qgeom);
+            if (pk2)
+                pk2[gno] = a[1]/(qgeom*qgeom);
+            if (pa1)
+                pa1[gno] = a[2];
+            if (pa2)
+                pa2[gno] = a[3];
+            if (px)
+                px[gno] = qgeom*a[4] + xvalue[gno];
+            if (py)
+                py[gno] = qgeom*a[5] + yvalue[gno];
+            if (pz)
+                pz[gno] = a[6];
+        }
+    }
+
+    /* Copy quantity values to all other instances of the same quantity in
+     * @values. */
+    gwy_clear(seen, NQ);
+    for (i = 0; i < nquantities; i++) {
+        GwyGrainQuantity quantity = quantities[i];
+
+        if ((guint)quantity >= NQ || need_aux[quantity] == INVALID)
+            continue;
+
+        if (seen[quantity]) {
+            memcpy(values + i*(ngrains + 1), quantity_data[quantity],
+                   (ngrains + 1)*sizeof(gdouble));
+        }
+        seen[quantity] = TRUE;
+    }
+
+    /* Finalize */
+    for (l = buffers; l; l = g_list_next(l)) {
+        g_free(l->data);
+    }
+    g_list_free(buffers);
 
     return values;
 }
