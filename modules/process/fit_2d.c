@@ -879,7 +879,7 @@ static void
 fit_2d_sanitize_args(Fit2DArgs *args)
 {
     args->display_type = MIN(args->display_type, GWY_FIT_2D_DISPLAY_DIFF);
-    args->function_type = MIN(args->display_type, GWY_FIT_2D_FIT_SPHERE_DOWN);
+    args->function_type = MIN(args->function_type, GWY_FIT_2D_FIT_SPHERE_DOWN);
 }
 
 static void
