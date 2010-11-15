@@ -203,10 +203,6 @@ main(int argc,
     GSList *m, *modules = NULL;
     gsize i;
 
-#ifdef G_OS_WIN32
-    gwy_find_self_set_argv0(argv[0]);
-#endif  /* G_OS_WIN32 */
-
     g_type_init();
     if (argc < 2) {
         g_printerr("Need user guide map.\n");
