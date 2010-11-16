@@ -767,6 +767,8 @@ gwy_math_curvature(const gdouble *coeffs,
         GWY_SWAP(gdouble, cx, cy);
         phi += G_PI/2.0;
     }
+    /* Compenstate the left-handed coordinate system */
+    phi = -phi;
 
     if (pkappa1)
         *pkappa1 = cx;
