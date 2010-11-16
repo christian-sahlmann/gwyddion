@@ -756,6 +756,11 @@ gwy_math_curvature(const gdouble *coeffs,
         degree = 2;
     }
 
+    if (cx > cy) {
+        GWY_SWAP(gdouble, cx, cy);
+        phi += G_PI/2.0;
+    }
+
     if (pkappa1)
         *pkappa1 = cx;
     if (pkappa2)
