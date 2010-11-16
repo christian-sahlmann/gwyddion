@@ -989,7 +989,7 @@ grain_volume_laplace(GwyDataField *data_field,
     }
     g_assert(ns > 0);
     s /= ns;
-    maxerr = sqrt(fabs(maxerr/ns - s*s))/1e-2;
+    maxerr = 0.01*sqrt(fabs(maxerr/ns - s*s));
 
     /* Fill with the starting value */
     for (i = 0; i < h; i++) {
@@ -3153,8 +3153,8 @@ gwy_data_field_get_grain_bounding_boxes(GwyDataField *mask_field,
     }
 
     for (i = 1; i <= ngrains; i++) {
-        bboxes[4*i + 2] = bboxes[4*i + 2] - bboxes[4*i]     + 1;
-        bboxes[4*i + 3] = bboxes[4*i + 3] - bboxes[4*i + 1] + 1;
+        bboxes[4*i + 2] = bboxes[4*i + 2] + 1 - bboxes[4*i];
+        bboxes[4*i + 3] = bboxes[4*i + 3] + 1 - bboxes[4*i + 1];
     }
 
     return bboxes;
