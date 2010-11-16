@@ -1851,18 +1851,12 @@ calculate_grain_aux(GwyDataField *data_field,
                 x = j - xvalue[gno];
                 y = i - yvalue[gno];
                 z = *d;
-                *(t++) = x*x;
-                *(t++) = x*y;
-                *(t++) = y*y;
-                *(t++) = x*z;
-                *t = y*z;
+                *(t++) += x*x;
+                *(t++) += x*y;
+                *(t++) += y*y;
+                *(t++) += x*z;
+                *t += y*z;
             }
-        }
-        for (gno = 0; gno <= ngrains; gno++) {
-            t = linear + 5*gno;
-            n = sizes[gno];
-            for (k = 5; k; k--, t++)
-                *t /= n;
         }
     }
     if (quadratic) {
@@ -1871,35 +1865,29 @@ calculate_grain_aux(GwyDataField *data_field,
         d = data_field->data;
         for (i = 0; i < yres; i++) {
             for (j = 0; j < xres; j++, g++, d++) {
-                gdouble x, y, x2, y2, xy;
+                gdouble x, y, xx, yy, xy;
 
                 gno = *g;
                 t = quadratic + 12*gno;
                 x = j - xvalue[gno];
                 y = i - yvalue[gno];
-                x2 = x*x;
+                xx = x*x;
                 xy = x*y;
-                y2 = y*y;
+                yy = y*y;
                 z = *d;
-                *(t++) = x2*x;
-                *(t++) = x2*y;
-                *(t++) = x*y2;
-                *(t++) = y*y2;
-                *(t++) = x2*x2;
-                *(t++) = x2*xy;
-                *(t++) = x2*y2;
-                *(t++) = xy*y2;
-                *(t++) = y2*y2;
-                *(t++) = x2*z;
-                *(t++) = xy*z;
-                *t = y2*z;
+                *(t++) += xx*x;
+                *(t++) += xx*y;
+                *(t++) += x*yy;
+                *(t++) += y*yy;
+                *(t++) += xx*xx;
+                *(t++) += xx*xy;
+                *(t++) += xx*yy;
+                *(t++) += xy*yy;
+                *(t++) += yy*yy;
+                *(t++) += xx*z;
+                *(t++) += xy*z;
+                *t += yy*z;
             }
-        }
-        for (gno = 0; gno <= ngrains; gno++) {
-            t = quadratic + 12*gno;
-            n = sizes[gno];
-            for (k = 12; k; k--, t++)
-                *t /= n;
         }
     }
 }
@@ -2409,10 +2397,9 @@ gwy_data_field_grains_get_quantities(GwyDataField *data_field,
         gdouble *pphi = quantity_data[GWY_GRAIN_VALUE_SLOPE_PHI];
 
         for (gno = 1; gno <= ngrains; gno++) {
-            gdouble z, xx, yy, xy, xz, yz, det, bx, by;
+            gdouble xx, yy, xy, xz, yz, det, bx, by;
             gdouble *lin = linear + 5*gno;
 
-            z = zvalue[gno];
             xx = lin[0];
             xy = lin[1];
             yy = lin[2];
@@ -2466,7 +2453,7 @@ gwy_data_field_grains_get_quantities(GwyDataField *data_field,
             guint n = sizes[gno];
 
             if (n >= 6) {
-                a[0] = 1.0;
+                a[0] = n;
                 a[1] = a[3] = 0.0;
                 a[2] = a[6] = lin[0];
                 a[4] = a[10] = lin[1];
