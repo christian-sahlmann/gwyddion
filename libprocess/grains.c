@@ -1839,7 +1839,7 @@ calculate_grain_aux(GwyDataField *data_field,
         }
     }
     if (linear) {
-        g_assert(sizes && xvalue && yvalue);
+        g_assert(xvalue && yvalue);
         g = grains;
         d = data_field->data;
         for (i = 0; i < yres; i++) {
@@ -1860,7 +1860,7 @@ calculate_grain_aux(GwyDataField *data_field,
         }
     }
     if (quadratic) {
-        g_assert(sizes && xvalue && yvalue);
+        g_assert(xvalue && yvalue);
         g = grains;
         d = data_field->data;
         for (i = 0; i < yres; i++) {
@@ -2468,7 +2468,7 @@ gwy_data_field_grains_get_quantities(GwyDataField *data_field,
                 a[19] = quad[7];
                 a[20] = quad[8];
                 if (gwy_math_choleski_decompose(6, a)) {
-                    b[0] = zvalue[gno];
+                    b[0] = n*zvalue[gno];
                     b[1] = lin[3];
                     b[2] = lin[4];
                     b[3] = quad[9];
