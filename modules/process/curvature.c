@@ -378,7 +378,7 @@ curvature_calculate(GwyDataField *dfield,
     ok = TRUE;
     for (i = 0; i < 2; i++) {
         ok &= intersect_with_boundary(params[PARAM_X0], params[PARAM_Y0],
-                                      params[PARAM_PHI1 + i],
+                                      -params[PARAM_PHI1 + i],
                                       xreal, yreal, i1 + i, i2 + i);
     }
 
@@ -560,7 +560,7 @@ render_value(G_GNUC_UNUSED GtkTreeViewColumn *column,
     gtk_tree_model_get(model, iter, 0, &i, -1);
     val = controls->params[i];
     if (i == PARAM_PHI1 || i == PARAM_PHI2) {
-        s = g_strdup_printf("%.2f deg", -val*180.0/G_PI);
+        s = g_strdup_printf("%.2f deg", val*180.0/G_PI);
     }
     else {
         vf = gwy_si_unit_get_format_with_digits(controls->unit,
@@ -918,7 +918,7 @@ curvature_make_report(const CurvatureControls *controls)
         g_string_append(str, " = ");
         val = controls->params[i];
         if (i == PARAM_PHI1 || i == PARAM_PHI2) {
-            g_string_append_printf(str, "%.2f deg", -val*180.0/G_PI);
+            g_string_append_printf(str, "%.2f deg", val*180.0/G_PI);
         }
         else {
             vf = gwy_si_unit_get_format_with_digits(controls->unit,
