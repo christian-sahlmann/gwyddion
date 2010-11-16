@@ -425,7 +425,6 @@ microprof_txt_load(const gchar *filename,
             }
         }
     }
-    gwy_file_abandon_contents(buffer, size, NULL);
 
     siunit = gwy_si_unit_new("m");
     gwy_data_field_set_si_unit_xy(dfield, siunit);
