@@ -149,11 +149,12 @@ static GwyModuleInfo module_info = {
     "2003",
 };
 
-static const gchar fixres_key[]     = "/module/grain_dist/fixres";
-static const gchar mode_key[]       = "/module/grain_dist/mode";
-static const gchar resolution_key[] = "/module/grain_dist/resolution";
-static const gchar selected_key[]   = "/module/grain_dist/selected";
-static const gchar expanded_key[]   = "/module/grain_dist/expanded";
+static const gchar fixres_key[]      = "/module/grain_dist/fixres";
+static const gchar mode_key[]        = "/module/grain_dist/mode";
+static const gchar resolution_key[]  = "/module/grain_dist/resolution";
+static const gchar add_comment_key[] = "/module/grain_dist/add_comment";
+static const gchar selected_key[]    = "/module/grain_dist/selected";
+static const gchar expanded_key[]    = "/module/grain_dist/expanded";
 
 GWY_MODULE_QUERY(module_info)
 
@@ -874,6 +875,8 @@ grain_dist_load_args(GwyContainer *container,
     *args = grain_dist_defaults;
 
     gwy_container_gis_boolean_by_name(container, fixres_key, &args->fixres);
+    gwy_container_gis_boolean_by_name(container, add_comment_key,
+                                      &args->add_comment);
     if (gwy_container_value_type_by_name(container, selected_key) != G_TYPE_INT)
         gwy_container_gis_string_by_name(container, selected_key,
                                          (const guchar**)&args->selected);
@@ -889,6 +892,8 @@ grain_dist_save_args(GwyContainer *container,
                      GrainDistArgs *args)
 {
     gwy_container_set_boolean_by_name(container, fixres_key, args->fixres);
+    gwy_container_set_boolean_by_name(container, add_comment_key,
+                                      args->add_comment);
     /* args->selected is updated immediately in settings */
     gwy_container_set_int32_by_name(container, expanded_key, args->expanded);
     gwy_container_set_int32_by_name(container, resolution_key,
