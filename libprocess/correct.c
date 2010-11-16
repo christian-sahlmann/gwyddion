@@ -216,17 +216,21 @@ gwy_data_field_correct_laplace_iteration(GwyDataField *data_field,
     mask = mask_field->data;
 
     /* set boundary condition for masked boundary data */
-    for (i = 0; i < xres; i++) {
-        if (mask[i] > 0)
-            buffer[i] = buffer[i + 2*xres];
-        if (mask[i + xres*(yres - 1)] > 0)
-            buffer[i + xres*(yres - 1)] = buffer[i + xres*(yres - 3)];
+    if (yres >= 2) {
+        for (i = 0; i < xres; i++) {
+            if (mask[i] > 0)
+                buffer[i] = buffer[i + xres];
+            if (mask[i + xres*(yres - 1)] > 0)
+                buffer[i + xres*(yres - 1)] = buffer[i + xres*(yres - 2)];
+        }
     }
-    for (i = 0; i < yres; i++) {
-        if (mask[xres*i] > 0)
-            buffer[xres*i] = buffer[2 + xres*i];
-        if (mask[xres - 1 + xres*i] > 0)
-            buffer[xres - 1 + xres*i] = buffer[xres - 3 + xres*i];
+    if (xres >= 2) {
+        for (i = 0; i < yres; i++) {
+            if (mask[xres*i] > 0)
+                buffer[xres*i] = buffer[1 + xres*i];
+            if (mask[xres - 1 + xres*i] > 0)
+                buffer[xres - 1 + xres*i] = buffer[xres-2 + xres*i];
+        }
     }
 
     /* iterate */
