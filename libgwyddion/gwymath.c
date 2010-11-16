@@ -756,6 +756,13 @@ gwy_math_curvature(const gdouble *coeffs,
         degree = 2;
     }
 
+    if (pxc)
+        *pxc = xc*cos(phi) - yc*sin(phi);
+    if (pyc)
+        *pyc = xc*sin(phi) + yc*cos(phi);
+    if (pzc)
+        *pzc = a + xc*bx1 + yc*by1 + xc*xc*cx + yc*yc*cy;
+
     if (cx > cy) {
         GWY_SWAP(gdouble, cx, cy);
         phi += G_PI/2.0;
@@ -765,12 +772,7 @@ gwy_math_curvature(const gdouble *coeffs,
         *pkappa1 = cx;
     if (pkappa2)
         *pkappa2 = cy;
-    if (pxc)
-        *pxc = xc*cos(phi) - yc*sin(phi);
-    if (pyc)
-        *pyc = xc*sin(phi) + yc*cos(phi);
-    if (pzc)
-        *pzc = a + xc*bx1 + yc*by1 + xc*xc*cx + yc*yc*cy;
+
     if (pphi1) {
         gdouble phi1 = fmod(phi, G_PI);
         *pphi1 = (phi1 > G_PI/2.0) ? phi1 - G_PI : phi1;
