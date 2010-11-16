@@ -1056,6 +1056,7 @@ gwy_grain_values_get_builtin_grain_value(GwyGrainQuantity quantity)
                               GUINT_TO_POINTER(quantity));
 }
 
+#if 0
 static void
 ensure_grain_quantity(gdouble **quantities,
                       GwyDataField *data_field,
@@ -1177,6 +1178,123 @@ gwy_grain_values_calculate(gint nvalues,
         g_free(quantities[q]);
     g_free(quantities);
 }
+#else
+void
+gwy_grain_values_calculate(gint nvalues,
+                           GwyGrainValue **gvalues,
+                           gdouble **results,
+                           GwyDataField *data_field,
+                           gint ngrains,
+                           const gint *grains)
+{
+    GwyGrainValue *gvalue;
+    guint vars[MAXBUILTINS];
+    GwyGrainQuantity builtins[MAXBUILTINS];
+    gdouble *quantities[MAXBUILTINS], *packed_quantities[MAXBUILTINS],
+            *mapped[MAXBUILTINS+1];
+    GList *l, *buffers = NULL;
+    gboolean duplicities = FALSE;
+    guint i, j, n, q;
+
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    if (!nvalues)
+        return;
+
+    /* Builtins */
+    gwy_clear(quantities, MAXBUILTINS);
+    gwy_clear(mapped, MAXBUILTINS+1);
+    for (i = 0; i < nvalues; i++) {
+        gvalue = gvalues[i];
+        g_return_if_fail(GWY_IS_GRAIN_VALUE(gvalue));
+        if (gvalue->data.group == GWY_GRAIN_VALUE_GROUP_USER)
+            continue;
+
+        q = gvalue->builtin;
+        if (quantities[q])
+            duplicities = TRUE;
+        else
+            quantities[q] = results[i];
+    }
+
+    /* Expressions */
+    for (i = 0; i < nvalues; i++) {
+        gboolean resolved;
+
+        gvalue = gvalues[i];
+        if (gvalue->data.group != GWY_GRAIN_VALUE_GROUP_USER)
+            continue;
+        resolved = gwy_grain_value_resolve_expression(gvalue->expression, vars,
+                                                      NULL);
+        g_return_if_fail(resolved);
+        for (q = 0; q < MAXBUILTINS; q++) {
+            if (!vars[q])
+                continue;
+
+            if (!quantities[q]) {
+                quantities[q] = g_new(gdouble, ngrains + 1);
+                buffers = g_list_prepend(buffers, quantities[q]);
+            }
+        }
+    }
+
+    /* Pack into a flat array */
+    for (i = n = 0; i < MAXBUILTINS; i++) {
+        if (quantities[i]) {
+            if ((guint)i == GWY_GRAIN_QUANTITY_ID) {
+                for (j = 0; j <= ngrains; j++)
+                    quantities[i][j] = j;
+            }
+            else {
+                builtins[n] = i;
+                packed_quantities[n] = quantities[i];
+                n++;
+            }
+        }
+    }
+
+    /* Calculate the built-in quantities */
+    gwy_data_field_grains_get_quantities(data_field, packed_quantities,
+                                         builtins, n, ngrains, grains);
+
+    /* Calculate the user quantities */
+    for (i = 0; i < nvalues; i++) {
+        gvalue = gvalues[i];
+        if (gvalue->data.group != GWY_GRAIN_VALUE_GROUP_USER)
+            continue;
+        gwy_grain_value_resolve_expression(gvalue->expression, vars, NULL);
+        gwy_clear(mapped, MAXBUILTINS + 1);
+        for (q = 0; q < MAXBUILTINS; q++) {
+            if (vars[q]) {
+                g_assert(quantities[q]);
+                mapped[vars[q]] = quantities[q];
+            }
+        }
+        gwy_expr_vector_execute(expr, ngrains+1, (const gdouble**)mapped,
+                                results[i]);
+    }
+
+    /* Copy duplicities to all instances in @results. */
+    if (duplicities) {
+        for (i = 1; i < nvalues; i++) {
+            gvalue = gvalues[i];
+            for (j = i; j; j--) {
+                if (gvalues[j-1] == gvalue)
+                    break;
+            }
+            if (!j)
+                continue;
+
+            j--;
+            memcpy(quantities[i], quantities[j], (ngrains + 1)*sizeof(gdouble));
+        }
+    }
+
+    /* Free */
+    for (l = buffers; l; l = g_list_next(l))
+        g_free(l->data);
+    g_list_free(buffers);
+}
+#endif
 
 /************************** Documentation ****************************/
 
