@@ -1056,31 +1056,6 @@ gwy_grain_values_get_builtin_grain_value(GwyGrainQuantity quantity)
                               GUINT_TO_POINTER(quantity));
 }
 
-#if 0
-static void
-ensure_grain_quantity(gdouble **quantities,
-                      GwyDataField *data_field,
-                      gint ngrains,
-                      const gint *grains,
-                      GwyGrainQuantity q)
-{
-    if (quantities[q])
-        return;
-
-    if (q == GWY_GRAIN_QUANTITY_ID) {
-        gint i;
-
-        quantities[q] = g_new(gdouble, ngrains+1);
-        for (i = 0; i <= ngrains; i++)
-            quantities[q][i] = i;
-
-        return;
-    }
-
-    quantities[q] = gwy_data_field_grains_get_values(data_field, NULL,
-                                                     ngrains, grains, q);
-}
-
 /**
  * gwy_grain_values_calculate:
  * @nvalues: Number of items in @gvalues.
@@ -1096,89 +1071,11 @@ ensure_grain_quantity(gdouble **quantities,
  *
  * Calculates a set of grain values.
  *
- * See also gwy_data_field_grains_get_values() for a simplier function
+ * See also gwy_data_field_grains_get_quantities() for a simplier function
  * for built-in grain values.
  *
  * Since: 2.8
  **/
-void
-gwy_grain_values_calculate(gint nvalues,
-                           GwyGrainValue **gvalues,
-                           gdouble **results,
-                           GwyDataField *data_field,
-                           gint ngrains,
-                           const gint *grains)
-{
-    GwyGrainValue *gvalue;
-    guint vars[MAXBUILTINS];
-    gdouble **quantities, **mapped;
-    GwyGrainQuantity q;  /* can take invalid enum values too */
-    gint i;
-
-    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
-    if (!nvalues)
-        return;
-
-    /* Find out what builtin quantities are necessary to calculate and
-     * calculate them. */
-    quantities = g_new0(gdouble*, 2*MAXBUILTINS + 1);
-    mapped = quantities + MAXBUILTINS;
-    for (i = 0; i < nvalues; i++) {
-        gboolean resolved;
-
-        gvalue = gvalues[i];
-        g_return_if_fail(GWY_IS_GRAIN_VALUE(gvalue));
-
-        /* Builtins */
-        if (gvalue->data.group != GWY_GRAIN_VALUE_GROUP_USER) {
-            q = gvalue->builtin;
-            ensure_grain_quantity(quantities, data_field, ngrains, grains, q);
-            continue;
-        }
-
-        /* Expressions */
-        resolved = gwy_grain_value_resolve_expression(gvalue->expression, vars,
-                                                      NULL);
-        g_return_if_fail(resolved);
-        for (q = 0; q < MAXBUILTINS; q++) {
-            if (!vars[q])
-                continue;
-
-            ensure_grain_quantity(quantities, data_field, ngrains, grains, q);
-        }
-    }
-
-    /* Calculate the requested quantities */
-    for (i = 0; i < nvalues; i++) {
-        gvalue = gvalues[i];
-
-        /* Builtins */
-        if (gvalue->data.group != GWY_GRAIN_VALUE_GROUP_USER) {
-            g_assert(quantities[gvalue->builtin]);
-            memcpy(results[i], quantities[gvalue->builtin],
-                   (ngrains + 1)*sizeof(gdouble));
-            continue;
-        }
-
-        /* Expressions */
-        gwy_grain_value_resolve_expression(gvalue->expression, vars, NULL);
-        gwy_clear(mapped, MAXBUILTINS + 1);
-        for (q = 0; q < MAXBUILTINS; q++) {
-            if (vars[q]) {
-                g_assert(quantities[q]);
-                mapped[vars[q]] = quantities[q];
-            }
-        }
-        gwy_expr_vector_execute(expr, ngrains+1, (const gdouble**)mapped,
-                                results[i]);
-    }
-
-    /* Free */
-    for (q = 0; q < MAXBUILTINS; q++)
-        g_free(quantities[q]);
-    g_free(quantities);
-}
-#else
 void
 gwy_grain_values_calculate(gint nvalues,
                            GwyGrainValue **gvalues,
@@ -1294,7 +1191,6 @@ gwy_grain_values_calculate(gint nvalues,
         g_free(l->data);
     g_list_free(buffers);
 }
-#endif
 
 /************************** Documentation ****************************/
 
