@@ -1725,22 +1725,26 @@ ensure_buffer(GwyGrainQuantity quantity,
               gdouble fillvalue,
               GList **buffers)
 {
-    gdouble *buf;
+    gdouble *buf, *b;
+    guint gno;
 
-    if (quantity_data[quantity])
-        return quantity_data[quantity];
-
-    if (fillvalue) {
-        guint gno;
-
-        buf = g_new(gdouble, ngrains + 1);
-        for (gno = ngrains+1; gno; gno--)
-            *(buf++) = fillvalue;
+    if (quantity_data[quantity]) {
+        buf = quantity_data[quantity];
+        if (!fillvalue)
+            gwy_clear(buf, ngrains + 1);
     }
-    else
-        buf = g_new0(gdouble, ngrains + 1);
+    else {
+        if (fillvalue)
+            buf = g_new(gdouble, ngrains + 1);
+        else
+            buf = g_new0(gdouble, ngrains + 1);
+        *buffers = g_list_prepend(*buffers, buf);
+    }
+    if (fillvalue) {
+        for (gno = ngrains+1, b = buf; gno; gno--)
+            *(b++) = fillvalue;
+    }
 
-    *buffers = g_list_prepend(*buffers, buf);
     return buf;
 }
 
@@ -1772,7 +1776,7 @@ calculate_grain_aux(GwyDataField *data_field,
         }
     }
     if (boundpos) {
-        for (k = nn, g = grains; k; k--, g++) {
+        for (k = 0, g = grains; k < nn; k++, g++) {
             gno = *g;
             if (boundpos[gno] == -1)
                 boundpos[gno] = k;
@@ -2051,8 +2055,8 @@ gwy_data_field_grains_get_quantities(GwyDataField *data_field,
         if ((need & NEED_BOUNDPOS) && !boundpos) {
             boundpos = g_new(gint, ngrains + 1);
             buffers = g_list_prepend(buffers, boundpos);
-            for (i = 0; i <= nn; i++)
-                boundpos[i] = -1;
+            for (gno = 0; gno <= ngrains; gno++)
+                boundpos[gno] = -1;
         }
         /* Floating point data that coincide with some quantity */
         if (need & NEED_MIN)
@@ -2071,11 +2075,11 @@ gwy_data_field_grains_get_quantities(GwyDataField *data_field,
             zvalue = ensure_buffer(GWY_GRAIN_VALUE_MEAN, quantity_data,
                                    ngrains, 0.0, &buffers);
         /* Complex floating point data */
-        if ((need & NEED_LINEAR) & !linear) {
+        if ((need & NEED_LINEAR) && !linear) {
             linear = g_new0(gdouble, 5*(ngrains + 1));
             buffers = g_list_prepend(buffers, linear);
         }
-        if ((need & NEED_QUADRATIC) & !quadratic) {
+        if ((need & NEED_QUADRATIC) && !quadratic) {
             quadratic = g_new0(gdouble, 12*(ngrains + 1));
             buffers = g_list_prepend(buffers, quadratic);
         }
@@ -2158,7 +2162,7 @@ gwy_data_field_grains_get_quantities(GwyDataField *data_field,
         csizes[0] = 0;
         csizes[1] = sizes[1];
         for (gno = 2; gno <= ngrains; gno++)
-            csizes[gno] = sizes[gno] + sizes[gno-1];
+            csizes[gno] = sizes[gno] + csizes[gno-1];
 
         tmp = g_new(gdouble, csizes[ngrains]);
         /* Find where each grain starts in tmp sorted by grain # */
@@ -2199,7 +2203,7 @@ gwy_data_field_grains_get_quantities(GwyDataField *data_field,
             p[gno] = qarea*zhsizes[gno];
         /* Finalize */
         g_free(zhalf);
-        g_free(sizes);
+        g_free(zhsizes);
     }
     if ((p = quantity_data[GWY_GRAIN_VALUE_FLAT_BOUNDARY_LENGTH])) {
         gwy_clear(p, ngrains + 1);
@@ -2537,9 +2541,8 @@ gwy_data_field_grains_get_quantities(GwyDataField *data_field,
     }
 
     /* Finalize */
-    for (l = buffers; l; l = g_list_next(l)) {
+    for (l = buffers; l; l = g_list_next(l))
         g_free(l->data);
-    }
     g_list_free(buffers);
 
     return values;
