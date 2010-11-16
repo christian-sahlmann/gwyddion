@@ -7,6 +7,16 @@ Libraries:
   added.
 - libgwyddion: gwy_math_curvature() calculating curvature parameters from a
   quadratic surface polynomial coefficients was added.
+- libgwyprocess: gwy_data_field_grains_get_quantitites() can calculate
+  multiple built-in grain quantities at once, avoiding repeated work.
+- libgwyprocess: Buffer overflow in gwy_data_field_correct_laplace_iteration()
+  for thin masks touching the data field sides was corrected.
+- libgwyprocess: Laplace basis for grain volume calculation that might not be
+  sufficiently converged is now let to really converge to a stable surface.
+- libgwyprocess: Slope-related grain quantities now fall back to 0 instead of
+  becoming NaN for too small grains.
+- libgwyprocess: Grain boundary minimum and maximum calculation consideres
+  pixels at edges of the image to be boundaries too.
 
 Modules:
 - Pattern Synthesis (new): Creates regular patterns such as steps of ridges.
@@ -24,6 +34,7 @@ Modules:
 - Color range tool: Critical warning/crashe when Fixed mode is set default
   and the file is closed was fixed.
 - Plug-in proxy: Channel title read from dump files is retained now.
+- Grain distributions: The comment header option is remembered.
 
 
 2.21 (2010-10-26)
