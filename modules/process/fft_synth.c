@@ -385,7 +385,7 @@ fft_synth_dialog(FFTSynthArgs *args,
     gtk_box_pack_start(GTK_BOX(vbox), controls.randomize, FALSE, FALSE, 0);
 
     notebook = gtk_notebook_new();
-    gtk_box_pack_start(GTK_BOX(hbox), notebook, FALSE, FALSE, 4);
+    gtk_box_pack_start(GTK_BOX(hbox), notebook, TRUE, TRUE, 4);
     g_signal_connect_swapped(notebook, "switch-page",
                              G_CALLBACK(page_switched), &controls);
 
