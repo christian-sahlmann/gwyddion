@@ -630,7 +630,7 @@ gwy_module_lookup(const gchar *name)
  * semicolon after).
  **/
 
-/**
+/*
  * GWY_MODULE_QUERY_BUILTIN:
  * @mod_info: The #GwyModuleInfo structure to return as module info.
  * @name: Module name.  This is the base name of the source file with dashes
@@ -649,7 +649,7 @@ gwy_module_lookup(const gchar *name)
  * module).
  *
  * Since: 2.22
- **/
+ */
 
 /**
  * GwyModuleRegisterFunc:
