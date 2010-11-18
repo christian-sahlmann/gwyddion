@@ -332,7 +332,7 @@ AC_PATH_XTRA
 if test "x$x_includes" != x && test "x$x_includes" != xNONE; then
   CPPFLAGS="$CPPFLAGS -I$x_includes"
 fi
-if test "x$x_libraries" != x && text "x$x_libraries" != xNONE; then
+if test "x$x_libraries" != x && test "x$x_libraries" != xNONE; then
   LDFLAGS="$LDFLAGS -L$x_libraries"
 fi
 
@@ -377,6 +377,9 @@ case "$gdk_target" in
   quartz)
     target_quartz=yes
     pangoft2=
+    ;;
+  win32)
+    remote_backend=win32
     ;;
   *)
     ;;
