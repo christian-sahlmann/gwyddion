@@ -37,6 +37,11 @@ EXTRA_DIST = \
 	makefile.msc.gwt \
 	libgwymodule2.def
 
+if OS_WIN32
+no_undefined = -no-undefined
+export_symbols = -export-symbols libgwymodule2.def
+endif
+
 # Must init
 CLEANFILES =
 MAINTAINERCLEANFILES = \
@@ -60,8 +65,9 @@ AM_CPPFLAGS = -I$(top_srcdir) -DG_LOG_DOMAIN=\"GwyModule\"
 # Any iface change    C++: 0:   A
 # Adding ifaces       C:   R:   A++
 # Changing ifaces     C:   R:   0
-libgwymodule2_la_LDFLAGS = @GMODULE_LIBS@ @GTK_LIBS@ @BASIC_LIBS@ -version-info 4:0:4
-#libgwymodule2_la_LDFLAGS = @GMODULE_LIBS@ @GTK_LIBS@ @BASIC_LIBS@ -release @LIBRARY_RELEASE@
+libversion = -version-info 4:0:4
+#libversion = -release @LIBRARY_RELEASE@
+libgwymodule2_la_LDFLAGS = @GMODULE_LIBS@ @GTK_LIBS@ @BASIC_LIBS@  -export-dynamic $(no_undefined) $(export_symbols) $(libversion)
 libgwymodule2_la_LIBADD = $(libgwymodule_libadd)
 
 libgwymodule2_la_SOURCES = \

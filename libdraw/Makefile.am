@@ -27,6 +27,11 @@ EXTRA_DIST = \
 	makefile.msc.gwt \
 	libgwydraw2.def
 
+if OS_WIN32
+no_undefined = -no-undefined
+export_symbols = -export-symbols libgwydraw2.def
+endif
+
 noinst_HEADERS = \
 	gwydrawinternal.h
 
@@ -38,8 +43,9 @@ AM_CPPFLAGS = -I$(top_srcdir) -DG_LOG_DOMAIN=\"GwyDraw\"
 # Any iface change    C++: 0:   A
 # Adding ifaces       C:   R:   A++
 # Changing ifaces     C:   R:   0
-libgwydraw2_la_LDFLAGS = @GTK_LIBS@ @BASIC_LIBS@ -version-info 1:0:1
-#libgwydraw2_la_LDFLAGS = @GTK_LIBS@ @BASIC_LIBS@ -release @LIBRARY_RELEASE@
+libversion = -version-info 1:0:1
+#libversion = -release @LIBRARY_RELEASE@
+libgwydraw2_la_LDFLAGS = @GTK_LIBS@ @BASIC_LIBS@ -export-dynamic $(no_undefined) $(export_symbols) $(libversion)
 libgwydraw2_la_LIBADD = $(libgwydraw_libadd)
 
 libgwydraw2_la_SOURCES = \

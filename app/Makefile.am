@@ -64,6 +64,11 @@ EXTRA_DIST = \
 BUILT_SOURCES = \
 	authors.h
 
+if OS_WIN32
+no_undefined = -no-undefined
+export_symbols = -export-symbols libgwyapp2.def
+endif
+
 # Must init
 CLEANFILES =
 MAINTAINERCLEANFILES = \
@@ -93,8 +98,9 @@ AM_CPPFLAGS = -I$(top_srcdir)
 # Any iface change    C++: 0:   A
 # Adding ifaces       C:   R:   A++
 # Changing ifaces     C:   R:   0
-libgwyapp2_la_LDFLAGS = @GTKGLEXT_LIBS@ @BASIC_LIBS@ -version-info 6:0:6
-#libgwyapp2_la_LDFLAGS = @GTKGLEXT_LIBS@ @BASIC_LIBS@ -release @LIBRARY_RELEASE@
+libversion = -version-info 6:0:6
+#libversion = -release @LIBRARY_RELEASE@
+libgwyapp2_la_LDFLAGS = @GTKGLEXT_LIBS@ @BASIC_LIBS@ -export-dynamic $(no_undefined) $(export_symbols) $(libversion)
 libgwyapp2_la_CPPFLAGS = -DG_LOG_DOMAIN=\"GwyApp\" $(AM_CPPFLAGS)
 libgwyapp2_la_LIBADD = $(libgwyapp_libadd)
 

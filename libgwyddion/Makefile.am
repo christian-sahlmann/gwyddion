@@ -39,6 +39,11 @@ EXTRA_DIST = \
 	makefile.msc.gwt \
 	libgwyddion2.def
 
+if OS_WIN32
+no_undefined = -no-undefined
+export_symbols = -export-symbols libgwyddion2.def
+endif
+
 # Must init
 CLEANFILES =
 MAINTAINERCLEANFILES = \
@@ -68,8 +73,9 @@ AM_CPPFLAGS = \
 # Any iface change    C++: 0:   A
 # Adding ifaces       C:   R:   A++
 # Changing ifaces     C:   R:   0
-libgwyddion2_la_LDFLAGS = @BASIC_LIBS@ -version-info 6:8:6
-#libgwyddion2_la_LDFLAGS = @BASIC_LIBS@ -release @LIBRARY_RELEASE@
+libversion = -version-info 6:8:6
+#libversion = -release @LIBRARY_RELEASE@
+libgwyddion2_la_LDFLAGS = @BASIC_LIBS@ -export-dynamic $(no_undefined) $(export_symbols) $(libversion)
 libgwyddion2_la_SOURCES = \
 	gwycontainer.c \
 	gwyddion.c \
