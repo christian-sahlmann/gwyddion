@@ -546,7 +546,7 @@ gwy_osx_find_dir_in_bundle(const gchar *dirname)
 gchar*
 gwy_find_self_dir(const gchar *dirname)
 {
-#ifdef G_OS_WIN32
+#ifdef _MSC_VER
     static gchar *basedir = NULL;
 
     if (!basedir)
@@ -555,7 +555,7 @@ gwy_find_self_dir(const gchar *dirname)
         dirname = NULL;
 
     return g_build_filename(basedir, dirname, NULL);
-#endif    /* G_OS_WIN32 */
+#endif    /* _MSC_VER */
 
 #ifdef G_OS_UNIX
 #ifdef GWY_LIBDIR
@@ -618,10 +618,74 @@ gwy_find_self_dir(const gchar *dirname)
                   dirname, base, paths[i].dir);
         return g_build_filename(base, paths[i].dir, NULL);
     }
-    g_critical("Cannot find directory for `%s'", dirname);
 #endif    /* GWY_LIBDIR */
-    return NULL;
 #endif    /* G_OS_UNIX */
+
+#ifdef G_OS_WIN32
+#ifndef _MSC_VER
+    static const struct {
+        const gchar *id;
+        const gchar *env;
+        const gchar *base;
+        const gchar *dir;
+    }
+    paths[] = {
+        {
+            "modules",
+            "GWYDDION_LIBDIR",
+            "lib",
+            "gwyddion/modules"
+        },
+        {
+            "plugins",
+            "GWYDDION_LIBEXECDIR",
+            "libexec",
+            "gwyddion/plugins"
+        },
+        {
+            "pixmaps",
+            "GWYDDION_DATADIR",
+            "share",
+            "gwyddion/pixmaps",
+        },
+        {
+            "data",
+            "GWYDDION_DATADIR",
+            "share",
+            "gwyddion",
+        },
+        {
+            "locale",
+            "GWYDDION_LOCALEDIR",
+            "share",
+            "locale",
+        },
+    };
+    static gchar *topdir = NULL;
+    gsize i;
+    const gchar *base;
+
+    if (!topdir)
+        topdir = g_win32_get_package_installation_directory(NULL, dll_name);
+
+    for (i = 0; i < G_N_ELEMENTS(paths); i++) {
+        if (!gwy_strequal(dirname, paths[i].id))
+            continue;
+
+        if ((base = g_getenv(paths[i].env))) {
+            gwy_debug("for <%s> base = <%s>, dir = <%s>",
+                      dirname, base, paths[i].dir);
+            return g_build_filename(base, paths[i].dir, NULL);
+        }
+        gwy_debug("for <%s> top = <%s>, klass = <%s>, dir = <%s>",
+                  dirname, topdir, paths[i].base, paths[i].dir);
+        return g_build_filename(topdir, paths[i].base, paths[i].dir, NULL);
+    }
+#endif    /* !_MSC_VER */
+#endif    /* G_OS_WIN32 */
+
+    g_critical("Cannot find directory for `%s'", dirname);
+    return NULL;
 }
 
 /**
