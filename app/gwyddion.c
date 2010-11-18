@@ -281,6 +281,10 @@ process_preinit_options(int *argc,
                 options->log_to_file = TRUE;
                 continue;
             }
+            if (gwy_strequal((*argv)[i], "--no-log-to-file")) {
+                options->log_to_file = FALSE;
+                continue;
+            }
             if (gwy_strequal((*argv)[i], "--check")) {
                 options->check = TRUE;
                 continue;
@@ -310,6 +314,7 @@ print_help(void)
 "     --remote-existing      Load FILES to a running instance or fail.\n"
 "     --check                Check FILES, print problems and terminate.\n"
 "     --log-to-file          Redirect messages file set in GWYDDION_LOGFILE.\n"
+"     --no-log-to-file       Print messages to console.\n"
 "     --debug-objects        Catch leaking objects (devel only).\n"
 "     --startup-time         Measure time of startup tasks.\n"
         );
@@ -440,7 +445,7 @@ setup_locale_from_win32_registry(void)
 {
 #ifdef G_OS_WIN32
     gchar locale[64];
-    guint size = sizeof(locale);
+    DWORD size = sizeof(locale);
     HKEY reg_key;
 
     if (RegOpenKeyEx(HKEY_CURRENT_USER, TEXT("Software\\Gwyddion\\1.0"),
