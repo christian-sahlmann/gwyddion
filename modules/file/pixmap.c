@@ -423,7 +423,7 @@ static GwyModuleInfo module_info = {
        "PNG, JPEG, TIFF, PPM, BMP, TARGA. "
        "Import support relies on GDK and thus may be installation-dependent."),
     "Yeti <yeti@gwyddion.net>",
-    "7.9",
+    "7.10",
     "David Nečas (Yeti)",
     "2004-2010",
 };
@@ -454,10 +454,13 @@ module_register(void)
         if (gwy_strequal(fmtname, "ico")
             || gwy_strequal(fmtname, "ani")
             || gwy_strequal(fmtname, "wbmp")
-            /* libwmf loader seems to try to claim ownership of almost
+            /* WMF/EMF loaders seems to try to claim ownership of almost
              * arbitrary binary data, prints error messages, and it's silly
-             * to load WMF to Gwyddion anyway */
+             * to load WMF/EMF to Gwyddion anyway */
             || gwy_strequal(fmtname, "wmf")
+            || gwy_strequal(fmtname, "emf")
+            /* Don't know what is QTIF but again format detection is broken. */
+            || gwy_strequal(fmtname, "qtif")
             /* swfdec causes strange errors and how mad one has to be to try
              * to import Flash to Gwyddion? */
             || gwy_strequal(fmtname, "swf")
