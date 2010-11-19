@@ -27,8 +27,6 @@
 
 #undef GWY_MODULE_PEDANTIC_CHECK
 
-#define GWY_MODULE_QUERY_NAME G_STRINGIFY(_GWY_MODULE_QUERY)
-
 typedef struct {
     GHFunc func;
     gpointer data;
@@ -316,7 +314,7 @@ gwy_module_do_register_module(const gchar *filename,
     /* Sanity checks on the module before registration is attempted. */
     ok = TRUE;
     currenly_registered_module = modname;
-    if (!g_module_symbol(mod, GWY_MODULE_QUERY_NAME, (gpointer)&query)
+    if (!g_module_symbol(mod, "_gwy_module_query", (gpointer)&query)
         || !query) {
         g_set_error(&err, GWY_MODULE_ERROR, GWY_MODULE_ERROR_QUERY,
                     "Module contains no query function");
