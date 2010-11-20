@@ -7,14 +7,14 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2010-11-13 03:59+0100\n"
-"PO-Revision-Date: 2010-11-13 21:42+0300\n"
+"POT-Creation-Date: 2010-11-20 03:58+0100\n"
+"PO-Revision-Date: 2010-11-20 21:53+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
+"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: \n"
 "X-Poedit-Language: Russian\n"
 "X-Poedit-Country: RUSSIAN FEDERATION\n"
 "X-Poedit-SourceCharset: utf-8\n"
@@ -324,7 +324,7 @@ msgstr "Позиция"
 
 #: libprocess/gwygrainvalue.c:977
 #: app/meta.c:286
-#: modules/process/curvature.c:791
+#: modules/process/curvature.c:743
 #: modules/tools/level3.c:461
 #: modules/tools/readvalue.c:269
 msgid "Value"
@@ -350,7 +350,7 @@ msgid "Slope"
 msgstr "Уклон"
 
 #: libprocess/gwygrainvalue.c:982
-#: modules/process/curvature.c:648
+#: modules/process/curvature.c:600
 msgid "Curvature"
 msgstr "Кривизна"
 
@@ -780,14 +780,15 @@ msgid "pixels"
 msgstr "точек"
 
 #: libgwydgets/gwy3dwindow.c:1027
-#: modules/file/pixmap.c:948
-#: modules/file/pixmap.c:2666
+#: modules/file/pixmap.c:951
+#: modules/file/pixmap.c:2669
 #: modules/file/rawfile.c:398
 #: modules/process/angle_dist.c:170
 #: modules/process/calibrate.c:295
-#: modules/process/curvature.c:650
+#: modules/process/curvature.c:602
 #: modules/process/cwt.c:132
 #: modules/process/deposit.c:197
+#: modules/process/deposit_synth.c:328
 #: modules/process/drift.c:230
 #: modules/process/dwt.c:164
 #: modules/process/dwtanisotropy.c:183
@@ -872,17 +873,17 @@ msgstr "Линия + точки"
 msgid "Change Mask Color"
 msgstr "Изменить цвет маски"
 
-#: libgwydgets/gwygrainvaluemenu.c:171
+#: libgwydgets/gwygrainvaluemenu.c:183
 msgid "Quantity"
 msgstr "Количество"
 
-#: libgwydgets/gwygrainvaluemenu.c:181
-#: libgwydgets/gwygrainvaluemenu.c:194
-#: modules/process/curvature.c:782
+#: libgwydgets/gwygrainvaluemenu.c:193
+#: libgwydgets/gwygrainvaluemenu.c:206
+#: modules/process/curvature.c:734
 msgid "Symbol"
 msgstr "Символ"
 
-#: libgwydgets/gwygrainvaluemenu.c:204
+#: libgwydgets/gwygrainvaluemenu.c:216
 msgid "Enabled"
 msgstr "Включено"
 
@@ -1148,7 +1149,7 @@ msgid "Preview"
 msgstr "Предпросмотр"
 
 #: libgwymodule/gwymodule-file.c:516
-#: modules/file/pixmap.c:724
+#: modules/file/pixmap.c:727
 #, c-format
 msgid "Cannot open file for reading: %s."
 msgstr "Невозможно открыть файл для чтения: %s."
@@ -1183,7 +1184,7 @@ msgstr "Название и версия:"
 
 #: libgwymodule/gwymodulebrowser.c:246
 #: libgwymodule/gwymodulebrowser.c:269
-#: modules/process/grain_dist.c:698
+#: modules/process/grain_dist.c:699
 msgid "File:"
 msgstr "Файл:"
 
@@ -1598,11 +1599,11 @@ msgstr "Регистрация модулей"
 msgid "Initializing GUI"
 msgstr "Инициализируется графический интерфейс"
 
-#: app/gwyddion.c:364
+#: app/gwyddion.c:369
 msgid "Could not read settings."
 msgstr "Не удается считать настройки"
 
-#: app/gwyddion.c:367
+#: app/gwyddion.c:372
 #, c-format
 msgid ""
 "Settings file `%s' cannot be read: %s\n"
@@ -2299,11 +2300,11 @@ msgid "Export Text"
 msgstr "Экспортировать текст"
 
 #: modules/file/asciiexport.c:276
-#: modules/file/pixmap.c:2755
+#: modules/file/pixmap.c:2758
 #: modules/file/rawfile.c:720
 #: modules/file/rawxyz.c:670
 #: modules/process/fft_filter_1d.c:296
-#: modules/process/grain_dist.c:284
+#: modules/process/grain_dist.c:285
 #: modules/process/grain_mark.c:347
 #: modules/process/grain_rem_threshold.c:324
 #: modules/process/grain_wshed.c:278
@@ -2317,7 +2318,7 @@ msgid "Use _dot as decimal separator"
 msgstr "Использовать точку как _десятичный разделитель"
 
 #: modules/file/asciiexport.c:286
-#: modules/process/grain_dist.c:295
+#: modules/process/grain_dist.c:296
 msgid "Add _informational comment header"
 msgstr "Добавить _информационный заголовок-комментарий"
 
@@ -2949,7 +2950,7 @@ msgid "Parameter header is truncated"
 msgstr "Заголовок параметров усечён"
 
 #: modules/file/nanoeducator.c:907
-#: modules/process/curvature.c:489
+#: modules/process/curvature.c:441
 #: modules/tools/profile.c:535
 #, c-format
 msgid "Profile %d"
@@ -3289,93 +3290,93 @@ msgstr "Иконка Apple (.icns)"
 msgid "Renders data into pixmap images and imports data from pixmap images. It supports the following image formats for export: PNG, JPEG, TIFF, PPM, BMP, TARGA. Import support relies on GDK and thus may be installation-dependent."
 msgstr "Строит данные как растровые изображения и импортирует данные из растровых изображений. Поддерживает следующие форматы изображений при экспорте: PNG, JPEG, TIFF, PPM, BMP, TARGA. Поддержка импорта полагается на GDK и, вследствие этого, может зависеть от варианта установки."
 
-#: modules/file/pixmap.c:710
+#: modules/file/pixmap.c:713
 msgid "Pixmap image import must be run as interactive."
 msgstr "Импорт растровых изображений должен запускаться в интерактивном режиме."
 
-#: modules/file/pixmap.c:718
+#: modules/file/pixmap.c:721
 #, c-format
 msgid "Pixmap has not registered file type `%s'."
 msgstr "Модуль импорта изображений не имеет зарегистрированного типа файла `%s'."
 
-#: modules/file/pixmap.c:732
+#: modules/file/pixmap.c:735
 #, c-format
 msgid "Cannot get pixbuf loader: %s."
 msgstr "Не удаётся получить загрузчик pixbuf: %s."
 
-#: modules/file/pixmap.c:744
-#: modules/file/pixmap.c:754
+#: modules/file/pixmap.c:747
+#: modules/file/pixmap.c:757
 #, c-format
 msgid "Pixbuf loader refused data: %s."
 msgstr "Загрузчик pixbuf не принял данные: %s."
 
-#: modules/file/pixmap.c:916
+#: modules/file/pixmap.c:919
 msgid "Red"
 msgstr "Красный"
 
-#: modules/file/pixmap.c:917
+#: modules/file/pixmap.c:920
 msgid "Green"
 msgstr "Зеленый"
 
-#: modules/file/pixmap.c:918
+#: modules/file/pixmap.c:921
 msgid "Blue"
 msgstr "Синий"
 
-#: modules/file/pixmap.c:919
+#: modules/file/pixmap.c:922
 msgid "Value (max)"
 msgstr "Значение (макс.)"
 
-#: modules/file/pixmap.c:920
+#: modules/file/pixmap.c:923
 msgid "RGB sum"
 msgstr "Сумма RGB"
 
-#: modules/file/pixmap.c:921
+#: modules/file/pixmap.c:924
 msgid "Alpha"
 msgstr "Альфа"
 
-#: modules/file/pixmap.c:945
+#: modules/file/pixmap.c:948
 msgid "Import "
 msgstr "Импортировать "
 
-#: modules/file/pixmap.c:971
+#: modules/file/pixmap.c:974
 #: modules/file/rawfile.c:600
 #: modules/file/rawxyz.c:516
 #: modules/process/dimensions.h:443
 msgid "Resolution"
 msgstr "Разрешение"
 
-#: modules/file/pixmap.c:978
+#: modules/file/pixmap.c:981
 #: modules/file/rawfile.c:605
 #: modules/file/rawxyz.c:520
 #: modules/process/dimensions.h:449
 msgid "_Horizontal size:"
 msgstr "_Горизонтальный размер:"
 
-#: modules/file/pixmap.c:978
-#: modules/file/pixmap.c:985
+#: modules/file/pixmap.c:981
+#: modules/file/pixmap.c:988
 msgid "px"
 msgstr "пикс."
 
-#: modules/file/pixmap.c:985
+#: modules/file/pixmap.c:988
 #: modules/file/rawfile.c:612
 #: modules/file/rawxyz.c:535
 #: modules/process/dimensions.h:452
 msgid "_Vertical size:"
 msgstr "Вертика_льный размер:"
 
-#: modules/file/pixmap.c:1016
+#: modules/file/pixmap.c:1019
 #: modules/file/rawfile.c:623
 #: modules/file/rawxyz.c:569
 #: modules/process/dimensions.h:465
 msgid "Physical Dimensions"
 msgstr "Физические размеры"
 
-#: modules/file/pixmap.c:1026
+#: modules/file/pixmap.c:1029
 msgid "_Width"
 msgstr "_Ширина"
 
-#: modules/file/pixmap.c:1048
-#: modules/file/pixmap.c:1103
+#: modules/file/pixmap.c:1051
+#: modules/file/pixmap.c:1106
 #: modules/file/rawfile.c:655
 #: modules/file/rawfile.c:711
 #: modules/process/calibrate.c:338
@@ -3384,89 +3385,89 @@ msgstr "_Ширина"
 msgid "Change"
 msgstr "Изменить"
 
-#: modules/file/pixmap.c:1061
+#: modules/file/pixmap.c:1064
 msgid "H_eight"
 msgstr "_Высота"
 
-#: modules/file/pixmap.c:1068
+#: modules/file/pixmap.c:1071
 #: modules/file/rawfile.c:675
 #: modules/file/rawxyz.c:550
 msgid "Identical _measures"
 msgstr "Одинаковый _масштаб"
 
-#: modules/file/pixmap.c:1080
+#: modules/file/pixmap.c:1083
 #: modules/file/rawfile.c:687
 msgid "_Z-scale (per sample unit):"
 msgstr "Масштаб _Z (на единицу дискретизации):"
 
-#: modules/file/pixmap.c:1113
+#: modules/file/pixmap.c:1116
 msgid "Warning: Colorful images cannot be reliably mapped to meaningful values."
 msgstr "Предупреждение: цветные изображения не могут быть надёжно отображены в значащие что-либо данные."
 
-#: modules/file/pixmap.c:1131
+#: modules/file/pixmap.c:1134
 msgid "Use"
 msgstr "Использовать"
 
-#: modules/file/pixmap.c:1131
+#: modules/file/pixmap.c:1134
 msgid "as data"
 msgstr "как данные"
 
-#: modules/file/pixmap.c:1327
+#: modules/file/pixmap.c:1330
 #: modules/file/rawfile.c:1326
 #: modules/process/calibrate.c:815
 #: modules/process/dimensions.h:193
 msgid "Change Units"
 msgstr "Изменить единицы измерения"
 
-#: modules/file/pixmap.c:1341
+#: modules/file/pixmap.c:1344
 #: modules/file/rawfile.c:1340
 #: modules/process/calibrate.c:829
 #: modules/process/dimensions.h:206
 msgid "New _units:"
 msgstr "Новые _единицы:"
 
-#: modules/file/pixmap.c:1407
-#: modules/file/pixmap.c:1417
+#: modules/file/pixmap.c:1410
+#: modules/file/pixmap.c:1420
 #, c-format
 msgid "libpng initialization error (in %s)"
 msgstr "ошибка инициализации libpng (в %s)"
 
-#: modules/file/pixmap.c:1428
+#: modules/file/pixmap.c:1431
 msgid "libpng error occured"
 msgstr "Произошла ошибка libpng"
 
-#: modules/file/pixmap.c:1495
-#: modules/file/pixmap.c:1523
+#: modules/file/pixmap.c:1498
+#: modules/file/pixmap.c:1526
 #, c-format
 msgid "Pixbuf save failed: %s."
 msgstr "Сохранение pixbuf закончилось неудачно: %s."
 
-#: modules/file/pixmap.c:1868
+#: modules/file/pixmap.c:1871
 msgid "Image is too large to be stored as TARGA."
 msgstr "Изображение слишком велико чтобы сохранить его в формате TARGA."
 
-#: modules/file/pixmap.c:1946
+#: modules/file/pixmap.c:1949
 msgid "Data must be displayed in a window for pixmap export."
 msgstr "Данные должны отображаться в окне для экспорта изображения."
 
-#: modules/file/pixmap.c:2604
+#: modules/file/pixmap.c:2607
 msgid "Change Inset Color"
 msgstr "Изменить цвет отрезка"
 
-#: modules/file/pixmap.c:2663
+#: modules/file/pixmap.c:2666
 #, c-format
 msgid "Export %s"
 msgstr "Экспорт %s"
 
-#: modules/file/pixmap.c:2694
+#: modules/file/pixmap.c:2697
 msgid "Scaling"
 msgstr "Масштабирование"
 
-#: modules/file/pixmap.c:2703
+#: modules/file/pixmap.c:2706
 msgid "_Zoom:"
 msgstr "_Увеличение:"
 
-#: modules/file/pixmap.c:2712
+#: modules/file/pixmap.c:2715
 #: modules/file/rawfile.c:632
 #: modules/process/crosscor.c:197
 #: modules/process/dimensions.h:471
@@ -3474,7 +3475,7 @@ msgstr "_Увеличение:"
 msgid "_Width:"
 msgstr "_Ширина:"
 
-#: modules/file/pixmap.c:2721
+#: modules/file/pixmap.c:2724
 #: modules/process/grain_mark.c:312
 #: modules/process/grain_rem_threshold.c:280
 #: modules/process/obj_synth.c:564
@@ -3484,91 +3485,91 @@ msgstr "_Ширина:"
 msgid "_Height:"
 msgstr "_Высота:"
 
-#: modules/file/pixmap.c:2730
+#: modules/file/pixmap.c:2733
 msgid "Scale text _proportionally"
 msgstr "_Пропорциональный масштаб текста"
 
-#: modules/file/pixmap.c:2745
+#: modules/file/pixmap.c:2748
 msgid "_Font size:"
 msgstr "_Размер шрифта:"
 
-#: modules/file/pixmap.c:2759
+#: modules/file/pixmap.c:2762
 msgid "Draw _mask"
 msgstr "Рисовать _маску"
 
-#: modules/file/pixmap.c:2768
+#: modules/file/pixmap.c:2771
 msgid "Draw _selection"
 msgstr "Рисовать в_ыбранную область"
 
-#: modules/file/pixmap.c:2784
+#: modules/file/pixmap.c:2787
 msgid "Grayscale Mode"
 msgstr "Градации серого"
 
-#: modules/file/pixmap.c:2788
+#: modules/file/pixmap.c:2791
 msgid "Export as 1_6 bit grayscale"
 msgstr "Экспортировать как 1_6битное серое"
 
-#: modules/file/pixmap.c:2814
+#: modules/file/pixmap.c:2817
 msgid "Lateral Scale"
 msgstr "Горизонтальный масштаб:"
 
-#: modules/file/pixmap.c:2821
-#: modules/file/pixmap.c:2917
+#: modules/file/pixmap.c:2824
+#: modules/file/pixmap.c:2920
 #: modules/process/immerse.c:367
 msgid "_None"
 msgstr "_Нет"
 
-#: modules/file/pixmap.c:2822
+#: modules/file/pixmap.c:2825
 msgid "_Rulers"
 msgstr "Направл_яющие"
 
-#: modules/file/pixmap.c:2823
+#: modules/file/pixmap.c:2826
 msgid "_Inset scale bar"
 msgstr "В_ложенный масштабный отрезок"
 
-#: modules/file/pixmap.c:2828
+#: modules/file/pixmap.c:2831
 msgid "Color:"
 msgstr "Цвет:"
 
-#: modules/file/pixmap.c:2844
+#: modules/file/pixmap.c:2847
 #: modules/process/immerse.c:323
 msgid "Position:"
 msgstr "Расположение:"
 
-#: modules/file/pixmap.c:2849
+#: modules/file/pixmap.c:2852
 msgid "left"
 msgstr "слева"
 
-#: modules/file/pixmap.c:2853
+#: modules/file/pixmap.c:2856
 msgid "center"
 msgstr "по центру"
 
-#: modules/file/pixmap.c:2857
+#: modules/file/pixmap.c:2860
 msgid "right"
 msgstr "справа"
 
-#: modules/file/pixmap.c:2862
+#: modules/file/pixmap.c:2865
 msgid "top"
 msgstr "верх"
 
-#: modules/file/pixmap.c:2874
+#: modules/file/pixmap.c:2877
 msgid "bottom"
 msgstr "низ"
 
-#: modules/file/pixmap.c:2885
+#: modules/file/pixmap.c:2888
 #: modules/process/lno_synth.c:1067
 msgid "_Length:"
 msgstr "_Длина:"
 
-#: modules/file/pixmap.c:2902
+#: modules/file/pixmap.c:2905
 msgid "_Auto"
 msgstr "_Авто"
 
-#: modules/file/pixmap.c:2910
+#: modules/file/pixmap.c:2913
 msgid "Value Scale"
 msgstr "Масштаб значений"
 
-#: modules/file/pixmap.c:2918
+#: modules/file/pixmap.c:2921
 msgid "_False color ruler"
 msgstr "Л_инейка псевдоцвета"
 
@@ -3736,6 +3737,7 @@ msgstr "Предустановки"
 #: modules/file/rawxyz.c:436
 #: modules/process/arithmetic.c:227
 #: modules/process/convolution_filter.c:243
+#: modules/process/deposit_synth.c:626
 #: modules/process/drift.c:227
 #: modules/process/edge.c:633
 #: modules/process/fft_filter_1d.c:197
@@ -4529,6 +4531,14 @@ msgstr "параметры масштаба z"
 msgid "data type parameters"
 msgstr "параметры типа данных"
 
+#: modules/file/wipfile.c:123
+msgid "Imports WItec Project data files."
+msgstr "Импортирует файлы данных WItec Project."
+
+#: modules/file/wipfile.c:136
+msgid "WItec Project files (.wip)"
+msgstr "Файлы WItec Project (.wip)"
+
 #: modules/file/witfile.c:210
 msgid "Imports WITec WIT data files."
 msgstr "Импортирует файлы данных WITec WIT."
@@ -4598,7 +4608,7 @@ msgstr "_Функция:"
 #: modules/graph/graph_cd.c:278
 #: modules/graph/graph_fdfit.c:334
 #: modules/graph/graph_fit.c:334
-#: modules/process/curvature.c:774
+#: modules/process/curvature.c:726
 msgid "Parameter"
 msgstr "Параметр"
 
@@ -5017,11 +5027,11 @@ msgstr "Отсутствует высота поля данных."
 msgid "Data field dimensions are not positive numbers."
 msgstr "Размеры поля данных не являются положительными числами."
 
-#: modules/plugin-proxy.c:1391
+#: modules/plugin-proxy.c:1398
 msgid "End of file reached inside a data field."
 msgstr "Достигнут конец файла внутри поля данных."
 
-#: modules/plugin-proxy.c:1412
+#: modules/plugin-proxy.c:1419
 msgid "Missing end of data field marker."
 msgstr "Отсутствует маркер конца поля данных."
 
@@ -5478,24 +5488,24 @@ msgstr "Рассчитать общую кривизну"
 msgid "Curvature: Lateral dimensions and value must be the same physical quantity."
 msgstr "Кривизна: горизонтальные размеры и значения данных должны быть одной физической величиной."
 
-#: modules/process/curvature.c:480
+#: modules/process/curvature.c:432
 msgid "Curvature Sections"
 msgstr "Сечения кривизны"
 
-#: modules/process/curvature.c:704
+#: modules/process/curvature.c:656
 #: modules/process/slope_dist.c:216
 msgid "Output type"
 msgstr "Тип вывода"
 
-#: modules/process/curvature.c:711
+#: modules/process/curvature.c:663
 msgid "_Set selection"
 msgstr "_Установить выделение"
 
-#: modules/process/curvature.c:721
+#: modules/process/curvature.c:673
 msgid "_Plot graph"
 msgstr "Строить _график"
 
-#: modules/process/curvature.c:732
+#: modules/process/curvature.c:684
 #: modules/process/facet-level.c:297
 #: modules/process/level.c:267
 #: modules/process/polylevel.c:495
@@ -5503,27 +5513,27 @@ msgstr "Строить _график"
 msgid "Masking Mode"
 msgstr "Режим использования маски"
 
-#: modules/process/curvature.c:802
-#: modules/process/grain_dist.c:826
+#: modules/process/curvature.c:754
+#: modules/process/grain_dist.c:827
 #: modules/tools/distance.c:221
 #: modules/tools/roughness.c:835
 #: modules/tools/stats.c:399
 msgid "Save table to a file"
 msgstr "Сохранить таблицу в файл"
 
-#: modules/process/curvature.c:807
-#: modules/process/grain_dist.c:831
+#: modules/process/curvature.c:759
+#: modules/process/grain_dist.c:832
 #: modules/tools/distance.c:226
 #: modules/tools/roughness.c:840
 #: modules/tools/stats.c:404
 msgid "Copy table to clipboard"
 msgstr "Скопировать таблицу в буфер обмена"
 
-#: modules/process/curvature.c:934
+#: modules/process/curvature.c:886
 msgid "Axes are outside the image."
 msgstr "Оси снаружи изображения."
 
-#: modules/process/curvature.c:999
+#: modules/process/curvature.c:951
 msgid "Save Curvature"
 msgstr "Сохранить кривизну"
 
@@ -5589,6 +5599,94 @@ msgstr "_Перечитать после осаждения"
 #: modules/process/deposit.c:375
 msgid "Particles"
 msgstr "Частицы"
+
+#: modules/process/deposit_synth.c:170
+msgid "Generates particles using simple dynamical model"
+msgstr "Создаёт частицы используя простую динамическую модель"
+
+#: modules/process/deposit_synth.c:184
+msgid "/S_ynthetic/_Particles..."
+msgstr "/Син_тез/_Частицы..."
+
+#: modules/process/deposit_synth.c:188
+msgid "Generate particles using dynamical model"
+msgstr "Создать частицы используя динамическую модель"
+
+#: modules/process/deposit_synth.c:285
+#: modules/process/deposit_synth.c:297
+#: modules/process/deposit_synth.c:517
+#: modules/process/deposit_synth.c:530
+#: modules/process/fft_synth.c:304
+#: modules/process/lno_synth.c:410
+#: modules/process/noise_synth.c:322
+#: modules/process/obj_synth.c:395
+#: modules/process/pat_synth.c:363
+msgid "Generated"
+msgstr "Сгенерированное"
+
+#: modules/process/deposit_synth.c:326
+msgid "Particle generation"
+msgstr "Генерация частиц"
+
+#: modules/process/deposit_synth.c:399
+#: modules/process/fft_synth.c:395
+#: modules/process/lno_synth.c:501
+#: modules/process/noise_synth.c:413
+#: modules/process/obj_synth.c:488
+#: modules/process/pat_synth.c:456
+msgid "Dimensions"
+msgstr "Размеры"
+
+#: modules/process/deposit_synth.c:409
+#: modules/process/fft_synth.c:406
+#: modules/process/lno_synth.c:512
+#: modules/process/noise_synth.c:424
+#: modules/process/obj_synth.c:499
+#: modules/process/pat_synth.c:467
+msgid "Generator"
+msgstr "Генератор"
+
+#: modules/process/deposit_synth.c:414
+msgid "_size:"
+msgstr "_размер:"
+
+#: modules/process/deposit_synth.c:425
+msgid "_width:"
+msgstr "_ширина:"
+
+#: modules/process/deposit_synth.c:436
+msgid "Coverage:"
+msgstr "Покрытие:"
+
+#: modules/process/deposit_synth.c:445
+msgid "Revise:"
+msgstr "Изменить:"
+
+#: modules/process/deposit_synth.c:630
+#: modules/process/edge.c:714
+#: modules/process/fft_filter_1d.c:334
+#: modules/process/grain_mark.c:380
+#: modules/process/grain_rem_threshold.c:357
+#: modules/process/mark_with.c:359
+#: modules/process/polydistort.c:334
+#: modules/process/scars.c:575
+#: modules/process/synth.h:454
+msgid "I_nstant updates"
+msgstr "Мгновенное об_новление"
+
+#: modules/process/deposit_synth.c:648
+#: modules/process/synth.h:489
+msgid "R_andom seed:"
+msgstr "На_чальное число:"
+
+#: modules/process/deposit_synth.c:654
+#: modules/process/synth.h:495
+msgid "seed|_New"
+msgstr "Ново_е"
+
+#: modules/process/deposit_synth.c:665
+msgid "Randomize"
+msgstr "Сделать случайным"
 
 #: modules/process/dimensions.h:455
 msgid "S_quare image"
@@ -5867,17 +5965,6 @@ msgstr "_ЛГ после свёртки"
 #: modules/process/edge.c:708
 msgid "Detected st_ep"
 msgstr "Найденная с_тупень"
-
-#: modules/process/edge.c:714
-#: modules/process/fft_filter_1d.c:334
-#: modules/process/grain_mark.c:380
-#: modules/process/grain_rem_threshold.c:357
-#: modules/process/mark_with.c:359
-#: modules/process/polydistort.c:334
-#: modules/process/scars.c:575
-#: modules/process/synth.h:454
-msgid "I_nstant updates"
-msgstr "Мгновенное об_новление"
 
 #: modules/process/facet-level.c:67
 msgid "Automatic facet-orientation based levelling. Levels data to make facets point up."
@@ -6192,7 +6279,7 @@ msgid "PSDF Section"
 msgstr "Сечение ФСПМ"
 
 #: modules/process/fft_profile.c:272
-#: modules/process/grain_dist.c:312
+#: modules/process/grain_dist.c:313
 #: modules/tools/linestats.c:375
 #: modules/tools/profile.c:353
 #: modules/tools/sfunctions.c:368
@@ -6214,39 +6301,15 @@ msgstr "Генерирует случайные поверхности испо�
 
 #: modules/process/fft_synth.c:188
 msgid "/S_ynthetic/_Spectral..."
-msgstr "/Син_тез/_Спектральный..."
+msgstr "/Син_тез/С_пектральный..."
 
 #: modules/process/fft_synth.c:192
 msgid "Generate surface using spectral synthesis"
 msgstr "Создать поверхность используя спектральный синтез"
 
-#: modules/process/fft_synth.c:304
-#: modules/process/lno_synth.c:410
-#: modules/process/noise_synth.c:322
-#: modules/process/obj_synth.c:395
-#: modules/process/pat_synth.c:363
-msgid "Generated"
-msgstr "Сгенерированное"
-
 #: modules/process/fft_synth.c:328
 msgid "Spectral Synthesis"
 msgstr "Спектральный синтез"
-
-#: modules/process/fft_synth.c:395
-#: modules/process/lno_synth.c:501
-#: modules/process/noise_synth.c:413
-#: modules/process/obj_synth.c:488
-#: modules/process/pat_synth.c:456
-msgid "Dimensions"
-msgstr "Размеры"
-
-#: modules/process/fft_synth.c:406
-#: modules/process/lno_synth.c:512
-#: modules/process/noise_synth.c:424
-#: modules/process/obj_synth.c:499
-#: modules/process/pat_synth.c:467
-msgid "Generator"
-msgstr "Генератор"
 
 #: modules/process/fft_synth.c:411
 #: modules/process/lno_synth.c:544
@@ -6594,84 +6657,84 @@ msgstr "О_рдината"
 msgid "Evaluates distribution of grains (continuous parts of mask)."
 msgstr "Оценивает распределение зёрен (непрерывных частей маски)."
 
-#: modules/process/grain_dist.c:165
+#: modules/process/grain_dist.c:166
 msgid "/_Grains/_Distributions..."
 msgstr "/Зёрн_а/_Распределения..."
 
-#: modules/process/grain_dist.c:169
+#: modules/process/grain_dist.c:170
 msgid "Distributions of various grain characteristics"
 msgstr "Распределения различных характеристик зерна"
 
-#: modules/process/grain_dist.c:173
+#: modules/process/grain_dist.c:174
 msgid "/_Grains/S_tatistics..."
 msgstr "/Зёрн_а/_Статистика..."
 
-#: modules/process/grain_dist.c:177
+#: modules/process/grain_dist.c:178
 msgid "Simple grain statistics"
 msgstr "Простая статистика зёрен"
 
-#: modules/process/grain_dist.c:216
+#: modules/process/grain_dist.c:217
 msgid "_Export raw data"
 msgstr "_Экспортировать необработанные данные"
 
-#: modules/process/grain_dist.c:217
+#: modules/process/grain_dist.c:218
 msgid "Plot _graphs"
 msgstr "Строить _графики"
 
-#: modules/process/grain_dist.c:232
+#: modules/process/grain_dist.c:233
 msgid "Grain Distributions"
 msgstr "Распределения зёрен"
 
-#: modules/process/grain_dist.c:478
+#: modules/process/grain_dist.c:479
 msgid "noun|count"
 msgstr "число"
 
-#: modules/process/grain_dist.c:546
+#: modules/process/grain_dist.c:547
 msgid "Export Raw Grain Values"
 msgstr "Экспортировать необработанные значения зёрен"
 
-#: modules/process/grain_dist.c:653
+#: modules/process/grain_dist.c:654
 msgid "Save Grain Statistics"
 msgstr "Сохранить статистику зёрен"
 
-#: modules/process/grain_dist.c:704
+#: modules/process/grain_dist.c:705
 msgid "Data channel:"
 msgstr "Канал данных:"
 
-#: modules/process/grain_dist.c:733
-#: modules/process/grain_dist.c:805
+#: modules/process/grain_dist.c:734
+#: modules/process/grain_dist.c:806
 msgid "Grain Statistics"
 msgstr "Статистика зёрен"
 
-#: modules/process/grain_dist.c:745
+#: modules/process/grain_dist.c:746
 msgid "Number of grains:"
 msgstr "Число зёрен:"
 
-#: modules/process/grain_dist.c:754
+#: modules/process/grain_dist.c:755
 msgid "Total projected area (abs.):"
 msgstr "Общая площадь проекции (абс.):"
 
-#: modules/process/grain_dist.c:758
+#: modules/process/grain_dist.c:759
 msgid "Total projected area (rel.):"
 msgstr "Общая площадь проекции (отн.):"
 
-#: modules/process/grain_dist.c:764
+#: modules/process/grain_dist.c:765
 msgid "Mean grain area:"
 msgstr "Средняя площадь зерна:"
 
-#: modules/process/grain_dist.c:770
+#: modules/process/grain_dist.c:771
 msgid "Mean grain size:"
 msgstr "Средний размер зерна:"
 
-#: modules/process/grain_dist.c:779
+#: modules/process/grain_dist.c:780
 msgid "Total grain volume (zero):"
 msgstr "Общий объём зерна (нуль):"
 
-#: modules/process/grain_dist.c:785
+#: modules/process/grain_dist.c:786
 msgid "Total grain volume (minimum):"
 msgstr "Общий объём зерна (минимум):"
 
-#: modules/process/grain_dist.c:791
+#: modules/process/grain_dist.c:792
 msgid "Total grain volume (laplacian):"
 msgstr "Общий объём зерна (по Лапласу):"
 
@@ -8302,14 +8365,6 @@ msgstr "_Амплитуда:"
 #: modules/process/synth.h:413
 msgid "_Lateral scale:"
 msgstr "_Горизонтальный масштаб:"
-
-#: modules/process/synth.h:489
-msgid "R_andom seed:"
-msgstr "На_чальное число:"
-
-#: modules/process/synth.h:495
-msgid "seed|_New"
-msgstr "Ново_е"
 
 #: modules/process/synth.h:507
 msgid "Randomi_ze"
