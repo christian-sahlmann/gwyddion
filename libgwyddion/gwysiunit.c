@@ -188,9 +188,10 @@ gwy_si_unit_class_init(GwySIUnitClass *klass)
 }
 
 static void
-gwy_si_unit_init(GwySIUnit *si_unit)
+gwy_si_unit_init(GwySIUnit *siunit)
 {
-    gwy_debug_objects_creation((GObject*)si_unit);
+    gwy_debug_objects_creation((GObject*)siunit);
+    siunit->units = g_array_new(FALSE, FALSE, sizeof(GwySimpleUnit));
 }
 
 static void
@@ -354,7 +355,6 @@ gwy_si_unit_new_parse(const char *unit_string,
 
     gwy_debug("");
     siunit = g_object_new(GWY_TYPE_SI_UNIT, NULL);
-    siunit->units = g_array_new(FALSE, FALSE, sizeof(GwySimpleUnit));
     gwy_si_unit_parse(siunit, unit_string);
     if (power10)
         *power10 = siunit->power10;
