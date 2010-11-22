@@ -19,11 +19,6 @@
  */
 
 /* TODO:
- * Unknown types:
- * sizeof cardinal (using 8)
- * sizeof integer (using 4)
- * sizeof smallint (using 2)
- *
  * Guessed types:
  * sizeof enum (seems to be 16byte string)
  * TPoint member type (seems to be 32bit int)
@@ -31,6 +26,9 @@
  * TF3DPoint member type (seems to be double)
  * CMaxCurves (seems to be 8)
  * sizeof boolean (seems to be 1)
+ * sizeof smallint (seems to be 2)
+ * sizeof integer (seems to be 4)
+ * sizeof cardinal (seems to be 4)
  */
 
 /**
