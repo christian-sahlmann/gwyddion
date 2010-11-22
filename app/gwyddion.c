@@ -76,6 +76,7 @@ static void gwy_app_init                    (int *argc,
                                              char ***argv);
 static void gwy_app_set_window_icon         (void);
 static void gwy_app_check_version           (void);
+static void sneaking_thread_init            (void);
 
 static GwyAppOptions app_options = {
     FALSE, FALSE, FALSE, FALSE, LOG_TO_FILE_DEFAULT, GWY_APP_REMOTE_NONE,
@@ -91,6 +92,7 @@ main(int argc, char *argv[])
     GError *settings_err = NULL;
     GTimer *timer;
 
+    sneaking_thread_init();
     timer = g_timer_new();
     gwy_app_check_version();
 
@@ -98,13 +100,11 @@ main(int argc, char *argv[])
     gwy_osx_set_locale();
 
     process_preinit_options(&argc, &argv, &app_options);
+    if (app_options.log_to_file)
+        setup_logging();
     gwy_debug_objects_enable(app_options.debug_objects);
     /* TODO: handle failure */
     gwy_app_settings_create_config_dir(NULL);
-    /* FIXME: somewhat late, actually even gwy_find_self_set_argv0() which MUST
-     * be run first can print things to console when debugging is enabled. */
-    if (app_options.log_to_file)
-        setup_logging();
     debug_time(timer, "init");
     setup_locale_from_win32_registry();
     gtk_init(&argc, &argv);
@@ -448,6 +448,7 @@ setup_locale_from_win32_registry(void)
     DWORD size = sizeof(locale);
     HKEY reg_key;
 
+#ifdef _MSC_VER
     if (RegOpenKeyEx(HKEY_CURRENT_USER, TEXT("Software\\Gwyddion\\1.0"),
                      0, KEY_READ, &reg_key) == ERROR_SUCCESS) {
         if (RegQueryValueEx(reg_key, TEXT("gwy_locale"), NULL, NULL, locale, &size) == ERROR_SUCCESS){
@@ -463,6 +464,23 @@ setup_locale_from_win32_registry(void)
             g_setenv("LANG", locale, TRUE);
         RegCloseKey(reg_key);
     }
+#else
+    if (RegOpenKeyEx(HKEY_CURRENT_USER, TEXT("Software\\Gwyddion\\2.0"),
+                     0, KEY_READ, &reg_key) == ERROR_SUCCESS) {
+        if (RegQueryValueEx(reg_key, TEXT("Locale"), NULL, NULL, locale, &size) == ERROR_SUCCESS){
+            g_setenv("LANG", locale, TRUE);
+            RegCloseKey(reg_key);
+            return;
+        }
+        RegCloseKey(reg_key);
+    }
+    if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, TEXT("Software\\Gwyddion\\2.0"),
+                     0, KEY_READ, &reg_key) == ERROR_SUCCESS) {
+        if (RegQueryValueEx(reg_key, TEXT("Locale"), NULL, NULL, locale, &size) == ERROR_SUCCESS)
+            g_setenv("LANG", locale, TRUE);
+        RegCloseKey(reg_key);
+    }
+#endif
 #endif
 }
 
@@ -598,6 +616,37 @@ gwy_app_check_version(void)
         g_warning("Application and library versions do not match: %s vs. %s",
                   GWY_VERSION_STRING, gwy_version_string());
     }
+}
+
+/* This is (a) to ensure threads are initialised as the very first thing if
+ * it's neceesary (b) get timers right. */
+static void
+sneaking_thread_init(void)
+{
+    GModule *main_module;
+    const gchar *version_mismatch;
+    GDestroyNotify thread_init_func = NULL;
+
+    if ((version_mismatch = glib_check_version(2, 24, 0))) {
+        gwy_debug("GLib is not >= 2.24.0; says %s", version_mismatch);
+        return;
+    }
+
+    main_module = g_module_open(NULL, G_MODULE_BIND_LAZY | G_MODULE_BIND_LOCAL);
+    if (!main_module) {
+        gwy_debug("Canno dlopen() self.");
+        return;
+    }
+
+    if (g_module_symbol(main_module, "g_thread_init",
+                        (gpointer)&thread_init_func)) {
+        thread_init_func(NULL);
+        gwy_debug("Threads initialised.");
+    }
+    else {
+        gwy_debug("Cannot find symbol g_thread_init.");
+    }
+    g_module_close(main_module);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
