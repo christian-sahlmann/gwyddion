@@ -1,4 +1,9 @@
 2.22 (0000-00-00)
+Application:
+- Translations updated: Czech, French, Russian.
+- Gwyddion tries to initialise thread support as the very first thing if it
+  finds to be running with GLib 2.24 or newer.
+
 Libraries:
 - libgwyprocess: Odd behaviour of 1D convolution and Gaussian filters for
   kernels much larger than data were corrected to full mirroring.
@@ -38,6 +43,9 @@ Modules:
 
 
 2.21 (2010-10-26)
+Application:
+- Translations updated: Czech, French, Russian.
+
 Libraries:
 - libgwyapp: It is possible to disable undo globally, undo/redo operations
   then become no-op.
