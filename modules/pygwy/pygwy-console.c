@@ -53,7 +53,7 @@ pygwy_register_console()
                                   N_("/Pygwy Console"),
                                   NULL,
                                   GWY_RUN_IMMEDIATE,
-                                  GWY_MENU_FLAG_DATA,
+                                  0,
                                   N_("Python wrapper console")) ) {
 
     }
