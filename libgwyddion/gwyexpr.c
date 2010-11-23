@@ -736,7 +736,7 @@ gwy_expr_scan_tokens(GwyExpr *expr,
 
     scanner = expr->scanner;
     while ((token = g_scanner_get_next_token(scanner))) {
-        switch (token) {
+        switch ((gint)token) {
             case G_TOKEN_LEFT_PAREN:
             case G_TOKEN_RIGHT_PAREN:
             case G_TOKEN_COMMA:
