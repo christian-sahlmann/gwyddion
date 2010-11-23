@@ -37,6 +37,8 @@ cat >build_documentation.ignore <<':'
 ^lib.*-scan\.c:[0-9]*: warning: unused parameter
 ^lib.*-scan\.c:[0-9]*: warning: .* shadows a previous local
 ^lib.*-scan\.c:[0-9]*: warning: shadowed declaration is here
+^lib.*-scan\.c:[0-9]*:[0-9]*: warning: unused parameter 'arg[vc]'
+^Use of uninitialized value within %DeclarationTypes in lc at /usr/bin/gtkdoc-mkdb line 929\.
 ^Computing chunks\.\.\.
 ^  These can be found in [a-z]\+-unused\.txt\.
 ^  They should be added to [a-z]\+-sections\.txt in the appropriate place\.
