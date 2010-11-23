@@ -1024,7 +1024,7 @@ rawxyz_do(RawXYZFile *rfile,
         fill_field_x((const GwyTriangulationPointXYZ*)points->data, dfield);
     else if (rfile->regular == RAW_XYZ_REGULAR_Y)
         fill_field_y((const GwyTriangulationPointXYZ*)points->data, dfield);
-    else if (args->interpolation == GWY_INTERPOLATION_FIELD) {
+    else if ((gint)args->interpolation == GWY_INTERPOLATION_FIELD) {
         extend_borders(rfile, args, EPSREL);
         interpolate_field(points->len,
                           (const GwyTriangulationPointXYZ*)points->data,
@@ -1709,7 +1709,7 @@ static void
 rawxyz_sanitize_args(RawXYZArgs *args)
 {
     if (args->interpolation != GWY_INTERPOLATION_ROUND
-        && args->interpolation != GWY_INTERPOLATION_FIELD)
+        && (gint)args->interpolation != GWY_INTERPOLATION_FIELD)
         args->interpolation = GWY_INTERPOLATION_LINEAR;
     if (args->exterior != GWY_EXTERIOR_MIRROR_EXTEND
         && args->exterior != GWY_EXTERIOR_PERIODIC)
