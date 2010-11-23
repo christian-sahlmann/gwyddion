@@ -236,7 +236,7 @@ run_noninteractive(DepositSynthArgs *args,
         args->seed = g_random_int() & 0x7fffffff;
 
     if (replace) {
-        printf("noninteractive replace\n");
+        //printf("noninteractive replace\n");
         gwy_app_undo_qcheckpointv(data, 1, &quark);
 
             out = gwy_data_field_new_alike(dfield, FALSE);
@@ -248,12 +248,12 @@ run_noninteractive(DepositSynthArgs *args,
     }
     else {
         if (add && dfield) {
-            printf("noninteractive add\n");
+            //printf("noninteractive add\n");
             out = gwy_data_field_new_alike(dfield, FALSE);
             gwy_data_field_copy(dfield, out, FALSE);
         }
         else {
-            printf("noninteractive new\n");
+            //printf("noninteractive new\n");
             mag = pow10(dimsargs->xypow10) * dimsargs->measure;
             out = gwy_data_field_new(dimsargs->xres, dimsargs->yres,
                                         mag*dimsargs->xres, mag*dimsargs->yres,
@@ -267,7 +267,7 @@ run_noninteractive(DepositSynthArgs *args,
         }
     }
 
-    printf("size %d %d\n", gwy_data_field_get_xres(out), gwy_data_field_get_yres(out));
+    //printf("size %d %d\n", gwy_data_field_get_xres(out), gwy_data_field_get_yres(out));
     gwy_app_wait_start(gwy_app_find_window_for_channel(data, oldid), "Starting...");
     deposit_synth_do(args, out, NULL);
     gwy_app_wait_finish();
@@ -323,7 +323,7 @@ deposit_synth_dialog(DepositSynthArgs *args,
     controls.in_init = TRUE;
     controls.args = args;
     controls.pxsize = 1.0;
-    dialog = gtk_dialog_new_with_buttons(_("Particle generation"),
+    dialog = gtk_dialog_new_with_buttons(_("Particle Generation"),
                                          NULL, 0,
                                          _("_Reset"), RESPONSE_RESET,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
@@ -355,7 +355,7 @@ deposit_synth_dialog(DepositSynthArgs *args,
     if (dfield_template) {
         dfield = surface_for_preview(controls.original, PREVIEW_SIZE);
         gwy_data_field_data_changed(dfield);
-        printf("surface from original put to dfield\n");
+    //    printf("surface from original put to dfield\n");
     } 
 
     gwy_container_set_object_by_name(controls.mydata, "/0/data", dfield);
@@ -411,7 +411,7 @@ deposit_synth_dialog(DepositSynthArgs *args,
 
     controls.size = gtk_adjustment_new(args->size/pow10(controls.dims->args->xypow10),
                                         0.001, 100.0, 0.1, 1.0, 0);
-    spin = gwy_table_attach_hscale(table, row, _("_size:"), controls.dims->args->xyunits,
+    spin = gwy_table_attach_hscale(table, row, _("_Size:"), controls.dims->args->xyunits,
                                    controls.size, GWY_HSCALE_LOG);
     gtk_spin_button_set_snap_to_ticks(GTK_SPIN_BUTTON(spin), FALSE);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 4);
@@ -422,7 +422,7 @@ deposit_synth_dialog(DepositSynthArgs *args,
 
     controls.width = gtk_adjustment_new(args->width/pow10(controls.dims->args->xypow10),
                                         0.001, 100.0, 0.1, 1.0, 0);
-    spin = gwy_table_attach_hscale(table, row, _("_width:"), controls.dims->args->xyunits,
+    spin = gwy_table_attach_hscale(table, row, _("_Width:"), controls.dims->args->xyunits,
                                    controls.width, GWY_HSCALE_LOG);
     gtk_spin_button_set_snap_to_ticks(GTK_SPIN_BUTTON(spin), FALSE);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 4);
@@ -433,7 +433,7 @@ deposit_synth_dialog(DepositSynthArgs *args,
 
     controls.coverage = gtk_adjustment_new(args->coverage,
                                            0.0, 100, 0.1, 1, 0);
-    gwy_table_attach_hscale(table, row, _("Coverage:"),
+    gwy_table_attach_hscale(table, row, _("_Coverage:"),
                             "%",
                             controls.coverage, GWY_HSCALE_DEFAULT);
     g_signal_connect_swapped(controls.coverage, "value-changed",
@@ -442,7 +442,7 @@ deposit_synth_dialog(DepositSynthArgs *args,
 
     controls.revise = gtk_adjustment_new(args->revise,
                                            0.0, 1000, 0.1, 1, 0);
-    gwy_table_attach_hscale(table, row, _("Revise:"),
+    gwy_table_attach_hscale(table, row, _("_Revise:"),
                             "",
                             controls.revise, GWY_HSCALE_DEFAULT);
     g_signal_connect_swapped(controls.revise, "value-changed",
@@ -450,7 +450,7 @@ deposit_synth_dialog(DepositSynthArgs *args,
     row++;
 
 
-    controls.message = gtk_label_new(_(""));
+    controls.message = gtk_label_new("");
     gtk_misc_set_alignment(GTK_MISC(controls.message), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), controls.message,
                      0, 4, row, row+1, GTK_FILL, 0, 0, 0);
@@ -598,6 +598,33 @@ update_controls(DepositSynthControls *controls,
                              args->revise);
 }
 
+static gdouble
+rand_gen_gaussian(GRand *rng,
+                  gdouble sigma)
+{
+    static gboolean have_spare = FALSE;
+    static gdouble spare;
+
+    gdouble x, y, w;
+
+    /* Calling with NULL rng just clears the spare random value. */
+    if (have_spare || G_UNLIKELY(!rng)) {
+        have_spare = FALSE;
+        return sigma*spare;
+    }
+
+    do {
+        x = -1.0 + 2.0*g_rand_double(rng);
+        y = -1.0 + 2.0*g_rand_double(rng);
+        w = x*x + y*y;
+    } while (w >= 1.0 || G_UNLIKELY(w == 0.0));
+
+    w = sqrt(-2.0*log(w)/w);
+    spare = y*w;
+    have_spare = TRUE;
+
+    return sigma*x*w;
+}
 
 
 static void
@@ -741,16 +768,6 @@ revise_changed(DepositSynthControls *controls,
 
 }
 
-static void
-update_value_label(GtkLabel *label,
-                   const GwySIValueFormat *vf,
-                   gdouble value)
-{
-    gchar buf[32];
-
-    g_snprintf(buf, sizeof(buf), "%.*f", vf->precision, value/vf->magnitude);
-    gtk_label_set_markup(label, buf);
-}
 
 static void
 deposit_synth_invalidate(DepositSynthControls *controls)
@@ -854,7 +871,7 @@ preview(DepositSynthControls *controls)
     args->width = CLAMP(args->width, 0.0, 100*pow10(controls->dims->args->xypow10));
 
     
-    gwy_app_wait_start(controls->dialog, "Starting...");
+    gwy_app_wait_start(GTK_WINDOW(controls->dialog), "Starting...");
     gtk_label_set_text(GTK_LABEL(controls->message), "Running computation...");
     ndata = deposit_synth_do(args, controls->out, dfield);
     gwy_app_wait_finish();
@@ -923,9 +940,9 @@ showit(GwyDataField *lfield, GwyDataField *dfield, gdouble *rdisizes, gdouble *r
 
 /*lj potential between two particles*/
 static gdouble
-get_lj_potential_spheres(gdouble ax, gdouble ay, gdouble az, gdouble bx, gdouble by, gdouble bz, gdouble size)
+get_lj_potential_spheres(gdouble ax, gdouble ay, gdouble az, gdouble bx, gdouble by, gdouble bz, gdouble asize, gdouble bsize)
 {
-    gdouble sigma = 1.7*size;
+    gdouble sigma = 0.85*(asize+bsize); 
     gdouble dist = ((ax-bx)*(ax-bx)
                     + (ay-by)*(ay-by)
                     + (az-bz)*(az-bz));
@@ -946,7 +963,6 @@ integrate_lj_substrate(GwyDataField *lfield, gdouble ax, gdouble ay, gdouble az,
                                           CLAMP(gwy_data_field_rtoi(lfield, ay), 0, gwy_data_field_get_yres(lfield)-1));
 
     dist = sqrt((az-zval)*(az-zval));
-    //printf("%g %g \n", dist, (pow(sigma, 12)/45.0/pow(dist, 9) - pow(sigma, 6)/6.0/pow(dist, 3)));
     return 1e18*(pow(sigma, 12)/45.0/pow(dist, 9) - pow(sigma, 6)/6.0/pow(dist, 3));
 }
     
@@ -956,13 +972,13 @@ static gint
 deposit_synth_do(const DepositSynthArgs *args,
              GwyDataField *dfield, GwyDataField *showfield)
 {
-    gint i, ii, m, j, k;
+    gint i, ii, m, k;
     GRand *rng;
     GwyDataField *surface, *lfield, *zlfield, *zdfield; //FIXME all of them?
     gint xres, yres, oxres, oyres, ndata, steps;
     gdouble xreal, yreal, oxreal, oyreal, diff;
     gdouble size, width; 
-    gdouble mass=1,  timestep = 6e-7, rxv, ryv, rzv;
+    gdouble mass=1,  timestep = 3e-7, rxv, ryv, rzv;
     gint mdisize, add, presetval;
     gint xdata[MAXN];
     gint ydata[MAXN];
@@ -987,8 +1003,8 @@ deposit_synth_do(const DepositSynthArgs *args,
 
 
 
-    printf("do (%d %d) %g %g \n", gwy_data_field_get_xres(dfield), gwy_data_field_get_yres(dfield),
-                           gwy_data_field_get_xreal(dfield), gwy_data_field_get_yreal(dfield));
+//    printf("do (%d %d) %g %g \n", gwy_data_field_get_xres(dfield), gwy_data_field_get_yres(dfield),
+//                           gwy_data_field_get_xreal(dfield), gwy_data_field_get_yreal(dfield));
     rng = g_rand_new();
     g_rand_set_seed(rng, args->seed);
 
@@ -999,8 +1015,8 @@ deposit_synth_do(const DepositSynthArgs *args,
     diff = oxreal/oxres/10;
 
 
-    printf("size %g width %g, coverage %g, revise %d, datafield real %g x %g\n", 
-           args->size, args->width, args->coverage, args->revise, oxreal, oyreal); //assure that width and size are in real coordinates
+//    printf("size %g width %g, coverage %g, revise %d, datafield real %g x %g\n", 
+//           args->size, args->width, args->coverage, args->revise, oxreal, oyreal); //assure that width and size are in real coordinates
 
     size = args->size;
     width = args->width;
@@ -1014,7 +1030,7 @@ deposit_synth_do(const DepositSynthArgs *args,
 
     /*allocate field with increased size, do all the computation and cut field back, return dfield again*/
 
-    printf("new size: %d %d\n", xres, yres);
+//    printf("new size: %d %d\n", xres, yres);
     lfield = gwy_data_field_new(xres, yres,
                                 gwy_data_field_itor(dfield, xres),
                                 gwy_data_field_jtor(dfield, yres),
@@ -1040,7 +1056,7 @@ deposit_synth_do(const DepositSynthArgs *args,
 
     zlfield = gwy_data_field_duplicate(lfield);
     zdfield = gwy_data_field_duplicate(dfield);
-    printf("fields prepared for computation\n");
+ //   printf("fields prepared for computation\n");
     gwy_app_wait_set_message("Initial particle set...");
 
     /*FIXME determine max number of particles and alloc only necessary field sizes*/
@@ -1052,12 +1068,12 @@ deposit_synth_do(const DepositSynthArgs *args,
 
     ndata = steps = 0;
     presetval = args->coverage/100 * xreal*yreal/(G_PI*size*size); 
-    printf("%d particles should be deposited\n", presetval);
+//    printf("%d particles should be deposited\n", presetval);
 
     while (ndata < presetval && steps<maxsteps)
     {
-        //disize = mdisize*(0.8+(double)(rand()%20)/40.0);   
-        disize = mdisize;
+        size = CLAMP(args->size + rand_gen_gaussian(rng, args->width), 0, 10*args->size); 
+        disize = gwy_data_field_rtoi(dfield, size);
 
         xpos = disize+(g_rand_double(rng)*(xres-2*(gint)(disize+1))) + 1;
         ypos = disize+(g_rand_double(rng)*(yres-2*(gint)(disize+1))) + 1;
@@ -1091,7 +1107,7 @@ deposit_synth_do(const DepositSynthArgs *args,
             ndata++;
         }
     };
-    printf("%d particles deposited in %d steps\n", ndata, steps);
+//    printf("%d particles deposited in %d steps\n", ndata, steps);
 
     gwy_data_field_copy(zlfield, lfield, 0);
 
@@ -1122,7 +1138,8 @@ deposit_synth_do(const DepositSynthArgs *args,
 
             while (ndata < presetval && ii<(max/1000) && nloc<maxloc)
             {
-                disize = mdisize;
+                size = CLAMP(args->size + rand_gen_gaussian(rng, args->width), 0, 10*args->size);
+                disize = gwy_data_field_rtoi(dfield, size);
 
                 xpos = disize+(g_rand_double(rng)*(xres-2*(gint)(disize+1))) + 1;
                 ypos = disize+(g_rand_double(rng)*(yres-2*(gint)(disize+1))) + 1;
@@ -1186,13 +1203,12 @@ deposit_synth_do(const DepositSynthArgs *args,
 
                 if (m==k) continue;
 
-            //    printf("(%g %g %g) on (%g %g %g)\n", rx[m], ry[m], rz[m], rx[k], ry[k], rz[k]);
-                fx[k] -= (get_lj_potential_spheres(rx[m], ry[m], rz[m], rx[k]+diff, ry[k], rz[k], gwy_data_field_itor(dfield, disizes[k]))
-                              -get_lj_potential_spheres(rx[m], ry[m], rz[m], rx[k]-diff, ry[k], rz[k], gwy_data_field_itor(dfield, disizes[k])))/2/diff;
-                fy[k] -= (get_lj_potential_spheres(rx[m], ry[m], rz[m], rx[k], ry[k]+diff, rz[k], gwy_data_field_itor(dfield, disizes[k]))
-                              -get_lj_potential_spheres(rx[m], ry[m], rz[m], rx[k], ry[k]-diff, rz[k], gwy_data_field_itor(dfield, disizes[k])))/2/diff;
-                fz[k] -= (get_lj_potential_spheres(rx[m], ry[m], rz[m], rx[k], ry[k], rz[k]+diff, gwy_data_field_itor(dfield, disizes[k]))
-                              -get_lj_potential_spheres(rx[m], ry[m], rz[m], rx[k], ry[k], rz[k]-diff, gwy_data_field_itor(dfield, disizes[k])))/2/diff;
+                fx[k] -= (get_lj_potential_spheres(rx[m], ry[m], rz[m], rx[k]+diff, ry[k], rz[k], rdisizes[k], rdisizes[m])
+                              -get_lj_potential_spheres(rx[m], ry[m], rz[m], rx[k]-diff, ry[k], rz[k], rdisizes[k], rdisizes[m]))/2/diff;
+                fy[k] -= (get_lj_potential_spheres(rx[m], ry[m], rz[m], rx[k], ry[k]+diff, rz[k], rdisizes[k], rdisizes[m])
+                              -get_lj_potential_spheres(rx[m], ry[m], rz[m], rx[k], ry[k]-diff, rz[k], rdisizes[k], rdisizes[m]))/2/diff;
+                fz[k] -= (get_lj_potential_spheres(rx[m], ry[m], rz[m], rx[k], ry[k], rz[k]+diff, rdisizes[k], rdisizes[m])
+                              -get_lj_potential_spheres(rx[m], ry[m], rz[m], rx[k], ry[k], rz[k]-diff, rdisizes[k], rdisizes[m]))/2/diff;
 
             }
             fx[k] -= (integrate_lj_substrate(zlfield, rx[k]+diff, ry[k], rz[k], rdisizes[k])
@@ -1216,14 +1232,14 @@ deposit_synth_do(const DepositSynthArgs *args,
             ax[k] = fx[k]/mass;
             vx[k] += 0.5*ax[k]*timestep;
             vx[k] *= 0.9;
-            if (fabs(vx[k])>0.01) vx[k] = 0; //0.2
+            if (fabs(vx[k])>0.01) vx[k] = 0;
 
             ry[k] += vy[k]*timestep + 0.5*ay[k]*timestep*timestep;
             vy[k] += 0.5*ay[k]*timestep;
             ay[k] = fy[k]/mass;
             vy[k] += 0.5*ay[k]*timestep;
             vy[k] *= 0.9;
-            if (fabs(vy[k])>0.01) vy[k] = 0; //0.2
+            if (fabs(vy[k])>0.01) vy[k] = 0; 
 
             rz[k] += vz[k]*timestep + 0.5*az[k]*timestep*timestep;
             vz[k] += 0.5*az[k]*timestep;
@@ -1272,7 +1288,7 @@ deposit_synth_do(const DepositSynthArgs *args,
 
 
 
-    printf("copying center back\n");
+//    printf("copying center back\n");
     gwy_data_field_area_copy(lfield, dfield, add, add, oxres, oyres, 0, 0);
     gwy_data_field_data_changed(dfield);
     gwy_object_unref(lfield);
