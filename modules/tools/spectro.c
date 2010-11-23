@@ -240,7 +240,7 @@ gwy_tool_spectro_init_dialog(GwyToolSpectro *tool)
     GtkDialog *dialog;
     GtkWidget *scwin, *label, *hbox, *vbox, *hbox2;
     GtkTable *table;
-    GtkTreeSelection *select;
+    GtkTreeSelection *selection;
     guint i, row;
 
     dialog = GTK_DIALOG(GWY_TOOL(tool)->dialog);
@@ -274,9 +274,9 @@ gwy_tool_spectro_init_dialog(GwyToolSpectro *tool)
         gtk_tree_view_append_column(tool->treeview, column);
     }
 
-    select = gtk_tree_view_get_selection(GTK_TREE_VIEW (tool->treeview));
-    gtk_tree_selection_set_mode(select, GTK_SELECTION_MULTIPLE);
-    g_signal_connect(G_OBJECT(select), "changed",
+    selection = gtk_tree_view_get_selection(GTK_TREE_VIEW (tool->treeview));
+    gtk_tree_selection_set_mode(selection, GTK_SELECTION_MULTIPLE);
+    g_signal_connect(G_OBJECT(selection), "changed",
                      G_CALLBACK(gwy_tool_spectro_tree_sel_changed),
                      tool);
 
