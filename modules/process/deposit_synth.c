@@ -154,6 +154,8 @@ static void          deposit_synth_load_args   (GwyContainer *container,
 static void          deposit_synth_save_args   (GwyContainer *container,
                                             const DepositSynthArgs *args,
                                             const GwyDimensionArgs *dimsargs);
+static inline gboolean gwy_data_field_inside(GwyDataField *data_field, gint i, gint j);
+
 
 static const DepositSynthArgs deposit_synth_defaults = {
     PAGE_DIMENSIONS,
@@ -441,7 +443,7 @@ deposit_synth_dialog(DepositSynthArgs *args,
     row++;
 
     controls.revise = gtk_adjustment_new(args->revise,
-                                           0.0, 1000, 0.1, 1, 0);
+                                           0.0, 10000, 0.1, 1, 0);
     gwy_table_attach_hscale(table, row, _("_Revise:"),
                             "",
                             controls.revise, GWY_HSCALE_DEFAULT);
@@ -889,6 +891,16 @@ preview(DepositSynthControls *controls)
     gwy_object_unref(surface);
 }
 
+static inline gboolean
+gwy_data_field_inside(GwyDataField *data_field, gint i, gint j)
+{
+        if (i >= 0 && j >= 0 && i < data_field->xres && j < data_field->yres)
+                    return TRUE;
+            else
+                        return FALSE;
+}
+
+
 static void
 showit(GwyDataField *lfield, GwyDataField *dfield, gdouble *rdisizes, gdouble *rx, gdouble *ry, gdouble *rz, gint *xdata, gint *ydata, gint ndata,
        gint oxres, gdouble oxreal, gint oyres, gdouble oyreal, gint add, gint xres, gint yres)
@@ -908,6 +920,8 @@ showit(GwyDataField *lfield, GwyDataField *dfield, gdouble *rdisizes, gdouble *r
         if (xdata[i]<0 || ydata[i]<0 || xdata[i]>=xres || ydata[i]>=yres) continue;
         if (rz[i]>(gwy_data_field_get_val(lfield, xdata[i], ydata[i])+6*rdisizes[i])) continue;
 
+    //    if (!gwy_data_field_inside(lfield, xdata[i], ydata[i])) printf("Problem for csurface lfield: %d %d\n", xdata[i], ydata[i]);
+
         csurface = gwy_data_field_get_val(lfield, xdata[i], ydata[i]);
         disize = (gint)((gdouble)oxres*rdisizes[i]/oxreal);
         rdisize = rdisizes[i];
@@ -920,9 +934,10 @@ showit(GwyDataField *lfield, GwyDataField *dfield, gdouble *rdisizes, gdouble *r
                     if (m<0 || n<0 || m>=xres || n>=yres) continue;
 
                     if (m>=add && n>=add && m<(xres-add) && n<(yres-add)) {
+      //                  if (!gwy_data_field_inside(dfield, m-add, n-add)) printf("Problem for dfield: %d %d\n", m-add, n-add);
                         surface = gwy_data_field_get_val(dfield, m-add, n-add);
+      //                  if (!gwy_data_field_inside(lfield, m, n)) printf("Problem for lfield: %d %d\n", m, n);
                         lsurface = gwy_data_field_get_val(lfield, m, n);
-
 
                         if ((sum=(disize*disize - (xdata[i]-m)*(xdata[i]-m) - (ydata[i]-n)*(ydata[i]-n)))>0)
                         {
@@ -947,8 +962,9 @@ get_lj_potential_spheres(gdouble ax, gdouble ay, gdouble az, gdouble bx, gdouble
                     + (ay-by)*(ay-by)
                     + (az-bz)*(az-bz));
 
-    // printf("%g %g %g %g -> %g\n", dist, pow(sigma, 12), pow(dist, 6), pow(dist, 3), pow(sigma, 12)/pow(dist, 6) - pow(sigma, 6)/pow(dist, 3));
+    if ((asize>0 && bsize>0) && dist > asize/100)
     return 1e-5*(pow(sigma, 12)/pow(dist, 6) - pow(sigma, 6)/pow(dist, 3)); //0.1
+    else return 0;
 }
 
 /*integrate over some volume around particle (ax, ay, az), if there is substrate, add this to potential*/
@@ -963,6 +979,8 @@ integrate_lj_substrate(GwyDataField *lfield, gdouble ax, gdouble ay, gdouble az,
                                           CLAMP(gwy_data_field_rtoi(lfield, ay), 0, gwy_data_field_get_yres(lfield)-1));
 
     dist = sqrt((az-zval)*(az-zval));
+   
+    if (size>0 && dist > size/100);
     return 1e18*(pow(sigma, 12)/45.0/pow(dist, 9) - pow(sigma, 6)/6.0/pow(dist, 3));
 }
     
@@ -1056,7 +1074,6 @@ deposit_synth_do(const DepositSynthArgs *args,
 
     zlfield = gwy_data_field_duplicate(lfield);
     zdfield = gwy_data_field_duplicate(dfield);
- //   printf("fields prepared for computation\n");
     gwy_app_wait_set_message("Initial particle set...");
 
     /*FIXME determine max number of particles and alloc only necessary field sizes*/
@@ -1068,46 +1085,46 @@ deposit_synth_do(const DepositSynthArgs *args,
 
     ndata = steps = 0;
     presetval = args->coverage/100 * xreal*yreal/(G_PI*size*size); 
-//    printf("%d particles should be deposited\n", presetval);
+    //printf("%d particles should be deposited\n", presetval);
 
     while (ndata < presetval && steps<maxsteps)
     {
-        size = CLAMP(args->size + rand_gen_gaussian(rng, args->width), 0, 10*args->size); 
+        size = CLAMP(args->size + rand_gen_gaussian(rng, args->width), args->size/1000, 10*args->size); 
         disize = gwy_data_field_rtoi(dfield, size);
 
-        xpos = disize+(g_rand_double(rng)*(xres-2*(gint)(disize+1))) + 1;
-        ypos = disize+(g_rand_double(rng)*(yres-2*(gint)(disize+1))) + 1;
+        xpos = CLAMP(disize+(g_rand_double(rng)*(xres-2*(gint)(disize+1))) + 1, 0, xres);
+        ypos = CLAMP(disize+(g_rand_double(rng)*(yres-2*(gint)(disize+1))) + 1, 0, yres);
         steps++;
 
-        {
-            too_close = 0;
+        too_close = 0;
 
-            /*sync real to integer positions*/
-            for (k=0; k<ndata; k++)
+        /*sync real to integer positions*/
+        for (k=0; k<ndata; k++)
+        {
+            if (((xpos-xdata[k])*(xpos-xdata[k]) + (ypos-ydata[k])*(ypos-ydata[k]))<(4*disize*disize))
             {
-                if (((xpos-xdata[k])*(xpos-xdata[k]) + (ypos-ydata[k])*(ypos-ydata[k]))<(4*disize*disize))
-                {
-                    too_close = 1;
-                    break;
-                }
-            }
-            if (too_close) continue;
-            if (ndata>=MAXN) {
+                too_close = 1;
                 break;
             }
-
-            xdata[ndata] = xpos;
-            ydata[ndata] = ypos;
-            disizes[ndata] = disize;
-            rdisizes[ndata] = size;
-            rx[ndata] = (gdouble)xpos*oxreal/(gdouble)oxres;
-            ry[ndata] = (gdouble)ypos*oyreal/(gdouble)oyres;
-            //printf("surface at %g, particle size %g\n", gwy_data_field_get_val(lfield, xpos, ypos), rdisizes[ndata]);
-            rz[ndata] = 1.0*gwy_data_field_get_val(lfield, xpos, ypos) + rdisizes[ndata]; //2
-            ndata++;
         }
+        if (too_close) continue;
+        if (ndata>=MAXN) {
+            break;
+        }
+
+        xdata[ndata] = xpos;
+        ydata[ndata] = ypos;
+        disizes[ndata] = disize;
+        rdisizes[ndata] = size;
+        rx[ndata] = (gdouble)xpos*oxreal/(gdouble)oxres;
+        ry[ndata] = (gdouble)ypos*oyreal/(gdouble)oyres;
+        //printf("surface at %g, particle size %g\n", gwy_data_field_get_val(lfield, xpos, ypos), rdisizes[ndata]);
+
+      //  if (!gwy_data_field_inside(lfield, xpos, ypos)) printf("Problem for deposite lfield: %d %d\n", xpos, ypos);
+        rz[ndata] = 1.0*gwy_data_field_get_val(lfield, xpos, ypos) + rdisizes[ndata]; //2
+        ndata++;
     };
-//    printf("%d particles deposited in %d steps\n", ndata, steps);
+    //printf("%d particles deposited in %d steps\n", ndata, steps);
 
     gwy_data_field_copy(zlfield, lfield, 0);
 
@@ -1129,7 +1146,7 @@ deposit_synth_do(const DepositSynthArgs *args,
     for (i=0; i<(args->revise); i++)
     {
         gwy_app_wait_set_message("Running revise...");
-//        printf("###### step %d of %d ##########\n", i, (gint)(20*args->revise));
+    //    printf("###### step %d of %d ##########\n", i, (gint)(args->revise));
 
         /*try to add some particles if necessary, do this only for first half of molecular dynamics*/
         if (ndata<presetval && i<(10*args->revise)) {
@@ -1138,50 +1155,51 @@ deposit_synth_do(const DepositSynthArgs *args,
 
             while (ndata < presetval && ii<(max/1000) && nloc<maxloc)
             {
-                size = CLAMP(args->size + rand_gen_gaussian(rng, args->width), 0, 10*args->size);
+                size = CLAMP(args->size + rand_gen_gaussian(rng, args->width), args->size/1000, 10*args->size);
                 disize = gwy_data_field_rtoi(dfield, size);
 
-                xpos = disize+(g_rand_double(rng)*(xres-2*(gint)(disize+1))) + 1;
-                ypos = disize+(g_rand_double(rng)*(yres-2*(gint)(disize+1))) + 1;
+                xpos = CLAMP(disize+(g_rand_double(rng)*(xres-2*(gint)(disize+1))) + 1, 0, xres);
+                ypos = CLAMP(disize+(g_rand_double(rng)*(yres-2*(gint)(disize+1))) + 1, 0, yres);
 
                 ii++;
+                too_close = 0;
+
+                rxv = ((gdouble)xpos*oxreal/(gdouble)oxres);
+                ryv = ((gdouble)ypos*oyreal/(gdouble)oyres);
+
+             //   if (!gwy_data_field_inside(zlfield, xpos, ypos)) printf("Problem for dep2 zlfield: %d %d\n", xpos, ypos);
+
+                rzv = gwy_data_field_get_val(zlfield, xpos, ypos) + 5*size;
+
+                for (k=0; k<ndata; k++)
                 {
-                    too_close = 0;
-
-                    rxv = ((gdouble)xpos*oxreal/(gdouble)oxres);
-                    ryv = ((gdouble)ypos*oyreal/(gdouble)oyres);
-                    rzv = gwy_data_field_get_val(zlfield, xpos, ypos) + 5*size;
-
-                    for (k=0; k<ndata; k++)
+                    if (((rxv-rx[k])*(rxv-rx[k])
+                         + (ryv-ry[k])*(ryv-ry[k])
+                         + (rzv-rz[k])*(rzv-rz[k]))<(4.0*size*size))
                     {
-                        if (((rxv-rx[k])*(rxv-rx[k])
-                             + (ryv-ry[k])*(ryv-ry[k])
-                             + (rzv-rz[k])*(rzv-rz[k]))<(4.0*size*size))
-                        {
-                            too_close = 1;
-                            break;
-                        }
-                    }
-                    if (too_close) continue;
-                    if (ndata>=10000) {
-//                        printf("Maximum reached!\n");
+                        too_close = 1;
                         break;
                     }
-
-                    xdata[ndata] = xpos;
-                    ydata[ndata] = ypos;
-                    disizes[ndata] = disize;
-                    rdisizes[ndata] = size;
-                    rx[ndata] = rxv;
-                    ry[ndata] = ryv;
-                    rz[ndata] = rzv;
-                    vz[ndata] = -0.01;
-                    ndata++;
-                    nloc++;
-
                 }
+                if (too_close) continue;
+                if (ndata>=10000) {
+  //                                          printf("Maximum reached!\n");
+                    break;
+                }
+
+                xdata[ndata] = xpos;
+                ydata[ndata] = ypos;
+                disizes[ndata] = disize;
+                rdisizes[ndata] = size;
+                rx[ndata] = rxv;
+                ry[ndata] = ryv;
+                rz[ndata] = rzv;
+                vz[ndata] = -0.01;
+                ndata++;
+                nloc++;
+
             };
-//            if (ii==(max/100)) printf("Maximum reached, only %d particles now present instead of %d\n", ndata, presetval);
+//                        if (ii==(max/100)) printf("Maximum reached, only %d particles now present instead of %d\n", ndata, presetval);
 //            else printf("%d particles now at surface\n", ndata);
 
         }
@@ -1195,8 +1213,10 @@ deposit_synth_do(const DepositSynthArgs *args,
             if (gwy_data_field_rtoi(lfield, rx[k])<0
                 || gwy_data_field_rtoj(lfield, ry[k])<0
                 || gwy_data_field_rtoi(lfield, rx[k])>=xres
-                || gwy_data_field_rtoj(lfield, ry[k])>=yres)
+                || gwy_data_field_rtoj(lfield, ry[k])>=yres) {
+        //        printf("skip wrong values %d %g %g\n", k, rx[k], ry[k]);
                 continue;
+            }
 
             for (m=0; m<ndata; m++)
             {
@@ -1218,6 +1238,15 @@ deposit_synth_do(const DepositSynthArgs *args,
             fz[k] -= (integrate_lj_substrate(zlfield, rx[k], ry[k], rz[k]+diff, rdisizes[k])
                     - integrate_lj_substrate(zlfield, rx[k], ry[k], rz[k]-diff, rdisizes[k]))/2/diff;
         }
+
+        //clamp forces to prevent too fast movements at extreme parameters cases
+        /*for (k=0; k<ndata; k++)
+        {
+            fx[k] = CLAMP(fx[k], -100, 100);
+            fy[k] = CLAMP(fy[k], -100, 100);
+            fz[k] = CLAMP(fz[k], -100, 100);
+        }*/
+
         for (k=0; k<ndata; k++)
         {
           if (gwy_data_field_rtoi(lfield, rx[k])<0
@@ -1246,12 +1275,13 @@ deposit_synth_do(const DepositSynthArgs *args,
             az[k] = fz[k]/mass;
             vz[k] += 0.5*az[k]*timestep;
             vz[k] *= 0.9;
-            if (fabs(vz[k])>0.01) vz[k] = 0;
-            if (rx[k]<=gwy_data_field_itor(dfield, disizes[k])) rx[k] = gwy_data_field_itor(dfield, disizes[k]);
-            if (ry[k]<=gwy_data_field_itor(dfield, disizes[k])) ry[k] = gwy_data_field_itor(dfield, disizes[k]);
-            if (rx[k]>=(xreal-gwy_data_field_itor(dfield, disizes[k]))) rx[k] = xreal-gwy_data_field_itor(dfield, disizes[k]);
-            if (ry[k]>=(yreal-gwy_data_field_itor(dfield, disizes[k]))) ry[k] = yreal-gwy_data_field_itor(dfield, disizes[k]);
 
+            if (fabs(vz[k])>0.01) vz[k] = 0;
+            if (rx[k]<rdisizes[k]) rx[k] = rdisizes[k];
+            if (ry[k]<rdisizes[k]) ry[k] = rdisizes[k];
+            if (rx[k]>(xreal-rdisizes[k])) rx[k] = xreal-rdisizes[k];
+            if (ry[k]>(yreal-rdisizes[k])) ry[k] = yreal-rdisizes[k];
+            //printf("final %d (%g %g %g) (%g %g %g) (%g %g)\n", k, fx[k], fy[k], fz[k], rx[k], ry[k], rz[k], xreal, yreal);
         }
 
 
@@ -1264,8 +1294,6 @@ deposit_synth_do(const DepositSynthArgs *args,
             gwy_data_field_copy(surface, showfield, FALSE);
             gwy_data_field_data_changed(showfield);
         }
-
-
 
         gwy_data_field_area_copy(lfield, dfield, add, add, oxres, oyres, 0, 0);
         gwy_data_field_data_changed(dfield);
@@ -1288,7 +1316,6 @@ deposit_synth_do(const DepositSynthArgs *args,
 
 
 
-//    printf("copying center back\n");
     gwy_data_field_area_copy(lfield, dfield, add, add, oxres, oyres, 0, 0);
     gwy_data_field_data_changed(dfield);
     gwy_object_unref(lfield);
