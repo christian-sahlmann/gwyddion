@@ -394,7 +394,7 @@ gwy_gradient_editor_apply(GwyResourceEditor *res_editor)
     colorsel = GTK_COLOR_SELECTION(editor->colorsel);
     hmbox = GWY_MARKER_BOX(editor->markers);
     i = editor->pendop.i;
-    switch (editor->pendop.optype)  {
+    switch ((gint)editor->pendop.optype)  {
         /* This is both actual move and color change. */
         case GWY_MARKER_OPERATION_MOVE:
         point.x = gwy_marker_box_get_marker_position(hmbox, i);
@@ -575,7 +575,7 @@ gwy_gradient_editor_marker_selected(GwyGradientEditor *editor,
 static void
 gwy_gradient_editor_color_changed(GwyGradientEditor *editor)
 {
-    g_return_if_fail(editor->pendop.optype == GWY_MARKER_OPERATION_NONE
+    g_return_if_fail((gint)editor->pendop.optype == GWY_MARKER_OPERATION_NONE
                      || editor->pendop.optype == GWY_MARKER_OPERATION_MOVE);
     editor->pendop.optype = GWY_MARKER_OPERATION_MOVE;
     editor->pendop.i = gwy_marker_box_get_selected_marker
@@ -587,7 +587,7 @@ static void
 gwy_gradient_editor_marker_moved(GwyGradientEditor *editor,
                                  gint i)
 {
-    g_return_if_fail(editor->pendop.optype == GWY_MARKER_OPERATION_NONE
+    g_return_if_fail((gint)editor->pendop.optype == GWY_MARKER_OPERATION_NONE
                      || editor->pendop.optype == GWY_MARKER_OPERATION_MOVE);
     editor->pendop.optype = GWY_MARKER_OPERATION_MOVE;
     editor->pendop.i = i;
