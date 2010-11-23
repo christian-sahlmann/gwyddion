@@ -920,7 +920,7 @@ showit(GwyDataField *lfield, GwyDataField *dfield, gdouble *rdisizes, gdouble *r
         if (xdata[i]<0 || ydata[i]<0 || xdata[i]>=xres || ydata[i]>=yres) continue;
         if (rz[i]>(gwy_data_field_get_val(lfield, xdata[i], ydata[i])+6*rdisizes[i])) continue;
 
-    //    if (!gwy_data_field_inside(lfield, xdata[i], ydata[i])) printf("Problem for csurface lfield: %d %d\n", xdata[i], ydata[i]);
+        //if (!gwy_data_field_inside(lfield, xdata[i], ydata[i])) printf("Problem for csurface lfield: %d %d\n", xdata[i], ydata[i]);
 
         csurface = gwy_data_field_get_val(lfield, xdata[i], ydata[i]);
         disize = (gint)((gdouble)oxres*rdisizes[i]/oxreal);
@@ -934,14 +934,13 @@ showit(GwyDataField *lfield, GwyDataField *dfield, gdouble *rdisizes, gdouble *r
                     if (m<0 || n<0 || m>=xres || n>=yres) continue;
 
                     if (m>=add && n>=add && m<(xres-add) && n<(yres-add)) {
-      //                  if (!gwy_data_field_inside(dfield, m-add, n-add)) printf("Problem for dfield: %d %d\n", m-add, n-add);
+                        //if (!gwy_data_field_inside(dfield, m-add, n-add)) printf("Problem for dfield: %d %d\n", m-add, n-add);
                         surface = gwy_data_field_get_val(dfield, m-add, n-add);
-      //                  if (!gwy_data_field_inside(lfield, m, n)) printf("Problem for lfield: %d %d\n", m, n);
+                        //if (!gwy_data_field_inside(lfield, m, n)) printf("Problem for lfield: %d %d\n", m, n);
                         lsurface = gwy_data_field_get_val(lfield, m, n);
 
                         if ((sum=(disize*disize - (xdata[i]-m)*(xdata[i]-m) - (ydata[i]-n)*(ydata[i]-n)))>0)
                         {
-                            //surface = MAX(lsurface, csurface + (sqrt(sum) + disize)*oxreal/(double)oxres);
                             surface = MAX(lsurface, rz[i] + sqrt(sum)*oxreal/(double)oxres);
                             gwy_data_field_set_val(lfield, m, n, surface);
                         }
@@ -1089,11 +1088,13 @@ deposit_synth_do(const DepositSynthArgs *args,
 
     while (ndata < presetval && steps<maxsteps)
     {
-        size = CLAMP(args->size + rand_gen_gaussian(rng, args->width), args->size/1000, 10*args->size); 
+        size = args->size + rand_gen_gaussian(rng, args->width);
+        if (size<args->size/100) size = args->size/100;
+
         disize = gwy_data_field_rtoi(dfield, size);
 
-        xpos = CLAMP(disize+(g_rand_double(rng)*(xres-2*(gint)(disize+1))) + 1, 0, xres);
-        ypos = CLAMP(disize+(g_rand_double(rng)*(yres-2*(gint)(disize+1))) + 1, 0, yres);
+        xpos = CLAMP((gint)(disize+(g_rand_double(rng)*(xres-2*(gint)(disize+1))) + 1), 0, xres);
+        ypos = CLAMP((gint)(disize+(g_rand_double(rng)*(yres-2*(gint)(disize+1))) + 1), 0, yres);
         steps++;
 
         too_close = 0;
@@ -1120,7 +1121,7 @@ deposit_synth_do(const DepositSynthArgs *args,
         ry[ndata] = (gdouble)ypos*oyreal/(gdouble)oyres;
         //printf("surface at %g, particle size %g\n", gwy_data_field_get_val(lfield, xpos, ypos), rdisizes[ndata]);
 
-      //  if (!gwy_data_field_inside(lfield, xpos, ypos)) printf("Problem for deposite lfield: %d %d\n", xpos, ypos);
+        //if (!gwy_data_field_inside(lfield, xpos, ypos)) printf("Problem!: for deposite lfield: %d %d\n", xpos, ypos);
         rz[ndata] = 1.0*gwy_data_field_get_val(lfield, xpos, ypos) + rdisizes[ndata]; //2
         ndata++;
     };
