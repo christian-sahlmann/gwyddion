@@ -83,6 +83,7 @@ EXTRA_DIST = \
 if OS_WIN32
 no_undefined = -no-undefined
 export_symbols = -export-symbols libgwydgets2.def
+libgwydgets2_la_DEPENDENCIES = libgwydgets2.def
 endif
 
 # Must init
@@ -102,6 +103,14 @@ include $(top_srcdir)/utils/mkenum.mk
 GENMARSHAL_NAME = gwydgetmarshals
 GENMARSHAL_PREFIX = _gwydget_marshal
 include $(top_srcdir)/utils/genmarshal.mk
+
+libgwydgets2.def: $(libgwydgets2_la_OBJECTS)
+	@echo EXPORTS >libgwydgets2.def
+	@for lo in $(libgwydgets2_la_OBJECTS); do \
+		o=`sed "s/^pic_object='\\(.*\\)'/\\1/;t;d" "$$lo"`; \
+		$(NM) --defined-only --demangle --no-sort "$$o" \
+		| awk -F' ' '($$2=="T" && $$3 ~ /^gwy_/){print "     ",$$3}'; \
+	done | sort >>libgwydgets2.def
 
 AM_CFLAGS = @COMMON_CFLAGS@
 AM_CPPFLAGS = -I$(top_srcdir) -DG_LOG_DOMAIN=\"Gwydgets\"

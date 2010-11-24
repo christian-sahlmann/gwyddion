@@ -51,6 +51,7 @@ EXTRA_DIST = \
 if OS_WIN32
 no_undefined = -no-undefined
 export_symbols = -export-symbols libgwyprocess2.def
+libgwyprocess2_la_DEPENDENCIES = libgwyprocess2.def
 endif
 
 # Must init
@@ -66,6 +67,14 @@ MKENUM_HFILES = \
 	$(srcdir)/gwyprocessenums.h \
 	$(srcdir)/gwygrainvalue.h
 include $(top_srcdir)/utils/mkenum.mk
+
+libgwyprocess2.def: $(libgwyprocess2_la_OBJECTS)
+	@echo EXPORTS >libgwyprocess2.def
+	@for lo in $(libgwyprocess2_la_OBJECTS); do \
+		o=`sed "s/^pic_object='\\(.*\\)'/\\1/;t;d" "$$lo"`; \
+		$(NM) --defined-only --demangle --no-sort "$$o" \
+		| awk -F' ' '($$2=="T" && $$3 ~ /^gwy_/){print "     ",$$3}'; \
+	done | sort >>libgwyprocess2.def
 
 AM_CFLAGS = @COMMON_CFLAGS@ @FFTW3_CFLAGS@
 AM_CPPFLAGS = -I$(top_srcdir) -DG_LOG_DOMAIN=\"GwyProcess\"

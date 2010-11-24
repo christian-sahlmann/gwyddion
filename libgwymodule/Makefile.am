@@ -40,6 +40,7 @@ EXTRA_DIST = \
 if OS_WIN32
 no_undefined = -no-undefined
 export_symbols = -export-symbols libgwymodule2.def
+libgwymodule2_la_DEPENDENCIES = libgwymodule2.def
 endif
 
 # Must init
@@ -56,6 +57,14 @@ MKENUM_HFILES = \
 	$(srcdir)/gwymoduleloader.h \
 	$(srcdir)/gwymodule-file.h
 include $(top_srcdir)/utils/mkenum.mk
+
+libgwymodule2.def: $(libgwymodule2_la_OBJECTS)
+	@echo EXPORTS >libgwymodule2.def
+	@for lo in $(libgwymodule2_la_OBJECTS); do \
+		o=`sed "s/^pic_object='\\(.*\\)'/\\1/;t;d" "$$lo"`; \
+		$(NM) --defined-only --demangle --no-sort "$$o" \
+		| awk -F' ' '($$2=="T" && $$3 ~ /^gwy_/){print "     ",$$3}'; \
+	done | sort >>libgwymodule2.def
 
 AM_CFLAGS = @COMMON_CFLAGS@
 AM_CPPFLAGS = -I$(top_srcdir) -DG_LOG_DOMAIN=\"GwyModule\"

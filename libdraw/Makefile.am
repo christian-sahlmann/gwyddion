@@ -30,10 +30,19 @@ EXTRA_DIST = \
 if OS_WIN32
 no_undefined = -no-undefined
 export_symbols = -export-symbols libgwydraw2.def
+libgwydraw2_la_DEPENDENCIES = libgwydraw2.def
 endif
 
 noinst_HEADERS = \
 	gwydrawinternal.h
+
+libgwydraw2.def: $(libgwydraw2_la_OBJECTS)
+	@echo EXPORTS >libgwydraw2.def
+	@for lo in $(libgwydraw2_la_OBJECTS); do \
+		o=`sed "s/^pic_object='\\(.*\\)'/\\1/;t;d" "$$lo"`; \
+		$(NM) --defined-only --demangle --no-sort "$$o" \
+		| awk -F' ' '($$2=="T" && $$3 ~ /^gwy_/){print "     ",$$3}'; \
+	done | sort >>libgwydraw2.def
 
 AM_CFLAGS = @COMMON_CFLAGS@
 AM_CPPFLAGS = -I$(top_srcdir) -DG_LOG_DOMAIN=\"GwyDraw\"

@@ -67,6 +67,7 @@ BUILT_SOURCES = \
 if OS_WIN32
 no_undefined = -no-undefined
 export_symbols = -export-symbols libgwyapp2.def
+libgwyapp2_la_DEPENDENCIES = libgwyapp2.def
 endif
 
 # Must init
@@ -89,6 +90,14 @@ include $(top_srcdir)/utils/mkenum.mk
 if OS_DARWIN
 carbon_cflags = -ObjC -framework AppKit -framework Carbon -framework ApplicationServices
 endif
+
+libgwyapp2.def: $(libgwyapp2_la_OBJECTS)
+	@echo EXPORTS >libgwyapp2.def
+	@for lo in $(libgwyapp2_la_OBJECTS); do \
+		o=`sed "s/^pic_object='\\(.*\\)'/\\1/;t;d" "$$lo"`; \
+		$(NM) --defined-only --demangle --no-sort "$$o" \
+		| awk -F' ' '($$2=="T" && $$3 ~ /^gwy_/){print "     ",$$3}'; \
+	done | sort >>libgwyapp2.def
 
 AM_CFLAGS = $(carbon_cflags) @FFTW3_CFLAGS@ @UNIQUE_CFLAGS@ @COMMON_CFLAGS@
 AM_CPPFLAGS = -I$(top_srcdir)
