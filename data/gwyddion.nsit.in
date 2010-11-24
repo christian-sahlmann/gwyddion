@@ -1,0 +1,274 @@
+; Gwyddion NSIS installer with bundled Gtk+ and stuff.
+; This needs to be expanded by expandsi to obtain the actual SetOutDir, File,
+; Delete and RMDir commands (that's why the extension is nsit, not nsi).
+; Written by Yeti.  Public domain.
+
+!define GTK_BIN_VERSION "2.10.0"
+!define PANGO_BIN_VERSION "1.6.0"
+
+!define PRODUCT_VERSION "@PACKAGE_VERSION@"
+!define PRODUCT_BIN_VERSION "2.0"
+!define PRODUCT_NAME "Gwyddion"
+!define PRODUCT_PUBLISHER "Gwyddion developers"
+!define PRODUCT_WEB_SITE "http://gwyddion.net/"
+
+!define PRODUCT_REG_KEY "Software\${PRODUCT_NAME}\${PRODUCT_BIN_VERSION}"
+!define PRODUCT_UNINST_KEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_NAME}"
+!define PRODUCT_PATH_KEY "Software\Microsoft\Windows\CurrentVersion\App Paths\gwyddion.exe"
+!define ICON_FILE "share/gwyddion/pixmaps/gwyddion.ico"
+!define UNINSTALLER_NAME "uninstall.exe"
+
+!define ALL_USERS
+
+Var Locale
+Var Dialog
+Var Label
+Var RadioButton
+
+;----------------------------------------------------------------------------
+
+RequestExecutionLevel admin
+SetCompressor /SOLID lzma
+;SetCompressor /SOLID zlib
+CRCCheck On
+Name "${PRODUCT_NAME}"
+OutFile "${PRODUCT_NAME}-${PRODUCT_VERSION}.exe"
+InstallDir "$PROGRAMFILES\${PRODUCT_NAME}"
+InstallDirRegKey HKLM "${PRODUCT_REG_KEY}" "InstallDir"
+XPStyle On
+
+;----------------------------------------------------------------------------
+
+!define MUI_ICON "${ICON_FILE}"
+!define MUI_UNICON "${ICON_FILE}"
+
+!include "LogicLib.nsh"
+!include "MUI2.nsh"
+
+!define MUI_ABORTWARNING
+
+!insertmacro MUI_PAGE_LICENSE "licenses.txt"
+!insertmacro MUI_PAGE_DIRECTORY
+Page custom ChooseLocale
+!insertmacro MUI_PAGE_INSTFILES
+
+!insertmacro MUI_UNPAGE_CONFIRM
+!insertmacro MUI_UNPAGE_INSTFILES
+
+!insertmacro MUI_LANGUAGE "English"
+
+;----------------------------------------------------------------------------
+
+; Fetch user's preferred locale for upgrade
+Function .onInit
+    ReadRegStr $Locale HKLM "${PRODUCT_REG_KEY}" "Locale"
+    IfErrors 0 NoError
+    StrCpy $Locale "en_US.UTF-8"
+    NoError:
+    Call DetectPrevInstallation
+FunctionEnd
+
+;----------------------------------------------------------------------------
+
+Section "Gwyddion (required)"
+    SectionIn RO
+
+    SetShellVarContext all
+
+    GwyExpandFiles "COPYING-expat.txt"
+    GwyExpandFiles "COPYING-fontconfig.txt"
+    GwyExpandFiles "COPYING-GPLv2.txt"
+    GwyExpandFiles "COPYING-LGPLv2.txt"
+    GwyExpandFiles "COPYING-libjpeg.txt"
+    GwyExpandFiles "COPYING-zlib.txt"
+    GwyExpandFiles "Copyright-libxml2.txt"
+    GwyExpandFiles "LICENSE-JasPer.txt"
+    GwyExpandFiles "LICENSE-libpng.txt"
+    GwyExpandFiles "bin\fc-cache.exe"
+    GwyExpandFiles "bin\fc-list.exe"
+    GwyExpandFiles "bin\gdbus.exe"
+    GwyExpandFiles "bin\gdk-pixbuf-query-loaders.exe"
+    GwyExpandFiles "bin\gsettings.exe"
+    GwyExpandFiles "bin\gspawn-win32-helper-console.exe"
+    GwyExpandFiles "bin\gspawn-win32-helper.exe"
+    GwyExpandFiles "bin\gtk-query-immodules-2.0.exe"
+    GwyExpandFiles "bin\gtk-update-icon-cache.exe"
+    GwyExpandFiles "bin\gtk-update-icon-cache.exe.manifest"
+    GwyExpandFiles "bin\gwyddion.exe"
+    GwyExpandFiles "bin\gwyddion-thumbnailer.exe"
+    GwyExpandFiles "bin\libasprintf-0.dll"
+    GwyExpandFiles "bin\libatk-1.0-0.dll"
+    GwyExpandFiles "bin\libcairo-2.dll"
+    GwyExpandFiles "bin\libcharset-1.dll"
+    GwyExpandFiles "bin\libexpat-1.dll"
+    GwyExpandFiles "bin\libfftw3-3.dll"
+    GwyExpandFiles "bin\libfontconfig-1.dll"
+    GwyExpandFiles "bin\libfreetype-6.dll"
+    GwyExpandFiles "bin\libgailutil-18.dll"
+    GwyExpandFiles "bin\libgdkglext-win32-1.0-0.dll"
+    GwyExpandFiles "bin\libgdk_pixbuf-2.0-0.dll"
+    GwyExpandFiles "bin\libgdk-win32-2.0-0.dll"
+    GwyExpandFiles "bin\libgettextlib-0-17.dll"
+    GwyExpandFiles "bin\libgettextpo-0.dll"
+    GwyExpandFiles "bin\libgettextsrc-0-17.dll"
+    GwyExpandFiles "bin\libgio-2.0-0.dll"
+    GwyExpandFiles "bin\libglib-2.0-0.dll"
+    GwyExpandFiles "bin\libgmodule-2.0-0.dll"
+    GwyExpandFiles "bin\libgobject-2.0-0.dll"
+    GwyExpandFiles "bin\libgthread-2.0-0.dll"
+    GwyExpandFiles "bin\libgtkglext-win32-1.0-0.dll"
+    GwyExpandFiles "bin\libgtk-win32-2.0-0.dll"
+    GwyExpandFiles "bin\libgwy*2-0.dll"
+    GwyExpandFiles "bin\libiconv-2.dll"
+    GwyExpandFiles "bin\libintl-8.dll"
+    GwyExpandFiles "bin\libjasper-1.dll"
+    GwyExpandFiles "bin\libjpeg-7.dll"
+    GwyExpandFiles "bin\libpango-1.0-0.dll"
+    GwyExpandFiles "bin\libpangocairo-1.0-0.dll"
+    GwyExpandFiles "bin\libpangoft2-1.0-0.dll"
+    GwyExpandFiles "bin\libpangowin32-1.0-0.dll"
+    GwyExpandFiles "bin\libpixman-1-0.dll"
+    GwyExpandFiles "bin\libpng14-14.dll"
+    GwyExpandFiles "bin\libxml2-2.dll"
+    GwyExpandFiles "bin\pango-querymodules.exe"
+    GwyExpandFiles "bin\zlib1.dll"
+    GwyExpandFiles "etc\pango\pango.modules"
+    GwyExpandFiles "etc\gtk-2.0\gtk.immodules"
+    GwyExpandFiles "etc\gtk-2.0\im-multipress.conf"
+    GwyExpandFiles "lib\charset.alias"
+    GwyExpandFiles "lib\gdk-pixbuf-2.0\${GTK_BIN_VERSION}\loaders.cache"
+    GwyExpandFiles "lib\gdk-pixbuf-2.0\${GTK_BIN_VERSION}\loaders\*.dll"
+    GwyExpandFiles "lib\gtk-2.0\${GTK_BIN_VERSION}\engines\*.dll"
+    GwyExpandFiles "lib\gtk-2.0\${GTK_BIN_VERSION}\immodules\*.dll"
+    GwyExpandFiles "lib\gtk-2.0\modules\*.dll"
+    GwyExpandFiles "lib\gwyddion\modules\*.dll"
+    GwyExpandFiles "lib\gwyddion\modules\*\*.dll"
+    GwyExpandFiles "lib\pango\${PANGO_BIN_VERSION}\modules\*.dll"
+    GwyExpandFiles "share\gwyddion\glmaterials\*"
+    GwyExpandFiles "share\gwyddion\gradients\*"
+    GwyExpandFiles "share\gwyddion\pixmaps\*"
+    GwyExpandFiles "share\gwyddion\ui\toolbox.xml"
+    GwyExpandFiles "share\themes\*\*\gtkrc"
+    GwyExpandFiles "share\locale\cs\LC_MESSAGES\*.mo"
+    GwyExpandFiles "share\locale\de\LC_MESSAGES\*.mo"
+    GwyExpandFiles "share\locale\it\LC_MESSAGES\*.mo"
+    GwyExpandFiles "share\locale\fr\LC_MESSAGES\*.mo"
+    GwyExpandFiles "share\locale\ru\LC_MESSAGES\*.mo"
+
+    CreateShortCut "$SMPROGRAMS\Gwyddion.lnk" "$INSTDIR\bin\gwyddion.exe" "" "$INSTDIR\${ICON_FILE}" "" SW_SHOWNORMAL "" "Gwyddion - SPM data analysis"
+
+    WriteRegStr HKLM "${PRODUCT_REG_KEY}" "InstallDir" "$INSTDIR"
+    WriteRegStr HKLM "${PRODUCT_REG_KEY}" "Locale" $Locale
+    WriteRegStr HKLM "${PRODUCT_PATH_KEY}" "" "$INSTDIR\bin\gwyddion.exe"
+    WriteRegStr HKLM "${PRODUCT_PATH_KEY}" "Path" "$INSTDIR\bin"
+    WriteRegStr HKLM "${PRODUCT_UNINST_KEY}" "DisplayName" "${PRODUCT_NAME}"
+    WriteRegStr HKLM "${PRODUCT_UNINST_KEY}" "UninstallString" "$INSTDIR\${UNINSTALLER_NAME}"
+    WriteRegStr HKLM "${PRODUCT_UNINST_KEY}" "InstallLocation" "$INSTDIR"
+    WriteRegStr HKLM "${PRODUCT_UNINST_KEY}" "Publisher" "${PRODUCT_PUBLISHER}"
+    WriteRegStr HKLM "${PRODUCT_UNINST_KEY}" "DisplayIcon" "$INSTDIR\${ICON_FILE}"
+    WriteRegStr HKLM "${PRODUCT_UNINST_KEY}" "URLInfoAbout" "${PRODUCT_WEB_SITE}"
+    WriteRegStr HKLM "${PRODUCT_UNINST_KEY}" "DisplayVersion" "${PRODUCT_VERSION}"
+
+    WriteRegStr HKCR ".gwy" "" "Gwyddion.NativeData"
+    WriteRegStr HKCR "Gwyddion.NativeData" "" "Gwyddion Native Data File"
+    WriteRegStr HKCR "Gwyddion.NativeData\DefaultIcon" "" "$INSTDIR\${ICON_FILE}"
+    WriteRegStr HKCR "Gwyddion.NativeData\shell\open\command" "" '$INSTDIR\bin\gwyddion.exe --remote-new "%1"'
+
+    WriteUninstaller "${UNINSTALLER_NAME}"
+SectionEnd
+
+;----------------------------------------------------------------------------
+
+Section "Uninstall"
+    DeleteRegKey HKCR "Gwyddion.NativeData"
+    DeleteRegKey HKCR ".gwy"
+    DeleteRegKey HKLM "${PRODUCT_REG_KEY}"
+    DeleteRegKey HKLM "${PRODUCT_PATH_KEY}"
+    DeleteRegKey HKLM "${PRODUCT_UNINST_KEY}"
+
+    Delete "$SMPROGRAMS\Gwyddion.lnk"
+
+    GwyExpandDeleteAll
+SectionEnd
+
+;----------------------------------------------------------------------------
+
+; Detect existing installation and give the user the choice to
+; - remove the old version before proceeding
+; - ignore its presence and continue installation
+; - abort the installation
+Function DetectPrevInstallation
+    SetShellVarContext all
+    push $R0
+    push $R1
+    push $R2
+
+    ReadRegStr $R0 HKLM "${PRODUCT_UNINST_KEY}" "UninstallString"
+    StrCmp $R0 "" detect_prev_finished
+
+    ReadRegStr $R1 HKLM "${PRODUCT_UNINST_KEY}" "DisplayVersion"
+    ReadRegStr $R2 HKLM "${PRODUCT_UNINST_KEY}" "InstallLocation"
+
+    MessageBox MB_YESNOCANCEL|MB_ICONQUESTION \
+        "${PRODUCT_NAME} $R1 is already installed in $R2.$\n$\n\
+        Do you want to replace it?$\n$\n\
+        Click Yes to remove the previous version, \
+        No to ignore the previous version and proceed, \
+        Cancel to abort the installation." \
+        /SD IDYES IDYES uninstall_prev IDNO detect_prev_finished
+
+    Quit
+
+    uninstall_prev:
+    ExecWait '$R0 /S _?=$INSTDIR'
+
+    detect_prev_finished:
+    pop $R2
+    pop $R1
+    pop $R0
+FunctionEnd
+
+;----------------------------------------------------------------------------
+
+; Create radio button with label LABEL and value LOCALE at position VPOS
+!macro GWY_LOCALE_CHOOSER LABEL LOCALE VPOS
+    ${NSD_CreateRadioButton} 0u ${VPOS} 100% 12u ${LABEL}
+    Pop $RadioButton
+    nsDialogs::SetUserData $RadioButton ${LOCALE}
+    ${If} $Locale == ${LOCALE}
+        ${NSD_SetState} $RadioButton ${BST_CHECKED}
+    ${EndIf}
+    ${NSD_OnClick} $RadioButton LocaleOnClick
+!macroend
+
+; Installer page to choose Gwyddion translation
+Function ChooseLocale
+    nsDialogs::Create 1018
+    Pop $Dialog
+
+    ${If} $Dialog == error
+    Abort
+    ${EndIf}
+
+    !insertmacro MUI_HEADER_TEXT "Choose Language" "Choose the language of Gwyddion user interface."
+
+    ${NSD_CreateLabel} 0u 0u 100% 12u "Available languages:"
+    Pop $Label
+
+    !insertmacro GWY_LOCALE_CHOOSER "English" "en_US.UTF-8" 12u
+    !insertmacro GWY_LOCALE_CHOOSER "Czech" "cs_CZ.UTF-8" 24u
+    !insertmacro GWY_LOCALE_CHOOSER "French" "fr_FR.UTF-8" 36u
+    !insertmacro GWY_LOCALE_CHOOSER "German" "de_DE.UTF-8" 48u
+    !insertmacro GWY_LOCALE_CHOOSER "Italian" "it_IT.UTF-8" 60u
+    !insertmacro GWY_LOCALE_CHOOSER "Russian" "ru_RU.UTF-8" 72u
+
+    nsDialogs::Show
+FunctionEnd
+
+Function LocaleOnClick
+    Pop $1
+    nsDialogs::GetUserData $1
+    Pop $Locale
+FunctionEnd
+
+; vim: set ft=nsis ff=dos ts=4 sw=4 et :

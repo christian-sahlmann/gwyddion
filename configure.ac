@@ -61,6 +61,7 @@ AC_CONFIG_FILES(\
   data/gwyddion.iss \
   data/gwyddion-devel.iss \
   data/gwyddion.pc \
+  data/gwyddion.nsit \
   data/config.h.win32 \
 )
 AC_CONFIG_HEADER(config.h)

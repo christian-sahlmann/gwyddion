@@ -34,6 +34,7 @@ EXTRA_DIST = \
 	gwyddion-thumbnailer.schemas.in \
 	gwyddion.iss \
 	gwyddion.iss.in \
+	gwyddion.nsit.in \
 	gwyddion.pc.in \
 	gwyddion.spec.in \
 	gwyddion-cfg.py \
