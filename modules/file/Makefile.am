@@ -92,6 +92,7 @@ file_LTLIBRARIES = \
 	stpfile.la \
 	surffile.la \
 	unisoku.la \
+	wipfile.la \
 	witfile.la \
 	wsxmfile.la
 
@@ -192,7 +193,7 @@ stmprg_la_SOURCES        = stmprg.c
 stpfile_la_SOURCES       = stpfile.c
 surffile_la_SOURCES      = surffile.c
 unisoku_la_SOURCES       = unisoku.c
-#wipfile_la_SOURCES       = wipfile.c
+wipfile_la_SOURCES       = wipfile.c
 witfile_la_SOURCES       = witfile.c
 wsxmfile_la_SOURCES      = wsxmfile.c
 
