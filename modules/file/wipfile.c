@@ -37,10 +37,12 @@
  * Read
  **/
 
-#include "config.h"
-//remove me
+/* FIXME: remove this in final version */
+#define DEBUG
 #include <stdio.h>
-//
+/* end */
+
+#include "config.h"
 #include <string.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
@@ -163,64 +165,63 @@ static void print_tag_data(WIPTag *tag, guchar **pos, guint asterisks)
     guchar *p;
     gchar *str;
     gint i, j, n, str_len;
-    
+
     if (WIPTagDataSize[tag->type])
         n = (tag->data_end - tag->data_start)/WIPTagDataSize[tag->type];
     else if (tag->type) // string
         n = 1;
     else // container
         n = 0;
-        
+
     if (n > 10) {
-		for (j = 0; j < asterisks; j++)
-			gwy_debug("  ");
-		gwy_debug("%d 0x%X\n", n, tag->data_start);
-		n = 0; // printing offset instead of data
-	}
-	
-	p = *pos;
-    for (i = 0; i < n; i++) {
-		for (j = 0; j < asterisks; j++)
-			gwy_debug("  ");
-		switch(tag->type) {
-			case 0:
-				break;
-			case 1:
-				gwy_debug("pascal extended ");
-				break;
-			case 2:
-				gwy_debug("%g ",gwy_get_gdouble_le(&p));
-				break;
-			case 3:
-				gwy_debug("%g ",gwy_get_gfloat_le(&p));
-				break;
-			case 4:
-				gwy_debug("%d ",gwy_get_gint64_le(&p));
-				break;
-			case 5:
-				gwy_debug("%d ",gwy_get_gint32_le(&p));
-				break;
-			case 6:
-				gwy_debug("%u ",gwy_get_guint32_le(&p));
-				break;
-			case 7:
-				gwy_debug("%u ",(*p++));
-				break;
-			case 8:
-				gwy_debug("%u ",(*p++));
-				break;
-			case 9:
-				str_len = gwy_get_gint32_le(&p);
-				str = g_strndup(p, str_len);
-				gwy_debug("%s",str);
-				g_free(str);
-				break;
-			default:
-				gwy_debug("something wrong ");
-		}
-		gwy_debug("\n");	
+        for (j = 0; j < asterisks; j++)
+            fprintf(stderr,"  ");
+        fprintf(stderr,"%d 0x%X\n", n, tag->data_start);
+        n = 0; // printing offset instead of data
     }
-    *pos = tag->data_end;
+
+    p = *pos;
+    for (i = 0; i < n; i++) {
+        for (j = 0; j < asterisks; j++)
+            fprintf(stderr,"  ");
+        switch(tag->type) {
+            case 0:
+                break;
+            case 1:
+                fprintf(stderr,"pascal extended ");
+                break;
+            case 2:
+                fprintf(stderr,"%g ",gwy_get_gdouble_le(&p));
+                break;
+            case 3:
+                fprintf(stderr,"%g ",gwy_get_gfloat_le(&p));
+                break;
+            case 4:
+                fprintf(stderr,"%d ",gwy_get_gint64_le(&p));
+                break;
+            case 5:
+                fprintf(stderr,"%d ",gwy_get_gint32_le(&p));
+                break;
+            case 6:
+                fprintf(stderr,"%u ",gwy_get_guint32_le(&p));
+                break;
+            case 7:
+                fprintf(stderr,"%u ",(*p++));
+                break;
+            case 8:
+                fprintf(stderr,"%u ",(*p++));
+                break;
+            case 9:
+                str_len = gwy_get_gint32_le(&p);
+                str = g_strndup(p, str_len);
+                fprintf(stderr,"%s",str);
+                g_free(str);
+                break;
+            default:
+                fprintf(stderr,"something wrong ");
+        }
+        fprintf(stderr,"\n");
+    }
 }
 
 static WIPTag *wip_get_tag(guchar **pos, gsize *size)
@@ -243,7 +244,7 @@ static WIPTag *wip_get_tag(guchar **pos, gsize *size)
     tag->data_start = gwy_get_gint64_le(&p);
     tag->data_end = gwy_get_gint64_le(&p);
     /*
-    gwy_debug("%d %s %d %lld %lld\n",  tag->name_length,
+    fprintf(stderr,"%d %s %d %lld %lld\n",  tag->name_length,
                 tag->name, tag->type, tag->data_start, tag->data_end);
     */
     *pos = p;
@@ -267,22 +268,22 @@ static void print_tags (const guchar *buffer, gsize pos,
     gint i;
 
     cur = pos;
-    p = buffer + pos;
+    p = (guchar *)(buffer + pos);
     while(cur < end) {
-        p = buffer + cur;
+        p = (guchar *)(buffer + cur);
         remaining = end - cur;
         if(!(tag = wip_get_tag(&p,&remaining))) {
         }
         else {
             for (i = 0; i < n; i++)
-                gwy_debug("* ");
-            gwy_debug("%s \n", tag->name);
-            if(!tag->type) 
+                fprintf(stderr,"* ");
+            fprintf(stderr,"%s \n", tag->name);
+            if(!tag->type)
                 print_tags(buffer, tag->data_start, tag->data_end, n+1);
             else {
-				p = buffer + tag->data_start;
-				print_tag_data(tag, &p, n+1);
-			}
+                p = (guchar *)(buffer + tag->data_start);
+                print_tag_data(tag, &p, n+1);
+            }
             cur = tag->data_end;
             wip_free_tag(tag);
         }
