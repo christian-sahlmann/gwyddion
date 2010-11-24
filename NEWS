@@ -43,6 +43,10 @@ Modules:
 - Grain distributions: The comment header option is remembered.
 - Pygwy console: It can be run also if no data is loaded.
 
+Other:
+- If compiled by gcc and it accepts option -fexcess-precision=fast it is passed
+  to the compile to be on the fast side.
+
 
 2.21 (2010-10-26)
 Application:
