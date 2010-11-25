@@ -24,6 +24,7 @@ filedir = $(pkglibdir)/modules/file
 
 file_LTLIBRARIES = \
 	aistfile.la \
+	anfatec.la \
 	apefile.la \
 	asciiexport.la \
 	assing-afm.la \
@@ -125,8 +126,9 @@ module_libadd = \
 	@GTK_LIBS@
 endif
 
-apefile_la_SOURCES       = apefile.c
 aistfile_la_SOURCES      = aistfile.c
+anfatec_la_SOURCES       = anfatec.c
+apefile_la_SOURCES       = apefile.c
 asciiexport_la_SOURCES   = asciiexport.c
 assing_afm_la_SOURCES    = assing-afm.c
 attocube_la_SOURCES      = attocube.c
