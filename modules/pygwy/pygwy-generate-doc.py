@@ -142,8 +142,11 @@ def print_functions(spaces, method, docs, enums, level=1):
             printdoc('@param '+param_name+': '+param[1].rstrip()+ "Expected values: "+enum_str[param[0]].rstrip()+ptype)
          else:
             printdoc('@param '+param_name+': '+param[1].rstrip()+ptype)
-      if len(docs[method.c_name].ret) > 0:
-         printdoc("@return:"+docs[method.c_name].ret)
+      ret = docs[method.c_name].ret
+      if len(ret) > 0:
+         if type(ret) is not type(''):
+           ret = ret[0]
+         printdoc("@return:"+ret)
       print spaces+spaces2+"\"\"\""
    print spaces+spaces2+"return", method.guess_return_value_ownership()
 
