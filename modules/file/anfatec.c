@@ -17,7 +17,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
-
+#define DEBUG 1
 /**
  * [FILE-MAGIC-FREEDESKTOP]
  * <mime-type type="application/x-anfatec-spm">
@@ -48,6 +48,7 @@
 #include <libgwymodule/gwymodule-file.h>
 #include <libprocess/datafield.h>
 #include <libprocess/spectra.h>
+#include <app/gwymoduleutils-file.h>
 #include <app/data-browser.h>
 
 #include "err.h"
@@ -131,29 +132,53 @@ static gchar*
 anfatec_find_parameterfile(const gchar *filename)
 {
     gchar *paramfile;
-    guint len;
+    /* 4 is the length of .int, we start with removal of that. */
+    guint len, removed = 4, ntries = 3;
+    gboolean removed_something;
+
+    if (g_str_has_suffix(filename, ".txt")
+        || g_str_has_suffix(filename, ".TXT"))
+        return g_strdup(filename);
 
     if (g_str_has_suffix(filename, ".int")
         || g_str_has_suffix(filename, ".INT")) {
         gwy_debug("File name ends with .int");
         paramfile = g_strdup(filename);
         len = strlen(paramfile);
-        strcpy(paramfile + len-3, ".txt");
-        gwy_debug("Looking for %s", paramfile);
-        if (g_file_test(paramfile, G_FILE_TEST_IS_REGULAR
-                        || G_FILE_TEST_IS_SYMLINK)) {
-            gwy_debug("Found.");
-            return paramfile;
-        }
-        gwy_debug("Looking for %s", paramfile);
-        strcpy(paramfile + len-3, ".TXT");
-        if (g_file_test(paramfile, G_FILE_TEST_IS_REGULAR
-                        || G_FILE_TEST_IS_SYMLINK)) {
-            gwy_debug("Found.");
-            return paramfile;
-        }
+
+        do {
+            removed_something = FALSE;
+
+            /* Try to add .txt, both lower- and uppercase */
+            strcpy(paramfile + len-removed, ".txt");
+            gwy_debug("Looking for %s", paramfile);
+            if (g_file_test(paramfile, G_FILE_TEST_IS_REGULAR
+                            || G_FILE_TEST_IS_SYMLINK)) {
+                gwy_debug("Found.");
+                return paramfile;
+            }
+            gwy_debug("Looking for %s", paramfile);
+            strcpy(paramfile + len-removed, ".TXT");
+            if (g_file_test(paramfile, G_FILE_TEST_IS_REGULAR
+                            || G_FILE_TEST_IS_SYMLINK)) {
+                gwy_debug("Found.");
+                return paramfile;
+            }
+
+            /* Remove a contiguous sequence matching [A-Z]+[a-z]*.  This means
+             * something like TopoFwd. */
+            while (removed < len && g_ascii_islower(paramfile[len-removed-1])) {
+                removed_something = TRUE;
+                removed++;
+            }
+            while (removed < len && g_ascii_isupper(paramfile[len-removed-1])) {
+                removed_something = TRUE;
+                removed++;
+            }
+        } while (removed_something && removed < len && ntries--);
+
+        gwy_debug("No matching paramter file.");
         g_free(paramfile);
-        gwy_debug("No matching paramtert file.");
     }
 
     return NULL;
@@ -161,24 +186,111 @@ anfatec_find_parameterfile(const gchar *filename)
 
 static GwyContainer*
 anfatec_load(const gchar *filename,
-             G_GNUC_UNUSED GwyRunType mode,
+             GwyRunType mode,
              GError **error)
 {
     GwyContainer *container = NULL, *meta;
-    gchar *text = NULL;
+    GHashTable *hash = NULL;
+    gchar *line, *value, *key, *text = NULL;
     GError *err = NULL;
     GwyDataField *dfield = NULL;
-    gchar key[32];
-    guint i;
+    gsize size;
+    gint sectdepth, id;
 
-    if (!g_file_get_contents(filename, &text, NULL, &err)) {
+    if (!g_file_get_contents(filename, &text, &size, &err)) {
         err_GET_FILE_CONTENTS(error, &err);
         return NULL;
     }
 
+    if (!gwy_memmem(text, MIN(size, GWY_FILE_DETECT_BUFFER_SIZE),
+                    MAGIC, MAGIC_SIZE)) {
+        gchar *paramfile = anfatec_find_parameterfile(filename);
 
+        /* If we are given data but find a suitable parameter file, recurse. */
+        if (paramfile) {
+            if (!gwy_strequal(paramfile, filename))
+                container = anfatec_load(paramfile, mode, error);
+            else
+                g_set_error(error, GWY_MODULE_FILE_ERROR,
+                            GWY_MODULE_FILE_ERROR_IO,
+                            _("The parameter file cannot be loaded."));
+            g_free(paramfile);
+        }
+        else
+            g_set_error(error, GWY_MODULE_FILE_ERROR,
+                        GWY_MODULE_FILE_ERROR_IO,
+                        _("Cannot find the corresponding parameter file."));
+        return container;
+    }
+
+    /* Cannot use GwyTextHeaderParser due to unlabelled sections. */
+    hash = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
+    sectdepth = 0;
+    id = -1;
+    while ((line = gwy_str_next_line(&text))) {
+        g_strstrip(line);
+        if (!line[0] || line[0] == ';')
+            continue;
+
+        if (gwy_strequal(line, "FileDescBegin")) {
+            if (sectdepth) {
+                g_set_error(error, GWY_MODULE_FILE_ERROR,
+                            GWY_MODULE_FILE_ERROR_DATA,
+                            _("FileDescBegin cannot be inside another "
+                              "FileDesc."));
+                goto fail;
+            }
+            sectdepth++;
+            id++;
+            continue;
+        }
+        if (gwy_strequal(line, "FileDescEnd")) {
+            if (!sectdepth) {
+                g_set_error(error, GWY_MODULE_FILE_ERROR,
+                            GWY_MODULE_FILE_ERROR_DATA,
+                            _("FileDescEnd has no corresponding "
+                              "FileDescBegin."));
+                goto fail;
+            }
+            sectdepth--;
+            continue;
+        }
+
+        if (!(value = strchr(line, ':'))) {
+            g_warning("Cannot parse line %s", line);
+            continue;
+        }
+
+        *value = '\0';
+        value++;
+        g_strchomp(line);
+        g_strchug(value);
+        if (sectdepth)
+            key = g_strdup_printf("%d::%s", id, line);
+        else
+            key = g_strdup(line);
+        gwy_debug("<%s> = <%s>", key, value);
+        g_hash_table_replace(hash, key, value);
+    }
+
+    if (sectdepth) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("FileDescBegin has no corresponding "
+                      "FileDescEnd."));
+        goto fail;
+    }
+
+    if (id == -1) {
+        err_NO_DATA(error);
+        goto fail;
+    }
+
+
+    err_NO_DATA(error);
 fail:
     g_free(text);
+    if (hash)
+        g_hash_table_destroy(hash);
 
     return container;
 }
