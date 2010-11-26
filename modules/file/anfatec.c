@@ -61,13 +61,16 @@
 
 #define Nanometer 1e-9
 
-static gboolean      module_register            (void);
-static gint          anfatec_detect             (const GwyFileDetectInfo *fileinfo,
-                                                 gboolean only_name);
-static gchar* anfatec_find_parameterfile(const gchar *filename);
-static GwyContainer* anfatec_load               (const gchar *filename,
-                                                 GwyRunType mode,
-                                                 GError **error);
+static gboolean      module_register           (void);
+static gint          anfatec_detect            (const GwyFileDetectInfo *fileinfo,
+                                                gboolean only_name);
+static gchar*        anfatec_find_parameterfile(const gchar *filename);
+static GwyContainer* anfatec_load              (const gchar *filename,
+                                                GwyRunType mode,
+                                                GError **error);
+static GwyDataField* anfatec_load_channel      (GHashTable *hash,
+                                                gint id,
+                                                gchar **title);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -189,13 +192,13 @@ anfatec_load(const gchar *filename,
              GwyRunType mode,
              GError **error)
 {
-    GwyContainer *container = NULL, *meta;
+    GwyContainer *container = NULL;
     GHashTable *hash = NULL;
     gchar *line, *value, *key, *text = NULL;
     GError *err = NULL;
     GwyDataField *dfield = NULL;
     gsize size;
-    gint sectdepth, id;
+    gint sectdepth, id, maxid;
 
     if (!g_file_get_contents(filename, &text, &size, &err)) {
         err_GET_FILE_CONTENTS(error, &err);
@@ -285,6 +288,33 @@ anfatec_load(const gchar *filename,
         goto fail;
     }
 
+    if (!require_keys(hash, error,
+                      "xPixel", "yPixel",
+                      "XScanRange", "YScanRange",
+                      NULL))
+        goto fail;
+
+    maxid = id;
+    for (id = 0; id <= maxid; id++) {
+        GQuark quark;
+        gchar *title;
+
+        if (!(dfield = anfatec_load_channel(hash, id, &title)))
+            continue;
+
+        if (!container)
+            container = gwy_container_new();
+        quark = gwy_app_get_data_key_for_id(id);
+        gwy_container_set_object(container, quark, dfield);
+
+        if (title) {
+            key = g_strdup_printf("/%d/data/title", id);
+            gwy_container_set_string_by_name(container, key, g_strdup(title));
+            g_free(key);
+        }
+        else
+            gwy_app_channel_title_fall_back(container, id);
+    }
 
     err_NO_DATA(error);
 fail:
@@ -293,6 +323,109 @@ fail:
         g_hash_table_destroy(hash);
 
     return container;
+}
+
+static GwyDataField*
+anfatec_load_channel(GHashTable *hash,
+                     gint id,
+                     gchar **title)
+{
+    GwyDataField *dfield = NULL;
+    GwySIUnit *unitx = NULL, *unity = NULL, *unitz = NULL;
+    const gchar *filename;
+    gint xres, yres, i, power10x, power10y, power10z;
+    gdouble xreal, yreal, q;
+    gint32 *buffer = NULL;
+    gchar *key, *value;
+    gdouble *data;
+    FILE *fh;
+
+    *title = NULL;
+
+    xres = atoi(g_hash_table_lookup(hash, "xPixel"));
+    yres = atoi(g_hash_table_lookup(hash, "xPixel"));
+    if (err_DIMENSION(NULL, xres) || err_DIMENSION(NULL, yres))
+        return NULL;
+
+    key = g_strdup_printf("%d::FileName", id);
+    filename = g_hash_table_lookup(hash, key);
+    g_free(key);
+    if (!filename) {
+        g_warning("Missing FileName in channel %d.", id);
+        return NULL;
+    }
+
+    /* Must use system fopen() that does no file name charset conversion. */
+    fh = fopen(filename, "rb");
+    if (!fh) {
+        g_warning("Cannot open %s.", filename);
+        goto fail;
+    }
+
+    buffer = g_new(gint32, xres*yres);
+    if (fread(buffer, sizeof(guint32), xres*yres, fh) != xres*yres) {
+        g_warning("Cannot read data from %s.", filename);
+        goto fail;
+    }
+    fclose(fh);
+    fh = NULL;
+
+    xreal = g_ascii_strtod(g_hash_table_lookup(hash, "XScanRange"), NULL);
+    xreal = fabs(xreal);
+    if (!(xreal > 0.0)) {
+        g_warning("Real x size is 0.0, fixing to 1.0");
+        xreal = 1.0;
+    }
+    yreal = g_ascii_strtod(g_hash_table_lookup(hash, "YScanRange"), NULL);
+    if (!(yreal > 0.0)) {
+        g_warning("Real y size is 0.0, fixing to 1.0");
+        yreal = 1.0;
+    }
+
+    unitx = gwy_si_unit_new_parse(g_hash_table_lookup(hash, "XPhysUnit"),
+                                  &power10x);
+    unity = gwy_si_unit_new_parse(g_hash_table_lookup(hash, "YPhysUnit"),
+                                  &power10y);
+    if (!gwy_si_unit_equal(unitx, unity))
+        g_warning("X and Y units differ, using X");
+
+    key = g_strdup_printf("%d::PhysUnit", id);
+    unitz = gwy_si_unit_new_parse(g_hash_table_lookup(hash, key),
+                                  &power10z);
+    g_free(key);
+
+    dfield = gwy_data_field_new(xres, yres,
+                                xreal*pow10(power10x), yreal*pow10(power10y),
+                                FALSE);
+    gwy_data_field_set_si_unit_xy(dfield, unitx);
+    gwy_data_field_set_si_unit_z(dfield, unitz);
+
+    q = pow10(power10z);
+    key = g_strdup_printf("%d::Scale", id);
+    if ((value = g_hash_table_lookup(hash, key)))
+        q *= g_ascii_strtod(value, NULL);
+    g_free(key);
+
+    data = gwy_data_field_get_data(dfield);
+    for (i = 0; i < xres*yres; i++) {
+        data[i] = q*GINT32_FROM_LE(buffer[i]);
+    }
+
+    key = g_strdup_printf("%d::Caption", id);
+    if ((value = g_hash_table_lookup(hash, key)))
+        *title = value;
+    g_free(key);
+
+fail:
+    if (fh)
+        fclose(fh);
+    if (buffer)
+        g_free(buffer);
+    gwy_object_unref(unitx);
+    gwy_object_unref(unity);
+    gwy_object_unref(unitz);
+
+    return dfield;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
