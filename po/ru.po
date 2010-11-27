@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2010-11-20 03:58+0100\n"
-"PO-Revision-Date: 2010-11-20 21:53+0300\n"
+"POT-Creation-Date: 2010-11-27 03:59+0100\n"
+"PO-Revision-Date: 2010-11-27 18:35+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "Language: \n"
@@ -788,7 +788,7 @@ msgstr "точек"
 #: modules/process/curvature.c:602
 #: modules/process/cwt.c:132
 #: modules/process/deposit.c:197
-#: modules/process/deposit_synth.c:328
+#: modules/process/deposit_synth.c:327
 #: modules/process/drift.c:230
 #: modules/process/dwt.c:164
 #: modules/process/dwtanisotropy.c:183
@@ -2260,6 +2260,34 @@ msgstr "Импорт файлов данных AIST-NT"
 msgid "AIST-NT files (.aist)"
 msgstr "Файлы AIST-NT (.aist)"
 
+#: modules/file/anfatec.c:78
+msgid "Imports Anfatec data files (two-part .txt + .int)."
+msgstr "Импортирует файлы данных Anfatec (две части .txt + .int)."
+
+#: modules/file/anfatec.c:91
+msgid "Anfatec files (.par + .int)"
+msgstr "Файлы Anfatec (.par + .int)"
+
+#: modules/file/anfatec.c:219
+msgid "The parameter file cannot be loaded."
+msgstr "Файл параметров не может быть загружен."
+
+#: modules/file/anfatec.c:225
+msgid "Cannot find the corresponding parameter file."
+msgstr "Не удаётся найти соответствующий файл параметров."
+
+#: modules/file/anfatec.c:242
+msgid "FileDescBegin cannot be inside another FileDesc."
+msgstr "FileDescBegin не может быть внутри другого FileDesc."
+
+#: modules/file/anfatec.c:254
+msgid "FileDescEnd has no corresponding FileDescBegin."
+msgstr "Для FileDescEnd не найден соответствующий FileDescBegin."
+
+#: modules/file/anfatec.c:281
+msgid "FileDescBegin has no corresponding FileDescEnd."
+msgstr "Для FileDescBegin не найден соответствующий FileDescEnd."
+
 #: modules/file/apefile.c:168
 msgid "Imports APE (Applied Physics and Engineering) data files."
 msgstr "Импортирует файлы данных APE (Applied Physics and Engineering)."
@@ -2876,31 +2904,31 @@ msgstr "Текстовые файлы MicroProf FRT (.txt)"
 msgid "File contains less than XSize*YSize data points."
 msgstr "Файл содержит меньше точек данных, чем XSize*YSize."
 
-#: modules/file/miffile.c:190
+#: modules/file/miffile.c:188
 msgid "Imports DME MIF data files."
 msgstr "Импортирует файлы данных DME MIF."
 
-#: modules/file/miffile.c:203
+#: modules/file/miffile.c:201
 msgid "DME MIF files (.mif)"
 msgstr "Файлы DME MIF (.mif)"
 
-#: modules/file/miffile.c:230
+#: modules/file/miffile.c:228
 msgid "Image header record is too short."
 msgstr "Заголовок изображения слишком короткий."
 
-#: modules/file/miffile.c:238
+#: modules/file/miffile.c:236
 msgid "Axis display info record is too short."
 msgstr "Заголовок с информацией об отображении осей слишком короток."
 
-#: modules/file/miffile.c:281
+#: modules/file/miffile.c:279
 msgid "File information block is outside the file."
 msgstr "Блок информации о файле не находится внутри файла."
 
-#: modules/file/miffile.c:315
+#: modules/file/miffile.c:313
 msgid "File information block size is invalid."
 msgstr "Размер блока информации о файле неверен."
 
-#: modules/file/miffile.c:379
+#: modules/file/miffile.c:377
 msgid "Unique id record is too short."
 msgstr "Уникальный идентификатор слишком короткий."
 
@@ -3470,6 +3498,7 @@ msgstr "_Увеличение:"
 #: modules/file/pixmap.c:2715
 #: modules/file/rawfile.c:632
 #: modules/process/crosscor.c:197
+#: modules/process/deposit_synth.c:424
 #: modules/process/dimensions.h:471
 #: modules/process/tip_blind.c:264
 msgid "_Width:"
@@ -3737,7 +3766,7 @@ msgstr "Предустановки"
 #: modules/file/rawxyz.c:436
 #: modules/process/arithmetic.c:227
 #: modules/process/convolution_filter.c:243
-#: modules/process/deposit_synth.c:626
+#: modules/process/deposit_synth.c:652
 #: modules/process/drift.c:227
 #: modules/process/edge.c:633
 #: modules/process/fft_filter_1d.c:197
@@ -4531,11 +4560,11 @@ msgstr "параметры масштаба z"
 msgid "data type parameters"
 msgstr "параметры типа данных"
 
-#: modules/file/wipfile.c:123
+#: modules/file/wipfile.c:125
 msgid "Imports WItec Project data files."
 msgstr "Импортирует файлы данных WItec Project."
 
-#: modules/file/wipfile.c:136
+#: modules/file/wipfile.c:138
 msgid "WItec Project files (.wip)"
 msgstr "Файлы WItec Project (.wip)"
 
@@ -5569,7 +5598,7 @@ msgstr "Моделирует осаждение сферических част�
 
 #: modules/process/deposit.c:133
 msgid "/_Synthetic/_Deposit particles..."
-msgstr "/Син_тез/Осадить _частицы..."
+msgstr "/Син_тез/Осадить ч_астицы..."
 
 #: modules/process/deposit.c:137
 #: modules/process/deposit.c:191
@@ -5589,6 +5618,7 @@ msgid "_Size"
 msgstr "_Размер"
 
 #: modules/process/deposit.c:299
+#: modules/process/deposit_synth.c:435
 msgid "_Coverage:"
 msgstr "Процент по_крытия:"
 
@@ -5600,22 +5630,22 @@ msgstr "_Перечитать после осаждения"
 msgid "Particles"
 msgstr "Частицы"
 
-#: modules/process/deposit_synth.c:170
+#: modules/process/deposit_synth.c:169
 msgid "Generates particles using simple dynamical model"
 msgstr "Создаёт частицы используя простую динамическую модель"
 
-#: modules/process/deposit_synth.c:184
+#: modules/process/deposit_synth.c:183
 msgid "/S_ynthetic/_Particles..."
 msgstr "/Син_тез/_Частицы..."
 
-#: modules/process/deposit_synth.c:188
+#: modules/process/deposit_synth.c:187
 msgid "Generate particles using dynamical model"
 msgstr "Создать частицы используя динамическую модель"
 
-#: modules/process/deposit_synth.c:285
-#: modules/process/deposit_synth.c:297
-#: modules/process/deposit_synth.c:517
-#: modules/process/deposit_synth.c:530
+#: modules/process/deposit_synth.c:284
+#: modules/process/deposit_synth.c:296
+#: modules/process/deposit_synth.c:516
+#: modules/process/deposit_synth.c:529
 #: modules/process/fft_synth.c:304
 #: modules/process/lno_synth.c:410
 #: modules/process/noise_synth.c:322
@@ -5624,11 +5654,11 @@ msgstr "Создать частицы используя динамическу�
 msgid "Generated"
 msgstr "Сгенерированное"
 
-#: modules/process/deposit_synth.c:326
-msgid "Particle generation"
+#: modules/process/deposit_synth.c:325
+msgid "Particle Generation"
 msgstr "Генерация частиц"
 
-#: modules/process/deposit_synth.c:399
+#: modules/process/deposit_synth.c:398
 #: modules/process/fft_synth.c:395
 #: modules/process/lno_synth.c:501
 #: modules/process/noise_synth.c:413
@@ -5637,7 +5667,7 @@ msgstr "Генерация частиц"
 msgid "Dimensions"
 msgstr "Размеры"
 
-#: modules/process/deposit_synth.c:409
+#: modules/process/deposit_synth.c:408
 #: modules/process/fft_synth.c:406
 #: modules/process/lno_synth.c:512
 #: modules/process/noise_synth.c:424
@@ -5646,23 +5676,15 @@ msgstr "Размеры"
 msgid "Generator"
 msgstr "Генератор"
 
-#: modules/process/deposit_synth.c:414
-msgid "_size:"
-msgstr "_размер:"
+#: modules/process/deposit_synth.c:413
+msgid "R_adius:"
+msgstr "Р_адиус:"
 
-#: modules/process/deposit_synth.c:425
-msgid "_width:"
-msgstr "_ширина:"
+#: modules/process/deposit_synth.c:444
+msgid "_Revise:"
+msgstr "И_зменить:"
 
-#: modules/process/deposit_synth.c:436
-msgid "Coverage:"
-msgstr "Покрытие:"
-
-#: modules/process/deposit_synth.c:445
-msgid "Revise:"
-msgstr "Изменить:"
-
-#: modules/process/deposit_synth.c:630
+#: modules/process/deposit_synth.c:656
 #: modules/process/edge.c:714
 #: modules/process/fft_filter_1d.c:334
 #: modules/process/grain_mark.c:380
@@ -5674,17 +5696,17 @@ msgstr "Изменить:"
 msgid "I_nstant updates"
 msgstr "Мгновенное об_новление"
 
-#: modules/process/deposit_synth.c:648
+#: modules/process/deposit_synth.c:674
 #: modules/process/synth.h:489
 msgid "R_andom seed:"
 msgstr "На_чальное число:"
 
-#: modules/process/deposit_synth.c:654
+#: modules/process/deposit_synth.c:680
 #: modules/process/synth.h:495
 msgid "seed|_New"
 msgstr "Ново_е"
 
-#: modules/process/deposit_synth.c:665
+#: modules/process/deposit_synth.c:691
 msgid "Randomize"
 msgstr "Сделать случайным"
 
@@ -9631,3 +9653,11 @@ msgstr ""
 "Наклон θ:     %s\n"
 "Наклон φ:     %s\n"
 
+#~ msgid "_size:"
+#~ msgstr "_размер:"
+
+#~ msgid "_width:"
+#~ msgstr "_ширина:"
+
+#~ msgid "Coverage:"
+#~ msgstr "Покрытие:"
