@@ -25,6 +25,7 @@ Libraries:
 - libgwyddion: GwySIUnit works correctly if created with g_object_new().
 
 Modules:
+- Anfatec (new): Anfatec data file import.
 - Pattern Synthesis (new): Creates regular patterns such as steps of ridges.
 - Noise Synthesis (new): Generates uncorrelated point noise.
 - Line Noise Synthesis (new): Generates line noise (steps or scars).
@@ -35,6 +36,8 @@ Modules:
   and bucket filling and unfilling.
 - Arithmetic: Has a preview, expressions can work with mask values, units of
   the result can be speficied, the number of fields was increased to 8.
+- Threshold: Renamed to Limit Range in the menus; can cut off outliers given
+  by a multiple of RMS now.
 - BCR: Z-axis scaling for non-topography floating point data was corrected.
 - GDEF: Vertically flipped data was corrected.
 - Color range tool: Critical warning/crashe when Fixed mode is set default
