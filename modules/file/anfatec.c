@@ -70,7 +70,10 @@ static GwyContainer* anfatec_load              (const gchar *filename,
                                                 GError **error);
 static GwyDataField* anfatec_load_channel      (GHashTable *hash,
                                                 gint id,
+                                                const gchar *dirname,
                                                 gchar **title);
+static FILE*         anfatec_try_to_find_data  (const gchar *dirname_glib,
+                                                const gchar *basename_sys);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -104,7 +107,8 @@ anfatec_detect(const GwyFileDetectInfo *fileinfo,
     FILE *fh;
     gchar *parameterfile;
     gchar *buf;
-    guint  size, result;
+    guint size;
+    gboolean result;
 
     if (only_name)
         return 0;
@@ -120,10 +124,13 @@ anfatec_detect(const GwyFileDetectInfo *fileinfo,
         g_free(parameterfile);
         return 0;
     }
+    gwy_debug("Parameterfile opened");
     buf = g_new(gchar, GWY_FILE_DETECT_BUFFER_SIZE);
     size = fread(buf, 1, GWY_FILE_DETECT_BUFFER_SIZE, fh);
+    gwy_debug("size: %u", size);
     buf[MIN(GWY_FILE_DETECT_BUFFER_SIZE-1, size)] = '\0';
-    result = strstr(fileinfo->head, MAGIC) != NULL;
+    result = (strstr(buf, MAGIC) != NULL);
+    gwy_debug("result: %d", result);
     fclose(fh);
     g_free(buf);
     g_free(parameterfile);
@@ -194,7 +201,7 @@ anfatec_load(const gchar *filename,
 {
     GwyContainer *container = NULL;
     GHashTable *hash = NULL;
-    gchar *line, *value, *key, *text = NULL;
+    gchar *line, *value, *key, *dirname = NULL, *text = NULL;
     GError *err = NULL;
     GwyDataField *dfield = NULL;
     gsize size;
@@ -294,12 +301,13 @@ anfatec_load(const gchar *filename,
                       NULL))
         goto fail;
 
+    dirname = g_path_get_dirname(filename);
     maxid = id;
     for (id = 0; id <= maxid; id++) {
         GQuark quark;
         gchar *title;
 
-        if (!(dfield = anfatec_load_channel(hash, id, &title)))
+        if (!(dfield = anfatec_load_channel(hash, id, dirname, &title)))
             continue;
 
         if (!container)
@@ -318,6 +326,7 @@ anfatec_load(const gchar *filename,
 
     err_NO_DATA(error);
 fail:
+    g_free(dirname);
     g_free(text);
     if (hash)
         g_hash_table_destroy(hash);
@@ -328,6 +337,7 @@ fail:
 static GwyDataField*
 anfatec_load_channel(GHashTable *hash,
                      gint id,
+                     const gchar *dirname,
                      gchar **title)
 {
     GwyDataField *dfield = NULL;
@@ -356,7 +366,7 @@ anfatec_load_channel(GHashTable *hash,
     }
 
     /* Must use system fopen() that does no file name charset conversion. */
-    fh = fopen(filename, "rb");
+    fh = anfatec_try_to_find_data(dirname, filename);
     if (!fh) {
         g_warning("Cannot open %s.", filename);
         goto fail;
@@ -426,6 +436,70 @@ fail:
     gwy_object_unref(unitz);
 
     return dfield;
+}
+
+/* We get the directory name in GLib encoding and the basename in system
+ * encoding.  Which ensures lots of fun for the long winter evenings. */
+static FILE*
+anfatec_try_to_find_data(const gchar *dirname_glib,
+                         const gchar *basename_sys)
+{
+    static const gchar *encodings[] = {
+        "UTF-16", "CP1252", "CP1251", "CP1250", "CP1253", "CP1254", "CP1255",
+        "CP1256", "CP1257", "CP1258",
+    };
+    guint i;
+    gssize len = strlen(basename_sys);
+    gchar *fullname_asis, G_GNUC_UNUSED *dirname_locale;
+    FILE *fh;
+
+    /* Fingers crossed... */
+    fullname_asis = g_build_filename(dirname_glib, basename_sys, NULL);
+    fh = fopen(fullname_asis, "rb");
+    if (fh)
+        return fh;
+
+#ifdef G_OS_WIN32
+    /* On Win32, the GLib encoding is UTF-8. */
+    dirname_locale = g_win32_locale_filename_from_utf8(dirname_glib);
+    if (dirname_locale) {
+        gchar *fullname_locale = g_build_filename(dirname_locale, basename_sys,
+                                                  NULL);
+
+        g_free(dirname_locale);
+        gwy_debug("Trying locale <%s>", fullname_locale);
+        fh = fopen(fullname_locale, "rb");
+        g_free(fullname_locale);
+        if (fh)
+            return fh;
+    }
+#endif
+
+    for (i = 0; i < G_N_ELEMENTS(encodings); i++) {
+        gchar *filename_utf8 = g_convert(basename_sys, len,
+                                         "UTF-8", encodings[i],
+                                         NULL, NULL, NULL);
+        if (filename_utf8) {
+            gchar *filename_glib = g_filename_from_utf8(filename_utf8, -1,
+                                                        NULL, NULL, NULL);
+
+            g_free(filename_utf8);
+            if (filename_glib) {
+                gchar *fullname_glib = g_build_filename(dirname_glib,
+                                                        filename_glib,
+                                                        NULL);
+
+                g_free(filename_glib);
+                fh = g_fopen(fullname_glib, "rb");
+                g_free(fullname_glib);
+
+                if (fh)
+                    return fh;
+            }
+        }
+    }
+
+    return NULL;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
