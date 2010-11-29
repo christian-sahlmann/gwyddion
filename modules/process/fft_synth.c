@@ -481,6 +481,9 @@ fft_synth_dialog(FFTSynthArgs *args,
                                    NULL,
                                    &controls.gauss_tau_value,
                                    &controls.gauss_tau_units);
+    gwy_table_hscale_set_sensitive(controls.gauss_tau, args->gauss_enable);
+    gtk_widget_set_sensitive(controls.gauss_tau_value, args->gauss_enable);
+    gtk_widget_set_sensitive(controls.gauss_tau_units, args->gauss_enable);
 
     controls.power_enable
         = gtk_check_button_new_with_mnemonic(_("Enable _power multiplier"));
