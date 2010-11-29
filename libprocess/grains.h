@@ -123,6 +123,13 @@ void gwy_data_field_area_grains_tgnd(GwyDataField *data_field,
                                      gint height,
                                      gboolean below,
                                      gint nstats);
+void gwy_data_field_area_grains_tgnd_range(GwyDataField *data_field,
+                                           GwyDataLine *target_line,
+                                           gint col, gint row,
+                                           gint width, gint height,
+                                           gdouble min, gdouble max,
+                                           gboolean below,
+                                           gint nstats);
 
 void gwy_data_field_grains_splash_water(GwyDataField *data_field,
                                         GwyDataField *minima,
@@ -133,3 +140,4 @@ G_END_DECLS
 
 #endif /* __GWY_PROCESS_GRAINS__ */
 
+/* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

@@ -2536,7 +2536,7 @@ gwy_data_field_get_grain_bounding_boxes(GwyDataField *mask_field,
  * gwy_data_field_area_grains_tgnd:
  * @data_field: A data field.
  * @target_line: A data line to store the distribution to.  It will be
- *               resampled to requested width.
+ *               resampled to the requested width.
  * @col: Upper-left column coordinate.
  * @row: Upper-left row coordinate.
  * @width: Area width (number of columns).
@@ -2547,9 +2547,8 @@ gwy_data_field_get_grain_bounding_boxes(GwyDataField *mask_field,
  *
  * Calculates threshold grain number distribution.
  *
- * This is the number of grains for each of @nstats equidistant height
- * threshold levels.  For large @nstats this function is much faster than the
- * equivalent number of gwy_data_field_grains_mark_height().
+ * This function is a simple gwy_data_field_area_grains_tgnd_range() that
+ * calculates the distribution in the full range.
  **/
 void
 gwy_data_field_area_grains_tgnd(GwyDataField *data_field,
@@ -2559,8 +2558,49 @@ gwy_data_field_area_grains_tgnd(GwyDataField *data_field,
                                 gboolean below,
                                 gint nstats)
 {
+    gdouble min, max;
+
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    gwy_data_field_area_get_min_max(data_field, NULL,
+                                    col, row, width, height,
+                                    &min, &max);
+    gwy_data_field_area_grains_tgnd_range(data_field, target_line,
+                                          col, row, width, height,
+                                          min, max, below, nstats);
+}
+
+/**
+ * gwy_data_field_area_grains_tgnd_range:
+ * @data_field: A data field.
+ * @target_line: A data line to store the distribution to.  It will be
+ *               resampled to the requested width.
+ * @col: Upper-left column coordinate.
+ * @row: Upper-left row coordinate.
+ * @width: Area width (number of columns).
+ * @height: Area height (number of rows).
+ * @min: Minimum threshold value.
+ * @max: Maximum threshold value.
+ * @below: If %TRUE, valleys are marked, otherwise mountains are marked.
+ * @nstats: The number of samples to take on the distribution function.  If
+ *          nonpositive, a suitable resolution is determined automatically.
+ *
+ * Calculates threshold grain number distribution in given height range.
+ *
+ * This is the number of grains for each of @nstats equidistant height
+ * threshold levels.  For large @nstats this function is much faster than the
+ * equivalent number of gwy_data_field_grains_mark_height() calls.
+ **/
+void
+gwy_data_field_area_grains_tgnd_range(GwyDataField *data_field,
+                                      GwyDataLine *target_line,
+                                      gint col, gint row,
+                                      gint width, gint height,
+                                      gdouble min, gdouble max,
+                                      gboolean below,
+                                      gint nstats)
+{
     gint *heights, *hindex, *nh, *grains, *listv, *listh, *m, *mm;
-    gdouble min, max, q;
+    gdouble q;
     gint i, j, k, h, n;
     gint grain_no, last_grain_no;
     guint msize;
@@ -2579,9 +2619,6 @@ gwy_data_field_area_grains_tgnd(GwyDataField *data_field,
 
     gwy_data_line_resample(target_line, nstats, GWY_INTERPOLATION_NONE);
 
-    gwy_data_field_area_get_min_max(data_field, NULL,
-                                    col, row, width, height,
-                                    &min, &max);
     n = width*height;
     if (max == min || n == 0) {
         gwy_data_line_clear(target_line);
@@ -2756,6 +2793,7 @@ gwy_data_field_area_grains_tgnd(GwyDataField *data_field,
     g_free(nh);
     g_free(heights);
 }
+
 
 /**
  * gwy_data_field_fill_grain:
