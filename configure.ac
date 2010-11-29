@@ -115,7 +115,7 @@ case "$host_os" in
   mingw*)
     os_win32=yes
     HOST_CFLAGS="-mms-bitfields"
-    HOST_LDFLAGS="-mwindows"
+    HOST_LDFLAGS="-Wl,-subsystem,windows"
     ;;
   *)
     os_win32=no
