@@ -714,7 +714,7 @@ igor_read_data_field(const IgorFile *igorfile,
                                       &power10);
     q = pow10(power10);
 
-    switch (wave5->type) {
+    switch ((guint)wave5->type) {
         case IGOR_INT8:
         {
             const gint8 *ps = (const gint8*)buffer;
