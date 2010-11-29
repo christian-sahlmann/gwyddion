@@ -606,6 +606,7 @@ AC_SUBST(KDE4_LIBS)
 AC_MSG_CHECKING([for anyone actually reading this nonsense])
 AC_MSG_RESULT([no])
 AC_CHECK_HEADERS( \
+  signal.h \
   stdbool.h \
   sys/stat.h \
   sys/types.h \

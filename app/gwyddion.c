@@ -44,6 +44,10 @@
 #define LOG_TO_FILE_DEFAULT FALSE
 #endif
 
+#ifdef HAVE_SIGNAL_H
+#include <signal.h>
+#endif
+
 typedef struct {
     gboolean no_splash;
     gboolean debug_objects;
@@ -150,6 +154,11 @@ main(int argc, char *argv[])
     gwy_app_splash_set_message(_("Registering modules"));
     module_dirs = gwy_app_settings_get_module_dirs();
     gwy_module_register_modules((const gchar**)module_dirs);
+    /* The Python initialisation somehow overrides SIGINT and Gwyddion can no
+     * longer be terminated with Ctrl-C.  Fix it. */
+#if HAVE_SIGNAL_H
+    signal(SIGINT, SIG_DFL);
+#endif
     debug_time(timer, "register modules");
 
     if (app_options.check) {
