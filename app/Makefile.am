@@ -150,7 +150,7 @@ gwyddion_SOURCES = \
 	toolbox.c
 
 
-gwyddion_LDADD = @GTKGLEXT_LIBS@ @FFTW3_LIBS@ @UNIQUE_LIBS@ @BASIC_LIBS@ $(LIBXMU) \
+gwyddion_LDADD = @COMMON_LDFLAGS@ @GTKGLEXT_LIBS@ @FFTW3_LIBS@ @UNIQUE_LIBS@ @BASIC_LIBS@ $(LIBXMU) \
 	libgwyapp2.la \
 	$(libgwymodule) \
 	$(libgwydgets) \
