@@ -1,6 +1,8 @@
 2.22 (0000-00-00)
 Application:
 - Translations updated: Czech, French, Russian.
+- New command line option --no-log-to-file disables redirection of messages
+  to a log file (usefuly namely on Win32).
 - Gwyddion tries to initialise thread support as the very first thing if it
   finds to be running with GLib 2.24 or newer.
 
@@ -49,6 +51,8 @@ Modules:
 Other:
 - If compiled by gcc and it accepts option -fexcess-precision=fast it is passed
   to the compile to be on the fast side.
+- It is possible to cross-compile Gwyddion for MS Windows using the MinGW32
+  cross-compiler.  The official executables are still made using MSVC6 though.
 
 
 2.21 (2010-10-26)
