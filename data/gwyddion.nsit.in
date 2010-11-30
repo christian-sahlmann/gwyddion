@@ -15,7 +15,7 @@
 !define PRODUCT_REG_KEY "Software\${PRODUCT_NAME}\${PRODUCT_BIN_VERSION}"
 !define PRODUCT_UNINST_KEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_NAME}"
 !define PRODUCT_PATH_KEY "Software\Microsoft\Windows\CurrentVersion\App Paths\gwyddion.exe"
-!define ICON_FILE "share/gwyddion/pixmaps/gwyddion.ico"
+!define ICON_FILE "share\gwyddion\pixmaps\gwyddion.ico"
 !define UNINSTALLER_NAME "uninstall.exe"
 
 !define ALL_USERS
