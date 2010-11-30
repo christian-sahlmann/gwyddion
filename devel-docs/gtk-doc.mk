@@ -190,8 +190,7 @@ install-data-local:
 	if test -n "$$d"; then \
 		$(mkdir_p) $(DESTDIR)$(TARGET_DIR); \
 		( cd $$d && $(INSTALL_DATA) * "$(DESTDIR)$(TARGET_DIR)"; ); \
-	fi; \
-	test -n "$$d"
+	fi
 
 uninstall-local:
 	rm -f $(DESTDIR)$(TARGET_DIR)/*
