@@ -51,7 +51,7 @@
 
 enum {
     PREVIEW_SIZE = 400,
-    MAXN         = 10000,
+    MAXN         = 5000,
 };
 
 enum {
@@ -62,6 +62,13 @@ enum {
     PAGE_DIMENSIONS = 0,
     PAGE_GENERATOR = 1,
     PAGE_NPAGES
+};
+
+enum {
+    RES_TOO_FEW = -1,
+    RES_TOO_MANY = -2,
+    RES_TOO_SMALL = -3,
+    RES_TOO_LARGE = -4
 };
 
 typedef struct {
@@ -144,7 +151,8 @@ static gboolean      preview_gsource       (gpointer user_data);
 static void          preview               (DepositSynthControls *controls);
 static gint          deposit_synth_do      (const DepositSynthArgs *args,
                                             GwyDataField *dfield,
-                                            GwyDataField *showfield);
+                                            GwyDataField *showfield,
+                                            gboolean *success);
 static void          deposit_synth_load_args   (GwyContainer *container,
                                             DepositSynthArgs *args,
                                             GwyDimensionArgs *dimsargs);
@@ -226,10 +234,13 @@ run_noninteractive(DepositSynthArgs *args,
     GwyDataField *out;
     GwySIUnit *siunit;
     GwyContainer *newdata;
+    GtkWidget *dialog;
     gboolean replace = dimsargs->replace && dfield;
     gboolean add = dimsargs->add && dfield;
     gdouble mag; 
-    gint newid;
+    gboolean success;
+    gint newid, ndata;
+    gchar message[50];
 
     if (args->randomize)
         args->seed = g_random_int() & 0x7fffffff;
@@ -268,35 +279,59 @@ run_noninteractive(DepositSynthArgs *args,
 
     //printf("size %d %d\n", gwy_data_field_get_xres(out), gwy_data_field_get_yres(out));
     gwy_app_wait_start(gwy_app_find_window_for_channel(data, oldid), "Starting...");
-    deposit_synth_do(args, out, NULL);
+    ndata = deposit_synth_do(args, out, NULL, &success);
     gwy_app_wait_finish();
 
-    if (replace) {
-        gwy_data_field_copy(out, dfield, FALSE);
-        gwy_data_field_data_changed(dfield);
-    }
-    else {
-        if (data) {
-            newid = gwy_app_data_browser_add_data_field(out, data, TRUE);
-            gwy_app_sync_data_items(data, data, oldid, newid, FALSE,
-                                    GWY_DATA_ITEM_GRADIENT,
-                                    0);
-            gwy_app_set_data_field_title(data, newid, _("Generated"));
+    if (ndata <=0) {
+        if (ndata==RES_TOO_MANY) g_snprintf(message, sizeof(message), "Error: too many particles.");
+        else if (ndata==RES_TOO_FEW) g_snprintf(message, sizeof(message), "Error: no particles.");
+        else if (ndata==RES_TOO_LARGE) g_snprintf(message, sizeof(message), "Error: particles too large.");
+        else if (ndata==RES_TOO_SMALL) g_snprintf(message, sizeof(message), "Error: particles too small.");
+        dialog = gtk_message_dialog_new (gwy_app_find_window_for_channel(data, oldid),
+                                         GTK_DIALOG_DESTROY_WITH_PARENT,
+                                         GTK_MESSAGE_ERROR,
+                                         GTK_BUTTONS_CLOSE,
+                                         "%s", message);
+        gtk_dialog_run (GTK_DIALOG (dialog));
+        gtk_widget_destroy (dialog);
 
+    } else {
+        if (!success) {
+            dialog = gtk_message_dialog_new (gwy_app_find_window_for_channel(data, oldid),
+                                             GTK_DIALOG_DESTROY_WITH_PARENT,
+                                             GTK_MESSAGE_WARNING,
+                                             GTK_BUTTONS_CLOSE,
+                                             "Not all the particles could be deposited, try more revise steps.");
+            gtk_dialog_run (GTK_DIALOG (dialog));
+            gtk_widget_destroy (dialog);
+        }
+        if (replace) {
+            gwy_data_field_copy(out, dfield, FALSE);
+            gwy_data_field_data_changed(dfield);
         }
         else {
-            newid = 0;
-            newdata = gwy_container_new();
-            gwy_container_set_object(newdata, gwy_app_get_data_key_for_id(newid),
-                                     out);
-            gwy_app_data_browser_add(newdata);
-            gwy_app_data_browser_reset_visibility(newdata,
-                                                  GWY_VISIBILITY_RESET_SHOW_ALL);
-            g_object_unref(newdata);
-            gwy_app_set_data_field_title(newdata, newid, _("Generated"));
+            if (data) {
+                newid = gwy_app_data_browser_add_data_field(out, data, TRUE);
+                gwy_app_sync_data_items(data, data, oldid, newid, FALSE,
+                                        GWY_DATA_ITEM_GRADIENT,
+                                        0);
+                gwy_app_set_data_field_title(data, newid, _("Generated"));
+
+            }
+            else {
+                newid = 0;
+                newdata = gwy_container_new();
+                gwy_container_set_object(newdata, gwy_app_get_data_key_for_id(newid),
+                                         out);
+                gwy_app_data_browser_add(newdata);
+                gwy_app_data_browser_reset_visibility(newdata,
+                                                      GWY_VISIBILITY_RESET_SHOW_ALL);
+                g_object_unref(newdata);
+                gwy_app_set_data_field_title(newdata, newid, _("Generated"));
+
+            }
 
         }
-
     }
 
     g_object_unref(out);
@@ -708,11 +743,10 @@ page_switched(DepositSynthControls *controls,
     if (pagenum == PAGE_GENERATOR) {
         GwyDimensions *dims = controls->dims;
 
-        gtk_label_set_markup(GTK_LABEL(controls->size),
+        gtk_label_set_markup(GTK_LABEL(controls->size_units),
                              dims->xyvf->units);
-        gtk_label_set_markup(GTK_LABEL(controls->width),
+        gtk_label_set_markup(GTK_LABEL(controls->width_units),
                              dims->xyvf->units);
-
 
         //update_size_value(controls);
         //update_width_value(controls);
@@ -800,6 +834,7 @@ preview(DepositSynthControls *controls)
     GwyDataField *dfield, *surface;
     gchar message[50];
     gint ndata;
+    gboolean success;
 
     dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
                                                                     "/0/data"));
@@ -872,8 +907,17 @@ preview(DepositSynthControls *controls)
     
     gwy_app_wait_start(GTK_WINDOW(controls->dialog), "Starting...");
     gtk_label_set_text(GTK_LABEL(controls->message), "Running computation...");
-    ndata = deposit_synth_do(args, controls->out, dfield);
+    ndata = deposit_synth_do(args, controls->out, dfield, &success);
     gwy_app_wait_finish();
+
+    if (ndata>=0 && success) g_snprintf(message, sizeof(message), "%d particles deposited", ndata);
+    else if (ndata>=0 && !success) g_snprintf(message, sizeof(message), "Not all deposited (%d), try revise", ndata);
+    else if (ndata==RES_TOO_MANY) g_snprintf(message, sizeof(message), "Error: too many particles.");
+    else if (ndata==RES_TOO_FEW) g_snprintf(message, sizeof(message), "Error: no particles.");
+    else if (ndata==RES_TOO_LARGE) g_snprintf(message, sizeof(message), "Error: particles too large."); 
+    else if (ndata==RES_TOO_SMALL) g_snprintf(message, sizeof(message), "Error: particles too small.");
+   
+    gtk_label_set_text(GTK_LABEL(controls->message), message);
 
     if (surface) gwy_object_unref(surface);
     surface = surface_for_preview(controls->out, PREVIEW_SIZE);
@@ -882,9 +926,6 @@ preview(DepositSynthControls *controls)
     controls->data_done = TRUE;
 
     gwy_data_field_data_changed(controls->out);
-
-    g_snprintf(message, sizeof(message), "%d particles deposited\n", ndata);
-    gtk_label_set_text(GTK_LABEL(controls->message), message);
 
     gwy_object_unref(surface);
 }
@@ -979,7 +1020,7 @@ integrate_lj_substrate(GwyDataField *lfield, gdouble ax, gdouble ay, gdouble az,
 
 static gint
 deposit_synth_do(const DepositSynthArgs *args,
-             GwyDataField *dfield, GwyDataField *showfield)
+             GwyDataField *dfield, GwyDataField *showfield, gboolean *success)
 {
     gint i, ii, m, k;
     GRand *rng;
@@ -989,22 +1030,12 @@ deposit_synth_do(const DepositSynthArgs *args,
     gdouble size, width; 
     gdouble mass=1,  timestep = 1, rxv, ryv, rzv;
     gint mdisize, add, presetval;
-    gint xdata[MAXN];
-    gint ydata[MAXN];
-    gdouble disizes[MAXN];
-    gdouble rdisizes[MAXN];
-    gdouble rx[MAXN];
-    gdouble ry[MAXN];
-    gdouble rz[MAXN];
-    gdouble ax[MAXN];
-    gdouble ay[MAXN];
-    gdouble az[MAXN];
-    gdouble vx[MAXN];
-    gdouble vy[MAXN];
-    gdouble vz[MAXN];
-    gdouble fx[MAXN];
-    gdouble fy[MAXN];
-    gdouble fz[MAXN];
+    gint *xdata, *ydata;
+    gdouble *disizes, *rdisizes;
+    gdouble *rx, *ry, *rz;
+    gdouble *vx, *vy, *vz;
+    gdouble *ax, *ay, *az;
+    gdouble *fx, *fy, *fz;
     gdouble disize;
     gint xpos, ypos, too_close, maxsteps = 10000;
     gint nloc, maxloc = 1;
@@ -1029,8 +1060,7 @@ deposit_synth_do(const DepositSynthArgs *args,
     gwy_data_field_set_yreal(dfield, gwy_data_field_get_yreal(dfield)*norm);
     size = norm*args->size;
     width = norm*args->width;
-    /*normalized*/
-
+    /*now everything is normalized to be close to 1*/
 
     oxres = gwy_data_field_get_xres(dfield);
     oyres = gwy_data_field_get_yres(dfield);
@@ -1045,6 +1075,28 @@ deposit_synth_do(const DepositSynthArgs *args,
     xreal = xres*oxreal/(gdouble)oxres;
     yreal = yres*oyreal/(gdouble)oyres;
 
+    presetval = args->coverage/100 * xreal*yreal/(G_PI*size*size);
+    if (presetval<=0) return RES_TOO_FEW;
+    if (presetval>MAXN) return RES_TOO_MANY;
+    if (2*size*xres < xreal) return RES_TOO_SMALL;
+    if (4*size > xreal) return RES_TOO_LARGE;
+
+    xdata = (gint *) g_malloc(presetval*sizeof(gint));
+    ydata = (gint *) g_malloc(presetval*sizeof(gint));
+    disizes = (gdouble *) g_malloc(presetval*sizeof(gdouble));
+    rdisizes = (gdouble *) g_malloc(presetval*sizeof(gdouble));
+    rx = (gdouble *) g_malloc(presetval*sizeof(gdouble));
+    ry = (gdouble *) g_malloc(presetval*sizeof(gdouble));
+    rz = (gdouble *) g_malloc(presetval*sizeof(gdouble));
+    vx = (gdouble *) g_malloc(presetval*sizeof(gdouble));
+    vy = (gdouble *) g_malloc(presetval*sizeof(gdouble));
+    vz = (gdouble *) g_malloc(presetval*sizeof(gdouble));
+    ax = (gdouble *) g_malloc(presetval*sizeof(gdouble));
+    ay = (gdouble *) g_malloc(presetval*sizeof(gdouble));
+    az = (gdouble *) g_malloc(presetval*sizeof(gdouble));
+    fx = (gdouble *) g_malloc(presetval*sizeof(gdouble));
+    fy = (gdouble *) g_malloc(presetval*sizeof(gdouble));
+    fz = (gdouble *) g_malloc(presetval*sizeof(gdouble));
 
    // printf("After normalization size %g width %g, coverage %g, revise %d, datafield real %g x %g, rms %g\n", 
    //        size, width, args->coverage, args->revise, oxreal, oyreal, gwy_data_field_get_rms(dfield)); //assure that width and size are in real coordinates
@@ -1080,7 +1132,7 @@ deposit_synth_do(const DepositSynthArgs *args,
 
     /*FIXME determine max number of particles and alloc only necessary field sizes*/
 
-    for (i=0; i<MAXN; i++)
+    for (i=0; i<presetval; i++)
     {
         ax[i] = ay[i] = az[i] = vx[i] = vy[i] = vz[i] = 0;
     }
@@ -1112,7 +1164,7 @@ deposit_synth_do(const DepositSynthArgs *args,
             }
         }
         if (too_close) continue;
-        if (ndata>=MAXN) {
+        if (ndata>=presetval) {
             break;
         }
 
@@ -1328,7 +1380,27 @@ deposit_synth_do(const DepositSynthArgs *args,
     gwy_object_unref(zlfield);
     gwy_object_unref(zdfield);
 
+    g_free(xdata);
+    g_free(ydata);
+    g_free(disizes);
+    g_free(rdisizes);
+    g_free(rx);
+    g_free(ry);
+    g_free(rz);
+    g_free(vx);
+    g_free(vy);
+    g_free(vz);
+    g_free(ax);
+    g_free(ay);
+    g_free(az);
+    g_free(fx);
+    g_free(fy);
+    g_free(fz);
+
     g_rand_free(rng);
+
+    if (ndata != presetval) *success = FALSE;
+    else *success = TRUE;
 
     return ndata;
 }
