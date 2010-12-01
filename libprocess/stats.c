@@ -2071,7 +2071,7 @@ gwy_data_field_hhcf(GwyDataField *data_field,
  * @orientation: Orientation of lines (PSDF is simply averaged over the
  *               other orientation).
  * @interpolation: Interpolation to use when @nstats is given and requires
- *                 resampling (and possibly in FFT too).
+ *                 resampling.
  * @windowing: Windowing type to use.
  * @nstats: The number of samples to take on the distribution function.  If
  *          nonpositive, data field width (height) is used.
@@ -2181,7 +2181,7 @@ gwy_data_field_area_psdf(GwyDataField *data_field,
  * @orientation: Orientation of lines (PSDF is simply averaged over the
  *               other orientation).
  * @interpolation: Interpolation to use when @nstats is given and requires
- *                 resampling (and possibly in FFT too).
+ *                 resampling.
  * @windowing: Windowing type to use.
  * @nstats: The number of samples to take on the distribution function.  If
  *          nonpositive, data field width (height) is used.
@@ -2212,7 +2212,7 @@ gwy_data_field_psdf(GwyDataField *data_field,
  * @width: Area width (number of columns).
  * @height: Area height (number of rows).
  * @interpolation: Interpolation to use when @nstats is given and requires
- *                 resampling (and possibly in FFT too).
+ *                 resampling.
  * @windowing: Windowing type to use.
  * @nstats: The number of samples to take on the distribution function.  If
  *          nonpositive, data field width (height) is used.
@@ -2328,7 +2328,7 @@ gwy_data_field_area_rpsdf(GwyDataField *data_field,
  * @target_line: A data line to store the distribution to.  It will be
  *               resampled to requested width.
  * @interpolation: Interpolation to use when @nstats is given and requires
- *                 resampling (and possibly in FFT too).
+ *                 resampling.
  * @windowing: Windowing type to use.
  * @nstats: The number of samples to take on the distribution function.  If
  *          nonpositive, data field width (height) is used.
