@@ -443,9 +443,9 @@ deposit_synth_dialog(DepositSynthArgs *args,
     row = 0;
 
     controls.size = gtk_adjustment_new(args->size/pow10(controls.dims->args->xypow10),
-                                        0.001, 100.0, 0.1, 1.0, 0);
+                                        0, 100.0, 0.1, 1.0, 0);
     spin = gwy_table_attach_hscale(table, row, _("R_adius:"), controls.dims->args->xyunits,
-                                   controls.size, GWY_HSCALE_LOG);
+                                   controls.size, GWY_HSCALE_DEFAULT);
     gtk_spin_button_set_snap_to_ticks(GTK_SPIN_BUTTON(spin), FALSE);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 4);
     controls.size_units = gwy_table_hscale_get_units(controls.size);
@@ -454,9 +454,9 @@ deposit_synth_dialog(DepositSynthArgs *args,
     row++;
 
     controls.width = gtk_adjustment_new(args->width/pow10(controls.dims->args->xypow10),
-                                        0.0, 100.0, 0.1, 1.0, 0);
+                                        0, 100.0, 0.1, 1.0, 0);
     spin = gwy_table_attach_hscale(table, row, _("_Width:"), controls.dims->args->xyunits,
-                                   controls.width, GWY_HSCALE_LOG);
+                                   controls.width, GWY_HSCALE_DEFAULT);
     gtk_spin_button_set_snap_to_ticks(GTK_SPIN_BUTTON(spin), FALSE);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 4);
     controls.width_units = gwy_table_hscale_get_units(controls.width);
@@ -562,8 +562,8 @@ deposit_synth_dialog(DepositSynthArgs *args,
             }
 
         }
-        gtk_widget_destroy(dialog);
     }
+    gtk_widget_destroy(dialog);
 
     if (controls.sid) {
         g_source_remove(controls.sid);
