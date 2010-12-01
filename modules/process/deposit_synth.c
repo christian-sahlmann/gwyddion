@@ -122,7 +122,8 @@ static gboolean      deposit_synth_dialog      (DepositSynthArgs *args,
                                             GwyDimensionArgs *dimsargs,
                                             GwyContainer *data,
                                             GwyDataField *dfield,
-                                            gint id);
+                                            gint id,
+                                            GQuark quark);
 static GwyDataField* surface_for_preview   (GwyDataField *dfield,
                                             guint size);
 static void          update_controls       (DepositSynthControls *controls,
@@ -216,7 +217,7 @@ deposit_synth(GwyContainer *data, GwyRunType run)
     if (run == GWY_RUN_IMMEDIATE)
         run_noninteractive(&args, &dimsargs, data, dfield, id, quark);
     else if (run == GWY_RUN_INTERACTIVE) {
-        deposit_synth_dialog(&args, &dimsargs, data, dfield, id);
+        deposit_synth_dialog(&args, &dimsargs, data, dfield, id, quark);
         deposit_synth_save_args(gwy_app_settings_get(), &args, &dimsargs);
     }
 
@@ -246,7 +247,6 @@ run_noninteractive(DepositSynthArgs *args,
         args->seed = g_random_int() & 0x7fffffff;
 
     if (replace) {
-        //printf("noninteractive replace\n");
         gwy_app_undo_qcheckpointv(data, 1, &quark);
 
             out = gwy_data_field_new_alike(dfield, FALSE);
@@ -258,12 +258,10 @@ run_noninteractive(DepositSynthArgs *args,
     }
     else {
         if (add && dfield) {
-            //printf("noninteractive add\n");
             out = gwy_data_field_new_alike(dfield, FALSE);
             gwy_data_field_copy(dfield, out, FALSE);
         }
         else {
-            //printf("noninteractive new\n");
             mag = pow10(dimsargs->xypow10) * dimsargs->measure;
             out = gwy_data_field_new(dimsargs->xres, dimsargs->yres,
                                         mag*dimsargs->xres, mag*dimsargs->yres,
@@ -277,7 +275,6 @@ run_noninteractive(DepositSynthArgs *args,
         }
     }
 
-    //printf("size %d %d\n", gwy_data_field_get_xres(out), gwy_data_field_get_yres(out));
     gwy_app_wait_start(gwy_app_find_window_for_channel(data, oldid), "Starting...");
     ndata = deposit_synth_do(args, out, NULL, &success);
     gwy_app_wait_finish();
@@ -342,7 +339,7 @@ deposit_synth_dialog(DepositSynthArgs *args,
                  GwyDimensionArgs *dimsargs,
                  GwyContainer *data,
                  GwyDataField *dfield_template,
-                 gint id)
+                 gint id, GQuark quark)
 {
     GtkWidget *dialog, *table, *vbox, *hbox, *notebook, *spin;
     DepositSynthControls controls;
@@ -382,6 +379,8 @@ deposit_synth_dialog(DepositSynthArgs *args,
                                 dimsargs->measure*PREVIEW_SIZE,
                                 dimsargs->measure*PREVIEW_SIZE,
                                 FALSE);
+
+
     if (data)
         gwy_app_sync_data_items(data, controls.mydata, id, 0, FALSE,
                                 GWY_DATA_ITEM_PALETTE,
@@ -505,7 +504,6 @@ deposit_synth_dialog(DepositSynthArgs *args,
             case GTK_RESPONSE_CANCEL:
             case GTK_RESPONSE_DELETE_EVENT:
             case GTK_RESPONSE_OK:
-            gtk_widget_destroy(dialog);
             case GTK_RESPONSE_NONE:
             finished = TRUE;
             break;
@@ -537,13 +535,12 @@ deposit_synth_dialog(DepositSynthArgs *args,
         if (!controls.data_done) preview(&controls);
 
         if (controls.dims->args->replace) {
-            //        printf("replacing channel\n");
+            gwy_app_undo_qcheckpointv(data, 1, &quark);
             gwy_data_field_copy(controls.out, controls.original, FALSE);
             gwy_data_field_data_changed(controls.original);
         }
         else {
             if (data) {
-                //            printf("adding a channel\n");
                 newid = gwy_app_data_browser_add_data_field(controls.out, data, TRUE);
                 gwy_app_sync_data_items(data, data, id, newid, FALSE,
                                         GWY_DATA_ITEM_GRADIENT,
@@ -552,7 +549,6 @@ deposit_synth_dialog(DepositSynthArgs *args,
 
             }
             else {
-                //            printf("creating completely new data\n");
                 newid = 0;
                 newdata = gwy_container_new();
                 gwy_container_set_object(newdata, gwy_app_get_data_key_for_id(newid),
@@ -566,6 +562,7 @@ deposit_synth_dialog(DepositSynthArgs *args,
             }
 
         }
+        gtk_widget_destroy(dialog);
     }
 
     if (controls.sid) {
@@ -577,7 +574,6 @@ deposit_synth_dialog(DepositSynthArgs *args,
     gwy_dimensions_free(controls.dims);
 
 
-//    printf("dialog finished\n");
     return response == GTK_RESPONSE_OK;
 }
 
@@ -903,7 +899,6 @@ preview(DepositSynthControls *controls)
     /*check arguments for sure again (see sanitize_args)*/
     args->size = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->size))*pow10(controls->dims->args->xypow10);
     args->width = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->width))*pow10(controls->dims->args->xypow10);
-            
     
     gwy_app_wait_start(GTK_WINDOW(controls->dialog), "Starting...");
     gtk_label_set_text(GTK_LABEL(controls->message), "Running computation...");
@@ -1358,10 +1353,12 @@ deposit_synth_do(const DepositSynthArgs *args,
 
     gwy_data_field_copy(zlfield, lfield, 0);
 
+    showit(lfield, zdfield, rdisizes, rx, ry, rz, xdata, ydata, ndata,
+           oxres, oxreal, oyres, oyreal, add, xres, yres);
+    if (surface) gwy_object_unref(surface);
+
     if (showfield) {
-        showit(lfield, zdfield, rdisizes, rx, ry, rz, xdata, ydata, ndata,
-               oxres, oxreal, oyres, oyreal, add, xres, yres);
-        if (surface) gwy_object_unref(surface);
+
         surface = surface_for_preview(dfield, PREVIEW_SIZE);
         gwy_data_field_copy(surface, showfield, FALSE);
         gwy_data_field_data_changed(showfield);
