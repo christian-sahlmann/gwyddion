@@ -17,7 +17,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
-#define DEBUG 1
+
 /**
  * [FILE-MAGIC-FREEDESKTOP]
  * <mime-type type="application/x-anfatec-spm">
@@ -58,8 +58,6 @@
 
 #define EXTENSION_HEADER ".txt"
 #define EXTENSION_DATA ".int"
-
-#define Nanometer 1e-9
 
 static gboolean      module_register           (void);
 static gint          anfatec_detect            (const GwyFileDetectInfo *fileinfo,
