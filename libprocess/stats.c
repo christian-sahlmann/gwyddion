@@ -2432,10 +2432,9 @@ gwy_data_field_area_racf(GwyDataField *data_field,
             weight[k+1] += r;
         }
     }
-    r = lmeasure;  /* target_line discretization */
     for (i = 0; i < nstats; i++) {
         if (weight[i])
-            target[i] = r*target[i]/weight[i];
+            target[i] = target[i]/weight[i];
         else
             target[i] = 0.0;
     }
