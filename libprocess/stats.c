@@ -2378,8 +2378,8 @@ gwy_data_field_area_racf(GwyDataField *data_field,
     GwyDataLine *weight_line;
     GwySIUnit *xyunit, *zunit, *lineunit;
     gdouble *acf, *target, *weight;
-    gint i, j, k, xres, yres, wa, w2a, h2a, size;
-    gdouble xreal, yreal, v, r, xmeasure, ymeasure, lmeasure;
+    gint i, j, k, xres, yres, wa, w2a, h2a, size, nempty, emptyfrom;
+    gdouble xreal, yreal, v, r, xmeasure, ymeasure, lmeasure, first, last;
 
     g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
     g_return_if_fail(GWY_IS_DATA_LINE(target_line));
@@ -2432,11 +2432,36 @@ gwy_data_field_area_racf(GwyDataField *data_field,
             weight[k+1] += r;
         }
     }
+
+    /* Fill holes where we have no weight, this can occur near the start if
+     * large nstats is requested. */
+    nempty = emptyfrom = 0;
+    first = 0.0;
     for (i = 0; i < nstats; i++) {
-        if (weight[i])
+        if (weight[i]) {
             target[i] = target[i]/weight[i];
-        else
-            target[i] = 0.0;
+            if (nempty) {
+                last = target[i];
+                for (j = 0; j < nempty; j++) {
+                    gdouble x = j/(nempty + 1.0);
+                    target[emptyfrom + j] = x*last + (1.0 - x)*first;
+                }
+                nempty = 0;
+            }
+        }
+        else {
+            if (!i) {
+                g_warning("Weight for zero tau is 0, that's impossible!");
+                target[i] = 0.0;
+            }
+            else {
+                if (!nempty) {
+                    first = target[i-1];
+                    emptyfrom = i;
+                }
+                nempty++;
+            }
+        }
     }
 
     g_object_unref(acf_field);
