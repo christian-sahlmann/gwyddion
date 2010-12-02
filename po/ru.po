@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2010-11-27 03:59+0100\n"
-"PO-Revision-Date: 2010-11-27 18:35+0300\n"
+"POT-Creation-Date: 2010-12-01 03:58+0100\n"
+"PO-Revision-Date: 2010-12-02 12:08+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "Language: \n"
@@ -18,6 +18,67 @@ msgstr ""
 "X-Poedit-Language: Russian\n"
 "X-Poedit-Country: RUSSIAN FEDERATION\n"
 "X-Poedit-SourceCharset: utf-8\n"
+
+#: libgwyddion/gwyexpr.c:765
+msgid "Invalid token"
+msgstr "Неверный токен"
+
+#: libgwyddion/gwyexpr.c:773
+msgid "No tokens"
+msgstr "Нет токенов"
+
+#: libgwyddion/gwyexpr.c:1015
+#, c-format
+msgid "Missing operator %c argument"
+msgstr "Отсутствует аргумент %c оператора"
+
+#: libgwyddion/gwyexpr.c:1021
+#, c-format
+msgid "Invalid operator %c argument"
+msgstr "Неправильный аргумент %c оператора"
+
+#: libgwyddion/gwyexpr.c:1070
+#, c-format
+msgid "Missing %s argument"
+msgstr "Отсутствует аргумент %s"
+
+#: libgwyddion/gwyexpr.c:1077
+#, c-format
+msgid "Invalid %s argument"
+msgstr "Неправильный аргумент %s"
+
+#: libgwyddion/gwyexpr.c:1135
+msgid "Missing opening parenthesis"
+msgstr "отсутствует открывающая скобка"
+
+#: libgwyddion/gwyexpr.c:1177
+msgid "Missing closing parenthesis"
+msgstr "Отсутствует закрывающая скобка"
+
+#: libgwyddion/gwyexpr.c:1182
+msgid "Empty parentheses"
+msgstr "Пустые скобки"
+
+#: libgwyddion/gwyexpr.c:1191
+msgid "Stray comma"
+msgstr "Запятая не на своём месте"
+
+#: libgwyddion/gwyexpr.c:1230
+#, c-format
+msgid "Stray symbol %d"
+msgstr "Символ %d не на своём месте"
+
+#: libgwyddion/gwyexpr.c:1282
+msgid "Trailing garbage"
+msgstr "Мусор в конце файла"
+
+#: libgwyddion/gwyexpr.c:1302
+msgid "Stack is not executable"
+msgstr "Стек не является исполняемым"
+
+#: libgwyddion/gwyexpr.c:1411
+msgid "Unresolved identifiers"
+msgstr "Неразрешенные идентификаторы"
 
 #: libgwyddion/gwyfdcurvepreset.c:745
 msgid "vdW: semisphere"
@@ -1563,47 +1624,47 @@ msgstr "…"
 msgid "Cannot preview"
 msgstr "Нельзя просмотреть."
 
-#: app/gwyddion.c:124
+#: app/gwyddion.c:128
 msgid "Loading document history"
 msgstr "Загружается список предыдущих документов"
 
-#: app/gwyddion.c:129
+#: app/gwyddion.c:133
 msgid "Registering "
 msgstr "Регистрируем"
 
-#: app/gwyddion.c:130
+#: app/gwyddion.c:134
 msgid "stock items"
 msgstr "основные элементы"
 
-#: app/gwyddion.c:134
+#: app/gwyddion.c:138
 msgid "color gradients"
 msgstr "Цветовые градиенты"
 
-#: app/gwyddion.c:136
+#: app/gwyddion.c:140
 msgid "GL materials"
 msgstr "Материалы GL"
 
-#: app/gwyddion.c:138
+#: app/gwyddion.c:142
 msgid "grain quantities"
 msgstr "величины зёрен"
 
-#: app/gwyddion.c:143
+#: app/gwyddion.c:147
 msgid "Loading settings"
 msgstr "Загрузка настроек"
 
-#: app/gwyddion.c:150
+#: app/gwyddion.c:154
 msgid "Registering modules"
 msgstr "Регистрация модулей"
 
-#: app/gwyddion.c:167
+#: app/gwyddion.c:176
 msgid "Initializing GUI"
 msgstr "Инициализируется графический интерфейс"
 
-#: app/gwyddion.c:369
+#: app/gwyddion.c:378
 msgid "Could not read settings."
 msgstr "Не удается считать настройки"
 
-#: app/gwyddion.c:372
+#: app/gwyddion.c:381
 #, c-format
 msgid ""
 "Settings file `%s' cannot be read: %s\n"
@@ -2260,31 +2321,31 @@ msgstr "Импорт файлов данных AIST-NT"
 msgid "AIST-NT files (.aist)"
 msgstr "Файлы AIST-NT (.aist)"
 
-#: modules/file/anfatec.c:78
+#: modules/file/anfatec.c:81
 msgid "Imports Anfatec data files (two-part .txt + .int)."
 msgstr "Импортирует файлы данных Anfatec (две части .txt + .int)."
 
-#: modules/file/anfatec.c:91
+#: modules/file/anfatec.c:94
 msgid "Anfatec files (.par + .int)"
 msgstr "Файлы Anfatec (.par + .int)"
 
-#: modules/file/anfatec.c:219
+#: modules/file/anfatec.c:226
 msgid "The parameter file cannot be loaded."
 msgstr "Файл параметров не может быть загружен."
 
-#: modules/file/anfatec.c:225
+#: modules/file/anfatec.c:232
 msgid "Cannot find the corresponding parameter file."
 msgstr "Не удаётся найти соответствующий файл параметров."
 
-#: modules/file/anfatec.c:242
+#: modules/file/anfatec.c:249
 msgid "FileDescBegin cannot be inside another FileDesc."
 msgstr "FileDescBegin не может быть внутри другого FileDesc."
 
-#: modules/file/anfatec.c:254
+#: modules/file/anfatec.c:261
 msgid "FileDescEnd has no corresponding FileDescBegin."
 msgstr "Для FileDescEnd не найден соответствующий FileDescBegin."
 
-#: modules/file/anfatec.c:281
+#: modules/file/anfatec.c:288
 msgid "FileDescBegin has no corresponding FileDescEnd."
 msgstr "Для FileDescBegin не найден соответствующий FileDescEnd."
 
@@ -6227,7 +6288,7 @@ msgid "_Undo"
 msgstr "_Отменить"
 
 #: modules/process/fft_filter_2d.c:489
-#: modules/tools/maskedit.c:553
+#: modules/tools/maskedit.c:542
 msgid "_Remove"
 msgstr "_Удалить"
 
@@ -6362,11 +6423,11 @@ msgstr "Разрешить _гауссов множитель"
 msgid "_Autocorrelation length:"
 msgstr "_Длина автокорреляции:"
 
-#: modules/process/fft_synth.c:486
+#: modules/process/fft_synth.c:489
 msgid "Enable _power multiplier"
 msgstr "Разрешить сте_пенной множитель"
 
-#: modules/process/fft_synth.c:497
+#: modules/process/fft_synth.c:500
 msgid "Po_wer:"
 msgstr "С_тепень:"
 
@@ -8220,6 +8281,7 @@ msgstr "_Жёсткий порог:"
 
 #: modules/process/scars.c:530
 #: modules/process/scars.c:537
+#: modules/process/threshold.c:354
 msgid "RMS"
 msgstr "Ср. квадр."
 
@@ -8392,41 +8454,49 @@ msgstr "_Горизонтальный масштаб:"
 msgid "Randomi_ze"
 msgstr "Сделать случа_йным"
 
-#: modules/process/threshold.c:94
+#: modules/process/threshold.c:123
 msgid "Limit the data range using a lower/upper threshold."
 msgstr "Ограничивает диапазон данных используя порог сверху и снизу."
 
-#: modules/process/threshold.c:108
-msgid "/_Basic Operations/Threshol_d..."
-msgstr "/_Базовые действия/_Порог..."
+#: modules/process/threshold.c:137
+msgid "/_Basic Operations/Li_mit range..."
+msgstr "/_Базовые действия/Ограничить _диапазон..."
 
-#: modules/process/threshold.c:112
+#: modules/process/threshold.c:141
 msgid "Limit data range"
 msgstr "Ограничить диапазон данных"
 
-#: modules/process/threshold.c:237
-msgid "Threshold"
-msgstr "Порог"
+#: modules/process/threshold.c:250
+msgid "Limit Range"
+msgstr "Ограничить диапазон данных"
 
-#: modules/process/threshold.c:281
-msgid "Thresholds"
-msgstr "Пороги"
+#: modules/process/threshold.c:296
+msgid "Specify _thresholds"
+msgstr "Задать _пороги"
 
-#: modules/process/threshold.c:286
+#: modules/process/threshold.c:298
+msgid "Use _display range"
+msgstr "Использовать отображаемый _диапазон"
+
+#: modules/process/threshold.c:300
+msgid "Cut off outlier_s"
+msgstr "Обрезать _выпадающие детали."
+
+#: modules/process/threshold.c:309
 msgid "_Lower:"
 msgstr "С_низу:"
 
-#: modules/process/threshold.c:292
+#: modules/process/threshold.c:315
 msgid "_Upper:"
 msgstr "С_верху:"
 
-#: modules/process/threshold.c:298
-msgid "Set to Full Range"
-msgstr "Полный диапазон"
+#: modules/process/threshold.c:320
+msgid "Set to _Full Range"
+msgstr "_Полный диапазон"
 
-#: modules/process/threshold.c:306
-msgid "Set to Display Range"
-msgstr "Отображаемый диапазон"
+#: modules/process/threshold.c:354
+msgid "F_arther than:"
+msgstr "Д_альше, чем:"
 
 #: modules/process/tilt.c:73
 msgid "Tilts image by specified amount."
@@ -8992,127 +9062,127 @@ msgstr "<b>Параметры</b>"
 msgid "_Instant updates"
 msgstr "_Обновлять сразу"
 
-#: modules/tools/maskedit.c:159
+#: modules/tools/maskedit.c:157
 msgid "Mask editor tool, allows to interactively add or remove parts of mask."
 msgstr "Редактор маски, позволяет интерактивно добавлять и удалять части маски."
 
-#: modules/tools/maskedit.c:213
+#: modules/tools/maskedit.c:211
 msgid "Mask Editor"
 msgstr "Редактор маски"
 
-#: modules/tools/maskedit.c:214
+#: modules/tools/maskedit.c:212
 msgid "Edit mask"
 msgstr "Редактировать маску"
 
-#: modules/tools/maskedit.c:323
+#: modules/tools/maskedit.c:321
 msgid "Set mask to selection"
 msgstr "Установить маску равной выделенному"
 
-#: modules/tools/maskedit.c:328
+#: modules/tools/maskedit.c:326
 msgid "Add selection to mask"
 msgstr "Добавить выделенное к маске"
 
-#: modules/tools/maskedit.c:333
+#: modules/tools/maskedit.c:331
 msgid "Subtract selection from mask"
 msgstr "Вычесть выделенное из маски"
 
-#: modules/tools/maskedit.c:338
+#: modules/tools/maskedit.c:336
 msgid "Intersect selection with mask"
 msgstr "Пересечение выделенного и маски"
 
-#: modules/tools/maskedit.c:345
+#: modules/tools/maskedit.c:343
 msgid "Rectangular shapes"
 msgstr "Прямоугольные формы"
 
-#: modules/tools/maskedit.c:350
+#: modules/tools/maskedit.c:348
 msgid "Elliptic shapes"
 msgstr "Эллиптические формы"
 
-#: modules/tools/maskedit.c:355
+#: modules/tools/maskedit.c:353
 msgid "Thin lines"
 msgstr "Тонкие линии"
 
-#: modules/tools/maskedit.c:362
+#: modules/tools/maskedit.c:360
 msgid "Freehand mask drawing"
 msgstr "Свободное рисование маски"
 
-#: modules/tools/maskedit.c:367
+#: modules/tools/maskedit.c:365
 msgid "Freehand mask erasing"
 msgstr "Свободное стирание маски"
 
-#: modules/tools/maskedit.c:372
+#: modules/tools/maskedit.c:370
 msgid "Fill continous empty areas with mask"
 msgstr "Заполнение непрерывных пустых областей маской"
 
-#: modules/tools/maskedit.c:377
+#: modules/tools/maskedit.c:375
 msgid "Erase continous parts of mask"
 msgstr "Удалить непрерывные части маски"
 
-#: modules/tools/maskedit.c:404
+#: modules/tools/maskedit.c:402
 msgid "Editor"
 msgstr "Редактор"
 
-#: modules/tools/maskedit.c:409
+#: modules/tools/maskedit.c:407
 msgid "_Shapes"
 msgstr "_Фигуры"
 
-#: modules/tools/maskedit.c:419
+#: modules/tools/maskedit.c:417
 msgid "Mode:"
 msgstr "Режим:"
 
-#: modules/tools/maskedit.c:451
+#: modules/tools/maskedit.c:446
 msgid "Shape:"
 msgstr "Форма:"
 
-#: modules/tools/maskedit.c:485
+#: modules/tools/maskedit.c:477
 msgid "_Drawing Tools"
 msgstr "И_нструменты рисования"
 
-#: modules/tools/maskedit.c:495
+#: modules/tools/maskedit.c:487
 msgid "Tool:"
 msgstr "Инструмент:"
 
-#: modules/tools/maskedit.c:529
+#: modules/tools/maskedit.c:518
 msgid "_Radius:"
 msgstr "Ра_диус:"
 
-#: modules/tools/maskedit.c:537
+#: modules/tools/maskedit.c:526
 msgid "Actions"
 msgstr "Действия"
 
-#: modules/tools/maskedit.c:545
+#: modules/tools/maskedit.c:534
 msgid "_Invert"
 msgstr "_Инвертировать"
 
-#: modules/tools/maskedit.c:561
+#: modules/tools/maskedit.c:550
 msgid "_Fill"
 msgstr "_Заполнить"
 
-#: modules/tools/maskedit.c:568
+#: modules/tools/maskedit.c:557
 msgid "Fill _Voids"
 msgstr "З_аполнить Пустоты"
 
-#: modules/tools/maskedit.c:582
+#: modules/tools/maskedit.c:571
 msgid "Grow/Shrink"
 msgstr "Растянуть/Ужать"
 
-#: modules/tools/maskedit.c:591
+#: modules/tools/maskedit.c:580
 msgid "_Grow"
 msgstr "_Растянуть"
 
-#: modules/tools/maskedit.c:599
+#: modules/tools/maskedit.c:588
 msgid "Shrin_k"
 msgstr "_Ужать"
 
-#: modules/tools/maskedit.c:614
+#: modules/tools/maskedit.c:603
 msgid "_Amount:"
 msgstr "_Количество:"
 
-#: modules/tools/maskedit.c:621
+#: modules/tools/maskedit.c:610
 msgid "Shrink from _border"
 msgstr "Ужать от _границы"
 
-#: modules/tools/maskedit.c:632
+#: modules/tools/maskedit.c:621
 msgid "_Prevent grain merging by growing"
 msgstr "_Предотвращать слияние зёрен при растяжении"
 
@@ -9652,6 +9722,15 @@ msgstr ""
 "Площадь проекции:    %s\n"
 "Наклон θ:     %s\n"
 "Наклон φ:     %s\n"
+
+#~ msgid "/_Basic Operations/Threshol_d..."
+#~ msgstr "/_Базовые действия/_Порог..."
+
+#~ msgid "Threshold"
+#~ msgstr "Порог"
+
+#~ msgid "Thresholds"
+#~ msgstr "Пороги"
 
 #~ msgid "_size:"
 #~ msgstr "_размер:"
