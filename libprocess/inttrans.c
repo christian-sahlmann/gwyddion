@@ -161,7 +161,7 @@ static void  gwy_preserve_rms_simple       (gint nsrc,
  * @windowing: Windowing mode.
  * @direction: FFT direction.
  * @interpolation: Interpolation type.
- *                 Ignored since 2.8 as no reampling is performed.
+ *                 Ignored since 2.8 as no resampling is performed.
  * @preserverms: %TRUE to preserve RMS value while windowing.
  * @level: 0 to perform no leveling, 1 to subtract mean value, 2 to subtract
  *         line (the number can be interpreted as the first polynomial degree
@@ -200,7 +200,7 @@ gwy_data_line_fft(GwyDataLine *rsrc, GwyDataLine *isrc,
  * @windowing: Windowing mode.
  * @direction: FFT direction.
  * @interpolation: Interpolation type.
- *                 Ignored since 2.8 as no reampling is performed.
+ *                 Ignored since 2.8 as no resampling is performed.
  * @preserverms: %TRUE to preserve RMS value while windowing.
  * @level: 0 to perform no leveling, 1 to subtract mean value, 2 to subtract
  *         line (the number can be interpreted as the first polynomial degree
@@ -448,7 +448,7 @@ gwy_data_field_2dfft_prepare(GwyDataField *dfield,
  * @windowing: Windowing type.
  * @direction: FFT direction.
  * @interpolation: Interpolation type.
- *                 Ignored since 2.8 as no reampling is performed.
+ *                 Ignored since 2.8 as no resampling is performed.
  * @preserverms: %TRUE to preserve RMS while windowing.
  * @level: 0 to perform no leveling, 1 to subtract mean value, 2 to subtract
  *         plane (the number can be interpreted as the first polynomial degree
@@ -994,7 +994,7 @@ gwy_data_field_2dfft_dehumanize(GwyDataField *data_field)
  * @windowing: Windowing type.
  * @direction: FFT direction.
  * @interpolation: Interpolation type.
- *                 Ignored since 2.8 as no reampling is performed.
+ *                 Ignored since 2.8 as no resampling is performed.
  * @preserverms: %TRUE to preserve RMS while windowing.
  * @level: 0 to perform no leveling, 1 to subtract mean value, 2 to subtract
  *         lines (the number can be interpreted as the first polynomial degree
@@ -1065,7 +1065,7 @@ gwy_data_field_area_1dfft(GwyDataField *rin, GwyDataField *iin,
  * @windowing: Windowing type.
  * @direction: FFT direction.
  * @interpolation: Interpolation type.
- *                 Ignored since 2.8 as no reampling is performed.
+ *                 Ignored since 2.8 as no resampling is performed.
  * @preserverms: %TRUE to preserve RMS while windowing.
  * @level: 0 to perform no leveling, 1 to subtract mean value, 2 to subtract
  *         line (the number can be interpreted as the first polynomial degree
@@ -1927,7 +1927,7 @@ gwy_data_field_mult_wav(GwyDataField *real_field,
  * gwy_data_field_cwt:
  * @data_field: A data field.
  * @interpolation: Interpolation type.
- *                 Ignored since 2.8 as no reampling is performed.
+ *                 Ignored since 2.8 as no resampling is performed.
  * @scale: Wavelet scale.
  * @wtype: Wavelet type.
  *
