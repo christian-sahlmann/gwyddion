@@ -385,10 +385,10 @@ deposit_synth_dialog(DepositSynthArgs *args,
         gwy_app_sync_data_items(data, controls.mydata, id, 0, FALSE,
                                 GWY_DATA_ITEM_PALETTE,
                                 0);
-    if (dfield_template) {
+    
+    if (dfield_template && dimsargs->add) {
         dfield = surface_for_preview(controls.original, PREVIEW_SIZE);
         gwy_data_field_data_changed(dfield);
-    //    printf("surface from original put to dfield\n");
     } 
 
     gwy_container_set_object_by_name(controls.mydata, "/0/data", dfield);
