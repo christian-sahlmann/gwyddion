@@ -304,6 +304,16 @@ void    gwy_data_field_area_2dacf           (GwyDataField *data_field,
                                              gint yrange);
 void    gwy_data_field_2dacf                (GwyDataField *data_field,
                                              GwyDataField *target_field);
+void    gwy_data_field_area_racf            (GwyDataField *data_field,
+                                             GwyDataLine *target_line,
+                                             gint col,
+                                             gint row,
+                                             gint width,
+                                             gint height,
+                                             gint nstats);
+void    gwy_data_field_racf                 (GwyDataField *data_field,
+                                             GwyDataLine *target_line,
+                                             gint nstats);
 void    gwy_data_field_area_minkowski_volume(GwyDataField *data_field,
                                              GwyDataLine *target_line,
                                              gint col, gint row,

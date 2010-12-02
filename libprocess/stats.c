@@ -2351,6 +2351,130 @@ gwy_data_field_rpsdf(GwyDataField *data_field,
 }
 
 /**
+ * gwy_data_field_area_racf:
+ * @data_field: A data field.
+ * @target_line: A data line to store the autocorrelation function to.  It
+ *               will be resampled to requested width.
+ * @col: Upper-left column coordinate.
+ * @row: Upper-left row coordinate.
+ * @width: Area width (number of columns).
+ * @height: Area height (number of rows).
+ * @nstats: The number of samples to take on the autocorrelation function.  If
+ *          nonpositive, a suitable resolution is chosen automatically.
+ *
+ * Calculates radially averaged autocorrelation function of a rectangular part
+ * of a data field.
+ *
+ * Since: 2.22
+ **/
+void
+gwy_data_field_area_racf(GwyDataField *data_field,
+                         GwyDataLine *target_line,
+                         gint col, gint row,
+                         gint width, gint height,
+                         gint nstats)
+{
+    GwyDataField *acf_field;
+    GwyDataLine *weight_line;
+    GwySIUnit *xyunit, *zunit, *lineunit;
+    gdouble *acf, *target, *weight;
+    gint i, j, k, xres, yres, wa, w2a, h2a, size;
+    gdouble xreal, yreal, v, r, xmeasure, ymeasure, lmeasure;
+
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    g_return_if_fail(GWY_IS_DATA_LINE(target_line));
+    xres = data_field->xres;
+    yres = data_field->yres;
+    g_return_if_fail(col >= 0 && row >= 0
+                     && width >= 4 && height >= 4
+                     && col + width <= xres
+                     && row + height <= yres);
+    xreal = data_field->xreal;
+    yreal = data_field->yreal;
+    xmeasure = xreal/xres;
+    ymeasure = yreal/yres;
+
+    size = MIN(width, height)/2;
+    if (nstats < 0)
+        nstats = size;
+    gwy_data_line_resample(target_line, nstats, GWY_INTERPOLATION_NONE);
+    gwy_data_line_clear(target_line);
+    gwy_data_line_set_offset(target_line, 0.0);
+    gwy_data_line_set_real(target_line, MIN(xreal, yreal)/2.0);
+    weight_line = gwy_data_line_duplicate(target_line);
+
+    acf_field = gwy_data_field_new(2*size - 1, 2*size - 1, 1.0, 1.0, FALSE);
+    target = target_line->data;
+    weight = weight_line->data;
+    lmeasure = target_line->real/nstats;
+    gwy_data_field_area_2dacf(data_field, acf_field,
+                              col, row, width, height, size, size);
+    wa = acf_field->xres;
+    w2a = acf_field->xres/2;
+    h2a = acf_field->yres/2;
+    acf = acf_field->data;
+    for (i = 0; i < acf_field->yres; i++) {
+        for (j = 0; j < wa; j++) {
+            v = acf[i*wa + j];
+            r = hypot((i - h2a)*xmeasure, (j - w2a)*ymeasure)/lmeasure;
+            k = floor(r);
+            if (k+1 >= nstats)
+                continue;
+            r -= k;
+            if (r <= 0.5)
+                r = 2.0*r*r;
+            else
+                r = 1.0 - 2.0*(1.0 - r)*(1.0 - r);
+
+            target[k] += (1.0 - r)*v;
+            target[k+1] += r*v;
+            weight[k] += 1.0 - r;
+            weight[k+1] += r;
+        }
+    }
+    r = lmeasure;  /* target_line discretization */
+    for (i = 0; i < nstats; i++) {
+        if (weight[i])
+            target[i] = r*target[i]/weight[i];
+        else
+            target[i] = 0.0;
+    }
+
+    g_object_unref(acf_field);
+
+    /* Set proper units */
+    xyunit = gwy_data_field_get_si_unit_xy(data_field);
+    zunit = gwy_data_field_get_si_unit_z(data_field);
+    lineunit = gwy_data_line_get_si_unit_x(target_line);
+    gwy_serializable_clone(G_OBJECT(xyunit), G_OBJECT(lineunit));
+    lineunit = gwy_data_line_get_si_unit_y(target_line);
+    gwy_si_unit_multiply(xyunit, zunit, lineunit);
+}
+
+/**
+ * gwy_data_field_area_racf:
+ * @data_field: A data field.
+ * @target_line: A data line to store the autocorrelation function to.  It
+ *               will be resampled to requested width.
+ * @nstats: The number of samples to take on the autocorrelation function.  If
+ *          nonpositive, a suitable resolution is chosen automatically.
+ *
+ * Calculates radially averaged autocorrelation function of a data field.
+ *
+ * Since: 2.22
+ **/
+void
+gwy_data_field_racf(GwyDataField *data_field,
+                    GwyDataLine *target_line,
+                    gint nstats)
+{
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    gwy_data_field_area_racf(data_field, target_line,
+                             0, 0, data_field->xres, data_field->yres,
+                             nstats);
+}
+
+/**
  * gwy_data_field_area_2dacf:
  * @data_field: A data field.
  * @target_field: A data field to store the result to.  It will be resampled
