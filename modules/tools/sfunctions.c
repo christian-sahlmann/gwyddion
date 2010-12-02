@@ -48,6 +48,7 @@ typedef enum {
     GWY_SF_MINKOWSKI_BOUNDARY     = 8,
     GWY_SF_MINKOWSKI_CONNECTIVITY = 9,
     GWY_SF_RPSDF                  = 10,
+    GWY_SF_RACF                   = 11,
 } GwySFOutputType;
 
 enum {
@@ -137,7 +138,7 @@ static GwyModuleInfo module_info = {
        "functions (height distribution, correlations, PSDF, Minkowski "
        "functionals) of selected part of data."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "2.7",
+    "2.8",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -169,6 +170,7 @@ static const GwyEnum sf_types[] =  {
     { N_("HHCF"),                        GWY_SF_HHCF,                   },
     { N_("PSDF"),                        GWY_SF_PSDF,                   },
     { N_("Radial PSDF"),                 GWY_SF_RPSDF,                  },
+    { N_("Radial ACF"),                  GWY_SF_RACF,                   },
     { N_("Minkowski volume"),            GWY_SF_MINKOWSKI_VOLUME,       },
     { N_("Minkowski boundary"),          GWY_SF_MINKOWSKI_BOUNDARY,     },
     { N_("Minkowski connectivity"),      GWY_SF_MINKOWSKI_CONNECTIVITY, },
@@ -678,7 +680,16 @@ gwy_tool_sfunctions_update_curve(GwyToolSFunctions *tool)
                                   GWY_WINDOWING_HANN,
                                   lineres);
         xlabel = "k";
-        ylabel = "W";
+        ylabel = "W<sub>r</sub>";
+        break;
+
+        case GWY_SF_RACF:
+        gwy_data_field_area_racf(plain_tool->data_field,
+                                 tool->line,
+                                 isel[0], isel[1], w, h,
+                                 lineres);
+        xlabel = "τ";
+        ylabel = "G<sub>r</sub>";
         break;
 
         default:
