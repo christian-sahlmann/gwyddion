@@ -1143,8 +1143,8 @@ deposit_synth_do(const DepositSynthArgs *args,
 
         disize = gwy_data_field_rtoi(dfield, size);
 
-        xpos = CLAMP((gint)(disize+(g_rand_double(rng)*(xres-2*(gint)(disize+1))) + 1), 0, xres);
-        ypos = CLAMP((gint)(disize+(g_rand_double(rng)*(yres-2*(gint)(disize+1))) + 1), 0, yres);
+        xpos = CLAMP((gint)(disize+(g_rand_double(rng)*(xres-2*(gint)(disize+1))) + 1), 0, xres-1);
+        ypos = CLAMP((gint)(disize+(g_rand_double(rng)*(yres-2*(gint)(disize+1))) + 1), 0, yres-1);
         steps++;
 
         too_close = 0;
@@ -1169,7 +1169,7 @@ deposit_synth_do(const DepositSynthArgs *args,
         rdisizes[ndata] = size;
         rx[ndata] = (gdouble)xpos*oxreal/(gdouble)oxres; 
         ry[ndata] = (gdouble)ypos*oyreal/(gdouble)oyres;
-        rz[ndata] = 1.0*gwy_data_field_get_val(lfield, xpos, ypos) + rdisizes[ndata]; //2
+        rz[ndata] = gwy_data_field_get_val(lfield, xpos, ypos) + rdisizes[ndata]; 
         ndata++;
     };
 
@@ -1206,8 +1206,8 @@ deposit_synth_do(const DepositSynthArgs *args,
 
                 disize = gwy_data_field_rtoi(dfield, size);
 
-                xpos = CLAMP(disize+(g_rand_double(rng)*(xres-2*(gint)(disize+1))) + 1, 0, xres);
-                ypos = CLAMP(disize+(g_rand_double(rng)*(yres-2*(gint)(disize+1))) + 1, 0, yres);
+                xpos = CLAMP(disize+(g_rand_double(rng)*(xres-2*(gint)(disize+1))) + 1, 0, xres-1);
+                ypos = CLAMP(disize+(g_rand_double(rng)*(yres-2*(gint)(disize+1))) + 1, 0, yres-1);
 
                 ii++;
                 too_close = 0;
