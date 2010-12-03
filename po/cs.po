@@ -3,15 +3,74 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2010-11-30 10:55+0100\n"
-"PO-Revision-Date: 2010-11-30 11:17+0100\n"
+"POT-Creation-Date: 2010-12-03 13:32+0100\n"
+"PO-Revision-Date: 2010-12-03 13:37+0100\n"
 "Last-Translator: Yeti <yeti@gwyddion.net>\n"
 "Language-Team: Czech\n"
-"Language: \n"
+"Language: cs\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2;\n"
+
+#: libgwyddion/gwyexpr.c:765
+msgid "Invalid token"
+msgstr "Neplatný token"
+
+#: libgwyddion/gwyexpr.c:774
+msgid "Empty expression"
+msgstr "Prázdný výraz"
+
+#: libgwyddion/gwyexpr.c:1016
+#, c-format
+msgid "Missing operator %c argument"
+msgstr "Chybí argument operátoru %c"
+
+#: libgwyddion/gwyexpr.c:1022
+#, c-format
+msgid "Invalid operator %c argument"
+msgstr "Argument operátoru %c je neplatný"
+
+#: libgwyddion/gwyexpr.c:1071
+msgid "Missing argument of %s"
+msgstr "Chybí argument %c"
+
+#: libgwyddion/gwyexpr.c:1078
+msgid "Invalid argument of %s"
+msgstr "Neplatný argument %s"
+
+#: libgwyddion/gwyexpr.c:1136
+msgid "Missing opening parenthesis"
+msgstr "Chybí otevírací závorka"
+
+#: libgwyddion/gwyexpr.c:1178
+msgid "Missing closing parenthesis"
+msgstr "Chybí uzavírací závorka"
+
+#: libgwyddion/gwyexpr.c:1183
+msgid "Empty parentheses"
+msgstr "Prázdné závorky"
+
+#: libgwyddion/gwyexpr.c:1192
+msgid "Stray comma"
+msgstr "Zbloudilá čárka"
+
+#: libgwyddion/gwyexpr.c:1231
+#, c-format
+msgid "Stray symbol %d"
+msgstr "Zbloudilý symbol %d"
+
+#: libgwyddion/gwyexpr.c:1283
+msgid "Trailing garbage"
+msgstr "Nesmyslný konec výrazu"
+
+#: libgwyddion/gwyexpr.c:1303
+msgid "Stack is not executable"
+msgstr "Zásobník není spustitelný"
+
+#: libgwyddion/gwyexpr.c:1412
+msgid "Unresolved identifiers"
+msgstr "Neznámé identifikátory"
 
 #: libgwyddion/gwyfdcurvepreset.c:745
 msgid "vdW: semisphere"
@@ -726,7 +785,7 @@ msgstr "pixelů"
 #: modules/file/pixmap.c:2669 modules/file/rawfile.c:398
 #: modules/process/angle_dist.c:170 modules/process/calibrate.c:295
 #: modules/process/curvature.c:602 modules/process/cwt.c:132
-#: modules/process/deposit.c:197 modules/process/deposit_synth.c:327
+#: modules/process/deposit.c:197 modules/process/deposit_synth.c:359
 #: modules/process/drift.c:230 modules/process/dwt.c:164
 #: modules/process/dwtanisotropy.c:183 modules/process/edge.c:636
 #: modules/process/facet-level.c:283 modules/process/facet_analysis.c:272
@@ -2346,31 +2405,31 @@ msgstr "Načítá datové soubory AIST-NT."
 msgid "AIST-NT files (.aist)"
 msgstr "AIST-NT soubory (.aist)"
 
-#: modules/file/anfatec.c:81
+#: modules/file/anfatec.c:79
 msgid "Imports Anfatec data files (two-part .txt + .int)."
 msgstr "Načítá datové soubory Anfatec (dvoudílné: .txt + .int)"
 
-#: modules/file/anfatec.c:94
+#: modules/file/anfatec.c:92
 msgid "Anfatec files (.par + .int)"
 msgstr "Anfatec soubory (.txt + .int)"
 
-#: modules/file/anfatec.c:226
+#: modules/file/anfatec.c:224
 msgid "The parameter file cannot be loaded."
 msgstr "Nelze načíst soubor s parametry."
 
-#: modules/file/anfatec.c:232
+#: modules/file/anfatec.c:230
 msgid "Cannot find the corresponding parameter file."
 msgstr "Nelze najít odpovídající soubor s parametry."
 
-#: modules/file/anfatec.c:249
+#: modules/file/anfatec.c:247
 msgid "FileDescBegin cannot be inside another FileDesc."
 msgstr "FileDescBegin nemůže být uvnitř jiného FileDesc"
 
-#: modules/file/anfatec.c:261
+#: modules/file/anfatec.c:259
 msgid "FileDescEnd has no corresponding FileDescBegin."
 msgstr "FileDescEnd nemá odpovídající FileDescBegin"
 
-#: modules/file/anfatec.c:288
+#: modules/file/anfatec.c:286
 msgid "FileDescBegin has no corresponding FileDescEnd."
 msgstr "FileDescBegin nemá odpovídající FileDescEnd"
 
@@ -3568,7 +3627,7 @@ msgid "_Zoom:"
 msgstr "_Zvětšení"
 
 #: modules/file/pixmap.c:2715 modules/file/rawfile.c:632
-#: modules/process/crosscor.c:197 modules/process/deposit_synth.c:424
+#: modules/process/crosscor.c:197 modules/process/deposit_synth.c:458
 #: modules/process/dimensions.h:471 modules/process/tip_blind.c:264
 msgid "_Width:"
 msgstr "Šířk_a:"
@@ -3829,13 +3888,13 @@ msgstr "Předvolby"
 
 #: modules/file/rawfile.c:541 modules/file/rawxyz.c:436
 #: modules/process/arithmetic.c:227 modules/process/convolution_filter.c:243
-#: modules/process/deposit_synth.c:652 modules/process/drift.c:227
+#: modules/process/deposit_synth.c:683 modules/process/drift.c:227
 #: modules/process/edge.c:633 modules/process/fft_filter_1d.c:197
 #: modules/process/grain_mark.c:262 modules/process/grain_rem_threshold.c:221
 #: modules/process/grain_wshed.c:179 modules/process/mark_with.c:212
 #: modules/process/polydistort.c:214 modules/process/scars.c:466
 #: modules/process/synth.h:450 modules/process/tip_model.c:167
-#: modules/tools/linestats.c:420 modules/tools/sfunctions.c:413
+#: modules/tools/linestats.c:420 modules/tools/sfunctions.c:415
 #: modules/tools/stats.c:408
 msgid "_Update"
 msgstr "_Aktualizovat"
@@ -4146,7 +4205,7 @@ msgstr "Jednotky _hodnot:"
 #: modules/process/polydistort.c:268 modules/process/rotate.c:293
 #: modules/process/scale.c:248 modules/process/unrotate.c:282
 #: modules/tools/linestats.c:400 modules/tools/profile.c:381
-#: modules/tools/roughness.c:880 modules/tools/sfunctions.c:393
+#: modules/tools/roughness.c:880 modules/tools/sfunctions.c:395
 msgid "_Interpolation type:"
 msgstr "Typ _interpolace:"
 
@@ -5612,7 +5671,7 @@ msgstr "Parametry deposice"
 msgid "_Size"
 msgstr "_Velikost:"
 
-#: modules/process/deposit.c:299 modules/process/deposit_synth.c:435
+#: modules/process/deposit.c:299 modules/process/deposit_synth.c:469
 msgid "_Coverage:"
 msgstr "_Pokrytí:"
 
@@ -5624,51 +5683,51 @@ msgstr "_Opravit po usazení"
 msgid "Particles"
 msgstr "Částice"
 
-#: modules/process/deposit_synth.c:169
+#: modules/process/deposit_synth.c:178
 msgid "Generates particles using simple dynamical model"
 msgstr "Generuje částice pomocí jednoduchého dynamického modelu"
 
-#: modules/process/deposit_synth.c:183
+#: modules/process/deposit_synth.c:192
 msgid "/S_ynthetic/_Particles..."
 msgstr "/S_yntetická/Část_ice..."
 
-#: modules/process/deposit_synth.c:187
+#: modules/process/deposit_synth.c:196
 msgid "Generate particles using dynamical model"
 msgstr "Generovat částice pomocí dynamického modelu"
 
-#: modules/process/deposit_synth.c:284 modules/process/deposit_synth.c:296
-#: modules/process/deposit_synth.c:516 modules/process/deposit_synth.c:529
+#: modules/process/deposit_synth.c:315 modules/process/deposit_synth.c:327
+#: modules/process/deposit_synth.c:548 modules/process/deposit_synth.c:560
 #: modules/process/fft_synth.c:304 modules/process/lno_synth.c:410
 #: modules/process/noise_synth.c:322 modules/process/obj_synth.c:395
 #: modules/process/pat_synth.c:363
 msgid "Generated"
 msgstr "Generovaný"
 
-#: modules/process/deposit_synth.c:325
+#: modules/process/deposit_synth.c:357
 msgid "Particle Generation"
 msgstr "Generování částic"
 
-#: modules/process/deposit_synth.c:398 modules/process/fft_synth.c:395
+#: modules/process/deposit_synth.c:432 modules/process/fft_synth.c:395
 #: modules/process/lno_synth.c:501 modules/process/noise_synth.c:413
 #: modules/process/obj_synth.c:488 modules/process/pat_synth.c:456
 msgid "Dimensions"
 msgstr "Rozměry"
 
-#: modules/process/deposit_synth.c:408 modules/process/fft_synth.c:406
+#: modules/process/deposit_synth.c:442 modules/process/fft_synth.c:406
 #: modules/process/lno_synth.c:512 modules/process/noise_synth.c:424
 #: modules/process/obj_synth.c:499 modules/process/pat_synth.c:467
 msgid "Generator"
 msgstr "Generátor"
 
-#: modules/process/deposit_synth.c:413
+#: modules/process/deposit_synth.c:447
 msgid "R_adius:"
 msgstr "_Poloměr:"
 
-#: modules/process/deposit_synth.c:444
+#: modules/process/deposit_synth.c:478
 msgid "_Revise:"
 msgstr "_Revidovat:"
 
-#: modules/process/deposit_synth.c:656 modules/process/edge.c:714
+#: modules/process/deposit_synth.c:687 modules/process/edge.c:714
 #: modules/process/fft_filter_1d.c:334 modules/process/grain_mark.c:380
 #: modules/process/grain_rem_threshold.c:357 modules/process/mark_with.c:359
 #: modules/process/polydistort.c:334 modules/process/scars.c:575
@@ -5676,15 +5735,15 @@ msgstr "_Revidovat:"
 msgid "I_nstant updates"
 msgstr "Okamžité _aktualizace"
 
-#: modules/process/deposit_synth.c:674 modules/process/synth.h:489
+#: modules/process/deposit_synth.c:705 modules/process/synth.h:489
 msgid "R_andom seed:"
 msgstr "_Hnízdo náhodných čísel:"
 
-#: modules/process/deposit_synth.c:680 modules/process/synth.h:495
+#: modules/process/deposit_synth.c:711 modules/process/synth.h:495
 msgid "seed|_New"
 msgstr "_Nové"
 
-#: modules/process/deposit_synth.c:691
+#: modules/process/deposit_synth.c:722
 msgid "Randomize"
 msgstr "Znáhodn_it"
 
@@ -6287,7 +6346,7 @@ msgstr "PSDF řez"
 
 #: modules/process/fft_profile.c:272 modules/process/grain_dist.c:313
 #: modules/tools/linestats.c:375 modules/tools/profile.c:353
-#: modules/tools/sfunctions.c:368
+#: modules/tools/sfunctions.c:370
 msgid "_Fix res.:"
 msgstr "Ro_zliš.:"
 
@@ -8274,12 +8333,12 @@ msgid "Level data by arc revolution"
 msgstr "Vyrovnat data valením oblouku"
 
 #: modules/process/sphere-revolve.c:204 modules/tools/polynom.c:209
-#: modules/tools/sfunctions.c:301
+#: modules/tools/sfunctions.c:303
 msgid "_Horizontal direction"
 msgstr "_Vodorovný směr"
 
 #: modules/process/sphere-revolve.c:205 modules/tools/polynom.c:210
-#: modules/tools/sfunctions.c:302
+#: modules/tools/sfunctions.c:304
 msgid "_Vertical direction"
 msgstr "_Svislý směr"
 
@@ -8966,11 +9025,11 @@ msgid "Average:"
 msgstr "Střední hodnota:"
 
 #: modules/tools/linestats.c:346 modules/tools/profile.c:326
-#: modules/tools/sfunctions.c:339 modules/tools/spectro.c:292
+#: modules/tools/sfunctions.c:341 modules/tools/spectro.c:292
 msgid "<b>Options</b>"
 msgstr "<b>Volby</b>"
 
-#: modules/tools/linestats.c:362 modules/tools/sfunctions.c:355
+#: modules/tools/linestats.c:362 modules/tools/sfunctions.c:357
 #: modules/tools/stats.c:357
 msgid "_Instant updates"
 msgstr "Okamžité aktuali_zace"
@@ -9419,7 +9478,7 @@ msgstr "_Rozkopírovat"
 msgid "to _all files"
 msgstr "do _všech souborů"
 
-#: modules/tools/sfunctions.c:136
+#: modules/tools/sfunctions.c:137
 msgid ""
 "Statistical function tool, calculates one-dimensional statistical functions "
 "(height distribution, correlations, PSDF, Minkowski functionals) of selected "
@@ -9429,55 +9488,59 @@ msgstr ""
 "(rozdělení výšek, korelace, spektrální hustotu, Minkowského funkcionály) "
 "vybrané části dat."
 
-#: modules/tools/sfunctions.c:164
+#: modules/tools/sfunctions.c:165
 msgid "Height distribution"
 msgstr "Rozdělení výšek"
 
-#: modules/tools/sfunctions.c:165
+#: modules/tools/sfunctions.c:166
 msgid "Cum. height distribution"
 msgstr "Kumul. rozdělení výšek"
 
-#: modules/tools/sfunctions.c:166
+#: modules/tools/sfunctions.c:167
 msgid "Distribution of angles"
 msgstr "Rozdělení úhlů"
 
-#: modules/tools/sfunctions.c:167
+#: modules/tools/sfunctions.c:168
 msgid "Cum. distribution of angles"
 msgstr "Kumul. rozdělení úhlů"
 
-#: modules/tools/sfunctions.c:168
+#: modules/tools/sfunctions.c:169
 msgid "ACF"
 msgstr "ACF"
 
-#: modules/tools/sfunctions.c:169
+#: modules/tools/sfunctions.c:170
 msgid "HHCF"
 msgstr "HHCF"
 
-#: modules/tools/sfunctions.c:170
+#: modules/tools/sfunctions.c:171
 msgid "PSDF"
 msgstr "PSDF"
 
-#: modules/tools/sfunctions.c:171
+#: modules/tools/sfunctions.c:172
 msgid "Radial PSDF"
 msgstr "Radiální PSDF"
 
-#: modules/tools/sfunctions.c:172
+#: modules/tools/sfunctions.c:173
+msgid "Radial ACF"
+msgstr "Radiální ACF"
+
+#: modules/tools/sfunctions.c:174
 msgid "Minkowski volume"
 msgstr "Minkovského objem"
 
-#: modules/tools/sfunctions.c:173
+#: modules/tools/sfunctions.c:175
 msgid "Minkowski boundary"
 msgstr "Minkovského hranice"
 
-#: modules/tools/sfunctions.c:174
+#: modules/tools/sfunctions.c:176
 msgid "Minkowski connectivity"
 msgstr "Minkovského spojitost"
 
-#: modules/tools/sfunctions.c:199
+#: modules/tools/sfunctions.c:201
 msgid "Statistical Functions"
 msgstr "Statistické funkce"
 
-#: modules/tools/sfunctions.c:200
+#: modules/tools/sfunctions.c:202
 msgid "Calculate 1D statistical functions"
 msgstr "Výpočet jednorozměrných statistických funkcí"
 
@@ -9665,6 +9728,5 @@ msgstr ""
 #~ msgid "Single point spectroscopy (SPS) is not supported."
 #~ msgstr "Bodová spektroskopie (SPS) není podporována."
 
-#, fuzzy
 #~ msgid "force/distance curves"
 #~ msgstr "Proložit FD křívku"
