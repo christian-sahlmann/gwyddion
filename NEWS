@@ -1,3 +1,4 @@
+2.21
 2.22 (0000-00-00)
 Application:
 - Translations updated: Czech, French, Russian.
@@ -25,17 +26,21 @@ Libraries:
 - libgwyprocess: Grain boundary minimum and maximum calculation consideres
   pixels at edges of the image to be boundaries too.
 - libgwyddion: GwySIUnit works correctly if created with g_object_new().
+- libgwyprocesss: New function for radially averaged ACF.
 
 Modules:
 - Anfatec (new): Anfatec data file import.
 - Pattern Synthesis (new): Creates regular patterns such as steps of ridges.
 - Noise Synthesis (new): Generates uncorrelated point noise.
 - Line Noise Synthesis (new): Generates line noise (steps or scars).
+- Particle synthesis (new): Generate (modify) surfaces by particle
+  deposition using a simple dynamic model.
 - Object Synthesis: Objects can be placed onto an existing surface, two
   new shapes (diamond and Gaussian) were added, other small improvements.
 - Spectral Synthesis: Generated data can be added to an existing surface.
 - Mask Editor tool: New editting tools were added: paintbrush, eraser,
   and bucket filling and unfilling.
+- Statistical functions tool: Radially averaged ACF was added.
 - Arithmetic: Has a preview, expressions can work with mask values, units of
   the result can be speficied, the number of fields was increased to 8.
 - Threshold: Renamed to Limit Range in the menus; can cut off outliers given
