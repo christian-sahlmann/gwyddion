@@ -770,7 +770,8 @@ gwy_expr_scan_tokens(GwyExpr *expr,
     }
 
     if (!tokens) {
-        g_set_error(err, GWY_EXPR_ERROR, GWY_EXPR_ERROR_EMPTY, _("No tokens"));
+        g_set_error(err, GWY_EXPR_ERROR, GWY_EXPR_ERROR_EMPTY,
+                    _("Empty expression"));
         return FALSE;
     }
 
