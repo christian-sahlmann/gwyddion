@@ -1068,14 +1068,14 @@ gwy_expr_transform_functions(GwyExpr *expr,
             if (!arg) {
                 g_set_error(err, GWY_EXPR_ERROR,
                             GWY_EXPR_ERROR_MISSING_ARGUMENT,
-                            _("Missing %s argument"), call_table[func].name);
+                            _("Missing argument of %s"), call_table[func].name);
                 gwy_expr_token_list_delete(expr, tokens);
                 return NULL;
             }
             if (!arg->rpn_block) {
                 g_set_error(err, GWY_EXPR_ERROR,
                             GWY_EXPR_ERROR_INVALID_ARGUMENT,
-                            _("Invalid %s argument"), call_table[func].name);
+                            _("Invalid argument of %s"), call_table[func].name);
                 gwy_expr_token_list_delete(expr, tokens);
                 return NULL;
             }
