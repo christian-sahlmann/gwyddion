@@ -41,6 +41,7 @@ EXTRA_DIST = \
 	gwyddion.vim \
 	gwyddion.1 \
 	makefile.msc \
+	mingw32-gwyddion-libs.spec.in \
 	thumbnailer-schemas.xsl \
 	$(gwyddionapp_DATA) \
 	$(gwyddionmime_DATA)

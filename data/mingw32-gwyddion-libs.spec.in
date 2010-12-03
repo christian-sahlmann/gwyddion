@@ -1,0 +1,94 @@
+# @(#) $Id$
+%global __strip %{_mingw32_strip}
+%global __objdump %{_mingw32_objdump}
+%global _use_internal_dependency_generator 0
+%global __find_requires %{_mingw32_findrequires}
+%global __find_provides %{_mingw32_findprovides}
+%define __debug_install_post %{_mingw32_debug_install_post}
+
+Name:           mingw32-gwyddion-libs
+Version:        @PACKAGE_VERSION@
+Release:        1%{?dist}
+Summary:        MinGW Windows Gwyddion libraries
+
+Group:          Development/Libraries
+License:        GPLv2+
+URL:            @PACKAGE_URL@
+Source0:        http://gwyddion.net/download/%{version}/gwyddion-%{version}.tar.bz2
+Patch0:         gwyddion-2.22-build-only-libs.patch
+BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
+
+BuildArch:       noarch
+
+BuildRequires:  mingw32-filesystem >= 52
+BuildRequires:  mingw32-gcc
+BuildRequires:  mingw32-binutils
+BuildRequires:  mingw32-w32api
+BuildRequires:  mingw32-gtk2 >= 2.8
+BuildRequires:  mingw32-libxml2
+BuildRequires:  mingw32-gtkglext
+BuildRequires:  mingw32-fftw
+BuildRequires:  mingw32-dlfcn
+
+%description
+MinGW Windows Gwyddion libraries.
+
+%{?_mingw32_debug_package}
+
+
+%prep
+%setup -q -n gwyddion-%{version}
+%patch0 -p1 -b .onlylibs
+
+%build
+%{_mingw32_configure} --enable-shared --disable-static --disable-gtk-doc \
+  --disable-schemas-install --disable-desktop-file-update --disable-pygwy \
+  --without-pascal --without-perl --without-python --without-ruby \
+  --without-kde4-thumbnailer
+make %{?_smp_mflags}
+
+
+%install
+rm -rf ${RPM_BUILD_ROOT}
+%{_mingw32_makeinstall}
+
+# Manually copy gwyddion.pc as we no longer descend into data
+install -D -m 644 data/gwyddion.pc ${RPM_BUILD_ROOT}%{_mingw32_libdir}/pkgconfig/gwyddion.pc
+
+# Remove stuff not necessary for cross-compilation of Gwyddion apps and modules
+rm -rf ${RPM_BUILD_ROOT}%{_mingw32_bindir}/*.exe
+rm -f ${RPM_BUILD_ROOT}%{_mingw32_datadir}/gwyddion/ui/toolbox.xml
+
+
+%clean
+rm -rf $RPM_BUILD_ROOT
+
+
+%files
+%defattr(-,root,root,-)
+%{_mingw32_bindir}/libgwyddion2-0.dll
+%{_mingw32_bindir}/libgwyprocess2-0.dll
+%{_mingw32_bindir}/libgwydraw2-0.dll
+%{_mingw32_bindir}/libgwydgets2-0.dll
+%{_mingw32_bindir}/libgwymodule2-0.dll
+%{_mingw32_bindir}/libgwyapp2-0.dll
+%{_mingw32_includedir}/gwyddion
+%{_mingw32_libdir}/libgwyddion2.la
+%{_mingw32_libdir}/libgwyddion2.dll.a
+%{_mingw32_libdir}/libgwyprocess2.la
+%{_mingw32_libdir}/libgwyprocess2.dll.a
+%{_mingw32_libdir}/libgwydraw2.la
+%{_mingw32_libdir}/libgwydraw2.dll.a
+%{_mingw32_libdir}/libgwydgets2.la
+%{_mingw32_libdir}/libgwydgets2.dll.a
+%{_mingw32_libdir}/libgwymodule2.la
+%{_mingw32_libdir}/libgwymodule2.dll.a
+%{_mingw32_libdir}/libgwyapp2.la
+%{_mingw32_libdir}/libgwyapp2.dll.a
+%{_mingw32_libdir}/gwyddion/include/gwyconfig.h
+%{_mingw32_libdir}/pkgconfig/gwyddion.pc
+
+
+%changelog
+* Tue Dec 2 2010 Yeti <yeti@gwyddion.net> - 2.21-1
+- Created
