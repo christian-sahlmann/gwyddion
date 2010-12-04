@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2010-12-01 03:58+0100\n"
-"PO-Revision-Date: 2010-12-02 12:08+0300\n"
+"POT-Creation-Date: 2010-12-04 03:58+0100\n"
+"PO-Revision-Date: 2010-12-04 16:52+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "Language: \n"
@@ -23,60 +23,60 @@ msgstr ""
 msgid "Invalid token"
 msgstr "Неверный токен"
 
-#: libgwyddion/gwyexpr.c:773
-msgid "No tokens"
-msgstr "Нет токенов"
+#: libgwyddion/gwyexpr.c:774
+msgid "Empty expression"
+msgstr "Пустое выражение"
 
-#: libgwyddion/gwyexpr.c:1015
+#: libgwyddion/gwyexpr.c:1016
 #, c-format
 msgid "Missing operator %c argument"
 msgstr "Отсутствует аргумент %c оператора"
 
-#: libgwyddion/gwyexpr.c:1021
+#: libgwyddion/gwyexpr.c:1022
 #, c-format
 msgid "Invalid operator %c argument"
 msgstr "Неправильный аргумент %c оператора"
 
-#: libgwyddion/gwyexpr.c:1070
+#: libgwyddion/gwyexpr.c:1071
 #, c-format
-msgid "Missing %s argument"
+msgid "Missing argument of %s"
 msgstr "Отсутствует аргумент %s"
 
-#: libgwyddion/gwyexpr.c:1077
+#: libgwyddion/gwyexpr.c:1078
 #, c-format
-msgid "Invalid %s argument"
+msgid "Invalid argument of %s"
 msgstr "Неправильный аргумент %s"
 
-#: libgwyddion/gwyexpr.c:1135
+#: libgwyddion/gwyexpr.c:1136
 msgid "Missing opening parenthesis"
 msgstr "отсутствует открывающая скобка"
 
-#: libgwyddion/gwyexpr.c:1177
+#: libgwyddion/gwyexpr.c:1178
 msgid "Missing closing parenthesis"
 msgstr "Отсутствует закрывающая скобка"
 
-#: libgwyddion/gwyexpr.c:1182
+#: libgwyddion/gwyexpr.c:1183
 msgid "Empty parentheses"
 msgstr "Пустые скобки"
 
-#: libgwyddion/gwyexpr.c:1191
+#: libgwyddion/gwyexpr.c:1192
 msgid "Stray comma"
 msgstr "Запятая не на своём месте"
 
-#: libgwyddion/gwyexpr.c:1230
+#: libgwyddion/gwyexpr.c:1231
 #, c-format
 msgid "Stray symbol %d"
 msgstr "Символ %d не на своём месте"
 
-#: libgwyddion/gwyexpr.c:1282
+#: libgwyddion/gwyexpr.c:1283
 msgid "Trailing garbage"
 msgstr "Мусор в конце файла"
 
-#: libgwyddion/gwyexpr.c:1302
+#: libgwyddion/gwyexpr.c:1303
 msgid "Stack is not executable"
 msgstr "Стек не является исполняемым"
 
-#: libgwyddion/gwyexpr.c:1411
+#: libgwyddion/gwyexpr.c:1412
 msgid "Unresolved identifiers"
 msgstr "Неразрешенные идентификаторы"
 
@@ -139,7 +139,7 @@ msgstr "Гауссова (ФСПМ)"
 
 #: libgwyddion/gwynlfitpreset.c:1220
 msgid "Gaussian (ACF)"
-msgstr "Гауссова (ACF)"
+msgstr "Гауссова (ФАК)"
 
 #: libgwyddion/gwynlfitpreset.c:1234
 msgid "Gaussian (HHCF)"
@@ -159,7 +159,7 @@ msgstr "Экспоненциальная (ФСПМ)"
 
 #: libgwyddion/gwynlfitpreset.c:1289
 msgid "Exponential (ACF)"
-msgstr "Экспоненциальная (ACF)"
+msgstr "Экспоненциальная (ФАК)"
 
 #: libgwyddion/gwynlfitpreset.c:1302
 msgid "Exponential (HHCF)"
@@ -849,7 +849,7 @@ msgstr "точек"
 #: modules/process/curvature.c:602
 #: modules/process/cwt.c:132
 #: modules/process/deposit.c:197
-#: modules/process/deposit_synth.c:327
+#: modules/process/deposit_synth.c:359
 #: modules/process/drift.c:230
 #: modules/process/dwt.c:164
 #: modules/process/dwtanisotropy.c:183
@@ -2321,31 +2321,31 @@ msgstr "Импорт файлов данных AIST-NT"
 msgid "AIST-NT files (.aist)"
 msgstr "Файлы AIST-NT (.aist)"
 
-#: modules/file/anfatec.c:81
+#: modules/file/anfatec.c:79
 msgid "Imports Anfatec data files (two-part .txt + .int)."
 msgstr "Импортирует файлы данных Anfatec (две части .txt + .int)."
 
-#: modules/file/anfatec.c:94
+#: modules/file/anfatec.c:92
 msgid "Anfatec files (.par + .int)"
 msgstr "Файлы Anfatec (.par + .int)"
 
-#: modules/file/anfatec.c:226
+#: modules/file/anfatec.c:224
 msgid "The parameter file cannot be loaded."
 msgstr "Файл параметров не может быть загружен."
 
-#: modules/file/anfatec.c:232
+#: modules/file/anfatec.c:230
 msgid "Cannot find the corresponding parameter file."
 msgstr "Не удаётся найти соответствующий файл параметров."
 
-#: modules/file/anfatec.c:249
+#: modules/file/anfatec.c:247
 msgid "FileDescBegin cannot be inside another FileDesc."
 msgstr "FileDescBegin не может быть внутри другого FileDesc."
 
-#: modules/file/anfatec.c:261
+#: modules/file/anfatec.c:259
 msgid "FileDescEnd has no corresponding FileDescBegin."
 msgstr "Для FileDescEnd не найден соответствующий FileDescBegin."
 
-#: modules/file/anfatec.c:288
+#: modules/file/anfatec.c:286
 msgid "FileDescBegin has no corresponding FileDescEnd."
 msgstr "Для FileDescBegin не найден соответствующий FileDescEnd."
 
@@ -3559,7 +3559,7 @@ msgstr "_Увеличение:"
 #: modules/file/pixmap.c:2715
 #: modules/file/rawfile.c:632
 #: modules/process/crosscor.c:197
-#: modules/process/deposit_synth.c:424
+#: modules/process/deposit_synth.c:458
 #: modules/process/dimensions.h:471
 #: modules/process/tip_blind.c:264
 msgid "_Width:"
@@ -3827,7 +3827,7 @@ msgstr "Предустановки"
 #: modules/file/rawxyz.c:436
 #: modules/process/arithmetic.c:227
 #: modules/process/convolution_filter.c:243
-#: modules/process/deposit_synth.c:652
+#: modules/process/deposit_synth.c:683
 #: modules/process/drift.c:227
 #: modules/process/edge.c:633
 #: modules/process/fft_filter_1d.c:197
@@ -3840,7 +3840,7 @@ msgstr "Предустановки"
 #: modules/process/synth.h:450
 #: modules/process/tip_model.c:167
 #: modules/tools/linestats.c:420
-#: modules/tools/sfunctions.c:413
+#: modules/tools/sfunctions.c:415
 #: modules/tools/stats.c:408
 msgid "_Update"
 msgstr "О_бновить"
@@ -4154,7 +4154,7 @@ msgstr "Единицы измерения _значения:"
 #: modules/tools/linestats.c:400
 #: modules/tools/profile.c:381
 #: modules/tools/roughness.c:880
-#: modules/tools/sfunctions.c:393
+#: modules/tools/sfunctions.c:395
 msgid "_Interpolation type:"
 msgstr "Тип _интерполяции:"
 
@@ -5679,7 +5679,7 @@ msgid "_Size"
 msgstr "_Размер"
 
 #: modules/process/deposit.c:299
-#: modules/process/deposit_synth.c:435
+#: modules/process/deposit_synth.c:469
 msgid "_Coverage:"
 msgstr "Процент по_крытия:"
 
@@ -5691,22 +5691,22 @@ msgstr "_Перечитать после осаждения"
 msgid "Particles"
 msgstr "Частицы"
 
-#: modules/process/deposit_synth.c:169
+#: modules/process/deposit_synth.c:178
 msgid "Generates particles using simple dynamical model"
 msgstr "Создаёт частицы используя простую динамическую модель"
 
-#: modules/process/deposit_synth.c:183
+#: modules/process/deposit_synth.c:192
 msgid "/S_ynthetic/_Particles..."
 msgstr "/Син_тез/_Частицы..."
 
-#: modules/process/deposit_synth.c:187
+#: modules/process/deposit_synth.c:196
 msgid "Generate particles using dynamical model"
 msgstr "Создать частицы используя динамическую модель"
 
-#: modules/process/deposit_synth.c:284
-#: modules/process/deposit_synth.c:296
-#: modules/process/deposit_synth.c:516
-#: modules/process/deposit_synth.c:529
+#: modules/process/deposit_synth.c:315
+#: modules/process/deposit_synth.c:327
+#: modules/process/deposit_synth.c:548
+#: modules/process/deposit_synth.c:560
 #: modules/process/fft_synth.c:304
 #: modules/process/lno_synth.c:410
 #: modules/process/noise_synth.c:322
@@ -5715,11 +5715,11 @@ msgstr "Создать частицы используя динамическу�
 msgid "Generated"
 msgstr "Сгенерированное"
 
-#: modules/process/deposit_synth.c:325
+#: modules/process/deposit_synth.c:357
 msgid "Particle Generation"
 msgstr "Генерация частиц"
 
-#: modules/process/deposit_synth.c:398
+#: modules/process/deposit_synth.c:432
 #: modules/process/fft_synth.c:395
 #: modules/process/lno_synth.c:501
 #: modules/process/noise_synth.c:413
@@ -5728,7 +5728,7 @@ msgstr "Генерация частиц"
 msgid "Dimensions"
 msgstr "Размеры"
 
-#: modules/process/deposit_synth.c:408
+#: modules/process/deposit_synth.c:442
 #: modules/process/fft_synth.c:406
 #: modules/process/lno_synth.c:512
 #: modules/process/noise_synth.c:424
@@ -5737,15 +5737,15 @@ msgstr "Размеры"
 msgid "Generator"
 msgstr "Генератор"
 
-#: modules/process/deposit_synth.c:413
+#: modules/process/deposit_synth.c:447
 msgid "R_adius:"
 msgstr "Р_адиус:"
 
-#: modules/process/deposit_synth.c:444
+#: modules/process/deposit_synth.c:478
 msgid "_Revise:"
 msgstr "И_зменить:"
 
-#: modules/process/deposit_synth.c:656
+#: modules/process/deposit_synth.c:687
 #: modules/process/edge.c:714
 #: modules/process/fft_filter_1d.c:334
 #: modules/process/grain_mark.c:380
@@ -5757,17 +5757,17 @@ msgstr "И_зменить:"
 msgid "I_nstant updates"
 msgstr "Мгновенное об_новление"
 
-#: modules/process/deposit_synth.c:674
+#: modules/process/deposit_synth.c:705
 #: modules/process/synth.h:489
 msgid "R_andom seed:"
 msgstr "На_чальное число:"
 
-#: modules/process/deposit_synth.c:680
+#: modules/process/deposit_synth.c:711
 #: modules/process/synth.h:495
 msgid "seed|_New"
 msgstr "Ново_е"
 
-#: modules/process/deposit_synth.c:691
+#: modules/process/deposit_synth.c:722
 msgid "Randomize"
 msgstr "Сделать случайным"
 
@@ -6365,7 +6365,7 @@ msgstr "Сечение ФСПМ"
 #: modules/process/grain_dist.c:313
 #: modules/tools/linestats.c:375
 #: modules/tools/profile.c:353
-#: modules/tools/sfunctions.c:368
+#: modules/tools/sfunctions.c:370
 msgid "_Fix res.:"
 msgstr "_Фикс. разр.:"
 
@@ -8376,13 +8376,13 @@ msgstr "Выровнять данные вращением дуги"
 
 #: modules/process/sphere-revolve.c:204
 #: modules/tools/polynom.c:209
-#: modules/tools/sfunctions.c:301
+#: modules/tools/sfunctions.c:303
 msgid "_Horizontal direction"
 msgstr "_Горизонтальное направление"
 
 #: modules/process/sphere-revolve.c:205
 #: modules/tools/polynom.c:210
-#: modules/tools/sfunctions.c:302
+#: modules/tools/sfunctions.c:304
 msgid "_Vertical direction"
 msgstr "_Вертикальное направление"
 
@@ -9051,13 +9051,13 @@ msgstr "Среднее:"
 
 #: modules/tools/linestats.c:346
 #: modules/tools/profile.c:326
-#: modules/tools/sfunctions.c:339
+#: modules/tools/sfunctions.c:341
 #: modules/tools/spectro.c:292
 msgid "<b>Options</b>"
 msgstr "<b>Параметры</b>"
 
 #: modules/tools/linestats.c:362
-#: modules/tools/sfunctions.c:355
+#: modules/tools/sfunctions.c:357
 #: modules/tools/stats.c:357
 msgid "_Instant updates"
 msgstr "_Обновлять сразу"
@@ -9509,59 +9509,63 @@ msgstr "_Распространить"
 msgid "to _all files"
 msgstr "на _все файлы"
 
-#: modules/tools/sfunctions.c:136
+#: modules/tools/sfunctions.c:137
 msgid "Statistical function tool, calculates one-dimensional statistical functions (height distribution, correlations, PSDF, Minkowski functionals) of selected part of data."
 msgstr "Инструмент статистики, рассчитывает одномерные статистические функции (распределение высоты, корреляции, функция спектральной плотности мощности (ФСПМ, PSDF), функционалы Минковского) выбранной части данных."
 
-#: modules/tools/sfunctions.c:164
+#: modules/tools/sfunctions.c:165
 msgid "Height distribution"
 msgstr "Распределение высоты"
 
-#: modules/tools/sfunctions.c:165
+#: modules/tools/sfunctions.c:166
 msgid "Cum. height distribution"
 msgstr "Интегр. распределение высоты"
 
-#: modules/tools/sfunctions.c:166
+#: modules/tools/sfunctions.c:167
 msgid "Distribution of angles"
 msgstr "Распределение углов"
 
-#: modules/tools/sfunctions.c:167
+#: modules/tools/sfunctions.c:168
 msgid "Cum. distribution of angles"
 msgstr "Интегр. распределение углов"
 
-#: modules/tools/sfunctions.c:168
+#: modules/tools/sfunctions.c:169
 msgid "ACF"
 msgstr "ФАК"
 
-#: modules/tools/sfunctions.c:169
+#: modules/tools/sfunctions.c:170
 msgid "HHCF"
 msgstr "ФКВВ"
 
-#: modules/tools/sfunctions.c:170
+#: modules/tools/sfunctions.c:171
 msgid "PSDF"
 msgstr "ФСПМ"
 
-#: modules/tools/sfunctions.c:171
+#: modules/tools/sfunctions.c:172
 msgid "Radial PSDF"
 msgstr "Радиальная ФСПМ"
 
-#: modules/tools/sfunctions.c:172
+#: modules/tools/sfunctions.c:173
+msgid "Radial ACF"
+msgstr "Радиальная ФАК"
+
+#: modules/tools/sfunctions.c:174
 msgid "Minkowski volume"
 msgstr "Объём Минковского"
 
-#: modules/tools/sfunctions.c:173
+#: modules/tools/sfunctions.c:175
 msgid "Minkowski boundary"
 msgstr "Граница Минковского"
 
-#: modules/tools/sfunctions.c:174
+#: modules/tools/sfunctions.c:176
 msgid "Minkowski connectivity"
 msgstr "Связность Минковского"
 
-#: modules/tools/sfunctions.c:199
+#: modules/tools/sfunctions.c:201
 msgid "Statistical Functions"
 msgstr "Статистические функции"
 
-#: modules/tools/sfunctions.c:200
+#: modules/tools/sfunctions.c:202
 msgid "Calculate 1D statistical functions"
 msgstr "Рассчитать одномерные статистические функции"
 
@@ -9722,6 +9726,9 @@ msgstr ""
 "Площадь проекции:    %s\n"
 "Наклон θ:     %s\n"
 "Наклон φ:     %s\n"
+
+#~ msgid "No tokens"
+#~ msgstr "Нет токенов"
 
 #~ msgid "/_Basic Operations/Threshol_d..."
 #~ msgstr "/_Базовые действия/_Порог..."
