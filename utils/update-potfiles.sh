@@ -9,5 +9,5 @@ for dir in libgwyddion libprocess libdraw libgwydgets libgwymodule app modules; 
   echo
   echo "# $dir"
   find $dir -name \*.\[ch\] | xargs grep -E -l '\<N?_\(|\<gwy_sgettext\(' \
-    | grep -v '/\(main\|test\)\.c' | sort
+    | grep -E -v '/(main|test|pygwywrap)\.c' | sort
 done
