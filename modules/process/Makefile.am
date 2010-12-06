@@ -12,7 +12,7 @@ process_LTLIBRARIES = \
 	crosscor.la \
 	curvature.la \
 	cwt.la \
-        deposit_synth.la \
+	deposit_synth.la \
 	drift.la \
 	dwt.la \
 	dwtanisotropy.la \
