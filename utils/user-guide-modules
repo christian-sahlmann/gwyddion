@@ -1,6 +1,7 @@
 # vim: set ts=28 :
 acf2d	statistical-analysis	autocorrelation-2d
 aistfile	managing-files
+anfatec	managing-files
 angle_dist	statistical-analysis	angle-distribution
 apefile	managing-files
 arithmetic	multidata	data-arithmetic
@@ -21,6 +22,7 @@ crosscor	multidata	cross-correlation
 curvature	leveling	curvature
 cwt	integral-transforms	cwt
 deposit	synthetic
+deposit_synth	synthetic
 distance	basic-operations	distance
 dmefile	managing-files
 drift	edit-extended	drift-compensation
@@ -78,6 +80,7 @@ lextfile	managing-files
 line	selections
 linecorrect	editing-correction	line-correction
 linestats	statistical-analysis	line-stats
+lno_synth	synthetic	line-noise-synthetis
 local_contrast	filters-presentations	local-contrast
 mapvue	managing-files
 mark_with	presentations-masks
@@ -100,6 +103,7 @@ nanoscope	managing-files
 nanoscope-ii	managing-files
 nanotop	managing-files
 netcdf	managing-files
+noise_synth	synthetic	noise-synthetis
 nt-mdt	managing-files
 obj_synth	synthetic	object-synthetis
 ols	managing-files
@@ -108,6 +112,7 @@ omicronflat	managing-files
 omicronmatrix	managing-files
 opdfile	managing-files
 outliers	editing-correction	mask-of-outliers
+pat_synth	synthetic	pattern-synthetis
 pathlevel	leveling-and-background	path-level
 pixmap	managing-files
 pltfile	managing-files
@@ -163,5 +168,6 @@ tip_model	tip-convolution-artefacts	tip-model
 tipops	tip-convolution-artefacts	tip-operations
 unisoku	managing-files
 unrotate	editing-correction	unrotate
+wipfile	managing-files
 witfile	managing-files
 wsxmfile	managing-files
