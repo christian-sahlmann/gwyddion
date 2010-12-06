@@ -32,10 +32,12 @@ msgid "Invalid operator %c argument"
 msgstr "Argument operátoru %c je neplatný"
 
 #: libgwyddion/gwyexpr.c:1071
+#, fuzzy, c-format
 msgid "Missing argument of %s"
 msgstr "Chybí argument %c"
 
 #: libgwyddion/gwyexpr.c:1078
+#, c-format
 msgid "Invalid argument of %s"
 msgstr "Neplatný argument %s"
 
