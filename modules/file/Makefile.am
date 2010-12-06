@@ -93,7 +93,6 @@ file_LTLIBRARIES = \
 	stpfile.la \
 	surffile.la \
 	unisoku.la \
-	wipfile.la \
 	witfile.la \
 	wsxmfile.la
 
@@ -101,7 +100,15 @@ noinst_HEADERS = \
 	err.h \
 	get.h
 
+# Put sources that are for some reason disabled yet present in svn checkouts
+# here.  This makes them distributed and translations of their messages are
+# kept.  If we remove them completely, various bits can get lost.
+disabled_sources = \
+	miffile.c \
+	wipfile.c
+
 EXTRA_DIST = \
+	$(disabled_sources) \
 	1CHECKLIST \
 	$(spml_sources) \
 	makefile.msc \
@@ -195,7 +202,7 @@ stmprg_la_SOURCES        = stmprg.c
 stpfile_la_SOURCES       = stpfile.c
 surffile_la_SOURCES      = surffile.c
 unisoku_la_SOURCES       = unisoku.c
-wipfile_la_SOURCES       = wipfile.c
+#wipfile_la_SOURCES       = wipfile.c
 witfile_la_SOURCES       = witfile.c
 wsxmfile_la_SOURCES      = wsxmfile.c
 
