@@ -1,4 +1,4 @@
-2.22 (0000-00-00)
+2.22 (2010-12-06)
 Application:
 - Translations updated: Czech, French, Russian.
 - New command line option --no-log-to-file disables redirection of messages
