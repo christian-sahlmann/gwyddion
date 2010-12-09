@@ -545,9 +545,11 @@ gwy_data_chooser_receive_event(GwyContainer *data,
 
     /* Find if we already have an event on the same object. */
     for (item = chooser->events; item; item = g_list_next(item)) {
-        event = (GwyDataChooserEvent*)item->data;
-        if (event->container == data && event->id == id)
+        GwyDataChooserEvent *thisevent = (GwyDataChooserEvent*)item->data;
+        if (thisevent->container == data && thisevent->id == id) {
+            event = thisevent;
             break;
+        }
     }
 
     if (event) {
@@ -555,7 +557,7 @@ gwy_data_chooser_receive_event(GwyContainer *data,
             if (event->event_type == GWY_DATA_WATCH_EVENT_REMOVED)
                 g_warning("Got event REMOVED twice on %p, %d.", data, id);
             else if (event->event_type == GWY_DATA_WATCH_EVENT_ADDED) {
-                /* Got rid of the data altogether, as we do not display it. */
+                /* Get rid of the data altogether, as we do not display it. */
                 chooser->events = g_list_delete_link(chooser->events, item);
                 return;
             }
@@ -563,7 +565,7 @@ gwy_data_chooser_receive_event(GwyContainer *data,
                 event->event_type = event_type;
         }
         else if (event_type == GWY_DATA_WATCH_EVENT_ADDED) {
-            g_warning("Got event ADDED on existing item %p, %d.", data, id);
+            g_warning("Got event ADDED twice on %p, %d.", data, id);
         }
         else if (event_type == GWY_DATA_WATCH_EVENT_CHANGED) {
             if (event->event_type == GWY_DATA_WATCH_EVENT_REMOVED)
