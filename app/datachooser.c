@@ -452,7 +452,8 @@ gwy_data_chooser_find_data(GwyDataChooser *chooser,
                            MODEL_COLUMN_CONTAINER, &container2,
                            MODEL_COLUMN_ID, &id2,
                            -1);
-        g_object_unref(container);
+        if (container2)
+            g_object_unref(container2);
         if (container2 == container && id2 == id)
             return TRUE;
         if (container2 > container || (container2 == container && id2 > id))
