@@ -155,10 +155,6 @@ build the API documentation (tarballs cannot be made without it).
 
 You should be able to build executables then with
   make
-A few other things remain to generate, however, namely MSVC files (makefiles,
-.def files).  They can be built only after a successful project build.  Run
-  ./utils/update-msvc.py
-to generate them.
 
 At this point that all files that are included in source tarball should be
 created, and
