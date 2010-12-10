@@ -26,21 +26,13 @@ schema_DATA = gwyddion-thumbnailer.schemas
 endif
 
 EXTRA_DIST = \
-	config.h.win32.in \
-	config.h.win32 \
-	gwyconfig.h.win32 \
-	gwyddion-devel.iss \
-	gwyddion-devel.iss.in \
 	gwyddion-thumbnailer.schemas.in \
-	gwyddion.iss \
-	gwyddion.iss.in \
 	gwyddion.nsit.in \
 	gwyddion.pc.in \
 	gwyddion.spec.in \
 	gwyddion-cfg.py \
 	gwyddion.vim \
 	gwyddion.1 \
-	makefile.msc \
 	mingw32-gwyddion-libs.spec.in \
 	thumbnailer-schemas.xsl \
 	$(gwyddionapp_DATA) \

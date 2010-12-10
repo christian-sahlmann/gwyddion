@@ -104,59 +104,8 @@ GNOME thumbnailer, run `make install DISABLE_GCONF_SCHEMAS_INSTALL=yes'.  To
 ease packaging, it is automatically disabled when DESTDIR is non-empty.
 
 
-===[ 2. From sources -- MS Windows ]=========================================
+===[ 2. Cross compilation for MS Windows ]===================================
 
-Prerequisities:
-- MSVC 6 or newer (it may build with Cygwin or MinGW toolchain, but MSVC is
-  the tested one)
-- Gtk+-2.8, including development files
-- GtkGLExt-1.0 or newer, including development files
-- LibXML2, including development files
-The prefered way to get all these is to install Gtk+ all-in-one package from
-GladeWin32.
-
-Optional but recommended, for installer creation:
-- Inno Setup 4 or newer
-
-Unpack tarball with sources, change to the created directory and edit
-make.msc.  Point:
-- GTK_TOP to top level directory of your Gtk+ installation (it's the
-  directory that have bin, lib, share, ..., subdirectories).  We will refer
-  to this directory as $(GTK_TOP) below.
-- GTKGLEXT_TOP to top level directory of your GtkGLExt installation if it
-  differs from $(GTK_TOP)
-- LIBXML2_TOP to top level directory of your LibXML2 installation if it
-  differs from $(GTK_TOP)
-- MSC_TOP to top level directory of you MSVC installation
-These variables are set to reasonable defaults, so chances are you will not
-need to change them.
-
-Run command prompt (DOS) in the directory with unpacked sources.  Ensure
-MSVC directories are in PATH, this can be done by running vcvars32.bat,
-provided by MSVC.  Run
-  nmake -f makefile.msc
-  nmake -f makefile.msc install
-
-If you are not going to create an installer and run Gwyddion from where it
-was compiled instead (that its, from the `inst' subdirectory), you have to set
-up registry keys so that it can find Gtk+ libraries.  Run regedit and create
-in
-  HKEY_LOCAL_MACHINE->Software->Microsoft->Windows->Current Version->
-    ->App Paths->Gwyddion.exe
-a string key `Path' and put `$(GTK_TOP)\lib;$(GTK_TOP)\bin' there.  If
-GtkGLExt or LibXML2 is installed separately, also add its lib and bin
-directories, separated by semicolons.
-
-To create an installer, open inst/gwyddion.iss in Inno Setup and select Build,
-it will create Gwyddion-$VERSION.exe in the inst subdirectory.  You can
-optionally create installer of Gwyddion development files by repeating these
-steps with inst/gwyddion-devel.iss.
-
-It is possible to build Gwyddion from the MSVC IDE, but it is not supported.
-Namely because there are no decent project files to start with, and if there
-were some, we don't know how to automatically update them for new modules,
-source files, pixmaps, etc. according to Unix makefiles as it works with the
-nmake makefiles now.
 
 
 ===[ 3. From sources -- Mac OS X ]===========================================

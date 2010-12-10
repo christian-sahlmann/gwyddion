@@ -1,3 +1,9 @@
+2.23 (0000-00-00)
+Other:
+- Compilation with MSVC6 toolchain on MS Windows is no longer supported, use
+  MinGW32.  The recommended compilation method is cross-compilation on Linux.
+
+
 2.22 (2010-12-06)
 Application:
 - Translations updated: Czech, French, Russian.

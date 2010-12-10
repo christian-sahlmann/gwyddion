@@ -29,6 +29,7 @@
 #include <stdio.h>
 #include <locale.h>
 #include <string.h>
+#include <unistd.h>
 #include <glib/gstdio.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
@@ -37,10 +38,6 @@
 #include <libprocess/datafield.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <app/gwyapp.h>
-
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif
 
 #include "err.h"
 

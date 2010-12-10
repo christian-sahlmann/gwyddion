@@ -12,7 +12,6 @@ EXTRA_DIST = \
 	CODING-STANDARDS \
 	README \
 	README.QA \
-	makefile.msc \
 	add-objects.py \
 	style.css
 

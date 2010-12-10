@@ -37,11 +37,6 @@ gwyddion-build-log
     Performs nightly rebuild, extracts information from its logs.
 
 
-gwywin32.bat.in
-
-    Win32 nightly rebuild script template.
-
-
 indent.pro
 
     An approximation of Gwyddion coding style as an indent settings file.
@@ -87,14 +82,6 @@ update-langs.py
     Updates files that, for whatever reason, contain the list of available
     localizations.  The primary list is in this script.  Must be run from
     the top-level source directory.
-
-
-update-msvc.py
-
-    Updates makefile.msc in every source directory to match Makefile.am
-    and dependencies in .deps.  Must be run from the top-level source
-    directory after a successful project build as it relies on inspection
-    of outputs of compilation.
 
 
 update-potfiles.sh

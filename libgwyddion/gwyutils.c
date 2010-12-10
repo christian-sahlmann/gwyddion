@@ -546,17 +546,6 @@ gwy_osx_find_dir_in_bundle(const gchar *dirname)
 gchar*
 gwy_find_self_dir(const gchar *dirname)
 {
-#ifdef _MSC_VER
-    static gchar *basedir = NULL;
-
-    if (!basedir)
-        basedir = g_win32_get_package_installation_directory(NULL, dll_name);
-    if (gwy_strequal(dirname, "data"))
-        dirname = NULL;
-
-    return g_build_filename(basedir, dirname, NULL);
-#endif    /* _MSC_VER */
-
 #ifdef G_OS_UNIX
 #ifdef GWY_LIBDIR
     static const struct {
@@ -622,7 +611,6 @@ gwy_find_self_dir(const gchar *dirname)
 #endif    /* G_OS_UNIX */
 
 #ifdef G_OS_WIN32
-#ifndef _MSC_VER
     static const struct {
         const gchar *id;
         const gchar *env;
@@ -681,7 +669,6 @@ gwy_find_self_dir(const gchar *dirname)
                   dirname, topdir, paths[i].base, paths[i].dir);
         return g_build_filename(topdir, paths[i].base, paths[i].dir, NULL);
     }
-#endif    /* !_MSC_VER */
 #endif    /* G_OS_WIN32 */
 
     g_critical("Cannot find directory for `%s'", dirname);

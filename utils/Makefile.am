@@ -13,13 +13,11 @@ GUIDE_MAP = user-guide-modules
 EXTRA_DIST = \
 	extract-file-magic.py \
 	genmarshal.mk \
-	gwywin32.bat.in \
 	mkenum.c.template \
 	mkenum.h.template \
 	mkenum.mk \
 	modules-web.xsl \
 	update-langs.py \
-	update-msvc.py \
 	update-potfiles.sh \
 	$(GUIDE_MAP) \
 	vim-syn-gen.py \

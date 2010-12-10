@@ -1839,8 +1839,6 @@ extract_mda_data(MDTMDAFrame * dataframe)
             const gint64 *tp = (const gint64 *)p;
 
             while (data < end_data) {
-                /* for some reason, MSVC6 spits an unsigned int64 conversion
-                 * error also here */
                 *(data++) = zscale * (gint64)GINT64_FROM_LE(*tp);
                 tp++;
             }
@@ -1852,15 +1850,7 @@ extract_mda_data(MDTMDAFrame * dataframe)
             const guint64 *tp = (const guint64 *)p;
 
             while (data < end_data) {
-                /* Fucking MSVC6 cannot convert unsigned 64bit int to double. */
-#ifdef _MSC_VER
-                guint u32h = *tp >> 32u;
-                guint u32l = *tp & 0xffffffffu;
-                *(data++) = zscale * (4294967296.0*u32h + u32l);
-
-#else
                 *(data++) = zscale * GUINT64_FROM_LE(*tp);
-#endif
                 tp++;
             }
         }
@@ -2028,8 +2018,6 @@ extract_mda_spectrum(MDTMDAFrame *dataframe, guint number)
                 {
                     const gint64 *tp = (const gint64 *)p;
 
-                    /* for some reason, MSVC6 spits an unsigned int64 conversion
-                     * error also here */
                     xdata[i] = xscale * (gint64)GINT64_FROM_LE(*tp);
                     p += sizeof(gint64)/sizeof(gchar);
                 }
@@ -2038,15 +2026,7 @@ extract_mda_spectrum(MDTMDAFrame *dataframe, guint number)
                 case MDA_DATA_UINT64:
                 {
                     const guint64 *tp = (const guint64 *)p;
-
-                    /* Fucking MSVC6 cannot convert unsigned 64bit int to double. */
-#ifdef _MSC_VER
-                    guint u32h = *tp >> 32u;
-                    guint u32l = *tp & 0xffffffffu;
-                    xdata[i] = xscale * (4294967296.0*u32h + u32l);
-#else
                     xdata[i] = xscale * GUINT64_FROM_LE(*tp);
-#endif
                     p += sizeof(guint64)/sizeof(gchar);
                 }
                 break;
@@ -2121,8 +2101,6 @@ extract_mda_spectrum(MDTMDAFrame *dataframe, guint number)
             {
                 const gint64 *tp = (const gint64 *)p;
 
-                /* for some reason, MSVC6 spits an unsigned int64 conversion
-                 * error also here */
                 ydata[i] = yscale * (gint64)GINT64_FROM_LE(*tp);
                 p += sizeof(gint64);
             }
@@ -2131,15 +2109,7 @@ extract_mda_spectrum(MDTMDAFrame *dataframe, guint number)
             case MDA_DATA_UINT64:
             {
                 const guint64 *tp = (const guint64 *)p;
-
-                /* Fucking MSVC6 cannot convert unsigned 64bit int to double. */
-#ifdef _MSC_VER
-                guint u32h = *tp >> 32u;
-                guint u32l = *tp & 0xffffffffu;
-                ydata[i] = yscale * (4294967296.0*u32h + u32l);
-#else
                 ydata[i] = yscale * GUINT64_FROM_LE(*tp);
-#endif
                 p += sizeof(guint64);
             }
             break;

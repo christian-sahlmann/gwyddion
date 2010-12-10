@@ -37,10 +37,5 @@ glmaterialdata_DATA = \
 	Yellow-Rubber
 
 EXTRA_DIST = \
-	makefile.msc \
-	makefile.msc.gwt \
 	$(glmaterialdata_DATA)
-
-MAINTAINERCLEANFILES = \
-	makefile.msc
 

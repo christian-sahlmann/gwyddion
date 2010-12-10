@@ -13,10 +13,6 @@ graph_LTLIBRARIES = \
 	graph_fit.la \
 	graph_level.la
 
-EXTRA_DIST = \
-	makefile.msc \
-	makefile.msc.gwt
-
 if OS_WIN32
 no_undefined = -no-undefined
 endif
@@ -45,8 +41,6 @@ graph_cd_la_SOURCES = graph_cd.c
 graph_cut_la_SOURCES = graph_cut.c
 graph_level_la_SOURCES = graph_level.c
 graph_dos_spectrum_la_SOURCES = graph_dos_spectrum.c
-
-MAINTAINERCLEANFILES = makefile.msc
 
 clean-local:
 	rm -f core.* *~

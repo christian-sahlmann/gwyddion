@@ -23,10 +23,6 @@ tools_LTLIBRARIES = \
 	spectro.la \
 	stats.la
 
-EXTRA_DIST = \
-	makefile.msc \
-	makefile.msc.gwt
-
 if OS_WIN32
 no_undefined = -no-undefined
 endif
@@ -65,8 +61,6 @@ selectionmanager_la_SOURCES = selectionmanager.c
 sfunctions_la_SOURCES       = sfunctions.c
 spectro_la_SOURCES          = spectro.c
 spotremove_la_SOURCES       = spotremove.c
-
-MAINTAINERCLEANFILES = makefile.msc
 
 clean-local:
 	rm -f core.* *~

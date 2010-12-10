@@ -40,7 +40,6 @@ AC_CONFIG_FILES(\
   data/glmaterials/Makefile \
   data/gradients/Makefile \
   utils/Makefile \
-  utils/gwywin32.bat \
   utils/bundler \
   utils/mkosxlauncher \
   thumbnailer/Makefile \
@@ -58,12 +57,9 @@ AC_CONFIG_FILES(\
   devel-docs/libgwyprocess/Makefile \
   devel-docs/libgwyprocess/releaseinfo.xml \
   gwyddion.spec:data/gwyddion.spec.in \
-  data/gwyddion.iss \
-  data/gwyddion-devel.iss \
   data/gwyddion.pc \
   data/gwyddion.nsit \
-  data/mingw32-gwyddion-libs.spec \
-  data/config.h.win32 \
+  data/mingw32-gwyddion-libs.spec
 )
 AC_CONFIG_HEADER(config.h)
 
@@ -607,11 +603,7 @@ AC_SUBST(KDE4_LIBS)
 AC_MSG_CHECKING([for anyone actually reading this nonsense])
 AC_MSG_RESULT([no])
 AC_CHECK_HEADERS( \
-  signal.h \
   stdbool.h \
-  sys/stat.h \
-  sys/types.h \
-  unistd.h \
   time.h)
 
 #############################################################################
@@ -620,11 +612,7 @@ AC_CHECK_HEADERS( \
 #############################################################################
 # Check for library functions.
 GWY_CHECK_MATH_FUNCS([cbrt hypot pow10 acosh asinh atanh isinf isnan])
-AC_CHECK_FUNCS([sincos _fpclass memrchr])
-dnl FIXME: We need C99 for this.  But we must be able to switch off its
-dnl aliasing rules which at this moment we can do for GCC only.  That's too
-dnl limited.
-dnl GWY_CHECK_FPCLASSIFY
+AC_CHECK_FUNCS([sincos memrchr memmem])
 
 #############################################################################
 # I18n
@@ -667,8 +655,6 @@ AC_SUBST(PACKAGE_URL)
 
 #############################################################################
 # Generate gwyconfig
-#
-# NB: When you add definitions here, add them to data/gwyconfig.h.win32 too.
 #
 # FIXME: #define-ing symbols from libc is quite arrogant, even if they are
 # missing on the system.  It can conflict with other packages.  Define

@@ -23,10 +23,7 @@ SUBDIRS = \
 EXTRA_DIST = \
 	INSTALL.gwyddion \
 	autogen.sh \
-	gwyddion.spec\
-	make.msc \
-	makefile.msc \
-	rules.msc
+	gwyddion.spec
 
 DISTCLEANFILES = gwyconfig.h
 

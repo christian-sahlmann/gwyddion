@@ -22,6 +22,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <signal.h>
 #include <glib/gstdio.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
@@ -42,10 +43,6 @@
 #include <winreg.h>
 #else
 #define LOG_TO_FILE_DEFAULT FALSE
-#endif
-
-#ifdef HAVE_SIGNAL_H
-#include <signal.h>
 #endif
 
 typedef struct {
@@ -156,9 +153,7 @@ main(int argc, char *argv[])
     gwy_module_register_modules((const gchar**)module_dirs);
     /* The Python initialisation somehow overrides SIGINT and Gwyddion can no
      * longer be terminated with Ctrl-C.  Fix it. */
-#if HAVE_SIGNAL_H
     signal(SIGINT, SIG_DFL);
-#endif
     debug_time(timer, "register modules");
 
     if (app_options.check) {
@@ -457,23 +452,6 @@ setup_locale_from_win32_registry(void)
     DWORD size = sizeof(locale);
     HKEY reg_key;
 
-#ifdef _MSC_VER
-    if (RegOpenKeyEx(HKEY_CURRENT_USER, TEXT("Software\\Gwyddion\\1.0"),
-                     0, KEY_READ, &reg_key) == ERROR_SUCCESS) {
-        if (RegQueryValueEx(reg_key, TEXT("gwy_locale"), NULL, NULL, locale, &size) == ERROR_SUCCESS){
-            g_setenv("LANG", locale, TRUE);
-            RegCloseKey(reg_key);
-            return;
-        }
-        RegCloseKey(reg_key);
-    }
-    if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, TEXT("Software\\Gwyddion\\1.0"),
-                     0, KEY_READ, &reg_key) == ERROR_SUCCESS) {
-        if (RegQueryValueEx(reg_key, TEXT("gwy_locale"), NULL, NULL, locale, &size) == ERROR_SUCCESS)
-            g_setenv("LANG", locale, TRUE);
-        RegCloseKey(reg_key);
-    }
-#else
     if (RegOpenKeyEx(HKEY_CURRENT_USER, TEXT("Software\\Gwyddion\\2.0"),
                      0, KEY_READ, &reg_key) == ERROR_SUCCESS) {
         if (RegQueryValueEx(reg_key, TEXT("Locale"), NULL, NULL, locale, &size) == ERROR_SUCCESS){
@@ -489,7 +467,6 @@ setup_locale_from_win32_registry(void)
             g_setenv("LANG", locale, TRUE);
         RegCloseKey(reg_key);
     }
-#endif
 #endif
 }
 

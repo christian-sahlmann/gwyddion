@@ -110,9 +110,7 @@ disabled_sources = \
 EXTRA_DIST = \
 	$(disabled_sources) \
 	1CHECKLIST \
-	$(spml_sources) \
-	makefile.msc \
-	makefile.msc.gwt
+	$(spml_sources)
 
 if OS_WIN32
 no_undefined = -no-undefined
@@ -220,8 +218,6 @@ if HAVE_ZLIB
 #matfile_la_SOURCES       = matfile.c
 #matfile_la_LIBADD        = @ZLIB@
 endif
-
-MAINTAINERCLEANFILES = makefile.msc
 
 clean-local:
 	rm -f core.* *~

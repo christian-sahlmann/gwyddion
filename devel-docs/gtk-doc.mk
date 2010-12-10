@@ -38,7 +38,6 @@ ADD_OBJECTS = $(top_srcdir)/devel-docs/add-objects.py
 
 EXTRA_DIST = \
 	$(content_files) \
-	makefile.msc \
 	releaseinfo.xml.in \
 	$(HTML_IMAGES) \
 	$(DOC_MAIN_SGML_FILE) \

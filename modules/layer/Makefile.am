@@ -12,10 +12,6 @@ layer_LTLIBRARIES = \
 noinst_HEADERS = \
 	layer.h
 
-EXTRA_DIST = \
-	makefile.msc \
-	makefile.msc.gwt
-
 if OS_WIN32
 no_undefined = -no-undefined
 endif
@@ -40,8 +36,6 @@ ellipse_la_SOURCES = ellipse.c
 line_la_SOURCES = line.c
 rectangle_la_SOURCES = rectangle.c
 point_la_SOURCES = point.c
-
-MAINTAINERCLEANFILES = makefile.msc
 
 clean-local:
 	rm -f core.* *~

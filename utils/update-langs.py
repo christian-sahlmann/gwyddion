@@ -4,7 +4,6 @@
 import re, os, sys
 
 files_to_update = (
-    'data/gwyddion.iss.in',
     'po/LINGUAS',
     'app/mac_integration.c',
 )
@@ -63,20 +62,6 @@ class Template:
         return self.separator.join(all)
 
 templates = {
-    'INNO LANGUAGES': Template(
-        'Name: "%(key)s"; MessagesFile: "compiler:Languages\\%(name)s.isl"',
-        'Name: "%(key)s"; MessagesFile: "compiler:Default.isl"'
-    ),
-    'INNO LC_MESSAGES': Template(
-        'Source: "locale\\%(key)s\\LC_MESSAGES\\*.*"; DestDir: "{app}\\locale\\%(key)s\\LC_MESSAGES"',
-        None
-    ),
-    'INNO HKLM': Template(
-        'Root: HKLM; Subkey: "Software\\@PACKAGE_NAME@\\1.0"; ValueType: string; ValueName: "gwy_locale"; ValueData: "%(isofull)s"; Languages: %(key)s; Flags: uninsdeletevalue'
-    ),
-    'INNO HKCU': Template(
-        'Root: HKCU; Subkey: "Software\\@PACKAGE_NAME@\\1.0"; ValueType: string; ValueName: "gwy_locale"; ValueData: "%(isofull)s"; Languages: %(key)s; Flags: uninsdeletevalue'
-    ),
     'LINGUAS': Template('%(key)s', None, ' '),
     'OS X': Template('        { "%(isofull)s", "%(key)s" },'),
 }

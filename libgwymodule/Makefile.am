@@ -32,11 +32,6 @@ noinst_HEADERS = \
 
 lib_LTLIBRARIES = libgwymodule2.la
 
-EXTRA_DIST = \
-	makefile.msc \
-	makefile.msc.gwt \
-	libgwymodule2.def
-
 if OS_WIN32
 no_undefined = -no-undefined
 export_symbols = -export-symbols libgwymodule2.def
@@ -44,10 +39,9 @@ libgwymodule2_la_DEPENDENCIES = libgwymodule2.def
 endif
 
 # Must init
-CLEANFILES =
-MAINTAINERCLEANFILES = \
-	makefile.msc \
-	libgwymodule2.def
+EXTRA_DIST =
+CLEANFILES = libgwymodule2.def
+MAINTAINERCLEANFILES =
 BUILT_SOURCES =
 
 MKENUM_NAME = gwymoduletypes

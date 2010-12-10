@@ -22,10 +22,6 @@ libgwydraw2include_HEADERS = \
 
 lib_LTLIBRARIES = libgwydraw2.la
 
-EXTRA_DIST = \
-	makefile.msc \
-	makefile.msc.gwt \
-	libgwydraw2.def
 
 if OS_WIN32
 no_undefined = -no-undefined
@@ -65,9 +61,7 @@ libgwydraw2_la_SOURCES = \
 	gwyrgba.c \
 	gwyselection.c
 
-MAINTAINERCLEANFILES = \
-	makefile.msc \
-	libgwydraw2.def
+CLEANFILES = libgwydraw2.def
 
 clean-local:
 	rm -f core.* *~

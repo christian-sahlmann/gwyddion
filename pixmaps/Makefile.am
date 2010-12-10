@@ -187,12 +187,7 @@ xcf_sources = \
 
 EXTRA_DIST = \
 	gwyddion.icns \
-	makefile.msc \
-	makefile.msc.gwt \
 	$(icondata_DATA) \
 	$(pixmapdata_DATA) \
 	$(xcf_sources)
-
-MAINTAINERCLEANFILES = \
-	makefile.msc
 

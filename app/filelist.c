@@ -28,32 +28,20 @@
  */
 
 #include "config.h"
-
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <errno.h>
-
-#ifdef HAVE_UNISTD_H
 #include <unistd.h>
-#endif
 
 #ifdef _WIN32
 #include <process.h>
 #endif
 
-#if (defined(HAVE_SYS_STAT_H) || defined(_WIN32))
 #include <sys/stat.h>
-/* And now we are in a deep s... */
-#endif
-
-#ifdef HAVE_SYS_TYPES_H
 #include <sys/types.h>
-#endif
-
 #include <glib/gstdio.h>
 #include <gtk/gtk.h>
-
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwydebugobjects.h>

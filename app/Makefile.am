@@ -54,13 +54,6 @@ uidata_DATA = toolbox.xml
 bin_PROGRAMS = gwyddion
 lib_LTLIBRARIES = libgwyapp2.la
 
-EXTRA_DIST = \
-	makefile.msc \
-	makefile.msc.gwt \
-	libgwyapp2.def \
-	README.objdata \
-	toolbox.xml
-
 BUILT_SOURCES = \
 	authors.h
 
@@ -71,11 +64,11 @@ libgwyapp2_la_DEPENDENCIES = libgwyapp2.def
 endif
 
 # Must init
-CLEANFILES =
-MAINTAINERCLEANFILES = \
-	makefile.msc \
-	libgwyapp2.def \
-	authors.h
+EXTRA_DIST = \
+	README.objdata \
+	toolbox.xml
+CLEANFILES = libgwyapp2.def
+MAINTAINERCLEANFILES = authors.h
 
 MKENUM_NAME = gwyapptypes
 MKENUM_ID = GWY_APP_TYPES

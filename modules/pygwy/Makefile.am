@@ -176,13 +176,10 @@ EXTRA_DIST = \
 	pygwy-codegen.py \
 	pygwy-generate-doc.py \
 	pygwy-fix-defs.py \
-	makefile.msc \
 	wrap_calls.h \
 	pygwy-console.h \
 	pygwy.h \
-	gwyutils.py \
-	makefile.msc.gwt \
-	pygwywrap.c.win32
+	gwyutils.py
 
 if OS_WIN32
 no_undefined = -no-undefined
@@ -235,8 +232,6 @@ endif
 CLEANFILES = gwy.py gwy.pyc gwy.pyo
 
 DISTCLEANFILES = pygwy.defs pygwywrap.c
-
-MAINTAINERCLEANFILES = makefile.msc
 
 clean-local:
 	rm -f core.* *~

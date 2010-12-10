@@ -22,9 +22,7 @@ module_LTLIBRARIES = \
 	$(plugin_proxy_module)
 
 EXTRA_DIST = \
-	$(plugin_proxy_sources) \
-	makefile.msc \
-	makefile.msc.gwt
+	$(plugin_proxy_sources)
 
 if OS_WIN32
 no_undefined = -no-undefined
@@ -50,8 +48,6 @@ if ENABLE_PLUGIN_PROXY
 plugin_proxy_la_SOURCES = plugin-proxy.c
 plugin_proxy_la_LIBADD = $(module_libadd)
 endif
-
-MAINTAINERCLEANFILES = makefile.msc
 
 clean-local:
 	rm -f core.* *~

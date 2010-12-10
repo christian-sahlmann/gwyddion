@@ -43,16 +43,13 @@
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <glib/gstdio.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwyutils.h>
 #include <libprocess/datafield.h>
 #include <libdraw/gwyselection.h>
 #include <libgwymodule/gwymodule-file.h>
-
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif
 
 #include "err.h"
 

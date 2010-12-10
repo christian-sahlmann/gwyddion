@@ -444,11 +444,6 @@ gwy_data_field_unrotate_find_corrections(GwyDataLine *derdist,
     return guess;
 }
 
-/* FIXME: The reason why this is a separate function is that either there's
- * a devious bug in gwy_data_field_unrotate_find_corrections(), or MSVC
- * mysteriously miscompiles it.  The effect is that bogus numbers appear
- * in `total'.  Either way moving this code into a subroutine hides the
- * problem. */
 static void
 compute_fourier_coeffs(gint nder, const gdouble *der,
                        guint symmetry,

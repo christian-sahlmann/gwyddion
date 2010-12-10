@@ -23,24 +23,14 @@
 #include <string.h>
 #include <stdarg.h>
 #include <errno.h>
-
-#ifdef HAVE_UNISTD_H
 #include <unistd.h>
-#endif
 
 #ifdef _WIN32
 #include <process.h>
 #endif
 
-#if (defined(HAVE_SYS_STAT_H) || defined(_WIN32))
 #include <sys/stat.h>
-/* And now we are in a deep s... */
-#endif
-
-#ifdef HAVE_SYS_TYPES_H
 #include <sys/types.h>
-#endif
-
 #include <gtk/gtk.h>
 #include <app/gwyapp.h>
 #include <libgwyddion/gwyddion.h>

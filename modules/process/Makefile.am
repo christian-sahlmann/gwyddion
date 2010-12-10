@@ -76,9 +76,7 @@ disabled_sources = \
 	superresolution.c
 
 EXTRA_DIST = \
-	$(disabled_sources) \
-	makefile.msc \
-	makefile.msc.gwt
+	$(disabled_sources)
 
 if OS_WIN32
 no_undefined = -no-undefined
@@ -164,8 +162,6 @@ tip_blind_la_SOURCES           = tip_blind.c
 tip_model_la_SOURCES           = tip_model.c
 tipops_la_SOURCES              = tipops.c
 unrotate_la_SOURCES            = unrotate.c
-
-MAINTAINERCLEANFILES = makefile.msc
 
 clean-local:
 	rm -f core.* *~

@@ -33,12 +33,6 @@ noinst_HEADERS = \
 
 lib_LTLIBRARIES = libgwyddion2.la
 
-EXTRA_DIST = \
-	gwyversion.h.in \
-	makefile.msc \
-	makefile.msc.gwt \
-	libgwyddion2.def
-
 if OS_WIN32
 no_undefined = -no-undefined
 export_symbols = -export-symbols libgwyddion2.def
@@ -46,10 +40,9 @@ libgwyddion2_la_DEPENDENCIES = libgwyddion2.def
 endif
 
 # Must init
-CLEANFILES =
-MAINTAINERCLEANFILES = \
-	makefile.msc \
-	libgwyddion2.def
+EXTRA_DIST = gwyversion.h.in
+CLEANFILES = libgwyddion2.def
+MAINTAINERCLEANFILES =
 BUILT_SOURCES =
 
 MKENUM_NAME = gwyddiontypes

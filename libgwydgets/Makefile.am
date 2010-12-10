@@ -75,11 +75,6 @@ noinst_HEADERS = \
 
 lib_LTLIBRARIES = libgwydgets2.la
 
-EXTRA_DIST = \
-	makefile.msc \
-	makefile.msc.gwt \
-	libgwydgets2.def
-
 if OS_WIN32
 no_undefined = -no-undefined
 export_symbols = -export-symbols libgwydgets2.def
@@ -87,10 +82,9 @@ libgwydgets2_la_DEPENDENCIES = libgwydgets2.def
 endif
 
 # Must init
-CLEANFILES =
-MAINTAINERCLEANFILES = \
-	makefile.msc \
-	libgwydgets2.def
+EXTRA_DIST =
+CLEANFILES = libgwydgets2.def
+MAINTAINERCLEANFILES =
 BUILT_SOURCES =
 
 MKENUM_NAME = gwydgettypes
