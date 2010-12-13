@@ -484,7 +484,7 @@ gwy_synth_random_seed_new(GWY_SYNTH_CONTROLS *controls,
     *adj = gtk_adjustment_new(*target, 1, 0x7fffffff, 1, 10, 0);
     g_object_set_data(G_OBJECT(*adj), "target", target);
     g_signal_connect_swapped(*adj, "value-changed",
-                             G_CALLBACK(gwy_synth_double_changed), controls);
+                             G_CALLBACK(gwy_synth_int_changed), controls);
 
     label = gtk_label_new_with_mnemonic(_("R_andom seed:"));
     gtk_box_pack_start(GTK_BOX(hbox), label, FALSE, FALSE, 0);
