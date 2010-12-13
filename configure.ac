@@ -64,8 +64,9 @@ AC_CONFIG_FILES(\
 AC_CONFIG_HEADER(config.h)
 
 AC_CANONICAL_HOST
-AM_INIT_AUTOMAKE([1.7 gnu check-news dist-bzip2])
+AM_INIT_AUTOMAKE([1.11 gnu check-news silent-rules dist-bzip2])
 AM_MAINTAINER_MODE
+m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])])
 
 GWY_VERSION_MAJOR=gwy_version_major
 GWY_VERSION_MINOR=gwy_version_minor

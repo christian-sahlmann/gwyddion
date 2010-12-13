@@ -89,7 +89,7 @@ echo "$*" | grep --quiet -- '--quiet\>\|--silent\>' && QUIET=">/dev/null"
 echo "$*" | grep --quiet -- '--verbose\>\|--debug\>' || VERBOSE=">/dev/null"
 
 check_tool Autoconf "$AUTOCONF" "$AUTOHEADER $AUTOM4TE" 2 60 ftp://ftp.gnu.org/pub/gnu/autoconf/
-check_tool Automake "$AUTOMAKE" "$ACLOCAL" 1 7 ftp://ftp.gnu.org/pub/gnu/automake/
+check_tool Automake "$AUTOMAKE" "$ACLOCAL" 1 11 ftp://ftp.gnu.org/pub/gnu/automake/
 check_tool Libtool "$LIBTOOLIZE" "" 1 4 ftp://ftp.gnu.org/pub/gnu/libtool/
 check_tool Gettext "$GETTEXT" "$GETTEXTIZE" 0 12 ftp://ftp.gnu.org/pub/gnu/gettext/
 
