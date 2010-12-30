@@ -159,6 +159,7 @@ Section "Gwyddion (required)"
 
     WriteRegStr HKLM "${PRODUCT_REG_KEY}" "InstallDir" "$INSTDIR"
     WriteRegStr HKLM "${PRODUCT_REG_KEY}" "Locale" $Locale
+    WriteRegStr HKLM "${PRODUCT_REG_KEY}" "Version" "${PRODUCT_VERSION}"
     WriteRegStr HKLM "${PRODUCT_PATH_KEY}" "" "$INSTDIR\bin\gwyddion.exe"
     WriteRegStr HKLM "${PRODUCT_PATH_KEY}" "Path" "$INSTDIR\bin"
     WriteRegStr HKLM "${PRODUCT_UNINST_KEY}" "DisplayName" "${PRODUCT_NAME}"
