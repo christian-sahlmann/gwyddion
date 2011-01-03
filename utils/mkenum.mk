@@ -36,10 +36,10 @@ MAINTAINERCLEANFILES += $(mkenum_built_sources) $(mkenum_stamp_files)
 BUILT_SOURCES += $(mkenum_built_sources)
 
 $(MKENUM_NAME).h: $(MKENUM_NAME).h.stamp
-	@true
+	$(AM_V_GEN)true
 
 $(MKENUM_NAME).h.stamp: $(MKENUM_HFILES) $(mkenum_h_template) $(mkenum_self)
-	$(GLIB_MKENUMS) --template $(mkenum_h_template) $(MKENUM_HFILES) \
+	$(AM_V_at)$(GLIB_MKENUMS) --template $(mkenum_h_template) $(MKENUM_HFILES) \
 		$(mkenum_fix_output) \
 		>$(MKENUM_NAME).h.xgen \
 	&& ( cmp -s $(MKENUM_NAME).h.xgen $(MKENUM_NAME).h \
@@ -48,7 +48,7 @@ $(MKENUM_NAME).h.stamp: $(MKENUM_HFILES) $(mkenum_h_template) $(mkenum_self)
 	&& echo timestamp >$(MKENUM_NAME).h.stamp
 
 $(MKENUM_NAME).c: $(MKENUM_HFILES) $(mkenum_c_template) $(mkenum_self)
-	$(GLIB_MKENUMS) --template $(mkenum_c_template) $(MKENUM_HFILES) \
+	$(AM_V_GEN)$(GLIB_MKENUMS) --template $(mkenum_c_template) $(MKENUM_HFILES) \
 		$(mkenum_fix_output) \
 		>$(MKENUM_NAME).c.xgen \
 	&& cp $(MKENUM_NAME).c.xgen $(MKENUM_NAME).c  \

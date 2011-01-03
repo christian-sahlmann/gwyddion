@@ -85,8 +85,8 @@ carbon_cflags = -ObjC -framework AppKit -framework Carbon -framework Application
 endif
 
 libgwyapp2.def: $(libgwyapp2_la_OBJECTS)
-	@echo EXPORTS >libgwyapp2.def
-	@for lo in $(libgwyapp2_la_OBJECTS); do \
+	$(AM_V_at)echo EXPORTS >libgwyapp2.def
+	$(AM_V_GEN)for lo in $(libgwyapp2_la_OBJECTS); do \
 		o=`sed "s/^pic_object='\\(.*\\)'/\\1/;t;d" "$$lo"`; \
 		$(NM) --defined-only --demangle --no-sort "$$o" \
 		| awk -F' ' '($$2=="T" && $$3 ~ /^gwy_/){print "     ",$$3}'; \
@@ -153,7 +153,7 @@ gwyddion_LDADD = @COMMON_LDFLAGS@ @GTKGLEXT_LIBS@ @FFTW3_LIBS@ @UNIQUE_LIBS@ @BA
 
 # This is ugly a bit, but uses only very basic sed constructs
 authors.h: ${top_srcdir}/AUTHORS
-	{ \
+	$(AM_V_GEN){ \
 		echo '/* This is a GENERATED file */'; \
 		echo '/*< private_header >*/'; \
 		echo 'static const gchar developers[] ='; \

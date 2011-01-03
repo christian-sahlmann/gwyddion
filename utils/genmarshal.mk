@@ -35,13 +35,13 @@ MAINTAINERCLEANFILES += $(genmarshal_built_sources) $(genmarshal_stamp_files)
 BUILT_SOURCES += $(genmarshal_built_sources)
 
 $(GENMARSHAL_NAME).h: $(GENMARSHAL_NAME).h.stamp
-	@true
+	$(AM_V_GEN)true
 
 # XXX: Add G_GNUC_INTERNAL manually, glib-genmarshal can do it, but too new
 # version is required (2.13+)
 # Keep the `GENERATED' string quoted to prevent match here
 $(GENMARSHAL_NAME).h.stamp: $(GENMARSHAL_NAME).list $(genmarshal_self)
-	echo '/* This is a 'GENERATED' file */' >$(GENMARSHAL_NAME).h.xgen \
+	$(AM_V_at)echo '/* This is a 'GENERATED' file */' >$(GENMARSHAL_NAME).h.xgen \
 	&& $(GLIB_GENMARSHAL) --header --prefix=$(GENMARSHAL_PREFIX) \
 		$(srcdir)/$(GENMARSHAL_NAME).list \
 		| sed -e 's/^extern /G_GNUC_INTERNAL /' \
@@ -53,7 +53,7 @@ $(GENMARSHAL_NAME).h.stamp: $(GENMARSHAL_NAME).list $(genmarshal_self)
 
 # Keep the `GENERATED' string quoted to prevent match here
 $(GENMARSHAL_NAME).c: $(GENMARSHAL_NAME).list $(genmarshal_self)
-	echo '/* This is a 'GENERATED' file */' >$(GENMARSHAL_NAME).c.xgen \
+	$(AM_V_GEN)echo '/* This is a 'GENERATED' file */' >$(GENMARSHAL_NAME).c.xgen \
 	&& echo '#include "$(GENMARSHAL_NAME).h"' >>$(GENMARSHAL_NAME).c.xgen \
 	&& $(GLIB_GENMARSHAL) --body --prefix=$(GENMARSHAL_PREFIX) \
 		$(srcdir)/$(GENMARSHAL_NAME).list \
