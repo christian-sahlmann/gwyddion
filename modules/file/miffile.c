@@ -52,6 +52,7 @@
 #include <stdio.h>
 #include <libgwyddion/gwymath.h>
 #include <libprocess/datafield.h>
+#include <app/data-browser.h>
 #include <app/gwymoduleutils-file.h>
 
 #include "err.h"
@@ -175,12 +176,17 @@ typedef struct {
     MIFInfoItem images[INFO_N_IMAGES];
 } MIFFile;
 
-static gboolean        module_register       (void);
-static gint            mif_detect       (const GwyFileDetectInfo *fileinfo,
-                                              gboolean only_name);
-static GwyContainer*   mif_load         (const gchar *filename,
-                                              GwyRunType mode,
-                                              GError **error);
+static gboolean      module_register    (void);
+static gint          mif_detect         (const GwyFileDetectInfo *fileinfo,
+                                         gboolean only_name);
+static GwyContainer* mif_load           (const gchar *filename,
+                                         GwyRunType mode,
+                                         GError **error);
+static GwyDataField* mif_read_data_field(const MIFImageHeader *image_header,
+                                         const MIFBlock *block,
+                                         const guchar *buffer,
+                                         gsize size,
+                                         GError **error);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -262,6 +268,15 @@ mif_read_header(const guchar *buffer,
     gwy_debug("sw version: %u.%u, file version: %u.%u",
               header->software_version/0x100, header->software_version % 0x100,
               header->file_version/0x100, header->file_version % 0x100);
+    /* Version 1.7 is the only actually implemented.  Other can be added upon
+     * request and, namely, provision of the files as each file version is
+     * different. */
+    if (header->file_version != 0x107) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Loading of file version %u.%u is not implemented."),
+                    header->file_version/0x100, header->file_version % 0x100);
+        return FALSE;
+    }
     get_CHARARRAY(header->time, &p);
     get_CHARARRAY(header->comment, &p);
     header->nimages = gwy_get_guint16_le(&p);
@@ -404,6 +419,15 @@ mif_read_scan_setup(MIFScanSetup *setup,
         setup->xreal = gwy_get_gdouble_le(p);
         setup->yreal = gwy_get_gdouble_le(p);
         gwy_debug("xreal: %g, yreal: %g", setup->xreal, setup->yreal);
+        /* Use negated positive conditions to catch NaNs */
+        if (!((setup->xreal = fabs(setup->xreal)) > 0)) {
+            g_warning("Real x size is 0.0, fixing to 1.0");
+            setup->xreal = 1.0;
+        }
+        if (!((setup->yreal = fabs(setup->yreal)) > 0)) {
+            g_warning("Real y size is 0.0, fixing to 1.0");
+            setup->yreal = 1.0;
+        }
         setup->xoff = gwy_get_gdouble_le(p);
         setup->yoff = gwy_get_gdouble_le(p);
         gwy_debug("xoff: %g, yoff: %g", setup->xoff, setup->yoff);
@@ -547,8 +571,6 @@ mif_load(const gchar *filename,
     guchar *buffer = NULL;
     gsize size = 0;
     GError *err = NULL;
-    GwySIUnit *units = NULL;
-    gint32 power10;
     MIFFile mfile;
     GwyDataField *dfield;
     guint i;
@@ -576,12 +598,14 @@ mif_load(const gchar *filename,
         MIFBlock raster, macro_geometry, preview, image, curve, calc;
         guint ncalculations;
         const guchar *p = buffer + item->image.offset;
+        GQuark quark;
 
         if (!item->image.size)
             continue;
-        if (item->image.offset + item->image.size > size) {
-            /* TODO: Error */
-            return FALSE;
+        if (item->image.offset > size
+            || item->image.size > size
+            || item->image.offset + item->image.size > size) {
+            continue;
         }
 
         /* XXX: We cannot use item->image.size because it's bogus, i.e.
@@ -592,12 +616,10 @@ mif_load(const gchar *filename,
         if (!mif_read_image_header(&image_header, &p, size - (p - buffer),
                                    mfile.header.file_version,
                                    error))
-            goto fail;
+            continue;
 
-        if (p - buffer + 52 > size) {
-            err_IMAGE_HEADER_TOO_SHORT(error);
-            goto fail;
-        }
+        if (p - buffer + 52 > size)
+            continue;
 
         mif_read_block(&raster, "raster", &p);
         mif_read_block(&macro_geometry, "macro_geometry", &p);
@@ -607,14 +629,80 @@ mif_load(const gchar *filename,
         ncalculations = gwy_get_guint32_le(&p);
         mif_read_block(&calc, "calc", &p);
 
-        g_printerr("TRUE SIZE: %u\n", (guint)(p - (buffer + item->image.offset)));
+        gwy_debug("image header true size: %zu",
+                  (gsize)(p - (buffer + item->image.offset)));
+
+        dfield = mif_read_data_field(&image_header, &image, buffer, size, NULL);
+        if (!dfield)
+            continue;
+
+        if (!container)
+            container = gwy_container_new();
+
+        quark = gwy_app_get_data_key_for_id(i);
+        gwy_container_set_object(container, quark, dfield);
+        g_object_unref(dfield);
+        gwy_app_channel_title_fall_back(container, i);
     }
 
-    err_NO_DATA(error);
+    if (!container)
+        err_NO_DATA(error);
 
-fail:
     gwy_file_abandon_contents(buffer, size, NULL);
     return container;
+}
+
+static GwyDataField*
+mif_read_data_field(const MIFImageHeader *image_header,
+                    const MIFBlock *block,
+                    const guchar *buffer,
+                    gsize size,
+                    GError **error)
+{
+    gint xres = image_header->setup.xres;
+    gint yres = image_header->setup.yres;
+    gdouble xreal = image_header->setup.xreal;
+    gdouble yreal = image_header->setup.yreal;
+    gdouble xoff = image_header->setup.xoff;
+    gdouble yoff = image_header->setup.yoff;
+    gdouble q = image_header->configuration.scan_int_to_meter;
+    GwyDataField *dfield;
+    gdouble *data;
+    const gint16 *d16;
+    gint i, j;
+
+    if (err_DIMENSION(error, xres) || err_DIMENSION(error, yres))
+        return NULL;
+
+    if (!block->size || block->offset > size || block->size > size
+        || block->offset + block->size > size) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Image data are outside the file."));
+        return NULL;
+    }
+
+    if (err_SIZE_MISMATCH(error, xres*yres*sizeof(gint16), block->size, FALSE))
+        return NULL;
+
+    dfield = gwy_data_field_new(xres, yres, xreal, yreal, FALSE);
+    gwy_data_field_set_xoffset(dfield, xoff);
+    gwy_data_field_set_yoffset(dfield, yoff);
+    data = gwy_data_field_get_data(dfield);
+    d16 = (const gint16*)(buffer + block->offset);
+
+    gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_xy(dfield), "m");
+    gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_z(dfield), "m");
+
+    // FIXME: Don't know why this factor.  It seems to match what MIF spmview
+    // profile reader shows though.
+    q *= 1.0e4;
+    for (i = 0; i < yres; i++) {
+        for (j = 0; j < yres; j++) {
+            data[(yres-1 - i)*xres + j] = q*GINT16_FROM_LE(d16[i*xres + j]);
+        }
+    }
+
+    return dfield;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
