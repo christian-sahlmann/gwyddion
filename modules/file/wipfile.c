@@ -98,6 +98,31 @@ typedef struct {
     const guchar *data;
 } WIPTag;
 
+/* TD*Interpretation */
+typedef struct {
+    guint    id;
+    gchar   *unitname;
+    gdouble  unitmultiplier;
+    gdoudle  laser_wl; /* for 1/cm axis only */
+} WIPAxis;
+
+/* TDSpectralTransformation for optical spectra;
+ * to recalculate x spectral data from
+ * spectrometer calibrations */
+typedef struct {
+    guint    id;
+    guint    transform_type; /* should be 1 */
+    gint     polynom [3]; /* polynomial coeffs. should be zeros */
+    guint    nc; /* central pixel number */
+    gdouble  lambdac; /* central pixel lambda in nm */
+    gdouble  gamma; /* FIXME: don't know what is it */
+    gdouble  delta; /* FIXME: don't know what is it */
+    gint     m; /* diffraction order */
+    gdouble  d; /* 1e6/lines per mm */
+    gdouble  x; /* pixel size */
+    gdouble  f; /* focal distance */
+} WIPSpectralTransform;
+
 /*
 typedef struct {
     gint32 version;
