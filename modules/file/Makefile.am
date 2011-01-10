@@ -95,6 +95,7 @@ file_LTLIBRARIES = \
 	surffile.la \
 	unisoku.la \
 	witfile.la \
+	wsffile.la \
 	wsxmfile.la
 
 noinst_HEADERS = \
@@ -203,6 +204,7 @@ surffile_la_SOURCES      = surffile.c
 unisoku_la_SOURCES       = unisoku.c
 #wipfile_la_SOURCES       = wipfile.c
 witfile_la_SOURCES       = witfile.c
+wsffile_la_SOURCES       = wsffile.c
 wsxmfile_la_SOURCES      = wsxmfile.c
 
 # It compiles also without.
