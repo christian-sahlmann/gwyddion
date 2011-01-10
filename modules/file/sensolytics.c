@@ -389,6 +389,7 @@ get_meta(GHashTable *hash)
 
     return meta;
 }
+
 static void
 clone_meta(GwyContainer *container, GwyContainer *meta, guint nchannels)
 {
