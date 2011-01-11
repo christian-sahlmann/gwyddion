@@ -747,9 +747,11 @@ pixmap_load(const gchar *filename,
                         _("Pixbuf loader refused data: %s."), err->message);
             g_clear_error(&err);
             g_object_unref(loader);
+            fclose(fh);
             return NULL;
         }
     } while (n == buffer_length);
+    fclose(fh);
 
     if (!gdk_pixbuf_loader_close(loader, &err)) {
         g_set_error(error, GWY_MODULE_FILE_ERROR,

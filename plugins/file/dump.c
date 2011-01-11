@@ -121,6 +121,7 @@ copy_file(const char *src_file,
         }
     } while (n == BUF_SIZE);
 
+    free(buffer);
     fclose(fhr);
     fclose(fhw);
 

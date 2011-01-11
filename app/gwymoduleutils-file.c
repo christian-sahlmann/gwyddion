@@ -291,6 +291,8 @@ make_noise(GwyTextHeaderContext *context,
  *
  * See #GwyTextHeaderParser for details of memory and error handling.
  *
+ * Lines consisting only of whitespace are ignored.
+ *
  * Returns: A newly created hash table with values indexed by they keys found
  *          in the header.
  *

@@ -541,9 +541,9 @@ gwy_resource_parse_real(const gchar *text,
                         gboolean is_const)
 {
     GwyResourceClass *klass;
-    GwyResource *resource;
+    GwyResource *resource = NULL;
     GType type;
-    gchar *name;
+    gchar *name = NULL;
     guint len;
 
     if (!g_str_has_prefix(text, MAGIC_HEADER)) {
@@ -557,7 +557,7 @@ gwy_resource_parse_real(const gchar *text,
     text = strchr(text + len, '\n');
     if (!text) {
         g_warning("Truncated resource header");
-        return NULL;
+        goto fail;
     }
     text++;
     type = g_type_from_name(name);
@@ -567,8 +567,7 @@ gwy_resource_parse_real(const gchar *text,
         || !G_TYPE_IS_INSTANTIATABLE(type)
         || G_TYPE_IS_ABSTRACT(type)) {
         g_warning("Wrong resource type `%s'", name);
-        g_free(name);
-        return NULL;
+        goto fail;
     }
     klass = GWY_RESOURCE_CLASS(g_type_class_peek_static(type));
     g_return_val_if_fail(klass && klass->parse, NULL);
@@ -576,6 +575,8 @@ gwy_resource_parse_real(const gchar *text,
     resource = klass->parse(text, is_const);
     if (resource)
         g_string_assign(resource->name, name);
+
+fail:
     g_free(name);
 
     return resource;

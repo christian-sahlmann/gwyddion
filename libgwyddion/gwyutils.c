@@ -506,6 +506,7 @@ gwy_osx_find_dir_in_bundle(const gchar *dirname)
             basedir = malloc(len + 1);
             strncpy(basedir, res_url_path, len);
             basedir[len] = 0;
+            free(res_url_path);
         }
         if (res_url_ref)
             CFRelease(res_url_ref);

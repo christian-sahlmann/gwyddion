@@ -1418,7 +1418,9 @@ gwy_data_field_grains_get_quantities(GwyDataField *data_field,
             for (gno = 0; gno <= ngrains; gno++)
                 boundpos[gno] = -1;
         }
-        /* Floating point data that coincide with some quantity */
+        /* Floating point data that coincide with some quantity.  An array
+         * is allocated only if the corresponding quantity is not requested.
+         * Otherwise we use the supplied array. */
         if (need & NEED_MIN)
             min = ensure_buffer(GWY_GRAIN_VALUE_MINIMUM, quantity_data,
                                 ngrains, G_MAXDOUBLE, &buffers);

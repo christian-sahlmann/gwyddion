@@ -639,7 +639,7 @@ arithmetic_do(ArithmeticArgs *args)
 
     /* Then the mask fields */
     for (i = NARGS*ARITHMETIC_MASK; i < NARGS*(ARITHMETIC_MASK + 1); i++) {
-        gwy_debug("mfield[%u]: %s", i, need_data[i] ? "NEEDED" : "not needed");
+        gwy_debug("mfield[%u]: %s", i, need_data[i % NARGS] ? "NEEDED" : "not needed");
         if (!need_data[i % NARGS])
             continue;
 
