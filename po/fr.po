@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: French localization\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2010-12-12 03:58+0100\n"
-"PO-Revision-Date: 2010-12-12 17:40+0100\n"
+"POT-Creation-Date: 2011-01-11 03:58+0100\n"
+"PO-Revision-Date: 2011-01-11 21:40+0100\n"
 "Last-Translator: François RIGUET <francheu@caramail.com>\n"
 "Language-Team: François RIGUET <francheu@caramail.com>\n"
 "MIME-Version: 1.0\n"
@@ -2967,33 +2967,42 @@ msgstr "MicroProf FRT texte (.txt)"
 msgid "File contains less than XSize*YSize data points."
 msgstr "Le fichier contient moins de TailleX*TailleY points de données."
 
-#: modules/file/miffile.c:188
+#: modules/file/miffile.c:194
 msgid "Imports DME MIF data files."
 msgstr "Importe les fichiers DME MIF."
 
-#: modules/file/miffile.c:201
+#: modules/file/miffile.c:207
 msgid "DME MIF files (.mif)"
 msgstr "DME MIF (.mif)"
 
-#: modules/file/miffile.c:228
+#: modules/file/miffile.c:234
 msgid "Image header record is too short."
 msgstr "L'en-tête d'image est trop court."
 
-#: modules/file/miffile.c:236
+#: modules/file/miffile.c:242
 msgid "Axis display info record is too short."
 msgstr "L'information d'affichage des axes est trop courte."
 
-#: modules/file/miffile.c:279
+#: modules/file/miffile.c:276
+#, c-format
+msgid "Loading of file version %u.%u is not implemented."
+msgstr "Le chargement des fichiers de version %u.%u n'est pas supporté."
+
+#: modules/file/miffile.c:294
 msgid "File information block is outside the file."
 msgstr "Le bloc d'information de fichier est en dehors du fichier."
 
-#: modules/file/miffile.c:313
+#: modules/file/miffile.c:328
 msgid "File information block size is invalid."
 msgstr "La taille du bloc d'information de fichier est invalide."
 
-#: modules/file/miffile.c:377
+#: modules/file/miffile.c:392
 msgid "Unique id record is too short."
 msgstr "L'identifiant unique est trop court."
+
+#: modules/file/miffile.c:680
+msgid "Image data are outside the file."
+msgstr "Les données de l'image sont en dehors du fichier."
 
 #: modules/file/mifile.c:165
 msgid "Imports Molecular Imaging MI data files."
@@ -4621,11 +4630,11 @@ msgstr "paramètres d'échelle z"
 msgid "data type parameters"
 msgstr "paramètres de type de données"
 
-#: modules/file/wipfile.c:125
+#: modules/file/wipfile.c:150
 msgid "Imports WItec Project data files."
 msgstr "Importe les fichiers WITec Project."
 
-#: modules/file/wipfile.c:138
+#: modules/file/wipfile.c:163
 msgid "WItec Project files (.wip)"
 msgstr "WITec Project (.wip)"
 
@@ -4636,6 +4645,18 @@ msgstr "Importe les fichiers WITec WIT."
 #: modules/file/witfile.c:223
 msgid "WITec files (.wit)"
 msgstr "WITec (.wit)"
+
+#: modules/file/wsffile.c:73
+msgid "Imports WSF ASCII files."
+msgstr "Importe les fichiers WSF ASCII."
+
+#: modules/file/wsffile.c:86
+msgid "WSF ASCII files (.wsf)"
+msgstr "WSF ASCII (.wsf)"
+
+#: modules/file/wsffile.c:141
+msgid "File header does not end with an empty line."
+msgstr "L'en-tête de fichier ne se termine pas par une ligne vide."
 
 #: modules/file/wsxmfile.c:82
 msgid "Imports Nanotec WSxM data files."
