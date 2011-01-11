@@ -108,7 +108,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Nanonis SXM data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.9",
+    "0.10",
     "David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
@@ -358,6 +358,25 @@ sxm_read_tag(SXMFile *sxmfile,
         sxmfile->data_info = (SXMDataInfo*)data_info->data;
         sxmfile->ndata = data_info->len;
         g_array_free(data_info, FALSE);
+        return TRUE;
+    }
+
+    if (gwy_strequal(tag, "Multipass-Config")) {
+        /* Multipass-Config.  Don't know how to tell the number of lines in the
+         * table :-/  Cross fingers and try to read lines until we hit ':' at
+         * the begining.  We have to look at p as seeing ':' in line would be
+         * too late. */
+        while (*p && **p && **p != ':') {
+            if (!(line = get_next_line_with_error(p, error)))
+                return FALSE;
+        }
+        if (!*p || !**p) {
+            g_set_error(error, GWY_MODULE_FILE_ERROR,
+                        GWY_MODULE_FILE_ERROR_DATA,
+                        _("Header ended within a Multipass-Config table."));
+            return FALSE;
+        }
+        /* Uf. */
         return TRUE;
     }
 
