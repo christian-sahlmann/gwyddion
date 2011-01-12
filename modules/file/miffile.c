@@ -47,7 +47,7 @@
  * .mif
  * Read
  **/
-#define DEBUG 1
+
 #include "config.h"
 #include <stdio.h>
 #include <libgwyddion/gwymath.h>
