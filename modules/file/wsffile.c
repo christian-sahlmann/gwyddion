@@ -149,7 +149,7 @@ wsf_load(const gchar *filename,
 
     if (!require_keys(hash, error,
                       "Pixels in X", "Lines in Y", "X Range", "Y Range",
-                      "Z Calibration", "Display Type",
+                      "Display Type",
                       NULL))
         goto fail;
 
@@ -177,10 +177,7 @@ wsf_load(const gchar *filename,
     value = g_hash_table_lookup(hash, "Display Type");
     // TODO: Set the units based on Display Type...
     gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_z(dfield), "m");
-    // FIXME: Peter Eaton's sample does not seem to use this factor.
-    //q = g_ascii_strtod(g_hash_table_lookup(hash, "Z Calibration"), NULL);
-    q = 1.0;
-    q *= Nanometre;
+    q = Nanometre;
 
     data = gwy_data_field_get_data(dfield);
     value = p = header_end;
