@@ -125,7 +125,7 @@ typedef struct {
 
 /*
 typedef struct {
-    gint32 version;
+    guint version;  
 } WIPFile;
 */
 
@@ -331,7 +331,7 @@ wip_load(const gchar *filename, GwyRunType mode, GError **error)
 
     p = buffer + 8; /* skip magic header */
 
-    print_tags(buffer,8, size, 0);
+    print_tags(buffer, 8, size, 0);
 
     gwy_file_abandon_contents(buffer, size, NULL);
     return NULL;

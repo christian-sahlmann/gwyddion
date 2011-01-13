@@ -133,6 +133,7 @@ static void dos_spectrum(GwyGraph *graph)
         ndata = gwy_graph_curve_model_get_ndata(gcmodel);
         nndata = ndata-1;
         ydatamin = fabs(ydata[0]);
+        xdatamin = xdata[0];
         for(i = 1; i < ndata; i++) {
             if (fabs(xdata[i]) < DELTA)
                 nndata--;
