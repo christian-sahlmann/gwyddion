@@ -2342,12 +2342,14 @@ mark_grain_boundaries(GwyDataField *grain_field)
     g_object_unref(buffer);
 }
 
+#include <stdio.h>
 /* Merge grains i and j in map with full resolution */
 static inline void
 resolve_grain_map(gint *m, gint i, gint j)
 {
     gint ii, jj, k;
 
+    printf("%d %d\n", i, j);
     /* Find what i and j fully resolve to */
     for (ii = i; m[ii] != ii; ii = m[ii])
         ;
@@ -2381,6 +2383,7 @@ resolve_grain_map(gint *m, gint i, gint j)
  *
  * Returns: The number of last grain (note they are numbered from 1).
  **/
+//#include <stdio.h>
 gint
 gwy_data_field_number_grains(GwyDataField *mask_field,
                              gint *grains)
@@ -2389,6 +2392,9 @@ gwy_data_field_number_grains(GwyDataField *mask_field,
     gint xres, yres, i, j, grain_id, max_id, id;
     gint *m, *mm;
 
+
+
+    printf("gr...\n");
     xres = mask_field->xres;
     yres = mask_field->yres;
     data = mask_field->data;
@@ -2396,6 +2402,7 @@ gwy_data_field_number_grains(GwyDataField *mask_field,
     /* The max number of grains, reached with checkerboard pattern */
     m = g_new0(gint, (xres*yres + 1)/2 + 1);
 
+    //printf("size %d\n", (xres*yres + 1)/2 + 1);
     /* Number grains with simple unidirectional grain number propagation,
      * updating map m for later full grain join */
     max_id = 0;
@@ -2414,6 +2421,7 @@ gwy_data_field_number_grains(GwyDataField *mask_field,
             grain_id = 0;
     }
     /* The rest of rows */
+    printf("gr2..\n");
     for (i = 1; i < yres; i++) {
         grain_id = 0;
         for (j = 0; j < xres; j++) {
@@ -2461,6 +2469,8 @@ gwy_data_field_number_grains(GwyDataField *mask_field,
         grains[i] = m[grains[i]];
 
     g_free(m);
+
+    //printf("pogr\n");
 
     return id;
 }

@@ -26,6 +26,8 @@
 #include <libprocess/stats.h>
 #include <libprocess/morph_lib.h>
 
+#include <stdio.h>
+
 /* INTERPOLATION: New (not applicable). */
 
 static void
@@ -83,17 +85,24 @@ noncontact_guess(GwyDataField *data,
 }
 
 static void
-delta_guess(G_GNUC_UNUSED GwyDataField *data,
-            G_GNUC_UNUSED gdouble height,
-            G_GNUC_UNUSED gdouble radius,
+delta_guess(GwyDataField *data,
+            gdouble height,
+            gdouble radius,
             G_GNUC_UNUSED gdouble *params,
             gint *xres, gint *yres)
 {
-    *xres = 20;
-    *yres = 20;
+    if (radius == 0)
+    {
+        *xres = 20;
+        *yres = 20;
+        return;
+    }
+    *xres = gwy_data_field_rtoi(data, G_SQRT2*sqrt(height*(2*radius-height)));
+    *xres = CLAMP((*xres), 20, 500);
+    *yres = (*xres);
 
 }
-
+#include <stdio.h>
 static void
 create_pyramide(GwyDataField *tip, gdouble alpha, gint n, gdouble theta)
 {
@@ -121,6 +130,7 @@ create_pyramide(GwyDataField *tip, gdouble alpha, gint n, gdouble theta)
     scol = tip->xres/2;
     srow = tip->yres/2;
 
+    printf("at creation: height: %g radius: %g, alpha %g\n", height, radius, alpha);
     ca = cos(add);
     sa = sin(add);
     ir = 1.0/(radius*cos(G_PI/n));
@@ -139,7 +149,6 @@ create_pyramide(GwyDataField *tip, gdouble alpha, gint n, gdouble theta)
 
     gwy_data_field_invalidate(tip);
 }
-
 static void
 round_pyramide(GwyDataField *tip, gdouble angle, gint n, gdouble ballradius)
 {
@@ -155,11 +164,10 @@ round_pyramide(GwyDataField *tip, gdouble angle, gint n, gdouble ballradius)
     center_x = tip->xreal/2;
     center_y = tip->yreal/2;
     beta = atan(tan(angle)/cos(G_PI/n));
+    printf("angle: %g, beta: %g\n", angle, beta);
     center_z = height - ballradius/sin(beta);
-    gwy_debug("z:%g, height=%g, ballradius=%g, cosbeta=%g, beta=%g "
-              "(%g deg of %g deg)\n",
-              center_z, height, ballradius, cos(beta), beta,
-              beta*180/G_PI, angle*180/G_PI);
+    printf("ballradius %g, cz: %g\n", ballradius, center_z);
+    printf("height %g\n", height);
     for (row = 0; row < tip->yres; row++) {
         gdouble *datarow = tip->data + tip->xres*row;
 
@@ -213,14 +221,35 @@ noncontact(GwyDataField *tip,
     round_pyramide(tip, angle, 3, radius);
 }
 
+
 static void
 delta(GwyDataField *tip, gdouble height,
-      G_GNUC_UNUSED gdouble radius,
+      gdouble radius,
       G_GNUC_UNUSED gdouble rotation,
       G_GNUC_UNUSED gdouble *params)
 {
+    gint col, row;
+    gdouble cr, cc, val;
+
     gwy_data_field_clear(tip);
-    tip->data[tip->xres/2 + tip->xres*tip->yres/2] = height;
+    if (radius == 0) {
+        tip->data[tip->xres/2 + tip->xres*tip->yres/2] = height;
+        gwy_data_field_invalidate(tip);
+        return;
+    }
+    cc = tip->xreal/2;
+    cr = tip->yreal/2;
+    for (col = 0; col < tip->xres; col++) {
+        for (row = 0; row < tip->yres; row++) {
+            val = radius*radius - (gwy_data_field_jtor(tip, col) - cc)*(gwy_data_field_jtor(tip, col) - cc)
+                                - (gwy_data_field_itor(tip, row) - cr)*(gwy_data_field_itor(tip, row) - cr);
+            if (val>0) 
+                tip->data[col + tip->xres*row] = sqrt(val) - radius + height;
+            if (tip->data[col + tip->xres*row] < 0) 
+                tip->data[col + tip->xres*row] = 0;
+        }
+    }
+    gwy_data_field_invalidate(tip);    
 }
 
 static const GwyTipModelPreset tip_presets[] = {
@@ -580,6 +609,8 @@ gwy_tip_dilation(GwyDataField *tip,
     if (fresult)
         _gwy_morph_lib_dfreematrix(fresult);
 
+
+
     return result;
 }
 
@@ -641,6 +672,7 @@ gwy_tip_erosion(GwyDataField *tip,
     if (fresult)
         _gwy_morph_lib_dfreematrix(fresult);
 
+
     return result;
 }
 
@@ -689,6 +721,7 @@ gwy_tip_cmap(GwyDataField *tip,
     surfacemin = gwy_data_field_get_min(surface);
     step = (gwy_data_field_get_max(surface) - surfacemin)/10000;
 
+    printf("tipmin: %g surfacemin %g step %g\n", tipmin, surfacemin, step);
     ftip = i_datafield_to_field(buffertip, TRUE, tipmin, step);
     fsurface = i_datafield_to_largefield(surface, buffertip, surfacemin, step);
 
@@ -704,6 +737,8 @@ gwy_tip_cmap(GwyDataField *tip,
        return NULL;
     }
 
+   // gwy_data_field_invert(buffertip, FALSE, FALSE, TRUE);
+   // ftip = i_datafield_to_field(buffertip, TRUE, tipmin, step);
     /*find certanty map*/
     if (rsurface) {
         fresult = _gwy_morph_lib_icmap(fsurface, newx, newy,
@@ -731,6 +766,7 @@ gwy_tip_cmap(GwyDataField *tip,
     _gwy_morph_lib_ifreematrix(rsurface);
     if (fresult)
         _gwy_morph_lib_ifreematrix(fresult);
+
 
     return result;
 }

@@ -55,7 +55,7 @@
 
 #define EXTENSION ".img"
 
-enum { HEADER_SIZE = 830 };
+enum { HEADER_SIZE = 830 };//830
 
 enum {
     ECS_RESOLUTION = 0x2,
@@ -116,6 +116,7 @@ ecs_detect(const GwyFileDetectInfo *fileinfo,
     if (fileinfo->buffer_len < ECS_RESOLUTION + 2*2
         || fileinfo->file_size < HEADER_SIZE + 2
         || memcmp(fileinfo->head, MAGIC, MAGIC_SIZE) != 0)
+        printf("Head1 failed!\n");
         return 0;
 
     /* Check if file size matches */
@@ -124,6 +125,7 @@ ecs_detect(const GwyFileDetectInfo *fileinfo,
     yres = gwy_get_guint16_le(&p);
 
     if (fileinfo->file_size != 2*xres*yres + HEADER_SIZE)
+         printf("Head2 failed %g %g\n", xres, yres);
         return 0;
 
     return 100;
@@ -155,12 +157,13 @@ ecs_load(const gchar *filename,
     if (size < HEADER_SIZE + 2) {
         err_TOO_SHORT(error);
         goto fail;
+          printf("too short\n");
     }
 
     p = buffer + ECS_RESOLUTION;
     xres = gwy_get_guint16_le(&p);
     yres = gwy_get_guint16_le(&p);
-    gwy_debug("xres: %u, yres: %u", xres, yres);
+    printf("xres: %u, yres: %u\n", xres, yres);
     if (err_DIMENSION(error, xres) || err_DIMENSION(error, yres))
         goto fail;
     if (err_SIZE_MISMATCH(error, HEADER_SIZE + 2*xres*yres, size, TRUE))

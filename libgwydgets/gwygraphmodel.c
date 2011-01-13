@@ -1481,7 +1481,8 @@ gwy_graph_model_get_ranges(GwyGraphModel *gmodel,
     xmax = ymax = -G_MAXDOUBLE;
     for (i = 0; i < gmodel->curves->len; i++) {
         gcmodel = g_ptr_array_index(gmodel->curves, i);
-        if (gwy_graph_curve_model_get_ranges(gcmodel, x_logscale, y_logscale,
+        if (gcmodel->mode != GWY_GRAPH_CURVE_HIDDEN &&
+            gwy_graph_curve_model_get_ranges(gcmodel, x_logscale, y_logscale,
                                              &cxmin, &cxmax, &cymin, &cymax)) {
             ok |= ALL;
             xmin = MIN(cxmin, xmin);

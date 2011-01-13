@@ -11,6 +11,8 @@ endif
 
 libgwyprocess2include_HEADERS = \
 	arithmetic.h \
+        delaunay.h \
+        natural.h \
 	cdline.h \
 	correct.h \
 	correlation.h \
@@ -22,6 +24,8 @@ libgwyprocess2include_HEADERS = \
 	filters.h \
 	fractals.h \
 	grains.h \
+        gwycaldata.h \
+        gwycalibration.h \
 	gwygrainvalue.h \
 	gwyprocess.h \
 	gwyprocessenums.h \
@@ -34,6 +38,7 @@ libgwyprocess2include_HEADERS = \
 	simplefft.h \
 	spectra.h \
 	stats.h \
+        stats_uncertainty.h \
 	tip.h \
 	triangulation.h
 
@@ -85,6 +90,8 @@ libgwyprocess2_la_LIBADD = $(libgwyprocess_libadd)
 
 libgwyprocess2_la_SOURCES = \
 	arithmetic.c \
+        delaunay.c \
+        natural.c \
 	cdline.c \
 	correct.c \
 	correlation.c \
@@ -96,6 +103,8 @@ libgwyprocess2_la_SOURCES = \
 	filters.c \
 	fractals.c \
 	grains.c \
+        gwycaldata.c \
+        gwycalibration.c \
 	gwygrainvalue.c \
 	gwyprocess.c \
 	gwyprocessenums.c \
@@ -109,6 +118,7 @@ libgwyprocess2_la_SOURCES = \
 	simplefft.c \
 	spectra.c \
 	stats.c \
+        stats_uncertainty.c \
 	tip.c \
 	triangulation.c
 

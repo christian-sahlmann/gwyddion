@@ -24,6 +24,7 @@
 #include <libdraw/gwyrgba.h>
 #include <libgwydgets/gwydgetenums.h>
 #include <libprocess/dataline.h>
+#include <libprocess/gwycaldata.h>
 
 G_BEGIN_DECLS
 
@@ -69,7 +70,7 @@ struct _GwyGraphCurveModel {
     gint int3;
     gint int4;
     gdouble *cache2;
-    gpointer reserved2;
+    GwyCurveCalibrationData *calibration;
     gpointer reserved3;
     gpointer reserved4;
 };
@@ -114,6 +115,11 @@ gboolean       gwy_graph_curve_model_get_ranges(GwyGraphCurveModel *gcmodel,
                                                 gdouble *x_max,
                                                 gdouble *y_min,
                                                 gdouble *y_max);
+
+GwyCurveCalibrationData *gwy_graph_curve_model_get_calibration_data(GwyGraphCurveModel *gcmodel);
+
+void gwy_graph_curve_model_set_calibration_data(GwyGraphCurveModel *gcmodel, 
+                                                GwyCurveCalibrationData *calibration);
 
 G_END_DECLS
 

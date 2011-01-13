@@ -15,8 +15,9 @@
  *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA.
  */
+
 
 #include "config.h"
 #include <gtk/gtk.h>
@@ -258,10 +259,10 @@ fft_dialog(FFTArgs *args)
     enum { RESPONSE_RESET = 1 };
     static const GwyEnum fft_outputs[] = {
         { N_("Real + Imaginary"),  GWY_FFT_OUTPUT_REAL_IMG,  },
-        { N_("Modulus + Phase"),   GWY_FFT_OUTPUT_MOD_PHASE, },
+        { N_("Module + Phase"),    GWY_FFT_OUTPUT_MOD_PHASE, },
         { N_("Real"),              GWY_FFT_OUTPUT_REAL,      },
         { N_("Imaginary"),         GWY_FFT_OUTPUT_IMG,       },
-        { N_("Modulus"),           GWY_FFT_OUTPUT_MOD,       },
+        { N_("Module"),            GWY_FFT_OUTPUT_MOD,       },
         { N_("Phase"),             GWY_FFT_OUTPUT_PHASE,     },
     };
     GtkWidget *dialog, *table;

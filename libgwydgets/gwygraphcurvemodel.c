@@ -225,6 +225,7 @@ gwy_graph_curve_model_set_property(GObject *object,
 
         case PROP_MODE:
         gcmodel->mode = g_value_get_enum(value);
+        gwy_graph_curve_model_data_changed(gcmodel);
         break;
 
         case PROP_POINT_TYPE:
@@ -316,6 +317,8 @@ gwy_graph_curve_model_init(GwyGraphCurveModel *gcmodel)
 
     gcmodel->line_style = GDK_LINE_SOLID;
     gcmodel->line_width = 1;
+
+    gcmodel->calibration = NULL;
 }
 
 /**
@@ -406,11 +409,25 @@ gwy_graph_curve_model_serialize(GObject *object,
             { 'i', "line_style", &gcmodel->line_style, NULL },
             /* XXX: Legacy */
             { 'i', "line_size", &gcmodel->line_width, NULL },
+            { 'D', "xerr", &gcmodel->calibration->xerr, &gcmodel->n },
+            { 'D', "yerr", &gcmodel->calibration->yerr, &gcmodel->n },
+            { 'D', "zerr", &gcmodel->calibration->zerr, &gcmodel->n },
+            { 'D', "xunc", &gcmodel->calibration->xunc, &gcmodel->n },
+            { 'D', "yunc", &gcmodel->calibration->yunc, &gcmodel->n },
+            { 'D', "zunc", &gcmodel->calibration->zunc, &gcmodel->n },
         };
 
+        if (gcmodel->calibration) {
         return gwy_serialize_pack_object_struct(buffer,
                                                 GWY_GRAPH_CURVE_MODEL_TYPE_NAME,
                                                 G_N_ELEMENTS(spec), spec);
+        }
+        else {
+        return gwy_serialize_pack_object_struct(buffer,
+                                                GWY_GRAPH_CURVE_MODEL_TYPE_NAME,
+                                                G_N_ELEMENTS(spec)-6, spec);
+        }
+        
     }
 }
 
@@ -438,10 +455,19 @@ gwy_graph_curve_model_get_size(GObject *object)
             { 'i', "line_style", &gcmodel->line_style, NULL },
             /* XXX: Legacy */
             { 'i', "line_size", &gcmodel->line_width, NULL },
+            { 'D', "xerr", &gcmodel->calibration->xerr, &gcmodel->n },
+            { 'D', "yerr", &gcmodel->calibration->yerr, &gcmodel->n },
+            { 'D', "zerr", &gcmodel->calibration->zerr, &gcmodel->n },
+            { 'D', "xunc", &gcmodel->calibration->xunc, &gcmodel->n },
+            { 'D', "yunc", &gcmodel->calibration->yunc, &gcmodel->n },
+            { 'D', "zunc", &gcmodel->calibration->zunc, &gcmodel->n },
         };
 
+        if (gcmodel->calibration)
         return gwy_serialize_get_struct_size(GWY_GRAPH_CURVE_MODEL_TYPE_NAME,
                                              G_N_ELEMENTS(spec), spec);
+        else  return gwy_serialize_get_struct_size(GWY_GRAPH_CURVE_MODEL_TYPE_NAME,
+                                             G_N_ELEMENTS(spec)-6, spec);
     }
 }
 
@@ -451,13 +477,16 @@ gwy_graph_curve_model_deserialize(const guchar *buffer,
                                   gsize *position)
 {
     GwyGraphCurveModel *gcmodel;
+    gdouble *xerr, *yerr, *zerr, *xunc, *yunc, *zunc;
+    gint nxerr, nyerr, nzerr, nxunc, nyunc, nzunc;
+    xerr = yerr = zerr = xunc = yunc = zunc = NULL;
 
     gwy_debug("");
     g_return_val_if_fail(buffer, NULL);
 
     gcmodel = gwy_graph_curve_model_new();
     {
-        gint nxdata, nydata;
+        gint nxdata, nydata, ncaldata;
         gchar *description = NULL;
         GwySerializeSpec spec[] = {
             { 'D', "xdata", &gcmodel->xdata, &nxdata },
@@ -477,6 +506,12 @@ gwy_graph_curve_model_deserialize(const guchar *buffer,
             { 'i', "line_size", &gcmodel->line_width, NULL },
             /* Accept line_width too */
             { 'i', "line_width", &gcmodel->line_width, NULL },
+            { 'D', "xerr", &xerr, &nxerr }, 
+            { 'D', "yerr", &yerr, &nyerr },
+            { 'D', "zerr", &zerr, &nzerr },
+            { 'D', "xunc", &xunc, &nxunc },
+            { 'D', "yunc", &yunc, &nyunc },
+            { 'D', "zunc", &zunc, &nzunc },
         };
         if (!gwy_serialize_unpack_object_struct(buffer, size, position,
                                                 GWY_GRAPH_CURVE_MODEL_TYPE_NAME,
@@ -496,6 +531,25 @@ gwy_graph_curve_model_deserialize(const guchar *buffer,
             g_free(description);
         }
         gcmodel->n = nxdata;
+        if (nxerr == nxdata && nyerr == nxdata && nzerr == nxdata 
+            && nxunc == nxdata && nyunc == nxdata && nzunc == nxdata)
+        {
+            gcmodel->calibration = (GwyCurveCalibrationData *) g_malloc(sizeof(GwyCurveCalibrationData));
+            gcmodel->calibration->xerr = xerr;
+            gcmodel->calibration->yerr = yerr;
+            gcmodel->calibration->zerr = zerr;
+            gcmodel->calibration->xunc = xunc;
+            gcmodel->calibration->yunc = yunc;
+            gcmodel->calibration->zunc = zunc;
+        } else {
+            if (xerr) g_free(xerr);
+            if (yerr) g_free(yerr);
+            if (zerr) g_free(zerr);
+            if (xunc) g_free(xunc);
+            if (yunc) g_free(yunc);
+            if (zunc) g_free(zunc);
+            gcmodel->calibration = NULL;
+        }
     }
 
     return (GObject*)gcmodel;
@@ -957,6 +1011,30 @@ gwy_graph_curve_model_data_changed(GwyGraphCurveModel *gcmodel)
     gcmodel->cached = 0;
     g_signal_emit(gcmodel, graph_curve_model_signals[DATA_CHANGED], 0);
 }
+
+GwyCurveCalibrationData *
+gwy_graph_curve_model_get_calibration_data(GwyGraphCurveModel *gcmodel)
+{
+    return gcmodel->calibration;
+}
+
+void 
+gwy_graph_curve_model_set_calibration_data(GwyGraphCurveModel *gcmodel,
+                                           GwyCurveCalibrationData *calibration)
+{
+    if (gcmodel->calibration)
+    {
+        g_free(gcmodel->calibration->xerr);
+        g_free(gcmodel->calibration->yerr);
+        g_free(gcmodel->calibration->zerr);
+        g_free(gcmodel->calibration->xunc);
+        g_free(gcmodel->calibration->yunc);
+        g_free(gcmodel->calibration->zunc);
+    }
+    gcmodel->calibration = calibration;
+}
+
+
 
 /************************** Documentation ****************************/
 

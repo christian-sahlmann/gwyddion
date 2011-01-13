@@ -29,6 +29,7 @@
 #include <libgwyddion/gwyversion.h>
 #include <libgwyddion/gwydebugobjects.h>
 #include <libprocess/gwygrainvalue.h>
+#include <libprocess/gwycalibration.h>
 #include <libgwymodule/gwymoduleloader.h>
 #include <libgwymodule/gwymodule-file.h>
 #include <libgwydgets/gwydgets.h>
@@ -138,6 +139,8 @@ main(int argc, char *argv[])
     gwy_resource_class_load(g_type_class_peek(GWY_TYPE_GL_MATERIAL));
     gwy_app_splash_set_message(_("grain quantities"));
     gwy_resource_class_load(g_type_class_peek(GWY_TYPE_GRAIN_VALUE));
+    gwy_app_splash_set_message(_("calibrations"));
+    gwy_resource_class_load(g_type_class_peek(GWY_TYPE_CALIBRATION));
     gwy_app_splash_set_message_prefix(NULL);
     debug_time(timer, "load resources");
 

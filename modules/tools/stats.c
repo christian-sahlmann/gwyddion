@@ -29,6 +29,7 @@
 #include <libgwymodule/gwymodule-tool.h>
 #include <libprocess/datafield.h>
 #include <libprocess/stats.h>
+#include <libprocess/stats_uncertainty.h>
 #include <libgwydgets/gwystock.h>
 #include <libgwydgets/gwyradiobuttons.h>
 #include <libgwydgets/gwydgetutils.h>
@@ -65,6 +66,19 @@ typedef struct {
     /* These two are in degrees as we use need only for the user. */
     gdouble theta;
     gdouble phi;
+
+    gdouble uavg;
+    gdouble umin;
+    gdouble umax;
+    gdouble umedian;
+    gdouble ura;
+    gdouble urms;
+    gdouble uskew;
+    gdouble ukurtosis;
+    gdouble uarea;
+    gdouble uprojarea;
+    gdouble utheta;
+    gdouble uphi;
 } ToolResults;
 
 typedef struct {
@@ -110,6 +124,12 @@ struct _GwyToolStats {
 
     gboolean same_units;
 
+    gboolean has_calibration;
+    GwyDataField *xunc;
+    GwyDataField *yunc;
+    GwyDataField *zunc;
+
+
     /* potential class data */
     GwySIValueFormat *angle_format;
     GType layer_type_rect;
@@ -141,6 +161,10 @@ static void  gwy_tool_stats_update_units          (GwyToolStats *tool);
 static void  update_label                         (GwySIValueFormat *units,
                                                    GtkWidget *label,
                                                    gdouble value);
+static void  update_label_unc                     (GwySIValueFormat *units,
+                                                   GtkWidget *label,
+                                                   gdouble value,
+                                                   gdouble uncertainty);
 static void  gwy_tool_stats_masking_changed       (GtkWidget *button,
                                                    GwyToolStats *tool);
 static void  gwy_tool_stats_instant_update_changed(GtkToggleButton *check,
@@ -424,6 +448,10 @@ gwy_tool_stats_data_switched(GwyTool *gwytool,
     GwyPlainTool *plain_tool;
     GwyToolStats *tool;
     gboolean ignore;
+    gchar xukey[24];
+    gchar yukey[24];
+    gchar zukey[24];
+
 
     plain_tool = GWY_PLAIN_TOOL(gwytool);
     tool = GWY_TOOL_STATS(gwytool);
@@ -450,6 +478,22 @@ gwy_tool_stats_data_switched(GwyTool *gwytool,
 
     gtk_widget_set_sensitive(tool->copy, data_view != NULL);
     gtk_widget_set_sensitive(tool->save, data_view != NULL);
+
+    g_snprintf(xukey, sizeof(xukey), "/%d/cal_xunc", plain_tool->id);
+    g_snprintf(yukey, sizeof(yukey), "/%d/cal_yunc", plain_tool->id);
+    g_snprintf(zukey, sizeof(zukey), "/%d/cal_zunc", plain_tool->id);
+
+    if (gwy_container_gis_object_by_name(plain_tool->container, xukey, &(tool->xunc))
+        && gwy_container_gis_object_by_name(plain_tool->container, yukey, &(tool->yunc))
+        && gwy_container_gis_object_by_name(plain_tool->container, zukey, &(tool->zunc)))
+    {
+        printf("Data have calibration\n");
+        tool->has_calibration = TRUE;
+    } else {
+        printf("Data don't have calibration\n");
+        tool->has_calibration = FALSE;
+    }
+
 }
 
 static void
@@ -563,21 +607,40 @@ gwy_tool_stats_update_labels(GwyToolStats *tool)
     if (!tool->results_up_to_date)
         return;
 
-    update_label(plain_tool->value_format, tool->ra, tool->results.ra);
-    update_label(plain_tool->value_format, tool->rms, tool->results.rms);
-    g_snprintf(buffer, sizeof(buffer), "%2.3g", tool->results.skew);
-    gtk_label_set_text(GTK_LABEL(tool->skew), buffer);
-    g_snprintf(buffer, sizeof(buffer), "%2.3g", tool->results.kurtosis);
-    gtk_label_set_text(GTK_LABEL(tool->kurtosis), buffer);
-    update_label(plain_tool->value_format, tool->avg, tool->results.avg);
-    update_label(plain_tool->value_format, tool->min, tool->results.min);
-    update_label(plain_tool->value_format, tool->max, tool->results.max);
-    update_label(plain_tool->value_format, tool->median, tool->results.median);
+    if (tool->has_calibration) {
+        update_label_unc(plain_tool->value_format, tool->ra, tool->results.ra, tool->results.ura);
+        update_label_unc(plain_tool->value_format, tool->rms, tool->results.rms, tool->results.urms);
+        g_snprintf(buffer, sizeof(buffer), "%2.3g±%2.3g", tool->results.skew, tool->results.uskew);
+        gtk_label_set_text(GTK_LABEL(tool->skew), buffer);
+        g_snprintf(buffer, sizeof(buffer), "%2.3g±%2.3g", tool->results.kurtosis, tool->results.ukurtosis);
+        gtk_label_set_text(GTK_LABEL(tool->kurtosis), buffer);
+        update_label_unc(plain_tool->value_format, tool->avg, tool->results.avg, tool->results.uavg);
+        update_label_unc(plain_tool->value_format, tool->min, tool->results.min, tool->results.umin);
+        update_label_unc(plain_tool->value_format, tool->max, tool->results.max, tool->results.umax);
+        update_label_unc(plain_tool->value_format, tool->median, tool->results.median, tool->results.umedian);
+        update_label(tool->area_format, tool->projarea, tool->results.projarea);
+    } else {
+        update_label(plain_tool->value_format, tool->ra, tool->results.ra);
+        update_label(plain_tool->value_format, tool->rms, tool->results.rms);
+        g_snprintf(buffer, sizeof(buffer), "%2.3g", tool->results.skew);
+        gtk_label_set_text(GTK_LABEL(tool->skew), buffer);
+        g_snprintf(buffer, sizeof(buffer), "%2.3g", tool->results.kurtosis);
+        gtk_label_set_text(GTK_LABEL(tool->kurtosis), buffer);
+        update_label(plain_tool->value_format, tool->avg, tool->results.avg);
+        update_label(plain_tool->value_format, tool->min, tool->results.min);
+        update_label(plain_tool->value_format, tool->max, tool->results.max);
+        update_label(plain_tool->value_format, tool->median, tool->results.median);
 
-    update_label(tool->area_format, tool->projarea, tool->results.projarea);
+        update_label(tool->area_format, tool->projarea, tool->results.projarea);
+    }
 
     if (tool->same_units)
-        update_label(tool->area_format, tool->area, tool->results.area);
+    {
+        if (!tool->has_calibration) 
+           update_label(tool->area_format, tool->area, tool->results.area);
+        else
+           update_label_unc(tool->area_format, tool->area, tool->results.area, tool->results.uarea);
+    }
     else
         gtk_label_set_text(GTK_LABEL(tool->area), _("N.A."));
 
@@ -683,6 +746,42 @@ gwy_tool_stats_calculate(GwyToolStats *tool)
         tool->results.theta *= 180.0/G_PI;
         tool->results.phi *= 180.0/G_PI;
     }
+    if (tool->has_calibration) {
+    tool->results.uprojarea = gwy_data_field_area_get_projected_area_uncertainty(nn, tool->xunc, tool->yunc);
+
+        gwy_data_field_area_get_stats_uncertainties_mask(plain_tool->data_field, tool->zunc, mask, masking,
+                                           isel[0], isel[1], w, h,
+                                           &tool->results.uavg,
+                                           &tool->results.ura,
+                                           &tool->results.urms,
+                                           &tool->results.uskew,
+                                           &tool->results.ukurtosis);
+        gwy_data_field_area_get_min_max_uncertainty_mask(plain_tool->data_field, tool->zunc, mask, masking,
+                                             isel[0], isel[1], w, h,
+                                             &tool->results.umin,
+                                             &tool->results.umax);
+        tool->results.umedian
+            = gwy_data_field_area_get_median_uncertainty_mask(plain_tool->data_field, tool->zunc,
+                                                  mask, masking,
+                                                  isel[0], isel[1], w, h);
+
+        tool->results.uarea
+            = gwy_data_field_area_get_surface_area_uncertainty(plain_tool->data_field, tool->zunc,
+                                                               tool->xunc,
+                                                               tool->yunc,
+                                                               mask,
+                                                               isel[0], isel[1], w, h);
+        /*gwy_data_field_area_get_inclination_uncertainty(plain_tool->data_field,
+tool->zunc, tool->xunc, tool->yunc,
+                                            isel[0], isel[1], w, h,
+                                            &tool->results.utheta,
+                                            &tool->results.uphi);
+        tool->results.utheta *= 180.0/G_PI;
+        tool->results.uphi *= 180.0/G_PI;*/
+        //printf("inclination_uncertainty  %f %f \n",tool->results.utheta, tool->results.uphi);
+       tool->results.utheta = 0;
+       tool->results.uphi = 0;
+    }
 
     memcpy(tool->results.isel, isel, sizeof(isel));
     memcpy(tool->results.sel, sel, sizeof(sel));
@@ -705,6 +804,23 @@ update_label(GwySIValueFormat *units,
 
     g_snprintf(buffer, sizeof(buffer), "%.*f%s%s",
                units->precision, value/units->magnitude,
+               *units->units ? " " : "", units->units);
+    gtk_label_set_markup(GTK_LABEL(label), buffer);
+}
+
+static void
+update_label_unc(GwySIValueFormat *units,
+             GtkWidget *label,
+             gdouble value, gdouble uncertainty)
+{
+    static gchar buffer[64];
+
+    g_return_if_fail(units);
+    g_return_if_fail(GTK_IS_LABEL(label));
+
+    g_snprintf(buffer, sizeof(buffer), "(%.*f±%.*f) %s%s",
+               units->precision, value/units->magnitude,
+               units->precision, uncertainty/units->magnitude,
                *units->units ? " " : "", units->units);
     gtk_label_set_markup(GTK_LABEL(label), buffer);
 }

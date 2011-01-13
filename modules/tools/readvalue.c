@@ -70,6 +70,11 @@ struct _GwyToolReadValue {
 
     gboolean same_units;
 
+    GwyDataField *xunc;
+    GwyDataField *yunc;
+    GwyDataField *zunc;
+    gboolean has_calibration;
+
     /* potential class data */
     GwySIValueFormat *pixel_format;
     GwySIValueFormat *angle_format;
@@ -360,6 +365,10 @@ gwy_tool_read_value_data_switched(GwyTool *gwytool,
     GwyPlainTool *plain_tool;
     GwyToolReadValue *tool;
     gboolean ignore;
+    gchar xukey[24];
+    gchar yukey[24];
+    gchar zukey[24];
+
 
     plain_tool = GWY_PLAIN_TOOL(gwytool);
     ignore = (data_view == plain_tool->data_view);
@@ -381,6 +390,19 @@ gwy_tool_read_value_data_switched(GwyTool *gwytool,
                                 NULL);
         gwy_selection_set_max_objects(plain_tool->selection, 1);
         gwy_tool_read_value_update_units(tool);
+    }
+
+    g_snprintf(xukey, sizeof(xukey), "/%d/cal_xunc", plain_tool->id);
+    g_snprintf(yukey, sizeof(yukey), "/%d/cal_yunc", plain_tool->id);
+    g_snprintf(zukey, sizeof(zukey), "/%d/cal_zunc", plain_tool->id);
+
+    if (gwy_container_gis_object_by_name(plain_tool->container, xukey, &(tool->xunc))
+        && gwy_container_gis_object_by_name(plain_tool->container, yukey, &(tool->yunc))
+        && gwy_container_gis_object_by_name(plain_tool->container, zukey, &(tool->zunc)))
+    {
+        tool->has_calibration = TRUE;
+    } else {
+        tool->has_calibration = FALSE;
     }
 }
 
@@ -464,6 +486,23 @@ update_label(GwySIValueFormat *units,
 }
 
 static void
+update_label_unc(GwySIValueFormat *units,
+             GtkWidget *label,
+             gdouble value,
+             gdouble unc)
+{
+    static gchar buffer[64];
+
+    g_return_if_fail(units);
+    g_return_if_fail(GTK_IS_LABEL(label));
+
+    g_snprintf(buffer, sizeof(buffer), "(%.*f±%.*f)%s%s",
+               units->precision, value/units->magnitude, units->precision, unc/units->magnitude,
+               *units->units ? " " : "", units->units);
+    gtk_label_set_markup(GTK_LABEL(label), buffer);
+}
+
+static void
 gwy_tool_read_value_update_values(GwyToolReadValue *tool)
 {
     GwyPlainTool *plain_tool;
@@ -498,7 +537,16 @@ gwy_tool_read_value_update_values(GwyToolReadValue *tool)
     update_label(plain_tool->coord_format, tool->y, point[1] + yoff);
     update_label(tool->pixel_format, tool->ypx, row);
     gwy_tool_read_value_calculate(tool, col, row);
-    update_label(plain_tool->value_format, tool->z, tool->avg);
+
+    if (tool->has_calibration) /*FIXME, use local plane fitting and uncertainty propagation*/
+          update_label_unc(plain_tool->value_format, 
+                           tool->z, 
+                           tool->avg, 
+                           gwy_data_field_get_dval_real(tool->zunc, 
+                                                        point[0], 
+                                                        point[1], 
+                                                        GWY_INTERPOLATION_BILINEAR));
+    else update_label(plain_tool->value_format, tool->z, tool->avg);
 
     if (tool->same_units) {
         update_label(tool->angle_format, tool->theta,

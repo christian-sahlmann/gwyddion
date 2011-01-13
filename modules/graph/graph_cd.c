@@ -59,6 +59,7 @@ typedef struct {
     GwyGraphModel *graph_model;
     GwyDataLine *xdata;
     GwyDataLine *ydata;
+    GwyCurveCalibrationData *cdata;
     GwyRGBA fitcolor;
     GwySIValueFormat *abscissa_vf;
 } FitArgs;
@@ -547,11 +548,13 @@ fit_do(FitControls *controls)
     error = g_newa(gdouble, nparams);
     for (i = 0; i < nparams; i++)
         param[i] = args->param[i].value;
+
     gwy_cdline_fit(args->fitfunc,
                    gwy_data_line_get_res(args->xdata),
                    gwy_data_line_get_data_const(args->xdata),
                    gwy_data_line_get_data_const(args->ydata),
-                   0, param, error, NULL, NULL);
+                   0, param, error, NULL, 
+                   args->cdata);
 
     for (i = 0; i < nparams; i++) {
         args->param[i].value = param[i];
@@ -900,6 +903,7 @@ normalize_data(FitArgs *args)
     xs = gwy_graph_curve_model_get_xdata(cmodel);
     ys = gwy_graph_curve_model_get_ydata(cmodel);
     ns = gwy_graph_curve_model_get_ndata(cmodel);
+    args->cdata = gwy_graph_curve_model_get_calibration_data(cmodel);
 
     gwy_data_line_resample(args->xdata, ns, GWY_INTERPOLATION_NONE);
     gwy_data_line_resample(args->ydata, ns, GWY_INTERPOLATION_NONE);

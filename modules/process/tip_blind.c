@@ -31,6 +31,7 @@
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
 
+
 #define TIP_BLIND_RUN_MODES GWY_RUN_INTERACTIVE
 
 enum {

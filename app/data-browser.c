@@ -21,6 +21,8 @@
 /* XXX: The purpose of this file is to contain all ugliness from the rest of
  * source files.  And indeed it has managed to gather lots of it. */
 
+#include <stdio.h>
+
 #include "config.h"
 #include <stdlib.h>
 #include <string.h>
@@ -1732,7 +1734,7 @@ gwy_app_data_browser_channel_render_flags(G_GNUC_UNUSED GtkTreeViewColumn *colum
                                           gpointer userdata)
 {
     GwyAppDataBrowser *browser = (GwyAppDataBrowser*)userdata;
-    gboolean has_mask, has_show;
+    gboolean has_mask, has_show, has_cal;
     GwyContainer *data;
     gchar key[24];
     gint channel;
@@ -1745,10 +1747,14 @@ gwy_app_data_browser_channel_render_flags(G_GNUC_UNUSED GtkTreeViewColumn *colum
     has_mask = gwy_container_contains_by_name(data, key);
     g_snprintf(key, sizeof(key), "/%d/show", channel);
     has_show = gwy_container_contains_by_name(data, key);
+    g_snprintf(key, sizeof(key), "/%d/cal_zunc", channel); //FIXME, all the fields should be present
+    has_cal = gwy_container_contains_by_name(data, key);
 
-    g_snprintf(key, sizeof(key), "%s%s",
+
+    g_snprintf(key, sizeof(key), "%s%s%s",
                has_mask ? "M" : "",
-               has_show ? "P" : "");
+               has_show ? "P" : "",
+               has_cal ? "C" : "");
 
     g_object_set(renderer, "text", key, NULL);
 }
@@ -2714,17 +2720,27 @@ gwy_app_data_browser_graph_render_title(G_GNUC_UNUSED GtkTreeViewColumn *column,
 }
 
 static void
-gwy_app_data_browser_graph_render_ncurves(G_GNUC_UNUSED GtkTreeViewColumn *column,
+gwy_app_data_browser_graph_render_flags(G_GNUC_UNUSED GtkTreeViewColumn *column,
                                           GtkCellRenderer *renderer,
                                           GtkTreeModel *model,
                                           GtkTreeIter *iter,
                                           G_GNUC_UNUSED gpointer userdata)
 {
     GwyGraphModel *gmodel;
+    GwyGraphCurveModel *gcmodel;
     gchar s[8];
+    gboolean has_cal = FALSE;
+    gint i, nc;
 
     gtk_tree_model_get(model, iter, MODEL_OBJECT, &gmodel, -1);
-    g_snprintf(s, sizeof(s), "%d", gwy_graph_model_get_n_curves(gmodel));
+    nc = gwy_graph_model_get_n_curves(gmodel);
+    for (i=0; i<nc; i++) 
+        if (gwy_graph_curve_model_get_calibration_data(gwy_graph_model_get_curve(gmodel, i)))
+            has_cal = TRUE;
+    if (has_cal)
+        g_snprintf(s, sizeof(s), "%d C", gwy_graph_model_get_n_curves(gmodel));
+    else
+        g_snprintf(s, sizeof(s), "%d", gwy_graph_model_get_n_curves(gmodel));
     g_object_set(renderer, "text", s, NULL);
     g_object_unref(gmodel);
 }
@@ -3072,7 +3088,7 @@ gwy_app_data_browser_construct_graphs(GwyAppDataBrowser *browser)
                                                       NULL);
     gtk_tree_view_column_set_cell_data_func
         (column, renderer,
-         gwy_app_data_browser_graph_render_ncurves, browser, NULL);
+         gwy_app_data_browser_graph_render_flags, browser, NULL);
     gtk_tree_view_append_column(treeview, column);
 
     gtk_tree_view_set_headers_visible(treeview, FALSE);

@@ -18,6 +18,8 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
+#include <stdio.h>
+
 #define GWY_TYPE_RAW_FILE_PRESET             (gwy_raw_file_preset_get_type())
 #define GWY_RAW_FILE_PRESET(obj)             (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_RAW_FILE_PRESET, GwyRawFilePreset))
 #define GWY_RAW_FILE_PRESET_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST((klass), GWY_TYPE_RAW_FILE_PRESET, GwyRawFilePresetClass))
@@ -323,6 +325,7 @@ gwy_raw_file_preset_parse(const gchar *text,
     GwyRawFilePresetClass *klass;
     gchar *str, *p, *line, *key, *value;
     guint len;
+
 
     g_return_val_if_fail(text, NULL);
     klass = g_type_class_peek(GWY_TYPE_RAW_FILE_PRESET);

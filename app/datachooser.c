@@ -80,6 +80,13 @@ enum {
     MODEL_NCOLUMNS
 };
 
+/*****************************************/
+GtkTreeModel *gwy_data_chooser_get_filter(GwyDataChooser *chooser)
+{
+    return chooser->filter;
+}
+/******************************************/
+
 static void     gwy_data_chooser_finalize       (GObject *object);
 static void     gwy_data_chooser_destroy        (GtkObject *object);
 static gboolean gwy_data_chooser_is_visible     (GtkTreeModel *model,

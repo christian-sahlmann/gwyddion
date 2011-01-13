@@ -24,6 +24,7 @@
 #include <libgwyddion/gwycontainer.h>
 #include <libprocess/datafield.h>
 #include <gtk/gtkwidget.h>
+#include <gtk/gtk.h>
 
 G_BEGIN_DECLS
 
@@ -56,7 +57,7 @@ void          gwy_data_chooser_set_filter(GwyDataChooser *chooser,
 const gchar*  gwy_data_chooser_get_none  (GwyDataChooser *chooser);
 void          gwy_data_chooser_set_none  (GwyDataChooser *chooser,
                                           const gchar *none);
-
+GtkTreeModel *gwy_data_chooser_get_filter (GwyDataChooser *chooser);
 G_END_DECLS
 
 #endif /* __GWY_DATA_CHOOSER_H__ */

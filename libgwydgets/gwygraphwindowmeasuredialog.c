@@ -136,6 +136,14 @@ value_label(GtkWidget *label, gdouble value, gint precision, GString *str)
     gtk_label_set_text(GTK_LABEL(label), str->str);
 }
 
+static void
+value_label_unc(GtkWidget *label, gdouble value, gdouble unc, gint precision, GString *str)
+{
+    g_string_printf(str, "%.*f±%.*f", precision, value, precision, unc);
+    gtk_label_set_text(GTK_LABEL(label), str->str);
+}
+
+
 static GtkWidget *
 header_label(GtkWidget *table, gint row, gint col,
             const gchar *header, const gchar *unit,
@@ -203,6 +211,81 @@ get_y_for_x(GwyGraph *graph, gdouble x, gint curve, gboolean *ret)
     return ydata[pos] + (ydata[pos+1] - ydata[pos])*(x - (xdata[pos]))/(xdata[pos+1] - xdata[pos]);
 }
 
+static gdouble
+get_xunc_for_x(GwyGraph *graph, gdouble x, gint curve, gboolean *ret)
+{
+    GwyGraphModel *model;
+    GwyGraphCurveModel *cmodel;
+    GwyCurveCalibrationData *cdata;
+    const gdouble *xdata, *ydata;
+    gint ndata, i, pos;
+
+    model = gwy_graph_get_model(graph);
+    if (gwy_graph_model_get_n_curves(model) <= curve) {
+        *ret = FALSE;
+        return 0;
+    }
+
+    cmodel = gwy_graph_model_get_curve(model, curve);
+    cdata = gwy_graph_curve_model_get_calibration_data(cmodel);
+    xdata = gwy_graph_curve_model_get_xdata(cmodel);
+    ydata = cdata->xunc;
+    ndata = gwy_graph_curve_model_get_ndata(cmodel);
+
+    pos = -1;
+    for (i = 0; i < (ndata - 1); i++) {
+        if (xdata[i] < x && xdata[i+1] >= x) {
+            pos = i;
+            break;
+        }
+    }
+    if (pos == -1) {
+        *ret = FALSE;
+        return 0;
+    }
+    *ret = TRUE;
+
+    return ydata[pos] + (ydata[pos+1] - ydata[pos])*(x - (xdata[pos]))/(xdata[pos+1] - xdata[pos]);
+}
+
+static gdouble
+get_yunc_for_x(GwyGraph *graph, gdouble x, gint curve, gboolean *ret)
+{
+    GwyGraphModel *model;
+    GwyGraphCurveModel *cmodel;
+    GwyCurveCalibrationData *cdata;
+    const gdouble *xdata, *ydata;
+    gint ndata, i, pos;
+
+    model = gwy_graph_get_model(graph);
+    if (gwy_graph_model_get_n_curves(model) <= curve) {
+        *ret = FALSE;
+        return 0;
+    }
+
+    cmodel = gwy_graph_model_get_curve(model, curve);
+    cdata = gwy_graph_curve_model_get_calibration_data(cmodel);
+    xdata = gwy_graph_curve_model_get_xdata(cmodel);
+    ydata = cdata->zunc;
+    ndata = gwy_graph_curve_model_get_ndata(cmodel);
+
+    pos = -1;
+    for (i = 0; i < (ndata - 1); i++) {
+        if (xdata[i] < x && xdata[i+1] >= x) {
+            pos = i;
+            break;
+        }
+    }
+    if (pos == -1) {
+        *ret = FALSE;
+        return 0;
+    }
+    *ret = TRUE;
+
+    return ydata[pos] + (ydata[pos+1] - ydata[pos])*(x - (xdata[pos]))/(xdata[pos+1] - xdata[pos]);
+}
+
+
 static void
 selection_updated_cb(GwySelection *selection,
                      G_GNUC_UNUSED gint k,
@@ -217,6 +300,7 @@ selection_updated_cb(GwySelection *selection,
     gint i, n;
     gdouble *spoints = NULL;
     gdouble x = 0, y = 0, xp = 0, yp = 0;
+    gdouble xunc = 0, xpunc = 0, yunc = 0, ypunc = 0;
     gboolean ret = TRUE, prevret = TRUE;
     GwySIUnit *xunit;
     GwySIUnit *yunit;
@@ -225,6 +309,8 @@ selection_updated_cb(GwySelection *selection,
     gdouble xmin, xmax, xrange, xresolution;
     gdouble ymin, ymax, yrange, yresolution;
     guint width, height;
+    gboolean is_calibration;
+    GwyCurveCalibrationData *cdata;
 
     graph = GWY_GRAPH(dialog->graph);
     gmodel = GWY_GRAPH_MODEL(gwy_graph_get_model(graph));
@@ -254,6 +340,14 @@ selection_updated_cb(GwySelection *selection,
     yaxis = gwy_graph_get_axis(graph, GTK_POS_LEFT);
     yunit = gwy_si_unit_new(gwy_axis_get_magnification_string(yaxis));
 
+    if ((cdata = gwy_graph_curve_model_get_calibration_data(
+                       gwy_graph_model_get_curve(gmodel, dialog->curve_index - 1)))==NULL)
+    {
+        is_calibration = FALSE;
+    } else {
+        is_calibration = TRUE;
+    }
+
     /* set up some nice formatting for the values */
     gtk_layout_get_size(GTK_LAYOUT(garea), &width, &height);
     gwy_graph_model_get_x_range(gmodel, &xmin, &xmax);
@@ -273,6 +367,7 @@ selection_updated_cb(GwySelection *selection,
                                                      yresolution/6,
                                                      NULL);
 
+
     /* set up header labels */
     header_label_update(GTK_LABEL(dialog->header_x), "X",
                         xformat->units, str);
@@ -290,6 +385,10 @@ selection_updated_cb(GwySelection *selection,
                 xp = x;
                 yp = y;
                 prevret = ret;
+                if (is_calibration) {
+                    xpunc = xunc;
+                    ypunc = yunc;
+                }
             }
 
             if (gwy_graph_get_status(graph) == GWY_GRAPH_STATUS_POINTS) {
@@ -299,6 +398,10 @@ selection_updated_cb(GwySelection *selection,
             else if (gwy_graph_get_status(graph) == GWY_GRAPH_STATUS_XLINES) {
                 x = spoints[i];
                 y = get_y_for_x(graph, x, dialog->curve_index - 1, &ret);
+                if (is_calibration) {
+                    xunc = get_xunc_for_x(graph, x, dialog->curve_index - 1, &ret);
+                    yunc = get_yunc_for_x(graph, x, dialog->curve_index - 1, &ret);
+                }
             }
             label = g_ptr_array_index(dialog->pointx, i);
             value_label(label, x/xformat->magnitude, xformat->precision, str);
@@ -314,20 +417,41 @@ selection_updated_cb(GwySelection *selection,
                 continue;
 
             label = g_ptr_array_index(dialog->distx, i);
-            value_label(label, (x - xp)/xformat->magnitude,
+            if (is_calibration && gwy_graph_get_status(graph) == GWY_GRAPH_STATUS_XLINES) {
+                value_label_unc(label, (x - xp)/xformat->magnitude,
+                                            sqrt(xpunc*xpunc + xunc*xunc)/xformat->magnitude,
+                                            xformat->precision, str);
+
+            }
+            else value_label(label, (x - xp)/xformat->magnitude,
                         xformat->precision, str);
 
 
             label = g_ptr_array_index(dialog->disty, i);
-            if (ret && prevret)
+            if (ret && prevret) {
+                if (is_calibration && gwy_graph_get_status(graph) == GWY_GRAPH_STATUS_XLINES) { 
+                    value_label_unc(label, (y - yp)/yformat->magnitude,
+                                                    sqrt(ypunc*ypunc + yunc*yunc)/yformat->magnitude,
+                                                    yformat->precision, str);
+                }
+                else
                 value_label(label, (y - yp)/yformat->magnitude,
                             yformat->precision, str);
+            }
             else
                 gtk_label_set_text(GTK_LABEL(label), NULL);
 
             label = g_ptr_array_index(dialog->slope, i);
             if (ret && prevret) {
                 if (gwy_si_unit_equal (xunit, yunit))
+                    if (is_calibration && gwy_graph_get_status(graph) == GWY_GRAPH_STATUS_XLINES) 
+                        value_label_unc(label, 180.0/G_PI*atan2((y - yp), (x - xp)),
+                               sqrt((1/(1+(y-yp)*(y-yp)/(x-xp)/(x-xp))*(y-yp)/(x-xp)/(x-xp))
+                                   *(1/(1+(y-yp)*(y-yp)/(x-xp)/(x-xp))*(y-yp)/(x-xp)/(x-xp))*(xpunc*xpunc + xunc*xunc)
+                                   +(1/(1+(y-yp)*(y-yp)/(x-xp)/(x-xp))/(x-xp))
+                                   *(1/(1+(y-yp)*(y-yp)/(x-xp)/(x-xp))/(x-xp))*(ypunc*ypunc + yunc*yunc)),
+                                            xformat->precision, str);
+                    else
                     value_label(label, 180.0/G_PI*atan2((y - yp), (x - xp)),
                             2, str);
                 else
@@ -448,36 +572,42 @@ _gwy_graph_window_measure_dialog_new(GwyGraph *graph)
 
     for (i = 0; i < NMAX; i++) {
         label = gtk_label_new(NULL);
+        gtk_label_set_selectable(GTK_LABEL(label), TRUE); 
         gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
         gtk_table_attach(GTK_TABLE(table), label, 0, 1, i+2, i+3,
                          GTK_FILL | GTK_EXPAND, 0, 4, 2);
         g_ptr_array_add(dialog->labpoint, label);
 
         label = gtk_label_new(NULL);
+        gtk_label_set_selectable(GTK_LABEL(label), TRUE);
         gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
         gtk_table_attach(GTK_TABLE(table), label, 1, 2, i+2, i+3,
                          GTK_FILL | GTK_EXPAND, 0, 4, 2);
         g_ptr_array_add(dialog->pointx, label);
 
         label = gtk_label_new(NULL);
+        gtk_label_set_selectable(GTK_LABEL(label), TRUE);
         gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
         gtk_table_attach(GTK_TABLE(table), label, 2, 3, i+2, i+3,
                          GTK_FILL | GTK_EXPAND, 0, 4, 2);
         g_ptr_array_add(dialog->pointy, label);
 
         label = gtk_label_new(NULL);
+        gtk_label_set_selectable(GTK_LABEL(label), TRUE);
         gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
         gtk_table_attach(GTK_TABLE(table), label, 3, 4, i+2, i+3,
                          GTK_FILL | GTK_EXPAND, 0, 4, 2);
         g_ptr_array_add(dialog->distx, label);
 
         label = gtk_label_new(NULL);
+        gtk_label_set_selectable(GTK_LABEL(label), TRUE);
         gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
         gtk_table_attach(GTK_TABLE(table), label, 4, 5, i+2, i+3,
                          GTK_FILL | GTK_EXPAND, 0, 4, 2);
         g_ptr_array_add(dialog->disty, label);
 
         label = gtk_label_new(NULL);
+        gtk_label_set_selectable(GTK_LABEL(label), TRUE);
         gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
         gtk_table_attach(GTK_TABLE(table), label, 5, 6, i+2, i+3,
                          GTK_FILL | GTK_EXPAND, 0, 4, 2);

@@ -26,6 +26,7 @@
 #include <libgwyddion/gwydebugobjects.h>
 #include "gwyprocessinternal.h"
 #include <libgwyddion/gwynlfit.h>
+#include <libprocess/gwycaldata.h>
 
 typedef gdouble (*GwyCDLineFitFunc)(gdouble x,
                                     gint n_param,
@@ -260,15 +261,18 @@ cd_stepheight(const gdouble *x,
               gint n_dat,
               gdouble *param,
               gdouble *err,
-              G_GNUC_UNUSED gpointer user_data,
+              GwyCurveCalibrationData *cdata,
               gboolean *fres)
 {
     gint i;
     gint nstep;
     gdouble max, min, val;
     gint imax, imin, iwidth;
-    gint nout;
+    gint nout, na, nb;
+    gdouble suma, sumb;
 
+    if (cdata) printf("We have cdata\n");
+    else printf("No cdata here\n");
 
     nstep = n_dat/20;
     if (nstep < 1)
@@ -298,26 +302,66 @@ cd_stepheight(const gdouble *x,
     iwidth = imin - imax;
 
     /*FIXME: modified now (imax+iwidth/3, imin-iwidth/3) */
-    get_linestatpars(y, n_dat, imax + iwidth/3, imin - iwidth/3, param + 2,
-                     err + 2);
+    if (!cdata) {
+        get_linestatpars(y, n_dat, imax + iwidth/3, imin - iwidth/3, param + 2,
+                         err + 2);
 
-    param[1] = err[1] = 0;
-    nout = 0;
-    for (i = 0; i < n_dat; i++) {
-        if ((i < (imax - iwidth/3) && i > (imax - iwidth))    /* /3 */
-            || (i > (imin + iwidth/3) && i < (imin + iwidth))) {       /* /3 */
-            param[1] += y[i];
-            err[1] += y[i] * y[i];
-            nout++;
+        param[1] = err[1] = 0;
+        nout = 0;
+        for (i = 0; i < n_dat; i++) {
+            if ((i < (imax - iwidth/3) && i > (imax - iwidth))    /* /3 */
+                || (i > (imin + iwidth/3) && i < (imin + iwidth))) {       /* /3 */
+                param[1] += y[i];
+                err[1] += y[i] * y[i];
+                nout++;
+            }
         }
+        err[1] = sqrt(fabs(err[1] - param[1] * param[1]/nout)/nout);
+        param[1] /= (gdouble)nout;
+        err[3] = err[4] = -1;
+    } else {
+        param[1] = 0;
+        param[2] = 0;
+        suma = sumb = 0;
+        for (i = 0; i < n_dat; i++) {
+            if ((i < (imax - iwidth/3) && i > (imax - iwidth))    /* /3 */
+                || (i > (imin + iwidth/3) && i < (imin + iwidth))) {       /* /3 */
+                param[1] += y[i]/cdata->zunc[i]/cdata->zunc[i];
+                suma += (1/cdata->zunc[i]/cdata->zunc[i]);
+            } 
+            else if (i>(imax + iwidth/3) && i<=(imin - iwidth/3))
+            {
+                param[2] += y[i]/cdata->zunc[i]/cdata->zunc[i];
+                sumb += (1/cdata->zunc[i]/cdata->zunc[i]);
+            }
+        }
+        param[1]/=suma;
+        param[2]/=sumb;
+
+        err[1] = 0;
+        err[2] = 0;
+        na = nb = 0;
+        for (i = 0; i < n_dat; i++) {
+            if ((i < (imax - iwidth/3) && i > (imax - iwidth))    /* /3 */
+                || (i > (imin + iwidth/3) && i < (imin + iwidth))) {       /* /3 */
+                err[1] += cdata->zunc[i]*cdata->zunc[i];
+                na++;
+            } 
+            else if (i>(imax + iwidth/3) && i<=(imin - iwidth/3))
+            {
+                printf("%g\n", cdata->zunc[i]);
+                err[2] += cdata->zunc[i]*cdata->zunc[i];
+                nb++;
+            }
+        }
+        err[1] = sqrt(err[1]/na);
+        err[2] = sqrt(err[2]/nb);
+        err[3] = cdata->xunc[imax];
+        err[4] = cdata->xunc[imin];
     }
-    err[1] = sqrt(fabs(err[1] - param[1] * param[1]/nout)/nout);
-    param[1] /= (gdouble)nout;
 
     param[0] = param[2] - param[1];
-
     err[0] = hypot(err[2], err[1]);
-    err[3] = err[4] = -1;
 
     *fres = TRUE;
 }
@@ -723,13 +767,13 @@ gwy_cdline_fit(GwyCDLine* cdline,
                gdouble *params,
                gdouble *err,
                G_GNUC_UNUSED const gboolean *fixed_param,
-               G_GNUC_UNUSED gpointer user_data)
+               gpointer user_data)
 {
     gboolean fres;
 
     g_return_if_fail(GWY_IS_CDLINE(cdline));
     fres = TRUE;
-    cdline->builtin->function_fit(x, y, n_dat, params, err, NULL, &fres);
+    cdline->builtin->function_fit(x, y, n_dat, params, err, user_data, &fres);
 }
 
 static void

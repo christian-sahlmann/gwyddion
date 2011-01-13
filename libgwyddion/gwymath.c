@@ -1014,6 +1014,78 @@ jump_over: ;
     }
 }
 
+gdouble
+gwy_math_median_uncertainty(gsize n, gdouble *array, gdouble *uarray)
+{
+    gsize lo, hi;
+    gsize median;
+    gsize middle, ll, hh;
+
+    lo = 0;
+    hi = n - 1;
+    median = n/2;
+    while (TRUE) {
+        if (hi <= lo)        /* One element only */
+            return uarray[median];
+
+        if (hi == lo + 1) {  /* Two elements only */
+            if (array[lo] > array[hi]){
+                DSWAP(array[lo], array[hi]);
+                DSWAP(uarray[lo], uarray[hi]);
+        }
+            return uarray[median];
+        }
+
+        /* Find median of lo, middle and hi items; swap into position lo */
+        middle = (lo + hi)/2;
+        if (array[middle] > array[hi]){
+            DSWAP(array[middle], array[hi]);
+            DSWAP(uarray[middle], uarray[hi]);
+    }
+        if (array[lo] > array[hi]){
+            DSWAP(array[lo], array[hi]);
+            DSWAP(uarray[lo], uarray[hi]);
+    }
+        if (array[middle] > array[lo]){
+            DSWAP(array[middle], array[lo]);
+            DSWAP(uarray[middle], uarray[lo]);
+    }
+
+        /* Swap low item (now in position middle) into position (lo+1) */
+        DSWAP(array[middle], array[lo + 1]);
+        DSWAP(uarray[middle], uarray[lo + 1]);
+
+        /* Nibble from each end towards middle, swapping items when stuck */
+        ll = lo + 1;
+        hh = hi;
+        while (TRUE) {
+            do {
+                ll++;
+            } while (array[lo] > array[ll]);
+            do {
+                hh--;
+            } while (array[hh] > array[lo]);
+
+            if (hh < ll)
+                break;
+
+            DSWAP(array[ll], array[hh]);
+            DSWAP(uarray[ll], uarray[hh]);
+        }
+        /* Swap middle item (in position lo) back into correct position */
+        DSWAP(array[lo], array[hh]);
+        DSWAP(uarray[lo], uarray[hh]);
+
+        /* Re-set active partition */
+        if (hh <= median)
+            lo = ll;
+        if (hh >= median)
+            hi = hh - 1;
+    }
+}
+
+
+
 /************************** Documentation ****************************/
 
 /**

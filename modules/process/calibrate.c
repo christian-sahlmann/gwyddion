@@ -156,7 +156,7 @@ module_register(void)
 {
     gwy_process_func_register("calibrate",
                               (GwyProcessFunc)&calibrate,
-                              N_("/_Basic Operations/_Recalibrate..."),
+                              N_("/Cali_bration/Basic _recalibration..."),
                               GWY_STOCK_DATA_MEASURE,
                               CALIBRATE_RUN_MODES,
                               GWY_MENU_FLAG_DATA,

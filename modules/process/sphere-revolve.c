@@ -255,6 +255,7 @@ sphrev_dialog(Sphrev1DArgs *args)
     row = gwy_radio_buttons_attach_to_table(controls.direction,
                                             GTK_TABLE(table), 4, row);
 
+    row += 3;
     controls.do_extract
         = gtk_check_button_new_with_mnemonic(_("E_xtract background"));
     gtk_table_attach(GTK_TABLE(table), controls.do_extract,

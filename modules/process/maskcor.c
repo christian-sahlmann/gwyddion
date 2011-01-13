@@ -24,10 +24,15 @@
 #include <libprocess/arithmetic.h>
 #include <libprocess/correlation.h>
 #include <libprocess/filters.h>
+#include <libprocess/grains.h>
+#include <libprocess/correct.h>
+#include <libprocess/stats.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <libgwydgets/gwycombobox.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
+
+#include <stdio.h>
 
 #define MASKCOR_RUN_MODES GWY_RUN_INTERACTIVE
 
@@ -311,6 +316,9 @@ maskcor_do(MaskcorArgs *args)
     GwyComputationState *state;
     GQuark quark;
     gint newid, work, wpi;
+    gint *grains, *maxpos, ngrains, i, j, k;
+    gdouble *rdata, *maxval, correction[8];
+    GwyDataLine *derdist;
 
     quark = gwy_app_get_data_key_for_id(args->kernel.id);
     kernel = GWY_DATA_FIELD(gwy_container_get_object(args->kernel.data, quark));
@@ -362,7 +370,8 @@ maskcor_do(MaskcorArgs *args)
         g_object_unref(score);
     }
     else {
-        /* add mask */
+        /* add mask and averages*/
+ 
         quark = gwy_app_get_mask_key_for_id(args->data.id);
         gwy_app_undo_qcheckpointv(args->data.data, 1, &quark);
         if (args->result == GWY_MASKCOR_OBJECTS)
@@ -370,11 +379,78 @@ maskcor_do(MaskcorArgs *args)
                             gwy_data_field_get_xres(kernel),
                             gwy_data_field_get_yres(kernel),
                             args->threshold);
-        else if (args->result == GWY_MASKCOR_MAXIMA)
+        else if (args->result == GWY_MASKCOR_MAXIMA) {
+            score = gwy_data_field_duplicate(retfield);
+            gwy_data_field_clear(score);
+ 
             gwy_data_field_threshold(retfield, args->threshold, 0.0, 1.0);
+            /*mask only on unique local maxima*/
+            grains = (gint *)g_malloc(gwy_data_field_get_xres(retfield)*gwy_data_field_get_yres(retfield)*sizeof(int));
+            for (i=0; i<(gwy_data_field_get_xres(retfield)*gwy_data_field_get_yres(retfield)); i++) grains[i] = 0;
+            rdata = gwy_data_field_get_data(retfield);
+            ngrains = gwy_data_field_number_grains(retfield, grains);
+            maxpos = (gint *) g_malloc(ngrains*sizeof(gint));
+            maxval = (gdouble *) g_malloc(ngrains*sizeof(gdouble));
+            for (i=0; i<ngrains; i++) maxval[i] = -G_MAXDOUBLE;
+            for (i=0; i<gwy_data_field_get_xres(retfield)*gwy_data_field_get_yres(retfield); i++)
+            {
+                if (grains[i]!=0) {
+                    if (maxval[grains[i]-1]<rdata[i]) {
+                        maxval[grains[i]-1]=rdata[i]; 
+                        maxpos[grains[i]-1]=i;
+                    }
+                }
+            }
 
-        gwy_container_set_object(args->data.data, quark, retfield);
-    }
+            for (i=0; i<(gwy_data_field_get_xres(retfield)*gwy_data_field_get_yres(retfield)); i++) 
+                rdata[i] = 0;
+            g_free(maxpos);
+            g_free(maxval);
+            g_free(grains);
+
+
+            for (i=0; i<ngrains; i++) { 
+                if (maxpos[i]<(gwy_data_field_get_xres(retfield)*gwy_data_field_get_yres(retfield)))
+                rdata[maxpos[i]] = 1; }
+
+            /*for nonzero positions, find average and put it to score*/
+            printf("%g %g\n", gwy_data_field_get_xreal(score), gwy_data_field_get_yreal(score));
+            printf("%d\n", ngrains);
+            
+            for (j=gwy_data_field_get_xres(kernel)/2; j<(gwy_data_field_get_xres(retfield)-gwy_data_field_get_xres(kernel)/2); j++)
+                for (k=gwy_data_field_get_yres(kernel)/2; k<(gwy_data_field_get_yres(retfield)-gwy_data_field_get_yres(kernel)/2); k++)
+                {
+                    if (gwy_data_field_get_val(retfield, j, k)!=0) {
+                        gwy_data_field_set_val(score, j, k, gwy_data_field_area_get_avg(dfield, NULL, 
+                                                                         j-gwy_data_field_get_xres(kernel)/2,
+                                                                         k-gwy_data_field_get_yres(kernel)/2,
+                                                                         gwy_data_field_get_xres(kernel),
+                                                                         gwy_data_field_get_yres(kernel)));
+
+                        printf("%g %g %g\n", gwy_data_field_itor(dfield, j), gwy_data_field_jtor(dfield, k), gwy_data_field_get_val(score, j, k));
+
+                        
+                    }
+                }
+
+          
+           gwy_container_set_object(args->data.data, quark, retfield);
+           
+           derdist = gwy_data_line_new(100, 100, 1);
+           gwy_data_field_slope_distribution(score, derdist, 0);
+           gwy_data_field_unrotate_find_corrections(derdist, correction);
+           printf("correction estimate : %g\n", correction[0]);
+
+           newid = gwy_app_data_browser_add_data_field(score, args->data.data,
+                                                    TRUE);
+           gwy_app_sync_data_items(args->data.data, args->data.data,
+                                args->data.id, newid, FALSE,
+                                GWY_DATA_ITEM_GRADIENT, 0);
+           gwy_app_set_data_field_title(args->data.data, newid,
+                                     _("Averages"));
+           g_object_unref(score);
+        }
+     }
     g_object_unref(retfield);
 }
 

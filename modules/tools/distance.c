@@ -54,6 +54,15 @@ struct _GwyToolDistance {
     GtkWidget *copy;
     GtkWidget *save;
 
+    GwyDataField *xerr;
+    GwyDataField *yerr;
+    GwyDataField *zerr;
+    GwyDataField *xunc;
+    GwyDataField *yunc;
+    GwyDataField *zunc;
+
+    gboolean has_calibration;
+
     /* potential class data */
     GwySIValueFormat *angle_format;
     GType layer_type_line;
@@ -263,6 +272,10 @@ gwy_tool_distance_data_switched(GwyTool *gwytool,
     GwyPlainTool *plain_tool;
     GwyToolDistance *tool;
     gboolean ignore;
+    gchar xukey[24];
+    gchar yukey[24];
+    gchar zukey[24];
+
 
     plain_tool = GWY_PLAIN_TOOL(gwytool);
     ignore = (data_view == plain_tool->data_view);
@@ -285,6 +298,20 @@ gwy_tool_distance_data_switched(GwyTool *gwytool,
         gwy_selection_set_max_objects(plain_tool->selection, NLINES);
     }
     gwy_tool_distance_update_headers(tool);
+
+    g_snprintf(xukey, sizeof(xukey), "/%d/cal_xunc", plain_tool->id);
+    g_snprintf(yukey, sizeof(yukey), "/%d/cal_yunc", plain_tool->id);
+    g_snprintf(zukey, sizeof(zukey), "/%d/cal_zunc", plain_tool->id);
+
+    if (gwy_container_gis_object_by_name(plain_tool->container, xukey, &(tool->xunc))
+        && gwy_container_gis_object_by_name(plain_tool->container, yukey, &(tool->yunc))
+        && gwy_container_gis_object_by_name(plain_tool->container, zukey, &(tool->zunc)))
+    {
+        tool->has_calibration = TRUE;
+    } else {
+        tool->has_calibration = FALSE;
+    }
+
 }
 
 static void
@@ -394,7 +421,9 @@ gwy_tool_distance_render_cell(GtkCellLayout *layout,
     gchar buf[32];
     gdouble line[4];
     gdouble val;
+    gdouble unc;
     guint idx, id;
+    gint x, y;
 
     id = GPOINTER_TO_UINT(g_object_get_data(G_OBJECT(layout), "id"));
     gtk_tree_model_get(model, iter, 0, &idx, -1);
@@ -407,21 +436,36 @@ gwy_tool_distance_render_cell(GtkCellLayout *layout,
     plain_tool = GWY_PLAIN_TOOL(tool);
     gwy_selection_get_object(plain_tool->selection, idx, line);
 
+
     switch (id) {
         case COLUMN_DX:
         vf = plain_tool->coord_format;
         val = line[2] - line[0];
+        if (tool->has_calibration) {
+            unc = gwy_data_field_get_dval_real(tool->xunc, line[0], line[1], GWY_INTERPOLATION_BILINEAR);
+            unc *= unc;
+            unc += gwy_data_field_get_dval_real(tool->xunc, line[2], line[3], GWY_INTERPOLATION_BILINEAR)
+                *gwy_data_field_get_dval_real(tool->xunc, line[2], line[3], GWY_INTERPOLATION_BILINEAR);
+            unc = sqrt(unc);
+        }
         break;
 
         case COLUMN_DY:
         vf = plain_tool->coord_format;
         val = line[3] - line[1];
-        break;
+        if (tool->has_calibration) {
+            unc = gwy_data_field_get_dval_real(tool->yunc, line[0], line[1], GWY_INTERPOLATION_BILINEAR);
+            unc *= unc;
+            unc += gwy_data_field_get_dval_real(tool->yunc, line[2], line[3], GWY_INTERPOLATION_BILINEAR)
+                *gwy_data_field_get_dval_real(tool->yunc, line[2], line[3], GWY_INTERPOLATION_BILINEAR);
+            unc = sqrt(unc);
+        }
+         break;
 
         case COLUMN_R:
         vf = plain_tool->coord_format;
         val = hypot(line[2] - line[0], line[3] - line[1]);
-        break;
+         break;
 
         case COLUMN_PHI:
         vf = tool->angle_format;
@@ -430,8 +474,6 @@ gwy_tool_distance_render_cell(GtkCellLayout *layout,
 
         case COLUMN_DZ:
         {
-            gint x, y;
-
             x = floor(gwy_data_field_rtoj(plain_tool->data_field, line[2]));
             y = floor(gwy_data_field_rtoi(plain_tool->data_field, line[3]));
             val = gwy_data_field_get_val(plain_tool->data_field, x, y);
@@ -439,6 +481,13 @@ gwy_tool_distance_render_cell(GtkCellLayout *layout,
             y = floor(gwy_data_field_rtoi(plain_tool->data_field, line[1]));
             val -= gwy_data_field_get_val(plain_tool->data_field, x, y);
             vf = plain_tool->value_format;
+            if (tool->has_calibration) {
+                unc = gwy_data_field_get_dval_real(tool->zunc, line[0], line[1], GWY_INTERPOLATION_BILINEAR);
+                unc *= unc;
+                unc += gwy_data_field_get_dval_real(tool->zunc, line[2], line[3], GWY_INTERPOLATION_BILINEAR)
+                    *gwy_data_field_get_dval_real(tool->zunc, line[2], line[3], GWY_INTERPOLATION_BILINEAR);
+                unc = sqrt(unc);
+            }
         }
         break;
 
@@ -447,11 +496,19 @@ gwy_tool_distance_render_cell(GtkCellLayout *layout,
         break;
     }
 
-    if (vf)
-        g_snprintf(buf, sizeof(buf), "%.*f", vf->precision, val/vf->magnitude);
-    else
-        g_snprintf(buf, sizeof(buf), "%.3g", val);
+    if (tool->has_calibration)
+    {
+        if (vf)
+            g_snprintf(buf, sizeof(buf), "%.*f±%.*f", vf->precision, val/vf->magnitude, vf->precision, unc/vf->magnitude);
+        else
+            g_snprintf(buf, sizeof(buf), "%.3g±%.3g", val, unc);
+    } else {
+        if (vf)
+            g_snprintf(buf, sizeof(buf), "%.*f", vf->precision, val/vf->magnitude);
+        else
+            g_snprintf(buf, sizeof(buf), "%.3g", val);
 
+    }
     g_object_set(renderer, "text", buf, NULL);
 }
 

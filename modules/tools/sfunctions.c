@@ -25,6 +25,7 @@
 #include <libgwymodule/gwymodule-tool.h>
 #include <libprocess/gwyprocesstypes.h>
 #include <libprocess/stats.h>
+#include <libprocess/stats_uncertainty.h>
 #include <libgwydgets/gwystock.h>
 #include <libgwydgets/gwycombobox.h>
 #include <libgwydgets/gwyradiobuttons.h>
@@ -67,6 +68,7 @@ typedef struct {
     gboolean fixres;
     GwyOrientation direction;
     GwyInterpolationType interpolation;
+    gboolean separate;
 } ToolArgs;
 
 struct _GwyToolSFunctions {
@@ -91,6 +93,15 @@ struct _GwyToolSFunctions {
     GtkWidget *interpolation_label;
     GtkWidget *update;
     GtkWidget *apply;
+    GtkWidget *separate;
+
+    gboolean has_calibration;
+    gboolean has_uline;
+    GwyDataLine *uline;
+    GwyDataField *xunc;
+    GwyDataField *yunc;
+    GwyDataField *zunc;
+
 
     /* potential class data */
     GType layer_type_rect;
@@ -129,6 +140,9 @@ static void gwy_tool_sfunctions_interpolation_changed(GtkComboBox *combo,
 static void gwy_tool_sfunctions_options_expanded     (GtkExpander *expander,
                                                       GParamSpec *pspec,
                                                       GwyToolSFunctions *tool);
+static void gwy_tool_sfunctions_separate_changed     (GtkToggleButton *check,
+                                                      GwyToolSFunctions *tool);
+
 static void gwy_tool_sfunctions_apply                (GwyToolSFunctions *tool);
 
 static GwyModuleInfo module_info = {
@@ -150,6 +164,7 @@ static const gchar interpolation_key[]   = "/module/sfunctions/interpolation";
 static const gchar options_visible_key[] = "/module/sfunctions/options_visible";
 static const gchar output_type_key[]     = "/module/sfunctions/output_type";
 static const gchar resolution_key[]      = "/module/sfunctions/resolution";
+static const gchar separate_key[]      = "/module/sfunctions/separate";
 
 static const ToolArgs default_args = {
     GWY_SF_DH,
@@ -159,6 +174,7 @@ static const ToolArgs default_args = {
     FALSE,
     GWY_ORIENTATION_HORIZONTAL,
     GWY_INTERPOLATION_LINEAR,
+    FALSE,
 };
 
 static const GwyEnum sf_types[] =  {
@@ -278,6 +294,7 @@ gwy_tool_sfunctions_init(GwyToolSFunctions *tool)
         = gwy_enum_sanitize_value(tool->args.direction, GWY_TYPE_ORIENTATION);
 
     tool->line = gwy_data_line_new(4, 1.0, FALSE);
+    tool->uline = gwy_data_line_new(4, 1.0, FALSE);
 
     gwy_plain_tool_connect_selection(plain_tool, tool->layer_type_rect,
                                      "rectangle");
@@ -406,6 +423,18 @@ gwy_tool_sfunctions_init_dialog(GwyToolSFunctions *tool)
     gtk_box_pack_end(GTK_BOX(hbox2), tool->interpolation, FALSE, FALSE, 0);
     row++;
 
+    tool->separate
+        = gtk_check_button_new_with_mnemonic(_("_Separate uncertainty"));
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(tool->separate),
+                                 tool->args.separate);
+    g_signal_connect(tool->separate, "toggled",
+                     G_CALLBACK(gwy_tool_sfunctions_separate_changed), tool);
+    gtk_table_attach(table, tool->separate,
+                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+
+    row++;
+
+
     tool->gmodel = gwy_graph_model_new();
 
     tool->graph = gwy_graph_new(tool->gmodel);
@@ -434,6 +463,10 @@ gwy_tool_sfunctions_data_switched(GwyTool *gwytool,
     GwyPlainTool *plain_tool;
     GwyToolSFunctions *tool;
     gboolean ignore;
+    gchar xukey[24];
+    gchar yukey[24];
+    gchar zukey[24];
+
 
     plain_tool = GWY_PLAIN_TOOL(gwytool);
     ignore = (data_view == plain_tool->data_view);
@@ -453,6 +486,36 @@ gwy_tool_sfunctions_data_switched(GwyTool *gwytool,
         gwy_selection_set_max_objects(plain_tool->selection, 1);
     }
 
+    g_snprintf(xukey, sizeof(xukey), "/%d/cal_xunc", plain_tool->id);
+    g_snprintf(yukey, sizeof(yukey), "/%d/cal_yunc", plain_tool->id);
+    g_snprintf(zukey, sizeof(zukey), "/%d/cal_zunc", plain_tool->id);
+
+    if (gwy_container_gis_object_by_name(plain_tool->container, xukey, &(tool->xunc))
+        && gwy_container_gis_object_by_name(plain_tool->container, yukey, &(tool->yunc))
+        && gwy_container_gis_object_by_name(plain_tool->container, zukey, &(tool->zunc)))
+    {
+        printf("Data have calibration\n");
+        tool->has_calibration = TRUE;
+        /*we need to resample uncertainties*/
+        tool->xunc = gwy_data_field_new_resampled(tool->xunc,
+                                                  gwy_data_field_get_xres(plain_tool->data_field),
+                                                  gwy_data_field_get_yres(plain_tool->data_field),
+                                                  GWY_INTERPOLATION_BILINEAR);
+        tool->yunc = gwy_data_field_new_resampled(tool->yunc,
+                                                  gwy_data_field_get_xres(plain_tool->data_field),
+                                                  gwy_data_field_get_yres(plain_tool->data_field),
+                                                  GWY_INTERPOLATION_BILINEAR);
+                                                   
+        tool->zunc = gwy_data_field_new_resampled(tool->zunc,
+                                                  gwy_data_field_get_xres(plain_tool->data_field),
+                                                  gwy_data_field_get_yres(plain_tool->data_field),
+                                                  GWY_INTERPOLATION_BILINEAR);
+ 
+    } else {
+        printf("Data don't have calibration\n");
+        tool->has_calibration = FALSE;
+    }
+
     gwy_tool_sfunctions_update_curve(tool);
 }
 
@@ -462,6 +525,8 @@ gwy_tool_sfunctions_response(GwyTool *tool,
 {
     GWY_TOOL_CLASS(gwy_tool_sfunctions_parent_class)->response(tool,
                                                                response_id);
+
+
 
     if (response_id == GTK_RESPONSE_APPLY)
         gwy_tool_sfunctions_apply(GWY_TOOL_SFUNCTIONS(tool));
@@ -529,8 +594,8 @@ static void
 gwy_tool_sfunctions_update_curve(GwyToolSFunctions *tool)
 {
     GwyPlainTool *plain_tool;
-    GwyGraphCurveModel *gcmodel;
-    gdouble sel[4];
+    GwyGraphCurveModel *gcmodel, *ugcmodel;
+    gdouble sel[4], *xdata, *ydata;
     gint isel[4] = { sizeof("Die, die, GCC!"), 0, 0, 0 };
     gint n, nsel, lineres, w = sizeof("Die, die, GCC!"), h = 0;
     const gchar *title, *xlabel, *ylabel;
@@ -571,6 +636,7 @@ gwy_tool_sfunctions_update_curve(GwyToolSFunctions *tool)
         return;
     }
 
+    tool->has_uline = FALSE;
     lineres = tool->args.fixres ? tool->args.resolution : -1;
     switch (tool->args.output_type) {
         case GWY_SF_DH:
@@ -580,6 +646,16 @@ gwy_tool_sfunctions_update_curve(GwyToolSFunctions *tool)
                                lineres);
         xlabel = "z";
         ylabel = "ρ";
+        if (tool->has_calibration) {
+            gwy_data_field_area_dh_uncertainty(plain_tool->data_field,
+                                           tool->zunc,
+                                           plain_tool->mask_field,
+                                           tool->uline,
+                                           isel[0], isel[1], w, h,
+                                           lineres);
+            tool->has_uline = TRUE;
+        }
+
         break;
 
         case GWY_SF_CDH:
@@ -589,6 +665,17 @@ gwy_tool_sfunctions_update_curve(GwyToolSFunctions *tool)
                                 lineres);
         xlabel = "z";
         ylabel = "D";
+       if (tool->has_calibration) {
+            gwy_data_field_area_cdh_uncertainty(plain_tool->data_field,
+                                           tool->zunc,
+                                           plain_tool->mask_field,
+                                           tool->uline,
+                                           isel[0], isel[1], w, h,
+                                           lineres);
+            tool->has_uline = TRUE;
+        }
+
+
         break;
 
         case GWY_SF_DA:
@@ -620,6 +707,18 @@ gwy_tool_sfunctions_update_curve(GwyToolSFunctions *tool)
                                 lineres);
         xlabel = "τ";
         ylabel = "G";
+        if (tool->has_calibration) {
+            gwy_data_field_area_acf_uncertainty(plain_tool->data_field,
+                                           tool->zunc,
+                                           tool->uline,
+                                           isel[0], isel[1], w, h,
+                                           tool->args.direction); 
+/*              gwy_data_field_acf_uncertainty(plain_tool->data_field, tool->zunc,
+                          tool->uline, tool->args.direction); */
+            tool->has_uline = TRUE;
+        }
+
+           
         break;
 
         case GWY_SF_HHCF:
@@ -631,6 +730,17 @@ gwy_tool_sfunctions_update_curve(GwyToolSFunctions *tool)
                                  lineres);
         xlabel = "τ";
         ylabel = "H";
+        if (tool->has_calibration) {
+            gwy_data_field_area_hhcf_uncertainty(plain_tool->data_field,
+                                           tool->zunc,
+                                           tool->uline,
+                                           isel[0], isel[1], w, h,
+                                           tool->args.direction); 
+      /*        gwy_data_field_hhcf_uncertainty(plain_tool->data_field, tool->zunc,
+                          tool->uline, tool->args.direction);*/
+            tool->has_uline = TRUE;
+        }
+
         break;
 
         case GWY_SF_PSDF:
@@ -697,25 +807,56 @@ gwy_tool_sfunctions_update_curve(GwyToolSFunctions *tool)
         break;
     }
 
+
     if (nsel > 0 && n == 0) {
         gcmodel = gwy_graph_curve_model_new();
         gwy_graph_model_add_curve(tool->gmodel, gcmodel);
         g_object_set(gcmodel, "mode", GWY_GRAPH_CURVE_LINE, NULL);
         g_object_unref(gcmodel);
+        
+        if (tool->has_calibration && tool->has_uline) {
+           ugcmodel = gwy_graph_curve_model_new();
+           gwy_graph_model_add_curve(tool->gmodel, ugcmodel);
+           g_object_set(ugcmodel, "mode", GWY_GRAPH_CURVE_LINE, NULL);
+           g_object_unref(ugcmodel);
+        }
     }
-    else
+    else {
         gcmodel = gwy_graph_model_get_curve(tool->gmodel, 0);
+        if (tool->has_calibration && tool->has_uline)
+           if (gwy_graph_model_get_n_curves(tool->gmodel)<2)
+           {
+               ugcmodel = gwy_graph_curve_model_new();
+               gwy_graph_model_add_curve(tool->gmodel, ugcmodel);
+               g_object_set(ugcmodel, "mode", GWY_GRAPH_CURVE_LINE, NULL);
+               g_object_unref(ugcmodel);
+           } 
+           else ugcmodel = gwy_graph_model_get_curve(tool->gmodel, 1);
+        else if (gwy_graph_model_get_n_curves(tool->gmodel)>1)
+           gwy_graph_model_remove_curve(tool->gmodel, 1);
+    }
+
 
     gwy_graph_curve_model_set_data_from_dataline(gcmodel, tool->line, 0, 0);
     title = gwy_enum_to_string(tool->args.output_type,
                                sf_types, G_N_ELEMENTS(sf_types));
+
     g_object_set(gcmodel, "description", title, NULL);
+    
+    if (tool->has_calibration && tool->has_uline)
+    {
+        gwy_graph_curve_model_set_data_from_dataline(ugcmodel, tool->uline, 0, 0);
+        g_object_set(ugcmodel, "description", "uncertainty", NULL);
+    } 
+
     g_object_set(tool->gmodel,
                  "title", title,
                  "axis-label-bottom", xlabel,
                  "axis-label-left", ylabel,
                  NULL);
+
     gwy_graph_model_set_units_from_data_line(tool->gmodel, tool->line);
+
 }
 
 static void
@@ -779,17 +920,50 @@ gwy_tool_sfunctions_options_expanded(GtkExpander *expander,
 }
 
 static void
+gwy_tool_sfunctions_separate_changed(GtkToggleButton *check,
+                                       GwyToolSFunctions *tool)
+{
+    tool->args.separate = gtk_toggle_button_get_active(check);
+}
+
+
+static void
 gwy_tool_sfunctions_apply(GwyToolSFunctions *tool)
 {
     GwyPlainTool *plain_tool;
-    GwyGraphModel *gmodel;
+    GwyGraphModel *gmodel, *ugmodel;
+    GwyGraphCurveModel *ugcmodel;
+    gchar *str, title[50];
 
     plain_tool = GWY_PLAIN_TOOL(tool);
     g_return_if_fail(plain_tool->selection);
 
     gmodel = gwy_graph_model_duplicate(tool->gmodel);
-    gwy_app_data_browser_add_graph_model(gmodel, plain_tool->container, TRUE);
+    if (tool->has_calibration && tool->has_uline && tool->args.separate 
+        && gwy_graph_model_get_n_curves(gmodel)==2)
+    {
+        ugmodel = gwy_graph_model_duplicate(tool->gmodel);
+        g_object_get(ugmodel,"title", &str, NULL);
+        g_snprintf(title, sizeof(title), "%s uncertainty", str);
+        g_object_set(ugmodel, "title", title, NULL);
+        g_free(str);
+
+        gwy_graph_model_remove_curve(ugmodel, 0);
+        gwy_graph_model_remove_curve(gmodel, 1);
+
+        gwy_app_data_browser_add_graph_model(gmodel, plain_tool->container, TRUE);
+        gwy_app_data_browser_add_graph_model(ugmodel, plain_tool->container, TRUE);
+        
+    }
+    else gwy_app_data_browser_add_graph_model(gmodel, plain_tool->container, TRUE);
+
+
+    g_object_unref(tool->xunc);
+    g_object_unref(tool->yunc);
+    g_object_unref(tool->zunc);
     g_object_unref(gmodel);
+
+
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

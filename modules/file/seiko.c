@@ -44,6 +44,7 @@
 
 #include "config.h"
 #include <string.h>
+#include <stdio.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwyutils.h>
 #include <libgwyddion/gwymath.h>
@@ -140,6 +141,8 @@ seiko_load(const gchar *filename,
     GError *err = NULL;
     GwyDataField *dfield = NULL;
 
+    printf("seikooooooo\n");
+
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
         err_GET_FILE_CONTENTS(error, &err);
         return NULL;
@@ -203,6 +206,8 @@ read_data_field(const guchar *buffer,
     endfile = gwy_get_guint32_le(&p);
     p = buffer + DATASTART_OFFSET;
     datastart = gwy_get_guint32_le(&p);
+    printf("version: %u, endfile: %u, datastart: %u\n",
+                         version, endfile, datastart);
     gwy_debug("version: %u, endfile: %u, datastart: %u",
               version, endfile, datastart);
 
@@ -211,6 +216,8 @@ read_data_field(const guchar *buffer,
 
     xres = (int)sqrt((endfile - datastart)/2 + 0.1);
     yres = xres;
+    printf("xres = yres: %d (%s)\n",
+                         xres, 2*xres*xres == endfile - datastart ? "OK" : "Not square!");
     gwy_debug("xres = yres: %d (%s)",
               xres, 2*xres*xres == endfile - datastart ? "OK" : "Not square!");
 

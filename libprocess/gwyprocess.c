@@ -64,10 +64,12 @@ gwy_process_type_init(void)
     g_type_class_peek(GWY_TYPE_DATA_FIELD);
     g_type_class_peek(GWY_TYPE_CDLINE);
     g_type_class_peek(GWY_TYPE_SPECTRA);
+    g_type_class_peek(GWY_TYPE_CALDATA);
     types_initialized = TRUE;
 
     _gwy_cdline_class_setup_presets();
     _gwy_grain_value_class_setup_presets();
+    _gwy_calibration_class_setup_presets();
     gwy_process_import_fftw_wisdom();
 }
 

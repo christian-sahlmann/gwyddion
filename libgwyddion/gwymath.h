@@ -95,6 +95,8 @@ gdouble  gwy_math_median               (gsize n,
                                         gdouble *array);
 void     gwy_math_sort                 (gsize n,
                                         gdouble *array);
+gdouble  gwy_math_median_uncertainty   (gsize n, gdouble *array, 
+                                        gdouble *uarray);
 
 G_END_DECLS
 

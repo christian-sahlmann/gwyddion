@@ -380,7 +380,7 @@ static void
 tip_model_dialog_update_controls(TipModelControls *controls,
                                  TipModelArgs *args)
 {
-    gboolean all_sensitive = FALSE, contact_sensitive = FALSE;
+    gboolean all_sensitive = FALSE, contact_sensitive = FALSE, radius_sensitive = FALSE;
 
     gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->type), args->type);
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->nsides),
@@ -398,9 +398,11 @@ tip_model_dialog_update_controls(TipModelControls *controls,
         case GWY_TIP_CONTACT:
         case GWY_TIP_NONCONTACT:
         contact_sensitive = TRUE;
+        radius_sensitive = TRUE;
         break;
 
         case GWY_TIP_DELTA:
+        radius_sensitive = TRUE;
         break;
 
         default:
@@ -410,9 +412,9 @@ tip_model_dialog_update_controls(TipModelControls *controls,
     gwy_table_hscale_set_sensitive(controls->angle, all_sensitive);
     gwy_table_hscale_set_sensitive(controls->theta, contact_sensitive);
     gwy_table_hscale_set_sensitive(controls->nsides, all_sensitive);
-    gtk_widget_set_sensitive(controls->radius_spin, contact_sensitive);
-    gtk_widget_set_sensitive(controls->radius_unit, contact_sensitive);
-    gtk_widget_set_sensitive(controls->radius_label, contact_sensitive);
+    gtk_widget_set_sensitive(controls->radius_spin, radius_sensitive);
+    gtk_widget_set_sensitive(controls->radius_unit, radius_sensitive);
+    gtk_widget_set_sensitive(controls->radius_label, radius_sensitive);
 }
 
 static void
