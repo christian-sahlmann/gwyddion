@@ -470,6 +470,7 @@ gwy_undo_qcheckpointv(GwyContainer *data,
 
     return level->id;
 }
+
 /**
  * gwy_app_undo_reuse_levels:
  * @level: An undo level with objects that have to be either duplicated or
@@ -932,6 +933,34 @@ gwy_undo_container_remove(GwyContainer *data,
 
     appundo->undo = gwy_undo_container_remove_from_list(appundo->undo, prefix);
     appundo->redo = gwy_undo_container_remove_from_list(appundo->redo, prefix);
+}
+
+/**
+ * gwy_app_undo_container_remove:
+ * @data: A data container managed by the data-browser.
+ * @prefix: Prefix to remove undo/redo information under.  Pass %NULL to remove
+ *          undo/redo information altogether.
+ *
+ * Removes undo/redo information for a data container.
+ *
+ * In addition to what gwy_undo_container_remove() does, this function takes
+ * care of updating application controls state.
+ *
+ * Since: 2.23
+ **/
+void
+gwy_app_undo_container_remove(GwyContainer *data,
+                              const gchar *prefix)
+{
+    GwyAppUndo *appundo;
+
+    gwy_undo_container_remove(data, prefix);
+    appundo = gwy_undo_get_for_data(data, FALSE);
+    if (!appundo)
+        return;
+    gwy_app_sensitivity_set_state(GWY_MENU_FLAG_UNDO | GWY_MENU_FLAG_REDO,
+                                  (appundo->undo ? GWY_MENU_FLAG_UNDO : 0)
+                                  | (appundo->redo ? GWY_MENU_FLAG_REDO : 0));
 }
 
 /**
