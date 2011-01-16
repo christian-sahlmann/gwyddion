@@ -37,6 +37,8 @@ gulong   gwy_app_undo_qcheckpointv        (GwyContainer *data,
                                            const GQuark *keys);
 void     gwy_app_undo_undo_container      (GwyContainer *data);
 void     gwy_app_undo_redo_container      (GwyContainer *data);
+void     gwy_app_undo_container_remove    (GwyContainer *data,
+                                           const gchar *prefix);
 
 gulong   gwy_undo_checkpoint              (GwyContainer *data,
                                            ...);
