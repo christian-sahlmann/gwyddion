@@ -50,8 +50,9 @@
 
 #include "err.h"
 
-#define Micrometre (1e-6)
-#define Nanometre (1e-9)
+#define Mili (1e-3)
+#define Micro (1e-6)
+#define Nano (1e-9)
 
 #define MAGIC1 "\nPixels in X:"
 #define MAGIC1_SIZE (sizeof(MAGIC1)-1)
@@ -112,13 +113,15 @@ wsf_load(const gchar *filename,
 {
     GwyContainer *container = NULL, *meta;
     GwyDataField *dfield = NULL;
-    gchar *line, *p, *header_end, *value, *header = NULL, *buffer = NULL;
+    gchar *line, *p, *header_end, *value, *title,
+          *header = NULL, *buffer = NULL;
     GwyTextHeaderParser parser;
     GHashTable *hash = NULL;
     gsize size;
     GError *err = NULL;
     gdouble xreal, yreal, q;
     gint i, xres, yres;
+    const gchar *zunit;
     gdouble *data;
 
     if (!g_file_get_contents(filename, &buffer, &size, &err)) {
@@ -169,15 +172,28 @@ wsf_load(const gchar *filename,
         g_warning("Real y size is 0.0, fixing to 1.0");
         yreal = 1.0;
     }
-    xreal *= Micrometre;
-    yreal *= Micrometre;
+    xreal *= Micro;
+    yreal *= Micro;
 
     dfield = gwy_data_field_new(xres, yres, xreal, yreal, FALSE);
     gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_xy(dfield), "m");
-    value = g_hash_table_lookup(hash, "Display Type");
-    // TODO: Set the units based on Display Type...
-    gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_z(dfield), "m");
-    q = Nanometre;
+    value = title = g_hash_table_lookup(hash, "Display Type");
+    if (gwy_stramong(value, "Z_DRIVE")) {
+        zunit = "m";
+        q = Nano;
+    }
+    else if (gwy_stramong(value, "Z_SENSE", "Z_ERR", "L-R", "T-B", "T+B",
+                          "Z_PHASE", "Z_AMPL", "Z_DRIVE", "Aux ADC 1",
+                          "Aux ADC 2", NULL)) {
+        zunit = "V";
+        q = Mili;
+    }
+    else {
+        g_warning("Unknown type %s, cannot determine units.", value);
+        zunit = NULL;
+        q = 1.0;
+    }
+    gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_z(dfield), zunit);
 
     data = gwy_data_field_get_data(dfield);
     value = p = header_end;
@@ -191,7 +207,8 @@ wsf_load(const gchar *filename,
     gwy_container_set_object(container, gwy_app_get_data_key_for_id(0), dfield);
     g_object_unref(dfield);
 
-    gwy_app_channel_title_fall_back(container, 0);
+    gwy_container_set_string_by_name(container, "/0/data/title",
+                                     g_strdup(title));
 
     if ((meta = wsf_get_meta(hash))) {
         gwy_container_set_object_by_name(container, "/0/meta", meta);
