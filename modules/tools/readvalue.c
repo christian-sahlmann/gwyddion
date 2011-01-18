@@ -390,19 +390,20 @@ gwy_tool_read_value_data_switched(GwyTool *gwytool,
                                 NULL);
         gwy_selection_set_max_objects(plain_tool->selection, 1);
         gwy_tool_read_value_update_units(tool);
-    }
 
-    g_snprintf(xukey, sizeof(xukey), "/%d/cal_xunc", plain_tool->id);
-    g_snprintf(yukey, sizeof(yukey), "/%d/cal_yunc", plain_tool->id);
-    g_snprintf(zukey, sizeof(zukey), "/%d/cal_zunc", plain_tool->id);
 
-    if (gwy_container_gis_object_by_name(plain_tool->container, xukey, &(tool->xunc))
-        && gwy_container_gis_object_by_name(plain_tool->container, yukey, &(tool->yunc))
-        && gwy_container_gis_object_by_name(plain_tool->container, zukey, &(tool->zunc)))
-    {
-        tool->has_calibration = TRUE;
-    } else {
-        tool->has_calibration = FALSE;
+        g_snprintf(xukey, sizeof(xukey), "/%d/cal_xunc", plain_tool->id);
+        g_snprintf(yukey, sizeof(yukey), "/%d/cal_yunc", plain_tool->id);
+        g_snprintf(zukey, sizeof(zukey), "/%d/cal_zunc", plain_tool->id);
+
+        if (gwy_container_gis_object_by_name(plain_tool->container, xukey, &(tool->xunc))
+            && gwy_container_gis_object_by_name(plain_tool->container, yukey, &(tool->yunc))
+            && gwy_container_gis_object_by_name(plain_tool->container, zukey, &(tool->zunc)))
+        {
+            tool->has_calibration = TRUE;
+        } else {
+            tool->has_calibration = FALSE;
+        }
     }
 }
 
