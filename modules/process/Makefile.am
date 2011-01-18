@@ -39,7 +39,6 @@ process_LTLIBRARIES = \
 	laplace.la \
 	level.la \
 	linecorrect.la \
-	lno_synth.la \
 	local_contrast.la \
 	mark_with.la \
 	maskcor.la \
@@ -133,7 +132,6 @@ indent_analyze_la_SOURCES      = indent_analyze.c
 laplace_la_SOURCES             = laplace.c
 level_la_SOURCES               = level.c
 linecorrect_la_SOURCES         = linecorrect.c
-lno_synth_la_SOURCES           = lno_synth.c dimensions.h synth.h
 local_contrast_la_SOURCES      = local_contrast.c
 mark_with_la_SOURCES           = mark_with.c
 maskcor_la_SOURCES             = maskcor.c

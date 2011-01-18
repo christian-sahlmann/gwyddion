@@ -1212,15 +1212,16 @@ deposit_synth_do(const DepositSynthArgs *args,
                 ii++;
                 too_close = 0;
 
+                rdisizes[ndata] = size;
                 rxv = ((gdouble)xpos*oxreal/(gdouble)oxres); 
                 ryv = ((gdouble)ypos*oyreal/(gdouble)oyres);
-                rzv = gwy_data_field_get_val(zlfield, xpos, ypos) + 5*size;
+                rzv = gwy_data_field_get_val(zlfield, xpos, ypos)+ rdisizes[ndata];// + 5*size; 
 
                 for (k=0; k<ndata; k++)
                 {
                     if (((rxv-rx[k])*(rxv-rx[k])
                          + (ryv-ry[k])*(ryv-ry[k])
-                         + (rzv-rz[k])*(rzv-rz[k]))<(4.0*size*size))
+                         + (rzv-rz[k])*(rzv-rz[k]))<(4.0*size*size)) 
                     {
                         too_close = 1;
                         break;
@@ -1238,7 +1239,7 @@ deposit_synth_do(const DepositSynthArgs *args,
                 rx[ndata] = rxv;
                 ry[ndata] = ryv;
                 rz[ndata] = rzv;
-                vz[ndata] = -0.005;
+                vz[ndata] = 0;//-0.005;
                 ndata++;
                 nloc++;
 
