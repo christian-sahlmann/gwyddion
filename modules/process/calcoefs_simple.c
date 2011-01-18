@@ -151,7 +151,6 @@ find_next(gdouble *xs, gdouble *ys, gdouble *pxs, gdouble *pys, gint *is_indexed
           gint present_xs, gint present_pxs, gint ncol, gint nrow, gint n, gint *nind, 
           gdouble *avs, gint *navs);
 
-static const gchar default_expression[] = "d1 - d2";
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -723,7 +722,6 @@ simple_do(SimpleArgs *args)
     GQuark quark;
 
     xxshift = xyshift = yxshift = yyshift =  0;
-    printf("starting, threshold = %g\n", args->threshold);
 
     data = args->objects[0].data;
     quark = gwy_app_get_data_key_for_id(args->objects[0].id);
@@ -747,7 +745,6 @@ simple_do(SimpleArgs *args)
     index_col = (gint *)g_malloc(noriginal*sizeof(gint));
     index_row = (gint *)g_malloc(noriginal*sizeof(gint));
        
-    //printf("%d object locations in original\n", noriginal);
     for (i=0; i<noriginal; i++)
     {
         is_indexed[i] = 0;
@@ -763,7 +760,6 @@ simple_do(SimpleArgs *args)
             tl = i;
         }
     }
-    //printf("center object of field (%d %d) is %g %g\n", xres, yres, xs[tl], ys[tl]);
 
     //determine initial xdiff and ydiff for col and row
     nextmin = G_MAXDOUBLE;
@@ -776,7 +772,6 @@ simple_do(SimpleArgs *args)
             xyshift = ys[next] - ys[tl];
         }
     }
-    //printf("x shifts %g %g\n", xxshift, xyshift);
 
     nextmin = G_MAXDOUBLE;
     for (i=0; i<noriginal; i++) {
@@ -788,7 +783,6 @@ simple_do(SimpleArgs *args)
             yyshift = ys[next] - ys[tl];
         }
     }
-    //printf("y shifts %g %g\n", yxshift, yyshift);
 
 
     nind = 0;

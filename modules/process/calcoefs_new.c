@@ -18,7 +18,6 @@
  */
 
 #include "config.h"
-#include <stdio.h>
 #include <string.h>
 #include <gtk/gtk.h>
 #include <glib/gstdio.h>
@@ -189,24 +188,6 @@ module_register(void)
     return TRUE;
 }
 
-
-/*
-static void
-debugcal(GwyCalData *caldata)
-{
-    gint i;
-
-    printf("######## Calibration data: ###########\n");
-    printf("%d data, range %g %g %g x %g %g %g", caldata->ndata, 
-           caldata->x_from, caldata->y_from, caldata->z_from, 
-           caldata->x_to, caldata->y_to, caldata->z_to);
-    for (i=0; i<caldata->ndata; i++)
-    {
-        printf("%d   %g %g %g   %g %g %g    %g %g %g\n", i, caldata->x[i], caldata->y[i], caldata->z[i], 
-               caldata->xerr[i], caldata->yerr[i], caldata->zerr[i], caldata->xunc[i], caldata->yunc[i], caldata->zunc[i]);
-    }
-
-} */
 
 static void
 cnew(GwyContainer *data, GwyRunType run)
@@ -663,7 +644,7 @@ cnew_dialog(CNewArgs *args,
                                                  GTK_DIALOG_DESTROY_WITH_PARENT,
                                                  GTK_MESSAGE_WARNING,
                                                  GTK_BUTTONS_CANCEL,
-                                                 "Calibration '%s' alerady exists",
+                                                 "Calibration '%s' already exists",
                                                  args->name);
                 gtk_dialog_add_button(GTK_DIALOG(dialog2), "Overwrite", RESPONSE_DUPLICATE_OVERWRITE);
                 gtk_dialog_add_button(GTK_DIALOG(dialog2), "Append", RESPONSE_DUPLICATE_APPEND);
@@ -1028,11 +1009,21 @@ zmult_changed_cb(GtkAdjustment *adj,
 
 
 static const gchar xrange_from_key[]    = "/module/cnew/xrange_from";
+static const gchar xrange_to_key[]    = "/module/cnew/xrange_to";
+static const gchar yrange_from_key[]    = "/module/cnew/yrange_from";
+static const gchar yrange_to_key[]    = "/module/cnew/yrange_to";
+static const gchar zrange_from_key[]    = "/module/cnew/zrange_from";
+static const gchar zrange_to_key[]    = "/module/cnew/zrange_to";
 
 static void
 cnew_sanitize_args(CNewArgs *args)
 {
     args->xrange_from = CLAMP(args->xrange_from, -1e7, 1e7);
+    args->xrange_to = CLAMP(args->xrange_to, -1e7, 1e7);
+    args->yrange_from = CLAMP(args->yrange_from, -1e7, 1e7);
+    args->yrange_to = CLAMP(args->yrange_to, -1e7, 1e7);
+    args->zrange_from = CLAMP(args->zrange_from, -1e7, 1e7);
+    args->zrange_to = CLAMP(args->zrange_to, -1e7, 1e7);
 }
 
 static void
@@ -1042,6 +1033,12 @@ cnew_load_args(GwyContainer *container,
     *args = cnew_defaults;
 
     gwy_container_gis_double_by_name(container, xrange_from_key, &args->xrange_from);
+    gwy_container_gis_double_by_name(container, xrange_to_key, &args->xrange_to);
+    gwy_container_gis_double_by_name(container, yrange_from_key, &args->yrange_from);
+    gwy_container_gis_double_by_name(container, yrange_to_key, &args->yrange_to);
+    gwy_container_gis_double_by_name(container, zrange_from_key, &args->zrange_from);
+    gwy_container_gis_double_by_name(container, zrange_to_key, &args->zrange_to);
+
     cnew_sanitize_args(args);
 }
 
@@ -1050,6 +1047,12 @@ cnew_save_args(GwyContainer *container,
               CNewArgs *args)
 {
     gwy_container_set_double_by_name(container, xrange_from_key, args->xrange_from);
+    gwy_container_set_double_by_name(container, xrange_to_key, args->xrange_to);
+    gwy_container_set_double_by_name(container, yrange_from_key, args->yrange_from);
+    gwy_container_set_double_by_name(container, yrange_to_key, args->yrange_to);
+    gwy_container_set_double_by_name(container, zrange_from_key, args->zrange_from);
+    gwy_container_set_double_by_name(container, zrange_to_key, args->zrange_to);
+
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

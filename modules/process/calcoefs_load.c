@@ -18,7 +18,6 @@
  */
 
 #include "config.h"
-#include <stdio.h>
 #include <string.h>
 #include <gtk/gtk.h>
 #include <glib/gstdio.h>
@@ -100,24 +99,6 @@ module_register(void)
 
     return TRUE;
 }
-
-/*
-static void
-debugcal(GwyCalData *caldata)
-{
-    gint i;
-
-    printf("######## Calibration data: ###########\n");
-    printf("%d data, range %g %g %g x %g %g %g", caldata->ndata,
-           caldata->x_from, caldata->y_from, caldata->z_from,
-           caldata->x_to, caldata->y_to, caldata->z_to);
-    for (i=0; i<caldata->ndata; i++)
-    {
-        printf("%d   %g %g %g   %g %g %g    %g %g %g\n", i, caldata->x[i], caldata->y[i], caldata->z[i],
-               caldata->xerr[i], caldata->yerr[i], caldata->zerr[i], caldata->xunc[i], caldata->yunc[i], caldata->zunc[i]);
-    }
-
-}*/
 
 
 static void
@@ -354,7 +335,7 @@ cload_dialog_update(CLoadControls *controls,
 static void
 load_caldata(CLoadControls *controls)
 {
-    GtkWidget *dialog;
+    GtkWidget *dialog, *msgdialog;
     gchar *filename;
     GwyCalData *caldata = controls->args->caldata;
     FILE *fr;
@@ -376,6 +357,15 @@ load_caldata(CLoadControls *controls)
         filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (dialog));
         fr = fopen(filename, "r");
         if (!fr) { printf("Error: no file open\n");
+            msgdialog = gtk_message_dialog_new (dialog,
+                                             GTK_DIALOG_DESTROY_WITH_PARENT,
+                                             GTK_MESSAGE_ERROR,
+                                             GTK_BUTTONS_CLOSE,
+                                             "Error loading file '%s': %s",
+                                             filename, g_strerror (errno));
+            gtk_dialog_run(GTK_DIALOG(msgdialog));
+            gtk_widget_destroy(msgdialog);
+            gtk_widget_destroy(dialog);
         } else {
             
             fscanf(fr, "%d", &ndata);
@@ -386,7 +376,6 @@ load_caldata(CLoadControls *controls)
             fscanf(fr, "%lf", &zfrom);
             fscanf(fr, "%lf", &zto);
 
-            //printf("loading %d caldata\n", ndata);
             caldata = gwy_caldata_new(ndata);    //FIXME free it somewhere if allocated previously
             caldata->ndata = ndata;
             caldata->x_from = xfrom;
@@ -422,14 +411,9 @@ load_caldata(CLoadControls *controls)
                 caldata->xunc[i] = xunc;
                 caldata->yunc[i] = yunc;
                 caldata->zunc[i] = zunc;
-               /* printf("adding %g %g %g  %g %g %g   %g %g %g\n",
-                       caldata->x[i], caldata->y[i], caldata->z[i],
-                       caldata->xerr[i], caldata->yerr[i], caldata->zerr[i],
-                       caldata->xunc[i], caldata->yunc[i], caldata->zunc[i]);*/
               }
             
             fclose(fr);
-            //printf("done.\n");
             g_snprintf(text, sizeof(text), "Loaded %d data points", caldata->ndata);
             gtk_label_set_text(GTK_LABEL(controls->text), text);
         }

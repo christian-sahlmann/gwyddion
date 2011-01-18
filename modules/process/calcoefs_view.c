@@ -19,7 +19,6 @@
  */
 
 #include "config.h"
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
@@ -218,7 +217,7 @@ static GwyModuleInfo module_info = {
     "Petr Klapetek <petr@klapetek.cz>",
     "1.0",
     "David Nečas (Yeti) & Petr Klapetek",
-    "2008",
+    "2010",
 };
 
 GWY_MODULE_QUERY(module_info)
@@ -558,11 +557,9 @@ cc_view_dialog(CCViewArgs *args,
             case GTK_RESPONSE_OK:
             if (!args->computed || !args->crop)
             {
-                //printf("recomputing for crop\n");
                 args->crop = TRUE;
                 args->computed = FALSE;
                 update_view(&controls, args);
-                //printf("done\n");
             }
             cc_view_do(&controls);
             break;
@@ -579,7 +576,6 @@ cc_view_dialog(CCViewArgs *args,
 
     args->calibration = gtk_combo_box_get_active(GTK_COMBO_BOX(controls.calibration));
     calibration = gwy_inventory_get_nth_item(inventory, args->calibration);
-   // printf("Applying %d %s %s\n", calibration->ndata, calibration->filename, GWY_RESOURCE(calibration)->name->str);
 
     gtk_widget_destroy(dialog);
     cc_view_dialog_abandon(&controls);
@@ -631,13 +627,10 @@ update_view(CCViewControls *controls, CCViewArgs *args)
         }
 
     } else {
-        /*output something?*/
-        //printf("update view: no calibration data\n");
         caldata = NULL;
         calibration = NULL;
         return;
     }
-    //printf("updating view\n");
 
     /*FIXME determine maximum necessary size of field*/
     xres = 200; 
@@ -647,20 +640,16 @@ update_view(CCViewControls *controls, CCViewArgs *args)
     if (!caldata) {
         gwy_data_field_fill(viewfield, 0);
         gwy_data_field_data_changed(viewfield);
-        //printf("update view: no calibration data\n");
         return;
     }
  
-   printf("ac %d\n", args->computed); 
 
     if (!args->computed) {
         gwy_app_wait_start(GTK_WINDOW(controls->dialog), "Building mesh...\n");
 
         if (args->interpolation_type == GWY_CC_VIEW_INTERPOLATION_NATURAL)
         {
-            //printf("setup interpolation\n");
             gwy_caldata_setup_interpolation(caldata);
-            //printf("done\n");
         }
         run = gwy_app_wait_set_message("Triangulation...\n");
         run = gwy_app_wait_set_fraction(0);
@@ -864,7 +853,6 @@ brutal_search(GwyCalData *caldata, gdouble x, gdouble y, gdouble z, gdouble radi
         splane = caldata->z[smallest];
         snap = 1;
     }
-  //  printf("plane: %g\n", splane);
 
     for (i=0; i<caldata->ndata; i++)
     {
@@ -915,7 +903,6 @@ get_value(GwyCalData *caldata, gdouble x, gdouble y, gdouble z,
 
     if (!caldata) {/*printf("no caldata!\n");*/ return;}
 
-    //printf("request for point %g %g %g\n", x, y, z);
 
     if (snap_type == GWY_CC_VIEW_INTERPOLATION_NATURAL)
     gwy_caldata_interpolate(caldata, x, y, z, xerr, yerr, zerr, xunc, yunc, zunc);
