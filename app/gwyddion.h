@@ -66,6 +66,7 @@ void       gwy_app_splash_start             (gboolean visible);
 void       gwy_app_splash_finish            (void);
 void       gwy_app_splash_set_message       (const gchar *message);
 void       gwy_app_splash_set_message_prefix(const gchar *prefix);
+gboolean   gwy_app_gl_disabled              (void);
 
 G_END_DECLS
 

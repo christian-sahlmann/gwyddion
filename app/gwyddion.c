@@ -52,6 +52,7 @@ typedef struct {
     gboolean startup_time;
     gboolean check;
     gboolean log_to_file;
+    gboolean disable_gl;
     GwyAppRemoteType remote;
 } GwyAppOptions;
 
@@ -81,7 +82,8 @@ static void gwy_app_check_version           (void);
 static void sneaking_thread_init            (void);
 
 static GwyAppOptions app_options = {
-    FALSE, FALSE, FALSE, FALSE, LOG_TO_FILE_DEFAULT, GWY_APP_REMOTE_NONE,
+    FALSE, FALSE, FALSE, FALSE, LOG_TO_FILE_DEFAULT, FALSE,
+    GWY_APP_REMOTE_NONE,
 };
 
 int
@@ -292,6 +294,10 @@ process_preinit_options(int *argc,
                 options->log_to_file = FALSE;
                 continue;
             }
+            if (gwy_strequal((*argv)[i], "--disable-gl")) {
+                options->disable_gl = TRUE;
+                continue;
+            }
             if (gwy_strequal((*argv)[i], "--check")) {
                 options->check = TRUE;
                 continue;
@@ -320,6 +326,7 @@ print_help(void)
 "     --remote-new           Load FILES to a running instance or run a new one.\n"
 "     --remote-existing      Load FILES to a running instance or fail.\n"
 "     --check                Check FILES, print problems and terminate.\n"
+"     --disable-gl           Disable OpenGL, including any availability checks.\n"
 "     --log-to-file          Redirect messages file set in GWYDDION_LOGFILE.\n"
 "     --no-log-to-file       Print messages to console.\n"
 "     --debug-objects        Catch leaking objects (devel only).\n"
@@ -570,8 +577,9 @@ gwy_app_init(int *argc,
     if (sizeof(GWY_VERSION_STRING) > 9)
         g_log_set_always_fatal(G_LOG_LEVEL_CRITICAL);
     g_set_application_name(PACKAGE_NAME);
-    gwy_app_gl_init(argc, argv);
-    /* XXX: These reference are never released. */
+    if (!gwy_app_gl_disabled())
+        gwy_app_gl_init(argc, argv);
+    /* XXX: These references are never released. */
     gwy_data_window_class_set_tooltips(gwy_app_get_tooltips());
     gwy_3d_window_class_set_tooltips(gwy_app_get_tooltips());
     gwy_graph_window_class_set_tooltips(gwy_app_get_tooltips());
@@ -636,6 +644,12 @@ sneaking_thread_init(void)
         gwy_debug("Cannot find symbol g_thread_init.");
     }
     g_module_close(main_module);
+}
+
+gboolean
+gwy_app_gl_disabled(void)
+{
+    return app_options.disable_gl;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

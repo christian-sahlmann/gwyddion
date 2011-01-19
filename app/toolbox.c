@@ -1118,24 +1118,30 @@ gwy_app_gl_view_maybe_cb(void)
     dialog = gtk_message_dialog_new(NULL, 0, GTK_MESSAGE_INFO,
                                     GTK_BUTTONS_CLOSE,
                                     _("OpenGL 3D graphics not available"));
+#ifdef GWYDDION_HAS_OPENGL
+    if (gwy_app_gl_disabled()) {
+        gtk_message_dialog_format_secondary_markup
+            (GTK_MESSAGE_DIALOG(dialog),
+             _("OpenGL was disabled with a command-line option."));
+    }
+    else {
+        gtk_message_dialog_format_secondary_markup
+            (GTK_MESSAGE_DIALOG(dialog),
+             /* FIXME: Makes sense only on Unix */
+             /* FIXME: It would be nice to give a more helpful message, but the
+              * trouble is we don't know why the silly thing failed either. */
+             _("Initialization of OpenGL failed.  Check output of "
+               "<tt>glxinfo</tt> and warning messages printed to console "
+               "during Gwyddion startup."));
+    }
+#else
     gtk_message_dialog_format_secondary_markup
         (GTK_MESSAGE_DIALOG(dialog),
-#ifdef GWYDDION_HAS_OPENGL
-         /* FIXME: Makes sense only on Unix */
-         /* FIXME: It would be nice to give a more helpful message, but the
-          * trouble is we don't know why the silly thing failed either. */
-         _("Initialization of OpenGL failed.  Check output of "
-           "<tt>glxinfo</tt> and warning messages printed to console during "
-           "Gwyddion startup.")
-#else
-         _("This version of Gwyddion was built without OpenGL support.")
+         _("This version of Gwyddion was built without OpenGL support."));
 #endif
-        );
     g_signal_connect(dialog, "response", G_CALLBACK(gtk_widget_destroy), NULL);
     g_object_add_weak_pointer(G_OBJECT(dialog), (gpointer*)&dialog);
     gtk_widget_show(dialog);
 }
-
-
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
