@@ -351,7 +351,7 @@ cc_view_dialog(CCViewArgs *args,
     store = gwy_inventory_store_new(inventory);
     controls.calibration = gtk_combo_box_new_with_model(GTK_TREE_MODEL(store));
     renderer = gtk_cell_renderer_text_new();
-    g_signal_connect_swapped(renderer, "edited",  //FIXME, use another signal
+    g_signal_connect_swapped(controls.calibration, "changed",  
                              G_CALLBACK(calibration_changed_cb),
                              &controls);
     gtk_cell_layout_pack_start(GTK_CELL_LAYOUT(controls.calibration), renderer, FALSE);
@@ -1103,6 +1103,7 @@ settings_changed(CCViewControls *controls)
 static void    
 calibration_changed_cb(CCViewControls *controls)
 {
+    controls->args->computed = FALSE;
     if (controls->args->update)
         update_view(controls, controls->args);
 }
