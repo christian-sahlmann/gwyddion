@@ -392,9 +392,9 @@ gwy_tool_read_value_data_switched(GwyTool *gwytool,
         gwy_tool_read_value_update_units(tool);
 
 
-        g_snprintf(xukey, sizeof(xukey), "/%d/cal_xunc", plain_tool->id);
-        g_snprintf(yukey, sizeof(yukey), "/%d/cal_yunc", plain_tool->id);
-        g_snprintf(zukey, sizeof(zukey), "/%d/cal_zunc", plain_tool->id);
+        g_snprintf(xukey, sizeof(xukey), "/%d/data/cal_xunc", plain_tool->id);
+        g_snprintf(yukey, sizeof(yukey), "/%d/data/cal_yunc", plain_tool->id);
+        g_snprintf(zukey, sizeof(zukey), "/%d/data/cal_zunc", plain_tool->id);
 
         if (gwy_container_gis_object_by_name(plain_tool->container, xukey, &(tool->xunc))
             && gwy_container_gis_object_by_name(plain_tool->container, yukey, &(tool->yunc))

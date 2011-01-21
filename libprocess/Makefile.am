@@ -11,7 +11,6 @@ endif
 
 libgwyprocess2include_HEADERS = \
 	arithmetic.h \
-        delaunay.h \
         natural.h \
 	cdline.h \
 	correct.h \
@@ -90,7 +89,6 @@ libgwyprocess2_la_LIBADD = $(libgwyprocess_libadd)
 
 libgwyprocess2_la_SOURCES = \
 	arithmetic.c \
-        delaunay.c \
         natural.c \
 	cdline.c \
 	correct.c \

@@ -486,7 +486,16 @@ _gwy_app_analyse_data_key(const gchar *strkey,
         *type = KEY_IS_MASK_COLOR;
         n += strlen("mask/");
     }
-    else if (gwy_strequal(s, "meta"))
+    else if (gwy_strequal(s, "data/cal_xunc")
+             || gwy_strequal(s, "data/cal_yunc")
+             || gwy_strequal(s, "data/cal_zunc")
+             || gwy_strequal(s, "data/cal_xerr")
+             || gwy_strequal(s, "data/cal_yerr")
+             || gwy_strequal(s, "data/cal_zerr")) {
+        *type = KEY_IS_CALDATA;
+        n += strlen("data/");
+    }
+     else if (gwy_strequal(s, "meta"))
         *type = KEY_IS_META;
     else if (gwy_strequal(s, "data/realsquare"))
         *type = KEY_IS_REAL_SQUARE;
@@ -1225,6 +1234,24 @@ gwy_app_data_proxy_item_changed(GwyContainer *data,
             pageno = -1;
         break;
 
+        case KEY_IS_CALDATA:
+        gwy_container_gis_object(data, quark, &object);
+        pageno = PAGE_CHANNELS;
+        list = &proxy->lists[pageno];
+        found = gwy_app_data_proxy_find_object(list->store, id, &iter);
+        if (found) {
+            gwy_list_store_row_changed(proxy->lists[PAGE_CHANNELS].store,
+                                       &iter, NULL, -1);
+            gtk_tree_model_get(GTK_TREE_MODEL(list->store), &iter,
+                               MODEL_WIDGET, &data_view,
+                               -1);
+        }
+        /* Prevent thumbnail update */
+        if (!found)
+            pageno = -1;
+        break;
+
+
         case KEY_IS_SHOW:
         gwy_container_gis_object(data, quark, &object);
         pageno = PAGE_CHANNELS;
@@ -1747,7 +1774,7 @@ gwy_app_data_browser_channel_render_flags(G_GNUC_UNUSED GtkTreeViewColumn *colum
     has_mask = gwy_container_contains_by_name(data, key);
     g_snprintf(key, sizeof(key), "/%d/show", channel);
     has_show = gwy_container_contains_by_name(data, key);
-    g_snprintf(key, sizeof(key), "/%d/cal_zunc", channel); //FIXME, all the fields should be present
+    g_snprintf(key, sizeof(key), "/%d/data/cal_zunc", channel); //FIXME, all the fields should be present
     has_cal = gwy_container_contains_by_name(data, key);
 
 
@@ -3457,7 +3484,19 @@ gwy_app_data_browser_delete_object(GwyAppDataProxy *proxy,
             gwy_container_remove_by_prefix(data, key);
             g_snprintf(key, sizeof(key), "/%d/3d", i);
             gwy_container_remove_by_prefix(data, key);
-        }
+            g_snprintf(key, sizeof(key), "/%d/cal_xunc", i);
+            gwy_container_remove_by_prefix(data, key);
+            g_snprintf(key, sizeof(key), "/%d/cal_yunc", i);
+            gwy_container_remove_by_prefix(data, key);
+            g_snprintf(key, sizeof(key), "/%d/cal_zunc", i);
+            gwy_container_remove_by_prefix(data, key);
+            g_snprintf(key, sizeof(key), "/%d/cal_xerr", i);
+            gwy_container_remove_by_prefix(data, key);
+            g_snprintf(key, sizeof(key), "/%d/cal_yerr", i);
+            gwy_container_remove_by_prefix(data, key);
+            g_snprintf(key, sizeof(key), "/%d/cal_zerr", i);
+            gwy_container_remove_by_prefix(data, key);
+             }
         break;
 
         case PAGE_GRAPHS:

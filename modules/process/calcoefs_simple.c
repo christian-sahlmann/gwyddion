@@ -169,7 +169,7 @@ module_register(void)
 {
     gwy_process_func_register("simple",
                               (GwyProcessFunc)&simple,
-                              N_("/Cali_bration/_3D calibration/_Get simple errop map..."),
+                              N_("/Cali_bration/_Get simple errop map..."),
                               NULL,
                               SIMPLE_RUN_MODES,
                               GWY_MENU_FLAG_DATA,

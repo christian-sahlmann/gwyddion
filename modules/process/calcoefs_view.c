@@ -171,6 +171,7 @@ static void         update_view            (CCViewControls *controls,
                                             CCViewArgs *args);
 static void         settings_changed       (CCViewControls *controls);
 static void         crop_change_cb         (CCViewControls *controls);
+static void         calibration_changed_cb (CCViewControls *controls);
 static void         update_change_cb       (CCViewControls *controls);
 static void         brutal_search          (GwyCalData *caldata, 
                                             gdouble x, 
@@ -227,7 +228,7 @@ module_register(void)
 {
     gwy_process_func_register("cc_view",
                               (GwyProcessFunc)&cc_view,
-                              N_("/Cali_bration/_3D calibration/Apply to data..."),
+                              N_("/Cali_bration/_Apply to data..."),
                               NULL,
                               CC_VIEW_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
@@ -350,6 +351,9 @@ cc_view_dialog(CCViewArgs *args,
     store = gwy_inventory_store_new(inventory);
     controls.calibration = gtk_combo_box_new_with_model(GTK_TREE_MODEL(store));
     renderer = gtk_cell_renderer_text_new();
+    g_signal_connect_swapped(renderer, "edited",  //FIXME, use another signal
+                             G_CALLBACK(calibration_changed_cb),
+                             &controls);
     gtk_cell_layout_pack_start(GTK_CELL_LAYOUT(controls.calibration), renderer, FALSE);
     gtk_cell_layout_add_attribute(GTK_CELL_LAYOUT(controls.calibration), renderer,
                                   "text", 1);
@@ -749,6 +753,7 @@ update_view(CCViewControls *controls, CCViewArgs *args)
                     if (!(run = gwy_app_wait_set_fraction((gdouble)col/(gdouble)xres))) break;
                 }
             }
+            
         }
         gwy_data_field_invalidate(controls->xerr);
         gwy_data_field_invalidate(controls->yerr);
@@ -758,6 +763,9 @@ update_view(CCViewControls *controls, CCViewArgs *args)
         gwy_data_field_invalidate(controls->zunc);
         if (run)
             args->computed = TRUE;
+
+        gwy_app_wait_finish();
+
     }
 
     if (run) 
@@ -776,7 +784,6 @@ update_view(CCViewControls *controls, CCViewArgs *args)
             gwy_data_field_copy(controls->zunc, viewfield, FALSE);
     }
 
-    gwy_app_wait_finish();
     gwy_data_field_invalidate(controls->view_field);
     gwy_data_field_data_changed(controls->view_field);
 }
@@ -791,17 +798,17 @@ void add_calibration(GwyDataField *dfield,
 
 
     if (type == GWY_CC_VIEW_DISPLAY_X_CORR)
-       g_snprintf(key, sizeof(key), "/%d/cal_xerr", id);
+       g_snprintf(key, sizeof(key), "/%d/data/cal_xerr", id);
     else if (type == GWY_CC_VIEW_DISPLAY_Y_CORR)
-       g_snprintf(key, sizeof(key), "/%d/cal_yerr", id);
+       g_snprintf(key, sizeof(key), "/%d/data/cal_yerr", id);
     else if (type == GWY_CC_VIEW_DISPLAY_Z_CORR)
-       g_snprintf(key, sizeof(key), "/%d/cal_zerr", id);
+       g_snprintf(key, sizeof(key), "/%d/data/cal_zerr", id);
     else if (type == GWY_CC_VIEW_DISPLAY_X_UNC)
-       g_snprintf(key, sizeof(key), "/%d/cal_xunc", id);
+       g_snprintf(key, sizeof(key), "/%d/data/cal_xunc", id);
     else if (type == GWY_CC_VIEW_DISPLAY_Y_UNC)
-       g_snprintf(key, sizeof(key), "/%d/cal_yunc", id);
+       g_snprintf(key, sizeof(key), "/%d/data/cal_yunc", id);
     else if (type == GWY_CC_VIEW_DISPLAY_Z_UNC)
-       g_snprintf(key, sizeof(key), "/%d/cal_zunc", id);
+       g_snprintf(key, sizeof(key), "/%d/data/cal_zunc", id);
     else {
         g_critical("No such calibration key.");
         return;
@@ -992,7 +999,7 @@ menu_interpolation(GCallback callback, gpointer cbdata,
 
 
 static void
-display_changed(GtkComboBox *combo, CCViewControls *controls)
+display_changed(G_GNUC_UNUSED GtkComboBox *combo, CCViewControls *controls)
 {
     controls->args->display_type = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(controls->menu_display));
 
@@ -1024,7 +1031,7 @@ display_changed(GtkComboBox *combo, CCViewControls *controls)
 
 
 static void
-calculation_changed(GtkComboBox *combo, CCViewControls *controls)
+calculation_changed(G_GNUC_UNUSED GtkComboBox *combo, CCViewControls *controls)
 {
     controls->args->display_type = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(controls->menu_display));
     controls->args->plane_type = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(controls->menu_plane));
@@ -1091,6 +1098,13 @@ settings_changed(CCViewControls *controls)
    controls->args->computed = FALSE;
    if (controls->args->update)
        update_view(controls, controls->args);
+}
+
+static void    
+calibration_changed_cb(CCViewControls *controls)
+{
+    if (controls->args->update)
+        update_view(controls, controls->args);
 }
 
 static void
@@ -1184,7 +1198,6 @@ units_change_cb(GtkWidget *button,
     GtkWidget *dialog, *hbox, *label, *entry;
     const gchar *id, *unit;
     gint response;
-    CCViewArgs *args = controls->args;
 
     if (controls->in_update)
         return;

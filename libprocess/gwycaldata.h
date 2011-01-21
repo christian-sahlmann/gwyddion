@@ -23,7 +23,6 @@
 
 #include <libgwyddion/gwysiunit.h>
 #include <libprocess/gwyprocessenums.h>
-#include <libprocess/delaunay.h>
 #include <libprocess/natural.h>
 
 G_BEGIN_DECLS

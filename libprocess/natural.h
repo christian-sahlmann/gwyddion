@@ -15,6 +15,87 @@
 #ifndef natural_h
 #define natural_h
 
+#include <glib.h>
+
+typedef struct
+{
+  gint top;
+  gint slots;
+  void** arr;
+} stack;
+
+
+/* This is how we store an array list. */
+typedef struct
+{
+   gint   num_slots;
+   gint   num_elements;
+   void** arr;
+} arrayList;
+
+/* These structs are needed to store a (doubly) linked list. */
+typedef struct _listNode
+{
+  void *data;
+  struct _listNode *next;
+  struct _listNode *prev;
+} listNode;
+
+typedef struct
+{
+  listNode *head;
+  listNode *last;
+  gint nelem;
+  stack   *deadNodes;
+} linkedList;
+
+typedef struct
+{
+  gdouble v[3];
+  gint    index;
+  gdouble data[3];
+  gdouble voronoiVolume;
+
+} GwyDelaunayVertex;
+
+
+typedef struct _simplex
+{
+  GwyDelaunayVertex  *p[4];
+  struct _simplex *s[4];
+  listNode *node;
+} simplex;
+
+/******************************************************************************/
+
+typedef struct
+{
+  stack  *ptrs;
+  stack  *old;
+} neighbourUpdate;
+
+typedef struct
+{
+  linkedList    *tets;
+
+  simplex *super;
+  GwyDelaunayVertex   superVerticies[4];
+
+  stack   *deadSimplicies;
+  stack   *deadVoronoiCells;
+
+  arrayList       *conflicts;
+  arrayList       *updates;
+  neighbourUpdate *neighbourUpdates;
+
+  gint coplanar_degenerecies;
+  gint cospherical_degenerecies;
+
+} GwyDelaunayMesh;
+
+GwyDelaunayMesh* gwy_delaunay_new_mesh();
+void             gwy_delaunay_build_mesh(GwyDelaunayVertex* ps, gint n, GwyDelaunayMesh *m);
+
 GwyDelaunayVertex *initPoints(gdouble *x, gdouble *y, gdouble *z, 
                    gdouble *u, gdouble *v, gdouble *w, gint n);
 

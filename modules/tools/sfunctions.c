@@ -484,36 +484,35 @@ gwy_tool_sfunctions_data_switched(GwyTool *gwytool,
                                 "focus", -1,
                                 NULL);
         gwy_selection_set_max_objects(plain_tool->selection, 1);
-    }
 
-    g_snprintf(xukey, sizeof(xukey), "/%d/cal_xunc", plain_tool->id);
-    g_snprintf(yukey, sizeof(yukey), "/%d/cal_yunc", plain_tool->id);
-    g_snprintf(zukey, sizeof(zukey), "/%d/cal_zunc", plain_tool->id);
 
-    if (gwy_container_gis_object_by_name(plain_tool->container, xukey, &(tool->xunc))
-        && gwy_container_gis_object_by_name(plain_tool->container, yukey, &(tool->yunc))
-        && gwy_container_gis_object_by_name(plain_tool->container, zukey, &(tool->zunc)))
-    {
-        printf("Data have calibration\n");
-        tool->has_calibration = TRUE;
-        /*we need to resample uncertainties*/
-        tool->xunc = gwy_data_field_new_resampled(tool->xunc,
-                                                  gwy_data_field_get_xres(plain_tool->data_field),
-                                                  gwy_data_field_get_yres(plain_tool->data_field),
-                                                  GWY_INTERPOLATION_BILINEAR);
-        tool->yunc = gwy_data_field_new_resampled(tool->yunc,
-                                                  gwy_data_field_get_xres(plain_tool->data_field),
-                                                  gwy_data_field_get_yres(plain_tool->data_field),
-                                                  GWY_INTERPOLATION_BILINEAR);
-                                                   
-        tool->zunc = gwy_data_field_new_resampled(tool->zunc,
-                                                  gwy_data_field_get_xres(plain_tool->data_field),
-                                                  gwy_data_field_get_yres(plain_tool->data_field),
-                                                  GWY_INTERPOLATION_BILINEAR);
- 
-    } else {
-        printf("Data don't have calibration\n");
-        tool->has_calibration = FALSE;
+        g_snprintf(xukey, sizeof(xukey), "/%d/data/cal_xunc", plain_tool->id);
+        g_snprintf(yukey, sizeof(yukey), "/%d/data/cal_yunc", plain_tool->id);
+        g_snprintf(zukey, sizeof(zukey), "/%d/data/cal_zunc", plain_tool->id);
+
+        if (gwy_container_gis_object_by_name(plain_tool->container, xukey, &(tool->xunc))
+            && gwy_container_gis_object_by_name(plain_tool->container, yukey, &(tool->yunc))
+            && gwy_container_gis_object_by_name(plain_tool->container, zukey, &(tool->zunc)))
+        {
+            tool->has_calibration = TRUE;
+            /*we need to resample uncertainties*/
+            tool->xunc = gwy_data_field_new_resampled(tool->xunc,
+                                                      gwy_data_field_get_xres(plain_tool->data_field),
+                                                      gwy_data_field_get_yres(plain_tool->data_field),
+                                                      GWY_INTERPOLATION_BILINEAR);
+            tool->yunc = gwy_data_field_new_resampled(tool->yunc,
+                                                      gwy_data_field_get_xres(plain_tool->data_field),
+                                                      gwy_data_field_get_yres(plain_tool->data_field),
+                                                      GWY_INTERPOLATION_BILINEAR);
+
+            tool->zunc = gwy_data_field_new_resampled(tool->zunc,
+                                                      gwy_data_field_get_xres(plain_tool->data_field),
+                                                      gwy_data_field_get_yres(plain_tool->data_field),
+                                                      GWY_INTERPOLATION_BILINEAR);
+
+        } else {
+            tool->has_calibration = FALSE;
+        }
     }
 
     gwy_tool_sfunctions_update_curve(tool);

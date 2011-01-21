@@ -296,21 +296,22 @@ gwy_tool_distance_data_switched(GwyTool *gwytool,
                                 "focus", -1,
                                 NULL);
         gwy_selection_set_max_objects(plain_tool->selection, NLINES);
+        g_snprintf(xukey, sizeof(xukey), "/%d/data/cal_xunc", plain_tool->id);
+        g_snprintf(yukey, sizeof(yukey), "/%d/data/cal_yunc", plain_tool->id);
+        g_snprintf(zukey, sizeof(zukey), "/%d/data/cal_zunc", plain_tool->id);
+
+        if (gwy_container_gis_object_by_name(plain_tool->container, xukey, &(tool->xunc))
+            && gwy_container_gis_object_by_name(plain_tool->container, yukey, &(tool->yunc))
+            && gwy_container_gis_object_by_name(plain_tool->container, zukey, &(tool->zunc)))
+        {
+            tool->has_calibration = TRUE;
+        } else {
+            tool->has_calibration = FALSE;
+        }
+
     }
     gwy_tool_distance_update_headers(tool);
 
-    g_snprintf(xukey, sizeof(xukey), "/%d/cal_xunc", plain_tool->id);
-    g_snprintf(yukey, sizeof(yukey), "/%d/cal_yunc", plain_tool->id);
-    g_snprintf(zukey, sizeof(zukey), "/%d/cal_zunc", plain_tool->id);
-
-    if (gwy_container_gis_object_by_name(plain_tool->container, xukey, &(tool->xunc))
-        && gwy_container_gis_object_by_name(plain_tool->container, yukey, &(tool->yunc))
-        && gwy_container_gis_object_by_name(plain_tool->container, zukey, &(tool->zunc)))
-    {
-        tool->has_calibration = TRUE;
-    } else {
-        tool->has_calibration = FALSE;
-    }
 
 }
 

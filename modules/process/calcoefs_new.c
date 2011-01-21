@@ -179,7 +179,7 @@ module_register(void)
 {
     gwy_process_func_register("cnew",
                               (GwyProcessFunc)&cnew,
-                              N_("/Cali_bration/_3D calibration/Create..."),
+                              N_("/Cali_bration/_Create..."),
                               GWY_STOCK_CWT,
                               CNEW_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
@@ -187,7 +187,6 @@ module_register(void)
 
     return TRUE;
 }
-
 
 static void
 cnew(GwyContainer *data, GwyRunType run)

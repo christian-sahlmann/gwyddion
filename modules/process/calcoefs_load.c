@@ -52,6 +52,7 @@ typedef struct {
 typedef struct {
     GtkWidget *dialog;
     GtkWidget *text;
+    GtkWidget *okbutton;
     CLoadArgs *args;
     GtkEntry *name;
 } CLoadControls;
@@ -63,8 +64,6 @@ static void        cload                        (GwyContainer *data,
                                                GwyRunType run);
 static gboolean    cload_dialog                 (CLoadArgs *args, 
                                                 GwyDataField *dfield);
-static void        cload_dialog_update          (CLoadControls *controls,
-                                               CLoadArgs *args);
 static void         load_caldata              (CLoadControls *controls);
 
 
@@ -91,7 +90,7 @@ module_register(void)
 {
     gwy_process_func_register("cload",
                               (GwyProcessFunc)&cload,
-                              N_("/Cali_bration/_3D calibration/Load from text file..."),
+                              N_("/Cali_bration/_Load from text file..."),
                               GWY_STOCK_CWT,
                               CNEW_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
@@ -102,7 +101,7 @@ module_register(void)
 
 
 static void
-cload(GwyContainer *data, GwyRunType run)
+cload(G_GNUC_UNUSED GwyContainer *data, GwyRunType run)
 {
     GwyDataField *dfield;
     CLoadArgs args;
@@ -223,7 +222,7 @@ cload(GwyContainer *data, GwyRunType run)
 
 static gboolean
 cload_dialog(CLoadArgs *args,
-            GwyDataField *dfield)
+            G_GNUC_UNUSED GwyDataField *dfield)
 {
     GtkWidget *dialog, *dialog2, *table, *label;
     gint row = 0;
@@ -236,10 +235,9 @@ cload_dialog(CLoadArgs *args,
 
     controls.args = args;
     dialog = gtk_dialog_new_with_buttons(_("Load calibration data"), NULL, 0,
-                                         _("_Reset"), RESPONSE_RESET,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-                                         GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);
+    controls.okbutton = gtk_dialog_add_button(GTK_DIALOG(dialog), GTK_STOCK_OK, GTK_RESPONSE_OK);
     controls.dialog = dialog;
     gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
 
@@ -273,6 +271,7 @@ cload_dialog(CLoadArgs *args,
     gtk_table_attach(GTK_TABLE(table), controls.text,
                      0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
+    gtk_widget_set_sensitive(controls.okbutton, FALSE);
 
     gtk_widget_show_all(dialog);
     do {
@@ -325,12 +324,6 @@ cload_dialog(CLoadArgs *args,
     return TRUE;
 }
 
-static void
-cload_dialog_update(CLoadControls *controls,
-                        CLoadArgs *args)
-{
-
-}
 
 static void
 load_caldata(CLoadControls *controls)
@@ -338,12 +331,14 @@ load_caldata(CLoadControls *controls)
     GtkWidget *dialog, *msgdialog;
     gchar *filename;
     GwyCalData *caldata = controls->args->caldata;
-    FILE *fr;
-    gint i, ndata;
-    gchar text[50];
+    gint i, ndata=0;
+    gchar mtext[50];
     gdouble xfrom, xto, yfrom, yto, zfrom, zto;
     gdouble x, y, z, xerr, yerr, zerr, xunc, yunc, zunc;
     gchar six[50], siy[50], siz[50];
+    gchar *line, *text = NULL;
+    gsize size;
+    GError *err = NULL;
 
     dialog = gtk_file_chooser_dialog_new ("Load calibration data",
                       GTK_WINDOW(controls->dialog),
@@ -355,26 +350,33 @@ load_caldata(CLoadControls *controls)
     if (gtk_dialog_run (GTK_DIALOG (dialog)) == GTK_RESPONSE_ACCEPT)
     {
         filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (dialog));
-        fr = fopen(filename, "r");
-        if (!fr) { printf("Error: no file open\n");
-            msgdialog = gtk_message_dialog_new (dialog,
+        if (!g_file_get_contents(filename, &text, &size, &err)) { printf("Error: no file open\n");
+            msgdialog = gtk_message_dialog_new (GTK_WINDOW(dialog),
                                              GTK_DIALOG_DESTROY_WITH_PARENT,
                                              GTK_MESSAGE_ERROR,
                                              GTK_BUTTONS_CLOSE,
-                                             "Error loading file '%s': %s",
-                                             filename, g_strerror (errno));
+                                             "Error loading file '%s'",
+                                             filename);
             gtk_dialog_run(GTK_DIALOG(msgdialog));
             gtk_widget_destroy(msgdialog);
             gtk_widget_destroy(dialog);
         } else {
-            
-            fscanf(fr, "%d", &ndata);
-            fscanf(fr, "%lf", &xfrom);
-            fscanf(fr, "%lf", &xto);
-            fscanf(fr, "%lf", &yfrom);
-            fscanf(fr, "%lf", &yto);
-            fscanf(fr, "%lf", &zfrom);
-            fscanf(fr, "%lf", &zto);
+
+            //TODO use g_ascii_strtod    
+           //g_file_get_contents()
+           //gwy_str_next_line()
+            line = gwy_str_next_line(&text);
+            g_strstrip(line);
+
+
+
+            //fscanf(fr, "%d", &ndata);
+            //fscanf(fr, "%lf", &xfrom);
+            //fscanf(fr, "%lf", &xto);
+            //fscanf(fr, "%lf", &yfrom);
+            //fscanf(fr, "%lf", &yto);
+            //fscanf(fr, "%lf", &zfrom);
+            //fscanf(fr, "%lf", &zto);
 
             caldata = gwy_caldata_new(ndata);    //FIXME free it somewhere if allocated previously
             caldata->ndata = ndata;
@@ -384,16 +386,18 @@ load_caldata(CLoadControls *controls)
             caldata->y_to = yto;
             caldata->z_from = zfrom;
             caldata->z_to = zto;
-            fscanf(fr, "%s", six);
-            fscanf(fr, "%s", siy);
-            fscanf(fr, "%s", siz);
+            //fscanf(fr, "%s", six);
+            //fscanf(fr, "%s", siy);
+            //fscanf(fr, "%s", siz);
             caldata->si_unit_x = gwy_si_unit_new(six);
             caldata->si_unit_y = gwy_si_unit_new(siy);
             caldata->si_unit_z = gwy_si_unit_new(siz);
 
             for (i=0; i<caldata->ndata; i++)
             {
-                fscanf(fr, "%lf", &x);
+                line = gwy_str_next_line(&text);
+                g_strstrip(line);
+                /*fscanf(fr, "%lf", &x);
                 fscanf(fr, "%lf", &y);
                 fscanf(fr, "%lf", &z);
                 fscanf(fr, "%lf", &xerr);
@@ -401,7 +405,7 @@ load_caldata(CLoadControls *controls)
                 fscanf(fr, "%lf", &zerr);
                 fscanf(fr, "%lf", &xunc);
                 fscanf(fr, "%lf", &yunc);
-                fscanf(fr, "%lf", &zunc);
+                fscanf(fr, "%lf", &zunc);*/
                 caldata->x[i] = x;
                 caldata->y[i] = y;
                 caldata->z[i] = z;
@@ -413,9 +417,9 @@ load_caldata(CLoadControls *controls)
                 caldata->zunc[i] = zunc;
               }
             
-            fclose(fr);
-            g_snprintf(text, sizeof(text), "Loaded %d data points", caldata->ndata);
-            gtk_label_set_text(GTK_LABEL(controls->text), text);
+            g_snprintf(mtext, sizeof(mtext), "Loaded %d data points", caldata->ndata);
+            gtk_label_set_text(GTK_LABEL(controls->text), mtext);
+            gtk_widget_set_sensitive(controls->okbutton, TRUE);
         }
         g_free (filename);
         controls->args->caldata = caldata;

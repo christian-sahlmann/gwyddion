@@ -170,7 +170,6 @@ static GtkWidget*   menu_display           (GCallback callback,
 static void         display_changed        (GtkComboBox *combo,
                                             GwyToolProfile *tool);
 
-static void export_caldata(GwyToolProfile *tool, GwyDataLine *line, gchar *str);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -541,36 +540,36 @@ gwy_tool_profile_data_switched(GwyTool *gwytool,
                                 "focus", -1,
                                 NULL);
         gwy_selection_set_max_objects(plain_tool->selection, NLINES);
-    }
 
-    g_snprintf(xekey, sizeof(xekey), "/%d/cal_xerr", plain_tool->id);
-    g_snprintf(yekey, sizeof(yekey), "/%d/cal_yerr", plain_tool->id);
-    g_snprintf(zekey, sizeof(zekey), "/%d/cal_zerr", plain_tool->id);
-    g_snprintf(xukey, sizeof(xukey), "/%d/cal_xunc", plain_tool->id);
-    g_snprintf(yukey, sizeof(yukey), "/%d/cal_yunc", plain_tool->id);
-    g_snprintf(zukey, sizeof(zukey), "/%d/cal_zunc", plain_tool->id);
+        g_snprintf(xekey, sizeof(xekey), "/%d/data/cal_xerr", plain_tool->id);
+        g_snprintf(yekey, sizeof(yekey), "/%d/data/cal_yerr", plain_tool->id);
+        g_snprintf(zekey, sizeof(zekey), "/%d/data/cal_zerr", plain_tool->id);
+        g_snprintf(xukey, sizeof(xukey), "/%d/data/cal_xunc", plain_tool->id);
+        g_snprintf(yukey, sizeof(yukey), "/%d/data/cal_yunc", plain_tool->id);
+        g_snprintf(zukey, sizeof(zukey), "/%d/data/cal_zunc", plain_tool->id);
 
-    if (gwy_container_gis_object_by_name(plain_tool->container, xekey, &(tool->xerr))
-        && gwy_container_gis_object_by_name(plain_tool->container, yekey, &(tool->yerr))
-        && gwy_container_gis_object_by_name(plain_tool->container, zekey, &(tool->zerr))
-        && gwy_container_gis_object_by_name(plain_tool->container, xukey, &(tool->xunc))
-        && gwy_container_gis_object_by_name(plain_tool->container, yukey, &(tool->yunc))
-        && gwy_container_gis_object_by_name(plain_tool->container, zukey, &(tool->zunc)))
-    {
-        tool->has_calibration = TRUE;
-        tool->line_xerr = gwy_data_line_new(gwy_data_field_get_xres(plain_tool->data_field), 
-                                            gwy_data_field_get_xreal(plain_tool->data_field), 0);
-        gtk_widget_show(tool->menu_display);
-        gtk_widget_show(tool->callabel);
-        gtk_widget_show(tool->both);
-        gtk_widget_show(tool->export);
-    } else {
-        tool->has_calibration = FALSE;
-        gtk_widget_hide(tool->menu_display);
-        gtk_widget_hide(tool->callabel);
-        gtk_widget_hide(tool->both);
-        gtk_widget_hide(tool->export);
+        if (gwy_container_gis_object_by_name(plain_tool->container, xekey, &(tool->xerr))
+            && gwy_container_gis_object_by_name(plain_tool->container, yekey, &(tool->yerr))
+            && gwy_container_gis_object_by_name(plain_tool->container, zekey, &(tool->zerr))
+            && gwy_container_gis_object_by_name(plain_tool->container, xukey, &(tool->xunc))
+            && gwy_container_gis_object_by_name(plain_tool->container, yukey, &(tool->yunc))
+            && gwy_container_gis_object_by_name(plain_tool->container, zukey, &(tool->zunc)))
+        {
+            tool->has_calibration = TRUE;
+            tool->line_xerr = gwy_data_line_new(gwy_data_field_get_xres(plain_tool->data_field), 
+                                                gwy_data_field_get_xreal(plain_tool->data_field), 0);
+            gtk_widget_show(tool->menu_display);
+            gtk_widget_show(tool->callabel);
+            gtk_widget_show(tool->both);
+            gtk_widget_show(tool->export);
+        } else {
+            tool->has_calibration = FALSE;
+            gtk_widget_hide(tool->menu_display);
+            gtk_widget_hide(tool->callabel);
+            gtk_widget_hide(tool->both);
+            gtk_widget_hide(tool->export);
 
+        }
     }
 
     gwy_graph_model_remove_all_curves(tool->gmodel);
@@ -688,10 +687,10 @@ gwy_tool_profile_update_curve(GwyToolProfile *tool,
     gdouble line[4];
     gint xl1, yl1, xl2, yl2;
     gint n, lineres, multpos;
-    gdouble calxratio, calyratio;
+    gdouble calxratio=1, calyratio=1;
     gchar *desc;
     GwyRGBA *color;
-    GwyDataLine *upunc, *lowunc;
+    GwyDataLine *upunc=NULL, *lowunc=NULL;
 
     plain_tool = GWY_PLAIN_TOOL(tool);
     g_return_if_fail(plain_tool->selection);
