@@ -3,6 +3,9 @@ Other:
 - Compilation with MSVC6 toolchain on MS Windows is no longer supported, use
   MinGW32.  The recommended compilation method is cross-compilation on Linux.
 
+Modules:
+- MIF (new): Import of DME MIF files v1.7 (just topography).
+
 
 2.22 (2010-12-06)
 Application:
