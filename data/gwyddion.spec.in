@@ -67,8 +67,10 @@ BuildRequires: gtksourceview-devel
 %endif
 
 # Default the fftw package name to the common name in the hope the distro
-# provides that.
-%if %{?fftw3:1}%{!?fftw3:0}
+# provides that.  The expansion inside %if is somehow limited, define the
+# test in two steps.
+%define fftwundefined %{?fftw3:0}%{!?fftw3:1}
+%if %{fftwundefined}
 %define fftw3 fftw
 %define fftw3devel fftw-devel
 %endif
