@@ -1,10 +1,13 @@
 2.23 (0000-00-00)
+Modules:
+- WSF file (new): Imports WSF SPM data.
+- MIF (new): Import of DME MIF files v1.7 (just topography).
+
 Other:
 - Compilation with MSVC6 toolchain on MS Windows is no longer supported, use
   MinGW32.  The recommended compilation method is cross-compilation on Linux.
-
-Modules:
-- MIF (new): Import of DME MIF files v1.7 (just topography).
+- Building of RPMs should work on any sufficiently RedHat-based distribution,
+  not just Fedora.
 
 
 2.22 (2010-12-06)
