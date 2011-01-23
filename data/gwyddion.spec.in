@@ -2,7 +2,7 @@
 # Optional features:
 #   --with-kde4-thumbnailer    Enables the kde4-thumbnailer subpackage (and
 #                              introduces lots of new dependencies).
-%{expand:%global distro_is_fedora %(test ! -f /etc/fedora-release; echo $?)}
+%{expand:%global distro_is_redhat %(test ! -f /etc/redhat-release; echo $?)}
 %{expand:%global distro_is_suse %(test ! -f /etc/SuSE-release; echo $?)}
 %{expand:%global distro_is_mdk %(test ! -f /etc/mandriva-release; echo $?)}
 %define enable_kde4_thumbnailer %{?_with_kde4_thumbnailer:1}%{!?_with_kde4_thumbnailer:0}
@@ -33,7 +33,7 @@ BuildRequires: desktop-file-utils >= 0.9
 BuildRequires: pkgconfig
 BuildRequires: findutils
 
-%if %{distro_is_fedora}
+%if %{distro_is_redhat}
 BuildRequires: libXmu-devel
 BuildRequires: pygtk2-devel
 BuildRequires: gtksourceview2-devel
@@ -109,7 +109,7 @@ Requires:      %{name} = %{version}
 Requires:      gtk2-devel >= 2.8
 Requires:      gtkglext-devel
 Requires:      %{fftw3devel}
-%if %{distro_is_fedora}
+%if %{distro_is_redhat}
 Requires:      perl(:MODULE_COMPAT_%(eval "`%{__perl} -V:version`"; echo $version))
 Requires:      python-abi = %(%{__python} -c "import sys ; print sys.version[:3]")
 %endif
