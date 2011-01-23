@@ -478,7 +478,7 @@ simple_dialog(SimpleArgs *args, GwyDataField *dfield)
     row++;
 
     controls.threshold = gtk_adjustment_new(args->threshold, -1.0, 1.0, 0.1, 0.2, 0);
-    spin = gwy_table_attach_hscale(table, row, _("_Threshold"), _(""),
+    spin = gwy_table_attach_hscale(table, row, _("_Threshold"), "",
                                                   controls.threshold, GWY_HSCALE_DEFAULT);
 
     g_signal_connect(controls.threshold, "value-changed",
