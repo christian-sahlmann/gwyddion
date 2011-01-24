@@ -884,7 +884,7 @@ static void exactinit()
 /*                                                                           */
 /*****************************************************************************/
 
-int grow_expansion(elen, e, b, h)                /* e and h can be the same. */
+static int grow_expansion(elen, e, b, h)                /* e and h can be the same. */
 int elen;
 REAL *e;
 REAL b;
@@ -921,7 +921,7 @@ REAL *h;
 /*                                                                           */
 /*****************************************************************************/
 
-int grow_expansion_zeroelim(elen, e, b, h)       /* e and h can be the same. */
+static int grow_expansion_zeroelim(elen, e, b, h)       /* e and h can be the same. */
 int elen;
 REAL *e;
 REAL b;
@@ -963,7 +963,7 @@ REAL *h;
 /*                                                                           */
 /*****************************************************************************/
 
-int expansion_sum(elen, e, flen, f, h)
+static int expansion_sum(elen, e, flen, f, h)
 /* e and h can be the same, but f and h cannot. */
 int elen;
 REAL *e;
@@ -1012,7 +1012,7 @@ REAL *h;
 /*                                                                           */
 /*****************************************************************************/
 
-int expansion_sum_zeroelim1(elen, e, flen, f, h)
+static int expansion_sum_zeroelim1(elen, e, flen, f, h)
 /* e and h can be the same, but f and h cannot. */
 int elen;
 REAL *e;
@@ -1072,7 +1072,7 @@ REAL *h;
 /*                                                                           */
 /*****************************************************************************/
 
-int expansion_sum_zeroelim2(elen, e, flen, f, h)
+static int expansion_sum_zeroelim2(elen, e, flen, f, h)
 /* e and h can be the same, but f and h cannot. */
 int elen;
 REAL *e;
@@ -1129,7 +1129,7 @@ REAL *h;
 /*                                                                           */
 /*****************************************************************************/
 
-int fast_expansion_sum(elen, e, flen, f, h)           /* h cannot be e or f. */
+static int fast_expansion_sum(elen, e, flen, f, h)           /* h cannot be e or f. */
 int elen;
 REAL *e;
 int flen;
@@ -1206,7 +1206,7 @@ REAL *h;
 /*                                                                           */
 /*****************************************************************************/
 
-int fast_expansion_sum_zeroelim(elen, e, flen, f, h)  /* h cannot be e or f. */
+static int fast_expansion_sum_zeroelim(elen, e, flen, f, h)  /* h cannot be e or f. */
 int elen;
 REAL *e;
 int flen;
@@ -1291,7 +1291,7 @@ REAL *h;
 /*                                                                           */
 /*****************************************************************************/
 
-int linear_expansion_sum(elen, e, flen, f, h)         /* h cannot be e or f. */
+static int linear_expansion_sum(elen, e, flen, f, h)         /* h cannot be e or f. */
 int elen;
 REAL *e;
 int flen;
@@ -1355,7 +1355,7 @@ REAL *h;
 /*                                                                           */
 /*****************************************************************************/
 
-int linear_expansion_sum_zeroelim(elen, e, flen, f, h)/* h cannot be e or f. */
+static int linear_expansion_sum_zeroelim(elen, e, flen, f, h)/* h cannot be e or f. */
 int elen;
 REAL *e;
 int flen;
@@ -1429,7 +1429,7 @@ REAL *h;
 /*                                                                           */
 /*****************************************************************************/
 
-int scale_expansion(elen, e, b, h)            /* e and h cannot be the same. */
+static int scale_expansion(elen, e, b, h)            /* e and h cannot be the same. */
 int elen;
 REAL *e;
 REAL b;
@@ -1478,7 +1478,7 @@ REAL *h;
 /*                                                                           */
 /*****************************************************************************/
 
-int scale_expansion_zeroelim(elen, e, b, h)   /* e and h cannot be the same. */
+static int scale_expansion_zeroelim(elen, e, b, h)   /* e and h cannot be the same. */
 int elen;
 REAL *e;
 REAL b;
@@ -1533,7 +1533,7 @@ REAL *h;
 /*                                                                           */
 /*****************************************************************************/
 
-int compress(elen, e, h)                         /* e and h may be the same. */
+static int compress(elen, e, h)                         /* e and h may be the same. */
 int elen;
 REAL *e;
 REAL *h;
@@ -1578,7 +1578,7 @@ REAL *h;
 /*                                                                           */
 /*****************************************************************************/
 
-REAL estimate(elen, e)
+static REAL estimate(elen, e)
 int elen;
 REAL *e;
 {
@@ -1618,7 +1618,7 @@ REAL *e;
 /*                                                                           */
 /*****************************************************************************/
 
-REAL orient2dfast(pa, pb, pc)
+static REAL orient2dfast(pa, pb, pc)
 REAL *pa;
 REAL *pb;
 REAL *pc;
@@ -1632,7 +1632,7 @@ REAL *pc;
   return acx * bcy - acy * bcx;
 }
 
-REAL orient2dexact(pa, pb, pc)
+static REAL orient2dexact(pa, pb, pc)
 REAL *pa;
 REAL *pb;
 REAL *pc;
@@ -1677,7 +1677,7 @@ REAL *pc;
   return w[wlength - 1];
 }
 
-REAL orient2dslow(pa, pb, pc)
+static REAL orient2dslow(pa, pb, pc)
 REAL *pa;
 REAL *pb;
 REAL *pc;
@@ -1721,7 +1721,7 @@ REAL *pc;
   return deter[deterlen - 1];
 }
 
-REAL orient2dadapt(pa, pb, pc, detsum)
+static REAL orient2dadapt(pa, pb, pc, detsum)
 REAL *pa;
 REAL *pb;
 REAL *pc;
@@ -1805,7 +1805,7 @@ REAL detsum;
   return(D[Dlength - 1]);
 }
 
-REAL orient2d(pa, pb, pc)
+static REAL orient2d(pa, pb, pc)
 REAL *pa;
 REAL *pb;
 REAL *pc;
@@ -1870,7 +1870,7 @@ REAL *pc;
 /*                                                                           */
 /*****************************************************************************/
 
-REAL orient3dfast(pa, pb, pc, pd)
+static REAL orient3dfast(pa, pb, pc, pd)
 REAL *pa;
 REAL *pb;
 REAL *pc;
@@ -1895,7 +1895,7 @@ REAL *pd;
        + cdx * (ady * bdz - adz * bdy);
 }
 
-REAL orient3dexact(pa, pb, pc, pd)
+static REAL orient3dexact(pa, pb, pc, pd)
 REAL *pa;
 REAL *pb;
 REAL *pc;
@@ -1976,7 +1976,7 @@ REAL *pd;
   return deter[deterlen - 1];
 }
 
-REAL orient3dslow(pa, pb, pc, pd)
+static REAL orient3dslow(pa, pb, pc, pd)
 REAL *pa;
 REAL *pb;
 REAL *pc;
@@ -2072,7 +2072,7 @@ REAL *pd;
   return deter[deterlen - 1];
 }
 
-REAL orient3dadapt(pa, pb, pc, pd, permanent)
+static REAL orient3dadapt(pa, pb, pc, pd, permanent)
 REAL *pa;
 REAL *pb;
 REAL *pc;
@@ -2477,7 +2477,7 @@ REAL permanent;
   return finnow[finlength - 1];
 }
 
-REAL orient3d(pa, pb, pc, pd)
+static REAL orient3d(pa, pb, pc, pd)
 REAL *pa;
 REAL *pb;
 REAL *pc;
@@ -2548,7 +2548,7 @@ REAL *pd;
 /*                                                                           */
 /*****************************************************************************/
 
-REAL incirclefast(pa, pb, pc, pd)
+static REAL incirclefast(pa, pb, pc, pd)
 REAL *pa;
 REAL *pb;
 REAL *pc;
@@ -2575,7 +2575,7 @@ REAL *pd;
   return alift * bcdet + blift * cadet + clift * abdet;
 }
 
-REAL incircleexact(pa, pb, pc, pd)
+static REAL incircleexact(pa, pb, pc, pd)
 REAL *pa;
 REAL *pb;
 REAL *pc;
@@ -2677,7 +2677,7 @@ REAL *pd;
   return deter[deterlen - 1];
 }
 
-REAL incircleslow(pa, pb, pc, pd)
+static REAL incircleslow(pa, pb, pc, pd)
 REAL *pa;
 REAL *pb;
 REAL *pc;
@@ -2837,7 +2837,7 @@ REAL *pd;
   return deter[deterlen - 1];
 }
 
-REAL incircleadapt(pa, pb, pc, pd, permanent)
+static REAL incircleadapt(pa, pb, pc, pd, permanent)
 REAL *pa;
 REAL *pb;
 REAL *pc;
@@ -3411,7 +3411,7 @@ REAL permanent;
   return finnow[finlength - 1];
 }
 
-REAL incircle(pa, pb, pc, pd)
+static REAL incircle(pa, pb, pc, pd)
 REAL *pa;
 REAL *pb;
 REAL *pc;
@@ -3484,7 +3484,7 @@ REAL *pd;
 /*                                                                           */
 /*****************************************************************************/
 
-REAL inspherefast(pa, pb, pc, pd, pe)
+static REAL inspherefast(pa, pb, pc, pd, pe)
 REAL *pa;
 REAL *pb;
 REAL *pc;
@@ -3532,7 +3532,7 @@ REAL *pe;
   return (dlift * abc - clift * dab) + (blift * cda - alift * bcd);
 }
 
-REAL insphereexact(pa, pb, pc, pd, pe)
+static REAL insphereexact(pa, pb, pc, pd, pe)
 REAL *pa;
 REAL *pb;
 REAL *pc;
@@ -3789,7 +3789,7 @@ REAL *pe;
   return deter[deterlen - 1];
 }
 
-REAL insphereslow(pa, pb, pc, pd, pe)
+static REAL insphereslow(pa, pb, pc, pd, pe)
 REAL *pa;
 REAL *pb;
 REAL *pc;
@@ -4123,7 +4123,7 @@ REAL *pe;
   return deter[deterlen - 1];
 }
 
-REAL insphereadapt(pa, pb, pc, pd, pe, permanent)
+static REAL insphereadapt(pa, pb, pc, pd, pe, permanent)
 REAL *pa;
 REAL *pb;
 REAL *pc;
@@ -4343,7 +4343,7 @@ REAL permanent;
   return insphereexact(pa, pb, pc, pd, pe);
 }
 
-REAL insphere(pa, pb, pc, pd, pe)
+static REAL insphere(pa, pb, pc, pd, pe)
 REAL *pa;
 REAL *pb;
 REAL *pc;
@@ -4812,7 +4812,7 @@ static void updateConflictingSimplicies(GwyDelaunayVertex *p, GwyDelaunayMesh *m
 /******************************************************************************/
 // Add a point by using the edge flipping algorithm.
 
-void gwy_delaunay_add_point(GwyDelaunayVertex *p, GwyDelaunayMesh *m)
+static void gwy_delaunay_add_point(GwyDelaunayVertex *p, GwyDelaunayMesh *m)
 {
   gint i, j, k, attempt;
   gdouble o;
@@ -4970,7 +4970,7 @@ static void setNeighbours(arrayList *newTets)
 // and not coordinates: so that duplicate coordinates will evaluate to not 
 // equal.
 
-gint gwy_delaunay_point_on_simplex(GwyDelaunayVertex *p, simplex *s)
+static gint gwy_delaunay_point_on_simplex(GwyDelaunayVertex *p, simplex *s)
 {
   if (!s) return 0;
   
@@ -4986,7 +4986,7 @@ gint gwy_delaunay_point_on_simplex(GwyDelaunayVertex *p, simplex *s)
 // Given a point and a list of simplicies, we want to find any valid 
 // neighbour of this point.
 
-simplex *gwy_delaunay_find_any_neighbour(GwyDelaunayVertex *v, arrayList *tets)
+static simplex *gwy_delaunay_find_any_neighbour(GwyDelaunayVertex *v, arrayList *tets)
 {
   gint i;
   
@@ -5133,7 +5133,7 @@ static void startNewVoronoiFace(voronoiCell *vc)
 // from the last insert, and the mesh. We can 'roll-back' the mesh to its
 // previous state.
 
-void gwy_delaunay_remove_point(GwyDelaunayMesh *m)
+static void gwy_delaunay_remove_point(GwyDelaunayMesh *m)
 {
   gint i;
   simplex  *s;  
@@ -5157,7 +5157,7 @@ void gwy_delaunay_remove_point(GwyDelaunayMesh *m)
 // This will take a voronoi cell and calculate the volume.
 // the point p is the point which the voronoi cell is defined about.
 
-gdouble gwy_delaunay_voronoi_cell_volume(voronoiCell *vc, GwyDelaunayVertex *p)
+static gdouble gwy_delaunay_voronoi_cell_volume(voronoiCell *vc, GwyDelaunayVertex *p)
 {
   gint i,j;
   gdouble volume = 0;
@@ -5221,7 +5221,7 @@ gdouble gwy_delaunay_voronoi_cell_volume(voronoiCell *vc, GwyDelaunayVertex *p)
 // This will give us the volume of the voronoi cell about the point p.
 // We pass a point, at least one simplex containing that point, and the mesh.
 
-voronoiCell* gwy_delaunay_get_voronoi_cell(GwyDelaunayVertex *point, simplex *s0, GwyDelaunayMesh *m)
+static voronoiCell* gwy_delaunay_get_voronoi_cell(GwyDelaunayVertex *point, simplex *s0, GwyDelaunayMesh *m)
 {
   simplex  *s;
   // Find the Natural Neighbour verticies of this point.
@@ -5326,7 +5326,7 @@ voronoiCell* gwy_delaunay_get_voronoi_cell(GwyDelaunayVertex *point, simplex *s0
 
 /******************************************************************************/
 
-void gwy_delaunay_free_voronoi_cell(voronoiCell *vc, GwyDelaunayMesh *m)
+static void gwy_delaunay_free_voronoi_cell(voronoiCell *vc, GwyDelaunayMesh *m)
 {
   // We just push the cell to the memory pool.
   // We can free the memory pools manually, or let the program do it 
@@ -5491,7 +5491,7 @@ GwyDelaunayMesh *gwy_delaunay_new_mesh()
 
 /******************************************************************************/
 
-void gwy_delaunay_free_mesh(GwyDelaunayMesh *m)
+static void gwy_delaunay_free_mesh(GwyDelaunayMesh *m)
 {
   #ifdef DEBUG
   printf("Mallocs for vertex: %d.\n", VERTEX_MALLOC);
@@ -5584,7 +5584,7 @@ static void vertexAdd(gdouble *a, gdouble *b, gdouble *out)
 /******************************************************************************/
 // Note that this modifies the actual value of the given vertex.
 
-void gwy_delaunay_vertex_by_scalar(gdouble *a, gdouble b, gdouble *out)
+static void gwy_delaunay_vertex_by_scalar(gdouble *a, gdouble b, gdouble *out)
 {
   out[0] = a[0] * b;
   out[1] = a[1] * b;
@@ -5704,7 +5704,7 @@ GwyDelaunayVertex *initPoints(gdouble *x, gdouble *y, gdouble *z,
 }
 
 
-void lastNaturalNeighbours(GwyDelaunayVertex *v, GwyDelaunayMesh *m, arrayList *neighbours, 
+static void lastNaturalNeighbours(GwyDelaunayVertex *v, GwyDelaunayMesh *m, arrayList *neighbours, 
                                                arrayList *neighbourSimplicies)
 {
   gint i, j;
