@@ -90,7 +90,7 @@ module_register(void)
 {
     gwy_process_func_register("cload",
                               (GwyProcessFunc)&cload,
-                              N_("/Cali_bration/_Load from text file..."),
+                              N_("/Cali_bration/_Load From Text File..."),
                               GWY_STOCK_CWT,
                               CNEW_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
@@ -234,7 +234,7 @@ cload_dialog(CLoadArgs *args,
     gint response;
 
     controls.args = args;
-    dialog = gtk_dialog_new_with_buttons(_("Load calibration data"), NULL, 0,
+    dialog = gtk_dialog_new_with_buttons(_("Load Calibration Data"), NULL, 0,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          NULL);
     controls.okbutton = gtk_dialog_add_button(GTK_DIALOG(dialog), GTK_STOCK_OK, GTK_RESPONSE_OK);

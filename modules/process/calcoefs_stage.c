@@ -90,7 +90,7 @@ module_register(void)
 {
     gwy_process_func_register("stage",
                               (GwyProcessFunc)&stage,
-                              N_("/Cali_bration/_3D calibration/_Get from stage map..."),
+                              N_("/Cali_bration/_3D Calibration/_Get From Stage map..."),
                               NULL,
                               STAGE_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
@@ -131,7 +131,7 @@ stage_dialog(StageArgs *args)
 
     controls.args = args;
 
-    dialog = gtk_dialog_new_with_buttons(_("Stage error map"), NULL, 0,
+    dialog = gtk_dialog_new_with_buttons(_("Stage Error Map"), NULL, 0,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);

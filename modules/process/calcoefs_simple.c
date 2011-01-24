@@ -169,7 +169,7 @@ module_register(void)
 {
     gwy_process_func_register("simple",
                               (GwyProcessFunc)&simple,
-                              N_("/Cali_bration/_Get simple errop map..."),
+                              N_("/Cali_bration/_Get Simple Errop Map..."),
                               NULL,
                               SIMPLE_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
@@ -340,7 +340,7 @@ simple_dialog(SimpleArgs *args, GwyDataField *dfield)
     args->ys = NULL;
     args->noriginal = 0;
 
-    dialog = gtk_dialog_new_with_buttons(_("Simple error map"), NULL, 0,
+    dialog = gtk_dialog_new_with_buttons(_("Simple Error Map"), NULL, 0,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);

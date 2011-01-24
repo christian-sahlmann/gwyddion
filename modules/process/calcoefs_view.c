@@ -229,7 +229,7 @@ module_register(void)
 {
     gwy_process_func_register("cc_view",
                               (GwyProcessFunc)&cc_view,
-                              N_("/Cali_bration/_Apply to data..."),
+                              N_("/Cali_bration/_Apply to Data..."),
                               NULL,
                               CC_VIEW_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
@@ -291,7 +291,7 @@ cc_view_dialog(CCViewArgs *args,
     args->interpolation_type = GWY_CC_VIEW_INTERPOLATION_3D;
 
 
-    dialog = gtk_dialog_new_with_buttons(_("3D calibration"), NULL, 0, NULL);
+    dialog = gtk_dialog_new_with_buttons(_("3D Calibration"), NULL, 0, NULL);
     gtk_dialog_add_action_widget(GTK_DIALOG(dialog),
                                                           gwy_stock_like_button_new(_("_Update"),
                                                                                     GTK_STOCK_EXECUTE),

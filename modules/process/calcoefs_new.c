@@ -354,7 +354,7 @@ cnew_dialog(CNewArgs *args,
     controls.args = args;
     controls.in_update = TRUE;
 
-    dialog = gtk_dialog_new_with_buttons(_("Simple calibration data"), NULL, 0,
+    dialog = gtk_dialog_new_with_buttons(_("Simple Calibration Data"), NULL, 0,
                                          _("_Reset"), RESPONSE_RESET,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
