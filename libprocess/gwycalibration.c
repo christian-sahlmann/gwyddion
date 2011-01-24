@@ -88,6 +88,8 @@ gwy_calibration_use(GwyResource *resource)
     
 }
 
+
+
 static void
 gwy_calibration_release(GwyResource *resource)
 {
@@ -124,6 +126,17 @@ _gwy_calibration_class_setup_presets(void)
     klass = g_type_class_ref(GWY_TYPE_CALIBRATION);
 }
 
+/**
+ * gwy_calibration_new:
+ * @name: Name of resource
+ * @ndata: Number of calibration data
+ * @filename: Filename of associated calibration data 
+ *  
+ * Creates new calibration resource.
+ * 
+ * Returns: A newly created calibration resource.
+ **/
+
 GwyCalibration*
 gwy_calibration_new(const gchar *name,
                  gint ndata,
@@ -143,6 +156,22 @@ gwy_calibration_new(const gchar *name,
 
     return calibration;
 }
+
+/**
+ * gwy_calibration_get_filename:
+ * @calibration: Calibration resource
+ *  
+ * Get filename of associated calibration data.
+ * 
+ * Returns: Filename of associated calibration data.
+ **/
+
+const gchar*      
+gwy_calibration_get_filename(GwyCalibration *calibration)
+{
+    return calibration->filename;
+}
+
 
 static gpointer
 gwy_calibration_copy(gpointer item)
@@ -172,7 +201,7 @@ gwy_calibration_dump(GwyResource *resource,
 
 static GwyResource*
 gwy_calibration_parse(const gchar *text,
-                   gboolean is_const)
+                   G_GNUC_UNUSED gboolean is_const)
 {
     GwyCalibration *calibration = NULL;
     GwyCalibrationClass *klass;
@@ -220,7 +249,7 @@ gwy_calibration_parse(const gchar *text,
 }
 
 static void  
-gwy_calibration_sanitize(GwyCalibration *calibration)
+gwy_calibration_sanitize(G_GNUC_UNUSED GwyCalibration *calibration)
 {
 }
 

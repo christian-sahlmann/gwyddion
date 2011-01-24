@@ -63,7 +63,6 @@ GwyCalibration* gwy_calibration_new             (const gchar *name,
                                                         gint ndata,
                                                         const char* filename);
 GType             gwy_calibration_get_type              (void) G_GNUC_CONST;
-gint              gwy_calibration_get_data           (GwyCalibration *calibration);
 const gchar*      gwy_calibration_get_filename          (GwyCalibration *calibration);
 GwyInventory*     gwy_calibrations                      (void);
 GwyCalibration*   gwy_calibrations_get_calibration      (const gchar *name);

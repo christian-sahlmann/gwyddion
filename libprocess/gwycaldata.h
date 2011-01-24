@@ -93,13 +93,7 @@ struct _GwyCalDataClass {
 GType  gwy_caldata_get_type  (void) G_GNUC_CONST;
 
 GwyCalData*   gwy_caldata_new                   (gint ndata);
-void           gwy_caldata_copy                  (GwyCalData *caldata,
-                                                    GwyCalData *b);
 gint           gwy_caldata_get_ndata            (GwyCalData *caldata);
-gboolean       gwy_caldata_get_point            (GwyCalData *caldata,
-                                                     gdouble x, gdouble y, gdouble z,
-                                                     gdouble *xerr, gdouble *yerr, gdouble *zerr,
-                                                     gdouble *xunc, gdouble *yunc, gdouble *zunc);
 GwySIUnit*     gwy_caldata_get_si_unit_x      (GwyCalData *caldata);
 GwySIUnit*     gwy_caldata_get_si_unit_y       (GwyCalData *caldata);
 GwySIUnit*     gwy_caldata_get_si_unit_z       (GwyCalData *caldata);

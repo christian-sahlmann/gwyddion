@@ -49,7 +49,6 @@ static GObject*    gwy_caldata_deserialize      (const guchar *buffer,
 static void        gwy_caldata_clone_real       (GObject *source,
                                                    GObject *copy);
 */
-static guint caldata_signals[LAST_SIGNAL] = { 0 };
 
 G_DEFINE_TYPE_EXTENDED
     (GwyCalData, gwy_caldata, G_TYPE_OBJECT, 0,
@@ -103,14 +102,11 @@ gwy_caldata_finalize(GObject *object)
 
 /**
  * gwy_caldata_new:
- * @res: Resolution, i.e., the number of samples.
- * @real: Real physical dimension.
- * @nullme: Whether the data line should be initialized to zeroes. If %FALSE,
- *          the data will not be initialized.
+ * @ndata: Number of calibration data
  *
- * Creates a new data line.
+ * Creates new calibration data.
  *
- * Returns: A newly created data line.
+ * Returns: A newly created calibration data.
  **/
 GwyCalData*
 gwy_caldata_new(gint ndata)
@@ -134,6 +130,19 @@ gwy_caldata_new(gint ndata)
     return caldata;
 }
 
+/**
+ * gwy_caldata_get_ndata:
+ * @caldata: Calibration data
+ *
+ * Get number of calibration data entries.
+ *
+ * Returns: Number of calibration data entries.
+ **/
+gint           
+gwy_caldata_get_ndata(GwyCalData *caldata)
+{
+    return caldata->ndata;
+}
 
 static GByteArray*
 gwy_caldata_serialize(GObject *obj,
@@ -229,7 +238,7 @@ gwy_caldata_deserialize(const guchar *buffer,
                           gsize *position)
 {
     guint32 fsize;
-    gint i, ndata;
+    gint ndata;
     gdouble x_from, y_from, z_from, x_to, y_to, z_to;
     gdouble *x = NULL, *y = NULL, *z = NULL;
     gdouble *xerr = NULL, *yerr = NULL, *zerr = NULL;
@@ -343,12 +352,12 @@ gwy_caldata_deserialize(const guchar *buffer,
 
 /**
  * gwy_caldata_get_si_unit_x:
- * @caldata: A data line.
+ * @caldata: Calibration data
  *
- * Returns lateral SI unit of a data line.
+ * Returns lateral SI unit of calibration data.
  *
- * Returns: SI unit corresponding to the lateral (X) dimension of the data
- *          line.  Its reference count is not incremented.
+ * Returns: SI unit corresponding to the lateral (X) dimension of the calibration data
+ *          Its reference count is not incremented.
  **/
 GwySIUnit*
 gwy_caldata_get_si_unit_x(GwyCalData *caldata)
@@ -363,12 +372,12 @@ gwy_caldata_get_si_unit_x(GwyCalData *caldata)
 
 /**
  * gwy_caldata_get_si_unit_y:
- * @caldata: A data line.
+ * @caldata: Calibration data.
  *
- * Returns lateral SI unit of a data line.
+ * Returns lateral SI unit of calibration data
  *
- * Returns: SI unit corresponding to the lateral (Y) dimension of the data
- *          line.  Its reference count is not incremented.
+ * Returns: SI unit corresponding to the lateral (Y) dimension of the calibration data.
+ *          Its reference count is not incremented.
  **/
 GwySIUnit*
 gwy_caldata_get_si_unit_y(GwyCalData *caldata)
@@ -384,12 +393,12 @@ gwy_caldata_get_si_unit_y(GwyCalData *caldata)
 
 /**
  * gwy_caldata_get_si_unit_z:
- * @caldata: A data line.
+ * @caldata: Calibration data.
  *
- * Returns value SI unit of a data line.
+ * Returns value SI unit of calibration data
  *
- * Returns: SI unit corresponding to the "height" (Z) dimension of the data
- *          line.  Its reference count is not incremented.
+ * Returns: SI unit corresponding to the "height" (Z) dimension of calibration data.
+ *          Its reference count is not incremented.
  **/
 GwySIUnit*
 gwy_caldata_get_si_unit_z(GwyCalData *caldata)
@@ -404,11 +413,11 @@ gwy_caldata_get_si_unit_z(GwyCalData *caldata)
 
 /**
  * gwy_caldata_set_si_unit_x:
- * @caldata: A data line.
+ * @caldata: Calibration data.
  * @si_unit: SI unit to be set.
  *
- * Sets the SI unit corresponding to the lateral (X) dimension of a data
- * line.
+ * Sets the SI unit corresponding to the lateral (X) dimension of 
+ * calibration data.
  *
  * It does not assume a reference on @si_unit, instead it adds its own
  * reference.
@@ -429,11 +438,11 @@ gwy_caldata_set_si_unit_x(GwyCalData *caldata,
 
 /**
  * gwy_caldata_set_si_unit_y:
- * @caldata: A data line.
+ * @caldata: Calibration data.
  * @si_unit: SI unit to be set.
  *
- * Sets the SI unit corresponding to the lateral (Y) dimension of a data
- * line.
+ * Sets the SI unit corresponding to the lateral (Y) dimension of 
+ * calibration data.
  *
  * It does not assume a reference on @si_unit, instead it adds its own
  * reference.
@@ -454,11 +463,11 @@ gwy_caldata_set_si_unit_y(GwyCalData *caldata,
 
 /**
  * gwy_caldata_set_si_unit_z:
- * @caldata: A data line.
+ * @caldata: Calibration data.
  * @si_unit: SI unit to be set.
  *
- * Sets the SI unit corresponding to the "height" (Z) dimension of a data
- * line.
+ * Sets the SI unit corresponding to the "height" (Z) dimension of 
+ * calibration data.
  *
  * It does not assume a reference on @si_unit, instead it adds its own
  * reference.
@@ -478,29 +487,11 @@ gwy_caldata_set_si_unit_z(GwyCalData *caldata,
 }
 
 /**
- * gwy_caldata_get_point:
- * @caldata: A data line.
- * @x: x coordinate of requested position 
- * @y: y coordinate of requested position
- * @z: z coordinate of requested position
- * @xerr: x error at given position
- * @yerr: y error at given position
- * @zerr: z error at given position
- * @xunc: x uncertainty at given position
- * @yunc: y uncertainty at given position
- * @zunc: z uncertainty at given position
+ * gwy_caldata_setup_interpolation:
+ * @caldata: Calibration data.
  *
- * Determines (interpolates) caldata parameter for given position.
+ * Prepares data for interpolating the calibration data (building Delaunay triangulation, etc.).
  **/ 
-gboolean       
-gwy_caldata_get_point(GwyCalData *caldata,
-                          gdouble x, gdouble y, gdouble z,
-                          gdouble *xerr, gdouble *yerr, gdouble *zerr,
-                          gdouble *xunc, gdouble *yunc, gdouble *zunc)
-{
-    return 0;
-}
-
 void           
 gwy_caldata_setup_interpolation (GwyCalData *caldata)
 {
@@ -516,6 +507,21 @@ gwy_caldata_setup_interpolation (GwyCalData *caldata)
     gwy_delaunay_build_mesh(caldata->unc_ps, caldata->ndata, caldata->unc_m);
 }
 
+/**
+ * gwy_caldata_interpolate:
+ * @caldata: Calibration data.
+ * @x: x coordinate of requested position 
+ * @y: y coordinate of requested position
+ * @z: z coordinate of requested position
+ * @xerr: x error at given position
+ * @yerr: y error at given position
+ * @zerr: z error at given position
+ * @xunc: x uncertainty at given position
+ * @yunc: y uncertainty at given position
+ * @zunc: z uncertainty at given position
+ *
+ * Determines (interpolates) caldata parameters for given position.
+ **/ 
 void           
 gwy_caldata_interpolate (GwyCalData *caldata,
                          gdouble x, gdouble y, gdouble z,
