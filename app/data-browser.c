@@ -5691,6 +5691,10 @@ gwy_app_sync_data_items(GwyContainer *source,
     static const gchar *sel_keys[] = {
         "point", "pointer", "line", "rectangle", "ellipse",
     };
+    static const gchar *cal_keys[] = {
+        "xerr", "yerr", "zerr", "xunc", "yunc", "zunc",
+    };
+
 
     GwyDataItem what;
     gchar key_from[40];
@@ -5787,6 +5791,23 @@ gwy_app_sync_data_items(GwyContainer *source,
                 gwy_container_remove_by_name(dest, key_to);
             break;
 
+            case GWY_DATA_ITEM_CALDATA:
+            for (i = 0; i < G_N_ELEMENTS(cal_keys); i++) {
+                g_snprintf(key_from, sizeof(key_from), "/%d/data/%s", 
+                           from_id, cal_keys[i]);
+                g_snprintf(key_to, sizeof(key_to), "/%d/data/%s", 
+                           to_id, cal_keys[i]);
+                if (gwy_container_gis_object_by_name(source, key_from, &obj)) {
+                    obj = gwy_serializable_duplicate(obj);
+                    gwy_container_set_object_by_name(dest, key_to, obj);
+                    g_object_unref(obj);
+                }
+                else if (delete_too)
+                    gwy_container_remove_by_name(dest, key_to);
+            }
+            break;
+
+
             case GWY_DATA_ITEM_SELECTIONS:
             for (i = 0; i < G_N_ELEMENTS(sel_keys); i++) {
                 g_snprintf(key_from, sizeof(key_from), "/%d/select/%s",
@@ -5865,6 +5886,7 @@ gwy_app_data_browser_copy_channel(GwyContainer *source,
                             GWY_DATA_ITEM_META,
                             GWY_DATA_ITEM_TITLE,
                             GWY_DATA_ITEM_SELECTIONS,
+                            GWY_DATA_ITEM_CALDATA,
                             0);
 
     return newid;
