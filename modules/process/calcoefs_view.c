@@ -134,6 +134,7 @@ typedef struct {
     GtkWidget *zunits;
     GtkWidget *xyexponent;
     GtkWidget *zexponent;
+    GtkWidget *button_ok;
     gboolean in_update;
 
 } CCViewControls;
@@ -292,12 +293,12 @@ cc_view_dialog(CCViewArgs *args,
 
     dialog = gtk_dialog_new_with_buttons(_("3D calibration"), NULL, 0, NULL);
     gtk_dialog_add_action_widget(GTK_DIALOG(dialog),
-                                 gwy_stock_like_button_new(_("_Update"),
-                                                           GTK_STOCK_EXECUTE),
-                                 RESPONSE_PREVIEW);
-     gtk_dialog_add_button(GTK_DIALOG(dialog),
-                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL);
+                                                          gwy_stock_like_button_new(_("_Update"),
+                                                                                    GTK_STOCK_EXECUTE),
+                                                          RESPONSE_PREVIEW);
     gtk_dialog_add_button(GTK_DIALOG(dialog),
+                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL);
+    controls.button_ok = gtk_dialog_add_button(GTK_DIALOG(dialog),
                           GTK_STOCK_OK, GTK_RESPONSE_OK);
 
     gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
@@ -579,7 +580,9 @@ cc_view_dialog(CCViewArgs *args,
     } while (response != GTK_RESPONSE_OK);
 
     args->calibration = gtk_combo_box_get_active(GTK_COMBO_BOX(controls.calibration));
-    calibration = gwy_inventory_get_nth_item(inventory, args->calibration);
+    if (args->calibration < gwy_inventory_get_n_items(inventory))
+        calibration = gwy_inventory_get_nth_item(inventory, args->calibration);
+    else calibration = NULL;
 
     gtk_widget_destroy(dialog);
     cc_view_dialog_abandon(&controls);
@@ -601,7 +604,7 @@ update_view(CCViewControls *controls, CCViewArgs *args)
     gint col, row, xres, yres, zres;
     gdouble x, y, z, xerr, yerr, zerr, xunc, yunc, zunc;
     GwyDataField *viewfield;
-    GwyCalibration *calibration;
+    GwyCalibration *calibration = NULL;
     GwyCalData *caldata = NULL;
     gsize len;
     GError *err = NULL;
@@ -614,7 +617,16 @@ update_view(CCViewControls *controls, CCViewArgs *args)
    //viewfield = controls->view_field;
 
     args->calibration = gtk_combo_box_get_active(GTK_COMBO_BOX(controls->calibration));
-    calibration = gwy_inventory_get_nth_item(gwy_calibrations(), args->calibration);
+    if (args->calibration < gwy_inventory_get_n_items(gwy_calibrations()))
+        calibration = gwy_inventory_get_nth_item(gwy_calibrations(), args->calibration);
+
+    if (calibration==NULL) {
+        gtk_widget_set_sensitive(controls->button_ok, FALSE);
+    } else {
+        gtk_widget_set_sensitive(controls->button_ok, TRUE);
+     }
+
+
     if (calibration) {
         filename = g_build_filename(gwy_get_user_dir(), "caldata", calibration->filename, NULL);
         if (!g_file_get_contents(filename, 
