@@ -160,7 +160,7 @@ gwy_data_field_area_get_max_uncertainty(GwyDataField *dfield,
 }
 
 /**
- * gwy_data_field_get_min:
+ * gwy_data_field_get_min_uncertainty:
  * @data_field: A data field.
  * @uncz_field: The corresponding uncertainty data field.
  *
