@@ -227,6 +227,7 @@ validate_item_pass1(gpointer hash_key,
 
         case KEY_IS_MASK:
         case KEY_IS_SHOW:
+        case KEY_IS_CALDATA:
         check_type(gvalue, GWY_TYPE_DATA_FIELD, key, errors);
         break;
 
