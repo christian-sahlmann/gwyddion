@@ -5692,7 +5692,7 @@ gwy_app_sync_data_items(GwyContainer *source,
         "point", "pointer", "line", "rectangle", "ellipse",
     };
     static const gchar *cal_keys[] = {
-        "xerr", "yerr", "zerr", "xunc", "yunc", "zunc",
+        "cal_xerr", "cal_yerr", "cal_zerr", "cal_xunc", "cal_yunc", "cal_zunc",
     };
 
 
