@@ -178,7 +178,7 @@ wsf_load(const gchar *filename,
     dfield = gwy_data_field_new(xres, yres, xreal, yreal, FALSE);
     gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_xy(dfield), "m");
     value = title = g_hash_table_lookup(hash, "Display Type");
-    if (gwy_stramong(value, "Z_DRIVE")) {
+    if (gwy_stramong(value, "Z_DRIVE", NULL)) {
         zunit = "m";
         q = Nano;
     }
