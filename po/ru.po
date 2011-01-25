@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2011-01-22 03:58+0100\n"
-"PO-Revision-Date: 2011-01-22 13:22+0300\n"
+"POT-Creation-Date: 2011-01-25 03:58+0100\n"
+"PO-Revision-Date: 2011-01-25 07:59+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "Language: \n"
@@ -847,7 +847,7 @@ msgstr "точек"
 #: modules/file/rawfile.c:398
 #: modules/process/angle_dist.c:170
 #: modules/process/calcoefs_new.c:358
-#: modules/process/calibrate.c:295
+#: modules/process/calibrate.c:296
 #: modules/process/curvature.c:602
 #: modules/process/cwt.c:132
 #: modules/process/deposit_synth.c:359
@@ -2266,55 +2266,55 @@ msgstr "Байт в позиции %d"
 msgid "%s instead of %s"
 msgstr "%s вместо %s"
 
-#: app/validate.c:346
+#: app/validate.c:347
 #, c-format
 msgid "no channel %d exists for %s"
 msgstr "отсутствует канал %d для %s"
 
-#: app/validate.c:355
+#: app/validate.c:356
 #, c-format
 msgid "no graph %d exists for %s"
 msgstr "отсутствует график %d для %s"
 
-#: app/validate.c:365
+#: app/validate.c:366
 #, c-format
 msgid "no spectra %d exists for %s"
 msgstr "отсутствует спектр %d для %s"
 
-#: app/validate.c:419
+#: app/validate.c:420
 #, c-format
 msgid "ref_count is %d for %s"
 msgstr "ref_count равен %d для %s"
 
-#: app/validate.c:598
+#: app/validate.c:599
 msgid "Invalid item key format"
 msgstr "Неверный формат кода позиции"
 
-#: app/validate.c:599
+#: app/validate.c:600
 msgid "Item key contains invalid characters"
 msgstr "Код позиции содержит неверные символы"
 
-#: app/validate.c:600
+#: app/validate.c:601
 msgid "Item key does not belong to any known data"
 msgstr "Код позиции не принадлежит ни одному виду известных данных"
 
-#: app/validate.c:601
+#: app/validate.c:602
 msgid "Wrong data item id"
 msgstr "Неверный идентификатор элемента данных"
 
-#: app/validate.c:602
+#: app/validate.c:603
 msgid "Unexpected data item type"
 msgstr "Неожиданный тип элемента данных"
 
-#: app/validate.c:603
+#: app/validate.c:604
 msgid "String value is not valid UTF-8"
 msgstr "Строчное значение не является правильным UTF-8"
 
-#: app/validate.c:604
+#: app/validate.c:605
 msgid "Object has several references"
 msgstr "Несколько ссылок на объект"
 
-#: app/validate.c:605
+#: app/validate.c:606
 msgid "Secondary data item has no primary data"
 msgstr "Вторичный элемент данных не имеет первичных данных"
 
@@ -3494,10 +3494,10 @@ msgstr "_Ширина"
 #: modules/process/calcoefs_new.c:462
 #: modules/process/calcoefs_simple.c:406
 #: modules/process/calcoefs_simple.c:473
-#: modules/process/calcoefs_view.c:461
-#: modules/process/calcoefs_view.c:499
-#: modules/process/calibrate.c:338
-#: modules/process/calibrate.c:419
+#: modules/process/calcoefs_view.c:462
+#: modules/process/calcoefs_view.c:500
+#: modules/process/calibrate.c:339
+#: modules/process/calibrate.c:420
 #: modules/process/dimensions.h:159
 msgid "Change"
 msgstr "Изменить"
@@ -3533,8 +3533,8 @@ msgstr "как данные"
 #: modules/file/rawfile.c:1326
 #: modules/process/calcoefs_new.c:787
 #: modules/process/calcoefs_simple.c:1095
-#: modules/process/calcoefs_view.c:1209
-#: modules/process/calibrate.c:815
+#: modules/process/calcoefs_view.c:1221
+#: modules/process/calibrate.c:816
 #: modules/process/dimensions.h:193
 msgid "Change Units"
 msgstr "Изменить единицы измерения"
@@ -3543,8 +3543,8 @@ msgstr "Изменить единицы измерения"
 #: modules/file/rawfile.c:1340
 #: modules/process/calcoefs_new.c:800
 #: modules/process/calcoefs_simple.c:1108
-#: modules/process/calcoefs_view.c:1222
-#: modules/process/calibrate.c:829
+#: modules/process/calcoefs_view.c:1234
+#: modules/process/calibrate.c:830
 #: modules/process/dimensions.h:206
 msgid "New _units:"
 msgstr "Новые _единицы:"
@@ -3860,7 +3860,7 @@ msgstr "Предустановки"
 #: modules/file/rawfile.c:541
 #: modules/file/rawxyz.c:436
 #: modules/process/arithmetic.c:227
-#: modules/process/calcoefs_view.c:295
+#: modules/process/calcoefs_view.c:296
 #: modules/process/convolution_filter.c:243
 #: modules/process/deposit_synth.c:683
 #: modules/process/drift.c:227
@@ -5377,7 +5377,7 @@ msgid "Load calibration data from text file"
 msgstr "Загружает данные калибровки из текстового файла"
 
 #: modules/process/calcoefs_load.c:93
-msgid "/Cali_bration/_Load from text file..."
+msgid "/Cali_bration/_Load From Text File..."
 msgstr "/_Калибровка/_Загрузить из текстового файла..."
 
 #: modules/process/calcoefs_load.c:97
@@ -5385,7 +5385,7 @@ msgid "Load calibration data from text file."
 msgstr "Загрузить данные калибровки из текстового файла."
 
 #: modules/process/calcoefs_load.c:237
-msgid "Load calibration data"
+msgid "Load Calibration Data"
 msgstr "Загрузить данные калибровки"
 
 #: modules/process/calcoefs_load.c:257
@@ -5411,7 +5411,7 @@ msgid "Specify simple calibration data."
 msgstr "Задать простые данные калибровки"
 
 #: modules/process/calcoefs_new.c:357
-msgid "Simple calibration data"
+msgid "Simple Calibration Data"
 msgstr "Простые данные калибровки"
 
 #: modules/process/calcoefs_new.c:375
@@ -5467,7 +5467,7 @@ msgid "Simple AFM data recalibration"
 msgstr "Простая перекалибровка данных АСМ"
 
 #: modules/process/calcoefs_simple.c:172
-msgid "/Cali_bration/_Get simple errop map..."
+msgid "/Cali_bration/_Get Simple Errop Map..."
 msgstr "/_Калибровка/_Получить простую карту ошибок..."
 
 #: modules/process/calcoefs_simple.c:176
@@ -5475,7 +5475,7 @@ msgid "Simple error mapping"
 msgstr "Простое картирование ошибок"
 
 #: modules/process/calcoefs_simple.c:343
-msgid "Simple error map"
+msgid "Simple Error Map"
 msgstr "Простая карта ошибок"
 
 #: modules/process/calcoefs_simple.c:358
@@ -5485,14 +5485,14 @@ msgid "Operands:"
 msgstr "Операнды:"
 
 #: modules/process/calcoefs_simple.c:386
-#: modules/process/calcoefs_view.c:441
-#: modules/process/calibrate.c:366
+#: modules/process/calcoefs_view.c:442
+#: modules/process/calibrate.c:367
 msgid "_X offset:"
 msgstr "Смещение по _X:"
 
 #: modules/process/calcoefs_simple.c:413
-#: modules/process/calcoefs_view.c:467
-#: modules/process/calibrate.c:379
+#: modules/process/calcoefs_view.c:468
+#: modules/process/calibrate.c:380
 msgid "_Y offset:"
 msgstr "Смещение по _Y:"
 
@@ -5505,7 +5505,7 @@ msgid "Y p_eriod:"
 msgstr "Пе_риод Y:"
 
 #: modules/process/calcoefs_simple.c:453
-#: modules/process/calcoefs_view.c:479
+#: modules/process/calcoefs_view.c:480
 msgid "_Z offset:"
 msgstr "Смещение по _Z:"
 
@@ -5523,7 +5523,7 @@ msgstr "Перекалибровка данных цифровой АСМ"
 
 #: modules/process/calcoefs_stage.c:93
 #, fuzzy
-msgid "/Cali_bration/_3D calibration/_Get from stage map..."
+msgid "/Cali_bration/_3D Calibration/_Get From Stage map..."
 msgstr "/_Калибровка/_Трёхмерная/_Получить из карты stage..."
 
 #: modules/process/calcoefs_stage.c:97
@@ -5531,116 +5531,116 @@ msgid "Stage error mapping"
 msgstr "Картирование ошибок основания"
 
 #: modules/process/calcoefs_stage.c:134
-msgid "Stage error map"
+msgid "Stage Error Map"
 msgstr "Карта ошибок основания"
 
-#: modules/process/calcoefs_view.c:217
+#: modules/process/calcoefs_view.c:218
 msgid "3D calibration/uncertainty"
 msgstr "Трёхмерная калибровка и погрешность измерения"
 
-#: modules/process/calcoefs_view.c:231
-msgid "/Cali_bration/_Apply to data..."
+#: modules/process/calcoefs_view.c:232
+msgid "/Cali_bration/_Apply to Data..."
 msgstr "/_Калибровка/Применить к _данным..."
 
-#: modules/process/calcoefs_view.c:235
+#: modules/process/calcoefs_view.c:236
 msgid "3D calibration and uncertainty"
 msgstr "Трёхмерная калибровка и погрешности"
 
-#: modules/process/calcoefs_view.c:293
-msgid "3D calibration"
+#: modules/process/calcoefs_view.c:294
+msgid "3D Calibration"
 msgstr "Трёхмерная калибровка"
 
-#: modules/process/calcoefs_view.c:347
+#: modules/process/calcoefs_view.c:348
 msgid "Used calibration data:"
 msgstr "Используемые данные калибровки:"
 
-#: modules/process/calcoefs_view.c:364
+#: modules/process/calcoefs_view.c:365
 msgid "Shown planes:"
 msgstr "Показаны плоскости:"
 
-#: modules/process/calcoefs_view.c:370
+#: modules/process/calcoefs_view.c:371
 msgid "View:"
 msgstr "Вид:"
 
-#: modules/process/calcoefs_view.c:385
+#: modules/process/calcoefs_view.c:386
 msgid "Plane:"
 msgstr "Плоскость:"
 
-#: modules/process/calcoefs_view.c:404
+#: modules/process/calcoefs_view.c:405
 msgid "X pos:"
 msgstr "Положение X:"
 
-#: modules/process/calcoefs_view.c:411
+#: modules/process/calcoefs_view.c:412
 msgid "Y pos:"
 msgstr "Положение Y:"
 
-#: modules/process/calcoefs_view.c:418
+#: modules/process/calcoefs_view.c:419
 msgid "Z pos:"
 msgstr "Положение Z:"
 
-#: modules/process/calcoefs_view.c:423
+#: modules/process/calcoefs_view.c:424
 msgid "Interpolation:"
 msgstr "Интерполяция:"
 
-#: modules/process/calcoefs_view.c:507
+#: modules/process/calcoefs_view.c:508
 msgid "crop to actual data"
 msgstr "обрезать до действительных данных"
 
-#: modules/process/calcoefs_view.c:517
+#: modules/process/calcoefs_view.c:518
 msgid "i_nstant updates"
 msgstr "мгновенное об_новление"
 
-#: modules/process/calcoefs_view.c:962
+#: modules/process/calcoefs_view.c:974
 #: modules/tools/profile.c:1092
 msgid "X correction"
 msgstr "Поправка по X"
 
-#: modules/process/calcoefs_view.c:963
+#: modules/process/calcoefs_view.c:975
 #: modules/tools/profile.c:1093
 msgid "Y correction"
 msgstr "Поправка по Y"
 
-#: modules/process/calcoefs_view.c:964
+#: modules/process/calcoefs_view.c:976
 #: modules/tools/profile.c:1094
 msgid "Z correction"
 msgstr "Поправка по Z"
 
-#: modules/process/calcoefs_view.c:965
+#: modules/process/calcoefs_view.c:977
 #: modules/tools/profile.c:1095
 msgid "X uncertainty"
 msgstr "Погрешность X"
 
-#: modules/process/calcoefs_view.c:966
+#: modules/process/calcoefs_view.c:978
 #: modules/tools/profile.c:1096
 msgid "Y uncertainty"
 msgstr "Погрешность Y"
 
-#: modules/process/calcoefs_view.c:967
+#: modules/process/calcoefs_view.c:979
 #: modules/tools/profile.c:1097
 msgid "Z uncertainty"
 msgstr "Погрешность Z"
 
-#: modules/process/calcoefs_view.c:979
+#: modules/process/calcoefs_view.c:991
 msgid "Constant X"
 msgstr "Постоянная X"
 
-#: modules/process/calcoefs_view.c:980
+#: modules/process/calcoefs_view.c:992
 msgid "Constant Y"
 msgstr "Постоянная Y"
 
-#: modules/process/calcoefs_view.c:981
+#: modules/process/calcoefs_view.c:993
 msgid "Constant Z"
 msgstr "Постоянная Z"
 
-#: modules/process/calcoefs_view.c:992
+#: modules/process/calcoefs_view.c:1004
 msgid "NNA 3D"
 msgstr "АБС 3D"
 
-#: modules/process/calcoefs_view.c:993
+#: modules/process/calcoefs_view.c:1005
 msgid "Snap to planes"
 msgstr "Привязать к плоскостям"
 
-#: modules/process/calcoefs_view.c:994
+#: modules/process/calcoefs_view.c:1006
 msgid "Delaunay"
 msgstr "Делоне"
 
@@ -5649,62 +5649,62 @@ msgid "Recalibrates scan lateral dimensions or value range."
 msgstr "Перекалибровывает горизонтальное разрешение скана или диапазон значений"
 
 #: modules/process/calibrate.c:159
-msgid "/_Basic Operations/_Dimensions and units..."
+msgid "/_Basic Operations/_Dimensions and Units..."
 msgstr "/_Базовые действия/Единицы и_змерения..."
 
 #: modules/process/calibrate.c:163
-msgid "Recalibrate data"
-msgstr "Перекалибровать данные"
+msgid "Change physical dimensions, units or value scale"
+msgstr "Меняет горизонтальное разрешение, единицы измерения или диапазон значений"
 
-#: modules/process/calibrate.c:281
+#: modules/process/calibrate.c:282
 msgid "Recalibrated Data"
 msgstr "Перекалиброванные данные"
 
-#: modules/process/calibrate.c:294
+#: modules/process/calibrate.c:295
 msgid "Calibrate"
 msgstr "Калибровка"
 
-#: modules/process/calibrate.c:313
+#: modules/process/calibrate.c:314
 msgid "New Real Dimensions"
 msgstr "Новые реальные размеры"
 
-#: modules/process/calibrate.c:318
+#: modules/process/calibrate.c:319
 msgid "_X range:"
 msgstr "Диапазон _X:"
 
-#: modules/process/calibrate.c:345
+#: modules/process/calibrate.c:346
 msgid "_Y range:"
 msgstr "Диапазон _Y:"
 
-#: modules/process/calibrate.c:359
+#: modules/process/calibrate.c:360
 msgid "_Square samples"
 msgstr "_Квадратный образец"
 
-#: modules/process/calibrate.c:394
+#: modules/process/calibrate.c:395
 msgid "Value Range"
 msgstr "Диапазон значений"
 
-#: modules/process/calibrate.c:399
+#: modules/process/calibrate.c:400
 msgid "_Z range:"
 msgstr "Диапазон _Z:"
 
-#: modules/process/calibrate.c:428
+#: modules/process/calibrate.c:429
 msgid "Z shi_ft:"
 msgstr "С_двиг Z:"
 
-#: modules/process/calibrate.c:443
+#: modules/process/calibrate.c:444
 msgid "Calibration Coefficients"
 msgstr "Коэффициенты калибровки"
 
-#: modules/process/calibrate.c:450
+#: modules/process/calibrate.c:451
 msgid "_X calibration factor:"
 msgstr "Множитель калибровки по _X:"
 
-#: modules/process/calibrate.c:458
+#: modules/process/calibrate.c:459
 msgid "_Y calibration factor:"
 msgstr "Множитель калибровки по _Y:"
 
-#: modules/process/calibrate.c:466
+#: modules/process/calibrate.c:467
 msgid "_Z calibration factor:"
 msgstr "Множитель калибровки по _Z:"
 
@@ -10057,3 +10057,5 @@ msgstr ""
 "Наклон θ:     %s\n"
 "Наклон φ:     %s\n"
 
+#~ msgid "Recalibrate data"
+#~ msgstr "Перекалибровать данные"
