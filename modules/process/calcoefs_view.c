@@ -614,7 +614,6 @@ update_view(CCViewControls *controls, CCViewArgs *args)
     gboolean run = TRUE;
     viewfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
                                                                   "/0/data"));
-   //viewfield = controls->view_field;
 
     args->calibration = gtk_combo_box_get_active(GTK_COMBO_BOX(controls->calibration));
     if (args->calibration < gwy_inventory_get_n_items(gwy_calibrations()))

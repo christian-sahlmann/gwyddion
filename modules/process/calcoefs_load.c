@@ -42,7 +42,6 @@ typedef enum {
              DUPLICATE_APPEND = 2
 } ResponseDuplicate;
 
-
 typedef struct {
     gchar *name;
     GwyCalData *caldata;

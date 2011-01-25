@@ -94,7 +94,7 @@ typedef struct {
     GtkWidget *zunits;
     GtkWidget *xyexponent;
     GtkWidget *zexponent;
-    GtkEntry *name;
+    GtkWidget *name;
     GtkWidget *suggestion;
 } SimpleControls;
 
@@ -105,7 +105,6 @@ static gboolean     simple_dialog         (SimpleArgs *args,
                                            GwyDataField *dfield);
 static void         simple_data_cb        (GwyDataChooser *chooser,
                                                SimpleControls *controls);
-static const gchar* simple_check          (SimpleArgs *args);
 static void         simple_do             (SimpleArgs *args);
 static void        xyexponent_changed_cb       (GtkWidget *combo,
                                                SimpleControls *controls);
@@ -188,7 +187,7 @@ simple(GwyContainer *data, GwyRunType run)
     GQuark mquark;
     gint n, id;
     GwyCalibration *calibration;
-    GwyCalData *caldata;
+    GwyCalData *caldata=NULL;
     gchar *filename;
     gchar *contents;
     gsize len;
@@ -226,7 +225,7 @@ simple(GwyContainer *data, GwyRunType run)
 
 
     /*if append requested, copy newly created calibration into old one*/
-    if (args.duplicate == DUPLICATE_APPEND && (calibration = gwy_inventory_get_item(gwy_calibrations(), args.name)))
+    if (args.duplicate == DUPLICATE_APPEND && (calibration = gwy_inventory_get_item(gwy_calibrations(), args.name[0])))
     {
 
         filename = g_build_filename(gwy_get_user_dir(), "caldata", calibration->filename, NULL);
@@ -271,9 +270,9 @@ simple(GwyContainer *data, GwyRunType run)
     }
 
     /*now create and save the resource*/
-    if ((calibration = GWY_CALIBRATION(gwy_inventory_get_item(gwy_calibrations(), args.name)))==NULL)
+    if ((calibration = GWY_CALIBRATION(gwy_inventory_get_item(gwy_calibrations(), args.name[0])))==NULL)
     {
-        calibration = gwy_calibration_new(args.name, 8, g_strconcat(args.name, ".dat", NULL));
+        calibration = gwy_calibration_new(args.name[0], 8, g_strconcat(args.name[0], ".dat", NULL));
         gwy_inventory_insert_item(gwy_calibrations(), calibration);
         g_object_unref(calibration);
     }
@@ -494,7 +493,7 @@ simple_dialog(SimpleArgs *args, GwyDataField *dfield)
 
     args->calname = g_strdup("new"); //FIXME this should not be here
     controls.name = gtk_entry_new();
-    gtk_entry_set_text(controls.name, args->calname);
+    gtk_entry_set_text(GTK_ENTRY(controls.name), args->calname);
     gtk_table_attach(GTK_TABLE(table), controls.name,
                      1, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
@@ -524,7 +523,7 @@ simple_dialog(SimpleArgs *args, GwyDataField *dfield)
 
      controls.in_update = FALSE;
 
-     simple_data_cb(controls.data[0],
+     simple_data_cb(GWY_DATA_CHOOSER(controls.data[0]),
                      &controls);
 
 
@@ -544,17 +543,17 @@ simple_dialog(SimpleArgs *args, GwyDataField *dfield)
 
             case GTK_RESPONSE_OK:
             /*check whether this resource already exists*/
-            args->calname = g_strdup(gtk_entry_get_text(controls.name));
+            args->calname = g_strdup(gtk_entry_get_text(GTK_ENTRY(controls.name)));
             if (gwy_inventory_get_item(gwy_calibrations(), args->calname))
             {
-                dialog2 = gtk_message_dialog_new (dialog,
+                dialog2 = gtk_message_dialog_new (GTK_WINDOW(dialog),
                                                   GTK_DIALOG_DESTROY_WITH_PARENT,
                                                   GTK_MESSAGE_WARNING,
                                                   GTK_BUTTONS_CANCEL,
                                                   "Calibration '%s' alerady exists",
                                                   args->calname);
-                gtk_dialog_add_button(dialog2, "Overwrite", RESPONSE_DUPLICATE_OVERWRITE);
-                gtk_dialog_add_button(dialog2, "Append", RESPONSE_DUPLICATE_APPEND);
+                gtk_dialog_add_button(GTK_DIALOG(dialog2), "Overwrite", RESPONSE_DUPLICATE_OVERWRITE);
+                gtk_dialog_add_button(GTK_DIALOG(dialog2), "Append", RESPONSE_DUPLICATE_APPEND);
                 response = gtk_dialog_run(GTK_DIALOG(dialog2));
                 if (response == RESPONSE_DUPLICATE_OVERWRITE) {
                     args->duplicate = DUPLICATE_OVERWRITE;
@@ -840,7 +839,7 @@ find_next(gdouble *xs, gdouble *ys, gdouble *pxs, gdouble *pys, gint *is_indexed
           gint present_xs, gint present_pxs, gint ncol, gint nrow, gint n, gint *nind,
           gdouble *avs, gint *navs)  //present: present in xs,ys,  pcol, prow, present detected pos
 {
-    gint i, pos;
+    gint i, pos=0;
     gdouble val, min = G_MAXDOUBLE;
     gint found = 0;
     /*check me; first find next "present_xs"*/
@@ -1028,7 +1027,7 @@ threshold_changed_cb(GtkAdjustment *adj,
     simple_dialog_update(controls, args);
     controls->in_update = FALSE;
 
-    simple_data_cb(controls->data[0],
+    simple_data_cb(GWY_DATA_CHOOSER(controls->data[0]),
                           controls);
 
 
