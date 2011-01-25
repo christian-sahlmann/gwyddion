@@ -1,4 +1,22 @@
-
+/*
+ *  @(#) $Id: natural.c 11428 2010-10-18 08:34:36Z dn2010 $
+ *  Copyright (C) 2009 Ross Hemsley, David Necas (Yeti), Petr Klapetek.
+ *  E-mail: rh7223@bris.ac.uk, yeti@gwyddion.net, klapetek@gwyddion.net.
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
+ */
 
 /*******************************************************************************
 * utils.h
@@ -16,6 +34,55 @@
 
 #include "natural.h"
 #define SQR(x)  (x)*(x)
+
+
+struct _stack
+{
+  gint top;
+  gint slots;
+  void** arr;
+};
+
+
+struct _arrayList
+{
+   gint   num_slots;
+   gint   num_elements;
+   void** arr;
+};
+
+struct _listNode
+{
+  void *data;
+  struct _listNode *next;
+  struct _listNode *prev;
+};
+
+struct _linkedList
+{
+  listNode *head;
+  listNode *last;
+  gint nelem;
+  stack   *deadNodes;
+};
+
+struct _simplex
+{
+  GwyDelaunayVertex  *p[4];
+  struct _simplex *s[4];
+  listNode *node;
+};
+
+
+struct _neighbourUpdate
+{
+  stack  *ptrs;
+  stack  *old;
+};
+
+
+
+
 
 
 /*******************************************************************************
@@ -124,10 +191,10 @@ static gint arrayListSize(arrayList *l)
 
 /******************************************************************************/
 
-static void * getFromArrayList (arrayList *l, gint index)
+static void * getFromArrayList (arrayList *l, gint iindex)
 {
-   if(index >= 0 && index <  l->num_elements)
-      return l->arr[index];
+   if(iindex >= 0 && iindex <  l->num_elements)
+      return l->arr[iindex];
       
    return NULL;
 }

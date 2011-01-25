@@ -1,53 +1,35 @@
-/*******************************************************************************
-*
-*  interpolate.h - By Ross Hemsley Aug. 2009 - rh7223@bris.ac.uk.
-*  
-*  This unit will perform Natural-Neighbour interpolation. To do this, we first
-*  need a Mesh of Delaunay Tetrahedrons for our input points. Each point to be
-*  interpolated is then inserted into the mesh (remembering the steps that were
-*  taken to insert it) and then the volume of the modified Voronoi cells 
-*  (easily computed from the Delaunay Mesh) are used to weight the neighbouring
-*  points. We can then revert the Delaunay mesh back to the original mesh by 
-*  reversing the flips required to insert the point.
-*
-*******************************************************************************/
+/*
+ *  @(#) $Id: natural.h 11428 2010-10-18 08:34:36Z dn2010 $
+ *  Copyright (C) 2009 Ross Hemsley, David Necas (Yeti), Petr Klapetek.
+ *  E-mail: rh7223@bris.ac.uk, yeti@gwyddion.net, klapetek@gwyddion.net.
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
+ */
+
 
 #ifndef natural_h
 #define natural_h
 
 #include <glib.h>
 
-typedef struct
-{
-  gint top;
-  gint slots;
-  void** arr;
-} stack;
-
-
-/* This is how we store an array list. */
-typedef struct
-{
-   gint   num_slots;
-   gint   num_elements;
-   void** arr;
-} arrayList;
-
-/* These structs are needed to store a (doubly) linked list. */
-typedef struct _listNode
-{
-  void *data;
-  struct _listNode *next;
-  struct _listNode *prev;
-} listNode;
-
-typedef struct
-{
-  listNode *head;
-  listNode *last;
-  gint nelem;
-  stack   *deadNodes;
-} linkedList;
+typedef struct _stack stack;
+typedef struct _arrayList arrayList;
+typedef struct _listNode listNode;
+typedef struct _linkedList linkedList;
+typedef struct _simplex simplex;
+typedef struct _neighbourUpdate neighbourUpdate;
 
 typedef struct
 {
@@ -58,21 +40,6 @@ typedef struct
 
 } GwyDelaunayVertex;
 
-
-typedef struct _simplex
-{
-  GwyDelaunayVertex  *p[4];
-  struct _simplex *s[4];
-  listNode *node;
-} simplex;
-
-/******************************************************************************/
-
-typedef struct
-{
-  stack  *ptrs;
-  stack  *old;
-} neighbourUpdate;
 
 typedef struct
 {
