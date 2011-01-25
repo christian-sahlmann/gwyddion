@@ -1,7 +1,25 @@
 2.23 (0000-00-00)
+Application:
+- support for calibrations in Data Browser
+
+Libraries:
+- libgwyprocess: added Delaunay triangulation from Ross Hemsley
+- libgwyprocess: added calibration data structures 
+- libgwyprocess: added statistical functions for calculating uncertainties
+  from calibration data
+
 Modules:
 - WSF file (new): Imports WSF SPM data.
 - MIF (new): Import of DME MIF files v1.7 (just topography).
+- Calibration: Load from text file: enables loading complex calibration data
+- Calibration: Create: enables defining simple calibration data for 3 axes
+- Calibration: View: select, view and apply calibration for concrete SPM data
+- Calibration: Simple error map: create simple calibration entry from grating 
+  measurement
+- Profile: modified to display calibration data
+- Read value: modified to display calibration data
+- Statistics: modified to display calibration data
+- Statistical functions: modified to display calibration data
 
 Other:
 - Compilation with MSVC6 toolchain on MS Windows is no longer supported, use
