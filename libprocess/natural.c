@@ -36,6 +36,14 @@
 #define SQR(x)  (x)*(x)
 
 
+typedef struct _stack stack;
+typedef struct _arrayList arrayList;
+typedef struct _listNode listNode;
+typedef struct _linkedList linkedList;
+typedef struct _simplex simplex;
+typedef struct _neighbourUpdate neighbourUpdate;
+
+
 struct _stack
 {
   gint top;
@@ -80,6 +88,34 @@ struct _neighbourUpdate
   stack  *old;
 };
 
+
+struct _GwyDelaunayVertex
+{
+  gdouble v[3];
+  gint    index;
+  gdouble data[3];
+  gdouble voronoiVolume;
+
+};
+
+struct _GwyDelaunayMesh
+{
+  linkedList    *tets;
+
+  simplex *super;
+  GwyDelaunayVertex   superVerticies[4];
+
+  stack   *deadSimplicies;
+  stack   *deadVoronoiCells;
+
+  arrayList       *conflicts;
+  arrayList       *updates;
+  neighbourUpdate *neighbourUpdates;
+
+  gint coplanar_degenerecies;
+  gint cospherical_degenerecies;
+
+};
 
 
 

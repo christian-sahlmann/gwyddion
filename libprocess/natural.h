@@ -24,41 +24,9 @@
 
 #include <glib.h>
 
-typedef struct _stack stack;
-typedef struct _arrayList arrayList;
-typedef struct _listNode listNode;
-typedef struct _linkedList linkedList;
-typedef struct _simplex simplex;
-typedef struct _neighbourUpdate neighbourUpdate;
+typedef struct _GwyDelaunayVertex GwyDelaunayVertex;
+typedef struct _GwyDelaunayMesh GwyDelaunayMesh;
 
-typedef struct
-{
-  gdouble v[3];
-  gint    index;
-  gdouble data[3];
-  gdouble voronoiVolume;
-
-} GwyDelaunayVertex;
-
-
-typedef struct
-{
-  linkedList    *tets;
-
-  simplex *super;
-  GwyDelaunayVertex   superVerticies[4];
-
-  stack   *deadSimplicies;
-  stack   *deadVoronoiCells;
-
-  arrayList       *conflicts;
-  arrayList       *updates;
-  neighbourUpdate *neighbourUpdates;
-
-  gint coplanar_degenerecies;
-  gint cospherical_degenerecies;
-
-} GwyDelaunayMesh;
 
 GwyDelaunayMesh* gwy_delaunay_new_mesh();
 void             gwy_delaunay_build_mesh(GwyDelaunayVertex* ps, gint n, GwyDelaunayMesh *m);
