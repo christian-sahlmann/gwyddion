@@ -138,9 +138,6 @@ static void        zmult_changed_cb           (GtkAdjustment *adj,
 
 
 
-
-
-
 static const CNewArgs cnew_defaults = {
     0.0,
     100e-6,

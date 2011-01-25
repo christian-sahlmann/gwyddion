@@ -87,6 +87,12 @@ gwy_caldata_finalize(GObject *object)
     gwy_object_unref(caldata->si_unit_x);
     gwy_object_unref(caldata->si_unit_y);
     gwy_object_unref(caldata->si_unit_z);
+
+    gwy_delaunay_mesh_free(caldata->err_m);
+    gwy_delaunay_mesh_free(caldata->unc_m);
+    //gwy_delaunay_vertex_free(caldata->err_m);
+    //gwy_delaunay_vertex_free(caldata->unc_m);
+
     g_free(caldata->x);
     g_free(caldata->y);
     g_free(caldata->z);
@@ -495,16 +501,16 @@ gwy_caldata_set_si_unit_z(GwyCalData *caldata,
 void           
 gwy_caldata_setup_interpolation (GwyCalData *caldata)
 {
-    caldata->err_ps = initPoints(caldata->x, caldata->y, caldata->z,  
+    caldata->err_ps = gwy_delaunay_vertex_new(caldata->x, caldata->y, caldata->z,  
                                  caldata->xerr, caldata->yerr, caldata->zerr, caldata->ndata);
-    caldata->unc_ps = initPoints(caldata->x, caldata->y, caldata->z,  
+    caldata->unc_ps = gwy_delaunay_vertex_new(caldata->x, caldata->y, caldata->z,  
                                  caldata->xunc, caldata->yunc, caldata->zunc, caldata->ndata);
 
-    caldata->err_m = gwy_delaunay_new_mesh();
-    caldata->unc_m = gwy_delaunay_new_mesh();
+    caldata->err_m = gwy_delaunay_mesh_new();
+    caldata->unc_m = gwy_delaunay_mesh_new();
 
-    gwy_delaunay_build_mesh(caldata->err_ps, caldata->ndata, caldata->err_m);
-    gwy_delaunay_build_mesh(caldata->unc_ps, caldata->ndata, caldata->unc_m);
+    gwy_delaunay_mesh_build(caldata->err_m, caldata->err_ps, caldata->ndata);
+    gwy_delaunay_mesh_build(caldata->unc_m, caldata->unc_ps, caldata->ndata);
 }
 
 /**
@@ -530,10 +536,10 @@ gwy_caldata_interpolate (GwyCalData *caldata,
 {
 
     if (xerr || yerr || zerr)
-       gwy_delaunay_interpolate3_3(x, y, z, xerr, yerr, zerr, caldata->err_m);
+       gwy_delaunay_mesh_interpolate3_3(caldata->err_m, x, y, z, xerr, yerr, zerr);
 
     if (xunc || yunc || zunc)
-       gwy_delaunay_interpolate3_3(x, y, z, xunc, yunc, zunc, caldata->unc_m);
+       gwy_delaunay_mesh_interpolate3_3(caldata->unc_m, x, y, z, xunc, yunc, zunc);
 }
 
 

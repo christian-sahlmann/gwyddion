@@ -28,14 +28,18 @@ typedef struct _GwyDelaunayVertex GwyDelaunayVertex;
 typedef struct _GwyDelaunayMesh GwyDelaunayMesh;
 
 
-GwyDelaunayMesh* gwy_delaunay_new_mesh();
-void             gwy_delaunay_build_mesh(GwyDelaunayVertex* ps, gint n, GwyDelaunayMesh *m);
-
-GwyDelaunayVertex *initPoints(gdouble *x, gdouble *y, gdouble *z, 
+GwyDelaunayVertex *gwy_delaunay_vertex_new(gdouble *x, gdouble *y, gdouble *z, 
                    gdouble *u, gdouble *v, gdouble *w, gint n);
 
-void     gwy_delaunay_interpolate3_3(gdouble  x, gdouble  y, gdouble  z, 
-                        gdouble *u, gdouble *v, gdouble *w, GwyDelaunayMesh *m);
+//void     gwy_delaunay_vertex_free(GwyDelaunayVertex *ps);
+
+GwyDelaunayMesh* gwy_delaunay_mesh_new();
+void             gwy_delaunay_mesh_build(GwyDelaunayMesh *m, GwyDelaunayVertex* ps, gint n);
+
+void     gwy_delaunay_mesh_interpolate3_3(GwyDelaunayMesh *m, gdouble  x, gdouble  y, gdouble  z, 
+                        gdouble *u, gdouble *v, gdouble *w);
+
+void     gwy_delaunay_mesh_free(GwyDelaunayMesh *m);
                         
 #endif
 

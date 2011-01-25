@@ -1267,7 +1267,7 @@ static simplex *newSimplex(GwyDelaunayMesh *m)
 // This will take a list of points, and a mesh struct, and create a 
 // Delaunay Tetrahedralisation.
 
-void gwy_delaunay_build_mesh(GwyDelaunayVertex* ps, gint n, GwyDelaunayMesh *m)
+void gwy_delaunay_mesh_build(GwyDelaunayMesh *m, GwyDelaunayVertex* ps, gint n)
 {
   gint i,j;
 
@@ -2181,7 +2181,7 @@ static neighbourUpdate *initNeighbourUpdates()
 /******************************************************************************/
 // Allocate all the strucutres required to magintain a mesh in memory.
 
-GwyDelaunayMesh *gwy_delaunay_new_mesh()
+GwyDelaunayMesh *gwy_delaunay_mesh_new()
 {
   // Create the struct to hold all of the data strucutres.
   GwyDelaunayMesh *m             = g_malloc(sizeof(GwyDelaunayMesh));
@@ -2206,7 +2206,7 @@ GwyDelaunayMesh *gwy_delaunay_new_mesh()
 
 /******************************************************************************/
 
-static void gwy_delaunay_free_mesh(GwyDelaunayMesh *m)
+void gwy_delaunay_mesh_free(GwyDelaunayMesh *m)
 {
   #ifdef DEBUG
   printf("Mallocs for vertex: %d.\n", VERTEX_MALLOC);
@@ -2394,7 +2394,7 @@ static void getRange(GwyDelaunayVertex *ps, gint n, GwyDelaunayVertex *min, GwyD
 
 /******************************************************************************/
 
-GwyDelaunayVertex *initPoints(gdouble *x, gdouble *y, gdouble *z, 
+GwyDelaunayVertex *gwy_delaunay_vertex_new(gdouble *x, gdouble *y, gdouble *z, 
                    gdouble *u, gdouble *v, gdouble *w, gint n)
 {
   GwyDelaunayVertex* ps = g_malloc(sizeof(GwyDelaunayVertex) *n);
@@ -2447,8 +2447,8 @@ static void lastNaturalNeighbours(GwyDelaunayVertex *v, GwyDelaunayMesh *m, arra
 // This function will interpolate the value of a new vertex in a given 
 // vector field.
 
-void gwy_delaunay_interpolate3_3(gdouble  x, gdouble  y, gdouble  z, 
-                     gdouble *u, gdouble *v, gdouble *w, GwyDelaunayMesh *m )
+void gwy_delaunay_mesh_interpolate3_3(GwyDelaunayMesh *m, gdouble  x, gdouble  y, gdouble  z, 
+                     gdouble *u, gdouble *v, gdouble *w)
 {
   gint i;
   
