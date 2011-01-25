@@ -292,7 +292,7 @@ calibrate_dialog(CalibrateArgs *args,
     CalibrateControls controls;
     gint row, response;
 
-    dialog = gtk_dialog_new_with_buttons(_("Calibrate"), NULL, 0,
+    dialog = gtk_dialog_new_with_buttons(_("Dimensions and Units"), NULL, 0,
                                          _("_Reset"), RESPONSE_RESET,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
