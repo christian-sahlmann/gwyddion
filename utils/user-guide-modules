@@ -14,7 +14,7 @@ bcrfile	managing-files
 burleigh	managing-files
 burleigh_bii	managing-files
 burleigh_exp	managing-files
-calibrate	basic-operations	calibrate
+calibrate	basic-operations	dimensions-and-units
 convolution_filter	filters-presentations	convolution-filter
 createc	managing-files
 crop	basic-operations	crop
@@ -170,4 +170,5 @@ unisoku	managing-files
 unrotate	editing-correction	unrotate
 wipfile	managing-files
 witfile	managing-files
+wsffile	managing-files
 wsxmfile	managing-files
