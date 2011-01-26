@@ -739,9 +739,11 @@ page_switched(DepositSynthControls *controls,
     if (pagenum == PAGE_GENERATOR) {
         GwyDimensions *dims = controls->dims;
 
-        gtk_label_set_markup(GTK_LABEL(controls->size_units),
+        if (controls->size_units)
+          gtk_label_set_markup(GTK_LABEL(controls->size_units),
                              dims->xyvf->units);
-        gtk_label_set_markup(GTK_LABEL(controls->width_units),
+        if (controls->width_units)
+          gtk_label_set_markup(GTK_LABEL(controls->width_units),
                              dims->xyvf->units);
 
         //update_size_value(controls);
