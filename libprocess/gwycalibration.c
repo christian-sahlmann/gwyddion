@@ -1,5 +1,5 @@
 /*
- *  @(#) $Id: gwycalibration.c 7021 2006-11-20 20:32:29Z yeti-dn $
+ *  @(#) $Id$
  *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *

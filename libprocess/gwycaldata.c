@@ -1,5 +1,5 @@
 /*
- *  @(#) $Id: dataline.c 8874 2008-12-28 12:16:22Z yeti-dn $
+ *  @(#) $Id$
  *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *

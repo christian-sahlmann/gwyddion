@@ -1,5 +1,5 @@
 /*
- *  @(#) $Id: stats.c 10263 2009-10-19 12:39:41Z yeti-dn $
+ *  @(#) $Id$
  *  Copyright (C) 2003-2009 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
