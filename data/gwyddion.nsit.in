@@ -190,6 +190,9 @@ Section "Uninstall"
     Delete "$SMPROGRAMS\Gwyddion.lnk"
 
     GwyExpandDeleteAll
+
+    Delete "$INSTDIR\${UNINSTALLER_NAME}"
+    RmDir "$INSTDIR"
 SectionEnd
 
 ;----------------------------------------------------------------------------
