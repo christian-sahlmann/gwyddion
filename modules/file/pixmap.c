@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2004-2010 David Necas (Yeti).
+ *  Copyright (C) 2004-2011 David Necas (Yeti).
  *  E-mail: yeti@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -423,9 +423,9 @@ static GwyModuleInfo module_info = {
        "PNG, JPEG, TIFF, PPM, BMP, TARGA. "
        "Import support relies on GDK and thus may be installation-dependent."),
     "Yeti <yeti@gwyddion.net>",
-    "7.10",
+    "7.11",
     "David Nečas (Yeti)",
-    "2004-2010",
+    "2004-2011",
 };
 
 GWY_MODULE_QUERY(module_info)
@@ -446,28 +446,21 @@ module_register(void)
         gchar *fmtname;
 
         /* Ignore all vector formats */
-        if (gdk_pixbuf_format_is_scalable(pixbuf_format))
-            continue;
-
         fmtname = gdk_pixbuf_format_get_name(pixbuf_format);
-        /* Ignore some really silly formats explicitly */
-        if (gwy_strequal(fmtname, "ico")
-            || gwy_strequal(fmtname, "ani")
-            || gwy_strequal(fmtname, "wbmp")
-            /* WMF/EMF loaders seems to try to claim ownership of almost
-             * arbitrary binary data, prints error messages, and it's silly
-             * to load WMF/EMF to Gwyddion anyway */
-            || gwy_strequal(fmtname, "wmf")
-            || gwy_strequal(fmtname, "emf")
-            /* Don't know what is QTIF but again format detection is broken. */
-            || gwy_strequal(fmtname, "qtif")
-            /* swfdec causes strange errors and how mad one has to be to try
-             * to import Flash to Gwyddion? */
-            || gwy_strequal(fmtname, "swf")
-            || gwy_strequal(fmtname, "xbm")
-            || gwy_strequal(fmtname, "Digital camera RAW")
-            || gwy_strequal(fmtname, "svg")) {
-            g_free(fmtname);
+        if (gdk_pixbuf_format_is_scalable(pixbuf_format)) {
+            gwy_debug("Ignoring scalable GdkPixbuf format %s.", fmtname);
+            continue;
+        }
+
+        /* Use a whitelist of safe formats, namely those with an explicit
+         * detection in pixmap_detect().  GdkPixbuf loaders tend to accept
+         * any rubbish as their format and then crash because it isn't. */
+        if (!gwy_stramong(fmtname,
+                          "bmp", "gif", "icns", "jpeg", "jpeg2000", "pcx",
+                          "png", "pnm", "ras", "tga", "tiff", "xpm",
+                          NULL)) {
+            gwy_debug("Ignoring GdkPixbuf format %s because it is not on "
+                      "the whitelist.", fmtname);
             continue;
         }
 

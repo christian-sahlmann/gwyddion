@@ -12,6 +12,9 @@ Modules:
 - WSF file (new): Imports WSF SPM data.
 - MIF (new): Import of DME MIF files v1.7 (just topography).
 - Nanonis: Can open files containing a multipass configuration table.
+- Pixmap: The set of importable formats was limited to BMP, GIF, ICNS, JPEG,
+  JPEG2000, PCX, PNG, PNM, RAS, TARGA, TIFF and XPM that are known to work to
+  avoid crashes whenever a new buggy loader appears in GdkPixbuf.
 - Calibration: Load from text file: enables loading complex calibration data.
 - Calibration: Create: enables defining simple calibration data for 3 axes.
 - Calibration: View: select, view and apply calibration for specific SPM data.
