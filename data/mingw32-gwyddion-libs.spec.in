@@ -1,10 +1,21 @@
 # @(#) $Id$
+%{expand:%global distro_is_redhat %(test ! -f /etc/redhat-release; echo $?)}
+%{expand:%global distro_is_suse %(test ! -f /etc/SuSE-release; echo $?)}
+
 %global __strip %{_mingw32_strip}
 %global __objdump %{_mingw32_objdump}
 %global _use_internal_dependency_generator 0
 %global __find_requires %{_mingw32_findrequires}
 %global __find_provides %{_mingw32_findprovides}
+%if %{distro_is_redhat}
 %define __debug_install_post %{_mingw32_debug_install_post}
+%define develdep %{nil}
+%endif
+%if %{distro_is_suse}
+%define __os_install_post %{_mingw32_debug_install_post} \
+                          %{_mingw32_install_post}
+%define develdep -devel
+%endif
 
 Name:           mingw32-gwyddion-libs
 Version:        @PACKAGE_VERSION@
@@ -21,14 +32,25 @@ BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildArch:       noarch
 
 BuildRequires:  mingw32-filesystem >= 52
+%if %{distro_is_redhat}
 BuildRequires:  mingw32-gcc
 BuildRequires:  mingw32-binutils
-BuildRequires:  mingw32-w32api
-BuildRequires:  mingw32-gtk2 >= 2.8
-BuildRequires:  mingw32-libxml2
-BuildRequires:  mingw32-gtkglext
-BuildRequires:  mingw32-fftw
 BuildRequires:  mingw32-dlfcn
+BuildRequires:  mingw32-w32api
+BuildRequires:  mingw32-fftw
+%endif
+%if %{distro_is_suse}
+BuildRequires:  mingw32-cross-gcc
+BuildRequires:  mingw32-cross-binutils
+BuildRequires:  mingw32-cross-pkg-config
+BuildRequires:  mingw32-headers
+BuildRequires:  mingw32-fftw3-devel
+%endif
+BuildRequires:  mingw32-gtk2%{develdep} >= 2.8
+BuildRequires:  mingw32-atk%{develdep}
+BuildRequires:  mingw32-glib2%{develdep}
+BuildRequires:  mingw32-libxml2%{develdep}
+BuildRequires:  mingw32-gtkglext
 
 %description
 MinGW Windows Gwyddion libraries.
@@ -73,22 +95,27 @@ rm -rf $RPM_BUILD_ROOT
 %{_mingw32_bindir}/libgwymodule2-0.dll
 %{_mingw32_bindir}/libgwyapp2-0.dll
 %{_mingw32_includedir}/gwyddion
-%{_mingw32_libdir}/libgwyddion2.la
 %{_mingw32_libdir}/libgwyddion2.dll.a
-%{_mingw32_libdir}/libgwyprocess2.la
 %{_mingw32_libdir}/libgwyprocess2.dll.a
-%{_mingw32_libdir}/libgwydraw2.la
 %{_mingw32_libdir}/libgwydraw2.dll.a
-%{_mingw32_libdir}/libgwydgets2.la
 %{_mingw32_libdir}/libgwydgets2.dll.a
-%{_mingw32_libdir}/libgwymodule2.la
 %{_mingw32_libdir}/libgwymodule2.dll.a
-%{_mingw32_libdir}/libgwyapp2.la
 %{_mingw32_libdir}/libgwyapp2.dll.a
+%if %{distro_is_redhat}
+%{_mingw32_libdir}/libgwyddion2.la
+%{_mingw32_libdir}/libgwyprocess2.la
+%{_mingw32_libdir}/libgwydraw2.la
+%{_mingw32_libdir}/libgwydgets2.la
+%{_mingw32_libdir}/libgwymodule2.la
+%{_mingw32_libdir}/libgwyapp2.la
+%endif
 %{_mingw32_libdir}/gwyddion/include/gwyconfig.h
 %{_mingw32_libdir}/pkgconfig/gwyddion.pc
 
 
 %changelog
+* Thu Jan 27 2011 Yeti <yeti@gwyddion.net> - 2.22-1
+- Updated to build on openSUSE
+
 * Tue Dec 2 2010 Yeti <yeti@gwyddion.net> - 2.21-1
 - Created
