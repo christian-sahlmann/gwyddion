@@ -66,8 +66,6 @@ GType             gwy_calibration_get_type              (void) G_GNUC_CONST;
 const gchar*      gwy_calibration_get_filename          (GwyCalibration *calibration);
 GwyInventory*     gwy_calibrations                      (void);
 GwyCalibration*   gwy_calibrations_get_calibration      (const gchar *name);
-void              _gwy_calibration_class_setup_presets(void);
-
 
 G_END_DECLS
 

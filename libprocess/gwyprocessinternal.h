@@ -39,6 +39,9 @@ void _gwy_cdline_class_setup_presets(void);
 G_GNUC_INTERNAL
 void _gwy_grain_value_class_setup_presets(void);
 
+G_GNUC_INTERNAL
+void _gwy_calibration_class_setup_presets(void);
+
 G_END_DECLS
 
 #endif /* __GWYPROCESS_INTERNAL_H__ */
