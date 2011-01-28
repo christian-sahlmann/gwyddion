@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2010,2011 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -70,7 +70,6 @@ gwy_caldata_class_init(GwyCalDataClass *klass)
     GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
 
     gobject_class->finalize = gwy_caldata_finalize;
-
 }
 
 static void
@@ -102,7 +101,7 @@ gwy_caldata_finalize(GObject *object)
     g_free(caldata->xunc);
     g_free(caldata->yunc);
     g_free(caldata->zunc);
- 
+
     G_OBJECT_CLASS(gwy_caldata_parent_class)->finalize(object);
 }
 
@@ -144,7 +143,7 @@ gwy_caldata_new(gint ndata)
  *
  * Returns: Number of calibration data entries.
  **/
-gint           
+gint
 gwy_caldata_get_ndata(GwyCalData *caldata)
 {
     return caldata->ndata;
@@ -251,7 +250,7 @@ gwy_caldata_deserialize(const guchar *buffer,
     gdouble *xunc = NULL, *yunc = NULL, *zunc = NULL;
     GwySIUnit *si_unit_x = NULL, *si_unit_y = NULL, *si_unit_z = NULL;
     GwyCalData *caldata;
-   
+
     GwySerializeSpec spec[] = {
       { 'i', "ndata", &ndata, NULL, },
       { 'o', "si_unit_x", &si_unit_x, NULL, },
@@ -298,7 +297,7 @@ gwy_caldata_deserialize(const guchar *buffer,
     if (fsize != (guint)ndata) {
         g_critical("Serialized %s size mismatch %u != %u",
               GWY_CALDATA_TYPE_NAME, fsize, ndata);
-        
+
         g_free(x);
         g_free(y);
         g_free(z);
@@ -422,7 +421,7 @@ gwy_caldata_get_si_unit_z(GwyCalData *caldata)
  * @caldata: Calibration data.
  * @si_unit: SI unit to be set.
  *
- * Sets the SI unit corresponding to the lateral (X) dimension of 
+ * Sets the SI unit corresponding to the lateral (X) dimension of
  * calibration data.
  *
  * It does not assume a reference on @si_unit, instead it adds its own
@@ -447,7 +446,7 @@ gwy_caldata_set_si_unit_x(GwyCalData *caldata,
  * @caldata: Calibration data.
  * @si_unit: SI unit to be set.
  *
- * Sets the SI unit corresponding to the lateral (Y) dimension of 
+ * Sets the SI unit corresponding to the lateral (Y) dimension of
  * calibration data.
  *
  * It does not assume a reference on @si_unit, instead it adds its own
@@ -472,7 +471,7 @@ gwy_caldata_set_si_unit_y(GwyCalData *caldata,
  * @caldata: Calibration data.
  * @si_unit: SI unit to be set.
  *
- * Sets the SI unit corresponding to the "height" (Z) dimension of 
+ * Sets the SI unit corresponding to the "height" (Z) dimension of
  * calibration data.
  *
  * It does not assume a reference on @si_unit, instead it adds its own
@@ -497,13 +496,13 @@ gwy_caldata_set_si_unit_z(GwyCalData *caldata,
  * @caldata: Calibration data.
  *
  * Prepares data for interpolating the calibration data (building Delaunay triangulation, etc.).
- **/ 
-void           
+ **/
+void
 gwy_caldata_setup_interpolation (GwyCalData *caldata)
 {
-    caldata->err_ps = gwy_delaunay_vertex_new(caldata->x, caldata->y, caldata->z,  
+    caldata->err_ps = gwy_delaunay_vertex_new(caldata->x, caldata->y, caldata->z,
                                  caldata->xerr, caldata->yerr, caldata->zerr, caldata->ndata);
-    caldata->unc_ps = gwy_delaunay_vertex_new(caldata->x, caldata->y, caldata->z,  
+    caldata->unc_ps = gwy_delaunay_vertex_new(caldata->x, caldata->y, caldata->z,
                                  caldata->xunc, caldata->yunc, caldata->zunc, caldata->ndata);
 
     caldata->err_m = gwy_delaunay_mesh_new();
@@ -516,7 +515,7 @@ gwy_caldata_setup_interpolation (GwyCalData *caldata)
 /**
  * gwy_caldata_interpolate:
  * @caldata: Calibration data.
- * @x: x coordinate of requested position 
+ * @x: x coordinate of requested position
  * @y: y coordinate of requested position
  * @z: z coordinate of requested position
  * @xerr: x error at given position
@@ -527,12 +526,12 @@ gwy_caldata_setup_interpolation (GwyCalData *caldata)
  * @zunc: z uncertainty at given position
  *
  * Determines (interpolates) caldata parameters for given position.
- **/ 
-void           
-gwy_caldata_interpolate (GwyCalData *caldata,
-                         gdouble x, gdouble y, gdouble z,
-                         gdouble *xerr, gdouble *yerr, gdouble *zerr,
-                         gdouble *xunc, gdouble *yunc, gdouble *zunc)
+ **/
+void
+gwy_caldata_interpolate(GwyCalData *caldata,
+                        gdouble x, gdouble y, gdouble z,
+                        gdouble *xerr, gdouble *yerr, gdouble *zerr,
+                        gdouble *xunc, gdouble *yunc, gdouble *zunc)
 {
 
     if (xerr || yerr || zerr)
@@ -541,8 +540,5 @@ gwy_caldata_interpolate (GwyCalData *caldata,
     if (xunc || yunc || zunc)
        gwy_delaunay_mesh_interpolate3_3(caldata->unc_m, x, y, z, xunc, yunc, zunc);
 }
-
-
-
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

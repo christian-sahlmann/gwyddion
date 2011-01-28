@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2010,2011 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -92,27 +92,31 @@ struct _GwyCalDataClass {
 
 GType  gwy_caldata_get_type  (void) G_GNUC_CONST;
 
-GwyCalData*   gwy_caldata_new                   (gint ndata);
-gint           gwy_caldata_get_ndata            (GwyCalData *caldata);
-GwySIUnit*     gwy_caldata_get_si_unit_x      (GwyCalData *caldata);
-GwySIUnit*     gwy_caldata_get_si_unit_y       (GwyCalData *caldata);
-GwySIUnit*     gwy_caldata_get_si_unit_z       (GwyCalData *caldata);
-void           gwy_caldata_set_si_unit_x       (GwyCalData *caldata,
-                                                    GwySIUnit *si_unit);
-void           gwy_caldata_set_si_unit_y       (GwyCalData *caldata,
-                                                    GwySIUnit *si_unit);
-void           gwy_caldata_set_si_unit_z       (GwyCalData *caldata,
-                                                    GwySIUnit *si_unit);
-void           gwy_caldata_setup_interpolation (GwyCalData *caldata);
-void           gwy_caldata_interpolate         (GwyCalData *caldata,
-                                                gdouble x, gdouble y, gdouble z,
-                                                gdouble *xerr, gdouble *yerr, gdouble *zerr,
-                                                gdouble *xunc, gdouble *yunc, gdouble *zunc);
+GwyCalData* gwy_caldata_new                (gint ndata);
+gint        gwy_caldata_get_ndata          (GwyCalData *caldata);
+GwySIUnit*  gwy_caldata_get_si_unit_x      (GwyCalData *caldata);
+GwySIUnit*  gwy_caldata_get_si_unit_y      (GwyCalData *caldata);
+GwySIUnit*  gwy_caldata_get_si_unit_z      (GwyCalData *caldata);
+void        gwy_caldata_set_si_unit_x      (GwyCalData *caldata,
+                                            GwySIUnit *si_unit);
+void        gwy_caldata_set_si_unit_y      (GwyCalData *caldata,
+                                            GwySIUnit *si_unit);
+void        gwy_caldata_set_si_unit_z      (GwyCalData *caldata,
+                                            GwySIUnit *si_unit);
+void        gwy_caldata_setup_interpolation(GwyCalData *caldata);
+void        gwy_caldata_interpolate        (GwyCalData *caldata,
+                                            gdouble x,
+                                            gdouble y,
+                                            gdouble z,
+                                            gdouble *xerr,
+                                            gdouble *yerr,
+                                            gdouble *zerr,
+                                            gdouble *xunc,
+                                            gdouble *yunc,
+                                            gdouble *zunc);
 
 G_END_DECLS
 
 #endif /* __GWY_CALDATA_H__ */
 
-
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
-
