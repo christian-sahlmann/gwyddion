@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2010,2011 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -23,12 +23,8 @@
 
 #include <glib-object.h>
 #include <libgwyddion/gwyresource.h>
-#include <libdraw/gwyrgba.h>
-#include <gdk-pixbuf/gdk-pixbuf.h>
 
 G_BEGIN_DECLS
-
-#define GWY_CALIBRATION_DEFAULT "Gray"
 
 #define GWY_TYPE_CALIBRATION                  (gwy_calibration_get_type())
 #define GWY_CALIBRATION(obj)                  (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_CALIBRATION, GwyCalibration))
@@ -59,13 +55,13 @@ struct _GwyCalibrationClass {
     void (*reserved2)(void);
 };
 
+GType           gwy_calibration_get_type        (void)                         G_GNUC_CONST;
 GwyCalibration* gwy_calibration_new             (const gchar *name,
-                                                        gint ndata,
-                                                        const char* filename);
-GType             gwy_calibration_get_type              (void) G_GNUC_CONST;
-const gchar*      gwy_calibration_get_filename          (GwyCalibration *calibration);
-GwyInventory*     gwy_calibrations                      (void);
-GwyCalibration*   gwy_calibrations_get_calibration      (const gchar *name);
+                                                 gint ndata,
+                                                 const char* filename);
+const gchar*    gwy_calibration_get_filename    (GwyCalibration *calibration);
+GwyInventory*   gwy_calibrations                (void);
+GwyCalibration* gwy_calibrations_get_calibration(const gchar *name);
 
 G_END_DECLS
 

@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2010,2011 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -56,8 +56,6 @@ gwy_calibration_class_init(GwyCalibrationClass *klass)
 
     res_class->name = "calibrations";
     res_class->inventory = gwy_inventory_new(&res_class->item_type);
-    gwy_inventory_set_default_item_name(res_class->inventory,
-                                        GWY_CALIBRATION_DEFAULT);
     res_class->use = gwy_calibration_use;
     res_class->release = gwy_calibration_release;
     res_class->dump = gwy_calibration_dump;
