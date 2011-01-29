@@ -581,7 +581,10 @@ gwy_graph_curve_model_duplicate_real(GObject *object)
  * @ydata: Y data points (array of size @n).
  * @n: Number of points, i.e. items in @xdata and @ydata.
  *
- * Sets curve model data.
+ * Sets curve model data. 
+ *
+ * If there are any calibration data, they are freed,
+ * as they might be not actual.
  **/
 void
 gwy_graph_curve_model_set_data(GwyGraphCurveModel *gcmodel,
@@ -605,6 +608,16 @@ gwy_graph_curve_model_set_data(GwyGraphCurveModel *gcmodel,
         g_free(old);
 
         gcmodel->n = n;
+    }
+    if (gcmodel->calibration)
+    {
+        g_free(gcmodel->calibration->xerr);
+        g_free(gcmodel->calibration->yerr);
+        g_free(gcmodel->calibration->zerr);
+        g_free(gcmodel->calibration->xunc);
+        g_free(gcmodel->calibration->yunc);
+        g_free(gcmodel->calibration->zunc);
+        gcmodel->calibration = NULL;
     }
     gwy_graph_curve_model_data_changed(gcmodel);
 }
@@ -1012,12 +1025,30 @@ gwy_graph_curve_model_data_changed(GwyGraphCurveModel *gcmodel)
     g_signal_emit(gcmodel, graph_curve_model_signals[DATA_CHANGED], 0);
 }
 
+/**
+ * gwy_graph_curve_model_get_calibration_data:
+ * @gcmodel: A graph curve model.
+ *
+ * Get pointer to actual calibration data for curve.
+ *
+ * Returns: Pointer to the calibration data of present curve (NULL if none).
+ *         
+ **/
 GwyCurveCalibrationData *
 gwy_graph_curve_model_get_calibration_data(GwyGraphCurveModel *gcmodel)
 {
     return gcmodel->calibration;
 }
 
+/**
+ * gwy_graph_curve_model_set_calibration_data:
+ * @gcmodel: A graph curve model.
+ * @calibration: Curve calibration data
+ *
+ * Set pointer to actual calibration data for curve. Frees old ones (if any).
+ * Does not allocate new calibration data instance.
+ *         
+ **/
 void 
 gwy_graph_curve_model_set_calibration_data(GwyGraphCurveModel *gcmodel,
                                            GwyCurveCalibrationData *calibration)
