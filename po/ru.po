@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2011-01-25 03:58+0100\n"
-"PO-Revision-Date: 2011-01-25 07:59+0300\n"
+"POT-Creation-Date: 2011-01-29 03:58+0100\n"
+"PO-Revision-Date: 2011-01-29 09:12+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "Language: \n"
@@ -842,11 +842,11 @@ msgid "pixels"
 msgstr "точек"
 
 #: libgwydgets/gwy3dwindow.c:1027
-#: modules/file/pixmap.c:953
-#: modules/file/pixmap.c:2671
+#: modules/file/pixmap.c:946
+#: modules/file/pixmap.c:2664
 #: modules/file/rawfile.c:398
 #: modules/process/angle_dist.c:170
-#: modules/process/calcoefs_new.c:358
+#: modules/process/calcoefs_new.c:355
 #: modules/process/calibrate.c:296
 #: modules/process/curvature.c:602
 #: modules/process/cwt.c:132
@@ -1211,7 +1211,7 @@ msgid "Preview"
 msgstr "Предпросмотр"
 
 #: libgwymodule/gwymodule-file.c:508
-#: modules/file/pixmap.c:727
+#: modules/file/pixmap.c:720
 #, c-format
 msgid "Cannot open file for reading: %s."
 msgstr "Невозможно открыть файл для чтения: %s."
@@ -2398,7 +2398,7 @@ msgid "Export Text"
 msgstr "Экспортировать текст"
 
 #: modules/file/asciiexport.c:273
-#: modules/file/pixmap.c:2760
+#: modules/file/pixmap.c:2753
 #: modules/file/rawfile.c:720
 #: modules/file/rawxyz.c:670
 #: modules/process/fft_filter_1d.c:296
@@ -3401,99 +3401,99 @@ msgstr "Иконка Apple (.icns)"
 msgid "Renders data into pixmap images and imports data from pixmap images. It supports the following image formats for export: PNG, JPEG, TIFF, PPM, BMP, TARGA. Import support relies on GDK and thus may be installation-dependent."
 msgstr "Строит данные как растровые изображения и импортирует данные из растровых изображений. Поддерживает следующие форматы изображений при экспорте: PNG, JPEG, TIFF, PPM, BMP, TARGA. Поддержка импорта полагается на GDK и, вследствие этого, может зависеть от варианта установки."
 
-#: modules/file/pixmap.c:713
+#: modules/file/pixmap.c:706
 msgid "Pixmap image import must be run as interactive."
 msgstr "Импорт растровых изображений должен запускаться в интерактивном режиме."
 
-#: modules/file/pixmap.c:721
+#: modules/file/pixmap.c:714
 #, c-format
 msgid "Pixmap has not registered file type `%s'."
 msgstr "Модуль импорта изображений не имеет зарегистрированного типа файла `%s'."
 
-#: modules/file/pixmap.c:735
+#: modules/file/pixmap.c:728
 #, c-format
 msgid "Cannot get pixbuf loader: %s."
 msgstr "Не удаётся получить загрузчик pixbuf: %s."
 
-#: modules/file/pixmap.c:747
-#: modules/file/pixmap.c:759
+#: modules/file/pixmap.c:740
+#: modules/file/pixmap.c:752
 #, c-format
 msgid "Pixbuf loader refused data: %s."
 msgstr "Загрузчик pixbuf не принял данные: %s."
 
-#: modules/file/pixmap.c:921
+#: modules/file/pixmap.c:914
 msgid "Red"
 msgstr "Красный"
 
-#: modules/file/pixmap.c:922
+#: modules/file/pixmap.c:915
 msgid "Green"
 msgstr "Зеленый"
 
-#: modules/file/pixmap.c:923
+#: modules/file/pixmap.c:916
 msgid "Blue"
 msgstr "Синий"
 
-#: modules/file/pixmap.c:924
+#: modules/file/pixmap.c:917
 msgid "Value (max)"
 msgstr "Значение (макс.)"
 
-#: modules/file/pixmap.c:925
+#: modules/file/pixmap.c:918
 msgid "RGB sum"
 msgstr "Сумма RGB"
 
-#: modules/file/pixmap.c:926
+#: modules/file/pixmap.c:919
 msgid "Alpha"
 msgstr "Альфа"
 
-#: modules/file/pixmap.c:950
+#: modules/file/pixmap.c:943
 msgid "Import "
 msgstr "Импортировать "
 
-#: modules/file/pixmap.c:976
+#: modules/file/pixmap.c:969
 #: modules/file/rawfile.c:600
 #: modules/file/rawxyz.c:516
 #: modules/process/dimensions.h:443
 msgid "Resolution"
 msgstr "Разрешение"
 
-#: modules/file/pixmap.c:983
+#: modules/file/pixmap.c:976
 #: modules/file/rawfile.c:605
 #: modules/file/rawxyz.c:520
 #: modules/process/dimensions.h:449
 msgid "_Horizontal size:"
 msgstr "_Горизонтальный размер:"
 
+#: modules/file/pixmap.c:976
 #: modules/file/pixmap.c:983
-#: modules/file/pixmap.c:990
 msgid "px"
 msgstr "пикс."
 
-#: modules/file/pixmap.c:990
+#: modules/file/pixmap.c:983
 #: modules/file/rawfile.c:612
 #: modules/file/rawxyz.c:535
 #: modules/process/dimensions.h:452
 msgid "_Vertical size:"
 msgstr "Вертика_льный размер:"
 
-#: modules/file/pixmap.c:1021
+#: modules/file/pixmap.c:1014
 #: modules/file/rawfile.c:623
 #: modules/file/rawxyz.c:569
 #: modules/process/dimensions.h:465
 msgid "Physical Dimensions"
 msgstr "Физические размеры"
 
-#: modules/file/pixmap.c:1031
+#: modules/file/pixmap.c:1024
 msgid "_Width"
 msgstr "_Ширина"
 
-#: modules/file/pixmap.c:1053
-#: modules/file/pixmap.c:1108
+#: modules/file/pixmap.c:1046
+#: modules/file/pixmap.c:1101
 #: modules/file/rawfile.c:655
 #: modules/file/rawfile.c:711
-#: modules/process/calcoefs_new.c:395
-#: modules/process/calcoefs_new.c:462
-#: modules/process/calcoefs_simple.c:406
-#: modules/process/calcoefs_simple.c:473
+#: modules/process/calcoefs_new.c:392
+#: modules/process/calcoefs_new.c:459
+#: modules/process/calcoefs_simple.c:405
+#: modules/process/calcoefs_simple.c:472
 #: modules/process/calcoefs_view.c:462
 #: modules/process/calcoefs_view.c:500
 #: modules/process/calibrate.c:339
@@ -3502,95 +3502,95 @@ msgstr "_Ширина"
 msgid "Change"
 msgstr "Изменить"
 
-#: modules/file/pixmap.c:1066
+#: modules/file/pixmap.c:1059
 msgid "H_eight"
 msgstr "_Высота"
 
-#: modules/file/pixmap.c:1073
+#: modules/file/pixmap.c:1066
 #: modules/file/rawfile.c:675
 #: modules/file/rawxyz.c:550
 msgid "Identical _measures"
 msgstr "Одинаковый _масштаб"
 
-#: modules/file/pixmap.c:1085
+#: modules/file/pixmap.c:1078
 #: modules/file/rawfile.c:687
 msgid "_Z-scale (per sample unit):"
 msgstr "Масштаб _Z (на единицу дискретизации):"
 
-#: modules/file/pixmap.c:1118
+#: modules/file/pixmap.c:1111
 msgid "Warning: Colorful images cannot be reliably mapped to meaningful values."
 msgstr "Предупреждение: цветные изображения не могут быть надёжно отображены в значащие что-либо данные."
 
-#: modules/file/pixmap.c:1136
+#: modules/file/pixmap.c:1129
 msgid "Use"
 msgstr "Использовать"
 
-#: modules/file/pixmap.c:1136
+#: modules/file/pixmap.c:1129
 msgid "as data"
 msgstr "как данные"
 
-#: modules/file/pixmap.c:1332
+#: modules/file/pixmap.c:1325
 #: modules/file/rawfile.c:1326
-#: modules/process/calcoefs_new.c:787
-#: modules/process/calcoefs_simple.c:1095
-#: modules/process/calcoefs_view.c:1221
+#: modules/process/calcoefs_new.c:784
+#: modules/process/calcoefs_simple.c:1094
+#: modules/process/calcoefs_view.c:1220
 #: modules/process/calibrate.c:816
 #: modules/process/dimensions.h:193
 msgid "Change Units"
 msgstr "Изменить единицы измерения"
 
-#: modules/file/pixmap.c:1346
+#: modules/file/pixmap.c:1339
 #: modules/file/rawfile.c:1340
-#: modules/process/calcoefs_new.c:800
-#: modules/process/calcoefs_simple.c:1108
-#: modules/process/calcoefs_view.c:1234
+#: modules/process/calcoefs_new.c:797
+#: modules/process/calcoefs_simple.c:1107
+#: modules/process/calcoefs_view.c:1233
 #: modules/process/calibrate.c:830
 #: modules/process/dimensions.h:206
 msgid "New _units:"
 msgstr "Новые _единицы:"
 
-#: modules/file/pixmap.c:1412
-#: modules/file/pixmap.c:1422
+#: modules/file/pixmap.c:1405
+#: modules/file/pixmap.c:1415
 #, c-format
 msgid "libpng initialization error (in %s)"
 msgstr "ошибка инициализации libpng (в %s)"
 
-#: modules/file/pixmap.c:1433
+#: modules/file/pixmap.c:1426
 msgid "libpng error occured"
 msgstr "Произошла ошибка libpng"
 
-#: modules/file/pixmap.c:1500
-#: modules/file/pixmap.c:1528
+#: modules/file/pixmap.c:1493
+#: modules/file/pixmap.c:1521
 #, c-format
 msgid "Pixbuf save failed: %s."
 msgstr "Сохранение pixbuf закончилось неудачно: %s."
 
-#: modules/file/pixmap.c:1873
+#: modules/file/pixmap.c:1866
 msgid "Image is too large to be stored as TARGA."
 msgstr "Изображение слишком велико чтобы сохранить его в формате TARGA."
 
-#: modules/file/pixmap.c:1951
+#: modules/file/pixmap.c:1944
 msgid "Data must be displayed in a window for pixmap export."
 msgstr "Данные должны отображаться в окне для экспорта изображения."
 
-#: modules/file/pixmap.c:2609
+#: modules/file/pixmap.c:2602
 msgid "Change Inset Color"
 msgstr "Изменить цвет отрезка"
 
-#: modules/file/pixmap.c:2668
+#: modules/file/pixmap.c:2661
 #, c-format
 msgid "Export %s"
 msgstr "Экспорт %s"
 
-#: modules/file/pixmap.c:2699
+#: modules/file/pixmap.c:2692
 msgid "Scaling"
 msgstr "Масштабирование"
 
-#: modules/file/pixmap.c:2708
+#: modules/file/pixmap.c:2701
 msgid "_Zoom:"
 msgstr "_Увеличение:"
 
-#: modules/file/pixmap.c:2717
+#: modules/file/pixmap.c:2710
 #: modules/file/rawfile.c:632
 #: modules/process/crosscor.c:197
 #: modules/process/deposit_synth.c:458
@@ -3599,7 +3599,7 @@ msgstr "_Увеличение:"
 msgid "_Width:"
 msgstr "_Ширина:"
 
-#: modules/file/pixmap.c:2726
+#: modules/file/pixmap.c:2719
 #: modules/process/grain_mark.c:312
 #: modules/process/grain_rem_threshold.c:280
 #: modules/process/obj_synth.c:564
@@ -3609,91 +3609,91 @@ msgstr "_Ширина:"
 msgid "_Height:"
 msgstr "_Высота:"
 
-#: modules/file/pixmap.c:2735
+#: modules/file/pixmap.c:2728
 msgid "Scale text _proportionally"
 msgstr "_Пропорциональный масштаб текста"
 
-#: modules/file/pixmap.c:2750
+#: modules/file/pixmap.c:2743
 msgid "_Font size:"
 msgstr "_Размер шрифта:"
 
-#: modules/file/pixmap.c:2764
+#: modules/file/pixmap.c:2757
 msgid "Draw _mask"
 msgstr "Рисовать _маску"
 
-#: modules/file/pixmap.c:2773
+#: modules/file/pixmap.c:2766
 msgid "Draw _selection"
 msgstr "Рисовать в_ыбранную область"
 
-#: modules/file/pixmap.c:2789
+#: modules/file/pixmap.c:2782
 msgid "Grayscale Mode"
 msgstr "Градации серого"
 
-#: modules/file/pixmap.c:2793
+#: modules/file/pixmap.c:2786
 msgid "Export as 1_6 bit grayscale"
 msgstr "Экспортировать как 1_6битное серое"
 
-#: modules/file/pixmap.c:2819
+#: modules/file/pixmap.c:2812
 msgid "Lateral Scale"
 msgstr "Горизонтальный масштаб:"
 
-#: modules/file/pixmap.c:2826
-#: modules/file/pixmap.c:2922
+#: modules/file/pixmap.c:2819
+#: modules/file/pixmap.c:2915
 #: modules/process/immerse.c:367
 msgid "_None"
 msgstr "_Нет"
 
-#: modules/file/pixmap.c:2827
+#: modules/file/pixmap.c:2820
 msgid "_Rulers"
 msgstr "Направл_яющие"
 
-#: modules/file/pixmap.c:2828
+#: modules/file/pixmap.c:2821
 msgid "_Inset scale bar"
 msgstr "В_ложенный масштабный отрезок"
 
-#: modules/file/pixmap.c:2833
+#: modules/file/pixmap.c:2826
 msgid "Color:"
 msgstr "Цвет:"
 
-#: modules/file/pixmap.c:2849
+#: modules/file/pixmap.c:2842
 #: modules/process/immerse.c:323
 msgid "Position:"
 msgstr "Расположение:"
 
-#: modules/file/pixmap.c:2854
+#: modules/file/pixmap.c:2847
 msgid "left"
 msgstr "слева"
 
-#: modules/file/pixmap.c:2858
+#: modules/file/pixmap.c:2851
 msgid "center"
 msgstr "по центру"
 
-#: modules/file/pixmap.c:2862
+#: modules/file/pixmap.c:2855
 msgid "right"
 msgstr "справа"
 
-#: modules/file/pixmap.c:2867
+#: modules/file/pixmap.c:2860
 msgid "top"
 msgstr "верх"
 
-#: modules/file/pixmap.c:2879
+#: modules/file/pixmap.c:2872
 msgid "bottom"
 msgstr "низ"
 
-#: modules/file/pixmap.c:2890
+#: modules/file/pixmap.c:2883
 #: modules/process/lno_synth.c:1067
 msgid "_Length:"
 msgstr "_Длина:"
 
-#: modules/file/pixmap.c:2907
+#: modules/file/pixmap.c:2900
 msgid "_Auto"
 msgstr "_Авто"
 
-#: modules/file/pixmap.c:2915
+#: modules/file/pixmap.c:2908
 msgid "Value Scale"
 msgstr "Масштаб значений"
 
-#: modules/file/pixmap.c:2923
+#: modules/file/pixmap.c:2916
 msgid "_False color ruler"
 msgstr "Л_инейка псевдоцвета"
 
@@ -4022,7 +4022,7 @@ msgid "Preset l_ist"
 msgstr "С_писок предустановок"
 
 #: modules/file/rawfile.c:1008
-#: modules/process/calcoefs_load.c:245
+#: modules/process/calcoefs_load.c:244
 msgid "_Load"
 msgstr "_Загрузить"
 
@@ -5372,148 +5372,148 @@ msgstr "/_Базовые действия/Обнулить _смещения"
 msgid "Null horizontall offsets, moving the origin to the upper left corner"
 msgstr "Обнуляет смещения по горизонтали, перемещая начало координат в верхний левый угол"
 
-#: modules/process/calcoefs_load.c:79
+#: modules/process/calcoefs_load.c:78
 msgid "Load calibration data from text file"
 msgstr "Загружает данные калибровки из текстового файла"
 
-#: modules/process/calcoefs_load.c:93
+#: modules/process/calcoefs_load.c:92
 msgid "/Cali_bration/_Load From Text File..."
 msgstr "/_Калибровка/_Загрузить из текстового файла..."
 
-#: modules/process/calcoefs_load.c:97
+#: modules/process/calcoefs_load.c:96
 msgid "Load calibration data from text file."
 msgstr "Загрузить данные калибровки из текстового файла."
 
-#: modules/process/calcoefs_load.c:237
+#: modules/process/calcoefs_load.c:236
 msgid "Load Calibration Data"
 msgstr "Загрузить данные калибровки"
 
-#: modules/process/calcoefs_load.c:257
-#: modules/process/calcoefs_new.c:577
-#: modules/process/calcoefs_simple.c:490
+#: modules/process/calcoefs_load.c:256
+#: modules/process/calcoefs_new.c:574
+#: modules/process/calcoefs_simple.c:489
 msgid "Calibration name:"
 msgstr "Имя калибровки:"
 
-#: modules/process/calcoefs_load.c:269
+#: modules/process/calcoefs_load.c:268
 msgid "No data loaded"
 msgstr "Данные не загружены"
 
-#: modules/process/calcoefs_new.c:168
+#: modules/process/calcoefs_new.c:165
 msgid "Create simple calibration data"
 msgstr "Создаёт простые данные калибровки"
 
-#: modules/process/calcoefs_new.c:182
+#: modules/process/calcoefs_new.c:179
 msgid "/Cali_bration/_Create..."
 msgstr "/_Калибровка/_Создать..."
 
-#: modules/process/calcoefs_new.c:186
+#: modules/process/calcoefs_new.c:183
 msgid "Specify simple calibration data."
 msgstr "Задать простые данные калибровки"
 
-#: modules/process/calcoefs_new.c:357
+#: modules/process/calcoefs_new.c:354
 msgid "Simple Calibration Data"
 msgstr "Простые данные калибровки"
 
-#: modules/process/calcoefs_new.c:375
+#: modules/process/calcoefs_new.c:372
 msgid "_X from:"
 msgstr "_X от:"
 
-#: modules/process/calcoefs_new.c:402
+#: modules/process/calcoefs_new.c:399
 msgid "_X to:"
 msgstr "X _до:"
 
-#: modules/process/calcoefs_new.c:415
+#: modules/process/calcoefs_new.c:412
 msgid "_Y from:"
 msgstr "_Y от:"
 
-#: modules/process/calcoefs_new.c:428
+#: modules/process/calcoefs_new.c:425
 msgid "_Y to:"
 msgstr "Y до:"
 
-#: modules/process/calcoefs_new.c:442
+#: modules/process/calcoefs_new.c:439
 msgid "_Z from:"
 msgstr "_Z от:"
 
-#: modules/process/calcoefs_new.c:469
+#: modules/process/calcoefs_new.c:466
 msgid "_Z to:"
 msgstr "Z до:"
 
-#: modules/process/calcoefs_new.c:482
+#: modules/process/calcoefs_new.c:479
 msgid "_X uncertainty:"
 msgstr "_Погрешность по X"
 
-#: modules/process/calcoefs_new.c:503
+#: modules/process/calcoefs_new.c:500
 msgid "_Y uncertainty:"
 msgstr "По_грешность по Y"
 
-#: modules/process/calcoefs_new.c:518
+#: modules/process/calcoefs_new.c:515
 msgid "_Z uncertainty:"
 msgstr "Пог_решность по Z"
 
-#: modules/process/calcoefs_new.c:540
+#: modules/process/calcoefs_new.c:537
 msgid "_X correction factor:"
 msgstr "_Множитель калибровки по X:"
 
-#: modules/process/calcoefs_new.c:552
+#: modules/process/calcoefs_new.c:549
 msgid "_Y correction factor:"
 msgstr "М_ножитель калибровки по Y:"
 
-#: modules/process/calcoefs_new.c:564
+#: modules/process/calcoefs_new.c:561
 msgid "_Z correction factor:"
 msgstr "Мно_житель калибровки по Z:"
 
-#: modules/process/calcoefs_simple.c:158
+#: modules/process/calcoefs_simple.c:157
 msgid "Simple AFM data recalibration"
 msgstr "Простая перекалибровка данных АСМ"
 
-#: modules/process/calcoefs_simple.c:172
+#: modules/process/calcoefs_simple.c:171
 msgid "/Cali_bration/_Get Simple Errop Map..."
 msgstr "/_Калибровка/_Получить простую карту ошибок..."
 
-#: modules/process/calcoefs_simple.c:176
+#: modules/process/calcoefs_simple.c:175
 msgid "Simple error mapping"
 msgstr "Простое картирование ошибок"
 
-#: modules/process/calcoefs_simple.c:343
+#: modules/process/calcoefs_simple.c:342
 msgid "Simple Error Map"
 msgstr "Простая карта ошибок"
 
-#: modules/process/calcoefs_simple.c:358
+#: modules/process/calcoefs_simple.c:357
 #: modules/process/calcoefs_stage.c:149
 #: modules/process/superresolution.c:159
 msgid "Operands:"
 msgstr "Операнды:"
 
-#: modules/process/calcoefs_simple.c:386
+#: modules/process/calcoefs_simple.c:385
 #: modules/process/calcoefs_view.c:442
 #: modules/process/calibrate.c:367
 msgid "_X offset:"
 msgstr "Смещение по _X:"
 
-#: modules/process/calcoefs_simple.c:413
+#: modules/process/calcoefs_simple.c:412
 #: modules/process/calcoefs_view.c:468
 #: modules/process/calibrate.c:380
 msgid "_Y offset:"
 msgstr "Смещение по _Y:"
 
-#: modules/process/calcoefs_simple.c:426
+#: modules/process/calcoefs_simple.c:425
 msgid "X _period:"
 msgstr "П_ериод X:"
 
-#: modules/process/calcoefs_simple.c:439
+#: modules/process/calcoefs_simple.c:438
 msgid "Y p_eriod:"
 msgstr "Пе_риод Y:"
 
-#: modules/process/calcoefs_simple.c:453
+#: modules/process/calcoefs_simple.c:452
 #: modules/process/calcoefs_view.c:480
 msgid "_Z offset:"
 msgstr "Смещение по _Z:"
 
-#: modules/process/calcoefs_simple.c:481
+#: modules/process/calcoefs_simple.c:480
 msgid "_Threshold"
 msgstr "_Порог"
 
-#: modules/process/calcoefs_simple.c:502
+#: modules/process/calcoefs_simple.c:501
 msgid "No suggestion\n"
 msgstr "Нет предположений\n"
 
@@ -5590,57 +5590,57 @@ msgstr "обрезать до действительных данных"
 msgid "i_nstant updates"
 msgstr "мгновенное об_новление"
 
-#: modules/process/calcoefs_view.c:974
+#: modules/process/calcoefs_view.c:973
 #: modules/tools/profile.c:1092
 msgid "X correction"
 msgstr "Поправка по X"
 
-#: modules/process/calcoefs_view.c:975
+#: modules/process/calcoefs_view.c:974
 #: modules/tools/profile.c:1093
 msgid "Y correction"
 msgstr "Поправка по Y"
 
-#: modules/process/calcoefs_view.c:976
+#: modules/process/calcoefs_view.c:975
 #: modules/tools/profile.c:1094
 msgid "Z correction"
 msgstr "Поправка по Z"
 
-#: modules/process/calcoefs_view.c:977
+#: modules/process/calcoefs_view.c:976
 #: modules/tools/profile.c:1095
 msgid "X uncertainty"
 msgstr "Погрешность X"
 
-#: modules/process/calcoefs_view.c:978
+#: modules/process/calcoefs_view.c:977
 #: modules/tools/profile.c:1096
 msgid "Y uncertainty"
 msgstr "Погрешность Y"
 
-#: modules/process/calcoefs_view.c:979
+#: modules/process/calcoefs_view.c:978
 #: modules/tools/profile.c:1097
 msgid "Z uncertainty"
 msgstr "Погрешность Z"
 
-#: modules/process/calcoefs_view.c:991
+#: modules/process/calcoefs_view.c:990
 msgid "Constant X"
 msgstr "Постоянная X"
 
-#: modules/process/calcoefs_view.c:992
+#: modules/process/calcoefs_view.c:991
 msgid "Constant Y"
 msgstr "Постоянная Y"
 
-#: modules/process/calcoefs_view.c:993
+#: modules/process/calcoefs_view.c:992
 msgid "Constant Z"
 msgstr "Постоянная Z"
 
-#: modules/process/calcoefs_view.c:1004
+#: modules/process/calcoefs_view.c:1003
 msgid "NNA 3D"
 msgstr "АБС 3D"
 
-#: modules/process/calcoefs_view.c:1005
+#: modules/process/calcoefs_view.c:1004
 msgid "Snap to planes"
 msgstr "Привязать к плоскостям"
 
-#: modules/process/calcoefs_view.c:1006
+#: modules/process/calcoefs_view.c:1005
 msgid "Delaunay"
 msgstr "Делоне"
 
@@ -5661,8 +5661,8 @@ msgid "Recalibrated Data"
 msgstr "Перекалиброванные данные"
 
 #: modules/process/calibrate.c:295
-msgid "Calibrate"
-msgstr "Калибровка"
+msgid "Dimensions and Units"
+msgstr "Размеры и единицы измерения"
 
 #: modules/process/calibrate.c:314
 msgid "New Real Dimensions"
@@ -10056,6 +10056,9 @@ msgstr ""
 "Площадь проекции:    %s\n"
 "Наклон θ:     %s\n"
 "Наклон φ:     %s\n"
+
+#~ msgid "Calibrate"
+#~ msgstr "Калибровка"
 
 #~ msgid "Recalibrate data"
 #~ msgstr "Перекалибровать данные"
