@@ -30,7 +30,7 @@
 #include <app/gwyapp.h>
 #include <app/gwymoduleutils.h>
 
-#define DELTA (1e-12)
+#define DELTA (1e-15)
 
 static gboolean    module_register           (void);
 static void        dos_spectrum              (GwyGraph *graph);
@@ -68,7 +68,6 @@ static void dos_spectrum(GwyGraph *graph)
     GwyGraphCurveModel *gcmodel, *ngcmodel;
     const gdouble *xdata, *ydata;
     gdouble *nxdata, *nydata;
-    gdouble ydatamin, xdatamin;
     guint i, j, k, ncurves, ndata, nndata;
     gchar *graphtitle, *newtitle;
     GwySIUnit *siunitx, *siunity, *testunitx, *testunity;
@@ -84,8 +83,8 @@ static void dos_spectrum(GwyGraph *graph)
     /* Checking axis units to be voltage-current spectroscopy */
     testunitx = gwy_si_unit_new("V");
     testunity = gwy_si_unit_new("A");
-    if(!((gwy_si_unit_equal(siunitx, testunitx)) &&
-        (gwy_si_unit_equal(siunity, testunity)))) {
+    if(!(gwy_si_unit_equal(siunitx, testunitx) &&
+        gwy_si_unit_equal(siunity, testunity))) {
 
         dialog = gtk_message_dialog_new
             (gwy_app_find_window_for_channel(data, -1),
@@ -132,19 +131,11 @@ static void dos_spectrum(GwyGraph *graph)
         ydata = gwy_graph_curve_model_get_ydata(gcmodel);
         ndata = gwy_graph_curve_model_get_ndata(gcmodel);
         nndata = ndata-1;
-        ydatamin = fabs(ydata[0]);
-        xdatamin = xdata[0];
         for(i = 1; i < ndata; i++) {
-            if (fabs(xdata[i]) < DELTA)
+            if (fabs(ydata[i]) < DELTA)
                 nndata--;
             if (fabs(xdata[i]-xdata[i-1]) < DELTA)
                 nndata--;
-            /* Zero U search */
-            if (fabs(ydata[i]) < ydatamin) {
-                ydatamin = fabs(ydata[i]);
-                xdatamin = xdata[i];
-            }
-            /* End of Zero U search */
         }
 
         if (nndata == 0) continue;
@@ -155,13 +146,13 @@ static void dos_spectrum(GwyGraph *graph)
 
         j = 0;
         for(i = 1; i < ndata; i++) {
-            if (fabs(xdata[i]) < DELTA)
+            if (fabs(ydata[i]) < DELTA)
                 continue;
             if (fabs(xdata[i]-xdata[i-1]) < DELTA)
                 continue;
-            nxdata[j] = xdata[i] - xdatamin;
-            nydata[j] = ((ydata[i]-ydata[i-1])/(xdata[i]-xdata[i-1]))/
-                        (ydata[i]/nxdata[j]);
+            nxdata[j] = xdata[i];
+            nydata[j] = fabs(((ydata[i]-ydata[i-1])/(xdata[i]-xdata[i-1]))*
+                        (xdata[i]/ydata[i]));
             j++;
         }
 
