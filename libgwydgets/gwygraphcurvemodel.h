@@ -119,7 +119,7 @@ gboolean       gwy_graph_curve_model_get_ranges(GwyGraphCurveModel *gcmodel,
 GwyCurveCalibrationData *gwy_graph_curve_model_get_calibration_data(GwyGraphCurveModel *gcmodel);
 
 void gwy_graph_curve_model_set_calibration_data(GwyGraphCurveModel *gcmodel, 
-                                                GwyCurveCalibrationData *calibration);
+                                                const GwyCurveCalibrationData *calibration);
 
 G_END_DECLS
 

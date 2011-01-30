@@ -583,8 +583,7 @@ gwy_graph_curve_model_duplicate_real(GObject *object)
  *
  * Sets curve model data. 
  *
- * If there are any calibration data, they are freed,
- * as they might be not actual.
+ * If there were calibration data in the former @gcmodel, they are removed.
  **/
 void
 gwy_graph_curve_model_set_data(GwyGraphCurveModel *gcmodel,
@@ -678,6 +677,8 @@ gwy_graph_curve_model_get_ndata(GwyGraphCurveModel *gcmodel)
  * modified using parameters @from_index and @to_index that are
  * interpreted directly as data indices within the #GwyDataLine.
  * In the case that @from_index == @to_index, the full #GwyDataLine is used.
+ *
+ * If there were calibration data in the former @gcmodel, they are removed.
  **/
 /* XXX: Malformed documentation. */
 void
@@ -1045,13 +1046,12 @@ gwy_graph_curve_model_get_calibration_data(GwyGraphCurveModel *gcmodel)
  * @gcmodel: A graph curve model.
  * @calibration: Curve calibration data
  *
- * Set pointer to actual calibration data for curve. Frees old ones (if any).
- * Does not allocate new calibration data instance.
+ * Set calibration data for curve. 
  *         
  **/
 void 
 gwy_graph_curve_model_set_calibration_data(GwyGraphCurveModel *gcmodel,
-                                           GwyCurveCalibrationData *calibration)
+                                           const GwyCurveCalibrationData *calibration)
 {
     if (gcmodel->calibration)
     {
@@ -1062,7 +1062,19 @@ gwy_graph_curve_model_set_calibration_data(GwyGraphCurveModel *gcmodel,
         g_free(gcmodel->calibration->yunc);
         g_free(gcmodel->calibration->zunc);
     }
-    gcmodel->calibration = calibration;
+    gcmodel->calibration->n = calibration->n;
+    gcmodel->calibration->xerr = g_memdup(calibration->xerr, 
+                                          calibration->n*sizeof(gdouble));
+    gcmodel->calibration->yerr = g_memdup(calibration->yerr, 
+                                          calibration->n*sizeof(gdouble));
+    gcmodel->calibration->zerr = g_memdup(calibration->zerr, 
+                                          calibration->n*sizeof(gdouble));
+    gcmodel->calibration->xunc = g_memdup(calibration->xunc, 
+                                          calibration->n*sizeof(gdouble));
+    gcmodel->calibration->yunc = g_memdup(calibration->yunc, 
+                                          calibration->n*sizeof(gdouble));
+    gcmodel->calibration->zunc = g_memdup(calibration->zunc, 
+                                          calibration->n*sizeof(gdouble));
 }
 
 
