@@ -186,6 +186,9 @@ cload(G_GNUC_UNUSED GwyContainer *data, GwyRunType run)
     }
 
     filename = gwy_resource_build_filename(GWY_RESOURCE(calibration));
+    if (!g_file_test(filename, G_FILE_TEST_EXISTS)) {
+        g_mkdir(g_build_filename(gwy_get_user_dir(), "calibrations", NULL), 0700);
+    }
     fh = g_fopen(filename, "w");
     if (!fh) {
         g_warning("Cannot save preset: %s", filename);

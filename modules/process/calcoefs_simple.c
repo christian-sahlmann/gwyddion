@@ -229,6 +229,9 @@ simple(GwyContainer *data, GwyRunType run)
     {
 
         filename = g_build_filename(gwy_get_user_dir(), "caldata", calibration->filename, NULL);
+        if (!g_file_test(filename, G_FILE_TEST_EXISTS)) {
+            g_mkdir(g_build_filename(gwy_get_user_dir(), "calibrations", NULL), 0700);
+        }
         if (!g_file_get_contents(filename,
                                  &contents, &len, &err))
         {
