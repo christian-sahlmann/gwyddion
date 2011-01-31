@@ -28,6 +28,7 @@
 #include <libprocess/datafield.h>
 #include <app/menu.h>
 #include <app/undo.h>
+#include "gwyappinternal.h"
 
 enum {
     UNDO_LEVELS = 3
@@ -189,6 +190,62 @@ gwy_app_undo_qcheckpoint(GwyContainer *data,
     return id;
 }
 
+/* Create a list of calibration keys corresponding to channel keys in @keys.
+ * If @only_calibration_keys is true then only these keys are returned
+ * otherwise a list that contains all original keys plus any missing
+ * calibration keys is returned. */
+static GQuark*
+construct_calibrations_keys(GwyContainer *data,
+                            guint *pn, const GQuark *keys,
+                            gboolean only_calibration_keys)
+{
+    static const gchar *calib_keys[] = {
+        "cal_xerr", "cal_yerr", "cal_zerr", "cal_xunc", "cal_yunc", "cal_zunc",
+    };
+
+    GArray *newkeys;
+    guint n = *pn;
+    GwyAppKeyType type;
+    gint len, i, j, k, id;
+
+    newkeys = g_array_new(FALSE, FALSE, sizeof(GQuark));
+    for (i = 0; i < n; i++) {
+        GQuark key = keys[i];
+        if (!key)
+            continue;
+
+        id = _gwy_app_analyse_data_key(g_quark_to_string(key), &type, &len);
+        if (!only_calib_keys)
+            g_array_append_val(newkeys, key);
+        if (type != KEY_IS_DATA)
+            continue;
+
+        for (k = 0; k < G_N_ELEMENTS(calib_keys); k++) {
+            gchar buf[40];
+            GQuark calkey;
+
+            g_snprintf(buf, sizeof(buf), "/%d/data/%s", id, calib_keys[k]);
+            calkey = g_quark_from_string(buf);
+            if (!gwy_container_contains(data, calkey))
+                continue;
+
+            if (only_calib_keys)
+                g_array_append_val(newkeys, calkey);
+            else {
+                for (j = 0; j < n; j++) {
+                    if (keys[j] == calkey)
+                        break;
+                }
+                if (j == n)
+                    g_array_append_val(newkeys, calkey);
+            }
+        }
+    }
+
+    *pn = newkeys->len;
+    return (GQuark*)g_array_free(newkeys, FALSE);
+}
+
 /**
  * gwy_app_undo_qcheckpointv:
  * @data: A data container.
@@ -209,12 +266,24 @@ gwy_app_undo_qcheckpointv(GwyContainer *data,
                           guint n,
                           const GQuark *keys)
 {
+    GQuark *calkeys;
     gulong id;
+    guint nwcal, i;
 
-    id = gwy_undo_qcheckpointv(data, n, keys);
+    nwcal = n;
+    calkeys = construct_calibrations_keys(data, &nwcal, keys, FALSE);
+    id = gwy_undo_qcheckpointv(data, nwcal, calkeys);
+    g_free(calkeys);
+
     if (id)
         gwy_app_sensitivity_set_state(GWY_MENU_FLAG_UNDO | GWY_MENU_FLAG_REDO,
                                       GWY_MENU_FLAG_UNDO);
+
+    nwcal = n;
+    calkeys = construct_calibrations_keys(data, &nwcal, keys, TRUE);
+    for (i = 0; i < nwcal; i++)
+        gwy_container_remove(data, calkeys[i]);
+    g_free(calkeys);
 
     return id;
 }
