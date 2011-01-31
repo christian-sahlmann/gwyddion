@@ -259,6 +259,12 @@ construct_calibrations_keys(GwyContainer *data,
  * In addition to what gwy_undo_checkpointv() does, this function takes care
  * of updating application controls state.
  *
+ * If @keys include channel keys the corresponding channel calibration data is
+ * saved together with the data and then removed from the container.  This
+ * prevents mismatch between a data field and its calibration data.  Therefore,
+ * if you perform a data operation that can also meaningfully transform the
+ * corresponding calibration data take care to obtain it before saving undo.
+ *
  * Returns: Undo level id.  Not useful (yet).
  **/
 gulong
