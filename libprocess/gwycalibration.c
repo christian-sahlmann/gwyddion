@@ -282,6 +282,26 @@ gwy_calibrations_get_calibration(const gchar *name)
     return (GwyCalibration*)gwy_inventory_get_item_or_default(i, name);
 }
 
+/************************** Documentation ****************************/
+
+/**
+ * SECTION:calibration
+ * @title: GwyCalibration
+ * @short_description: Resource for managing calibrations
+ *
+ * #GwyCalibration is a resource used for managing calibration data. These resources
+ * are stored separately from calibration data and contain namely filename of
+ * connected calibration data file.
+ *
+ * with #GwyDataField.
+ **/
+
+/**
+ * GwyCalibration:
+ *
+ * The #GwyCalibration struct contains private data only and should be accessed
+ * using the functions below.
+ **/
 
 
 
