@@ -191,13 +191,13 @@ gwy_app_undo_qcheckpoint(GwyContainer *data,
 }
 
 /* Create a list of calibration keys corresponding to channel keys in @keys.
- * If @only_calibration_keys is true then only these keys are returned
+ * If @only_calib_keys is true then only these keys are returned
  * otherwise a list that contains all original keys plus any missing
  * calibration keys is returned. */
 static GQuark*
 construct_calibrations_keys(GwyContainer *data,
                             guint *pn, const GQuark *keys,
-                            gboolean only_calibration_keys)
+                            gboolean only_calib_keys)
 {
     static const gchar *calib_keys[] = {
         "cal_xerr", "cal_yerr", "cal_zerr", "cal_xunc", "cal_yunc", "cal_zunc",
