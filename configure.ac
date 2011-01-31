@@ -497,6 +497,7 @@ if test "x$enable_spml" != "xno"; then
                                [Define if we have the libxml2 package.])],
                      enable_spml=no; SPML_WARN=" (needs libxml2)")
 fi
+AM_CONDITIONAL([HAVE_XML2],[test x$enable_spml != xno])
 
 #############################################################################
 # libunique
