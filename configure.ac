@@ -470,7 +470,9 @@ fi
 if test x$enable_zlib != xno && test -n "$ZLIB"; then
   AC_DEFINE(HAVE_ZLIB,1,[Define if we have the ZLIB library.])
 else
+  enable_spml=no
   ZLIB_WARN=" (needs zlib)"
+  SPML_WARN=" (needs zlib)"
 fi
 AM_CONDITIONAL([HAVE_ZLIB],[test x$enable_zlib != xno && test -n "$ZLIB"])
 AC_SUBST(ZLIB)
@@ -493,10 +495,8 @@ if test "x$enable_spml" != "xno"; then
   PKG_CHECK_MODULES(XML2, [libxml-2.0 >= 2.6],
                     [AC_DEFINE(HAVE_XML2,1,
                                [Define if we have the libxml2 package.])],
-                    enable_spml=no; SPML_WARN=" (needs libxml2)")
-
+                     enable_spml=no; SPML_WARN=" (needs libxml2)")
 fi
-AM_CONDITIONAL([HAVE_XML2],[test x$enable_spml != xno])
 
 #############################################################################
 # libunique

@@ -3,8 +3,13 @@
 # When libXML2 is disabled, put the sources to EXTRA_DIST to include them in
 # make dist.
 if HAVE_XML2
+if HAVE_ZLIB
 spml_module = spml.la
 spml_sources =
+else
+spml_module =
+spml_sources = spml.c
+endif
 else
 spml_module =
 spml_sources = spml.c
@@ -212,9 +217,11 @@ createc_la_LIBADD        = @ZLIB@
 pixmap_la_LIBADD         = @PNG_LIBS@
 
 if HAVE_XML2
+if HAVE_ZLIB
 spml_la_SOURCES          = spml.c spml-utils.h
 spml_la_CFLAGS           = $(AM_CFLAGS) @XML2_CFLAGS@
-spml_la_LIBADD           = @XML2_LIBS@
+spml_la_LIBADD           = @XML2_LIBS@ @ZLIB@
+endif
 endif
 
 if HAVE_ZLIB
