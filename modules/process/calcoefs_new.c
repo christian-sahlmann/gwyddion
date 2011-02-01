@@ -193,7 +193,7 @@ cnew(GwyContainer *data, GwyRunType run)
     gboolean ok;
     gint oldid, i, j, k, n;
     GwyCalibration *calibration;
-    GwyCalData *caldata = NULL;
+    GwyCalData *caldata = NULL, *old;
     gchar *filename;
     gchar *contents;
     gsize len;
@@ -201,6 +201,7 @@ cnew(GwyContainer *data, GwyRunType run)
     gsize pos = 0;
     GString *str;
     GByteArray *barray;
+    gdouble *x, *y, *z, *xunc, *yunc, *zunc, *xerr, *yerr, *zerr;
     FILE *fh;
 
 
@@ -219,8 +220,47 @@ cnew(GwyContainer *data, GwyRunType run)
     }
 
     /*create the caldata*/
+    caldata = gwy_caldata_new(8);
+    x = gwy_caldata_get_x(caldata);
+    y = gwy_caldata_get_y(caldata);
+    z = gwy_caldata_get_z(caldata);
+    xerr = gwy_caldata_get_xerr(caldata);
+    yerr = gwy_caldata_get_yerr(caldata);
+    zerr = gwy_caldata_get_zerr(caldata);
+    xunc = gwy_caldata_get_xunc(caldata);
+    yunc = gwy_caldata_get_yunc(caldata);
+    zunc = gwy_caldata_get_zunc(caldata);
 
+    n = 0;
+    for (i=0; i<2; i++)
+    {
+        for (j=0; j<2; j++)
+        {
+            for (k=0; k<2; k++)
+            {
 
+                if (i) x[n] = args.xrange_from;
+                else x[n] = args.xrange_to;
+                if (j) y[n] = args.yrange_from;
+                else y[n] = args.yrange_to;
+                if (k) z[n] = args.zrange_from;
+                else z[n] = args.zrange_to;
+
+                if (i) xerr[n] = (args.xrange_to-args.xrange_from)*(args.xmult-1);
+                else xerr[n] = 0;
+                if (j) yerr[n] = (args.yrange_to-args.yrange_from)*(args.ymult-1);
+                else yerr[n] = 0;
+                if (k) zerr[n] = (args.zrange_to-args.zrange_from)*(args.zmult-1);
+                else zerr[n] = 0;
+
+                xunc[n] = args.xunc;
+                yunc[n] = args.yunc;
+                zunc[n] = args.zunc;
+                n++;
+            }
+        }
+    }
+ 
     if (args.duplicate == DUPLICATE_APPEND && (calibration = gwy_inventory_get_item(gwy_calibrations(), args.name)))
         {
         filename = g_build_filename(gwy_get_user_dir(), "caldata", calibration->filename, NULL);
@@ -233,72 +273,25 @@ cnew(GwyContainer *data, GwyRunType run)
         }
         else {
             if (len)
-              caldata = GWY_CALDATA(gwy_serializable_deserialize(contents, len, &pos));
+              old = GWY_CALDATA(gwy_serializable_deserialize(contents, len, &pos));
             g_free(contents);
         }
-        n = caldata->ndata + 8;
-        caldata->x = g_realloc(caldata->x, n*sizeof(gdouble));
-        caldata->y = g_realloc(caldata->y, n*sizeof(gdouble));
-        caldata->z = g_realloc(caldata->z, n*sizeof(gdouble));
-        caldata->xerr = g_realloc(caldata->xerr, n*sizeof(gdouble));
-        caldata->yerr = g_realloc(caldata->yerr, n*sizeof(gdouble));
-        caldata->zerr = g_realloc(caldata->zerr, n*sizeof(gdouble));
-        caldata->xunc = g_realloc(caldata->xunc, n*sizeof(gdouble));
-        caldata->yunc = g_realloc(caldata->yunc, n*sizeof(gdouble));
-        caldata->zunc = g_realloc(caldata->zunc, n*sizeof(gdouble));
-
-        n = caldata->ndata;
-        caldata->ndata += 8;
-    } 
-    else {
-        caldata = gwy_caldata_new(8);
-        n = 0;
+        
+        gwy_caldata_append(old, caldata);
+        g_object_unref(caldata);
+        caldata = old;
+        
     }
-    for (i=0; i<2; i++)
-    {
-        for (j=0; j<2; j++)
-        {
-            for (k=0; k<2; k++)
-            {
 
-                if (i) caldata->x[n] = args.xrange_from;
-                else caldata->x[n] = args.xrange_to;
-                if (j) caldata->y[n] = args.yrange_from;
-                else caldata->y[n] = args.yrange_to;
-                if (k) caldata->z[n] = args.zrange_from;
-                else caldata->z[n] = args.zrange_to;
+    gwy_caldata_set_range(caldata, args.xrange_from, args.xrange_to,
+                          args.yrange_from, args.yrange_to,
+                          args.zrange_from, args.zrange_to);
 
-                if (i) caldata->xerr[n] = (args.xrange_to-args.xrange_from)*(args.xmult-1);
-                else caldata->xerr[n] = 0;
-                if (j) caldata->yerr[n] = (args.yrange_to-args.yrange_from)*(args.ymult-1);
-                else caldata->yerr[n] = 0;
-                if (k) caldata->zerr[n] = (args.zrange_to-args.zrange_from)*(args.zmult-1);
-                else caldata->zerr[n] = 0;
-
-                caldata->xunc[n] = args.xunc;
-                caldata->yunc[n] = args.yunc;
-                caldata->zunc[n] = args.zunc;
-                n++;
-            }
-        }
-    }
-    //for (i=0; i<8; i++) {caldata->xerr[i] = 1.0; caldata->yerr[i] = 2.0; caldata->zerr[i] = 3.0; }
-
-    caldata->x_from = args.xrange_from;
-    caldata->x_to = args.xrange_to;
-    caldata->y_from = args.yrange_from;
-    caldata->y_to = args.yrange_to;
-    caldata->z_from = args.zrange_from;
-    caldata->z_to = args.zrange_to;
-
-
-    //debugcal(caldata);
 
     /*now create and save the resource*/
-
     if ((calibration = GWY_CALIBRATION(gwy_inventory_get_item(gwy_calibrations(), args.name)))==NULL)
     {
-        calibration = gwy_calibration_new(args.name, 8, g_strconcat(args.name, ".dat", NULL));
+        calibration = gwy_calibration_new(args.name, gwy_caldata_get_ndata(caldata), g_strconcat(args.name, ".dat", NULL));
         gwy_inventory_insert_item(gwy_calibrations(), calibration);
         g_object_unref(calibration);
     }

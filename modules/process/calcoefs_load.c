@@ -105,7 +105,7 @@ cload(G_GNUC_UNUSED GwyContainer *data, GwyRunType run)
     GwyDataField *dfield;
     CLoadArgs args;
     gboolean ok;
-    gint oldid, i, n;
+    gint oldid, n;
     GwyCalibration *calibration;
     GwyCalData *caldata = NULL;
     gchar *filename;
@@ -149,32 +149,9 @@ cload(G_GNUC_UNUSED GwyContainer *data, GwyRunType run)
               caldata = GWY_CALDATA(gwy_serializable_deserialize(contents, len, &pos));
             g_free(contents);
         }
-        n = caldata->ndata + args.caldata->ndata;
+        n = gwy_caldata_get_ndata(caldata) + gwy_caldata_get_ndata(args.caldata);
 
-        //add to args->caldata
-        args.caldata->x = g_realloc(args.caldata->x, n*sizeof(gdouble));
-        args.caldata->y = g_realloc(args.caldata->y, n*sizeof(gdouble));
-        args.caldata->z = g_realloc(args.caldata->z, n*sizeof(gdouble));
-        args.caldata->xerr = g_realloc(args.caldata->xerr, n*sizeof(gdouble));
-        args.caldata->yerr = g_realloc(args.caldata->yerr, n*sizeof(gdouble));
-        args.caldata->zerr = g_realloc(args.caldata->zerr, n*sizeof(gdouble));
-        args.caldata->xunc = g_realloc(args.caldata->xunc, n*sizeof(gdouble));
-        args.caldata->yunc = g_realloc(args.caldata->yunc, n*sizeof(gdouble));
-        args.caldata->zunc = g_realloc(args.caldata->zunc, n*sizeof(gdouble));
-
-        for (i=args.caldata->ndata; i<n; i++)
-        {
-           args.caldata->x[i] = caldata->x[i-caldata->ndata];
-           args.caldata->y[i] = caldata->y[i-caldata->ndata];
-           args.caldata->z[i] = caldata->z[i-caldata->ndata];
-           args.caldata->xerr[i] = caldata->xerr[i-caldata->ndata];
-           args.caldata->yerr[i] = caldata->yerr[i-caldata->ndata];
-           args.caldata->zerr[i] = caldata->zerr[i-caldata->ndata];
-           args.caldata->xunc[i] = caldata->xunc[i-caldata->ndata];
-           args.caldata->yunc[i] = caldata->yunc[i-caldata->ndata];
-           args.caldata->zunc[i] = caldata->zunc[i-caldata->ndata];
-        }
-        args.caldata->ndata = n; 
+        gwy_caldata_append(args.caldata, caldata);
     }
 
     /*now create and save the resource*/
@@ -381,21 +358,21 @@ load_caldata(CLoadControls *controls)
             //fscanf(fr, "%lf", &zto);
 
             caldata = gwy_caldata_new(ndata);    //FIXME free it somewhere if allocated previously
-            caldata->ndata = ndata;
-            caldata->x_from = xfrom;
-            caldata->x_to = xto;
-            caldata->y_from = yfrom;
-            caldata->y_to = yto;
-            caldata->z_from = zfrom;
-            caldata->z_to = zto;
+            //caldata->ndata = ndata;
+            //caldata->x_from = xfrom;
+            //caldata->x_to = xto;
+            //caldata->y_from = yfrom;
+            //caldata->y_to = yto;
+            //caldata->z_from = zfrom;
+            //caldata->z_to = zto;
             //fscanf(fr, "%s", six);
             //fscanf(fr, "%s", siy);
             //fscanf(fr, "%s", siz);
-            caldata->si_unit_x = gwy_si_unit_new(six);
-            caldata->si_unit_y = gwy_si_unit_new(siy);
-            caldata->si_unit_z = gwy_si_unit_new(siz);
+            //caldata->si_unit_x = gwy_si_unit_new(six);
+            //caldata->si_unit_y = gwy_si_unit_new(siy);
+            //caldata->si_unit_z = gwy_si_unit_new(siz);
 
-            for (i=0; i<caldata->ndata; i++)
+            for (i=0; i<gwy_caldata_get_ndata(caldata); i++)
             {
                 line = gwy_str_next_line(&text);
                 g_strstrip(line);
@@ -408,18 +385,18 @@ load_caldata(CLoadControls *controls)
                 fscanf(fr, "%lf", &xunc);
                 fscanf(fr, "%lf", &yunc);
                 fscanf(fr, "%lf", &zunc);*/
-                caldata->x[i] = x;
-                caldata->y[i] = y;
-                caldata->z[i] = z;
-                caldata->xerr[i] = xerr;
-                caldata->yerr[i] = yerr;
-                caldata->zerr[i] = zerr;
-                caldata->xunc[i] = xunc;
-                caldata->yunc[i] = yunc;
-                caldata->zunc[i] = zunc;
+                //caldata->x[i] = x;
+                //caldata->y[i] = y;
+                //caldata->z[i] = z;
+                //caldata->xerr[i] = xerr;
+                //caldata->yerr[i] = yerr;
+                //caldata->zerr[i] = zerr;
+                //caldata->xunc[i] = xunc;
+                //caldata->yunc[i] = yunc;
+                //caldata->zunc[i] = zunc;
               }
             
-            g_snprintf(mtext, sizeof(mtext), "Loaded %d data points", caldata->ndata);
+            g_snprintf(mtext, sizeof(mtext), "Loaded %d data points", gwy_caldata_get_ndata(caldata));
             gtk_label_set_text(GTK_LABEL(controls->text), mtext);
             gtk_widget_set_sensitive(controls->okbutton, TRUE);
         }

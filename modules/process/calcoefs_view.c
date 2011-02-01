@@ -603,6 +603,7 @@ update_view(CCViewControls *controls, CCViewArgs *args)
 {
     gint col, row, xres, yres, zres;
     gdouble x, y, z, xerr, yerr, zerr, xunc, yunc, zunc;
+    gdouble x_from, x_to, y_from, y_to, z_from, z_to;
     GwyDataField *viewfield;
     GwyCalibration *calibration = NULL;
     GwyCalData *caldata = NULL;
@@ -669,7 +670,9 @@ update_view(CCViewControls *controls, CCViewArgs *args)
         run = gwy_app_wait_set_message("Triangulation...\n");
         run = gwy_app_wait_set_fraction(0);
 
+
         if (run && controls->args->crop) {
+            gwy_caldata_get_range(caldata, &x_from, &x_to, &y_from, &y_to, &z_from, &z_to);
             for (row=0; row<yres; row++)
             {
                 y = controls->args->yoffset + gwy_data_field_get_yoffset(controls->actual_field) + 
@@ -698,12 +701,12 @@ update_view(CCViewControls *controls, CCViewArgs *args)
             if (controls->args->plane_type == GWY_CC_VIEW_PLANE_X)
             {
                 gwy_data_field_resample(viewfield, yres, zres, GWY_INTERPOLATION_NONE);
-                x = caldata->x_from + (caldata->x_to-caldata->x_from)*(gdouble)args->xplane/100.0;
+                x = x_from + (x_to-x_from)*(gdouble)args->xplane/100.0;
                 for (col=0; col<yres; col++)
                 {
-                    y = caldata->y_from + (caldata->y_to-caldata->y_from)*(gdouble)col/(double)yres;
+                    y = y_from + (y_to-y_from)*(gdouble)col/(double)yres;
                     for (row=0; row<zres; row++) {
-                        z = caldata->z_from + (caldata->z_to-caldata->z_from)*(gdouble)row/(double)zres;
+                        z = z_from + (z_to-z_from)*(gdouble)row/(double)zres;
 
                         get_value(caldata, x, y, z, &xerr, &yerr, &zerr, &xunc, &yunc, &zunc, args->interpolation_type);
                         controls->xerr->data[col + yres*row] = xerr;
@@ -720,12 +723,12 @@ update_view(CCViewControls *controls, CCViewArgs *args)
             if (controls->args->plane_type == GWY_CC_VIEW_PLANE_Y)
             {
                 gwy_data_field_resample(viewfield, xres, zres, GWY_INTERPOLATION_NONE);
-                y = caldata->y_from + (caldata->y_to-caldata->y_from)*(gdouble)args->yplane/100.0;
+                y = y_from + (y_to-y_from)*(gdouble)args->yplane/100.0;
                 for (col=0; col<xres; col++)
                 { 
-                    x = caldata->x_from + (caldata->x_to-caldata->x_from)*(gdouble)col/(double)xres;
+                    x = x_from + (x_to-x_from)*(gdouble)col/(double)xres;
                     for (row=0; row<zres; row++) {
-                        z = caldata->z_from + (caldata->z_to-caldata->z_from)*(gdouble)row/(double)zres;
+                        z = z_from + (z_to-z_from)*(gdouble)row/(double)zres;
                         get_value(caldata, x, y, z, &xerr, &yerr, &zerr, &xunc, &yunc, &zunc, args->interpolation_type);
                         controls->xerr->data[col + xres*row] = xerr;
                         controls->yerr->data[col + xres*row] = yerr;
@@ -741,10 +744,10 @@ update_view(CCViewControls *controls, CCViewArgs *args)
             if (controls->args->plane_type == GWY_CC_VIEW_PLANE_Z)
             {
                 gwy_data_field_resample(viewfield, xres, yres, GWY_INTERPOLATION_NONE);
-                gwy_data_field_set_xreal(viewfield, caldata->x_to - caldata->x_from);
-                gwy_data_field_set_yreal(viewfield, caldata->y_to - caldata->y_from);
+                gwy_data_field_set_xreal(viewfield, x_to - x_from);
+                gwy_data_field_set_yreal(viewfield, y_to - y_from);
 
-                z = caldata->z_from + (caldata->z_to-caldata->z_from)*(gdouble)args->zplane/100.0;
+                z = z_from + (z_to-z_from)*(gdouble)args->zplane/100.0;
                 for (col=0; col<xres; col++)
                 {
                     x = gwy_data_field_get_yoffset(viewfield) +
@@ -849,7 +852,7 @@ brutal_search(GwyCalData *caldata, gdouble x, gdouble y, gdouble z, gdouble radi
                    gint *pos, gdouble *dist, gint *ndata, GwyCCViewInterpolationType snap_type)
 {
     gint i, j, smallest = 0, largest = 0;
-    gdouble val, minval, maxval;
+    gdouble val, minval, maxval, *xd, *yd, *zd;
     gint maxdata = *ndata;
     gboolean snap = 0;
     gdouble splane = 0;
@@ -857,28 +860,32 @@ brutal_search(GwyCalData *caldata, gdouble x, gdouble y, gdouble z, gdouble radi
 
     if (!caldata) return;
 
+    xd = gwy_caldata_get_x(caldata);
+    yd = gwy_caldata_get_y(caldata);
+    zd = gwy_caldata_get_z(caldata);
+
     /*find closest plane, if requested*/
     if (snap_type == GWY_CC_VIEW_INTERPOLATION_PLANE)
     {
         minval = G_MAXDOUBLE;
-        for (i=0; i<caldata->ndata; i++)
+        for (i=0; i<gwy_caldata_get_ndata(caldata); i++)
         {
-            if (fabs(z - caldata->z[i]) < minval) {
-                minval = fabs(z - caldata->z[i]);
+            if (fabs(z - zd[i]) < minval) {
+                minval = fabs(z - zd[i]);
                 smallest = i;
             }
         }
-        splane = caldata->z[smallest];
+        splane = zd[smallest];
         snap = 1;
     }
 
-    for (i=0; i<caldata->ndata; i++)
+    for (i=0; i<gwy_caldata_get_ndata(caldata); i++)
     {
-        if (snap && (fabs(caldata->z[i]-splane))>1e-6) continue;
+        if (snap && (fabs(zd[i]-splane))>1e-6) continue;
 
-        if ((val=((caldata->x[i] - x)*(caldata->x[i] - x) +
-             (caldata->y[i] - y)*(caldata->y[i] - y) +
-             (caldata->z[i] - z)*(caldata->z[i] - z))) < (radius*radius))
+        if ((val=((xd[i] - x)*(xd[i] - x) +
+             (yd[i] - y)*(yd[i] - y) +
+             (zd[i] - z)*(zd[i] - z))) < (radius*radius))
         {
             if ((*ndata) == maxdata)
             {
@@ -917,6 +924,7 @@ get_value(GwyCalData *caldata, gdouble x, gdouble y, gdouble z,
     gint pos[500];
     gint ndata=9;
     gdouble sumxerr, sumyerr, sumzerr, sumxunc, sumyunc, sumzunc, sumw;
+    gdouble *xerrd, *yerrd, *zerrd, *xuncd, *yuncd, *zuncd; 
     gdouble w, dist[500];
 
     if (!caldata) {/*printf("no caldata!\n");*/ return;}
@@ -926,30 +934,37 @@ get_value(GwyCalData *caldata, gdouble x, gdouble y, gdouble z,
     gwy_caldata_interpolate(caldata, x, y, z, xerr, yerr, zerr, xunc, yunc, zunc);
     else
     {
+        xerrd = gwy_caldata_get_xerr(caldata);
+        yerrd = gwy_caldata_get_yerr(caldata);
+        zerrd = gwy_caldata_get_zerr(caldata);
+        xuncd = gwy_caldata_get_xunc(caldata);
+        yuncd = gwy_caldata_get_yunc(caldata);
+        zuncd = gwy_caldata_get_zunc(caldata);
+
         brutal_search(caldata, x, y, z, 1e-1, pos, dist, &ndata, snap_type);
         sumxerr = sumyerr = sumzerr = sumxunc = sumyunc = sumzunc = sumw = 0;
         for (i=0; i<ndata; i++)
         {
             if (dist[i]<1e-9) {
                 sumw = 1;
-                sumxerr = caldata->xerr[pos[i]];
-                sumyerr = caldata->yerr[pos[i]];
-                sumzerr = caldata->zerr[pos[i]];
-                sumxunc = caldata->xunc[pos[i]];
-                sumyunc = caldata->yunc[pos[i]];
-                sumzunc = caldata->zunc[pos[i]];
+                sumxerr = xerrd[pos[i]];
+                sumyerr = yerrd[pos[i]];
+                sumzerr = zerrd[pos[i]];
+                sumxunc = xuncd[pos[i]];
+                sumyunc = yuncd[pos[i]];
+                sumzunc = zuncd[pos[i]];
                 break;
             }
             else {
                 w = 1.0/dist[i];
                 w = w*w;
                 sumw += w;
-                sumxerr += w*caldata->xerr[pos[i]];
-                sumyerr += w*caldata->yerr[pos[i]];
-                sumzerr += w*caldata->zerr[pos[i]];
-                sumxunc += w*caldata->xunc[pos[i]];
-                sumyunc += w*caldata->yunc[pos[i]];
-                sumzunc += w*caldata->zunc[pos[i]];
+                sumxerr += w*xerrd[pos[i]];
+                sumyerr += w*yerrd[pos[i]];
+                sumzerr += w*zerrd[pos[i]];
+                sumxunc += w*xuncd[pos[i]];
+                sumyunc += w*yuncd[pos[i]];
+                sumzunc += w*zuncd[pos[i]];
             }
         }
         *xerr = sumxerr/sumw;

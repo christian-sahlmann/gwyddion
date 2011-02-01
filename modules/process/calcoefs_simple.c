@@ -194,6 +194,7 @@ simple(GwyContainer *data, GwyRunType run)
     GError *err = NULL;
     gsize pos = 0;
     GString *str;
+    GByteArray *barray;
     FILE *fh; 
 
     g_return_if_fail(run & SIMPLE_RUN_MODES);
@@ -244,38 +245,15 @@ simple(GwyContainer *data, GwyRunType run)
               caldata = GWY_CALDATA(gwy_serializable_deserialize(contents, len, &pos));
             g_free(contents);
         }
-        n = caldata->ndata + args.caldata->ndata;
-
-        //add to args->caldata
-        args.caldata->x = g_realloc(args.caldata->x, n*sizeof(gdouble));
-        args.caldata->y = g_realloc(args.caldata->y, n*sizeof(gdouble));
-        args.caldata->z = g_realloc(args.caldata->z, n*sizeof(gdouble));
-        args.caldata->xerr = g_realloc(args.caldata->xerr, n*sizeof(gdouble));
-        args.caldata->yerr = g_realloc(args.caldata->yerr, n*sizeof(gdouble));
-        args.caldata->zerr = g_realloc(args.caldata->zerr, n*sizeof(gdouble));
-        args.caldata->xunc = g_realloc(args.caldata->xunc, n*sizeof(gdouble));
-        args.caldata->yunc = g_realloc(args.caldata->yunc, n*sizeof(gdouble));
-        args.caldata->zunc = g_realloc(args.caldata->zunc, n*sizeof(gdouble));
-
-        for (i=args.caldata->ndata; i<n; i++)
-        {
-           args.caldata->x[i] = caldata->x[i];
-           args.caldata->y[i] = caldata->y[i];
-           args.caldata->z[i] = caldata->z[i];
-           args.caldata->xerr[i] = caldata->xerr[i];
-           args.caldata->yerr[i] = caldata->yerr[i];
-           args.caldata->zerr[i] = caldata->zerr[i];
-           args.caldata->xunc[i] = caldata->xunc[i];
-           args.caldata->yunc[i] = caldata->yunc[i];
-           args.caldata->zunc[i] = caldata->zunc[i];
-        }
-        args.caldata->ndata = n;
+        gwy_caldata_append(args.caldata, caldata);
+        g_object_unref(caldata);
+        caldata = args.caldata;
     }
 
     /*now create and save the resource*/
     if ((calibration = GWY_CALIBRATION(gwy_inventory_get_item(gwy_calibrations(), args.name[0])))==NULL)
     {
-        calibration = gwy_calibration_new(args.name[0], 8, g_strconcat(args.name[0], ".dat", NULL));
+        calibration = gwy_calibration_new(args.name[0], gwy_caldata_get_ndata(args.caldata), g_strconcat(args.name[0], ".dat", NULL));
         gwy_inventory_insert_item(gwy_calibrations(), calibration);
         g_object_unref(calibration);
     }
@@ -296,23 +274,19 @@ simple(GwyContainer *data, GwyRunType run)
 
     gwy_resource_data_saved(GWY_RESOURCE(calibration));
 
-
     /*now save the calibration data*/
-    //if (!g_file_test(g_build_filename(gwy_get_user_dir(), "caldata", NULL), G_FILE_TEST_EXISTS)) {
-    //    g_mkdir(g_build_filename(gwy_get_user_dir(), "caldata", NULL), 0700);
-    // }
-    //fh = g_fopen(g_build_filename(gwy_get_user_dir(), "caldata", calibration->filename, NULL), "w");
-    //if (!fh) {
-    //    g_warning("Cannot save caldata\n");
-    //    return;
-    //}
-    //barray = gwy_serializable_serialize(G_OBJECT(args.caldata), NULL);
+    if (!g_file_test(g_build_filename(gwy_get_user_dir(), "caldata", NULL), G_FILE_TEST_EXISTS)) {
+        g_mkdir(g_build_filename(gwy_get_user_dir(), "caldata", NULL), 0700);
+    }
+    fh = g_fopen(g_build_filename(gwy_get_user_dir(), "caldata", calibration->filename, NULL), "w");
+    if (!fh) {
+        g_warning("Cannot save caldata\n");
+        return;
+    }
+    barray = gwy_serializable_serialize(G_OBJECT(args.caldata), NULL);
     //g_file_set_contents(fh, barray->data, sizeof(guint8)*barray->len, NULL);
-    //fwrite(barray->data, sizeof(guint8), barray->len, fh);
-    //fclose(fh);
-
-
-
+    fwrite(barray->data, sizeof(guint8), barray->len, fh);
+    fclose(fh);
 }
 
 static gboolean

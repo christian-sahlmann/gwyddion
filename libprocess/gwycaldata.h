@@ -23,7 +23,6 @@
 
 #include <libgwyddion/gwysiunit.h>
 #include <libprocess/gwyprocessenums.h>
-#include <libprocess/natural.h>
 
 G_BEGIN_DECLS
 
@@ -48,44 +47,6 @@ typedef struct {
 typedef struct _GwyCalData      GwyCalData;
 typedef struct _GwyCalDataClass GwyCalDataClass;
 
-struct _GwyCalData {
-    GObject parent_instance;
-
-    gdouble *x;
-    gdouble *y;
-    gdouble *z;
-    gdouble *xerr;
-    gdouble *yerr;
-    gdouble *zerr;
-    gdouble *xunc;
-    gdouble *yunc;
-    gdouble *zunc;
-    gdouble x_from;
-    gdouble x_to;
-    gdouble y_from;
-    gdouble y_to;
-    gdouble z_from;
-    gdouble z_to;
-    gint ndata; 
-
-    GwySIUnit *si_unit_x;
-    GwySIUnit *si_unit_y;
-    GwySIUnit *si_unit_z;
-
-    GwyDelaunayVertex *err_ps;      //as all triangulation works for vectors, there are two separate meshes now which is stupid.
-    GwyDelaunayVertex *unc_ps;
-    GwyDelaunayMesh *err_m;
-    GwyDelaunayMesh *unc_m;
-
-    gpointer reserved1;
-    gint int1;
-};
-
-struct _GwyCalDataClass {
-    GObjectClass parent_class;
-
-    void (*reserved1)(void);
-};
 
 #define gwy_caldata_duplicate(caldata) \
         (GWY_CALDATA(gwy_serializable_duplicate(G_OBJECT(caldata))))
@@ -93,7 +54,36 @@ struct _GwyCalDataClass {
 GType  gwy_caldata_get_type  (void) G_GNUC_CONST;
 
 GwyCalData* gwy_caldata_new                (gint ndata);
+void        gwy_caldata_resize             (GwyCalData *caldata, 
+                                            gint ndata);
+void        gwy_caldata_append             (GwyCalData *caldata, 
+                                            GwyCalData *sec);
 gint        gwy_caldata_get_ndata          (GwyCalData *caldata);
+gdouble*    gwy_caldata_get_x              (GwyCalData *caldata);
+gdouble*    gwy_caldata_get_y              (GwyCalData *caldata);
+gdouble*    gwy_caldata_get_z              (GwyCalData *caldata);
+gdouble*    gwy_caldata_get_xerr           (GwyCalData *caldata);
+gdouble*    gwy_caldata_get_yerr           (GwyCalData *caldata);
+gdouble*    gwy_caldata_get_zerr           (GwyCalData *caldata);
+gdouble*    gwy_caldata_get_xunc           (GwyCalData *caldata);
+gdouble*    gwy_caldata_get_yunc           (GwyCalData *caldata);
+gdouble*    gwy_caldata_get_zunc           (GwyCalData *caldata);
+void        gwy_caldata_get_range          (GwyCalData *caldata,
+                                            gdouble *xfrom,
+                                            gdouble *xto,
+                                            gdouble *yfrom,
+                                            gdouble *yto,
+                                            gdouble *zfrom,
+                                            gdouble *zto);
+void        gwy_caldata_set_range          (GwyCalData *caldata,
+                                            gdouble xfrom,
+                                            gdouble xto,
+                                            gdouble yfrom,
+                                            gdouble yto,
+                                            gdouble zfrom,
+                                            gdouble zto);
+
+
 GwySIUnit*  gwy_caldata_get_si_unit_x      (GwyCalData *caldata);
 GwySIUnit*  gwy_caldata_get_si_unit_y      (GwyCalData *caldata);
 GwySIUnit*  gwy_caldata_get_si_unit_z      (GwyCalData *caldata);

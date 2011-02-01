@@ -27,9 +27,51 @@
 #include <libprocess/interpolation.h>
 #include <libprocess/gwycaldata.h>
 
+#include <libprocess/natural.h>
+
 #define GWY_CALDATA_TYPE_NAME "GwyCalData"
 
-/* INTERPOLATION: FIXME, gwy_caldata_rotate() does `something'. */
+
+
+struct _GwyCalData {
+    GObject parent_instance;
+
+    gdouble *x;
+    gdouble *y;
+    gdouble *z;
+    gdouble *xerr;
+    gdouble *yerr;
+    gdouble *zerr;
+    gdouble *xunc;
+    gdouble *yunc;
+    gdouble *zunc;
+    gdouble x_from;
+    gdouble x_to;
+    gdouble y_from;
+    gdouble y_to;
+    gdouble z_from;
+    gdouble z_to;
+    gint ndata;
+
+    GwySIUnit *si_unit_x;
+    GwySIUnit *si_unit_y;
+    GwySIUnit *si_unit_z;
+
+    GwyDelaunayVertex *err_ps;      //as all triangulation works for vectors, there are two separate meshes now which is stupid.
+    GwyDelaunayVertex *unc_ps;
+    GwyDelaunayMesh *err_m;
+    GwyDelaunayMesh *unc_m;
+
+    gpointer reserved1;
+    gint int1;
+};
+
+struct _GwyCalDataClass {
+    GObjectClass parent_class;
+
+    void (*reserved1)(void);
+};
+
 
 enum {
     DATA_CHANGED,
@@ -133,6 +175,114 @@ gwy_caldata_new(gint ndata)
     caldata->zunc = g_new(gdouble, caldata->ndata);
 
     return caldata;
+}
+
+/**
+ * gwy_caldata_resize
+ * @caldata: Calibration data
+ * @ndata: New number of data points
+ *
+ * Set number of calibration data entries, resize
+ * arrays for holding them. Preserves actual values
+ * up to new calibration data size.
+ *
+ **/
+
+void        
+gwy_caldata_resize(GwyCalData *caldata, gint ndata)
+{
+    gint i, ncopy;
+    gdouble *b;
+
+    if (ndata==caldata->ndata) return;
+
+    ncopy = MIN(caldata->ndata, ndata);
+    b = g_new(gdouble, ndata);
+    for (i=0; i<ncopy; i++) {
+        b[i] = caldata->x[i];
+    }
+    caldata->x = b;
+
+    b = g_new(gdouble, ndata);
+    for (i=0; i<ncopy; i++) {
+        b[i] = caldata->y[i];
+    }
+    caldata->y = b;
+
+    b = g_new(gdouble, ndata);
+    for (i=0; i<ncopy; i++) {
+        b[i] = caldata->z[i];
+    }
+    caldata->z = b;
+
+    b = g_new(gdouble, ndata);
+    for (i=0; i<ncopy; i++) {
+        b[i] = caldata->xerr[i];
+    }
+    caldata->xerr = b;
+
+    b = g_new(gdouble, ndata);
+    for (i=0; i<ncopy; i++) {
+        b[i] = caldata->yerr[i];
+    }
+    caldata->yerr = b;
+
+    b = g_new(gdouble, ndata);
+    for (i=0; i<ncopy; i++) {
+        b[i] = caldata->zerr[i];
+    }
+    caldata->zerr = b;
+
+    b = g_new(gdouble, ndata);
+    for (i=0; i<ncopy; i++) {
+        b[i] = caldata->xunc[i];
+    }
+    caldata->xunc = b;
+
+    b = g_new(gdouble, ndata);
+    for (i=0; i<ncopy; i++) {
+        b[i] = caldata->yunc[i];
+    }
+    caldata->yunc = b;
+
+    b = g_new(gdouble, ndata);
+    for (i=0; i<ncopy; i++) {
+        b[i] = caldata->zunc[i];
+    }
+    caldata->zunc = b;
+
+}
+
+/**
+ * gwy_caldata_append
+ * @caldata: Calibration data
+ * @sec: Calibration data to be appended
+ *
+ * Append calibration data entries, resizing
+ * arrays for holding them. 
+ *
+ **/
+
+void        
+gwy_caldata_append(GwyCalData *caldata, GwyCalData *sec)
+{
+    gint i, from;
+ 
+    from = caldata->ndata;
+    gwy_caldata_resize(caldata, caldata->ndata + sec->ndata);
+
+    for (i=from; i<(caldata->ndata + sec->ndata); i++)
+    {
+        caldata->x[i] = sec->x[i-from];
+        caldata->y[i] = sec->y[i-from];
+        caldata->z[i] = sec->z[i-from];
+        caldata->xerr[i] = sec->xerr[i-from];
+        caldata->yerr[i] = sec->yerr[i-from];
+        caldata->zerr[i] = sec->zerr[i-from];
+        caldata->xunc[i] = sec->xunc[i-from];
+        caldata->yunc[i] = sec->yunc[i-from];
+        caldata->zunc[i] = sec->zunc[i-from];
+    }
 }
 
 /**
@@ -540,6 +690,159 @@ gwy_caldata_interpolate(GwyCalData *caldata,
     if (xunc || yunc || zunc)
        gwy_delaunay_mesh_interpolate3_3(caldata->unc_m, x, y, z, xunc, yunc, zunc);
 }
+
+/**
+ * gwy_caldata_get_xerr:
+ * @caldata: Calibration data.
+ *
+ * Returns: x error array pointer for given calibration data.
+ **/
+gdouble*    
+gwy_caldata_get_xerr(GwyCalData *caldata)
+{
+    return caldata->xerr;
+}
+/**
+ * gwy_caldata_get_x:
+ * @caldata: Calibration data.
+ *
+ * Returns: x array pointer for given calibration data.
+ **/
+gdouble*    
+gwy_caldata_get_x(GwyCalData *caldata)
+{
+    return caldata->x;
+}
+/**
+ * gwy_caldata_get_y:
+ * @caldata: Calibration data.
+ *
+ * Returns: y array pointer for given calibration data.
+ **/
+gdouble*    
+gwy_caldata_get_y(GwyCalData *caldata)
+{
+    return caldata->y;
+}
+/**
+ * gwy_caldata_get_z:
+ * @caldata: Calibration data.
+ *
+ * Returns: z array pointer for given calibration data.
+ **/
+gdouble*    
+gwy_caldata_get_z(GwyCalData *caldata)
+{
+    return caldata->z;
+}
+/**
+ * gwy_caldata_get_yerr:
+ * @caldata: Calibration data.
+ *
+ * Returns: y error array pointer for given calibration data.
+ **/
+gdouble*    
+gwy_caldata_get_yerr(GwyCalData *caldata)
+{
+    return caldata->yerr;
+}
+/**
+ * gwy_caldata_get_zerr:
+ * @caldata: Calibration data.
+ *
+ * Returns: z error array pointer for given calibration data.
+ **/
+gdouble*    
+gwy_caldata_get_zerr(GwyCalData *caldata)
+{
+    return caldata->zerr;
+}
+/**
+ * gwy_caldata_get_xunc:
+ * @caldata: Calibration data.
+ *
+ * Returns: x uncertainty array pointer for given calibration data.
+ **/
+gdouble*    
+gwy_caldata_get_xunc(GwyCalData *caldata)
+{
+    return caldata->xunc;
+}
+/**
+ * gwy_caldata_get_yunc:
+ * @caldata: Calibration data.
+ *
+ * Returns: y uncertainty array pointer for given calibration data.
+ **/
+gdouble*    
+gwy_caldata_get_yunc(GwyCalData *caldata)
+{
+    return caldata->yunc;
+}
+/**
+ * gwy_caldata_get_zunc:
+ * @caldata: Calibration data.
+ *
+ * Returns: z uncertainty array pointer for given calibration data.
+ **/
+gdouble*    
+gwy_caldata_get_zunc(GwyCalData *caldata)
+{
+    return caldata->zunc;
+}
+
+
+/**
+ * gwy_caldata_get_range:
+ * @caldata: Calibration data.
+ * @xfrom: x minimum 
+ * @xto: x maximum 
+ * @yfrom: y minimum 
+ * @yto: y maximum 
+ * @zfrom: z minimum 
+ * @zto: z maximum
+ *
+ * Returns boundaries of calibration data validity.
+ **/
+void        
+gwy_caldata_get_range(GwyCalData *caldata,
+                     gdouble *xfrom, gdouble *xto, gdouble *yfrom, gdouble *yto,
+                     gdouble *zfrom, gdouble *zto)
+{
+    *xfrom = caldata->x_from;
+    *xto = caldata->x_to;
+    *yfrom = caldata->y_from;
+    *yto = caldata->y_to;
+    *zfrom = caldata->z_from;
+    *zto = caldata->z_to;
+}
+
+/**
+ * gwy_caldata_get_range:
+ * @caldata: Calibration data.
+ * @xfrom: x minimum 
+ * @xto: x maximum 
+ * @yfrom: y minimum 
+ * @yto: y maximum 
+ * @zfrom: z minimum 
+ * @zto: z maximum
+ *
+ * Sets boundaries of calibration data validity.
+ **/
+void        
+gwy_caldata_set_range(GwyCalData *caldata,
+                     gdouble xfrom, gdouble xto, gdouble yfrom, gdouble yto,
+                     gdouble zfrom, gdouble zto)
+{
+    caldata->x_from = xfrom;
+    caldata->x_to = xto;
+    caldata->y_from = yfrom;
+    caldata->y_to = yto;
+    caldata->z_from = zfrom;
+    caldata->z_to = zto;
+}
+
+
 
 /************************** Documentation ****************************/
 
