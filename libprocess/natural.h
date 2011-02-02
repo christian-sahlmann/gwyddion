@@ -29,23 +29,23 @@ typedef struct _GwyDelaunayVertex GwyDelaunayVertex;
 typedef struct _GwyDelaunayMesh GwyDelaunayMesh;
 
 G_GNUC_INTERNAL
-GwyDelaunayVertex *gwy_delaunay_vertex_new(gdouble *x, gdouble *y, gdouble *z,
+GwyDelaunayVertex *_gwy_delaunay_vertex_new(gdouble *x, gdouble *y, gdouble *z,
                    gdouble *u, gdouble *v, gdouble *w, gint n);
 
-//void     gwy_delaunay_vertex_free(GwyDelaunayVertex *ps);
+//void     _gwy_delaunay_vertex_free(GwyDelaunayVertex *ps);
 
 G_GNUC_INTERNAL
-GwyDelaunayMesh* gwy_delaunay_mesh_new();
+GwyDelaunayMesh* _gwy_delaunay_mesh_new();
 
 G_GNUC_INTERNAL
-void             gwy_delaunay_mesh_build(GwyDelaunayMesh *m, GwyDelaunayVertex* ps, gint n);
+void             _gwy_delaunay_mesh_build(GwyDelaunayMesh *m, GwyDelaunayVertex* ps, gint n);
 
 G_GNUC_INTERNAL
-void     gwy_delaunay_mesh_interpolate3_3(GwyDelaunayMesh *m, gdouble  x, gdouble  y, gdouble  z,
+void     _gwy_delaunay_mesh_interpolate3_3(GwyDelaunayMesh *m, gdouble  x, gdouble  y, gdouble  z,
                         gdouble *u, gdouble *v, gdouble *w);
 
 G_GNUC_INTERNAL
-void     gwy_delaunay_mesh_free(GwyDelaunayMesh *m);
+void     _gwy_delaunay_mesh_free(GwyDelaunayMesh *m);
 
 #endif
 

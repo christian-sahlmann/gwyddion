@@ -157,7 +157,7 @@ static void        emptyStack(stack *s);
 * utils.c
 *
 * Written by Ross Hemsley for McStas, September 2009.
-* All code below is required for the gintperolation functions, though many of 
+* All code below is required for the gintperolation functions, though many of
 * of the routines may be considered general enough for use anywhere they are
 * required. Current utils include an array based list implementation, a doubly
 * linked list implementation and an array based stack implementation.
@@ -175,7 +175,7 @@ static gint addToArrayList(arrayList *l, void* element)
 {
    if (l->num_elements >= l->num_slots)
    {
-   
+
       // we have to allocate more space
       l->num_slots *= 2;
       l->arr = realloc(l->arr, (l->num_slots*sizeof(void*)));
@@ -189,7 +189,7 @@ static gint addToArrayList(arrayList *l, void* element)
    // add the element
    l->arr[l->num_elements] = element;
    l->num_elements++;
-   
+
    // return the index where this element can be found.
    return (l->num_elements -1);
 }
@@ -231,7 +231,7 @@ static void * getFromArrayList (arrayList *l, gint iindex)
 {
    if(iindex >= 0 && iindex <  l->num_elements)
       return l->arr[iindex];
-      
+
    return NULL;
 }
 
@@ -241,7 +241,7 @@ static void * getFromArrayList (arrayList *l, gint iindex)
 
 static void emptyArrayList(arrayList *l)
 {
-  l->num_elements=0; 
+  l->num_elements=0;
 }
 
 /******************************************************************************/
@@ -249,11 +249,11 @@ static void emptyArrayList(arrayList *l)
 static void freeArrayList(arrayList *l, void (*destructor)(void *e))
 {
   gint i;
-  
+
   if (destructor)
     for (i=0;i<arrayListSize(l); i++)
       destructor(getFromArrayList(l,i));
-  
+
   free(l->arr);
   free(l);
 }
@@ -263,7 +263,7 @@ static void freeArrayList(arrayList *l, void (*destructor)(void *e))
 * we want to have faster extractions from very large lists. Using this
 * implementation we expect O(1) from all operations, except accessing an element
 * by index, which is O(n). In most cases this will be much slower than using
-* the array list implementation. (Except fast pogint removal in large sets) 
+* the array list implementation. (Except fast pogint removal in large sets)
 * because this implementation will not take advantage of the cache like the
 * array list does.
 *******************************************************************************/
@@ -271,12 +271,12 @@ static void freeArrayList(arrayList *l, void (*destructor)(void *e))
 static linkedList *newLinkedList()
 {
   linkedList *l = malloc(sizeof(linkedList));
-    
+
   l->deadNodes = newStack();
   l->head  = NULL;
   l->last  = NULL;
   l->nelem = 0;
-  
+
   return l;
 }
 
@@ -286,7 +286,7 @@ static listNode* addToLinkedList(linkedList *l, void *e)
 {
 
   listNode *ln;
-  
+
   if (!isEmpty(l->deadNodes))
     ln = pop(l->deadNodes);
   else
@@ -295,7 +295,7 @@ static listNode* addToLinkedList(linkedList *l, void *e)
   ln->data = e;
   ln->next = NULL;
   ln->prev = l->last;
-  
+
   // Put this element on the end. If this is the first element
   // then set the head.
   if (l->head)
@@ -303,7 +303,7 @@ static listNode* addToLinkedList(linkedList *l, void *e)
   else
     l->head = ln;
   l->last = ln;
-  
+
   l->nelem ++;
   return ln;
 }
@@ -319,7 +319,7 @@ static void *nextElement(G_GNUC_UNUSED linkedList *l, listNode **last)
   // If this is the end, return null.
   if (!*last) return NULL;
   // Move the iterator along to the next element,
-  // and then return the data item 
+  // and then return the data item
   e = (*last)->data;
   *last = (*last)->next;
   return e;
@@ -341,21 +341,21 @@ static void removeFromLinkedList(linkedList *l, listNode *ln)
   if (!ln){
 //    fprintf(stderr, "Error: Tried to remove null element from linkedList.\n");
     return;
-  }  
+  }
   // This could be the top of the linkedList: if it is: make sure we change the
   // head poginter to the new value.
   if (ln->prev)
     ln->prev->next = ln->next;
   else
     l->head = ln->next;
- 
+
   // This could be the bottom of the linkedList: make sure we change the last poginter.
-  // if it is.   
+  // if it is.
   if (ln->next)
     ln->next->prev = ln->prev;
-  else 
+  else
     l->last = ln->prev;
-    
+
   // Free the node, and update the element count.
   push(l->deadNodes, ln);
   l->nelem --;
@@ -366,11 +366,11 @@ static void removeFromLinkedList(linkedList *l, listNode *ln)
 // using the given destructor.
 static void freeLinkedList(linkedList *l, void (*destructor)(void *e))
 {
-  
+
   listNode *thisNode = l->head;
   while (thisNode)
   {
-    listNode *tmp = thisNode->next;    
+    listNode *tmp = thisNode->next;
     if (destructor) destructor(thisNode->data);
     free(thisNode);
     thisNode = tmp;
@@ -391,17 +391,17 @@ static void freeLinkedList(linkedList *l, void (*destructor)(void *e))
 static stack *newStack()
 {
   stack *s = malloc(sizeof(stack));
-  
+
   s->top   = 0;
   s->slots = 2;
   s->arr = malloc(2*sizeof(void*));
-  
+
   return s;
 }
 
 
 /******************************************************************************/
-// When we are storing poginters which could be null, we need to have a check 
+// When we are storing poginters which could be null, we need to have a check
 // to see if the stack is empty.
 
 static gint isEmpty(stack *s)
@@ -444,7 +444,7 @@ static void  push(stack *s, void*e)
 static void *pop(stack *s)
 {
   // If the stack is empty
-  if (s->top == 0) return NULL;  
+  if (s->top == 0) return NULL;
   s->top--;
   return s->arr[s->top];
 }
@@ -456,8 +456,8 @@ static void freeStack(stack *s, void (*destructor)(void *e))
   void *e;
   if (destructor)
     while ((e = pop(s)))
-      destructor(e); 
-      
+      destructor(e);
+
   free(s->arr);
   free(s);
 }
@@ -468,30 +468,30 @@ static void freeStack(stack *s, void (*destructor)(void *e))
 /*
 
   delaunay.h - By Ross Hemsley Aug. 2009 - rh7223@bris.ac.uk.
-  
+
   This module will compute the delaunay triangulation of a set of uniformly
   distributed points in R^3. We will use the iterative edge flipping
   algorithm to add points one at a time.
-  
+
   To store the triangulation, we start by just storing simplicies with pointers
-  to their respective coordinates. 
-  
+  to their respective coordinates.
+
   To simplify insertion, we first create a super-simplex with contains our
   entire dataset, this means that we don't have to specify any special
   conditions for the creation of our original simplicies.
 
-  To make our algorithm robust we use Jonathan Shewchuk's Arbitrary Precision 
-  Floating-poing Arithmetic predicates[1]  
+  To make our algorithm robust we use Jonathan Shewchuk's Arbitrary Precision
+  Floating-poing Arithmetic predicates[1]
 
 
-  [1]  Routines for Arbitrary Precision Floating-point Arithmetic               
+  [1]  Routines for Arbitrary Precision Floating-point Arithmetic
        and Fast Robust Geometric Predicates. May 18, 1996.
-       Jonathan Rigchard Shewchuk.      
-       
+       Jonathan Rigchard Shewchuk.
+
 */
 /******************************************************************************/
 
-/* These macros make code more readable. They allow us to access  
+/* These macros make code more readable. They allow us to access
    the indexed elements of verticies directly.                    */
 #define X v[0]
 #define Y v[1]
@@ -503,10 +503,10 @@ static void freeStack(stack *s, void (*destructor)(void *e))
 /******************************************************************************/
 
 /*******************************************************************************
-* This is how we represent a Voronoi Cell in memory.                          
+* This is how we represent a Voronoi Cell in memory.
 *******************************************************************************/
 
-typedef struct 
+typedef struct
 {
   // The number of points on this cell, and the amount
   // of memory allocated for points on this cell.
@@ -515,12 +515,12 @@ typedef struct
   gdouble **points;
 
   // This defines the cell, it contains a list of faces, each one is
-  // consistantly oriented relative to itself (so traversing the pionts gives 
+  // consistantly oriented relative to itself (so traversing the pionts gives
   // the convex hull of the face). Each face is seperated by a NULL pointer.
-  // No gaurentee is made about the consistancy of orientations between 
+  // No gaurentee is made about the consistancy of orientations between
   // different faces.
   arrayList *verticies;
-  
+
 } voronoiCell;
 
 /******************************************************************************/
@@ -1175,8 +1175,8 @@ REAL *pe;
 *
 * This file implements Delaunay meshing in 3D, using the edge flipping
 * algorithm. To stop degenerecies arising from floating point errors, we use
-* the geometical predicates provided in predicates.c - giving adaptive 
-* floating point arithmetic. We also remove degenerecies present in data 
+* the geometical predicates provided in predicates.c - giving adaptive
+* floating point arithmetic. We also remove degenerecies present in data
 * caused by points which are coplanar, or cospherical. These points are removed
 * by gradually adding random peterbations until the degenerecies are removed.
 *
@@ -1187,7 +1187,7 @@ REAL *pe;
 *
 * The executible created can be run to create a set of random points, which are
 * then meshed and checked for Delaunayness.
-* 
+*
 *******************************************************************************/
 
 #include <glib.h>
@@ -1197,13 +1197,13 @@ REAL *pe;
 #include "assert.h"
 #include <time.h>
 
-/* These macros make code more readable. They allow us to access  
+/* These macros make code more readable. They allow us to access
    the indexed elements of verticies directly.                    */
 
 static void             getRange(GwyDelaunayVertex *ps, gint n, GwyDelaunayVertex *min,
                                              GwyDelaunayVertex *max, GwyDelaunayVertex *range, gint r);
 static void             initSuperSimplex(GwyDelaunayVertex *ps, gint n, GwyDelaunayMesh *m);
-static void             getFaceVerticies(simplex *s, gint i, GwyDelaunayVertex **p1, GwyDelaunayVertex **p2, 
+static void             getFaceVerticies(simplex *s, gint i, GwyDelaunayVertex **p1, GwyDelaunayVertex **p2,
                                                      GwyDelaunayVertex **p3, GwyDelaunayVertex **p4 );
 static void             addSimplexToMesh(GwyDelaunayMesh *m, simplex *s);
 static void             removeSimplexFromMesh(GwyDelaunayMesh *m, simplex *s);
@@ -1248,10 +1248,10 @@ static void             randomPerturbation(GwyDelaunayVertex *v, gint attempt);
 static simplex *newSimplex(GwyDelaunayMesh *m)
 {
   simplex *s = pop(m->deadSimplicies);
- 
+
   // Obviously, we aren't going to re-use the super simplex..
   if (s==m->super) s=0;
- 
+
   if (!s)
   {
     s = g_malloc(sizeof(simplex));
@@ -1260,22 +1260,22 @@ static simplex *newSimplex(GwyDelaunayMesh *m)
   s->s[1] = 0;
   s->s[2] = 0;
   s->s[3] = 0;
-  
+
   return s;
 }
 
 /******************************************************************************/
-// This will take a list of points, and a mesh struct, and create a 
+// This will take a list of points, and a mesh struct, and create a
 // Delaunay Tetrahedralisation.
 
-void gwy_delaunay_mesh_build(GwyDelaunayMesh *m, GwyDelaunayVertex* ps, gint n)
+void _gwy_delaunay_mesh_build(GwyDelaunayMesh *m, GwyDelaunayVertex* ps, gint n)
 {
   gint i,j;
 
   // Seed the random function, we will use the random function to remove
   // any degenerecies as we find them.
   srand ( time(NULL) );
-    
+
   // We have no degenerecies to start with.
   m->coplanar_degenerecies  = 0;
   m->cospherical_degenerecies = 0;
@@ -1283,24 +1283,24 @@ void gwy_delaunay_mesh_build(GwyDelaunayMesh *m, GwyDelaunayVertex* ps, gint n)
   // This simplex will contain our entire point-set.
   initSuperSimplex(ps, n, m);
   addSimplexToMesh(m, m->super);
-  
+
   // Add each point to the mesh 1-by-1 using the Edge Flipping technique.
   for (i=0; i<n; i++)
   {
     gwy_delaunay_add_point(&ps[i], m);
-    
+
     // Push conflicts to the memory pool.
     for (j=0; j<arrayListSize(m->conflicts); j++)
-      push(m->deadSimplicies, getFromArrayList(m->conflicts, j));    
-    
+      push(m->deadSimplicies, getFromArrayList(m->conflicts, j));
+
     // Reset the conflict and update lists.
     emptyArrayList(m->conflicts);
     emptyArrayList(m->updates);
-    
+
     // Clear out the old neighobur update structs. (We don't use them here).
     resetNeighbourUpdates(m->neighbourUpdates);
-    
-    //printf("Meshing: %d%%.\n%c[1A", (gint)((i+1)/(gdouble)n *100),27);   
+
+    //printf("Meshing: %d%%.\n%c[1A", (gint)((i+1)/(gdouble)n *100),27);
   }
 }
 
@@ -1313,16 +1313,16 @@ static simplex** swapSimplexNeighbour(simplex *s, simplex *old, simplex *new)
   gint i,found=0;
   // If this neighbour is on the exterior, we don't need to do anything.
   if (!s) return NULL;
- 
+
   // We are going to go through each of the elements children to see which one
-  // points to the old simplex. When we find that value, we are going to swap 
+  // points to the old simplex. When we find that value, we are going to swap
   // it for the new simplex value.
   for (i=0;i<4;i++)
   {
-    if (s->s[i] == old) 
+    if (s->s[i] == old)
     {
       found=1;
-      break;    
+      break;
     }
   }
 
@@ -1346,19 +1346,19 @@ static simplex** swapSimplexNeighbour(simplex *s, simplex *old, simplex *new)
 static simplex* findContainingSimplex(GwyDelaunayMesh *m, GwyDelaunayVertex *p)
 {
   // This will arbitrarily get the first simplex to consider.
-  // ideally we want to start from the middle, but chosing a random 
+  // ideally we want to start from the middle, but chosing a random
   // simplex will give us good performance in general.
-  
+
   listNode *iter = topOfLinkedList(m->tets);
-  simplex  *s    = nextElement(m->tets,&iter); 
+  simplex  *s    = nextElement(m->tets,&iter);
   GwyDelaunayVertex *v1, *v2, *v3, *v4;
-  
+
   gint i;
   for (i=0; i<4; i++)
   {
     // get the orientation of this face.
     getFaceVerticies(s, i, &v1, &v2, &v3, &v4);
-    
+
     if ((orient3dfast(v1->v, v2->v, v3->v, p->v) < 0) && s->s[i])
     {
       // Go to the next simplex, and start the loop again.
@@ -1366,7 +1366,7 @@ static simplex* findContainingSimplex(GwyDelaunayMesh *m, GwyDelaunayVertex *p)
       i = -1;
     }
   }
-    
+
   // All the orientation tests passed: the point lies within/on the simplex.
   return s;
 }
@@ -1376,7 +1376,7 @@ static simplex* findContainingSimplex(GwyDelaunayMesh *m, GwyDelaunayVertex *p)
 // This function aims to help us ensure consistant orientation.
 // The last value is that of the remaining vertex which is left over.
 
-static void getFaceVerticies(simplex *s, gint i, GwyDelaunayVertex **p1, GwyDelaunayVertex **p2, 
+static void getFaceVerticies(simplex *s, gint i, GwyDelaunayVertex **p1, GwyDelaunayVertex **p2,
                                          GwyDelaunayVertex **p3, GwyDelaunayVertex **p4  )
 {
   switch (i)
@@ -1384,28 +1384,28 @@ static void getFaceVerticies(simplex *s, gint i, GwyDelaunayVertex **p1, GwyDela
     case 0:
       *p1 = s->p[0];
       *p2 = s->p[1];
-      *p3 = s->p[2];      
+      *p3 = s->p[2];
       *p4 = s->p[3];
       break;
     case 1:
       *p1 = s->p[3];
       *p2 = s->p[1];
-      *p3 = s->p[0];      
-      *p4 = s->p[2];   
+      *p3 = s->p[0];
+      *p4 = s->p[2];
       break;
     case 2:
       *p1 = s->p[0];
       *p2 = s->p[2];
-      *p3 = s->p[3];      
-      *p4 = s->p[1];  
+      *p3 = s->p[3];
+      *p4 = s->p[1];
       break;
-    case 3:  
+    case 3:
       *p1 = s->p[3];
       *p2 = s->p[2];
-      *p3 = s->p[1];      
-      *p4 = s->p[0];  
+      *p3 = s->p[1];
+      *p4 = s->p[0];
       break;
-  } 
+  }
 }
 
 
@@ -1427,21 +1427,21 @@ static void randomPerturbation(GwyDelaunayVertex *v, gint attempt)
 }
 
 /******************************************************************************/
-// This routine will return 0 if the simplex is no longer Delaunay with 
+// This routine will return 0 if the simplex is no longer Delaunay with
 // the addition of this new point, 1 if this simplex is still Delaunay
-// with the addition of this new point, and -1 if this simplex is 
+// with the addition of this new point, and -1 if this simplex is
 // degenerate with the addition of this new point (i.e. if the simplex is
 // co-spherical.)
 
 static gint isDelaunay(simplex *s, GwyDelaunayVertex *p)
 {
   gdouble inSph;
- 
+
   // If the orientation is incorrect, then the output will be indeterministic.
  // #if DEBUG >= 0
-  gdouble orientation = orient3dfast(s->p[0]->v, 
-                                    s->p[1]->v, 
-                                    s->p[2]->v, 
+  gdouble orientation = orient3dfast(s->p[0]->v,
+                                    s->p[1]->v,
+                                    s->p[2]->v,
                                     s->p[3]->v);
 
 
@@ -1457,14 +1457,14 @@ static gint isDelaunay(simplex *s, GwyDelaunayVertex *p)
 
   //#endif
   inSph = inspherefast(  s->p[0]->v,
-                                s->p[1]->v, 
-                                s->p[2]->v, 
-                                s->p[3]->v, p); 
+                                s->p[1]->v,
+                                s->p[2]->v,
+                                s->p[3]->v, p);
 
-            
+
   // We have a degenerecy.
   if (inSph == 0) return -1;
-                
+
   return inSph < 0;
 
 }
@@ -1479,9 +1479,9 @@ static void updateConflictingSimplicies(GwyDelaunayVertex *p, GwyDelaunayMesh *m
   // Get at least one simplex which contains this point.
   simplex *s0 = findContainingSimplex(m, p);
   simplex *current;
-  
+
   // Go through each simplex, if it contains neighbours which are
-  // not already present, which are not in the list already, 
+  // not already present, which are not in the list already,
   // and which are not delaunay, we add them to the list of conflicts
   stack *toCheck = newStack();
   push(toCheck, s0);
@@ -1490,12 +1490,12 @@ static void updateConflictingSimplicies(GwyDelaunayVertex *p, GwyDelaunayMesh *m
   {
     // pop the next one to check from the stack.
     current = pop(toCheck);
-    
-    isDel = isDelaunay(current,p); 
-    
+
+    isDel = isDelaunay(current,p);
+
     // Check to see whether or not we have a degenerecy
-    if (isDel == -1) 
-    {     
+    if (isDel == -1)
+    {
       m->cospherical_degenerecies ++;
       i=0;
       while( isDel == -1 )
@@ -1504,15 +1504,15 @@ static void updateConflictingSimplicies(GwyDelaunayVertex *p, GwyDelaunayMesh *m
         isDel = isDelaunay(current,p);
         //printf("Degenerecy removing for %p, attempt: %d\n",current,i);
         i++;
-      }   
-      
+      }
+
       // Start this function again now that we have moved the point.
       freeStack(toCheck,NULL);
       emptyArrayList(m->conflicts);
       updateConflictingSimplicies(p,m);
       return;
     }
-    
+
     if ((!isDel) && (!arrayListContains(m->conflicts, current)))
     {
       // add this simplex, and check its neighbours.
@@ -1535,43 +1535,43 @@ static void gwy_delaunay_add_point(GwyDelaunayVertex *p, GwyDelaunayMesh *m)
   simplex *new, *s, **update;
 
   // If the list arguments are NULL, then we create local lists.
-  // Otherwise, we return the list of updates we did. 
+  // Otherwise, we return the list of updates we did.
   // This is so that we can easily perform point removal.
 
   // This will set a list of conflicting non-Delaunay simplicies in the mesh
   // structure.
   updateConflictingSimplicies(p,m);
-  
+
   // We now have a list of simplicies which contain the point p within
   // their circum-sphere.
   // We now want to create a new tetrahedralisation in the polytope formed
   // by removing the old simplicies.
   // We know which faces we should connect to our point, by deleting every
   // face which is shared by another conflicting simplex.
-  
+
   for (j=0; j< arrayListSize(m->conflicts); j++)
   {
      s = getFromArrayList(m->conflicts,j);
-     
+
     // Now go through each face, if it is not shared by any other face
-    // on the stack, we will create a new simplex which is joined to 
+    // on the stack, we will create a new simplex which is joined to
     // our point.
     for (i=0; i<4; i++)
     {
       GwyDelaunayVertex *v1, *v2, *v3, *v4;
       getFaceVerticies(s, i, &v1, &v2, &v3, &v4);
-      
-      // Now, check to see whether or not this face is shared with any 
+
+      // Now, check to see whether or not this face is shared with any
       // other simplicies in the list.
       if (! arrayListContains(m->conflicts, s->s[i]))
       {
-        // We will create a new simplex connecting this face to our point. 
+        // We will create a new simplex connecting this face to our point.
         new = newSimplex(m);
         new->p[0] = v1;
         new->p[1] = v2;
         new->p[2] = v3;
         new->p[3] =  p;
-        
+
         attempt = 0;
         // Detect degenerecies resulting from coplanar points.
         o = orient3dfast(v1->v, v2->v, v3->v, p->v);
@@ -1590,7 +1590,7 @@ static void gwy_delaunay_add_point(GwyDelaunayVertex *p, GwyDelaunayMesh *m)
           for (k=0; k<arrayListSize(m->updates); k++)
           {
             removeSimplexFromMesh(m, getFromArrayList(m->updates,k));
-            push(m->deadSimplicies, getFromArrayList(m->updates, k));    
+            push(m->deadSimplicies, getFromArrayList(m->updates, k));
           }
           emptyArrayList(m->updates);
           emptyArrayList(m->conflicts);
@@ -1599,12 +1599,12 @@ static void gwy_delaunay_add_point(GwyDelaunayVertex *p, GwyDelaunayMesh *m)
           gwy_delaunay_add_point(p,m);
           return;
         }
-        
+
         // We know that every successful face will be pointing
         // outwards from the point. We can therefore directly set the neighbour
         // to be the same as the one that was with this face before.
         new->s[0] = s->s[i];
-         
+
         // update, storing each neighbour pointer change we make.
         update = swapSimplexNeighbour(s->s[i], s, new);
         pushNeighbourUpdate(m->neighbourUpdates, update, s);
@@ -1612,15 +1612,15 @@ static void gwy_delaunay_add_point(GwyDelaunayVertex *p, GwyDelaunayMesh *m)
         // This is a list of all the new tets created whilst adding
         // this point.
         addToArrayList(m->updates, new);
-        addSimplexToMesh(m, new);        
-      }      
-    }    
+        addSimplexToMesh(m, new);
+      }
+    }
   }
 
   // Connect up the ginternal neighbours of all our new simplicies.
-  setNeighbours(m->updates);  
-  
-  // Remove the conflicting simplicies.  
+  setNeighbours(m->updates);
+
+  // Remove the conflicting simplicies.
   for (i=0; i<arrayListSize(m->conflicts); i++)
   {
     s = getFromArrayList(m->conflicts, i);
@@ -1629,7 +1629,7 @@ static void gwy_delaunay_add_point(GwyDelaunayVertex *p, GwyDelaunayMesh *m)
 }
 
 /******************************************************************************/
-// Slightly quick and dirty way to connect up all the neighbours of the 
+// Slightly quick and dirty way to connect up all the neighbours of the
 // new simplicies.
 
 static void setNeighbours(arrayList *newTets)
@@ -1638,42 +1638,42 @@ static void setNeighbours(arrayList *newTets)
   GwyDelaunayVertex *v1, *v2, *v3, *t1, *t2, *t3, *tmp;
   // Go through each new simplex.
   gint i, j, k;
-  
+
   for (j=0; j<arrayListSize(newTets); j++)
   {
     s = getFromArrayList(newTets,j);
 
-    // These are the verticies on the 2-simplex pointing outwards from 
-    // the current point.   
+    // These are the verticies on the 2-simplex pointing outwards from
+    // the current point.
     v1 = s->p[0];
     v2 = s->p[1];
     v3 = s->p[2];
 
     // We need to find neighbours for the edges (v1,v2) (v2,v3) (v3,v1)
-    // We will do this by going through every other simplex in the list, 
+    // We will do this by going through every other simplex in the list,
     // and checking to see if its outward pointing face shares any of these
     // pairs. If it does, then we connect up the neighbours.
-    
+
     for (k=0; k<arrayListSize(newTets); k++)
     {
-      s2 = getFromArrayList(newTets,k); 
+      s2 = getFromArrayList(newTets,k);
       if (s == s2) continue;
       // NOTE: we don't consider the outside face.
       // We want to know which side the neighbours are on.
       for (i=1; i<4; i++)
       {
         getFaceVerticies(s2, i, &t1, &t2, &t3, &tmp);
-        // We now want to see if any of the edges (v1,v2) (v2,v3) (v3,v1) are 
+        // We now want to see if any of the edges (v1,v2) (v2,v3) (v3,v1) are
         // on this triangle:
-        if (      (v1 == t1 || v1 == t2 || v1 == t3) && 
+        if (      (v1 == t1 || v1 == t2 || v1 == t3) &&
                   (v2 == t1 || v2 == t2 || v2 == t3)    )
-          s->s[1] = s2;        
-        else if ( (v2 == t1 || v2 == t2 || v2 == t3) && 
+          s->s[1] = s2;
+        else if ( (v2 == t1 || v2 == t2 || v2 == t3) &&
                   (v3 == t1 || v3 == t2 || v3 == t3)    )
           s->s[3] = s2;
-        else if ( (v3 == t1 || v3 == t2 || v3 == t3) && 
+        else if ( (v3 == t1 || v3 == t2 || v3 == t3) &&
                   (v1 == t1 || v1 == t2 || v1 == t3)    )
-          s->s[2] = s2;           
+          s->s[2] = s2;
       }
     }
   }
@@ -1683,14 +1683,14 @@ static void setNeighbours(arrayList *newTets)
 
 /******************************************************************************/
 // Does this simplex have the point p? - notice that we are comparing pointersa
-// and not coordinates: so that duplicate coordinates will evaluate to not 
+// and not coordinates: so that duplicate coordinates will evaluate to not
 // equal.
 
 static gint gwy_delaunay_point_on_simplex(GwyDelaunayVertex *p, simplex *s)
 {
   if (!s) return 0;
-  
-  if (p == s->p[0] || p == s->p[1] || p == s->p[2] || p == s->p[3])   
+
+  if (p == s->p[0] || p == s->p[1] || p == s->p[2] || p == s->p[3])
     return 1;
 
   return 0;
@@ -1699,17 +1699,17 @@ static gint gwy_delaunay_point_on_simplex(GwyDelaunayVertex *p, simplex *s)
 
 
 /******************************************************************************/
-// Given a point and a list of simplicies, we want to find any valid 
+// Given a point and a list of simplicies, we want to find any valid
 // neighbour of this point.
 
 static simplex *gwy_delaunay_find_any_neighbour(GwyDelaunayVertex *v, arrayList *tets)
 {
   gint i;
-  
+
   for (i=0; i<arrayListSize(tets); i++)
   {
     simplex *s = getFromArrayList(tets,i);
-    if (gwy_delaunay_point_on_simplex(v, s)) return s; 
+    if (gwy_delaunay_point_on_simplex(v, s)) return s;
   }
   return NULL;
 }
@@ -1717,14 +1717,14 @@ static simplex *gwy_delaunay_find_any_neighbour(GwyDelaunayVertex *v, arrayList 
 /******************************************************************************/
 // This function will find the neighbours of a given point.
 // given a simplex and at least one neighbour.
-// This is much more efficient than the previous Natural Neighobour method, 
-// because we take a local simplex and then check the neighbourhood for 
+// This is much more efficient than the previous Natural Neighobour method,
+// because we take a local simplex and then check the neighbourhood for
 // matching simplicies.
 
 static arrayList *findNeighbours(GwyDelaunayVertex *v, simplex *s)
 {
   gint i;
-  arrayList *l   = newArrayList(); 
+  arrayList *l   = newArrayList();
   stack *toCheck = newStack();
 
   simplex *current;
@@ -1734,8 +1734,8 @@ static arrayList *findNeighbours(GwyDelaunayVertex *v, simplex *s)
   {
     // pop the next one to check from the stack.
     current = pop(toCheck);
-    
-    // We try to chose the things most likely to fail first, to take 
+
+    // We try to chose the things most likely to fail first, to take
     // advantage of lazy evaluation.
     if ( gwy_delaunay_point_on_simplex(v, current) && (! arrayListContains(l, current)) )
     {
@@ -1744,19 +1744,19 @@ static arrayList *findNeighbours(GwyDelaunayVertex *v, simplex *s)
       for (i=0; i<4;i++)
         if (current->s[i])
           push(toCheck, current->s[i]);
-    }   
+    }
   }
   freeStack(toCheck,NULL);
 
-  return l;   
+  return l;
 }
 
 /******************************************************************************/
 // Given a simplex, we want to find the correctly oriented verticies which are
 // not connected
 
-static void getRemainingFace(simplex *s, GwyDelaunayVertex *p, GwyDelaunayVertex **v1, 
-                                             GwyDelaunayVertex **v2, 
+static void getRemainingFace(simplex *s, GwyDelaunayVertex *p, GwyDelaunayVertex **v1,
+                                             GwyDelaunayVertex **v2,
                                              GwyDelaunayVertex **v3  )
 {
   gint i,found=0;
@@ -1764,10 +1764,10 @@ static void getRemainingFace(simplex *s, GwyDelaunayVertex *p, GwyDelaunayVertex
   for (i=0; i<4; i++)
   {
     getFaceVerticies(s, i, v1, v2, v3, &tmp);
-    if (tmp == p) 
+    if (tmp == p)
     {
       found = 1;
-      break; 
+      break;
     }
   }
   // Make sure that we found the point.
@@ -1782,7 +1782,7 @@ static gint isNeighbour(simplex *s0, simplex *s1)
   gint i;
   for (i=0;i<4;i++)
     if (s0->s[i] == s1) return 1;
-    
+
   return 0;
 }
 
@@ -1802,7 +1802,7 @@ static voronoiCell *newVoronoiCell(GwyDelaunayMesh *m, gint n)
     vc->nallocated  = 0;
     vc->points      = 0;
     #ifdef DEBUG
-    VORONOI_MALLOC ++;  
+    VORONOI_MALLOC ++;
     #endif
   } else {
     emptyArrayList(vc->verticies);
@@ -1815,7 +1815,7 @@ static voronoiCell *newVoronoiCell(GwyDelaunayMesh *m, gint n)
   if (n > vc->nallocated)
   {
     vc->points = realloc(vc->points, sizeof(gdouble)*n);
-    
+
     for (i=vc->nallocated; i<n; i++)
     {
       #ifdef DEBUG
@@ -1833,7 +1833,7 @@ static voronoiCell *newVoronoiCell(GwyDelaunayMesh *m, gint n)
 
 static void addVertexToVoronoiCell(voronoiCell *vc, gdouble *v)
 {
-  addToArrayList(vc->verticies, v); 
+  addToArrayList(vc->verticies, v);
 }
 
 /******************************************************************************/
@@ -1852,16 +1852,16 @@ static void startNewVoronoiFace(voronoiCell *vc)
 static void gwy_delaunay_remove_point(GwyDelaunayMesh *m)
 {
   gint i;
-  simplex  *s;  
+  simplex  *s;
 
   for (i=0; i< arrayListSize(m->conflicts); i++)
   {
     s = getFromArrayList(m->conflicts,i);
     addSimplexToMesh(m,s);
   }
-   
+
   undoNeighbourUpdates(m->neighbourUpdates);
-  
+
   for (i=0; i<arrayListSize(m->updates); i++)
   {
     s = getFromArrayList(m->updates, i);
@@ -1877,38 +1877,38 @@ static gdouble gwy_delaunay_voronoi_cell_volume(voronoiCell *vc, GwyDelaunayVert
 {
   gint i,j;
   gdouble volume = 0;
-  
+
   for (i=0; i<arrayListSize(vc->verticies); i++)
   {
     gdouble   *thisV;
     gdouble   *firstV;
     gdouble   *lastV = NULL;
-    
+
     // Calculate the center point of this face.
     gdouble center[3] = {0,0,0};
-    
+
     // Find the center point of this vertex.
     for (j=i; j<arrayListSize(vc->verticies); j++)
-    {     
+    {
       thisV = getFromArrayList(vc->verticies, j);
-           
+
       // We have reached the next face.
       if (!thisV) break;
-      vertexAdd(thisV, center, center);          
+      vertexAdd(thisV, center, center);
     }
 
     // This will give us the center point of the face.
     gwy_delaunay_vertex_by_scalar(center, 1/(gdouble)(j-i), center);
-       
+
     // First vertex on the face.
     firstV = getFromArrayList(vc->verticies, i);
     lastV  = NULL;
-    
+
     for (j=i; j<arrayListSize(vc->verticies); j++)
     {
       // Get the current vertex from the face.
       thisV = getFromArrayList(vc->verticies,j);
-      
+
       // We've reached the end of this face.
       if (thisV == NULL)
       {
@@ -1917,17 +1917,17 @@ static gdouble gwy_delaunay_voronoi_cell_volume(voronoiCell *vc, GwyDelaunayVert
       }
       // If we have two points to join up, add the volume.
       if (lastV)
-        volume += volumeOfTetrahedron(thisV, lastV, p->v, center);   
-      else 
+        volume += volumeOfTetrahedron(thisV, lastV, p->v, center);
+      else
         firstV = thisV;
       lastV = thisV;
     }
     // Add the first segment.
-    volume += volumeOfTetrahedron(lastV, firstV, p->v, center);      
+    volume += volumeOfTetrahedron(lastV, firstV, p->v, center);
   }
 
   assert(volume>0);
-  
+
   return volume;
 
 }
@@ -1951,8 +1951,8 @@ static voronoiCell* gwy_delaunay_get_voronoi_cell(GwyDelaunayVertex *point, simp
   gint first, current, lastConsidered;
   gint match;
 
-  
-  // If no neighbours were found, it could be because we are trying to 
+
+  // If no neighbours were found, it could be because we are trying to
   // get a cell outside of the points
   if (n==0)
   {
@@ -1965,7 +1965,7 @@ static voronoiCell* gwy_delaunay_get_voronoi_cell(GwyDelaunayVertex *point, simp
  //   exit(1);
       return NULL;
   }
-  
+
   // Create a new voronoi cell.
   vc = newVoronoiCell(m,n);
 
@@ -1973,35 +1973,35 @@ static voronoiCell* gwy_delaunay_get_voronoi_cell(GwyDelaunayVertex *point, simp
   {
     s = getFromArrayList(neighbours, i);
     getRemainingFace(s, point, &v1, &v2, &v3);
-    
+
     // Add this simplex to the list note we add three points for each.
     simps[i]        = s;
-    edges[3*i]      = v1;   
+    edges[3*i]      = v1;
     edges[3*i+1]    = v2;
     edges[3*i+2]    = v3;
-    
+
     done[3*i]       = 0;
     done[3*i+1]     = 0;
     done[3*i+2]     = 0;
- 
+
     // Calculate the circumcenter of this simplex.
     circumCenter(s, vc->points[i]);
   }
 
   // For every edge that is in the list, we are going to get the first simplex
   // which is incident to it, and then draw a line from it to the next
-  // neighbour that it is incident to it. This next neighbour will be chosen 
-  // because it is NOT the last one we considered.  
+  // neighbour that it is incident to it. This next neighbour will be chosen
+  // because it is NOT the last one we considered.
   // We are effectively rotating around each edge which spans from the point
-  // to one of its natural neighbours, and storing the circum-centers of 
+  // to one of its natural neighbours, and storing the circum-centers of
   // the simplicies that we found.
   for (i=0; i<3*n; i++)
-  {   
+  {
     // We don't want to recompute edges.
     if (done[i]) continue;
-    
+
     // This is the current simplex.
-    // We are going to find a neighbour for it, which shares an edge, 
+    // We are going to find a neighbour for it, which shares an edge,
     // and is NOT equal to lastConsidered.
     first   = i;
     current = i;
@@ -2021,20 +2021,20 @@ static voronoiCell* gwy_delaunay_get_voronoi_cell(GwyDelaunayVertex *point, simp
         if ((edges[i] == edges[j]) && j != lastConsidered
                                    && isNeighbour(simps[current/3], simps[j/3]))
         {
-          done[j] = 1;  
-          match   = 1;      
+          done[j] = 1;
+          match   = 1;
           // Add this vertex to this face of this cell.
           addVertexToVoronoiCell(vc, vc->points[j/3]);
           lastConsidered = current;
           current = j;
           break;
-        }      
-      }  
+        }
+      }
     } while (match && (current != first));
-    
+
     startNewVoronoiFace(vc);
   }
-   
+
   freeArrayList(neighbours, NULL);
 
   return vc;
@@ -2045,7 +2045,7 @@ static voronoiCell* gwy_delaunay_get_voronoi_cell(GwyDelaunayVertex *point, simp
 static void gwy_delaunay_free_voronoi_cell(voronoiCell *vc, GwyDelaunayMesh *m)
 {
   // We just push the cell to the memory pool.
-  // We can free the memory pools manually, or let the program do it 
+  // We can free the memory pools manually, or let the program do it
   // automatically at the end.
   push(m->deadVoronoiCells, vc);
 }
@@ -2058,7 +2058,7 @@ static void gwy_delaunay_free_voronoi_cell(voronoiCell *vc, GwyDelaunayMesh *m)
 
 static void addSimplexToMesh(GwyDelaunayMesh *m, simplex *s)
 {
-  s->node = addToLinkedList(m->tets, s);  
+  s->node = addToLinkedList(m->tets, s);
 }
 
 /******************************************************************************/
@@ -2077,27 +2077,27 @@ static void removeSimplexFromMesh(GwyDelaunayMesh *m, simplex *s)
 static void initSuperSimplex(GwyDelaunayVertex *ps, gint n, GwyDelaunayMesh *m)
 {
   gint i;
-  
+
   // Get the range of our data set.
   GwyDelaunayVertex min,max,range;
   getRange(ps, n, &min, &max, &range,1);
   m->super = newSimplex(m);
-  
+
  //  Make the super simplex bigger! TODO check this !
  // vertexByScalar(range.v, 4, range.v);
 
-  //printf("range is %g %g %g    %g %g %g\n", min.X, min.Y, min.Z, max.X, max.Y, max.Z);  
+  //printf("range is %g %g %g    %g %g %g\n", min.X, min.Y, min.Z, max.X, max.Y, max.Z);
 
   // We will go clockwise around the base, and then do the top.
   m->superVerticies[0].X =  min.X + range.X/2;
-  m->superVerticies[0].Y =  max.Y + 3*range.Y; 
+  m->superVerticies[0].Y =  max.Y + 3*range.Y;
   m->superVerticies[0].Z =  min.Z - range.Z;
 
 
   m->superVerticies[1].X =  max.X + 2*range.X;
   m->superVerticies[1].Y =  min.Y - 2*range.Y;
   m->superVerticies[1].Z =  min.Z - range.Z;
-  
+
   m->superVerticies[2].X =  min.X - 2*range.X;
   m->superVerticies[2].Y =  min.Y - 2*range.Y;
   m->superVerticies[2].Z =  min.Z - range.Z;
@@ -2105,7 +2105,7 @@ static void initSuperSimplex(GwyDelaunayVertex *ps, gint n, GwyDelaunayMesh *m)
   m->superVerticies[3].X = min.X + range.X/2;
   m->superVerticies[3].Y = min.Y + range.Y/2;
   m->superVerticies[3].Z = max.Z + 2*range.Z;
-  
+
   // The super-simplex doesn't have any neighbours.
   for (i=0;i<4;i++)
   {
@@ -2117,11 +2117,11 @@ static void initSuperSimplex(GwyDelaunayVertex *ps, gint n, GwyDelaunayMesh *m)
 
 /******************************************************************************/
 // We are using two stacks, instead of a struct, because it gives us good
-// memory advantages. - We will always want about the same number of 
+// memory advantages. - We will always want about the same number of
 // neighbour updates: using two array-based stacks means that we can always have
 // that memory allocated: we should not have to do any memory reallocation
 // for the neighbour updating.
-// We use a function, so that the process becomes atomic: we don't want 
+// We use a function, so that the process becomes atomic: we don't want
 // to end up with the two stacks being incoherent!
 
 static void pushNeighbourUpdate(neighbourUpdate *nu, simplex **ptr, simplex *old)
@@ -2140,20 +2140,20 @@ static void freeNeighbourUpdates(neighbourUpdate *nu)
 }
 
 /******************************************************************************/
-// We will go through, and use our neighbour update list to change the 
+// We will go through, and use our neighbour update list to change the
 // neighbour values back to their originals.
 
 static void undoNeighbourUpdates(neighbourUpdate *nu)
 {
   simplex **thisPtr;
   simplex  *thisSimplex;
-  
+
   // We use isEmpty, because the pointers might sometimes be NULL.
   while (!isEmpty(nu->ptrs))
   {
     thisPtr     = pop(nu->ptrs);
-    thisSimplex = pop(nu->old);  
-    
+    thisSimplex = pop(nu->old);
+
     if (thisPtr)
       *thisPtr = thisSimplex;
   }
@@ -2182,7 +2182,7 @@ static neighbourUpdate *initNeighbourUpdates()
 /******************************************************************************/
 // Allocate all the strucutres required to magintain a mesh in memory.
 
-GwyDelaunayMesh *gwy_delaunay_mesh_new()
+GwyDelaunayMesh *_gwy_delaunay_mesh_new()
 {
   // Create the struct to hold all of the data strucutres.
   GwyDelaunayMesh *m             = g_malloc(sizeof(GwyDelaunayMesh));
@@ -2207,17 +2207,17 @@ GwyDelaunayMesh *gwy_delaunay_mesh_new()
 
 /******************************************************************************/
 
-void gwy_delaunay_mesh_free(GwyDelaunayMesh *m)
+void _gwy_delaunay_mesh_free(GwyDelaunayMesh *m)
 {
   #ifdef DEBUG
   printf("Mallocs for vertex: %d.\n", VERTEX_MALLOC);
   printf("Mallocs for simplex: %d.\n", SIMPLEX_MALLOC);
   printf("Mallocs for voronoi: %d.\n", VORONOI_MALLOC);
   #endif
-  
+
   free(m->super);
   freeStack(m->deadSimplicies,   free);
-  
+
   while(!isEmpty(m->deadVoronoiCells))
   {
     voronoiCell *vc = pop(m->deadVoronoiCells);
@@ -2228,31 +2228,31 @@ void gwy_delaunay_mesh_free(GwyDelaunayMesh *m)
     freeArrayList(vc->verticies, NULL);
     free(vc);
   }
-  
+
   freeStack(m->deadVoronoiCells, NULL);
   freeLinkedList(m->tets,        free);
   freeArrayList(m->conflicts, free);
   freeArrayList(m->updates, NULL);
   freeNeighbourUpdates(m->neighbourUpdates);
-  free(m); 
+  free(m);
 }
 
 /******************************************************************************/
-// This will give us the volume of the arbitrary tetrahedron formed by 
+// This will give us the volume of the arbitrary tetrahedron formed by
 // v1, v2, v3, v4
 // All arguments are arrays of length three of gdoubles.
 
 static gdouble volumeOfTetrahedron(gdouble *a, gdouble *b, gdouble *c, gdouble *d)
 {
   gdouble a_d[3], b_d[3], c_d[3], cross[3], v;
-  
+
   vertexSub(a,d, a_d);
   vertexSub(b,d, b_d);
   vertexSub(c,d, c_d);
-  
-  crossProduct(b_d, c_d, cross);  
+
+  crossProduct(b_d, c_d, cross);
   v = scalarProduct(a_d, cross)/(gdouble)6;
-   
+
   return (v >= 0) ? v : -v;
 }
 
@@ -2269,7 +2269,7 @@ static void crossProduct(gdouble *b, gdouble *c, gdouble *out)
 {
   out[0] = b[1] * c[2] - b[2] * c[1];
   out[1] = b[2] * c[0] - b[0] * c[2];
-  out[2] = b[0] * c[1] - b[1] * c[0];  
+  out[2] = b[0] * c[1] - b[1] * c[0];
 }
 
 /******************************************************************************/
@@ -2314,46 +2314,46 @@ static void gwy_delaunay_vertex_by_scalar(gdouble *a, gdouble b, gdouble *out)
 static void circumCenter(simplex *s, gdouble *out)
 {
   GwyDelaunayVertex *a, *b, *c, *d;
- 
-  gdouble b_a[3]   , c_a[3]   , d_a[3], 
-         cross1[3], cross2[3], cross3[3], 
-         mult1[3] , mult2[3] , mult3[3], 
+
+  gdouble b_a[3]   , c_a[3]   , d_a[3],
+         cross1[3], cross2[3], cross3[3],
+         mult1[3] , mult2[3] , mult3[3],
          sum[3];
   gdouble denominator;
 
   getFaceVerticies(s, 0, &a, &b, &c, &d);
- 
-  
+
+
   // Calculate diferences between points.
   vertexSub(b->v, a->v, b_a);
   vertexSub(c->v, a->v, c_a);
   vertexSub(d->v, a->v, d_a);
-  
+
   // Calculate first cross product.
   crossProduct(b_a, c_a, cross1);
-  
+
   // Calculate second cross product.
   crossProduct(d_a, b_a, cross2);
-  
+
   // Calculate third cross product.
   crossProduct(c_a, d_a, cross3);
 
   gwy_delaunay_vertex_by_scalar(cross1, squaredDistance(d_a), mult1);
   gwy_delaunay_vertex_by_scalar(cross2, squaredDistance(c_a), mult2);
   gwy_delaunay_vertex_by_scalar(cross3, squaredDistance(b_a), mult3);
-  
+
   // Add up the sum of the numerator.
   vertexAdd(mult1, mult2, sum);
   vertexAdd(mult3, sum  , sum);
 
   // Calculate the denominator.
   denominator = 2*scalarProduct(b_a, cross3);
-  
+
   // Do the division, and output to out.
   gwy_delaunay_vertex_by_scalar(sum, 1/(gdouble)(denominator), out);
-  
+
   vertexAdd(out, a->v, out);
-  
+
   // Calculate the radius of this sphere. - We don't actually need this.
   // But if we need it for debugging, we can add it back in.
   // return sqrt((gdouble)squaredDistance(sum))/(gdouble)denominator;
@@ -2365,10 +2365,10 @@ static void circumCenter(simplex *s, gdouble *out)
 static void getRange(GwyDelaunayVertex *ps, gint n, GwyDelaunayVertex *min, GwyDelaunayVertex *max, GwyDelaunayVertex *range, G_GNUC_UNUSED gint r)
 {
   gint i;
-  
+
   *min = ps[0];
   *max = ps[0];
-  
+
   for (i=0; i<n; i++)
   {
     if (0)
@@ -2377,16 +2377,16 @@ static void getRange(GwyDelaunayVertex *ps, gint n, GwyDelaunayVertex *min, GwyD
       ps[i].Y +=  ((gdouble)rand() / ((gdouble)RAND_MAX + 1) -0.5);
       ps[i].Z +=  ((gdouble)rand() / ((gdouble)RAND_MAX + 1) -0.5);
     }
-    
+
     max->X = MAX(max->X, ps[i].X);
     max->Y = MAX(max->Y, ps[i].Y);
     max->Z = MAX(max->Z, ps[i].Z);
-    
+
     min->X = MIN(min->X, ps[i].X);
     min->Y = MIN(min->Y, ps[i].Y);
-    min->Z = MIN(min->Z, ps[i].Z);   
+    min->Z = MIN(min->Z, ps[i].Z);
   }
-  
+
   for (i=0;i<3;i++)
     range->v[i] = max->v[i] - min->v[i];
 }
@@ -2395,7 +2395,7 @@ static void getRange(GwyDelaunayVertex *ps, gint n, GwyDelaunayVertex *min, GwyD
 
 /******************************************************************************/
 
-GwyDelaunayVertex *gwy_delaunay_vertex_new(gdouble *x, gdouble *y, gdouble *z, 
+GwyDelaunayVertex *_gwy_delaunay_vertex_new(gdouble *x, gdouble *y, gdouble *z,
                    gdouble *u, gdouble *v, gdouble *w, gint n)
 {
   GwyDelaunayVertex* ps = g_malloc(sizeof(GwyDelaunayVertex) *n);
@@ -2407,20 +2407,20 @@ GwyDelaunayVertex *gwy_delaunay_vertex_new(gdouble *x, gdouble *y, gdouble *z,
     ps[i].X = x[i];
     ps[i].Y = y[i];
     ps[i].Z = z[i];
-    
+
     ps[i].U = u[i];
     ps[i].V = v[i];
-    ps[i].W = w[i]; 
-    
-    ps[i].voronoiVolume = -1;   
+    ps[i].W = w[i];
+
+    ps[i].voronoiVolume = -1;
     //printf("Loading: %d: %g %g %g %g %g %g\n", i, ps[i].X, ps[i].Y, ps[i].Z, ps[i].U, ps[i].V, ps[i].W);
   }
-  
+
   return ps;
 }
 
 
-static void lastNaturalNeighbours(GwyDelaunayVertex *v, GwyDelaunayMesh *m, arrayList *neighbours, 
+static void lastNaturalNeighbours(GwyDelaunayVertex *v, GwyDelaunayMesh *m, arrayList *neighbours,
                                                arrayList *neighbourSimplicies)
 {
   gint i, j;
@@ -2428,31 +2428,31 @@ static void lastNaturalNeighbours(GwyDelaunayVertex *v, GwyDelaunayMesh *m, arra
 
   for (i=0; i<arrayListSize(m->updates); i++)
   {
-    this = getFromArrayList(m->updates,i); 
+    this = getFromArrayList(m->updates,i);
     for (j=0; j<4; j++)
-    {     
+    {
       if (this->p[j] != v && (! arrayListContains(neighbours, this->p[j])) )
       {
         if ((! gwy_delaunay_point_on_simplex(this->p[j], m->super)))
         {
-          addToArrayList(neighbours, this->p[j]);      
+          addToArrayList(neighbours, this->p[j]);
           addToArrayList(neighbourSimplicies, this);
         }
-      }      
+      }
     }
   }
 }
 
 /******************************************************************************/
 
-// This function will interpolate the value of a new vertex in a given 
+// This function will interpolate the value of a new vertex in a given
 // vector field.
 
-void gwy_delaunay_mesh_interpolate3_3(GwyDelaunayMesh *m, gdouble  x, gdouble  y, gdouble  z, 
+void _gwy_delaunay_mesh_interpolate3_3(GwyDelaunayMesh *m, gdouble  x, gdouble  y, gdouble  z,
                      gdouble *u, gdouble *v, gdouble *w)
 {
   gint i;
-  
+
   arrayList *neighbours;
   arrayList *neighbourSimplicies;
   gdouble *neighbourVolumes;
@@ -2463,7 +2463,7 @@ void gwy_delaunay_mesh_interpolate3_3(GwyDelaunayMesh *m, gdouble  x, gdouble  y
   voronoiCell *pointCell;
   GwyDelaunayVertex *thisVertex;
   simplex *thisSimplex;
-  voronoiCell *vc;    
+  voronoiCell *vc;
 
   GwyDelaunayVertex p;
   p.X             =  x;
@@ -2471,15 +2471,15 @@ void gwy_delaunay_mesh_interpolate3_3(GwyDelaunayMesh *m, gdouble  x, gdouble  y
   p.Z             =  z;
   p.index         = -1;
   p.voronoiVolume = -1;
-  
-  // Add the point to the Delaunay Mesh - storing the original state.
-  gwy_delaunay_add_point(&p, m);    
 
-  // Find the natural neighbours of the inserted point, and also keep 
+  // Add the point to the Delaunay Mesh - storing the original state.
+  gwy_delaunay_add_point(&p, m);
+
+  // Find the natural neighbours of the inserted point, and also keep
   // a list of an arbitrary neighbouring simplex, this will give us faster
   // neighbour lookup later.
-  neighbours          = newArrayList();  
-  neighbourSimplicies = newArrayList();  
+  neighbours          = newArrayList();
+  neighbourSimplicies = newArrayList();
   lastNaturalNeighbours(&p, m, neighbours, neighbourSimplicies);
 
   // Calculate the volumes of the Voronoi Cells of the natural neighbours.
@@ -2489,10 +2489,10 @@ void gwy_delaunay_mesh_interpolate3_3(GwyDelaunayMesh *m, gdouble  x, gdouble  y
   for (i=0; i<arrayListSize(neighbours); i++)
   {
     thisVertex  = getFromArrayList(neighbours, i);
-    thisSimplex = getFromArrayList(neighbourSimplicies,i);  
-    vc      = gwy_delaunay_get_voronoi_cell(thisVertex, thisSimplex, m);    
-    neighbourVolumes[i]  = gwy_delaunay_voronoi_cell_volume(vc, thisVertex);  
-    gwy_delaunay_free_voronoi_cell(vc,m); 
+    thisSimplex = getFromArrayList(neighbourSimplicies,i);
+    vc      = gwy_delaunay_get_voronoi_cell(thisVertex, thisSimplex, m);
+    neighbourVolumes[i]  = gwy_delaunay_voronoi_cell_volume(vc, thisVertex);
+    gwy_delaunay_free_voronoi_cell(vc,m);
   }
 
   // Calculate the volume of the new point's Voronoi Cell.
@@ -2502,7 +2502,7 @@ void gwy_delaunay_mesh_interpolate3_3(GwyDelaunayMesh *m, gdouble  x, gdouble  y
   pointCell = gwy_delaunay_get_voronoi_cell(&p, s, m);
   pointVolume            = gwy_delaunay_voronoi_cell_volume(pointCell, &p);
   gwy_delaunay_free_voronoi_cell(pointCell,m);
-         
+
   // Remove the last point.
   gwy_delaunay_remove_point(m);
 
@@ -2511,9 +2511,9 @@ void gwy_delaunay_mesh_interpolate3_3(GwyDelaunayMesh *m, gdouble  x, gdouble  y
   // given when the point was added.
   for (i=0; i<arrayListSize(neighbours); i++)
   {
-    thisVertex   = getFromArrayList(neighbours, i);  
-    
-    // All verticies have -1 here to start with, so we can tell if 
+    thisVertex   = getFromArrayList(neighbours, i);
+
+    // All verticies have -1 here to start with, so we can tell if
     // we have already calculated this value, and use it again here.
     if (thisVertex->voronoiVolume < 0)
     {
@@ -2524,7 +2524,7 @@ void gwy_delaunay_mesh_interpolate3_3(GwyDelaunayMesh *m, gdouble  x, gdouble  y
     }
     neighbourVolumes[i]  = thisVertex->voronoiVolume-neighbourVolumes[i];
   }
-   
+
   // Weight the data values of each natural neighbour using the volume
   // ratios.
   sum   = 0;
@@ -2533,23 +2533,23 @@ void gwy_delaunay_mesh_interpolate3_3(GwyDelaunayMesh *m, gdouble  x, gdouble  y
   {
     thisVertex = getFromArrayList(neighbours, i);
     assert (neighbourVolumes[i]>= -0.001);
-    
+
     // Get the weight of this vertex.
     weight = neighbourVolumes[i]/pointVolume;
-    
+
     // Add this componenet to the result.
     sum      += weight;
-    value[0] += weight * thisVertex->U;   
-    value[1] += weight * thisVertex->V;   
-    value[2] += weight * thisVertex->W;           
+    value[0] += weight * thisVertex->U;
+    value[1] += weight * thisVertex->V;
+    value[2] += weight * thisVertex->W;
   }
-  
+
   // Normalise the output.
   gwy_delaunay_vertex_by_scalar(value, (double)1/(double)sum, value);
 
-  // If the sum is 0 or less, we will get meaningless output. 
+  // If the sum is 0 or less, we will get meaningless output.
   // If it is slightly greater than 1, this could be due to rounding errors.
-  // We tolerate up to 0.1 here.  
+  // We tolerate up to 0.1 here.
   if (sum <= 0 || sum > 1.1)
   {
     //fprintf(stderr, "Error: sum value: %lf, expected range (0,1].\n",sum);
@@ -2566,12 +2566,12 @@ void gwy_delaunay_mesh_interpolate3_3(GwyDelaunayMesh *m, gdouble  x, gdouble  y
   // Free all the memory that we allocated whilst interpolating this point.
   emptyArrayList(m->conflicts);
   emptyArrayList(m->updates);
-  
+
   // Free memory associated with adding this point.
   freeArrayList(neighbours,          NULL);
-  freeArrayList(neighbourSimplicies, NULL); 
+  freeArrayList(neighbourSimplicies, NULL);
   free(neighbourVolumes);
-  
+
   // set the output.
   *u = value[0];
   *v = value[1];
