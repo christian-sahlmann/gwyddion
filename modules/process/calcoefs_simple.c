@@ -127,7 +127,7 @@ static void     yperiod_changed_cb   (GtkAdjustment *adj,
                                       SimpleControls *controls);
 static void     threshold_changed_cb (GtkAdjustment *adj,
                                       SimpleControls *controls);
-void            get_object_list      (GwyDataField *data,
+static void     get_object_list      (GwyDataField *data,
                                       GwyDataField *kernel,
                                       gdouble threshold,
                                       gdouble *xs,
