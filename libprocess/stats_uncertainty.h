@@ -278,6 +278,13 @@ gdouble gwy_data_field_get_yder_uncertainty                  (GwyDataField *data
                                                               GwyDataField *uncy_field,
                                                               gint col,
                                                               gint row);
+void    gwy_data_line_acf_uncertainty                        (GwyDataLine *data_line,
+                                                              GwyDataLine *uline,
+                                                              GwyDataLine *target_line);
+void    gwy_data_line_cumulate_uncertainty                   (GwyDataLine *uncz_line);
+void    gwy_data_line_hhcf_uncertainty                       (GwyDataLine *data_line,
+                                                              GwyDataLine *uline,
+                                                              GwyDataLine *target_line);
 
 G_END_DECLS
 
