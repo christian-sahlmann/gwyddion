@@ -11,7 +11,6 @@ endif
 
 libgwyprocess2include_HEADERS = \
 	arithmetic.h \
-        natural.h \
 	cdline.h \
 	correct.h \
 	correlation.h \
@@ -23,8 +22,8 @@ libgwyprocess2include_HEADERS = \
 	filters.h \
 	fractals.h \
 	grains.h \
-        gwycaldata.h \
-        gwycalibration.h \
+	gwycaldata.h \
+	gwycalibration.h \
 	gwygrainvalue.h \
 	gwyprocess.h \
 	gwyprocessenums.h \
@@ -37,12 +36,13 @@ libgwyprocess2include_HEADERS = \
 	simplefft.h \
 	spectra.h \
 	stats.h \
-        stats_uncertainty.h \
+	stats_uncertainty.h \
 	tip.h \
 	triangulation.h
 
 noinst_HEADERS = \
 	morph_lib.h \
+	natural.h \
 	gwyprocessinternal.h
 
 lib_LTLIBRARIES = libgwyprocess2.la

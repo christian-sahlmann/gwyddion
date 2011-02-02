@@ -18,9 +18,10 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
+/*< private_header >*/
 
-#ifndef natural_h
-#define natural_h
+#ifndef __GWY_PROCESS_NATURAL_H__
+#define __GWY_PROCESS_NATURAL_H__
 
 #include <glib.h>
 
@@ -28,7 +29,7 @@ typedef struct _GwyDelaunayVertex GwyDelaunayVertex;
 typedef struct _GwyDelaunayMesh GwyDelaunayMesh;
 
 G_GNUC_INTERNAL
-GwyDelaunayVertex *gwy_delaunay_vertex_new(gdouble *x, gdouble *y, gdouble *z, 
+GwyDelaunayVertex *gwy_delaunay_vertex_new(gdouble *x, gdouble *y, gdouble *z,
                    gdouble *u, gdouble *v, gdouble *w, gint n);
 
 //void     gwy_delaunay_vertex_free(GwyDelaunayVertex *ps);
@@ -40,11 +41,12 @@ G_GNUC_INTERNAL
 void             gwy_delaunay_mesh_build(GwyDelaunayMesh *m, GwyDelaunayVertex* ps, gint n);
 
 G_GNUC_INTERNAL
-void     gwy_delaunay_mesh_interpolate3_3(GwyDelaunayMesh *m, gdouble  x, gdouble  y, gdouble  z, 
+void     gwy_delaunay_mesh_interpolate3_3(GwyDelaunayMesh *m, gdouble  x, gdouble  y, gdouble  z,
                         gdouble *u, gdouble *v, gdouble *w);
 
 G_GNUC_INTERNAL
 void     gwy_delaunay_mesh_free(GwyDelaunayMesh *m);
-                        
+
 #endif
 
+/* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
