@@ -98,57 +98,69 @@ typedef struct {
     GtkWidget *suggestion;
 } SimpleControls;
 
-static gboolean     module_register           (void);
-static void         simple                (GwyContainer *data,
-                                               GwyRunType run);
-static gboolean     simple_dialog         (SimpleArgs *args,
-                                           GwyDataField *dfield);
-static void         simple_data_cb        (GwyDataChooser *chooser,
-                                               SimpleControls *controls);
-static void         simple_do             (SimpleArgs *args);
-static void        xyexponent_changed_cb       (GtkWidget *combo,
-                                               SimpleControls *controls);
-static void        zexponent_changed_cb       (GtkWidget *combo,
-                                               SimpleControls *controls);
-static void        units_change_cb             (GtkWidget *button,
-                                               SimpleControls *controls);
-static void        set_combo_from_unit       (GtkWidget *combo,
-                                              const gchar *str,
-                                              gint basepower);
-static void        xoffset_changed_cb          (GtkAdjustment *adj,
-                                               SimpleControls *controls);
-static void        yoffset_changed_cb          (GtkAdjustment *adj,
-                                               SimpleControls *controls);
-static void        zoffset_changed_cb          (GtkAdjustment *adj,
-                                               SimpleControls *controls);
-static void        xperiod_changed_cb          (GtkAdjustment *adj,
-                                               SimpleControls *controls);
-static void        yperiod_changed_cb          (GtkAdjustment *adj,
-                                               SimpleControls *controls);
-static void        threshold_changed_cb        (GtkAdjustment *adj,
-                                                SimpleControls *controls);
-void              get_object_list              (GwyDataField *data, 
-                                                GwyDataField *kernel, 
-                                                gdouble threshold, 
-                                                gdouble *xs, 
-                                                gdouble *ys, 
-                                                gint *nobjects, 
-                                                GwyCorrelationType type);
-static void       draw_cross                  (GwyDataField *mask, 
-                                               gint size, 
-                                               gint xpos, 
-                                               gint ypos);
-static void       draw_times                  (GwyDataField *mask, 
-                                               gint size, 
-                                               gint xpos, 
-                                               gint ypos);
-
-
-void
-find_next(gdouble *xs, gdouble *ys, gdouble *pxs, gdouble *pys, gint *is_indexed,
-          gint *index_col, gint *index_row, gint xxshift, gint xyshift, gint yxshift, gint yyshift, 
-          gint present_xs, gint present_pxs, gint ncol, gint nrow, gint n, gint *nind, 
-          gdouble *avs, gint *navs);
+static gboolean module_register      (void);
+static void     simple               (GwyContainer *data,
+                                      GwyRunType run);
+static gboolean simple_dialog        (SimpleArgs *args,
+                                      GwyDataField *dfield);
+static void     simple_data_cb       (GwyDataChooser *chooser,
+                                      SimpleControls *controls);
+static void     simple_do            (SimpleArgs *args);
+static void     xyexponent_changed_cb(GtkWidget *combo,
+                                      SimpleControls *controls);
+static void     zexponent_changed_cb (GtkWidget *combo,
+                                      SimpleControls *controls);
+static void     units_change_cb      (GtkWidget *button,
+                                      SimpleControls *controls);
+static void     set_combo_from_unit  (GtkWidget *combo,
+                                      const gchar *str,
+                                      gint basepower);
+static void     xoffset_changed_cb   (GtkAdjustment *adj,
+                                      SimpleControls *controls);
+static void     yoffset_changed_cb   (GtkAdjustment *adj,
+                                      SimpleControls *controls);
+static void     zoffset_changed_cb   (GtkAdjustment *adj,
+                                      SimpleControls *controls);
+static void     xperiod_changed_cb   (GtkAdjustment *adj,
+                                      SimpleControls *controls);
+static void     yperiod_changed_cb   (GtkAdjustment *adj,
+                                      SimpleControls *controls);
+static void     threshold_changed_cb (GtkAdjustment *adj,
+                                      SimpleControls *controls);
+void            get_object_list      (GwyDataField *data,
+                                      GwyDataField *kernel,
+                                      gdouble threshold,
+                                      gdouble *xs,
+                                      gdouble *ys,
+                                      gint *nobjects,
+                                      GwyCorrelationType type);
+static void     draw_cross           (GwyDataField *mask,
+                                      gint size,
+                                      gint xpos,
+                                      gint ypos);
+static void     draw_times           (GwyDataField *mask,
+                                      gint size,
+                                      gint xpos,
+                                      gint ypos);
+static void     find_next            (gdouble *xs,
+                                      gdouble *ys,
+                                      gdouble *pxs,
+                                      gdouble *pys,
+                                      gint *is_indexed,
+                                      gint *index_col,
+                                      gint *index_row,
+                                      gint xxshift,
+                                      gint xyshift,
+                                      gint yxshift,
+                                      gint yyshift,
+                                      gint present_xs,
+                                      gint present_pxs,
+                                      gint ncol,
+                                      gint nrow,
+                                      gint n,
+                                      gint *nind,
+                                      gdouble *avs,
+                                      gint *navs);
 
 
 static GwyModuleInfo module_info = {
@@ -195,12 +207,12 @@ simple(GwyContainer *data, GwyRunType run)
     gsize pos = 0;
     GString *str;
     GByteArray *barray;
-    FILE *fh; 
+    FILE *fh;
 
     g_return_if_fail(run & SIMPLE_RUN_MODES);
 
-    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_ID, &id, 
-                                     GWY_APP_DATA_FIELD, &dfield, 
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_ID, &id,
+                                     GWY_APP_DATA_FIELD, &dfield,
                                      GWY_APP_MASK_FIELD, &(args.mask),
                                      GWY_APP_MASK_FIELD_KEY, &mquark,
                                      0);
@@ -216,13 +228,13 @@ simple(GwyContainer *data, GwyRunType run)
         {
             gwy_app_undo_qcheckpointv(data, 1, &mquark);
             args.mask = gwy_data_field_new_alike(dfield, FALSE);
-            gwy_container_set_object(data, mquark, args.mask);            
+            gwy_container_set_object(data, mquark, args.mask);
         }
 
         simple_do(&args);
         gwy_data_field_data_changed(args.mask);
 
-    } else return; 
+    } else return;
 
 
     /*if append requested, copy newly created calibration into old one*/
@@ -459,7 +471,7 @@ simple_dialog(SimpleArgs *args, GwyDataField *dfield)
 
     g_signal_connect(controls.threshold, "value-changed",
                        G_CALLBACK(threshold_changed_cb), &controls);
- 
+
     row++;
 
 
@@ -576,13 +588,13 @@ simple_data_cb(GwyDataChooser *chooser,
 
     if (original==detail) gtk_label_set_text(GTK_LABEL(controls->suggestion), "Data same as detail?\n");
     else if (gwy_data_field_get_xres(original)<=gwy_data_field_get_xres(detail) ||
-        gwy_data_field_get_yres(original)<=gwy_data_field_get_yres(detail)) 
+        gwy_data_field_get_yres(original)<=gwy_data_field_get_yres(detail))
     {
         gtk_label_set_text(GTK_LABEL(controls->suggestion), "Data larger than detail?\n");
     }
     else {
         args->noriginal = 10000;
-        if (args->xs==NULL || args->ys==NULL) 
+        if (args->xs==NULL || args->ys==NULL)
         {
            args->xs = (gdouble *)g_malloc(args->noriginal*sizeof(gdouble));
            args->ys = (gdouble *)g_malloc(args->noriginal*sizeof(gdouble));
@@ -592,14 +604,14 @@ simple_data_cb(GwyDataChooser *chooser,
         g_snprintf(message, sizeof(message), "%d objects found\n", args->noriginal);
         gtk_label_set_text(GTK_LABEL(controls->suggestion), message);
 
-        
+
     }
 
 
 }
 
-void
-get_object_list(GwyDataField *data, GwyDataField *kernel, gdouble threshold, 
+static void
+get_object_list(GwyDataField *data, GwyDataField *kernel, gdouble threshold,
                 gdouble *xs, gdouble *ys, gint *nobjects, GwyCorrelationType type)
 {
     GwyDataField *score = gwy_data_field_new_alike(data, 0);
@@ -612,7 +624,7 @@ get_object_list(GwyDataField *data, GwyDataField *kernel, gdouble threshold,
     min = gwy_data_field_get_min(score);
 
     retfield = gwy_data_field_duplicate(score);
-    gwy_data_field_threshold(retfield, threshold, 0.0, 1.0); 
+    gwy_data_field_threshold(retfield, threshold, 0.0, 1.0);
 
     grains = (gint *)g_malloc(gwy_data_field_get_xres(retfield)*gwy_data_field_get_yres(retfield)*sizeof(gint));
     ngrains = gwy_data_field_number_grains(retfield, grains);
@@ -622,7 +634,7 @@ get_object_list(GwyDataField *data, GwyDataField *kernel, gdouble threshold,
     sdata = gwy_data_field_get_data(score);
 
     for (i=0; i<ngrains; i++) maxval[i] = -G_MAXDOUBLE;
-    
+
     //find correlation maximum of each grain
     for (i=0; i<(gwy_data_field_get_xres(score)*gwy_data_field_get_yres(score)); i++)
     {
@@ -658,8 +670,8 @@ simple_dialog_update(SimpleControls *controls,
 }
 
 
- 
-gdouble 
+
+static gdouble
 get_prod_grid(GwyDataField *a, GwyDataField *b, gdouble period)
 {
     gint i, j;
@@ -686,7 +698,7 @@ simple_do(SimpleArgs *args)
 {
     GwyContainer *data;
     GwyDataField *original, *detail;
-    gdouble *xs, *ys, *pxs, *pys; 
+    gdouble *xs, *ys, *pxs, *pys;
     gint *is_indexed, *index_row, *index_col;
     gint i, noriginal, nind;
     gdouble xxshift, xyshift, yxshift, yyshift;
@@ -720,13 +732,13 @@ simple_do(SimpleArgs *args)
     is_indexed = (gint *)g_malloc(noriginal*sizeof(gint));
     index_col = (gint *)g_malloc(noriginal*sizeof(gint));
     index_row = (gint *)g_malloc(noriginal*sizeof(gint));
-       
+
     for (i=0; i<noriginal; i++)
     {
         is_indexed[i] = 0;
     }
     nind = 0;
-    
+
     //find center object
     tl = 0;
     tlmin = G_MAXDOUBLE;
@@ -774,8 +786,8 @@ simple_do(SimpleArgs *args)
     avs[0] = avs[1] = avs[2] = avs[3] = 0;
     navs[0] = navs[1] = navs[2] = navs[3] = 0;
 
-    find_next(xs, ys, pxs, pys, is_indexed, 
-              index_col, index_row, xxshift, xyshift, yxshift, yyshift, tl/*present_xs*/, 0/*present_pxs*/, 
+    find_next(xs, ys, pxs, pys, is_indexed,
+              index_col, index_row, xxshift, xyshift, yxshift, yyshift, tl/*present_xs*/, 0/*present_pxs*/,
               1/*ncol*/, 0/*nrow*/, noriginal, &nind, avs, navs);
 
     //printf("field summary: ###############################\n");
@@ -794,12 +806,12 @@ simple_do(SimpleArgs *args)
     {
         /*draw times and crosses on mask*/
         draw_cross(args->mask, 5, pxs[i], pys[i]);
-        draw_times(args->mask, 4, 
+        draw_times(args->mask, 4,
                    xs[tl] + index_col[i]*xxshift + index_row[i]*yxshift,
                    ys[tl] + index_col[i]*xyshift + index_row[i]*yyshift
                    );
 
-    //    printf("%g %g  %g %g\n", 
+    //    printf("%g %g  %g %g\n",
     //           xs[tl] + index_col[i]*xxshift + index_row[i]*yxshift,
     //           ys[tl] + index_col[i]*xyshift + index_row[i]*yyshift,
     //           pxs[i], pys[i]);
@@ -807,12 +819,12 @@ simple_do(SimpleArgs *args)
 
 
     /*TODO recalculate values to proper period (if period is not 0)?*/
- 
+
 }
 
-void
+static void
 find_next(gdouble *xs, gdouble *ys, gdouble *pxs, gdouble *pys, gint *is_indexed,
-          gint *index_col, gint *index_row, gint xxshift, gint xyshift, gint yxshift, gint yyshift, 
+          gint *index_col, gint *index_row, gint xxshift, gint xyshift, gint yxshift, gint yyshift,
           gint present_xs, gint present_pxs, gint ncol, gint nrow, gint n, gint *nind,
           gdouble *avs, gint *navs)  //present: present in xs,ys,  pcol, prow, present detected pos
 {
@@ -842,7 +854,7 @@ find_next(gdouble *xs, gdouble *ys, gdouble *pxs, gdouble *pys, gint *is_indexed
     }
 
     if (is_indexed[pos]) {
-    //    printf("oh, we'v been at (%d %d) already\n", ncol, nrow); 
+    //    printf("oh, we'v been at (%d %d) already\n", ncol, nrow);
         return;
     }
 
@@ -887,25 +899,25 @@ find_next(gdouble *xs, gdouble *ys, gdouble *pxs, gdouble *pys, gint *is_indexed
     //{
     //    printf("No. %d, index %d %d, pos %g %g\n", i, index_col[i], index_row[i], pxs[i], pys[i]);
     //}
-    
+
 
     /*search for neighbors*/
-    find_next(xs, ys, pxs, pys, is_indexed, 
-              index_col, index_row, xxshift, xyshift, yxshift, yyshift, pos, present_pxs, 
+    find_next(xs, ys, pxs, pys, is_indexed,
+              index_col, index_row, xxshift, xyshift, yxshift, yyshift, pos, present_pxs,
               ncol+1, nrow, n, nind, avs, navs);
-   
-    find_next(xs, ys, pxs, pys, is_indexed, 
-              index_col, index_row, xxshift, xyshift, yxshift, yyshift, pos, present_pxs, 
+
+    find_next(xs, ys, pxs, pys, is_indexed,
+              index_col, index_row, xxshift, xyshift, yxshift, yyshift, pos, present_pxs,
               ncol-1, nrow, n, nind, avs, navs);
 
-    find_next(xs, ys, pxs, pys, is_indexed, 
-              index_col, index_row, xxshift, xyshift, yxshift, yyshift, pos, present_pxs, 
+    find_next(xs, ys, pxs, pys, is_indexed,
+              index_col, index_row, xxshift, xyshift, yxshift, yyshift, pos, present_pxs,
               ncol, nrow+1, n, nind, avs, navs);
 
-    find_next(xs, ys, pxs, pys, is_indexed, 
-              index_col, index_row, xxshift, xyshift, yxshift, yyshift, pos, present_pxs, 
+    find_next(xs, ys, pxs, pys, is_indexed,
+              index_col, index_row, xxshift, xyshift, yxshift, yyshift, pos, present_pxs,
               ncol, nrow-1, n, nind, avs, navs);
- 
+
 }
 
 
@@ -1011,8 +1023,6 @@ threshold_changed_cb(GtkAdjustment *adj,
 }
 
 
-
-
 static void
 xyexponent_changed_cb(GtkWidget *combo,
                       SimpleControls *controls)
@@ -1110,6 +1120,7 @@ units_change_cb(GtkWidget *button,
     simple_dialog_update(controls, args);
     controls->in_update = FALSE;
 }
+
 static void
 set_combo_from_unit(GtkWidget *combo,
                     const gchar *str,
@@ -1146,7 +1157,7 @@ draw_times(GwyDataField *mask, gint size, gint xpos, gint ypos)
         {
             if (abs(i-xpos)==abs(j-ypos)) gwy_data_field_set_val(mask, i, j, 1);
 
-            //printf("%d %d\n", i-xpos, j-ypos);  //-3 3 -2 2 -1 1 
+            //printf("%d %d\n", i-xpos, j-ypos);  //-3 3 -2 2 -1 1
 
         }
 

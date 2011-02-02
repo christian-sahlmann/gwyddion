@@ -803,10 +803,11 @@ update_view(CCViewControls *controls, CCViewArgs *args)
 }
 
 
-void add_calibration(GwyDataField *dfield,
-                     GwyContainer *data,
-                     gint id,
-                     GwyCCViewDisplayType type)
+static void
+add_calibration(GwyDataField *dfield,
+                GwyContainer *data,
+                gint id,
+                GwyCCViewDisplayType type)
 {
     gchar key[24];
 
