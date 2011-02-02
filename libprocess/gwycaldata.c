@@ -847,21 +847,20 @@ gwy_caldata_set_range(GwyCalData *caldata,
 /************************** Documentation ****************************/
 
 /**
- * SECTION:caldata
+ * SECTION:gwycaldata
  * @title: GwyCalData
  * @short_description: General calibration data
  *
- * #GwyCalData is an object representing general calibration data of a SPM system.
- * Any point in the volume that can be reached by SPM scanner can be characterized
- * by two vectors: error and uncertainty. Errors can be used for further data correction,
- * uncertainties for propagation and determination of final uncertainty of results
- * of direct measurements or statistical functions. Using different strategies a different
- * number of these local calibration data can be obtained, starting from single uncertainty
- * applied for whole system up to complex determination of local  SPM errors and uncertainties.
- *
+ * #GwyCalData is an object representing general calibration data of a SPM
+ * system.  Any point in the volume that can be reached by SPM scanner can be
+ * characterized by two vectors: error and uncertainty. Errors can be used for
+ * further data correction, uncertainties for propagation and determination of
+ * final uncertainty of results of direct measurements or statistical
+ * functions. Using different strategies a different number of these local
+ * calibration data can be obtained, starting from single uncertainty applied
+ * for whole system up to complex determination of local  SPM errors and
+ * uncertainties.
  **/
-
-
 
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

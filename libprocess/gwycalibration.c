@@ -285,13 +285,13 @@ gwy_calibrations_get_calibration(const gchar *name)
 /************************** Documentation ****************************/
 
 /**
- * SECTION:calibration
+ * SECTION:gwycalibration
  * @title: GwyCalibration
  * @short_description: Resource for managing calibrations
  *
- * #GwyCalibration is a resource used for managing calibration data. These resources
- * are stored separately from calibration data and contain namely filename of
- * connected calibration data file.
+ * #GwyCalibration is a resource used for managing calibration data. These
+ * resources are stored separately from calibration data and contain namely
+ * filename of connected calibration data file.
  *
  * with #GwyDataField.
  **/
@@ -302,7 +302,5 @@ gwy_calibrations_get_calibration(const gchar *name)
  * The #GwyCalibration struct contains private data only and should be accessed
  * using the functions below.
  **/
-
-
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
