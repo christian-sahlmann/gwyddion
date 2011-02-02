@@ -924,7 +924,8 @@ REAL isperrboundA, isperrboundB, isperrboundC;
 /*                                                                           */
 /*****************************************************************************/
 
-int fast_expansion_sum_zeroelim(elen, e, flen, f, h)  /* h cannot be e or f. */
+#if 0
+static int fast_expansion_sum_zeroelim(elen, e, flen, f, h)  /* h cannot be e or f. */
 int elen;
 REAL *e;
 int flen;
@@ -997,7 +998,7 @@ REAL *h;
   }
   return hindex;
 }
-
+#endif
 
 
 
