@@ -21,6 +21,9 @@
 #include "config.h"
 #include <string.h>
 
+#include <glib.h>
+#include <glib/gstdio.h>
+
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwydebugobjects.h>
@@ -841,6 +844,23 @@ gwy_caldata_set_range(GwyCalData *caldata,
     caldata->z_from = zfrom;
     caldata->z_to = zto;
 }
+
+void        
+gwy_caldata_save_data(GwyCalData *caldata, gchar *filename)
+{
+    GByteArray *barray;
+
+    if (!g_file_test(g_build_filename(gwy_get_user_dir(), "caldata", NULL), G_FILE_TEST_EXISTS)) {
+        g_mkdir(g_build_filename(gwy_get_user_dir(), "caldata", NULL), 0700);
+    }
+
+    barray = gwy_serializable_serialize(G_OBJECT(caldata), NULL);
+    if (!g_file_set_contents(filename, barray->data, sizeof(guint8)*barray->len, NULL))
+    {
+        g_warning("Cannot save caldata\n");
+    }
+}
+
 
 /*
 #include <stdio.h>

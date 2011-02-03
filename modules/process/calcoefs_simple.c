@@ -206,7 +206,6 @@ simple(GwyContainer *data, GwyRunType run)
     GError *err = NULL;
     gsize pos = 0;
     GString *str;
-    GByteArray *barray;
     FILE *fh;
 
     g_return_if_fail(run & SIMPLE_RUN_MODES);
@@ -287,18 +286,8 @@ simple(GwyContainer *data, GwyRunType run)
     gwy_resource_data_saved(GWY_RESOURCE(calibration));
 
     /*now save the calibration data*/
-    if (!g_file_test(g_build_filename(gwy_get_user_dir(), "caldata", NULL), G_FILE_TEST_EXISTS)) {
-        g_mkdir(g_build_filename(gwy_get_user_dir(), "caldata", NULL), 0700);
-    }
-    fh = g_fopen(g_build_filename(gwy_get_user_dir(), "caldata", calibration->filename, NULL), "w");
-    if (!fh) {
-        g_warning("Cannot save caldata\n");
-        return;
-    }
-    barray = gwy_serializable_serialize(G_OBJECT(args.caldata), NULL);
-    //g_file_set_contents(fh, barray->data, sizeof(guint8)*barray->len, NULL);
-    fwrite(barray->data, sizeof(guint8), barray->len, fh);
-    fclose(fh);
+    gwy_caldata_save_data(caldata, calibration->filename);
+
 }
 
 static gboolean
