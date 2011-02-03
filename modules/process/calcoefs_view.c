@@ -18,10 +18,12 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
+
 #include "config.h"
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include <math.h>
 #include <glib/gstdio.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
@@ -654,11 +656,14 @@ update_view(CCViewControls *controls, CCViewArgs *args)
     zres = 200;
 
     if (!caldata) {
+        g_warning("No caldata present");
         gwy_data_field_fill(viewfield, 0);
         gwy_data_field_data_changed(viewfield);
         return;
     }
- 
+    g_warning("Caldata present");
+
+    //gwy_caldata_debug(caldata, "Using: ");
 
     if (!args->computed) {
         gwy_app_wait_start(GTK_WINDOW(controls->dialog), "Building mesh...\n");
@@ -669,7 +674,6 @@ update_view(CCViewControls *controls, CCViewArgs *args)
         }
         run = gwy_app_wait_set_message("Triangulation...\n");
         run = gwy_app_wait_set_fraction(0);
-
 
         if (run && controls->args->crop) {
             gwy_caldata_get_range(caldata, &x_from, &x_to, &y_from, &y_to, &z_from, &z_to);
@@ -692,7 +696,6 @@ update_view(CCViewControls *controls, CCViewArgs *args)
                     controls->xunc->data[col + xres*row] = xunc;
                     controls->yunc->data[col + xres*row] = yunc;
                     controls->zunc->data[col + xres*row] = zunc;
-
 
                 }
                 if (!(run = gwy_app_wait_set_fraction((gdouble)row/(gdouble)yres))) break;

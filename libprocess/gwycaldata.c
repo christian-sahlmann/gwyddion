@@ -842,7 +842,23 @@ gwy_caldata_set_range(GwyCalData *caldata,
     caldata->z_to = zto;
 }
 
+/*
+#include <stdio.h>
+void
+gwy_caldata_debug(GwyCalData *caldata, gchar *message)
+{
+    gint i;
+    printf("%s: %d calibration data entries\n", message, caldata->ndata);
 
+    for (i=0; i<caldata->ndata; i++)
+    {
+         printf("%d   (%g %g %g)  (%g %g %g)  (%g %g %g)\n", i,
+                caldata->x[i], caldata->y[i], caldata->z[i],
+                caldata->xerr[i], caldata->yerr[i], caldata->zerr[i],
+                caldata->xunc[i], caldata->yunc[i], caldata->zunc[i]);
+    }
+}
+*/
 
 /************************** Documentation ****************************/
 

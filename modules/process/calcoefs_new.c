@@ -316,6 +316,8 @@ cnew(GwyContainer *data, GwyRunType run)
     gwy_resource_data_saved(GWY_RESOURCE(calibration));
 
     /*now save the calibration data*/
+    //gwy_caldata_debug(caldata, "Saving: ");
+
     if (!g_file_test(g_build_filename(gwy_get_user_dir(), "caldata", NULL), G_FILE_TEST_EXISTS)) {
         g_mkdir(g_build_filename(gwy_get_user_dir(), "caldata", NULL), 0700);
     }
