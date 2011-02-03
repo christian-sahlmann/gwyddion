@@ -550,6 +550,8 @@ cc_view_dialog(CCViewArgs *args,
                                       args->update);
 
     update_view(&controls, args);
+    g_critical("module started");
+
 
     gtk_widget_show_all(dialog);
     do {
@@ -619,7 +621,7 @@ update_view(CCViewControls *controls, CCViewArgs *args)
     viewfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
                                                                   "/0/data"));
 
-    g_warning("view update");
+    g_critical("view update");
     args->calibration = gtk_combo_box_get_active(GTK_COMBO_BOX(controls->calibration));
     if (args->calibration < gwy_inventory_get_n_items(gwy_calibrations()))
         calibration = gwy_inventory_get_nth_item(gwy_calibrations(), args->calibration);
@@ -647,7 +649,7 @@ update_view(CCViewControls *controls, CCViewArgs *args)
         }
 
     } else {
-        g_warning("No calibration");
+        g_critical("No calibration");
         caldata = NULL;
         calibration = NULL;
         return;
@@ -659,12 +661,12 @@ update_view(CCViewControls *controls, CCViewArgs *args)
     zres = 200;
 
     if (!caldata) {
-        g_warning("No caldata present");
+        g_critical("No caldata present");
         gwy_data_field_fill(viewfield, 0);
         gwy_data_field_data_changed(viewfield);
         return;
     }
-    g_warning("Caldata present");
+    g_critical("Caldata present");
 
     //gwy_caldata_debug(caldata, "Using: ");
 
