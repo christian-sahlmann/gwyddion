@@ -19,6 +19,7 @@
  */
 
 
+
 #include "config.h"
 #include <stdlib.h>
 #include <string.h>
@@ -618,6 +619,7 @@ update_view(CCViewControls *controls, CCViewArgs *args)
     viewfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
                                                                   "/0/data"));
 
+    g_warning("view update");
     args->calibration = gtk_combo_box_get_active(GTK_COMBO_BOX(controls->calibration));
     if (args->calibration < gwy_inventory_get_n_items(gwy_calibrations()))
         calibration = gwy_inventory_get_nth_item(gwy_calibrations(), args->calibration);
@@ -645,6 +647,7 @@ update_view(CCViewControls *controls, CCViewArgs *args)
         }
 
     } else {
+        g_warning("No calibration");
         caldata = NULL;
         calibration = NULL;
         return;
