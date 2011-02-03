@@ -300,7 +300,7 @@ cnew(GwyContainer *data, GwyRunType run)
     if (!g_file_test(filename, G_FILE_TEST_EXISTS)) {
         g_mkdir(g_build_filename(gwy_get_user_dir(), "calibrations", NULL), 0700);
     }
-    fh = g_fopen(filename, "w");
+    fh = g_fopen(filename, "wb");
     if (!fh) {
         g_warning("Cannot save preset: %s", filename);
         g_free(filename);
@@ -327,8 +327,8 @@ cnew(GwyContainer *data, GwyRunType run)
         return;
     }
     barray = gwy_serializable_serialize(G_OBJECT(caldata), NULL);
-    //g_file_set_contents(fh, barray->data, sizeof(guint8)*barray->len, NULL);
-    fwrite(barray->data, sizeof(guint8), barray->len, fh);
+    g_file_set_contents(fh, barray->data, sizeof(guint8)*barray->len, NULL);
+    //fwrite(barray->data, sizeof(guint8), barray->len, fh);
     fclose(fh);
 
 }

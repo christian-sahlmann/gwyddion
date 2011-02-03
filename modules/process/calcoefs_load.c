@@ -21,6 +21,7 @@
 #include <string.h>
 #include <gtk/gtk.h>
 #include <glib/gstdio.h>
+#include <glib/gprintf.h>
 #include <math.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
@@ -314,9 +315,10 @@ load_caldata(CLoadControls *controls)
     gchar mtext[50];
     gdouble xfrom, xto, yfrom, yto, zfrom, zto;
     gdouble x, y, z, xerr, yerr, zerr, xunc, yunc, zunc;
-    gchar six[50], siy[50], siz[50];
+    gdouble *px, *py, *pz, *pxerr, *pyerr, *pzerr, *pxunc, *pyunc, *pzunc;
     gchar *line, *text = NULL;
     gsize size;
+    gint xpower10, ypower10, zpower10;
     GError *err = NULL;
 
     dialog = gtk_file_chooser_dialog_new ("Load calibration data",
@@ -341,60 +343,80 @@ load_caldata(CLoadControls *controls)
             gtk_widget_destroy(dialog);
         } else {
 
-            //TODO use g_ascii_strtod    
-           //g_file_get_contents()
-           //gwy_str_next_line()
             line = gwy_str_next_line(&text);
             g_strstrip(line);
+            ndata = g_ascii_strtod(line, &line);
+ 
+            line = gwy_str_next_line(&text);
+            g_strstrip(line);
+            xfrom = g_ascii_strtod(line, &line);
+            xto = g_ascii_strtod(line, &line);
 
+            line = gwy_str_next_line(&text);
+            g_strstrip(line);
+            yfrom = g_ascii_strtod(line, &line);
+            yto = g_ascii_strtod(line, &line);
 
+            line = gwy_str_next_line(&text);
+            g_strstrip(line);
+            zfrom = g_ascii_strtod(line, &line);
+            zto = g_ascii_strtod(line, &line);
 
-            //fscanf(fr, "%d", &ndata);
-            //fscanf(fr, "%lf", &xfrom);
-            //fscanf(fr, "%lf", &xto);
-            //fscanf(fr, "%lf", &yfrom);
-            //fscanf(fr, "%lf", &yto);
-            //fscanf(fr, "%lf", &zfrom);
-            //fscanf(fr, "%lf", &zto);
+            line = gwy_str_next_line(&text);
 
             caldata = gwy_caldata_new(ndata);    //FIXME free it somewhere if allocated previously
-            //caldata->ndata = ndata;
-            //caldata->x_from = xfrom;
-            //caldata->x_to = xto;
-            //caldata->y_from = yfrom;
-            //caldata->y_to = yto;
-            //caldata->z_from = zfrom;
-            //caldata->z_to = zto;
-            //fscanf(fr, "%s", six);
-            //fscanf(fr, "%s", siy);
-            //fscanf(fr, "%s", siz);
-            //caldata->si_unit_x = gwy_si_unit_new(six);
-            //caldata->si_unit_y = gwy_si_unit_new(siy);
-            //caldata->si_unit_z = gwy_si_unit_new(siz);
+
+            line = gwy_str_next_line(&text);
+            g_strstrip(line);
+            gwy_caldata_set_si_unit_x(caldata, gwy_si_unit_new_parse(line, &xpower10));
+
+            line = gwy_str_next_line(&text);
+            g_strstrip(line);
+            gwy_caldata_set_si_unit_y(caldata, gwy_si_unit_new_parse(line, &ypower10));
+
+            line = gwy_str_next_line(&text);
+            g_strstrip(line);
+            gwy_caldata_set_si_unit_z(caldata, gwy_si_unit_new_parse(line, &zpower10));
+
+            gwy_caldata_set_range(caldata, 
+                                  xfrom*pow10(xpower10), xto*pow10(xpower10), 
+                                  yfrom*pow10(ypower10), yto*pow10(ypower10), 
+                                  zfrom*pow10(zpower10), zto*pow10(zpower10));
+
+            px = gwy_caldata_get_x(caldata);
+            py = gwy_caldata_get_y(caldata);
+            pz = gwy_caldata_get_z(caldata);
+            pxerr = gwy_caldata_get_xerr(caldata);
+            pyerr = gwy_caldata_get_yerr(caldata);
+            pzerr = gwy_caldata_get_zerr(caldata);
+            pxunc = gwy_caldata_get_xunc(caldata);
+            pyunc = gwy_caldata_get_yunc(caldata);
+            pzunc = gwy_caldata_get_zunc(caldata);
 
             for (i=0; i<gwy_caldata_get_ndata(caldata); i++)
             {
                 line = gwy_str_next_line(&text);
                 g_strstrip(line);
-                /*fscanf(fr, "%lf", &x);
-                fscanf(fr, "%lf", &y);
-                fscanf(fr, "%lf", &z);
-                fscanf(fr, "%lf", &xerr);
-                fscanf(fr, "%lf", &yerr);
-                fscanf(fr, "%lf", &zerr);
-                fscanf(fr, "%lf", &xunc);
-                fscanf(fr, "%lf", &yunc);
-                fscanf(fr, "%lf", &zunc);*/
-                //caldata->x[i] = x;
-                //caldata->y[i] = y;
-                //caldata->z[i] = z;
-                //caldata->xerr[i] = xerr;
-                //caldata->yerr[i] = yerr;
-                //caldata->zerr[i] = zerr;
-                //caldata->xunc[i] = xunc;
-                //caldata->yunc[i] = yunc;
-                //caldata->zunc[i] = zunc;
-              }
+                x = g_ascii_strtod(line, &line);
+                y = g_ascii_strtod(line, &line);
+                z = g_ascii_strtod(line, &line);
+                xerr = g_ascii_strtod(line, &line);
+                yerr = g_ascii_strtod(line, &line);
+                zerr = g_ascii_strtod(line, &line);
+                xunc = g_ascii_strtod(line, &line);
+                yunc = g_ascii_strtod(line, &line);
+                zunc = g_ascii_strtod(line, &line);
+
+                px[i] = x;
+                py[i] = y;
+                pz[i] = z;
+                pxerr[i] = xerr;
+                pyerr[i] = yerr;
+                pzerr[i] = zerr;
+                pxunc[i] = xunc;
+                pyunc[i] = yunc;
+                pzunc[i] = zunc;
+            }
             
             g_snprintf(mtext, sizeof(mtext), "Loaded %d data points", gwy_caldata_get_ndata(caldata));
             gtk_label_set_text(GTK_LABEL(controls->text), mtext);
