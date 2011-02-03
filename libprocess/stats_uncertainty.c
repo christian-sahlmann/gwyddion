@@ -864,7 +864,7 @@ gwy_data_field_get_stats_uncertainties(GwyDataField *data_field,
     guint nn = data_field->xres * data_field->yres;
     gdouble dif, udif, myavg, myrms, myskew, mykurtosis, myra;
     gdouble hlp;
-    gint csig = 0;
+    gdouble csig = 0;
 
     g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
     g_return_if_fail(GWY_IS_DATA_FIELD(uncz_field));
@@ -876,8 +876,13 @@ gwy_data_field_get_stats_uncertainties(GwyDataField *data_field,
                              &myavg, &myra, &myrms, &myskew, &mykurtosis);
     for (i = nn; i; i--, p++, u++) {
         dif = (*p - myavg);
-        csig += dif/fabs(dif);
+	if (dif > 0 )
+		csig ++;
+	else if (dif <0 )
+		csig --;
+			
     }
+    csig/=nn;
 
 
     for (i = nn; i; i--, p++, u++) {
@@ -885,7 +890,13 @@ gwy_data_field_get_stats_uncertainties(GwyDataField *data_field,
         udif = (*u) *(*p - myavg);
 
         c_uavg += (*u)*(*u);
-        hlp = dif/fabs(dif) - csig/nn;
+	if (dif > 0)
+		hlp = 1-csig;
+	else if (dif  <0)
+		hlp = -1-csig;
+	else
+		hlp = -csig;
+
         c_uabs += hlp*(*u)*hlp*(*u);
         c_urms += udif*udif;
         hlp = dif*dif/(myrms*myrms) - 1 - myskew/myrms*dif;
@@ -1000,7 +1011,7 @@ gwy_data_field_area_get_stats_uncertainties_mask(GwyDataField *dfield,
     gint i, j;
     guint nn;
     gdouble dif, hlp, myavg, myrms, myskew, mykurtosis, myra;
-    gint csig = 0;
+    gdouble csig = 0;
 
     g_return_if_fail(GWY_IS_DATA_FIELD(dfield));
     g_return_if_fail(GWY_IS_DATA_FIELD(uncz_field));
@@ -1020,25 +1031,43 @@ gwy_data_field_area_get_stats_uncertainties_mask(GwyDataField *dfield,
     gwy_data_field_area_get_stats_mask(dfield, mask, mode, col, row, width, height,
                                        &myavg, &myra, &myrms, &myskew, &mykurtosis);
 
-    if (mask && mode != GWY_MASK_IGNORE) {
-        datapos = dfield->data + row*dfield->xres + col;
-        uncpos = uncz_field->data + row*uncz_field->xres + col;
-        mpos = mask->data + row*mask->xres + col;
-        nn = 0;
-        for (i = 0; i < height; i++) {
-            const gdouble *drow = datapos + i*dfield->xres;
-            const gdouble *mrow = mpos + i*mask->xres;
-            if (mode == GWY_MASK_INCLUDE) {
-                for (j = 0; j < width; j++) {
-                    if (*mrow > 0.0) {
-                        dif = *drow - myavg;
-                        csig += dif/fabs(dif);
-                    }
-                    drow++;
-                }
-            }
-        }
+    if (mask && (mode != GWY_MASK_IGNORE)) {
+	    datapos = dfield->data + row*dfield->xres + col;
+	    uncpos = uncz_field->data + row*uncz_field->xres + col;
+	    mpos = mask->data + row*mask->xres + col;
+	    nn = 0;
+	    for (i = 0; i < height; i++) {
+		    const gdouble *drow = datapos + i*dfield->xres;
+		    const gdouble *mrow = mpos + i*mask->xres;
+		    if (mode == GWY_MASK_INCLUDE) {
+			    for (j = 0; j < width; j++) {
+				    if (*mrow > 0.0) {
+					    nn++;
+					    dif = *drow - myavg;
+					    if (dif >0)
+						    csig ++;
+					    else if (dif <0)
+						    csig --;
+				    }
+				    drow++;
+			    }
+		    }
+		    else{
+			    for (j = 0; j < width; j++) {
+				    if (*mrow < 1.0) {
+					    nn++;
+					    dif = *drow - myavg;
+					    if (dif >0)
+						    csig ++;
+					    else if (dif <0)
+						    csig --;
+				    }
+				    drow++;
+			    }
+		    }
+	    }
 
+	    csig/=nn;
         for (i = 0; i < height; i++) {
             const gdouble *drow = datapos + i*dfield->xres;
             const gdouble *urow = uncpos + i*uncz_field->xres;
@@ -1051,7 +1080,12 @@ gwy_data_field_area_get_stats_uncertainties_mask(GwyDataField *dfield,
 
                         c_uavg += (*urow)*(*urow);
 
-                        hlp = dif/fabs(dif)-csig/nn;
+			if (dif >0)
+				hlp = 1-csig;
+			else if (dif <0)
+				hlp = -1-csig;
+			else
+				hlp = -csig;
                         c_uabs += hlp*(*urow)*hlp*(*urow);
 
                         c_urms += dif*dif*(*urow)*(*urow);                   //was udif
@@ -1076,7 +1110,12 @@ gwy_data_field_area_get_stats_uncertainties_mask(GwyDataField *dfield,
 
                         c_uavg += (*urow)*(*urow);
 
-                        hlp = dif/fabs(dif)-csig/nn;
+			if (dif >0)
+				hlp = 1 - csig;
+			else if (dif <0 )
+				hlp = -1 -csig;
+			else
+				hlp = -csig;
                         c_uabs += hlp*(*urow)*hlp*(*urow);
 
                         c_urms += (*urow)*dif*(*urow)*dif;
@@ -1110,7 +1149,14 @@ gwy_data_field_area_get_stats_uncertainties_mask(GwyDataField *dfield,
 
                 c_uavg += (*urow)*(*urow);
 
-                hlp = dif/fabs(dif)-csig/nn;
+		if (dif >0) 
+			hlp = 1-csig;
+		else if (dif < 0 )
+			hlp = -1-csig;
+		else
+			hlp = -csig;
+
+
                 c_uabs += hlp*(*urow)*hlp*(*urow);
 
                 c_urms += (*urow)*dif*(*urow)*dif;
@@ -3448,17 +3494,18 @@ gwy_data_field_get_yder_uncertainty(GwyDataField *data_field,
     if (row == 0) {
         uz1 = gwy_data_field_get_dval(uncz_field, col*hx, (row+1)*hy, GWY_INTERPOLATION_BILINEAR);
         uz2 = gwy_data_field_get_dval(uncz_field, col*hx, row*hy, GWY_INTERPOLATION_BILINEAR);
-        sum = (uz1*uz1 + uz2*uz2)/(hy*hy);
+        sum += (uz1*uz1 + uz2*uz2)/(hy*hy); //!!!!!
     }
     else if (row == data_field->yres-1) {
         uz1 = gwy_data_field_get_dval(uncz_field, col*hx, row*hy, GWY_INTERPOLATION_BILINEAR);
         uz2 = gwy_data_field_get_dval(uncz_field, col*hx, (row-1)*hy, GWY_INTERPOLATION_BILINEAR);
-        sum = (uz1*uz1 + uz2*uz2)/(hy*hy);
+        sum += (uz1*uz1 + uz2*uz2)/(hy*hy);//!!!!!
     }
     else {
         uz1 = gwy_data_field_get_dval(uncz_field, col*hx, (row-1)*hy, GWY_INTERPOLATION_BILINEAR);
         uz2 = gwy_data_field_get_dval(uncz_field, col*hx, (row+1)*hy, GWY_INTERPOLATION_BILINEAR);
-        sum = (uz1*uz1 + uz2*uz2)/(4*hy*hy);
+        sum += (uz1*uz1 + uz2*uz2)/(4*hy*hy);//!!!!!
+
         //no  x contribution
 
         //  y contribution
@@ -3466,18 +3513,17 @@ gwy_data_field_get_yder_uncertainty(GwyDataField *data_field,
     if (row == 0) {
         uz1 = gwy_data_field_get_dval(uncy_field, col*hx, (row+1)*hy, GWY_INTERPOLATION_BILINEAR);
         uz2 = gwy_data_field_get_dval(uncy_field, col*hx, row*hy, GWY_INTERPOLATION_BILINEAR);
-        sum = (uz1*uz1 + uz2*uz2)/(hy*hy)*gwy_data_field_get_yder(data_field, col, row);
+        sum += (uz1*uz1 + uz2*uz2)/(hy*hy)*gwy_data_field_get_yder(data_field, col, row);
     }
     else if (row == data_field->yres-1) {
         uz1 = gwy_data_field_get_dval(uncy_field, col*hx, (row-1)*hy, GWY_INTERPOLATION_BILINEAR);
         uz2 = gwy_data_field_get_dval(uncy_field, col*hx, row*hy, GWY_INTERPOLATION_BILINEAR);
-        sum = (uz1*uz1 + uz2*uz2)/(hy*hy)*gwy_data_field_get_yder(data_field, col, row);
+        sum += (uz1*uz1 + uz2*uz2)/(hy*hy)*gwy_data_field_get_yder(data_field, col, row);
     }
     else {
         uz1 = gwy_data_field_get_dval(uncy_field, col*hx, (row-1)*hy, GWY_INTERPOLATION_BILINEAR);
         uz2 = gwy_data_field_get_dval(uncy_field, col*hx, (row+1)*hy, GWY_INTERPOLATION_BILINEAR);
-        sum = (uz1*uz1 + uz2*uz2)/(4*hy*hy)*gwy_data_field_get_yder(data_field, col, row);
-
+        sum += (uz1*uz1 + uz2*uz2)/(4*hy*hy)*gwy_data_field_get_yder(data_field, col, row);
     }
     return sum;
 }
