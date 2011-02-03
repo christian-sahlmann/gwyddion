@@ -138,6 +138,10 @@ typedef struct {
     GtkWidget *xyexponent;
     GtkWidget *zexponent;
     GtkWidget *button_ok;
+    GtkWidget *message1;
+    GtkWidget *message2;
+    GtkWidget *message3;
+    GtkWidget *message4;
     gboolean in_update;
 
 } CCViewControls;
@@ -342,9 +346,26 @@ cc_view_dialog(CCViewArgs *args,
 
     alignment = GTK_WIDGET(gtk_alignment_new(0.5, 0, 0, 0));
     gtk_container_add(GTK_CONTAINER(alignment), controls.view);
-    gtk_box_pack_start(GTK_BOX(hbox), alignment, FALSE, FALSE, 4);
+    
+    vbox = gtk_vbox_new(FALSE, 3);
+    gtk_box_pack_start(GTK_BOX(vbox), alignment, FALSE, FALSE, 4);
 
-    /*set up fit controls*/
+    controls.message1 = gtk_label_new("No data used.");
+    gtk_box_pack_start(GTK_BOX(vbox), controls.message1, FALSE, FALSE, 4);
+    controls.message2 = gtk_label_new("nothing to plot");
+    gtk_box_pack_start(GTK_BOX(vbox), controls.message2, FALSE, FALSE, 4);
+    controls.message3 = gtk_label_new("nothing to plot");
+    gtk_box_pack_start(GTK_BOX(vbox), controls.message3, FALSE, FALSE, 4);
+    controls.message4 = gtk_label_new("nothing to plot");
+    gtk_box_pack_start(GTK_BOX(vbox), controls.message4, FALSE, FALSE, 4);
+
+
+
+
+    gtk_box_pack_start(GTK_BOX(hbox), vbox, FALSE, FALSE, 4);
+
+
+    /*set up controls*/
     vbox = gtk_vbox_new(FALSE, 3);
     gtk_box_pack_start(GTK_BOX(hbox), vbox, FALSE, FALSE, 4);
 
@@ -609,8 +630,10 @@ update_view(CCViewControls *controls, CCViewArgs *args)
     gdouble x, y, z, xerr, yerr, zerr, xunc, yunc, zunc;
     gdouble x_from, x_to, y_from, y_to, z_from, z_to;
     GwyDataField *viewfield;
+    gchar msg[50];
     GwyCalibration *calibration = NULL;
     GwyCalData *caldata = NULL;
+    GwySIUnit *six, *siy, *siz;
     gsize len;
     GError *err = NULL;
     gchar *contents;
@@ -632,6 +655,28 @@ update_view(CCViewControls *controls, CCViewArgs *args)
 
     gwy_resource_use(GWY_RESOURCE(calibration));
     caldata = gwy_calibration_get_data(calibration);
+   
+    six = gwy_caldata_get_si_unit_x(caldata);
+    siy = gwy_caldata_get_si_unit_y(caldata);
+    siz = gwy_caldata_get_si_unit_z(caldata); 
+    gwy_caldata_get_range(caldata, &x_from, &x_to, &y_from, &y_to, &z_from, &z_to);
+    g_snprintf(msg, sizeof(msg), "%d calibration data", gwy_caldata_get_ndata(caldata));
+    gtk_label_set_text(GTK_LABEL(controls->message1), msg);
+   
+    g_snprintf(msg, sizeof(msg), "X range: %g - %g %s ",
+               x_from, x_to, gwy_si_unit_get_string(six, GWY_SI_UNIT_FORMAT_PLAIN));
+    gtk_label_set_text(GTK_LABEL(controls->message2), msg);
+
+    g_snprintf(msg, sizeof(msg), "Y range: %g - %g %s ",
+               y_from, y_to, gwy_si_unit_get_string(siy, GWY_SI_UNIT_FORMAT_PLAIN));
+    gtk_label_set_text(GTK_LABEL(controls->message3), msg);
+
+    g_snprintf(msg, sizeof(msg), "Z range: %g - %g %s ",
+               z_from, z_to, gwy_si_unit_get_string(siz, GWY_SI_UNIT_FORMAT_PLAIN));
+    gtk_label_set_text(GTK_LABEL(controls->message4), msg);
+
+
+
 
     /*FIXME determine maximum necessary size of field*/
     xres = 200; 
@@ -657,7 +702,6 @@ update_view(CCViewControls *controls, CCViewArgs *args)
         run = gwy_app_wait_set_fraction(0);
 
         if (run && controls->args->crop) {
-            gwy_caldata_get_range(caldata, &x_from, &x_to, &y_from, &y_to, &z_from, &z_to);
             for (row=0; row<yres; row++)
             {
                 y = controls->args->yoffset + gwy_data_field_get_yoffset(controls->actual_field) + 
@@ -1114,7 +1158,9 @@ settings_changed(CCViewControls *controls)
 static void    
 calibration_changed_cb(CCViewControls *controls)
 {
+    
     controls->args->computed = FALSE;
+    
     if (controls->args->update)
         update_view(controls, controls->args);
 }
