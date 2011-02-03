@@ -80,12 +80,47 @@ gwy_calibration_finalize(GObject *object)
 static void
 gwy_calibration_use(GwyResource *resource)
 {
+    gchar *filename;
+    GError *err = NULL;
+    gchar *contents;
+    gsize len, pos = 0;
+
     GwyCalibration *calibration;
     calibration = GWY_CALIBRATION(resource);
-    /*here load the file*/
-    
+
+    if (calibration->caldata) 
+        g_object_unref(calibration->caldata);
+
+
+    filename = g_build_filename(gwy_get_user_dir(), "caldata", calibration->filename, NULL);
+    if (!g_file_get_contents(filename,
+                             &contents, &len, &err))
+    {
+        g_warning("Error loading file: %s\n", err->message);
+        g_clear_error(&err);
+        return;
+    }
+    else {
+        if (len)
+            calibration->caldata = GWY_CALDATA(gwy_serializable_deserialize(contents, len, &pos));
+        g_free(contents);
+    }
+
 }
 
+/**
+ * gwy_calibration_get_data:
+ * @calibration: A calibration.
+ *
+ * Returns the data related to calibration.
+ *
+ * Returns: The data related to @calibration.
+ **/
+GwyCalData*     
+gwy_calibration_get_data(GwyCalibration *calibration)
+{
+    return calibration->caldata;
+}
 
 
 static void
@@ -100,9 +135,9 @@ gwy_calibration_release(GwyResource *resource)
 
 /**
  * gwy_calibration_get_npoints:
- * @calibration: A color calibration.
+ * @calibration: A calibration.
  *
- * Returns the number of points in a color calibration.
+ * Returns the number of points in a calibration.
  *
  * Returns: The number of points in @calibration.
  **/
@@ -110,7 +145,9 @@ gint
 gwy_calibration_get_ndata(GwyCalibration *calibration)
 {
     g_return_val_if_fail(GWY_IS_CALIBRATION(calibration), 0);
-    return calibration->ndata;
+    if (calibration->caldata)
+       return gwy_caldata_get_ndata(calibration->caldata);
+    else return 0;
 }
 
 
@@ -127,7 +164,6 @@ _gwy_calibration_class_setup_presets(void)
 /**
  * gwy_calibration_new:
  * @name: Name of resource
- * @ndata: Number of calibration data
  * @filename: Filename of associated calibration data 
  *  
  * Creates new calibration resource.
@@ -137,7 +173,6 @@ _gwy_calibration_class_setup_presets(void)
 
 GwyCalibration*
 gwy_calibration_new(const gchar *name,
-                 gint ndata,
                  const gchar *filename)
 {
     GwyCalibration *calibration;
@@ -146,9 +181,10 @@ gwy_calibration_new(const gchar *name,
     g_return_val_if_fail(name, NULL);
 
     calibration = g_object_new(GWY_TYPE_CALIBRATION, "is-const", is_const, NULL);
-    calibration->ndata = ndata;
     if (filename) calibration->filename = g_strdup(filename);
     g_string_assign(GWY_RESOURCE(calibration)->name, name);
+
+    calibration->caldata = NULL;
 
     GWY_RESOURCE(calibration)->is_modified = 0;
 
@@ -180,7 +216,6 @@ gwy_calibration_copy(gpointer item)
 
     calibration = GWY_CALIBRATION(item);
     copy = gwy_calibration_new(gwy_resource_get_name(GWY_RESOURCE(item)),
-                            calibration->ndata,
                             calibration->filename);
 
     return copy;
@@ -194,7 +229,7 @@ gwy_calibration_dump(GwyResource *resource,
 
     g_return_if_fail(GWY_IS_CALIBRATION(resource));
     calibration = GWY_CALIBRATION(resource);
-    g_string_append_printf(str, "npoints %u\nfilename %s\n", calibration->ndata, calibration->filename);
+    g_string_append_printf(str, "npoints %u\nfilename %s\n", gwy_calibration_get_ndata(calibration), calibration->filename);
 }
 
 static GwyResource*
@@ -240,8 +275,7 @@ gwy_calibration_parse(const gchar *text,
             g_warning("Unknown field `%s'.", key);
     }
    
-    calibration = gwy_calibration_new(filename,
-                                ndata, filename);
+    calibration = gwy_calibration_new(filename, filename);
     gwy_calibration_sanitize(calibration);
     return (GwyResource*)calibration;
 }

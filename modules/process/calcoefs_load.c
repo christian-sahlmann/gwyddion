@@ -157,7 +157,7 @@ cload(G_GNUC_UNUSED GwyContainer *data, GwyRunType run)
     /*now create and save the resource*/
     if ((calibration = GWY_CALIBRATION(gwy_inventory_get_item(gwy_calibrations(), args.name)))==NULL)
     {
-        calibration = gwy_calibration_new(args.name, 8, g_strconcat(args.name, ".dat", NULL));
+        calibration = gwy_calibration_new(args.name, g_strconcat(args.name, ".dat", NULL));
         gwy_inventory_insert_item(gwy_calibrations(), calibration);
         g_object_unref(calibration);
     }

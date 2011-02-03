@@ -849,13 +849,15 @@ void
 gwy_caldata_save_data(GwyCalData *caldata, gchar *filename)
 {
     GByteArray *barray;
+    gchar *file;
 
     if (!g_file_test(g_build_filename(gwy_get_user_dir(), "caldata", NULL), G_FILE_TEST_EXISTS)) {
         g_mkdir(g_build_filename(gwy_get_user_dir(), "caldata", NULL), 0700);
     }
 
+    file = g_build_filename(gwy_get_user_dir(), "caldata", filename, NULL);
     barray = gwy_serializable_serialize(G_OBJECT(caldata), NULL);
-    if (!g_file_set_contents(filename, barray->data, sizeof(guint8)*barray->len, NULL))
+    if (!g_file_set_contents(file, barray->data, sizeof(guint8)*barray->len, NULL))
     {
         g_warning("Cannot save caldata\n");
     }

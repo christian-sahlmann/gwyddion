@@ -264,7 +264,7 @@ simple(GwyContainer *data, GwyRunType run)
     /*now create and save the resource*/
     if ((calibration = GWY_CALIBRATION(gwy_inventory_get_item(gwy_calibrations(), args.name[0])))==NULL)
     {
-        calibration = gwy_calibration_new(args.name[0], gwy_caldata_get_ndata(args.caldata), g_strconcat(args.name[0], ".dat", NULL));
+        calibration = gwy_calibration_new(args.name[0], g_strconcat(args.name[0], ".dat", NULL));
         gwy_inventory_insert_item(gwy_calibrations(), calibration);
         g_object_unref(calibration);
     }

@@ -23,6 +23,7 @@
 
 #include <glib-object.h>
 #include <libgwyddion/gwyresource.h>
+#include "gwycaldata.h"
 
 G_BEGIN_DECLS
 
@@ -40,7 +41,7 @@ typedef struct _GwyCalibrationClass GwyCalibrationClass;
 struct _GwyCalibration {
     GwyResource parent_instance;
 
-    gint ndata;
+    GwyCalData *caldata;
     gchar* filename;
 
     gpointer reserved1;
@@ -57,12 +58,13 @@ struct _GwyCalibrationClass {
 
 GType           gwy_calibration_get_type        (void)                         G_GNUC_CONST;
 GwyCalibration* gwy_calibration_new             (const gchar *name,
-                                                 gint ndata,
                                                  const char* filename);
 const gchar*    gwy_calibration_get_filename    (GwyCalibration *calibration);
 gint            gwy_calibration_get_ndata       (GwyCalibration *calibration);
 GwyInventory*   gwy_calibrations                (void);
 GwyCalibration* gwy_calibrations_get_calibration(const gchar *name);
+
+GwyCalData*     gwy_calibration_get_data        (GwyCalibration *calibration);
 
 G_END_DECLS
 

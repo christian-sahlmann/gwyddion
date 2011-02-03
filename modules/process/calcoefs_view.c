@@ -550,7 +550,6 @@ cc_view_dialog(CCViewArgs *args,
                                       args->update);
 
     update_view(&controls, args);
-    g_critical("module started");
 
 
     gtk_widget_show_all(dialog);
@@ -621,7 +620,6 @@ update_view(CCViewControls *controls, CCViewArgs *args)
     viewfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
                                                                   "/0/data"));
 
-    g_critical("view update");
     args->calibration = gtk_combo_box_get_active(GTK_COMBO_BOX(controls->calibration));
     if (args->calibration < gwy_inventory_get_n_items(gwy_calibrations()))
         calibration = gwy_inventory_get_nth_item(gwy_calibrations(), args->calibration);
@@ -632,28 +630,8 @@ update_view(CCViewControls *controls, CCViewArgs *args)
         gtk_widget_set_sensitive(controls->button_ok, TRUE);
      }
 
-
-    if (calibration) {
-        filename = g_build_filename(gwy_get_user_dir(), "caldata", calibration->filename, NULL);
-        if (!g_file_get_contents(filename, 
-                                 &contents, &len, &err))
-        {
-             g_warning("Error loading file: %s\n", err->message);
-             g_clear_error(&err);
-             return;
-        }    
-        else {
-            if (len)
-              caldata = GWY_CALDATA(gwy_serializable_deserialize(contents, len, &pos));
-            g_free(contents);
-        }
-
-    } else {
-        g_critical("No calibration");
-        caldata = NULL;
-        calibration = NULL;
-        return;
-    }
+    gwy_resource_use(GWY_RESOURCE(calibration));
+    caldata = gwy_calibration_get_data(calibration);
 
     /*FIXME determine maximum necessary size of field*/
     xres = 200; 
@@ -661,12 +639,10 @@ update_view(CCViewControls *controls, CCViewArgs *args)
     zres = 200;
 
     if (!caldata) {
-        g_critical("No caldata present");
         gwy_data_field_fill(viewfield, 0);
         gwy_data_field_data_changed(viewfield);
         return;
     }
-    g_critical("Caldata present");
 
     //gwy_caldata_debug(caldata, "Using: ");
 
