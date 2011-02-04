@@ -438,7 +438,6 @@ gwy_tool_stats_init_dialog(GwyToolStats *tool)
 
     gtk_widget_set_sensitive(tool->update, !tool->args.instant_update);
 
-    g_critical("start");
     gtk_widget_show_all(dialog->vbox);
 }
 
@@ -476,7 +475,6 @@ gwy_tool_stats_data_switched(GwyTool *gwytool,
                                 NULL);
         gwy_selection_set_max_objects(plain_tool->selection, 1);
 
-        g_critical("sds");        
         g_snprintf(xukey, sizeof(xukey), "/%d/data/cal_xunc", plain_tool->id);
         g_snprintf(yukey, sizeof(yukey), "/%d/data/cal_yunc", plain_tool->id);
         g_snprintf(zukey, sizeof(zukey), "/%d/data/cal_zunc", plain_tool->id);
@@ -486,10 +484,8 @@ gwy_tool_stats_data_switched(GwyTool *gwytool,
             && gwy_container_gis_object_by_name(plain_tool->container, zukey, &(tool->zunc)))
         {
             tool->has_calibration = TRUE;
-            g_critical("sds t");
         } else {
             tool->has_calibration = FALSE;
-            g_critical("sds f");
         }
 
     }
