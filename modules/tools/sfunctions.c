@@ -495,6 +495,7 @@ gwy_tool_sfunctions_data_switched(GwyTool *gwytool,
             && gwy_container_gis_object_by_name(plain_tool->container, zukey, &(tool->zunc)))
         {
             tool->has_calibration = TRUE;
+            gtk_widget_show(tool->separate);
             /*we need to resample uncertainties*/
             tool->xunc = gwy_data_field_new_resampled(tool->xunc,
                                                       gwy_data_field_get_xres(plain_tool->data_field),
@@ -512,6 +513,7 @@ gwy_tool_sfunctions_data_switched(GwyTool *gwytool,
 
         } else {
             tool->has_calibration = FALSE;
+            gtk_widget_hide(tool->separate);
         }
     }
 
