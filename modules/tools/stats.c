@@ -768,11 +768,11 @@ gwy_tool_stats_calculate(GwyToolStats *tool)
                                              &tool->results.umin,
                                              &tool->results.umax);*/
         g_critical("c");
-        tool->results.umedian
+/*        tool->results.umedian
             = gwy_data_field_area_get_median_uncertainty_mask(plain_tool->data_field, tool->zunc,
                                                   mask, masking,
                                                   isel[0], isel[1], w, h);
-
+*/
         g_critical("d");
         tool->results.uarea
             = gwy_data_field_area_get_surface_area_uncertainty(plain_tool->data_field, tool->zunc,
