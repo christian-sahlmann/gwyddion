@@ -376,6 +376,8 @@ gwy_graph_label_draw_on_drawable(GwyGraphLabel *label,
     for (i = 0; i < nc; i++) {
         curvemodel = gwy_graph_model_get_curve(model, i);
 
+        if (curvemodel->mode == GWY_GRAPH_CURVE_HIDDEN) continue;
+
         pango_layout_set_markup(layout, curvemodel->description->str,
                                 curvemodel->description->len);
         pango_layout_get_pixel_extents(layout, NULL, &rect);
@@ -543,6 +545,7 @@ gwy_graph_label_calculate_size(GwyGraphLabel *label)
     nc = gwy_graph_model_get_n_curves(model);
     for (i = 0; i < nc; i++) {
         curvemodel = gwy_graph_model_get_curve(model, i);
+        if (curvemodel->mode == GWY_GRAPH_CURVE_HIDDEN) continue;
 
         layout = gtk_widget_create_pango_layout(GTK_WIDGET(label), NULL);
 
