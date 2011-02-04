@@ -483,8 +483,10 @@ gwy_tool_stats_data_switched(GwyTool *gwytool,
             && gwy_container_gis_object_by_name(plain_tool->container, yukey, &(tool->yunc))
             && gwy_container_gis_object_by_name(plain_tool->container, zukey, &(tool->zunc)))
         {
+            printf("has calibration\n");
             tool->has_calibration = TRUE;
         } else {
+            printf("no calibration\n");
             tool->has_calibration = FALSE;
         }
 
