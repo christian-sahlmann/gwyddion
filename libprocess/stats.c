@@ -3163,17 +3163,26 @@ stripe_area2(gint n,
              const gdouble *r,
              const gdouble *rr,
              const gdouble *m,
+             GwyMaskingType mode,
              gdouble x,
              gdouble y)
 {
     gdouble sum = 0.0;
     gint j;
 
-    if (m) {
+    if (m && mode == GWY_MASK_INCLUDE) {
         for (j = 0; j < n-1; j++)
             sum += square_area2w(r[j*stride], r[(j + 1)*stride],
                                  rr[(j + 1)*stride], rr[j*stride],
                                  m[j*stride] > 0.0, m[(j + 1)*stride] > 0.0,
+                                 0, 0,
+                                 x, y);
+    }
+    else if (m && mode == GWY_MASK_EXCLUDE) {
+        for (j = 0; j < n-1; j++)
+            sum += square_area2w(r[j*stride], r[(j + 1)*stride],
+                                 rr[(j + 1)*stride], rr[j*stride],
+                                 m[j*stride] < 1.0, m[(j + 1)*stride] < 1.0,
                                  0, 0,
                                  x, y);
     }
@@ -3285,7 +3294,7 @@ calculate_surface_area(GwyDataField *dfield,
             /* Top row */
             s = !(row == 0);
             sum += stripe_area2(width, 1, dataul, dataul - s*xres, maskul,
-                                x, y);
+                                mode, x, y);
 
             /* Bottom row */
             s = !(row + height == yres);
@@ -3293,18 +3302,19 @@ calculate_surface_area(GwyDataField *dfield,
                                 dataul + xres*(height-1),
                                 dataul + xres*(height-1 + s),
                                 maskul + xres*(height-1),
-                                x, y);
+                                mode, x, y);
 
             /* Left column */
             s = !(col == 0);
-            sum += stripe_area2(height, xres, dataul, dataul - s, maskul, y, x);
+            sum += stripe_area2(height, xres, dataul, dataul - s, maskul,
+                                mode, y, x);
 
             /* Right column */
             s = !(col + width == xres);
             sum += stripe_area2(height, xres,
                                 dataul + width-1, dataul + width-1 + s,
                                 maskul + width-1,
-                                y, x);
+                                mode, y, x);
         }
 
         /* Just take the four corner quater-pixels as flat.  */
@@ -3372,7 +3382,8 @@ calculate_surface_area(GwyDataField *dfield,
 
             /* Top row */
             s = !(row == 0);
-            sum += stripe_area2(width, 1, dataul, dataul - s*xres, NULL, x, y);
+            sum += stripe_area2(width, 1, dataul, dataul - s*xres, NULL,
+                                GWY_MASK_IGNORE, x, y);
 
             /* Bottom row */
             s = !(row + height == yres);
@@ -3380,17 +3391,18 @@ calculate_surface_area(GwyDataField *dfield,
                                 dataul + xres*(height-1),
                                 dataul + xres*(height-1 + s),
                                 NULL,
-                                x, y);
+                                GWY_MASK_IGNORE, x, y);
 
             /* Left column */
             s = !(col == 0);
-            sum += stripe_area2(height, xres, dataul, dataul - s, NULL, y, x);
+            sum += stripe_area2(height, xres, dataul, dataul - s, NULL,
+                                GWY_MASK_IGNORE, y, x);
 
             /* Right column */
             s = !(col + width == xres);
             sum += stripe_area2(height, xres,
                                 dataul + width-1, dataul + width-1 + s, NULL,
-                                y, x);
+                                GWY_MASK_IGNORE, y, x);
         }
 
         /* Just take the four corner quater-pixels as flat.  */
