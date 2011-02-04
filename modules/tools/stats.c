@@ -438,6 +438,7 @@ gwy_tool_stats_init_dialog(GwyToolStats *tool)
 
     gtk_widget_set_sensitive(tool->update, !tool->args.instant_update);
 
+    g_critical("start");
     gtk_widget_show_all(dialog->vbox);
 }
 
@@ -474,7 +475,8 @@ gwy_tool_stats_data_switched(GwyTool *gwytool,
                                 "focus", -1,
                                 NULL);
         gwy_selection_set_max_objects(plain_tool->selection, 1);
-        
+
+        g_critical("sds");        
         g_snprintf(xukey, sizeof(xukey), "/%d/data/cal_xunc", plain_tool->id);
         g_snprintf(yukey, sizeof(yukey), "/%d/data/cal_yunc", plain_tool->id);
         g_snprintf(zukey, sizeof(zukey), "/%d/data/cal_zunc", plain_tool->id);
@@ -484,8 +486,10 @@ gwy_tool_stats_data_switched(GwyTool *gwytool,
             && gwy_container_gis_object_by_name(plain_tool->container, zukey, &(tool->zunc)))
         {
             tool->has_calibration = TRUE;
+            g_critical("sds t");
         } else {
             tool->has_calibration = FALSE;
+            g_critical("sds f");
         }
 
     }
@@ -746,6 +750,7 @@ gwy_tool_stats_calculate(GwyToolStats *tool)
         tool->results.phi *= 180.0/G_PI;
     }
     if (tool->has_calibration) {
+        g_critical("a");
     tool->results.uprojarea = gwy_data_field_area_get_projected_area_uncertainty(nn, tool->xunc, tool->yunc);
 
         gwy_data_field_area_get_stats_uncertainties_mask(plain_tool->data_field, tool->zunc, mask, masking,
@@ -755,15 +760,19 @@ gwy_tool_stats_calculate(GwyToolStats *tool)
                                            &tool->results.urms,
                                            &tool->results.uskew,
                                            &tool->results.ukurtosis);
+
+        g_critical("b");
         gwy_data_field_area_get_min_max_uncertainty_mask(plain_tool->data_field, tool->zunc, mask, masking,
                                              isel[0], isel[1], w, h,
                                              &tool->results.umin,
                                              &tool->results.umax);
+        g_critical("c");
         tool->results.umedian
             = gwy_data_field_area_get_median_uncertainty_mask(plain_tool->data_field, tool->zunc,
                                                   mask, masking,
                                                   isel[0], isel[1], w, h);
 
+        g_critical("d");
         tool->results.uarea
             = gwy_data_field_area_get_surface_area_uncertainty(plain_tool->data_field, tool->zunc,
                                                                tool->xunc,
