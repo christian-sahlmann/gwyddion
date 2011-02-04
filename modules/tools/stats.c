@@ -753,6 +753,10 @@ gwy_tool_stats_calculate(GwyToolStats *tool)
         g_critical("a");
         tool->results.uprojarea = gwy_data_field_area_get_projected_area_uncertainty(nn, tool->xunc, tool->yunc);
         g_critical("aa");
+        if (!tool->zunc) g_critical("aa?");
+        else g_critical("aa!");
+        
+
         gwy_data_field_area_get_min_max_uncertainty_mask(plain_tool->data_field, tool->zunc, mask, masking,
                                                          isel[0], isel[1], w, h,
                                                          &tool->results.umin,
