@@ -3298,14 +3298,26 @@ calculate_surface_area(GwyDataField *dfield,
         }
 
         /* Just take the four corner quater-pixels as flat.  */
-        if (maskul[0])
-            sum += 1.0;
-        if (maskul[width-1])
-            sum += 1.0;
-        if (maskul[xres*(height-1)])
-            sum += 1.0;
-        if (maskul[xres*(height-1) + width-1])
-            sum += 1.0;
+        if (mode == GWY_MASK_INCLUDE) {
+            if (maskul[0] > 0.0)
+                sum += 1.0;
+            if (maskul[width-1 > 0.0])
+                sum += 1.0;
+            if (maskul[xres*(height-1)] > 0.0)
+                sum += 1.0;
+            if (maskul[xres*(height-1) + width-1] > 0.0)
+                sum += 1.0;
+        }
+        else {
+            if (maskul[0] < 1.0)
+                sum += 1.0;
+            if (maskul[width-1] < 1.0)
+                sum += 1.0;
+            if (maskul[xres*(height-1)] < 1.0)
+                sum += 1.0;
+            if (maskul[xres*(height-1) + width-1] < 1.0)
+                sum += 1.0;
+        }
     }
     else {
         if (fabs(log(x/y)) < 1e-7) {
