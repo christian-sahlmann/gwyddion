@@ -807,7 +807,7 @@ simple_do(SimpleArgs *args)
     }
 
 
-    /*TODO recalculate values to proper period (if period is not 0)?*/
+    /*TODO recalculate values to proper period (if period is not 0)? Caldata!!!!!!!!!!!!!!!!*/
 
 }
 
