@@ -1740,21 +1740,21 @@ square_area1w_uncertainty(gdouble z1, gdouble z2, gdouble z3, gdouble z4,
     a41 = sqrt(1.0 + 2.0*(z4*z4 + z1*z1)/q);
 
     // A12
-    sum += (w1 + w2)*(w1 + w2)*0.25/(a12*a12) * ((3*z1-z2)*(3*z1-z2)*uz1*uz1+
+    sum += 0.25*(w1 + w2)*(w1 + w2)*0.25/(a12*a12) * ((3*z1-z2)*(3*z1-z2)*uz1*uz1+
                                                  (3*z2-z1)*(3*z2-z1)*uz2*uz2+
                                                  (z1+z2)*(z1+z2)*(uz3*uz3+uz4*uz4));
     // A23
-    sum += (w2 + w3)*(w2 + w3)*0.25/(a23*a23) * ((3*z2-z3)*(3*z2-z3)*uz2*uz2+
+    sum += 0.25*(w2 + w3)*(w2 + w3)*0.25/(a23*a23) * ((3*z2-z3)*(3*z2-z3)*uz2*uz2+
                                                 (3*z3-z2)*(3*z3-z2)*uz3*uz3+
                                                 (z2+z3)*(z2+z3)*(uz1*uz1+uz4*uz4));
     // A34
-    sum += (w3 + w4)*(w3 + w4)*0.25/(a34*a34) * ((3*z3-z4)*(3*z3-z4)*uz3*uz3+
+    sum += 0.25*(w3 + w4)*(w3 + w4)*0.25/(a34*a34) * ((3*z3-z4)*(3*z3-z4)*uz3*uz3+
                                                  (3*z4-z3)*(3*z4-z3)*uz4*uz4+
                                                  (z3+z4)*(z3+z4)*(uz1*uz1+uz2*uz2));
     // A41
-    sum += (w1 + w4)*0.25/(a41*a41) * ((3*z4-z1)*(3*z4-z1)*uz4*uz4+
-                                       (3*z1-z4)*(3*z1-z4)*uz1*uz1+
-                                       (z4+z1)*(z4+z1)*(uz2*uz2+uz3*uz3));
+    sum += 0.25*(w1 + w4)*(w1 + w4)*0.25/(a41*a41) * ((3*z4-z1)*(3*z4-z1)*uz4*uz4+
+                                                 (3*z1-z4)*(3*z1-z4)*uz1*uz1+
+                                                 (z4+z1)*(z4+z1)*(uz2*uz2+uz3*uz3));
 
     sum *= q*q/16;
     // x contribution
@@ -1762,7 +1762,7 @@ square_area1w_uncertainty(gdouble z1, gdouble z2, gdouble z3, gdouble z4,
     hlp1 = -2-2*(c-2*z2)*(c-z1-z2)/q;
     hlp2 = 2+2*(c-2*z1)*(c-z1-z2)/q;
     hlp3 = -4*(z2-z1)*(c-z1-z2)/q;
-    sum += (w1+w2)*(w1+w2)/(64*a12*a12)*q*((hlp1+0.25*hlp3)*(hlp1+0.25*hlp3)*ux1*ux1+
+    sum += 0.25*(w1+w2)*(w1+w2)/(64*a12*a12)*q*((hlp1+0.25*hlp3)*(hlp1+0.25*hlp3)*ux1*ux1+
                                            (hlp2+0.25*hlp3)*(hlp2+0.25*hlp3)*ux2*ux2+
                                            hlp3*hlp3*(uz3*uz3+uz4*uz4));
 
@@ -1770,7 +1770,7 @@ square_area1w_uncertainty(gdouble z1, gdouble z2, gdouble z3, gdouble z4,
     hlp1 = -2 + 2*(z3-z2)*(c-2*z3)/q;
     hlp2 = -2 - 2*(z3-z2)*(c-2*z2)/q;
     hlp3 = 4 + 4*(z3-z2)*(z3-z2)/q;
-    sum += (w2+w3)*(w2+w3)/(64*a23*a23)*q*((hlp1+0.25*hlp3)*(hlp1+0.25*hlp3)*uy2*uy2+
+    sum += 0.25*(w2+w3)*(w2+w3)/(64*a23*a23)*q*((hlp1+0.25*hlp3)*(hlp1+0.25*hlp3)*uy2*uy2+
                                            (hlp2+0.25*hlp3)*(hlp2+0.25*hlp3)*uy3*uy3+
                                            hlp3*hlp3*(uy1*uy1+uy4*uy4));
 
@@ -1778,7 +1778,7 @@ square_area1w_uncertainty(gdouble z1, gdouble z2, gdouble z3, gdouble z4,
     hlp1 = -2-2*(c-2*z4)*(c-z3-z4)/q;
     hlp2 = 2+2*(c-2*z3)*(c-z3-z4)/q;
     hlp3 = -4*(z4-z2)*(c-z3-z4)/q;
-    sum += (w3+w4)*(w3+w4)/(64*a34*a34)*q*((hlp1+0.25*hlp3)*(hlp1+0.25*hlp3)*ux3*ux3+
+    sum += 0.25*(w3+w4)*(w3+w4)/(64*a34*a34)*q*((hlp1+0.25*hlp3)*(hlp1+0.25*hlp3)*ux3*ux3+
                                            (hlp2+0.25*hlp3)*(hlp2+0.25*hlp3)*ux4*ux4+
                                            hlp3*hlp3*(uz1*uz1+uz2*uz2));
 
@@ -1786,7 +1786,7 @@ square_area1w_uncertainty(gdouble z1, gdouble z2, gdouble z3, gdouble z4,
     hlp1 = -2 + 2*(z1-z4)*(c-2*z1)/q;
     hlp2 = -2 - 2*(z1-z4)*(c-2*z4)/q;
     hlp3 = 4 + 4*(z1-z4)*(z1-z4)/q;
-    sum += (w4+w1)*(w4+w1)/(64*a41*a41)*q*((hlp1+0.25*hlp3)*(hlp1+0.25*hlp3)*uy4*uy4+
+    sum += 0.25*(w4+w1)*(w4+w1)/(64*a41*a41)*q*((hlp1+0.25*hlp3)*(hlp1+0.25*hlp3)*uy4*uy4+
                                            (hlp2+0.25*hlp3)*(hlp2+0.25*hlp3)*uy1*uy1+
                                            hlp3*hlp3*(uy2*uy2+uy3*uy3));
 
@@ -1795,7 +1795,7 @@ square_area1w_uncertainty(gdouble z1, gdouble z2, gdouble z3, gdouble z4,
     hlp1 = -2 + 2*(z2-z1)*(c-2*z2)/q;
     hlp2 = -2 - 2*(z2-z1)*(c-2*z1)/q;
     hlp3 = 4 + 4*(z2-z1)*(z2-z1)/q;
-    sum += (w1+w2)*(w1+w2)/(64*a12*a12)*q*((hlp1+0.25*hlp3)*(hlp1+0.25*hlp3)*uy1*uy1+
+    sum += 0.25*(w1+w2)*(w1+w2)/(64*a12*a12)*q*((hlp1+0.25*hlp3)*(hlp1+0.25*hlp3)*uy1*uy1+
                                            (hlp2+0.25*hlp3)*(hlp2+0.25*hlp3)*uy2*uy2+
                                            hlp3*hlp3*(uy3*uy3+uy4*uy4));
 
@@ -1803,7 +1803,7 @@ square_area1w_uncertainty(gdouble z1, gdouble z2, gdouble z3, gdouble z4,
     hlp1 = -2-2*(c-2*z3)*(c-z2-z3)/q;
     hlp2 = 2+2*(c-2*z2)*(c-z2-z3)/q;
     hlp3 = -4*(z3-z2)*(c-z2-z3)/q;
-    sum += (w2+w3)*(w2+w3)/(64*a23*a23)*q*((hlp1+0.25*hlp3)*(hlp1+0.25*hlp3)*uy2*uy2+
+    sum += 0.25*(w2+w3)*(w2+w3)/(64*a23*a23)*q*((hlp1+0.25*hlp3)*(hlp1+0.25*hlp3)*uy2*uy2+
                                            (hlp2+0.25*hlp3)*(hlp2+0.25*hlp3)*uy3*uy3+
                                            hlp3*hlp3*(uy1*uy1+uy4*uy4));
 
@@ -1811,7 +1811,7 @@ square_area1w_uncertainty(gdouble z1, gdouble z2, gdouble z3, gdouble z4,
     hlp1 = -2 + 2*(z4-z3)*(c-2*z4)/q;
     hlp2 = -2 - 2*(z4-z3)*(c-2*z3)/q;
     hlp3 = 4 + 4*(z4-z3)*(z4-z3)/q;
-    sum += (w3+w4)*(w3+w4)/(64*a34*a34)*q*((hlp1+0.25*hlp3)*(hlp1+0.25*hlp3)*uy3*uy3+
+    sum += 0.25*(w3+w4)*(w3+w4)/(64*a34*a34)*q*((hlp1+0.25*hlp3)*(hlp1+0.25*hlp3)*uy3*uy3+
                                            (hlp2+0.25*hlp3)*(hlp2+0.25*hlp3)*uy4*uy4+
                                            hlp3*hlp3*(uy1*uy1+uy2*uy2));
 
@@ -1819,7 +1819,7 @@ square_area1w_uncertainty(gdouble z1, gdouble z2, gdouble z3, gdouble z4,
     hlp1 = -2-2*(c-2*z1)*(c-z4-z1)/q;
     hlp2 = 2+2*(c-2*z4)*(c-z4-z1)/q;
     hlp3 = -4*(z1-z4)*(c-z4-z1)/q;
-    sum += (w4+w1)*(w4+w1)/(64*a41*a41)*q*((hlp1+0.25*hlp3)*(hlp1+0.25*hlp3)*uy4*uy4+
+    sum += 0.25*(w4+w1)*(w4+w1)/(64*a41*a41)*q*((hlp1+0.25*hlp3)*(hlp1+0.25*hlp3)*uy4*uy4+
                                            (hlp2+0.25*hlp3)*(hlp2+0.25*hlp3)*uy1*uy1+
                                            hlp3*hlp3*(uy2*uy2+uy3*uy3));
 
@@ -2030,7 +2030,7 @@ square_area2w_uncertainty(gdouble z1, gdouble z2, gdouble z3, gdouble z4,
     hlp1 = ((z1 - z2)/x + 0.5* (z1+z2 - c)/y);
     hlp2 = ((z2 - z1)/x + 0.5* (z1+z2 - c)/y);
     hlp3 = -0.5* (z1+z2 - c)/y;
-    sum += (w1+w2)*(w1+w2)/(a12*a12) * (hlp1*hlp1*uz1*uz1+
+    sum += 0.25*(w1+w2)*(w1+w2)/(a12*a12) * (hlp1*hlp1*uz1*uz1+
                                         hlp2*hlp2*uz2*uz2+
                                         hlp3*hlp3*(uz3*uz3+uz4*uz4));
 
@@ -2038,7 +2038,7 @@ square_area2w_uncertainty(gdouble z1, gdouble z2, gdouble z3, gdouble z4,
     hlp1 = ((z2 - z3)/y + 0.5* (z2+z3 - c)/x);
     hlp2 = ((z3 - z2)/y + 0.5* (z2+z3 - c)/x);
     hlp3 = -0.5* (z2+z3 - c)/x;
-    sum += (w2+w3)*(w2+w3)/(a23*a23) * (hlp1*hlp1*uz2*uz2+
+    sum += 0.25*(w2+w3)*(w2+w3)/(a23*a23) * (hlp1*hlp1*uz2*uz2+
                                         hlp2*hlp2*uz3*uz3+
                                         hlp3*hlp3*(uz4*uz4+uz1*uz1));
 
@@ -2046,14 +2046,14 @@ square_area2w_uncertainty(gdouble z1, gdouble z2, gdouble z3, gdouble z4,
     hlp1 = ((z3 - z4)/x + 0.5* (z3+z4 - c)/y);
     hlp2 = ((z4 - z3)/x + 0.5* (z3+z4 - c)/y);
     hlp3 = -0.5* (z3+z4 - c)/y;
-    sum += (w3+w4)*(w3+w4)/(a34*a34) * (hlp1*hlp1*uz3*uz3+
+    sum += 0.25*(w3+w4)*(w3+w4)/(a34*a34) * (hlp1*hlp1*uz3*uz3+
                                         hlp2*hlp2*uz4*uz4+
                                         hlp3*hlp3*(uz1*uz1+uz2*uz2));
     // A41
     hlp1 = ((z4 - z1)/y + 0.5* (z4+z1 - c)/x);
     hlp2 = ((z1 - z4)/y + 0.5* (z4+z1 - c)/x);
     hlp3 = -0.5* (z4+z1 - c)/x;
-    sum += (w4+w1)*(w4+w1)/(a41*a41) * (hlp1*hlp1*uz4*uz4+
+    sum += 0.25*(w4+w1)*(w4+w1)/(a41*a41) * (hlp1*hlp1*uz4*uz4+
                                         hlp2*hlp2*uz1*uz1+
                                         hlp3*hlp3*(uz2*uz2+uz3*uz3));
 
@@ -2064,7 +2064,7 @@ square_area2w_uncertainty(gdouble z1, gdouble z2, gdouble z3, gdouble z4,
     hlp1 = -2-2*(c-2*z2)*(c-z1-z2)/y;
     hlp2 = 2+2*(c-2*z1)*(c-z1-z2)/y;
     hlp3 = -4*(z2-z1)*(c-z1-z2)/y;
-    sum += (w1+w2)*(w1+w2)/(64*a12*a12)*y*((hlp1+0.25*hlp3)*(hlp1+0.25*hlp3)*ux1*ux1+
+    sum += 0.25*(w1+w2)*(w1+w2)/(64*a12*a12)*y*((hlp1+0.25*hlp3)*(hlp1+0.25*hlp3)*ux1*ux1+
                                            (hlp2+0.25*hlp3)*(hlp2+0.25*hlp3)*ux2*ux2+
                                            hlp3*hlp3*(uz3*uz3+uz4*uz4));
 
@@ -2072,7 +2072,7 @@ square_area2w_uncertainty(gdouble z1, gdouble z2, gdouble z3, gdouble z4,
     hlp1 = -2 + 2*(z3-z2)*(c-2*z3)/y;
     hlp2 = -2 - 2*(z3-z2)*(c-2*z2)/y;
     hlp3 = 4 + 4*(z3-z2)*(z3-z2)/y;
-    sum += (w2+w3)*(w2+w3)/(64*a23*a23)*y*((hlp1+0.25*hlp3)*(hlp1+0.25*hlp3)*uy2*uy2+
+    sum += 0.25*(w2+w3)*(w2+w3)/(64*a23*a23)*y*((hlp1+0.25*hlp3)*(hlp1+0.25*hlp3)*uy2*uy2+
                                            (hlp2+0.25*hlp3)*(hlp2+0.25*hlp3)*uy3*uy3+
                                            hlp3*hlp3*(uy1*uy1+uy4*uy4));
 
@@ -2080,7 +2080,7 @@ square_area2w_uncertainty(gdouble z1, gdouble z2, gdouble z3, gdouble z4,
     hlp1 = -2-2*(c-2*z4)*(c-z3-z4)/y;
     hlp2 = 2+2*(c-2*z3)*(c-z3-z4)/y;
     hlp3 = -4*(z4-z2)*(c-z3-z4)/y;
-    sum += (w3+w4)*(w3+w4)/(64*a34*a34)*y*((hlp1+0.25*hlp3)*(hlp1+0.25*hlp3)*ux3*ux3+
+    sum += 0.25*(w3+w4)*(w3+w4)/(64*a34*a34)*y*((hlp1+0.25*hlp3)*(hlp1+0.25*hlp3)*ux3*ux3+
                                            (hlp2+0.25*hlp3)*(hlp2+0.25*hlp3)*ux4*ux4+
                                            hlp3*hlp3*(uz1*uz1+uz2*uz2));
 
@@ -2088,7 +2088,7 @@ square_area2w_uncertainty(gdouble z1, gdouble z2, gdouble z3, gdouble z4,
     hlp1 = -2 + 2*(z1-z4)*(c-2*z1)/y;
     hlp2 = -2 - 2*(z1-z4)*(c-2*z4)/y;
     hlp3 = 4 + 4*(z1-z4)*(z1-z4)/y;
-    sum += (w4+w1)*(w4+w1)/(64*a41*a41)*y*((hlp1+0.25*hlp3)*(hlp1+0.25*hlp3)*uy4*uy4+
+    sum += 0.25*(w4+w1)*(w4+w1)/(64*a41*a41)*y*((hlp1+0.25*hlp3)*(hlp1+0.25*hlp3)*uy4*uy4+
                                            (hlp2+0.25*hlp3)*(hlp2+0.25*hlp3)*uy1*uy1+
                                            hlp3*hlp3*(uy2*uy2+uy3*uy3));
 
@@ -2097,7 +2097,7 @@ square_area2w_uncertainty(gdouble z1, gdouble z2, gdouble z3, gdouble z4,
     hlp1 = -2 + 2*(z2-z1)*(c-2*z2)/x;
     hlp2 = -2 - 2*(z2-z1)*(c-2*z1)/x;
     hlp3 = 4 + 4*(z2-z1)*(z2-z1)/x;
-    sum += (w1+w2)*(w1+w2)/(64*a12*a12)*x*((hlp1+0.25*hlp3)*(hlp1+0.25*hlp3)*uy1*uy1+
+    sum += 0.25*(w1+w2)*(w1+w2)/(64*a12*a12)*x*((hlp1+0.25*hlp3)*(hlp1+0.25*hlp3)*uy1*uy1+
                                            (hlp2+0.25*hlp3)*(hlp2+0.25*hlp3)*uy2*uy2+
                                            hlp3*hlp3*(uy3*uy3+uy4*uy4));
 
@@ -2105,7 +2105,7 @@ square_area2w_uncertainty(gdouble z1, gdouble z2, gdouble z3, gdouble z4,
     hlp1 = -2-2*(c-2*z3)*(c-z2-z3)/x;
     hlp2 = 2+2*(c-2*z2)*(c-z2-z3)/x;
     hlp3 = -4*(z3-z2)*(c-z2-z3)/x;
-    sum += (w2+w3)*(w2+w3)/(64*a23*a23)*x*((hlp1+0.25*hlp3)*(hlp1+0.25*hlp3)*uy2*uy2+
+    sum += 0.25*(w2+w3)*(w2+w3)/(64*a23*a23)*x*((hlp1+0.25*hlp3)*(hlp1+0.25*hlp3)*uy2*uy2+
                                            (hlp2+0.25*hlp3)*(hlp2+0.25*hlp3)*uy3*uy3+
                                            hlp3*hlp3*(uy1*uy1+uy4*uy4));
 
@@ -2113,7 +2113,7 @@ square_area2w_uncertainty(gdouble z1, gdouble z2, gdouble z3, gdouble z4,
     hlp1 = -2 + 2*(z4-z3)*(c-2*z4)/x;
     hlp2 = -2 - 2*(z4-z3)*(c-2*z3)/x;
     hlp3 = 4 + 4*(z4-z3)*(z4-z3)/x;
-    sum += (w3+w4)*(w3+w4)/(64*a34*a34)*x*((hlp1+0.25*hlp3)*(hlp1+0.25*hlp3)*uy3*uy3+
+    sum += 0.25*(w3+w4)*(w3+w4)/(64*a34*a34)*x*((hlp1+0.25*hlp3)*(hlp1+0.25*hlp3)*uy3*uy3+
                                            (hlp2+0.25*hlp3)*(hlp2+0.25*hlp3)*uy4*uy4+
                                            hlp3*hlp3*(uy1*uy1+uy2*uy2));
 
@@ -2121,7 +2121,7 @@ square_area2w_uncertainty(gdouble z1, gdouble z2, gdouble z3, gdouble z4,
     hlp1 = -2-2*(c-2*z1)*(c-z4-z1)/x;
     hlp2 = 2+2*(c-2*z4)*(c-z4-z1)/x;
     hlp3 = -4*(z1-z4)*(c-z4-z1)/x;
-    sum += (w4+w1)*(w4+w1)/(64*a41*a41)*x*((hlp1+0.25*hlp3)*(hlp1+0.25*hlp3)*uy4*uy4+
+    sum += 0.25*(w4+w1)*(w4+w1)/(64*a41*a41)*x*((hlp1+0.25*hlp3)*(hlp1+0.25*hlp3)*uy4*uy4+
                                            (hlp2+0.25*hlp3)*(hlp2+0.25*hlp3)*uy1*uy1+
                                            hlp3*hlp3*(uy2*uy2+uy3*uy3));
 
@@ -2328,6 +2328,7 @@ calculate_surface_area_uncertainty(GwyDataField *dfield,
     uxul = uncx_field->data + xres*row + col;
     uyul = uncy_field->data + xres*row + col;
     uzul = uncz_field->data + xres*row + col;
+
 
     if (mask && mode != GWY_MASK_IGNORE) {
         maskul = mask->data + xres*row + col;
