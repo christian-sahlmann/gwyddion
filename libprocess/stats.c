@@ -3264,12 +3264,22 @@ calculate_surface_area(GwyDataField *dfield,
             for (i = 0; i < height-1; i++) {
                 r = dataul + xres*i;
                 m = maskul + xres*i;
-                for (j = 0; j < width-1; j++)
-                    sum += square_area2w(r[j], r[j+1],
-                                         r[j+xres+1], r[j+xres],
-                                         m[j] > 0.0, m[j+1] > 0.0,
-                                         m[j+xres+1] > 0.0, m[j+xres] > 0.0,
-                                         x, y);
+                if (mode == GWY_MASK_INCLUDE) {
+                    for (j = 0; j < width-1; j++)
+                        sum += square_area2w(r[j], r[j+1],
+                                             r[j+xres+1], r[j+xres],
+                                             m[j] > 0.0, m[j+1] > 0.0,
+                                             m[j+xres+1] > 0.0, m[j+xres] > 0.0,
+                                             x, y);
+                }
+                else {
+                    for (j = 0; j < width-1; j++)
+                        sum += square_area2w(r[j], r[j+1],
+                                             r[j+xres+1], r[j+xres],
+                                             m[j] < 1.0, m[j+1] < 1.0,
+                                             m[j+xres+1] < 1.0, m[j+xres] < 1.0,
+                                             x, y);
+                }
             }
 
             /* Top row */
@@ -3301,7 +3311,7 @@ calculate_surface_area(GwyDataField *dfield,
         if (mode == GWY_MASK_INCLUDE) {
             if (maskul[0] > 0.0)
                 sum += 1.0;
-            if (maskul[width-1 > 0.0])
+            if (maskul[width-1] > 0.0)
                 sum += 1.0;
             if (maskul[xres*(height-1)] > 0.0)
                 sum += 1.0;
