@@ -617,7 +617,8 @@ gwy_tool_stats_update_labels(GwyToolStats *tool)
         update_label_unc(plain_tool->value_format, tool->min, tool->results.min, tool->results.umin);
         update_label_unc(plain_tool->value_format, tool->max, tool->results.max, tool->results.umax);
         update_label_unc(plain_tool->value_format, tool->median, tool->results.median, tool->results.umedian);
-        update_label(tool->area_format, tool->projarea, tool->results.projarea);
+        update_label_unc(tool->area_format, tool->projarea, tool->results.projarea, tool->results.uprojarea);
+//        update_label(tool->area_format, tool->projarea, tool->results.projarea);
     } else {
         update_label(plain_tool->value_format, tool->ra, tool->results.ra);
         update_label(plain_tool->value_format, tool->rms, tool->results.rms);
@@ -646,6 +647,10 @@ gwy_tool_stats_update_labels(GwyToolStats *tool)
     if (tool->same_units && !mask_in_use) {
         update_label(tool->angle_format, tool->theta, tool->results.theta);
         update_label(tool->angle_format, tool->phi, tool->results.phi);
+        if (tool->has_calibration) {
+		    update_label_unc(tool->angle_format, tool->theta, tool->results.theta, tool->results.utheta);
+		    update_label_unc(tool->angle_format, tool->phi, tool->results.phi, tool->results.uphi);
+	}
     }
     else {
         gtk_label_set_text(GTK_LABEL(tool->theta), _("N.A."));
@@ -785,21 +790,20 @@ gwy_tool_stats_calculate(GwyToolStats *tool)
                                                   mask, masking,
                                                   isel[0], isel[1], w, h);
         tool->results.uarea
-            = gwy_data_field_area_get_surface_area_uncertainty(plain_tool->data_field, tool->zunc,
+            = gwy_data_field_area_get_surface_area_mask_uncertainty(plain_tool->data_field, tool->zunc,
                                                                tool->xunc,
                                                                tool->yunc,
-                                                               mask,
+                                                               mask,masking,
                                                                isel[0], isel[1], w, h);
-        /*gwy_data_field_area_get_inclination_uncertainty(plain_tool->data_field,
-tool->zunc, tool->xunc, tool->yunc,
-                                            isel[0], isel[1], w, h,
-                                            &tool->results.utheta,
-                                            &tool->results.uphi);
-        tool->results.utheta *= 180.0/G_PI;
-        tool->results.uphi *= 180.0/G_PI;*/
-        //printf("inclination_uncertainty  %f %f \n",tool->results.utheta, tool->results.uphi);
-       tool->results.utheta = 0;
-       tool->results.uphi = 0;
+	if (tool->same_units && !mask) {
+		gwy_data_field_area_get_inclination_uncertainty(plain_tool->data_field,
+				tool->zunc, tool->xunc, tool->yunc,
+				isel[0], isel[1], w, h,
+				&tool->results.utheta,
+				&tool->results.uphi);
+		tool->results.utheta *= 180.0/G_PI;
+		tool->results.uphi *= 180.0/G_PI;
+	}
 
         gwy_data_field_resample(tool->xunc, 
                                 oldx, 
