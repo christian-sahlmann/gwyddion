@@ -666,6 +666,7 @@ gwy_tool_stats_calculate(GwyToolStats *tool)
     gdouble q;
     gint nn, w, h;
     gdouble sel[4];
+    gint oldx, oldy;
     gint isel[4];
 
     plain_tool = GWY_PLAIN_TOOL(tool);
@@ -750,30 +751,43 @@ gwy_tool_stats_calculate(GwyToolStats *tool)
         tool->results.phi *= 180.0/G_PI;
     }
     if (tool->has_calibration) {
-        g_critical("a");
+
+        oldx = gwy_data_field_get_xres(tool->xunc);
+        oldy = gwy_data_field_get_yres(tool->xunc);
+        gwy_data_field_resample(tool->xunc,                     //FIXME, functions should work with data of any size
+                                gwy_data_field_get_xres(plain_tool->data_field), 
+                                gwy_data_field_get_yres(plain_tool->data_field),
+                                GWY_INTERPOLATION_BILINEAR);
+        gwy_data_field_resample(tool->yunc, 
+                                gwy_data_field_get_xres(plain_tool->data_field), 
+                                gwy_data_field_get_yres(plain_tool->data_field),
+                                GWY_INTERPOLATION_BILINEAR);
+        gwy_data_field_resample(tool->zunc, 
+                                gwy_data_field_get_xres(plain_tool->data_field), 
+                                gwy_data_field_get_yres(plain_tool->data_field),
+                                GWY_INTERPOLATION_BILINEAR);
+
+
+
         tool->results.uprojarea = gwy_data_field_area_get_projected_area_uncertainty(nn, tool->xunc, tool->yunc);
         
 
-        /*gwy_data_field_area_get_stats_uncertainties_mask(plain_tool->data_field, tool->zunc, mask, masking,
+        gwy_data_field_area_get_stats_uncertainties_mask(plain_tool->data_field, tool->zunc, mask, masking,
                                            isel[0], isel[1], w, h,
                                            &tool->results.uavg,
                                            &tool->results.ura,
                                            &tool->results.urms,
                                            &tool->results.uskew,
                                            &tool->results.ukurtosis);
-*/
-        g_critical("b");
-  /*      gwy_data_field_area_get_min_max_uncertainty_mask(plain_tool->data_field, tool->zunc, mask, masking,
+
+        gwy_data_field_area_get_min_max_uncertainty_mask(plain_tool->data_field, tool->zunc, mask, masking,
                                              isel[0], isel[1], w, h,
                                              &tool->results.umin,
-                                             &tool->results.umax);*/
-        g_critical("c");
-/*        tool->results.umedian
+                                             &tool->results.umax);
+        tool->results.umedian
             = gwy_data_field_area_get_median_uncertainty_mask(plain_tool->data_field, tool->zunc,
                                                   mask, masking,
                                                   isel[0], isel[1], w, h);
-*/
-        g_critical("d");
         tool->results.uarea
             = gwy_data_field_area_get_surface_area_uncertainty(plain_tool->data_field, tool->zunc,
                                                                tool->xunc,
@@ -790,7 +804,20 @@ tool->zunc, tool->xunc, tool->yunc,
         //printf("inclination_uncertainty  %f %f \n",tool->results.utheta, tool->results.uphi);
        tool->results.utheta = 0;
        tool->results.uphi = 0;
-    }
+
+        gwy_data_field_resample(tool->xunc, 
+                                oldx, 
+                                oldy,
+                                GWY_INTERPOLATION_BILINEAR);
+        gwy_data_field_resample(tool->yunc, 
+                                oldx, 
+                                oldy,
+                                GWY_INTERPOLATION_BILINEAR);
+        gwy_data_field_resample(tool->zunc, 
+                                oldx, 
+                                oldy,
+                                GWY_INTERPOLATION_BILINEAR);
+       }
 
     memcpy(tool->results.isel, isel, sizeof(isel));
     memcpy(tool->results.sel, sel, sizeof(sel));
