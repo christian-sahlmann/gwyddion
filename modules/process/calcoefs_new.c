@@ -229,6 +229,9 @@ cnew(GwyContainer *data, GwyRunType run)
     xunc = gwy_caldata_get_xunc(caldata);
     yunc = gwy_caldata_get_yunc(caldata);
     zunc = gwy_caldata_get_zunc(caldata);
+    gwy_caldata_set_si_unit_x(caldata, gwy_data_field_get_si_unit_xy(dfield));
+    gwy_caldata_set_si_unit_y(caldata, gwy_data_field_get_si_unit_xy(dfield));
+    gwy_caldata_set_si_unit_z(caldata, gwy_data_field_get_si_unit_z(dfield));
 
     n = 0;
     for (i=0; i<2; i++)
