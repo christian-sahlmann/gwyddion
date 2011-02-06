@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: French localization\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2011-01-22 03:58+0100\n"
-"PO-Revision-Date: 2011-01-22 14:36+0100\n"
+"POT-Creation-Date: 2011-02-05 03:58+0100\n"
+"PO-Revision-Date: 2011-02-06 15:47+0100\n"
 "Last-Translator: François RIGUET <francheu@caramail.com>\n"
 "Language-Team: François RIGUET <francheu@caramail.com>\n"
 "MIME-Version: 1.0\n"
@@ -842,12 +842,12 @@ msgid "pixels"
 msgstr "pixels"
 
 #: libgwydgets/gwy3dwindow.c:1027
-#: modules/file/pixmap.c:953
-#: modules/file/pixmap.c:2671
+#: modules/file/pixmap.c:946
+#: modules/file/pixmap.c:2664
 #: modules/file/rawfile.c:398
 #: modules/process/angle_dist.c:170
-#: modules/process/calcoefs_new.c:358
-#: modules/process/calibrate.c:295
+#: modules/process/calcoefs_new.c:344
+#: modules/process/calibrate.c:296
 #: modules/process/curvature.c:602
 #: modules/process/cwt.c:132
 #: modules/process/deposit_synth.c:359
@@ -1211,7 +1211,7 @@ msgid "Preview"
 msgstr "Aperçu"
 
 #: libgwymodule/gwymodule-file.c:508
-#: modules/file/pixmap.c:727
+#: modules/file/pixmap.c:720
 #, c-format
 msgid "Cannot open file for reading: %s."
 msgstr "Impossible d'ouvrir le fichier pour le lire : %s."
@@ -2266,55 +2266,55 @@ msgstr "octet à la position %d"
 msgid "%s instead of %s"
 msgstr "%s au lieu de %s"
 
-#: app/validate.c:346
+#: app/validate.c:347
 #, c-format
 msgid "no channel %d exists for %s"
 msgstr "aucun canal %d n'existe pour %s"
 
-#: app/validate.c:355
+#: app/validate.c:356
 #, c-format
 msgid "no graph %d exists for %s"
 msgstr "aucun graphe %d n'existe pour %s"
 
-#: app/validate.c:365
+#: app/validate.c:366
 #, c-format
 msgid "no spectra %d exists for %s"
 msgstr "aucun spectre %d n'existe pour %s"
 
-#: app/validate.c:419
+#: app/validate.c:420
 #, c-format
 msgid "ref_count is %d for %s"
 msgstr "ref_count est à %d sur %s"
 
-#: app/validate.c:598
+#: app/validate.c:599
 msgid "Invalid item key format"
 msgstr "Format d'élément invalide"
 
-#: app/validate.c:599
+#: app/validate.c:600
 msgid "Item key contains invalid characters"
 msgstr "Le nom d'élément contient des caractères invalides"
 
-#: app/validate.c:600
+#: app/validate.c:601
 msgid "Item key does not belong to any known data"
 msgstr "Le nom d'élément ne correspond à aucune donnée connue"
 
-#: app/validate.c:601
+#: app/validate.c:602
 msgid "Wrong data item id"
 msgstr "Numéro d'élément de données erroné"
 
-#: app/validate.c:602
+#: app/validate.c:603
 msgid "Unexpected data item type"
 msgstr "Type d'élément inattendu"
 
-#: app/validate.c:603
+#: app/validate.c:604
 msgid "String value is not valid UTF-8"
 msgstr "La chaîne de caractère n'a pas un format UTF-8 valide"
 
-#: app/validate.c:604
+#: app/validate.c:605
 msgid "Object has several references"
 msgstr "L'objet a plusieurs références"
 
-#: app/validate.c:605
+#: app/validate.c:606
 msgid "Secondary data item has no primary data"
 msgstr "L'élément de données secondaires n'a pas de données primaires"
 
@@ -2331,14 +2331,12 @@ msgid "AIST-NT files (.aist)"
 msgstr "AIST-NT (.aist)"
 
 #: modules/file/anfatec.c:79
-#, fuzzy
 msgid "Imports Anfatec data files (two-part .txt + .int)."
 msgstr "Importe les fichiers Anfatec (2 parties .txt + .int)."
 
 #: modules/file/anfatec.c:92
-#, fuzzy
 msgid "Anfatec files (.par + .int)"
-msgstr "Anfatec (.par + .int)"
+msgstr "Anfatec (.txt + .int)"
 
 #: modules/file/anfatec.c:224
 msgid "The parameter file cannot be loaded."
@@ -2400,7 +2398,7 @@ msgid "Export Text"
 msgstr "Exporter au format texte"
 
 #: modules/file/asciiexport.c:273
-#: modules/file/pixmap.c:2760
+#: modules/file/pixmap.c:2753
 #: modules/file/rawfile.c:720
 #: modules/file/rawxyz.c:670
 #: modules/process/fft_filter_1d.c:296
@@ -3131,7 +3129,7 @@ msgstr "La ligne DATA_INFO contient moins de %d champs."
 
 #: modules/file/nanonis.c:376
 msgid "Header ended within a Multipass-Config table."
-msgstr ""
+msgstr "L'en-tête se termine avec une table Multipass-Config."
 
 #: modules/file/nanonis.c:536
 msgid "Missing data start marker \\x1a\\x04."
@@ -3403,196 +3401,196 @@ msgstr "Icône Apple (.icns)"
 msgid "Renders data into pixmap images and imports data from pixmap images. It supports the following image formats for export: PNG, JPEG, TIFF, PPM, BMP, TARGA. Import support relies on GDK and thus may be installation-dependent."
 msgstr "Exporte les données sous forme d'images et importe des données à partir d'une image. Les formats d'image suivants sont supportés pour l'export : PNG, JPEG, TIFF, PPM, BMP, TARGA. L'import dépend de GDK et peut ainsi dépendre de l'installation."
 
-#: modules/file/pixmap.c:713
+#: modules/file/pixmap.c:706
 msgid "Pixmap image import must be run as interactive."
 msgstr "L'import d'image doit se faire de manière interactive."
 
-#: modules/file/pixmap.c:721
+#: modules/file/pixmap.c:714
 #, c-format
 msgid "Pixmap has not registered file type `%s'."
 msgstr "L'image ne peut enregistrée avec le type de fichier `%s'."
 
-#: modules/file/pixmap.c:735
+#: modules/file/pixmap.c:728
 #, c-format
 msgid "Cannot get pixbuf loader: %s."
 msgstr "Chargeur d'image non disponible : %s."
 
-#: modules/file/pixmap.c:747
-#: modules/file/pixmap.c:759
+#: modules/file/pixmap.c:740
+#: modules/file/pixmap.c:752
 #, c-format
 msgid "Pixbuf loader refused data: %s."
 msgstr "Le chargeur d'image refuse les données : %s."
 
-#: modules/file/pixmap.c:921
+#: modules/file/pixmap.c:914
 msgid "Red"
 msgstr "Rouge"
 
-#: modules/file/pixmap.c:922
+#: modules/file/pixmap.c:915
 msgid "Green"
 msgstr "Vert"
 
-#: modules/file/pixmap.c:923
+#: modules/file/pixmap.c:916
 msgid "Blue"
 msgstr "Bleu"
 
-#: modules/file/pixmap.c:924
+#: modules/file/pixmap.c:917
 msgid "Value (max)"
 msgstr "Valeur (max)"
 
-#: modules/file/pixmap.c:925
+#: modules/file/pixmap.c:918
 msgid "RGB sum"
 msgstr "Somme RVB"
 
-#: modules/file/pixmap.c:926
+#: modules/file/pixmap.c:919
 msgid "Alpha"
 msgstr "Alpha"
 
-#: modules/file/pixmap.c:950
+#: modules/file/pixmap.c:943
 msgid "Import "
 msgstr "Importer"
 
-#: modules/file/pixmap.c:976
+#: modules/file/pixmap.c:969
 #: modules/file/rawfile.c:600
 #: modules/file/rawxyz.c:516
 #: modules/process/dimensions.h:443
 msgid "Resolution"
 msgstr "Résolution"
 
-#: modules/file/pixmap.c:983
+#: modules/file/pixmap.c:976
 #: modules/file/rawfile.c:605
 #: modules/file/rawxyz.c:520
 #: modules/process/dimensions.h:449
 msgid "_Horizontal size:"
 msgstr "Taille _horizontale :"
 
+#: modules/file/pixmap.c:976
 #: modules/file/pixmap.c:983
-#: modules/file/pixmap.c:990
 msgid "px"
 msgstr "px"
 
-#: modules/file/pixmap.c:990
+#: modules/file/pixmap.c:983
 #: modules/file/rawfile.c:612
 #: modules/file/rawxyz.c:535
 #: modules/process/dimensions.h:452
 msgid "_Vertical size:"
 msgstr "Taille _verticale :"
 
-#: modules/file/pixmap.c:1021
+#: modules/file/pixmap.c:1014
 #: modules/file/rawfile.c:623
 #: modules/file/rawxyz.c:569
 #: modules/process/dimensions.h:465
 msgid "Physical Dimensions"
 msgstr "Dimensions physiques"
 
-#: modules/file/pixmap.c:1031
+#: modules/file/pixmap.c:1024
 msgid "_Width"
 msgstr "Largeur"
 
-#: modules/file/pixmap.c:1053
-#: modules/file/pixmap.c:1108
+#: modules/file/pixmap.c:1046
+#: modules/file/pixmap.c:1101
 #: modules/file/rawfile.c:655
 #: modules/file/rawfile.c:711
-#: modules/process/calcoefs_new.c:395
-#: modules/process/calcoefs_new.c:462
-#: modules/process/calcoefs_simple.c:406
-#: modules/process/calcoefs_simple.c:473
-#: modules/process/calcoefs_view.c:461
+#: modules/process/calcoefs_new.c:381
+#: modules/process/calcoefs_new.c:448
+#: modules/process/calcoefs_simple.c:383
+#: modules/process/calcoefs_simple.c:450
 #: modules/process/calcoefs_view.c:499
-#: modules/process/calibrate.c:338
-#: modules/process/calibrate.c:419
+#: modules/process/calcoefs_view.c:537
+#: modules/process/calibrate.c:339
+#: modules/process/calibrate.c:420
 #: modules/process/dimensions.h:159
 msgid "Change"
 msgstr "Changer"
 
-#: modules/file/pixmap.c:1066
+#: modules/file/pixmap.c:1059
 msgid "H_eight"
 msgstr "Haut_eur"
 
-#: modules/file/pixmap.c:1073
+#: modules/file/pixmap.c:1066
 #: modules/file/rawfile.c:675
 #: modules/file/rawxyz.c:550
 msgid "Identical _measures"
 msgstr "_Mesures identiques"
 
-#: modules/file/pixmap.c:1085
+#: modules/file/pixmap.c:1078
 #: modules/file/rawfile.c:687
 msgid "_Z-scale (per sample unit):"
 msgstr "Echelle _Z (par unité d'échantillon) :"
 
-#: modules/file/pixmap.c:1118
+#: modules/file/pixmap.c:1111
 msgid "Warning: Colorful images cannot be reliably mapped to meaningful values."
 msgstr "Attention : des valeurs correctes ne peuvent être appliquées de manière fiable à des images en couleurs ."
 
-#: modules/file/pixmap.c:1136
+#: modules/file/pixmap.c:1129
 msgid "Use"
 msgstr "Utiliser"
 
-#: modules/file/pixmap.c:1136
+#: modules/file/pixmap.c:1129
 msgid "as data"
 msgstr "en tant que données"
 
-#: modules/file/pixmap.c:1332
+#: modules/file/pixmap.c:1325
 #: modules/file/rawfile.c:1326
-#: modules/process/calcoefs_new.c:787
-#: modules/process/calcoefs_simple.c:1095
-#: modules/process/calcoefs_view.c:1209
-#: modules/process/calibrate.c:815
+#: modules/process/calcoefs_new.c:773
+#: modules/process/calcoefs_simple.c:1070
+#: modules/process/calcoefs_view.c:1334
+#: modules/process/calibrate.c:816
 #: modules/process/dimensions.h:193
 msgid "Change Units"
 msgstr "Changer les unités"
 
-#: modules/file/pixmap.c:1346
+#: modules/file/pixmap.c:1339
 #: modules/file/rawfile.c:1340
-#: modules/process/calcoefs_new.c:800
-#: modules/process/calcoefs_simple.c:1108
-#: modules/process/calcoefs_view.c:1222
-#: modules/process/calibrate.c:829
+#: modules/process/calcoefs_new.c:786
+#: modules/process/calcoefs_simple.c:1083
+#: modules/process/calcoefs_view.c:1347
+#: modules/process/calibrate.c:830
 #: modules/process/dimensions.h:206
 msgid "New _units:"
 msgstr "Nouvelles _unités :"
 
-#: modules/file/pixmap.c:1412
-#: modules/file/pixmap.c:1422
+#: modules/file/pixmap.c:1405
+#: modules/file/pixmap.c:1415
 #, c-format
 msgid "libpng initialization error (in %s)"
 msgstr "Erreur d'initialisation de libpng (dans %s)"
 
-#: modules/file/pixmap.c:1433
+#: modules/file/pixmap.c:1426
 msgid "libpng error occured"
 msgstr "Une erreur s'est produite dans libpng"
 
-#: modules/file/pixmap.c:1500
-#: modules/file/pixmap.c:1528
+#: modules/file/pixmap.c:1493
+#: modules/file/pixmap.c:1521
 #, c-format
 msgid "Pixbuf save failed: %s."
 msgstr "La sauvegarde de l'image à échoué : %s."
 
-#: modules/file/pixmap.c:1873
+#: modules/file/pixmap.c:1866
 msgid "Image is too large to be stored as TARGA."
 msgstr "L'image est trop grande pour être enregistrée au format TARGA"
 
-#: modules/file/pixmap.c:1951
+#: modules/file/pixmap.c:1944
 msgid "Data must be displayed in a window for pixmap export."
 msgstr "Les données doivent affichées dans une fenêtre pour l'export vers un format image."
 
-#: modules/file/pixmap.c:2609
+#: modules/file/pixmap.c:2602
 msgid "Change Inset Color"
 msgstr "Changer l'échelle de couleurs"
 
-#: modules/file/pixmap.c:2668
+#: modules/file/pixmap.c:2661
 #, c-format
 msgid "Export %s"
 msgstr "Exporter %s"
 
-#: modules/file/pixmap.c:2699
+#: modules/file/pixmap.c:2692
 msgid "Scaling"
 msgstr "Echelle"
 
-#: modules/file/pixmap.c:2708
+#: modules/file/pixmap.c:2701
 msgid "_Zoom:"
 msgstr "_Zoom :"
 
-#: modules/file/pixmap.c:2717
+#: modules/file/pixmap.c:2710
 #: modules/file/rawfile.c:632
 #: modules/process/crosscor.c:197
 #: modules/process/deposit_synth.c:458
@@ -3601,7 +3599,7 @@ msgstr "_Zoom :"
 msgid "_Width:"
 msgstr "Largeur :"
 
-#: modules/file/pixmap.c:2726
+#: modules/file/pixmap.c:2719
 #: modules/process/grain_mark.c:312
 #: modules/process/grain_rem_threshold.c:280
 #: modules/process/obj_synth.c:564
@@ -3611,91 +3609,91 @@ msgstr "Largeur :"
 msgid "_Height:"
 msgstr "_Hauteur :"
 
-#: modules/file/pixmap.c:2735
+#: modules/file/pixmap.c:2728
 msgid "Scale text _proportionally"
 msgstr "Mettre le texte _proportionnellement à l'échelle"
 
-#: modules/file/pixmap.c:2750
+#: modules/file/pixmap.c:2743
 msgid "_Font size:"
 msgstr "Taille de police :"
 
-#: modules/file/pixmap.c:2764
+#: modules/file/pixmap.c:2757
 msgid "Draw _mask"
 msgstr "Dessiner le _masque"
 
-#: modules/file/pixmap.c:2773
+#: modules/file/pixmap.c:2766
 msgid "Draw _selection"
 msgstr "Dessiner la _sélection"
 
-#: modules/file/pixmap.c:2789
+#: modules/file/pixmap.c:2782
 msgid "Grayscale Mode"
 msgstr "Mode niveaux de gris"
 
-#: modules/file/pixmap.c:2793
+#: modules/file/pixmap.c:2786
 msgid "Export as 1_6 bit grayscale"
 msgstr "Exporter en niveaux de gris 1_6 bits"
 
-#: modules/file/pixmap.c:2819
+#: modules/file/pixmap.c:2812
 msgid "Lateral Scale"
 msgstr "Echelle latérale"
 
-#: modules/file/pixmap.c:2826
-#: modules/file/pixmap.c:2922
+#: modules/file/pixmap.c:2819
+#: modules/file/pixmap.c:2915
 #: modules/process/immerse.c:367
 msgid "_None"
 msgstr "_Aucune"
 
-#: modules/file/pixmap.c:2827
+#: modules/file/pixmap.c:2820
 msgid "_Rulers"
 msgstr "G_raduations"
 
-#: modules/file/pixmap.c:2828
+#: modules/file/pixmap.c:2821
 msgid "_Inset scale bar"
 msgstr "Echelle"
 
-#: modules/file/pixmap.c:2833
+#: modules/file/pixmap.c:2826
 msgid "Color:"
 msgstr "Couleur :"
 
-#: modules/file/pixmap.c:2849
+#: modules/file/pixmap.c:2842
 #: modules/process/immerse.c:323
 msgid "Position:"
 msgstr "Position :"
 
-#: modules/file/pixmap.c:2854
+#: modules/file/pixmap.c:2847
 msgid "left"
 msgstr "gauche"
 
-#: modules/file/pixmap.c:2858
+#: modules/file/pixmap.c:2851
 msgid "center"
 msgstr "centre"
 
-#: modules/file/pixmap.c:2862
+#: modules/file/pixmap.c:2855
 msgid "right"
 msgstr "droite"
 
-#: modules/file/pixmap.c:2867
+#: modules/file/pixmap.c:2860
 msgid "top"
 msgstr "haut"
 
-#: modules/file/pixmap.c:2879
+#: modules/file/pixmap.c:2872
 msgid "bottom"
 msgstr "bas"
 
-#: modules/file/pixmap.c:2890
+#: modules/file/pixmap.c:2883
 #: modules/process/lno_synth.c:1067
 msgid "_Length:"
 msgstr "_Longueur :"
 
-#: modules/file/pixmap.c:2907
+#: modules/file/pixmap.c:2900
 msgid "_Auto"
 msgstr "_Auto"
 
-#: modules/file/pixmap.c:2915
+#: modules/file/pixmap.c:2908
 msgid "Value Scale"
 msgstr "Valeur d'échelle"
 
-#: modules/file/pixmap.c:2923
+#: modules/file/pixmap.c:2916
 msgid "_False color ruler"
 msgstr "Echelle de couleurs"
 
@@ -3862,7 +3860,7 @@ msgstr "Préréglages"
 #: modules/file/rawfile.c:541
 #: modules/file/rawxyz.c:436
 #: modules/process/arithmetic.c:227
-#: modules/process/calcoefs_view.c:295
+#: modules/process/calcoefs_view.c:304
 #: modules/process/convolution_filter.c:243
 #: modules/process/deposit_synth.c:683
 #: modules/process/drift.c:227
@@ -4022,7 +4020,7 @@ msgid "Preset l_ist"
 msgstr "Liste des préréglages"
 
 #: modules/file/rawfile.c:1008
-#: modules/process/calcoefs_load.c:245
+#: modules/process/calcoefs_load.c:214
 msgid "_Load"
 msgstr "Charger"
 
@@ -4802,12 +4800,12 @@ msgstr "Il faut sélectionner plus de points que de paramètres d'ajustement"
 #: modules/tools/readvalue.c:559
 #: modules/tools/readvalue.c:560
 #: modules/tools/roughness.c:968
-#: modules/tools/stats.c:644
-#: modules/tools/stats.c:651
-#: modules/tools/stats.c:652
-#: modules/tools/stats.c:996
-#: modules/tools/stats.c:1003
-#: modules/tools/stats.c:1005
+#: modules/tools/stats.c:645
+#: modules/tools/stats.c:656
+#: modules/tools/stats.c:657
+#: modules/tools/stats.c:1033
+#: modules/tools/stats.c:1040
+#: modules/tools/stats.c:1042
 msgid "N.A."
 msgstr "N. A."
 
@@ -4883,12 +4881,12 @@ msgstr "/Spectre _DOS"
 msgid "Calculate DOS spectrum from I-V tunneling spectroscopy"
 msgstr "Calculer un spectre DOS à partir d'une spectroscopie à effet tunnel "
 
-#: modules/graph/graph_dos_spectrum.c:95
+#: modules/graph/graph_dos_spectrum.c:94
 #, c-format
 msgid "%s: Graph should be I-V spectroscopy."
 msgstr "%s: le graphe doit être un spectre I-V."
 
-#: modules/graph/graph_dos_spectrum.c:114
+#: modules/graph/graph_dos_spectrum.c:113
 #, c-format
 msgid "DOS Spectrum for \"%s\""
 msgstr "Spectre DOS pour \"%s\""
@@ -5377,150 +5375,150 @@ msgid "Load calibration data from text file"
 msgstr "Charger des données de calibration à partir d'un fichier texte"
 
 #: modules/process/calcoefs_load.c:93
-msgid "/Cali_bration/_Load from text file..."
-msgstr "/Cali_bration/Charger un fichier de calibration..."
+msgid "/Cali_bration/_Load From Text File..."
+msgstr "/Cali_bration/Charger un fichier de ca_libration..."
 
 #: modules/process/calcoefs_load.c:97
 msgid "Load calibration data from text file."
 msgstr "Charger des données de calibration à partir d'un fichier texte."
 
-#: modules/process/calcoefs_load.c:237
-msgid "Load calibration data"
+#: modules/process/calcoefs_load.c:206
+msgid "Load Calibration Data"
 msgstr "Charger des données de calibration"
 
-#: modules/process/calcoefs_load.c:257
-#: modules/process/calcoefs_new.c:577
-#: modules/process/calcoefs_simple.c:490
+#: modules/process/calcoefs_load.c:226
+#: modules/process/calcoefs_new.c:563
+#: modules/process/calcoefs_simple.c:467
 #, fuzzy
 msgid "Calibration name:"
 msgstr "Nom de la calibration :"
 
-#: modules/process/calcoefs_load.c:269
+#: modules/process/calcoefs_load.c:238
 msgid "No data loaded"
 msgstr "Aucunes données chargées"
 
-#: modules/process/calcoefs_new.c:168
+#: modules/process/calcoefs_new.c:165
 msgid "Create simple calibration data"
 msgstr "Créer des "
 
-#: modules/process/calcoefs_new.c:182
+#: modules/process/calcoefs_new.c:179
 msgid "/Cali_bration/_Create..."
 msgstr "/Cali_bration/_Créer..."
 
-#: modules/process/calcoefs_new.c:186
+#: modules/process/calcoefs_new.c:183
 msgid "Specify simple calibration data."
 msgstr "Spécifier des données de calibration basiques."
 
-#: modules/process/calcoefs_new.c:357
-msgid "Simple calibration data"
+#: modules/process/calcoefs_new.c:343
+msgid "Simple Calibration Data"
 msgstr "Données de calibration basiques"
 
-#: modules/process/calcoefs_new.c:375
+#: modules/process/calcoefs_new.c:361
 #, fuzzy
 msgid "_X from:"
-msgstr "A partir de :"
+msgstr "A partir de _X :"
 
-#: modules/process/calcoefs_new.c:402
+#: modules/process/calcoefs_new.c:388
 #, fuzzy
 msgid "_X to:"
-msgstr "_X :"
+msgstr "A _X :"
 
-#: modules/process/calcoefs_new.c:415
+#: modules/process/calcoefs_new.c:401
 #, fuzzy
 msgid "_Y from:"
 msgstr "A partir de :"
 
-#: modules/process/calcoefs_new.c:428
+#: modules/process/calcoefs_new.c:414
 #, fuzzy
 msgid "_Y to:"
 msgstr "_Y :"
 
-#: modules/process/calcoefs_new.c:442
+#: modules/process/calcoefs_new.c:428
 #, fuzzy
 msgid "_Z from:"
 msgstr "_Zoom :"
 
-#: modules/process/calcoefs_new.c:469
+#: modules/process/calcoefs_new.c:455
 #, fuzzy
 msgid "_Z to:"
 msgstr "_Zoom :"
 
-#: modules/process/calcoefs_new.c:482
+#: modules/process/calcoefs_new.c:468
 msgid "_X uncertainty:"
 msgstr "Incertitude _X :"
 
-#: modules/process/calcoefs_new.c:503
+#: modules/process/calcoefs_new.c:489
 msgid "_Y uncertainty:"
 msgstr "Incertitude _Y :"
 
-#: modules/process/calcoefs_new.c:518
+#: modules/process/calcoefs_new.c:504
 msgid "_Z uncertainty:"
 msgstr "Incertitude _Z :"
 
-#: modules/process/calcoefs_new.c:540
+#: modules/process/calcoefs_new.c:526
 msgid "_X correction factor:"
 msgstr "Facteur de correction _X :"
 
-#: modules/process/calcoefs_new.c:552
+#: modules/process/calcoefs_new.c:538
 msgid "_Y correction factor:"
 msgstr "Facteur de correction _Y :"
 
-#: modules/process/calcoefs_new.c:564
+#: modules/process/calcoefs_new.c:550
 msgid "_Z correction factor:"
 msgstr "Facteur de correction _Z :"
 
-#: modules/process/calcoefs_simple.c:158
+#: modules/process/calcoefs_simple.c:169
 msgid "Simple AFM data recalibration"
 msgstr "Calibration basique de données AFM"
 
-#: modules/process/calcoefs_simple.c:172
-msgid "/Cali_bration/_Get simple errop map..."
-msgstr ""
+#: modules/process/calcoefs_simple.c:183
+msgid "/Cali_bration/_Get Simple Errop Map..."
+msgstr "/Cali_bration/Calculer une carte d'erreur basique.."
 
-#: modules/process/calcoefs_simple.c:176
+#: modules/process/calcoefs_simple.c:187
 msgid "Simple error mapping"
 msgstr ""
 
-#: modules/process/calcoefs_simple.c:343
-msgid "Simple error map"
+#: modules/process/calcoefs_simple.c:320
+msgid "Simple Error Map"
 msgstr "Carte d'erreur basique"
 
-#: modules/process/calcoefs_simple.c:358
+#: modules/process/calcoefs_simple.c:335
 #: modules/process/calcoefs_stage.c:149
 #: modules/process/superresolution.c:159
 msgid "Operands:"
 msgstr "Opérateurs :"
 
-#: modules/process/calcoefs_simple.c:386
-#: modules/process/calcoefs_view.c:441
-#: modules/process/calibrate.c:366
+#: modules/process/calcoefs_simple.c:363
+#: modules/process/calcoefs_view.c:479
+#: modules/process/calibrate.c:367
 msgid "_X offset:"
 msgstr "Décalage _X :"
 
-#: modules/process/calcoefs_simple.c:413
-#: modules/process/calcoefs_view.c:467
-#: modules/process/calibrate.c:379
+#: modules/process/calcoefs_simple.c:390
+#: modules/process/calcoefs_view.c:505
+#: modules/process/calibrate.c:380
 msgid "_Y offset:"
 msgstr "Décalage _Y :"
 
-#: modules/process/calcoefs_simple.c:426
+#: modules/process/calcoefs_simple.c:403
 msgid "X _period:"
 msgstr "_Période X :"
 
-#: modules/process/calcoefs_simple.c:439
+#: modules/process/calcoefs_simple.c:416
 msgid "Y p_eriod:"
 msgstr "P_ériode Y :"
 
-#: modules/process/calcoefs_simple.c:453
-#: modules/process/calcoefs_view.c:479
+#: modules/process/calcoefs_simple.c:430
+#: modules/process/calcoefs_view.c:517
 msgid "_Z offset:"
 msgstr "Décalage _Z :"
 
-#: modules/process/calcoefs_simple.c:481
+#: modules/process/calcoefs_simple.c:458
 msgid "_Threshold"
 msgstr "Seuil"
 
-#: modules/process/calcoefs_simple.c:502
+#: modules/process/calcoefs_simple.c:479
 msgid "No suggestion\n"
 msgstr "Aucune suggestion\n"
 
@@ -5530,126 +5528,161 @@ msgstr "Recalibration numérique des données AFM"
 
 #: modules/process/calcoefs_stage.c:93
 #, fuzzy
-msgid "/Cali_bration/_3D calibration/_Get from stage map..."
-msgstr "/Cali_bration/Calibration _3D/A partir de la carte d'erreur de la platine..."
+msgid "/Cali_bration/_3D Calibration/_Get From Stage map..."
+msgstr "/Cali_bration/Calibration _3D/A partir de la carte d'erreur de platine..."
 
 #: modules/process/calcoefs_stage.c:97
 msgid "Stage error mapping"
 msgstr ""
 
 #: modules/process/calcoefs_stage.c:134
-msgid "Stage error map"
+msgid "Stage Error Map"
 msgstr "Carte d'erreur de platine"
 
-#: modules/process/calcoefs_view.c:217
+#: modules/process/calcoefs_view.c:226
 msgid "3D calibration/uncertainty"
 msgstr "Calibration 3D / incertitude"
 
-#: modules/process/calcoefs_view.c:231
-msgid "/Cali_bration/_Apply to data..."
+#: modules/process/calcoefs_view.c:240
+msgid "/Cali_bration/_Apply to Data..."
 msgstr "/Cali_bration/_Appliquer aux données..."
 
-#: modules/process/calcoefs_view.c:235
+#: modules/process/calcoefs_view.c:244
 msgid "3D calibration and uncertainty"
 msgstr "Calibration 3D et incertitude"
 
-#: modules/process/calcoefs_view.c:293
-msgid "3D calibration"
+#: modules/process/calcoefs_view.c:302
+msgid "3D Calibration"
 msgstr "Calibration 3D"
 
-#: modules/process/calcoefs_view.c:347
+#: modules/process/calcoefs_view.c:385
 msgid "Used calibration data:"
 msgstr "Données de calibration utilisées :"
 
-#: modules/process/calcoefs_view.c:364
+#: modules/process/calcoefs_view.c:402
 msgid "Shown planes:"
 msgstr "Plans affichés :"
 
-#: modules/process/calcoefs_view.c:370
+#: modules/process/calcoefs_view.c:408
 msgid "View:"
 msgstr "Vue :"
 
-#: modules/process/calcoefs_view.c:385
+#: modules/process/calcoefs_view.c:423
 msgid "Plane:"
 msgstr "Plan :"
 
-#: modules/process/calcoefs_view.c:404
-#, fuzzy
+#: modules/process/calcoefs_view.c:442
 msgid "X pos:"
-msgstr "Décalage _X :"
+msgstr "X pos :"
 
-#: modules/process/calcoefs_view.c:411
-#, fuzzy
+#: modules/process/calcoefs_view.c:449
 msgid "Y pos:"
-msgstr "Décalage _Y :"
+msgstr "Y pos :"
 
-#: modules/process/calcoefs_view.c:418
+#: modules/process/calcoefs_view.c:456
 msgid "Z pos:"
-msgstr ""
+msgstr "Z pos :"
 
-#: modules/process/calcoefs_view.c:423
+#: modules/process/calcoefs_view.c:461
 msgid "Interpolation:"
 msgstr "Interpolation :"
 
-#: modules/process/calcoefs_view.c:507
+#: modules/process/calcoefs_view.c:545
 msgid "crop to actual data"
 msgstr ""
 
-#: modules/process/calcoefs_view.c:517
+#: modules/process/calcoefs_view.c:555
 msgid "i_nstant updates"
 msgstr "i_nstant updates"
 
-#: modules/process/calcoefs_view.c:962
+#: modules/process/calcoefs_view.c:645
+msgid "Shown part has zero range."
+msgstr ""
+
+#: modules/process/calcoefs_view.c:652
+#, c-format
+msgid "Shown range (%.*f - %.*f) %s"
+msgstr "Plage affichée (%.*f - %.*f) %s"
+
+#: modules/process/calcoefs_view.c:702
+#, c-format
+msgid "%d calibration data"
+msgstr "Données de calibration %d"
+
+#: modules/process/calcoefs_view.c:706
+#, fuzzy, c-format
+msgid "X span: (%.*f - %.*f) %s"
+msgstr "Plage X :          %.*f jusqu'à %.*f %s\n"
+
+#: modules/process/calcoefs_view.c:712
+#, fuzzy, c-format
+msgid "Y span: (%.*f - %.*f) %s"
+msgstr "Plage X :          %.*f jusqu'à %.*f %s\n"
+
+#: modules/process/calcoefs_view.c:718
+#, fuzzy, c-format
+msgid "Z span: (%.*f - %.*f) %s"
+msgstr "Plage X :          %.*f jusqu'à %.*f %s\n"
+
+#: modules/process/calcoefs_view.c:743
+msgid "Building mesh..."
+msgstr ""
+
+#: modules/process/calcoefs_view.c:749
+msgid "Triangulation..."
+msgstr "Triangulation..."
+
+#: modules/process/calcoefs_view.c:1074
 #: modules/tools/profile.c:1092
 msgid "X correction"
 msgstr "Correction X"
 
-#: modules/process/calcoefs_view.c:963
+#: modules/process/calcoefs_view.c:1075
 #: modules/tools/profile.c:1093
 msgid "Y correction"
 msgstr "Correction Y"
 
-#: modules/process/calcoefs_view.c:964
+#: modules/process/calcoefs_view.c:1076
 #: modules/tools/profile.c:1094
 msgid "Z correction"
 msgstr "Correction Z"
 
-#: modules/process/calcoefs_view.c:965
+#: modules/process/calcoefs_view.c:1077
 #: modules/tools/profile.c:1095
 msgid "X uncertainty"
 msgstr "Incertitude X"
 
-#: modules/process/calcoefs_view.c:966
+#: modules/process/calcoefs_view.c:1078
 #: modules/tools/profile.c:1096
 msgid "Y uncertainty"
 msgstr "Incertitude Y"
 
-#: modules/process/calcoefs_view.c:967
+#: modules/process/calcoefs_view.c:1079
 #: modules/tools/profile.c:1097
 msgid "Z uncertainty"
 msgstr "Incertitude X"
 
-#: modules/process/calcoefs_view.c:979
+#: modules/process/calcoefs_view.c:1091
 msgid "Constant X"
 msgstr "X constant"
 
-#: modules/process/calcoefs_view.c:980
+#: modules/process/calcoefs_view.c:1092
 msgid "Constant Y"
 msgstr "Y constant"
 
-#: modules/process/calcoefs_view.c:981
+#: modules/process/calcoefs_view.c:1093
 msgid "Constant Z"
 msgstr "Z constant"
 
-#: modules/process/calcoefs_view.c:992
+#: modules/process/calcoefs_view.c:1104
 msgid "NNA 3D"
 msgstr "NNA 3D"
 
-#: modules/process/calcoefs_view.c:993
+#: modules/process/calcoefs_view.c:1105
 msgid "Snap to planes"
 msgstr "S'accrocher aux plans"
 
-#: modules/process/calcoefs_view.c:994
+#: modules/process/calcoefs_view.c:1106
 msgid "Delaunay"
 msgstr "Delaunay"
 
@@ -5658,62 +5691,62 @@ msgid "Recalibrates scan lateral dimensions or value range."
 msgstr "Recalibre les dimensions latérales ou la valeur d'échelle."
 
 #: modules/process/calibrate.c:159
-msgid "/_Basic Operations/_Dimensions and units..."
+msgid "/_Basic Operations/_Dimensions and Units..."
 msgstr "/Opérations _Basiques/_Dimensions et unités..."
 
 #: modules/process/calibrate.c:163
-msgid "Recalibrate data"
-msgstr "Recalibrer les données"
+msgid "Change physical dimensions, units or value scale"
+msgstr "Modifie les dimensions latérales, les unités ou l'échelle."
 
-#: modules/process/calibrate.c:281
+#: modules/process/calibrate.c:282
 msgid "Recalibrated Data"
 msgstr "Données recalibrées"
 
-#: modules/process/calibrate.c:294
-msgid "Calibrate"
-msgstr "Calibrer"
+#: modules/process/calibrate.c:295
+msgid "Dimensions and Units"
+msgstr "Dimensions et unités"
 
-#: modules/process/calibrate.c:313
+#: modules/process/calibrate.c:314
 msgid "New Real Dimensions"
 msgstr "Nouvelles dimensions réelles"
 
-#: modules/process/calibrate.c:318
+#: modules/process/calibrate.c:319
 msgid "_X range:"
 msgstr "Largeur _X :"
 
-#: modules/process/calibrate.c:345
+#: modules/process/calibrate.c:346
 msgid "_Y range:"
 msgstr "Hauteur _Y :"
 
-#: modules/process/calibrate.c:359
+#: modules/process/calibrate.c:360
 msgid "_Square samples"
 msgstr "Echantillons carrés"
 
-#: modules/process/calibrate.c:394
+#: modules/process/calibrate.c:395
 msgid "Value Range"
 msgstr "Plage de valeurs"
 
-#: modules/process/calibrate.c:399
+#: modules/process/calibrate.c:400
 msgid "_Z range:"
 msgstr "Plage _Z : "
 
-#: modules/process/calibrate.c:428
+#: modules/process/calibrate.c:429
 msgid "Z shi_ft:"
 msgstr "Décalage Z :"
 
-#: modules/process/calibrate.c:443
+#: modules/process/calibrate.c:444
 msgid "Calibration Coefficients"
 msgstr "Coefficients de calibration"
 
-#: modules/process/calibrate.c:450
+#: modules/process/calibrate.c:451
 msgid "_X calibration factor:"
 msgstr "Facteur de calibration _X :"
 
-#: modules/process/calibrate.c:458
+#: modules/process/calibrate.c:459
 msgid "_Y calibration factor:"
 msgstr "Facteur de calibration _Y :"
 
-#: modules/process/calibrate.c:466
+#: modules/process/calibrate.c:467
 msgid "_Z calibration factor:"
 msgstr "Facteur de calibration _Z :"
 
@@ -6089,7 +6122,7 @@ msgstr "Evalue et/ou corrige la dérive thermique dans l'axe rapide de scan"
 
 #: modules/process/drift.c:169
 msgid "/_Correct Data/Compensate _Drift..."
-msgstr "/_Correction des Données/Compenser la _Dérive..."
+msgstr "/_Correction des Données/Compenser la _dérive..."
 
 #: modules/process/drift.c:173
 msgid "Evaluate/correct thermal drift in fast scan axis"
@@ -8465,7 +8498,7 @@ msgstr "Pivote les données par un angle quelconque."
 
 #: modules/process/rotate.c:100
 msgid "/_Basic Operations/Rotate by _Angle..."
-msgstr "/Opérations _Basiques/Rotation d'angle..."
+msgstr "/Opérations _Basiques/Rotation..."
 
 #: modules/process/rotate.c:104
 msgid "Rotate by arbitrary angle"
@@ -8784,11 +8817,11 @@ msgstr "Au-delà de :"
 
 #: modules/process/tilt.c:73
 msgid "Tilts image by specified amount."
-msgstr "Tilte l'image."
+msgstr "Incline l'image."
 
 #: modules/process/tilt.c:87
 msgid "/_Basic Operations/_Tilt..."
-msgstr "/Opérations _Basiques/Angle..."
+msgstr "/Opérations _Basiques/Inclinaison..."
 
 #: modules/process/tilt.c:91
 msgid "Tilt by specified amount"
@@ -9789,13 +9822,13 @@ msgid "Roughness Parameters"
 msgstr "Paramètres de rugosité"
 
 #: modules/tools/roughness.c:2209
-#: modules/tools/stats.c:945
+#: modules/tools/stats.c:982
 #, c-format
 msgid "File:              %s\n"
 msgstr "Fichier :              %s\n"
 
 #: modules/tools/roughness.c:2213
-#: modules/tools/stats.c:949
+#: modules/tools/stats.c:986
 #, c-format
 msgid "Data channel:      %s\n"
 msgstr "Canal de données :      %s\n"
@@ -9958,7 +9991,7 @@ msgid "Statistics tool."
 msgstr "Outil statistique."
 
 #: modules/tools/stats.c:217
-#: modules/tools/stats.c:939
+#: modules/tools/stats.c:976
 msgid "Statistical Quantities"
 msgstr "Statistiques"
 
@@ -10018,19 +10051,19 @@ msgstr "Inclinaison φ :"
 msgid "Parameters"
 msgstr "Paramètres"
 
-#: modules/tools/stats.c:875
+#: modules/tools/stats.c:912
 msgid "Save Statistical Quantities"
 msgstr "Enregistrer les statistiques"
 
-#: modules/tools/stats.c:971
+#: modules/tools/stats.c:1008
 msgid "Yes"
 msgstr "Oui"
 
-#: modules/tools/stats.c:971
+#: modules/tools/stats.c:1008
 msgid "No"
 msgstr "Non"
 
-#: modules/tools/stats.c:1008
+#: modules/tools/stats.c:1045
 #, c-format
 msgid ""
 "Selected area:     %s × %s at (%s, %s) px\n"
@@ -10067,6 +10100,10 @@ msgstr ""
 "Inclinaison θ:      %s\n"
 "Inclinaison φ:      %s\n"
 
+#~ msgid "Recalibrate data"
+#~ msgstr "Recalibrer les données"
+#~ msgid "Calibrate"
+#~ msgstr "Calibrer"
 #~ msgid "/_Basic Operations/_Recalibrate..."
 #~ msgstr "/Opérations _Basiques/_Recalibrer..."
 #~ msgid "Simulate spherical particle deposition."
