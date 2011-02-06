@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: French localization\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
 "POT-Creation-Date: 2011-02-05 03:58+0100\n"
-"PO-Revision-Date: 2011-02-06 15:47+0100\n"
+"PO-Revision-Date: 2011-02-06 19:31+0100\n"
 "Last-Translator: François RIGUET <francheu@caramail.com>\n"
 "Language-Team: François RIGUET <francheu@caramail.com>\n"
 "MIME-Version: 1.0\n"
@@ -9698,7 +9698,7 @@ msgstr "Hauteur moyenne des pics"
 #: modules/tools/roughness.c:364
 #: modules/tools/roughness.c:372
 msgid "Average third highest peak to third lowest valley height"
-msgstr "Ecart entre le 3ème plus haut pic et la 3ème plus basse vallée"
+msgstr "Profondeur de rugosité"
 
 #: modules/tools/roughness.c:380
 msgid "Average maximum height of the profile"
@@ -9782,11 +9782,11 @@ msgstr "Ondulation"
 
 #: modules/tools/roughness.c:796
 msgid "ADF"
-msgstr "Distribution d'amplitude (DA)"
+msgstr "Distribution d'amplitude"
 
 #: modules/tools/roughness.c:797
 msgid "BRC"
-msgstr "DA cumulée"
+msgstr "Distribution d'amplitude cumulée"
 
 #: modules/tools/roughness.c:798
 #: modules/tools/roughness.c:1397
