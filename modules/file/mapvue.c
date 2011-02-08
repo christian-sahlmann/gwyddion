@@ -36,7 +36,7 @@
  * .map
  * Read
  **/
-
+#define DEBUG 1
 #include "config.h"
 #include <string.h>
 #include <stdlib.h>
@@ -399,9 +399,10 @@ static guint         mapvue_skip_group     (const guchar *p,
                                             gsize size,
                                             guint reftag,
                                             GError **error);
-static GwyDataField* read_data_field       (const gint32 *d32,
+static GwyDataField* read_data_field       (gconstpointer p,
                                             gint xres,
                                             gint yres,
+                                            guint bpp,
                                             GwyDataField **maskfield);
 
 #define MAPVUE_GROUP_READER(x) \
@@ -500,6 +501,7 @@ mapvue_load(const gchar *filename,
     GError *err = NULL;
     GwyDataField *dfield = NULL, *mfield;
     gint xres, yres;
+    guint bpp;
     gdouble xreal, yreal;
 
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
@@ -520,20 +522,45 @@ mapvue_load(const gchar *filename,
         goto fail;
     p += header_size;
 
-    if (mapvuefile.group3.reftag != 3) {
+    /* Try the better tag first even though the presence of both is unlikely. */
+    if (mapvuefile.group3.reftag == 3) {
+        gwy_debug("obtaining pixel dimensions from tag 3");
+        xres = mapvuefile.group3.n_columns;
+        yres = mapvuefile.group3.n_rows;
+        bpp = 4;
+    }
+    else if (mapvuefile.group2.reftag == 2) {
+        gwy_debug("obtaining pixel dimensions from tag 2");
+        xres = mapvuefile.group2.n_columns;
+        yres = mapvuefile.group2.n_rows;
+        bpp = 2;
+    }
+    else {
         g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                    _("Required tag %u was not found."), 3);
+                    _("Required tag %u or %u was not found."), 2, 3);
         goto fail;
     }
-    if (mapvuefile.group551.reftag != 551) {
+    expected_size = xres * yres * bpp;
+
+    if (mapvuefile.group551.reftag == 551) {
+        gwy_debug("obtaining physical dimensions from tag 551");
+        /* FIXME: Just guessing. */
+        yreal = 1e-3*yres*mapvuefile.group551.y_optical_scale;
+        xreal = yreal*mapvuefile.group551.x_frame_scale*xres/yres;
+    }
+    else if (mapvuefile.group550.reftag == 550) {
+        gwy_debug("obtaining physical dimensions from tag 550");
+        /* FIXME: Just guessing. */
+        //yreal = 1e-3*yres*mapvuefile.group550.y_optical_scale;
+        yreal = 1.0;
+        xreal = yreal*mapvuefile.group550.x_frame_scale*xres/yres;
+    }
+    else {
         g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                    _("Required tag %u was not found."), 551);
+                    _("Required tag %u or %u was not found."), 550, 551);
         goto fail;
     }
 
-    xres = mapvuefile.group3.n_columns;
-    yres = mapvuefile.group3.n_rows;
-    expected_size = xres * yres * sizeof(gint32);
 
     /* XXX: Does not catch premature end of the tag reading cycle! */
     if (err_SIZE_MISMATCH(error, expected_size, size - (p - buffer), FALSE))
@@ -542,10 +569,7 @@ mapvue_load(const gchar *filename,
     if (err_DIMENSION(error, xres) || err_DIMENSION(error, yres))
         goto fail;
 
-    dfield = read_data_field((const gint32*)p, xres, yres, &mfield);
-    /* FIXME: Just guessing. */
-    yreal = 1e-3*yres*mapvuefile.group551.y_optical_scale;
-    xreal = yreal*mapvuefile.group551.x_frame_scale*xres/yres;
+    dfield = read_data_field((gconstpointer)p, xres, yres, bpp, &mfield);
     gwy_data_field_set_xreal(dfield, xreal);
     gwy_data_field_set_yreal(dfield, yreal);
 
@@ -899,7 +923,7 @@ static guint
 mapvue_read_group2(const guchar *p, gsize size, gpointer grpdata,
                    GError **error)
 {
-    enum { SIZE = 8 };
+    enum { SIZE = 4*2 };
     MapVueGroup2 *group = (MapVueGroup2*)grpdata;
 
     if (err_TAG_SIZE(error, group->reftag, SIZE, size))
@@ -916,7 +940,11 @@ static guint
 mapvue_read_group3(const guchar *p, gsize size, gpointer grpdata,
                    GError **error)
 {
+    enum { SIZE = 4*4 };
     MapVueGroup3 *group = (MapVueGroup3*)grpdata;
+
+    if (err_TAG_SIZE(error, group->reftag, SIZE, size))
+        return 0;
 
     if (!(size = mapvue_group_size(&p, size, group->reftag, error)))
         return 0;
@@ -1168,6 +1196,7 @@ mapvue_read_group550(const guchar *p, gsize size, gpointer grpdata,
         return 0;
 
     group->x_frame_scale = gwy_get_gfloat_le(&p);
+    gwy_debug("x_frame_scale: %g", group->x_frame_scale);
     return size;
 }
 
@@ -1184,6 +1213,8 @@ mapvue_read_group551(const guchar *p, gsize size, gpointer grpdata,
     group->magnification = gwy_get_gfloat_le(&p);
     group->x_frame_scale = gwy_get_gfloat_le(&p);
     group->y_optical_scale = gwy_get_gfloat_le(&p);
+    gwy_debug("x_frame_scale: %g, y_optical_scale: %g",
+              group->x_frame_scale, group->y_optical_scale);
     return SIZE;
 }
 
@@ -1624,8 +1655,9 @@ mapvue_read_group2351(const guchar *p, gsize size, gpointer grpdata,
 }
 
 static GwyDataField*
-read_data_field(const gint32 *d32,
+read_data_field(gconstpointer p,
                 gint xres, gint yres,
+                guint bpp,
                 GwyDataField **maskfield)
 {
     GwyDataField *dfield, *mfield;
@@ -1649,14 +1681,30 @@ read_data_field(const gint32 *d32,
 
     data = gwy_data_field_get_data(dfield);
     mdata = gwy_data_field_get_data(mfield);
-    for (i = 0; i < yres; i++) {
-        for (j = 0; j < xres; j++) {
-            gint32 v = GINT32_FROM_LE(*d32);
-            if (v != G_MAXINT32)
-                data[i*xres + j] = v/(gdouble)G_MAXINT32/5.625e4;
-            else
-                mdata[i*xres + j] = 0.0;
-            d32++;
+    if (bpp == 4) {
+        const guint32 *d32 = p;
+        for (i = 0; i < yres; i++) {
+            for (j = 0; j < xres; j++) {
+                gint32 v = GINT32_FROM_LE(*d32);
+                if (v != G_MAXINT32)
+                    data[i*xres + j] = v/(gdouble)G_MAXINT32/5.625e4;
+                else
+                    mdata[i*xres + j] = 0.0;
+                d32++;
+            }
+        }
+    }
+    else if (bpp == 2) {
+        const guint16 *d16 = p;
+        for (i = 0; i < yres; i++) {
+            for (j = 0; j < xres; j++) {
+                gint16 v = GINT16_FROM_LE(*d16);
+                if (v != G_MAXINT16)
+                    data[i*xres + j] = v/(gdouble)G_MAXINT16/5.625e4;
+                else
+                    mdata[i*xres + j] = 0.0;
+                d16++;
+            }
         }
     }
 
