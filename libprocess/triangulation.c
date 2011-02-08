@@ -2331,7 +2331,7 @@ interpolate_linear(Triangulation *triangulation,
 }
 
 /**
- * gwy_delaunay_interpolate:
+ * gwy_triangulation_interpolate:
  * @triangulation: Triangulation.
  * @interpolation: Interpolation to use.  Only @GWY_INTERPOLATION_ROUND and
  *                 @GWY_INTERPOLATION_LINEAR are implemented.  Is is an error
