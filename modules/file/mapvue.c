@@ -36,7 +36,7 @@
  * .map
  * Read
  **/
-#define DEBUG 1
+
 #include "config.h"
 #include <string.h>
 #include <stdlib.h>
@@ -900,10 +900,14 @@ mapvue_read_fids(const guchar **p, gsize size, MapVueFids *fids, GError **error)
         return 0;
     }
 
-    for (i = 0; i < MIN(fids->n, 4); i++)
+    for (i = 0; i < MIN(fids->n, 4); i++) {
         fids->x_coordinates[i] = gwy_get_gfloat_le(p);
-    for (i = 0; i < MIN(fids->n, 4); i++)
+        gwy_debug("fid x[%u]: %g", i, fids->x_coordinates[i]);
+    }
+    for (i = 0; i < MIN(fids->n, 4); i++) {
         fids->y_coordinates[i] = gwy_get_gfloat_le(p);
+        gwy_debug("fid y[%u]: %g", i, fids->y_coordinates[i]);
+    }
 
     return 4 + 2*4*fids->n;
 }
