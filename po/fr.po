@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: French localization\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2011-02-05 03:58+0100\n"
-"PO-Revision-Date: 2011-02-06 19:31+0100\n"
+"POT-Creation-Date: 2011-02-09 03:58+0100\n"
+"PO-Revision-Date: 2011-02-09 20:35+0100\n"
 "Last-Translator: François RIGUET <francheu@caramail.com>\n"
 "Language-Team: François RIGUET <francheu@caramail.com>\n"
 "MIME-Version: 1.0\n"
@@ -2725,8 +2725,6 @@ msgstr "Des positions invalides de balises ont été trouvées."
 #: modules/file/gwytiff.h:627
 #: modules/file/gwytiff.h:699
 #: modules/file/gwytiff.h:715
-#: modules/file/mapvue.c:450
-#: modules/file/mapvue.c:455
 #, c-format
 msgid "Required tag %u was not found."
 msgstr "La balise %u n'a pas été trouvée."
@@ -2882,43 +2880,61 @@ msgstr "L'élément de premier niveau n'est pas ‘TiffTagDescData’."
 msgid "XML parsing failed: %s"
 msgstr "L'analyse du fichier XML à échoué : %s"
 
-#: modules/file/mapvue.c:379
+#: modules/file/mapvue.c:451
 msgid "Imports MapVue data files (.map)."
 msgstr "Importe les fichiers MapVue (.map)."
 
-#: modules/file/mapvue.c:392
+#: modules/file/mapvue.c:464
 msgid "MapVue files (.map)"
 msgstr "MapVue (.map)"
 
-#: modules/file/mapvue.c:628
+#: modules/file/mapvue.c:540
+#: modules/file/mapvue.c:560
+#, c-format
+msgid "Required tag %u or %u was not found."
+msgstr "La balise requise %u ou %u n'a pas été trouvée."
+
+#: modules/file/mapvue.c:771
 msgid "File end was reached while scanning tags."
 msgstr "La fin du fichier a été atteinte lors de la lecture des balises."
 
-#: modules/file/mapvue.c:640
+#: modules/file/mapvue.c:783
 #, c-format
 msgid "Expected tag %u size is %u bytes, but the actual size is %u bytes."
 msgstr "La taille attendue de la balise %u est de %u octets, mais la taille réelle est de %u octets."
 
-#: modules/file/mapvue.c:654
+#: modules/file/mapvue.c:797
 #, c-format
 msgid "Tag %u size is %u bytes, which is not enough to hold the tag marker."
 msgstr "La taille de la balise %u est de %u octets, ce qui n'est pas assez pour contenir le marqueur de balise."
 
-#: modules/file/mapvue.c:665
-#: modules/file/mapvue.c:678
+#: modules/file/mapvue.c:808
+#: modules/file/mapvue.c:821
 #, c-format
 msgid "Tag %u size is %u bytes, which is not enough to hold the tag marker and size."
 msgstr "La taille de la balise %u est de %u octets, ce qui n'est pas assez pour contenir le marqueur et la taille de la balise."
 
-#: modules/file/mapvue.c:689
+#: modules/file/mapvue.c:832
 #, c-format
 msgid "Tag marker is missing on an unknown tag %u."
 msgstr "Le marqueur de balise est manquant sur la balise inconnue %u."
 
-#: modules/file/mapvue.c:708
-#: modules/file/mapvue.c:718
+#: modules/file/mapvue.c:851
+#: modules/file/mapvue.c:861
 msgid "Character array does not fit into the file."
 msgstr "La table de caractères ne tient pas dans le fichier."
+
+#: modules/file/mapvue.c:878
+#: modules/file/mapvue.c:889
+#: modules/file/mapvue.c:899
+#, fuzzy
+msgid "Fiducial record does not fit into the file."
+msgstr "La table de caractères ne tient pas dans le fichier."
+
+#: modules/file/mapvue.c:1119
+#, c-format
+msgid "Tag %u size is %u which is not sufficient to hold its content."
+msgstr "La taille de la balise %u est %u, ce qui n'est pas suffisant pour tenir son contenu."
 
 #: modules/file/matfile.c:222
 msgid "Imports Matlab MAT files v5."
@@ -5589,7 +5605,7 @@ msgstr "Interpolation :"
 
 #: modules/process/calcoefs_view.c:545
 msgid "crop to actual data"
-msgstr ""
+msgstr "Rogner aux données réelles"
 
 #: modules/process/calcoefs_view.c:555
 msgid "i_nstant updates"
@@ -5597,7 +5613,7 @@ msgstr "i_nstant updates"
 
 #: modules/process/calcoefs_view.c:645
 msgid "Shown part has zero range."
-msgstr ""
+msgstr "La partie affichée a une plage nulle."
 
 #: modules/process/calcoefs_view.c:652
 #, c-format
@@ -5626,7 +5642,7 @@ msgstr "Plage X :          %.*f jusqu'à %.*f %s\n"
 
 #: modules/process/calcoefs_view.c:743
 msgid "Building mesh..."
-msgstr ""
+msgstr "Maillage en cours..."
 
 #: modules/process/calcoefs_view.c:749
 msgid "Triangulation..."
