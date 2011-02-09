@@ -385,25 +385,29 @@ typedef struct {
     MapVueGroup2351 group2351;
 } MapVueFile;
 
-static gboolean      module_register       (void);
-static gint          mapvue_detect         (const GwyFileDetectInfo *fileinfo,
-                                            gboolean only_name);
-static GwyContainer* mapvue_load           (const gchar *filename,
-                                            GwyRunType mode,
-                                            GError **error);
-static guint         mapvue_read_header    (const guchar *buffer,
-                                            gsize size,
-                                            MapVueFile *mapvuevile,
-                                            GError **error);
-static guint         mapvue_skip_group     (const guchar *p,
-                                            gsize size,
-                                            guint reftag,
-                                            GError **error);
-static GwyDataField* read_data_field       (gconstpointer p,
-                                            gint xres,
-                                            gint yres,
-                                            guint bpp,
-                                            GwyDataField **maskfield);
+static gboolean      module_register           (void);
+static gint          mapvue_detect             (const GwyFileDetectInfo *fileinfo,
+                                                gboolean only_name);
+static GwyContainer* mapvue_load               (const gchar *filename,
+                                                GwyRunType mode,
+                                                GError **error);
+static guint         mapvue_read_header        (const guchar *buffer,
+                                                gsize size,
+                                                MapVueFile *mapvuevile,
+                                                GError **error);
+static guint         mapvue_skip_group         (const guchar *p,
+                                                gsize size,
+                                                guint reftag,
+                                                GError **error);
+static GwyDataField* read_data_field           (gconstpointer p,
+                                                gint xres,
+                                                gint yres,
+                                                guint bpp,
+                                                GwyDataField **maskfield);
+static gboolean      calculate_scales_from_fids(const MapVueGroup155 *group155,
+                                                gdouble aspratio,
+                                                gdouble *xscale,
+                                                gdouble *yscale);
 
 #define MAPVUE_GROUP_READER(x) \
     static guint mapvue_read_group##x(const guchar *p, gsize size, \
@@ -549,11 +553,21 @@ mapvue_load(const gchar *filename,
         xreal = yreal*mapvuefile.group551.x_frame_scale*xres/yres;
     }
     else if (mapvuefile.group550.reftag == 550) {
+        gdouble aspratio = mapvuefile.group550.x_frame_scale;
+
         gwy_debug("obtaining physical dimensions from tag 550");
-        /* FIXME: Just guessing. */
-        //yreal = 1e-3*yres*mapvuefile.group550.y_optical_scale;
-        yreal = 1.0;
-        xreal = yreal*mapvuefile.group550.x_frame_scale*xres/yres;
+        if (mapvuefile.group155.reftag == 155
+            && calculate_scales_from_fids(&mapvuefile.group155,
+                                          aspratio, &xreal, &yreal)) {
+            xreal *= xres;
+            yreal *= yres;
+        }
+        else {
+            g_warning("Cannot figure out dimensions from fiducials, "
+                      "setting y size to 1m.");
+            yreal = 1.0;
+            xreal = yreal*aspratio*xres/yres;
+        }
     }
     else {
         g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
@@ -1703,8 +1717,10 @@ read_data_field(gconstpointer p,
         for (i = 0; i < yres; i++) {
             for (j = 0; j < xres; j++) {
                 gint16 v = GINT16_FROM_LE(*d16);
+                // FIXME: The scale factor 7.61 was just estimated from image
+                // comparison!
                 if (v != G_MAXINT16)
-                    data[i*xres + j] = v/(gdouble)G_MAXINT16/5.625e4;
+                    data[i*xres + j] = v/(gdouble)G_MAXINT16/5.625e4/7.61;
                 else
                     mdata[i*xres + j] = 0.0;
                 d16++;
@@ -1720,6 +1736,37 @@ read_data_field(gconstpointer p,
         g_object_unref(mfield);
 
     return dfield;
+}
+
+static gboolean
+calculate_scales_from_fids(const MapVueGroup155 *group155,
+                           gdouble aspratio,
+                           gdouble *xscale, gdouble *yscale)
+{
+    const MapVueFids *dimfids = &group155->dim_fids;
+    gdouble h;
+
+    gwy_debug("Trying to figure out dimension from fiducials.");
+    if (dimfids->n != 2) {
+        gwy_debug("The number of dim fids differs from 2, giving up.");
+        return FALSE;
+    }
+    if (!group155->dim_distance) {
+        gwy_debug("Dim distance is zero, that would lead to zero dimensions.");
+        return FALSE;
+    }
+
+    h = hypot(aspratio*(dimfids->x_coordinates[1] - dimfids->x_coordinates[0]),
+              dimfids->y_coordinates[1] - dimfids->y_coordinates[0]);
+    if (!h) {
+        gwy_debug("Pixel distance of fiducials is zero, that would lead to "
+                  "infinite dimensions.");
+        return FALSE;
+    }
+
+    *yscale = 1e-3*group155->dim_distance/h;
+    *xscale = aspratio * (*yscale);
+    return TRUE;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
