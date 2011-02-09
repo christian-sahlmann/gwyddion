@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2011-02-05 03:58+0100\n"
-"PO-Revision-Date: 2011-02-05 21:31+0300\n"
+"POT-Creation-Date: 2011-02-09 03:58+0100\n"
+"PO-Revision-Date: 2011-02-09 23:41+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "Language: \n"
@@ -2725,8 +2725,6 @@ msgstr "Были найдены некорректные позиции тего
 #: modules/file/gwytiff.h:627
 #: modules/file/gwytiff.h:699
 #: modules/file/gwytiff.h:715
-#: modules/file/mapvue.c:450
-#: modules/file/mapvue.c:455
 #, c-format
 msgid "Required tag %u was not found."
 msgstr "Требуемый тег %u не был найден."
@@ -2882,43 +2880,60 @@ msgstr "Элемент верхнего уровня не ‘TiffTagDescData’.
 msgid "XML parsing failed: %s"
 msgstr "Разбор XML окончился неудачно: %s"
 
-#: modules/file/mapvue.c:379
+#: modules/file/mapvue.c:451
 msgid "Imports MapVue data files (.map)."
 msgstr "Импортирует файлы данных MapVue (.map)."
 
-#: modules/file/mapvue.c:392
+#: modules/file/mapvue.c:464
 msgid "MapVue files (.map)"
 msgstr "Файлы MapVue (.map)"
 
-#: modules/file/mapvue.c:628
+#: modules/file/mapvue.c:540
+#: modules/file/mapvue.c:560
+#, c-format
+msgid "Required tag %u or %u was not found."
+msgstr "Требуемый тег %u или %u не был найден."
+
+#: modules/file/mapvue.c:771
 msgid "File end was reached while scanning tags."
 msgstr "В процессе поиска тегов был достигнут конец файла."
 
-#: modules/file/mapvue.c:640
+#: modules/file/mapvue.c:783
 #, c-format
 msgid "Expected tag %u size is %u bytes, but the actual size is %u bytes."
 msgstr "Ожидаемый размер тега %u должен быть %u байт, но реальный размер %u байт."
 
-#: modules/file/mapvue.c:654
+#: modules/file/mapvue.c:797
 #, c-format
 msgid "Tag %u size is %u bytes, which is not enough to hold the tag marker."
 msgstr "Размер тега %u - %u байт, что недостаточно чтобы содержать маркер тега."
 
-#: modules/file/mapvue.c:665
-#: modules/file/mapvue.c:678
+#: modules/file/mapvue.c:808
+#: modules/file/mapvue.c:821
 #, c-format
 msgid "Tag %u size is %u bytes, which is not enough to hold the tag marker and size."
 msgstr "Размер тега %u - %u байт, что недостаточно чтобы содержать маркер тега и его размер."
 
-#: modules/file/mapvue.c:689
+#: modules/file/mapvue.c:832
 #, c-format
 msgid "Tag marker is missing on an unknown tag %u."
 msgstr "Маркер тега отсутствует на неизвестном теге %u."
 
-#: modules/file/mapvue.c:708
-#: modules/file/mapvue.c:718
+#: modules/file/mapvue.c:851
+#: modules/file/mapvue.c:861
 msgid "Character array does not fit into the file."
 msgstr "Массив символов не помещается в файл."
+
+#: modules/file/mapvue.c:878
+#: modules/file/mapvue.c:889
+#: modules/file/mapvue.c:899
+msgid "Fiducial record does not fit into the file."
+msgstr "Фидуциальная запись не помещается в файл."
+
+#: modules/file/mapvue.c:1119
+#, c-format
+msgid "Tag %u size is %u which is not sufficient to hold its content."
+msgstr "Размер тега %u - %u, что недостаточно чтобы вместить его содержимое."
 
 #: modules/file/matfile.c:222
 msgid "Imports Matlab MAT files v5."
