@@ -1,12 +1,16 @@
 2.23 (0000-00-00)
 Application:
-- Support for calibrations in Data Browser.
+- Translations updated: French, Russian.
 
 Libraries:
-- libgwyprocess: added Delaunay triangulation from Ross Hemsley
-- libgwyprocess: added calibration data structures 
-- libgwyprocess: added statistical functions for calculating uncertainties
-  from calibration data
+- libgwyprocess: New classes GwyCalibration and GwyCalData representing
+  instrument calibrations.
+- libgwyapp: Support for calibrations was added to Data Browser.
+- libgwyprocess: Delaunay triangulation algorithms by Ross Hemsley were added.
+- libgwyprocess: Added statistical functions for calculating uncertainties
+  from calibration data.
+- libgwyprocess: Small discrepancies in surface area calculated with mask
+  were corrected.
 
 Modules:
 - WSF file (new): Imports WSF SPM data.
@@ -15,6 +19,7 @@ Modules:
 - Pixmap: The set of importable formats was limited to BMP, GIF, ICNS, JPEG,
   JPEG2000, PCX, PNG, PNM, RAS, TARGA, TIFF and XPM that are known to work to
   avoid crashes whenever a new buggy loader appears in GdkPixbuf.
+- MapVue: Support for old OptiCode files was added.
 - Calibration: Load from text file: enables loading complex calibration data.
 - Calibration: Create: enables defining simple calibration data for 3 axes.
 - Calibration: View: select, view and apply calibration for specific SPM data.
@@ -24,6 +29,8 @@ Modules:
 - Read value: Modified to display calibration data if present.
 - Statistics: Modified to display calibration data if present.
 - Statistical functions: Modified to display calibration data if present.
+- DOS spectrum: Calculates absolute value of (dI/dU)/(I/U) and does not
+  removing the contact potential.
 
 Other:
 - Compilation with MSVC6 toolchain on MS Windows is no longer supported, use
