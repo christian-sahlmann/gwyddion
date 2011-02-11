@@ -132,6 +132,8 @@ cload(G_GNUC_UNUSED GwyContainer *data, GwyRunType run)
             return;
     }
 
+    if (!args.caldata) return;
+
     /*if append requested, copy newly created calibration into old one*/
     if (args.duplicate == DUPLICATE_APPEND && (calibration = gwy_inventory_get_item(gwy_calibrations(), args.name)))
     {
@@ -184,7 +186,7 @@ cload(G_GNUC_UNUSED GwyContainer *data, GwyRunType run)
     //debugcal(args.caldata);
 
     /*now save the calibration data*/
-    gwy_caldata_save_data(caldata, calibration->filename);
+    gwy_caldata_save_data(args.caldata, calibration->filename);
 
 
 }
@@ -308,6 +310,7 @@ load_caldata(CLoadControls *controls)
     gchar *line, *text = NULL;
     gsize size;
     gint xpower10, ypower10, zpower10;
+    gboolean ok = TRUE;
     GError *err = NULL;
 
     dialog = gtk_file_chooser_dialog_new ("Load calibration data",
@@ -351,9 +354,8 @@ load_caldata(CLoadControls *controls)
             zfrom = g_ascii_strtod(line, &line);
             zto = g_ascii_strtod(line, &line);
 
-            line = gwy_str_next_line(&text);
-
-            caldata = gwy_caldata_new(ndata);    //FIXME free it somewhere if allocated previously
+            if (caldata) gwy_object_unref(caldata);
+            caldata = gwy_caldata_new(ndata);    
 
             line = gwy_str_next_line(&text);
             g_strstrip(line);
@@ -382,9 +384,14 @@ load_caldata(CLoadControls *controls)
             pyunc = gwy_caldata_get_yunc(caldata);
             pzunc = gwy_caldata_get_zunc(caldata);
 
-            for (i=0; i<gwy_caldata_get_ndata(caldata); i++)
-            {
+            for (i=0; i<gwy_caldata_get_ndata(caldata); i++) {
                 line = gwy_str_next_line(&text);
+                if (!line) {
+                    g_snprintf(mtext, sizeof(mtext), "Error: not enough points.");
+                    gtk_label_set_text(GTK_LABEL(controls->text), mtext);
+                    ok = FALSE;
+                    break;
+                }
                 g_strstrip(line);
                 x = g_ascii_strtod(line, &line);
                 y = g_ascii_strtod(line, &line);
@@ -406,13 +413,14 @@ load_caldata(CLoadControls *controls)
                 pyunc[i] = yunc;
                 pzunc[i] = zunc;
             }
-            
-            g_snprintf(mtext, sizeof(mtext), "Loaded %d data points", gwy_caldata_get_ndata(caldata));
-            gtk_label_set_text(GTK_LABEL(controls->text), mtext);
-            gtk_widget_set_sensitive(controls->okbutton, TRUE);
+            if (ok) {
+                g_snprintf(mtext, sizeof(mtext), "Loaded %d data points", gwy_caldata_get_ndata(caldata));
+                gtk_label_set_text(GTK_LABEL(controls->text), mtext);
+                gtk_widget_set_sensitive(controls->okbutton, TRUE);
+            }
         }
         g_free (filename);
-        controls->args->caldata = caldata;
+        if (ok) controls->args->caldata = caldata;
     }
     gtk_widget_destroy (dialog);
 
