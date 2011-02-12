@@ -169,6 +169,7 @@ seiko_load(const gchar *filename,
     gwy_container_set_string_by_name(container, "/0/data/title",
                                      g_strndup(buffer + COMMENT_OFFSET,
                                                COMMENT_SIZE));
+    gwy_app_channel_check_nonsquare(container, 0);
 
     gwy_file_abandon_contents(buffer, size, NULL);
 
