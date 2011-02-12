@@ -81,7 +81,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Seiko XQB, XQD and XQT files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.5",
+    "0.6",
     "David Nečas (Yeti) & Markus Pristovsek",
     "2006",
 };
@@ -189,8 +189,8 @@ read_data_field(const guchar *buffer,
         ZSCALE_OFFSET = 0xa8,
     };
     gint xres, yres, i, j;
-    guint version, endfile, datastart;
-    gdouble xreal, yreal, q;
+    guint n, version, endfile, datastart;
+    gdouble xreal, yreal, q, alpha;
     GwyDataField *dfield;
     GwySIUnit *siunit;
     gdouble *data, *row;
@@ -209,19 +209,38 @@ read_data_field(const guchar *buffer,
     if (err_SIZE_MISMATCH(error, endfile, size, TRUE))
         return NULL;
 
-    xres = (int)sqrt((endfile - datastart)/2 + 0.1);
-    yres = xres;
-    gwy_debug("xres = yres: %d (%s)",
-              xres, 2*xres*xres == endfile - datastart ? "OK" : "Not square!");
-
     p = buffer + XSCALE_OFFSET;
-    xreal = gwy_get_gdouble_le(&p) * xres * Nanometer;
+    xreal = gwy_get_gdouble_le(&p) * Nanometer;
     p = buffer + YSCALE_OFFSET;
-    yreal = gwy_get_gdouble_le(&p) * yres * Nanometer;
+    yreal = gwy_get_gdouble_le(&p) * Nanometer;
     p = buffer + ZSCALE_OFFSET;
     q = gwy_get_gdouble_le(&p) * Nanometer;
-    gwy_debug("xreal: %g, yreal: %g, zreal: %g",
+    gwy_debug("xscale: %g, yscale: %g, zreal: %g",
               xreal/Nanometer, yreal/Nanometer, q/Nanometer);
+
+    alpha = xreal/yreal;
+    n = (endfile - datastart)/2;
+    xres = (int)sqrt(n/alpha + 0.1);
+    yres = (int)sqrt(n*alpha + 0.1);
+    gwy_debug("1st try: xres: %d, yres: %d, size: %u vs. %u",
+              xres, yres, 2*xres*yres, endfile - datastart);
+    if (2*xres*yres != endfile - datastart) {
+        /* Try square then */
+        if (fabs(alpha - 1.0) > 1e-3)
+            xres = yres = (int)sqrt(n + 0.1);
+        gwy_debug("2nd try: xres: %d, yres: %d, size: %u vs. %u",
+                  xres, yres, 2*xres*yres, endfile - datastart);
+    }
+    if (2*xres*yres != endfile - datastart) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR,
+                    GWY_MODULE_FILE_ERROR_DATA,
+                    _("Cannot determine scan dimensions; it seems "
+                      "non-square with an unknown side ratio."));
+        return NULL;
+    }
+
+    xreal *= xres;
+    yreal *= yres;
 
     dfield = gwy_data_field_new(xres, yres, xreal, yreal, FALSE);
     data = gwy_data_field_get_data(dfield);
