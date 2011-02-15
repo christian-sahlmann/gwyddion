@@ -143,6 +143,7 @@ typedef struct {
     GtkWidget *message3;
     GtkWidget *message4;
     GtkWidget *message5;  
+    GtkWidget *resmes;
     gboolean in_update;
 
 } CCViewControls;
@@ -373,7 +374,8 @@ cc_view_dialog(CCViewArgs *args,
     gtk_box_pack_start(GTK_BOX(vbox), controls.message4, FALSE, FALSE, 4);
     controls.message5 = gtk_label_new("");
     gtk_box_pack_start(GTK_BOX(vbox), controls.message5, FALSE, FALSE, 4);
-
+    controls.resmes = gtk_label_new("");
+    gtk_box_pack_start(GTK_BOX(vbox), controls.resmes, FALSE, FALSE, 4);
 
     gtk_box_pack_start(GTK_BOX(hbox), vbox, FALSE, FALSE, 4);
 
@@ -627,6 +629,27 @@ cc_view_dialog(CCViewArgs *args,
 
 }
 
+static gboolean
+field_inside(GwyCalData *caldata, GwyDataField *dfield, 
+             gdouble xoffset, gdouble yoffset, gdouble zoffset)
+{
+    gdouble xmin, xmax, ymin, ymax, zmin, zmax;
+
+    gwy_caldata_get_range(caldata, &xmin, &xmax, &ymin, &ymax, &zmin, &zmax);
+    if (gwy_caldata_inside(caldata, xoffset + gwy_data_field_get_xoffset(dfield), 
+                                    yoffset + gwy_data_field_get_yoffset(dfield), 
+                                    zoffset + gwy_data_field_get_min(dfield))
+        && 
+        gwy_caldata_inside(caldata, xoffset + gwy_data_field_get_xoffset(dfield) 
+                                            + gwy_data_field_get_xreal(dfield), 
+                                    yoffset + gwy_data_field_get_yoffset(dfield)
+                                            + gwy_data_field_get_yreal(dfield), 
+                                    zoffset + gwy_data_field_get_max(dfield)))
+        return TRUE;
+    return FALSE;
+
+}
+
 static void
 cc_view_dialog_abandon(CCViewControls *controls)
 {
@@ -656,6 +679,7 @@ static void show_info(CCViewControls *controls, GwyDataField *dfield)
     }
     gtk_label_set_markup(GTK_LABEL(controls->message5), msg);
 
+
 }
 
 
@@ -671,15 +695,10 @@ update_view(CCViewControls *controls, CCViewArgs *args)
     GwyCalibration *calibration = NULL;
     GwyCalData *caldata = NULL;
     GwySIUnit *six, *siy, *siz;
-    GwySIUnit *siunit;
     GwySIValueFormat *maxf;
-    gdouble max, min;
     gsize len;
-    GError *err = NULL;
-    gchar *contents;
-    gchar *filename;
-    gsize pos = 0;
     gboolean run = TRUE;
+    gboolean posok = TRUE;
     viewfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
                                                                   "/0/data"));
 
@@ -724,8 +743,6 @@ update_view(CCViewControls *controls, CCViewArgs *args)
     }
 
 
-
-
     /*FIXME determine maximum necessary size of field*/
     xres = 200; 
     yres = 200;
@@ -738,8 +755,18 @@ update_view(CCViewControls *controls, CCViewArgs *args)
     }
 
     //gwy_caldata_debug(caldata, "Using: ");
+    if (controls->args->crop && !field_inside(caldata, controls->actual_field, 
+                              args->xoffset, args->yoffset, args->zoffset))
+    {
+        g_snprintf(msg, sizeof(msg), "Error: out of range.");
+        gtk_label_set_markup(GTK_LABEL(controls->resmes), msg);
+        posok = FALSE;
+        gtk_widget_set_sensitive(controls->button_ok, FALSE);
+    }
+    else gtk_label_set_markup(GTK_LABEL(controls->resmes), "");
 
-    if (!args->computed) {
+
+    if (posok && !args->computed) {
         gwy_app_wait_start(GTK_WINDOW(controls->dialog), _("Building mesh..."));
 
         if (args->interpolation_type == GWY_CC_VIEW_INTERPOLATION_NATURAL)

@@ -262,31 +262,31 @@ simple(GwyContainer *data, GwyRunType run)
     }
 
     /*now create and save the resource*/
-    if ((calibration = GWY_CALIBRATION(gwy_inventory_get_item(gwy_calibrations(), args.name[0])))==NULL)
-    {
-        calibration = gwy_calibration_new(args.name[0], g_strconcat(args.name[0], ".dat", NULL));
-        gwy_inventory_insert_item(gwy_calibrations(), calibration);
-        g_object_unref(calibration);
-    }
+//    if ((calibration = GWY_CALIBRATION(gwy_inventory_get_item(gwy_calibrations(), args.name[0])))==NULL)
+//    {
+//        calibration = gwy_calibration_new(args.name[0], g_strconcat(args.name[0], ".dat", NULL));
+//        gwy_inventory_insert_item(gwy_calibrations(), calibration);
+//        g_object_unref(calibration);
+//    }
 
-    filename = gwy_resource_build_filename(GWY_RESOURCE(calibration));
-    fh = g_fopen(filename, "w");
-    if (!fh) {
-        g_warning("Cannot save preset: %s", filename);
-        g_free(filename);
-        return;
-    }
-    g_free(filename);
+//    filename = gwy_resource_build_filename(GWY_RESOURCE(calibration));
+//    fh = g_fopen(filename, "w");
+//    if (!fh) {
+//        g_warning("Cannot save preset: %s", filename);
+//        g_free(filename);
+//        return;
+//    }
+//    g_free(filename);
 
-    str = gwy_resource_dump(GWY_RESOURCE(calibration));
-    fwrite(str->str, 1, str->len, fh);
-    fclose(fh);
-    g_string_free(str, TRUE);
+//    str = gwy_resource_dump(GWY_RESOURCE(calibration));
+//    fwrite(str->str, 1, str->len, fh);
+//    fclose(fh);
+//    g_string_free(str, TRUE);
 
-    gwy_resource_data_saved(GWY_RESOURCE(calibration));
+//    gwy_resource_data_saved(GWY_RESOURCE(calibration));
 
     /*now save the calibration data*/
-    gwy_caldata_save_data(caldata, calibration->filename);
+//    gwy_caldata_save_data(caldata, calibration->filename);
 
 }
 
