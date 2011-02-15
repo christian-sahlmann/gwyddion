@@ -845,10 +845,30 @@ gwy_caldata_set_range(GwyCalData *caldata,
     caldata->z_to = zto;
 }
 
+/**
+ * gwy_caldata_inside:
+ * @caldata: Calibration data.
+ * @x: x position
+ * @y: y position
+ * @z: z position
+ *
+ * Returns: true if xyz position is inside calibration data range.
+ **/
+
+gboolean    
+gwy_caldata_inside(GwyCalData *caldata,
+                   gdouble x, gdouble y, gdouble z)
+{
+    if (x >= caldata->x_from && x<=caldata->x_to &&
+        y >= caldata->y_from && y<=caldata->y_to &&
+        z >= caldata->z_from && z<=caldata->z_to) return TRUE;
+    return FALSE;
+}
+
 void        
 gwy_caldata_save_data(GwyCalData *caldata, gchar *filename)
 {
-    GByteArray *barray;
+    GByteArray *barray = NULL;
     gchar *file;
 
     if (!g_file_test(g_build_filename(gwy_get_user_dir(), "caldata", NULL), G_FILE_TEST_EXISTS)) {
@@ -857,7 +877,10 @@ gwy_caldata_save_data(GwyCalData *caldata, gchar *filename)
 
     file = g_build_filename(gwy_get_user_dir(), "caldata", filename, NULL);
     barray = gwy_serializable_serialize(G_OBJECT(caldata), NULL);
-    if (!g_file_set_contents(file, barray->data, sizeof(guint8)*barray->len, NULL))
+    if (!barray) {
+        g_warning("Cannot serialize caldata\n");
+    }
+    else if (!g_file_set_contents(file, barray->data, sizeof(guint8)*barray->len, NULL))
     {
         g_warning("Cannot save caldata\n");
     }

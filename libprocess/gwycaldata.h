@@ -108,6 +108,10 @@ void        gwy_caldata_interpolate        (GwyCalData *caldata,
 void        gwy_caldata_save_data          (GwyCalData *caldata,
                                             gchar *filename);
 
+gboolean    gwy_caldata_inside             (GwyCalData *caldata,
+                                            gdouble x,
+                                            gdouble y,
+                                            gdouble z);
 //void
 //gwy_caldata_debug(GwyCalData *caldata, gchar *message);
 
