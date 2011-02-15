@@ -157,8 +157,8 @@ static void   gwy_tool_profile_fixres_changed       (GtkToggleButton *check,
                                                      GwyToolProfile *tool);
 static void   gwy_tool_profile_separate_changed     (GtkToggleButton *check,
                                                      GwyToolProfile *tool);
-static void   gwy_tool_profile_export_changed     (GtkToggleButton *check,
-                                                     GwyToolProfile *tool);
+//static void   gwy_tool_profile_export_changed     (GtkToggleButton *check,
+//                                                     GwyToolProfile *tool);
 static void   gwy_tool_profile_both_changed     (GtkToggleButton *check,
                                                      GwyToolProfile *tool);
 static void   gwy_tool_profile_interpolation_changed(GtkComboBox *combo,
@@ -197,7 +197,7 @@ static const ToolArgs default_args = {
     FALSE,
     GWY_INTERPOLATION_LINEAR,
     FALSE,
-    FALSE,
+    TRUE,
     TRUE,
 };
 
@@ -479,7 +479,7 @@ gwy_tool_profile_init_dialog(GwyToolProfile *tool)
                      G_CALLBACK(gwy_tool_profile_both_changed), tool);
     row++;
 
-    tool->export
+    /*tool->export
         = gtk_check_button_new_with_mnemonic(_("_Export uncertainties"));
     gtk_table_attach(table, tool->export,
                      0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
@@ -488,7 +488,8 @@ gwy_tool_profile_init_dialog(GwyToolProfile *tool)
     g_signal_connect(tool->export, "toggled",
                      G_CALLBACK(gwy_tool_profile_export_changed), tool);
     row++;
-
+    */
+    tool->args.export = TRUE;
 
 
     tool->gmodel = gwy_graph_model_new();
@@ -973,12 +974,13 @@ gwy_tool_profile_separate_changed(GtkToggleButton *check,
 {
     tool->args.separate = gtk_toggle_button_get_active(check);
 }
+/*
 static void
 gwy_tool_profile_export_changed(GtkToggleButton *check,
                                   GwyToolProfile *tool)
 {
     tool->args.export = gtk_toggle_button_get_active(check);
-}
+}*/
 static void
 gwy_tool_profile_both_changed(GtkToggleButton *check,
                                   GwyToolProfile *tool)
@@ -1063,7 +1065,7 @@ gwy_tool_profile_apply(GwyToolProfile *tool)
         id = gwy_app_data_browser_add_graph_model(gmodel, plain_tool->container,
                                              TRUE);
         g_object_unref(gmodel);
-   
+  
 
         if (tool->args.export && tool->display_type>0) {
             gmodel = gwy_graph_model_new_alike(tool->gmodel);
@@ -1079,6 +1081,7 @@ gwy_tool_profile_apply(GwyToolProfile *tool)
             gwy_app_data_browser_add_graph_model(gmodel, plain_tool->container,
                                              TRUE);
          }
+
     }
 }
 
@@ -1114,7 +1117,7 @@ display_changed(GtkComboBox *combo, GwyToolProfile *tool)
     plain_tool = GWY_PLAIN_TOOL(tool);
     g_return_if_fail(plain_tool->selection);
     n = gwy_selection_get_data(plain_tool->selection, NULL);
-    g_return_if_fail(n);
+    if (!n) return;
 
     tool->display_type = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(tool->menu_display));
 

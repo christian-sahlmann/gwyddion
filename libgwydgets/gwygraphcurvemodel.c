@@ -1061,7 +1061,9 @@ gwy_graph_curve_model_set_calibration_data(GwyGraphCurveModel *gcmodel,
         g_free(gcmodel->calibration->xunc);
         g_free(gcmodel->calibration->yunc);
         g_free(gcmodel->calibration->zunc);
-    }
+    } else 
+        gcmodel->calibration = g_new(GwyCurveCalibrationData, 1);
+
     gcmodel->calibration->n = calibration->n;
     gcmodel->calibration->xerr = g_memdup(calibration->xerr, 
                                           calibration->n*sizeof(gdouble));
