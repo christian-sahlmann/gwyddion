@@ -1523,6 +1523,7 @@ gwy_app_data_list_update_last(GwyAppDataList *list,
 static void
 gwy_app_data_browser_update_filename(GwyAppDataProxy *proxy)
 {
+    GtkTooltips *tips;
     GwyAppDataBrowser *browser;
     const guchar *filename;
     gchar *s;
@@ -1531,10 +1532,17 @@ gwy_app_data_browser_update_filename(GwyAppDataProxy *proxy)
     if (!browser->window)
         return;
 
-    if (gwy_container_gis_string(proxy->container, filename_quark, &filename))
+    tips = gwy_app_get_tooltips();
+    if (gwy_container_gis_string(proxy->container, filename_quark, &filename)) {
         s = g_path_get_basename(filename);
-    else
+        gtk_tooltips_set_tip(tips, browser->filename, filename, NULL);
+    }
+    else {
         s = g_strdup_printf("%s %d", _("Untitled"), proxy->untitled_no);
+        // XXX: For some reason, the tooltip survives being set to NULL
+        // but "" disables it.
+        gtk_tooltips_set_tip(tips, browser->filename, "", NULL);
+    }
     gtk_label_set_text(GTK_LABEL(browser->filename), s);
     g_free(s);
 }
@@ -3967,9 +3975,15 @@ gwy_app_data_browser_switch_data(GwyContainer *data)
     browser = gwy_app_get_data_browser();
     if (!data) {
         if (browser->window) {
+            GtkTooltips *tips;
+
             for (i = 0; i < NPAGES; i++)
                 gtk_tree_view_set_model(GTK_TREE_VIEW(browser->lists[i]), NULL);
             gtk_label_set_text(GTK_LABEL(browser->filename), NULL);
+            tips = gwy_app_get_tooltips();
+            // XXX: For some reason, the tooltip survives being set to NULL
+            // but "" disables it.
+            gtk_tooltips_set_tip(tips, browser->filename, "", NULL);
             gwy_app_data_browser_set_file_present(browser, FALSE);
         }
         browser->current = NULL;
