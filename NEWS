@@ -11,6 +11,9 @@ Libraries:
   from calibration data.
 - libgwyprocess: Small discrepancies in surface area calculated with mask
   were corrected.
+- libgwyapp: Data windows use a thumbnail of the image as the window icon.
+- libgwyapp: Data browser shows the full file path as a tooltip of the file
+             name.
 
 Modules:
 - WSF file (new): Imports WSF SPM data.
