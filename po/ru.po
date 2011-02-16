@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2011-02-09 03:58+0100\n"
-"PO-Revision-Date: 2011-02-09 23:41+0300\n"
+"POT-Creation-Date: 2011-02-16 03:58+0100\n"
+"PO-Revision-Date: 2011-02-16 07:49+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "Language: \n"
@@ -119,10 +119,10 @@ msgstr "vdW: параболоид"
 #: libgwyddion/gwyinventory.c:1310
 #: libgwydgets/gwygraphwindow.c:603
 #: app/data-browser.c:1537
-#: app/data-browser.c:2271
-#: app/data-browser.c:3045
-#: app/data-browser.c:3204
-#: app/data-browser.c:5106
+#: app/data-browser.c:2282
+#: app/data-browser.c:3056
+#: app/data-browser.c:3215
+#: app/data-browser.c:5117
 #: app/resource-editor.c:366
 #: modules/process/convolution_filter.c:700
 msgid "Untitled"
@@ -536,7 +536,7 @@ msgstr "Шаум"
 #: app/datachooser.c:402
 #: modules/process/convolution_filter.c:129
 #: modules/process/merge.c:135
-#: modules/tools/profile.c:1091
+#: modules/tools/profile.c:1094
 msgid "None"
 msgstr "Нет"
 
@@ -1419,39 +1419,39 @@ msgstr "Квадратный _попиксельно"
 msgid "_Physically Square"
 msgstr "Квадратный _физически"
 
-#: app/data-browser.c:3755
+#: app/data-browser.c:3766
 msgid "Extract to a new file"
 msgstr "Извлечь в новый файл"
 
-#: app/data-browser.c:3756
+#: app/data-browser.c:3767
 msgid "Duplicate"
 msgstr "Сделать копию"
 
-#: app/data-browser.c:3757
+#: app/data-browser.c:3768
 msgid "Delete"
 msgstr "Удалить"
 
-#: app/data-browser.c:3801
+#: app/data-browser.c:3812
 msgid "Data Browser"
 msgstr "Просмотр данных"
 
-#: app/data-browser.c:3824
+#: app/data-browser.c:3835
 msgid "Close file"
 msgstr "Закрыть файл"
 
-#: app/data-browser.c:3837
+#: app/data-browser.c:3848
 msgid "Channels"
 msgstr "Каналы"
 
-#: app/data-browser.c:3851
+#: app/data-browser.c:3862
 msgid "Graphs"
 msgstr "Графики"
 
-#: app/data-browser.c:3865
+#: app/data-browser.c:3876
 msgid "Spectra"
 msgstr "Спектры"
 
-#: app/data-browser.c:5144
+#: app/data-browser.c:5155
 #, c-format
 msgid "Unknown channel %d"
 msgstr "Неизвестный канал %d"
@@ -2880,57 +2880,57 @@ msgstr "Элемент верхнего уровня не ‘TiffTagDescData’.
 msgid "XML parsing failed: %s"
 msgstr "Разбор XML окончился неудачно: %s"
 
-#: modules/file/mapvue.c:451
+#: modules/file/mapvue.c:455
 msgid "Imports MapVue data files (.map)."
 msgstr "Импортирует файлы данных MapVue (.map)."
 
-#: modules/file/mapvue.c:464
+#: modules/file/mapvue.c:468
 msgid "MapVue files (.map)"
 msgstr "Файлы MapVue (.map)"
 
-#: modules/file/mapvue.c:540
-#: modules/file/mapvue.c:560
+#: modules/file/mapvue.c:544
+#: modules/file/mapvue.c:574
 #, c-format
 msgid "Required tag %u or %u was not found."
 msgstr "Требуемый тег %u или %u не был найден."
 
-#: modules/file/mapvue.c:771
+#: modules/file/mapvue.c:785
 msgid "File end was reached while scanning tags."
 msgstr "В процессе поиска тегов был достигнут конец файла."
 
-#: modules/file/mapvue.c:783
+#: modules/file/mapvue.c:797
 #, c-format
 msgid "Expected tag %u size is %u bytes, but the actual size is %u bytes."
 msgstr "Ожидаемый размер тега %u должен быть %u байт, но реальный размер %u байт."
 
-#: modules/file/mapvue.c:797
+#: modules/file/mapvue.c:811
 #, c-format
 msgid "Tag %u size is %u bytes, which is not enough to hold the tag marker."
 msgstr "Размер тега %u - %u байт, что недостаточно чтобы содержать маркер тега."
 
-#: modules/file/mapvue.c:808
-#: modules/file/mapvue.c:821
+#: modules/file/mapvue.c:822
+#: modules/file/mapvue.c:835
 #, c-format
 msgid "Tag %u size is %u bytes, which is not enough to hold the tag marker and size."
 msgstr "Размер тега %u - %u байт, что недостаточно чтобы содержать маркер тега и его размер."
 
-#: modules/file/mapvue.c:832
+#: modules/file/mapvue.c:846
 #, c-format
 msgid "Tag marker is missing on an unknown tag %u."
 msgstr "Маркер тега отсутствует на неизвестном теге %u."
 
-#: modules/file/mapvue.c:851
-#: modules/file/mapvue.c:861
+#: modules/file/mapvue.c:865
+#: modules/file/mapvue.c:875
 msgid "Character array does not fit into the file."
 msgstr "Массив символов не помещается в файл."
 
-#: modules/file/mapvue.c:878
-#: modules/file/mapvue.c:889
-#: modules/file/mapvue.c:899
+#: modules/file/mapvue.c:892
+#: modules/file/mapvue.c:903
+#: modules/file/mapvue.c:913
 msgid "Fiducial record does not fit into the file."
 msgstr "Фидуциальная запись не помещается в файл."
 
-#: modules/file/mapvue.c:1119
+#: modules/file/mapvue.c:1137
 #, c-format
 msgid "Tag %u size is %u which is not sufficient to hold its content."
 msgstr "Размер тега %u - %u, что недостаточно чтобы вместить его содержимое."
@@ -3073,7 +3073,7 @@ msgstr "Заголовок параметров усечён"
 
 #: modules/file/nanoeducator.c:907
 #: modules/process/curvature.c:441
-#: modules/tools/profile.c:803
+#: modules/tools/profile.c:804
 #, c-format
 msgid "Profile %d"
 msgstr "Профиль %d"
@@ -3509,8 +3509,8 @@ msgstr "_Ширина"
 #: modules/process/calcoefs_new.c:448
 #: modules/process/calcoefs_simple.c:383
 #: modules/process/calcoefs_simple.c:450
-#: modules/process/calcoefs_view.c:499
-#: modules/process/calcoefs_view.c:537
+#: modules/process/calcoefs_view.c:501
+#: modules/process/calcoefs_view.c:539
 #: modules/process/calibrate.c:339
 #: modules/process/calibrate.c:420
 #: modules/process/dimensions.h:159
@@ -3548,7 +3548,7 @@ msgstr "как данные"
 #: modules/file/rawfile.c:1326
 #: modules/process/calcoefs_new.c:773
 #: modules/process/calcoefs_simple.c:1070
-#: modules/process/calcoefs_view.c:1334
+#: modules/process/calcoefs_view.c:1361
 #: modules/process/calibrate.c:816
 #: modules/process/dimensions.h:193
 msgid "Change Units"
@@ -3558,7 +3558,7 @@ msgstr "Изменить единицы измерения"
 #: modules/file/rawfile.c:1340
 #: modules/process/calcoefs_new.c:786
 #: modules/process/calcoefs_simple.c:1083
-#: modules/process/calcoefs_view.c:1347
+#: modules/process/calcoefs_view.c:1374
 #: modules/process/calibrate.c:830
 #: modules/process/dimensions.h:206
 msgid "New _units:"
@@ -3875,7 +3875,7 @@ msgstr "Предустановки"
 #: modules/file/rawfile.c:541
 #: modules/file/rawxyz.c:436
 #: modules/process/arithmetic.c:227
-#: modules/process/calcoefs_view.c:304
+#: modules/process/calcoefs_view.c:305
 #: modules/process/convolution_filter.c:243
 #: modules/process/deposit_synth.c:683
 #: modules/process/drift.c:227
@@ -4037,7 +4037,7 @@ msgid "Preset l_ist"
 msgstr "С_писок предустановок"
 
 #: modules/file/rawfile.c:1008
-#: modules/process/calcoefs_load.c:214
+#: modules/process/calcoefs_load.c:216
 msgid "_Load"
 msgstr "_Загрузить"
 
@@ -4407,6 +4407,10 @@ msgstr "Импортирует файлы Seiko XQB, XQD и XQT."
 #: modules/file/seiko.c:95
 msgid "Seiko files (.xqb, .xqd, .xqt)"
 msgstr "Файлы Seiko (.xqb, .xqd, .xqt)"
+
+#: modules/file/seiko.c:238
+msgid "Cannot determine scan dimensions; it seems non-square with an unknown side ratio."
+msgstr "Не удаётся определить размеры скана; он по видимому не квадратный с неизвестным соотношением сторон."
 
 #: modules/file/sensofar.c:200
 msgid "Imports Sensofar PLu file format, version 2000 or newer."
@@ -5399,17 +5403,17 @@ msgstr "/_Калибровка/_Загрузить из текстового ф�
 msgid "Load calibration data from text file."
 msgstr "Загрузить данные калибровки из текстового файла."
 
-#: modules/process/calcoefs_load.c:206
+#: modules/process/calcoefs_load.c:208
 msgid "Load Calibration Data"
 msgstr "Загрузить данные калибровки"
 
-#: modules/process/calcoefs_load.c:226
+#: modules/process/calcoefs_load.c:228
 #: modules/process/calcoefs_new.c:563
 #: modules/process/calcoefs_simple.c:467
 msgid "Calibration name:"
 msgstr "Имя калибровки:"
 
-#: modules/process/calcoefs_load.c:238
+#: modules/process/calcoefs_load.c:240
 msgid "No data loaded"
 msgstr "Данные не загружены"
 
@@ -5500,13 +5504,13 @@ msgid "Operands:"
 msgstr "Операнды:"
 
 #: modules/process/calcoefs_simple.c:363
-#: modules/process/calcoefs_view.c:479
+#: modules/process/calcoefs_view.c:481
 #: modules/process/calibrate.c:367
 msgid "_X offset:"
 msgstr "Смещение по _X:"
 
 #: modules/process/calcoefs_simple.c:390
-#: modules/process/calcoefs_view.c:505
+#: modules/process/calcoefs_view.c:507
 #: modules/process/calibrate.c:380
 msgid "_Y offset:"
 msgstr "Смещение по _Y:"
@@ -5520,7 +5524,7 @@ msgid "Y p_eriod:"
 msgstr "Пе_риод Y:"
 
 #: modules/process/calcoefs_simple.c:430
-#: modules/process/calcoefs_view.c:517
+#: modules/process/calcoefs_view.c:519
 msgid "_Z offset:"
 msgstr "Смещение по _Z:"
 
@@ -5549,150 +5553,150 @@ msgstr "Картирование ошибок основания"
 msgid "Stage Error Map"
 msgstr "Карта ошибок основания"
 
-#: modules/process/calcoefs_view.c:226
+#: modules/process/calcoefs_view.c:227
 msgid "3D calibration/uncertainty"
 msgstr "Трёхмерная калибровка и погрешность измерения"
 
-#: modules/process/calcoefs_view.c:240
+#: modules/process/calcoefs_view.c:241
 msgid "/Cali_bration/_Apply to Data..."
 msgstr "/_Калибровка/Применить к _данным..."
 
-#: modules/process/calcoefs_view.c:244
+#: modules/process/calcoefs_view.c:245
 msgid "3D calibration and uncertainty"
 msgstr "Трёхмерная калибровка и погрешности"
 
-#: modules/process/calcoefs_view.c:302
+#: modules/process/calcoefs_view.c:303
 msgid "3D Calibration"
 msgstr "Трёхмерная калибровка"
 
-#: modules/process/calcoefs_view.c:385
+#: modules/process/calcoefs_view.c:387
 msgid "Used calibration data:"
 msgstr "Используемые данные калибровки:"
 
-#: modules/process/calcoefs_view.c:402
+#: modules/process/calcoefs_view.c:404
 msgid "Shown planes:"
 msgstr "Показаны плоскости:"
 
-#: modules/process/calcoefs_view.c:408
+#: modules/process/calcoefs_view.c:410
 msgid "View:"
 msgstr "Вид:"
 
-#: modules/process/calcoefs_view.c:423
+#: modules/process/calcoefs_view.c:425
 msgid "Plane:"
 msgstr "Плоскость:"
 
-#: modules/process/calcoefs_view.c:442
+#: modules/process/calcoefs_view.c:444
 msgid "X pos:"
 msgstr "Положение X:"
 
-#: modules/process/calcoefs_view.c:449
+#: modules/process/calcoefs_view.c:451
 msgid "Y pos:"
 msgstr "Положение Y:"
 
-#: modules/process/calcoefs_view.c:456
+#: modules/process/calcoefs_view.c:458
 msgid "Z pos:"
 msgstr "Положение Z:"
 
-#: modules/process/calcoefs_view.c:461
+#: modules/process/calcoefs_view.c:463
 msgid "Interpolation:"
 msgstr "Интерполяция:"
 
-#: modules/process/calcoefs_view.c:545
+#: modules/process/calcoefs_view.c:547
 msgid "crop to actual data"
 msgstr "обрезать до действительных данных"
 
-#: modules/process/calcoefs_view.c:555
+#: modules/process/calcoefs_view.c:557
 msgid "i_nstant updates"
 msgstr "мгновенное об_новление"
 
-#: modules/process/calcoefs_view.c:645
+#: modules/process/calcoefs_view.c:668
 msgid "Shown part has zero range."
 msgstr "У показанной части нулевой диапазон "
 
-#: modules/process/calcoefs_view.c:652
+#: modules/process/calcoefs_view.c:675
 #, c-format
 msgid "Shown range (%.*f - %.*f) %s"
 msgstr "Показан диапазон (%.*f - %.*f) %s"
 
-#: modules/process/calcoefs_view.c:702
+#: modules/process/calcoefs_view.c:721
 #, c-format
 msgid "%d calibration data"
 msgstr "%d данных калибровки"
 
-#: modules/process/calcoefs_view.c:706
+#: modules/process/calcoefs_view.c:725
 #, c-format
 msgid "X span: (%.*f - %.*f) %s"
 msgstr "Диапазон X: (%.*f - %.*f) %s"
 
-#: modules/process/calcoefs_view.c:712
+#: modules/process/calcoefs_view.c:731
 #, c-format
 msgid "Y span: (%.*f - %.*f) %s"
 msgstr "Диапазон Y: (%.*f - %.*f) %s"
 
-#: modules/process/calcoefs_view.c:718
+#: modules/process/calcoefs_view.c:737
 #, c-format
 msgid "Z span: (%.*f - %.*f) %s"
 msgstr "Диапазон Z: (%.*f - %.*f) %s"
 
-#: modules/process/calcoefs_view.c:743
+#: modules/process/calcoefs_view.c:770
 msgid "Building mesh..."
 msgstr "Строится сетка..."
 
-#: modules/process/calcoefs_view.c:749
+#: modules/process/calcoefs_view.c:776
 msgid "Triangulation..."
 msgstr "Триангуляция..."
 
-#: modules/process/calcoefs_view.c:1074
-#: modules/tools/profile.c:1092
+#: modules/process/calcoefs_view.c:1101
+#: modules/tools/profile.c:1095
 msgid "X correction"
 msgstr "Поправка по X"
 
-#: modules/process/calcoefs_view.c:1075
-#: modules/tools/profile.c:1093
+#: modules/process/calcoefs_view.c:1102
+#: modules/tools/profile.c:1096
 msgid "Y correction"
 msgstr "Поправка по Y"
 
-#: modules/process/calcoefs_view.c:1076
-#: modules/tools/profile.c:1094
+#: modules/process/calcoefs_view.c:1103
+#: modules/tools/profile.c:1097
 msgid "Z correction"
 msgstr "Поправка по Z"
 
-#: modules/process/calcoefs_view.c:1077
-#: modules/tools/profile.c:1095
+#: modules/process/calcoefs_view.c:1104
+#: modules/tools/profile.c:1098
 msgid "X uncertainty"
 msgstr "Погрешность X"
 
-#: modules/process/calcoefs_view.c:1078
-#: modules/tools/profile.c:1096
+#: modules/process/calcoefs_view.c:1105
+#: modules/tools/profile.c:1099
 msgid "Y uncertainty"
 msgstr "Погрешность Y"
 
-#: modules/process/calcoefs_view.c:1079
-#: modules/tools/profile.c:1097
+#: modules/process/calcoefs_view.c:1106
+#: modules/tools/profile.c:1100
 msgid "Z uncertainty"
 msgstr "Погрешность Z"
 
-#: modules/process/calcoefs_view.c:1091
+#: modules/process/calcoefs_view.c:1118
 msgid "Constant X"
 msgstr "Постоянная X"
 
-#: modules/process/calcoefs_view.c:1092
+#: modules/process/calcoefs_view.c:1119
 msgid "Constant Y"
 msgstr "Постоянная Y"
 
-#: modules/process/calcoefs_view.c:1093
+#: modules/process/calcoefs_view.c:1120
 msgid "Constant Z"
 msgstr "Постоянная Z"
 
-#: modules/process/calcoefs_view.c:1104
+#: modules/process/calcoefs_view.c:1131
 msgid "NNA 3D"
 msgstr "АБС 3D"
 
-#: modules/process/calcoefs_view.c:1105
+#: modules/process/calcoefs_view.c:1132
 msgid "Snap to planes"
 msgstr "Привязать к плоскостям"
 
-#: modules/process/calcoefs_view.c:1106
+#: modules/process/calcoefs_view.c:1133
 msgid "Delaunay"
 msgstr "Делоне"
 
@@ -9575,7 +9579,7 @@ msgid "Profile tool, creates profile graphs from selected lines."
 msgstr "Инструмент профиля, создает графики профилей вдоль выбранных линий."
 
 #: modules/tools/profile.c:226
-#: modules/tools/profile.c:495
+#: modules/tools/profile.c:496
 msgid "Profiles"
 msgstr "Профили"
 
@@ -9595,46 +9599,42 @@ msgstr "Данные _калибровки:"
 msgid "_Show profile"
 msgstr "_Показать профиль"
 
-#: modules/tools/profile.c:483
-msgid "_Export uncertainties"
-msgstr "_Экспорт погрешностей"
-
-#: modules/tools/profile.c:820
+#: modules/tools/profile.c:821
 #, c-format
 msgid "X error %d"
 msgstr "Ошибка по X %d"
 
-#: modules/tools/profile.c:823
+#: modules/tools/profile.c:824
 #, c-format
 msgid "Y error %d"
 msgstr "Ошибка по Y %d"
 
-#: modules/tools/profile.c:826
+#: modules/tools/profile.c:827
 #, c-format
 msgid "Z error %d"
 msgstr "Ошибка по Z %d"
 
-#: modules/tools/profile.c:829
+#: modules/tools/profile.c:830
 #, c-format
 msgid "X uncertainty %d"
 msgstr "Погрешность по X %d"
 
-#: modules/tools/profile.c:832
+#: modules/tools/profile.c:833
 #, c-format
 msgid "Y uncertainty %d"
 msgstr "Погрешность по Y %d"
 
-#: modules/tools/profile.c:835
+#: modules/tools/profile.c:836
 #, c-format
 msgid "Z uncertainty %d"
 msgstr "Погрешность по Z %d"
 
-#: modules/tools/profile.c:838
+#: modules/tools/profile.c:839
 #, c-format
 msgid "Zunc up bound %d"
 msgstr "Верхняя граница погрешности Z %d"
 
-#: modules/tools/profile.c:841
+#: modules/tools/profile.c:842
 #, c-format
 msgid "Zunc low bound %d"
 msgstr "Нижняя граница погрешности Z %d"
@@ -10109,8 +10109,3 @@ msgstr ""
 "Наклон θ:     %s\n"
 "Наклон φ:     %s\n"
 
-#~ msgid "Calibrate"
-#~ msgstr "Калибровка"
-
-#~ msgid "Recalibrate data"
-#~ msgstr "Перекалибровать данные"
