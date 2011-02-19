@@ -1316,40 +1316,40 @@ gwy_data_field_grains_get_quantities(GwyDataField *data_field,
         INVALID = G_MAXUINT
     };
     static const guint need_aux[NQ] = {
-        NEED_SIZES,
-        NEED_SIZES,
-        NEED_SIZES,
-        0,
-        NEED_MIN,
-        NEED_MAX,
-        NEED_ZVALUE,
-        NEED_SIZES,
+        NEED_SIZES,                   /* projected area */
+        NEED_SIZES,                   /* equiv square side */
+        NEED_SIZES,                   /* equiv disc radius */
+        0,                            /* surface area */
+        NEED_MAX,                     /* maximum */
+        NEED_MIN,                     /* minimum */
+        NEED_ZVALUE,                  /* mean */
+        NEED_SIZES,                   /* median */
         INVALID,
-        NEED_MIN | NEED_MAX,
-        0,
+        NEED_MIN | NEED_MAX,          /* half-height area */
+        0,                            /* flat boundary length */
         INVALID,
-        NEED_BOUNDPOS,
-        NEED_BOUNDPOS,
-        NEED_BOUNDPOS,
-        NEED_BOUNDPOS,
-        NEED_XVALUE,
-        NEED_YVALUE,
-        0,
-        NEED_MIN,
-        0,
+        NEED_BOUNDPOS,                /* min bounding size */
+        NEED_BOUNDPOS,                /* min bounding direction */
+        NEED_BOUNDPOS,                /* max bounding size */
+        NEED_BOUNDPOS,                /* max bounding direction */
+        NEED_XVALUE,                  /* centre x */
+        NEED_YVALUE,                  /* centre y */
+        0,                            /* volume, 0-based */
+        NEED_MIN,                     /* volume, min-based */
+        0,                            /* volume, Laplace-based */
         INVALID,
         INVALID,
-        NEED_LINEAR,
-        NEED_LINEAR,
-        0,
-        0,
-        NEED_QUADRATIC,
-        NEED_QUADRATIC,
-        NEED_QUADRATIC,
-        NEED_QUADRATIC,
-        NEED_QUADRATIC,
-        NEED_QUADRATIC,
-        NEED_QUADRATIC,
+        NEED_LINEAR,                  /* slope theta */
+        NEED_LINEAR,                  /* slope phi */
+        0,                            /* boundary minimum */
+        0,                            /* boundary maximum */
+        NEED_QUADRATIC,               /* curvature centre x */
+        NEED_QUADRATIC,               /* curvature centre y */
+        NEED_QUADRATIC,               /* curvature centre z */
+        NEED_QUADRATIC,               /* curvature invrad 1 */
+        NEED_QUADRATIC,               /* curvature invrad 2 */
+        NEED_QUADRATIC,               /* curvature direction 1 */
+        NEED_QUADRATIC,               /* curvature direction 2 */
     };
 
     gdouble *quantity_data[NQ];
@@ -1375,6 +1375,10 @@ gwy_data_field_grains_get_quantities(GwyDataField *data_field,
         values = g_new(gdouble*, nquantities);
         for (i = 0; i < nquantities; i++)
             values[i] = g_new0(gdouble, ngrains + 1);
+    }
+    else {
+        for (i = 0; i < nquantities; i++)
+            gwy_clear(values[i], ngrains + 1);
     }
 
     xres = data_field->xres;
