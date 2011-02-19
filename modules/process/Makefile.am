@@ -41,6 +41,7 @@ process_LTLIBRARIES = \
 	indent_analyze.la \
 	laplace.la \
 	level.la \
+	level_grains.la \
 	linecorrect.la \
 	local_contrast.la \
 	mark_with.la \
@@ -138,6 +139,7 @@ immerse_la_SOURCES             = immerse.c
 indent_analyze_la_SOURCES      = indent_analyze.c
 laplace_la_SOURCES             = laplace.c
 level_la_SOURCES               = level.c
+level_grains_la_SOURCES        = level_grains.c
 linecorrect_la_SOURCES         = linecorrect.c
 local_contrast_la_SOURCES      = local_contrast.c
 mark_with_la_SOURCES           = mark_with.c
