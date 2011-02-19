@@ -13,11 +13,14 @@ Libraries:
   were corrected.
 - libgwyapp: Data windows use a thumbnail of the image as the window icon.
 - libgwyapp: Data browser shows the full file path as a tooltip of the file
-             name.
+  name.
+- libgwyprocess: If grain minimum or maximum was requested without the other
+  it has not been calculated (bug introduced in 2.22); this was corrected.
 
 Modules:
 - WSF file (new): Imports WSF SPM data.
 - MIF (new): Import of DME MIF files v1.7 (just topography).
+- Level Grains (new): Subtract background that makes makred grains level.
 - Nanonis: Can open files containing a multipass configuration table.
 - Pixmap: The set of importable formats was limited to BMP, GIF, ICNS, JPEG,
   JPEG2000, PCX, PNG, PNM, RAS, TARGA, TIFF and XPM that are known to work to
@@ -34,6 +37,7 @@ Modules:
 - Statistical functions: Modified to display calibration data if present.
 - DOS spectrum: Calculates absolute value of (dI/dU)/(I/U) and does not
   removing the contact potential.
+- Object Synthesis: Object heights can be truncated.
 
 Other:
 - Compilation with MSVC6 toolchain on MS Windows is no longer supported, use
