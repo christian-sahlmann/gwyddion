@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2011-02-16 03:58+0100\n"
-"PO-Revision-Date: 2011-02-16 07:49+0300\n"
+"POT-Creation-Date: 2011-02-20 03:58+0100\n"
+"PO-Revision-Date: 2011-02-20 17:12+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "Language: \n"
@@ -118,11 +118,11 @@ msgstr "vdW: параболоид"
 
 #: libgwyddion/gwyinventory.c:1310
 #: libgwydgets/gwygraphwindow.c:603
-#: app/data-browser.c:1537
-#: app/data-browser.c:2282
-#: app/data-browser.c:3056
-#: app/data-browser.c:3215
-#: app/data-browser.c:5117
+#: app/data-browser.c:1541
+#: app/data-browser.c:2290
+#: app/data-browser.c:3064
+#: app/data-browser.c:3223
+#: app/data-browser.c:5131
 #: app/resource-editor.c:366
 #: modules/process/convolution_filter.c:700
 msgid "Untitled"
@@ -870,7 +870,7 @@ msgstr "точек"
 #: modules/process/local_contrast.c:126
 #: modules/process/median-bg.c:176
 #: modules/process/noise_synth.c:347
-#: modules/process/obj_synth.c:423
+#: modules/process/obj_synth.c:432
 #: modules/process/pat_synth.c:391
 #: modules/process/polydistort.c:219
 #: modules/process/polylevel.c:376
@@ -1137,7 +1137,7 @@ msgstr "Длина"
 #: libgwydgets/gwygraphwindowmeasuredialog.c:378
 #: libgwydgets/gwygraphwindowmeasuredialog.c:567
 #: app/gwyplaintool.c:1022
-#: modules/process/obj_synth.c:558
+#: modules/process/obj_synth.c:567
 #: modules/process/pat_synth.c:818
 #: modules/process/pat_synth.c:1115
 msgid "Height"
@@ -1419,39 +1419,39 @@ msgstr "Квадратный _попиксельно"
 msgid "_Physically Square"
 msgstr "Квадратный _физически"
 
-#: app/data-browser.c:3766
+#: app/data-browser.c:3774
 msgid "Extract to a new file"
 msgstr "Извлечь в новый файл"
 
-#: app/data-browser.c:3767
+#: app/data-browser.c:3775
 msgid "Duplicate"
 msgstr "Сделать копию"
 
-#: app/data-browser.c:3768
+#: app/data-browser.c:3776
 msgid "Delete"
 msgstr "Удалить"
 
-#: app/data-browser.c:3812
+#: app/data-browser.c:3820
 msgid "Data Browser"
 msgstr "Просмотр данных"
 
-#: app/data-browser.c:3835
+#: app/data-browser.c:3843
 msgid "Close file"
 msgstr "Закрыть файл"
 
-#: app/data-browser.c:3848
+#: app/data-browser.c:3856
 msgid "Channels"
 msgstr "Каналы"
 
-#: app/data-browser.c:3862
+#: app/data-browser.c:3870
 msgid "Graphs"
 msgstr "Графики"
 
-#: app/data-browser.c:3876
+#: app/data-browser.c:3884
 msgid "Spectra"
 msgstr "Спектры"
 
-#: app/data-browser.c:5155
+#: app/data-browser.c:5169
 #, c-format
 msgid "Unknown channel %d"
 msgstr "Неизвестный канал %d"
@@ -1749,7 +1749,7 @@ msgstr "Начальная точка"
 #: modules/file/rawfile.c:959
 #: modules/process/convolution_filter.c:358
 #: modules/process/convolution_filter.c:562
-#: modules/process/obj_synth.c:528
+#: modules/process/obj_synth.c:537
 msgid "Size"
 msgstr "Размер"
 
@@ -3617,7 +3617,7 @@ msgstr "_Ширина:"
 #: modules/file/pixmap.c:2719
 #: modules/process/grain_mark.c:312
 #: modules/process/grain_rem_threshold.c:280
-#: modules/process/obj_synth.c:564
+#: modules/process/obj_synth.c:573
 #: modules/process/pat_synth.c:824
 #: modules/process/pat_synth.c:1121
 #: modules/process/tip_blind.c:272
@@ -6040,7 +6040,7 @@ msgstr "Создать частицы используя динамическу�
 #: modules/process/fft_synth.c:304
 #: modules/process/lno_synth.c:410
 #: modules/process/noise_synth.c:322
-#: modules/process/obj_synth.c:395
+#: modules/process/obj_synth.c:404
 #: modules/process/pat_synth.c:363
 msgid "Generated"
 msgstr "Сгенерированное"
@@ -6053,7 +6053,7 @@ msgstr "Генерация частиц"
 #: modules/process/fft_synth.c:395
 #: modules/process/lno_synth.c:501
 #: modules/process/noise_synth.c:413
-#: modules/process/obj_synth.c:488
+#: modules/process/obj_synth.c:497
 #: modules/process/pat_synth.c:456
 msgid "Dimensions"
 msgstr "Размеры"
@@ -6062,7 +6062,7 @@ msgstr "Размеры"
 #: modules/process/fft_synth.c:406
 #: modules/process/lno_synth.c:512
 #: modules/process/noise_synth.c:424
-#: modules/process/obj_synth.c:499
+#: modules/process/obj_synth.c:508
 #: modules/process/pat_synth.c:467
 msgid "Generator"
 msgstr "Генератор"
@@ -6737,7 +6737,7 @@ msgstr "Ср. _квадр.:"
 #: modules/process/fft_synth.c:415
 #: modules/process/lno_synth.c:548
 #: modules/process/noise_synth.c:456
-#: modules/process/obj_synth.c:568
+#: modules/process/obj_synth.c:577
 msgid "_Like Current Channel"
 msgstr "Как _у текущего канала"
 
@@ -7716,6 +7716,45 @@ msgstr "Выровнять по плоскости"
 msgid "Level Rotate"
 msgstr "Выравнивание поворотом"
 
+#: modules/process/level_grains.c:83
+msgid "Levels individual grains, interpolating the shifts between using Laplacian interpolation."
+msgstr "Выравнивает отдельные зёрна, интерполируя сдвиги между ними используя интерполяцию Лапласа"
+
+#: modules/process/level_grains.c:98
+msgid "/_Grains/_Level Grains..."
+msgstr "/Зёрн_а/В_ыровнять зёрна..."
+
+#: modules/process/level_grains.c:102
+msgid "Level individual grains, interpolating the shifts between using Laplacian interpolation"
+msgstr "Выровнять отдельные зёрна, интерполируя сдвиги между ними используя интерполяцию Лапласа"
+
+#: modules/process/level_grains.c:177
+msgid "Laplace interpolation..."
+msgstr "Интерполяция Лапласа..."
+
+#: modules/process/level_grains.c:223
+#: modules/process/median-bg.c:163
+#: modules/process/polylevel.c:296
+#: modules/process/polylevel.c:421
+#: modules/process/sphere-revolve.c:197
+msgid "Background"
+msgstr "Фон"
+
+#: modules/process/level_grains.c:240
+msgid "Level Grains"
+msgstr "Выровнять зёрна"
+
+#: modules/process/level_grains.c:255
+msgid "Quantity to level:"
+msgstr "Величина:"
+
+#: modules/process/level_grains.c:268
+#: modules/process/median-bg.c:213
+#: modules/process/polylevel.c:486
+#: modules/process/sphere-revolve.c:260
+msgid "E_xtract background"
+msgstr "_Извлечь фон"
+
 #: modules/process/linecorrect.c:64
 msgid "Corrects line defects (mostly experimental algorithms)."
 msgstr "Исправление дефектов линий (большая часть алгоритмов экспериментальна)"
@@ -7855,7 +7894,7 @@ msgid "C_umulative"
 msgstr "К_умулятивный"
 
 #: modules/process/lno_synth.c:1055
-#: modules/process/obj_synth.c:510
+#: modules/process/obj_synth.c:519
 msgid "Co_verage:"
 msgstr "По_крытие:"
 
@@ -8066,13 +8105,6 @@ msgstr "Выровнять данные вычетом локального ср
 msgid "Median-leveling"
 msgstr "Выравнивание по срединному."
 
-#: modules/process/median-bg.c:163
-#: modules/process/polylevel.c:296
-#: modules/process/polylevel.c:421
-#: modules/process/sphere-revolve.c:197
-msgid "Background"
-msgstr "Фон"
-
 #: modules/process/median-bg.c:175
 msgid "Median Level"
 msgstr "Выровнять по срединному"
@@ -8086,12 +8118,6 @@ msgstr "Реальный _радиус:"
 #: modules/process/sphere-revolve.c:244
 msgid "_Pixel radius:"
 msgstr "Радиус в _пикселях:"
-
-#: modules/process/median-bg.c:213
-#: modules/process/polylevel.c:486
-#: modules/process/sphere-revolve.c:260
-msgid "E_xtract background"
-msgstr "_Извлечь фон"
 
 #: modules/process/merge.c:127
 msgid "Up"
@@ -8221,89 +8247,93 @@ msgstr "Сгенерировать поверхность из некоррел�
 msgid "Random Noise"
 msgstr "Случайный шум"
 
-#: modules/process/obj_synth.c:265
+#: modules/process/obj_synth.c:274
 msgid "Spheres"
 msgstr "Сферы"
 
-#: modules/process/obj_synth.c:266
+#: modules/process/obj_synth.c:275
 msgid "Boxes"
 msgstr "Коробки"
 
-#: modules/process/obj_synth.c:267
+#: modules/process/obj_synth.c:276
 msgid "Cones"
 msgstr "Конусы"
 
-#: modules/process/obj_synth.c:268
+#: modules/process/obj_synth.c:277
 msgid "Pyramids"
 msgstr "Пирамиды"
 
-#: modules/process/obj_synth.c:269
+#: modules/process/obj_synth.c:278
 msgid "Diamonds"
 msgstr "Алмазы"
 
-#: modules/process/obj_synth.c:270
+#: modules/process/obj_synth.c:279
 msgid "Tetrahedrons"
 msgstr "Тетраэдры"
 
-#: modules/process/obj_synth.c:271
+#: modules/process/obj_synth.c:280
 msgid "Nuggets"
 msgstr "Частицы"
 
-#: modules/process/obj_synth.c:272
+#: modules/process/obj_synth.c:281
 msgid "Thatches"
 msgstr "Листья камыша"
 
-#: modules/process/obj_synth.c:273
+#: modules/process/obj_synth.c:282
 msgid "Tents"
 msgstr "Ангары"
 
-#: modules/process/obj_synth.c:274
+#: modules/process/obj_synth.c:283
 msgid "Gaussians"
 msgstr "Гауссианы"
 
-#: modules/process/obj_synth.c:275
+#: modules/process/obj_synth.c:284
 msgid "Dougnuts"
 msgstr "Бублики"
 
-#: modules/process/obj_synth.c:281
+#: modules/process/obj_synth.c:290
 msgid "Generates randomly patterned surfaces by placing objects."
 msgstr "Генерирует поверхности со случайным узором расставляя объекты."
 
-#: modules/process/obj_synth.c:295
+#: modules/process/obj_synth.c:304
 msgid "/S_ynthetic/_Objects..."
 msgstr "/Син_тез/_Объекты..."
 
-#: modules/process/obj_synth.c:299
+#: modules/process/obj_synth.c:308
 msgid "Generate surface of randomly placed objects"
 msgstr "Сгенерировать поверхность из случайно расположенных объектов"
 
-#: modules/process/obj_synth.c:421
+#: modules/process/obj_synth.c:430
 msgid "Random Objects"
 msgstr "Случайные объекты"
 
-#: modules/process/obj_synth.c:503
+#: modules/process/obj_synth.c:512
 msgid "_Shape:"
 msgstr "_Форма:"
 
-#: modules/process/obj_synth.c:521
+#: modules/process/obj_synth.c:530
 msgid "obj."
 msgstr "объект."
 
-#: modules/process/obj_synth.c:534
+#: modules/process/obj_synth.c:543
 msgid "_Size:"
 msgstr "_Размер:"
 
-#: modules/process/obj_synth.c:541
+#: modules/process/obj_synth.c:550
 msgid "Aspect Ratio"
 msgstr "Пропорции"
 
-#: modules/process/obj_synth.c:548
+#: modules/process/obj_synth.c:557
 msgid "_Aspect ratio:"
 msgstr "_Пропорции:"
 
-#: modules/process/obj_synth.c:577
+#: modules/process/obj_synth.c:586
 msgid "Scales _with size"
 msgstr "_Масштабируется с размером"
+
+#: modules/process/obj_synth.c:789
+msgid "_Truncate:"
+msgstr "_Усечение:"
 
 #: modules/process/outliers.c:38
 msgid "Creates mask of outliers."
