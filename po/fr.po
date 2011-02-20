@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: French localization\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2011-02-09 03:58+0100\n"
-"PO-Revision-Date: 2011-02-09 20:35+0100\n"
+"POT-Creation-Date: 2011-02-20 03:58+0100\n"
+"PO-Revision-Date: 2011-02-20 19:04+0100\n"
 "Last-Translator: François RIGUET <francheu@caramail.com>\n"
 "Language-Team: François RIGUET <francheu@caramail.com>\n"
 "MIME-Version: 1.0\n"
@@ -118,11 +118,11 @@ msgstr "vdW : parabole"
 
 #: libgwyddion/gwyinventory.c:1310
 #: libgwydgets/gwygraphwindow.c:603
-#: app/data-browser.c:1537
-#: app/data-browser.c:2271
-#: app/data-browser.c:3045
-#: app/data-browser.c:3204
-#: app/data-browser.c:5106
+#: app/data-browser.c:1541
+#: app/data-browser.c:2290
+#: app/data-browser.c:3064
+#: app/data-browser.c:3223
+#: app/data-browser.c:5131
 #: app/resource-editor.c:366
 #: modules/process/convolution_filter.c:700
 msgid "Untitled"
@@ -536,7 +536,7 @@ msgstr "Schaum"
 #: app/datachooser.c:402
 #: modules/process/convolution_filter.c:129
 #: modules/process/merge.c:135
-#: modules/tools/profile.c:1091
+#: modules/tools/profile.c:1094
 msgid "None"
 msgstr "Aucun"
 
@@ -870,7 +870,7 @@ msgstr "pixels"
 #: modules/process/local_contrast.c:126
 #: modules/process/median-bg.c:176
 #: modules/process/noise_synth.c:347
-#: modules/process/obj_synth.c:423
+#: modules/process/obj_synth.c:432
 #: modules/process/pat_synth.c:391
 #: modules/process/polydistort.c:219
 #: modules/process/polylevel.c:376
@@ -1137,7 +1137,7 @@ msgstr "Longueur"
 #: libgwydgets/gwygraphwindowmeasuredialog.c:378
 #: libgwydgets/gwygraphwindowmeasuredialog.c:567
 #: app/gwyplaintool.c:1022
-#: modules/process/obj_synth.c:558
+#: modules/process/obj_synth.c:567
 #: modules/process/pat_synth.c:818
 #: modules/process/pat_synth.c:1115
 msgid "Height"
@@ -1419,39 +1419,39 @@ msgstr "Pi_xels carrés"
 msgid "_Physically Square"
 msgstr "_Pixels réels"
 
-#: app/data-browser.c:3755
+#: app/data-browser.c:3774
 msgid "Extract to a new file"
 msgstr "Extraire en tant que nouveau fichier"
 
-#: app/data-browser.c:3756
+#: app/data-browser.c:3775
 msgid "Duplicate"
 msgstr "Dupliquer"
 
-#: app/data-browser.c:3757
+#: app/data-browser.c:3776
 msgid "Delete"
 msgstr "Supprimer"
 
-#: app/data-browser.c:3801
+#: app/data-browser.c:3820
 msgid "Data Browser"
 msgstr "Navigateur de Données"
 
-#: app/data-browser.c:3824
+#: app/data-browser.c:3843
 msgid "Close file"
 msgstr "Fermer le fichier"
 
-#: app/data-browser.c:3837
+#: app/data-browser.c:3856
 msgid "Channels"
 msgstr "Canaux"
 
-#: app/data-browser.c:3851
+#: app/data-browser.c:3870
 msgid "Graphs"
 msgstr "Graphes"
 
-#: app/data-browser.c:3865
+#: app/data-browser.c:3884
 msgid "Spectra"
 msgstr "Spectres"
 
-#: app/data-browser.c:5144
+#: app/data-browser.c:5169
 #, c-format
 msgid "Unknown channel %d"
 msgstr "Canal inconnu %d"
@@ -1749,7 +1749,7 @@ msgstr "Origine"
 #: modules/file/rawfile.c:959
 #: modules/process/convolution_filter.c:358
 #: modules/process/convolution_filter.c:562
-#: modules/process/obj_synth.c:528
+#: modules/process/obj_synth.c:537
 msgid "Size"
 msgstr "Taille"
 
@@ -2880,58 +2880,58 @@ msgstr "L'élément de premier niveau n'est pas ‘TiffTagDescData’."
 msgid "XML parsing failed: %s"
 msgstr "L'analyse du fichier XML à échoué : %s"
 
-#: modules/file/mapvue.c:451
+#: modules/file/mapvue.c:455
 msgid "Imports MapVue data files (.map)."
 msgstr "Importe les fichiers MapVue (.map)."
 
-#: modules/file/mapvue.c:464
+#: modules/file/mapvue.c:468
 msgid "MapVue files (.map)"
 msgstr "MapVue (.map)"
 
-#: modules/file/mapvue.c:540
-#: modules/file/mapvue.c:560
+#: modules/file/mapvue.c:544
+#: modules/file/mapvue.c:574
 #, c-format
 msgid "Required tag %u or %u was not found."
 msgstr "La balise requise %u ou %u n'a pas été trouvée."
 
-#: modules/file/mapvue.c:771
+#: modules/file/mapvue.c:785
 msgid "File end was reached while scanning tags."
 msgstr "La fin du fichier a été atteinte lors de la lecture des balises."
 
-#: modules/file/mapvue.c:783
+#: modules/file/mapvue.c:797
 #, c-format
 msgid "Expected tag %u size is %u bytes, but the actual size is %u bytes."
 msgstr "La taille attendue de la balise %u est de %u octets, mais la taille réelle est de %u octets."
 
-#: modules/file/mapvue.c:797
+#: modules/file/mapvue.c:811
 #, c-format
 msgid "Tag %u size is %u bytes, which is not enough to hold the tag marker."
 msgstr "La taille de la balise %u est de %u octets, ce qui n'est pas assez pour contenir le marqueur de balise."
 
-#: modules/file/mapvue.c:808
-#: modules/file/mapvue.c:821
+#: modules/file/mapvue.c:822
+#: modules/file/mapvue.c:835
 #, c-format
 msgid "Tag %u size is %u bytes, which is not enough to hold the tag marker and size."
 msgstr "La taille de la balise %u est de %u octets, ce qui n'est pas assez pour contenir le marqueur et la taille de la balise."
 
-#: modules/file/mapvue.c:832
+#: modules/file/mapvue.c:846
 #, c-format
 msgid "Tag marker is missing on an unknown tag %u."
 msgstr "Le marqueur de balise est manquant sur la balise inconnue %u."
 
-#: modules/file/mapvue.c:851
-#: modules/file/mapvue.c:861
+#: modules/file/mapvue.c:865
+#: modules/file/mapvue.c:875
 msgid "Character array does not fit into the file."
 msgstr "La table de caractères ne tient pas dans le fichier."
 
-#: modules/file/mapvue.c:878
-#: modules/file/mapvue.c:889
-#: modules/file/mapvue.c:899
+#: modules/file/mapvue.c:892
+#: modules/file/mapvue.c:903
+#: modules/file/mapvue.c:913
 #, fuzzy
 msgid "Fiducial record does not fit into the file."
 msgstr "La table de caractères ne tient pas dans le fichier."
 
-#: modules/file/mapvue.c:1119
+#: modules/file/mapvue.c:1137
 #, c-format
 msgid "Tag %u size is %u which is not sufficient to hold its content."
 msgstr "La taille de la balise %u est %u, ce qui n'est pas suffisant pour tenir son contenu."
@@ -3074,7 +3074,7 @@ msgstr "L'en-tête de paramètre est tronqué."
 
 #: modules/file/nanoeducator.c:907
 #: modules/process/curvature.c:441
-#: modules/tools/profile.c:803
+#: modules/tools/profile.c:804
 #, c-format
 msgid "Profile %d"
 msgstr "Profil %d"
@@ -3510,8 +3510,8 @@ msgstr "Largeur"
 #: modules/process/calcoefs_new.c:448
 #: modules/process/calcoefs_simple.c:383
 #: modules/process/calcoefs_simple.c:450
-#: modules/process/calcoefs_view.c:499
-#: modules/process/calcoefs_view.c:537
+#: modules/process/calcoefs_view.c:501
+#: modules/process/calcoefs_view.c:539
 #: modules/process/calibrate.c:339
 #: modules/process/calibrate.c:420
 #: modules/process/dimensions.h:159
@@ -3549,7 +3549,7 @@ msgstr "en tant que données"
 #: modules/file/rawfile.c:1326
 #: modules/process/calcoefs_new.c:773
 #: modules/process/calcoefs_simple.c:1070
-#: modules/process/calcoefs_view.c:1334
+#: modules/process/calcoefs_view.c:1361
 #: modules/process/calibrate.c:816
 #: modules/process/dimensions.h:193
 msgid "Change Units"
@@ -3559,7 +3559,7 @@ msgstr "Changer les unités"
 #: modules/file/rawfile.c:1340
 #: modules/process/calcoefs_new.c:786
 #: modules/process/calcoefs_simple.c:1083
-#: modules/process/calcoefs_view.c:1347
+#: modules/process/calcoefs_view.c:1374
 #: modules/process/calibrate.c:830
 #: modules/process/dimensions.h:206
 msgid "New _units:"
@@ -3618,7 +3618,7 @@ msgstr "Largeur :"
 #: modules/file/pixmap.c:2719
 #: modules/process/grain_mark.c:312
 #: modules/process/grain_rem_threshold.c:280
-#: modules/process/obj_synth.c:564
+#: modules/process/obj_synth.c:573
 #: modules/process/pat_synth.c:824
 #: modules/process/pat_synth.c:1121
 #: modules/process/tip_blind.c:272
@@ -3876,7 +3876,7 @@ msgstr "Préréglages"
 #: modules/file/rawfile.c:541
 #: modules/file/rawxyz.c:436
 #: modules/process/arithmetic.c:227
-#: modules/process/calcoefs_view.c:304
+#: modules/process/calcoefs_view.c:305
 #: modules/process/convolution_filter.c:243
 #: modules/process/deposit_synth.c:683
 #: modules/process/drift.c:227
@@ -4036,7 +4036,7 @@ msgid "Preset l_ist"
 msgstr "Liste des préréglages"
 
 #: modules/file/rawfile.c:1008
-#: modules/process/calcoefs_load.c:214
+#: modules/process/calcoefs_load.c:216
 msgid "_Load"
 msgstr "Charger"
 
@@ -4406,6 +4406,10 @@ msgstr "Importe les fichiers Seiko XQB, XQD et XQT."
 #: modules/file/seiko.c:95
 msgid "Seiko files (.xqb, .xqd, .xqt)"
 msgstr "Seiko (.xqb, .xqd, .xqt)"
+
+#: modules/file/seiko.c:238
+msgid "Cannot determine scan dimensions; it seems non-square with an unknown side ratio."
+msgstr "Il est Impossible de déterminer les dimensions du scan ; il semble rectangulaire avec un rapport d'aspect inconnu."
 
 #: modules/file/sensofar.c:200
 msgid "Imports Sensofar PLu file format, version 2000 or newer."
@@ -5398,18 +5402,18 @@ msgstr "/Cali_bration/Charger un fichier de ca_libration..."
 msgid "Load calibration data from text file."
 msgstr "Charger des données de calibration à partir d'un fichier texte."
 
-#: modules/process/calcoefs_load.c:206
+#: modules/process/calcoefs_load.c:208
 msgid "Load Calibration Data"
 msgstr "Charger des données de calibration"
 
-#: modules/process/calcoefs_load.c:226
+#: modules/process/calcoefs_load.c:228
 #: modules/process/calcoefs_new.c:563
 #: modules/process/calcoefs_simple.c:467
 #, fuzzy
 msgid "Calibration name:"
 msgstr "Nom de la calibration :"
 
-#: modules/process/calcoefs_load.c:238
+#: modules/process/calcoefs_load.c:240
 msgid "No data loaded"
 msgstr "Aucunes données chargées"
 
@@ -5506,13 +5510,13 @@ msgid "Operands:"
 msgstr "Opérateurs :"
 
 #: modules/process/calcoefs_simple.c:363
-#: modules/process/calcoefs_view.c:479
+#: modules/process/calcoefs_view.c:481
 #: modules/process/calibrate.c:367
 msgid "_X offset:"
 msgstr "Décalage _X :"
 
 #: modules/process/calcoefs_simple.c:390
-#: modules/process/calcoefs_view.c:505
+#: modules/process/calcoefs_view.c:507
 #: modules/process/calibrate.c:380
 msgid "_Y offset:"
 msgstr "Décalage _Y :"
@@ -5526,7 +5530,7 @@ msgid "Y p_eriod:"
 msgstr "P_ériode Y :"
 
 #: modules/process/calcoefs_simple.c:430
-#: modules/process/calcoefs_view.c:517
+#: modules/process/calcoefs_view.c:519
 msgid "_Z offset:"
 msgstr "Décalage _Z :"
 
@@ -5555,150 +5559,150 @@ msgstr ""
 msgid "Stage Error Map"
 msgstr "Carte d'erreur de platine"
 
-#: modules/process/calcoefs_view.c:226
+#: modules/process/calcoefs_view.c:227
 msgid "3D calibration/uncertainty"
 msgstr "Calibration 3D / incertitude"
 
-#: modules/process/calcoefs_view.c:240
+#: modules/process/calcoefs_view.c:241
 msgid "/Cali_bration/_Apply to Data..."
 msgstr "/Cali_bration/_Appliquer aux données..."
 
-#: modules/process/calcoefs_view.c:244
+#: modules/process/calcoefs_view.c:245
 msgid "3D calibration and uncertainty"
 msgstr "Calibration 3D et incertitude"
 
-#: modules/process/calcoefs_view.c:302
+#: modules/process/calcoefs_view.c:303
 msgid "3D Calibration"
 msgstr "Calibration 3D"
 
-#: modules/process/calcoefs_view.c:385
+#: modules/process/calcoefs_view.c:387
 msgid "Used calibration data:"
 msgstr "Données de calibration utilisées :"
 
-#: modules/process/calcoefs_view.c:402
+#: modules/process/calcoefs_view.c:404
 msgid "Shown planes:"
 msgstr "Plans affichés :"
 
-#: modules/process/calcoefs_view.c:408
+#: modules/process/calcoefs_view.c:410
 msgid "View:"
 msgstr "Vue :"
 
-#: modules/process/calcoefs_view.c:423
+#: modules/process/calcoefs_view.c:425
 msgid "Plane:"
 msgstr "Plan :"
 
-#: modules/process/calcoefs_view.c:442
+#: modules/process/calcoefs_view.c:444
 msgid "X pos:"
 msgstr "X pos :"
 
-#: modules/process/calcoefs_view.c:449
+#: modules/process/calcoefs_view.c:451
 msgid "Y pos:"
 msgstr "Y pos :"
 
-#: modules/process/calcoefs_view.c:456
+#: modules/process/calcoefs_view.c:458
 msgid "Z pos:"
 msgstr "Z pos :"
 
-#: modules/process/calcoefs_view.c:461
+#: modules/process/calcoefs_view.c:463
 msgid "Interpolation:"
 msgstr "Interpolation :"
 
-#: modules/process/calcoefs_view.c:545
+#: modules/process/calcoefs_view.c:547
 msgid "crop to actual data"
 msgstr "Rogner aux données réelles"
 
-#: modules/process/calcoefs_view.c:555
+#: modules/process/calcoefs_view.c:557
 msgid "i_nstant updates"
 msgstr "i_nstant updates"
 
-#: modules/process/calcoefs_view.c:645
+#: modules/process/calcoefs_view.c:668
 msgid "Shown part has zero range."
 msgstr "La partie affichée a une plage nulle."
 
-#: modules/process/calcoefs_view.c:652
+#: modules/process/calcoefs_view.c:675
 #, c-format
 msgid "Shown range (%.*f - %.*f) %s"
 msgstr "Plage affichée (%.*f - %.*f) %s"
 
-#: modules/process/calcoefs_view.c:702
+#: modules/process/calcoefs_view.c:721
 #, c-format
 msgid "%d calibration data"
 msgstr "Données de calibration %d"
 
-#: modules/process/calcoefs_view.c:706
+#: modules/process/calcoefs_view.c:725
 #, fuzzy, c-format
 msgid "X span: (%.*f - %.*f) %s"
 msgstr "Plage X :          %.*f jusqu'à %.*f %s\n"
 
-#: modules/process/calcoefs_view.c:712
+#: modules/process/calcoefs_view.c:731
 #, fuzzy, c-format
 msgid "Y span: (%.*f - %.*f) %s"
 msgstr "Plage X :          %.*f jusqu'à %.*f %s\n"
 
-#: modules/process/calcoefs_view.c:718
+#: modules/process/calcoefs_view.c:737
 #, fuzzy, c-format
 msgid "Z span: (%.*f - %.*f) %s"
 msgstr "Plage X :          %.*f jusqu'à %.*f %s\n"
 
-#: modules/process/calcoefs_view.c:743
+#: modules/process/calcoefs_view.c:770
 msgid "Building mesh..."
 msgstr "Maillage en cours..."
 
-#: modules/process/calcoefs_view.c:749
+#: modules/process/calcoefs_view.c:776
 msgid "Triangulation..."
 msgstr "Triangulation..."
 
-#: modules/process/calcoefs_view.c:1074
-#: modules/tools/profile.c:1092
+#: modules/process/calcoefs_view.c:1101
+#: modules/tools/profile.c:1095
 msgid "X correction"
 msgstr "Correction X"
 
-#: modules/process/calcoefs_view.c:1075
-#: modules/tools/profile.c:1093
+#: modules/process/calcoefs_view.c:1102
+#: modules/tools/profile.c:1096
 msgid "Y correction"
 msgstr "Correction Y"
 
-#: modules/process/calcoefs_view.c:1076
-#: modules/tools/profile.c:1094
+#: modules/process/calcoefs_view.c:1103
+#: modules/tools/profile.c:1097
 msgid "Z correction"
 msgstr "Correction Z"
 
-#: modules/process/calcoefs_view.c:1077
-#: modules/tools/profile.c:1095
+#: modules/process/calcoefs_view.c:1104
+#: modules/tools/profile.c:1098
 msgid "X uncertainty"
 msgstr "Incertitude X"
 
-#: modules/process/calcoefs_view.c:1078
-#: modules/tools/profile.c:1096
+#: modules/process/calcoefs_view.c:1105
+#: modules/tools/profile.c:1099
 msgid "Y uncertainty"
 msgstr "Incertitude Y"
 
-#: modules/process/calcoefs_view.c:1079
-#: modules/tools/profile.c:1097
+#: modules/process/calcoefs_view.c:1106
+#: modules/tools/profile.c:1100
 msgid "Z uncertainty"
 msgstr "Incertitude X"
 
-#: modules/process/calcoefs_view.c:1091
+#: modules/process/calcoefs_view.c:1118
 msgid "Constant X"
 msgstr "X constant"
 
-#: modules/process/calcoefs_view.c:1092
+#: modules/process/calcoefs_view.c:1119
 msgid "Constant Y"
 msgstr "Y constant"
 
-#: modules/process/calcoefs_view.c:1093
+#: modules/process/calcoefs_view.c:1120
 msgid "Constant Z"
 msgstr "Z constant"
 
-#: modules/process/calcoefs_view.c:1104
+#: modules/process/calcoefs_view.c:1131
 msgid "NNA 3D"
 msgstr "NNA 3D"
 
-#: modules/process/calcoefs_view.c:1105
+#: modules/process/calcoefs_view.c:1132
 msgid "Snap to planes"
 msgstr "S'accrocher aux plans"
 
-#: modules/process/calcoefs_view.c:1106
+#: modules/process/calcoefs_view.c:1133
 msgid "Delaunay"
 msgstr "Delaunay"
 
@@ -6042,7 +6046,7 @@ msgstr "Générer des particules à l'aide d'un modèle dynamique"
 #: modules/process/fft_synth.c:304
 #: modules/process/lno_synth.c:410
 #: modules/process/noise_synth.c:322
-#: modules/process/obj_synth.c:395
+#: modules/process/obj_synth.c:404
 #: modules/process/pat_synth.c:363
 msgid "Generated"
 msgstr "Généré"
@@ -6055,7 +6059,7 @@ msgstr "Génération de particules"
 #: modules/process/fft_synth.c:395
 #: modules/process/lno_synth.c:501
 #: modules/process/noise_synth.c:413
-#: modules/process/obj_synth.c:488
+#: modules/process/obj_synth.c:497
 #: modules/process/pat_synth.c:456
 msgid "Dimensions"
 msgstr "Dimensions"
@@ -6064,7 +6068,7 @@ msgstr "Dimensions"
 #: modules/process/fft_synth.c:406
 #: modules/process/lno_synth.c:512
 #: modules/process/noise_synth.c:424
-#: modules/process/obj_synth.c:499
+#: modules/process/obj_synth.c:508
 #: modules/process/pat_synth.c:467
 msgid "Generator"
 msgstr "Générateur"
@@ -6740,7 +6744,7 @@ msgstr "_RMS :"
 #: modules/process/fft_synth.c:415
 #: modules/process/lno_synth.c:548
 #: modules/process/noise_synth.c:456
-#: modules/process/obj_synth.c:568
+#: modules/process/obj_synth.c:577
 msgid "_Like Current Channel"
 msgstr "Identique au canal courant"
 
@@ -7719,6 +7723,45 @@ msgstr "Niveau plan"
 msgid "Level Rotate"
 msgstr "Rotation du plan"
 
+#: modules/process/level_grains.c:83
+msgid "Levels individual grains, interpolating the shifts between using Laplacian interpolation."
+msgstr "Met à niveau des grains individuels, en interpolant les décalages à l'aide d'une interpolation laplacienne."
+
+#: modules/process/level_grains.c:98
+msgid "/_Grains/_Level Grains..."
+msgstr "/_Grains/Mise à niveau de grains..."
+
+#: modules/process/level_grains.c:102
+msgid "Level individual grains, interpolating the shifts between using Laplacian interpolation"
+msgstr "Mise à niveau de grains individuels, en interpolant les décalages à l'aide d'une interpolation laplacienne."
+
+#: modules/process/level_grains.c:177
+msgid "Laplace interpolation..."
+msgstr "Interpolation laplacienne..."
+
+#: modules/process/level_grains.c:223
+#: modules/process/median-bg.c:163
+#: modules/process/polylevel.c:296
+#: modules/process/polylevel.c:421
+#: modules/process/sphere-revolve.c:197
+msgid "Background"
+msgstr "Arrière-plan"
+
+#: modules/process/level_grains.c:240
+msgid "Level Grains"
+msgstr "Mise à niveau de grains"
+
+#: modules/process/level_grains.c:255
+msgid "Quantity to level:"
+msgstr "Quantité à mettre à niveau :"
+
+#: modules/process/level_grains.c:268
+#: modules/process/median-bg.c:213
+#: modules/process/polylevel.c:486
+#: modules/process/sphere-revolve.c:260
+msgid "E_xtract background"
+msgstr "E_xtraire l'arrière-plan"
+
 #: modules/process/linecorrect.c:64
 msgid "Corrects line defects (mostly experimental algorithms)."
 msgstr "Corrige les défauts des lignes (algorithmes expérimentaux)."
@@ -7858,7 +7901,7 @@ msgid "C_umulative"
 msgstr "C_umulatif"
 
 #: modules/process/lno_synth.c:1055
-#: modules/process/obj_synth.c:510
+#: modules/process/obj_synth.c:519
 msgid "Co_verage:"
 msgstr "Couverture :"
 
@@ -8069,13 +8112,6 @@ msgstr "Ajuste les données en soustrayant la médiane"
 msgid "Median-leveling"
 msgstr "Nivelage médian"
 
-#: modules/process/median-bg.c:163
-#: modules/process/polylevel.c:296
-#: modules/process/polylevel.c:421
-#: modules/process/sphere-revolve.c:197
-msgid "Background"
-msgstr "Arrière-plan"
-
 #: modules/process/median-bg.c:175
 msgid "Median Level"
 msgstr "Niveau Médian"
@@ -8089,12 +8125,6 @@ msgstr "_Rayon réel :"
 #: modules/process/sphere-revolve.c:244
 msgid "_Pixel radius:"
 msgstr "Rayon du _pixel :"
-
-#: modules/process/median-bg.c:213
-#: modules/process/polylevel.c:486
-#: modules/process/sphere-revolve.c:260
-msgid "E_xtract background"
-msgstr "E_xtraire l'arrière-plan"
 
 #: modules/process/merge.c:127
 msgid "Up"
@@ -8224,89 +8254,93 @@ msgstr "Générer une surface à partir d'un bruit non corrélé"
 msgid "Random Noise"
 msgstr "Bruit aléatoire"
 
-#: modules/process/obj_synth.c:265
+#: modules/process/obj_synth.c:274
 msgid "Spheres"
 msgstr "Sphères"
 
-#: modules/process/obj_synth.c:266
+#: modules/process/obj_synth.c:275
 msgid "Boxes"
 msgstr "Boîtes"
 
-#: modules/process/obj_synth.c:267
+#: modules/process/obj_synth.c:276
 msgid "Cones"
 msgstr "Cônes"
 
-#: modules/process/obj_synth.c:268
+#: modules/process/obj_synth.c:277
 msgid "Pyramids"
 msgstr "Pyramides"
 
-#: modules/process/obj_synth.c:269
+#: modules/process/obj_synth.c:278
 msgid "Diamonds"
 msgstr "Losanges"
 
-#: modules/process/obj_synth.c:270
+#: modules/process/obj_synth.c:279
 msgid "Tetrahedrons"
 msgstr "Tétraèdres"
 
-#: modules/process/obj_synth.c:271
+#: modules/process/obj_synth.c:280
 msgid "Nuggets"
 msgstr "Pépites"
 
-#: modules/process/obj_synth.c:272
+#: modules/process/obj_synth.c:281
 msgid "Thatches"
 msgstr "Chaumes"
 
-#: modules/process/obj_synth.c:273
+#: modules/process/obj_synth.c:282
 msgid "Tents"
 msgstr "Tentes"
 
-#: modules/process/obj_synth.c:274
+#: modules/process/obj_synth.c:283
 msgid "Gaussians"
 msgstr "Gaussiennes"
 
-#: modules/process/obj_synth.c:275
+#: modules/process/obj_synth.c:284
 msgid "Dougnuts"
 msgstr "Beignets"
 
-#: modules/process/obj_synth.c:281
+#: modules/process/obj_synth.c:290
 msgid "Generates randomly patterned surfaces by placing objects."
 msgstr "Génère des motifs de surface aléatoire en plçant des objets."
 
-#: modules/process/obj_synth.c:295
+#: modules/process/obj_synth.c:304
 msgid "/S_ynthetic/_Objects..."
 msgstr "/S_ynthèse/_Objets..."
 
-#: modules/process/obj_synth.c:299
+#: modules/process/obj_synth.c:308
 msgid "Generate surface of randomly placed objects"
 msgstr "Générer une surface avec des objets placés aléatoirement"
 
-#: modules/process/obj_synth.c:421
+#: modules/process/obj_synth.c:430
 msgid "Random Objects"
 msgstr "Objets aléatoires"
 
-#: modules/process/obj_synth.c:503
+#: modules/process/obj_synth.c:512
 msgid "_Shape:"
 msgstr "Forme :"
 
-#: modules/process/obj_synth.c:521
+#: modules/process/obj_synth.c:530
 msgid "obj."
 msgstr "obj."
 
-#: modules/process/obj_synth.c:534
+#: modules/process/obj_synth.c:543
 msgid "_Size:"
 msgstr "Dimen_sion :"
 
-#: modules/process/obj_synth.c:541
+#: modules/process/obj_synth.c:550
 msgid "Aspect Ratio"
 msgstr "Rapport d'aspect"
 
-#: modules/process/obj_synth.c:548
+#: modules/process/obj_synth.c:557
 msgid "_Aspect ratio:"
 msgstr "Rapport d'_aspect :"
 
-#: modules/process/obj_synth.c:577
+#: modules/process/obj_synth.c:586
 msgid "Scales _with size"
 msgstr "Mettre à l'échelle avec la taille"
+
+#: modules/process/obj_synth.c:789
+msgid "_Truncate:"
+msgstr "_Tronquer :"
 
 #: modules/process/outliers.c:38
 msgid "Creates mask of outliers."
@@ -9582,7 +9616,7 @@ msgid "Profile tool, creates profile graphs from selected lines."
 msgstr "Outil profil, crée des graphes de profiles à partir des lignes sélectionnées."
 
 #: modules/tools/profile.c:226
-#: modules/tools/profile.c:495
+#: modules/tools/profile.c:496
 msgid "Profiles"
 msgstr "Profils"
 
@@ -9602,46 +9636,42 @@ msgstr "Données de _calibration :"
 msgid "_Show profile"
 msgstr "Montrer le profil"
 
-#: modules/tools/profile.c:483
-msgid "_Export uncertainties"
-msgstr "_Exporter les incertitudes"
-
-#: modules/tools/profile.c:820
+#: modules/tools/profile.c:821
 #, c-format
 msgid "X error %d"
 msgstr "Erreur X %d"
 
-#: modules/tools/profile.c:823
+#: modules/tools/profile.c:824
 #, c-format
 msgid "Y error %d"
 msgstr "Erreur Y %d"
 
-#: modules/tools/profile.c:826
+#: modules/tools/profile.c:827
 #, c-format
 msgid "Z error %d"
 msgstr "Erreur Z %d"
 
-#: modules/tools/profile.c:829
+#: modules/tools/profile.c:830
 #, c-format
 msgid "X uncertainty %d"
 msgstr "Incertitude X %d"
 
-#: modules/tools/profile.c:832
+#: modules/tools/profile.c:833
 #, c-format
 msgid "Y uncertainty %d"
 msgstr "Incertitude Y %d"
 
-#: modules/tools/profile.c:835
+#: modules/tools/profile.c:836
 #, c-format
 msgid "Z uncertainty %d"
 msgstr "Incertitude Z %d"
 
-#: modules/tools/profile.c:838
+#: modules/tools/profile.c:839
 #, c-format
 msgid "Zunc up bound %d"
 msgstr ""
 
-#: modules/tools/profile.c:841
+#: modules/tools/profile.c:842
 #, c-format
 msgid "Zunc low bound %d"
 msgstr ""
@@ -10116,6 +10146,8 @@ msgstr ""
 "Inclinaison θ:      %s\n"
 "Inclinaison φ:      %s\n"
 
+#~ msgid "_Export uncertainties"
+#~ msgstr "_Exporter les incertitudes"
 #~ msgid "Recalibrate data"
 #~ msgstr "Recalibrer les données"
 #~ msgid "Calibrate"
