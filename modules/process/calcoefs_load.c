@@ -182,6 +182,7 @@ cload(G_GNUC_UNUSED GwyContainer *data, GwyRunType run)
     g_string_free(str, TRUE);
 
     gwy_resource_data_saved(GWY_RESOURCE(calibration));
+    gwy_resource_data_changed(GWY_RESOURCE(calibration));
 
     //debugcal(args.caldata);
 
