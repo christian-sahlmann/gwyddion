@@ -105,6 +105,26 @@ typedef struct {
 
 } CCViewArgs;
 
+static const CCViewArgs ccview_defaults = {
+    GWY_CC_VIEW_DISPLAY_X_CORR,
+    GWY_CC_VIEW_PLANE_X,
+    GWY_CC_VIEW_INTERPOLATION_3D,
+    0,
+    0,
+    0,
+    FALSE,
+    FALSE,
+    0,
+    FALSE,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+};
+
+
 typedef struct {
     GtkWidget *dialog;
     GtkWidget *view;
@@ -1448,6 +1468,8 @@ static void
 cc_view_load_args(GwyContainer *container,
                     CCViewArgs *args)
 {
+    *args = ccview_defaults;
+
     gwy_container_gis_enum_by_name(container, display_key, &args->display_type);
     gwy_container_gis_enum_by_name(container, plane_key, &args->plane_type);
     gwy_container_gis_enum_by_name(container, interpolation_key, &args->interpolation_type);
