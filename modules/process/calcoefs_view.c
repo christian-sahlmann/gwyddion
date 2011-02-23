@@ -277,27 +277,34 @@ cc_view_dialog(CCViewArgs *args,
     GwyPixmapLayer *layer;
     GwyCalibration *calibration;
     GtkCellRenderer *renderer;
+    gboolean cropval;
     gint response;
     guint row = 0;
     GtkWidget *label;
     GwySIUnit *unit;
+    GwySIValueFormat *vf;
 
 
     controls.args = args;
-    args->crop = 0;
     args->calibration = 0;
     args->computed = 0;
-    args->update = TRUE;
 
     /*FIXME: load more from dfield*/
-    args->xoffset = 0;
-    args->yoffset = 0;
+    args->xoffset = gwy_data_field_get_xoffset(dfield);
+    args->yoffset = gwy_data_field_get_yoffset(dfield);
     args->zoffset = 0;
-    args->xyexponent = -6;
-    args->zexponent = -6;
 
+    vf = gwy_data_field_get_value_format_xy(dfield,
+                                       GWY_SI_UNIT_FORMAT_MARKUP,
+                                       NULL);
+    args->xyexponent = log10(vf->magnitude);
 
-    args->interpolation_type = GWY_CC_VIEW_INTERPOLATION_3D;
+    vf = gwy_data_field_get_value_format_z(dfield,
+                                       GWY_SI_UNIT_FORMAT_MARKUP,
+                                       vf);
+    args->zexponent = log10(vf->magnitude);
+
+    gwy_si_unit_value_format_free(vf);
 
 
     dialog = gtk_dialog_new_with_buttons(_("3D Calibration"), NULL, 0, NULL);
@@ -583,9 +590,8 @@ cc_view_dialog(CCViewArgs *args,
    
     gtk_dialog_set_response_sensitive(GTK_DIALOG(dialog),
                                       RESPONSE_PREVIEW,
-                                      args->update);
-
-    update_view(&controls, args);
+                                      !args->update);
+    //update_view(&controls, args);
 
 
     gtk_widget_show_all(dialog);
@@ -602,9 +608,11 @@ cc_view_dialog(CCViewArgs *args,
             case GTK_RESPONSE_OK:
             if (!args->computed || !args->crop)
             {
+                cropval = args->crop;
                 args->crop = TRUE;
                 args->computed = FALSE;
                 update_view(&controls, args);
+                args->crop = cropval;
             }
             cc_view_do(&controls);
             break;
@@ -956,8 +964,10 @@ cc_view_do(CCViewControls *controls)
     add_calibration(controls->xunc, controls->data, controls->args->id, GWY_CC_VIEW_DISPLAY_X_UNC);
     add_calibration(controls->yunc, controls->data, controls->args->id, GWY_CC_VIEW_DISPLAY_Y_UNC);
     add_calibration(controls->zunc, controls->data, controls->args->id, GWY_CC_VIEW_DISPLAY_Z_UNC);
-
     /*now the data should be present in container and user functions can use them*/
+
+    /*modules won't see it immediately if you don't emit anything*/
+    gwy_data_field_data_changed(controls->actual_field);
 
 }
 static void
