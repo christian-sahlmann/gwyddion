@@ -538,6 +538,23 @@ gwy_tool_sfunctions_response(GwyTool *tool,
 static void
 gwy_tool_sfunctions_data_changed(GwyPlainTool *plain_tool)
 {
+    gchar xukey[24];
+    gchar yukey[24];
+    gchar zukey[24];
+
+    g_snprintf(xukey, sizeof(xukey), "/%d/data/cal_xunc", plain_tool->id);
+    g_snprintf(yukey, sizeof(yukey), "/%d/data/cal_yunc", plain_tool->id);
+    g_snprintf(zukey, sizeof(zukey), "/%d/data/cal_zunc", plain_tool->id);
+
+    if (gwy_container_gis_object_by_name(plain_tool->container, xukey, &(GWY_TOOL_SFUNCTIONS(plain_tool)->xunc))
+        && gwy_container_gis_object_by_name(plain_tool->container, yukey, &(GWY_TOOL_SFUNCTIONS(plain_tool)->yunc))
+        && gwy_container_gis_object_by_name(plain_tool->container, zukey, &(GWY_TOOL_SFUNCTIONS(plain_tool)->zunc)))
+    {
+        GWY_TOOL_SFUNCTIONS(plain_tool)->has_calibration = TRUE;
+    } else {
+        GWY_TOOL_SFUNCTIONS(plain_tool)->has_calibration = FALSE;
+    }
+
     gwy_tool_sfunctions_update_curve(GWY_TOOL_SFUNCTIONS(plain_tool));
 }
 
