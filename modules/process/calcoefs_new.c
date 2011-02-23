@@ -289,7 +289,7 @@ cnew(GwyContainer *data, GwyRunType run)
                           args.yrange_from, args.yrange_to,
                           args.zrange_from, args.zrange_to);
 
-    printf("Saving %g %g %g %g\n", args.xrange_from, args.xrange_to, args.yrange_from, args.yrange_to);
+    //printf("Saving %g %g %g %g\n", args.xrange_from, args.xrange_to, args.yrange_from, args.yrange_to);
 
     /*now create and save the resource*/
     if ((calibration = GWY_CALIBRATION(gwy_inventory_get_item(gwy_calibrations(), args.name)))==NULL)

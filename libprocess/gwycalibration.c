@@ -92,7 +92,7 @@ gwy_calibration_use(GwyResource *resource)
         g_object_unref(calibration->caldata);
 
     filename = g_build_filename(gwy_get_user_dir(), "caldata", calibration->filename, NULL);
-    printf("loading from %s\n", filename);
+   // printf("loading from %s\n", filename);
     if (!g_file_get_contents(filename,
                              &contents, &len, &err))
     {

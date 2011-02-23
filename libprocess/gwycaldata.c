@@ -877,7 +877,7 @@ gwy_caldata_save_data(GwyCalData *caldata, gchar *filename)
         g_mkdir(g_build_filename(gwy_get_user_dir(), "caldata", NULL), 0700);
     }
 
-    printf("saved to %s\n", filename);
+    //printf("saved to %s\n", filename);
     file = g_build_filename(gwy_get_user_dir(), "caldata", filename, NULL);
     barray = gwy_serializable_serialize(G_OBJECT(caldata), NULL);
     if (!barray) {

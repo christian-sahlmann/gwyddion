@@ -727,7 +727,7 @@ update_view(CCViewControls *controls, CCViewArgs *args)
         siz = gwy_caldata_get_si_unit_z(caldata); 
         gwy_caldata_get_range(caldata, &x_from, &x_to, &y_from, &y_to, &z_from, &z_to);
 
-        printf("Loaded %g %g %g %g\n", x_from, x_to, y_from, y_to);
+       // printf("Loaded %g %g %g %g\n", x_from, x_to, y_from, y_to);
 
         g_snprintf(msg, sizeof(msg), _("%d calibration data"), gwy_caldata_get_ndata(caldata));
         gtk_label_set_text(GTK_LABEL(controls->message1), msg);
