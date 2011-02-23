@@ -132,7 +132,9 @@ gwy_caldata_finalize(GObject *object)
     gwy_object_unref(caldata->si_unit_y);
     gwy_object_unref(caldata->si_unit_z);
 
+    if (caldata->err_m)
     _gwy_delaunay_mesh_free(caldata->err_m);
+    if (caldata->unc_m)
     _gwy_delaunay_mesh_free(caldata->unc_m);
     //_gwy_delaunay_vertex_free(caldata->err_m);
     //_gwy_delaunay_vertex_free(caldata->unc_m);
