@@ -486,7 +486,7 @@ gwy_graph_curve_model_deserialize(const guchar *buffer,
 
     gcmodel = gwy_graph_curve_model_new();
     {
-        gint nxdata, nydata, ncaldata;
+        gint nxdata=0, nydata=0;
         gchar *description = NULL;
         GwySerializeSpec spec[] = {
             { 'D', "xdata", &gcmodel->xdata, &nxdata },
