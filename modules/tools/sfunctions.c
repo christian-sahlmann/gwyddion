@@ -252,6 +252,9 @@ gwy_tool_sfunctions_finalize(GObject *object)
 
     gwy_object_unref(tool->line);
     gwy_object_unref(tool->gmodel);
+    if (tool->xunc) g_object_unref(tool->xunc);
+    if (tool->yunc) g_object_unref(tool->yunc);
+    if (tool->zunc) g_object_unref(tool->zunc);
 
     G_OBJECT_CLASS(gwy_tool_sfunctions_parent_class)->finalize(object);
 }
@@ -295,6 +298,9 @@ gwy_tool_sfunctions_init(GwyToolSFunctions *tool)
 
     tool->line = gwy_data_line_new(4, 1.0, FALSE);
     tool->uline = gwy_data_line_new(4, 1.0, FALSE);
+    tool->xunc = NULL;
+    tool->yunc = NULL;
+    tool->zunc = NULL;
 
     gwy_plain_tool_connect_selection(plain_tool, tool->layer_type_rect,
                                      "rectangle");
@@ -551,6 +557,22 @@ gwy_tool_sfunctions_data_changed(GwyPlainTool *plain_tool)
         && gwy_container_gis_object_by_name(plain_tool->container, zukey, &(GWY_TOOL_SFUNCTIONS(plain_tool)->zunc)))
     {
         GWY_TOOL_SFUNCTIONS(plain_tool)->has_calibration = TRUE;
+            gtk_widget_show(GWY_TOOL_SFUNCTIONS(plain_tool)->separate);
+            /*we need to resample uncertainties*/
+            GWY_TOOL_SFUNCTIONS(plain_tool)->xunc = gwy_data_field_new_resampled(GWY_TOOL_SFUNCTIONS(plain_tool)->xunc,
+                                                      gwy_data_field_get_xres(plain_tool->data_field),
+                                                      gwy_data_field_get_yres(plain_tool->data_field),
+                                                      GWY_INTERPOLATION_BILINEAR);
+            GWY_TOOL_SFUNCTIONS(plain_tool)->yunc = gwy_data_field_new_resampled(GWY_TOOL_SFUNCTIONS(plain_tool)->yunc,
+                                                      gwy_data_field_get_xres(plain_tool->data_field),
+                                                      gwy_data_field_get_yres(plain_tool->data_field),
+                                                      GWY_INTERPOLATION_BILINEAR);
+
+            GWY_TOOL_SFUNCTIONS(plain_tool)->zunc = gwy_data_field_new_resampled(GWY_TOOL_SFUNCTIONS(plain_tool)->zunc,
+                                                      gwy_data_field_get_xres(plain_tool->data_field),
+                                                      gwy_data_field_get_yres(plain_tool->data_field),
+                                                      GWY_INTERPOLATION_BILINEAR);
+
     } else {
         GWY_TOOL_SFUNCTIONS(plain_tool)->has_calibration = FALSE;
     }
@@ -976,9 +998,6 @@ gwy_tool_sfunctions_apply(GwyToolSFunctions *tool)
     else gwy_app_data_browser_add_graph_model(gmodel, plain_tool->container, TRUE);
 
 
-    g_object_unref(tool->xunc);
-    g_object_unref(tool->yunc);
-    g_object_unref(tool->zunc);
     g_object_unref(gmodel);
 
 
