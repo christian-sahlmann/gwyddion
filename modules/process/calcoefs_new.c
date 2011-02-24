@@ -298,6 +298,7 @@ cnew(GwyContainer *data, GwyRunType run)
         gwy_inventory_insert_item(gwy_calibrations(), calibration);
         g_object_unref(calibration);
     }
+    calibration->caldata = caldata;
 
     filename = gwy_resource_build_filename(GWY_RESOURCE(calibration));
     if (!g_file_test(filename, G_FILE_TEST_EXISTS)) {
