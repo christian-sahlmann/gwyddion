@@ -219,7 +219,7 @@ gwy_null_store_iter_children(GtkTreeModel *model,
     GwyNullStore *store;
 
     store = GWY_NULL_STORE(model);
-    if (!parent || !store->n)
+    if (parent || !store->n)
         return FALSE;
 
     iter->stamp = store->stamp;
