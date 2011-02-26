@@ -16,21 +16,25 @@ Libraries:
   name.
 - libgwyprocess: If grain minimum or maximum was requested without the other
   it has not been calculated (bug introduced in 2.22); this was corrected.
+- libgwydgets: Bogus GwyNullStore virtual method iter_chilidren() was fixed.
 
 Modules:
 - WSF file (new): Imports WSF SPM data.
 - MIF (new): Import of DME MIF files v1.7 (just topography).
 - Level Grains (new): Subtract background that makes makred grains level.
+- Calibration, Load from text file (new): enables loading complex calibration
+  data.
+- Calibration, Create (new): enables defining simple calibration data for 3
+  axes.
+- Calibration, View (new): select, view and apply calibration for specific SPM
+  data.
+- Calibration, Simple error map (new): create simple calibration entry from
+  grating measurement.
 - Nanonis: Can open files containing a multipass configuration table.
 - Pixmap: The set of importable formats was limited to BMP, GIF, ICNS, JPEG,
   JPEG2000, PCX, PNG, PNM, RAS, TARGA, TIFF and XPM that are known to work to
   avoid crashes whenever a new buggy loader appears in GdkPixbuf.
 - MapVue: Support for old OptiCode files was added.
-- Calibration: Load from text file: enables loading complex calibration data.
-- Calibration: Create: enables defining simple calibration data for 3 axes.
-- Calibration: View: select, view and apply calibration for specific SPM data.
-- Calibration: Simple error map: create simple calibration entry from grating
-  measurement.
 - Profile: Modified to display calibration data if present.
 - Read value: Modified to display calibration data if present.
 - Statistics: Modified to display calibration data if present.
@@ -38,6 +42,10 @@ Modules:
 - DOS spectrum: Calculates absolute value of (dI/dU)/(I/U) and does not
   removing the contact potential.
 - Object Synthesis: Object heights can be truncated.
+- Pattern Synthesis: Range calculations were corrected, removing problems with
+  pattern occasionaly ending prematurely.  Patterns with the same random seed
+  will not be pixel-for-pixel identical to pre-2.23, just statistically.
+- Pattern Synthesis: New patern type, two-dimensional grid of holes, was added.
 
 Other:
 - Compilation with MSVC6 toolchain on MS Windows is no longer supported, use
