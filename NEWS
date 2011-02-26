@@ -21,7 +21,7 @@ Libraries:
 Modules:
 - WSF file (new): Imports WSF SPM data.
 - MIF (new): Import of DME MIF files v1.7 (just topography).
-- Level Grains (new): Subtract background that makes makred grains level.
+- Level Grains (new): Subtract background that makes marked grains level.
 - Calibration, Load from text file (new): enables loading complex calibration
   data.
 - Calibration, Create (new): enables defining simple calibration data for 3
