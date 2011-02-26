@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2010 David Necas (Yeti).
+ *  Copyright (C) 2010,2011 David Necas (Yeti).
  *  E-mail: yeti@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -62,24 +62,31 @@ enum {
 enum {
     PAGE_DIMENSIONS = 0,
     PAGE_GENERATOR  = 1,
+    PAGE_PLACEMENT  = 2,
     PAGE_NPAGES
 };
 
 /* Each pattern has its own set of parameters but many are common so they get
  * the same symbolic name in PatSynthRng for simpliciy. */
 typedef enum {
-    RNG_FLAT      = 0,
-    RNG_TOP       = 0,
-    RNG_SLOPE     = 1,
-    RNG_BOTTOM    = 2,
-    RNG_HEIGHT    = 3,
-    RNG_DISPLAC_X = 4,
+    RNG_FLAT       = 0,
+    RNG_TOP        = 0,
+    RNG_DISTANCE_X = 0,
+    RNG_SLOPE      = 1,
+    RNG_BOTTOM     = 2,
+    RNG_SIZE       = 2,
+    RNG_HEIGHT     = 3,
+    RNG_DISPLAC_X  = 4,
+    RNG_DISPLAC_Y  = 5,
+    RNG_ROUNDNESS  = 6,
+    RNG_DISTANCE_Y = 7,
     RNG_NRNGS
 } PatSynthRng;
 
 typedef enum {
     PAT_SYNTH_STEPS  = 0,
     PAT_SYNTH_RIDGES = 1,
+    PAT_SYNTH_HOLES  = 2,
     PAT_SYNTH_NTYPES
 } PatSynthType;
 
@@ -141,6 +148,8 @@ struct _PatSynthControls {
     GtkObject *seed;
     GtkWidget *randomize;
     GtkTable *table;
+    GtkTable *table_parameters;
+    GtkTable *table_placement;
     GtkWidget *type;
     GwyContainer *mydata;
     GwyDataField *surface;
@@ -206,6 +215,7 @@ static void          pat_synth_save_args  (GwyContainer *container,
 
 DECLARE_PATTERN(steps);
 DECLARE_PATTERN(ridges);
+DECLARE_PATTERN(holes);
 
 static const gchar prefix[] = "/module/pat_synth";
 
@@ -221,6 +231,7 @@ static const GwyDimensionArgs dims_defaults = GWY_DIMENSION_ARGS_INIT;
 static const PatSynthPattern patterns[] = {
     { PAT_SYNTH_STEPS,  N_("Steps"),  PATTERN_FUNCS(steps),  },
     { PAT_SYNTH_RIDGES, N_("Ridges"), PATTERN_FUNCS(ridges), },
+    { PAT_SYNTH_HOLES,  N_("Holes"),  PATTERN_FUNCS(holes),  },
 };
 
 static GwyModuleInfo module_info = {
@@ -229,7 +240,7 @@ static GwyModuleInfo module_info = {
     N_("Generates surfaces representing simple patterns "
        "(steps, ridges, ...)."),
     "Yeti <yeti@gwyddion.net>",
-    "1.0",
+    "1.1",
     "David Nečas (Yeti)",
     "2010",
 };
@@ -459,9 +470,10 @@ pat_synth_dialog(PatSynthArgs *args,
                                  G_CALLBACK(pat_synth_invalidate), &controls);
 
     table = gtk_table_new(1, 4, FALSE);
-    controls.table = GTK_TABLE(table);
-    gtk_table_set_row_spacings(controls.table, 2);
-    gtk_table_set_col_spacings(controls.table, 6);
+    controls.table_parameters = GTK_TABLE(table);
+    gtk_table_set_row_spacings(controls.table_parameters, 2);
+    gtk_table_set_col_spacings(controls.table_parameters, 6);
+    gtk_table_set_row_spacing(controls.table_parameters, 0, 0);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_notebook_append_page(GTK_NOTEBOOK(notebook), table,
                              gtk_label_new(_("Generator")));
@@ -471,9 +483,18 @@ pat_synth_dialog(PatSynthArgs *args,
     gwy_table_attach_hscale(table, row, _("_Pattern:"), NULL,
                             GTK_OBJECT(controls.type), GWY_HSCALE_WIDGET);
     row++;
+    g_object_set_data(G_OBJECT(table), "base-rows", GINT_TO_POINTER(row));
 
-    g_object_set_data(G_OBJECT(controls.table),
-                      "base-rows", GINT_TO_POINTER(row));
+    table = gtk_table_new(1, 4, FALSE);
+    controls.table_placement = GTK_TABLE(table);
+    gtk_table_set_row_spacings(controls.table_placement, 2);
+    gtk_table_set_col_spacings(controls.table_placement, 6);
+    gtk_container_set_border_width(GTK_CONTAINER(table), 4);
+    gtk_notebook_append_page(GTK_NOTEBOOK(notebook), table,
+                             gtk_label_new(_("Placement")));
+    g_object_set_data(G_OBJECT(table), "base-rows", GINT_TO_POINTER(1));
+
+    controls.table = GTK_TABLE(controls.table_parameters);
     pattern_type_selected(GTK_COMBO_BOX(controls.type), &controls);
 
     gtk_widget_show_all(dialog);
@@ -588,6 +609,7 @@ pattern_type_selected(GtkComboBox *combo,
 {
     const PatSynthPattern *pattern;
     PatSynthArgs *args = controls->args;
+    GtkTable *table;
     guint baserows;
 
     if (controls->pattern) {
@@ -607,13 +629,18 @@ pattern_type_selected(GtkComboBox *combo,
     args->type = gwy_enum_combo_box_get_active(combo);
     pattern = controls->pattern = get_pattern(args->type);
 
-    baserows = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(controls->table),
-                                                 "base-rows"));
-    gwy_synth_shrink_table(controls->table, baserows);
+    table = controls->table_parameters;
+    baserows = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(table), "base-rows"));
+    gwy_synth_shrink_table(table, baserows);
+
+    table = controls->table_placement;
+    baserows = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(table), "base-rows"));
+    gwy_synth_shrink_table(table, baserows);
 
     args->pattern_args = pattern->load_args(gwy_app_settings_get());
     controls->pattern_controls = pattern->create_gui(controls);
-    gtk_widget_show_all(GTK_WIDGET(controls->table));
+    gtk_widget_show_all(GTK_WIDGET(controls->table_parameters));
+    gtk_widget_show_all(GTK_WIDGET(controls->table_placement));
 
     pat_synth_invalidate(controls);
 }
@@ -668,6 +695,47 @@ pat_synth_do(const PatSynthArgs *args,
     gwy_data_field_data_changed(dfield);
 }
 
+/* Iterating through rectangles in a growing fashion from the origin to
+ * preserve the top left conrer if it's randomly generated.  Field @k holds
+ * the current index in the two-dimensional array. */
+typedef struct {
+    guint n;
+    guint i, j, k;
+    gboolean horizontal;
+} GrowingIter;
+
+static inline void
+growing_iter_init(GrowingIter *giter, guint n)
+{
+    giter->n = n;
+    giter->k = giter->j = giter-> i = 0;
+    giter->horizontal = FALSE;
+}
+
+static inline gboolean
+growing_iter_next(GrowingIter *giter)
+{
+    if (giter->horizontal) {
+        if (++giter->j > giter->i) {
+            giter->j = 0;
+            giter->horizontal = FALSE;
+        }
+    }
+    else {
+        if (++giter->j >= giter->i) {
+            if (++giter->i == giter->n)
+                return FALSE;
+            giter->j = 0;
+            giter->horizontal = TRUE;
+        }
+    }
+
+    giter->k = (giter->horizontal
+                ? giter->i*giter->n + giter->j
+                : giter->j*giter->n + giter->i);
+    return TRUE;
+}
+
 /* Gauss-like distribution with range limited to [1-range, 1+range] */
 static inline gdouble
 rand_gen_set_mult(RandGenSet *rngset,
@@ -677,11 +745,6 @@ rand_gen_set_mult(RandGenSet *rngset,
     GRand *rng;
 
     rng = rngset->rng[i];
-
-    /*
-    return 1.0 + range*(g_rand_double(rng) - g_rand_double(rng)
-                        + g_rand_double(rng) - g_rand_double(rng))/2.0;
-                        */
     return 1.0 + range*(g_rand_double(rng) - g_rand_double(rng));
 }
 
@@ -776,7 +839,8 @@ create_gui_steps(PatSynthControls *controls)
     PatSynthArgsSteps *pargs;
     gint row;
 
-    row = gwy_synth_extend_table(controls->table, 4+4+3+2+4);
+    controls->table = controls->table_parameters;
+    row = gwy_synth_extend_table(controls->table, 4+4+4);
     pcontrols = g_new0(PatSynthControlsSteps, 1);
     pargs = pcontrols->args = controls->args->pattern_args;
 
@@ -827,6 +891,9 @@ create_gui_steps(PatSynthControls *controls)
                                     &pcontrols->height_noise,
                                     &pargs->height_noise);
 
+    controls->table = controls->table_placement;
+    row = gwy_synth_extend_table(controls->table, 2+3);
+
     row = gwy_synth_attach_orientation(controls, row,
                                        &pcontrols->angle, &pargs->angle);
 
@@ -865,7 +932,7 @@ make_pattern_steps(const PatSynthArgs *args,
     GwyDataField *displacement_x;
     guint n, i, j, k, xres, yres;
     gdouble *abscissa, *height, *data, *dx_data;
-    gdouble h, c, s, xoff, yoff, range;
+    gdouble h, c, s, xoff, yoff, range, margin, pitch;
 
     h = pargs->height * pow10(dimsargs->zpow10);
 
@@ -873,12 +940,14 @@ make_pattern_steps(const PatSynthArgs *args,
     yres = gwy_data_field_get_yres(dfield);
     data = gwy_data_field_get_data(dfield);
 
-    range = (hypot(xres, yres) + pargs->sigma)/(pargs->flat + pargs->slope);
-    n = GWY_ROUND(2.0*range + 16);
+    pitch = pargs->flat + pargs->slope;
+    margin = (hypot(xres, yres) - MAX(xres, yres) + 4*pargs->sigma + 2);
+    range = (xres + yres + 8*pargs->sigma + 4)/pitch;
+    n = GWY_ROUND(range + 1);
     abscissa = g_new(gdouble, 2*n);
     height = g_new(gdouble, n+1);
 
-    abscissa[0] = -range - 8;
+    abscissa[0] = -margin;
     accumulate(abscissa + 1, pargs->slope, pargs->slope_noise,
                rngset, RNG_SLOPE);
     height[0] = 0.0;
@@ -1058,7 +1127,8 @@ create_gui_ridges(PatSynthControls *controls)
     PatSynthArgsRidges *pargs;
     gint row;
 
-    row = gwy_synth_extend_table(controls->table, 4+4+4+3+2+4);
+    controls->table = controls->table_parameters;
+    row = gwy_synth_extend_table(controls->table, 4+4+4+4);
     pcontrols = g_new0(PatSynthControlsRidges, 1);
     pargs = pcontrols->args = controls->args->pattern_args;
 
@@ -1124,6 +1194,9 @@ create_gui_ridges(PatSynthControls *controls)
                                     &pcontrols->height_noise,
                                     &pargs->height_noise);
 
+    controls->table = controls->table_placement;
+    row = gwy_synth_extend_table(controls->table, 2+3);
+
     row = gwy_synth_attach_orientation(controls, row,
                                        &pcontrols->angle, &pargs->angle);
 
@@ -1164,7 +1237,7 @@ make_pattern_ridges(const PatSynthArgs *args,
     GwyDataField *displacement_x;
     guint n, i, j, k, xres, yres;
     gdouble *abscissa, *height, *data, *dx_data;
-    gdouble h, c, s, xoff, yoff, range;
+    gdouble h, c, s, xoff, yoff, range, margin, pitch;
 
     h = pargs->height * pow10(dimsargs->zpow10);
 
@@ -1172,13 +1245,14 @@ make_pattern_ridges(const PatSynthArgs *args,
     yres = gwy_data_field_get_yres(dfield);
     data = gwy_data_field_get_data(dfield);
 
-    range = (hypot(xres, yres) + pargs->sigma)/(pargs->top + 2*pargs->slope
-                                                + pargs->bottom);
-    n = GWY_ROUND(2.0*range + 16);
+    pitch = pargs->top + 2*pargs->slope + pargs->bottom;
+    margin = (hypot(xres, yres) - MAX(xres, yres) + 4*pargs->sigma + 2);
+    range = (xres + yres + 8*pargs->sigma + 4)/pitch;
+    n = GWY_ROUND(range + 1);
     abscissa = g_new(gdouble, 4*n);
     height = g_new(gdouble, n+1);
 
-    abscissa[0] = -range - 8;
+    abscissa[0] = -margin;
     accumulate(abscissa + 1, pargs->slope, pargs->slope_noise,
                rngset, RNG_SLOPE);
     accumulate(abscissa + 2, pargs->bottom, pargs->bottom_noise,
@@ -1328,29 +1402,476 @@ reset_ridges(gpointer p)
     gtk_adjustment_set_value(GTK_ADJUSTMENT(pcontrols->tau), pargs->tau);
 }
 
-/* Fill a data field with uncorrelated random numbers in a growin fashion to
- * preserve character of the noise even if the dimensions change */
+typedef struct {
+    gdouble distance;
+    gdouble distance_noise;
+    gdouble size;
+    gdouble size_noise;
+    gdouble slope;
+    gdouble slope_noise;
+    gdouble height;
+    gdouble height_noise;
+    gdouble roundness;
+    gdouble roundness_noise;
+    gdouble angle;
+    gdouble sigma;
+    gdouble tau;
+} PatSynthArgsHoles;
+
+typedef struct {
+    PatSynthArgsHoles *args;
+    GtkObject *distance;
+    GtkWidget *distance_value;
+    GtkWidget *distance_units;
+    GtkObject *distance_noise;
+    GtkObject *size;
+    GtkWidget *size_value;
+    GtkWidget *size_units;
+    GtkObject *size_noise;
+    GtkObject *slope;
+    GtkWidget *slope_value;
+    GtkWidget *slope_units;
+    GtkObject *slope_noise;
+    GtkObject *height;
+    GtkWidget *height_units;
+    GtkObject *height_noise;
+    GtkObject *roundness;
+    GtkWidget *roundness_value;
+    GtkObject *roundness_noise;
+    GtkObject *angle;
+    GtkObject *sigma;
+    GtkObject *tau;
+    GtkWidget *tau_value;
+    GtkWidget *tau_units;
+} PatSynthControlsHoles;
+
+static const PatSynthArgsHoles pat_synth_defaults_holes = {
+    10.0, 0.0,
+    10.0, 0.0,
+    1.0, 0.0,
+    1.0, 0.0,
+    0.0, 0.0,
+    0.0,
+    0.0, 10.0,
+};
+
+static gpointer
+create_gui_holes(PatSynthControls *controls)
+{
+    PatSynthControlsHoles *pcontrols;
+    PatSynthArgsHoles *pargs;
+    gint row;
+
+    controls->table = controls->table_parameters;
+    row = gwy_synth_extend_table(controls->table, 4+4+4+3+4);
+    pcontrols = g_new0(PatSynthControlsHoles, 1);
+    pargs = pcontrols->args = controls->args->pattern_args;
+
+    gtk_table_set_row_spacing(controls->table, row-1, 8);
+    gtk_table_attach(controls->table, gwy_label_new_header(_("Distance")),
+                     0, 3, row, row+1, GTK_FILL, 0, 0, 0);
+    row++;
+
+    pcontrols->distance = gtk_adjustment_new(pargs->distance,
+                                             0.1, 1000.0, 0.01, 10.0, 0);
+    row = gwy_synth_attach_lateral(controls, row,
+                                   pcontrols->distance, &pargs->distance,
+                                   _("_Distance:"), GWY_HSCALE_LOG,
+                                   NULL,
+                                   &pcontrols->distance_value,
+                                   &pcontrols->distance_units);
+    row = gwy_synth_attach_variance(controls, row,
+                                    &pcontrols->distance_noise,
+                                    &pargs->distance_noise);
+
+    gtk_table_set_row_spacing(controls->table, row-1, 8);
+    gtk_table_attach(controls->table, gwy_label_new_header(_("Size")),
+                     0, 3, row, row+1, GTK_FILL, 0, 0, 0);
+    row++;
+
+    pcontrols->size = gtk_adjustment_new(pargs->size,
+                                         1.0, 1000.0, 0.01, 10.0, 0);
+    row = gwy_synth_attach_lateral(controls, row,
+                                   pcontrols->size, &pargs->size,
+                                   _("_Size:"), GWY_HSCALE_LOG,
+                                   NULL,
+                                   &pcontrols->size_value,
+                                   &pcontrols->size_units);
+    row = gwy_synth_attach_variance(controls, row,
+                                    &pcontrols->size_noise,
+                                    &pargs->size_noise);
+
+    gtk_table_set_row_spacing(controls->table, row-1, 8);
+    gtk_table_attach(controls->table, gwy_label_new_header(_("Slope")),
+                     0, 3, row, row+1, GTK_FILL, 0, 0, 0);
+    row++;
+
+    pcontrols->slope = gtk_adjustment_new(pargs->slope,
+                                          0.0, 1000.0, 0.01, 10.0, 0);
+    row = gwy_synth_attach_lateral(controls, row,
+                                   pcontrols->slope, &pargs->slope,
+                                   _("_Slope width:"), GWY_HSCALE_SQRT,
+                                   NULL,
+                                   &pcontrols->slope_value,
+                                   &pcontrols->slope_units);
+    row = gwy_synth_attach_variance(controls, row,
+                                    &pcontrols->slope_noise,
+                                    &pargs->slope_noise);
+
+    gtk_table_set_row_spacing(controls->table, row-1, 8);
+    gtk_table_attach(controls->table, gwy_label_new_header(_("Height")),
+                     0, 3, row, row+1, GTK_FILL, 0, 0, 0);
+    row++;
+
+    row = gwy_synth_attach_height(controls, row,
+                                  &pcontrols->height, &pargs->height,
+                                  _("_Height:"),
+                                  NULL, &pcontrols->height_units);
+    row = gwy_synth_attach_variance(controls, row,
+                                    &pcontrols->height_noise,
+                                    &pargs->height_noise);
+
+    row = gwy_synth_attach_roundness(controls, row,
+                                     &pcontrols->roundness, &pargs->roundness);
+    row = gwy_synth_attach_variance(controls, row,
+                                    &pcontrols->roundness_noise,
+                                    &pargs->roundness_noise);
+
+    controls->table = controls->table_placement;
+    row = gwy_synth_extend_table(controls->table, 2+3);
+
+    row = gwy_synth_attach_orientation(controls, row,
+                                       &pcontrols->angle, &pargs->angle);
+
+    row = gwy_synth_attach_deformation(controls, row,
+                                       &pcontrols->sigma, &pargs->sigma,
+                                       &pcontrols->tau, &pargs->tau,
+                                       &pcontrols->tau_value,
+                                       &pcontrols->tau_units);
+
+    return pcontrols;
+}
+
+static void
+dimensions_changed_holes(PatSynthControls *controls)
+{
+    PatSynthControlsHoles *pcontrols = controls->pattern_controls;
+    GwyDimensions *dims = controls->dims;
+
+    gtk_label_set_markup(GTK_LABEL(pcontrols->distance_units),
+                         dims->xyvf->units);
+    gtk_label_set_markup(GTK_LABEL(pcontrols->size_units), dims->xyvf->units);
+    gtk_label_set_markup(GTK_LABEL(pcontrols->slope_units), dims->xyvf->units);
+    gtk_label_set_markup(GTK_LABEL(pcontrols->height_units), dims->zvf->units);
+    gtk_label_set_markup(GTK_LABEL(pcontrols->tau_units), dims->xyvf->units);
+
+    gwy_synth_update_lateral(controls, GTK_ADJUSTMENT(pcontrols->distance));
+    gwy_synth_update_lateral(controls, GTK_ADJUSTMENT(pcontrols->size));
+    gwy_synth_update_lateral(controls, GTK_ADJUSTMENT(pcontrols->slope));
+    gwy_synth_update_lateral(controls, GTK_ADJUSTMENT(pcontrols->tau));
+}
+
+static inline gdouble
+hole_radial_intersection(gdouble q, gdouble A, gdouble R)
+{
+    gdouble A1q = A*(1.0 - q);
+    gdouble q21 = 1.0 + q*q;
+    gdouble D = R*R*q21 - A1q*A1q;
+    gdouble sqrtD = sqrt(MAX(D, 0.0));
+    gdouble x = ((1.0 + q)*A + sqrtD)/q21;
+    return hypot(x, q*x);
+}
+
+static gdouble
+hole_shape(gdouble x, gdouble y, gdouble size, gdouble slope, gdouble roundness)
+{
+    gdouble rx, ry, r, rr, rsz;
+    gdouble v = 0.0;
+
+    if (roundness) {
+        rsz = roundness*size;
+        rx = fabs(x) - (size - rsz);
+        ry = fabs(y) - (size - rsz);
+        r = MAX(rx, ry);
+        rr = MIN(rx, ry);
+        if (r <= 0.0 || (r <= rsz && rr <= 0.0) || hypot(rx, ry) <= rsz)
+            v = -1.0;
+        else if (slope) {
+            gdouble ss = size + slope;
+            rsz = roundness*ss;
+            rx = fabs(x) - (ss - rsz);
+            ry = fabs(y) - (ss - rsz);
+            r = MAX(rx, ry);
+            rr = MIN(rx, ry);
+            if (r <= 0.0 || (r <= rsz && rr <= 0.0)
+                || hypot(rx, ry) <= rsz) {
+                gdouble q = (rr + ss - rsz)/(r + ss - rsz);
+                if (q <= 1.0 - roundness)
+                    v = (r - rsz)/slope;
+                else {
+                    r = hole_radial_intersection(q, ss - rsz, rsz);
+                    rr = hole_radial_intersection(q, size - roundness*size,
+                                                  roundness*size);
+                    v = (hypot(x, y) - r)/(r - rr);
+                }
+            }
+        }
+    }
+    else {
+        rx = fabs(x) - size;
+        ry = fabs(y) - size;
+        r = MAX(rx, ry);
+        if (r <= 0.0)
+            v = -1.0;
+        else if (r < slope)
+            v = (r - slope)/slope;
+    }
+
+    return v;
+}
+
+static void
+make_pattern_holes(const PatSynthArgs *args,
+                   const GwyDimensionArgs *dimsargs,
+                   RandGenSet *rngset,
+                   GwyDataField *dfield)
+{
+    enum {
+        HOLE_OFFSET_X,
+        HOLE_OFFSET_Y,
+        HOLE_SIZE,
+        HOLE_SLOPE,
+        HOLE_HEIGHT,
+        HOLE_ROUNDNESS,
+        HOLE_NPARAMS
+    };
+
+    const PatSynthArgsHoles *pargs = args->pattern_args;
+    GwyDataField *displacement_x, *displacement_y;
+    guint n, i, j, xres, yres;
+    gdouble *params, *data, *dx_data, *dy_data;
+    gdouble h, c, s, xoff, yoff, pitch, range, margin;
+    GrowingIter giter;
+
+    h = pargs->height * pow10(dimsargs->zpow10);
+
+    xres = gwy_data_field_get_xres(dfield);
+    yres = gwy_data_field_get_yres(dfield);
+    data = gwy_data_field_get_data(dfield);
+
+    pitch = pargs->size + 2*pargs->slope + pargs->distance;
+    margin = (hypot(xres, yres) - MAX(xres, yres) + 4*pargs->sigma + 2);
+    range = (xres + yres + 8*pargs->sigma + 4)/pitch;
+    n = GWY_ROUND(range + 1);
+    params = g_new(gdouble, HOLE_NPARAMS*n*n);
+
+    growing_iter_init(&giter, n);
+    do {
+        gdouble *p = params + giter.k*HOLE_NPARAMS;
+        generate(p + HOLE_OFFSET_X, pargs->distance, pargs->distance_noise,
+                 rngset, RNG_DISTANCE_X);
+        generate(p + HOLE_OFFSET_Y, pargs->distance, pargs->distance_noise,
+                 rngset, RNG_DISTANCE_Y);
+        generate(p + HOLE_SIZE, pargs->size, pargs->size_noise,
+                 rngset, RNG_SIZE);
+        generate(p + HOLE_HEIGHT, h, pargs->height_noise,
+                 rngset, RNG_HEIGHT);
+        generate(p + HOLE_SLOPE, pargs->slope, pargs->slope_noise,
+                 rngset, RNG_SLOPE);
+        generate(p + HOLE_ROUNDNESS, pargs->roundness, pargs->roundness_noise,
+                 rngset, RNG_ROUNDNESS);
+    } while (growing_iter_next(&giter));
+
+    displacement_x = make_displacement_map(xres, yres,
+                                           pargs->sigma, pargs->tau,
+                                           rngset->rng[RNG_DISPLAC_X]);
+    displacement_y = make_displacement_map(xres, yres,
+                                           pargs->sigma, pargs->tau,
+                                           rngset->rng[RNG_DISPLAC_Y]);
+    dx_data = gwy_data_field_get_data(displacement_x);
+    dy_data = gwy_data_field_get_data(displacement_y);
+
+    c = cos(pargs->angle);
+    s = sin(pargs->angle);
+    xoff = 0.5*((1.0 - c)*xres + s*yres);
+    yoff = 0.5*(-s*yres + (1.0 - c)*yres);
+    for (i = 0; i < yres; i++) {
+        for (j = 0; j < xres; j++) {
+            gdouble v[4], x, y, xu, yu, xx, yy;
+            gint kx, ky, kxx, kyy;
+            gdouble *p;
+
+            xu = xoff + j*c - i*s;
+            yu = yoff + j*s + i*c;
+            x = xu + dx_data[i*xres + j] + margin;
+            y = yu + dy_data[i*xres + j] + margin;
+            kx = (gint)floor(x/pitch);
+            ky = (gint)floor(y/pitch);
+            x -= pitch*(kx + 0.5);
+            y -= pitch*(ky + 0.5);
+            /* Better repeated boundary features than buffer overflow... */
+            kx = CLAMP(kx, 0, n-1);
+            ky = CLAMP(ky, 0, n-1);
+            /* The cell itself */
+            p = params + (n*ky + kx)*HOLE_NPARAMS;
+            xx = x - 0.5*p[HOLE_OFFSET_X];
+            yy = y - 0.5*p[HOLE_OFFSET_Y];
+            v[0] = hole_shape(xx, yy,
+                              0.5*p[HOLE_SIZE], p[HOLE_SLOPE],
+                              p[HOLE_ROUNDNESS]) * p[HOLE_HEIGHT];
+            /* Left/right neighbour. */
+            kxx = kx + (x >= 0 ? 1 : -1);
+            kxx = CLAMP(kxx, 0, n-1);
+            p = params + (n*ky + kxx)*HOLE_NPARAMS;
+            xx = x - 0.5*p[HOLE_OFFSET_X] - (x >= 0 ? pitch : -pitch);
+            yy = y - 0.5*p[HOLE_OFFSET_Y];
+            v[1] = hole_shape(xx, yy,
+                              0.5*p[HOLE_SIZE], p[HOLE_SLOPE],
+                              p[HOLE_ROUNDNESS]) * p[HOLE_HEIGHT];
+            /* Upper/lower neighbour. */
+            kyy = ky + (y >= 0 ? 1 : -1);
+            kyy = CLAMP(kyy, 0, n-1);
+            p = params + (n*kyy + kx)*HOLE_NPARAMS;
+            xx = x - 0.5*p[HOLE_OFFSET_X];
+            yy = y - 0.5*p[HOLE_OFFSET_Y] - (y >= 0 ? pitch : -pitch);
+            v[2] = hole_shape(xx, yy,
+                              0.5*p[HOLE_SIZE], p[HOLE_SLOPE],
+                              p[HOLE_ROUNDNESS]) * p[HOLE_HEIGHT];
+            /* Diagonal neighbour */
+            p = params + (n*kyy + kxx)*HOLE_NPARAMS;
+            xx = x - 0.5*p[HOLE_OFFSET_X] - (x >= 0 ? pitch : -pitch);
+            yy = y - 0.5*p[HOLE_OFFSET_Y] - (y >= 0 ? pitch : -pitch);
+            v[3] = hole_shape(xx, yy,
+                              0.5*p[HOLE_SIZE], p[HOLE_SLOPE],
+                              p[HOLE_ROUNDNESS]) * p[HOLE_HEIGHT];
+
+            data[i*xres + j] += MIN(MIN(v[0], v[1]), MIN(v[2], v[3]));
+        }
+    }
+
+    g_object_unref(displacement_y);
+    g_object_unref(displacement_x);
+    g_free(params);
+}
+
+static gpointer
+load_args_holes(GwyContainer *settings)
+{
+    PatSynthArgsHoles *pargs;
+    GString *key;
+
+    pargs = g_memdup(&pat_synth_defaults_holes, sizeof(PatSynthArgsHoles));
+    key = g_string_new(prefix);
+    g_string_append(key, "/holes/");
+    gwy_synth_load_arg_double(settings, key, "distance", 0.1, 1000.0,
+                              &pargs->distance);
+    gwy_synth_load_arg_double(settings, key, "distance_noise", 0.0, 1.0,
+                              &pargs->distance_noise);
+    gwy_synth_load_arg_double(settings, key, "size", 1.0, 1000.0,
+                              &pargs->size);
+    gwy_synth_load_arg_double(settings, key, "size_noise", 0.0, 1.0,
+                              &pargs->size_noise);
+    gwy_synth_load_arg_double(settings, key, "slope", 0.0, 1000.0,
+                              &pargs->slope);
+    gwy_synth_load_arg_double(settings, key, "slope_noise", 0.0, 1.0,
+                              &pargs->slope_noise);
+    gwy_synth_load_arg_double(settings, key, "height", 0.0001, 10000.0,
+                              &pargs->height);
+    gwy_synth_load_arg_double(settings, key, "height_noise", 0.0, 1.0,
+                              &pargs->height_noise);
+    gwy_synth_load_arg_double(settings, key, "roundness", 0.0, 1.0,
+                              &pargs->roundness);
+    gwy_synth_load_arg_double(settings, key, "roundness_noise", 0.0, 1.0,
+                              &pargs->roundness_noise);
+    gwy_synth_load_arg_double(settings, key, "angle", -G_PI, G_PI,
+                              &pargs->angle);
+    gwy_synth_load_arg_double(settings, key, "sigma", 0.0, 100.0,
+                              &pargs->sigma);
+    gwy_synth_load_arg_double(settings, key, "tau", 0.1, 1000.0,
+                              &pargs->tau);
+    g_string_free(key, TRUE);
+
+    return pargs;
+}
+
+static void
+save_args_holes(gpointer p,
+                GwyContainer *settings)
+{
+    PatSynthArgsHoles *pargs = p;
+    GString *key;
+
+    key = g_string_new(prefix);
+    g_string_append(key, "/holes/");
+    gwy_synth_save_arg_double(settings, key, "distance", pargs->distance);
+    gwy_synth_save_arg_double(settings, key, "distance_noise",
+                              pargs->distance_noise);
+    gwy_synth_save_arg_double(settings, key, "size", pargs->size);
+    gwy_synth_save_arg_double(settings, key, "size_noise", pargs->size_noise);
+    gwy_synth_save_arg_double(settings, key, "slope", pargs->slope);
+    gwy_synth_save_arg_double(settings, key, "slope_noise", pargs->slope_noise);
+    gwy_synth_save_arg_double(settings, key, "height", pargs->height);
+    gwy_synth_save_arg_double(settings, key, "height_noise",
+                              pargs->height_noise);
+    gwy_synth_save_arg_double(settings, key, "roundness", pargs->roundness);
+    gwy_synth_save_arg_double(settings, key, "roundness_noise",
+                              pargs->roundness_noise);
+    gwy_synth_save_arg_double(settings, key, "angle", pargs->angle);
+    gwy_synth_save_arg_double(settings, key, "sigma", pargs->sigma);
+    gwy_synth_save_arg_double(settings, key, "tau", pargs->tau);
+    g_string_free(key, TRUE);
+}
+
+static void
+reset_holes(gpointer p)
+{
+    PatSynthControlsHoles *pcontrols = p;
+    PatSynthArgsHoles *pargs = pcontrols->args;
+
+    *pargs = pat_synth_defaults_holes;
+
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(pcontrols->distance),
+                             pargs->distance);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(pcontrols->distance_noise),
+                             pargs->distance_noise);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(pcontrols->size), pargs->size);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(pcontrols->size_noise),
+                             pargs->size_noise);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(pcontrols->slope), pargs->slope);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(pcontrols->slope_noise),
+                             pargs->slope_noise);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(pcontrols->height), pargs->height);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(pcontrols->height_noise),
+                             pargs->height_noise);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(pcontrols->roundness),
+                             pargs->roundness);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(pcontrols->roundness_noise),
+                             pargs->roundness_noise);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(pcontrols->angle), pargs->angle);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(pcontrols->sigma), pargs->sigma);
+    gtk_adjustment_set_value(GTK_ADJUSTMENT(pcontrols->tau), pargs->tau);
+}
+
+/* Fill a data field with uncorrelated random numbers in a growing fashion to
+ * preserve the character of the noise even if the dimensions change */
 static void
 fill_displacement_map(GwyDataField *dfield,
                       GRand *rng,
                       gdouble q)
 {
-    guint xres, yres, n, i, j;
+    GrowingIter giter;
+    guint xres, yres;
     gdouble *data;
 
     xres = gwy_data_field_get_xres(dfield);
     yres = gwy_data_field_get_yres(dfield);
     g_return_if_fail(xres == yres);
     data = gwy_data_field_get_data(dfield);
-    n = xres;
+    growing_iter_init(&giter, xres);
 
-    data[0] = q*(g_rand_double(rng) - 0.5);
-    for (i = 1; i < n; i++) {
-        for (j = 0; j <= i; j++)
-            data[i*n + j] = q*(g_rand_double(rng) - 0.5);
-        for (j = 0; j < i; j++)
-            data[j*n + i] = q*(g_rand_double(rng) - 0.5);
-    }
+    do {
+        data[giter.k] = q*(g_rand_double(rng) - 0.5);
+    } while (growing_iter_next(&giter));
 }
 
 static GwyDataField*

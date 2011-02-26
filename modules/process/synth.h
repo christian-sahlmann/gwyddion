@@ -73,6 +73,10 @@ static gint          gwy_synth_attach_height         (GWY_SYNTH_CONTROLS *contro
                                                       const gchar *name,
                                                       GtkWidget **pspin,
                                                       GtkWidget **punits);
+static gint          gwy_synth_attach_roundness      (GWY_SYNTH_CONTROLS *controls,
+                                                      gint row,
+                                                      GtkObject **adj,
+                                                      gdouble *target);
 static gint          gwy_synth_attach_orientation    (GWY_SYNTH_CONTROLS *controls,
                                                       gint row,
                                                       GtkObject **adj,
@@ -314,12 +318,41 @@ gwy_synth_attach_height(GWY_SYNTH_CONTROLS *controls,
 
     spin = gwy_table_attach_hscale(GTK_WIDGET(controls->table),
                                    row, name, "", *adj, GWY_HSCALE_LOG);
+    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 4);
     if (pspin)
         *pspin = spin;
 
     *punits = gwy_table_hscale_get_units(*adj);
     g_signal_connect_swapped(*adj, "value-changed",
                              G_CALLBACK(gwy_synth_double_changed), controls);
+    row++;
+
+    return row;
+}
+
+G_GNUC_UNUSED
+static gint
+gwy_synth_attach_roundness(GWY_SYNTH_CONTROLS *controls,
+                           gint row,
+                           GtkObject **adj,
+                           gdouble *target)
+{
+    GtkWidget *spin;
+
+    gtk_table_set_row_spacing(controls->table, row-1, 8);
+    gtk_table_attach(controls->table, gwy_label_new_header(_("Roundness")),
+                     0, 3, row, row+1, GTK_FILL, 0, 0, 0);
+    row++;
+
+    *adj = gtk_adjustment_new(*target, 0.0, 1.0, 0.001, 0.1, 0);
+    g_object_set_data(G_OBJECT(*adj), "target", target);
+
+    spin = gwy_table_attach_hscale(GTK_WIDGET(controls->table),
+                                   row, _("Roundn_ess:"), NULL, *adj,
+                                   GWY_HSCALE_DEFAULT);
+    g_signal_connect_swapped(*adj, "value-changed",
+                             G_CALLBACK(gwy_synth_double_changed), controls);
+
     row++;
 
     return row;
