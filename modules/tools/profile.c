@@ -562,13 +562,13 @@ gwy_tool_profile_data_switched(GwyTool *gwytool,
             gtk_widget_show(tool->menu_display);
             gtk_widget_show(tool->callabel);
             gtk_widget_show(tool->both);
-            gtk_widget_show(tool->export);
+            //gtk_widget_show(tool->export);
         } else {
             tool->has_calibration = FALSE;
             gtk_widget_hide(tool->menu_display);
             gtk_widget_hide(tool->callabel);
             gtk_widget_hide(tool->both);
-            gtk_widget_hide(tool->export);
+            //gtk_widget_hide(tool->export);
 
         }
     }
