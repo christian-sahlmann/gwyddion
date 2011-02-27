@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2011-02-20 03:58+0100\n"
-"PO-Revision-Date: 2011-02-20 17:12+0300\n"
+"POT-Creation-Date: 2011-02-27 03:58+0100\n"
+"PO-Revision-Date: 2011-02-27 14:52+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "Language: \n"
@@ -404,8 +404,9 @@ msgid "Boundary"
 msgstr "Граница"
 
 #: libprocess/gwygrainvalue.c:981
-#: modules/process/pat_synth.c:801
-#: modules/process/pat_synth.c:1098
+#: modules/process/pat_synth.c:865
+#: modules/process/pat_synth.c:1168
+#: modules/process/pat_synth.c:1505
 #: modules/tools/linestats.c:156
 msgid "Slope"
 msgstr "Уклон"
@@ -846,7 +847,7 @@ msgstr "точек"
 #: modules/file/pixmap.c:2664
 #: modules/file/rawfile.c:398
 #: modules/process/angle_dist.c:170
-#: modules/process/calcoefs_new.c:344
+#: modules/process/calcoefs_new.c:347
 #: modules/process/calibrate.c:296
 #: modules/process/curvature.c:602
 #: modules/process/cwt.c:132
@@ -861,6 +862,7 @@ msgstr "точек"
 #: modules/process/fft_filter_2d.c:396
 #: modules/process/fft_synth.c:330
 #: modules/process/fractal.c:206
+#: modules/process/grain_edge.c:220
 #: modules/process/grain_mark.c:265
 #: modules/process/grain_rem_threshold.c:224
 #: modules/process/grain_wshed.c:182
@@ -871,7 +873,7 @@ msgstr "точек"
 #: modules/process/median-bg.c:176
 #: modules/process/noise_synth.c:347
 #: modules/process/obj_synth.c:432
-#: modules/process/pat_synth.c:391
+#: modules/process/pat_synth.c:402
 #: modules/process/polydistort.c:219
 #: modules/process/polylevel.c:376
 #: modules/process/rotate.c:264
@@ -1138,8 +1140,9 @@ msgstr "Длина"
 #: libgwydgets/gwygraphwindowmeasuredialog.c:567
 #: app/gwyplaintool.c:1022
 #: modules/process/obj_synth.c:567
-#: modules/process/pat_synth.c:818
-#: modules/process/pat_synth.c:1115
+#: modules/process/pat_synth.c:882
+#: modules/process/pat_synth.c:1185
+#: modules/process/pat_synth.c:1522
 msgid "Height"
 msgstr "Высота"
 
@@ -1750,6 +1753,7 @@ msgstr "Начальная точка"
 #: modules/process/convolution_filter.c:358
 #: modules/process/convolution_filter.c:562
 #: modules/process/obj_synth.c:537
+#: modules/process/pat_synth.c:1488
 msgid "Size"
 msgstr "Размер"
 
@@ -2403,6 +2407,7 @@ msgstr "Экспортировать текст"
 #: modules/file/rawxyz.c:670
 #: modules/process/fft_filter_1d.c:296
 #: modules/process/grain_dist.c:285
+#: modules/process/grain_edge.c:273
 #: modules/process/grain_mark.c:347
 #: modules/process/grain_rem_threshold.c:324
 #: modules/process/grain_wshed.c:278
@@ -3505,12 +3510,12 @@ msgstr "_Ширина"
 #: modules/file/pixmap.c:1101
 #: modules/file/rawfile.c:655
 #: modules/file/rawfile.c:711
-#: modules/process/calcoefs_new.c:381
-#: modules/process/calcoefs_new.c:448
+#: modules/process/calcoefs_new.c:384
+#: modules/process/calcoefs_new.c:451
 #: modules/process/calcoefs_simple.c:383
 #: modules/process/calcoefs_simple.c:450
-#: modules/process/calcoefs_view.c:501
-#: modules/process/calcoefs_view.c:539
+#: modules/process/calcoefs_view.c:528
+#: modules/process/calcoefs_view.c:566
 #: modules/process/calibrate.c:339
 #: modules/process/calibrate.c:420
 #: modules/process/dimensions.h:159
@@ -3546,9 +3551,9 @@ msgstr "как данные"
 
 #: modules/file/pixmap.c:1325
 #: modules/file/rawfile.c:1326
-#: modules/process/calcoefs_new.c:773
+#: modules/process/calcoefs_new.c:776
 #: modules/process/calcoefs_simple.c:1070
-#: modules/process/calcoefs_view.c:1361
+#: modules/process/calcoefs_view.c:1394
 #: modules/process/calibrate.c:816
 #: modules/process/dimensions.h:193
 msgid "Change Units"
@@ -3556,9 +3561,9 @@ msgstr "Изменить единицы измерения"
 
 #: modules/file/pixmap.c:1339
 #: modules/file/rawfile.c:1340
-#: modules/process/calcoefs_new.c:786
+#: modules/process/calcoefs_new.c:789
 #: modules/process/calcoefs_simple.c:1083
-#: modules/process/calcoefs_view.c:1374
+#: modules/process/calcoefs_view.c:1407
 #: modules/process/calibrate.c:830
 #: modules/process/dimensions.h:206
 msgid "New _units:"
@@ -3618,8 +3623,9 @@ msgstr "_Ширина:"
 #: modules/process/grain_mark.c:312
 #: modules/process/grain_rem_threshold.c:280
 #: modules/process/obj_synth.c:573
-#: modules/process/pat_synth.c:824
-#: modules/process/pat_synth.c:1121
+#: modules/process/pat_synth.c:888
+#: modules/process/pat_synth.c:1191
+#: modules/process/pat_synth.c:1528
 #: modules/process/tip_blind.c:272
 msgid "_Height:"
 msgstr "_Высота:"
@@ -3875,22 +3881,23 @@ msgstr "Предустановки"
 #: modules/file/rawfile.c:541
 #: modules/file/rawxyz.c:436
 #: modules/process/arithmetic.c:227
-#: modules/process/calcoefs_view.c:305
+#: modules/process/calcoefs_view.c:332
 #: modules/process/convolution_filter.c:243
 #: modules/process/deposit_synth.c:683
 #: modules/process/drift.c:227
 #: modules/process/edge.c:633
 #: modules/process/fft_filter_1d.c:197
+#: modules/process/grain_edge.c:217
 #: modules/process/grain_mark.c:262
 #: modules/process/grain_rem_threshold.c:221
 #: modules/process/grain_wshed.c:179
 #: modules/process/mark_with.c:212
 #: modules/process/polydistort.c:214
 #: modules/process/scars.c:466
-#: modules/process/synth.h:450
+#: modules/process/synth.h:483
 #: modules/process/tip_model.c:167
 #: modules/tools/linestats.c:420
-#: modules/tools/sfunctions.c:444
+#: modules/tools/sfunctions.c:450
 #: modules/tools/stats.c:432
 msgid "_Update"
 msgstr "О_бновить"
@@ -4037,7 +4044,7 @@ msgid "Preset l_ist"
 msgstr "С_писок предустановок"
 
 #: modules/file/rawfile.c:1008
-#: modules/process/calcoefs_load.c:216
+#: modules/process/calcoefs_load.c:217
 msgid "_Load"
 msgstr "_Загрузить"
 
@@ -4205,7 +4212,7 @@ msgstr "Единицы измерения _значения:"
 #: modules/tools/linestats.c:400
 #: modules/tools/profile.c:443
 #: modules/tools/roughness.c:880
-#: modules/tools/sfunctions.c:412
+#: modules/tools/sfunctions.c:418
 msgid "_Interpolation type:"
 msgstr "Тип _интерполяции:"
 
@@ -4818,15 +4825,15 @@ msgstr "Необходимо выбрать больше точек данных
 #: modules/graph/graph_fdfit.c:782
 #: modules/graph/graph_fit.c:806
 #: modules/tools/grainmeasure.c:215
-#: modules/tools/readvalue.c:559
-#: modules/tools/readvalue.c:560
+#: modules/tools/readvalue.c:576
+#: modules/tools/readvalue.c:577
 #: modules/tools/roughness.c:968
-#: modules/tools/stats.c:645
-#: modules/tools/stats.c:656
-#: modules/tools/stats.c:657
-#: modules/tools/stats.c:1033
-#: modules/tools/stats.c:1040
-#: modules/tools/stats.c:1042
+#: modules/tools/stats.c:661
+#: modules/tools/stats.c:672
+#: modules/tools/stats.c:673
+#: modules/tools/stats.c:1049
+#: modules/tools/stats.c:1056
+#: modules/tools/stats.c:1058
 msgid "N.A."
 msgstr "недоступно"
 
@@ -5403,17 +5410,17 @@ msgstr "/_Калибровка/_Загрузить из текстового ф�
 msgid "Load calibration data from text file."
 msgstr "Загрузить данные калибровки из текстового файла."
 
-#: modules/process/calcoefs_load.c:208
+#: modules/process/calcoefs_load.c:209
 msgid "Load Calibration Data"
 msgstr "Загрузить данные калибровки"
 
-#: modules/process/calcoefs_load.c:228
-#: modules/process/calcoefs_new.c:563
+#: modules/process/calcoefs_load.c:229
+#: modules/process/calcoefs_new.c:566
 #: modules/process/calcoefs_simple.c:467
 msgid "Calibration name:"
 msgstr "Имя калибровки:"
 
-#: modules/process/calcoefs_load.c:240
+#: modules/process/calcoefs_load.c:241
 msgid "No data loaded"
 msgstr "Данные не загружены"
 
@@ -5429,55 +5436,55 @@ msgstr "/_Калибровка/_Создать..."
 msgid "Specify simple calibration data."
 msgstr "Задать простые данные калибровки"
 
-#: modules/process/calcoefs_new.c:343
+#: modules/process/calcoefs_new.c:346
 msgid "Simple Calibration Data"
 msgstr "Простые данные калибровки"
 
-#: modules/process/calcoefs_new.c:361
+#: modules/process/calcoefs_new.c:364
 msgid "_X from:"
 msgstr "_X от:"
 
-#: modules/process/calcoefs_new.c:388
+#: modules/process/calcoefs_new.c:391
 msgid "_X to:"
 msgstr "X _до:"
 
-#: modules/process/calcoefs_new.c:401
+#: modules/process/calcoefs_new.c:404
 msgid "_Y from:"
 msgstr "_Y от:"
 
-#: modules/process/calcoefs_new.c:414
+#: modules/process/calcoefs_new.c:417
 msgid "_Y to:"
 msgstr "Y до:"
 
-#: modules/process/calcoefs_new.c:428
+#: modules/process/calcoefs_new.c:431
 msgid "_Z from:"
 msgstr "_Z от:"
 
-#: modules/process/calcoefs_new.c:455
+#: modules/process/calcoefs_new.c:458
 msgid "_Z to:"
 msgstr "Z до:"
 
-#: modules/process/calcoefs_new.c:468
+#: modules/process/calcoefs_new.c:471
 msgid "_X uncertainty:"
 msgstr "_Погрешность по X"
 
-#: modules/process/calcoefs_new.c:489
+#: modules/process/calcoefs_new.c:492
 msgid "_Y uncertainty:"
 msgstr "По_грешность по Y"
 
-#: modules/process/calcoefs_new.c:504
+#: modules/process/calcoefs_new.c:507
 msgid "_Z uncertainty:"
 msgstr "Пог_решность по Z"
 
-#: modules/process/calcoefs_new.c:526
+#: modules/process/calcoefs_new.c:529
 msgid "_X correction factor:"
 msgstr "_Множитель калибровки по X:"
 
-#: modules/process/calcoefs_new.c:538
+#: modules/process/calcoefs_new.c:541
 msgid "_Y correction factor:"
 msgstr "М_ножитель калибровки по Y:"
 
-#: modules/process/calcoefs_new.c:550
+#: modules/process/calcoefs_new.c:553
 msgid "_Z correction factor:"
 msgstr "Мно_житель калибровки по Z:"
 
@@ -5504,13 +5511,13 @@ msgid "Operands:"
 msgstr "Операнды:"
 
 #: modules/process/calcoefs_simple.c:363
-#: modules/process/calcoefs_view.c:481
+#: modules/process/calcoefs_view.c:508
 #: modules/process/calibrate.c:367
 msgid "_X offset:"
 msgstr "Смещение по _X:"
 
 #: modules/process/calcoefs_simple.c:390
-#: modules/process/calcoefs_view.c:507
+#: modules/process/calcoefs_view.c:534
 #: modules/process/calibrate.c:380
 msgid "_Y offset:"
 msgstr "Смещение по _Y:"
@@ -5524,7 +5531,7 @@ msgid "Y p_eriod:"
 msgstr "Пе_риод Y:"
 
 #: modules/process/calcoefs_simple.c:430
-#: modules/process/calcoefs_view.c:519
+#: modules/process/calcoefs_view.c:546
 msgid "_Z offset:"
 msgstr "Смещение по _Z:"
 
@@ -5553,150 +5560,150 @@ msgstr "Картирование ошибок основания"
 msgid "Stage Error Map"
 msgstr "Карта ошибок основания"
 
-#: modules/process/calcoefs_view.c:227
+#: modules/process/calcoefs_view.c:247
 msgid "3D calibration/uncertainty"
 msgstr "Трёхмерная калибровка и погрешность измерения"
 
-#: modules/process/calcoefs_view.c:241
+#: modules/process/calcoefs_view.c:261
 msgid "/Cali_bration/_Apply to Data..."
 msgstr "/_Калибровка/Применить к _данным..."
 
-#: modules/process/calcoefs_view.c:245
+#: modules/process/calcoefs_view.c:265
 msgid "3D calibration and uncertainty"
 msgstr "Трёхмерная калибровка и погрешности"
 
-#: modules/process/calcoefs_view.c:303
+#: modules/process/calcoefs_view.c:330
 msgid "3D Calibration"
 msgstr "Трёхмерная калибровка"
 
-#: modules/process/calcoefs_view.c:387
+#: modules/process/calcoefs_view.c:414
 msgid "Used calibration data:"
 msgstr "Используемые данные калибровки:"
 
-#: modules/process/calcoefs_view.c:404
+#: modules/process/calcoefs_view.c:431
 msgid "Shown planes:"
 msgstr "Показаны плоскости:"
 
-#: modules/process/calcoefs_view.c:410
+#: modules/process/calcoefs_view.c:437
 msgid "View:"
 msgstr "Вид:"
 
-#: modules/process/calcoefs_view.c:425
+#: modules/process/calcoefs_view.c:452
 msgid "Plane:"
 msgstr "Плоскость:"
 
-#: modules/process/calcoefs_view.c:444
+#: modules/process/calcoefs_view.c:471
 msgid "X pos:"
 msgstr "Положение X:"
 
-#: modules/process/calcoefs_view.c:451
+#: modules/process/calcoefs_view.c:478
 msgid "Y pos:"
 msgstr "Положение Y:"
 
-#: modules/process/calcoefs_view.c:458
+#: modules/process/calcoefs_view.c:485
 msgid "Z pos:"
 msgstr "Положение Z:"
 
-#: modules/process/calcoefs_view.c:463
+#: modules/process/calcoefs_view.c:490
 msgid "Interpolation:"
 msgstr "Интерполяция:"
 
-#: modules/process/calcoefs_view.c:547
+#: modules/process/calcoefs_view.c:574
 msgid "crop to actual data"
 msgstr "обрезать до действительных данных"
 
-#: modules/process/calcoefs_view.c:557
+#: modules/process/calcoefs_view.c:584
 msgid "i_nstant updates"
 msgstr "мгновенное об_новление"
 
-#: modules/process/calcoefs_view.c:668
+#: modules/process/calcoefs_view.c:696
 msgid "Shown part has zero range."
 msgstr "У показанной части нулевой диапазон "
 
-#: modules/process/calcoefs_view.c:675
+#: modules/process/calcoefs_view.c:703
 #, c-format
 msgid "Shown range (%.*f - %.*f) %s"
 msgstr "Показан диапазон (%.*f - %.*f) %s"
 
-#: modules/process/calcoefs_view.c:721
+#: modules/process/calcoefs_view.c:752
 #, c-format
 msgid "%d calibration data"
 msgstr "%d данных калибровки"
 
-#: modules/process/calcoefs_view.c:725
+#: modules/process/calcoefs_view.c:756
 #, c-format
 msgid "X span: (%.*f - %.*f) %s"
 msgstr "Диапазон X: (%.*f - %.*f) %s"
 
-#: modules/process/calcoefs_view.c:731
+#: modules/process/calcoefs_view.c:762
 #, c-format
 msgid "Y span: (%.*f - %.*f) %s"
 msgstr "Диапазон Y: (%.*f - %.*f) %s"
 
-#: modules/process/calcoefs_view.c:737
+#: modules/process/calcoefs_view.c:768
 #, c-format
 msgid "Z span: (%.*f - %.*f) %s"
 msgstr "Диапазон Z: (%.*f - %.*f) %s"
 
-#: modules/process/calcoefs_view.c:770
+#: modules/process/calcoefs_view.c:801
 msgid "Building mesh..."
 msgstr "Строится сетка..."
 
-#: modules/process/calcoefs_view.c:776
+#: modules/process/calcoefs_view.c:807
 msgid "Triangulation..."
 msgstr "Триангуляция..."
 
-#: modules/process/calcoefs_view.c:1101
+#: modules/process/calcoefs_view.c:1134
 #: modules/tools/profile.c:1095
 msgid "X correction"
 msgstr "Поправка по X"
 
-#: modules/process/calcoefs_view.c:1102
+#: modules/process/calcoefs_view.c:1135
 #: modules/tools/profile.c:1096
 msgid "Y correction"
 msgstr "Поправка по Y"
 
-#: modules/process/calcoefs_view.c:1103
+#: modules/process/calcoefs_view.c:1136
 #: modules/tools/profile.c:1097
 msgid "Z correction"
 msgstr "Поправка по Z"
 
-#: modules/process/calcoefs_view.c:1104
+#: modules/process/calcoefs_view.c:1137
 #: modules/tools/profile.c:1098
 msgid "X uncertainty"
 msgstr "Погрешность X"
 
-#: modules/process/calcoefs_view.c:1105
+#: modules/process/calcoefs_view.c:1138
 #: modules/tools/profile.c:1099
 msgid "Y uncertainty"
 msgstr "Погрешность Y"
 
-#: modules/process/calcoefs_view.c:1106
+#: modules/process/calcoefs_view.c:1139
 #: modules/tools/profile.c:1100
 msgid "Z uncertainty"
 msgstr "Погрешность Z"
 
-#: modules/process/calcoefs_view.c:1118
+#: modules/process/calcoefs_view.c:1151
 msgid "Constant X"
 msgstr "Постоянная X"
 
-#: modules/process/calcoefs_view.c:1119
+#: modules/process/calcoefs_view.c:1152
 msgid "Constant Y"
 msgstr "Постоянная Y"
 
-#: modules/process/calcoefs_view.c:1120
+#: modules/process/calcoefs_view.c:1153
 msgid "Constant Z"
 msgstr "Постоянная Z"
 
-#: modules/process/calcoefs_view.c:1131
+#: modules/process/calcoefs_view.c:1164
 msgid "NNA 3D"
 msgstr "АБС 3D"
 
-#: modules/process/calcoefs_view.c:1132
+#: modules/process/calcoefs_view.c:1165
 msgid "Snap to planes"
 msgstr "Привязать к плоскостям"
 
-#: modules/process/calcoefs_view.c:1133
+#: modules/process/calcoefs_view.c:1166
 msgid "Delaunay"
 msgstr "Делоне"
 
@@ -6041,7 +6048,7 @@ msgstr "Создать частицы используя динамическу�
 #: modules/process/lno_synth.c:410
 #: modules/process/noise_synth.c:322
 #: modules/process/obj_synth.c:404
-#: modules/process/pat_synth.c:363
+#: modules/process/pat_synth.c:374
 msgid "Generated"
 msgstr "Сгенерированное"
 
@@ -6054,7 +6061,7 @@ msgstr "Генерация частиц"
 #: modules/process/lno_synth.c:501
 #: modules/process/noise_synth.c:413
 #: modules/process/obj_synth.c:497
-#: modules/process/pat_synth.c:456
+#: modules/process/pat_synth.c:467
 msgid "Dimensions"
 msgstr "Размеры"
 
@@ -6063,7 +6070,7 @@ msgstr "Размеры"
 #: modules/process/lno_synth.c:512
 #: modules/process/noise_synth.c:424
 #: modules/process/obj_synth.c:508
-#: modules/process/pat_synth.c:467
+#: modules/process/pat_synth.c:479
 msgid "Generator"
 msgstr "Генератор"
 
@@ -6082,22 +6089,23 @@ msgstr "И_зменить:"
 #: modules/process/deposit_synth.c:687
 #: modules/process/edge.c:714
 #: modules/process/fft_filter_1d.c:334
+#: modules/process/grain_edge.c:289
 #: modules/process/grain_mark.c:380
 #: modules/process/grain_rem_threshold.c:357
 #: modules/process/mark_with.c:359
 #: modules/process/polydistort.c:334
 #: modules/process/scars.c:575
-#: modules/process/synth.h:454
+#: modules/process/synth.h:487
 msgid "I_nstant updates"
 msgstr "Мгновенное об_новление"
 
 #: modules/process/deposit_synth.c:705
-#: modules/process/synth.h:489
+#: modules/process/synth.h:522
 msgid "R_andom seed:"
 msgstr "На_чальное число:"
 
 #: modules/process/deposit_synth.c:711
-#: modules/process/synth.h:495
+#: modules/process/synth.h:528
 msgid "seed|_New"
 msgstr "Ново_е"
 
@@ -6179,6 +6187,7 @@ msgstr "_Линии дрейфа"
 
 #: modules/process/drift.c:349
 #: modules/process/facet_analysis.c:409
+#: modules/process/grain_edge.c:282
 #: modules/process/grain_mark.c:373
 #: modules/process/grain_rem_threshold.c:350
 #: modules/process/grain_wshed.c:296
@@ -6699,7 +6708,7 @@ msgstr "Сечение ФСПМ"
 #: modules/process/grain_dist.c:313
 #: modules/tools/linestats.c:375
 #: modules/tools/profile.c:415
-#: modules/tools/sfunctions.c:387
+#: modules/tools/sfunctions.c:393
 msgid "_Fix res.:"
 msgstr "_Фикс. разр.:"
 
@@ -7154,6 +7163,30 @@ msgstr "Общий объём зерна (минимум):"
 #: modules/process/grain_dist.c:792
 msgid "Total grain volume (laplacian):"
 msgstr "Общий объём зерна (по Лапласу):"
+
+#: modules/process/grain_edge.c:106
+msgid "Marks grains by edge detection method."
+msgstr "Помечает зёрна алгоритмом нахождения краёв."
+
+#: modules/process/grain_edge.c:120
+msgid "/_Grains/Mark by _Edge Detection..."
+msgstr "/Зёрн_а/Пометить по кра_ю..."
+
+#: modules/process/grain_edge.c:124
+msgid "Mark grains with edge detection mechanism"
+msgstr "Пометить зёрна с помощью поиска края"
+
+#: modules/process/grain_edge.c:214
+msgid "Mark Grains by Edge Detection"
+msgstr "Пометить зёрна по краю"
+
+#: modules/process/grain_edge.c:263
+msgid "Threshold"
+msgstr "Порог"
+
+#: modules/process/grain_edge.c:267
+msgid "_Laplasian:"
+msgstr "_Лапласиан:"
 
 #: modules/process/grain_mark.c:144
 msgid "Marks grains by thresholding (height, slope, curvature)."
@@ -7820,7 +7853,7 @@ msgid "distribution|Triangular"
 msgstr "Треугольное"
 
 #: modules/process/lno_synth.c:274
-#: modules/process/pat_synth.c:222
+#: modules/process/pat_synth.c:232
 msgid "Steps"
 msgstr "Ступеньки"
 
@@ -8316,6 +8349,7 @@ msgid "obj."
 msgstr "объект."
 
 #: modules/process/obj_synth.c:543
+#: modules/process/pat_synth.c:1496
 msgid "_Size:"
 msgstr "_Размер:"
 
@@ -8347,58 +8381,76 @@ msgstr "/Исправить _данные/Маска в_ыпадающего"
 msgid "Mark data farther than 3σ from mean value"
 msgstr "Пометить данные которые находятся дальше, чем 3σ от среднего значения"
 
-#: modules/process/pat_synth.c:223
+#: modules/process/pat_synth.c:233
 msgid "Ridges"
 msgstr "Борозды"
 
-#: modules/process/pat_synth.c:229
+#: modules/process/pat_synth.c:234
+msgid "Holes"
+msgstr "Отверстия"
+
+#: modules/process/pat_synth.c:240
 msgid "Generates surfaces representing simple patterns (steps, ridges, ...)."
 msgstr "Генерирует поверхность представляющую простые структуры (ступени, борозды, ...)."
 
-#: modules/process/pat_synth.c:244
+#: modules/process/pat_synth.c:255
 msgid "/S_ynthetic/_Pattern..."
 msgstr "/Син_тез/_Структура..."
 
-#: modules/process/pat_synth.c:248
+#: modules/process/pat_synth.c:259
 msgid "Generate patterned surface"
 msgstr "Генерирует структурированную поверхность"
 
-#: modules/process/pat_synth.c:389
+#: modules/process/pat_synth.c:400
 msgid "Pattern"
 msgstr "Структура"
 
-#: modules/process/pat_synth.c:471
+#: modules/process/pat_synth.c:483
 msgid "_Pattern:"
 msgstr "С_труктура:"
 
-#: modules/process/pat_synth.c:784
+#: modules/process/pat_synth.c:494
+msgid "Placement"
+msgstr "Положение"
+
+#: modules/process/pat_synth.c:848
 msgid "Flat"
 msgstr "Плоскость"
 
-#: modules/process/pat_synth.c:792
+#: modules/process/pat_synth.c:856
 msgid "_Flat width:"
 msgstr "_Ширина плоскости:"
 
-#: modules/process/pat_synth.c:809
-#: modules/process/pat_synth.c:1106
+#: modules/process/pat_synth.c:873
+#: modules/process/pat_synth.c:1176
+#: modules/process/pat_synth.c:1513
 msgid "_Slope width:"
 msgstr "Ширина _уклона:"
 
-#: modules/process/pat_synth.c:1066
+#: modules/process/pat_synth.c:1136
 msgid "Top"
 msgstr "Вершина"
 
-#: modules/process/pat_synth.c:1073
+#: modules/process/pat_synth.c:1143
 msgid "Flat _top width:"
 msgstr "Ширина плоской _вершины:"
 
-#: modules/process/pat_synth.c:1081
+#: modules/process/pat_synth.c:1151
 msgid "Bottom"
 msgstr "Дно"
 
-#: modules/process/pat_synth.c:1089
+#: modules/process/pat_synth.c:1159
 msgid "Flat _bottom width:"
 msgstr "Ширина плоского _дна:"
+
+#: modules/process/pat_synth.c:1471
+#: modules/tools/distance.c:130
+msgid "Distance"
+msgstr "Расстояние"
+
+#: modules/process/pat_synth.c:1479
+msgid "_Distance:"
+msgstr "Р_асстояние:"
 
 #: modules/process/polydistort.c:140
 msgid "Apllies polynomial distortion in the horizontal plane."
@@ -8740,13 +8792,13 @@ msgstr "Выровнять данные вращением дуги"
 
 #: modules/process/sphere-revolve.c:204
 #: modules/tools/polynom.c:209
-#: modules/tools/sfunctions.c:320
+#: modules/tools/sfunctions.c:326
 msgid "_Horizontal direction"
 msgstr "_Горизонтальное направление"
 
 #: modules/process/sphere-revolve.c:205
 #: modules/tools/polynom.c:210
-#: modules/tools/sfunctions.c:321
+#: modules/tools/sfunctions.c:327
 msgid "_Vertical direction"
 msgstr "_Вертикальное направление"
 
@@ -8786,31 +8838,39 @@ msgstr "Взаимная корреляция..."
 msgid "Interpolating..."
 msgstr "Интерполируется..."
 
-#: modules/process/synth.h:338
+#: modules/process/synth.h:343
+msgid "Roundness"
+msgstr "Округлость"
+
+#: modules/process/synth.h:351
+msgid "Roundn_ess:"
+msgstr "О_круглость:"
+
+#: modules/process/synth.h:371
 msgid "Orientation"
 msgstr "Ориентация"
 
-#: modules/process/synth.h:347
+#: modules/process/synth.h:380
 msgid "Orien_tation:"
 msgstr "Ор_иентация:"
 
-#: modules/process/synth.h:371
+#: modules/process/synth.h:404
 msgid "Variance:"
 msgstr "Разброс:"
 
-#: modules/process/synth.h:397
+#: modules/process/synth.h:430
 msgid "Deformation"
 msgstr "Деформация"
 
-#: modules/process/synth.h:405
+#: modules/process/synth.h:438
 msgid "_Amplitude:"
 msgstr "_Амплитуда:"
 
-#: modules/process/synth.h:413
+#: modules/process/synth.h:446
 msgid "_Lateral scale:"
 msgstr "_Горизонтальный масштаб:"
 
-#: modules/process/synth.h:507
+#: modules/process/synth.h:540
 msgid "Randomi_ze"
 msgstr "Сделать случа_йным"
 
@@ -9165,10 +9225,6 @@ msgstr "Часть"
 msgid "Distance measurement tool, measures distances and angles."
 msgstr "Инструмент измерения расстояний, измеряет расстояния и углы."
 
-#: modules/tools/distance.c:130
-msgid "Distance"
-msgstr "Расстояние"
-
 #: modules/tools/distance.c:131
 msgid "Measure distances and directions between points"
 msgstr "Измерить расстояния и углы между точками"
@@ -9411,13 +9467,13 @@ msgstr "Среднее:"
 
 #: modules/tools/linestats.c:346
 #: modules/tools/profile.c:388
-#: modules/tools/sfunctions.c:358
+#: modules/tools/sfunctions.c:364
 #: modules/tools/spectro.c:292
 msgid "<b>Options</b>"
 msgstr "<b>Параметры</b>"
 
 #: modules/tools/linestats.c:362
-#: modules/tools/sfunctions.c:374
+#: modules/tools/sfunctions.c:380
 #: modules/tools/stats.c:381
 msgid "_Instant updates"
 msgstr "_Обновлять сразу"
@@ -9861,13 +9917,13 @@ msgid "Roughness Parameters"
 msgstr "Параметры шероховатости"
 
 #: modules/tools/roughness.c:2209
-#: modules/tools/stats.c:982
+#: modules/tools/stats.c:998
 #, c-format
 msgid "File:              %s\n"
 msgstr "Файл:              %s\n"
 
 #: modules/tools/roughness.c:2213
-#: modules/tools/stats.c:986
+#: modules/tools/stats.c:1002
 #, c-format
 msgid "Data channel:      %s\n"
 msgstr "Канал данных:      %s\n"
@@ -9977,7 +10033,7 @@ msgstr "Статистические функции"
 msgid "Calculate 1D statistical functions"
 msgstr "Рассчитать одномерные статистические функции"
 
-#: modules/tools/sfunctions.c:427
+#: modules/tools/sfunctions.c:433
 msgid "_Separate uncertainty"
 msgstr "_Разделить погрешности"
 
@@ -10030,7 +10086,7 @@ msgid "Statistics tool."
 msgstr "Инструмент статистики."
 
 #: modules/tools/stats.c:217
-#: modules/tools/stats.c:976
+#: modules/tools/stats.c:992
 msgid "Statistical Quantities"
 msgstr "Статистические величины"
 
@@ -10090,19 +10146,19 @@ msgstr "Наклон φ:"
 msgid "Parameters"
 msgstr "Параметры"
 
-#: modules/tools/stats.c:912
+#: modules/tools/stats.c:928
 msgid "Save Statistical Quantities"
 msgstr "Сохранять статистические величины"
 
-#: modules/tools/stats.c:1008
+#: modules/tools/stats.c:1024
 msgid "Yes"
 msgstr "Да"
 
-#: modules/tools/stats.c:1008
+#: modules/tools/stats.c:1024
 msgid "No"
 msgstr "Нет"
 
-#: modules/tools/stats.c:1045
+#: modules/tools/stats.c:1061
 #, c-format
 msgid ""
 "Selected area:     %s × %s at (%s, %s) px\n"
