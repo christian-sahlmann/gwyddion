@@ -152,7 +152,6 @@ cload(G_GNUC_UNUSED GwyContainer *data, GwyRunType run)
             g_free(contents);
         }
         n = gwy_caldata_get_ndata(caldata) + gwy_caldata_get_ndata(args.caldata);
-
         gwy_caldata_append(args.caldata, caldata);
     }
 
@@ -163,6 +162,7 @@ cload(G_GNUC_UNUSED GwyContainer *data, GwyRunType run)
         gwy_inventory_insert_item(gwy_calibrations(), calibration);
         g_object_unref(calibration);
     }
+    calibration->caldata = args.caldata;
 
     filename = gwy_resource_build_filename(GWY_RESOURCE(calibration));
     if (!g_file_test(filename, G_FILE_TEST_EXISTS)) {
@@ -182,7 +182,6 @@ cload(G_GNUC_UNUSED GwyContainer *data, GwyRunType run)
     g_string_free(str, TRUE);
 
     gwy_resource_data_saved(GWY_RESOURCE(calibration));
-    gwy_resource_data_changed(GWY_RESOURCE(calibration));
 
     //debugcal(args.caldata);
 
@@ -265,7 +264,7 @@ cload_dialog(CLoadArgs *args,
                                                   GTK_DIALOG_DESTROY_WITH_PARENT,
                                                   GTK_MESSAGE_WARNING,
                                                   GTK_BUTTONS_CANCEL,
-                                                  "Calibration '%s' alerady exists",
+                                                  "Calibration '%s' already exists",
                                                   args->name);
                 gtk_dialog_add_button(GTK_DIALOG(dialog2), "Overwrite", RESPONSE_DUPLICATE_OVERWRITE);
                 gtk_dialog_add_button(GTK_DIALOG(dialog2), "Append", RESPONSE_DUPLICATE_APPEND);

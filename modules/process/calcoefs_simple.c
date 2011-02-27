@@ -77,6 +77,7 @@ typedef struct {
     gdouble *ys;
     gint noriginal;
     GwyDataField *mask;
+    gboolean objects_found;
 } SimpleArgs;
 
 typedef struct {
@@ -96,6 +97,7 @@ typedef struct {
     GtkWidget *zexponent;
     GtkWidget *name;
     GtkWidget *suggestion;
+    GtkWidget *button_ok;
 } SimpleControls;
 
 static gboolean module_register      (void);
@@ -127,13 +129,15 @@ static void     yperiod_changed_cb   (GtkAdjustment *adj,
                                       SimpleControls *controls);
 static void     threshold_changed_cb (GtkAdjustment *adj,
                                       SimpleControls *controls);
-static void     get_object_list      (GwyDataField *data,
+static void     get_object_list      (GtkWindow *window,
+                                      GwyDataField *data,
                                       GwyDataField *kernel,
                                       gdouble threshold,
                                       gdouble *xs,
                                       gdouble *ys,
                                       gint *nobjects,
-                                      GwyCorrelationType type);
+                                      GwyCorrelationType type,
+                                      gboolean *objects_found);
 static void     draw_cross           (GwyDataField *mask,
                                       gint size,
                                       gint xpos,
@@ -235,15 +239,14 @@ simple(GwyContainer *data, GwyRunType run)
 
     } else return;
 
+    if (!args.caldata) return;
+
 
     /*if append requested, copy newly created calibration into old one*/
-    if (args.duplicate == DUPLICATE_APPEND && (calibration = gwy_inventory_get_item(gwy_calibrations(), args.name[0])))
+    if (args.duplicate == DUPLICATE_APPEND && (calibration = gwy_inventory_get_item(gwy_calibrations(), args.calname)))
     {
 
         filename = g_build_filename(gwy_get_user_dir(), "caldata", calibration->filename, NULL);
-        if (!g_file_test(filename, G_FILE_TEST_EXISTS)) {
-            g_mkdir(g_build_filename(gwy_get_user_dir(), "calibrations", NULL), 0700);
-        }
         if (!g_file_get_contents(filename,
                                  &contents, &len, &err))
         {
@@ -256,37 +259,41 @@ simple(GwyContainer *data, GwyRunType run)
               caldata = GWY_CALDATA(gwy_serializable_deserialize(contents, len, &pos));
             g_free(contents);
         }
+        n = gwy_caldata_get_ndata(caldata) + gwy_caldata_get_ndata(args.caldata);
         gwy_caldata_append(args.caldata, caldata);
-        g_object_unref(caldata);
-        caldata = args.caldata;
     }
 
     /*now create and save the resource*/
-//    if ((calibration = GWY_CALIBRATION(gwy_inventory_get_item(gwy_calibrations(), args.name[0])))==NULL)
-//    {
-//        calibration = gwy_calibration_new(args.name[0], g_strconcat(args.name[0], ".dat", NULL));
-//        gwy_inventory_insert_item(gwy_calibrations(), calibration);
-//        g_object_unref(calibration);
-//    }
+    if ((calibration = GWY_CALIBRATION(gwy_inventory_get_item(gwy_calibrations(), args.calname)))==NULL)
+    {
+        calibration = gwy_calibration_new(args.calname, g_strconcat(args.name[0], ".dat", NULL));
+        gwy_inventory_insert_item(gwy_calibrations(), calibration);
+        g_object_unref(calibration);
+    }
+    calibration->caldata = args.caldata;
 
-//    filename = gwy_resource_build_filename(GWY_RESOURCE(calibration));
-//    fh = g_fopen(filename, "w");
-//    if (!fh) {
-//        g_warning("Cannot save preset: %s", filename);
-//        g_free(filename);
-//        return;
-//    }
-//    g_free(filename);
+    filename = gwy_resource_build_filename(GWY_RESOURCE(calibration));
+    if (!g_file_test(filename, G_FILE_TEST_EXISTS)) {
+        g_mkdir(g_build_filename(gwy_get_user_dir(), "calibrations", NULL), 0700);
+    }
 
-//    str = gwy_resource_dump(GWY_RESOURCE(calibration));
-//    fwrite(str->str, 1, str->len, fh);
-//    fclose(fh);
-//    g_string_free(str, TRUE);
+    fh = g_fopen(filename, "w");
+    if (!fh) {
+        g_warning("Cannot save preset: %s", filename);
+        g_free(filename);
+        return;
+    }
+    g_free(filename);
 
-//    gwy_resource_data_saved(GWY_RESOURCE(calibration));
+    str = gwy_resource_dump(GWY_RESOURCE(calibration));
+    fwrite(str->str, 1, str->len, fh);
+    fclose(fh);
+    g_string_free(str, TRUE);
+
+    gwy_resource_data_saved(GWY_RESOURCE(calibration));
 
     /*now save the calibration data*/
-//    gwy_caldata_save_data(caldata, calibration->filename);
+    gwy_caldata_save_data(args.caldata, calibration->filename);
 
 }
 
@@ -304,6 +311,7 @@ simple_dialog(SimpleArgs *args, GwyDataField *dfield)
 
 
     controls.args = args;
+    args->objects_found = FALSE;
 
     /*FIXME: use defaults*/
     args->xoffset = 0;
@@ -319,9 +327,11 @@ simple_dialog(SimpleArgs *args, GwyDataField *dfield)
 
     dialog = gtk_dialog_new_with_buttons(_("Simple Error Map"), NULL, 0,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-                                         GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);
     controls.dialog = dialog;
+    controls.button_ok = gtk_dialog_add_button(GTK_DIALOG(dialog),
+                                               GTK_STOCK_OK, GTK_RESPONSE_OK);
+
     gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
 
@@ -469,7 +479,7 @@ simple_dialog(SimpleArgs *args, GwyDataField *dfield)
     gtk_table_attach(GTK_TABLE(table), label,
                      0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
-    args->calname = g_strdup("new"); //FIXME this should not be here
+    args->calname = g_strdup("new"); 
     controls.name = gtk_entry_new();
     gtk_entry_set_text(GTK_ENTRY(controls.name), args->calname);
     gtk_table_attach(GTK_TABLE(table), controls.name,
@@ -528,7 +538,7 @@ simple_dialog(SimpleArgs *args, GwyDataField *dfield)
                                                   GTK_DIALOG_DESTROY_WITH_PARENT,
                                                   GTK_MESSAGE_WARNING,
                                                   GTK_BUTTONS_CANCEL,
-                                                  "Calibration '%s' alerady exists",
+                                                  "Calibration '%s' already exists",
                                                   args->calname);
                 gtk_dialog_add_button(GTK_DIALOG(dialog2), "Overwrite", RESPONSE_DUPLICATE_OVERWRITE);
                 gtk_dialog_add_button(GTK_DIALOG(dialog2), "Append", RESPONSE_DUPLICATE_APPEND);
@@ -575,11 +585,15 @@ simple_data_cb(GwyDataChooser *chooser,
     detail = GWY_DATA_FIELD(gwy_container_get_object(controls->args->objects[1].data,
                                                        gwy_app_get_data_key_for_id(args->objects[1].id)));
 
-    if (original==detail) gtk_label_set_text(GTK_LABEL(controls->suggestion), "Data same as detail?\n");
+    if (original==detail) {
+        gtk_label_set_text(GTK_LABEL(controls->suggestion), "Data same as detail?\n");
+        gtk_widget_set_sensitive(controls->button_ok, FALSE);
+    }
     else if (gwy_data_field_get_xres(original)<=gwy_data_field_get_xres(detail) ||
         gwy_data_field_get_yres(original)<=gwy_data_field_get_yres(detail))
     {
         gtk_label_set_text(GTK_LABEL(controls->suggestion), "Data larger than detail?\n");
+        gtk_widget_set_sensitive(controls->button_ok, FALSE);
     }
     else {
         args->noriginal = 10000;
@@ -589,9 +603,14 @@ simple_data_cb(GwyDataChooser *chooser,
            args->ys = (gdouble *)g_malloc(args->noriginal*sizeof(gdouble));
         }
 
-        get_object_list(original, detail, args->threshold, args->xs, args->ys, &(args->noriginal), GWY_CORRELATION_NORMAL);
-        g_snprintf(message, sizeof(message), "%d objects found\n", args->noriginal);
+        get_object_list(GTK_WINDOW(controls->dialog), original, detail, args->threshold, args->xs, args->ys, &(args->noriginal), 
+                        GWY_CORRELATION_NORMAL, &(args->objects_found));
+        if (args->objects_found)
+          g_snprintf(message, sizeof(message), "%d objects found\n", args->noriginal);
+        else 
+          g_snprintf(message, sizeof(message), "Search cancelled\n");
         gtk_label_set_text(GTK_LABEL(controls->suggestion), message);
+        gtk_widget_set_sensitive(controls->button_ok, TRUE);
 
 
     }
@@ -600,20 +619,47 @@ simple_data_cb(GwyDataChooser *chooser,
 }
 
 static void
-get_object_list(GwyDataField *data, GwyDataField *kernel, gdouble threshold,
-                gdouble *xs, gdouble *ys, gint *nobjects, GwyCorrelationType type)
+get_object_list(GtkWindow *window, GwyDataField *data, GwyDataField *kernel, gdouble threshold,
+                gdouble *xs, gdouble *ys, gint *nobjects, GwyCorrelationType type,
+                gboolean *objects_found)
 {
+    enum { WORK_PER_UPDATE = 50000000 };
     GwyDataField *score = gwy_data_field_new_alike(data, 0);
     GwyDataField *retfield;
     gdouble *sdata, *maxval, min, max;
-    gint i, *grains, *maxpos, ngrains;
+    gint i, *grains, *maxpos, ngrains, work, wpi;
+    GwyComputationState *state;
+    
+    gwy_app_wait_start(window, _("Initializing"));
+    state = gwy_data_field_correlate_init(data, kernel, score);
+    gwy_app_wait_set_message(_("Correlating"));
+    work = 0;
+    wpi = gwy_data_field_get_xres(kernel)*gwy_data_field_get_yres(kernel);
+    wpi = MIN(wpi, WORK_PER_UPDATE);
+    do {
+        gwy_data_field_correlate_iteration(state);
+        work += wpi;
+        if (work > WORK_PER_UPDATE) {
+            work -= WORK_PER_UPDATE;
+            if (!gwy_app_wait_set_fraction(state->fraction)) {
+                gwy_data_field_correlate_finalize(state);
+                gwy_app_wait_finish();
+                *objects_found = FALSE;
+                return;
+            }
+        }
+    } while (state->state != GWY_COMPUTATION_STATE_FINISHED);
+    gwy_data_field_correlate_finalize(state);
+    gwy_app_wait_finish();
 
-    gwy_data_field_correlate(data, kernel, score, type);
+
+    //gwy_data_field_correlate(data, kernel, score, type);
     max = gwy_data_field_get_max(score);
     min = gwy_data_field_get_min(score);
 
     retfield = gwy_data_field_duplicate(score);
     gwy_data_field_threshold(retfield, threshold, 0.0, 1.0);
+
 
     grains = (gint *)g_malloc(gwy_data_field_get_xres(retfield)*gwy_data_field_get_yres(retfield)*sizeof(gint));
     ngrains = gwy_data_field_number_grains(retfield, grains);
@@ -622,6 +668,7 @@ get_object_list(GwyDataField *data, GwyDataField *kernel, gdouble threshold,
     maxval = (gdouble *) g_malloc(ngrains*sizeof(gdouble));
     sdata = gwy_data_field_get_data(score);
 
+ 
     for (i=0; i<ngrains; i++) maxval[i] = -G_MAXDOUBLE;
 
     //find correlation maximum of each grain
@@ -634,6 +681,7 @@ get_object_list(GwyDataField *data, GwyDataField *kernel, gdouble threshold,
             }
         }
     }
+
     //return correlation maxima (x, y), TODO do this in future with subpixel precision;
     *nobjects = MIN(*nobjects, ngrains);
     for (i=0; i<(*nobjects); i++) {
@@ -641,6 +689,8 @@ get_object_list(GwyDataField *data, GwyDataField *kernel, gdouble threshold,
         xs[i] = maxpos[i] - ys[i]*gwy_data_field_get_xres(retfield);
     }
 
+
+    *objects_found = TRUE;
     g_object_unref(score);
     g_object_unref(retfield);
     g_free(grains);
@@ -694,7 +744,9 @@ simple_do(SimpleArgs *args)
     gdouble tlmin, nextmin;
     gint tl, next;
     gint xres, yres, present_xs, present_pxs;
-    gdouble avs[4];
+    gdouble angle, avs[4];
+    gdouble *x, *y, *z, *xerr, *yerr, *zerr, *xunc, *yunc, *zunc;
+    gdouble minx, maxx, miny, maxy, minz, maxz;
     gint navs[4];
     GQuark quark;
 
@@ -710,6 +762,15 @@ simple_do(SimpleArgs *args)
 
     xres = gwy_data_field_get_xres(original);
     yres = gwy_data_field_get_yres(original);
+
+    if (!args->objects_found)
+           get_object_list(gwy_app_find_window_for_channel(data, args->objects[0].id),
+                           original, 
+                           detail, args->threshold, 
+                           args->xs, 
+                           args->ys, &(args->noriginal), 
+                           GWY_CORRELATION_NORMAL,
+                           &(args->objects_found));
 
     //________________________________________________________original____________________________________________
     //find objects on original
@@ -779,16 +840,27 @@ simple_do(SimpleArgs *args)
               index_col, index_row, xxshift, xyshift, yxshift, yyshift, tl/*present_xs*/, 0/*present_pxs*/,
               1/*ncol*/, 0/*nrow*/, noriginal, &nind, avs, navs);
 
-    //printf("field summary: ###############################\n");
-    //for (i=0; i<(nind); i++)
-    //{
-    //    printf("No. %d, index %d %d, pos %g %g\n", i, index_col[i], index_row[i], pxs[i], pys[i]);
-    //}
 
     xxshift = avs[0]/navs[0];
     xyshift = avs[1]/navs[1];
     yxshift = avs[2]/navs[2];
     yyshift = avs[3]/navs[3];
+
+    if (xxshift == 0 || yyshift == 0) return; 
+    //printf("%g %g %g %g\n", xxshift, yyshift, xyshift, yxshift);
+
+    angle = (atan(xyshift/xxshift) + atan(-yxshift/yyshift))/2.0;
+
+    xxshift = args->xperiod*cos(angle);
+    yyshift = args->yperiod*cos(angle);
+    xyshift = args->xperiod*sin(angle);
+    yxshift = -args->yperiod*sin(angle);
+    //printf("%g  %g %g  %g %g      %g %g %g %g\n", angle,
+    //       xxshift, yyshift, xyshift, yxshift,
+    //      gwy_data_field_rtoi(original, xxshift),
+    //       gwy_data_field_rtoj(original, yyshift),
+    //       gwy_data_field_rtoi(original, xyshift),
+    //       gwy_data_field_rtoj(original, yxshift));
 
     gwy_data_field_fill(args->mask, 0);
     for (i=0; i<(nind); i++)
@@ -796,18 +868,58 @@ simple_do(SimpleArgs *args)
         /*draw times and crosses on mask*/
         draw_cross(args->mask, 5, pxs[i], pys[i]);
         draw_times(args->mask, 4,
-                   xs[tl] + index_col[i]*xxshift + index_row[i]*yxshift,
-                   ys[tl] + index_col[i]*xyshift + index_row[i]*yyshift
+                   xs[tl] + index_col[i]*gwy_data_field_rtoi(original, xxshift) 
+                          + index_row[i]*gwy_data_field_rtoj(original, yxshift),
+                   ys[tl] + index_col[i]*gwy_data_field_rtoi(original, xyshift)
+                          + index_row[i]*gwy_data_field_rtoj(original, yyshift)
                    );
 
-    //    printf("%g %g  %g %g\n",
-    //           xs[tl] + index_col[i]*xxshift + index_row[i]*yxshift,
-    //           ys[tl] + index_col[i]*xyshift + index_row[i]*yyshift,
-    //           pxs[i], pys[i]);
     }
 
+    args->caldata = gwy_caldata_new(nind);
+    x = gwy_caldata_get_x(args->caldata);
+    y = gwy_caldata_get_y(args->caldata);
+    z = gwy_caldata_get_z(args->caldata);
+    xerr = gwy_caldata_get_xerr(args->caldata);
+    yerr = gwy_caldata_get_yerr(args->caldata);
+    zerr = gwy_caldata_get_zerr(args->caldata);
+    xunc = gwy_caldata_get_xunc(args->caldata);
+    yunc = gwy_caldata_get_yunc(args->caldata);
+    zunc = gwy_caldata_get_zunc(args->caldata);
 
-    /*TODO recalculate values to proper period (if period is not 0)? Caldata!!!!!!!!!!!!!!!!*/
+    minx = miny = minz = G_MAXDOUBLE;
+    maxx = maxy = maxz = -G_MAXDOUBLE;
+
+    for (i=0; i<(nind); i++)
+    {
+        x[i] = args->xoffset + gwy_data_field_itor(original, pxs[i]);
+        if (minx > x[i]) minx = x[i];
+        if (maxx < x[i]) maxx = x[i];
+
+        y[i] = args->yoffset + gwy_data_field_jtor(original, pys[i]);
+        if (miny > y[i]) miny = y[i];
+        if (maxy < y[i]) maxy = y[i];
+
+        z[i] = args->zoffset + gwy_data_field_get_val(original, pxs[i], pys[i]);
+        if (minz > z[i]) minz = z[i];
+        if (maxz < z[i]) maxz = z[i];
+
+        xerr[i] = gwy_data_field_itor(original, xs[tl]) 
+                    + gwy_data_field_itor(original, index_col[i])*xxshift 
+                    + gwy_data_field_jtor(original, index_row[i])*yxshift
+                    - x[i];
+        yerr[i] = gwy_data_field_jtor(original, ys[tl]) 
+                    + gwy_data_field_itor(original, index_col[i])*xyshift 
+                    + gwy_data_field_jtor(original, index_row[i])*yyshift
+                    - y[i];
+
+        zerr[i] = gwy_data_field_get_val(original, pxs[i], pys[i]) 
+                    - gwy_data_field_get_val(original, xs[tl], ys[tl]);
+
+        xunc[i] = yunc[i] = zunc[i] = 0;
+    }
+
+    gwy_caldata_set_range(args->caldata, minx, maxx, miny, maxy, minz, maxz);
 
 }
 
@@ -1027,7 +1139,12 @@ xyexponent_changed_cb(GtkWidget *combo,
                   * pow10(args->xyexponent);
     args->yoffset = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->yoffset))
                   * pow10(args->xyexponent);
-
+    args->xperiod = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->xperiod)) 
+                  * pow10(args->xyexponent);
+    args->yperiod = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->yperiod)) 
+                  * pow10(args->xyexponent);
+    
+ 
     simple_dialog_update(controls, args);
     controls->in_update = FALSE;
 }
@@ -1145,12 +1262,8 @@ draw_times(GwyDataField *mask, gint size, gint xpos, gint ypos)
         for (j = MAX(0, ypos-size); j<MIN(gwy_data_field_get_yres(mask), ypos+size); j++)
         {
             if (abs(i-xpos)==abs(j-ypos)) gwy_data_field_set_val(mask, i, j, 1);
-
-            //printf("%d %d\n", i-xpos, j-ypos);  //-3 3 -2 2 -1 1
-
         }
 
-    //printf("________\n");
 }
 
 
