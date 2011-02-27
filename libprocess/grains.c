@@ -124,20 +124,20 @@ gwy_data_field_grains_mark_height(GwyDataField *data_field,
 }
 
 /**
- * gwy_data_field_grains_mark_slope:
+ * gwy_data_field_grains_mark_curvature:
  * @data_field: Data to be used for marking.
  * @grain_field: Data field to store the resulting mask to.
- * @threshval: Relative slope threshold, in percents.
+ * @threshval: Relative curvature threshold, in percents.
  * @below: If %TRUE, data below threshold are marked, otherwise data above
  *         threshold are marked.
  *
- * Marks data that are above/below slope threshold.
+ * Marks data that are above/below curvature threshold.
  **/
 void
-gwy_data_field_grains_mark_slope(GwyDataField *data_field,
-                                 GwyDataField *grain_field,
-                                 gdouble threshval,
-                                 gboolean below)
+gwy_data_field_grains_mark_curvature(GwyDataField *data_field,
+                                     GwyDataField *grain_field,
+                                     gdouble threshval,
+                                     gboolean below)
 {
     gdouble min, max;
 
@@ -159,20 +159,20 @@ gwy_data_field_grains_mark_slope(GwyDataField *data_field,
 }
 
 /**
- * gwy_data_field_grains_mark_curvature:
+ * gwy_data_field_grains_mark_slope:
  * @data_field: Data to be used for marking.
  * @grain_field: Data field to store the resulting mask to.
- * @threshval: Relative curvature threshold, in percents.
+ * @threshval: Relative slope threshold, in percents.
  * @below: If %TRUE, data below threshold are marked, otherwise data above
  *         threshold are marked.
  *
- * Marks data that are above/below curvature threshold.
+ * Marks data that are above/below slope threshold.
  **/
 void
-gwy_data_field_grains_mark_curvature(GwyDataField *data_field,
-                                     GwyDataField *grain_field,
-                                     gdouble threshval,
-                                     gboolean below)
+gwy_data_field_grains_mark_slope(GwyDataField *data_field,
+                                 GwyDataField *grain_field,
+                                 gdouble threshval,
+                                 gboolean below)
 {
     GwyDataField *masky;
     gdouble *gdata;
@@ -188,7 +188,7 @@ gwy_data_field_grains_mark_curvature(GwyDataField *data_field,
     masky = gwy_data_field_duplicate(data_field);
     gwy_data_field_copy(data_field, grain_field, FALSE);
     gwy_data_field_filter_sobel(grain_field, GWY_ORIENTATION_HORIZONTAL);
-    gwy_data_field_filter_sobel(masky, GWY_ORIENTATION_HORIZONTAL);
+    gwy_data_field_filter_sobel(masky, GWY_ORIENTATION_VERTICAL);
 
     gdata = grain_field->data;
     for (i = 0; i < xres*yres; i++)
