@@ -221,7 +221,7 @@ gwy_pixbuf_draw_data_field_adaptive(GdkPixbuf *pixbuf,
  * @data_field: A data field to draw.
  * @color: A color to use.
  *
- * Paints a data field to a pixbuf as a signle-color mask with varying opacity.
+ * Paints a data field to a pixbuf as a single-color mask with varying opacity.
  *
  * Values equal or smaller to 0.0 are drawn as fully transparent, values
  * greater or equal to 1.0 as fully opaque, values between are linearly
