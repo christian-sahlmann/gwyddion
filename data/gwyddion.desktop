@@ -4,6 +4,7 @@ Type=Application
 Name=Gwyddion
 Comment=SPM data visualization and analysis
 Comment[cs]=Vizualizace a analýza SPM dat
+Comment[ru]=Визуализация и анализ данных СЗМ
 TryExec=gwyddion
 Exec=gwyddion --remote-new %F
 Icon=gwyddion.png
