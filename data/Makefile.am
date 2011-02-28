@@ -68,6 +68,11 @@ gwyddion.xml: $(top_srcdir)/utils/extract-file-magic.py $(file_magic_sources)
 	$(AM_V_GEN)$(PYTHON) $(top_srcdir)/utils/extract-file-magic.py \
 	  FREEDESKTOP $(file_magic_sources) >gwyddion.xml
 
+# File format table for user guide
+file-format-table.xml: $(top_srcdir)/utils/extract-file-magic.py $(file_magic_sources)
+	$(AM_V_GEN)$(PYTHON) $(top_srcdir)/utils/extract-file-magic.py \
+	  USERGUIDE $(file_magic_sources) >file-format-table.xml
+
 # Generate Gnome thumbnailer schemas
 gwyddion-thumbnailer.schemas.in: thumbnailer-schemas.xsl $(srcdir)/gwyddion.xml
 	$(AM_V_GEN)$(XSLTPROC) $(srcdir)/thumbnailer-schemas.xsl $(srcdir)/gwyddion.xml \
