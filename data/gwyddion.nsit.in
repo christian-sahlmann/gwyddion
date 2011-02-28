@@ -256,12 +256,60 @@ Function ChooseLocale
     ${NSD_CreateLabel} 0u 0u 100% 12u "Available languages:"
     Pop $Label
 
-    !insertmacro GWY_LOCALE_CHOOSER "English" "en_US.UTF-8" 12u
-    !insertmacro GWY_LOCALE_CHOOSER "Czech" "cs_CZ.UTF-8" 24u
-    !insertmacro GWY_LOCALE_CHOOSER "French" "fr_FR.UTF-8" 36u
-    !insertmacro GWY_LOCALE_CHOOSER "German" "de_DE.UTF-8" 48u
-    !insertmacro GWY_LOCALE_CHOOSER "Italian" "it_IT.UTF-8" 60u
-    !insertmacro GWY_LOCALE_CHOOSER "Russian" "ru_RU.UTF-8" 72u
+    ${NSD_CreateRadioButton} 0u 12u 100% 12u "English"
+    Pop $RadioButton
+    nsDialogs::SetUserData $RadioButton "en_US.UTF-8"
+    ${If} $Locale == "en_US.UTF-8"
+        ${NSD_SetState} $RadioButton ${BST_CHECKED}
+    ${EndIf}
+    ${NSD_OnClick} $RadioButton LocaleOnClick
+
+    ${NSD_CreateRadioButton} 0u 24u 100% 12u "Czech"
+    Pop $RadioButton
+    nsDialogs::SetUserData $RadioButton "cs_CZ.UTF-8"
+    ${If} $Locale == "cs_CZ.UTF-8"
+        ${NSD_SetState} $RadioButton ${BST_CHECKED}
+    ${EndIf}
+    ${NSD_OnClick} $RadioButton LocaleOnClick
+
+    ${NSD_CreateRadioButton} 0u 36u 100% 12u "French"
+    Pop $RadioButton
+    nsDialogs::SetUserData $RadioButton "fr_FR.UTF-8"
+    ${If} $Locale == "fr_FR.UTF-8"
+        ${NSD_SetState} $RadioButton ${BST_CHECKED}
+    ${EndIf}
+    ${NSD_OnClick} $RadioButton LocaleOnClick
+
+    ${NSD_CreateRadioButton} 0u 48u 100% 12u "German"
+    Pop $RadioButton
+    nsDialogs::SetUserData $RadioButton "de_DE.UTF-8"
+    ${If} $Locale == "de_DE.UTF-8"
+        ${NSD_SetState} $RadioButton ${BST_CHECKED}
+    ${EndIf}
+    ${NSD_OnClick} $RadioButton LocaleOnClick
+
+    ${NSD_CreateRadioButton} 0u 60u 100% 12u "Italian"
+    Pop $RadioButton
+    nsDialogs::SetUserData $RadioButton "it_IT.UTF-8"
+    ${If} $Locale == "it_IT.UTF-8"
+        ${NSD_SetState} $RadioButton ${BST_CHECKED}
+    ${EndIf}
+    ${NSD_OnClick} $RadioButton LocaleOnClick
+
+    ${NSD_CreateRadioButton} 0u 72u 100% 12u "Russian"
+    Pop $RadioButton
+    nsDialogs::SetUserData $RadioButton "ru_RU.UTF-8"
+    ${If} $Locale == "ru_RU.UTF-8"
+        ${NSD_SetState} $RadioButton ${BST_CHECKED}
+    ${EndIf}
+    ${NSD_OnClick} $RadioButton LocaleOnClick
+
+;    !insertmacro GWY_LOCALE_CHOOSER "English" "en_US.UTF-8" 12u
+;    !insertmacro GWY_LOCALE_CHOOSER "Czech" "cs_CZ.UTF-8" 24u
+;    !insertmacro GWY_LOCALE_CHOOSER "French" "fr_FR.UTF-8" 36u
+;    !insertmacro GWY_LOCALE_CHOOSER "German" "de_DE.UTF-8" 48u
+;    !insertmacro GWY_LOCALE_CHOOSER "Italian" "it_IT.UTF-8" 60u
+;    !insertmacro GWY_LOCALE_CHOOSER "Russian" "ru_RU.UTF-8" 72u
 
     nsDialogs::Show
 FunctionEnd
