@@ -142,7 +142,7 @@ cload(G_GNUC_UNUSED GwyContainer *data, GwyRunType run)
         if (!g_file_get_contents(filename,
                                  &contents, &len, &err))
         {
-             g_warning("Error loading file: %s\n", err->message);
+             g_warning(N_("Error loading file: %s\n"), err->message);
              g_clear_error(&err);
              return;
         }
@@ -170,7 +170,7 @@ cload(G_GNUC_UNUSED GwyContainer *data, GwyRunType run)
     }
     fh = g_fopen(filename, "w");
     if (!fh) {
-        g_warning("Cannot save preset: %s", filename);
+        g_warning(N_("Cannot save preset: %s"), filename);
         g_free(filename);
         return;
     }
@@ -205,7 +205,7 @@ cload_dialog(CLoadArgs *args,
     gint response;
 
     controls.args = args;
-    dialog = gtk_dialog_new_with_buttons(_("Load Calibration Data"), NULL, 0,
+    dialog = gtk_dialog_new_with_buttons(N_("Load Calibration Data"), NULL, 0,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          NULL);
     controls.okbutton = gtk_dialog_add_button(GTK_DIALOG(dialog), GTK_STOCK_OK, GTK_RESPONSE_OK);
@@ -213,7 +213,7 @@ cload_dialog(CLoadArgs *args,
     gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
 
     gtk_dialog_add_action_widget(GTK_DIALOG(dialog),
-                                 gwy_stock_like_button_new(_("_Load"),
+                                 gwy_stock_like_button_new(N_("_Load"),
                                                            GTK_STOCK_OPEN),
                                  RESPONSE_LOAD);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
@@ -225,7 +225,7 @@ cload_dialog(CLoadArgs *args,
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table,
                        FALSE, FALSE, 4);
 
-    label = gtk_label_new_with_mnemonic(_("Calibration name:"));
+    label = gtk_label_new_with_mnemonic(N_("Calibration name:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label,
                      0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
@@ -237,7 +237,7 @@ cload_dialog(CLoadArgs *args,
                      1, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
     row++;
-    controls.text = gtk_label_new(_("No data loaded"));
+    controls.text = gtk_label_new(N_("No data loaded"));
     gtk_misc_set_alignment(GTK_MISC(controls.text), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), controls.text,
                      0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
@@ -264,10 +264,10 @@ cload_dialog(CLoadArgs *args,
                                                   GTK_DIALOG_DESTROY_WITH_PARENT,
                                                   GTK_MESSAGE_WARNING,
                                                   GTK_BUTTONS_CANCEL,
-                                                  "Calibration '%s' already exists",
+                                                  N_("Calibration '%s' already exists"),
                                                   args->name);
-                gtk_dialog_add_button(GTK_DIALOG(dialog2), "Overwrite", RESPONSE_DUPLICATE_OVERWRITE);
-                gtk_dialog_add_button(GTK_DIALOG(dialog2), "Append", RESPONSE_DUPLICATE_APPEND);
+                gtk_dialog_add_button(GTK_DIALOG(dialog2), N_("Overwrite"), RESPONSE_DUPLICATE_OVERWRITE);
+                gtk_dialog_add_button(GTK_DIALOG(dialog2), N_("Append"), RESPONSE_DUPLICATE_APPEND);
                 response = gtk_dialog_run(GTK_DIALOG(dialog2));
                 if (response == RESPONSE_DUPLICATE_OVERWRITE) {
                     args->duplicate = DUPLICATE_OVERWRITE;
@@ -313,7 +313,7 @@ load_caldata(CLoadControls *controls)
     gboolean ok = TRUE;
     GError *err = NULL;
 
-    dialog = gtk_file_chooser_dialog_new ("Load calibration data",
+    dialog = gtk_file_chooser_dialog_new (N_("Load calibration data"),
                       GTK_WINDOW(controls->dialog),
                       GTK_FILE_CHOOSER_ACTION_OPEN,
                       GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
@@ -323,12 +323,12 @@ load_caldata(CLoadControls *controls)
     if (gtk_dialog_run (GTK_DIALOG (dialog)) == GTK_RESPONSE_ACCEPT)
     {
         filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (dialog));
-        if (!g_file_get_contents(filename, &text, &size, &err)) { printf("Error: no file open\n");
+        if (!g_file_get_contents(filename, &text, &size, &err)) { 
             msgdialog = gtk_message_dialog_new (GTK_WINDOW(dialog),
                                              GTK_DIALOG_DESTROY_WITH_PARENT,
                                              GTK_MESSAGE_ERROR,
                                              GTK_BUTTONS_CLOSE,
-                                             "Error loading file '%s'",
+                                             N_("Error loading file '%s'"),
                                              filename);
             gtk_dialog_run(GTK_DIALOG(msgdialog));
             gtk_widget_destroy(msgdialog);
@@ -387,7 +387,7 @@ load_caldata(CLoadControls *controls)
             for (i=0; i<gwy_caldata_get_ndata(caldata); i++) {
                 line = gwy_str_next_line(&text);
                 if (!line) {
-                    g_snprintf(mtext, sizeof(mtext), "Error: not enough points.");
+                    g_snprintf(mtext, sizeof(mtext), N_("Error: not enough points."));
                     gtk_label_set_text(GTK_LABEL(controls->text), mtext);
                     ok = FALSE;
                     break;
@@ -414,7 +414,7 @@ load_caldata(CLoadControls *controls)
                 pzunc[i] = zunc;
             }
             if (ok) {
-                g_snprintf(mtext, sizeof(mtext), "Loaded %d data points", gwy_caldata_get_ndata(caldata));
+                g_snprintf(mtext, sizeof(mtext), N_("Loaded %d data points"), gwy_caldata_get_ndata(caldata));
                 gtk_label_set_text(GTK_LABEL(controls->text), mtext);
                 gtk_widget_set_sensitive(controls->okbutton, TRUE);
             }
