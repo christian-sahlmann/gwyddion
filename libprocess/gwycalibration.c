@@ -34,7 +34,7 @@ static void         gwy_calibration_release        (GwyResource *resource);
 static void         gwy_calibration_sanitize       (GwyCalibration *calibration);
 static void         gwy_calibration_dump           (GwyResource *resource,
                                                  GString *str);
-static GwyResource* gwy_calibration_parse          (const gchar *text, 
+static GwyResource* gwy_calibration_parse          (const gchar *text,
                                                     gboolean is_const);
 
 
@@ -88,7 +88,7 @@ gwy_calibration_use(GwyResource *resource)
     GwyCalibration *calibration;
     calibration = GWY_CALIBRATION(resource);
 
-    if (calibration->caldata) 
+    if (calibration->caldata)
         g_object_unref(calibration->caldata);
 
     filename = g_build_filename(gwy_get_user_dir(), "caldata", calibration->filename, NULL);
@@ -112,11 +112,13 @@ gwy_calibration_use(GwyResource *resource)
  * gwy_calibration_get_data:
  * @calibration: A calibration.
  *
- * Returns the data related to calibration.
+ * Obtains the data related to calibration.
  *
  * Returns: The data related to @calibration.
+ *
+ * Since: 2.23
  **/
-GwyCalData*     
+GwyCalData*
 gwy_calibration_get_data(GwyCalibration *calibration)
 {
     return calibration->caldata;
@@ -129,7 +131,7 @@ gwy_calibration_release(GwyResource *resource)
     GwyCalibration *calibration;
 
     calibration = GWY_CALIBRATION(resource);
-    
+
     /*here free the file*/
 }
 
@@ -140,6 +142,8 @@ gwy_calibration_release(GwyResource *resource)
  * Returns the number of points in a calibration.
  *
  * Returns: The number of points in @calibration.
+ *
+ * Since: 2.23
  **/
 gint
 gwy_calibration_get_ndata(GwyCalibration *calibration)
@@ -164,13 +168,14 @@ _gwy_calibration_class_setup_presets(void)
 /**
  * gwy_calibration_new:
  * @name: Name of resource
- * @filename: Filename of associated calibration data 
- *  
+ * @filename: Filename of associated calibration data
+ *
  * Creates new calibration resource.
- * 
+ *
  * Returns: A newly created calibration resource.
+ *
+ * Since: 2.23
  **/
-
 GwyCalibration*
 gwy_calibration_new(const gchar *name,
                  const gchar *filename)
@@ -194,13 +199,14 @@ gwy_calibration_new(const gchar *name,
 /**
  * gwy_calibration_get_filename:
  * @calibration: Calibration resource
- *  
+ *
  * Get filename of associated calibration data.
- * 
+ *
  * Returns: Filename of associated calibration data.
+ *
+ * Since: 2.23
  **/
-
-const gchar*      
+const gchar*
 gwy_calibration_get_filename(GwyCalibration *calibration)
 {
     return calibration->filename;
@@ -245,9 +251,9 @@ gwy_calibration_parse(const gchar *text,
     g_return_val_if_fail(text, NULL);
     klass = g_type_class_peek(GWY_TYPE_CALIBRATION);
     g_return_val_if_fail(klass, NULL);
-   
+
     p = str = g_strdup(text);
-    
+
     while ((line = gwy_str_next_line(&p))) {
         g_strstrip(line);
         key = line;
@@ -274,13 +280,13 @@ gwy_calibration_parse(const gchar *text,
         else
             g_warning("Unknown field `%s'.", key);
     }
-   
+
     calibration = gwy_calibration_new(filename, filename);
     gwy_calibration_sanitize(calibration);
     return (GwyResource*)calibration;
 }
 
-static void  
+static void
 gwy_calibration_sanitize(G_GNUC_UNUSED GwyCalibration *calibration)
 {
 }
@@ -291,6 +297,8 @@ gwy_calibration_sanitize(G_GNUC_UNUSED GwyCalibration *calibration)
  * Gets inventory with all the calibrations.
  *
  * Returns: Calibration inventory.
+ *
+ * Since: 2.23
  **/
 GwyInventory*
 gwy_calibrations(void)
@@ -304,8 +312,10 @@ gwy_calibrations(void)
  *
  * Convenience function to get a calibration from gwy_calibrations() by name.
  *
- * Returns: Calibration identified by @name or the default calibration if @name does
- *          not exist.
+ * Returns: Calibration identified by @name or the default calibration if @name
+ *          does not exist.
+ *
+ * Since: 2.23
  **/
 GwyCalibration*
 gwy_calibrations_get_calibration(const gchar *name)
@@ -326,8 +336,6 @@ gwy_calibrations_get_calibration(const gchar *name)
  * #GwyCalibration is a resource used for managing calibration data. These
  * resources are stored separately from calibration data and contain namely
  * filename of connected calibration data file.
- *
- * with #GwyDataField.
  **/
 
 /**
@@ -335,6 +343,8 @@ gwy_calibrations_get_calibration(const gchar *name)
  *
  * The #GwyCalibration struct contains private data only and should be accessed
  * using the functions below.
+ *
+ * Since: 2.23
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
