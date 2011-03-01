@@ -458,7 +458,7 @@ gedge_process(GwyDataField *dfield,
 
     temp_field = gwy_data_field_new_alike(dfield, FALSE);
     gwy_data_field_copy(dfield, temp_field, FALSE);
-    gwy_data_field_filter_laplacian(temp_field);
+    gwy_data_field_filter_laplacian_of_gaussians(temp_field);
     gwy_data_field_grains_mark_height(temp_field, maskfield,
                                       args->threshold_laplasian, TRUE);
 
@@ -467,7 +467,7 @@ gedge_process(GwyDataField *dfield,
 
 static const gchar threshold_laplasian_key[]
     = "/module/grain_edge/threshold_laplasian";
-static const gchar update_key[]    = "/module/grain_edge/update";
+static const gchar update_key[] = "/module/grain_edge/update";
 
 static void
 gedge_sanitize_args(GEdgeArgs *args)

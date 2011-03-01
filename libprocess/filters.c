@@ -1160,6 +1160,65 @@ gwy_data_field_filter_laplacian(GwyDataField *data_field)
                                          data_field->xres, data_field->yres);
 }
 
+ /**
+ * gwy_data_field_area_filter_laplacian_of_gaussians:
+ * @data_field: A data field to apply the filter to.
+ * @col: Upper-left column coordinate.
+ * @row: Upper-left row coordinate.
+ * @width: Area width (number of columns).
+ * @height: Area height (number of rows).
+ *
+ * Filters a rectangular part of a data field with Laplacian of Gaussians filter.
+ * 
+ * Since: 2.23
+ **/
+void
+gwy_data_field_area_filter_laplacian_of_gaussians(GwyDataField *data_field,
+                                                  gint col, gint row,
+                                                  gint width,
+                                                  gint height)
+{
+	/* optimized mexican hat from Scharr's works */
+	const gdouble laplacian_of_gaussians_data[] = {
+		  1, -12,    3, -12,   1,
+        -12,  78,  167,  78, -12,
+          3, 167, -902, 167,   3,
+        -12,  78,  167,  78, -12,
+          1, -12,    3, -12,   1,
+    };
+    
+    GwyDataField *laplacian_of_gaussians;
+    gint i, j;
+
+    laplacian_of_gaussians = gwy_data_field_new(5, 5, 5.0, 5.0, TRUE);
+    for(i = 0; i < 5; i++)
+        for(j = 0; j < 5; j++)
+            gwy_data_field_set_val(laplacian_of_gaussians, j, i,
+                                   laplacian_of_gaussians_data[i*5+j]);
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    gwy_data_field_area_convolve(data_field, laplacian_of_gaussians,
+                                 col, row, width, height);
+
+    g_object_unref(laplacian_of_gaussians);
+}
+
+/**
+ * gwy_data_field_filter_laplacian_of_gaussians:
+ * @data_field: A data field to apply the filter to.
+ *
+ * Filters a data field with Laplacian of Gaussians filter.
+ * 
+ * Since: 2.23
+ **/
+void
+gwy_data_field_filter_laplacian_of_gaussians(GwyDataField *data_field)
+{
+    g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    gwy_data_field_area_filter_laplacian_of_gaussians(data_field, 0, 0,
+                                                      data_field->xres,
+                                                      data_field->yres);
+}
+
 /**
  * gwy_data_field_area_filter_sobel:
  * @data_field: A data field to apply the filter to.

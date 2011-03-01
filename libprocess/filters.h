@@ -109,6 +109,12 @@ void gwy_data_field_area_filter_laplacian   (GwyDataField *data_field,
                                              gint row,
                                              gint width,
                                              gint height);
+void gwy_data_field_filter_laplacian_of_gaussians      (GwyDataField *data_field);
+void gwy_data_field_area_filter_laplacian_of_gaussians (GwyDataField *data_field,
+                                                        gint col,
+                                                        gint row,
+                                                        gint width,
+                                                        gint height);
 void gwy_data_field_filter_sobel            (GwyDataField *data_field,
                                              GwyOrientation orientation);
 void gwy_data_field_area_filter_sobel       (GwyDataField *data_field,
