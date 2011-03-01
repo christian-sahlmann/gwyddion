@@ -51,16 +51,17 @@
  **/
 gdouble
 gwy_data_field_get_max_uncertainty(GwyDataField *data_field,
-                                   GwyDataField *uncz_field)
+        GwyDataField *uncz_field)
 {
     const gdouble *p, *u;
-    gdouble max, max_unc = G_MAXDOUBLE;
+    gdouble max, max_unc ;
     gint i;
 
     g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), -G_MAXDOUBLE);
     g_return_val_if_fail(GWY_IS_DATA_FIELD(uncz_field), -G_MAXDOUBLE);
 
     max = data_field->data[0];
+    max_unc = data_field->data[0];
     p = data_field->data;
     u = uncz_field->data;
     for (i = data_field->xres * data_field->yres; i; i--, p++, u++) {
@@ -78,6 +79,7 @@ gwy_data_field_get_max_uncertainty(GwyDataField *data_field,
  * @data_field: A data field.
  * @uncz_field: The corresponding uncertainty data field.
  * @mask: Mask specifying which values to take into account/exclude, or %NULL.
+ * @mode: Masking mode.
  * @col: Upper-left column coordinate.
  * @row: Upper-left row coordinate.
  * @width: Area width (number of columns).
@@ -91,12 +93,12 @@ gwy_data_field_get_max_uncertainty(GwyDataField *data_field,
  *
  * Since: 2.23
  **/
-gdouble
+    gdouble
 gwy_data_field_area_get_max_uncertainty(GwyDataField *dfield,
-                                        GwyDataField *uncz_field,
-                                        GwyDataField *mask,
-                                        gint col, gint row,
-                                        gint width, gint height)
+        GwyDataField *uncz_field,
+        GwyDataField *mask, gint mode,
+        gint col, gint row,
+        gint width, gint height)
 {
     gint i, j;
     gdouble max = -G_MAXDOUBLE;
@@ -106,34 +108,68 @@ gwy_data_field_area_get_max_uncertainty(GwyDataField *dfield,
     g_return_val_if_fail(GWY_IS_DATA_FIELD(dfield), max_unc);
     g_return_val_if_fail(GWY_IS_DATA_FIELD(uncz_field), max_unc);
     g_return_val_if_fail(!mask || (GWY_IS_DATA_FIELD(mask)
-                                   && mask->xres == dfield->xres
-                                   && mask->yres == dfield->yres),
-                         max_unc);
+                && mask->xres == dfield->xres
+                && mask->yres == dfield->yres),
+            max_unc);
     g_return_val_if_fail(col >= 0 && row >= 0
-                         && width >= 0 && height >= 0
-                         && col + width <= dfield->xres
-                         && row + height <= dfield->yres,
-                         max_unc);
+            && width >= 0 && height >= 0
+            && col + width <= dfield->xres
+            && row + height <= dfield->yres,
+            max_unc);
     if (!width || !height)
         return max;
 
-    if (mask) {
+    if (mask && mode !=GWY_MASK_IGNORE) {
         datapos = dfield->data + row*dfield->xres + col;
         uncpos = uncz_field->data+row*uncz_field->xres+col;
         mpos = mask->data + row*mask->xres + col;
+        if (mode == GWY_MASK_INCLUDE) {
+            do {
+                mpos++;
+                datapos++;
+                uncpos++;
+            } while (*mpos < 1.0);
+        }
+        else {
+            do {
+                mpos++;
+                datapos++;
+                uncpos++;
+            } while (*mpos > 0.0);
+        }
+        max = *datapos;
+        max_unc = *uncpos;
+
+        datapos = dfield->data + row*dfield->xres + col;
+        uncpos = uncz_field->data + row*uncz_field->xres + col;
+        mpos = mask->data + row*mask->xres + col;
+
         for (i = 0; i < height; i++) {
             const gdouble *drow = datapos + i*dfield->xres;
             const gdouble *urow = uncpos + i*uncz_field->xres;
             const gdouble *mrow = mpos + i*mask->xres;
 
-            for (j = 0; j < width; j++) {
-                if (G_UNLIKELY(max < *drow) && *mrow > 0.0) {
-                    max = *drow;
-                    max_unc = *urow;
+            if (mode == GWY_MASK_INCLUDE) {
+                for (j = 0; j < width; j++) {
+                    if (G_UNLIKELY(max < *drow) && *mrow > 0.0) {
+                        max = *drow;
+                        max_unc = *urow;
+                    }
+                    drow++;
+                    urow++;
+                    mrow++;
                 }
-                drow++;
-                urow++;
-                mrow++;
+            }
+            else  {
+                for (j = 0; j < width; j++) {
+                    if (G_UNLIKELY(max < *drow) && *mrow < 1.0) {
+                        max = *drow;
+                        max_unc = *urow;
+                    }
+                    drow++;
+                    urow++;
+                    mrow++;
+                }
             }
         }
 
@@ -141,7 +177,7 @@ gwy_data_field_area_get_max_uncertainty(GwyDataField *dfield,
     }
 
     if (col == 0 && width == dfield->xres
-        && row == 0 && height == dfield->yres)
+            && row == 0 && height == dfield->yres)
         return gwy_data_field_get_max_uncertainty(dfield, uncz_field);
 
     datapos = dfield->data + row*dfield->xres + col;
@@ -174,11 +210,11 @@ gwy_data_field_area_get_max_uncertainty(GwyDataField *dfield,
  *
  * Since: 2.23
  **/
-gdouble
+    gdouble
 gwy_data_field_get_min_uncertainty(GwyDataField *data_field,
-                                   GwyDataField *uncz_field)
+        GwyDataField *uncz_field)
 {
-    gdouble min, min_unc = G_MAXDOUBLE;
+    gdouble min, min_unc ;
     const gdouble *p, *u;
     gint i;
 
@@ -186,6 +222,7 @@ gwy_data_field_get_min_uncertainty(GwyDataField *data_field,
     g_return_val_if_fail(GWY_IS_DATA_FIELD(uncz_field), G_MAXDOUBLE);
 
     min = data_field->data[0];
+    min_unc = uncz_field->data[0];
     p = data_field->data;
     u = uncz_field->data;
     for (i = data_field->xres * data_field->yres; i; i--, p++, u++) {
@@ -204,6 +241,7 @@ gwy_data_field_get_min_uncertainty(GwyDataField *data_field,
  * @data_field: A data field.
  * @uncz_field: The corresponding uncertainty data field.
  * @mask: Mask specifying which values to take into account/exclude, or %NULL.
+ * @mode: Masking mode.
  * @col: Upper-left column coordinate.
  * @row: Upper-left row coordinate.
  * @width: Area width (number of columns).
@@ -217,12 +255,12 @@ gwy_data_field_get_min_uncertainty(GwyDataField *data_field,
  *
  * Since: 2.23
  **/
-gdouble
+    gdouble
 gwy_data_field_area_get_min_uncertainty(GwyDataField *dfield,
-                                        GwyDataField *uncz_field,
-                                        GwyDataField *mask,
-                                        gint col, gint row,
-                                        gint width, gint height)
+        GwyDataField *uncz_field,
+        GwyDataField *mask, gint mode,
+        gint col, gint row,
+        gint width, gint height)
 {
     gint i, j;
     gdouble min = G_MAXDOUBLE;
@@ -232,34 +270,68 @@ gwy_data_field_area_get_min_uncertainty(GwyDataField *dfield,
     g_return_val_if_fail(GWY_IS_DATA_FIELD(dfield), min_unc);
     g_return_val_if_fail(GWY_IS_DATA_FIELD(uncz_field), min_unc);
     g_return_val_if_fail(!mask || (GWY_IS_DATA_FIELD(mask)
-                                   && mask->xres == dfield->xres
-                                   && mask->yres == dfield->yres),
-                         min_unc);
+                && mask->xres == dfield->xres
+                && mask->yres == dfield->yres),
+            min_unc);
     g_return_val_if_fail(col >= 0 && row >= 0
-                         && width >= 0 && height >= 0
-                         && col + width <= dfield->xres
-                         && row + height <= dfield->yres,
-                         min_unc);
+            && width >= 0 && height >= 0
+            && col + width <= dfield->xres
+            && row + height <= dfield->yres,
+            min_unc);
     if (!width || !height)
         return min_unc;
 
-    if (mask) {
+    if (mask && mode !=GWY_MASK_IGNORE) {
         datapos = dfield->data + row*dfield->xres + col;
         uncpos = uncz_field->data + row*uncz_field->xres + col;
         mpos = mask->data + row*mask->xres + col;
+        if (mode == GWY_MASK_INCLUDE) {
+            do {
+                mpos++;
+                datapos++;
+                uncpos++;
+            } while (*mpos < 1.0);
+        }
+        else {
+            do {
+                mpos++;
+                datapos++;
+                uncpos++;
+            } while (*mpos > 0.0);
+        }
+        min = *datapos;
+        min_unc = *uncpos;
+
+        datapos = dfield->data + row*dfield->xres + col;
+        uncpos = uncz_field->data + row*uncz_field->xres + col;
+        mpos = mask->data + row*mask->xres + col;
+
         for (i = 0; i < height; i++) {
             const gdouble *drow = datapos + i*dfield->xres;
             const gdouble *urow = uncpos + i*uncz_field->xres;
             const gdouble *mrow = mpos + i*mask->xres;
 
-            for (j = 0; j < width; j++) {
-                if (G_UNLIKELY(min > *drow) && *mrow > 0.0) {
-                    min = *drow;
-                    min_unc = *urow;
+            if (mode == GWY_MASK_INCLUDE) {
+                for (j = 0; j < width; j++) {
+                    if (G_UNLIKELY(min > *drow) && *mrow > 0.0) {
+                        min = *drow;
+                        min_unc = *urow;
+                    }
+                    drow++;
+                    urow++;
+                    mrow++;
                 }
-                drow++;
-                urow++;
-                mrow++;
+            }
+            else  {
+                for (j = 0; j < width; j++) {
+                    if (G_UNLIKELY(min > *drow) && *mrow < 1.0) {
+                        min = *drow;
+                        min_unc = *urow;
+                    }
+                    drow++;
+                    urow++;
+                    mrow++;
+                }
             }
         }
 
@@ -267,11 +339,13 @@ gwy_data_field_area_get_min_uncertainty(GwyDataField *dfield,
     }
 
     if (col == 0 && width == dfield->xres
-        && row == 0 && height == dfield->yres)
+            && row == 0 && height == dfield->yres)
         return gwy_data_field_get_min_uncertainty(dfield, uncz_field);
 
     datapos = dfield->data + row*dfield->xres + col;
     uncpos = uncz_field->data + row*uncz_field->xres + col;
+    min = *datapos;
+    min_unc = *uncpos;
     for (i = 0; i < height; i++) {
         const gdouble *drow = datapos + i*dfield->xres;
         const gdouble *urow = uncpos + i*uncz_field->xres;
@@ -300,14 +374,14 @@ gwy_data_field_area_get_min_uncertainty(GwyDataField *dfield,
  *
  * Since: 2.23
  **/
-void
+    void
 gwy_data_field_get_min_max_uncertainty(GwyDataField *data_field,
-                                       GwyDataField *uncz_field,
-                                       gdouble *min_unc,
-                                       gdouble *max_unc)
+        GwyDataField *uncz_field,
+        gdouble *min_unc,
+        gdouble *max_unc)
 {
     gdouble min1, max1;
-    gdouble min_unc1 = G_MAXDOUBLE, max_unc1 = G_MAXDOUBLE;
+    gdouble min_unc1 , max_unc1 ;
     const gdouble *p, *u;
     gint i;
 
@@ -316,6 +390,8 @@ gwy_data_field_get_min_max_uncertainty(GwyDataField *data_field,
 
     min1 = data_field->data[0];
     max1 = data_field->data[0];
+    min_unc1 = uncz_field->data[0];
+    max_unc1 = uncz_field->data[0];
     p = data_field->data;
     u = uncz_field->data;
     for (i = data_field->xres * data_field->yres; i; i--, p++, u++) {
@@ -354,19 +430,19 @@ gwy_data_field_get_min_max_uncertainty(GwyDataField *data_field,
  *
  * Since: 2.23
  **/
-void
+    void
 gwy_data_field_area_get_min_max_uncertainty(GwyDataField *data_field,
-                                GwyDataField *uncz_field,
-                                GwyDataField *mask,
-                                gint col, gint row,
-                                gint width, gint height,
-                                gdouble *min_unc,
-                                gdouble *max_unc)
+        GwyDataField *uncz_field,
+        GwyDataField *mask,
+        gint col, gint row,
+        gint width, gint height,
+        gdouble *min_unc,
+        gdouble *max_unc)
 {
     gwy_data_field_area_get_min_max_uncertainty_mask(data_field, uncz_field,
-                                                     mask, GWY_MASK_INCLUDE,
-                                                     col, row, width, height,
-                                                     min_unc, max_unc);
+            mask, GWY_MASK_INCLUDE,
+            col, row, width, height,
+            min_unc, max_unc);
 }
 
 /**
@@ -388,30 +464,30 @@ gwy_data_field_area_get_min_max_uncertainty(GwyDataField *data_field,
  *
  * Since: 2.23
  **/
-void
+    void
 gwy_data_field_area_get_min_max_uncertainty_mask(GwyDataField *data_field,
-                                                 GwyDataField *uncz_field,
-                                                 GwyDataField *mask,
-                                                 GwyMaskingType mode,
-                                                 gint col, gint row,
-                                                 gint width, gint height,
-                                                 gdouble *min_unc,
-                                                 gdouble *max_unc)
+        GwyDataField *uncz_field,
+        GwyDataField *mask,
+        GwyMaskingType mode,
+        gint col, gint row,
+        gint width, gint height,
+        gdouble *min_unc,
+        gdouble *max_unc)
 {
-    gdouble min1 = G_MAXDOUBLE, max1 = -G_MAXDOUBLE;
-    gdouble min_unc1 = G_MAXDOUBLE, max_unc1 = G_MAXDOUBLE;
+    gdouble min1 , max1 ;
+    gdouble min_unc1 , max_unc1 ;
     const gdouble *datapos, *mpos, *uncpos;
     gint i, j;
 
     g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
     g_return_if_fail(GWY_IS_DATA_FIELD(uncz_field));
     g_return_if_fail(!mask || (GWY_IS_DATA_FIELD(mask)
-                               && mask->xres == data_field->xres
-                               && mask->yres == data_field->yres));
+                && mask->xres == data_field->xres
+                && mask->yres == data_field->yres));
     g_return_if_fail(col >= 0 && row >= 0
-                     && width >= 0 && height >= 0
-                     && col + width <= data_field->xres
-                     && row + height <= data_field->yres);
+            && width >= 0 && height >= 0
+            && col + width <= data_field->xres
+            && row + height <= data_field->yres);
     if (!width || !height) {
         if (min_unc)
             *min_unc = min_unc1;
@@ -427,6 +503,30 @@ gwy_data_field_area_get_min_max_uncertainty_mask(GwyDataField *data_field,
         datapos = data_field->data + row*data_field->xres + col;
         uncpos = uncz_field->data + row*uncz_field->xres + col;
         mpos = mask->data + row*mask->xres + col;
+
+        if (mode == GWY_MASK_INCLUDE) {
+            do {
+                mpos++;
+                datapos++;
+                uncpos++;
+            } while (*mpos < 1.0);
+        }
+        else {
+            do {
+                mpos++;
+                datapos++;
+                uncpos++;
+            } while (*mpos > 0.0);
+        }
+        min1 = *datapos;
+        max1 = *datapos;
+        min_unc1 = *uncpos;
+        max_unc1 = *uncpos;
+
+        datapos = data_field->data + row*data_field->xres + col;
+        uncpos = uncz_field->data + row*uncz_field->xres + col;
+        mpos = mask->data + row*mask->xres + col;
+
         for (i = 0; i < height; i++) {
             const gdouble *drow = datapos + i*data_field->xres;
             const gdouble *urow = uncpos + i*uncz_field->xres;
@@ -470,25 +570,29 @@ gwy_data_field_area_get_min_max_uncertainty_mask(GwyDataField *data_field,
     }
 
     if (col == 0 && width == data_field->xres
-        && row == 0 && height == data_field->yres) {
+            && row == 0 && height == data_field->yres) {
         gwy_data_field_get_min_max_uncertainty(data_field, uncz_field,
-                                               min_unc, max_unc);
+                min_unc, max_unc);
         return;
     }
 
     if (!min_unc) {
         *max_unc = gwy_data_field_area_get_max_uncertainty(data_field, uncz_field, NULL,
-                                           col, row, width, height);
+                GWY_MASK_IGNORE, col, row, width, height);
         return;
     }
     if (!max_unc) {
         *min_unc = gwy_data_field_area_get_min_uncertainty(data_field, uncz_field, NULL,
-                                           col, row, width, height);
+                GWY_MASK_IGNORE, col, row, width, height);
         return;
     }
 
     datapos = data_field->data + row*data_field->xres + col;
     uncpos = uncz_field->data + row*uncz_field->xres + col;
+    min1 = *datapos;
+    max1 = *datapos;
+    min_unc1 = *uncpos;
+    max_unc1 = *uncpos;
     for (i = 0; i < height; i++) {
         const gdouble *drow = datapos + i*data_field->xres;
         const gdouble *urow = uncpos + i*uncz_field->xres;
@@ -522,9 +626,9 @@ gwy_data_field_area_get_min_max_uncertainty_mask(GwyDataField *data_field,
  *
  * Since: 2.23
  **/
-gdouble
+    gdouble
 gwy_data_field_get_avg_uncertainty(GwyDataField *data_field,
-                                   GwyDataField *uncz_field)
+        GwyDataField *uncz_field)
 {
     gdouble sum = 0;
     const gdouble *p;
@@ -561,16 +665,16 @@ gwy_data_field_get_avg_uncertainty(GwyDataField *data_field,
  *
  * Since: 2.23
  **/
-gdouble
+    gdouble
 gwy_data_field_area_get_avg_uncertainty(GwyDataField *dfield,
-                                        GwyDataField *uncz_field,
-                                        GwyDataField *mask,
-                                        gint col, gint row,
-                                        gint width, gint height)
+        GwyDataField *uncz_field,
+        GwyDataField *mask,
+        gint col, gint row,
+        gint width, gint height)
 {
     return gwy_data_field_area_get_avg_uncertainty_mask(dfield, uncz_field, mask,
-                                                        GWY_MASK_INCLUDE,
-                                                        col, row, width, height);
+            GWY_MASK_INCLUDE,
+            col, row, width, height);
 }
 
 /**
@@ -592,13 +696,13 @@ gwy_data_field_area_get_avg_uncertainty(GwyDataField *dfield,
  *
  * Since: 2.23
  **/
-gdouble
+    gdouble
 gwy_data_field_area_get_avg_uncertainty_mask(GwyDataField *dfield,
-                                             GwyDataField *uncz_field,
-                                             GwyDataField *mask,
-                                             GwyMaskingType mode,
-                                             gint col, gint row,
-                                             gint width, gint height)
+        GwyDataField *uncz_field,
+        GwyDataField *mask,
+        GwyMaskingType mode,
+        gint col, gint row,
+        gint width, gint height)
 {
     const gdouble *datapos, *mpos;
     gdouble sum = 0;
@@ -619,14 +723,14 @@ gwy_data_field_area_get_avg_uncertainty_mask(GwyDataField *dfield,
 
     g_return_val_if_fail(GWY_IS_DATA_FIELD(dfield), sum);
     g_return_val_if_fail(GWY_IS_DATA_FIELD(mask)
-                         && mask->xres == dfield->xres
-                         && mask->yres == dfield->yres,
-                         sum);
+            && mask->xres == dfield->xres
+            && mask->yres == dfield->yres,
+            sum);
     g_return_val_if_fail(col >= 0 && row >= 0
-                         && width >= 0 && height >= 0
-                         && col + width <= dfield->xres
-                         && row + height <= dfield->yres,
-                         sum);
+            && width >= 0 && height >= 0
+            && col + width <= dfield->xres
+            && row + height <= dfield->yres,
+            sum);
 
     datapos = uncz_field->data + row*uncz_field->xres + col;
     mpos = mask->data + row*mask->xres + col;
@@ -670,9 +774,9 @@ gwy_data_field_area_get_avg_uncertainty_mask(GwyDataField *dfield,
  *
  * Returns: The uncertainty of the root mean square value.
  **/
-gdouble
+    gdouble
 gwy_data_field_get_rms_uncertainty(GwyDataField *data_field,
-                                   GwyDataField *uncz_field)
+        GwyDataField *uncz_field)
 {
     gint i, n;
     gdouble rms_unc = 0.0, sum, avg, rms;
@@ -718,16 +822,16 @@ gwy_data_field_get_rms_uncertainty(GwyDataField *data_field,
  *
  * Since: 2.23
  **/
-gdouble
+    gdouble
 gwy_data_field_area_get_rms_uncertainty(GwyDataField *dfield,
-                                        GwyDataField *uncz_field,
-                                        GwyDataField *mask,
-                                        gint col, gint row,
-                                        gint width, gint height)
+        GwyDataField *uncz_field,
+        GwyDataField *mask,
+        gint col, gint row,
+        gint width, gint height)
 {
     return gwy_data_field_area_get_rms_uncertainty_mask(dfield, uncz_field,
-                                                        mask, GWY_MASK_INCLUDE,
-                                                        col, row, width, height);
+            mask, GWY_MASK_INCLUDE,
+            col, row, width, height);
 }
 
 /**
@@ -750,13 +854,13 @@ gwy_data_field_area_get_rms_uncertainty(GwyDataField *dfield,
  *
  * Since: 2.23
  **/
-gdouble
+    gdouble
 gwy_data_field_area_get_rms_uncertainty_mask(GwyDataField *dfield,
-                                             GwyDataField *uncz_field,
-                                             GwyDataField *mask,
-                                             GwyMaskingType mode,
-                                             gint col, gint row,
-                                             gint width, gint height)
+        GwyDataField *uncz_field,
+        GwyDataField *mask,
+        GwyMaskingType mode,
+        gint col, gint row,
+        gint width, gint height)
 {
     gint i, j;
     gdouble rms_unc = 0.0, sum = 0.0;
@@ -770,22 +874,22 @@ gwy_data_field_area_get_rms_uncertainty_mask(GwyDataField *dfield,
     g_return_val_if_fail(GWY_IS_DATA_FIELD(dfield), rms_unc);
     g_return_val_if_fail(GWY_IS_DATA_FIELD(uncz_field), rms_unc);
     g_return_val_if_fail(!mask || (GWY_IS_DATA_FIELD(mask)
-                                   && mask->xres == dfield->xres
-                                   && mask->yres == dfield->yres),
-                         rms_unc);
+                && mask->xres == dfield->xres
+                && mask->yres == dfield->yres),
+            rms_unc);
     g_return_val_if_fail(col >= 0 && row >= 0
-                         && width >= 0 && height >= 0
-                         && col + width <= dfield->xres
-                         && row + height <= dfield->yres,
-                         rms_unc);
+            && width >= 0 && height >= 0
+            && col + width <= dfield->xres
+            && row + height <= dfield->yres,
+            rms_unc);
     if (!width || !height)
         return rms_unc;
 
     if (mask && mode != GWY_MASK_INCLUDE) {
         avg = gwy_data_field_area_get_avg_mask(dfield, mask, mode,
-                                               col, row, width, height);
+                col, row, width, height);
         rms = gwy_data_field_area_get_rms_mask(dfield, mask, mode,
-                                               col, row, width, height);
+                col, row, width, height);
         datapos = dfield->data + row*dfield->xres + col;
         uncpos = uncz_field->data + row*uncz_field->xres + col;
         mpos = mask->data + row*mask->xres + col;
@@ -826,7 +930,7 @@ gwy_data_field_area_get_rms_uncertainty_mask(GwyDataField *dfield,
     }
 
     if (col == 0 && width == dfield->xres
-        && row == 0 && height == dfield->yres)
+            && row == 0 && height == dfield->yres)
         return gwy_data_field_get_rms_uncertainty(dfield, uncz_field);
 
     avg = gwy_data_field_area_get_avg(dfield, NULL, col, row, width, height);
@@ -872,14 +976,14 @@ gwy_data_field_area_get_rms_uncertainty_mask(GwyDataField *dfield,
  *
  * Since: 2.23
  **/
-void
+    void
 gwy_data_field_get_stats_uncertainties(GwyDataField *data_field,
-                                       GwyDataField *uncz_field,
-                                       gdouble *avg_unc,
-                                       gdouble *ra_unc,
-                                       gdouble *rms_unc,
-                                       gdouble *skew_unc,
-                                       gdouble *kurtosis_unc)
+        GwyDataField *uncz_field,
+        gdouble *avg_unc,
+        gdouble *ra_unc,
+        gdouble *rms_unc,
+        gdouble *skew_unc,
+        gdouble *kurtosis_unc)
 {
     gint i;
     gdouble c_sz2, c_sz3, c_sz4, c_abs1;
@@ -898,14 +1002,14 @@ gwy_data_field_get_stats_uncertainties(GwyDataField *data_field,
     c_uabs= c_urms = c_uskew = c_ukurt = c_uavg= 0;
 
     gwy_data_field_get_stats(data_field,
-                             &myavg, &myra, &myrms, &myskew, &mykurtosis);
+            &myavg, &myra, &myrms, &myskew, &mykurtosis);
     for (i = nn; i; i--, p++, u++) {
         dif = (*p - myavg);
-	if (dif > 0 )
-		csig ++;
-	else if (dif <0 )
-		csig --;
-			
+        if (dif > 0 )
+            csig ++;
+        else if (dif <0 )
+            csig --;
+
     }
     csig/=nn;
 
@@ -915,12 +1019,12 @@ gwy_data_field_get_stats_uncertainties(GwyDataField *data_field,
         udif = (*u) *(*p - myavg);
 
         c_uavg += (*u)*(*u);
-	if (dif > 0)
-		hlp = 1-csig;
-	else if (dif  <0)
-		hlp = -1-csig;
-	else
-		hlp = -csig;
+        if (dif > 0)
+            hlp = 1-csig;
+        else if (dif  <0)
+            hlp = -1-csig;
+        else
+            hlp = -csig;
 
         c_uabs += hlp*(*u)*hlp*(*u);
         c_urms += udif*udif;
@@ -972,23 +1076,23 @@ gwy_data_field_get_stats_uncertainties(GwyDataField *data_field,
  *
  * Since: 2.23
  **/
-void
+    void
 gwy_data_field_area_get_stats_uncertainties(GwyDataField *dfield,
-                                            GwyDataField *uncz_field,
-                                            GwyDataField *mask,
-                                            gint col, gint row,
-                                            gint width, gint height,
-                                            gdouble *avg_unc,
-                                            gdouble *ra_unc,
-                                            gdouble *rms_unc,
-                                            gdouble *skew_unc,
-                                            gdouble *kurtosis_unc)
+        GwyDataField *uncz_field,
+        GwyDataField *mask,
+        gint col, gint row,
+        gint width, gint height,
+        gdouble *avg_unc,
+        gdouble *ra_unc,
+        gdouble *rms_unc,
+        gdouble *skew_unc,
+        gdouble *kurtosis_unc)
 {
     gwy_data_field_area_get_stats_uncertainties_mask(dfield, uncz_field, mask,
-                                                     GWY_MASK_INCLUDE,
-                                                     col, row, width, height,
-                                                     avg_unc, ra_unc, rms_unc,
-                                                     skew_unc, kurtosis_unc);
+            GWY_MASK_INCLUDE,
+            col, row, width, height,
+            avg_unc, ra_unc, rms_unc,
+            skew_unc, kurtosis_unc);
 }
 
 /**
@@ -1019,18 +1123,18 @@ gwy_data_field_area_get_stats_uncertainties(GwyDataField *dfield,
  *
  * Since: 2.23
  **/
-void
+    void
 gwy_data_field_area_get_stats_uncertainties_mask(GwyDataField *dfield,
-                                                 GwyDataField *uncz_field,
-                                                 GwyDataField *mask,
-                                                 GwyMaskingType mode,
-                                                 gint col, gint row,
-                                                 gint width, gint height,
-                                                 gdouble *avg_unc,
-                                                 gdouble *ra_unc,
-                                                 gdouble *rms_unc,
-                                                 gdouble *skew_unc,
-                                                 gdouble *kurtosis_unc)
+        GwyDataField *uncz_field,
+        GwyDataField *mask,
+        GwyMaskingType mode,
+        gint col, gint row,
+        gint width, gint height,
+        gdouble *avg_unc,
+        gdouble *ra_unc,
+        gdouble *rms_unc,
+        gdouble *skew_unc,
+        gdouble *kurtosis_unc)
 {
     gdouble c_sz2, c_sz3, c_sz4, c_abs1;
     gdouble c_uabs, c_urms, c_uskew, c_ukurt, c_uavg;
@@ -1043,58 +1147,58 @@ gwy_data_field_area_get_stats_uncertainties_mask(GwyDataField *dfield,
     g_return_if_fail(GWY_IS_DATA_FIELD(dfield));
     g_return_if_fail(GWY_IS_DATA_FIELD(uncz_field));
     g_return_if_fail(!mask || (GWY_IS_DATA_FIELD(mask)
-                               && mask->xres == dfield->xres
-                               && mask->yres == dfield->yres));
+                && mask->xres == dfield->xres
+                && mask->yres == dfield->yres));
     g_return_if_fail(col >= 0 && row >= 0
-                     && width > 0 && height > 0
-                     && col + width <= dfield->xres
-                     && row + height <= dfield->yres);
+            && width > 0 && height > 0
+            && col + width <= dfield->xres
+            && row + height <= dfield->yres);
 
     c_sz2 = c_sz3 = c_sz4 = c_abs1 = 0;
     c_uabs= c_urms = c_uskew = c_ukurt = c_uavg= 0;
 
     myavg = gwy_data_field_area_get_avg_mask(dfield, mask, mode,
-                                             col, row, width, height);
+            col, row, width, height);
     gwy_data_field_area_get_stats_mask(dfield, mask, mode, col, row, width, height,
-                                       &myavg, &myra, &myrms, &myskew, &mykurtosis);
+            &myavg, &myra, &myrms, &myskew, &mykurtosis);
 
     if (mask && (mode != GWY_MASK_IGNORE)) {
-	    datapos = dfield->data + row*dfield->xres + col;
-	    uncpos = uncz_field->data + row*uncz_field->xres + col;
-	    mpos = mask->data + row*mask->xres + col;
-	    nn = 0;
-	    for (i = 0; i < height; i++) {
-		    const gdouble *drow = datapos + i*dfield->xres;
-		    const gdouble *mrow = mpos + i*mask->xres;
-		    if (mode == GWY_MASK_INCLUDE) {
-			    for (j = 0; j < width; j++) {
-				    if (*mrow > 0.0) {
-					    nn++;
-					    dif = *drow - myavg;
-					    if (dif >0)
-						    csig ++;
-					    else if (dif <0)
-						    csig --;
-				    }
-				    drow++;
-			    }
-		    }
-		    else{
-			    for (j = 0; j < width; j++) {
-				    if (*mrow < 1.0) {
-					    nn++;
-					    dif = *drow - myavg;
-					    if (dif >0)
-						    csig ++;
-					    else if (dif <0)
-						    csig --;
-				    }
-				    drow++;
-			    }
-		    }
-	    }
+        datapos = dfield->data + row*dfield->xres + col;
+        uncpos = uncz_field->data + row*uncz_field->xres + col;
+        mpos = mask->data + row*mask->xres + col;
+        nn = 0;
+        for (i = 0; i < height; i++) {
+            const gdouble *drow = datapos + i*dfield->xres;
+            const gdouble *mrow = mpos + i*mask->xres;
+            if (mode == GWY_MASK_INCLUDE) {
+                for (j = 0; j < width; j++) {
+                    if (*mrow > 0.0) {
+                        nn++;
+                        dif = *drow - myavg;
+                        if (dif >0)
+                            csig ++;
+                        else if (dif <0)
+                            csig --;
+                    }
+                    drow++;
+                }
+            }
+            else{
+                for (j = 0; j < width; j++) {
+                    if (*mrow < 1.0) {
+                        nn++;
+                        dif = *drow - myavg;
+                        if (dif >0)
+                            csig ++;
+                        else if (dif <0)
+                            csig --;
+                    }
+                    drow++;
+                }
+            }
+        }
 
-	    csig/=nn;
+        csig/=nn;
         for (i = 0; i < height; i++) {
             const gdouble *drow = datapos + i*dfield->xres;
             const gdouble *urow = uncpos + i*uncz_field->xres;
@@ -1107,12 +1211,12 @@ gwy_data_field_area_get_stats_uncertainties_mask(GwyDataField *dfield,
 
                         c_uavg += (*urow)*(*urow);
 
-			if (dif >0)
-				hlp = 1-csig;
-			else if (dif <0)
-				hlp = -1-csig;
-			else
-				hlp = -csig;
+                        if (dif >0)
+                            hlp = 1-csig;
+                        else if (dif <0)
+                            hlp = -1-csig;
+                        else
+                            hlp = -csig;
                         c_uabs += hlp*(*urow)*hlp*(*urow);
 
                         c_urms += dif*dif*(*urow)*(*urow);                   //was udif
@@ -1137,12 +1241,12 @@ gwy_data_field_area_get_stats_uncertainties_mask(GwyDataField *dfield,
 
                         c_uavg += (*urow)*(*urow);
 
-			if (dif >0)
-				hlp = 1 - csig;
-			else if (dif <0 )
-				hlp = -1 -csig;
-			else
-				hlp = -csig;
+                        if (dif >0)
+                            hlp = 1 - csig;
+                        else if (dif <0 )
+                            hlp = -1 -csig;
+                        else
+                            hlp = -csig;
                         c_uabs += hlp*(*urow)*hlp*(*urow);
 
                         c_urms += (*urow)*dif*(*urow)*dif;
@@ -1176,12 +1280,12 @@ gwy_data_field_area_get_stats_uncertainties_mask(GwyDataField *dfield,
 
                 c_uavg += (*urow)*(*urow);
 
-		if (dif >0) 
-			hlp = 1-csig;
-		else if (dif < 0 )
-			hlp = -1-csig;
-		else
-			hlp = -csig;
+                if (dif >0) 
+                    hlp = 1-csig;
+                else if (dif < 0 )
+                    hlp = -1-csig;
+                else
+                    hlp = -csig;
 
 
                 c_uabs += hlp*(*urow)*hlp*(*urow);
@@ -1216,15 +1320,17 @@ gwy_data_field_area_get_stats_uncertainties_mask(GwyDataField *dfield,
 
 
 typedef void (*GwyLameAreaUFunc)(GwyDataLine *source, GwyDataLine *usource,
-                                GwyDataLine *target);
+        GwyDataLine *target);
 
-static void
+    static void
 gwy_data_field_area_func_lame_uncertainty(GwyDataField *data_field, GwyDataField *uncz_field,
-                              GwyDataLine *target_line,
-                              GwyLameAreaUFunc func,
-                              gint col, gint row,
-                              gint width, gint height,
-                              GwyOrientation orientation)
+        GwyDataLine *target_line,
+        GwyLameAreaUFunc func,
+        gint col, gint row,
+        gint width, gint height,
+        GwyOrientation orientation,
+        GwyInterpolationType interpolation,
+        gint nstats)
 {
     GwyDataLine *data_line, *uline, *tmp_line;
     gint i, j, xres, yres, size;
@@ -1235,11 +1341,11 @@ gwy_data_field_area_func_lame_uncertainty(GwyDataField *data_field, GwyDataField
     xres = data_field->xres;
     yres = data_field->yres;
     g_return_if_fail(col >= 0 && row >= 0
-                     && width >= 1 && height >= 1
-                     && col + width <= xres
-                     && row + height <= yres);
+            && width >= 1 && height >= 1
+            && col + width <= xres
+            && row + height <= yres);
     g_return_if_fail(orientation == GWY_ORIENTATION_HORIZONTAL
-                     || orientation == GWY_ORIENTATION_VERTICAL);
+            || orientation == GWY_ORIENTATION_VERTICAL);
 
     size = (orientation == GWY_ORIENTATION_HORIZONTAL) ? width : height;
     data_line = gwy_data_line_new(size, 1.0, FALSE);
@@ -1251,42 +1357,44 @@ gwy_data_field_area_func_lame_uncertainty(GwyDataField *data_field, GwyDataField
 
     switch (orientation) {
         case GWY_ORIENTATION_HORIZONTAL:
-        for (i = 0; i < height; i++) {
-            gwy_data_field_get_row_part(data_field, data_line, row+i,
-                                        col, col+width);
-            gwy_data_field_get_row_part(uncz_field, uline, row+i,
-                                        col, col+width);
-            func(data_line, uline, tmp_line);
+            for (i = 0; i < height; i++) {
+                gwy_data_field_get_row_part(data_field, data_line, row+i,
+                        col, col+width);
+                gwy_data_field_get_row_part(uncz_field, uline, row+i,
+                        col, col+width);
+                func(data_line, uline, tmp_line);
+                for (j = 0; j < width; j++)
+                    target_line->data[j] += tmp_line->data[j];
+            }
+            gwy_data_line_set_real(target_line,
+                    gwy_data_field_jtor(data_field, width));
             for (j = 0; j < width; j++)
-                target_line->data[j] += tmp_line->data[j];
-        }
-        gwy_data_line_set_real(target_line,
-                               gwy_data_field_jtor(data_field, width));
-        for (j = 0; j < width; j++)
-		target_line->data[j] = sqrt(target_line->data[j])/height;
-        break;
+                target_line->data[j] = sqrt(target_line->data[j])/height;
+            break;
 
         case GWY_ORIENTATION_VERTICAL:
-        for (i = 0; i < width; i++) {
-            gwy_data_field_get_column_part(data_field, data_line, col+i,
-                                           row, row+height);
-            gwy_data_field_get_column_part(uncz_field, uline, col+i,
-                                           row, row+height);
-            func(data_line, uline, tmp_line);
+            for (i = 0; i < width; i++) {
+                gwy_data_field_get_column_part(data_field, data_line, col+i,
+                        row, row+height);
+                gwy_data_field_get_column_part(uncz_field, uline, col+i,
+                        row, row+height);
+                func(data_line, uline, tmp_line);
+                for (j = 0; j < height; j++)
+                    target_line->data[j] += tmp_line->data[j];
+            }
+            gwy_data_line_set_real(target_line,
+                    gwy_data_field_itor(data_field, height));
             for (j = 0; j < height; j++)
-                target_line->data[j] += tmp_line->data[j];
-        }
-        gwy_data_line_set_real(target_line,
-                               gwy_data_field_itor(data_field, height));
-        for (j = 0; j < height; j++)
-		target_line->data[j] = sqrt(target_line->data[j])/width;
-        break;
+                target_line->data[j] = sqrt(target_line->data[j])/width;
+            break;
     }
 
     g_object_unref(data_line);
     g_object_unref(uline);
     g_object_unref(tmp_line);
 
+    if (nstats > 0)
+        gwy_data_line_resample(target_line, nstats, interpolation);
 }
 /**
  * gwy_data_line_acf_uncertainty:
@@ -1300,9 +1408,9 @@ gwy_data_field_area_func_lame_uncertainty(GwyDataField *data_field, GwyDataField
  *
  * Since: 2.23
  **/
-void
+    void
 gwy_data_line_acf_uncertainty(GwyDataLine *data_line, GwyDataLine *uline,
-                              GwyDataLine *target_line)
+        GwyDataLine *target_line)
 {
     gint i, n, k, m;
     gdouble val, avg, cval;
@@ -1377,10 +1485,10 @@ gwy_data_line_acf_uncertainty(GwyDataLine *data_line, GwyDataLine *uline,
  *
  * Since: 2.23
  **/
-void
+    void
 gwy_data_line_hhcf_uncertainty(GwyDataLine *data_line,
-                               GwyDataLine *uline,
-                               GwyDataLine *target_line)
+        GwyDataLine *uline,
+        GwyDataLine *target_line)
 {
     gint i, n, m;
     gdouble val;
@@ -1412,25 +1520,25 @@ gwy_data_line_hhcf_uncertainty(GwyDataLine *data_line,
     for (m = 0; m < n; m++) {
         if (m > (n-1)/2.0) {
             for (i = m; i < n; i++) {
-                val = data_line->data[i]-data_line->data[i-m];
+                val = data_line->data[i] - data_line->data[i-m];
                 target_line->data[m] += val*val*uline->data[i]*uline->data[i];
             }
             for (i = 0; i < n-m; i++) {
-                val = -data_line->data[i+m]+data_line->data[i];
+                val = -data_line->data[i+m] + data_line->data[i];
                 target_line->data[m] += val*val*uline->data[i]*uline->data[i];
             }
         }
         else {
             for (i = 0; i < m; i++) {
-                val = -data_line->data[i+m]+data_line->data[i];
+                val = -data_line->data[i+m] + data_line->data[i];
                 target_line->data[m] += val*val*uline->data[i]*uline->data[i];
             }
             for (i = m; i < n-m; i++) {
-                val = data_line->data[i]-data_line->data[i-m]-data_line->data[i+m]+data_line->data[i];
+                val = 2*data_line->data[i] - data_line->data[i-m] - data_line->data[i+m];
                 target_line->data[m] += val*val*uline->data[i]*uline->data[i];
             }
             for (i = n-m; i < n; i++) {
-                val = data_line->data[i]-data_line->data[i-m];
+                val = data_line->data[i] - data_line->data[i-m];
                 target_line->data[m] += val*val*uline->data[i]*uline->data[i];
             }
         }
@@ -1449,26 +1557,32 @@ gwy_data_line_hhcf_uncertainty(GwyDataLine *data_line,
  * @height: Area height (number of rows).
  * @orientation: Orientation of lines (ACF is simply averaged over the
  *               other orientation).
+ * @interpolation: Interpolation to use when @nstats is given and requires
+ *                 resampling.
+ * @nstats: The number of samples to take on the distribution function.  If
+ *          nonpositive, @width (@height) is used.
  *
  * Calculates the uncertainty of the one-dimensional autocorrelation function of a rectangular part of
  * a data field.
  *
  * Since: 2.23
  **/
-void
+    void
 gwy_data_field_area_acf_uncertainty(GwyDataField *data_field,
-                                    GwyDataField *uncz_field,
-                                    GwyDataLine *target_line,
-                                    gint col, gint row,
-                                    gint width, gint height,
-                                    GwyOrientation orientation)
+        GwyDataField *uncz_field,
+        GwyDataLine *target_line,
+        gint col, gint row,
+        gint width, gint height,
+        GwyOrientation orientation,
+        GwyInterpolationType interpolation,
+        gint nstats)
 {
     GwySIUnit *fieldunit, *lineunit;
 
     gwy_data_field_area_func_lame_uncertainty(data_field, uncz_field, target_line,
-                                              &gwy_data_line_acf_uncertainty,
-                                              col, row, width, height,
-                                              orientation);
+            &gwy_data_line_acf_uncertainty,
+            col, row, width, height,
+            orientation, interpolation, nstats);
 
     fieldunit = gwy_data_field_get_si_unit_xy(data_field);
     lineunit = gwy_data_line_get_si_unit_x(target_line);
@@ -1490,18 +1604,20 @@ gwy_data_field_area_acf_uncertainty(GwyDataField *data_field,
  *
  * Since: 2.23
  **/
-void
+    void
 gwy_data_field_acf_uncertainty(GwyDataField *data_field,
-                               GwyDataField *uncz_field,
-                               GwyDataLine *target_line,
-                               GwyOrientation orientation)
+        GwyDataField *uncz_field,
+        GwyDataLine *target_line,
+        GwyOrientation orientation,
+        GwyInterpolationType interpolation,
+        gint nstats)
 {
     g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
     g_return_if_fail(GWY_IS_DATA_FIELD(uncz_field));
     g_return_if_fail(GWY_IS_DATA_LINE(target_line));
     gwy_data_field_area_acf_uncertainty(data_field, uncz_field, target_line,
-                                        0, 0, data_field->xres, data_field->yres,
-                                        orientation);
+            0, 0, data_field->xres, data_field->yres,
+            orientation, interpolation, nstats);
     return;
 }
 
@@ -1524,20 +1640,22 @@ gwy_data_field_acf_uncertainty(GwyDataField *data_field,
  *
  * Since: 2.23
  **/
-void
+    void
 gwy_data_field_area_hhcf_uncertainty(GwyDataField *data_field,
-                                     GwyDataField *uncz_field,
-                                     GwyDataLine *target_line,
-                                     gint col, gint row,
-                                     gint width, gint height,
-                                     GwyOrientation orientation)
+        GwyDataField *uncz_field,
+        GwyDataLine *target_line,
+        gint col, gint row,
+        gint width, gint height,
+        GwyOrientation orientation,
+        GwyInterpolationType interpolation,
+        gint nstats)
 {
     GwySIUnit *fieldunit, *lineunit;
 
     gwy_data_field_area_func_lame_uncertainty(data_field, uncz_field, target_line,
-                                              &gwy_data_line_hhcf_uncertainty,
-                                              col, row, width, height,
-                                              orientation);
+            &gwy_data_line_hhcf_uncertainty,
+            col, row, width, height,
+            orientation, interpolation, nstats);
 
     fieldunit = gwy_data_field_get_si_unit_xy(data_field);
     lineunit = gwy_data_line_get_si_unit_x(target_line);
@@ -1560,18 +1678,20 @@ gwy_data_field_area_hhcf_uncertainty(GwyDataField *data_field,
  *
  * Since: 2.23
  **/
-void
+    void
 gwy_data_field_hhcf_uncertainty(GwyDataField *data_field,
-                                GwyDataField *uncz_field,
-                                GwyDataLine *target_line,
-                                GwyOrientation orientation)
+        GwyDataField *uncz_field,
+        GwyDataLine *target_line,
+        GwyOrientation orientation,
+        GwyInterpolationType interpolation,
+        gint nstats)
 {
     g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
     g_return_if_fail(GWY_IS_DATA_FIELD(uncz_field));
     g_return_if_fail(GWY_IS_DATA_LINE(target_line));
     gwy_data_field_area_hhcf_uncertainty(data_field, uncz_field, target_line,
-                                         0, 0, data_field->xres, data_field->yres,
-                                         orientation);
+            0, 0, data_field->xres, data_field->yres,
+            orientation, interpolation, nstats);
     return;
 }
 
@@ -1599,12 +1719,12 @@ gwy_data_field_hhcf_uncertainty(GwyDataField *data_field,
  *
  * Returns: The uncertainty squared of the area.
  **/
-static inline gdouble
+    static inline gdouble
 square_area1_uncertainty(gdouble z1, gdouble z2, gdouble z3, gdouble z4,
-                         gdouble uz1, gdouble uz2, gdouble uz3, gdouble uz4,
-                         gdouble ux1, gdouble ux2, gdouble ux3, gdouble ux4,
-                         gdouble uy1, gdouble uy2, gdouble uy3, gdouble uy4,
-                         gdouble q)
+        gdouble uz1, gdouble uz2, gdouble uz3, gdouble uz4,
+        gdouble ux1, gdouble ux2, gdouble ux3, gdouble ux4,
+        gdouble uy1, gdouble uy2, gdouble uy3, gdouble uy4,
+        gdouble q)
 {
     gdouble c;
     gdouble a12, a23, a34, a41;
@@ -1619,31 +1739,31 @@ square_area1_uncertainty(gdouble z1, gdouble z2, gdouble z3, gdouble z4,
     z4 -= c;
 
     a12 = sqrt(1.0 + 2.0*(z1*z1 + z2*z2)/q);
-    a23 = sqrt(2.0 + 2.0*(z2*z2 + z3*z3)/q);
-    a34 = sqrt(3.0 + 2.0*(z3*z3 + z4*z4)/q);
+    a23 = sqrt(1.0 + 2.0*(z2*z2 + z3*z3)/q);
+    a34 = sqrt(1.0 + 2.0*(z3*z3 + z4*z4)/q);
     a41 = sqrt(1.0 + 2.0*(z4*z4 + z1*z1)/q);
 
     // z contribution
     // A12
-    sum += 0.25/(a12*a12) *(
-                            (3*z1-z2)*(3*z1-z2)*uz1*uz1+
-                            (3*z2-z1)*(3*z2-z1)*uz2*uz2+
-                            (z1+z2)*(z1+z2)*(uz3*uz3+uz4*uz4));
+    sum += 0.0625/(a12*a12) *(
+            (3*z1-z2)*(3*z1-z2)*uz1*uz1+
+            (3*z2-z1)*(3*z2-z1)*uz2*uz2+
+            (z1+z2)*(z1+z2)*(uz3*uz3+uz4*uz4));
     // A23
-    sum += 0.25/(a23*a23) *(
-                            (3*z2-z3)*(3*z2-z3)*uz2*uz2+
-                            (3*z3-z2)*(3*z3-z2)*uz3*uz3+
-                            (z2+z3)*(z2+z3)*(uz1*uz1+uz4*uz4));
+    sum += 0.0625/(a23*a23) *(
+            (3*z2-z3)*(3*z2-z3)*uz2*uz2+
+            (3*z3-z2)*(3*z3-z2)*uz3*uz3+
+            (z2+z3)*(z2+z3)*(uz1*uz1+uz4*uz4));
     // A34
-    sum += 0.25/(a34*a34) *(
-                            (3*z3-z4)*(3*z3-z4)*uz3*uz3+
-                            (3*z4-z3)*(3*z4-z3)*uz4*uz4+
-                            (z3+z4)*(z3+z4)*(uz1*uz1+uz2*uz2));
+    sum += 0.0625/(a34*a34) *(
+            (3*z3-z4)*(3*z3-z4)*uz3*uz3+
+            (3*z4-z3)*(3*z4-z3)*uz4*uz4+
+            (z3+z4)*(z3+z4)*(uz1*uz1+uz2*uz2));
     // A41
-    sum += 0.25/(a41*a41) *(
-                            (3*z4-z1)*(3*z4-z1)*uz4*uz4+
-                            (3*z1-z4)*(3*z1-z4)*uz1*uz1+
-                            (z4+z1)*(z4+z1)*(uz2*uz2+uz3*uz3));
+    sum += 0.0625/(a41*a41) *(
+            (3*z4-z1)*(3*z4-z1)*uz4*uz4+
+            (3*z1-z4)*(3*z1-z4)*uz1*uz1+
+            (z4+z1)*(z4+z1)*(uz2*uz2+uz3*uz3));
     sum *= q*q/16;
 
     // x contribution
@@ -1652,36 +1772,36 @@ square_area1_uncertainty(gdouble z1, gdouble z2, gdouble z3, gdouble z4,
     hlp2 = 2+2*(c-2*z1)*(c-z1-z2)/q;
     hlp3 = -4*(z2-z1)*(c-z1-z2)/q;
     sum += 1./(64*a12*a12)*q*(
-                              (hlp1+0.25*hlp3)*(hlp1+0.25*hlp3)*ux1*ux1+
-                              (hlp2+0.25*hlp3)*(hlp2+0.25*hlp3)*ux2*ux2+
-                              hlp3*hlp3*(uz3*uz3+uz4*uz4));
+            (hlp1+0.25*hlp3)*(hlp1+0.25*hlp3)*ux1*ux1+
+            (hlp2+0.25*hlp3)*(hlp2+0.25*hlp3)*ux2*ux2+
+            hlp3*hlp3*(uz3*uz3+uz4*uz4));
 
     // A23
     hlp1 = -2 + 2*(z3-z2)*(c-2*z3)/q;
     hlp2 = -2 - 2*(z3-z2)*(c-2*z2)/q;
     hlp3 = 4 + 4*(z3-z2)*(z3-z2)/q;
     sum += 1./(64*a23*a23)*q*(
-                              (hlp1+0.25*hlp3)*(hlp1+0.25*hlp3)*uy2*uy2+
-                              (hlp2+0.25*hlp3)*(hlp2+0.25*hlp3)*uy3*uy3+
-                              hlp3*hlp3*(uy1*uy1+uy4*uy4));
+            (hlp1+0.25*hlp3)*(hlp1+0.25*hlp3)*uy2*uy2+
+            (hlp2+0.25*hlp3)*(hlp2+0.25*hlp3)*uy3*uy3+
+            hlp3*hlp3*(uy1*uy1+uy4*uy4));
 
     // A34
     hlp1 = -2-2*(c-2*z4)*(c-z3-z4)/q;
     hlp2 = 2+2*(c-2*z3)*(c-z3-z4)/q;
     hlp3 = -4*(z4-z2)*(c-z3-z4)/q;
     sum += 1./(64*a34*a34)*q*(
-                              (hlp1+0.25*hlp3)*(hlp1+0.25*hlp3)*ux3*ux3+
-                              (hlp2+0.25*hlp3)*(hlp2+0.25*hlp3)*ux4*ux4+
-                              hlp3*hlp3*(uz1*uz1+uz2*uz2));
+            (hlp1+0.25*hlp3)*(hlp1+0.25*hlp3)*ux3*ux3+
+            (hlp2+0.25*hlp3)*(hlp2+0.25*hlp3)*ux4*ux4+
+            hlp3*hlp3*(uz1*uz1+uz2*uz2));
 
     // A41
     hlp1 = -2 + 2*(z1-z4)*(c-2*z1)/q;
     hlp2 = -2 - 2*(z1-z4)*(c-2*z4)/q;
     hlp3 = 4 + 4*(z1-z4)*(z1-z4)/q;
     sum += 1./(64*a41*a41)*q*(
-                              (hlp1+0.25*hlp3)*(hlp1+0.25*hlp3)*uy4*uy4+
-                              (hlp2+0.25*hlp3)*(hlp2+0.25*hlp3)*uy1*uy1+
-                              hlp3*hlp3*(uy2*uy2+uy3*uy3));
+            (hlp1+0.25*hlp3)*(hlp1+0.25*hlp3)*uy4*uy4+
+            (hlp2+0.25*hlp3)*(hlp2+0.25*hlp3)*uy1*uy1+
+            hlp3*hlp3*(uy2*uy2+uy3*uy3));
 
     // y contribution
     // A12
@@ -1689,36 +1809,36 @@ square_area1_uncertainty(gdouble z1, gdouble z2, gdouble z3, gdouble z4,
     hlp2 = -2 - 2*(z2-z1)*(c-2*z1)/q;
     hlp3 = 4 + 4*(z2-z1)*(z2-z1)/q;
     sum += 1./(64*a12*a12)*q*(
-                              (hlp1+0.25*hlp3)*(hlp1+0.25*hlp3)*uy1*uy1+
-                              (hlp2+0.25*hlp3)*(hlp2+0.25*hlp3)*uy2*uy2+
-                              hlp3*hlp3*(uy3*uy3+uy4*uy4));
+            (hlp1+0.25*hlp3)*(hlp1+0.25*hlp3)*uy1*uy1+
+            (hlp2+0.25*hlp3)*(hlp2+0.25*hlp3)*uy2*uy2+
+            hlp3*hlp3*(uy3*uy3+uy4*uy4));
 
     // A23
     hlp1 = -2-2*(c-2*z3)*(c-z2-z3)/q;
     hlp2 = 2+2*(c-2*z2)*(c-z2-z3)/q;
     hlp3 = -4*(z3-z2)*(c-z2-z3)/q;
     sum += 1./(64*a23*a23)*q*(
-                              (hlp1+0.25*hlp3)*(hlp1+0.25*hlp3)*uy2*uy2+
-                              (hlp2+0.25*hlp3)*(hlp2+0.25*hlp3)*uy3*uy3+
-                              hlp3*hlp3*(uy1*uy1+uy4*uy4));
+            (hlp1+0.25*hlp3)*(hlp1+0.25*hlp3)*uy2*uy2+
+            (hlp2+0.25*hlp3)*(hlp2+0.25*hlp3)*uy3*uy3+
+            hlp3*hlp3*(uy1*uy1+uy4*uy4));
 
     // A34
     hlp1 = -2 + 2*(z4-z3)*(c-2*z4)/q;
     hlp2 = -2 - 2*(z4-z3)*(c-2*z3)/q;
     hlp3 = 4 + 4*(z4-z3)*(z4-z3)/q;
     sum += 1./(64*a34*a34)*q*(
-                              (hlp1+0.25*hlp3)*(hlp1+0.25*hlp3)*uy3*uy3+
-                              (hlp2+0.25*hlp3)*(hlp2+0.25*hlp3)*uy4*uy4+
-                              hlp3*hlp3*(uy1*uy1+uy2*uy2));
+            (hlp1+0.25*hlp3)*(hlp1+0.25*hlp3)*uy3*uy3+
+            (hlp2+0.25*hlp3)*(hlp2+0.25*hlp3)*uy4*uy4+
+            hlp3*hlp3*(uy1*uy1+uy2*uy2));
 
     // A41
     hlp1 = -2-2*(c-2*z1)*(c-z4-z1)/q;
     hlp2 = 2+2*(c-2*z4)*(c-z4-z1)/q;
     hlp3 = -4*(z1-z4)*(c-z4-z1)/q;
     sum += 1./(64*a41*a41)*q*(
-                              (hlp1+0.25*hlp3)*(hlp1+0.25*hlp3)*uy4*uy4+
-                              (hlp2+0.25*hlp3)*(hlp2+0.25*hlp3)*uy1*uy1+
-                              hlp3*hlp3*(uy2*uy2+uy3*uy3));
+            (hlp1+0.25*hlp3)*(hlp1+0.25*hlp3)*uy4*uy4+
+            (hlp2+0.25*hlp3)*(hlp2+0.25*hlp3)*uy1*uy1+
+            hlp3*hlp3*(uy2*uy2+uy3*uy3));
 
     return sum;
 }
@@ -1752,13 +1872,13 @@ square_area1_uncertainty(gdouble z1, gdouble z2, gdouble z3, gdouble z4,
  *
  * Returns: The uncertainty of the area squared.
  **/
-static inline gdouble
+    static inline gdouble
 square_area1w_uncertainty(gdouble z1, gdouble z2, gdouble z3, gdouble z4,
-                          gdouble uz1, gdouble uz2, gdouble uz3, gdouble uz4,
-                          gdouble ux1, gdouble ux2, gdouble ux3, gdouble ux4,
-                          gdouble uy1, gdouble uy2, gdouble uy3, gdouble uy4,
-                          gint w1, gint w2, gint w3, gint w4,
-                          gdouble q)
+        gdouble uz1, gdouble uz2, gdouble uz3, gdouble uz4,
+        gdouble ux1, gdouble ux2, gdouble ux3, gdouble ux4,
+        gdouble uy1, gdouble uy2, gdouble uy3, gdouble uy4,
+        gint w1, gint w2, gint w3, gint w4,
+        gdouble q)
 {
     gdouble c;
     gdouble a12, a23, a34, a41;
@@ -1773,26 +1893,26 @@ square_area1w_uncertainty(gdouble z1, gdouble z2, gdouble z3, gdouble z4,
     z4 -= c;
 
     a12 = sqrt(1.0 + 2.0*(z1*z1 + z2*z2)/q);
-    a23 = sqrt(2.0 + 2.0*(z2*z2 + z3*z3)/q);
-    a34 = sqrt(3.0 + 2.0*(z3*z3 + z4*z4)/q);
+    a23 = sqrt(1.0 + 2.0*(z2*z2 + z3*z3)/q);
+    a34 = sqrt(1.0 + 2.0*(z3*z3 + z4*z4)/q);
     a41 = sqrt(1.0 + 2.0*(z4*z4 + z1*z1)/q);
 
     // A12
     sum += 0.25*(w1 + w2)*(w1 + w2)*0.25/(a12*a12) * ((3*z1-z2)*(3*z1-z2)*uz1*uz1+
-                                                 (3*z2-z1)*(3*z2-z1)*uz2*uz2+
-                                                 (z1+z2)*(z1+z2)*(uz3*uz3+uz4*uz4));
+            (3*z2-z1)*(3*z2-z1)*uz2*uz2+
+            (z1+z2)*(z1+z2)*(uz3*uz3+uz4*uz4));
     // A23
     sum += 0.25*(w2 + w3)*(w2 + w3)*0.25/(a23*a23) * ((3*z2-z3)*(3*z2-z3)*uz2*uz2+
-                                                (3*z3-z2)*(3*z3-z2)*uz3*uz3+
-                                                (z2+z3)*(z2+z3)*(uz1*uz1+uz4*uz4));
+            (3*z3-z2)*(3*z3-z2)*uz3*uz3+
+            (z2+z3)*(z2+z3)*(uz1*uz1+uz4*uz4));
     // A34
     sum += 0.25*(w3 + w4)*(w3 + w4)*0.25/(a34*a34) * ((3*z3-z4)*(3*z3-z4)*uz3*uz3+
-                                                 (3*z4-z3)*(3*z4-z3)*uz4*uz4+
-                                                 (z3+z4)*(z3+z4)*(uz1*uz1+uz2*uz2));
+            (3*z4-z3)*(3*z4-z3)*uz4*uz4+
+            (z3+z4)*(z3+z4)*(uz1*uz1+uz2*uz2));
     // A41
     sum += 0.25*(w1 + w4)*(w1 + w4)*0.25/(a41*a41) * ((3*z4-z1)*(3*z4-z1)*uz4*uz4+
-                                                 (3*z1-z4)*(3*z1-z4)*uz1*uz1+
-                                                 (z4+z1)*(z4+z1)*(uz2*uz2+uz3*uz3));
+            (3*z1-z4)*(3*z1-z4)*uz1*uz1+
+            (z4+z1)*(z4+z1)*(uz2*uz2+uz3*uz3));
 
     sum *= q*q/16;
     // x contribution
@@ -1801,32 +1921,32 @@ square_area1w_uncertainty(gdouble z1, gdouble z2, gdouble z3, gdouble z4,
     hlp2 = 2+2*(c-2*z1)*(c-z1-z2)/q;
     hlp3 = -4*(z2-z1)*(c-z1-z2)/q;
     sum += 0.25*(w1+w2)*(w1+w2)/(64*a12*a12)*q*((hlp1+0.25*hlp3)*(hlp1+0.25*hlp3)*ux1*ux1+
-                                           (hlp2+0.25*hlp3)*(hlp2+0.25*hlp3)*ux2*ux2+
-                                           hlp3*hlp3*(uz3*uz3+uz4*uz4));
+            (hlp2+0.25*hlp3)*(hlp2+0.25*hlp3)*ux2*ux2+
+            hlp3*hlp3*(uz3*uz3+uz4*uz4));
 
     // A23
     hlp1 = -2 + 2*(z3-z2)*(c-2*z3)/q;
     hlp2 = -2 - 2*(z3-z2)*(c-2*z2)/q;
     hlp3 = 4 + 4*(z3-z2)*(z3-z2)/q;
     sum += 0.25*(w2+w3)*(w2+w3)/(64*a23*a23)*q*((hlp1+0.25*hlp3)*(hlp1+0.25*hlp3)*uy2*uy2+
-                                           (hlp2+0.25*hlp3)*(hlp2+0.25*hlp3)*uy3*uy3+
-                                           hlp3*hlp3*(uy1*uy1+uy4*uy4));
+            (hlp2+0.25*hlp3)*(hlp2+0.25*hlp3)*uy3*uy3+
+            hlp3*hlp3*(uy1*uy1+uy4*uy4));
 
     // A34
     hlp1 = -2-2*(c-2*z4)*(c-z3-z4)/q;
     hlp2 = 2+2*(c-2*z3)*(c-z3-z4)/q;
     hlp3 = -4*(z4-z2)*(c-z3-z4)/q;
     sum += 0.25*(w3+w4)*(w3+w4)/(64*a34*a34)*q*((hlp1+0.25*hlp3)*(hlp1+0.25*hlp3)*ux3*ux3+
-                                           (hlp2+0.25*hlp3)*(hlp2+0.25*hlp3)*ux4*ux4+
-                                           hlp3*hlp3*(uz1*uz1+uz2*uz2));
+            (hlp2+0.25*hlp3)*(hlp2+0.25*hlp3)*ux4*ux4+
+            hlp3*hlp3*(uz1*uz1+uz2*uz2));
 
     // A41
     hlp1 = -2 + 2*(z1-z4)*(c-2*z1)/q;
     hlp2 = -2 - 2*(z1-z4)*(c-2*z4)/q;
     hlp3 = 4 + 4*(z1-z4)*(z1-z4)/q;
     sum += 0.25*(w4+w1)*(w4+w1)/(64*a41*a41)*q*((hlp1+0.25*hlp3)*(hlp1+0.25*hlp3)*uy4*uy4+
-                                           (hlp2+0.25*hlp3)*(hlp2+0.25*hlp3)*uy1*uy1+
-                                           hlp3*hlp3*(uy2*uy2+uy3*uy3));
+            (hlp2+0.25*hlp3)*(hlp2+0.25*hlp3)*uy1*uy1+
+            hlp3*hlp3*(uy2*uy2+uy3*uy3));
 
     // y contribution
     // A12
@@ -1834,32 +1954,32 @@ square_area1w_uncertainty(gdouble z1, gdouble z2, gdouble z3, gdouble z4,
     hlp2 = -2 - 2*(z2-z1)*(c-2*z1)/q;
     hlp3 = 4 + 4*(z2-z1)*(z2-z1)/q;
     sum += 0.25*(w1+w2)*(w1+w2)/(64*a12*a12)*q*((hlp1+0.25*hlp3)*(hlp1+0.25*hlp3)*uy1*uy1+
-                                           (hlp2+0.25*hlp3)*(hlp2+0.25*hlp3)*uy2*uy2+
-                                           hlp3*hlp3*(uy3*uy3+uy4*uy4));
+            (hlp2+0.25*hlp3)*(hlp2+0.25*hlp3)*uy2*uy2+
+            hlp3*hlp3*(uy3*uy3+uy4*uy4));
 
     // A23
     hlp1 = -2-2*(c-2*z3)*(c-z2-z3)/q;
     hlp2 = 2+2*(c-2*z2)*(c-z2-z3)/q;
     hlp3 = -4*(z3-z2)*(c-z2-z3)/q;
     sum += 0.25*(w2+w3)*(w2+w3)/(64*a23*a23)*q*((hlp1+0.25*hlp3)*(hlp1+0.25*hlp3)*uy2*uy2+
-                                           (hlp2+0.25*hlp3)*(hlp2+0.25*hlp3)*uy3*uy3+
-                                           hlp3*hlp3*(uy1*uy1+uy4*uy4));
+            (hlp2+0.25*hlp3)*(hlp2+0.25*hlp3)*uy3*uy3+
+            hlp3*hlp3*(uy1*uy1+uy4*uy4));
 
     // A34
     hlp1 = -2 + 2*(z4-z3)*(c-2*z4)/q;
     hlp2 = -2 - 2*(z4-z3)*(c-2*z3)/q;
     hlp3 = 4 + 4*(z4-z3)*(z4-z3)/q;
     sum += 0.25*(w3+w4)*(w3+w4)/(64*a34*a34)*q*((hlp1+0.25*hlp3)*(hlp1+0.25*hlp3)*uy3*uy3+
-                                           (hlp2+0.25*hlp3)*(hlp2+0.25*hlp3)*uy4*uy4+
-                                           hlp3*hlp3*(uy1*uy1+uy2*uy2));
+            (hlp2+0.25*hlp3)*(hlp2+0.25*hlp3)*uy4*uy4+
+            hlp3*hlp3*(uy1*uy1+uy2*uy2));
 
     // A41
     hlp1 = -2-2*(c-2*z1)*(c-z4-z1)/q;
     hlp2 = 2+2*(c-2*z4)*(c-z4-z1)/q;
     hlp3 = -4*(z1-z4)*(c-z4-z1)/q;
     sum += 0.25*(w4+w1)*(w4+w1)/(64*a41*a41)*q*((hlp1+0.25*hlp3)*(hlp1+0.25*hlp3)*uy4*uy4+
-                                           (hlp2+0.25*hlp3)*(hlp2+0.25*hlp3)*uy1*uy1+
-                                           hlp3*hlp3*(uy2*uy2+uy3*uy3));
+            (hlp2+0.25*hlp3)*(hlp2+0.25*hlp3)*uy1*uy1+
+            hlp3*hlp3*(uy2*uy2+uy3*uy3));
 
     return sum;
 }
@@ -1891,12 +2011,12 @@ square_area1w_uncertainty(gdouble z1, gdouble z2, gdouble z3, gdouble z4,
  * Returns: The uncertainty of the area squared.
  **/
 
-static inline gdouble
+    static inline gdouble
 square_area2_uncertainty(gdouble z1, gdouble z2, gdouble z3, gdouble z4,
-                         gdouble uz1, gdouble uz2, gdouble uz3, gdouble uz4,
-                         gdouble ux1, gdouble ux2, gdouble ux3, gdouble ux4,
-                         gdouble uy1, gdouble uy2, gdouble uy3, gdouble uy4,
-                         gdouble x, gdouble y)
+        gdouble uz1, gdouble uz2, gdouble uz3, gdouble uz4,
+        gdouble ux1, gdouble ux2, gdouble ux3, gdouble ux4,
+        gdouble uy1, gdouble uy2, gdouble uy3, gdouble uy4,
+        gdouble x, gdouble y)
 {
     gdouble c;
     gdouble a12, a23, a34, a41;
@@ -1916,31 +2036,31 @@ square_area2_uncertainty(gdouble z1, gdouble z2, gdouble z3, gdouble z4,
     hlp2 = ((z2 - z1)/x + 0.5* (z1+z2 - c)/y);
     hlp3 = -0.5* (z1+z2 - c)/y;
     sum += 1/(a12*a12) * (hlp1*hlp1*uz1*uz1+
-                          hlp2*hlp2*uz2*uz2+
-                          hlp3*hlp3*(uz3*uz3+uz4*uz4));
+            hlp2*hlp2*uz2*uz2+
+            hlp3*hlp3*(uz3*uz3+uz4*uz4));
 
     // A23
     hlp1 = ((z2 - z3)/y + 0.5* (z2+z3 - c)/x);
     hlp2 = ((z3 - z2)/y + 0.5* (z2+z3 - c)/x);
     hlp3 = -0.5* (z2+z3 - c)/x;
     sum += 1/(a23*a23) * (hlp1*hlp1*uz2*uz2+
-                          hlp2*hlp2*uz3*uz3+
-                          hlp3*hlp3*(uz4*uz4+uz1*uz1));
+            hlp2*hlp2*uz3*uz3+
+            hlp3*hlp3*(uz4*uz4+uz1*uz1));
 
     // A34
     hlp1 = ((z3 - z4)/x + 0.5* (z3+z4 - c)/y);
     hlp2 = ((z4 - z3)/x + 0.5* (z3+z4 - c)/y);
     hlp3 = -0.5* (z3+z4 - c)/y;
     sum += 1/(a34*a34) * (hlp1*hlp1*uz3*uz3+
-                          hlp2*hlp2*uz4*uz4+
-                          hlp3*hlp3*(uz1*uz1+uz2*uz2));
+            hlp2*hlp2*uz4*uz4+
+            hlp3*hlp3*(uz1*uz1+uz2*uz2));
     // A41
     hlp1 = ((z4 - z1)/y + 0.5* (z4+z1 - c)/x);
     hlp2 = ((z1 - z4)/y + 0.5* (z4+z1 - c)/x);
     hlp3 = -0.5* (z4+z1 - c)/x;
     sum += 1/(a41*a41) * (hlp1*hlp1*uz4*uz4+
-                          hlp2*hlp2*uz1*uz1+
-                          hlp3*hlp3*(uz2*uz2+uz3*uz3));
+            hlp2*hlp2*uz1*uz1+
+            hlp3*hlp3*(uz2*uz2+uz3*uz3));
 
     sum *= x*y/16;
 
@@ -1950,32 +2070,32 @@ square_area2_uncertainty(gdouble z1, gdouble z2, gdouble z3, gdouble z4,
     hlp2 = 2+2*(c-2*z1)*(c-z1-z2)/y;
     hlp2 = -4*(z2-z1)*(c-z1-z2)/y;
     sum += 1./(64*a12*a12)*y*((hlp1+0.25*hlp3)*(hlp1+0.25*hlp3)*ux1*ux1+
-                              (hlp2+0.25*hlp3)*(hlp2+0.25*hlp3)*ux2*ux2+
-                              hlp3*hlp3*(uz3*uz3+uz4*uz4));
+            (hlp2+0.25*hlp3)*(hlp2+0.25*hlp3)*ux2*ux2+
+            hlp3*hlp3*(uz3*uz3+uz4*uz4));
 
     // A23
     hlp1 = -2 + 2*(z3-z2)*(c-2*z3)/y;
     hlp2 = -2 - 2*(z3-z2)*(c-2*z2)/y;
     hlp3 = 4 + 4*(z3-z2)*(z3-z2)/y;
     sum += 1./(64*a23*a23)*y*((hlp1+0.25*hlp3)*(hlp1+0.25*hlp3)*uy2*uy2+
-                              (hlp2+0.25*hlp3)*(hlp2+0.25*hlp3)*uy3*uy3+
-                              hlp3*hlp3*(uy1*uy1+uy4*uy4));
+            (hlp2+0.25*hlp3)*(hlp2+0.25*hlp3)*uy3*uy3+
+            hlp3*hlp3*(uy1*uy1+uy4*uy4));
 
     // A34
     hlp1 = -2-2*(c-2*z4)*(c-z3-z4)/y;
     hlp2 = 2+2*(c-2*z3)*(c-z3-z4)/y;
     hlp3 = -4*(z4-z2)*(c-z3-z4)/y;
     sum += 1./(64*a34*a34)*y*((hlp1+0.25*hlp3)*(hlp1+0.25*hlp3)*ux3*ux3+
-                              (hlp2+0.25*hlp3)*(hlp2+0.25*hlp3)*ux4*ux4+
-                              hlp3*hlp3*(uz1*uz1+uz2*uz2));
+            (hlp2+0.25*hlp3)*(hlp2+0.25*hlp3)*ux4*ux4+
+            hlp3*hlp3*(uz1*uz1+uz2*uz2));
 
     // A41
     hlp1 = -2 + 2*(z1-z4)*(c-2*z1)/y;
     hlp2 = -2 - 2*(z1-z4)*(c-2*z4)/y;
     hlp3 = 4 + 4*(z1-z4)*(z1-z4)/y;
     sum += 1./(64*a41*a41)*y*((hlp1+0.25*hlp3)*(hlp1+0.25*hlp3)*uy4*uy4+
-                              (hlp2+0.25*hlp3)*(hlp2+0.25*hlp3)*uy1*uy1+
-                              hlp3*hlp3*(uy2*uy2+uy3*uy3));
+            (hlp2+0.25*hlp3)*(hlp2+0.25*hlp3)*uy1*uy1+
+            hlp3*hlp3*(uy2*uy2+uy3*uy3));
 
     // y contribution
     // A12
@@ -1983,32 +2103,32 @@ square_area2_uncertainty(gdouble z1, gdouble z2, gdouble z3, gdouble z4,
     hlp2 = -2 - 2*(z2-z1)*(c-2*z1)/x;
     hlp3 = 4 + 4*(z2-z1)*(z2-z1)/x;
     sum += 1./(64*a12*a12)*x*((hlp1+0.25*hlp3)*(hlp1+0.25*hlp3)*uy1*uy1+
-                              (hlp2+0.25*hlp3)*(hlp2+0.25*hlp3)*uy2*uy2+
-                              hlp3*hlp3*(uy3*uy3+uy4*uy4));
+            (hlp2+0.25*hlp3)*(hlp2+0.25*hlp3)*uy2*uy2+
+            hlp3*hlp3*(uy3*uy3+uy4*uy4));
 
     // A23
     hlp1 = -2-2*(c-2*z3)*(c-z2-z3)/x;
     hlp2 = 2+2*(c-2*z2)*(c-z2-z3)/x;
     hlp3 = -4*(z3-z2)*(c-z2-z3)/x;
     sum += 1./(64*a23*a23)*x*((hlp1+0.25*hlp3)*(hlp1+0.25*hlp3)*uy2*uy2+
-                              (hlp2+0.25*hlp3)*(hlp2+0.25*hlp3)*uy3*uy3+
-                              hlp3*hlp3*(uy1*uy1+uy4*uy4));
+            (hlp2+0.25*hlp3)*(hlp2+0.25*hlp3)*uy3*uy3+
+            hlp3*hlp3*(uy1*uy1+uy4*uy4));
 
     // A34
     hlp1 = -2 + 2*(z4-z3)*(c-2*z4)/x;
     hlp2 = -2 - 2*(z4-z3)*(c-2*z3)/x;
     hlp3 = 4 + 4*(z4-z3)*(z4-z3)/x;
     sum += 1./(64*a34*a34)*x*((hlp1+0.25*hlp3)*(hlp1+0.25*hlp3)*uy3*uy3+
-                              (hlp2+0.25*hlp3)*(hlp2+0.25*hlp3)*uy4*uy4+
-                              hlp3*hlp3*(uy1*uy1+uy2*uy2));
+            (hlp2+0.25*hlp3)*(hlp2+0.25*hlp3)*uy4*uy4+
+            hlp3*hlp3*(uy1*uy1+uy2*uy2));
 
     // A41
     hlp1 = -2-2*(c-2*z1)*(c-z4-z1)/x;
     hlp2 = 2+2*(c-2*z4)*(c-z4-z1)/x;
     hlp3 = -4*(z1-z4)*(c-z4-z1)/x;
     sum += 1./(64*a41*a41)*x*((hlp1+0.25*hlp3)*(hlp1+0.25*hlp3)*uy4*uy4+
-                              (hlp2+0.25*hlp3)*(hlp2+0.25*hlp3)*uy1*uy1+
-                              hlp3*hlp3*(uy2*uy2+uy3*uy3));
+            (hlp2+0.25*hlp3)*(hlp2+0.25*hlp3)*uy1*uy1+
+            hlp3*hlp3*(uy2*uy2+uy3*uy3));
 
     return sum;
 }
@@ -2043,13 +2163,13 @@ square_area2_uncertainty(gdouble z1, gdouble z2, gdouble z3, gdouble z4,
  *
  * Returns: The uncertainty of the area squared.
  **/
-static inline gdouble
+    static inline gdouble
 square_area2w_uncertainty(gdouble z1, gdouble z2, gdouble z3, gdouble z4,
-                          gdouble uz1, gdouble uz2, gdouble uz3, gdouble uz4,
-                          gdouble ux1, gdouble ux2, gdouble ux3, gdouble ux4,
-                          gdouble uy1, gdouble uy2, gdouble uy3, gdouble uy4,
-                          gint w1, gint w2, gint w3, gint w4,
-                          gdouble x, gdouble y)
+        gdouble uz1, gdouble uz2, gdouble uz3, gdouble uz4,
+        gdouble ux1, gdouble ux2, gdouble ux3, gdouble ux4,
+        gdouble uy1, gdouble uy2, gdouble uy3, gdouble uy4,
+        gint w1, gint w2, gint w3, gint w4,
+        gdouble x, gdouble y)
 {
     gdouble c;
     gdouble a12, a23, a34, a41;
@@ -2069,31 +2189,31 @@ square_area2w_uncertainty(gdouble z1, gdouble z2, gdouble z3, gdouble z4,
     hlp2 = ((z2 - z1)/x + 0.5* (z1+z2 - c)/y);
     hlp3 = -0.5* (z1+z2 - c)/y;
     sum += 0.25*(w1+w2)*(w1+w2)/(a12*a12) * (hlp1*hlp1*uz1*uz1+
-                                        hlp2*hlp2*uz2*uz2+
-                                        hlp3*hlp3*(uz3*uz3+uz4*uz4));
+            hlp2*hlp2*uz2*uz2+
+            hlp3*hlp3*(uz3*uz3+uz4*uz4));
 
     // A23
     hlp1 = ((z2 - z3)/y + 0.5* (z2+z3 - c)/x);
     hlp2 = ((z3 - z2)/y + 0.5* (z2+z3 - c)/x);
     hlp3 = -0.5* (z2+z3 - c)/x;
     sum += 0.25*(w2+w3)*(w2+w3)/(a23*a23) * (hlp1*hlp1*uz2*uz2+
-                                        hlp2*hlp2*uz3*uz3+
-                                        hlp3*hlp3*(uz4*uz4+uz1*uz1));
+            hlp2*hlp2*uz3*uz3+
+            hlp3*hlp3*(uz4*uz4+uz1*uz1));
 
     // A34
     hlp1 = ((z3 - z4)/x + 0.5* (z3+z4 - c)/y);
     hlp2 = ((z4 - z3)/x + 0.5* (z3+z4 - c)/y);
     hlp3 = -0.5* (z3+z4 - c)/y;
     sum += 0.25*(w3+w4)*(w3+w4)/(a34*a34) * (hlp1*hlp1*uz3*uz3+
-                                        hlp2*hlp2*uz4*uz4+
-                                        hlp3*hlp3*(uz1*uz1+uz2*uz2));
+            hlp2*hlp2*uz4*uz4+
+            hlp3*hlp3*(uz1*uz1+uz2*uz2));
     // A41
     hlp1 = ((z4 - z1)/y + 0.5* (z4+z1 - c)/x);
     hlp2 = ((z1 - z4)/y + 0.5* (z4+z1 - c)/x);
     hlp3 = -0.5* (z4+z1 - c)/x;
     sum += 0.25*(w4+w1)*(w4+w1)/(a41*a41) * (hlp1*hlp1*uz4*uz4+
-                                        hlp2*hlp2*uz1*uz1+
-                                        hlp3*hlp3*(uz2*uz2+uz3*uz3));
+            hlp2*hlp2*uz1*uz1+
+            hlp3*hlp3*(uz2*uz2+uz3*uz3));
 
     sum *= x*y/16;
 
@@ -2103,32 +2223,32 @@ square_area2w_uncertainty(gdouble z1, gdouble z2, gdouble z3, gdouble z4,
     hlp2 = 2+2*(c-2*z1)*(c-z1-z2)/y;
     hlp3 = -4*(z2-z1)*(c-z1-z2)/y;
     sum += 0.25*(w1+w2)*(w1+w2)/(64*a12*a12)*y*((hlp1+0.25*hlp3)*(hlp1+0.25*hlp3)*ux1*ux1+
-                                           (hlp2+0.25*hlp3)*(hlp2+0.25*hlp3)*ux2*ux2+
-                                           hlp3*hlp3*(uz3*uz3+uz4*uz4));
+            (hlp2+0.25*hlp3)*(hlp2+0.25*hlp3)*ux2*ux2+
+            hlp3*hlp3*(uz3*uz3+uz4*uz4));
 
     // A23
     hlp1 = -2 + 2*(z3-z2)*(c-2*z3)/y;
     hlp2 = -2 - 2*(z3-z2)*(c-2*z2)/y;
     hlp3 = 4 + 4*(z3-z2)*(z3-z2)/y;
     sum += 0.25*(w2+w3)*(w2+w3)/(64*a23*a23)*y*((hlp1+0.25*hlp3)*(hlp1+0.25*hlp3)*uy2*uy2+
-                                           (hlp2+0.25*hlp3)*(hlp2+0.25*hlp3)*uy3*uy3+
-                                           hlp3*hlp3*(uy1*uy1+uy4*uy4));
+            (hlp2+0.25*hlp3)*(hlp2+0.25*hlp3)*uy3*uy3+
+            hlp3*hlp3*(uy1*uy1+uy4*uy4));
 
     // A34
     hlp1 = -2-2*(c-2*z4)*(c-z3-z4)/y;
     hlp2 = 2+2*(c-2*z3)*(c-z3-z4)/y;
     hlp3 = -4*(z4-z2)*(c-z3-z4)/y;
     sum += 0.25*(w3+w4)*(w3+w4)/(64*a34*a34)*y*((hlp1+0.25*hlp3)*(hlp1+0.25*hlp3)*ux3*ux3+
-                                           (hlp2+0.25*hlp3)*(hlp2+0.25*hlp3)*ux4*ux4+
-                                           hlp3*hlp3*(uz1*uz1+uz2*uz2));
+            (hlp2+0.25*hlp3)*(hlp2+0.25*hlp3)*ux4*ux4+
+            hlp3*hlp3*(uz1*uz1+uz2*uz2));
 
     // A41
     hlp1 = -2 + 2*(z1-z4)*(c-2*z1)/y;
     hlp2 = -2 - 2*(z1-z4)*(c-2*z4)/y;
     hlp3 = 4 + 4*(z1-z4)*(z1-z4)/y;
     sum += 0.25*(w4+w1)*(w4+w1)/(64*a41*a41)*y*((hlp1+0.25*hlp3)*(hlp1+0.25*hlp3)*uy4*uy4+
-                                           (hlp2+0.25*hlp3)*(hlp2+0.25*hlp3)*uy1*uy1+
-                                           hlp3*hlp3*(uy2*uy2+uy3*uy3));
+            (hlp2+0.25*hlp3)*(hlp2+0.25*hlp3)*uy1*uy1+
+            hlp3*hlp3*(uy2*uy2+uy3*uy3));
 
     // y contribution
     // A12
@@ -2136,32 +2256,32 @@ square_area2w_uncertainty(gdouble z1, gdouble z2, gdouble z3, gdouble z4,
     hlp2 = -2 - 2*(z2-z1)*(c-2*z1)/x;
     hlp3 = 4 + 4*(z2-z1)*(z2-z1)/x;
     sum += 0.25*(w1+w2)*(w1+w2)/(64*a12*a12)*x*((hlp1+0.25*hlp3)*(hlp1+0.25*hlp3)*uy1*uy1+
-                                           (hlp2+0.25*hlp3)*(hlp2+0.25*hlp3)*uy2*uy2+
-                                           hlp3*hlp3*(uy3*uy3+uy4*uy4));
+            (hlp2+0.25*hlp3)*(hlp2+0.25*hlp3)*uy2*uy2+
+            hlp3*hlp3*(uy3*uy3+uy4*uy4));
 
     // A23
     hlp1 = -2-2*(c-2*z3)*(c-z2-z3)/x;
     hlp2 = 2+2*(c-2*z2)*(c-z2-z3)/x;
     hlp3 = -4*(z3-z2)*(c-z2-z3)/x;
     sum += 0.25*(w2+w3)*(w2+w3)/(64*a23*a23)*x*((hlp1+0.25*hlp3)*(hlp1+0.25*hlp3)*uy2*uy2+
-                                           (hlp2+0.25*hlp3)*(hlp2+0.25*hlp3)*uy3*uy3+
-                                           hlp3*hlp3*(uy1*uy1+uy4*uy4));
+            (hlp2+0.25*hlp3)*(hlp2+0.25*hlp3)*uy3*uy3+
+            hlp3*hlp3*(uy1*uy1+uy4*uy4));
 
     // A34
     hlp1 = -2 + 2*(z4-z3)*(c-2*z4)/x;
     hlp2 = -2 - 2*(z4-z3)*(c-2*z3)/x;
     hlp3 = 4 + 4*(z4-z3)*(z4-z3)/x;
     sum += 0.25*(w3+w4)*(w3+w4)/(64*a34*a34)*x*((hlp1+0.25*hlp3)*(hlp1+0.25*hlp3)*uy3*uy3+
-                                           (hlp2+0.25*hlp3)*(hlp2+0.25*hlp3)*uy4*uy4+
-                                           hlp3*hlp3*(uy1*uy1+uy2*uy2));
+            (hlp2+0.25*hlp3)*(hlp2+0.25*hlp3)*uy4*uy4+
+            hlp3*hlp3*(uy1*uy1+uy2*uy2));
 
     // A41
     hlp1 = -2-2*(c-2*z1)*(c-z4-z1)/x;
     hlp2 = 2+2*(c-2*z4)*(c-z4-z1)/x;
     hlp3 = -4*(z1-z4)*(c-z4-z1)/x;
     sum += 0.25*(w4+w1)*(w4+w1)/(64*a41*a41)*x*((hlp1+0.25*hlp3)*(hlp1+0.25*hlp3)*uy4*uy4+
-                                           (hlp2+0.25*hlp3)*(hlp2+0.25*hlp3)*uy1*uy1+
-                                           hlp3*hlp3*(uy2*uy2+uy3*uy3));
+            (hlp2+0.25*hlp3)*(hlp2+0.25*hlp3)*uy1*uy1+
+            hlp3*hlp3*(uy2*uy2+uy3*uy3));
 
     return sum;
 }
@@ -2195,20 +2315,20 @@ square_area2w_uncertainty(gdouble z1, gdouble z2, gdouble z3, gdouble z4,
  *
  * Returns: The uncertainty of the area squared.
  **/
-static gdouble
+    static gdouble
 stripe_area1_uncertainty(gint n,
-                         gint stride,
-                         const gdouble *r,
-                         const gdouble *rr,
-                         const gdouble *uz,
-                         const gdouble *uuz,
-                         const gdouble *ux,
-                         const gdouble *uux,
-                         const gdouble *uy,
-                         const gdouble *uuy,
-                         const gdouble *m,
-                         GwyMaskingType mode,
-                         gdouble q)
+        gint stride,
+        const gdouble *r,
+        const gdouble *rr,
+        const gdouble *uz,
+        const gdouble *uuz,
+        const gdouble *ux,
+        const gdouble *uux,
+        const gdouble *uy,
+        const gdouble *uuy,
+        const gdouble *m,
+        GwyMaskingType mode,
+        gdouble q)
 {
     gdouble sum = 0.0;
     gint j;
@@ -2217,44 +2337,44 @@ stripe_area1_uncertainty(gint n,
         if (mode == GWY_MASK_INCLUDE) {
             for (j = 0; j < n-1; j++)
                 sum += square_area1w_uncertainty(r[j*stride], r[(j + 1)*stride],
-                                     rr[(j + 1)*stride], rr[j*stride],
-                                     uz[j*stride], uz[(j + 1)*stride],
-                                     uuz[(j + 1)*stride], uuz[j*stride],
-                                     ux[j*stride], ux[(j + 1)*stride],
-                                     uux[(j + 1)*stride], uux[j*stride],
-                                     uy[j*stride], uy[(j + 1)*stride],
-                                     uuy[(j + 1)*stride], uuy[j*stride],
-                                     m[j*stride] > 0.0, m[(j + 1)*stride] > 0.0,
-                                     0, 0,
-                                     q);
+                        rr[(j + 1)*stride], rr[j*stride],
+                        uz[j*stride], uz[(j + 1)*stride],
+                        uuz[(j + 1)*stride], uuz[j*stride],
+                        ux[j*stride], ux[(j + 1)*stride],
+                        uux[(j + 1)*stride], uux[j*stride],
+                        uy[j*stride], uy[(j + 1)*stride],
+                        uuy[(j + 1)*stride], uuy[j*stride],
+                        m[j*stride] > 0.0, m[(j + 1)*stride] > 0.0,
+                        0, 0,
+                        q);
         }
         else {
             for (j = 0; j < n-1; j++)
                 sum += square_area1w_uncertainty(r[j*stride], r[(j + 1)*stride],
-                                                 rr[(j + 1)*stride], rr[j*stride],
-                                                 uz[j*stride], uz[(j + 1)*stride],
-                                                 uuz[(j + 1)*stride], uuz[j*stride],
-                                                 ux[j*stride], ux[(j + 1)*stride],
-                                                 uux[(j + 1)*stride], uux[j*stride],
-                                                 uy[j*stride], uy[(j + 1)*stride],
-                                                 uuy[(j + 1)*stride], uuy[j*stride],
-                                                 m[j*stride] < 1.0, m[(j + 1)*stride] < 1.0,
-                                                 0, 0,
-                                                 q);
+                        rr[(j + 1)*stride], rr[j*stride],
+                        uz[j*stride], uz[(j + 1)*stride],
+                        uuz[(j + 1)*stride], uuz[j*stride],
+                        ux[j*stride], ux[(j + 1)*stride],
+                        uux[(j + 1)*stride], uux[j*stride],
+                        uy[j*stride], uy[(j + 1)*stride],
+                        uuy[(j + 1)*stride], uuy[j*stride],
+                        m[j*stride] < 1.0, m[(j + 1)*stride] < 1.0,
+                        0, 0,
+                        q);
         }
     }
     else {
         for (j = 0; j < n-1; j++)
             sum += square_area1w_uncertainty(r[j*stride], r[(j + 1)*stride],
-                                             rr[(j + 1)*stride], rr[j*stride],
-                                             uz[j*stride], uz[(j + 1)*stride],
-                                             uuz[(j + 1)*stride], uuz[j*stride],
-                                             ux[j*stride], ux[(j + 1)*stride],
-                                             uux[(j + 1)*stride], uux[j*stride],
-                                             uy[j*stride], uy[(j + 1)*stride],
-                                             uuy[(j + 1)*stride], uuy[j*stride],
-                                             1, 1, 0, 0,
-                                             q);
+                    rr[(j + 1)*stride], rr[j*stride],
+                    uz[j*stride], uz[(j + 1)*stride],
+                    uuz[(j + 1)*stride], uuz[j*stride],
+                    ux[j*stride], ux[(j + 1)*stride],
+                    uux[(j + 1)*stride], uux[j*stride],
+                    uy[j*stride], uy[(j + 1)*stride],
+                    uuy[(j + 1)*stride], uuy[j*stride],
+                    1, 1, 0, 0,
+                    q);
     }
 
     return sum;
@@ -2289,64 +2409,80 @@ stripe_area1_uncertainty(gint n,
  *
  * Returns: The squared uncertainty of the area.
  **/
-static gdouble
+    static gdouble
 stripe_area2_uncertainty(gint n,
-                         gint stride,
-                         const gdouble *r,
-                         const gdouble *rr,
-                         const gdouble *uz,
-                         const gdouble *uuz,
-                         const gdouble *ux,
-                         const gdouble *uux,
-                         const gdouble *uy,
-                         const gdouble *uuy,
-                         const gdouble *m,
-                         gdouble x,
-                         gdouble y)
+        gint stride,
+        const gdouble *r,
+        const gdouble *rr,
+        const gdouble *uz,
+        const gdouble *uuz,
+        const gdouble *ux,
+        const gdouble *uux,
+        const gdouble *uy,
+        const gdouble *uuy,
+        const gdouble *m,
+        GwyMaskingType mode,
+        gdouble x,
+        gdouble y)
 {
     gdouble sum = 0.0;
     gint j;
 
-    if (m) {
+    if (m && mode == GWY_MASK_INCLUDE) {
         for (j = 0; j < n-1; j++)
             sum += square_area2w_uncertainty(r[j*stride], r[(j + 1)*stride],
-                                             rr[(j + 1)*stride], rr[j*stride],
-                                             uz[j*stride], uz[(j + 1)*stride],
-                                             uuz[(j + 1)*stride], uuz[j*stride],
-                                             ux[j*stride], ux[(j + 1)*stride],
-                                             uux[(j + 1)*stride], uux[j*stride],
-                                             uy[j*stride], uy[(j + 1)*stride],
-                                             uuy[(j + 1)*stride], uuy[j*stride],
-                                             m[j*stride] > 0.0, m[(j + 1)*stride] > 0.0,
-                                             0, 0,
-                                             x, y);
+                    rr[(j + 1)*stride], rr[j*stride],
+                    uz[j*stride], uz[(j + 1)*stride],
+                    uuz[(j + 1)*stride], uuz[j*stride],
+                    ux[j*stride], ux[(j + 1)*stride],
+                    uux[(j + 1)*stride], uux[j*stride],
+                    uy[j*stride], uy[(j + 1)*stride],
+                    uuy[(j + 1)*stride], uuy[j*stride],
+                    m[j*stride] > 0.0, m[(j + 1)*stride] > 0.0,
+                    0, 0,
+                    x, y);
+    }
+    else if (m && mode == GWY_MASK_EXCLUDE) {
+        for (j = 0; j < n-1; j++)
+            sum += square_area2w_uncertainty(r[j*stride], r[(j + 1)*stride],
+                    rr[(j + 1)*stride], rr[j*stride],
+                    uz[j*stride], uz[(j + 1)*stride],
+                    uuz[(j + 1)*stride], uuz[j*stride],
+                    ux[j*stride], ux[(j + 1)*stride],
+                    uux[(j + 1)*stride], uux[j*stride],
+                    uy[j*stride], uy[(j + 1)*stride],
+                    uuy[(j + 1)*stride], uuy[j*stride],
+                    m[j*stride] < 1.0, m[(j + 1)*stride] < 1.0,
+                    0, 0,
+                    x, y);
+
     }
     else {
         for (j = 0; j < n-1; j++)
             sum += square_area2w_uncertainty(r[j*stride], r[(j + 1)*stride],
-                                             rr[(j + 1)*stride], rr[j*stride],
-                                             uz[j*stride], uz[(j + 1)*stride],
-                                             uuz[(j + 1)*stride], uuz[j*stride],
-                                             ux[j*stride], ux[(j + 1)*stride],
-                                             uux[(j + 1)*stride], uux[j*stride],
-                                             uy[j*stride], uy[(j + 1)*stride],
-                                             uuy[(j + 1)*stride], uuy[j*stride],
-                                             1, 1, 0, 0,
-                                             x, y);
+                    rr[(j + 1)*stride], rr[j*stride],
+                    uz[j*stride], uz[(j + 1)*stride],
+                    uuz[(j + 1)*stride], uuz[j*stride],
+                    ux[j*stride], ux[(j + 1)*stride],
+                    uux[(j + 1)*stride], uux[j*stride],
+                    uy[j*stride], uy[(j + 1)*stride],
+                    uuy[(j + 1)*stride], uuy[j*stride],
+                    1, 1, 0, 0,
+                    x, y);
     }
 
     return sum;
 }
 
-static gdouble
+    static gdouble
 calculate_surface_area_uncertainty(GwyDataField *dfield,
-                                   GwyDataField *uncz_field,
-                                   GwyDataField *uncx_field,
-                                   GwyDataField *uncy_field,
-                                   GwyDataField *mask,
-                                   GwyMaskingType mode,
-                                   gint col, gint row,
-                                   gint width, gint height)
+        GwyDataField *uncz_field,
+        GwyDataField *uncx_field,
+        GwyDataField *uncy_field,
+        GwyDataField *mask,
+        GwyMaskingType mode,
+        gint col, gint row,
+        gint width, gint height)
 {
     const gdouble *r, *m, *dataul, *maskul, *uzul, *uxul, *uyul, *ux, *uz, *uy;
     gint i, j, xres, yres, s;
@@ -2371,7 +2507,7 @@ calculate_surface_area_uncertainty(GwyDataField *dfield,
     if (mask && mode != GWY_MASK_IGNORE) {
         maskul = mask->data + xres*row + col;
         if (fabs(log(x/y)) < 1e-7) {
-         //    Inside
+            //    Inside
             for (i = 0; i < height-1; i++) {
                 r = dataul + xres*i;
                 uz = uzul + xres*i;
@@ -2381,67 +2517,67 @@ calculate_surface_area_uncertainty(GwyDataField *dfield,
                 if (mode == GWY_MASK_INCLUDE) {
                     for (j = 0; j < width-1; j++)
                         sum += square_area1w_uncertainty(r[j], r[j+1],
-                                                         r[j+xres+1], r[j+xres],
-                                                         uz[j], uz[j+1],
-                                                         uz[j+xres+1], uz[j+xres],
-                                                         ux[j], ux[j+1],
-                                                         ux[j+xres+1], ux[j+xres],
-                                                         uy[j], uy[j+1],
-                                                         uy[j+xres+1], uy[j+xres],
-                                                         m[j] > 0.0, m[j+1] > 0.0,
-                                                         m[j+xres+1] > 0.0, m[j+xres] > 0.0,
-                                                         q);
+                                r[j+xres+1], r[j+xres],
+                                uz[j], uz[j+1],
+                                uz[j+xres+1], uz[j+xres],
+                                ux[j], ux[j+1],
+                                ux[j+xres+1], ux[j+xres],
+                                uy[j], uy[j+1],
+                                uy[j+xres+1], uy[j+xres],
+                                m[j] > 0.0, m[j+1] > 0.0,
+                                m[j+xres+1] > 0.0, m[j+xres] > 0.0,
+                                q);
                 }
                 else {
                     for (j = 0; j < width-1; j++)
                         sum += square_area1w_uncertainty(r[j], r[j+1],
-                                                         r[j+xres+1], r[j+xres],
-                                                         uz[j], uz[j+1],
-                                                         uz[j+xres+1], uz[j+xres],
-                                                         ux[j], ux[j+1],
-                                                         ux[j+xres+1], ux[j+xres],
-                                                         uy[j], uy[j+1],
-                                                         uy[j+xres+1], uy[j+xres],
-                                                         m[j] < 1.0, m[j+1] < 1.0,
-                                                         m[j+xres+1] < 1.0, m[j+xres] < 1.0,
-                                                         q);
+                                r[j+xres+1], r[j+xres],
+                                uz[j], uz[j+1],
+                                uz[j+xres+1], uz[j+xres],
+                                ux[j], ux[j+1],
+                                ux[j+xres+1], ux[j+xres],
+                                uy[j], uy[j+1],
+                                uy[j+xres+1], uy[j+xres],
+                                m[j] < 1.0, m[j+1] < 1.0,
+                                m[j+xres+1] < 1.0, m[j+xres] < 1.0,
+                                q);
                 }
             }
 
             // Top row
             s = !(row == 0);
             sum += stripe_area1_uncertainty(width, 1, dataul, dataul - s*xres,
-                                            uzul, uzul - s*xres,
-                                            uxul, uxul - s*xres, uyul, uyul - s*xres,
-                                            maskul, mode, q);
+                    uzul, uzul - s*xres,
+                    uxul, uxul - s*xres, uyul, uyul - s*xres,
+                    maskul, mode, q);
 
             // Bottom row
             s = !(row + height == yres);
             sum += stripe_area1_uncertainty(width, 1,
-                                            dataul + xres*(height-1),
-                                            dataul + xres*(height-1 + s),
-                                            uzul + xres*(height-1),
-                                            uzul + xres*(height-1 + s),
-                                            uxul + xres*(height-1),
-                                            uxul + xres*(height-1 + s),
-                                            uyul + xres*(height-1),
-                                            uyul + xres*(height-1 + s),
-                                            maskul + xres*(height-1), mode, q);
+                    dataul + xres*(height-1),
+                    dataul + xres*(height-1 + s),
+                    uzul + xres*(height-1),
+                    uzul + xres*(height-1 + s),
+                    uxul + xres*(height-1),
+                    uxul + xres*(height-1 + s),
+                    uyul + xres*(height-1),
+                    uyul + xres*(height-1 + s),
+                    maskul + xres*(height-1), mode, q);
 
             // Left column
             s = !(col == 0);
             sum += stripe_area1_uncertainty(height, xres, dataul, dataul - s,
-                                            uzul, uzul - s,
-                                            uxul, uxul - s, uyul, uyul - s,
-                                            maskul, mode, q);
+                    uzul, uzul - s,
+                    uxul, uxul - s, uyul, uyul - s,
+                    maskul, mode, q);
             // Right column
             s = !(col + width == xres);
             sum += stripe_area1_uncertainty(height, xres,
-                                            dataul + width-1, dataul + width-1 + s,
-                                            uzul + width-1, uzul + width-1 + s,
-                                            uxul + width-1, uxul + width-1 + s,
-                                            uyul + width-1, uyul + width-1 + s,
-                                            maskul + width-1, mode, q);
+                    dataul + width-1, dataul + width-1 + s,
+                    uzul + width-1, uzul + width-1 + s,
+                    uxul + width-1, uxul + width-1 + s,
+                    uyul + width-1, uyul + width-1 + s,
+                    maskul + width-1, mode, q);
         }
         else {
             // Inside
@@ -2451,60 +2587,76 @@ calculate_surface_area_uncertainty(GwyDataField *dfield,
                 uz = uzul + xres*i;
                 ux = uxul + xres*i;
                 uy = uyul + xres*i;
-                for (j = 0; j < width-1; j++)
-                    sum += square_area2w_uncertainty(r[j], r[j+1],
-                                                     r[j+xres+1], r[j+xres],
-                                                     uz[j], uz[j+1],
-                                                     uz[j+xres+1], uz[j+xres],
-                                                     ux[j], ux[j+1],
-                                                     ux[j+xres+1], ux[j+xres],
-                                                     uy[j], uy[j+1],
-                                                     uy[j+xres+1], uy[j+xres],
-                                                     m[j] > 0.0, m[j+1] > 0.0,
-                                                     m[j+xres+1] > 0.0, m[j+xres] > 0.0,
-                                                     x, y);
+                if (mode ==GWY_MASK_INCLUDE) {
+                    for (j = 0; j < width-1; j++)
+                        sum += square_area2w_uncertainty(r[j], r[j+1],
+                                r[j+xres+1], r[j+xres],
+                                uz[j], uz[j+1],
+                                uz[j+xres+1], uz[j+xres],
+                                ux[j], ux[j+1],
+                                ux[j+xres+1], ux[j+xres],
+                                uy[j], uy[j+1],
+                                uy[j+xres+1], uy[j+xres],
+                                m[j] > 0.0, m[j+1] > 0.0,
+                                m[j+xres+1] > 0.0, m[j+xres] > 0.0,
+                                x, y);
+                }
+                else {
+                    for (j = 0; j < width-1; j++)
+                        sum += square_area2w_uncertainty(r[j], r[j+1],
+                                r[j+xres+1], r[j+xres],
+                                uz[j], uz[j+1],
+                                uz[j+xres+1], uz[j+xres],
+                                ux[j], ux[j+1],
+                                ux[j+xres+1], ux[j+xres],
+                                uy[j], uy[j+1],
+                                uy[j+xres+1], uy[j+xres],
+                                m[j] < 1.0, m[j+1] < 1.0,
+                                m[j+xres+1] < 1.0, m[j+xres] < 1.0,
+                                x, y);
+                }
             }
 
             // Top row
             s = !(row == 0);
             sum += stripe_area2_uncertainty(width, 1, dataul, dataul - s*xres,
-                                            uzul, uzul - s*xres,
-                                            uxul, uxul - s*xres,
-                                            uyul, uyul - s*xres,
-                                            maskul, x, y);
+                    uzul, uzul - s*xres,
+                    uxul, uxul - s*xres,
+                    uyul, uyul - s*xres,
+                    maskul,mode, x, y);
 
             // Bottom row
             s = !(row + height == yres);
             sum += stripe_area2_uncertainty(width, 1,
-                                            dataul + xres*(height-1),
-                                            dataul + xres*(height-1 + s),
-                                            uzul + xres*(height-1),
-                                            uzul + xres*(height-1 + s),
-                                            uxul + xres*(height-1),
-                                            uxul + xres*(height-1 + s),
-                                            uyul + xres*(height-1),
-                                            uyul + xres*(height-1 + s),
-                                            maskul + xres*(height-1),
-                                            x, y);
+                    dataul + xres*(height-1),
+                    dataul + xres*(height-1 + s),
+                    uzul + xres*(height-1),
+                    uzul + xres*(height-1 + s),
+                    uxul + xres*(height-1),
+                    uxul + xres*(height-1 + s),
+                    uyul + xres*(height-1),
+                    uyul + xres*(height-1 + s),
+                    maskul + xres*(height-1),
+                    mode,x, y);
 
             // Left column
             s = !(col == 0);
             sum += stripe_area2_uncertainty(height, xres, dataul, dataul - s,
-                                            uzul, uzul - s,
-                                            uyul, uyul - s,
-                                            uxul, uxul - s,
-                                            maskul, y, x);
+                    uzul, uzul - s,
+                    uyul, uyul - s,
+                    uxul, uxul - s,
+                    maskul, mode, y, x);
 
 
             // Right column
             s = !(col + width == xres);
             sum += stripe_area2_uncertainty(height, xres,
-                                            dataul + width-1, dataul + width-1 + s,
-                                            uzul + width-1, uzul + width-1 + s,
-                                            uyul + width-1, uyul + width-1 + s,
-                                            uxul + width-1, uxul + width-1 + s,
-                                            maskul + width-1,
-                                            y, x);
+                    dataul + width-1, dataul + width-1 + s,
+                    uzul + width-1, uzul + width-1 + s,
+                    uyul + width-1, uyul + width-1 + s,
+                    uxul + width-1, uxul + width-1 + s,
+                    maskul + width-1,
+                    mode,y, x);
         }
 
         // Four corner quater-pixels are flat, so no uncertainty comes from them.
@@ -2519,50 +2671,50 @@ calculate_surface_area_uncertainty(GwyDataField *dfield,
                 uy = uyul + xres*i;
                 for (j = 0; j < width-1; j++) {
                     sum += square_area1_uncertainty(r[j], r[j+1], r[j+xres+1], r[j+xres],
-                                                    uz[j], uz[j+1], uz[j+xres+1], uz[j+xres],
-                                                    ux[j], ux[j+1], ux[j+xres+1], ux[j+xres],
-                                                    uy[j], uy[j+1], uy[j+xres+1], uy[j+xres],
-                                                    q);
+                            uz[j], uz[j+1], uz[j+xres+1], uz[j+xres],
+                            ux[j], ux[j+1], ux[j+xres+1], ux[j+xres],
+                            uy[j], uy[j+1], uy[j+xres+1], uy[j+xres],
+                            q);
                 }
             }
 
             // Top row
             s = !(row == 0);
             sum += stripe_area1_uncertainty(width, 1, dataul, dataul - s*xres,
-                                            uzul, uzul - s*xres,
-                                            uxul, uxul - s*xres,
-                                            uyul, uyul - s*xres,
-                                            NULL, GWY_MASK_IGNORE, q);
+                    uzul, uzul - s*xres,
+                    uxul, uxul - s*xres,
+                    uyul, uyul - s*xres,
+                    NULL, GWY_MASK_IGNORE, q);
 
             // Bottom row
             s = !(row + height == yres);
             sum += stripe_area1_uncertainty(width, 1,
-                                            dataul + xres*(height-1),
-                                            dataul + xres*(height-1 + s),
-                                            uzul + xres*(height-1),
-                                            uzul + xres*(height-1 + s),
-                                            uxul + xres*(height-1),
-                                            uxul + xres*(height-1 + s),
-                                            uyul + xres*(height-1),
-                                            uyul + xres*(height-1 + s),
-                                            NULL, GWY_MASK_IGNORE, q);
+                    dataul + xres*(height-1),
+                    dataul + xres*(height-1 + s),
+                    uzul + xres*(height-1),
+                    uzul + xres*(height-1 + s),
+                    uxul + xres*(height-1),
+                    uxul + xres*(height-1 + s),
+                    uyul + xres*(height-1),
+                    uyul + xres*(height-1 + s),
+                    NULL, GWY_MASK_IGNORE, q);
 
             // Left column
             s = !(col == 0);
             sum += stripe_area1_uncertainty(height, xres, dataul, dataul - s,
-                                            uzul, uzul - s,
-                                            uxul, uxul - s,
-                                            uyul, uyul - s,
-                                            NULL, GWY_MASK_IGNORE, q);
+                    uzul, uzul - s,
+                    uxul, uxul - s,
+                    uyul, uyul - s,
+                    NULL, GWY_MASK_IGNORE, q);
 
             // Right column
             s = !(col + width == xres);
             sum += stripe_area1_uncertainty(height, xres,
-                                            dataul + width-1, dataul + width-1 + s,
-                                            uzul + width-1, uzul + width-1 + s,
-                                            uxul + width-1, uxul + width-1 + s,
-                                            uyul + width-1, uyul + width-1 + s,
-                                            NULL, GWY_MASK_IGNORE, q);
+                    dataul + width-1, dataul + width-1 + s,
+                    uzul + width-1, uzul + width-1 + s,
+                    uxul + width-1, uxul + width-1 + s,
+                    uyul + width-1, uyul + width-1 + s,
+                    NULL, GWY_MASK_IGNORE, q);
         }
         else {
             for (i = 0; i < height-1; i++) {
@@ -2572,50 +2724,51 @@ calculate_surface_area_uncertainty(GwyDataField *dfield,
                 uy = uyul + xres*i;
                 for (j = 0; j < width-1; j++)
                     sum += square_area2_uncertainty(r[j], r[j+1], r[j+xres+1], r[j+xres],
-                                                    uz[j], uz[j+1], uz[j+xres+1], uz[j+xres],
-                                                    ux[j], ux[j+1], ux[j+xres+1], ux[j+xres],
-                                                    uy[j], uy[j+1], uy[j+xres+1], uy[j+xres],
-                                                    x, y);
+                            uz[j], uz[j+1], uz[j+xres+1], uz[j+xres],
+                            ux[j], ux[j+1], ux[j+xres+1], ux[j+xres],
+                            uy[j], uy[j+1], uy[j+xres+1], uy[j+xres],
+                            x, y);
             }
 
             // Top row
             s = !(row == 0);
             sum += stripe_area2_uncertainty(width, 1, dataul, dataul - s*xres,
-                                            uzul, uzul - s*xres,
-                                            uxul, uxul - s*xres,
-                                            uyul, uyul - s*xres,
-                                            NULL, x, y);
+                    uzul, uzul - s*xres,
+                    uxul, uxul - s*xres,
+                    uyul, uyul - s*xres,
+                    NULL, GWY_MASK_IGNORE, x, y);
 
             // Bottom row
             s = !(row + height == yres);
             sum += stripe_area2_uncertainty(width, 1,
-                                            dataul + xres*(height-1),
-                                            dataul + xres*(height-1 + s),
-                                            uzul + xres*(height-1),
-                                            uzul + xres*(height-1 + s),
-                                            uxul + xres*(height-1),
-                                            uxul + xres*(height-1 + s),
-                                            uyul + xres*(height-1),
-                                            uyul + xres*(height-1 + s),
-                                            NULL,
-                                            x, y);
+                    dataul + xres*(height-1),
+                    dataul + xres*(height-1 + s),
+                    uzul + xres*(height-1),
+                    uzul + xres*(height-1 + s),
+                    uxul + xres*(height-1),
+                    uxul + xres*(height-1 + s),
+                    uyul + xres*(height-1),
+                    uyul + xres*(height-1 + s),
+                    NULL, GWY_MASK_IGNORE,
+                    x, y);
 
             // Left column
             s = !(col == 0);
             sum += stripe_area2_uncertainty(height, xres, dataul, dataul - s,
-                                            uzul, uzul -s,
-                                            uyul, uyul -s,
-                                            uxul, uxul -s,
-                                            NULL, y, x);
+                    uzul, uzul -s,
+                    uyul, uyul -s,
+                    uxul, uxul -s,
+                    NULL, GWY_MASK_IGNORE,
+                    y, x);
 
             // Right column
             s = !(col + width == xres);
             sum += stripe_area2_uncertainty(height, xres,
-                                            dataul + width-1, dataul + width-1 + s,
-                                            uzul + width-1, uzul + width-1 + s,
-                                            uyul + width-1, uyul + width-1 + s,
-                                            uxul + width-1, uxul + width-1 + s, NULL,
-                                            y, x);
+                    dataul + width-1, dataul + width-1 + s,
+                    uzul + width-1, uzul + width-1 + s,
+                    uyul + width-1, uyul + width-1 + s,
+                    uxul + width-1, uxul + width-1 + s, NULL,
+                    GWY_MASK_IGNORE, y, x);
         }
 
         // The four corner quater-pixels as flat, so their z uncertainty is 0.
@@ -2636,7 +2789,7 @@ calculate_surface_area_uncertainty(GwyDataField *dfield,
  *
  * Since: 2.23
  **/
-gdouble
+    gdouble
 gwy_data_field_get_surface_area_uncertainty(GwyDataField *data_field,
                                             GwyDataField *uncz_field,
                                             GwyDataField *uncx_field,
@@ -2647,9 +2800,9 @@ gwy_data_field_get_surface_area_uncertainty(GwyDataField *data_field,
     g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), uarea);
 
     uarea = calculate_surface_area_uncertainty(data_field, uncz_field, uncx_field,
-                                               uncy_field,
-                                               NULL, GWY_MASK_IGNORE,
-                                               0, 0, data_field->xres, data_field->yres);
+            uncy_field,
+            NULL, GWY_MASK_IGNORE,
+            0, 0, data_field->xres, data_field->yres);
 
     return sqrt(uarea);
 }
@@ -2677,20 +2830,20 @@ gwy_data_field_get_surface_area_uncertainty(GwyDataField *data_field,
  *
  * Since: 2.23
  **/
-gdouble
+    gdouble
 gwy_data_field_area_get_surface_area_uncertainty(GwyDataField *data_field,
-                                     GwyDataField *uncz_field,
-                                     GwyDataField *uncx_field,
-                                     GwyDataField *uncy_field,
-                                     GwyDataField *mask,
-                                     gint col, gint row,
-                                     gint width, gint height)
+        GwyDataField *uncz_field,
+        GwyDataField *uncx_field,
+        GwyDataField *uncy_field,
+        GwyDataField *mask,
+        gint col, gint row,
+        gint width, gint height)
 {
 
     gdouble uarea = gwy_data_field_area_get_surface_area_mask_uncertainty(data_field,
-                                                                          uncz_field, uncx_field, uncy_field, mask,
-                                                                          GWY_MASK_INCLUDE,
-                                                                          col, row, width, height);
+            uncz_field, uncx_field, uncy_field, mask,
+            GWY_MASK_INCLUDE,
+            col, row, width, height);
     return uarea;
 }
 
@@ -2717,38 +2870,38 @@ gwy_data_field_area_get_surface_area_uncertainty(GwyDataField *data_field,
  *
  * Since: 2.23
  **/
-gdouble
+    gdouble
 gwy_data_field_area_get_surface_area_mask_uncertainty(GwyDataField *data_field,
-                                                      GwyDataField *uncz_field,
-                                                      GwyDataField *uncx_field,
-                                                      GwyDataField *uncy_field,
-                                                      GwyDataField *mask,
-                                                      GwyMaskingType mode,
-                                                      gint col, gint row,
-                                                      gint width, gint height)
+        GwyDataField *uncz_field,
+        GwyDataField *uncx_field,
+        GwyDataField *uncy_field,
+        GwyDataField *mask,
+        GwyMaskingType mode,
+        gint col, gint row,
+        gint width, gint height)
 {
     gdouble uarea = 0.0;
 
     g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), uarea);
     g_return_val_if_fail(!mask || (GWY_IS_DATA_FIELD(mask)
-                                   && mask->xres == data_field->xres
-                                   && mask->yres == data_field->yres), uarea);
+                && mask->xres == data_field->xres
+                && mask->yres == data_field->yres), uarea);
     g_return_val_if_fail(col >= 0 && row >= 0
-                         && width >= 0 && height >= 0
-                         && col + width <= data_field->xres
-                         && row + height <= data_field->yres,
-                         uarea);
+            && width >= 0 && height >= 0
+            && col + width <= data_field->xres
+            && row + height <= data_field->yres,
+            uarea);
 
     if (!mask
-        && row == 0 && col == 0
-        && width == data_field->xres && height == data_field->yres)
+            && row == 0 && col == 0
+            && width == data_field->xres && height == data_field->yres)
         return gwy_data_field_get_surface_area_uncertainty(data_field, uncz_field,
-                                                           uncx_field, uncy_field);
+                uncx_field, uncy_field);
 
     uarea = calculate_surface_area_uncertainty(data_field, uncz_field,
-                                               uncx_field, uncy_field,
-                                               mask, mode,
-                                               col, row, width, height);
+            uncx_field, uncy_field,
+            mask, mode,
+            col, row, width, height);
     return sqrt(uarea);
 }
 
@@ -2772,15 +2925,15 @@ gwy_data_field_area_get_surface_area_mask_uncertainty(GwyDataField *data_field,
  *
  * Since: 2.23
  **/
-gdouble
+    gdouble
 gwy_data_field_area_get_median_uncertainty(GwyDataField *dfield,
-                                           GwyDataField *uncz_field,
-                                           GwyDataField *mask,
-                                           gint col, gint row,
-                                           gint width, gint height)
+        GwyDataField *uncz_field,
+        GwyDataField *mask,
+        gint col, gint row,
+        gint width, gint height)
 {
     return gwy_data_field_area_get_median_uncertainty_mask(dfield, uncz_field, mask, GWY_MASK_INCLUDE,
-                                                           col, row, width, height);
+            col, row, width, height);
 }
 
 /**
@@ -2801,13 +2954,13 @@ gwy_data_field_area_get_median_uncertainty(GwyDataField *dfield,
  *
  * Since: 2.23
  **/
-gdouble
+    gdouble
 gwy_data_field_area_get_median_uncertainty_mask(GwyDataField *dfield,
-                                                GwyDataField *uncz_field,
-                                                GwyDataField *mask,
-                                                GwyMaskingType mode,
-                                                gint col, gint row,
-                                                gint width, gint height)
+        GwyDataField *uncz_field,
+        GwyDataField *mask,
+        GwyMaskingType mode,
+        gint col, gint row,
+        gint width, gint height)
 {
     gdouble med_unc = G_MAXDOUBLE;
     const gdouble *datapos, *mpos, *uncpos;
@@ -2819,14 +2972,14 @@ gwy_data_field_area_get_median_uncertainty_mask(GwyDataField *dfield,
     g_return_val_if_fail(GWY_IS_DATA_FIELD(dfield), med_unc);
 
     g_return_val_if_fail(!mask || (GWY_IS_DATA_FIELD(mask)
-                                   && mask->xres == dfield->xres
-                                   && mask->yres == dfield->yres),
-                         med_unc);
+                && mask->xres == dfield->xres
+                && mask->yres == dfield->yres),
+            med_unc);
     g_return_val_if_fail(col >= 0 && row >= 0
-                         && width >= 0 && height >= 0
-                         && col + width <= dfield->xres
-                         && row + height <= dfield->yres,
-                         med_unc);
+            && width >= 0 && height >= 0
+            && col + width <= dfield->xres
+            && row + height <= dfield->yres,
+            med_unc);
     if (!width || !height)
         return med_unc;
 
@@ -2879,7 +3032,7 @@ gwy_data_field_area_get_median_uncertainty_mask(GwyDataField *dfield,
     }
 
     if (col == 0 && width == dfield->xres
-        && row == 0 && height == dfield->yres)
+            && row == 0 && height == dfield->yres)
         return gwy_data_field_get_median_uncertainty(dfield, uncz_field);
 
     buffer = g_new(gdouble, width*height);
@@ -2893,9 +3046,9 @@ gwy_data_field_area_get_median_uncertainty_mask(GwyDataField *dfield,
     else {
         for (i = 0; i < height; i++) {
             memcpy(buffer + i*width, datapos + i*dfield->xres,
-                   width*sizeof(gdouble));
+                    width*sizeof(gdouble));
             memcpy(ubuffer + i*width, uncpos + i*uncz_field->xres,
-                   width*sizeof(gdouble));
+                    width*sizeof(gdouble));
         }
     }
     med_unc = gwy_math_median_uncertainty(width*height, buffer, ubuffer);
@@ -2916,9 +3069,9 @@ gwy_data_field_area_get_median_uncertainty_mask(GwyDataField *dfield,
  *
  * Since: 2.23
  **/
-gdouble
+    gdouble
 gwy_data_field_get_median_uncertainty(GwyDataField *data_field,
-                                      GwyDataField *uncz_field)
+        GwyDataField *uncz_field)
 {
     gint xres, yres;
     gdouble *buffer, *ubuffer;
@@ -2957,32 +3110,33 @@ gwy_data_field_get_median_uncertainty(GwyDataField *data_field,
  *
  * Since: 2.23
  **/
-void
+    void
 gwy_data_field_area_dh_uncertainty(GwyDataField *data_field,
-                       GwyDataField *uncz_field,
-                       GwyDataField *mask,
-                       GwyDataLine *target_line,
-                       gint col, gint row,
-                       gint width, gint height,
-                       gint nstats)
+        GwyDataField *uncz_field,
+        GwyDataField *mask,
+        GwyDataLine *target_line,
+        gint col, gint row,
+        gint width, gint height,
+        gint nstats)
 {
     GwySIUnit *fieldunit, *lineunit, *rhounit;
-    gdouble min, max;
-    gdouble max_unc, min_unc;
-    const gdouble *drow, *mrow;
-    gint i, j, k;
+    gdouble min, max, max_unc;
+    const gdouble *drow, *mrow, *urow;
+    gdouble *val, *valmin, *valmax;
+    gint i, j, k, l, m, k1, k2, l1, l2;
+    gint imin=0, imax=0, jmin=0, jmax=0;
     guint nn;
 
     g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
     g_return_if_fail(GWY_IS_DATA_FIELD(uncz_field));
     g_return_if_fail(!mask || (GWY_IS_DATA_FIELD(mask)
-                               && mask->xres == data_field->xres
-                               && mask->yres == data_field->yres));
+                && mask->xres == data_field->xres
+                && mask->yres == data_field->yres));
     g_return_if_fail(GWY_IS_DATA_LINE(target_line));
     g_return_if_fail(col >= 0 && row >= 0
-                     && width >= 1 && height >= 1
-                     && col + width <= data_field->xres
-                     && row + height <= data_field->yres);
+            && width >= 1 && height >= 1
+            && col + width <= data_field->xres
+            && row + height <= data_field->yres);
 
     if (mask) {
         nn = 0;
@@ -3004,10 +3158,53 @@ gwy_data_field_area_dh_uncertainty(GwyDataField *data_field,
 
     gwy_data_line_resample(target_line, nstats, GWY_INTERPOLATION_NONE);
     gwy_data_line_clear(target_line);
-    gwy_data_field_area_get_min_max(data_field, mask,
-                                    col, row, width, height,
-                                    &min, &max);
 
+    /* Find minimum and maximum and their position */
+    min=G_MAXDOUBLE;
+    max=-G_MAXDOUBLE;
+
+    if (mask) {
+        for (j = 0; j < height; j++) {
+            drow = data_field->data + (j + row)*data_field->xres + col;
+            mrow = mask->data + (j + row)*mask->xres + col;
+
+            for (i = 0; i < width; i++) {
+                if (G_UNLIKELY(min > *drow) && *mrow > 0.0) {
+                    jmin = j + row;
+                    imin = i + col ;
+                    min = *drow;
+                }
+                if (G_UNLIKELY(max < *drow) && *mrow > 0.0) {
+                    jmax = j + row;
+                    imax = i + col ;
+                    max = *drow;
+                }
+                drow++;
+                mrow++;
+            }
+        }
+    }
+    else {
+        for (j = 0; j < height; j++) {
+            drow = data_field->data + (j + row)*data_field->xres + col;
+
+            for (i = 0; i < width; i++) {
+                if (G_UNLIKELY(min > *drow)) {
+                    jmin = j + row;
+                    imin = i + col ;
+                    min = *drow;
+                }
+                if (G_UNLIKELY(max < *drow)) {
+                    jmax = j + row;
+                    imax = i + col ;
+                    max = *drow;
+                }
+                drow++;
+                mrow++;
+            }
+        }
+
+    }
 
     /* Set proper units */
     fieldunit = gwy_data_field_get_si_unit_z(data_field);
@@ -3018,61 +3215,146 @@ gwy_data_field_area_dh_uncertainty(GwyDataField *data_field,
 
     /* Handle border cases */
     if (min == max) {
+        max_unc = gwy_data_field_get_val(uncz_field, imax, jmax);
         gwy_data_line_set_real(target_line, min ? max : 1.0);
-        gwy_data_field_area_get_min_max(uncz_field, mask,
-                                    col, row, width, height,
-                                    &min_unc, &max_unc);
         target_line->data[0] = min? nstats/(max*max)*max_unc :0;
         return;
     }
 
-    /* Calculate height distribution */
     gwy_data_line_set_real(target_line, max - min);
     gwy_data_line_set_offset(target_line, min);
+
     if (mask) {
-        for (i = 0; i < height; i++) {
-            drow = data_field->data + (i + row)*data_field->xres + col;
-            mrow = mask->data + (i + row)*mask->xres + col;
-
-            for (j = 0; j < width; j++) {
-                if (mrow[j]) {
-                    k = (gint)((drow[j] - min)/(max - min)*nstats);
+        /* all terms except maximum and minimum */
+        for (l = 0; l < height; l++) {
+            urow = uncz_field->data + (l + row)*data_field->xres + col;
+            drow = data_field->data + (l + row)*data_field->xres + col;
+            mrow = mask->data + (l + row)*mask->xres + col;
+            for (k = 0; k< width; k++) {
+                if (mrow[k]) {
+                    m = (gint)((drow[k] - min)/(max - min)*nstats);
                     /* Fix rounding errors */
-                    if (G_UNLIKELY(k >= nstats))
-                        k = nstats-1;
-                    else if (G_UNLIKELY(k < 0))
-                        k = 0;
-
-                    target_line->data[k] += 1;
+                    if (G_UNLIKELY(m >= nstats))
+                        m = nstats-1;
+                    else if (G_UNLIKELY(m < 0))
+                        m = 0;
+                    target_line->data[m]+=nstats*nstats*urow[k]*urow[k];
                 }
             }
         }
-    }
-    else {
-        for (i = 0; i < height; i++) {
-            drow = data_field->data + (i + row)*data_field->xres + col;
 
-            for (j = 0; j < width; j++) {
-                k = (gint)((drow[j] - min)/(max - min)*nstats);
-                /* Fix rounding errors */
-                if (G_UNLIKELY(k >= nstats))
-                    k = nstats-1;
-                else if (G_UNLIKELY(k < 0))
-                    k = 0;
+        /* contribution from maximum and minimum */
+        valmin = g_new0(gdouble,nstats); 
+        valmax = g_new0(gdouble,nstats); 
 
-                target_line->data[k] += 1;
+        for (j = 0; j < height; j++) {
+            drow = data_field->data + (j + row)*data_field->xres + col;
+            urow = uncz_field->data + (j + row)*data_field->xres + col;
+            urow = mask->data + (j + row)*data_field->xres + col;
+            for (i = 0; i < width; i++) {
+                if (mrow[i]) {
+                    m = (gint)((drow[i] - min)/(max - min)*nstats);
+                    /* Fix rounding errors */
+                    if (G_UNLIKELY(m >= nstats))
+                        m = nstats-1;
+                    else if (G_UNLIKELY(m < 0))
+                        m = 0;
+                    valmin[m] += (drow[i] - max)/(max - min)*nstats + 1;
+                    valmax[m] -= (drow[i] - min)/(max - min)*nstats + 1;
+                }
             }
         }
+
+        for (m = 0; m < nstats; m++) {
+            target_line->data[m]+=valmin[m]*valmin[m]*gwy_data_field_get_val(uncz_field, imin, jmin)*gwy_data_field_get_val(uncz_field, imin, jmin);
+            target_line->data[m]+=valmax[m]*valmax[m]*gwy_data_field_get_val(uncz_field, imax, jmax)*gwy_data_field_get_val(uncz_field, imax, jmax);
+        }
+
+        m = (gint)((gwy_data_field_get_val(data_field,imin,jmin) - min)/(max - min)*nstats);
+        /* Fix rounding errors */
+        if (G_UNLIKELY(m >= nstats))
+            m = nstats-1;
+        else if (G_UNLIKELY(m < 0))
+            m = 0;
+        target_line->data[m]+=2*nstats*valmin[m]*gwy_data_field_get_val(uncz_field, imin, jmin)*gwy_data_field_get_val(uncz_field, imin, jmin);
+
+        m = (gint)((gwy_data_field_get_val(data_field,imax,jmax) - min)/(max - min)*nstats);
+        /* Fix rounding errors */
+        if (G_UNLIKELY(m >= nstats))
+            m = nstats-1;
+        else if (G_UNLIKELY(m < 0))
+            m = 0;
+        target_line->data[m]+=2*nstats*valmax[m]*gwy_data_field_get_val(uncz_field, imax, jmax)*gwy_data_field_get_val(uncz_field, imax, jmax);
+
+        g_free(valmax);
+        g_free(valmin);
+
+    }
+    else { 
+        /* all terms except maximum and minimum */
+        for (l = 0; l < height; l++) {
+            urow = uncz_field->data + (l + row)*data_field->xres + col;
+            drow = data_field->data + (l + row)*data_field->xres + col;
+            for (k = 0; k< width; k++) {
+                m = (gint)((drow[k] - min)/(max - min)*nstats);
+                /* Fix rounding errors */
+                if (G_UNLIKELY(m >= nstats))
+                    m = nstats-1;
+                else if (G_UNLIKELY(m < 0))
+                    m = 0;
+                target_line->data[m]+=nstats*nstats*urow[k]*urow[k];
+            }
+        }
+
+        /* contribution from maximum and minimum */
+        valmin = g_new0(gdouble,nstats); 
+        valmax = g_new0(gdouble,nstats); 
+
+        for (j = 0; j < height; j++) {
+            drow = data_field->data + (j + row)*data_field->xres + col;
+            urow = uncz_field->data + (j + row)*data_field->xres + col;
+            for (i = 0; i < width; i++) {
+                m = (gint)((drow[i] - min)/(max - min)*nstats);
+                /* Fix rounding errors */
+                if (G_UNLIKELY(m >= nstats))
+                    m = nstats-1;
+                else if (G_UNLIKELY(m < 0))
+                    m = 0;
+                valmin[m] += (drow[i] - max)/(max - min)*nstats + 1;
+                valmax[m] -= (drow[i] - min)/(max - min)*nstats + 1;
+            }
+        }
+
+        for (m = 0; m < nstats; m++) {
+            target_line->data[m]+=valmin[m]*valmin[m]*gwy_data_field_get_val(uncz_field, imin, jmin)*gwy_data_field_get_val(uncz_field, imin, jmin);
+            target_line->data[m]+=valmax[m]*valmax[m]*gwy_data_field_get_val(uncz_field, imax, jmax)*gwy_data_field_get_val(uncz_field, imax, jmax);
+        }
+
+        m = (gint)((gwy_data_field_get_val(data_field,imin,jmin) - min)/(max - min)*nstats);
+        /* Fix rounding errors */
+        if (G_UNLIKELY(m >= nstats))
+            m = nstats-1;
+        else if (G_UNLIKELY(m < 0))
+            m = 0;
+        target_line->data[m]+=2*nstats*valmin[m]*gwy_data_field_get_val(uncz_field, imin, jmin)*gwy_data_field_get_val(uncz_field, imin, jmin);
+
+        m = (gint)((gwy_data_field_get_val(data_field,imax,jmax) - min)/(max - min)*nstats);
+        /* Fix rounding errors */
+        if (G_UNLIKELY(m >= nstats))
+            m = nstats-1;
+        else if (G_UNLIKELY(m < 0))
+            m = 0;
+        target_line->data[m]+=2*nstats*valmax[m]*gwy_data_field_get_val(uncz_field, imax, jmax)*gwy_data_field_get_val(uncz_field, imax, jmax);
+
+        g_free(valmax);
+        g_free(valmin);
     }
 
-    gwy_data_line_multiply(target_line, nstats/(max - min)/nn);
-    /* Calculate uncertainty */
+    for (m = 0; m < nstats; m++)
+        target_line->data[m]=sqrt(target_line->data[m]);
 
-    gwy_data_field_area_get_min_max_uncertainty(data_field, uncz_field, mask,
-                                                col, row, width, height,
-                                                &min_unc, &max_unc);
-    gwy_data_line_multiply(target_line,
-                           sqrt(max_unc*max_unc+min_unc*min_unc)/(max-min));
+    gwy_data_line_multiply(target_line, nstats/((max - min)*(max - min)*nn));
+
 }
 
 /**
@@ -3088,17 +3370,17 @@ gwy_data_field_area_dh_uncertainty(GwyDataField *data_field,
  *
  * Since: 2.23
  **/
-void
+    void
 gwy_data_field_dh_uncertainty(GwyDataField *data_field,
-                  GwyDataField *uncz_field,
-                  GwyDataLine *target_line,
-                  gint nstats)
+        GwyDataField *uncz_field,
+        GwyDataLine *target_line,
+        gint nstats)
 {
     g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
     g_return_if_fail(GWY_IS_DATA_FIELD(uncz_field));
     gwy_data_field_area_dh_uncertainty(data_field, uncz_field, NULL, target_line,
-                           0, 0, data_field->xres, data_field->yres,
-                           nstats);
+            0, 0, data_field->xres, data_field->yres,
+            nstats);
 }
 
 /**
@@ -3126,15 +3408,15 @@ gwy_data_field_dh_uncertainty(GwyDataField *data_field,
  *
  * Since: 2.23
  **/
-void
+    void
 gwy_data_field_area_get_normal_coeffs_uncertainty(GwyDataField *data_field,
-                                                  GwyDataField *uncz_field,
-                                                  GwyDataField *uncx_field,
-                                                  GwyDataField *uncy_field,
-                                                  gint col, gint row,
-                                                  gint width, gint height,
-                                                  gdouble *nx, gdouble *ny, gdouble *nz,
-                                                  gdouble *ux, gdouble *uy, gdouble *uz)
+        GwyDataField *uncz_field,
+        GwyDataField *uncx_field,
+        GwyDataField *uncy_field,
+        gint col, gint row,
+        gint width, gint height,
+        gdouble *nx, gdouble *ny, gdouble *nz,
+        gdouble *ux, gdouble *uy, gdouble *uz)
 {
     gint i, j, xres, yres;
     int ctr = 0;
@@ -3146,9 +3428,9 @@ gwy_data_field_area_get_normal_coeffs_uncertainty(GwyDataField *data_field,
     g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
     g_return_if_fail(GWY_IS_DATA_FIELD(uncz_field));
     g_return_if_fail(col >= 0 && row >= 0
-                     && width > 0 && height > 0
-                     && col + width <= data_field->xres
-                     && row + height <= data_field->yres);
+            && width > 0 && height > 0
+            && col + width <= data_field->xres
+            && row + height <= data_field->yres);
 
     xres=data_field->xres;
     yres=data_field->yres;
@@ -3189,12 +3471,12 @@ gwy_data_field_area_get_normal_coeffs_uncertainty(GwyDataField *data_field,
     for (j = row; j < row+height; j++) {
         for (i = col; i < col+width; i++) {
             uvalx = gwy_data_field_get_xder_uncertainty(data_field, uncz_field,
-                                                        uncx_field, uncy_field,
-                                                        i, j);
+                    uncx_field, uncy_field,
+                    i, j);
             valx = gwy_data_field_get_xder(data_field, i, j);
             uvaly = gwy_data_field_get_yder_uncertainty(data_field, uncz_field,
-                                                        uncx_field, uncy_field,
-                                                        i, j);
+                    uncx_field, uncy_field,
+                    i, j);
             valy = gwy_data_field_get_yder(data_field, i, j);
             hlp = valx*uvalx/(nn[i-col][j-row]*nn[i-col][j-row]*nn[i-col][j-row]);
             sumdz += hlp*hlp;
@@ -3260,22 +3542,22 @@ gwy_data_field_area_get_normal_coeffs_uncertainty(GwyDataField *data_field,
  *
  * Since: 2.23
  **/
-void
+    void
 gwy_data_field_get_normal_coeffs_uncertainty(GwyDataField *data_field,
-                                             GwyDataField *uncz_field,
-                                             GwyDataField *uncx_field,
-                                             GwyDataField *uncy_field,
-                                             gdouble *nx, gdouble *ny, gdouble *nz,
-                                             gdouble *ux, gdouble *uy, gdouble *uz)
+        GwyDataField *uncz_field,
+        GwyDataField *uncx_field,
+        GwyDataField *uncy_field,
+        gdouble *nx, gdouble *ny, gdouble *nz,
+        gdouble *ux, gdouble *uy, gdouble *uz)
 {
     g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
     gwy_data_field_area_get_normal_coeffs_uncertainty(data_field,
-                                                      uncz_field,
-                                                      uncx_field,
-                                                      uncy_field,
-                                                      0, 0,
-                                                      data_field->xres, data_field->yres,
-                                                      nx, ny, nz, ux, uy, uz);
+            uncz_field,
+            uncx_field,
+            uncy_field,
+            0, 0,
+            data_field->xres, data_field->yres,
+            nx, ny, nz, ux, uy, uz);
 }
 
 /**
@@ -3295,15 +3577,15 @@ gwy_data_field_get_normal_coeffs_uncertainty(GwyDataField *data_field,
  *
  * Since: 2.23
  **/
-void
+    void
 gwy_data_field_area_get_inclination_uncertainty(GwyDataField *data_field,
-                                                GwyDataField *uncz_field,
-                                                GwyDataField *uncx_field,
-                                                GwyDataField *uncy_field,
-                                                gint col, gint row,
-                                                gint width, gint height,
-                                                gdouble *utheta,
-                                                gdouble *uphi)
+        GwyDataField *uncz_field,
+        GwyDataField *uncx_field,
+        GwyDataField *uncy_field,
+        gint col, gint row,
+        gint width, gint height,
+        gdouble *utheta,
+        gdouble *uphi)
 {
     gdouble nx, ny, nz;
     gdouble unx, uny, unz;
@@ -3313,14 +3595,14 @@ gwy_data_field_area_get_inclination_uncertainty(GwyDataField *data_field,
     g_return_if_fail(GWY_IS_DATA_FIELD(uncx_field));
     g_return_if_fail(GWY_IS_DATA_FIELD(uncy_field));
     g_return_if_fail(col >= 0 && row >= 0
-                     && width > 0 && height > 0
-                     && col + width <= data_field->xres
-                     && row + height <= data_field->yres);
+            && width > 0 && height > 0
+            && col + width <= data_field->xres
+            && row + height <= data_field->yres);
 
     gwy_data_field_area_get_normal_coeffs_uncertainty(data_field,
-                                                      uncz_field, uncx_field, uncy_field,
-                                                      col, row, width, height, &nx, &ny, &nz,
-                                                      &unx, &uny, &unz);
+            uncz_field, uncx_field, uncy_field,
+            col, row, width, height, &nx, &ny, &nz,
+            &unx, &uny, &unz);
 
     if (utheta) {
         *utheta = nz*nz*(unx*unx*ny*ny+uny*uny*nx*nx)/(nx*nx+ny*ny);
@@ -3346,27 +3628,27 @@ gwy_data_field_area_get_inclination_uncertainty(GwyDataField *data_field,
  *
  * Since: 2.23
  **/
-void
+    void
 gwy_data_field_get_inclination_uncertainty(GwyDataField *data_field,
-                                           GwyDataField *uncz_field,
-                                           GwyDataField *uncx_field,
-                                           GwyDataField *uncy_field,
-                                           gdouble *utheta,
-                                           gdouble *uphi)
+        GwyDataField *uncz_field,
+        GwyDataField *uncx_field,
+        GwyDataField *uncy_field,
+        gdouble *utheta,
+        gdouble *uphi)
 {
     g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
     gwy_data_field_area_get_inclination_uncertainty(data_field,
-                                                    uncz_field, uncx_field, uncy_field,
-                                                    0, 0,
-                                                    data_field->xres, data_field->yres,
-                                                    utheta,
-                                                    uphi);
+            uncz_field, uncx_field, uncy_field,
+            0, 0,
+            data_field->xres, data_field->yres,
+            utheta,
+            uphi);
 }
 
-gdouble
+    gdouble
 gwy_data_field_area_get_projected_area_uncertainty(gint nn,
-                                                   GwyDataField *uncx_field,
-                                                   GwyDataField *uncy_field)
+        GwyDataField *uncx_field,
+        GwyDataField *uncy_field)
 {
     gdouble unc;
     gint xres, yres;
@@ -3391,7 +3673,7 @@ gwy_data_field_area_get_projected_area_uncertainty(gint nn,
  *
  * Since: 2.23
  **/
-void
+    void
 gwy_data_line_cumulate_uncertainty(GwyDataLine *uncz_line)
 {
     gdouble sum;
@@ -3430,20 +3712,20 @@ gwy_data_line_cumulate_uncertainty(GwyDataLine *uncz_line)
  *
  * Since: 2.23
  **/
-void
+    void
 gwy_data_field_area_cdh_uncertainty(GwyDataField *data_field,
-                                    GwyDataField *uncz_field,
-                                    GwyDataField *mask,
-                                    GwyDataLine *target_line,
-                                    gint col, gint row,
-                                    gint width, gint height,
-                                    gint nstats)
+        GwyDataField *uncz_field,
+        GwyDataField *mask,
+        GwyDataLine *target_line,
+        gint col, gint row,
+        gint width, gint height,
+        gint nstats)
 {
     GwySIUnit *rhounit, *lineunit;
 
     gwy_data_field_area_dh_uncertainty(data_field, uncz_field, mask, target_line,
-                           col, row, width, height,
-                           nstats);
+            col, row, width, height,
+            nstats);
     gwy_data_line_cumulate_uncertainty(target_line);
     gwy_data_line_multiply(target_line, gwy_data_line_itor(target_line, 1));
 
@@ -3467,23 +3749,23 @@ gwy_data_field_area_cdh_uncertainty(GwyDataField *data_field,
  *
  * Since: 2.23
  **/
-void
+    void
 gwy_data_field_cdh_uncertainty(GwyDataField *data_field,
-                   GwyDataField *uncz_field,
-                   GwyDataLine *target_line,
-                   gint nstats)
+        GwyDataField *uncz_field,
+        GwyDataLine *target_line,
+        gint nstats)
 {
     g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
     gwy_data_field_area_cdh_uncertainty(data_field, uncz_field, NULL, target_line,
-                                        0, 0, data_field->xres, data_field->yres,
-                                        nstats);
+            0, 0, data_field->xres, data_field->yres,
+            nstats);
 }
 
 gdouble
 gwy_data_field_get_xder_uncertainty(GwyDataField *data_field,
-                                    GwyDataField *uncz_field,
-                                    GwyDataField * uncx_field,
-                                    GwyDataField *uncy_field, gint col, gint row) {
+        GwyDataField *uncz_field,
+        GwyDataField * uncx_field,
+        GwyDataField *uncy_field, gint col, gint row) {
     gdouble uz1, uz2;
     gdouble sum;
     gdouble hx, hy;
@@ -3531,12 +3813,12 @@ gwy_data_field_get_xder_uncertainty(GwyDataField *data_field,
     return sum;
 }
 
-gdouble
+    gdouble
 gwy_data_field_get_yder_uncertainty(GwyDataField *data_field,
-                                    GwyDataField *uncz_field,
-                                    GwyDataField * uncx_field,
-                                    GwyDataField *uncy_field,
-                                    gint col, gint row)
+        GwyDataField *uncz_field,
+        GwyDataField * uncx_field,
+        GwyDataField *uncy_field,
+        gint col, gint row)
 {
     gdouble uz1, uz2;
     gdouble sum;

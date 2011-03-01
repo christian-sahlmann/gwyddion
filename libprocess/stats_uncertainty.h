@@ -31,6 +31,7 @@ gdouble gwy_data_field_get_max_uncertainty                   (GwyDataField *data
 gdouble gwy_data_field_area_get_max_uncertainty              (GwyDataField *dfield,
                                                               GwyDataField *uncz_field,
                                                               GwyDataField *mask,
+                                                              gint mode,
                                                               gint col,
                                                               gint row,
                                                               gint width,
@@ -40,6 +41,7 @@ gdouble gwy_data_field_get_min_uncertainty                   (GwyDataField *data
 gdouble gwy_data_field_area_get_min_uncertainty              (GwyDataField *dfield,
                                                               GwyDataField *uncz_field,
                                                               GwyDataField *mask,
+                                                              gint mode,
                                                               gint col,
                                                               gint row,
                                                               gint width,
@@ -140,11 +142,15 @@ void    gwy_data_field_area_acf_uncertainty                  (GwyDataField *data
                                                               gint row,
                                                               gint width,
                                                               gint height,
-                                                              GwyOrientation orientation);
+                                                              GwyOrientation orientation,
+                                                              GwyInterpolationType interpolation,
+                                                              gint nstats);
 void    gwy_data_field_acf_uncertainty                       (GwyDataField *data_field,
                                                               GwyDataField *uncz_field,
                                                               GwyDataLine *target_line,
-                                                              GwyOrientation orientation);
+                                                              GwyOrientation orientation,
+                                                              GwyInterpolationType interpolation,
+                                                              gint nstats);
 void    gwy_data_field_area_hhcf_uncertainty                 (GwyDataField *data_field,
                                                               GwyDataField *uncz_field,
                                                               GwyDataLine *target_line,
@@ -152,11 +158,15 @@ void    gwy_data_field_area_hhcf_uncertainty                 (GwyDataField *data
                                                               gint row,
                                                               gint width,
                                                               gint height,
-                                                              GwyOrientation orientation);
+                                                              GwyOrientation orientation,
+                                                              GwyInterpolationType interpolation,
+                                                              gint nstats);
 void    gwy_data_field_hhcf_uncertainty                      (GwyDataField *data_field,
                                                               GwyDataField *uncz_field,
                                                               GwyDataLine *target_line,
-                                                              GwyOrientation orientation);
+                                                              GwyOrientation orientation,
+                                                              GwyInterpolationType interpolation,
+                                                              gint nstats);
 gdouble gwy_data_field_get_surface_area_uncertainty          (GwyDataField *data_field,
                                                               GwyDataField *uncz_field,
                                                               GwyDataField *uncx_field,

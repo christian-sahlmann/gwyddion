@@ -805,12 +805,13 @@ gwy_tool_stats_calculate(GwyToolStats *tool)
             = gwy_data_field_area_get_median_uncertainty_mask(plain_tool->data_field, tool->zunc,
                                                   mask, masking,
                                                   isel[0], isel[1], w, h);
-        tool->results.uarea
-            = gwy_data_field_area_get_surface_area_mask_uncertainty(plain_tool->data_field, tool->zunc,
+        tool->results.uarea = 0;
+         /*   = gwy_data_field_area_get_surface_area_mask_uncertainty(plain_tool->data_field, tool->zunc,
                                                                tool->xunc,
                                                                tool->yunc,
                                                                mask,masking,
                                                                isel[0], isel[1], w, h);
+           TODO							       */
 	if (tool->same_units && !mask) {
 		gwy_data_field_area_get_inclination_uncertainty(plain_tool->data_field,
 				tool->zunc, tool->xunc, tool->yunc,
