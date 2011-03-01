@@ -45,8 +45,9 @@
  *
  * Finds the uncertainty of the maximum value of a data field.
  *
- *
  * Returns: The uncertainty of the maximum value.
+ *
+ * Since: 2.23
  **/
 gdouble
 gwy_data_field_get_max_uncertainty(GwyDataField *data_field,
@@ -87,6 +88,8 @@ gwy_data_field_get_max_uncertainty(GwyDataField *data_field,
  *
  * Returns: The uncertainty of the maximum value.  When the number of samples
  *          to calculate maximum of is zero, %G_MAXDOUBLE is returned.
+ *
+ * Since: 2.23
  **/
 gdouble
 gwy_data_field_area_get_max_uncertainty(GwyDataField *dfield,
@@ -167,8 +170,9 @@ gwy_data_field_area_get_max_uncertainty(GwyDataField *dfield,
  *
  * Finds the uncertainty of the minimum value of a data field.
  *
- *
  * Returns: The uncertainty of the minimum value.
+ *
+ * Since: 2.23
  **/
 gdouble
 gwy_data_field_get_min_uncertainty(GwyDataField *data_field,
@@ -205,10 +209,13 @@ gwy_data_field_get_min_uncertainty(GwyDataField *data_field,
  * @width: Area width (number of columns).
  * @height: Area height (number of rows).
  *
- * Finds the uncertainty of the minimum value in a rectangular part of a data field.
+ * Finds the uncertainty of the minimum value in a rectangular part of a data
+ * field.
  *
- * Returns: The uncertainty of the minimum value.  When the number of samples to calculate
- *          minimum of is zero, %G_MAXDOUBLE is returned.
+ * Returns: The uncertainty of the minimum value.  When the number of samples
+ *          to calculate minimum of is zero, %G_MAXDOUBLE is returned.
+ *
+ * Since: 2.23
  **/
 gdouble
 gwy_data_field_area_get_min_uncertainty(GwyDataField *dfield,
@@ -290,6 +297,8 @@ gwy_data_field_area_get_min_uncertainty(GwyDataField *dfield,
  * @max_unc: Location to store uncertainty maximum to.
  *
  * Finds minimum and maximum values of a data field.
+ *
+ * Since: 2.23
  **/
 void
 gwy_data_field_get_min_max_uncertainty(GwyDataField *data_field,
@@ -336,11 +345,14 @@ gwy_data_field_get_min_max_uncertainty(GwyDataField *data_field,
  * @min_unc: Location to store uncertainty of minimum to.
  * @max_unc: Location to store uncertainty of maximum to.
  *
- * Finds uncertainties of the minimum and maximum values in a rectangular part of a data field.
+ * Finds uncertainties of the minimum and maximum values in a rectangular part
+ * of a data field.
  *
  * This function is equivalent to calling
- * @gwy_data_field_area_get_min_max_uncertainty_mask()
- * with masking mode %GWY_MASK_INCLUDE.
+ * gwy_data_field_area_get_min_max_uncertainty_mask() with masking mode
+ * %GWY_MASK_INCLUDE.
+ *
+ * Since: 2.23
  **/
 void
 gwy_data_field_area_get_min_max_uncertainty(GwyDataField *data_field,
@@ -506,8 +518,9 @@ gwy_data_field_area_get_min_max_uncertainty_mask(GwyDataField *data_field,
  *
  * Computes the uncertainty of the average value of a data field.
  *
- *
  * Returns: The uncertainty of the average value.
+ *
+ * Since: 2.23
  **/
 gdouble
 gwy_data_field_get_avg_uncertainty(GwyDataField *data_field,
@@ -537,12 +550,16 @@ gwy_data_field_get_avg_uncertainty(GwyDataField *data_field,
  * @width: Area width (number of columns).
  * @height: Area height (number of rows).
  *
- * Computes the uncertainty of the average value of a rectangular part of a data field.
+ * Computes the uncertainty of the average value of a rectangular part of a
+ * data field.
  *
- * This function is equivalent to calling @gwy_data_field_area_get_avg_uncertainty_mask()
- * with masking mode %GWY_MASK_INCLUDE.
+ * This function is equivalent to calling
+ * @gwy_data_field_area_get_avg_uncertainty_mask() with masking mode
+ * %GWY_MASK_INCLUDE.
  *
  * Returns: The uncertainty of the average value.
+ *
+ * Since: 2.23
  **/
 gdouble
 gwy_data_field_area_get_avg_uncertainty(GwyDataField *dfield,
@@ -568,7 +585,8 @@ gwy_data_field_area_get_avg_uncertainty(GwyDataField *dfield,
  * @width: Area width (number of columns).
  * @height: Area height (number of rows).
  *
- * Computes the uncertainty of the average value of a rectangular part of a data field.
+ * Computes the uncertainty of the average value of a rectangular part of a
+ * data field.
  *
  * Returns: The uncertainty of the average value.
  *
@@ -689,14 +707,17 @@ gwy_data_field_get_rms_uncertainty(GwyDataField *data_field,
  * @width: Area width (number of columns).
  * @height: Area height (number of rows).
  *
- * Computes uncertainty of root mean square value of a rectangular part of a data field.
+ * Computes uncertainty of root mean square value of a rectangular part of a
+ * data field.
  *
  * Returns: The uncertainty of root mean square value.
  *
- * This function is equivalent to calling @gwy_data_field_area_get_rms_uncertainty_mask()
- * with masking mode %GWY_MASK_INCLUDE.
+ * This function is equivalent to calling
+ * @gwy_data_field_area_get_rms_uncertainty_mask() with masking mode
+ * %GWY_MASK_INCLUDE.
+ *
+ * Since: 2.23
  **/
-
 gdouble
 gwy_data_field_area_get_rms_uncertainty(GwyDataField *dfield,
                                         GwyDataField *uncz_field,
@@ -721,10 +742,11 @@ gwy_data_field_area_get_rms_uncertainty(GwyDataField *dfield,
  * @width: Area width (number of columns).
  * @height: Area height (number of rows).
  *
- * Computes uncertainty of root mean square value of deviations of a rectangular part of a
- * data field.
+ * Computes uncertainty of root mean square value of deviations of a
+ * rectangular part of a data field.
  *
- * Returns: The uncertainty of root mean square value of deviations from the mean value.
+ * Returns: The uncertainty of root mean square value of deviations from the
+ *          mean value.
  *
  * Since: 2.23
  **/
@@ -845,7 +867,10 @@ gwy_data_field_area_get_rms_uncertainty_mask(GwyDataField *dfield,
  * @kurtosis_unc: Where uncertainty of kurtosis (peakedness of height ditribution) should be
  *            stored, or %NULL.
  *
- * Computes the uncertainties of the basic statistical quantities of a data field.
+ * Computes the uncertainties of the basic statistical quantities of a data
+ * field.
+ *
+ * Since: 2.23
  **/
 void
 gwy_data_field_get_stats_uncertainties(GwyDataField *data_field,
@@ -944,6 +969,8 @@ gwy_data_field_get_stats_uncertainties(GwyDataField *data_field,
  *
  * This function is equivalent to calling @gwy_data_field_area_get_stats_uncertainties_mask()
  * with masking mode %GWY_MASK_INCLUDE.
+ *
+ * Since: 2.23
  **/
 void
 gwy_data_field_area_get_stats_uncertainties(GwyDataField *dfield,
@@ -1270,6 +1297,8 @@ gwy_data_field_area_func_lame_uncertainty(GwyDataField *data_field, GwyDataField
  *
  * Computes squared uncertainty of  autocorrelation function and stores the values in
  * @target_line
+ *
+ * Since: 2.23
  **/
 void
 gwy_data_line_acf_uncertainty(GwyDataLine *data_line, GwyDataLine *uline,
@@ -1345,6 +1374,8 @@ gwy_data_line_acf_uncertainty(GwyDataLine *data_line, GwyDataLine *uline,
  *
  * Computes uncertainty squared of the height-height correlation function and
  * stores results in @target_line.
+ *
+ * Since: 2.23
  **/
 void
 gwy_data_line_hhcf_uncertainty(GwyDataLine *data_line,
@@ -1421,6 +1452,8 @@ gwy_data_line_hhcf_uncertainty(GwyDataLine *data_line,
  *
  * Calculates the uncertainty of the one-dimensional autocorrelation function of a rectangular part of
  * a data field.
+ *
+ * Since: 2.23
  **/
 void
 gwy_data_field_area_acf_uncertainty(GwyDataField *data_field,
@@ -1454,6 +1487,8 @@ gwy_data_field_area_acf_uncertainty(GwyDataField *data_field,
  *
  * Calculates uncertainty of one-dimensional autocorrelation function of a data
  * field.
+ *
+ * Since: 2.23
  **/
 void
 gwy_data_field_acf_uncertainty(GwyDataField *data_field,
@@ -1486,6 +1521,8 @@ gwy_data_field_acf_uncertainty(GwyDataField *data_field,
  *
  * Calculates uncertainty of the one-dimensional autocorrelation function of a
  * rectangular part of a data field.
+ *
+ * Since: 2.23
  **/
 void
 gwy_data_field_area_hhcf_uncertainty(GwyDataField *data_field,
@@ -1520,6 +1557,8 @@ gwy_data_field_area_hhcf_uncertainty(GwyDataField *data_field,
  *
  * Calculates uncertainty of one-dimensional autocorrelation function of a data
  * field.
+ *
+ * Since: 2.23
  **/
 void
 gwy_data_field_hhcf_uncertainty(GwyDataField *data_field,
@@ -1713,7 +1752,6 @@ square_area1_uncertainty(gdouble z1, gdouble z2, gdouble z3, gdouble z4,
  *
  * Returns: The uncertainty of the area squared.
  **/
-
 static inline gdouble
 square_area1w_uncertainty(gdouble z1, gdouble z2, gdouble z3, gdouble z4,
                           gdouble uz1, gdouble uz2, gdouble uz3, gdouble uz4,
@@ -2594,15 +2632,15 @@ calculate_surface_area_uncertainty(GwyDataField *dfield,
  *
  * Computes uncertainty of surface area of a data field.
  *
- *
  * Returns: uncertainty of surface area
+ *
+ * Since: 2.23
  **/
-
 gdouble
 gwy_data_field_get_surface_area_uncertainty(GwyDataField *data_field,
-                                GwyDataField *uncz_field,
-                                GwyDataField *uncx_field,
-                                GwyDataField *uncy_field)
+                                            GwyDataField *uncz_field,
+                                            GwyDataField *uncx_field,
+                                            GwyDataField *uncy_field)
 {
     gdouble uarea = 0.0;
 
@@ -2636,8 +2674,9 @@ gwy_data_field_get_surface_area_uncertainty(GwyDataField *data_field,
  * with masking mode %GWY_MASK_INCLUDE.
  *
  * Returns: The uncertainty of surface area.
+ *
+ * Since: 2.23
  **/
-
 gdouble
 gwy_data_field_area_get_surface_area_uncertainty(GwyDataField *data_field,
                                      GwyDataField *uncz_field,
@@ -2678,7 +2717,6 @@ gwy_data_field_area_get_surface_area_uncertainty(GwyDataField *data_field,
  *
  * Since: 2.23
  **/
-
 gdouble
 gwy_data_field_area_get_surface_area_mask_uncertainty(GwyDataField *data_field,
                                                       GwyDataField *uncz_field,
@@ -2731,8 +2769,9 @@ gwy_data_field_area_get_surface_area_mask_uncertainty(GwyDataField *data_field,
  * with masking mode %GWY_MASK_INCLUDE.
  *
  * Returns: The uncertainty of the median value.
+ *
+ * Since: 2.23
  **/
-
 gdouble
 gwy_data_field_area_get_median_uncertainty(GwyDataField *dfield,
                                            GwyDataField *uncz_field,
@@ -2762,7 +2801,6 @@ gwy_data_field_area_get_median_uncertainty(GwyDataField *dfield,
  *
  * Since: 2.23
  **/
-
 gdouble
 gwy_data_field_area_get_median_uncertainty_mask(GwyDataField *dfield,
                                                 GwyDataField *uncz_field,
@@ -2874,10 +2912,10 @@ gwy_data_field_area_get_median_uncertainty_mask(GwyDataField *dfield,
  *
  * Computes uncertainty of median value of a data field.
  *
- *
  * Returns: The uncertainty of the median value.
+ *
+ * Since: 2.23
  **/
-
 gdouble
 gwy_data_field_get_median_uncertainty(GwyDataField *data_field,
                                       GwyDataField *uncz_field)
@@ -2914,7 +2952,10 @@ gwy_data_field_get_median_uncertainty(GwyDataField *data_field,
  * @nstats: The number of samples to take on the distribution function.  If
  *          nonpositive, a suitable resolution is determined automatically.
  *
- * Calculates uncertainty of distribution of heights in a rectangular part of data field.
+ * Calculates uncertainty of distribution of heights in a rectangular part of
+ * data field.
+ *
+ * Since: 2.23
  **/
 void
 gwy_data_field_area_dh_uncertainty(GwyDataField *data_field,
@@ -3044,6 +3085,8 @@ gwy_data_field_area_dh_uncertainty(GwyDataField *data_field,
  *          nonpositive, a suitable resolution is determined automatically.
  *
  * Calculates uncertainty of distribution of heights in a data field.
+ *
+ * Since: 2.23
  **/
 void
 gwy_data_field_dh_uncertainty(GwyDataField *data_field,
@@ -3080,6 +3123,8 @@ gwy_data_field_dh_uncertainty(GwyDataField *data_field,
  *
  * Computes squared uncertainty of average normal vector of an area of a data
  * field.
+ *
+ * Since: 2.23
  **/
 void
 gwy_data_field_area_get_normal_coeffs_uncertainty(GwyDataField *data_field,
@@ -3212,8 +3257,9 @@ gwy_data_field_area_get_normal_coeffs_uncertainty(GwyDataField *data_field,
  * @uz: Where z-component of  uncertainty of the normal vector should be stored, or %NULL.
  *
  * Computes squared uncertainty of average normal vector of a data field.
+ *
+ * Since: 2.23
  **/
-
 void
 gwy_data_field_get_normal_coeffs_uncertainty(GwyDataField *data_field,
                                              GwyDataField *uncz_field,
@@ -3246,6 +3292,8 @@ gwy_data_field_get_normal_coeffs_uncertainty(GwyDataField *data_field,
  * @phi: Where phi angle (in radians) should be stored, or %NULL.
  *
  * Calculates the uncertainty of the inclination of the image (polar and azimuth angle).
+ *
+ * Since: 2.23
  **/
 void
 gwy_data_field_area_get_inclination_uncertainty(GwyDataField *data_field,
@@ -3295,6 +3343,8 @@ gwy_data_field_area_get_inclination_uncertainty(GwyDataField *data_field,
  * @phi: Where phi angle (in radians) should be stored, or %NULL.
  *
  * Calculates the uncertainty of the inclination of the image (polar and azimuth angle).
+ *
+ * Since: 2.23
  **/
 void
 gwy_data_field_get_inclination_uncertainty(GwyDataField *data_field,
@@ -3338,6 +3388,8 @@ gwy_data_field_area_get_projected_area_uncertainty(gint nn,
  *
  * Calculates the uncertainty of a cummulative distribution from the
  * uncertainty of the original distribution.
+ *
+ * Since: 2.23
  **/
 void
 gwy_data_line_cumulate_uncertainty(GwyDataLine *uncz_line)
@@ -3375,6 +3427,8 @@ gwy_data_line_cumulate_uncertainty(GwyDataLine *uncz_line)
  *
  * Calculates uncertainty of the cumulative distribution of heights in a
  * rectangular part of the data field.
+ *
+ * Since: 2.23
  **/
 void
 gwy_data_field_area_cdh_uncertainty(GwyDataField *data_field,
@@ -3410,6 +3464,8 @@ gwy_data_field_area_cdh_uncertainty(GwyDataField *data_field,
  *
  * Calculates uncertainty of the cumulative distribution of heights in a data
  * field.
+ *
+ * Since: 2.23
  **/
 void
 gwy_data_field_cdh_uncertainty(GwyDataField *data_field,
