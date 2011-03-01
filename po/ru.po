@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2011-02-27 03:58+0100\n"
-"PO-Revision-Date: 2011-02-27 14:52+0300\n"
+"POT-Creation-Date: 2011-03-01 03:58+0100\n"
+"PO-Revision-Date: 2011-03-01 08:07+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "Language: \n"
@@ -859,7 +859,7 @@ msgstr "точек"
 #: modules/process/facet-level.c:283
 #: modules/process/facet_analysis.c:272
 #: modules/process/fft.c:272
-#: modules/process/fft_filter_2d.c:396
+#: modules/process/fft_filter_2d.c:399
 #: modules/process/fft_synth.c:330
 #: modules/process/fractal.c:206
 #: modules/process/grain_edge.c:220
@@ -3512,8 +3512,8 @@ msgstr "_Ширина"
 #: modules/file/rawfile.c:711
 #: modules/process/calcoefs_new.c:384
 #: modules/process/calcoefs_new.c:451
-#: modules/process/calcoefs_simple.c:383
-#: modules/process/calcoefs_simple.c:450
+#: modules/process/calcoefs_simple.c:393
+#: modules/process/calcoefs_simple.c:460
 #: modules/process/calcoefs_view.c:528
 #: modules/process/calcoefs_view.c:566
 #: modules/process/calibrate.c:339
@@ -3552,7 +3552,7 @@ msgstr "как данные"
 #: modules/file/pixmap.c:1325
 #: modules/file/rawfile.c:1326
 #: modules/process/calcoefs_new.c:776
-#: modules/process/calcoefs_simple.c:1070
+#: modules/process/calcoefs_simple.c:1187
 #: modules/process/calcoefs_view.c:1394
 #: modules/process/calibrate.c:816
 #: modules/process/dimensions.h:193
@@ -3562,7 +3562,7 @@ msgstr "Изменить единицы измерения"
 #: modules/file/pixmap.c:1339
 #: modules/file/rawfile.c:1340
 #: modules/process/calcoefs_new.c:789
-#: modules/process/calcoefs_simple.c:1083
+#: modules/process/calcoefs_simple.c:1200
 #: modules/process/calcoefs_view.c:1407
 #: modules/process/calibrate.c:830
 #: modules/process/dimensions.h:206
@@ -4044,7 +4044,7 @@ msgid "Preset l_ist"
 msgstr "С_писок предустановок"
 
 #: modules/file/rawfile.c:1008
-#: modules/process/calcoefs_load.c:217
+#: modules/process/calcoefs_load.c:216
 msgid "_Load"
 msgstr "_Загрузить"
 
@@ -4360,6 +4360,14 @@ msgstr "диапазоны данных"
 #: modules/file/rhk-spm32.c:482
 msgid "data offset"
 msgstr "смещение данных"
+
+#: modules/file/robotics.c:72
+msgid "Imports Automation & Robotics Dual Lensmapper data files"
+msgstr "Импортирует файлы данных Automation & Robotics Dual Lensmapper"
+
+#: modules/file/robotics.c:85
+msgid "Dual Lensmapper files"
+msgstr "Файлы Dual Lensmapper"
 
 #: modules/file/sdfile.c:156
 msgid "Imports Surfstand group SDF (Surface Data File) files."
@@ -5410,17 +5418,17 @@ msgstr "/_Калибровка/_Загрузить из текстового ф�
 msgid "Load calibration data from text file."
 msgstr "Загрузить данные калибровки из текстового файла."
 
-#: modules/process/calcoefs_load.c:209
+#: modules/process/calcoefs_load.c:208
 msgid "Load Calibration Data"
 msgstr "Загрузить данные калибровки"
 
-#: modules/process/calcoefs_load.c:229
+#: modules/process/calcoefs_load.c:228
 #: modules/process/calcoefs_new.c:566
-#: modules/process/calcoefs_simple.c:467
+#: modules/process/calcoefs_simple.c:477
 msgid "Calibration name:"
 msgstr "Имя калибровки:"
 
-#: modules/process/calcoefs_load.c:241
+#: modules/process/calcoefs_load.c:240
 msgid "No data loaded"
 msgstr "Данные не загружены"
 
@@ -5488,60 +5496,77 @@ msgstr "М_ножитель калибровки по Y:"
 msgid "_Z correction factor:"
 msgstr "Мно_житель калибровки по Z:"
 
-#: modules/process/calcoefs_simple.c:169
+#: modules/process/calcoefs_simple.c:173
 msgid "Simple AFM data recalibration"
 msgstr "Простая перекалибровка данных АСМ"
 
-#: modules/process/calcoefs_simple.c:183
+#: modules/process/calcoefs_simple.c:187
 msgid "/Cali_bration/_Get Simple Errop Map..."
 msgstr "/_Калибровка/_Получить простую карту ошибок..."
 
-#: modules/process/calcoefs_simple.c:187
+#: modules/process/calcoefs_simple.c:191
 msgid "Simple error mapping"
 msgstr "Простое картирование ошибок"
 
-#: modules/process/calcoefs_simple.c:320
+#: modules/process/calcoefs_simple.c:328
 msgid "Simple Error Map"
 msgstr "Простая карта ошибок"
 
-#: modules/process/calcoefs_simple.c:335
+#: modules/process/calcoefs_simple.c:345
 #: modules/process/calcoefs_stage.c:149
 #: modules/process/superresolution.c:159
 msgid "Operands:"
 msgstr "Операнды:"
 
-#: modules/process/calcoefs_simple.c:363
+#: modules/process/calcoefs_simple.c:373
 #: modules/process/calcoefs_view.c:508
 #: modules/process/calibrate.c:367
 msgid "_X offset:"
 msgstr "Смещение по _X:"
 
-#: modules/process/calcoefs_simple.c:390
+#: modules/process/calcoefs_simple.c:400
 #: modules/process/calcoefs_view.c:534
 #: modules/process/calibrate.c:380
 msgid "_Y offset:"
 msgstr "Смещение по _Y:"
 
-#: modules/process/calcoefs_simple.c:403
+#: modules/process/calcoefs_simple.c:413
 msgid "X _period:"
 msgstr "П_ериод X:"
 
-#: modules/process/calcoefs_simple.c:416
+#: modules/process/calcoefs_simple.c:426
 msgid "Y p_eriod:"
 msgstr "Пе_риод Y:"
 
-#: modules/process/calcoefs_simple.c:430
+#: modules/process/calcoefs_simple.c:440
 #: modules/process/calcoefs_view.c:546
 msgid "_Z offset:"
 msgstr "Смещение по _Z:"
 
-#: modules/process/calcoefs_simple.c:458
+#: modules/process/calcoefs_simple.c:468
 msgid "_Threshold"
 msgstr "_Порог"
 
-#: modules/process/calcoefs_simple.c:479
+#: modules/process/calcoefs_simple.c:489
 msgid "No suggestion\n"
 msgstr "Нет предположений\n"
+
+#: modules/process/calcoefs_simple.c:633
+#: modules/process/grain_wshed.c:501
+#: modules/process/maskcor.c:327
+#: modules/process/mcrop.c:326
+#: modules/process/merge.c:686
+#: modules/process/tip_blind.c:559
+#: modules/process/tipops.c:307
+msgid "Initializing"
+msgstr "Инициализация"
+
+#: modules/process/calcoefs_simple.c:635
+#: modules/process/maskcor.c:329
+#: modules/process/mcrop.c:328
+#: modules/process/merge.c:688
+msgid "Correlating"
+msgstr "Коррелируется"
 
 #: modules/process/calcoefs_stage.c:79
 msgid "Digital AFM data recalibration"
@@ -5875,7 +5900,7 @@ msgstr "Расстояние по Y"
 
 #: modules/process/crosscor.c:236
 #: modules/process/fft.c:299
-#: modules/process/fft_filter_2d.c:565
+#: modules/process/fft_filter_2d.c:591
 #: modules/process/maskcor.c:175
 msgid "Output _type:"
 msgstr "Тип в_ывода:"
@@ -6375,12 +6400,12 @@ msgid "NRMS"
 msgstr "ср. квадр. в окр."
 
 #: modules/process/edge.c:697
-#: modules/process/fft_filter_2d.c:525
+#: modules/process/fft_filter_2d.c:526
 msgid "Display"
 msgstr "Показать"
 
 #: modules/process/edge.c:706
-#: modules/process/fft_filter_2d.c:368
+#: modules/process/fft_filter_2d.c:371
 msgid "Original _image"
 msgstr "Исходное _изображение"
 
@@ -6572,115 +6597,128 @@ msgstr "Тип _фильтра:"
 msgid "1D FFT Filtered Data"
 msgstr "Отфильтрованные данные одномерного БПФ"
 
-#: modules/process/fft_filter_2d.c:146
-#: modules/process/fft_filter_2d.c:395
+#: modules/process/fft_filter_2d.c:166
+#: modules/process/fft_filter_2d.c:398
 msgid "2D FFT Filtering"
 msgstr "Двумерный фильтр БПФ"
 
-#: modules/process/fft_filter_2d.c:160
+#: modules/process/fft_filter_2d.c:180
 msgid "/_Correct Data/_2D FFT Filtering..."
 msgstr "/Исправить _данные/Двумерная фильтрация _БПФ..."
 
-#: modules/process/fft_filter_2d.c:164
+#: modules/process/fft_filter_2d.c:184
 msgid "Two-dimensional FFT filtering"
 msgstr "Двумерная фильтрация БПФ"
 
-#: modules/process/fft_filter_2d.c:295
+#: modules/process/fft_filter_2d.c:298
 msgid "Filtered Data"
 msgstr "Отфильтрованные данные"
 
-#: modules/process/fft_filter_2d.c:307
-#: modules/process/fft_filter_2d.c:558
+#: modules/process/fft_filter_2d.c:310
+#: modules/process/fft_filter_2d.c:584
 msgid "Filtered FFT"
 msgstr "Отфильтрованное БПФ"
 
-#: modules/process/fft_filter_2d.c:338
+#: modules/process/fft_filter_2d.c:341
 msgid "Add an ellipse to the FFT mask"
 msgstr "Добавить эллипс к маске БПФ"
 
-#: modules/process/fft_filter_2d.c:343
+#: modules/process/fft_filter_2d.c:346
 msgid "Add a rectangle to the FFT mask"
 msgstr "Добавить прямоугольник к маске БПФ"
 
-#: modules/process/fft_filter_2d.c:348
+#: modules/process/fft_filter_2d.c:351
 msgid "Subtract an ellipse from the FFT mask"
 msgstr "Вычесть эллипс из маски БПФ"
 
-#: modules/process/fft_filter_2d.c:353
+#: modules/process/fft_filter_2d.c:356
 msgid "Subtract a rectange from the FFT mask"
 msgstr "Вычесть прямоугольник из маски БПФ"
 
-#: modules/process/fft_filter_2d.c:364
+#: modules/process/fft_filter_2d.c:367
 msgid "_FFT editor"
 msgstr "Редактор _БПФ"
 
-#: modules/process/fft_filter_2d.c:372
+#: modules/process/fft_filter_2d.c:375
 msgid "_Filtered image"
 msgstr "От_фильтрованное изображение"
 
-#: modules/process/fft_filter_2d.c:376
+#: modules/process/fft_filter_2d.c:379
 msgid "Image _difference"
 msgstr "_Разница изображений"
 
-#: modules/process/fft_filter_2d.c:445
+#: modules/process/fft_filter_2d.c:446
 msgid "Filter Mask"
 msgstr "Маска фильтра"
 
-#: modules/process/fft_filter_2d.c:480
+#: modules/process/fft_filter_2d.c:481
 msgid "_Undo"
 msgstr "_Отменить"
 
-#: modules/process/fft_filter_2d.c:489
+#: modules/process/fft_filter_2d.c:490
 #: modules/tools/maskedit.c:542
 msgid "_Remove"
 msgstr "_Удалить"
 
-#: modules/process/fft_filter_2d.c:499
+#: modules/process/fft_filter_2d.c:498
+#: modules/tools/maskedit.c:550
+msgid "_Fill"
+msgstr "_Заполнить"
+
+#: modules/process/fft_filter_2d.c:508
 msgid "_Snap to origin"
 msgstr "_Прикрепить к началу координат"
 
-#: modules/process/fft_filter_2d.c:511
+#: modules/process/fft_filter_2d.c:521
 msgid "Preview Options"
 msgstr "Параметры предпросмотра"
 
-#: modules/process/fft_filter_2d.c:551
+#: modules/process/fft_filter_2d.c:556
+msgid "Zoom:"
+msgstr "Масштаб:"
+
+#: modules/process/fft_filter_2d.c:577
 msgid "Output Options"
 msgstr "Параметры вывода"
 
-#: modules/process/fft_filter_2d.c:557
+#: modules/process/fft_filter_2d.c:583
 msgid "Filtered Image"
 msgstr "Отфильтрованное изображение"
 
-#: modules/process/fft_filter_2d.c:559
+#: modules/process/fft_filter_2d.c:585
 #: modules/process/scars.c:450
 msgid "Both"
 msgstr "Оба"
 
-#: modules/process/fft_filter_2d.c:1082
+#: modules/process/fft_filter_2d.c:1229
 msgid "Draw a new inclusive circle marker"
 msgstr "Нарисовать новый маркер \"заполненный круг\""
 
-#: modules/process/fft_filter_2d.c:1084
+#: modules/process/fft_filter_2d.c:1231
 msgid "Draw a new inclusive rectangle marker"
 msgstr "Нарисовать новый маркер \"заполненный прямоугольник\""
 
-#: modules/process/fft_filter_2d.c:1086
+#: modules/process/fft_filter_2d.c:1233
 msgid "Draw a new exclusive circle marker"
 msgstr "Нарисовать новый маркер \"круглый вырез\""
 
-#: modules/process/fft_filter_2d.c:1088
+#: modules/process/fft_filter_2d.c:1235
 msgid "Draw a new exclusive rectangle marker"
 msgstr "Нарисовать новый маркер \"прямоугольный вырез\""
 
-#: modules/process/fft_filter_2d.c:1090
+#: modules/process/fft_filter_2d.c:1237
 msgid "Undo the last change to the filter mask"
 msgstr "Отменить последнее изменение маски фильтра"
 
-#: modules/process/fft_filter_2d.c:1092
+#: modules/process/fft_filter_2d.c:1239
 msgid "Removes the entire filter mask"
 msgstr "Удаляет всю маску фильтра"
 
-#: modules/process/fft_filter_2d.c:1094
+#: modules/process/fft_filter_2d.c:1241
+msgid "Fills the entire filter mask"
+msgstr "Заполняет всю маску фильтра"
+
+#: modules/process/fft_filter_2d.c:1243
 msgid "Forces new markers to center around the origin"
 msgstr "Центрирует маркеры по началу координат"
 
@@ -7286,15 +7324,6 @@ msgstr "Число _шагов:"
 #: modules/process/grain_wshed.c:270
 msgid "Dr_op size:"
 msgstr "Размер _капли:"
-
-#: modules/process/grain_wshed.c:501
-#: modules/process/maskcor.c:327
-#: modules/process/mcrop.c:326
-#: modules/process/merge.c:686
-#: modules/process/tip_blind.c:559
-#: modules/process/tipops.c:307
-msgid "Initializing"
-msgstr "Инициализация"
 
 #: modules/process/grain_wshed.c:507
 msgid "Finding minima"
@@ -8063,12 +8092,6 @@ msgstr "Степень корреляции"
 #: modules/process/maskcor.c:182
 msgid "Correlation _method:"
 msgstr "_Метод корреляции:"
-
-#: modules/process/maskcor.c:329
-#: modules/process/mcrop.c:328
-#: modules/process/merge.c:688
-msgid "Correlating"
-msgstr "Коррелируется"
 
 #: modules/process/maskops.c:46
 msgid "Basic operations with mask: inversion, removal, extraction."
@@ -9569,10 +9592,6 @@ msgstr "Действия"
 #: modules/tools/maskedit.c:534
 msgid "_Invert"
 msgstr "_Инвертировать"
-
-#: modules/tools/maskedit.c:550
-msgid "_Fill"
-msgstr "_Заполнить"
 
 #: modules/tools/maskedit.c:557
 msgid "Fill _Voids"
