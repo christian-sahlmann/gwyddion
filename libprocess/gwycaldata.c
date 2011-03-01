@@ -187,13 +187,11 @@ gwy_caldata_new(gint ndata)
  * @caldata: Calibration data
  * @ndata: New number of data points
  *
- * Set number of calibration data entries, resize
- * arrays for holding them. Preserves actual values
- * up to new calibration data size.
+ * Sets number of calibration data entries, resizing arrays for holding them.
  *
+ * Preserves actual values up to new calibration data size.
  **/
-
-void        
+void
 gwy_caldata_resize(GwyCalData *caldata, gint ndata)
 {
     gint i, ncopy;
@@ -263,16 +261,15 @@ gwy_caldata_resize(GwyCalData *caldata, gint ndata)
  * @caldata: Calibration data
  * @sec: Calibration data to be appended
  *
- * Append calibration data entries, resizing
- * arrays for holding them. 
+ * Appends calibration data entries, resizing arrays for holding them.
  *
+ * Since: 2.23
  **/
-
-void        
+void
 gwy_caldata_append(GwyCalData *caldata, GwyCalData *sec)
 {
     gint i, from;
- 
+
     from = caldata->ndata;
     gwy_caldata_resize(caldata, caldata->ndata + sec->ndata);
 
@@ -294,9 +291,11 @@ gwy_caldata_append(GwyCalData *caldata, GwyCalData *sec)
  * gwy_caldata_get_ndata:
  * @caldata: Calibration data
  *
- * Get number of calibration data entries.
+ * Gets the number of calibration data entries.
  *
  * Returns: Number of calibration data entries.
+ *
+ * Since: 2.23
  **/
 gint
 gwy_caldata_get_ndata(GwyCalData *caldata)
@@ -518,6 +517,8 @@ gwy_caldata_deserialize(const guchar *buffer,
  *
  * Returns: SI unit corresponding to the lateral (X) dimension of the calibration data
  *          Its reference count is not incremented.
+ *
+ * Since: 2.23
  **/
 GwySIUnit*
 gwy_caldata_get_si_unit_x(GwyCalData *caldata)
@@ -538,6 +539,8 @@ gwy_caldata_get_si_unit_x(GwyCalData *caldata)
  *
  * Returns: SI unit corresponding to the lateral (Y) dimension of the calibration data.
  *          Its reference count is not incremented.
+ *
+ * Since: 2.23
  **/
 GwySIUnit*
 gwy_caldata_get_si_unit_y(GwyCalData *caldata)
@@ -559,6 +562,8 @@ gwy_caldata_get_si_unit_y(GwyCalData *caldata)
  *
  * Returns: SI unit corresponding to the "height" (Z) dimension of calibration data.
  *          Its reference count is not incremented.
+ *
+ * Since: 2.23
  **/
 GwySIUnit*
 gwy_caldata_get_si_unit_z(GwyCalData *caldata)
@@ -581,6 +586,8 @@ gwy_caldata_get_si_unit_z(GwyCalData *caldata)
  *
  * It does not assume a reference on @si_unit, instead it adds its own
  * reference.
+ *
+ * Since: 2.23
  **/
 void
 gwy_caldata_set_si_unit_x(GwyCalData *caldata,
@@ -606,6 +613,8 @@ gwy_caldata_set_si_unit_x(GwyCalData *caldata,
  *
  * It does not assume a reference on @si_unit, instead it adds its own
  * reference.
+ *
+ * Since: 2.23
  **/
 void
 gwy_caldata_set_si_unit_y(GwyCalData *caldata,
@@ -631,6 +640,8 @@ gwy_caldata_set_si_unit_y(GwyCalData *caldata,
  *
  * It does not assume a reference on @si_unit, instead it adds its own
  * reference.
+ *
+ * Since: 2.23
  **/
 void
 gwy_caldata_set_si_unit_z(GwyCalData *caldata,
@@ -650,7 +661,10 @@ gwy_caldata_set_si_unit_z(GwyCalData *caldata,
  * gwy_caldata_setup_interpolation:
  * @caldata: Calibration data.
  *
- * Prepares data for interpolating the calibration data (building Delaunay triangulation, etc.).
+ * Prepares data for interpolating the calibration data (building Delaunay
+ * triangulation, etc.).
+ *
+ * Since: 2.23
  **/
 void
 gwy_caldata_setup_interpolation (GwyCalData *caldata)
@@ -681,6 +695,8 @@ gwy_caldata_setup_interpolation (GwyCalData *caldata)
  * @zunc: z uncertainty at given position
  *
  * Determines (interpolates) caldata parameters for given position.
+ *
+ * Since: 2.23
  **/
 void
 gwy_caldata_interpolate(GwyCalData *caldata,
@@ -700,97 +716,141 @@ gwy_caldata_interpolate(GwyCalData *caldata,
  * gwy_caldata_get_xerr:
  * @caldata: Calibration data.
  *
+ * Gets the X error data for calibration data.
+ *
  * Returns: x error array pointer for given calibration data.
+ *
+ * Since: 2.23
  **/
-gdouble*    
+gdouble*
 gwy_caldata_get_xerr(GwyCalData *caldata)
 {
     return caldata->xerr;
 }
+
 /**
  * gwy_caldata_get_x:
  * @caldata: Calibration data.
  *
+ * Gets the Y data for calibration data.
+ *
  * Returns: x array pointer for given calibration data.
+ *
+ * Since: 2.23
  **/
-gdouble*    
+gdouble*
 gwy_caldata_get_x(GwyCalData *caldata)
 {
     return caldata->x;
 }
+
 /**
  * gwy_caldata_get_y:
  * @caldata: Calibration data.
  *
+ * Gets the Y data for calibration data.
+ *
  * Returns: y array pointer for given calibration data.
+ *
+ * Since: 2.23
  **/
-gdouble*    
+gdouble*
 gwy_caldata_get_y(GwyCalData *caldata)
 {
     return caldata->y;
 }
+
 /**
  * gwy_caldata_get_z:
  * @caldata: Calibration data.
  *
+ * Gets the Z data for calibration data.
+ *
  * Returns: z array pointer for given calibration data.
+ *
+ * Since: 2.23
  **/
-gdouble*    
+gdouble*
 gwy_caldata_get_z(GwyCalData *caldata)
 {
     return caldata->z;
 }
+
 /**
  * gwy_caldata_get_yerr:
  * @caldata: Calibration data.
  *
+ * Gets the Y error data for calibration data.
+ *
  * Returns: y error array pointer for given calibration data.
+ *
+ * Since: 2.23
  **/
-gdouble*    
+gdouble*
 gwy_caldata_get_yerr(GwyCalData *caldata)
 {
     return caldata->yerr;
 }
+
 /**
  * gwy_caldata_get_zerr:
  * @caldata: Calibration data.
  *
+ * Gets the Z error data for calibration data.
+ *
  * Returns: z error array pointer for given calibration data.
+ *
+ * Since: 2.23
  **/
-gdouble*    
+gdouble*
 gwy_caldata_get_zerr(GwyCalData *caldata)
 {
     return caldata->zerr;
 }
+
 /**
  * gwy_caldata_get_xunc:
  * @caldata: Calibration data.
  *
+ * Gets the X uncertainty data for calibration data.
+ *
  * Returns: x uncertainty array pointer for given calibration data.
+ *
+ * Since: 2.23
  **/
-gdouble*    
+gdouble*
 gwy_caldata_get_xunc(GwyCalData *caldata)
 {
     return caldata->xunc;
 }
+
 /**
  * gwy_caldata_get_yunc:
  * @caldata: Calibration data.
  *
+ * Gets the Y uncertainty data for calibration data.
+ *
  * Returns: y uncertainty array pointer for given calibration data.
+ *
+ * Since: 2.23
  **/
-gdouble*    
+gdouble*
 gwy_caldata_get_yunc(GwyCalData *caldata)
 {
     return caldata->yunc;
 }
+
 /**
  * gwy_caldata_get_zunc:
  * @caldata: Calibration data.
  *
+ * Gets the Z uncertainty data for calibration data.
+ *
  * Returns: z uncertainty array pointer for given calibration data.
+ *
+ * Since: 2.23
  **/
-gdouble*    
+gdouble*
 gwy_caldata_get_zunc(GwyCalData *caldata)
 {
     return caldata->zunc;
@@ -800,16 +860,18 @@ gwy_caldata_get_zunc(GwyCalData *caldata)
 /**
  * gwy_caldata_get_range:
  * @caldata: Calibration data.
- * @xfrom: x minimum 
- * @xto: x maximum 
- * @yfrom: y minimum 
- * @yto: y maximum 
- * @zfrom: z minimum 
+ * @xfrom: x minimum
+ * @xto: x maximum
+ * @yfrom: y minimum
+ * @yto: y maximum
+ * @zfrom: z minimum
  * @zto: z maximum
  *
- * Returns boundaries of calibration data validity.
+ * Obtains boundaries of calibration data validity.
+ *
+ * Since: 2.23
  **/
-void        
+void
 gwy_caldata_get_range(GwyCalData *caldata,
                      gdouble *xfrom, gdouble *xto, gdouble *yfrom, gdouble *yto,
                      gdouble *zfrom, gdouble *zto)
@@ -825,16 +887,18 @@ gwy_caldata_get_range(GwyCalData *caldata,
 /**
  * gwy_caldata_get_range:
  * @caldata: Calibration data.
- * @xfrom: x minimum 
- * @xto: x maximum 
- * @yfrom: y minimum 
- * @yto: y maximum 
- * @zfrom: z minimum 
+ * @xfrom: x minimum
+ * @xto: x maximum
+ * @yfrom: y minimum
+ * @yto: y maximum
+ * @zfrom: z minimum
  * @zto: z maximum
  *
  * Sets boundaries of calibration data validity.
+ *
+ * Since: 2.23
  **/
-void        
+void
 gwy_caldata_set_range(GwyCalData *caldata,
                      gdouble xfrom, gdouble xto, gdouble yfrom, gdouble yto,
                      gdouble zfrom, gdouble zto)
@@ -854,10 +918,13 @@ gwy_caldata_set_range(GwyCalData *caldata,
  * @y: y position
  * @z: z position
  *
- * Returns: true if xyz position is inside calibration data range.
+ * Tests whether a point is inside calibration data range.
+ *
+ * Returns: %TRUE if xyz position is inside calibration data range.
+ *
+ * Since: 2.23
  **/
-
-gboolean    
+gboolean
 gwy_caldata_inside(GwyCalData *caldata,
                    gdouble x, gdouble y, gdouble z)
 {
@@ -867,7 +934,7 @@ gwy_caldata_inside(GwyCalData *caldata,
     return FALSE;
 }
 
-void        
+void
 gwy_caldata_save_data(GwyCalData *caldata, gchar *filename)
 {
     GByteArray *barray = NULL;
