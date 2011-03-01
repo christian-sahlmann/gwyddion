@@ -4,7 +4,7 @@ msgstr ""
 "Project-Id-Version: Gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
 "POT-Creation-Date: 2011-02-28 03:58+0100\n"
-"PO-Revision-Date: 2011-02-28 08:21+0100\n"
+"PO-Revision-Date: 2011-03-01 16:14+0100\n"
 "Last-Translator: Petr Klapetek <klapetek@gwyddion.net>\n"
 "Language-Team: Czech\n"
 "Language: cs\n"
@@ -32,7 +32,7 @@ msgid "Invalid operator %c argument"
 msgstr "Argument operátoru %c je neplatný"
 
 #: libgwyddion/gwyexpr.c:1071
-#, fuzzy, c-format
+#, c-format
 msgid "Missing argument of %s"
 msgstr "Chybí argument %c"
 
@@ -1647,9 +1647,8 @@ msgid "grain quantities"
 msgstr "zrnové veličiny"
 
 #: app/gwyddion.c:144
-#, fuzzy
 msgid "calibrations"
-msgstr "Sklony"
+msgstr "kalibrace"
 
 #: app/gwyddion.c:149
 msgid "Loading settings"
@@ -2243,7 +2242,7 @@ msgstr "Trojrozměrné OpenGL zobrazení není přístupno"
 
 #: app/toolbox.c:1125
 msgid "OpenGL was disabled with a command-line option."
-msgstr ""
+msgstr "OpenGL bylo zakázáno na příkazové řádce."
 
 #: app/toolbox.c:1133
 msgid "Initialization of OpenGL failed.  Check output of <tt>glxinfo</tt> and warning messages printed to console during Gwyddion startup."
@@ -2890,9 +2889,9 @@ msgstr "MapVue soubory (.map)"
 
 #: modules/file/mapvue.c:544
 #: modules/file/mapvue.c:574
-#, fuzzy, c-format
+#, c-format
 msgid "Required tag %u or %u was not found."
-msgstr "Nebyl nalezen nezbytný tag %u."
+msgstr "Nebyl nalezen nezbytný tag %u nebo %u."
 
 #: modules/file/mapvue.c:785
 msgid "File end was reached while scanning tags."
@@ -2927,14 +2926,13 @@ msgstr "Znakové pole přesahuje konec souboru."
 #: modules/file/mapvue.c:892
 #: modules/file/mapvue.c:903
 #: modules/file/mapvue.c:913
-#, fuzzy
 msgid "Fiducial record does not fit into the file."
-msgstr "Znakové pole přesahuje konec souboru."
+msgstr "Záznam základní značky přesahuje konec souboru."
 
 #: modules/file/mapvue.c:1137
-#, fuzzy, c-format
+#, c-format
 msgid "Tag %u size is %u which is not sufficient to hold its content."
-msgstr "Velikost tagu %u je %u bajtů, což nestačí ani na značku tagu."
+msgstr "Velikost tagu %u je %u bajtů, což nestačí pro jeho obsah."
 
 #: modules/file/matfile.c:222
 msgid "Imports Matlab MAT files v5."
@@ -3007,9 +3005,8 @@ msgid "Axis display info record is too short."
 msgstr "Záznam o zobrazení osy je příliš krátký."
 
 #: modules/file/miffile.c:276
-#, fuzzy, c-format
 msgid "Loading of file version %u.%u is not implemented."
-msgstr "Verze souboru %u.%u není podporována."
+msgstr "Načítání souboru verze %u.%u není implementováno."
 
 #: modules/file/miffile.c:294
 msgid "File information block is outside the file."
@@ -3024,9 +3021,8 @@ msgid "Unique id record is too short."
 msgstr "Záznam unikátního identifikátoru je příliš krátký."
 
 #: modules/file/miffile.c:680
-#, fuzzy
 msgid "Image data are outside the file."
-msgstr "Osy jsou mimo obrázek"
+msgstr "Data obrázku jsou mimo soubor."
 
 #: modules/file/mifile.c:165
 msgid "Imports Molecular Imaging MI data files."
@@ -3146,7 +3142,7 @@ msgstr "Řádek DATA_INFO obsahuje méně než %d položek."
 
 #: modules/file/nanonis.c:376
 msgid "Header ended within a Multipass-Config table."
-msgstr ""
+msgstr "Hlavička skončila uvnitř tabulky Multipass-Config."
 
 #: modules/file/nanonis.c:536
 msgid "Missing data start marker \\x1a\\x04."
@@ -4413,6 +4409,7 @@ msgstr "Seiko soubory (.xqb, .xqd, .xqt)"
 #: modules/file/seiko.c:238
 msgid "Cannot determine scan dimensions; it seems non-square with an unknown side ratio."
 msgstr ""
+"Nelze určit rozměry obrázku, zdá se nečtvercový s neznámým poměrem stran."
 
 #: modules/file/sensofar.c:200
 msgid "Imports Sensofar PLu file format, version 2000 or newer."
@@ -4695,19 +4692,16 @@ msgid "WITec files (.wit)"
 msgstr "WITec soubory (.wit)"
 
 #: modules/file/wsffile.c:74
-#, fuzzy
 msgid "Imports WSF ASCII files."
-msgstr "Načítá ASCII datové soubory SPIP."
+msgstr "Načítá ASCII datové soubory WSF."
 
 #: modules/file/wsffile.c:87
-#, fuzzy
 msgid "WSF ASCII files (.wsf)"
-msgstr "SPIP ASCII soubory (.asc)"
+msgstr "WSF ASCII soubory (.wsf)"
 
 #: modules/file/wsffile.c:144
-#, fuzzy
 msgid "File header does not end with an empty line."
-msgstr "Hlavička souboru je větší než soubor."
+msgstr "Hlavička souboru nekončí prázdným řádkem."
 
 #: modules/file/wsxmfile.c:82
 msgid "Imports Nanotec WSxM data files."
@@ -7219,31 +7213,28 @@ msgid "Total grain volume (laplacian):"
 msgstr "Celkový objem zrn (laplacian):"
 
 #: modules/process/grain_edge.c:106
-#, fuzzy
 msgid "Marks grains by edge detection method."
-msgstr "Vyznačení zrn podle prahu"
+msgstr "Označuje zrna pomocí detekce hran."
 
 #: modules/process/grain_edge.c:120
-#, fuzzy
 msgid "/_Grains/Mark by _Edge Detection..."
-msgstr "/_Zrna/Označit metodou _stékání..."
+msgstr "/_Zrna/Označit _detekcí hran..."
 
 #: modules/process/grain_edge.c:124
 msgid "Mark grains with edge detection mechanism"
-msgstr ""
+msgstr "Označit zrna pomocí detekce hran"
 
 #: modules/process/grain_edge.c:214
-#, fuzzy
 msgid "Mark Grains by Edge Detection"
-msgstr "Vyznačení zrn podle prahu"
+msgstr "Vyznačení zrn detekcí hran"
 
 #: modules/process/grain_edge.c:263
 msgid "Threshold"
 msgstr "Práh"
 
 #: modules/process/grain_edge.c:267
-msgid "_Laplasian:"
-msgstr ""
+msgid "_Laplacian:"
+msgstr "_Laplacián:"
 
 #: modules/process/grain_mark.c:144
 msgid "Marks grains by thresholding (height, slope, curvature)."
@@ -7796,23 +7787,20 @@ msgid "Level Rotate"
 msgstr "Vyrovnání rotací"
 
 #: modules/process/level_grains.c:83
-#, fuzzy
 msgid "Levels individual grains, interpolating the shifts between using Laplacian interpolation."
-msgstr "Odstraňuje data pod maskou, interpoluje je řešním Laplaceovy rovnice."
+msgstr "Vyrovnává jednolivá zrna, interpolujíc mezi nimi řešením Laplaceovy rovnice."
 
 #: modules/process/level_grains.c:98
-#, fuzzy
 msgid "/_Grains/_Level Grains..."
-msgstr "/_Zrna/_Korelace..."
+msgstr "/_Zrna/_Vyrovnat zrna..."
 
 #: modules/process/level_grains.c:102
 msgid "Level individual grains, interpolating the shifts between using Laplacian interpolation"
-msgstr ""
+msgstr "Vyrovnat jednotlivá zrna s laplaceovskou interpolací mezi nimi"
 
 #: modules/process/level_grains.c:177
-#, fuzzy
 msgid "Laplace interpolation..."
-msgstr "Fraktální interpolace"
+msgstr "Laplaceovská interpolace..."
 
 #: modules/process/level_grains.c:223
 #: modules/process/median-bg.c:163
@@ -7823,14 +7811,12 @@ msgid "Background"
 msgstr "Pozadí"
 
 #: modules/process/level_grains.c:240
-#, fuzzy
 msgid "Level Grains"
-msgstr "Vyrovnává křivky grafu."
+msgstr "Vyrovnat zrna"
 
 #: modules/process/level_grains.c:255
-#, fuzzy
 msgid "Quantity to level:"
-msgstr "_Veličina:"
+msgstr "Vyrovnat podle:"
 
 #: modules/process/level_grains.c:268
 #: modules/process/median-bg.c:213
@@ -8412,7 +8398,7 @@ msgstr "Škálova_t s velikostí:"
 
 #: modules/process/obj_synth.c:789
 msgid "_Truncate:"
-msgstr ""
+msgstr "_Uříznout:"
 
 #: modules/process/outliers.c:38
 msgid "Creates mask of outliers."
@@ -8432,7 +8418,7 @@ msgstr "Hřebeny"
 
 #: modules/process/pat_synth.c:234
 msgid "Holes"
-msgstr ""
+msgstr "Otvory"
 
 #: modules/process/pat_synth.c:240
 msgid "Generates surfaces representing simple patterns (steps, ridges, ...)."
@@ -8456,7 +8442,7 @@ msgstr "_Vzor:"
 
 #: modules/process/pat_synth.c:494
 msgid "Placement"
-msgstr ""
+msgstr "Umístění"
 
 #: modules/process/pat_synth.c:848
 msgid "Flat"
@@ -8494,9 +8480,8 @@ msgid "Distance"
 msgstr "Vzdálenosti"
 
 #: modules/process/pat_synth.c:1479
-#, fuzzy
 msgid "_Distance:"
-msgstr "Vzdálenosti"
+msgstr "_Vzdálenost:"
 
 #: modules/process/polydistort.c:140
 msgid "Apllies polynomial distortion in the horizontal plane."
@@ -8885,14 +8870,12 @@ msgid "Interpolating..."
 msgstr "Interpoluji..."
 
 #: modules/process/synth.h:343
-#, fuzzy
 msgid "Roundness"
-msgstr "Drsnost"
+msgstr "Zaoblenost"
 
 #: modules/process/synth.h:351
-#, fuzzy
 msgid "Roundn_ess:"
-msgstr "Zaokrouhlení"
+msgstr "_Zaoblenost:"
 
 #: modules/process/synth.h:371
 msgid "Orientation"
