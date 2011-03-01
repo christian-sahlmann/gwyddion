@@ -264,7 +264,7 @@ gedge_dialog(GEdgeArgs *args,
                      0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
-    table_attach_threshold(table, &row, _("_Laplasian:"),
+    table_attach_threshold(table, &row, _("_Laplacian:"),
                            &controls.threshold_laplasian,
                            args->threshold_laplasian,
                            &controls);
