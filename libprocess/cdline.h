@@ -23,6 +23,7 @@
 
 #include <glib.h>
 #include <libprocess/dataline.h>
+#include <libprocess/gwycaldata.h>
 #include <libgwyddion/gwyresource.h>
 
 
@@ -84,6 +85,13 @@ void         gwy_cdline_fit              (GwyCDLine* cdline,
                                           gdouble *err,
                                           const gboolean *fixed_param,
                                           gpointer user_data);
+void         gwy_cdline_fit_with_caldata (GwyCDLine* cdline,
+                                          gint n_dat,
+                                          const gdouble *x,
+                                          const gdouble *y,
+                                          gdouble *params,
+                                          gdouble *err,
+                                          GwyCurveCalibrationData *cdata); 
 gdouble      gwy_cdline_get_value        (GwyCDLine *cdline,
                                           gdouble x,
                                           const gdouble *params,
