@@ -4,7 +4,7 @@ msgstr ""
 "Project-Id-Version: Gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
 "POT-Creation-Date: 2011-02-28 03:58+0100\n"
-"PO-Revision-Date: 2011-03-01 16:14+0100\n"
+"PO-Revision-Date: 2011-03-02 10:22+0100\n"
 "Last-Translator: Petr Klapetek <klapetek@gwyddion.net>\n"
 "Language-Team: Czech\n"
 "Language: cs\n"
@@ -34,7 +34,7 @@ msgstr "Argument operátoru %c je neplatný"
 #: libgwyddion/gwyexpr.c:1071
 #, c-format
 msgid "Missing argument of %s"
-msgstr "Chybí argument %c"
+msgstr "Chybí argument %s"
 
 #: libgwyddion/gwyexpr.c:1078
 #, c-format
