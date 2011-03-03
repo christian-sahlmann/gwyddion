@@ -84,7 +84,6 @@ file_LTLIBRARIES = \
 	rhk-sm3.la \
 	rhk-sm4.la \
 	rhk-spm32.la \
-	robotics.la \
 	sdfile.la \
 	seiko.la \
 	sensofar.la \
@@ -113,6 +112,7 @@ noinst_HEADERS = \
 # kept.  If we remove them completely, various bits can get lost.
 disabled_sources = \
 	miffile.c \
+	robotics.la \
 	wipfile.c
 
 EXTRA_DIST = \
@@ -194,7 +194,7 @@ rawxyz_la_SOURCES        = rawxyz.c
 rhk_sm3_la_SOURCES       = rhk-sm3.c
 rhk_sm4_la_SOURCES       = rhk-sm4.c
 rhk_spm32_la_SOURCES     = rhk-spm32.c
-robotics_la_SOURCES      = robotics.c
+#robotics_la_SOURCES      = robotics.c
 sdfile_la_SOURCES        = sdfile.c
 seiko_la_SOURCES         = seiko.c
 sensofar_la_SOURCES      = sensofar.c
