@@ -3,8 +3,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2011-02-28 03:58+0100\n"
-"PO-Revision-Date: 2011-03-02 10:22+0100\n"
+"POT-Creation-Date: 2011-03-03 03:58+0100\n"
+"PO-Revision-Date: 2011-03-03 10:03+0100\n"
 "Last-Translator: Petr Klapetek <klapetek@gwyddion.net>\n"
 "Language-Team: Czech\n"
 "Language: cs\n"
@@ -195,46 +195,46 @@ msgstr "Lorentzovka"
 msgid "Sinc"
 msgstr "Sinc"
 
-#: libprocess/cdline.c:540
+#: libprocess/cdline.c:538
 msgid "Edge height (right)"
 msgstr "Výška hrany (pravé)"
 
-#: libprocess/cdline.c:541
-#: libprocess/cdline.c:550
+#: libprocess/cdline.c:539
+#: libprocess/cdline.c:548
 msgid "Edge"
 msgstr "Hrana"
 
-#: libprocess/cdline.c:549
+#: libprocess/cdline.c:547
 msgid "Edge height (left)"
 msgstr "Výška hrany (levé)"
 
-#: libprocess/cdline.c:558
+#: libprocess/cdline.c:556
 msgid "Step height (positive)"
 msgstr "Výška schodu (kladného)"
 
-#: libprocess/cdline.c:559
-#: libprocess/cdline.c:568
+#: libprocess/cdline.c:557
+#: libprocess/cdline.c:566
 #: libgwydgets/gwydgetenums.c:47
 #: modules/process/hough.c:166
 msgid "Line"
 msgstr "Čára"
 
-#: libprocess/cdline.c:567
+#: libprocess/cdline.c:565
 msgid "Step height (negative)"
 msgstr "Výšska schodu (záporného)"
 
-#: libprocess/cdline.c:576
+#: libprocess/cdline.c:574
 msgid "Circle (down)"
 msgstr "Kružnice (dolní část)"
 
-#: libprocess/cdline.c:577
-#: libprocess/cdline.c:586
+#: libprocess/cdline.c:575
+#: libprocess/cdline.c:584
 #: libgwydgets/gwygraphareadialog.c:535
 #: modules/process/hough.c:167
 msgid "Circle"
 msgstr "Kružnice"
 
-#: libprocess/cdline.c:585
+#: libprocess/cdline.c:583
 msgid "Circle (up)"
 msgstr "Kružnice (horní část)"
 
@@ -853,7 +853,7 @@ msgstr "pixelů"
 #: modules/process/facet-level.c:283
 #: modules/process/facet_analysis.c:272
 #: modules/process/fft.c:272
-#: modules/process/fft_filter_2d.c:396
+#: modules/process/fft_filter_2d.c:399
 #: modules/process/fft_synth.c:330
 #: modules/process/fractal.c:206
 #: modules/process/grain_edge.c:220
@@ -3005,6 +3005,7 @@ msgid "Axis display info record is too short."
 msgstr "Záznam o zobrazení osy je příliš krátký."
 
 #: modules/file/miffile.c:276
+#, c-format
 msgid "Loading of file version %u.%u is not implemented."
 msgstr "Načítání souboru verze %u.%u není implementováno."
 
@@ -4352,6 +4353,14 @@ msgstr "rozsahy dat"
 msgid "data offset"
 msgstr "posun dat"
 
+#: modules/file/robotics.c:72
+msgid "Imports Automation & Robotics Dual Lensmapper data files"
+msgstr ""
+
+#: modules/file/robotics.c:85
+msgid "Dual Lensmapper files"
+msgstr ""
+
 #: modules/file/sdfile.c:156
 msgid "Imports Surfstand group SDF (Surface Data File) files."
 msgstr "Načítá soubory SDF (Surface Data File) skupiny Surfstand."
@@ -4408,8 +4417,7 @@ msgstr "Seiko soubory (.xqb, .xqd, .xqt)"
 
 #: modules/file/seiko.c:238
 msgid "Cannot determine scan dimensions; it seems non-square with an unknown side ratio."
-msgstr ""
-"Nelze určit rozměry obrázku, zdá se nečtvercový s neznámým poměrem stran."
+msgstr "Nelze určit rozměry obrázku, zdá se nečtvercový s neznámým poměrem stran."
 
 #: modules/file/sensofar.c:200
 msgid "Imports Sensofar PLu file format, version 2000 or newer."
@@ -4823,9 +4831,9 @@ msgstr "Je třeba vybrat více datových bodů, než je volných parametrů fitu
 #: modules/tools/stats.c:661
 #: modules/tools/stats.c:672
 #: modules/tools/stats.c:673
-#: modules/tools/stats.c:1049
-#: modules/tools/stats.c:1056
-#: modules/tools/stats.c:1058
+#: modules/tools/stats.c:1050
+#: modules/tools/stats.c:1057
+#: modules/tools/stats.c:1059
 msgid "N.A."
 msgstr "nelze použít"
 
@@ -5391,114 +5399,153 @@ msgid "Null horizontall offsets, moving the origin to the upper left corner"
 msgstr "Přesunout počátek souřadnic do levého horního rohu"
 
 #: modules/process/calcoefs_load.c:79
-#, fuzzy
 msgid "Load calibration data from text file"
-msgstr "Export dat grafu do textového souboru"
+msgstr "Import kalibračních dat z textového souboru"
 
 #: modules/process/calcoefs_load.c:93
 msgid "/Cali_bration/_Load From Text File..."
 msgstr "/Kali_brace/V_ložit ze souboru..."
 
 #: modules/process/calcoefs_load.c:97
-#, fuzzy
 msgid "Load calibration data from text file."
-msgstr "Exportuje data grafu do textových souborů."
+msgstr "Importuje kalibrační data z textového souboru"
+
+#: modules/process/calcoefs_load.c:145
+#: modules/process/calcoefs_simple.c:253
+#, c-format
+msgid "Error loading file: %s\n"
+msgstr "Chyba při čtení souboru: %s"
+
+#: modules/process/calcoefs_load.c:173
+#: modules/process/calcoefs_new.c:309
+#: modules/process/calcoefs_simple.c:282
+#, c-format
+msgid "Cannot save preset: %s"
+msgstr "Obsah souboru nelze uložit: %s"
 
 #: modules/process/calcoefs_load.c:208
-#, fuzzy
 msgid "Load Calibration Data"
-msgstr "Kalibrační faktor v ose _X:"
+msgstr "Nahrát kalibrační data"
 
 #: modules/process/calcoefs_load.c:228
 #: modules/process/calcoefs_new.c:566
 #: modules/process/calcoefs_simple.c:477
-#, fuzzy
 msgid "Calibration name:"
-msgstr "Kalibrovat osy"
+msgstr "Název kalibrace"
 
 #: modules/process/calcoefs_load.c:240
 msgid "No data loaded"
 msgstr "Nebyla vložena žádná data"
 
+#: modules/process/calcoefs_load.c:267
+#: modules/process/calcoefs_new.c:635
+#: modules/process/calcoefs_simple.c:541
+#, c-format
+msgid "Calibration '%s' already exists"
+msgstr "Kalibrace „%s“ již existuje"
+
+#: modules/process/calcoefs_load.c:269
+#: modules/process/calcoefs_new.c:637
+#: modules/process/calcoefs_simple.c:543
+msgid "Overwrite"
+msgstr "Přepsat"
+
+#: modules/process/calcoefs_load.c:270
+#: modules/process/calcoefs_new.c:638
+#: modules/process/calcoefs_simple.c:544
+msgid "Append"
+msgstr "Přidat"
+
+#: modules/process/calcoefs_load.c:316
+msgid "Load calibration data"
+msgstr "Nahrát kalibrační data."
+
+#: modules/process/calcoefs_load.c:331
+#, c-format
+msgid "Error loading file '%s'"
+msgstr "Chyba při čtení souboru '%s'"
+
+#: modules/process/calcoefs_load.c:390
+msgid "Error: not enough points."
+msgstr "Chyba: příliš málo bodů v souboru"
+
+#: modules/process/calcoefs_load.c:417
+#, c-format
+msgid "Loaded %d data points"
+msgstr "Načteno %d bodů"
+
 #: modules/process/calcoefs_new.c:165
-#, fuzzy
 msgid "Create simple calibration data"
-msgstr "Vytváří vystínovanou presentaci dat."
+msgstr "Vytvořit jednodouchá kalibrační data."
 
 #: modules/process/calcoefs_new.c:179
-#, fuzzy
 msgid "/Cali_bration/_Create..."
-msgstr "/_Zrna/_Korelace..."
+msgstr "/Kali_brace/_Vytvořit..."
 
 #: modules/process/calcoefs_new.c:183
 msgid "Specify simple calibration data."
 msgstr "Vytvořit jednoduchá kalibrační data."
 
+#: modules/process/calcoefs_new.c:272
+#, c-format
+msgid "Error loading file: %s"
+msgstr "Chyba při čtení souboru: %s"
+
 #: modules/process/calcoefs_new.c:346
-#, fuzzy
 msgid "Simple Calibration Data"
-msgstr "Překalibrovaná data"
+msgstr "Jednoduchá kalibrační data"
 
 #: modules/process/calcoefs_new.c:364
-#, fuzzy
 msgid "_X from:"
-msgstr "Od:"
+msgstr "_X od:"
 
 #: modules/process/calcoefs_new.c:391
 msgid "_X to:"
 msgstr "do:"
 
 #: modules/process/calcoefs_new.c:404
-#, fuzzy
 msgid "_Y from:"
-msgstr "Od:"
+msgstr "_Y od:"
 
 #: modules/process/calcoefs_new.c:417
 msgid "_Y to:"
 msgstr "do:"
 
 #: modules/process/calcoefs_new.c:431
-#, fuzzy
 msgid "_Z from:"
-msgstr "Od:"
+msgstr "_Z od:"
 
 #: modules/process/calcoefs_new.c:458
 msgid "_Z to:"
 msgstr "do:"
 
 #: modules/process/calcoefs_new.c:471
-#, fuzzy
 msgid "_X uncertainty:"
-msgstr "Mapa spolehlivosti hrotu"
+msgstr "Nejistota _X:"
 
 #: modules/process/calcoefs_new.c:492
-#, fuzzy
 msgid "_Y uncertainty:"
-msgstr "Mapa spolehlivosti hrotu"
+msgstr "Nejistota _Y:"
 
 #: modules/process/calcoefs_new.c:507
-#, fuzzy
 msgid "_Z uncertainty:"
-msgstr "Mapa spolehlivosti hrotu"
+msgstr "Nejistota _Z:"
 
 #: modules/process/calcoefs_new.c:529
-#, fuzzy
 msgid "_X correction factor:"
-msgstr "Kalibrační faktor v ose _X:"
+msgstr "Korekční faktor v ose _X:"
 
 #: modules/process/calcoefs_new.c:541
-#, fuzzy
 msgid "_Y correction factor:"
-msgstr "Kalibrační faktor v ose _Y:"
+msgstr "Korekční faktor v ose _Y:"
 
 #: modules/process/calcoefs_new.c:553
-#, fuzzy
 msgid "_Z correction factor:"
-msgstr "Kalibrační faktor v ose _Z:"
+msgstr "Korekční faktor v ose _Z:"
 
 #: modules/process/calcoefs_simple.c:173
-msgid "Simple AFM data recalibration"
-msgstr "Jednoduchá rekalibrace dat"
+msgid "Simple error map based on grating measurements"
+msgstr "Jednoduchá mapa chyb založená na měření mřížky"
 
 #: modules/process/calcoefs_simple.c:187
 msgid "/Cali_bration/_Get Simple Errop Map..."
@@ -5517,6 +5564,15 @@ msgstr "Jednoduchá mapa chyb"
 #: modules/process/superresolution.c:159
 msgid "Operands:"
 msgstr "O_perandy:"
+
+#: modules/process/calcoefs_simple.c:351
+msgid "Grating image"
+msgstr "_Snímek mřížky"
+
+#: modules/process/calcoefs_simple.c:352
+#: modules/tools/crop.c:394
+msgid "Detail"
+msgstr "Detail"
 
 #: modules/process/calcoefs_simple.c:373
 #: modules/process/calcoefs_view.c:508
@@ -5540,18 +5596,33 @@ msgstr "P_erioda v Y:"
 
 #: modules/process/calcoefs_simple.c:440
 #: modules/process/calcoefs_view.c:546
-#, fuzzy
 msgid "_Z offset:"
-msgstr "Posun v _X:"
+msgstr "Posun v _Z:"
 
 #: modules/process/calcoefs_simple.c:468
-#, fuzzy
 msgid "_Threshold"
-msgstr "_Práh:"
+msgstr "_Práh"
 
 #: modules/process/calcoefs_simple.c:489
 msgid "No suggestion\n"
 msgstr ""
+
+#: modules/process/calcoefs_simple.c:589
+msgid "Data same as detail?"
+msgstr "Data se shodují s detailem?"
+
+#: modules/process/calcoefs_simple.c:595
+msgid "Data larger than detail?"
+msgstr "Data větší než detail?"
+
+#: modules/process/calcoefs_simple.c:609
+#, c-format
+msgid "%d objects found"
+msgstr "Nalezeno %d objektů"
+
+#: modules/process/calcoefs_simple.c:611
+msgid "Search cancelled"
+msgstr "Hledání zrušeno:"
 
 #: modules/process/calcoefs_simple.c:633
 #: modules/process/grain_wshed.c:501
@@ -5595,34 +5666,32 @@ msgid "/Cali_bration/_Apply to Data..."
 msgstr "/Kali_brace/Použít na d_ata..."
 
 #: modules/process/calcoefs_view.c:265
-#, fuzzy
 msgid "3D calibration and uncertainty"
-msgstr "Kalibrační faktor v ose _X:"
+msgstr "3D kalibrace a nejistoty"
 
 #: modules/process/calcoefs_view.c:330
-#, fuzzy
 msgid "3D Calibration"
-msgstr "Kalibrovat osy"
+msgstr "3D kalibrace"
+
+#: modules/process/calcoefs_view.c:394
+msgid "No data used."
+msgstr "Nebyla použita žádná data"
 
 #: modules/process/calcoefs_view.c:414
-#, fuzzy
 msgid "Used calibration data:"
-msgstr "Překalibrovat data"
+msgstr "Použitá data:"
 
 #: modules/process/calcoefs_view.c:431
-#, fuzzy
 msgid "Shown planes:"
-msgstr "Zobrazuj _popisky"
+msgstr "Zobrazená _rovina"
 
 #: modules/process/calcoefs_view.c:437
-#, fuzzy
 msgid "View:"
-msgstr "Zobrazení"
+msgstr "Zobrazení:"
 
 #: modules/process/calcoefs_view.c:452
-#, fuzzy
 msgid "Plane:"
-msgstr "Rovinu"
+msgstr "Rovina:"
 
 #: modules/process/calcoefs_view.c:471
 msgid "X pos:"
@@ -5637,17 +5706,25 @@ msgid "Z pos:"
 msgstr "Z ofset:"
 
 #: modules/process/calcoefs_view.c:490
-#, fuzzy
 msgid "Interpolation:"
-msgstr "Typ _interpolace:"
+msgstr "_Interpolace:"
 
 #: modules/process/calcoefs_view.c:574
 msgid "crop to actual data"
 msgstr "ořížnout na aktuální data"
 
 #: modules/process/calcoefs_view.c:584
-#, fuzzy
-msgid "i_nstant updates"
+#: modules/process/deposit_synth.c:687
+#: modules/process/edge.c:714
+#: modules/process/fft_filter_1d.c:334
+#: modules/process/grain_edge.c:289
+#: modules/process/grain_mark.c:380
+#: modules/process/grain_rem_threshold.c:357
+#: modules/process/mark_with.c:359
+#: modules/process/polydistort.c:334
+#: modules/process/scars.c:575
+#: modules/process/synth.h:487
+msgid "I_nstant updates"
 msgstr "Okamžité _aktualizace"
 
 #: modules/process/calcoefs_view.c:696
@@ -5655,98 +5732,91 @@ msgid "Shown part has zero range."
 msgstr "Zobrazen nulový rozsah."
 
 #: modules/process/calcoefs_view.c:703
-#, fuzzy, c-format
+#, c-format
 msgid "Shown range (%.*f - %.*f) %s"
-msgstr "Rozsah x:         %.*f až %.*f %s\n"
+msgstr "Rozsah:  ( %.*f až %.*f) %s"
 
 #: modules/process/calcoefs_view.c:752
-#, fuzzy, c-format
+#, c-format
 msgid "%d calibration data"
-msgstr "Překalibrovat data"
+msgstr "Počet dat: %d "
 
 #: modules/process/calcoefs_view.c:756
-#, fuzzy, c-format
+#, c-format
 msgid "X span: (%.*f - %.*f) %s"
-msgstr "Rozsah x:         %.*f až %.*f %s\n"
+msgstr "Rozsah x:  (%.*f až %.*f) %s"
 
 #: modules/process/calcoefs_view.c:762
-#, fuzzy, c-format
+#, c-format
 msgid "Y span: (%.*f - %.*f) %s"
-msgstr "Rozsah x:         %.*f až %.*f %s\n"
+msgstr "Rozsah y: (%.*f až %.*f ) %s"
 
 #: modules/process/calcoefs_view.c:768
-#, fuzzy, c-format
+#, c-format
 msgid "Z span: (%.*f - %.*f) %s"
-msgstr "Rozsah x:         %.*f až %.*f %s\n"
+msgstr "Rozsah z:  (%.*f až %.*f) %s"
+
+#: modules/process/calcoefs_view.c:792
+msgid "Error: out of range."
+msgstr ""
 
 #: modules/process/calcoefs_view.c:801
 msgid "Building mesh..."
 msgstr "Vytváření sítě..."
 
 #: modules/process/calcoefs_view.c:807
-#, fuzzy
 msgid "Triangulation..."
-msgstr "Triangulace"
+msgstr "Triangulace..."
 
 #: modules/process/calcoefs_view.c:1134
 #: modules/tools/profile.c:1095
-#, fuzzy
 msgid "X correction"
-msgstr "Korekce:"
+msgstr "X korekce"
 
 #: modules/process/calcoefs_view.c:1135
 #: modules/tools/profile.c:1096
-#, fuzzy
 msgid "Y correction"
-msgstr "Korekce:"
+msgstr "Y korekce"
 
 #: modules/process/calcoefs_view.c:1136
 #: modules/tools/profile.c:1097
-#, fuzzy
 msgid "Z correction"
-msgstr "Korekce:"
+msgstr "Z korekce"
 
 #: modules/process/calcoefs_view.c:1137
 #: modules/tools/profile.c:1098
-#, fuzzy
 msgid "X uncertainty"
-msgstr "Mapa spolehlivosti hrotu"
+msgstr "X nejistota"
 
 #: modules/process/calcoefs_view.c:1138
 #: modules/tools/profile.c:1099
-#, fuzzy
 msgid "Y uncertainty"
-msgstr "Mapa spolehlivosti hrotu"
+msgstr "Y nejistota"
 
 #: modules/process/calcoefs_view.c:1139
 #: modules/tools/profile.c:1100
-#, fuzzy
 msgid "Z uncertainty"
-msgstr "Mapa spolehlivosti hrotu"
+msgstr "Z nejistota"
 
 #: modules/process/calcoefs_view.c:1151
-#, fuzzy
 msgid "Constant X"
-msgstr "Okamžitě:"
+msgstr "Konstantní X"
 
 #: modules/process/calcoefs_view.c:1152
-#, fuzzy
 msgid "Constant Y"
-msgstr "Okamžitě:"
+msgstr "Konstantní Y"
 
 #: modules/process/calcoefs_view.c:1153
-#, fuzzy
 msgid "Constant Z"
-msgstr "Okamžitě:"
+msgstr "Konstantní Z"
 
 #: modules/process/calcoefs_view.c:1164
 msgid "NNA 3D"
 msgstr "NNA 3D"
 
 #: modules/process/calcoefs_view.c:1165
-#, fuzzy
 msgid "Snap to planes"
-msgstr "Při_chytit k počátku"
+msgstr "Při_chytit k rovině"
 
 #: modules/process/calcoefs_view.c:1166
 msgid "Delaunay"
@@ -5757,23 +5827,20 @@ msgid "Recalibrates scan lateral dimensions or value range."
 msgstr "Kalibruje podélné rozměry vozrku nebo rozsah hodnot."
 
 #: modules/process/calibrate.c:159
-#, fuzzy
 msgid "/_Basic Operations/_Dimensions and Units..."
-msgstr "/_Jednoduché operace/_Omezit rozsah..."
+msgstr "/_Jednoduché operace/_Rozsah a jednotky..."
 
 #: modules/process/calibrate.c:163
-#, fuzzy
 msgid "Change physical dimensions, units or value scale"
-msgstr "Kalibruje podélné rozměry vozrku nebo rozsah hodnot."
+msgstr "Kalibruje podélné rozměry vzorku nebo rozsah hodnot."
 
 #: modules/process/calibrate.c:282
 msgid "Recalibrated Data"
 msgstr "Překalibrovaná data"
 
 #: modules/process/calibrate.c:295
-#, fuzzy
 msgid "Dimensions and Units"
-msgstr "Jednotky roz_měrů:"
+msgstr "Rozsah a jednotky"
 
 #: modules/process/calibrate.c:314
 msgid "New Real Dimensions"
@@ -5923,7 +5990,7 @@ msgstr "Vzdálenost v ose Y"
 
 #: modules/process/crosscor.c:236
 #: modules/process/fft.c:299
-#: modules/process/fft_filter_2d.c:565
+#: modules/process/fft_filter_2d.c:591
 #: modules/process/maskcor.c:175
 msgid "Output _type:"
 msgstr "T_yp výstupu:"
@@ -6133,19 +6200,6 @@ msgstr "_Pokrytí:"
 #: modules/process/deposit_synth.c:478
 msgid "_Revise:"
 msgstr "_Revidovat:"
-
-#: modules/process/deposit_synth.c:687
-#: modules/process/edge.c:714
-#: modules/process/fft_filter_1d.c:334
-#: modules/process/grain_edge.c:289
-#: modules/process/grain_mark.c:380
-#: modules/process/grain_rem_threshold.c:357
-#: modules/process/mark_with.c:359
-#: modules/process/polydistort.c:334
-#: modules/process/scars.c:575
-#: modules/process/synth.h:487
-msgid "I_nstant updates"
-msgstr "Okamžité _aktualizace"
 
 #: modules/process/deposit_synth.c:705
 #: modules/process/synth.h:522
@@ -6423,12 +6477,12 @@ msgid "NRMS"
 msgstr "NRMS"
 
 #: modules/process/edge.c:697
-#: modules/process/fft_filter_2d.c:525
+#: modules/process/fft_filter_2d.c:526
 msgid "Display"
 msgstr "Zobrazovat"
 
 #: modules/process/edge.c:706
-#: modules/process/fft_filter_2d.c:368
+#: modules/process/fft_filter_2d.c:371
 msgid "Original _image"
 msgstr "_Původní obraz"
 
@@ -6620,115 +6674,128 @@ msgstr "Typ _filtru:"
 msgid "1D FFT Filtered Data"
 msgstr "1D FFT filtrovaná data"
 
-#: modules/process/fft_filter_2d.c:146
-#: modules/process/fft_filter_2d.c:395
+#: modules/process/fft_filter_2d.c:166
+#: modules/process/fft_filter_2d.c:398
 msgid "2D FFT Filtering"
 msgstr "Dvourozměrné FFT filtrování"
 
-#: modules/process/fft_filter_2d.c:160
+#: modules/process/fft_filter_2d.c:180
 msgid "/_Correct Data/_2D FFT Filtering..."
 msgstr "/_Korekce dat/_2D FFT filtrování..."
 
-#: modules/process/fft_filter_2d.c:164
+#: modules/process/fft_filter_2d.c:184
 msgid "Two-dimensional FFT filtering"
 msgstr "Dvourozměrné FFT filtrování"
 
-#: modules/process/fft_filter_2d.c:295
+#: modules/process/fft_filter_2d.c:298
 msgid "Filtered Data"
 msgstr "Filtrovaná data"
 
-#: modules/process/fft_filter_2d.c:307
-#: modules/process/fft_filter_2d.c:558
+#: modules/process/fft_filter_2d.c:310
+#: modules/process/fft_filter_2d.c:584
 msgid "Filtered FFT"
 msgstr "Filtrované FFT"
 
-#: modules/process/fft_filter_2d.c:338
+#: modules/process/fft_filter_2d.c:341
 msgid "Add an ellipse to the FFT mask"
 msgstr "Přidat k FFT masce elipsu"
 
-#: modules/process/fft_filter_2d.c:343
+#: modules/process/fft_filter_2d.c:346
 msgid "Add a rectangle to the FFT mask"
 msgstr "Přidat k FFT masce obdélník"
 
-#: modules/process/fft_filter_2d.c:348
+#: modules/process/fft_filter_2d.c:351
 msgid "Subtract an ellipse from the FFT mask"
 msgstr "Odstranit z FFT masky elipsu"
 
-#: modules/process/fft_filter_2d.c:353
+#: modules/process/fft_filter_2d.c:356
 msgid "Subtract a rectange from the FFT mask"
 msgstr "Odstranit z FFT masky obdélník"
 
-#: modules/process/fft_filter_2d.c:364
+#: modules/process/fft_filter_2d.c:367
 msgid "_FFT editor"
 msgstr "_FFT editor"
 
-#: modules/process/fft_filter_2d.c:372
+#: modules/process/fft_filter_2d.c:375
 msgid "_Filtered image"
 msgstr "F_iltrovaný obraz"
 
-#: modules/process/fft_filter_2d.c:376
+#: modules/process/fft_filter_2d.c:379
 msgid "Image _difference"
 msgstr "_Rozdíl obrazů"
 
-#: modules/process/fft_filter_2d.c:445
+#: modules/process/fft_filter_2d.c:446
 msgid "Filter Mask"
 msgstr "Maska filtru"
 
-#: modules/process/fft_filter_2d.c:480
+#: modules/process/fft_filter_2d.c:481
 msgid "_Undo"
 msgstr "_Zpět"
 
-#: modules/process/fft_filter_2d.c:489
+#: modules/process/fft_filter_2d.c:490
 #: modules/tools/maskedit.c:542
 msgid "_Remove"
 msgstr "_Odstranit"
 
-#: modules/process/fft_filter_2d.c:499
+#: modules/process/fft_filter_2d.c:498
+#: modules/tools/maskedit.c:550
+msgid "_Fill"
+msgstr "_Vyplnění"
+
+#: modules/process/fft_filter_2d.c:508
 msgid "_Snap to origin"
 msgstr "Při_chytit k počátku"
 
-#: modules/process/fft_filter_2d.c:511
+#: modules/process/fft_filter_2d.c:521
 msgid "Preview Options"
 msgstr "Volby náhledu"
 
-#: modules/process/fft_filter_2d.c:551
+#: modules/process/fft_filter_2d.c:556
+msgid "Zoom:"
+msgstr "_Zvětšení:"
+
+#: modules/process/fft_filter_2d.c:577
 msgid "Output Options"
 msgstr "Možnosti výstupu"
 
-#: modules/process/fft_filter_2d.c:557
+#: modules/process/fft_filter_2d.c:583
 msgid "Filtered Image"
 msgstr "Filtrovaný obraz"
 
-#: modules/process/fft_filter_2d.c:559
+#: modules/process/fft_filter_2d.c:585
 #: modules/process/scars.c:450
 msgid "Both"
 msgstr "Oba"
 
-#: modules/process/fft_filter_2d.c:1082
+#: modules/process/fft_filter_2d.c:1229
 msgid "Draw a new inclusive circle marker"
 msgstr "Přidat novou kruhovou oblast"
 
-#: modules/process/fft_filter_2d.c:1084
+#: modules/process/fft_filter_2d.c:1231
 msgid "Draw a new inclusive rectangle marker"
 msgstr "Přidat novou obdélníkovou oblast"
 
-#: modules/process/fft_filter_2d.c:1086
+#: modules/process/fft_filter_2d.c:1233
 msgid "Draw a new exclusive circle marker"
 msgstr "Odebrat kruhovou oblast"
 
-#: modules/process/fft_filter_2d.c:1088
+#: modules/process/fft_filter_2d.c:1235
 msgid "Draw a new exclusive rectangle marker"
 msgstr "Odebrat obdélníkovou oblast"
 
-#: modules/process/fft_filter_2d.c:1090
+#: modules/process/fft_filter_2d.c:1237
 msgid "Undo the last change to the filter mask"
 msgstr "Vrátit zpět poslední změnu masky filtru"
 
-#: modules/process/fft_filter_2d.c:1092
+#: modules/process/fft_filter_2d.c:1239
 msgid "Removes the entire filter mask"
 msgstr "Odstranit celou masku"
 
-#: modules/process/fft_filter_2d.c:1094
+#: modules/process/fft_filter_2d.c:1241
+msgid "Fills the entire filter mask"
+msgstr "Vyplní celou masku filtru"
+
+#: modules/process/fft_filter_2d.c:1243
 msgid "Forces new markers to center around the origin"
 msgstr "Upevnit středy nových oblastí do počátku"
 
@@ -9248,10 +9315,6 @@ msgstr "_Zachovat podélné posunutí"
 msgid "Create new channel"
 msgstr "Vytvořit nový kanál"
 
-#: modules/tools/crop.c:394
-msgid "Detail"
-msgstr "Detail"
-
 #: modules/tools/distance.c:101
 msgid "Distance measurement tool, measures distances and angles."
 msgstr "Nástroj měření vzdálenosti, měří vzdálenosti a úhly."
@@ -9601,10 +9664,6 @@ msgstr "Akce"
 msgid "_Invert"
 msgstr "_Inverze"
 
-#: modules/tools/maskedit.c:550
-msgid "_Fill"
-msgstr "_Vyplnění"
-
 #: modules/tools/maskedit.c:557
 msgid "Fill _Voids"
 msgstr "Vyplnit _Díry"
@@ -9709,54 +9768,52 @@ msgid "_Separate profiles"
 msgstr "_Oddělit profily"
 
 #: modules/tools/profile.c:459
-#, fuzzy
 msgid "_Calibration data:"
-msgstr "Kalibrační faktor v ose _X:"
+msgstr "Kalibrační data:"
 
 #: modules/tools/profile.c:473
-#, fuzzy
 msgid "_Show profile"
-msgstr "_Oddělit profily"
+msgstr "_Zobrazit profil"
 
 #: modules/tools/profile.c:821
 #, c-format
 msgid "X error %d"
-msgstr ""
+msgstr "Chyba X %d"
 
 #: modules/tools/profile.c:824
 #, c-format
 msgid "Y error %d"
-msgstr ""
+msgstr "Chyba Y %d"
 
 #: modules/tools/profile.c:827
 #, c-format
 msgid "Z error %d"
-msgstr ""
+msgstr "Chyba Z %d"
 
 #: modules/tools/profile.c:830
-#, fuzzy, c-format
+#, c-format
 msgid "X uncertainty %d"
-msgstr "Mapa spolehlivosti hrotu"
+msgstr "Nejistota X %d"
 
 #: modules/tools/profile.c:833
-#, fuzzy, c-format
+#, c-format
 msgid "Y uncertainty %d"
-msgstr "Mapa spolehlivosti hrotu"
+msgstr "Nejistota Y %d"
 
 #: modules/tools/profile.c:836
-#, fuzzy, c-format
+#, c-format
 msgid "Z uncertainty %d"
-msgstr "Mapa spolehlivosti hrotu"
+msgstr "Nejistota z %d"
 
 #: modules/tools/profile.c:839
 #, c-format
 msgid "Zunc up bound %d"
-msgstr ""
+msgstr "Nejistota z do %d"
 
 #: modules/tools/profile.c:842
 #, c-format
 msgid "Zunc low bound %d"
-msgstr ""
+msgstr "Nejistota z od %d"
 
 #: modules/tools/readvalue.c:114
 msgid "Pointer tool, reads value under pointer."
@@ -9950,13 +10007,13 @@ msgid "Roughness Parameters"
 msgstr "Parametry drsnosti"
 
 #: modules/tools/roughness.c:2209
-#: modules/tools/stats.c:998
+#: modules/tools/stats.c:999
 #, c-format
 msgid "File:              %s\n"
 msgstr "Soubor:              %s\n"
 
 #: modules/tools/roughness.c:2213
-#: modules/tools/stats.c:1002
+#: modules/tools/stats.c:1003
 #, c-format
 msgid "Data channel:      %s\n"
 msgstr "Datový kanál:        %s\n"
@@ -10067,9 +10124,8 @@ msgid "Calculate 1D statistical functions"
 msgstr "Výpočet jednorozměrných statistických funkcí"
 
 #: modules/tools/sfunctions.c:433
-#, fuzzy
 msgid "_Separate uncertainty"
-msgstr "_Oddělit spektra"
+msgstr "_Oddělit nejistotu"
 
 #: modules/tools/spectro.c:126
 msgid "Point Spectrum, extracts point spectra to a graph."
@@ -10120,7 +10176,7 @@ msgid "Statistics tool."
 msgstr "Statistický nástroj."
 
 #: modules/tools/stats.c:217
-#: modules/tools/stats.c:992
+#: modules/tools/stats.c:993
 msgid "Statistical Quantities"
 msgstr "Statistické veličiny"
 
@@ -10180,19 +10236,19 @@ msgstr "φ sklonu:"
 msgid "Parameters"
 msgstr "Parametry"
 
-#: modules/tools/stats.c:928
+#: modules/tools/stats.c:929
 msgid "Save Statistical Quantities"
 msgstr "Uložení statistických hodnot"
 
-#: modules/tools/stats.c:1024
+#: modules/tools/stats.c:1025
 msgid "Yes"
 msgstr "Ano"
 
-#: modules/tools/stats.c:1024
+#: modules/tools/stats.c:1025
 msgid "No"
 msgstr "Ne"
 
-#: modules/tools/stats.c:1061
+#: modules/tools/stats.c:1062
 #, c-format
 msgid ""
 "Selected area:     %s × %s at (%s, %s) px\n"
@@ -10228,6 +10284,13 @@ msgstr ""
 "Projektovaná plocha: %s\n"
 "θ sklonu:            %s\n"
 "φ sklonu:            %s\n"
+
+#~ msgid "Simple AFM data recalibration"
+#~ msgstr "Jednoduchá rekalibrace dat"
+
+#, fuzzy
+#~ msgid "i_nstant updates"
+#~ msgstr "Okamžité _aktualizace"
 
 #~ msgid "/_Basic Operations/_Recalibrate..."
 #~ msgstr "/_Jednoduché operace/_Kalibrace os..."
