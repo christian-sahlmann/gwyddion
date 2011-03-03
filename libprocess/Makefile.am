@@ -82,7 +82,7 @@ AM_CPPFLAGS = -I$(top_srcdir) -DG_LOG_DOMAIN=\"GwyProcess\"
 # Any iface change    C++: 0:   A
 # Adding ifaces       C:   R:   A++
 # Changing ifaces     C:   R:   0
-libversion = -version-info 11:0:11
+libversion = -version-info 12:0:12
 #libversion = -release @LIBRARY_RELEASE@
 libgwyprocess2_la_LDFLAGS = @BASIC_LIBS@ @FFTW3_LIBS@ -export-dynamic $(no_undefined) $(export_symbols) $(libversion)
 libgwyprocess2_la_LIBADD = $(libgwyprocess_libadd)
