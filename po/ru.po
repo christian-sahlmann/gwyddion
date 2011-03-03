@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2011-03-01 03:58+0100\n"
-"PO-Revision-Date: 2011-03-01 08:07+0300\n"
+"POT-Creation-Date: 2011-03-03 03:58+0100\n"
+"PO-Revision-Date: 2011-03-03 07:24+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "Language: \n"
@@ -201,46 +201,46 @@ msgstr "Лоренцева"
 msgid "Sinc"
 msgstr "Sinc"
 
-#: libprocess/cdline.c:540
+#: libprocess/cdline.c:538
 msgid "Edge height (right)"
 msgstr "Высота кромки (справа)"
 
-#: libprocess/cdline.c:541
-#: libprocess/cdline.c:550
+#: libprocess/cdline.c:539
+#: libprocess/cdline.c:548
 msgid "Edge"
 msgstr "Кромка"
 
-#: libprocess/cdline.c:549
+#: libprocess/cdline.c:547
 msgid "Edge height (left)"
 msgstr "Высота кромки (слева)"
 
-#: libprocess/cdline.c:558
+#: libprocess/cdline.c:556
 msgid "Step height (positive)"
 msgstr "Высота ступеньки (выступа)"
 
-#: libprocess/cdline.c:559
-#: libprocess/cdline.c:568
+#: libprocess/cdline.c:557
+#: libprocess/cdline.c:566
 #: libgwydgets/gwydgetenums.c:47
 #: modules/process/hough.c:166
 msgid "Line"
 msgstr "Линия"
 
-#: libprocess/cdline.c:567
+#: libprocess/cdline.c:565
 msgid "Step height (negative)"
 msgstr "Высота ступеньки (впадины)"
 
-#: libprocess/cdline.c:576
+#: libprocess/cdline.c:574
 msgid "Circle (down)"
 msgstr "Сфера (вниз)"
 
-#: libprocess/cdline.c:577
-#: libprocess/cdline.c:586
+#: libprocess/cdline.c:575
+#: libprocess/cdline.c:584
 #: libgwydgets/gwygraphareadialog.c:535
 #: modules/process/hough.c:167
 msgid "Circle"
 msgstr "Круг"
 
-#: libprocess/cdline.c:585
+#: libprocess/cdline.c:583
 msgid "Circle (up)"
 msgstr "Сфера (вверх)"
 
@@ -4839,9 +4839,9 @@ msgstr "Необходимо выбрать больше точек данных
 #: modules/tools/stats.c:661
 #: modules/tools/stats.c:672
 #: modules/tools/stats.c:673
-#: modules/tools/stats.c:1049
-#: modules/tools/stats.c:1056
-#: modules/tools/stats.c:1058
+#: modules/tools/stats.c:1050
+#: modules/tools/stats.c:1057
+#: modules/tools/stats.c:1059
 msgid "N.A."
 msgstr "недоступно"
 
@@ -5418,6 +5418,19 @@ msgstr "/_Калибровка/_Загрузить из текстового ф�
 msgid "Load calibration data from text file."
 msgstr "Загрузить данные калибровки из текстового файла."
 
+#: modules/process/calcoefs_load.c:145
+#: modules/process/calcoefs_simple.c:253
+#, c-format
+msgid "Error loading file: %s\n"
+msgstr "Ошибка загрузки файла %s\n"
+
+#: modules/process/calcoefs_load.c:173
+#: modules/process/calcoefs_new.c:309
+#: modules/process/calcoefs_simple.c:282
+#, c-format
+msgid "Cannot save preset: %s"
+msgstr "Невозможно сохранить набор предустановок: %s"
+
 #: modules/process/calcoefs_load.c:208
 msgid "Load Calibration Data"
 msgstr "Загрузить данные калибровки"
@@ -5432,6 +5445,43 @@ msgstr "Имя калибровки:"
 msgid "No data loaded"
 msgstr "Данные не загружены"
 
+#: modules/process/calcoefs_load.c:267
+#: modules/process/calcoefs_new.c:635
+#: modules/process/calcoefs_simple.c:541
+#, c-format
+msgid "Calibration '%s' already exists"
+msgstr "Калибровка `%s' уже существует"
+
+#: modules/process/calcoefs_load.c:269
+#: modules/process/calcoefs_new.c:637
+#: modules/process/calcoefs_simple.c:543
+msgid "Overwrite"
+msgstr "Перезаписать"
+
+#: modules/process/calcoefs_load.c:270
+#: modules/process/calcoefs_new.c:638
+#: modules/process/calcoefs_simple.c:544
+msgid "Append"
+msgstr "Добавить"
+
+#: modules/process/calcoefs_load.c:316
+msgid "Load calibration data"
+msgstr "Загрузить данные калибровки"
+
+#: modules/process/calcoefs_load.c:331
+#, c-format
+msgid "Error loading file '%s'"
+msgstr "Ошибка загрузки файла '%s'"
+
+#: modules/process/calcoefs_load.c:390
+msgid "Error: not enough points."
+msgstr "Ошибка: недостаточно точек."
+
+#: modules/process/calcoefs_load.c:417
+#, c-format
+msgid "Loaded %d data points"
+msgstr "Загружено %d точек данных"
+
 #: modules/process/calcoefs_new.c:165
 msgid "Create simple calibration data"
 msgstr "Создаёт простые данные калибровки"
@@ -5443,6 +5493,11 @@ msgstr "/_Калибровка/_Создать..."
 #: modules/process/calcoefs_new.c:183
 msgid "Specify simple calibration data."
 msgstr "Задать простые данные калибровки"
+
+#: modules/process/calcoefs_new.c:272
+#, c-format
+msgid "Error loading file: %s"
+msgstr "Ошибка загрузки файла: %s"
 
 #: modules/process/calcoefs_new.c:346
 msgid "Simple Calibration Data"
@@ -5497,8 +5552,8 @@ msgid "_Z correction factor:"
 msgstr "Мно_житель калибровки по Z:"
 
 #: modules/process/calcoefs_simple.c:173
-msgid "Simple AFM data recalibration"
-msgstr "Простая перекалибровка данных АСМ"
+msgid "Simple error map based on grating measurements"
+msgstr "Простая карта ошибок на основе измерения калибровочной решетки"
 
 #: modules/process/calcoefs_simple.c:187
 msgid "/Cali_bration/_Get Simple Errop Map..."
@@ -5517,6 +5572,15 @@ msgstr "Простая карта ошибок"
 #: modules/process/superresolution.c:159
 msgid "Operands:"
 msgstr "Операнды:"
+
+#: modules/process/calcoefs_simple.c:351
+msgid "Grating image"
+msgstr "Изображение решетки"
+
+#: modules/process/calcoefs_simple.c:352
+#: modules/tools/crop.c:394
+msgid "Detail"
+msgstr "Часть"
 
 #: modules/process/calcoefs_simple.c:373
 #: modules/process/calcoefs_view.c:508
@@ -5551,6 +5615,23 @@ msgstr "_Порог"
 msgid "No suggestion\n"
 msgstr "Нет предположений\n"
 
+#: modules/process/calcoefs_simple.c:589
+msgid "Data same as detail?"
+msgstr "Данные одинаковы с фрагментом?"
+
+#: modules/process/calcoefs_simple.c:595
+msgid "Data larger than detail?"
+msgstr "Размер данных больше чем фрагмент?"
+
+#: modules/process/calcoefs_simple.c:609
+#, c-format
+msgid "%d objects found"
+msgstr "Найдено %d объектов"
+
+#: modules/process/calcoefs_simple.c:611
+msgid "Search cancelled"
+msgstr "Поиск отменён"
+
 #: modules/process/calcoefs_simple.c:633
 #: modules/process/grain_wshed.c:501
 #: modules/process/maskcor.c:327
@@ -5575,7 +5656,7 @@ msgstr "Перекалибровка данных цифровой АСМ"
 #: modules/process/calcoefs_stage.c:93
 #, fuzzy
 msgid "/Cali_bration/_3D Calibration/_Get From Stage map..."
-msgstr "/_Калибровка/_Трёхмерная/_Получить из карты stage..."
+msgstr "/_Калибровка/_Трёхмерная/_Получить из карты Stage..."
 
 #: modules/process/calcoefs_stage.c:97
 msgid "Stage error mapping"
@@ -5600,6 +5681,10 @@ msgstr "Трёхмерная калибровка и погрешности"
 #: modules/process/calcoefs_view.c:330
 msgid "3D Calibration"
 msgstr "Трёхмерная калибровка"
+
+#: modules/process/calcoefs_view.c:394
+msgid "No data used."
+msgstr "Данные не использовались."
 
 #: modules/process/calcoefs_view.c:414
 msgid "Used calibration data:"
@@ -5638,8 +5723,18 @@ msgid "crop to actual data"
 msgstr "обрезать до действительных данных"
 
 #: modules/process/calcoefs_view.c:584
-msgid "i_nstant updates"
-msgstr "мгновенное об_новление"
+#: modules/process/deposit_synth.c:687
+#: modules/process/edge.c:714
+#: modules/process/fft_filter_1d.c:334
+#: modules/process/grain_edge.c:289
+#: modules/process/grain_mark.c:380
+#: modules/process/grain_rem_threshold.c:357
+#: modules/process/mark_with.c:359
+#: modules/process/polydistort.c:334
+#: modules/process/scars.c:575
+#: modules/process/synth.h:487
+msgid "I_nstant updates"
+msgstr "Мгновенное об_новление"
 
 #: modules/process/calcoefs_view.c:696
 msgid "Shown part has zero range."
@@ -5669,6 +5764,10 @@ msgstr "Диапазон Y: (%.*f - %.*f) %s"
 #, c-format
 msgid "Z span: (%.*f - %.*f) %s"
 msgstr "Диапазон Z: (%.*f - %.*f) %s"
+
+#: modules/process/calcoefs_view.c:792
+msgid "Error: out of range."
+msgstr "Ошибка: вне диапазона."
 
 #: modules/process/calcoefs_view.c:801
 msgid "Building mesh..."
@@ -6110,19 +6209,6 @@ msgstr "Процент по_крытия:"
 #: modules/process/deposit_synth.c:478
 msgid "_Revise:"
 msgstr "И_зменить:"
-
-#: modules/process/deposit_synth.c:687
-#: modules/process/edge.c:714
-#: modules/process/fft_filter_1d.c:334
-#: modules/process/grain_edge.c:289
-#: modules/process/grain_mark.c:380
-#: modules/process/grain_rem_threshold.c:357
-#: modules/process/mark_with.c:359
-#: modules/process/polydistort.c:334
-#: modules/process/scars.c:575
-#: modules/process/synth.h:487
-msgid "I_nstant updates"
-msgstr "Мгновенное об_новление"
 
 #: modules/process/deposit_synth.c:705
 #: modules/process/synth.h:522
@@ -7151,7 +7237,7 @@ msgstr "Распределения зёрен"
 
 #: modules/process/grain_dist.c:479
 msgid "noun|count"
-msgstr "число"
+msgstr "количество"
 
 #: modules/process/grain_dist.c:547
 msgid "Export Raw Grain Values"
@@ -7223,7 +7309,7 @@ msgid "Threshold"
 msgstr "Порог"
 
 #: modules/process/grain_edge.c:267
-msgid "_Laplasian:"
+msgid "_Laplacian:"
 msgstr "_Лапласиан:"
 
 #: modules/process/grain_mark.c:144
@@ -9240,10 +9326,6 @@ msgstr "Сохранять пространственные смещения"
 msgid "Create new channel"
 msgstr "Создать новый канал"
 
-#: modules/tools/crop.c:394
-msgid "Detail"
-msgstr "Часть"
-
 #: modules/tools/distance.c:101
 msgid "Distance measurement tool, measures distances and angles."
 msgstr "Инструмент измерения расстояний, измеряет расстояния и углы."
@@ -9936,13 +10018,13 @@ msgid "Roughness Parameters"
 msgstr "Параметры шероховатости"
 
 #: modules/tools/roughness.c:2209
-#: modules/tools/stats.c:998
+#: modules/tools/stats.c:999
 #, c-format
 msgid "File:              %s\n"
 msgstr "Файл:              %s\n"
 
 #: modules/tools/roughness.c:2213
-#: modules/tools/stats.c:1002
+#: modules/tools/stats.c:1003
 #, c-format
 msgid "Data channel:      %s\n"
 msgstr "Канал данных:      %s\n"
@@ -10105,7 +10187,7 @@ msgid "Statistics tool."
 msgstr "Инструмент статистики."
 
 #: modules/tools/stats.c:217
-#: modules/tools/stats.c:992
+#: modules/tools/stats.c:993
 msgid "Statistical Quantities"
 msgstr "Статистические величины"
 
@@ -10165,19 +10247,19 @@ msgstr "Наклон φ:"
 msgid "Parameters"
 msgstr "Параметры"
 
-#: modules/tools/stats.c:928
+#: modules/tools/stats.c:929
 msgid "Save Statistical Quantities"
 msgstr "Сохранять статистические величины"
 
-#: modules/tools/stats.c:1024
+#: modules/tools/stats.c:1025
 msgid "Yes"
 msgstr "Да"
 
-#: modules/tools/stats.c:1024
+#: modules/tools/stats.c:1025
 msgid "No"
 msgstr "Нет"
 
-#: modules/tools/stats.c:1061
+#: modules/tools/stats.c:1062
 #, c-format
 msgid ""
 "Selected area:     %s × %s at (%s, %s) px\n"
@@ -10214,3 +10296,8 @@ msgstr ""
 "Наклон θ:     %s\n"
 "Наклон φ:     %s\n"
 
+#~ msgid "Simple AFM data recalibration"
+#~ msgstr "Простая перекалибровка данных АСМ"
+
+#~ msgid "i_nstant updates"
+#~ msgstr "мгновенное об_новление"
