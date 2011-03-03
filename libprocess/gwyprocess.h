@@ -48,6 +48,7 @@
 #include <libprocess/triangulation.h>
 #include <libprocess/gwycalibration.h>
 #include <libprocess/gwycaldata.h>
+#include <libprocess/stats_uncertainty.h>
 
 G_BEGIN_DECLS
 
