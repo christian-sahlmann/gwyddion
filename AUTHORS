@@ -50,6 +50,8 @@ Luke Somers <lsomers@sas.upenn.edu>
     Median difference line correction.
 Vojtěch Salajka <xsalaj02@stud.fit.vutbr.cz>
     Numbered ticks and other color axis improvements.
+Anna Campbellova <acampbellova@cmi.cz>
+    Uncertainties of quantities calculated from calibrated data.
 
 
 === Translators ===

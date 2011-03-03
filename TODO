@@ -1,18 +1,3 @@
-Too many things.  Use
-
-  grep --include '*.[ch]' -i '\<\(XXX\|TODO\|FIXME\|provisory\|fuck\|shit|hell\)\>' .
-
-to locate them ;-)
-
-Particularly (overall app issues, module issues not listed):
-- Printing
-- Integrated help
-- Sessions
-- ...
-
-Quite a few of these items are intrusive and will have to wait for the next
-unstable version.
-
 ============================================================================
 Unimplemented stuff:
 - libprocess/correlation.c: @window_width and @window_height are unused in
@@ -20,8 +5,8 @@ Unimplemented stuff:
 
 ============================================================================
 Release checklist:
-- must build on Linux from tarballs
-- must build on MS Windows
+- must build on Linux from svn and tarballs
+- must cross-build for MS Windows
 - update user guide module map
 - update translations (make update-po in po; remember to commit and tag the
   really final versions, making dists in general updates po again)
