@@ -5414,7 +5414,7 @@ msgstr "Importuje kalibrační data z textového souboru"
 #: modules/process/calcoefs_simple.c:253
 #, c-format
 msgid "Error loading file: %s\n"
-msgstr "Chyba při čtení souboru: %s"
+msgstr "Chyba při čtení souboru: %s\n"
 
 #: modules/process/calcoefs_load.c:173
 #: modules/process/calcoefs_new.c:309
@@ -5605,7 +5605,7 @@ msgstr "_Práh"
 
 #: modules/process/calcoefs_simple.c:489
 msgid "No suggestion\n"
-msgstr ""
+msgstr "\n"
 
 #: modules/process/calcoefs_simple.c:589
 msgid "Data same as detail?"
