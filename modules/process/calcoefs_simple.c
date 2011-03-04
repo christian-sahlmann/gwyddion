@@ -887,6 +887,10 @@ simple_do(SimpleArgs *args)
     yunc = gwy_caldata_get_yunc(args->caldata);
     zunc = gwy_caldata_get_zunc(args->caldata);
 
+    gwy_caldata_set_si_unit_x(args->caldata, gwy_data_field_get_si_unit_xy(original));
+    gwy_caldata_set_si_unit_y(args->caldata, gwy_data_field_get_si_unit_xy(original));
+    gwy_caldata_set_si_unit_z(args->caldata, gwy_data_field_get_si_unit_z(original));
+
     minx = miny = minz = G_MAXDOUBLE;
     maxx = maxy = maxz = -G_MAXDOUBLE;
 
