@@ -112,7 +112,7 @@ noinst_HEADERS = \
 # kept.  If we remove them completely, various bits can get lost.
 disabled_sources = \
 	miffile.c \
-	robotics.la \
+	robotics.c \
 	wipfile.c
 
 EXTRA_DIST = \
