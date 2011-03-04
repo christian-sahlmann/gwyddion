@@ -3123,7 +3123,7 @@ gwy_data_field_area_dh_uncertainty(GwyDataField *data_field,
     gdouble min, max, max_unc;
     const gdouble *drow, *mrow, *urow;
     gdouble *val, *valmin, *valmax;
-    gint i, j, k, l, m, k1, k2, l1, l2;
+    gint i, j, k, l, m;
     gint imin=0, imax=0, jmin=0, jmax=0;
     guint nn;
 
