@@ -1,6 +1,6 @@
-2.23 (0000-00-00)
+2.23 (2011-03-05)
 Application:
-- Translations updated: French, Russian.
+- Translations updated: Czech, French, Russian.
 
 Libraries:
 - libgwyprocess: New classes GwyCalibration and GwyCalData representing
