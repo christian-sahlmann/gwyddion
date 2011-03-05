@@ -122,5 +122,8 @@ The Board of Trustees of the University of Illinois
 
 Gtk+ Mac OS X project
     OS X menubar integration app/ige-mac-menu.[ch] was copied from this
-    project, see the files for mode.
+    project, see the files for more.
 
+Ross Hemsley, Bristol University
+    3D Delaunay triangulation and interpolation, see libprocess/natural.c for
+    more.
