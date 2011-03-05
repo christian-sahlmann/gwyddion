@@ -5605,7 +5605,7 @@ msgstr "_Práh"
 
 #: modules/process/calcoefs_simple.c:489
 msgid "No suggestion\n"
-msgstr "\n"
+msgstr " \n"
 
 #: modules/process/calcoefs_simple.c:589
 msgid "Data same as detail?"
