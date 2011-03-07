@@ -4,7 +4,7 @@ msgstr ""
 "Project-Id-Version: Gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
 "POT-Creation-Date: 2011-03-05 11:11+0100\n"
-"PO-Revision-Date: 2011-03-03 10:03+0100\n"
+"PO-Revision-Date: 2011-03-07 13:25+0100\n"
 "Last-Translator: Petr Klapetek <klapetek@gwyddion.net>\n"
 "Language-Team: Czech\n"
 "Language: cs\n"
@@ -7650,7 +7650,7 @@ msgid "_Save statistics"
 msgstr "/_Uložit statistiky"
 
 #: modules/process/indent_analyze.c:1581
-msgid "No statistics has benn computed yet."
+msgid "No statistics has been computed yet."
 msgstr "Dosud nebylo provedeno vyhodnocení."
 
 #: modules/process/indent_analyze.c:1589
@@ -7679,7 +7679,7 @@ msgstr "Maximum na [%d, %d] je:                 %lf\n"
 
 #: modules/process/indent_analyze.c:1637
 #, c-format
-msgid "Diference max-min:                      %lf\n"
+msgid "Difference max-min:                     %lf\n"
 msgstr "Rozdíl maximum-minimum:                 %lf\n"
 
 #: modules/process/indent_analyze.c:1642
