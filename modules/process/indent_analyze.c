@@ -1578,7 +1578,7 @@ save_statistics_dialog(IndentAnalyzeControls *c,
                                         GTK_DIALOG_DESTROY_WITH_PARENT,
                                         GTK_MESSAGE_ERROR,
                                         GTK_BUTTONS_OK,
-                                        _("No statistics has benn "
+                                        _("No statistics has been "
                                           "computed yet."));
         gtk_dialog_run(GTK_DIALOG(dialog));
         gtk_widget_destroy(dialog);
@@ -1634,7 +1634,7 @@ save_statistics_dialog(IndentAnalyzeControls *c,
                 args->minx, args->miny, args->min_val/mag);
         fprintf(out, _("Maximum at [%d, %d] is:                 %lf\n"),
                 args->maxx, args->maxy, args->max_val/mag);
-        fprintf(out, _("Diference max-min:                      %lf\n"),
+        fprintf(out, _("Difference max-min:                     %lf\n"),
                 (args->max_val - args->min_val)/mag);
         fprintf(out, "\n");
 
