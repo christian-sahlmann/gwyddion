@@ -70,6 +70,86 @@ FunctionEnd
 
 ;----------------------------------------------------------------------------
 
+; Detect existing installation and give the user the choice to
+; - remove the old version before proceeding
+; - ignore its presence and continue installation
+; - abort the installation
+Function DetectPrevInstallation
+    SetShellVarContext all
+    push $R0
+    push $R1
+    push $R2
+
+    ReadRegStr $R0 HKLM "${PRODUCT_UNINST_KEY}" "UninstallString"
+    StrCmp $R0 "" detect_prev_finished
+
+    ReadRegStr $R1 HKLM "${PRODUCT_UNINST_KEY}" "DisplayVersion"
+    ReadRegStr $R2 HKLM "${PRODUCT_UNINST_KEY}" "InstallLocation"
+
+    MessageBox MB_YESNOCANCEL|MB_ICONQUESTION \
+        "${PRODUCT_NAME} $R1 is already installed in $R2.$\n$\n\
+        Do you want to replace it?$\n$\n\
+        Click Yes to remove the previous version, \
+        No to ignore the previous version and proceed, \
+        Cancel to abort the installation." \
+        /SD IDYES IDYES uninstall_prev IDNO detect_prev_finished
+
+    Quit
+
+    uninstall_prev:
+    ExecWait '$R0 /S _?=$INSTDIR'
+
+    detect_prev_finished:
+    pop $R2
+    pop $R1
+    pop $R0
+FunctionEnd
+
+;----------------------------------------------------------------------------
+
+; Create radio button with label LABEL and value LOCALE at position VPOS
+!macro GWY_LOCALE_CHOOSER LABEL LOCALE VPOS
+    ${NSD_CreateRadioButton} 0u ${VPOS} 100% 12u ${LABEL}
+    Pop $RadioButton
+    nsDialogs::SetUserData $RadioButton ${LOCALE}
+    ${If} $Locale == ${LOCALE}
+        ${NSD_SetState} $RadioButton ${BST_CHECKED}
+    ${EndIf}
+    ${NSD_OnClick} $RadioButton LocaleOnClick
+!macroend
+
+; Installer page to choose Gwyddion translation
+Function ChooseLocale
+    nsDialogs::Create 1018
+    Pop $Dialog
+
+    ${If} $Dialog == error
+    Abort
+    ${EndIf}
+
+    !insertmacro MUI_HEADER_TEXT "Choose Language" "Choose the language of Gwyddion user interface."
+
+    ${NSD_CreateLabel} 0u 0u 100% 12u "Available languages:"
+    Pop $Label
+
+    !insertmacro GWY_LOCALE_CHOOSER "English" "en_US.UTF-8" 12u
+    !insertmacro GWY_LOCALE_CHOOSER "Czech" "cs_CZ.UTF-8" 24u
+    !insertmacro GWY_LOCALE_CHOOSER "French" "fr_FR.UTF-8" 36u
+    !insertmacro GWY_LOCALE_CHOOSER "German" "de_DE.UTF-8" 48u
+    !insertmacro GWY_LOCALE_CHOOSER "Italian" "it_IT.UTF-8" 60u
+    !insertmacro GWY_LOCALE_CHOOSER "Russian" "ru_RU.UTF-8" 72u
+
+    nsDialogs::Show
+FunctionEnd
+
+Function LocaleOnClick
+    Pop $1
+    nsDialogs::GetUserData $1
+    Pop $Locale
+FunctionEnd
+
+;----------------------------------------------------------------------------
+
 Section "Gwyddion (required)"
     SectionIn RO
 
@@ -191,85 +271,5 @@ Section "Uninstall"
     Delete "$INSTDIR\${UNINSTALLER_NAME}"
     RmDir "$INSTDIR"
 SectionEnd
-
-;----------------------------------------------------------------------------
-
-; Detect existing installation and give the user the choice to
-; - remove the old version before proceeding
-; - ignore its presence and continue installation
-; - abort the installation
-Function DetectPrevInstallation
-    SetShellVarContext all
-    push $R0
-    push $R1
-    push $R2
-
-    ReadRegStr $R0 HKLM "${PRODUCT_UNINST_KEY}" "UninstallString"
-    StrCmp $R0 "" detect_prev_finished
-
-    ReadRegStr $R1 HKLM "${PRODUCT_UNINST_KEY}" "DisplayVersion"
-    ReadRegStr $R2 HKLM "${PRODUCT_UNINST_KEY}" "InstallLocation"
-
-    MessageBox MB_YESNOCANCEL|MB_ICONQUESTION \
-        "${PRODUCT_NAME} $R1 is already installed in $R2.$\n$\n\
-        Do you want to replace it?$\n$\n\
-        Click Yes to remove the previous version, \
-        No to ignore the previous version and proceed, \
-        Cancel to abort the installation." \
-        /SD IDYES IDYES uninstall_prev IDNO detect_prev_finished
-
-    Quit
-
-    uninstall_prev:
-    ExecWait '$R0 /S _?=$INSTDIR'
-
-    detect_prev_finished:
-    pop $R2
-    pop $R1
-    pop $R0
-FunctionEnd
-
-;----------------------------------------------------------------------------
-
-; Create radio button with label LABEL and value LOCALE at position VPOS
-!macro GWY_LOCALE_CHOOSER LABEL LOCALE VPOS
-    ${NSD_CreateRadioButton} 0u ${VPOS} 100% 12u ${LABEL}
-    Pop $RadioButton
-    nsDialogs::SetUserData $RadioButton ${LOCALE}
-    ${If} $Locale == ${LOCALE}
-        ${NSD_SetState} $RadioButton ${BST_CHECKED}
-    ${EndIf}
-    ${NSD_OnClick} $RadioButton LocaleOnClick
-!macroend
-
-; Installer page to choose Gwyddion translation
-Function ChooseLocale
-    nsDialogs::Create 1018
-    Pop $Dialog
-
-    ${If} $Dialog == error
-    Abort
-    ${EndIf}
-
-    !insertmacro MUI_HEADER_TEXT "Choose Language" "Choose the language of Gwyddion user interface."
-
-    ${NSD_CreateLabel} 0u 0u 100% 12u "Available languages:"
-    Pop $Label
-
-    !insertmacro GWY_LOCALE_CHOOSER "English" "en_US.UTF-8" 12u
-    !insertmacro GWY_LOCALE_CHOOSER "Czech" "cs_CZ.UTF-8" 24u
-    !insertmacro GWY_LOCALE_CHOOSER "French" "fr_FR.UTF-8" 36u
-    !insertmacro GWY_LOCALE_CHOOSER "German" "de_DE.UTF-8" 48u
-    !insertmacro GWY_LOCALE_CHOOSER "Italian" "it_IT.UTF-8" 60u
-    !insertmacro GWY_LOCALE_CHOOSER "Russian" "ru_RU.UTF-8" 72u
-
-    nsDialogs::Show
-FunctionEnd
-
-Function LocaleOnClick
-    Pop $1
-    nsDialogs::GetUserData $1
-    Pop $Locale
-FunctionEnd
 
 ; vim: set ft=nsis ff=dos ts=4 sw=4 et :
