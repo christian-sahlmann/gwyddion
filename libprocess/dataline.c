@@ -160,6 +160,7 @@ gwy_data_line_new_alike(GwyDataLine *model,
 
     data_line->res = model->res;
     data_line->real = model->real;
+    data_line->off = model->off;
     if (nullme)
         data_line->data = g_new0(gdouble, data_line->res);
     else
