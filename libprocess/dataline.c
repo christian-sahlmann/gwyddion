@@ -362,6 +362,7 @@ gwy_data_line_clone_real(GObject *source, GObject *copy)
         clone->data = g_renew(gdouble, clone->data, clone->res);
     }
     clone->real = data_line->real;
+    clone->off = data_line->off;
     memcpy(clone->data, data_line->data, data_line->res*sizeof(gdouble));
 
     /* SI Units can be NULL */
