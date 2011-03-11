@@ -1,3 +1,15 @@
+2.24 (0000-00-00)
+Application:
+- Translations updated: Italian.
+
+Libraries:
+- libprocess: gwy_data_line_new_alike(), gwy_data_line_duplicate() and
+  gwy_data_line_clone() keep the offset.
+
+Modules:
+- Spectro tool: It is possible to average the selected spectra.
+
+
 2.23 (2011-03-05)
 Application:
 - Translations updated: Czech, French, Russian.
