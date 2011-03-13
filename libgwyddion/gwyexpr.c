@@ -1013,12 +1013,14 @@ gwy_expr_transform_infix_ops(GwyExpr *expr,
         next = t->next;
         if (!next || !prev) {
             g_set_error(err, GWY_EXPR_ERROR, GWY_EXPR_ERROR_MISSING_ARGUMENT,
+            /* TRANSLATORS: %c is replaced with +, -, *, /, etc. */
                         _("Missing operator %c argument"), operators[i]);
             gwy_expr_token_list_delete(expr, tokens);
             return NULL;
         }
         if (!prev->rpn_block || !next->rpn_block) {
             g_set_error(err, GWY_EXPR_ERROR, GWY_EXPR_ERROR_INVALID_ARGUMENT,
+            /* TRANSLATORS: %c is replaced with +, -, *, /, etc. */
                         _("Invalid operator %c argument"), operators[i]);
             gwy_expr_token_list_delete(expr, tokens);
             return NULL;
@@ -1068,6 +1070,7 @@ gwy_expr_transform_functions(GwyExpr *expr,
             if (!arg) {
                 g_set_error(err, GWY_EXPR_ERROR,
                             GWY_EXPR_ERROR_MISSING_ARGUMENT,
+                /* TRANSLATORS: %s is replaced with sin, cos, sqrt, etc. */
                             _("Missing argument of %s"), call_table[func].name);
                 gwy_expr_token_list_delete(expr, tokens);
                 return NULL;
@@ -1075,6 +1078,7 @@ gwy_expr_transform_functions(GwyExpr *expr,
             if (!arg->rpn_block) {
                 g_set_error(err, GWY_EXPR_ERROR,
                             GWY_EXPR_ERROR_INVALID_ARGUMENT,
+                /* TRANSLATORS: %s is replaced with sin, cos, sqrt, etc. */
                             _("Invalid argument of %s"), call_table[func].name);
                 gwy_expr_token_list_delete(expr, tokens);
                 return NULL;
