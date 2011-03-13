@@ -2,7 +2,7 @@
 DOMAIN = $(PACKAGE)
 subdir = po
 top_builddir = ..
-XGETTEXT_OPTIONS = --keyword=_ --keyword=N_ --keyword=gwy_sgettext --foreign-user --from-code=UTF-8
+XGETTEXT_OPTIONS = --keyword=_ --keyword=N_ --keyword=gwy_sgettext --foreign-user --from-code=UTF-8 --add-comments=TRANSLATORS
 COPYRIGHT_HOLDER = "David Necas (Yeti) & Petr Klapetek"
 MSGID_BUGS_ADDRESS = yeti@gwyddion.net
 EXTRA_LOCALE_CATEGORIES =
