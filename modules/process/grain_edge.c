@@ -104,7 +104,7 @@ static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Marks grains by edge detection method."),
-    "Daniil Bratashov (dn2010@gmail.com)",
+    "Daniil Bratashov <dn2010@gmail.com>",
     "0.1",
     "David Nečas (Yeti) & Petr Klapetek & Daniil Bratashov",
     "2011",

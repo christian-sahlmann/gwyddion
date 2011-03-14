@@ -1042,9 +1042,8 @@ nanoedu_read_fd_spectra(const guchar *pos_buffer, gsize pos_size,
                                      d16 + 2*2*speccount*res + 2*res, TRUE);
             gwy_spectra_add_spectrum(spectra, dline, x, y);
             g_object_unref(dline);
-
-            speccount++;
         }
+        speccount++;
     }
 
     return spectra;
@@ -1141,9 +1140,8 @@ nanoedu_read_iv_spectra(const guchar *pos_buffer, gsize pos_size,
                                      FALSE);
             gwy_spectra_add_spectrum(spectra, dline, x, y);
             g_object_unref(dline);
-
-            speccount++;
         }
+        speccount++;
     }
 
     return spectra;
@@ -1231,9 +1229,8 @@ nanoedu_read_iz_spectra(const guchar *pos_buffer, gsize pos_size,
             data = gwy_data_line_get_data(dline);
             gwy_spectra_add_spectrum(spectra, dline, x, y);
             g_object_unref(dline);
-
-            speccount++;
         }
+        speccount++;
     }
 
     return spectra;
