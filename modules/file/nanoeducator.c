@@ -1023,7 +1023,7 @@ nanoedu_read_fd_spectra(const guchar *pos_buffer, gsize pos_size,
     /* For FD curves, there are always two spectra: forward and backward.
      * The backward one is really stored backwards, so we revert it upon
      * reading. */
-    for (i = speccount = 0; speccount < nspectra; i++) {
+    for (i = 0; i < nspectra; i++) {
         x = xscale*GINT16_FROM_LE(p16[pointstep*i]);
         y = yreal - yscale*GINT16_FROM_LE(p16[pointstep*i + 1]);
         n = (pointstep == 3) ? GINT16_FROM_LE(p16[pointstep*i + 2]) : 1;
@@ -1032,18 +1032,17 @@ nanoedu_read_fd_spectra(const guchar *pos_buffer, gsize pos_size,
         while (n--) {
             /* Forward */
             dline = make_fd_spectrum(res, xy_step,
-                                     d16 + 2*2*speccount*res, FALSE);
+                                     d16 + 2*2*i*res, FALSE);
             data = gwy_data_line_get_data(dline);
             gwy_spectra_add_spectrum(spectra, dline, x, y);
             g_object_unref(dline);
 
             /* Backward */
             dline = make_fd_spectrum(res, xy_step,
-                                     d16 + 2*2*speccount*res + 2*res, TRUE);
+                                     d16 + 2*2*i*res + 2*res, TRUE);
             gwy_spectra_add_spectrum(spectra, dline, x, y);
             g_object_unref(dline);
         }
-        speccount++;
     }
 
     return spectra;
@@ -1119,7 +1118,7 @@ nanoedu_read_iv_spectra(const guchar *pos_buffer, gsize pos_size,
     /* For IV curves, there are always two spectra: forward and backward.
      * The backward one is really stored backwards, so we revert it upon
      * reading. */
-    for (i = speccount = 0; speccount < nspectra; i++) {
+    for (i = 0; i < nspectra; i++) {
         x = xscale*GINT16_FROM_LE(p16[pointstep*i]);
         y = yreal - yscale*GINT16_FROM_LE(p16[pointstep*i + 1]);
         n = (pointstep == 3) ? GINT16_FROM_LE(p16[pointstep*i + 2]) : 1;
@@ -1128,7 +1127,7 @@ nanoedu_read_iv_spectra(const guchar *pos_buffer, gsize pos_size,
         while (n--) {
             /* Forward */
             dline = make_iv_spectrum(res, vscale,
-                                     d16 + 2*2*speccount*res, 1e-12,
+                                     d16 + 2*2*i*res, 1e-12,
                                      FALSE);
             data = gwy_data_line_get_data(dline);
             gwy_spectra_add_spectrum(spectra, dline, x, y);
@@ -1136,12 +1135,11 @@ nanoedu_read_iv_spectra(const guchar *pos_buffer, gsize pos_size,
 
             /* Backward */
             dline = make_iv_spectrum(res, vscale,
-                                     d16 + 2*2*speccount*res + 2*res, 1e-12,
+                                     d16 + 2*2*i*res + 2*res, 1e-12,
                                      FALSE);
             gwy_spectra_add_spectrum(spectra, dline, x, y);
             g_object_unref(dline);
         }
-        speccount++;
     }
 
     return spectra;
@@ -1215,7 +1213,7 @@ nanoedu_read_iz_spectra(const guchar *pos_buffer, gsize pos_size,
     /* For IV curves, there are always two spectra: forward and backward.
      * The backward one is really stored backwards, so we revert it upon
      * reading. */
-    for (i = speccount = 0; speccount < nspectra; i++) {
+    for (i = 0; i < nspectra; i++) {
         x = xscale*GINT16_FROM_LE(p16[pointstep*i]);
         y = yreal - yscale*GINT16_FROM_LE(p16[pointstep*i + 1]);
         n = (pointstep == 3) ? GINT16_FROM_LE(p16[pointstep*i + 2]) : 1;
@@ -1224,13 +1222,12 @@ nanoedu_read_iz_spectra(const guchar *pos_buffer, gsize pos_size,
         while (n--) {
             /* Only one direction */
             dline = make_iz_spectrum(res, xy_step,
-                                     d16 + 2*speccount*res, 1e-12,
+                                     d16 + 2*i*res, 1e-12,
                                      FALSE);
             data = gwy_data_line_get_data(dline);
             gwy_spectra_add_spectrum(spectra, dline, x, y);
             g_object_unref(dline);
         }
-        speccount++;
     }
 
     return spectra;
