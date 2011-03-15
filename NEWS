@@ -8,6 +8,7 @@ Libraries:
 
 Modules:
 - Spectro tool: It is possible to average the selected spectra.
+- Nanoeducator: Loading of multiple spectra per point was corrected.
 
 
 2.23 (2011-03-05)
@@ -29,6 +30,7 @@ Libraries:
 - libgwyprocess: If grain minimum or maximum was requested without the other
   it has not been calculated (bug introduced in 2.22); this was corrected.
 - libgwydgets: Bogus GwyNullStore virtual method iter_chilidren() was fixed.
+- libgwyprocess: Laplacian of Gaussians filter was added.
 
 Modules:
 - WSF file (new): Imports WSF SPM data.
