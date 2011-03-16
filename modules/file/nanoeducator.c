@@ -464,8 +464,6 @@ nanoedu_load(const gchar *filename,
 
         /* FIXME: This might be wrong, however, there does not seem to be any
          * other discriminating quantity in the headers. */
-        fprintf(stderr,"poffset=%d soffset=%d size=%d\n",
-                header.point_offset, header.spec_offset, size);
         if (params.probe_type == 0)
             spectra = nanoedu_read_fd_spectra(buffer + header.point_offset,
                                               header.spec_offset - header.point_offset,
@@ -947,6 +945,7 @@ make_fd_spectrum(gint res, gdouble xy_step, const gint16 *d16, gboolean flip)
     gdouble *data;
     gint j, amin;
     gdouble z0;
+    gint16 v, a;
 
     dline = gwy_data_line_new(res, xy_step*res, FALSE);
     siunitx = gwy_si_unit_new("m");
@@ -962,8 +961,6 @@ make_fd_spectrum(gint res, gdouble xy_step, const gint16 *d16, gboolean flip)
     /* XXX: The odd coordinates are abscissas.  We only use the zeroth for
      * setting the offset.  If they are not equidistant, though luck... */
     for (j = 0; j < res; j++) {
-        gint16 v, a;
-
         if (flip) {
             v = d16[2*(res-1 - j)];
             a = d16[2*(res-1 - j) + 1];
@@ -982,7 +979,8 @@ make_fd_spectrum(gint res, gdouble xy_step, const gint16 *d16, gboolean flip)
         }
     }
     gwy_data_line_multiply(dline, 1.0/z0);
-    gwy_data_line_set_offset(dline, xy_step*d16[flip ? 2*(res-1) + 1 : 1]);
+    gwy_data_line_set_offset(dline, xy_step * 
+                         GINT16_FROM_LE(d16[flip ? 2*(res-1) + 1 : 1]));
 
     return dline;
 }
@@ -1062,7 +1060,9 @@ make_iv_spectrum(gint res, gdouble xy_step,
     gint j;
     gint16 v;
 
-    dline = gwy_data_line_new(res, xy_step*fabs(d16[res - 1] - d16[0]),
+    dline = gwy_data_line_new(res, xy_step*
+                              fabs(GINT16_FROM_LE(d16[res - 1]) -
+                                   GINT16_FROM_LE(d16[0])),
                               FALSE);
     siunitx = gwy_si_unit_new("V");
     siunity = gwy_si_unit_new("A");
@@ -1078,7 +1078,7 @@ make_iv_spectrum(gint res, gdouble xy_step,
         v = *(d16+2*j+1);
         data[j] = q*GINT16_FROM_LE(v);
     }
-    gwy_data_line_set_offset(dline, xy_step*d16[0]);
+    gwy_data_line_set_offset(dline, xy_step*GINT16_FROM_LE(d16[0]));
 
     return dline;
 }
@@ -1160,7 +1160,7 @@ make_iz_spectrum(gint res, gdouble xy_step,
         v = d16[2*j];
         data[j] = q*GINT16_FROM_LE(v);
     }
-    gwy_data_line_set_offset(dline, xy_step*d16[1]);
+    gwy_data_line_set_offset(dline, xy_step*GINT16_FROM_LE(d16[1]));
 
     return dline;
 }
