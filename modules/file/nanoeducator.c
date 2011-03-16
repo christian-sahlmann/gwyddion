@@ -464,6 +464,8 @@ nanoedu_load(const gchar *filename,
 
         /* FIXME: This might be wrong, however, there does not seem to be any
          * other discriminating quantity in the headers. */
+        fprintf(stderr,"poffset=%d soffset=%d size=%d\n",
+                header.point_offset, header.spec_offset, size);
         if (params.probe_type == 0)
             spectra = nanoedu_read_fd_spectra(buffer + header.point_offset,
                                               header.spec_offset - header.point_offset,
@@ -960,7 +962,7 @@ make_fd_spectrum(gint res, gdouble xy_step, const gint16 *d16, gboolean flip)
     /* XXX: The odd coordinates are abscissas.  We only use the zeroth for
      * setting the offset.  If they are not equidistant, though luck... */
     for (j = 0; j < res; j++) {
-        gint v, a;
+        gint16 v, a;
 
         if (flip) {
             v = d16[2*(res-1 - j)];
@@ -993,7 +995,7 @@ nanoedu_read_fd_spectra(const guchar *pos_buffer, gsize pos_size,
                         gdouble xscale, gdouble yscale,
                         GError **error)
 {
-    gint i, n, speccount, pointstep;
+    gint i, j, n, pointstep;
     GwySpectra *spectra;
     GwyDataLine *dline;
     GwySIUnit *siunit;
@@ -1029,17 +1031,19 @@ nanoedu_read_fd_spectra(const guchar *pos_buffer, gsize pos_size,
         n = (pointstep == 3) ? GINT16_FROM_LE(p16[pointstep*i + 2]) : 1;
         gwy_debug("FD spec%d [%g,%g] %dpts", i, x, y, n);
 
-        while (n--) {
+        for (j = 0; j < n; j++) {
             /* Forward */
             dline = make_fd_spectrum(res, xy_step,
-                                     d16 + 2*2*i*res, FALSE);
+                                     d16 + 4*(i*n+j)*res,
+                                     FALSE);
             data = gwy_data_line_get_data(dline);
             gwy_spectra_add_spectrum(spectra, dline, x, y);
             g_object_unref(dline);
 
             /* Backward */
             dline = make_fd_spectrum(res, xy_step,
-                                     d16 + 2*2*i*res + 2*res, TRUE);
+                                     d16 + 4*(i*n+j)*res + 2*res,
+                                     TRUE);
             gwy_spectra_add_spectrum(spectra, dline, x, y);
             g_object_unref(dline);
         }
@@ -1050,15 +1054,15 @@ nanoedu_read_fd_spectra(const guchar *pos_buffer, gsize pos_size,
 
 static GwyDataLine*
 make_iv_spectrum(gint res, gdouble xy_step,
-                 const gint16 *d16, gdouble q,
-                 gboolean flip)
+                 const gint16 *d16, gdouble q)
 {
     GwyDataLine *dline;
     GwySIUnit *siunitx, *siunity;
     gdouble *data;
     gint j;
+    gint16 v;
 
-    dline = gwy_data_line_new(res, xy_step*fabs(d16[2*(res - 1)] - d16[0]),
+    dline = gwy_data_line_new(res, xy_step*fabs(d16[res - 1] - d16[0]),
                               FALSE);
     siunitx = gwy_si_unit_new("V");
     siunity = gwy_si_unit_new("A");
@@ -1071,16 +1075,10 @@ make_iv_spectrum(gint res, gdouble xy_step,
     /* XXX: The even coordinates are abscissas.  We only use the zeroth for
      * setting the offset.  If they are not equidistant, though luck... */
     for (j = 0; j < res; j++) {
-        gint v;
-
-        if (flip)
-            v = d16[2*(res-1 - j) + 1];
-        else
-            v = d16[2*j + 1];
-
+        v = *(d16+2*j+1);
         data[j] = q*GINT16_FROM_LE(v);
     }
-    gwy_data_line_set_offset(dline, xy_step*d16[flip ? 2*(res-1) : 0]);
+    gwy_data_line_set_offset(dline, xy_step*d16[0]);
 
     return dline;
 }
@@ -1094,7 +1092,7 @@ nanoedu_read_iv_spectra(const guchar *pos_buffer, gsize pos_size,
                         gdouble vscale,
                         GError **error)
 {
-    gint i, n, speccount, pointstep;
+    gint i, j, n, pointstep;
     GwySpectra *spectra;
     GwyDataLine *dline;
     GwySIUnit *siunit;
@@ -1115,28 +1113,20 @@ nanoedu_read_iv_spectra(const guchar *pos_buffer, gsize pos_size,
     g_object_unref(siunit);
     gwy_spectra_set_title(spectra, _("I-V spectra"));
 
-    /* For IV curves, there are always two spectra: forward and backward.
-     * The backward one is really stored backwards, so we revert it upon
-     * reading. */
     for (i = 0; i < nspectra; i++) {
         x = xscale*GINT16_FROM_LE(p16[pointstep*i]);
         y = yreal - yscale*GINT16_FROM_LE(p16[pointstep*i + 1]);
         n = (pointstep == 3) ? GINT16_FROM_LE(p16[pointstep*i + 2]) : 1;
         gwy_debug("IV spec%d [%g,%g] %dpts", i, x, y, n);
 
-        while (n--) {
-            /* Forward */
-            dline = make_iv_spectrum(res, vscale,
-                                     d16 + 2*2*i*res, 1e-12,
-                                     FALSE);
-            data = gwy_data_line_get_data(dline);
-            gwy_spectra_add_spectrum(spectra, dline, x, y);
-            g_object_unref(dline);
+        if (err_SIZE_MISMATCH(error, 2*n*nspectra*res, data_size, FALSE))
+            return NULL;
 
-            /* Backward */
+        for (j = 0; j < n; j++) {
             dline = make_iv_spectrum(res, vscale,
-                                     d16 + 2*2*i*res + 2*res, 1e-12,
-                                     FALSE);
+                                     d16 + 2*(i*n+j)*res,
+                                     1e-12);
+            data = gwy_data_line_get_data(dline);
             gwy_spectra_add_spectrum(spectra, dline, x, y);
             g_object_unref(dline);
         }
@@ -1147,13 +1137,13 @@ nanoedu_read_iv_spectra(const guchar *pos_buffer, gsize pos_size,
 
 static GwyDataLine*
 make_iz_spectrum(gint res, gdouble xy_step,
-                 const gint16 *d16, gdouble q,
-                 gboolean flip)
+                 const gint16 *d16, gdouble q)
 {
     GwyDataLine *dline;
     GwySIUnit *siunitx, *siunity;
     gdouble *data;
     gint j;
+    gint16 v;
 
     dline = gwy_data_line_new(res, xy_step*res, FALSE);
     siunitx = gwy_si_unit_new("m");
@@ -1167,16 +1157,10 @@ make_iz_spectrum(gint res, gdouble xy_step,
     /* XXX: The odd coordinates are abscissas.  We only use the zeroth for
      * setting the offset.  If they are not equidistant, though luck... */
     for (j = 0; j < res; j++) {
-        gint v;
-
-        if (flip)
-            v = d16[2*(res-1 - j)];
-        else
-            v = d16[2*j];
-
+        v = d16[2*j];
         data[j] = q*GINT16_FROM_LE(v);
     }
-    gwy_data_line_set_offset(dline, xy_step*d16[flip ? 2*(res-1) + 1 : 1]);
+    gwy_data_line_set_offset(dline, xy_step*d16[1]);
 
     return dline;
 }
@@ -1189,7 +1173,7 @@ nanoedu_read_iz_spectra(const guchar *pos_buffer, gsize pos_size,
                         gdouble xscale, gdouble yscale,
                         GError **error)
 {
-    gint i, n, speccount, pointstep;
+    gint i, j, n, pointstep;
     GwySpectra *spectra;
     GwyDataLine *dline;
     GwySIUnit *siunit;
@@ -1210,20 +1194,17 @@ nanoedu_read_iz_spectra(const guchar *pos_buffer, gsize pos_size,
     g_object_unref(siunit);
     gwy_spectra_set_title(spectra, _("I-Z spectra"));
 
-    /* For IV curves, there are always two spectra: forward and backward.
-     * The backward one is really stored backwards, so we revert it upon
-     * reading. */
     for (i = 0; i < nspectra; i++) {
         x = xscale*GINT16_FROM_LE(p16[pointstep*i]);
         y = yreal - yscale*GINT16_FROM_LE(p16[pointstep*i + 1]);
         n = (pointstep == 3) ? GINT16_FROM_LE(p16[pointstep*i + 2]) : 1;
         gwy_debug("IZ spec%d [%g,%g] %dpts", i, x, y, n);
 
-        while (n--) {
+        for(j = 0; j < n; j++) {
             /* Only one direction */
             dline = make_iz_spectrum(res, xy_step,
-                                     d16 + 2*i*res, 1e-12,
-                                     FALSE);
+                                     d16 + 2*(i*n+j)*res,
+                                     1e-12);
             data = gwy_data_line_get_data(dline);
             gwy_spectra_add_spectrum(spectra, dline, x, y);
             g_object_unref(dline);
