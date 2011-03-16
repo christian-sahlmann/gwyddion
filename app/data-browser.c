@@ -1242,9 +1242,6 @@ gwy_app_data_proxy_item_changed(GwyContainer *data,
         if (found) {
             gwy_list_store_row_changed(proxy->lists[PAGE_CHANNELS].store,
                                        &iter, NULL, -1);
-            gtk_tree_model_get(GTK_TREE_MODEL(list->store), &iter,
-                               MODEL_WIDGET, &data_view,
-                               -1);
         }
         /* Prevent thumbnail update */
         if (!found)
@@ -1825,6 +1822,7 @@ gwy_app_data_browser_render_channel(G_GNUC_UNUSED GtkTreeViewColumn *column,
         if (*pbuf_timestamp >= timestamp) {
             g_object_set(renderer, "pixbuf", pixbuf, NULL);
             g_object_unref(pixbuf);
+            gwy_object_unref(data_view);
             return;
         }
     }
