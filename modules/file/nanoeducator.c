@@ -1061,7 +1061,7 @@ make_iv_spectrum(gint res, gdouble xy_step,
     gint16 v;
 
     dline = gwy_data_line_new(res, xy_step*
-                              fabs(GINT16_FROM_LE(d16[res - 1]) -
+                              fabs(GINT16_FROM_LE(d16[2*(res - 1)]) -
                                    GINT16_FROM_LE(d16[0])),
                               FALSE);
     siunitx = gwy_si_unit_new("V");
@@ -1075,7 +1075,7 @@ make_iv_spectrum(gint res, gdouble xy_step,
     /* XXX: The even coordinates are abscissas.  We only use the zeroth for
      * setting the offset.  If they are not equidistant, though luck... */
     for (j = 0; j < res; j++) {
-        v = *(d16+2*j+1);
+        v = d16[2*j+1];
         data[j] = q*GINT16_FROM_LE(v);
     }
     gwy_data_line_set_offset(dline, xy_step*GINT16_FROM_LE(d16[0]));
