@@ -179,7 +179,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Wyko OPD and ASC files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.6",
+    "0.6.1",
     "David Nečas (Yeti)",
     "2008",
 };
@@ -378,7 +378,7 @@ opd_load(const gchar *filename,
         g_object_unref(meta);
     }
     else {
-        g_object_unref(container);
+        gwy_object_unref(container);
         err_NO_DATA(error);
     }
 
