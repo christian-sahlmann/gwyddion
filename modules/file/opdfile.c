@@ -179,7 +179,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Wyko OPD and ASC files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.6.1",
+    "0.7",
     "David Nečas (Yeti)",
     "2008",
 };
@@ -318,7 +318,8 @@ opd_load(const gchar *filename,
 
         if (!gwy_stramong(header[i].name,
                           "OPD", "SAMPLE_DATA", "RAW_DATA", "RAW DATA",
-                          "Image", "Intensity", "SecArr_0", NULL))
+                          "Image", "Intensity", "SecArr_0", "Raw",
+                          NULL))
             continue;
 
         if (header[i].type != OPD_ARRAY) {
@@ -733,7 +734,8 @@ opd_asc_load(const gchar *filename,
         s++;
 
         if (gwy_stramong(line, "OPD", "SAMPLE_DATA", "RAW_DATA", "RAW DATA",
-                         "Image", "Intensity", "SecArr_0", NULL)) {
+                         "Image", "Intensity", "SecArr_0", "Raw",
+                         NULL)) {
             gdouble pixel_size, wavelength, mult = 1.0, aspect = 1.0;
             gboolean intensity;
             gchar *k;
