@@ -62,7 +62,7 @@ struct _GwyColorAxis {
     gint labelb_size;
     gint labele_size;
 
-    gboolean reserved_bool1;
+    gboolean inverted;
 
     gpointer reserved1;
     gpointer reserved2;
