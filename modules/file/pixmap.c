@@ -423,7 +423,7 @@ static GwyModuleInfo module_info = {
        "PNG, JPEG, TIFF, PPM, BMP, TARGA. "
        "Import support relies on GDK and thus may be installation-dependent."),
     "Yeti <yeti@gwyddion.net>",
-    "7.11",
+    "7.12",
     "David Nečas (Yeti)",
     "2004-2011",
 };
@@ -2007,7 +2007,7 @@ pixmap_draw_presentational(GwyContainer *data,
     GwySIUnit *siunit_xy, *siunit_z;
     guchar *pixels;
     gint zwidth, zheight, hrh, vrw, scw, y, lw;
-    gboolean has_presentation;
+    gboolean has_presentation, inverted = FALSE;
     gdouble fontzoom, min, max;
     gint border = 20;
     gint gap = 20;
@@ -2121,6 +2121,7 @@ pixmap_draw_presentational(GwyContainer *data,
             = gwy_data_window_get_color_axis(GWY_DATA_WINDOW(data_window));
         gwy_color_axis_get_range(GWY_COLOR_AXIS(coloraxis), &min, &max);
         scalepixbuf = fmscale(zheight + 2*lw, min, max, fontzoom, siunit_z);
+        inverted = min > max;
         scw = gdk_pixbuf_get_width(scalepixbuf);
         if (has_presentation)
             g_object_unref(siunit_z);
@@ -2175,11 +2176,12 @@ pixmap_draw_presentational(GwyContainer *data,
 
         pixels = gdk_pixbuf_get_pixels(pixbuf);
         for (y = 0; y < zheight; y++) {
-            gint j, k;
+            gint j, k, yi;
             guchar *row;
 
+            yi = inverted ? zheight-1 - y : y;
             row = pixels
-                + gdk_pixbuf_get_rowstride(pixbuf)*(border + hrh + lw + y)
+                + gdk_pixbuf_get_rowstride(pixbuf)*(border + hrh + lw + yi)
                 + 3*(int)(border + vrw + zwidth + 2*lw + gap + lw);
             k = nsamples-1 - floor(nsamples*y/zheight);
             for (j = 0; j < fmw; j++) {
