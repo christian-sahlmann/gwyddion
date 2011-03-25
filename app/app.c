@@ -363,6 +363,287 @@ _gwy_app_data_window_setup(GwyDataWindow *data_window)
     }
 }
 
+static GtkWidget*
+gwy_app_menu_data_popup_create(GtkAccelGroup *accel_group)
+{
+    static struct {
+        const gchar *label;
+        gpointer callback;
+        gpointer cbdata;
+        guint key;
+        GdkModifierType mods;
+    }
+    const menu_items[] = {
+        {
+            NULL, gwy_app_run_process_func,
+            "mask_remove", GDK_K, GDK_CONTROL_MASK
+        },
+        {
+            N_("Mask _Color..."),  gwy_app_change_mask_color_cb,
+            NULL, 0, 0
+        },
+        {
+            NULL, gwy_app_run_process_func,
+            "fix_zero", 0, 0
+        },
+        {
+            NULL, gwy_app_run_process_func,
+            "presentation_remove", GDK_K, GDK_CONTROL_MASK | GDK_SHIFT_MASK
+        },
+        {
+            NULL, gwy_app_run_process_func,
+            "level", GDK_L, GDK_CONTROL_MASK
+        },
+        {
+            N_("Zoom _1:1"), gwy_app_data_window_reset_zoom,
+            NULL, 0, 0
+        },
+    };
+    GwySensitivityGroup *sensgroup;
+    GtkWidget *menu, *item;
+    const gchar *name;
+    guint i, mask;
+
+    menu = gtk_menu_new();
+    if (accel_group)
+        gtk_menu_set_accel_group(GTK_MENU(menu), accel_group);
+    sensgroup = gwy_app_sensitivity_get_group();
+    for (i = 0; i < G_N_ELEMENTS(menu_items); i++) {
+        if (menu_items[i].callback == gwy_app_run_process_func
+            && !gwy_process_func_get_run_types((gchar*)menu_items[i].cbdata)) {
+            g_warning("Processing function <%s> for "
+                      "data view context menu is not available.",
+                      (gchar*)menu_items[i].cbdata);
+            continue;
+        }
+        if (menu_items[i].callback == gwy_app_run_process_func) {
+            name = _(gwy_process_func_get_menu_path(menu_items[i].cbdata));
+            name = strrchr(name, '/');
+            if (!name) {
+                g_warning("Invalid translated menu path for <%s>",
+                          (const gchar*)menu_items[i].cbdata);
+                continue;
+            }
+            item = gtk_menu_item_new_with_mnemonic(name + 1);
+            mask = gwy_process_func_get_sensitivity_mask(menu_items[i].cbdata);
+            gwy_sensitivity_group_add_widget(sensgroup, item, mask);
+        }
+        else {
+            item = gtk_menu_item_new_with_mnemonic(_(menu_items[i].label));
+
+            if (menu_items[i].callback == gwy_app_change_mask_color_cb)
+                gwy_sensitivity_group_add_widget(sensgroup, item,
+                                                 GWY_MENU_FLAG_DATA_MASK);
+        }
+
+        if (menu_items[i].key)
+            gtk_widget_add_accelerator(item, "activate", accel_group,
+                                       menu_items[i].key, menu_items[i].mods,
+                                       GTK_ACCEL_VISIBLE | GTK_ACCEL_LOCKED);
+        gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
+        g_signal_connect_swapped(item, "activate",
+                                 G_CALLBACK(menu_items[i].callback),
+                                 menu_items[i].cbdata);
+    }
+
+    return menu;
+}
+
+static gboolean
+gwy_app_data_popup_menu_popup_mouse(GtkWidget *menu,
+                                    GdkEventButton *event,
+                                    GwyDataView *data_view)
+{
+    if (event->button != 3)
+        return FALSE;
+
+    gwy_app_data_browser_select_data_view(data_view);
+    gtk_menu_popup(GTK_MENU(menu), NULL, NULL, NULL, NULL,
+                   event->button, event->time);
+
+    return TRUE;
+}
+
+static void
+gwy_app_data_popup_menu_position(G_GNUC_UNUSED GtkMenu *menu,
+                                 gint *x,
+                                 gint *y,
+                                 gboolean *push_in,
+                                 GtkWidget *window)
+{
+    GwyDataView *data_view;
+
+    data_view = gwy_data_window_get_data_view(GWY_DATA_WINDOW(window));
+    gdk_window_get_origin(GTK_WIDGET(data_view)->window, x, y);
+    *push_in = TRUE;
+}
+
+static void
+gwy_app_data_popup_menu_popup_key(GtkWidget *menu,
+                                  GtkWidget *data_window)
+{
+    gtk_menu_popup(GTK_MENU(menu), NULL, NULL,
+                   (GtkMenuPositionFunc)gwy_app_data_popup_menu_position,
+                   data_window,
+                   0, gtk_get_current_event_time());
+}
+
+/**
+ * gwy_app_data_corner_menu_update:
+ * @menu: Data window corner menu.
+ * @data_view: The corresponding data view.
+ *
+ * Updates corner menu to reflect data window's state before we show it.
+ **/
+static void
+gwy_app_data_corner_menu_update(GtkWidget *menu,
+                                GwyDataView *data_view)
+{
+    gboolean realsquare = FALSE;
+    GwyContainer *data;
+    const gchar *key;
+    gchar *s;
+    GtkWidget *item;
+    GList *l;
+    gulong id;
+    guint i;
+
+    /* Square mode */
+    data = gwy_data_view_get_data(data_view);
+    key = gwy_data_view_get_data_prefix(data_view);
+    s = g_strconcat(key, "/realsquare", NULL);
+    gwy_container_gis_boolean_by_name(data, s, &realsquare);
+    gwy_debug("view's realsquare: %d", realsquare);
+    g_free(s);
+
+    /* Update stuff */
+    l = gtk_container_get_children(GTK_CONTAINER(menu));
+    while (l) {
+        item = GTK_WIDGET(l->data);
+        i = GPOINTER_TO_UINT(g_object_get_qdata(G_OBJECT(item),
+                                                corner_item_quark));
+        switch (i) {
+            case ITEM_PIXELSQUARE:
+            if (!realsquare) {
+                gwy_debug("setting Pixelwise active");
+                id = g_signal_handler_find(item, G_SIGNAL_MATCH_FUNC,
+                                           0, 0, NULL,
+                                           gwy_app_data_window_change_square,
+                                           NULL);
+                g_signal_handler_block(item, id);
+                gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(item), TRUE);
+                g_signal_handler_unblock(item, id);
+            }
+            break;
+
+            case ITEM_REALSQUARE:
+            if (realsquare) {
+                gwy_debug("setting Physical active");
+                id = g_signal_handler_find(item, G_SIGNAL_MATCH_FUNC,
+                                           0, 0, NULL,
+                                           gwy_app_data_window_change_square,
+                                           NULL);
+                g_signal_handler_block(item, id);
+                gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(item), TRUE);
+                g_signal_handler_unblock(item, id);
+            }
+            break;
+
+            default:
+            break;
+        }
+        l = g_list_next(l);
+    }
+}
+
+static gboolean
+gwy_app_data_corner_menu_popup_mouse(GtkWidget *menu,
+                                     GdkEventButton *event,
+                                     GtkWidget *ebox)
+{
+    GtkWidget *window;
+    GwyDataView *data_view;
+
+    if (event->button != 1)
+        return FALSE;
+
+    window = gtk_widget_get_ancestor(ebox, GWY_TYPE_DATA_WINDOW);
+    g_return_val_if_fail(window, FALSE);
+    data_view = gwy_data_window_get_data_view(GWY_DATA_WINDOW(window));
+
+    gwy_app_data_browser_select_data_view(data_view);
+    gwy_app_data_corner_menu_update(menu, data_view);
+    gtk_menu_popup(GTK_MENU(menu), NULL, NULL, NULL, NULL,
+                   event->button, event->time);
+
+    return FALSE;
+}
+
+static GtkWidget*
+gwy_app_menu_data_corner_create(GtkAccelGroup *accel_group)
+{
+    GtkWidget *menu, *item;
+    GtkRadioMenuItem *r;
+
+    corner_item_quark = g_quark_from_static_string("id");
+
+    menu = gtk_menu_new();
+    if (accel_group)
+        gtk_menu_set_accel_group(GTK_MENU(menu), accel_group);
+
+    item = gtk_radio_menu_item_new_with_mnemonic(NULL,
+                                                 _("Pi_xelwise Square"));
+    gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
+    g_object_set_qdata(G_OBJECT(item), corner_item_quark,
+                       GUINT_TO_POINTER(ITEM_PIXELSQUARE));
+    g_signal_connect(item, "activate",
+                     G_CALLBACK(gwy_app_data_window_change_square),
+                     GINT_TO_POINTER(FALSE));
+
+    r = GTK_RADIO_MENU_ITEM(item);
+    item = gtk_radio_menu_item_new_with_mnemonic_from_widget(r,
+                                                             _("_Physically "
+                                                               "Square"));
+    gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
+    g_object_set_qdata(G_OBJECT(item), corner_item_quark,
+                       GUINT_TO_POINTER(ITEM_REALSQUARE));
+    g_signal_connect(item, "activate",
+                     G_CALLBACK(gwy_app_data_window_change_square),
+                     GINT_TO_POINTER(TRUE));
+
+    return menu;
+}
+
+static void
+gwy_app_data_window_change_square(GtkWidget *item,
+                                  gpointer user_data)
+{
+    gboolean realsquare = GPOINTER_TO_INT(user_data);
+    GwyDataView *data_view;
+    GwyContainer *data;
+    const gchar *key;
+    gchar *s;
+
+    if (!gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(item))) {
+        gwy_debug("bogus update");
+        return;
+    }
+
+    gwy_debug("new square mode: %s", realsquare ? "Physical" : "Pixelwise");
+    gwy_app_data_browser_get_current(GWY_APP_CONTAINER, &data,
+                                     GWY_APP_DATA_VIEW, &data_view,
+                                     0);
+    data = gwy_data_view_get_data(data_view);
+    key = gwy_data_view_get_data_prefix(data_view);
+    g_return_if_fail(key);
+    s = g_strconcat(key, "/realsquare", NULL);
+    if (realsquare)
+        gwy_container_set_boolean_by_name(data, s, realsquare);
+    else
+        gwy_container_remove_by_name(data, s);
+    g_free(s);
+}
+
 /*****************************************************************************
  *                                                                           *
  *     Graph window list management                                          *
@@ -658,287 +939,6 @@ _gwy_app_spectra_set_current(GwySpectra *spectra)
  *     Miscellaneous                                                         *
  *                                                                           *
  *****************************************************************************/
-
-static GtkWidget*
-gwy_app_menu_data_popup_create(GtkAccelGroup *accel_group)
-{
-    static struct {
-        const gchar *label;
-        gpointer callback;
-        gpointer cbdata;
-        guint key;
-        GdkModifierType mods;
-    }
-    const menu_items[] = {
-        {
-            NULL, gwy_app_run_process_func,
-            "mask_remove", GDK_K, GDK_CONTROL_MASK
-        },
-        {
-            N_("Mask _Color..."),  gwy_app_change_mask_color_cb,
-            NULL, 0, 0
-        },
-        {
-            NULL, gwy_app_run_process_func,
-            "fix_zero", 0, 0
-        },
-        {
-            NULL, gwy_app_run_process_func,
-            "presentation_remove", GDK_K, GDK_CONTROL_MASK | GDK_SHIFT_MASK
-        },
-        {
-            NULL, gwy_app_run_process_func,
-            "level", GDK_L, GDK_CONTROL_MASK
-        },
-        {
-            N_("Zoom _1:1"), gwy_app_data_window_reset_zoom,
-            NULL, 0, 0
-        },
-    };
-    GwySensitivityGroup *sensgroup;
-    GtkWidget *menu, *item;
-    const gchar *name;
-    guint i, mask;
-
-    menu = gtk_menu_new();
-    if (accel_group)
-        gtk_menu_set_accel_group(GTK_MENU(menu), accel_group);
-    sensgroup = gwy_app_sensitivity_get_group();
-    for (i = 0; i < G_N_ELEMENTS(menu_items); i++) {
-        if (menu_items[i].callback == gwy_app_run_process_func
-            && !gwy_process_func_get_run_types((gchar*)menu_items[i].cbdata)) {
-            g_warning("Processing function <%s> for "
-                      "data view context menu is not available.",
-                      (gchar*)menu_items[i].cbdata);
-            continue;
-        }
-        if (menu_items[i].callback == gwy_app_run_process_func) {
-            name = _(gwy_process_func_get_menu_path(menu_items[i].cbdata));
-            name = strrchr(name, '/');
-            if (!name) {
-                g_warning("Invalid translated menu path for <%s>",
-                          (const gchar*)menu_items[i].cbdata);
-                continue;
-            }
-            item = gtk_menu_item_new_with_mnemonic(name + 1);
-            mask = gwy_process_func_get_sensitivity_mask(menu_items[i].cbdata);
-            gwy_sensitivity_group_add_widget(sensgroup, item, mask);
-        }
-        else {
-            item = gtk_menu_item_new_with_mnemonic(_(menu_items[i].label));
-
-            if (menu_items[i].callback == gwy_app_change_mask_color_cb)
-                gwy_sensitivity_group_add_widget(sensgroup, item,
-                                                 GWY_MENU_FLAG_DATA_MASK);
-        }
-
-        if (menu_items[i].key)
-            gtk_widget_add_accelerator(item, "activate", accel_group,
-                                       menu_items[i].key, menu_items[i].mods,
-                                       GTK_ACCEL_VISIBLE | GTK_ACCEL_LOCKED);
-        gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
-        g_signal_connect_swapped(item, "activate",
-                                 G_CALLBACK(menu_items[i].callback),
-                                 menu_items[i].cbdata);
-    }
-
-    return menu;
-}
-
-static gboolean
-gwy_app_data_popup_menu_popup_mouse(GtkWidget *menu,
-                                    GdkEventButton *event,
-                                    GwyDataView *data_view)
-{
-    if (event->button != 3)
-        return FALSE;
-
-    gwy_app_data_browser_select_data_view(data_view);
-    gtk_menu_popup(GTK_MENU(menu), NULL, NULL, NULL, NULL,
-                   event->button, event->time);
-
-    return TRUE;
-}
-
-static void
-gwy_app_data_popup_menu_position(G_GNUC_UNUSED GtkMenu *menu,
-                                 gint *x,
-                                 gint *y,
-                                 gboolean *push_in,
-                                 GtkWidget *window)
-{
-    GwyDataView *data_view;
-
-    data_view = gwy_data_window_get_data_view(GWY_DATA_WINDOW(window));
-    gdk_window_get_origin(GTK_WIDGET(data_view)->window, x, y);
-    *push_in = TRUE;
-}
-
-static void
-gwy_app_data_popup_menu_popup_key(GtkWidget *menu,
-                                  GtkWidget *data_window)
-{
-    gtk_menu_popup(GTK_MENU(menu), NULL, NULL,
-                   (GtkMenuPositionFunc)gwy_app_data_popup_menu_position,
-                   data_window,
-                   0, gtk_get_current_event_time());
-}
-
-/**
- * gwy_app_data_corner_menu_update:
- * @menu: Data window corner menu.
- * @data_view: The corresponding data view.
- *
- * Updates corner menu to reflect data window's state before we show it.
- **/
-static void
-gwy_app_data_corner_menu_update(GtkWidget *menu,
-                                GwyDataView *data_view)
-{
-    gboolean realsquare = FALSE;
-    GwyContainer *data;
-    const gchar *key;
-    gchar *s;
-    GtkWidget *item;
-    GList *l;
-    gulong id;
-    guint i;
-
-    /* Square mode */
-    data = gwy_data_view_get_data(data_view);
-    key = gwy_data_view_get_data_prefix(data_view);
-    s = g_strconcat(key, "/realsquare", NULL);
-    gwy_container_gis_boolean_by_name(data, s, &realsquare);
-    gwy_debug("view's realsquare: %d", realsquare);
-    g_free(s);
-
-    /* Update stuff */
-    l = gtk_container_get_children(GTK_CONTAINER(menu));
-    while (l) {
-        item = GTK_WIDGET(l->data);
-        i = GPOINTER_TO_UINT(g_object_get_qdata(G_OBJECT(item),
-                                                corner_item_quark));
-        switch (i) {
-            case ITEM_PIXELSQUARE:
-            if (!realsquare) {
-                gwy_debug("setting Pixelwise active");
-                id = g_signal_handler_find(item, G_SIGNAL_MATCH_FUNC,
-                                           0, 0, NULL,
-                                           gwy_app_data_window_change_square,
-                                           NULL);
-                g_signal_handler_block(item, id);
-                gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(item), TRUE);
-                g_signal_handler_unblock(item, id);
-            }
-            break;
-
-            case ITEM_REALSQUARE:
-            if (realsquare) {
-                gwy_debug("setting Physical active");
-                id = g_signal_handler_find(item, G_SIGNAL_MATCH_FUNC,
-                                           0, 0, NULL,
-                                           gwy_app_data_window_change_square,
-                                           NULL);
-                g_signal_handler_block(item, id);
-                gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(item), TRUE);
-                g_signal_handler_unblock(item, id);
-            }
-            break;
-
-            default:
-            break;
-        }
-        l = g_list_next(l);
-    }
-}
-
-static gboolean
-gwy_app_data_corner_menu_popup_mouse(GtkWidget *menu,
-                                     GdkEventButton *event,
-                                     GtkWidget *ebox)
-{
-    GtkWidget *window;
-    GwyDataView *data_view;
-
-    if (event->button != 1)
-        return FALSE;
-
-    window = gtk_widget_get_ancestor(ebox, GWY_TYPE_DATA_WINDOW);
-    g_return_val_if_fail(window, FALSE);
-    data_view = gwy_data_window_get_data_view(GWY_DATA_WINDOW(window));
-
-    gwy_app_data_browser_select_data_view(data_view);
-    gwy_app_data_corner_menu_update(menu, data_view);
-    gtk_menu_popup(GTK_MENU(menu), NULL, NULL, NULL, NULL,
-                   event->button, event->time);
-
-    return FALSE;
-}
-
-static GtkWidget*
-gwy_app_menu_data_corner_create(GtkAccelGroup *accel_group)
-{
-    GtkWidget *menu, *item;
-    GtkRadioMenuItem *r;
-
-    corner_item_quark = g_quark_from_static_string("id");
-
-    menu = gtk_menu_new();
-    if (accel_group)
-        gtk_menu_set_accel_group(GTK_MENU(menu), accel_group);
-
-    item = gtk_radio_menu_item_new_with_mnemonic(NULL,
-                                                 _("Pi_xelwise Square"));
-    gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
-    g_object_set_qdata(G_OBJECT(item), corner_item_quark,
-                       GUINT_TO_POINTER(ITEM_PIXELSQUARE));
-    g_signal_connect(item, "activate",
-                     G_CALLBACK(gwy_app_data_window_change_square),
-                     GINT_TO_POINTER(FALSE));
-
-    r = GTK_RADIO_MENU_ITEM(item);
-    item = gtk_radio_menu_item_new_with_mnemonic_from_widget(r,
-                                                             _("_Physically "
-                                                               "Square"));
-    gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
-    g_object_set_qdata(G_OBJECT(item), corner_item_quark,
-                       GUINT_TO_POINTER(ITEM_REALSQUARE));
-    g_signal_connect(item, "activate",
-                     G_CALLBACK(gwy_app_data_window_change_square),
-                     GINT_TO_POINTER(TRUE));
-
-    return menu;
-}
-
-static void
-gwy_app_data_window_change_square(GtkWidget *item,
-                                  gpointer user_data)
-{
-    gboolean realsquare = GPOINTER_TO_INT(user_data);
-    GwyDataView *data_view;
-    GwyContainer *data;
-    const gchar *key;
-    gchar *s;
-
-    if (!gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(item))) {
-        gwy_debug("bogus update");
-        return;
-    }
-
-    gwy_debug("new square mode: %s", realsquare ? "Physical" : "Pixelwise");
-    gwy_app_data_browser_get_current(GWY_APP_CONTAINER, &data,
-                                     GWY_APP_DATA_VIEW, &data_view,
-                                     0);
-    data = gwy_data_view_get_data(data_view);
-    key = gwy_data_view_get_data_prefix(data_view);
-    g_return_if_fail(key);
-    s = g_strconcat(key, "/realsquare", NULL);
-    if (realsquare)
-        gwy_container_set_boolean_by_name(data, s, realsquare);
-    else
-        gwy_container_remove_by_name(data, s);
-    g_free(s);
-}
 
 /**
  * gwy_app_switch_tool:
