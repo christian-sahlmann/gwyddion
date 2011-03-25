@@ -25,7 +25,7 @@
  * <mime-type type="application/x-attocube-asc">
  *   <comment>Attocube ASCII data</comment>
  *   <magic priority="80">
- *     <match type="string" offset="0" value="# Daisy frame view snapshot"/>
+ *     <match type="string" offset="0" value="# Daisy "/>
  *   </magic>
  *   <glob pattern="*.asc"/>
  *   <glob pattern="*.ASC"/>
@@ -53,11 +53,11 @@
 
 #include "err.h"
 
-#define MAGIC_BARE "# Daisy frame view snapshot"
-#define MAGIC1 MAGIC_BARE "\r\n"
-#define MAGIC2 MAGIC_BARE "\n"
-#define MAGIC1_SIZE (sizeof(MAGIC1)-1)
-#define MAGIC2_SIZE (sizeof(MAGIC2)-1)
+// Observed in the wild:
+//   Daisy frame view snapshot
+//   Daisy saved frame
+#define MAGIC "# Daisy "
+#define MAGIC_SIZE (sizeof(MAGIC)-1)
 #define DATA_MAGIC "# Start of Data:"
 #define EXTENSION ".asc"
 
@@ -73,7 +73,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Attocube Systems ASC files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.1",
+    "0.2",
     "David Nečas (Yeti)",
     "2009",
 };
@@ -100,9 +100,8 @@ asc_detect(const GwyFileDetectInfo *fileinfo,
     if (only_name)
         return g_str_has_suffix(fileinfo->name_lowercase, EXTENSION) ? 10 : 0;
 
-    if (fileinfo->file_size < MAX(MAGIC1_SIZE, MAGIC2_SIZE)
-        || (memcmp(fileinfo->head, MAGIC1, MAGIC1_SIZE) != 0
-            && memcmp(fileinfo->head, MAGIC2, MAGIC2_SIZE) != 0))
+    if (fileinfo->file_size < MAGIC_SIZE
+        || memcmp(fileinfo->head, MAGIC, MAGIC_SIZE) != 0)
         return 0;
 
     return 100;
@@ -150,7 +149,7 @@ asc_load(const gchar *filename,
 
     p = buffer;
     line = gwy_str_next_line(&p);
-    if (!gwy_strequal(line, MAGIC_BARE)) {
+    if (!g_str_has_prefix(line, MAGIC)) {
         err_FILE_TYPE(error, "Attocube ASC");
         goto fail;
     }
