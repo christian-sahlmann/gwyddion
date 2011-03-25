@@ -540,7 +540,8 @@ gwy_app_build_graph_menu(GtkAccelGroup *accel_group)
                                           gwy_graph_func_get_sensitivity_mask);
     gtk_menu_set_accel_group(GTK_MENU(menu), accel_group);
     gtk_menu_set_accel_path(GTK_MENU(menu), "<graph>/Graph");
-    graph_menu = menu;
+    if (!graph_menu)
+        graph_menu = menu;
 
     return menu;
 }
