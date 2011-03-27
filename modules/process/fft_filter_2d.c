@@ -165,7 +165,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("2D FFT Filtering"),
     "Chris Anderson <sidewinder.asu@gmail.com>",
-    "1.7",
+    "1.7.1",
     "Chris Anderson, Molecular Imaging Corp.",
     "2005",
 };
@@ -364,7 +364,7 @@ run_dialog(ControlsType *controls)
     const prev_modes[] = {
         {
             PREV_FFT,
-            N_("_FFT editor"),
+            N_("_FFT mask editor"),
         },
         {
             PREV_IMAGE,
@@ -1226,21 +1226,21 @@ static void
 build_tooltips(GHashTable *hash_tips)
 {
     g_hash_table_insert(hash_tips, "circle_inclusive",
-                        _("Draw a new inclusive circle marker"));
+                        _("Draw ellipses on the mask"));
     g_hash_table_insert(hash_tips, "rectangle_inclusive",
-                        _("Draw a new inclusive rectangle marker"));
+                        _("Draw rectangles on the mask"));
     g_hash_table_insert(hash_tips, "circle_exclusive",
-                        _("Draw a new exclusive circle marker"));
+                        _("Undraw ellipses on the mask"));
     g_hash_table_insert(hash_tips, "rectangle_exclusive",
-                        _("Draw a new exclusive rectangle marker"));
+                        _("Undraw rectangles on the mask"));
     g_hash_table_insert(hash_tips, "undo",
                         _("Undo the last change to the filter mask"));
     g_hash_table_insert(hash_tips, "remove_all",
-                        _("Removes the entire filter mask"));
+                        _("Clear the entire filter mask"));
     g_hash_table_insert(hash_tips, "fill_all",
-                        _("Fills the entire filter mask"));
+                        _("Fill the entire filter mask"));
     g_hash_table_insert(hash_tips, "origin",
-                        _("Forces new markers to center around the origin"));
+                        _("Force shapes to center around the origin"));
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
