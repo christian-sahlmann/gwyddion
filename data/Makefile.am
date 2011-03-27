@@ -27,6 +27,7 @@ endif
 
 EXTRA_DIST = \
 	gwyddion-thumbnailer.schemas.in \
+	gwyddion.desktop.in \
 	gwyddion.nsit.in \
 	gwyddion.pc.in \
 	gwyddion.spec.in \
@@ -35,7 +36,6 @@ EXTRA_DIST = \
 	gwyddion.1 \
 	mingw32-gwyddion-libs.spec.in \
 	thumbnailer-schemas.xsl \
-	$(gwyddionapp_DATA) \
 	$(gwyddionmime_DATA)
 
 # gwyddion.vim generation
@@ -89,6 +89,18 @@ gwyddion-thumbnailer.schemas: gwyddion-thumbnailer.schemas.in Makefile
 	  -e 's#[@]bindir[@]#$(bindir)#' \
 	   $(srcdir)/gwyddion-thumbnailer.schemas.in \
 	   >gwyddion-thumbnailer.schemas
+
+# Generate gwyddion.desktop from gwyddion.xml to keep the file format list in
+# sync.
+# NB: We must use sed, not autoconf @-replacements, because that would leave
+# unexpanded ${prefix} in the schemas file.
+# Depend on Makefile, this may run this rule perhaps too often but ensures
+# the paths are updated every time they should.
+gwyddion.desktop: gwyddion.desktop.in $(srcdir)/gwyddion.xml Makefile
+	$(AM_V_GEN)x=`$(SED) -e '/^<mime-type/ s/.*<mime-type type="\(.*\)">.*/\1;/' -e t -e d <$(srcdir)/gwyddion.xml | tr -d '\n'` \
+	&& $(SED) -e "s#@MIME_TYPE_LIST@#$$x#" \
+	  -e 's#[@]datadir[@]#$(datadir)#' \
+	  <gwyddion.desktop.in >gwyddion.desktop
 
 # Desktop file installation
 # FIXME: Maybe not according to current standards
