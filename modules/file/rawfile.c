@@ -781,7 +781,7 @@ rawfile_dialog_format_page(RawFileArgs *args,
                                    -1,
                                    _("Any whitespace"), RAW_DELIM_WHITESPACE,
                                    _("TAB character"), RAW_DELIM_TAB,
-                                   _("Ohter character"), RAW_DELIM_OTHER,
+                                   _("Other character"), RAW_DELIM_OTHER,
                                    NULL);
     controls->delimmenu = combo;
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), combo);

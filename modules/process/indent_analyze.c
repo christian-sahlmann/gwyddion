@@ -491,7 +491,7 @@ create_parameters_table(IndentAnalyzeControls * controls)
    gwy_table_attach_row(table, row++, _("Maximum at"), siu->str,
          controls->w_max_xy);
    controls->w_minmax = gtk_label_new("");
-   gwy_table_attach_row(table, row++, _("Max-min diference"), siu->str,
+   gwy_table_attach_row(table, row++, _("Max-min difference"), siu->str,
          controls->w_minmax);
 
    g_string_append(siu, "<sup>2</sup>");
@@ -648,7 +648,7 @@ indent_analyze_dialog(GwyContainer *data, IndentAnalyzeArgs * args)
     GtkObject *layer;
 
     controls.args = args;
-    dialog = gtk_dialog_new_with_buttons(_("Indentaion statistics"), NULL, 0,
+    dialog = gtk_dialog_new_with_buttons(_("Indentation statistics"), NULL, 0,
                                          _("_Compute & mark"), RESPONSE_COMPUTE,
                                          _("_Save statistics"), RESPONSE_SAVE,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
@@ -1663,7 +1663,7 @@ save_statistics_dialog(IndentAnalyzeControls *c,
                 args->volume_above/mag/mag/mag);
         fprintf(out, _("Volume below:     %g\n"),
                 args->volume_below/mag/mag/mag);
-        fprintf(out, _("Volume diference  %g\n"),
+        fprintf(out, _("Volume difference %g\n"),
                 (args->volume_above -
                  args->volume_below)/mag/mag/mag);
 
