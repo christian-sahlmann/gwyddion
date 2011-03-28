@@ -653,7 +653,7 @@ curvature_dialog(CurvatureArgs *args,
     gtk_box_pack_start(GTK_BOX(vbox), table, FALSE, FALSE, 0);
     row = 0;
 
-    label = gwy_label_new_header(_("Output type"));
+    label = gwy_label_new_header(_("Output Type"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label,
                      0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
