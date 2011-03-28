@@ -65,10 +65,11 @@ typedef enum {
     PREV_DIFF,
 } PreviewType;
 
-enum {
-    OUTPUT_FFT = 1,
-    OUTPUT_IMAGE = 2
-};
+typedef enum {
+    OUTPUT_FFT   = 1 << 0,
+    OUTPUT_IMAGE = 1 << 1,
+    OUTPUT_DIFF  = 1 << 2
+} OutputType;
 
 enum {
     SENS_EDIT = 1 << 0,
@@ -109,7 +110,7 @@ typedef struct {
     GSList          *zoom;
 
     gboolean        snap;
-    guint           out_mode;
+    OutputType      out_mode;
 
     gboolean        compute;
 } ControlsType;
@@ -132,6 +133,8 @@ static void        undo_cb               (ControlsType *controls);
 static void        snap_cb               (GtkWidget *check,
                                           ControlsType *controls);
 static void        zoom_changed          (GtkRadioButton *button,
+                                          ControlsType *controls);
+static void        out_mode_changed      (GtkToggleButton *check,
                                           ControlsType *controls);
 
 /* Helper Functions */
@@ -165,7 +168,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("2D FFT Filtering"),
     "Chris Anderson <sidewinder.asu@gmail.com>",
-    "1.7.1",
+    "1.8",
     "Chris Anderson, Molecular Imaging Corp.",
     "2005",
 };
@@ -190,19 +193,19 @@ static void
 run_main(GwyContainer *data, GwyRunType run)
 {
     GwyDataField *dfield, *mfield, *fft, *filtered, *diff;
-    GwyDataField *out_image = NULL, *out_fft = NULL;
+    GwyDataField *out_image = NULL, *out_fft = NULL, *out_diff = NULL;
     gint id, newid;
     ControlsType controls;
     gboolean response;
 
     g_return_if_fail(run & FFTF_2D_RUN_MODES);
 
-    /* Initialize */
+    /* Initialise */
     controls.rect_signal = controls.ellipse_signal = 0;
     controls.edit_mode = FFT_ELLIPSE_ADD;
     controls.prev_mode = PREV_FFT;
     controls.zoom_mode = ZOOM_1;
-    controls.out_mode = OUTPUT_FFT | OUTPUT_IMAGE;
+    controls.out_mode = OUTPUT_IMAGE | OUTPUT_DIFF;
     controls.snap = FALSE;
     controls.data = data;
     controls.compute = TRUE;
@@ -276,7 +279,7 @@ run_main(GwyContainer *data, GwyRunType run)
 
     /* Do the fft filtering */
     if (response) {
-        if (controls.out_mode & OUTPUT_IMAGE)
+        if (controls.out_mode & (OUTPUT_IMAGE | OUTPUT_DIFF))
             out_image = gwy_data_field_new_alike(dfield, FALSE);
         if (controls.out_mode & OUTPUT_FFT)
             out_fft = gwy_data_field_new_alike(dfield, FALSE);
@@ -286,7 +289,7 @@ run_main(GwyContainer *data, GwyRunType run)
                                                             "/0/mask"));
         fft_filter_2d(dfield, out_image, out_fft, mfield);
 
-        if (out_image) {
+        if (controls.out_mode & OUTPUT_IMAGE) {
             newid = gwy_app_data_browser_add_data_field(out_image, data, TRUE);
             gwy_app_sync_data_items(data, data, id, newid, FALSE,
                                     GWY_DATA_ITEM_GRADIENT,
@@ -298,7 +301,21 @@ run_main(GwyContainer *data, GwyRunType run)
             gwy_app_set_data_field_title(data, newid, _("Filtered Data"));
         }
 
-        if (out_fft) {
+        if (controls.out_mode & OUTPUT_DIFF) {
+            out_diff = gwy_data_field_duplicate(dfield);
+            gwy_data_field_subtract_fields(out_diff, dfield, out_image);
+            newid = gwy_app_data_browser_add_data_field(out_diff, data, TRUE);
+            gwy_app_sync_data_items(data, data, id, newid, FALSE,
+                                    GWY_DATA_ITEM_GRADIENT,
+                                    GWY_DATA_ITEM_MASK_COLOR,
+                                    GWY_DATA_ITEM_RANGE,
+                                    GWY_DATA_ITEM_RANGE_TYPE,
+                                    GWY_DATA_ITEM_REAL_SQUARE,
+                                    0);
+            gwy_app_set_data_field_title(data, newid, _("Difference"));
+        }
+
+        if (controls.out_mode & OUTPUT_FFT) {
             newid = gwy_app_data_browser_add_data_field(out_fft, data, TRUE);
             gwy_app_sync_data_items(controls.mydata, data, 0, newid, FALSE,
                                     GWY_DATA_ITEM_GRADIENT,
@@ -309,7 +326,13 @@ run_main(GwyContainer *data, GwyRunType run)
                                     0);
             gwy_app_set_data_field_title(data, newid, _("Filtered FFT"));
         }
+
+        gwy_object_unref(out_diff);
+        gwy_object_unref(out_image);
+        gwy_object_unref(out_fft);
     }
+
+    g_object_unref(controls.mydata);
 }
 
 static GwyDataField*
@@ -380,12 +403,31 @@ run_dialog(ControlsType *controls)
         },
     };
 
+    static struct {
+        guint out_mode;
+        const gchar *text;
+    }
+    const out_modes[] = {
+        {
+            OUTPUT_IMAGE,
+            N_("Fi_ltered i_mage"),
+        },
+        {
+            OUTPUT_DIFF,
+            N_("Ima_ge difference"),
+        },
+        {
+            OUTPUT_FFT,
+            N_("Filtered FFT mo_dulus"),
+        },
+    };
+
     GtkWidget *dialog;
     GtkWidget *table, *hbox, *hbox2;
     GtkWidget *label;
     GtkWidget *image;
     GtkWidget *button = NULL;
-    GtkWidget *combo;
+    GtkWidget *check;
     GtkRadioButton *group;
     GtkTooltips *tips;
     GHashTable *hash_tips;
@@ -436,7 +478,7 @@ run_dialog(ControlsType *controls)
     gwy_data_view_set_alpha_layer(GWY_DATA_VIEW(controls->view), mlayer);
 
     /* Setup the control panel */
-    table = gtk_table_new(12, 2, FALSE);
+    table = gtk_table_new(16, 2, FALSE);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
@@ -523,8 +565,8 @@ run_dialog(ControlsType *controls)
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
-    label = gtk_label_new(_("Display"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.05);
+    label = gtk_label_new(_("Display:"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 0, 1, row, row+1,
                      GTK_FILL, GTK_FILL, 0, 2);
     row++;
@@ -579,23 +621,25 @@ run_dialog(ControlsType *controls)
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
-    combo = gwy_enum_combo_box_newl(NULL, NULL, OUTPUT_IMAGE,
-                                    _("Filtered Image"), OUTPUT_IMAGE,
-                                    _("Filtered FFT"), OUTPUT_FFT,
-                                    _("Both"), OUTPUT_IMAGE | OUTPUT_FFT,
-                                    NULL);
-    gwy_enum_combo_box_set_active(GTK_COMBO_BOX(combo), controls->out_mode);
-    gtk_table_attach(GTK_TABLE(table), combo, 1, 2, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
-
-    label = gtk_label_new_with_mnemonic(_("Output _type:"));
+    label = gtk_label_new(_("Output type:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_label_set_mnemonic_widget(GTK_LABEL(label), combo);
-    gtk_table_attach(GTK_TABLE(table), label, 0, 1, row, row+1,
-                     GTK_FILL, 0, 0, 0);
-
-    gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
+    gtk_table_attach(GTK_TABLE(table), label, 0, 2, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 2);
     row++;
+
+    for (i = 0; i < G_N_ELEMENTS(out_modes); i++) {
+        check = gtk_check_button_new_with_mnemonic(_(out_modes[i].text));
+        g_object_set_data(G_OBJECT(check), "value",
+                          GUINT_TO_POINTER(out_modes[i].out_mode));
+        if (controls->out_mode & out_modes[i].out_mode)
+            gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(check), TRUE);
+        gtk_table_attach(GTK_TABLE(table), check, 0, 2, row, row+1,
+                         GTK_EXPAND | GTK_FILL, 0, 0, 0);
+        g_signal_connect(check, "toggled",
+                         G_CALLBACK(out_mode_changed), controls);
+        row++;
+    }
+    gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
 
     gwy_sensitivity_group_set_state(controls->sensgroup, SENS_EDIT, SENS_EDIT);
     g_object_unref(controls->sensgroup);
@@ -625,8 +669,6 @@ run_dialog(ControlsType *controls)
             break;
         }
     } while (response != GTK_RESPONSE_OK);
-
-    controls->out_mode = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
 
     /* Finalize */
     gtk_widget_destroy(dialog);
@@ -1022,6 +1064,20 @@ zoom_changed(GtkRadioButton *button,
     gwy_set_data_preview_size(GWY_DATA_VIEW(controls->view), PREVIEW_SIZE);
 }
 
+static void
+out_mode_changed(GtkToggleButton *check,
+                 ControlsType *controls)
+{
+    OutputType value = GPOINTER_TO_UINT(g_object_get_data(G_OBJECT(check),
+                                                          "value"));
+    gboolean active = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(check));
+
+    if (active)
+        controls->out_mode |= value;
+    else
+        controls->out_mode &= ~value;
+}
+
 /* set_dfield_modulus is copied from fft.c */
 static void
 set_dfield_modulus(GwyDataField *re, GwyDataField *im, GwyDataField *target)
@@ -1197,8 +1253,8 @@ save_settings(ControlsType *controls)
                                       controls->snap);
     gwy_container_set_enum_by_name(settings, "/module/fft_filter_2d/zoom",
                                    controls->zoom_mode);
-    gwy_container_set_int32_by_name(settings, "/module/fft_filter_2d/out_mode",
-                                    controls->out_mode);
+    gwy_container_set_enum_by_name(settings, "/module/fft_filter_2d/out_mode",
+                                   controls->out_mode);
 }
 
 static void
@@ -1212,8 +1268,8 @@ load_settings(ControlsType *controls)
                                       &controls->snap);
     gwy_container_gis_enum_by_name(settings, "/module/fft_filter_2d/zoom",
                                    &controls->zoom_mode);
-    gwy_container_gis_int32_by_name(settings, "/module/fft_filter_2d/out_mode",
-                                    &controls->out_mode);
+    gwy_container_gis_enum_by_name(settings, "/module/fft_filter_2d/out_mode",
+                                   &controls->out_mode);
 
     if (controls->zoom_mode != ZOOM_1
         && controls->zoom_mode != ZOOM_4
