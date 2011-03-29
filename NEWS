@@ -7,14 +7,20 @@ Libraries:
   gwy_data_line_clone() keep the offset.
 - libgwydgets: GwyColorAxis is drawn correctly if the z-range is inverted.
 - libgwyapp: Graph windows offer all graph functions in a context menu.
+- libgwyapp: Memory leaks in the data browser were plugged.
 
 Modules:
+- MUL file (new): Imports Aarhus MUL data files.
 - Spectro tool: It is possible to average the selected spectra.
 - Nanoeducator: Loading of multiple spectra per point was corrected.
 - OPD file: Support for v5.0 data was added.
 - Pixmap: False colour scale is drawn correctly if the z-range is inverted.
 - Attocube: File detection is more liberal, accepting anything starting
   with "# Daisy".
+
+Other:
+- The list of MIME types Gwyddion declares it can open (on Unix) was updated
+  and made to be updated automatically.
 
 
 2.23 (2011-03-05)
