@@ -58,6 +58,7 @@ file_LTLIBRARIES = \
 	microprof.la \
 	miffile.la \
 	mifile.la \
+	mulfile.la \
 	nanoeducator.la \
 	nanonics.la \
 	nanonis.la \
@@ -111,7 +112,6 @@ noinst_HEADERS = \
 # here.  This makes them distributed and translations of their messages are
 # kept.  If we remove them completely, various bits can get lost.
 disabled_sources = \
-	miffile.c \
 	robotics.c \
 	wipfile.c
 
@@ -168,6 +168,7 @@ metropro_la_SOURCES      = metropro.c
 microprof_la_SOURCES     = microprof.c
 miffile_la_SOURCES       = miffile.c
 mifile_la_SOURCES        = mifile.c
+mulfile_la_SOURCES       = mulfile.c
 nanoeducator_la_SOURCES  = nanoeducator.c
 nanonics_la_SOURCES      = nanonics.c
 nanonis_la_SOURCES       = nanonis.c
