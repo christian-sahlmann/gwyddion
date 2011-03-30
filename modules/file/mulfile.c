@@ -100,7 +100,7 @@ typedef struct {
     gint current;
     gchar sample[MUL_STRING_SIZE+1];
     gchar title[MUL_STRING_SIZE+1];
-    guint pospr, postd1;   /* ??? */
+    guint postpr, postd1;   /* ??? */
     MulModeType mode;
     guint curr_factor;
     guint n_point_scans;
@@ -143,7 +143,7 @@ static void          mul_read_image      (GwyContainer *container,
                                           const guchar *buffer,
                                           const MulIndexEntry *entry,
                                           const MulImageLabel *label);
-static GwyContainer* mul_get_meta        (GHashTable *hash);
+static GwyContainer* mul_get_meta        (const MulImageLabel *label);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -190,7 +190,7 @@ mul_load(const gchar *filename,
          G_GNUC_UNUSED GwyRunType mode,
          GError **error)
 {
-    GwyContainer *container = NULL, *meta;
+    GwyContainer *container = NULL;
     guchar *buffer = NULL;
     gsize size;
     GError *err = NULL;
@@ -359,7 +359,7 @@ mul_read_image_label(const guchar *buffer,
     gwy_debug("[%u] sample: <%s>, title: <%s>",
               label->id, label->sample, label->title);
 
-    label->pospr = gwy_get_guint16_le(&p);
+    label->postpr = gwy_get_guint16_le(&p);
     label->postd1 = gwy_get_guint16_le(&p);
     label->mode = gwy_get_guint16_le(&p);
     gwy_debug("[%u] mode: %u", label->id, label->mode);
@@ -402,6 +402,7 @@ mul_read_image(GwyContainer *container,
     const guint16 *u16 = (const guint16*)(buffer
                                           + (entry->addr + 1)* MUL_BLOCK_SIZE);
     GwyDataField *field;
+    GwyContainer *meta;
     gdouble *data;
     gdouble q_height, q_current, q_voltage, q = 1.0/32768;
     guint i, j;
@@ -412,12 +413,15 @@ mul_read_image(GwyContainer *container,
                                Angstrom*label->xdim,
                                Angstrom*label->ydim,
                                FALSE);
+    /*
     gwy_data_field_set_xoffset(field, Angstrom*label->xoff);
     gwy_data_field_set_yoffset(field, Angstrom*label->yoff);
+    */
 
     q_height = -Angstrom * label->zscale/5.0;
     q_current = 1.0/32768 * label->curr_factor * 10*Nano;
-    q_voltage = -1.0/32768 * ((label->spare_61 >= 4) ? 0.05 : 0.025);
+    /* q_voltage = -1.0/32768 * ((label->spare_61 >= 4) ? 0.05 : 0.025); */
+    q_voltage = -10.0/32768;
 
     if (label->mode == MUL_MODE_HEIGHT || label->mode == MUL_MODE_DIFFERENT) {
         q = q_height;
@@ -493,49 +497,60 @@ mul_read_image(GwyContainer *container,
                             label->sample, label->title, label->id);
     gwy_container_set_string_by_name(container, key, title);
 
+    g_snprintf(key, sizeof(key), "/%d/meta", label->id);
+    meta = mul_get_meta(label);
+    gwy_container_set_object_by_name(container, key, meta);
+    g_object_unref(meta);
+
     gwy_app_channel_check_nonsquare(container, label->id);
 }
 
-#if 0
 static GwyContainer*
-mul_get_meta(GHashTable *hash)
+mul_get_meta(const MulImageLabel *label)
 {
-    static const gchar *keys[] = {
-        "X Offset", "Y Offset", "Scan Rotation(\xb0)", "Scan Rate(Hz)",
-        "Scan Type",
-    };
     GwyContainer *meta = gwy_container_new();
-    gchar *value, *unit, *key, *p;
-    guint i;
 
-    for (i = 0; i < G_N_ELEMENTS(keys); i++) {
-        if (!(value = g_hash_table_lookup(hash, keys[i])))
-            continue;
-
-        if (!(unit = strchr(keys[i], '('))) {
-            gwy_container_set_string_by_name(meta, keys[i], g_strdup(value));
-            continue;
-        }
-
-        key = g_strdup(keys[i]);
-        unit = strchr(key, '(');
-        *unit = '\0';
-        unit++;
-        g_strstrip(key);
-        if ((p = strchr(unit, ')')))
-            *p = '\0';
-        g_strstrip(unit);
-
-        value = g_strconcat(value, " ", unit, NULL);
-        gwy_container_set_string_by_name(meta, key, value);
-        g_free(key);
-    }
-
-    if (!gwy_container_get_n_items(meta))
-        gwy_object_unref(meta);
+    gwy_container_set_string_by_name
+        (meta, "Date", g_strdup_printf("%u-%02u-%02u %02u:%02u:%02u",
+                                       label->year, label->month, label->day,
+                                       label->hour, label->minute,
+                                       label->second));
+    gwy_container_set_string_by_name
+        (meta, "X-Offset", g_strdup_printf("%g nm", label->xoff/10.0));
+    gwy_container_set_string_by_name
+        (meta, "Y-Offset", g_strdup_printf("%g nm", label->yoff/10.0));
+    gwy_container_set_string_by_name
+        (meta, "Z-Scale", g_strdup_printf("%u V", label->zscale));
+    gwy_container_set_string_by_name
+        (meta, "Tilt", g_strdup_printf("%u deg", label->tilt));
+    gwy_container_set_string_by_name
+        (meta, "Scan duration", g_strdup_printf("%g s", label->speed/100.0));
+    gwy_container_set_string_by_name
+        (meta, "Bias", g_strdup_printf("%g V", -10.0*label->bias/32768.0));
+    gwy_container_set_string_by_name
+        (meta, "Current", g_strdup_printf("%g nA", label->current/100.0));
+    gwy_container_set_string_by_name
+        (meta, "Bias (corrected)",
+         g_strdup_printf("%g V",
+                         -10.0*label->bias/32768.0 - 1e-6*label->current));
+    gwy_container_set_string_by_name
+        (meta, "Postprocessing", g_strdup_printf("%u", label->postpr));
+    gwy_container_set_string_by_name
+        (meta, "Current factor", g_strdup_printf("%u", label->curr_factor));
+    gwy_container_set_string_by_name
+        (meta, "Mode", g_strdup_printf("%u", label->mode));
+    gwy_container_set_string_by_name
+        (meta, "R_Nr", g_strdup_printf("%u", label->n_point_scans));
+    gwy_container_set_string_by_name
+        (meta, "Unit number", g_strdup_printf("%u", label->unitnr));
+    gwy_container_set_string_by_name
+        (meta, "Version", g_strdup_printf("%u", label->version));
+    gwy_container_set_string_by_name
+        (meta, "Gain", g_strdup_printf("%u", label->spare_60));
+    gwy_container_set_string_by_name
+        (meta, "STM", g_strdup_printf("%u", label->spare_61));
 
     return meta;
 }
-#endif
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
