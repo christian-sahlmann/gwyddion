@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2011-03-15 03:59+0100\n"
-"PO-Revision-Date: 2011-03-15 07:53+0300\n"
+"POT-Creation-Date: 2011-03-30 03:58+0200\n"
+"PO-Revision-Date: 2011-03-30 10:53+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "Language: \n"
@@ -122,11 +122,11 @@ msgstr "vdW: параболоид"
 
 #: libgwyddion/gwyinventory.c:1310
 #: libgwydgets/gwygraphwindow.c:603
-#: app/data-browser.c:1541
-#: app/data-browser.c:2290
-#: app/data-browser.c:3064
-#: app/data-browser.c:3223
-#: app/data-browser.c:5131
+#: app/data-browser.c:1538
+#: app/data-browser.c:2288
+#: app/data-browser.c:3062
+#: app/data-browser.c:3221
+#: app/data-browser.c:5129
 #: app/resource-editor.c:366
 #: modules/process/convolution_filter.c:700
 msgid "Untitled"
@@ -848,7 +848,7 @@ msgstr "точек"
 
 #: libgwydgets/gwy3dwindow.c:1027
 #: modules/file/pixmap.c:946
-#: modules/file/pixmap.c:2664
+#: modules/file/pixmap.c:2666
 #: modules/file/rawfile.c:398
 #: modules/process/angle_dist.c:170
 #: modules/process/calcoefs_new.c:347
@@ -863,7 +863,7 @@ msgstr "точек"
 #: modules/process/facet-level.c:283
 #: modules/process/facet_analysis.c:272
 #: modules/process/fft.c:272
-#: modules/process/fft_filter_2d.c:399
+#: modules/process/fft_filter_2d.c:441
 #: modules/process/fft_synth.c:330
 #: modules/process/fractal.c:206
 #: modules/process/grain_edge.c:220
@@ -1373,7 +1373,7 @@ msgstr "Удалённое управление"
 msgid "Python Scripting Interface"
 msgstr "Скриптовый интерфейс Python"
 
-#: app/app.c:238
+#: app/app.c:243
 #, c-format
 msgid ""
 "Some data are unsaved:\n"
@@ -1384,81 +1384,81 @@ msgstr ""
 "%s\n"
 "Действительно выйти?"
 
-#: app/app.c:416
+#: app/app.c:387
+msgid "Mask _Color..."
+msgstr "_Цвет маски..."
+
+#: app/app.c:403
+msgid "Zoom _1:1"
+msgstr "Масштаб _1:1"
+
+#: app/app.c:600
+msgid "Pi_xelwise Square"
+msgstr "Квадратный _попиксельно"
+
+#: app/app.c:610
+msgid "_Physically Square"
+msgstr "Квадратный _физически"
+
+#: app/app.c:779
 msgid "Save"
 msgstr "Сохранить"
 
-#: app/app.c:418
-#: app/app.c:422
+#: app/app.c:781
+#: app/app.c:785
 msgid "Save 3D view to an image"
 msgstr "Сохранить трёхмерный вид в изображение"
 
-#: app/app.c:428
+#: app/app.c:791
 msgid "Set as Default"
 msgstr "Использовать по умолчанию"
 
-#: app/app.c:430
+#: app/app.c:793
 msgid "Set the current view setup as the default"
 msgstr "Установить текущие настройки вида как настройки по умолчанию"
 
-#: app/app.c:474
+#: app/app.c:837
 #, c-format
 msgid "Saving of 3D view to `%s' failed"
 msgstr "Не удалось сохранить трёхмерный вид в `%s'"
 
-#: app/app.c:518
+#: app/app.c:881
 msgid "Export 3D View"
 msgstr "Экспортировать трёхмерный вид"
 
-#: app/app.c:678
-msgid "Mask _Color..."
-msgstr "_Цвет маски..."
-
-#: app/app.c:694
-msgid "Zoom _1:1"
-msgstr "Масштаб _1:1"
-
-#: app/app.c:891
-msgid "Pi_xelwise Square"
-msgstr "Квадратный _попиксельно"
-
-#: app/app.c:901
-msgid "_Physically Square"
-msgstr "Квадратный _физически"
-
-#: app/data-browser.c:3774
+#: app/data-browser.c:3772
 msgid "Extract to a new file"
 msgstr "Извлечь в новый файл"
 
-#: app/data-browser.c:3775
+#: app/data-browser.c:3773
 msgid "Duplicate"
 msgstr "Сделать копию"
 
-#: app/data-browser.c:3776
+#: app/data-browser.c:3774
 msgid "Delete"
 msgstr "Удалить"
 
-#: app/data-browser.c:3820
+#: app/data-browser.c:3818
 msgid "Data Browser"
 msgstr "Просмотр данных"
 
-#: app/data-browser.c:3843
+#: app/data-browser.c:3841
 msgid "Close file"
 msgstr "Закрыть файл"
 
-#: app/data-browser.c:3856
+#: app/data-browser.c:3854
 msgid "Channels"
 msgstr "Каналы"
 
-#: app/data-browser.c:3870
+#: app/data-browser.c:3868
 msgid "Graphs"
 msgstr "Графики"
 
-#: app/data-browser.c:3884
+#: app/data-browser.c:3882
 msgid "Spectra"
 msgstr "Спектры"
 
-#: app/data-browser.c:5169
+#: app/data-browser.c:5167
 #, c-format
 msgid "Unknown channel %d"
 msgstr "Неизвестный канал %d"
@@ -1783,23 +1783,23 @@ msgstr "_Обработка данных"
 msgid "_Graph"
 msgstr "_График"
 
-#: app/menu.c:568
+#: app/menu.c:569
 msgid "Re-show Last"
 msgstr "Повторить с настройкой последний"
 
-#: app/menu.c:583
+#: app/menu.c:584
 msgid "Repeat Last"
 msgstr "Повторить последний"
 
-#: app/menu.c:711
+#: app/menu.c:712
 msgid "Repeat"
 msgstr "Повторить"
 
-#: app/menu.c:717
+#: app/menu.c:718
 msgid "Re-show"
 msgstr "Перепоказать"
 
-#: app/menu.c:904
+#: app/menu.c:905
 msgid "_Document history"
 msgstr "_Предыдущие документы"
 
@@ -2406,7 +2406,7 @@ msgid "Export Text"
 msgstr "Экспортировать текст"
 
 #: modules/file/asciiexport.c:273
-#: modules/file/pixmap.c:2753
+#: modules/file/pixmap.c:2755
 #: modules/file/rawfile.c:720
 #: modules/file/rawxyz.c:670
 #: modules/process/fft_filter_1d.c:296
@@ -3032,6 +3032,7 @@ msgid "Unique id record is too short."
 msgstr "Уникальный идентификатор слишком короткий."
 
 #: modules/file/miffile.c:680
+#: modules/file/mulfile.c:335
 msgid "Image data are outside the file."
 msgstr "Данные изображения не помещаются в файл."
 
@@ -3046,6 +3047,25 @@ msgstr "Файлы данных PicoView (.mi)"
 #: modules/file/mifile.c:374
 msgid "Spectroscopy Graph"
 msgstr "График спектроскопии"
+
+#: modules/file/mulfile.c:149
+msgid "Imports Aarhus MUL files."
+msgstr "Импортирует файлы Aarhus MUL"
+
+#: modules/file/mulfile.c:162
+msgid "Aarhus NUL files (.mul)"
+msgstr "Файлы Aarhus MUL (.mul)"
+
+#: modules/file/mulfile.c:326
+#, c-format
+msgid "Image number in the label %u does not match the number %u in the index."
+msgstr "Номер изображения в названии %u не соответствует числу %u в оглавлении."
+
+#: modules/file/mulfile.c:384
+#: modules/file/mulfile.c:393
+#, c-format
+msgid "Label string length %u is larger than 20."
+msgstr "Длина строки названия %u больше, чем 20."
 
 #: modules/file/nanoeducator.c:280
 msgid "Imports Nanoeducator data files."
@@ -3091,11 +3111,11 @@ msgstr "Профиль %d"
 msgid "F-D spectra"
 msgstr "Спектры сила-расстояние"
 
-#: modules/file/nanoeducator.c:1117
+#: modules/file/nanoeducator.c:1114
 msgid "I-V spectra"
 msgstr "Спектры ВАХ"
 
-#: modules/file/nanoeducator.c:1213
+#: modules/file/nanoeducator.c:1195
 msgid "I-Z spectra"
 msgstr "Спектры I-Z"
 
@@ -3364,11 +3384,11 @@ msgstr "Файлы экспорта в ASCII Wyko (.asc)"
 msgid "Item `%s' is beyond the end of the file."
 msgstr "Элемент `%s' находится за концом файла."
 
-#: modules/file/opdfile.c:595
+#: modules/file/opdfile.c:596
 msgid "Nested directories found"
 msgstr "Найдены вложенные каталоги"
 
-#: modules/file/opdfile.c:785
+#: modules/file/opdfile.c:787
 #, c-format
 msgid "Truncated data in block %s"
 msgstr "Неполные данные в блоке %s"
@@ -3597,24 +3617,24 @@ msgstr "Изображение слишком велико чтобы сохра
 msgid "Data must be displayed in a window for pixmap export."
 msgstr "Данные должны отображаться в окне для экспорта изображения."
 
-#: modules/file/pixmap.c:2602
+#: modules/file/pixmap.c:2604
 msgid "Change Inset Color"
 msgstr "Изменить цвет отрезка"
 
-#: modules/file/pixmap.c:2661
+#: modules/file/pixmap.c:2663
 #, c-format
 msgid "Export %s"
 msgstr "Экспорт %s"
 
-#: modules/file/pixmap.c:2692
+#: modules/file/pixmap.c:2694
 msgid "Scaling"
 msgstr "Масштабирование"
 
-#: modules/file/pixmap.c:2701
+#: modules/file/pixmap.c:2703
 msgid "_Zoom:"
 msgstr "_Увеличение:"
 
-#: modules/file/pixmap.c:2710
+#: modules/file/pixmap.c:2712
 #: modules/file/rawfile.c:632
 #: modules/process/crosscor.c:197
 #: modules/process/deposit_synth.c:458
@@ -3623,7 +3643,7 @@ msgstr "_Увеличение:"
 msgid "_Width:"
 msgstr "_Ширина:"
 
-#: modules/file/pixmap.c:2719
+#: modules/file/pixmap.c:2721
 #: modules/process/grain_mark.c:312
 #: modules/process/grain_rem_threshold.c:280
 #: modules/process/obj_synth.c:573
@@ -3634,91 +3654,91 @@ msgstr "_Ширина:"
 msgid "_Height:"
 msgstr "_Высота:"
 
-#: modules/file/pixmap.c:2728
+#: modules/file/pixmap.c:2730
 msgid "Scale text _proportionally"
 msgstr "_Пропорциональный масштаб текста"
 
-#: modules/file/pixmap.c:2743
+#: modules/file/pixmap.c:2745
 msgid "_Font size:"
 msgstr "_Размер шрифта:"
 
-#: modules/file/pixmap.c:2757
+#: modules/file/pixmap.c:2759
 msgid "Draw _mask"
 msgstr "Рисовать _маску"
 
-#: modules/file/pixmap.c:2766
+#: modules/file/pixmap.c:2768
 msgid "Draw _selection"
 msgstr "Рисовать в_ыбранную область"
 
-#: modules/file/pixmap.c:2782
+#: modules/file/pixmap.c:2784
 msgid "Grayscale Mode"
 msgstr "Градации серого"
 
-#: modules/file/pixmap.c:2786
+#: modules/file/pixmap.c:2788
 msgid "Export as 1_6 bit grayscale"
 msgstr "Экспортировать как 1_6битное серое"
 
-#: modules/file/pixmap.c:2812
+#: modules/file/pixmap.c:2814
 msgid "Lateral Scale"
 msgstr "Горизонтальный масштаб:"
 
-#: modules/file/pixmap.c:2819
-#: modules/file/pixmap.c:2915
+#: modules/file/pixmap.c:2821
+#: modules/file/pixmap.c:2917
 #: modules/process/immerse.c:367
 msgid "_None"
 msgstr "_Нет"
 
-#: modules/file/pixmap.c:2820
+#: modules/file/pixmap.c:2822
 msgid "_Rulers"
 msgstr "Направл_яющие"
 
-#: modules/file/pixmap.c:2821
+#: modules/file/pixmap.c:2823
 msgid "_Inset scale bar"
 msgstr "В_ложенный масштабный отрезок"
 
-#: modules/file/pixmap.c:2826
+#: modules/file/pixmap.c:2828
 msgid "Color:"
 msgstr "Цвет:"
 
-#: modules/file/pixmap.c:2842
+#: modules/file/pixmap.c:2844
 #: modules/process/immerse.c:323
 msgid "Position:"
 msgstr "Расположение:"
 
-#: modules/file/pixmap.c:2847
+#: modules/file/pixmap.c:2849
 msgid "left"
 msgstr "слева"
 
-#: modules/file/pixmap.c:2851
+#: modules/file/pixmap.c:2853
 msgid "center"
 msgstr "по центру"
 
-#: modules/file/pixmap.c:2855
+#: modules/file/pixmap.c:2857
 msgid "right"
 msgstr "справа"
 
-#: modules/file/pixmap.c:2860
+#: modules/file/pixmap.c:2862
 msgid "top"
 msgstr "верх"
 
-#: modules/file/pixmap.c:2872
+#: modules/file/pixmap.c:2874
 msgid "bottom"
 msgstr "низ"
 
-#: modules/file/pixmap.c:2883
+#: modules/file/pixmap.c:2885
 #: modules/process/lno_synth.c:1067
 msgid "_Length:"
 msgstr "_Длина:"
 
-#: modules/file/pixmap.c:2900
+#: modules/file/pixmap.c:2902
 msgid "_Auto"
 msgstr "_Авто"
 
-#: modules/file/pixmap.c:2908
+#: modules/file/pixmap.c:2910
 msgid "Value Scale"
 msgstr "Масштаб значений"
 
-#: modules/file/pixmap.c:2916
+#: modules/file/pixmap.c:2918
 msgid "_False color ruler"
 msgstr "Л_инейка псевдоцвета"
 
@@ -3960,7 +3980,7 @@ msgid "TAB character"
 msgstr "Символ TAB"
 
 #: modules/file/rawfile.c:784
-msgid "Ohter character"
+msgid "Other character"
 msgstr "Другой символ"
 
 #: modules/file/rawfile.c:792
@@ -6003,7 +6023,6 @@ msgstr "Расстояние по Y"
 
 #: modules/process/crosscor.c:236
 #: modules/process/fft.c:299
-#: modules/process/fft_filter_2d.c:591
 #: modules/process/maskcor.c:175
 msgid "Output _type:"
 msgstr "Тип в_ывода:"
@@ -6086,8 +6105,7 @@ msgid "Curvature Sections"
 msgstr "Сечения кривизны"
 
 #: modules/process/curvature.c:656
-#: modules/process/slope_dist.c:216
-msgid "Output type"
+msgid "Output Type"
 msgstr "Тип вывода"
 
 #: modules/process/curvature.c:663
@@ -6490,12 +6508,11 @@ msgid "NRMS"
 msgstr "ср. квадр. в окр."
 
 #: modules/process/edge.c:697
-#: modules/process/fft_filter_2d.c:526
 msgid "Display"
 msgstr "Показать"
 
 #: modules/process/edge.c:706
-#: modules/process/fft_filter_2d.c:371
+#: modules/process/fft_filter_2d.c:394
 msgid "Original _image"
 msgstr "Исходное _изображение"
 
@@ -6687,130 +6704,146 @@ msgstr "Тип _фильтра:"
 msgid "1D FFT Filtered Data"
 msgstr "Отфильтрованные данные одномерного БПФ"
 
-#: modules/process/fft_filter_2d.c:166
-#: modules/process/fft_filter_2d.c:398
+#: modules/process/fft_filter_2d.c:169
+#: modules/process/fft_filter_2d.c:440
 msgid "2D FFT Filtering"
 msgstr "Двумерный фильтр БПФ"
 
-#: modules/process/fft_filter_2d.c:180
+#: modules/process/fft_filter_2d.c:183
 msgid "/_Correct Data/_2D FFT Filtering..."
 msgstr "/Исправить _данные/Двумерная фильтрация _БПФ..."
 
-#: modules/process/fft_filter_2d.c:184
+#: modules/process/fft_filter_2d.c:187
 msgid "Two-dimensional FFT filtering"
 msgstr "Двумерная фильтрация БПФ"
 
-#: modules/process/fft_filter_2d.c:298
+#: modules/process/fft_filter_2d.c:301
 msgid "Filtered Data"
 msgstr "Отфильтрованные данные"
 
-#: modules/process/fft_filter_2d.c:310
-#: modules/process/fft_filter_2d.c:584
+#: modules/process/fft_filter_2d.c:315
+#: modules/process/fit_2d.c:678
+msgid "Difference"
+msgstr "Разница"
+
+#: modules/process/fft_filter_2d.c:327
 msgid "Filtered FFT"
 msgstr "Отфильтрованное БПФ"
 
-#: modules/process/fft_filter_2d.c:341
+#: modules/process/fft_filter_2d.c:364
 msgid "Add an ellipse to the FFT mask"
 msgstr "Добавить эллипс к маске БПФ"
 
-#: modules/process/fft_filter_2d.c:346
+#: modules/process/fft_filter_2d.c:369
 msgid "Add a rectangle to the FFT mask"
 msgstr "Добавить прямоугольник к маске БПФ"
 
-#: modules/process/fft_filter_2d.c:351
+#: modules/process/fft_filter_2d.c:374
 msgid "Subtract an ellipse from the FFT mask"
 msgstr "Вычесть эллипс из маски БПФ"
 
-#: modules/process/fft_filter_2d.c:356
+#: modules/process/fft_filter_2d.c:379
 msgid "Subtract a rectange from the FFT mask"
 msgstr "Вычесть прямоугольник из маски БПФ"
 
-#: modules/process/fft_filter_2d.c:367
-msgid "_FFT editor"
-msgstr "Редактор _БПФ"
+#: modules/process/fft_filter_2d.c:390
+msgid "_FFT mask editor"
+msgstr "Редактор маски _БПФ"
 
-#: modules/process/fft_filter_2d.c:375
+#: modules/process/fft_filter_2d.c:398
 msgid "_Filtered image"
 msgstr "От_фильтрованное изображение"
 
-#: modules/process/fft_filter_2d.c:379
+#: modules/process/fft_filter_2d.c:402
 msgid "Image _difference"
 msgstr "_Разница изображений"
 
-#: modules/process/fft_filter_2d.c:446
+#: modules/process/fft_filter_2d.c:413
+msgid "Fi_ltered i_mage"
+msgstr "От_фильтрованное изображение"
+
+#: modules/process/fft_filter_2d.c:417
+msgid "Ima_ge difference"
+msgstr "_Разница изображений"
+
+#: modules/process/fft_filter_2d.c:421
+msgid "Filtered FFT mo_dulus"
+msgstr "Отфильтрованный _модуль БПФ"
+
+#: modules/process/fft_filter_2d.c:488
 msgid "Filter Mask"
 msgstr "Маска фильтра"
 
-#: modules/process/fft_filter_2d.c:481
+#: modules/process/fft_filter_2d.c:523
 msgid "_Undo"
 msgstr "_Отменить"
 
-#: modules/process/fft_filter_2d.c:490
+#: modules/process/fft_filter_2d.c:532
 #: modules/tools/maskedit.c:542
 msgid "_Remove"
 msgstr "_Удалить"
 
-#: modules/process/fft_filter_2d.c:498
+#: modules/process/fft_filter_2d.c:540
 #: modules/tools/maskedit.c:550
 msgid "_Fill"
 msgstr "_Заполнить"
 
-#: modules/process/fft_filter_2d.c:508
+#: modules/process/fft_filter_2d.c:550
 msgid "_Snap to origin"
 msgstr "_Прикрепить к началу координат"
 
-#: modules/process/fft_filter_2d.c:521
+#: modules/process/fft_filter_2d.c:563
 msgid "Preview Options"
 msgstr "Параметры предпросмотра"
 
-#: modules/process/fft_filter_2d.c:556
+#: modules/process/fft_filter_2d.c:568
+msgid "Display:"
+msgstr "Показать:"
+
+#: modules/process/fft_filter_2d.c:598
 msgid "Zoom:"
 msgstr "Масштаб:"
 
-#: modules/process/fft_filter_2d.c:577
+#: modules/process/fft_filter_2d.c:619
 msgid "Output Options"
 msgstr "Параметры вывода"
 
-#: modules/process/fft_filter_2d.c:583
-msgid "Filtered Image"
-msgstr "Отфильтрованное изображение"
+#: modules/process/fft_filter_2d.c:624
+#: modules/process/slope_dist.c:216
+msgid "Output type:"
+msgstr "Тип вывода:"
 
-#: modules/process/fft_filter_2d.c:585
-#: modules/process/scars.c:450
-msgid "Both"
-msgstr "Оба"
+#: modules/process/fft_filter_2d.c:1285
+msgid "Draw ellipses on the mask"
+msgstr "Рисовать эллипсы на маске БПФ"
 
-#: modules/process/fft_filter_2d.c:1229
-msgid "Draw a new inclusive circle marker"
-msgstr "Нарисовать новый маркер \"заполненный круг\""
+#: modules/process/fft_filter_2d.c:1287
+msgid "Draw rectangles on the mask"
+msgstr "Рисовать прямоугольники на маске БПФ"
 
-#: modules/process/fft_filter_2d.c:1231
-msgid "Draw a new inclusive rectangle marker"
-msgstr "Нарисовать новый маркер \"заполненный прямоугольник\""
+#: modules/process/fft_filter_2d.c:1289
+msgid "Undraw ellipses on the mask"
+msgstr "Вырезать эллипсы из маски БПФ"
 
-#: modules/process/fft_filter_2d.c:1233
-msgid "Draw a new exclusive circle marker"
-msgstr "Нарисовать новый маркер \"круглый вырез\""
+#: modules/process/fft_filter_2d.c:1291
+msgid "Undraw rectangles on the mask"
+msgstr "Вырезать прямоугольники из маски БПФ"
 
-#: modules/process/fft_filter_2d.c:1235
-msgid "Draw a new exclusive rectangle marker"
-msgstr "Нарисовать новый маркер \"прямоугольный вырез\""
-
-#: modules/process/fft_filter_2d.c:1237
+#: modules/process/fft_filter_2d.c:1293
 msgid "Undo the last change to the filter mask"
 msgstr "Отменить последнее изменение маски фильтра"
 
-#: modules/process/fft_filter_2d.c:1239
-msgid "Removes the entire filter mask"
-msgstr "Удаляет всю маску фильтра"
+#: modules/process/fft_filter_2d.c:1295
+msgid "Clear the entire filter mask"
+msgstr "Очистить всю маску фильтра"
 
-#: modules/process/fft_filter_2d.c:1241
-msgid "Fills the entire filter mask"
-msgstr "Заполняет всю маску фильтра"
+#: modules/process/fft_filter_2d.c:1297
+msgid "Fill the entire filter mask"
+msgstr "Заполнить всю маску фильтра"
 
-#: modules/process/fft_filter_2d.c:1243
-msgid "Forces new markers to center around the origin"
-msgstr "Центрирует маркеры по началу координат"
+#: modules/process/fft_filter_2d.c:1299
+msgid "Force shapes to center around the origin"
+msgstr "Центрирует фигуры относительно начала координат"
 
 #: modules/process/fft_profile.c:119
 msgid "Reads radial sections of two-dimensional power spectrum density function."
@@ -6972,10 +7005,6 @@ msgstr "Аппроксимирующая сфера"
 #: modules/process/fit_2d.c:677
 msgid "Fit result"
 msgstr "Результат аппроксимации"
-
-#: modules/process/fit_2d.c:678
-msgid "Difference"
-msgstr "Разница"
 
 #: modules/process/fit_2d.c:690
 msgid "Sphere (up)"
@@ -7652,7 +7681,7 @@ msgid "Maximum at"
 msgstr "Максимум в"
 
 #: modules/process/indent_analyze.c:494
-msgid "Max-min diference"
+msgid "Max-min difference"
 msgstr "Разница max-min"
 
 #: modules/process/indent_analyze.c:500
@@ -7696,7 +7725,7 @@ msgid "Outer Pile-Up A<sub>p</sub>"
 msgstr "A<sub>p</sub> внешнего выдавливания"
 
 #: modules/process/indent_analyze.c:651
-msgid "Indentaion statistics"
+msgid "Indentation statistics"
 msgstr "Статистика индентации"
 
 #: modules/process/indent_analyze.c:652
@@ -7777,8 +7806,8 @@ msgstr "Объём ниже:     %g\n"
 
 #: modules/process/indent_analyze.c:1666
 #, c-format
-msgid "Volume diference  %g\n"
-msgstr "Разница объёмов  %g\n"
+msgid "Volume difference %g\n"
+msgstr "Разница объёмов %g\n"
 
 #: modules/process/indent_analyze.c:1670
 #, c-format
@@ -8791,6 +8820,10 @@ msgstr "Положительные"
 #: modules/process/scars.c:449
 msgid "Negative"
 msgstr "Отрицательные"
+
+#: modules/process/scars.c:450
+msgid "Both"
+msgstr "Оба"
 
 #: modules/process/scars.c:464
 msgid "Mark Scars"
@@ -10303,6 +10336,24 @@ msgstr ""
 "Площадь проекции:    %s\n"
 "Наклон θ:     %s\n"
 "Наклон φ:     %s\n"
+
+#~ msgid "Filtered Image"
+#~ msgstr "Отфильтрованное изображение"
+
+#~ msgid "Draw a new inclusive circle marker"
+#~ msgstr "Нарисовать новый маркер \"заполненный круг\""
+
+#~ msgid "Draw a new inclusive rectangle marker"
+#~ msgstr "Нарисовать новый маркер \"заполненный прямоугольник\""
+
+#~ msgid "Draw a new exclusive circle marker"
+#~ msgstr "Нарисовать новый маркер \"круглый вырез\""
+
+#~ msgid "Draw a new exclusive rectangle marker"
+#~ msgstr "Нарисовать новый маркер \"прямоугольный вырез\""
+
+#~ msgid "Removes the entire filter mask"
+#~ msgstr "Удаляет всю маску фильтра"
 
 #~ msgid "Ra:"
 #~ msgstr "Ra:"
