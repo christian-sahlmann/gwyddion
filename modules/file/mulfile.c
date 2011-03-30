@@ -418,7 +418,8 @@ mul_read_image(GwyContainer *container,
     gwy_data_field_set_yoffset(field, Angstrom*label->yoff);
     */
 
-    q_height = -Angstrom * label->zscale/5.0;
+    /* q_height = -Angstrom * label->zscale/5.0; */
+    q_height = -0.1*Angstrom;
     q_current = 1.0/32768 * label->curr_factor * 10*Nano;
     /* q_voltage = -1.0/32768 * ((label->spare_61 >= 4) ? 0.05 : 0.025); */
     q_voltage = -10.0/32768;
