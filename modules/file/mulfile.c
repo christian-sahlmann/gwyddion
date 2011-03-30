@@ -53,6 +53,7 @@
 #include "err.h"
 
 #define Angstrom (1e-10)
+#define Nano (1e-9)
 
 /* This is actually the number and address of the first data as there is no
  * real identifier.  It should be constant, though. */
@@ -68,15 +69,15 @@ enum {
 };
 
 typedef enum {
-    MUL_MODE_HEIGHT = 0,
-    MUL_MODE_CURRENT = 1,
-    MUL_MODE_V_I = 2,
-    MUL_MODE_DI_DZ = 3,
-    MUL_MODE_Z_I_TIME = 4,
-    MUL_MODE_V_Y = 5,
-    MUL_MODE_I_Y = 6,
+    MUL_MODE_HEIGHT    = 0,
+    MUL_MODE_CURRENT   = 1,
+    MUL_MODE_V_X_I_Y   = 2,
+    MUL_MODE_DI_DZ     = 3,
+    MUL_MODE_Z_I_TIME  = 4,
+    MUL_MODE_V_Y       = 5,
+    MUL_MODE_I_Y       = 6,
     MUL_MODE_DIFFERENT = 7,
-    MUL_MODE_VOLTAGE = 7,
+    MUL_MODE_VOLTAGE   = 8,
     MUL_MODE_NMODES
 } MulModeType;
 
@@ -90,7 +91,8 @@ typedef struct {
     guint size;   /* In blocks */
     guint xres, yres, zres;   /* zres unused */
     guint year, month, day, hour, minute, second;
-    guint xdim, ydim, xoff, yoff;    /* In Angström */
+    guint xdim, ydim;    /* In Angström */
+    gint xoff, yoff;    /* In Angström */
     guint zscale;   /* In Volts */
     guint tilt;
     guint speed;
@@ -100,27 +102,27 @@ typedef struct {
     gchar title[MUL_STRING_SIZE+1];
     guint pospr, postd1;   /* ??? */
     MulModeType mode;
-    guint curr_factor;   /* ??? */
+    guint curr_factor;
     guint n_point_scans;
     guint unitnr;
     guint version;
     /* They bear some information, sometimes. */
-    guint spare_48;
-    guint spare_49;
-    guint spare_50;
-    guint spare_51;
-    guint spare_52;
-    guint spare_53;
-    guint spare_54;
-    guint spare_55;
-    guint spare_56;
-    guint spare_57;
-    guint spare_58;
-    guint spare_59;
-    guint spare_60;
-    guint spare_61;
-    guint spare_62;
-    guint spare_63;
+    gint spare_48;
+    gint spare_49;
+    gint spare_50;
+    gint spare_51;
+    gint spare_52;
+    gint spare_53;
+    gint spare_54;
+    gint spare_55;
+    gint spare_56;
+    gint spare_57;
+    gint spare_58;
+    gint spare_59;
+    gint spare_60;
+    gint spare_61;
+    gint spare_62;
+    gint spare_63;
 } MulImageLabel;
 
 static gboolean      module_register     (void);
@@ -129,7 +131,6 @@ static gint          mul_detect          (const GwyFileDetectInfo *fileinfo,
 static GwyContainer* mul_load            (const gchar *filename,
                                           GwyRunType mode,
                                           GError **error);
-static GwyContainer* mul_get_meta        (GHashTable *hash);
 static gint          mul_read_index      (const guchar *p,
                                           gsize size,
                                           MulIndexEntry *image_index);
@@ -142,6 +143,7 @@ static void          mul_read_image      (GwyContainer *container,
                                           const guchar *buffer,
                                           const MulIndexEntry *entry,
                                           const MulImageLabel *label);
+static GwyContainer* mul_get_meta        (GHashTable *hash);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -231,48 +233,6 @@ fail:
 
     return container;
 }
-
-#if 0
-static GwyContainer*
-mul_get_meta(GHashTable *hash)
-{
-    static const gchar *keys[] = {
-        "X Offset", "Y Offset", "Scan Rotation(\xb0)", "Scan Rate(Hz)",
-        "Scan Type",
-    };
-    GwyContainer *meta = gwy_container_new();
-    gchar *value, *unit, *key, *p;
-    guint i;
-
-    for (i = 0; i < G_N_ELEMENTS(keys); i++) {
-        if (!(value = g_hash_table_lookup(hash, keys[i])))
-            continue;
-
-        if (!(unit = strchr(keys[i], '('))) {
-            gwy_container_set_string_by_name(meta, keys[i], g_strdup(value));
-            continue;
-        }
-
-        key = g_strdup(keys[i]);
-        unit = strchr(key, '(');
-        *unit = '\0';
-        unit++;
-        g_strstrip(key);
-        if ((p = strchr(unit, ')')))
-            *p = '\0';
-        g_strstrip(unit);
-
-        value = g_strconcat(value, " ", unit, NULL);
-        gwy_container_set_string_by_name(meta, key, value);
-        g_free(key);
-    }
-
-    if (!gwy_container_get_n_items(meta))
-        gwy_object_unref(meta);
-
-    return meta;
-}
-#endif
 
 static gint
 mul_read_index(const guchar *p,
@@ -406,25 +366,27 @@ mul_read_image_label(const guchar *buffer,
     label->curr_factor = gwy_get_guint16_le(&p);
     label->n_point_scans = gwy_get_guint16_le(&p);
     gwy_debug("[%u] n_point_scans: %u", label->id, label->n_point_scans);
+    if (label->n_point_scans)
+        g_warning("FIXME: n_point_scans > 0, so there's more data somewhere.");
     label->unitnr = gwy_get_guint16_le(&p);
     label->version = gwy_get_guint16_le(&p);
 
-    label->spare_48 = gwy_get_guint16_le(&p);
-    label->spare_49 = gwy_get_guint16_le(&p);
-    label->spare_50 = gwy_get_guint16_le(&p);
-    label->spare_51 = gwy_get_guint16_le(&p);
-    label->spare_52 = gwy_get_guint16_le(&p);
-    label->spare_53 = gwy_get_guint16_le(&p);
-    label->spare_54 = gwy_get_guint16_le(&p);
-    label->spare_55 = gwy_get_guint16_le(&p);
-    label->spare_56 = gwy_get_guint16_le(&p);
-    label->spare_57 = gwy_get_guint16_le(&p);
-    label->spare_58 = gwy_get_guint16_le(&p);
-    label->spare_59 = gwy_get_guint16_le(&p);
-    label->spare_60 = gwy_get_guint16_le(&p);
-    label->spare_61 = gwy_get_guint16_le(&p);
-    label->spare_62 = gwy_get_guint16_le(&p);
-    label->spare_63 = gwy_get_guint16_le(&p);
+    label->spare_48 = gwy_get_gint16_le(&p);
+    label->spare_49 = gwy_get_gint16_le(&p);
+    label->spare_50 = gwy_get_gint16_le(&p);
+    label->spare_51 = gwy_get_gint16_le(&p);
+    label->spare_52 = gwy_get_gint16_le(&p);
+    label->spare_53 = gwy_get_gint16_le(&p);
+    label->spare_54 = gwy_get_gint16_le(&p);
+    label->spare_55 = gwy_get_gint16_le(&p);
+    label->spare_56 = gwy_get_gint16_le(&p);
+    label->spare_57 = gwy_get_gint16_le(&p);
+    label->spare_58 = gwy_get_gint16_le(&p);
+    label->spare_59 = gwy_get_gint16_le(&p);
+    label->spare_60 = gwy_get_gint16_le(&p);
+    label->spare_61 = gwy_get_gint16_le(&p);
+    label->spare_62 = gwy_get_gint16_le(&p);
+    label->spare_63 = gwy_get_gint16_le(&p);
 
     return TRUE;
 }
@@ -435,28 +397,92 @@ mul_read_image(GwyContainer *container,
                const MulIndexEntry *entry,
                const MulImageLabel *label)
 {
-    const guint16 *d16 = (const guint16*)(buffer
+    const gint16 *d16 = (const gint16*)(buffer
+                                        + (entry->addr + 1)* MUL_BLOCK_SIZE);
+    const guint16 *u16 = (const guint16*)(buffer
                                           + (entry->addr + 1)* MUL_BLOCK_SIZE);
     GwyDataField *field;
     gdouble *data;
-    gdouble q = -Angstrom * label->zscale/5.0;
+    gdouble q_height, q_current, q_voltage, q = 1.0/32768;
     guint i, j;
     guchar key[64], *title;
 
+    /* XXX: The specs say lenght unit is 0.1 Å but that does not seem right. */
     field = gwy_data_field_new(label->xres, label->yres,
-                               Angstrom*label->xdim, Angstrom*label->ydim,
+                               Angstrom*label->xdim,
+                               Angstrom*label->ydim,
                                FALSE);
-    data = gwy_data_field_get_data(field);
+    gwy_data_field_set_xoffset(field, Angstrom*label->xoff);
+    gwy_data_field_set_yoffset(field, Angstrom*label->yoff);
 
-    for (i = 0; i < label->yres; i++) {
-        for (j = 0; j < label->xres; j++) {
-            guint16 v = GUINT16_FROM_LE(d16[i*label->xres + j]);
-            data[i*label->xres + j] = q*v;
-        }
+    q_height = -Angstrom * label->zscale/5.0;
+    q_current = 1.0/32768 * label->curr_factor * 10*Nano;
+    q_voltage = -1.0/32768 * ((label->spare_61 >= 4) ? 0.05 : 0.025);
+
+    if (label->mode == MUL_MODE_HEIGHT || label->mode == MUL_MODE_DIFFERENT) {
+        q = q_height;
+        gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_xy(field), "m");
+        gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_z(field), "m");
+    }
+    else if (label->mode == MUL_MODE_CURRENT) {
+        q = q_current;
+        gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_xy(field), "m");
+        gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_z(field), "A");
+    }
+    else if (label->mode == MUL_MODE_V_X_I_Y) {
+        gint xmin = label->spare_50, xmax = label->spare_51,
+             ymin = label->spare_48, ymax = label->spare_49;
+
+        q = q_height;
+        gwy_data_field_set_xreal(field, MAX(fabs(xmax - xmin), 1)*q_voltage);
+        gwy_data_field_set_xoffset(field, xmin*q_voltage);
+        gwy_data_field_set_yreal(field, MAX(fabs(ymax - ymin), 1)*q_current);
+        gwy_data_field_set_yoffset(field, ymin*q_voltage);
+        /* No xy units, to reduce confusion as we cannot make the different. */
+        gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_z(field), "m");
+    }
+    else if (label->mode == MUL_MODE_DI_DZ) {
+        /* They say dZ is in spare54 but have I no idea how to use it. */
+    }
+    else if (label->mode == MUL_MODE_V_Y) {
+        gint ymin = label->spare_48, ymax = label->spare_49;
+
+        q = q_height;
+        gwy_data_field_set_yreal(field, MAX(fabs(ymax - ymin), 1)*q_voltage);
+        gwy_data_field_set_yoffset(field, ymin*q_voltage);
+        /* No xy units, to reduce confusion as we cannot make the different. */
+        gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_z(field), "m");
+    }
+    else if (label->mode == MUL_MODE_I_Y) {
+        gint ymin = label->spare_48, ymax = label->spare_49;
+
+        q = q_height;
+        gwy_data_field_set_yreal(field, MAX(fabs(ymax - ymin), 1)*q_current);
+        gwy_data_field_set_yoffset(field, ymin*q_current);
+        /* No xy units, to reduce confusion as we cannot make the different. */
+        gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_z(field), "m");
+    }
+    else if (label->mode == MUL_MODE_VOLTAGE) {
+        q = q_voltage;
+        gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_xy(field), "m");
+        gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_z(field), "V");
     }
 
-    gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_xy(field), "m");
-    gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_z(field), "m");
+    data = gwy_data_field_get_data(field);
+    for (i = 0; i < label->yres; i++) {
+        if (label->mode == MUL_MODE_CURRENT) {
+            for (j = 0; j < label->xres; j++) {
+                gint16 v = GUINT16_FROM_LE(u16[i*label->xres + j]);
+                data[i*label->xres + j] = q*v;
+            }
+        }
+        else {
+            for (j = 0; j < label->xres; j++) {
+                gint16 v = GINT16_FROM_LE(d16[i*label->xres + j]);
+                data[i*label->xres + j] = q*v;
+            }
+        }
+    }
 
     g_snprintf(key, sizeof(key), "/%d/data", label->id);
     gwy_container_set_object_by_name(container, key, field);
@@ -469,5 +495,47 @@ mul_read_image(GwyContainer *container,
 
     gwy_app_channel_check_nonsquare(container, label->id);
 }
+
+#if 0
+static GwyContainer*
+mul_get_meta(GHashTable *hash)
+{
+    static const gchar *keys[] = {
+        "X Offset", "Y Offset", "Scan Rotation(\xb0)", "Scan Rate(Hz)",
+        "Scan Type",
+    };
+    GwyContainer *meta = gwy_container_new();
+    gchar *value, *unit, *key, *p;
+    guint i;
+
+    for (i = 0; i < G_N_ELEMENTS(keys); i++) {
+        if (!(value = g_hash_table_lookup(hash, keys[i])))
+            continue;
+
+        if (!(unit = strchr(keys[i], '('))) {
+            gwy_container_set_string_by_name(meta, keys[i], g_strdup(value));
+            continue;
+        }
+
+        key = g_strdup(keys[i]);
+        unit = strchr(key, '(');
+        *unit = '\0';
+        unit++;
+        g_strstrip(key);
+        if ((p = strchr(unit, ')')))
+            *p = '\0';
+        g_strstrip(unit);
+
+        value = g_strconcat(value, " ", unit, NULL);
+        gwy_container_set_string_by_name(meta, key, value);
+        g_free(key);
+    }
+
+    if (!gwy_container_get_n_items(meta))
+        gwy_object_unref(meta);
+
+    return meta;
+}
+#endif
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
