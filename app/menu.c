@@ -823,6 +823,10 @@ gwy_app_menu_recent_files_set_thumbnail(GtkWidget *item,
 void
 gwy_app_menu_recent_files_update(GList *recent_files)
 {
+    static const guint accel_keys[] = {
+        GDK_1, GDK_2, GDK_3, GDK_4, GDK_5, GDK_6, GDK_7, GDK_8, GDK_9, GDK_0
+    };
+
     GtkWidget *item;
     GQuark quark;
     GList *l, *child;
@@ -857,6 +861,15 @@ gwy_app_menu_recent_files_update(GList *recent_files)
             gwy_debug("creating item %p for <%s> [#%d]", item, s, i);
             g_object_set_qdata_full(G_OBJECT(item), quark, g_strdup(filename),
                                     g_free);
+            if (i < G_N_ELEMENTS(accel_keys)) {
+                gchar accel_path[64];
+
+                g_snprintf(accel_path, sizeof(accel_path),
+                           "<file>/Open Recent/%d", i+1);
+                gtk_menu_item_set_accel_path(GTK_MENU_ITEM(item), accel_path);
+                gtk_accel_map_add_entry(accel_path, accel_keys[i],
+                                        GDK_CONTROL_MASK);
+            }
             gtk_menu_shell_append(GTK_MENU_SHELL(recent_files_menu), item);
             g_signal_connect(item, "activate",
                              G_CALLBACK(gwy_app_file_open_recent_cb), NULL);
@@ -881,6 +894,15 @@ gwy_app_menu_recent_files_update(GList *recent_files)
             item = gtk_image_menu_item_new_with_mnemonic("Thou Canst See This");
             g_object_set(item, "always-show-image", TRUE, NULL);
             gwy_debug("adding hidden item %p [#%d]", item, i);
+            if (i < G_N_ELEMENTS(accel_keys)) {
+                gchar accel_path[64];
+
+                g_snprintf(accel_path, sizeof(accel_path),
+                           "<file>/Open Recent/%d", i+1);
+                gtk_menu_item_set_accel_path(GTK_MENU_ITEM(item), accel_path);
+                gtk_accel_map_add_entry(accel_path, accel_keys[i],
+                                        GDK_CONTROL_MASK);
+            }
             gtk_menu_shell_append(GTK_MENU_SHELL(recent_files_menu), item);
             g_signal_connect(item, "activate",
                              G_CALLBACK(gwy_app_file_open_recent_cb), NULL);
@@ -938,9 +960,17 @@ GtkWidget*
 gwy_app_menu_recent_files_get(void)
 {
     if (!recent_files_menu) {
-        GtkWidget *item;
+        GtkWidget *item, *main_window;
+        GtkAccelGroup *accel_group = NULL;
+
+        main_window = gwy_app_main_window_get();
+        if (main_window)
+            accel_group = GTK_ACCEL_GROUP(g_object_get_data(G_OBJECT(main_window),
+                                                            "accel_group"));
 
         recent_files_menu = gtk_menu_new();
+        if (accel_group)
+            gtk_menu_set_accel_group(GTK_MENU(recent_files_menu), accel_group);
         item = gtk_tearoff_menu_item_new();
         gtk_menu_shell_append(GTK_MENU_SHELL(recent_files_menu), item);
         g_object_add_weak_pointer(G_OBJECT(recent_files_menu),
