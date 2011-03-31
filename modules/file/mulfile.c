@@ -327,8 +327,8 @@ mul_read_image_label(const guchar *buffer,
         g_warning("Real y size is 0.0, fixing to 1.0");
         label->ydim = 1;
     }
-    label->xoff = gwy_get_guint16_le(&p);
-    label->yoff = gwy_get_guint16_le(&p);
+    label->xoff = gwy_get_gint16_le(&p);
+    label->yoff = gwy_get_gint16_le(&p);
     label->zscale = gwy_get_guint16_le(&p);
     gwy_debug("[%u] zscale: %u", label->id, label->zscale);
     label->tilt = gwy_get_guint16_le(&p);
