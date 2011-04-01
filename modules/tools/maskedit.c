@@ -104,6 +104,8 @@ struct _GwyToolMaskEditor {
     GtkWidget *from_border;
     GtkWidget *prevent_merge;
 
+    gboolean in_setup;
+
     /* paintrbrush only */
     gboolean drawing_started;
     gint oldisel[2];
@@ -157,7 +159,7 @@ static GwyModuleInfo module_info = {
     N_("Mask editor tool, allows to interactively add or remove parts "
        "of mask."),
     "Yeti <yeti@gwyddion.net>",
-    "3.0",
+    "3.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -258,6 +260,8 @@ gwy_tool_mask_editor_init(GwyToolMaskEditor *tool)
     GwyContainer *settings;
     guint i;
 
+    tool->in_setup = TRUE;
+
     plain_tool = GWY_PLAIN_TOOL(tool);
     for (i = 0; i < MASK_NSHAPES; i++) {
         tool->layer_types[i]
@@ -304,6 +308,7 @@ gwy_tool_mask_editor_init(GwyToolMaskEditor *tool)
                                          tool->layer_type_point, "pointer");
 
     gwy_tool_mask_editor_init_dialog(tool);
+    tool->in_setup = FALSE;
 }
 
 static void
@@ -384,6 +389,7 @@ gwy_tool_mask_editor_init_dialog(GwyToolMaskEditor *tool)
     GtkWidget *image, *label, *button;
     GtkBox *hbox;
     gint i, row;
+    MaskEditStyle style = tool->args.style;
 
     dialog = GTK_DIALOG(GWY_TOOL(tool)->dialog);
     tips = gwy_app_get_tooltips();
@@ -630,7 +636,7 @@ gwy_tool_mask_editor_init_dialog(GwyToolMaskEditor *tool)
     row++;
 
     gwy_tool_add_hide_button(GWY_TOOL(tool), TRUE);
-    gwy_radio_buttons_set_current(tool->style, tool->args.style);
+    gwy_radio_buttons_set_current(tool->style, style);
 
     g_object_unref(sizegroup);
     g_object_unref(tool->sensgroup);
@@ -648,17 +654,21 @@ gwy_tool_mask_editor_data_switched(GwyTool *gwytool,
     plain_tool = GWY_PLAIN_TOOL(gwytool);
     ignore = (data_view == plain_tool->data_view);
 
+    tool = GWY_TOOL_MASK_EDITOR(gwytool);
+    tool->in_setup = TRUE;
     GWY_TOOL_CLASS(gwy_tool_mask_editor_parent_class)->data_switched(gwytool,
                                                                      data_view);
+    tool->in_setup = FALSE;
 
     if (ignore || plain_tool->init_failed)
         return;
 
-    tool = GWY_TOOL_MASK_EDITOR(gwytool);
+    tool->in_setup = TRUE;
     gwy_tool_mask_editor_style_changed(tool);
     gwy_sensitivity_group_set_state(tool->sensgroup, SENS_DATA,
                                     data_view ? SENS_DATA : 0);
     gwy_tool_mask_editor_mask_changed(plain_tool);
+    tool->in_setup = FALSE;
 }
 
 static void
@@ -691,8 +701,12 @@ gwy_tool_mask_editor_style_changed(GwyToolMaskEditor *tool)
         gwy_tool_mask_editor_shape_changed(tool);
     }
     else {
+        tool->in_setup = TRUE;
         gwy_plain_tool_connect_selection(GWY_PLAIN_TOOL(tool),
                                          tool->layer_type_point, "pointer");
+        if (GWY_PLAIN_TOOL(tool)->selection)
+            gwy_selection_clear(GWY_PLAIN_TOOL(tool)->selection);
+        tool->in_setup = FALSE;
         gwy_tool_mask_editor_setup_layer(tool);
     }
 }
@@ -1507,8 +1521,10 @@ gwy_tool_mask_editor_selection_changed(GwyPlainTool *plain_tool,
     gint isel[2];
 
     tool = GWY_TOOL_MASK_EDITOR(plain_tool);
-    if (tool->args.style != MASK_EDIT_STYLE_DRAWING)
+    if (tool->in_setup || tool->args.style != MASK_EDIT_STYLE_DRAWING)
         return;
+
+    g_assert_not_reached();
 
     if (tool->args.tool == MASK_TOOL_PAINT_DRAW)
         fillvalue = 1.0;
