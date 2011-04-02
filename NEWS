@@ -8,6 +8,7 @@ Libraries:
 - libgwydgets: GwyColorAxis is drawn correctly if the z-range is inverted.
 - libgwyapp: Graph windows offer all graph functions in a context menu.
 - libgwyapp: Memory leaks in the data browser were plugged.
+- libgwyapp: The most recent 10 files can be opened using Ctrl-1 to Ctrl-0.
 
 Modules:
 - MUL file (new): Imports Aarhus MUL data files.
@@ -17,6 +18,7 @@ Modules:
 - Pixmap: False colour scale is drawn correctly if the z-range is inverted.
 - Attocube: File detection is more liberal, accepting anything starting
   with "# Daisy".
+- Mask editor tool: Spurious drawing upon data/tool switch was corrected.
 
 Other:
 - The list of MIME types Gwyddion declares it can open (on Unix) was updated
