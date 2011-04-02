@@ -82,30 +82,30 @@ typedef enum {
 } MulModeType;
 
 typedef struct {
-    guint id;
+    gint id;
     gsize addr;   /* measured in blocks! */
 } MulIndexEntry;
 
 typedef struct {
-    guint id;
-    guint size;   /* In blocks */
-    guint xres, yres, zres;   /* zres unused */
-    guint year, month, day, hour, minute, second;
-    guint xdim, ydim;    /* In Angström */
+    gint id;
+    gint size;   /* In blocks */
+    gint xres, yres, zres;
+    gint year, month, day, hour, minute, second;
+    gint xdim, ydim;    /* In Angström */
     gint xoff, yoff;    /* In Angström */
-    guint zscale;   /* In Volts */
-    guint tilt;
-    guint speed;
+    gint zscale;   /* In Volts */
+    gint tilt;
+    gint speed;
     gint bias;
     gint current;
     gchar sample[MUL_STRING_SIZE+1];
     gchar title[MUL_STRING_SIZE+1];
-    guint postpr, postd1;   /* ??? */
+    gint postpr, postd1;   /* ??? */
     MulModeType mode;
-    guint curr_factor;
-    guint n_point_scans;
-    guint unitnr;
-    guint version;
+    gint curr_factor;
+    gint n_point_scans;
+    gint unitnr;
+    gint version;
     /* They bear some information, sometimes. */
     gint spare_48;
     gint spare_49;
@@ -243,8 +243,8 @@ mul_read_index(const guchar *p,
     gint i, n = 0;
 
     for (i = 0; i < MUL_INDEX_LENGTH; i++) {
-        image_index[n].id = gwy_get_guint16_le(&p);
-        image_index[n].addr = gwy_get_guint32_le(&p);
+        image_index[n].id = gwy_get_gint16_le(&p);
+        image_index[n].addr = gwy_get_gint32_le(&p);
         gwy_debug("%u 0x%08lx", image_index[n].id, (gulong)image_index[n].addr);
         if (image_index[n].id) {
             if (image_index[n].addr >= size/MUL_BLOCK_SIZE
@@ -278,9 +278,9 @@ mul_read_image_label(const guchar *buffer,
                      GError **error)
 {
     const guchar *p = buffer + entry->addr * MUL_BLOCK_SIZE;
-    guint len;
+    gint len;
 
-    label->id = gwy_get_guint16_le(&p);
+    label->id = gwy_get_gint16_le(&p);
     if (label->id != entry->id) {
         g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
                     _("Image number in the label %u does not match "
@@ -288,35 +288,36 @@ mul_read_image_label(const guchar *buffer,
                     label->id, entry->id);
         return FALSE;
     }
-    label->size = gwy_get_guint16_le(&p);
+    label->size = gwy_get_gint16_le(&p);
     gwy_debug("[%u] size: %u", label->id, label->size);
     if (label->size < 2 || entry->addr + label->size > size/MUL_BLOCK_SIZE) {
         g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
                     _("Image data are outside the file."));
         return FALSE;
     }
-    label->xres = gwy_get_guint16_le(&p);
-    label->yres = gwy_get_guint16_le(&p);
-    label->zres = gwy_get_guint16_le(&p);
-    gwy_debug("[%u] xres: %u, yres: %u", label->id, label->xres, label->yres);
+    label->xres = gwy_get_gint16_le(&p);
+    label->yres = gwy_get_gint16_le(&p);
+    label->zres = gwy_get_gint16_le(&p);
+    gwy_debug("[%u] xres: %u, yres: %u, zres: %u",
+              label->id, label->xres, label->yres, label->zres);
     if (err_DIMENSION(error, label->xres) || err_DIMENSION(error, label->yres))
         return FALSE;
     /* The extra MUL_BLOCK_SIZE is for the label itself. */
     if (err_SIZE_MISMATCH(error, 2*label->xres * label->yres + MUL_BLOCK_SIZE,
                           label->size*MUL_BLOCK_SIZE, FALSE))
         return FALSE;
-    label->year = gwy_get_guint16_le(&p);
-    label->month = gwy_get_guint16_le(&p);
-    label->day = gwy_get_guint16_le(&p);
-    label->hour = gwy_get_guint16_le(&p);
-    label->minute = gwy_get_guint16_le(&p);
-    label->second = gwy_get_guint16_le(&p);
+    label->year = gwy_get_gint16_le(&p);
+    label->month = gwy_get_gint16_le(&p);
+    label->day = gwy_get_gint16_le(&p);
+    label->hour = gwy_get_gint16_le(&p);
+    label->minute = gwy_get_gint16_le(&p);
+    label->second = gwy_get_gint16_le(&p);
     gwy_debug("[%u] %u-%u-%u %u:%u:%u",
               label->id,
               label->year, label->month, label->day,
               label->hour, label->minute, label->second);
-    label->xdim = gwy_get_guint16_le(&p);
-    label->ydim = gwy_get_guint16_le(&p);
+    label->xdim = gwy_get_gint16_le(&p);
+    label->ydim = gwy_get_gint16_le(&p);
     gwy_debug("[%u] (%u, %u)", label->id, label->xdim, label->ydim);
     /* Use negated positive conditions to catch NaNs */
     if (!label->xdim) {
@@ -329,10 +330,10 @@ mul_read_image_label(const guchar *buffer,
     }
     label->xoff = gwy_get_gint16_le(&p);
     label->yoff = gwy_get_gint16_le(&p);
-    label->zscale = gwy_get_guint16_le(&p);
+    label->zscale = gwy_get_gint16_le(&p);
     gwy_debug("[%u] zscale: %u", label->id, label->zscale);
-    label->tilt = gwy_get_guint16_le(&p);
-    label->speed = gwy_get_guint16_le(&p);
+    label->tilt = gwy_get_gint16_le(&p);
+    label->speed = gwy_get_gint16_le(&p);
     label->bias = gwy_get_gint16_le(&p);
     label->current = gwy_get_gint16_le(&p);
     gwy_debug("[%u] tilt: %u, speed: %u, bias: %d, current: %d",
@@ -359,17 +360,17 @@ mul_read_image_label(const guchar *buffer,
     gwy_debug("[%u] sample: <%s>, title: <%s>",
               label->id, label->sample, label->title);
 
-    label->postpr = gwy_get_guint16_le(&p);
-    label->postd1 = gwy_get_guint16_le(&p);
-    label->mode = gwy_get_guint16_le(&p);
+    label->postpr = gwy_get_gint16_le(&p);
+    label->postd1 = gwy_get_gint16_le(&p);
+    label->mode = gwy_get_gint16_le(&p);
     gwy_debug("[%u] mode: %u", label->id, label->mode);
-    label->curr_factor = gwy_get_guint16_le(&p);
-    label->n_point_scans = gwy_get_guint16_le(&p);
+    label->curr_factor = gwy_get_gint16_le(&p);
+    label->n_point_scans = gwy_get_gint16_le(&p);
     gwy_debug("[%u] n_point_scans: %u", label->id, label->n_point_scans);
     if (label->n_point_scans)
         g_warning("FIXME: n_point_scans > 0, so there's more data somewhere.");
-    label->unitnr = gwy_get_guint16_le(&p);
-    label->version = gwy_get_guint16_le(&p);
+    label->unitnr = gwy_get_gint16_le(&p);
+    label->version = gwy_get_gint16_le(&p);
 
     label->spare_48 = gwy_get_gint16_le(&p);
     label->spare_49 = gwy_get_gint16_le(&p);
@@ -419,7 +420,7 @@ mul_read_image(GwyContainer *container,
     */
 
     /* q_height = -Angstrom * label->zscale/5.0; */
-    q_height = -0.1*Angstrom;
+    q_height = -100*Angstrom/32768;
     q_current = 1.0/32768 * label->curr_factor * 10*Nano;
     /* q_voltage = -1.0/32768 * ((label->spare_61 >= 4) ? 0.05 : 0.025); */
     q_voltage = -10.0/32768;
@@ -475,16 +476,17 @@ mul_read_image(GwyContainer *container,
 
     data = gwy_data_field_get_data(field);
     for (i = 0; i < label->yres; i++) {
+        guint ib = (label->yres-1 - i)*label->xres;
         if (label->mode == MUL_MODE_CURRENT) {
             for (j = 0; j < label->xres; j++) {
                 gint16 v = GUINT16_FROM_LE(u16[i*label->xres + j]);
-                data[i*label->xres + j] = q*v;
+                data[ib + j] = q*v;
             }
         }
         else {
             for (j = 0; j < label->xres; j++) {
                 gint16 v = GINT16_FROM_LE(d16[i*label->xres + j]);
-                data[i*label->xres + j] = q*v;
+                data[ib + j] = q*v;
             }
         }
     }
