@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: French localization\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2011-03-05 11:11+0100\n"
-"PO-Revision-Date: 2011-03-06 12:31+0100\n"
+"POT-Creation-Date: 2011-04-01 03:58+0200\n"
+"PO-Revision-Date: 2011-04-03 09:44+0100\n"
 "Last-Translator: François RIGUET <francheu@caramail.com>\n"
 "Language-Team: François RIGUET <francheu@caramail.com>\n"
 "Language: \n"
@@ -27,56 +27,60 @@ msgstr "Symbole invalide"
 msgid "Empty expression"
 msgstr "Expression vide"
 
-#: libgwyddion/gwyexpr.c:1016
+#. TRANSLATORS: %c is replaced with +, -, *, /, etc.
+#: libgwyddion/gwyexpr.c:1017
 #, c-format
 msgid "Missing operator %c argument"
 msgstr "Il manque l'argument d'opérateur %c"
 
-#: libgwyddion/gwyexpr.c:1022
+#. TRANSLATORS: %c is replaced with +, -, *, /, etc.
+#: libgwyddion/gwyexpr.c:1024
 #, c-format
 msgid "Invalid operator %c argument"
 msgstr "L'argument d'opérateur %c est invalide"
 
-#: libgwyddion/gwyexpr.c:1071
+#. TRANSLATORS: %s is replaced with sin, cos, sqrt, etc.
+#: libgwyddion/gwyexpr.c:1074
 #, c-format
 msgid "Missing argument of %s"
 msgstr "Il manque l'argument de %s"
 
-#: libgwyddion/gwyexpr.c:1078
+#. TRANSLATORS: %s is replaced with sin, cos, sqrt, etc.
+#: libgwyddion/gwyexpr.c:1082
 #, c-format
 msgid "Invalid argument of %s"
 msgstr "L'argument de %s est invalide"
 
-#: libgwyddion/gwyexpr.c:1136
+#: libgwyddion/gwyexpr.c:1140
 msgid "Missing opening parenthesis"
 msgstr "Il manque la parenthèse ouvrante"
 
-#: libgwyddion/gwyexpr.c:1178
+#: libgwyddion/gwyexpr.c:1182
 msgid "Missing closing parenthesis"
 msgstr "Il manque la parenthèse fermante"
 
-#: libgwyddion/gwyexpr.c:1183
+#: libgwyddion/gwyexpr.c:1187
 msgid "Empty parentheses"
 msgstr "Parenthèses vides"
 
-#: libgwyddion/gwyexpr.c:1192
+#: libgwyddion/gwyexpr.c:1196
 msgid "Stray comma"
 msgstr "Virgule isolée"
 
-#: libgwyddion/gwyexpr.c:1231
+#: libgwyddion/gwyexpr.c:1235
 #, c-format
 msgid "Stray symbol %d"
 msgstr "Symbole %d isolé"
 
-#: libgwyddion/gwyexpr.c:1283
+#: libgwyddion/gwyexpr.c:1287
 msgid "Trailing garbage"
 msgstr "Il reste des éléments inutiles"
 
-#: libgwyddion/gwyexpr.c:1303
+#: libgwyddion/gwyexpr.c:1307
 msgid "Stack is not executable"
 msgstr "La pile n'est pas exécutable"
 
-#: libgwyddion/gwyexpr.c:1412
+#: libgwyddion/gwyexpr.c:1416
 msgid "Unresolved identifiers"
 msgstr "Identifiants non résolus"
 
@@ -118,11 +122,11 @@ msgstr "vdW : parabole"
 
 #: libgwyddion/gwyinventory.c:1310
 #: libgwydgets/gwygraphwindow.c:603
-#: app/data-browser.c:1541
-#: app/data-browser.c:2290
-#: app/data-browser.c:3064
-#: app/data-browser.c:3223
-#: app/data-browser.c:5131
+#: app/data-browser.c:1538
+#: app/data-browser.c:2288
+#: app/data-browser.c:3062
+#: app/data-browser.c:3221
+#: app/data-browser.c:5129
 #: app/resource-editor.c:366
 #: modules/process/convolution_filter.c:700
 msgid "Untitled"
@@ -844,7 +848,7 @@ msgstr "pixels"
 
 #: libgwydgets/gwy3dwindow.c:1027
 #: modules/file/pixmap.c:946
-#: modules/file/pixmap.c:2664
+#: modules/file/pixmap.c:2666
 #: modules/file/rawfile.c:398
 #: modules/process/angle_dist.c:170
 #: modules/process/calcoefs_new.c:347
@@ -859,7 +863,7 @@ msgstr "pixels"
 #: modules/process/facet-level.c:283
 #: modules/process/facet_analysis.c:272
 #: modules/process/fft.c:272
-#: modules/process/fft_filter_2d.c:399
+#: modules/process/fft_filter_2d.c:441
 #: modules/process/fft_synth.c:330
 #: modules/process/fractal.c:206
 #: modules/process/grain_edge.c:220
@@ -1369,7 +1373,7 @@ msgstr "Contrôle à distance"
 msgid "Python Scripting Interface"
 msgstr "Interface de script Python"
 
-#: app/app.c:238
+#: app/app.c:243
 #, c-format
 msgid ""
 "Some data are unsaved:\n"
@@ -1380,81 +1384,81 @@ msgstr ""
 "%s\n"
 "Souhaitez-vous vraiment quitter ?"
 
-#: app/app.c:416
+#: app/app.c:387
+msgid "Mask _Color..."
+msgstr "_Couleur du masque..."
+
+#: app/app.c:403
+msgid "Zoom _1:1"
+msgstr "Zoom _1:1"
+
+#: app/app.c:600
+msgid "Pi_xelwise Square"
+msgstr "Pi_xels carrés"
+
+#: app/app.c:610
+msgid "_Physically Square"
+msgstr "_Pixels réels"
+
+#: app/app.c:779
 msgid "Save"
 msgstr "Enregistrer"
 
-#: app/app.c:418
-#: app/app.c:422
+#: app/app.c:781
+#: app/app.c:785
 msgid "Save 3D view to an image"
 msgstr "Exporter la vue 3D en image"
 
-#: app/app.c:428
+#: app/app.c:791
 msgid "Set as Default"
 msgstr "Enregistrer comme défaut"
 
-#: app/app.c:430
+#: app/app.c:793
 msgid "Set the current view setup as the default"
 msgstr "Enregistre la configuration comme défaut"
 
-#: app/app.c:474
+#: app/app.c:837
 #, c-format
 msgid "Saving of 3D view to `%s' failed"
 msgstr "L'enregistrement de la vue 3D `%s' a échoué"
 
-#: app/app.c:518
+#: app/app.c:881
 msgid "Export 3D View"
 msgstr "Exporter la vue 3D"
 
-#: app/app.c:678
-msgid "Mask _Color..."
-msgstr "_Couleur du masque..."
-
-#: app/app.c:694
-msgid "Zoom _1:1"
-msgstr "Zoom _1:1"
-
-#: app/app.c:891
-msgid "Pi_xelwise Square"
-msgstr "Pi_xels carrés"
-
-#: app/app.c:901
-msgid "_Physically Square"
-msgstr "_Pixels réels"
-
-#: app/data-browser.c:3774
+#: app/data-browser.c:3772
 msgid "Extract to a new file"
 msgstr "Extraire en tant que nouveau fichier"
 
-#: app/data-browser.c:3775
+#: app/data-browser.c:3773
 msgid "Duplicate"
 msgstr "Dupliquer"
 
-#: app/data-browser.c:3776
+#: app/data-browser.c:3774
 msgid "Delete"
 msgstr "Supprimer"
 
-#: app/data-browser.c:3820
+#: app/data-browser.c:3818
 msgid "Data Browser"
 msgstr "Navigateur de Données"
 
-#: app/data-browser.c:3843
+#: app/data-browser.c:3841
 msgid "Close file"
 msgstr "Fermer le fichier"
 
-#: app/data-browser.c:3856
+#: app/data-browser.c:3854
 msgid "Channels"
 msgstr "Canaux"
 
-#: app/data-browser.c:3870
+#: app/data-browser.c:3868
 msgid "Graphs"
 msgstr "Graphes"
 
-#: app/data-browser.c:3884
+#: app/data-browser.c:3882
 msgid "Spectra"
 msgstr "Spectres"
 
-#: app/data-browser.c:5169
+#: app/data-browser.c:5167
 #, c-format
 msgid "Unknown channel %d"
 msgstr "Canal inconnu %d"
@@ -1779,23 +1783,23 @@ msgstr "Traitement des _Données"
 msgid "_Graph"
 msgstr "_Graphe"
 
-#: app/menu.c:568
+#: app/menu.c:569
 msgid "Re-show Last"
 msgstr "Remontrer la dernière commande"
 
-#: app/menu.c:583
+#: app/menu.c:584
 msgid "Repeat Last"
 msgstr "Répéter la dernière commande"
 
-#: app/menu.c:711
+#: app/menu.c:712
 msgid "Repeat"
 msgstr "Répéter"
 
-#: app/menu.c:717
+#: app/menu.c:718
 msgid "Re-show"
 msgstr "Remontrer"
 
-#: app/menu.c:904
+#: app/menu.c:927
 msgid "_Document history"
 msgstr "_Historique"
 
@@ -2402,7 +2406,7 @@ msgid "Export Text"
 msgstr "Exporter au format texte"
 
 #: modules/file/asciiexport.c:273
-#: modules/file/pixmap.c:2753
+#: modules/file/pixmap.c:2755
 #: modules/file/rawfile.c:720
 #: modules/file/rawxyz.c:670
 #: modules/process/fft_filter_1d.c:296
@@ -3028,6 +3032,7 @@ msgid "Unique id record is too short."
 msgstr "L'identifiant unique est trop court."
 
 #: modules/file/miffile.c:680
+#: modules/file/mulfile.c:295
 msgid "Image data are outside the file."
 msgstr "Les données de l'image sont en dehors du fichier."
 
@@ -3042,6 +3047,25 @@ msgstr "PicoView (.mi)"
 #: modules/file/mifile.c:374
 msgid "Spectroscopy Graph"
 msgstr "Courbe de spectrosopie"
+
+#: modules/file/mulfile.c:151
+msgid "Imports Aarhus MUL files."
+msgstr "Importe les fichiers Aarhus MUL."
+
+#: modules/file/mulfile.c:164
+msgid "Aarhus NUL files (.mul)"
+msgstr "Aarhus NUL (.mul)"
+
+#: modules/file/mulfile.c:286
+#, c-format
+msgid "Image number in the label %u does not match the number %u in the index."
+msgstr "Le numéro d'image dans le label %u ne correspond pas au nombre %u dans l'index."
+
+#: modules/file/mulfile.c:344
+#: modules/file/mulfile.c:353
+#, c-format
+msgid "Label string length %u is larger than 20."
+msgstr "La longueur du label %u est supérieure à 20."
 
 #: modules/file/nanoeducator.c:280
 msgid "Imports Nanoeducator data files."
@@ -3087,11 +3111,11 @@ msgstr "Profil %d"
 msgid "F-D spectra"
 msgstr "Spectres F-D"
 
-#: modules/file/nanoeducator.c:1118
+#: modules/file/nanoeducator.c:1114
 msgid "I-V spectra"
 msgstr "Spectres I-V"
 
-#: modules/file/nanoeducator.c:1215
+#: modules/file/nanoeducator.c:1195
 msgid "I-Z spectra"
 msgstr "Spectres I-Z"
 
@@ -3360,11 +3384,11 @@ msgstr "Wyko ASCII (.asc)"
 msgid "Item `%s' is beyond the end of the file."
 msgstr "L'élément `%s' est au-delà de la fin du fichier."
 
-#: modules/file/opdfile.c:595
+#: modules/file/opdfile.c:596
 msgid "Nested directories found"
 msgstr "Des dossiers emboîtés ont été trouvés"
 
-#: modules/file/opdfile.c:785
+#: modules/file/opdfile.c:787
 #, c-format
 msgid "Truncated data in block %s"
 msgstr "Données tronquées dans le bloc %s"
@@ -3593,24 +3617,24 @@ msgstr "L'image est trop grande pour être enregistrée au format TARGA"
 msgid "Data must be displayed in a window for pixmap export."
 msgstr "Les données doivent affichées dans une fenêtre pour l'export vers un format image."
 
-#: modules/file/pixmap.c:2602
+#: modules/file/pixmap.c:2604
 msgid "Change Inset Color"
 msgstr "Changer l'échelle de couleurs"
 
-#: modules/file/pixmap.c:2661
+#: modules/file/pixmap.c:2663
 #, c-format
 msgid "Export %s"
 msgstr "Exporter %s"
 
-#: modules/file/pixmap.c:2692
+#: modules/file/pixmap.c:2694
 msgid "Scaling"
 msgstr "Echelle"
 
-#: modules/file/pixmap.c:2701
+#: modules/file/pixmap.c:2703
 msgid "_Zoom:"
 msgstr "_Zoom :"
 
-#: modules/file/pixmap.c:2710
+#: modules/file/pixmap.c:2712
 #: modules/file/rawfile.c:632
 #: modules/process/crosscor.c:197
 #: modules/process/deposit_synth.c:458
@@ -3619,7 +3643,7 @@ msgstr "_Zoom :"
 msgid "_Width:"
 msgstr "Largeur :"
 
-#: modules/file/pixmap.c:2719
+#: modules/file/pixmap.c:2721
 #: modules/process/grain_mark.c:312
 #: modules/process/grain_rem_threshold.c:280
 #: modules/process/obj_synth.c:573
@@ -3630,91 +3654,91 @@ msgstr "Largeur :"
 msgid "_Height:"
 msgstr "_Hauteur :"
 
-#: modules/file/pixmap.c:2728
+#: modules/file/pixmap.c:2730
 msgid "Scale text _proportionally"
 msgstr "Mettre le texte _proportionnellement à l'échelle"
 
-#: modules/file/pixmap.c:2743
+#: modules/file/pixmap.c:2745
 msgid "_Font size:"
 msgstr "Taille de police :"
 
-#: modules/file/pixmap.c:2757
+#: modules/file/pixmap.c:2759
 msgid "Draw _mask"
 msgstr "Dessiner le _masque"
 
-#: modules/file/pixmap.c:2766
+#: modules/file/pixmap.c:2768
 msgid "Draw _selection"
 msgstr "Dessiner la _sélection"
 
-#: modules/file/pixmap.c:2782
+#: modules/file/pixmap.c:2784
 msgid "Grayscale Mode"
 msgstr "Mode niveaux de gris"
 
-#: modules/file/pixmap.c:2786
+#: modules/file/pixmap.c:2788
 msgid "Export as 1_6 bit grayscale"
 msgstr "Exporter en niveaux de gris 1_6 bits"
 
-#: modules/file/pixmap.c:2812
+#: modules/file/pixmap.c:2814
 msgid "Lateral Scale"
 msgstr "Echelle latérale"
 
-#: modules/file/pixmap.c:2819
-#: modules/file/pixmap.c:2915
+#: modules/file/pixmap.c:2821
+#: modules/file/pixmap.c:2917
 #: modules/process/immerse.c:367
 msgid "_None"
 msgstr "_Aucune"
 
-#: modules/file/pixmap.c:2820
+#: modules/file/pixmap.c:2822
 msgid "_Rulers"
 msgstr "G_raduations"
 
-#: modules/file/pixmap.c:2821
+#: modules/file/pixmap.c:2823
 msgid "_Inset scale bar"
 msgstr "Echelle"
 
-#: modules/file/pixmap.c:2826
+#: modules/file/pixmap.c:2828
 msgid "Color:"
 msgstr "Couleur :"
 
-#: modules/file/pixmap.c:2842
+#: modules/file/pixmap.c:2844
 #: modules/process/immerse.c:323
 msgid "Position:"
 msgstr "Position :"
 
-#: modules/file/pixmap.c:2847
+#: modules/file/pixmap.c:2849
 msgid "left"
 msgstr "gauche"
 
-#: modules/file/pixmap.c:2851
+#: modules/file/pixmap.c:2853
 msgid "center"
 msgstr "centre"
 
-#: modules/file/pixmap.c:2855
+#: modules/file/pixmap.c:2857
 msgid "right"
 msgstr "droite"
 
-#: modules/file/pixmap.c:2860
+#: modules/file/pixmap.c:2862
 msgid "top"
 msgstr "haut"
 
-#: modules/file/pixmap.c:2872
+#: modules/file/pixmap.c:2874
 msgid "bottom"
 msgstr "bas"
 
-#: modules/file/pixmap.c:2883
+#: modules/file/pixmap.c:2885
 #: modules/process/lno_synth.c:1067
 msgid "_Length:"
 msgstr "_Longueur :"
 
-#: modules/file/pixmap.c:2900
+#: modules/file/pixmap.c:2902
 msgid "_Auto"
 msgstr "_Auto"
 
-#: modules/file/pixmap.c:2908
+#: modules/file/pixmap.c:2910
 msgid "Value Scale"
 msgstr "Valeur d'échelle"
 
-#: modules/file/pixmap.c:2916
+#: modules/file/pixmap.c:2918
 msgid "_False color ruler"
 msgstr "Echelle de couleurs"
 
@@ -3954,7 +3978,7 @@ msgid "TAB character"
 msgstr "Tabulation"
 
 #: modules/file/rawfile.c:784
-msgid "Ohter character"
+msgid "Other character"
 msgstr "Autre caractère"
 
 #: modules/file/rawfile.c:792
@@ -5999,7 +6023,6 @@ msgstr "Distance Y"
 
 #: modules/process/crosscor.c:236
 #: modules/process/fft.c:299
-#: modules/process/fft_filter_2d.c:591
 #: modules/process/maskcor.c:175
 msgid "Output _type:"
 msgstr "_Type de sortie :"
@@ -6082,8 +6105,7 @@ msgid "Curvature Sections"
 msgstr "Sections de courbure"
 
 #: modules/process/curvature.c:656
-#: modules/process/slope_dist.c:216
-msgid "Output type"
+msgid "Output Type"
 msgstr "Type de sortie"
 
 #: modules/process/curvature.c:663
@@ -6487,12 +6509,11 @@ msgid "NRMS"
 msgstr "NRMS"
 
 #: modules/process/edge.c:697
-#: modules/process/fft_filter_2d.c:526
 msgid "Display"
 msgstr "Affichage"
 
 #: modules/process/edge.c:706
-#: modules/process/fft_filter_2d.c:371
+#: modules/process/fft_filter_2d.c:394
 msgid "Original _image"
 msgstr "_Image originale"
 
@@ -6684,130 +6705,147 @@ msgstr "Type de _filtre :"
 msgid "1D FFT Filtered Data"
 msgstr "Données filtrées après FFT 1D"
 
-#: modules/process/fft_filter_2d.c:166
-#: modules/process/fft_filter_2d.c:398
+#: modules/process/fft_filter_2d.c:169
+#: modules/process/fft_filter_2d.c:440
 msgid "2D FFT Filtering"
 msgstr "Filtrage FFT 2D"
 
-#: modules/process/fft_filter_2d.c:180
+#: modules/process/fft_filter_2d.c:183
 msgid "/_Correct Data/_2D FFT Filtering..."
 msgstr "/_Correction des Données/Filtrage FFT _2D..."
 
-#: modules/process/fft_filter_2d.c:184
+#: modules/process/fft_filter_2d.c:187
 msgid "Two-dimensional FFT filtering"
 msgstr "Filtrage FFT bi-dimensionnelle"
 
-#: modules/process/fft_filter_2d.c:298
+#: modules/process/fft_filter_2d.c:301
 msgid "Filtered Data"
 msgstr "Données filtrées"
 
-#: modules/process/fft_filter_2d.c:310
-#: modules/process/fft_filter_2d.c:584
+#: modules/process/fft_filter_2d.c:315
+#: modules/process/fit_2d.c:678
+msgid "Difference"
+msgstr "Différence"
+
+#: modules/process/fft_filter_2d.c:327
 msgid "Filtered FFT"
 msgstr "FFT filtrée"
 
-#: modules/process/fft_filter_2d.c:341
+#: modules/process/fft_filter_2d.c:364
 msgid "Add an ellipse to the FFT mask"
 msgstr "Ajouter une ellipse au masque de filtrage"
 
-#: modules/process/fft_filter_2d.c:346
+#: modules/process/fft_filter_2d.c:369
 msgid "Add a rectangle to the FFT mask"
 msgstr "Ajouter un rectangle au masque de filtrage"
 
-#: modules/process/fft_filter_2d.c:351
+#: modules/process/fft_filter_2d.c:374
 msgid "Subtract an ellipse from the FFT mask"
 msgstr "Soustraire une ellipse au masque de filtrage"
 
-#: modules/process/fft_filter_2d.c:356
+#: modules/process/fft_filter_2d.c:379
 msgid "Subtract a rectange from the FFT mask"
 msgstr "Soustraire un rectangle au masque de filtrage"
 
-#: modules/process/fft_filter_2d.c:367
-msgid "_FFT editor"
-msgstr "Editeur _FFT"
+#: modules/process/fft_filter_2d.c:390
+msgid "_FFT mask editor"
+msgstr "Editeur de masque _FFT"
 
-#: modules/process/fft_filter_2d.c:375
+#: modules/process/fft_filter_2d.c:398
 msgid "_Filtered image"
 msgstr "Image Filtrée"
 
-#: modules/process/fft_filter_2d.c:379
+#: modules/process/fft_filter_2d.c:402
 msgid "Image _difference"
 msgstr "_Différence d'images."
 
-#: modules/process/fft_filter_2d.c:446
+#: modules/process/fft_filter_2d.c:413
+msgid "Fi_ltered i_mage"
+msgstr "I_mage filtrée"
+
+#: modules/process/fft_filter_2d.c:417
+#, fuzzy
+msgid "Ima_ge difference"
+msgstr "_Différence d'images."
+
+#: modules/process/fft_filter_2d.c:421
+msgid "Filtered FFT mo_dulus"
+msgstr "Mo_dule de la FFT filtrée"
+
+#: modules/process/fft_filter_2d.c:488
 msgid "Filter Mask"
 msgstr "Masque de filtre"
 
-#: modules/process/fft_filter_2d.c:481
+#: modules/process/fft_filter_2d.c:523
 msgid "_Undo"
 msgstr "_Annuler"
 
-#: modules/process/fft_filter_2d.c:490
+#: modules/process/fft_filter_2d.c:532
 #: modules/tools/maskedit.c:542
 msgid "_Remove"
 msgstr "Supprimer"
 
-#: modules/process/fft_filter_2d.c:498
+#: modules/process/fft_filter_2d.c:540
 #: modules/tools/maskedit.c:550
 msgid "_Fill"
 msgstr "Remplir"
 
-#: modules/process/fft_filter_2d.c:508
+#: modules/process/fft_filter_2d.c:550
 msgid "_Snap to origin"
 msgstr "_S'accrocher à l'origine"
 
-#: modules/process/fft_filter_2d.c:521
+#: modules/process/fft_filter_2d.c:563
 msgid "Preview Options"
 msgstr "Option de prévisualisation"
 
-#: modules/process/fft_filter_2d.c:556
+#: modules/process/fft_filter_2d.c:568
+msgid "Display:"
+msgstr "Affichage :"
+
+#: modules/process/fft_filter_2d.c:598
 msgid "Zoom:"
 msgstr "_Zoom :"
 
-#: modules/process/fft_filter_2d.c:577
+#: modules/process/fft_filter_2d.c:619
 msgid "Output Options"
 msgstr "Options de sortie"
 
-#: modules/process/fft_filter_2d.c:583
-msgid "Filtered Image"
-msgstr "Image filtrée"
+#: modules/process/fft_filter_2d.c:624
+#: modules/process/slope_dist.c:216
+msgid "Output type:"
+msgstr "Type de sortie :"
 
-#: modules/process/fft_filter_2d.c:585
-#: modules/process/scars.c:450
-msgid "Both"
-msgstr "Les deux"
+#: modules/process/fft_filter_2d.c:1285
+msgid "Draw ellipses on the mask"
+msgstr "Ajouter des ellipses au masque de filtrage"
 
-#: modules/process/fft_filter_2d.c:1229
-msgid "Draw a new inclusive circle marker"
-msgstr "Dessiner un nouveau marqueur circulaire inclusif"
+#: modules/process/fft_filter_2d.c:1287
+msgid "Draw rectangles on the mask"
+msgstr "Ajouter des rectangles au masque de filtrage"
 
-#: modules/process/fft_filter_2d.c:1231
-msgid "Draw a new inclusive rectangle marker"
-msgstr "Dessiner un nouveau marqueur rectangulaire inclusif"
+#: modules/process/fft_filter_2d.c:1289
+msgid "Undraw ellipses on the mask"
+msgstr "Retirer des ellipses du masque de filtrage"
 
-#: modules/process/fft_filter_2d.c:1233
-msgid "Draw a new exclusive circle marker"
-msgstr "Dessiner un nouveau marqueur circulaire exclusif"
+#: modules/process/fft_filter_2d.c:1291
+msgid "Undraw rectangles on the mask"
+msgstr "Retirer des rectangles du masque de filtrage"
 
-#: modules/process/fft_filter_2d.c:1235
-msgid "Draw a new exclusive rectangle marker"
-msgstr "Dessiner un nouveau marqueur rectangulaire exclusif"
-
-#: modules/process/fft_filter_2d.c:1237
+#: modules/process/fft_filter_2d.c:1293
 msgid "Undo the last change to the filter mask"
 msgstr "Annuler la dernière modification sur le masque de filtrage"
 
-#: modules/process/fft_filter_2d.c:1239
-msgid "Removes the entire filter mask"
+#: modules/process/fft_filter_2d.c:1295
+msgid "Clear the entire filter mask"
 msgstr "Supprimer complètement le masque filtre"
 
-#: modules/process/fft_filter_2d.c:1241
-msgid "Fills the entire filter mask"
-msgstr "Remplit complètement le masque filtre"
+#: modules/process/fft_filter_2d.c:1297
+msgid "Fill the entire filter mask"
+msgstr "Remplire complètement le masque filtre"
 
-#: modules/process/fft_filter_2d.c:1243
-msgid "Forces new markers to center around the origin"
-msgstr "Forcer les nouveaux marqueurs à se centrer sur l'origine"
+#: modules/process/fft_filter_2d.c:1299
+msgid "Force shapes to center around the origin"
+msgstr "Forcer les formes à se centrer sur l'origine"
 
 #: modules/process/fft_profile.c:119
 msgid "Reads radial sections of two-dimensional power spectrum density function."
@@ -6969,10 +7007,6 @@ msgstr "Sphère d'ajustement"
 #: modules/process/fit_2d.c:677
 msgid "Fit result"
 msgstr "Résultat de l'ajustement"
-
-#: modules/process/fit_2d.c:678
-msgid "Difference"
-msgstr "Différence"
 
 #: modules/process/fit_2d.c:690
 msgid "Sphere (up)"
@@ -7649,7 +7683,7 @@ msgid "Maximum at"
 msgstr "Maximum à "
 
 #: modules/process/indent_analyze.c:494
-msgid "Max-min diference"
+msgid "Max-min difference"
 msgstr "Différence max-min"
 
 #: modules/process/indent_analyze.c:500
@@ -7693,7 +7727,7 @@ msgid "Outer Pile-Up A<sub>p</sub>"
 msgstr "Débordement  A<sub>p</sub>"
 
 #: modules/process/indent_analyze.c:651
-msgid "Indentaion statistics"
+msgid "Indentation statistics"
 msgstr "Statistiques d'indentation"
 
 #: modules/process/indent_analyze.c:652
@@ -7705,7 +7739,7 @@ msgid "_Save statistics"
 msgstr "_Sauvegarder les statistiques"
 
 #: modules/process/indent_analyze.c:1581
-msgid "No statistics has benn computed yet."
+msgid "No statistics has been computed yet."
 msgstr "Aucune statistique n'a encore été calculée."
 
 #: modules/process/indent_analyze.c:1589
@@ -7734,7 +7768,7 @@ msgstr "Le maximum à [%d, %d] est :                 %lf\n"
 
 #: modules/process/indent_analyze.c:1637
 #, c-format
-msgid "Diference max-min:                      %lf\n"
+msgid "Difference max-min:                     %lf\n"
 msgstr "Différence max-min :                      %lf\n"
 
 #: modules/process/indent_analyze.c:1642
@@ -7774,7 +7808,7 @@ msgstr "Volume en-dessous :     %g\n"
 
 #: modules/process/indent_analyze.c:1666
 #, c-format
-msgid "Volume diference  %g\n"
+msgid "Volume difference %g\n"
 msgstr "Différence de volume  %g\n"
 
 #: modules/process/indent_analyze.c:1670
@@ -8789,6 +8823,10 @@ msgstr "Positif"
 msgid "Negative"
 msgstr "Négatif"
 
+#: modules/process/scars.c:450
+msgid "Both"
+msgstr "Les deux"
+
 #: modules/process/scars.c:464
 msgid "Mark Scars"
 msgstr "Marquer les défauts linéaires"
@@ -9574,7 +9612,7 @@ msgstr "Moyenne :"
 #: modules/tools/linestats.c:346
 #: modules/tools/profile.c:388
 #: modules/tools/sfunctions.c:364
-#: modules/tools/spectro.c:292
+#: modules/tools/spectro.c:306
 msgid "<b>Options</b>"
 msgstr "<b>Options</b>"
 
@@ -10139,23 +10177,28 @@ msgstr "Calcule les fonctions statistiques 1D"
 msgid "_Separate uncertainty"
 msgstr "Incertitudes _séparées"
 
-#: modules/tools/spectro.c:126
+#: modules/tools/spectro.c:134
 msgid "Point Spectrum, extracts point spectra to a graph."
 msgstr "Spectre ponctuel, extrait des spectres ponctuels vers un graphe."
 
-#: modules/tools/spectro.c:162
+#: modules/tools/spectro.c:172
 msgid "Point Spectroscopy"
 msgstr "Spectroscopie ponctuelle"
 
-#: modules/tools/spectro.c:163
+#: modules/tools/spectro.c:173
 msgid "Extract and view point spectroscopy data"
 msgstr "Extrait et visualise les données de spectroscopie ponctuelle"
 
-#: modules/tools/spectro.c:308
+#: modules/tools/spectro.c:322
 msgid "_Separate spectra"
 msgstr "_Spectres séparés"
 
-#: modules/tools/spectro.c:418
+#: modules/tools/spectro.c:332
+#, fuzzy
+msgid "_Average spectra"
+msgstr "_Spectres séparés"
+
+#: modules/tools/spectro.c:442
 msgid "Spectroscopy"
 msgstr "Spectroscopie"
 
@@ -10297,6 +10340,18 @@ msgstr ""
 "Inclinaison θ:      %s\n"
 "Inclinaison φ:      %s\n"
 
+#~ msgid "Filtered Image"
+#~ msgstr "Image filtrée"
+#~ msgid "Draw a new inclusive circle marker"
+#~ msgstr "Dessiner un nouveau marqueur circulaire inclusif"
+#~ msgid "Draw a new inclusive rectangle marker"
+#~ msgstr "Dessiner un nouveau marqueur rectangulaire inclusif"
+#~ msgid "Draw a new exclusive circle marker"
+#~ msgstr "Dessiner un nouveau marqueur circulaire exclusif"
+#~ msgid "Draw a new exclusive rectangle marker"
+#~ msgstr "Dessiner un nouveau marqueur rectangulaire exclusif"
+#~ msgid "Removes the entire filter mask"
+#~ msgstr "Supprimer complètement le masque filtre"
 #~ msgid "Simple AFM data recalibration"
 #~ msgstr "Calibration basique de données AFM"
 #~ msgid "i_nstant updates"
@@ -10354,11 +10409,6 @@ msgstr ""
 #~ msgstr "La specroscopie ponctuelle (SPS) n'est pas supportée."
 #~ msgid "Export"
 #~ msgstr "Exporter"
-#~ msgid ""
-#~ "The number of spectra coordinates does not match the number of spectra."
-#~ msgstr ""
-#~ "Le nombre de coordonnées de spectres ne correspond pas au nombre de "
-#~ "spectres."
 #~ msgid "data samples"
 #~ msgstr "Echantillons de données"
 #~ msgid "_Exclude region under mask"
