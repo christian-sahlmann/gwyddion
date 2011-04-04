@@ -1,8 +1,7 @@
 2.24 (0000-00-00)
 Application:
-- Translations updated: German, Italian.
+- Translations updated: Czech, French, German, Italian, Russian.
 
-Libraries:
 - libprocess: gwy_data_line_new_alike(), gwy_data_line_duplicate() and
   gwy_data_line_clone() keep the offset.
 - libgwydgets: GwyColorAxis is drawn correctly if the z-range is inverted.
@@ -18,6 +17,7 @@ Modules:
 - Pixmap: False colour scale is drawn correctly if the z-range is inverted.
 - Attocube: File detection is more liberal, accepting anything starting
   with "# Daisy".
+- 2D FFT filter: Image difference output type was added.
 - Mask editor tool: Spurious drawing upon data/tool switch was corrected.
 
 Other:
