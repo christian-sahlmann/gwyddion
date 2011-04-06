@@ -3,8 +3,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2011-03-13 14:15+0100\n"
-"PO-Revision-Date: 2011-04-03 11:26+0200\n"
+"POT-Creation-Date: 2011-04-06 20:17+0200\n"
+"PO-Revision-Date: 2011-04-06 20:22+0200\n"
 "Last-Translator: Petr Klapetek <klapetek@gwyddion.net>\n"
 "Language-Team: Czech\n"
 "Language: cs\n"
@@ -115,8 +115,8 @@ msgid "vdW: paraboloid"
 msgstr "vdW: paraboloid"
 
 #: libgwyddion/gwyinventory.c:1310 libgwydgets/gwygraphwindow.c:603
-#: app/data-browser.c:1541 app/data-browser.c:2290 app/data-browser.c:3064
-#: app/data-browser.c:3223 app/data-browser.c:5131 app/resource-editor.c:366
+#: app/data-browser.c:1538 app/data-browser.c:2288 app/data-browser.c:3062
+#: app/data-browser.c:3221 app/data-browser.c:5129 app/resource-editor.c:366
 #: modules/process/convolution_filter.c:700
 msgid "Untitled"
 msgstr "Nepojmenovaný"
@@ -789,14 +789,14 @@ msgid "pixels"
 msgstr "pixelů"
 
 #: libgwydgets/gwy3dwindow.c:1027 modules/file/pixmap.c:946
-#: modules/file/pixmap.c:2664 modules/file/rawfile.c:398
+#: modules/file/pixmap.c:2666 modules/file/rawfile.c:398
 #: modules/process/angle_dist.c:170 modules/process/calcoefs_new.c:347
 #: modules/process/calibrate.c:296 modules/process/curvature.c:602
 #: modules/process/cwt.c:132 modules/process/deposit_synth.c:359
 #: modules/process/drift.c:230 modules/process/dwtanisotropy.c:183
 #: modules/process/dwt.c:164 modules/process/edge.c:636
 #: modules/process/facet_analysis.c:272 modules/process/facet-level.c:283
-#: modules/process/fft.c:272 modules/process/fft_filter_2d.c:399
+#: modules/process/fft.c:272 modules/process/fft_filter_2d.c:441
 #: modules/process/fft_synth.c:330 modules/process/fractal.c:206
 #: modules/process/grain_edge.c:220 modules/process/grain_mark.c:265
 #: modules/process/grain_rem_threshold.c:224 modules/process/grain_wshed.c:182
@@ -1283,7 +1283,7 @@ msgstr "Dálkové ovládání"
 msgid "Python Scripting Interface"
 msgstr "Rozhraní pro skriptování v Pythonu"
 
-#: app/app.c:238
+#: app/app.c:243
 #, c-format
 msgid ""
 "Some data are unsaved:\n"
@@ -1294,80 +1294,80 @@ msgstr ""
 "%s\n"
 "Opravdu skončit?"
 
-#: app/app.c:416
+#: app/app.c:387
+msgid "Mask _Color..."
+msgstr "_Barva masky..."
+
+#: app/app.c:403
+msgid "Zoom _1:1"
+msgstr "Zvětšit _1:1"
+
+#: app/app.c:600
+msgid "Pi_xelwise Square"
+msgstr "Čtvercové pi_xely"
+
+#: app/app.c:610
+msgid "_Physically Square"
+msgstr "_Fyzicky čtvercový"
+
+#: app/app.c:779
 msgid "Save"
 msgstr "Uložit"
 
-#: app/app.c:418 app/app.c:422
+#: app/app.c:781 app/app.c:785
 msgid "Save 3D view to an image"
 msgstr "Exportovat trojrozměrný pohled do obrázku"
 
-#: app/app.c:428
+#: app/app.c:791
 msgid "Set as Default"
 msgstr "Nastavit výchozí"
 
-#: app/app.c:430
+#: app/app.c:793
 msgid "Set the current view setup as the default"
 msgstr "Nastavit současné uspořádání pohledu jako výchozí"
 
-#: app/app.c:474
+#: app/app.c:837
 #, c-format
 msgid "Saving of 3D view to `%s' failed"
 msgstr "Uložení 3D pohledu do „%s“ se nezdařilo"
 
-#: app/app.c:518
+#: app/app.c:881
 msgid "Export 3D View"
 msgstr "Exportovat trojrozměrný pohled"
 
-#: app/app.c:678
-msgid "Mask _Color..."
-msgstr "_Barva masky..."
-
-#: app/app.c:694
-msgid "Zoom _1:1"
-msgstr "Zvětšit _1:1"
-
-#: app/app.c:891
-msgid "Pi_xelwise Square"
-msgstr "Čtvercové pi_xely"
-
-#: app/app.c:901
-msgid "_Physically Square"
-msgstr "_Fyzicky čtvercový"
-
-#: app/data-browser.c:3774
+#: app/data-browser.c:3772
 msgid "Extract to a new file"
 msgstr "Extrahovat do nového souboru"
 
-#: app/data-browser.c:3775
+#: app/data-browser.c:3773
 msgid "Duplicate"
 msgstr "Zduplikovat"
 
-#: app/data-browser.c:3776
+#: app/data-browser.c:3774
 msgid "Delete"
 msgstr "Smazat"
 
-#: app/data-browser.c:3820
+#: app/data-browser.c:3818
 msgid "Data Browser"
 msgstr "Prohlížeč dat"
 
-#: app/data-browser.c:3843
+#: app/data-browser.c:3841
 msgid "Close file"
 msgstr "Zavřít soubor"
 
-#: app/data-browser.c:3856
+#: app/data-browser.c:3854
 msgid "Channels"
 msgstr "Kanály"
 
-#: app/data-browser.c:3870
+#: app/data-browser.c:3868
 msgid "Graphs"
 msgstr "Grafy"
 
-#: app/data-browser.c:3884
+#: app/data-browser.c:3882
 msgid "Spectra"
 msgstr "Spektra"
 
-#: app/data-browser.c:5169
+#: app/data-browser.c:5167
 #, c-format
 msgid "Unknown channel %d"
 msgstr "Neznámý kanál %d"
@@ -1695,23 +1695,23 @@ msgstr "Zpracování _dat"
 msgid "_Graph"
 msgstr "_Graf"
 
-#: app/menu.c:568
+#: app/menu.c:569
 msgid "Re-show Last"
 msgstr "Ukázat poslední"
 
-#: app/menu.c:583
+#: app/menu.c:584
 msgid "Repeat Last"
 msgstr "Opakovat poslední"
 
-#: app/menu.c:711
+#: app/menu.c:712
 msgid "Repeat"
 msgstr "Opakovat"
 
-#: app/menu.c:717
+#: app/menu.c:718
 msgid "Re-show"
 msgstr "Ukázat znovu"
 
-#: app/menu.c:904
+#: app/menu.c:927
 msgid "_Document history"
 msgstr "_Historie dokumentů"
 
@@ -2486,7 +2486,7 @@ msgstr "Jednotky hodnot:"
 msgid "Export Text"
 msgstr "Export jako text"
 
-#: modules/file/asciiexport.c:273 modules/file/pixmap.c:2753
+#: modules/file/asciiexport.c:273 modules/file/pixmap.c:2755
 #: modules/file/rawfile.c:720 modules/file/rawxyz.c:670
 #: modules/process/fft_filter_1d.c:296 modules/process/grain_dist.c:285
 #: modules/process/grain_edge.c:273 modules/process/grain_mark.c:347
@@ -3106,7 +3106,7 @@ msgstr "Block informací o souboru má neplatnou velikost."
 msgid "Unique id record is too short."
 msgstr "Záznam unikátního identifikátoru je příliš krátký."
 
-#: modules/file/miffile.c:680
+#: modules/file/miffile.c:680 modules/file/mulfile.c:294
 msgid "Image data are outside the file."
 msgstr "Data obrázku jsou mimo soubor."
 
@@ -3121,6 +3121,26 @@ msgstr "PicoView soubory (.mi)"
 #: modules/file/mifile.c:374
 msgid "Spectroscopy Graph"
 msgstr "Graf spektroskopie"
+
+#: modules/file/mulfile.c:150
+#, fuzzy
+msgid "Imports Aarhus MUL files."
+msgstr "Načítá AFM datové soubory Hitachi."
+
+#: modules/file/mulfile.c:163
+#, fuzzy
+msgid "Aarhus NUL files (.mul)"
+msgstr "SPML soubory (.xml)"
+
+#: modules/file/mulfile.c:285
+#, fuzzy, c-format
+msgid "Image number in the label %u does not match the number %u in the index."
+msgstr "Počet souřadnic spekter nesouhlasí s počtem spekter."
+
+#: modules/file/mulfile.c:344 modules/file/mulfile.c:353
+#, c-format
+msgid "Label string length %u is larger than 20."
+msgstr ""
 
 #: modules/file/nanoeducator.c:280
 msgid "Imports Nanoeducator data files."
@@ -3162,11 +3182,11 @@ msgstr "Profil %d"
 msgid "F-D spectra"
 msgstr "F-D spektra"
 
-#: modules/file/nanoeducator.c:1118
+#: modules/file/nanoeducator.c:1114
 msgid "I-V spectra"
 msgstr "I-V spektra"
 
-#: modules/file/nanoeducator.c:1215
+#: modules/file/nanoeducator.c:1195
 msgid "I-Z spectra"
 msgstr "I-Z spektra"
 
@@ -3373,7 +3393,7 @@ msgstr "Soubor skončil v datech rámu č. %u."
 msgid "Frame #%u is too short for scanned data header."
 msgstr "Rám č. %u je příliš krátký pro hlavičku dat skenu."
 
-#: modules/file/nt-mdt.c:2374
+#: modules/file/nt-mdt.c:2373
 msgid "Raman Image"
 msgstr "Ramanovský obrázek"
 
@@ -3443,11 +3463,11 @@ msgstr "Wyko exportované ASCII soubory (.asc)"
 msgid "Item `%s' is beyond the end of the file."
 msgstr "Položka ‚%s‘ zasahuje za konec souboru."
 
-#: modules/file/opdfile.c:595
+#: modules/file/opdfile.c:596
 msgid "Nested directories found"
 msgstr "Struktura obsahuje vnořené adresáře"
 
-#: modules/file/opdfile.c:785
+#: modules/file/opdfile.c:787
 #, c-format
 msgid "Truncated data in block %s"
 msgstr "Data v bloku %s jsou uříznutá"
@@ -3660,118 +3680,118 @@ msgstr "Obrázek je příliš velký, než aby šel uložit jako TARGA."
 msgid "Data must be displayed in a window for pixmap export."
 msgstr "Pro export obrázku musejí být data zobrazena v okně."
 
-#: modules/file/pixmap.c:2602
+#: modules/file/pixmap.c:2604
 msgid "Change Inset Color"
 msgstr "Změnit barvu vloženého měřítka"
 
-#: modules/file/pixmap.c:2661
+#: modules/file/pixmap.c:2663
 #, c-format
 msgid "Export %s"
 msgstr "Export %s"
 
-#: modules/file/pixmap.c:2692
+#: modules/file/pixmap.c:2694
 msgid "Scaling"
 msgstr "Škálování"
 
-#: modules/file/pixmap.c:2701
+#: modules/file/pixmap.c:2703
 msgid "_Zoom:"
 msgstr "_Zvětšení"
 
-#: modules/file/pixmap.c:2710 modules/file/rawfile.c:632
+#: modules/file/pixmap.c:2712 modules/file/rawfile.c:632
 #: modules/process/crosscor.c:197 modules/process/deposit_synth.c:458
 #: modules/process/dimensions.h:471 modules/process/tip_blind.c:265
 msgid "_Width:"
 msgstr "Šířk_a:"
 
-#: modules/file/pixmap.c:2719 modules/process/grain_mark.c:312
+#: modules/file/pixmap.c:2721 modules/process/grain_mark.c:312
 #: modules/process/grain_rem_threshold.c:280 modules/process/obj_synth.c:573
 #: modules/process/pat_synth.c:888 modules/process/pat_synth.c:1191
 #: modules/process/pat_synth.c:1528 modules/process/tip_blind.c:272
 msgid "_Height:"
 msgstr "_Výška:"
 
-#: modules/file/pixmap.c:2728
+#: modules/file/pixmap.c:2730
 msgid "Scale text _proportionally"
 msgstr "Škálovat text _proporcionálně"
 
-#: modules/file/pixmap.c:2743
+#: modules/file/pixmap.c:2745
 msgid "_Font size:"
 msgstr "Ve_likost písma"
 
-#: modules/file/pixmap.c:2757
+#: modules/file/pixmap.c:2759
 msgid "Draw _mask"
 msgstr "Nakreslit _masku"
 
-#: modules/file/pixmap.c:2766
+#: modules/file/pixmap.c:2768
 msgid "Draw _selection"
 msgstr "Nakreslit _výběr"
 
-#: modules/file/pixmap.c:2782
+#: modules/file/pixmap.c:2784
 msgid "Grayscale Mode"
 msgstr "Mód stupňů šedi"
 
-#: modules/file/pixmap.c:2786
+#: modules/file/pixmap.c:2788
 msgid "Export as 1_6 bit grayscale"
 msgstr "Exportovat s 16bitovou hloubkou"
 
-#: modules/file/pixmap.c:2812
+#: modules/file/pixmap.c:2814
 msgid "Lateral Scale"
 msgstr "Příčná škála"
 
-#: modules/file/pixmap.c:2819 modules/file/pixmap.c:2915
+#: modules/file/pixmap.c:2821 modules/file/pixmap.c:2917
 #: modules/process/immerse.c:367
 msgid "_None"
 msgstr "Žád_né"
 
-#: modules/file/pixmap.c:2820
+#: modules/file/pixmap.c:2822
 msgid "_Rulers"
 msgstr "_Pravítka"
 
-#: modules/file/pixmap.c:2821
+#: modules/file/pixmap.c:2823
 msgid "_Inset scale bar"
 msgstr "_Vložené měřítko"
 
-#: modules/file/pixmap.c:2826
+#: modules/file/pixmap.c:2828
 msgid "Color:"
 msgstr "Barva:"
 
-#: modules/file/pixmap.c:2842 modules/process/immerse.c:323
+#: modules/file/pixmap.c:2844 modules/process/immerse.c:323
 msgid "Position:"
 msgstr "Poloha:"
 
-#: modules/file/pixmap.c:2847
+#: modules/file/pixmap.c:2849
 msgid "left"
 msgstr "vlevo"
 
-#: modules/file/pixmap.c:2851
+#: modules/file/pixmap.c:2853
 msgid "center"
 msgstr "uprostřed"
 
-#: modules/file/pixmap.c:2855
+#: modules/file/pixmap.c:2857
 msgid "right"
 msgstr "vpravo"
 
-#: modules/file/pixmap.c:2860
+#: modules/file/pixmap.c:2862
 msgid "top"
 msgstr "nahoře"
 
-#: modules/file/pixmap.c:2872
+#: modules/file/pixmap.c:2874
 msgid "bottom"
 msgstr "dole"
 
-#: modules/file/pixmap.c:2883 modules/process/lno_synth.c:1067
+#: modules/file/pixmap.c:2885 modules/process/lno_synth.c:1067
 msgid "_Length:"
 msgstr "_Délka:"
 
-#: modules/file/pixmap.c:2900
+#: modules/file/pixmap.c:2902
 msgid "_Auto"
 msgstr "_Auto"
 
-#: modules/file/pixmap.c:2908
+#: modules/file/pixmap.c:2910
 msgid "Value Scale"
 msgstr "Škála hodnot"
 
-#: modules/file/pixmap.c:2916
+#: modules/file/pixmap.c:2918
 msgid "_False color ruler"
 msgstr "Škála _falešných barev"
 
@@ -4001,7 +4021,8 @@ msgid "TAB character"
 msgstr "Tabelátor"
 
 #: modules/file/rawfile.c:784
-msgid "Ohter character"
+#, fuzzy
+msgid "Other character"
 msgstr "Jiný znak"
 
 #: modules/file/rawfile.c:792
@@ -5973,7 +5994,7 @@ msgid "Y Distance"
 msgstr "Vzdálenost v ose Y"
 
 #: modules/process/crosscor.c:236 modules/process/fft.c:299
-#: modules/process/fft_filter_2d.c:591 modules/process/maskcor.c:175
+#: modules/process/maskcor.c:175
 msgid "Output _type:"
 msgstr "T_yp výstupu:"
 
@@ -6052,8 +6073,9 @@ msgstr "Křivost: Rozměry a hodnota musejí být tatáž fyzikální veličina.
 msgid "Curvature Sections"
 msgstr "Řezy křivosti"
 
-#: modules/process/curvature.c:656 modules/process/slope_dist.c:216
-msgid "Output type"
+#: modules/process/curvature.c:656
+#, fuzzy
+msgid "Output Type"
 msgstr "Typ výstupu"
 
 #: modules/process/curvature.c:663
@@ -6437,11 +6459,11 @@ msgstr "_Práh:"
 msgid "NRMS"
 msgstr "NRMS"
 
-#: modules/process/edge.c:697 modules/process/fft_filter_2d.c:526
+#: modules/process/edge.c:697
 msgid "Display"
 msgstr "Zobrazovat"
 
-#: modules/process/edge.c:706 modules/process/fft_filter_2d.c:371
+#: modules/process/edge.c:706 modules/process/fft_filter_2d.c:394
 msgid "Original _image"
 msgstr "_Původní obraz"
 
@@ -6644,124 +6666,140 @@ msgstr "Typ _filtru:"
 msgid "1D FFT Filtered Data"
 msgstr "1D FFT filtrovaná data"
 
-#: modules/process/fft_filter_2d.c:166 modules/process/fft_filter_2d.c:398
+#: modules/process/fft_filter_2d.c:169 modules/process/fft_filter_2d.c:440
 msgid "2D FFT Filtering"
 msgstr "Dvourozměrné FFT filtrování"
 
-#: modules/process/fft_filter_2d.c:180
+#: modules/process/fft_filter_2d.c:183
 msgid "/_Correct Data/_2D FFT Filtering..."
 msgstr "/_Korekce dat/_2D FFT filtrování..."
 
-#: modules/process/fft_filter_2d.c:184
+#: modules/process/fft_filter_2d.c:187
 msgid "Two-dimensional FFT filtering"
 msgstr "Dvourozměrné FFT filtrování"
 
-#: modules/process/fft_filter_2d.c:298
+#: modules/process/fft_filter_2d.c:301
 msgid "Filtered Data"
 msgstr "Filtrovaná data"
 
-#: modules/process/fft_filter_2d.c:310 modules/process/fft_filter_2d.c:584
+#: modules/process/fft_filter_2d.c:315 modules/process/fit_2d.c:678
+msgid "Difference"
+msgstr "Rozdíl"
+
+#: modules/process/fft_filter_2d.c:327
 msgid "Filtered FFT"
 msgstr "Filtrované FFT"
 
-#: modules/process/fft_filter_2d.c:341
+#: modules/process/fft_filter_2d.c:364
 msgid "Add an ellipse to the FFT mask"
 msgstr "Přidat k FFT masce elipsu"
 
-#: modules/process/fft_filter_2d.c:346
+#: modules/process/fft_filter_2d.c:369
 msgid "Add a rectangle to the FFT mask"
 msgstr "Přidat k FFT masce obdélník"
 
-#: modules/process/fft_filter_2d.c:351
+#: modules/process/fft_filter_2d.c:374
 msgid "Subtract an ellipse from the FFT mask"
 msgstr "Odstranit z FFT masky elipsu"
 
-#: modules/process/fft_filter_2d.c:356
+#: modules/process/fft_filter_2d.c:379
 msgid "Subtract a rectange from the FFT mask"
 msgstr "Odstranit z FFT masky obdélník"
 
-#: modules/process/fft_filter_2d.c:367
-msgid "_FFT editor"
-msgstr "_FFT editor"
+#: modules/process/fft_filter_2d.c:390
+msgid "_FFT mask editor"
+msgstr "Editor _FFT masky"
 
-#: modules/process/fft_filter_2d.c:375
-msgid "_Filtered image"
+#: modules/process/fft_filter_2d.c:398
+msgid "Fi_ltered image"
 msgstr "F_iltrovaný obraz"
 
-#: modules/process/fft_filter_2d.c:379
+#: modules/process/fft_filter_2d.c:402
 msgid "Image _difference"
 msgstr "_Rozdíl obrazů"
 
-#: modules/process/fft_filter_2d.c:446
+#: modules/process/fft_filter_2d.c:413
+msgid "Filtered i_mage"
+msgstr "Filtrovaný obra_z"
+
+#: modules/process/fft_filter_2d.c:417
+msgid "Ima_ge difference"
+msgstr "Rozdíl o_brazů"
+
+#: modules/process/fft_filter_2d.c:421
+msgid "Filtered FFT mo_dulus"
+msgstr "Filtrovaný mod_ul FFT"
+
+#: modules/process/fft_filter_2d.c:488
 msgid "Filter Mask"
 msgstr "Maska filtru"
 
-#: modules/process/fft_filter_2d.c:481
+#: modules/process/fft_filter_2d.c:523
 msgid "_Undo"
 msgstr "_Zpět"
 
-#: modules/process/fft_filter_2d.c:490 modules/tools/maskedit.c:542
+#: modules/process/fft_filter_2d.c:532 modules/tools/maskedit.c:548
 msgid "_Remove"
 msgstr "_Odstranit"
 
-#: modules/process/fft_filter_2d.c:498 modules/tools/maskedit.c:550
+#: modules/process/fft_filter_2d.c:540 modules/tools/maskedit.c:556
 msgid "_Fill"
 msgstr "_Vyplnění"
 
-#: modules/process/fft_filter_2d.c:508
+#: modules/process/fft_filter_2d.c:550
 msgid "_Snap to origin"
 msgstr "Při_chytit k počátku"
 
-#: modules/process/fft_filter_2d.c:521
+#: modules/process/fft_filter_2d.c:563
 msgid "Preview Options"
 msgstr "Volby náhledu"
 
-#: modules/process/fft_filter_2d.c:556
+#: modules/process/fft_filter_2d.c:568
+msgid "Display:"
+msgstr "Zobrazovat:"
+
+#: modules/process/fft_filter_2d.c:598
 msgid "Zoom:"
 msgstr "_Zvětšení:"
 
-#: modules/process/fft_filter_2d.c:577
+#: modules/process/fft_filter_2d.c:619
 msgid "Output Options"
 msgstr "Možnosti výstupu"
 
-#: modules/process/fft_filter_2d.c:583
-msgid "Filtered Image"
-msgstr "Filtrovaný obraz"
+#: modules/process/fft_filter_2d.c:624 modules/process/slope_dist.c:216
+msgid "Output type:"
+msgstr "Typ výstupu:"
 
-#: modules/process/fft_filter_2d.c:585 modules/process/scars.c:450
-msgid "Both"
-msgstr "Oba"
+#: modules/process/fft_filter_2d.c:1285
+msgid "Draw ellipses on the mask"
+msgstr "Nakreslit na masku elipsu"
 
-#: modules/process/fft_filter_2d.c:1229
-msgid "Draw a new inclusive circle marker"
-msgstr "Přidat novou kruhovou oblast"
+#: modules/process/fft_filter_2d.c:1287
+msgid "Draw rectangles on the mask"
+msgstr "Nakreslit na masku obdélník"
 
-#: modules/process/fft_filter_2d.c:1231
-msgid "Draw a new inclusive rectangle marker"
-msgstr "Přidat novou obdélníkovou oblast"
+#: modules/process/fft_filter_2d.c:1289
+msgid "Undraw ellipses on the mask"
+msgstr "Vymazat z masky elipsu"
 
-#: modules/process/fft_filter_2d.c:1233
-msgid "Draw a new exclusive circle marker"
-msgstr "Odebrat kruhovou oblast"
+#: modules/process/fft_filter_2d.c:1291
+msgid "Undraw rectangles on the mask"
+msgstr "Vymazat z masky obdélník"
 
-#: modules/process/fft_filter_2d.c:1235
-msgid "Draw a new exclusive rectangle marker"
-msgstr "Odebrat obdélníkovou oblast"
-
-#: modules/process/fft_filter_2d.c:1237
+#: modules/process/fft_filter_2d.c:1293
 msgid "Undo the last change to the filter mask"
 msgstr "Vrátit zpět poslední změnu masky filtru"
 
-#: modules/process/fft_filter_2d.c:1239
-msgid "Removes the entire filter mask"
-msgstr "Odstranit celou masku"
+#: modules/process/fft_filter_2d.c:1295
+msgid "Clear the entire filter mask"
+msgstr "Vymazat celou masku filtru"
 
-#: modules/process/fft_filter_2d.c:1241
-msgid "Fills the entire filter mask"
-msgstr "Vyplní celou masku filtru"
+#: modules/process/fft_filter_2d.c:1297
+msgid "Fill the entire filter mask"
+msgstr "Vyplnit celou masku filtru"
 
-#: modules/process/fft_filter_2d.c:1243
-msgid "Forces new markers to center around the origin"
+#: modules/process/fft_filter_2d.c:1299
+msgid "Force shapes to center around the origin"
 msgstr "Upevnit středy nových oblastí do počátku"
 
 #: modules/process/fft_profile.c:119
@@ -6915,10 +6953,6 @@ msgstr "Proložená sféra"
 #: modules/process/fit_2d.c:677
 msgid "Fit result"
 msgstr "Výsledek fitování"
-
-#: modules/process/fit_2d.c:678
-msgid "Difference"
-msgstr "Rozdíl"
 
 #: modules/process/fit_2d.c:690
 msgid "Sphere (up)"
@@ -7598,7 +7632,7 @@ msgid "Maximum at"
 msgstr "Maximum v"
 
 #: modules/process/indent_analyze.c:494
-msgid "Max-min diference"
+msgid "Max-min difference"
 msgstr "Rozdíl max-min"
 
 #: modules/process/indent_analyze.c:500
@@ -7642,7 +7676,7 @@ msgid "Outer Pile-Up A<sub>p</sub>"
 msgstr "Vnější pile-up A<sub>p</sub>"
 
 #: modules/process/indent_analyze.c:651
-msgid "Indentaion statistics"
+msgid "Indentation statistics"
 msgstr "Statistika indentace"
 
 #: modules/process/indent_analyze.c:652
@@ -7722,8 +7756,7 @@ msgid "Volume below:     %g\n"
 msgstr "Objem pod:        %g\n"
 
 #: modules/process/indent_analyze.c:1666
-#, c-format
-msgid "Volume diference  %g\n"
+msgid "Volume difference %g\n"
 msgstr "Rozdíl objemů:    %g\n"
 
 #: modules/process/indent_analyze.c:1670
@@ -8724,6 +8757,10 @@ msgstr "Positivní"
 msgid "Negative"
 msgstr "Negativné"
 
+#: modules/process/scars.c:450
+msgid "Both"
+msgstr "Oba"
+
 #: modules/process/scars.c:464
 msgid "Mark Scars"
 msgstr "Označení šrámů"
@@ -9535,125 +9572,125 @@ msgstr "<b>Volby</b>"
 msgid "_Instant updates"
 msgstr "Okamžité aktuali_zace"
 
-#: modules/tools/maskedit.c:157
+#: modules/tools/maskedit.c:159
 msgid "Mask editor tool, allows to interactively add or remove parts of mask."
 msgstr ""
 "Nástroj editor masky, umožňuje interaktivně přidávat či odstraňovat části "
 "masky."
 
-#: modules/tools/maskedit.c:211
+#: modules/tools/maskedit.c:213
 msgid "Mask Editor"
 msgstr "Editor masky"
 
-#: modules/tools/maskedit.c:212
+#: modules/tools/maskedit.c:214
 msgid "Edit mask"
 msgstr "Upravit masku"
 
-#: modules/tools/maskedit.c:321
+#: modules/tools/maskedit.c:326
 msgid "Set mask to selection"
 msgstr "Nastavení masky na výběr"
 
-#: modules/tools/maskedit.c:326
+#: modules/tools/maskedit.c:331
 msgid "Add selection to mask"
 msgstr "Přidávání výběru k masce"
 
-#: modules/tools/maskedit.c:331
+#: modules/tools/maskedit.c:336
 msgid "Subtract selection from mask"
 msgstr "Odebírání výběru od masky"
 
-#: modules/tools/maskedit.c:336
+#: modules/tools/maskedit.c:341
 msgid "Intersect selection with mask"
 msgstr "Průnik výběru s maskou"
 
-#: modules/tools/maskedit.c:343
+#: modules/tools/maskedit.c:348
 msgid "Rectangular shapes"
 msgstr "Obdélníkové tvary"
 
-#: modules/tools/maskedit.c:348
+#: modules/tools/maskedit.c:353
 msgid "Elliptic shapes"
 msgstr "Eliptické tvary"
 
-#: modules/tools/maskedit.c:353
+#: modules/tools/maskedit.c:358
 msgid "Thin lines"
 msgstr "Tenké čáry"
 
-#: modules/tools/maskedit.c:360
+#: modules/tools/maskedit.c:365
 msgid "Freehand mask drawing"
 msgstr "Volné kreslení masky"
 
-#: modules/tools/maskedit.c:365
+#: modules/tools/maskedit.c:370
 msgid "Freehand mask erasing"
 msgstr "Volné mazání masky"
 
-#: modules/tools/maskedit.c:370
+#: modules/tools/maskedit.c:375
 msgid "Fill continous empty areas with mask"
 msgstr "Vyplnění souvislých prázdných oblastí maskou"
 
-#: modules/tools/maskedit.c:375
+#: modules/tools/maskedit.c:380
 msgid "Erase continous parts of mask"
 msgstr "Odstranění souvislých částí masky"
 
-#: modules/tools/maskedit.c:402
+#: modules/tools/maskedit.c:408
 msgid "Editor"
 msgstr "Editor"
 
-#: modules/tools/maskedit.c:407
+#: modules/tools/maskedit.c:413
 msgid "_Shapes"
 msgstr "_Tvary"
 
-#: modules/tools/maskedit.c:417
+#: modules/tools/maskedit.c:423
 msgid "Mode:"
 msgstr "Mód:"
 
-#: modules/tools/maskedit.c:446
+#: modules/tools/maskedit.c:452
 msgid "Shape:"
 msgstr "Tvar:"
 
-#: modules/tools/maskedit.c:477
+#: modules/tools/maskedit.c:483
 msgid "_Drawing Tools"
 msgstr "_Kreslicí nástroje"
 
-#: modules/tools/maskedit.c:487
+#: modules/tools/maskedit.c:493
 msgid "Tool:"
 msgstr "Nástroj:"
 
-#: modules/tools/maskedit.c:518
+#: modules/tools/maskedit.c:524
 msgid "_Radius:"
 msgstr "_Poloměr:"
 
-#: modules/tools/maskedit.c:526
+#: modules/tools/maskedit.c:532
 msgid "Actions"
 msgstr "Akce"
 
-#: modules/tools/maskedit.c:534
+#: modules/tools/maskedit.c:540
 msgid "_Invert"
 msgstr "_Inverze"
 
-#: modules/tools/maskedit.c:557
+#: modules/tools/maskedit.c:563
 msgid "Fill _Voids"
 msgstr "Vyplnit _Díry"
 
-#: modules/tools/maskedit.c:571
+#: modules/tools/maskedit.c:577
 msgid "Grow/Shrink"
 msgstr "Rozšíření/zúžení"
 
-#: modules/tools/maskedit.c:580
+#: modules/tools/maskedit.c:586
 msgid "_Grow"
 msgstr "Rozšíři_t"
 
-#: modules/tools/maskedit.c:588
+#: modules/tools/maskedit.c:594
 msgid "Shrin_k"
 msgstr "_Zúžit"
 
-#: modules/tools/maskedit.c:603
+#: modules/tools/maskedit.c:609
 msgid "_Amount:"
 msgstr "_Míra:"
 
-#: modules/tools/maskedit.c:610
+#: modules/tools/maskedit.c:616
 msgid "Shrink from _border"
 msgstr "Zužovat i od _krajů"
 
-#: modules/tools/maskedit.c:621
+#: modules/tools/maskedit.c:627
 msgid "_Prevent grain merging by growing"
 msgstr "_Zabránit"
 
@@ -10258,6 +10295,27 @@ msgstr ""
 "θ sklonu:            %s\n"
 "φ sklonu:            %s\n"
 
+#~ msgid "_Filtered image"
+#~ msgstr "F_iltrovaný obraz"
+
+#~ msgid "Filtered Image"
+#~ msgstr "Filtrovaný obraz"
+
+#~ msgid "Draw a new inclusive circle marker"
+#~ msgstr "Přidat novou kruhovou oblast"
+
+#~ msgid "Draw a new inclusive rectangle marker"
+#~ msgstr "Přidat novou obdélníkovou oblast"
+
+#~ msgid "Draw a new exclusive circle marker"
+#~ msgstr "Odebrat kruhovou oblast"
+
+#~ msgid "Draw a new exclusive rectangle marker"
+#~ msgstr "Odebrat obdélníkovou oblast"
+
+#~ msgid "Removes the entire filter mask"
+#~ msgstr "Odstranit celou masku"
+
 #~ msgid "Ra:"
 #~ msgstr "Ra:"
 
@@ -10306,10 +10364,6 @@ msgstr ""
 
 #~ msgid "Export"
 #~ msgstr "Export"
-
-#~ msgid ""
-#~ "The number of spectra coordinates does not match the number of spectra."
-#~ msgstr "Počet souřadnic spekter nesouhlasí s počtem spekter."
 
 #~ msgid "Constant current tunnel spectroscopy (CITS) is not supported."
 #~ msgstr ""
