@@ -82,14 +82,14 @@ AM_CPPFLAGS = -I$(top_srcdir) -DG_LOG_DOMAIN=\"GwyProcess\"
 # Any iface change    C++: 0:   A
 # Adding ifaces       C:   R:   A++
 # Changing ifaces     C:   R:   0
-libversion = -version-info 12:0:12
+libversion = -version-info 12:1:12
 #libversion = -release @LIBRARY_RELEASE@
 libgwyprocess2_la_LDFLAGS = @BASIC_LIBS@ @FFTW3_LIBS@ -export-dynamic $(no_undefined) $(export_symbols) $(libversion)
 libgwyprocess2_la_LIBADD = $(libgwyprocess_libadd)
 
 libgwyprocess2_la_SOURCES = \
 	arithmetic.c \
-        natural.c \
+	natural.c \
 	cdline.c \
 	correct.c \
 	correlation.c \
@@ -101,8 +101,8 @@ libgwyprocess2_la_SOURCES = \
 	filters.c \
 	fractals.c \
 	grains.c \
-        gwycaldata.c \
-        gwycalibration.c \
+	gwycaldata.c \
+	gwycalibration.c \
 	gwygrainvalue.c \
 	gwyprocess.c \
 	gwyprocessenums.c \
