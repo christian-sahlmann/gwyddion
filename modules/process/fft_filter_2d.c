@@ -395,7 +395,7 @@ run_dialog(ControlsType *controls)
         },
         {
             PREV_FILTERED,
-            N_("_Filtered image"),
+            N_("Fi_ltered image"),
         },
         {
             PREV_DIFF,
@@ -410,7 +410,7 @@ run_dialog(ControlsType *controls)
     const out_modes[] = {
         {
             OUTPUT_IMAGE,
-            N_("Fi_ltered i_mage"),
+            N_("Filtered i_mage"),
         },
         {
             OUTPUT_DIFF,
