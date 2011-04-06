@@ -657,7 +657,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports NT-MDT data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.14",
+    "0.15",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -1713,10 +1713,10 @@ extract_mda_data(MDTMDAFrame * dataframe)
 {
     GwyDataField *dfield;
     gdouble *data, *end_data;
-    gdouble xreal, yreal, zscale;
+    gdouble xreal, yreal, zscale, zoffset;
     gint power10xy, power10z;
     GwySIUnit *siunitxy, *siunitz;
-    gint total;
+    gint  nx,ny,total;
     const guchar *p;
     const gchar *cunit;
     gchar *unit;
@@ -1751,16 +1751,15 @@ extract_mda_data(MDTMDAFrame * dataframe)
     }
     gwy_debug("z unit power %d", power10xy);
 
-    xreal = pow10(power10xy) * xAxis->scale;
-    yreal = pow10(power10xy) * yAxis->scale;
+    nx    = xAxis->maxIndex - xAxis->minIndex + 1;
+    ny    = yAxis->maxIndex - yAxis->minIndex + 1;	
+    xreal = pow10(power10xy) * xAxis->scale * (nx - 1);
+    yreal = pow10(power10xy) * yAxis->scale * (ny - 1);
     zscale = pow10(power10z) * zAxis->scale;
-
-    dfield = gwy_data_field_new(xAxis->maxIndex - xAxis->minIndex + 1,
-                                yAxis->maxIndex - yAxis->minIndex + 1,
-                                xreal, yreal, FALSE);
-    total
-        = (xAxis->maxIndex - xAxis->minIndex + 1) * (yAxis->maxIndex
-                                                 - yAxis->minIndex + 1);
+    zoffset = pow10(power10z) * zAxis->bias;
+	
+    dfield = gwy_data_field_new(nx,ny, xreal, yreal, FALSE);
+    total = nx * ny;
     gwy_data_field_set_si_unit_xy(dfield, siunitxy);
     g_object_unref(siunitxy);
     gwy_data_field_set_si_unit_z(dfield, siunitz);
@@ -1777,7 +1776,7 @@ extract_mda_data(MDTMDAFrame * dataframe)
             const gchar *tp = p;
 
             while (data < end_data)
-                *(data++) = zscale * (*(tp++));
+                *(data++) = zoffset + zscale * (*(tp++));
         }
         break;
 
@@ -1786,7 +1785,7 @@ extract_mda_data(MDTMDAFrame * dataframe)
             const guchar *tp = (const guchar *)p;
 
             while (data < end_data)
-                *(data++) = zscale * (*(tp++));
+                *(data++) = zoffset + zscale * (*(tp++));
         }
         break;
 
@@ -1795,7 +1794,7 @@ extract_mda_data(MDTMDAFrame * dataframe)
             const gint16 *tp = (const gint16 *)p;
 
             while (data < end_data) {
-                *(data++) = zscale * GINT16_FROM_LE(*tp);
+                *(data++) = zoffset + zscale * GINT16_FROM_LE(*tp);
                 tp++;
             }
         }
@@ -1806,7 +1805,7 @@ extract_mda_data(MDTMDAFrame * dataframe)
             const guint16 *tp = (const guint16 *)p;
 
             while (data < end_data) {
-                *(data++) = zscale * GUINT16_FROM_LE(*tp);
+                *(data++) = zoffset + zscale * GUINT16_FROM_LE(*tp);
                 tp++;
             }
         }
@@ -1817,7 +1816,7 @@ extract_mda_data(MDTMDAFrame * dataframe)
             const gint32 *tp = (const gint32 *)p;
 
             while (data < end_data) {
-                *(data++) = zscale * GINT32_FROM_LE(*tp);
+                *(data++) = zoffset + zscale * GINT32_FROM_LE(*tp);
                 tp++;
             }
         }
@@ -1828,7 +1827,7 @@ extract_mda_data(MDTMDAFrame * dataframe)
             const guint32 *tp = (const guint32 *)p;
 
             while (data < end_data) {
-                *(data++) = zscale * GUINT32_FROM_LE(*tp);
+                *(data++) = zoffset + zscale * GUINT32_FROM_LE(*tp);
                 tp++;
             }
         }
@@ -1839,7 +1838,7 @@ extract_mda_data(MDTMDAFrame * dataframe)
             const gint64 *tp = (const gint64 *)p;
 
             while (data < end_data) {
-                *(data++) = zscale * (gint64)GINT64_FROM_LE(*tp);
+                *(data++) = zoffset + zscale * (gint64)GINT64_FROM_LE(*tp);
                 tp++;
             }
         }
@@ -1850,7 +1849,7 @@ extract_mda_data(MDTMDAFrame * dataframe)
             const guint64 *tp = (const guint64 *)p;
 
             while (data < end_data) {
-                *(data++) = zscale * GUINT64_FROM_LE(*tp);
+                *(data++) = zoffset + zscale * GUINT64_FROM_LE(*tp);
                 tp++;
             }
         }
@@ -1858,12 +1857,12 @@ extract_mda_data(MDTMDAFrame * dataframe)
 
         case MDA_DATA_FLOAT32:
         while (data < end_data)
-            *(data++) = zscale * gwy_get_gfloat_le(&p);
+            *(data++) = zoffset + zscale * gwy_get_gfloat_le(&p);
         break;
 
         case MDA_DATA_FLOAT64:
         while (data < end_data)
-            *(data++) = zscale * gwy_get_gdouble_le(&p);
+            *(data++) = zoffset + zscale * gwy_get_gdouble_le(&p);
         break;
 
         default:
@@ -2361,7 +2360,7 @@ static GwyDataField * extract_raman_image (MDTMDAFrame *dataframe,
 
     /* FIXME: real size is wrong */
     dfield = gwy_data_field_new(xsize, ysize,
-                                xreal*xsize, yreal*ysize, FALSE);
+                                xreal*(xsize - 1), yreal*(ysize - 1), FALSE);
 
     gwy_data_field_set_si_unit_xy(dfield, siunitxy);
     g_object_unref(siunitxy);
