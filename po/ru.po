@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2011-03-30 03:58+0200\n"
-"PO-Revision-Date: 2011-03-30 10:53+0300\n"
+"POT-Creation-Date: 2011-04-07 03:58+0200\n"
+"PO-Revision-Date: 2011-04-07 07:30+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "Language: \n"
@@ -1799,7 +1799,7 @@ msgstr "Повторить"
 msgid "Re-show"
 msgstr "Перепоказать"
 
-#: app/menu.c:905
+#: app/menu.c:927
 msgid "_Document history"
 msgstr "_Предыдущие документы"
 
@@ -3032,7 +3032,7 @@ msgid "Unique id record is too short."
 msgstr "Уникальный идентификатор слишком короткий."
 
 #: modules/file/miffile.c:680
-#: modules/file/mulfile.c:335
+#: modules/file/mulfile.c:294
 msgid "Image data are outside the file."
 msgstr "Данные изображения не помещаются в файл."
 
@@ -3048,21 +3048,21 @@ msgstr "Файлы данных PicoView (.mi)"
 msgid "Spectroscopy Graph"
 msgstr "График спектроскопии"
 
-#: modules/file/mulfile.c:149
+#: modules/file/mulfile.c:150
 msgid "Imports Aarhus MUL files."
 msgstr "Импортирует файлы Aarhus MUL"
 
-#: modules/file/mulfile.c:162
+#: modules/file/mulfile.c:163
 msgid "Aarhus NUL files (.mul)"
 msgstr "Файлы Aarhus MUL (.mul)"
 
-#: modules/file/mulfile.c:326
+#: modules/file/mulfile.c:285
 #, c-format
 msgid "Image number in the label %u does not match the number %u in the index."
 msgstr "Номер изображения в названии %u не соответствует числу %u в оглавлении."
 
-#: modules/file/mulfile.c:384
-#: modules/file/mulfile.c:393
+#: modules/file/mulfile.c:344
+#: modules/file/mulfile.c:353
 #, c-format
 msgid "Label string length %u is larger than 20."
 msgstr "Длина строки названия %u больше, чем 20."
@@ -3315,7 +3315,7 @@ msgstr "Достигнут конец файла в данных фрейма #%
 msgid "Frame #%u is too short for scanned data header."
 msgstr "Фрейм #%u слишком короткий чтобы быть заголовком сканированных данных."
 
-#: modules/file/nt-mdt.c:2374
+#: modules/file/nt-mdt.c:2373
 msgid "Raman Image"
 msgstr "Изображение комбинационного рассеяния"
 
@@ -4182,7 +4182,7 @@ msgstr "Е_диницы Y:"
 
 #: modules/file/rawgraph.c:432
 msgid "Only files with two columns can be imported."
-msgstr "Могут быть импортированы файлы с двумя столбцами данных."
+msgstr "Могут быть импортированы только файлы с двумя столбцами данных."
 
 #: modules/file/rawgraph.c:548
 msgid "Curve"
@@ -6751,15 +6751,15 @@ msgid "_FFT mask editor"
 msgstr "Редактор маски _БПФ"
 
 #: modules/process/fft_filter_2d.c:398
-msgid "_Filtered image"
-msgstr "От_фильтрованное изображение"
+msgid "Fi_ltered image"
+msgstr "Отфи_льтрованное изображение"
 
 #: modules/process/fft_filter_2d.c:402
 msgid "Image _difference"
 msgstr "_Разница изображений"
 
 #: modules/process/fft_filter_2d.c:413
-msgid "Fi_ltered i_mage"
+msgid "Filtered i_mage"
 msgstr "От_фильтрованное изображение"
 
 #: modules/process/fft_filter_2d.c:417
@@ -6779,12 +6779,12 @@ msgid "_Undo"
 msgstr "_Отменить"
 
 #: modules/process/fft_filter_2d.c:532
-#: modules/tools/maskedit.c:542
+#: modules/tools/maskedit.c:548
 msgid "_Remove"
 msgstr "_Удалить"
 
 #: modules/process/fft_filter_2d.c:540
-#: modules/tools/maskedit.c:550
+#: modules/tools/maskedit.c:556
 msgid "_Fill"
 msgstr "_Заполнить"
 
@@ -9620,123 +9620,123 @@ msgstr "<b>Параметры</b>"
 msgid "_Instant updates"
 msgstr "_Обновлять сразу"
 
-#: modules/tools/maskedit.c:157
+#: modules/tools/maskedit.c:159
 msgid "Mask editor tool, allows to interactively add or remove parts of mask."
 msgstr "Редактор маски, позволяет интерактивно добавлять и удалять части маски."
 
-#: modules/tools/maskedit.c:211
+#: modules/tools/maskedit.c:213
 msgid "Mask Editor"
 msgstr "Редактор маски"
 
-#: modules/tools/maskedit.c:212
+#: modules/tools/maskedit.c:214
 msgid "Edit mask"
 msgstr "Редактировать маску"
 
-#: modules/tools/maskedit.c:321
+#: modules/tools/maskedit.c:326
 msgid "Set mask to selection"
 msgstr "Установить маску равной выделенному"
 
-#: modules/tools/maskedit.c:326
+#: modules/tools/maskedit.c:331
 msgid "Add selection to mask"
 msgstr "Добавить выделенное к маске"
 
-#: modules/tools/maskedit.c:331
+#: modules/tools/maskedit.c:336
 msgid "Subtract selection from mask"
 msgstr "Вычесть выделенное из маски"
 
-#: modules/tools/maskedit.c:336
+#: modules/tools/maskedit.c:341
 msgid "Intersect selection with mask"
 msgstr "Пересечение выделенного и маски"
 
-#: modules/tools/maskedit.c:343
+#: modules/tools/maskedit.c:348
 msgid "Rectangular shapes"
 msgstr "Прямоугольные формы"
 
-#: modules/tools/maskedit.c:348
+#: modules/tools/maskedit.c:353
 msgid "Elliptic shapes"
 msgstr "Эллиптические формы"
 
-#: modules/tools/maskedit.c:353
+#: modules/tools/maskedit.c:358
 msgid "Thin lines"
 msgstr "Тонкие линии"
 
-#: modules/tools/maskedit.c:360
+#: modules/tools/maskedit.c:365
 msgid "Freehand mask drawing"
 msgstr "Свободное рисование маски"
 
-#: modules/tools/maskedit.c:365
+#: modules/tools/maskedit.c:370
 msgid "Freehand mask erasing"
 msgstr "Свободное стирание маски"
 
-#: modules/tools/maskedit.c:370
+#: modules/tools/maskedit.c:375
 msgid "Fill continous empty areas with mask"
 msgstr "Заполнение непрерывных пустых областей маской"
 
-#: modules/tools/maskedit.c:375
+#: modules/tools/maskedit.c:380
 msgid "Erase continous parts of mask"
 msgstr "Удалить непрерывные части маски"
 
-#: modules/tools/maskedit.c:402
+#: modules/tools/maskedit.c:408
 msgid "Editor"
 msgstr "Редактор"
 
-#: modules/tools/maskedit.c:407
+#: modules/tools/maskedit.c:413
 msgid "_Shapes"
 msgstr "_Фигуры"
 
-#: modules/tools/maskedit.c:417
+#: modules/tools/maskedit.c:423
 msgid "Mode:"
 msgstr "Режим:"
 
-#: modules/tools/maskedit.c:446
+#: modules/tools/maskedit.c:452
 msgid "Shape:"
 msgstr "Форма:"
 
-#: modules/tools/maskedit.c:477
+#: modules/tools/maskedit.c:483
 msgid "_Drawing Tools"
 msgstr "И_нструменты рисования"
 
-#: modules/tools/maskedit.c:487
+#: modules/tools/maskedit.c:493
 msgid "Tool:"
 msgstr "Инструмент:"
 
-#: modules/tools/maskedit.c:518
+#: modules/tools/maskedit.c:524
 msgid "_Radius:"
 msgstr "Ра_диус:"
 
-#: modules/tools/maskedit.c:526
+#: modules/tools/maskedit.c:532
 msgid "Actions"
 msgstr "Действия"
 
-#: modules/tools/maskedit.c:534
+#: modules/tools/maskedit.c:540
 msgid "_Invert"
 msgstr "_Инвертировать"
 
-#: modules/tools/maskedit.c:557
+#: modules/tools/maskedit.c:563
 msgid "Fill _Voids"
 msgstr "З_аполнить Пустоты"
 
-#: modules/tools/maskedit.c:571
+#: modules/tools/maskedit.c:577
 msgid "Grow/Shrink"
 msgstr "Растянуть/Ужать"
 
-#: modules/tools/maskedit.c:580
+#: modules/tools/maskedit.c:586
 msgid "_Grow"
 msgstr "_Растянуть"
 
-#: modules/tools/maskedit.c:588
+#: modules/tools/maskedit.c:594
 msgid "Shrin_k"
 msgstr "_Ужать"
 
-#: modules/tools/maskedit.c:603
+#: modules/tools/maskedit.c:609
 msgid "_Amount:"
 msgstr "_Количество:"
 
-#: modules/tools/maskedit.c:610
+#: modules/tools/maskedit.c:616
 msgid "Shrink from _border"
 msgstr "Ужать от _границы"
 
-#: modules/tools/maskedit.c:621
+#: modules/tools/maskedit.c:627
 msgid "_Prevent grain merging by growing"
 msgstr "_Предотвращать слияние зёрен при растяжении"
 
@@ -10336,6 +10336,9 @@ msgstr ""
 "Площадь проекции:    %s\n"
 "Наклон θ:     %s\n"
 "Наклон φ:     %s\n"
+
+#~ msgid "_Filtered image"
+#~ msgstr "От_фильтрованное изображение"
 
 #~ msgid "Filtered Image"
 #~ msgstr "Отфильтрованное изображение"
