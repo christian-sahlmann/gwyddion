@@ -979,7 +979,7 @@ make_fd_spectrum(gint res, gdouble xy_step, const gint16 *d16, gboolean flip)
         }
     }
     gwy_data_line_multiply(dline, 1.0/z0);
-    gwy_data_line_set_offset(dline, xy_step * 
+    gwy_data_line_set_offset(dline, xy_step *
                          GINT16_FROM_LE(d16[flip ? 2*(res-1) + 1 : 1]));
 
     return dline;
@@ -1144,8 +1144,10 @@ make_iz_spectrum(gint res, gdouble xy_step,
     gdouble *data;
     gint j;
     gint16 v;
+    gdouble xstep;
 
-    dline = gwy_data_line_new(res, xy_step*res, FALSE);
+    xstep = GINT16_FROM_LE(d16[2*res-1])-GINT16_FROM_LE(d16[1]);
+    dline = gwy_data_line_new(res, xy_step*xstep, FALSE);
     siunitx = gwy_si_unit_new("m");
     siunity = gwy_si_unit_new("A");
     gwy_data_line_set_si_unit_x(dline, siunitx);
@@ -1154,8 +1156,8 @@ make_iz_spectrum(gint res, gdouble xy_step,
     g_object_unref(siunity);
 
     data = gwy_data_line_get_data(dline);
-    /* XXX: The odd coordinates are abscissas.  We only use the zeroth for
-     * setting the offset.  If they are not equidistant, though luck... */
+    /* XXX: The odd coordinates are abscissas.  We use the zeroth and last 
+     * for x offset and scale. If they are not equidistant, though luck... */
     for (j = 0; j < res; j++) {
         v = d16[2*j];
         data[j] = q*GINT16_FROM_LE(v);
