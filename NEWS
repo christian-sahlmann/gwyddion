@@ -1,4 +1,4 @@
-2.24 (0000-00-00)
+2.24 (2011-04-08)
 Application:
 - Translations updated: Czech, French, German, Italian, Russian.
 
@@ -13,6 +13,7 @@ Modules:
 - MUL file (new): Imports Aarhus MUL data files.
 - Spectro tool: It is possible to average the selected spectra.
 - Nanoeducator: Loading of multiple spectra per point was corrected.
+- Nanoeducator: Z-range of I(z) spectroscopy was corrected.
 - OPD file: Support for v5.0 data was added.
 - Pixmap: False colour scale is drawn correctly if the z-range is inverted.
 - Attocube: File detection is more liberal, accepting anything starting
