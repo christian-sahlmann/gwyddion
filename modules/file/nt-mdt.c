@@ -1752,12 +1752,12 @@ extract_mda_data(MDTMDAFrame * dataframe)
     gwy_debug("z unit power %d", power10xy);
 
     nx    = xAxis->maxIndex - xAxis->minIndex + 1;
-    ny    = yAxis->maxIndex - yAxis->minIndex + 1;	
+    ny    = yAxis->maxIndex - yAxis->minIndex + 1;
     xreal = pow10(power10xy) * xAxis->scale * (nx - 1);
     yreal = pow10(power10xy) * yAxis->scale * (ny - 1);
     zscale = pow10(power10z) * zAxis->scale;
     zoffset = pow10(power10z) * zAxis->bias;
-	
+
     dfield = gwy_data_field_new(nx,ny, xreal, yreal, FALSE);
     total = nx * ny;
     gwy_data_field_set_si_unit_xy(dfield, siunitxy);
@@ -1880,6 +1880,8 @@ extract_mda_spectrum(MDTMDAFrame *dataframe, guint number)
     GwyGraphCurveModel *spectra;
     GwyGraphModel *gmodel;
     gdouble xscale, yscale;
+    gsize xskip = 0;
+    gsize yskip = 0;
     gint power10x, power10y;
     GwySIUnit *siunitx, *siunity;
     gdouble *xdata, *ydata;
@@ -1956,177 +1958,258 @@ extract_mda_spectrum(MDTMDAFrame *dataframe, guint number)
 
     p = (gchar*)dataframe->image;
 
-    for (i = 0; i < res; i++) {
-        if (dataframe->nDimensions) { /* old variant */
+    switch (yAxis->dataType) {
+        case MDA_DATA_INT8:
+        case MDA_DATA_UINT8:
+            yskip = 1;
+        break;
+
+        case MDA_DATA_INT16:
+        case MDA_DATA_UINT16:
+            yskip = 2;
+        break;
+
+        case MDA_DATA_INT32:
+        case MDA_DATA_UINT32:
+        case MDA_DATA_FLOAT32:
+            yskip = 4;
+        break;
+
+        case MDA_DATA_INT64:
+        case MDA_DATA_UINT64:
+        case MDA_DATA_FLOAT64:
+            yskip = 8;
+        break;
+
+        default:
+            g_assert_not_reached();
+        break;
+    }
+
+    if (dataframe->nDimensions) { /* old variant */
+        xskip = 0;
+        for (i = 0; i < res; i++)
             xdata[i] = i; /* in xml chunk xAxis->comment instead */
-        }
-        else { /* new variant */
-            switch (xAxis->dataType) {
-                case MDA_DATA_INT8:
-                {
-                    xdata[i] = xscale * (gdouble)(*p);
-                    p++;
-                }
-                break;
-
-                case MDA_DATA_UINT8:
-                {
-                    const guchar *tp = (const guchar *)p;
-
-                    xdata[i] = xscale * (*tp);
-                    p += sizeof(guchar)/sizeof(gchar);
-                }
-                break;
-
-                case MDA_DATA_INT16:
-                {
-                    const gint16 *tp = (const gint16 *)p;
-
-                    xdata[i] = xscale * GINT16_FROM_LE(*tp);
-                    p += sizeof(gint16)/sizeof(gchar);
-                }
-                break;
-
-                case MDA_DATA_UINT16:
-                {
-                    const guint16 *tp = (const guint16 *)p;
-
-                    xdata[i] = xscale * GUINT16_FROM_LE(*tp);
-                    p += sizeof(guint16)/sizeof(gchar);
-                }
-                break;
-
-                case MDA_DATA_INT32:
-                {
-                    const gint32 *tp = (const gint32 *)p;
-
-                    xdata[i] = xscale * GINT32_FROM_LE(*tp);
-                    p += sizeof(gint32)/sizeof(gchar);
-                }
-                break;
-
-                case MDA_DATA_UINT32:
-                {
-                    const guint32 *tp = (const guint32 *)p;
-                    xdata[i] = xscale * GUINT32_FROM_LE(*tp);
-                    p += sizeof(guint32)/sizeof(gchar);
-                }
-                break;
-
-                case MDA_DATA_INT64:
-                {
-                    const gint64 *tp = (const gint64 *)p;
-
-                    xdata[i] = xscale * (gint64)GINT64_FROM_LE(*tp);
-                    p += sizeof(gint64)/sizeof(gchar);
-                }
-                break;
-
-                case MDA_DATA_UINT64:
-                {
-                    const guint64 *tp = (const guint64 *)p;
-                    xdata[i] = xscale * GUINT64_FROM_LE(*tp);
-                    p += sizeof(guint64)/sizeof(gchar);
-                }
-                break;
-
-                case MDA_DATA_FLOAT32:
-                xdata[i] = xscale * gwy_get_gfloat_le(&p);
-                break;
-
-                case MDA_DATA_FLOAT64:
-                xdata[i] = xscale * gwy_get_gdouble_le(&p);
-                break;
-
-                default:
-                g_assert_not_reached();
-                break;
-            }
-        } /* end of if (dataframe->nDimensions) and xAxis */
-
-        switch (yAxis->dataType) {
+    }
+    else { /* new variant */
+        switch (xAxis->dataType) {
             case MDA_DATA_INT8:
             {
-                ydata[i] = yscale * (gdouble)(*p);
-                p++;
+                xskip = 1;
+
+                for (i = 0; i < res; i++) {
+                    xdata[i] = xscale * (gdouble)(*p);
+                    p += 1 + yskip;
+                }
             }
             break;
 
             case MDA_DATA_UINT8:
             {
-                const guchar *tp = (const guchar *)p;
+                xskip = 1;
 
-                ydata[i] = yscale * (*tp);
-                p += sizeof(guchar);
+                for (i = 0; i < res; i++) {
+                    xdata[i] = xscale * (*(const guchar *)p);
+                    p += 1 + yskip;
+                }
             }
             break;
 
             case MDA_DATA_INT16:
             {
-                const gint16 *tp = (const gint16 *)p;
+                xskip = 2;
 
-                ydata[i] = yscale * GINT16_FROM_LE(*tp);
-                p += sizeof(gint16);
+                for (i = 0; i < res; i++) {
+                    xdata[i] = xscale *
+                               GINT16_FROM_LE(*(const gint16 *)p);
+                    p += 2 + yskip;
+                }
             }
             break;
 
             case MDA_DATA_UINT16:
             {
-                const guint16 *tp = (const guint16 *)p;
+                xskip = 2;
 
-                ydata[i] = yscale * GUINT16_FROM_LE(*tp);
-                p += sizeof(guint16);
+                for (i = 0; i < res; i++) {
+                    xdata[i] = xscale *
+                               GUINT16_FROM_LE(*(const guint16 *)p);
+                    p += 2 + yskip;
+                }
             }
             break;
 
             case MDA_DATA_INT32:
             {
-                const gint32 *tp = (const gint32 *)p;
+                xskip = 4;
 
-                ydata[i] = yscale * GINT32_FROM_LE(*tp);
-                p += sizeof(gint32);
+                for (i = 0; i < res; i++) {
+                    xdata[i] = xscale * 
+							   GINT32_FROM_LE(*(const gint32 *)p);
+                    p += 4 + yskip;
+                }
             }
             break;
 
             case MDA_DATA_UINT32:
             {
-                const guint32 *tp = (const guint32 *)p;
-                ydata[i] = yscale * GUINT32_FROM_LE(*tp);
-                p += sizeof(guint32);
+                xskip = 4;
+
+                for (i = 0; i < res; i++) {
+                    xdata[i] = xscale * 
+                               GUINT32_FROM_LE(*(const guint32 *)p);
+                    p += 4 + yskip;
+                }
             }
             break;
 
             case MDA_DATA_INT64:
             {
-                const gint64 *tp = (const gint64 *)p;
+                xskip = 8;
 
-                ydata[i] = yscale * (gint64)GINT64_FROM_LE(*tp);
-                p += sizeof(gint64);
+                for (i = 0; i < res; i++) {
+                    xdata[i] = xscale * 
+							   (gint64)GINT64_FROM_LE(*(const gint64 *)p);
+                    p += 8 + yskip;
+                }
             }
             break;
 
             case MDA_DATA_UINT64:
             {
-                const guint64 *tp = (const guint64 *)p;
-                ydata[i] = yscale * GUINT64_FROM_LE(*tp);
-                p += sizeof(guint64);
+                xskip = 8;
+
+                for (i = 0; i < res; i++) {
+                    xdata[i] = xscale * 
+							   GUINT64_FROM_LE(*(const guint64 *)p);
+                    p += 8 + yskip;
+                }
             }
             break;
 
             case MDA_DATA_FLOAT32:
-            ydata[i] = yscale * gwy_get_gfloat_le(&p);
+            {
+                xskip = 4;
+
+                for (i = 0; i < res; i++) {
+                    xdata[i] = xscale * gwy_get_gfloat_le(&p);
+                    p += yskip;
+                }
+            }
             break;
 
             case MDA_DATA_FLOAT64:
-            ydata[i] = yscale * gwy_get_gdouble_le(&p);
+            {
+                xskip = 8;
+
+                for (i = 0; i < res; i++) {
+                    xdata[i] = xscale * gwy_get_gdouble_le(&p);
+                    p += yskip;
+                }
+            }
             break;
 
             default:
-            g_assert_not_reached();
+                g_assert_not_reached();
             break;
         }
+    } /* end of if (dataframe->nDimensions) and xAxis */
 
+    p = (gchar*)dataframe->image;
+
+    switch (yAxis->dataType) {
+        case MDA_DATA_INT8:
+            for (i = 0; i < res; i++) {
+                p += xskip;
+                ydata[i] = yscale * (gdouble)(*p);
+                p++;
+            }
+        break;
+
+        case MDA_DATA_UINT8:
+            for (i = 0; i < res; i++) {
+                p += xskip;
+                ydata[i] = yscale * (*(const guchar *)p);
+                p++;
+            }
+        break;
+
+        case MDA_DATA_INT16:
+            for (i = 0; i < res; i++) {
+                p += xskip;
+                ydata[i] = yscale * GINT16_FROM_LE(*(const gint16 *)p);
+                p += 2;
+            }
+        break;
+
+        case MDA_DATA_UINT16:
+        {
+            for (i = 0; i < res; i++) {
+                p += xskip;
+                ydata[i] = yscale * 
+						   GUINT16_FROM_LE(*(const guint16 *)p);
+                p += 2;
+            }
+        }
+        break;
+
+        case MDA_DATA_INT32:
+            for (i = 0; i < res; i++) {
+                p += xskip;
+                ydata[i] = yscale * GINT32_FROM_LE(*(const gint32 *)p);
+                p += 4;
+            }
+        break;
+
+        case MDA_DATA_UINT32:
+            for (i = 0; i < res; i++) {
+                p += xskip;
+                ydata[i] = yscale * GUINT32_FROM_LE(*(const guint32 *)p);
+                p += 4;
+            }
+        break;
+
+        case MDA_DATA_INT64:
+            for (i = 0; i < res; i++) {
+                p += xskip;
+                ydata[i] = yscale * 
+                           (gint64)GINT64_FROM_LE(*(const gint64 *)p);
+                p += 8;
+            }
+        break;
+
+        case MDA_DATA_UINT64:
+            for (i = 0; i < res; i++) {
+                p += xskip;
+                ydata[i] = yscale * 
+						   GUINT64_FROM_LE(*(const guint64 *)p);
+                p += 8;
+            }
+        break;
+
+        case MDA_DATA_FLOAT32:
+        {
+            for (i = 0; i < res; i++) {
+                p += xskip;
+                ydata[i] = yscale * gwy_get_gfloat_le(&p);
+            }
+        }
+        break;
+
+        case MDA_DATA_FLOAT64:
+        {
+            for (i = 0; i < res; i++) {
+                p += xskip;
+                ydata[i] = yscale * gwy_get_gdouble_le(&p);
+            }
+        }
+        break;
+
+        default:
+            g_assert_not_reached();
+        break;
     }
+
 
     /* parsing XML xAxis->comment to get xdata */
     if (dataframe->nDimensions) {
