@@ -2,6 +2,7 @@
 Application:
 - Translations updated: Czech, French, German, Italian, Russian.
 
+Libraries:
 - libprocess: gwy_data_line_new_alike(), gwy_data_line_duplicate() and
   gwy_data_line_clone() keep the offset.
 - libgwydgets: GwyColorAxis is drawn correctly if the z-range is inverted.
