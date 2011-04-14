@@ -207,7 +207,7 @@ gwy_dimensions_units_changed(GtkWidget *widget,
     gtk_box_pack_start(GTK_BOX(hbox), label, TRUE, TRUE, 0);
 
     entry = GTK_ENTRY(gtk_entry_new());
-    gtk_entry_set_text(entry, *unitstr);
+    gtk_entry_set_text(entry, *unitstr ? *unitstr : "");
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), GTK_WIDGET(entry));
     gtk_entry_set_activates_default(entry, TRUE);
     gtk_box_pack_start(GTK_BOX(hbox), GTK_WIDGET(entry), TRUE, TRUE, 0);
