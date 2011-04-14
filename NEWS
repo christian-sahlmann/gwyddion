@@ -1,3 +1,9 @@
+2.25 (0000-00-00)
+Modules:
+- All synthesis: Critical warning/crash upon clicking on Change units and the
+  current units were unset was fixed.
+
+
 2.24 (2011-04-08)
 Application:
 - Translations updated: Czech, French, German, Italian, Russian.
@@ -136,7 +142,7 @@ Modules:
   by a multiple of RMS now.
 - BCR: Z-axis scaling for non-topography floating point data was corrected.
 - GDEF: Vertically flipped data was corrected.
-- Color range tool: Critical warning/crashe when Fixed mode is set default
+- Color range tool: Critical warning/crash when Fixed mode is set default
   and the file is closed was fixed.
 - Plug-in proxy: Channel title read from dump files is retained now.
 - Grain distributions: The comment header option is remembered.
