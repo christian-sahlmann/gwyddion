@@ -474,8 +474,9 @@ nanoedu_load(const gchar *filename,
                                               Nanometer*q, scale*header.topo_ny,
                                               Nanometer*qx, Nanometer*qy,
                                               error);
-        else if (size - header.spec_offset
-            == 4 * params.n_spectra_lines * params.n_spectrum_points)
+        else if ((params.spectroscopy_type == 1)
+              || (size - header.spec_offset
+              == 4 * params.n_spectra_lines * params.n_spectrum_points))
             spectra = nanoedu_read_iz_spectra(buffer + header.point_offset,
                                               header.spec_offset - header.point_offset,
                                               buffer + header.spec_offset,
@@ -1156,7 +1157,7 @@ make_iz_spectrum(gint res, gdouble xy_step,
     g_object_unref(siunity);
 
     data = gwy_data_line_get_data(dline);
-    /* XXX: The odd coordinates are abscissas.  We use the zeroth and last 
+    /* XXX: The odd coordinates are abscissas.  We use the zeroth and last
      * for x offset and scale. If they are not equidistant, though luck... */
     for (j = 0; j < res; j++) {
         v = d16[2*j];
