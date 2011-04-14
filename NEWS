@@ -1,5 +1,6 @@
 2.25 (0000-00-00)
 Modules:
+- NT-MDT: Slowness of MDA spectra loading was corrected.
 - All synthesis: Critical warning/crash upon clicking on Change units and the
   current units were unset was fixed.
 
