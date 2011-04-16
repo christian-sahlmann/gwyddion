@@ -270,6 +270,7 @@ static GwySpectra*    nanoedu_read_iz_spectra(const guchar *pos_buffer,
                                               gdouble yreal,
                                               gdouble xscale,
                                               gdouble yscale,
+                                              gint sp_type,
                                               GError **error);
 static GwyContainer* nanoedu_read_meta       (const NanoeduFileHeader *header,
                                               const NanoeduParameterHeader *param);
@@ -485,6 +486,7 @@ nanoedu_load(const gchar *filename,
                                               params.n_spectrum_points,
                                               Nanometer*q, scale*header.topo_ny,
                                               Nanometer*qx, Nanometer*qy,
+                                              params.spectroscopy_type,
                                               error);
         else
             spectra = nanoedu_read_iv_spectra(buffer + header.point_offset,
@@ -1174,6 +1176,7 @@ nanoedu_read_iz_spectra(const guchar *pos_buffer, gsize pos_size,
                         gint nspectra, gint res,
                         gdouble xy_step, gdouble yreal,
                         gdouble xscale, gdouble yscale,
+                        gint sp_type,
                         GError **error)
 {
     gint i, j, n, pointstep;
@@ -1204,13 +1207,30 @@ nanoedu_read_iz_spectra(const guchar *pos_buffer, gsize pos_size,
         gwy_debug("IZ spec%d [%g,%g] %dpts", i, x, y, n);
 
         for(j = 0; j < n; j++) {
-            /* Only one direction */
-            dline = make_iz_spectrum(res, xy_step,
-                                     d16 + 2*(i*n+j)*res,
-                                     1e-12);
-            data = gwy_data_line_get_data(dline);
-            gwy_spectra_add_spectrum(spectra, dline, x, y);
-            g_object_unref(dline);
+            if (1 == sp_type) {
+                /* two directions in new format */
+                dline = make_iz_spectrum(res, xy_step,
+                                        d16 + 4*(i*n+j)*res,
+                                        1e-12);
+                data = gwy_data_line_get_data(dline);
+                gwy_spectra_add_spectrum(spectra, dline, x, y);
+                g_object_unref(dline);
+                dline = make_iz_spectrum(res, xy_step,
+                                         d16 + 4*(i*n+j)*res + 2*res,
+                                         1e-12);
+                data = gwy_data_line_get_data(dline);
+                gwy_spectra_add_spectrum(spectra, dline, x, y);
+                g_object_unref(dline);
+            }
+            else {
+                /* one direction */
+                dline = make_iz_spectrum(res, xy_step,
+                                        d16 + 2*(i*n+j)*res,
+                                        1e-12);
+                data = gwy_data_line_get_data(dline);
+                gwy_spectra_add_spectrum(spectra, dline, x, y);
+                g_object_unref(dline);
+            }
         }
     }
 
