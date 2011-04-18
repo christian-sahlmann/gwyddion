@@ -531,11 +531,8 @@ AC_DEFINE_UNQUOTED([REMOTE_BACKEND],$b,[Define to the remote control backend.])
 # setting CXXFLAGS, LIBS, etc. herself.
 GWY_WITH([kde4-thumbnailer],
          [kde4_thumbnailer],
-         [KDE4 thumbnail creator module])
-# Normalize
-if test "x$enable_kde4_thumbnailer" != xno; then
-  enable_kde4_thumbnailer=yes
-fi
+         [KDE4 thumbnail creator module],
+         [no])
 
 # Find kde4-config.
 AC_ARG_VAR([KDE4_CONFIG],[path to kde4-config utility])
