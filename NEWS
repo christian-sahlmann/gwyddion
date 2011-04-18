@@ -1,8 +1,12 @@
 2.25 (0000-00-00)
 Modules:
+- Dumb (new): Loads plug-in proxy's dumb dump files.
 - NT-MDT: Slowness of MDA spectra loading was corrected.
 - All synthesis: Critical warning/crash upon clicking on Change units and the
   current units were unset was fixed.
+
+Other:
+- The KDE4 thumbnailer is not built by default.
 
 
 2.24 (2011-04-08)
