@@ -17,6 +17,16 @@
   </refnamediv>
 
   <refsect1>
+    <title>Purpose</title>
+    <para>
+      The dumb dump file format is used for data exchange between plug-in proxy
+      and plug-ins.  It is <emphasis>not</emphasis> and never has been intended
+      for permantent data storage.  If you are looking for a simple file
+      format Gwyddion can read and write then you are looking for
+      <ulink url='http://gwyddion.net/documentation/user-guide-en/gsf.html'>GSF</ulink>.
+    </para>
+  </refsect1>
+  <refsect1>
     <title>Overall Structure</title>
     <para>
       The dump format consists of text lines, except for the actual data
