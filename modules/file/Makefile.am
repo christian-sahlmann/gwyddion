@@ -40,6 +40,7 @@ file_LTLIBRARIES = \
 	burleigh_exp.la \
 	createc.la \
 	dmefile.la \
+	dumbfile.la \
 	ecsfile.la \
 	ezdfile.la \
 	gdeffile.la \
@@ -151,6 +152,7 @@ burleigh_bii_la_SOURCES  = burleigh_bii.c
 burleigh_exp_la_SOURCES  = burleigh_exp.c
 createc_la_SOURCES       = createc.c
 dmefile_la_SOURCES       = dmefile.c
+dumbfile_la_SOURCES      = dumbfile.c
 ecsfile_la_SOURCES       = ecsfile.c
 ezdfile_la_SOURCES       = ezdfile.c
 gdeffile_la_SOURCES      = gdeffile.c

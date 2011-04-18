@@ -137,7 +137,7 @@ gsf_load(const gchar *filename,
 
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
         err_GET_FILE_CONTENTS(error, &err);
-        goto fail;
+        return NULL;
     }
 
     if (size < MAGIC_SIZE || memcmp(buffer, MAGIC, MAGIC_SIZE) != 0) {
