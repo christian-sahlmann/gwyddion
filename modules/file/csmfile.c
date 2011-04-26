@@ -318,11 +318,15 @@ store_meta(gpointer key,
 {
     GwyContainer *meta = (GwyContainer*)user_data;
 
-    // FIXME: The manufacturer is Chinese and probably uses some CJK encoding.
-    if (!g_utf8_validate(value, -1, NULL))
-        return;
-
-    gwy_container_set_string_by_name(meta, key, g_strdup(value));
+    if (g_utf8_validate(value, -1, NULL)) {
+        gwy_container_set_string_by_name(meta, key, g_strdup(value));
+    }
+    else {
+        // FIXME: Is this Windows-locale dependent?
+        gchar *s = g_convert(value, -1, "UTF-8", "GB2312", NULL, NULL, NULL);
+        if (s)
+            gwy_container_set_string_by_name(meta, key, s);
+    }
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
