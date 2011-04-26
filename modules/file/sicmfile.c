@@ -66,11 +66,11 @@ enum
 typedef struct _SICMImage
 {
                                         /* offset in file */
-                                        
+
     gint16  version; /* 50 */           /* 0 */
     gint16  xdim;                       /* 2 */
     gint16  ydim;                       /* 4 */
-    
+
     /* STM Param Record */
     gdouble fsdHVA;                     /* 6 */
     gdouble fsdDAC;                     /* 12 */
@@ -81,7 +81,7 @@ typedef struct _SICMImage
     gdouble piezoCalZ;                  /* 42 */
     gdouble gainZ;                      /* 48 */
     gint16  maxADC;                     /* 54 */
-    
+
     /* Scan Para Record */
     gdouble scanSize; /* 10^-8 m */     /* 56 */
     gint16  ctrlOS;                     /* 62 */
@@ -89,14 +89,14 @@ typedef struct _SICMImage
     gint16  ctrlPts;                    /* 66 */
     gint16  xDimension; /* == xdim */   /* 68 */
     gint16  yDimension; /* == ydim */   /* 70 */
-    
+
     /* Loop Record */
     gdouble loopGain;                   /* 72 */
     gdouble setPoint;   /* pA */        /* 78 */
     gdouble tipVoltage; /* mV (?) */    /* 84 */
     gdouble tipXPos;    /* 10^-8 m */   /* 90 */
     gdouble tipYPos;    /* 10^-8 m */   /* 96 */
-    
+
     /* Plane Param Record */
     gdouble A;                          /* 102 */
     gdouble B;                          /* 108 */
@@ -106,7 +106,7 @@ typedef struct _SICMImage
     gint16  min;                        /* 124 */
     gint16  max;                        /* 126 */
     gdouble scale;                      /* 128 */
-    
+
     /* Scan Setup Record */
     gdouble     scanAngle;              /* 134 */
     gdouble     xSlope;                 /* 140 */
@@ -115,18 +115,18 @@ typedef struct _SICMImage
     gboolean    polarity;               /* 153 */
     gboolean    scan1D;                 /* 154 */
     gboolean    startCenter;            /* 155 */
-    
+
     /* Time Record */
     guchar  date[79];                   /* 156 */
     guchar  time[79];                   /* 235 */
-    
+
     gint16  scanMode;                   /* 314 */
     guint16 version2; /* == version */  /* 316 */
     gdouble range;                      /* 318 */
     guchar  space2[7];                  /* 324 */
     guchar  comment[81];                /* 331 */
     guchar  title[81];                  /* 412 */
-    
+
     /* CITS Record */
     gint16  NCITS;                      /* 493 */
     gint16  settle;                     /* 495 */
@@ -139,9 +139,9 @@ typedef struct _SICMImage
     gdouble vStart;                     /* 597 */
     gdouble vEnd;                       /* 603 */
     gdouble threshold;                  /* 609 */
-    
+
     gint16  loopMode;                   /* 615 */
-    
+
     /* Hopping Mode Record */
     guint16 hopAmp;                     /* 617 */
     guint16 riseRate;                   /* 619 */
@@ -156,15 +156,15 @@ typedef struct _SICMImage
     guchar  resLevels[8];               /* 634 */
     guint16 resThresholds[8];           /* 642 */
     guchar  numResLevels;               /* 658 */
-    
+
     guchar  space[7];                   /* 659 */
-    
+
     /* Info Strings */
     guchar  modeStr[41];                /* 666 */
     guchar  loopStr[41];                /* 707 */
     guchar  sizeStr[41];                /* 748 */
     guchar  posStr[41];                 /* 789 */
-    
+
     /* Start of heightfield data */     /* 830 */
     /* xdim x ydim array of gint16 */
 }
@@ -229,7 +229,7 @@ static gint sicm_detect ( const GwyFileDetectInfo *fileinfo,
     {
         /* otherwise, we can perform a slightly more discriminating test: */
         const guchar* p = fileinfo->head;
-        
+
         if ( fileinfo->buffer_len > 6                   /* big enough to test */
              && gwy_get_gint16_le(&p) == SICM_VERSION   /* version has to serve as magic number */
              && (fileinfo->file_size == HEADER_SIZE     /* file size is consistent */
@@ -238,7 +238,7 @@ static gint sicm_detect ( const GwyFileDetectInfo *fileinfo,
                                         * gwy_get_gint16_le(&p) ) )
             return 100;
     }
-    
+
     return 0;
 }
 
@@ -276,9 +276,9 @@ static GwyContainer* sicm_load ( const gchar *filename,
     }
 
     p = buffer;
-    
+
     sicm.version = gwy_get_gint16_le(&p);
-    
+
     /* version and size tests as in sicm_detect above */
     if ( sicm.version != SICM_VERSION )
     {
@@ -286,7 +286,7 @@ static GwyContainer* sicm_load ( const gchar *filename,
         gwy_file_abandon_contents(buffer, size, NULL);
         return NULL;
     }
-    
+
     sicm.xdim = gwy_get_gint16_le(&p);
     sicm.ydim = gwy_get_gint16_le(&p);
 
@@ -308,14 +308,14 @@ static GwyContainer* sicm_load ( const gchar *filename,
     sicm.piezoCalZ = gwy_get_pascal_real_le(&p);
     sicm.gainZ = gwy_get_pascal_real_le(&p);
     sicm.maxADC = gwy_get_gint16_le(&p);
-    
+
     sicm.scanSize = gwy_get_pascal_real_le(&p);
     sicm.ctrlOS = gwy_get_gint16_le(&p);
     sicm.imagOS = gwy_get_gint16_le(&p);
     sicm.ctrlPts = gwy_get_gint16_le(&p);
     sicm.xDimension = gwy_get_gint16_le(&p);
     sicm.yDimension = gwy_get_gint16_le(&p);
-    
+
     sicm.loopGain = gwy_get_pascal_real_le(&p);
     sicm.setPoint = gwy_get_pascal_real_le(&p);
     sicm.tipVoltage = gwy_get_pascal_real_le(&p);
@@ -334,24 +334,24 @@ static GwyContainer* sicm_load ( const gchar *filename,
     sicm.scanAngle = gwy_get_pascal_real_le(&p);
     sicm.xSlope = gwy_get_pascal_real_le(&p);
     sicm.ySlope = gwy_get_pascal_real_le(&p);
-    
+
     sicm.fitting = gwy_get_gboolean8(&p);
     sicm.polarity = gwy_get_gboolean8(&p);
     sicm.scan1D = gwy_get_gboolean8(&p);
     sicm.startCenter = gwy_get_gboolean8(&p);
-    
+
     memcpy(sicm.date, p+1, 78);
     sicm.date[78] = 0;
     p += 79;
-    
+
     memcpy(sicm.time, p+1, 78);
     sicm.time[78] = 0;
     p += 79;
-    
+
     sicm.scanMode = gwy_get_gint16_le(&p);
     sicm.version2 = gwy_get_guint16_le(&p);
     sicm.range = gwy_get_pascal_real_le(&p);
-    
+
     memcpy(sicm.space2, p+1, 6);
     sicm.space2[6] = 0;
     p += 7;
@@ -361,14 +361,14 @@ static GwyContainer* sicm_load ( const gchar *filename,
     memcpy(sicm.title, p+1, 80);
     sicm.title[80] = 0;
     p += 81;
-    
+
     sicm.NCITS = gwy_get_gint16_le(&p);
     sicm.settle = gwy_get_gint16_le(&p);
     for ( i = 0; i < 8; ++i )
         sicm.vArray[i] = gwy_get_pascal_real_le(&p);
     for ( i = 0; i < 8; ++i )
         sicm.offArray[i] = gwy_get_pascal_real_le(&p);
-    
+
     sicm.noPts = gwy_get_gint16_le(&p);
     sicm.settle2 = gwy_get_gint16_le(&p);
     sicm.vStart = gwy_get_pascal_real_le(&p);
@@ -376,7 +376,7 @@ static GwyContainer* sicm_load ( const gchar *filename,
     sicm.threshold = gwy_get_pascal_real_le(&p);
 
     sicm.loopMode = gwy_get_gint16_le(&p);
-    
+
     sicm.hopAmp = gwy_get_guint16_le(&p);
     sicm.riseRate = gwy_get_guint16_le(&p);
     sicm.riseToFallTime = gwy_get_guint16_le(&p);
@@ -392,11 +392,11 @@ static GwyContainer* sicm_load ( const gchar *filename,
     for ( i = 0; i < 8; ++i )
         sicm.resThresholds[i] = gwy_get_guint16_le(&p);
     sicm.numResLevels = *p++;
-    
+
     memcpy(sicm.space, p+1, 6);
     sicm.space[6] = 0;
     p += 7;
-    
+
     memcpy(sicm.modeStr, p+1, 40);
     sicm.modeStr[40] = 0;
     p += 41;
@@ -417,7 +417,7 @@ static GwyContainer* sicm_load ( const gchar *filename,
                                  FALSE );
     data = gwy_data_field_get_data ( dfield );
     rawdata = (const gint16*) p;
-    
+
     /* scale factor depends on the channel data type, which we get from the mode string */
     switch ( sicm.modeStr[0] )
     {
@@ -427,13 +427,13 @@ static GwyContainer* sicm_load ( const gchar *filename,
                amplifier and delivered as a voltage using a mV/pA conversion rate
                that is not recorded in the file. all we can realistically do is
                present that voltage, so fall through to case below */
-        
+
         case 'A':
             /* ADC channels: scale to voltage range */
             scaling = sicm.fsdADC / 32767;
             unit_name = "V";
             break;
-        
+
         default:
             /* topography: scale to piezo range, which we don't explicitly
                know but can determine from sensitivity and voltage range
@@ -441,20 +441,20 @@ static GwyContainer* sicm_load ( const gchar *filename,
             scaling = sicm.piezoCalZ * sicm.fsdHVA * sicm.fsdDAC * 1e-6 / 32767.0;
             unit_name = "m";
     }
-    
-    
+
+
     /* image data is stored bottom-up, so reverse order of rows */
     for (i = 0; i < sicm.ydim; ++i)
     {
         int r1 = i * sicm.xdim;
         int r2 = (sicm.ydim - i - 1) * sicm.xdim;
-        
+
         for ( j = 0; j < sicm.xdim; ++j )
         {
             data[r1 + j] = scaling * GINT16_FROM_LE(rawdata[r2 + j]);
         }
     }
-    
+
     unit = gwy_si_unit_new("m");
     gwy_data_field_set_si_unit_xy(dfield, unit);
     g_object_unref(unit);
@@ -467,40 +467,40 @@ static GwyContainer* sicm_load ( const gchar *filename,
     container = gwy_container_new();
     gwy_container_set_object_by_name(container, "/0/data", dfield);
     gwy_container_set_string_by_name(container, "/0/data/title",
-                                     g_convert(sicm.modeStr, -1, "UTF-8", "ISO-8859-1", 0, 0, 0 ));
+                                     g_convert(sicm.modeStr, -1, "UTF-8", "ISO-8859-1", NULL, NULL, NULL));
     g_object_unref(dfield);
-    
+
     /* add pretty much all metadata from the header
        a bunch of this doesn't seem to be used meaningfully; we prefix
        probably useless or placeholder fields with a tilde so they sort
        to the bottom of the browser -- these should probably be omitted
        entirely when we're sure they're not needed */
     meta = gwy_container_new();
- 
+
     gwy_container_set_string_by_name(meta,
                                      "Title",
-                                     g_convert(sicm.title, -1, "UTF-8", "ISO-8859-1", 0, 0, 0 ));
+                                     g_convert(sicm.title, -1, "UTF-8", "ISO-8859-1", NULL, NULL, NULL));
     gwy_container_set_string_by_name(meta,
                                      "Comment",
-                                     g_convert(sicm.comment, -1, "UTF-8", "ISO-8859-1", 0, 0, 0 ));
+                                     g_convert(sicm.comment, -1, "UTF-8", "ISO-8859-1", NULL, NULL, NULL));
     gwy_container_set_string_by_name(meta,
                                      "Time Begun",
-                                     g_convert(sicm.date, -1, "UTF-8", "ISO-8859-1", 0, 0, 0 ));
+                                     g_convert(sicm.date, -1, "UTF-8", "ISO-8859-1", NULL, NULL, NULL));
     gwy_container_set_string_by_name(meta,
                                      "Time Completed",
-                                     g_convert(sicm.time, -1, "UTF-8", "ISO-8859-1", 0, 0, 0 ));
+                                     g_convert(sicm.time, -1, "UTF-8", "ISO-8859-1", NULL, NULL, NULL));
     gwy_container_set_string_by_name(meta,
                                      "Channel Mode",
-                                     g_convert(sicm.modeStr, -1, "UTF-8", "ISO-8859-1", 0, 0, 0 ));
+                                     g_convert(sicm.modeStr, -1, "UTF-8", "ISO-8859-1", NULL, NULL, NULL));
     gwy_container_set_string_by_name(meta,
                                      "Loop Info",
-                                     g_convert(sicm.loopStr, -1, "UTF-8", "ISO-8859-1", 0, 0, 0 ));
+                                     g_convert(sicm.loopStr, -1, "UTF-8", "ISO-8859-1", NULL, NULL, NULL));
     gwy_container_set_string_by_name(meta,
                                      "Scan Size",
-                                     g_convert(sicm.sizeStr, -1, "UTF-8", "ISO-8859-1", 0, 0, 0 ));
+                                     g_convert(sicm.sizeStr, -1, "UTF-8", "ISO-8859-1", NULL, NULL, NULL));
     gwy_container_set_string_by_name(meta,
                                      "Probe Position",
-                                     g_convert(sicm.posStr, -1, "UTF-8", "ISO-8859-1", 0, 0, 0 ));
+                                     g_convert(sicm.posStr, -1, "UTF-8", "ISO-8859-1", NULL, NULL, NULL));
 
     gwy_container_set_string_by_name(meta,
                                      "Head Voltage Amplifier FSD",
@@ -587,7 +587,7 @@ static GwyContainer* sicm_load ( const gchar *filename,
     gwy_container_set_string_by_name(meta,
                                      "~ Threshold",
                                      g_strdup_printf("%g", sicm.threshold));
-                                     
+
     gwy_container_set_string_by_name(meta,
                                      "ADC Max",
                                      g_strdup_printf("%d", sicm.maxADC));
@@ -643,7 +643,7 @@ static GwyContainer* sicm_load ( const gchar *filename,
     gwy_container_set_string_by_name(meta,
                                      "Start Center",
                                      g_strdup(sicm.startCenter ? "yes" : "no"));
-    
+
     /* Format has been updated to add fields that are only valid in hopping mode.
        We prefix these with an asterisk so they sort together.
        In earlier versions this part of the header was left empty,
@@ -692,11 +692,11 @@ static GwyContainer* sicm_load ( const gchar *filename,
     gwy_container_set_string_by_name(meta,
                                      "* Resolution Levels Used",
                                      g_strdup_printf("%d", sicm.numResLevels));
-                                     
+
     gwy_container_set_object_by_name(container, "/0/meta", meta);
     g_object_unref(meta);
 
-    
+
 
     gwy_file_abandon_contents(buffer, size, NULL);
 
