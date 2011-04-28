@@ -370,6 +370,7 @@ curvature_calculate(GwyDataField *dfield,
                        params + PARAM_PHI1, params + PARAM_PHI2,
                        params + PARAM_X0, params + PARAM_Y0, params + PARAM_A);
     /* Transform to physical values. */
+    /* FIXME: Why we have q*q here? */
     params[PARAM_R1] = 1.0/(q*q*params[PARAM_R1]);
     params[PARAM_R2] = 1.0/(q*q*params[PARAM_R2]);
     params[PARAM_X0] = params[PARAM_X0]/q + 0.5*xreal;

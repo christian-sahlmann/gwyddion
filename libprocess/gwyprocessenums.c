@@ -202,6 +202,7 @@ const GwyEnum*
 gwy_interpolation_type_get_enum(void)
 {
     static const GwyEnum entries[] = {
+        /* TRANSLATORS: Interpolation type (AKA nearest neighbour) */
         { N_("Round"),   GWY_INTERPOLATION_ROUND,   },
         { N_("Linear"),  GWY_INTERPOLATION_LINEAR,  },
         { N_("Key"),     GWY_INTERPOLATION_KEY,     },
@@ -240,17 +241,17 @@ const GwyEnum*
 gwy_windowing_type_get_enum(void)
 {
     static const GwyEnum entries[] = {
-        { N_("None"),       GWY_WINDOWING_NONE,      },
-        { N_("Hann"),       GWY_WINDOWING_HANN,      },
-        { N_("Hamming"),    GWY_WINDOWING_HAMMING,   },
-        { N_("Blackmann"),  GWY_WINDOWING_BLACKMANN, },
-        { N_("Lanzcos"),    GWY_WINDOWING_LANCZOS,   },
-        { N_("Welch"),      GWY_WINDOWING_WELCH,     },
-        { N_("Rect"),       GWY_WINDOWING_RECT,      },
-        { N_("Nuttall"),    GWY_WINDOWING_NUTTALL,   },
-        { N_("Flat-top"),   GWY_WINDOWING_FLAT_TOP,  },
-        { N_("Kaiser 2.5"), GWY_WINDOWING_KAISER25,  },
-        { NULL,             0,                       },
+        { N_("windowing|None"), GWY_WINDOWING_NONE,      },
+        { N_("Hann"),           GWY_WINDOWING_HANN,      },
+        { N_("Hamming"),        GWY_WINDOWING_HAMMING,   },
+        { N_("Blackmann"),      GWY_WINDOWING_BLACKMANN, },
+        { N_("Lanzcos"),        GWY_WINDOWING_LANCZOS,   },
+        { N_("Welch"),          GWY_WINDOWING_WELCH,     },
+        { N_("Rect"),           GWY_WINDOWING_RECT,      },
+        { N_("Nuttall"),        GWY_WINDOWING_NUTTALL,   },
+        { N_("Flat-top"),       GWY_WINDOWING_FLAT_TOP,  },
+        { N_("Kaiser 2.5"),     GWY_WINDOWING_KAISER25,  },
+        { NULL,                 0,                       },
     };
     return entries;
 }
@@ -259,10 +260,10 @@ const GwyEnum*
 gwy_correlation_type_get_enum(void)
 {
     static const GwyEnum entries[] = {
-        { N_("Normal"),      GWY_CORRELATION_NORMAL, },
-        { N_("FFT"),         GWY_CORRELATION_FFT,    },
-        { N_("Phase only"),  GWY_CORRELATION_POC,    },
-        { NULL,           0,                       },
+        { N_("correlation|Normal"), GWY_CORRELATION_NORMAL, },
+        { N_("FFT"),                GWY_CORRELATION_FFT,    },
+        { N_("Phase only"),         GWY_CORRELATION_POC,    },
+        { NULL,                     0,                      },
     };
     return entries;
 }

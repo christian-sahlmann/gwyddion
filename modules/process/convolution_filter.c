@@ -126,9 +126,9 @@ static void convolution_filter_save_args        (GwyContainer *settings,
                                                  ConvolutionArgs *args);
 
 static const GwyEnum symmetries[] = {
-    { N_("None"), CONVOLUTION_FILTER_SYMMETRY_NONE, },
-    { N_("Even"), CONVOLUTION_FILTER_SYMMETRY_EVEN, },
-    { N_("Odd"),  CONVOLUTION_FILTER_SYMMETRY_ODD,  },
+    { N_("symmetry|None"), CONVOLUTION_FILTER_SYMMETRY_NONE, },
+    { N_("symmetry|Even"), CONVOLUTION_FILTER_SYMMETRY_EVEN, },
+    { N_("symmetry|Odd"),  CONVOLUTION_FILTER_SYMMETRY_ODD,  },
 };
 
 static GwyModuleInfo module_info = {

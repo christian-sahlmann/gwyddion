@@ -1091,13 +1091,13 @@ menu_display(GCallback callback, gpointer cbdata,
              GwyCCDisplayType current)
 {
     static const GwyEnum entries[] = {
-        { N_("None"),        GWY_CC_DISPLAY_NONE,      },
-        { N_("X correction"),   GWY_CC_DISPLAY_X_CORR, },
-        { N_("Y correction"),   GWY_CC_DISPLAY_Y_CORR, },
-        { N_("Z correction"),   GWY_CC_DISPLAY_Z_CORR, },
-        { N_("X uncertainty"),  GWY_CC_DISPLAY_X_UNC,  },
-        { N_("Y uncertainty"),  GWY_CC_DISPLAY_Y_UNC,  },
-        { N_("Z uncertainty"),  GWY_CC_DISPLAY_Z_UNC,  },
+        { N_("calib-data|None"), GWY_CC_DISPLAY_NONE,   },
+        { N_("X correction"),    GWY_CC_DISPLAY_X_CORR, },
+        { N_("Y correction"),    GWY_CC_DISPLAY_Y_CORR, },
+        { N_("Z correction"),    GWY_CC_DISPLAY_Z_CORR, },
+        { N_("X uncertainty"),   GWY_CC_DISPLAY_X_UNC,  },
+        { N_("Y uncertainty"),   GWY_CC_DISPLAY_Y_UNC,  },
+        { N_("Z uncertainty"),   GWY_CC_DISPLAY_Z_UNC,  },
 
     };
     return gwy_enum_combo_box_new(entries, G_N_ELEMENTS(entries),

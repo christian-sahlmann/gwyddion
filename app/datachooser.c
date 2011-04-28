@@ -197,7 +197,7 @@ gwy_data_chooser_init(GwyDataChooser *chooser)
     /* XXX: size */
     proxy->thumb = gdk_pixbuf_new(GDK_COLORSPACE_RGB, TRUE, 8, 20, 20);
     gdk_pixbuf_fill(proxy->thumb, 0x00000000);
-    proxy->name = g_strdup(_("None"));
+    proxy->name = g_strdup(gwy_sgettext("channel|None"));
     gtk_list_store_insert_with_values(chooser->store, &iter, 0,
                                       MODEL_COLUMN_ID, -1,
                                       MODEL_COLUMN_PROXY, proxy,
@@ -399,7 +399,7 @@ gwy_data_chooser_set_none(GwyDataChooser *chooser,
     if (chooser->none_label && *chooser->none_label)
         proxy->name = g_strdup(chooser->none_label);
     else
-        proxy->name = g_strdup(_("None"));
+        proxy->name = g_strdup(gwy_sgettext("channel|None"));
     gwy_list_store_row_changed(chooser->store, &iter, NULL, 0);
 
     gwy_data_chooser_choose_whatever(chooser);

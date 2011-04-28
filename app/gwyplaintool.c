@@ -1001,6 +1001,7 @@ gwy_rect_selection_labels_new(gboolean none_is_full,
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     g_signal_connect_swapped(table, "destroy", G_CALLBACK(g_free), rlabels);
 
+    /* TRANSLATORS: Origin of the selected rectangle. */
     label = gwy_label_new_header(_("Origin"));
     gtk_table_attach(table, label, 0, 1, 0, 1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
 

@@ -185,6 +185,8 @@ grain_values[] = {
         }
     },
     {
+        /* TRANSLATORS: Grain volume calculated using basis (foot) set to
+         * zero. */
         N_("Zero basis volume"),
         GWY_GRAIN_VALUE_VOLUME_0,
         {
@@ -194,6 +196,8 @@ grain_values[] = {
         }
     },
     {
+        /* TRANSLATORS: Grain volume calculated using basis (foot) set to the
+         * grain minimum. */
         N_("Grain minimum basis volume"),
         GWY_GRAIN_VALUE_VOLUME_MIN,
         {
@@ -203,6 +207,8 @@ grain_values[] = {
         }
     },
     {
+        /* TRANSLATORS: Grain volume calculated using basis (foot) set to the
+         * Laplacian background. */
         N_("Laplacian background basis volume"),
         GWY_GRAIN_VALUE_VOLUME_LAPLACE,
         {

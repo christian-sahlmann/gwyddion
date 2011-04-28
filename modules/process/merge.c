@@ -131,8 +131,8 @@ static const GwyEnum directions[] = {
 };
 
 static const GwyEnum modes[] = {
-    { N_("Correlation"),   GWY_MERGE_MODE_CORRELATE },
-    { N_("None"),          GWY_MERGE_MODE_NONE },
+    { N_("Correlation"),     GWY_MERGE_MODE_CORRELATE, },
+    { N_("merge-mode|None"), GWY_MERGE_MODE_NONE,      },
 };
 
 static const GwyEnum boundaries[] = {
