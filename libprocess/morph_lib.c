@@ -621,7 +621,10 @@ _gwy_morph_lib_itip_estimate(gint **image, gint im_xsiz, gint im_ysiz,
                                    use_edges, set_fraction, set_message);
         if (count == -1)
             return count;
-        g_string_printf(str, _("%d image locations produced refinement"),
+        g_string_printf(str,
+                        ngettext("One image location produced refinement",
+                                 "%d image locations produced refinement",
+                                 count),
                         count);
         if (set_message && !set_message(str->str))
             return -1;
@@ -741,7 +744,10 @@ _gwy_morph_lib_itip_estimate0(gint **image, gint im_xsiz, gint im_ysiz,
             }
         }
     }
-    g_string_printf(str, _("Found %d internal local maxima"), n);
+    g_string_printf(str, ngettext("Found %d internal local maxima",
+                                  "Found one internal local maximum",
+                                  n),
+                    n);
     if (set_message && !set_message(str->str)) {
         g_free(x);
         g_free(y);
@@ -775,7 +781,10 @@ _gwy_morph_lib_itip_estimate0(gint **image, gint im_xsiz, gint im_ysiz,
                 return -1;
             }
         }
-        g_string_printf(str, _("%d image locations produced refinement"),
+        g_string_printf(str,
+                        ngettext("One image location produced refinement",
+                                 "%d image locations produced refinement",
+                                 count),
                         count);
         if (set_message && !set_message(str->str)) {
                 g_free(x);
