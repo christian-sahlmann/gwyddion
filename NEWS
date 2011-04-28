@@ -1,4 +1,8 @@
 2.25 (0000-00-00)
+Libraries:
+- libgwyddion: SI unit arithmetic, sometimes giving incorrect results if one of
+  the operand was the same object as the result, was corrected.
+
 Modules:
 - CSM (new): Imports Benyuan CSM files.
 - Dumb (new): Loads plug-in proxy's dumb dump files.

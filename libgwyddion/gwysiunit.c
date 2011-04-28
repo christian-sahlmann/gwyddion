@@ -1148,24 +1148,27 @@ gwy_si_unit_power_multiply(GwySIUnit *siunit1,
         result = gwy_si_unit_new(NULL);
 
     /* Try to avoid hard work by making siunit2 the simplier one */
-    if (siunit1->units->len < siunit2->units->len
-        || (power2 && !power1)
+    if ((!siunit1->units->len && siunit2->units->len)
+        || (!power1 && power2)
         || (siunit2 == result && siunit1 != result)) {
         GWY_SWAP(GwySIUnit*, siunit1, siunit2);
         GWY_SWAP(gint, power1, power2);
     }
-    gwy_si_unit_power_real(siunit1, power1, result);
-    if (!power2) {
+    if (!power2 || !siunit2->units->len) {
+        /* We can do this only if we won't use siunit2 for anything as it
+         * can be the same object as result. */
+        gwy_si_unit_power_real(siunit1, power1, result);
         gwy_si_unit_canonicalize(result);
         return result;
     }
 
-    /* When the second operand is the same object as the result, we have to
-     * operate on a temporary copy */
+    /* Operate on a temporary copy in the general case to ensure siunit2 and
+     * result are different objects.*/
     if (siunit2 == result) {
         op2 = gwy_si_unit_duplicate(siunit2);
         siunit2 = op2;
     }
+    gwy_si_unit_power_real(siunit1, power1, result);
 
     result->power10 += power2*siunit2->power10;
     for (i = 0; i < siunit2->units->len; i++) {
