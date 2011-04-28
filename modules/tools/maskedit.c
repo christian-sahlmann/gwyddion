@@ -159,7 +159,7 @@ static GwyModuleInfo module_info = {
     N_("Mask editor tool, allows to interactively add or remove parts "
        "of mask."),
     "Yeti <yeti@gwyddion.net>",
-    "3.1",
+    "3.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -1523,8 +1523,6 @@ gwy_tool_mask_editor_selection_changed(GwyPlainTool *plain_tool,
     tool = GWY_TOOL_MASK_EDITOR(plain_tool);
     if (tool->in_setup || tool->args.style != MASK_EDIT_STYLE_DRAWING)
         return;
-
-    g_assert_not_reached();
 
     if (tool->args.tool == MASK_TOOL_PAINT_DRAW)
         fillvalue = 1.0;

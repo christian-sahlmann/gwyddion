@@ -2,6 +2,8 @@
 Modules:
 - CSM (new): Imports Benyuan CSM files.
 - Dumb (new): Loads plug-in proxy's dumb dump files.
+- Mask editor tool: Program termination upon attempt to draw in drawing mode
+  was corrected (bun introduced in 2.24).
 - NT-MDT: Slowness of MDA spectra loading was corrected.
 - All synthesis: Critical warning/crash upon clicking on Change units and the
   current units were unset was fixed.
