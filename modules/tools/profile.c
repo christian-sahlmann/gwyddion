@@ -40,7 +40,7 @@
 #define GWY_TOOL_PROFILE_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_TOOL_PROFILE, GwyToolProfileClass))
 
 typedef enum {
-    GWY_CC_DISPLAY_NONE = 0, 
+    GWY_CC_DISPLAY_NONE = 0,
     GWY_CC_DISPLAY_X_CORR  = 1,
     GWY_CC_DISPLAY_Y_CORR = 2,
     GWY_CC_DISPLAY_Z_CORR = 3,
@@ -557,7 +557,7 @@ gwy_tool_profile_data_switched(GwyTool *gwytool,
             && gwy_container_gis_object_by_name(plain_tool->container, zukey, &(tool->zunc)))
         {
             tool->has_calibration = TRUE;
-            tool->line_xerr = gwy_data_line_new(gwy_data_field_get_xres(plain_tool->data_field), 
+            tool->line_xerr = gwy_data_line_new(gwy_data_field_get_xres(plain_tool->data_field),
                                                 gwy_data_field_get_xreal(plain_tool->data_field), 0);
             gtk_widget_show(tool->menu_display);
             gtk_widget_show(tool->callabel);
@@ -653,8 +653,9 @@ gwy_data_line_subtract(GwyDataLine *a, GwyDataLine *b)
             a->data[i] -= b->data[i];
 }
 
-static void 
-add_hidden_curve(GwyToolProfile *tool, GwyDataLine *line, gchar *str, GwyRGBA *color, gboolean hidden)
+static void
+add_hidden_curve(GwyToolProfile *tool, GwyDataLine *line,
+                 gchar *str, const GwyRGBA *color, gboolean hidden)
 {
     GwyGraphCurveModel *gcmodel;
 
@@ -666,7 +667,7 @@ add_hidden_curve(GwyToolProfile *tool, GwyDataLine *line, gchar *str, GwyRGBA *c
                  "color", color,
                  "line-style", GDK_LINE_ON_OFF_DASH,
                  NULL);
-    else 
+    else
     g_object_set(gcmodel,
                  "mode", GWY_GRAPH_CURVE_LINE,
                  "description", str,
@@ -678,7 +679,7 @@ add_hidden_curve(GwyToolProfile *tool, GwyDataLine *line, gchar *str, GwyRGBA *c
     g_object_unref(gcmodel);
 
 }
- 
+
 static void
 gwy_tool_profile_update_curve(GwyToolProfile *tool,
                               gint i)
@@ -690,7 +691,7 @@ gwy_tool_profile_update_curve(GwyToolProfile *tool,
     gint n, lineres, multpos;
     gdouble calxratio=1, calyratio=1;
     gchar *desc;
-    GwyRGBA *color;
+    const GwyRGBA *color;
     GwyDataLine *upunc=NULL, *lowunc=NULL;
 
     plain_tool = GWY_PLAIN_TOOL(tool);
@@ -760,7 +761,7 @@ gwy_tool_profile_update_curve(GwyToolProfile *tool,
 
         upunc = gwy_data_line_new_alike(tool->line, FALSE);
         gwy_data_line_copy(tool->line, upunc);
-        gwy_data_line_sum(upunc, tool->line_xerr); 
+        gwy_data_line_sum(upunc, tool->line_xerr);
 
         lowunc = gwy_data_line_new_alike(tool->line, FALSE);
         gwy_data_line_copy(tool->line, lowunc);
@@ -771,7 +772,7 @@ gwy_tool_profile_update_curve(GwyToolProfile *tool,
     n = gwy_graph_model_get_n_curves(tool->gmodel);
     if (i < n) {
         gcmodel = gwy_graph_model_get_curve(tool->gmodel, i);
-        gwy_graph_curve_model_set_data_from_dataline(gcmodel, tool->line, 0, 0); 
+        gwy_graph_curve_model_set_data_from_dataline(gcmodel, tool->line, 0, 0);
 
         if (tool->has_calibration) {
             gcmodel = gwy_graph_model_get_curve(tool->gmodel, i+1);
@@ -809,7 +810,7 @@ gwy_tool_profile_update_curve(GwyToolProfile *tool,
                      "color", color,
                      NULL);
         g_free(desc);
-        gwy_graph_curve_model_set_data_from_dataline(gcmodel, tool->line, 0, 0); 
+        gwy_graph_curve_model_set_data_from_dataline(gcmodel, tool->line, 0, 0);
         gwy_graph_model_add_curve(tool->gmodel, gcmodel);
         g_object_unref(gcmodel);
 
@@ -817,7 +818,7 @@ gwy_tool_profile_update_curve(GwyToolProfile *tool,
             gwy_graph_model_set_units_from_data_line(tool->gmodel, tool->line);
 
         if (tool->has_calibration) {
-            
+
             desc = g_strdup_printf(_("X error %d"), i/multpos+1);
             add_hidden_curve(tool, tool->line_xerr, desc, color, !(tool->display_type==1));
             g_free(desc);
@@ -1037,7 +1038,7 @@ gwy_tool_profile_apply(GwyToolProfile *tool)
         gcmodel = gwy_graph_curve_model_duplicate(gcmodel);
 
         /*add calibration data to the curve*/
-        if (tool->has_calibration) 
+        if (tool->has_calibration)
         {
             ccdata = (GwyCurveCalibrationData *)g_malloc(sizeof(GwyCurveCalibrationData));
 
@@ -1053,7 +1054,7 @@ gwy_tool_profile_apply(GwyToolProfile *tool)
                                             gwy_graph_curve_model_get_ndata(gcmodel)*sizeof(gdouble));
             ccdata->zunc = g_memdup(gwy_graph_curve_model_get_ydata(gwy_graph_model_get_curve(tool->gmodel, i+6)),
                                             gwy_graph_curve_model_get_ndata(gcmodel)*sizeof(gdouble));
-  
+
             gwy_graph_curve_model_set_calibration_data(gcmodel, ccdata);
         }
 
@@ -1065,7 +1066,7 @@ gwy_tool_profile_apply(GwyToolProfile *tool)
         id = gwy_app_data_browser_add_graph_model(gmodel, plain_tool->container,
                                              TRUE);
         g_object_unref(gmodel);
-  
+
 
         if (tool->args.export && tool->display_type>0) {
             gmodel = gwy_graph_model_new_alike(tool->gmodel);
@@ -1105,32 +1106,34 @@ menu_display(GCallback callback, gpointer cbdata,
 }
 
 static void
-display_changed(GtkComboBox *combo, GwyToolProfile *tool)
+display_changed(G_GNUC_UNUSED GtkComboBox *combo, GwyToolProfile *tool)
 {
     GwyPlainTool *plain_tool;
     GwyGraphCurveModel *gcmodel;
     gint i, n;
     gint multpos = 9;
 
-    if (!tool->has_calibration) return;
+    if (!tool->has_calibration)
+        return;
 
     plain_tool = GWY_PLAIN_TOOL(tool);
     g_return_if_fail(plain_tool->selection);
     n = gwy_selection_get_data(plain_tool->selection, NULL);
-    if (!n) return;
+    if (!n)
+        return;
 
     tool->display_type = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(tool->menu_display));
 
-    
+
     /*change the visibility of all the affected curves*/
     for (i = 0; i < n*multpos; i++) {
         gcmodel = gwy_graph_model_get_curve(tool->gmodel, i);
 
-        if (i%multpos==0) { 
+        if (i%multpos==0) {
             if (tool->args.both) g_object_set(gcmodel, "mode", GWY_GRAPH_CURVE_LINE, NULL);
             else g_object_set(gcmodel, "mode", GWY_GRAPH_CURVE_HIDDEN, NULL);
         }
-        else if ((tool->display_type<=5 && (i-(int)tool->display_type)>=0 && (i-(int)tool->display_type)%multpos == 0) 
+        else if ((tool->display_type<=5 && (i-(int)tool->display_type)>=0 && (i-(int)tool->display_type)%multpos == 0)
             || (tool->display_type==6 && ((i-7)%multpos==0 || (i-8)%multpos==0))) {
             g_object_set(gcmodel, "mode", GWY_GRAPH_CURVE_LINE, NULL);
         }
