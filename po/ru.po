@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2011-04-24 03:58+0200\n"
-"PO-Revision-Date: 2011-04-24 10:49+0300\n"
+"POT-Creation-Date: 2011-04-29 03:58+0200\n"
+"PO-Revision-Date: 2011-04-29 12:05+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "Language: \n"
@@ -18,6 +18,7 @@ msgstr ""
 "X-Poedit-Language: Russian\n"
 "X-Poedit-Country: RUSSIAN FEDERATION\n"
 "X-Poedit-SourceCharset: utf-8\n"
+"Plural-Forms: nplurals=3; plural=((((n%10)==1)&&((n%100)!=11))?(0):(((((n%10)>=2)&&((n%10)<=4))&&(((n%100)<10)||((n%100)>=20)))?(1):2));\n"
 
 #: libgwyddion/gwyexpr.c:765
 msgid "Invalid token"
@@ -308,106 +309,112 @@ msgstr "Радиус эквивалентного диска"
 msgid "Area above half-height"
 msgstr "Площадь выше половинной высоты"
 
-#: libprocess/gwygrainvalue.c:188
+#. TRANSLATORS: Grain volume calculated using basis (foot) set to
+#. * zero.
+#: libprocess/gwygrainvalue.c:190
 msgid "Zero basis volume"
 msgstr "Объём между нулевой плоскостью и поверхностью"
 
-#: libprocess/gwygrainvalue.c:197
+#. TRANSLATORS: Grain volume calculated using basis (foot) set to the
+#. * grain minimum.
+#: libprocess/gwygrainvalue.c:201
 msgid "Grain minimum basis volume"
 msgstr "Объём между поверхностью и плоскостью, проходящей через минимум зерна"
 
-#: libprocess/gwygrainvalue.c:206
+#. TRANSLATORS: Grain volume calculated using basis (foot) set to the
+#. * Laplacian background.
+#: libprocess/gwygrainvalue.c:212
 msgid "Laplacian background basis volume"
 msgstr "Объём между поверхностью и фоном, вычисленным по Лапласу"
 
-#: libprocess/gwygrainvalue.c:215
+#: libprocess/gwygrainvalue.c:221
 msgid "Projected boundary length"
 msgstr "Длина границы проекции"
 
-#: libprocess/gwygrainvalue.c:224
+#: libprocess/gwygrainvalue.c:230
 msgid "Minimum bounding size"
 msgstr "Минимальный ограничивающий размер"
 
-#: libprocess/gwygrainvalue.c:233
+#: libprocess/gwygrainvalue.c:239
 msgid "Minimum bounding direction"
 msgstr "Направление минимального ограничивающего размера"
 
-#: libprocess/gwygrainvalue.c:242
+#: libprocess/gwygrainvalue.c:248
 msgid "Maximum bounding size"
 msgstr "Максимальный ограничивающий размер"
 
-#: libprocess/gwygrainvalue.c:251
+#: libprocess/gwygrainvalue.c:257
 msgid "Maximum bounding direction"
 msgstr "Направление максимального ограничивающего размера"
 
-#: libprocess/gwygrainvalue.c:260
+#: libprocess/gwygrainvalue.c:266
 #: modules/tools/readvalue.c:307
 msgid "Inclination θ"
 msgstr "Наклон θ"
 
-#: libprocess/gwygrainvalue.c:269
+#: libprocess/gwygrainvalue.c:275
 #: modules/tools/readvalue.c:317
 msgid "Inclination φ"
 msgstr "Наклон φ"
 
-#: libprocess/gwygrainvalue.c:278
+#: libprocess/gwygrainvalue.c:284
 msgid "Curvature center x position"
 msgstr "Положение центра кривизны по x"
 
-#: libprocess/gwygrainvalue.c:287
+#: libprocess/gwygrainvalue.c:293
 msgid "Curvature center y position"
 msgstr "Положение центра кривизны по y"
 
-#: libprocess/gwygrainvalue.c:296
+#: libprocess/gwygrainvalue.c:302
 msgid "Curvature center z value"
 msgstr "Значение центра кривизны по z"
 
-#: libprocess/gwygrainvalue.c:305
+#: libprocess/gwygrainvalue.c:311
 msgid "Curvature 1"
 msgstr "Кривизна 1"
 
-#: libprocess/gwygrainvalue.c:314
+#: libprocess/gwygrainvalue.c:320
 msgid "Curvature 2"
 msgstr "Кривизна 2"
 
-#: libprocess/gwygrainvalue.c:323
+#: libprocess/gwygrainvalue.c:329
 msgid "Curvature angle 1"
 msgstr "Угол кривизны 1"
 
-#: libprocess/gwygrainvalue.c:332
+#: libprocess/gwygrainvalue.c:338
 msgid "Curvature angle 2"
 msgstr "Угол кривизны 2"
 
-#: libprocess/gwygrainvalue.c:975
+#: libprocess/gwygrainvalue.c:981
 msgid "Id"
 msgstr "Идентификатор"
 
-#: libprocess/gwygrainvalue.c:976
+#: libprocess/gwygrainvalue.c:982
 #: modules/tools/readvalue.c:239
 msgid "Position"
 msgstr "Позиция"
 
-#: libprocess/gwygrainvalue.c:977
+#: libprocess/gwygrainvalue.c:983
 #: app/meta.c:286
-#: modules/process/curvature.c:743
+#: modules/process/curvature.c:744
 #: modules/tools/level3.c:461
 #: modules/tools/readvalue.c:274
 msgid "Value"
 msgstr "Значение"
 
-#: libprocess/gwygrainvalue.c:978
+#: libprocess/gwygrainvalue.c:984
 msgid "Area"
 msgstr "Площадь"
 
-#: libprocess/gwygrainvalue.c:979
+#: libprocess/gwygrainvalue.c:985
 msgid "Volume"
 msgstr "Объём"
 
-#: libprocess/gwygrainvalue.c:980
+#: libprocess/gwygrainvalue.c:986
 msgid "Boundary"
 msgstr "Граница"
 
-#: libprocess/gwygrainvalue.c:981
+#: libprocess/gwygrainvalue.c:987
 #: modules/process/pat_synth.c:865
 #: modules/process/pat_synth.c:1168
 #: modules/process/pat_synth.c:1505
@@ -415,12 +422,12 @@ msgstr "Граница"
 msgid "Slope"
 msgstr "Уклон"
 
-#: libprocess/gwygrainvalue.c:982
-#: modules/process/curvature.c:600
+#: libprocess/gwygrainvalue.c:988
+#: modules/process/curvature.c:601
 msgid "Curvature"
 msgstr "Кривизна"
 
-#: libprocess/gwygrainvalue.c:986
+#: libprocess/gwygrainvalue.c:992
 msgid "User"
 msgstr "Пользовательские"
 
@@ -506,102 +513,98 @@ msgstr "Адаптивный по масштабу"
 msgid "Scale and space adaptive"
 msgstr "Адаптивный по масштабу и пространству"
 
-#: libprocess/gwyprocessenums.c:205
+#. TRANSLATORS: Interpolation type (AKA nearest neighbour)
+#: libprocess/gwyprocessenums.c:206
 #: modules/file/rawxyz.c:682
 msgid "Round"
 msgstr "Округление"
 
-#: libprocess/gwyprocessenums.c:206
+#: libprocess/gwyprocessenums.c:207
 #: modules/file/rawxyz.c:683
 msgid "Linear"
 msgstr "Линейная"
 
-#: libprocess/gwyprocessenums.c:207
+#: libprocess/gwyprocessenums.c:208
 msgid "Key"
 msgstr "Кубическая"
 
-#: libprocess/gwyprocessenums.c:208
+#: libprocess/gwyprocessenums.c:209
 msgid "BSpline"
 msgstr "Бета-сплайн"
 
-#: libprocess/gwyprocessenums.c:209
+#: libprocess/gwyprocessenums.c:210
 msgid "OMOMS"
 msgstr "OMOMS"
 
-#: libprocess/gwyprocessenums.c:210
+#: libprocess/gwyprocessenums.c:211
 msgid "NNA"
 msgstr "АБС"
 
-#: libprocess/gwyprocessenums.c:211
+#: libprocess/gwyprocessenums.c:212
 msgid "Schaum"
 msgstr "Шаум"
 
-#: libprocess/gwyprocessenums.c:243
-#: app/datachooser.c:200
-#: app/datachooser.c:402
-#: modules/process/convolution_filter.c:129
-#: modules/process/merge.c:135
-#: modules/tools/profile.c:1094
-msgid "None"
+#: libprocess/gwyprocessenums.c:244
+msgid "windowing|None"
 msgstr "Нет"
 
-#: libprocess/gwyprocessenums.c:244
+#: libprocess/gwyprocessenums.c:245
 msgid "Hann"
 msgstr "Ханн"
 
-#: libprocess/gwyprocessenums.c:245
+#: libprocess/gwyprocessenums.c:246
 msgid "Hamming"
 msgstr "Хэмминг"
 
-#: libprocess/gwyprocessenums.c:246
+#: libprocess/gwyprocessenums.c:247
 msgid "Blackmann"
 msgstr "Блэкмен"
 
-#: libprocess/gwyprocessenums.c:247
+#: libprocess/gwyprocessenums.c:248
 msgid "Lanzcos"
 msgstr "Ланцош"
 
-#: libprocess/gwyprocessenums.c:248
+#: libprocess/gwyprocessenums.c:249
 msgid "Welch"
 msgstr "Велч"
 
-#: libprocess/gwyprocessenums.c:249
+#: libprocess/gwyprocessenums.c:250
 msgid "Rect"
 msgstr "Прямоугольное"
 
-#: libprocess/gwyprocessenums.c:250
+#: libprocess/gwyprocessenums.c:251
 msgid "Nuttall"
 msgstr "Наттолл"
 
-#: libprocess/gwyprocessenums.c:251
+#: libprocess/gwyprocessenums.c:252
 msgid "Flat-top"
 msgstr "Плоская вершина"
 
-#: libprocess/gwyprocessenums.c:252
+#: libprocess/gwyprocessenums.c:253
 msgid "Kaiser 2.5"
 msgstr "Кайзер 2.5"
 
-#: libprocess/gwyprocessenums.c:262
-msgid "Normal"
-msgstr "Обычный"
-
 #: libprocess/gwyprocessenums.c:263
+msgid "correlation|Normal"
+msgstr "Обычная"
+
+#: libprocess/gwyprocessenums.c:264
 msgid "FFT"
 msgstr "БПФ"
 
-#: libprocess/gwyprocessenums.c:264
+#: libprocess/gwyprocessenums.c:265
 msgid "Phase only"
 msgstr "Только фаза"
 
-#: libprocess/gwyprocessenums.c:297
+#: libprocess/gwyprocessenums.c:298
 msgid "Exclude masked region"
 msgstr "Исключить область под маской"
 
-#: libprocess/gwyprocessenums.c:298
+#: libprocess/gwyprocessenums.c:299
 msgid "Include only masked region"
 msgstr "Включить только область под маской"
 
-#: libprocess/gwyprocessenums.c:299
+#: libprocess/gwyprocessenums.c:300
 msgid "Use entire image (ignore mask)"
 msgstr "Использовать всё изображение (игнорировать маску)"
 
@@ -620,25 +623,31 @@ msgid "Certainty map"
 msgstr "Карта достоверности"
 
 #: libprocess/morph_lib.c:616
-#: libprocess/morph_lib.c:758
+#: libprocess/morph_lib.c:764
 #, c-format
 msgid "Iterating estimate (iteration %d)"
 msgstr "Циклическая оценка (цикл %d)"
 
-#: libprocess/morph_lib.c:624
-#: libprocess/morph_lib.c:778
+#: libprocess/morph_lib.c:625
+#: libprocess/morph_lib.c:785
 #, c-format
-msgid "%d image locations produced refinement"
-msgstr "%d участков изображения были уточнены"
+msgid "%d image location produced refinement"
+msgid_plural "%d image locations produced refinement"
+msgstr[0] "%d участок изображения был уточнён"
+msgstr[1] "%d участка изображения было уточнено"
+msgstr[2] "%d участков изображения было уточнено"
 
-#: libprocess/morph_lib.c:722
+#: libprocess/morph_lib.c:725
 msgid "Searching for local maxima"
 msgstr "Поиск локальных максимумов"
 
-#: libprocess/morph_lib.c:744
+#: libprocess/morph_lib.c:747
 #, c-format
-msgid "Found %d internal local maxima"
-msgstr "Найдено %d внутренних локальных максимумов"
+msgid "Found %d internal local maximum"
+msgid_plural "Found %d internal local maxima"
+msgstr[0] "Найден %d внутренний локальный максимум"
+msgstr[1] "Найдено %d внутренних локальных максимума"
+msgstr[2] "Найдено %d внутренних локальных максимумов"
 
 #: libprocess/tip.c:228
 msgid "Pyramide"
@@ -853,7 +862,7 @@ msgstr "точек"
 #: modules/process/angle_dist.c:170
 #: modules/process/calcoefs_new.c:347
 #: modules/process/calibrate.c:296
-#: modules/process/curvature.c:602
+#: modules/process/curvature.c:603
 #: modules/process/cwt.c:132
 #: modules/process/deposit_synth.c:359
 #: modules/process/drift.c:230
@@ -947,7 +956,7 @@ msgstr "Количество"
 
 #: libgwydgets/gwygrainvaluemenu.c:193
 #: libgwydgets/gwygrainvaluemenu.c:206
-#: modules/process/curvature.c:734
+#: modules/process/curvature.c:735
 msgid "Symbol"
 msgstr "Символ"
 
@@ -1142,7 +1151,7 @@ msgstr "Длина"
 
 #: libgwydgets/gwygraphwindowmeasuredialog.c:378
 #: libgwydgets/gwygraphwindowmeasuredialog.c:567
-#: app/gwyplaintool.c:1022
+#: app/gwyplaintool.c:1023
 #: modules/process/obj_synth.c:567
 #: modules/process/pat_synth.c:882
 #: modules/process/pat_synth.c:1185
@@ -1463,6 +1472,11 @@ msgstr "Спектры"
 msgid "Unknown channel %d"
 msgstr "Неизвестный канал %d"
 
+#: app/datachooser.c:200
+#: app/datachooser.c:402
+msgid "channel|None"
+msgstr "Нет"
+
 #: app/file.c:207
 msgid "Imported data are likely incorrect."
 msgstr "Импортированные данные скорее всего неверны."
@@ -1748,11 +1762,12 @@ msgstr "Этот инструмент требует для работы сло�
 msgid "Clear selected objects"
 msgstr "Очистить выбранные объекты"
 
-#: app/gwyplaintool.c:1004
+#. TRANSLATORS: Origin of the selected rectangle.
+#: app/gwyplaintool.c:1005
 msgid "Origin"
 msgstr "Начальная точка"
 
-#: app/gwyplaintool.c:1015
+#: app/gwyplaintool.c:1016
 #: modules/file/rawfile.c:959
 #: modules/process/convolution_filter.c:358
 #: modules/process/convolution_filter.c:562
@@ -1761,7 +1776,7 @@ msgstr "Начальная точка"
 msgid "Size"
 msgstr "Размер"
 
-#: app/gwyplaintool.c:1018
+#: app/gwyplaintool.c:1019
 msgid "Width"
 msgstr "Ширина"
 
@@ -2532,6 +2547,22 @@ msgstr "Распаковка сжатых данных закончилась с
 msgid "Cannot decompress compressed data.  Zlib support was not built in."
 msgstr "Не удаётся распаковать сжатые данные. Поддержка zlib не была встроена."
 
+#: modules/file/csmfile.c:82
+msgid "Imports Benyuan CSM data files."
+msgstr "Импортирует файлы данных Benyuan CSM."
+
+#: modules/file/csmfile.c:95
+msgid "Benyuan CSM files (.csm)"
+msgstr "Файлы Benyuan CSM (.csm)"
+
+#: modules/file/csmfile.c:182
+msgid "Header image width field does not match BMP width."
+msgstr "Поле заголовка \"ширина изображения\" не соответствует ширине BMP."
+
+#: modules/file/csmfile.c:195
+msgid "Header image height field does not match BMP height."
+msgstr "Поле заголовка \"высота изображения\" не соответствует высоте BMP."
+
 #: modules/file/dmefile.c:121
 msgid "Imports Danish Micro Engineering (DME) data files."
 msgstr "Импортирует файлы данных Danish Micro Engineering (DME)."
@@ -3139,8 +3170,8 @@ msgid "Parameter header is truncated"
 msgstr "Заголовок параметров усечён"
 
 #: modules/file/nanoeducator.c:910
-#: modules/process/curvature.c:441
-#: modules/tools/profile.c:804
+#: modules/process/curvature.c:442
+#: modules/tools/profile.c:805
 #, c-format
 msgid "Profile %d"
 msgstr "Профиль %d"
@@ -4842,7 +4873,7 @@ msgstr "_Функция:"
 #: modules/graph/graph_cd.c:279
 #: modules/graph/graph_fdfit.c:334
 #: modules/graph/graph_fit.c:334
-#: modules/process/curvature.c:726
+#: modules/process/curvature.c:727
 msgid "Parameter"
 msgstr "Параметр"
 
@@ -5816,32 +5847,32 @@ msgid "Triangulation..."
 msgstr "Триангуляция..."
 
 #: modules/process/calcoefs_view.c:1134
-#: modules/tools/profile.c:1095
+#: modules/tools/profile.c:1096
 msgid "X correction"
 msgstr "Поправка по X"
 
 #: modules/process/calcoefs_view.c:1135
-#: modules/tools/profile.c:1096
+#: modules/tools/profile.c:1097
 msgid "Y correction"
 msgstr "Поправка по Y"
 
 #: modules/process/calcoefs_view.c:1136
-#: modules/tools/profile.c:1097
+#: modules/tools/profile.c:1098
 msgid "Z correction"
 msgstr "Поправка по Z"
 
 #: modules/process/calcoefs_view.c:1137
-#: modules/tools/profile.c:1098
+#: modules/tools/profile.c:1099
 msgid "X uncertainty"
 msgstr "Погрешность X"
 
 #: modules/process/calcoefs_view.c:1138
-#: modules/tools/profile.c:1099
+#: modules/tools/profile.c:1100
 msgid "Y uncertainty"
 msgstr "Погрешность Y"
 
 #: modules/process/calcoefs_view.c:1139
-#: modules/tools/profile.c:1100
+#: modules/tools/profile.c:1101
 msgid "Z uncertainty"
 msgstr "Погрешность Z"
 
@@ -5933,13 +5964,17 @@ msgstr "Множитель калибровки по _Y:"
 msgid "_Z calibration factor:"
 msgstr "Множитель калибровки по _Z:"
 
+#: modules/process/convolution_filter.c:129
+msgid "symmetry|None"
+msgstr "Нет"
+
 #: modules/process/convolution_filter.c:130
-msgid "Even"
-msgstr "Четные"
+msgid "symmetry|Even"
+msgstr "Чётная"
 
 #: modules/process/convolution_filter.c:131
-msgid "Odd"
-msgstr "Нечетные"
+msgid "symmetry|Odd"
+msgstr "Нечётная"
 
 #: modules/process/convolution_filter.c:137
 msgid "Generic convolution filter with a user-defined matrix."
@@ -6114,23 +6149,23 @@ msgstr "Рассчитать общую кривизну"
 msgid "Curvature: Lateral dimensions and value must be the same physical quantity."
 msgstr "Кривизна: горизонтальные размеры и значения данных должны быть одной физической величиной."
 
-#: modules/process/curvature.c:432
+#: modules/process/curvature.c:433
 msgid "Curvature Sections"
 msgstr "Сечения кривизны"
 
-#: modules/process/curvature.c:656
+#: modules/process/curvature.c:657
 msgid "Output Type"
 msgstr "Тип вывода"
 
-#: modules/process/curvature.c:663
+#: modules/process/curvature.c:664
 msgid "_Set selection"
 msgstr "_Установить выделение"
 
-#: modules/process/curvature.c:673
+#: modules/process/curvature.c:674
 msgid "_Plot graph"
 msgstr "Строить _график"
 
-#: modules/process/curvature.c:684
+#: modules/process/curvature.c:685
 #: modules/process/facet-level.c:297
 #: modules/process/level.c:267
 #: modules/process/polylevel.c:495
@@ -6138,7 +6173,7 @@ msgstr "Строить _график"
 msgid "Masking Mode"
 msgstr "Режим использования маски"
 
-#: modules/process/curvature.c:754
+#: modules/process/curvature.c:755
 #: modules/process/grain_dist.c:827
 #: modules/tools/distance.c:230
 #: modules/tools/roughness.c:835
@@ -6146,7 +6181,7 @@ msgstr "Режим использования маски"
 msgid "Save table to a file"
 msgstr "Сохранить таблицу в файл"
 
-#: modules/process/curvature.c:759
+#: modules/process/curvature.c:760
 #: modules/process/grain_dist.c:832
 #: modules/tools/distance.c:235
 #: modules/tools/roughness.c:840
@@ -6154,11 +6189,11 @@ msgstr "Сохранить таблицу в файл"
 msgid "Copy table to clipboard"
 msgstr "Скопировать таблицу в буфер обмена"
 
-#: modules/process/curvature.c:886
+#: modules/process/curvature.c:887
 msgid "Axes are outside the image."
 msgstr "Оси снаружи изображения."
 
-#: modules/process/curvature.c:951
+#: modules/process/curvature.c:952
 msgid "Save Curvature"
 msgstr "Сохранить кривизну"
 
@@ -8328,6 +8363,10 @@ msgstr "Слева"
 msgid "Correlation"
 msgstr "Корреляция"
 
+#: modules/process/merge.c:135
+msgid "merge-mode|None"
+msgstr "Нет"
+
 #: modules/process/merge.c:139
 msgid "First operand"
 msgstr "Первый операнд"
@@ -9837,45 +9876,49 @@ msgstr "Данные _калибровки:"
 msgid "_Show profile"
 msgstr "_Показать профиль"
 
-#: modules/tools/profile.c:821
+#: modules/tools/profile.c:822
 #, c-format
 msgid "X error %d"
 msgstr "Ошибка по X %d"
 
-#: modules/tools/profile.c:824
+#: modules/tools/profile.c:825
 #, c-format
 msgid "Y error %d"
 msgstr "Ошибка по Y %d"
 
-#: modules/tools/profile.c:827
+#: modules/tools/profile.c:828
 #, c-format
 msgid "Z error %d"
 msgstr "Ошибка по Z %d"
 
-#: modules/tools/profile.c:830
+#: modules/tools/profile.c:831
 #, c-format
 msgid "X uncertainty %d"
 msgstr "Погрешность по X %d"
 
-#: modules/tools/profile.c:833
+#: modules/tools/profile.c:834
 #, c-format
 msgid "Y uncertainty %d"
 msgstr "Погрешность по Y %d"
 
-#: modules/tools/profile.c:836
+#: modules/tools/profile.c:837
 #, c-format
 msgid "Z uncertainty %d"
 msgstr "Погрешность по Z %d"
 
-#: modules/tools/profile.c:839
+#: modules/tools/profile.c:840
 #, c-format
 msgid "Zunc up bound %d"
 msgstr "Верхняя граница погрешности Z %d"
 
-#: modules/tools/profile.c:842
+#: modules/tools/profile.c:843
 #, c-format
 msgid "Zunc low bound %d"
 msgstr "Нижняя граница погрешности Z %d"
+
+#: modules/tools/profile.c:1095
+msgid "calib-data|None"
+msgstr "Нет"
 
 #: modules/tools/readvalue.c:114
 msgid "Pointer tool, reads value under pointer."
@@ -10350,6 +10393,18 @@ msgstr ""
 "Площадь проекции:    %s\n"
 "Наклон θ:     %s\n"
 "Наклон φ:     %s\n"
+
+#~ msgid "None"
+#~ msgstr "Нет"
+
+#~ msgid "Normal"
+#~ msgstr "Обычный"
+
+#~ msgid "Even"
+#~ msgstr "Четные"
+
+#~ msgid "Odd"
+#~ msgstr "Нечетные"
 
 #~ msgid "_Filtered image"
 #~ msgstr "От_фильтрованное изображение"
