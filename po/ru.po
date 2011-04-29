@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
 "POT-Creation-Date: 2011-04-29 03:58+0200\n"
-"PO-Revision-Date: 2011-04-29 12:05+0300\n"
+"PO-Revision-Date: 2011-04-29 21:56+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "Language: \n"
@@ -18,7 +18,7 @@ msgstr ""
 "X-Poedit-Language: Russian\n"
 "X-Poedit-Country: RUSSIAN FEDERATION\n"
 "X-Poedit-SourceCharset: utf-8\n"
-"Plural-Forms: nplurals=3; plural=((((n%10)==1)&&((n%100)!=11))?(0):(((((n%10)>=2)&&((n%10)<=4))&&(((n%100)<10)||((n%100)>=20)))?(1):2));\n"
+"Plural-Forms: nplurals=3; plural=n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2;\n"
 
 #: libgwyddion/gwyexpr.c:765
 msgid "Invalid token"
@@ -631,7 +631,7 @@ msgstr "Циклическая оценка (цикл %d)"
 #: libprocess/morph_lib.c:625
 #: libprocess/morph_lib.c:785
 #, c-format
-msgid "%d image location produced refinement"
+msgid "One image location produced refinement"
 msgid_plural "%d image locations produced refinement"
 msgstr[0] "%d участок изображения был уточнён"
 msgstr[1] "%d участка изображения было уточнено"
@@ -643,7 +643,7 @@ msgstr "Поиск локальных максимумов"
 
 #: libprocess/morph_lib.c:747
 #, c-format
-msgid "Found %d internal local maximum"
+msgid "Found one internal local maximum"
 msgid_plural "Found %d internal local maxima"
 msgstr[0] "Найден %d внутренний локальный максимум"
 msgstr[1] "Найдено %d внутренних локальных максимума"
