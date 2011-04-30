@@ -744,8 +744,8 @@ _gwy_morph_lib_itip_estimate0(gint **image, gint im_xsiz, gint im_ysiz,
             }
         }
     }
-    g_string_printf(str, ngettext("Found %d internal local maxima",
-                                  "Found one internal local maximum",
+    g_string_printf(str, ngettext("Found one internal local maximum",
+                                  "Found %d internal local maxima",
                                   n),
                     n);
     if (set_message && !set_message(str->str)) {
