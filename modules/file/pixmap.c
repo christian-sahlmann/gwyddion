@@ -1789,19 +1789,47 @@ fail:
 #undef W
 #undef Q
 
+static void
+add_ppm_comment_string(GString *str,
+                       const gchar *key,
+                       const gchar *value,
+                       gboolean take)
+{
+    g_string_append_printf(str, "# %s %s\n", key, value);
+    if (take)
+        g_free((gpointer)value);
+}
+
+static void
+add_ppm_comment_float(GString *str,
+                      const gchar *key,
+                      gdouble value)
+{
+    gchar buffer[G_ASCII_DTOSTR_BUF_SIZE];
+
+    g_ascii_dtostr(buffer, sizeof(buffer), value);
+    g_string_append_printf(str, "# %s %s\n", key, buffer);
+}
+
 static gboolean
 pixmap_save_ppm(GwyContainer *data,
                 const gchar *filename,
                 GwyRunType mode,
                 GError **error)
 {
-    static const gchar *ppm_header = "P6\n%u\n%u\n255\n";
-    static const gchar *pgm_header = "P5\n%u\n%u\n65535\n";
+    static const gchar ppm_header[] = "P6\n%u\n%u\n255\n";
+    static const gchar pgm_header[] = "P5\n%s%u\n%u\n65535\n";
+    GwyDataField *dfield;
     GwyPixbuf *pixbuf;
     guint i, rowsize;
     gboolean ok = FALSE;
     gchar *ppmh = NULL;
     FILE *fh;
+    gint id;
+
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
+                                     GWY_APP_DATA_FIELD_ID, &id,
+                                     0);
 
     pixbuf = pixmap_draw_pixbuf(data, "PPM", TRUE, mode, error);
     if (!pixbuf)
@@ -1814,9 +1842,46 @@ pixmap_save_ppm(GwyContainer *data,
         return FALSE;
     }
 
-    ppmh = g_strdup_printf(pixbuf->colorspace == GWY_COLORSPACE_RGB
-                           ? ppm_header : pgm_header,
-                           pixbuf->width, pixbuf->height);
+    if (pixbuf->colorspace == GWY_COLORSPACE_GRAY) {
+        const guchar *title = "Data";
+        gchar *s = g_strdup_printf("/%d/data/title", id);
+        GString *str = g_string_new(NULL);
+        gdouble min, max;
+
+        gwy_container_gis_string_by_name(data, s, &title);
+        g_free(s);
+
+        /* Gwyddion GSF keys */
+        gwy_data_field_get_min_max(dfield, &min, &max);
+        add_ppm_comment_float(str, GWY_IMGKEY_XREAL,
+                              gwy_data_field_get_xreal(dfield));
+        add_ppm_comment_float(str, GWY_IMGKEY_YREAL,
+                              gwy_data_field_get_yreal(dfield));
+        add_ppm_comment_float(str, GWY_IMGKEY_XOFFSET,
+                              gwy_data_field_get_xoffset(dfield));
+        add_ppm_comment_float(str, GWY_IMGKEY_YOFFSET,
+                              gwy_data_field_get_yoffset(dfield));
+        add_ppm_comment_float(str, GWY_IMGKEY_ZMIN, min);
+        add_ppm_comment_float(str, GWY_IMGKEY_ZMAX, max);
+        add_ppm_comment_string(str, GWY_IMGKEY_XYUNIT,
+                               gwy_si_unit_get_string
+                                      (gwy_data_field_get_si_unit_xy(dfield),
+                                       GWY_SI_UNIT_FORMAT_PLAIN),
+                               TRUE);
+        add_ppm_comment_string(str, GWY_IMGKEY_ZUNIT,
+                               gwy_si_unit_get_string
+                                      (gwy_data_field_get_si_unit_z(dfield),
+                                       GWY_SI_UNIT_FORMAT_PLAIN),
+                               TRUE);
+        add_ppm_comment_string(str, GWY_IMGKEY_TITLE, title, FALSE);
+
+        ppmh = g_strdup_printf(pgm_header,
+                               str->str, pixbuf->width, pixbuf->height);
+        g_string_free(str, TRUE);
+    }
+    else {
+        ppmh = g_strdup_printf(ppm_header, pixbuf->width, pixbuf->height);
+    }
     if (fwrite(ppmh, 1, strlen(ppmh), fh) != strlen(ppmh)) {
         err_WRITE(error);
         goto end;
