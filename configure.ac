@@ -479,13 +479,23 @@ AC_SUBST(ZLIB)
 
 #############################################################################
 # PNG
-# Optional.  Only directly used for 16bit grayscale PNG pixmap export.
+# Optional.  Only directly used for 16bit greyscale PNG pixmap import/export.
 enable_png=yes
 PKG_CHECK_MODULES(PNG, [libpng],
                   [AC_DEFINE(HAVE_PNG,1,
                             [Define if we have the libpng package.])],
                   [enable_png=no])
 AM_CONDITIONAL([HAVE_PNG],[test x$enable_png != xno])
+
+#############################################################################
+# OpenEXR
+# Optional.  Used for HDR greyscale OpenEXR pixmap import/export.
+enable_exr=yes
+PKG_CHECK_MODULES(EXR, [OpenEXR],
+                  [AC_DEFINE(HAVE_EXR,1,
+                            [Define if we have the OpenEXR package.])],
+                  [enable_exr=no])
+AM_CONDITIONAL([HAVE_EXR],[test x$enable_exr != xno])
 
 #############################################################################
 # SPML importer
@@ -637,6 +647,8 @@ AC_SUBST(COMMON_LDFLAGS)
 
 COMMON_CFLAGS="$HOST_CFLAGS $WARNING_CFLAGS $GOBJECT_CFLAGS $GMODULE_CFLAGS $GTKGLEXT_CFLAGS $PREMISE_CFLAGS"
 AC_SUBST(COMMON_CFLAGS)
+COMMON_CXXFLAGS="$HOST_CFLAGS $GOBJECT_CFLAGS $GMODULE_CFLAGS $GTKGLEXT_CFLAGS $PREMISE_CFLAGS"
+AC_SUBST(COMMON_CXXFLAGS)
 
 #############################################################################
 # Plugin-proxy
