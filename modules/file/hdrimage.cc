@@ -400,26 +400,26 @@ exr_write_image(GwyDataField *field,
 
     gdouble v;
     v = gwy_data_field_get_xreal(field);
-    header.insert("XReal", Imf::DoubleAttribute(v));
+    header.insert("Gwy::XReal", Imf::DoubleAttribute(v));
     v = gwy_data_field_get_xreal(field);
-    header.insert("YReal", Imf::DoubleAttribute(v));
-    header.insert("ZScale", Imf::DoubleAttribute(zscale));
+    header.insert("Gwy::YReal", Imf::DoubleAttribute(v));
+    header.insert("Gwy::ZScale", Imf::DoubleAttribute(zscale));
     if ((v = gwy_data_field_get_xoffset(field)))
-        header.insert("XOffset", Imf::DoubleAttribute(v));
+        header.insert("Gwy::XOffset", Imf::DoubleAttribute(v));
     if ((v = gwy_data_field_get_yoffset(field)))
-        header.insert("YOffset", Imf::DoubleAttribute(v));
+        header.insert("Gwy::YOffset", Imf::DoubleAttribute(v));
 
-    header.insert("Title", Imf::StringAttribute(title));
+    header.insert("Gwy::Title", Imf::StringAttribute(title));
 
     gchar *s;
     s = gwy_si_unit_get_string(gwy_data_field_get_si_unit_xy(field),
                                GWY_SI_UNIT_FORMAT_PLAIN);
-    header.insert("XYUnits", Imf::StringAttribute(s));
+    header.insert("Gwy::XYUnits", Imf::StringAttribute(s));
     g_free(s);
 
     s = gwy_si_unit_get_string(gwy_data_field_get_si_unit_z(field),
                                GWY_SI_UNIT_FORMAT_PLAIN);
-    header.insert("ZUnits", Imf::StringAttribute(s));
+    header.insert("Gwy::ZUnits", Imf::StringAttribute(s));
     g_free(s);
 
     header.channels().insert("Y", Imf::Channel(pixel_type));
