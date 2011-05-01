@@ -99,6 +99,7 @@ typedef enum {
     PIXMAP_MAP_VALUE,
     PIXMAP_MAP_SUM,
     PIXMAP_MAP_ALPHA,
+    PIXMAP_MAP_LUMA,
     PIXMAP_MAP_LAST
 } PixmapMapType;
 
@@ -423,7 +424,7 @@ static GwyModuleInfo module_info = {
        "PNG, JPEG, TIFF, PPM, BMP, TARGA. "
        "Import support relies on GDK and thus may be installation-dependent."),
     "Yeti <yeti@gwyddion.net>",
-    "7.12",
+    "7.13",
     "David Nečas (Yeti)",
     "2004-2011",
 };
@@ -895,6 +896,14 @@ pixmap_load_pixbuf_to_data_field(GdkPixbuf *pixbuf,
             }
             break;
 
+            case PIXMAP_MAP_LUMA:
+            for (j = 0; j < width; j++) {
+                guchar red = p[bpp*j], green = p[bpp*j+1], blue = p[bpp*j+2];
+
+                r[j] = (0.2126*red + 0.7152*green + 0.0722*blue)/255.0;
+            }
+            break;
+
             default:
             g_assert_not_reached();
             break;
@@ -916,6 +925,7 @@ pixmap_load_dialog(PixmapLoadArgs *args,
         { N_("Blue"),        PIXMAP_MAP_BLUE,  },
         { N_("Value (max)"), PIXMAP_MAP_VALUE, },
         { N_("RGB sum"),     PIXMAP_MAP_SUM,   },
+        { N_("Luma"),        PIXMAP_MAP_LUMA,  },
         { N_("Alpha"),       PIXMAP_MAP_ALPHA, },
     };
 
