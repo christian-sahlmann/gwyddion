@@ -48,6 +48,7 @@ file_LTLIBRARIES = \
 	gsffile.la \
 	gwyfile.la \
 	hdf4file.la \
+	hdrimage.la \
 	hitachi-afm.la \
 	igorfile.la \
 	intematix.la \
@@ -127,7 +128,8 @@ no_undefined = -no-undefined
 endif
 
 AM_CPPFLAGS = -I$(top_srcdir) -DG_LOG_DOMAIN=\"Module\"
-AM_CFLAGS = @COMMON_CFLAGS@ @PNG_CFLAGS@
+AM_CFLAGS = @COMMON_CFLAGS@
+AM_CXXFLAGS = @COMMON_CXXFLAGS@
 AM_LDFLAGS = -avoid-version -module $(no_undefined) $(module_libadd)
 
 if MODULE_DEPENDENCIES
@@ -160,6 +162,7 @@ ezdfile_la_SOURCES       = ezdfile.c
 gdeffile_la_SOURCES      = gdeffile.c
 gsffile_la_SOURCES       = gsffile.c
 gwyfile_la_SOURCES       = gwyfile.c
+hdrimage_la_SOURCES      = hdrimage.cc
 hdf4file_la_SOURCES      = hdf4file.c
 hitachi_afm_la_SOURCES   = hitachi-afm.c
 igorfile_la_SOURCES      = igorfile.c
@@ -222,6 +225,9 @@ wsxmfile_la_SOURCES      = wsxmfile.c
 # It compiles also without.
 createc_la_LIBADD        = @ZLIB@
 pixmap_la_LIBADD         = @PNG_LIBS@
+pixmap_la_CFLAGS         = $(AM_CFLAGS) @PNG_CFLAGS@
+hdrimage_la_LIBADD       = @EXR_LIBS@ @PNG_LIBS@
+hdrimage_la_CXXFLAGS     = $(AM_CXXFLAGS) @PNG_CFLAGS@ @EXR_CFLAGS@
 
 if HAVE_XML2
 if HAVE_ZLIB
