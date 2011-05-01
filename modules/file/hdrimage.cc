@@ -74,48 +74,73 @@ typedef enum {
 typedef struct {
     GwyBitDepth bit_depth;
     gdouble zscale;
+    /* Interface */
+    gdouble pmin;
+    gdouble pmax;
+    gdouble pcentre;
+    gdouble min;
+    gdouble max;
 } EXRSaveArgs;
 
 typedef struct {
     EXRSaveArgs *args;
+    GwyDataField *field;
     GSList *bit_depth;
     GtkWidget *zscale;
-    GtkWidget *min_label;
     GtkWidget *min;
-    GtkWidget *max_label;
+    GtkWidget *min_image;
     GtkWidget *max;
-    GtkWidget *centre_label;
+    GtkWidget *max_image;
     GtkWidget *centre;
     GtkWidget *use_centre;
     GtkWidget *message;
 } EXRSaveControls;
 
-static gboolean module_register  (void);
-static gint     exr_detect       (const GwyFileDetectInfo *fileinfo,
-                                  gboolean only_name,
-                                  const gchar *name);
-static gboolean exr_export       (GwyContainer *data,
-                                  const gchar *filename,
-                                  GwyRunType mode,
-                                  GError **error);
-static gboolean exr_save_dialog(EXRSaveArgs *args,
-                GwyDataField *field,
-                gdouble pmin, gdouble pmax, gdouble pcentre);
-static void exr_save_bit_depth_changed(GtkWidget *button,
-                           EXRSaveControls *controls);
-static void     exr_write_image  (GwyDataField *field,
-                                  gchar *imagedata,
-                                  const gchar *filename,
-                                  const gchar *title,
-                                  GwyBitDepth bit_depth,
-                                  gdouble zscale);
-static void     find_range       (GwyDataField *field,
-                                  gdouble *pmin,
-                                  gdouble *pmax,
-                                  gdouble *pcentre);
-static gchar*   create_image_data(GwyDataField *field,
-                                  GwyBitDepth bit_depth,
-                                  gdouble zscale);
+static gboolean module_register            (void);
+static gint     exr_detect                 (const GwyFileDetectInfo *fileinfo,
+                                            gboolean only_name,
+                                            const gchar *name);
+static gboolean exr_export                 (GwyContainer *data,
+                                            const gchar *filename,
+                                            GwyRunType mode,
+                                            GError **error);
+static gboolean exr_save_dialog            (EXRSaveArgs *args,
+                                            GwyDataField *field);
+static void     exr_save_update_zscale     (EXRSaveControls *controls);
+static void     exr_save_update_ranges     (EXRSaveControls *controls);
+static void     exr_save_bit_depth_changed (GtkWidget *button,
+                                            EXRSaveControls *controls);
+static void     exr_save_zscale_changed    (GtkWidget *entry,
+                                            EXRSaveControls *controls);
+static void     exr_save_use_centre_clicked(GtkWidget *button,
+                                            EXRSaveControls *controls);
+static gdouble  suggest_zscale             (GwyBitDepth bit_depth,
+                                            gdouble pmin,
+                                            gdouble pmax,
+                                            gdouble pcentre);
+static void     representable_range        (GwyBitDepth bit_depth,
+                                            gdouble zscale,
+                                            gdouble *min,
+                                            gdouble *max);
+static void     exr_write_image            (GwyDataField *field,
+                                            gchar *imagedata,
+                                            const gchar *filename,
+                                            const gchar *title,
+                                            GwyBitDepth bit_depth,
+                                            gdouble zscale);
+static void     find_range                 (GwyDataField *field,
+                                            gdouble *fmin,
+                                            gdouble *fmax,
+                                            gdouble *pmin,
+                                            gdouble *pmax,
+                                            gdouble *pcentre);
+static gchar*   create_image_data          (GwyDataField *field,
+                                            GwyBitDepth bit_depth,
+                                            gdouble zscale);
+static void     exr_save_load_args         (GwyContainer *container,
+                                            EXRSaveArgs *args);
+static void     exr_save_save_args         (GwyContainer *container,
+                                            EXRSaveArgs *args);
 
 static const EXRSaveArgs exr_save_defaults = {
     GWY_BIT_DEPTH_HALF, 0.0
@@ -167,17 +192,20 @@ exr_detect(const GwyFileDetectInfo *fileinfo,
 }
 
 static gboolean
-exr_export(G_GNUC_UNUSED GwyContainer *data,
+exr_export(GwyContainer *data,
            const gchar *filename,
            GwyRunType mode,
            GError **error)
 {
-    EXRSaveArgs args = exr_save_defaults;
+    EXRSaveArgs args;
     GwyDataField *field;
     guint id;
     gboolean ok = TRUE;
+    const gchar *title = "Data";
+    gchar *imagedata, *key;
 
-    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &field,
+    gwy_app_data_browser_get_current(GWY_APP_CONTAINER, &data,
+                                     GWY_APP_DATA_FIELD, &field,
                                      GWY_APP_DATA_FIELD_ID, &id,
                                      0);
     if (!field) {
@@ -185,25 +213,31 @@ exr_export(G_GNUC_UNUSED GwyContainer *data,
         return FALSE;
     }
 
-    gdouble pmax, pmin, pcentre;
-    /* Statistics of positive values */
-    find_range(field, &pmin, &pmax, &pcentre);
+    exr_save_load_args(gwy_app_settings_get(), &args);
+    find_range(field,
+               &args.min, &args.max, &args.pmin, &args.pmax, &args.pcentre);
 
     if (mode == GWY_RUN_INTERACTIVE
-        && !exr_save_dialog(&args, field, pmin, pmax, pcentre)) {
-        //exr_save_save_args(settings, &args);
+        && !exr_save_dialog(&args, field)) {
+        exr_save_save_args(gwy_app_settings_get(), &args);
         err_CANCELLED(error);
         return FALSE;
     }
+    exr_save_save_args(gwy_app_settings_get(), &args);
 
-    gchar *imagedata = create_image_data(field, args.bit_depth, args.zscale);
+    imagedata = create_image_data(field, args.bit_depth, args.zscale);
+    key = g_strdup_printf("/%d/data/title", id);
+    gwy_container_gis_string_by_name(data, key, (const guchar**)&title);
+    g_free(key);
 
     try {
         exr_write_image(field, imagedata,
-                        filename, "Height", args.bit_depth, args.zscale);
+                        filename, title, args.bit_depth, args.zscale);
     }
     catch (const std::exception &exc) {
-        g_warning("Exception from libImf: %s", exc.what());
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_IO,
+                    _("EXR image writing failed with libImf error: %s"),
+                    exc.what());
         ok = FALSE;
     }
 
@@ -214,18 +248,17 @@ exr_export(G_GNUC_UNUSED GwyContainer *data,
 
 static gboolean
 exr_save_dialog(EXRSaveArgs *args,
-                GwyDataField *field,
-                gdouble pmin, gdouble pmax, gdouble pcentre)
+                GwyDataField *field)
 {
     GtkWidget *dialog, *label, *align;
     GtkTable *table;
     EXRSaveControls controls;
-    gint row, response, power10;
+    gint row, response;
     GwySIValueFormat *vf;
+    gchar *s;
 
-    // XXX:
-    args->zscale = pcentre;
     controls.args = args;
+    controls.field = field;
 
     dialog = gtk_dialog_new_with_buttons(_("Export EXR Image"), NULL,
                                          (GtkDialogFlags)0,
@@ -235,7 +268,7 @@ exr_save_dialog(EXRSaveArgs *args,
     gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
 
-    table = GTK_TABLE(gtk_table_new(10, 3, FALSE));
+    table = GTK_TABLE(gtk_table_new(11, 3, FALSE));
     gtk_table_set_row_spacings(table, 2);
     gtk_table_set_col_spacings(table, 6);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
@@ -265,66 +298,85 @@ exr_save_dialog(EXRSaveArgs *args,
                      GTK_FILL, (GtkAttachOptions)0, 0, 0);
 
     controls.zscale = gtk_entry_new();
-    gtk_entry_set_width_chars(GTK_ENTRY(controls.zscale), 8);
+    gtk_entry_set_width_chars(GTK_ENTRY(controls.zscale), 10);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls.zscale);
-    // TODO: Set default value
     gtk_table_attach(table, controls.zscale, 1, 2, row, row+1,
                      (GtkAttachOptions)(GTK_EXPAND | GTK_FILL),
                      (GtkAttachOptions)0,
                      0, 0);
+    g_signal_connect(controls.zscale, "activate",
+                     G_CALLBACK(exr_save_zscale_changed), &controls);
     gwy_widget_set_activate_on_unfocus(controls.zscale, TRUE);
 
-    // TODO: Handle null range.
-    power10 = 3*GWY_ROUND(log(pcentre)/M_LN10/3.0);
-    vf = gwy_si_unit_get_format_for_power10(gwy_data_field_get_si_unit_z(field),
-                                            GWY_SI_UNIT_FORMAT_VFMARKUP,
-                                            power10, NULL);
-    label = gtk_label_new(vf->units);
-    gwy_si_unit_value_format_free(vf);
+    s = gwy_si_unit_get_string(gwy_data_field_get_si_unit_z(field),
+                               GWY_SI_UNIT_FORMAT_VFMARKUP);
+    label = gtk_label_new(s);
+    g_free(s);
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(table, label, 2, 3, row, row+1,
                      GTK_FILL, (GtkAttachOptions)0, 0, 0);
     row++;
 
-    controls.min_label = label = gtk_label_new("Min");
+    gtk_table_set_row_spacing(table, row-1, 8);
+    label = gtk_label_new(_("Data"));
+    gtk_table_attach(table, label, 1, 2, row, row+1,
+                     GTK_FILL, (GtkAttachOptions)0, 0, 0);
+    label = gtk_label_new(_("Representable"));
+    gtk_table_attach(table, label, 2, 3, row, row+1,
+                     GTK_FILL, (GtkAttachOptions)0, 0, 0);
+    row++;
+
+    label = gtk_label_new(_("Minimum:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(table, label, 0, 1, row, row+1,
                      GTK_FILL, (GtkAttachOptions)0, 0, 0);
 
-    controls.min = label = gtk_label_new("0.1");
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    controls.min = label = gtk_label_new("");
+    gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
     gtk_table_attach(table, label, 1, 2, row, row+1,
+                     GTK_FILL, (GtkAttachOptions)0, 0, 0);
+
+    controls.min_image = label = gtk_label_new("");
+    gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
+    gtk_table_attach(table, label, 2, 3, row, row+1,
                      GTK_FILL, (GtkAttachOptions)0, 0, 0);
     row++;
 
-    controls.max_label = label = gtk_label_new("Max");
+    label = gtk_label_new(_("Maximum:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(table, label, 0, 1, row, row+1,
                      GTK_FILL, (GtkAttachOptions)0, 0, 0);
 
-    controls.max = label = gtk_label_new("1.0");
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    controls.max = label = gtk_label_new("");
+    gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
     gtk_table_attach(table, label, 1, 2, row, row+1,
+                     GTK_FILL, (GtkAttachOptions)0, 0, 0);
+
+    controls.max_image = label = gtk_label_new("");
+    gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
+    gtk_table_attach(table, label, 2, 3, row, row+1,
                      GTK_FILL, (GtkAttachOptions)0, 0, 0);
     row++;
 
-    controls.centre_label = label = gtk_label_new("Z scale");
+    gtk_table_set_row_spacing(table, row-1, 8);
+    label = gtk_label_new("Suggested z scale:");
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(table, label, 0, 1, row, row+1,
                      GTK_FILL, (GtkAttachOptions)0, 0, 0);
 
-    controls.centre = label = gtk_label_new("0.3");
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    controls.centre = label = gtk_label_new("");
+    gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
     gtk_table_attach(table, label, 1, 2, row, row+1,
                      GTK_FILL, (GtkAttachOptions)0, 0, 0);
-    row++;
 
-    align = gtk_alignment_new(0.0, 0.5, 0.0, 0.0);
-    gtk_table_attach(table, align, 1, 2, row, row+1,
+    align = gtk_alignment_new(1.0, 0.5, 0.0, 0.0);
+    gtk_table_attach(table, align, 2, 3, row, row+1,
                      GTK_FILL, (GtkAttachOptions)0, 0, 0);
 
     controls.use_centre = gtk_button_new_with_mnemonic(_("_Use"));
     gtk_container_add(GTK_CONTAINER(align), controls.use_centre);
+    g_signal_connect(controls.use_centre, "clicked",
+                     G_CALLBACK(exr_save_use_centre_clicked), &controls);
     row++;
 
     gtk_table_set_row_spacing(table, row-1, 8);
@@ -334,7 +386,8 @@ exr_save_dialog(EXRSaveArgs *args,
                      GTK_FILL, (GtkAttachOptions)0, 0, 0);
     row++;
 
-    // TODO: Update min/max and message according to the data type.
+    exr_save_update_zscale(&controls);
+    exr_save_update_ranges(&controls);
 
     gtk_widget_show_all(dialog);
 
@@ -363,12 +416,161 @@ exr_save_dialog(EXRSaveArgs *args,
 }
 
 static void
+exr_save_update_zscale(EXRSaveControls *controls)
+{
+    gdouble zscale = controls->args->zscale;
+    gchar *s = g_strdup_printf("%g", zscale);
+    gtk_entry_set_text(GTK_ENTRY(controls->zscale), s);
+    g_free(s);
+}
+
+static void
+exr_save_update_ranges(EXRSaveControls *controls)
+{
+    EXRSaveArgs *args = controls->args;
+    gdouble zscale, rmin, rmax;
+    GwySIUnit *unit;
+    GwySIValueFormat *vf;
+    gchar *s;
+
+    unit = gwy_data_field_get_si_unit_z(controls->field);
+
+    vf = gwy_si_unit_get_format_with_digits(unit, GWY_SI_UNIT_FORMAT_VFMARKUP,
+                                            args->min, 3, NULL);
+    s = g_strdup_printf("%.*f%s%s",
+                        vf->precision, args->min/vf->magnitude,
+                        *vf->units ? " " : "",
+                        vf->units);
+    gtk_label_set_markup(GTK_LABEL(controls->min), s);
+    g_free(s);
+
+    vf = gwy_si_unit_get_format_with_digits(unit, GWY_SI_UNIT_FORMAT_VFMARKUP,
+                                            args->max, 3, vf);
+    s = g_strdup_printf("%.*f%s%s",
+                        vf->precision, args->max/vf->magnitude,
+                        *vf->units ? " " : "",
+                        vf->units);
+    gtk_label_set_markup(GTK_LABEL(controls->max), s);
+    g_free(s);
+
+    zscale = suggest_zscale(args->bit_depth,
+                            args->pmin, args->pmax, args->pcentre);
+    vf = gwy_si_unit_get_format_with_digits(unit, GWY_SI_UNIT_FORMAT_VFMARKUP,
+                                            zscale, 3, vf);
+    s = g_strdup_printf("%.*f%s%s",
+                        vf->precision, zscale/vf->magnitude,
+                        *vf->units ? " " : "",
+                        vf->units);
+    gtk_label_set_markup(GTK_LABEL(controls->centre), s);
+    g_free(s);
+
+    representable_range(args->bit_depth, args->zscale, &rmin, &rmax);
+    vf = gwy_si_unit_get_format_with_digits(unit, GWY_SI_UNIT_FORMAT_VFMARKUP,
+                                            rmin, 3, vf);
+    s = g_strdup_printf("%.*f%s%s",
+                        vf->precision, rmin/vf->magnitude,
+                        *vf->units ? " " : "",
+                        vf->units);
+    gtk_label_set_markup(GTK_LABEL(controls->min_image), s);
+    g_free(s);
+
+    representable_range(args->bit_depth, args->zscale, &rmin, &rmax);
+    vf = gwy_si_unit_get_format_with_digits(unit, GWY_SI_UNIT_FORMAT_VFMARKUP,
+                                            rmax, 3, vf);
+    s = g_strdup_printf("%.*f%s%s",
+                        vf->precision, rmax/vf->magnitude,
+                        *vf->units ? " " : "",
+                        vf->units);
+    gtk_label_set_markup(GTK_LABEL(controls->max_image), s);
+    g_free(s);
+
+    gwy_si_unit_value_format_free(vf);
+}
+
+static void
 exr_save_bit_depth_changed(G_GNUC_UNUSED GtkWidget *button,
                            EXRSaveControls *controls)
 {
-    controls->args->bit_depth
-        = (GwyBitDepth)gwy_radio_buttons_get_current(controls->bit_depth);
-    // TODO
+    gint value = gwy_radio_buttons_get_current(controls->bit_depth);
+    controls->args->bit_depth = (GwyBitDepth)value;
+    exr_save_update_ranges(controls);
+}
+
+static void
+exr_save_zscale_changed(GtkWidget *entry,
+                        EXRSaveControls *controls)
+{
+    const gchar *value = gtk_entry_get_text(GTK_ENTRY(entry));
+    gdouble zscale;
+
+    if ((zscale = g_strtod(value, NULL)) > 0.0)
+        controls->args->zscale = zscale;
+    else
+        exr_save_update_zscale(controls);
+
+    exr_save_update_ranges(controls);
+}
+
+static void
+exr_save_use_centre_clicked(G_GNUC_UNUSED GtkWidget *button,
+                            EXRSaveControls *controls)
+{
+    EXRSaveArgs *args = controls->args;
+    args->zscale = suggest_zscale(args->bit_depth,
+                                  args->pmin, args->pmax, args->pcentre);
+    exr_save_update_zscale(controls);
+    gtk_widget_activate(controls->zscale);
+}
+
+static gdouble
+suggest_zscale(GwyBitDepth bit_depth,
+               gdouble pmin, gdouble pmax, gdouble pcentre)
+{
+    if (bit_depth == GWY_BIT_DEPTH_FLOAT)
+        return 1.0;
+
+    if (bit_depth == GWY_BIT_DEPTH_INT16)
+        return pmax/G_MAXUINT16;
+    if (bit_depth == GWY_BIT_DEPTH_INT32)
+        return pmax/G_MAXUINT32;
+
+    g_return_val_if_fail(bit_depth == GWY_BIT_DEPTH_HALF, 1.0);
+
+    // Range OK as-is
+    if (pmin >= HALF_NRM_MIN && pmax <= HALF_MAX)
+        return 1.0;
+
+    // Range OK if scaled
+    if (pmax/pmin < (double)HALF_MAX/HALF_NRM_MIN)
+        return sqrt(pmax/HALF_MAX * pmin/HALF_NRM_MIN);
+
+    // Range not OK, may need a bit more sopistication here...
+    return pcentre;
+}
+
+static void
+representable_range(GwyBitDepth bit_depth, gdouble zscale,
+                    gdouble *min, gdouble *max)
+{
+    if (bit_depth == GWY_BIT_DEPTH_FLOAT) {
+        *min = zscale*G_MINFLOAT;
+        *max = zscale*G_MAXFLOAT;
+    }
+    else if (bit_depth == GWY_BIT_DEPTH_INT16) {
+        *min = zscale;
+        *max = zscale*G_MAXUINT16;
+    }
+    else if (bit_depth == GWY_BIT_DEPTH_INT32) {
+        *min = zscale;
+        *max = zscale*G_MAXUINT32;
+    }
+    else if (bit_depth == GWY_BIT_DEPTH_HALF) {
+        *min = zscale*HALF_NRM_MIN;
+        *max = zscale*HALF_MAX;
+    }
+    else {
+        g_assert_not_reached();
+    }
 }
 
 // NB: This function raises a C++ exception instead of reporting the error via
@@ -461,14 +663,16 @@ create_image_data(GwyDataField *field,
         retval = (gchar*)imagedata;
 
         for (i = xres*yres; i; i--, d++, imagedata++)
-            *imagedata = (guint16)CLAMP(*d/zscale, 0.0, 65535.0);
+            *imagedata = (guint16)CLAMP(*d/zscale, 0.0, G_MAXUINT16);
     }
     else if (bit_depth == GWY_BIT_DEPTH_INT32) {
         guint32 *imagedata = g_new(guint32, xres*yres);
         retval = (gchar*)imagedata;
 
-        for (i = xres*yres; i; i--, d++, imagedata++)
-            *imagedata = (guint32)CLAMP(*d/zscale, 0.0, 4294967295.0);
+        for (i = xres*yres; i; i--, d++, imagedata++) {
+            *imagedata = (guint32)CLAMP(*d/zscale, 0.0, G_MAXUINT32);
+            g_print("%u ", *imagedata);
+        }
     }
     else if (bit_depth == GWY_BIT_DEPTH_FLOAT) {
         gfloat *imagedata = g_new(gfloat, xres*yres);
@@ -493,6 +697,7 @@ create_image_data(GwyDataField *field,
 
 static void
 find_range(GwyDataField *field,
+           gdouble *fmin, gdouble *fmax,
            gdouble *pmin, gdouble *pmax, gdouble *pcentre)
 {
     gdouble min = G_MAXDOUBLE, max = G_MINDOUBLE, logcentre = 0.0;
@@ -518,6 +723,43 @@ find_range(GwyDataField *field,
     *pmax = max;
     *pmin = min;
     *pcentre = exp(logcentre/nc);
+
+    gwy_data_field_get_min_max(field, fmin, fmax);
+}
+
+static const gchar bit_depth_key[] = "/module/openexr/bit_depth";
+static const gchar zscale_key[]    = "/module/openexr/zscale";
+
+static void
+exr_save_sanitize_args(EXRSaveArgs *args)
+{
+    if (args->bit_depth != GWY_BIT_DEPTH_HALF
+        && args->bit_depth != GWY_BIT_DEPTH_INT32
+        && args->bit_depth != GWY_BIT_DEPTH_FLOAT)
+        args->bit_depth = GWY_BIT_DEPTH_HALF;
+
+    if (!(args->zscale > 0.0))
+        args->zscale = 1.0;
+}
+
+static void
+exr_save_load_args(GwyContainer *container,
+                   EXRSaveArgs *args)
+{
+    *args = exr_save_defaults;
+
+    gwy_container_gis_double_by_name(container, zscale_key, &args->zscale);
+    gwy_container_gis_enum_by_name(container, bit_depth_key,
+                                   (guint*)&args->bit_depth);
+    exr_save_sanitize_args(args);
+}
+
+static void
+exr_save_save_args(GwyContainer *container,
+                   EXRSaveArgs *args)
+{
+    gwy_container_set_double_by_name(container, zscale_key, args->zscale);
+    gwy_container_set_enum_by_name(container, bit_depth_key, args->bit_depth);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
