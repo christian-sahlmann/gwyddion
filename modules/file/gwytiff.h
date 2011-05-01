@@ -59,7 +59,7 @@ typedef enum {
 } GwyTIFFDataType;
 
 /* Standard TIFF tags */
-enum {
+typedef enum {
     GWY_TIFFTAG_IMAGE_WIDTH       = 256,
     GWY_TIFFTAG_IMAGE_LENGTH      = 257,
     GWY_TIFFTAG_BITS_PER_SAMPLE   = 258,
@@ -232,7 +232,7 @@ gwy_tiff_load_impl(GwyTIFF *tiff,
             GwyTIFFEntry entry;
 
             entry.tag = tiff->get_guint16(&p);
-            entry.type = tiff->get_guint16(&p);
+            entry.type = (GwyTIFFDataType)tiff->get_guint16(&p);
             entry.count = tiff->get_guint32(&p);
             memcpy(entry.value, p, 4);
             p += 4;
@@ -251,7 +251,7 @@ gwy_tiff_free(GwyTIFF *tiff)
         guint i;
 
         for (i = 0; i < tiff->dirs->len; i++)
-            g_array_free(g_ptr_array_index(tiff->dirs, i), TRUE);
+            g_array_free((GArray*)g_ptr_array_index(tiff->dirs, i), TRUE);
 
         g_ptr_array_free(tiff->dirs, TRUE);
     }
@@ -323,7 +323,7 @@ gwy_tiff_tags_valid(const GwyTIFF *tiff,
     guint i, j, offset, item_size;
 
     for (i = 0; i < tiff->dirs->len; i++) {
-        const GArray *tags = g_ptr_array_index(tiff->dirs, i);
+        const GArray *tags = (const GArray*)g_ptr_array_index(tiff->dirs, i);
 
         for (j = 0; j < tags->len; j++) {
             const GwyTIFFEntry *entry;
@@ -369,7 +369,8 @@ gwy_tiff_sort_tags(GwyTIFF *tiff)
     guint i;
 
     for (i = 0; i < tiff->dirs->len; i++)
-        g_array_sort(g_ptr_array_index(tiff->dirs, i), gwy_tiff_tag_compare);
+        g_array_sort((GArray*)g_ptr_array_index(tiff->dirs, i),
+                     gwy_tiff_tag_compare);
 }
 
 static const GwyTIFFEntry*
@@ -396,7 +397,7 @@ gwy_tiff_find_tag(const GwyTIFF *tiff,
     if (dirno >= tiff->dirs->len)
         return NULL;
 
-    tags = g_ptr_array_index(tiff->dirs, dirno);
+    tags = (const GArray*)g_ptr_array_index(tiff->dirs, dirno);
     lo = 0;
     hi = tags->len-1;
     while (hi - lo > 1) {
@@ -745,7 +746,7 @@ gwy_tiff_get_image_reader(const GwyTIFF *tiff,
     }
 
     /* If we got here we are convinced we can read the image data. */
-    return g_memdup(&reader, sizeof(GwyTIFFImageReader));
+    return (GwyTIFFImageReader*)g_memdup(&reader, sizeof(GwyTIFFImageReader));
 }
 
 G_GNUC_UNUSED static inline void
