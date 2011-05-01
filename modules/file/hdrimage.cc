@@ -38,13 +38,19 @@
 #endif
 
 #ifdef HAVE_EXR
-#include <exception>
-#include <ImfChannelList.h>
-#include <ImfDoubleAttribute.h>
-#include <ImfFrameBuffer.h>
-#include <ImfInputFile.h>
-#include <ImfOutputFile.h>
-#include <ImfStringAttribute.h>
+#  include <exception>
+#  include <half.h>
+#  include <ImfChannelList.h>
+#  include <ImfDoubleAttribute.h>
+#  include <ImfFrameBuffer.h>
+#  include <ImfInputFile.h>
+#  include <ImfOutputFile.h>
+#  include <ImfStringAttribute.h>
+#else
+#  define HALF_MIN 5.96046448e-08
+#  define HALF_NRM_MIN 6.10351562e-05
+#  define HALF_MAX 65504.0
+#  define half guint16
 #endif
 
 #include <libgwyddion/gwymacros.h>
@@ -97,6 +103,7 @@ typedef struct {
 } EXRSaveControls;
 
 static gboolean module_register            (void);
+#ifdef HAVE_EXR
 static gint     exr_detect                 (const GwyFileDetectInfo *fileinfo,
                                             gboolean only_name,
                                             const gchar *name);
@@ -114,6 +121,17 @@ static void     exr_save_zscale_changed    (GtkWidget *entry,
                                             EXRSaveControls *controls);
 static void     exr_save_use_centre_clicked(GtkWidget *button,
                                             EXRSaveControls *controls);
+static void     exr_write_image            (GwyDataField *field,
+                                            gchar *imagedata,
+                                            const gchar *filename,
+                                            const gchar *title,
+                                            GwyBitDepth bit_depth,
+                                            gdouble zscale);
+static void     exr_save_load_args         (GwyContainer *container,
+                                            EXRSaveArgs *args);
+static void     exr_save_save_args         (GwyContainer *container,
+                                            EXRSaveArgs *args);
+#endif
 static gdouble  suggest_zscale             (GwyBitDepth bit_depth,
                                             gdouble pmin,
                                             gdouble pmax,
@@ -122,12 +140,6 @@ static void     representable_range        (GwyBitDepth bit_depth,
                                             gdouble zscale,
                                             gdouble *min,
                                             gdouble *max);
-static void     exr_write_image            (GwyDataField *field,
-                                            gchar *imagedata,
-                                            const gchar *filename,
-                                            const gchar *title,
-                                            GwyBitDepth bit_depth,
-                                            gdouble zscale);
 static void     find_range                 (GwyDataField *field,
                                             gdouble *fmin,
                                             gdouble *fmax,
@@ -137,14 +149,12 @@ static void     find_range                 (GwyDataField *field,
 static gchar*   create_image_data          (GwyDataField *field,
                                             GwyBitDepth bit_depth,
                                             gdouble zscale);
-static void     exr_save_load_args         (GwyContainer *container,
-                                            EXRSaveArgs *args);
-static void     exr_save_save_args         (GwyContainer *container,
-                                            EXRSaveArgs *args);
 
+#ifdef HAVE_EXR
 static const EXRSaveArgs exr_save_defaults = {
     GWY_BIT_DEPTH_HALF, 0.0
 };
+#endif
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -162,6 +172,7 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(void)
 {
+#ifdef HAVE_EXR
     gwy_file_func_register("openexr",
                            N_("OpenEXR images (.exr)"),
                            (GwyFileDetectFunc)&exr_detect,
@@ -169,10 +180,18 @@ module_register(void)
                            NULL,
                            NULL,
                            (GwyFileSaveFunc)&exr_export);
+#endif
 
     return TRUE;
 }
 
+/***************************************************************************
+ *
+ * OpenEXR
+ *
+ ***************************************************************************/
+
+#ifdef HAVE_EXR
 static gint
 exr_detect(const GwyFileDetectInfo *fileinfo,
            gboolean only_name,
@@ -522,57 +541,6 @@ exr_save_use_centre_clicked(G_GNUC_UNUSED GtkWidget *button,
     gtk_widget_activate(controls->zscale);
 }
 
-static gdouble
-suggest_zscale(GwyBitDepth bit_depth,
-               gdouble pmin, gdouble pmax, gdouble pcentre)
-{
-    if (bit_depth == GWY_BIT_DEPTH_FLOAT)
-        return 1.0;
-
-    if (bit_depth == GWY_BIT_DEPTH_INT16)
-        return pmax/G_MAXUINT16;
-    if (bit_depth == GWY_BIT_DEPTH_INT32)
-        return pmax/G_MAXUINT32;
-
-    g_return_val_if_fail(bit_depth == GWY_BIT_DEPTH_HALF, 1.0);
-
-    // Range OK as-is
-    if (pmin >= HALF_NRM_MIN && pmax <= HALF_MAX)
-        return 1.0;
-
-    // Range OK if scaled
-    if (pmax/pmin < (double)HALF_MAX/HALF_NRM_MIN)
-        return sqrt(pmax/HALF_MAX * pmin/HALF_NRM_MIN);
-
-    // Range not OK, may need a bit more sopistication here...
-    return pcentre;
-}
-
-static void
-representable_range(GwyBitDepth bit_depth, gdouble zscale,
-                    gdouble *min, gdouble *max)
-{
-    if (bit_depth == GWY_BIT_DEPTH_FLOAT) {
-        *min = zscale*G_MINFLOAT;
-        *max = zscale*G_MAXFLOAT;
-    }
-    else if (bit_depth == GWY_BIT_DEPTH_INT16) {
-        *min = zscale;
-        *max = zscale*G_MAXUINT16;
-    }
-    else if (bit_depth == GWY_BIT_DEPTH_INT32) {
-        *min = zscale;
-        *max = zscale*G_MAXUINT32;
-    }
-    else if (bit_depth == GWY_BIT_DEPTH_HALF) {
-        *min = zscale*HALF_NRM_MIN;
-        *max = zscale*HALF_MAX;
-    }
-    else {
-        g_assert_not_reached();
-    }
-}
-
 // NB: This function raises a C++ exception instead of reporting the error via
 // GError.  The caller must catch it.
 static void
@@ -645,6 +613,99 @@ exr_write_image(GwyDataField *field,
 
     outfile.setFrameBuffer(framebuffer);
     outfile.writePixels(yres);
+}
+
+static const gchar bit_depth_key[] = "/module/openexr/bit_depth";
+static const gchar zscale_key[]    = "/module/openexr/zscale";
+
+static void
+exr_save_sanitize_args(EXRSaveArgs *args)
+{
+    if (args->bit_depth != GWY_BIT_DEPTH_HALF
+        && args->bit_depth != GWY_BIT_DEPTH_INT32
+        && args->bit_depth != GWY_BIT_DEPTH_FLOAT)
+        args->bit_depth = GWY_BIT_DEPTH_HALF;
+
+    if (!(args->zscale > 0.0))
+        args->zscale = 1.0;
+}
+
+static void
+exr_save_load_args(GwyContainer *container,
+                   EXRSaveArgs *args)
+{
+    *args = exr_save_defaults;
+
+    gwy_container_gis_double_by_name(container, zscale_key, &args->zscale);
+    gwy_container_gis_enum_by_name(container, bit_depth_key,
+                                   (guint*)&args->bit_depth);
+    exr_save_sanitize_args(args);
+}
+
+static void
+exr_save_save_args(GwyContainer *container,
+                   EXRSaveArgs *args)
+{
+    gwy_container_set_double_by_name(container, zscale_key, args->zscale);
+    gwy_container_set_enum_by_name(container, bit_depth_key, args->bit_depth);
+}
+#endif
+
+/***************************************************************************
+ *
+ * Common HDR image functions
+ *
+ ***************************************************************************/
+
+static gdouble
+suggest_zscale(GwyBitDepth bit_depth,
+               gdouble pmin, gdouble pmax, gdouble pcentre)
+{
+    if (bit_depth == GWY_BIT_DEPTH_FLOAT)
+        return 1.0;
+
+    if (bit_depth == GWY_BIT_DEPTH_INT16)
+        return pmax/G_MAXUINT16;
+    if (bit_depth == GWY_BIT_DEPTH_INT32)
+        return pmax/G_MAXUINT32;
+
+    g_return_val_if_fail(bit_depth == GWY_BIT_DEPTH_HALF, 1.0);
+
+    // Range OK as-is
+    if (pmin >= HALF_NRM_MIN && pmax <= HALF_MAX)
+        return 1.0;
+
+    // Range OK if scaled
+    if (pmax/pmin < (double)HALF_MAX/HALF_NRM_MIN)
+        return sqrt(pmax/HALF_MAX * pmin/HALF_NRM_MIN);
+
+    // Range not OK, may need a bit more sopistication here...
+    return pcentre;
+}
+
+static void
+representable_range(GwyBitDepth bit_depth, gdouble zscale,
+                    gdouble *min, gdouble *max)
+{
+    if (bit_depth == GWY_BIT_DEPTH_FLOAT) {
+        *min = zscale*G_MINFLOAT;
+        *max = zscale*G_MAXFLOAT;
+    }
+    else if (bit_depth == GWY_BIT_DEPTH_INT16) {
+        *min = zscale;
+        *max = zscale*G_MAXUINT16;
+    }
+    else if (bit_depth == GWY_BIT_DEPTH_INT32) {
+        *min = zscale;
+        *max = zscale*G_MAXUINT32;
+    }
+    else if (bit_depth == GWY_BIT_DEPTH_HALF) {
+        *min = zscale*HALF_NRM_MIN;
+        *max = zscale*HALF_MAX;
+    }
+    else {
+        g_assert_not_reached();
+    }
 }
 
 static gchar*
@@ -725,41 +786,6 @@ find_range(GwyDataField *field,
     *pcentre = exp(logcentre/nc);
 
     gwy_data_field_get_min_max(field, fmin, fmax);
-}
-
-static const gchar bit_depth_key[] = "/module/openexr/bit_depth";
-static const gchar zscale_key[]    = "/module/openexr/zscale";
-
-static void
-exr_save_sanitize_args(EXRSaveArgs *args)
-{
-    if (args->bit_depth != GWY_BIT_DEPTH_HALF
-        && args->bit_depth != GWY_BIT_DEPTH_INT32
-        && args->bit_depth != GWY_BIT_DEPTH_FLOAT)
-        args->bit_depth = GWY_BIT_DEPTH_HALF;
-
-    if (!(args->zscale > 0.0))
-        args->zscale = 1.0;
-}
-
-static void
-exr_save_load_args(GwyContainer *container,
-                   EXRSaveArgs *args)
-{
-    *args = exr_save_defaults;
-
-    gwy_container_gis_double_by_name(container, zscale_key, &args->zscale);
-    gwy_container_gis_enum_by_name(container, bit_depth_key,
-                                   (guint*)&args->bit_depth);
-    exr_save_sanitize_args(args);
-}
-
-static void
-exr_save_save_args(GwyContainer *container,
-                   EXRSaveArgs *args)
-{
-    gwy_container_set_double_by_name(container, zscale_key, args->zscale);
-    gwy_container_set_enum_by_name(container, bit_depth_key, args->bit_depth);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
