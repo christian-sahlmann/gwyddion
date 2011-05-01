@@ -63,6 +63,7 @@
 
 #include "err.h"
 #include "gwytiff.h"
+#include "image-keys.h"
 
 #define EXR_EXTENSION ".exr"
 #define EXR_MAGIC "\x76\x2f\x31\x01"
@@ -570,26 +571,27 @@ exr_write_image(GwyDataField *field,
 
     gdouble v;
     v = gwy_data_field_get_xreal(field);
-    header.insert("Gwy::XReal", Imf::DoubleAttribute(v));
+    header.insert(GWY_IMGKEY_XREAL, Imf::DoubleAttribute(v));
     v = gwy_data_field_get_xreal(field);
-    header.insert("Gwy::YReal", Imf::DoubleAttribute(v));
-    header.insert("Gwy::ZScale", Imf::DoubleAttribute(zscale));
+    header.insert(GWY_IMGKEY_YREAL, Imf::DoubleAttribute(v));
+    header.insert(GWY_IMGKEY_ZSCALE, Imf::DoubleAttribute(zscale));
     if ((v = gwy_data_field_get_xoffset(field)))
-        header.insert("Gwy::XOffset", Imf::DoubleAttribute(v));
+        header.insert(GWY_IMGKEY_XOFFSET, Imf::DoubleAttribute(v));
     if ((v = gwy_data_field_get_yoffset(field)))
-        header.insert("Gwy::YOffset", Imf::DoubleAttribute(v));
+        header.insert(GWY_IMGKEY_YOFFSET, Imf::DoubleAttribute(v));
 
-    header.insert("Gwy::Title", Imf::StringAttribute(title));
+    header.insert(GWY_IMGKEY_TITLE, Imf::StringAttribute(title));
+    header.insert("Software", Imf::StringAttribute("Gwyddion"));
 
     gchar *s;
     s = gwy_si_unit_get_string(gwy_data_field_get_si_unit_xy(field),
                                GWY_SI_UNIT_FORMAT_PLAIN);
-    header.insert("Gwy::XYUnits", Imf::StringAttribute(s));
+    header.insert(GWY_IMGKEY_XYUNIT, Imf::StringAttribute(s));
     g_free(s);
 
     s = gwy_si_unit_get_string(gwy_data_field_get_si_unit_z(field),
                                GWY_SI_UNIT_FORMAT_PLAIN);
-    header.insert("Gwy::ZUnits", Imf::StringAttribute(s));
+    header.insert(GWY_IMGKEY_ZUNIT, Imf::StringAttribute(s));
     g_free(s);
 
     header.channels().insert("Y", Imf::Channel(pixel_type));

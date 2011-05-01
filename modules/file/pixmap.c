@@ -45,6 +45,7 @@
 
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
+#include <libgwyddion/gwyversion.h>
 #include <libgwyddion/gwydebugobjects.h>
 #include <libdraw/gwypixfield.h>
 #include <libgwymodule/gwymodule-file.h>
@@ -55,6 +56,7 @@
 
 #include "err.h"
 #include "gwytiff.h"
+#include "image-keys.h"
 
 #define GWY_PNG_EXTENSIONS   ".png"
 #define GWY_JPEG_EXTENSIONS  ".jpeg,.jpg,.jpe"
@@ -1389,22 +1391,48 @@ units_change_cb(GtkWidget *button,
  ***************************************************************************/
 
 #ifdef HAVE_PNG
+static void
+add_png_text_chunk(png_text *chunk,
+                   const gchar *key,
+                   const gchar *format,
+                   ...)
+{
+    gchar *buffer = NULL;
+    gint length;
+    va_list args;
+
+    chunk->compression = PNG_TEXT_COMPRESSION_NONE;
+    chunk->key = (char*)key;
+
+    va_start(args, format);
+    length = g_vasprintf(&buffer, format, args);
+    va_end(args);
+
+    chunk->text = buffer;
+    chunk->text_length = strlen(buffer);
+}
+
 static gboolean
 pixmap_save_png_gray(GwyPixbuf *pixbuf,
                      const gchar *filename,
+                     GwyDataField *dfield,
+                     const gchar *title,
                      GError **error)
 {
+    enum { NCHUNKS = 9 };
     png_structp writer;
     png_infop writer_info;
     png_byte **rows = NULL;
+    png_text *text_chunks = NULL;
 #if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
     guint transform_flags = PNG_TRANSFORM_SWAP_ENDIAN;
 #endif
 #if (G_BYTE_ORDER == G_BIG_ENDIAN)
     guint transform_flags = PNG_TRANSFORM_IDENTITY;
 #endif
-    guint i;
     FILE *fw;
+    gchar *s;
+    guint i;
 
     writer = png_create_write_struct(PNG_LIBPNG_VER_STRING,
                                      NULL, NULL, NULL);
@@ -1429,6 +1457,36 @@ pixmap_save_png_gray(GwyPixbuf *pixbuf,
 
     fw = g_fopen(filename, "wb");
 
+    /* Create the chunks dynamically because the fields of png_text are
+     * variable. */
+    text_chunks = g_new0(png_text, NCHUNKS);
+    i = 0;
+    /* Standard PNG keys */
+    add_png_text_chunk(text_chunks + i++, "Title", "%s", title);
+    add_png_text_chunk(text_chunks + i++, "Software",
+                       "Gwyddion %s", gwy_version_string());
+    /* Gwyddion GSF keys */
+    add_png_text_chunk(text_chunks + i++, GWY_IMGKEY_XREAL,
+                       "%.8g", gwy_data_field_get_xreal(dfield));
+    add_png_text_chunk(text_chunks + i++, GWY_IMGKEY_YREAL,
+                       "%.8g", gwy_data_field_get_yreal(dfield));
+    add_png_text_chunk(text_chunks + i++, GWY_IMGKEY_XOFFSET,
+                       "%.8g", gwy_data_field_get_xoffset(dfield));
+    add_png_text_chunk(text_chunks + i++, GWY_IMGKEY_YOFFSET,
+                       "%.8g", gwy_data_field_get_yoffset(dfield));
+    s = gwy_si_unit_get_string(gwy_data_field_get_si_unit_xy(dfield),
+                               GWY_SI_UNIT_FORMAT_PLAIN);
+    add_png_text_chunk(text_chunks + i++, GWY_IMGKEY_XYUNIT, "%s", s);
+    g_free(s);
+    s = gwy_si_unit_get_string(gwy_data_field_get_si_unit_z(dfield),
+                               GWY_SI_UNIT_FORMAT_PLAIN);
+    add_png_text_chunk(text_chunks + i++, GWY_IMGKEY_ZUNIT, "%s", s);
+    g_free(s);
+    add_png_text_chunk(text_chunks + i++, GWY_IMGKEY_TITLE, "%s", title);
+    g_assert(i == NCHUNKS);
+
+    png_set_text(writer, writer_info, text_chunks, NCHUNKS);
+
     if (setjmp(png_jmpbuf(writer))) {
         /* FIXME: Not very helpful.  Thread-unsafe. */
         g_set_error(error, GWY_MODULE_FILE_ERROR,
@@ -1438,6 +1496,9 @@ pixmap_save_png_gray(GwyPixbuf *pixbuf,
         fclose(fw);
         g_unlink(filename);
         g_free(rows);
+        for (i = 0; i < NCHUNKS; i++)
+            g_free(text_chunks[i].text);
+        g_free(text_chunks);
         return FALSE;
     }
 
@@ -1459,6 +1520,9 @@ pixmap_save_png_gray(GwyPixbuf *pixbuf,
     fclose(fw);
     g_free(rows);
     png_destroy_write_struct(&writer, &writer_info);
+    for (i = 0; i < NCHUNKS; i++)
+        g_free(text_chunks[i].text);
+    g_free(text_chunks);
 
     return TRUE;
 }
@@ -1466,6 +1530,8 @@ pixmap_save_png_gray(GwyPixbuf *pixbuf,
 static gboolean
 pixmap_save_png_gray(G_GNUC_UNUSED GwyPixbuf *pixbuf,
                      G_GNUC_UNUSED const gchar *filename,
+                     G_GNUC_UNUSED GwyDataField *dfield,
+                     G_GNUC_UNUSED const gchar *title,
                      G_GNUC_UNUSED GError **error)
 {
     g_assert_not_reached();
@@ -1479,9 +1545,15 @@ pixmap_save_png(GwyContainer *data,
                 GwyRunType mode,
                 GError **error)
 {
+    GwyDataField *dfield;
     GwyPixbuf *pixbuf;
     GError *err = NULL;
     gboolean ok;
+    gint id;
+
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
+                                     GWY_APP_DATA_FIELD_ID, &id,
+                                     0);
 
     pixbuf = pixmap_draw_pixbuf(data, "PNG",
 #ifdef HAVE_PNG
@@ -1494,7 +1566,13 @@ pixmap_save_png(GwyContainer *data,
         return FALSE;
 
     if (pixbuf->colorspace == GWY_COLORSPACE_GRAY) {
-        ok = pixmap_save_png_gray(pixbuf, filename, error);
+        const guchar *title = "Data";
+        gchar *s = g_strdup_printf("/%d/data/title", id);
+
+        gwy_container_gis_string_by_name(data, s, &title);
+        g_free(s);
+
+        ok = pixmap_save_png_gray(pixbuf, filename, dfield, title, error);
     }
     else {
         ok = gdk_pixbuf_save(pixbuf->owner, filename, "png", &err, NULL);
