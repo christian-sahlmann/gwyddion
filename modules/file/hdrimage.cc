@@ -111,33 +111,46 @@ typedef struct {
 
 static gboolean module_register            (void);
 #ifdef HAVE_EXR
-static gint     exr_detect                 (const GwyFileDetectInfo *fileinfo,
-                                            gboolean only_name,
-                                            const gchar *name);
-static gboolean exr_export                 (GwyContainer *data,
-                                            const gchar *filename,
-                                            GwyRunType mode,
-                                            GError **error);
-static gboolean exr_save_dialog            (EXRSaveArgs *args,
-                                            GwyDataField *field);
-static void     exr_save_update_zscale     (EXRSaveControls *controls);
-static void     exr_save_update_ranges     (EXRSaveControls *controls);
-static void     exr_save_bit_depth_changed (GtkWidget *button,
-                                            EXRSaveControls *controls);
-static void     exr_save_zscale_changed    (GtkWidget *entry,
-                                            EXRSaveControls *controls);
-static void     exr_save_use_centre_clicked(GtkWidget *button,
-                                            EXRSaveControls *controls);
-static void     exr_write_image            (GwyDataField *field,
-                                            gchar *imagedata,
-                                            const gchar *filename,
-                                            const gchar *title,
-                                            GwyBitDepth bit_depth,
-                                            gdouble zscale);
-static void     exr_save_load_args         (GwyContainer *container,
-                                            EXRSaveArgs *args);
-static void     exr_save_save_args         (GwyContainer *container,
-                                            EXRSaveArgs *args);
+static gint          exr_detect                 (const GwyFileDetectInfo *fileinfo,
+                                                 gboolean only_name,
+                                                 const gchar *name);
+static GwyContainer* exr_load                   (const gchar *filename,
+                                                 GwyRunType mode,
+                                                 GError **error,
+                                                 const gchar *name);
+static gboolean      exr_export                 (GwyContainer *data,
+                                                 const gchar *filename,
+                                                 GwyRunType mode,
+                                                 GError **error);
+static gboolean      exr_save_dialog            (EXRSaveArgs *args,
+                                                 GwyDataField *field);
+static void          exr_save_update_zscale     (EXRSaveControls *controls);
+static void          exr_save_update_ranges     (EXRSaveControls *controls);
+static void          exr_save_bit_depth_changed (GtkWidget *button,
+                                                 EXRSaveControls *controls);
+static void          exr_save_zscale_changed    (GtkWidget *entry,
+                                                 EXRSaveControls *controls);
+static void          exr_save_use_centre_clicked(GtkWidget *button,
+                                                 EXRSaveControls *controls);
+static void          exr_write_image            (GwyDataField *field,
+                                                 gchar *imagedata,
+                                                 const gchar *filename,
+                                                 const gchar *title,
+                                                 GwyBitDepth bit_depth,
+                                                 gdouble zscale);
+static void          exr_save_load_args         (GwyContainer *container,
+                                                 EXRSaveArgs *args);
+static void          exr_save_save_args         (GwyContainer *container,
+                                                 EXRSaveArgs *args);
+#endif
+#ifdef HAVE_PNG
+static gint          png_detect                 (const GwyFileDetectInfo *fileinfo,
+                                                 gboolean only_name,
+                                                 const gchar *name);
+static GwyContainer* png_load                   (const gchar *filename,
+                                                 GwyRunType mode,
+                                                 GError **error,
+                                                 const gchar *name);
 #endif
 static gdouble  suggest_zscale             (GwyBitDepth bit_depth,
                                             gdouble pmin,
@@ -185,11 +198,16 @@ module_register(void)
     gwy_file_func_register("openexr",
                            N_("OpenEXR images (.exr)"),
                            (GwyFileDetectFunc)&exr_detect,
-                           //(GwyFileLoadFunc)&exr_load,
-                           NULL,
+                           (GwyFileLoadFunc)&exr_load,
                            NULL,
                            (GwyFileSaveFunc)&exr_export);
 #endif
+    gwy_file_func_register("pnggray16",
+                           N_("Grayscale 16bit PNG images (.png)"),
+                           (GwyFileDetectFunc)&png_detect,
+                           (GwyFileLoadFunc)&png_load,
+                           NULL,
+                           NULL);
 
     return TRUE;
 }
@@ -217,6 +235,25 @@ exr_detect(const GwyFileDetectInfo *fileinfo,
         score = 100;
 
     return score;
+}
+
+static GwyContainer*
+exr_load(const gchar *filename,
+         GwyRunType mode,
+         GError **error,
+         const gchar *name)
+{
+    // FIXME: We can import files with metadata directly.
+    if (mode != GWY_RUN_INTERACTIVE) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR,
+                    GWY_MODULE_FILE_ERROR_INTERACTIVE,
+                    _("Pixmap image import must be run as interactive."));
+        return NULL;
+    }
+
+    g_warning("EXR: Implement me!");
+    err_NO_DATA(error);
+    return NULL;
 }
 
 static gboolean
@@ -684,6 +721,69 @@ exr_save_save_args(GwyContainer *container,
 {
     gwy_container_set_double_by_name(container, zscale_key, args->zscale);
     gwy_container_set_enum_by_name(container, bit_depth_key, args->bit_depth);
+}
+#endif
+
+/***************************************************************************
+ *
+ * PNG
+ *
+ ***************************************************************************/
+
+#ifdef HAVE_PNG
+static gint
+png_detect(const GwyFileDetectInfo *fileinfo,
+           gboolean only_name,
+           const gchar *name)
+{
+    typedef struct {
+        guint width;
+        guint height;
+        guint bit_depth;
+        guint colour_type;
+        guint compression_method;
+        guint filter_method;
+        guint interlace_method;
+    } IHDR;
+
+    IHDR header;
+    const guchar *p;
+
+    // This is done in pixmap.c, we cannot have multiple exporters of the same
+    // type (unlike loaders).
+    if (only_name)
+        return 0;
+
+    if (fileinfo->buffer_len < 64)
+        return 0;
+    if (memcmp(fileinfo->head, "\x89PNG\r\n\x1a\n\x00\x00\x00\x0dIHDR", 16)
+        != 0)
+        return 0;
+
+    p = fileinfo->head + 16;
+    header.width = gwy_get_guint32_be(&p);
+    header.height = gwy_get_guint32_be(&p);
+    header.bit_depth = *(p++);
+    header.colour_type = *(p++);
+    header.compression_method = *(p++);
+    header.filter_method = *(p++);
+    header.interlace_method = *(p++);
+    if (!header.width || !header.height
+        || header.colour_type != 0 || header.bit_depth != 16)
+        return 0;
+
+    return 95;
+}
+
+static GwyContainer*
+png_load(const gchar *filename,
+         GwyRunType mode,
+         GError **error,
+         const gchar *name)
+{
+    g_warning("PNG: Implement me!");
+    err_NO_DATA(error);
+    return NULL;
 }
 #endif
 
