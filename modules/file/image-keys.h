@@ -30,10 +30,12 @@
 #define GWY_IMGKEY_YOFFSET "Gwy::YOffset"
 #define GWY_IMGKEY_XYUNIT "Gwy::XYUnit"
 #define GWY_IMGKEY_ZUNIT "Gwy::ZUnit"
-/* The value scaling meaning differs for integral and floating point data.
- * For integers is the LSB value, for floats it is the value corresponding to
- * 1.0.  Floats with reasonable dynamic range can usually omit it for no
- * scaling. */
+/* ZScale is used for limited-range floating point data (such as halves) and
+ * determines the value corresponding to 1.0 in the file. */
 #define GWY_IMGKEY_ZSCALE "Gwy::ZScale"
+/* ZMin and ZMax are used for integer data and correspond to 0 and the maximum
+ * possible integer value. */
+#define GWY_IMGKEY_ZMIN "Gwy::ZMin"
+#define GWY_IMGKEY_ZMAX "Gwy::ZMax"
 
 #endif

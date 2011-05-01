@@ -1424,7 +1424,7 @@ pixmap_save_png_gray(GwyPixbuf *pixbuf,
                      const gchar *title,
                      GError **error)
 {
-    enum { NCHUNKS = 9 };
+    enum { NCHUNKS = 11 };
     png_structp writer;
     png_infop writer_info;
     png_byte **rows = NULL;
@@ -1435,6 +1435,7 @@ pixmap_save_png_gray(GwyPixbuf *pixbuf,
 #if (G_BYTE_ORDER == G_BIG_ENDIAN)
     guint transform_flags = PNG_TRANSFORM_IDENTITY;
 #endif
+    gdouble min, max;
     FILE *fw;
     guint i;
 
@@ -1469,6 +1470,7 @@ pixmap_save_png_gray(GwyPixbuf *pixbuf,
     add_png_text_chunk_string(text_chunks + i++, "Title", title, FALSE);
     add_png_text_chunk_string(text_chunks + i++, "Software", "Gwyddion", FALSE);
     /* Gwyddion GSF keys */
+    gwy_data_field_get_min_max(dfield, &min, &max);
     add_png_text_chunk_float(text_chunks + i++, GWY_IMGKEY_XREAL,
                              gwy_data_field_get_xreal(dfield));
     add_png_text_chunk_float(text_chunks + i++, GWY_IMGKEY_YREAL,
@@ -1477,6 +1479,8 @@ pixmap_save_png_gray(GwyPixbuf *pixbuf,
                              gwy_data_field_get_xoffset(dfield));
     add_png_text_chunk_float(text_chunks + i++, GWY_IMGKEY_YOFFSET,
                              gwy_data_field_get_yoffset(dfield));
+    add_png_text_chunk_float(text_chunks + i++, GWY_IMGKEY_ZMIN, min);
+    add_png_text_chunk_float(text_chunks + i++, GWY_IMGKEY_ZMAX, max);
     add_png_text_chunk_string(text_chunks + i++, GWY_IMGKEY_XYUNIT,
                               gwy_si_unit_get_string
                                       (gwy_data_field_get_si_unit_xy(dfield),
