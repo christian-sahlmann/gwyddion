@@ -665,9 +665,9 @@ suggest_zscale(GwyBitDepth bit_depth,
         return 1.0;
 
     if (bit_depth == GWY_BIT_DEPTH_INT16)
-        return pmax/G_MAXUINT16;
+        return pmax/(G_MAXUINT16 + 0.999);
     if (bit_depth == GWY_BIT_DEPTH_INT32)
-        return pmax/G_MAXUINT32;
+        return pmax/(G_MAXUINT32 + 0.999);
 
     g_return_val_if_fail(bit_depth == GWY_BIT_DEPTH_HALF, 1.0);
 
@@ -693,11 +693,11 @@ representable_range(GwyBitDepth bit_depth, gdouble zscale,
     }
     else if (bit_depth == GWY_BIT_DEPTH_INT16) {
         *min = zscale;
-        *max = zscale*G_MAXUINT16;
+        *max = zscale*(G_MAXUINT16 + 0.999);
     }
     else if (bit_depth == GWY_BIT_DEPTH_INT32) {
         *min = zscale;
-        *max = zscale*G_MAXUINT32;
+        *max = zscale*(G_MAXUINT32 + 0.999);
     }
     else if (bit_depth == GWY_BIT_DEPTH_HALF) {
         *min = zscale*HALF_NRM_MIN;
@@ -724,14 +724,14 @@ create_image_data(GwyDataField *field,
         retval = (gchar*)imagedata;
 
         for (i = xres*yres; i; i--, d++, imagedata++)
-            *imagedata = (guint16)CLAMP(*d/zscale, 0.0, G_MAXUINT16);
+            *imagedata = (guint16)CLAMP(*d/zscale, 0.0, G_MAXUINT16 + 0.999);
     }
     else if (bit_depth == GWY_BIT_DEPTH_INT32) {
         guint32 *imagedata = g_new(guint32, xres*yres);
         retval = (gchar*)imagedata;
 
         for (i = xres*yres; i; i--, d++, imagedata++) {
-            *imagedata = (guint32)CLAMP(*d/zscale, 0.0, G_MAXUINT32);
+            *imagedata = (guint32)CLAMP(*d/zscale, 0.0, G_MAXUINT32 + 0.999);
             g_print("%u ", *imagedata);
         }
     }
