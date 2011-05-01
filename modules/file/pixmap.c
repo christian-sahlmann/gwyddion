@@ -1392,24 +1392,29 @@ units_change_cb(GtkWidget *button,
 
 #ifdef HAVE_PNG
 static void
-add_png_text_chunk(png_text *chunk,
-                   const gchar *key,
-                   const gchar *format,
-                   ...)
+add_png_text_chunk_string(png_text *chunk,
+                          const gchar *key,
+                          const gchar *str,
+                          gboolean take)
 {
-    gchar *buffer = NULL;
-    gint length;
-    va_list args;
+    chunk->compression = PNG_TEXT_COMPRESSION_NONE;
+    chunk->key = (char*)key;
+    chunk->text = take ? (char*)str : g_strdup(str);
+    chunk->text_length = strlen(chunk->text);
+}
+
+static void
+add_png_text_chunk_float(png_text *chunk,
+                         const gchar *key,
+                         gdouble value)
+{
+    gchar buffer[G_ASCII_DTOSTR_BUF_SIZE];
 
     chunk->compression = PNG_TEXT_COMPRESSION_NONE;
     chunk->key = (char*)key;
-
-    va_start(args, format);
-    length = g_vasprintf(&buffer, format, args);
-    va_end(args);
-
-    chunk->text = buffer;
-    chunk->text_length = strlen(buffer);
+    g_ascii_dtostr(buffer, sizeof(buffer), value);
+    chunk->text = g_strdup(buffer);
+    chunk->text_length = strlen(chunk->text);
 }
 
 static gboolean
@@ -1431,7 +1436,6 @@ pixmap_save_png_gray(GwyPixbuf *pixbuf,
     guint transform_flags = PNG_TRANSFORM_IDENTITY;
 #endif
     FILE *fw;
-    gchar *s;
     guint i;
 
     writer = png_create_write_struct(PNG_LIBPNG_VER_STRING,
@@ -1462,27 +1466,28 @@ pixmap_save_png_gray(GwyPixbuf *pixbuf,
     text_chunks = g_new0(png_text, NCHUNKS);
     i = 0;
     /* Standard PNG keys */
-    add_png_text_chunk(text_chunks + i++, "Title", "%s", title);
-    add_png_text_chunk(text_chunks + i++, "Software",
-                       "Gwyddion %s", gwy_version_string());
+    add_png_text_chunk_string(text_chunks + i++, "Title", title, FALSE);
+    add_png_text_chunk_string(text_chunks + i++, "Software", "Gwyddion", FALSE);
     /* Gwyddion GSF keys */
-    add_png_text_chunk(text_chunks + i++, GWY_IMGKEY_XREAL,
-                       "%.8g", gwy_data_field_get_xreal(dfield));
-    add_png_text_chunk(text_chunks + i++, GWY_IMGKEY_YREAL,
-                       "%.8g", gwy_data_field_get_yreal(dfield));
-    add_png_text_chunk(text_chunks + i++, GWY_IMGKEY_XOFFSET,
-                       "%.8g", gwy_data_field_get_xoffset(dfield));
-    add_png_text_chunk(text_chunks + i++, GWY_IMGKEY_YOFFSET,
-                       "%.8g", gwy_data_field_get_yoffset(dfield));
-    s = gwy_si_unit_get_string(gwy_data_field_get_si_unit_xy(dfield),
-                               GWY_SI_UNIT_FORMAT_PLAIN);
-    add_png_text_chunk(text_chunks + i++, GWY_IMGKEY_XYUNIT, "%s", s);
-    g_free(s);
-    s = gwy_si_unit_get_string(gwy_data_field_get_si_unit_z(dfield),
-                               GWY_SI_UNIT_FORMAT_PLAIN);
-    add_png_text_chunk(text_chunks + i++, GWY_IMGKEY_ZUNIT, "%s", s);
-    g_free(s);
-    add_png_text_chunk(text_chunks + i++, GWY_IMGKEY_TITLE, "%s", title);
+    add_png_text_chunk_float(text_chunks + i++, GWY_IMGKEY_XREAL,
+                             gwy_data_field_get_xreal(dfield));
+    add_png_text_chunk_float(text_chunks + i++, GWY_IMGKEY_YREAL,
+                             gwy_data_field_get_yreal(dfield));
+    add_png_text_chunk_float(text_chunks + i++, GWY_IMGKEY_XOFFSET,
+                             gwy_data_field_get_xoffset(dfield));
+    add_png_text_chunk_float(text_chunks + i++, GWY_IMGKEY_YOFFSET,
+                             gwy_data_field_get_yoffset(dfield));
+    add_png_text_chunk_string(text_chunks + i++, GWY_IMGKEY_XYUNIT,
+                              gwy_si_unit_get_string
+                                      (gwy_data_field_get_si_unit_xy(dfield),
+                                       GWY_SI_UNIT_FORMAT_PLAIN),
+                              TRUE);
+    add_png_text_chunk_string(text_chunks + i++, GWY_IMGKEY_ZUNIT,
+                              gwy_si_unit_get_string
+                                      (gwy_data_field_get_si_unit_z(dfield),
+                                       GWY_SI_UNIT_FORMAT_PLAIN),
+                              TRUE);
+    add_png_text_chunk_string(text_chunks + i++, GWY_IMGKEY_TITLE, title, FALSE);
     g_assert(i == NCHUNKS);
 
     png_set_text(writer, writer_info, text_chunks, NCHUNKS);
