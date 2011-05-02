@@ -793,7 +793,7 @@ png_load(const gchar *filename,
  *
  ***************************************************************************/
 
-static gdouble
+G_GNUC_UNUSED static gdouble
 suggest_zscale(GwyBitDepth bit_depth,
                gdouble pmin, gdouble pmax, gdouble pcentre)
 {
@@ -814,7 +814,7 @@ suggest_zscale(GwyBitDepth bit_depth,
     return pcentre;
 }
 
-static void
+G_GNUC_UNUSED static void
 representable_range(GwyBitDepth bit_depth, gdouble zscale,
                     gdouble *min, gdouble *max)
 {
@@ -831,7 +831,7 @@ representable_range(GwyBitDepth bit_depth, gdouble zscale,
     }
 }
 
-static gchar*
+G_GNUC_UNUSED static gchar*
 create_image_data(GwyDataField *field,
                   GwyBitDepth bit_depth,
                   gdouble zscale,
@@ -883,7 +883,7 @@ create_image_data(GwyDataField *field,
     return retval;
 }
 
-static void
+G_GNUC_UNUSED static void
 find_range(GwyDataField *field,
            gdouble *fmin, gdouble *fmax,
            gdouble *pmin, gdouble *pmax, gdouble *pcentre)
