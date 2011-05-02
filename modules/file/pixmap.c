@@ -1435,6 +1435,9 @@ pixmap_save_png_gray(GwyPixbuf *pixbuf,
 #if (G_BYTE_ORDER == G_BIG_ENDIAN)
     guint transform_flags = PNG_TRANSFORM_IDENTITY;
 #endif
+    /* A bit of convoluted typing to get a png_charpp equivalent. */
+    gchar param0[G_ASCII_DTOSTR_BUF_SIZE], param1[G_ASCII_DTOSTR_BUF_SIZE];
+    gchar *units, *params[2];
     gdouble min, max;
     FILE *fw;
     guint i;
@@ -1495,6 +1498,21 @@ pixmap_save_png_gray(GwyPixbuf *pixbuf,
     g_assert(i == NCHUNKS);
 
     png_set_text(writer, writer_info, text_chunks, NCHUNKS);
+
+    /* Present the scaling information also as calibration chunks.
+     * Unfortunately, they cannot represent it fully – the rejected xCAL and
+     * yCAL chunks would be necessary for that. */
+    png_set_sCAL(writer, writer_info, PNG_SCALE_METER,  /* Usually... */
+                 gwy_data_field_get_xreal(dfield),
+                 gwy_data_field_get_yreal(dfield));
+    units = gwy_si_unit_get_string(gwy_data_field_get_si_unit_z(dfield),
+                                   GWY_SI_UNIT_FORMAT_PLAIN);
+    g_ascii_dtostr(param0, sizeof(param0), min);
+    g_ascii_dtostr(param1, sizeof(param1), (max - min)/G_MAXUINT16);
+    params[0] = param0;
+    params[1] = param1;
+    png_set_pCAL(writer, writer_info, "Z", 0, G_MAXUINT16, 0, 2, units, params);
+    g_free(units);
 
     if (setjmp(png_jmpbuf(writer))) {
         /* FIXME: Not very helpful.  Thread-unsafe. */
