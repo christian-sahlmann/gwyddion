@@ -603,7 +603,7 @@ read_qt_string(const guchar **p, gsize *size, gchar **value)
     }
     else if (G_BYTE_ORDER == G_LITTLE_ENDIAN) {
         utf16native = must_free = g_new(gunichar2, len/sizeof(gunichar2));
-        swab(*p, must_free, len);
+        swab(*p, (gpointer)must_free, len);
     }
     *value = g_utf16_to_utf8(utf16native, len/sizeof(gunichar2), NULL, NULL,
                              NULL);
