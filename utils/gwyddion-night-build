@@ -137,7 +137,7 @@ function check_symbols() {
     m=$(basename $mod .so)
     nm $mod \
       | sed -re 's/^[0-9a-f]+ T +([A-Za-z0-9_]+)$/Evil symbol ('$m'): \1/;t;d' \
-      | grep -Ev ' _(fini|init|gwy_module_query|Z17_gwy_module_queryv)$' 1>&2
+      | grep -Ev ' _(fini|init|gwy_module_query)$' 1>&2
   done
 }
 
