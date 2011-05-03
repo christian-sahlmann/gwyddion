@@ -34,6 +34,20 @@ err_GET_FILE_CONTENTS(GError **error, GError **err)
 }
 
 static inline void
+err_OPEN_READ(GError **error)
+{
+    g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_IO,
+                _("Cannot open file for reading: %s."), g_strerror(errno));
+}
+
+static inline void
+err_READ(GError **error)
+{
+    g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_IO,
+                _("Cannot read from file: %s."), g_strerror(errno));
+}
+
+static inline void
 err_OPEN_WRITE(GError **error)
 {
     g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_IO,
