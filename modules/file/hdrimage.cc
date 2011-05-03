@@ -30,6 +30,7 @@
 #include <errno.h>
 #include <math.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <glib/gstdio.h>
 #include <gtk/gtk.h>
 
@@ -78,6 +79,12 @@ typedef enum {
     GWY_BIT_DEPTH_FLOAT = 33,
 } GwyBitDepth;
 
+typedef enum {
+    BAD_FILE = 0,
+    PLAIN_IMAGE = 1,
+    GWY_META = 2,
+} DetectionResult;
+
 typedef struct {
     GwyBitDepth bit_depth;
     gdouble zscale;
@@ -110,6 +117,7 @@ typedef struct {
 } EXRSaveControls;
 
 static gboolean module_register            (void);
+
 #ifdef HAVE_EXR
 static gint          exr_detect                 (const GwyFileDetectInfo *fileinfo,
                                                  gboolean only_name,
@@ -143,15 +151,25 @@ static void          exr_save_load_args         (GwyContainer *container,
 static void          exr_save_save_args         (GwyContainer *container,
                                                  EXRSaveArgs *args);
 #endif
+
 #ifdef HAVE_PNG
-static gint          png_detect                 (const GwyFileDetectInfo *fileinfo,
-                                                 gboolean only_name,
-                                                 const gchar *name);
-static GwyContainer* png_load                   (const gchar *filename,
-                                                 GwyRunType mode,
-                                                 GError **error,
-                                                 const gchar *name);
+static gint          png_detect(const GwyFileDetectInfo *fileinfo,
+                                gboolean only_name,
+                                const gchar *name);
+static GwyContainer* png_load  (const gchar *filename,
+                                GwyRunType mode,
+                                GError **error,
+                                const gchar *name);
 #endif
+
+static gint          pgm_detect(const GwyFileDetectInfo *fileinfo,
+                                gboolean only_name,
+                                const gchar *name);
+static GwyContainer* pgm_load  (const gchar *filename,
+                                GwyRunType mode,
+                                GError **error,
+                                const gchar *name);
+
 static gdouble  suggest_zscale             (GwyBitDepth bit_depth,
                                             gdouble pmin,
                                             gdouble pmax,
@@ -203,13 +221,19 @@ module_register(void)
                            (GwyFileSaveFunc)&exr_export);
 #endif
 #ifdef HAVE_PNG
-    gwy_file_func_register("pnggray16",
-                           N_("Grayscale 16bit PNG images (.png)"),
+    gwy_file_func_register("png16",
+                           N_("PNG images with 16bit depth (.png)"),
                            (GwyFileDetectFunc)&png_detect,
                            (GwyFileLoadFunc)&png_load,
                            NULL,
                            NULL);
 #endif
+    gwy_file_func_register("pgm16",
+                           N_("PGM images with 16bit depth (.pgm)"),
+                           (GwyFileDetectFunc)&pgm_detect,
+                           (GwyFileLoadFunc)&pgm_load,
+                           NULL,
+                           NULL);
 
     return TRUE;
 }
@@ -770,8 +794,7 @@ png_detect(const GwyFileDetectInfo *fileinfo,
     header.compression_method = *(p++);
     header.filter_method = *(p++);
     header.interlace_method = *(p++);
-    if (!header.width || !header.height
-        || header.colour_type != 0 || header.bit_depth != 16)
+    if (!header.width || !header.height || header.bit_depth != 16)
         return 0;
 
     return 95;
@@ -983,6 +1006,7 @@ png_load(const gchar *filename,
         title = get_png_text_string(text_chunks, ncomments, "Title");
 
     if (manual_import) {
+        // TODO
         g_warning("PNG: Implement me!");
         err_NO_DATA(error);
         goto fail;
@@ -1060,6 +1084,292 @@ fail:
     return container;
 }
 #endif
+
+/***************************************************************************
+ *
+ * PGM
+ *
+ ***************************************************************************/
+
+/* Pixel properties are set if detection is successfull, real properties are
+ * set only if return value is GWY_META. */
+static DetectionResult
+read_pgm_head(const gchar *buffer, gsize len, guint *headersize,
+              guint *xres, guint *yres, guint *maxval,
+              gdouble *xreal, gdouble *yreal,
+              gdouble *yoff, gdouble *xoff,
+              gdouble *zmin, gdouble *zmax,
+              gchar **unitxy, gchar **unitz,
+              gchar **title)
+{
+    const gchar *p = buffer, *q;
+    gboolean seen_comments = FALSE,
+             seen_xreal = FALSE, seen_yreal = FALSE,
+             seen_zmin = FALSE, seen_zmax = FALSE;
+    gchar *text, *line, *s, *t;
+    guint i;
+
+    /* Quickly weed out non-PGM files */
+    if (len < 3)
+        return BAD_FILE;
+    if (p[0] != 'P' || p[1] != '5' || !g_ascii_isspace(p[2]))
+        return BAD_FILE;
+    p += 3;
+
+    for (i = 0; i < 3; i++) {
+        if (p == buffer)
+            return BAD_FILE;
+
+        while (TRUE) {
+            /* Skip whitespace */
+            while ((p - buffer) < len && g_ascii_isspace(*p))
+                p++;
+            if (p == buffer)
+                return BAD_FILE;
+
+            /* Possibly skip comments */
+            if (*p != '#')
+                break;
+
+            seen_comments = TRUE;
+            while ((p - buffer) < len && *p != '\n' && *p != '\r')
+                p++;
+            if (p == buffer)
+                return BAD_FILE;
+        }
+
+        /* Find the number */
+        if (!g_ascii_isdigit(*p))
+            return BAD_FILE;
+        q = p;
+        while ((p - buffer) < len && g_ascii_isdigit(*p))
+            p++;
+        if (p == buffer)
+            return BAD_FILE;
+        if (!g_ascii_isspace(*p))
+            return BAD_FILE;
+
+        /* Store the number */
+        if (i == 0)
+            *xres = atoi(q);
+        else if (i == 1)
+            *yres = atoi(q);
+        else if (i == 2)
+            *maxval = atoi(q);
+        else {
+            g_assert_not_reached();
+        }
+    }
+
+    /* If i == 3 and we got here then p points to the single white space
+     * character after the last number (maxval). */
+    p++;
+    *headersize = p - buffer;
+
+    /* Sanity check. */
+    if (*maxval < 0x100 || *maxval >= 0x10000)
+        return BAD_FILE;
+    if (*xres < 1 || *xres >= 1 << 15)
+        return BAD_FILE;
+    if (*yres < 1 || *yres >= 1 << 15)
+        return BAD_FILE;
+
+    if (!seen_comments)
+        return PLAIN_IMAGE;
+
+    *xoff = *yoff = 0.0;
+    *unitxy = *unitz = *title = NULL;
+    text = t = g_strndup(buffer, *headersize);
+    for (line = gwy_str_next_line(&t); line; line = gwy_str_next_line(&t)) {
+        g_strstrip(line);
+        if (line[0] != '#')
+            continue;
+        line++;
+        while (g_ascii_isspace(*line))
+            line++;
+        s = line;
+        while (g_ascii_isalnum(*line) || *line == ':')
+            line++;
+        *line = '\0';
+        line++;
+        while (g_ascii_isspace(*line))
+            line++;
+
+        if (gwy_strequal(s, GWY_IMGKEY_XREAL)) {
+            *xreal = g_ascii_strtod(line, NULL);
+            seen_xreal = TRUE;
+        }
+        else if (gwy_strequal(s, GWY_IMGKEY_YREAL)) {
+            *yreal = g_ascii_strtod(line, NULL);
+            seen_yreal = TRUE;
+        }
+        else if (gwy_strequal(s, GWY_IMGKEY_ZMIN)) {
+            *zmin = g_ascii_strtod(line, NULL);
+            seen_zmin = TRUE;
+        }
+        else if (gwy_strequal(s, GWY_IMGKEY_ZMAX)) {
+            *zmax = g_ascii_strtod(line, NULL);
+            seen_zmax = TRUE;
+        }
+        else if (gwy_strequal(s, GWY_IMGKEY_XOFFSET))
+            *xoff = g_ascii_strtod(line, NULL);
+        else if (gwy_strequal(s, GWY_IMGKEY_YOFFSET))
+            *yoff = g_ascii_strtod(line, NULL);
+        else if (gwy_strequal(s, GWY_IMGKEY_XYUNIT)) {
+            g_free(*unitxy);
+            *unitxy = *line ? g_strdup(line) : NULL;
+        }
+        else if (gwy_strequal(s, GWY_IMGKEY_ZUNIT)) {
+            g_free(*unitz);
+            *unitz = *line ? g_strdup(line) : NULL;
+        }
+        else if (gwy_strequal(s, GWY_IMGKEY_TITLE)) {
+            g_free(*title);
+            *title = *line ? g_strdup(line) : NULL;
+        }
+    }
+
+    g_free(text);
+
+    if (seen_xreal && seen_yreal && seen_zmin && seen_zmax)
+        return GWY_META;
+
+    g_free(unitxy);
+    g_free(unitz);
+    g_free(title);
+    return PLAIN_IMAGE;
+}
+
+static gint
+pgm_detect(const GwyFileDetectInfo *fileinfo,
+           gboolean only_name,
+           const gchar *name)
+{
+    gchar *unitxy = NULL, *unitz = NULL, *title = NULL;
+    gdouble xreal, yreal, xoff, yoff, zmin, zmax;
+    guint xres, yres, maxval, headersize;
+
+    // Export is done in pixmap.c, we cannot have multiple exporters of the
+    // same type (unlike loaders).
+    if (only_name)
+        return 0;
+
+    if (!read_pgm_head((const gchar*)fileinfo->head, fileinfo->buffer_len,
+                       &headersize,
+                       &xres, &yres, &maxval,
+                       &xreal, &yreal, &yoff, &xoff,
+                       &zmin, &zmax,
+                       &unitxy, &unitz, &title))
+        return 0;
+
+    g_free(unitxy);
+    g_free(unitz);
+    g_free(title);
+
+    return 95;
+}
+
+static GwyContainer*
+pgm_load(const gchar *filename,
+         GwyRunType mode,
+         GError **error,
+         const gchar *name)
+{
+    GwyContainer *container = NULL;
+    GwyDataField *field = NULL;
+    GError *err = NULL;
+    guchar *buffer = NULL;
+    gchar *unitxy = NULL, *unitz = NULL, *title = NULL;
+    gdouble xreal, yreal, xoff, yoff, zmin, zmax, q;
+    guint xres, yres, maxval, headersize, i, j;
+    const guint16 *d16;
+    gdouble *data;
+    gint power10;
+    DetectionResult detected;
+    gsize size = 0;
+
+    if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
+        err_GET_FILE_CONTENTS(error, &err);
+        return NULL;
+    }
+
+    // TODO: Read images in cycle, PNM is a multi-image format.
+    detected = read_pgm_head((const gchar*)buffer, size, &headersize,
+                             &xres, &yres, &maxval,
+                             &xreal, &yreal, &yoff, &xoff,
+                             &zmin, &zmax,
+                             &unitxy, &unitz, &title);
+    if (!detected) {
+        err_FILE_TYPE(error, "PGM");
+        goto fail;
+    }
+
+    gwy_debug("Detected: %s",
+              detected == GWY_META ? "Gwyddion image keys" : "Plain image");
+
+    if (detected != GWY_META) {
+        // TODO
+        g_warning("PGM: Implement me!");
+        err_NO_DATA(error);
+        goto fail;
+    }
+
+    if (err_SIZE_MISMATCH(error, 2*xres*yres + headersize, size, FALSE))
+        goto fail;
+
+    if (!((xreal = fabs(xreal)) > 0.0)) {
+        g_warning("Real y size is 0.0, fixing to 1.0");
+        xreal = 1.0;
+    }
+    if (!((xreal = fabs(xreal)) > 0.0)) {
+        g_warning("Real y size is 0.0, fixing to 1.0");
+        xreal = 1.0;
+    }
+
+    field = gwy_data_field_new(xres, yres, xreal, yreal, FALSE);
+    gwy_si_unit_set_from_string_parse(gwy_data_field_get_si_unit_xy(field),
+                                      unitxy, &power10);
+    if (power10) {
+        q = pow10(power10);
+        xreal *= q;
+        yreal *= q;
+        xoff *= q;
+        yoff *= q;
+        gwy_data_field_set_xreal(field, xreal);
+        gwy_data_field_set_yreal(field, yreal);
+    }
+    gwy_data_field_set_xoffset(field, xoff);
+    gwy_data_field_set_yoffset(field, yoff);
+    gwy_si_unit_set_from_string_parse(gwy_data_field_get_si_unit_z(field),
+                                      unitz, &power10);
+    if (power10) {
+        q = pow10(power10);
+        zmin *= q;
+        zmax *= q;
+    }
+
+    q = (zmax - zmin)/G_MAXUINT16;
+    data = gwy_data_field_get_data(field);
+    d16 = (const guint16*)(buffer + headersize);
+    for (i = 0; i < yres; i++) {
+        for (j = 0; j < xres; j++)
+            data[i*xres + j] = q*GUINT16_FROM_BE(d16[i*xres + j]) + zmin;
+    }
+
+    container = gwy_container_new();
+    gwy_container_set_object_by_name(container, "/0/data", field);
+    gwy_container_set_string_by_name(container, "/0/data/title",
+                                     (const guchar*)title);
+    title = NULL;
+
+fail:
+    gwy_file_abandon_contents(buffer, size, NULL);
+    g_free(unitxy);
+    g_free(unitz);
+    g_free(title);
+
+    return container;
+}
 
 /***************************************************************************
  *
