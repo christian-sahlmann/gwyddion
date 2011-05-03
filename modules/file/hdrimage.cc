@@ -777,6 +777,34 @@ png_detect(const GwyFileDetectInfo *fileinfo,
     return 95;
 }
 
+static gboolean
+get_png_text_double(const png_textp text_chunks, guint ncomments,
+                    const gchar *key, gdouble *value)
+{
+    guint i;
+
+    for (i = 0; i < ncomments; i++) {
+        if (gwy_strequal(text_chunks[i].key, key)) {
+            *value = g_ascii_strtod(text_chunks[i].text, NULL);
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
+
+static const gchar*
+get_png_text_string(const png_textp text_chunks, guint ncomments,
+                    const gchar *key)
+{
+    guint i;
+
+    for (i = 0; i < ncomments; i++) {
+        if (gwy_strequal(text_chunks[i].key, key))
+            return text_chunks[i].text;
+    }
+    return NULL;
+}
+
 static GwyContainer*
 png_load(const gchar *filename,
          GwyRunType mode,
@@ -784,12 +812,12 @@ png_load(const gchar *filename,
          const gchar *name)
 {
     png_structp reader = NULL;
-    png_infop reader_info = NULL, end_info = NULL;
+    png_infop reader_info = NULL;
     png_bytepp rows = NULL;
     png_textp text_chunks = NULL;
-    png_int_32 scal_X0, scal_X1;
-    png_charp scal_purpose, scal_units;
-    png_charpp scal_params;
+    png_int_32 pcal_X0, pcal_X1;
+    png_charp pcal_purpose, pcal_units;
+    png_charpp pcal_params;
 #if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
     guint transform_flags = PNG_TRANSFORM_SWAP_ENDIAN;
 #endif
@@ -797,11 +825,16 @@ png_load(const gchar *filename,
     guint transform_flags = PNG_TRANSFORM_IDENTITY;
 #endif
     GwyContainer *container = NULL;
+    GwyDataField **fields = NULL;
+    gdouble **data = NULL;
     FILE *fr = NULL;
-    gboolean have_sCAL, have_pCAL;
+    GwySIUnit *unitxy = NULL, *unitz = NULL;
+    gboolean have_sCAL, have_pCAL, manual_import = TRUE;
     guint xres, yres, bit_depth, colour_type, nchannels, rowbytes, ncomments;
-    int unit, scal_type, scal_nparams;
-    gdouble xreal, yreal;
+    guint id, i, j;
+    int scal_unit, pcal_type, pcal_nparams, power10;
+    gdouble xreal, yreal, xoff, yoff, zmin, zmax, q, scal_xreal, scal_yreal;
+    const gchar *title = NULL;
     png_byte magic[8];
 
     if (!(fr = g_fopen(filename, "rb"))) {
@@ -835,15 +868,6 @@ png_load(const gchar *filename,
         goto fail;
     }
 
-    end_info = png_create_info_struct(reader);
-    if (!end_info) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR,
-                    GWY_MODULE_FILE_ERROR_SPECIFIC,
-                    _("libpng initialization error (in %s)"),
-                    "png_create_info_struct");
-        goto fail;
-    }
-
     if (setjmp(png_jmpbuf(reader))) {
         /* FIXME: Not very helpful.  Thread-unsafe. */
         g_set_error(error, GWY_MODULE_FILE_ERROR,
@@ -861,28 +885,176 @@ png_load(const gchar *filename,
     xres = png_get_image_width(reader, reader_info);
     yres = png_get_image_height(reader, reader_info);
     bit_depth = png_get_bit_depth(reader, reader_info);
+    if (bit_depth != 16) {
+        err_BPP(error, bit_depth);
+        goto fail;
+    }
     colour_type = png_get_color_type(reader, reader_info);
     nchannels = png_get_channels(reader, reader_info);
     gwy_debug("xres: %u, yres: %u, bit_depth: %u, type: %u, nchannels: %u",
               xres, yres, bit_depth, colour_type, nchannels);
     rowbytes = png_get_rowbytes(reader, reader_info);
     ncomments = png_get_text(reader, reader_info, &text_chunks, NULL);
-    have_sCAL = png_get_sCAL(reader, reader_info, &unit, &xreal, &yreal);
+    have_sCAL = png_get_sCAL(reader, reader_info,
+                             &scal_unit, &scal_xreal, &scal_yreal);
     have_pCAL = png_get_pCAL(reader, reader_info,
-                             &scal_purpose, &scal_X0, &scal_X1, &scal_type,
-                             &scal_nparams, &scal_units, &scal_params);
+                             &pcal_purpose, &pcal_X0, &pcal_X1, &pcal_type,
+                             &pcal_nparams, &pcal_units, &pcal_params);
     gwy_debug("ncomments: %u, sCAL: %d, pCAL: %d",
               ncomments, have_sCAL, have_pCAL);
     rows = png_get_rows(reader, reader_info);
 
-    g_warning("PNG: Implement me!");
-    err_NO_DATA(error);
+    /* Gwyddion tEXT chunks. */
+    if (get_png_text_double(text_chunks, ncomments,
+                            GWY_IMGKEY_XREAL, &xreal)
+        && get_png_text_double(text_chunks, ncomments,
+                               GWY_IMGKEY_YREAL, &yreal)
+        && get_png_text_double(text_chunks, ncomments,
+                               GWY_IMGKEY_ZMIN, &zmin)
+        && get_png_text_double(text_chunks, ncomments,
+                               GWY_IMGKEY_ZMAX, &zmax)) {
+        gwy_debug("Found Gwyddion image keys, using for direct import.");
+        xoff = yoff = 0.0;
+        get_png_text_double(text_chunks, ncomments, GWY_IMGKEY_XOFFSET, &xoff);
+        get_png_text_double(text_chunks, ncomments, GWY_IMGKEY_YOFFSET, &yoff);
+        unitxy = gwy_si_unit_new_parse(get_png_text_string(text_chunks,
+                                                           ncomments,
+                                                           GWY_IMGKEY_XYUNIT),
+                                       &power10);
+        q = pow10(power10);
+        xreal *= q;
+        yreal *= q;
+        xoff *= q;
+        yoff *= q;
+        unitz = gwy_si_unit_new_parse(get_png_text_string(text_chunks,
+                                                          ncomments,
+                                                          GWY_IMGKEY_ZUNIT),
+                                      &power10);
+        q = pow10(power10);
+        zmin *= q;
+        zmax *= q;
+        title = get_png_text_string(text_chunks, ncomments, GWY_IMGKEY_TITLE);
+
+        if (!((xreal = fabs(xreal)) > 0.0)) {
+            g_warning("Real y size is 0.0, fixing to 1.0");
+            xreal = 1.0;
+        }
+        if (!((xreal = fabs(xreal)) > 0.0)) {
+            g_warning("Real y size is 0.0, fixing to 1.0");
+            xreal = 1.0;
+        }
+        manual_import = FALSE;
+    }
+    else if (have_sCAL
+             && have_pCAL
+             && pcal_nparams == 2
+             && gwy_strequal(pcal_purpose, "Z")) {
+        gwy_debug("Found sCAL and pCAL chnunks, using for direct import.");
+        if (pcal_X0 != 0 || pcal_X1 != G_MAXUINT16)
+            g_warning("PNG pCAL X0 and X1 transform is not implemented");
+
+        xreal = scal_xreal;
+        yreal = scal_yreal;
+        xoff = yoff = 0.0;
+        zmin = g_ascii_strtod(pcal_params[0], NULL);
+        zmax = zmin + G_MAXUINT16*g_ascii_strtod(pcal_params[0], NULL);
+
+        unitxy = gwy_si_unit_new("m");
+        unitz = gwy_si_unit_new_parse(pcal_units, &power10);
+        q = pow10(power10);
+        zmin *= q;
+        zmax *= q;
+
+        if (!((xreal = fabs(xreal)) > 0.0)) {
+            g_warning("Real y size is 0.0, fixing to 1.0");
+            xreal = 1.0;
+        }
+        if (!((xreal = fabs(xreal)) > 0.0)) {
+            g_warning("Real y size is 0.0, fixing to 1.0");
+            xreal = 1.0;
+        }
+        manual_import = FALSE;
+    }
+    else {
+        gwy_debug("Manual import is necessary.");
+    }
+
+    if (!title)
+        title = get_png_text_string(text_chunks, ncomments, "Title");
+
+    if (manual_import) {
+        g_warning("PNG: Implement me!");
+        err_NO_DATA(error);
+        goto fail;
+    }
+
+    fields = g_new(GwyDataField*, nchannels);
+    data = g_new(gdouble*, nchannels);
+    for (id = 0; id < nchannels; id++) {
+        GwyDataField *f;
+
+        fields[id] = f = gwy_data_field_new(xres, yres, xreal, yreal, FALSE);
+        gwy_serializable_clone(G_OBJECT(unitxy),
+                               G_OBJECT(gwy_data_field_get_si_unit_xy(f)));
+        gwy_serializable_clone(G_OBJECT(unitz),
+                               G_OBJECT(gwy_data_field_get_si_unit_z(f)));
+        gwy_data_field_set_xoffset(f, xoff);
+        gwy_data_field_set_yoffset(f, yoff);
+        data[id] = gwy_data_field_get_data(f);
+    }
+
+    q = (zmax - zmin)/G_MAXUINT16;
+    for (i = 0; i < yres; i++) {
+        const guint16 *row = (const guint16*)rows[i];
+        for (j = 0; j < xres; j++) {
+            for (id = 0; id < nchannels; id++) {
+                data[id][i*xres + j] = q*row[j*nchannels + id] + zmin;
+            }
+        }
+    }
+
+    container = gwy_container_new();
+    for (id = 0; id < nchannels; id++) {
+        const gchar *basetitle;
+        gchar buf[40];
+        gchar *t = NULL;
+
+        g_snprintf(buf, sizeof(buf), "/%u/data", id);
+        gwy_container_set_object_by_name(container, buf, fields[id]);
+        g_object_unref(fields[id]);
+
+        g_snprintf(buf, sizeof(buf), "/%u/data/title", id);
+        if (nchannels == 1)
+            basetitle = "Gray";
+        else if (nchannels == 2)
+            basetitle = id ? "Alpha" : "Gray";
+        else if (nchannels == 3)
+            basetitle = id ? (id == 1 ? "G" : "B") : "R";
+        else if (nchannels == 4)
+            basetitle = id ? (id == 1 ? "G" : (id == 2 ? "B" : "Alpha")) : "R";
+        else
+            basetitle = NULL;
+
+        if (title && (nchannels == 1 || !basetitle))
+            t = g_strdup(title);
+        else if (title)
+            t = g_strdup_printf("%s %s", basetitle, title);
+        else if (basetitle)
+            t = g_strdup(basetitle);
+
+        if (t)
+            gwy_container_set_string_by_name(container, buf, (const guchar*)t);
+    }
 
 fail:
+    g_free(data);
+    g_free(fields);
+    gwy_object_unref(unitxy);
+    gwy_object_unref(unitz);
     if (reader)
         png_destroy_read_struct(&reader,
                                 reader_info ? &reader_info : NULL,
-                                end_info ? &end_info : NULL);
+                                NULL);
     if (fr)
         fclose(fr);
     return container;
