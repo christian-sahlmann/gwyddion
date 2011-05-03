@@ -451,6 +451,7 @@ gwy_resource_tree_view_new(const ResourceInfo *rinfo,
     gtk_cell_renderer_set_fixed_size(renderer, -1, height);
     i = gwy_inventory_store_get_column_by_name(store, "is-preferred");
     g_assert(i > 0);
+    /* TRANSLATORS: Preferred resource. */
     column = gtk_tree_view_column_new_with_attributes(_("Preferred"), renderer,
                                                       "active", i,
                                                       NULL);

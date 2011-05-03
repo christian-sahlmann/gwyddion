@@ -632,7 +632,8 @@ gwy_3d_window_new(Gwy3DView *gwy3dview)
     /* Basic table */
     vbox = gwy_3d_window_build_basic_tab(gwy3dwindow);
     gtk_notebook_append_page(GTK_NOTEBOOK(gwy3dwindow->notebook),
-                             vbox, gtk_label_new(_("Basic")));
+                             vbox,
+                             gtk_label_new(gwy_sgettext("3dcontrols|Basic")));
 
     /* Light & Material table */
     vbox = gwy_3d_window_build_visual_tab(gwy3dwindow);
