@@ -24,7 +24,7 @@
  * .exr
  * Read Export
  **/
-
+#define DEBUG 1
 #include "config.h"
 #include <string.h>
 #include <errno.h>
@@ -202,12 +202,14 @@ module_register(void)
                            NULL,
                            (GwyFileSaveFunc)&exr_export);
 #endif
+#ifdef HAVE_PNG
     gwy_file_func_register("pnggray16",
                            N_("Grayscale 16bit PNG images (.png)"),
                            (GwyFileDetectFunc)&png_detect,
                            (GwyFileLoadFunc)&png_load,
                            NULL,
                            NULL);
+#endif
 
     return TRUE;
 }
@@ -749,8 +751,8 @@ png_detect(const GwyFileDetectInfo *fileinfo,
     IHDR header;
     const guchar *p;
 
-    // This is done in pixmap.c, we cannot have multiple exporters of the same
-    // type (unlike loaders).
+    // Export is done in pixmap.c, we cannot have multiple exporters of the
+    // same type (unlike loaders).
     if (only_name)
         return 0;
 
@@ -781,9 +783,109 @@ png_load(const gchar *filename,
          GError **error,
          const gchar *name)
 {
+    png_structp reader = NULL;
+    png_infop reader_info = NULL, end_info = NULL;
+    png_bytepp rows = NULL;
+    png_textp text_chunks = NULL;
+    png_int_32 scal_X0, scal_X1;
+    png_charp scal_purpose, scal_units;
+    png_charpp scal_params;
+#if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
+    guint transform_flags = PNG_TRANSFORM_SWAP_ENDIAN;
+#endif
+#if (G_BYTE_ORDER == G_BIG_ENDIAN)
+    guint transform_flags = PNG_TRANSFORM_IDENTITY;
+#endif
+    GwyContainer *container = NULL;
+    FILE *fr = NULL;
+    gboolean have_sCAL, have_pCAL;
+    guint xres, yres, bit_depth, colour_type, nchannels, rowbytes, ncomments;
+    int unit, scal_type, scal_nparams;
+    gdouble xreal, yreal;
+    png_byte magic[8];
+
+    if (!(fr = g_fopen(filename, "rb"))) {
+        err_OPEN_READ(error);
+        goto fail;
+    }
+    if (fread(magic, 1, sizeof(magic), fr) != sizeof(magic)) {
+        err_READ(error);
+        goto fail;
+    }
+    if (png_sig_cmp(magic, 0, sizeof(magic)) != 0) {
+        err_FILE_TYPE(error, "PNG");
+        goto fail;
+    }
+
+    reader = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+    if (!reader) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR,
+                    GWY_MODULE_FILE_ERROR_SPECIFIC,
+                    _("libpng initialization error (in %s)"),
+                    "png_create_read_struct");
+        goto fail;
+    }
+
+    reader_info = png_create_info_struct(reader);
+    if (!reader_info) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR,
+                    GWY_MODULE_FILE_ERROR_SPECIFIC,
+                    _("libpng initialization error (in %s)"),
+                    "png_create_info_struct");
+        goto fail;
+    }
+
+    end_info = png_create_info_struct(reader);
+    if (!end_info) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR,
+                    GWY_MODULE_FILE_ERROR_SPECIFIC,
+                    _("libpng initialization error (in %s)"),
+                    "png_create_info_struct");
+        goto fail;
+    }
+
+    if (setjmp(png_jmpbuf(reader))) {
+        /* FIXME: Not very helpful.  Thread-unsafe. */
+        g_set_error(error, GWY_MODULE_FILE_ERROR,
+                    GWY_MODULE_FILE_ERROR_SPECIFIC,
+                    _("libpng error occured"));
+        goto fail;
+    }
+
+    png_init_io(reader, fr);
+    png_set_sig_bytes(reader, sizeof(magic));
+    /* The same as in err_DIMENSIONS(). */
+    png_set_user_limits(reader, 1 << 15, 1 << 15);
+    png_read_png(reader, reader_info, transform_flags, NULL);
+    /* png_get_IHDR() causes trouble with the too type-picky C++ compiler. */
+    xres = png_get_image_width(reader, reader_info);
+    yres = png_get_image_height(reader, reader_info);
+    bit_depth = png_get_bit_depth(reader, reader_info);
+    colour_type = png_get_color_type(reader, reader_info);
+    nchannels = png_get_channels(reader, reader_info);
+    gwy_debug("xres: %u, yres: %u, bit_depth: %u, type: %u, nchannels: %u",
+              xres, yres, bit_depth, colour_type, nchannels);
+    rowbytes = png_get_rowbytes(reader, reader_info);
+    ncomments = png_get_text(reader, reader_info, &text_chunks, NULL);
+    have_sCAL = png_get_sCAL(reader, reader_info, &unit, &xreal, &yreal);
+    have_pCAL = png_get_pCAL(reader, reader_info,
+                             &scal_purpose, &scal_X0, &scal_X1, &scal_type,
+                             &scal_nparams, &scal_units, &scal_params);
+    gwy_debug("ncomments: %u, sCAL: %d, pCAL: %d",
+              ncomments, have_sCAL, have_pCAL);
+    rows = png_get_rows(reader, reader_info);
+
     g_warning("PNG: Implement me!");
     err_NO_DATA(error);
-    return NULL;
+
+fail:
+    if (reader)
+        png_destroy_read_struct(&reader,
+                                reader_info ? &reader_info : NULL,
+                                end_info ? &end_info : NULL);
+    if (fr)
+        fclose(fr);
+    return container;
 }
 #endif
 
