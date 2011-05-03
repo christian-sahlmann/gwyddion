@@ -27,9 +27,15 @@ G_BEGIN_DECLS
 
 #define GWY_MODULE_ABI_VERSION 2
 
+#ifdef  __cplusplus
+#define __GWY_MODULE_QUERY_EXTERN_C extern "C"
+#else
+#define __GWY_MODULE_QUERY_EXTERN_C /* */
+#endif
+
 #define GWY_MODULE_QUERY(mod_info) \
-    G_MODULE_EXPORT GwyModuleInfo* \
-    _gwy_module_query(void) { return &mod_info; }
+    __GWY_MODULE_QUERY_EXTERN_C G_MODULE_EXPORT GwyModuleInfo* \
+    _gwy_module_query(void) { return &mod_info; } \
 
 #define GWY_MODULE_ERROR gwy_module_error_quark()
 

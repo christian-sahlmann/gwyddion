@@ -626,6 +626,17 @@ gwy_module_lookup(const gchar *name)
  * Gwyddion understands it. Put #GWY_MODULE_QUERY with the module info
  * (#GwyModuleInfo) of your module as its argument on a line (with NO
  * semicolon after).
+ *
+ * If you write a module in C++ note the module query must have C linkage.
+ * This is achieved by marking it <literal>extern "C"</literal>:
+ * |[
+ * extern "C" {
+ * GWY_MODULE_QUERY(module_info)
+ * }
+ * ]|
+ * This has to be done manually in versions up to 2.24; since version 2.25
+ * GWY_MODULE_QUERY() includes <literal>extern "C"<literal> automatically if
+ * it is compiled using a C++ compiler.
  **/
 
 /*
