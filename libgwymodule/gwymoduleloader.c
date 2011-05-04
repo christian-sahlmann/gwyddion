@@ -635,7 +635,7 @@ gwy_module_lookup(const gchar *name)
  * }
  * ]|
  * This has to be done manually in versions up to 2.24; since version 2.25
- * GWY_MODULE_QUERY() includes <literal>extern "C"<literal> automatically if
+ * GWY_MODULE_QUERY() includes <literal>extern "C"</literal> automatically if
  * it is compiled using a C++ compiler.
  **/
 
