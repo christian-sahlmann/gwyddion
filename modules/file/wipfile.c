@@ -35,7 +35,7 @@
  * [FILE-MAGIC-USERGUIDE]
  * WIPfile
  * .wip
- * Read
+ * SPS
  **/
 
 /* FIXME: remove this in final version */
@@ -391,7 +391,27 @@ gboolean wip_read_graph_tags(GNode *node, gpointer header)
         graphheader->datasize = (gsize)(tag->data_end-tag->data_start);
     }
     header = (gpointer)graphheader;
-    
+
+    return FALSE;
+}
+
+gboolean wip_read_caption(GNode *node, gpointer caption)
+{
+    gchar *str;
+    gint str_len;
+    WIPTag *tag;
+    const guchar *p;
+
+    tag = node->data;
+    if (!strncmp(tag->name, "Caption", 7)) {
+        p = tag->data;
+        str_len = gwy_get_gint32_le(&p);
+        str = g_strndup(p, str_len);
+        g_string_printf(caption, "%s", str);
+        g_free(str);
+        return TRUE;
+    }
+
     return FALSE;
 }
 
@@ -403,20 +423,21 @@ GwyGraphModel * wip_read_graph(GNode *node)
     GwySIUnit *siunitx, *siunity;
     gdouble *xdata, *ydata;
     gint numpoints, i;
+    GString *caption;
     const guchar *p;
 
     header = g_new0(WIPGraph, 1);
-    
+
     g_node_traverse (node, G_LEVEL_ORDER, G_TRAVERSE_ALL, -1,
                      wip_read_graph_tags, (gpointer)header);
-    
+
     if ((header->sizex != 1) || (header->sizey != 1)) { // image
         g_free(header);
         return NULL;
     }
 
     numpoints = header->rangesmax - header->rangesmin + 1;
-    if ((numpoints <= 0) 
+    if ((numpoints <= 0)
      || (header->datatype != WIP_DATA_FLOAT)
      || (header->datasize < 4 * numpoints)) { //FIXME: 4 for float
         g_free(header);
@@ -425,19 +446,25 @@ GwyGraphModel * wip_read_graph(GNode *node)
 
     xdata = g_new(gdouble, numpoints);
     ydata = g_new(gdouble, numpoints);
-    
+
+    // Read ydata, fallback xdata
     p = header->data;
     for (i = 0; i < numpoints; i++) {
-		xdata[i] = i;
-		ydata[i] = gwy_get_gfloat_le(&p);
-	}
-	
-	gmodel = g_object_new(GWY_TYPE_GRAPH_MODEL,
-                          "si-unit-x", siunitx,
-                          "si-unit-y", siunity,
+        xdata[i] = i;
+        ydata[i] = gwy_get_gfloat_le(&p);
+    }
+
+    caption = g_string_new(NULL);
+    g_node_traverse (node->parent, G_LEVEL_ORDER, G_TRAVERSE_ALL, -1,
+                     wip_read_caption, (gpointer)caption);
+
+    gmodel = g_object_new(GWY_TYPE_GRAPH_MODEL,
+                          "title", caption->str,
+                     /*     "si-unit-x", siunitx,
+                          "si-unit-y", siunity, */
                           NULL);
     gcmodel = g_object_new(GWY_TYPE_GRAPH_CURVE_MODEL,
-                           "description", "",
+                           "description", caption->str,
                            "mode", GWY_GRAPH_CURVE_LINE,
                            "color", gwy_graph_get_preset_color(0),
                            NULL);
@@ -446,7 +473,7 @@ GwyGraphModel * wip_read_graph(GNode *node)
     g_free(ydata);
     gwy_graph_model_add_curve(gmodel, gcmodel);
     g_object_unref(gcmodel);
-
+    g_string_free(caption, TRUE);
     g_free(header);
     return gmodel;
 }
@@ -465,21 +492,21 @@ gboolean wip_read_data (GNode *node, gpointer filedata)
     container = filecontent->data;
     if (!strncmp(tag->name, "TDGraph", 7)) {
         gmodel = wip_read_graph(node);
-        if (!gmodel) { 
-			// some error
-		}
-		else {
-			(filecontent->numgraph)++;
-			g_string_printf(key, "/0/graph/graph/%d",
-						    filecontent->numgraph);
+        if (!gmodel) {
+            // some error
+        }
+        else {
+            (filecontent->numgraph)++;
+            g_string_printf(key, "/0/graph/graph/%d",
+                            filecontent->numgraph);
             gwy_container_set_object_by_name(filecontent->data,
-                                             key->str, gmodel); 
+                                             key->str, gmodel);
             g_object_unref(gmodel);
-	    }
+        }
     }
-    
+
     g_string_free(key, TRUE);
-    
+
     return FALSE;
 }
 
@@ -524,7 +551,7 @@ static GwyContainer* wip_load (const gchar *filename,
     filedata = g_new0(WIPFile, 1);
     filedata->numgraph = 0;
     filedata->data = data;
-    
+
     g_node_traverse (tagtree, G_LEVEL_ORDER, G_TRAVERSE_ALL, -1,
                      wip_read_data, (gpointer)filedata);
 
