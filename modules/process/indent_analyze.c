@@ -276,7 +276,7 @@ GwyEnum how_mark_enum[] = {
 GwyEnum what_mark_enum[] = {
     { N_("Nothing"),        GWY_WHAT_MARK_NOTHING     },
     { N_("Above"),          GWY_WHAT_MARK_ABOVE       },
-    { N_("Bellow"),         GWY_WHAT_MARK_BELOW       },
+    { N_("Below"),          GWY_WHAT_MARK_BELOW       },
     { N_("Plane"),          GWY_WHAT_MARK_PLANE       },
     { N_("Impression"),     GWY_WHAT_MARK_INDENTATION },
     { N_("Inner Pile-up"),  GWY_WHAT_MARK_INNERPILEUP },

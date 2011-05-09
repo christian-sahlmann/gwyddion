@@ -336,7 +336,7 @@ calibrate_dialog(CalibrateArgs *args,
     gtk_table_attach(GTK_TABLE(table), controls.xyexponent, 2, 3, row, row+2,
                      GTK_EXPAND | GTK_FILL | GTK_SHRINK, 0, 0, 0);
 
-    controls.xyunits = gtk_button_new_with_label(_("Change"));
+    controls.xyunits = gtk_button_new_with_label(gwy_sgettext("verb|Change"));
     g_object_set_data(G_OBJECT(controls.xyunits), "id", (gpointer)"xy");
     gtk_table_attach(GTK_TABLE(table), controls.xyunits,
                      3, 4, row, row+2,
@@ -417,7 +417,7 @@ calibrate_dialog(CalibrateArgs *args,
     gtk_table_attach(GTK_TABLE(table), controls.zexponent, 2, 3, row, row+1,
                      GTK_EXPAND | GTK_FILL | GTK_SHRINK, 0, 0, 0);
 
-    controls.zunits = gtk_button_new_with_label(_("Change"));
+    controls.zunits = gtk_button_new_with_label(gwy_sgettext("verb|Change"));
     g_object_set_data(G_OBJECT(controls.zunits), "id", (gpointer)"z");
     gtk_table_attach(GTK_TABLE(table), controls.zunits,
                      3, 4, row, row+1,

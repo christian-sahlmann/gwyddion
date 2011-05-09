@@ -213,7 +213,7 @@ cload_dialog(CLoadArgs *args,
     gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
 
     gtk_dialog_add_action_widget(GTK_DIALOG(dialog),
-                                 gwy_stock_like_button_new(N_("_Load"),
+                                 gwy_stock_like_button_new(N_("verb|_Load"),
                                                            GTK_STOCK_OPEN),
                                  RESPONSE_LOAD);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);

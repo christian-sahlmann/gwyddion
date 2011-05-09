@@ -476,7 +476,7 @@ add_one_distribution(GwyContainer *container,
     name = gettext(gwy_resource_get_name(GWY_RESOURCE(gvalue)));
     g_object_set(gmodel,
                  "title", name,
-                 "axis-label-left", gwy_sgettext("noun|count"),
+                 "axis-label-left", _("count"),
                  "axis-label-bottom", gwy_grain_value_get_symbol_markup(gvalue),
                  NULL);
     gwy_graph_model_set_units_from_data_line(gmodel, distribution);

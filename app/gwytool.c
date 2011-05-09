@@ -233,7 +233,8 @@ gwy_tool_add_hide_button(GwyTool *tool,
     g_return_if_fail(GWY_IS_TOOL(tool));
 
     tips = gwy_app_get_tooltips();
-    button = gtk_dialog_add_button(GTK_DIALOG(tool->dialog), _("Hide"),
+    button = gtk_dialog_add_button(GTK_DIALOG(tool->dialog),
+                                   gwy_sgettext("verb|Hide"),
                                    GTK_RESPONSE_DELETE_EVENT);
     gtk_tooltips_set_tip(tips, button, _("Hide tool dialog (Esc)"), NULL);
     if (set_default)

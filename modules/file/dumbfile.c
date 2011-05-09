@@ -80,7 +80,7 @@ static gboolean
 module_register(void)
 {
     gwy_file_func_register("dumbfile",
-                           N_("Gwyddion dumb dump files (.dumb)"),
+                           N_("Gwyddion dumb dump files (.dump)"),
                            (GwyFileDetectFunc)&dumb_detect,
                            (GwyFileLoadFunc)&dumb_load,
                            NULL, NULL);

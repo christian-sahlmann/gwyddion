@@ -235,9 +235,11 @@ fit_2d_dialog(Fit2DArgs *args,
     controls.args = args;
     controls.original_field = dfield;
     controls.original_id = id;
-    dialog = gtk_dialog_new_with_buttons(_("Fit sphere"), NULL, 0,
-                                         _("_Fit"), RESPONSE_FIT,
-                                         _("_Estimate"), RESPONSE_GUESS,
+    dialog = gtk_dialog_new_with_buttons(_("Fit Sphere"), NULL, 0,
+                                         gwy_sgettext("verb|_Fit"),
+                                         RESPONSE_FIT,
+                                         gwy_sgettext("verb|_Estimate"),
+                                         RESPONSE_GUESS,
                                          _("_Plot Inits"), RESPONSE_INITS,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,

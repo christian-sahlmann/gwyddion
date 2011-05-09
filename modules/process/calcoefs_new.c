@@ -269,7 +269,7 @@ cnew(GwyContainer *data, GwyRunType run)
         if (!g_file_get_contents(filename,
                                  &contents, &len, &err))
         {
-             g_warning(N_("Error loading file: %s"), err->message);
+             g_warning("Error loading file: %s", err->message);
              g_clear_error(&err);
              return;
         }
@@ -306,7 +306,7 @@ cnew(GwyContainer *data, GwyRunType run)
     }
     fh = g_fopen(filename, "wb");
     if (!fh) {
-        g_warning(N_("Cannot save preset: %s"), filename);
+        g_warning(_("Cannot save preset: %s"), filename);
         g_free(filename);
         return;
     }
@@ -343,8 +343,8 @@ cnew_dialog(CNewArgs *args,
     controls.args = args;
     controls.in_update = TRUE;
 
-    dialog = gtk_dialog_new_with_buttons(N_("Simple Calibration Data"), NULL, 0,
-                                         N_("_Reset"), RESPONSE_RESET,
+    dialog = gtk_dialog_new_with_buttons(_("Simple Calibration Data"), NULL, 0,
+                                         _("_Reset"), RESPONSE_RESET,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);
@@ -361,7 +361,7 @@ cnew_dialog(CNewArgs *args,
     /*x from*/
     row = 0;
 
-    label = gtk_label_new_with_mnemonic(N_("_X from:"));
+    label = gtk_label_new_with_mnemonic(_("_X from:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label,
                      0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
@@ -381,14 +381,14 @@ cnew_dialog(CNewArgs *args,
     gtk_table_attach(GTK_TABLE(table), controls.xyexponent, 2, 3, row, row+2,
                      GTK_EXPAND | GTK_FILL | GTK_SHRINK, 0, 0, 0);
 
-    controls.xyunits = gtk_button_new_with_label(N_("Change"));
+    controls.xyunits = gtk_button_new_with_label(gwy_sgettext("verb|Change"));
     g_object_set_data(G_OBJECT(controls.xyunits), "id", (gpointer)"xy");
     gtk_table_attach(GTK_TABLE(table), controls.xyunits,
                      3, 4, row, row+2,
                      GTK_EXPAND | GTK_FILL | GTK_SHRINK, 0, 0, 0);
     row++;
  
-    label = gtk_label_new_with_mnemonic(N_("_X to:"));
+    label = gtk_label_new_with_mnemonic(_("_X to:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label,
                      0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
@@ -401,7 +401,7 @@ cnew_dialog(CNewArgs *args,
                      1, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
-    label = gtk_label_new_with_mnemonic(N_("_Y from:"));
+    label = gtk_label_new_with_mnemonic(_("_Y from:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label,
                      0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
@@ -414,7 +414,7 @@ cnew_dialog(CNewArgs *args,
                      1, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
-    label = gtk_label_new_with_mnemonic(N_("_Y to:"));
+    label = gtk_label_new_with_mnemonic(_("_Y to:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label,
                      0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
@@ -428,7 +428,7 @@ cnew_dialog(CNewArgs *args,
     row++;
 
 
-    label = gtk_label_new_with_mnemonic(N_("_Z from:"));
+    label = gtk_label_new_with_mnemonic(_("_Z from:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label,
                      0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
@@ -448,14 +448,14 @@ cnew_dialog(CNewArgs *args,
     gtk_table_attach(GTK_TABLE(table), controls.zexponent, 2, 3, row, row+2,
                      GTK_EXPAND | GTK_FILL | GTK_SHRINK, 0, 0, 0);
 
-    controls.zunits = gtk_button_new_with_label(N_("Change"));
+    controls.zunits = gtk_button_new_with_label(gwy_sgettext("verb|Change"));
     g_object_set_data(G_OBJECT(controls.zunits), "id", (gpointer)"z");
     gtk_table_attach(GTK_TABLE(table), controls.zunits,
                      3, 4, row, row+2,
                      GTK_EXPAND | GTK_FILL | GTK_SHRINK, 0, 0, 0);
     row++;
  
-    label = gtk_label_new_with_mnemonic(N_("_Z to:"));
+    label = gtk_label_new_with_mnemonic(_("_Z to:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label,
                      0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
@@ -468,7 +468,7 @@ cnew_dialog(CNewArgs *args,
                      1, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
-    label = gtk_label_new_with_mnemonic(N_("_X uncertainty:"));
+    label = gtk_label_new_with_mnemonic(_("_X uncertainty:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label,
                      0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
@@ -489,7 +489,7 @@ cnew_dialog(CNewArgs *args,
                      GTK_EXPAND | GTK_FILL , 0, 0, 0);
 
     row++;
-    label = gtk_label_new_with_mnemonic(N_("_Y uncertainty:"));
+    label = gtk_label_new_with_mnemonic(_("_Y uncertainty:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label,
                      0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
@@ -504,7 +504,7 @@ cnew_dialog(CNewArgs *args,
 
     row++;
 
-    label = gtk_label_new_with_mnemonic(N_("_Z uncertainty:"));
+    label = gtk_label_new_with_mnemonic(_("_Z uncertainty:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label,
                      0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
@@ -526,7 +526,7 @@ cnew_dialog(CNewArgs *args,
 
     row++;
 
-    label = gtk_label_new_with_mnemonic(N_("_X correction factor:"));
+    label = gtk_label_new_with_mnemonic(_("_X correction factor:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label,
                      0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
@@ -538,7 +538,7 @@ cnew_dialog(CNewArgs *args,
     gtk_table_attach(GTK_TABLE(table), spin,
                      1, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
-    label = gtk_label_new_with_mnemonic(N_("_Y correction factor:"));
+    label = gtk_label_new_with_mnemonic(_("_Y correction factor:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label,
                      0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
@@ -550,7 +550,7 @@ cnew_dialog(CNewArgs *args,
     gtk_table_attach(GTK_TABLE(table), spin,
                      1, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
-    label = gtk_label_new_with_mnemonic(N_("_Z correction factor:"));
+    label = gtk_label_new_with_mnemonic(_("_Z correction factor:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label,
                      0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
@@ -563,7 +563,7 @@ cnew_dialog(CNewArgs *args,
                      1, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
-    label = gtk_label_new_with_mnemonic(N_("Calibration name:"));
+    label = gtk_label_new_with_mnemonic(_("Calibration name:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label,
                      0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
@@ -632,10 +632,10 @@ cnew_dialog(CNewArgs *args,
                                                  GTK_DIALOG_DESTROY_WITH_PARENT,
                                                  GTK_MESSAGE_WARNING,
                                                  GTK_BUTTONS_CANCEL,
-                                                 N_("Calibration '%s' already exists"),
+                                                 _("Calibration '%s' already exists"),
                                                  args->name);
-                gtk_dialog_add_button(GTK_DIALOG(dialog2), N_("Overwrite"), RESPONSE_DUPLICATE_OVERWRITE);
-                gtk_dialog_add_button(GTK_DIALOG(dialog2), N_("Append"), RESPONSE_DUPLICATE_APPEND);
+                gtk_dialog_add_button(GTK_DIALOG(dialog2), _("Overwrite"), RESPONSE_DUPLICATE_OVERWRITE);
+                gtk_dialog_add_button(GTK_DIALOG(dialog2), _("Append"), RESPONSE_DUPLICATE_APPEND);
                 response = gtk_dialog_run(GTK_DIALOG(dialog2));
                 if (response == RESPONSE_DUPLICATE_OVERWRITE) {
                     args->duplicate = DUPLICATE_OVERWRITE;
@@ -773,7 +773,7 @@ units_change_cb(GtkWidget *button,
     controls->in_update = TRUE;
 
     id = g_object_get_data(G_OBJECT(button), "id");
-    dialog = gtk_dialog_new_with_buttons(N_("Change Units"),
+    dialog = gtk_dialog_new_with_buttons(_("Change Units"),
                                          NULL,
                                          GTK_DIALOG_MODAL
                                          | GTK_DIALOG_NO_SEPARATOR,
@@ -786,7 +786,7 @@ units_change_cb(GtkWidget *button,
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox,
                        FALSE, FALSE, 0);
 
-    label = gtk_label_new_with_mnemonic(N_("New _units:"));
+    label = gtk_label_new_with_mnemonic(_("New _units:"));
     gtk_box_pack_start(GTK_BOX(hbox), label, TRUE, TRUE, 0);
 
     entry = gtk_entry_new();

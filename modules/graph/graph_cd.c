@@ -211,7 +211,7 @@ fit_dialog(FitArgs *args)
     controls.dialog = dialog;
     gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
     gtk_dialog_add_action_widget(GTK_DIALOG(dialog),
-                                 gwy_stock_like_button_new(_("_Fit"),
+                                 gwy_stock_like_button_new(gwy_sgettext("verb|_Fit"),
                                                            GTK_STOCK_EXECUTE),
                                  RESPONSE_FIT);
     gtk_dialog_add_button(GTK_DIALOG(dialog),
@@ -510,7 +510,7 @@ fit_plot_curve(FitArgs *args)
         gwy_graph_model_add_curve(args->graph_model, cmodel);
         g_object_unref(cmodel);
     }
-    g_object_set(cmodel, "description", gwy_sgettext("noun|Fit"), NULL);
+    g_object_set(cmodel, "description", _("Fit"), NULL);
     gwy_graph_curve_model_set_data(cmodel, xd, yd, n);
 }
 
@@ -1117,7 +1117,7 @@ draw_circle_changed(FitControls *controls)
               gwy_graph_model_add_curve(args->graph_model, cmodel);
               g_object_unref(cmodel);
         }
-        g_object_set(cmodel, "description", gwy_sgettext("noun|Fit"), NULL);
+        g_object_set(cmodel, "description", _("Fit"), NULL);
         gwy_graph_curve_model_set_data(cmodel, xd, yd, 2*res);
     }
     else

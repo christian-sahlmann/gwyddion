@@ -694,7 +694,7 @@ zero_crossing_dialog(ZeroCrossingArgs *args,
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
     row++;
 
-    label = gtk_label_new(_("Display"));
+    label = gtk_label_new(gwy_sgettext("verb|Display"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label,
                      0, 3, row, row+1, GTK_FILL, 0, 0, 0);

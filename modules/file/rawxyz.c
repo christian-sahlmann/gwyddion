@@ -696,9 +696,12 @@ construct_options(RawXYZControls *controls,
     controls->exterior
         = gwy_enum_combo_box_newl(NULL, NULL,
                                   args->exterior,
-                                  _("Border"), GWY_EXTERIOR_BORDER_EXTEND,
-                                  _("Mirror"), GWY_EXTERIOR_MIRROR_EXTEND,
-                                  _("Periodic"), GWY_EXTERIOR_PERIODIC,
+                                  gwy_sgettext("exterior|Border"),
+                                  GWY_EXTERIOR_BORDER_EXTEND,
+                                  gwy_sgettext("exterior|Mirror"),
+                                  GWY_EXTERIOR_MIRROR_EXTEND,
+                                  gwy_sgettext("exterior|Periodic"),
+                                  GWY_EXTERIOR_PERIODIC,
                                   NULL);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls->exterior);
     gtk_table_attach(table, controls->exterior, 1, 4, row, row+1,

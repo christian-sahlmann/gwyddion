@@ -1055,7 +1055,7 @@ pixmap_load_dialog(PixmapLoadArgs *args,
                                                         args->xyexponent);
     gtk_box_pack_start(GTK_BOX(hbox2), controls.xyexponent, FALSE, FALSE, 0);
 
-    controls.xyunits = gtk_button_new_with_label(_("Change"));
+    controls.xyunits = gtk_button_new_with_label(gwy_sgettext("verb|Change"));
     g_object_set_data(G_OBJECT(controls.xyunits), "id", (gpointer)"xy");
     g_signal_connect(controls.xyunits, "clicked",
                      G_CALLBACK(units_change_cb), &controls);
@@ -1110,7 +1110,7 @@ pixmap_load_dialog(PixmapLoadArgs *args,
     gtk_box_pack_start(GTK_BOX(hbox2), controls.zexponent, FALSE, FALSE, 0);
     g_object_unref(unit);
 
-    controls.zunits = gtk_button_new_with_label(_("Change"));
+    controls.zunits = gtk_button_new_with_label(gwy_sgettext("verb|Change"));
     g_object_set_data(G_OBJECT(controls.zunits), "id", (gpointer)"z");
     g_signal_connect(controls.zunits, "clicked",
                      G_CALLBACK(units_change_cb), &controls);
@@ -1138,7 +1138,8 @@ pixmap_load_dialog(PixmapLoadArgs *args,
                                      G_CALLBACK(pixmap_load_map_type_update),
                                      &controls,
                                      args->maptype, TRUE);
-        gwy_table_attach_row(table, row++, _("Use"), _("as data"),
+        gwy_table_attach_row(table, row++,
+                             gwy_sgettext("verb|Use"), _("as data"),
                              controls.maptype);
     }
     else
@@ -2998,7 +2999,7 @@ pixmap_save_dialog(GwyContainer *data,
     controls.xytypes
         = gwy_radio_buttons_createl(G_CALLBACK(save_xytype_changed), &controls,
                                     args->xytype,
-                                    _("_None"), PIXMAP_NONE,
+                                    gwy_sgettext("ruler|_None"), PIXMAP_NONE,
                                     _("_Rulers"), PIXMAP_RULERS,
                                     _("_Inset scale bar"), PIXMAP_SCALEBAR,
                                     NULL);
@@ -3094,7 +3095,7 @@ pixmap_save_dialog(GwyContainer *data,
     controls.ztypes
         = gwy_radio_buttons_createl(G_CALLBACK(save_ztype_changed), &controls,
                                     args->ztype,
-                                    _("_None"), PIXMAP_NONE,
+                                    gwy_sgettext("ruler|_None"), PIXMAP_NONE,
                                     _("_False color ruler"), PIXMAP_FMSCALE,
                                     NULL);
     row = gwy_radio_buttons_attach_to_table(controls.ztypes, table, 3, row);

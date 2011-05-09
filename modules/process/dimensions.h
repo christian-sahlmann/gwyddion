@@ -156,7 +156,7 @@ gwy_dimensions_make_units(GtkTable *table,
     gwy_sensitivity_group_add_widget(sensgroup, *combo, GWY_DIMENSIONS_SENS);
     gtk_table_attach(table, *combo, 1, 2, row, row+1, GTK_FILL, 0, 0, 0);
 
-    changer = gtk_button_new_with_label(_("Change"));
+    changer = gtk_button_new_with_label(gwy_sgettext("verb|Change"));
     gwy_sensitivity_group_add_widget(sensgroup, changer, GWY_DIMENSIONS_SENS);
     gtk_table_attach(table, changer, 2, 3, row, row+1, GTK_FILL, 0, 0, 0);
 

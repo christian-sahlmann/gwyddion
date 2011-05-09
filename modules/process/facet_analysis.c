@@ -268,7 +268,8 @@ facets_dialog(FacetsArgs *args,
     dialog = gtk_dialog_new_with_buttons(_("Mark Facets"),
                                          NULL,
                                          GTK_DIALOG_DESTROY_WITH_PARENT,
-                                         _("_Mark"), RESPONSE_PREVIEW,
+                                         gwy_sgettext("verb|_Mark"),
+                                         RESPONSE_PREVIEW,
                                          _("_Reset"), RESPONSE_RESET,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
@@ -345,7 +346,8 @@ facets_dialog(FacetsArgs *args,
     gtk_box_pack_start(GTK_BOX(hbox2), table, TRUE, TRUE, 4);
     row = 0;
 
-    label = gwy_label_new_header(gwy_sgettext("noun|Normal"));
+    /* TRANSLATORS: The direction or line orthogonal to something. */
+    label = gwy_label_new_header(_("Normal"));
     gtk_table_attach(GTK_TABLE(table), label,
                      0, 2, row, row+1, GTK_FILL, 0, 0, 0);
     row++;

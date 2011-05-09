@@ -327,11 +327,11 @@ cc_view_dialog(CCViewArgs *args,
     gwy_si_unit_value_format_free(vf);
 
 
-    dialog = gtk_dialog_new_with_buttons(N_("3D Calibration"), NULL, 0, NULL);
+    dialog = gtk_dialog_new_with_buttons(_("3D Calibration"), NULL, 0, NULL);
     gtk_dialog_add_action_widget(GTK_DIALOG(dialog),
-                                                          gwy_stock_like_button_new(N_("_Update"),
-                                                                                    GTK_STOCK_EXECUTE),
-                                                          RESPONSE_PREVIEW);
+                                 gwy_stock_like_button_new(_("_Update"),
+                                                           GTK_STOCK_EXECUTE),
+                                 RESPONSE_PREVIEW);
     gtk_dialog_add_button(GTK_DIALOG(dialog),
                           GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL);
     controls.button_ok = gtk_dialog_add_button(GTK_DIALOG(dialog),
@@ -391,7 +391,7 @@ cc_view_dialog(CCViewArgs *args,
     vbox = gtk_vbox_new(FALSE, 3);
     gtk_box_pack_start(GTK_BOX(vbox), alignment, FALSE, FALSE, 4);
 
-    controls.message1 = gtk_label_new(N_("No data used."));
+    controls.message1 = gtk_label_new(_("No data used."));
     gtk_box_pack_start(GTK_BOX(vbox), controls.message1, FALSE, FALSE, 4);
     controls.message2 = gtk_label_new("");
     gtk_box_pack_start(GTK_BOX(vbox), controls.message2, FALSE, FALSE, 4);
@@ -411,7 +411,7 @@ cc_view_dialog(CCViewArgs *args,
     vbox = gtk_vbox_new(FALSE, 3);
     gtk_box_pack_start(GTK_BOX(hbox), vbox, FALSE, FALSE, 4);
 
-    label = gwy_label_new_header(N_("Used calibration data:"));
+    label = gwy_label_new_header(_("Used calibration data:"));
     gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 4);
 
     inventory = gwy_calibrations();
@@ -428,13 +428,13 @@ cc_view_dialog(CCViewArgs *args,
 
     gtk_box_pack_start(GTK_BOX(vbox), controls.calibration, FALSE, FALSE, 4);
 
-    label = gwy_label_new_header(N_("Shown planes:"));
+    label = gwy_label_new_header(_("Shown planes:"));
     gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 4);
 
     table = gtk_table_new(8, 4, FALSE);
 
 
-    label = gtk_label_new_with_mnemonic(N_("View:"));
+    label = gtk_label_new_with_mnemonic(_("View:"));
 
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
 
@@ -449,7 +449,7 @@ cc_view_dialog(CCViewArgs *args,
     gtk_table_attach(GTK_TABLE(table), controls.menu_display, 1, 2, row, row+1,
                      GTK_FILL | GTK_EXPAND, GTK_FILL | GTK_EXPAND, 2, 2);
 
-    label = gtk_label_new_with_mnemonic(N_("Plane:"));
+    label = gtk_label_new_with_mnemonic(_("Plane:"));
 
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
 
@@ -468,26 +468,26 @@ cc_view_dialog(CCViewArgs *args,
     args->xplane = args->yplane = args->zplane = 0;
     controls.xplane = gtk_adjustment_new(args->xplane,
                                        0.0, 100.0, 1, 100, 0);
-    gwy_table_attach_hscale(table, row++, N_("X pos:"), "%",
+    gwy_table_attach_hscale(table, row++, _("X pos:"), "%",
                                        controls.xplane, 0);
     g_signal_connect_swapped(controls.xplane, "value-changed",
                                        G_CALLBACK(settings_changed), &controls);
 
     controls.yplane = gtk_adjustment_new(args->yplane,
                                        0.0, 100.0, 1, 100, 0);
-    gwy_table_attach_hscale(table, row++, N_("Y pos:"), "%",
+    gwy_table_attach_hscale(table, row++, _("Y pos:"), "%",
                                        controls.yplane, 0);
     g_signal_connect_swapped(controls.yplane, "value-changed",
                                        G_CALLBACK(settings_changed), &controls);
 
     controls.zplane = gtk_adjustment_new(args->zplane,
                                        0.0, 100.0, 1, 100, 0);
-    gwy_table_attach_hscale(table, row++, N_("Z pos:"), "%",
+    gwy_table_attach_hscale(table, row++, _("Z pos:"), "%",
                                        controls.zplane, 0);
     g_signal_connect_swapped(controls.zplane, "value-changed",
                                        G_CALLBACK(settings_changed), &controls);
 
-    label = gtk_label_new_with_mnemonic(N_("Interpolation:"));
+    label = gtk_label_new_with_mnemonic(_("Interpolation:"));
 
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
 
@@ -505,7 +505,7 @@ cc_view_dialog(CCViewArgs *args,
     row++;
 
 
-    label = gtk_label_new_with_mnemonic(N_("_X offset:"));
+    label = gtk_label_new_with_mnemonic(_("_X offset:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label,
                      0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
@@ -525,13 +525,13 @@ cc_view_dialog(CCViewArgs *args,
     gtk_table_attach(GTK_TABLE(table), controls.xyexponent, 2, 3, row, row+2,
                      GTK_EXPAND | GTK_FILL | GTK_SHRINK, 0, 0, 0);
 
-    controls.xyunits = gtk_button_new_with_label(N_("Change"));
+    controls.xyunits = gtk_button_new_with_label(gwy_sgettext("verb|Change"));
     g_object_set_data(G_OBJECT(controls.xyunits), "id", (gpointer)"xy");
     gtk_table_attach(GTK_TABLE(table), controls.xyunits,
                      3, 4, row, row+2,
                      GTK_EXPAND | GTK_FILL | GTK_SHRINK, 0, 0, 0);
     row++;
-    label = gtk_label_new_with_mnemonic(N_("_Y offset:"));
+    label = gtk_label_new_with_mnemonic(_("_Y offset:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label,
                      0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
@@ -543,7 +543,7 @@ cc_view_dialog(CCViewArgs *args,
     gtk_table_attach(GTK_TABLE(table), spin,
                      1, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
-    label = gtk_label_new_with_mnemonic(N_("_Z offset:"));
+    label = gtk_label_new_with_mnemonic(_("_Z offset:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label,
                      0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
@@ -563,7 +563,7 @@ cc_view_dialog(CCViewArgs *args,
     gtk_table_attach(GTK_TABLE(table), controls.zexponent, 2, 3, row, row+1,
                      GTK_EXPAND | GTK_FILL | GTK_SHRINK, 0, 0, 0);
 
-    controls.zunits = gtk_button_new_with_label(N_("Change"));
+    controls.zunits = gtk_button_new_with_label(gwy_sgettext("verb|Change"));
     g_object_set_data(G_OBJECT(controls.zunits), "id", (gpointer)"z");
     gtk_table_attach(GTK_TABLE(table), controls.zunits,
                      3, 4, row, row+1,
@@ -571,7 +571,7 @@ cc_view_dialog(CCViewArgs *args,
     row++;
 
 
-    controls.crop = gtk_check_button_new_with_mnemonic(N_("crop to actual data"));
+    controls.crop = gtk_check_button_new_with_mnemonic(_("Crop to actual data"));
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.crop),
                                                     args->crop);
     gtk_table_attach(GTK_TABLE(table), controls.crop,
@@ -581,7 +581,7 @@ cc_view_dialog(CCViewArgs *args,
     row++;
 
 
-    controls.update = gtk_check_button_new_with_mnemonic(N_("I_nstant updates"));
+    controls.update = gtk_check_button_new_with_mnemonic(_("I_nstant updates"));
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.update),
                                                     args->update);
     gtk_table_attach(GTK_TABLE(table), controls.update,
@@ -693,14 +693,14 @@ static void show_info(CCViewControls *controls, GwyDataField *dfield)
     gchar msg[50];
 
     if (gwy_data_field_get_sum(dfield)==0) 
-        g_snprintf(msg, sizeof(msg), N_("Shown part has zero range."));
+        g_snprintf(msg, sizeof(msg), _("Shown part has zero range."));
     else {
         siunit = gwy_data_field_get_si_unit_z(dfield);
         min = gwy_data_field_get_min(dfield);
         max = gwy_data_field_get_max(dfield);
         maxf = gwy_si_unit_get_format(siunit, GWY_SI_UNIT_FORMAT_VFMARKUP, max, NULL);
 
-        g_snprintf(msg, sizeof(msg), N_("Shown range (%.*f - %.*f) %s"),
+        g_snprintf(msg, sizeof(msg), _("Shown range (%.*f - %.*f) %s"),
                     maxf->precision, min/maxf->magnitude, maxf->precision, max/maxf->magnitude,
                     maxf->units);
         gwy_si_unit_value_format_free(maxf);
@@ -749,23 +749,23 @@ update_view(CCViewControls *controls, CCViewArgs *args)
 
        // printf("Loaded %g %g %g %g\n", x_from, x_to, y_from, y_to);
 
-        g_snprintf(msg, sizeof(msg), N_("%d calibration data"), gwy_caldata_get_ndata(caldata));
+        g_snprintf(msg, sizeof(msg), _("%d calibration data"), gwy_caldata_get_ndata(caldata));
         gtk_label_set_text(GTK_LABEL(controls->message1), msg);
 
         maxf = gwy_si_unit_get_format(six, GWY_SI_UNIT_FORMAT_VFMARKUP, x_to, NULL);
-        g_snprintf(msg, sizeof(msg), N_("X span: (%.*f - %.*f) %s"),
+        g_snprintf(msg, sizeof(msg), _("X span: (%.*f - %.*f) %s"),
                     maxf->precision, x_from/maxf->magnitude, maxf->precision, x_to/maxf->magnitude,
                     maxf->units);
         gtk_label_set_markup(GTK_LABEL(controls->message2), msg);
 
         gwy_si_unit_get_format(siy, GWY_SI_UNIT_FORMAT_VFMARKUP, y_to, maxf);
-        g_snprintf(msg, sizeof(msg), N_("Y span: (%.*f - %.*f) %s"),
+        g_snprintf(msg, sizeof(msg), _("Y span: (%.*f - %.*f) %s"),
                     maxf->precision, y_from/maxf->magnitude, maxf->precision, y_to/maxf->magnitude,
                     maxf->units);
         gtk_label_set_markup(GTK_LABEL(controls->message3), msg);
 
         gwy_si_unit_get_format(siz, GWY_SI_UNIT_FORMAT_VFMARKUP, z_to, maxf);
-        g_snprintf(msg, sizeof(msg), N_("Z span: (%.*f - %.*f) %s"),
+        g_snprintf(msg, sizeof(msg), _("Z span: (%.*f - %.*f) %s"),
                     maxf->precision, z_from/maxf->magnitude, maxf->precision, z_to/maxf->magnitude,
                     maxf->units);
         gtk_label_set_markup(GTK_LABEL(controls->message4), msg);
@@ -789,7 +789,7 @@ update_view(CCViewControls *controls, CCViewArgs *args)
     if (controls->args->crop && !field_inside(caldata, controls->actual_field, 
                               args->xoffset, args->yoffset, args->zoffset))
     {
-        g_snprintf(msg, sizeof(msg), N_("Error: out of range."));
+        g_snprintf(msg, sizeof(msg), _("Error: out of range."));
         gtk_label_set_markup(GTK_LABEL(controls->resmes), msg);
         posok = FALSE;
         gtk_widget_set_sensitive(controls->button_ok, FALSE);
@@ -798,13 +798,13 @@ update_view(CCViewControls *controls, CCViewArgs *args)
 
 
     if (posok && !args->computed) {
-        gwy_app_wait_start(GTK_WINDOW(controls->dialog), N_("Building mesh..."));
+        gwy_app_wait_start(GTK_WINDOW(controls->dialog), _("Building mesh..."));
 
         if (args->interpolation_type == GWY_CC_VIEW_INTERPOLATION_NATURAL)
         {
             gwy_caldata_setup_interpolation(caldata);
         }
-        run = gwy_app_wait_set_message(N_("Triangulation..."));
+        run = gwy_app_wait_set_message(_("Triangulation..."));
         run = gwy_app_wait_set_fraction(0);
 
         if (run && controls->args->crop) {
@@ -1391,7 +1391,7 @@ units_change_cb(GtkWidget *button,
     controls->in_update = TRUE;
 
     id = g_object_get_data(G_OBJECT(button), "id");
-    dialog = gtk_dialog_new_with_buttons(N_("Change Units"),
+    dialog = gtk_dialog_new_with_buttons(_("Change Units"),
                                          NULL,
                                          GTK_DIALOG_MODAL
                                          | GTK_DIALOG_NO_SEPARATOR,
@@ -1404,7 +1404,7 @@ units_change_cb(GtkWidget *button,
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox,
                        FALSE, FALSE, 0);
 
-    label = gtk_label_new_with_mnemonic(N_("New _units:"));
+    label = gtk_label_new_with_mnemonic(_("New _units:"));
     gtk_box_pack_start(GTK_BOX(hbox), label, TRUE, TRUE, 0);
 
     entry = gtk_entry_new();

@@ -160,7 +160,7 @@ static gboolean
 module_register(void)
 {
     gwy_file_func_register("mulfile",
-                           N_("Aarhus NUL files (.mul)"),
+                           N_("Aarhus MUL files (.mul)"),
                            (GwyFileDetectFunc)&mul_detect,
                            (GwyFileLoadFunc)&mul_load,
                            NULL,

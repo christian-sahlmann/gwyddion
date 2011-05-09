@@ -652,7 +652,7 @@ rawfile_dialog_info_page(RawFileArgs *args,
                                         args->p.xyexponent);
     gtk_box_pack_start(GTK_BOX(hbox), controls->xyexponent, FALSE, FALSE, 0);
 
-    controls->xyunits = gtk_button_new_with_label(_("Change"));
+    controls->xyunits = gtk_button_new_with_label(gwy_sgettext("verb|Change"));
     g_object_set_data(G_OBJECT(controls->xyunits), "id", (gpointer)"xy");
     g_signal_connect(controls->xyunits, "clicked",
                      G_CALLBACK(units_change_cb), controls);
@@ -708,7 +708,7 @@ rawfile_dialog_info_page(RawFileArgs *args,
     gtk_box_pack_start(GTK_BOX(hbox), controls->zexponent, FALSE, FALSE, 0);
     g_object_unref(unit);
 
-    controls->zunits = gtk_button_new_with_label(_("Change"));
+    controls->zunits = gtk_button_new_with_label(gwy_sgettext("verb|Change"));
     g_object_set_data(G_OBJECT(controls->zunits), "id", (gpointer)"z");
     g_signal_connect(controls->zunits, "clicked",
                      G_CALLBACK(units_change_cb), controls);
@@ -1005,13 +1005,13 @@ rawfile_dialog_preset_page(RawFileArgs *args,
     gtk_button_box_set_layout(GTK_BUTTON_BOX(bbox), GTK_BUTTONBOX_START);
     gtk_box_pack_start(GTK_BOX(vbox), bbox, FALSE, FALSE, 0);
 
-    button = gtk_button_new_with_mnemonic(_("_Load"));
+    button = gtk_button_new_with_mnemonic(_("verb|_Load"));
     controls->load = button;
     gtk_container_add(GTK_CONTAINER(bbox), button);
     g_signal_connect_swapped(button, "clicked",
                              G_CALLBACK(preset_load_cb), controls);
 
-    button = gtk_button_new_with_mnemonic(_("_Store"));
+    button = gtk_button_new_with_mnemonic(_("verb|_Store"));
     controls->save = button;
     gtk_container_add(GTK_CONTAINER(bbox), button);
     g_signal_connect_swapped(button, "clicked",

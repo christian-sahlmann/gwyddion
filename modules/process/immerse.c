@@ -364,7 +364,8 @@ immerse_dialog(ImmerseArgs *args)
         = gwy_radio_buttons_createl(G_CALLBACK(immerse_leveling_changed),
                                     &controls,
                                     args->leveling,
-                                    _("_None"), GWY_IMMERSE_LEVEL_NONE,
+                                    gwy_sgettext("levelling|_None"),
+                                    GWY_IMMERSE_LEVEL_NONE,
                                     _("_Mean value"), GWY_IMMERSE_LEVEL_MEAN,
                                     NULL);
 

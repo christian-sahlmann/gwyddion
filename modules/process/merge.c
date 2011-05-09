@@ -124,10 +124,10 @@ static void     put_fields           (GwyDataField *dfield1,
                                       gint py2);
 
 static const GwyEnum directions[] = {
-    { N_("Up"),            GWY_MERGE_DIRECTION_UP },
-    { N_("Down"),          GWY_MERGE_DIRECTION_DOWN },
-    { N_("Right"),         GWY_MERGE_DIRECTION_RIGHT },
-    { N_("Left"),          GWY_MERGE_DIRECTION_LEFT },
+    { N_("Up"),           GWY_MERGE_DIRECTION_UP,    },
+    { N_("Down"),         GWY_MERGE_DIRECTION_DOWN,  },
+    { N_("adverb|Right"), GWY_MERGE_DIRECTION_RIGHT, },
+    { N_("adverb|Left"),  GWY_MERGE_DIRECTION_LEFT,  },
 };
 
 static const GwyEnum modes[] = {

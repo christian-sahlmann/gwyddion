@@ -250,11 +250,11 @@ fit_dialog(FitArgs *args)
     controls.dialog = dialog;
     gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
     gtk_dialog_add_action_widget(GTK_DIALOG(dialog),
-                                 gwy_stock_like_button_new(_("_Fit"),
+                                 gwy_stock_like_button_new(gwy_sgettext("verb|_Fit"),
                                                            GTK_STOCK_EXECUTE),
                                  RESPONSE_FIT);
     gtk_dialog_add_button(GTK_DIALOG(dialog),
-                          _("_Estimate"), RESPONSE_ESTIMATE);
+                          gwy_sgettext("verb|_Estimate"), RESPONSE_ESTIMATE);
     gtk_dialog_add_button(GTK_DIALOG(dialog),
                           _("_Plot Inits"), RESPONSE_PLOT);
     gtk_dialog_add_button(GTK_DIALOG(dialog),
@@ -689,8 +689,8 @@ fit_plot_curve(FitArgs *args)
     g_object_set(cmodel,
                  "description",
                  initial
-                 ? gwy_sgettext("noun|Estimate")
-                 : gwy_sgettext("noun|Fit"),
+                 ? gwy_sgettext("Estimate")
+                 : gwy_sgettext("Fit"),
                  NULL);
     gwy_graph_curve_model_set_data(cmodel, xd, yd, n);
 }

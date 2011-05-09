@@ -874,6 +874,7 @@ gwy_data_window_color_axis_clicked(GtkWidget *data_window,
 
     menu = gwy_menu_gradient(G_CALLBACK(gwy_data_window_gradient_selected),
                              data_window);
+    /* TRANSLATORS: Countable (more false colour gradients). */
     item = gtk_menu_item_new_with_label(_("More..."));
     g_signal_connect_swapped(item, "activate",
                              G_CALLBACK(gwy_data_window_show_more_gradients),

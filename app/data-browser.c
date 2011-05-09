@@ -3787,7 +3787,8 @@ gwy_app_data_browser_construct_buttons(GwyAppDataBrowser *browser)
         button = gtk_button_new();
         g_object_set_data(G_OBJECT(button), "action",
                           (gpointer)actions[i].action);
-        gtk_tooltips_set_tip(tips, button, _(actions[i].tooltip), NULL);
+        gtk_tooltips_set_tip(tips, button, gwy_sgettext(actions[i].tooltip),
+                             NULL);
         gtk_container_add(GTK_CONTAINER(button), image);
         gtk_box_pack_start(GTK_BOX(hbox), button, TRUE, TRUE, 0);
         gwy_sensitivity_group_add_widget(browser->sensgroup, button,

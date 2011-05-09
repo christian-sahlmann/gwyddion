@@ -531,10 +531,10 @@ GtkTreeModel*
 _gwy_graph_get_point_type_store(GtkWidget *widget)
 {
     static const GwyEnum point_types[] = {
-        { N_("noun|Square"),         GWY_GRAPH_POINT_SQUARE,                },
+        { N_("Square"),              GWY_GRAPH_POINT_SQUARE,                },
         { N_("Circle"),              GWY_GRAPH_POINT_CIRCLE,                },
         { N_("Diamond"),             GWY_GRAPH_POINT_DIAMOND,               },
-        { N_("noun|Cross"),          GWY_GRAPH_POINT_CROSS,                 },
+        { N_("Cross"),               GWY_GRAPH_POINT_CROSS,                 },
         { N_("Diagonal cross"),      GWY_GRAPH_POINT_TIMES,                 },
         { N_("Asterisk"),            GWY_GRAPH_POINT_ASTERISK,              },
         { N_("Star"),                GWY_GRAPH_POINT_STAR,                  },
@@ -610,8 +610,8 @@ GtkTreeModel*
 _gwy_graph_get_line_style_store(GtkWidget *widget)
 {
     static const GwyEnum line_styles[] = {
-        { N_("Solid"), GDK_LINE_SOLID,       },
-        { N_("Dash"),  GDK_LINE_ON_OFF_DASH, },
+        { N_("line-style|Solid"), GDK_LINE_SOLID,       },
+        { N_("line-style|Dash"),  GDK_LINE_ON_OFF_DASH, },
     };
     static const GwyRGBA fg = { 0.0, 0.0, 0.0, 1.0 };
     static GtkListStore *store = NULL;

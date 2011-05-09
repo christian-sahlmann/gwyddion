@@ -250,7 +250,7 @@ simple(GwyContainer *data, GwyRunType run)
         if (!g_file_get_contents(filename,
                                  &contents, &len, &err))
         {
-             g_warning(N_("Error loading file: %s\n"), err->message);
+             g_warning("Error loading file: %s\n", err->message);
              g_clear_error(&err);
              return;
         }
@@ -279,7 +279,7 @@ simple(GwyContainer *data, GwyRunType run)
 
     fh = g_fopen(filename, "w");
     if (!fh) {
-        g_warning(N_("Cannot save preset: %s"), filename);
+        g_warning("Cannot save preset: %s", filename);
         g_free(filename);
         return;
     }
@@ -325,7 +325,7 @@ simple_dialog(SimpleArgs *args, GwyDataField *dfield)
     args->ys = NULL;
     args->noriginal = 0;
 
-    dialog = gtk_dialog_new_with_buttons(N_("Simple Error Map"), NULL, 0,
+    dialog = gtk_dialog_new_with_buttons(_("Simple Error Map"), NULL, 0,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          NULL);
     controls.dialog = dialog;
@@ -342,14 +342,14 @@ simple_dialog(SimpleArgs *args, GwyDataField *dfield)
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table, TRUE, TRUE, 4);
     row = 0;
 
-    label = gtk_label_new(N_("Operands:"));
+    label = gtk_label_new(_("Operands:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label, 0, 2, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
-    args->name[0] = g_strdup_printf(N_("Grating image"));
-    args->name[1] = g_strdup_printf(N_("Detail"));
+    args->name[0] = g_strdup_printf(_("Grating image"));
+    args->name[1] = g_strdup_printf(_("Detail"));
       for (i = 0; i < NARGS; i++) {
         label = gtk_label_new_with_mnemonic(args->name[i]);
         gwy_strkill(args->name[i], "_");
@@ -370,7 +370,7 @@ simple_dialog(SimpleArgs *args, GwyDataField *dfield)
 
         row++;
       }
-    label = gtk_label_new_with_mnemonic(N_("_X offset:"));
+    label = gtk_label_new_with_mnemonic(_("_X offset:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label,
                      0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
@@ -390,14 +390,14 @@ simple_dialog(SimpleArgs *args, GwyDataField *dfield)
     gtk_table_attach(GTK_TABLE(table), controls.xyexponent, 2, 3, row, row+2,
                      GTK_EXPAND | GTK_FILL | GTK_SHRINK, 0, 0, 0);
 
-    controls.xyunits = gtk_button_new_with_label(N_("Change"));
+    controls.xyunits = gtk_button_new_with_label(gwy_sgettext("verb|Change"));
     g_object_set_data(G_OBJECT(controls.xyunits), "id", (gpointer)"xy");
     gtk_table_attach(GTK_TABLE(table), controls.xyunits,
                      3, 4, row, row+2,
                      GTK_EXPAND | GTK_FILL | GTK_SHRINK, 0, 0, 0);
     row++;
 
-    label = gtk_label_new_with_mnemonic(N_("_Y offset:"));
+    label = gtk_label_new_with_mnemonic(_("_Y offset:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label,
                      0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
@@ -410,7 +410,7 @@ simple_dialog(SimpleArgs *args, GwyDataField *dfield)
                      1, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
-    label = gtk_label_new_with_mnemonic(N_("X _period:"));
+    label = gtk_label_new_with_mnemonic(_("X _period:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label,
                      0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
@@ -423,7 +423,7 @@ simple_dialog(SimpleArgs *args, GwyDataField *dfield)
                      1, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
-    label = gtk_label_new_with_mnemonic(N_("Y p_eriod:"));
+    label = gtk_label_new_with_mnemonic(_("Y p_eriod:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label,
                      0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
@@ -437,7 +437,7 @@ simple_dialog(SimpleArgs *args, GwyDataField *dfield)
     row++;
 
 
-    label = gtk_label_new_with_mnemonic(N_("_Z offset:"));
+    label = gtk_label_new_with_mnemonic(_("_Z offset:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label,
                      0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
@@ -457,7 +457,7 @@ simple_dialog(SimpleArgs *args, GwyDataField *dfield)
     gtk_table_attach(GTK_TABLE(table), controls.zexponent, 2, 3, row, row+1,
                      GTK_EXPAND | GTK_FILL | GTK_SHRINK, 0, 0, 0);
 
-    controls.zunits = gtk_button_new_with_label(N_("Change"));
+    controls.zunits = gtk_button_new_with_label(gwy_sgettext("verb|Change"));
     g_object_set_data(G_OBJECT(controls.zunits), "id", (gpointer)"z");
     gtk_table_attach(GTK_TABLE(table), controls.zunits,
                      3, 4, row, row+1,
@@ -465,8 +465,8 @@ simple_dialog(SimpleArgs *args, GwyDataField *dfield)
     row++;
 
     controls.threshold = gtk_adjustment_new(args->threshold, -1.0, 1.0, 0.1, 0.2, 0);
-    spin = gwy_table_attach_hscale(table, row, N_("_Threshold"), "",
-                                                  controls.threshold, GWY_HSCALE_DEFAULT);
+    spin = gwy_table_attach_hscale(table, row, _("_Threshold"), "",
+                                   controls.threshold, GWY_HSCALE_DEFAULT);
 
     g_signal_connect(controls.threshold, "value-changed",
                        G_CALLBACK(threshold_changed_cb), &controls);
@@ -474,7 +474,7 @@ simple_dialog(SimpleArgs *args, GwyDataField *dfield)
     row++;
 
 
-    label = gtk_label_new_with_mnemonic(N_("Calibration name:"));
+    label = gtk_label_new_with_mnemonic(_("Calibration name:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label,
                      0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
@@ -486,7 +486,7 @@ simple_dialog(SimpleArgs *args, GwyDataField *dfield)
                      1, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
     row++;
-    controls.suggestion = gtk_label_new_with_mnemonic(N_("No suggestion\n"));
+    controls.suggestion = gtk_label_new_with_mnemonic(_("No suggestion\n"));
     gtk_misc_set_alignment(GTK_MISC(controls.suggestion), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), controls.suggestion,
                      0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
@@ -538,10 +538,10 @@ simple_dialog(SimpleArgs *args, GwyDataField *dfield)
                                                   GTK_DIALOG_DESTROY_WITH_PARENT,
                                                   GTK_MESSAGE_WARNING,
                                                   GTK_BUTTONS_CANCEL,
-                                                  N_("Calibration '%s' already exists"),
+                                                  _("Calibration '%s' already exists"),
                                                   args->calname);
-                gtk_dialog_add_button(GTK_DIALOG(dialog2), N_("Overwrite"), RESPONSE_DUPLICATE_OVERWRITE);
-                gtk_dialog_add_button(GTK_DIALOG(dialog2), N_("Append"), RESPONSE_DUPLICATE_APPEND);
+                gtk_dialog_add_button(GTK_DIALOG(dialog2), _("Overwrite"), RESPONSE_DUPLICATE_OVERWRITE);
+                gtk_dialog_add_button(GTK_DIALOG(dialog2), _("Append"), RESPONSE_DUPLICATE_APPEND);
                 response = gtk_dialog_run(GTK_DIALOG(dialog2));
                 if (response == RESPONSE_DUPLICATE_OVERWRITE) {
                     args->duplicate = DUPLICATE_OVERWRITE;
@@ -586,13 +586,13 @@ simple_data_cb(GwyDataChooser *chooser,
                                                        gwy_app_get_data_key_for_id(args->objects[1].id)));
 
     if (original==detail) {
-        gtk_label_set_text(GTK_LABEL(controls->suggestion), N_("Data same as detail?"));
+        gtk_label_set_text(GTK_LABEL(controls->suggestion), _("Data same as detail?"));
         gtk_widget_set_sensitive(controls->button_ok, FALSE);
     }
     else if (gwy_data_field_get_xres(original)<=gwy_data_field_get_xres(detail) ||
         gwy_data_field_get_yres(original)<=gwy_data_field_get_yres(detail))
     {
-        gtk_label_set_text(GTK_LABEL(controls->suggestion), N_("Data larger than detail?"));
+        gtk_label_set_text(GTK_LABEL(controls->suggestion), _("Data larger than detail?"));
         gtk_widget_set_sensitive(controls->button_ok, FALSE);
     }
     else {
@@ -606,9 +606,9 @@ simple_data_cb(GwyDataChooser *chooser,
         get_object_list(GTK_WINDOW(controls->dialog), original, detail, args->threshold, args->xs, args->ys, &(args->noriginal), 
                         GWY_CORRELATION_NORMAL, &(args->objects_found));
         if (args->objects_found)
-          g_snprintf(message, sizeof(message), N_("%d objects found"), args->noriginal);
+          g_snprintf(message, sizeof(message), _("%d objects found"), args->noriginal);
         else 
-          g_snprintf(message, sizeof(message), N_("Search cancelled"));
+          g_snprintf(message, sizeof(message), _("Search cancelled"));
         gtk_label_set_text(GTK_LABEL(controls->suggestion), message);
         gtk_widget_set_sensitive(controls->button_ok, TRUE);
 
@@ -630,9 +630,9 @@ get_object_list(GtkWindow *window, GwyDataField *data, GwyDataField *kernel, gdo
     gint i, *grains, *maxpos, ngrains, work, wpi;
     GwyComputationState *state;
     
-    gwy_app_wait_start(window, N_("Initializing"));
+    gwy_app_wait_start(window, _("Initializing"));
     state = gwy_data_field_correlate_init(data, kernel, score);
-    gwy_app_wait_set_message(N_("Correlating"));
+    gwy_app_wait_set_message(_("Correlating"));
     work = 0;
     wpi = gwy_data_field_get_xres(kernel)*gwy_data_field_get_yres(kernel);
     wpi = MIN(wpi, WORK_PER_UPDATE);
@@ -1188,7 +1188,7 @@ units_change_cb(GtkWidget *button,
     controls->in_update = TRUE;
 
     id = g_object_get_data(G_OBJECT(button), "id");
-    dialog = gtk_dialog_new_with_buttons(N_("Change Units"),
+    dialog = gtk_dialog_new_with_buttons(_("Change Units"),
                                          NULL,
                                          GTK_DIALOG_MODAL
                                          | GTK_DIALOG_NO_SEPARATOR,
@@ -1201,7 +1201,7 @@ units_change_cb(GtkWidget *button,
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox,
                        FALSE, FALSE, 0);
 
-    label = gtk_label_new_with_mnemonic(N_("New _units:"));
+    label = gtk_label_new_with_mnemonic(_("New _units:"));
     gtk_box_pack_start(GTK_BOX(hbox), label, TRUE, TRUE, 0);
 
     entry = gtk_entry_new();
