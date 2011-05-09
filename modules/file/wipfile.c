@@ -167,12 +167,6 @@ static GwyContainer*  wip_load              (const gchar *filename,
 static void           wip_read_all_tags     (const guchar *buffer,
                                              gsize start, gsize end,
                                              GNode *tagtree, gint n);
-/*
-static gboolean       wip_real_load         (const guchar *buffer,
-                                             gsize size,
-                                             WIPFile *wipfile,
-                                             GError **error);
-*/
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -329,7 +323,6 @@ static void wip_read_all_tags (const guchar *buffer, gsize start,
     guchar *p;
     gsize cur;
     WIPTag *tag;
-//    gint i;
     GNode *tagpos;
 
     cur = start;
@@ -340,15 +333,8 @@ static void wip_read_all_tags (const guchar *buffer, gsize start,
         }
         else {
             tagpos=g_node_insert_data(tagtree, -1, tag);
-     //       for (i = 0; i < n; i++)
-     //           fprintf(stderr,"* ");
-     //       fprintf(stderr,"%s \n", tag->name);
             if((!tag->type) && (n < 255))
                 wip_read_all_tags(buffer, tag->data_start, tag->data_end, tagpos, n+1);
-            // else {
-            //    p = (guchar *)(buffer + tag->data_start);
-            //    print_tag_data(tag, &p, n+1);
-            // }
             cur = tag->data_end;
         }
     }
@@ -510,7 +496,6 @@ static GwyContainer* wip_load (const gchar *filename,
     WIPFile *filedata;
     GNode *tagtree;
     GwyContainer *data;
-  //  WIPFile *file;
 
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
         err_GET_FILE_CONTENTS(error, &err);
