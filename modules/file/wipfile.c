@@ -1,6 +1,7 @@
 /*
  *  $Id$
- *  Copyright (C) 2010 David Necas (Yeti), Petr Klapetek, Daniil Bratashov (dn2010)
+ *  Copyright (C) 2010-2011 David Necas (Yeti), Petr Klapetek,
+ *  Daniil Bratashov (dn2010)
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net, dn2010@gmail.com
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -45,9 +46,12 @@
 #include "config.h"
 #include <string.h>
 #include <libgwyddion/gwymacros.h>
-#include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwyutils.h>
+#include <libgwyddion/gwymath.h>
 #include <libprocess/datafield.h>
+#include <libprocess/spectra.h>
+#include <libgwydgets/gwygraphmodel.h>
+#include <libgwydgets/gwygraphbasics.h>
 #include <libgwymodule/gwymodule-file.h>
 #include <app/gwymoduleutils-file.h>
 
@@ -103,7 +107,7 @@ typedef struct {
     guint    id;
     gchar   *unitname;
     gdouble  unitmultiplier;
-    gdoudle  laser_wl; /* for 1/cm axis only */
+    gdouble  laser_wl; /* for 1/cm axis only */
 } WIPAxis;
 
 /* TDSpectralTransformation for optical spectra;
@@ -123,20 +127,46 @@ typedef struct {
     gdouble  f; /* focal distance */
 } WIPSpectralTransform;
 
-/*
 typedef struct {
-    guint version;  
+    guint dimension;
+    WIPDataType datatype;
+    guint minrange, maxrange;
+    gpointer data;
+} WIPGraphData;
+
+typedef struct {
+    guint sizex;
+    guint sizey;
+    guint sizegraph;
+    guint spacetransformid;
+    guint xtransformid;
+    guint xinterpid;
+    guint zinterpid;
+    guint dimension;
+    WIPDataType datatype;
+    guint rangesmin;
+    guint rangesmax;
+    gsize datasize;
+    const guchar *data;
+} WIPGraph;
+
+typedef struct {
+    guint numgraph;
+    GwyContainer *data;
 } WIPFile;
-*/
 
 static gboolean       module_register       (void);
 static gint           wip_detect            (const GwyFileDetectInfo *fileinfo,
                                              gboolean only_name);
-static WIPTag*        wip_get_tag           (guchar **pos, gsize *size);
+static WIPTag*        wip_read_tag          (guchar **pos,
+                                             gsize *start, gsize *end);
 static void           wip_free_tag          (WIPTag *tag);
 static GwyContainer*  wip_load              (const gchar *filename,
                                              GwyRunType mode,
                                              GError **error);
+static void           wip_read_all_tags     (const guchar *buffer,
+                                             gsize start, gsize end,
+                                             GNode *tagtree, gint n);
 /*
 static gboolean       wip_real_load         (const guchar *buffer,
                                              gsize size,
@@ -149,7 +179,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports WItec Project data files."),
     "dn2010 <dn2010@gmail.com>",
-    "0.1",
+    "0.2",
     "David Nečas (Yeti) & Petr Klapetek & Daniil Bratashov",
     "2010",
 };
@@ -185,6 +215,7 @@ wip_detect(const GwyFileDetectInfo *fileinfo,
     return score;
 }
 
+/*
 static void print_tag_data(WIPTag *tag, guchar **pos, guint asterisks)
 {
     guchar *p;
@@ -201,7 +232,7 @@ static void print_tag_data(WIPTag *tag, guchar **pos, guint asterisks)
     if (n > 10) {
         for (j = 0; j < asterisks; j++)
             fprintf(stderr,"  ");
-        fprintf(stderr,"%d 0x%X\n", n, tag->data_start);
+        fprintf(stderr,"%d 0x%X\n", n, (unsigned int)tag->data_start);
         n = 0; // printing offset instead of data
     }
 
@@ -248,18 +279,21 @@ static void print_tag_data(WIPTag *tag, guchar **pos, guint asterisks)
         fprintf(stderr,"\n");
     }
 }
+*/
 
-static WIPTag *wip_get_tag(guchar **pos, gsize *size)
+static WIPTag *wip_read_tag(guchar **pos, gsize *start, gsize *end)
 {
     WIPTag *tag;
-    guchar *p;
+    const guchar *p;
+    gsize maxsize;
 
     p = *pos;
-    if (*size < 4)
+    maxsize = *end - *start;
+    if (maxsize < 4)
         return NULL;
     tag = g_new0(WIPTag, 1);
     tag->name_length = gwy_get_guint32_le(&p);
-    if (*size < 24+tag->name_length) {
+    if (maxsize < 24+tag->name_length) {
         g_free(tag);
         return NULL;
     }
@@ -268,61 +302,215 @@ static WIPTag *wip_get_tag(guchar **pos, gsize *size)
     tag->type = (WIPTagType)gwy_get_guint32_le(&p);
     tag->data_start = gwy_get_gint64_le(&p);
     tag->data_end = gwy_get_gint64_le(&p);
+    if ((tag->data_start < *start) || (tag->data_end > *end)
+     || (tag->data_end - tag->data_start < 0)) {
+        g_free(tag);
+        return NULL;
+    }
+    tag->data = (gpointer)p;
     /*
     fprintf(stderr,"%d %s %d %lld %lld\n",  tag->name_length,
                 tag->name, tag->type, tag->data_start, tag->data_end);
     */
-    *pos = p;
-    *size -= 24+tag->name_length;
+    *pos = (guchar *)p;
+
     return tag;
 }
 
 static void wip_free_tag(WIPTag *tag)
 {
-    g_free(tag->name);
+    g_free((gpointer)tag->name);
     g_free(tag);
 }
 
-static void print_tags (const guchar *buffer, gsize pos,
-                        gsize end, gint n)
+static void wip_read_all_tags (const guchar *buffer, gsize start,
+                        gsize end, GNode *tagtree, gint n)
 {
     guchar *p;
     gsize cur;
-    gsize remaining;
     WIPTag *tag;
-    gint i;
+//    gint i;
+    GNode *tagpos;
 
-    cur = pos;
-    p = (guchar *)(buffer + pos);
+    cur = start;
     while(cur < end) {
         p = (guchar *)(buffer + cur);
-        remaining = end - cur;
-        if(!(tag = wip_get_tag(&p,&remaining))) {
+        if(!(tag = wip_read_tag(&p, &cur, &end))) {
+            // error: tag cannot be read
         }
         else {
-            for (i = 0; i < n; i++)
-                fprintf(stderr,"* ");
-            fprintf(stderr,"%s \n", tag->name);
-            if(!tag->type)
-                print_tags(buffer, tag->data_start, tag->data_end, n+1);
-            else {
-                p = (guchar *)(buffer + tag->data_start);
-                print_tag_data(tag, &p, n+1);
-            }
+            tagpos=g_node_insert_data(tagtree, -1, tag);
+     //       for (i = 0; i < n; i++)
+     //           fprintf(stderr,"* ");
+     //       fprintf(stderr,"%s \n", tag->name);
+            if((!tag->type) && (n < 255))
+                wip_read_all_tags(buffer, tag->data_start, tag->data_end, tagpos, n+1);
+            // else {
+            //    p = (guchar *)(buffer + tag->data_start);
+            //    print_tag_data(tag, &p, n+1);
+            // }
             cur = tag->data_end;
-            wip_free_tag(tag);
         }
     }
 }
 
-static GwyContainer*
-wip_load(const gchar *filename, GwyRunType mode, GError **error)
+void wip_print_tag(WIPTag *tag)
+{
+    fprintf(stderr,"%d %s %d %lld %lld\n",  tag->name_length,
+                tag->name, tag->type, tag->data_start, tag->data_end);
+}
+
+gboolean wip_free_leave (GNode *node, G_GNUC_UNUSED gpointer data)
+{
+   // wip_print_tag((WIPTag *)node->data);
+    wip_free_tag((WIPTag *)node->data);
+    node->data = NULL;
+
+    return FALSE;
+}
+
+gboolean wip_read_graph_tags(GNode *node, gpointer header)
+{
+    WIPTag *tag;
+    WIPGraph *graphheader;
+    const guchar *p;
+
+    tag = node->data;
+    graphheader = (WIPGraph *)header;
+    p = tag->data;
+    if (!strncmp(tag->name, "SizeX", 5))
+        graphheader->sizex = gwy_get_gint32_le(&p);
+    else if (!strncmp(tag->name, "SizeY", 5))
+        graphheader->sizey = gwy_get_gint32_le(&p);
+    else if (!strncmp(tag->name, "SizeGraph", 9))
+        graphheader->sizegraph = gwy_get_gint32_le(&p);
+    else if (!strncmp(tag->name, "SpaceTransformationID", 21))
+        graphheader->spacetransformid = gwy_get_gint32_le(&p);
+    else if (!strncmp(tag->name, "XTransformationID", 17))
+        graphheader->xtransformid = gwy_get_gint32_le(&p);
+    else if (!strncmp(tag->name, "XInterpretationID", 17))
+        graphheader->xinterpid = gwy_get_gint32_le(&p);
+    else if (!strncmp(tag->name, "ZInterpretationID", 17))
+        graphheader->zinterpid = gwy_get_gint32_le(&p);
+    else if (!strncmp(tag->name, "Dimension", 9))
+        graphheader->dimension = gwy_get_gint32_le(&p);
+    else if (!strncmp(tag->name, "DataType", 8))
+        graphheader->datatype = (WIPDataType)gwy_get_gint32_le(&p);
+    else if (!strncmp(tag->name, "Ranges", 6)) {
+        graphheader->rangesmin = gwy_get_gint32_le(&p);
+        graphheader->rangesmax = gwy_get_gint32_le(&p);
+    }
+    else if (!strncmp(tag->name, "Data", 4)) {
+        graphheader->data = p;
+        graphheader->datasize = (gsize)(tag->data_end-tag->data_start);
+    }
+    header = (gpointer)graphheader;
+    
+    return FALSE;
+}
+
+GwyGraphModel * wip_read_graph(GNode *node)
+{
+    WIPGraph *header;
+    GwyGraphModel *gmodel;
+    GwyGraphCurveModel *gcmodel;
+    GwySIUnit *siunitx, *siunity;
+    gdouble *xdata, *ydata;
+    gint numpoints, i;
+    const guchar *p;
+
+    header = g_new0(WIPGraph, 1);
+    
+    g_node_traverse (node, G_LEVEL_ORDER, G_TRAVERSE_ALL, -1,
+                     wip_read_graph_tags, (gpointer)header);
+    
+    if ((header->sizex != 1) || (header->sizey != 1)) { // image
+        g_free(header);
+        return NULL;
+    }
+
+    numpoints = header->rangesmax - header->rangesmin + 1;
+    if ((numpoints <= 0) 
+     || (header->datatype != WIP_DATA_FLOAT)
+     || (header->datasize < 4 * numpoints)) { //FIXME: 4 for float
+        g_free(header);
+        return NULL;
+    }
+
+    xdata = g_new(gdouble, numpoints);
+    ydata = g_new(gdouble, numpoints);
+    
+    p = header->data;
+    for (i = 0; i < numpoints; i++) {
+		xdata[i] = i;
+		ydata[i] = gwy_get_gfloat_le(&p);
+	}
+	
+	gmodel = g_object_new(GWY_TYPE_GRAPH_MODEL,
+                          "si-unit-x", siunitx,
+                          "si-unit-y", siunity,
+                          NULL);
+    gcmodel = g_object_new(GWY_TYPE_GRAPH_CURVE_MODEL,
+                           "description", "",
+                           "mode", GWY_GRAPH_CURVE_LINE,
+                           "color", gwy_graph_get_preset_color(0),
+                           NULL);
+    gwy_graph_curve_model_set_data(gcmodel, xdata, ydata, numpoints);
+    g_free(xdata);
+    g_free(ydata);
+    gwy_graph_model_add_curve(gmodel, gcmodel);
+    g_object_unref(gcmodel);
+
+    g_free(header);
+    return gmodel;
+}
+
+gboolean wip_read_data (GNode *node, gpointer filedata)
+{
+    WIPTag *tag;
+    WIPFile *filecontent;
+    GwyGraphModel *gmodel;
+    GwyContainer *container;
+    GString *key;
+
+    tag = node->data;
+    filecontent = (WIPFile *)filedata;
+    key = g_string_new(NULL);
+    container = filecontent->data;
+    if (!strncmp(tag->name, "TDGraph", 7)) {
+        gmodel = wip_read_graph(node);
+        if (!gmodel) { 
+			// some error
+		}
+		else {
+			(filecontent->numgraph)++;
+			g_string_printf(key, "/0/graph/graph/%d",
+						    filecontent->numgraph);
+            gwy_container_set_object_by_name(filecontent->data,
+                                             key->str, gmodel); 
+            g_object_unref(gmodel);
+	    }
+    }
+    
+    g_string_free(key, TRUE);
+    
+    return FALSE;
+}
+
+
+static GwyContainer* wip_load (const gchar *filename,
+                               G_GNUC_UNUSED GwyRunType mode,
+                               GError **error)
 {
     guchar *buffer;
-    gsize size, remaining;
+    gsize size, cur;
     GError *err = NULL;
     guchar *p;
     WIPTag *tag;
+    WIPFile *filedata;
+    GNode *tagtree;
+    GwyContainer *data;
+  //  WIPFile *file;
 
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
         err_GET_FILE_CONTENTS(error, &err);
@@ -330,11 +518,38 @@ wip_load(const gchar *filename, GwyRunType mode, GError **error)
     }
 
     p = buffer + 8; /* skip magic header */
+    cur = 8;
+    if(!(tag = wip_read_tag(&p, &cur, &size))) {
+        // error: tag cannot be read
+    }
 
-    print_tags(buffer, 8, size, 0);
+    if ((tag->type)
+     || (strncmp(tag->name, "WITec Project ", tag->name_length))) {
+        err_FILE_TYPE(error, "WITec Project");
+        wip_free_tag(tag);
+        return NULL;
+    }
+    else {
+        tagtree = g_node_new((gpointer)tag);
+        wip_read_all_tags(buffer, tag->data_start,
+                          tag->data_end, tagtree, 1);
+    }
 
+    data = gwy_container_new();
+    filedata = g_new0(WIPFile, 1);
+    filedata->numgraph = 0;
+    filedata->data = data;
+    
+    g_node_traverse (tagtree, G_LEVEL_ORDER, G_TRAVERSE_ALL, -1,
+                     wip_read_data, (gpointer)filedata);
+
+    g_node_traverse (tagtree, G_LEVEL_ORDER, G_TRAVERSE_ALL, -1,
+                     wip_free_leave, NULL);
+    g_node_destroy (tagtree);
+    g_free(filedata);
     gwy_file_abandon_contents(buffer, size, NULL);
-    return NULL;
+
+    return data;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
