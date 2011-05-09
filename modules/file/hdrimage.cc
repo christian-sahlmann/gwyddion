@@ -346,7 +346,6 @@ exr_save_dialog(EXRSaveArgs *args,
     GtkTable *table;
     EXRSaveControls controls;
     gint row, response;
-    GwySIValueFormat *vf;
     gchar *s;
 
     controls.args = args;
