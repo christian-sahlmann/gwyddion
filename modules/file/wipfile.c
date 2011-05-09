@@ -116,7 +116,7 @@ typedef struct {
 typedef struct {
     guint    id;
     guint    transform_type; /* should be 1 */
-    gint     polynom [3]; /* polynomial coeffs. should be zeros */
+    gdouble  polynom [3]; /* polynomial coeffs. should be zeros */
     guint    nc; /* central pixel number */
     gdouble  lambdac; /* central pixel lambda in nm */
     gdouble  gamma; /* FIXME: don't know what is it */
@@ -395,6 +395,44 @@ gboolean wip_read_graph_tags(GNode *node, gpointer header)
     return FALSE;
 }
 
+gboolean wip_read_sp_transform_tags(GNode *node, gpointer transform)
+{
+    WIPTag *tag;
+    WIPSpectralTransform *sp_transform;
+    const guchar *p;
+    gint i;
+
+    tag = node->data;
+    sp_transform = (WIPSpectralTransform *)transform;
+    p = tag->data;
+    if (!strncmp(tag->name, "SpectralTransformationType", 26))
+        sp_transform->transform_type = gwy_get_gint32_le(&p);
+    else if (!strncmp(tag->name, "Polynom", 7)) {
+        for(i = 0; i < 3; i++)
+            sp_transform->polynom[i] = gwy_get_gdouble_le(&p);
+    }
+	else if (!strncmp(tag->name, "nC", 2))
+		sp_transform->nc = gwy_get_gint32_le(&p);
+	else if (!strncmp(tag->name, "LambdaC", 7))
+		sp_transform->lambdac = gwy_get_gdouble_le(&p);
+	else if (!strncmp(tag->name, "Gamma", 5))
+		sp_transform->gamma = gwy_get_gdouble_le(&p);
+	else if (!strncmp(tag->name, "Delta", 5))
+		sp_transform->delta = gwy_get_gdouble_le(&p);	
+	else if (!strncmp(tag->name, "m", 1))
+		sp_transform->m = gwy_get_gdouble_le(&p);		
+	else if (!strncmp(tag->name, "d", 1))
+		sp_transform->d = gwy_get_gdouble_le(&p);
+	else if (!strncmp(tag->name, "x", 1))
+		sp_transform->x = gwy_get_gdouble_le(&p);			
+	else if (!strncmp(tag->name, "f", 1))
+		sp_transform->f = gwy_get_gdouble_le(&p);			
+
+    transform = (WIPSpectralTransform *)sp_transform;
+
+    return FALSE;
+}
+
 gboolean wip_read_caption(GNode *node, gpointer caption)
 {
     gchar *str;
@@ -457,6 +495,8 @@ GwyGraphModel * wip_read_graph(GNode *node)
     caption = g_string_new(NULL);
     g_node_traverse (node->parent, G_LEVEL_ORDER, G_TRAVERSE_ALL, -1,
                      wip_read_caption, (gpointer)caption);
+    if(!caption->str)
+        g_string_printf(caption,"Unnamed graph");
 
     gmodel = g_object_new(GWY_TYPE_GRAPH_MODEL,
                           "title", caption->str,
