@@ -61,7 +61,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Quesant file format."),
     "Jan Hořák <xhorak@gmail.com>, Yeti <yeti@gwyddion.net>",
-    "0.3",
+    "0.4",
     "David Nečas (Yeti) & Jan Hořák",
     "2008",
 };
@@ -270,7 +270,7 @@ quesant_load(const gchar *filename,
     d = gwy_data_field_get_data(dfield);
     // values are stored in unsigned int16 type
     for (row = 0; row < info.img_res; row++) {
-        for (col = info.img_res-1; col >= 0; col--) {
+        for (col = 0; col < info.img_res; col++) {
             d[row*info.img_res + col] = GUINT16_FROM_LE(*p) * multiplier;
             p++;
         }
