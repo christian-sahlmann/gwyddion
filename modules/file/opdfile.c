@@ -402,6 +402,14 @@ get_block(OPDBlock *block, const guchar **p)
     block->type = gwy_get_guint16_le(p);
     block->size = gwy_get_guint32_le(p);
     block->flags = gwy_get_guint16_le(p);
+
+    if (strncmp(block->name, "AdjustVSI_", sizeof("AdjustVSI_")-1) == 0
+        && block->type == 7
+        && block->size == 2) {
+        g_warning("Changing the type of field %s from float to short.",
+                  block->name);
+        block->type = 6;
+    }
 }
 
 static gboolean
