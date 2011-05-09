@@ -1005,13 +1005,13 @@ rawfile_dialog_preset_page(RawFileArgs *args,
     gtk_button_box_set_layout(GTK_BUTTON_BOX(bbox), GTK_BUTTONBOX_START);
     gtk_box_pack_start(GTK_BOX(vbox), bbox, FALSE, FALSE, 0);
 
-    button = gtk_button_new_with_mnemonic(_("verb|_Load"));
+    button = gtk_button_new_with_mnemonic(gwy_sgettext("verb|_Load"));
     controls->load = button;
     gtk_container_add(GTK_CONTAINER(bbox), button);
     g_signal_connect_swapped(button, "clicked",
                              G_CALLBACK(preset_load_cb), controls);
 
-    button = gtk_button_new_with_mnemonic(_("verb|_Store"));
+    button = gtk_button_new_with_mnemonic(gwy_sgettext("verb|_Store"));
     controls->save = button;
     gtk_container_add(GTK_CONTAINER(bbox), button);
     g_signal_connect_swapped(button, "clicked",
