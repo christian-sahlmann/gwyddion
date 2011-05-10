@@ -154,7 +154,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Merges two images."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.2",
+    "1.3",
     "David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
@@ -589,14 +589,13 @@ put_fields(GwyDataField *dfield1, GwyDataField *dfield2,
     xres2 = gwy_data_field_get_xres(dfield2);
     yres2 = gwy_data_field_get_yres(dfield2);
 
+    /* Use the pixels sizes of field 1 but they must be identical. */
     gwy_data_field_set_xreal(result,
-                             gwy_data_field_get_xreal(result)
-                             *gwy_data_field_get_xres(result)
-                             /xres2);
+                             gwy_data_field_get_xres(result)
+                             * gwy_data_field_get_xmeasure(dfield1));
     gwy_data_field_set_yreal(result,
-                             gwy_data_field_get_yreal(result)
-                             *gwy_data_field_get_yres(result)
-                             /yres2);
+                             gwy_data_field_get_yres(result)
+                             * gwy_data_field_get_ymeasure(dfield1));
 
     gwy_data_field_fill(result,
                         MIN(gwy_data_field_get_min(dfield1),
@@ -758,6 +757,7 @@ merge_boundary(GwyDataField *dfield1,
 
             weight = 0.5; /*FIXME adapt weight to direction*/
 
+            /* FIXME: This sometimes asks for values outside the field. */
             val1 = gwy_data_field_get_val(dfield1,
                                           col + f1_pos.x, row + f1_pos.y);
             val2 = gwy_data_field_get_val(dfield2,
@@ -778,7 +778,7 @@ merge_sanitize_args(MergeArgs *args)
 {
     args->direction = MIN(args->direction, GWY_MERGE_DIRECTION_LAST - 1);
     args->mode = MIN(args->mode, GWY_MERGE_MODE_LAST - 1);
-    args->boundary = MIN(args->boundary, GWY_MERGE_BOUNDARY_LAST - 2);
+    args->boundary = MIN(args->boundary, GWY_MERGE_BOUNDARY_LAST - 1);
 }
 
 static void
