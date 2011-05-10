@@ -19,6 +19,16 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
+/* Warning: spectroscopy xaxis is definitely wrong (about 5 nm near
+ * edges), gamma seems to be CCD plane inclination to incident light
+ * at central pixel and not taken into account.
+ *
+ * I need an example of AFM data to implement reading of datafields.
+ *
+ * There should be some generic infrastructure for N*M arrays of
+ * spectroscopy data, same for this, NTMDT and some other formats.
+ */
+
 /**
  * [FILE-MAGIC-FREEDESKTOP]
  * <mime-type type="application/x-wipfile-spm">
@@ -93,6 +103,12 @@ typedef enum {
     WIP_DATA_EXTENDED = 11 /* x86 FPU native type, 10 bytes */
 } WIPDataType;
 
+typedef enum {
+    WIP_UNIT_OTHER       = 0,
+    WIP_UNIT_MIKROMETER  = 2,
+    WIP_UNIT_RAMAN_SHIFT = 3 /* 1/cm */
+} WIPUnitIndex;
+
 typedef struct {
     guint32       name_length;
     const guchar *name; /* name_length bytes */
@@ -119,8 +135,8 @@ typedef struct {
     gdouble  polynom [3]; /* polynomial coeffs. should be zeros */
     gdouble  nc; /* central pixel number */
     gdouble  lambdac; /* central pixel lambda in nm */
-    gdouble  gamma; /* FIXME: don't know what is it */
-    gdouble  delta; /* FIXME: don't know what is it */
+    gdouble  gamma; /* FIXME: don't know what is it, CCD Inclination? */
+    gdouble  delta; /* FIXME: don't know what is it, small coef. */
     gdouble  m; /* diffraction order */
     gdouble  d; /* 1e6/lines per mm */
     gdouble  x; /* pixel size */
@@ -411,22 +427,22 @@ gboolean wip_read_sp_transform_tags(GNode *node, gpointer transform)
         for(i = 0; i < 3; i++)
             sp_transform->polynom[i] = gwy_get_gdouble_le(&p);
     }
-	else if (!strncmp(tag->name, "nC", 2))
-		sp_transform->nc = gwy_get_gdouble_le(&p);
-	else if (!strncmp(tag->name, "LambdaC", 7))
-		sp_transform->lambdac = gwy_get_gdouble_le(&p);
-	else if (!strncmp(tag->name, "Gamma", 5))
-		sp_transform->gamma = gwy_get_gdouble_le(&p);
-	else if (!strncmp(tag->name, "Delta", 5))
-		sp_transform->delta = gwy_get_gdouble_le(&p);	
-	else if (!strncmp(tag->name, "m", 1))
-		sp_transform->m = gwy_get_gdouble_le(&p);		
-	else if (!strncmp(tag->name, "d", 1))
-		sp_transform->d = gwy_get_gdouble_le(&p);
-	else if (!strncmp(tag->name, "x", 1))
-		sp_transform->x = gwy_get_gdouble_le(&p);			
-	else if (!strncmp(tag->name, "f", 1))
-		sp_transform->f = gwy_get_gdouble_le(&p);			
+    else if (!strncmp(tag->name, "nC", 2))
+        sp_transform->nc = gwy_get_gdouble_le(&p);
+    else if (!strncmp(tag->name, "LambdaC", 7))
+        sp_transform->lambdac = gwy_get_gdouble_le(&p);
+    else if (!strncmp(tag->name, "Gamma", 5))
+        sp_transform->gamma = gwy_get_gdouble_le(&p);
+    else if (!strncmp(tag->name, "Delta", 5))
+        sp_transform->delta = gwy_get_gdouble_le(&p);
+    else if (!strncmp(tag->name, "m", 1))
+        sp_transform->m = gwy_get_gdouble_le(&p);
+    else if (!strncmp(tag->name, "d", 1))
+        sp_transform->d = gwy_get_gdouble_le(&p);
+    else if (!strncmp(tag->name, "x", 1))
+        sp_transform->x = gwy_get_gdouble_le(&p);
+    else if (!strncmp(tag->name, "f", 1))
+        sp_transform->f = gwy_get_gdouble_le(&p);
 
     transform = (WIPSpectralTransform *)sp_transform;
 
@@ -435,18 +451,18 @@ gboolean wip_read_sp_transform_tags(GNode *node, gpointer transform)
 
 gboolean wip_find_by_id(GNode *node, gpointer id)
 {
-	WIPTag *tag;
-	const guchar *p;
-	guint id_temp = 0;
-	
-	tag = node->data;
-	p = tag->data;
-	if (!strncmp(tag->name, "ID", 2))
-		id_temp = gwy_get_gint32_le(&p);
-	if (id_temp == *(gint *)id)
-		return TRUE;
-	
-	return FALSE;
+    WIPTag *tag;
+    const guchar *p;
+    guint id_temp = 0;
+
+    tag = node->data;
+    p = tag->data;
+    if (!strncmp(tag->name, "ID", 2))
+        id_temp = gwy_get_gint32_le(&p);
+    if (id_temp == *(gint *)id)
+        return TRUE;
+
+    return FALSE;
 }
 
 gboolean wip_read_caption(GNode *node, gpointer caption)
@@ -498,9 +514,9 @@ GwyGraphModel * wip_read_graph(GNode *node)
         g_free(header);
         return NULL;
     }
-    
+
     g_node_traverse (node, G_LEVEL_ORDER, G_TRAVERSE_ALL, -1,
-                     wip_read_graph_tags, (gpointer)header);    
+                     wip_read_graph_tags, (gpointer)header);
 
     xdata = g_new(gdouble, numpoints);
     ydata = g_new(gdouble, numpoints);
@@ -511,40 +527,39 @@ GwyGraphModel * wip_read_graph(GNode *node)
         xdata[i] = i;
         ydata[i] = gwy_get_gfloat_le(&p);
     }
-	
-	// Read caption
+
+    // Read caption
     caption = g_string_new(NULL);
     g_node_traverse (node->parent, G_LEVEL_ORDER, G_TRAVERSE_ALL, -1,
                      wip_read_caption, (gpointer)caption);
     if(!caption->str)
-        g_string_printf(caption,"Unnamed graph");
+        g_string_printf(caption, "Unnamed graph");
 
-	// Try to read xdata
-	g_node_traverse (g_node_get_root (node),
-					 G_LEVEL_ORDER, G_TRAVERSE_ALL, -1,
+    // Try to read xdata
+    g_node_traverse (g_node_get_root (node),
+                     G_LEVEL_ORDER, G_TRAVERSE_ALL, -1,
                      wip_find_by_id, (gpointer)&(header->xtransformid));
-    
-	xtransform = g_new0(WIPSpectralTransform, 1);
-	g_node_traverse (node->parent->parent,
-	                 G_LEVEL_ORDER, G_TRAVERSE_ALL, -1,
+
+    xtransform = g_new0(WIPSpectralTransform, 1);
+    g_node_traverse (node->parent->parent,
+                     G_LEVEL_ORDER, G_TRAVERSE_ALL, -1,
                      wip_read_sp_transform_tags,
-                     (gpointer)xtransform); 
+                     (gpointer)xtransform);
     if ((xtransform->transform_type != 1)
      || (xtransform->m < 0.01) || (xtransform->f < 0.01)
-	 || (xtransform->nc < 0.0) || (xtransform->nc > numpoints)) {
-		fprintf(stderr,"Wrong xdata!");
-		// xtransform not read correctly, fallback again
-	}
-	else
-		for(i = 0; i < numpoints; i++) {
-			xdata[i] = xtransform->lambdac + xtransform->d
-					 * (i - xtransform->nc) * xtransform->x
-					 / xtransform->m / xtransform->f;
-		}
-			
-	g_free(xtransform);
-	
-	// Packing
+     || (xtransform->nc < 0.0) || (xtransform->nc > numpoints)) {
+        // xtransform not read correctly, fallback to point numbers
+    }
+    else
+        for(i = 0; i < numpoints; i++) {
+            xdata[i] = xtransform->lambdac + xtransform->d
+                     * (i - xtransform->nc + 1) * xtransform->x
+                     / xtransform->m / xtransform->f;
+        }
+
+    g_free(xtransform);
+
+    // Packing
     gmodel = g_object_new(GWY_TYPE_GRAPH_MODEL,
                           "title", caption->str,
                      /*     "si-unit-x", siunitx,
@@ -562,6 +577,7 @@ GwyGraphModel * wip_read_graph(GNode *node)
     g_object_unref(gcmodel);
     g_string_free(caption, TRUE);
     g_free(header);
+
     return gmodel;
 }
 
