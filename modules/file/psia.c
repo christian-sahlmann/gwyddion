@@ -20,8 +20,8 @@
 
 /**
  * [FILE-MAGIC-USERGUIDE]
- * PSIA
- * .tiff
+ * Park Systems
+ * .tiff, .tif
  * Read
  **/
 
@@ -233,7 +233,7 @@ static GwyContainer* psia_get_metadata       (PSIAImageHeader *header,
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     module_register,
-    N_("Imports PSIA data files."),
+    N_("Imports Park Systems data files."),
     "Yeti <yeti@gwyddion.net>",
     "0.5",
     "David Nečas (Yeti) & Petr Klapetek",
@@ -246,7 +246,7 @@ static gboolean
 module_register(void)
 {
     gwy_file_func_register("psia",
-                           N_("PSIA data files (.tiff)"),
+                           N_("Park Systems data files (.tiff, .tif)"),
                            (GwyFileDetectFunc)&psia_detect,
                            (GwyFileLoadFunc)&psia_load,
                            NULL,
@@ -321,7 +321,7 @@ psia_load_tiff(GwyTIFF *tiff, GError **error)
         || magic != PSIA_MAGIC_NUMBER
         || !gwy_tiff_get_uint0(tiff, PSIA_TIFFTAG_Version, &version)
         || !(version == PSIA_VERSION1 || version == PSIA_VERSION2)) {
-        err_FILE_TYPE(error, "PSIA");
+        err_FILE_TYPE(error, "Park Systems");
         return NULL;
     }
 
@@ -346,7 +346,7 @@ psia_load_tiff(GwyTIFF *tiff, GError **error)
     /* Header */
     entry = gwy_tiff_find_tag(tiff, 0, PSIA_TIFFTAG_Header);
     if (!entry) {
-        err_FILE_TYPE(error, "PSIA");
+        err_FILE_TYPE(error, "Park Systems");
         return NULL;
     }
     p = entry->value;
