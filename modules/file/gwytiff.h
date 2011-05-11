@@ -471,13 +471,27 @@ gwy_tiff_get_uints(const GwyTIFF *tiff,
 {
     const GwyTIFFEntry *entry;
     const guchar *p;
-    guint i;
+    guint i, offset, size = 0;
 
     entry = gwy_tiff_find_tag(tiff, dirno, tag);
     if (!entry || entry->count != expected_count)
         return FALSE;
 
     p = entry->value;
+    if (entry->type == GWY_TIFF_BYTE)
+        size = expected_count;
+    else if (entry->type == GWY_TIFF_SHORT)
+        size = 2*expected_count;
+    else if (entry->type == GWY_TIFF_LONG)
+        size = 4*expected_count;
+    else
+        return FALSE;
+
+    if (size > 4) {
+        offset = tiff->get_guint32(&p);
+        p = tiff->data + offset;
+    }
+
     for (i = 0; i < expected_count; i++) {
         switch (entry->type) {
             case GWY_TIFF_BYTE:
