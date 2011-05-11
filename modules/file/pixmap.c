@@ -102,6 +102,7 @@ typedef enum {
     PIXMAP_MAP_SUM,
     PIXMAP_MAP_ALPHA,
     PIXMAP_MAP_LUMA,
+    PIXMAP_MAP_ALL,
     PIXMAP_MAP_LAST
 } PixmapMapType;
 
@@ -223,6 +224,11 @@ static GwyContainer*     pixmap_load               (const gchar *filename,
                                                     GwyRunType mode,
                                                     GError **error,
                                                     const gchar *name);
+static void             pixmap_load_set_field(GwyContainer *container,
+                                              gint id,
+                                              GwyDataField *dfield,
+                                              const PixmapLoadArgs *args,
+                                              const gchar *title);
 static void             pixmap_load_pixbuf_to_data_field(GdkPixbuf *pixbuf,
                                                          GwyDataField *dfield,
                                                          PixmapMapType maptype);
@@ -323,6 +329,17 @@ static void              pixmap_load_load_args     (GwyContainer *container,
 static void              pixmap_load_save_args     (GwyContainer *container,
                                                     PixmapLoadArgs *args);
 static void              pixmap_load_sanitize_args (PixmapLoadArgs *args);
+
+static const GwyEnum value_map_types[] = {
+    { N_("All channels"), PIXMAP_MAP_ALL,   },
+    { N_("Red"),          PIXMAP_MAP_RED,   },
+    { N_("Green"),        PIXMAP_MAP_GREEN, },
+    { N_("Blue"),         PIXMAP_MAP_BLUE,  },
+    { N_("Value (max)"),  PIXMAP_MAP_VALUE, },
+    { N_("RGB sum"),      PIXMAP_MAP_SUM,   },
+    { N_("Luma"),         PIXMAP_MAP_LUMA,  },
+    { N_("Alpha"),        PIXMAP_MAP_ALPHA, },
+};
 
 static struct {
     const gchar *name;
@@ -426,7 +443,7 @@ static GwyModuleInfo module_info = {
        "PNG, JPEG, TIFF, PPM, BMP, TARGA. "
        "Import support relies on GDK and thus may be installation-dependent."),
     "Yeti <yeti@gwyddion.net>",
-    "7.13",
+    "7.14",
     "David Nečas (Yeti)",
     "2004-2011",
 };
@@ -683,12 +700,11 @@ pixmap_load(const gchar *filename,
             GError **error,
             const gchar *name)
 {
-    enum { buffer_length = 4096 };
+    enum { buffer_length = 4096, nmaptypes = G_N_ELEMENTS(value_map_types) };
     guchar pixmap_buf[buffer_length];
     PixmapFormatInfo *format_info;
     GdkPixbufLoader *loader;
     GwyDataField *dfield;
-    GwySIUnit *siunit;
     GwyContainer *data, *settings;
     GdkPixbuf *pixbuf;
     GError *err = NULL;
@@ -823,28 +839,65 @@ pixmap_load(const gchar *filename,
         return NULL;
     }
 
-    dfield = gwy_data_field_new(width, height, args.xreal, args.yreal, FALSE);
-    pixmap_load_pixbuf_to_data_field(pixbuf, dfield, args.maptype);
+    data = gwy_container_new();
+
+    if (args.maptype == PIXMAP_MAP_ALL) {
+        for (i = 0; i < bpp; i++) {
+            PixmapMapType maptype = (i < 3) ? i + 1 : 6;
+            dfield = gwy_data_field_new(width, height, args.xreal, args.yreal,
+                                        FALSE);
+            pixmap_load_pixbuf_to_data_field(pixbuf, dfield, maptype);
+            pixmap_load_set_field(data, i, dfield, &args,
+                                  gwy_enum_to_string(maptype,
+                                                     value_map_types,
+                                                     nmaptypes));
+            g_object_unref(dfield);
+        }
+    }
+    else {
+        dfield = gwy_data_field_new(width, height, args.xreal, args.yreal,
+                                    FALSE);
+        pixmap_load_pixbuf_to_data_field(pixbuf, dfield, args.maptype);
+        pixmap_load_set_field(data, 0, dfield, &args,
+                              gwy_enum_to_string(args.maptype,
+                                                 value_map_types, nmaptypes));
+        g_object_unref(dfield);
+    }
+
     g_object_unref(pixbuf);
-
-    gwy_data_field_set_xreal(dfield, args.xreal*pow10(args.xyexponent));
-    gwy_data_field_set_yreal(dfield, args.yreal*pow10(args.xyexponent));
-    gwy_data_field_multiply(dfield, args.zreal*pow10(args.zexponent));
-    siunit = gwy_si_unit_new(args.xyunit);
-    gwy_data_field_set_si_unit_xy(dfield, siunit);
-    g_object_unref(siunit);
-    siunit = gwy_si_unit_new(args.zunit);
-    gwy_data_field_set_si_unit_z(dfield, siunit);
-    g_object_unref(siunit);
-
     g_free(args.xyunit);
     g_free(args.zunit);
 
-    data = gwy_container_new();
-    gwy_container_set_object_by_name(data, "/0/data", dfield);
-    g_object_unref(dfield);
-
     return data;
+}
+
+static void
+pixmap_load_set_field(GwyContainer *container,
+                      gint id,
+                      GwyDataField *dfield,
+                      const PixmapLoadArgs *args,
+                      const gchar *title)
+{
+    GwySIUnit *siunit;
+    GQuark quark;
+    gchar *key;
+
+    gwy_data_field_set_xreal(dfield, args->xreal*pow10(args->xyexponent));
+    gwy_data_field_set_yreal(dfield, args->yreal*pow10(args->xyexponent));
+    gwy_data_field_multiply(dfield, args->zreal*pow10(args->zexponent));
+    siunit = gwy_si_unit_new(args->xyunit);
+    gwy_data_field_set_si_unit_xy(dfield, siunit);
+    g_object_unref(siunit);
+    siunit = gwy_si_unit_new(args->zunit);
+    gwy_data_field_set_si_unit_z(dfield, siunit);
+    g_object_unref(siunit);
+
+    quark = gwy_app_get_data_key_for_id(id);
+    gwy_container_set_object(container, quark, dfield);
+
+    key = g_strdup_printf("%s/title", g_quark_to_string(quark));
+    gwy_container_set_string_by_name(container, key, g_strdup(title));
+    g_free(key);
 }
 
 static void
@@ -921,15 +974,6 @@ pixmap_load_dialog(PixmapLoadArgs *args,
                    const gboolean mapknown)
 {
     enum { RESPONSE_RESET = 1 };
-    static const GwyEnum value_map_types[] = {
-        { N_("Red"),         PIXMAP_MAP_RED,   },
-        { N_("Green"),       PIXMAP_MAP_GREEN, },
-        { N_("Blue"),        PIXMAP_MAP_BLUE,  },
-        { N_("Value (max)"), PIXMAP_MAP_VALUE, },
-        { N_("RGB sum"),     PIXMAP_MAP_SUM,   },
-        { N_("Luma"),        PIXMAP_MAP_LUMA,  },
-        { N_("Alpha"),       PIXMAP_MAP_ALPHA, },
-    };
 
     PixmapLoadControls controls;
     GwyContainer *data;
@@ -1205,6 +1249,7 @@ static void
 pixmap_load_create_preview(PixmapLoadArgs *args,
                            PixmapLoadControls *controls)
 {
+    PixmapMapType maptype = args->maptype;
     GwyContainer *data;
     GwyDataField *dfield;
 
@@ -1214,8 +1259,9 @@ pixmap_load_create_preview(PixmapLoadArgs *args,
         gwy_container_set_object_by_name(data, "/0/data", dfield);
         g_object_unref(dfield);
     }
-    pixmap_load_pixbuf_to_data_field(controls->small_pixbuf, dfield,
-                                     args->maptype);
+    if (maptype == PIXMAP_MAP_ALL)
+        maptype = PIXMAP_MAP_RED;
+    pixmap_load_pixbuf_to_data_field(controls->small_pixbuf, dfield, maptype);
     gwy_data_field_data_changed(dfield);
 }
 
