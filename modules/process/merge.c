@@ -373,7 +373,8 @@ merge_do(MergeArgs *args)
             real_boundary = GWY_MERGE_BOUNDARY_SECOND;
         if (args->boundary == GWY_MERGE_BOUNDARY_SECOND)
             real_boundary = GWY_MERGE_BOUNDARY_FIRST;
-    } else {
+    }
+    else {
         real_dir = args->direction;
         real_boundary = args->boundary;
     }
@@ -625,7 +626,7 @@ put_fields(GwyDataField *dfield1, GwyDataField *dfield2,
         gwy_data_field_area_copy(dfield1, result,
                                  x1, y1_, w1, h1,
                                  px1, py1);
-     }
+    }
 
 
     /* adjust boundary to be as smooth as possible */
@@ -642,7 +643,8 @@ put_fields(GwyDataField *dfield1, GwyDataField *dfield2,
             res_rect.y = py2;
             res_rect.height = MAX(MIN(yres1, yres2),
                                   py1 + yres1 - py2 - (yres1 - yres2));
-        } else {
+        }
+        else {
             res_rect.y = py1;
             res_rect.height = py2 + yres2 - py1;
         }
@@ -655,13 +657,9 @@ put_fields(GwyDataField *dfield1, GwyDataField *dfield2,
 
         /*gwy_data_field_area_multiply(result, res_rect.x, res_rect.y,
                                      res_rect.width, res_rect.height, 1.5);*/
-        merge_boundary(dfield1, dfield2, result,
-                       res_rect, f1_pos, f2_pos);
-
+        merge_boundary(dfield1, dfield2, result, res_rect, f1_pos, f2_pos);
     }
-
 }
-
 
 /* compute corelation */
 static gboolean
@@ -783,7 +781,7 @@ merge_sanitize_args(MergeArgs *args)
 
 static void
 merge_load_args(GwyContainer *settings,
-                   MergeArgs *args)
+                MergeArgs *args)
 {
     *args = merge_defaults;
     gwy_container_gis_enum_by_name(settings, direction_key, &args->direction);
@@ -794,7 +792,7 @@ merge_load_args(GwyContainer *settings,
 
 static void
 merge_save_args(GwyContainer *settings,
-                   MergeArgs *args)
+                MergeArgs *args)
 {
     gwy_container_set_enum_by_name(settings, direction_key, args->direction);
     gwy_container_set_enum_by_name(settings, mode_key, args->mode);
