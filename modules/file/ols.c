@@ -17,7 +17,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
-
+#define DEBUG 1
 /**
  * [FILE-MAGIC-FREEDESKTOP]
  * <mime-type type="application/x-olympus-lext-3000">
@@ -171,7 +171,7 @@ ols_load_tiff(const GwyTIFF *tiff, GError **error)
     for (dir_num = 0; dir_num < gwy_tiff_get_n_dirs(tiff); dir_num++) {
         reader = gwy_tiff_image_reader_free(reader);
         /* Request a reader, this ensures dimensions and stuff are defined. */
-        reader = gwy_tiff_get_image_reader(tiff, dir_num, &err);
+        reader = gwy_tiff_get_image_reader(tiff, dir_num, 1, &err);
         if (!reader) {
             g_warning("Ignoring directory %u: %s", dir_num, err->message);
             g_clear_error(&err);
@@ -250,6 +250,9 @@ ols_load_tiff(const GwyTIFF *tiff, GError **error)
         gwy_tiff_image_reader_free(reader);
         reader = NULL;
     }
+
+    if (!container)
+        err_NO_DATA(error);
 
     return container;
 }

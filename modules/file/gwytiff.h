@@ -463,6 +463,45 @@ gwy_tiff_get_uint(const GwyTIFF *tiff,
 }
 
 G_GNUC_UNUSED static gboolean
+gwy_tiff_get_uints(const GwyTIFF *tiff,
+                   guint dirno,
+                   guint tag,
+                   guint expected_count,
+                   guint *retval)
+{
+    const GwyTIFFEntry *entry;
+    const guchar *p;
+    guint i;
+
+    entry = gwy_tiff_find_tag(tiff, dirno, tag);
+    if (!entry || entry->count != expected_count)
+        return FALSE;
+
+    p = entry->value;
+    for (i = 0; i < expected_count; i++) {
+        switch (entry->type) {
+            case GWY_TIFF_BYTE:
+            *(retval++) = *(p++);
+            break;
+
+            case GWY_TIFF_SHORT:
+            *(retval++) = tiff->get_guint16(&p);
+            break;
+
+            case GWY_TIFF_LONG:
+            *(retval++) = tiff->get_guint32(&p);
+            break;
+
+            default:
+            return FALSE;
+            break;
+        }
+    }
+
+    return TRUE;
+}
+
+G_GNUC_UNUSED static gboolean
 gwy_tiff_get_sint(const GwyTIFF *tiff,
                   guint dirno,
                   guint tag,
@@ -614,10 +653,12 @@ gwy_tiff_get_string(const GwyTIFF *tiff,
 G_GNUC_UNUSED static GwyTIFFImageReader*
 gwy_tiff_get_image_reader(const GwyTIFF *tiff,
                           guint dirno,
+                          gboolean max_samples,
                           GError **error)
 {
     GwyTIFFImageReader reader;
     guint nstripes, i, ssize;
+    guint *bps;
 
     reader.dirno = dirno;
 
@@ -637,13 +678,34 @@ gwy_tiff_get_image_reader(const GwyTIFF *tiff,
         return NULL;
     }
 
-    /* The TIFF specs say these are required, but they seem to default to 1. */
-    if (!gwy_tiff_get_uint(tiff, dirno, GWY_TIFFTAG_BITS_PER_SAMPLE,
-                           &reader.bits_per_sample))
-        reader.bits_per_sample = 1;
+    /* The TIFF specs say this is required, but it seems to default to 1. */
     if (!gwy_tiff_get_uint(tiff, dirno, GWY_TIFFTAG_SAMPLES_PER_PIXEL,
                            &reader.samples_per_pixel))
         reader.samples_per_pixel = 1;
+    if (reader.samples_per_pixel == 0
+        || reader.samples_per_pixel > max_samples) {
+        err_UNSUPPORTED(error, "SamplesPerPixel");
+        return NULL;
+    }
+
+    /* The TIFF specs say this is required, but it seems to default to 1. */
+    bps = g_new(guint, reader.samples_per_pixel);
+    if (!gwy_tiff_get_uints(tiff, dirno, GWY_TIFFTAG_BITS_PER_SAMPLE,
+                            reader.samples_per_pixel, bps))
+        reader.bits_per_sample = 1;
+    else {
+        for (i = 1; i < reader.samples_per_pixel; i++) {
+            if (bps[i] != bps[i-1]) {
+                g_set_error(error, GWY_MODULE_FILE_ERROR,
+                            GWY_MODULE_FILE_ERROR_DATA,
+                            _("Non-uniform bits per sample are unsupported."));
+                g_free(bps);
+                return NULL;
+            }
+        }
+        reader.bits_per_sample = bps[0];
+    }
+    g_free(bps);
 
     /* The TIFF specs say this is required, but it seems to default to
      * MAXINT.  Setting more reasonably to RowsPerStrip = ImageLength achieves
@@ -655,7 +717,8 @@ gwy_tiff_get_image_reader(const GwyTIFF *tiff,
     /*
      * The data sample type (default is unsigned integer)
      */
-    if (!gwy_tiff_get_uint(tiff, dirno, GWY_TIFFTAG_SAMPLE_FORMAT, &reader.sample_format))
+    if (!gwy_tiff_get_uint(tiff, dirno, GWY_TIFFTAG_SAMPLE_FORMAT,
+                           &reader.sample_format))
         reader.sample_format = GWY_TIFF_SAMPLE_FORMAT_UNSIGNED_INTEGER;
 
     /* Integer fields specifying data in a format we do not support */
@@ -671,7 +734,9 @@ gwy_tiff_get_image_reader(const GwyTIFF *tiff,
                     _("Planar configuration %u is not supported."), i);
         return NULL;
     }
-    if (reader.bits_per_sample != 16 && reader.bits_per_sample != 32) {
+    if (reader.bits_per_sample != 8
+        && reader.bits_per_sample != 16
+        && reader.bits_per_sample != 32) {
         err_BPP(error, reader.bits_per_sample);
         return NULL;
     }
@@ -682,10 +747,6 @@ gwy_tiff_get_image_reader(const GwyTIFF *tiff,
         return NULL;
     }
 
-    if (reader.samples_per_pixel != 1) {
-        err_UNSUPPORTED(error, "SamplesPerPixel");
-        return NULL;
-    }
     if (reader.stripe_rows == 0 || reader.stripe_rows > reader.width) {
         err_INVALID(error, "RowsPerStripe");
         return NULL;
@@ -764,6 +825,7 @@ gwy_tiff_read_image_row(const GwyTIFF *tiff,
                         gdouble z0,
                         gdouble *dest)
 {
+    GwyTIFFSampleFormat sformat = (GwyTIFFSampleFormat)reader->sample_format;
     const guchar *p;
     guint stripeno, stripeindex, i;
 
@@ -775,23 +837,35 @@ gwy_tiff_read_image_row(const GwyTIFF *tiff,
     p = tiff->data + reader->offsets[stripeno] + stripeindex*reader->rowstride;
 
     switch (reader->bits_per_sample) {
+        case 8:
+        if (sformat == GWY_TIFF_SAMPLE_FORMAT_UNSIGNED_INTEGER) {
+            for (i = 0; i < reader->width; i++, p++)
+                dest[i] = z0 + q*(*p);
+        }
+        else if (sformat == GWY_TIFF_SAMPLE_FORMAT_SIGNED_INTEGER) {
+            const gchar *s = (const gchar*)p;
+            for (i = 0; i < reader->width; i++, s++)
+                dest[i] = z0 + q*(*s);
+        }
+        break;
+
         case 16:
-        if (reader->sample_format == GWY_TIFF_SAMPLE_FORMAT_UNSIGNED_INTEGER) {
+        if (sformat == GWY_TIFF_SAMPLE_FORMAT_UNSIGNED_INTEGER) {
             for (i = 0; i < reader->width; i++)
                 dest[i] = z0 + q*tiff->get_guint16(&p);
         }
-        else if (reader->sample_format == GWY_TIFF_SAMPLE_FORMAT_SIGNED_INTEGER) {
+        else if (sformat == GWY_TIFF_SAMPLE_FORMAT_SIGNED_INTEGER) {
             for (i = 0; i < reader->width; i++)
                 dest[i] = z0 + q*tiff->get_gint16(&p);
         }
         break;
 
         case 32:
-        if (reader->sample_format == GWY_TIFF_SAMPLE_FORMAT_UNSIGNED_INTEGER) {
+        if (sformat == GWY_TIFF_SAMPLE_FORMAT_UNSIGNED_INTEGER) {
             for (i = 0; i < reader->width; i++)
                 dest[i] = z0 + q*tiff->get_guint32(&p);
         }
-        else if (reader->sample_format == GWY_TIFF_SAMPLE_FORMAT_SIGNED_INTEGER) {
+        else if (sformat == GWY_TIFF_SAMPLE_FORMAT_SIGNED_INTEGER) {
             for (i = 0; i < reader->width; i++)
                 dest[i] = z0 + q*tiff->get_gint32(&p);
         }
