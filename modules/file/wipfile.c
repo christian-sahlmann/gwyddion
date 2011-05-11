@@ -55,6 +55,7 @@
 
 #include "config.h"
 #include <string.h>
+#include <stdlib.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwyutils.h>
 #include <libgwyddion/gwymath.h>
@@ -104,9 +105,14 @@ typedef enum {
 } WIPDataType;
 
 typedef enum {
-    WIP_UNIT_OTHER       = 0,
-    WIP_UNIT_MIKROMETER  = 2,
-    WIP_UNIT_RAMAN_SHIFT = 3 /* 1/cm */
+    WIP_UNIT_NANOMETER   = 0,
+    WIP_UNIT_MIKROMETER  = 1,
+    WIP_UNIT_SM_1        = 2, /* 1/cm */
+    WIP_UNIT_RAMAN_SHIFT = 3, /* 1/cm relative*/
+    WIP_UNIT_EV          = 4,
+    WIP_UNIT_MEV         = 5, /* meV m = milli*/
+    WIP_UNIT_EV_REL      = 6,
+    WIP_UNIT_MEV_REL     = 7
 } WIPUnitIndex;
 
 typedef struct {
@@ -141,6 +147,7 @@ typedef struct {
     gdouble  d; /* 1e6/lines per mm */
     gdouble  x; /* pixel size */
     gdouble  f; /* focal distance */
+    gchar   *unitname; /* nm */
 } WIPSpectralTransform;
 
 typedef struct {
@@ -416,7 +423,8 @@ gboolean wip_read_sp_transform_tags(GNode *node, gpointer transform)
     WIPTag *tag;
     WIPSpectralTransform *sp_transform;
     const guchar *p;
-    gint i;
+    gint i, str_len;
+    gchar *str;
 
     tag = node->data;
     sp_transform = (WIPSpectralTransform *)transform;
@@ -443,6 +451,14 @@ gboolean wip_read_sp_transform_tags(GNode *node, gpointer transform)
         sp_transform->x = gwy_get_gdouble_le(&p);
     else if (!strncmp(tag->name, "f", 1))
         sp_transform->f = gwy_get_gdouble_le(&p);
+    else if (!strncmp(tag->name, "StandardUnit", 11)) {
+        str_len = gwy_get_gint32_le(&p);
+        str = g_strndup(p, str_len);
+        sp_transform->unitname = g_convert(str, str_len, "UTF-8",
+                                           "ISO-8859-1",
+                                           NULL, NULL, NULL);
+        g_free(str);
+    }
 
     transform = (WIPSpectralTransform *)sp_transform;
 
@@ -493,7 +509,7 @@ GwyGraphModel * wip_read_graph(GNode *node)
     GwyGraphCurveModel *gcmodel;
     GwySIUnit *siunitx, *siunity;
     gdouble *xdata, *ydata;
-    gint numpoints, i;
+    gint numpoints, i, power10x;
     GString *caption;
     const guchar *p;
 
@@ -550,26 +566,39 @@ GwyGraphModel * wip_read_graph(GNode *node)
      || (xtransform->nc < 0.0) || (xtransform->nc > numpoints)) {
         // xtransform not read correctly, fallback to point numbers
     }
-    else
-        for(i = 0; i < numpoints; i++) {
+    else {
+        for(i = 0; i < numpoints; i++)
             xdata[i] = xtransform->lambdac + xtransform->d
                      * (i - xtransform->nc + 1) * xtransform->x
                      / xtransform->m / xtransform->f;
-        }
-
+    }
+    
+    if(xtransform->unitname != NULL) {
+		siunitx = gwy_si_unit_new_parse(xtransform->unitname, 
+		                               &power10x);
+        for(i = 0; i < numpoints; i++)
+			xdata[i] = xdata[i] * pow(10.0, power10x);
+    }
+    else
+		siunitx = gwy_si_unit_new("pixels");
+    
+    if(!xtransform->unitname) {
+        g_free(xtransform->unitname);
+    }
     g_free(xtransform);
 
     // Packing
     gmodel = g_object_new(GWY_TYPE_GRAPH_MODEL,
                           "title", caption->str,
-                     /*     "si-unit-x", siunitx,
-                          "si-unit-y", siunity, */
+                          "si-unit-x", siunitx,
+                     /*     "si-unit-y", siunity, */
                           NULL);
     gcmodel = g_object_new(GWY_TYPE_GRAPH_CURVE_MODEL,
                            "description", caption->str,
                            "mode", GWY_GRAPH_CURVE_LINE,
                            "color", gwy_graph_get_preset_color(0),
                            NULL);
+    g_object_unref(siunitx);
     gwy_graph_curve_model_set_data(gcmodel, xdata, ydata, numpoints);
     g_free(xdata);
     g_free(ydata);
