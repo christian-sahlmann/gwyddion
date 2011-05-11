@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: French localization\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2011-05-10 03:58+0200\n"
-"PO-Revision-Date: 2011-05-11 08:35+0200\n"
+"POT-Creation-Date: 2011-05-11 08:37+0200\n"
+"PO-Revision-Date: 2011-05-11 10:27+0100\n"
 "Last-Translator: François RIGUET <francheu@caramail.com>\n"
 "Language-Team: François RIGUET <francheu@caramail.com>\n"
 "Language: \n"
@@ -632,9 +632,8 @@ msgstr "Estimation en cours (itération %d)"
 #, c-format
 msgid "One image location produced refinement"
 msgid_plural "%d image locations produced refinement"
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "Un point de l'image donne un recouvrement"
+msgstr[1] "%d points de l'image donnent un recouvrement"
 
 #: libprocess/morph_lib.c:725
 msgid "Searching for local maxima"
@@ -644,9 +643,8 @@ msgstr "Recherche des maxima locaux"
 #, c-format
 msgid "Found one internal local maximum"
 msgid_plural "Found %d internal local maxima"
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "Un maximum local interne a été trouvé"
+msgstr[1] "%d maximum locaux internes ont été trouvés"
 
 #: libprocess/tip.c:228
 msgid "Pyramide"
@@ -2356,6 +2354,14 @@ msgstr "Importe les fichiers AIST-NT."
 msgid "AIST-NT files (.aist)"
 msgstr "AIST-NT (.aist)"
 
+#: modules/file/ambfile.c:74
+msgid "Imports Ambios AMB data files."
+msgstr "Importe les fichiers Ambios AMB."
+
+#: modules/file/ambfile.c:87
+msgid "Ambios amb files (.amb)"
+msgstr "Ambios amb (.amb)"
+
 #: modules/file/anfatec.c:79
 msgid "Imports Anfatec data files (two-part .txt + .int)."
 msgstr "Importe les fichiers Anfatec (2 parties .txt + .int)."
@@ -3839,12 +3845,12 @@ msgid "PNI files (.pni)"
 msgstr "PNI (.pni)"
 
 #: modules/file/psia.c:236
-msgid "Imports PSIA data files."
-msgstr "Importe les fichiers PSIA."
+msgid "Imports Park Systems data files."
+msgstr "Importe les fichiers Park Systems."
 
 #: modules/file/psia.c:249
-msgid "PSIA data files (.tiff)"
-msgstr "PSIA (.tiff)."
+msgid "Park Systems data files (.tiff, .tif)"
+msgstr "Park Systems (.tiff, .tif)"
 
 #: modules/file/psia.c:332
 msgid "Data tag is missing."
@@ -4793,11 +4799,11 @@ msgstr "paramètres d'échelle z"
 msgid "data type parameters"
 msgstr "paramètres de type de données"
 
-#: modules/file/wipfile.c:174
+#: modules/file/wipfile.c:190
 msgid "Imports WItec Project data files."
 msgstr "Importe les fichiers WITec Project."
 
-#: modules/file/wipfile.c:187
+#: modules/file/wipfile.c:203
 msgid "WItec Project files (.wip)"
 msgstr "WITec Project (.wip)"
 
@@ -5708,7 +5714,7 @@ msgstr "Recherche annulée"
 #: modules/process/grain_wshed.c:501
 #: modules/process/maskcor.c:327
 #: modules/process/mcrop.c:326
-#: modules/process/merge.c:686
+#: modules/process/merge.c:685
 #: modules/process/tip_blind.c:559
 #: modules/process/tipops.c:307
 msgid "Initializing"
@@ -5717,7 +5723,7 @@ msgstr "Initialisation"
 #: modules/process/calcoefs_simple.c:635
 #: modules/process/maskcor.c:329
 #: modules/process/mcrop.c:328
-#: modules/process/merge.c:688
+#: modules/process/merge.c:687
 msgid "Correlating"
 msgstr "Corrélation"
 
