@@ -17,7 +17,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
-#define DEBUG 1
+
 /**
  * [FILE-MAGIC-FREEDESKTOP]
  * <mime-type type="application/x-olympus-lext-3000">
@@ -65,7 +65,7 @@ static GwyModuleInfo module_info = {
     module_register,
     N_("Imports OLS data files."),
     "Jan Hořák <xhorak@gmail.com>, Yeti <yeti@gwyddion.net>",
-    "0.8",
+    "0.9",
     "David Nečas (Yeti) & Petr Klapetek",
     "2008",
 };
@@ -134,6 +134,8 @@ ols_load(const gchar *filename,
 static GwyContainer*
 ols_load_tiff(const GwyTIFF *tiff, GError **error)
 {
+    const gchar *colour_channels[] = { "Red", "Green", "Blue" };
+
     GwyContainer *container = NULL;
     GwyDataField *dfield;
     GwySIUnit *siunit;
@@ -145,7 +147,7 @@ ols_load_tiff(const GwyTIFF *tiff, GError **error)
     const gchar *s1;
     gchar *s2;
     GError *err = NULL;
-    guint dir_num = 0;
+    guint spp, ch, dir_num = 0;
     gdouble *data;
     double z_axis = 1.0, xy_axis, factor;
     GQuark quark;
@@ -171,12 +173,13 @@ ols_load_tiff(const GwyTIFF *tiff, GError **error)
     for (dir_num = 0; dir_num < gwy_tiff_get_n_dirs(tiff); dir_num++) {
         reader = gwy_tiff_image_reader_free(reader);
         /* Request a reader, this ensures dimensions and stuff are defined. */
-        reader = gwy_tiff_get_image_reader(tiff, dir_num, 1, &err);
+        reader = gwy_tiff_get_image_reader(tiff, dir_num, 3, &err);
         if (!reader) {
             g_warning("Ignoring directory %u: %s", dir_num, err->message);
             g_clear_error(&err);
             continue;
         }
+        spp = reader->samples_per_pixel;
         g_string_printf(key, "Data %u Info::XY Convert Value", dir_num+1);
         if (!(s1 = g_hash_table_lookup(hash, key->str))) {
             g_warning("Cannot find 'XY Convert Value' for data %u.", dir_num+1);
@@ -194,53 +197,70 @@ ols_load_tiff(const GwyTIFF *tiff, GError **error)
         }
         z_axis = g_ascii_strtod(s1, NULL);
 
-        siunit = gwy_si_unit_new_parse("nm", &power10);
-        dfield = gwy_data_field_new(reader->width, reader->height,
-                                    reader->width * xy_axis * pow10(power10),
-                                    reader->height * xy_axis * pow10(power10),
-                                    FALSE);
-        // units
-        gwy_data_field_set_si_unit_xy(dfield, siunit);
-        g_object_unref(siunit);
-
-        if (dir_num == 1)
+        for (ch = 0; ch < spp; ch++) {
             siunit = gwy_si_unit_new_parse("nm", &power10);
-        else
-            siunit = gwy_si_unit_new_parse("1e-6", &power10);
-        gwy_data_field_set_si_unit_z(dfield, siunit);
-        g_object_unref(siunit);
+            factor = pow10(power10);
+            dfield = gwy_data_field_new(reader->width, reader->height,
+                                        reader->width * xy_axis * factor,
+                                        reader->height * xy_axis * factor,
+                                        FALSE);
+            // units
+            gwy_data_field_set_si_unit_xy(dfield, siunit);
+            g_object_unref(siunit);
 
-        factor = z_axis * pow10(power10);
-        data = gwy_data_field_get_data(dfield);
+            if (spp == 1) {
+                if (dir_num == 1)
+                    siunit = gwy_si_unit_new_parse("nm", &power10);
+                else
+                    siunit = gwy_si_unit_new_parse("1e-6", &power10);
+            }
+            else {
+                siunit = gwy_si_unit_new(NULL);
+                power10 = 0;
+            }
+            gwy_data_field_set_si_unit_z(dfield, siunit);
+            g_object_unref(siunit);
 
-        for (i = 0; i < reader->height; i++)
-            gwy_tiff_read_image_row(tiff, reader, i, factor, 0.0,
-                                    data + i*reader->width);
+            factor = z_axis * pow10(power10);
+            data = gwy_data_field_get_data(dfield);
 
-        /* add read datafield to container */
-        if (!container)
-            container = gwy_container_new();
+            for (i = 0; i < reader->height; i++)
+                gwy_tiff_read_image_row(tiff, reader, ch, i, factor, 0.0,
+                                        data + i*reader->width);
 
-        quark = gwy_app_get_data_key_for_id(dir_num);
-        gwy_container_set_object(container, quark, dfield);
+            /* add read datafield to container */
+            if (!container)
+                container = gwy_container_new();
 
-        /* Channel 0 is texture */
-        if (dir_num == 0) {
-            s2 = g_strdup_printf("%s/title", g_quark_to_string(quark));
-            gwy_container_set_string_by_name(container, s2,
-                                             g_strdup("Texture"));
-            g_free(s2);
+            quark = gwy_app_get_data_key_for_id(dir_num*spp + ch);
+            gwy_container_set_object(container, quark, dfield);
+
+            if (spp == 1) {
+                /* Channel 0 is texture */
+                if (dir_num == 0) {
+                    s2 = g_strdup_printf("%s/title", g_quark_to_string(quark));
+                    gwy_container_set_string_by_name(container, s2,
+                                                     g_strdup("Texture"));
+                    g_free(s2);
+                }
+                /* Channel 1 is topography */
+                else if (dir_num == 1) {
+                    s2 = g_strdup_printf("%s/title", g_quark_to_string(quark));
+                    gwy_container_set_string_by_name(container, s2,
+                                                     g_strdup("Height"));
+                    g_free(s2);
+                }
+            }
+            else {
+                s2 = g_strdup_printf("%s/title", g_quark_to_string(quark));
+                gwy_container_set_string_by_name(container, s2,
+                                                 g_strdup(colour_channels[ch]));
+                g_free(s2);
+            }
+
+            // free resources
+            g_object_unref(dfield);
         }
-        /* Channel 1 is topography */
-        else if (dir_num == 1) {
-            s2 = g_strdup_printf("%s/title", g_quark_to_string(quark));
-            gwy_container_set_string_by_name(container, s2,
-                                             g_strdup("Height"));
-            g_free(s2);
-        }
-
-        // free resources
-        g_object_unref(dfield);
     }
 
     g_hash_table_destroy(hash);

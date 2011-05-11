@@ -834,6 +834,7 @@ gwy_tiff_get_image_reader(const GwyTIFF *tiff,
 G_GNUC_UNUSED static inline void
 gwy_tiff_read_image_row(const GwyTIFF *tiff,
                         const GwyTIFFImageReader *reader,
+                        guint channelno,
                         guint rowno,
                         gdouble q,
                         gdouble z0,
@@ -841,46 +842,51 @@ gwy_tiff_read_image_row(const GwyTIFF *tiff,
 {
     GwyTIFFSampleFormat sformat = (GwyTIFFSampleFormat)reader->sample_format;
     const guchar *p;
-    guint stripeno, stripeindex, i;
+    guint stripeno, stripeindex, i, skip;
 
     g_return_if_fail(reader->dirno < tiff->dirs->len);
     g_return_if_fail(rowno < reader->height);
+    g_return_if_fail(channelno < reader->samples_per_pixel);
 
     stripeno = rowno/reader->stripe_rows;
     stripeindex = rowno % reader->stripe_rows;
-    p = tiff->data + reader->offsets[stripeno] + stripeindex*reader->rowstride;
+    p = tiff->data + (reader->offsets[stripeno] + stripeindex*reader->rowstride
+                      + (reader->bits_per_sample/8)*channelno);
 
     switch (reader->bits_per_sample) {
         case 8:
+        skip = reader->samples_per_pixel;
         if (sformat == GWY_TIFF_SAMPLE_FORMAT_UNSIGNED_INTEGER) {
-            for (i = 0; i < reader->width; i++, p++)
+            for (i = 0; i < reader->width; i++, p += skip)
                 dest[i] = z0 + q*(*p);
         }
         else if (sformat == GWY_TIFF_SAMPLE_FORMAT_SIGNED_INTEGER) {
             const gchar *s = (const gchar*)p;
-            for (i = 0; i < reader->width; i++, s++)
+            for (i = 0; i < reader->width; i++, s += skip)
                 dest[i] = z0 + q*(*s);
         }
         break;
 
         case 16:
+        skip = (reader->samples_per_pixel - 1)*reader->bits_per_sample;
         if (sformat == GWY_TIFF_SAMPLE_FORMAT_UNSIGNED_INTEGER) {
-            for (i = 0; i < reader->width; i++)
+            for (i = 0; i < reader->width; i++, p += skip)
                 dest[i] = z0 + q*tiff->get_guint16(&p);
         }
         else if (sformat == GWY_TIFF_SAMPLE_FORMAT_SIGNED_INTEGER) {
-            for (i = 0; i < reader->width; i++)
+            for (i = 0; i < reader->width; i++, p += skip)
                 dest[i] = z0 + q*tiff->get_gint16(&p);
         }
         break;
 
         case 32:
+        skip = (reader->samples_per_pixel - 1)*reader->bits_per_sample;
         if (sformat == GWY_TIFF_SAMPLE_FORMAT_UNSIGNED_INTEGER) {
-            for (i = 0; i < reader->width; i++)
+            for (i = 0; i < reader->width; i++, p += skip)
                 dest[i] = z0 + q*tiff->get_guint32(&p);
         }
         else if (sformat == GWY_TIFF_SAMPLE_FORMAT_SIGNED_INTEGER) {
-            for (i = 0; i < reader->width; i++)
+            for (i = 0; i < reader->width; i++, p += skip)
                 dest[i] = z0 + q*tiff->get_gint32(&p);
         }
         break;
