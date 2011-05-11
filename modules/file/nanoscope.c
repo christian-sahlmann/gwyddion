@@ -686,6 +686,8 @@ get_physical_scale(GHashTable *hash,
         }
 
         /* Old style scales */
+        gwy_debug("Old-style scale, using hard units %g %s",
+                  val->hard_value, val->hard_value_units);
         siunit = gwy_si_unit_new_parse(val->hard_value_units, &q);
         *scale = val->hard_value * pow10(q);
         return siunit;
@@ -705,8 +707,11 @@ get_physical_scale(GHashTable *hash,
         }
 
         *scale = val->hard_value*sval->hard_value;
+        gwy_debug("Hard-value scale %g (%g * %g)",
+                  *scale, val->hard_value, sval->hard_value);
 
         if (!sval->hard_value_units || !*sval->hard_value_units) {
+            gwy_debug("No hard value units");
             if (gwy_strequal(val->soft_scale, "Sens. Phase"))
                 siunit = gwy_si_unit_new("deg");
             else
@@ -730,6 +735,8 @@ get_physical_scale(GHashTable *hash,
     else {
         /* We have '@2:Z scale' but the reference to soft scale is missing,
          * the quantity is something in the hard units (seen for Potential). */
+        gwy_debug("No soft scale, using hard units %g %s",
+                  val->hard_value, val->hard_value_units);
         siunit = gwy_si_unit_new_parse(val->hard_value_units, &q);
         *scale = val->hard_value * pow10(q);
     }
