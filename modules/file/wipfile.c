@@ -178,18 +178,34 @@ typedef struct {
     GwyContainer *data;
 } WIPFile;
 
-static gboolean       module_register       (void);
-static gint           wip_detect            (const GwyFileDetectInfo *fileinfo,
-                                             gboolean only_name);
-static WIPTag*        wip_read_tag          (guchar **pos,
-                                             gsize *start, gsize *end);
-static void           wip_free_tag          (WIPTag *tag);
-static GwyContainer*  wip_load              (const gchar *filename,
-                                             GwyRunType mode,
-                                             GError **error);
-static void           wip_read_all_tags     (const guchar *buffer,
-                                             gsize start, gsize end,
-                                             GNode *tagtree, gint n);
+static gboolean      module_register           (void);
+static gint          wip_detect(const GwyFileDetectInfo *fileinfo,
+                                gboolean only_name);
+static WIPTag*       wip_read_tag              (guchar **pos,
+                                                gsize *start,
+                                                gsize *end);
+static void          wip_free_tag              (WIPTag *tag);
+static GwyContainer* wip_load                  (const gchar *filename,
+                                                GwyRunType mode,
+                                                GError **error);
+static void          wip_read_all_tags         (const guchar *buffer,
+                                                gsize start, gsize end,
+                                                GNode *tagtree, gint n);
+gboolean             wip_free_leave            (GNode *node,
+                                                G_GNUC_UNUSED gpointer data);
+gboolean             wip_read_graph_tags       (GNode *node,
+                                                gpointer header);
+gboolean             wip_read_sp_transform_tags(GNode *node,
+                                                gpointer transform);
+gboolean             wip_read_axis_tags        (GNode *node,
+                                                gpointer axis);
+gboolean             wip_find_by_id            (GNode *node,
+                                                gpointer id);
+gboolean             wip_read_caption          (GNode *node,
+                                                gpointer caption);
+gboolean             wip_read_data             (GNode *node,
+                                                gpointer filedata);
+GwyGraphModel*       wip_read_graph            (GNode *node);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -231,72 +247,6 @@ wip_detect(const GwyFileDetectInfo *fileinfo,
 
     return score;
 }
-
-/*
-static void print_tag_data(WIPTag *tag, guchar **pos, guint asterisks)
-{
-    guchar *p;
-    gchar *str;
-    gint i, j, n, str_len;
-
-    if (WIPTagDataSize[tag->type])
-        n = (tag->data_end - tag->data_start)/WIPTagDataSize[tag->type];
-    else if (tag->type) // string
-        n = 1;
-    else // container
-        n = 0;
-
-    if (n > 10) {
-        for (j = 0; j < asterisks; j++)
-            fprintf(stderr,"  ");
-        fprintf(stderr,"%d 0x%X\n", n, (unsigned int)tag->data_start);
-        n = 0; // printing offset instead of data
-    }
-
-    p = *pos;
-    for (i = 0; i < n; i++) {
-        for (j = 0; j < asterisks; j++)
-            fprintf(stderr,"  ");
-        switch(tag->type) {
-            case 0:
-                break;
-            case 1:
-                fprintf(stderr,"pascal extended ");
-                break;
-            case 2:
-                fprintf(stderr,"%g ",gwy_get_gdouble_le(&p));
-                break;
-            case 3:
-                fprintf(stderr,"%g ",gwy_get_gfloat_le(&p));
-                break;
-            case 4:
-                fprintf(stderr,"%d ",gwy_get_gint64_le(&p));
-                break;
-            case 5:
-                fprintf(stderr,"%d ",gwy_get_gint32_le(&p));
-                break;
-            case 6:
-                fprintf(stderr,"%u ",gwy_get_guint32_le(&p));
-                break;
-            case 7:
-                fprintf(stderr,"%u ",(*p++));
-                break;
-            case 8:
-                fprintf(stderr,"%u ",(*p++));
-                break;
-            case 9:
-                str_len = gwy_get_gint32_le(&p);
-                str = g_strndup(p, str_len);
-                fprintf(stderr,"%s",str);
-                g_free(str);
-                break;
-            default:
-                fprintf(stderr,"something wrong ");
-        }
-        fprintf(stderr,"\n");
-    }
-}
-*/
 
 static WIPTag *wip_read_tag(guchar **pos, gsize *start, gsize *end)
 {
@@ -361,12 +311,6 @@ static void wip_read_all_tags (const guchar *buffer, gsize start,
             cur = tag->data_end;
         }
     }
-}
-
-void wip_print_tag(WIPTag *tag)
-{
-    fprintf(stderr,"%d %s %d %lld %lld\n",  tag->name_length,
-                tag->name, tag->type, tag->data_start, tag->data_end);
 }
 
 gboolean wip_free_leave (GNode *node, G_GNUC_UNUSED gpointer data)
@@ -597,21 +541,21 @@ GwyGraphModel * wip_read_graph(GNode *node)
                      * (i - xtransform->nc + 1) * xtransform->x
                      / xtransform->m / xtransform->f;
     }
-    
+
     if(xtransform->unitname != NULL) {
-		siunitx = gwy_si_unit_new_parse(xtransform->unitname, 
-		                               &power10x);
+        siunitx = gwy_si_unit_new_parse(xtransform->unitname,
+                                       &power10x);
         for(i = 0; i < numpoints; i++)
-			xdata[i] = xdata[i] * pow(10.0, power10x);
+            xdata[i] = xdata[i] * pow(10.0, power10x);
     }
     else
-		siunitx = gwy_si_unit_new("pixels");
-    
+        siunitx = gwy_si_unit_new("pixels");
+
     if(!xtransform->unitname) {
         g_free(xtransform->unitname);
     }
     g_free(xtransform);
-    
+
     //Try to read y units
     g_node_traverse (g_node_get_root (node),
                      G_LEVEL_ORDER, G_TRAVERSE_ALL, -1,
@@ -621,17 +565,17 @@ GwyGraphModel * wip_read_graph(GNode *node)
                      G_LEVEL_ORDER, G_TRAVERSE_ALL, -1,
                      wip_read_axis_tags,
                      (gpointer)yaxis);
-	if (yaxis->unitname)
-		siunity = gwy_si_unit_new(yaxis->unitname);
-	else
-		siunity = gwy_si_unit_new("");
-	g_free(yaxis);
+    if (yaxis->unitname)
+        siunity = gwy_si_unit_new(yaxis->unitname);
+    else
+        siunity = gwy_si_unit_new("");
+    g_free(yaxis);
 
     // Packing
     gmodel = g_object_new(GWY_TYPE_GRAPH_MODEL,
                           "title", caption->str,
                           "si-unit-x", siunitx,
-                          "si-unit-y", siunity, 
+                          "si-unit-y", siunity,
                           NULL);
     gcmodel = g_object_new(GWY_TYPE_GRAPH_CURVE_MODEL,
                            "description", caption->str,
