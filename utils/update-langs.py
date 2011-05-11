@@ -6,6 +6,7 @@ import re, os, sys
 files_to_update = (
     'po/LINGUAS',
     'app/mac_integration.c',
+    'data/gwyddion.nsit.in',
 )
 
 class Language:
@@ -29,6 +30,7 @@ languages = (
     Language('fr', 'fr_FR.UTF-8', 'French'),
     Language('it', 'it_IT.UTF-8', 'Italian'),
     Language('ru', 'ru_RU.UTF-8', 'Russian'),
+    Language('es', 'es_ES.UTF-8', 'Spanish'),
 )
 
 class Template:
@@ -49,11 +51,8 @@ class Template:
 
     def fill_all(self, langs):
         all = []
-        if self.default == 0:
-            sortedlangs = enumerate(sorted(langs))
-        else:
-            sortedlangs = enumerate(langs)
-        for i, l in sortedlangs:
+        for i, l in enumerate(langs):
+            l.i12 = 12*(i + 1)
             if not i:
                 if self.default != None:
                     all.append(self.fill_default(l))
@@ -64,6 +63,7 @@ class Template:
 templates = {
     'LINGUAS': Template('%(key)s', None, ' '),
     'OS X': Template('        { "%(isofull)s", "%(key)s" },'),
+    'NSIS': Template('    !insertmacro GWY_LOCALE_CHOOSER "%(name)s" "%(isofull)s" %(i12)uu'),
 }
 
 signature = (r'(?P<open>@@@ GENERATED LANG (?P<name>[A-Z_ ]+) BEGIN @@@[^\n]*$)'

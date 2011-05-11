@@ -43,7 +43,8 @@ Matthew Caldwell <m.caldwell@ucl.ac.uk>
 Андрей Груздев <gruzdev@ntmdt.ru>
     Mac OS X integration.
 Даниил Браташов <dn2010@gmail.com>
-    NT-MDT improvements namely MDA frame import, Mutual crop, DOS modules.
+    NT-MDT improvements namely MDA frame import, Nanoeducator import, Mutual
+    crop, DOS modules.
 François Bianco <francois.bianco@unige.ch>
     Omicron flat file format import.
 Luke Somers <lsomers@sas.upenn.edu>
@@ -67,6 +68,8 @@ François Riguet <francheu@caramail.com>
     French.
 Даниил Браташов <dn2010@gmail.com>
     Russian.
+Andrés Muñiz Piniella <andresmp@gmail.com>
+    Spanish.
 
 
 === Copies ===

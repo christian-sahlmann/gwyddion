@@ -183,12 +183,13 @@ gwy_osx_set_locale()
     locales[] = {
 /* The following generated part is updated by running utils/update-langs.py */
 /* @@@ GENERATED LANG OS X BEGIN @@@ */
+        { "en_US.UTF-8", "en" },
         { "cs_CZ.UTF-8", "cs" },
         { "de_DE.UTF-8", "de" },
-        { "en_US.UTF-8", "en" },
         { "fr_FR.UTF-8", "fr" },
         { "it_IT.UTF-8", "it" },
         { "ru_RU.UTF-8", "ru" },
+        { "es_ES.UTF-8", "es" },
 /* @@@ GENERATED LANG OS X END @@@ */
     };
 

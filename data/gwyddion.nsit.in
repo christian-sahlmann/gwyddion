@@ -132,12 +132,16 @@ Function ChooseLocale
     ${NSD_CreateLabel} 0u 0u 100% 12u "Available languages:"
     Pop $Label
 
+# The following generated part is updated by running utils/update-langs.py
+# @@@ GENERATED LANG NSIS BEGIN @@@
     !insertmacro GWY_LOCALE_CHOOSER "English" "en_US.UTF-8" 12u
     !insertmacro GWY_LOCALE_CHOOSER "Czech" "cs_CZ.UTF-8" 24u
-    !insertmacro GWY_LOCALE_CHOOSER "French" "fr_FR.UTF-8" 36u
-    !insertmacro GWY_LOCALE_CHOOSER "German" "de_DE.UTF-8" 48u
+    !insertmacro GWY_LOCALE_CHOOSER "German" "de_DE.UTF-8" 36u
+    !insertmacro GWY_LOCALE_CHOOSER "French" "fr_FR.UTF-8" 48u
     !insertmacro GWY_LOCALE_CHOOSER "Italian" "it_IT.UTF-8" 60u
     !insertmacro GWY_LOCALE_CHOOSER "Russian" "ru_RU.UTF-8" 72u
+    !insertmacro GWY_LOCALE_CHOOSER "Spanish" "es_ES.UTF-8" 84u
+# @@@ GENERATED LANG NSIS END @@@
 
     nsDialogs::Show
 FunctionEnd
