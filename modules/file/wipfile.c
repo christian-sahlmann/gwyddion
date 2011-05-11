@@ -460,7 +460,31 @@ gboolean wip_read_sp_transform_tags(GNode *node, gpointer transform)
         g_free(str);
     }
 
-    transform = (WIPSpectralTransform *)sp_transform;
+    transform = (gpointer)sp_transform;
+
+    return FALSE;
+}
+
+gboolean wip_read_axis_tags(GNode *node, gpointer axis)
+{
+    WIPTag *tag;
+    WIPAxis *tmp_axis;
+    const guchar *p;
+    gint str_len;
+    gchar *str;
+
+    tag = node->data;
+    tmp_axis = (WIPAxis *)axis;
+    p = tag->data;
+    if (!strncmp(tag->name, "UnitName", 8)) {
+        str_len = gwy_get_gint32_le(&p);
+        str = g_strndup(p, str_len);
+        tmp_axis->unitname = g_convert(str, str_len, "UTF-8",
+                                           "ISO-8859-1",
+                                           NULL, NULL, NULL);
+        g_free(str);
+    }
+    axis = (gpointer)tmp_axis;
 
     return FALSE;
 }
@@ -505,6 +529,7 @@ GwyGraphModel * wip_read_graph(GNode *node)
 {
     WIPGraph *header;
     WIPSpectralTransform *xtransform;
+    WIPAxis *yaxis;
     GwyGraphModel *gmodel;
     GwyGraphCurveModel *gcmodel;
     GwySIUnit *siunitx, *siunity;
@@ -586,12 +611,27 @@ GwyGraphModel * wip_read_graph(GNode *node)
         g_free(xtransform->unitname);
     }
     g_free(xtransform);
+    
+    //Try to read y units
+    g_node_traverse (g_node_get_root (node),
+                     G_LEVEL_ORDER, G_TRAVERSE_ALL, -1,
+                     wip_find_by_id, (gpointer)&(header->zinterpid));
+    yaxis = g_new0(WIPAxis, 1);
+    g_node_traverse (node->parent->parent,
+                     G_LEVEL_ORDER, G_TRAVERSE_ALL, -1,
+                     wip_read_axis_tags,
+                     (gpointer)yaxis);
+	if (yaxis->unitname)
+		siunity = gwy_si_unit_new(yaxis->unitname);
+	else
+		siunity = gwy_si_unit_new("");
+	g_free(yaxis);
 
     // Packing
     gmodel = g_object_new(GWY_TYPE_GRAPH_MODEL,
                           "title", caption->str,
                           "si-unit-x", siunitx,
-                     /*     "si-unit-y", siunity, */
+                          "si-unit-y", siunity, 
                           NULL);
     gcmodel = g_object_new(GWY_TYPE_GRAPH_CURVE_MODEL,
                            "description", caption->str,
@@ -599,6 +639,7 @@ GwyGraphModel * wip_read_graph(GNode *node)
                            "color", gwy_graph_get_preset_color(0),
                            NULL);
     g_object_unref(siunitx);
+    g_object_unref(siunity);
     gwy_graph_curve_model_set_data(gcmodel, xdata, ydata, numpoints);
     g_free(xdata);
     g_free(ydata);
