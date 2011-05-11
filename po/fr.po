@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: French localization\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
 "POT-Creation-Date: 2011-05-10 03:58+0200\n"
-"PO-Revision-Date: 2011-05-10 21:44+0100\n"
+"PO-Revision-Date: 2011-05-11 08:35+0200\n"
 "Last-Translator: François RIGUET <francheu@caramail.com>\n"
 "Language-Team: François RIGUET <francheu@caramail.com>\n"
 "Language: \n"
@@ -632,6 +632,9 @@ msgstr "Estimation en cours (itération %d)"
 #, c-format
 msgid "One image location produced refinement"
 msgid_plural "%d image locations produced refinement"
+msgstr[0] ""
+msgstr[1] ""
+msgstr[2] ""
 
 #: libprocess/morph_lib.c:725
 msgid "Searching for local maxima"
@@ -641,6 +644,9 @@ msgstr "Recherche des maxima locaux"
 #, c-format
 msgid "Found one internal local maximum"
 msgid_plural "Found %d internal local maxima"
+msgstr[0] ""
+msgstr[1] ""
+msgstr[2] ""
 
 #: libprocess/tip.c:228
 msgid "Pyramide"
