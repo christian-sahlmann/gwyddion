@@ -236,7 +236,9 @@ static gboolean          pixmap_load_dialog        (PixmapLoadArgs *args,
                                                     const gchar *name,
                                                     gint xres,
                                                     gint yres,
-                                                    const gboolean mapknown);
+                                                    gboolean mapknown,
+                                                    gboolean grayscale,
+                                                    gboolean has_alpha);
 static void              pixmap_load_create_preview(PixmapLoadArgs *args,
                                                     PixmapLoadControls *controls);
 static void              pixmap_load_map_type_update(GtkWidget *combo,
@@ -829,7 +831,8 @@ pixmap_load(const gchar *filename,
     }
 
     /* ask user what she thinks */
-    ok = pixmap_load_dialog(&args, name, width, height, maptype_known);
+    ok = pixmap_load_dialog(&args, name, width, height,
+                            maptype_known, !not_grayscale, alpha_important);
     pixmap_load_save_args(settings, &args);
     if (!ok) {
         err_CANCELLED(error);
@@ -966,12 +969,23 @@ pixmap_load_pixbuf_to_data_field(GdkPixbuf *pixbuf,
     }
 }
 
+static const gchar*
+describe_channels(gboolean grayscale, gboolean has_alpha)
+{
+    if (grayscale)
+        return has_alpha ? "GA" : "G";
+    else
+        return has_alpha ? "RGBA" : "RGB";
+}
+
 static gboolean
 pixmap_load_dialog(PixmapLoadArgs *args,
                    const gchar *name,
                    gint xres,
                    gint yres,
-                   const gboolean mapknown)
+                   gboolean mapknown,
+                   gboolean grayscale,
+                   gboolean has_alpha)
 {
     enum { RESPONSE_RESET = 1 };
 
@@ -996,7 +1010,8 @@ pixmap_load_dialog(PixmapLoadArgs *args,
     sizegroup = gtk_size_group_new(GTK_SIZE_GROUP_HORIZONTAL);
 
     s = g_ascii_strup(name, -1);
-    title = g_strconcat(_("Import "), s, NULL);
+    /* TRANSLATORS: Dialog title; %s is PNG, TIFF, ... */
+    title = g_strdup_printf(_("Import %s"), s);
     g_free(s);
     dialog = gtk_dialog_new_with_buttons(title, NULL, 0,
                                          _("_Reset"), RESPONSE_RESET,
@@ -1016,27 +1031,32 @@ pixmap_load_dialog(PixmapLoadArgs *args,
     align = gtk_alignment_new(0.0, 0.0, 0.0, 0.0);
     gtk_box_pack_start(GTK_BOX(hbox), align, TRUE, TRUE, 0);
 
-    table = gtk_table_new(3, 3, FALSE);
+    table = gtk_table_new(4, 3, FALSE);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_container_add(GTK_CONTAINER(align), table);
     row = 0;
 
-    gtk_table_attach(GTK_TABLE(table), gwy_label_new_header(_("Resolution")),
+    gtk_table_attach(GTK_TABLE(table),
+                     gwy_label_new_header(_("Image Information")),
                      0, 3, row, row+1, GTK_FILL, 0, 0, 0);
     row++;
 
     g_snprintf(buf, sizeof(buf), "%u", xres);
     label = gtk_label_new(buf);
     gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
-    gwy_table_attach_row(table, row++, _("_Horizontal size:"), _("px"),
+    gwy_table_attach_row(table, row++, _("Horizontal size:"), _("px"),
                          label);
 
     g_snprintf(buf, sizeof(buf), "%u", yres);
     label = gtk_label_new(buf);
     gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
-    gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
-    gwy_table_attach_row(table, row++, _("_Vertical size:"), _("px"),
+    gwy_table_attach_row(table, row++, _("Vertical size:"), _("px"),
+                         label);
+
+    label = gtk_label_new(describe_channels(grayscale, has_alpha));
+    gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
+    gwy_table_attach_row(table, row++, _("Channels:"), NULL,
                          label);
 
     align = gtk_alignment_new(1.0, 0.0, 0.0, 0.0);
@@ -1077,7 +1097,7 @@ pixmap_load_dialog(PixmapLoadArgs *args,
     gtk_table_attach(GTK_TABLE(table), controls.xreal,
                      1, 2, row, row+1, GTK_FILL, 0, 0, 0);
 
-    label = gtk_label_new_with_mnemonic(_("_Width"));
+    label = gtk_label_new_with_mnemonic(_("_Width:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls.xreal);
     gtk_table_attach(GTK_TABLE(table), label,
@@ -1088,7 +1108,6 @@ pixmap_load_dialog(PixmapLoadArgs *args,
                      GTK_EXPAND | GTK_FILL | GTK_SHRINK, 0, 0, 0);
 
     hbox2 = gtk_hbox_new(FALSE, 6);
-    gtk_size_group_add_widget(sizegroup, hbox2);
     gtk_container_add(GTK_CONTAINER(align), hbox2);
 
     unit = gwy_si_unit_new(args->xyunit);
@@ -1097,13 +1116,14 @@ pixmap_load_dialog(PixmapLoadArgs *args,
                                                         args->xyexponent + 6,
                                                         unit,
                                                         args->xyexponent);
+    gtk_size_group_add_widget(sizegroup, controls.xyexponent);
     gtk_box_pack_start(GTK_BOX(hbox2), controls.xyexponent, FALSE, FALSE, 0);
 
     controls.xyunits = gtk_button_new_with_label(gwy_sgettext("verb|Change"));
     g_object_set_data(G_OBJECT(controls.xyunits), "id", (gpointer)"xy");
     g_signal_connect(controls.xyunits, "clicked",
                      G_CALLBACK(units_change_cb), &controls);
-    gtk_box_pack_end(GTK_BOX(hbox2), controls.xyunits, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(hbox2), controls.xyunits, FALSE, FALSE, 0);
     row++;
 
     adj = gtk_adjustment_new(args->yreal, 0.01, 10000, 1, 100, 0);
@@ -1112,7 +1132,7 @@ pixmap_load_dialog(PixmapLoadArgs *args,
     gtk_table_attach(GTK_TABLE(table), controls.yreal,
                      1, 2, row, row+1, GTK_FILL, 0, 0, 0);
 
-    label = gtk_label_new_with_mnemonic(_("H_eight"));
+    label = gtk_label_new_with_mnemonic(_("H_eight:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls.yreal);
     gtk_table_attach(GTK_TABLE(table), label,
@@ -1142,7 +1162,6 @@ pixmap_load_dialog(PixmapLoadArgs *args,
                      GTK_EXPAND | GTK_FILL | GTK_SHRINK, 0, 0, 0);
 
     hbox2 = gtk_hbox_new(FALSE, 6);
-    gtk_size_group_add_widget(sizegroup, hbox2);
     gtk_container_add(GTK_CONTAINER(align), hbox2);
 
     gwy_si_unit_set_from_string(unit, args->zunit);
@@ -1151,6 +1170,7 @@ pixmap_load_dialog(PixmapLoadArgs *args,
                                                        args->zexponent + 6,
                                                        unit,
                                                        args->zexponent);
+    gtk_size_group_add_widget(sizegroup, controls.zexponent);
     gtk_box_pack_start(GTK_BOX(hbox2), controls.zexponent, FALSE, FALSE, 0);
     g_object_unref(unit);
 
@@ -1158,7 +1178,7 @@ pixmap_load_dialog(PixmapLoadArgs *args,
     g_object_set_data(G_OBJECT(controls.zunits), "id", (gpointer)"z");
     g_signal_connect(controls.zunits, "clicked",
                      G_CALLBACK(units_change_cb), &controls);
-    gtk_box_pack_end(GTK_BOX(hbox2), controls.zunits, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(hbox2), controls.zunits, FALSE, FALSE, 0);
 
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
     row++;
