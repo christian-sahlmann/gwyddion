@@ -187,7 +187,7 @@ jpkscan_load(const gchar *filename,
     for (idx = 0; idx < gwy_tiff_get_n_dirs(tiff); idx++) {
         reader = gwy_tiff_image_reader_free(reader);
         /* Request a reader, this ensures dimensions and stuff are defined. */
-        reader = gwy_tiff_get_image_reader(tiff, idx, &err);
+        reader = gwy_tiff_get_image_reader(tiff, idx, 1, &err);
         if (!reader) {
             /* 0th directory is usually thumbnail, do not complain about it. */
             if (idx > 0)
@@ -314,7 +314,7 @@ jpk_load_channel(const GwyTIFF *tiff,
     data = gwy_data_field_get_data(dfield);
 
     for (j = 0; j < reader->height; j++)
-        gwy_tiff_read_image_row(tiff, reader,
+        gwy_tiff_read_image_row(tiff, reader, 0,
                                 reflect ? j : reader->height-1 - j,
                                 mult, offset,
                                 data + j*reader->width);

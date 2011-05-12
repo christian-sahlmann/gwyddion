@@ -282,7 +282,7 @@ lext_load_tiff(const GwyTIFF *tiff, GError **error)
 
         reader = gwy_tiff_image_reader_free(reader);
         /* Request a reader, this ensures dimensions and stuff are defined. */
-        reader = gwy_tiff_get_image_reader(tiff, dir_num, &err);
+        reader = gwy_tiff_get_image_reader(tiff, dir_num, 1, &err);
         if (!reader) {
             g_warning("Ignoring directory %u: %s", dir_num, err->message);
             g_clear_error(&err);
@@ -334,7 +334,7 @@ lext_load_tiff(const GwyTIFF *tiff, GError **error)
 
         data = gwy_data_field_get_data(dfield);
         for (i = 0; i < reader->height; i++)
-            gwy_tiff_read_image_row(tiff, reader, i, zfactor, 0.0,
+            gwy_tiff_read_image_row(tiff, reader, 0, i, zfactor, 0.0,
                                     data + i*reader->width);
 
         /* add read datafield to container */
