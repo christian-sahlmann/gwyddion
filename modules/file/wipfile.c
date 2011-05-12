@@ -104,6 +104,8 @@ typedef enum {
     WIP_DATA_EXTENDED = 11 /* x86 FPU native type, 10 bytes */
 } WIPDataType;
 
+gsize WIPDataSize[12] = {0, 8, 4, 2, 1, 4, 2, 1, 1, 4, 8, 10};
+
 typedef enum {
     WIP_UNIT_NANOMETER   = 0,
     WIP_UNIT_MIKROMETER  = 1,
@@ -174,7 +176,21 @@ typedef struct {
 } WIPGraph;
 
 typedef struct {
+    guint sizex;
+    guint sizey;
+    guint postransformid;
+    guint zinterpid;
+    guint dimension;
+    WIPDataType datatype;
+    guint xrange;
+    guint yrange;
+    gsize datasize;
+    const guchar *data;
+} WIPImage;
+
+typedef struct {
     guint numgraph;
+    guint numimages;
     GwyContainer *data;
 } WIPFile;
 
@@ -301,15 +317,16 @@ static void wip_read_all_tags (const guchar *buffer, gsize start,
     GNode *tagpos;
 
     cur = start;
-    while(cur < end) {
+    while (cur < end) {
         p = (guchar *)(buffer + cur);
-        if(!(tag = wip_read_tag(&p, &cur, &end))) {
+        if (!(tag = wip_read_tag(&p, &cur, &end))) {
             // error: tag cannot be read
         }
         else {
             tagpos=g_node_insert_data(tagtree, -1, tag);
             if((!tag->type) && (n < 255))
-                wip_read_all_tags(buffer, tag->data_start, tag->data_end, tagpos, n+1);
+                wip_read_all_tags(buffer, tag->data_start,
+                                  tag->data_end, tagpos, n+1);
             cur = tag->data_end;
         }
     }
@@ -359,6 +376,40 @@ gboolean wip_read_graph_tags(GNode *node, gpointer header)
         graphheader->datasize = (gsize)(tag->data_end-tag->data_start);
     }
     header = (gpointer)graphheader;
+
+    return FALSE;
+}
+
+gboolean wip_read_image_tags(GNode *node, gpointer header)
+{
+    WIPTag *tag;
+    WIPImage *imageheader;
+    const guchar *p;
+
+    tag = node->data;
+    imageheader = (WIPImage *)header;
+    p = tag->data;
+    if (!strncmp(tag->name, "SizeX", 5))
+        imageheader->sizex = gwy_get_gint32_le(&p);
+    else if (!strncmp(tag->name, "SizeY", 5))
+        imageheader->sizey = gwy_get_gint32_le(&p);
+    else if (!strncmp(tag->name, "PositionTransformationID", 24))
+        imageheader->postransformid = gwy_get_gint32_le(&p);
+    else if (!strncmp(tag->name, "ZInterpretationID", 17))
+        imageheader->zinterpid = gwy_get_gint32_le(&p);
+    else if (!strncmp(tag->name, "Dimension", 9))
+        imageheader->dimension = gwy_get_gint32_le(&p);
+    else if (!strncmp(tag->name, "DataType", 8))
+        imageheader->datatype = (WIPDataType)gwy_get_gint32_le(&p);
+    else if (!strncmp(tag->name, "Ranges", 6)) {
+        imageheader->xrange = gwy_get_gint32_le(&p);
+        imageheader->yrange = gwy_get_gint32_le(&p);
+    }
+    else if (!strncmp(tag->name, "Data", 4)) {
+        imageheader->data = p;
+        imageheader->datasize = (gsize)(tag->data_end-tag->data_start);
+    }
+    header = (gpointer)imageheader;
 
     return FALSE;
 }
@@ -498,7 +549,7 @@ GwyGraphModel * wip_read_graph(GNode *node)
     GwyGraphCurveModel *gcmodel;
     GwySIUnit *siunitx, *siunity;
     gdouble *xdata, *ydata;
-    gint numpoints, i, power10x;
+    gint numpoints, i;
     GString *caption;
     const guchar *p;
 
@@ -515,7 +566,8 @@ GwyGraphModel * wip_read_graph(GNode *node)
     numpoints = header->yrange;
     if ((numpoints <= 0)
      || (header->datatype != WIP_DATA_FLOAT)
-     || (header->datasize < 4 * numpoints)) { //FIXME: 4 for float
+     || (header->datasize != WIPDataSize[header->datatype]
+       * numpoints)) {
         g_free(header);
         return NULL;
     }
@@ -535,36 +587,35 @@ GwyGraphModel * wip_read_graph(GNode *node)
 
     // Read caption
     caption = g_string_new(NULL);
-    g_node_traverse (node->parent, G_LEVEL_ORDER, G_TRAVERSE_ALL, -1,
-                     wip_read_caption, (gpointer)caption);
-    if(!caption->str)
+    g_node_traverse(node->parent, G_LEVEL_ORDER, G_TRAVERSE_ALL, -1,
+                    wip_read_caption, (gpointer)caption);
+    if (!caption->str)
         g_string_printf(caption, "Unnamed graph");
 
     // Try to read xdata
-    g_node_traverse (g_node_get_root (node),
-                     G_LEVEL_ORDER, G_TRAVERSE_ALL, -1,
-                     wip_find_by_id, (gpointer)&(header->xtransformid));
+    g_node_traverse(g_node_get_root (node),
+                    G_LEVEL_ORDER, G_TRAVERSE_ALL, -1,
+                    wip_find_by_id, (gpointer)&(header->xtransformid));
 
     xtransform = g_new0(WIPSpectralTransform, 1);
-    g_node_traverse (node->parent->parent,
-                     G_LEVEL_ORDER, G_TRAVERSE_ALL, -1,
-                     wip_read_sp_transform_tags,
-                     (gpointer)xtransform);
+    g_node_traverse(node->parent->parent,
+                    G_LEVEL_ORDER, G_TRAVERSE_ALL, -1,
+                    wip_read_sp_transform_tags,
+                    (gpointer)xtransform);
     if ((xtransform->transform_type != 1)
      || (xtransform->m < 0.01) || (xtransform->f < 0.01)
      || (xtransform->nc < 0.0) || (xtransform->nc > numpoints)) {
         // xtransform not read correctly, fallback to point numbers
     }
     else {
-        for(i = 0; i < numpoints; i++)
+        for (i = 0; i < numpoints; i++)
             xdata[i] = wip_pixel_to_lambda(i, xtransform);
     }
 
-    if(xtransform->unitname != NULL) {
-        siunitx = gwy_si_unit_new_parse(xtransform->unitname,
-                                       &power10x);
-        for(i = 0; i < numpoints; i++)
-            xdata[i] = xdata[i] * pow(10.0, power10x);
+    if (xtransform->unitname != NULL) {
+        siunitx = gwy_si_unit_new("m");
+        for (i = 0; i < numpoints; i++)
+            xdata[i] = xdata[i] * 1e-9;
     }
     else
         siunitx = gwy_si_unit_new("pixels");
@@ -613,13 +664,42 @@ GwyGraphModel * wip_read_graph(GNode *node)
     return gmodel;
 }
 
-gboolean wip_read_data (GNode *node, gpointer filedata)
+GwyDataField * wip_read_image(GNode *node)
+{
+    WIPImage *header;
+    GwyDataField *dfield;
+    gdouble *data;
+    gint i;
+    const guchar *p;
+
+    header = g_new0(WIPImage, 1);
+
+    g_node_traverse (node, G_LEVEL_ORDER, G_TRAVERSE_ALL, -1,
+                     wip_read_image_tags, (gpointer)header);
+
+    dfield = gwy_data_field_new(header->sizex, header->sizey, 1, 1, FALSE);
+    data = gwy_data_field_get_data(dfield);
+
+    p = header->data;
+    if (header->datatype == 9)
+        for (i = 0; i < header->sizex * header->sizey; i++)
+            data[i] = gwy_get_gfloat_le(&p);
+    else if (header->datatype == 8)
+        for (i = 0; i < header->sizex * header->sizey; i++)
+            data[i] = *(p++);
+
+    return dfield;
+}
+
+gboolean wip_read_data(GNode *node, gpointer filedata)
 {
     WIPTag *tag;
     WIPFile *filecontent;
     GwyGraphModel *gmodel;
+    GwyDataField *image;
     GwyContainer *container;
     GString *key;
+    GString *caption;
 
     tag = node->data;
     filecontent = (WIPFile *)filedata;
@@ -637,6 +717,30 @@ gboolean wip_read_data (GNode *node, gpointer filedata)
             gwy_container_set_object_by_name(filecontent->data,
                                              key->str, gmodel);
             g_object_unref(gmodel);
+        }
+    }
+    else if (!strncmp(tag->name, "TDImage", 7)) {
+        image = wip_read_image(node);
+        if(!image) {
+            // some error
+        }
+        else {
+            (filecontent->numimages)++;
+            caption = g_string_new(NULL);
+            g_node_traverse(node->parent, G_LEVEL_ORDER, G_TRAVERSE_ALL,
+                            -1, wip_read_caption, (gpointer)caption);
+            if (!caption->str)
+                g_string_printf(caption, "Unnamed data");
+            g_string_printf(key, "/%d/data", filecontent->numimages);
+            gwy_container_set_object_by_name(filecontent->data,
+                                             key->str, image);
+            g_string_append(key, "/title");
+            gwy_container_set_string_by_name(filecontent->data,
+                                             key->str,
+                                             g_strdup(caption->str));
+
+            g_string_free(caption, TRUE);
+            g_object_unref(image);
         }
     }
 
