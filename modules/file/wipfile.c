@@ -19,9 +19,9 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA
  */
 
-/* Warning: spectroscopy xaxis is definitely wrong (about 5 nm near
- * edges), gamma seems to be CCD plane inclination to incident light
- * at central pixel and not taken into account.
+/* Warning: spectroscopy xaxis is slightly wrong (less than 1 nm near
+ * edges), gamma seems to be some angle (it is near angle between
+ * incident and diffracted light) and not taken into account.
  *
  * I need an example of AFM data to implement reading of datafields.
  *
@@ -153,7 +153,7 @@ typedef struct {
 typedef struct {
     guint dimension;
     WIPDataType datatype;
-    guint minrange, maxrange;
+    guint xrange, yrange;
     gpointer data;
 } WIPGraphData;
 
@@ -167,8 +167,8 @@ typedef struct {
     guint zinterpid;
     guint dimension;
     WIPDataType datatype;
-    guint rangesmin;
-    guint rangesmax;
+    guint xrange;
+    guint yrange;
     gsize datasize;
     const guchar *data;
 } WIPGraph;
@@ -317,7 +317,6 @@ static void wip_read_all_tags (const guchar *buffer, gsize start,
 
 gboolean wip_free_leave (GNode *node, G_GNUC_UNUSED gpointer data)
 {
-   // wip_print_tag((WIPTag *)node->data);
     wip_free_tag((WIPTag *)node->data);
     node->data = NULL;
 
@@ -352,8 +351,8 @@ gboolean wip_read_graph_tags(GNode *node, gpointer header)
     else if (!strncmp(tag->name, "DataType", 8))
         graphheader->datatype = (WIPDataType)gwy_get_gint32_le(&p);
     else if (!strncmp(tag->name, "Ranges", 6)) {
-        graphheader->rangesmin = gwy_get_gint32_le(&p);
-        graphheader->rangesmax = gwy_get_gint32_le(&p);
+        graphheader->xrange = gwy_get_gint32_le(&p);
+        graphheader->yrange = gwy_get_gint32_le(&p);
     }
     else if (!strncmp(tag->name, "Data", 4)) {
         graphheader->data = p;
@@ -513,7 +512,7 @@ GwyGraphModel * wip_read_graph(GNode *node)
         return NULL;
     }
 
-    numpoints = header->rangesmax - header->rangesmin + 1;
+    numpoints = header->yrange;
     if ((numpoints <= 0)
      || (header->datatype != WIP_DATA_FLOAT)
      || (header->datasize < 4 * numpoints)) { //FIXME: 4 for float
