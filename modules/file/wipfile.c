@@ -141,8 +141,8 @@ typedef struct {
     gdouble  polynom [3]; /* polynomial coeffs. should be zeros */
     gdouble  nc; /* central pixel number */
     gdouble  lambdac; /* central pixel lambda in nm */
-    gdouble  gamma; /* FIXME: don't know what is it, CCD Inclination? */
-    gdouble  delta; /* FIXME: don't know what is it, small coef. */
+    gdouble  gamma; /* FIXME: don't know what is it */
+    gdouble  delta; /* CCD inclination */
     gdouble  m; /* diffraction order */
     gdouble  d; /* 1e6/lines per mm */
     gdouble  x; /* pixel size */
@@ -192,7 +192,7 @@ static void          wip_read_all_tags         (const guchar *buffer,
                                                 gsize start, gsize end,
                                                 GNode *tagtree, gint n);
 gboolean             wip_free_leave            (GNode *node,
-                                                G_GNUC_UNUSED gpointer data);
+                                           G_GNUC_UNUSED gpointer data);
 gboolean             wip_read_graph_tags       (GNode *node,
                                                 gpointer header);
 gboolean             wip_read_sp_transform_tags(GNode *node,
@@ -205,6 +205,8 @@ gboolean             wip_read_caption          (GNode *node,
                                                 gpointer caption);
 gboolean             wip_read_data             (GNode *node,
                                                 gpointer filedata);
+gdouble              wip_pixel_to_lambda       (gint i,
+                                       WIPSpectralTransform *transform);
 GwyGraphModel*       wip_read_graph            (GNode *node);
 
 static GwyModuleInfo module_info = {
@@ -469,6 +471,25 @@ gboolean wip_read_caption(GNode *node, gpointer caption)
     return FALSE;
 }
 
+gdouble wip_pixel_to_lambda(gint i, WIPSpectralTransform *transform)
+{
+    gdouble lambda, x, a2, alpha, alpha0;
+
+    if ((transform->lambdac/transform->d) < 0.0
+     || (transform->lambdac/transform->d) > 1.0)
+        return i;
+    alpha0 = asin(transform->lambdac * transform->m / transform->d);
+    x = (i - transform->nc + 1) * transform->x;
+    a2 = transform->f * transform->f + x * x
+       - 2 * transform->f * x * cos(M_PI/2.0 + transform->delta);
+    if ((a2 < 0.0) || (x/sqrt(a2)*sin(M_PI/2 + transform->delta)) > 1)
+        return i;
+    alpha = asin(x / sqrt(a2) * sin(M_PI/2 + transform->delta));
+    lambda = transform->d / transform->m * sin(alpha0 + alpha);
+
+    return lambda;
+}
+
 GwyGraphModel * wip_read_graph(GNode *node)
 {
     WIPGraph *header;
@@ -537,9 +558,7 @@ GwyGraphModel * wip_read_graph(GNode *node)
     }
     else {
         for(i = 0; i < numpoints; i++)
-            xdata[i] = xtransform->lambdac + xtransform->d
-                     * (i - xtransform->nc + 1) * xtransform->x
-                     / xtransform->m / xtransform->f;
+            xdata[i] = wip_pixel_to_lambda(i, xtransform);
     }
 
     if(xtransform->unitname != NULL) {
