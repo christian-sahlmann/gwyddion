@@ -70,6 +70,8 @@
 #define EXR_MAGIC "\x76\x2f\x31\x01"
 #define EXR_MAGIC_SIZE sizeof(EXR_MAGIC)-1
 
+#define PREVIEW_SIZE 240
+
 typedef enum {
     /* Used with common image formats supporting 16bit greyscale */
     GWY_BIT_DEPTH_INT16 = 16,
@@ -115,6 +117,33 @@ typedef struct {
     GtkWidget *centre_label;
     GtkWidget *use_centre;
 } EXRSaveControls;
+
+typedef struct {
+    gdouble xreal;
+    gdouble yreal;
+    gint32 xyexponent;
+    gboolean xymeasureeq;
+    gchar *xyunit;
+    gdouble zreal;
+    gint32 zexponent;
+    gchar *zunit;
+} PixmapLoadArgs;
+
+typedef struct {
+    GtkWidget *dialog;
+    GtkWidget *xreal;
+    GtkWidget *yreal;
+    GtkWidget *xyexponent;
+    GtkWidget *xymeasureeq;
+    GtkWidget *xyunits;
+    GtkWidget *zreal;
+    GtkWidget *zexponent;
+    GtkWidget *zunits;
+    GtkWidget *view;
+    gint xres;
+    gint yres;
+    PixmapLoadArgs *args;
+} PixmapLoadControls;
 
 static gboolean module_register            (void);
 
@@ -190,11 +219,36 @@ static gchar*   create_image_data          (GwyDataField *field,
                                             gdouble zmin,
                                             gdouble zmax);
 
+static gboolean pixmap_load_dialog         (PixmapLoadArgs *args,
+                                            const gchar *name,
+                                            GwyDataField *dfield,
+                                            const gchar *channels,
+                                            guint npages);
+static void     pixmap_load_update_controls(PixmapLoadControls *controls,
+                                            PixmapLoadArgs *args);
+static void     pixmap_load_update_values  (PixmapLoadControls *controls,
+                                            PixmapLoadArgs *args);
+static void     xyreal_changed_cb          (GtkAdjustment *adj,
+                                            PixmapLoadControls *controls);
+static void     xymeasureeq_changed_cb     (PixmapLoadControls *controls);
+static void     set_combo_from_unit        (GtkWidget *combo,
+                                            const gchar *str);
+static void     units_change_cb            (GtkWidget *button,
+                                            PixmapLoadControls *controls);
+static void     pixmap_load_load_args      (GwyContainer *container,
+                                            PixmapLoadArgs *args);
+static void     pixmap_load_save_args      (GwyContainer *container,
+                                            PixmapLoadArgs *args);
+
 #ifdef HAVE_EXR
 static const EXRSaveArgs exr_save_defaults = {
     GWY_BIT_DEPTH_HALF, 0.0
 };
 #endif
+
+static const PixmapLoadArgs pixmap_load_defaults = {
+    100.0, 100.0, -6, TRUE, (gchar*)"m", 1.0, -6, (gchar*)"m"
+};
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -827,6 +881,15 @@ get_png_text_string(const png_textp text_chunks, guint ncomments,
     return NULL;
 }
 
+static const gchar*
+describe_channels(gboolean grayscale, gboolean has_alpha)
+{
+    if (grayscale)
+        return has_alpha ? "GA" : "G";
+    else
+        return has_alpha ? "RGBA" : "RGB";
+}
+
 static GwyContainer*
 png_load(const gchar *filename,
          GwyRunType mode,
@@ -999,16 +1062,52 @@ png_load(const gchar *filename,
     }
     else {
         gwy_debug("Manual import is necessary.");
+        if (mode != GWY_RUN_INTERACTIVE) {
+            g_set_error(error, GWY_MODULE_FILE_ERROR,
+                        GWY_MODULE_FILE_ERROR_INTERACTIVE,
+                        _("Pixmap image import must be run as interactive."));
+            goto fail;
+        }
     }
 
     if (!title)
         title = get_png_text_string(text_chunks, ncomments, "Title");
 
     if (manual_import) {
-        // TODO
-        g_warning("PNG: Implement me!");
-        err_NO_DATA(error);
-        goto fail;
+        GwyDataField *f = gwy_data_field_new(xres, yres, 1.0, 1.0, FALSE);
+        gdouble *d = gwy_data_field_get_data(f);
+        PixmapLoadArgs args;
+        gboolean ok;
+
+        // Use the first channel for preview.
+        for (i = 0; i < yres; i++) {
+            const guint16 *row = (const guint16*)rows[i];
+            for (j = 0; j < xres; j++) {
+                d[i*xres + j] = row[j*nchannels];
+            }
+        }
+
+        pixmap_load_load_args(gwy_app_settings_get(), &args);
+        // Loading alpha from a separate chunk is not supported
+        ok = pixmap_load_dialog(&args, "PNG", f,
+                                describe_channels(nchannels == 1, FALSE), 1);
+        g_object_unref(f);
+        pixmap_load_save_args(gwy_app_settings_get(), &args);
+        if (!ok) {
+            g_free(args.xyunit);
+            g_free(args.zunit);
+            err_CANCELLED(error);
+            goto fail;
+        }
+
+        xreal = args.xreal * pow10(args.xyexponent);
+        yreal = args.yreal * pow10(args.xyexponent);
+        zmin = 0.0;
+        zmax = args.zreal * pow10(args.zexponent);
+        unitxy = gwy_si_unit_new(args.xyunit);
+        unitz = gwy_si_unit_new(args.zunit);
+        g_free(args.xyunit);
+        g_free(args.zunit);
     }
 
     fields = g_new(GwyDataField*, nchannels);
@@ -1299,18 +1398,49 @@ pgm_load(const gchar *filename,
                              &zmin, &zmax,
                              &unitxy, &unitz, &title);
     if (!detected) {
-        err_FILE_TYPE(error, "PGM");
-        goto fail;
+        if (mode != GWY_RUN_INTERACTIVE) {
+            g_set_error(error, GWY_MODULE_FILE_ERROR,
+                        GWY_MODULE_FILE_ERROR_INTERACTIVE,
+                        _("Pixmap image import must be run as interactive."));
+            goto fail;
+        }
     }
 
     gwy_debug("Detected: %s",
               detected == GWY_META ? "Gwyddion image keys" : "Plain image");
 
     if (detected != GWY_META) {
-        // TODO
-        g_warning("PGM: Implement me!");
-        err_NO_DATA(error);
-        goto fail;
+        GwyDataField *f = gwy_data_field_new(xres, yres, 1.0, 1.0, FALSE);
+        PixmapLoadArgs args;
+        gboolean ok;
+
+        data = gwy_data_field_get_data(f);
+        d16 = (const guint16*)(buffer + headersize);
+        for (i = 0; i < yres; i++) {
+            for (j = 0; j < xres; j++)
+                data[i*xres + j] = GUINT16_FROM_BE(d16[i*xres + j]);
+        }
+
+        pixmap_load_load_args(gwy_app_settings_get(), &args);
+        // Loading alpha from a separate chunk is not supported
+        ok = pixmap_load_dialog(&args, "PGM", f, "G", 1);
+        g_object_unref(f);
+        pixmap_load_save_args(gwy_app_settings_get(), &args);
+        if (!ok) {
+            g_free(args.xyunit);
+            g_free(args.zunit);
+            err_CANCELLED(error);
+            goto fail;
+        }
+
+        xreal = args.xreal * pow10(args.xyexponent);
+        yreal = args.yreal * pow10(args.xyexponent);
+        xoff = yoff = 0.0;
+        zmin = 0.0;
+        zmax = args.zreal * pow10(args.zexponent);
+        // Transfer ownership
+        unitxy = args.xyunit;
+        unitz = args.zunit;
     }
 
     if (err_SIZE_MISMATCH(error, 2*xres*yres + headersize, size, FALSE))
@@ -1357,9 +1487,11 @@ pgm_load(const gchar *filename,
 
     container = gwy_container_new();
     gwy_container_set_object_by_name(container, "/0/data", field);
-    gwy_container_set_string_by_name(container, "/0/data/title",
-                                     (const guchar*)title);
-    title = NULL;
+    if (title) {
+        gwy_container_set_string_by_name(container, "/0/data/title",
+                                         (const guchar*)title);
+        title = NULL;
+    }
 
 fail:
     gwy_file_abandon_contents(buffer, size, NULL);
@@ -1496,6 +1628,507 @@ find_range(GwyDataField *field,
     *pcentre = exp(logcentre/nc);
 
     gwy_data_field_get_min_max(field, fmin, fmax);
+}
+
+/***************************************************************************
+ *
+ * Manual high-depth image loading
+ *
+ ***************************************************************************/
+
+static gboolean
+pixmap_load_dialog(PixmapLoadArgs *args,
+                   const gchar *name,
+                   GwyDataField *dfield,
+                   const gchar *channels,
+                   guint npages)
+{
+    enum { RESPONSE_RESET = 1 };
+
+    PixmapLoadControls controls;
+    GwyContainer *data;
+    GwyPixmapLayer *layer;
+    GtkObject *adj;
+    GtkAdjustment *adj2;
+    GtkWidget *dialog, *table, *label, *align, *button, *hbox, *hbox2;
+    GtkSizeGroup *sizegroup;
+    GwySIUnit *unit;
+    gint response;
+    gchar *s, *title;
+    gdouble zoom;
+    gchar buf[16];
+    gint row, n;
+
+    controls.args = args;
+    controls.xres = gwy_data_field_get_xres(dfield);
+    controls.yres = gwy_data_field_get_yres(dfield);
+
+    sizegroup = gtk_size_group_new(GTK_SIZE_GROUP_HORIZONTAL);
+
+    s = g_ascii_strup(name, -1);
+    /* TRANSLATORS: Dialog title; %s is PNG, TIFF, ... */
+    title = g_strdup_printf(_("Import %s"), s);
+    g_free(s);
+    dialog = gtk_dialog_new_with_buttons(title, NULL, (GtkDialogFlags)0,
+                                         _("_Reset"), RESPONSE_RESET,
+                                         GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
+                                         GTK_STOCK_OK, GTK_RESPONSE_OK,
+                                         NULL);
+    controls.dialog = dialog;
+    gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
+    gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
+    g_free(title);
+
+    hbox = gtk_hbox_new(FALSE, 20);
+    gtk_container_set_border_width(GTK_CONTAINER(hbox), 4);
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox,
+                       FALSE, FALSE, 0);
+
+    align = gtk_alignment_new(0.0, 0.0, 0.0, 0.0);
+    gtk_box_pack_start(GTK_BOX(hbox), align, TRUE, TRUE, 0);
+
+    table = gtk_table_new(5, 3, FALSE);
+    gtk_table_set_row_spacings(GTK_TABLE(table), 2);
+    gtk_table_set_col_spacings(GTK_TABLE(table), 6);
+    gtk_container_add(GTK_CONTAINER(align), table);
+    row = 0;
+
+    gtk_table_attach(GTK_TABLE(table),
+                     gwy_label_new_header(_("Image Information")),
+                     0, 3, row, row+1,
+                     GTK_FILL, (GtkAttachOptions)0,
+                     (GtkAttachOptions)0, (GtkAttachOptions)0);
+    row++;
+
+    g_snprintf(buf, sizeof(buf), "%u", controls.xres);
+    label = gtk_label_new(buf);
+    gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
+    gwy_table_attach_row(table, row++, _("Horizontal size:"), _("px"),
+                         label);
+
+    g_snprintf(buf, sizeof(buf), "%u", controls.yres);
+    label = gtk_label_new(buf);
+    gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
+    gwy_table_attach_row(table, row++, _("Vertical size:"), _("px"),
+                         label);
+
+    label = gtk_label_new(channels);
+    gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
+    gwy_table_attach_row(table, row++, _("Channels:"), NULL,
+                         label);
+
+    g_snprintf(buf, sizeof(buf), "%u", npages);
+    label = gtk_label_new(buf);
+    gtk_misc_set_alignment(GTK_MISC(label), 1.0, 0.5);
+    gwy_table_attach_row(table, row++, _("Pages:"), NULL,
+                         label);
+
+    align = gtk_alignment_new(1.0, 0.0, 0.0, 0.0);
+    gtk_box_pack_start(GTK_BOX(hbox), align, TRUE, TRUE, 0);
+
+    zoom = PREVIEW_SIZE/(gdouble)MAX(controls.xres, controls.yres);
+    data = gwy_container_new();
+    controls.view = gwy_data_view_new(data);
+    gwy_data_view_set_zoom(GWY_DATA_VIEW(controls.view), zoom);
+    g_object_unref(data);
+    gwy_container_set_object_by_name(data, "/0/data", dfield);
+    layer = gwy_layer_basic_new();
+    gwy_pixmap_layer_set_data_key(layer, "/0/data");
+    gwy_layer_basic_set_gradient_key(GWY_LAYER_BASIC(layer), "/0/base/palette");
+    gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view), layer);
+    gtk_container_add(GTK_CONTAINER(align), controls.view);
+
+    table = gtk_table_new(4, 3, FALSE);
+    gtk_table_set_row_spacings(GTK_TABLE(table), 2);
+    gtk_table_set_col_spacings(GTK_TABLE(table), 6);
+    gtk_container_set_border_width(GTK_CONTAINER(table), 4);
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table,
+                       FALSE, FALSE, 0);
+    row = 0;
+
+    gtk_table_attach(GTK_TABLE(table),
+                     gwy_label_new_header(_("Physical Dimensions")),
+                     0, 3, row, row+1,
+                     GTK_FILL, (GtkAttachOptions)0,
+                     (GtkAttachOptions)0, (GtkAttachOptions)0);
+    row++;
+
+    adj = gtk_adjustment_new(args->xreal, 0.01, 10000, 1, 100, 0);
+    controls.xreal = gtk_spin_button_new(GTK_ADJUSTMENT(adj), 1, 2);
+    gtk_spin_button_set_numeric(GTK_SPIN_BUTTON(controls.xreal), TRUE);
+    gtk_table_attach(GTK_TABLE(table), controls.xreal,
+                     1, 2, row, row+1,
+                     GTK_FILL, (GtkAttachOptions)0,
+                     (GtkAttachOptions)0, (GtkAttachOptions)0);
+
+    label = gtk_label_new_with_mnemonic(_("_Width:"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls.xreal);
+    gtk_table_attach(GTK_TABLE(table), label,
+                     0, 1, row, row+1,
+                     GTK_FILL, (GtkAttachOptions)0,
+                     (GtkAttachOptions)0, (GtkAttachOptions)0);
+
+    align = gtk_alignment_new(0.0, 0.5, 1.0, 0.0);
+    gtk_table_attach(GTK_TABLE(table), align, 2, 3, row, row+2,
+                     (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
+                     (GtkAttachOptions)0,
+                     (GtkAttachOptions)0, (GtkAttachOptions)0);
+
+    hbox2 = gtk_hbox_new(FALSE, 6);
+    gtk_container_add(GTK_CONTAINER(align), hbox2);
+
+    unit = gwy_si_unit_new(args->xyunit);
+    controls.xyexponent = gwy_combo_box_metric_unit_new(NULL, NULL,
+                                                        args->xyexponent - 6,
+                                                        args->xyexponent + 6,
+                                                        unit,
+                                                        args->xyexponent);
+    gtk_size_group_add_widget(sizegroup, controls.xyexponent);
+    gtk_box_pack_start(GTK_BOX(hbox2), controls.xyexponent, FALSE, FALSE, 0);
+
+    controls.xyunits = gtk_button_new_with_label(gwy_sgettext("verb|Change"));
+    g_object_set_data(G_OBJECT(controls.xyunits), "id", (gpointer)"xy");
+    g_signal_connect(controls.xyunits, "clicked",
+                     G_CALLBACK(units_change_cb), &controls);
+    gtk_box_pack_start(GTK_BOX(hbox2), controls.xyunits, FALSE, FALSE, 0);
+    row++;
+
+    adj = gtk_adjustment_new(args->yreal, 0.01, 10000, 1, 100, 0);
+    controls.yreal = gtk_spin_button_new(GTK_ADJUSTMENT(adj), 1, 2);
+    gtk_spin_button_set_numeric(GTK_SPIN_BUTTON(controls.yreal), TRUE);
+    gtk_table_attach(GTK_TABLE(table), controls.yreal,
+                     1, 2, row, row+1,
+                     GTK_FILL, (GtkAttachOptions)0,
+                     (GtkAttachOptions)0, (GtkAttachOptions)0);
+
+    label = gtk_label_new_with_mnemonic(_("H_eight:"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls.yreal);
+    gtk_table_attach(GTK_TABLE(table), label,
+                     0, 1, row, row+1,
+                     GTK_FILL, (GtkAttachOptions)0,
+                     (GtkAttachOptions)0, (GtkAttachOptions)0);
+    row++;
+
+    button = gtk_check_button_new_with_mnemonic(_("Identical _measures"));
+    gtk_table_attach_defaults(GTK_TABLE(table), button, 0, 3, row, row+1);
+    controls.xymeasureeq = button;
+    gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
+    row++;
+
+    adj = gtk_adjustment_new(args->zreal, 0.01, 10000, 1, 100, 0);
+    controls.zreal = gtk_spin_button_new(GTK_ADJUSTMENT(adj), 1, 2);
+    gtk_spin_button_set_numeric(GTK_SPIN_BUTTON(controls.zreal), TRUE);
+    gtk_table_attach(GTK_TABLE(table), controls.zreal,
+                     1, 2, row, row+1,
+                     GTK_FILL, (GtkAttachOptions)0,
+                     (GtkAttachOptions)0, (GtkAttachOptions)0);
+
+    label = gtk_label_new_with_mnemonic(_("_Z-scale (per sample unit):"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls.zreal);
+    gtk_table_attach(GTK_TABLE(table), label,
+                     0, 1, row, row+1,
+                     GTK_FILL, (GtkAttachOptions)0,
+                     (GtkAttachOptions)0, (GtkAttachOptions)0);
+
+    align = gtk_alignment_new(0.0, 0.5, 1.0, 0.0);
+    gtk_table_attach(GTK_TABLE(table), align, 2, 3, row, row+1,
+                     (GtkAttachOptions)(GTK_EXPAND | GTK_FILL | GTK_SHRINK),
+                     (GtkAttachOptions)0,
+                     (GtkAttachOptions)0, (GtkAttachOptions)0);
+
+    hbox2 = gtk_hbox_new(FALSE, 6);
+    gtk_container_add(GTK_CONTAINER(align), hbox2);
+
+    gwy_si_unit_set_from_string(unit, args->zunit);
+    controls.zexponent = gwy_combo_box_metric_unit_new(NULL, NULL,
+                                                       args->zexponent - 6,
+                                                       args->zexponent + 6,
+                                                       unit,
+                                                       args->zexponent);
+    gtk_size_group_add_widget(sizegroup, controls.zexponent);
+    gtk_box_pack_start(GTK_BOX(hbox2), controls.zexponent, FALSE, FALSE, 0);
+    g_object_unref(unit);
+
+    controls.zunits = gtk_button_new_with_label(gwy_sgettext("verb|Change"));
+    g_object_set_data(G_OBJECT(controls.zunits), "id", (gpointer)"z");
+    g_signal_connect(controls.zunits, "clicked",
+                     G_CALLBACK(units_change_cb), &controls);
+    gtk_box_pack_start(GTK_BOX(hbox2), controls.zunits, FALSE, FALSE, 0);
+
+    gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
+    row++;
+
+    g_signal_connect_swapped(controls.xymeasureeq, "toggled",
+                             G_CALLBACK(xymeasureeq_changed_cb), &controls);
+    adj2 = gtk_spin_button_get_adjustment(GTK_SPIN_BUTTON(controls.xreal));
+    g_signal_connect(adj2, "value-changed",
+                     G_CALLBACK(xyreal_changed_cb), &controls);
+    adj2 = gtk_spin_button_get_adjustment(GTK_SPIN_BUTTON(controls.yreal));
+    g_signal_connect(adj2, "value-changed",
+                     G_CALLBACK(xyreal_changed_cb), &controls);
+    pixmap_load_update_controls(&controls, args);
+
+    g_object_unref(sizegroup);
+
+    gtk_widget_show_all(dialog);
+    do {
+        response = gtk_dialog_run(GTK_DIALOG(dialog));
+        switch (response) {
+            case GTK_RESPONSE_CANCEL:
+            case GTK_RESPONSE_DELETE_EVENT:
+            pixmap_load_update_values(&controls, args);
+            gtk_widget_destroy(dialog);
+            case GTK_RESPONSE_NONE:
+            return FALSE;
+            break;
+
+            case GTK_RESPONSE_OK:
+            break;
+
+            case RESPONSE_RESET:
+            args->xreal = pixmap_load_defaults.xreal;
+            args->yreal = pixmap_load_defaults.yreal;
+            args->xyexponent = pixmap_load_defaults.xyexponent;
+            args->xymeasureeq = pixmap_load_defaults.xymeasureeq;
+            g_free(args->xyunit);
+            args->xyunit = g_strdup(pixmap_load_defaults.xyunit);
+            args->zreal = pixmap_load_defaults.zreal;
+            args->zexponent = pixmap_load_defaults.zexponent;
+            g_free(args->zunit);
+            args->zunit = g_strdup(pixmap_load_defaults.zunit);
+            pixmap_load_update_controls(&controls, args);
+            break;
+
+            default:
+            g_assert_not_reached();
+            break;
+        }
+    } while (response != GTK_RESPONSE_OK);
+
+    pixmap_load_update_values(&controls, args);
+    gtk_widget_destroy(dialog);
+
+    return TRUE;
+}
+
+static void
+pixmap_load_update_controls(PixmapLoadControls *controls,
+                            PixmapLoadArgs *args)
+{
+    GtkAdjustment *adj;
+
+    /* TODO: Units */
+    adj = gtk_spin_button_get_adjustment(GTK_SPIN_BUTTON(controls->xreal));
+    gtk_adjustment_set_value(adj, args->xreal);
+    adj = gtk_spin_button_get_adjustment(GTK_SPIN_BUTTON(controls->yreal));
+    gtk_adjustment_set_value(adj, args->yreal);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->xymeasureeq),
+                                 args->xymeasureeq);
+    gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->xyexponent),
+                                   args->xyexponent);
+    adj = gtk_spin_button_get_adjustment(GTK_SPIN_BUTTON(controls->zreal));
+    gtk_adjustment_set_value(adj, args->zreal);
+    gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->zexponent),
+                                  args->zexponent);
+}
+
+static void
+pixmap_load_update_values(PixmapLoadControls *controls,
+                          PixmapLoadArgs *args)
+{
+    GtkAdjustment *adj;
+
+    adj = gtk_spin_button_get_adjustment(GTK_SPIN_BUTTON(controls->xreal));
+    args->xreal = gtk_adjustment_get_value(adj);
+    adj = gtk_spin_button_get_adjustment(GTK_SPIN_BUTTON(controls->yreal));
+    args->yreal = gtk_adjustment_get_value(adj);
+    args->xyexponent
+        = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(controls->xyexponent));
+    adj = gtk_spin_button_get_adjustment(GTK_SPIN_BUTTON(controls->zreal));
+    args->zreal = gtk_adjustment_get_value(adj);
+    args->zexponent
+        = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(controls->zexponent));
+}
+
+static void
+xyreal_changed_cb(GtkAdjustment *adj,
+                  PixmapLoadControls *controls)
+{
+    static gboolean in_update = FALSE;
+    GtkAdjustment *xadj, *yadj;
+    gdouble value;
+
+    if (!gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->xymeasureeq))
+        || in_update)
+        return;
+
+    value = gtk_adjustment_get_value(adj);
+    xadj = gtk_spin_button_get_adjustment(GTK_SPIN_BUTTON(controls->xreal));
+    yadj = gtk_spin_button_get_adjustment(GTK_SPIN_BUTTON(controls->yreal));
+    in_update = TRUE;
+    if (xadj == adj)
+        gtk_adjustment_set_value(yadj, value*controls->yres/controls->xres);
+    else
+        gtk_adjustment_set_value(xadj, value*controls->xres/controls->yres);
+    in_update = FALSE;
+}
+
+static void
+xymeasureeq_changed_cb(PixmapLoadControls *controls)
+{
+    GtkAdjustment *xadj, *yadj;
+
+    if (!gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->xymeasureeq)))
+        return;
+
+    xadj = gtk_spin_button_get_adjustment(GTK_SPIN_BUTTON(controls->xreal));
+    yadj = gtk_spin_button_get_adjustment(GTK_SPIN_BUTTON(controls->yreal));
+    gtk_adjustment_set_value(yadj,
+                             gtk_adjustment_get_value(xadj)
+                             *controls->yres/controls->xres);
+}
+
+static void
+set_combo_from_unit(GtkWidget *combo,
+                    const gchar *str)
+{
+    GwySIUnit *unit;
+    gint power10;
+
+    unit = gwy_si_unit_new_parse(str, &power10);
+    gwy_combo_box_metric_unit_set_unit(GTK_COMBO_BOX(combo),
+                                       power10 - 6, power10 + 6, unit);
+    g_object_unref(unit);
+}
+
+static void
+units_change_cb(GtkWidget *button,
+                PixmapLoadControls *controls)
+{
+    GtkWidget *dialog, *hbox, *label, *entry;
+    const gchar *id, *unit;
+    gint response;
+
+    pixmap_load_update_values(controls, controls->args);
+    id = (const gchar*)g_object_get_data(G_OBJECT(button), "id");
+    dialog = gtk_dialog_new_with_buttons(_("Change Units"),
+                                         GTK_WINDOW(controls->dialog),
+                                         (GtkDialogFlags)(GTK_DIALOG_MODAL
+                                                         | GTK_DIALOG_NO_SEPARATOR),
+                                         GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
+                                         GTK_STOCK_OK, GTK_RESPONSE_OK,
+                                         NULL);
+    gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
+
+    hbox = gtk_hbox_new(FALSE, 6);
+    gtk_container_set_border_width(GTK_CONTAINER(hbox), 4);
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox,
+                       FALSE, FALSE, 0);
+
+    label = gtk_label_new_with_mnemonic(_("New _units:"));
+    gtk_box_pack_start(GTK_BOX(hbox), label, TRUE, TRUE, 0);
+
+    entry = gtk_entry_new();
+    if (gwy_strequal(id, "xy"))
+        gtk_entry_set_text(GTK_ENTRY(entry), controls->args->xyunit);
+    else if (gwy_strequal(id, "z"))
+        gtk_entry_set_text(GTK_ENTRY(entry), controls->args->zunit);
+    else
+        g_return_if_reached();
+    gtk_label_set_mnemonic_widget(GTK_LABEL(label), entry);
+    gtk_entry_set_activates_default(GTK_ENTRY(entry), TRUE);
+    gtk_box_pack_start(GTK_BOX(hbox), entry, TRUE, TRUE, 0);
+
+    gtk_widget_show_all(dialog);
+    response = gtk_dialog_run(GTK_DIALOG(dialog));
+    if (response != GTK_RESPONSE_OK) {
+        gtk_widget_destroy(dialog);
+        return;
+    }
+
+    unit = gtk_entry_get_text(GTK_ENTRY(entry));
+    if (gwy_strequal(id, "xy")) {
+        set_combo_from_unit(controls->xyexponent, unit);
+        g_free(controls->args->xyunit);
+        controls->args->xyunit = g_strdup(unit);
+    }
+    else if (gwy_strequal(id, "z")) {
+        set_combo_from_unit(controls->zexponent, unit);
+        g_free(controls->args->zunit);
+        controls->args->zunit = g_strdup(unit);
+    }
+
+    gtk_widget_destroy(dialog);
+}
+
+/* Share keys with the pixmap module so that people get the same paramters
+ * for low-depth and high-depth images. */
+static const gchar xreal_key[]       = "/module/pixmap/xreal";
+static const gchar yreal_key[]       = "/module/pixmap/yreal";
+static const gchar xyexponent_key[]  = "/module/pixmap/xyexponent";
+static const gchar xymeasureeq_key[] = "/module/pixmap/xymeasureeq";
+static const gchar xyunit_key[]      = "/module/pixmap/xyunit";
+static const gchar zreal_key[]       = "/module/pixmap/zreal";
+static const gchar zexponent_key[]   = "/module/pixmap/zexponent";
+static const gchar zunit_key[]       = "/module/pixmap/zunit";
+
+static void
+pixmap_load_sanitize_args(PixmapLoadArgs *args)
+{
+    args->xreal = CLAMP(args->xreal, 0.01, 10000.0);
+    args->yreal = CLAMP(args->yreal, 0.01, 10000.0);
+    args->zreal = CLAMP(args->zreal, 0.01, 10000.0);
+    args->xyexponent = CLAMP(args->xyexponent, -12, 3);
+    args->zexponent = CLAMP(args->zexponent, -12, 3);
+    args->xymeasureeq = !!args->xymeasureeq;
+}
+
+static void
+pixmap_load_load_args(GwyContainer *container,
+                      PixmapLoadArgs *args)
+{
+    *args = pixmap_load_defaults;
+
+    gwy_container_gis_double_by_name(container, xreal_key, &args->xreal);
+    gwy_container_gis_double_by_name(container, yreal_key, &args->yreal);
+    gwy_container_gis_int32_by_name(container, xyexponent_key,
+                                    &args->xyexponent);
+    gwy_container_gis_double_by_name(container, zreal_key, &args->zreal);
+    gwy_container_gis_int32_by_name(container, zexponent_key,
+                                    &args->zexponent);
+    gwy_container_gis_boolean_by_name(container, xymeasureeq_key,
+                                      &args->xymeasureeq);
+    gwy_container_gis_string_by_name(container, xyunit_key,
+                                     (const guchar**)&args->xyunit);
+    gwy_container_gis_string_by_name(container, zunit_key,
+                                     (const guchar**)&args->zunit);
+
+    args->xyunit = g_strdup(args->xyunit);
+    args->zunit = g_strdup(args->zunit);
+
+    pixmap_load_sanitize_args(args);
+}
+
+static void
+pixmap_load_save_args(GwyContainer *container,
+                      PixmapLoadArgs *args)
+{
+    gwy_container_set_double_by_name(container, xreal_key, args->xreal);
+    gwy_container_set_double_by_name(container, yreal_key, args->yreal);
+    gwy_container_set_int32_by_name(container, xyexponent_key,
+                                    args->xyexponent);
+    gwy_container_set_double_by_name(container, zreal_key, args->zreal);
+    gwy_container_set_int32_by_name(container, zexponent_key,
+                                    args->zexponent);
+    gwy_container_set_boolean_by_name(container, xymeasureeq_key,
+                                      args->xymeasureeq);
+    gwy_container_set_string_by_name(container, xyunit_key,
+                                     (const guchar*)g_strdup(args->xyunit));
+    gwy_container_set_string_by_name(container, zunit_key,
+                                     (const guchar*)g_strdup(args->zunit));
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
