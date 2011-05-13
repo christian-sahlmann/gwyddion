@@ -720,6 +720,7 @@ GwyDataField * wip_read_image(GNode *node)
         siunitz = gwy_si_unit_new("");
     g_free(zaxis);
 
+	// Reading actual data
     dfield = gwy_data_field_new(header->sizex, header->sizey, 1.0,
                                 1.0 * pow(10.0, power10z), TRUE);
     data = gwy_data_field_get_data(dfield);
@@ -727,12 +728,58 @@ GwyDataField * wip_read_image(GNode *node)
     g_object_unref(siunitz);
 
     p = header->data;
-    if (header->datatype == 9)
-        for (i = 0; i < header->sizex * header->sizey; i++)
-            data[i] = gwy_get_gfloat_le(&p);
-    else if (header->datatype == 8)
-        for (i = 0; i < header->sizex * header->sizey; i++)
-            data[i] = *(p++);
+    switch(header->datatype) {
+		case WIP_DATA_LIST:
+		case WIP_DATA_EXTENDED:
+			/* cannot read this */
+			break;
+		case WIP_DATA_FLOAT:
+			for (i = 0; i < header->sizex * header->sizey; i++)
+				data[i] = gwy_get_gfloat_le(&p);
+			break;
+		case WIP_DATA_DOUBLE:				
+			for (i = 0; i < header->sizex * header->sizey; i++)
+				data[i] = gwy_get_gdouble_le(&p);
+			break;
+		case WIP_DATA_INT8:
+		case WIP_DATA_UINT8:
+		case WIP_DATA_BOOL:	
+			for (i = 0; i < header->sizex * header->sizey; i++)
+				data[i] = *(p++);
+			break;
+		case WIP_DATA_INT64:
+			for (i = 0; i < header->sizex * header->sizey; i++) {
+				data[i] = GINT64_FROM_LE(*(const gint64 *)p);
+				p += 8;
+			}
+			break;
+		case WIP_DATA_INT32:
+			for (i = 0; i < header->sizex * header->sizey; i++) {
+				data[i] = GINT32_FROM_LE(*(const gint32 *)p);
+				p += 4;
+			}
+			break;	
+		case WIP_DATA_INT16:
+			for (i = 0; i < header->sizex * header->sizey; i++) {
+				data[i] = GINT16_FROM_LE(*(const gint16 *)p);
+				p += 2;
+			}
+			break;	
+		case WIP_DATA_UINT32:
+			for (i = 0; i < header->sizex * header->sizey; i++) {
+				data[i] = GUINT32_FROM_LE(*(const guint32 *)p);
+				p += 4;
+			}
+			break;	
+		case WIP_DATA_UINT16:
+			for (i = 0; i < header->sizex * header->sizey; i++) {
+				data[i] = GUINT16_FROM_LE(*(const guint16 *)p);
+				p += 2;
+			}
+			break;								
+		default:
+			g_warning("Wrong datatype");
+	}
 
     return dfield;
 }
