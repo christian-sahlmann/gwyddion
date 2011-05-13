@@ -71,6 +71,7 @@ file_LTLIBRARIES = \
 	nanoscope.la \
 	nanotop.la \
 	netcdf.la \
+	nrrdfile.la \
 	nt-mdt.la \
 	omicron.la \
 	omicronflat.la \
@@ -187,6 +188,7 @@ nanoscope_ii_la_SOURCES  = nanoscope-ii.c
 nanoscope_la_SOURCES     = nanoscope.c
 nanotop_la_SOURCES       = nanotop.c
 netcdf_la_SOURCES        = netcdf.c
+nrrdfile_la_SOURCES      = nrrdfile.c
 nt_mdt_la_SOURCES        = nt-mdt.c
 ols_la_SOURCES           = ols.c gwytiff.h
 omicron_la_SOURCES       = omicron.c
