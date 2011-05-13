@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003-2004 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003-2011 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -980,6 +980,384 @@ gwy_memcpy_byte_swap(const guint8 *source,
     }
 }
 
+#ifdef __GNUC__
+#  define gwy_powi __builtin_powi
+#else
+static inline double
+gwy_powi(double x, int i)
+{
+    gdouble r = 1.0;
+    if (!i)
+        return 1.0;
+    gboolean negative = FALSE;
+    if (i < 0) {
+        negative = TRUE;
+        i = -i;
+    }
+    for ( ; ; ) {
+        if (i & 1)
+            r *= x;
+        if (!(i >>= 1))
+            break;
+        x *= x;
+    }
+    return negative ? 1.0/r : r;
+}
+#endif
+
+static inline gdouble
+get_pascal_real_le(const guchar *p)
+{
+    gdouble x;
+
+    if (!p[0])
+        return 0.0;
+
+    x = 1.0 + ((((p[1]/256.0 + p[2])/256.0 + p[3])/256.0 + p[4])/256.0
+               + (p[5] & 0x7f))/128.0;
+    if (p[5] & 0x80)
+        x = -x;
+
+    return x*gwy_powi(2.0, (gint)p[0] - 129);
+}
+
+static inline gdouble
+get_pascal_real_be(const guchar *p)
+{
+    gdouble x;
+
+    if (!p[5])
+        return 0.0;
+
+    x = 1.0 + ((((p[4]/256.0 + p[3])/256.0 + p[2])/256.0 + p[1])/256.0
+               + (p[0] & 0x7f))/128.0;
+    if (p[0] & 0x80)
+        x = -x;
+
+    return x*gwy_powi(2.0, (gint)p[5] - 129);
+}
+
+/**
+ * gwy_convert_raw_data:
+ * @data: Pointer to the input raw data to be converted to doubles.  The data
+ *        type is given by @datatype and @byteorder.
+ * @nitems: Data block length, i.e. the number of consecutive items to convert.
+ * @datatype: Type of the raw data items.
+ * @byteorder: Byte order of the raw data.
+ * @target: Array of @nitems to store the converted input data to.
+ * @scale: Factor to multiply the data with.
+ * @offset: Constant to add to the data after multiplying with @scale.
+ * @backwards: %TRUE to revert the order of data, %FALSE to keep the order.
+ *
+ * Converts a block of consecutive raw data items to doubles.
+ *
+ * Note that conversion from 64bit integral types may lose information as they
+ * have more bits than the mantissa of doubles.  All other conversions should
+ * be precise.
+ *
+ * Since: 2.25
+ **/
+void
+gwy_convert_raw_data(gconstpointer data,
+                     gsize nitems,
+                     GwyRawDataType datatype,
+                     GwyByteOrder byteorder,
+                     gdouble *target,
+                     gdouble scale,
+                     gdouble offset,
+                     gboolean backwards)
+{
+    gboolean littleendian = (byteorder == GWY_BYTE_ORDER_LITTLE_ENDIAN
+                             || (G_BYTE_ORDER == G_LITTLE_ENDIAN
+                                 && byteorder == GWY_BYTE_ORDER_NATIVE));
+    gboolean byteswap = (byteorder && byteorder != G_BYTE_ORDER);
+    gsize i;
+
+    g_return_if_fail(data && target);
+
+    if (datatype == GWY_RAW_DATA_SINT8) {
+        const gint8 *s8 = (const gint8*)data;
+        if (backwards) {
+            s8 += nitems-1;
+            for (i = nitems; i; i--, s8--, target++)
+                *target = scale*(*s8) + offset;
+        }
+        else {
+            for (i = nitems; i; i--, s8++, target++)
+                *target = scale*(*s8) + offset;
+        }
+    }
+    else if (datatype == GWY_RAW_DATA_UINT8) {
+        const guint8 *u8 = (const guint8*)data;
+        if (backwards) {
+            u8 += nitems-1;
+            for (i = nitems; i; i--, u8--, target++)
+                *target = scale*(*u8) + offset;
+        }
+        else {
+            for (i = nitems; i; i--, u8++, target++)
+                *target = scale*(*u8) + offset;
+        }
+    }
+    else if (datatype == GWY_RAW_DATA_SINT16) {
+        const gint16 *s16 = (const gint16*)data;
+        if (backwards) {
+            s16 += nitems-1;
+            if (byteswap) {
+                for (i = nitems; i; i--, s16--, target++)
+                    *target = scale*(gint16)GUINT16_SWAP_LE_BE(*s16) + offset;
+            }
+            else {
+                for (i = nitems; i; i--, s16--, target++)
+                    *target = scale*(*s16) + offset;
+            }
+        }
+        else {
+            if (byteswap) {
+                for (i = nitems; i; i--, s16++, target++)
+                    *target = scale*(gint16)GUINT16_SWAP_LE_BE(*s16) + offset;
+            }
+            else {
+                for (i = nitems; i; i--, s16++, target++)
+                    *target = scale*(*s16) + offset;
+            }
+        }
+    }
+    else if (datatype == GWY_RAW_DATA_UINT16) {
+        const guint16 *u16 = (const guint16*)data;
+        if (backwards) {
+            u16 += nitems-1;
+            if (byteswap) {
+                for (i = nitems; i; i--, u16--, target++)
+                    *target = scale*GUINT16_SWAP_LE_BE(*u16) + offset;
+            }
+            else {
+                for (i = nitems; i; i--, u16--, target++)
+                    *target = scale*(*u16) + offset;
+            }
+        }
+        else {
+            if (byteswap) {
+                for (i = nitems; i; i--, u16++, target++)
+                    *target = scale*GUINT16_SWAP_LE_BE(*u16) + offset;
+            }
+            else {
+                for (i = nitems; i; i--, u16++, target++)
+                    *target = scale*(*u16) + offset;
+            }
+        }
+    }
+    else if (datatype == GWY_RAW_DATA_SINT32) {
+        const gint32 *s32 = (const gint32*)data;
+        if (backwards) {
+            s32 += nitems-1;
+            if (byteswap) {
+                for (i = nitems; i; i--, s32--, target++)
+                    *target = scale*(gint32)GUINT32_SWAP_LE_BE(*s32) + offset;
+            }
+            else {
+                for (i = nitems; i; i--, s32--, target++)
+                    *target = scale*(*s32) + offset;
+            }
+        }
+        else {
+            if (byteswap) {
+                for (i = nitems; i; i--, s32++, target++)
+                    *target = scale*(gint32)GUINT32_SWAP_LE_BE(*s32) + offset;
+            }
+            else {
+                for (i = nitems; i; i--, s32++, target++)
+                    *target = scale*(*s32) + offset;
+            }
+        }
+    }
+    else if (datatype == GWY_RAW_DATA_UINT32) {
+        const guint32 *u32 = (const guint32*)data;
+        if (backwards) {
+            u32 += nitems-1;
+            if (byteswap) {
+                for (i = nitems; i; i--, u32--, target++)
+                    *target = scale*GUINT32_SWAP_LE_BE(*u32) + offset;
+            }
+            else {
+                for (i = nitems; i; i--, u32--, target++)
+                    *target = scale*(*u32) + offset;
+            }
+        }
+        else {
+            if (byteswap) {
+                for (i = nitems; i; i--, u32++, target++)
+                    *target = scale*GUINT32_SWAP_LE_BE(*u32) + offset;
+            }
+            else {
+                for (i = nitems; i; i--, u32++, target++)
+                    *target = scale*(*u32) + offset;
+            }
+        }
+    }
+    else if (datatype == GWY_RAW_DATA_SINT64) {
+        const gint64 *s64 = (const gint64*)data;
+        if (backwards) {
+            s64 += nitems-1;
+            if (byteswap) {
+                for (i = nitems; i; i--, s64--, target++)
+                    *target = scale*(gint64)GUINT64_SWAP_LE_BE(*s64) + offset;
+            }
+            else {
+                for (i = nitems; i; i--, s64--, target++)
+                    *target = scale*(*s64) + offset;
+            }
+        }
+        else {
+            if (byteswap) {
+                for (i = nitems; i; i--, s64++, target++)
+                    *target = scale*(gint64)GUINT64_SWAP_LE_BE(*s64) + offset;
+            }
+            else {
+                for (i = nitems; i; i--, s64++, target++)
+                    *target = scale*(*s64) + offset;
+            }
+        }
+    }
+    else if (datatype == GWY_RAW_DATA_UINT64) {
+        const guint64 *u64 = (const guint64*)data;
+        if (backwards) {
+            u64 += nitems-1;
+            if (byteswap) {
+                for (i = nitems; i; i--, u64--, target++)
+                    *target = scale*GUINT64_SWAP_LE_BE(*u64) + offset;
+            }
+            else {
+                for (i = nitems; i; i--, u64--, target++)
+                    *target = scale*(*u64) + offset;
+            }
+        }
+        else {
+            if (byteswap) {
+                for (i = nitems; i; i--, u64++, target++)
+                    *target = scale*GUINT64_SWAP_LE_BE(*u64) + offset;
+            }
+            else {
+                for (i = nitems; i; i--, u64++, target++)
+                    *target = scale*(*u64) + offset;
+            }
+        }
+    }
+    else if (datatype == GWY_RAW_DATA_HALF) {
+        g_warning("Half-precision floating point data format "
+                  "is not implemented.");
+    }
+    else if (datatype == GWY_RAW_DATA_FLOAT) {
+        const guint32 *u32 = (const guint32*)data;
+        const gfloat *f32 = (const gfloat*)data;
+        union { guint32 u; gfloat f; } v;
+        if (backwards) {
+            if (byteswap) {
+                u32 += nitems-1;
+                for (i = nitems; i; i--, u32--, target++) {
+                    v.u = GUINT32_SWAP_LE_BE(*u32);
+                    *target = scale*v.f + offset;
+                }
+            }
+            else {
+                f32 += nitems-1;
+                for (i = nitems; i; i--, f32--, target++)
+                    *target = scale*(*f32) + offset;
+            }
+        }
+        else {
+            if (byteswap) {
+                for (i = nitems; i; i--, u32++, target++) {
+                    v.u = GUINT32_SWAP_LE_BE(*u32);
+                    *target = scale*v.f + offset;
+                }
+            }
+            else {
+                for (i = nitems; i; i--, f32++, target++)
+                    *target = scale*(*f32) + offset;
+            }
+        }
+    }
+    else if (datatype == GWY_RAW_DATA_REAL) {
+        const guchar *p = (const guchar*)data;
+        if (backwards) {
+            p += 6*(nitems-1);
+            if (littleendian) {
+                for (i = nitems; i; i--, p -= 6, target++)
+                    *target = scale*get_pascal_real_le(p) + offset;
+            }
+            else {
+                for (i = nitems; i; i--, p -= 6, target++)
+                    *target = scale*get_pascal_real_be(p) + offset;
+            }
+        }
+        else {
+            if (byteswap) {
+                for (i = nitems; i; i--, p += 6, target++)
+                    *target = scale*get_pascal_real_le(p) + offset;
+            }
+            else {
+                for (i = nitems; i; i--, p += 6, target++)
+                    *target = scale*get_pascal_real_be(p) + offset;
+            }
+        }
+    }
+    else if (datatype == GWY_RAW_DATA_DOUBLE) {
+        const guint64 *u64 = (const guint64*)data;
+        const gdouble *d64 = (const gdouble*)data;
+        union { guint64 u; double d; } v;
+        if (backwards) {
+            if (byteswap) {
+                u64 += nitems-1;
+                for (i = nitems; i; i--, u64--, target++) {
+                    v.u = GUINT64_SWAP_LE_BE(*u64);
+                    *target = scale*v.d + offset;
+                }
+            }
+            else {
+                d64 += nitems-1;
+                for (i = nitems; i; i--, d64--, target++)
+                    *target = scale*(*d64) + offset;
+            }
+        }
+        else {
+            if (byteswap) {
+                for (i = nitems; i; i--, u64++, target++) {
+                    v.u = GUINT64_SWAP_LE_BE(*u64);
+                    *target = scale*v.d + offset;
+                }
+            }
+            else {
+                for (i = nitems; i; i--, d64++, target++)
+                    *target = scale*(*d64) + offset;
+            }
+        }
+    }
+    else {
+        g_assert_not_reached();
+    }
+}
+
+/**
+ * gwy_raw_data_size:
+ * @datatype: Raw data type.
+ *
+ * Reports the size of a single raw data item.
+ *
+ * Returns: The size of a single raw data item of type @datatype.
+ *
+ * Since: 2.25
+ **/
+guint
+gwy_raw_data_size(GwyRawDataType datatype)
+{
+    static const guint sizes[GWY_RAW_DATA_DOUBLE+1] = {
+        1, 1, 2, 2, 4, 4, 8, 8, 2, 4, 6, 8
+    };
+
+    g_return_val_if_fail(datatype <= GWY_RAW_DATA_DOUBLE, 0);
+    return sizes[datatype];
+}
 
 /**
  * gwy_object_set_or_reset:
@@ -1213,6 +1591,42 @@ gwy_object_set_or_reset(gpointer object,
  * @hid is disconnected.  In all cases @hid is set to 0.
  *
  * A useful property of this macro is its idempotence.
+ **/
+
+/**
+ * GwyRawDataType:
+ * @GWY_RAW_DATA_SINT8: Signed 8bit integer (one byte).
+ * @GWY_RAW_DATA_UINT8: Unsigned 8bit integer (one byte).
+ * @GWY_RAW_DATA_SINT16: Signed 16bit integer (two bytes).
+ * @GWY_RAW_DATA_UINT16: Unsigned 16bit integer (two bytes).
+ * @GWY_RAW_DATA_SINT32: Signed 32bit integer (four bytes).
+ * @GWY_RAW_DATA_UINT32: Unsigned 32bit integer (four bytes).
+ * @GWY_RAW_DATA_SINT64: Signed 64bit integer (eight bytes).
+ * @GWY_RAW_DATA_UINT64: Unsigned 64bit integer (eight bytes).
+ * @GWY_RAW_DATA_HALF: Half-precision floating point number (two bytes).
+ * @GWY_RAW_DATA_FLOAT: Single-precision floating point number (four bytes).
+ * @GWY_RAW_DATA_REAL: Pascal ‘real’ floating point number (six bytes).
+ * @GWY_RAW_DATA_DOUBLE: Double-precision floating point number (eight bytes).
+ *
+ * Types of raw data.
+ *
+ * Multibyte types usually need to be complemented with #GwyByteOrder to get a
+ * full type specification.
+ *
+ * Since: 2.25
+ **/
+
+/**
+ * GwyByteOrder:
+ * @GWY_BYTE_ORDER_NATIVE: Native byte order.
+ * @GWY_BYTE_ORDER_LITTLE_ENDIAN: Little endian byte order (the same as
+ *                                %G_LITTLE_ENDIAN).
+ * @GWY_BYTE_ORDER_BIG_ENDIAN: Big endian byte order (the same as
+ *                             %G_BIG_ENDIAN).
+ *
+ * Type of byte order.
+ *
+ * Since: 2.25
  **/
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003-2011 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -24,6 +24,27 @@
 #include <glib-object.h>
 
 G_BEGIN_DECLS
+
+typedef enum {
+    GWY_RAW_DATA_SINT8,
+    GWY_RAW_DATA_UINT8,
+    GWY_RAW_DATA_SINT16,
+    GWY_RAW_DATA_UINT16,
+    GWY_RAW_DATA_SINT32,
+    GWY_RAW_DATA_UINT32,
+    GWY_RAW_DATA_SINT64,
+    GWY_RAW_DATA_UINT64,
+    GWY_RAW_DATA_HALF,
+    GWY_RAW_DATA_FLOAT,
+    GWY_RAW_DATA_REAL,
+    GWY_RAW_DATA_DOUBLE,
+} GwyRawDataType;
+
+typedef enum {
+    GWY_BYTE_ORDER_NATIVE        = 0,
+    GWY_BYTE_ORDER_LITTLE_ENDIAN = G_LITTLE_ENDIAN,
+    GWY_BYTE_ORDER_BIG_ENDIAN    = G_BIG_ENDIAN,
+} GwyByteOrder;
 
 void         gwy_hash_table_to_slist_cb(gpointer unused_key,
                                         gpointer value,
@@ -67,6 +88,15 @@ void         gwy_memcpy_byte_swap      (const guint8 *source,
                                         gsize item_size,
                                         gsize nitems,
                                         gsize byteswap);
+void         gwy_convert_raw_data      (gconstpointer data,
+                                        gsize nitems,
+                                        GwyRawDataType datatype,
+                                        GwyByteOrder byteorder,
+                                        gdouble *target,
+                                        gdouble scale,
+                                        gdouble offset,
+                                        gboolean backwards);
+guint        gwy_raw_data_size         (GwyRawDataType datatype);
 void         gwy_object_set_or_reset   (gpointer object,
                                         GType type,
                                         ...);
