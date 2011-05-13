@@ -194,6 +194,11 @@ typedef struct {
     GwyContainer *data;
 } WIPFile;
 
+typedef struct  {
+    guint id;
+    GNode *node;
+} WIPIdNode;
+
 static gboolean      module_register           (void);
 static gint          wip_detect(const GwyFileDetectInfo *fileinfo,
                                 gboolean only_name);
@@ -216,7 +221,7 @@ gboolean             wip_read_sp_transform_tags(GNode *node,
 gboolean             wip_read_axis_tags        (GNode *node,
                                                 gpointer axis);
 gboolean             wip_find_by_id            (GNode *node,
-                                                gpointer id);
+                                                gpointer idnode);
 gboolean             wip_read_caption          (GNode *node,
                                                 gpointer caption);
 gboolean             wip_read_data             (GNode *node,
@@ -375,7 +380,6 @@ gboolean wip_read_graph_tags(GNode *node, gpointer header)
         graphheader->data = p;
         graphheader->datasize = (gsize)(tag->data_end-tag->data_start);
     }
-    header = (gpointer)graphheader;
 
     return FALSE;
 }
@@ -409,7 +413,6 @@ gboolean wip_read_image_tags(GNode *node, gpointer header)
         imageheader->data = p;
         imageheader->datasize = (gsize)(tag->data_end-tag->data_start);
     }
-    header = (gpointer)imageheader;
 
     return FALSE;
 }
@@ -456,8 +459,6 @@ gboolean wip_read_sp_transform_tags(GNode *node, gpointer transform)
         g_free(str);
     }
 
-    transform = (gpointer)sp_transform;
-
     return FALSE;
 }
 
@@ -480,23 +481,29 @@ gboolean wip_read_axis_tags(GNode *node, gpointer axis)
                                            NULL, NULL, NULL);
         g_free(str);
     }
-    axis = (gpointer)tmp_axis;
 
     return FALSE;
 }
 
-gboolean wip_find_by_id(GNode *node, gpointer id)
+gboolean wip_find_by_id(GNode *node, gpointer idnode)
 {
     WIPTag *tag;
+    WIPIdNode *idnode_tmp;
     const guchar *p;
-    guint id_temp = 0;
+    gint id_temp;
 
     tag = node->data;
     p = tag->data;
-    if (!strncmp(tag->name, "ID", 2))
+    idnode_tmp = (WIPIdNode *)idnode;
+    id_temp = 0;
+    if (!strncmp(tag->name, "ID", 2)) {
         id_temp = gwy_get_gint32_le(&p);
-    if (id_temp == *(gint *)id)
-        return TRUE;
+        if (id_temp == idnode_tmp->id) {
+            idnode_tmp->node = node;
+
+            return TRUE;
+        }
+    }
 
     return FALSE;
 }
@@ -545,6 +552,7 @@ GwyGraphModel * wip_read_graph(GNode *node)
     WIPGraph *header;
     WIPSpectralTransform *xtransform;
     WIPAxis *yaxis;
+    WIPIdNode *idnode;
     GwyGraphModel *gmodel;
     GwyGraphCurveModel *gcmodel;
     GwySIUnit *siunitx, *siunity;
@@ -593,12 +601,14 @@ GwyGraphModel * wip_read_graph(GNode *node)
         g_string_printf(caption, "Unnamed graph");
 
     // Try to read xdata
-    g_node_traverse(g_node_get_root (node),
+    idnode = g_new0(WIPIdNode,1);
+    idnode->id = header->xtransformid;
+    g_node_traverse(g_node_get_root(node),
                     G_LEVEL_ORDER, G_TRAVERSE_ALL, -1,
-                    wip_find_by_id, (gpointer)&(header->xtransformid));
+                    wip_find_by_id, (gpointer)idnode);
 
     xtransform = g_new0(WIPSpectralTransform, 1);
-    g_node_traverse(node->parent->parent,
+    g_node_traverse(idnode->node->parent->parent,
                     G_LEVEL_ORDER, G_TRAVERSE_ALL, -1,
                     wip_read_sp_transform_tags,
                     (gpointer)xtransform);
@@ -626,11 +636,12 @@ GwyGraphModel * wip_read_graph(GNode *node)
     g_free(xtransform);
 
     //Try to read y units
+    idnode->id = header->zinterpid;
     g_node_traverse (g_node_get_root (node),
                      G_LEVEL_ORDER, G_TRAVERSE_ALL, -1,
-                     wip_find_by_id, (gpointer)&(header->zinterpid));
+                     wip_find_by_id, (gpointer)idnode);
     yaxis = g_new0(WIPAxis, 1);
-    g_node_traverse (node->parent->parent,
+    g_node_traverse (idnode->node->parent->parent,
                      G_LEVEL_ORDER, G_TRAVERSE_ALL, -1,
                      wip_read_axis_tags,
                      (gpointer)yaxis);
@@ -651,6 +662,7 @@ GwyGraphModel * wip_read_graph(GNode *node)
                            "mode", GWY_GRAPH_CURVE_LINE,
                            "color", gwy_graph_get_preset_color(0),
                            NULL);
+    g_free(idnode);
     g_object_unref(siunitx);
     g_object_unref(siunity);
     gwy_graph_curve_model_set_data(gcmodel, xdata, ydata, numpoints);
@@ -667,9 +679,13 @@ GwyGraphModel * wip_read_graph(GNode *node)
 GwyDataField * wip_read_image(GNode *node)
 {
     WIPImage *header;
+    WIPAxis *zaxis;
+    WIPIdNode *idnode;
     GwyDataField *dfield;
+    GwySIUnit *siunitxy, *siunitz;
     gdouble *data;
     gint i;
+    gint power10z = 0;
     const guchar *p;
 
     header = g_new0(WIPImage, 1);
@@ -677,8 +693,38 @@ GwyDataField * wip_read_image(GNode *node)
     g_node_traverse (node, G_LEVEL_ORDER, G_TRAVERSE_ALL, -1,
                      wip_read_image_tags, (gpointer)header);
 
-    dfield = gwy_data_field_new(header->sizex, header->sizey, 1, 1, FALSE);
+    if ((header->datatype > 11)
+     || (header->sizex != header->xrange)
+     || (header->sizey != header->yrange)
+     || (header->datasize != WIPDataSize[header->datatype]
+       * header->sizex * header->sizey)) {
+        g_free(header);
+        return NULL;
+    }
+
+    //Try to read z units
+    idnode = g_new0(WIPIdNode,1);
+    idnode->id = header->zinterpid;
+    g_node_traverse (g_node_get_root(node),
+                     G_LEVEL_ORDER, G_TRAVERSE_ALL, -1,
+                     wip_find_by_id, (gpointer)idnode);
+    zaxis = g_new0(WIPAxis, 1);
+    g_node_traverse (idnode->node->parent->parent,
+                     G_LEVEL_ORDER, G_TRAVERSE_ALL, -1,
+                     wip_read_axis_tags,
+                     (gpointer)zaxis);
+    g_free(idnode);
+    if (zaxis->unitname)
+        siunitz = gwy_si_unit_new_parse(zaxis->unitname, &power10z);
+    else
+        siunitz = gwy_si_unit_new("");
+    g_free(zaxis);
+
+    dfield = gwy_data_field_new(header->sizex, header->sizey, 1.0,
+                                1.0 * pow(10.0, power10z), TRUE);
     data = gwy_data_field_get_data(dfield);
+    gwy_data_field_set_si_unit_z(dfield, siunitz);
+    g_object_unref(siunitz);
 
     p = header->data;
     if (header->datatype == 9)
