@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2011-05-10 03:58+0200\n"
-"PO-Revision-Date: 2011-05-10 07:41+0300\n"
+"POT-Creation-Date: 2011-05-11 08:37+0200\n"
+"PO-Revision-Date: 2011-05-13 08:09+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "Language: \n"
@@ -2356,6 +2356,14 @@ msgstr "Импорт файлов данных AIST-NT"
 msgid "AIST-NT files (.aist)"
 msgstr "Файлы AIST-NT (.aist)"
 
+#: modules/file/ambfile.c:74
+msgid "Imports Ambios AMB data files."
+msgstr "Импортирует файлы данных Ambios AMB."
+
+#: modules/file/ambfile.c:87
+msgid "Ambios amb files (.amb)"
+msgstr "Файлы Ambios amb (.amb)"
+
 #: modules/file/anfatec.c:79
 msgid "Imports Anfatec data files (two-part .txt + .int)."
 msgstr "Импортирует файлы данных Anfatec (две части .txt + .int)."
@@ -3839,12 +3847,12 @@ msgid "PNI files (.pni)"
 msgstr "Файлы PNI (.pni)"
 
 #: modules/file/psia.c:236
-msgid "Imports PSIA data files."
-msgstr "Импортирует файлы данных PSIA."
+msgid "Imports Park Systems data files."
+msgstr "Импортирует файлы данных Park Systems."
 
 #: modules/file/psia.c:249
-msgid "PSIA data files (.tiff)"
-msgstr "Файлы данных PSIA (.tiff)"
+msgid "Park Systems data files (.tiff, .tif)"
+msgstr "Файлы данных Park Systems (.tiff, .tif)"
 
 #: modules/file/psia.c:332
 msgid "Data tag is missing."
@@ -4795,11 +4803,11 @@ msgstr "параметры масштаба z"
 msgid "data type parameters"
 msgstr "параметры типа данных"
 
-#: modules/file/wipfile.c:174
+#: modules/file/wipfile.c:190
 msgid "Imports WItec Project data files."
 msgstr "Импортирует файлы данных WItec Project."
 
-#: modules/file/wipfile.c:187
+#: modules/file/wipfile.c:203
 msgid "WItec Project files (.wip)"
 msgstr "Файлы WItec Project (.wip)"
 
@@ -5709,7 +5717,7 @@ msgstr "Поиск отменён"
 #: modules/process/grain_wshed.c:501
 #: modules/process/maskcor.c:327
 #: modules/process/mcrop.c:326
-#: modules/process/merge.c:686
+#: modules/process/merge.c:685
 #: modules/process/tip_blind.c:559
 #: modules/process/tipops.c:307
 msgid "Initializing"
@@ -5718,7 +5726,7 @@ msgstr "Инициализация"
 #: modules/process/calcoefs_simple.c:635
 #: modules/process/maskcor.c:329
 #: modules/process/mcrop.c:328
-#: modules/process/merge.c:688
+#: modules/process/merge.c:687
 msgid "Correlating"
 msgstr "Коррелируется"
 
@@ -10403,38 +10411,3 @@ msgstr ""
 "Наклон θ:     %s\n"
 "Наклон φ:     %s\n"
 
-#~ msgid "noun|Square"
-#~ msgstr "Квадрат"
-
-#~ msgid "Solid"
-#~ msgstr "Сплошная"
-
-#~ msgid "Dash"
-#~ msgstr "Пунктир"
-
-#~ msgid "Use"
-#~ msgstr "Использовать"
-
-#~ msgid "Border"
-#~ msgstr "Граничный"
-
-#~ msgid "Mirror"
-#~ msgstr "Зеркальный"
-
-#~ msgid "noun|Fit"
-#~ msgstr "Аппроксимация"
-
-#~ msgid "noun|Estimate"
-#~ msgstr "Оценить"
-
-#~ msgid "Error loading file: %s"
-#~ msgstr "Ошибка загрузки файла: %s"
-
-#~ msgid "Bellow"
-#~ msgstr "Ниже"
-
-#~ msgid "Right"
-#~ msgstr "Справа"
-
-#~ msgid "Left"
-#~ msgstr "Слева"
