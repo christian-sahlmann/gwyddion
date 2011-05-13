@@ -40,11 +40,13 @@
 #include "config.h"
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwyutils.h>
 #include <libgwymodule/gwymodule-file.h>
 #include <libprocess/datafield.h>
+#include <app/data-browser.h>
 #include <app/gwymoduleutils-file.h>
 
 #include "err.h"
@@ -57,6 +59,7 @@
 
 typedef enum {
     NRRD_TYPE_UNKNOWN = -1,
+    /* Importable types start from 0 */
     NRRD_TYPE_SINT8,
     NRRD_TYPE_UINT8,
     NRRD_TYPE_SINT16,
@@ -67,6 +70,7 @@ typedef enum {
     NRRD_TYPE_UINT64,
     NRRD_TYPE_FLOAT,
     NRRD_TYPE_DOUBLE,
+    /* Non-importable types */
     NRRD_TYPE_BLOCK,
 } NRRDDataType;
 
@@ -79,14 +83,26 @@ typedef enum {
     NRRD_ENCODING_BZIP2,
 } NRRDEncoding;
 
-static gboolean      module_register(void);
-static gint          nrrdfile_detect(const GwyFileDetectInfo *fileinfo,
-                                     gboolean only_name);
-static GwyContainer* nrrdfile_load  (const gchar *filename,
-                                     GwyRunType mode,
-                                     GError **error);
-static NRRDDataType  parse_data_type(const gchar *value);
-static NRRDEncoding  parse_encoding (const gchar *value);
+static gboolean      module_register    (void);
+static gint          nrrdfile_detect    (const GwyFileDetectInfo *fileinfo,
+                                         gboolean only_name);
+static GwyContainer* nrrdfile_load      (const gchar *filename,
+                                         GwyRunType mode,
+                                         GError **error);
+static void normalise_field_name(gchar *name);
+static NRRDDataType  parse_data_type    (const gchar *value);
+static NRRDEncoding  parse_encoding     (const gchar *value);
+static gboolean      find_gwy_data_type (NRRDDataType datatype,
+                                         const gchar *endian,
+                                         GwyRawDataType *rawdatatype,
+                                         GwyByteOrder *byteorder,
+                                         GError **error);
+static GwyDataField* read_raw_data_field(guint xres,
+                                         guint yres,
+                                         GwyRawDataType rawdatatype,
+                                         GwyByteOrder byteorder,
+                                         GHashTable *fields,
+                                         gconstpointer data);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -132,15 +148,6 @@ nrrdfile_detect(const GwyFileDetectInfo *fileinfo,
     return 0;
 }
 
-static void
-ascii_tolower_inplace(gchar *s)
-{
-    while (*s) {
-        *s = g_ascii_tolower(*s);
-        s++;
-    }
-}
-
 static GwyContainer*
 nrrdfile_load(const gchar *filename,
               G_GNUC_UNUSED GwyRunType mode,
@@ -149,17 +156,17 @@ nrrdfile_load(const gchar *filename,
     GwyContainer *meta, *container = NULL;
     GHashTable *hash, *fields = NULL, *keyvalue = NULL;
     guchar *buffer = NULL, *header_end;
-    gsize size = 0;
+    gsize expected_size, size = 0;
     GError *err = NULL;
     GwyDataField *dfield = NULL;
-    guint xres, yres, header_size, i, j;
-    GwySIUnit *unit = NULL;
-    gchar *value, *vkeyvalue, *vfield, *p, *line, *header = NULL;
-    gdouble *data;
-    guint version;
+    guint version, dimension, xres, yres, header_size;
+    gchar *value, *vkeyvalue, *vfield, *p, *line, *datafile, *header = NULL;
     gboolean unix_eol;
+    gint byteskip = 0, lineskip = 0;
     NRRDDataType data_type;
     NRRDEncoding encoding;
+    GwyRawDataType rawdatatype;
+    GwyByteOrder byteorder;
 
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
         err_GET_FILE_CONTENTS(error, &err);
@@ -182,8 +189,8 @@ nrrdfile_load(const gchar *filename,
     version = buffer[MAGIC_SIZE] - '0';
     unix_eol = (buffer[MAGIC_SIZE+1] == '\n');
     header_end = gwy_memmem(buffer, size,
-                     unix_eol ? "\n\n" : "\r\n\r\n",
-                     unix_eol ? 2 : 4);
+                            unix_eol ? "\n\n" : "\r\n\r\n",
+                            unix_eol ? 2 : 4);
     if (!header_end) {
         g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
                     _("File header is truncated"));
@@ -227,7 +234,8 @@ nrrdfile_load(const gchar *filename,
         g_strchomp(line);
         g_strchug(value);
         if (hash == fields)
-            ascii_tolower_inplace(line);
+            normalise_field_name(line);
+        /* TODO: Unescape values. */
         gwy_debug("<%s> = <%s> (%s)", line, value, hash == fields ? "F" : "KV");
         g_hash_table_insert(hash, line, value);
     }
@@ -236,15 +244,90 @@ nrrdfile_load(const gchar *filename,
                       "dimension", "encoding", "sizes", "type", NULL))
         goto fail;
 
-    data_type = parse_data_type(g_hash_table_lookup(fields, "type"));
-    encoding = parse_encoding(g_hash_table_lookup(fields, "encoding"));
+    if ((data_type = parse_data_type(g_hash_table_lookup(fields, "type")))
+        == (NRRDDataType)-1) {
+        err_UNSUPPORTED(error, "type");
+        goto fail;
+    }
+    if ((encoding = parse_encoding(g_hash_table_lookup(fields, "encoding")))
+        == (NRRDEncoding)-1) {
+        err_UNSUPPORTED(error, "encoding");
+        goto fail;
+    }
     gwy_debug("data_type: %u, encoding: %u", data_type, encoding);
+    /* TODO: More encodings */
+    if (encoding != NRRD_ENCODING_RAW) {
+        err_UNSUPPORTED(error, "encoding");
+        goto fail;
+    }
 
-    err_NO_DATA(error);
+    if (sscanf(g_hash_table_lookup(fields, "dimension"),
+               "%u", &dimension) != 1) {
+        err_INVALID(error, "dimension");
+        goto fail;
+    }
+    if (dimension != 2) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Only two-dimensional data are supported."));
+        goto fail;
+    }
+    if (sscanf(g_hash_table_lookup(fields, "sizes"),
+               "%u %u", &xres, &yres) != 2) {
+        err_INVALID(error, "sizes");
+        goto fail;
+    }
+    gwy_debug("xres: %u, yres: %u", xres, yres);
+    if (err_DIMENSION(error, xres) || err_DIMENSION(error, yres))
+        goto fail;
+
+    if ((value = g_hash_table_lookup(fields, "lineskip"))) {
+        lineskip = atoi(value);
+        if (lineskip < -1) {
+            err_INVALID(error, "lineskip");
+            goto fail;
+        }
+    }
+    if ((value = g_hash_table_lookup(fields, "byteskip"))) {
+        byteskip = atoi(value);
+        if (lineskip < -1) {
+            err_INVALID(error, "lineskip");
+            goto fail;
+        }
+    }
+
+    /* TODO: Support skips */
+    if (lineskip != 0 || byteskip != 0) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    "Non-zero lineskip and byteskip are not supported.");
+        goto fail;
+    }
+
+    /* TODO: Detached data */
+    datafile = g_hash_table_lookup(fields, "datafile");
+    if (datafile) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    "Detached data files are unsupported.");
+        goto fail;
+    }
+
+    if (!find_gwy_data_type(data_type, g_hash_table_lookup(fields, "endian"),
+                            &rawdatatype, &byteorder, error))
+        goto fail;
+
+    expected_size = ((header_end - buffer) + (unix_eol ? 2 : 4)
+                     + gwy_raw_data_size(rawdatatype)*xres*yres);
+    if (err_SIZE_MISMATCH(error, expected_size, size, FALSE))
+        goto fail;
+
+    container = gwy_container_new();
+
+    dfield = read_raw_data_field(xres, yres, rawdatatype, byteorder, fields,
+                                 header_end + (unix_eol ? 2 : 4));
+    gwy_container_set_object(container, gwy_app_get_data_key_for_id(0), dfield);
+    g_object_unref(dfield);
 
 fail:
     gwy_file_abandon_contents(buffer, size, NULL);
-    gwy_object_unref(unit);
     g_free(header);
     if (fields)
         g_hash_table_destroy(fields);
@@ -252,6 +335,24 @@ fail:
         g_hash_table_destroy(keyvalue);
 
     return container;
+}
+
+static void
+normalise_field_name(gchar *name)
+{
+    guint i, j;
+
+    /* Get rid of non-alnum characters, e.g. "sample units" → "sampleunits"
+     * and convert alphabetic characters to lowercase. */
+    for (i = j = 0; name[i]; i++) {
+        if (g_ascii_isalnum(name[i])) {
+            name[j++] = g_ascii_tolower(name[i]);
+        }
+    }
+    name[j] = '\0';
+
+    if (gwy_strequal(name, "centerings"))
+        strcpy(name, "centers");
 }
 
 static NRRDDataType
@@ -340,6 +441,140 @@ parse_encoding(const gchar *value)
     g_free(s);
 
     return encoding;
+}
+
+static gboolean
+find_gwy_data_type(NRRDDataType datatype, const gchar *endian,
+                   GwyRawDataType *rawdatatype, GwyByteOrder *byteorder,
+                   GError **error)
+{
+    static const GwyRawDataType types[] = {
+        GWY_RAW_DATA_SINT8,
+        GWY_RAW_DATA_UINT8,
+        GWY_RAW_DATA_SINT16,
+        GWY_RAW_DATA_UINT16,
+        GWY_RAW_DATA_SINT32,
+        GWY_RAW_DATA_UINT32,
+        GWY_RAW_DATA_SINT64,
+        GWY_RAW_DATA_UINT64,
+        GWY_RAW_DATA_FLOAT,
+        GWY_RAW_DATA_DOUBLE,
+    };
+
+    if (datatype > NRRD_TYPE_DOUBLE) {
+        err_UNSUPPORTED(error, "type");
+        return FALSE;
+    }
+
+    *rawdatatype = types[datatype];
+    *byteorder = GWY_BYTE_ORDER_NATIVE;
+    if (gwy_raw_data_size(*rawdatatype) > 1) {
+        if (!endian) {
+            err_MISSING_FIELD(error, "endian");
+            return FALSE;
+        }
+
+        if (strcasecmp(endian, "little") == 0)
+            *byteorder = GWY_BYTE_ORDER_LITTLE_ENDIAN;
+        else if (strcasecmp(endian, "big") == 0)
+            *byteorder = GWY_BYTE_ORDER_BIG_ENDIAN;
+        else {
+            err_INVALID(error, "endian");
+            return FALSE;
+        }
+    }
+
+    return TRUE;
+}
+
+static GwyDataField*
+read_raw_data_field(guint xres, guint yres,
+                    GwyRawDataType rawdatatype, GwyByteOrder byteorder,
+                    GHashTable *fields,
+                    gconstpointer data)
+{
+    GwyDataField *dfield;
+    GwySIUnit *siunitz = NULL, *siunitxy = NULL;
+    gdouble dx = 1.0, dy = 1.0, q = 1.0, z0 = 0.0, xoff = 0.0, yoff = 0.0;
+    gint power10;
+    gchar *value;
+
+    if ((value = g_hash_table_lookup(fields, "oldmin")))
+        z0 = g_ascii_strtod(value, NULL);
+
+    if ((value = g_hash_table_lookup(fields, "oldmax")))
+        q = g_ascii_strtod(value, NULL) - z0;
+
+    if ((value = g_hash_table_lookup(fields, "spacings"))
+        && sscanf(value, "%lf %lf", &dx, &dy)) {
+        /* Use negated positive conditions to catch NaNs */
+        if (!((dx = fabs(dx)) > 0)) {
+            g_warning("Real x step is 0.0, fixing to 1.0");
+            dx = 1.0;
+        }
+        /* Use negated positive conditions to catch NaNs */
+        if (!((dy = fabs(dy)) > 0)) {
+            g_warning("Real y step is 0.0, fixing to 1.0");
+            dy = 1.0;
+        }
+    }
+
+    if ((value = g_hash_table_lookup(fields, "axismins"))
+        && sscanf(value, "%lf %lf", &xoff, &yoff)) {
+        if (gwy_isnan(xoff) || gwy_isinf(xoff))
+            xoff = 0.0;
+        if (gwy_isnan(yoff) || gwy_isinf(yoff))
+            yoff = 0.0;
+    }
+
+    /* Prefer axismaxs if both spacings and axismaxs are given. */
+    if ((value = g_hash_table_lookup(fields, "axismaxs"))
+        && sscanf(value, "%lf %lf", &dx, &dy)) {
+        dx = (dx - xoff)/xres;
+        dy = (dy - xoff)/xres;
+        /* Use negated positive conditions to catch NaNs */
+        if (!((dx = fabs(dx)) > 0)) {
+            g_warning("Real x step is 0.0, fixing to 1.0");
+            dx = 1.0;
+        }
+        /* Use negated positive conditions to catch NaNs */
+        if (!((dy = fabs(dy)) > 0)) {
+            g_warning("Real y step is 0.0, fixing to 1.0");
+            dy = 1.0;
+        }
+    }
+
+    if ((value = g_hash_table_lookup(fields, "sampleunits"))) {
+        siunitz = gwy_si_unit_new_parse(value, &power10);
+        q *= pow10(power10);
+        z0 *= pow10(power10);
+    }
+
+    if ((value = g_hash_table_lookup(fields, "units"))) {
+        gchar *start, *end;
+        /* Parse only the first axis unit.  We would not know what to do with
+         * different X and Y units anyway. */
+        if ((start = strchr(value, '"')) && (end = strchr(start+1, '"'))) {
+            value = g_strndup(start+1, end-start-1);
+            siunitxy = gwy_si_unit_new_parse(value, &power10);
+            g_free(value);
+            dx *= pow10(power10);
+            dy *= pow10(power10);
+        }
+    }
+
+    dfield = gwy_data_field_new(xres, yres, xres*dx, yres*dy, FALSE);
+    gwy_data_field_set_xoffset(dfield, xoff);
+    gwy_data_field_set_yoffset(dfield, yoff);
+    gwy_convert_raw_data(data, xres*yres, rawdatatype, byteorder,
+                         gwy_data_field_get_data(dfield), q, z0, FALSE);
+
+    if (siunitz) {
+        gwy_data_field_set_si_unit_z(dfield, siunitz);
+        gwy_object_unref(siunitz);
+    }
+
+    return dfield;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
