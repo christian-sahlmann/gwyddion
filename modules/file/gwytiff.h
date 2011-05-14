@@ -667,7 +667,7 @@ gwy_tiff_get_string(const GwyTIFF *tiff,
 G_GNUC_UNUSED static GwyTIFFImageReader*
 gwy_tiff_get_image_reader(const GwyTIFF *tiff,
                           guint dirno,
-                          gboolean max_samples,
+                          guint max_samples,
                           GError **error)
 {
     GwyTIFFImageReader reader;
