@@ -1657,7 +1657,7 @@ pixmap_load_dialog(PixmapLoadArgs *args,
     gchar *s, *title;
     gdouble zoom;
     gchar buf[16];
-    gint row, n;
+    gint row;
 
     controls.args = args;
     controls.xres = gwy_data_field_get_xres(dfield);
