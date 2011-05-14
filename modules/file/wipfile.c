@@ -27,6 +27,9 @@
  *
  * There should be some generic infrastructure for N*M arrays of
  * spectroscopy data, same for this, NTMDT and some other formats.
+ *
+ * Thanks to GSXM project crew for description of tag format and
+ * datatypes.
  */
 
 /**
@@ -45,7 +48,7 @@
  * [FILE-MAGIC-USERGUIDE]
  * WIPfile
  * .wip
- * SPS
+ * Read SPS
  **/
 
 /* FIXME: remove this in final version */
@@ -153,6 +156,12 @@ typedef struct {
 } WIPSpectralTransform;
 
 typedef struct {
+    guint id;
+    gchar *unitname;
+    gdouble scale[9];
+} WIPSpaceTransform;
+
+typedef struct {
     guint dimension;
     WIPDataType datatype;
     guint xrange, yrange;
@@ -200,8 +209,8 @@ typedef struct  {
 } WIPIdNode;
 
 static gboolean      module_register           (void);
-static gint          wip_detect(const GwyFileDetectInfo *fileinfo,
-                                gboolean only_name);
+static gint          wip_detect (const GwyFileDetectInfo *fileinfo,
+                                 gboolean only_name);
 static WIPTag*       wip_read_tag              (guchar **pos,
                                                 gsize *start,
                                                 gsize *end);
@@ -212,23 +221,26 @@ static GwyContainer* wip_load                  (const gchar *filename,
 static void          wip_read_all_tags         (const guchar *buffer,
                                                 gsize start, gsize end,
                                                 GNode *tagtree, gint n);
-gboolean             wip_free_leave            (GNode *node,
+static gboolean      wip_free_leave            (GNode *node,
                                            G_GNUC_UNUSED gpointer data);
-gboolean             wip_read_graph_tags       (GNode *node,
+static gboolean      wip_read_graph_tags       (GNode *node,
                                                 gpointer header);
-gboolean             wip_read_sp_transform_tags(GNode *node,
+static gboolean      wip_read_sp_transform_tags(GNode *node,
                                                 gpointer transform);
-gboolean             wip_read_axis_tags        (GNode *node,
+static gboolean      wip_read_space_tr_tag     (GNode *node,
+                                                gpointer transform);
+static gboolean      wip_read_axis_tags        (GNode *node,
                                                 gpointer axis);
-gboolean             wip_find_by_id            (GNode *node,
+static gboolean      wip_find_by_id            (GNode *node,
                                                 gpointer idnode);
-gboolean             wip_read_caption          (GNode *node,
+static gboolean      wip_read_caption          (GNode *node,
                                                 gpointer caption);
-gboolean             wip_read_data             (GNode *node,
+static gboolean      wip_read_data             (GNode *node,
                                                 gpointer filedata);
-gdouble              wip_pixel_to_lambda       (gint i,
+static gdouble       wip_pixel_to_lambda       (gint i,
                                        WIPSpectralTransform *transform);
-GwyGraphModel*       wip_read_graph            (GNode *node);
+static GwyGraphModel*
+                     wip_read_graph            (GNode *node);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -337,7 +349,8 @@ static void wip_read_all_tags (const guchar *buffer, gsize start,
     }
 }
 
-gboolean wip_free_leave (GNode *node, G_GNUC_UNUSED gpointer data)
+static gboolean wip_free_leave (GNode *node,
+                                G_GNUC_UNUSED gpointer data)
 {
     wip_free_tag((WIPTag *)node->data);
     node->data = NULL;
@@ -345,7 +358,7 @@ gboolean wip_free_leave (GNode *node, G_GNUC_UNUSED gpointer data)
     return FALSE;
 }
 
-gboolean wip_read_graph_tags(GNode *node, gpointer header)
+static gboolean wip_read_graph_tags(GNode *node, gpointer header)
 {
     WIPTag *tag;
     WIPGraph *graphheader;
@@ -384,7 +397,7 @@ gboolean wip_read_graph_tags(GNode *node, gpointer header)
     return FALSE;
 }
 
-gboolean wip_read_image_tags(GNode *node, gpointer header)
+static gboolean wip_read_image_tags(GNode *node, gpointer header)
 {
     WIPTag *tag;
     WIPImage *imageheader;
@@ -417,7 +430,8 @@ gboolean wip_read_image_tags(GNode *node, gpointer header)
     return FALSE;
 }
 
-gboolean wip_read_sp_transform_tags(GNode *node, gpointer transform)
+static gboolean wip_read_sp_transform_tags(GNode *node,
+                                           gpointer transform)
 {
     WIPTag *tag;
     WIPSpectralTransform *sp_transform;
@@ -462,7 +476,34 @@ gboolean wip_read_sp_transform_tags(GNode *node, gpointer transform)
     return FALSE;
 }
 
-gboolean wip_read_axis_tags(GNode *node, gpointer axis)
+static gboolean wip_read_space_tr_tag(GNode *node, gpointer transform)
+{
+    WIPTag *tag;
+    WIPSpaceTransform *sp_transform;
+    const guchar *p;
+    gint i, str_len;
+    gchar *str;
+
+    tag = node->data;
+    sp_transform = (WIPSpaceTransform *)transform;
+    p = tag->data;
+    if (!strncmp(tag->name, "Scale", 5)) {
+        for (i = 0; i < 9; i++)
+            sp_transform->scale[i] = gwy_get_gdouble_le(&p);
+    }
+    else if (!strncmp(tag->name, "StandardUnit", 11)) {
+        str_len = gwy_get_gint32_le(&p);
+        str = g_strndup(p, str_len);
+        sp_transform->unitname = g_convert(str, str_len, "UTF-8",
+                                           "ISO-8859-1",
+                                           NULL, NULL, NULL);
+        g_free(str);
+    }
+
+    return FALSE;
+}
+
+static gboolean wip_read_axis_tags(GNode *node, gpointer axis)
 {
     WIPTag *tag;
     WIPAxis *tmp_axis;
@@ -485,7 +526,7 @@ gboolean wip_read_axis_tags(GNode *node, gpointer axis)
     return FALSE;
 }
 
-gboolean wip_find_by_id(GNode *node, gpointer idnode)
+static gboolean wip_find_by_id(GNode *node, gpointer idnode)
 {
     WIPTag *tag;
     WIPIdNode *idnode_tmp;
@@ -508,7 +549,7 @@ gboolean wip_find_by_id(GNode *node, gpointer idnode)
     return FALSE;
 }
 
-gboolean wip_read_caption(GNode *node, gpointer caption)
+static gboolean wip_read_caption(GNode *node, gpointer caption)
 {
     gchar *str;
     gint str_len;
@@ -528,7 +569,8 @@ gboolean wip_read_caption(GNode *node, gpointer caption)
     return FALSE;
 }
 
-gdouble wip_pixel_to_lambda(gint i, WIPSpectralTransform *transform)
+static gdouble wip_pixel_to_lambda(gint i,
+                                   WIPSpectralTransform *transform)
 {
     gdouble lambda, x, a2, alpha, alpha0;
 
@@ -547,7 +589,7 @@ gdouble wip_pixel_to_lambda(gint i, WIPSpectralTransform *transform)
     return lambda;
 }
 
-GwyGraphModel * wip_read_graph(GNode *node)
+static GwyGraphModel * wip_read_graph(GNode *node)
 {
     WIPGraph *header;
     WIPSpectralTransform *xtransform;
@@ -676,17 +718,22 @@ GwyGraphModel * wip_read_graph(GNode *node)
     return gmodel;
 }
 
-GwyDataField * wip_read_image(GNode *node)
+static GwyDataField * wip_read_image(GNode *node)
 {
     WIPImage *header;
     WIPAxis *zaxis;
+    WIPSpaceTransform *xyaxis;
     WIPIdNode *idnode;
     GwyDataField *dfield;
     GwySIUnit *siunitxy, *siunitz;
     gdouble *data;
+    gdouble xscale, yscale, zscale;
     gint i;
     gint power10z = 0;
+    gint power10xy = 0;
     const guchar *p;
+    gboolean mirrory = FALSE;
+    gboolean mirrorx = FALSE;
 
     header = g_new0(WIPImage, 1);
 
@@ -713,78 +760,122 @@ GwyDataField * wip_read_image(GNode *node)
                      G_LEVEL_ORDER, G_TRAVERSE_ALL, -1,
                      wip_read_axis_tags,
                      (gpointer)zaxis);
-    g_free(idnode);
     if (zaxis->unitname)
         siunitz = gwy_si_unit_new_parse(zaxis->unitname, &power10z);
     else
         siunitz = gwy_si_unit_new("");
     g_free(zaxis);
 
-	// Reading actual data
-    dfield = gwy_data_field_new(header->sizex, header->sizey, 1.0,
-                                1.0 * pow(10.0, power10z), TRUE);
+    //Try to read xy units and scale;
+    idnode->id = header->postransformid;
+    g_node_traverse (g_node_get_root(node),
+                     G_LEVEL_ORDER, G_TRAVERSE_ALL, -1,
+                     wip_find_by_id, (gpointer)idnode);
+    xyaxis = g_new0(WIPSpaceTransform, 1);
+    g_node_traverse (idnode->node->parent->parent,
+                     G_LEVEL_ORDER, G_TRAVERSE_ALL, -1,
+                     wip_read_space_tr_tag, (gpointer)xyaxis);
+    if (xyaxis->unitname)
+        siunitxy = gwy_si_unit_new_parse(xyaxis->unitname, &power10xy);
+    else
+        siunitxy = gwy_si_unit_new("");
+    xscale = xyaxis->scale[0];
+    yscale = xyaxis->scale[4];
+    if (yscale == 0.0) {
+        g_warning("Wrong y-scale");
+        xscale = 1.0;
+    }
+    if (xscale == 0.0) {
+        g_warning("Wrong x-scale");
+        xscale = 1.0;
+    }
+    if (yscale < 0.0) {
+        mirrory = TRUE;
+        yscale = fabs(yscale);
+    }
+    if (xscale < 0.0) {
+        mirrorx = TRUE;
+        xscale = fabs(xscale);
+    }
+    g_free(xyaxis);
+    g_free(idnode);
+
+    // Reading actual data
+    dfield = gwy_data_field_new(header->sizex, header->sizey,
+                          header->sizex * pow(10.0, power10xy) * xscale,
+                          header->sizey * pow(10.0, power10xy) * yscale,
+                          FALSE);
     data = gwy_data_field_get_data(dfield);
     gwy_data_field_set_si_unit_z(dfield, siunitz);
+    gwy_data_field_set_si_unit_xy(dfield, siunitxy);
     g_object_unref(siunitz);
+    g_object_unref(siunitxy);
 
+    zscale = pow(10.0, power10z);
+    if (zscale == 0.0)
+        zscale = 1.0;
     p = header->data;
     switch(header->datatype) {
-		case WIP_DATA_LIST:
-		case WIP_DATA_EXTENDED:
-			/* cannot read this */
-			break;
-		case WIP_DATA_FLOAT:
-			for (i = 0; i < header->sizex * header->sizey; i++)
-				data[i] = gwy_get_gfloat_le(&p);
-			break;
-		case WIP_DATA_DOUBLE:				
-			for (i = 0; i < header->sizex * header->sizey; i++)
-				data[i] = gwy_get_gdouble_le(&p);
-			break;
-		case WIP_DATA_INT8:
-		case WIP_DATA_UINT8:
-		case WIP_DATA_BOOL:	
-			for (i = 0; i < header->sizex * header->sizey; i++)
-				data[i] = *(p++);
-			break;
-		case WIP_DATA_INT64:
-			for (i = 0; i < header->sizex * header->sizey; i++) {
-				data[i] = GINT64_FROM_LE(*(const gint64 *)p);
-				p += 8;
-			}
-			break;
-		case WIP_DATA_INT32:
-			for (i = 0; i < header->sizex * header->sizey; i++) {
-				data[i] = GINT32_FROM_LE(*(const gint32 *)p);
-				p += 4;
-			}
-			break;	
-		case WIP_DATA_INT16:
-			for (i = 0; i < header->sizex * header->sizey; i++) {
-				data[i] = GINT16_FROM_LE(*(const gint16 *)p);
-				p += 2;
-			}
-			break;	
-		case WIP_DATA_UINT32:
-			for (i = 0; i < header->sizex * header->sizey; i++) {
-				data[i] = GUINT32_FROM_LE(*(const guint32 *)p);
-				p += 4;
-			}
-			break;	
-		case WIP_DATA_UINT16:
-			for (i = 0; i < header->sizex * header->sizey; i++) {
-				data[i] = GUINT16_FROM_LE(*(const guint16 *)p);
-				p += 2;
-			}
-			break;								
-		default:
-			g_warning("Wrong datatype");
-	}
+        case WIP_DATA_LIST:
+        case WIP_DATA_EXTENDED:
+            /* cannot read this */
+            break;
+        case WIP_DATA_FLOAT:
+            for (i = 0; i < header->sizex * header->sizey; i++)
+                data[i] = zscale * gwy_get_gfloat_le(&p);
+            break;
+        case WIP_DATA_DOUBLE:
+            for (i = 0; i < header->sizex * header->sizey; i++)
+                data[i] = zscale * gwy_get_gdouble_le(&p);
+            break;
+        case WIP_DATA_INT8:
+        case WIP_DATA_UINT8:
+        case WIP_DATA_BOOL:
+            for (i = 0; i < header->sizex * header->sizey; i++)
+                data[i] = *(p++) * zscale;
+            break;
+        case WIP_DATA_INT64:
+            for (i = 0; i < header->sizex * header->sizey; i++) {
+                data[i] = GINT64_FROM_LE(*(const gint64 *)p) * zscale;
+                p += 8;
+            }
+            break;
+        case WIP_DATA_INT32:
+            for (i = 0; i < header->sizex * header->sizey; i++) {
+                data[i] = GINT32_FROM_LE(*(const gint32 *)p) * zscale;
+                p += 4;
+            }
+            break;
+        case WIP_DATA_INT16:
+            for (i = 0; i < header->sizex * header->sizey; i++) {
+                data[i] = GINT16_FROM_LE(*(const gint16 *)p) * zscale;
+                p += 2;
+            }
+            break;
+        case WIP_DATA_UINT32:
+            for (i = 0; i < header->sizex * header->sizey; i++) {
+                data[i] = GUINT32_FROM_LE(*(const guint32 *)p) * zscale;
+                p += 4;
+            }
+            break;
+        case WIP_DATA_UINT16:
+            for (i = 0; i < header->sizex * header->sizey; i++) {
+                data[i] = GUINT16_FROM_LE(*(const guint16 *)p) * zscale;
+                p += 2;
+            }
+            break;
+        default:
+            g_warning("Wrong datatype");
+    }
+
+    if (mirrory || mirrorx) {
+        gwy_data_field_invert(dfield, mirrorx, mirrorx, FALSE);
+    }
 
     return dfield;
 }
 
-gboolean wip_read_data(GNode *node, gpointer filedata)
+static gboolean wip_read_data(GNode *node, gpointer filedata)
 {
     WIPTag *tag;
     WIPFile *filecontent;
