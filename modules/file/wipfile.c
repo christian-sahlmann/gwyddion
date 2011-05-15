@@ -120,6 +120,10 @@ typedef enum {
     WIP_UNIT_MEV_REL     = 7
 } WIPUnitIndex;
 
+enum {
+    BMP_HEADER_SIZE = 54
+};
+
 typedef struct {
     guint32       name_length;
     const guchar *name; /* name_length bytes */
@@ -198,15 +202,31 @@ typedef struct {
 } WIPImage;
 
 typedef struct {
+    guint spacetransformid;
+    gsize streamsize;
+    gsize datasize;
+    const guchar *data;
+} WIPBitmap;
+
+typedef struct {
     guint numgraph;
     guint numimages;
     GwyContainer *data;
 } WIPFile;
 
-typedef struct  {
+typedef struct {
     guint id;
     GNode *node;
 } WIPIdNode;
+
+typedef struct {
+    gsize size;
+    gsize offset;
+    guint width;
+    guint height;
+    guint bpp;
+    gsize datasize;
+} WIPBMPHeader;
 
 static gboolean      module_register           (void);
 static gint          wip_detect (const GwyFileDetectInfo *fileinfo,
@@ -231,16 +251,28 @@ static gboolean      wip_read_space_tr_tag     (GNode *node,
                                                 gpointer transform);
 static gboolean      wip_read_axis_tags        (GNode *node,
                                                 gpointer axis);
+static gboolean      wip_read_bitmap_tags      (GNode *node,
+                                                gpointer data);
 static gboolean      wip_find_by_id            (GNode *node,
                                                 gpointer idnode);
 static gboolean      wip_read_caption          (GNode *node,
                                                 gpointer caption);
-static gboolean      wip_read_data             (GNode *node,
-                                                gpointer filedata);
+static GwyDataField *
+                     wip_read_bmp              (const guchar *bmpdata,
+                                                gsize datasize,
+                                                gdouble xscale,
+                                                gdouble yscale,
+                                                gint power10xy);
 static gdouble       wip_pixel_to_lambda       (gint i,
                                        WIPSpectralTransform *transform);
 static GwyGraphModel*
                      wip_read_graph            (GNode *node);
+static GwyDataField *
+                     wip_read_image            (GNode *node);
+static GwyDataField *
+                     wip_read_bitmap           (GNode *node);
+static gboolean      wip_read_data             (GNode *node,
+                                                gpointer filedata);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -526,6 +558,27 @@ static gboolean wip_read_axis_tags(GNode *node, gpointer axis)
     return FALSE;
 }
 
+static gboolean wip_read_bitmap_tags(GNode *node, gpointer data)
+{
+    WIPTag *tag;
+    WIPBitmap *bitmap;
+    const guchar *p;
+
+    tag = node->data;
+    bitmap = (WIPBitmap *)data;
+    p = tag->data;
+    if (!strncmp(tag->name, "SpaceTransformationID", 21))
+        bitmap->spacetransformid = gwy_get_gint32_le(&p);
+    else if (!strncmp(tag->name, "StreamSize", 10))
+        bitmap->streamsize = gwy_get_gint32_le(&p);
+    else if (!strncmp(tag->name, "StreamData", 10)) {
+        bitmap->data = p;
+        bitmap->datasize = (gsize)(tag->data_end-tag->data_start);
+    }
+
+    return FALSE;
+}
+
 static gboolean wip_find_by_id(GNode *node, gpointer idnode)
 {
     WIPTag *tag;
@@ -567,6 +620,94 @@ static gboolean wip_read_caption(GNode *node, gpointer caption)
     }
 
     return FALSE;
+}
+
+static GwyDataField * wip_read_bmp(const guchar *bmpdata,
+                                   gsize datasize,
+                                   gdouble xscale, gdouble yscale,
+                                   gint power10xy)
+{
+    const guchar *p;
+    gint tmp;
+    WIPBMPHeader *header;
+    GwyDataField *dfield;
+    gdouble *data;
+    gint i, j;
+    guint r, g, b;
+    gdouble y;
+
+    header = g_new0(WIPBMPHeader, 1);
+    p = bmpdata;
+    if (p[0] != 'B' || p[1] != 'M') {
+        g_free(header);
+        return NULL;
+    }
+    p += 2;
+
+    if (((header->size = gwy_get_guint32_le(&p)) < BMP_HEADER_SIZE)
+     || (header->size != datasize)) { /* Size */
+
+        g_free(header);
+        return NULL;
+    }
+    if ((tmp = gwy_get_guint32_le(&p)) != 0) { /* Reserved */
+        g_free(header);
+        return NULL;
+    }
+    if ((header->offset = gwy_get_guint32_le(&p)) != 54) { /* Offset */
+        g_free(header);
+        return NULL;
+    }
+    if ((tmp = gwy_get_guint32_le(&p)) != 40) { /* Header size */
+        g_free(header);
+        return NULL;
+    }
+    if ((header->width = gwy_get_guint32_le(&p)) == 0) {  /* Width */
+        g_free(header);
+        return NULL;
+    }
+    if ((header->height = gwy_get_guint32_le(&p)) == 0) { /* Height */
+        g_free(header);
+        return NULL;
+    }
+    if ((tmp = gwy_get_guint16_le(&p)) != 1) { /* Bit planes */
+        g_free(header);
+        return NULL;
+    }
+    if ((header->bpp = gwy_get_guint16_le(&p)) != 24) { /* BPP */
+        g_free(header);
+        return NULL;
+    }
+    if ((tmp = gwy_get_guint32_le(&p)) != 0) { /* Compression */
+        g_free(header);
+        return NULL;
+    }
+    if (((header->datasize = gwy_get_guint32_le(&p))
+        + BMP_HEADER_SIZE != datasize)
+      || (header->datasize != 3 * header->width * header->height)) {
+       /* Compresed size */
+        g_free(header);
+        return NULL;
+    }
+
+    p = bmpdata + header->offset;
+    dfield = gwy_data_field_new(header->width, header->height,
+                         header->width * xscale * pow(10.0, power10xy),
+                         header->height * yscale * pow(10.0, power10xy),
+                         FALSE);
+    data = gwy_data_field_get_data(dfield);
+
+    for (i = 0; i < header->height; i++)
+        for (j = 0; j < header-> width; j++) {
+            r = *(p++);
+            g = *(p++);
+            b = *(p++);
+            y = (0.2125 * r + 0.7154 * g + 0.0721 * b) / 255.0;
+            *(data++) = y;
+        }
+
+    g_free(header);
+    return dfield;
 }
 
 static gdouble wip_pixel_to_lambda(gint i,
@@ -875,6 +1016,70 @@ static GwyDataField * wip_read_image(GNode *node)
     return dfield;
 }
 
+static GwyDataField * wip_read_bitmap(GNode *node)
+{
+    WIPBitmap *header;
+    WIPSpaceTransform *xyaxis;
+    WIPIdNode *idnode;
+    GwyDataField *dfield;
+    GwySIUnit *siunitxy;
+    gdouble xscale, yscale;
+    gint power10xy;
+    gboolean mirrorx, mirrory;
+
+    header = g_new0(WIPBitmap, 1);
+
+    g_node_traverse (node, G_LEVEL_ORDER, G_TRAVERSE_ALL, -1,
+                     wip_read_bitmap_tags, (gpointer)header);
+
+    //Try to read xy units and scale;
+    idnode = g_new0(WIPIdNode,1);
+    idnode->id = header->spacetransformid;
+    g_node_traverse (g_node_get_root(node),
+                     G_LEVEL_ORDER, G_TRAVERSE_ALL, -1,
+                     wip_find_by_id, (gpointer)idnode);
+    xyaxis = g_new0(WIPSpaceTransform, 1);
+    g_node_traverse (idnode->node->parent->parent,
+                     G_LEVEL_ORDER, G_TRAVERSE_ALL, -1,
+                     wip_read_space_tr_tag, (gpointer)xyaxis);
+    if (xyaxis->unitname)
+        siunitxy = gwy_si_unit_new_parse(xyaxis->unitname, &power10xy);
+    else
+        siunitxy = gwy_si_unit_new("");
+    xscale = xyaxis->scale[0];
+    yscale = xyaxis->scale[4];
+    if (yscale == 0.0) {
+        g_warning("Wrong y-scale");
+        xscale = 1.0;
+    }
+    if (xscale == 0.0) {
+        g_warning("Wrong x-scale");
+        xscale = 1.0;
+    }
+    if (yscale < 0.0) {
+        mirrory = TRUE;
+        yscale = fabs(yscale);
+    }
+    if (xscale < 0.0) {
+        mirrorx = TRUE;
+        xscale = fabs(xscale);
+    }
+    g_free(xyaxis);
+    g_free(idnode);
+
+    dfield = wip_read_bmp(header->data, header->datasize,
+                          xscale, yscale, power10xy);
+    gwy_data_field_set_si_unit_xy(dfield, siunitxy);
+    g_object_unref(siunitxy);
+    g_free(header);
+
+    if (mirrory || mirrorx) {
+        gwy_data_field_invert(dfield, mirrorx, mirrorx, FALSE);
+    }
+
+    return dfield;
+}
+
 static gboolean wip_read_data(GNode *node, gpointer filedata)
 {
     WIPTag *tag;
@@ -905,6 +1110,30 @@ static gboolean wip_read_data(GNode *node, gpointer filedata)
     }
     else if (!strncmp(tag->name, "TDImage", 7)) {
         image = wip_read_image(node);
+        if(!image) {
+            // some error
+        }
+        else {
+            (filecontent->numimages)++;
+            caption = g_string_new(NULL);
+            g_node_traverse(node->parent, G_LEVEL_ORDER, G_TRAVERSE_ALL,
+                            -1, wip_read_caption, (gpointer)caption);
+            if (!caption->str)
+                g_string_printf(caption, "Unnamed data");
+            g_string_printf(key, "/%d/data", filecontent->numimages);
+            gwy_container_set_object_by_name(filecontent->data,
+                                             key->str, image);
+            g_string_append(key, "/title");
+            gwy_container_set_string_by_name(filecontent->data,
+                                             key->str,
+                                             g_strdup(caption->str));
+
+            g_string_free(caption, TRUE);
+            g_object_unref(image);
+        }
+    }
+    else if (!strncmp(tag->name, "TDBitmap", 8)) {
+        image = wip_read_bitmap(node->parent);
         if(!image) {
             // some error
         }
