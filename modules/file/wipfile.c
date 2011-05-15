@@ -1069,13 +1069,18 @@ static GwyDataField * wip_read_bitmap(GNode *node)
 
     dfield = wip_read_bmp(header->data, header->datasize,
                           xscale, yscale, power10xy);
-    gwy_data_field_set_si_unit_xy(dfield, siunitxy);
+    if (!dfield){
+        // Error here
+    }
+    else {
+        gwy_data_field_set_si_unit_xy(dfield, siunitxy);
+        if (mirrory || mirrorx) {
+            gwy_data_field_invert(dfield, mirrorx, mirrorx, FALSE);
+        }
+    }
+
     g_object_unref(siunitxy);
     g_free(header);
-
-    if (mirrory || mirrorx) {
-        gwy_data_field_invert(dfield, mirrorx, mirrorx, FALSE);
-    }
 
     return dfield;
 }
