@@ -41,6 +41,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <glib/gstdio.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwyutils.h>
@@ -83,26 +84,30 @@ typedef enum {
     NRRD_ENCODING_BZIP2,
 } NRRDEncoding;
 
-static gboolean      module_register    (void);
-static gint          nrrdfile_detect    (const GwyFileDetectInfo *fileinfo,
-                                         gboolean only_name);
-static GwyContainer* nrrdfile_load      (const gchar *filename,
-                                         GwyRunType mode,
-                                         GError **error);
-static void normalise_field_name(gchar *name);
-static NRRDDataType  parse_data_type    (const gchar *value);
-static NRRDEncoding  parse_encoding     (const gchar *value);
-static gboolean      find_gwy_data_type (NRRDDataType datatype,
-                                         const gchar *endian,
-                                         GwyRawDataType *rawdatatype,
-                                         GwyByteOrder *byteorder,
-                                         GError **error);
-static GwyDataField* read_raw_data_field(guint xres,
-                                         guint yres,
-                                         GwyRawDataType rawdatatype,
-                                         GwyByteOrder byteorder,
-                                         GHashTable *fields,
-                                         gconstpointer data);
+static gboolean      module_register     (void);
+static gint          nrrdfile_detect     (const GwyFileDetectInfo *fileinfo,
+                                          gboolean only_name);
+static GwyContainer* nrrdfile_load       (const gchar *filename,
+                                          GwyRunType mode,
+                                          GError **error);
+static gboolean      nrrdfile_export     (GwyContainer *data,
+                                          const gchar *filename,
+                                          GwyRunType mode,
+                                          GError **error);
+static void          normalise_field_name(gchar *name);
+static NRRDDataType  parse_data_type     (const gchar *value);
+static NRRDEncoding  parse_encoding      (const gchar *value);
+static gboolean      find_gwy_data_type  (NRRDDataType datatype,
+                                          const gchar *endian,
+                                          GwyRawDataType *rawdatatype,
+                                          GwyByteOrder *byteorder,
+                                          GError **error);
+static GwyDataField* read_raw_data_field (guint xres,
+                                          guint yres,
+                                          GwyRawDataType rawdatatype,
+                                          GwyByteOrder byteorder,
+                                          GHashTable *fields,
+                                          gconstpointer data);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -124,7 +129,7 @@ module_register(void)
                            (GwyFileDetectFunc)&nrrdfile_detect,
                            (GwyFileLoadFunc)&nrrdfile_load,
                            NULL,
-                           NULL);
+                           (GwyFileSaveFunc)&nrrdfile_export);
 
     return TRUE;
 }
@@ -294,6 +299,7 @@ nrrdfile_load(const gchar *filename,
             goto fail;
         }
     }
+    /* TODO: Use ‘content’ for title, if present.  */
 
     /* TODO: Support skips */
     if (lineskip != 0 || byteskip != 0) {
@@ -569,12 +575,103 @@ read_raw_data_field(guint xres, guint yres,
     gwy_convert_raw_data(data, xres*yres, rawdatatype, byteorder,
                          gwy_data_field_get_data(dfield), q, z0, FALSE);
 
+    if (siunitxy) {
+        gwy_data_field_set_si_unit_xy(dfield, siunitxy);
+        g_object_unref(siunitxy);
+    }
     if (siunitz) {
         gwy_data_field_set_si_unit_z(dfield, siunitz);
-        gwy_object_unref(siunitz);
+        g_object_unref(siunitz);
     }
 
     return dfield;
+}
+
+static gboolean
+nrrdfile_export(G_GNUC_UNUSED GwyContainer *data,
+                const gchar *filename,
+                G_GNUC_UNUSED GwyRunType mode,
+                GError **error)
+{
+    /* We specify lateral units so at least version 4 is necessary. */
+    static const gchar header_format[] =
+        "NRRD0004\n"
+        "type: float\n"
+        "encoding: raw\n"
+        "endian: %s\n"
+        "dimension: 2\n"
+        "sizes: %u %u\n"
+        "axismins: %s %s\n"
+        "axismaxs: %s %s\n"
+        "units: \"%s\" \"%s\"\n"
+        "sampleunits: \"%s\"\n"
+        "\n";
+
+    GwyDataField *dfield;
+    const gdouble *d;
+    gdouble xreal, yreal, xoff, yoff;
+    guint xres, yres, i;
+    gchar *unitxy, *unitz;
+    gfloat *dfl;
+    gchar buf[4][32];
+    gboolean ok = TRUE;
+    FILE *fh;
+
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield, 0);
+    if (!dfield) {
+        err_NO_CHANNEL_EXPORT(error);
+        return FALSE;
+    }
+
+    /* The specification says both kind of EOLs are fine so write Unix EOLs
+     * everywhere. */
+    if (!(fh = g_fopen(filename, "wb"))) {
+        err_OPEN_WRITE(error);
+        return FALSE;
+    }
+
+    d = gwy_data_field_get_data_const(dfield);
+    xres = gwy_data_field_get_xres(dfield);
+    yres = gwy_data_field_get_yres(dfield);
+    xreal = gwy_data_field_get_xreal(dfield);
+    yreal = gwy_data_field_get_yreal(dfield);
+    xoff = gwy_data_field_get_xoffset(dfield);
+    yoff = gwy_data_field_get_yoffset(dfield);
+    unitxy = gwy_si_unit_get_string(gwy_data_field_get_si_unit_xy(dfield),
+                                    GWY_SI_UNIT_FORMAT_PLAIN);
+    unitz = gwy_si_unit_get_string(gwy_data_field_get_si_unit_z(dfield),
+                                   GWY_SI_UNIT_FORMAT_PLAIN);
+
+    g_ascii_formatd(buf[0], sizeof(buf[0]), "%.8g", xoff);
+    g_ascii_formatd(buf[1], sizeof(buf[1]), "%.8g", yoff);
+    g_ascii_formatd(buf[2], sizeof(buf[2]), "%.8g", xreal - xoff);
+    g_ascii_formatd(buf[3], sizeof(buf[3]), "%.8g", yreal - yoff);
+
+    /* Write in native endian. */
+    fprintf(fh, header_format,
+            G_BYTE_ORDER == G_LITTLE_ENDIAN ? "little" : "big",
+            xres, yres,
+            buf[0], buf[1], buf[2], buf[3],
+            unitxy, unitxy, unitz);
+    g_free(unitz);
+    g_free(unitxy);
+
+    dfl = g_new(gfloat, xres*yres);
+    for (i = 0; i < xres*yres; i++) {
+        union { guchar pp[4]; float f; } z;
+        z.f = d[i];
+        dfl[i] = d[i];
+    }
+
+    if (fwrite(dfl, sizeof(gfloat), xres*yres, fh) != xres*yres) {
+        /* uses errno, must do this before fclose(). */
+        err_WRITE(error);
+        ok = FALSE;
+    }
+    g_free(dfl);
+    fclose(fh);
+
+    return ok;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
