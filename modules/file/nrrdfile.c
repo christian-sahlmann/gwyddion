@@ -103,6 +103,15 @@ static gboolean      find_gwy_data_type  (NRRDDataType datatype,
                                           GwyRawDataType *rawdatatype,
                                           GwyByteOrder *byteorder,
                                           GError **error);
+static guchar* load_detached_file(const gchar *datafile,
+                   gsize *size,
+                   GError **error);
+static gconstpointer get_raw_data_pointer(gconstpointer base,
+                                          gsize size,
+                                          gsize nitems,
+                                          GwyRawDataType datatype,
+                                          gssize byteskip,
+                                          GError **error);
 static GwyDataField* read_raw_data_field (guint xres,
                                           guint yres,
                                           GwyRawDataType rawdatatype,
@@ -161,12 +170,14 @@ nrrdfile_load(const gchar *filename,
 {
     GwyContainer *meta, *container = NULL;
     GHashTable *hash, *fields = NULL, *keyvalue = NULL;
-    guchar *buffer = NULL, *header_end;
-    gsize expected_size, size = 0;
+    guchar *buffer = NULL, *data_buffer = NULL, *header_end;
+    gconstpointer data_start;
+    gsize data_size, size = 0;
     GError *err = NULL;
     GwyDataField *dfield = NULL;
     guint version, dimension, xres, yres, header_size;
-    gchar *value, *vkeyvalue, *vfield, *p, *line, *datafile, *header = NULL;
+    gchar *value, *vkeyvalue, *vfield, *p, *line,
+          *datafile = NULL, *header = NULL;
     gboolean unix_eol, detached_header = FALSE;
     guchar first_byte = 0;
     gint byteskip = 0, lineskip = 0;
@@ -257,16 +268,6 @@ nrrdfile_load(const gchar *filename,
                     _("Deatched header does not refer to any data file."));
         goto fail;
     }
-    /* TODO: Split files.
-     * XXX: Numbered split files (with a printf-like format) are a risk. */
-    if (datafile) {
-        if (strchr(datafile, ' ') || gwy_strequal(datafile, "LIST")) {
-            g_set_error(error, GWY_MODULE_FILE_ERROR,
-                        GWY_MODULE_FILE_ERROR_DATA,
-                        _("Split detached data files are not supported."));
-            goto fail;
-        }
-    }
 
     if (!require_keys(fields, error,
                       "dimension", "encoding", "sizes", "type", NULL))
@@ -310,23 +311,18 @@ nrrdfile_load(const gchar *filename,
 
     if ((value = g_hash_table_lookup(fields, "lineskip"))) {
         lineskip = atoi(value);
-        if (lineskip < -1) {
+        if (lineskip < 0) {
             err_INVALID(error, "lineskip");
             goto fail;
         }
     }
-    if ((value = g_hash_table_lookup(fields, "byteskip"))) {
+    if ((value = g_hash_table_lookup(fields, "byteskip")))
         byteskip = atoi(value);
-        if (lineskip < -1) {
-            err_INVALID(error, "lineskip");
-            goto fail;
-        }
-    }
 
-    /* TODO: Support skips */
-    if (lineskip != 0 || byteskip != 0) {
+    /* TODO: Support line skips */
+    if (lineskip != 0) {
         g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                    "Non-zero lineskip and byteskip are not supported.");
+                    "Non-zero lineskip is not supported.");
         goto fail;
     }
 
@@ -334,14 +330,24 @@ nrrdfile_load(const gchar *filename,
                             &rawdatatype, &byteorder, error))
         goto fail;
 
-    expected_size = (header_size + gwy_raw_data_size(rawdatatype)*xres*yres);
-    if (err_SIZE_MISMATCH(error, expected_size, size, FALSE))
+    if (datafile) {
+        if (!(data_buffer = load_detached_file(datafile, &data_size, error)))
+            goto fail;
+    }
+    else {
+        data_buffer = buffer + header_size;
+        data_size = size - header_size;
+    }
+
+    if (!(data_start = get_raw_data_pointer(data_buffer, data_size,
+                                            xres*yres, rawdatatype, byteskip,
+                                            error)))
         goto fail;
 
     container = gwy_container_new();
 
     dfield = read_raw_data_field(xres, yres, rawdatatype, byteorder, fields,
-                                 buffer + header_size);
+                                 data_start);
     quark = gwy_app_get_data_key_for_id(0);
     gwy_container_set_object(container, quark, dfield);
     g_object_unref(dfield);
@@ -353,6 +359,9 @@ nrrdfile_load(const gchar *filename,
     }
 
 fail:
+    /* data_buffer may differ from buffer only we have datafile */
+    if (datafile)
+        g_free(data_buffer);
     g_free(buffer);
     g_free(header);
     if (fields)
@@ -538,6 +547,62 @@ find_gwy_data_type(NRRDDataType datatype, const gchar *endian,
     }
 
     return TRUE;
+}
+
+/* TODO: Someday we may read split files here. */
+/* XXX: Numbered split files (with a printf-like format) are a risk. */
+static guchar*
+load_detached_file(const gchar *datafile,
+                   gsize *size,
+                   GError **error)
+{
+    GError *err = NULL;
+    gchar *buffer;
+
+    if (datafile) {
+        if (strchr(datafile, ' ') || gwy_strequal(datafile, "LIST")) {
+            g_set_error(error, GWY_MODULE_FILE_ERROR,
+                        GWY_MODULE_FILE_ERROR_DATA,
+                        _("Split detached data files are not supported."));
+            return NULL;
+        }
+    }
+
+    if (!g_file_get_contents(datafile, &buffer, size, &err)) {
+        err_GET_FILE_CONTENTS(error, &err);
+        return NULL;
+    }
+
+    return buffer;
+}
+
+static gconstpointer
+get_raw_data_pointer(gconstpointer base,
+                     gsize size,
+                     gsize nitems,
+                     GwyRawDataType rawdatatype,
+                     gssize byteskip,
+                     GError **error)
+{
+    gsize expected_size;
+
+    if (byteskip < -1) {
+        err_INVALID(error, "byteskip");
+        return NULL;
+    }
+
+    if (byteskip == -1)
+        expected_size = gwy_raw_data_size(rawdatatype)*nitems;
+    else
+        expected_size = gwy_raw_data_size(rawdatatype)*nitems + byteskip;
+
+    if (err_SIZE_MISMATCH(error, expected_size, size, FALSE))
+        return NULL;
+
+    if (byteskip == -1)
+        return (gconstpointer)((const gchar*)base + size - expected_size);
+    else
+        return (gconstpointer)((const gchar*)base + byteskip);
 }
 
 static GwyDataField*
