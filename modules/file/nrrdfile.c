@@ -95,6 +95,7 @@ static gboolean      nrrdfile_export     (GwyContainer *data,
                                           GwyRunType mode,
                                           GError **error);
 static void          normalise_field_name(gchar *name);
+static void          unescape_field_value(gchar *value);
 static NRRDDataType  parse_data_type     (const gchar *value);
 static NRRDEncoding  parse_encoding      (const gchar *value);
 static gboolean      find_gwy_data_type  (NRRDDataType datatype,
@@ -166,14 +167,16 @@ nrrdfile_load(const gchar *filename,
     GwyDataField *dfield = NULL;
     guint version, dimension, xres, yres, header_size;
     gchar *value, *vkeyvalue, *vfield, *p, *line, *datafile, *header = NULL;
-    gboolean unix_eol;
+    gboolean unix_eol, detached_header = FALSE;
+    guchar first_byte = 0;
     gint byteskip = 0, lineskip = 0;
     NRRDDataType data_type;
     NRRDEncoding encoding;
     GwyRawDataType rawdatatype;
     GwyByteOrder byteorder;
+    GQuark quark;
 
-    if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
+    if (!g_file_get_contents(filename, (gchar**)&buffer, &size, &err)) {
         err_GET_FILE_CONTENTS(error, &err);
         return NULL;
     }
@@ -196,22 +199,23 @@ nrrdfile_load(const gchar *filename,
     header_end = gwy_memmem(buffer, size,
                             unix_eol ? "\n\n" : "\r\n\r\n",
                             unix_eol ? 2 : 4);
-    if (!header_end) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                    _("File header is truncated"));
-        goto fail;
+    if (header_end) {
+        header_size = header_end - buffer + (unix_eol ? 2 : 4);
+        first_byte = buffer[header_size];
+        buffer[header_size] = '\0';
     }
-
-    header_size = header_end - buffer - (MAGIC_SIZE + 2 + !unix_eol);
-    header = g_new(gchar, header_size + 1);
-    memcpy(header, buffer + MAGIC_SIZE + 2 + !unix_eol, header_size);
-    header[header_size] = '\0';
+    else {
+        header_size = size;
+        detached_header = TRUE;
+    }
 
     fields = g_hash_table_new(g_str_hash, g_str_equal);
     keyvalue = g_hash_table_new(g_str_hash, g_str_equal);
-    p = header;
+    p = buffer + (MAGIC_SIZE + 2 + !unix_eol);
     for (line = gwy_str_next_line(&p); line; line = gwy_str_next_line(&p)) {
         g_strstrip(line);
+        if (!line[0])
+            break;
         if (line[0] == '#')
             continue;
 
@@ -240,9 +244,28 @@ nrrdfile_load(const gchar *filename,
         g_strchug(value);
         if (hash == fields)
             normalise_field_name(line);
-        /* TODO: Unescape values. */
+        unescape_field_value(value);
         gwy_debug("<%s> = <%s> (%s)", line, value, hash == fields ? "F" : "KV");
         g_hash_table_insert(hash, line, value);
+    }
+    if (!detached_header)
+        buffer[header_size] = first_byte;
+
+    datafile = g_hash_table_lookup(fields, "datafile");
+    if (detached_header && !datafile) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Deatched header does not refer to any data file."));
+        goto fail;
+    }
+    /* TODO: Split files.
+     * XXX: Numbered split files (with a printf-like format) are a risk. */
+    if (datafile) {
+        if (strchr(datafile, ' ') || gwy_strequal(datafile, "LIST")) {
+            g_set_error(error, GWY_MODULE_FILE_ERROR,
+                        GWY_MODULE_FILE_ERROR_DATA,
+                        _("Split detached data files are not supported."));
+            goto fail;
+        }
     }
 
     if (!require_keys(fields, error,
@@ -299,7 +322,6 @@ nrrdfile_load(const gchar *filename,
             goto fail;
         }
     }
-    /* TODO: Use ‘content’ for title, if present.  */
 
     /* TODO: Support skips */
     if (lineskip != 0 || byteskip != 0) {
@@ -308,32 +330,30 @@ nrrdfile_load(const gchar *filename,
         goto fail;
     }
 
-    /* TODO: Detached data */
-    datafile = g_hash_table_lookup(fields, "datafile");
-    if (datafile) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                    "Detached data files are unsupported.");
-        goto fail;
-    }
-
     if (!find_gwy_data_type(data_type, g_hash_table_lookup(fields, "endian"),
                             &rawdatatype, &byteorder, error))
         goto fail;
 
-    expected_size = ((header_end - buffer) + (unix_eol ? 2 : 4)
-                     + gwy_raw_data_size(rawdatatype)*xres*yres);
+    expected_size = (header_size + gwy_raw_data_size(rawdatatype)*xres*yres);
     if (err_SIZE_MISMATCH(error, expected_size, size, FALSE))
         goto fail;
 
     container = gwy_container_new();
 
     dfield = read_raw_data_field(xres, yres, rawdatatype, byteorder, fields,
-                                 header_end + (unix_eol ? 2 : 4));
-    gwy_container_set_object(container, gwy_app_get_data_key_for_id(0), dfield);
+                                 buffer + header_size);
+    quark = gwy_app_get_data_key_for_id(0);
+    gwy_container_set_object(container, quark, dfield);
     g_object_unref(dfield);
 
+    if ((value = g_hash_table_lookup(fields, "content"))) {
+        gchar *key = g_strconcat(g_quark_to_string(quark), "/title", NULL);
+        gwy_container_set_string_by_name(container, key, g_strdup(value));
+        g_free(key);
+    }
+
 fail:
-    gwy_file_abandon_contents(buffer, size, NULL);
+    g_free(buffer);
     g_free(header);
     if (fields)
         g_hash_table_destroy(fields);
@@ -359,6 +379,33 @@ normalise_field_name(gchar *name)
 
     if (gwy_strequal(name, "centerings"))
         strcpy(name, "centers");
+}
+
+static void
+unescape_field_value(gchar *value)
+{
+    guint i, j;
+
+    if (!strchr(value, '\\'))
+        return;
+
+    for (i = j = 0; value[i]; i++, j++) {
+        if (value[i] == '\\') {
+            if (value[i+1] == '\\') {
+                value[j] = '\\';
+                i++;
+            }
+            else if (value[i+1] == 'n') {
+                value[j] = '\n';
+                i++;
+            }
+            else {
+                g_warning("Undefined escape sequence \\%c found.", value[i+1]);
+            }
+        }
+        value[j] = value[i];
+    }
+    value[j] = '\0';
 }
 
 static NRRDDataType
