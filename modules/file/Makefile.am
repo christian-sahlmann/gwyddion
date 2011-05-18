@@ -227,8 +227,9 @@ witfile_la_SOURCES       = witfile.c
 wsffile_la_SOURCES       = wsffile.c
 wsxmfile_la_SOURCES      = wsxmfile.c
 
-# It compiles also without.
+# They compile also without.
 createc_la_LIBADD        = @ZLIB@
+nrrdfile_la_LIBADD       = @ZLIB@
 pixmap_la_LIBADD         = @PNG_LIBS@
 pixmap_la_CFLAGS         = $(AM_CFLAGS) @PNG_CFLAGS@
 hdrimage_la_LIBADD       = @EXR_LIBS@ @PNG_LIBS@

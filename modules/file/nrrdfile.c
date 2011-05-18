@@ -41,6 +41,12 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+
+#ifdef HAVE_ZLIB
+#include <zlib.h>
+#endif
+
+
 #include <glib/gstdio.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
@@ -107,10 +113,13 @@ static guchar* load_detached_file(const gchar *datafile,
                    gsize *size,
                    GError **error);
 static gconstpointer get_raw_data_pointer(gconstpointer base,
-                                          gsize size,
+                                          gsize *size,
                                           gsize nitems,
                                           GwyRawDataType datatype,
+                                          NRRDEncoding encoding,
+                                          gssize lineskip,
                                           gssize byteskip,
+                                          GSList **buffers_to_free,
                                           GError **error);
 static GwyDataField* read_raw_data_field (guint xres,
                                           guint yres,
@@ -170,17 +179,17 @@ nrrdfile_load(const gchar *filename,
 {
     GwyContainer *meta, *container = NULL;
     GHashTable *hash, *fields = NULL, *keyvalue = NULL;
+    GSList *l, *buffers_to_free = NULL;
     guchar *buffer = NULL, *data_buffer = NULL, *header_end;
     gconstpointer data_start;
     gsize data_size, size = 0;
     GError *err = NULL;
     GwyDataField *dfield = NULL;
     guint version, dimension, xres, yres, header_size;
-    gchar *value, *vkeyvalue, *vfield, *p, *line,
-          *datafile = NULL, *header = NULL;
+    gchar *value, *vkeyvalue, *vfield, *p, *line, *datafile = NULL;
     gboolean unix_eol, detached_header = FALSE;
     guchar first_byte = 0;
-    gint byteskip = 0, lineskip = 0;
+    gssize byteskip = 0, lineskip = 0;
     NRRDDataType data_type;
     NRRDEncoding encoding;
     GwyRawDataType rawdatatype;
@@ -191,6 +200,7 @@ nrrdfile_load(const gchar *filename,
         err_GET_FILE_CONTENTS(error, &err);
         return NULL;
     }
+    buffers_to_free = g_slist_append(buffers_to_free, buffer);
 
     if (size < MAGIC_SIZE + 3) {
         err_TOO_SHORT(error);
@@ -284,12 +294,9 @@ nrrdfile_load(const gchar *filename,
         goto fail;
     }
     gwy_debug("data_type: %u, encoding: %u", data_type, encoding);
-    /* TODO: More encodings */
-    if (encoding != NRRD_ENCODING_RAW) {
-        err_UNSUPPORTED(error, "encoding");
-        goto fail;
-    }
 
+    /* TODO: Read 3D data as a sequence of images (must change unit reading
+     * to use the second unit then).  Read 1D data as a graph. */
     if (sscanf(g_hash_table_lookup(fields, "dimension"),
                "%u", &dimension) != 1) {
         err_INVALID(error, "dimension");
@@ -310,14 +317,14 @@ nrrdfile_load(const gchar *filename,
         goto fail;
 
     if ((value = g_hash_table_lookup(fields, "lineskip"))) {
-        lineskip = atoi(value);
+        lineskip = atol(value);
         if (lineskip < 0) {
             err_INVALID(error, "lineskip");
             goto fail;
         }
     }
     if ((value = g_hash_table_lookup(fields, "byteskip")))
-        byteskip = atoi(value);
+        byteskip = atol(value);
 
     /* TODO: Support line skips */
     if (lineskip != 0) {
@@ -333,14 +340,18 @@ nrrdfile_load(const gchar *filename,
     if (datafile) {
         if (!(data_buffer = load_detached_file(datafile, &data_size, error)))
             goto fail;
+
+        buffers_to_free = g_slist_append(buffers_to_free, data_buffer);
     }
     else {
         data_buffer = buffer + header_size;
         data_size = size - header_size;
     }
 
-    if (!(data_start = get_raw_data_pointer(data_buffer, data_size,
-                                            xres*yres, rawdatatype, byteskip,
+    if (!(data_start = get_raw_data_pointer(data_buffer, &data_size,
+                                            xres*yres, rawdatatype, encoding,
+                                            lineskip, byteskip,
+                                            &buffers_to_free,
                                             error)))
         goto fail;
 
@@ -358,12 +369,13 @@ nrrdfile_load(const gchar *filename,
         g_free(key);
     }
 
+    /* TODO: Read key-values and possible other fields as metadata. */
+
 fail:
     /* data_buffer may differ from buffer only we have datafile */
-    if (datafile)
-        g_free(data_buffer);
-    g_free(buffer);
-    g_free(header);
+    for (l = buffers_to_free; l; l = g_slist_next(l))
+        g_free(l->data);
+    g_slist_free(buffers_to_free);
     if (fields)
         g_hash_table_destroy(fields);
     if (keyvalue)
@@ -576,31 +588,214 @@ load_detached_file(const gchar *datafile,
     return buffer;
 }
 
+#ifdef HAVE_ZLIB
+static guchar*
+decode_gzip(const guchar *encoded,
+            gsize encsize,
+            gsize *decsize,
+            GError **error)
+{
+    gsize estimated_size = *decsize;
+
+    while (TRUE) {
+        z_stream zbuf;
+        gint status;
+
+        gwy_clear(&zbuf, 1);
+        zbuf.next_in = (char*)encoded;
+        zbuf.avail_in = encsize;
+        zbuf.next_out = g_new(char, estimated_size);
+        zbuf.avail_out = estimated_size;
+
+        /* XXX: zbuf->msg does not seem to ever contain anything, so just report
+         * the error codes. */
+        if ((status = inflateInit(&zbuf)) != Z_OK) {
+            g_set_error(error, GWY_MODULE_FILE_ERROR,
+                        GWY_MODULE_FILE_ERROR_SPECIFIC,
+                        _("zlib initialization failed with error %d, "
+                          "cannot decompress data."),
+                        status);
+            g_free(zbuf.next_out);
+            return NULL;
+        }
+
+        if ((status = inflate(&zbuf, Z_SYNC_FLUSH)) == Z_OK
+            /* zlib return Z_STREAM_END also when we *exactly* exhaust all
+             * input. But this is no error, in fact it should happen every
+             * time, so check for it specifically. */
+            || (status == Z_STREAM_END
+                && zbuf.total_in == encsize
+                && zbuf.total_out <= estimated_size)) {
+            *decsize = zbuf.total_out;
+            return zbuf.next_out;
+        }
+
+        /* This should not really happen whatever data we pass in.  And we have
+         * already our output, so just make some noise and get over it.  */
+        if (inflateEnd(&zbuf) != Z_OK)
+            g_warning("inflateEnd() failed with error %d", status);
+
+        g_free(zbuf.next_out);
+        if (status != Z_STREAM_END) {
+            g_set_error(error, GWY_MODULE_FILE_ERROR,
+                        GWY_MODULE_FILE_ERROR_DATA,
+                        _("Decompression of encoded data failed with "
+                          "error %d."),
+                        status);
+            return NULL;
+        }
+
+        /* Stream ended prematurely so our estimate was too small.  Enlarge
+         * the buffer and try again. */
+        estimated_size *= 2*estimated_size;
+    }
+}
+#else
+static guchar*
+decode_gzip(G_GNUC_UNUSED const guchar *encoded,
+            G_GNUC_UNUSED gsize encsize,
+            G_GNUC_UNUSED gsize *decsize,
+            GError **error)
+{
+    g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_SPECIFIC,
+                _("Cannot decompress encoded data.  Zlib support was "
+                  "not built in."));
+    return NULL;
+}
+#endif
+
+static guchar*
+decode_hex(const guchar *encoded,
+           gsize encsize,
+           gsize *decsize)
+{
+    static const gint16 hexadecimals[] = {
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+         0,  1,  2,  3,  4,  5,  6,  7,  8,  9, -1, -1, -1, -1, -1, -1,
+        -1, 10, 11, 12, 13, 14, 15, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+        -1, 10, 11, 12, 13, 14, 15, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+    };
+
+    const guchar *p = encoded;
+    guchar *decoded = g_new(guchar, encsize/2);
+    gsize decoded_size = 0;
+
+    do {
+        gint hi, lo;
+
+        while ((gsize)(p - encoded) < encsize && (hi = hexadecimals[*p]) == -1)
+            p++;
+        while ((gsize)(p - encoded) < encsize && (lo = hexadecimals[*p]) == -1)
+            p++;
+        if ((gsize)(p - encoded) < encsize)
+            decoded[decoded_size++] = hi*16 + lo;
+    } while ((gsize)(p - encsize) < encsize);
+
+    *decsize = decoded_size;
+
+    return decoded;
+}
+
+/*
+ * The sequence of actions must be:
+ * 1. line skipping
+ * 2. decompression
+ * 3. byte skipping
+ */
 static gconstpointer
 get_raw_data_pointer(gconstpointer base,
-                     gsize size,
+                     gsize *size,
                      gsize nitems,
                      GwyRawDataType rawdatatype,
+                     NRRDEncoding encoding,
+                     gssize lineskip,
                      gssize byteskip,
+                     GSList **buffers_to_free,
                      GError **error)
 {
     gsize expected_size;
+    gssize i;
 
     if (byteskip < -1) {
         err_INVALID(error, "byteskip");
         return NULL;
     }
+    if (byteskip == -1)
+        lineskip = 0;
 
+    if (lineskip < 0) {
+        err_INVALID(error, "lineskip");
+        return NULL;
+    }
+
+    if (byteskip == -1 && encoding == NRRD_ENCODING_TEXT) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Filed byteskip cannot be -1 for the ASCII encoding."));
+        return NULL;
+    }
+
+    /* Line skipping */
+    while (i < lineskip) {
+        const guchar *p = memchr(base, '\n', *size);
+
+        if (!p) {
+            g_set_error(error, GWY_MODULE_FILE_ERROR,
+                        GWY_MODULE_FILE_ERROR_DATA,
+                        _("Field lineskip specifies more lines than there "
+                          "are in the file."));
+            return NULL;
+        }
+        p++;
+        *size -= p - (const guchar*)base;
+        base = p;
+    }
+
+    /* Decompression */
+    if (encoding == NRRD_ENCODING_RAW) {
+        /* Nothing to do. */
+    }
+    else if (encoding == NRRD_ENCODING_HEX) {
+        base = decode_hex(base, *size, size);
+        *buffers_to_free = g_slist_append(*buffers_to_free, (gpointer)base);
+    }
+    else if (encoding == NRRD_ENCODING_GZIP) {
+        expected_size = (gwy_raw_data_size(rawdatatype)*nitems
+                         + MAX(byteskip, 1024));
+        base = decode_gzip(base, *size, &expected_size, error);
+        if (!base)
+            return NULL;
+        *size = expected_size;
+        *buffers_to_free = g_slist_append(*buffers_to_free, (gpointer)base);
+    }
+    else {
+        err_UNSUPPORTED(error, "encoding");
+        return NULL;
+    }
+    /* TODO: Add ASCII data parsing as a decoding step. */
+
+    /* Byte skipping and final size validation. */
     if (byteskip == -1)
         expected_size = gwy_raw_data_size(rawdatatype)*nitems;
     else
         expected_size = gwy_raw_data_size(rawdatatype)*nitems + byteskip;
 
-    if (err_SIZE_MISMATCH(error, expected_size, size, FALSE))
+    if (err_SIZE_MISMATCH(error, expected_size, *size, FALSE))
         return NULL;
 
     if (byteskip == -1)
-        return (gconstpointer)((const gchar*)base + size - expected_size);
+        return (gconstpointer)((const gchar*)base + *size - expected_size);
     else
         return (gconstpointer)((const gchar*)base + byteskip);
 }
@@ -769,11 +964,8 @@ nrrdfile_export(G_GNUC_UNUSED GwyContainer *data,
     g_free(unitxy);
 
     dfl = g_new(gfloat, xres*yres);
-    for (i = 0; i < xres*yres; i++) {
-        union { guchar pp[4]; float f; } z;
-        z.f = d[i];
+    for (i = 0; i < xres*yres; i++)
         dfl[i] = d[i];
-    }
 
     if (fwrite(dfl, sizeof(gfloat), xres*yres, fh) != xres*yres) {
         /* uses errno, must do this before fclose(). */
