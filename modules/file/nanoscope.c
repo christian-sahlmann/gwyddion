@@ -129,7 +129,7 @@ static GwyGraphModel*  hash_to_curve          (GHashTable *hash,
                                                gchar *buffer,
                                                gint gxres,
                                                GError **error);
-static gboolean        read_text_data         (gint n,
+static gboolean        read_text_data         (guint n,
                                                gdouble *data,
                                                gchar **buffer,
                                                gint bpp,
@@ -975,12 +975,12 @@ get_tuna_physical_scale(GHashTable *hash,
 }
 
 static gboolean
-read_text_data(gint n, gdouble *data,
+read_text_data(guint n, gdouble *data,
                gchar **buffer,
                gint bpp,
                GError **error)
 {
-    gint i;
+    guint i;
     gdouble q;
     gchar *end;
     long l, min, max;
@@ -997,7 +997,7 @@ read_text_data(gint n, gdouble *data,
         if (end == *buffer) {
             g_set_error(error, GWY_MODULE_FILE_ERROR,
                         GWY_MODULE_FILE_ERROR_DATA,
-                        _("Garbage after data sample #%d."), i);
+                        _("Garbage after data sample #%u."), i);
             return FALSE;
         }
         *buffer = end;

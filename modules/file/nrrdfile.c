@@ -34,7 +34,10 @@
  * [FILE-MAGIC-USERGUIDE]
  * Nearly raw raster data (NRRD)
  * .nrrd
- * Read
+ * Read[1] Export[2]
+ * [1] Not all options are implemented, e.g. sliced or BZIP2-compressed files
+ * cannot be loaded.
+ * [2] Data are exported in a fixed attached native-endian float point format.
  **/
 #define DEBUG 1
 #include "config.h"
@@ -109,13 +112,14 @@ static gboolean      find_gwy_data_type  (NRRDDataType datatype,
                                           GwyRawDataType *rawdatatype,
                                           GwyByteOrder *byteorder,
                                           GError **error);
-static guchar* load_detached_file(const gchar *datafile,
-                   gsize *size,
-                   GError **error);
+static guchar*       load_detached_file  (const gchar *datafile,
+                                          gsize *size,
+                                          GError **error);
 static gconstpointer get_raw_data_pointer(gconstpointer base,
                                           gsize *size,
                                           gsize nitems,
                                           GwyRawDataType datatype,
+                                          GwyByteOrder *byteorder,
                                           NRRDEncoding encoding,
                                           gssize lineskip,
                                           gssize byteskip,
@@ -316,22 +320,10 @@ nrrdfile_load(const gchar *filename,
     if (err_DIMENSION(error, xres) || err_DIMENSION(error, yres))
         goto fail;
 
-    if ((value = g_hash_table_lookup(fields, "lineskip"))) {
+    if ((value = g_hash_table_lookup(fields, "lineskip")))
         lineskip = atol(value);
-        if (lineskip < 0) {
-            err_INVALID(error, "lineskip");
-            goto fail;
-        }
-    }
     if ((value = g_hash_table_lookup(fields, "byteskip")))
         byteskip = atol(value);
-
-    /* TODO: Support line skips */
-    if (lineskip != 0) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                    "Non-zero lineskip is not supported.");
-        goto fail;
-    }
 
     if (!find_gwy_data_type(data_type, g_hash_table_lookup(fields, "endian"),
                             &rawdatatype, &byteorder, error))
@@ -349,7 +341,8 @@ nrrdfile_load(const gchar *filename,
     }
 
     if (!(data_start = get_raw_data_pointer(data_buffer, &data_size,
-                                            xres*yres, rawdatatype, encoding,
+                                            xres*yres,
+                                            rawdatatype, &byteorder, encoding,
                                             lineskip, byteskip,
                                             &buffers_to_free,
                                             error)))
@@ -571,6 +564,7 @@ load_detached_file(const gchar *datafile,
     GError *err = NULL;
     gchar *buffer;
 
+    gwy_debug("Loading detached <%s>", datafile);
     if (datafile) {
         if (strchr(datafile, ' ') || gwy_strequal(datafile, "LIST")) {
             g_set_error(error, GWY_MODULE_FILE_ERROR,
@@ -666,10 +660,12 @@ decode_gzip(G_GNUC_UNUSED const guchar *encoded,
 
 static guchar*
 decode_hex(const guchar *encoded,
-           gsize encsize,
-           gsize *decsize)
+           gsize nitems,
+           GwyRawDataType rawdatatype,
+           gsize *decsize,
+           GError **error)
 {
-    static const gint16 hexadecimals[] = {
+    static const gint16 hex[] = {
         -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
         -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
         -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
@@ -688,24 +684,156 @@ decode_hex(const guchar *encoded,
         -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
     };
 
+    gsize dsize = gwy_raw_data_size(rawdatatype)*nitems;
+    guchar *decoded = g_new(guchar, dsize);
     const guchar *p = encoded;
-    guchar *decoded = g_new(guchar, encsize/2);
-    gsize decoded_size = 0;
+    gsize i;
 
-    do {
+    for (i = nitems; i; i--, decoded++) {
         gint hi, lo;
 
-        while ((gsize)(p - encoded) < encsize && (hi = hexadecimals[*p]) == -1)
+        do {
             p++;
-        while ((gsize)(p - encoded) < encsize && (lo = hexadecimals[*p]) == -1)
+        } while (*p && (hi = hex[*p]) == -1);
+        if (!*p)
+            goto fail;
+
+        do {
             p++;
-        if ((gsize)(p - encoded) < encsize)
-            decoded[decoded_size++] = hi*16 + lo;
-    } while ((gsize)(p - encsize) < encsize);
+        } while (*p && (lo = hex[*p]) == -1);
+        if (!*p)
+            goto fail;
 
-    *decsize = decoded_size;
+        *decoded = hi*16 + lo;
+    }
 
+    *decsize = dsize;
     return decoded;
+
+fail:
+    g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                _("Hex data contains less values (%u) "
+                  "than corresponds to the sizes (%u)."),
+                (guint)(nitems-i), (guint)nitems);
+
+    g_free(decoded);
+    return NULL;
+}
+
+/* Handle also ASCII encoding as another representation of raw encoding to
+ * unify all encodings. */
+static guchar*
+decode_text(const gchar *encoded,
+            gsize nitems,
+            GwyRawDataType rawdatatype,
+            gsize *decsize,
+            GError **error)
+{
+    gsize dsize = gwy_raw_data_size(rawdatatype)*nitems;
+    guchar *decoded = g_new(guchar, dsize);
+    const gchar *p = encoded;
+    gchar *end;
+    gsize i;
+
+    if (rawdatatype == GWY_RAW_DATA_SINT8) {
+        gint8 *s8 = (gint8*)decoded;
+        for (i = nitems; i; i--, s8++) {
+            *s8 = (gint8)g_ascii_strtoll(p, &end, 10);
+            if (end == p)
+                goto fail;
+        }
+    }
+    else if (rawdatatype == GWY_RAW_DATA_UINT8) {
+        guint8 *u8 = (guint8*)decoded;
+        for (i = nitems; i; i--, u8++) {
+            *u8 = (guint8)g_ascii_strtoull(p, &end, 10);
+            if (end == p)
+                goto fail;
+        }
+    }
+    else if (rawdatatype == GWY_RAW_DATA_SINT16) {
+        gint16 *s16 = (gint16*)decoded;
+        for (i = nitems; i; i--, s16++) {
+            *s16 = (gint16)g_ascii_strtoll(p, &end, 10);
+            if (end == p)
+                goto fail;
+        }
+    }
+    else if (rawdatatype == GWY_RAW_DATA_UINT16) {
+        guint16 *u16 = (guint16*)decoded;
+        for (i = nitems; i; i--, u16++) {
+            *u16 = (guint16)g_ascii_strtoull(p, &end, 10);
+            if (end == p)
+                goto fail;
+        }
+    }
+    else if (rawdatatype == GWY_RAW_DATA_SINT32) {
+        gint32 *s32 = (gint32*)decoded;
+        for (i = nitems; i; i--, s32++) {
+            *s32 = (gint32)g_ascii_strtoll(p, &end, 10);
+            if (end == p)
+                goto fail;
+        }
+    }
+    else if (rawdatatype == GWY_RAW_DATA_UINT32) {
+        guint32 *u32 = (guint32*)decoded;
+        for (i = nitems; i; i--, u32++) {
+            *u32 = (guint32)g_ascii_strtoull(p, &end, 10);
+            if (end == p)
+                goto fail;
+        }
+    }
+    else if (rawdatatype == GWY_RAW_DATA_SINT64) {
+        gint64 *s64 = (gint64*)decoded;
+        for (i = nitems; i; i--, s64++) {
+            *s64 = g_ascii_strtoll(p, &end, 10);
+            if (end == p)
+                goto fail;
+        }
+    }
+    else if (rawdatatype == GWY_RAW_DATA_UINT64) {
+        guint64 *u64 = (guint64*)decoded;
+        for (i = nitems; i; i--, u64++) {
+            *u64 = g_ascii_strtoull(p, &end, 10);
+            if (end == p)
+                goto fail;
+        }
+    }
+    else if (rawdatatype == GWY_RAW_DATA_FLOAT) {
+        gfloat *f32 = (gfloat*)decoded;
+        for (i = nitems; i; i--, f32++) {
+            *f32 = (gfloat)g_ascii_strtod(p, &end);
+            if (end == p)
+                goto fail;
+        }
+    }
+    else if (rawdatatype == GWY_RAW_DATA_DOUBLE) {
+        gdouble *d64 = (gdouble*)decoded;
+        for (i = nitems; i; i--, d64++) {
+            *d64 = g_ascii_strtod(p, &end);
+            if (end == p)
+                goto fail;
+        }
+    }
+    else {
+        g_return_val_if_reached(NULL);
+    }
+
+    *decsize = dsize;
+    return decoded;
+
+fail:
+    if (!*p)
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Text data contains less values (%u) "
+                      "than corresponds to the sizes (%u)."),
+                    (guint)(nitems-i), (guint)nitems);
+    else
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Gargbage after data sample #%u."), (guint)(nitems-i));
+
+    g_free(decoded);
+    return NULL;
 }
 
 /*
@@ -719,6 +847,7 @@ get_raw_data_pointer(gconstpointer base,
                      gsize *size,
                      gsize nitems,
                      GwyRawDataType rawdatatype,
+                     GwyByteOrder *byteorder,
                      NRRDEncoding encoding,
                      gssize lineskip,
                      gssize byteskip,
@@ -726,12 +855,14 @@ get_raw_data_pointer(gconstpointer base,
                      GError **error)
 {
     gsize expected_size;
+    gboolean binary = TRUE;
     gssize i;
 
     if (byteskip < -1) {
         err_INVALID(error, "byteskip");
         return NULL;
     }
+    /* Do not bother skipping lines at the begining if we look from the end. */
     if (byteskip == -1)
         lineskip = 0;
 
@@ -740,14 +871,15 @@ get_raw_data_pointer(gconstpointer base,
         return NULL;
     }
 
-    if (byteskip == -1 && encoding == NRRD_ENCODING_TEXT) {
+    if (byteskip == -1 && (encoding == NRRD_ENCODING_TEXT
+                           || encoding == NRRD_ENCODING_HEX)) {
         g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                    _("Filed byteskip cannot be -1 for the ASCII encoding."));
+                    _("Field byteskip cannot be -1 for text encodings."));
         return NULL;
     }
 
     /* Line skipping */
-    while (i < lineskip) {
+    for (i = 0; i < lineskip; i++) {
         const guchar *p = memchr(base, '\n', *size);
 
         if (!p) {
@@ -766,9 +898,9 @@ get_raw_data_pointer(gconstpointer base,
     if (encoding == NRRD_ENCODING_RAW) {
         /* Nothing to do. */
     }
-    else if (encoding == NRRD_ENCODING_HEX) {
-        base = decode_hex(base, *size, size);
-        *buffers_to_free = g_slist_append(*buffers_to_free, (gpointer)base);
+    else if (encoding == NRRD_ENCODING_TEXT || encoding == NRRD_ENCODING_HEX) {
+        /* Decoded later. */
+        binary = FALSE;
     }
     else if (encoding == NRRD_ENCODING_GZIP) {
         expected_size = (gwy_raw_data_size(rawdatatype)*nitems
@@ -783,21 +915,52 @@ get_raw_data_pointer(gconstpointer base,
         err_UNSUPPORTED(error, "encoding");
         return NULL;
     }
-    /* TODO: Add ASCII data parsing as a decoding step. */
 
-    /* Byte skipping and final size validation. */
-    if (byteskip == -1)
+    /* Byte skipping and final size validation for binary formats. */
+    if (byteskip <= 0)
         expected_size = gwy_raw_data_size(rawdatatype)*nitems;
     else
         expected_size = gwy_raw_data_size(rawdatatype)*nitems + byteskip;
 
-    if (err_SIZE_MISMATCH(error, expected_size, *size, FALSE))
-        return NULL;
+    if (binary) {
+        if (err_SIZE_MISMATCH(error, expected_size, *size, FALSE))
+            return NULL;
 
-    if (byteskip == -1)
-        return (gconstpointer)((const gchar*)base + *size - expected_size);
-    else
-        return (gconstpointer)((const gchar*)base + byteskip);
+        if (byteskip == -1)
+            return (gconstpointer)((const gchar*)base + *size - expected_size);
+        else
+            return (gconstpointer)((const gchar*)base + byteskip);
+    }
+
+    /* Decoding for text formats. */
+    g_assert(byteskip >= 0);   /* This must hold if we got here. */
+    if (byteskip > *size) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR,
+                    GWY_MODULE_FILE_ERROR_DATA,
+                    _("Field byteskip specifies more bytes than there "
+                      "are in the file."));
+        return NULL;
+    }
+    base = (gconstpointer)((const gchar*)base + byteskip);
+    *size -= byteskip;
+
+    /* Buffers are always nul-terminated, passing the encoed size is not
+     * necessary. */
+    if (encoding == NRRD_ENCODING_HEX)
+        base = decode_hex(base, nitems, rawdatatype, size, error);
+    else if (encoding == NRRD_ENCODING_TEXT) {
+        /* Text data are always created (‘decoded’) in the native byte order. */
+        base = decode_text(base, nitems, rawdatatype, size, error);
+        *byteorder = GWY_BYTE_ORDER_NATIVE;
+    }
+    else {
+        g_assert_not_reached();
+    }
+
+    if (base)
+        *buffers_to_free = g_slist_append(*buffers_to_free, (gpointer)base);
+
+    return base;
 }
 
 static GwyDataField*
