@@ -44,11 +44,12 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdarg.h>
 
+#undef HAVE_ZLIB
 #ifdef HAVE_ZLIB
 #include <zlib.h>
 #endif
-
 
 #include <glib/gstdio.h>
 #include <libgwyddion/gwymacros.h>
@@ -115,6 +116,9 @@ static gboolean      find_gwy_data_type  (NRRDDataType datatype,
 static guchar*       load_detached_file  (const gchar *datafile,
                                           gsize *size,
                                           GError **error);
+static guint         pick_channel_axis   (guint dimension,
+                                          const guint *sizes,
+                                          gchar **kinds);
 static gconstpointer get_raw_data_pointer(gconstpointer base,
                                           gsize *size,
                                           gsize nitems,
@@ -127,10 +131,23 @@ static gconstpointer get_raw_data_pointer(gconstpointer base,
                                           GError **error);
 static GwyDataField* read_raw_data_field (guint xres,
                                           guint yres,
+                                          gint stride,
+                                          guint rowstride,
                                           GwyRawDataType rawdatatype,
                                           GwyByteOrder byteorder,
                                           GHashTable *fields,
-                                          gconstpointer data);
+                                          const guchar *data);
+static gboolean      parse_uint_vector   (const gchar *value,
+                                          guint n,
+                                          ...);
+static gboolean      parse_float_vector  (const gchar *value,
+                                          guint n,
+                                          ...);
+static gchar**       split_per_axis_field(const gchar *value,
+                                          const gchar *name,
+                                          guint nitems,
+                                          gboolean quoted,
+                                          GError **error);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -185,12 +202,15 @@ nrrdfile_load(const gchar *filename,
     GHashTable *hash, *fields = NULL, *keyvalue = NULL;
     GSList *l, *buffers_to_free = NULL;
     guchar *buffer = NULL, *data_buffer = NULL, *header_end;
-    gconstpointer data_start;
+    const guchar *data_start;
     gsize data_size, size = 0;
     GError *err = NULL;
     GwyDataField *dfield = NULL;
-    guint version, dimension, xres, yres, header_size;
+    guint sizes[3] = { 1, 1, 1 };
+    guint version, dimension, xres, yres, header_size, i,
+          stride, rowstride, fieldstride, chanaxis, xaxis, yaxis, nchannels;
     gchar *value, *vkeyvalue, *vfield, *p, *line, *datafile = NULL;
+    gchar **kinds = NULL;
     gboolean unix_eol, detached_header = FALSE;
     guchar first_byte = 0;
     gssize byteskip = 0, lineskip = 0;
@@ -299,25 +319,25 @@ nrrdfile_load(const gchar *filename,
     }
     gwy_debug("data_type: %u, encoding: %u", data_type, encoding);
 
-    /* TODO: Read 3D data as a sequence of images (must change unit reading
-     * to use the second unit then).  Read 1D data as a graph. */
-    if (sscanf(g_hash_table_lookup(fields, "dimension"),
-               "%u", &dimension) != 1) {
+    /* TODO: Read 1D data as a graph. */
+    if (sscanf(g_hash_table_lookup(fields, "dimension"), "%u",
+               &dimension) != 1) {
         err_INVALID(error, "dimension");
         goto fail;
     }
-    if (dimension != 2) {
+    if (dimension != 2 && dimension != 3) {
         g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                    _("Only two-dimensional data are supported."));
+                    _("Only two- and three-dimensional data are supported."));
         goto fail;
     }
-    if (sscanf(g_hash_table_lookup(fields, "sizes"),
-               "%u %u", &xres, &yres) != 2) {
+    if (!parse_uint_vector(g_hash_table_lookup(fields, "sizes"), dimension,
+                           &sizes[0], &sizes[1], &sizes[2])) {
         err_INVALID(error, "sizes");
         goto fail;
     }
-    gwy_debug("xres: %u, yres: %u", xres, yres);
-    if (err_DIMENSION(error, xres) || err_DIMENSION(error, yres))
+    gwy_debug("sizes: %u, %u, %u", sizes[0], sizes[1], sizes[2]);
+    if (err_DIMENSION(error, sizes[0]) || err_DIMENSION(error, sizes[1])
+        || (dimension == 3 && err_DIMENSION(error, sizes[2])))
         goto fail;
 
     if ((value = g_hash_table_lookup(fields, "lineskip")))
@@ -328,6 +348,9 @@ nrrdfile_load(const gchar *filename,
     if (!find_gwy_data_type(data_type, g_hash_table_lookup(fields, "endian"),
                             &rawdatatype, &byteorder, error))
         goto fail;
+
+    if ((value = g_hash_table_lookup(fields, "kinds")))
+        kinds = split_per_axis_field(value, "kinds", dimension, TRUE, NULL);
 
     if (datafile) {
         if (!(data_buffer = load_detached_file(datafile, &data_size, error)))
@@ -340,8 +363,41 @@ nrrdfile_load(const gchar *filename,
         data_size = size - header_size;
     }
 
+    chanaxis = pick_channel_axis(dimension, sizes, kinds);
+    gwy_debug("picked %u as the channel axis", chanaxis);
+    nchannels = sizes[chanaxis];
+    if (chanaxis == 0) {
+        xaxis = 1;
+        yaxis = 2;
+        stride = nchannels;
+        rowstride = nchannels*sizes[xaxis];
+        fieldstride = 1;
+    }
+    else if (chanaxis == 1) {
+        xaxis = 0;
+        yaxis = 2;
+        stride = 1;
+        rowstride = nchannels*sizes[xaxis];
+        fieldstride = sizes[xaxis];
+    }
+    else if (chanaxis == 2) {
+        xaxis = 0;
+        yaxis = 1;
+        stride = 1;
+        rowstride = sizes[xaxis];
+        fieldstride = sizes[xaxis]*sizes[yaxis];
+    }
+    else {
+        g_assert_not_reached();
+    }
+    xres = sizes[xaxis];
+    yres = sizes[yaxis];
+    gwy_debug("xres: %u, yres: %u, nchannels: %u", xres, yres, nchannels);
+    gwy_debug("stride: %u, rowstride: %u, fieldstride: %u",
+              stride, rowstride, fieldstride);
+
     if (!(data_start = get_raw_data_pointer(data_buffer, &data_size,
-                                            xres*yres,
+                                            sizes[0]*sizes[1]*sizes[2],
                                             rawdatatype, &byteorder, encoding,
                                             lineskip, byteskip,
                                             &buffers_to_free,
@@ -350,25 +406,29 @@ nrrdfile_load(const gchar *filename,
 
     container = gwy_container_new();
 
-    dfield = read_raw_data_field(xres, yres, rawdatatype, byteorder, fields,
-                                 data_start);
-    quark = gwy_app_get_data_key_for_id(0);
-    gwy_container_set_object(container, quark, dfield);
-    g_object_unref(dfield);
+    for (i = 0; i < nchannels; i++) {
+        const guchar *chandata = data_start + i*fieldstride;
+        dfield = read_raw_data_field(xres, yres,
+                                     stride, rowstride, rawdatatype, byteorder,
+                                     fields, chandata);
+        quark = gwy_app_get_data_key_for_id(i);
+        gwy_container_set_object(container, quark, dfield);
+        g_object_unref(dfield);
 
-    if ((value = g_hash_table_lookup(fields, "content"))) {
-        gchar *key = g_strconcat(g_quark_to_string(quark), "/title", NULL);
-        gwy_container_set_string_by_name(container, key, g_strdup(value));
-        g_free(key);
+        if ((value = g_hash_table_lookup(fields, "content"))) {
+            gchar *key = g_strconcat(g_quark_to_string(quark), "/title", NULL);
+            gwy_container_set_string_by_name(container, key, g_strdup(value));
+            g_free(key);
+        }
     }
 
     /* TODO: Read key-values and possible other fields as metadata. */
 
 fail:
-    /* data_buffer may differ from buffer only we have datafile */
     for (l = buffers_to_free; l; l = g_slist_next(l))
         g_free(l->data);
     g_slist_free(buffers_to_free);
+    g_strfreev(kinds);
     if (fields)
         g_hash_table_destroy(fields);
     if (keyvalue)
@@ -582,7 +642,73 @@ load_detached_file(const gchar *datafile,
     return buffer;
 }
 
+static guint
+pick_channel_axis(guint dimension,
+                  const guint *sizes,
+                  gchar **kinds)
+{
+    gboolean xdomain = TRUE, ydomain = TRUE, zdomain = TRUE;
+
+    if (dimension == 2)
+        return 2;
+
+    if (kinds) {
+        normalise_field_name(kinds[0]);
+        xdomain = gwy_stramong(kinds[0], "domain", "space", "time", NULL);
+
+        normalise_field_name(kinds[1]);
+        ydomain = gwy_stramong(kinds[1], "domain", "space", "time", NULL);
+
+        normalise_field_name(kinds[2]);
+        zdomain = gwy_stramong(kinds[2], "domain", "space", "time", NULL);
+    }
+
+    /* Pick the axis in which the size 1, preferrably of non-domain kind and
+     * first or last. */
+    if (sizes[2] == 1 && !zdomain)
+        return 2;
+    if (sizes[0] == 1 && !xdomain)
+        return 0;
+    if (sizes[1] == 1 && !ydomain)
+        return 0;
+    if (xdomain && ydomain && !zdomain)
+        return 2;
+    if (!xdomain && ydomain && zdomain)
+        return 0;
+    if (xdomain && !ydomain && zdomain)
+        return 1;
+    if (sizes[2] == 1)
+        return 2;
+    if (sizes[0] == 1)
+        return 0;
+    if (sizes[1] == 1)
+        return 0;
+
+    /* If that fails try the axis much smaller than the other two. */
+    if (sizes[2]*sqrt(sizes[2]) < MIN(sizes[0], sizes[1]))
+        return 2;
+    if (sizes[0]*sqrt(sizes[0]) < MIN(sizes[1], sizes[2]))
+        return 0;
+    if (sizes[1]*sqrt(sizes[1]) < MIN(sizes[0], sizes[2]))
+        return 1;
+
+    /* Then the non-square axis */
+    if (sizes[1] == sizes[0] && sizes[2] != sizes[0])
+        return 2;
+    if (sizes[2] == sizes[1] && sizes[0] != sizes[1])
+        return 0;
+    if (sizes[0] == sizes[2] && sizes[1] != sizes[2])
+        return 1;
+
+    /* If everything fails just choose arbitrarily; choosing z gives the best
+     * memory access pattern... */
+    return 2;
+}
+
 #ifdef HAVE_ZLIB
+/* FIXME: This is wrong, NRRD requires real *gzip* compression, not just zlib
+ * compression.  So we need to use gzopen().  BUT that cannot be done directly
+ * with attached data, only with detached.  So this needs to be reworked. */
 static guchar*
 decode_gzip(const guchar *encoded,
             gsize encsize,
@@ -839,8 +965,11 @@ fail:
 /*
  * The sequence of actions must be:
  * 1. line skipping
- * 2. decompression
+ * 2. decompression (decoding)
  * 3. byte skipping
+ *
+ * However, we treat text and hex as decoding steps while the specs do not.  So
+ * for these formats the order has to be modified.
  */
 static gconstpointer
 get_raw_data_pointer(gconstpointer base,
@@ -965,15 +1094,18 @@ get_raw_data_pointer(gconstpointer base,
 
 static GwyDataField*
 read_raw_data_field(guint xres, guint yres,
+                    gint stride, guint rowstride,
                     GwyRawDataType rawdatatype, GwyByteOrder byteorder,
                     GHashTable *fields,
-                    gconstpointer data)
+                    const guchar *data)
 {
     GwyDataField *dfield;
     GwySIUnit *siunitz = NULL, *siunitxy = NULL;
     gdouble dx = 1.0, dy = 1.0, q = 1.0, z0 = 0.0, xoff = 0.0, yoff = 0.0;
+    gdouble *d;
     gint power10;
     gchar *value;
+    guint i;
 
     if ((value = g_hash_table_lookup(fields, "oldmin")))
         z0 = g_ascii_strtod(value, NULL);
@@ -982,7 +1114,7 @@ read_raw_data_field(guint xres, guint yres,
         q = g_ascii_strtod(value, NULL) - z0;
 
     if ((value = g_hash_table_lookup(fields, "spacings"))
-        && sscanf(value, "%lf %lf", &dx, &dy)) {
+        && parse_float_vector(value, 2, &dx, &dy)) {
         /* Use negated positive conditions to catch NaNs */
         if (!((dx = fabs(dx)) > 0)) {
             g_warning("Real x step is 0.0, fixing to 1.0");
@@ -996,7 +1128,7 @@ read_raw_data_field(guint xres, guint yres,
     }
 
     if ((value = g_hash_table_lookup(fields, "axismins"))
-        && sscanf(value, "%lf %lf", &xoff, &yoff)) {
+        && parse_float_vector(value, 2, &xoff, &yoff)) {
         if (gwy_isnan(xoff) || gwy_isinf(xoff))
             xoff = 0.0;
         if (gwy_isnan(yoff) || gwy_isinf(yoff))
@@ -1005,7 +1137,7 @@ read_raw_data_field(guint xres, guint yres,
 
     /* Prefer axismaxs if both spacings and axismaxs are given. */
     if ((value = g_hash_table_lookup(fields, "axismaxs"))
-        && sscanf(value, "%lf %lf", &dx, &dy)) {
+        && parse_float_vector(value, 2, &dx, &dy)) {
         dx = (dx - xoff)/xres;
         dy = (dy - xoff)/xres;
         /* Use negated positive conditions to catch NaNs */
@@ -1042,8 +1174,11 @@ read_raw_data_field(guint xres, guint yres,
     dfield = gwy_data_field_new(xres, yres, xres*dx, yres*dy, FALSE);
     gwy_data_field_set_xoffset(dfield, xoff);
     gwy_data_field_set_yoffset(dfield, yoff);
-    gwy_convert_raw_data(data, xres*yres, rawdatatype, byteorder,
-                         gwy_data_field_get_data(dfield), q, z0, FALSE);
+    d = gwy_data_field_get_data(dfield);
+    for (i = 0; i < yres; i++)
+        gwy_convert_raw_data(data + i*rowstride, xres, stride,
+                             rawdatatype, byteorder,
+                             d + i*xres, q, z0);
 
     if (siunitxy) {
         gwy_data_field_set_si_unit_xy(dfield, siunitxy);
@@ -1055,6 +1190,113 @@ read_raw_data_field(guint xres, guint yres,
     }
 
     return dfield;
+}
+
+static gboolean
+parse_uint_vector(const gchar *value,
+                  guint n,
+                  ...)
+{
+    va_list ap;
+    gchar *end;
+    guint i;
+
+    va_start(ap, n);
+
+    for (i = 0; i < n; i++) {
+        guint *u = va_arg(ap, guint*);
+
+        *u = g_ascii_strtoull(value, &end, 10);
+        if (end == value) {
+            va_end(ap);
+            return FALSE;
+        }
+        value = end;
+    }
+    va_end(ap);
+
+    return TRUE;
+}
+
+static gboolean
+parse_float_vector(const gchar *value,
+                   guint n,
+                   ...)
+{
+    va_list ap;
+    gchar *end;
+    guint i;
+
+    va_start(ap, n);
+
+    for (i = 0; i < n; i++) {
+        gdouble *d = va_arg(ap, gdouble*);
+
+        *d = g_ascii_strtod(value, &end);
+        if (end == value || gwy_isnan(*d) || gwy_isinf(*d)) {
+            va_end(ap);
+            return FALSE;
+        }
+        value = end;
+    }
+    va_end(ap);
+
+    return TRUE;
+}
+
+static gchar**
+split_per_axis_field(const gchar *value,
+                     const gchar *name,
+                     guint nitems,
+                     gboolean quoted,
+                     GError **error)
+{
+    gchar **raw_fields, **fields, *f;
+    guint n, i, len;
+
+    raw_fields = g_strsplit_set(value, " \t\v\r\n", -1);
+    fields = g_new0(gchar*, nitems+1);
+    for (i = 0; (f = raw_fields[i]); i++) {
+        len = strlen(f);
+        if (!len)
+            continue;
+
+        if (quoted) {
+            if (len < 2 || f[0] != '"' || f[len-1] != '"') {
+                g_set_error(error, GWY_MODULE_FILE_ERROR,
+                            GWY_MODULE_FILE_ERROR_DATA,
+                            _("Items of per-axis header field %s are not "
+                              "quoted."),
+                            name);
+                goto fail;
+            }
+            f[len-1] = '\0';
+            f++;
+        }
+        if (n == nitems) {
+            g_set_error(error, GWY_MODULE_FILE_ERROR,
+                        GWY_MODULE_FILE_ERROR_DATA,
+                        _("Per-axis header field %s contains too many "
+                          "items."),
+                        name);
+            goto fail;
+        }
+        fields[n++] = g_strdup(f);
+    }
+    if (n < nitems) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Per-axis header field %s contains too few items."),
+                    name);
+        goto fail;
+    }
+
+    g_strfreev(raw_fields);
+    return fields;
+
+fail:
+    g_strfreev(raw_fields);
+    g_strfreev(fields);
+    return NULL;
 }
 
 static gboolean
