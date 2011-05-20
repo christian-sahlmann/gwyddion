@@ -39,7 +39,7 @@
  * cannot be loaded.
  * [2] Data are exported in a fixed attached native-endian float point format.
  **/
-#define DEBUG 1
+
 #include "config.h"
 #include <string.h>
 #include <stdlib.h>
@@ -137,6 +137,7 @@ static GwyDataField* read_raw_data_field (guint xres,
                                           GwyByteOrder byteorder,
                                           GHashTable *fields,
                                           const guchar *data);
+static GwyContainer* nrrd_make_meta      (GHashTable *keyvalue);
 static gboolean      parse_uint_vector   (const gchar *value,
                                           guint n,
                                           ...);
@@ -198,7 +199,7 @@ nrrdfile_load(const gchar *filename,
               G_GNUC_UNUSED GwyRunType mode,
               GError **error)
 {
-    GwyContainer *meta, *container = NULL;
+    GwyContainer *meta = NULL, *container = NULL;
     GHashTable *hash, *fields = NULL, *keyvalue = NULL;
     GSList *l, *buffers_to_free = NULL;
     guchar *buffer = NULL, *data_buffer = NULL, *header_end;
@@ -405,9 +406,11 @@ nrrdfile_load(const gchar *filename,
         goto fail;
 
     container = gwy_container_new();
+    meta = nrrd_make_meta(keyvalue);
 
     for (i = 0; i < nchannels; i++) {
-        const guchar *chandata = data_start + i*fieldstride;
+        const guchar *chandata = data_start
+                                 + i*fieldstride*gwy_raw_data_size(rawdatatype);
         dfield = read_raw_data_field(xres, yres,
                                      stride, rowstride, rawdatatype, byteorder,
                                      fields, chandata);
@@ -420,11 +423,22 @@ nrrdfile_load(const gchar *filename,
             gwy_container_set_string_by_name(container, key, g_strdup(value));
             g_free(key);
         }
+        if (meta) {
+            gchar *key = g_strdup(g_quark_to_string(quark));
+            GwyContainer *chanmeta = gwy_container_duplicate(meta);
+
+            g_assert(g_str_has_suffix(key, "/data"));
+            strcpy(key + strlen(key)-4, "meta");
+            gwy_container_set_object_by_name(container, key, chanmeta);
+            g_object_unref(chanmeta);
+            g_free(key);
+        }
     }
 
     /* TODO: Read key-values and possible other fields as metadata. */
 
 fail:
+    gwy_object_unref(meta);
     for (l = buffers_to_free; l; l = g_slist_next(l))
         g_free(l->data);
     g_slist_free(buffers_to_free);
@@ -1171,6 +1185,7 @@ read_raw_data_field(guint xres, guint yres,
         }
     }
 
+    rowstride *= gwy_raw_data_size(rawdatatype);
     dfield = gwy_data_field_new(xres, yres, xres*dx, yres*dy, FALSE);
     gwy_data_field_set_xoffset(dfield, xoff);
     gwy_data_field_set_yoffset(dfield, yoff);
@@ -1190,6 +1205,29 @@ read_raw_data_field(guint xres, guint yres,
     }
 
     return dfield;
+}
+
+static void
+add_meta(gpointer key, gpointer value, gpointer user_data)
+{
+    const gchar *strkey = (const gchar*)key;
+    const gchar *strvalue = (const gchar*)value;
+    GwyContainer *meta = (GwyContainer*)user_data;
+
+    gwy_container_set_string_by_name(meta, strkey, g_strdup(strvalue));
+}
+
+static GwyContainer*
+nrrd_make_meta(GHashTable *keyvalue)
+{
+    GwyContainer *meta = gwy_container_new();
+
+    g_hash_table_foreach(keyvalue, add_meta, meta);
+    if (gwy_container_get_n_items(meta))
+        return meta;
+    g_object_unref(meta);
+
+    return NULL;
 }
 
 static gboolean
