@@ -90,12 +90,12 @@ void         gwy_memcpy_byte_swap      (const guint8 *source,
                                         gsize byteswap);
 void         gwy_convert_raw_data      (gconstpointer data,
                                         gsize nitems,
+                                        gssize stride,
                                         GwyRawDataType datatype,
                                         GwyByteOrder byteorder,
                                         gdouble *target,
                                         gdouble scale,
-                                        gdouble offset,
-                                        gboolean backwards);
+                                        gdouble offset);
 guint        gwy_raw_data_size         (GwyRawDataType datatype);
 void         gwy_object_set_or_reset   (gpointer object,
                                         GType type,
