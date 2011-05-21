@@ -51,11 +51,6 @@
  * Read SPS
  **/
 
-/* FIXME: remove this in final version */
-#define DEBUG
-#include <stdio.h>
-/* end */
-
 #include "config.h"
 #include <string.h>
 #include <stdlib.h>
@@ -343,8 +338,8 @@ static WIPTag *wip_read_tag(guchar **pos, gsize *start, gsize *end)
     }
     tag->data = (gpointer)p;
     /*
-    fprintf(stderr,"%d %s %d %lld %lld\n",  tag->name_length,
-                tag->name, tag->type, tag->data_start, tag->data_end);
+    gwy_debug("%d %s %d %lld %lld\n",  tag->name_length,
+              tag->name, tag->type, tag->data_start, tag->data_end);
     */
     *pos = (guchar *)p;
 
