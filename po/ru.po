@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2011-05-14 03:58+0200\n"
-"PO-Revision-Date: 2011-05-14 08:20+0300\n"
+"POT-Creation-Date: 2011-05-21 03:58+0200\n"
+"PO-Revision-Date: 2011-05-21 10:09+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "Language: \n"
@@ -2545,6 +2545,7 @@ msgstr "Не найдено ни `%s', ни `%s' поля заголовка."
 
 #: modules/file/createc.c:520
 #: modules/file/matfile.c:596
+#: modules/file/nrrdfile.c:749
 #, c-format
 msgid "zlib initialization failed with error %d, cannot decompress data."
 msgstr "Инициализация zlib закончилась с ошибкой %d, не удалось распаковать данные."
@@ -2903,7 +2904,6 @@ msgid "Format version is %d.  Only version 5 is supported."
 msgstr "Версия формата %d.  Поддерживается только версия 5."
 
 #: modules/file/igorfile.c:292
-#: modules/file/nrrdfile.c:271
 msgid "Only two-dimensional data are supported."
 msgstr "Поддерживаются только двумерные данные."
 
@@ -3181,7 +3181,6 @@ msgid "Spectra data starts past the end of file."
 msgstr "Данные спектроскопии начинаются после конца файла."
 
 #: modules/file/nanoeducator.c:626
-#: modules/file/nrrdfile.c:196
 #: modules/file/opdfile.c:268
 #: modules/file/sensofar.c:256
 msgid "File header is truncated"
@@ -3324,8 +3323,8 @@ msgstr "Не удаётся распознать поле `Scan size'."
 
 #: modules/file/nanoscope.c:1000
 #, c-format
-msgid "Garbage after data sample #%d."
-msgstr "Мусор после элемента данных #%d."
+msgid "Garbage after data sample #%u."
+msgstr "Мусор после элемента данных #%u."
 
 #: modules/file/nanoscope.c:1080
 msgid "Truncated header line."
@@ -3375,13 +3374,76 @@ msgstr "Массив `%s' содержит ненулевое количеств
 msgid "More than one record dimension found."
 msgstr "Найдена больше, чем одна запись о размерности."
 
-#: modules/file/nrrdfile.c:110
+#: modules/file/nrrdfile.c:156
 msgid "Imports and exports nearly raw raster data (NRRD) files."
 msgstr "Импортирует и экспортирует файлы nearly raw raster data (NRRD)."
 
-#: modules/file/nrrdfile.c:123
+#: modules/file/nrrdfile.c:169
 msgid "Nearly raw raster data (NRRD) files (.nrrd)"
 msgstr "Файлы nearly raw raster data (NRRD) (.nrrd)"
+
+#: modules/file/nrrdfile.c:303
+msgid "Deatched header does not refer to any data file."
+msgstr "Заголовок откреплённых в отдельный файл данных не соответствует никакому файлу данных."
+
+#: modules/file/nrrdfile.c:331
+msgid "Only two- and three-dimensional data are supported."
+msgstr "Поддерживаются только двумерные и трёхмерные данные."
+
+#: modules/file/nrrdfile.c:646
+msgid "Split detached data files are not supported."
+msgstr "Разбитые на тома открепленные файлы данных не поддерживаются."
+
+#: modules/file/nrrdfile.c:776
+#, c-format
+msgid "Decompression of encoded data failed with error %d."
+msgstr "Распаковка кодированных данных закончилась с ошибкой %d."
+
+#: modules/file/nrrdfile.c:795
+msgid "Cannot decompress encoded data.  Zlib support was not built in."
+msgstr "Не удаётся распаковать кодированные данные. Поддержка zlib не была встроена."
+
+#: modules/file/nrrdfile.c:855
+#, c-format
+msgid "Hex data contains less values (%u) than corresponds to the sizes (%u)."
+msgstr "Шестнадцатеричные данные содержат меньше значений (%u) чем нужно в соответствии с размерами (%u)."
+
+#: modules/file/nrrdfile.c:968
+#, c-format
+msgid "Text data contains less values (%u) than corresponds to the sizes (%u)."
+msgstr "Текстовые данные содержат меньше значений (%u) чем нужно в соответствии с размерами (%u)."
+
+#: modules/file/nrrdfile.c:973
+#, c-format
+msgid "Gargbage after data sample #%u."
+msgstr "Мусор после элемента данных #%u."
+
+#: modules/file/nrrdfile.c:1020
+msgid "Field byteskip cannot be -1 for text encodings."
+msgstr "Число пропущенных байтов поля не может быть -1 для текстовых кодировок."
+
+#: modules/file/nrrdfile.c:1031
+msgid "Field lineskip specifies more lines than there are in the file."
+msgstr "Число пропущенных линий поля задаёт больше линий, чем есть в файле."
+
+#: modules/file/nrrdfile.c:1083
+msgid "Field byteskip specifies more bytes than there are in the file."
+msgstr "Число пропущенных байтов поля задаёт больше байтов, чем есть в файле."
+
+#: modules/file/nrrdfile.c:1306
+#, c-format
+msgid "Items of per-axis header field %s are not quoted."
+msgstr "Элементы поля %s заголовка оси не заключены в кавычки."
+
+#: modules/file/nrrdfile.c:1317
+#, c-format
+msgid "Per-axis header field %s contains too many items."
+msgstr "Поле %s заголовка оси содержит слишком много элементов."
+
+#: modules/file/nrrdfile.c:1326
+#, c-format
+msgid "Per-axis header field %s contains too few items."
+msgstr "Поле %s заголовка оси содержит слишком мало элементов."
 
 #: modules/file/nt-mdt.c:658
 msgid "Imports NT-MDT data files."
@@ -4830,11 +4892,11 @@ msgstr "параметры масштаба z"
 msgid "data type parameters"
 msgstr "параметры типа данных"
 
-#: modules/file/wipfile.c:236
+#: modules/file/wipfile.c:280
 msgid "Imports WItec Project data files."
 msgstr "Импортирует файлы данных WItec Project."
 
-#: modules/file/wipfile.c:249
+#: modules/file/wipfile.c:293
 msgid "WItec Project files (.wip)"
 msgstr "Файлы WItec Project (.wip)"
 
