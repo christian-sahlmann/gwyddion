@@ -459,7 +459,8 @@ AC_SUBST([GTKGLEXT_DEPENDENCY])
 
 #############################################################################
 # libz
-# Optional.  Used sometimes for data compression, e.g. in Createc and MATLAB.
+# Optional.  Used sometimes for data compression, e.g. in Createc, NRRD and
+# MATLAB.
 GWY_WITH([zlib],,[build with zlib support])
 if test x$enable_zlib != xno && test -z "$ZLIB"; then
   AC_CHECK_LIB(z, inflate,
@@ -476,6 +477,24 @@ else
 fi
 AM_CONDITIONAL([HAVE_ZLIB],[test x$enable_zlib != xno && test -n "$ZLIB"])
 AC_SUBST(ZLIB)
+
+#############################################################################
+# libbz2
+# Optional.  Used sometimes for data compression, e.g. in NRRD.
+GWY_WITH([bzip2],,[build with bzip2 support])
+if test x$enable_bzip2 != xno && test -z "$BZIP2"; then
+  AC_CHECK_LIB(bz2, BZ2_bzopen,
+    [AC_CHECK_HEADER(bzlib.h, BZIP2='-lbz2', [enable_bzip2=no])],
+    [enable_bzip2=no],
+    [])
+fi
+if test x$enable_bzip2 != xno && test -n "$BZIP2"; then
+  AC_DEFINE(HAVE_BZIP2,1,[Define if we have the BZIP2 library.])
+else
+  BZIP2_WARN=" (needs bzip2)"
+fi
+AM_CONDITIONAL([HAVE_BZIP2],[test x$enable_bzip2 != xno && test -n "$BZIP2"])
+AC_SUBST(BZIP2)
 
 #############################################################################
 # PNG
