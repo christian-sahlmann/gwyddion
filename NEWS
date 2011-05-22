@@ -30,6 +30,7 @@ Modules:
   open VSI files.
 - OLS: Can load colour images; R, G, B are imported as separate channels.
 - Merge: Calculation of physical dimensions of the merged image was corrected.
+- RHK-SM3: Loading of multipage files was corrected.
 
 Other:
 - The KDE4 thumbnailer is not built by default.

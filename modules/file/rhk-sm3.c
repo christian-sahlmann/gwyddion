@@ -227,7 +227,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports RHK Technology SM3 data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.13",
+    "0.14",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -583,7 +583,7 @@ rhk_sm3_load(const gchar *filename,
     RHKPage *rhkpage;
     GwyContainer *meta, *container = NULL;
     guchar *buffer = NULL;
-    gsize size = 0;
+    gsize fullsize, size = 0;
     GError *err = NULL;
     const guchar *p;
     GString *key;
@@ -593,9 +593,10 @@ rhk_sm3_load(const gchar *filename,
         err_GET_FILE_CONTENTS(error, &err);
         return NULL;
     }
+    fullsize = size;
     if (size < HEADER_SIZE) {
         err_TOO_SHORT(error);
-        gwy_file_abandon_contents(buffer, size, NULL);
+        gwy_file_abandon_contents(buffer, fullsize, NULL);
         return NULL;
     }
 
@@ -624,7 +625,7 @@ rhk_sm3_load(const gchar *filename,
             g_propagate_error(error, err);
         else
             err_NO_DATA(error);
-        gwy_file_abandon_contents(buffer, size, NULL);
+        gwy_file_abandon_contents(buffer, fullsize, NULL);
         g_ptr_array_free(rhkfile, TRUE);
         return NULL;
     }
@@ -722,7 +723,7 @@ rhk_sm3_load(const gchar *filename,
 
     g_string_free(key, TRUE);
 
-    gwy_file_abandon_contents(buffer, size, NULL);
+    gwy_file_abandon_contents(buffer, fullsize, NULL);
     for (i = 0; i < rhkfile->len; i++)
         rhk_sm3_page_free(g_ptr_array_index(rhkfile, i));
     g_ptr_array_free(rhkfile, TRUE);
