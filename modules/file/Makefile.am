@@ -229,7 +229,7 @@ wsxmfile_la_SOURCES      = wsxmfile.c
 
 # They compile also without.
 createc_la_LIBADD        = @ZLIB@
-nrrdfile_la_LIBADD       = @ZLIB@
+nrrdfile_la_LIBADD       = @ZLIB@ @BZIP2@
 pixmap_la_LIBADD         = @PNG_LIBS@
 pixmap_la_CFLAGS         = $(AM_CFLAGS) @PNG_CFLAGS@
 hdrimage_la_LIBADD       = @EXR_LIBS@ @PNG_LIBS@

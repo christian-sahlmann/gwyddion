@@ -35,8 +35,7 @@
  * Nearly raw raster data (NRRD)
  * .nrrd
  * Read[1] Export[2]
- * [1] Not all options are implemented, e.g. sliced or BZIP2-compressed files
- * cannot be loaded.
+ * [1] Not all variants are implemented.
  * [2] Data are exported in a fixed attached native-endian float point format.
  **/
 
@@ -46,9 +45,12 @@
 #include <stdio.h>
 #include <stdarg.h>
 
-#undef HAVE_ZLIB
 #ifdef HAVE_ZLIB
 #include <zlib.h>
+#endif
+
+#ifdef HAVE_BZIP2
+#include <bzlib.h>
 #endif
 
 #include <glib/gstdio.h>
@@ -115,6 +117,8 @@ static gboolean      find_gwy_data_type  (NRRDDataType datatype,
                                           GError **error);
 static guchar*       load_detached_file  (const gchar *datafile,
                                           gsize *size,
+                                          gboolean gzcompressed,
+                                          gboolean bz2compressed,
                                           GError **error);
 static guint         pick_channel_axis   (guint dimension,
                                           const guint *sizes,
@@ -346,6 +350,14 @@ nrrdfile_load(const gchar *filename,
     if ((value = g_hash_table_lookup(fields, "byteskip")))
         byteskip = atol(value);
 
+    if (lineskip && (encoding == NRRD_ENCODING_GZIP
+                     || encoding == NRRD_ENCODING_BZIP2)) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Non-zero lineskip is supported only for uncompressed "
+                      "files."));
+        goto fail;
+    }
+
     if (!find_gwy_data_type(data_type, g_hash_table_lookup(fields, "endian"),
                             &rawdatatype, &byteorder, error))
         goto fail;
@@ -354,12 +366,23 @@ nrrdfile_load(const gchar *filename,
         kinds = split_per_axis_field(value, "kinds", dimension, TRUE, NULL);
 
     if (datafile) {
-        if (!(data_buffer = load_detached_file(datafile, &data_size, error)))
+        if (!(data_buffer = load_detached_file(datafile, &data_size,
+                                               encoding == NRRD_ENCODING_GZIP,
+                                               encoding == NRRD_ENCODING_BZIP2,
+                                               error)))
             goto fail;
 
         buffers_to_free = g_slist_append(buffers_to_free, data_buffer);
+        if (encoding == NRRD_ENCODING_GZIP || NRRD_ENCODING_BZIP2)
+            encoding = NRRD_ENCODING_RAW;
     }
     else {
+        if (encoding == NRRD_ENCODING_GZIP || encoding == NRRD_ENCODING_BZIP2) {
+            g_set_error(error, GWY_MODULE_FILE_ERROR,
+                        GWY_MODULE_FILE_ERROR_DATA,
+                        _("Compression is supported only for detached files."));
+            goto fail;
+        }
         data_buffer = buffer + header_size;
         data_size = size - header_size;
     }
@@ -633,10 +656,12 @@ find_gwy_data_type(NRRDDataType datatype, const gchar *endian,
 static guchar*
 load_detached_file(const gchar *datafile,
                    gsize *size,
+                   gboolean gzcompressed,
+                   gboolean bz2compressed,
                    GError **error)
 {
     GError *err = NULL;
-    gchar *buffer;
+    gchar *buffer = NULL;
 
     gwy_debug("Loading detached <%s>", datafile);
     if (datafile) {
@@ -648,9 +673,102 @@ load_detached_file(const gchar *datafile,
         }
     }
 
-    if (!g_file_get_contents(datafile, &buffer, size, &err)) {
-        err_GET_FILE_CONTENTS(error, &err);
-        return NULL;
+    if (gzcompressed) {
+#ifdef HAVE_ZLIB
+        gzFile *cfile = gzopen(datafile, "rb");
+        gsize prevsize, toread;
+        gssize readbytes;
+
+        if (!cfile) {
+            err_OPEN_READ(error);
+            return NULL;
+        }
+
+        *size = 0;
+        do {
+            prevsize = *size;
+            *size = MAX(2*prevsize, 4096);
+            buffer = g_realloc(buffer, *size);
+            toread = *size - prevsize;
+        } while ((readbytes = gzread(cfile, buffer + prevsize, toread))
+                 == toread);
+
+        if (readbytes < 0) {
+            gint errcode;
+            const gchar *message = gzerror(cfile, &errcode);
+
+            if (errcode == Z_ERRNO)
+                err_READ(error);
+            else
+                g_set_error(error, GWY_MODULE_FILE_ERROR,
+                            GWY_MODULE_FILE_ERROR_DATA,
+                            _("Cannot read from file: %s."), message);
+            gzclose(cfile);
+            g_free(buffer);
+            return NULL;
+        }
+
+        gzclose(cfile);
+        *size = prevsize + readbytes;
+        gwy_debug("decompressed size: %lu", (gulong)*size);
+#else
+        g_set_error(error, GWY_MODULE_FILE_ERROR,
+                    GWY_MODULE_FILE_ERROR_SPECIFIC,
+                    _("Cannot decompress gzip-encoded data.  "
+                      "Zlib support was not built in."));
+#endif
+    }
+    else if (bz2compressed) {
+#ifdef HAVE_BZIP2
+        BZFILE *cfile = BZ2_bzopen(datafile, "rb");
+        gsize prevsize, toread;
+        gssize readbytes;
+
+        if (!cfile) {
+            err_OPEN_READ(error);
+            return NULL;
+        }
+
+        *size = 0;
+        do {
+            prevsize = *size;
+            *size = MAX(2*prevsize, 4096);
+            buffer = g_realloc(buffer, *size);
+            toread = *size - prevsize;
+        } while ((readbytes = BZ2_bzread(cfile, buffer + prevsize, toread))
+                 == toread);
+
+        if (readbytes < 0) {
+            gint errcode;
+            const gchar *message = BZ2_bzerror(cfile, &errcode);
+
+            if (errcode == BZ_IO_ERROR)  /* XXX: Is this right? */
+                err_READ(error);
+            else
+                g_set_error(error, GWY_MODULE_FILE_ERROR,
+                            GWY_MODULE_FILE_ERROR_DATA,
+                            _("Cannot read from file: %s."), message);
+            BZ2_bzclose(cfile);
+            g_free(buffer);
+            return NULL;
+        }
+
+        BZ2_bzclose(cfile);
+        *size = prevsize + readbytes;
+        gwy_debug("decompressed size: %lu", (gulong)*size);
+#else
+        g_set_error(error, GWY_MODULE_FILE_ERROR,
+                    GWY_MODULE_FILE_ERROR_SPECIFIC,
+                    _("Cannot decompress bzip2-encoded data.  "
+                      "Bzip2 support was not built in."));
+#endif
+    }
+    else {
+        if (!g_file_get_contents(datafile, &buffer, size, &err)) {
+            err_GET_FILE_CONTENTS(error, &err);
+            return NULL;
+        }
+        gwy_debug("file size: %lu", (gulong)*size);
     }
 
     return buffer;
@@ -718,85 +836,6 @@ pick_channel_axis(guint dimension,
      * memory access pattern... */
     return 2;
 }
-
-#ifdef HAVE_ZLIB
-/* FIXME: This is wrong, NRRD requires real *gzip* compression, not just zlib
- * compression.  So we need to use gzopen().  BUT that cannot be done directly
- * with attached data, only with detached.  So this needs to be reworked. */
-static guchar*
-decode_gzip(const guchar *encoded,
-            gsize encsize,
-            gsize *decsize,
-            GError **error)
-{
-    gsize estimated_size = *decsize;
-
-    while (TRUE) {
-        z_stream zbuf;
-        gint status;
-
-        gwy_clear(&zbuf, 1);
-        zbuf.next_in = (char*)encoded;
-        zbuf.avail_in = encsize;
-        zbuf.next_out = g_new(char, estimated_size);
-        zbuf.avail_out = estimated_size;
-
-        /* XXX: zbuf->msg does not seem to ever contain anything, so just report
-         * the error codes. */
-        if ((status = inflateInit(&zbuf)) != Z_OK) {
-            g_set_error(error, GWY_MODULE_FILE_ERROR,
-                        GWY_MODULE_FILE_ERROR_SPECIFIC,
-                        _("zlib initialization failed with error %d, "
-                          "cannot decompress data."),
-                        status);
-            g_free(zbuf.next_out);
-            return NULL;
-        }
-
-        if ((status = inflate(&zbuf, Z_SYNC_FLUSH)) == Z_OK
-            /* zlib return Z_STREAM_END also when we *exactly* exhaust all
-             * input. But this is no error, in fact it should happen every
-             * time, so check for it specifically. */
-            || (status == Z_STREAM_END
-                && zbuf.total_in == encsize
-                && zbuf.total_out <= estimated_size)) {
-            *decsize = zbuf.total_out;
-            return zbuf.next_out;
-        }
-
-        /* This should not really happen whatever data we pass in.  And we have
-         * already our output, so just make some noise and get over it.  */
-        if (inflateEnd(&zbuf) != Z_OK)
-            g_warning("inflateEnd() failed with error %d", status);
-
-        g_free(zbuf.next_out);
-        if (status != Z_STREAM_END) {
-            g_set_error(error, GWY_MODULE_FILE_ERROR,
-                        GWY_MODULE_FILE_ERROR_DATA,
-                        _("Decompression of encoded data failed with "
-                          "error %d."),
-                        status);
-            return NULL;
-        }
-
-        /* Stream ended prematurely so our estimate was too small.  Enlarge
-         * the buffer and try again. */
-        estimated_size *= 2*estimated_size;
-    }
-}
-#else
-static guchar*
-decode_gzip(G_GNUC_UNUSED const guchar *encoded,
-            G_GNUC_UNUSED gsize encsize,
-            G_GNUC_UNUSED gsize *decsize,
-            GError **error)
-{
-    g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_SPECIFIC,
-                _("Cannot decompress encoded data.  Zlib support was "
-                  "not built in."));
-    return NULL;
-}
-#endif
 
 static guchar*
 decode_hex(const guchar *encoded,
@@ -982,8 +1021,10 @@ fail:
  * 2. decompression (decoding)
  * 3. byte skipping
  *
- * However, we treat text and hex as decoding steps while the specs do not.  So
- * for these formats the order has to be modified.
+ * However, we treat text and hex as decoding steps.  On the other hand, the
+ * format uses actual gzip-compressed data, not just zlib-deflated and to use
+ * gzopen() we need the compressed data as a detached file.  Fortunately, this
+ * seems to be the common case.
  */
 static gconstpointer
 get_raw_data_pointer(gconstpointer base,
@@ -1044,15 +1085,6 @@ get_raw_data_pointer(gconstpointer base,
     else if (encoding == NRRD_ENCODING_TEXT || encoding == NRRD_ENCODING_HEX) {
         /* Decoded later. */
         binary = FALSE;
-    }
-    else if (encoding == NRRD_ENCODING_GZIP) {
-        expected_size = (gwy_raw_data_size(rawdatatype)*nitems
-                         + MAX(byteskip, 1024));
-        base = decode_gzip(base, *size, &expected_size, error);
-        if (!base)
-            return NULL;
-        *size = expected_size;
-        *buffers_to_free = g_slist_append(*buffers_to_free, (gpointer)base);
     }
     else {
         err_UNSUPPORTED(error, "encoding");
