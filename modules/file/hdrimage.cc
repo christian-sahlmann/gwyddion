@@ -155,6 +155,9 @@ static GwyContainer* exr_load                   (const gchar *filename,
                                                  GwyRunType mode,
                                                  GError **error,
                                                  const gchar *name);
+static GwyContainer* exr_load_image             (const gchar *filename,
+                                                 GwyRunType mode,
+                                                 GError **error);
 static gboolean      exr_export                 (GwyContainer *data,
                                                  const gchar *filename,
                                                  GwyRunType mode,
@@ -315,25 +318,6 @@ exr_detect(const GwyFileDetectInfo *fileinfo,
         score = 100;
 
     return score;
-}
-
-static GwyContainer*
-exr_load(const gchar *filename,
-         GwyRunType mode,
-         GError **error,
-         const gchar *name)
-{
-    // FIXME: We can import files with metadata directly.
-    if (mode != GWY_RUN_INTERACTIVE) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR,
-                    GWY_MODULE_FILE_ERROR_INTERACTIVE,
-                    _("Pixmap image import must be run as interactive."));
-        return NULL;
-    }
-
-    g_warning("EXR: Implement me!");
-    err_NO_DATA(error);
-    return NULL;
 }
 
 static gboolean
@@ -801,6 +785,154 @@ exr_save_save_args(GwyContainer *container,
     gwy_container_set_double_by_name(container, zscale_key, args->zscale);
     gwy_container_set_enum_by_name(container, bit_depth_key, args->bit_depth);
 }
+
+static GwyContainer*
+exr_load(const gchar *filename,
+         GwyRunType mode,
+         GError **error,
+         G_GNUC_UNUSED const gchar *name)
+{
+    // FIXME: We can import files with metadata directly.
+    if (mode != GWY_RUN_INTERACTIVE) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR,
+                    GWY_MODULE_FILE_ERROR_INTERACTIVE,
+                    _("Pixmap image import must be run as interactive."));
+        return NULL;
+    }
+
+    GwyContainer *container = NULL;
+
+    try {
+        container = exr_load_image(filename, mode, error);
+    }
+    catch (const std::exception &exc) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_IO,
+                    _("EXR image loading failed with libImf error: %s"),
+                    exc.what());
+    }
+
+    return container;
+}
+
+static const Imf::DoubleAttribute*
+exr_get_double_attr(const Imf::InputFile &infile,
+                    const gchar *name)
+{
+    const Imf::DoubleAttribute *attr
+        = infile.header().findTypedAttribute<Imf::DoubleAttribute>(name);
+
+    if (attr) {
+        gwy_debug("%s = %g", name, attr->value());
+    }
+    return attr;
+}
+
+static const Imf::StringAttribute*
+exr_get_string_attr(const Imf::InputFile &infile,
+                    const gchar *name)
+{
+    const Imf::StringAttribute *attr
+        = infile.header().findTypedAttribute<Imf::StringAttribute>(name);
+
+    if (attr) {
+        gwy_debug("%s = <%s>", name, attr->value().c_str());
+    }
+    return attr;
+}
+
+// NB: This function either raises a C++ exception or it reports the error via
+// via GError.  In the latter case the return value is NULL.
+static GwyContainer*
+exr_load_image(const gchar *filename,
+               GwyRunType mode,
+               GError **error)
+{
+
+    Imf::InputFile infile(filename);
+
+    Imath::Box2i dw = infile.header().dataWindow();
+    gint width = dw.max.x - dw.min.x + 1;
+    gint height = dw.max.y - dw.min.y + 1;
+    gwy_debug("width: %d, height: %d", width, height);
+
+    const Imf::DoubleAttribute
+        *xreal_attr = exr_get_double_attr(infile, GWY_IMGKEY_XREAL),
+        *yreal_attr = exr_get_double_attr(infile, GWY_IMGKEY_YREAL),
+        *xoff_attr = exr_get_double_attr(infile, GWY_IMGKEY_XOFFSET),
+        *yoff_attr = exr_get_double_attr(infile, GWY_IMGKEY_YOFFSET),
+        *zscale_attr = exr_get_double_attr(infile, GWY_IMGKEY_ZSCALE),
+        *zmin_attr = exr_get_double_attr(infile, GWY_IMGKEY_ZMIN),
+        *zmax_attr = exr_get_double_attr(infile, GWY_IMGKEY_ZMAX);
+    const Imf::StringAttribute
+        *xyunit_attr = exr_get_string_attr(infile, GWY_IMGKEY_XYUNIT),
+        *zunit_attr = exr_get_string_attr(infile, GWY_IMGKEY_ZUNIT),
+        *title_attr = exr_get_string_attr(infile, GWY_IMGKEY_TITLE);
+
+    const Imf::ChannelList &channels = infile.header().channels();
+    Imf::FrameBuffer framebuffer;
+    // TODO: Make freeing of this exception-safe, probably by passing the
+    // responsibility to the caller.
+    GSList *buffers = NULL;
+
+    for (Imf::ChannelList::ConstIterator i = channels.begin();
+         i != channels.end();
+         ++i) {
+        const Imf::Channel &channel = i.channel();
+        gwy_debug("channel: <%s>, type: %u", i.name(), (guint)channel.type);
+        gwy_debug("samplings: %u, %u", channel.xSampling, channel.ySampling);
+
+        if (channel.type == Imf::UINT) {
+            guint32 *buffer = g_new(guint32, width*height);
+            char *base = (char*)(buffer - dw.min.x - width*dw.min.y);
+            buffers = g_slist_append(buffers, (gpointer)buffer);
+            framebuffer.insert(i.name(),
+                               Imf::Slice(Imf::UINT, base,
+                                          sizeof(buffer[0]),
+                                          width*sizeof(buffer[0]),
+                                          channel.xSampling, channel.ySampling,
+                                          0.0));
+        }
+        else if (channel.type == Imf::HALF) {
+            half *buffer = g_new(half, width*height);
+            char *base = (char*)(buffer - dw.min.x - width*dw.min.y);
+            buffers = g_slist_append(buffers, (gpointer)buffer);
+            framebuffer.insert(i.name(),
+                               Imf::Slice(Imf::HALF, base,
+                                          sizeof(buffer[0]),
+                                          width*sizeof(buffer[0]),
+                                          channel.xSampling, channel.ySampling,
+                                          0.0));
+        }
+        else if (channel.type == Imf::FLOAT) {
+            gfloat *buffer = g_new(gfloat, width*height);
+            char *base = (char*)(buffer - dw.min.x - width*dw.min.y);
+            buffers = g_slist_append(buffers, (gpointer)buffer);
+            framebuffer.insert(i.name(),
+                               Imf::Slice(Imf::FLOAT, base,
+                                          sizeof(buffer[0]),
+                                          width*sizeof(buffer[0]),
+                                          channel.xSampling, channel.ySampling,
+                                          0.0));
+        }
+        else {
+            g_assert_not_reached();
+        }
+
+    }
+
+    infile.setFrameBuffer(framebuffer);
+    infile.readPixels(dw.min.y, dw.max.y);
+
+    for (GSList *l = buffers; l; l = g_slist_next(l)) {
+        g_free(l->data);
+    }
+    g_slist_free(buffers);
+
+    g_warning("EXR: Implement me!");
+    err_NO_DATA(error);
+    return NULL;
+}
+
 #endif
 
 /***************************************************************************
