@@ -24,7 +24,7 @@
  * .exr
  * Read Export
  **/
-#define DEBUG 1
+
 #include "config.h"
 #include <string.h>
 #include <errno.h>
@@ -854,6 +854,34 @@ exr_get_string_attr(const Imf::InputFile &infile,
     return attr;
 }
 
+static inline GwyRawDataType
+exr_type_to_gwy_type(Imf::PixelType type)
+{
+    if (type == Imf::UINT)
+        return GWY_RAW_DATA_UINT32;
+    else if (type == Imf::HALF)
+        return GWY_RAW_DATA_HALF;
+    else if (type == Imf::FLOAT)
+        return GWY_RAW_DATA_FLOAT;
+
+    g_return_val_if_reached((GwyRawDataType)0);
+}
+
+static gchar*
+exr_format_channel_names(const Imf::ChannelList &channels)
+{
+    GString *str = g_string_new(NULL);
+
+    for (Imf::ChannelList::ConstIterator i = channels.begin();
+         i != channels.end();
+         ++i) {
+        if (str->len)
+            g_string_append(str, ", ");
+        g_string_append(str, i.name());
+    }
+    return g_string_free(str, FALSE);
+}
+
 // NB: This function either raises a C++ exception or it reports the error via
 // via GError.  In the latter case the return value is NULL.
 static GwyContainer*
@@ -929,7 +957,11 @@ exr_load_image(const gchar *filename,
                                           0.0));
         }
         else {
-            g_assert_not_reached();
+            g_set_error(error, GWY_MODULE_FILE_ERROR,
+                        GWY_MODULE_FILE_ERROR_DATA,
+                        _("OpenEXR data type %u is invalid or unsupported."),
+                        (guint)channel.type);
+            return NULL;
         }
 
     }
@@ -943,17 +975,19 @@ exr_load_image(const gchar *filename,
     infile.readPixels(dw.min.y, dw.max.y);
 
     gboolean manual_import = FALSE;
+    gdouble xreal, yreal, xoff = 0.0, yoff = 0.0;
+    gdouble q = 1.0, z0 = 0.0;
+    GwySIUnit *unitxy = NULL, *unitz = NULL;
 
     if (xreal_attr && yreal_attr) {
-        gdouble xreal = xreal_attr->value(),
-                yreal = yreal_attr->value(),
-                xoff = xoff_attr ? xoff_attr->value() : 0.0,
-                yoff = yoff_attr ? yoff_attr->value() : 0.0;
-        gdouble q = 1.0, z0 = 0.0;
-        GwySIUnit *unitxy = NULL, *unitz = NULL;
-        gint power10;
-
         gwy_debug("Found Gwyddion image keys, using for direct import.");
+
+        xreal = xreal_attr->value();
+        yreal = yreal_attr->value();
+        if (xoff_attr)
+            xoff = xoff_attr->value();
+        if (yoff_attr)
+            yoff = yoff_attr->value();
 
         /* We set zmin and zmax only for UINT data type. */
         if (zmin_attr && zmax_attr) {
@@ -966,6 +1000,8 @@ exr_load_image(const gchar *filename,
         else if (zscale_attr) {
             q = zscale_attr->value();
         }
+
+        gint power10;
 
         if (xyunit_attr) {
             unitxy = gwy_si_unit_new_parse(xyunit_attr->value().c_str(),
@@ -984,66 +1020,13 @@ exr_load_image(const gchar *filename,
             q *= pow10(power10);
             z0 *= pow10(power10);
         }
-
-        container = gwy_container_new();
-        *objects = g_slist_prepend(*objects, (gpointer)container);
-
-        GSList *l = *buffers;
-        gint id = 0;
-
-        for (Imf::ChannelList::ConstIterator i = channels.begin();
-             i != channels.end();
-             ++i, ++id, l = g_slist_next(l)) {
-            const Imf::Channel &channel = i.channel();
-            GwyRawDataType rawdatatype;
-
-            g_assert(l);
-            if (channel.type == Imf::UINT)
-                rawdatatype = GWY_RAW_DATA_UINT32;
-            else if (channel.type == Imf::HALF)
-                rawdatatype = GWY_RAW_DATA_HALF;
-            else if (channel.type == Imf::FLOAT)
-                rawdatatype = GWY_RAW_DATA_FLOAT;
-            else {
-                g_assert_not_reached();
-            }
-
-            // TODO: x/y sampling.
-            GwyDataField *dfield = gwy_data_field_new(width, height,
-                                                      xreal, yreal, FALSE);
-            gdouble *d = gwy_data_field_get_data(dfield);
-            *objects = g_slist_prepend(*objects, (gpointer)dfield);
-            gwy_convert_raw_data(l->data, width*height, 1,
-                                 rawdatatype, GWY_BYTE_ORDER_NATIVE,
-                                 d, q, z0);
-
-            if (unitxy) {
-                GwySIUnit *u = gwy_data_field_get_si_unit_xy(dfield);
-                gwy_serializable_clone(G_OBJECT(unitxy), G_OBJECT(u));
-            }
-            if (unitz) {
-                GwySIUnit *u = gwy_data_field_get_si_unit_z(dfield);
-                gwy_serializable_clone(G_OBJECT(unitz), G_OBJECT(u));
-            }
-
-            GQuark quark = gwy_app_get_data_key_for_id(id);
-            gwy_container_set_object(container, quark, dfield);
-
-            gchar *key = g_strconcat(g_quark_to_string(quark), "/title", NULL);
-            gchar *title;
-            if (title_attr && nchannels > 1)
-                title = g_strconcat(title_attr->value().c_str(), " ", i.name(),
-                                    NULL);
-            else if (title_attr)
-                title = g_strdup(title_attr->value().c_str());
-            else
-                title = g_strdup(i.name());
-            gwy_container_set_string_by_name(container, key,
-                                             (const guchar*)title);
-            g_free(key);
-        }
     }
     else {
+        // XXX: This is sort of completely wrong as each channel can have
+        // different scaling.  But presenting half a dozen physical scale
+        // choosers is hardly better.  Just import the data and let the user
+        // sort it out.  For plain images, only lateral measurements will
+        // probably make sense anyway.
         gwy_debug("Manual import is necessary.");
         if (mode != GWY_RUN_INTERACTIVE) {
             g_set_error(error, GWY_MODULE_FILE_ERROR,
@@ -1051,17 +1034,94 @@ exr_load_image(const gchar *filename,
                         _("Pixmap image import must be run as interactive."));
             return NULL;
         }
+
+        Imf::ChannelList::ConstIterator first = channels.begin();
+        const Imf::Channel &channel = first.channel();
+        GwyRawDataType rawdatatype = exr_type_to_gwy_type(channel.type);
+
+        GwyDataField *f = gwy_data_field_new(width, height, 1.0, 1.0, FALSE);
+        gdouble *d = gwy_data_field_get_data(f);
+        gwy_convert_raw_data((*buffers)->data, width*height, 1,
+                             rawdatatype, GWY_BYTE_ORDER_NATIVE,
+                             d, 1.0, 0.0);
+
+        PixmapLoadArgs args;
+        pixmap_load_load_args(gwy_app_settings_get(), &args);
+
+        gchar *channel_names = exr_format_channel_names(channels);
+        gboolean ok = pixmap_load_dialog(&args, "OpenEXR", f, channel_names, 1);
+        g_free(channel_names);
+        g_object_unref(f);
+        pixmap_load_save_args(gwy_app_settings_get(), &args);
+        if (!ok) {
+            g_free(args.xyunit);
+            g_free(args.zunit);
+            err_CANCELLED(error);
+            return NULL;
+        }
+
+        xreal = args.xreal * pow10(args.xyexponent);
+        yreal = args.yreal * pow10(args.xyexponent);
+        z0 = 0.0;
+        q = args.zreal * pow10(args.zexponent);
+        unitxy = gwy_si_unit_new(args.xyunit);
+        unitz = gwy_si_unit_new(args.zunit);
+        g_free(args.xyunit);
+        g_free(args.zunit);
     }
 
-    if (container) {
-        // We have container on the unref-me-list so another reference must be
-        // taken to retain it.
-        g_object_ref(container);
+    container = gwy_container_new();
+    *objects = g_slist_prepend(*objects, (gpointer)container);
+
+    GSList *l = *buffers;
+    gint id = 0;
+
+    for (Imf::ChannelList::ConstIterator i = channels.begin();
+         i != channels.end();
+         ++i, ++id, l = g_slist_next(l)) {
+        const Imf::Channel &channel = i.channel();
+        GwyRawDataType rawdatatype = exr_type_to_gwy_type(channel.type);
+
+        g_assert(l);
+
+        // TODO: x/y sampling.
+        GwyDataField *dfield = gwy_data_field_new(width, height,
+                                                  xreal, yreal, FALSE);
+        gdouble *d = gwy_data_field_get_data(dfield);
+        *objects = g_slist_prepend(*objects, (gpointer)dfield);
+        gwy_convert_raw_data(l->data, width*height, 1,
+                             rawdatatype, GWY_BYTE_ORDER_NATIVE,
+                             d, q, z0);
+
+        if (unitxy) {
+            GwySIUnit *u = gwy_data_field_get_si_unit_xy(dfield);
+            gwy_serializable_clone(G_OBJECT(unitxy), G_OBJECT(u));
+        }
+        if (unitz) {
+            GwySIUnit *u = gwy_data_field_get_si_unit_z(dfield);
+            gwy_serializable_clone(G_OBJECT(unitz), G_OBJECT(u));
+        }
+
+        GQuark quark = gwy_app_get_data_key_for_id(id);
+        gwy_container_set_object(container, quark, dfield);
+
+        gchar *key = g_strconcat(g_quark_to_string(quark), "/title", NULL);
+        gchar *title;
+        if (title_attr && nchannels > 1)
+            title = g_strconcat(title_attr->value().c_str(), " ", i.name(),
+                                NULL);
+        else if (title_attr)
+            title = g_strdup(title_attr->value().c_str());
+        else
+            title = g_strdup(i.name());
+        gwy_container_set_string_by_name(container, key,
+                                         (const guchar*)title);
+        g_free(key);
     }
-    else {
-        g_warning("EXR: Implement me!");
-        err_NO_DATA(error);
-    }
+
+    // We have container on the unref-me-list so another reference must be
+    // taken to retain it.
+    g_object_ref(container);
 
     return container;
 }
@@ -1149,9 +1209,9 @@ static const gchar*
 describe_channels(gboolean grayscale, gboolean has_alpha)
 {
     if (grayscale)
-        return has_alpha ? "GA" : "G";
+        return has_alpha ? "G, A" : "G";
     else
-        return has_alpha ? "RGBA" : "RGB";
+        return has_alpha ? "R, G, B, A" : "R, G, B";
 }
 
 static GwyContainer*
