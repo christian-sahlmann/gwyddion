@@ -24,6 +24,7 @@
 #include <stdarg.h>
 #include <string.h>
 #include <gobject/gvaluecollector.h>
+#include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwyutils.h>
 
@@ -1037,6 +1038,48 @@ get_pascal_real_be(const guchar *p)
     return x*gwy_powi(2.0, (gint)p[5] - 129);
 }
 
+static inline gdouble
+get_half_le(const guchar *p)
+{
+    gdouble x = p[0]/1024.0 + (p[1] & 0x03)/4.0;
+    gint exponent = (p[1] >> 2) & 0x1f;
+
+    if (G_UNLIKELY(exponent == 0x1f)) {
+        /* XXX: Gwyddion does not work with NaNs.  Should we produce them?*/
+        if (x)
+            return 0.0/0.0;
+        return (p[1] & 0x80) ? -HUGE_VAL : HUGE_VAL;
+    }
+
+    if (exponent)
+        x = (1.0 + x)*gwy_powi(2.0, exponent - 15);
+    else
+        x = x/16384.0;
+
+    return (p[1] & 0x80) ? -x : x;
+}
+
+static inline gdouble
+get_half_be(const guchar *p)
+{
+    gdouble x = p[1]/1024.0 + (p[0] & 0x03)/4.0;
+    gint exponent = (p[0] >> 2) & 0x1f;
+
+    if (G_UNLIKELY(exponent == 0x1f)) {
+        /* XXX: Gwyddion does not work with NaNs.  Should we produce them?*/
+        if (x)
+            return 0.0/0.0;
+        return (p[0] & 0x80) ? -HUGE_VAL : HUGE_VAL;
+    }
+
+    if (exponent)
+        x = (1.0 + x)*gwy_powi(2.0, exponent - 15);
+    else
+        x = x/16384.0;
+
+    return (p[0] & 0x80) ? -x : x;
+}
+
 /**
  * gwy_convert_raw_data:
  * @data: Pointer to the input raw data to be converted to doubles.  The data
@@ -1155,8 +1198,15 @@ gwy_convert_raw_data(gconstpointer data,
         }
     }
     else if (datatype == GWY_RAW_DATA_HALF) {
-        g_warning("Half-precision floating point data format "
-                  "is not implemented.");
+        const guchar *p = (const guchar*)data;
+        if (littleendian) {
+            for (i = nitems; i; i--, p += 2*stride, target++)
+                *target = scale*get_half_le(p) + offset;
+        }
+        else {
+            for (i = nitems; i; i--, p += 2*stride, target++)
+                *target = scale*get_half_be(p) + offset;
+        }
     }
     else if (datatype == GWY_RAW_DATA_FLOAT) {
         const guint32 *u32 = (const guint32*)data;
