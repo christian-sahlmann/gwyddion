@@ -863,6 +863,7 @@ exr_load_image(const gchar *filename,
                GSList **buffers,
                GError **error)
 {
+    GwyContainer *container = NULL;
     Imf::InputFile infile(filename);
 
     Imath::Box2i dw = infile.header().dataWindow();
@@ -885,10 +886,11 @@ exr_load_image(const gchar *filename,
 
     const Imf::ChannelList &channels = infile.header().channels();
     Imf::FrameBuffer framebuffer;
+    guint nchannels = 0;
 
     for (Imf::ChannelList::ConstIterator i = channels.begin();
          i != channels.end();
-         ++i) {
+         ++i, ++nchannels) {
         const Imf::Channel &channel = i.channel();
         gwy_debug("channel: <%s>, type: %u", i.name(), (guint)channel.type);
         gwy_debug("samplings: %u, %u", channel.xSampling, channel.ySampling);
@@ -932,14 +934,137 @@ exr_load_image(const gchar *filename,
 
     }
 
+    if (!nchannels) {
+        err_NO_DATA(error);
+        return NULL;
+    }
+
     infile.setFrameBuffer(framebuffer);
     infile.readPixels(dw.min.y, dw.max.y);
 
-    g_warning("EXR: Implement me!");
-    err_NO_DATA(error);
-    return NULL;
-}
+    gboolean manual_import = FALSE;
 
+    if (xreal_attr && yreal_attr) {
+        gdouble xreal = xreal_attr->value(),
+                yreal = yreal_attr->value(),
+                xoff = xoff_attr ? xoff_attr->value() : 0.0,
+                yoff = yoff_attr ? yoff_attr->value() : 0.0;
+        gdouble q = 1.0, z0 = 0.0;
+        GwySIUnit *unitxy = NULL, *unitz = NULL;
+        gint power10;
+
+        gwy_debug("Found Gwyddion image keys, using for direct import.");
+
+        /* We set zmin and zmax only for UINT data type. */
+        if (zmin_attr && zmax_attr) {
+            z0 = zmin_attr->value();
+            q = (zmax_attr->value() - z0)/(G_MAXUINT32 + 0.999);
+        }
+        else if (zmax_attr) {
+            q = zmax_attr->value()/(G_MAXUINT32 + 0.999);
+        }
+        else if (zscale_attr) {
+            q = zscale_attr->value();
+        }
+
+        if (xyunit_attr) {
+            unitxy = gwy_si_unit_new_parse(xyunit_attr->value().c_str(),
+                                           &power10);
+            *objects = g_slist_prepend(*objects, (gpointer)unitxy);
+            xreal *= pow10(power10);
+            yreal *= pow10(power10);
+            xoff *= pow10(power10);
+            yoff *= pow10(power10);
+        }
+
+        if (zunit_attr) {
+            unitz = gwy_si_unit_new_parse(zunit_attr->value().c_str(),
+                                          &power10);
+            *objects = g_slist_prepend(*objects, (gpointer)unitz);
+            q *= pow10(power10);
+            z0 *= pow10(power10);
+        }
+
+        container = gwy_container_new();
+        *objects = g_slist_prepend(*objects, (gpointer)container);
+
+        GSList *l = *buffers;
+        gint id = 0;
+
+        for (Imf::ChannelList::ConstIterator i = channels.begin();
+             i != channels.end();
+             ++i, ++id, l = g_slist_next(l)) {
+            const Imf::Channel &channel = i.channel();
+            GwyRawDataType rawdatatype;
+
+            g_assert(l);
+            if (channel.type == Imf::UINT)
+                rawdatatype = GWY_RAW_DATA_UINT32;
+            else if (channel.type == Imf::HALF)
+                rawdatatype = GWY_RAW_DATA_HALF;
+            else if (channel.type == Imf::FLOAT)
+                rawdatatype = GWY_RAW_DATA_FLOAT;
+            else {
+                g_assert_not_reached();
+            }
+
+            // TODO: x/y sampling.
+            GwyDataField *dfield = gwy_data_field_new(width, height,
+                                                      xreal, yreal, FALSE);
+            gdouble *d = gwy_data_field_get_data(dfield);
+            *objects = g_slist_prepend(*objects, (gpointer)dfield);
+            gwy_convert_raw_data(l->data, width*height, 1,
+                                 rawdatatype, GWY_BYTE_ORDER_NATIVE,
+                                 d, q, z0);
+
+            if (unitxy) {
+                GwySIUnit *u = gwy_data_field_get_si_unit_xy(dfield);
+                gwy_serializable_clone(G_OBJECT(unitxy), G_OBJECT(u));
+            }
+            if (unitz) {
+                GwySIUnit *u = gwy_data_field_get_si_unit_z(dfield);
+                gwy_serializable_clone(G_OBJECT(unitz), G_OBJECT(u));
+            }
+
+            GQuark quark = gwy_app_get_data_key_for_id(id);
+            gwy_container_set_object(container, quark, dfield);
+
+            gchar *key = g_strconcat(g_quark_to_string(quark), "/title", NULL);
+            gchar *title;
+            if (title_attr && nchannels > 1)
+                title = g_strconcat(title_attr->value().c_str(), " ", i.name(),
+                                    NULL);
+            else if (title_attr)
+                title = g_strdup(title_attr->value().c_str());
+            else
+                title = g_strdup(i.name());
+            gwy_container_set_string_by_name(container, key,
+                                             (const guchar*)title);
+            g_free(key);
+        }
+    }
+    else {
+        gwy_debug("Manual import is necessary.");
+        if (mode != GWY_RUN_INTERACTIVE) {
+            g_set_error(error, GWY_MODULE_FILE_ERROR,
+                        GWY_MODULE_FILE_ERROR_INTERACTIVE,
+                        _("Pixmap image import must be run as interactive."));
+            return NULL;
+        }
+    }
+
+    if (container) {
+        // We have container on the unref-me-list so another reference must be
+        // taken to retain it.
+        g_object_ref(container);
+    }
+    else {
+        g_warning("EXR: Implement me!");
+        err_NO_DATA(error);
+    }
+
+    return container;
+}
 #endif
 
 /***************************************************************************
