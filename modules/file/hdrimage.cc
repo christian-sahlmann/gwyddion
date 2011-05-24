@@ -157,6 +157,8 @@ static GwyContainer* exr_load                   (const gchar *filename,
                                                  const gchar *name);
 static GwyContainer* exr_load_image             (const gchar *filename,
                                                  GwyRunType mode,
+                                                 GSList **objects,
+                                                 GSList **buffers,
                                                  GError **error);
 static gboolean      exr_export                 (GwyContainer *data,
                                                  const gchar *filename,
@@ -801,15 +803,27 @@ exr_load(const gchar *filename,
     }
 
     GwyContainer *container = NULL;
+    GSList *objects = NULL, *buffers = NULL;
 
     try {
-        container = exr_load_image(filename, mode, error);
+        container = exr_load_image(filename, mode, &objects, &buffers, error);
     }
     catch (const std::exception &exc) {
         g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_IO,
                     _("EXR image loading failed with libImf error: %s"),
                     exc.what());
     }
+
+    for (GSList *l = buffers; l; l = g_slist_next(l)) {
+        g_free(l->data);
+    }
+    g_slist_free(buffers);
+
+    for (GSList *l = objects; l; l = g_slist_next(l)) {
+        g_object_unref(l->data);
+    }
+    g_slist_free(objects);
+
 
     return container;
 }
@@ -845,9 +859,10 @@ exr_get_string_attr(const Imf::InputFile &infile,
 static GwyContainer*
 exr_load_image(const gchar *filename,
                GwyRunType mode,
+               GSList **objects,
+               GSList **buffers,
                GError **error)
 {
-
     Imf::InputFile infile(filename);
 
     Imath::Box2i dw = infile.header().dataWindow();
@@ -870,9 +885,6 @@ exr_load_image(const gchar *filename,
 
     const Imf::ChannelList &channels = infile.header().channels();
     Imf::FrameBuffer framebuffer;
-    // TODO: Make freeing of this exception-safe, probably by passing the
-    // responsibility to the caller.
-    GSList *buffers = NULL;
 
     for (Imf::ChannelList::ConstIterator i = channels.begin();
          i != channels.end();
@@ -884,7 +896,7 @@ exr_load_image(const gchar *filename,
         if (channel.type == Imf::UINT) {
             guint32 *buffer = g_new(guint32, width*height);
             char *base = (char*)(buffer - dw.min.x - width*dw.min.y);
-            buffers = g_slist_append(buffers, (gpointer)buffer);
+            *buffers = g_slist_append(*buffers, (gpointer)buffer);
             framebuffer.insert(i.name(),
                                Imf::Slice(Imf::UINT, base,
                                           sizeof(buffer[0]),
@@ -895,7 +907,7 @@ exr_load_image(const gchar *filename,
         else if (channel.type == Imf::HALF) {
             half *buffer = g_new(half, width*height);
             char *base = (char*)(buffer - dw.min.x - width*dw.min.y);
-            buffers = g_slist_append(buffers, (gpointer)buffer);
+            *buffers = g_slist_append(*buffers, (gpointer)buffer);
             framebuffer.insert(i.name(),
                                Imf::Slice(Imf::HALF, base,
                                           sizeof(buffer[0]),
@@ -906,7 +918,7 @@ exr_load_image(const gchar *filename,
         else if (channel.type == Imf::FLOAT) {
             gfloat *buffer = g_new(gfloat, width*height);
             char *base = (char*)(buffer - dw.min.x - width*dw.min.y);
-            buffers = g_slist_append(buffers, (gpointer)buffer);
+            *buffers = g_slist_append(*buffers, (gpointer)buffer);
             framebuffer.insert(i.name(),
                                Imf::Slice(Imf::FLOAT, base,
                                           sizeof(buffer[0]),
@@ -922,11 +934,6 @@ exr_load_image(const gchar *filename,
 
     infile.setFrameBuffer(framebuffer);
     infile.readPixels(dw.min.y, dw.max.y);
-
-    for (GSList *l = buffers; l; l = g_slist_next(l)) {
-        g_free(l->data);
-    }
-    g_slist_free(buffers);
 
     g_warning("EXR: Implement me!");
     err_NO_DATA(error);
