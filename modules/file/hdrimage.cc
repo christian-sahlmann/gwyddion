@@ -974,7 +974,6 @@ exr_load_image(const gchar *filename,
     infile.setFrameBuffer(framebuffer);
     infile.readPixels(dw.min.y, dw.max.y);
 
-    gboolean manual_import = FALSE;
     gdouble xreal, yreal, xoff = 0.0, yoff = 0.0;
     gdouble q = 1.0, z0 = 0.0;
     GwySIUnit *unitxy = NULL, *unitz = NULL;
