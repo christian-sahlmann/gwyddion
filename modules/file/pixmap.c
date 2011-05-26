@@ -444,7 +444,7 @@ static GwyModuleInfo module_info = {
        "PNG, JPEG, TIFF, PPM, BMP, TARGA. "
        "Import support relies on GDK and thus may be installation-dependent."),
     "Yeti <yeti@gwyddion.net>",
-    "7.14",
+    "7.15",
     "David Nečas (Yeti)",
     "2004-2011",
 };
@@ -719,14 +719,6 @@ pixmap_load(const gchar *filename,
 
     gwy_debug("Loading <%s> as %s", filename, name);
 
-    /* Someday we can load pixmaps with default settings */
-    if (mode != GWY_RUN_INTERACTIVE) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR,
-                    GWY_MODULE_FILE_ERROR_INTERACTIVE,
-                    _("Pixmap image import must be run as interactive."));
-        return NULL;
-    }
-
     format_info = find_format(name);
     if (!format_info) {
         g_set_error(error, GWY_MODULE_FILE_ERROR,
@@ -830,15 +822,23 @@ pixmap_load(const gchar *filename,
     }
 
     /* ask user what she thinks */
-    ok = pixmap_load_dialog(&args, name, width, height,
-                            maptype_known, !not_grayscale, alpha_important);
-    pixmap_load_save_args(settings, &args);
-    if (!ok) {
-        err_CANCELLED(error);
-        g_object_unref(pixbuf);
-        g_free(args.xyunit);
-        g_free(args.zunit);
-        return NULL;
+    if (mode == GWY_RUN_INTERACTIVE) {
+        gwy_debug("Manual import is necessary.");
+
+        ok = pixmap_load_dialog(&args, name, width, height,
+                                maptype_known, !not_grayscale, alpha_important);
+        pixmap_load_save_args(settings, &args);
+        if (!ok) {
+            err_CANCELLED(error);
+            g_object_unref(pixbuf);
+            g_free(args.xyunit);
+            g_free(args.zunit);
+            return NULL;
+        }
+    }
+    else {
+        gwy_debug("Running non-interactively, reusing the last parameters.");
+        /* Nothing to do here; the args have been already loaded. */
     }
 
     data = gwy_container_new();
