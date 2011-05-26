@@ -148,6 +148,8 @@ static void  gwy_app_recent_file_list_destroyed      (Controls *controls);
 static void  gwy_app_recent_file_list_prune          (Controls *controls);
 static void  gwy_app_recent_file_list_open           (GtkWidget *list);
 static GtkWidget* gwy_app_recent_file_list_filter_construct(Controls *controls);
+static void  gwy_app_recent_file_list_filter_clear   (GtkWidget *button,
+                                                      Controls *controls);
 static void  gwy_app_recent_file_list_filter_apply   (GtkEntry *entry,
                                                       Controls *controls);
 static void gwy_app_recent_file_list_filter_case_changed(GtkToggleButton *check,
@@ -547,7 +549,7 @@ static GtkWidget*
 gwy_app_recent_file_list_filter_construct(Controls *controls)
 {
     GwyContainer *settings;
-    GtkWidget *hbox, *label, *entry, *check;
+    GtkWidget *hbox, *label, *entry, *check, *button, *image;
     const guchar *glob;
 
     settings = gwy_app_settings_get();
@@ -572,6 +574,17 @@ gwy_app_recent_file_list_filter_construct(Controls *controls)
                      G_CALLBACK(gwy_app_recent_file_list_filter_apply),
                      controls);
 
+    button = gtk_button_new();
+    gtk_button_set_relief(GTK_BUTTON(button), GTK_RELIEF_NONE);
+    gtk_box_pack_start(GTK_BOX(hbox), button, FALSE, FALSE, 0);
+    g_signal_connect(button, "clicked",
+                     G_CALLBACK(gwy_app_recent_file_list_filter_clear),
+                     controls);
+
+    image = gtk_image_new_from_stock(GTK_STOCK_CLEAR,
+                                     GTK_ICON_SIZE_SMALL_TOOLBAR);
+    gtk_button_set_image(GTK_BUTTON(button), image);
+
 #ifdef G_OS_WIN32
     controls->casesens = FALSE;
 #else
@@ -590,6 +603,14 @@ gwy_app_recent_file_list_filter_construct(Controls *controls)
                      controls);
 
     return hbox;
+}
+
+static void
+gwy_app_recent_file_list_filter_clear(G_GNUC_UNUSED GtkWidget *button,
+                                      Controls *controls)
+{
+    gtk_entry_set_text(GTK_ENTRY(controls->filter_glob), "");
+    gtk_widget_activate(controls->filter_glob);
 }
 
 static void
