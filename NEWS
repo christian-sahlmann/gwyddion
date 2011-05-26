@@ -2,6 +2,8 @@
 Application:
 - New translation: Spanish.
 - Translations updated: Czech, French, Italian, Russian.
+- Keyboard shortcut Ctrl-H invokes Document History.
+- Document history filter has a Clear button.
 
 Libraries:
 - libgwyddion: SI unit arithmetic, sometimes giving incorrect results if one of
@@ -13,10 +15,11 @@ Modules:
 - CSM (new): Imports Benyuan CSM files.
 - AMB (new): Import Ambios AMB files.
 - WIP (new): Imports WITec project files.
-- NRRD (new): Imports and exports Nearly Raw Raster Data (NRRD).
+- NRRD (new): Imports and exports Nearly Raw Raster Data (NRRD).  To get
+  support for compressed files, Gwyddion must be built with libz and/or libbz2.
 - Dumb (new): Loads plug-in proxy's dumb dump files.
-- HDR image (new): Exports data into OpenEXR files (if available).  Imports
-  16bit PNG and PGM images.
+- HDR image (new): Exports data into OpenEXR files (requires libImf, currently
+  used only on Unix).  Imports 16bit PNG and PGM images.
 - Mask editor tool: Program termination upon attempt to draw in drawing mode
   was corrected (bun introduced in 2.24).
 - NT-MDT: Slowness of MDA spectra loading was corrected.
@@ -26,6 +29,7 @@ Modules:
   also as Luma.
 - Pixmap: 16bit greyscale PNG and PGM images are exported with metadata bearing
   the physical units and scales as text comments or PNG sCAL and pCAL chunks.
+- Pixmap: Images are displayed in file open dialog preview.
 - OPD: Workaround for weird AdjustVSI_* fields was added, making possible to
   open VSI files.
 - OLS: Can load colour images; R, G, B are imported as separate channels.
