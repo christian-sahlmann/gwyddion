@@ -920,41 +920,41 @@ exr_load_image(const gchar *filename,
          i != channels.end();
          ++i, ++nchannels) {
         const Imf::Channel &channel = i.channel();
+        guint xs = channel.xSampling, ys = channel.ySampling;
+        // Round up; it's better to allocate too large buffer than too small.
+        guint xres = (width + xs-1)/xs, yres = (height + ys-1)/ys;
         gwy_debug("channel: <%s>, type: %u", i.name(), (guint)channel.type);
-        gwy_debug("samplings: %u, %u", channel.xSampling, channel.ySampling);
+        gwy_debug("samplings: %u, %u", xs, ys);
 
         if (channel.type == Imf::UINT) {
-            guint32 *buffer = g_new(guint32, width*height);
-            char *base = (char*)(buffer - dw.min.x - width*dw.min.y);
+            guint32 *buffer = g_new(guint32, xres*yres);
+            char *base = (char*)(buffer - dw.min.x - xres*dw.min.y);
             *buffers = g_slist_append(*buffers, (gpointer)buffer);
             framebuffer.insert(i.name(),
                                Imf::Slice(Imf::UINT, base,
                                           sizeof(buffer[0]),
-                                          width*sizeof(buffer[0]),
-                                          channel.xSampling, channel.ySampling,
-                                          0.0));
+                                          xres*sizeof(buffer[0]),
+                                          xs, ys));
         }
         else if (channel.type == Imf::HALF) {
-            half *buffer = g_new(half, width*height);
-            char *base = (char*)(buffer - dw.min.x - width*dw.min.y);
+            half *buffer = g_new(half, xres*yres);
+            char *base = (char*)(buffer - dw.min.x - xres*dw.min.y);
             *buffers = g_slist_append(*buffers, (gpointer)buffer);
             framebuffer.insert(i.name(),
                                Imf::Slice(Imf::HALF, base,
                                           sizeof(buffer[0]),
-                                          width*sizeof(buffer[0]),
-                                          channel.xSampling, channel.ySampling,
-                                          0.0));
+                                          xres*sizeof(buffer[0]),
+                                          xs, ys));
         }
         else if (channel.type == Imf::FLOAT) {
-            gfloat *buffer = g_new(gfloat, width*height);
-            char *base = (char*)(buffer - dw.min.x - width*dw.min.y);
+            gfloat *buffer = g_new(gfloat, xres*yres);
+            char *base = (char*)(buffer - dw.min.x - xres*dw.min.y);
             *buffers = g_slist_append(*buffers, (gpointer)buffer);
             framebuffer.insert(i.name(),
                                Imf::Slice(Imf::FLOAT, base,
                                           sizeof(buffer[0]),
-                                          width*sizeof(buffer[0]),
-                                          channel.xSampling, channel.ySampling,
-                                          0.0));
+                                          xres*sizeof(buffer[0]),
+                                          xs, ys));
         }
         else {
             g_set_error(error, GWY_MODULE_FILE_ERROR,
@@ -1036,11 +1036,13 @@ exr_load_image(const gchar *filename,
 
         Imf::ChannelList::ConstIterator first = channels.begin();
         const Imf::Channel &channel = first.channel();
+        guint xs = channel.xSampling, ys = channel.ySampling;
+        guint xres = (width + xs-1)/xs, yres = (height + ys-1)/ys;
         GwyRawDataType rawdatatype = exr_type_to_gwy_type(channel.type);
 
-        GwyDataField *f = gwy_data_field_new(width, height, 1.0, 1.0, FALSE);
+        GwyDataField *f = gwy_data_field_new(xres, yres, 1.0, 1.0, FALSE);
         gdouble *d = gwy_data_field_get_data(f);
-        gwy_convert_raw_data((*buffers)->data, width*height, 1,
+        gwy_convert_raw_data((*buffers)->data, xres*yres, 1,
                              rawdatatype, GWY_BYTE_ORDER_NATIVE,
                              d, 1.0, 0.0);
 
@@ -1079,16 +1081,17 @@ exr_load_image(const gchar *filename,
          i != channels.end();
          ++i, ++id, l = g_slist_next(l)) {
         const Imf::Channel &channel = i.channel();
+        guint xs = channel.xSampling, ys = channel.ySampling;
+        guint xres = (width + xs-1)/xs, yres = (height + ys-1)/ys;
         GwyRawDataType rawdatatype = exr_type_to_gwy_type(channel.type);
 
         g_assert(l);
 
-        // TODO: x/y sampling.
-        GwyDataField *dfield = gwy_data_field_new(width, height,
-                                                  xreal, yreal, FALSE);
+        GwyDataField *dfield = gwy_data_field_new(xres, yres, xreal, yreal,
+                                                  FALSE);
         gdouble *d = gwy_data_field_get_data(dfield);
         *objects = g_slist_prepend(*objects, (gpointer)dfield);
-        gwy_convert_raw_data(l->data, width*height, 1,
+        gwy_convert_raw_data(l->data, xres*yres, 1,
                              rawdatatype, GWY_BYTE_ORDER_NATIVE,
                              d, q, z0);
 
