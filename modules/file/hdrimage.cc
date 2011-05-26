@@ -230,26 +230,32 @@ static GwyContainer* tiff16_load  (const gchar *filename,
                                    GError **error,
                                    const gchar *name);
 
-static gboolean pixmap_load_dialog         (PixmapLoadArgs *args,
-                                            const gchar *name,
-                                            GwyDataField *dfield,
-                                            const gchar *channels,
-                                            guint npages);
-static void     pixmap_load_update_controls(PixmapLoadControls *controls,
-                                            PixmapLoadArgs *args);
-static void     pixmap_load_update_values  (PixmapLoadControls *controls,
-                                            PixmapLoadArgs *args);
-static void     xyreal_changed_cb          (GtkAdjustment *adj,
-                                            PixmapLoadControls *controls);
-static void     xymeasureeq_changed_cb     (PixmapLoadControls *controls);
-static void     set_combo_from_unit        (GtkWidget *combo,
-                                            const gchar *str);
-static void     units_change_cb            (GtkWidget *button,
-                                            PixmapLoadControls *controls);
-static void     pixmap_load_load_args      (GwyContainer *container,
-                                            PixmapLoadArgs *args);
-static void     pixmap_load_save_args      (GwyContainer *container,
-                                            PixmapLoadArgs *args);
+static gboolean pixmap_load_dialog           (PixmapLoadArgs *args,
+                                              const gchar *name,
+                                              GwyDataField *dfield,
+                                              const gchar *channels,
+                                              guint npages);
+static void     pixmap_load_update_controls  (PixmapLoadControls *controls,
+                                              PixmapLoadArgs *args);
+static void     pixmap_load_update_values    (PixmapLoadControls *controls,
+                                              PixmapLoadArgs *args);
+static void     xyreal_changed_cb            (GtkAdjustment *adj,
+                                              PixmapLoadControls *controls);
+static void     xymeasureeq_changed_cb       (PixmapLoadControls *controls);
+static void     set_combo_from_unit          (GtkWidget *combo,
+                                              const gchar *str);
+static void     units_change_cb              (GtkWidget *button,
+                                              PixmapLoadControls *controls);
+static void     pixmap_load_load_args        (GwyContainer *container,
+                                              PixmapLoadArgs *args);
+static void     pixmap_load_save_args        (GwyContainer *container,
+                                              PixmapLoadArgs *args);
+static void     pixmap_load_use_args_and_free(PixmapLoadArgs *args,
+                                              gdouble *xreal,
+                                              gdouble *yreal,
+                                              gdouble *q,
+                                              GwySIUnit **unitxy,
+                                              GwySIUnit **unitz);
 
 #ifdef HAVE_EXR
 static const EXRSaveArgs exr_save_defaults = {
@@ -806,14 +812,6 @@ exr_load(const gchar *filename,
          GError **error,
          G_GNUC_UNUSED const gchar *name)
 {
-    // FIXME: We can import files with metadata directly.
-    if (mode != GWY_RUN_INTERACTIVE) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR,
-                    GWY_MODULE_FILE_ERROR_INTERACTIVE,
-                    _("Pixmap image import must be run as interactive."));
-        return NULL;
-    }
-
     GwyContainer *container = NULL;
     GSList *objects = NULL, *buffers = NULL;
 
@@ -1032,19 +1030,13 @@ exr_load_image(const gchar *filename,
             z0 *= pow10(power10);
         }
     }
-    else {
+    else if (mode == GWY_RUN_INTERACTIVE) {
         // XXX: This is sort of completely wrong as each channel can have
         // different scaling.  But presenting half a dozen physical scale
         // choosers is hardly better.  Just import the data and let the user
         // sort it out.  For plain images, only lateral measurements will
         // probably make sense anyway.
         gwy_debug("Manual import is necessary.");
-        if (mode != GWY_RUN_INTERACTIVE) {
-            g_set_error(error, GWY_MODULE_FILE_ERROR,
-                        GWY_MODULE_FILE_ERROR_INTERACTIVE,
-                        _("Pixmap image import must be run as interactive."));
-            return NULL;
-        }
 
         Imf::ChannelList::ConstIterator first = channels.begin();
         const Imf::Channel &channel = first.channel();
@@ -1066,21 +1058,21 @@ exr_load_image(const gchar *filename,
         g_free(channel_names);
         g_object_unref(f);
         pixmap_load_save_args(gwy_app_settings_get(), &args);
+        pixmap_load_use_args_and_free(&args, &xreal, &yreal, &q,
+                                      ok ? &unitxy : NULL,
+                                      ok ? &unitz : NULL);
         if (!ok) {
-            g_free(args.xyunit);
-            g_free(args.zunit);
             err_CANCELLED(error);
             return NULL;
         }
+    }
+    else {
+        gwy_debug("Running non-interactively, reusing the last parameters.");
 
-        xreal = args.xreal * pow10(args.xyexponent);
-        yreal = args.yreal * pow10(args.xyexponent);
-        z0 = 0.0;
-        q = args.zreal * pow10(args.zexponent);
-        unitxy = gwy_si_unit_new(args.xyunit);
-        unitz = gwy_si_unit_new(args.zunit);
-        g_free(args.xyunit);
-        g_free(args.zunit);
+        PixmapLoadArgs args;
+        pixmap_load_load_args(gwy_app_settings_get(), &args);
+        pixmap_load_use_args_and_free(&args,
+                                      &xreal, &yreal, &q, &unitxy, &unitz);
     }
 
     container = gwy_container_new();
@@ -1529,20 +1521,13 @@ png16_load(const gchar *filename,
         }
         manual_import = FALSE;
     }
-    else {
-        gwy_debug("Manual import is necessary.");
-        if (mode != GWY_RUN_INTERACTIVE) {
-            g_set_error(error, GWY_MODULE_FILE_ERROR,
-                        GWY_MODULE_FILE_ERROR_INTERACTIVE,
-                        _("Pixmap image import must be run as interactive."));
-            goto fail;
-        }
-    }
 
     if (!title)
         title = get_png_text_string(text_chunks, ncomments, "Title");
 
-    if (manual_import) {
+    if (mode == GWY_RUN_INTERACTIVE && manual_import) {
+        gwy_debug("Manual import is necessary.");
+
         GwyDataField *f = gwy_data_field_new(xres, yres, 1.0, 1.0, FALSE);
         gdouble *d = gwy_data_field_get_data(f);
         PixmapLoadArgs args;
@@ -1562,21 +1547,23 @@ png16_load(const gchar *filename,
                                 describe_channels(nchannels == 1, FALSE), 1);
         g_object_unref(f);
         pixmap_load_save_args(gwy_app_settings_get(), &args);
+        pixmap_load_use_args_and_free(&args, &xreal, &yreal, &zmax,
+                                      ok ? &unitxy : NULL,
+                                      ok ? &unitz : NULL);
+        zmin = 0.0;
         if (!ok) {
-            g_free(args.xyunit);
-            g_free(args.zunit);
             err_CANCELLED(error);
             goto fail;
         }
+    }
+    else if (manual_import) {
+        gwy_debug("Running non-interactively, reusing the last parameters.");
 
-        xreal = args.xreal * pow10(args.xyexponent);
-        yreal = args.yreal * pow10(args.xyexponent);
+        PixmapLoadArgs args;
+        pixmap_load_load_args(gwy_app_settings_get(), &args);
+        pixmap_load_use_args_and_free(&args,
+                                      &xreal, &yreal, &zmax, &unitxy, &unitz);
         zmin = 0.0;
-        zmax = args.zreal * pow10(args.zexponent);
-        unitxy = gwy_si_unit_new(args.xyunit);
-        unitz = gwy_si_unit_new(args.zunit);
-        g_free(args.xyunit);
-        g_free(args.zunit);
     }
 
     fields = g_new(GwyDataField*, nchannels);
@@ -1666,13 +1653,14 @@ read_pgm_head(const gchar *buffer, gsize len, guint *headersize,
               gdouble *xreal, gdouble *yreal,
               gdouble *yoff, gdouble *xoff,
               gdouble *zmin, gdouble *zmax,
-              gchar **unitxy, gchar **unitz,
+              GwySIUnit **unitxy, GwySIUnit **unitz,
               gchar **title)
 {
     const gchar *p = buffer, *q;
     gboolean seen_comments = FALSE,
              seen_xreal = FALSE, seen_yreal = FALSE,
              seen_zmin = FALSE, seen_zmax = FALSE;
+    gint power10xy = 0, power10z = 0;
     gchar *text, *line, *s, *t;
     guint i;
 
@@ -1745,7 +1733,8 @@ read_pgm_head(const gchar *buffer, gsize len, guint *headersize,
         return PLAIN_IMAGE;
 
     *xoff = *yoff = 0.0;
-    *unitxy = *unitz = *title = NULL;
+    *unitxy = *unitz = NULL;
+    *title = NULL;
     text = t = g_strndup(buffer, *headersize);
     for (line = gwy_str_next_line(&t); line; line = gwy_str_next_line(&t)) {
         g_strstrip(line);
@@ -1783,12 +1772,12 @@ read_pgm_head(const gchar *buffer, gsize len, guint *headersize,
         else if (gwy_strequal(s, GWY_IMGKEY_YOFFSET))
             *yoff = g_ascii_strtod(line, NULL);
         else if (gwy_strequal(s, GWY_IMGKEY_XYUNIT)) {
-            g_free(*unitxy);
-            *unitxy = *line ? g_strdup(line) : NULL;
+            gwy_object_unref(*unitxy);
+            *unitxy = gwy_si_unit_new_parse(line, &power10xy);
         }
         else if (gwy_strequal(s, GWY_IMGKEY_ZUNIT)) {
-            g_free(*unitz);
-            *unitz = *line ? g_strdup(line) : NULL;
+            gwy_object_unref(*unitz);
+            *unitz = gwy_si_unit_new_parse(line, &power10z);
         }
         else if (gwy_strequal(s, GWY_IMGKEY_TITLE)) {
             g_free(*title);
@@ -1798,12 +1787,19 @@ read_pgm_head(const gchar *buffer, gsize len, guint *headersize,
 
     g_free(text);
 
-    if (seen_xreal && seen_yreal && seen_zmin && seen_zmax)
+    if (seen_xreal && seen_yreal && seen_zmin && seen_zmax) {
+        *xreal *= pow10(power10xy);
+        *yreal *= pow10(power10xy);
+        *xoff *= pow10(power10xy);
+        *yoff *= pow10(power10xy);
+        *zmin *= pow10(power10z);
+        *zmax *= pow10(power10z);
         return GWY_META;
+    }
 
-    g_free(unitxy);
-    g_free(unitz);
-    g_free(title);
+    gwy_object_unref(*unitxy);
+    gwy_object_unref(*unitz);
+    g_free(*title);
     return PLAIN_IMAGE;
 }
 
@@ -1812,7 +1808,8 @@ pgm16_detect(const GwyFileDetectInfo *fileinfo,
              gboolean only_name,
              const gchar *name)
 {
-    gchar *unitxy = NULL, *unitz = NULL, *title = NULL;
+    GwySIUnit *unitxy = NULL, *unitz = NULL;
+    gchar *title = NULL;
     gdouble xreal, yreal, xoff, yoff, zmin, zmax;
     guint xres, yres, maxval, headersize;
 
@@ -1829,8 +1826,8 @@ pgm16_detect(const GwyFileDetectInfo *fileinfo,
                        &unitxy, &unitz, &title))
         return 0;
 
-    g_free(unitxy);
-    g_free(unitz);
+    gwy_object_unref(unitxy);
+    gwy_object_unref(unitz);
     g_free(title);
 
     return 95;
@@ -1846,10 +1843,10 @@ pgm16_load(const gchar *filename,
     GwyDataField *field = NULL;
     GError *err = NULL;
     guchar *buffer = NULL;
-    gchar *unitxy = NULL, *unitz = NULL, *title = NULL;
+    gchar *title = NULL;
+    GwySIUnit *unitxy = NULL, *unitz = NULL, *u;
     gdouble xreal, yreal, xoff, yoff, zmin, zmax, q;
     guint xres, yres, maxval, headersize;
-    gint power10;
     DetectionResult detected;
     gsize size = 0;
 
@@ -1864,19 +1861,13 @@ pgm16_load(const gchar *filename,
                              &xreal, &yreal, &yoff, &xoff,
                              &zmin, &zmax,
                              &unitxy, &unitz, &title);
-    if (!detected) {
-        if (mode != GWY_RUN_INTERACTIVE) {
-            g_set_error(error, GWY_MODULE_FILE_ERROR,
-                        GWY_MODULE_FILE_ERROR_INTERACTIVE,
-                        _("Pixmap image import must be run as interactive."));
-            goto fail;
-        }
-    }
 
     gwy_debug("Detected: %s",
               detected == GWY_META ? "Gwyddion image keys" : "Plain image");
 
-    if (detected != GWY_META) {
+    if (detected != GWY_META && mode == GWY_RUN_INTERACTIVE) {
+        gwy_debug("Manual import is necessary.");
+
         GwyDataField *f = gwy_data_field_new(xres, yres, 1.0, 1.0, FALSE);
         PixmapLoadArgs args;
         gboolean ok;
@@ -1889,21 +1880,20 @@ pgm16_load(const gchar *filename,
         ok = pixmap_load_dialog(&args, "PGM", f, "Y", 1);
         g_object_unref(f);
         pixmap_load_save_args(gwy_app_settings_get(), &args);
+        pixmap_load_use_args_and_free(&args,
+                                      &xreal, &yreal, &zmax, &unitxy, &unitz);
         if (!ok) {
-            g_free(args.xyunit);
-            g_free(args.zunit);
             err_CANCELLED(error);
             goto fail;
         }
+    }
+    else if (detected != GWY_META) {
+        gwy_debug("Running non-interactively, reusing the last parameters.");
 
-        xreal = args.xreal * pow10(args.xyexponent);
-        yreal = args.yreal * pow10(args.xyexponent);
-        xoff = yoff = 0.0;
-        zmin = 0.0;
-        zmax = args.zreal * pow10(args.zexponent);
-        // Transfer ownership
-        unitxy = args.xyunit;
-        unitz = args.zunit;
+        PixmapLoadArgs args;
+        pixmap_load_load_args(gwy_app_settings_get(), &args);
+        pixmap_load_use_args_and_free(&args,
+                                      &xreal, &yreal, &zmax, &unitxy, &unitz);
     }
 
     if (err_SIZE_MISMATCH(error, 2*xres*yres + headersize, size, FALSE))
@@ -1919,26 +1909,13 @@ pgm16_load(const gchar *filename,
     }
 
     field = gwy_data_field_new(xres, yres, xreal, yreal, FALSE);
-    gwy_si_unit_set_from_string_parse(gwy_data_field_get_si_unit_xy(field),
-                                      unitxy, &power10);
-    if (power10) {
-        q = pow10(power10);
-        xreal *= q;
-        yreal *= q;
-        xoff *= q;
-        yoff *= q;
-        gwy_data_field_set_xreal(field, xreal);
-        gwy_data_field_set_yreal(field, yreal);
-    }
+    u = gwy_data_field_get_si_unit_xy(field);
+    gwy_serializable_clone(G_OBJECT(unitxy), G_OBJECT(u));
     gwy_data_field_set_xoffset(field, xoff);
     gwy_data_field_set_yoffset(field, yoff);
-    gwy_si_unit_set_from_string_parse(gwy_data_field_get_si_unit_z(field),
-                                      unitz, &power10);
-    if (power10) {
-        q = pow10(power10);
-        zmin *= q;
-        zmax *= q;
-    }
+
+    u = gwy_data_field_get_si_unit_z(field);
+    gwy_serializable_clone(G_OBJECT(unitz), G_OBJECT(u));
 
     q = (zmax - zmin)/G_MAXUINT16;
     gwy_convert_raw_data(buffer + headersize, xres*yres, 1,
@@ -1956,8 +1933,8 @@ pgm16_load(const gchar *filename,
 
 fail:
     gwy_file_abandon_contents(buffer, size, NULL);
-    g_free(unitxy);
-    g_free(unitz);
+    gwy_object_unref(unitxy);
+    gwy_object_unref(unitz);
     g_free(title);
 
     return container;
@@ -2063,8 +2040,8 @@ tiff16_load(const gchar *filename,
     }
 
     // Use the first channel for preview.
-    {
-        gwy_debug("Image keys not implemented for TIFF, using manual import.");
+    if (mode == GWY_RUN_INTERACTIVE) {
+        gwy_debug("Manual import is necessary.");
 
         guint xres = reader->width;
         guint yres = reader->height;
@@ -2080,18 +2057,21 @@ tiff16_load(const gchar *filename,
                                          gwy_tiff_get_n_dirs(tiff));
         g_object_unref(f);
         pixmap_load_save_args(gwy_app_settings_get(), &args);
-        xreal = args.xreal * pow10(args.xyexponent);
-        yreal = args.yreal * pow10(args.xyexponent);
-        zreal = args.zreal * pow10(args.zexponent);
-        unitxy = gwy_si_unit_new(args.xyunit);
-        unitz = gwy_si_unit_new(args.zunit);
-        g_free(args.xyunit);
-        g_free(args.zunit);
-
+        pixmap_load_use_args_and_free(&args, &xreal, &yreal, &zreal,
+                                      ok ? &unitxy : NULL,
+                                      ok ? &unitz : NULL);
         if (!ok) {
             err_CANCELLED(error);
             goto fail;
         }
+    }
+    else {
+        gwy_debug("Running non-interactively, reusing the last parameters.");
+
+        PixmapLoadArgs args;
+        pixmap_load_load_args(gwy_app_settings_get(), &args);
+        pixmap_load_use_args_and_free(&args,
+                                      &xreal, &yreal, &zreal, &unitxy, &unitz);
     }
 
     container = gwy_container_new();
@@ -2624,6 +2604,23 @@ pixmap_load_save_args(GwyContainer *container,
                                      (const guchar*)g_strdup(args->xyunit));
     gwy_container_set_string_by_name(container, zunit_key,
                                      (const guchar*)g_strdup(args->zunit));
+}
+
+static void
+pixmap_load_use_args_and_free(PixmapLoadArgs *args,
+                              gdouble *xreal, gdouble *yreal, gdouble *q,
+                              GwySIUnit **unitxy, GwySIUnit **unitz)
+{
+    *xreal = args->xreal * pow10(args->xyexponent);
+    *yreal = args->yreal * pow10(args->xyexponent);
+    *q = args->zreal * pow10(args->zexponent);
+    if (unitxy)
+        *unitxy = gwy_si_unit_new(args->xyunit);
+    if (unitz)
+        *unitz = gwy_si_unit_new(args->zunit);
+    g_free(args->xyunit);
+    g_free(args->zunit);
+    args->xyunit = args->zunit = NULL;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
