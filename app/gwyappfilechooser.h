@@ -58,7 +58,6 @@ struct _GwyAppFileChooser {
     guint full_preview_id;
     gboolean make_thumbnail;
     gchar *preview_name_sys;
-    GwyContainer *preview_data;
 };
 
 struct _GwyAppFileChooserClass {
@@ -74,12 +73,6 @@ GtkWidget* _gwy_app_file_chooser_get              (GtkFileChooserAction action);
 
 G_GNUC_INTERNAL
 gchar*     _gwy_app_file_chooser_get_selected_type (GwyAppFileChooser *chooser);
-
-G_GNUC_INTERNAL
-gboolean   _gwy_app_file_chooser_get_previewed_data(GwyAppFileChooser *chooser,
-                                                    GwyContainer **data,
-                                                    gchar **filename_utf8,
-                                                    gchar **filename_sys);
 
 G_END_DECLS
 

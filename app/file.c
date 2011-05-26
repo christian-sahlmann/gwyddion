@@ -339,9 +339,7 @@ gwy_app_file_open_or_merge(gboolean merge)
 {
     GtkWidget *dialog;
     GSList *filenames = NULL, *l;
-    gchar *name, *filename_utf8, *filename_sys;
-    const gchar *loaded_as = NULL;
-    GwyContainer *data;
+    gchar *name;
     gint response;
 
     dialog = _gwy_app_file_chooser_get(GTK_FILE_CHOOSER_ACTION_OPEN);
@@ -356,19 +354,6 @@ gwy_app_file_open_or_merge(gboolean merge)
 
     response = gtk_dialog_run(GTK_DIALOG(dialog));
     name = _gwy_app_file_chooser_get_selected_type(GWY_APP_FILE_CHOOSER(dialog));
-    /* This has to be called before hiding the dialog because hiding frees
-     * the previewed data */
-    _gwy_app_file_chooser_get_previewed_data(GWY_APP_FILE_CHOOSER(dialog),
-                                             &data,
-                                             &filename_utf8, &filename_sys);
-    if (data) {
-        g_object_ref(data);
-        gwy_debug("got %s data from preview", filename_utf8);
-        if (!gwy_file_get_data_info(data, &loaded_as, NULL)) {
-            g_warning("Cannot obtain previewed file type.");
-            loaded_as = name;
-        }
-    }
     if (response == GTK_RESPONSE_OK)
         filenames = gtk_file_chooser_get_filenames(GTK_FILE_CHOOSER(dialog));
     gtk_widget_hide(dialog);
@@ -376,39 +361,23 @@ gwy_app_file_open_or_merge(gboolean merge)
     for (l = filenames; l; l = g_slist_next(l)) {
         gchar *fname_sys = (gchar*)l->data;
 
-        /* To force the file type the user insists on we have to avoid
-         * reusing previewed data. */
-        if (data
-            && gwy_strequal(filename_sys, fname_sys)
-            && (!name || gwy_strequal(name, loaded_as))) {
-            if (merge)
+        if (merge) {
+            GwyContainer *data;
+
+            data = gwy_app_file_load_real(NULL, fname_sys, name, FALSE);
+            if (data) {
                 gwy_app_data_browser_merge(data);
-            else
-                gwy_app_file_add_loaded(data, filename_utf8, filename_sys);
-
-            warn_broken_load_func(name, data);
-        }
-        else {
-            if (merge) {
-                GwyContainer *newdata;
-
-                newdata = gwy_app_file_load_real(NULL, fname_sys, name, FALSE);
-                if (newdata) {
-                    gwy_app_data_browser_merge(newdata);
-                    g_object_unref(newdata);
-                    warn_broken_load_func(name, newdata);
-                }
+                g_object_unref(data);
+                warn_broken_load_func(name, data);
             }
-            else
-                gwy_app_file_load(NULL, fname_sys, name);
         }
+        else
+            gwy_app_file_load(NULL, fname_sys, name);
+
         g_free(fname_sys);
     }
     g_slist_free(filenames);
     g_free(name);
-    gwy_object_unref(data);
-    g_free(filename_utf8);
-    g_free(filename_sys);
 }
 
 /*** File saving ***********************************************************/
