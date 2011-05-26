@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: French localization\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2011-05-14 03:58+0200\n"
-"PO-Revision-Date: 2011-05-14 15:38+0100\n"
+"POT-Creation-Date: 2011-05-26 03:58+0200\n"
+"PO-Revision-Date: 2011-05-26 21:30+0100\n"
 "Last-Translator: François RIGUET <francheu@caramail.com>\n"
 "Language-Team: François RIGUET <francheu@caramail.com>\n"
 "Language: \n"
@@ -2642,6 +2642,8 @@ msgid "Scan size header field overlaps with data."
 msgstr "Le champ d'en-tête de la taille de scan recouvre les données."
 
 #: modules/file/err.h:47
+#: modules/file/nrrdfile.c:705
+#: modules/file/nrrdfile.c:750
 #, c-format
 msgid "Cannot read from file: %s."
 msgstr "Impossible de lire à partir du fichier : %s."
@@ -2902,9 +2904,8 @@ msgid "Format version is %d.  Only version 5 is supported."
 msgstr "La version de format est %d. Seule la version 5 est supportée."
 
 #: modules/file/igorfile.c:292
-#: modules/file/nrrdfile.c:271
 msgid "Only two-dimensional data are supported."
-msgstr "Seules les données bi-dimensionnelles sont supportés."
+msgstr "Seules les données bi-dimensionnelles sont supportées."
 
 #: modules/file/igorfile.c:304
 #, c-format
@@ -3180,7 +3181,6 @@ msgid "Spectra data starts past the end of file."
 msgstr "Les données du spectre commencent après la fin du fichier."
 
 #: modules/file/nanoeducator.c:626
-#: modules/file/nrrdfile.c:196
 #: modules/file/opdfile.c:268
 #: modules/file/sensofar.c:256
 msgid "File header is truncated"
@@ -3323,8 +3323,8 @@ msgstr "Impossible d'analyser le champ `Scan size'."
 
 #: modules/file/nanoscope.c:1000
 #, c-format
-msgid "Garbage after data sample #%d."
-msgstr "Données erronées après l'échantillon #%d."
+msgid "Garbage after data sample #%u."
+msgstr "Données erronées après l'échantillon #%u."
 
 #: modules/file/nanoscope.c:1080
 msgid "Truncated header line."
@@ -3374,13 +3374,83 @@ msgstr "Le tableau `%s', bien qu'absent, possède un nombre d'élément non nul.
 msgid "More than one record dimension found."
 msgstr "Plus d'une dimension d'enregistrement a été trouvée."
 
-#: modules/file/nrrdfile.c:110
+#: modules/file/nrrdfile.c:160
 msgid "Imports and exports nearly raw raster data (NRRD) files."
 msgstr "Importe et exporte les fichiers nearly raw raster data (NRRD)."
 
-#: modules/file/nrrdfile.c:123
+#: modules/file/nrrdfile.c:173
 msgid "Nearly raw raster data (NRRD) files (.nrrd)"
 msgstr "Fichiers nearly raw raster data (NRRD) (.nrrd)"
+
+#: modules/file/nrrdfile.c:307
+msgid "Deatched header does not refer to any data file."
+msgstr "L'en-tête détaché ne fait référence à aucun fichier de données."
+
+#: modules/file/nrrdfile.c:335
+msgid "Only two- and three-dimensional data are supported."
+msgstr "Seules les données bi-dimensionnelles et tri-dimensionnelles sont supportées."
+
+#: modules/file/nrrdfile.c:356
+msgid "Non-zero lineskip is supported only for uncompressed files."
+msgstr "Le saut de ligne non nul n'est supporté que pour les fichiers non compressés."
+
+#: modules/file/nrrdfile.c:383
+msgid "Compression is supported only for detached files."
+msgstr "La compression n'est supportée que pour les fichiers détachés."
+
+#: modules/file/nrrdfile.c:671
+msgid "Split detached data files are not supported."
+msgstr "Les fichiers détachés en plusieurs parties ne sont pas supportés."
+
+#: modules/file/nrrdfile.c:717
+msgid "Cannot decompress gzip-encoded data.  Zlib support was not built in."
+msgstr "Impossible de décompresser les données encodées au format gzip. Le support Zlib n'a pas été intégré."
+
+#: modules/file/nrrdfile.c:762
+msgid "Cannot decompress bzip2-encoded data.  Bzip2 support was not built in."
+msgstr "Impossible de décompresser les données encodées au format Bzip2. Le support Bzip2 n'a pas été intégré."
+
+#: modules/file/nrrdfile.c:894
+#, c-format
+msgid "Hex data contains less values (%u) than corresponds to the sizes (%u)."
+msgstr ""
+
+#: modules/file/nrrdfile.c:1007
+#, c-format
+msgid "Text data contains less values (%u) than corresponds to the sizes (%u)."
+msgstr ""
+
+#: modules/file/nrrdfile.c:1012
+#, c-format
+msgid "Gargbage after data sample #%u."
+msgstr "Données erronées après l'échantillon #%u."
+
+#: modules/file/nrrdfile.c:1061
+msgid "Field byteskip cannot be -1 for text encodings."
+msgstr "Le champ de saut d'octet ne peut être -1 pour les encodages de texte."
+
+#: modules/file/nrrdfile.c:1072
+msgid "Field lineskip specifies more lines than there are in the file."
+msgstr "Le champ de saut de ligne spécifie plus de lignes que n'en contient le fichier."
+
+#: modules/file/nrrdfile.c:1115
+msgid "Field byteskip specifies more bytes than there are in the file."
+msgstr "Le champ de saut d'octet spécifie plus d'octets que n'en contient le fichier."
+
+#: modules/file/nrrdfile.c:1338
+#, c-format
+msgid "Items of per-axis header field %s are not quoted."
+msgstr ""
+
+#: modules/file/nrrdfile.c:1349
+#, c-format
+msgid "Per-axis header field %s contains too many items."
+msgstr ""
+
+#: modules/file/nrrdfile.c:1358
+#, c-format
+msgid "Per-axis header field %s contains too few items."
+msgstr ""
 
 #: modules/file/nt-mdt.c:658
 msgid "Imports NT-MDT data files."
@@ -4430,7 +4500,7 @@ msgstr "Fin du fichier atteinte dans l'en-tête de couleur des données."
 msgid "End of file reached in color data."
 msgstr "Fin du fichier atteinte dans les données de couleur."
 
-#: modules/file/rhk-sm3.c:710
+#: modules/file/rhk-sm3.c:711
 #, c-format
 msgid "Unknown line %d"
 msgstr "Ligne inconnue %d"
@@ -4827,11 +4897,11 @@ msgstr "paramètres d'échelle z"
 msgid "data type parameters"
 msgstr "paramètres de type de données"
 
-#: modules/file/wipfile.c:236
+#: modules/file/wipfile.c:275
 msgid "Imports WItec Project data files."
 msgstr "Importe les fichiers WITec Project."
 
-#: modules/file/wipfile.c:249
+#: modules/file/wipfile.c:288
 msgid "WItec Project files (.wip)"
 msgstr "WITec Project (.wip)"
 
@@ -5338,7 +5408,7 @@ msgstr "Fonction d'autocorrélation 2D"
 
 #: modules/process/angle_dist.c:99
 msgid "Calculates two-dimensional distribution of angles, that is projections of slopes to all directions."
-msgstr "Calcule la distribution bi-dimensionnelle des angles, i.e. la projection des pentes dans toutes les directions"
+msgstr "Calcule la distribution bi-dimensionnelle des angles, i.e. la projection des pentes dans toutes les directions."
 
 #: modules/process/angle_dist.c:114
 msgid "/_Statistics/An_gle Distribution..."
@@ -7035,9 +7105,8 @@ msgid "Fit by sphere"
 msgstr "Ajuster par une sphère."
 
 #: modules/process/fit_2d.c:238
-#, fuzzy
 msgid "Fit Sphere"
-msgstr "Sphère d'ajustement."
+msgstr "Sphère d'ajustement"
 
 #: modules/process/fit_2d.c:285
 msgid "Fitting Parameters"
@@ -10440,6 +10509,9 @@ msgstr ""
 "Inclinaison θ:      %s\n"
 "Inclinaison φ:      %s\n"
 
+#, fuzzy
+#~ msgid "Decompression of encoded data failed with error %d."
+#~ msgstr "La décompression des données a échoué avec l'erreur %d."
 #~ msgid "_Width"
 #~ msgstr "Largeur"
 #~ msgid "H_eight"
