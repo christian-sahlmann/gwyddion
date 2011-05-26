@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2011-05-21 03:58+0200\n"
-"PO-Revision-Date: 2011-05-21 10:09+0300\n"
+"POT-Creation-Date: 2011-05-26 03:58+0200\n"
+"PO-Revision-Date: 2011-05-26 11:55+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "Language: \n"
@@ -2545,7 +2545,6 @@ msgstr "Не найдено ни `%s', ни `%s' поля заголовка."
 
 #: modules/file/createc.c:520
 #: modules/file/matfile.c:596
-#: modules/file/nrrdfile.c:749
 #, c-format
 msgid "zlib initialization failed with error %d, cannot decompress data."
 msgstr "Инициализация zlib закончилась с ошибкой %d, не удалось распаковать данные."
@@ -2644,6 +2643,8 @@ msgid "Scan size header field overlaps with data."
 msgstr "Поле заголовка \"размер сканирования\" пересекается с данными."
 
 #: modules/file/err.h:47
+#: modules/file/nrrdfile.c:705
+#: modules/file/nrrdfile.c:750
 #, c-format
 msgid "Cannot read from file: %s."
 msgstr "Невозможно прочесть из файла: %s."
@@ -3374,73 +3375,80 @@ msgstr "Массив `%s' содержит ненулевое количеств
 msgid "More than one record dimension found."
 msgstr "Найдена больше, чем одна запись о размерности."
 
-#: modules/file/nrrdfile.c:156
+#: modules/file/nrrdfile.c:160
 msgid "Imports and exports nearly raw raster data (NRRD) files."
 msgstr "Импортирует и экспортирует файлы nearly raw raster data (NRRD)."
 
-#: modules/file/nrrdfile.c:169
+#: modules/file/nrrdfile.c:173
 msgid "Nearly raw raster data (NRRD) files (.nrrd)"
 msgstr "Файлы nearly raw raster data (NRRD) (.nrrd)"
 
-#: modules/file/nrrdfile.c:303
+#: modules/file/nrrdfile.c:307
 msgid "Deatched header does not refer to any data file."
 msgstr "Заголовок откреплённых в отдельный файл данных не соответствует никакому файлу данных."
 
-#: modules/file/nrrdfile.c:331
+#: modules/file/nrrdfile.c:335
 msgid "Only two- and three-dimensional data are supported."
 msgstr "Поддерживаются только двумерные и трёхмерные данные."
 
-#: modules/file/nrrdfile.c:646
+#: modules/file/nrrdfile.c:356
+msgid "Non-zero lineskip is supported only for uncompressed files."
+msgstr "Ненулевое число пропущенных линий поддерживается только для несжатых файлов."
+
+#: modules/file/nrrdfile.c:383
+msgid "Compression is supported only for detached files."
+msgstr "Сжатие поддерживается только для открепленных файлов."
+
+#: modules/file/nrrdfile.c:671
 msgid "Split detached data files are not supported."
 msgstr "Разбитые на тома открепленные файлы данных не поддерживаются."
 
-#: modules/file/nrrdfile.c:776
-#, c-format
-msgid "Decompression of encoded data failed with error %d."
-msgstr "Распаковка кодированных данных закончилась с ошибкой %d."
+#: modules/file/nrrdfile.c:717
+msgid "Cannot decompress gzip-encoded data.  Zlib support was not built in."
+msgstr "Не удаётся распаковать gzip-кодированные данные. Поддержка Zlib не была встроена."
 
-#: modules/file/nrrdfile.c:795
-msgid "Cannot decompress encoded data.  Zlib support was not built in."
-msgstr "Не удаётся распаковать кодированные данные. Поддержка zlib не была встроена."
+#: modules/file/nrrdfile.c:762
+msgid "Cannot decompress bzip2-encoded data.  Bzip2 support was not built in."
+msgstr "Не удаётся распаковать bzip2-кодированные данные. Поддержка Bzip2 не была встроена."
 
-#: modules/file/nrrdfile.c:855
+#: modules/file/nrrdfile.c:894
 #, c-format
 msgid "Hex data contains less values (%u) than corresponds to the sizes (%u)."
 msgstr "Шестнадцатеричные данные содержат меньше значений (%u) чем нужно в соответствии с размерами (%u)."
 
-#: modules/file/nrrdfile.c:968
+#: modules/file/nrrdfile.c:1007
 #, c-format
 msgid "Text data contains less values (%u) than corresponds to the sizes (%u)."
 msgstr "Текстовые данные содержат меньше значений (%u) чем нужно в соответствии с размерами (%u)."
 
-#: modules/file/nrrdfile.c:973
+#: modules/file/nrrdfile.c:1012
 #, c-format
 msgid "Gargbage after data sample #%u."
 msgstr "Мусор после элемента данных #%u."
 
-#: modules/file/nrrdfile.c:1020
+#: modules/file/nrrdfile.c:1061
 msgid "Field byteskip cannot be -1 for text encodings."
 msgstr "Число пропущенных байтов поля не может быть -1 для текстовых кодировок."
 
-#: modules/file/nrrdfile.c:1031
+#: modules/file/nrrdfile.c:1072
 msgid "Field lineskip specifies more lines than there are in the file."
 msgstr "Число пропущенных линий поля задаёт больше линий, чем есть в файле."
 
-#: modules/file/nrrdfile.c:1083
+#: modules/file/nrrdfile.c:1115
 msgid "Field byteskip specifies more bytes than there are in the file."
 msgstr "Число пропущенных байтов поля задаёт больше байтов, чем есть в файле."
 
-#: modules/file/nrrdfile.c:1306
+#: modules/file/nrrdfile.c:1338
 #, c-format
 msgid "Items of per-axis header field %s are not quoted."
 msgstr "Элементы поля %s заголовка оси не заключены в кавычки."
 
-#: modules/file/nrrdfile.c:1317
+#: modules/file/nrrdfile.c:1349
 #, c-format
 msgid "Per-axis header field %s contains too many items."
 msgstr "Поле %s заголовка оси содержит слишком много элементов."
 
-#: modules/file/nrrdfile.c:1326
+#: modules/file/nrrdfile.c:1358
 #, c-format
 msgid "Per-axis header field %s contains too few items."
 msgstr "Поле %s заголовка оси содержит слишком мало элементов."
@@ -4495,7 +4503,7 @@ msgstr "Достигнут конец файла в заголовке цвет�
 msgid "End of file reached in color data."
 msgstr "Достигнут конец файла в цветовых данных."
 
-#: modules/file/rhk-sm3.c:710
+#: modules/file/rhk-sm3.c:711
 #, c-format
 msgid "Unknown line %d"
 msgstr "Неизвестная строка %d"
@@ -4892,11 +4900,11 @@ msgstr "параметры масштаба z"
 msgid "data type parameters"
 msgstr "параметры типа данных"
 
-#: modules/file/wipfile.c:280
+#: modules/file/wipfile.c:275
 msgid "Imports WItec Project data files."
 msgstr "Импортирует файлы данных WItec Project."
 
-#: modules/file/wipfile.c:293
+#: modules/file/wipfile.c:288
 msgid "WItec Project files (.wip)"
 msgstr "Файлы WItec Project (.wip)"
 
@@ -10500,8 +10508,3 @@ msgstr ""
 "Наклон θ:     %s\n"
 "Наклон φ:     %s\n"
 
-#~ msgid "_Width"
-#~ msgstr "_Ширина"
-
-#~ msgid "H_eight"
-#~ msgstr "_Высота"
