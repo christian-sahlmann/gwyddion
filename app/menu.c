@@ -925,6 +925,10 @@ gwy_app_menu_recent_files_update(GList *recent_files)
     gtk_widget_show(item);
     /* doc history */
     item = gtk_image_menu_item_new_with_mnemonic(_("_Document history"));
+    gtk_menu_item_set_accel_path(GTK_MENU_ITEM(item),
+                                 "<file>/Open Recent/Document History");
+    gtk_accel_map_add_entry("<file>/Open Recent/Document History",
+                            GDK_H, GDK_CONTROL_MASK);
     gtk_image_menu_item_set_image(GTK_IMAGE_MENU_ITEM(item),
                                   gtk_image_new_from_stock(GTK_STOCK_OPEN,
                                                            GTK_ICON_SIZE_MENU));
