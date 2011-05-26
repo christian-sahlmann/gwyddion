@@ -19,6 +19,7 @@
  */
 
 #include "config.h"
+#include <string.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwyutils.h>
@@ -171,6 +172,19 @@ gwy_meta_sort_func(GtkTreeModel *model,
     return g_utf8_collate(g_quark_to_string(qa), g_quark_to_string(qb));
 }
 
+static gboolean
+gwy_meta_equal_func(GtkTreeModel *model,
+                    G_GNUC_UNUSED gint column,
+                    const gchar *key,
+                    GtkTreeIter *iter,
+                    G_GNUC_UNUSED gpointer search_data)
+{
+    GQuark quark;
+
+    gtk_tree_model_get(model, iter, META_KEY, &quark, -1);
+    return strcmp(g_quark_to_string(quark), key);
+}
+
 static void
 gwy_meta_update_title(MetadataBrowser *browser,
                       GwyContainer *data,
@@ -201,6 +215,7 @@ gwy_meta_switch_data(MetadataBrowser *browser,
 {
     GwyContainer *meta;
     GtkListStore *store;
+    GtkTreeView *treeview;
     GtkTreeIter iter;
     GSList *fixlist, *l;
     gchar key[24];
@@ -256,18 +271,22 @@ gwy_meta_switch_data(MetadataBrowser *browser,
                       (GWeakNotify)&gwy_meta_data_finalized,
                       browser);
 
-    gtk_tree_sortable_set_sort_func(GTK_TREE_SORTABLE(store), 0,
-                                    gwy_meta_sort_func, NULL, NULL);
-    gtk_tree_sortable_set_sort_column_id(GTK_TREE_SORTABLE(store), META_KEY,
-                                         GTK_SORT_ASCENDING);
-
     browser->changed_id = g_signal_connect(meta, "item-changed",
                                            G_CALLBACK(gwy_meta_item_changed),
                                            browser);
 
-    gtk_tree_view_set_model(GTK_TREE_VIEW(browser->treeview),
-                            GTK_TREE_MODEL(store));
+    treeview = GTK_TREE_VIEW(browser->treeview);
+    gtk_tree_view_set_model(treeview, GTK_TREE_MODEL(store));
     g_object_unref(store);
+
+    /* Search column must set whenver the model changes */
+    gtk_tree_sortable_set_sort_func(GTK_TREE_SORTABLE(store), 0,
+                                    gwy_meta_sort_func, NULL, NULL);
+    gtk_tree_sortable_set_sort_column_id(GTK_TREE_SORTABLE(store), META_KEY,
+                                         GTK_SORT_ASCENDING);
+    gtk_tree_view_set_search_column(treeview, META_KEY);
+    gtk_tree_view_set_search_equal_func(treeview, gwy_meta_equal_func,
+                                        browser, NULL);
 
     gwy_meta_update_title(browser, data, id);
 
@@ -295,6 +314,7 @@ gwy_meta_browser_construct(MetadataBrowser *browser)
     browser->treeview = gtk_tree_view_new();
     treeview = GTK_TREE_VIEW(browser->treeview);
     gtk_tree_view_set_rules_hint(treeview, TRUE);
+    gtk_tree_view_set_enable_search(treeview, TRUE);
 
     for (i = 0; i < G_N_ELEMENTS(columns); i++) {
         renderer = gtk_cell_renderer_text_new();
