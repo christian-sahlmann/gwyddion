@@ -755,7 +755,7 @@ gwy_tiff_get_image_reader(const GwyTIFF *tiff,
         return NULL;
     }
     if (reader.sample_format != GWY_TIFF_SAMPLE_FORMAT_UNSIGNED_INTEGER
-        &&  reader.sample_format != GWY_TIFF_SAMPLE_FORMAT_SIGNED_INTEGER) {
+        && reader.sample_format != GWY_TIFF_SAMPLE_FORMAT_SIGNED_INTEGER) {
         g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
                     _("Unsupported sample format"));
         return NULL;
@@ -898,7 +898,7 @@ gwy_tiff_read_image_row(const GwyTIFF *tiff,
 }
 
 /* Idempotent, use: reader = gwy_tiff_image_reader_free(reader); */
-G_GNUC_UNUSED static inline gpointer
+G_GNUC_UNUSED static inline GwyTIFFImageReader*
 gwy_tiff_image_reader_free(GwyTIFFImageReader *reader)
 {
     if (reader) {
