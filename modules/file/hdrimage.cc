@@ -184,45 +184,51 @@ static void          exr_save_load_args         (GwyContainer *container,
                                                  EXRSaveArgs *args);
 static void          exr_save_save_args         (GwyContainer *container,
                                                  EXRSaveArgs *args);
+static gdouble       suggest_zscale             (GwyBitDepth bit_depth,
+                                                 gdouble pmin,
+                                                 gdouble pmax,
+                                                 gdouble pcentre);
+static void          representable_range        (GwyBitDepth bit_depth,
+                                                 gdouble zscale,
+                                                 gdouble *min,
+                                                 gdouble *max);
+static void          find_range                 (GwyDataField *field,
+                                                 gdouble *fmin,
+                                                 gdouble *fmax,
+                                                 gdouble *pmin,
+                                                 gdouble *pmax,
+                                                 gdouble *pcentre);
+static gchar*        create_image_data          (GwyDataField *field,
+                                                 GwyBitDepth bit_depth,
+                                                 gdouble zscale,
+                                                 gdouble zmin,
+                                                 gdouble zmax);
 #endif
 
 #ifdef HAVE_PNG
-static gint          png_detect(const GwyFileDetectInfo *fileinfo,
-                                gboolean only_name,
-                                const gchar *name);
-static GwyContainer* png_load  (const gchar *filename,
-                                GwyRunType mode,
-                                GError **error,
-                                const gchar *name);
+static gint          png16_detect(const GwyFileDetectInfo *fileinfo,
+                                  gboolean only_name,
+                                  const gchar *name);
+static GwyContainer* png16_load  (const gchar *filename,
+                                  GwyRunType mode,
+                                  GError **error,
+                                  const gchar *name);
 #endif
 
-static gint          pgm_detect(const GwyFileDetectInfo *fileinfo,
-                                gboolean only_name,
-                                const gchar *name);
-static GwyContainer* pgm_load  (const gchar *filename,
-                                GwyRunType mode,
-                                GError **error,
-                                const gchar *name);
-
-static gdouble  suggest_zscale             (GwyBitDepth bit_depth,
-                                            gdouble pmin,
-                                            gdouble pmax,
-                                            gdouble pcentre);
-static void     representable_range        (GwyBitDepth bit_depth,
-                                            gdouble zscale,
-                                            gdouble *min,
-                                            gdouble *max);
-static void     find_range                 (GwyDataField *field,
-                                            gdouble *fmin,
-                                            gdouble *fmax,
-                                            gdouble *pmin,
-                                            gdouble *pmax,
-                                            gdouble *pcentre);
-static gchar*   create_image_data          (GwyDataField *field,
-                                            GwyBitDepth bit_depth,
-                                            gdouble zscale,
-                                            gdouble zmin,
-                                            gdouble zmax);
+static gint          pgm16_detect (const GwyFileDetectInfo *fileinfo,
+                                   gboolean only_name,
+                                   const gchar *name);
+static GwyContainer* pgm16_load   (const gchar *filename,
+                                   GwyRunType mode,
+                                   GError **error,
+                                   const gchar *name);
+static gint          tiff16_detect(const GwyFileDetectInfo *fileinfo,
+                                   gboolean only_name,
+                                   const gchar *name);
+static GwyContainer* tiff16_load  (const gchar *filename,
+                                   GwyRunType mode,
+                                   GError **error,
+                                   const gchar *name);
 
 static gboolean pixmap_load_dialog         (PixmapLoadArgs *args,
                                             const gchar *name,
@@ -282,15 +288,21 @@ module_register(void)
 #ifdef HAVE_PNG
     gwy_file_func_register("png16",
                            N_("PNG images with 16bit depth (.png)"),
-                           (GwyFileDetectFunc)&png_detect,
-                           (GwyFileLoadFunc)&png_load,
+                           (GwyFileDetectFunc)&png16_detect,
+                           (GwyFileLoadFunc)&png16_load,
                            NULL,
                            NULL);
 #endif
     gwy_file_func_register("pgm16",
                            N_("PGM images with 16bit depth (.pgm)"),
-                           (GwyFileDetectFunc)&pgm_detect,
-                           (GwyFileLoadFunc)&pgm_load,
+                           (GwyFileDetectFunc)&pgm16_detect,
+                           (GwyFileLoadFunc)&pgm16_load,
+                           NULL,
+                           NULL);
+    gwy_file_func_register("tiff16",
+                           N_("TIFF images with 16bit depth (.tiff)"),
+                           (GwyFileDetectFunc)&tiff16_detect,
+                           (GwyFileLoadFunc)&tiff16_load,
                            NULL,
                            NULL);
 
@@ -1131,15 +1143,155 @@ exr_load_image(const gchar *filename,
 
 /***************************************************************************
  *
+ * Common HDR image functions
+ * Used only for OpenEXR at this moment.
+ *
+ ***************************************************************************/
+
+#ifdef HAVE_EXR
+static gdouble
+suggest_zscale(GwyBitDepth bit_depth,
+               gdouble pmin, gdouble pmax, gdouble pcentre)
+{
+    if (bit_depth == GWY_BIT_DEPTH_FLOAT)
+        return 1.0;
+
+    g_return_val_if_fail(bit_depth == GWY_BIT_DEPTH_HALF, 1.0);
+
+    // Range OK as-is
+    if (pmin >= HALF_NRM_MIN && pmax <= HALF_MAX)
+        return 1.0;
+
+    // Range OK if scaled
+    if (pmax/pmin < (double)HALF_MAX/HALF_NRM_MIN)
+        return sqrt(pmax/HALF_MAX * pmin/HALF_NRM_MIN);
+
+    // Range not OK, may need a bit more sopistication here...
+    return pcentre;
+}
+
+static void
+representable_range(GwyBitDepth bit_depth, gdouble zscale,
+                    gdouble *min, gdouble *max)
+{
+    if (bit_depth == GWY_BIT_DEPTH_FLOAT) {
+        *min = zscale*G_MINFLOAT;
+        *max = zscale*G_MAXFLOAT;
+    }
+    else if (bit_depth == GWY_BIT_DEPTH_HALF) {
+        *min = zscale*HALF_NRM_MIN;
+        *max = zscale*HALF_MAX;
+    }
+    else {
+        g_assert_not_reached();
+    }
+}
+
+static gchar*
+create_image_data(GwyDataField *field,
+                  GwyBitDepth bit_depth,
+                  gdouble zscale,
+                  gdouble zmin,
+                  gdouble zmax)
+{
+    guint xres = gwy_data_field_get_xres(field);
+    guint yres = gwy_data_field_get_yres(field);
+    const gdouble *d = gwy_data_field_get_data_const(field);
+    gchar *retval = NULL;
+    guint i;
+
+    if (zscale == GWY_BIT_DEPTH_INT16) {
+        guint16 *imagedata = g_new(guint16, xres*yres);
+        gdouble q = (G_MAXUINT16 + 0.999)/(zmax - zmin);
+        retval = (gchar*)imagedata;
+
+        for (i = xres*yres; i; i--, d++, imagedata++)
+            *imagedata = (guint16)CLAMP(q*(*d - zmin),
+                                        0.0, G_MAXUINT16 + 0.999);
+    }
+    else if (bit_depth == GWY_BIT_DEPTH_INT32) {
+        guint32 *imagedata = g_new(guint32, xres*yres);
+        gdouble q = (G_MAXUINT32 + 0.999)/(zmax - zmin);
+        retval = (gchar*)imagedata;
+
+        for (i = xres*yres; i; i--, d++, imagedata++)
+            *imagedata = (guint32)CLAMP(q*(*d - zmin),
+                                        0.0, G_MAXUINT32 + 0.999);
+    }
+    else if (bit_depth == GWY_BIT_DEPTH_FLOAT) {
+        gfloat *imagedata = g_new(gfloat, xres*yres);
+        retval = (gchar*)imagedata;
+
+        for (i = xres*yres; i; i--, d++, imagedata++)
+            *imagedata = (gfloat)(*d/zscale);
+    }
+    else if (bit_depth == GWY_BIT_DEPTH_HALF) {
+        half *imagedata = g_new(half, xres*yres);
+        retval = (gchar*)imagedata;
+
+        for (i = xres*yres; i; i--, d++, imagedata++)
+            *imagedata = (half)(*d/zscale);
+    }
+    else {
+        g_assert_not_reached();
+    }
+
+    return retval;
+}
+
+static void
+find_range(GwyDataField *field,
+           gdouble *fmin, gdouble *fmax,
+           gdouble *pmin, gdouble *pmax, gdouble *pcentre)
+{
+    gdouble min = G_MAXDOUBLE, max = G_MINDOUBLE, logcentre = 0.0;
+    guint i, nc = 0;
+    guint xres = gwy_data_field_get_xres(field),
+          yres = gwy_data_field_get_yres(field);
+    const gdouble *d = gwy_data_field_get_data_const(field);
+    gdouble v;
+
+    for (i = xres*yres; i; i--, d++) {
+        if (!(v = *d))
+            continue;
+
+        v = fabs(v);
+        if (v < min)
+            min = v;
+        if (v > max)
+            max = v;
+        logcentre += log(v);
+        nc++;
+    }
+
+    *pmax = max;
+    *pmin = min;
+    *pcentre = exp(logcentre/nc);
+
+    gwy_data_field_get_min_max(field, fmin, fmax);
+}
+#endif
+
+static const gchar*
+describe_channels(gboolean grayscale, gboolean has_alpha)
+{
+    if (grayscale)
+        return has_alpha ? "Y, A" : "Y";
+    else
+        return has_alpha ? "R, G, B, A" : "R, G, B";
+}
+
+/***************************************************************************
+ *
  * PNG
  *
  ***************************************************************************/
 
 #ifdef HAVE_PNG
 static gint
-png_detect(const GwyFileDetectInfo *fileinfo,
-           gboolean only_name,
-           const gchar *name)
+png16_detect(const GwyFileDetectInfo *fileinfo,
+             gboolean only_name,
+             const gchar *name)
 {
     typedef struct {
         guint width;
@@ -1207,20 +1359,11 @@ get_png_text_string(const png_textp text_chunks, guint ncomments,
     return NULL;
 }
 
-static const gchar*
-describe_channels(gboolean grayscale, gboolean has_alpha)
-{
-    if (grayscale)
-        return has_alpha ? "G, A" : "G";
-    else
-        return has_alpha ? "R, G, B, A" : "R, G, B";
-}
-
 static GwyContainer*
-png_load(const gchar *filename,
-         GwyRunType mode,
-         GError **error,
-         const gchar *name)
+png16_load(const gchar *filename,
+           GwyRunType mode,
+           GError **error,
+           const gchar *name)
 {
     png_structp reader = NULL;
     png_infop reader_info = NULL;
@@ -1665,9 +1808,9 @@ read_pgm_head(const gchar *buffer, gsize len, guint *headersize,
 }
 
 static gint
-pgm_detect(const GwyFileDetectInfo *fileinfo,
-           gboolean only_name,
-           const gchar *name)
+pgm16_detect(const GwyFileDetectInfo *fileinfo,
+             gboolean only_name,
+             const gchar *name)
 {
     gchar *unitxy = NULL, *unitz = NULL, *title = NULL;
     gdouble xreal, yreal, xoff, yoff, zmin, zmax;
@@ -1694,10 +1837,10 @@ pgm_detect(const GwyFileDetectInfo *fileinfo,
 }
 
 static GwyContainer*
-pgm_load(const gchar *filename,
-         GwyRunType mode,
-         GError **error,
-         const gchar *name)
+pgm16_load(const gchar *filename,
+           GwyRunType mode,
+           GError **error,
+           const gchar *name)
 {
     GwyContainer *container = NULL;
     GwyDataField *field = NULL;
@@ -1705,9 +1848,7 @@ pgm_load(const gchar *filename,
     guchar *buffer = NULL;
     gchar *unitxy = NULL, *unitz = NULL, *title = NULL;
     gdouble xreal, yreal, xoff, yoff, zmin, zmax, q;
-    guint xres, yres, maxval, headersize, i, j;
-    const guint16 *d16;
-    gdouble *data;
+    guint xres, yres, maxval, headersize;
     gint power10;
     DetectionResult detected;
     gsize size = 0;
@@ -1740,16 +1881,12 @@ pgm_load(const gchar *filename,
         PixmapLoadArgs args;
         gboolean ok;
 
-        data = gwy_data_field_get_data(f);
-        d16 = (const guint16*)(buffer + headersize);
-        for (i = 0; i < yres; i++) {
-            for (j = 0; j < xres; j++)
-                data[i*xres + j] = GUINT16_FROM_BE(d16[i*xres + j]);
-        }
-
+        gwy_convert_raw_data(buffer + headersize, xres*yres, 1,
+                             GWY_RAW_DATA_UINT16, GWY_BYTE_ORDER_BIG_ENDIAN,
+                             gwy_data_field_get_data(f), 1.0, 0.0);
         pixmap_load_load_args(gwy_app_settings_get(), &args);
         // Loading alpha from a separate chunk is not supported
-        ok = pixmap_load_dialog(&args, "PGM", f, "G", 1);
+        ok = pixmap_load_dialog(&args, "PGM", f, "Y", 1);
         g_object_unref(f);
         pixmap_load_save_args(gwy_app_settings_get(), &args);
         if (!ok) {
@@ -1804,15 +1941,13 @@ pgm_load(const gchar *filename,
     }
 
     q = (zmax - zmin)/G_MAXUINT16;
-    data = gwy_data_field_get_data(field);
-    d16 = (const guint16*)(buffer + headersize);
-    for (i = 0; i < yres; i++) {
-        for (j = 0; j < xres; j++)
-            data[i*xres + j] = q*GUINT16_FROM_BE(d16[i*xres + j]) + zmin;
-    }
+    gwy_convert_raw_data(buffer + headersize, xres*yres, 1,
+                         GWY_RAW_DATA_UINT16, GWY_BYTE_ORDER_BIG_ENDIAN,
+                         gwy_data_field_get_data(field), q, zmin);
 
     container = gwy_container_new();
     gwy_container_set_object_by_name(container, "/0/data", field);
+    g_object_unref(field);
     if (title) {
         gwy_container_set_string_by_name(container, "/0/data/title",
                                          (const guchar*)title);
@@ -1830,130 +1965,164 @@ fail:
 
 /***************************************************************************
  *
- * Common HDR image functions
+ * TIFF
  *
  ***************************************************************************/
 
-G_GNUC_UNUSED static gdouble
-suggest_zscale(GwyBitDepth bit_depth,
-               gdouble pmin, gdouble pmax, gdouble pcentre)
+static gint
+tiff16_detect(const GwyFileDetectInfo *fileinfo,
+              gboolean only_name,
+              const gchar *name)
 {
-    if (bit_depth == GWY_BIT_DEPTH_FLOAT)
-        return 1.0;
+    // Export is done in pixmap.c, we cannot have multiple exporters of the
+    // same type (unlike loaders).
+    if (only_name)
+        return 0;
 
-    g_return_val_if_fail(bit_depth == GWY_BIT_DEPTH_HALF, 1.0);
+    if (fileinfo->buffer_len < 5)
+        return 0;
+    if (memcmp(fileinfo->head, "MM\x00\x2a", 4) != 0
+        && memcmp(fileinfo->head, "II\x2a\x00", 4) != 0)
+        return 0;
 
-    // Range OK as-is
-    if (pmin >= HALF_NRM_MIN && pmax <= HALF_MAX)
-        return 1.0;
+    GwyTIFF *tiff = gwy_tiff_load(fileinfo->name, NULL);
+    if (!tiff)
+        return 0;
 
-    // Range OK if scaled
-    if (pmax/pmin < (double)HALF_MAX/HALF_NRM_MIN)
-        return sqrt(pmax/HALF_MAX * pmin/HALF_NRM_MIN);
+    GwyTIFFImageReader *reader = gwy_tiff_get_image_reader(tiff, 0, 4, NULL);
 
-    // Range not OK, may need a bit more sopistication here...
-    return pcentre;
+    guint score = 0;
+    // A bit larger value than in pixmap.c.
+    if (reader && reader->bits_per_sample == 16)
+        score = 75;
+
+    gwy_tiff_image_reader_free(reader);
+    gwy_tiff_free(tiff);
+
+    return score;
 }
 
-G_GNUC_UNUSED static void
-representable_range(GwyBitDepth bit_depth, gdouble zscale,
-                    gdouble *min, gdouble *max)
+static void
+load_tiff_channels(GwyContainer *container,
+                   const GwyTIFF *tiff,
+                   const GwyTIFFImageReader *reader,
+                   gdouble xreal, gdouble yreal, gdouble zreal,
+                   GwySIUnit *unitxy, GwySIUnit *unitz,
+                   guint *id)
 {
-    if (bit_depth == GWY_BIT_DEPTH_FLOAT) {
-        *min = zscale*G_MINFLOAT;
-        *max = zscale*G_MAXFLOAT;
-    }
-    else if (bit_depth == GWY_BIT_DEPTH_HALF) {
-        *min = zscale*HALF_NRM_MIN;
-        *max = zscale*HALF_MAX;
-    }
-    else {
-        g_assert_not_reached();
+    guint xres = reader->width;
+    guint yres = reader->height;
+    guint nchannels = reader->samples_per_pixel;
+
+    for (guint cid = 0; cid < nchannels; cid++) {
+        GwyDataField *dfield = gwy_data_field_new(xres, yres, xreal, yreal,
+                                                  FALSE);
+        gdouble *d = gwy_data_field_get_data(dfield);
+        for (guint i = 0; i < yres; i++)
+            gwy_tiff_read_image_row(tiff, reader, cid, i, zreal,
+                                    0.0, d + i*xres);
+
+        GwySIUnit *u;
+        u = gwy_data_field_get_si_unit_xy(dfield);
+        gwy_serializable_clone(G_OBJECT(unitxy), G_OBJECT(u));
+        u = gwy_data_field_get_si_unit_z(dfield);
+        gwy_serializable_clone(G_OBJECT(unitz), G_OBJECT(u));
+
+        GQuark quark = gwy_app_get_data_key_for_id(*id);
+        gwy_container_set_object(container, quark, dfield);
+        g_object_unref(dfield);
+
+        (*id)++;
     }
 }
 
-G_GNUC_UNUSED static gchar*
-create_image_data(GwyDataField *field,
-                  GwyBitDepth bit_depth,
-                  gdouble zscale,
-                  gdouble zmin,
-                  gdouble zmax)
+static GwyContainer*
+tiff16_load(const gchar *filename,
+            GwyRunType mode,
+            GError **error,
+            const gchar *name)
 {
-    guint xres = gwy_data_field_get_xres(field);
-    guint yres = gwy_data_field_get_yres(field);
-    const gdouble *d = gwy_data_field_get_data_const(field);
-    gchar *retval = NULL;
-    guint i;
+    GwyContainer *container = NULL;
+    guint id, idx;
+    gdouble xreal, yreal, zreal;
+    GwySIUnit *unitxy = NULL, *unitz = NULL;
+    GwyTIFF *tiff = NULL;
+    GwyTIFFImageReader *reader = NULL;
+    PixmapLoadArgs args;
 
-    if (zscale == GWY_BIT_DEPTH_INT16) {
-        guint16 *imagedata = g_new(guint16, xres*yres);
-        gdouble q = (G_MAXUINT16 + 0.999)/(zmax - zmin);
-        retval = (gchar*)imagedata;
+    if (!(tiff = gwy_tiff_load(filename, error)))
+        return NULL;
 
-        for (i = xres*yres; i; i--, d++, imagedata++)
-            *imagedata = (guint16)CLAMP(q*(*d - zmin),
-                                        0.0, G_MAXUINT16 + 0.999);
-    }
-    else if (bit_depth == GWY_BIT_DEPTH_INT32) {
-        guint32 *imagedata = g_new(guint32, xres*yres);
-        gdouble q = (G_MAXUINT32 + 0.999)/(zmax - zmin);
-        retval = (gchar*)imagedata;
+    if (!(reader = gwy_tiff_get_image_reader(tiff, 0, 4, error)))
+        goto fail;
 
-        for (i = xres*yres; i; i--, d++, imagedata++)
-            *imagedata = (guint32)CLAMP(q*(*d - zmin),
-                                        0.0, G_MAXUINT32 + 0.999);
-    }
-    else if (bit_depth == GWY_BIT_DEPTH_FLOAT) {
-        gfloat *imagedata = g_new(gfloat, xres*yres);
-        retval = (gchar*)imagedata;
-
-        for (i = xres*yres; i; i--, d++, imagedata++)
-            *imagedata = (gfloat)(*d/zscale);
-    }
-    else if (bit_depth == GWY_BIT_DEPTH_HALF) {
-        half *imagedata = g_new(half, xres*yres);
-        retval = (gchar*)imagedata;
-
-        for (i = xres*yres; i; i--, d++, imagedata++)
-            *imagedata = (half)(*d/zscale);
-    }
-    else {
-        g_assert_not_reached();
+    if (reader->bits_per_sample != 16) {
+        g_warning("Attempt to import non-16bit TIFF using the tiff16 loader.");
+        err_BPP(error, reader->bits_per_sample);
+        goto fail;
     }
 
-    return retval;
-}
+    // Use the first channel for preview.
+    {
+        gwy_debug("Image keys not implemented for TIFF, using manual import.");
 
-G_GNUC_UNUSED static void
-find_range(GwyDataField *field,
-           gdouble *fmin, gdouble *fmax,
-           gdouble *pmin, gdouble *pmax, gdouble *pcentre)
-{
-    gdouble min = G_MAXDOUBLE, max = G_MINDOUBLE, logcentre = 0.0;
-    guint i, nc = 0;
-    guint xres = gwy_data_field_get_xres(field),
-          yres = gwy_data_field_get_yres(field);
-    const gdouble *d = gwy_data_field_get_data_const(field);
-    gdouble v;
+        guint xres = reader->width;
+        guint yres = reader->height;
+        guint nchannels = reader->samples_per_pixel;
+        GwyDataField *f = gwy_data_field_new(xres, yres, 1.0, 1.0, FALSE);
+        gdouble *d = gwy_data_field_get_data(f);
+        for (guint i = 0; i < yres; i++)
+            gwy_tiff_read_image_row(tiff, reader, 0, i, 1.0, 0.0, d + i*xres);
 
-    for (i = xres*yres; i; i--, d++) {
-        if (!(v = *d))
+        pixmap_load_load_args(gwy_app_settings_get(), &args);
+        gboolean ok = pixmap_load_dialog(&args, "TIFF", f,
+                                         nchannels == 1 ? "Y" : "R, G, B",
+                                         gwy_tiff_get_n_dirs(tiff));
+        g_object_unref(f);
+        pixmap_load_save_args(gwy_app_settings_get(), &args);
+        xreal = args.xreal * pow10(args.xyexponent);
+        yreal = args.yreal * pow10(args.xyexponent);
+        zreal = args.zreal * pow10(args.zexponent);
+        unitxy = gwy_si_unit_new(args.xyunit);
+        unitz = gwy_si_unit_new(args.zunit);
+        g_free(args.xyunit);
+        g_free(args.zunit);
+
+        if (!ok) {
+            err_CANCELLED(error);
+            goto fail;
+        }
+    }
+
+    container = gwy_container_new();
+    for (idx = id = 0; idx < gwy_tiff_get_n_dirs(tiff); idx++) {
+        GError *err = NULL;
+
+        reader = gwy_tiff_image_reader_free(reader);
+        reader = gwy_tiff_get_image_reader(tiff, idx, 4, &err);
+        if (!reader) {
+            g_warning("Ignoring directory %u: %s.", idx, err->message);
+            g_clear_error(&err);
             continue;
+        }
 
-        v = fabs(v);
-        if (v < min)
-            min = v;
-        if (v > max)
-            max = v;
-        logcentre += log(v);
-        nc++;
+        load_tiff_channels(container, tiff, reader,
+                           xreal, yreal, zreal, unitxy, unitz,
+                           &id);
     }
 
-    *pmax = max;
-    *pmin = min;
-    *pcentre = exp(logcentre/nc);
+    if (!id) {
+        err_NO_DATA(error);
+        gwy_object_unref(container);
+    }
 
-    gwy_data_field_get_min_max(field, fmin, fmax);
+fail:
+    gwy_object_unref(unitxy);
+    gwy_object_unref(unitz);
+    gwy_tiff_image_reader_free(reader);
+    gwy_tiff_free(tiff);
+
+    return container;
 }
 
 /***************************************************************************
