@@ -24,7 +24,6 @@
  * .png .jpeg .tiff .tga .pnm .bmp
  * Read[1] Export[2]
  * [1] Import support relies on Gdk-Pixbuf and hence may vary among systems.
- * 16bit depth is not supported.
  * [2] Usually lossy, intended for presentational purposes.  16bit grayscale
  * export is possible to PNG, TIFF and PNM.
  **/
