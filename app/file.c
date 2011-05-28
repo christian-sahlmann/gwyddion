@@ -255,7 +255,8 @@ gwy_app_file_load_real(const gchar *filename_utf8,
         data = gwy_file_func_run_load(name, filename_sys,
                                       GWY_RUN_INTERACTIVE, &err);
     else
-        data = gwy_file_load(filename_sys, GWY_RUN_INTERACTIVE, &err);
+        data = gwy_file_load_with_func(filename_sys, GWY_RUN_INTERACTIVE,
+                                       &name, &err);
 
     if (data) {
         gwy_data_validate(data,
@@ -268,13 +269,26 @@ gwy_app_file_load_real(const gchar *filename_utf8,
         if (err && !g_error_matches(err,
                                     GWY_MODULE_FILE_ERROR,
                                     GWY_MODULE_FILE_ERROR_CANCELLED)) {
+            gchar *filename_disp = g_filename_display_basename(filename_utf8);
+            GString *message = g_string_new(NULL);
+
             dialog = gtk_message_dialog_new(NULL, 0,
                                             GTK_MESSAGE_ERROR,
                                             GTK_BUTTONS_CLOSE,
                                             _("Opening of `%s' failed"),
-                                            filename_utf8);
+                                            filename_disp);
+            g_free(filename_disp);
+            g_string_append(message, err->message);
+            g_string_append(message, "\n\n");
+            g_string_append_printf(message,
+                                   _("Full file path: %s."), filename_utf8);
+            if (name) {
+                g_string_append(message, "\n\n");
+                g_string_append_printf(message, _("Loaded using: %s."), name);
+            }
             gtk_message_dialog_format_secondary_text(GTK_MESSAGE_DIALOG(dialog),
-                                                     "%s", err->message);
+                                                     "%s", message->str);
+            g_string_free(message, TRUE);
             g_signal_connect(dialog, "response",
                              G_CALLBACK(gtk_widget_destroy), NULL);
             gtk_widget_show_all(dialog);
@@ -452,7 +466,8 @@ gwy_app_file_write(GwyContainer *data,
             saveok = 0;
     }
     else
-        saveok = gwy_file_save(data, filename_sys, GWY_RUN_INTERACTIVE, &err);
+        saveok = gwy_file_save_with_func(data, filename_sys,
+                                         GWY_RUN_INTERACTIVE, &name, &err);
 
     switch (saveok) {
         case GWY_FILE_OPERATION_SAVE:
@@ -474,13 +489,26 @@ gwy_app_file_write(GwyContainer *data,
         if (err && !g_error_matches(err,
                                     GWY_MODULE_FILE_ERROR,
                                     GWY_MODULE_FILE_ERROR_CANCELLED)) {
+            gchar *filename_disp = g_filename_display_basename(filename_utf8);
+            GString *message = g_string_new(NULL);
+
             dialog = gtk_message_dialog_new(NULL, 0,
                                             GTK_MESSAGE_ERROR,
                                             GTK_BUTTONS_CLOSE,
                                             _("Saving of `%s' failed"),
-                                            filename_utf8);
+                                            filename_disp);
+            g_free(filename_disp);
+            g_string_append(message, err->message);
+            g_string_append(message, "\n\n");
+            g_string_append_printf(message,
+                                   _("Full file path: %s."), filename_utf8);
+            if (name) {
+                g_string_append(message, "\n\n");
+                g_string_append_printf(message, _("Saved using: %s."), name);
+            }
             gtk_message_dialog_format_secondary_text(GTK_MESSAGE_DIALOG(dialog),
-                                                     "%s", err->message);
+                                                     "%s", message->str);
+            g_string_free(message, TRUE);
             g_signal_connect(dialog, "response",
                              G_CALLBACK(gtk_widget_destroy), NULL);
             gtk_widget_show_all(dialog);
