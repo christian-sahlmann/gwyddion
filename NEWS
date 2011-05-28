@@ -8,8 +8,11 @@ Application:
 Libraries:
 - libgwyddion: SI unit arithmetic, sometimes giving incorrect results if one of
   the operand was the same object as the result, was corrected.
-- libgwymodules: macro GWY_MODULE_QUERY automatically adds extern "C" if
+- libgwymodules: Macro GWY_MODULE_QUERY automatically adds extern "C" if
   compiled as C++.
+- libgwymodule: New file load/save functions reporting the actual module
+  function used to load/save the file.
+- libgwyapp: File load/save error message boxes were improved.
 
 Modules:
 - CSM (new): Imports Benyuan CSM files.
