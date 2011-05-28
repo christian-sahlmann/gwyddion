@@ -496,8 +496,35 @@ gwy_file_load(const gchar *filename,
               GwyRunType mode,
               GError **error)
 {
+    return gwy_file_load_with_func(filename, mode, NULL, error);
+}
+
+/**
+ * gwy_file_load:
+ * @filename: A file name to load data from, in GLib encoding.
+ * @mode: Run mode.
+ * @name: Location to store the name of file load function used to load the
+ *        file, or %NULL.  If an error occurs outside the module, e.g. failure
+ *        to recognise the file type, %NULL is stored to @name.
+ * @error: Return location for a #GError (or %NULL).
+ *
+ * Loads a data file, autodetecting its type.
+ *
+ * Returns: A new #GwyContainer with data from @filename, or %NULL.
+ *
+ * Since: 2.25
+ **/
+GwyContainer*
+gwy_file_load_with_func(const gchar *filename,
+                        GwyRunType mode,
+                        const gchar **name,
+                        GError **error)
+{
     const gchar *winner;
     FILE *fh;
+
+    if (name)
+        *name = NULL;
 
     g_return_val_if_fail(filename, NULL);
 
@@ -517,6 +544,8 @@ gwy_file_load(const gchar *filename,
                     _("No module can load this file type."));
         return NULL;
     }
+    if (name)
+        *name = winner;
 
     return gwy_file_func_run_load(winner, filename, mode, error);
 }
@@ -542,8 +571,41 @@ gwy_file_save(GwyContainer *data,
               GwyRunType mode,
               GError **error)
 {
+    return gwy_file_save_with_func(data, filename, mode, NULL, error);
+}
+
+/**
+ * gwy_file_save_with_func:
+ * @data: A #GwyContainer to save.
+ * @filename: A file name to save the data as, in GLib encoding.
+ * @mode: Run mode.
+ * @name: Location to store the name of file load function used to save the
+ *        file, or %NULL.  If an error occurs outside the module, e.g. failure
+ *        to recognise the file type, %NULL is stored to @name.
+ * @error: Return location for a #GError (or %NULL).
+ *
+ * Saves a data file, deciding to save as what type from the file name.
+ *
+ * It tries to find a module implementing %GWY_FILE_OPERATION_SAVE first, when
+ * it does not succeed, it falls back to %GWY_FILE_OPERATION_EXPORT.
+ *
+ * Returns: The save operation that was actually realized on success, zero
+ *          on failure.
+ *
+ * Since: 2.25
+ **/
+GwyFileOperationType
+gwy_file_save_with_func(GwyContainer *data,
+                        const gchar *filename,
+                        GwyRunType mode,
+                        const gchar **name,
+                        GError **error)
+{
     FileDetectData ddata;
     GwyFileDetectInfo fileinfo;
+
+    if (name)
+        *name = NULL;
 
     if (!file_funcs)
         goto gwy_file_save_fail;
@@ -559,6 +621,9 @@ gwy_file_save(GwyContainer *data,
     g_hash_table_foreach(file_funcs, (GHFunc)file_detect_max_score_cb, &ddata);
 
     if (ddata.winner) {
+        if (name)
+            *name = ddata.winner;
+
         gwy_file_detect_free_info(&fileinfo);
         if (gwy_file_func_run_save(ddata.winner,
                                    data, filename, mode, error))
@@ -571,6 +636,9 @@ gwy_file_save(GwyContainer *data,
     gwy_file_detect_free_info(&fileinfo);
 
     if (ddata.winner) {
+        if (name)
+            *name = ddata.winner;
+
         if (gwy_file_func_run_export(ddata.winner,
                                      data, filename, mode, error))
             return ddata.mode;

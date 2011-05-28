@@ -104,9 +104,18 @@ const gchar*        gwy_file_detect_with_score(const gchar *filename,
 GwyContainer*       gwy_file_load             (const gchar *filename,
                                                GwyRunType mode,
                                                GError **error);
+GwyContainer*       gwy_file_load_with_func   (const gchar *filename,
+                                               GwyRunType mode,
+                                               const gchar **name,
+                                               GError **error);
 GwyFileOperationType gwy_file_save            (GwyContainer *data,
                                                const gchar *filename,
                                                GwyRunType mode,
+                                               GError **error);
+GwyFileOperationType gwy_file_save_with_func  (GwyContainer *data,
+                                               const gchar *filename,
+                                               GwyRunType mode,
+                                               const gchar **name,
                                                GError **error);
 gboolean            gwy_file_func_get_is_detectable(const gchar *name);
 void                gwy_file_func_set_is_detectable(const gchar *name,
