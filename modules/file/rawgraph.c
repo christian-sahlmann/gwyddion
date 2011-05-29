@@ -97,7 +97,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports simple text files as graph curves."),
     "Yeti <yeti@gwyddion.net>",
-    "0.2",
+    "0.3",
     "David Nečas (Yeti)",
     "2009",
 };
@@ -210,7 +210,8 @@ fail:
     g_free(args.y_units);
     g_free(args.xdata);
     g_free(args.ydata);
-    g_array_free(args.data, TRUE);
+    if (args.data)
+        g_array_free(args.data, TRUE);
 
     return container;
 }
