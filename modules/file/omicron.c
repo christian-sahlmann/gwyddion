@@ -1014,7 +1014,7 @@ omicron_read_be_data(OmicronFile *ofile,
     g_object_unref(coord_unit);
 
     for (i = 0; i < gyres; i++) {
-        gdouble y = ofile->yreal*gystep*i/gyres;
+        gdouble y = ofile->yreal*gystep*(ofile->yres-1 - i)/gyres;
         for (j = 0; j < gxres; j++) {
             gdouble x = ofile->xreal*gxstep*j/gxres;
             GwyDataLine *dline = gwy_data_line_new(channel->npoints, xreal,
