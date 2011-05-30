@@ -39,7 +39,7 @@
  **/
 
 /* TODO: metadata */
-
+#define DEBUG 1
 #include "config.h"
 #include <stdlib.h>
 #include <string.h>
@@ -135,6 +135,9 @@ static GwyDataField* omicron_read_data          (OmicronFile *ofile,
                                                  OmicronTopoChannel *channel,
                                                  GError **error);
 static GwySpectra*   omicron_read_cs_data       (OmicronFile *ofile,
+                                                 OmicronSpectroChannel *channel,
+                                                 GError **error);
+static GwySpectra*   omicron_read_sf_data       (OmicronFile *ofile,
                                                  OmicronSpectroChannel *channel,
                                                  GError **error);
 static GwyContainer* omicron_make_meta          (OmicronFile *ofile);
@@ -324,7 +327,30 @@ omicron_load(const gchar *filename,
             }
             else if (omicron_has_extension(channel->filename, "sf")
                      || omicron_has_extension(channel->filename, "sb")) {
+                gchar *t;
+                GQuark quark;
+
+                spectra = omicron_read_sf_data(&ofile, channel, error);
+                if (!spectra) {
+                    /* XXX XXX XXX XXX XXX */
+                    continue;
+                    gwy_object_unref(container);
+                    goto fail;
+                }
+
+                if (!gwy_spectra_get_n_spectra(spectra)) {
+                    gwy_debug("Spectra %u is empty, ignoring", i);
+                    g_object_unref(spectra);
+                    continue;
+                }
+
                 /* FIXME */
+                t = g_strconcat(channel->chan, "-", channel->param, NULL);
+                gwy_spectra_set_title(spectra, t);
+                g_free(t);
+                quark = gwy_app_get_spectra_key_for_id(i);
+                gwy_container_set_object(container, quark, spectra);
+                g_object_unref(spectra);
             }
             else {
                 g_warning("Cannot determine spectra type of %s",
@@ -340,11 +366,12 @@ fail:
     return container;
 }
 
+/* XXX: The return value sometimes means FALSE, sometimes NULL. */
 #define GET_FIELD(hash, val, field, err) \
     do { \
         if (!(val = g_hash_table_lookup(hash, field))) { \
             err_MISSING_FIELD(err, field); \
-            return FALSE; \
+            return 0; \
         } \
     } while (FALSE)
 
@@ -933,6 +960,80 @@ omicron_read_cs_data(OmicronFile *ofile,
 
     return spectra;
 }
+
+/* Read grid spectra. */
+static GwySpectra*
+omicron_read_sf_data(OmicronFile *ofile,
+                     OmicronSpectroChannel *channel,
+                     GError **error)
+{
+    gdouble xreal = channel->max_phys - channel->min_phys;
+    GError *err = NULL;
+    GwySIUnit *siunit = NULL, *coord_unit = NULL;
+    GwySpectra *spectra = NULL;
+    gsize size;
+    gchar *filename;
+    guchar *buffer;
+    gdouble scale;
+    guint i, j;
+    gint power10 = 0;
+    guint gxres, gyres, gxstep, gystep;
+    gchar* value;
+
+    GET_FIELD(ofile->meta, value, "Spectroscopy Points in X", error);
+    gxres = abs(atoi(value));
+    GET_FIELD(ofile->meta, value, "Spectroscopy Lines in Y", error);
+    gyres = abs(atoi(value));
+    GET_FIELD(ofile->meta, value, "Spectroscopy Grid Value in X", error);
+    gxstep = abs(atoi(value));
+    GET_FIELD(ofile->meta, value, "Spectroscopy Grid Value in Y", error);
+    gystep = abs(atoi(value));
+    gwy_debug("grid: %ux%u with steps %u,%u", gxres, gyres, gxstep, gystep);
+
+    filename = omicron_fix_file_name(ofile->filename, channel->filename, error);
+    if (!filename)
+        return NULL;
+
+    gwy_debug("Succeeded with <%s>", filename);
+    if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
+        g_free(filename);
+        err_GET_FILE_CONTENTS(error, &err);
+        return NULL;
+    }
+    g_free(filename);
+
+    if (err_SIZE_MISMATCH(error, 2*gxres*gyres*channel->npoints, size, TRUE))
+        goto fail;
+
+    spectra = gwy_spectra_new();
+    for (i = 0; i < gyres; i++) {
+        for (j = 0; j < gxres; j++) {
+            gdouble x = ofile->xreal*gxstep*j/gxres,
+                    y = ofile->yreal*gystep*i/gyres;
+            GwyDataLine *dline = gwy_data_line_new(channel->npoints, xreal,
+                                                   FALSE);
+
+            gwy_data_line_set_offset(dline, channel->min_phys);
+
+            /* TODO: Physical scales */
+            gwy_convert_raw_data(buffer + 2*(i*gxres + j), channel->npoints,
+                                 gxres*gyres,
+                                 GWY_RAW_DATA_SINT16,
+                                 GWY_BYTE_ORDER_BIG_ENDIAN,
+                                 gwy_data_line_get_data(dline), 1.0, 0.0);
+
+            gwy_spectra_add_spectrum(spectra, dline, x, y);
+            gwy_debug("[%u,%u] %g, %g", j, i, x, y);
+            g_object_unref(dline);
+        }
+    }
+
+fail:
+    gwy_file_abandon_contents(buffer, size, NULL);
+
+    return spectra;
+}
+
 
 static void
 add_meta(gpointer key, gpointer value, gpointer user_data)
