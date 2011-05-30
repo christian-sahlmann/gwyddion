@@ -8,6 +8,7 @@ Application:
 Libraries:
 - libgwyddion: SI unit arithmetic, sometimes giving incorrect results if one of
   the operand was the same object as the result, was corrected.
+- libgwyddion: New functions for conversion blocks of raw data to doubles.
 - libgwymodules: Macro GWY_MODULE_QUERY automatically adds extern "C" if
   compiled as C++.
 - libgwymodule: New file load/save functions reporting the actual module
