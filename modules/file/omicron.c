@@ -1,6 +1,6 @@
 /*
  *  $Id$
- *  Copyright (C) 2006 David Necas (Yeti), Petr Klapetek, Markus Pristovsek
+ *  Copyright (C) 2006-2011 David Necas (Yeti), Petr Klapetek, Markus Pristovsek
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net,
  *  prissi@gift.physik.tu-berlin.de.
  *
@@ -39,7 +39,7 @@
  **/
 
 /* TODO: metadata */
-#define DEBUG 1
+
 #include "config.h"
 #include <stdlib.h>
 #include <string.h>
@@ -137,7 +137,7 @@ static GwyDataField* omicron_read_data          (OmicronFile *ofile,
 static GwySpectra*   omicron_read_cs_data       (OmicronFile *ofile,
                                                  OmicronSpectroChannel *channel,
                                                  GError **error);
-static GwySpectra*   omicron_read_sf_data       (OmicronFile *ofile,
+static GwySpectra*   omicron_read_be_data       (OmicronFile *ofile,
                                                  OmicronSpectroChannel *channel,
                                                  GError **error);
 static GwyContainer* omicron_make_meta          (OmicronFile *ofile);
@@ -148,7 +148,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Omicron data files (two-part .par + .tf*, .tb*, .sf*, .sb*)."),
     "Yeti <yeti@gwyddion.net>",
-    "0.7",
+    "0.8",
     "David Nečas (Yeti) & Petr Klapetek & Markus Pristovsek",
     "2006",
 };
@@ -330,10 +330,8 @@ omicron_load(const gchar *filename,
                 gchar *t;
                 GQuark quark;
 
-                spectra = omicron_read_sf_data(&ofile, channel, error);
+                spectra = omicron_read_be_data(&ofile, channel, error);
                 if (!spectra) {
-                    /* XXX XXX XXX XXX XXX */
-                    continue;
                     gwy_object_unref(container);
                     goto fail;
                 }
@@ -963,18 +961,20 @@ omicron_read_cs_data(OmicronFile *ofile,
 
 /* Read grid spectra. */
 static GwySpectra*
-omicron_read_sf_data(OmicronFile *ofile,
+omicron_read_be_data(OmicronFile *ofile,
                      OmicronSpectroChannel *channel,
                      GError **error)
 {
-    gdouble xreal = channel->max_phys - channel->min_phys;
+    gdouble xreal = channel->end - channel->start,
+            q = (channel->max_phys - channel->min_phys)
+                /(channel->max_raw - channel->min_raw),
+            z0 = channel->min_phys;
     GError *err = NULL;
     GwySIUnit *siunit = NULL, *coord_unit = NULL;
     GwySpectra *spectra = NULL;
     gsize size;
     gchar *filename;
     guchar *buffer;
-    gdouble scale;
     guint i, j;
     gint power10 = 0;
     guint gxres, gyres, gxstep, gystep;
@@ -1002,34 +1002,73 @@ omicron_read_sf_data(OmicronFile *ofile,
     }
     g_free(filename);
 
-    if (err_SIZE_MISMATCH(error, 2*gxres*gyres*channel->npoints, size, TRUE))
-        goto fail;
+    if (err_SIZE_MISMATCH(error, 2*gxres*gyres*channel->npoints, size, TRUE)) {
+        gwy_file_abandon_contents(buffer, size, NULL);
+        return NULL;
+    }
 
     spectra = gwy_spectra_new();
+
+    coord_unit = gwy_si_unit_new("m");
+    gwy_spectra_set_si_unit_xy(spectra, coord_unit);
+    g_object_unref(coord_unit);
+
     for (i = 0; i < gyres; i++) {
+        gdouble y = ofile->yreal*gystep*i/gyres;
         for (j = 0; j < gxres; j++) {
-            gdouble x = ofile->xreal*gxstep*j/gxres,
-                    y = ofile->yreal*gystep*i/gyres;
+            gdouble x = ofile->xreal*gxstep*j/gxres;
             GwyDataLine *dline = gwy_data_line_new(channel->npoints, xreal,
                                                    FALSE);
 
-            gwy_data_line_set_offset(dline, channel->min_phys);
-
-            /* TODO: Physical scales */
+            gwy_data_line_set_offset(dline, channel->start);
             gwy_convert_raw_data(buffer + 2*(i*gxres + j), channel->npoints,
                                  gxres*gyres,
                                  GWY_RAW_DATA_SINT16,
                                  GWY_BYTE_ORDER_BIG_ENDIAN,
-                                 gwy_data_line_get_data(dline), 1.0, 0.0);
+                                 gwy_data_line_get_data(dline), q, z0);
+
+            /* Set Units for the parameter (x) axis */
+            if ((channel->param[0] == 'V') || (channel->param[0] == 'E')) {
+                siunit = gwy_si_unit_new("V");
+                power10 = 0;
+            }
+            else if (channel->param[0] == 'I')
+                siunit = gwy_si_unit_new_parse("nA", &power10);
+            else if (channel->param[0] == 'Z')
+                siunit = gwy_si_unit_new_parse("nm", &power10);
+            else {
+                gwy_debug("Parameter unit not recognised");
+            }
+
+            if (siunit) {
+                gwy_data_line_set_si_unit_x(dline, siunit);
+                g_object_unref(siunit);
+            }
+
+            if (power10) {
+                gdouble offset = 0;
+                gdouble realsize = 0;
+
+                offset = gwy_data_line_get_offset(dline)*pow10(power10);
+                realsize = gwy_data_line_get_real(dline)*pow10(power10);
+
+                gwy_data_line_set_offset(dline, offset);
+                gwy_data_line_set_real(dline, realsize);
+            }
+
+            /* Set Units for the Value (y) Axis */
+            siunit = gwy_si_unit_new_parse(channel->units, &power10);
+            gwy_data_line_set_si_unit_y(dline, siunit);
+            g_object_unref(siunit);
+
+            if (power10)
+                gwy_data_line_multiply(dline, pow10(power10));
 
             gwy_spectra_add_spectrum(spectra, dline, x, y);
             gwy_debug("[%u,%u] %g, %g", j, i, x, y);
             g_object_unref(dline);
         }
     }
-
-fail:
-    gwy_file_abandon_contents(buffer, size, NULL);
 
     return spectra;
 }
