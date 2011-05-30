@@ -2498,7 +2498,7 @@ gwy_app_data_browser_construct_channels(GwyAppDataBrowser *browser)
 
     /* Add the flags column */
     renderer = gtk_cell_renderer_text_new();
-    g_object_set(renderer, "width-chars", 4, NULL);
+    g_object_set(renderer, "width-chars", 5, NULL);
     column = gtk_tree_view_column_new_with_attributes("Flags", renderer,
                                                       NULL);
     gtk_tree_view_column_set_cell_data_func
@@ -3126,7 +3126,7 @@ gwy_app_data_browser_construct_graphs(GwyAppDataBrowser *browser)
 
     /* Add the flags column */
     renderer = gtk_cell_renderer_text_new();
-    g_object_set(renderer, "width-chars", 3, NULL);
+    g_object_set(renderer, "width-chars", 4, NULL);
     column = gtk_tree_view_column_new_with_attributes("Curves", renderer,
                                                       NULL);
     gtk_tree_view_column_set_cell_data_func
@@ -3389,7 +3389,7 @@ gwy_app_data_browser_construct_spectra(GwyAppDataBrowser *browser)
 
     /* Add the flags column */
     renderer = gtk_cell_renderer_text_new();
-    g_object_set(renderer, "width-chars", 3, NULL);
+    g_object_set(renderer, "width-chars", 4, NULL);
     column = gtk_tree_view_column_new_with_attributes("Points", renderer,
                                                       NULL);
     gtk_tree_view_column_set_cell_data_func
