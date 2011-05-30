@@ -17,7 +17,7 @@ Libraries:
 
 Modules:
 - CSM (new): Imports Benyuan CSM files.
-- AMB (new): Import Ambios AMB files.
+- AMB (new): Import Ambios AMB files (experimental).
 - WIP (new): Imports WITec project files.
 - NRRD (new): Imports and exports Nearly Raw Raster Data (NRRD).  To get
   support for compressed files, Gwyddion must be built with libz and/or libbz2.
@@ -39,6 +39,8 @@ Modules:
 - OLS: Can load colour images; R, G, B are imported as separate channels.
 - Merge: Calculation of physical dimensions of the merged image was corrected.
 - RHK-SM3: Loading of multipage files was corrected.
+- Raw graph import: Possible crash if the file cannot be loaded was fixed.
+- Omicron: Can load grid spectra files *.sf* and *.sb*.
 
 Other:
 - The KDE4 thumbnailer is not built by default.
