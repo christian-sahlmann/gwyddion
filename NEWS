@@ -44,6 +44,7 @@ Modules:
 
 Other:
 - The KDE4 thumbnailer is not built by default.
+- Line noise synthesis module, forgotten from the package, was reinstated.
 
 
 2.24 (2011-04-08)

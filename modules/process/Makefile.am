@@ -9,7 +9,7 @@ process_LTLIBRARIES = \
 	basicops.la \
 	calcoefs_load.la \
 	calcoefs_new.la \
-        calcoefs_simple.la \
+	calcoefs_simple.la \
 	calcoefs_view.la \
 	calibrate.la \
 	convolution_filter.la \
@@ -45,6 +45,7 @@ process_LTLIBRARIES = \
 	level.la \
 	level_grains.la \
 	linecorrect.la \
+	lno_synth.la \
 	local_contrast.la \
 	mark_with.la \
 	maskcor.la \
@@ -76,7 +77,6 @@ process_LTLIBRARIES = \
 # here.  This makes them distributed and translations of their messages are
 # kept.  If we remove them completely, various bits can get lost.
 disabled_sources = \
-	fft_synth.c \
 	nanoindent_adjust.c \
 	superresolution.c
 
@@ -144,6 +144,7 @@ laplace_la_SOURCES             = laplace.c
 level_la_SOURCES               = level.c
 level_grains_la_SOURCES        = level_grains.c
 linecorrect_la_SOURCES         = linecorrect.c
+lno_synth_la_SOURCES           = lno_synth.c dimensions.h synth.h
 local_contrast_la_SOURCES      = local_contrast.c
 mark_with_la_SOURCES           = mark_with.c
 maskcor_la_SOURCES             = maskcor.c
