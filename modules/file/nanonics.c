@@ -91,7 +91,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Nanonics NAN data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.1",
+    "0.2",
     "David Nečas (Yeti)",
     "2009",
 };
@@ -130,6 +130,8 @@ nanonics_load(const gchar *filename,
               G_GNUC_UNUSED GwyRunType mode,
               GError **error)
 {
+    enum { size_guess = 4096 };
+
     GwyContainer *container = NULL;
     guchar *buffer = NULL;
     gchar *s, *header = NULL;
@@ -150,7 +152,14 @@ nanonics_load(const gchar *filename,
 
     gwy_clear(&nfile, 1);
     header = g_strndup(buffer + MAGIC_LINE_SIZE,
-                       MIN(size - MAGIC_LINE_SIZE, 4906));
+                       MIN(size - MAGIC_LINE_SIZE, size_guess));
+    if ((s = strstr(header, "HeaderLength="))) {
+        header_size = g_ascii_strtoull(s + strlen("HeaderLength="), NULL, 10);
+        if (header_size > size_guess && header_size <= size - MAGIC_LINE_SIZE) {
+            g_free(header);
+            header = g_strndup(buffer + MAGIC_LINE_SIZE, header_size);
+        }
+    }
     if (!(s = strstr(header, "-End Header-"))) {
         g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
                     _("Expected header end marker ‘%s’ was not found."),
