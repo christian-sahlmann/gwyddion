@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2011-05-28 03:58+0200\n"
-"PO-Revision-Date: 2011-05-28 13:47+0300\n"
+"POT-Creation-Date: 2011-06-01 03:58+0200\n"
+"PO-Revision-Date: 2011-06-01 20:49+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "Language: \n"
@@ -1230,18 +1230,18 @@ msgstr "_Добавить символ"
 msgid "Preview"
 msgstr "Предпросмотр"
 
-#: libgwymodule/gwymodule-file.c:508
+#: libgwymodule/gwymodule-file.c:535
 #: modules/file/err.h:40
 #: modules/file/pixmap.c:732
 #, c-format
 msgid "Cannot open file for reading: %s."
 msgstr "Невозможно открыть файл для чтения: %s."
 
-#: libgwymodule/gwymodule-file.c:517
+#: libgwymodule/gwymodule-file.c:544
 msgid "No module can load this file type."
 msgstr "Ни один из модулей не может открыть этот тип файла"
 
-#: libgwymodule/gwymodule-file.c:583
+#: libgwymodule/gwymodule-file.c:651
 msgid "No module can save to this file type."
 msgstr "Ни один из модулей не может сохранить этот тип файла"
 
@@ -1509,37 +1509,53 @@ msgstr ""
 "\n"
 "%s"
 
-#: app/file.c:274
+#: app/file.c:278
 #, c-format
 msgid "Opening of `%s' failed"
 msgstr "Не удалось открыть '%s'"
 
-#: app/file.c:347
+#: app/file.c:284
+#: app/file.c:504
+#, c-format
+msgid "Full file path: %s."
+msgstr "Полный путь к файлу: %s."
+
+#: app/file.c:287
+#, c-format
+msgid "Loaded using: %s."
+msgstr "Загружено используя: %s."
+
+#: app/file.c:361
 msgid "Merge File"
 msgstr "Объединить файлы"
 
-#: app/file.c:349
+#: app/file.c:363
 #: app/gwyappfilechooser.c:216
 msgid "Open File"
 msgstr "Открыть файл"
 
-#: app/file.c:480
+#: app/file.c:498
 #: app/gwymoduleutils.c:192
 #, c-format
 msgid "Saving of `%s' failed"
 msgstr "Сохранение `%s' не выполнено"
 
-#: app/file.c:620
+#: app/file.c:507
+#, c-format
+msgid "Saved using: %s."
+msgstr "Сохранено используя: %s."
+
+#: app/file.c:648
 #, c-format
 msgid "File `%s' already exists.  Replace?"
 msgstr "Файл `%s' уже существует. Заменить?"
 
-#: app/file.c:624
+#: app/file.c:652
 #, c-format
 msgid "The file already exists in `%s'.  Replacing it will overwrite its contents."
 msgstr "Файл уже существует в `%s'. Если его заменить, то его содержимое будет перезаписано."
 
-#: app/file.c:627
+#: app/file.c:655
 msgid "Replace File?"
 msgstr "Заменить существующий файл?"
 
@@ -2527,7 +2543,7 @@ msgstr "Экспортированные данные Burleigh (.txt, .bin)"
 #: modules/file/burleigh_exp.c:225
 #: modules/file/burleigh_exp.c:266
 #: modules/file/nanoscope.c:1090
-#: modules/file/omicron.c:370
+#: modules/file/omicron.c:395
 #: modules/file/shimadzu.c:406
 msgid "Missing colon in header line."
 msgstr "Пропущено двоеточие в строке заголовка."
@@ -3453,7 +3469,7 @@ msgid "Nanonis SXM files (.sxm)"
 msgstr "Файлы Nanonis SXM (.sxm)"
 
 #: modules/file/nanonis.c:163
-#: modules/file/omicron.c:474
+#: modules/file/omicron.c:499
 #: modules/file/unisoku.c:260
 msgid "File header ended unexpectedly."
 msgstr "Заголовок файла неожиданно завершился."
@@ -3706,19 +3722,19 @@ msgstr "Импортирует файлы данных OLS."
 msgid "Olympus LEXT OLS3000 (.ols)"
 msgstr "Olympus LEXT OLS3000 (.ols)"
 
-#: modules/file/omicron.c:146
+#: modules/file/omicron.c:149
 msgid "Imports Omicron data files (two-part .par + .tf*, .tb*, .sf*, .sb*)."
 msgstr "Импортирует файлы данных Omicron (две части: .par + .tf*, .tb*, .sf*, .sb*)."
 
-#: modules/file/omicron.c:159
+#: modules/file/omicron.c:162
 msgid "Omicron files (.par + data)"
 msgstr "Файлы Omicron (.par + данные)"
 
-#: modules/file/omicron.c:376
+#: modules/file/omicron.c:401
 msgid "Header line starts with a colon."
 msgstr "Строка заголовка начинается с двоеточия."
 
-#: modules/file/omicron.c:483
+#: modules/file/omicron.c:508
 msgid "Channel information ended unexpectedly."
 msgstr "Информация о канале неожиданно закончилась."
 
@@ -4439,35 +4455,35 @@ msgstr "Файлы ASCII с кривой графика"
 msgid "ASCII graph import must be run as interactive."
 msgstr "Импорт графиков из ASCII должен запускаться в интерактивном режиме."
 
-#: modules/file/rawgraph.c:230
+#: modules/file/rawgraph.c:231
 msgid "Import Graph Data"
 msgstr "Импорт данных графика"
 
-#: modules/file/rawgraph.c:255
+#: modules/file/rawgraph.c:256
 msgid "_Title:"
 msgstr "_Заголовок:"
 
-#: modules/file/rawgraph.c:262
+#: modules/file/rawgraph.c:263
 msgid "_X label:"
 msgstr "Метка _X:"
 
-#: modules/file/rawgraph.c:267
+#: modules/file/rawgraph.c:268
 msgid "_Y label:"
 msgstr "Метка _Y:"
 
-#: modules/file/rawgraph.c:272
+#: modules/file/rawgraph.c:273
 msgid "X _units:"
 msgstr "_Единицы X:"
 
-#: modules/file/rawgraph.c:279
+#: modules/file/rawgraph.c:280
 msgid "Y un_its:"
 msgstr "Е_диницы Y:"
 
-#: modules/file/rawgraph.c:432
+#: modules/file/rawgraph.c:433
 msgid "Only files with two columns can be imported."
 msgstr "Могут быть импортированы только файлы с двумя столбцами данных."
 
-#: modules/file/rawgraph.c:548
+#: modules/file/rawgraph.c:549
 msgid "Curve"
 msgstr "Кривая"
 
