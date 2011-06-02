@@ -11,7 +11,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n!=1)\n"
 "X-Poedit-Language: Spanish\n"
-"X-Poedit-Country: UNITED KINGDOM\n"
+"X-Poedit-Country: SPAIN\n"
 "X-Poedit-SourceCharset: utf-8\n"
 
 #: libgwyddion/gwyexpr.c:765
@@ -36,13 +36,13 @@ msgstr "Operador inválido argumento %c "
 
 #. TRANSLATORS: %s is replaced with sin, cos, sqrt, etc.
 #: libgwyddion/gwyexpr.c:1074
-#, fuzzy, c-format
+#, c-format
 msgid "Missing argument of %s"
 msgstr "Falta el argumento de %s "
 
 #. TRANSLATORS: %s is replaced with sin, cos, sqrt, etc.
 #: libgwyddion/gwyexpr.c:1082
-#, fuzzy, c-format
+#, c-format
 msgid "Invalid argument of %s"
 msgstr "Argumento inválido de %s"
 
@@ -80,22 +80,18 @@ msgid "Unresolved identifiers"
 msgstr "Identificadores sin resolver"
 
 #: libgwyddion/gwyfdcurvepreset.c:745
-#, fuzzy
 msgid "vdW: semisphere"
 msgstr "vdW: semiesfera"
 
 #: libgwyddion/gwyfdcurvepreset.c:760
-#, fuzzy
 msgid "vdW: pyramide"
 msgstr "vdW: pirámide"
 
 #: libgwyddion/gwyfdcurvepreset.c:773
-#, fuzzy
 msgid "vdW: truncated pyramid"
 msgstr "vdW: pirámide truncada"
 
 #: libgwyddion/gwyfdcurvepreset.c:786
-#, fuzzy
 msgid "vdW: sphere"
 msgstr "vdW: esfera"
 
@@ -104,22 +100,18 @@ msgid "vdW: offset sphere"
 msgstr ""
 
 #: libgwyddion/gwyfdcurvepreset.c:812
-#, fuzzy
 msgid "vdW: two spheres"
 msgstr "vdW: dos esferas"
 
 #: libgwyddion/gwyfdcurvepreset.c:825
-#, fuzzy
 msgid "vdW: cone"
 msgstr "vdW: cono"
 
 #: libgwyddion/gwyfdcurvepreset.c:838
-#, fuzzy
 msgid "vdW: cylinder"
 msgstr "vdW: cilindro"
 
 #: libgwyddion/gwyfdcurvepreset.c:851
-#, fuzzy
 msgid "vdW: paraboloid"
 msgstr "vdW: paraboloide"
 
@@ -141,12 +133,10 @@ msgid "Gaussian"
 msgstr "Gaussiano"
 
 #: libgwyddion/gwynlfitpreset.c:1206
-#, fuzzy
 msgid "Gaussian (PSDF)"
 msgstr "Gaussiano (PSDF)"
 
 #: libgwyddion/gwynlfitpreset.c:1220
-#, fuzzy
 msgid "Gaussian (ACF)"
 msgstr "Gaussiano (ACF)"
 
@@ -423,7 +413,6 @@ msgstr ""
 #: modules/process/pat_synth.c:1168
 #: modules/process/pat_synth.c:1505
 #: modules/tools/linestats.c:156
-#, fuzzy
 msgid "Slope"
 msgstr "Rampa"
 
@@ -469,7 +458,6 @@ msgid "Hexagonal"
 msgstr "Hexagonal"
 
 #: libprocess/gwyprocessenums.c:101
-#, fuzzy
 msgid "Hat"
 msgstr "Sombrero"
 
@@ -512,7 +500,6 @@ msgid "Universal"
 msgstr "Universal"
 
 #: libprocess/gwyprocessenums.c:166
-#, fuzzy
 msgid "Scale adaptive"
 msgstr "Adaptable a escala"
 
@@ -523,7 +510,6 @@ msgstr ""
 #. TRANSLATORS: Interpolation type (AKA nearest neighbour)
 #: libprocess/gwyprocessenums.c:206
 #: modules/file/rawxyz.c:682
-#, fuzzy
 msgid "Round"
 msgstr "Redondo"
 
@@ -593,7 +579,6 @@ msgid "Kaiser 2.5"
 msgstr ""
 
 #: libprocess/gwyprocessenums.c:263
-#, fuzzy
 msgid "correlation|Normal"
 msgstr "correlación|Normal"
 
@@ -602,39 +587,32 @@ msgid "FFT"
 msgstr ""
 
 #: libprocess/gwyprocessenums.c:265
-#, fuzzy
 msgid "Phase only"
 msgstr "Sólo Fase"
 
 #: libprocess/gwyprocessenums.c:298
-#, fuzzy
 msgid "Exclude masked region"
 msgstr "Excluye la región con enmascarada"
 
 #: libprocess/gwyprocessenums.c:299
-#, fuzzy
 msgid "Include only masked region"
 msgstr "Incluye solo la región enmascarada"
 
 #: libprocess/gwyprocessenums.c:300
-#, fuzzy
 msgid "Use entire image (ignore mask)"
 msgstr "Usa la imagen entera (ignora la máscara)"
 
 #: libprocess/morph_lib.c:169
 #: libprocess/morph_lib.c:461
-#, fuzzy
 msgid "Dilation"
 msgstr "Dilatación"
 
 #: libprocess/morph_lib.c:235
 #: libprocess/morph_lib.c:528
-#, fuzzy
 msgid "Erosion"
 msgstr "Erosión"
 
 #: libprocess/morph_lib.c:305
-#, fuzzy
 msgid "Certainty map"
 msgstr "Mapa de certidumbre"
 
@@ -706,11 +684,11 @@ msgstr ""
 
 #: libgwydgets/gwy3dwindow.c:496
 msgid "Rotate view (R)"
-msgstr ""
+msgstr "Rotar vista (R)"
 
 #: libgwydgets/gwy3dwindow.c:501
 msgid "Scale view as a whole (S)"
-msgstr ""
+msgstr "Usar escala de la vista al completo (S)"
 
 #: libgwydgets/gwy3dwindow.c:506
 msgid "Scale value range (V)"
@@ -726,11 +704,11 @@ msgstr ""
 
 #: libgwydgets/gwy3dwindow.c:620
 msgid "Hide full controls"
-msgstr ""
+msgstr "Esconder controles completos"
 
 #: libgwydgets/gwy3dwindow.c:636
 msgid "3dcontrols|Basic"
-msgstr ""
+msgstr "controles3d|Basico"
 
 #: libgwydgets/gwy3dwindow.c:641
 msgid "Light & Material"
@@ -738,7 +716,7 @@ msgstr ""
 
 #: libgwydgets/gwy3dwindow.c:646
 msgid "Labels"
-msgstr ""
+msgstr "Etiquetas"
 
 #: libgwydgets/gwy3dwindow.c:759
 #: modules/process/facet_analysis.c:354
@@ -1117,7 +1095,7 @@ msgstr ""
 #: libgwydgets/gwygraphwindow.c:140
 #: app/toolbox.c:103
 msgid "Graph"
-msgstr ""
+msgstr "Gráfico"
 
 #: libgwydgets/gwygraphwindow.c:147
 #: modules/process/fit_2d.c:676
@@ -1126,11 +1104,11 @@ msgstr ""
 
 #: libgwydgets/gwygraphwindow.c:160
 msgid "Curves"
-msgstr ""
+msgstr "Curvas"
 
 #: libgwydgets/gwygraphwindow.c:174
 msgid "Measure distances in graph"
-msgstr ""
+msgstr "Medir distancias en gráfico"
 
 #: libgwydgets/gwygraphwindow.c:186
 msgid "Zoom in by mouse selection"
@@ -1250,11 +1228,11 @@ msgstr ""
 
 #: libgwymodule/gwymodule-file.c:517
 msgid "No module can load this file type."
-msgstr ""
+msgstr "Ningún módulo puede cargar este tipo de archivo"
 
 #: libgwymodule/gwymodule-file.c:583
 msgid "No module can save to this file type."
-msgstr ""
+msgstr "Ningún módulo puede guardar este tipo de archivo."
 
 #: libgwymodule/gwymodulebrowser.c:66
 msgid "Module Browser"
@@ -1280,7 +1258,7 @@ msgstr ""
 #: libgwymodule/gwymodulebrowser.c:269
 #: modules/process/grain_dist.c:699
 msgid "File:"
-msgstr ""
+msgstr "Archivo:"
 
 #: libgwymodule/gwymodulebrowser.c:247
 msgid "Registered functions:"
@@ -1317,7 +1295,7 @@ msgstr ""
 
 #: app/about.c:91
 msgid "An SPM data visualization and analysis tool."
-msgstr ""
+msgstr "Una herramienta para la visualización y análisis de datos SPM (microscopio de sonda de  barrido)."
 
 #: app/about.c:101
 #, c-format
@@ -1328,11 +1306,11 @@ msgstr ""
 
 #: app/about.c:118
 msgid "Credits"
-msgstr ""
+msgstr "Créditos"
 
 #: app/about.c:135
 msgid "License"
-msgstr ""
+msgstr "Licencia"
 
 #: app/about.c:140
 #, c-format
@@ -1358,7 +1336,7 @@ msgstr ""
 #: app/about.c:254
 #: app/about.c:257
 msgid "OpenGL 3D View"
-msgstr ""
+msgstr "Vista 3D OpenGL"
 
 #: app/about.c:258
 #: app/about.c:272
@@ -1422,12 +1400,12 @@ msgstr ""
 
 #: app/app.c:779
 msgid "Save"
-msgstr ""
+msgstr "Guardar"
 
 #: app/app.c:781
 #: app/app.c:785
 msgid "Save 3D view to an image"
-msgstr ""
+msgstr "Guardar vista 3D a una imagen"
 
 #: app/app.c:791
 msgid "Set as Default"
@@ -1435,7 +1413,7 @@ msgstr ""
 
 #: app/app.c:793
 msgid "Set the current view setup as the default"
-msgstr ""
+msgstr "Usar configuración de vista actual  como el defecto"
 
 #: app/app.c:837
 #, c-format
@@ -1444,11 +1422,11 @@ msgstr ""
 
 #: app/app.c:881
 msgid "Export 3D View"
-msgstr ""
+msgstr "Exportar la vista 3D"
 
 #: app/data-browser.c:3772
 msgid "Extract to a new file"
-msgstr ""
+msgstr "Extraer a un nuevo archivo"
 
 #: app/data-browser.c:3773
 msgid "Duplicate"
@@ -1456,7 +1434,7 @@ msgstr ""
 
 #: app/data-browser.c:3774
 msgid "Delete"
-msgstr ""
+msgstr "Suprimir"
 
 #: app/data-browser.c:3818
 msgid "Data Browser"
@@ -1464,7 +1442,7 @@ msgstr ""
 
 #: app/data-browser.c:3841
 msgid "Close file"
-msgstr ""
+msgstr "Cierra archivo"
 
 #: app/data-browser.c:3854
 msgid "Channels"
@@ -1513,12 +1491,12 @@ msgstr ""
 
 #: app/file.c:349
 msgid "Merge File"
-msgstr ""
+msgstr "Fusionar Archivo"
 
 #: app/file.c:351
 #: app/gwyappfilechooser.c:216
 msgid "Open File"
-msgstr ""
+msgstr "Abre Archivo"
 
 #: app/file.c:511
 #: app/gwymoduleutils.c:192
@@ -1538,7 +1516,7 @@ msgstr ""
 
 #: app/file.c:658
 msgid "Replace File?"
-msgstr ""
+msgstr "¿Sustituir Archivo?"
 
 #: app/filelist.c:224
 msgid "Document History"
@@ -1550,15 +1528,15 @@ msgstr ""
 
 #: app/filelist.c:255
 msgid "Remove entries of files that no longer exist"
-msgstr ""
+msgstr "Quitar entradas de archivos que ya no existen"
 
 #: app/filelist.c:264
 msgid "Close file list"
-msgstr ""
+msgstr "Cerrar lista de archivo"
 
 #: app/filelist.c:271
 msgid "Open selected file"
-msgstr ""
+msgstr "Abrir archivo seleccionado"
 
 #: app/filelist.c:557
 msgid "_Filter:"
@@ -1616,7 +1594,7 @@ msgstr ""
 
 #: app/gwyappfilechooser.c:221
 msgid "Save File"
-msgstr ""
+msgstr "Guardar archivo"
 
 #: app/gwyappfilechooser.c:401
 #, c-format
@@ -1638,7 +1616,7 @@ msgstr ""
 
 #: app/gwyappfilechooser.c:541
 msgid "Show only loadable files"
-msgstr ""
+msgstr "Enseñar sólo archivos cargables"
 
 #: app/gwyappfilechooser.c:746
 msgid "…"
@@ -1785,17 +1763,17 @@ msgstr ""
 
 #: app/gwytool.c:238
 msgid "Hide tool dialog (Esc)"
-msgstr ""
+msgstr "Esconde la herramienta de diálogo (Esc)"
 
 #: app/menu.c:492
 #: app/toolbox.c:604
 msgid "_Data Process"
-msgstr ""
+msgstr "_Proceso de Datos"
 
 #: app/menu.c:535
 #: app/toolbox.c:608
 msgid "_Graph"
-msgstr ""
+msgstr "_Gráfico"
 
 #: app/menu.c:569
 msgid "Re-show Last"
@@ -1819,20 +1797,20 @@ msgstr ""
 
 #: app/meta.c:136
 msgid "_Save"
-msgstr ""
+msgstr "_Guardar"
 
 #: app/meta.c:142
 msgid "_New"
-msgstr ""
+msgstr "_Nuevo"
 
 #: app/meta.c:147
 #: modules/file/rawfile.c:1026
 msgid "_Delete"
-msgstr ""
+msgstr "_Suprimir"
 
 #: app/meta.c:152
 msgid "_Close"
-msgstr ""
+msgstr "_Cerrar"
 
 #: app/meta.c:184
 #, c-format
@@ -1845,26 +1823,26 @@ msgstr ""
 
 #: app/meta.c:613
 msgid "Save Metadata"
-msgstr ""
+msgstr "Guarda Metadatos"
 
 #: app/resource-editor.c:134
 msgid "Edit selected item"
-msgstr ""
+msgstr "Editar artículo seleccionado"
 
 #: app/resource-editor.c:140
 #: modules/process/convolution_filter.c:512
 msgid "Create a new item"
-msgstr ""
+msgstr "Crear un nuevo dato"
 
 #: app/resource-editor.c:146
 #: modules/process/convolution_filter.c:517
 msgid "Create a new item based on selected one"
-msgstr ""
+msgstr "Crear un nuevo dato basado en uno seleccionado"
 
 #: app/resource-editor.c:152
 #: modules/process/convolution_filter.c:522
 msgid "Delete selected item"
-msgstr ""
+msgstr "Suprimir dato seleccionado"
 
 #: app/resource-editor.c:158
 msgid "Set selected item as default"
@@ -1884,11 +1862,11 @@ msgstr ""
 
 #: app/settings.c:188
 msgid "File is empty."
-msgstr ""
+msgstr "El archivo está vacío"
 
 #: app/settings.c:198
 msgid "File is corrupted, magic header does not match."
-msgstr ""
+msgstr "El archivo esta corrupto, cabecero mágico no concuerda."
 
 #: app/settings.c:209
 msgid "File is corrupted, deserialization failed."
@@ -1926,7 +1904,7 @@ msgstr ""
 
 #: app/tips.c:66
 msgid "If multiple regions are selected on a graph, e.g. in 1D FFT Filtering, individual regions can be deleted by clicking on them with the right mouse button."
-msgstr ""
+msgstr "Si múltiples regiones están seleccionadas en un gráfico, p. ej. en 1D FFT Filtrando, regiones individuales pueden ser suprimidas pulsando sobre ellas con el botón derecho del ratón."
 
 #: app/tips.c:72
 msgid "Data presentations created by functions in Data Process → Presentation do not change the underlying data.  All subsequent operations still apply to the underlying data."
@@ -1938,11 +1916,11 @@ msgstr ""
 
 #: app/tips.c:84
 msgid "When Gwyddion is run with a directory argument it opens a file open dialog showing this directory."
-msgstr ""
+msgstr "Cuando Gwyddion se ejecuta con un argumento de directorio abre un diálogo de abrir archivo enseñando este directorio. "
 
 #: app/tips.c:89
 msgid "File → Open Recent → Document History opens a browser of recently loaded files with the possibility to search them by name."
-msgstr ""
+msgstr "Archivo → Abrir reciente → Historial de Documentos abre un Navegador de archivos recientemente cargados con la posibilidad de buscarlas por nombre"
 
 #: app/tips.c:95
 msgid "Automatic import of unrecognized files as raw data can be enabled/disabled in the Raw file import dialog."
@@ -1954,7 +1932,7 @@ msgstr ""
 
 #: app/tips.c:106
 msgid "File → Merge imports all data from selected file to the current file."
-msgstr ""
+msgstr "Archivo → Fusionar las imporacione todo los datos del archivo seleccionado a el archivo actual."
 
 #: app/tips.c:112
 msgid "Your favorite false color gradient can be set as default in the gradient editor: Edit → Color Gradients.  The default gradient is shown in bold face."
@@ -1982,19 +1960,19 @@ msgstr ""
 
 #: app/tips.c:145
 msgid "Graph curve properties can be edited by clicking on the curve."
-msgstr ""
+msgstr "Propiedades de curva de gráfico pueden ser editadas pulsando en la curva."
 
 #: app/tips.c:149
 msgid "Graph axis labels can be edited after by clicking on the label."
-msgstr ""
+msgstr "Etiquetas del eje del gráfico pueden ser editadas pulsando en la etiqueta. "
 
 #: app/tips.c:153
 msgid "Graph key (legend) properties can be edited by double-clicking on the legend."
-msgstr ""
+msgstr "Las propiedades de la leyenda del Gráfico pueden ser editadas mediante una doble pulsación sobre la leyenda."
 
 #: app/tips.c:158
 msgid "Curves can be deleted from graphs by selecting the curve in Curves tab and pressing Delete."
-msgstr ""
+msgstr "Las curvas pueden ser suprimidas de los gráficos seleccionado la curva en la pestaña de Curvas y pulsando Suprimir."
 
 #: app/tips.c:164
 msgid "Key ‛+’ or ‛=’ zooms in a data window."
@@ -2018,15 +1996,15 @@ msgstr ""
 
 #: app/tips.c:189
 msgid "Clicking on a 3D view with the right mouse button brings a GL material or false color gradient selector."
-msgstr ""
+msgstr "Pulsando sobre la vista 3D con el botón derecho del ratón muestra un selector de material GL o un gradiente de color falso."
 
 #: app/tips.c:194
 msgid "3D view transformation modes can be selected with keys: R (rotate), S (scale), V (value scale) and L (light source)."
-msgstr ""
+msgstr "Los modos de transformación de vista 3D pueden ser seleccionadas con las teclas R (rotar), S (usar escala), V (valor de escala) y L (fuente de luz)."
 
 #: app/tips.c:200
 msgid "Pressing Ctrl-C copies the image of a channel, graph or 3D view to the clipboard."
-msgstr ""
+msgstr "Presionando Ctrl-C copia la imagen de un canal, gráfico o visión 3D al portapapeles. "
 
 #: app/tips.c:205
 msgid "Dragging channels or graphs from Data Browser to a window copies them to the corresponding file."
@@ -2034,7 +2012,7 @@ msgstr ""
 
 #: app/tips.c:210
 msgid "Meta → Show Data Browser brings back a closed Data Browser."
-msgstr ""
+msgstr "Meta → Enseña el Navegador de Datos y trae de vuelta un Navegador de Datos Cerrado. "
 
 #: app/tips.c:214
 msgid "Channels and graphs can be renamed by double-clicking on their name in Data Browser."
@@ -2074,15 +2052,15 @@ msgstr ""
 
 #: app/tips.c:262
 msgid "Remove Scars in the toolbox runs with the settings last used in Mark Scars."
-msgstr ""
+msgstr "Quitar cicatrices en la caja de herramientas se ejecuta con la ultima configuración usada en Marca Cicatrices."
 
 #: app/tips.c:268
 msgid "Graph → Critical Dimension measures steps on extracted profile graphs."
-msgstr ""
+msgstr "Gráfico → Dimensión Crítica mide los pasos en un gráfico de perfil extraído. "
 
 #: app/tips.c:274
 msgid "Pressing Esc hides tool windows."
-msgstr ""
+msgstr "Pulsando Esc esconde las ventanas de herramienta."
 
 #: app/tips.c:278
 msgid "Read Value tool displays also the local facet normal."
@@ -2094,15 +2072,15 @@ msgstr ""
 
 #: app/tips.c:287
 msgid "Individual lines can be deleted in Distance tool by selecting them in the list and pressing Delete."
-msgstr ""
+msgstr "Lineas individuales pueden ser eliminadas en la herramienta de Distancia seleccionándolas en la lista y pulsando suprimir. "
 
 #: app/tips.c:292
 msgid "Individual lines can be deleted in Profiles tool by selecting them in the list and pressing Delete."
-msgstr ""
+msgstr "Lineas individuales pueden ser eliminadas en la herramienta de Perfiles seleccionándolas en la lista y pulsando suprimir."
 
 #: app/tips.c:297
 msgid "Spectroscopy tool displays point spectroscopy data and extracts them to standalone graphs that can be subsequently analysed for instance with Graph → Fit FD Curve."
-msgstr ""
+msgstr "La herramienta de espectroscopia muestra los datos de espectroscopia puntual y los extrae a un gráfico autónomo que puede ser analizado posteriormente, por ejemplo con Gráfico → Encaja curva FD. "
 
 #: app/tips.c:303
 msgid "Statistical Quantities tool allows to limit the area of interest by a mask, rectangular selection or the intersection of both."
@@ -2142,23 +2120,23 @@ msgstr ""
 
 #: app/tips.c:393
 msgid "Gwyddion Tip of the Day"
-msgstr ""
+msgstr "Consejo del Día Gwyddion"
 
 #: app/tips.c:406
 msgid "_Previous Tip"
-msgstr ""
+msgstr "Consejo _Anterior"
 
 #: app/tips.c:412
 msgid "_Next Tip"
-msgstr ""
+msgstr "Consejo _Siguiente"
 
 #: app/toolbox.c:103
 msgid "View"
-msgstr ""
+msgstr "Vista"
 
 #: app/toolbox.c:103
 msgid "Data Process"
-msgstr ""
+msgstr "Proceso de Datos"
 
 #: app/toolbox.c:103
 msgid "Tools"
@@ -2166,7 +2144,7 @@ msgstr ""
 
 #: app/toolbox.c:159
 msgid "Display a 3D view of data"
-msgstr ""
+msgstr "Muestra una vista 3D de los datos"
 
 #: app/toolbox.c:166
 msgid "Zoom in"
@@ -2186,7 +2164,7 @@ msgstr ""
 
 #: app/toolbox.c:599
 msgid "_Edit"
-msgstr ""
+msgstr "_Editar"
 
 #: app/toolbox.c:611
 msgid "_Meta"
@@ -2206,7 +2184,7 @@ msgstr ""
 
 #: app/toolbox.c:686
 msgid "/_Tip of the Day"
-msgstr ""
+msgstr "/_Consejo del día "
 
 #: app/toolbox.c:694
 msgid "/_About Gwyddion"
@@ -2214,23 +2192,23 @@ msgstr ""
 
 #: app/toolbox.c:733
 msgid "/_Open..."
-msgstr ""
+msgstr "/_Abrir..."
 
 #: app/toolbox.c:741
 msgid "/_Merge..."
-msgstr ""
+msgstr "/_Fusionar..."
 
 #: app/toolbox.c:749
 msgid "/Open _Recent"
-msgstr ""
+msgstr "/Abrir_Reciente"
 
 #: app/toolbox.c:757
 msgid "/_Save"
-msgstr ""
+msgstr "/_Guardar"
 
 #: app/toolbox.c:765
 msgid "/Save _As..."
-msgstr ""
+msgstr "/Guardar_Como..."
 
 #: app/toolbox.c:781
 msgid "/_Quit"
@@ -2262,11 +2240,11 @@ msgstr ""
 
 #: app/toolbox.c:1120
 msgid "OpenGL 3D graphics not available"
-msgstr ""
+msgstr "Gráficos OpenGL 3D no disponibles"
 
 #: app/toolbox.c:1125
 msgid "OpenGL was disabled with a command-line option."
-msgstr ""
+msgstr "OpenGL fue deshabilitado con una opción de línea de comandos."
 
 #: app/toolbox.c:1133
 msgid "Initialization of OpenGL failed.  Check output of <tt>glxinfo</tt> and warning messages printed to console during Gwyddion startup."
@@ -2274,7 +2252,7 @@ msgstr ""
 
 #: app/toolbox.c:1140
 msgid "This version of Gwyddion was built without OpenGL support."
-msgstr ""
+msgstr "Esta versión de Gwyddion fue construida sin el soporte de OpenGL. "
 
 #: app/validate.c:109
 #: app/validate.c:130
@@ -3119,7 +3097,7 @@ msgstr ""
 
 #: modules/file/mifile.c:374
 msgid "Spectroscopy Graph"
-msgstr ""
+msgstr "Gráfico Espectroscópico"
 
 #: modules/file/mulfile.c:150
 msgid "Imports Aarhus MUL files."
@@ -3279,7 +3257,7 @@ msgstr ""
 
 #: modules/file/nanoscope.c:165
 msgid "Imports Veeco (Digital Instruments) Nanoscope data files, version 3 or newer."
-msgstr ""
+msgstr "Importa Veeco (Digital Instruments) Nanoscope archivos de datos, versión 3 o más nueva."
 
 #: modules/file/nanoscope.c:179
 msgid "Nanoscope III files"
@@ -3665,7 +3643,7 @@ msgstr ""
 #: modules/process/calibrate.c:830
 #: modules/process/dimensions.h:206
 msgid "New _units:"
-msgstr ""
+msgstr "Nuevas_unidades"
 
 #: modules/file/pixmap.c:1451
 #: modules/file/pixmap.c:1461
@@ -4214,19 +4192,19 @@ msgstr ""
 
 #: modules/file/rawgraph.c:98
 msgid "Imports simple text files as graph curves."
-msgstr ""
+msgstr "Importa archivos de texto simple como curvas de gráfico. "
 
 #: modules/file/rawgraph.c:111
 msgid "ASCII graph curve files"
-msgstr ""
+msgstr "Archivos de curvas de gráficos ASCII"
 
 #: modules/file/rawgraph.c:178
 msgid "ASCII graph import must be run as interactive."
-msgstr ""
+msgstr "La importación de gráfico ASCII  debe ser ejecutado como interactivo."
 
 #: modules/file/rawgraph.c:230
 msgid "Import Graph Data"
-msgstr ""
+msgstr "Importar Datos de Gráfico"
 
 #: modules/file/rawgraph.c:255
 msgid "_Title:"
@@ -4516,7 +4494,7 @@ msgstr ""
 
 #: modules/file/sensofar.c:200
 msgid "Imports Sensofar PLu file format, version 2000 or newer."
-msgstr ""
+msgstr "Importa archivo en formato Sensofar PLu, versión 2000 o más nuevo. "
 
 #: modules/file/sensofar.c:214
 msgid "Sensofar PLu files (.plu)"
@@ -4842,7 +4820,7 @@ msgstr ""
 #: modules/graph/graph_cd.c:210
 #: modules/graph/graph_fit.c:254
 msgid "Fit Graph"
-msgstr ""
+msgstr "Aproxima Gráfico"
 
 #: modules/graph/graph_cd.c:214
 #: modules/graph/graph_fdfit.c:253
@@ -4856,7 +4834,7 @@ msgstr ""
 #: modules/graph/graph_fdfit.c:279
 #: modules/graph/graph_fit.c:284
 msgid "_Graph curve:"
-msgstr ""
+msgstr "_Curva de Gráfico:"
 
 #: modules/graph/graph_cd.c:250
 #: modules/graph/graph_fdfit.c:293
@@ -4974,19 +4952,19 @@ msgstr ""
 
 #: modules/graph/graph_cut.c:86
 msgid "Cut graph"
-msgstr ""
+msgstr "Corta Gráfico"
 
 #: modules/graph/graph_cut.c:100
 msgid "/_Cut Graph..."
-msgstr ""
+msgstr "/_Corta Gráfico..."
 
 #: modules/graph/graph_cut.c:103
 msgid "Extract part of graph into new one"
-msgstr ""
+msgstr "Extrae parte del gráfico a uno nuevo"
 
 #: modules/graph/graph_cut.c:146
 msgid "Cut Graph"
-msgstr ""
+msgstr "Corta Gráfico"
 
 #: modules/graph/graph_cut.c:179
 msgid "Cut _all curves"
@@ -5032,7 +5010,7 @@ msgstr ""
 
 #: modules/graph/graph_export_ascii.c:68
 msgid "Exports graph data to text files."
-msgstr ""
+msgstr "Exporta datos de gráfico a archivos de texto. "
 
 #: modules/graph/graph_export_ascii.c:82
 msgid "/Export _Text..."
@@ -5040,7 +5018,7 @@ msgstr ""
 
 #: modules/graph/graph_export_ascii.c:85
 msgid "Export graph data to a text file"
-msgstr ""
+msgstr "Exporta datos de gráfico a archivo de texto"
 
 #: modules/graph/graph_export_ascii.c:126
 msgid "Export _labels"
@@ -5056,7 +5034,7 @@ msgstr ""
 
 #: modules/graph/graph_export_bitmap.c:34
 msgid "Export graph into bitmap"
-msgstr ""
+msgstr "Exporta gráfico a un mapa de bits"
 
 #: modules/graph/graph_export_bitmap.c:48
 msgid "/Export _Bitmap"
@@ -5068,7 +5046,7 @@ msgstr ""
 
 #: modules/graph/graph_export_vector.c:36
 msgid "Export graph in postscript"
-msgstr ""
+msgstr "Exporta gráfico a postscript"
 
 #: modules/graph/graph_export_vector.c:50
 msgid "/Export _PostScript"
@@ -5076,7 +5054,7 @@ msgstr ""
 
 #: modules/graph/graph_export_vector.c:53
 msgid "Export graph to a vector image"
-msgstr ""
+msgstr "Exporta gráfico a imagen de vectores"
 
 #: modules/graph/graph_fdfit.c:169
 msgid "Fit force-distance data"
@@ -5163,7 +5141,7 @@ msgstr ""
 
 #: modules/graph/graph_fit.c:173
 msgid "Fit graph with function"
-msgstr ""
+msgstr "Encaja gráfico con función"
 
 #: modules/graph/graph_fit.c:187
 msgid "/_Fit Function..."
@@ -5171,7 +5149,7 @@ msgstr ""
 
 #: modules/graph/graph_fit.c:190
 msgid "Fit a function on graph data"
-msgstr ""
+msgstr "Encaja una función en los datos de la gráfica"
 
 #: modules/graph/graph_fit.c:415
 msgid "Plot full range"
@@ -5179,7 +5157,7 @@ msgstr ""
 
 #: modules/graph/graph_level.c:37
 msgid "Level graph by line."
-msgstr ""
+msgstr "Nivela grávido por línea"
 
 #: modules/graph/graph_level.c:51
 msgid "/_Level"
@@ -5187,7 +5165,7 @@ msgstr ""
 
 #: modules/graph/graph_level.c:54
 msgid "Level graph curves"
-msgstr ""
+msgstr "Nivela curvas de gráfico"
 
 #: modules/layer/axis.c:139
 msgid "Layer allowing selection of horizontal or vertical lines."
@@ -5680,11 +5658,11 @@ msgstr ""
 
 #: modules/process/calcoefs_simple.c:589
 msgid "Data same as detail?"
-msgstr ""
+msgstr "¿Datos igual que detalle?"
 
 #: modules/process/calcoefs_simple.c:595
 msgid "Data larger than detail?"
-msgstr ""
+msgstr "¿Datos mayor que detalle?"
 
 #: modules/process/calcoefs_simple.c:609
 #, c-format
@@ -5758,7 +5736,7 @@ msgstr ""
 
 #: modules/process/calcoefs_view.c:437
 msgid "View:"
-msgstr ""
+msgstr "Vista:"
 
 #: modules/process/calcoefs_view.c:452
 msgid "Plane:"
@@ -5915,7 +5893,7 @@ msgstr ""
 
 #: modules/process/calibrate.c:314
 msgid "New Real Dimensions"
-msgstr ""
+msgstr "Nuevas Dimensiones Reales"
 
 #: modules/process/calibrate.c:319
 msgid "_X range:"
@@ -6156,7 +6134,7 @@ msgstr ""
 
 #: modules/process/curvature.c:674
 msgid "_Plot graph"
-msgstr ""
+msgstr "_Presenta gráfico"
 
 #: modules/process/curvature.c:685
 #: modules/process/facet-level.c:297
@@ -6172,7 +6150,7 @@ msgstr ""
 #: modules/tools/roughness.c:835
 #: modules/tools/stats.c:423
 msgid "Save table to a file"
-msgstr ""
+msgstr "Guardar tabla a un archivo"
 
 #: modules/process/curvature.c:760
 #: modules/process/grain_dist.c:832
@@ -6188,7 +6166,7 @@ msgstr ""
 
 #: modules/process/curvature.c:952
 msgid "Save Curvature"
-msgstr ""
+msgstr "Guardar Curvatura"
 
 #: modules/process/cwt.c:63
 msgid "Two-dimensional CWT (Continuous Wavelet Transform)."
@@ -7310,7 +7288,7 @@ msgstr ""
 
 #: modules/process/grain_dist.c:654
 msgid "Save Grain Statistics"
-msgstr ""
+msgstr "Guardar estadísticas de grano"
 
 #: modules/process/grain_dist.c:705
 msgid "Data channel:"
@@ -7594,7 +7572,7 @@ msgstr ""
 
 #: modules/process/indent_analyze.c:269
 msgid "New"
-msgstr ""
+msgstr "Nuevo"
 
 #: modules/process/indent_analyze.c:270
 msgid "AND"
@@ -7766,7 +7744,7 @@ msgstr ""
 
 #: modules/process/indent_analyze.c:653
 msgid "_Save statistics"
-msgstr ""
+msgstr "_Guardar estadísticas"
 
 #: modules/process/indent_analyze.c:1581
 msgid "No statistics has been computed yet."
@@ -7774,7 +7752,7 @@ msgstr ""
 
 #: modules/process/indent_analyze.c:1589
 msgid "Save Indentation Statistics"
-msgstr ""
+msgstr "Guardar Estadísticas de Indentación"
 
 #: modules/process/indent_analyze.c:1627
 #, c-format
@@ -8266,7 +8244,7 @@ msgstr ""
 
 #: modules/process/maskops.c:78
 msgid "Extract mask to a new channel"
-msgstr ""
+msgstr "Extrae máscara a un nuevo canal"
 
 #: modules/process/maskops.c:137
 msgid "Mask"
@@ -8344,7 +8322,7 @@ msgstr ""
 
 #: modules/process/merge.c:135
 msgid "merge-mode|None"
-msgstr ""
+msgstr "modo-fusión|Ninguno"
 
 #: modules/process/merge.c:139
 msgid "First operand"
@@ -8360,23 +8338,23 @@ msgstr ""
 
 #: modules/process/merge.c:155
 msgid "Merges two images."
-msgstr ""
+msgstr "Fusiona dos imágenes. "
 
 #: modules/process/merge.c:169
 msgid "/M_ultidata/_Merge..."
-msgstr ""
+msgstr "/M_ultidatos/_Fusionar..."
 
 #: modules/process/merge.c:173
 msgid "Merge two images"
-msgstr ""
+msgstr "Fusiona dos imágenes"
 
 #: modules/process/merge.c:206
 msgid "Merge Data"
-msgstr ""
+msgstr "Fusiona Datos"
 
 #: modules/process/merge.c:228
 msgid "_Merge with:"
-msgstr ""
+msgstr "_Fusiona con:"
 
 #: modules/process/merge.c:236
 msgid "_Put second operand:"
@@ -8392,7 +8370,7 @@ msgstr ""
 
 #: modules/process/merge.c:556
 msgid "Merged images"
-msgstr ""
+msgstr "Imágenes fusionadas"
 
 #: modules/process/nanoindent_adjust.c:88
 msgid "Adjust images of two indentor prints."
@@ -8432,7 +8410,7 @@ msgstr ""
 
 #: modules/process/nanoindent_adjust.c:294
 msgid "Tip has different range/resolution ratio than image. Tip will be resampled."
-msgstr ""
+msgstr "Punta tiene distinto ratio de  rango/resolución que la imagen. Punta será re-muestreada."
 
 #: modules/process/nanoindent_adjust.c:333
 msgid "Immersed detail data"
@@ -8735,7 +8713,7 @@ msgstr ""
 
 #: modules/process/presentationops.c:82
 msgid "Extract presentation to a new channel"
-msgstr ""
+msgstr "Extraer presentación a un nuevo canal "
 
 #: modules/process/presentationops.c:85
 msgid "/_Presentation/_Attach Presentation..."
@@ -8819,11 +8797,11 @@ msgstr ""
 
 #: modules/process/scale.c:230
 msgid "New _width:"
-msgstr ""
+msgstr "Nueva _anchura:"
 
 #: modules/process/scale.c:238
 msgid "New _height:"
-msgstr ""
+msgstr "Nueva _altura"
 
 #: modules/process/scars.c:124
 msgid "Marks and/or removes scars (horizontal linear artefacts)."
@@ -8909,7 +8887,7 @@ msgstr ""
 
 #: modules/process/slope_dist.c:107
 msgid "Calculates one- or two-dimensional distribution of slopes or graph of their angular distribution."
-msgstr ""
+msgstr "Calcula una distribución uni y bi dimensional de rampas o gráfico de su distribución angular"
 
 #: modules/process/slope_dist.c:122
 msgid "/_Statistics/_Slope Distribution..."
@@ -8929,7 +8907,7 @@ msgstr ""
 
 #: modules/process/slope_dist.c:191
 msgid "Directional (φ) _graph"
-msgstr ""
+msgstr "_gráfico  Direccional (φ) "
 
 #: modules/process/slope_dist.c:192
 msgid "_Inclination (θ) graph"
@@ -9126,19 +9104,19 @@ msgstr ""
 
 #: modules/process/tip_blind.c:129
 msgid "Blind estimation of SPM tip using Villarubia's algorithm."
-msgstr ""
+msgstr "Estimación ciega de punta SPM usando el algoritmo de Villarubia. "
 
 #: modules/process/tip_blind.c:143
 msgid "/_Tip/_Blind Estimation..."
-msgstr ""
+msgstr "/_Punta/_Estimación Ciega... "
 
 #: modules/process/tip_blind.c:147
 msgid "Blind tip estimation"
-msgstr ""
+msgstr "Estimación de punta ciega"
 
 #: modules/process/tip_blind.c:183
 msgid "Blind Tip Estimation"
-msgstr ""
+msgstr "Estimación ciega de punta"
 
 #: modules/process/tip_blind.c:184
 msgid "Run _Partial"
@@ -9158,7 +9136,7 @@ msgstr ""
 
 #: modules/process/tip_blind.c:258
 msgid "Estimated Tip Size"
-msgstr ""
+msgstr "Tamaño estimado de punta"
 
 #: modules/process/tip_blind.c:279
 msgid "_Same resolution"
@@ -9174,47 +9152,47 @@ msgstr ""
 
 #: modules/process/tip_blind.c:623
 msgid "Estimated tip"
-msgstr ""
+msgstr "Punta estimada"
 
 #: modules/process/tip_model.c:112
 msgid "Models SPM tip."
-msgstr ""
+msgstr "Hace un modelo de una punta SPM"
 
 #: modules/process/tip_model.c:127
 msgid "/_Tip/_Model Tip..."
-msgstr ""
+msgstr "/_Punta/_Modelado de Punta..."
 
 #: modules/process/tip_model.c:131
 msgid "Model AFM tip"
-msgstr ""
+msgstr "Modelo de punta AFM"
 
 #: modules/process/tip_model.c:165
 msgid "Model Tip"
-msgstr ""
+msgstr "Modelo de punta"
 
 #: modules/process/tip_model.c:224
 msgid "Tip _type:"
-msgstr ""
+msgstr "Punta _tipo:"
 
 #: modules/process/tip_model.c:229
 msgid "_Number of sides:"
-msgstr ""
+msgstr "_Número de Lados:"
 
 #: modules/process/tip_model.c:234
 msgid "Tip _slope:"
-msgstr ""
+msgstr "Punta _pendiente:"
 
 #: modules/process/tip_model.c:240
 msgid "Tip _rotation:"
-msgstr ""
+msgstr "Punta _rotación:"
 
 #: modules/process/tip_model.c:250
 msgid "Tip _apex radius:"
-msgstr ""
+msgstr "Radio del  _ápice de la punta "
 
 #: modules/process/tip_model.c:467
 msgid "Modelled tip"
-msgstr ""
+msgstr "Punta Modelada "
 
 #: modules/process/tip_model.c:512
 #, c-format
@@ -9223,35 +9201,35 @@ msgstr ""
 
 #: modules/process/tipops.c:65
 msgid "Tip operations: dilation (convolution), erosion (reconstruction) and certainty map."
-msgstr ""
+msgstr "Operaciones de Punta: dilatación (convolución), erosión (reconstrucción) y mapa de certidumbre"
 
 #: modules/process/tipops.c:80
 msgid "/_Tip/_Dilation..."
-msgstr ""
+msgstr "/_Punta/_Dilatación... "
 
 #: modules/process/tipops.c:84
 msgid "Surface dilation by defined tip"
-msgstr ""
+msgstr "Dilatación superficial por punta definida "
 
 #: modules/process/tipops.c:87
 msgid "/_Tip/_Surface Reconstruction..."
-msgstr ""
+msgstr "/_Punta/_Reconstrucción de Superficie... "
 
 #: modules/process/tipops.c:91
 msgid "Surface reconstruction by defined tip"
-msgstr ""
+msgstr "Reconstrucción de superficie por punta definida "
 
 #: modules/process/tipops.c:94
 msgid "/_Tip/_Certainty Map..."
-msgstr ""
+msgstr "/_Punta/_Mapa de certidumbre..."
 
 #: modules/process/tipops.c:98
 msgid "Tip certainty map"
-msgstr ""
+msgstr "Mapa de certidumbre de punta"
 
 #: modules/process/tipops.c:137
 msgid "Tip Dilation"
-msgstr ""
+msgstr "Dilatación de punta"
 
 #: modules/process/tipops.c:138
 msgid "Surface Reconstruction"
@@ -9263,7 +9241,7 @@ msgstr ""
 
 #: modules/process/tipops.c:160
 msgid "_Tip morphology:"
-msgstr ""
+msgstr "Morfología de _Punta"
 
 #: modules/process/tipops.c:248
 #, c-format
@@ -9326,7 +9304,7 @@ msgstr ""
 
 #: modules/pygwy/pygwy-console.c:180
 msgid "Open Python script"
-msgstr ""
+msgstr "Abrir secuencia de comandos Python"
 
 #: modules/pygwy/pygwy-console.c:244
 msgid "Save Script as"
@@ -9338,7 +9316,7 @@ msgstr ""
 
 #: modules/pygwy/pygwy-console.c:295
 msgid "Open script in Python language (Ctrl-O)"
-msgstr ""
+msgstr "Abrir secuencia de comandos en el lenguaje Python (Ctrl-O)"
 
 #: modules/pygwy/pygwy-console.c:297
 msgid "Save script (Ctrl-S)"
@@ -9362,7 +9340,7 @@ msgstr ""
 
 #: pygwy.c:489
 msgid "Graph function written in Python"
-msgstr ""
+msgstr "Función gráfica escrita en Python"
 
 #: pygwy.c:887
 #, c-format
@@ -9389,7 +9367,7 @@ msgstr ""
 
 #: modules/tools/crop.c:221
 msgid "Create new channel"
-msgstr ""
+msgstr "Crear un nuevo cannal"
 
 #: modules/tools/distance.c:101
 msgid "Distance measurement tool, measures distances and angles."
@@ -9401,7 +9379,7 @@ msgstr ""
 
 #: modules/tools/distance.c:522
 msgid "Save Table"
-msgstr ""
+msgstr "Guardar Tabla"
 
 #: modules/tools/filter.c:98
 msgid "Filter tool, processes selected part of data with a filter (conservative denoise, mean, median. Kuwahara, minimum, maximum)."
@@ -9658,7 +9636,7 @@ msgstr ""
 
 #: modules/tools/maskedit.c:214
 msgid "Edit mask"
-msgstr ""
+msgstr "Editar máscara"
 
 #: modules/tools/maskedit.c:326
 msgid "Set mask to selection"
@@ -10060,7 +10038,7 @@ msgstr ""
 
 #: modules/tools/roughness.c:855
 msgid "_Graph:"
-msgstr ""
+msgstr "_Gráfico:"
 
 #: modules/tools/roughness.c:862
 msgid "C_ut-off:"
@@ -10080,7 +10058,7 @@ msgstr ""
 
 #: modules/tools/roughness.c:2146
 msgid "Save Roughness Parameters"
-msgstr ""
+msgstr "Guardar Parámetros de Rugosidad "
 
 #: modules/tools/roughness.c:2203
 msgid "Roughness Parameters"
@@ -10215,7 +10193,7 @@ msgstr ""
 
 #: modules/tools/spectro.c:173
 msgid "Extract and view point spectroscopy data"
-msgstr ""
+msgstr "Extraer y ver datos de espectroscopia puntual"
 
 #: modules/tools/spectro.c:322
 msgid "_Separate spectra"
@@ -10350,4 +10328,20 @@ msgid ""
 "Inclination θ:     %s\n"
 "Inclination φ:     %s\n"
 msgstr ""
+"Selected area:     %s × %s at (%s, %s) px\n"
+"                   %s × %s at (%s, %s) %s\n"
+"Mask in use:       %s\n"
+"\n"
+"Average value:     %s\n"
+"Minimum:           %s\n"
+"Maximum:           %s\n"
+"Median:            %s\n"
+"Ra:                %s\n"
+"Rms:               %s\n"
+"Skew:              %s\n"
+"Kurtosis:          %s\n"
+"Surface area:      %s\n"
+"Projected area:    %s\n"
+"Inclination θ:     %s\n"
+"Inclination φ:     %s\n"
 
