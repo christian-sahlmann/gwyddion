@@ -778,7 +778,16 @@ mdt_load(const gchar *filename,
                 g_string_printf(key, "/%d/data", n);
                 gwy_container_set_object_by_name(data, key->str, dfield);
                 g_object_unref(dfield);
-                gwy_app_channel_title_fall_back(data, n);
+                if (mdaframe->title) {
+                    g_string_append(key, "/title");
+                    gwy_container_set_string_by_name(data, key->str,
+                            g_strdup_printf("%.*s (%u)",
+                                            mdaframe->title_len,
+                                            mdaframe->title, i+1));
+                }
+                else
+                    gwy_app_channel_title_fall_back(data, n);
+
                 n++;
             }
             else if ((mdaframe->nDimensions == 0 && mdaframe->nMesurands == 2)
@@ -799,7 +808,7 @@ mdt_load(const gchar *filename,
                 gwy_container_set_object_by_name(data, key->str, dfield);
                 g_object_unref(dfield);
                 if (mdaframe->title) {
-                g_string_append(key, "/title");
+                    g_string_append(key, "/title");
                     gwy_container_set_string_by_name(data, key->str,
                             g_strdup_printf("%.*s (%u)",
                                             mdaframe->title_len,
@@ -2044,8 +2053,8 @@ extract_mda_spectrum(MDTMDAFrame *dataframe, guint number)
                 xskip = 4;
 
                 for (i = 0; i < res; i++) {
-                    xdata[i] = xscale * 
-							   GINT32_FROM_LE(*(const gint32 *)p);
+                    xdata[i] = xscale *
+                               GINT32_FROM_LE(*(const gint32 *)p);
                     p += 4 + yskip;
                 }
             }
@@ -2056,7 +2065,7 @@ extract_mda_spectrum(MDTMDAFrame *dataframe, guint number)
                 xskip = 4;
 
                 for (i = 0; i < res; i++) {
-                    xdata[i] = xscale * 
+                    xdata[i] = xscale *
                                GUINT32_FROM_LE(*(const guint32 *)p);
                     p += 4 + yskip;
                 }
@@ -2068,8 +2077,8 @@ extract_mda_spectrum(MDTMDAFrame *dataframe, guint number)
                 xskip = 8;
 
                 for (i = 0; i < res; i++) {
-                    xdata[i] = xscale * 
-							   (gint64)GINT64_FROM_LE(*(const gint64 *)p);
+                    xdata[i] = xscale *
+                               (gint64)GINT64_FROM_LE(*(const gint64 *)p);
                     p += 8 + yskip;
                 }
             }
@@ -2080,8 +2089,8 @@ extract_mda_spectrum(MDTMDAFrame *dataframe, guint number)
                 xskip = 8;
 
                 for (i = 0; i < res; i++) {
-                    xdata[i] = xscale * 
-							   GUINT64_FROM_LE(*(const guint64 *)p);
+                    xdata[i] = xscale *
+                               GUINT64_FROM_LE(*(const guint64 *)p);
                     p += 8 + yskip;
                 }
             }
@@ -2146,8 +2155,8 @@ extract_mda_spectrum(MDTMDAFrame *dataframe, guint number)
         {
             for (i = 0; i < res; i++) {
                 p += xskip;
-                ydata[i] = yscale * 
-						   GUINT16_FROM_LE(*(const guint16 *)p);
+                ydata[i] = yscale *
+                           GUINT16_FROM_LE(*(const guint16 *)p);
                 p += 2;
             }
         }
@@ -2172,7 +2181,7 @@ extract_mda_spectrum(MDTMDAFrame *dataframe, guint number)
         case MDA_DATA_INT64:
             for (i = 0; i < res; i++) {
                 p += xskip;
-                ydata[i] = yscale * 
+                ydata[i] = yscale *
                            (gint64)GINT64_FROM_LE(*(const gint64 *)p);
                 p += 8;
             }
@@ -2181,8 +2190,8 @@ extract_mda_spectrum(MDTMDAFrame *dataframe, guint number)
         case MDA_DATA_UINT64:
             for (i = 0; i < res; i++) {
                 p += xskip;
-                ydata[i] = yscale * 
-						   GUINT64_FROM_LE(*(const guint64 *)p);
+                ydata[i] = yscale *
+                           GUINT64_FROM_LE(*(const guint64 *)p);
                 p += 8;
             }
         break;
