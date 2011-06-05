@@ -1,6 +1,6 @@
 /*
  *  $Id$
- *  Copyright (C) 2009 David Necas (Yeti).
+ *  Copyright (C) 2009-2011 David Necas (Yeti).
  *  E-mail: yeti@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -81,6 +81,8 @@ static GwyContainer* nanonics_load           (const gchar *filename,
 static GHashTable*   nanonics_read_header    (gchar *text,
                                               const gchar *name,
                                               GError **error);
+static void nanonics_parse_comment(GHashTable *hash,
+                       const gchar *comment);
 static GwyDataField* nanonics_read_data_field(const NanonicsFile *nfile,
                                               guint id,
                                               gboolean retrace,
@@ -194,11 +196,23 @@ nanonics_load(const gchar *filename,
         goto fail;
     }
 
-    ndata = (size - nfile.header_size)/nfile.page_size;
-    gwy_debug("ndata: %u", ndata);
-    if (!ndata) {
-        err_NO_DATA(error);
-        goto fail;
+    if ((s = g_hash_table_lookup(nfile.meta, "Number of channels"))) {
+        ndata = g_ascii_strtoull(s, NULL, 10);
+        /* It should be only set if we did find any channel descriptions. */
+        g_assert(ndata);
+        if (err_SIZE_MISMATCH(error,
+                              nfile.page_size*ndata,
+                              size - nfile.header_size, FALSE))
+            goto fail;
+        gwy_debug("ndata (from comment): %u", ndata);
+    }
+    else {
+        ndata = (size - nfile.header_size)/nfile.page_size;
+        gwy_debug("ndata (from size): %u", ndata);
+        if (!ndata) {
+            err_NO_DATA(error);
+            goto fail;
+        }
     }
 
     nfile.xres = strtol(g_hash_table_lookup(nfile.meta, "ReF"), NULL, 10);
@@ -236,9 +250,17 @@ nanonics_load(const gchar *filename,
         gwy_debug("reading page header %u", i);
         header = g_strndup(s + i*nfile.page_size, nfile.page_header_size);
         if (!(nfile.pagemeta[i] = nanonics_read_header(header, "Channel Header",
-                                                       error)))
-            goto fail;
-
+                                                       &err))) {
+            if (i == 0) {
+                g_propagate_error(error, err);
+                goto fail;
+            }
+            else {
+                g_warning("Cannot read the expected number of channels %u, "
+                          "failed after %u.", ndata, i);
+                ndata = i;
+            }
+        }
         g_free(header);
         header = NULL;
     }
@@ -294,6 +316,7 @@ nanonics_read_header(gchar *text, const gchar *name, GError **error)
 {
     GHashTable *hash;
     gchar *line, *p, *s, *val, *marker;
+    GString *comment = NULL;
 
     p = text;
 
@@ -318,6 +341,21 @@ nanonics_read_header(gchar *text, const gchar *name, GError **error)
         if (!*line)
             continue;
 
+        if (comment) {
+            g_string_append_c(comment, '\n');
+            g_string_append(comment, line);
+            if (line[strlen(line)-1] == ']') {
+                gwy_debug("comment: <%s>", comment->str);
+                g_string_erase(comment, 0, 1);
+                g_string_truncate(comment, comment->len-1);
+                g_hash_table_insert(hash,
+                                    g_strdup("comment"),
+                                    g_string_free(comment, FALSE));
+                comment = NULL;
+            }
+            continue;
+        }
+
         while (line && (s = strchr(line, '='))) {
             *s = '\0';
             g_strchomp(line);
@@ -330,10 +368,35 @@ nanonics_read_header(gchar *text, const gchar *name, GError **error)
                 line++;
             }
             g_strchomp(val);
-            g_hash_table_insert(hash, g_strdup(s), g_strdup(val));
-            gwy_debug("<%s>=<%s>", s, val);
+            if (gwy_strequal(s, "comment")) {
+                if (val[0] == '[') {
+                    if (val[strlen(val)-1] != ']') {
+                        /* Start gathering multiline comment. */
+                        comment = g_string_new(val);
+                        break;
+                    }
+                    else {
+                        /* In-line comment; just remove the brackets. */
+                        val[strlen(val)-1] = '\0';
+                        val += 1;
+                        g_hash_table_insert(hash, g_strdup(s), g_strdup(val));
+                        gwy_debug("<%s>=<%s>", s, val);
+                    }
+                }
+            }
+            else {
+                g_hash_table_insert(hash, g_strdup(s), g_strdup(val));
+                gwy_debug("<%s>=<%s>", s, val);
+            }
         }
+
     }
+
+    /* Should not happen if the comment is properly terminated. */
+    if (comment)
+        g_string_free(comment, TRUE);
+    else if ((s = g_hash_table_lookup(hash, "comment")) && strchr(s, '\n'))
+        nanonics_parse_comment(hash, s);
 
     if (!line) {
         g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
@@ -350,6 +413,70 @@ nanonics_read_header(gchar *text, const gchar *name, GError **error)
     g_free(marker);
 
     return hash;
+}
+
+static void
+nanonics_parse_comment(GHashTable *hash,
+                       const gchar *comment)
+{
+    gchar *buffer = g_strdup(comment);
+    gchar *p = buffer, *line, *value, **fields;
+    gboolean reading_channels;
+    guint id, nchannels = 0;
+
+    for (line = gwy_str_next_line(&p); line; line = gwy_str_next_line(&p)) {
+        g_strstrip(line);
+        if (gwy_strequal(line, "Analog channels:")) {
+            reading_channels = TRUE;
+            continue;
+        }
+        if (reading_channels) {
+            if (sscanf(line, "%d )", &id) == 1) {
+                if (id != nchannels) {
+                    g_warning("Channel #%u has non-sequential number %u.",
+                              nchannels, id);
+                    id = nchannels;
+                }
+                line = strchr(line, ')') + 1;
+                fields = g_strsplit(line, ",", 0);
+                if (fields
+                    && g_strv_length(fields) >= 3
+                    && g_str_has_prefix(fields[1], "Units:")
+                    && g_str_has_prefix(fields[2], "Formula:")) {
+                    value = g_strstrip(fields[0]);
+                    gwy_debug("Channel %u name: <%s>", id, value);
+                    g_hash_table_insert(hash, g_strdup_printf("Channel%u", id),
+                                        g_strdup(value));
+                    value = g_strstrip(fields[1] + strlen("Units:"));
+                    gwy_debug("Channel %u units: <%s>", id, value);
+                    g_hash_table_insert(hash, g_strdup_printf("Units%u", id),
+                                        g_strdup(value));
+                    value = g_strstrip(fields[2] + strlen("Formula:"));
+                    gwy_debug("Channel %u formula: <%s>", id, value);
+                    g_hash_table_insert(hash, g_strdup_printf("Formula%u", id),
+                                        g_strdup(value));
+                }
+                g_strfreev(fields);
+                nchannels++;
+                continue;
+            }
+            reading_channels = FALSE;
+        }
+        if ((value = strstr(line, ": "))) {
+            *value = '\0';
+            value += 2;
+            g_strstrip(value);
+            g_strchomp(line);
+            g_hash_table_insert(hash, g_strdup(line), g_strdup(value));
+            gwy_debug("<%s>=<%s>", line, value);
+        }
+    }
+
+    if (nchannels)
+        g_hash_table_insert(hash, g_strdup("Number of channels"),
+                            g_strdup_printf("%u", nchannels));
+
+    g_free(buffer);
 }
 
 static GwyDataField*
