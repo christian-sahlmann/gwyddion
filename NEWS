@@ -22,6 +22,7 @@ Modules:
 - WIP (new): Imports WITec project files.
 - NRRD (new): Imports and exports Nearly Raw Raster Data (NRRD).  To get
   support for compressed files, Gwyddion must be built with libz and/or libbz2.
+- Robotics (new): Imports Automation and Robotics Dual Lens Mapped data.
 - Dumb (new): Loads plug-in proxy's dumb dump files.
 - HDR image (new): Exports data into OpenEXR files (requires libImf, currently
   used only on Unix).  Imports 16bit PNG and PGM images.
