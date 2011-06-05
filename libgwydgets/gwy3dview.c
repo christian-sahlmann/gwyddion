@@ -2239,7 +2239,7 @@ gwy_3d_view_render_string(GtkWidget *widget,
                                     GWY_ROUND(0.8*size*PANGO_SCALE));
     wlayout = pango_layout_new(context);
     pango_layout_set_font_description(wlayout, cfontdesc);
-    pango_layout_set_text(wlayout, text, -1);
+    pango_layout_set_markup(wlayout, text, -1);
     pango_layout_get_pixel_size(wlayout, &wwidth, &wheight);
     g_object_unref(wlayout);
 
@@ -2257,7 +2257,7 @@ gwy_3d_view_render_string(GtkWidget *widget,
 
     clayout = pango_cairo_create_layout(cr);
     pango_layout_set_font_description(clayout, cfontdesc);
-    pango_layout_set_text(clayout, text, -1);
+    pango_layout_set_markup(clayout, text, -1);
     pango_layout_get_pixel_size(clayout, width, height);
     pango_cairo_show_layout(cr, clayout);
 
