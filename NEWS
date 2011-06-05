@@ -14,6 +14,7 @@ Libraries:
 - libgwymodule: New file load/save functions reporting the actual module
   function used to load/save the file.
 - libgwyapp: File load/save error message boxes were improved.
+- libgwydgets: Units with powers of subscripts are shown correctly in 3D view.
 
 Modules:
 - CSM (new): Imports Benyuan CSM files.
@@ -26,7 +27,8 @@ Modules:
   used only on Unix).  Imports 16bit PNG and PGM images.
 - Mask editor tool: Program termination upon attempt to draw in drawing mode
   was corrected (bun introduced in 2.24).
-- NT-MDT: Slowness of MDA spectra loading was corrected.
+- NT-MDT: Slowness of MDA spectra loading was corrected, MDA frames are
+  numbered similarly to other channels.
 - All synthesis: Critical warning/crash upon clicking on Change units and the
   current units were unset was fixed.
 - Pixmap: Colourful images can be imported as separate R, G, B channels and
@@ -41,6 +43,8 @@ Modules:
 - RHK-SM3: Loading of multipage files was corrected.
 - Raw graph import: Possible crash if the file cannot be loaded was fixed.
 - Omicron: Can load grid spectra files *.sf* and *.sb*.
+- Nanonics: Newer files with long headers and raw sensor data following the
+  image data can be imported.
 
 Other:
 - The KDE4 thumbnailer is not built by default.
