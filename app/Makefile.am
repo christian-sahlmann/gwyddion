@@ -100,7 +100,7 @@ AM_CPPFLAGS = -I$(top_srcdir)
 # Any iface change    C++: 0:   A
 # Adding ifaces       C:   R:   A++
 # Changing ifaces     C:   R:   0
-libversion = -version-info 7:1:7
+libversion = -version-info 7:2:7
 #libversion = -release @LIBRARY_RELEASE@
 libgwyapp2_la_LDFLAGS = @GTKGLEXT_LIBS@ @BASIC_LIBS@ -export-dynamic $(no_undefined) $(export_symbols) $(libversion)
 libgwyapp2_la_CPPFLAGS = -DG_LOG_DOMAIN=\"GwyApp\" $(AM_CPPFLAGS)
