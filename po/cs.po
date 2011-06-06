@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2011-06-01 14:58+0200\n"
+"POT-Creation-Date: 2011-06-06 09:56+0200\n"
 "PO-Revision-Date: 2011-06-01 15:05+0200\n"
 "Last-Translator: Petr Klapetek <klapetek@gwyddion.net>\n"
 "Language-Team: Czech\n"
@@ -1391,11 +1391,11 @@ msgstr "Neznámý kanál %d"
 msgid "channel|None"
 msgstr "Žádný"
 
-#: app/file.c:207
+#: app/file.c:208
 msgid "Imported data are likely incorrect."
 msgstr "Importovaná data jsou nejspíš nesprávná."
 
-#: app/file.c:211
+#: app/file.c:212
 #, c-format
 msgid ""
 "Import support for files of type\n"
@@ -1421,49 +1421,51 @@ msgstr ""
 "\n"
 "%s"
 
-#: app/file.c:278
+#: app/file.c:279
 #, c-format
 msgid "Opening of `%s' failed"
 msgstr "Načtení „%s“ se nezdařilo"
 
-#: app/file.c:284 app/file.c:504
+#: app/file.c:285 app/file.c:505
+#, c-format
 msgid "Full file path: %s."
 msgstr "Plná cesta souboru: %s."
 
-#: app/file.c:287
+#: app/file.c:288
+#, c-format
 msgid "Loaded using: %s."
 msgstr "Načítán pomocí: %s."
 
-#: app/file.c:361
+#: app/file.c:362
 msgid "Merge File"
 msgstr "Sloučení souboru"
 
-#: app/file.c:363 app/gwyappfilechooser.c:216
+#: app/file.c:364 app/gwyappfilechooser.c:216
 msgid "Open File"
 msgstr "Otevření souboru"
 
-#: app/file.c:498 app/gwymoduleutils.c:192
+#: app/file.c:499 app/gwymoduleutils.c:192
 #, c-format
 msgid "Saving of `%s' failed"
 msgstr "Zapsání „%s“ se nezdařilo"
 
-#: app/file.c:507
+#: app/file.c:508
 #, c-format
 msgid "Saved using: %s."
 msgstr "Ukládán pomocí: %s."
 
-#: app/file.c:648
+#: app/file.c:649
 #, c-format
 msgid "File `%s' already exists.  Replace?"
 msgstr "Soubor „%s“ již existuje. Přepsat?"
 
-#: app/file.c:652
+#: app/file.c:653
 #, c-format
 msgid ""
 "The file already exists in `%s'.  Replacing it will overwrite its contents."
 msgstr "Takový soubor již v „%s“ existuje. Přepsání nahradí jeho obsah."
 
-#: app/file.c:655
+#: app/file.c:656
 msgid "Replace File?"
 msgstr "Přepsat soubor?"
 
@@ -3034,6 +3036,7 @@ msgid "EXR image loading failed with libImf error: %s"
 msgstr "Načtení EXR obrázku selhalo s chybou libImf: %s"
 
 #: modules/file/hdrimage.cc:972
+#, c-format
 msgid "OpenEXR data type %u is invalid or unsupported."
 msgstr "OpenEXR datový typ %u je neplatný či nepodporovaný."
 
@@ -3460,25 +3463,25 @@ msgstr "I-V spektra"
 msgid "I-Z spectra"
 msgstr "I-Z spektra"
 
-#: modules/file/nanonics.c:92
+#: modules/file/nanonics.c:94
 msgid "Imports Nanonics NAN data files."
 msgstr "Načítá datové soubory Nanonics NAN."
 
-#: modules/file/nanonics.c:105
+#: modules/file/nanonics.c:107
 msgid "Nanonics files (.nan)"
 msgstr "Nanonics soubory (.nan)"
 
-#: modules/file/nanonics.c:165 modules/file/nanonics.c:340
+#: modules/file/nanonics.c:167 modules/file/nanonics.c:403
 #, c-format
 msgid "Expected header end marker ‘%s’ was not found."
 msgstr "Nebyl nalezen očekávaný konec hlavičky „%s“."
 
-#: modules/file/nanonics.c:192
+#: modules/file/nanonics.c:194
 #, c-format
 msgid "HeaderLength %u differs from actual header length %u"
 msgstr "Hodnota HeaderLength %u se liší od skutečné délky hlavičky %u"
 
-#: modules/file/nanonics.c:305
+#: modules/file/nanonics.c:328
 #, c-format
 msgid "Expected header start marker ‘%s’ but found ‘%s’."
 msgstr "Namísto očekávané značky začátku hlavičky „%s“ bylo nalezeno „%s“."
@@ -3721,30 +3724,30 @@ msgstr "Načítá datové soubory NT-MDT."
 msgid "NT-MDT files (.mdt)"
 msgstr "NT-MDT soubory (.mdt)"
 
-#: modules/file/nt-mdt.c:1087
+#: modules/file/nt-mdt.c:1096
 msgid "Frame is too short for Frame Mode."
 msgstr "Rám je příliš krátký pro daný Frame Mode."
 
-#: modules/file/nt-mdt.c:1101
+#: modules/file/nt-mdt.c:1110
 msgid "Frame is too short for dots or data."
 msgstr "Rám je příliš krátký pro body či data."
 
-#: modules/file/nt-mdt.c:1358
+#: modules/file/nt-mdt.c:1367
 #, c-format
 msgid "End of file reached in frame header #%u."
 msgstr "Soubor skončil v hlavičce rámu č. %u."
 
-#: modules/file/nt-mdt.c:1366
+#: modules/file/nt-mdt.c:1375
 #, c-format
 msgid "End of file reached in frame data #%u."
 msgstr "Soubor skončil v datech rámu č. %u."
 
-#: modules/file/nt-mdt.c:1401
+#: modules/file/nt-mdt.c:1410
 #, c-format
 msgid "Frame #%u is too short for scanned data header."
 msgstr "Rám č. %u je příliš krátký pro hlavičku dat skenu."
 
-#: modules/file/nt-mdt.c:2456
+#: modules/file/nt-mdt.c:2465
 msgid "Raman Image"
 msgstr "Ramanovský obrázek"
 
