@@ -63,10 +63,11 @@ class Template:
 templates = {
     'LINGUAS': Template('%(key)s', None, ' '),
     'OS X': Template('        { "%(isofull)s", "%(key)s" },'),
-    'NSIS': Template('    !insertmacro GWY_LOCALE_CHOOSER "%(name)s" "%(isofull)s" %(i12)uu'),
+    'NSIS-MENU': Template('    !insertmacro GWY_LOCALE_CHOOSER "%(name)s" "%(isofull)s" %(i12)uu'),
+    'NSIS-MO': Template('    GwyExpandFiles "share\\locale\\%(key)s\\LC_MESSAGES\*.mo"'),
 }
 
-signature = (r'(?P<open>@@@ GENERATED LANG (?P<name>[A-Z_ ]+) BEGIN @@@[^\n]*$)'
+signature = (r'(?P<open>@@@ GENERATED LANG (?P<name>[A-Z_ -]+) BEGIN @@@[^\n]*$)'
              r'(?P<body>.*?)'
              r'(?P<close>^[^\n]*@@@ GENERATED LANG (?P=name) END @@@)')
 sig_re = re.compile(signature, re.S | re.M)

@@ -133,7 +133,7 @@ Function ChooseLocale
     Pop $Label
 
 # The following generated part is updated by running utils/update-langs.py
-# @@@ GENERATED LANG NSIS BEGIN @@@
+# @@@ GENERATED LANG NSIS-MENU BEGIN @@@
     !insertmacro GWY_LOCALE_CHOOSER "English" "en_US.UTF-8" 12u
     !insertmacro GWY_LOCALE_CHOOSER "Czech" "cs_CZ.UTF-8" 24u
     !insertmacro GWY_LOCALE_CHOOSER "German" "de_DE.UTF-8" 36u
@@ -141,7 +141,7 @@ Function ChooseLocale
     !insertmacro GWY_LOCALE_CHOOSER "Italian" "it_IT.UTF-8" 60u
     !insertmacro GWY_LOCALE_CHOOSER "Russian" "ru_RU.UTF-8" 72u
     !insertmacro GWY_LOCALE_CHOOSER "Spanish" "es_ES.UTF-8" 84u
-# @@@ GENERATED LANG NSIS END @@@
+# @@@ GENERATED LANG NSIS-MENU END @@@
 
     nsDialogs::Show
 FunctionEnd
@@ -232,11 +232,16 @@ Section "Gwyddion (required)"
     GwyExpandFiles "share\gwyddion\pixmaps\*"
     GwyExpandFiles "share\gwyddion\ui\toolbox.xml"
     GwyExpandFiles "share\themes\*\*\gtkrc"
+# The following generated part is updated by running utils/update-langs.py
+# @@@ GENERATED LANG NSIS-MO BEGIN @@@
+    GwyExpandFiles "share\locale\en\LC_MESSAGES\*.mo"
     GwyExpandFiles "share\locale\cs\LC_MESSAGES\*.mo"
     GwyExpandFiles "share\locale\de\LC_MESSAGES\*.mo"
-    GwyExpandFiles "share\locale\it\LC_MESSAGES\*.mo"
     GwyExpandFiles "share\locale\fr\LC_MESSAGES\*.mo"
+    GwyExpandFiles "share\locale\it\LC_MESSAGES\*.mo"
     GwyExpandFiles "share\locale\ru\LC_MESSAGES\*.mo"
+    GwyExpandFiles "share\locale\es\LC_MESSAGES\*.mo"
+# @@@ GENERATED LANG NSIS-MO END @@@
 
     CreateShortCut "$SMPROGRAMS\Gwyddion.lnk" "$INSTDIR\bin\gwyddion.exe" "" "$INSTDIR\${ICON_FILE}" "" SW_SHOWNORMAL "" "Gwyddion - SPM data analysis"
 
