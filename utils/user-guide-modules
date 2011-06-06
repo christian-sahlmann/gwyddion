@@ -26,7 +26,6 @@ crop	basic-operations	crop
 crosscor	multidata	cross-correlation
 curvature	leveling	curvature
 cwt	integral-transforms	cwt
-deposit	synthetic
 deposit_synth	synthetic
 distance	basic-operations	distance
 dmefile	managing-files
@@ -180,3 +179,8 @@ wipfile	managing-files
 witfile	managing-files
 wsffile	managing-files
 wsxmfile	managing-files
+ambfile	managing-files
+csmfile	managing-files
+dumbfile	managing-files
+hdrimage	managing-files
+nrrdfile	managing-files
