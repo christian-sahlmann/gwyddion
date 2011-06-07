@@ -126,7 +126,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("FFT filtering"),
     "Petr Klapetek <petr@klapetek.cz>",
-    "2.4",
+    "2.5",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -431,6 +431,11 @@ restore_ps(Fftf1dControls *controls, Fftf1dArgs *args)
                  "mode", GWY_GRAPH_CURVE_LINE,
                  "description", "Fourier Modulus Density",
                   NULL);
+    g_object_set(controls->gmodel,
+                 "si-unit-x", gwy_data_line_get_si_unit_x(dline),
+                 "axis-label-bottom", "k",
+                 "axis-label-left", "",
+                 NULL);
 
     gwy_graph_model_add_curve(controls->gmodel, cmodel);
 
