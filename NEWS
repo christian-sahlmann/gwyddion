@@ -1,3 +1,9 @@
+2.26 (0000-00-00)
+Modules:
+- 1D FFT filter: Correct X-axis units of Fourier modulus are displayed.
+- Level Grains: The sign of extracted background was corrected.
+
+
 2.25 (2011-06-06)
 Application:
 - New translation: Spanish.
