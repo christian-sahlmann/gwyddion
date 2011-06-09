@@ -1,7 +1,7 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2004 David Necas (Yeti), Petr Klapetek.
- *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
+ *  Copyright (C) 2011 David Necas (Yeti).
+ *  E-mail: yeti@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -83,7 +83,7 @@ static GwyModuleInfo module_info = {
     N_("Levels individual grains, interpolating the shifts between using "
        "Laplacian interpolation."),
     "David Nečas <yeti@gwyddion.net>",
-    "1.0",
+    "1.1",
     "David Nečas (Yeti)",
     "2011",
 };
@@ -209,8 +209,9 @@ level_grains_do(const LevelGrainsArgs *args,
     gwy_app_wait_finish();
 
     if (!cancelled) {
+        gwy_data_field_invert(background, FALSE, FALSE, TRUE);
         gwy_app_undo_qcheckpointv(data, 1, &dquark);
-        gwy_data_field_sum_fields(dfield, dfield, background);
+        gwy_data_field_subtract_fields(dfield, dfield, background);
         gwy_data_field_data_changed(dfield);
 
         if (args->do_extract) {
