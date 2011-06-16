@@ -1093,7 +1093,6 @@ get_half_be(const guchar *p)
  * @target: Array of @nitems to store the converted input data to.
  * @scale: Factor to multiply the data with.
  * @offset: Constant to add to the data after multiplying with @scale.
- * @backwards: %TRUE to revert the order of data, %FALSE to keep the order.
  *
  * Converts a block of raw data items to doubles.
  *
