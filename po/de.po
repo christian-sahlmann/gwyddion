@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2011-06-06 09:56+0200\n"
+"POT-Creation-Date: 2011-06-16 13:40+0200\n"
 "PO-Revision-Date: 2011-06-05 10:52+0100\n"
 "Last-Translator: Johannes Römer <jroemer@physik.uni-wuerzburg.de>\n"
 "Language-Team: deutsch <de@li.org>\n"
@@ -848,9 +848,9 @@ msgstr "Pixel"
 #: modules/process/calcoefs_new.c:347 modules/process/calibrate.c:296
 #: modules/process/curvature.c:603 modules/process/cwt.c:132
 #: modules/process/deposit_synth.c:359 modules/process/drift.c:230
-#: modules/process/dwt.c:164 modules/process/dwtanisotropy.c:183
-#: modules/process/edge.c:636 modules/process/facet-level.c:283
-#: modules/process/facet_analysis.c:273 modules/process/fft.c:272
+#: modules/process/dwtanisotropy.c:183 modules/process/dwt.c:164
+#: modules/process/edge.c:636 modules/process/facet_analysis.c:273
+#: modules/process/facet-level.c:283 modules/process/fft.c:272
 #: modules/process/fft_filter_2d.c:441 modules/process/fft_synth.c:330
 #: modules/process/fractal.c:206 modules/process/grain_edge.c:220
 #: modules/process/grain_mark.c:265 modules/process/grain_rem_threshold.c:224
@@ -1201,20 +1201,6 @@ msgstr ""
 msgid "Preview"
 msgstr "Vorschau"
 
-#: libgwymodule/gwymodule-file.c:535 modules/file/err.h:40
-#: modules/file/pixmap.c:732
-#, c-format
-msgid "Cannot open file for reading: %s."
-msgstr "Datei kann nicht zum Lesen geöffnet werden: %s"
-
-#: libgwymodule/gwymodule-file.c:544
-msgid "No module can load this file type."
-msgstr "Das Laden dieses Dateiformats wird von keinem Modul unterstützt."
-
-#: libgwymodule/gwymodule-file.c:651
-msgid "No module can save to this file type."
-msgstr "Speichern in diesem Dateitformat wird von keinem Modul unterstützt."
-
 #: libgwymodule/gwymodulebrowser.c:66
 msgid "Module Browser"
 msgstr "Modul-Browser"
@@ -1268,6 +1254,20 @@ msgstr "Name:"
 #: libgwymodule/gwymodulebrowser.c:270
 msgid "Failure:"
 msgstr "Fehler:"
+
+#: libgwymodule/gwymodule-file.c:535 modules/file/err.h:40
+#: modules/file/pixmap.c:732
+#, c-format
+msgid "Cannot open file for reading: %s."
+msgstr "Datei kann nicht zum Lesen geöffnet werden: %s"
+
+#: libgwymodule/gwymodule-file.c:544
+msgid "No module can load this file type."
+msgstr "Das Laden dieses Dateiformats wird von keinem Modul unterstützt."
+
+#: libgwymodule/gwymodule-file.c:651
+msgid "No module can save to this file type."
+msgstr "Speichern in diesem Dateitformat wird von keinem Modul unterstützt."
 
 #: app/about.c:56
 #, c-format
@@ -1701,6 +1701,12 @@ msgstr ""
 "Um gespeicherte Einstellungen nicht zu verlieren, wird die Datei nicht "
 "aktualisiert, bis sie repariert oder gelöscht wurde."
 
+#: app/gwymoduleutils.c:197 app/settings.c:130 app/settings.c:141
+#: modules/file/err.h:61
+#, c-format
+msgid "Cannot write to file: %s."
+msgstr "Kann nicht in Datei schreiben: %s."
+
 #: app/gwymoduleutils-file.c:424
 #, c-format
 msgid "Section %s ended at line %u but it has never started."
@@ -1740,12 +1746,6 @@ msgstr ""
 #, c-format
 msgid "Header suddenly ended at line %u; end of header marker is missing"
 msgstr ""
-
-#: app/gwymoduleutils.c:197 app/settings.c:130 app/settings.c:141
-#: modules/file/err.h:61
-#, c-format
-msgid "Cannot write to file: %s."
-msgstr "Kann nicht in Datei schreiben: %s."
 
 #: app/gwyplaintool.c:569
 msgid "<big><b>Missing layer module.</b></big>"
@@ -2566,6 +2566,14 @@ msgstr ""
 msgid "Unknown file type header: `%s'."
 msgstr "Unbekannte Dateityp-Kopfzeile: `%s'."
 
+#: modules/file/burleigh_bii.c:75
+msgid "Imports Burleigh BII binary data files."
+msgstr "Importiert Burleigh BII-Binärdateien."
+
+#: modules/file/burleigh_bii.c:88
+msgid "Burleigh Image Studio files (.bii)"
+msgstr "Burleigh Image-Studio-Dateien (.bii)"
+
 #: modules/file/burleigh.c:119
 msgid "Imports Burleigh IMG data files version 2.1."
 msgstr "Importiert Burleigh IMG-Dateien der Version 2.1."
@@ -2578,14 +2586,6 @@ msgstr "Burleigh 2.1 Dateien (.img)"
 #, c-format
 msgid "File format version %.1f is not supported."
 msgstr "Das Dateiformat der Version %.1f wird nicht unterstützt."
-
-#: modules/file/burleigh_bii.c:75
-msgid "Imports Burleigh BII binary data files."
-msgstr "Importiert Burleigh BII-Binärdateien."
-
-#: modules/file/burleigh_bii.c:88
-msgid "Burleigh Image Studio files (.bii)"
-msgstr "Burleigh Image-Studio-Dateien (.bii)"
 
 #: modules/file/burleigh_exp.c:88
 msgid "Imports Burleigh text/bin exported images."
@@ -3525,14 +3525,6 @@ msgstr ""
 msgid "Wrong size of Base64 encoded data."
 msgstr ""
 
-#: modules/file/nanoscope-ii.c:79
-msgid "Imports Digital Instruments Nanoscope II data files."
-msgstr "Importiert Digital Instruments Nanoscope-II-Dateien."
-
-#: modules/file/nanoscope-ii.c:92
-msgid "Nanoscope II files"
-msgstr "Nanoscope-II-Dateien"
-
 #: modules/file/nanoscope.c:165
 msgid ""
 "Imports Veeco (Digital Instruments) Nanoscope data files, version 3 or newer."
@@ -3571,6 +3563,14 @@ msgstr ""
 #: modules/file/nanoscope.c:1080
 msgid "Truncated header line."
 msgstr ""
+
+#: modules/file/nanoscope-ii.c:79
+msgid "Imports Digital Instruments Nanoscope II data files."
+msgstr "Importiert Digital Instruments Nanoscope-II-Dateien."
+
+#: modules/file/nanoscope-ii.c:92
+msgid "Nanoscope II files"
+msgstr "Nanoscope-II-Dateien"
 
 #: modules/file/nanotop.c:106
 msgid "Imports NANOTOP AFM files"
@@ -4537,7 +4537,7 @@ msgid "_Value units:"
 msgstr "_Werteskala:"
 
 #: modules/file/rawxyz.c:674 modules/process/drift.c:291
-#: modules/process/dwt.c:204 modules/process/dwtanisotropy.c:201
+#: modules/process/dwtanisotropy.c:201 modules/process/dwt.c:204
 #: modules/process/fft_filter_1d.c:329 modules/process/fft_profile.c:298
 #: modules/process/fractal.c:228 modules/process/nanoindent_adjust.c:228
 #: modules/process/polydistort.c:268 modules/process/rotate.c:293
@@ -4834,14 +4834,6 @@ msgstr "Importiert SPIP ASC-Dateien."
 msgid "SPIP ASCII files (.asc)"
 msgstr "SPIP ASCII-Dateien (.asc)"
 
-#: modules/file/spml.c:98
-msgid "Loads SPML (Scanning Probe Microscopy Markup Language) data files."
-msgstr "Lädt SPML-Dateien (Scanning Probe Microscopy Markup Language)."
-
-#: modules/file/spml.c:112
-msgid "SPML files (.xml)"
-msgstr "SPML-Dateien (.xml)"
-
 #: modules/file/spmlab.c:120
 msgid "Imports Thermicroscopes SpmLab R3 to R7 data files."
 msgstr "Importiert Thermicroscopes SpmLab-Dateien (R3 bis R7)."
@@ -4867,6 +4859,14 @@ msgstr "SPMLab Gleitkomma-Dateien (.flt)"
 #, fuzzy
 msgid "Missing data start marker [Data]."
 msgstr "Markierung [DATA] des Datenfeld-Beginns fehlt."
+
+#: modules/file/spml.c:98
+msgid "Loads SPML (Scanning Probe Microscopy Markup Language) data files."
+msgstr "Lädt SPML-Dateien (Scanning Probe Microscopy Markup Language)."
+
+#: modules/file/spml.c:112
+msgid "SPML files (.xml)"
+msgstr "SPML-Dateien (.xml)"
 
 #: modules/file/stmprg.c:224
 msgid "Imports Omicron STMPRG data files (tp ta)."
@@ -6426,8 +6426,8 @@ msgstr "CWT"
 msgid "2D CWT"
 msgstr "2D-CWT"
 
-#: modules/process/cwt.c:155 modules/process/dwt.c:183
-#: modules/process/dwtanisotropy.c:208
+#: modules/process/cwt.c:155 modules/process/dwtanisotropy.c:208
+#: modules/process/dwt.c:183
 msgid "_Wavelet type:"
 msgstr "_Wavelet-Typ:"
 
@@ -6598,38 +6598,6 @@ msgstr ""
 msgid "x-axis drift"
 msgstr "Drift in X-Richtung"
 
-#: modules/process/dwt.c:71
-msgid "Two-dimensional DWT (Discrete Wavelet Transform)."
-msgstr "Zweidimensionale DWT (Diskrete Wavelet-Transformation)."
-
-#: modules/process/dwt.c:85
-msgid "/_Integral Transforms/2D _DWT..."
-msgstr "/_Integrale Transformationen/2D-_DWT..."
-
-#: modules/process/dwt.c:89
-msgid "Compute Discrete Wavelet Transform"
-msgstr "Diskrete Wavelet Transformation berechnen"
-
-#: modules/process/dwt.c:118 modules/process/dwtanisotropy.c:130
-#, c-format
-msgid "%s: Data must be square."
-msgstr "%s: Datensatz muss quadratisch sein."
-
-#: modules/process/dwt.c:145
-msgid "DWT"
-msgstr "DWT"
-
-#: modules/process/dwt.c:163
-msgid "2D DWT"
-msgstr "2D-DWT"
-
-#: modules/process/dwt.c:189
-#, c-format
-msgid ""
-"Size %d is not a power of 2,\n"
-"data will be resampled to %d×%d for DWT."
-msgstr ""
-
 #: modules/process/dwtanisotropy.c:78
 msgid "2D DWT anisotropy detection based on X/Y components ratio."
 msgstr ""
@@ -6643,6 +6611,11 @@ msgstr "/_Integrale Transformationen/DWT-_Anisotropie..."
 #: modules/process/dwtanisotropy.c:96
 msgid "DWT anisotropy detection"
 msgstr "DWT Anisotropie-Erkennung"
+
+#: modules/process/dwtanisotropy.c:130 modules/process/dwt.c:118
+#, c-format
+msgid "%s: Data must be square."
+msgstr "%s: Datensatz muss quadratisch sein."
 
 #: modules/process/dwtanisotropy.c:130
 msgid "DWT Anisotropy"
@@ -6660,6 +6633,33 @@ msgstr "Schwellwert für X/Y Verhältnis:"
 #, fuzzy
 msgid "Low level exclude limit:"
 msgstr "Untere Grenze:"
+
+#: modules/process/dwt.c:71
+msgid "Two-dimensional DWT (Discrete Wavelet Transform)."
+msgstr "Zweidimensionale DWT (Diskrete Wavelet-Transformation)."
+
+#: modules/process/dwt.c:85
+msgid "/_Integral Transforms/2D _DWT..."
+msgstr "/_Integrale Transformationen/2D-_DWT..."
+
+#: modules/process/dwt.c:89
+msgid "Compute Discrete Wavelet Transform"
+msgstr "Diskrete Wavelet Transformation berechnen"
+
+#: modules/process/dwt.c:145
+msgid "DWT"
+msgstr "DWT"
+
+#: modules/process/dwt.c:163
+msgid "2D DWT"
+msgstr "2D-DWT"
+
+#: modules/process/dwt.c:189
+#, c-format
+msgid ""
+"Size %d is not a power of 2,\n"
+"data will be resampled to %d×%d for DWT."
+msgstr ""
 
 #: modules/process/edge.c:147
 #, fuzzy
@@ -6796,36 +6796,6 @@ msgstr "_Laplace von Gaussglocke gefaltet"
 msgid "Detected st_ep"
 msgstr "Erkannte _Kanten"
 
-#: modules/process/facet-level.c:67
-msgid ""
-"Automatic facet-orientation based levelling. Levels data to make facets "
-"point up."
-msgstr ""
-"Automatische Facetten-Orientierte Nivellierung. Nivelliert Daten so, dass "
-"Facetten nach oben zeigen."
-
-#: modules/process/facet-level.c:82
-msgid "/_Level/_Facet Level"
-msgstr "/_Nivellierung/_Facetten-Nivellierung"
-
-#: modules/process/facet-level.c:86
-msgid "Level data to make facets point upward"
-msgstr "Daten so nivellieren, dass Facetten nach oben zeigen"
-
-#: modules/process/facet-level.c:120
-msgid ""
-"Facet level: Lateral dimensions and value must be the same physical quantity."
-msgstr ""
-
-#: modules/process/facet-level.c:132
-#, fuzzy
-msgid "Facet Level"
-msgstr "Ebene nivellieren"
-
-#: modules/process/facet-level.c:145
-msgid "Facet-leveling"
-msgstr "Facetten-Nivellierung"
-
 #: modules/process/facet_analysis.c:161
 msgid "Visualizes, marks and measures facet orientation."
 msgstr "Visualisiert, markiert und misst Facetten-Orientierung."
@@ -6878,6 +6848,36 @@ msgid ""
 msgstr ""
 "Warnung: laterale Einheiten und Werte differieren. Winkel sind nicht "
 "physikalisch aussagekräftig."
+
+#: modules/process/facet-level.c:67
+msgid ""
+"Automatic facet-orientation based levelling. Levels data to make facets "
+"point up."
+msgstr ""
+"Automatische Facetten-Orientierte Nivellierung. Nivelliert Daten so, dass "
+"Facetten nach oben zeigen."
+
+#: modules/process/facet-level.c:82
+msgid "/_Level/_Facet Level"
+msgstr "/_Nivellierung/_Facetten-Nivellierung"
+
+#: modules/process/facet-level.c:86
+msgid "Level data to make facets point upward"
+msgstr "Daten so nivellieren, dass Facetten nach oben zeigen"
+
+#: modules/process/facet-level.c:120
+msgid ""
+"Facet level: Lateral dimensions and value must be the same physical quantity."
+msgstr ""
+
+#: modules/process/facet-level.c:132
+#, fuzzy
+msgid "Facet Level"
+msgstr "Ebene nivellieren"
+
+#: modules/process/facet-level.c:145
+msgid "Facet-leveling"
+msgstr "Facetten-Nivellierung"
 
 #: modules/process/fft.c:90
 msgid "Two-dimensional FFT (Fast Fourier Transform)."
@@ -6994,7 +6994,7 @@ msgstr "_Linientyp:"
 msgid "_Filter type:"
 msgstr "_Filtertyp:"
 
-#: modules/process/fft_filter_1d.c:533
+#: modules/process/fft_filter_1d.c:538
 msgid "1D FFT Filtered Data"
 msgstr "1D FFT-gefilterte Daten"
 
@@ -8272,23 +8272,23 @@ msgstr ""
 msgid "Laplace interpolation..."
 msgstr "Interpoliere..."
 
-#: modules/process/level_grains.c:223 modules/process/median-bg.c:163
+#: modules/process/level_grains.c:224 modules/process/median-bg.c:163
 #: modules/process/polylevel.c:296 modules/process/polylevel.c:421
 #: modules/process/sphere-revolve.c:197
 msgid "Background"
 msgstr "Untergrund"
 
-#: modules/process/level_grains.c:240
+#: modules/process/level_grains.c:241
 #, fuzzy
 msgid "Level Grains"
 msgstr "Graphen mit Gerade nivellieren."
 
-#: modules/process/level_grains.c:255
+#: modules/process/level_grains.c:256
 #, fuzzy
 msgid "Quantity to level:"
 msgstr "/_Beenden"
 
-#: modules/process/level_grains.c:268 modules/process/median-bg.c:213
+#: modules/process/level_grains.c:269 modules/process/median-bg.c:213
 #: modules/process/polylevel.c:486 modules/process/sphere-revolve.c:260
 msgid "E_xtract background"
 msgstr "Untergrund e_xtrahieren"
@@ -9696,6 +9696,25 @@ msgstr "_Verwende:"
 msgid "Correction:"
 msgstr "Korrektur:"
 
+#: pygwy.c:91
+msgid "Pygwy, the Gwyddion Python wrapper."
+msgstr ""
+
+#: pygwy.c:443
+msgid "Function written in Python"
+msgstr "In Python geschriebene Funktion"
+
+#: pygwy.c:489
+msgid "Graph function written in Python"
+msgstr ""
+
+#: pygwy.c:887
+#, c-format
+msgid ""
+"Pygwy plugin: %s (%s)\n"
+"Export failed."
+msgstr ""
+
 #: modules/pygwy/pygwy-console.c:53
 msgid "/Pygwy Console"
 msgstr ""
@@ -9734,25 +9753,6 @@ msgstr "Skript ausführen (Strg-E)"
 
 #: modules/pygwy/pygwy-console.c:377
 msgid "Command"
-msgstr ""
-
-#: pygwy.c:91
-msgid "Pygwy, the Gwyddion Python wrapper."
-msgstr ""
-
-#: pygwy.c:443
-msgid "Function written in Python"
-msgstr "In Python geschriebene Funktion"
-
-#: pygwy.c:489
-msgid "Graph function written in Python"
-msgstr ""
-
-#: pygwy.c:887
-#, c-format
-msgid ""
-"Pygwy plugin: %s (%s)\n"
-"Export failed."
 msgstr ""
 
 #: modules/tools/crop.c:82

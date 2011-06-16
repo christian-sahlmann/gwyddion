@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: French localization\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2011-06-06 09:56+0200\n"
+"POT-Creation-Date: 2011-06-16 13:40+0200\n"
 "PO-Revision-Date: 2011-05-31 18:29+0100\n"
 "Last-Translator: François RIGUET <francheu@caramail.com>\n"
 "Language-Team: François RIGUET <francheu@caramail.com>\n"
@@ -810,9 +810,9 @@ msgstr "pixels"
 #: modules/process/calcoefs_new.c:347 modules/process/calibrate.c:296
 #: modules/process/curvature.c:603 modules/process/cwt.c:132
 #: modules/process/deposit_synth.c:359 modules/process/drift.c:230
-#: modules/process/dwt.c:164 modules/process/dwtanisotropy.c:183
-#: modules/process/edge.c:636 modules/process/facet-level.c:283
-#: modules/process/facet_analysis.c:273 modules/process/fft.c:272
+#: modules/process/dwtanisotropy.c:183 modules/process/dwt.c:164
+#: modules/process/edge.c:636 modules/process/facet_analysis.c:273
+#: modules/process/facet-level.c:283 modules/process/fft.c:272
 #: modules/process/fft_filter_2d.c:441 modules/process/fft_synth.c:330
 #: modules/process/fractal.c:206 modules/process/grain_edge.c:220
 #: modules/process/grain_mark.c:265 modules/process/grain_rem_threshold.c:224
@@ -1144,20 +1144,6 @@ msgstr "Ajouter un symbole"
 msgid "Preview"
 msgstr "Aperçu"
 
-#: libgwymodule/gwymodule-file.c:535 modules/file/err.h:40
-#: modules/file/pixmap.c:732
-#, c-format
-msgid "Cannot open file for reading: %s."
-msgstr "Impossible d'ouvrir le fichier pour le lire : %s."
-
-#: libgwymodule/gwymodule-file.c:544
-msgid "No module can load this file type."
-msgstr "Aucun module ne permet de charger ce type de fichier."
-
-#: libgwymodule/gwymodule-file.c:651
-msgid "No module can save to this file type."
-msgstr "Aucun module ne permet de sauvegarder sous ce format de fichier."
-
 #: libgwymodule/gwymodulebrowser.c:66
 msgid "Module Browser"
 msgstr "Navigaeteur de module"
@@ -1210,6 +1196,20 @@ msgstr "Nom :"
 #: libgwymodule/gwymodulebrowser.c:270
 msgid "Failure:"
 msgstr "Echec :"
+
+#: libgwymodule/gwymodule-file.c:535 modules/file/err.h:40
+#: modules/file/pixmap.c:732
+#, c-format
+msgid "Cannot open file for reading: %s."
+msgstr "Impossible d'ouvrir le fichier pour le lire : %s."
+
+#: libgwymodule/gwymodule-file.c:544
+msgid "No module can load this file type."
+msgstr "Aucun module ne permet de charger ce type de fichier."
+
+#: libgwymodule/gwymodule-file.c:651
+msgid "No module can save to this file type."
+msgstr "Aucun module ne permet de sauvegarder sous ce format de fichier."
 
 #: app/about.c:56
 #, c-format
@@ -1642,6 +1642,12 @@ msgstr ""
 "Pour éviter la perte des réglages sauvegardés aucune mise à jour ne sera "
 "faite avant que le fichier ne soit réparé ou supprimé."
 
+#: app/gwymoduleutils.c:197 app/settings.c:130 app/settings.c:141
+#: modules/file/err.h:61
+#, c-format
+msgid "Cannot write to file: %s."
+msgstr "Impossible d'écrire dans le fichier : %s."
+
 #: app/gwymoduleutils-file.c:424
 #, c-format
 msgid "Section %s ended at line %u but it has never started."
@@ -1683,12 +1689,6 @@ msgid "Header suddenly ended at line %u; end of header marker is missing"
 msgstr ""
 "L'en-tête se temine subitement à la ligne %u ; le marqueur de fin d'en-tête "
 "est manquant."
-
-#: app/gwymoduleutils.c:197 app/settings.c:130 app/settings.c:141
-#: modules/file/err.h:61
-#, c-format
-msgid "Cannot write to file: %s."
-msgstr "Impossible d'écrire dans le fichier : %s."
 
 #: app/gwyplaintool.c:569
 msgid "<big><b>Missing layer module.</b></big>"
@@ -2615,6 +2615,14 @@ msgstr "L'en-tête n'est pas convertible depuis UTF-16 : %s"
 msgid "Unknown file type header: `%s'."
 msgstr "Type d'en-tête inconnu : `%s'."
 
+#: modules/file/burleigh_bii.c:75
+msgid "Imports Burleigh BII binary data files."
+msgstr "Importe les fichiers Burleigh BII binaires."
+
+#: modules/file/burleigh_bii.c:88
+msgid "Burleigh Image Studio files (.bii)"
+msgstr "Burleigh Image Studio (.bii)"
+
 #: modules/file/burleigh.c:119
 msgid "Imports Burleigh IMG data files version 2.1."
 msgstr "Importe les fichiers Burleigh IMG version 2.1."
@@ -2627,14 +2635,6 @@ msgstr "Burleigh 2.1 (.img)"
 #, c-format
 msgid "File format version %.1f is not supported."
 msgstr "Le format de fichier %.1f n'est pas supporté."
-
-#: modules/file/burleigh_bii.c:75
-msgid "Imports Burleigh BII binary data files."
-msgstr "Importe les fichiers Burleigh BII binaires."
-
-#: modules/file/burleigh_bii.c:88
-msgid "Burleigh Image Studio files (.bii)"
-msgstr "Burleigh Image Studio (.bii)"
 
 #: modules/file/burleigh_exp.c:88
 msgid "Imports Burleigh text/bin exported images."
@@ -3595,14 +3595,6 @@ msgstr "Le premier élément n'est pas un ‘scan’."
 msgid "Wrong size of Base64 encoded data."
 msgstr "Les données codées en base 64 n'ont pas la bonne dimension."
 
-#: modules/file/nanoscope-ii.c:79
-msgid "Imports Digital Instruments Nanoscope II data files."
-msgstr "Importe les fichiers Digital Instruments Nanoscope II."
-
-#: modules/file/nanoscope-ii.c:92
-msgid "Nanoscope II files"
-msgstr "Nanoscope II"
-
 #: modules/file/nanoscope.c:165
 msgid ""
 "Imports Veeco (Digital Instruments) Nanoscope data files, version 3 or newer."
@@ -3650,6 +3642,14 @@ msgstr "Données erronées après l'échantillon #%u."
 #: modules/file/nanoscope.c:1080
 msgid "Truncated header line."
 msgstr "Ligne d'en-tête tronquée."
+
+#: modules/file/nanoscope-ii.c:79
+msgid "Imports Digital Instruments Nanoscope II data files."
+msgstr "Importe les fichiers Digital Instruments Nanoscope II."
+
+#: modules/file/nanoscope-ii.c:92
+msgid "Nanoscope II files"
+msgstr "Nanoscope II"
 
 #: modules/file/nanotop.c:106
 msgid "Imports NANOTOP AFM files"
@@ -4629,7 +4629,7 @@ msgid "_Value units:"
 msgstr "Unités de valeur :"
 
 #: modules/file/rawxyz.c:674 modules/process/drift.c:291
-#: modules/process/dwt.c:204 modules/process/dwtanisotropy.c:201
+#: modules/process/dwtanisotropy.c:201 modules/process/dwt.c:204
 #: modules/process/fft_filter_1d.c:329 modules/process/fft_profile.c:298
 #: modules/process/fractal.c:228 modules/process/nanoindent_adjust.c:228
 #: modules/process/polydistort.c:268 modules/process/rotate.c:293
@@ -4935,14 +4935,6 @@ msgstr "Importe les fichiers SPIP ASC."
 msgid "SPIP ASCII files (.asc)"
 msgstr "SPIP ASCII (.asc)"
 
-#: modules/file/spml.c:98
-msgid "Loads SPML (Scanning Probe Microscopy Markup Language) data files."
-msgstr "Charge les fichiers SPML (Scanning Probe Microscopy Markup Language)."
-
-#: modules/file/spml.c:112
-msgid "SPML files (.xml)"
-msgstr "SPML (.xml)"
-
 #: modules/file/spmlab.c:120
 msgid "Imports Thermicroscopes SpmLab R3 to R7 data files."
 msgstr "Importe les fichiers Thermicroscopes SpmLab R3 à R7."
@@ -4967,6 +4959,14 @@ msgstr "SPMLab virgule flottante (.flt)"
 #: modules/file/spmlabf.c:147
 msgid "Missing data start marker [Data]."
 msgstr "Il manque le marqueur de début de données [Data]."
+
+#: modules/file/spml.c:98
+msgid "Loads SPML (Scanning Probe Microscopy Markup Language) data files."
+msgstr "Charge les fichiers SPML (Scanning Probe Microscopy Markup Language)."
+
+#: modules/file/spml.c:112
+msgid "SPML files (.xml)"
+msgstr "SPML (.xml)"
 
 #: modules/file/stmprg.c:224
 msgid "Imports Omicron STMPRG data files (tp ta)."
@@ -6477,8 +6477,8 @@ msgstr "Transformée en ondelettes continue (CWT)"
 msgid "2D CWT"
 msgstr "Transformée continue en ondelettes 2D (2D CWT)"
 
-#: modules/process/cwt.c:155 modules/process/dwt.c:183
-#: modules/process/dwtanisotropy.c:208
+#: modules/process/cwt.c:155 modules/process/dwtanisotropy.c:208
+#: modules/process/dwt.c:183
 msgid "_Wavelet type:"
 msgstr "Type d'ondelette :"
 
@@ -6638,6 +6638,39 @@ msgstr "dérive"
 msgid "x-axis drift"
 msgstr "dérive selon l'axe x"
 
+#: modules/process/dwtanisotropy.c:78
+msgid "2D DWT anisotropy detection based on X/Y components ratio."
+msgstr "Détection d'anisotropie DWT 2D basée sur le ratio des composantes X/Y."
+
+#: modules/process/dwtanisotropy.c:92
+msgid "/_Integral Transforms/DWT _Anisotropy..."
+msgstr "/Transformées/_Anisotropie DWT..."
+
+#: modules/process/dwtanisotropy.c:96
+msgid "DWT anisotropy detection"
+msgstr "Détection d'anisotropie DWT"
+
+#: modules/process/dwtanisotropy.c:130 modules/process/dwt.c:118
+#, c-format
+msgid "%s: Data must be square."
+msgstr "%s : les données doivent être carrées."
+
+#: modules/process/dwtanisotropy.c:130
+msgid "DWT Anisotropy"
+msgstr "Anisotropie DWT"
+
+#: modules/process/dwtanisotropy.c:182
+msgid "2D DWT Anisotropy"
+msgstr "Anisotropie DWT 2D"
+
+#: modules/process/dwtanisotropy.c:213
+msgid "X/Y ratio threshold:"
+msgstr "Seuil du ratio X/Y :"
+
+#: modules/process/dwtanisotropy.c:221
+msgid "Low level exclude limit:"
+msgstr "Limite basse d'exclusion :"
+
 #: modules/process/dwt.c:71
 msgid "Two-dimensional DWT (Discrete Wavelet Transform)."
 msgstr "DWT bi-dimensionnelle (Transformée en ondelettes discrète)"
@@ -6649,11 +6682,6 @@ msgstr "/Transformées/_DWT 2D..."
 #: modules/process/dwt.c:89
 msgid "Compute Discrete Wavelet Transform"
 msgstr "Calculer la transformée discrète en ondelettes"
-
-#: modules/process/dwt.c:118 modules/process/dwtanisotropy.c:130
-#, c-format
-msgid "%s: Data must be square."
-msgstr "%s : les données doivent être carrées."
 
 #: modules/process/dwt.c:145
 msgid "DWT"
@@ -6671,34 +6699,6 @@ msgid ""
 msgstr ""
 "La dimension %d n'est pas une puissance de 2,\n"
 "les données vont être ré-échantilonées à %d×%d pour la DWT."
-
-#: modules/process/dwtanisotropy.c:78
-msgid "2D DWT anisotropy detection based on X/Y components ratio."
-msgstr "Détection d'anisotropie DWT 2D basée sur le ratio des composantes X/Y."
-
-#: modules/process/dwtanisotropy.c:92
-msgid "/_Integral Transforms/DWT _Anisotropy..."
-msgstr "/Transformées/_Anisotropie DWT..."
-
-#: modules/process/dwtanisotropy.c:96
-msgid "DWT anisotropy detection"
-msgstr "Détection d'anisotropie DWT"
-
-#: modules/process/dwtanisotropy.c:130
-msgid "DWT Anisotropy"
-msgstr "Anisotropie DWT"
-
-#: modules/process/dwtanisotropy.c:182
-msgid "2D DWT Anisotropy"
-msgstr "Anisotropie DWT 2D"
-
-#: modules/process/dwtanisotropy.c:213
-msgid "X/Y ratio threshold:"
-msgstr "Seuil du ratio X/Y :"
-
-#: modules/process/dwtanisotropy.c:221
-msgid "Low level exclude limit:"
-msgstr "Limite basse d'exclusion :"
 
 #: modules/process/edge.c:147
 msgid ""
@@ -6820,37 +6820,6 @@ msgstr "Convoluer par le Laplacien d'une Gaussienne (LoG)"
 msgid "Detected st_ep"
 msgstr "Pas dét_ecté"
 
-#: modules/process/facet-level.c:67
-msgid ""
-"Automatic facet-orientation based levelling. Levels data to make facets "
-"point up."
-msgstr ""
-"Mise à niveau basée sur l'orientation automatique des facettes. Met à niveau "
-"les données de manières à ce que les facettes pointent vers le haut."
-
-#: modules/process/facet-level.c:82
-msgid "/_Level/_Facet Level"
-msgstr "/Niveau/Niveau des _facettes"
-
-#: modules/process/facet-level.c:86
-msgid "Level data to make facets point upward"
-msgstr "Met à niveau les données pour que les facettes pointent vers le haut"
-
-#: modules/process/facet-level.c:120
-msgid ""
-"Facet level: Lateral dimensions and value must be the same physical quantity."
-msgstr ""
-"Mise à niveau des facettes : les dimensions latérales et les hauteurs "
-"doivent être des quantités physiques identiques."
-
-#: modules/process/facet-level.c:132
-msgid "Facet Level"
-msgstr "Niveau des facettes"
-
-#: modules/process/facet-level.c:145
-msgid "Facet-leveling"
-msgstr "Mise à niveau des facettes"
-
 #: modules/process/facet_analysis.c:161
 msgid "Visualizes, marks and measures facet orientation."
 msgstr "Visualise, marque et mesure l'orientation des facettes."
@@ -6899,6 +6868,37 @@ msgid ""
 msgstr ""
 "Attention : les unités latérales et de hauteur diffèrent. Les angles sont "
 "physiquement incorrects."
+
+#: modules/process/facet-level.c:67
+msgid ""
+"Automatic facet-orientation based levelling. Levels data to make facets "
+"point up."
+msgstr ""
+"Mise à niveau basée sur l'orientation automatique des facettes. Met à niveau "
+"les données de manières à ce que les facettes pointent vers le haut."
+
+#: modules/process/facet-level.c:82
+msgid "/_Level/_Facet Level"
+msgstr "/Niveau/Niveau des _facettes"
+
+#: modules/process/facet-level.c:86
+msgid "Level data to make facets point upward"
+msgstr "Met à niveau les données pour que les facettes pointent vers le haut"
+
+#: modules/process/facet-level.c:120
+msgid ""
+"Facet level: Lateral dimensions and value must be the same physical quantity."
+msgstr ""
+"Mise à niveau des facettes : les dimensions latérales et les hauteurs "
+"doivent être des quantités physiques identiques."
+
+#: modules/process/facet-level.c:132
+msgid "Facet Level"
+msgstr "Niveau des facettes"
+
+#: modules/process/facet-level.c:145
+msgid "Facet-leveling"
+msgstr "Mise à niveau des facettes"
 
 #: modules/process/fft.c:90
 msgid "Two-dimensional FFT (Fast Fourier Transform)."
@@ -7008,7 +7008,7 @@ msgstr "Type de _suppression :"
 msgid "_Filter type:"
 msgstr "Type de _filtre :"
 
-#: modules/process/fft_filter_1d.c:533
+#: modules/process/fft_filter_1d.c:538
 msgid "1D FFT Filtered Data"
 msgstr "Données filtrées après FFT 1D"
 
@@ -8236,21 +8236,21 @@ msgstr ""
 msgid "Laplace interpolation..."
 msgstr "Interpolation laplacienne..."
 
-#: modules/process/level_grains.c:223 modules/process/median-bg.c:163
+#: modules/process/level_grains.c:224 modules/process/median-bg.c:163
 #: modules/process/polylevel.c:296 modules/process/polylevel.c:421
 #: modules/process/sphere-revolve.c:197
 msgid "Background"
 msgstr "Arrière-plan"
 
-#: modules/process/level_grains.c:240
+#: modules/process/level_grains.c:241
 msgid "Level Grains"
 msgstr "Mise à niveau de grains"
 
-#: modules/process/level_grains.c:255
+#: modules/process/level_grains.c:256
 msgid "Quantity to level:"
 msgstr "Quantité à mettre à niveau :"
 
-#: modules/process/level_grains.c:268 modules/process/median-bg.c:213
+#: modules/process/level_grains.c:269 modules/process/median-bg.c:213
 #: modules/process/polylevel.c:486 modules/process/sphere-revolve.c:260
 msgid "E_xtract background"
 msgstr "E_xtraire l'arrière-plan"
@@ -9605,6 +9605,27 @@ msgstr "Hypothèse :"
 msgid "Correction:"
 msgstr "Correction :"
 
+#: pygwy.c:91
+msgid "Pygwy, the Gwyddion Python wrapper."
+msgstr "Pygwy, l'interface Python pour Gwyddion"
+
+#: pygwy.c:443
+msgid "Function written in Python"
+msgstr "Fonction écrite en Python"
+
+#: pygwy.c:489
+msgid "Graph function written in Python"
+msgstr "Fonction graphique écrite en Python"
+
+#: pygwy.c:887
+#, c-format
+msgid ""
+"Pygwy plugin: %s (%s)\n"
+"Export failed."
+msgstr ""
+"Plg-in Pygwy : %s (%s)\n"
+"Echec de l'export."
+
 #: modules/pygwy/pygwy-console.c:53
 msgid "/Pygwy Console"
 msgstr "/Console Pygwy"
@@ -9644,27 +9665,6 @@ msgstr "Exécuter le script (Ctrl-E)"
 #: modules/pygwy/pygwy-console.c:377
 msgid "Command"
 msgstr "Commande "
-
-#: pygwy.c:91
-msgid "Pygwy, the Gwyddion Python wrapper."
-msgstr "Pygwy, l'interface Python pour Gwyddion"
-
-#: pygwy.c:443
-msgid "Function written in Python"
-msgstr "Fonction écrite en Python"
-
-#: pygwy.c:489
-msgid "Graph function written in Python"
-msgstr "Fonction graphique écrite en Python"
-
-#: pygwy.c:887
-#, c-format
-msgid ""
-"Pygwy plugin: %s (%s)\n"
-"Export failed."
-msgstr ""
-"Plg-in Pygwy : %s (%s)\n"
-"Echec de l'export."
 
 #: modules/tools/crop.c:82
 msgid "Crop tool, crops data to smaller size."
