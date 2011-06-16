@@ -10,7 +10,7 @@ AC_CACHE_CHECK([whether $CC knows $2],
   [ac_cv_prog_cc_option_$1],
   [ye_PROG_CC_OPTION_cflags="$CFLAGS"
    CFLAGS="$CFLAGS $2"
-   AC_COMPILE_IFELSE([int main() { return 0; }],
+   AC_COMPILE_IFELSE([AC_LANG_PROGRAM()],
      [ac_cv_prog_cc_option_$1=yes],
      [ac_cv_prog_cc_option_$1=no])
    CFLAGS="$ye_PROG_CC_OPTION_cflags"])

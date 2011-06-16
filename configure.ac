@@ -595,7 +595,7 @@ LIBS="$LIBS $KDE4_LIBS"
 if test "x$enable_kde4_thumbnailer" != xno; then
   AC_MSG_CHECKING([for qVersion in $KDE4_LIBS])
   LIBS="$LIBS $KDE4_LIBS"
-  AC_LINK_IFELSE([char qVersion(void); int main(void){ return qVersion(); }],
+  AC_LINK_IFELSE([AC_LANG_SOURCE([char qVersion(void); int main(void){ return qVersion(); }])],
                  [:],[enable_kde4_thumbnailer=no])
   AC_MSG_RESULT([$enable_kde4_thumbnailer])
 fi
