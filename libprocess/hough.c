@@ -69,7 +69,6 @@ add_point(GwyDataField *result,
     }
 }
 
-#include <stdio.h>
 void
 gwy_data_field_hough_line(GwyDataField *dfield,
                                GwyDataField *x_gradient,
@@ -204,13 +203,11 @@ gwy_data_field_hough_circle(GwyDataField *dfield,
                                GwyDataField *result,
                                gdouble radius)
 {
-    gint col, row, xres, yres, rxres, ryres;
-    gdouble *data, angle = 0.0;
+    gint col, row, xres, yres;
+    gdouble angle = 0.0;
 
     xres = gwy_data_field_get_xres(dfield);
     yres = gwy_data_field_get_yres(dfield);
-    rxres = gwy_data_field_get_xres(result); /*rho*/
-    ryres = gwy_data_field_get_yres(result); /*theta*/
 
     if ((x_gradient && xres != gwy_data_field_get_xres(x_gradient))
         || (x_gradient && yres != gwy_data_field_get_yres(x_gradient))
@@ -221,7 +218,6 @@ gwy_data_field_hough_circle(GwyDataField *dfield,
     }
 
     gwy_data_field_fill(result, 0);
-    data = gwy_data_field_get_data(result);
     for (col = 0; col < xres; col++) {
         for (row = 0; row < yres; row++) {
             if (dfield->data[col + row*xres] > 0) {

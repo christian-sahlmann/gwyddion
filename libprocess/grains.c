@@ -727,14 +727,13 @@ find_grain_convex_hull(gint xres, gint yres,
     const GridPoint *cur, *mid, *prev;
     GridPoint v;
     gdouble phi, phim;
-    gint initpos, gno, n;
+    gint initpos, gno;
 
     g_return_if_fail(grains[pos]);
 
     g_array_set_size(vertices, 0);
     initpos = pos;
     gno = grains[pos];
-    n = xres + 1;
     v.i = pos/xres;
     v.j = pos % xres;
     g_array_append_val(vertices, v);
@@ -2084,15 +2083,11 @@ gwy_data_field_grains_splash_water(GwyDataField *data_field,
                                    gint locate_steps,
                                    gdouble locate_dropsize)
 {
-    GwyDataField *min, *mark_dfield;
-    gint xres, yres, i;
+    GwyDataField *mark_dfield;
+    gint i;
 
     g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
 
-    xres = data_field->xres;
-    yres = data_field->yres;
-
-    min = gwy_data_field_new_alike(data_field, TRUE);
     mark_dfield = gwy_data_field_duplicate(data_field);
 
     /* odrop */
@@ -2498,14 +2493,12 @@ gwy_data_field_get_grain_bounding_boxes(GwyDataField *mask_field,
                                         gint *bboxes)
 {
     gint xres, yres, i, j, id;
-    const gdouble *data;
 
     g_return_val_if_fail(GWY_IS_DATA_FIELD(mask_field), NULL);
     g_return_val_if_fail(grains, NULL);
 
     xres = mask_field->xres;
     yres = mask_field->yres;
-    data = mask_field->data;
     if (!bboxes)
         bboxes = g_new(gint, 4*(ngrains + 1));
 

@@ -685,7 +685,7 @@ gwy_data_field_dwt_mark_anisotropy(GwyDataField *dfield,
                                    gint lowlimit)
 {
     GwyDataField *buffer;
-    gint br, ul, count;
+    gint br, ul;
 
     g_return_if_fail(GWY_IS_DATA_FIELD(dfield));
     g_return_if_fail(GWY_IS_DATA_FIELD(mask));
@@ -699,7 +699,7 @@ gwy_data_field_dwt_mark_anisotropy(GwyDataField *dfield,
 
     for (br = dfield->xres; br > lowlimit; br >>= 1) {
         ul = br/2;
-        count = find_anisotropy(buffer, mask, ul, br, ratio, 3.5);
+        find_anisotropy(buffer, mask, ul, br, ratio, 3.5);
     }
 
     g_object_unref(buffer);

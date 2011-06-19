@@ -126,11 +126,13 @@ gwy_calibration_get_data(GwyCalibration *calibration)
 
 
 static void
-gwy_calibration_release(GwyResource *resource)
+gwy_calibration_release(G_GNUC_UNUSED GwyResource *resource)
 {
+    /*
     GwyCalibration *calibration;
 
     calibration = GWY_CALIBRATION(resource);
+    */
 
     /*here free the file*/
 }
@@ -160,9 +162,11 @@ gwy_calibration_get_ndata(GwyCalibration *calibration)
 void
 _gwy_calibration_class_setup_presets(void)
 {
+    /*
     GwyResourceClass *klass;
 
     klass = g_type_class_ref(GWY_TYPE_CALIBRATION);
+    */
 }
 
 /**
@@ -229,7 +233,7 @@ gwy_calibration_copy(gpointer item)
 
 static void
 gwy_calibration_dump(GwyResource *resource,
-                  GString *str)
+                     GString *str)
 {
     GwyCalibration *calibration;
 
@@ -240,13 +244,12 @@ gwy_calibration_dump(GwyResource *resource,
 
 static GwyResource*
 gwy_calibration_parse(const gchar *text,
-                   G_GNUC_UNUSED gboolean is_const)
+                      G_GNUC_UNUSED gboolean is_const)
 {
     GwyCalibration *calibration = NULL;
     GwyCalibrationClass *klass;
-    guint ndata = 0;
+    G_GNUC_UNUSED guint ndata = 0;
     gchar *str, *p, *line, *key, *filename=NULL, *value;
-    guint len;
 
     g_return_val_if_fail(text, NULL);
     klass = g_type_class_peek(GWY_TYPE_CALIBRATION);
@@ -274,7 +277,6 @@ gwy_calibration_parse(const gchar *text,
         if (gwy_strequal(key, "npoints"))
             ndata = atoi(value);
         else if (gwy_strequal(key, "filename")) {
-            len = strlen(value);
             filename = strdup(value);
         }
         else

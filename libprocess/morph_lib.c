@@ -712,7 +712,6 @@ _gwy_morph_lib_itip_estimate0(gint **image, gint im_xsiz, gint im_ysiz,
     gint delta;      /* defines what is meant by near neighborhood for purposes
                         of point selection. */
     gint maxcount = 20;
-    gboolean ok = FALSE;
     GString *str;
 
     arraysize = 300;
@@ -796,7 +795,6 @@ _gwy_morph_lib_itip_estimate0(gint **image, gint im_xsiz, gint im_ysiz,
     if (set_fraction)
         set_fraction(1.0);
 
-    ok = TRUE;
     /* free temporary space */
     g_string_free(str, TRUE);
     g_free(x);

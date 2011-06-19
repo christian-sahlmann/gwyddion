@@ -464,35 +464,35 @@ gwy_data_field_area_get_min_max_uncertainty(GwyDataField *data_field,
  *
  * Since: 2.23
  **/
-    void
+void
 gwy_data_field_area_get_min_max_uncertainty_mask(GwyDataField *data_field,
-        GwyDataField *uncz_field,
-        GwyDataField *mask,
-        GwyMaskingType mode,
-        gint col, gint row,
-        gint width, gint height,
-        gdouble *min_unc,
-        gdouble *max_unc)
+                                                 GwyDataField *uncz_field,
+                                                 GwyDataField *mask,
+                                                 GwyMaskingType mode,
+                                                 gint col, gint row,
+                                                 gint width, gint height,
+                                                 gdouble *min_unc,
+                                                 gdouble *max_unc)
 {
-    gdouble min1 , max1 ;
-    gdouble min_unc1 , max_unc1 ;
+    gdouble min1, max1;
+    gdouble min_unc1, max_unc1;
     const gdouble *datapos, *mpos, *uncpos;
     gint i, j;
 
     g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
     g_return_if_fail(GWY_IS_DATA_FIELD(uncz_field));
     g_return_if_fail(!mask || (GWY_IS_DATA_FIELD(mask)
-                && mask->xres == data_field->xres
-                && mask->yres == data_field->yres));
+                               && mask->xres == data_field->xres
+                               && mask->yres == data_field->yres));
     g_return_if_fail(col >= 0 && row >= 0
-            && width >= 0 && height >= 0
-            && col + width <= data_field->xres
-            && row + height <= data_field->yres);
+                     && width >= 0 && height >= 0
+                     && col + width <= data_field->xres
+                     && row + height <= data_field->yres);
     if (!width || !height) {
         if (min_unc)
-            *min_unc = min_unc1;
+            *min_unc = 0.0;
         if (max_unc)
-            *max_unc = max_unc1;
+            *max_unc = 0.0;
         return;
     }
 
@@ -986,7 +986,6 @@ gwy_data_field_get_stats_uncertainties(GwyDataField *data_field,
         gdouble *kurtosis_unc)
 {
     gint i;
-    gdouble c_sz2, c_sz3, c_sz4, c_abs1;
     gdouble c_uabs, c_urms, c_uskew, c_ukurt, c_uavg;
     const gdouble *p = data_field->data;
     const gdouble *u = uncz_field->data;
@@ -998,8 +997,7 @@ gwy_data_field_get_stats_uncertainties(GwyDataField *data_field,
     g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
     g_return_if_fail(GWY_IS_DATA_FIELD(uncz_field));
 
-    c_sz2 = c_sz3 = c_sz4 = c_abs1 = 0;
-    c_uabs= c_urms = c_uskew = c_ukurt = c_uavg= 0;
+    c_uabs = c_urms = c_uskew = c_ukurt = c_uavg= 0;
 
     gwy_data_field_get_stats(data_field,
             &myavg, &myra, &myrms, &myskew, &mykurtosis);
@@ -1136,7 +1134,6 @@ gwy_data_field_area_get_stats_uncertainties_mask(GwyDataField *dfield,
         gdouble *skew_unc,
         gdouble *kurtosis_unc)
 {
-    gdouble c_sz2, c_sz3, c_sz4, c_abs1;
     gdouble c_uabs, c_urms, c_uskew, c_ukurt, c_uavg;
     const gdouble *datapos, *mpos, *uncpos;
     gint i, j;
@@ -1154,8 +1151,7 @@ gwy_data_field_area_get_stats_uncertainties_mask(GwyDataField *dfield,
             && col + width <= dfield->xres
             && row + height <= dfield->yres);
 
-    c_sz2 = c_sz3 = c_sz4 = c_abs1 = 0;
-    c_uabs= c_urms = c_uskew = c_ukurt = c_uavg= 0;
+    c_uabs = c_urms = c_uskew = c_ukurt = c_uavg= 0;
 
     myavg = gwy_data_field_area_get_avg_mask(dfield, mask, mode,
             col, row, width, height);
@@ -3122,7 +3118,7 @@ gwy_data_field_area_dh_uncertainty(GwyDataField *data_field,
     GwySIUnit *fieldunit, *lineunit, *rhounit;
     gdouble min, max, max_unc;
     const gdouble *drow, *mrow, *urow;
-    gdouble *val, *valmin, *valmax;
+    gdouble *valmin, *valmax;
     gint i, j, k, l, m;
     gint imin=0, imax=0, jmin=0, jmax=0;
     guint nn;
@@ -3423,17 +3419,17 @@ gwy_data_field_area_get_normal_coeffs_uncertainty(GwyDataField *data_field,
     gdouble d1x, d1y, d1z, d2x, d2y, d2z, dcx, dcy, dcz, dd;
     gdouble **nn;
     gdouble sumdx, sumdy, sumdz, sumndx, sumndy, sumndz;
-    gdouble hx, hy, valx, uvalx, uvaly, valy, hlp;
+    gdouble valx, uvalx, uvaly, valy, hlp;
 
     g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    xres = data_field->xres;
+    yres = data_field->yres;
     g_return_if_fail(GWY_IS_DATA_FIELD(uncz_field));
     g_return_if_fail(col >= 0 && row >= 0
             && width > 0 && height > 0
-            && col + width <= data_field->xres
-            && row + height <= data_field->yres);
+            && col + width <= xres
+            && row + height <= yres);
 
-    xres=data_field->xres;
-    yres=data_field->yres;
 
     nn = (gdouble **)g_malloc(width*sizeof(gdouble *));
     for (i = 0; i <  width; i++) {
@@ -3462,10 +3458,6 @@ gwy_data_field_area_get_normal_coeffs_uncertainty(GwyDataField *data_field,
 
 
     //table of derivatives of x, y derivatives
-    hx = data_field->xreal/xres;
-    hy = data_field->yreal/yres;
-
-
     sumdx = sumdy = sumdz = 0;
     sumndx = sumndy = sumndz = 0;
     for (j = row; j < row+height; j++) {
@@ -3763,9 +3755,10 @@ gwy_data_field_cdh_uncertainty(GwyDataField *data_field,
 
 gdouble
 gwy_data_field_get_xder_uncertainty(GwyDataField *data_field,
-        GwyDataField *uncz_field,
-        GwyDataField * uncx_field,
-        GwyDataField *uncy_field, gint col, gint row) {
+                                    GwyDataField *uncz_field,
+                                    GwyDataField * uncx_field,
+                                    G_GNUC_UNUSED GwyDataField *uncy_field,
+                                    gint col, gint row) {
     gdouble uz1, uz2;
     gdouble sum;
     gdouble hx, hy;
@@ -3815,10 +3808,10 @@ gwy_data_field_get_xder_uncertainty(GwyDataField *data_field,
 
     gdouble
 gwy_data_field_get_yder_uncertainty(GwyDataField *data_field,
-        GwyDataField *uncz_field,
-        GwyDataField * uncx_field,
-        GwyDataField *uncy_field,
-        gint col, gint row)
+                                    GwyDataField *uncz_field,
+                                    G_GNUC_UNUSED GwyDataField *uncx_field,
+                                    GwyDataField *uncy_field,
+                                    gint col, gint row)
 {
     gdouble uz1, uz2;
     gdouble sum;

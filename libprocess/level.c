@@ -123,18 +123,18 @@ gwy_data_field_area_fit_plane(GwyDataField *data_field,
     gboolean skip;
 
     g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
-    g_return_if_fail(col >= 0 && row >= 0
-                     && width >= 0 && height >= 0
-                     && col + width <= data_field->xres
-                     && row + height <= data_field->yres);
-    if (mask) {
-        g_return_if_fail(GWY_IS_DATA_FIELD(mask));
-        g_return_if_fail(mask->xres == data_field->xres
-                         && mask->yres == data_field->yres);
-    }
-
     xres = data_field->xres;
     yres = data_field->yres;
+    g_return_if_fail(col >= 0 && row >= 0
+                     && width >= 0 && height >= 0
+                     && col + width <= xres
+                     && row + height <= yres);
+    if (mask) {
+        g_return_if_fail(GWY_IS_DATA_FIELD(mask));
+        g_return_if_fail(mask->xres == xres
+                         && mask->yres == yres);
+    }
+
     n = 0;
 
     /* try to return something reasonable even in degenerate cases */
@@ -513,16 +513,16 @@ gwy_data_field_area_fit_polynom(GwyDataField *data_field,
     gdouble *data, *sums, *m;
 
     g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), NULL);
+    xres = data_field->xres;
+    yres = data_field->yres;
     g_return_val_if_fail(row_degree >= 0 && col_degree >= 0, NULL);
     g_return_val_if_fail(col >= 0 && row >= 0
                          && width > col_degree && height > row_degree
-                         && col + width <= data_field->xres
-                         && row + height <= data_field->yres,
+                         && col + width <= xres
+                         && row + height <= yres,
                          NULL);
 
     data = data_field->data;
-    xres = data_field->xres;
-    yres = data_field->yres;
     size = (row_degree+1)*(col_degree+1);
     if (!coeffs)
         coeffs = g_new0(gdouble, size);
@@ -629,21 +629,20 @@ gwy_data_field_area_subtract_polynom(GwyDataField *data_field,
                                      gint col_degree, gint row_degree,
                                      const gdouble *coeffs)
 {
-    gint r, c, i, j, size, xres, yres;
+    gint r, c, i, j, xres, yres;
     gdouble *data;
 
     g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    xres = data_field->xres;
+    yres = data_field->yres;
     g_return_if_fail(coeffs);
     g_return_if_fail(row_degree >= 0 && col_degree >= 0);
     g_return_if_fail(col >= 0 && row >= 0
                      && width > 0 && height > 0
-                     && col + width <= data_field->xres
-                     && row + height <= data_field->yres);
+                     && col + width <= xres
+                     && row + height <= yres);
 
     data = data_field->data;
-    xres = data_field->xres;
-    yres = data_field->yres;
-    size = (row_degree+1)*(col_degree+1);
 
     for (r = row; r < row + height; r++) {
         for (c = col; c < col + width; c++) {
@@ -753,16 +752,16 @@ gwy_data_field_area_fit_legendre(GwyDataField *data_field,
     gdouble *data, *m, *pmx, *pmy, *sumsx, *sumsy, *rhs;
 
     g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), NULL);
+    xres = data_field->xres;
+    yres = data_field->yres;
     g_return_val_if_fail(row_degree >= 0 && col_degree >= 0, NULL);
     g_return_val_if_fail(col >= 0 && row >= 0
                          && width > col_degree && height > row_degree
-                         && col + width <= data_field->xres
-                         && row + height <= data_field->yres,
+                         && col + width <= xres
+                         && row + height <= yres,
                          NULL);
 
     data = data_field->data;
-    xres = data_field->xres;
-    yres = data_field->yres;
     col_n = col_degree + 1;
     row_n = row_degree + 1;
     size = col_n*row_n;
@@ -1038,23 +1037,22 @@ gwy_data_field_area_subtract_legendre(GwyDataField *data_field,
                                       gint col_degree, gint row_degree,
                                       const gdouble *coeffs)
 {
-    gint r, c, i, j, size, xres, yres, col_n, row_n;
+    gint r, c, i, j, xres, yres, col_n, row_n;
     gdouble *data, *pmx, *pmy;
 
     g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    xres = data_field->xres;
+    yres = data_field->yres;
     g_return_if_fail(coeffs);
     g_return_if_fail(row_degree >= 0 && col_degree >= 0);
     g_return_if_fail(col >= 0 && row >= 0
                      && width > 0 && height > 0
-                     && col + width <= data_field->xres
-                     && row + height <= data_field->yres);
+                     && col + width <= xres
+                     && row + height <= yres);
 
     data = data_field->data;
-    xres = data_field->xres;
-    yres = data_field->yres;
     col_n = col_degree + 1;
     row_n = row_degree + 1;
-    size = col_n*row_n;
 
     pmx = g_new0(gdouble, col_n + row_n);
     pmy = pmx + col_n;
@@ -1136,15 +1134,15 @@ gwy_data_field_area_fit_poly_max(GwyDataField *data_field,
     gdouble *data, *m, *pmx, *pmy, *sumsx, *sumsy;
 
     g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), NULL);
+    xres = data_field->xres;
+    yres = data_field->yres;
     g_return_val_if_fail(max_degree >= 0, NULL);
     g_return_val_if_fail(col >= 0 && row >= 0
-                         && col + width <= data_field->xres
-                         && row + height <= data_field->yres,
+                         && col + width <= xres
+                         && row + height <= yres,
                          NULL);
 
     data = data_field->data;
-    xres = data_field->xres;
-    yres = data_field->yres;
     degree_n = max_degree + 1;
     size = degree_n*(degree_n + 1)/2;
     g_return_val_if_fail(width*height > size, NULL);
@@ -1283,22 +1281,21 @@ gwy_data_field_area_subtract_poly_max(GwyDataField *data_field,
                                       gint max_degree,
                                       const gdouble *coeffs)
 {
-    gint r, c, i, j, size, xres, yres, degree_n;
+    gint r, c, i, j, xres, yres, degree_n;
     gdouble *data, *pmx, *pmy;
 
     g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    xres = data_field->xres;
+    yres = data_field->yres;
     g_return_if_fail(coeffs);
     g_return_if_fail(max_degree >= 0);
     g_return_if_fail(col >= 0 && row >= 0
                      && width > 0 && height > 0
-                     && col + width <= data_field->xres
-                     && row + height <= data_field->yres);
+                     && col + width <= xres
+                     && row + height <= yres);
 
     data = data_field->data;
-    xres = data_field->xres;
-    yres = data_field->yres;
     degree_n = max_degree + 1;
-    size = degree_n*(degree_n + 1)/2;
 
     pmx = g_new0(gdouble, 2*degree_n);
     pmy = pmx + degree_n;
@@ -1409,15 +1406,17 @@ gwy_data_field_area_fit_poly(GwyDataField *data_field,
     gdouble *m, *p;
 
     g_return_val_if_fail(GWY_IS_DATA_FIELD(data_field), NULL);
+    xres = data_field->xres;
+    yres = data_field->yres;
     g_return_val_if_fail(nterms >= 0, NULL);
     g_return_val_if_fail(col >= 0 && row >= 0
-                         && col + width <= data_field->xres
-                         && row + height <= data_field->yres,
+                         && col + width <= xres
+                         && row + height <= yres,
                          NULL);
     if (mask_field) {
         g_return_val_if_fail(GWY_IS_DATA_FIELD(mask_field), NULL);
-        g_return_val_if_fail(mask_field->xres == data_field->xres
-                             && mask_field->yres == data_field->yres, NULL);
+        g_return_val_if_fail(mask_field->xres == xres
+                             && mask_field->yres == yres, NULL);
     }
 
     if (!nterms)
@@ -1425,8 +1424,6 @@ gwy_data_field_area_fit_poly(GwyDataField *data_field,
 
     data = data_field->data;
     mask = mask_field ? mask_field->data : NULL;
-    xres = data_field->xres;
-    yres = data_field->yres;
 
     if (!coeffs)
         coeffs = g_new0(gdouble, nterms);
@@ -1548,18 +1545,18 @@ gwy_data_field_area_subtract_poly(GwyDataField *data_field,
     gint xres, yres, r, c, i;
 
     g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
+    xres = data_field->xres;
+    yres = data_field->yres;
     g_return_if_fail(nterms >= 0);
     g_return_if_fail(coeffs);
     g_return_if_fail(col >= 0 && row >= 0
-                     && col + width <= data_field->xres
-                     && row + height <= data_field->yres);
+                     && col + width <= xres
+                     && row + height <= yres);
 
     if (!nterms)
         return;
 
     data = data_field->data;
-    xres = data_field->xres;
-    yres = data_field->yres;
 
     for (r = 0; r < height; r++) {
         gdouble y = 2*r/(height - 1.0) - 1.0;

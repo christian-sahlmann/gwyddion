@@ -268,8 +268,7 @@ cd_stepheight(const gdouble *x,
     gint nstep;
     gdouble max, min, val;
     gint imax, imin, iwidth;
-    gint nout, na, nb;
-    gdouble suma, sumb;
+    gint nout;
 
     nstep = n_dat/20;
     if (nstep < 1)

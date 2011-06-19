@@ -1790,7 +1790,7 @@ gwy_data_field_area_filter_minimum(GwyDataField *data_field,
     GwyDataField *buffer, *buffer2;
     gint d, i, j, ip, ii, im, jp, jm;
     gint ep, em;  /* positive and negative excess */
-    gdouble *buf, *buf2, *data;
+    gdouble *buf, *buf2;
     gdouble v;
 
     g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
@@ -1808,7 +1808,6 @@ gwy_data_field_area_filter_minimum(GwyDataField *data_field,
         return;
     }
 
-    data = data_field->data;
     buffer = gwy_data_field_new(width, height, 1.0, 1.0, FALSE);
     buffer2 = gwy_data_field_new(width, height, 1.0, 1.0, FALSE);
     buf = buffer->data;
@@ -1938,7 +1937,7 @@ gwy_data_field_area_filter_maximum(GwyDataField *data_field,
     GwyDataField *buffer, *buffer2;
     gint d, i, j, ip, ii, im, jp, jm;
     gint ep, em;  /* positive and negative excess */
-    gdouble *buf, *buf2, *data;
+    gdouble *buf, *buf2;
     gdouble v;
 
     g_return_if_fail(GWY_IS_DATA_FIELD(data_field));
@@ -1956,7 +1955,6 @@ gwy_data_field_area_filter_maximum(GwyDataField *data_field,
         return;
     }
 
-    data = data_field->data;
     buffer = gwy_data_field_new(width, height, 1.0, 1.0, FALSE);
     buffer2 = gwy_data_field_new(width, height, 1.0, 1.0, FALSE);
     buf = buffer->data;

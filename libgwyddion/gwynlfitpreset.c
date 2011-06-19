@@ -58,16 +58,15 @@ gauss_guess(gint n_dat,
             gdouble *param,
             gboolean *fres)
 {
-    gint i, imin, imax;
+    gint i, imax;
 
     param[1] = G_MAXDOUBLE;
     param[2] = -G_MAXDOUBLE;
-    imin = imax = 0;
+    imax = 0;
     for (i = 0; i < n_dat; i++) {
         param[0] += x[i]/n_dat;
         if (param[1] > y[i]) {
             param[1] = y[i];
-            imin = i;
         }
         if (param[2] < y[i]) {
             param[2] = y[i];
