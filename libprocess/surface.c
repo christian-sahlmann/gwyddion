@@ -151,8 +151,8 @@ gwy_surface_new (gdouble xmin,
     surface->n = n;
     if (nullme) {
         surface->data = (GwyXYZ*)g_new0(gdouble, 3*surface->n);
-        
-        surface->cached = GWY_SURFACE_CBIT(MIN) | GWY_SURFACE_CBIT(MAX) | GWY_SURFACE_CBIT(AVG) | 
+
+        surface->cached = GWY_SURFACE_CBIT(MIN) | GWY_SURFACE_CBIT(MAX) | GWY_SURFACE_CBIT(AVG) |
                           GWY_SURFACE_CBIT(RMS) | GWY_SURFACE_CBIT(MED);
 
     }
@@ -177,11 +177,11 @@ gwy_surface_new_alike (const GwySurface *model,
     surface->xmin = model->xmin;
     surface->ymin = model->ymin;
     surface->n = model->n;
-    
+
     if (nullme) {
         surface->data = g_new0(GwyXYZ, surface->n);
-        
-        surface->cached = GWY_SURFACE_CBIT(MIN) | GWY_SURFACE_CBIT(MAX) | GWY_SURFACE_CBIT(AVG) | 
+
+        surface->cached = GWY_SURFACE_CBIT(MIN) | GWY_SURFACE_CBIT(MAX) | GWY_SURFACE_CBIT(AVG) |
                           GWY_SURFACE_CBIT(RMS) | GWY_SURFACE_CBIT(MED);
 
     }
@@ -219,7 +219,7 @@ gwy_surface_serialize(GObject *obj,
             { 'd', "ymin", &surface->ymin, NULL, },
             { 'd', "ymax", &surface->ymax, NULL, },
             { 'o', "si_unit_xy", &surface->si_unit_xy, NULL, },
-            { 'o', "si_unit_z", &surface->si_unit_z, NULL, },            
+            { 'o', "si_unit_z", &surface->si_unit_z, NULL, },
             { 'i', "n", &surface->n, NULL, },
             { 'D', "data", &surface->data, &datasize, },
         };
@@ -244,7 +244,7 @@ gwy_surface_get_size(GObject *obj)
     if (!surface->si_unit_z)
         surface->si_unit_z = gwy_si_unit_new("");
     datasize = 3*surface->n;
-    
+
     {
         GwySerializeSpec spec[] = {
             { 'd', "xmin", &surface->xmin, NULL, },
@@ -252,7 +252,7 @@ gwy_surface_get_size(GObject *obj)
             { 'd', "ymin", &surface->ymin, NULL, },
             { 'd', "ymax", &surface->ymax, NULL, },
             { 'o', "si_unit_xy", &surface->si_unit_xy, NULL, },
-            { 'o', "si_unit_z", &surface->si_unit_z, NULL, },            
+            { 'o', "si_unit_z", &surface->si_unit_z, NULL, },
             { 'i', "n", &surface->n, NULL, },
             { 'D', "data", &surface->data, &datasize, },
         };
@@ -266,7 +266,7 @@ gwy_surface_deserialize(const guchar *buffer,
                            gsize size,
                            gsize *position)
 {
-   
+
     guint32 datasize;
     gdouble xmin, xmax, ymin, ymax;
     GwySIUnit *si_unit_xy = NULL, *si_unit_z = NULL;
@@ -274,28 +274,28 @@ gwy_surface_deserialize(const guchar *buffer,
     gdouble *data = NULL;
     GwySurface *surface;
 
-    
+
     GwySerializeSpec spec[] = {
             { 'd', "xmin", &xmin, NULL, },
             { 'd', "xmax", &xmax, NULL, },
             { 'd', "ymin", &ymin, NULL, },
             { 'd', "ymax", &ymax, NULL, },
             { 'o', "si_unit_xy", &si_unit_xy, NULL, },
-            { 'o', "si_unit_z", &si_unit_z, NULL, },            
+            { 'o', "si_unit_z", &si_unit_z, NULL, },
             { 'i', "n", &n, NULL, },
             { 'D', "data", &data, &datasize},
     };
 
     gwy_debug("");
 
-    
+
     g_return_val_if_fail(buffer, NULL);
 
     if (!gwy_serialize_unpack_object_struct(buffer, size, position,
                                             GWY_SURFACE_TYPE_NAME,
                                             G_N_ELEMENTS(spec), spec)) {
-        
-       
+
+
         g_free(data);
         gwy_object_unref(si_unit_xy);
         gwy_object_unref(si_unit_z);
@@ -340,7 +340,7 @@ gwy_surface_duplicate_real(GObject *object)
     duplicate = gwy_surface_new_alike(surface,FALSE);
     memcpy(duplicate->data, surface->data,
            3*surface->n*sizeof(gdouble));
-    
+
     return (GObject*)duplicate;
 }
 
@@ -348,7 +348,6 @@ static void
 gwy_surface_clone_real(GObject *source, GObject *copy)
 {
     GwySurface *surface, *clone;
-    guint n;
 
     g_return_if_fail(GWY_IS_SURFACE(source));
     g_return_if_fail(GWY_IS_SURFACE(copy));
@@ -357,7 +356,7 @@ gwy_surface_clone_real(GObject *source, GObject *copy)
     clone = GWY_SURFACE(copy);
 
     if (clone->n != surface->n)
-        clone->data = (GwyXYZ*) g_renew(gdouble, clone->data, 3*n);
+        clone->data = (GwyXYZ*) g_renew(gdouble, clone->data, 3*surface->n);
     clone->n = surface->n;
 
     gwy_surface_copy(surface, clone, TRUE);
@@ -452,7 +451,7 @@ gwy_surface_new_part(const GwySurface *surface,
 {
     GwySurface *part;
     guint n = 0;
-    guint i;    
+    guint i;
 
     g_return_val_if_fail(GWY_IS_SURFACE(surface), NULL);
 
@@ -463,7 +462,7 @@ gwy_surface_new_part(const GwySurface *surface,
         || yfrom > yto)
         return part;
 
-    
+
     for (i = 0; i < surface->n; i++) {
         gdouble x = surface->data[i].x, y = surface->data[i].y;
         if (x >= xfrom && x <= xto && y >= yfrom && y <= yto)
@@ -490,7 +489,7 @@ copy_field_to_surface(const GwyDataField *field,
     gdouble xoff = 0.5*dx + field->xoff, yoff = 0.5*dy + field->yoff;
     guint k = 0;
     guint i,j;
-    
+
     for (i = 0; i < field->yres; i++) {
         for (j = 0; j < field->xres; j++) {
             surface->data[k].x = dx*j + xoff;
@@ -533,9 +532,9 @@ gwy_surface_new_from_field(const GwyDataField *datafield)
     GwySurface *surface;
 
     g_return_val_if_fail(GWY_IS_DATA_FIELD(datafield), NULL);
-    
+
     surface = g_object_newv(GWY_TYPE_SURFACE, 0, NULL);
-    
+
     surface->n = datafield->xres * datafield->yres;
     alloc_data(surface);
     copy_field_to_surface(datafield, surface);
@@ -564,7 +563,7 @@ gwy_surface_set_from_field(GwySurface *surface,
         g_free(surface->data);
         surface->n = field->xres * field->yres;
         alloc_data(surface);
-        
+
     }
     copy_field_to_surface(field, surface);
 }
@@ -723,7 +722,7 @@ regularise(GwySurface *surface,
     GwyDataField *field;
     gdouble xmin, xmax, ymin, ymax;
     gdouble xlen, ylen;
-    
+
     gwy_surface_xrange_full(surface, &xmin, &xmax);
     gwy_surface_yrange_full(surface, &ymin, &ymax);
 
@@ -733,7 +732,7 @@ regularise(GwySurface *surface,
         yfrom = ymin;
         yto = ymax;
     }
-    
+
     xlen = xto - xfrom;
     ylen = yto - yfrom;
 
@@ -884,7 +883,7 @@ gwy_surface_get_value_format_xy(GwySurface *surface,
                                 GwySIValueFormat *format)
 {
     gdouble xmin, xmax, ymin, ymax, max, unit;
-    
+
     g_return_val_if_fail(GWY_IS_SURFACE(surface), NULL);
     if (!surface->n)
         return gwy_si_unit_get_format_with_resolution(surface->si_unit_xy,
@@ -959,8 +958,8 @@ gwy_surface_print_info(GwySurface *surface, int n_values)
     for(i=0,p=surface->data;i<n_values && i<surface->n;i++,p++)
     {
       printf("%f \t%f \t%f\n",p->x,p->y,p->z);
-    } 
-    
+    }
+
 }
 
 
