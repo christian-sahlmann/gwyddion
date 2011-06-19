@@ -108,14 +108,10 @@ module_register(void)
 static void
 cut(GwyGraph *graph)
 {
-    GwyContainer *settings;
     CutArgs args;
 
     memset(&args, 0, sizeof(CutArgs));
-
     args.parent_graph = graph;
-
-    settings = gwy_app_settings_get();
     cut_dialog(&args);
 }
 

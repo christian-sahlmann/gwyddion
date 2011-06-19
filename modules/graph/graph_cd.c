@@ -407,10 +407,8 @@ fit_param_row_create(FitControls *controls,
 {
     GtkRequisition req;
     FitParamControl *cntrl;
-    FitParamArg *arg;
 
     cntrl = &controls->param[i];
-    arg = &controls->args->param[i];
 
     /* Name */
     cntrl->name = gtk_label_new(NULL);
@@ -664,14 +662,12 @@ static void
 fit_param_row_update_value(FitControls *controls,
                            gint i)
 {
-    GwyGraphCurveModel *cmodel;
     FitParamControl *cntrl;
     FitParamArg *arg;
     GwySIValueFormat *vf;
     GwySIUnit *unitx, *unity, *unitp;
     char buf[16];
 
-    cmodel = gwy_graph_model_get_curve(controls->args->graph_model, 0);
     cntrl = &controls->param[i];
     arg = &controls->args->param[i];
 
@@ -972,13 +968,12 @@ count_really_fitted_points(FitArgs *args)
 {
     gint i, n;
     GwyGraphCurveModel *cmodel;
-    const gdouble *xs, *ys;
+    const gdouble *xs;
     gint ns;
 
     n = 0;
     cmodel = gwy_graph_model_get_curve(args->graph_model, 0);
     xs = gwy_graph_curve_model_get_xdata(cmodel);
-    ys = gwy_graph_curve_model_get_ydata(cmodel);
     ns = gwy_graph_curve_model_get_ndata(cmodel);
 
     for (i = 0; i < ns; i++) {
