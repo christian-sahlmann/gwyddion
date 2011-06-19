@@ -402,13 +402,11 @@ colorsel_response_cb(GtkWidget *selector,
                      GwyGraphAreaDialog *dialog)
 {
     GwyGraphCurveModel *cmodel;
-    GtkWidget *colorsel;
 
     if (!dialog->curve_model)
         return;
 
     cmodel = GWY_GRAPH_CURVE_MODEL(dialog->curve_model);
-    colorsel = GTK_COLOR_SELECTION_DIALOG(selector)->colorsel;
     if (response == GTK_RESPONSE_CANCEL) {
         g_object_set(cmodel, "color", &dialog->old_color, NULL);
         refresh(dialog);

@@ -69,13 +69,11 @@ gwy_graph_corner_new()
 static void
 gwy_graph_corner_realize(GtkWidget *widget)
 {
-    GwyGraphCorner *graph_corner;
     GdkWindowAttr attributes;
     gint i, attributes_mask;
     GtkStyle *style;
 
     GTK_WIDGET_SET_FLAGS(widget, GTK_REALIZED);
-    graph_corner = GWY_GRAPH_CORNER(widget);
 
     attributes.x = widget->allocation.x;
     attributes.y = widget->allocation.y;
@@ -117,13 +115,9 @@ static void
 gwy_graph_corner_size_allocate(GtkWidget *widget,
                                GtkAllocation *allocation)
 {
-    GwyGraphCorner *graph_corner;
-
     widget->allocation = *allocation;
 
     if (GTK_WIDGET_REALIZED(widget)) {
-        graph_corner = GWY_GRAPH_CORNER(widget);
-
         gdk_window_move_resize(widget->window,
                                allocation->x, allocation->y,
                                allocation->width, allocation->height);
@@ -134,12 +128,8 @@ static gboolean
 gwy_graph_corner_expose(GtkWidget *widget,
                        GdkEventExpose *event)
 {
-    GwyGraphCorner *graph_corner;
-
     if (event->count > 0)
         return FALSE;
-
-    graph_corner = GWY_GRAPH_CORNER(widget);
 
     gdk_window_clear_area(widget->window,
                           0, 0,

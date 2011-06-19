@@ -451,13 +451,11 @@ gwy_data_view_size_request(GtkWidget *widget,
                            GtkRequisition *requisition)
 {
     GwyDataView *data_view;
-    GwyContainer *data;
     const gchar *key;
 
     gwy_debug(" ");
 
     data_view = GWY_DATA_VIEW(widget);
-    data = data_view->data;
     requisition->width = requisition->height = 2;
     if (!data_view->base_layer)
         return;

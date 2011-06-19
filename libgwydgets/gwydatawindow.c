@@ -78,8 +78,6 @@ static gboolean gradient_window_key_pressed       (GtkWidget *window,
 static void     gwy_data_window_gradient_update   (GwyDataWindow *data_window,
                                                    const gchar *gradient);
 static void     gwy_data_window_data_view_updated (GwyDataWindow *data_window);
-static void     gwy_data_window_set_tooltip       (GtkWidget *widget,
-                                                   const gchar *tip_text);
 
 /* These are actually class data.  To put them to Class struct someone would
  * have to do class_ref() and live with this reference to the end of time. */
@@ -645,14 +643,12 @@ gwy_data_window_update_title(GwyDataWindow *data_window)
     gchar *window_title;
     gchar zoomstr[8];
     GwyDataView *data_view;
-    GwyContainer *data;
     gdouble zoom;
     gint prec;
 
     g_return_if_fail(GWY_IS_DATA_WINDOW(data_window));
     data_view = GWY_DATA_VIEW(data_window->data_view);
     g_return_if_fail(GWY_IS_DATA_VIEW(data_view));
-    data = gwy_data_view_get_data(data_view);
 
     zoom = gwy_data_view_get_real_zoom(data_view);
     gwy_debug("%g", zoom);
@@ -1017,7 +1013,6 @@ gwy_data_window_data_view_updated(GwyDataWindow *data_window)
     GwyContainer *data;
     GwyDataView *view;
     GwyPixmapLayer *layer;
-    GwyDataField *dfield;
     gdouble min, max;
     const gchar *key;
     const guchar *gradname;
@@ -1028,7 +1023,6 @@ gwy_data_window_data_view_updated(GwyDataWindow *data_window)
     view = GWY_DATA_VIEW(data_window->data_view);
     layer = gwy_data_view_get_base_layer(view);
     key = gwy_pixmap_layer_get_data_key(layer);
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, key));
     gwy_layer_basic_get_range(GWY_LAYER_BASIC(layer), &min, &max);
     gwy_color_axis_set_range(GWY_COLOR_AXIS(data_window->coloraxis), min, max);
     key = gwy_layer_basic_get_gradient_key(GWY_LAYER_BASIC(layer));
@@ -1037,14 +1031,6 @@ gwy_data_window_data_view_updated(GwyDataWindow *data_window)
                                     gradname);
     gwy_data_window_size_allocate(GTK_WIDGET(data_window), NULL);
     gwy_data_window_update_units(data_window);
-}
-
-static void
-gwy_data_window_set_tooltip(GtkWidget *widget,
-                            const gchar *tip_text)
-{
-    if (tooltips)
-        gtk_tooltips_set_tip(tooltips, widget, tip_text, NULL);
 }
 
 /************************** Documentation ****************************/

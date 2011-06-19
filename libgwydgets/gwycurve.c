@@ -442,13 +442,6 @@ gwy_curve_get_type(void)
 static gboolean
 gwy_curve_configure(GwyCurve *c)
 {
-    GtkWidget *w;
-    gint width, height;
-
-    w = GTK_WIDGET(c);
-    width = w->allocation.width - RADIUS * 2;
-    height = w->allocation.height - RADIUS * 2;
-
     if (c->pixmap)
         g_object_unref(c->pixmap);
     c->pixmap = NULL;
@@ -483,7 +476,6 @@ gwy_curve_button_press(GtkWidget *widget,
                        G_GNUC_UNUSED GdkEventButton *event,
                        GwyCurve *c)
 {
-    GdkCursorType new_type = c->cursor_type;
     gint tx, ty, x, y, cx, width, height;
     gint i;
     gint j;
@@ -531,7 +523,6 @@ gwy_curve_button_press(GtkWidget *widget,
 
     /* either add new point, or grab closest one */
     gtk_grab_add(widget);
-    new_type = GDK_TCROSS;
     switch (c->curve_type) {
         case GWY_CURVE_TYPE_LINEAR:
         case GWY_CURVE_TYPE_SPLINE:
@@ -587,7 +578,6 @@ gwy_curve_button_release(GtkWidget *widget,
                          G_GNUC_UNUSED GdkEventButton *event,
                          GwyCurve *c)
 {
-    GdkCursorType new_type = c->cursor_type;
     gint src, dst;
     gint width, height;
     GtkWidget *w;
@@ -624,7 +614,6 @@ gwy_curve_button_release(GtkWidget *widget,
                           channel->num_ctlpoints * sizeof(GwyPoint));
         }
     }
-    new_type = GDK_FLEUR;
     c->grab_point = -1;
     c->grab_channel = -1;
 
@@ -1079,7 +1068,7 @@ void
 gwy_curve_get_control_points(GwyCurve *curve, GwyChannelData *channel_data,
                              gboolean triplets)
 {
-    GwyChannelData *channel, *curve_channel, *other_channel;
+    GwyChannelData *channel, *curve_channel;
     gint c_index, i, j, k;
     gint others[2];
     gint left_point, right_point;
@@ -1117,7 +1106,6 @@ gwy_curve_get_control_points(GwyCurve *curve, GwyChannelData *channel_data,
                 /* Check other channels to see if ctl
                    points exist at same x_val */
                 for (j = 0; j < 2; j++) {
-                    other_channel = &curve->channel_data[others[j]];
                     point_exists = FALSE;
                     left_point = right_point = -1;
 

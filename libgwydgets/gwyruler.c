@@ -592,11 +592,8 @@ gwy_ruler_draw_ticks(GwyRuler *ruler)
     gchar *unit_str;
     guint unitstr_len;
     gboolean units_drawn;
-    GtkWidget *widget;
-    GdkGC *gc;
-    gint ascent = 0, descent, vpos, state;
+    gint ascent = 0, vpos, state;
 
-    widget = GTK_WIDGET(ruler);
     if (!GTK_WIDGET_DRAWABLE(ruler))
         return;
 
@@ -640,7 +637,6 @@ gwy_ruler_draw_ticks(GwyRuler *ruler)
             pango_layout_set_markup(ruler->layout, unit_str, -1);
             pango_layout_get_pixel_extents(ruler->layout, NULL, &rect);
             ascent = PANGO_ASCENT(rect);
-            descent = PANGO_DESCENT(rect);
             text_size = rect.width + 1;
 
             if (lower < 0) {
@@ -766,7 +762,6 @@ gwy_ruler_draw_ticks(GwyRuler *ruler)
     }
     scale_depth--;
 
-    gc = widget->style->fg_gc[GTK_STATE_NORMAL];
     while (scale_depth > -1) {
         tick_length = ruler->height/(scale_depth + 1) - 2;
         scale = tick_info[scale_depth].scale;

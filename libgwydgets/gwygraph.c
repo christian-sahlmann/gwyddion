@@ -61,10 +61,7 @@ G_DEFINE_TYPE(GwyGraph, gwy_graph, GTK_TYPE_TABLE)
 static void
 gwy_graph_class_init(GwyGraphClass *klass)
 {
-    GtkWidgetClass *widget_class;
     GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
-
-    widget_class = (GtkWidgetClass*)klass;
 
     gobject_class->finalize = gwy_graph_finalize;
     gobject_class->set_property = gwy_graph_set_property;

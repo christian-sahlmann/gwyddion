@@ -366,13 +366,7 @@ gwy_graph_draw_line(GdkDrawable *drawable, GdkGC *gc,
                     gint size,
                     const GwyRGBA *color)
 {
-    GwyRGBA rgba;
-
     gwy_rgba_set_gdk_gc_fg(color, gc);
-    /* FIXME: WTF? */
-    rgba.r = MIN(color->g + 0.2, 1.0);
-    rgba.g = MIN(color->b + 0.2, 1.0);
-    rgba.b = MIN(color->r + 0.2, 1.0);
     gwy_rgba_set_gdk_gc_bg(color, gc);
 
     gdk_gc_set_line_attributes(gc, size,

@@ -1263,13 +1263,10 @@ gwy_graph_area_find_selection_edge(GwyGraphArea *area,
                                    gdouble y,
                                    int *eindex)
 {
-    GwyGraphModel *model;
     GwySelection *selection;
     gdouble coords[2], dists[2];
     gdouble maxoff, min, pos;
     gint n, i, mi, ei;
-
-    model = area->graph_model;
 
     gwy_debug(" ");
 
@@ -1343,13 +1340,10 @@ gwy_graph_area_find_selection(GwyGraphArea *area,
                               gdouble x,
                               gdouble y)
 {
-    GwyGraphModel *model;
     GwySelection *selection;
     gdouble coords[2];
     gdouble pos;
     gint n, i;
-
-    model = area->graph_model;
 
     gwy_debug(" ");
 
@@ -1387,10 +1381,8 @@ static gint
 gwy_graph_area_find_point(GwyGraphArea *area, gdouble x, gdouble y)
 {
     gint i;
-    GwyGraphModel *model;
     gdouble xmin, ymin, xmax, ymax, xoff, yoff, selection_data[2];
 
-    model = area->graph_model;
     /* FIXME: What is 50? */
     xoff = (area->x_max - area->x_min)/50;
     yoff = (area->y_min - area->y_max)/50;
@@ -1412,11 +1404,8 @@ gwy_graph_area_find_point(GwyGraphArea *area, gdouble x, gdouble y)
 static gint
 gwy_graph_area_find_line(GwyGraphArea *area, gdouble position)
 {
-    GwyGraphModel *model;
     gdouble min = 0, max = 0, xoff, yoff, selection_data;
     guint n, i;
-
-    model = area->graph_model;
 
     if (area->status == GWY_GRAPH_STATUS_XLINES) {
         /* FIXME: What is 100? */

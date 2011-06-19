@@ -1215,7 +1215,7 @@ gwy_3d_view_get_setup(Gwy3DView *gwy3dview)
 GdkPixbuf*
 gwy_3d_view_get_pixbuf(Gwy3DView *gwy3dview)
 {
-    int width, height, rowstride, n_channels, i, j;
+    int width, height, rowstride, i, j;
     guchar *pixels, *a, *b, z;
     GdkPixbuf * pixbuf;
 
@@ -1227,7 +1227,6 @@ gwy_3d_view_get_pixbuf(Gwy3DView *gwy3dview)
 
     pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, 8, width, height);
     gwy_debug_objects_creation(G_OBJECT(pixbuf));
-    n_channels = gdk_pixbuf_get_n_channels(pixbuf);
 
     rowstride = gdk_pixbuf_get_rowstride(pixbuf);
     pixels = gdk_pixbuf_get_pixels(pixbuf);

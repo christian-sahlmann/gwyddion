@@ -498,10 +498,6 @@ gwy_axis_get_property(GObject*object,
 static void
 gwy_axis_unrealize(GtkWidget *widget)
 {
-    GwyAxis *axis;
-
-    axis = GWY_AXIS(widget);
-
     if (GTK_WIDGET_CLASS(gwy_axis_parent_class)->unrealize)
         GTK_WIDGET_CLASS(gwy_axis_parent_class)->unrealize(widget);
 }

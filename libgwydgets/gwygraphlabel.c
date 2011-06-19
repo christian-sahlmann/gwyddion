@@ -52,10 +52,8 @@ static void
 gwy_graph_label_class_init(GwyGraphLabelClass *klass)
 {
     GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
-    GtkObjectClass *object_class;
     GtkWidgetClass *widget_class;
 
-    object_class = (GtkObjectClass*)klass;
     widget_class = (GtkWidgetClass*)klass;
 
     gobject_class->finalize = gwy_graph_label_finalize;
@@ -128,10 +126,6 @@ gwy_graph_label_finalize(GObject *object)
 static void
 gwy_graph_label_unrealize(GtkWidget *widget)
 {
-    GwyGraphLabel *label;
-
-    label = GWY_GRAPH_LABEL(widget);
-
     if (GTK_WIDGET_CLASS(gwy_graph_label_parent_class)->unrealize)
         GTK_WIDGET_CLASS(gwy_graph_label_parent_class)->unrealize(widget);
 }
@@ -139,7 +133,6 @@ gwy_graph_label_unrealize(GtkWidget *widget)
 static void
 gwy_graph_label_realize(GtkWidget *widget)
 {
-    GwyGraphLabel *label;
     GdkWindowAttr attributes;
     gint i, attributes_mask;
     GtkStyle *style;
@@ -148,7 +141,6 @@ gwy_graph_label_realize(GtkWidget *widget)
               widget->allocation.width, widget->allocation.height);
 
     GTK_WIDGET_SET_FLAGS(widget, GTK_REALIZED);
-    label = GWY_GRAPH_LABEL(widget);
 
     attributes.x = widget->allocation.x;
     attributes.y = widget->allocation.y;
@@ -195,14 +187,10 @@ static void
 gwy_graph_label_size_allocate(GtkWidget *widget,
                               GtkAllocation *allocation)
 {
-    GwyGraphLabel *label;
-
     gwy_debug("");
 
     widget->allocation = *allocation;
     if (GTK_WIDGET_REALIZED(widget)) {
-        label = GWY_GRAPH_LABEL(widget);
-
         gdk_window_move_resize(widget->window,
                                allocation->x, allocation->y,
                                allocation->width, allocation->height);
@@ -213,14 +201,11 @@ static gboolean
 gwy_graph_label_expose(GtkWidget *widget,
                        GdkEventExpose *event)
 {
-    GwyGraphLabel *label;
-
     gwy_debug("");
 
     if (event->count > 0)
         return FALSE;
 
-    label = GWY_GRAPH_LABEL(widget);
     gdk_window_clear_area(widget->window,
                           0, 0,
                           widget->allocation.width,
