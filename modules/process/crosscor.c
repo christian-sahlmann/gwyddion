@@ -152,7 +152,7 @@ static gboolean
 crosscor_dialog(CrosscorArgs *args)
 {
     CrosscorControls controls;
-    GtkWidget *dialog, *table, *chooser, *label, *spin, *combo;
+    GtkWidget *dialog, *table, *chooser, *label, *combo;
     gint row, response;
     gboolean ok = FALSE;
 
@@ -250,8 +250,8 @@ crosscor_dialog(CrosscorArgs *args)
 
     controls.threshold = gtk_adjustment_new(args->threshold,
                                             -1, 1, 0.005, 0.05, 0);
-    spin = gwy_table_attach_hscale(table, row, _("T_hreshold:"), NULL,
-                                   controls.threshold, 0);
+    gwy_table_attach_hscale(table, row, _("T_hreshold:"), NULL,
+                            controls.threshold, 0);
     gwy_table_hscale_set_sensitive(controls.threshold, args->add_ls_mask);
 
     gtk_widget_show_all(dialog);

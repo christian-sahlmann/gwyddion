@@ -635,7 +635,7 @@ gwy_tool_sfunctions_update_curve(GwyToolSFunctions *tool)
 {
     GwyPlainTool *plain_tool;
     GwyGraphCurveModel *gcmodel, *ugcmodel;
-    gdouble sel[4], *xdata, *ydata;
+    gdouble sel[4];
     gint isel[4] = { sizeof("Die, die, GCC!"), 0, 0, 0 };
     gint n, nsel, lineres, w = sizeof("Die, die, GCC!"), h = 0;
     const gchar *title, *xlabel, *ylabel;
@@ -974,7 +974,6 @@ gwy_tool_sfunctions_apply(GwyToolSFunctions *tool)
 {
     GwyPlainTool *plain_tool;
     GwyGraphModel *gmodel, *ugmodel;
-    GwyGraphCurveModel *ugcmodel;
     gchar *str, title[50];
 
     plain_tool = GWY_PLAIN_TOOL(tool);

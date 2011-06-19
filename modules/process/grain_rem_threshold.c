@@ -201,7 +201,7 @@ remove_dialog(RemoveArgs *args,
               gint id,
               GQuark mquark)
 {
-    GtkWidget *dialog, *table, *spin, *hbox, *label, *pivot;
+    GtkWidget *dialog, *table, *hbox, *label, *pivot;
     RemoveControls controls;
     gint response;
     GwyPixmapLayer *layer;
@@ -277,8 +277,8 @@ remove_dialog(RemoveArgs *args,
 
     controls.threshold_height = gtk_adjustment_new(args->height,
                                                    0.0, 100.0, 0.1, 5, 0);
-    spin = gwy_table_attach_hscale(table, row, _("_Height:"), "%",
-                                   controls.threshold_height, GWY_HSCALE_CHECK);
+    gwy_table_attach_hscale(table, row, _("_Height:"), "%",
+                            controls.threshold_height, GWY_HSCALE_CHECK);
     controls.is_height = gwy_table_hscale_get_check(controls.threshold_height);
     g_signal_connect_swapped(controls.threshold_height, "value-changed",
                              G_CALLBACK(remove_invalidate), &controls);
@@ -310,9 +310,9 @@ remove_dialog(RemoveArgs *args,
 
     controls.threshold_area = gtk_adjustment_new(args->area,
                                                  0.0, 16384.0, 1, 10, 0);
-    spin = gwy_table_attach_hscale(table, row, _("_Area:"), "px<sup>2</sup>",
-                                   controls.threshold_area,
-                                   GWY_HSCALE_CHECK | GWY_HSCALE_SQRT);
+    gwy_table_attach_hscale(table, row, _("_Area:"), "px<sup>2</sup>",
+                            controls.threshold_area,
+                            GWY_HSCALE_CHECK | GWY_HSCALE_SQRT);
     controls.is_area = gwy_table_hscale_get_check(controls.threshold_area);
     g_signal_connect_swapped(controls.threshold_area, "value-changed",
                              G_CALLBACK(remove_invalidate), &controls);

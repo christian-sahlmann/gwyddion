@@ -190,7 +190,8 @@ read_data_field(const guchar *buffer,
         ZSCALE_OFFSET = 0xa8,
     };
     gint xres, yres, i, j;
-    guint n, version, endfile, datastart;
+    G_GNUC_UNUSED guint version;
+    guint n, endfile, datastart;
     gdouble xreal, yreal, q, alpha;
     GwyDataField *dfield;
     GwySIUnit *siunit;

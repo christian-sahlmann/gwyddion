@@ -46,7 +46,7 @@
 // 5. repeat (3)
 
 // N. have function to insert result to data browser or swap it for present channel
-// N+1. run noninteractive or interactive with function N at end 
+// N+1. run noninteractive or interactive with function N at end
 
 
 enum {
@@ -238,7 +238,7 @@ run_noninteractive(DepositSynthArgs *args,
     GtkWidget *dialog;
     gboolean replace = dimsargs->replace && dfield;
     gboolean add = dimsargs->add && dfield;
-    gdouble mag; 
+    gdouble mag;
     gboolean success;
     gint newid, ndata;
     gchar message[50];
@@ -254,7 +254,7 @@ run_noninteractive(DepositSynthArgs *args,
             gwy_data_field_copy(dfield, out, FALSE);
         else
             gwy_data_field_fill(out, 0);
-        
+
     }
     else {
         if (add && dfield) {
@@ -366,7 +366,7 @@ deposit_synth_dialog(DepositSynthArgs *args,
 
     controls.original = dfield_template;
     controls.data_done = FALSE;
-    
+
     hbox = gtk_hbox_new(FALSE, 2);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox,
                        FALSE, FALSE, 4);
@@ -385,11 +385,11 @@ deposit_synth_dialog(DepositSynthArgs *args,
         gwy_app_sync_data_items(data, controls.mydata, id, 0, FALSE,
                                 GWY_DATA_ITEM_PALETTE,
                                 0);
-    
+
     if (dfield_template && dimsargs->add) {
         dfield = surface_for_preview(controls.original, PREVIEW_SIZE);
         gwy_data_field_data_changed(dfield);
-    } 
+    }
 
     gwy_container_set_object_by_name(controls.mydata, "/0/data", dfield);
     controls.view = gwy_data_view_new(controls.mydata);
@@ -766,7 +766,7 @@ randomize_seed(GtkAdjustment *adj)
     gtk_adjustment_set_value(adj, g_random_int() & 0x7fffffff);
 }
 
-static void          
+static void
 size_changed(DepositSynthControls *controls,
              GtkAdjustment *adj)
 {
@@ -774,7 +774,7 @@ size_changed(DepositSynthControls *controls,
     deposit_synth_invalidate(controls);
 
 }
-static void          
+static void
 width_changed(DepositSynthControls *controls,
              GtkAdjustment *adj)
 {
@@ -782,7 +782,7 @@ width_changed(DepositSynthControls *controls,
     deposit_synth_invalidate(controls);
 
 }
-static void          
+static void
 coverage_changed(DepositSynthControls *controls,
              GtkAdjustment *adj)
 {
@@ -790,7 +790,7 @@ coverage_changed(DepositSynthControls *controls,
     deposit_synth_invalidate(controls);
 
 }
-static void          
+static void
 revise_changed(DepositSynthControls *controls,
              GtkAdjustment *adj)
 {
@@ -855,7 +855,7 @@ preview(DepositSynthControls *controls)
         else if (gwy_data_field_get_xres(controls->out) != controls->dims->args->xres ||
                  gwy_data_field_get_yres(controls->out) != controls->dims->args->yres)
         {
-            gwy_data_field_resample(controls->out, 
+            gwy_data_field_resample(controls->out,
                                     controls->dims->args->xres,
                                     controls->dims->args->yres,
                                     GWY_INTERPOLATION_NONE);
@@ -867,7 +867,7 @@ preview(DepositSynthControls *controls)
         {
             gwy_data_field_set_xreal(controls->out, mag*controls->dims->args->xres);
             gwy_data_field_set_yreal(controls->out, mag*controls->dims->args->yres);
-            
+
         }
 
         gwy_data_field_fill(controls->out, 0);
@@ -888,7 +888,7 @@ preview(DepositSynthControls *controls)
             gwy_data_field_set_xreal(controls->out, gwy_data_field_get_xreal(controls->original));
             gwy_data_field_set_yreal(controls->out, gwy_data_field_get_yreal(controls->original));
         }
-         
+
         gwy_data_field_copy(controls->original, controls->out, TRUE);
     }
 
@@ -897,11 +897,11 @@ preview(DepositSynthControls *controls)
     gwy_data_field_copy(surface, dfield, FALSE);
     gwy_data_field_data_changed(dfield);
 
-        
+
     /*check arguments for sure again (see sanitize_args)*/
     args->size = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->size))*pow10(controls->dims->args->xypow10);
     args->width = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->width))*pow10(controls->dims->args->xypow10);
-    
+
     gwy_app_wait_start(GTK_WINDOW(controls->dialog), "Starting...");
     gtk_label_set_text(GTK_LABEL(controls->message), "Running computation...");
     ndata = deposit_synth_do(args, controls->out, dfield, &success);
@@ -911,9 +911,9 @@ preview(DepositSynthControls *controls)
     else if (ndata>=0 && !success) g_snprintf(message, sizeof(message), "Not all deposited (%d), try revise", ndata);
     else if (ndata==RES_TOO_MANY) g_snprintf(message, sizeof(message), "Error: too many particles.");
     else if (ndata==RES_TOO_FEW) g_snprintf(message, sizeof(message), "Error: no particles.");
-    else if (ndata==RES_TOO_LARGE) g_snprintf(message, sizeof(message), "Error: particles too large."); 
+    else if (ndata==RES_TOO_LARGE) g_snprintf(message, sizeof(message), "Error: particles too large.");
     else if (ndata==RES_TOO_SMALL) g_snprintf(message, sizeof(message), "Error: particles too small.");
-   
+
     gtk_label_set_text(GTK_LABEL(controls->message), message);
 
     if (surface) gwy_object_unref(surface);
@@ -985,7 +985,7 @@ showit(GwyDataField *lfield, GwyDataField *dfield, gdouble *rdisizes, gdouble *r
 static gdouble
 get_lj_potential_spheres(gdouble ax, gdouble ay, gdouble az, gdouble bx, gdouble by, gdouble bz, gdouble asize, gdouble bsize)
 {
-    gdouble sigma = 0.82*(asize+bsize); 
+    gdouble sigma = 0.82*(asize+bsize);
     gdouble dist = ((ax-bx)*(ax-bx)
                     + (ay-by)*(ay-by)
                     + (az-bz)*(az-bz));
@@ -1007,12 +1007,12 @@ integrate_lj_substrate(GwyDataField *lfield, gdouble ax, gdouble ay, gdouble az,
                                           CLAMP(gwy_data_field_rtoi(lfield, ay), 0, gwy_data_field_get_yres(lfield)-1));
 
     dist = sqrt((az-zval)*(az-zval));
-    
+
     if (size>0 && dist > size/100)
     return size*1e-3*(pow(sigma, 12)/45.0/pow(dist, 9) - pow(sigma, 6)/6.0/pow(dist, 3)); //corrected for particle size
     else return 0;
 }
-    
+
 
 
 static gint
@@ -1024,7 +1024,7 @@ deposit_synth_do(const DepositSynthArgs *args,
     GwyDataField *surface=NULL, *lfield, *zlfield, *zdfield; //FIXME all of them?
     gint xres, yres, oxres, oyres, ndata, steps;
     gdouble xreal, yreal, oxreal, oyreal, diff;
-    gdouble size, width; 
+    gdouble size, width;
     gdouble mass=1,  timestep = 1, rxv, ryv, rzv;
     gint mdisize, add, presetval;
     gint *xdata, *ydata;
@@ -1045,8 +1045,8 @@ deposit_synth_do(const DepositSynthArgs *args,
 
 //    printf("do (%d %d) %g %g, norm %g\n", gwy_data_field_get_xres(dfield), gwy_data_field_get_yres(dfield),
 //                           gwy_data_field_get_xreal(dfield), gwy_data_field_get_yreal(dfield), norm);
-//    printf("size %g width %g, coverage %g, revise %d, datafield real %g x %g, rms %g\n", 
-//           args->size, args->width, args->coverage, args->revise, oxreal, oyreal, gwy_data_field_get_rms(dfield)); 
+//    printf("size %g width %g, coverage %g, revise %d, datafield real %g x %g, rms %g\n",
+//           args->size, args->width, args->coverage, args->revise, oxreal, oyreal, gwy_data_field_get_rms(dfield));
 
     rng = g_rand_new();
     g_rand_set_seed(rng, args->seed);
@@ -1095,7 +1095,7 @@ deposit_synth_do(const DepositSynthArgs *args,
     fy = (gdouble *) g_malloc(presetval*sizeof(gdouble));
     fz = (gdouble *) g_malloc(presetval*sizeof(gdouble));
 
-   // printf("After normalization size %g width %g, coverage %g, revise %d, datafield real %g x %g, rms %g\n", 
+   // printf("After normalization size %g width %g, coverage %g, revise %d, datafield real %g x %g, rms %g\n",
    //        size, width, args->coverage, args->revise, oxreal, oyreal, gwy_data_field_get_rms(dfield)); //assure that width and size are in real coordinates
 
     /*allocate field with increased size, do all the computation and cut field back, return dfield again*/
@@ -1135,7 +1135,7 @@ deposit_synth_do(const DepositSynthArgs *args,
     }
 
     ndata = steps = 0;
-    presetval = args->coverage/100 * xreal*yreal/(G_PI*size*size); 
+    presetval = args->coverage/100 * xreal*yreal/(G_PI*size*size);
     //printf("%d particles should be deposited\n", presetval);
 
     while (ndata < presetval && steps<maxsteps)
@@ -1169,9 +1169,9 @@ deposit_synth_do(const DepositSynthArgs *args,
         ydata[ndata] = ypos;
         disizes[ndata] = disize;
         rdisizes[ndata] = size;
-        rx[ndata] = (gdouble)xpos*oxreal/(gdouble)oxres; 
+        rx[ndata] = (gdouble)xpos*oxreal/(gdouble)oxres;
         ry[ndata] = (gdouble)ypos*oyreal/(gdouble)oyres;
-        rz[ndata] = gwy_data_field_get_val(lfield, xpos, ypos) + rdisizes[ndata]; 
+        rz[ndata] = gwy_data_field_get_val(lfield, xpos, ypos) + rdisizes[ndata];
         ndata++;
     };
 
@@ -1215,15 +1215,15 @@ deposit_synth_do(const DepositSynthArgs *args,
                 too_close = 0;
 
                 rdisizes[ndata] = size;
-                rxv = ((gdouble)xpos*oxreal/(gdouble)oxres); 
+                rxv = ((gdouble)xpos*oxreal/(gdouble)oxres);
                 ryv = ((gdouble)ypos*oyreal/(gdouble)oyres);
-                rzv = gwy_data_field_get_val(zlfield, xpos, ypos)+ rdisizes[ndata];// + 5*size; 
+                rzv = gwy_data_field_get_val(zlfield, xpos, ypos)+ rdisizes[ndata];// + 5*size;
 
                 for (k=0; k<ndata; k++)
                 {
                     if (((rxv-rx[k])*(rxv-rx[k])
                          + (ryv-ry[k])*(ryv-ry[k])
-                         + (rzv-rz[k])*(rzv-rz[k]))<(4.0*size*size)) 
+                         + (rzv-rz[k])*(rzv-rz[k]))<(4.0*size*size))
                     {
                         too_close = 1;
                         break;
@@ -1316,7 +1316,7 @@ deposit_synth_do(const DepositSynthArgs *args,
             ay[k] = fy[k]/mass;
             vy[k] += 0.5*ay[k]*timestep;
             vy[k] *= 0.9;
-            if (fabs(vy[k])>0.01) vy[k] = 0; 
+            if (fabs(vy[k])>0.01) vy[k] = 0;
 
             rz[k] += vz[k]*timestep + 0.5*az[k]*timestep*timestep;
             vz[k] += 0.5*az[k]*timestep;
@@ -1329,7 +1329,7 @@ deposit_synth_do(const DepositSynthArgs *args,
             if (ry[k]<rdisizes[k]) ry[k] = rdisizes[k];
             if (rx[k]>(xreal-rdisizes[k])) rx[k] = xreal-rdisizes[k];
             if (ry[k]>(yreal-rdisizes[k])) ry[k] = yreal-rdisizes[k];
-            
+
  //           if (k%10==0) printf("final %d (%g %g %g) (%g %g %g) (%g %g)\n", k, fx[k], fy[k], fz[k], rx[k], ry[k], rz[k], xreal, yreal);
         }
 

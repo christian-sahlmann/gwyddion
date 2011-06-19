@@ -1750,7 +1750,7 @@ gwy_tool_roughness_peaks(GwyDataLine *data_line, gdouble *peaks,
     gint i, res, c=-1;
     gdouble val, val_prev;
     gdouble *p;
-    gboolean under=FALSE;
+    gboolean under = FALSE;
 
     g_return_val_if_fail(GWY_IS_DATA_LINE(data_line), 0);
 
@@ -1780,8 +1780,7 @@ gwy_tool_roughness_peaks(GwyDataLine *data_line, gdouble *peaks,
         c++;
         p[c] = val_prev;
     }
-    for (i = from; i<to; i++)
-    {
+    for (i = from; i < to; i++) {
         val = data_line->data[i];
         if (val > threshold) {
             if (val_prev < threshold) {

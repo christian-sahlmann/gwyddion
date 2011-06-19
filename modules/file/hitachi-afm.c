@@ -293,8 +293,10 @@ read_data_field_old(const guchar *buffer,
                     guint size,
                     GError **error)
 {
-    gint xres, yres, n, i, j, vx, vy, vz;
-    gdouble xscale, yscale, zscale, xunit, yunit, zunit, xreal, yreal, q;
+    gint xres, yres, n, i, j, vx, vy;
+    G_GNUC_UNUSED gint vz;
+    gdouble xscale, yscale, zscale, xreal, yreal, q;
+    G_GNUC_UNUSED gdouble xunit, yunit, zunit;
     GwyDataField *dfield;
     GwySIUnit *siunit;
     gdouble *data, *row;

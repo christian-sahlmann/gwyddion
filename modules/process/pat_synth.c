@@ -932,7 +932,7 @@ make_pattern_steps(const PatSynthArgs *args,
     GwyDataField *displacement_x;
     guint n, i, j, k, xres, yres;
     gdouble *abscissa, *height, *data, *dx_data;
-    gdouble h, c, s, xoff, yoff, range, margin, pitch;
+    gdouble h, c, s, xoff, range, margin, pitch;
 
     h = pargs->height * pow10(dimsargs->zpow10);
 
@@ -971,14 +971,12 @@ make_pattern_steps(const PatSynthArgs *args,
     c = cos(pargs->angle);
     s = sin(pargs->angle);
     xoff = 0.5*((1.0 - c)*xres + s*yres);
-    yoff = 0.5*(-s*yres + (1.0 - c)*yres);
     for (i = 0; i < yres; i++) {
         for (j = 0; j < xres; j++) {
-            gdouble v, x, xu, yu, d, q;
+            gdouble v, x, xu, d, q;
             guint kmod;
 
             xu = xoff + j*c - i*s;
-            yu = yoff + j*s + i*c;
             x = xu + dx_data[i*xres + j];
             k = bisect_lower(abscissa, 2*n, x);
             kmod = k % 2;
@@ -1237,7 +1235,7 @@ make_pattern_ridges(const PatSynthArgs *args,
     GwyDataField *displacement_x;
     guint n, i, j, k, xres, yres;
     gdouble *abscissa, *height, *data, *dx_data;
-    gdouble h, c, s, xoff, yoff, range, margin, pitch;
+    gdouble h, c, s, xoff, range, margin, pitch;
 
     h = pargs->height * pow10(dimsargs->zpow10);
 
@@ -1284,14 +1282,12 @@ make_pattern_ridges(const PatSynthArgs *args,
     c = cos(pargs->angle);
     s = sin(pargs->angle);
     xoff = 0.5*((1.0 - c)*xres + s*yres);
-    yoff = 0.5*(-s*yres + (1.0 - c)*yres);
     for (i = 0; i < yres; i++) {
         for (j = 0; j < xres; j++) {
-            gdouble v, x, xu, yu, d, q;
+            gdouble v, x, xu, d, q;
             guint kmod;
 
             xu = xoff + j*c - i*s;
-            yu = yoff + j*s + i*c;
             x = xu + dx_data[i*xres + j];
             k = bisect_lower(abscissa, 4*n, x);
             kmod = k % 4;

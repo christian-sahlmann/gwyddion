@@ -421,7 +421,7 @@ nanonics_parse_comment(GHashTable *hash,
 {
     gchar *buffer = g_strdup(comment);
     gchar *p = buffer, *line, *value, **fields;
-    gboolean reading_channels;
+    gboolean reading_channels = FALSE;
     guint id, nchannels = 0;
 
     for (line = gwy_str_next_line(&p); line; line = gwy_str_next_line(&p)) {

@@ -349,7 +349,6 @@ read_hash(gchar *buffer,
     g_hash_table_insert(hash, "Version", line + MAGIC_SIZE-2);
     next_is = WHATEVER;
     while ((line = gwy_str_next_line(&p))) {
-        gint llen;
         gchar *rb;
 
         if (line[0] == '/')
@@ -362,7 +361,6 @@ read_hash(gchar *buffer,
         }
 
         g_strstrip(line);
-        llen = strlen(line);
         /* sections */
         if (line[0] == '[' && (rb = strchr(line, ']'))) {
             *rb = '\0';

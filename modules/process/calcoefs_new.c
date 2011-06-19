@@ -89,7 +89,7 @@ typedef struct {
 static gboolean    module_register            (void);
 static void        cnew                        (GwyContainer *data,
                                                GwyRunType run);
-static gboolean    cnew_dialog                 (CNewArgs *args, 
+static gboolean    cnew_dialog                 (CNewArgs *args,
                                                 GwyDataField *dfield);
 static void        cnew_load_args              (GwyContainer *container,
                                                CNewArgs *args);
@@ -186,7 +186,7 @@ module_register(void)
 }
 
 static void
-cnew(GwyContainer *data, GwyRunType run)
+cnew(G_GNUC_UNUSED GwyContainer *data, GwyRunType run)
 {
     GwyDataField *dfield;
     CNewArgs args;
@@ -196,7 +196,7 @@ cnew(GwyContainer *data, GwyRunType run)
     GwyCalData *caldata = NULL, *old;
     gchar *filename;
     gchar *contents;
-    gsize len;
+    gsize len = 0;
     GError *err = NULL;
     gsize pos = 0;
     GString *str;
@@ -262,12 +262,12 @@ cnew(GwyContainer *data, GwyRunType run)
             }
         }
     }
- 
+
     if (args.duplicate == DUPLICATE_APPEND && (calibration = gwy_inventory_get_item(gwy_calibrations(), args.name)))
         {
         filename = g_build_filename(gwy_get_user_dir(), "caldata", calibration->filename, NULL);
         if (!g_file_get_contents(filename,
-                                 &contents, &len, &err))
+                                 &contents, &len, &err) || !len)
         {
              g_warning("Error loading file: %s", err->message);
              g_clear_error(&err);
@@ -278,11 +278,11 @@ cnew(GwyContainer *data, GwyRunType run)
               old = GWY_CALDATA(gwy_serializable_deserialize(contents, len, &pos));
             g_free(contents);
         }
-        
+
         gwy_caldata_append(old, caldata);
         g_object_unref(caldata);
         caldata = old;
-        
+
     }
 
     gwy_caldata_set_range(caldata, args.xrange_from, args.xrange_to,
@@ -387,7 +387,7 @@ cnew_dialog(CNewArgs *args,
                      3, 4, row, row+2,
                      GTK_EXPAND | GTK_FILL | GTK_SHRINK, 0, 0, 0);
     row++;
- 
+
     label = gtk_label_new_with_mnemonic(_("_X to:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label,
@@ -454,7 +454,7 @@ cnew_dialog(CNewArgs *args,
                      3, 4, row, row+2,
                      GTK_EXPAND | GTK_FILL | GTK_SHRINK, 0, 0, 0);
     row++;
- 
+
     label = gtk_label_new_with_mnemonic(_("_Z to:"));
     gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), label,
@@ -494,7 +494,7 @@ cnew_dialog(CNewArgs *args,
     gtk_table_attach(GTK_TABLE(table), label,
                      0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
-   
+
     controls.yunc = gtk_adjustment_new(args->yunc/pow10(args->xyuexponent),
                                         -10000, 10000, 1, 10, 0);
     spin = gtk_spin_button_new(GTK_ADJUSTMENT(controls.yunc), 1, 2);
@@ -603,10 +603,10 @@ cnew_dialog(CNewArgs *args,
                                               G_CALLBACK(zmult_changed_cb), &controls);
 
 
-    g_signal_connect(controls.xyunits, "clicked", 
+    g_signal_connect(controls.xyunits, "clicked",
                      G_CALLBACK(units_change_cb), &controls);
 
-    g_signal_connect(controls.zunits, "clicked", 
+    g_signal_connect(controls.zunits, "clicked",
                      G_CALLBACK(units_change_cb), &controls);
 
 

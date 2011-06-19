@@ -188,9 +188,6 @@ gwy_tool_distance_init_dialog(GwyToolDistance *tool)
     GtkWidget *scwin, *label, *hbox;
     GwyNullStore *store;
     guint i;
-    GwyPlainTool *plain_tool;
-
-    plain_tool = GWY_PLAIN_TOOL(tool);
 
     dialog = GTK_DIALOG(GWY_TOOL(tool)->dialog);
 
@@ -422,7 +419,7 @@ gwy_tool_distance_render_cell(GtkCellLayout *layout,
     gchar buf[32];
     gdouble line[4];
     gdouble val;
-    gdouble unc;
+    gdouble unc = 0.0;
     guint idx, id;
     gint x, y;
 

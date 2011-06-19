@@ -60,15 +60,13 @@ static void
 acf2d(GwyContainer *data, GwyRunType run)
 {
     GwyDataField *dfield, *result;
-    gint xres, yres, id;
+    gint id;
 
     g_return_if_fail(run & ACF2D_RUN_MODES);
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield, 0);
     g_return_if_fail(dfield);
 
     result = gwy_data_field_new(1, 1, 1.0, 1.0, FALSE);
-    xres = gwy_data_field_get_xres(dfield);
-    yres = gwy_data_field_get_yres(dfield);
     gwy_data_field_2dacf(dfield, result);
     id = gwy_app_data_browser_add_data_field(result, data, TRUE);
     g_object_unref(result);

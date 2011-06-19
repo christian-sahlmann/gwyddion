@@ -442,7 +442,6 @@ static GwyDataField*  extract_data        (SISFile *sisfile,
 static void           add_metadata        (SISFile *sisfile,
                                            gint id,
                                            guint ch,
-                                           guint im,
                                            GwyContainer *data);
 static gboolean       sis_real_load       (const guchar *buffer,
                                            guint size,
@@ -549,7 +548,7 @@ sis_load(const gchar *filename,
                     if (s)
                         gwy_container_set_string_by_name(data, key->str,
                                                          g_strdup(s));
-                    add_metadata(&sisfile, n, i, j, data);
+                    add_metadata(&sisfile, n, i, data);
                     n++;
                 }
             }
@@ -675,7 +674,6 @@ static void
 add_metadata(SISFile *sisfile,
              gint id,
              guint ch,
-             guint im,
              GwyContainer *data)
 {
     static const guint good_metadata[] = {
@@ -683,14 +681,12 @@ add_metadata(SISFile *sisfile,
     };
     GwyContainer *meta;
     SISChannel *channel;
-    SISImage *image;
     guint i, j;
     guchar *value, *key;
     gpointer *p;
 
     meta = gwy_container_new();
     channel = sisfile->channels + ch;
-    image = channel->images + im;
     for (i = 0; i < G_N_ELEMENTS(good_metadata); i++) {
         for (j = 0; j < G_N_ELEMENTS(sis_parameters); j++) {
             if (sis_parameters[j].idx == good_metadata[i])

@@ -724,7 +724,6 @@ update_view(CCViewControls *controls, CCViewArgs *args)
     GwyCalData *caldata = NULL;
     GwySIUnit *six, *siy, *siz;
     GwySIValueFormat *maxf;
-    gsize len;
     gboolean run = TRUE;
     gboolean posok = TRUE;
     viewfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,

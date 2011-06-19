@@ -489,7 +489,6 @@ curvature_do(GwyContainer *data,
 {
     gdouble params[PARAM_NPARAMS];
     Intersection i1[2], i2[2];
-    gint newid;
     gchar *key;
 
     if (!curvature_calculate(dfield, mfield, args, params, i1, i2))
@@ -512,7 +511,7 @@ curvature_do(GwyContainer *data,
 
         gmodel = gwy_graph_model_new();
         curvature_plot_graph(dfield, i1, i2, gmodel);
-        newid = gwy_app_data_browser_add_graph_model(gmodel, data, TRUE);
+        gwy_app_data_browser_add_graph_model(gmodel, data, TRUE);
         g_object_unref(gmodel);
     }
 }

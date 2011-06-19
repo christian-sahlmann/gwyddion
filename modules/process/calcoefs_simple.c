@@ -136,7 +136,6 @@ static void     get_object_list      (GtkWindow *window,
                                       gdouble *xs,
                                       gdouble *ys,
                                       gint *nobjects,
-                                      GwyCorrelationType type,
                                       gboolean *objects_found);
 static void     draw_cross           (GwyDataField *mask,
                                       gint size,
@@ -198,7 +197,6 @@ simple(GwyContainer *data, GwyRunType run)
 {
     SimpleArgs args;
     guint i;
-    GwyContainer *settings;
     GwyDataField *dfield;
     GQuark mquark;
     gint n, id;
@@ -220,7 +218,6 @@ simple(GwyContainer *data, GwyRunType run)
                                      GWY_APP_MASK_FIELD_KEY, &mquark,
                                      0);
 
-    settings = gwy_app_settings_get();
     for (i = 0; i < NARGS; i++) {
         args.objects[i].data = data;
         args.objects[i].id = id;
@@ -479,7 +476,7 @@ simple_dialog(SimpleArgs *args, GwyDataField *dfield)
     gtk_table_attach(GTK_TABLE(table), label,
                      0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
-    args->calname = g_strdup("new"); 
+    args->calname = g_strdup("new");
     controls.name = gtk_entry_new();
     gtk_entry_set_text(GTK_ENTRY(controls.name), args->calname);
     gtk_table_attach(GTK_TABLE(table), controls.name,
@@ -603,11 +600,11 @@ simple_data_cb(GwyDataChooser *chooser,
            args->ys = (gdouble *)g_malloc(args->noriginal*sizeof(gdouble));
         }
 
-        get_object_list(GTK_WINDOW(controls->dialog), original, detail, args->threshold, args->xs, args->ys, &(args->noriginal), 
-                        GWY_CORRELATION_NORMAL, &(args->objects_found));
+        get_object_list(GTK_WINDOW(controls->dialog), original, detail, args->threshold, args->xs, args->ys, &(args->noriginal),
+                        &(args->objects_found));
         if (args->objects_found)
           g_snprintf(message, sizeof(message), _("%d objects found"), args->noriginal);
-        else 
+        else
           g_snprintf(message, sizeof(message), _("Search cancelled"));
         gtk_label_set_text(GTK_LABEL(controls->suggestion), message);
         gtk_widget_set_sensitive(controls->button_ok, TRUE);
@@ -620,16 +617,16 @@ simple_data_cb(GwyDataChooser *chooser,
 
 static void
 get_object_list(GtkWindow *window, GwyDataField *data, GwyDataField *kernel, gdouble threshold,
-                gdouble *xs, gdouble *ys, gint *nobjects, GwyCorrelationType type,
+                gdouble *xs, gdouble *ys, gint *nobjects,
                 gboolean *objects_found)
 {
     enum { WORK_PER_UPDATE = 50000000 };
     GwyDataField *score = gwy_data_field_new_alike(data, 0);
     GwyDataField *retfield;
-    gdouble *sdata, *maxval, min, max;
+    gdouble *sdata, *maxval;
     gint i, *grains, *maxpos, ngrains, work, wpi;
     GwyComputationState *state;
-    
+
     gwy_app_wait_start(window, _("Initializing"));
     state = gwy_data_field_correlate_init(data, kernel, score);
     gwy_app_wait_set_message(_("Correlating"));
@@ -653,9 +650,11 @@ get_object_list(GtkWindow *window, GwyDataField *data, GwyDataField *kernel, gdo
     gwy_app_wait_finish();
 
 
-    //gwy_data_field_correlate(data, kernel, score, type);
+    /*
+    gwy_data_field_correlate(data, kernel, score, type);
     max = gwy_data_field_get_max(score);
     min = gwy_data_field_get_min(score);
+    */
 
     retfield = gwy_data_field_duplicate(score);
     gwy_data_field_threshold(retfield, threshold, 0.0, 1.0);
@@ -668,7 +667,7 @@ get_object_list(GtkWindow *window, GwyDataField *data, GwyDataField *kernel, gdo
     maxval = (gdouble *) g_malloc(ngrains*sizeof(gdouble));
     sdata = gwy_data_field_get_data(score);
 
- 
+
     for (i=0; i<ngrains; i++) maxval[i] = -G_MAXDOUBLE;
 
     //find correlation maximum of each grain
@@ -708,8 +707,7 @@ simple_dialog_update(SimpleControls *controls,
 
 }
 
-
-
+/*
 static gdouble
 get_prod_grid(GwyDataField *a, GwyDataField *b, gdouble period)
 {
@@ -731,6 +729,7 @@ get_prod_grid(GwyDataField *a, GwyDataField *b, gdouble period)
 
     return suma/sumb;
 }
+*/
 
 static void
 simple_do(SimpleArgs *args)
@@ -765,11 +764,10 @@ simple_do(SimpleArgs *args)
 
     if (!args->objects_found)
            get_object_list(gwy_app_find_window_for_channel(data, args->objects[0].id),
-                           original, 
-                           detail, args->threshold, 
-                           args->xs, 
-                           args->ys, &(args->noriginal), 
-                           GWY_CORRELATION_NORMAL,
+                           original,
+                           detail, args->threshold,
+                           args->xs,
+                           args->ys, &(args->noriginal),
                            &(args->objects_found));
 
     //________________________________________________________original____________________________________________
@@ -846,7 +844,7 @@ simple_do(SimpleArgs *args)
     yxshift = avs[2]/navs[2];
     yyshift = avs[3]/navs[3];
 
-    if (xxshift == 0 || yyshift == 0) return; 
+    if (xxshift == 0 || yyshift == 0) return;
     //printf("%g %g %g %g\n", xxshift, yyshift, xyshift, yxshift);
 
     angle = (atan(xyshift/xxshift) + atan(-yxshift/yyshift))/2.0;
@@ -868,7 +866,7 @@ simple_do(SimpleArgs *args)
         /*draw times and crosses on mask*/
         draw_cross(args->mask, 5, pxs[i], pys[i]);
         draw_times(args->mask, 4,
-                   xs[tl] + index_col[i]*gwy_data_field_rtoi(original, xxshift) 
+                   xs[tl] + index_col[i]*gwy_data_field_rtoi(original, xxshift)
                           + index_row[i]*gwy_data_field_rtoj(original, yxshift),
                    ys[tl] + index_col[i]*gwy_data_field_rtoi(original, xyshift)
                           + index_row[i]*gwy_data_field_rtoj(original, yyshift)
@@ -908,16 +906,16 @@ simple_do(SimpleArgs *args)
         if (minz > z[i]) minz = z[i];
         if (maxz < z[i]) maxz = z[i];
 
-        xerr[i] = gwy_data_field_itor(original, xs[tl]) 
-                    + gwy_data_field_itor(original, index_col[i])*xxshift 
+        xerr[i] = gwy_data_field_itor(original, xs[tl])
+                    + gwy_data_field_itor(original, index_col[i])*xxshift
                     + gwy_data_field_jtor(original, index_row[i])*yxshift
                     - x[i];
-        yerr[i] = gwy_data_field_jtor(original, ys[tl]) 
-                    + gwy_data_field_itor(original, index_col[i])*xyshift 
+        yerr[i] = gwy_data_field_jtor(original, ys[tl])
+                    + gwy_data_field_itor(original, index_col[i])*xyshift
                     + gwy_data_field_jtor(original, index_row[i])*yyshift
                     - y[i];
 
-        zerr[i] = gwy_data_field_get_val(original, pxs[i], pys[i]) 
+        zerr[i] = gwy_data_field_get_val(original, pxs[i], pys[i])
                     - gwy_data_field_get_val(original, xs[tl], ys[tl]);
 
         xunc[i] = yunc[i] = zunc[i] = 0;
@@ -1143,12 +1141,12 @@ xyexponent_changed_cb(GtkWidget *combo,
                   * pow10(args->xyexponent);
     args->yoffset = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->yoffset))
                   * pow10(args->xyexponent);
-    args->xperiod = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->xperiod)) 
+    args->xperiod = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->xperiod))
                   * pow10(args->xyexponent);
-    args->yperiod = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->yperiod)) 
+    args->yperiod = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->yperiod))
                   * pow10(args->xyexponent);
-    
- 
+
+
     simple_dialog_update(controls, args);
     controls->in_update = FALSE;
 }

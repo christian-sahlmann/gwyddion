@@ -160,7 +160,7 @@ angle_dist(GwyContainer *data, GwyRunType run)
 static gboolean
 angle_dialog(AngleArgs *args)
 {
-    GtkWidget *dialog, *table, *spin;
+    GtkWidget *dialog, *table;
     AngleControls controls;
     enum { RESPONSE_RESET = 1 };
     gint response;
@@ -188,8 +188,8 @@ angle_dialog(AngleArgs *args)
     row++;
 
     controls.steps = gtk_adjustment_new(args->steps, 6, MAX_STEPS, 1, 10, 0);
-    spin = gwy_table_attach_hscale(table, row, _("_Number of steps:"), NULL,
-                                   controls.steps, GWY_HSCALE_SQRT);
+    gwy_table_attach_hscale(table, row, _("_Number of steps:"), NULL,
+                            controls.steps, GWY_HSCALE_SQRT);
     row++;
 
     controls.logscale

@@ -404,7 +404,7 @@ static void
 nonlinearity_do(GwyDataField *dfield, GwyDataField *show)
 {
     static const gdouble r = 2.5;
-    gint xres, yres, i, j, size, rr;
+    gint xres, yres, i, j, size;
     gdouble qx, qy;
     gint *xp, *yp;
     gdouble *d, *z;
@@ -412,7 +412,6 @@ nonlinearity_do(GwyDataField *dfield, GwyDataField *show)
     xres = gwy_data_field_get_xres(dfield);
     yres = gwy_data_field_get_yres(dfield);
     d = gwy_data_field_get_data(show);
-    rr = (gint)ceil(r);
     qx = gwy_data_field_get_xmeasure(dfield);
     qy = gwy_data_field_get_xmeasure(dfield);
 
@@ -441,7 +440,7 @@ static void
 inclination_do(GwyDataField *dfield, GwyDataField *show)
 {
     static const gdouble r = 2.5;
-    gint xres, yres, i, j, size, rr;
+    gint xres, yres, i, j, size;
     gdouble qx, qy;
     gint *xp, *yp;
     gdouble *d, *z;
@@ -449,7 +448,6 @@ inclination_do(GwyDataField *dfield, GwyDataField *show)
     xres = gwy_data_field_get_xres(dfield);
     yres = gwy_data_field_get_yres(dfield);
     d = gwy_data_field_get_data(show);
-    rr = (gint)ceil(r);
     qx = gwy_data_field_get_xmeasure(dfield);
     qy = gwy_data_field_get_xmeasure(dfield);
 
@@ -459,12 +457,12 @@ inclination_do(GwyDataField *dfield, GwyDataField *show)
     yp = xp + size;
     for (i = 0; i < yres; i++) {
         for (j = 0; j < xres; j++) {
-            gdouble bx, by, s0r;
+            gdouble bx, by;
             gint n;
 
             n = gwy_data_field_circular_area_extract_with_pos(dfield, j, i, r,
                                                               z, xp, yp);
-            s0r = fit_local_plane_by_pos(n, xp, yp, z, &bx, &by);
+            fit_local_plane_by_pos(n, xp, yp, z, &bx, &by);
             bx /= qx;
             by /= qy;
             d[i*xres + j] = atan(hypot(bx, by));
@@ -478,13 +476,12 @@ static void
 step_do(GwyDataField *dfield, GwyDataField *show)
 {
     static const gdouble r = 2.5;
-    gint xres, yres, i, j, size, rr;
+    gint xres, yres, i, j, size;
     gdouble *d, *z;
 
     xres = gwy_data_field_get_xres(dfield);
     yres = gwy_data_field_get_yres(dfield);
     d = gwy_data_field_get_data(show);
-    rr = (gint)ceil(r);
 
     size = gwy_data_field_get_circular_area_size(r);
     z = g_new(gdouble, size);

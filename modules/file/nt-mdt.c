@@ -1235,8 +1235,8 @@ mdt_mda_vars(const guchar *p,
 {
 
     guint headSize, totLen, NameSize, CommSize, ViewInfoSize, SpecSize;
-    guint SourceInfoSize, VarSize, DataSize, StructLen, CellSize;
-    guint64  num;
+    G_GNUC_UNUSED guint SourceInfoSize, VarSize, DataSize, StructLen, CellSize;
+    G_GNUC_UNUSED guint64 num;
     const guchar *recordPointer = p;
     const guchar *structPointer;
 
@@ -1512,7 +1512,7 @@ static GwyGraphModel* extract_scanned_spectrum (MDTScannedDataFrame *dataframe,
     GwySIUnit *siunitx, *siunitz;
     guint i, res;
     gdouble *xdata, *ydata;
-    gdouble xreal, zscale;
+    G_GNUC_UNUSED gdouble xreal, zscale;
     gdouble deltax;
     gint power10x, power10z;
     const gint16 *p;
@@ -1586,7 +1586,7 @@ static GwySpectra* extract_sps_curve (MDTScannedDataFrame *dataframe,
     GwySIUnit *siunitx, *siunitz, *siunitcoordxy;
     guint i, i_p, res, numpoints;
     gdouble *ydata = NULL;
-    gdouble xreal, zscale;
+    G_GNUC_UNUSED gdouble xreal, zscale;
     gdouble deltax;
     gint power10x, power10z, power10coordxy;
     const guchar *p;
@@ -2297,7 +2297,7 @@ static GwyDataField * extract_raman_image (MDTMDAFrame *dataframe,
     gdouble r, g, b, x, y, z, xyzsum, wmin, wmax;
     gdouble ymax;
 
-    GtkWidget *dialog, *image;
+    GtkWidget *dialog = NULL, *image;
     GdkPixbuf *pixbuf;
     gint rowstride;
     guchar *pixels;
@@ -2472,8 +2472,7 @@ static GwyDataField * extract_raman_image (MDTMDAFrame *dataframe,
 
     image = gtk_image_new();
 
-    pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, 8,
-                                xsize, ysize);
+    pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, 8, xsize, ysize);
     gdk_pixbuf_fill(pixbuf, 0);
 
     pixels = gdk_pixbuf_get_pixels(pixbuf);

@@ -1086,14 +1086,12 @@ static gboolean wip_read_data(GNode *node, gpointer filedata)
     WIPFile *filecontent;
     GwyGraphModel *gmodel;
     GwyDataField *image;
-    GwyContainer *container;
     GString *key;
     GString *caption;
 
     tag = node->data;
     filecontent = (WIPFile *)filedata;
     key = g_string_new(NULL);
-    container = filecontent->data;
     if (!strncmp(tag->name, "TDGraph", 7)) {
         gmodel = wip_read_graph(node);
         if (!gmodel) {

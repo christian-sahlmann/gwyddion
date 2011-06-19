@@ -337,8 +337,6 @@ gwy_synth_attach_roundness(GWY_SYNTH_CONTROLS *controls,
                            GtkObject **adj,
                            gdouble *target)
 {
-    GtkWidget *spin;
-
     gtk_table_set_row_spacing(controls->table, row-1, 8);
     gtk_table_attach(controls->table, gwy_label_new_header(_("Roundness")),
                      0, 3, row, row+1, GTK_FILL, 0, 0, 0);
@@ -347,9 +345,9 @@ gwy_synth_attach_roundness(GWY_SYNTH_CONTROLS *controls,
     *adj = gtk_adjustment_new(*target, 0.0, 1.0, 0.001, 0.1, 0);
     g_object_set_data(G_OBJECT(*adj), "target", target);
 
-    spin = gwy_table_attach_hscale(GTK_WIDGET(controls->table),
-                                   row, _("Roundn_ess:"), NULL, *adj,
-                                   GWY_HSCALE_DEFAULT);
+    gwy_table_attach_hscale(GTK_WIDGET(controls->table),
+                            row, _("Roundn_ess:"), NULL, *adj,
+                            GWY_HSCALE_DEFAULT);
     g_signal_connect_swapped(*adj, "value-changed",
                              G_CALLBACK(gwy_synth_double_changed), controls);
 
@@ -424,8 +422,6 @@ gwy_synth_attach_deformation(GWY_SYNTH_CONTROLS  *controls,
                              GtkWidget **pvalue_tau,
                              GtkWidget **punits_tau)
 {
-    GtkWidget *spin;
-
     gtk_table_set_row_spacing(controls->table, row-1, 8);
     gtk_table_attach(controls->table, gwy_label_new_header(_("Deformation")),
                      0, 3, row, row+1, GTK_FILL, 0, 0, 0);
@@ -434,17 +430,17 @@ gwy_synth_attach_deformation(GWY_SYNTH_CONTROLS  *controls,
     *adj_sigma = gtk_adjustment_new(*target_sigma, 0.0, 100.0, 0.01, 1.0, 0);
     g_object_set_data(G_OBJECT(*adj_sigma), "target", target_sigma);
 
-    spin = gwy_table_attach_hscale(GTK_WIDGET(controls->table),
-                                   row, _("_Amplitude:"), NULL, *adj_sigma,
-                                   GWY_HSCALE_SQRT);
+    gwy_table_attach_hscale(GTK_WIDGET(controls->table),
+                            row, _("_Amplitude:"), NULL, *adj_sigma,
+                            GWY_HSCALE_SQRT);
     row++;
 
     *adj_tau = gtk_adjustment_new(*target_tau, 0.1, 1000.0, 0.01, 1.0, 0);
     g_object_set_data(G_OBJECT(*adj_tau), "target", target_tau);
 
-    spin = gwy_table_attach_hscale(GTK_WIDGET(controls->table),
-                                   row, _("_Lateral scale:"), "px", *adj_tau,
-                                   GWY_HSCALE_LOG);
+    gwy_table_attach_hscale(GTK_WIDGET(controls->table),
+                            row, _("_Lateral scale:"), "px", *adj_tau,
+                            GWY_HSCALE_LOG);
     row++;
 
     *pvalue_tau = gtk_label_new(NULL);

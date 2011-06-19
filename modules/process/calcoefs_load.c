@@ -62,7 +62,7 @@ enum { RESPONSE_LOAD = 1 };
 static gboolean    module_register            (void);
 static void        cload                        (GwyContainer *data,
                                                GwyRunType run);
-static gboolean    cload_dialog                 (CLoadArgs *args, 
+static gboolean    cload_dialog                 (CLoadArgs *args,
                                                 GwyDataField *dfield);
 static void         load_caldata              (CLoadControls *controls);
 
@@ -137,7 +137,7 @@ cload(G_GNUC_UNUSED GwyContainer *data, GwyRunType run)
     /*if append requested, copy newly created calibration into old one*/
     if (args.duplicate == DUPLICATE_APPEND && (calibration = gwy_inventory_get_item(gwy_calibrations(), args.name)))
     {
-        
+
         filename = g_build_filename(gwy_get_user_dir(), "caldata", calibration->filename, NULL);
         if (!g_file_get_contents(filename,
                                  &contents, &len, &err))
@@ -323,7 +323,7 @@ load_caldata(CLoadControls *controls)
     if (gtk_dialog_run (GTK_DIALOG (dialog)) == GTK_RESPONSE_ACCEPT)
     {
         filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (dialog));
-        if (!g_file_get_contents(filename, &text, &size, &err)) { 
+        if (!g_file_get_contents(filename, &text, &size, &err)) {
             msgdialog = gtk_message_dialog_new (GTK_WINDOW(dialog),
                                              GTK_DIALOG_DESTROY_WITH_PARENT,
                                              GTK_MESSAGE_ERROR,
@@ -338,7 +338,7 @@ load_caldata(CLoadControls *controls)
             line = gwy_str_next_line(&text);
             g_strstrip(line);
             ndata = g_ascii_strtod(line, &line);
- 
+
             line = gwy_str_next_line(&text);
             g_strstrip(line);
             xfrom = g_ascii_strtod(line, &line);
@@ -355,7 +355,7 @@ load_caldata(CLoadControls *controls)
             zto = g_ascii_strtod(line, &line);
 
             if (caldata) gwy_object_unref(caldata);
-            caldata = gwy_caldata_new(ndata);    
+            caldata = gwy_caldata_new(ndata);
 
             line = gwy_str_next_line(&text);
             g_strstrip(line);
@@ -369,9 +369,9 @@ load_caldata(CLoadControls *controls)
             g_strstrip(line);
             gwy_caldata_set_si_unit_z(caldata, gwy_si_unit_new_parse(line, &zpower10));
 
-            gwy_caldata_set_range(caldata, 
-                                  xfrom*pow10(xpower10), xto*pow10(xpower10), 
-                                  yfrom*pow10(ypower10), yto*pow10(ypower10), 
+            gwy_caldata_set_range(caldata,
+                                  xfrom*pow10(xpower10), xto*pow10(xpower10),
+                                  yfrom*pow10(ypower10), yto*pow10(ypower10),
                                   zfrom*pow10(zpower10), zto*pow10(zpower10));
 
             px = gwy_caldata_get_x(caldata);

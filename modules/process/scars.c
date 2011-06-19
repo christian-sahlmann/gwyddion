@@ -449,7 +449,7 @@ scars_mark_dialog(ScarsArgs *args,
         { N_("Negative"), FEATURES_NEGATIVE, },
         { N_("Both"),     FEATURES_BOTH,     },
     };
-    GtkWidget *dialog, *table, *spin, *hbox, *label;
+    GtkWidget *dialog, *table, *hbox, *label;
     GwyDataField *mfield;
     ScarsControls controls;
     gint response;
@@ -526,16 +526,16 @@ scars_mark_dialog(ScarsArgs *args,
 
     controls.threshold_high = gtk_adjustment_new(args->threshold_high,
                                                  0.0, 2.0, 0.01, 0.1, 0);
-    spin = gwy_table_attach_hscale(table, row++, _("_Hard threshold:"),
-                                   _("RMS"), controls.threshold_high, 0);
+    gwy_table_attach_hscale(table, row++, _("_Hard threshold:"),
+                            _("RMS"), controls.threshold_high, 0);
     g_signal_connect(controls.threshold_high, "value-changed",
                      G_CALLBACK(scars_mark_dialog_update_thresholds),
                      &controls);
 
     controls.threshold_low = gtk_adjustment_new(args->threshold_low,
                                                 0.0, 2.0, 0.01, 0.1, 0);
-    spin = gwy_table_attach_hscale(table, row, _("_Soft threshold:"), _("RMS"),
-                                   controls.threshold_low, 0);
+    gwy_table_attach_hscale(table, row, _("_Soft threshold:"), _("RMS"),
+                            controls.threshold_low, 0);
     g_signal_connect(controls.threshold_low, "value-changed",
                      G_CALLBACK(scars_mark_dialog_update_thresholds),
                      &controls);

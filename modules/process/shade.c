@@ -199,7 +199,7 @@ shade_dialog(ShadeArgs *args,
              GwyDataField *dfield,
              gint id)
 {
-    GtkWidget *dialog, *hbox, *table, *spin;
+    GtkWidget *dialog, *hbox, *table;
     GwyPixmapLayer *layer;
     const guchar *pal;
     ShadeControls controls;
@@ -240,24 +240,24 @@ shade_dialog(ShadeArgs *args,
 
     controls.theta = gtk_adjustment_new(args->theta*180.0/G_PI,
                                         0.0, 90.0, 1.0, 15.0, 0.0);
-    spin = gwy_table_attach_hscale(table, row, _("θ:"), _("deg"),
-                                   controls.theta, GWY_HSCALE_DEFAULT);
+    gwy_table_attach_hscale(table, row, _("θ:"), _("deg"),
+                            controls.theta, GWY_HSCALE_DEFAULT);
     g_signal_connect(controls.theta, "value-changed",
                      G_CALLBACK(theta_changed_cb), &controls);
     row++;
 
     controls.phi = gtk_adjustment_new(args->phi*180.0/G_PI,
                                       0.0, 360.0, 1.0, 30.0, 0.0);
-    spin = gwy_table_attach_hscale(table, row, _("φ:"), _("deg"),
-                                   controls.phi, GWY_HSCALE_DEFAULT);
+    gwy_table_attach_hscale(table, row, _("φ:"), _("deg"),
+                            controls.phi, GWY_HSCALE_DEFAULT);
     g_signal_connect(controls.phi, "value-changed",
                      G_CALLBACK(phi_changed_cb), &controls);
     row++;
 
     controls.mix = gtk_adjustment_new(args->mix, 0.0, 100.0, 1, 5, 0);
 
-    spin = gwy_table_attach_hscale(table, row, _("_Mix:"), "%",
-                                   controls.mix, GWY_HSCALE_CHECK);
+    gwy_table_attach_hscale(table, row, _("_Mix:"), "%",
+                            controls.mix, GWY_HSCALE_CHECK);
 
     controls.do_mix = g_object_get_data(G_OBJECT(controls.mix), "check");
 

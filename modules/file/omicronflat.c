@@ -503,7 +503,7 @@ omicronflat_readmetadata(GwyContainer *metadata, const guchar** fp,
     gchar key[100];
     gchar val[30];
 
-    guint32 type_code;
+    G_GNUC_UNUSED guint32 type_code;
     guchar* instance_name = NULL;
     guchar* unit_str = NULL;
     guchar* name_str = NULL;

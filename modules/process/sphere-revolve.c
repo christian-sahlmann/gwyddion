@@ -479,18 +479,15 @@ sphrev_horizontal(Sphrev1DArgs *args,
         /* Find the touching point */
         for (j = 0; j < xres; j++) {
             gdouble *row = tmp + j;
-            gint from, to, km;
+            gint from, to;
             gdouble min;
 
             from = MAX(0, j-size) - j;
             to = MIN(j+size, xres-1) - j;
             min = G_MAXDOUBLE;
-            km = 0;
             for (k = from; k <= to; k++) {
-                if (-(sphdata[size+k] - row[k]) < min) {
+                if (-(sphdata[size+k] - row[k]) < min)
                     min = -(sphdata[size+k] - row[k]);
-                    km = k;
-                }
             }
             rrow[j] = min;
         }
@@ -560,18 +557,15 @@ sphrev_vertical(Sphrev1DArgs *args,
         /* Find the touching point */
         for (j = 0; j < yres; j++) {
             gdouble *col = tmp + j;
-            gint from, to, km;
+            gint from, to;
             gdouble min;
 
             from = MAX(0, j-size) - j;
             to = MIN(j+size, yres-1) - j;
             min = G_MAXDOUBLE;
-            km = 0;
             for (k = from; k <= to; k++) {
-                if (-(sphdata[size+k] - col[k]) < min) {
+                if (-(sphdata[size+k] - col[k]) < min)
                     min = -(sphdata[size+k] - col[k]);
-                    km = k;
-                }
             }
             rcol[j*xres] = min;
         }

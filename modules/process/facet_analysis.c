@@ -997,7 +997,7 @@ static void
 preview(FacetsControls *controls,
         FacetsArgs *args)
 {
-    GwyDataField *dtheta, *dphi, *dfield, *mfield;
+    GwyDataField *dtheta, *dphi, *mfield;
     GwyContainer *data, *fdata;
 
     data = controls->mydata;
@@ -1006,7 +1006,6 @@ preview(FacetsControls *controls,
     add_mask_layer(GWY_DATA_VIEW(controls->view), NULL);
     add_mask_layer(GWY_DATA_VIEW(controls->fview), &mask_color);
 
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/data"));
     mfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(data, "/0/mask"));
     dtheta = GWY_DATA_FIELD(gwy_container_get_object_by_name(fdata, "/theta"));
     dphi = GWY_DATA_FIELD(gwy_container_get_object_by_name(fdata, "/phi"));

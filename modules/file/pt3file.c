@@ -693,7 +693,8 @@ pt3file_scan_line_triggers(const PicoHarpFile *pt3file,
 {
     LineTrigger *linetriggers;
     guint64 globaltime, globalbase;
-    guint xres, yres, i, lineno, n;
+    G_GNUC_UNUSED guint xres;
+    guint yres, i, lineno, n;
 
     globaltime = globalbase = 0;
     xres = pt3file->imaging.common.xres;

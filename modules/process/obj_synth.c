@@ -414,7 +414,7 @@ obj_synth_dialog(ObjSynthArgs *args,
                  GwyDataField *dfield_template,
                  gint id)
 {
-    GtkWidget *dialog, *table, *vbox, *hbox, *notebook, *spin;
+    GtkWidget *dialog, *table, *vbox, *hbox, *notebook;
     ObjSynthControls controls;
     GwyDataField *dfield;
     GwyPixmapLayer *layer;
@@ -516,8 +516,8 @@ obj_synth_dialog(ObjSynthArgs *args,
     controls.coverage = gtk_adjustment_new(args->coverage,
                                            0.001, 12.0, 0.001, 1.0, 0);
     g_object_set_data(G_OBJECT(controls.coverage), "target", &args->coverage);
-    spin = gwy_table_attach_hscale(table, row, _("Co_verage:"), NULL,
-                                   controls.coverage, GWY_HSCALE_SQRT);
+    gwy_table_attach_hscale(table, row, _("Co_verage:"), NULL,
+                            controls.coverage, GWY_HSCALE_SQRT);
     g_signal_connect_swapped(controls.coverage, "value-changed",
                              G_CALLBACK(gwy_synth_double_changed), &controls);
     row++;

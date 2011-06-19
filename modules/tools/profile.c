@@ -1010,7 +1010,7 @@ gwy_tool_profile_apply(GwyToolProfile *tool)
     GwyGraphModel *gmodel;
     gchar *s;
     gint i, n;
-    gint multpos, id;
+    gint multpos;
 
     plain_tool = GWY_PLAIN_TOOL(tool);
     g_return_if_fail(plain_tool->selection);
@@ -1063,7 +1063,7 @@ gwy_tool_profile_apply(GwyToolProfile *tool)
         g_object_get(gcmodel, "description", &s, NULL);
         g_object_set(gmodel, "title", s, NULL);
         g_free(s);
-        id = gwy_app_data_browser_add_graph_model(gmodel, plain_tool->container,
+        gwy_app_data_browser_add_graph_model(gmodel, plain_tool->container,
                                              TRUE);
         g_object_unref(gmodel);
 

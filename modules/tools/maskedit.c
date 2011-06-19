@@ -890,7 +890,7 @@ gwy_tool_mask_editor_grow(GwyToolMaskEditor *tool)
     GQuark quark;
     gdouble *data, *buffer, *prow;
     gdouble min, max, q1, q2;
-    gint xres, yres, rowstride, ngrains;
+    gint xres, yres, rowstride;
     gint i, j, iter;
     gint *grains = NULL;
 
@@ -910,7 +910,7 @@ gwy_tool_mask_editor_grow(GwyToolMaskEditor *tool)
 
     if (tool->args.prevent_merge) {
         grains = g_new0(gint, xres*yres);
-        ngrains = gwy_data_field_number_grains(plain_tool->mask_field, grains);
+        gwy_data_field_number_grains(plain_tool->mask_field, grains);
     }
 
     buffer = g_new(gdouble, xres);
@@ -1473,9 +1473,8 @@ gwy_data_field_paint_wide_line(GwyDataField *dfield,
                                gint width, gint height,
                                gdouble radius, gdouble value)
 {
-    gint i, q, xres;
+    gint i, q;
 
-    xres = gwy_data_field_get_xres(dfield);
     if (ABS(height) >= width) {
         q = width/2;
         if (height > 0) {
@@ -1515,7 +1514,6 @@ gwy_tool_mask_editor_selection_changed(GwyPlainTool *plain_tool,
     GwyToolMaskEditor *tool;
     GQuark quark;
     gint xres, yres;
-    gdouble *data;
     gdouble sel[2];
     gdouble fillvalue, r;
     gint isel[2];
@@ -1546,7 +1544,6 @@ gwy_tool_mask_editor_selection_changed(GwyPlainTool *plain_tool,
     mfield = gwy_tool_mask_editor_maybe_add_mask(plain_tool, quark);
     xres = gwy_data_field_get_xres(mfield);
     yres = gwy_data_field_get_yres(mfield);
-    data = gwy_data_field_get_data(mfield);
     r = tool->args.radius - 0.5;
     if (isel[0] >= 0 && isel[0] < xres && isel[1] >= 0 && isel[1] < yres) {
         if (!tool->drawing_started) {

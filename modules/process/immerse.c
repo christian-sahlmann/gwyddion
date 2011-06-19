@@ -732,7 +732,7 @@ immerse_do(ImmerseArgs *args)
     GwyContainer *data;
     GwyDataField *resampled, *image, *detail, *result;
     gint newid;
-    gint ixres, kxres, iyres, kyres;
+    gint kxres, kyres;
     gint x, y, w, h;
     gdouble iavg, davg;
     GQuark quark;
@@ -744,9 +744,7 @@ immerse_do(ImmerseArgs *args)
     detail = GWY_DATA_FIELD(gwy_container_get_object(args->detail.data, quark));
     davg = gwy_data_field_get_avg(detail);
 
-    ixres = gwy_data_field_get_xres(image);
     kxres = gwy_data_field_get_xres(detail);
-    iyres = gwy_data_field_get_yres(image);
     kyres = gwy_data_field_get_yres(detail);
 
     switch (args->sampling) {

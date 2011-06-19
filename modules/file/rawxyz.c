@@ -931,7 +931,6 @@ preview(RawXYZControls *controls)
     GwyDataField *dfield;
     GdkPixbuf *pixbuf;
     GtkWidget *entry;
-    gdouble avg, rms;
     gint xres, yres;
     GError *error = NULL;
 
@@ -953,8 +952,6 @@ preview(RawXYZControls *controls)
     args->yres = yres;
     if (dfield) {
         triangulation_info(controls);
-        avg = gwy_data_field_get_avg(dfield);
-        rms = gwy_data_field_get_rms(dfield);
         gwy_pixbuf_draw_data_field(pixbuf, dfield, controls->gradient);
         g_object_unref(dfield);
     }

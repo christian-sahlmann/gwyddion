@@ -596,7 +596,7 @@ mif_load(const gchar *filename,
         MIFInfoItem *item = mfile.images + i;
         MIFImageHeader image_header;
         MIFBlock raster, macro_geometry, preview, image, curve, calc;
-        guint ncalculations;
+        G_GNUC_UNUSED guint ncalculations;
         const guchar *p = buffer + item->image.offset;
         GQuark quark;
 

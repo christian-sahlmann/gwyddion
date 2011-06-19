@@ -212,7 +212,8 @@ nrrdfile_load(const gchar *filename,
     GError *err = NULL;
     GwyDataField *dfield = NULL;
     guint sizes[3] = { 1, 1, 1 };
-    guint version, dimension, xres, yres, header_size, i,
+    G_GNUC_UNUSED guint version;
+    guint dimension, xres, yres, header_size, i,
           stride, rowstride, fieldstride, chanaxis, xaxis, yaxis, nchannels;
     gchar *value, *vkeyvalue, *vfield, *p, *line, *datafile = NULL;
     gchar **kinds = NULL;
@@ -1322,7 +1323,7 @@ split_per_axis_field(const gchar *value,
                      GError **error)
 {
     gchar **raw_fields, **fields, *f;
-    guint n, i, len;
+    guint n = 0, i, len;
 
     raw_fields = g_strsplit_set(value, " \t\v\r\n", -1);
     fields = g_new0(gchar*, nitems+1);

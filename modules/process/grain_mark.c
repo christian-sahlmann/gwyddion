@@ -194,11 +194,8 @@ table_attach_threshold(GtkWidget *table, gint *row, const gchar *name,
                        GtkWidget **check,
                        gpointer data)
 {
-    GtkWidget *spin;
-
     *adj = gtk_adjustment_new(value, 0.0, 100.0, 0.1, 5, 0);
-    spin = gwy_table_attach_hscale(table, *row, name, "%", *adj,
-                                   GWY_HSCALE_CHECK);
+    gwy_table_attach_hscale(table, *row, name, "%", *adj, GWY_HSCALE_CHECK);
     *check = gwy_table_hscale_get_check(*adj);
     g_signal_connect_swapped(*adj, "value-changed",
                              G_CALLBACK(mark_invalidate), data);

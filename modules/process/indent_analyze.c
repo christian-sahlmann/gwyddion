@@ -362,7 +362,6 @@ create_preview_data(IndentAnalyzeControls *controls)
     GwyContainer *preview_container = NULL;
     GwyDataField *dfield = NULL, *mask;
     gint oldid;
-    gint xres, yres;
     // No zoom, zoom disorder final result
     // gdouble zoomval;
     const GwyRGBA mask_color = { 1.0, 0.0, 0.00, 0.5 };
@@ -376,8 +375,6 @@ create_preview_data(IndentAnalyzeControls *controls)
       preview_container = gwy_container_new();
       dfield = gwy_data_field_duplicate(dfield);
 
-      xres = gwy_data_field_get_xres(dfield);
-      yres = gwy_data_field_get_yres(dfield);
       // No zoom because it disorder mask on original image.
       // zoomval = (gdouble)PREVIEW_SIZE/MAX(xres, yres);
       // gwy_data_field_resample(dfield, xres*zoomval, yres*zoomval,
@@ -835,8 +832,8 @@ data_field_average_normal_vector(GwyDataField *dfield,
     xres = gwy_data_field_get_xres(dfield);
     yres = gwy_data_field_get_yres(dfield);
     gwy_data_field_area_get_inclination(dfield, col, row,
-                                        MIN(x + r, dfield->xres - 1) - col,
-                                        MIN(y + r, dfield->yres - 1) - row,
+                                        MIN(x + r, xres - 1) - col,
+                                        MIN(y + r, yres - 1) - row,
                                         &theta, &phi);
     vector->x = sin(theta)*cos(phi);
     vector->y = sin(theta)*sin(phi);
@@ -1063,8 +1060,6 @@ indent_analyze_do_the_hard_work(IndentAnalyzeControls * controls)
     gint mark_it = 0;
     gint i, j;
     gdouble dx, dy, ds;
-    gdouble total_area = 0;
-    gdouble flat_area = 0;
     gdouble sx;
     gdouble sy;
     gdouble side_r;
@@ -1123,8 +1118,6 @@ indent_analyze_do_the_hard_work(IndentAnalyzeControls * controls)
         (double)gwy_data_field_get_yres(dfield);
     ds = dx * dy;
 
-    total_area = 0;
-    flat_area = 0;
     // set particular args to zero
     reset_args(args);
 
@@ -1353,7 +1346,8 @@ compute_and_preview(IndentAnalyzeControls * controls)
 /* =========== dialog control functions ========================= */
 
 static void
-dialog_update(IndentAnalyzeControls * controls, IndentAnalyzeArgs * args)
+dialog_update(G_GNUC_UNUSED IndentAnalyzeControls *controls,
+              G_GNUC_UNUSED IndentAnalyzeArgs *args)
 {
 
     /*

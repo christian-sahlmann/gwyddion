@@ -175,7 +175,7 @@ static gboolean
 dwt_anisotropy_dialog(DWTAnisotropyArgs *args)
 {
     enum { RESPONSE_RESET = 1 };
-    GtkWidget *dialog, *table, *spin;
+    GtkWidget *dialog, *table;
     DWTAnisotropyControls controls;
     gint response;
 
@@ -209,17 +209,17 @@ dwt_anisotropy_dialog(DWTAnisotropyArgs *args)
 
     controls.ratio = gtk_adjustment_new(args->ratio,
                                         0.0001, 10.0, 1, 0.1, 0);
-    spin = gwy_table_attach_spinbutton(table, 3,
-                                       _("X/Y ratio threshold:"), NULL,
-                                       controls.ratio);
+    gwy_table_attach_spinbutton(table, 3,
+                                _("X/Y ratio threshold:"), NULL,
+                                controls.ratio);
     g_signal_connect(controls.ratio, "value-changed",
                      G_CALLBACK(ratio_changed_cb), args);
 
     controls.lowlimit = gtk_adjustment_new(args->lowlimit,
                                            1, 20, 1, 1, 0);
-    spin = gwy_table_attach_spinbutton(table, 4,
-                                       _("Low level exclude limit:"), NULL,
-                                       controls.lowlimit);
+    gwy_table_attach_spinbutton(table, 4,
+                                _("Low level exclude limit:"), NULL,
+                                controls.lowlimit);
     g_signal_connect(controls.lowlimit, "value-changed",
                      G_CALLBACK(lowlimit_changed_cb), args);
 

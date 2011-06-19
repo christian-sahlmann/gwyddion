@@ -1166,7 +1166,8 @@ static guint32 matrix_scanimagefile(const guchar** fp,
         gdouble* data_retdown = NULL;
         // and indices
         guint32 ind_tup, ind_retup, ind_tdown, ind_retdown;
-        guint32 xres, yres, maxint, cntl, cntp, n, avail;
+        guint32 xres, yres, cntl, cntp, n, avail;
+        G_GNUC_UNUSED guint32 maxint;
         gdouble width, height;
         GwySIUnit* unit;
         const gchar* sunit;
@@ -1634,7 +1635,6 @@ static GwyContainer* matrix_load(const gchar* filename,
               " Try loading parameter file, if available.");
     if(useparamfile) {
         // parameter file seems to be valid
-        gboolean res;
         fp = parbuffer + FILEIDENT_SIZE;
         gwy_container_set_string_by_name(container,
                               "/meta/imagefilename",
@@ -1645,7 +1645,7 @@ static GwyContainer* matrix_load(const gchar* filename,
                                          &matrixdata))
         { // scan parameterfile
         }
-        res = gwy_file_abandon_contents(parbuffer, parsize, NULL);
+        gwy_file_abandon_contents(parbuffer, parsize, NULL);
 
     } else {
         // parameterfile is invalid, open the images with arb units

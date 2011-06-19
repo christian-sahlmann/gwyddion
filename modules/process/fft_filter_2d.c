@@ -432,7 +432,6 @@ run_dialog(ControlsType *controls)
     GtkTooltips *tips;
     GHashTable *hash_tips;
     GwyPixmapLayer *layer, *mlayer;
-    GwyDataField *dfield;
     GSList *l;
     gint i, row, response;
 
@@ -463,8 +462,6 @@ run_dialog(ControlsType *controls)
     set_layer_channel(layer, 0);
     gwy_data_view_set_data_prefix(GWY_DATA_VIEW(controls->view), "/0/data");
     gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls->view), layer);
-    dfield = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
-                                                             "/1/data"));
     gwy_set_data_preview_size(GWY_DATA_VIEW(controls->view), PREVIEW_SIZE);
     gtk_box_pack_start(GTK_BOX(hbox), controls->view, FALSE, FALSE, 4);
 

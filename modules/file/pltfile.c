@@ -119,7 +119,7 @@ plt_load(const gchar *filename,
     GHashTable *hash = NULL;
     gsize size;
     GError *err = NULL;
-    gdouble xreal, yreal, zreal;
+    G_GNUC_UNUSED gdouble xreal, yreal, zreal;
     gint i, xres, yres;
     gdouble *data;
 
