@@ -35,6 +35,7 @@
 #include <libprocess/inttrans.h>
 #include <libprocess/simplefft.h>
 #include "gwyprocessinternal.h"
+#include "wrappers.h"
 
 /**
  * gwy_data_field_get_max:
@@ -458,6 +459,22 @@ gwy_data_field_area_get_min_max_mask(GwyDataField *data_field,
 
     *min = min1;
     *max = max1;
+}
+
+void
+_gwy_data_field_get_min_max(GwyDataField *field,
+                            GwyDataField *mask,
+                            GwyMaskingType mode,
+                            const GwyFieldPart *fpart,
+                            G_GNUC_UNUSED gpointer params,
+                            gdouble *results)
+{
+    gwy_data_field_area_get_min_max_mask(field, mask, mode,
+                                         fpart ? fpart->col : 0,
+                                         fpart ? fpart->row : 0,
+                                         fpart ? fpart->width : field->xres,
+                                         fpart ? fpart->height : field->yres,
+                                         results, results + 1);
 }
 
 /**

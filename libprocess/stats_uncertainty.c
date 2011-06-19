@@ -37,6 +37,27 @@
 #include <libprocess/inttrans.h>
 #include <libprocess/simplefft.h>
 #include "gwyprocessinternal.h"
+#include "monte-carlo-unc.h"
+#include "wrappers.h"
+
+/* XXX: This is just an example.   Does not use any actual uncertainties. */
+static void
+_gwy_data_field_area_min_max_unc(GwyDataField *field,
+                                 GwyDataField *uncz_field,
+                                 GwyDataField *mask, GwyMaskingType mode,
+                                 gint col, gint row,
+                                 gint width, gint height,
+                                 gdouble *min, gdouble *max)
+{
+    GwyFieldPart fpart = { col, row, width, height };
+    GwyFieldUncertainties unc = { 1.0 };
+    gdouble results[2];
+
+    _gwy_data_field_unc_scalar(field, mask, mode, &fpart, NULL, results, 2,
+                               &_gwy_data_field_get_min_max, &unc);
+    *min = results[0];
+    *max = results[1];
+}
 
 /**
  * gwy_data_field_get_max_uncertainty:

@@ -43,9 +43,11 @@ libgwyprocess2include_HEADERS = \
 	triangulation.h
 
 noinst_HEADERS = \
+	gwyprocessinternal.h \
+	monte-carlo-unc.h \
 	morph_lib.h \
 	natural.h \
-	gwyprocessinternal.h
+	wrappers.h
 
 lib_LTLIBRARIES = libgwyprocess2.la
 
@@ -114,6 +116,7 @@ libgwyprocess2_la_SOURCES = \
 	inttrans.c \
 	level.c \
 	linestats.c \
+	monte-carlo-unc.c \
 	morph_lib.c \
 	simplefft.c \
 	spectra.c \
