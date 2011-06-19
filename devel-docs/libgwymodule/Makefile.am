@@ -24,7 +24,7 @@ ADDOBJECTS_OPTIONS = --standard-files=gwymoduletypes
 
 # Extra options to supply to gtkdoc-scan.
 # e.g. SCAN_OPTIONS=--deprecated-guards="GTK_DISABLE_DEPRECATED" 
-SCAN_OPTIONS = --ignore-headers=gwymoduletypes.h
+SCAN_OPTIONS =
 
 # Extra options to supply to gtkdoc-mkdb.
 # e.g. MKDB_OPTIONS=--sgml-mode --output-format=xml

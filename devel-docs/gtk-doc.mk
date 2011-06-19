@@ -79,6 +79,9 @@ docs: html-build.stamp
 
 #### scan ####
 
+# XXX: The awk command modifying $(DOC_MODULE).interfaces fixes gtk-doc 1.17
+# which thinks everything listed there is an object and does various silly
+# things based on that.  Remove once not necessary.
 scan-build.stamp: $(HFILE_GLOB) $(CFILE_GLOB) $(ADD_OBJECTS)
 	@echo 'gtk-doc: Scanning header files'
 	if test -f Makefile.am; then \
@@ -98,6 +101,7 @@ scan-build.stamp: $(HFILE_GLOB) $(CFILE_GLOB) $(ADD_OBJECTS)
 	fi
 	if test -s $(DOC_MODULE).hierarchy; then \
 		$(PYTHON) $(ADD_OBJECTS) $(DOC_MODULE)-sections.txt $(DOC_MODULE).hierarchy $(ADDOBJECTS_OPTIONS); \
+		$(AWK) '/^[^ ]/{ignore=0}; /^(GFlags|GEnum|GBoxed)/{ignore=1}; {if(!ignore)print}' $(DOC_MODULE).hierarchy >$(DOC_MODULE).tmp && mv -f $(DOC_MODULE).tmp $(DOC_MODULE).hierarchy; \
 	fi
 	touch scan-build.stamp
 
