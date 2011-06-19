@@ -140,7 +140,7 @@ gwy_gl_material_editor_construct(GwyResourceEditor *res_editor)
         { N_("Spe_cular"), GL_MATERIAL_SPECULAR, },
         /*{ N_("_Emission"), GL_MATERIAL_EMISSION, },*/
     };
-    GtkWidget *vbox, *hbox, *buttonbox, *colorsel, *table, *spin;
+    GtkWidget *vbox, *hbox, *buttonbox, *colorsel, *table;
     GwyGLMaterialEditor *editor;
     GtkObject *adj;
     GSList *group, *l;
@@ -186,8 +186,8 @@ gwy_gl_material_editor_construct(GwyResourceEditor *res_editor)
     gtk_box_pack_start(GTK_BOX(vbox), table, FALSE, FALSE, 0);
     adj = gtk_adjustment_new(0.0, 0.0, 1.0, 0.001, 0.1, 0.0);
     editor->shininess = adj;
-    spin = gwy_table_attach_hscale(table, 0, _("Sh_ininess:"), NULL,
-                                   adj, GWY_HSCALE_DEFAULT);
+    gwy_table_attach_hscale(table, 0, _("Sh_ininess:"), NULL,
+                            adj, GWY_HSCALE_DEFAULT);
     g_signal_connect_swapped(adj, "value-changed",
                              G_CALLBACK(gwy_resource_editor_queue_commit),
                              res_editor);

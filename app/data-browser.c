@@ -3161,7 +3161,7 @@ gwy_app_data_browser_construct_graphs(GwyAppDataBrowser *browser)
  **************************************************************************/
 
 static void
-gwy_app_data_browser_spectra_toggled(GtkCellRendererToggle *renderer,
+gwy_app_data_browser_spectra_toggled(G_GNUC_UNUSED GtkCellRendererToggle *renderer,
                                      gchar *path_str,
                                      GwyAppDataBrowser *browser)
 {
@@ -3169,7 +3169,6 @@ gwy_app_data_browser_spectra_toggled(GtkCellRendererToggle *renderer,
     GtkTreeIter iter;
     GtkTreePath *path;
     GtkTreeModel *model;
-    gboolean active, toggled;
 
     gwy_debug("Toggled spectra row %s", path_str);
     proxy = browser->current;
@@ -3180,16 +3179,8 @@ gwy_app_data_browser_spectra_toggled(GtkCellRendererToggle *renderer,
     gtk_tree_model_get_iter(model, &iter, path);
     gtk_tree_path_free(path);
 
-    active = gtk_cell_renderer_toggle_get_active(renderer);
     g_warning("Cannot make spectra visible and this column should not be "
               "visible anyway.");
-    toggled = FALSE;
-    /*
-    toggled = gwy_app_data_proxy_graph_set_visible(proxy, &iter, !active);
-    g_assert(toggled);
-
-    gwy_app_data_proxy_maybe_finalize(proxy);
-    */
 }
 
 static void
@@ -3550,11 +3541,9 @@ gwy_app_data_browser_copy_object(GwyAppDataProxy *srcproxy,
                                  GtkTreeIter *iter,
                                  GwyAppDataProxy *destproxy)
 {
-    GwyAppDataBrowser *browser;
     GwyContainer *container;
     gint id;
 
-    browser = srcproxy->parent;
     gtk_tree_model_get(model, iter, MODEL_ID, &id, -1);
 
     if (!destproxy) {

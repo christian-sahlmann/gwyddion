@@ -704,7 +704,6 @@ gwy_plain_tool_set_selection_key(GwyPlainTool *plain_tool,
                                  const gchar *bname)
 {
     GwyPixmapLayer *layer;
-    GwyContainer *container;
     const gchar *data_key;
     gchar *key;
     guint len;
@@ -715,7 +714,6 @@ gwy_plain_tool_set_selection_key(GwyPlainTool *plain_tool,
     g_return_val_if_fail(GWY_IS_VECTOR_LAYER(plain_tool->layer), NULL);
     g_return_val_if_fail(bname, NULL);
 
-    container = gwy_data_view_get_data(plain_tool->data_view);
     layer = gwy_data_view_get_base_layer(plain_tool->data_view);
     data_key = gwy_pixmap_layer_get_data_key(layer);
     gwy_debug("data_key: <%s>", data_key);

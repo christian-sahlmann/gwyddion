@@ -1364,7 +1364,6 @@ gwy_app_init_common(GError **error,
     }
     else {
         GPtrArray *module_dirs;
-        const gchar *q;
         gchar *p;
         guint i;
 
@@ -1380,7 +1379,6 @@ gwy_app_init_common(GError **error,
         va_end(ap);
         g_free(p);
 
-        q = gwy_get_user_dir();
         va_start(ap, error);
         while ((dir = va_arg(ap, const gchar*))) {
             g_ptr_array_add(module_dirs,

@@ -640,16 +640,14 @@ gwy_data_chooser_channels_render_name(G_GNUC_UNUSED GtkCellLayout *layout,
                                       GtkCellRenderer *renderer,
                                       GtkTreeModel *model,
                                       GtkTreeIter *iter,
-                                      gpointer data)
+                                      G_GNUC_UNUSED gpointer data)
 {
-    GwyDataChooser *chooser;
     GwyContainer *container;
     Proxy *proxy;
     gint id;
 
     gtk_tree_model_get(model, iter, MODEL_COLUMN_PROXY, &proxy, -1);
     if (!proxy->name) {
-        chooser = (GwyDataChooser*)data;
         gtk_tree_model_get(model, iter,
                            MODEL_COLUMN_CONTAINER, &container,
                            MODEL_COLUMN_ID, &id,
@@ -665,9 +663,8 @@ gwy_data_chooser_channels_render_icon(G_GNUC_UNUSED GtkCellLayout *layout,
                                       GtkCellRenderer *renderer,
                                       GtkTreeModel *model,
                                       GtkTreeIter *iter,
-                                      gpointer data)
+                                      G_GNUC_UNUSED gpointer data)
 {
-    GwyDataChooser *chooser;
     GwyContainer *container;
     gint id, width, height;
     Proxy *proxy;
@@ -677,7 +674,6 @@ gwy_data_chooser_channels_render_icon(G_GNUC_UNUSED GtkCellLayout *layout,
 
     gtk_tree_model_get(model, iter, MODEL_COLUMN_PROXY, &proxy, -1);
     if (!proxy->thumb) {
-        chooser = (GwyDataChooser*)data;
         gtk_tree_model_get(model, iter,
                            MODEL_COLUMN_CONTAINER, &container,
                            MODEL_COLUMN_ID, &id,

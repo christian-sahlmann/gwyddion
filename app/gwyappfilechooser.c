@@ -566,11 +566,9 @@ static gboolean
 gwy_app_file_chooser_open_filter(const GtkFileFilterInfo *filter_info,
                                  gpointer userdata)
 {
-    GwyAppFileChooser *chooser;
     const gchar *name;
     gint score;
 
-    chooser = GWY_APP_FILE_CHOOSER(userdata);
     name = gwy_file_detect_with_score(filter_info->filename,
                                       FALSE, GWY_FILE_OPERATION_LOAD, &score);
     /* To filter out `fallback' importers like rawfile */
@@ -600,9 +598,8 @@ gwy_app_file_chooser_add_preview(GwyAppFileChooser *chooser)
     gtk_icon_view_set_columns(preview, 1);
 
     renderer = gtk_cell_renderer_pixbuf_new();
-    gtk_cell_layout_pack_start(GTK_CELL_LAYOUT(preview), renderer, FALSE);
-    gtk_cell_layout_add_attribute(GTK_CELL_LAYOUT(preview), renderer,
-                                  "pixbuf", COLUMN_PIXBUF);
+    gtk_cell_layout_pack_start(layout, renderer, FALSE);
+    gtk_cell_layout_add_attribute(layout, renderer, "pixbuf", COLUMN_PIXBUF);
 
     renderer = gtk_cell_renderer_text_new();
     g_object_set(renderer,
@@ -610,9 +607,8 @@ gwy_app_file_chooser_add_preview(GwyAppFileChooser *chooser)
                  "ellipsize", PANGO_ELLIPSIZE_END,
                  "ellipsize-set", TRUE,
                  NULL);
-    gtk_cell_layout_pack_start(GTK_CELL_LAYOUT(preview), renderer, FALSE);
-    gtk_cell_layout_add_attribute(GTK_CELL_LAYOUT(preview), renderer,
-                                  "markup", COLUMN_FILEINFO);
+    gtk_cell_layout_pack_start(layout, renderer, FALSE);
+    gtk_cell_layout_add_attribute(layout, renderer, "markup", COLUMN_FILEINFO);
     chooser->renderer_fileinfo = G_OBJECT(renderer);
 
     gtk_icon_view_set_selection_mode(preview, GTK_SELECTION_NONE);

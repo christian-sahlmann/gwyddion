@@ -476,7 +476,7 @@ gwy_meta_item_changed(GwyContainer *container,
     GtkListStore *store;
     GtkTreeView *treeview;
     GtkTreeIter iter;
-    const gchar *key;
+    G_GNUC_UNUSED const gchar *key;
 
     key = g_quark_to_string(quark);
     gwy_debug("Meta item <%s> changed", key);
