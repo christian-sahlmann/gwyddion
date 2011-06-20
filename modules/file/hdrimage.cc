@@ -1376,7 +1376,8 @@ png16_load(const gchar *filename,
     FILE *fr = NULL;
     GwySIUnit *unitxy = NULL, *unitz = NULL;
     gboolean have_sCAL, have_pCAL, manual_import = TRUE;
-    guint xres, yres, bit_depth, colour_type, nchannels, rowbytes, ncomments;
+    guint xres, yres, bit_depth, nchannels, ncomments;
+    G_GNUC_UNUSED guint colour_type, rowbytes;
     guint id, i, j;
     int scal_unit, pcal_type, pcal_nparams, power10;
     gdouble xreal, yreal, xoff, yoff, zmin, zmax, q, scal_xreal, scal_yreal;

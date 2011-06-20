@@ -198,7 +198,6 @@ mark_dialog(MarkArgs *args,
 {
     GtkWidget *dialog, *hbox, *vbox, *label, *vbox2;
     GtkTable *table;
-    GtkTooltips *tips;
     MarkControls controls;
     GwyDataField *dfield;
     GwyPixmapLayer *layer;
@@ -220,8 +219,6 @@ mark_dialog(MarkArgs *args,
                           GTK_STOCK_OK, GTK_RESPONSE_OK);
     gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
-
-    tips = gwy_app_get_tooltips();
 
     hbox = gtk_hbox_new(FALSE, 12);
     gtk_container_set_border_width(GTK_CONTAINER(hbox), 4);
