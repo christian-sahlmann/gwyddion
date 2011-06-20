@@ -873,10 +873,10 @@ gwy_data_field_2dfft_humanize_in_place(GwyDataField *data_field)
     gdouble *data;
 
     data = data_field->data;
-    im = data_field->yres/2;
-    jm = data_field->xres/2;
     xres = data_field->xres;
     yres = data_field->yres;
+    im = yres/2;
+    jm = xres/2;
 
     for (i = 0; i < im; i++) {
         for (j = 0; j < jm; j++) {

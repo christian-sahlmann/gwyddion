@@ -32,7 +32,7 @@ static void
 gwy_process_import_fftw_wisdom(void)
 {
 #ifdef HAVE_FFTW3
-    gboolean ok;
+    G_GNUC_UNUSED gboolean ok;
 
     ok = fftw_import_system_wisdom();
     gwy_debug("FFTW3 system wisdom imported: %d", ok);

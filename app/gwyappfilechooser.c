@@ -564,7 +564,7 @@ gwy_app_file_chooser_add_type_list(GwyAppFileChooser *chooser)
 
 static gboolean
 gwy_app_file_chooser_open_filter(const GtkFileFilterInfo *filter_info,
-                                 gpointer userdata)
+                                 G_GNUC_UNUSED gpointer userdata)
 {
     const gchar *name;
     gint score;
