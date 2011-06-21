@@ -116,7 +116,7 @@ static gboolean
 contrast_dialog(ContrastArgs *args)
 {
     enum { RESPONSE_RESET = 1 };
-    GtkWidget *dialog, *table, *spin;
+    GtkWidget *dialog, *table;
     ContrastControls controls;
     gint response;
     gint row;
@@ -147,8 +147,8 @@ contrast_dialog(ContrastArgs *args)
                             controls.depth, 0);
 
     controls.weight = gtk_adjustment_new(args->weight, 0.0, 1.0, 0.01, 0.1, 0);
-    spin = gwy_table_attach_hscale(table, row++, _("_Weight:"), NULL,
-                                   controls.weight, 0);
+    gwy_table_attach_hscale(table, row++, _("_Weight:"), NULL,
+                            controls.weight, 0);
 
     gtk_widget_show_all(dialog);
     do {
