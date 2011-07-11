@@ -161,6 +161,7 @@ start_element(G_GNUC_UNUSED GMarkupParseContext *context,
 {
     LextFile *lfile = (LextFile*)user_data;
 
+    gwy_debug("<%s>", element_name);
     if (!lfile->path->len && !gwy_strequal(element_name, "TiffTagDescData")) {
         g_set_error(error, G_MARKUP_ERROR, G_MARKUP_ERROR_UNKNOWN_ELEMENT,
                     _("Top-level element is not ‘TiffTagDescData’."));
@@ -180,6 +181,7 @@ end_element(G_GNUC_UNUSED GMarkupParseContext *context,
     LextFile *lfile = (LextFile*)user_data;
     gchar *pos;
 
+    gwy_debug("</%s>", element_name);
     pos = strlenrchr(lfile->path->str, '/', lfile->path->len);
     /* GMarkupParser should raise a run-time error if this does not hold. */
     g_assert(pos && strcmp(pos + 1, element_name) == 0);
