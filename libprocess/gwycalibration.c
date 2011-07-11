@@ -162,11 +162,7 @@ gwy_calibration_get_ndata(GwyCalibration *calibration)
 void
 _gwy_calibration_class_setup_presets(void)
 {
-    /*
-    GwyResourceClass *klass;
-
-    klass = g_type_class_ref(GWY_TYPE_CALIBRATION);
-    */
+    g_type_class_ref(GWY_TYPE_CALIBRATION);
 }
 
 /**
