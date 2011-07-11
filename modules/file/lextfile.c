@@ -52,7 +52,7 @@
 #ifdef HAVE_MEMRCHR
 #define strlenrchr(s,c,len) (gchar*)memrchr((s),(c),(len))
 #else
-#define strlenrchr(s,c,len) strchr((s),(c))
+#define strlenrchr(s,c,len) strrchr((s),(c))
 #endif
 
 #if GLIB_CHECK_VERSION(2, 12, 0)
@@ -85,7 +85,7 @@ static GwyModuleInfo module_info = {
     module_register,
     N_("Imports LEXT data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.1",
+    "0.2",
     "David Nečas (Yeti) & Petr Klapetek",
     "2010",
 };
@@ -201,7 +201,7 @@ text(G_GNUC_UNUSED GMarkupParseContext *context,
 
     g_strstrip(val);
     if (*val) {
-        gwy_debug("<%s> <%s>", path, val);
+        gwy_debug("%s <%s>", path, val);
         g_hash_table_replace(lfile->hash, g_strdup(path), val);
     }
     else
