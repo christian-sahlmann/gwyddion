@@ -336,5 +336,6 @@ fi
 
 %if %{enable_kde4_thumbnailer}
 %files thumbnailer-kde4
+%defattr(-,root,root)
 %{_libdir}/kde4/gwythumbcreator.so
 %endif
