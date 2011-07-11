@@ -2,6 +2,10 @@
 Modules:
 - 1D FFT filter: Correct X-axis units of Fourier modulus are displayed.
 - Level Grains: The sign of extracted background was corrected.
+- LEXT: Crashing on systems lacking memrchr(), namely MS Windows, was fixed.
+
+Other:
+- Compatibility with gcc 4.6 and autoconf 2.68 was improved.
 
 
 2.25 (2011-06-06)
