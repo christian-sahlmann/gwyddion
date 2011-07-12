@@ -39,6 +39,7 @@ file_LTLIBRARIES = \
 	burleigh.la \
 	burleigh_bii.la \
 	burleigh_exp.la \
+	codevfile.la \
 	createc.la \
 	csmfile.la \
 	dmefile.la \
@@ -158,6 +159,7 @@ burleigh_la_SOURCES      = burleigh.c
 burleigh_bii_la_SOURCES  = burleigh_bii.c
 burleigh_exp_la_SOURCES  = burleigh_exp.c
 createc_la_SOURCES       = createc.c
+codevfile_la_SOURCES     = codevfile.c
 csmfile_la_SOURCES       = csmfile.c
 dmefile_la_SOURCES       = dmefile.c
 dumbfile_la_SOURCES      = dumbfile.c
