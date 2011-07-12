@@ -1,8 +1,12 @@
 2.26 (0000-00-00)
+Libraries:
+- libgwydgets: Graph data can be exported to ASCII in a locale-independent way.
+
 Modules:
 - 1D FFT filter: Correct X-axis units of Fourier modulus are displayed.
 - Level Grains: The sign of extracted background was corrected.
 - LEXT: Crashing on systems lacking memrchr(), namely MS Windows, was fixed.
+- Graph export ASCII: Can export floating point numbers in POSIX format.
 
 Other:
 - Compatibility with gcc 4.6 and autoconf 2.68 was improved.
