@@ -1524,6 +1524,20 @@ gwy_graph_model_get_ranges(GwyGraphModel *gmodel,
     return (req & ok) == req;
 }
 
+static inline void
+append_number(GString *str,
+              gdouble value,
+              gboolean posix_format)
+{
+    if (posix_format) {
+        gchar buf[48];
+        g_ascii_formatd(buf, sizeof(buf), "%.8g", value);
+        g_string_append(str, buf);
+    }
+    else
+        g_string_append_printf(str, "%.8g", value);
+}
+
 /**
  * gwy_graph_model_export_ascii:
  * @model: A graph model.
@@ -1556,6 +1570,7 @@ gwy_graph_model_export_ascii(GwyGraphModel *model,
     gdouble xmult, ymult;
     GString *labels, *descriptions, *units;
     gint i, j, max, ndata;
+    gboolean posix_format = export_style & GWY_GRAPH_MODEL_EXPORT_ASCII_POSIX;
 
     if (!string)
         string = g_string_new(NULL);
@@ -1580,6 +1595,7 @@ gwy_graph_model_export_ascii(GwyGraphModel *model,
         ymult = 1;
     }
 
+    export_style &= ~GWY_GRAPH_MODEL_EXPORT_ASCII_POSIX;
     switch (export_style) {
         case GWY_GRAPH_MODEL_EXPORT_ASCII_PLAIN:
         case GWY_GRAPH_MODEL_EXPORT_ASCII_ORIGIN:
@@ -1619,15 +1635,16 @@ gwy_graph_model_export_ascii(GwyGraphModel *model,
         for (j = 0; j < max; j++) {
             for (i = 0; i < model->curves->len; i++) {
                 cmodel = g_ptr_array_index(model->curves, i);
-                if (gwy_graph_curve_model_get_ndata(cmodel) > j)
-                    g_string_append_printf(string, "%g  %g            ",
-                                           cmodel->xdata[j]/xmult,
-                                           cmodel->ydata[j]/ymult);
+                if (gwy_graph_curve_model_get_ndata(cmodel) > j) {
+                    append_number(string, cmodel->xdata[j]/xmult, posix_format);
+                    g_string_append(string, "  ");
+                    append_number(string, cmodel->ydata[j]/ymult, posix_format);
+                    g_string_append(string, "            ");
+                }
                 else
-                    g_string_append_printf(string,
-                                           "-          -              ");
+                    g_string_append(string, "-          -              ");
             }
-            g_string_append_printf(string, "\n");
+            g_string_append_c(string, '\n');
         }
         break;
 
@@ -1644,11 +1661,13 @@ gwy_graph_model_export_ascii(GwyGraphModel *model,
             if (export_units)
                 g_string_append_printf(string, "# [%s]    [%s]\n",
                                        xformat->units, yformat->units);
-            for (j = 0; j < cmodel->n; j++)
-                g_string_append_printf(string, "%g   %g\n",
-                                       cmodel->xdata[j]/xmult,
-                                       cmodel->ydata[j]/ymult);
-            g_string_append_printf(string, "\n\n");
+            for (j = 0; j < cmodel->n; j++) {
+                append_number(string, cmodel->xdata[j]/xmult, posix_format);
+                g_string_append(string, "   ");
+                append_number(string, cmodel->ydata[j]/ymult, posix_format);
+                g_string_append_c(string, '\n');
+            }
+            g_string_append(string, "\n\n");
         }
 
         break;
@@ -1691,14 +1710,16 @@ gwy_graph_model_export_ascii(GwyGraphModel *model,
         for (j = 0; j < max; j++) {
             for (i = 0; i < model->curves->len; i++) {
                 cmodel = g_ptr_array_index(model->curves, i);
-                if (gwy_graph_curve_model_get_ndata(cmodel) > j)
-                    g_string_append_printf(string, "%g;%g;",
-                                           cmodel->xdata[j]/xmult,
-                                           cmodel->ydata[j]/ymult);
+                if (gwy_graph_curve_model_get_ndata(cmodel) > j) {
+                    append_number(string, cmodel->xdata[j]/xmult, posix_format);
+                    g_string_append_c(string, ';');
+                    append_number(string, cmodel->ydata[j]/ymult, posix_format);
+                    g_string_append_c(string, ';');
+                }
                 else
-                    g_string_append_printf(string, ";;");
+                    g_string_append(string, ";;");
             }
-            g_string_append_printf(string, "\n");
+            g_string_append_c(string, '\n');
         }
         break;
 

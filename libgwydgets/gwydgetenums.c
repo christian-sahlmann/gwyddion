@@ -181,6 +181,28 @@ gwy_graph_curve_type_get_enum(void)
  **/
 
 /**
+ * @GWY_GRAPH_MODEL_EXPORT_ASCII_PLAIN: White-space separated data values,
+ *                                      plain description lines and column
+ *                                      headers, missing data represented with
+ *                                      dashes.
+ * @GWY_GRAPH_MODEL_EXPORT_ASCII_GNUPLOT: White-space separated data values,
+ *                                        curves serialised,
+ *                                        description lines and column headers
+ *                                        prefixed with <literal>#</literal>.
+ * @GWY_GRAPH_MODEL_EXPORT_ASCII_CSV: Semicolon separated data values and
+ *                                    column headers, missing
+ *                                    data represented as empty columns.
+ * @GWY_GRAPH_MODEL_EXPORT_ASCII_ORIGIN: Presently, the same as the plain
+ *                                       format.
+ * @GWY_GRAPH_MODEL_EXPORT_ASCII_POSIX: Flag that can be combined with the
+ *                                      other formats, meaning
+ *                                      locale-independent C/POSIX format of
+ *                                      floating point numbers. (Since 2.26)
+ *
+ * Graph ASCII export style.
+ **/
+
+/**
  * SECTION:gwydgetenums
  * @title: gwydgetenums
  * @short_description: Common enumerations
