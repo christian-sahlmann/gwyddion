@@ -32,6 +32,7 @@ typedef struct {
     gboolean units;
     gboolean labels;
     gboolean metadata;
+    gboolean posix;
     GwyGraphModelExportStyle style;
 } ExportParameters;
 
@@ -59,6 +60,7 @@ static const ExportParameters load_defaults = {
     TRUE,
     TRUE,
     TRUE,
+    FALSE,
     GWY_GRAPH_MODEL_EXPORT_ASCII_PLAIN,
 };
 
@@ -67,7 +69,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Exports graph data to text files."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.5",
+    "1.6",
     "David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
@@ -93,7 +95,6 @@ export(GwyGraph *graph)
     ExportParameters params;
     GwyContainer *settings;
 
-    
     settings = gwy_app_settings_get();
     load_args(settings, &params);
     export_dialog(graph, &params);
@@ -122,6 +123,12 @@ export_dialog(GwyGraph *graph,
                                    G_CALLBACK(gwy_enum_combo_box_update_int),
                                    &params->style, params->style, TRUE);
     gtk_box_pack_start(vbox, combo, FALSE, FALSE, 0);
+
+    check = gtk_check_button_new_with_mnemonic(_("POSIX _number format"));
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(check), params->posix);
+    gtk_box_pack_start(vbox, check, FALSE, FALSE, 0);
+    g_signal_connect(check, "toggled",
+                     G_CALLBACK(boolean_changed_cb), &params->posix);
 
     check = gtk_check_button_new_with_mnemonic(_("Export _labels"));
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(check), params->labels);
@@ -196,12 +203,17 @@ export_dialog_choose_file(GwyGraph *graph,
     }
 
     if (gwy_app_file_confirm_overwrite(dialog)) {
+        GwyGraphModelExportStyle style;
+
         filename = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dialog));
+        style = params->style | (params->posix
+                                 ? GWY_GRAPH_MODEL_EXPORT_ASCII_POSIX
+                                 : 0);
         str = gwy_graph_model_export_ascii(graph->graph_model,
                                            params->units,
                                            params->labels,
                                            params->metadata,
-                                           params->style,
+                                           style,
                                            NULL);
 
         /* FIXME: Must check success */
@@ -235,18 +247,24 @@ load_args(GwyContainer *settings,
     gwy_container_gis_boolean_by_name(settings, metadata_key, &params->metadata);
     gwy_container_gis_enum_by_name(settings, style_key, &params->style);
 
-    params->style = MIN(params->style,
-                        GWY_GRAPH_MODEL_EXPORT_ASCII_ORIGIN);
+    params->posix = params->style & GWY_GRAPH_MODEL_EXPORT_ASCII_POSIX;
+    params->style = params->style & ~GWY_GRAPH_MODEL_EXPORT_ASCII_POSIX;
+    params->style = MIN(params->style, GWY_GRAPH_MODEL_EXPORT_ASCII_ORIGIN);
 }
 
 static void
 save_args(GwyContainer *settings,
           ExportParameters *params)
 {
+    GwyGraphModelExportStyle style;
+
+    style = params->style | (params->posix
+                             ? GWY_GRAPH_MODEL_EXPORT_ASCII_POSIX
+                             : 0);
     gwy_container_set_boolean_by_name(settings, labels_key, params->labels);
     gwy_container_set_boolean_by_name(settings, units_key, params->units);
     gwy_container_set_boolean_by_name(settings, metadata_key, params->metadata);
-    gwy_container_set_enum_by_name(settings, style_key, params->style);
+    gwy_container_set_enum_by_name(settings, style_key, style);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
