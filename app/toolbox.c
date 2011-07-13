@@ -1115,21 +1115,9 @@ toggle_edit_accelerators(G_GNUC_UNUSED gpointer callback_data,
 static void
 enable_edit_accelerators(gboolean enable)
 {
-    GtkWidget *toolbox = gwy_app_main_window_get();
-    GtkAccelGroup *accel_group;
-
-    accel_group = GTK_ACCEL_GROUP(g_object_get_data(G_OBJECT(toolbox),
-                                                    "accel_group"));
-    /* XXX: The Gtk+ locking interface is recursive but we use only on/off
-     * locking. */
-    if (enable) {
-        if (gtk_accel_group_get_is_locked(accel_group))
-            gtk_accel_group_unlock(accel_group);
-    }
-    else {
-        if (!gtk_accel_group_get_is_locked(accel_group))
-            gtk_accel_group_lock(accel_group);
-    }
+    g_object_set(gtk_settings_get_default(),
+                 "gtk-can-change-accels", enable,
+                 NULL);
 }
 
 static void
