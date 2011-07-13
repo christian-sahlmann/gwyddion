@@ -48,6 +48,7 @@ typedef struct {
     GtkRadioButton *first_tool;
     const gchar *first_tool_func;
     GPtrArray *unseen_tools;
+    GtkAccelGroup *accel_group;
 } GwyAppToolboxBuilder;
 
 typedef enum {
@@ -255,6 +256,7 @@ toolbox_ui_make_tool(GwyAppToolboxBuilder *builder,
 {
     GtkWidget *button;
     const gchar *name;
+    gchar *accel_path;
     gboolean found;
     guint i;
 
@@ -269,6 +271,9 @@ toolbox_ui_make_tool(GwyAppToolboxBuilder *builder,
         builder->first_tool_func = name;
     }
     gtk_toggle_button_set_mode(GTK_TOGGLE_BUTTON(button), FALSE);
+    accel_path = g_strconcat("<tool>/", name, NULL);
+    gtk_widget_set_accel_path(button, accel_path, builder->accel_group);
+    g_free(accel_path);
 
     found = FALSE;
     for (i = 0; i < builder->unseen_tools->len; i++) {
@@ -520,7 +525,8 @@ gather_tools(const gchar *name,
 
 static void
 gwy_app_toolbox_build(GtkBox *vbox,
-                      GtkTooltips *tips)
+                      GtkTooltips *tips,
+                      GtkAccelGroup *accel_group)
 {
     static const GMarkupParser parser = {
         toolbox_ui_start_element,
@@ -555,6 +561,7 @@ gwy_app_toolbox_build(GtkBox *vbox,
     builder.tips = tips;
     builder.unseen_tools = g_ptr_array_new();
     builder.path = g_string_new(NULL);
+    builder.accel_group = accel_group;
 
     gwy_tool_func_foreach((GFunc)gather_tools, builder.unseen_tools);
 
@@ -585,6 +592,7 @@ gwy_app_toolbox_create(void)
     gwy_app_main_window_set(toolbox);
 
     accel_group = gtk_accel_group_new();
+    gtk_window_add_accel_group(GTK_WINDOW(toolbox), accel_group);
     g_object_set_data(G_OBJECT(toolbox), "accel_group", accel_group);
 
     vbox = GTK_BOX(gtk_vbox_new(FALSE, 0));
@@ -600,11 +608,9 @@ gwy_app_toolbox_create(void)
 
     menu = gwy_app_build_process_menu(accel_group);
     gwy_app_process_menu_add_run_last(menu);
-    gtk_accel_group_lock(gtk_menu_get_accel_group(GTK_MENU(menu)));
     toolbox_add_menubar(container, menu, _("_Data Process"));
 
     menu = gwy_app_build_graph_menu(accel_group);
-    gtk_accel_group_lock(gtk_menu_get_accel_group(GTK_MENU(menu)));
     toolbox_add_menubar(container, menu, _("_Graph"));
 
     toolbox_add_menubar(container,
@@ -612,7 +618,7 @@ gwy_app_toolbox_create(void)
 
     /***************************************************************/
 
-    gwy_app_toolbox_build(vbox, tooltips);
+    gwy_app_toolbox_build(vbox, tooltips, accel_group);
 
     /***************************************************************/
     gtk_drag_dest_set(toolbox, GTK_DEST_DEFAULT_ALL,
@@ -625,7 +631,6 @@ gwy_app_toolbox_create(void)
     /* XXX */
     g_signal_connect(toolbox, "delete-event", G_CALLBACK(gwy_app_quit), NULL);
 
-    gtk_window_add_accel_group(GTK_WINDOW(toolbox), accel_group);
     gtk_widget_show_all(toolbox);
 
     gwy_osx_get_menu_from_widget(container);

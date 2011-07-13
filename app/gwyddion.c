@@ -126,6 +126,8 @@ main(int argc, char *argv[])
     debug_time(timer, "create splash");
 
     accel_file = g_build_filename(gwy_get_user_dir(), "accel_map", NULL);
+    gtk_accel_map_load(accel_file);
+    debug_time(timer, "load accel map");
 
     gwy_app_splash_set_message(_("Loading document history"));
     recent_file_file = gwy_app_settings_get_recent_file_list_filename();
@@ -161,6 +163,8 @@ main(int argc, char *argv[])
     /* The Python initialisation somehow overrides SIGINT and Gwyddion can no
      * longer be terminated with Ctrl-C.  Fix it. */
     signal(SIGINT, SIG_DFL);
+    /* TODO: The Python initialisation also overrides where the warnings go.
+     * Restore the handlers. */
     debug_time(timer, "register modules");
 
     if (app_options.check) {

@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003-2006 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003-2006,2011 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -407,10 +407,12 @@ gwy_app_menu_setup_accels(GNode *node,
     MenuNodeData *data = (MenuNodeData*)node->data;
     gchar *accel_path;
 
-    accel_path = g_strconcat((gchar*)prefix, data->path, NULL);
-    gwy_app_menu_canonicalize_label(accel_path);
-    gtk_menu_item_set_accel_path(GTK_MENU_ITEM(data->widget), accel_path);
-    g_free(accel_path);
+    if (GTK_IS_MENU_ITEM(data->widget)) {
+        accel_path = g_strconcat((gchar*)prefix, data->path, NULL);
+        gwy_app_menu_canonicalize_label(accel_path);
+        gtk_menu_item_set_accel_path(GTK_MENU_ITEM(data->widget), accel_path);
+        g_free(accel_path);
+    }
 
     return FALSE;
 }
@@ -422,10 +424,10 @@ gwy_app_menu_setup_groups(GNode *node,
     MenuNodeData *data = (MenuNodeData*)node->data;
     GtkWidget *menu;
 
-    if (!(menu = gtk_menu_item_get_submenu(GTK_MENU_ITEM(data->widget))))
-        return FALSE;
-
-    gtk_menu_set_accel_group(GTK_MENU(menu), accel_group);
+    if (GTK_IS_MENU_ITEM(data->widget)) {
+        menu = gtk_menu_item_get_submenu(GTK_MENU_ITEM(data->widget));
+        gtk_menu_set_accel_group(GTK_MENU(menu), accel_group);
+    }
 
     return FALSE;
 }
