@@ -125,7 +125,7 @@ main(int argc, char *argv[])
     gwy_app_splash_start(!app_options.no_splash && !app_options.check);
     debug_time(timer, "create splash");
 
-    accel_file = g_build_filename(gwy_get_user_dir(), "accel_map", NULL);
+    accel_file = g_build_filename(gwy_get_user_dir(), "ui", "accel_map", NULL);
     gtk_accel_map_load(accel_file);
     debug_time(timer, "load accel map");
 
