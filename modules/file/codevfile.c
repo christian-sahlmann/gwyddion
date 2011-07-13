@@ -159,7 +159,7 @@ int_load(const gchar *filename,
     gsize size;
     GError *err = NULL;
     gdouble xreal, yreal;
-    gint i, xres, yres, no_data_value = 32768;
+    gint i, xres, yres, no_data_value = 32767;
     guint fi;
     gdouble scale_size, wavelength, q = 1.0, x_scale = 1.0;
     gboolean nearest_neighbour = FALSE;
