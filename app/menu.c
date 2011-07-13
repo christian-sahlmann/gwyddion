@@ -392,13 +392,52 @@ gwy_app_menu_setup_sensitivity(GNode *node,
 }
 
 /**
+ * gwy_app_menu_setup_accels:
+ * @node: Module function menu tree node to process.
+ * @prefix: Accel path prefix.
+ *
+ * This is stage 6.
+ *
+ * Returns: Always %FALSE.
+ **/
+static gboolean
+gwy_app_menu_setup_accels(GNode *node,
+                          gpointer prefix)
+{
+    MenuNodeData *data = (MenuNodeData*)node->data;
+    gchar *accel_path;
+
+    accel_path = g_strconcat((gchar*)prefix, data->path, NULL);
+    gwy_app_menu_canonicalize_label(accel_path);
+    gtk_menu_item_set_accel_path(GTK_MENU_ITEM(data->widget), accel_path);
+    g_free(accel_path);
+
+    return FALSE;
+}
+
+static gboolean
+gwy_app_menu_setup_groups(GNode *node,
+                          gpointer accel_group)
+{
+    MenuNodeData *data = (MenuNodeData*)node->data;
+    GtkWidget *menu;
+
+    if (!(menu = gtk_menu_item_get_submenu(GTK_MENU_ITEM(data->widget))))
+        return FALSE;
+
+    gtk_menu_set_accel_group(GTK_MENU(menu), accel_group);
+
+    return FALSE;
+}
+
+/**
  * gwy_app_menu_free_node_data:
  * @node: Module function menu tree node to process.
  * @userdata: Unused.
  *
  * Frees module function menu tree auxiliary data.
  *
- * This is stage 6, clean-up.
+ * This is stage 7, clean-up.
  *
  * Returns: Always %FALSE.
  **/
@@ -431,6 +470,8 @@ gwy_app_menu_free_node_data(GNode *node,
  **/
 static GtkWidget*
 gwy_app_build_module_func_menu(GNode *root,
+                               const gchar *prefix,
+                               GtkAccelGroup *accel_group,
                                GCallback callback,
                                guint (*get_flags)(const gchar *name))
 {
@@ -452,6 +493,10 @@ gwy_app_build_module_func_menu(GNode *root,
     if (get_flags)
         g_node_traverse(root, G_PRE_ORDER, G_TRAVERSE_LEAVES, -1,
                         &gwy_app_menu_setup_sensitivity, get_flags);
+    g_node_traverse(root, G_PRE_ORDER, G_TRAVERSE_NON_LEAVES, -1,
+                    &gwy_app_menu_setup_groups, accel_group);
+    g_node_traverse(root, G_PRE_ORDER, G_TRAVERSE_ALL, -1,
+                    &gwy_app_menu_setup_accels, (gpointer)prefix);
     g_node_traverse(root, G_POST_ORDER, G_TRAVERSE_ALL, -1,
                     &gwy_app_menu_free_node_data, NULL);
     g_node_destroy(root);
@@ -492,11 +537,10 @@ gwy_app_build_process_menu(GtkAccelGroup *accel_group)
     data->item_translated = g_strdup(_("_Data Process"));
     root = g_node_new(data);
     gwy_process_func_foreach((GFunc)&gwy_app_menu_add_proc_func, root);
-    menu = gwy_app_build_module_func_menu(root,
+    menu = gwy_app_build_module_func_menu(root, "<proc>/Data Process",
+                                          accel_group,
                                           G_CALLBACK(gwy_app_run_process_func),
                                           gwy_process_func_get_sensitivity_mask);
-    gtk_menu_set_accel_group(GTK_MENU(menu), accel_group);
-    gtk_menu_set_accel_path(GTK_MENU(menu), "<proc>/Data Process");
     process_menu = menu;
 
     return menu;
@@ -535,11 +579,10 @@ gwy_app_build_graph_menu(GtkAccelGroup *accel_group)
     data->item_translated = g_strdup(_("_Graph"));
     root = g_node_new(data);
     gwy_graph_func_foreach((GFunc)&gwy_app_menu_add_graph_func, root);
-    menu = gwy_app_build_module_func_menu(root,
+    menu = gwy_app_build_module_func_menu(root, "<graph>/Graph",
+                                          accel_group,
                                           G_CALLBACK(gwy_app_run_graph_func),
                                           gwy_graph_func_get_sensitivity_mask);
-    gtk_menu_set_accel_group(GTK_MENU(menu), accel_group);
-    gtk_menu_set_accel_path(GTK_MENU(menu), "<graph>/Graph");
     if (!graph_menu)
         graph_menu = menu;
 

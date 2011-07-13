@@ -91,7 +91,7 @@ main(int argc, char *argv[])
 {
     GtkWidget *toolbox;
     gchar **module_dirs;
-    gchar *settings_file, *recent_file_file;
+    gchar *settings_file, *recent_file_file, *accel_file;
     gboolean has_settings, settings_ok = FALSE;
     GError *settings_err = NULL;
     GTimer *timer;
@@ -124,6 +124,8 @@ main(int argc, char *argv[])
 
     gwy_app_splash_start(!app_options.no_splash && !app_options.check);
     debug_time(timer, "create splash");
+
+    accel_file = g_build_filename(gwy_get_user_dir(), "accel_map", NULL);
 
     gwy_app_splash_set_message(_("Loading document history"));
     recent_file_file = gwy_app_settings_get_recent_file_list_filename();
@@ -208,6 +210,7 @@ main(int argc, char *argv[])
     /* TODO: handle failure */
     if (settings_ok || !has_settings)
         gwy_app_settings_save(settings_file, NULL);
+    gtk_accel_map_save(accel_file);
     debug_time(timer, "save settings");
     gwy_app_recent_file_list_save(recent_file_file);
     debug_time(timer, "save document history");
@@ -224,6 +227,7 @@ main(int argc, char *argv[])
      * Remove in production version. */
     g_free(recent_file_file);
     g_free(settings_file);
+    g_free(accel_file);
     g_strfreev(module_dirs);
     debug_time(timer, "destroy resources");
     g_timer_destroy(timer);
