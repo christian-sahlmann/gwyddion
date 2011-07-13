@@ -375,7 +375,7 @@ gwy_app_menu_create_widgets(GNode *node,
  *
  * Sets up widget sensitivities.
  *
- * This is stage 5, sensitivity set-up.
+ * This is stage 5a, sensitivity set-up.
  *
  * Returns: Always %FALSE.
  **/
@@ -392,11 +392,44 @@ gwy_app_menu_setup_sensitivity(GNode *node,
 }
 
 /**
+ * gwy_app_menu_setup_groups:
+ * @node: Module function menu tree node to process.
+ * @accel_group: Acceleration group to be associated with the menus.
+ *
+ * Sets up accelerator groups for menus.
+ *
+ * Should be called in top-down order on non-leaves (i.e. menus).
+ *
+ * This is stage 5b, accel group setup.
+ *
+ * Returns: Always %FALSE.
+ **/
+static gboolean
+gwy_app_menu_setup_groups(GNode *node,
+                          gpointer accel_group)
+{
+    MenuNodeData *data = (MenuNodeData*)node->data;
+    GtkWidget *menu;
+
+    if (GTK_IS_MENU_ITEM(data->widget)) {
+        menu = gtk_menu_item_get_submenu(GTK_MENU_ITEM(data->widget));
+        gtk_menu_set_accel_group(GTK_MENU(menu), accel_group);
+    }
+
+    return FALSE;
+}
+
+/**
  * gwy_app_menu_setup_accels:
  * @node: Module function menu tree node to process.
  * @prefix: Accel path prefix.
  *
- * This is stage 6.
+ * Sets up accelerator paths for items.
+ *
+ * Can be probably called in any order, top-down is preferred, on leaves
+ * (i.e. menus items).
+ *
+ * This is stage 5c, accel path setup.
  *
  * Returns: Always %FALSE.
  **/
@@ -417,21 +450,6 @@ gwy_app_menu_setup_accels(GNode *node,
     return FALSE;
 }
 
-static gboolean
-gwy_app_menu_setup_groups(GNode *node,
-                          gpointer accel_group)
-{
-    MenuNodeData *data = (MenuNodeData*)node->data;
-    GtkWidget *menu;
-
-    if (GTK_IS_MENU_ITEM(data->widget)) {
-        menu = gtk_menu_item_get_submenu(GTK_MENU_ITEM(data->widget));
-        gtk_menu_set_accel_group(GTK_MENU(menu), accel_group);
-    }
-
-    return FALSE;
-}
-
 /**
  * gwy_app_menu_free_node_data:
  * @node: Module function menu tree node to process.
@@ -439,7 +457,7 @@ gwy_app_menu_setup_groups(GNode *node,
  *
  * Frees module function menu tree auxiliary data.
  *
- * This is stage 7, clean-up.
+ * This is stage 6, clean-up.
  *
  * Returns: Always %FALSE.
  **/
@@ -465,7 +483,7 @@ gwy_app_menu_free_node_data(GNode *node,
  * @root: Module function menu root.
  * @callback: The callback function to connect to leaves.
  *
- * Executes stages 2-4 of module function menu construction and destroys the
+ * Executes stages 2-6 of module function menu construction and destroys the
  * node tree.
  *
  * Returns: The top-level menu widget.
@@ -495,6 +513,7 @@ gwy_app_build_module_func_menu(GNode *root,
     if (get_flags)
         g_node_traverse(root, G_PRE_ORDER, G_TRAVERSE_LEAVES, -1,
                         &gwy_app_menu_setup_sensitivity, get_flags);
+    gtk_menu_set_accel_group(GTK_MENU(menu), accel_group);
     g_node_traverse(root, G_PRE_ORDER, G_TRAVERSE_NON_LEAVES, -1,
                     &gwy_app_menu_setup_groups, accel_group);
     g_node_traverse(root, G_PRE_ORDER, G_TRAVERSE_ALL, -1,
@@ -604,8 +623,8 @@ gwy_app_build_graph_menu(GtkAccelGroup *accel_group)
 void
 gwy_app_process_menu_add_run_last(GtkWidget *menu)
 {
-    static const gchar *reshow_accel_path = "<proc>/Re-show Last";
-    static const gchar *repeat_accel_path = "<proc>/Repeat Last";
+    static const gchar *reshow_accel_path = "<proc>/Data Process/Re-show Last";
+    static const gchar *repeat_accel_path = "<proc>/Data Process/Repeat Last";
     GtkWidget *item;
 
     if (!reshow_last_quark)
