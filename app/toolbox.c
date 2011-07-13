@@ -88,6 +88,10 @@ static void       delete_app_window            (void);
 static void       gwy_app_zoom_set_cb          (gpointer user_data);
 static void       gwy_app_undo_cb              (void);
 static void       gwy_app_redo_cb              (void);
+static void       toggle_edit_accelerators     (gpointer callback_data,
+                                                gint callback_action,
+                                                GtkCheckMenuItem *item);
+static void       enable_edit_accelerators     (gboolean enable);
 static void       gwy_app_tool_use_cb          (const gchar *toolname,
                                                 GtkWidget *button);
 static void gwy_app_change_default_mask_color_cb(void);
@@ -876,8 +880,18 @@ gwy_app_menu_create_edit_menu(GtkAccelGroup *accel_group)
             "<StockItem>",
             GWY_STOCK_GL_MATERIAL
         },
+        {
+            N_("/_Keyboard Shortcuts"),
+            NULL,
+            toggle_edit_accelerators,
+            0,
+            "<CheckItem>",
+            NULL
+        },
     };
     GtkItemFactory *item_factory;
+    GtkWidget *item;
+    gboolean enable_edit = FALSE;
 
     item_factory = gtk_item_factory_new(GTK_TYPE_MENU, "<edit>", accel_group);
 #ifdef ENABLE_NLS
@@ -892,6 +906,13 @@ gwy_app_menu_create_edit_menu(GtkAccelGroup *accel_group)
                     "<edit>/Undo", GWY_MENU_FLAG_UNDO,
                     "<edit>/Redo", GWY_MENU_FLAG_REDO,
                     NULL);
+
+    gwy_container_gis_boolean_by_name(gwy_app_settings_get(),
+                                      "/app/edit-accelerators", &enable_edit);
+    item = gtk_item_factory_get_widget(item_factory,
+                                       "<edit>/Keyboard Shortcuts");
+    gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(item), enable_edit);
+    enable_edit_accelerators(enable_edit);
 
     return gtk_item_factory_get_widget(item_factory, "<edit>");
 }
@@ -1077,6 +1098,38 @@ gwy_app_redo_cb(void)
     gwy_app_data_browser_get_current(GWY_APP_CONTAINER, &data, 0);
     if (data)
         gwy_app_undo_redo_container(data);
+}
+
+static void
+toggle_edit_accelerators(G_GNUC_UNUSED gpointer callback_data,
+                         G_GNUC_UNUSED gint callback_action,
+                         GtkCheckMenuItem *item)
+{
+    gboolean active = gtk_check_menu_item_get_active(item);
+
+    gwy_container_set_boolean_by_name(gwy_app_settings_get(),
+                                      "/app/edit-accelerators", active);
+    enable_edit_accelerators(active);
+}
+
+static void
+enable_edit_accelerators(gboolean enable)
+{
+    GtkWidget *toolbox = gwy_app_main_window_get();
+    GtkAccelGroup *accel_group;
+
+    accel_group = GTK_ACCEL_GROUP(g_object_get_data(G_OBJECT(toolbox),
+                                                    "accel_group"));
+    /* XXX: The Gtk+ locking interface is recursive but we use only on/off
+     * locking. */
+    if (enable) {
+        if (gtk_accel_group_get_is_locked(accel_group))
+            gtk_accel_group_unlock(accel_group);
+    }
+    else {
+        if (!gtk_accel_group_get_is_locked(accel_group))
+            gtk_accel_group_lock(accel_group);
+    }
 }
 
 static void
