@@ -261,6 +261,22 @@ create_config_dir_real(const gchar *cfgdir,
     }
 
     if (ok) {
+        gchar *ui_dir = g_build_filename(cfgdir, "ui", NULL);
+        if (!g_file_test(ui_dir, G_FILE_TEST_IS_DIR)) {
+            gwy_debug("Trying to create user ui directory %s", ui_dir);
+            ok = !g_mkdir(ui_dir, 0700);
+            if (!ok) {
+                g_set_error(error,
+                            GWY_APP_SETTINGS_ERROR,
+                            GWY_APP_SETTINGS_ERROR_CFGDIR,
+                            _("Cannot create user ui directory %s: %s"),
+                            ui_dir, g_strerror(errno));
+            }
+        }
+        g_free(ui_dir);
+    }
+
+    if (ok) {
         for (i = n-1; i < 2*n; i++) {
             if (g_file_test(moddirs[i], G_FILE_TEST_IS_DIR))
                 continue;
