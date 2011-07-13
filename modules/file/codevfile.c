@@ -49,6 +49,15 @@
 
 #define EXTENSION ".int"
 
+typedef enum {
+    CODEV_INT_SURFACE_DEFORMATION = 1,
+    CODEV_INT_WAVEFRONT_DEFORMATION,
+    CODEV_INT_INTENSITY_FILTER,
+    CODEV_INT_COATING_THICKNESS_VARIATION,
+    CODEV_INT_BIREFRINGENCE,
+    CODEV_INT_CRYSTAL_AXIS_ORIENTATION,
+} CodeVGridDataType;
+
 static gboolean      module_register(void);
 static gint          int_detect     (const GwyFileDetectInfo *fileinfo,
                                      gboolean only_name);
@@ -142,18 +151,19 @@ int_load(const gchar *filename,
          GError **error)
 {
     GwyContainer *container = NULL, *meta;
-    GwyDataField *dfield = NULL;
-    GwySIUnit *unit;
-    gchar *line, *p, *type, *title, *end, *buffer = NULL;
+    GwyDataField *dfield = NULL, *mfield = NULL;
+    CodeVGridDataType type;
+    gchar *line, *p, *comment, *end, *buffer = NULL;
+    const gchar *unit, *title;
     gchar **fields = NULL;
     gsize size;
     GError *err = NULL;
-    gdouble xreal, yreal, q;
-    gint i, xres, yres, power10, no_data_value = 32768;
+    gdouble xreal, yreal;
+    gint i, xres, yres, no_data_value = 32768;
     guint fi;
-    gdouble scale_size, wavelength, x_scale = 1.0;
+    gdouble scale_size, wavelength, q = 1.0, x_scale = 1.0;
     gboolean nearest_neighbour = FALSE;
-    gdouble *data;
+    gdouble *data, *mdata;
 
     if (!g_file_get_contents(filename, &buffer, &size, &err)) {
         err_GET_FILE_CONTENTS(error, &err);
@@ -173,12 +183,12 @@ int_load(const gchar *filename,
     }
 
     /* The title. */
-    title = line;
+    comment = line;
     if (!(line = gwy_str_next_line(&p))) {
         err_FILE_TYPE(error, "Code V INT");
         goto fail;
     }
-    gwy_debug("title <%s>", title);
+    gwy_debug("comment <%s>", comment);
 
     fields = split_line_in_place(line, ' ');
     if (!fields
@@ -186,15 +196,16 @@ int_load(const gchar *filename,
         || !gwy_strequal(fields[0], "GRD")
         || !(xres = atoi(fields[1]))
         || !(yres = atoi(fields[2]))
-        || !gwy_stramong(fields[3], "SUR", "WFR", "FIL", NULL)
+        || !(type = gwy_stramong(fields[3],
+                                 "SUR", "WFR", "FIL", "THV", "BIR", "CAO",
+                                 NULL))
         || !gwy_strequal(fields[4], "WVL")
         || (!(wavelength = g_ascii_strtod(fields[5], &end))
               && end == fields[5])) {
         err_FILE_TYPE(error, "Code V INT");
         goto fail;
     }
-    type = fields[3];
-    gwy_debug("type <%s>", type);
+    gwy_debug("type %u (%s)", type, fields[3]);
     gwy_debug("xres %d, yres %d", xres, yres);
     gwy_debug("wavelength %g", wavelength);
     fi = 6;
@@ -214,6 +225,10 @@ int_load(const gchar *filename,
         goto fail;
     }
     gwy_debug("scale_size %g", scale_size);
+    if (!scale_size) {
+        g_warning("Zero SSZ, fixing to 1.0");
+        scale_size = 1.0;
+    }
     fi++;
 
     if (fields[fi] && gwy_strequal(fields[fi], "NDA")) {
@@ -241,73 +256,83 @@ int_load(const gchar *filename,
         fi++;
     }
     gwy_debug("x_scale %g", x_scale);
+    if (!x_scale) {
+        g_warning("Zero XSC, fixing to 1.0");
+        x_scale = 1.0;
+    }
 
     /* There may be more stuff but we do not know anything about it. */
 
-    //dfield = gwy_data_field_new(xres, yres, xreal, yreal, FALSE);
+    if (err_DIMENSION(error, xres) || err_DIMENSION(error, yres))
+        goto fail;
 
-#if 0
-    if ((value = g_hash_table_lookup(hash, "x-unit"))) {
-        if ((line = g_hash_table_lookup(hash, "y-unit"))
-            && !gwy_strequal(line, value))
-            g_warning("X and Y units differ, using X");
+    yreal = 1.0;
+    xreal = x_scale*yreal;
+    dfield = gwy_data_field_new(xres, yres, xreal, yreal, TRUE);
 
-        unit = gwy_si_unit_new_parse(value, &power10);
-        gwy_data_field_set_si_unit_xy(dfield, unit);
-        g_object_unref(unit);
-
-        q = pow10(power10);
-        xreal *= q;
-        yreal *= q;
-        gwy_data_field_set_xreal(dfield, xreal);
-        gwy_data_field_set_yreal(dfield, yreal);
+    if (type == CODEV_INT_SURFACE_DEFORMATION) {
+        q = 1e-6*wavelength/scale_size;
+        unit = "m";
+        title = "Surface";
     }
-    else
-        q = 1.0;
-
-    if ((value = g_hash_table_lookup(hash, "x-offset")))
-        gwy_data_field_set_xoffset(dfield, q*g_ascii_strtod(value, NULL));
-    if ((value = g_hash_table_lookup(hash, "y-offset")))
-        gwy_data_field_set_yoffset(dfield, q*g_ascii_strtod(value, NULL));
-
-    if ((value = g_hash_table_lookup(hash, "z-unit"))) {
-        unit = gwy_si_unit_new_parse(value, &power10);
-        gwy_data_field_set_si_unit_z(dfield, unit);
-        g_object_unref(unit);
-        q = pow10(power10);
+    else if (type == CODEV_INT_WAVEFRONT_DEFORMATION) {
+        q = 1e-6*wavelength/scale_size;
+        unit = "m";
+        title = "Wavefront";
     }
-    else
-        q = 1.0;
+    else {
+        g_warning("Don't know how to convert this grid data type to physical "
+                  "units.");
+        title = fields[3];
+    }
 
+    gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_z(dfield), unit);
+
+    mfield = gwy_data_field_new_alike(dfield, TRUE);
     data = gwy_data_field_get_data(dfield);
-    value = p;
-    for (i = 0; i < xres*yres; i++) {
-        data[i] = q*g_ascii_strtod(value, &p);
-        value = p;
+    mdata = gwy_data_field_get_data(mfield);
+
+    for (i = 0; i < xres*yres; i++, p = end) {
+        gint value = strtol(p, &end, 10);
+
+        if (value != no_data_value && (type != CODEV_INT_INTENSITY_FILTER
+                                       || value >= 0)) {
+            mdata[i] = 1.0;
+            data[i] = q*value;
+        }
     }
+
+    if (!gwy_app_channel_remove_bad_data(dfield, mfield))
+        gwy_object_unref(mfield);
 
     container = gwy_container_new();
 
+    gwy_data_field_invert(dfield, FALSE, TRUE, FALSE);
     gwy_container_set_object(container, gwy_app_get_data_key_for_id(0), dfield);
     g_object_unref(dfield);
+    gwy_app_channel_check_nonsquare(container, 0);
 
-    if ((value = g_hash_table_lookup(hash, "display")))
-        gwy_container_set_string_by_name(container, "/0/data/title",
-                                         g_strdup(value));
+    gwy_container_set_string_by_name(container, "/0/data/title",
+                                     g_strdup(title));
+
+    if (mfield) {
+        gwy_data_field_invert(mfield, FALSE, TRUE, FALSE);
+        gwy_container_set_object(container, gwy_app_get_mask_key_for_id(0),
+                                 mfield);
+        g_object_unref(mfield);
+    }
 
     meta = gwy_container_new();
+
+    gwy_container_set_string_by_name(meta, "Comment", g_strdup(comment));
+    gwy_container_set_string_by_name(meta, "Interpolation",
+                                     g_strdup(nearest_neighbour
+                                              ? "NNR" : "Linear"));
+    gwy_container_set_string_by_name(meta, "Wavelength",
+                                     g_strdup_printf("%g μm", wavelength));
+
     gwy_container_set_object_by_name(container, "/0/meta", meta);
     g_object_unref(meta);
-
-    value = g_strdup_printf("%04u-%02u-%02u %02u:%02u:%02u",
-                            year, month, day, hour, minute, second);
-    gwy_container_set_string_by_name(meta, "Date", value);
-
-    if ((value = g_hash_table_lookup(hash, "scanspeed")))
-        gwy_container_set_string_by_name(meta, "Scan Speed", g_strdup(value));
-#endif
-
-    err_NO_DATA(error);
 
 fail:
     g_free(fields);
