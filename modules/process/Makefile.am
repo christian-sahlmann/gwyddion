@@ -14,6 +14,7 @@ process_LTLIBRARIES = \
 	calibrate.la \
 	convolution_filter.la \
 	crosscor.la \
+	col_synth.la \
 	curvature.la \
 	cwt.la \
 	deposit_synth.la \
@@ -111,6 +112,7 @@ calcoefs_load_la_SOURCES       = calcoefs_load.c
 calcoefs_simple_la_SOURCES    = calcoefs_simple.c
 calcoefs_view_la_SOURCES       = calcoefs_view.c
 calibrate_la_SOURCES           = calibrate.c
+col_synth_la_SOURCES           = col_synth.c dimensions.h synth.h
 convolution_filter_la_SOURCES  = convolution_filter.c convolutionfilterpreset.h
 crosscor_la_SOURCES            = crosscor.c
 cwt_la_SOURCES                 = cwt.c
