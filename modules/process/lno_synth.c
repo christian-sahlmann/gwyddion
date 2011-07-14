@@ -910,7 +910,7 @@ make_noise_steps(const LNoSynthArgs *args,
     PointNoiseFunc point_noise;
     gdouble *steps, *data;
     GRand *rng;
-    guint xres, yres, nbatches, nsteps, n, i, j, ib, is;
+    guint xres, yres, nbatches, nsteps, i, j, ib, is;
     gdouble q, h;
 
     rng = g_rand_new();
@@ -918,7 +918,6 @@ make_noise_steps(const LNoSynthArgs *args,
     q = args->sigma * pow10(dimsargs->zpow10);
     xres = gwy_data_field_get_xres(dfield);
     yres = gwy_data_field_get_yres(dfield);
-    n = xres*yres;
 
     nsteps = GWY_ROUND(yres*pargs->density);
     nsteps = MAX(nsteps, 1);
