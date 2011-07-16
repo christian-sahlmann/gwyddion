@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2011-07-14 03:58+0200\n"
-"PO-Revision-Date: 2011-07-14 21:54+0300\n"
+"POT-Creation-Date: 2011-07-16 03:58+0200\n"
+"PO-Revision-Date: 2011-07-16 20:22+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "Language: \n"
@@ -863,6 +863,7 @@ msgstr "точек"
 #: modules/process/angle_dist.c:170
 #: modules/process/calcoefs_new.c:347
 #: modules/process/calibrate.c:296
+#: modules/process/col_synth.c:299
 #: modules/process/curvature.c:602
 #: modules/process/cwt.c:132
 #: modules/process/deposit_synth.c:359
@@ -1790,6 +1791,7 @@ msgstr "Начальная точка"
 
 #: app/gwyplaintool.c:1014
 #: modules/file/rawfile.c:959
+#: modules/process/col_synth.c:393
 #: modules/process/convolution_filter.c:358
 #: modules/process/convolution_filter.c:562
 #: modules/process/obj_synth.c:537
@@ -3949,6 +3951,7 @@ msgid "_Zoom:"
 msgstr "_Увеличение:"
 
 #: modules/file/pixmap.c:2967
+#: modules/process/col_synth.c:400
 #: modules/process/grain_mark.c:309
 #: modules/process/grain_rem_threshold.c:280
 #: modules/process/obj_synth.c:573
@@ -4030,7 +4033,7 @@ msgid "bottom"
 msgstr "низ"
 
 #: modules/file/pixmap.c:3131
-#: modules/process/lno_synth.c:1067
+#: modules/process/lno_synth.c:1066
 msgid "_Length:"
 msgstr "_Длина:"
 
@@ -6208,6 +6211,81 @@ msgstr "Множитель калибровки по _Y:"
 msgid "_Z calibration factor:"
 msgstr "Множитель калибровки по _Z:"
 
+#: modules/process/col_synth.c:163
+msgid "Generates columnar surfaces by a simple growth algorithm."
+msgstr "Создаёт столбчатые поверхности простым алгоритмом роста. "
+
+#: modules/process/col_synth.c:177
+msgid "/S_ynthetic/_Columnar..."
+msgstr "/Син_тез/С_толбчатая..."
+
+#: modules/process/col_synth.c:181
+msgid "Generate columnar surface"
+msgstr "Создать столбчатую поверхность"
+
+#: modules/process/col_synth.c:273
+#: modules/process/deposit_synth.c:315
+#: modules/process/deposit_synth.c:327
+#: modules/process/deposit_synth.c:548
+#: modules/process/deposit_synth.c:560
+#: modules/process/fft_synth.c:304
+#: modules/process/lno_synth.c:410
+#: modules/process/noise_synth.c:322
+#: modules/process/obj_synth.c:404
+#: modules/process/pat_synth.c:374
+msgid "Generated"
+msgstr "Сгенерированное"
+
+#: modules/process/col_synth.c:297
+msgid "Grow Columnar Surface"
+msgstr "Вырастить столбчатую поверхность"
+
+#: modules/process/col_synth.c:364
+#: modules/process/deposit_synth.c:432
+#: modules/process/fft_synth.c:395
+#: modules/process/lno_synth.c:501
+#: modules/process/noise_synth.c:413
+#: modules/process/obj_synth.c:497
+#: modules/process/pat_synth.c:467
+msgid "Dimensions"
+msgstr "Размеры"
+
+#: modules/process/col_synth.c:375
+#: modules/process/deposit_synth.c:442
+#: modules/process/fft_synth.c:406
+#: modules/process/lno_synth.c:512
+#: modules/process/noise_synth.c:424
+#: modules/process/obj_synth.c:508
+#: modules/process/pat_synth.c:479
+msgid "Generator"
+msgstr "Генератор"
+
+#: modules/process/col_synth.c:379
+msgid "_Source:"
+msgstr "_Источник:"
+
+#: modules/process/col_synth.c:386
+#: modules/process/lno_synth.c:1054
+#: modules/process/obj_synth.c:519
+msgid "Co_verage:"
+msgstr "По_крытие:"
+
+#: modules/process/col_synth.c:404
+#: modules/process/fft_synth.c:415
+#: modules/process/lno_synth.c:548
+#: modules/process/noise_synth.c:456
+#: modules/process/obj_synth.c:577
+msgid "_Like Current Channel"
+msgstr "Как _у текущего канала"
+
+#: modules/process/col_synth.c:476
+msgid "source|Cosine"
+msgstr "Всенаправленный"
+
+#: modules/process/col_synth.c:478
+msgid "source|Directional"
+msgstr "Направленный"
+
 #: modules/process/convolution_filter.c:129
 msgid "symmetry|None"
 msgstr "Нет"
@@ -6479,39 +6557,9 @@ msgstr "/Син_тез/_Частицы..."
 msgid "Generate particles using dynamical model"
 msgstr "Создать частицы используя динамическую модель"
 
-#: modules/process/deposit_synth.c:315
-#: modules/process/deposit_synth.c:327
-#: modules/process/deposit_synth.c:548
-#: modules/process/deposit_synth.c:560
-#: modules/process/fft_synth.c:304
-#: modules/process/lno_synth.c:410
-#: modules/process/noise_synth.c:322
-#: modules/process/obj_synth.c:404
-#: modules/process/pat_synth.c:374
-msgid "Generated"
-msgstr "Сгенерированное"
-
 #: modules/process/deposit_synth.c:357
 msgid "Particle Generation"
 msgstr "Генерация частиц"
-
-#: modules/process/deposit_synth.c:432
-#: modules/process/fft_synth.c:395
-#: modules/process/lno_synth.c:501
-#: modules/process/noise_synth.c:413
-#: modules/process/obj_synth.c:497
-#: modules/process/pat_synth.c:467
-msgid "Dimensions"
-msgstr "Размеры"
-
-#: modules/process/deposit_synth.c:442
-#: modules/process/fft_synth.c:406
-#: modules/process/lno_synth.c:512
-#: modules/process/noise_synth.c:424
-#: modules/process/obj_synth.c:508
-#: modules/process/pat_synth.c:479
-msgid "Generator"
-msgstr "Генератор"
 
 #: modules/process/deposit_synth.c:447
 msgid "R_adius:"
@@ -7178,7 +7226,7 @@ msgstr "ФСПМ %.0f°"
 
 #: modules/process/fft_synth.c:174
 msgid "Generates random surfaces using spectral synthesis."
-msgstr "Генерирует случайные поверхности используя спектральный синтез."
+msgstr "Создаёт случайные поверхности используя спектральный синтез."
 
 #: modules/process/fft_synth.c:188
 msgid "/S_ynthetic/_Spectral..."
@@ -7197,13 +7245,6 @@ msgstr "Спектральный синтез"
 #: modules/process/noise_synth.c:452
 msgid "_RMS:"
 msgstr "Ср. _квадр.:"
-
-#: modules/process/fft_synth.c:415
-#: modules/process/lno_synth.c:548
-#: modules/process/noise_synth.c:456
-#: modules/process/obj_synth.c:577
-msgid "_Like Current Channel"
-msgstr "Как _у текущего канала"
 
 #: modules/process/fft_synth.c:426
 msgid "M_inimum frequency:"
@@ -8372,11 +8413,6 @@ msgstr "_В пределах линии:"
 msgid "C_umulative"
 msgstr "К_умулятивный"
 
-#: modules/process/lno_synth.c:1055
-#: modules/process/obj_synth.c:519
-msgid "Co_verage:"
-msgstr "По_крытие:"
-
 #: modules/process/local_contrast.c:75
 msgid "Maximizes local contrast."
 msgstr "Увеличивает локальный контраст."
@@ -8718,7 +8754,7 @@ msgstr "/Син_тез/_Шум..."
 
 #: modules/process/noise_synth.c:228
 msgid "Generate surface of uncorrelated noise"
-msgstr "Сгенерировать поверхность из некоррелированного шума"
+msgstr "Создать поверхность из некоррелированного шума"
 
 #: modules/process/noise_synth.c:345
 msgid "Random Noise"
@@ -8770,7 +8806,7 @@ msgstr "Бублики"
 
 #: modules/process/obj_synth.c:290
 msgid "Generates randomly patterned surfaces by placing objects."
-msgstr "Генерирует поверхности со случайным узором расставляя объекты."
+msgstr "Создаёт поверхности со случайным узором расставляя объекты."
 
 #: modules/process/obj_synth.c:304
 msgid "/S_ynthetic/_Objects..."
@@ -8778,7 +8814,7 @@ msgstr "/Син_тез/_Объекты..."
 
 #: modules/process/obj_synth.c:308
 msgid "Generate surface of randomly placed objects"
-msgstr "Сгенерировать поверхность из случайно расположенных объектов"
+msgstr "Создать поверхность из случайно расположенных объектов"
 
 #: modules/process/obj_synth.c:430
 msgid "Random Objects"
@@ -8835,7 +8871,7 @@ msgstr "Отверстия"
 
 #: modules/process/pat_synth.c:240
 msgid "Generates surfaces representing simple patterns (steps, ridges, ...)."
-msgstr "Генерирует поверхность представляющую простые структуры (ступени, борозды, ...)."
+msgstr "Создаёт поверхность, представляющую собой простые структуры (ступени, борозды, ...)."
 
 #: modules/process/pat_synth.c:255
 msgid "/S_ynthetic/_Pattern..."
@@ -8843,7 +8879,7 @@ msgstr "/Син_тез/_Структура..."
 
 #: modules/process/pat_synth.c:259
 msgid "Generate patterned surface"
-msgstr "Генерирует структурированную поверхность"
+msgstr "Создаёт структурированную поверхность"
 
 #: modules/process/pat_synth.c:400
 msgid "Pattern"
