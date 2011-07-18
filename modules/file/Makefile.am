@@ -110,7 +110,8 @@ file_LTLIBRARIES = \
 	wipfile.la \
 	witfile.la \
 	wsffile.la \
-	wsxmfile.la
+	wsxmfile.la \
+	zeiss.la
 
 noinst_HEADERS = \
 	err.h \
@@ -228,6 +229,7 @@ wipfile_la_SOURCES       = wipfile.c
 witfile_la_SOURCES       = witfile.c
 wsffile_la_SOURCES       = wsffile.c
 wsxmfile_la_SOURCES      = wsxmfile.c
+zeiss_la_SOURCES         = zeiss.c
 
 # They compile also without.
 createc_la_LIBADD        = @ZLIB@
