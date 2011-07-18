@@ -209,7 +209,7 @@ int_load(const gchar *filename,
     gwy_debug("xres %d, yres %d", xres, yres);
     gwy_debug("wavelength %g", wavelength);
     fi = 6;
-    if (gwy_strequal(fields[fi], "NNR")) {
+    if (gwy_strequal(fields[fi], "NNB")) {
         nearest_neighbour = TRUE;
         fi++;
     }
@@ -327,7 +327,7 @@ int_load(const gchar *filename,
     gwy_container_set_string_by_name(meta, "Comment", g_strdup(comment));
     gwy_container_set_string_by_name(meta, "Interpolation",
                                      g_strdup(nearest_neighbour
-                                              ? "NNR" : "Linear"));
+                                              ? "NNB" : "Linear"));
     gwy_container_set_string_by_name(meta, "Wavelength",
                                      g_strdup_printf("%g μm", wavelength));
 
