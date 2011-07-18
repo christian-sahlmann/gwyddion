@@ -169,8 +169,8 @@ zeiss_load_tiff(const GwyTIFF *tiff, GError **error)
     siunit = gwy_si_unit_new_parse(end, &power10);
     factor = pow10(power10);
     dfield = gwy_data_field_new(reader->width, reader->height,
-                                reader->width * factor,
-                                reader->height * factor,
+                                reader->width * factor * dx,
+                                reader->height * factor * dx,
                                 FALSE);
     gwy_data_field_set_si_unit_xy(dfield, siunit);
     g_object_unref(siunit);
