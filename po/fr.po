@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: French localization\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2011-07-13 03:59+0200\n"
-"PO-Revision-Date: 2011-07-13 19:02+0100\n"
+"POT-Creation-Date: 2011-07-18 03:58+0200\n"
+"PO-Revision-Date: 2011-07-18 20:23+0100\n"
 "Last-Translator: François RIGUET <francheu@caramail.com>\n"
 "Language-Team: François RIGUET <francheu@caramail.com>\n"
 "Language: \n"
@@ -861,6 +861,7 @@ msgstr "pixels"
 #: modules/process/angle_dist.c:170
 #: modules/process/calcoefs_new.c:347
 #: modules/process/calibrate.c:296
+#: modules/process/col_synth.c:299
 #: modules/process/curvature.c:602
 #: modules/process/cwt.c:132
 #: modules/process/deposit_synth.c:359
@@ -1005,7 +1006,6 @@ msgid "Diamond"
 msgstr "Losange"
 
 #: libgwydgets/gwygraphareadialog.c:535
-#, fuzzy
 msgid "Cross"
 msgstr "Croix"
 
@@ -1102,7 +1102,7 @@ msgid "_Reversed layout"
 msgstr "Disposition inve_rsée"
 
 #: libgwydgets/gwygraphwindow.c:140
-#: app/toolbox.c:103
+#: app/toolbox.c:108
 msgid "Graph"
 msgstr "Graphe"
 
@@ -1666,51 +1666,51 @@ msgstr "…"
 msgid "Cannot preview"
 msgstr "Impossible de prévisualiser"
 
-#: app/gwyddion.c:128
+#: app/gwyddion.c:132
 msgid "Loading document history"
 msgstr "Chargement de l'historique des documents"
 
-#: app/gwyddion.c:133
+#: app/gwyddion.c:137
 msgid "Registering "
 msgstr "Enregistrement "
 
-#: app/gwyddion.c:134
+#: app/gwyddion.c:138
 msgid "stock items"
 msgstr "éléments stockés"
 
-#: app/gwyddion.c:138
+#: app/gwyddion.c:142
 msgid "color gradients"
 msgstr "gradients"
 
-#: app/gwyddion.c:140
+#: app/gwyddion.c:144
 msgid "GL materials"
 msgstr "Matériaux GL"
 
-#: app/gwyddion.c:142
+#: app/gwyddion.c:146
 msgid "grain quantities"
 msgstr "quantité de grains"
 
-#: app/gwyddion.c:144
+#: app/gwyddion.c:148
 msgid "calibrations"
 msgstr "calibrations"
 
-#: app/gwyddion.c:149
+#: app/gwyddion.c:153
 msgid "Loading settings"
 msgstr "Chargement des réglages"
 
-#: app/gwyddion.c:156
+#: app/gwyddion.c:160
 msgid "Registering modules"
 msgstr "Enregistrement des modules"
 
-#: app/gwyddion.c:176
+#: app/gwyddion.c:182
 msgid "Initializing GUI"
 msgstr "Initialisation de l'interface graphique"
 
-#: app/gwyddion.c:383
+#: app/gwyddion.c:391
 msgid "Could not read settings."
 msgstr "Impossible de lire les réglages."
 
-#: app/gwyddion.c:386
+#: app/gwyddion.c:394
 #, c-format
 msgid ""
 "Settings file `%s' cannot be read: %s\n"
@@ -1789,6 +1789,7 @@ msgstr "Origine"
 
 #: app/gwyplaintool.c:1014
 #: modules/file/rawfile.c:959
+#: modules/process/col_synth.c:393
 #: modules/process/convolution_filter.c:358
 #: modules/process/convolution_filter.c:562
 #: modules/process/obj_synth.c:537
@@ -1808,33 +1809,33 @@ msgstr "Masquer"
 msgid "Hide tool dialog (Esc)"
 msgstr "Masquer la fenêtre outil (Echap)"
 
-#: app/menu.c:492
-#: app/toolbox.c:604
+#: app/menu.c:558
+#: app/toolbox.c:615
 msgid "_Data Process"
 msgstr "Traitement des _Données"
 
-#: app/menu.c:535
-#: app/toolbox.c:608
+#: app/menu.c:600
+#: app/toolbox.c:618
 msgid "_Graph"
 msgstr "_Graphe"
 
-#: app/menu.c:569
+#: app/menu.c:633
 msgid "Re-show Last"
 msgstr "Remontrer la dernière commande"
 
-#: app/menu.c:584
+#: app/menu.c:648
 msgid "Repeat Last"
 msgstr "Répéter la dernière commande"
 
-#: app/menu.c:712
+#: app/menu.c:776
 msgid "Repeat"
 msgstr "Répéter"
 
-#: app/menu.c:718
+#: app/menu.c:782
 msgid "Re-show"
 msgstr "Remontrer"
 
-#: app/menu.c:927
+#: app/menu.c:991
 msgid "_Document history"
 msgstr "_Historique"
 
@@ -1920,7 +1921,12 @@ msgstr "Le fichier est corrompu, la désérialisation a échoué."
 msgid "Cannot create user config directory %s: %s"
 msgstr "Impossible de créer le répertoire de configuration uilisateur %s : %s"
 
-#: app/settings.c:273
+#: app/settings.c:272
+#, c-format
+msgid "Cannot create user ui directory %s: %s"
+msgstr "Impossible de créer le répertoire d'interface utilisateur %s : %s"
+
+#: app/settings.c:289
 #, c-format
 msgid "Cannot create user module directory %s: %s"
 msgstr "Impossible de créer le répertoire de modules utilisateur %s : %s"
@@ -2173,127 +2179,131 @@ msgstr "Astuce _précédente"
 msgid "_Next Tip"
 msgstr "Astuce suiva_nte"
 
-#: app/toolbox.c:103
+#: app/toolbox.c:108
 msgid "View"
 msgstr "Vue"
 
-#: app/toolbox.c:103
+#: app/toolbox.c:108
 msgid "Data Process"
 msgstr "Traitement des Données"
 
-#: app/toolbox.c:103
+#: app/toolbox.c:108
 msgid "Tools"
 msgstr "Outils"
 
-#: app/toolbox.c:159
+#: app/toolbox.c:164
 msgid "Display a 3D view of data"
 msgstr "Affcher une vue en 3D des données"
 
-#: app/toolbox.c:166
+#: app/toolbox.c:171
 msgid "Zoom in"
 msgstr "Zoomer"
 
-#: app/toolbox.c:170
+#: app/toolbox.c:175
 msgid "Zoom 1:1"
 msgstr "Zoom 1:1"
 
-#: app/toolbox.c:174
+#: app/toolbox.c:179
 msgid "Zoom out"
 msgstr "Dézoomer"
 
-#: app/toolbox.c:597
+#: app/toolbox.c:609
 msgid "_File"
 msgstr "_Fichier"
 
-#: app/toolbox.c:599
+#: app/toolbox.c:611
 msgid "_Edit"
 msgstr "_Editer"
 
-#: app/toolbox.c:611
+#: app/toolbox.c:621
 msgid "_Meta"
 msgstr "_Métadonnées"
 
-#: app/toolbox.c:655
+#: app/toolbox.c:664
 msgid "/Show _Data Browser"
 msgstr "/Navigateur de _Données"
 
-#: app/toolbox.c:663
+#: app/toolbox.c:672
 msgid "/_Metadata Browser"
 msgstr "/Navigateur de Méta-données"
 
-#: app/toolbox.c:671
+#: app/toolbox.c:680
 msgid "/Module _Browser"
 msgstr "/Navigateur de Modules"
 
-#: app/toolbox.c:686
+#: app/toolbox.c:695
 msgid "/_Tip of the Day"
 msgstr "/As_tuce du jour"
 
-#: app/toolbox.c:694
+#: app/toolbox.c:703
 msgid "/_About Gwyddion"
 msgstr "/_A propos de Gwyddion"
 
-#: app/toolbox.c:733
+#: app/toolbox.c:742
 msgid "/_Open..."
 msgstr "/_Ouvrir..."
 
-#: app/toolbox.c:741
+#: app/toolbox.c:750
 msgid "/_Merge..."
 msgstr "/Fusionner..."
 
-#: app/toolbox.c:749
+#: app/toolbox.c:758
 msgid "/Open _Recent"
 msgstr "/Ouv_rir un ficher récent"
 
-#: app/toolbox.c:757
+#: app/toolbox.c:766
 msgid "/_Save"
 msgstr "/_Enregistrer"
 
-#: app/toolbox.c:765
+#: app/toolbox.c:774
 msgid "/Save _As..."
 msgstr "/Enregistrer sous..."
 
-#: app/toolbox.c:781
+#: app/toolbox.c:790
 msgid "/_Quit"
 msgstr "/_Quitter"
 
-#: app/toolbox.c:827
+#: app/toolbox.c:836
 msgid "/_Undo"
 msgstr "/Ann_uler"
 
-#: app/toolbox.c:835
+#: app/toolbox.c:844
 msgid "/_Redo"
 msgstr "/_Rétablir"
 
-#: app/toolbox.c:851
+#: app/toolbox.c:860
 msgid "/Default Mask _Color..."
 msgstr "/_Couleur de masque par défaut..."
 
-#: app/toolbox.c:859
+#: app/toolbox.c:868
 msgid "/Color _Gradients..."
 msgstr "/_Gradient de couleur..."
 
-#: app/toolbox.c:867
+#: app/toolbox.c:876
 msgid "/G_L Materials..."
 msgstr "/Materiaux G_L..."
 
-#: app/toolbox.c:1092
+#: app/toolbox.c:884
+msgid "/_Keyboard Shortcuts"
+msgstr "/Raccourcis clavier"
+
+#: app/toolbox.c:1138
 msgid "Change Default Mask Color"
 msgstr "Changer la couleur de masque par défaut"
 
-#: app/toolbox.c:1120
+#: app/toolbox.c:1166
 msgid "OpenGL 3D graphics not available"
 msgstr "Les graphismes OpenGL 3D ne sont pas disponibles"
 
-#: app/toolbox.c:1125
+#: app/toolbox.c:1171
 msgid "OpenGL was disabled with a command-line option."
 msgstr "OpenGL a été désactivé par une option de ligne de commande."
 
-#: app/toolbox.c:1133
+#: app/toolbox.c:1179
 msgid "Initialization of OpenGL failed.  Check output of <tt>glxinfo</tt> and warning messages printed to console during Gwyddion startup."
 msgstr "L'initialisation d'OpenGL a échoué. Vérifiez la sortie de <tt>glxinfo</tt> et les messages d'erreur affichés dans la console lors du démarrage de Gwyddion."
 
-#: app/toolbox.c:1140
+#: app/toolbox.c:1186
 msgid "This version of Gwyddion was built without OpenGL support."
 msgstr "Cette version de Gwyddion a été compilée sans le support OpenGL."
 
@@ -2547,11 +2557,11 @@ msgstr "Burleigh données exportées (.txt, .bin)"
 msgid "Missing colon in header line."
 msgstr "Il manque une colonne dans la ligne d'en-tête."
 
-#: modules/file/codevfile.c:62
+#: modules/file/codevfile.c:71
 msgid "Imports Code V interferogram files."
 msgstr "Importe les interférogrammes Code V"
 
-#: modules/file/codevfile.c:75
+#: modules/file/codevfile.c:84
 msgid "Code V interferogram files (.int)"
 msgstr "Interférogramme Code V (.int)"
 
@@ -3645,14 +3655,14 @@ msgid "Cannot decompress bzip2-encoded data.  Bzip2 support was not built in."
 msgstr "Impossible de décompresser les données encodées au format Bzip2. Le support Bzip2 n'a pas été intégré."
 
 #: modules/file/nrrdfile.c:895
-#, c-format
+#, fuzzy, c-format
 msgid "Hex data contains less values (%u) than corresponds to the sizes (%u)."
-msgstr ""
+msgstr "Les données hexadécimales contiennent moins de valeurs (%u) que de tailles (%u)."
 
 #: modules/file/nrrdfile.c:1008
-#, c-format
+#, fuzzy, c-format
 msgid "Text data contains less values (%u) than corresponds to the sizes (%u)."
-msgstr ""
+msgstr "Les données texte contiennent moins de valeurs (%u) que de tailles (%u)."
 
 #: modules/file/nrrdfile.c:1013
 #, c-format
@@ -3674,17 +3684,17 @@ msgstr "Le champ de saut d'octet spécifie plus d'octets que n'en contient le fi
 #: modules/file/nrrdfile.c:1339
 #, c-format
 msgid "Items of per-axis header field %s are not quoted."
-msgstr ""
+msgstr "Les éléments du champ d'en-tête d'axe %s ne sont pas entre apostrophes."
 
 #: modules/file/nrrdfile.c:1350
 #, c-format
 msgid "Per-axis header field %s contains too many items."
-msgstr ""
+msgstr "Le champ d'en-tête d'axe %s contient trop d'éléments."
 
 #: modules/file/nrrdfile.c:1359
 #, c-format
 msgid "Per-axis header field %s contains too few items."
-msgstr ""
+msgstr "Le champ d'en-tête d'axe %s ne contient pas assez d'éléments."
 
 #: modules/file/nt-mdt.c:658
 msgid "Imports NT-MDT data files."
@@ -3939,6 +3949,7 @@ msgid "_Zoom:"
 msgstr "_Zoom :"
 
 #: modules/file/pixmap.c:2967
+#: modules/process/col_synth.c:400
 #: modules/process/grain_mark.c:309
 #: modules/process/grain_rem_threshold.c:280
 #: modules/process/obj_synth.c:573
@@ -4020,7 +4031,7 @@ msgid "bottom"
 msgstr "bas"
 
 #: modules/file/pixmap.c:3131
-#: modules/process/lno_synth.c:1067
+#: modules/process/lno_synth.c:1066
 msgid "_Length:"
 msgstr "_Longueur :"
 
@@ -5148,9 +5159,8 @@ msgstr "Sauver le rapport d'ajustement"
 #: modules/graph/graph_cd.c:1115
 #: modules/graph/graph_fdfit.c:691
 #: modules/graph/graph_fit.c:715
-#, fuzzy
 msgid "Fit"
-msgstr "Ajuster"
+msgstr "Ajustement"
 
 #: modules/graph/graph_cd.c:537
 #: modules/graph/graph_fdfit.c:731
@@ -6196,6 +6206,81 @@ msgstr "Facteur de calibration _Y :"
 msgid "_Z calibration factor:"
 msgstr "Facteur de calibration _Z :"
 
+#: modules/process/col_synth.c:163
+msgid "Generates columnar surfaces by a simple growth algorithm."
+msgstr "Génère des surfaces colonnaires à l'aide d'un algorithme de croissance simple."
+
+#: modules/process/col_synth.c:177
+msgid "/S_ynthetic/_Columnar..."
+msgstr "/S_ynthèse/_Croissance colonnaire..."
+
+#: modules/process/col_synth.c:181
+msgid "Generate columnar surface"
+msgstr "Générer une surface colonnaire"
+
+#: modules/process/col_synth.c:273
+#: modules/process/deposit_synth.c:315
+#: modules/process/deposit_synth.c:327
+#: modules/process/deposit_synth.c:548
+#: modules/process/deposit_synth.c:560
+#: modules/process/fft_synth.c:304
+#: modules/process/lno_synth.c:410
+#: modules/process/noise_synth.c:322
+#: modules/process/obj_synth.c:404
+#: modules/process/pat_synth.c:374
+msgid "Generated"
+msgstr "Généré"
+
+#: modules/process/col_synth.c:297
+msgid "Grow Columnar Surface"
+msgstr "Surface à croissance colonnaire"
+
+#: modules/process/col_synth.c:364
+#: modules/process/deposit_synth.c:432
+#: modules/process/fft_synth.c:395
+#: modules/process/lno_synth.c:501
+#: modules/process/noise_synth.c:413
+#: modules/process/obj_synth.c:497
+#: modules/process/pat_synth.c:467
+msgid "Dimensions"
+msgstr "Dimensions"
+
+#: modules/process/col_synth.c:375
+#: modules/process/deposit_synth.c:442
+#: modules/process/fft_synth.c:406
+#: modules/process/lno_synth.c:512
+#: modules/process/noise_synth.c:424
+#: modules/process/obj_synth.c:508
+#: modules/process/pat_synth.c:479
+msgid "Generator"
+msgstr "Générateur"
+
+#: modules/process/col_synth.c:379
+msgid "_Source:"
+msgstr "_Source :"
+
+#: modules/process/col_synth.c:386
+#: modules/process/lno_synth.c:1054
+#: modules/process/obj_synth.c:519
+msgid "Co_verage:"
+msgstr "Couverture :"
+
+#: modules/process/col_synth.c:404
+#: modules/process/fft_synth.c:415
+#: modules/process/lno_synth.c:548
+#: modules/process/noise_synth.c:456
+#: modules/process/obj_synth.c:577
+msgid "_Like Current Channel"
+msgstr "Identique au canal courant"
+
+#: modules/process/col_synth.c:476
+msgid "source|Cosine"
+msgstr "Cosinus"
+
+#: modules/process/col_synth.c:478
+msgid "source|Directional"
+msgstr "Directionnelle"
+
 #: modules/process/convolution_filter.c:129
 msgid "symmetry|None"
 msgstr "Aucune"
@@ -6467,39 +6552,9 @@ msgstr "/S_ynthèse/_Particules..."
 msgid "Generate particles using dynamical model"
 msgstr "Générer des particules à l'aide d'un modèle dynamique"
 
-#: modules/process/deposit_synth.c:315
-#: modules/process/deposit_synth.c:327
-#: modules/process/deposit_synth.c:548
-#: modules/process/deposit_synth.c:560
-#: modules/process/fft_synth.c:304
-#: modules/process/lno_synth.c:410
-#: modules/process/noise_synth.c:322
-#: modules/process/obj_synth.c:404
-#: modules/process/pat_synth.c:374
-msgid "Generated"
-msgstr "Généré"
-
 #: modules/process/deposit_synth.c:357
 msgid "Particle Generation"
 msgstr "Génération de particules"
-
-#: modules/process/deposit_synth.c:432
-#: modules/process/fft_synth.c:395
-#: modules/process/lno_synth.c:501
-#: modules/process/noise_synth.c:413
-#: modules/process/obj_synth.c:497
-#: modules/process/pat_synth.c:467
-msgid "Dimensions"
-msgstr "Dimensions"
-
-#: modules/process/deposit_synth.c:442
-#: modules/process/fft_synth.c:406
-#: modules/process/lno_synth.c:512
-#: modules/process/noise_synth.c:424
-#: modules/process/obj_synth.c:508
-#: modules/process/pat_synth.c:479
-msgid "Generator"
-msgstr "Générateur"
 
 #: modules/process/deposit_synth.c:447
 msgid "R_adius:"
@@ -7187,13 +7242,6 @@ msgstr "Synthèse spectrale"
 msgid "_RMS:"
 msgstr "_RMS :"
 
-#: modules/process/fft_synth.c:415
-#: modules/process/lno_synth.c:548
-#: modules/process/noise_synth.c:456
-#: modules/process/obj_synth.c:577
-msgid "_Like Current Channel"
-msgstr "Identique au canal courant"
-
 #: modules/process/fft_synth.c:426
 msgid "M_inimum frequency:"
 msgstr "Fréquence m_inimum :"
@@ -7552,9 +7600,8 @@ msgid "Grain Distributions"
 msgstr "Distribution des grains"
 
 #: modules/process/grain_dist.c:479
-#, fuzzy
 msgid "count"
-msgstr "Comptage"
+msgstr "quantité"
 
 #: modules/process/grain_dist.c:547
 msgid "Export Raw Grain Values"
@@ -8363,18 +8410,13 @@ msgstr "Dans les lignes :"
 msgid "C_umulative"
 msgstr "C_umulatif"
 
-#: modules/process/lno_synth.c:1055
-#: modules/process/obj_synth.c:519
-msgid "Co_verage:"
-msgstr "Couverture :"
-
 #: modules/process/local_contrast.c:75
 msgid "Maximizes local contrast."
 msgstr "Maximise le contraste local."
 
 #: modules/process/local_contrast.c:89
 msgid "/_Presentation/Local _Contrast..."
-msgstr "/_Présentation/_Contrast local..."
+msgstr "/_Présentation/_Contraste local..."
 
 #: modules/process/local_contrast.c:93
 msgid "Presentation with maximized local contrast"
@@ -10149,12 +10191,12 @@ msgstr "Incertitude Z %d"
 #: modules/tools/profile.c:840
 #, c-format
 msgid "Zunc up bound %d"
-msgstr ""
+msgstr "Z inc. limite haute %d"
 
 #: modules/tools/profile.c:843
 #, c-format
 msgid "Zunc low bound %d"
-msgstr ""
+msgstr "Z inc. limite basse %d"
 
 #: modules/tools/profile.c:1095
 msgid "calib-data|None"
