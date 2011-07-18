@@ -1,8 +1,14 @@
 2.26 (0000-00-00)
+Application:
+- Keyboard shortucts can be modified by pointing to the menu item and pressing
+  the new shortcut (after enabling this in the Edit menu).
+
 Libraries:
 - libgwydgets: Graph data can be exported to ASCII in a locale-independent way.
 
 Modules:
+- Code V INT (new): Imports Code V INT grid interferograms.
+- Zeiss (new): Imports Carl Zeiss SEM scans (TIFF).
 - 1D FFT filter: Correct X-axis units of Fourier modulus are displayed.
 - Level Grains: The sign of extracted background was corrected.
 - LEXT: Crashing on systems lacking memrchr(), namely MS Windows, was fixed.
@@ -32,7 +38,7 @@ Libraries:
 
 Modules:
 - CSM (new): Imports Benyuan CSM files.
-- AMB (new): Import Ambios AMB files (experimental).
+- AMB (new): Imports Ambios AMB files (experimental).
 - WIP (new): Imports WITec project files.
 - NRRD (new): Imports and exports Nearly Raw Raster Data (NRRD).  To get
   support for compressed files, Gwyddion must be built with libz and/or libbz2.
