@@ -6,6 +6,7 @@ process_LTLIBRARIES = \
 	acf2d.la \
 	angle_dist.la \
 	arithmetic.la \
+	averaging.la \
 	basicops.la \
 	calcoefs_load.la \
 	calcoefs_new.la \
@@ -106,10 +107,11 @@ endif
 acf2d_la_SOURCES               = acf2d.c
 angle_dist_la_SOURCES          = angle_dist.c
 arithmetic_la_SOURCES          = arithmetic.c
+averaging_la_SOURCES           = averaging.c
 basicops_la_SOURCES            = basicops.c
 calcoefs_new_la_SOURCES        = calcoefs_new.c
 calcoefs_load_la_SOURCES       = calcoefs_load.c
-calcoefs_simple_la_SOURCES    = calcoefs_simple.c
+calcoefs_simple_la_SOURCES     = calcoefs_simple.c
 calcoefs_view_la_SOURCES       = calcoefs_view.c
 calibrate_la_SOURCES           = calibrate.c
 col_synth_la_SOURCES           = col_synth.c dimensions.h synth.h
