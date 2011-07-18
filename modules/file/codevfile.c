@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
-#define DEBUG 1
+
 /**
  * [FILE-MAGIC-FREEDESKTOP]
  * <mime-type type="application/x-code-v-int">
@@ -209,7 +209,7 @@ int_load(const gchar *filename,
     gwy_debug("xres %d, yres %d", xres, yres);
     gwy_debug("wavelength %g", wavelength);
     fi = 6;
-    if (gwy_strequal(fields[fi], "NNB")) {
+    if (gwy_strequal(fields[fi], "NNR")) {
         nearest_neighbour = TRUE;
         fi++;
     }
@@ -307,7 +307,7 @@ int_load(const gchar *filename,
 
     container = gwy_container_new();
 
-    gwy_data_field_invert(dfield, FALSE, TRUE, FALSE);
+    gwy_data_field_invert(dfield, TRUE, FALSE, FALSE);
     gwy_container_set_object(container, gwy_app_get_data_key_for_id(0), dfield);
     g_object_unref(dfield);
     gwy_app_channel_check_nonsquare(container, 0);
