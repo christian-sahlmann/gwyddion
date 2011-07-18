@@ -151,7 +151,7 @@ typedef struct {
     guint dirno;
     guint width;
     guint height;
-    guint stripe_rows;
+    guint strip_rows;
     guint bits_per_sample;
     guint samples_per_pixel;
     /* private */
@@ -725,8 +725,8 @@ gwy_tiff_get_image_reader(const GwyTIFF *tiff,
      * MAXINT.  Setting more reasonably to RowsPerStrip = ImageLength achieves
      * the same ends. */
     if (!gwy_tiff_get_uint(tiff, dirno, GWY_TIFFTAG_ROWS_PER_STRIP,
-                           &reader.stripe_rows))
-        reader.stripe_rows = reader.height;
+                           &reader.strip_rows))
+        reader.strip_rows = reader.height;
 
     /*
      * The data sample type (default is unsigned integer)
@@ -761,15 +761,19 @@ gwy_tiff_get_image_reader(const GwyTIFF *tiff,
         return NULL;
     }
 
-    if (reader.stripe_rows == 0 || reader.stripe_rows > reader.width) {
-        err_INVALID(error, "RowsPerStripe");
+    /* Seen in Carl Zeiss SEM files. */
+    if (reader.strip_rows == (guint)-1)
+        reader.strip_rows = reader.height;
+
+    if (reader.strip_rows == 0 || reader.strip_rows > reader.height) {
+        err_INVALID(error, "RowsPerStrip");
         return NULL;
     }
     if (err_DIMENSION(error, reader.width)
         || err_DIMENSION(error, reader.height))
         return NULL;
 
-    nstripes = (reader.height + reader.stripe_rows-1)/reader.stripe_rows;
+    nstripes = (reader.height + reader.strip_rows-1)/reader.strip_rows;
     reader.offsets = g_new(guint, nstripes);
 
     /* Stripe offsets and byte counts.
@@ -813,10 +817,10 @@ gwy_tiff_get_image_reader(const GwyTIFF *tiff,
     /* Validate stripe offsets and sizes */
     reader.rowstride = (reader.bits_per_sample/8 * reader.samples_per_pixel
                         * reader.width);
-    ssize = reader.rowstride * reader.stripe_rows;
+    ssize = reader.rowstride * reader.strip_rows;
     for (i = 0; i < nstripes; i++) {
-        if (i == nstripes-1 && reader.height % reader.stripe_rows)
-            ssize = reader.rowstride * (reader.height % reader.stripe_rows);
+        if (i == nstripes-1 && reader.height % reader.strip_rows)
+            ssize = reader.rowstride * (reader.height % reader.strip_rows);
 
         if (reader.offsets[i] + ssize > tiff->size) {
             g_set_error(error, GWY_MODULE_FILE_ERROR,
@@ -842,15 +846,15 @@ gwy_tiff_read_image_row(const GwyTIFF *tiff,
 {
     GwyTIFFSampleFormat sformat = (GwyTIFFSampleFormat)reader->sample_format;
     const guchar *p;
-    guint stripeno, stripeindex, i, skip;
+    guint stripno, stripindex, i, skip;
 
     g_return_if_fail(reader->dirno < tiff->dirs->len);
     g_return_if_fail(rowno < reader->height);
     g_return_if_fail(channelno < reader->samples_per_pixel);
 
-    stripeno = rowno/reader->stripe_rows;
-    stripeindex = rowno % reader->stripe_rows;
-    p = tiff->data + (reader->offsets[stripeno] + stripeindex*reader->rowstride
+    stripno = rowno/reader->strip_rows;
+    stripindex = rowno % reader->strip_rows;
+    p = tiff->data + (reader->offsets[stripno] + stripindex*reader->rowstride
                       + (reader->bits_per_sample/8)*channelno);
 
     switch (reader->bits_per_sample) {
@@ -935,4 +939,3 @@ gwy_tiff_load(const gchar *filename,
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
-
