@@ -642,7 +642,6 @@ col_synth_do(const ColSynthArgs *args,
     fyres = gwy_data_field_get_yres(dfield);
     xext = fxres/8 + 16;
     yext = fyres/8 + 16;
-    xext = yext = 0;
     xres = fxres + 2*xext;
     yres = fyres + 2*yext;
 
@@ -685,6 +684,8 @@ typedef struct {
                          actual movement depends on the direction octant. */
     gboolean dominant_edge;
 } Particle;
+
+typedef void (*ParticleMoveFunc)(Particle *p);
 
 /* Dominant direction: positive x.  Other direction: positive y. */
 static inline void
@@ -802,6 +803,217 @@ particle_move_xmym(Particle *p)
     }
 }
 
+/* Dominant direction: positive y.  Other direction: positive x. */
+static inline void
+particle_move_ypxp(Particle *p)
+{
+    if (p->dominant_edge) {
+        if (p->x <= 1.0 - p->a) {
+            p->x += p->a;
+            p->z += p->q;
+            p->i++;
+        }
+        else {
+            gdouble m = (1.0 - p->x)/p->a;
+            p->y += m;
+            p->x = 0.0;
+            p->z += p->q*m;
+            p->dominant_edge = FALSE;
+            p->j++;
+        }
+    }
+    else {
+        gdouble m = (1.0 - p->y);
+        p->y = 0.0;
+        p->x = p->a*m;
+        p->z += p->q*m;
+        p->dominant_edge = TRUE;
+        p->i++;
+    }
+}
+
+/* Dominant direction: positive y.  Other direction: negative x. */
+static inline void
+particle_move_ypxm(Particle *p)
+{
+    if (p->dominant_edge) {
+        if (p->x >= p->a) {
+            p->x -= p->a;
+            p->z += p->q;
+            p->i++;
+        }
+        else {
+            gdouble m = p->x/p->a;
+            p->y += m;
+            p->x = 1.0;
+            p->z += p->q*m;
+            p->dominant_edge = FALSE;
+            p->j--;
+        }
+    }
+    else {
+        gdouble m = (1.0 - p->y);
+        p->y = 0.0;
+        p->x = 1.0 - p->a*m;
+        p->z += p->q*m;
+        p->dominant_edge = TRUE;
+        p->i++;
+    }
+}
+
+/* Dominant direction: negative y.  Other direction: positive x. */
+static inline void
+particle_move_ymxp(Particle *p)
+{
+    if (p->dominant_edge) {
+        if (p->x <= 1.0 - p->a) {
+            p->x += p->a;
+            p->z += p->q;
+            p->i--;
+        }
+        else {
+            gdouble m = (1.0 - p->x)/p->a;
+            p->y -= m;
+            p->x = 0.0;
+            p->z += p->q*m;
+            p->dominant_edge = FALSE;
+            p->j++;
+        }
+    }
+    else {
+        gdouble m = p->y;
+        p->y = 1.0;
+        p->x = p->a*m;
+        p->z += p->q*m;
+        p->dominant_edge = TRUE;
+        p->i--;
+    }
+}
+
+/* Dominant direction: negative y.  Other direction: negative x. */
+static inline void
+particle_move_ymxm(Particle *p)
+{
+    if (p->dominant_edge) {
+        if (p->x >= p->a) {
+            p->x -= p->a;
+            p->z += p->q;
+            p->i--;
+        }
+        else {
+            gdouble m = p->x/p->a;
+            p->y -= m;
+            p->x = 1.0;
+            p->z += p->q*m;
+            p->dominant_edge = FALSE;
+            p->j--;
+        }
+    }
+    else {
+        gdouble m = p->y;
+        p->y = 1.0;
+        p->x = 1.0 - p->a*m;
+        p->z += p->q*m;
+        p->dominant_edge = TRUE;
+        p->i--;
+    }
+}
+
+static gboolean
+col_synth_trace2(GwyDataField *dfield,
+                gdouble x, gdouble y, gdouble z,
+                gdouble theta, gdouble phi, gdouble size,
+                gdouble *zmax)
+{
+    ParticleMoveFunc move, move_back;
+    Particle p;
+    gdouble kx, ky, kz;
+    guint k, xres, yres;
+    gdouble *data;
+
+    kx = cos(phi);
+    ky = sin(phi);
+    kz = -1.0/tan(theta);
+
+    xres = gwy_data_field_get_xres(dfield);
+    yres = gwy_data_field_get_yres(dfield);
+    data = gwy_data_field_get_data(dfield);
+
+    p.j = floor(x);
+    p.i = floor(y);
+    p.x = x - p.j;
+    p.y = y - p.i;
+    p.z = z;
+    p.dominant_edge = TRUE;
+    p.a = fmin(fabs(kx), fabs(ky))/fmax(fabs(kx), fabs(ky));
+    p.q = kz/fmax(fabs(kx), fabs(ky));
+
+    if (kx >= 0.0) {
+        if (ky >= 0.0) {
+            if (kx >= ky) {
+                move = &particle_move_xpyp;
+                move_back = &particle_move_xmym;
+            }
+            else {
+                move = &particle_move_ypxp;
+                move_back = &particle_move_ymxm;
+            }
+        }
+        else {
+            if (kx >= -ky) {
+                move = &particle_move_xpym;
+                move_back = &particle_move_xmyp;
+            }
+            else {
+                move = &particle_move_ymxp;
+                move_back = &particle_move_ypxm;
+            }
+        }
+    }
+    else {
+        if (ky >= 0.0) {
+            if (-kx >= ky) {
+                move = &particle_move_xmyp;
+                move_back = &particle_move_xpym;
+            }
+            else {
+                move = &particle_move_ypxm;
+                move_back = &particle_move_ymxp;
+            }
+        }
+        else {
+            if (-kx >= -ky) {
+                move = &particle_move_xmym;
+                move_back = &particle_move_xpyp;
+            }
+            else {
+                move = &particle_move_ymxm;
+                move_back = &particle_move_ypxp;
+            }
+        }
+    }
+
+    do {
+        move(&p);
+        if (p.j >= xres || p.i >= yres)
+            return FALSE;
+        k = p.i*xres + p.j;
+    } while (p.z > data[k]);
+
+    move_back(&p);
+    /* Rounding error? */
+    if (p.j >= xres || p.i >= yres) {
+        //g_warning("Move back went astray.");
+        return FALSE;
+    }
+    k = p.i*xres + p.j;
+    data[k] += size;
+    if (data[k] > *zmax)
+        *zmax = data[k];
+
+    return TRUE;
+}
+
 static gboolean
 col_synth_trace(GwyDataField *dfield,
                 gdouble x, gdouble y, gdouble z,
@@ -828,12 +1040,14 @@ col_synth_trace(GwyDataField *dfield,
     do {
         i = inew;
         j = jnew;
-        xnew = fmod(x + 0.2*kx + xres, xres);
-        ynew = fmod(y + 0.2*ky + yres, yres);
-        znew = z + 0.2*kz;
+        xnew = x + 0.4*kx;
+        ynew = y + 0.4*ky;
+        znew = z + 0.4*kz;
         jnew = floor(xnew);
         inew = floor(ynew);
         if (jnew != j || inew != i) {
+            if (jnew >= xres || inew >= yres)
+                return FALSE;
             iold = i;
             jold = j;
         }
