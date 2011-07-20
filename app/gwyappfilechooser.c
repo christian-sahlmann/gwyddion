@@ -982,7 +982,7 @@ ensure_gtk_recently_used(void)
             g_warning("Failed to create %s: %s", filename, error->message);
             g_clear_error(&error);
         }
-        g_object_unref(bookmarkfile);
+        g_bookmark_file_free(bookmarkfile);
     }
 #endif
     g_free(filename);
