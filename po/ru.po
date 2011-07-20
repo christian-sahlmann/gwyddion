@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2011-07-16 03:58+0200\n"
-"PO-Revision-Date: 2011-07-16 20:22+0300\n"
+"POT-Creation-Date: 2011-07-20 03:58+0200\n"
+"PO-Revision-Date: 2011-07-21 00:15+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "Language: \n"
@@ -2856,8 +2856,8 @@ msgstr "Были найдены некорректные позиции тего
 
 #: modules/file/gwytiff.h:683
 #: modules/file/gwytiff.h:690
-#: modules/file/gwytiff.h:782
-#: modules/file/gwytiff.h:798
+#: modules/file/gwytiff.h:786
+#: modules/file/gwytiff.h:802
 #, c-format
 msgid "Required tag %u was not found."
 msgstr "Требуемый тег %u не был найден."
@@ -2880,7 +2880,7 @@ msgstr "Двумерная конфигурация %u не поддержива
 msgid "Unsupported sample format"
 msgstr "Неподдерживаемый формат отсчёта"
 
-#: modules/file/gwytiff.h:824
+#: modules/file/gwytiff.h:828
 #: modules/file/matfile.c:275
 #: modules/file/matfile.c:297
 #: modules/file/psia.c:342
@@ -5083,6 +5083,14 @@ msgstr "количество строк"
 msgid "Unknown data type `%s'."
 msgstr "Неизвестный тип данных `%s'."
 
+#: modules/file/zeiss.c:62
+msgid "Imports Carl Zeiss SEM images."
+msgstr "Импортирует изображения Carl Zeiss SEM."
+
+#: modules/file/zeiss.c:75
+msgid "Carl Zeiss SEM scans (.tif)"
+msgstr "Сканы Carl Zeiss SEM (.tif)"
+
 #: modules/graph/graph_cd.c:137
 msgid "Critical dimension measurements"
 msgstr "Измерения габаритных размеров"
@@ -5660,6 +5668,26 @@ msgstr "Горизонтальные размеры являются разны�
 #: modules/process/superresolution.c:309
 msgid "Physical dimensions differ"
 msgstr "Физические размеры отличаются"
+
+#: modules/process/averaging.c:57
+msgid "Similar structures averaging using autocorrelation"
+msgstr "Усреднение подобных структур используя автокорреляцию"
+
+#: modules/process/averaging.c:70
+msgid "/_Correct Data/_Correlation averaging..."
+msgstr "/Исправить _данные/Усреднение по _корреляции..."
+
+#: modules/process/averaging.c:74
+msgid "Averaging of similar structures"
+msgstr "Усреднение подобных структур"
+
+#: modules/process/averaging.c:107
+msgid "Averaged"
+msgstr "Усреднённое"
+
+#: modules/process/averaging.c:125
+msgid "Select area of interest"
+msgstr "Выберите интересующую область"
 
 #: modules/process/basicops.c:55
 msgid "Basic operations like flipping, value inversion, and rotation by multiples of 90 degrees."
