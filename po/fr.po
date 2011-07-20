@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: French localization\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2011-07-18 03:58+0200\n"
-"PO-Revision-Date: 2011-07-18 20:23+0100\n"
+"POT-Creation-Date: 2011-07-20 03:58+0200\n"
+"PO-Revision-Date: 2011-07-20 20:23+0100\n"
 "Last-Translator: François RIGUET <francheu@caramail.com>\n"
 "Language-Team: François RIGUET <francheu@caramail.com>\n"
 "Language: \n"
@@ -2854,8 +2854,8 @@ msgstr "Des positions invalides de balises ont été trouvées."
 
 #: modules/file/gwytiff.h:683
 #: modules/file/gwytiff.h:690
-#: modules/file/gwytiff.h:782
-#: modules/file/gwytiff.h:798
+#: modules/file/gwytiff.h:786
+#: modules/file/gwytiff.h:802
 #, c-format
 msgid "Required tag %u was not found."
 msgstr "La balise %u n'a pas été trouvée."
@@ -2878,7 +2878,7 @@ msgstr "La configuration plane %u n'est pas supportée."
 msgid "Unsupported sample format"
 msgstr "Format non supporté"
 
-#: modules/file/gwytiff.h:824
+#: modules/file/gwytiff.h:828
 #: modules/file/matfile.c:275
 #: modules/file/matfile.c:297
 #: modules/file/psia.c:342
@@ -3655,14 +3655,14 @@ msgid "Cannot decompress bzip2-encoded data.  Bzip2 support was not built in."
 msgstr "Impossible de décompresser les données encodées au format Bzip2. Le support Bzip2 n'a pas été intégré."
 
 #: modules/file/nrrdfile.c:895
-#, fuzzy, c-format
+#, c-format
 msgid "Hex data contains less values (%u) than corresponds to the sizes (%u)."
-msgstr "Les données hexadécimales contiennent moins de valeurs (%u) que de tailles (%u)."
+msgstr "Les données hexadécimales contiennent moins de valeurs (%u) que celles correspondant aux tailles (%u)."
 
 #: modules/file/nrrdfile.c:1008
-#, fuzzy, c-format
+#, c-format
 msgid "Text data contains less values (%u) than corresponds to the sizes (%u)."
-msgstr "Les données texte contiennent moins de valeurs (%u) que de tailles (%u)."
+msgstr "Les données texte contiennent moins de valeurs (%u) que celles correspondant aux tailles (%u)."
 
 #: modules/file/nrrdfile.c:1013
 #, c-format
@@ -5079,6 +5079,14 @@ msgstr "Nombre de lignes"
 msgid "Unknown data type `%s'."
 msgstr "Type de données `%s' inconnu."
 
+#: modules/file/zeiss.c:62
+msgid "Imports Carl Zeiss SEM images."
+msgstr "Importe les fichiers Carl Zeiss SEM."
+
+#: modules/file/zeiss.c:75
+msgid "Carl Zeiss SEM scans (.tif)"
+msgstr "Scan Carl Zeiss SEM (.tif)"
+
 #: modules/graph/graph_cd.c:137
 msgid "Critical dimension measurements"
 msgstr "Mesures de dimensions critiques"
@@ -5656,6 +5664,26 @@ msgstr "Les dimensions latérales sont des quantités physiques différentes"
 #: modules/process/superresolution.c:309
 msgid "Physical dimensions differ"
 msgstr "Les dimensions physiques diffèrent"
+
+#: modules/process/averaging.c:57
+msgid "Similar structures averaging using autocorrelation"
+msgstr "Moyennage de structure similaires par auto-corrélation"
+
+#: modules/process/averaging.c:70
+msgid "/_Correct Data/_Correlation averaging..."
+msgstr "/_Correction des Données/Moyennage par _corrélation..."
+
+#: modules/process/averaging.c:74
+msgid "Averaging of similar structures"
+msgstr "Moyennage de structures similaires"
+
+#: modules/process/averaging.c:107
+msgid "Averaged"
+msgstr "Moyenné"
+
+#: modules/process/averaging.c:125
+msgid "Select area of interest"
+msgstr "Sélectionner la zone d'intérêt"
 
 #: modules/process/basicops.c:55
 msgid "Basic operations like flipping, value inversion, and rotation by multiples of 90 degrees."
