@@ -307,7 +307,11 @@ int_load(const gchar *filename,
 
     container = gwy_container_new();
 
+    /*
     gwy_data_field_invert(dfield, TRUE, FALSE, FALSE);
+    from F. Riguet : apparently no flip is needed (the raw data import module
+    gives the correct orientation without further flipping)
+    */
     gwy_container_set_object(container, gwy_app_get_data_key_for_id(0), dfield);
     g_object_unref(dfield);
     gwy_app_channel_check_nonsquare(container, 0);
@@ -316,7 +320,9 @@ int_load(const gchar *filename,
                                      g_strdup(title));
 
     if (mfield) {
+        /*
         gwy_data_field_invert(mfield, FALSE, TRUE, FALSE);
+        */
         gwy_container_set_object(container, gwy_app_get_mask_key_for_id(0),
                                  mfield);
         g_object_unref(mfield);
