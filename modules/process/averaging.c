@@ -45,11 +45,12 @@ typedef struct {
     gdouble zvalue;
 } GwyMaximum;
 
-static gboolean     module_register     (void);
-static void         averaging            (GwyContainer *data,
-                                         GwyRunType run);
-static GwyDataField *averaging_dialog(GwyContainer *data);
-static GwyDataField *averaging_do(GwyContainer *data, GwySelection *selected);
+static gboolean     module_register   (void);
+static void         averaging         (GwyContainer *data,
+                                       GwyRunType run);
+static GwyDataField *averaging_dialog (GwyContainer *data);
+static GwyDataField *averaging_do     (GwyContainer *data,
+                                       GwySelection *selected);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -133,7 +134,8 @@ static GwyDataField *averaging_dialog(GwyContainer *data)
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
 
     hbox = gtk_hbox_new(FALSE, 8);
-    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox, TRUE, TRUE, 0);
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox),
+                       hbox, TRUE, TRUE, 0);
 
     /* Data view */
     vbox = gtk_vbox_new(FALSE, 0);
@@ -142,7 +144,8 @@ static GwyDataField *averaging_dialog(GwyContainer *data)
     view = gwy_data_view_new(data);
     layer = gwy_layer_basic_new();
     gwy_pixmap_layer_set_data_key(layer, "/0/data");
-    gwy_layer_basic_set_gradient_key(GWY_LAYER_BASIC(layer), "/0/base/palette");
+    gwy_layer_basic_set_gradient_key(GWY_LAYER_BASIC(layer),
+                                     "/0/base/palette");
     gwy_data_view_set_data_prefix(GWY_DATA_VIEW(view), "/0/data");
     gwy_data_view_set_base_layer(GWY_DATA_VIEW(view), layer);
     gwy_set_data_preview_size(GWY_DATA_VIEW(view), PREVIEW_SIZE);
@@ -254,4 +257,4 @@ static GwyDataField *averaging_do(GwyContainer *data, GwySelection *selected)
     return result;
 }
 
-
+/* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
