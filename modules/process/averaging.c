@@ -131,7 +131,8 @@ static GwyDataField *averaging_dialog(GwyContainer *data)
                                          GTK_RESPONSE_OK,
                                          NULL);
     gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
-    gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
+    gtk_dialog_set_default_response(GTK_DIALOG(dialog),
+                                    GTK_RESPONSE_OK);
 
     hbox = gtk_hbox_new(FALSE, 8);
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox),
@@ -150,7 +151,9 @@ static GwyDataField *averaging_dialog(GwyContainer *data)
     gwy_data_view_set_base_layer(GWY_DATA_VIEW(view), layer);
     gwy_set_data_preview_size(GWY_DATA_VIEW(view), PREVIEW_SIZE);
 
-    vlayer = GWY_VECTOR_LAYER(g_object_new(g_type_from_name("GwyLayerRectangle"), NULL));
+    vlayer = GWY_VECTOR_LAYER(
+                g_object_new(g_type_from_name("GwyLayerRectangle"),
+                NULL));
     gwy_vector_layer_set_selection_key(vlayer, "/0/select/rect");
     gwy_data_view_set_top_layer(GWY_DATA_VIEW(view), vlayer);
     zselection = gwy_vector_layer_ensure_selection(vlayer);
@@ -181,7 +184,7 @@ static GwyDataField *averaging_dialog(GwyContainer *data)
     return score;
 }
 
-void find_local_maxima(GwyDataField *dfield, GArray *maxima)
+static void find_local_maxima(GwyDataField *dfield, GArray *maxima)
 {
     gint xres, yres;
     const gdouble *data;
@@ -207,7 +210,8 @@ void find_local_maxima(GwyDataField *dfield, GArray *maxima)
             }
 }
 
-static GwyDataField *averaging_do(GwyContainer *data, GwySelection *selected)
+static GwyDataField *
+averaging_do(GwyContainer *data, GwySelection *selected)
 {
     gdouble area[4];
     GwyDataField *dfield, *kernel, *correlation_score, *result;
