@@ -132,7 +132,7 @@ static const StartupTip tips[] = {
     {
         GTK_STOCK_INDEX,
         N_("Meta → Metadata Browser displays metadata (auxiliary information) "
-           "of channels and allows to edit it or export to a text file."),
+           "of channels and allows editting or exporting to a text file."),
     },
     /* 1D Views */
     {
@@ -300,7 +300,7 @@ static const StartupTip tips[] = {
     },
     {
         GWY_STOCK_STAT_QUANTITIES,
-        N_("Statistical Quantities tool allows to limit the area of interest "
+        N_("Statistical Quantities tool allows limiting the area of interest "
            "by a mask, rectangular selection or the intersection of both."),
     },
     {

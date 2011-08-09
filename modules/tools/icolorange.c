@@ -117,7 +117,7 @@ static void   gwy_tool_color_range_spin_changed      (GwyToolColorRange *tool);
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    N_("Interactive color range tool, allows to select data range false "
+    N_("Interactive color range tool, allows selecting the data range false "
        "color scale should map to, either on data or on height distribution "
        "histogram."),
     "Yeti <yeti@gwyddion.net>",

@@ -156,8 +156,8 @@ static void  gwy_tool_mask_editor_selection_changed  (GwyPlainTool *plain_tool,
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    N_("Mask editor tool, allows to interactively add or remove parts "
-       "of mask."),
+    N_("Mask editor tool, allows interactive modification of parts "
+       "of the mask."),
     "Yeti <yeti@gwyddion.net>",
     "3.2",
     "David Nečas (Yeti) & Petr Klapetek",
@@ -372,12 +372,12 @@ gwy_tool_mask_editor_init_dialog(GwyToolMaskEditor *tool)
         {
             MASK_TOOL_FILL_DRAW,
             GWY_STOCK_MASK_FILL_DRAW,
-            N_("Fill continous empty areas with mask"),
+            N_("Fill continuous empty areas with mask"),
         },
         {
             MASK_TOOL_FILL_ERASE,
             GWY_STOCK_MASK_FILL_ERASE,
-            N_("Erase continous parts of mask"),
+            N_("Erase continuous parts of mask"),
         },
     };
 
