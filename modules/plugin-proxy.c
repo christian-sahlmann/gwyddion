@@ -51,6 +51,7 @@
 #include <sys/types.h>
 #include <glib/gstdio.h>
 #include <libgwyddion/gwymacros.h>
+#include <libgwyddion/gwyutils.h>
 #include <libgwymodule/gwymodule.h>
 #include <libprocess/datafield.h>
 #include <app/gwyapp.h>
@@ -144,7 +145,7 @@ static GwyModuleInfo module_info = {
        "running external programs (plug-ins) on data pretending they are "
        "data processing or file loading/saving modules."),
     "Yeti <yeti@gwyddion.net>",
-    "3.8",
+    "3.9",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -1116,27 +1117,6 @@ text_dump_export(GwyContainer *data,
     return fh;
 }
 
-static inline void
-gwy_byteswapped_copy(const guint8 *source,
-                     guint8 *dest,
-                     gsize size,
-                     gsize len,
-                     gsize byteswap)
-{
-    gsize i, k;
-
-    if (!byteswap) {
-        memcpy(dest, source, size*len);
-        return;
-    }
-
-    for (i = 0; i < len; i++) {
-        guint8 *b = dest + i*size;
-
-        for (k = 0; k < size; k++)
-            b[k ^ byteswap] = *(source++);
-    }
-}
 /**
  * dump_export_data_field:
  * @dfield: A #GwyDataField.
@@ -1180,7 +1160,7 @@ dump_export_data_field(GwyDataField *dfield, const gchar *name, FILE *fh)
         guint8 *d;
 
         d = g_new(guint8, sizeof(gdouble)*xres*yres);
-        gwy_byteswapped_copy((const guint8*)data, d,
+        gwy_memcpy_byte_swap((const guint8*)data, d,
                              sizeof(gdouble), xres*yres, sizeof(gdouble) - 1);
         fwrite(data, sizeof(gdouble), xres*yres, fh);
         g_free(d);
@@ -1397,7 +1377,7 @@ text_dump_import(gchar *buffer,
 #if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
         memcpy(d, pos, n);
 #else
-        gwy_byteswapped_copy(pos, (guint8*)d,
+        gwy_memcpy_byte_swap(pos, (guint8*)d,
                              sizeof(gdouble), xres*yres, sizeof(gdouble)-1);
 #endif
         pos += n;

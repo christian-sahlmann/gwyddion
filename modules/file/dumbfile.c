@@ -69,7 +69,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Reads and exports Gwyddion dumb dump files."),
     "Yeti <yeti@gwyddion.net>",
-    "1.0",
+    "1.1",
     "David Nečas (Yeti)",
     "2011",
 };
@@ -283,7 +283,7 @@ text_dump_import(gchar *buffer,
 #if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
         memcpy(d, pos, n);
 #else
-        gwy_byteswapped_copy(pos, (guint8*)d,
+        gwy_memcpy_byte_swap(pos, (guint8*)d,
                              sizeof(gdouble), xres*yres, sizeof(gdouble)-1);
 #endif
         pos += n;
