@@ -5,6 +5,10 @@ Application:
 
 Libraries:
 - libgwydgets: Graph data can be exported to ASCII in a locale-independent way.
+- libgwydgets: Graph window properly disconnects signals from the graph model
+               when destroyed.
+- libgwyapp: Possible crash due to wrong freeing of GBookmarkFile was fixed.
+- libgwyapp: File chooser can plane- and/or row-level previewed data.
 
 Modules:
 - Code V INT (new): Imports Code V INT grid interferograms.
@@ -13,6 +17,7 @@ Modules:
 - Level Grains: The sign of extracted background was corrected.
 - LEXT: Crashing on systems lacking memrchr(), namely MS Windows, was fixed.
 - Graph export ASCII: Can export floating point numbers in POSIX format.
+- Dumb: Builds on big-endian architectures.
 
 Other:
 - Compatibility with gcc 4.6 and autoconf 2.68 was improved.
