@@ -24,8 +24,11 @@
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
+#include <libprocess/level.h>
+#include <libgwydgets/gwystock.h>
 #include <libgwymodule/gwymodule-file.h>
 #include <app/app.h>
+#include <app/menu.h>
 #include <app/settings.h>
 #include <app/filelist.h>
 #include <app/data-browser.h>
@@ -87,8 +90,16 @@ static void       gwy_app_file_chooser_expanded       (GwyAppFileChooser *choose
 static gboolean   gwy_app_file_chooser_open_filter    (const GtkFileFilterInfo *filter_info,
                                                        gpointer userdata);
 static void       gwy_app_file_chooser_add_preview    (GwyAppFileChooser *chooser);
+static void       plane_level_changed                 (GwyAppFileChooser *chooser,
+                                                       GtkToggleButton *button);
+static void       row_level_changed                   (GwyAppFileChooser *chooser,
+                                                       GtkToggleButton *button);
 static void       gwy_app_file_chooser_update_preview (GwyAppFileChooser *chooser);
 static gboolean   gwy_app_file_chooser_do_full_preview(gpointer user_data);
+static void       modify_channel_for_preview          (GwyContainer *data,
+                                                       gint id,
+                                                       gboolean plane_level,
+                                                       gboolean row_level);
 static void       gwy_app_file_chooser_free_preview   (GwyAppFileChooser *chooser);
 static void       ensure_gtk_recently_used            (void);
 
@@ -580,11 +591,14 @@ gwy_app_file_chooser_open_filter(const GtkFileFilterInfo *filter_info,
 static void
 gwy_app_file_chooser_add_preview(GwyAppFileChooser *chooser)
 {
+    GwyContainer *settings;
     GtkListStore *store;
     GtkIconView *preview;
     GtkCellLayout *layout;
     GtkCellRenderer *renderer;
-    GtkWidget *scwin, *vbox;
+    GtkTooltips *tips;
+    GtkWidget *scwin, *vbox, *button, *toolbar;
+    gboolean setting;
     gint w;
 
     scwin = gtk_scrolled_window_new(NULL, NULL);
@@ -647,12 +661,79 @@ gwy_app_file_chooser_add_preview(GwyAppFileChooser *chooser)
                        FALSE, FALSE, 0);
 
     gtk_box_pack_start(GTK_BOX(vbox), scwin, TRUE, TRUE, 0);
+
+    toolbar = gtk_hbox_new(FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(vbox), toolbar, FALSE, FALSE, 0);
+
+    settings = gwy_app_settings_get();
+    tips = gwy_app_get_tooltips();
+
+    setting = FALSE;
+    gwy_container_gis_boolean_by_name(settings, "/app/file/preview/plane-level",
+                                      &setting);
+    button = gtk_toggle_button_new();
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(button), setting);
+    gtk_widget_set_can_focus(button, FALSE);
+    gtk_button_set_relief(GTK_BUTTON(button), GTK_RELIEF_NONE);
+    gtk_tooltips_set_tip(tips, button,
+                         _("Plane-level previewed data"), NULL);
+    gtk_container_add(GTK_CONTAINER(button),
+                      gtk_image_new_from_stock(GWY_STOCK_LEVEL,
+                                               GTK_ICON_SIZE_SMALL_TOOLBAR));
+    gtk_box_pack_start(GTK_BOX(toolbar), button, FALSE, FALSE, 0);
+    g_signal_connect_swapped(button, "toggled",
+                             G_CALLBACK(plane_level_changed), chooser);
+
+    setting = FALSE;
+    gwy_container_gis_boolean_by_name(settings, "/app/file/preview/row-level",
+                                      &setting);
+    button = gtk_toggle_button_new();
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(button), setting);
+    gtk_widget_set_can_focus(button, FALSE);
+    gtk_button_set_relief(GTK_BUTTON(button), GTK_RELIEF_NONE);
+    gtk_tooltips_set_tip(tips, button,
+                         _("Row-level previewed data"), NULL);
+    gtk_container_add(GTK_CONTAINER(button),
+                      gtk_image_new_from_stock(GWY_STOCK_LINE_LEVEL,
+                                               GTK_ICON_SIZE_SMALL_TOOLBAR));
+    gtk_box_pack_start(GTK_BOX(toolbar), button, FALSE, FALSE, 0);
+    g_signal_connect_swapped(button, "toggled",
+                             G_CALLBACK(row_level_changed), chooser);
+
     gtk_widget_show_all(vbox);
 
     gtk_file_chooser_set_preview_widget(GTK_FILE_CHOOSER(chooser), vbox);
     gtk_file_chooser_set_use_preview_label(GTK_FILE_CHOOSER(chooser), FALSE);
     g_signal_connect(chooser, "update-preview",
                      G_CALLBACK(gwy_app_file_chooser_update_preview), NULL);
+}
+
+static void
+plane_level_changed(GwyAppFileChooser *chooser,
+                    GtkToggleButton *button)
+{
+    GwyContainer *settings = gwy_app_settings_get();
+    gwy_container_set_boolean_by_name(settings, "/app/file/preview/plane-level",
+                                      gtk_toggle_button_get_active(button));
+    if (chooser->full_preview_id) {
+        g_source_remove(chooser->full_preview_id);
+        chooser->full_preview_id = 0;
+    }
+    gwy_app_file_chooser_do_full_preview(chooser);
+}
+
+static void
+row_level_changed(GwyAppFileChooser *chooser,
+                  GtkToggleButton *button)
+{
+    GwyContainer *settings = gwy_app_settings_get();
+    gwy_container_set_boolean_by_name(settings, "/app/file/preview/row-level",
+                                      gtk_toggle_button_get_active(button));
+    if (chooser->full_preview_id) {
+        g_source_remove(chooser->full_preview_id);
+        chooser->full_preview_id = 0;
+    }
+    gwy_app_file_chooser_do_full_preview(chooser);
 }
 
 static void
@@ -834,10 +915,11 @@ gwy_app_file_chooser_do_full_preview(gpointer user_data)
     GtkListStore *store;
     GwyAppFileChooser *chooser;
     FileInfoData filedata;
-    GwyContainer *data;
+    GwyContainer *data, *settings;
     GdkPixbuf *pixbuf;
     GtkTreeIter iter;
     const gchar *name;
+    gboolean row_level = FALSE, plane_level = FALSE;
     GString *str;
     GSList *l;
     gint id;
@@ -864,7 +946,8 @@ gwy_app_file_chooser_do_full_preview(gpointer user_data)
                          GWY_RUN_NONINTERACTIVE, NULL);
     if (!data) {
         gwy_app_file_chooser_free_preview(chooser);
-        gtk_tree_model_get_iter_first(model, &iter);
+        gtk_list_store_clear(store);
+        gtk_list_store_append(store, &iter);
         gtk_list_store_set(store, &iter,
                            COLUMN_FILEINFO, _("Cannot preview"),
                            -1);
@@ -909,10 +992,16 @@ gwy_app_file_chooser_do_full_preview(gpointer user_data)
                  "ellipsize", PANGO_ELLIPSIZE_END,
                  "wrap-width", -1,
                  NULL);
+    settings = gwy_app_settings_get();
+    gwy_container_gis_boolean_by_name(settings, "/app/file/preview/plane-level",
+                                      &plane_level);
+    gwy_container_gis_boolean_by_name(settings, "/app/file/preview/row-level",
+                                      &row_level);
 
     gtk_list_store_clear(store);
     for (l = filedata.channels; l; l = g_slist_next(l)) {
         id = GPOINTER_TO_INT(l->data);
+        modify_channel_for_preview(data, id, plane_level, row_level);
         pixbuf = gwy_app_get_channel_thumbnail(data, id,
                                                TMS_NORMAL_THUMB_SIZE,
                                                TMS_NORMAL_THUMB_SIZE);
@@ -943,6 +1032,49 @@ gwy_app_file_chooser_do_full_preview(gpointer user_data)
     g_object_unref(data);
 
     return FALSE;
+}
+
+static void
+modify_channel_for_preview(GwyContainer *data,
+                           gint id,
+                           gboolean plane_level, gboolean row_level)
+{
+    GwyDataField *field;
+    gdouble a, bx, by;
+
+    if (!plane_level && !row_level)
+        return;
+
+    if (!gwy_container_gis_object(data, gwy_app_get_data_key_for_id(id), &field)
+        || !GWY_IS_DATA_FIELD(field))
+        return;
+
+    if (plane_level) {
+        gwy_data_field_fit_plane(field, &a, &bx, &by);
+        gwy_data_field_plane_level(field, a, bx, by);
+    }
+
+    if (row_level) {
+        guint xres = gwy_data_field_get_xres(field);
+        guint yres = gwy_data_field_get_yres(field);
+        gdouble *row = gwy_data_field_get_data(field);
+        gdouble *diffs = g_new(gdouble, xres);
+        guint i, j;
+
+        for (i = 1; i < yres; i++) {
+            gdouble *prev = row;
+            gdouble median;
+
+            row += xres;
+            for (j = 0; j < xres; j++)
+                diffs[j] = prev[j] - row[j];
+            median = gwy_math_median(xres, diffs);
+            for (j = 0; j < xres; j++)
+                row[j] += median;
+        }
+
+        g_free(diffs);
+    }
 }
 
 static void
