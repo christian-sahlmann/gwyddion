@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2004-2007 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2004-2011 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -165,7 +165,7 @@ static GwyModuleInfo module_info = {
     N_("Imports Veeco (Digital Instruments) Nanoscope data files, "
        "version 3 or newer."),
     "Yeti <yeti@gwyddion.net>",
-    "0.26",
+    "0.27",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -495,7 +495,7 @@ hash_to_data_field(GHashTable *hash,
     gint xres, yres, bpp, offset, size, power10;
     gdouble xreal, yreal, q;
     gdouble *data;
-    gboolean size_ok, use_global;
+    gboolean size_ok, use_global, nonsquare_aspect;
 
     if (!require_keys(hash, error, "Samps/line", "Number of lines",
                       "Scan size", "Data offset", "Data length", NULL))
@@ -509,6 +509,9 @@ hash_to_data_field(GHashTable *hash,
 
     val = g_hash_table_lookup(hash, "Bytes/pixel");
     bpp = val ? GWY_ROUND(val->hard_value) : 2;
+
+    val = g_hash_table_lookup(hash, "Aspect ratio");
+    nonsquare_aspect = val && !gwy_strequal(val->hard_value_str, "1:1");
 
     /* scan size */
     val = g_hash_table_lookup(hash, "Scan size");
@@ -586,7 +589,7 @@ hash_to_data_field(GHashTable *hash,
                 yres = gyres;
             }
         }
-        else {
+        else if (nonsquare_aspect) {
             /* Reported by Peter Eaton.  No test case that would contradict
              * this known. */
             yreal *= yres;
