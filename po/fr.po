@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: French localization\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2011-07-20 03:58+0200\n"
-"PO-Revision-Date: 2011-07-20 20:23+0100\n"
+"POT-Creation-Date: 2011-08-17 03:58+0200\n"
+"PO-Revision-Date: 2011-08-17 20:31+0100\n"
 "Last-Translator: François RIGUET <francheu@caramail.com>\n"
 "Language-Team: François RIGUET <francheu@caramail.com>\n"
 "Language: \n"
@@ -122,7 +122,7 @@ msgid "vdW: paraboloid"
 msgstr "vdW : parabole"
 
 #: libgwyddion/gwyinventory.c:1310
-#: libgwydgets/gwygraphwindow.c:603
+#: libgwydgets/gwygraphwindow.c:614
 #: app/data-browser.c:1538
 #: app/data-browser.c:2288
 #: app/data-browser.c:3062
@@ -1101,38 +1101,38 @@ msgstr "Epaisseur de la grille"
 msgid "_Reversed layout"
 msgstr "Disposition inve_rsée"
 
-#: libgwydgets/gwygraphwindow.c:140
+#: libgwydgets/gwygraphwindow.c:151
 #: app/toolbox.c:108
 msgid "Graph"
 msgstr "Graphe"
 
-#: libgwydgets/gwygraphwindow.c:147
+#: libgwydgets/gwygraphwindow.c:158
 #: modules/file/hdrimage.cc:470
 #: modules/process/fit_2d.c:678
 msgid "Data"
 msgstr "Données"
 
-#: libgwydgets/gwygraphwindow.c:160
+#: libgwydgets/gwygraphwindow.c:171
 msgid "Curves"
 msgstr "Courbes"
 
-#: libgwydgets/gwygraphwindow.c:174
+#: libgwydgets/gwygraphwindow.c:185
 msgid "Measure distances in graph"
 msgstr "Mesurer des distances sur un graphe"
 
-#: libgwydgets/gwygraphwindow.c:186
+#: libgwydgets/gwygraphwindow.c:197
 msgid "Zoom in by mouse selection"
 msgstr "Zoomer la sélection"
 
-#: libgwydgets/gwygraphwindow.c:198
+#: libgwydgets/gwygraphwindow.c:209
 msgid "Zoom out to full curve"
 msgstr "Montrer la courbe en entier"
 
-#: libgwydgets/gwygraphwindow.c:210
+#: libgwydgets/gwygraphwindow.c:221
 msgid "Toggle logarithmic x axis"
 msgstr "Passer à l'échelle logarithmique en X"
 
-#: libgwydgets/gwygraphwindow.c:222
+#: libgwydgets/gwygraphwindow.c:233
 msgid "Toggle logarithmic y axis"
 msgstr "Passer à l'échelle logarithmique en Y"
 
@@ -1529,7 +1529,7 @@ msgid "Merge File"
 msgstr "Fusionner un fichier"
 
 #: app/file.c:364
-#: app/gwyappfilechooser.c:216
+#: app/gwyappfilechooser.c:227
 msgid "Open File"
 msgstr "Ouvrir un fichier"
 
@@ -1632,37 +1632,45 @@ msgstr "_Courbe"
 msgid "_Snap to control points"
 msgstr "_S'accrocher aux points de contrôle"
 
-#: app/gwyappfilechooser.c:221
+#: app/gwyappfilechooser.c:232
 msgid "Save File"
 msgstr "Enregistrer le fichier"
 
-#: app/gwyappfilechooser.c:401
+#: app/gwyappfilechooser.c:412
 #, c-format
 msgid "File _type: %s, filtered"
 msgstr "_Type de fichier : %s, filtré"
 
-#: app/gwyappfilechooser.c:403
+#: app/gwyappfilechooser.c:414
 #, c-format
 msgid "File _type: %s"
 msgstr "_Type de fichier : %s"
 
-#: app/gwyappfilechooser.c:481
+#: app/gwyappfilechooser.c:492
 msgid "Automatic by extension"
 msgstr "Automatique par extension"
 
-#: app/gwyappfilechooser.c:490
+#: app/gwyappfilechooser.c:501
 msgid "Automatically detected"
 msgstr "Détection automatique"
 
-#: app/gwyappfilechooser.c:541
+#: app/gwyappfilechooser.c:552
 msgid "Show only loadable files"
 msgstr "Ne montrer que les fichiers chargeables"
 
-#: app/gwyappfilechooser.c:720
+#: app/gwyappfilechooser.c:679
+msgid "Plane-level previewed data"
+msgstr "Pré-visualisation des données avec mise à niveau par plan"
+
+#: app/gwyappfilechooser.c:695
+msgid "Row-level previewed data"
+msgstr "Pré-visualisation des données avec mise à niveau des lignes"
+
+#: app/gwyappfilechooser.c:801
 msgid "…"
 msgstr "…"
 
-#: app/gwyappfilechooser.c:869
+#: app/gwyappfilechooser.c:952
 msgid "Cannot preview"
 msgstr "Impossible de prévisualiser"
 
@@ -2000,8 +2008,8 @@ msgid "Each channel has its own metadata."
 msgstr "Chaque canal possède ses propres métadonnées."
 
 #: app/tips.c:134
-msgid "Meta → Metadata Browser displays metadata (auxiliary information) of channels and allows to edit it or export to a text file."
-msgstr "Méta→ Navigateur de Méta-données affiche les information auxiliaires sur les canaux et permet de les éditer ou les exporter vers un fichier texte."
+msgid "Meta → Metadata Browser displays metadata (auxiliary information) of channels and allows editting or exporting to a text file."
+msgstr "Métadonnées → Navigateur de Méta-données affiche les méta-données (informations auxiliaires) sur les canaux et permet de les éditer ou les exporter vers un fichier texte."
 
 #: app/tips.c:140
 msgid "Curves can be copied to other (compatible) graphs by dragging them from Curves tab to the graph window."
@@ -2132,8 +2140,8 @@ msgid "Spectroscopy tool displays point spectroscopy data and extracts them to s
 msgstr "L'outil Spectroscopie affiche les données de spectroscopie ponctuelleet les extraits vers des graphes qui peuvent être analysés ultérieurement, par exmeple avec Graphe → Ajuster la courbe FD."
 
 #: app/tips.c:303
-msgid "Statistical Quantities tool allows to limit the area of interest by a mask, rectangular selection or the intersection of both."
-msgstr "L'outil Statistiques permet de limiter la zone d'intérêt par un masque, des sections rectangulaires ou l'intersection des deux."
+msgid "Statistical Quantities tool allows limiting the area of interest by a mask, rectangular selection or the intersection of both."
+msgstr "L'outil Statistiques permet de limiter la zone d'intérêt par un masque, une sélection rectangulaire ou l'intersection des deux."
 
 #: app/tips.c:308
 msgid "Beside height and angle distributions, Statistical Functions tool calculates also correlation functions, power spectrum density (PSDF) and some more exotic functions."
@@ -2551,7 +2559,7 @@ msgstr "Burleigh données exportées (.txt, .bin)"
 
 #: modules/file/burleigh_exp.c:225
 #: modules/file/burleigh_exp.c:266
-#: modules/file/nanoscope.c:1090
+#: modules/file/nanoscope.c:1093
 #: modules/file/omicron.c:395
 #: modules/file/shimadzu.c:404
 msgid "Missing colon in header line."
@@ -2636,32 +2644,32 @@ msgid "Gwyddion dumb dump files (.dump)"
 msgstr "Gwyddion dump (.dump)"
 
 #: modules/file/dumbfile.c:160
-#: modules/plugin-proxy.c:1274
+#: modules/plugin-proxy.c:1254
 msgid "End of file reached when value was expected."
 msgstr "Fin du fichier atteinte alors qu'une valeur était attendue."
 
 #: modules/file/dumbfile.c:189
-#: modules/plugin-proxy.c:1303
+#: modules/plugin-proxy.c:1283
 msgid "Missing data field width."
 msgstr "Largeur du champ de données manquante."
 
 #: modules/file/dumbfile.c:202
-#: modules/plugin-proxy.c:1316
+#: modules/plugin-proxy.c:1296
 msgid "Missing data field height."
 msgstr "Hauteur du champ de données manquante."
 
 #: modules/file/dumbfile.c:232
-#: modules/plugin-proxy.c:1346
+#: modules/plugin-proxy.c:1326
 msgid "Data field dimensions are not positive numbers."
 msgstr "Les dimensions du champ de données ne sont pas positives."
 
 #: modules/file/dumbfile.c:273
-#: modules/plugin-proxy.c:1387
+#: modules/plugin-proxy.c:1367
 msgid "End of file reached inside a data field."
 msgstr "Fin du fichier atteinte dans un champ de données."
 
 #: modules/file/dumbfile.c:294
-#: modules/plugin-proxy.c:1408
+#: modules/plugin-proxy.c:1388
 msgid "Missing end of data field marker."
 msgstr "Marqueur de fin de données manquant."
 
@@ -3560,17 +3568,17 @@ msgstr ""
 "\n"
 "Cela arrive typiquement lorsque le fichier est traité comme du texte lors d'un envoi incompressé par e-mail, un transfert FTP en mode ascii (uilisez le binaire), compressé avec ‘Envoyer vers un dossier compressé’ dans certaines versions de MS Windows, ou tout autre transfert de fichier qui essaie d'enregistrer en texte indépendamment de la plateforme."
 
-#: modules/file/nanoscope.c:518
-#: modules/file/nanoscope.c:534
+#: modules/file/nanoscope.c:521
+#: modules/file/nanoscope.c:537
 msgid "Cannot parse `Scan size' field."
 msgstr "Impossible d'analyser le champ `Scan size'."
 
-#: modules/file/nanoscope.c:1000
+#: modules/file/nanoscope.c:1003
 #, c-format
 msgid "Garbage after data sample #%u."
 msgstr "Données erronées après l'échantillon #%u."
 
-#: modules/file/nanoscope.c:1080
+#: modules/file/nanoscope.c:1083
 msgid "Truncated header line."
 msgstr "Ligne d'en-tête tronquée."
 
@@ -5473,63 +5481,63 @@ msgstr "Couche permettant de sélectionner plusieurs points, sous forme de croix
 msgid "Layer allowing selection of rectangular areas."
 msgstr "Couche permettant de sélectionner des zones rectangulaires."
 
-#: modules/plugin-proxy.c:143
+#: modules/plugin-proxy.c:144
 msgid "Plug-in proxy is a module capable of querying, registering, and running external programs (plug-ins) on data pretending they are data processing or file loading/saving modules."
 msgstr "Plug-in proxy est un module capable d'appeler, enregistrer, et lancer des greffons sur des données en simulant des modules de traitement de données ou de chargement/sauvegarde de fichiers."
 
-#: modules/plugin-proxy.c:461
+#: modules/plugin-proxy.c:462
 msgid "/_Plug-Ins"
 msgstr "/Greffons"
 
-#: modules/plugin-proxy.c:462
+#: modules/plugin-proxy.c:463
 #, c-format
 msgid "Run plug-in %s"
 msgstr "Lancer le greffon %s"
 
-#: modules/plugin-proxy.c:735
-#: modules/plugin-proxy.c:836
+#: modules/plugin-proxy.c:736
+#: modules/plugin-proxy.c:837
 msgid "Plugin-proxy must be run as interactive."
 msgstr "Plugin-proxy doit être lancé de manière interactive."
 
-#: modules/plugin-proxy.c:741
+#: modules/plugin-proxy.c:742
 #, c-format
 msgid "Plug-in `%s' does not implement file loading."
 msgstr "Le greffon `%s' n'implémente pas de chargement de fichier."
 
-#: modules/plugin-proxy.c:759
+#: modules/plugin-proxy.c:760
 #, c-format
 msgid "Cannot read temporary file: %s."
 msgstr "Impossible de lire le fichier temporaire : %s."
 
-#: modules/plugin-proxy.c:766
-#: modules/plugin-proxy.c:861
+#: modules/plugin-proxy.c:767
+#: modules/plugin-proxy.c:862
 #, c-format
 msgid "Cannot execute plug-in `%s': %s."
 msgstr "Impossible d'exécuter le greffon `%s' : %s."
 
-#: modules/plugin-proxy.c:775
-#: modules/plugin-proxy.c:870
+#: modules/plugin-proxy.c:776
+#: modules/plugin-proxy.c:871
 #, c-format
 msgid "Plug-in `%s' returned non-zero exit status: %d."
 msgstr "Le greffon `%s' a retourné un statut de sortie non nul : %d."
 
-#: modules/plugin-proxy.c:788
+#: modules/plugin-proxy.c:789
 #, c-format
 msgid "Plug-in `%s' did not return any meaningful data."
 msgstr "Le greffon `%s' n'a pas renvoyé de données exploitables."
 
-#: modules/plugin-proxy.c:842
+#: modules/plugin-proxy.c:843
 #, c-format
 msgid "Plug-in `%s' does not implement file saving."
 msgstr "Le greffon `%s' n'implémente pas la sauvegarde de fichier."
 
-#: modules/plugin-proxy.c:1223
-#: modules/plugin-proxy.c:1232
+#: modules/plugin-proxy.c:1203
+#: modules/plugin-proxy.c:1212
 #, c-format
 msgid "Cannot create a temporary file: %s."
 msgstr "Impossible de créer le fichier temporaire : %s."
 
-#: modules/plugin-proxy.c:1240
+#: modules/plugin-proxy.c:1220
 #, c-format
 msgid "Cannot fdopen() already open file: %s."
 msgstr "fdopen() impossible sur le fichier déjà ouvert : %s."
@@ -5665,23 +5673,23 @@ msgstr "Les dimensions latérales sont des quantités physiques différentes"
 msgid "Physical dimensions differ"
 msgstr "Les dimensions physiques diffèrent"
 
-#: modules/process/averaging.c:57
+#: modules/process/averaging.c:58
 msgid "Similar structures averaging using autocorrelation"
 msgstr "Moyennage de structure similaires par auto-corrélation"
 
-#: modules/process/averaging.c:70
+#: modules/process/averaging.c:71
 msgid "/_Correct Data/_Correlation averaging..."
 msgstr "/_Correction des Données/Moyennage par _corrélation..."
 
-#: modules/process/averaging.c:74
+#: modules/process/averaging.c:75
 msgid "Averaging of similar structures"
 msgstr "Moyennage de structures similaires"
 
-#: modules/process/averaging.c:107
+#: modules/process/averaging.c:108
 msgid "Averaged"
 msgstr "Moyenné"
 
-#: modules/process/averaging.c:125
+#: modules/process/averaging.c:126
 msgid "Select area of interest"
 msgstr "Sélectionner la zone d'intérêt"
 
@@ -6548,7 +6556,7 @@ msgstr "CWT bi-dimensionnelle (Transformée en ondelettes continue)"
 
 #: modules/process/cwt.c:77
 msgid "/_Integral Transforms/2D _CWT..."
-msgstr "/Transformées/_CWT 2D..."
+msgstr "/Transformées/Ondelettes - continue (_CWT 2D)..."
 
 #: modules/process/cwt.c:81
 msgid "Compute continuous wavelet transform"
@@ -6560,7 +6568,7 @@ msgstr "Transformée en ondelettes continue (CWT)"
 
 #: modules/process/cwt.c:131
 msgid "2D CWT"
-msgstr "Transformée continue en ondelettes 2D (2D CWT)"
+msgstr "Transformée en ondelettes continue 2D (2D CWT)"
 
 #: modules/process/cwt.c:155
 #: modules/process/dwt.c:183
@@ -6715,11 +6723,11 @@ msgstr "DWT bi-dimensionnelle (Transformée en ondelettes discrète)"
 
 #: modules/process/dwt.c:85
 msgid "/_Integral Transforms/2D _DWT..."
-msgstr "/Transformées/_DWT 2D..."
+msgstr "/Transformées/Ondelettes - discrète (_DWT 2D)..."
 
 #: modules/process/dwt.c:89
 msgid "Compute Discrete Wavelet Transform"
-msgstr "Calculer la transformée discrète en ondelettes"
+msgstr "Calculer la transformée en ondelettes discrète "
 
 #: modules/process/dwt.c:118
 #: modules/process/dwtanisotropy.c:130
@@ -6729,11 +6737,11 @@ msgstr "%s : les données doivent être carrées."
 
 #: modules/process/dwt.c:145
 msgid "DWT"
-msgstr "Transformée dicrète en ondelettes"
+msgstr "Transformée en ondelettes discrète "
 
 #: modules/process/dwt.c:163
 msgid "2D DWT"
-msgstr "Transformée dicrète en ondelettes 2D"
+msgstr "Transformée en ondelettes discrète 2D"
 
 #: modules/process/dwt.c:189
 #, c-format
@@ -6750,7 +6758,7 @@ msgstr "Détection d'anisotropie DWT 2D basée sur le ratio des composantes X/Y.
 
 #: modules/process/dwtanisotropy.c:92
 msgid "/_Integral Transforms/DWT _Anisotropy..."
-msgstr "/Transformées/_Anisotropie DWT..."
+msgstr "/Transformées/Ondelettes - _anisotropie discrète..."
 
 #: modules/process/dwtanisotropy.c:96
 msgid "DWT anisotropy detection"
@@ -6964,7 +6972,7 @@ msgstr "FFT bi-dimensionnelle (transformée de Fourier rapide)"
 
 #: modules/process/fft.c:104
 msgid "/_Integral Transforms/2D _FFT..."
-msgstr "/Transformées/_FFT 2D..."
+msgstr "/Transformées/Fourier (_FFT 2D)..."
 
 #: modules/process/fft.c:108
 msgid "Compute Fast Fourier Transform"
@@ -8959,7 +8967,7 @@ msgstr "_Distance :"
 
 #: modules/process/polydistort.c:140
 msgid "Apllies polynomial distortion in the horizontal plane."
-msgstr "Applique une distorsion polynomiale dans le plan horizontal."
+msgstr "Applique une distorsion polynômiale dans le plan horizontal."
 
 #: modules/process/polydistort.c:154
 msgid "/_Correct Data/Pol_ynomial Distortion..."
@@ -8967,11 +8975,11 @@ msgstr "/_Correction des Données/Distorsion pol_ynomiale..."
 
 #: modules/process/polydistort.c:158
 msgid "Apllies polynomial distortion in the horizontal plane"
-msgstr "Applique une distorsion polynomiale dans le plan horizontal"
+msgstr "Applique une distorsion polynômiale dans le plan horizontal"
 
 #: modules/process/polydistort.c:211
 msgid "Distort by Polynomial"
-msgstr "Distorsion polynomiale"
+msgstr "Distorsion polynômiale"
 
 #: modules/process/polydistort.c:276
 #: modules/tools/filter.c:208
@@ -9006,15 +9014,15 @@ msgstr "Distordu"
 
 #: modules/process/polylevel.c:117
 msgid "Subtracts polynomial background."
-msgstr "Soustrait l'arrière-plan polynomial."
+msgstr "Soustrait l'arrière-plan polynômial."
 
 #: modules/process/polylevel.c:131
 msgid "/_Level/_Polynomial Background..."
-msgstr "/Niveau/Arrière-plan _polynomial..."
+msgstr "/Niveau/Arrière-plan _polynômial..."
 
 #: modules/process/polylevel.c:135
 msgid "Remove polynomial background"
-msgstr "Supprimer l'arrière-plan polynomial"
+msgstr "Supprimer l'arrière-plan polynômial"
 
 #: modules/process/polylevel.c:361
 msgid "Independent degrees"
@@ -9026,7 +9034,7 @@ msgstr "Degré total limité"
 
 #: modules/process/polylevel.c:374
 msgid "Remove Polynomial Background"
-msgstr "Supprimer l'arrière-plan polynomial"
+msgstr "Supprimer l'arrière-plan polynômial"
 
 #: modules/process/polylevel.c:416
 msgid "Leveled data"
@@ -9829,8 +9837,8 @@ msgid "_Interpolation method:"
 msgstr "Méthode d'_interpolation :"
 
 #: modules/tools/icolorange.c:120
-msgid "Interactive color range tool, allows to select data range false color scale should map to, either on data or on height distribution histogram."
-msgstr "Outil interactif de réglave de la visualisation des couleurs, permet de sélectionner la plage de données sur laquelle s'applique la palette de couleurs, à partir des données ou de l'histogramme de distribution des hauteurs."
+msgid "Interactive color range tool, allows selecting the data range false color scale should map to, either on data or on height distribution histogram."
+msgstr "Outil interactif de réglage de la visualisation des couleurs, permet de sélectionner la plage de données sur laquelle s'applique la palette de couleurs, à partir des données ou de l'histogramme de distribution des hauteurs."
 
 #: modules/tools/icolorange.c:151
 msgid "Color Range"
@@ -9984,8 +9992,8 @@ msgid "_Instant updates"
 msgstr "Mises à jour instantanées"
 
 #: modules/tools/maskedit.c:159
-msgid "Mask editor tool, allows to interactively add or remove parts of mask."
-msgstr "Outil d'édition de masque, permet d'ajouter ou d'enlever des parties du masque de manière interactive"
+msgid "Mask editor tool, allows interactive modification of parts of the mask."
+msgstr "Outil d'édition de masque, permet de modifier des parties du masque de manière interactive"
 
 #: modules/tools/maskedit.c:213
 msgid "Mask Editor"
@@ -10032,12 +10040,12 @@ msgid "Freehand mask erasing"
 msgstr "Effacement manuel d'un masque"
 
 #: modules/tools/maskedit.c:375
-msgid "Fill continous empty areas with mask"
+msgid "Fill continuous empty areas with mask"
 msgstr "Remplir les parties vides continues avec un masque"
 
 #: modules/tools/maskedit.c:380
-msgid "Erase continous parts of mask"
-msgstr "Efface les parties continues d'un masque"
+msgid "Erase continuous parts of mask"
+msgstr "Effacer les parties continues d'un masque"
 
 #: modules/tools/maskedit.c:408
 msgid "Editor"
@@ -10123,7 +10131,7 @@ msgstr "Epaisseur :"
 
 #: modules/tools/polynom.c:92
 msgid "Polynomial line level tool, fits polynomials to X or Y profiles and subtracts them."
-msgstr "Outil niveau polynomial, ajuste un polynôme à des profils X ou Y et le soustrait."
+msgstr "Outil niveau polynômial, ajuste un polynôme à des profils X ou Y et le soustrait."
 
 #: modules/tools/polynom.c:128
 msgid "Polynomial"
