@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2011-07-20 03:58+0200\n"
-"PO-Revision-Date: 2011-07-21 00:15+0300\n"
+"POT-Creation-Date: 2011-08-17 03:58+0200\n"
+"PO-Revision-Date: 2011-08-17 11:38+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "Language: \n"
@@ -122,7 +122,7 @@ msgid "vdW: paraboloid"
 msgstr "vdW: параболоид"
 
 #: libgwyddion/gwyinventory.c:1310
-#: libgwydgets/gwygraphwindow.c:603
+#: libgwydgets/gwygraphwindow.c:614
 #: app/data-browser.c:1538
 #: app/data-browser.c:2288
 #: app/data-browser.c:3062
@@ -1103,38 +1103,38 @@ msgstr "Толщина рамки:"
 msgid "_Reversed layout"
 msgstr "_Обратное расположение"
 
-#: libgwydgets/gwygraphwindow.c:140
+#: libgwydgets/gwygraphwindow.c:151
 #: app/toolbox.c:108
 msgid "Graph"
 msgstr "График"
 
-#: libgwydgets/gwygraphwindow.c:147
+#: libgwydgets/gwygraphwindow.c:158
 #: modules/file/hdrimage.cc:470
 #: modules/process/fit_2d.c:678
 msgid "Data"
 msgstr "Данные"
 
-#: libgwydgets/gwygraphwindow.c:160
+#: libgwydgets/gwygraphwindow.c:171
 msgid "Curves"
 msgstr "Кривые"
 
-#: libgwydgets/gwygraphwindow.c:174
+#: libgwydgets/gwygraphwindow.c:185
 msgid "Measure distances in graph"
 msgstr "Измерить расстояния на графике"
 
-#: libgwydgets/gwygraphwindow.c:186
+#: libgwydgets/gwygraphwindow.c:197
 msgid "Zoom in by mouse selection"
 msgstr "Приблизить при выборе мышью"
 
-#: libgwydgets/gwygraphwindow.c:198
+#: libgwydgets/gwygraphwindow.c:209
 msgid "Zoom out to full curve"
 msgstr "Увеличить до полной кривой"
 
-#: libgwydgets/gwygraphwindow.c:210
+#: libgwydgets/gwygraphwindow.c:221
 msgid "Toggle logarithmic x axis"
 msgstr "Сделать ось x логарифмической"
 
-#: libgwydgets/gwygraphwindow.c:222
+#: libgwydgets/gwygraphwindow.c:233
 msgid "Toggle logarithmic y axis"
 msgstr "Сделать ось y логарифмической"
 
@@ -1531,7 +1531,7 @@ msgid "Merge File"
 msgstr "Объединить файлы"
 
 #: app/file.c:364
-#: app/gwyappfilechooser.c:216
+#: app/gwyappfilechooser.c:227
 msgid "Open File"
 msgstr "Открыть файл"
 
@@ -1634,37 +1634,45 @@ msgstr "_Кривая"
 msgid "_Snap to control points"
 msgstr "_Притягиваться к контрольным точкам"
 
-#: app/gwyappfilechooser.c:221
+#: app/gwyappfilechooser.c:232
 msgid "Save File"
 msgstr "Сохранить файл"
 
-#: app/gwyappfilechooser.c:401
+#: app/gwyappfilechooser.c:412
 #, c-format
 msgid "File _type: %s, filtered"
 msgstr "_Тип файла: %s, отфильтровано"
 
-#: app/gwyappfilechooser.c:403
+#: app/gwyappfilechooser.c:414
 #, c-format
 msgid "File _type: %s"
 msgstr "_Тип файла: %s"
 
-#: app/gwyappfilechooser.c:481
+#: app/gwyappfilechooser.c:492
 msgid "Automatic by extension"
 msgstr "Определять по расширению"
 
-#: app/gwyappfilechooser.c:490
+#: app/gwyappfilechooser.c:501
 msgid "Automatically detected"
 msgstr "Автоматически определённый"
 
-#: app/gwyappfilechooser.c:541
+#: app/gwyappfilechooser.c:552
 msgid "Show only loadable files"
 msgstr "Показать только загружаемые файлы"
 
-#: app/gwyappfilechooser.c:720
+#: app/gwyappfilechooser.c:679
+msgid "Plane-level previewed data"
+msgstr "Выровнять плоскость у данных предпросмотра"
+
+#: app/gwyappfilechooser.c:695
+msgid "Row-level previewed data"
+msgstr "Выровнять строки у данных предпросмотра"
+
+#: app/gwyappfilechooser.c:801
 msgid "…"
 msgstr "…"
 
-#: app/gwyappfilechooser.c:869
+#: app/gwyappfilechooser.c:952
 msgid "Cannot preview"
 msgstr "Нельзя просмотреть."
 
@@ -2002,8 +2010,8 @@ msgid "Each channel has its own metadata."
 msgstr "У каждого канала есть свои метаданные."
 
 #: app/tips.c:134
-msgid "Meta → Metadata Browser displays metadata (auxiliary information) of channels and allows to edit it or export to a text file."
-msgstr "Мета → Просмотр метаданных показывает метаданные (вспомогательную информацию) каналов и позволяет их редактировать."
+msgid "Meta → Metadata Browser displays metadata (auxiliary information) of channels and allows editting or exporting to a text file."
+msgstr "Мета → Просмотр метаданных показывает метаданные (вспомогательную информацию) каналов и позволяет их редактировать или экспортировать в текстовый файл."
 
 #: app/tips.c:140
 msgid "Curves can be copied to other (compatible) graphs by dragging them from Curves tab to the graph window."
@@ -2134,8 +2142,8 @@ msgid "Spectroscopy tool displays point spectroscopy data and extracts them to s
 msgstr "Инструмент \"Спектроскопия\" показывает данные спектроскопии в точке и извлекает их в виде отдельных графиков, которые можно потом анализировать, например. с помощью инструмента График → Аппроксимировать кривую сила-расстояние."
 
 #: app/tips.c:303
-msgid "Statistical Quantities tool allows to limit the area of interest by a mask, rectangular selection or the intersection of both."
-msgstr "Инструмент \"Статистические величины\" позволяет выбрать интересующую область с помощью маски, прямоугольного выделения или пересечения обоих."
+msgid "Statistical Quantities tool allows limiting the area of interest by a mask, rectangular selection or the intersection of both."
+msgstr "Инструмент \"Статистические величины\" позволяет ограничить интересующую область с помощью маски, прямоугольного выделения или пересечения обоих."
 
 #: app/tips.c:308
 msgid "Beside height and angle distributions, Statistical Functions tool calculates also correlation functions, power spectrum density (PSDF) and some more exotic functions."
@@ -2553,7 +2561,7 @@ msgstr "Экспортированные данные Burleigh (.txt, .bin)"
 
 #: modules/file/burleigh_exp.c:225
 #: modules/file/burleigh_exp.c:266
-#: modules/file/nanoscope.c:1090
+#: modules/file/nanoscope.c:1093
 #: modules/file/omicron.c:395
 #: modules/file/shimadzu.c:404
 msgid "Missing colon in header line."
@@ -2638,32 +2646,32 @@ msgid "Gwyddion dumb dump files (.dump)"
 msgstr "Файлы простых дампов Gwyddion (.dump)"
 
 #: modules/file/dumbfile.c:160
-#: modules/plugin-proxy.c:1274
+#: modules/plugin-proxy.c:1254
 msgid "End of file reached when value was expected."
 msgstr "Достигнут конец файла в то время, как ожидались данные."
 
 #: modules/file/dumbfile.c:189
-#: modules/plugin-proxy.c:1303
+#: modules/plugin-proxy.c:1283
 msgid "Missing data field width."
 msgstr "Отсутствует ширина поля данных."
 
 #: modules/file/dumbfile.c:202
-#: modules/plugin-proxy.c:1316
+#: modules/plugin-proxy.c:1296
 msgid "Missing data field height."
 msgstr "Отсутствует высота поля данных."
 
 #: modules/file/dumbfile.c:232
-#: modules/plugin-proxy.c:1346
+#: modules/plugin-proxy.c:1326
 msgid "Data field dimensions are not positive numbers."
 msgstr "Размеры поля данных не являются положительными числами."
 
 #: modules/file/dumbfile.c:273
-#: modules/plugin-proxy.c:1387
+#: modules/plugin-proxy.c:1367
 msgid "End of file reached inside a data field."
 msgstr "Достигнут конец файла внутри поля данных."
 
 #: modules/file/dumbfile.c:294
-#: modules/plugin-proxy.c:1408
+#: modules/plugin-proxy.c:1388
 msgid "Missing end of data field marker."
 msgstr "Отсутствует маркер конца поля данных."
 
@@ -3562,17 +3570,17 @@ msgstr ""
 "\n"
 "Обычно это происходит если файл был воспринят как текст при передаче по электронной почте в несжатом виде, по FTP в ASCII-режиме (используйте binary), сжат с помощью команды 'Послать в сжатую папку' в некоторых версиях MS Windows, или при других способах передачи файла, которые используют платформо-независимое сохранение текста."
 
-#: modules/file/nanoscope.c:518
-#: modules/file/nanoscope.c:534
+#: modules/file/nanoscope.c:521
+#: modules/file/nanoscope.c:537
 msgid "Cannot parse `Scan size' field."
 msgstr "Не удаётся распознать поле `Scan size'."
 
-#: modules/file/nanoscope.c:1000
+#: modules/file/nanoscope.c:1003
 #, c-format
 msgid "Garbage after data sample #%u."
 msgstr "Мусор после элемента данных #%u."
 
-#: modules/file/nanoscope.c:1080
+#: modules/file/nanoscope.c:1083
 msgid "Truncated header line."
 msgstr "Обрезанная строка заголовка."
 
@@ -5477,63 +5485,63 @@ msgstr "Слой, позволяющий выбрать несколько то�
 msgid "Layer allowing selection of rectangular areas."
 msgstr "Слой, позволяющих выбрать прямоугольные области."
 
-#: modules/plugin-proxy.c:143
+#: modules/plugin-proxy.c:144
 msgid "Plug-in proxy is a module capable of querying, registering, and running external programs (plug-ins) on data pretending they are data processing or file loading/saving modules."
 msgstr "Plug-in proxy - модуль, опрашивающий, регистрирующий и запускающий внешние программы (подключаемые модули) на данных так, как будто они являются модулями обработки данных или загрузки/сохранения файлов."
 
-#: modules/plugin-proxy.c:461
+#: modules/plugin-proxy.c:462
 msgid "/_Plug-Ins"
 msgstr "/П_одключаемые модули"
 
-#: modules/plugin-proxy.c:462
+#: modules/plugin-proxy.c:463
 #, c-format
 msgid "Run plug-in %s"
 msgstr "Запустить подключаемый модуль %s"
 
-#: modules/plugin-proxy.c:735
-#: modules/plugin-proxy.c:836
+#: modules/plugin-proxy.c:736
+#: modules/plugin-proxy.c:837
 msgid "Plugin-proxy must be run as interactive."
 msgstr "Plugin-proxy должен запускаться в интерактивном режиме."
 
-#: modules/plugin-proxy.c:741
+#: modules/plugin-proxy.c:742
 #, c-format
 msgid "Plug-in `%s' does not implement file loading."
 msgstr "Подключаемый модуль `%s' не реализует загрузку файла."
 
-#: modules/plugin-proxy.c:759
+#: modules/plugin-proxy.c:760
 #, c-format
 msgid "Cannot read temporary file: %s."
 msgstr "Невозможно прочитать временный файл: %s."
 
-#: modules/plugin-proxy.c:766
-#: modules/plugin-proxy.c:861
+#: modules/plugin-proxy.c:767
+#: modules/plugin-proxy.c:862
 #, c-format
 msgid "Cannot execute plug-in `%s': %s."
 msgstr "Невозможно выполнить подключаемый модуль `%s': %s."
 
-#: modules/plugin-proxy.c:775
-#: modules/plugin-proxy.c:870
+#: modules/plugin-proxy.c:776
+#: modules/plugin-proxy.c:871
 #, c-format
 msgid "Plug-in `%s' returned non-zero exit status: %d."
 msgstr "Подключаемый модуль `%s' вернул ненулевое значение выхода: %d."
 
-#: modules/plugin-proxy.c:788
+#: modules/plugin-proxy.c:789
 #, c-format
 msgid "Plug-in `%s' did not return any meaningful data."
 msgstr "Подключаемый модуль `%s' не вернул никаких вменяемых данных."
 
-#: modules/plugin-proxy.c:842
+#: modules/plugin-proxy.c:843
 #, c-format
 msgid "Plug-in `%s' does not implement file saving."
 msgstr "Подключаемый модуль `%s' не реализует сохранение файлов."
 
-#: modules/plugin-proxy.c:1223
-#: modules/plugin-proxy.c:1232
+#: modules/plugin-proxy.c:1203
+#: modules/plugin-proxy.c:1212
 #, c-format
 msgid "Cannot create a temporary file: %s."
 msgstr "Невозможно создать временный файл: %s."
 
-#: modules/plugin-proxy.c:1240
+#: modules/plugin-proxy.c:1220
 #, c-format
 msgid "Cannot fdopen() already open file: %s."
 msgstr "Не удалось открыть fdopen() уже открытый файл: %s."
@@ -5669,23 +5677,23 @@ msgstr "Горизонтальные размеры являются разны�
 msgid "Physical dimensions differ"
 msgstr "Физические размеры отличаются"
 
-#: modules/process/averaging.c:57
+#: modules/process/averaging.c:58
 msgid "Similar structures averaging using autocorrelation"
 msgstr "Усреднение подобных структур используя автокорреляцию"
 
-#: modules/process/averaging.c:70
+#: modules/process/averaging.c:71
 msgid "/_Correct Data/_Correlation averaging..."
 msgstr "/Исправить _данные/Усреднение по _корреляции..."
 
-#: modules/process/averaging.c:74
+#: modules/process/averaging.c:75
 msgid "Averaging of similar structures"
 msgstr "Усреднение подобных структур"
 
-#: modules/process/averaging.c:107
+#: modules/process/averaging.c:108
 msgid "Averaged"
 msgstr "Усреднённое"
 
-#: modules/process/averaging.c:125
+#: modules/process/averaging.c:126
 msgid "Select area of interest"
 msgstr "Выберите интересующую область"
 
@@ -9832,7 +9840,7 @@ msgid "_Interpolation method:"
 msgstr "Метод _интерполяции:"
 
 #: modules/tools/icolorange.c:120
-msgid "Interactive color range tool, allows to select data range false color scale should map to, either on data or on height distribution histogram."
+msgid "Interactive color range tool, allows selecting the data range false color scale should map to, either on data or on height distribution histogram."
 msgstr "Интерактивный инструмент цветового диапазона, позволяет выбрать диапазон данных, которому будет соответствовать шкала псевдоцвета, как на наборе данных, так и на гистограмме распределения высот."
 
 #: modules/tools/icolorange.c:151
@@ -9987,8 +9995,8 @@ msgid "_Instant updates"
 msgstr "_Обновлять сразу"
 
 #: modules/tools/maskedit.c:159
-msgid "Mask editor tool, allows to interactively add or remove parts of mask."
-msgstr "Редактор маски, позволяет интерактивно добавлять и удалять части маски."
+msgid "Mask editor tool, allows interactive modification of parts of the mask."
+msgstr "Редактор маски, позволяет интерактивно изменять части маски."
 
 #: modules/tools/maskedit.c:213
 msgid "Mask Editor"
@@ -10035,12 +10043,12 @@ msgid "Freehand mask erasing"
 msgstr "Свободное стирание маски"
 
 #: modules/tools/maskedit.c:375
-msgid "Fill continous empty areas with mask"
+msgid "Fill continuous empty areas with mask"
 msgstr "Заполнение непрерывных пустых областей маской"
 
 #: modules/tools/maskedit.c:380
-msgid "Erase continous parts of mask"
-msgstr "Удалить непрерывные части маски"
+msgid "Erase continuous parts of mask"
+msgstr "Удаление непрерывных частей маски"
 
 #: modules/tools/maskedit.c:408
 msgid "Editor"
