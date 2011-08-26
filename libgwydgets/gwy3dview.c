@@ -184,14 +184,15 @@ static void     gwy_3d_view_label_changed        (Gwy3DView *gwy3dview);
 static void     gwy_3d_view_timeout_start        (Gwy3DView *gwy3dview,
                                                   gboolean invalidate_now);
 static gboolean gwy_3d_view_timeout_func         (gpointer user_data);
-static void     gwy_3d_print_text                (Gwy3DView *gwy3dview,
-                                                  Gwy3DViewLabel id,
-                                                  GLfloat raster_x,
-                                                  GLfloat raster_y,
-                                                  GLfloat raster_z,
-                                                  guint size,
-                                                  gint vjustify,
-                                                  gint hjustify);
+static void     gwy_3d_texture_text              (Gwy3DView     *gwy3dview,
+						  Gwy3DViewLabel id,
+						  GLfloat        raster_x,
+						  GLfloat        raster_y,
+						  GLfloat        raster_z,
+						  GLfloat        rot,
+						  guint          size,
+						  gint           vjustify,
+						  gint           hjustify);
 static void     gwy_3d_view_class_make_list_pool (Gwy3DListPool *pool);
 static void     gwy_3d_view_assign_lists         (Gwy3DView *gwy3dview);
 static void     gwy_3d_view_release_lists        (Gwy3DView *gwy3dview);
@@ -1934,6 +1935,75 @@ gwy_3d_make_list(Gwy3DView *gwy3dview,
 
 }
 
+static void gwy_3d_util_mult_matrix(const GLdouble a[16], 
+				    const GLdouble b[16],
+				    GLdouble mpMatrix[16])
+{
+    int i, j;
+    
+    for (i = 0; i < 4; i++) {
+	for (j = 0; j < 4; j++) {
+	    mpMatrix[i*4+j] = 
+		a[i*4+0]*b[0*4+j] +
+		a[i*4+1]*b[1*4+j] +
+		a[i*4+2]*b[2*4+j] +
+		a[i*4+3]*b[3*4+j];
+	}
+    }
+};
+
+static void gwy_3d_util_get_mpmatrix(GLdouble mpMatrix[16])
+{
+    GLdouble mM[16], pM[16];
+    glGetDoublev(GL_MODELVIEW_MATRIX,mM);
+    glGetDoublev(GL_PROJECTION_MATRIX,pM);
+
+    gwy_3d_util_mult_matrix(mM,pM,mpMatrix);
+};
+  
+
+static int gwy_3d_util_project(GLdouble x,
+			       GLdouble y,
+			       GLdouble z,
+			       const GLdouble mpM[16],
+			       const GLint vpMatrix[4],
+			       GLdouble* wx,
+			       GLdouble* wy,
+			       GLdouble* wz)
+{
+    GLdouble temp[4];
+    // Matrix-Vector-Product
+    temp[0]=mpM[0]*x+mpM[4]*y+mpM[8]*z+mpM[12];
+    temp[1]=mpM[1]*x+mpM[5]*y+mpM[9]*z+mpM[13];
+    temp[2]=mpM[2]*x+mpM[6]*y+mpM[10]*z+mpM[14];
+    temp[3]=mpM[3]*x+mpM[7]*y+mpM[11]*z+mpM[15];
+    
+    if (temp[3] == 0.0) return(GL_FALSE);
+
+    temp[0] /= temp[3];
+    temp[1] /= temp[3];
+    temp[2] /= temp[3];
+
+    *wx=(0.5*temp[0]+0.5)*vpMatrix[2]+vpMatrix[0];
+    *wy=(0.5*temp[1]+0.5)*vpMatrix[3]+vpMatrix[1];
+    *wz=0.5*temp[2]+0.5;
+
+    return(GL_TRUE);
+}
+
+static inline int uppow2(int x)
+{
+    x--;
+    x |= x >> 1;
+    x |= x >> 2;
+    x |= x >> 4;
+    x |= x >> 8;
+    x |= x >> 16;
+    x++;
+    
+    return x;
+};
+
 static void
 gwy_3d_draw_axes(Gwy3DView *widget)
 {
@@ -2032,33 +2102,109 @@ gwy_3d_draw_axes(Gwy3DView *widget)
     if (widget->setup->labels_visible
         && !ugly_hack_globally_disable_axis_drawing) {
         guint view_size;
-        gint size;
+        gint w,h;
+	gint size;
+	GLdouble mM[16], pM[16], mpM[16];
+	GLdouble sx, sy, sz,
+	         tx, ty, tz,
+                 ux, uy, uz,
+	         vx, vy, vz, 
+	         rotA,rotB;
+	GLint vpM[4];
+	
+	sx=sy=sz=tx=ty=tz=ux=uy=uz=vx=vy=vz=0;
 
-        view_size = MIN(GTK_WIDGET(widget)->allocation.width,
-                        GTK_WIDGET(widget)->allocation.height);
+	w=GTK_WIDGET(widget)->allocation.width;
+	h=GTK_WIDGET(widget)->allocation.height;
+        view_size = MIN(w,h);
         size = (gint)(sqrt(view_size)*0.8);
+	
+	
+	gwy_3d_util_get_mpmatrix(mpM);
+	glGetDoublev(GL_MODELVIEW_MATRIX,mM);
+	glGetDoublev(GL_PROJECTION_MATRIX,pM);
+	
+	glGetIntegerv(GL_VIEWPORT,vpM);
+	
+        glColor3f(1.0, 1.0, 1.0);
 
-        glColor3f(0.0, 0.0, 0.0);
-        gwy_3d_print_text(widget, yfirst ? GWY_3D_VIEW_LABEL_Y
-                                         : GWY_3D_VIEW_LABEL_X,
-                          (Ax+2*Bx)/3 - (Cx-Bx)*0.1,
-                          (Ay+2*By)/3 - (Cy-By)*0.1, -0.0f,
-                          size, 1, 1);
+	gwy_3d_util_project(Ax,Ay,-0.0f,mpM,vpM,&sx,&sy,&sz);
+	gwy_3d_util_project(Bx,By,-0.0f,mpM,vpM,&tx,&ty,&tz);
+	rotA=atan2((ty-sy),(tx-sx));
 
-        gwy_3d_print_text(widget, yfirst ? GWY_3D_VIEW_LABEL_X
-                                         : GWY_3D_VIEW_LABEL_Y,
-                          (2*Bx+Cx)/3 - (Ax-Bx)*0.1,
-                          (2*By+Cy)/3 - (Ay-By)*0.1, -0.0f,
-                          size, 1, -1);
+	gwy_3d_util_project(Cx,Cy,-0.0f,mpM,vpM,&sx,&sy,&sz);
+	rotB=G_PI/2.-atan2((sx-tx),(sy-ty));
+	
+	gwy_3d_util_project((Ax+Bx)/2 - (Cx-Bx)*0.1,
+			    (Ay+By)/2 - (Cy-By)*0.1,
+			    -0.0f,
+			    mpM,vpM,&sx,&sy,&sz);
+	gwy_3d_util_project((Bx+Cx)/2 - (Ax-Bx)*0.1,
+			    (By+Cy)/2 - (Ay-By)*0.1,
+			    -0.0f,
+			    mpM,vpM,&tx,&ty,&tz);
+	gwy_3d_util_project(Cx - (Ax-Bx)*0.1,
+			    Cy - (Ay-By)*0.1,
+			    0.0f,
+			    mpM,vpM,&ux,&uy,&uz);
+	gwy_3d_util_project(Cx - (Ax-Bx)*0.1,
+			    Cy - (Ay-By)*0.1,
+			    data_max-data_min,
+			    mpM,vpM,&vx,&vy,&vz);
+   
 
-        gwy_3d_print_text(widget, GWY_3D_VIEW_LABEL_MAX,
-                          Cx - (Ax-Bx)*0.1, Cy - (Ay-By)*0.1,
-                          (data_max - data_min),
-                          size, 0, -1);
+	/* setup 2d */
+	glViewport(0, 0, w, h);
 
-        gwy_3d_print_text(widget, GWY_3D_VIEW_LABEL_MIN,
-                          Cx - (Ax-Bx)*0.1, Cy - (Ay-By)*0.1, 0.0f,
-                          size, 0, -1);
+	glMatrixMode(GL_PROJECTION);
+	glPushMatrix();
+	glLoadIdentity();
+	glOrtho(0,w,0,h,-1,1);
+
+	glMatrixMode(GL_MODELVIEW);
+	glPushMatrix();
+	glLoadIdentity();
+
+	glDisable(GL_DEPTH_TEST);
+	glEnable(GL_TEXTURE_2D);
+	glDisable(GL_LIGHTING);
+
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_ONE,GL_ONE_MINUS_SRC_ALPHA);
+
+	gwy_3d_texture_text(widget, yfirst ? GWY_3D_VIEW_LABEL_Y
+                                           : GWY_3D_VIEW_LABEL_X,
+			    sx,sy,sz,rotA,
+			    size, 1, 1);
+
+        gwy_3d_texture_text(widget, yfirst ? GWY_3D_VIEW_LABEL_X
+			                   : GWY_3D_VIEW_LABEL_Y,
+			    tx,ty,tz,rotB,
+			    size, 1, 1);
+
+        gwy_3d_texture_text(widget, GWY_3D_VIEW_LABEL_MAX,
+			    vx,vy,vz,0,
+			    size, 1, 0);
+
+        gwy_3d_texture_text(widget, GWY_3D_VIEW_LABEL_MIN,
+			    ux,uy,uz,0,
+			    size, 1, 0);
+
+	/* unset 2d */
+	glDisable(GL_BLEND);
+
+	glDisable(GL_TEXTURE_2D);
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_LIGHTING);
+
+	glViewport(vpM[0],vpM[1],vpM[2],vpM[3]);
+
+	glMatrixMode(GL_PROJECTION);
+	glPopMatrix();
+
+	glMatrixMode(GL_MODELVIEW);
+	glPopMatrix();
+ 
     }
 
    glPopMatrix();
@@ -2222,10 +2368,11 @@ gwy_3d_view_render_string(GtkWidget *widget,
                           gint *height,
                           gint *stride)
 {
-    PangoLayout *wlayout, *clayout;
+    PangoLayout *clayout;
     PangoFontDescription *wfontdesc, *cfontdesc;
     PangoContext *context;
-    gint wwidth, wheight;
+    gint wstride;
+    gint px,py;
     cairo_t *cr;
     cairo_surface_t *surface;
     guchar *alpha;
@@ -2236,37 +2383,37 @@ gwy_3d_view_render_string(GtkWidget *widget,
     /* 0.8 is a random constant to keep the sizes comparable to the old ones */
     pango_font_description_set_size(cfontdesc,
                                     GWY_ROUND(0.8*size*PANGO_SCALE));
-    wlayout = pango_layout_new(context);
-    pango_layout_set_font_description(wlayout, cfontdesc);
-    pango_layout_set_markup(wlayout, text, -1);
-    pango_layout_get_pixel_size(wlayout, &wwidth, &wheight);
-    g_object_unref(wlayout);
 
-    gwy_debug("w-layout size: %d %d", wwidth, wheight);
-    wwidth = 3*wwidth/2;
-    wwidth = (wwidth + 3)/4*4;
-    wheight = 3*wheight/2;
-    gwy_debug("xw-layout size: %d %d", wwidth, wheight);
-
-    alpha = g_new0(guchar, wwidth*wheight);
-    surface = cairo_image_surface_create_for_data(alpha, CAIRO_FORMAT_A8,
-                                                  wwidth, wheight, wwidth);
+    wstride = cairo_format_stride_for_width (CAIRO_FORMAT_ARGB32, 1);
+    alpha = g_new(guchar, wstride);
+    surface = cairo_image_surface_create_for_data(alpha, CAIRO_FORMAT_ARGB32,
+                                                  1, 1, wstride);
     cr = cairo_create(surface);
     cairo_set_source_rgba(cr, 0.0, 0.0, 0.0, 1.0);
-
     clayout = pango_cairo_create_layout(cr);
     pango_layout_set_font_description(clayout, cfontdesc);
     pango_layout_set_markup(clayout, text, -1);
-    pango_layout_get_pixel_size(clayout, width, height);
+    pango_layout_get_pixel_size(clayout,&px,&py);
+    *width=px;
+    *height=py;
+    px=uppow2(px);
+    py=uppow2(py);
+
+    g_free(alpha);
+
+    wstride = cairo_format_stride_for_width (CAIRO_FORMAT_ARGB32, px);
+    alpha = g_new0(guchar,wstride*py);
+    surface = cairo_image_surface_create_for_data(alpha, CAIRO_FORMAT_ARGB32,
+                                                  px, py, wstride);
+    cr = cairo_create(surface);
+    cairo_set_source_rgba(cr, 0.0, 0.0, 0.0, 1.0);
+    clayout = pango_cairo_create_layout(cr);
+    pango_layout_set_font_description(clayout, cfontdesc);
+    pango_layout_set_markup(clayout, text, -1);
     pango_cairo_show_layout(cr, clayout);
 
-    gwy_debug("c-layout size: %d %d", *width, *height);
-    if (*width > wwidth || *height > wheight) {
-        g_warning("Cairo image surface is not large enough for text");
-        *width = MIN(*width, wwidth);
-        *height = MIN(*height, wheight);
-    }
-    *stride = wwidth;
+    gwy_debug("c-layout size: %d %d stride %d", *width, *height,wstride);
+    *stride = wstride;
 
     g_object_unref(clayout);
     pango_font_description_free(cfontdesc);
@@ -2276,95 +2423,58 @@ gwy_3d_view_render_string(GtkWidget *widget,
     return alpha;
 }
 
-static void
-gwy_3d_view_render_bitmap(gint width,
-                          gint height,
-                          gint stride,
-                          const guchar *alpha)
+static GLuint gwy_3d_cairo_to_tex(guchar* image,
+				  gint width, gint height, gint stride)
 {
-    guint32 *p, *pixels;
-    GLfloat color[4];
-    guint32 rgb;
-    GLfloat a;
-    const guchar *row;
-    int i;
+    GLint w2=uppow2(width),h2=uppow2(height);
+    GLuint t[1];
+    
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,GL_LINEAR);
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT );
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT );
+    glPixelStorei(GL_UNPACK_ROW_LENGTH,stride/4);
+    glPixelStorei(GL_UNPACK_ALIGNMENT,4);
+    glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA,w2,h2,0,GL_BGRA,GL_UNSIGNED_BYTE,image);
 
-    p = pixels = g_new(guint32, width*height);
+    return t[0];
+};
 
-    glGetFloatv(GL_CURRENT_COLOR, color);
-#if !defined(GL_VERSION_1_2) && G_BYTE_ORDER == G_LITTLE_ENDIAN
-    rgb = ((guint32)(color[0] * 255.0))
-          | (((guint32)(color[1] * 255.0)) << 8)
-          | (((guint32)(color[2] * 255.0)) << 16);
-#else
-    rgb = (((guint32)(color[0] * 255.0)) << 24)
-          | (((guint32)(color[1] * 255.0)) << 16)
-          | (((guint32)(color[2] * 255.0)) << 8);
-#endif
-    a = color[3];
-
-    row = alpha + height*stride; /* past-the-end */
-
-    if (a == 1.0) {
-        do {
-            row -= stride;
-            for (i = 0; i < width; i++)
-#if !defined(GL_VERSION_1_2) && G_BYTE_ORDER == G_LITTLE_ENDIAN
-                *p++ = rgb | (((guint32) row[i]) << 24);
-#else
-            *p++ = rgb | ((guint32) row[i]);
-#endif
-        }
-        while (row != alpha);
-    }
-    else {
-        do {
-            row -= stride;
-            for (i = 0; i < width; i++)
-#if !defined(GL_VERSION_1_2) && G_BYTE_ORDER == G_LITTLE_ENDIAN
-                *p++ = rgb | (((guint32) (a * row[i])) << 24);
-#else
-            *p++ = rgb | ((guint32) (a * row[i]));
-#endif
-        }
-        while (row != alpha);
-    }
-
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
-
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-#if !defined(GL_VERSION_1_2)
-    glDrawPixels(width, height,
-                 GL_RGBA, GL_UNSIGNED_BYTE,
-                 pixels);
-#else
-    glDrawPixels(width, height,
-                 GL_RGBA, GL_UNSIGNED_INT_8_8_8_8,
-                 pixels);
-#endif
-
-    glDisable(GL_BLEND);
-
-    g_free(pixels);
-}
-
-static void
-gwy_3d_print_text(Gwy3DView     *gwy3dview,
-                  Gwy3DViewLabel id,
-                  GLfloat        raster_x,
-                  GLfloat        raster_y,
-                  GLfloat        raster_z,
-                  guint          size,
-                  gint           vjustify,
-                  gint           hjustify)
+static void gwy_3d_draw_ctex(GLuint t, 
+			     gint hjust, gint vjust,
+			     gint width, gint height)
 {
-    GLfloat text_w, text_h;
-    guint hlp = 0;
+    GLfloat w2=uppow2(width),h2=uppow2(height);
+    GLfloat wt=width/w2,ht=height/h2; 
+    GLfloat ho=-(hjust)*width/2;
+    GLfloat vo=(int)(vjust-2)*height/2;
+    
+    glBindTexture(GL_TEXTURE_2D,t);
+    
+    glBegin(GL_QUADS);
+    glTexCoord2f(0,ht) ; glVertex2f(ho,vo);
+    glTexCoord2f(0,0); glVertex2f(ho,vo+height);
+    glTexCoord2f(wt,0) ; glVertex2f(ho+width,vo+height);
+    glTexCoord2f(wt,ht); glVertex2f(ho+width,vo);
+    glEnd();
+    
+    glBindTexture(GL_TEXTURE_2D,0);
+};
+
+static void gwy_3d_texture_text(Gwy3DView     *gwy3dview,
+				Gwy3DViewLabel id,
+				GLfloat        raster_x,
+				GLfloat        raster_y,
+				GLfloat        raster_z,
+				GLfloat        rot,
+				guint          size,
+				gint           vjustify,
+				gint           hjustify)
+{
+    GLuint tex = 0;
     Gwy3DLabel *label;
     gint width, height, stride, displacement_x, displacement_y;
-    guchar *alpha;
+    guchar *img;
     gchar *text;
 
     /* Render the label into an off-screen buffer */
@@ -2373,44 +2483,19 @@ gwy_3d_print_text(Gwy3DView     *gwy3dview,
     displacement_y = GWY_ROUND(label->delta_y);
     text = gwy_3d_label_expand_text(label, gwy3dview->variables);
     size = gwy_3d_label_user_size(label, size);
-    /* TODO: use Pango to rotate text, after Pango is capable doing it */
-    alpha = gwy_3d_view_render_string(GTK_WIDGET(gwy3dview), size,
-                                      text, &width, &height, &stride);
+
+    img = gwy_3d_view_render_string(GTK_WIDGET(gwy3dview), size,
+				    text, &width, &height, &stride);
     g_free(text);
-
-    /* Text position */
-    text_w = width;
-    text_h = height;
-
-    glRasterPos3f(raster_x, raster_y, raster_z);
-    glBitmap(0, 0, 0, 0, displacement_x, displacement_y, (GLubyte *)&hlp);
-    if (vjustify < 0) {
-       /* vertically justified to the bottom */
-    }
-    else if (vjustify == 0) {
-       /* vertically justified to the middle */
-       glBitmap(0, 0, 0, 0, 0, -text_h/2, (GLubyte *)&hlp);
-    }
-    else {
-       /* vertically justified to the top */
-       glBitmap(0, 0, 0, 0, 0, -text_h, (GLubyte *)&hlp);
-    }
-
-    if (hjustify < 0) {
-       /* horizontally justified to the left */
-    }
-    else if (hjustify == 0) {
-       /* horizontally justified to the middle */
-       glBitmap(0, 0, 0, 0, -text_w/2, 0, (GLubyte *)&hlp);
-    }
-    else {
-       /* horizontally justified to the right */
-       glBitmap(0, 0, 0, 0, -text_w, 0, (GLubyte *)&hlp);
-    }
-
-    /* Render text with GL */
-    gwy_3d_view_render_bitmap(width, height, stride, alpha);
-    g_free(alpha);
+    
+    gwy_3d_cairo_to_tex(img,width,height,stride);
+    glPushMatrix();
+    glTranslatef(raster_x+displacement_x,raster_y+displacement_y,raster_z);
+    glRotatef(rot*180./G_PI,0,0,1);
+    gwy_3d_draw_ctex(tex,hjustify,vjustify,width,height);
+    glPopMatrix();
+    
+    g_free(img);   
 }
 
 /**
