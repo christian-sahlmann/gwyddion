@@ -96,6 +96,7 @@ struct _GwyToolSFunctions {
     GtkWidget *apply;
     GtkWidget *separate;
     GSList *masking;
+    GtkWidget *masking_label;
 
     gboolean has_calibration;
     gboolean has_uline;
@@ -453,7 +454,7 @@ gwy_tool_sfunctions_init_dialog(GwyToolSFunctions *tool)
 
     /* Masking */
     gtk_table_set_row_spacing(table, row-1, 8);
-    label = gwy_label_new_header(_("Masking Mode"));
+    label = tool->masking_label = gwy_label_new_header(_("Masking Mode"));
     gtk_table_attach(table, label,
                      0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
@@ -663,6 +664,11 @@ gwy_tool_sfunctions_update_sensitivity(GwyToolSFunctions *tool)
                  || tool->args.output_type == GWY_SF_HHCF
                  || tool->args.output_type == GWY_SF_PSDF);
     for (l = tool->direction; l; l = g_slist_next(l))
+        gtk_widget_set_sensitive(GTK_WIDGET(l->data), sensitive);
+
+    sensitive = (tool->args.output_type == GWY_SF_DH);
+    gtk_widget_set_sensitive(tool->masking_label, sensitive);
+    for (l = tool->masking; l; l = g_slist_next(l))
         gtk_widget_set_sensitive(GTK_WIDGET(l->data), sensitive);
 }
 
