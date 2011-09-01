@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003-2006 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003-2011 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -61,6 +61,7 @@ typedef struct _GwyToolSFunctions      GwyToolSFunctions;
 typedef struct _GwyToolSFunctionsClass GwyToolSFunctionsClass;
 
 typedef struct {
+    GwyMaskingType masking;
     GwySFOutputType output_type;
     gboolean options_visible;
     gboolean instant_update;
@@ -94,6 +95,7 @@ struct _GwyToolSFunctions {
     GtkWidget *update;
     GtkWidget *apply;
     GtkWidget *separate;
+    GSList *masking;
 
     gboolean has_calibration;
     gboolean has_uline;
@@ -121,6 +123,7 @@ static void gwy_tool_sfunctions_data_switched        (GwyTool *gwytool,
 static void gwy_tool_sfunctions_response             (GwyTool *tool,
                                                       gint response_id);
 static void gwy_tool_sfunctions_data_changed         (GwyPlainTool *plain_tool);
+static void gwy_tool_sfunctions_mask_changed         (GwyPlainTool *plain_tool);
 static void gwy_tool_sfunctions_selection_changed    (GwyPlainTool *plain_tool,
                                                       gint hint);
 static void gwy_tool_sfunctions_update_sensitivity   (GwyToolSFunctions *tool);
@@ -142,7 +145,8 @@ static void gwy_tool_sfunctions_options_expanded     (GtkExpander *expander,
                                                       GwyToolSFunctions *tool);
 static void gwy_tool_sfunctions_separate_changed     (GtkToggleButton *check,
                                                       GwyToolSFunctions *tool);
-
+static void gwy_tool_sfunctions_masking_changed      (GtkWidget *button,
+                                                      GwyToolSFunctions *tool);
 static void gwy_tool_sfunctions_apply                (GwyToolSFunctions *tool);
 
 static GwyModuleInfo module_info = {
@@ -152,11 +156,12 @@ static GwyModuleInfo module_info = {
        "functions (height distribution, correlations, PSDF, Minkowski "
        "functionals) of selected part of data."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "2.8",
+    "2.9",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
 
+static const gchar masking_key[]         = "/module/sfunctions/masking";
 static const gchar direction_key[]       = "/module/sfunctions/direction";
 static const gchar fixres_key[]          = "/module/sfunctions/fixres";
 static const gchar instant_update_key[]  = "/module/sfunctions/instant_update";
@@ -164,9 +169,10 @@ static const gchar interpolation_key[]   = "/module/sfunctions/interpolation";
 static const gchar options_visible_key[] = "/module/sfunctions/options_visible";
 static const gchar output_type_key[]     = "/module/sfunctions/output_type";
 static const gchar resolution_key[]      = "/module/sfunctions/resolution";
-static const gchar separate_key[]      = "/module/sfunctions/separate";
+static const gchar separate_key[]        = "/module/sfunctions/separate";
 
 static const ToolArgs default_args = {
+    GWY_MASK_IGNORE,
     GWY_SF_DH,
     FALSE,
     TRUE,
@@ -223,6 +229,7 @@ gwy_tool_sfunctions_class_init(GwyToolSFunctionsClass *klass)
     tool_class->response = gwy_tool_sfunctions_response;
 
     ptool_class->data_changed = gwy_tool_sfunctions_data_changed;
+    ptool_class->mask_changed = gwy_tool_sfunctions_mask_changed;
     ptool_class->selection_changed = gwy_tool_sfunctions_selection_changed;
 }
 
@@ -235,6 +242,8 @@ gwy_tool_sfunctions_finalize(GObject *object)
     tool = GWY_TOOL_SFUNCTIONS(object);
 
     settings = gwy_app_settings_get();
+    gwy_container_set_enum_by_name(settings, masking_key,
+                                   tool->args.masking);
     gwy_container_set_enum_by_name(settings, output_type_key,
                                    tool->args.output_type);
     gwy_container_set_boolean_by_name(settings, options_visible_key,
@@ -276,6 +285,8 @@ gwy_tool_sfunctions_init(GwyToolSFunctions *tool)
 
     settings = gwy_app_settings_get();
     tool->args = default_args;
+    gwy_container_gis_enum_by_name(settings, masking_key,
+                                   &tool->args.masking);
     gwy_container_gis_enum_by_name(settings, output_type_key,
                                    &tool->args.output_type);
     gwy_container_gis_boolean_by_name(settings, options_visible_key,
@@ -369,7 +380,7 @@ gwy_tool_sfunctions_init_dialog(GwyToolSFunctions *tool)
                      G_CALLBACK(gwy_tool_sfunctions_options_expanded), tool);
     gtk_box_pack_start(GTK_BOX(vbox), tool->options, FALSE, FALSE, 0);
 
-    table = GTK_TABLE(gtk_table_new(6, 4, FALSE));
+    table = GTK_TABLE(gtk_table_new(10, 4, FALSE));
     gtk_table_set_col_spacings(table, 6);
     gtk_table_set_row_spacings(table, 2);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
@@ -440,6 +451,19 @@ gwy_tool_sfunctions_init_dialog(GwyToolSFunctions *tool)
 
     row++;
 
+    /* Masking */
+    gtk_table_set_row_spacing(table, row-1, 8);
+    label = gwy_label_new_header(_("Masking Mode"));
+    gtk_table_attach(table, label,
+                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    row++;
+
+    tool->masking
+        = gwy_radio_buttons_create(gwy_masking_type_get_enum(), -1,
+                                   G_CALLBACK(gwy_tool_sfunctions_masking_changed),
+                                   tool,
+                                   tool->args.masking);
+    row = gwy_radio_buttons_attach_to_table(tool->masking, table, 3, row);
 
     tool->gmodel = gwy_graph_model_new();
 
@@ -581,6 +605,18 @@ gwy_tool_sfunctions_data_changed(GwyPlainTool *plain_tool)
 }
 
 static void
+gwy_tool_sfunctions_mask_changed(GwyPlainTool *plain_tool)
+{
+    GwyToolSFunctions *tool = GWY_TOOL_SFUNCTIONS(plain_tool);
+
+    if (tool->args.masking == GWY_MASK_IGNORE
+        || tool->args.output_type != GWY_SF_DH)
+        return;
+
+    gwy_tool_sfunctions_update_curve(tool);
+}
+
+static void
 gwy_tool_sfunctions_selection_changed(GwyPlainTool *plain_tool,
                                       gint hint)
 {
@@ -635,6 +671,7 @@ gwy_tool_sfunctions_update_curve(GwyToolSFunctions *tool)
 {
     GwyPlainTool *plain_tool;
     GwyGraphCurveModel *gcmodel, *ugcmodel;
+    GwyDataField *mask_field = NULL;
     gdouble sel[4];
     gint isel[4] = { sizeof("Die, die, GCC!"), 0, 0, 0 };
     gint n, nsel, lineres, w = sizeof("Die, die, GCC!"), h = 0;
@@ -680,7 +717,17 @@ gwy_tool_sfunctions_update_curve(GwyToolSFunctions *tool)
     lineres = tool->args.fixres ? tool->args.resolution : -1;
     switch (tool->args.output_type) {
         case GWY_SF_DH:
-        gwy_data_field_area_dh(plain_tool->data_field, NULL,
+        if (tool->args.masking == GWY_MASK_EXCLUDE
+            && plain_tool->mask_field) {
+            mask_field = gwy_data_field_duplicate(plain_tool->mask_field);
+            gwy_data_field_multiply(mask_field, -1.0);
+            gwy_data_field_add(mask_field, 1.0);
+        }
+        else if (tool->args.masking == GWY_MASK_INCLUDE
+                 && plain_tool->mask_field)
+            mask_field = g_object_ref(plain_tool->mask_field);
+
+        gwy_data_field_area_dh(plain_tool->data_field, mask_field,
                                tool->line,
                                isel[0], isel[1], w, h,
                                lineres);
@@ -688,14 +735,14 @@ gwy_tool_sfunctions_update_curve(GwyToolSFunctions *tool)
         ylabel = "ρ";
         if (tool->has_calibration) {
             gwy_data_field_area_dh_uncertainty(plain_tool->data_field,
-                                           tool->zunc,
-                                           plain_tool->mask_field,
-                                           tool->uline,
-                                           isel[0], isel[1], w, h,
-                                           lineres);
+                                               tool->zunc,
+                                               mask_field,
+                                               tool->uline,
+                                               isel[0], isel[1], w, h,
+                                               lineres);
             tool->has_uline = TRUE;
         }
-
+        gwy_object_unref(mask_field);
         break;
 
         case GWY_SF_CDH:
@@ -965,6 +1012,20 @@ gwy_tool_sfunctions_separate_changed(GtkToggleButton *check,
     tool->args.separate = gtk_toggle_button_get_active(check);
 }
 
+static void
+gwy_tool_sfunctions_masking_changed(GtkWidget *button,
+                                    GwyToolSFunctions *tool)
+{
+    GwyPlainTool *plain_tool;
+
+    if (!gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(button)))
+        return;
+
+    plain_tool = GWY_PLAIN_TOOL(tool);
+    tool->args.masking = gwy_radio_button_get_value(button);
+    if (plain_tool->data_field && plain_tool->mask_field)
+        gwy_tool_sfunctions_update_curve(tool);
+}
 
 static void
 gwy_tool_sfunctions_apply(GwyToolSFunctions *tool)
