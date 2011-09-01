@@ -754,11 +754,9 @@ gwy_tool_sfunctions_update_curve(GwyToolSFunctions *tool)
                                            isel[0], isel[1], w, h,
                                            tool->args.direction,
                                            tool->args.interpolation,
-                                           lineres); 
+                                           lineres);
             tool->has_uline = TRUE;
         }
-
-           
         break;
 
         case GWY_SF_HHCF:
@@ -777,12 +775,11 @@ gwy_tool_sfunctions_update_curve(GwyToolSFunctions *tool)
                                            isel[0], isel[1], w, h,
                                            tool->args.direction,
                                            tool->args.interpolation,
-                                           lineres); 
+                                           lineres);
       /*        gwy_data_field_hhcf_uncertainty(plain_tool->data_field, tool->zunc,
                           tool->uline, tool->args.direction);*/
             tool->has_uline = TRUE;
         }
-
         break;
 
         case GWY_SF_PSDF:
@@ -855,7 +852,7 @@ gwy_tool_sfunctions_update_curve(GwyToolSFunctions *tool)
         gwy_graph_model_add_curve(tool->gmodel, gcmodel);
         g_object_set(gcmodel, "mode", GWY_GRAPH_CURVE_LINE, NULL);
         g_object_unref(gcmodel);
-        
+
         if (tool->has_calibration && tool->has_uline) {
            ugcmodel = gwy_graph_curve_model_new();
            gwy_graph_model_add_curve(tool->gmodel, ugcmodel);
@@ -872,7 +869,7 @@ gwy_tool_sfunctions_update_curve(GwyToolSFunctions *tool)
                gwy_graph_model_add_curve(tool->gmodel, ugcmodel);
                g_object_set(ugcmodel, "mode", GWY_GRAPH_CURVE_LINE, NULL);
                g_object_unref(ugcmodel);
-           } 
+           }
            else ugcmodel = gwy_graph_model_get_curve(tool->gmodel, 1);
         else if (gwy_graph_model_get_n_curves(tool->gmodel)>1)
            gwy_graph_model_remove_curve(tool->gmodel, 1);
@@ -884,12 +881,12 @@ gwy_tool_sfunctions_update_curve(GwyToolSFunctions *tool)
                                sf_types, G_N_ELEMENTS(sf_types));
 
     g_object_set(gcmodel, "description", title, NULL);
-    
+
     if (tool->has_calibration && tool->has_uline)
     {
         gwy_graph_curve_model_set_data_from_dataline(ugcmodel, tool->uline, 0, 0);
         g_object_set(ugcmodel, "description", "uncertainty", NULL);
-    } 
+    }
 
     g_object_set(tool->gmodel,
                  "title", title,
@@ -980,7 +977,7 @@ gwy_tool_sfunctions_apply(GwyToolSFunctions *tool)
     g_return_if_fail(plain_tool->selection);
 
     gmodel = gwy_graph_model_duplicate(tool->gmodel);
-    if (tool->has_calibration && tool->has_uline && tool->args.separate 
+    if (tool->has_calibration && tool->has_uline && tool->args.separate
         && gwy_graph_model_get_n_curves(gmodel)==2)
     {
         ugmodel = gwy_graph_model_duplicate(tool->gmodel);
@@ -994,14 +991,12 @@ gwy_tool_sfunctions_apply(GwyToolSFunctions *tool)
 
         gwy_app_data_browser_add_graph_model(gmodel, plain_tool->container, TRUE);
         gwy_app_data_browser_add_graph_model(ugmodel, plain_tool->container, TRUE);
-        
-    }
-    else gwy_app_data_browser_add_graph_model(gmodel, plain_tool->container, TRUE);
 
+    }
+    else
+        gwy_app_data_browser_add_graph_model(gmodel, plain_tool->container, TRUE);
 
     g_object_unref(gmodel);
-
-
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
