@@ -7,6 +7,7 @@ Libraries:
 - libgwydgets: Graph data can be exported to ASCII in a locale-independent way.
 - libgwydgets: Graph window properly disconnects signals from the graph model
                when destroyed.
+- libgwydgets: Labels on 3D view axes are rotated with the axes.
 - libgwyapp: Possible crash due to wrong freeing of GBookmarkFile was fixed.
 - libgwyapp: File chooser can plane- and/or row-level previewed data.
 
@@ -17,7 +18,10 @@ Modules:
 - Level Grains: The sign of extracted background was corrected.
 - LEXT: Crashing on systems lacking memrchr(), namely MS Windows, was fixed.
 - Graph export ASCII: Can export floating point numbers in POSIX format.
+- Nanoscope: Import of files with non-1:1 pixels was improved.
 - Dumb: Builds on big-endian architectures.
+- Statistical functions tool: Height distribution can use masking.
+- Roughness tool: The resulting curves are no longer automatically levelled.
 
 Other:
 - Compatibility with gcc 4.6 and autoconf 2.68 was improved.
@@ -109,6 +113,8 @@ Other:
 2.23 (2011-03-05)
 Application:
 - Translations updated: Czech, French, Russian.
+- OpenGL can be completely disabled with --disable-gl to avoid provoking
+  buggy graphics drivers.
 
 Libraries:
 - libgwyprocess: New classes GwyCalibration and GwyCalData representing
