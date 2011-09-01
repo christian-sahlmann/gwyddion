@@ -231,17 +231,6 @@ static void     gwy_tool_roughness_graph_changed     (GtkWidget *combo,
                                                       GwyToolRoughness *tool);
 static void     gwy_tool_roughness_apply             (GwyToolRoughness *tool);
 
-static void     gwy_data_line_data_discrete          (gdouble *x,
-                                                      gdouble *y,
-                                                      gint res,
-                                                      GwyDataLine *dline);
-static void     gwy_data_line_rotate2                (GwyDataLine *dline,
-                                                      gdouble angle);
-static void     gwy_data_line_balance                (GwyDataLine *dline);
-static void     gwy_math_quicksort                   (gdouble *array,
-                                                      gint *ind,
-                                                      gint low,
-                                                      gint high);
 static gint     gwy_data_line_extend                 (GwyDataLine *dline,
                                                       GwyDataLine *extline);
 static void gwy_tool_roughness_set_data_from_profile(GwyRoughnessProfiles *profiles,
@@ -1455,146 +1444,6 @@ gwy_tool_roughness_update_graphs(GwyToolRoughness *tool)
     }
 }
 
-static void
-gwy_data_line_data_discrete(gdouble *x, gdouble *y,
-                            gint res,
-                            GwyDataLine *dline)
-{
-    gdouble val, ratio;
-    gdouble *data;
-    gint i, j, n;
-
-    g_return_if_fail(GWY_IS_DATA_LINE(dline));
-    g_return_if_fail(res > 1);
-
-    n = gwy_data_line_get_res(dline);
-    ratio = gwy_data_line_get_real(dline)/(n - 1);
-    data = gwy_data_line_get_data(dline);
-
-    gwy_data_line_set_val(dline, 0, y[0]);
-    //gwy_data_line_set_val(dline, n - 1, y[res - 1]);
-    j = 0;
-    for (i = 1; i < n; i++) {
-        /* FIXME: This is wrong.  Who in hell invented this res-1 madness? */
-        val = i*ratio;
-        while (j < res && x[j] < val)
-          j++;
-
-        if (j >= res)
-            data[i] = y[j-1];
-        else if (j <= 0)
-            data[i] = y[0];
-        else
-            data[i] = y[j-1] + (val - x[j-1])*(y[j] - y[j-1])/(x[j] - x[j-1]);
-    }
-
-    return;
-}
-
-
-static void
-gwy_math_quicksort(gdouble *array, gint *ind, gint low, gint high)
-{
-    gdouble pivot, temp;
-    gint l, r, pos;
-
-    pivot = array[low];
-    l = low + 1;
-    r = high;
-
-    while (l < r) {
-        if (array[l] <= pivot)
-            l++;
-        else {
-            r--;
-
-            temp = array[l];
-            array[l] = array[r];
-            array[r] = temp;
-
-            pos = ind[l];
-            ind[l] = ind[r];
-            ind[r] = pos;
-        }
-    }
-
-    l--;
-
-    temp = array[low];
-    array[low] = array[l];
-    array[l] = temp;
-
-    pos = ind[low];
-    ind[low] = ind[l];
-    ind[l] = pos;
-
-
-    if (l-low > 1) gwy_math_quicksort(array, ind, low, l);
-    if (high-r > 1) gwy_math_quicksort(array, ind, r, high);
-}
-
-static void
-gwy_data_line_rotate2(GwyDataLine *dline,
-                      gdouble angle)
-{
-    gint i, j, k, n;
-    gdouble ratio, as, radius;
-    gdouble *dx, *dy, *dx_sort, *dy_sort;
-    gint *ind;
-    gdouble min = 0;
-
-    g_return_if_fail(GWY_IS_DATA_LINE(dline));
-
-    if (angle == 0)
-        return;
-
-    n = gwy_data_line_get_res(dline);
-    dx = g_new(gdouble, n);
-    dy_sort = g_new(gdouble, n);
-    dx_sort = g_new(gdouble, n);
-    ind = g_new(gint, n);
-    dy = g_new(gdouble, n);
-
-    ratio = dline->real/(n-1);
-
-    for (i = 0; i < n; i++) {
-        as = atan2(gwy_data_line_get_val(dline, i), i*ratio);
-        radius = hypot(i*ratio, gwy_data_line_get_val(dline, i));
-        dx[i] = radius*cos(as + angle);
-        dy[i] = radius*sin(as + angle);
-        ind[i] = i;
-        if (dx[i] < min)
-            min = dx[i];
-    }
-
-    for (i = 0; i < n; i++)
-        dx[i] = dx[i] - min;
-    gwy_math_quicksort(dx, ind, 0, n-1);
-
-    dx_sort[0] = dx[0];
-    j = ind[0];
-    dy_sort[0] = dy[j];
-    k = 1;
-    for (i = 1; i < n; i++) {
-        if (ind[i] > j) {
-            dx_sort[k] = dx[i];
-            j = ind[i];
-            dy_sort[k] = dy[j];
-            k++;
-        }
-    }
-
-    gwy_data_line_set_offset(dline, min);
-    gwy_data_line_set_real(dline, dx[n-1]);
-    gwy_data_line_data_discrete(dx_sort, dy_sort, n, dline);
-
-    g_free(dx);
-    g_free(dy);
-    g_free(dy_sort);
-    g_free(ind);
-}
-
-
 static gint
 gwy_data_line_extend(GwyDataLine *dline,
                      GwyDataLine *extline)
@@ -1648,18 +1497,6 @@ gwy_data_line_extend(GwyDataLine *dline,
     }
 
     return next;
-}
-
-static void
-gwy_data_line_balance(GwyDataLine *dline)
-{
-    gdouble av, bv;
-
-    gwy_data_line_get_line_coeffs(dline, &av, &bv);
-    bv /= gwy_data_line_get_real(dline)/gwy_data_line_get_res(dline);
-    bv = atan(bv);
-    gwy_data_line_add(dline, -av);
-    gwy_data_line_rotate2(dline, -bv);
 }
 
 static void
