@@ -632,7 +632,7 @@ static GwyModuleInfo module_info = {
     N_("Calculate surface profile parameters."),
     "Martin Hasoň <hasonm@physics.muni.cz>, "
         "Yeti <yeti@gwyddion.net>",
-    "1.7",
+    "1.8",
     "Martin Hasoň & David Nečas (Yeti)",
     "2006",
 };
@@ -1733,10 +1733,6 @@ gwy_tool_roughness_set_data_from_profile(GwyRoughnessProfiles *profiles,
         wdata[i] = tdata[i];
         rdata[i] = data[i] - tdata[i];
     }
-
-    gwy_data_line_balance(profiles->waviness);
-    gwy_data_line_balance(profiles->roughness);
-    gwy_data_line_balance(profiles->texture);
 }
 
 /**
