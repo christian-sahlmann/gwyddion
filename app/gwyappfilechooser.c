@@ -706,6 +706,9 @@ gwy_app_file_chooser_add_preview(GwyAppFileChooser *chooser)
     gtk_file_chooser_set_use_preview_label(GTK_FILE_CHOOSER(chooser), FALSE);
     g_signal_connect(chooser, "update-preview",
                      G_CALLBACK(gwy_app_file_chooser_update_preview), NULL);
+
+    toolbar = gtk_hbox_new(FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(vbox), toolbar, FALSE, FALSE, 0);
 }
 
 static void
