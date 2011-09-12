@@ -382,8 +382,8 @@ gwy_app_file_open_or_merge(gboolean merge)
             data = gwy_app_file_load_real(NULL, fname_sys, name, FALSE);
             if (data) {
                 gwy_app_data_browser_merge(data);
-                g_object_unref(data);
                 warn_broken_load_func(name, data);
+                g_object_unref(data);
             }
         }
         else
