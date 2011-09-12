@@ -8,8 +8,10 @@ Libraries:
 - libgwydgets: Graph window properly disconnects signals from the graph model
                when destroyed.
 - libgwydgets: Labels on 3D view axes are rotated with the axes.
+- libgwydgets: Vertical graph measurement mode was added.
 - libgwyapp: Possible crash due to wrong freeing of GBookmarkFile was fixed.
 - libgwyapp: File chooser can plane- and/or row-level previewed data.
+- libgwyapp: Critical warning/crash in file merging was fixed.
 
 Modules:
 - Code V INT (new): Imports Code V INT grid interferograms.
@@ -25,6 +27,8 @@ Modules:
 
 Other:
 - Compatibility with gcc 4.6 and autoconf 2.68 was improved.
+- The thumbnailer permits specifying the channel used to create the thumbnail
+  (if run manually).
 
 
 2.25 (2011-06-06)
