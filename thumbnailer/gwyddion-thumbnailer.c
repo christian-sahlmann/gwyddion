@@ -77,6 +77,7 @@ typedef enum {
     THUMBNAILER_TMS,
     THUMBNAILER_CHECK,
     THUMBNAILER_KDE4,
+    THUMBNAILER_CHANNEL,
 } ThumbnailerMode;
 
 typedef enum {
@@ -126,6 +127,7 @@ const GwyEnum modes[] = {
     { "--version", THUMBNAILER_VERSION, },
     { "-v",        THUMBNAILER_VERSION, },
     { "--update",  THUMBNAILER_UPDATE,  },
+    { "-c",        THUMBNAILER_CHANNEL, },
 };
 
 static void
@@ -157,6 +159,7 @@ print_help(gboolean succeed)
     /* Options */
     puts("Options:");
     puts("  --update                   Only write the thumbnail if it is not up to date.");
+    puts("  -c ID                      Make thumbnail of channel ID (from 0 to n).");
     putchar('\n');
     /* General */
     puts("Informative options:");
@@ -174,7 +177,7 @@ print_version(void)
 
 static void
 parse_mode(Options *options,
-           int *argc, char ***argv)
+           int *argc, char ***argv, int *channel)
 {
     ThumbnailerMode mode;
 
@@ -186,6 +189,12 @@ parse_mode(Options *options,
 
         if (mode == THUMBNAILER_UPDATE) {
             options->update = TRUE;
+            continue;
+        }
+        else if (mode == THUMBNAILER_CHANNEL) {
+            *channel = strtol((*argv)[1], NULL, 0);
+            (*argc)--;
+            (*argv)++;
             continue;
         }
         else if (mode == THUMBNAILER_UNKNOWN)
@@ -403,7 +412,8 @@ finalize:
 static gboolean
 write_thumbnail(const FileInfo *fileinfo,
                 gint maxsize,
-                GError **error)
+                GError **error,
+                gint channel)
 {
     GwyContainer *container;
     GwyDataField *dfield;
@@ -430,6 +440,8 @@ write_thumbnail(const FileInfo *fileinfo,
         return FALSE;
     }
 
+    if (channel > -1)
+        id=channel;
     pixbuf = gwy_app_get_channel_thumbnail(container, id, maxsize, maxsize);
     if (!pixbuf) {
         g_object_unref(container);
@@ -624,10 +636,11 @@ main(int argc,
     gint maxsize;
     gchar *canonpath;
     GError *err = NULL;
+    gint channel = -1;
 
     /* Parse arguments. */
     gtk_parse_args(&argc, &argv);
-    parse_mode(&options, &argc, &argv);
+    parse_mode(&options, &argc, &argv, &channel);
 
     if (options.mode == THUMBNAILER_GNOME2) {
         check_mode_nargs(options.mode, argc, 4);
@@ -684,7 +697,7 @@ main(int argc,
     load_modules();
 
     /* Go... */
-    if (!write_thumbnail(&fileinfo, maxsize, &err))
+    if (!write_thumbnail(&fileinfo, maxsize, &err, channel))
         die_gerror(err, "write_thumbnail");
 
     return 0;
