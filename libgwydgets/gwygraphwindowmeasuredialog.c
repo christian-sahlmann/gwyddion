@@ -50,6 +50,7 @@ static void     status_cb                                           (GwyGraphAre
 
 GwyEnum method_type[] = {
     { N_("Intersections"),   METHOD_INTERSECTIONS, },
+    { N_("Horizontal"),      METHOD_HORIZONTAL,    }, 
     { N_("Points anywhere"), METHOD_CROSSES,       },
 };
 
@@ -90,6 +91,24 @@ gwy_graph_window_measure_dialog_show(GtkWidget *widget)
 
     dialog = GWY_GRAPH_WINDOW_MEASURE_DIALOG(widget);
     GTK_WIDGET_CLASS(_gwy_graph_window_measure_dialog_parent_class)->show(widget);
+
+    switch (dialog->mmethod) {
+        case METHOD_INTERSECTIONS:
+        gwy_graph_set_status(GWY_GRAPH(dialog->graph), GWY_GRAPH_STATUS_XLINES);
+        break;
+
+        case METHOD_HORIZONTAL:
+        gwy_graph_set_status(GWY_GRAPH(dialog->graph), GWY_GRAPH_STATUS_YLINES);
+        break;
+
+        case METHOD_CROSSES:
+        gwy_graph_set_status(GWY_GRAPH(dialog->graph), GWY_GRAPH_STATUS_POINTS);
+        break;
+
+        default:
+        g_return_if_reached();
+        break;
+    }
     gwy_graph_window_measure_dialog_connect_selection(dialog);
 }
 
@@ -112,7 +131,8 @@ gwy_graph_window_measure_dialog_connect_selection(GwyGraphWindowMeasureDialog *d
     area = GWY_GRAPH_AREA(gwy_graph_get_area(GWY_GRAPH(dialog->graph)));
     status = gwy_graph_area_get_status(area);
     g_return_if_fail(status == GWY_GRAPH_STATUS_XLINES
-                     || status == GWY_GRAPH_STATUS_POINTS);
+                     || status == GWY_GRAPH_STATUS_POINTS
+                     || GWY_GRAPH_STATUS_YLINES);
 
     dialog->selection = gwy_graph_area_get_selection(area, status);
     g_object_ref(dialog->selection);
@@ -317,7 +337,8 @@ selection_updated_cb(GwySelection *selection,
     garea = GWY_GRAPH_AREA(gwy_graph_get_area(graph));
 
     if (!(gwy_graph_get_status(graph) == GWY_GRAPH_STATUS_POINTS
-          || gwy_graph_get_status(graph) == GWY_GRAPH_STATUS_XLINES))
+          || gwy_graph_get_status(graph) == GWY_GRAPH_STATUS_XLINES
+          || gwy_graph_get_status(graph) == GWY_GRAPH_STATUS_YLINES))
         return;
 
     n = gwy_selection_get_data(selection, NULL);
@@ -402,6 +423,11 @@ selection_updated_cb(GwySelection *selection,
                     xunc = get_xunc_for_x(graph, x, dialog->curve_index - 1, &ret);
                     yunc = get_yunc_for_x(graph, x, dialog->curve_index - 1, &ret);
                 }
+            }
+            else if (gwy_graph_get_status(graph) == GWY_GRAPH_STATUS_YLINES) {
+                x = 0;
+                y = spoints[i];
+                ret = TRUE;
             }
             label = g_ptr_array_index(dialog->pointx, i);
             value_label(label, x/xformat->magnitude, xformat->precision, str);
@@ -534,7 +560,7 @@ _gwy_graph_window_measure_dialog_new(GwyGraph *graph)
     gtk_table_attach(GTK_TABLE(table), label, 2, 3, 0, 1,
                      GTK_FILL | GTK_EXPAND, 0, 2, 2);
 
-    dialog->mmethod = 0;
+    dialog->mmethod = METHOD_INTERSECTIONS;
     dialog->method = gwy_enum_combo_box_new(method_type,
                                             G_N_ELEMENTS(method_type),
                                             G_CALLBACK(method_cb), dialog,
@@ -664,6 +690,10 @@ method_cb(GtkWidget *combo, GwyGraphWindowMeasureDialog *dialog)
     switch (dialog->mmethod) {
         case METHOD_INTERSECTIONS:
         status = GWY_GRAPH_STATUS_XLINES;
+        break;
+
+        case METHOD_HORIZONTAL:
+        status = GWY_GRAPH_STATUS_YLINES;
         break;
 
         case METHOD_CROSSES:

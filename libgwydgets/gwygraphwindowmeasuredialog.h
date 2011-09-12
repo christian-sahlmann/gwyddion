@@ -31,7 +31,8 @@ G_BEGIN_DECLS
 
 typedef enum {
     METHOD_INTERSECTIONS = 0,
-    METHOD_CROSSES       = 1
+    METHOD_CROSSES       = 1,
+    METHOD_HORIZONTAL    = 2
 } GwyMeasureMethodType;
 
 #define GWY_TYPE_GRAPH_WINDOW_MEASURE_DIALOG            (_gwy_graph_window_measure_dialog_get_type())

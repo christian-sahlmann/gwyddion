@@ -513,15 +513,12 @@ gwy_graph_window_measure_finished(GwyGraphWindow *graphwindow, gint response)
 
     area = GWY_GRAPH_AREA(gwy_graph_get_area(GWY_GRAPH(graphwindow->graph)));
 
-    /* XXX: Why, why, tell me why are *both* selections cleared when one clicks
-     * on clear and why it's done here instead of the dialog itself. */
-    gwy_selection_clear(gwy_graph_area_get_selection(area,
-                                                     GWY_GRAPH_STATUS_POINTS));
-    gwy_selection_clear(gwy_graph_area_get_selection(area,
-                                                     GWY_GRAPH_STATUS_XLINES));
-
-    if (response == GWY_GRAPH_WINDOW_MEASURE_RESPONSE_CLEAR)
+    if (response == GWY_GRAPH_WINDOW_MEASURE_RESPONSE_CLEAR) {
+        GwyGraphStatusType status;
+        status = gwy_graph_area_get_status(area);
+        gwy_selection_clear(gwy_graph_area_get_selection(area, status));
         return;
+    }
 
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(graphwindow->button_measure_points), FALSE);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(graphwindow->button_zoom_in), FALSE);
