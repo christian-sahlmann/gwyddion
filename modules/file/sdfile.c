@@ -155,7 +155,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Surfstand group SDF (Surface Data File) files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.10",
+    "0.11",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -333,6 +333,20 @@ sdfile_load_bin(const gchar *filename,
     return container;
 }
 
+static void
+store_meta(gpointer key,
+           gpointer value,
+           gpointer user_data)
+{
+    GwyContainer *meta = (GwyContainer*)user_data;
+    gchar *cval;
+
+    if (!(cval = g_convert(value, strlen(value), "UTF-8", "ISO-8859-1",
+                           NULL, NULL, NULL)))
+        return;
+    gwy_container_set_string_by_name(meta, key, cval);
+}
+
 static GwyContainer*
 sdfile_load_text(const gchar *filename,
                  G_GNUC_UNUSED GwyRunType mode,
@@ -369,9 +383,14 @@ sdfile_load_text(const gchar *filename,
     gwy_container_set_string_by_name(container, "/0/data/title",
                                      g_strdup("Topography"));
 
-    g_free(buffer);
-    if (sdfile.extras)
+    if (sdfile.extras) {
+        GwyContainer *meta = gwy_container_new();
+        g_hash_table_foreach(sdfile.extras, store_meta, meta);
+        gwy_container_set_object_by_name(container, "/0/meta", meta);
+        g_object_unref(meta);
         g_hash_table_destroy(sdfile.extras);
+    }
+    g_free(buffer);
 
     return container;
 }
@@ -691,7 +710,7 @@ sdfile_next_line(gchar **buffer,
     }
 
     klen = strlen(key);
-    if (strncmp(line, key, klen) != 0
+    if (g_ascii_strncasecmp(line, key, klen) != 0
         || !g_ascii_isspace(line[klen])) {
         g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
                     _("Invalid line found when looking for `%s' field."), key);
