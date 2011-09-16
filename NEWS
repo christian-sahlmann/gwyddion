@@ -22,6 +22,8 @@ Modules:
 - Graph export ASCII: Can export floating point numbers in POSIX format.
 - Nanoscope: Import of files with non-1:1 pixels was improved.
 - Dumb: Builds on big-endian architectures.
+- SDFile: Letter case of header fields is ignored.
+- SDFile: Extra fields after the data are made available in metadata.
 - Statistical functions tool: Height distribution can use masking.
 - Roughness tool: The resulting curves are no longer automatically levelled.
 
