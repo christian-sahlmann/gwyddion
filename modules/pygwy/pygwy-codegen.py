@@ -3,6 +3,7 @@
 # Public domain
 
 import sys
+import re
 
 # Add codegen path to our import path
 i = 1
@@ -25,6 +26,121 @@ del codegendir
 # Load it
 from codegen import *
 
+# override function_wrapper to deal with output arguments
+class RetTupleHandler():
+    def __init__(self,handler,returns):
+        self.returns=returns
+        self.handler=handler
+
+    def write_return(self,ptype, caller_owns_return, info):
+        info.varlist.add("PyObject", '*py_tuple_ret')
+        info.varlist.add("int", 'py_tuple_index')
+        info.codebefore.append('\n');
+        info.codeafter.append('\n');
+        if ptype==None or ptype=="none":
+            info.codebefore.append('    py_tuple_ret = PyTuple_New(%d);\n' % (self.returns))
+            info.codebefore.append('    py_tuple_index = 0;\n')
+        else:
+            self.handler.write_return(ptype,caller_owns_return,info)
+            info.varlist.add("PyObject", '*py_original_ret')
+            info.codebefore.append('    py_tuple_ret = PyTuple_New(%d);\n' % (self.returns+1))
+            info.codebefore.append('    py_tuple_index = 1;\n')
+            for i in range(len(info.codeafter)):
+                newc = re.sub(r'return\s+(?!NULL)(.*)',
+                              r'py_original_ret = \1',info.codeafter[i])
+                info.codeafter[i] = newc+'\n'
+
+            info.codeafter.append('    PyTuple_SetItem(py_tuple_ret,0,py_original_ret);\n')
+
+        info.codeafter.append('    return py_tuple_ret;\n')
+
+def write_function_wrapper(self, function_obj, template,
+                           handle_return=0, is_method=0, kwargs_needed=0,
+                           substdict=None):
+    '''This function is the guts of all functions that generate
+    wrappers for functions, methods and constructors.'''
+
+    if not substdict: substdict = {}
+
+    info = argtypes.WrapperInfo()
+    returns = 0
+
+    substdict.setdefault('errorreturn', 'NULL')
+
+    # for methods, we want the leading comma
+    if is_method:
+        info.arglist.append('')
+
+    if function_obj.varargs:
+        raise argtypes.ArgTypeNotFoundError("varargs functions not supported")
+
+    for param in function_obj.params:
+        if param.pdflt != None and '|' not in info.parsestr:
+            info.add_parselist('|', [], [])
+        handler = argtypes.matcher.get(param.ptype)
+        if param.ptype.endswith("Value"):
+          returns=returns+1
+        handler.write_param(param.ptype, param.pname, param.pdflt,
+                            param.pnull, info)
+
+    substdict['setreturn'] = ''
+    if handle_return:
+        if function_obj.ret not in ('none', None):
+            substdict['setreturn'] = 'ret = '
+        handler = argtypes.matcher.get(function_obj.ret)
+        if returns>0:
+            handler = RetTupleHandler(handler,returns)
+        handler.write_return(function_obj.ret,
+                             function_obj.caller_owns_return, info)
+
+    if function_obj.deprecated != None:
+        deprecated = self.deprecated_tmpl % {
+            'deprecationmsg': function_obj.deprecated,
+            'errorreturn': substdict['errorreturn'] }
+    else:
+        deprecated = ''
+
+    # if name isn't set, set it to function_obj.name
+    substdict.setdefault('name', function_obj.name)
+
+    if function_obj.unblock_threads:
+        substdict['begin_allow_threads'] = 'pyg_begin_allow_threads;'
+        substdict['end_allow_threads'] = 'pyg_end_allow_threads;'
+    else:
+        substdict['begin_allow_threads'] = ''
+        substdict['end_allow_threads'] = ''
+
+    if self.objinfo:
+        substdict['typename'] = self.objinfo.c_name
+    substdict.setdefault('cname',  function_obj.c_name)
+    substdict['varlist'] = info.get_varlist()
+    substdict['typecodes'] = info.parsestr
+    substdict['parselist'] = info.get_parselist()
+    substdict['arglist'] = info.get_arglist()
+    substdict['codebefore'] = deprecated + (
+        string.replace(info.get_codebefore(),
+        'return NULL', 'return ' + substdict['errorreturn'])
+        )
+    substdict['codeafter'] = (
+        string.replace(info.get_codeafter(),
+                       'return NULL',
+                       'return ' + substdict['errorreturn']))
+
+    if info.parsestr or kwargs_needed:
+        substdict['parseargs'] = self.parse_tmpl % substdict
+        substdict['extraparams'] = ', PyObject *args, PyObject *kwargs'
+        flags = 'METH_VARARGS|METH_KEYWORDS'
+
+        # prepend the keyword list to the variable list
+        substdict['varlist'] = info.get_kwlist() + substdict['varlist']
+    else:
+        substdict['parseargs'] = ''
+        substdict['extraparams'] = ''
+        flags = 'METH_NOARGS'
+
+    return template % substdict, flags
+
+Wrapper.write_function_wrapper=write_function_wrapper
 
 # New argument types:
 class GwyRGBAArg(argtypes.ArgType):
@@ -64,28 +180,16 @@ class GwyRGBAArgPtr(argtypes.ArgType):
 class GDoubleValue(argtypes.ArgType):
    def write_param(self, ptype, pname, pdflt, pnull, info):
       info.varlist.add(ptype, pname)
-      info.varlist.add('PyObject', '*'+pname+'_pyobj')
       info.arglist.append('&'+pname)
-      info.add_parselist("O", ['&'+pname+'_pyobj'], [pname])
-      info.codebefore.append('    if (!PyFloat_Check('+pname+'_pyobj)) {\n')
-      info.codebefore.append('        PyErr_SetString(PyExc_TypeError, "Parameter \''+pname+'\' must be a float variable");\n')
-      info.codebefore.append('        return NULL;\n')
-      info.codebefore.append('    }\n')
-      info.codebefore.append('    '+pname+' = PyFloat_AsDouble('+pname+'_pyobj);\n')      
-      info.codeafter.append('    ((PyFloatObject *) '+pname+'_pyobj)->ob_fval = '+pname+';\n')
+      info.codebefore.append('    '+pname+' = 0;\n')
+      info.codeafter.append('    PyTuple_SetItem(py_tuple_ret,py_tuple_index++,PyFloat_FromDouble('+pname+'));\n')
 
 class GIntValue(argtypes.ArgType):
    def write_param(self, ptype, pname, pdflt, pnull, info):
       info.varlist.add(ptype, pname)
-      info.varlist.add('PyObject', '*'+pname+'_pyobj')
       info.arglist.append('&'+pname)
-      info.add_parselist("O", ['&'+pname+'_pyobj'], [pname])
-      info.codebefore.append('    if (!PyInt_Check('+pname+'_pyobj)) {\n')
-      info.codebefore.append('        PyErr_SetString(PyExc_TypeError, "Parameter \''+pname+'\' must be an integer variable");\n')
-      info.codebefore.append('        return NULL;\n')
-      info.codebefore.append('    }\n')
-      info.codebefore.append('    '+pname+' = (int) PyInt_AsLong('+pname+'_pyobj);\n')      
-      info.codeafter.append('    ((PyIntObject *) '+pname+'_pyobj)->ob_ival = '+pname+';\n')
+      info.codebefore.append('    '+pname+' = 0;\n')
+      info.codeafter.append('    PyTuple_SetItem(py_tuple_ret,py_tuple_index++,PyInt_FromLong('+pname+'));\n')
 
 class GConstDoubleArray(argtypes.ArgType):
    def write_param(self, ptype, pname, pdflt, pnull, info):

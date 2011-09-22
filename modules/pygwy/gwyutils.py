@@ -44,6 +44,7 @@ def get_data_fields_dir(container):
          d[key] = obj
 
    return d
+
 def get_current_datafield():
    """
    Short version of function L{gwy.gwy_app_data_browser_get_current}(gwy.APP_DATA_FIELD)
@@ -70,3 +71,26 @@ def get_current_container():
 #   datafield.get_stats(d["average"], d["ra"], d["rms"], d["skew"], d["kurtosis"])
 #   return d
 
+try:
+  import numpy as np
+except ImportError: 
+  pass
+else:
+   def data_field_data_as_array(field):
+      class gwydfdatap():
+         def __init__(self,addr,shape):
+            data = (addr,False)
+            stride = (8,shape[0]*8)
+            self.__array_interface__= { 
+               'strides' : stride,
+               'shape'   : shape,
+               'data'    : data,
+               'typestr' : "|f8",
+               'version' : 3}
+         
+
+
+      addr = field.get_data_pointer()
+      shape = (field.get_xres(),field.get_yres())
+      return np.array(gwydfdatap(addr,shape),copy=False)
+    
