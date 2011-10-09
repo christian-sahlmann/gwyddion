@@ -44,6 +44,9 @@
 #include <libgwydgets/gwycombobox.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <libgwydgets/gwystock.h>
+#include <app/datachooser.h>
+#include <app/data-browser.h>
+#include <libprocess/gwyprocess.h>
 
 #define DEFAULT_SIZE 360
 
@@ -90,6 +93,8 @@ static void     gwy_3d_window_set_gradient         (GtkTreeSelection *selection,
                                                     Gwy3DWindow *gwy3dwindow);
 static void     gwy_3d_window_set_material         (GtkTreeSelection *selection,
                                                     Gwy3DWindow *gwy3dwindow);
+static void     gwy_3d_window_set_data2            (GwyDataChooser *chooser,
+						    Gwy3DWindow *gwy3dwindow);
 static void     gwy_3d_window_select_controls      (gpointer data,
                                                     GtkWidget *button);
 static void     gwy_3d_window_set_labels           (GtkWidget *combo,
@@ -101,6 +106,8 @@ static void     gwy_3d_window_projection_changed   (GtkToggleButton *check,
 static void     gwy_3d_window_show_axes_changed    (GtkToggleButton *check,
                                                     Gwy3DWindow *window);
 static void     gwy_3d_window_show_labels_changed  (GtkToggleButton *check,
+                                                    Gwy3DWindow *window);
+static void     gwy_3d_window_show_fmscale_changed (GtkToggleButton *check,
                                                     Gwy3DWindow *window);
 static void     gwy_3d_window_display_mode_changed (GtkWidget *item,
                                                     Gwy3DWindow *window);
@@ -134,6 +141,30 @@ static gboolean tooltips_set = FALSE;
 static GQuark adj_property_quark = 0;
 
 G_DEFINE_TYPE(Gwy3DWindow, gwy_3d_window, GTK_TYPE_WINDOW)
+
+gboolean gwy_3d_window_data2_filter (GwyContainer *data2, gint id2, gpointer user_data) 
+{
+  Gwy3DView* view;
+  GwyDataField *data_field1, *data_field2;
+  GQuark quark2;
+  GwyContainer* data1;
+  
+  quark2 = gwy_app_get_data_key_for_id(id2);
+  data_field2 = gwy_container_get_object(data2, quark2);
+  view = GWY_3D_VIEW(user_data);
+  data1 = gwy_3d_view_get_data(view);
+  if (data1!=data2) return 0;
+
+  gwy_container_gis_object_by_name(data1,gwy_3d_view_get_data_key(view),&data_field1);
+
+  return !gwy_data_field_check_compatibility
+    (data_field2, data_field1,
+     GWY_DATA_COMPATIBILITY_RES
+     );
+  
+  return 0;
+};
+
 
 static void
 gwy_3d_window_class_init(Gwy3DWindowClass *klass)
@@ -803,6 +834,15 @@ gwy_3d_window_build_basic_tab(Gwy3DWindow *window)
                      G_CALLBACK(gwy_3d_window_show_labels_changed), window);
     row++;
 
+    check = gtk_check_button_new_with_mnemonic(_("Show false _colorbar"));
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(check),
+                                 setup->fmscale_visible);
+    gtk_table_attach(GTK_TABLE(table), check,
+                     0, 3, row, row+1, GTK_FILL, 0, 0, 0);
+    g_signal_connect(check, "toggled",
+                     G_CALLBACK(gwy_3d_window_show_fmscale_changed), window);
+    row++;
+
     check = gtk_check_button_new_with_mnemonic(_("_Ortographic projection"));
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(check),
                                  !setup->projection);
@@ -821,24 +861,30 @@ gwy_3d_window_build_visual_tab(Gwy3DWindow *window)
     static const GwyEnum display_modes[] = {
         { N_("_Lighting"),    GWY_3D_VISUALIZATION_LIGHTING },
         { N_("_Gradient"),    GWY_3D_VISUALIZATION_GRADIENT },
+	{ N_("_Overlay"),     GWY_3D_VISUALIZATION_OVERLAY  }
     };
 
     Gwy3DView *view;
+    GQuark data2_ref;
     GwyContainer *data;
     Gwy3DSetup *setup;
-    gboolean is_material = FALSE, is_gradient = FALSE;
+    gboolean is_material = FALSE, is_gradient = FALSE, is_overlay = FALSE;
     GtkWidget *vbox, *spin, *table, *menu, *label;
     GtkObject *adj;
     const guchar *name;
-    gint row;
-
+    gint row,activeid;
+    gint* ids, *nids;
+    activeid=-1;
+    
     view = GWY_3D_VIEW(window->gwy3dview);
     data = gwy_3d_view_get_data(view);
     setup = gwy_3d_view_get_setup(view);
     if (setup->visualization == GWY_3D_VISUALIZATION_GRADIENT)
         is_gradient = TRUE;
-    else
+    else if (setup->visualization == GWY_3D_VISUALIZATION_LIGHTING)
         is_material = TRUE;
+    else
+        is_overlay  = TRUE;
 
     vbox = gtk_vbox_new(FALSE, 0);
 
@@ -854,10 +900,23 @@ gwy_3d_window_build_visual_tab(Gwy3DWindow *window)
                                    G_CALLBACK(gwy_3d_window_display_mode_changed),
                                    window,
                                    setup->visualization);
+
     gtk_table_attach(GTK_TABLE(table),
                      GTK_WIDGET(window->visual_mode_group->data),
                      0, 3, row, row+1, GTK_FILL, 0, 0, 0);
     row++;
+
+    gtk_table_attach(GTK_TABLE(table),
+                     GTK_WIDGET(window->visual_mode_group->next->data),
+                     0, 3, row, row+1, GTK_FILL, 0, 0, 0);
+    row++;
+
+    gtk_table_attach(GTK_TABLE(table),
+                     GTK_WIDGET(window->visual_mode_group->next->next->data),
+                     0, 3, row, row+1, GTK_FILL, 0, 0, 0);
+    row++;
+
+
 
     label = gtk_label_new_with_mnemonic(_("_Material:"));
     window->material_label = label;
@@ -884,7 +943,7 @@ gwy_3d_window_build_visual_tab(Gwy3DWindow *window)
     spin = gwy_table_attach_spinbutton(table, row++,
                                        _("_Light φ:"), _("deg"), adj);
     window->lights_spin1 = spin;
-    gtk_widget_set_sensitive(spin, is_material);
+    gtk_widget_set_sensitive(spin, is_material || is_overlay );
 
     adj = gwy_3d_window_make_setup_adj(window, setup, "light-theta",
                                        -G_MAXDOUBLE, G_MAXDOUBLE, 1.0, 15.0,
@@ -892,17 +951,12 @@ gwy_3d_window_build_visual_tab(Gwy3DWindow *window)
     spin = gwy_table_attach_spinbutton(table, row++,
                                        _("L_ight θ:"), _("deg"), adj);
     window->lights_spin2 = spin;
-    gtk_widget_set_sensitive(spin, is_material);
+    gtk_widget_set_sensitive(spin, is_material || is_overlay);
     gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 12);
     gtk_widget_set_sensitive(window->buttons[GWY_3D_MOVEMENT_LIGHT],
-                             is_material);
+                             is_material || is_overlay );
     gtk_widget_set_sensitive(window->buttons[N_BUTTONS + GWY_3D_MOVEMENT_LIGHT],
-                             is_material);
-    row++;
-
-    gtk_table_attach(GTK_TABLE(table),
-                     GTK_WIDGET(window->visual_mode_group->next->data),
-                     0, 3, row, row+1, GTK_FILL, 0, 0, 0);
+                             is_material || is_overlay );
     row++;
 
     name = NULL;
@@ -910,12 +964,43 @@ gwy_3d_window_build_visual_tab(Gwy3DWindow *window)
                                      &name);
     menu = gwy_gradient_selection_new(G_CALLBACK(gwy_3d_window_set_gradient),
                                       window, name);
-    gtk_widget_set_sensitive(menu, is_gradient);
+    gtk_widget_set_sensitive(menu, is_gradient || is_overlay);
     window->gradient_menu = menu;
     gtk_table_attach(GTK_TABLE(table), menu,
                      0, 3, row, row+1, GTK_FILL, 0, 0, 0);
-    gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
+
     row++;
+    
+    menu = gwy_data_chooser_new_channels();
+    
+    gwy_data_chooser_set_filter (GWY_DATA_CHOOSER(menu), gwy_3d_window_data2_filter, view, NULL);
+
+    ids = gwy_app_data_browser_get_data_ids(view->data);
+    data2_ref = gwy_3d_view_get_data2_ref(view);
+
+    for(nids=ids;*nids!=-1;nids++) {
+	if (gwy_app_get_data_key_for_id(*nids)==data2_ref) {
+	    activeid=*nids;
+	    break;
+	};
+	if (gwy_app_get_data_key_for_id(*nids)==view->data_key && activeid==-1) {
+	    activeid=*nids;
+	};
+    };
+    g_free(ids);
+    
+    gwy_data_chooser_set_active(GWY_DATA_CHOOSER(menu),view->data,activeid);
+
+    g_signal_connect(menu, "changed",
+                     G_CALLBACK(gwy_3d_window_set_data2), window);
+
+    window->dataov_menu = menu;
+    gtk_widget_set_sensitive(menu, is_overlay);  
+    gtk_table_attach(GTK_TABLE(table), menu,
+                     0, 3, row, row+1, GTK_FILL, 0, 0, 0);
+      
+
+    gtk_table_set_row_spacing(GTK_TABLE(table), row, 8); 
 
     g_signal_connect(setup, "notify::visualization",
                      G_CALLBACK(gwy_3d_window_visualization_changed), window);
@@ -1222,6 +1307,25 @@ gwy_3d_window_set_material(GtkTreeSelection *selection,
 }
 
 static void
+gwy_3d_window_set_data2(GwyDataChooser *chooser, Gwy3DWindow *gwy3dwindow)
+{
+  GwyContainer* data;
+  gint id;
+  GQuark key;
+  Gwy3DView *view;
+  const guchar* name;
+
+  view = GWY_3D_VIEW(gwy3dwindow->gwy3dview);
+  data = gwy_data_chooser_get_active(chooser, &id);
+  gwy_debug("data2: %p %d", data, id);
+  key = gwy_app_get_data_key_for_id(id);
+  name = g_quark_to_string(key);  
+  
+  gwy_3d_view_set_data2_ref(view,g_strdup(name));
+}
+
+
+static void
 gwy_3d_window_select_controls(gpointer data, GtkWidget *button)
 {
     Gwy3DWindow *gwy3dwindow;
@@ -1321,6 +1425,17 @@ gwy_3d_window_show_labels_changed(GtkToggleButton *check,
 }
 
 static void
+gwy_3d_window_show_fmscale_changed(GtkToggleButton *check,
+                                  Gwy3DWindow *window)
+{
+    Gwy3DSetup *setup;
+
+    setup = gwy_3d_view_get_setup(GWY_3D_VIEW(window->gwy3dview));
+    g_object_set(setup, "fmscale-visible", gtk_toggle_button_get_active(check),
+                 NULL);
+}
+
+static void
 gwy_3d_window_display_mode_changed(GtkWidget *item,
                                    Gwy3DWindow *window)
 {
@@ -1343,15 +1458,26 @@ static void
 gwy_3d_window_set_visualization(Gwy3DWindow *window,
                                 Gwy3DVisualization visual)
 {
-    gtk_widget_set_sensitive(window->material_menu, visual);
-    gtk_widget_set_sensitive(window->material_label, visual);
-    gtk_widget_set_sensitive(window->gradient_menu, !visual);
-    gtk_widget_set_sensitive(window->lights_spin1, visual);
-    gtk_widget_set_sensitive(window->lights_spin2, visual);
-    gtk_widget_set_sensitive(window->buttons[GWY_3D_MOVEMENT_LIGHT], visual);
+   gboolean is_material = FALSE, is_gradient = FALSE, is_overlay = FALSE;
+   if (visual == GWY_3D_VISUALIZATION_GRADIENT)
+        is_gradient = TRUE;
+    else if (visual == GWY_3D_VISUALIZATION_LIGHTING)
+        is_material = TRUE;
+    else
+        is_overlay  = TRUE;
+
+    gtk_widget_set_sensitive(window->material_menu, is_material );
+    gtk_widget_set_sensitive(window->material_label, is_material );
+    gtk_widget_set_sensitive(window->gradient_menu, is_gradient || is_overlay );
+    gtk_widget_set_sensitive(window->lights_spin1, is_material || is_overlay );
+    gtk_widget_set_sensitive(window->lights_spin2, is_material || is_overlay );
+    gtk_widget_set_sensitive(window->buttons[GWY_3D_MOVEMENT_LIGHT], is_material || is_overlay );
     gtk_widget_set_sensitive(window->buttons[N_BUTTONS + GWY_3D_MOVEMENT_LIGHT],
-                             visual);
-    if (visual == GWY_3D_VISUALIZATION_GRADIENT
+                             is_material || is_overlay );
+
+    gtk_widget_set_sensitive(window->dataov_menu, is_overlay);
+
+    if (!(is_overlay || is_material)
         && gwy_3d_view_get_movement_type(GWY_3D_VIEW(window->gwy3dview))
             == GWY_3D_MOVEMENT_LIGHT)
         g_signal_emit_by_name(window->buttons[GWY_3D_MOVEMENT_ROTATION],
