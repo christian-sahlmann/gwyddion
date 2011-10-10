@@ -8,6 +8,9 @@ Libraries:
 - libgwydgets: Graph window properly disconnects signals from the graph model
                when destroyed.
 - libgwydgets: Labels on 3D view axes are rotated with the axes.
+- libgwydgets: 3D view supports ‘overlay’ mode with secondary data used for
+               false colour mapping.
+- libgwydgets: 3D view can show false colour scale.
 - libgwydgets: Vertical graph measurement mode was added.
 - libgwyapp: Possible crash due to wrong freeing of GBookmarkFile was fixed.
 - libgwyapp: File chooser can plane- and/or row-level previewed data.
