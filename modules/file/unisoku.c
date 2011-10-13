@@ -136,7 +136,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Unisoku data files (two-part .hdr + .dat)."),
     "Yeti <yeti@gwyddion.net>",
-    "0.7",
+    "0.8",
     "David Nečas (Yeti) & Petr Klapetek",
     "2005",
 };
@@ -191,14 +191,19 @@ unisoku_load(const gchar *filename,
     GwyContainer *meta, *container = NULL;
     guchar *buffer = NULL;
     gchar *text = NULL;
-    gsize size = 0;
+    gsize i, size = 0;
     GError *err = NULL;
     GwyDataField *dfield = NULL;
     gchar *data_name;
 
-    if (!g_file_get_contents(filename, &text, NULL, &err)) {
+    if (!g_file_get_contents(filename, &text, &size, &err)) {
         err_GET_FILE_CONTENTS(error, &err);
         return NULL;
+    }
+
+    for (i = 0; i < size; i++) {
+        if (!text[i])
+            text[i] = ' ';
     }
 
     gwy_clear(&ufile, 1);
@@ -558,9 +563,10 @@ unisoku_find_data_name(const gchar *header_name)
     if (g_file_test(data_name->str, G_FILE_TEST_IS_REGULAR))
         ok = TRUE;
     else {
-        g_ascii_strup(data_name->str
-                      + data_name->len - (sizeof(EXTENSION_DATA) - 1),
-                      -1);
+        guint i;
+        for (i = 0; i < sizeof(EXTENSION_DATA); i++)
+            data_name->str[data_name->len-1 - i]
+                = g_ascii_toupper(data_name->str[data_name->len-1 - i]);
         if (g_file_test(data_name->str, G_FILE_TEST_IS_REGULAR))
             ok = TRUE;
     }
