@@ -76,8 +76,8 @@ struct _Gwy3DWindow {
     gboolean in_update;
     guint controls_full;  /* should be boolean, keep ABI */
 
-    GtkWidget *gradientov_menu;
-    GtkWidget *dataov_menu;
+    gpointer reserved1;
+    gpointer reserved2;
     gpointer reserved3;
     gpointer reserved4;
 };

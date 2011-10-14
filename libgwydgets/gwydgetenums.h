@@ -47,8 +47,7 @@ typedef enum { /*< lowercase_name=gwy_3d_projection >*/
 
 typedef enum { /*< lowercase_name=gwy_3d_visualization >*/
     GWY_3D_VISUALIZATION_GRADIENT = 0,
-    GWY_3D_VISUALIZATION_LIGHTING,
-    GWY_3D_VISUALIZATION_OVERLAY
+    GWY_3D_VISUALIZATION_LIGHTING
 } Gwy3DVisualization;
 
 typedef enum { /*< lowercase_name=gwy_3d_view_label >*/
