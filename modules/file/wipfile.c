@@ -937,9 +937,9 @@ static GwyDataField * wip_read_image(GNode *node)
     g_free(idnode);
 
     // Reading actual data
-    dfield = gwy_data_field_new(header->sizex, header->sizey,
-                          header->sizex * pow(10.0, power10xy) * xscale,
+    dfield = gwy_data_field_new(header->sizey, header->sizex,
                           header->sizey * pow(10.0, power10xy) * yscale,
+                          header->sizex * pow(10.0, power10xy) * xscale,
                           FALSE);
     data = gwy_data_field_get_data(dfield);
     gwy_data_field_set_si_unit_z(dfield, siunitz);
