@@ -223,7 +223,7 @@ if test "x$enable_pygwy" != xno; then
 fi
 
 if test "x$enable_pygwy" != xno; then
-  PKG_CHECK_MODULES(PYGTK,[pygtk-2.0 >= 2.9.0],[],
+  PKG_CHECK_MODULES(PYGTK,[pygtk-2.0 >= 2.10.0],[],
                     [enable_pygwy=no; PYGWY_WARN=" (needs pygtk2)"])
   AC_SUBST(PYGTK_CFLAGS)
   PYGTK_CODEGENDIR=`$PKG_CONFIG --variable=codegendir pygtk-2.0`
