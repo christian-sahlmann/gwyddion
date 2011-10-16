@@ -437,7 +437,7 @@ static int _map_gwy_container_ass_subscript(PyGObject *cont, PyObject *key, PyOb
 
    if(v!=NULL) {
      py_type = PyObject_Type(v);
-     g_type = pyg_type_from_object_strict(py_type,TRUE);
+     g_type = pyg_type_from_object(py_type);
      Py_DECREF(py_type);
      if(g_type==0)
      {
@@ -616,7 +616,7 @@ _wrap_gwy_container_set_value_by_name(PyGObject *self, PyObject *args, PyObject 
       return NULL;
 
    py_type = PyObject_Type(v);
-   g_type = pyg_type_from_object_strict(py_type,TRUE);
+   g_type = pyg_type_from_object(py_type);
    Py_DECREF(py_type);
    if(g_type==0)
    {
