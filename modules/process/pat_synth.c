@@ -240,7 +240,7 @@ static GwyModuleInfo module_info = {
     N_("Generates surfaces representing simple patterns "
        "(steps, ridges, ...)."),
     "Yeti <yeti@gwyddion.net>",
-    "1.1",
+    "1.2",
     "David Nečas (Yeti)",
     "2010",
 };
@@ -642,6 +642,7 @@ pattern_type_selected(GtkComboBox *combo,
     gtk_widget_show_all(GTK_WIDGET(controls->table_parameters));
     gtk_widget_show_all(GTK_WIDGET(controls->table_placement));
 
+    update_values(controls);
     pat_synth_invalidate(controls);
 }
 
