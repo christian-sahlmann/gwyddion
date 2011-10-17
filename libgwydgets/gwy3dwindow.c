@@ -941,6 +941,7 @@ gwy_3d_window_build_visual_tab(Gwy3DWindow *window)
     window->gradient_menu = menu;
     gtk_table_attach(GTK_TABLE(table), menu,
                      0, 3, row, row+1, GTK_FILL, 0, 0, 0);
+    row++;
 
     window->dataov_menu = gtk_label_new(NULL);
     gtk_table_attach(GTK_TABLE(table), window->dataov_menu,
