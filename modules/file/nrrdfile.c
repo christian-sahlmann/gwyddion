@@ -159,7 +159,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports and exports nearly raw raster data (NRRD) files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.1",
+    "0.2",
     "David Nečas (Yeti)",
     "2011",
 };
@@ -1427,8 +1427,8 @@ nrrdfile_export(G_GNUC_UNUSED GwyContainer *data,
 
     g_ascii_formatd(buf[0], sizeof(buf[0]), "%.8g", xoff);
     g_ascii_formatd(buf[1], sizeof(buf[1]), "%.8g", yoff);
-    g_ascii_formatd(buf[2], sizeof(buf[2]), "%.8g", xreal - xoff);
-    g_ascii_formatd(buf[3], sizeof(buf[3]), "%.8g", yreal - yoff);
+    g_ascii_formatd(buf[2], sizeof(buf[2]), "%.8g", xreal + xoff);
+    g_ascii_formatd(buf[3], sizeof(buf[3]), "%.8g", yreal + yoff);
 
     /* Write in native endian. */
     fprintf(fh, header_format,
