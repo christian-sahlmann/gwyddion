@@ -19,8 +19,8 @@
 
 /**
  * [FILE-MAGIC-FREEDESKTOP]
- * <mime-type type="application/x-itachi-sem">
- *   <comment>Itachi SEM data</comment>
+ * <mime-type type="application/x-hitachi-sem">
+ *   <comment>Hitachi SEM data</comment>
  *   <magic priority="80">
  *     <match type="string" offset="0" value="[SemImageFile]"/>
  *   </magic>
@@ -29,7 +29,7 @@
 
 /**
  * [FILE-MAGIC-USERGUIDE]
- * Itachi S-3700 and S-4800 SEM data
+ * Hitachi S-3700 and S-4800 SEM data
  * .txt + image
  * Read
  **/
@@ -54,25 +54,25 @@
 #define MAGIC_SIZE (sizeof(MAGIC)-1)
 #define HEADER_EXTENSION ".txt"
 
-static gboolean      module_register      (void);
-static gint          itachi_detect        (const GwyFileDetectInfo *fileinfo,
-                                           gboolean only_name);
-static GwyContainer* itachi_load          (const gchar *filename,
-                                           GwyRunType mode,
-                                           GError **error);
-static GHashTable*   itachi_load_header   (const gchar *filename,
-                                           gchar **header,
-                                           GError **error);
-static gchar*        itachi_find_data_name(const gchar *header_name,
-                                           const gchar *image_name);
-static void          store_meta           (gpointer key,
-                                           gpointer value,
-                                           gpointer user_data);
+static gboolean      module_register       (void);
+static gint          hitachi_detect        (const GwyFileDetectInfo *fileinfo,
+                                            gboolean only_name);
+static GwyContainer* hitachi_load          (const gchar *filename,
+                                            GwyRunType mode,
+                                            GError **error);
+static GHashTable*   hitachi_load_header   (const gchar *filename,
+                                            gchar **header,
+                                            GError **error);
+static gchar*        hitachi_find_data_name(const gchar *header_name,
+                                            const gchar *image_name);
+static void          store_meta            (gpointer key,
+                                            gpointer value,
+                                            gpointer user_data);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    N_("Imports Itachi S-3700 and S-4800 SEM files."),
+    N_("Imports Hitachi S-3700 and S-4800 SEM files."),
     "Yeti <yeti@gwyddion.net>",
     "0.1",
     "David Nečas (Yeti)",
@@ -84,10 +84,10 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(void)
 {
-    gwy_file_func_register("itachi",
-                           N_("Itachi SEM files (.txt + image)"),
-                           (GwyFileDetectFunc)&itachi_detect,
-                           (GwyFileLoadFunc)&itachi_load,
+    gwy_file_func_register("hitachi-sem",
+                           N_("Hitachi SEM files (.txt + image)"),
+                           (GwyFileDetectFunc)&hitachi_detect,
+                           (GwyFileLoadFunc)&hitachi_load,
                            NULL,
                            NULL);
 
@@ -95,8 +95,8 @@ module_register(void)
 }
 
 static gint
-itachi_detect(const GwyFileDetectInfo *fileinfo,
-              gboolean only_name)
+hitachi_detect(const GwyFileDetectInfo *fileinfo,
+               gboolean only_name)
 {
     GHashTable *hash;
     gchar *header, *imagename, *fullname;
@@ -111,13 +111,13 @@ itachi_detect(const GwyFileDetectInfo *fileinfo,
         return 0;
 
     gwy_debug("magic ok");
-    hash = itachi_load_header(fileinfo->name, &header, NULL);
+    hash = hitachi_load_header(fileinfo->name, &header, NULL);
     if (!hash)
         return 0;
 
     if ((imagename = g_hash_table_lookup(hash, "ImageName"))) {
         gwy_debug("imagename <%s>", imagename);
-        fullname = itachi_find_data_name(fileinfo->name, imagename);
+        fullname = hitachi_find_data_name(fileinfo->name, imagename);
         if (fullname) {
             g_free(fullname);
             score = 100;
@@ -129,9 +129,9 @@ itachi_detect(const GwyFileDetectInfo *fileinfo,
 }
 
 static GwyContainer*
-itachi_load(const gchar *filename,
-            G_GNUC_UNUSED GwyRunType mode,
-            GError **error)
+hitachi_load(const gchar *filename,
+             G_GNUC_UNUSED GwyRunType mode,
+             GError **error)
 {
     GwyContainer *container = NULL, *meta;
     GdkPixbuf *pixbuf = NULL;
@@ -144,7 +144,7 @@ itachi_load(const gchar *filename,
     gint pxres, pyres, hxres, hyres, rowstride, nchannels, i, j;
     gdouble *data;
 
-    if (!(hash = itachi_load_header(filename, &header, error)))
+    if (!(hash = hitachi_load_header(filename, &header, error)))
         return NULL;
 
     if (!require_keys(hash, error,
@@ -153,7 +153,7 @@ itachi_load(const gchar *filename,
         goto fail;
     value = g_hash_table_lookup(hash, "ImageName");
 
-    if (!(imagename = itachi_find_data_name(filename, value))) {
+    if (!(imagename = hitachi_find_data_name(filename, value))) {
         g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
                     _("No corresponding data file was found for header file."));
         goto fail;
@@ -235,9 +235,9 @@ fail:
 }
 
 static GHashTable*
-itachi_load_header(const gchar *filename,
-                   gchar **header,
-                   GError **error)
+hitachi_load_header(const gchar *filename,
+                    gchar **header,
+                    GError **error)
 {
     gchar *line, *p;
     GwyTextHeaderParser parser;
@@ -254,7 +254,7 @@ itachi_load_header(const gchar *filename,
     p = *header;
     line = gwy_str_next_line(&p);
     if (!gwy_strequal(line, MAGIC)) {
-        err_FILE_TYPE(error, "Itachi SEM");
+        err_FILE_TYPE(error, "Hitachi SEM");
         g_free(header);
         *header = NULL;
         return NULL;
@@ -269,8 +269,8 @@ itachi_load_header(const gchar *filename,
 }
 
 static gchar*
-itachi_find_data_name(const gchar *header_name,
-                      const gchar *image_name)
+hitachi_find_data_name(const gchar *header_name,
+                       const gchar *image_name)
 {
     gchar *dirname = g_path_get_dirname(header_name);
     gchar *filename, *iname;

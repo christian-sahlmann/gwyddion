@@ -52,9 +52,9 @@ file_LTLIBRARIES = \
 	hdf4file.la \
 	hdrimage.la \
 	hitachi-afm.la \
+	hitachi-sem.la \
 	igorfile.la \
 	intematix.la \
-	itachi.la \
 	jeol.la \
 	jpkscan.la \
 	lextfile.la \
@@ -173,9 +173,9 @@ gwyfile_la_SOURCES       = gwyfile.c
 hdrimage_la_SOURCES      = hdrimage.cc gwytiff.h image-keys.h
 hdf4file_la_SOURCES      = hdf4file.c
 hitachi_afm_la_SOURCES   = hitachi-afm.c
+hitachi_sem_la_SOURCES   = hitachi-sem.c
 igorfile_la_SOURCES      = igorfile.c
 intematix_la_SOURCES     = intematix.c gwytiff.h
-itachi_la_SOURCES        = itachi.c
 jeol_la_SOURCES          = jeol.c
 jpkscan_la_SOURCES       = jpkscan.c jpk.h gwytiff.h
 lextfile_la_SOURCES      = lextfile.c gwytiff.h
