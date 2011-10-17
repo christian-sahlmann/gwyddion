@@ -811,13 +811,17 @@ gwy_si_unit_parse(GwySIUnit *siunit,
                 g_string_prepend(buf, "°");
             }
         }
-        else if (gwy_strequal(buf->str, "°"))
+        else if (gwy_strequal(buf->str, "°")
+                 || gwy_strequal(buf->str, "degree")
+                 || gwy_strequal(buf->str, "degrees"))
             g_string_assign(buf, "deg");
         else if ((buf->str[0] == '\305' && !buf->str[1])
                  || gwy_strequal(buf->str, "Å")
                  || gwy_strequal(buf->str, "AA")
                  || gwy_strequal(buf->str, "Ang"))
             g_string_assign(buf, "Å");
+        else if (gwy_strequal(buf->str, "micro m"))
+            g_string_assign(buf, "µm");
         else if (gwy_strequal(buf->str, "a.u.")
                  || gwy_strequal(buf->str, "a. u.")
                  || gwy_strequal(buf->str, "counts"))
