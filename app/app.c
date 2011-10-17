@@ -26,6 +26,7 @@
 
 #include <libgwyddion/gwymacros.h>
 #include <libprocess/datafield.h>
+#include <libprocess/arithmetic.h>
 #include <libprocess/gwygrainvalue.h>
 #include <libprocess/gwycalibration.h>
 #include <libgwymodule/gwymodule.h>
@@ -69,6 +70,15 @@ static void       gwy_app_graph_popup_menu_popup_key  (GtkWidget *menu,
                                                        GtkWidget *graph);
 static void       gwy_app_3d_window_export            (Gwy3DWindow *window);
 static void       gwy_app_3d_view_set_defaults        (Gwy3DView *gwy3dview);
+static void       gwy_app_save_3d_export              (GtkWidget *dialog,
+                                                       gint response,
+                                                       Gwy3DWindow *gwy3dwindow);
+static void       gwy_app_3d_window_add_overlay_menu  (Gwy3DWindow *gwy3dwindow);
+static void       gwy_app_3d_window_set_data2         (GwyDataChooser *chooser,
+                                                       Gwy3DWindow *gwy3dwindow);
+static gboolean   gwy_app_3d_window_data2_filter      (GwyContainer *data2,
+                                                       gint id2,
+                                                       gpointer user_data);
 static void       gwy_app_data_window_reset_zoom      (void);
 static void       gwy_app_change_mask_color_cb        (void);
 
@@ -795,7 +805,88 @@ _gwy_app_3d_window_setup(Gwy3DWindow *window3d)
     gwy_3d_window_add_action_widget(GWY_3D_WINDOW(window3d), button);
     g_signal_connect_swapped(button, "clicked",
                              G_CALLBACK(gwy_app_3d_view_set_defaults), view3d);
+
+    gwy_app_3d_window_add_overlay_menu(GWY_3D_WINDOW(window3d));
 }
+
+static void
+gwy_app_3d_window_add_overlay_menu(Gwy3DWindow *gwy3dwindow)
+{
+    GtkWidget *menu;
+    Gwy3DView *view;
+    GQuark data2_ref;
+    gint* ids, *nids;
+    gint activeid = -1;
+
+    view = GWY_3D_VIEW(gwy_3d_window_get_3d_view(gwy3dwindow));
+    menu = gwy_data_chooser_new_channels();
+
+    gwy_data_chooser_set_filter(GWY_DATA_CHOOSER(menu),
+                                gwy_app_3d_window_data2_filter, view, NULL);
+
+    ids = gwy_app_data_browser_get_data_ids(view->data);
+    data2_ref = gwy_3d_view_get_data2_ref(view);
+
+    for (nids = ids; *nids != -1; nids++) {
+        if (gwy_app_get_data_key_for_id(*nids) == data2_ref) {
+            activeid = *nids;
+            break;
+        };
+        if (gwy_app_get_data_key_for_id(*nids) == view->data_key
+            && activeid == -1) {
+            activeid = *nids;
+        };
+    };
+    g_free(ids);
+
+    gwy_data_chooser_set_active(GWY_DATA_CHOOSER(menu), view->data, activeid);
+    g_signal_connect(menu, "changed",
+                     G_CALLBACK(gwy_app_3d_window_set_data2), gwy3dwindow);
+
+    gwy_3d_window_set_overlay_chooser(gwy3dwindow, menu);
+}
+
+static void
+gwy_app_3d_window_set_data2(GwyDataChooser *chooser,
+                            Gwy3DWindow *gwy3dwindow)
+{
+    gint id;
+    GQuark key;
+    Gwy3DView *view;
+    const guchar* name;
+
+    view = GWY_3D_VIEW(gwy_3d_window_get_3d_view(gwy3dwindow));
+    gwy_data_chooser_get_active(chooser, &id);
+    key = gwy_app_get_data_key_for_id(id);
+    name = g_quark_to_string(key);
+
+    gwy_3d_view_set_data2_ref(view, name);
+}
+
+static gboolean
+gwy_app_3d_window_data2_filter(GwyContainer *data2,
+                               gint id2,
+                               gpointer user_data)
+{
+    Gwy3DView* view;
+    GwyDataField *data_field1, *data_field2;
+    GQuark quark2;
+    GwyContainer* data1;
+
+    quark2 = gwy_app_get_data_key_for_id(id2);
+    data_field2 = gwy_container_get_object(data2, quark2);
+    view = GWY_3D_VIEW(user_data);
+    data1 = gwy_3d_view_get_data(view);
+    if (data1 != data2)
+        return FALSE;
+
+    gwy_container_gis_object_by_name(data1,
+                                     gwy_3d_view_get_data_key(view),
+                                     &data_field1);
+
+    return !gwy_data_field_check_compatibility(data_field2, data_field1,
+                                               GWY_DATA_COMPATIBILITY_RES);
+};
 
 static void
 gwy_app_save_3d_export(GtkWidget *dialog,

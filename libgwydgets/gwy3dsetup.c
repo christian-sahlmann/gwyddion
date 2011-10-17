@@ -32,6 +32,7 @@ enum {
     PROP_VISUALIZATION,
     PROP_AXES_VISIBLE,
     PROP_LABELS_VISIBLE,
+    PROP_FMSCALE_VISIBLE,
     PROP_ROTATION_X,
     PROP_ROTATION_Y,
     PROP_SCALE,
@@ -123,6 +124,16 @@ gwy_3d_setup_class_init(Gwy3DSetupClass *klass)
 
     g_object_class_install_property
         (gobject_class,
+         PROP_FMSCALE_VISIBLE,
+         g_param_spec_boolean("fmscale-visible",
+                              "fmscale visible",
+                              "Whether false color bar is visible "
+                              "",
+                              FALSE,
+                              G_PARAM_READWRITE));
+
+    g_object_class_install_property
+        (gobject_class,
          PROP_ROTATION_X,
          g_param_spec_double("rotation-x",
                              "Rotation X",
@@ -189,6 +200,7 @@ gwy_3d_setup_init(Gwy3DSetup *setup)
 
     setup->axes_visible = TRUE;
     setup->labels_visible = TRUE;
+    setup->fmscale_visible = FALSE;
 
     setup->rotation_x = G_PI/4.0;
     setup->rotation_y = -G_PI/4.0;
@@ -221,6 +233,10 @@ gwy_3d_setup_set_property(GObject *object,
 
         case PROP_LABELS_VISIBLE:
         setup->labels_visible = g_value_get_boolean(value);
+        break;
+
+        case PROP_FMSCALE_VISIBLE:
+        setup->fmscale_visible = g_value_get_boolean(value);
         break;
 
         case PROP_ROTATION_X:
@@ -278,6 +294,10 @@ gwy_3d_setup_get_property(GObject *object,
         g_value_set_boolean(value, setup->labels_visible);
         break;
 
+        case PROP_FMSCALE_VISIBLE:
+        g_value_set_boolean(value, setup->fmscale_visible);
+        break;
+
         case PROP_ROTATION_X:
         g_value_set_double(value, setup->rotation_x);
         break;
@@ -324,6 +344,7 @@ gwy_3d_setup_serialize(GObject *serializable,
             { 'i', "visualization", &setup->visualization, NULL, },
             { 'b', "axes-visible", &setup->axes_visible, NULL, },
             { 'b', "labels-visible", &setup->labels_visible, NULL, },
+            { 'b', "fmscale-visible", &setup->fmscale_visible, NULL, },
             { 'd', "rotation-x", &setup->rotation_x, NULL, },
             { 'd', "rotation-y", &setup->rotation_y, NULL, },
             { 'd', "scale", &setup->scale, NULL, },
@@ -353,6 +374,7 @@ gwy_3d_setup_get_size(GObject *object)
             { 'i', "visualization", &setup->visualization, NULL, },
             { 'b', "axes-visible", &setup->axes_visible, NULL, },
             { 'b', "labels-visible", &setup->labels_visible, NULL, },
+            { 'b', "fmscale-visible", &setup->fmscale_visible, NULL, },
             { 'd', "rotation-x", &setup->rotation_x, NULL, },
             { 'd', "rotation-y", &setup->rotation_y, NULL, },
             { 'd', "scale", &setup->scale, NULL, },
@@ -383,6 +405,7 @@ gwy_3d_setup_deserialize(const guchar *buffer,
             { 'i', "visualization", &setup->visualization, NULL, },
             { 'b', "axes-visible", &setup->axes_visible, NULL, },
             { 'b', "labels-visible", &setup->labels_visible, NULL, },
+            { 'b', "fmscale-visible", &setup->fmscale_visible, NULL, },
             { 'd', "rotation-x", &setup->rotation_x, NULL, },
             { 'd', "rotation-y", &setup->rotation_y, NULL, },
             { 'd', "scale", &setup->scale, NULL, },
@@ -432,6 +455,10 @@ gwy_3d_setup_clone(GObject *source,
         clone->labels_visible = setup->labels_visible;
         g_object_notify(copy, "labels-visible");
     }
+    if (clone->fmscale_visible != setup->fmscale_visible) {
+        clone->fmscale_visible = setup->fmscale_visible;
+        g_object_notify(copy, "fmscale-visible");
+    }
 
     if (clone->rotation_x != setup->rotation_x) {
         clone->rotation_x = setup->rotation_x;
@@ -476,6 +503,7 @@ gwy_3d_setup_duplicate_real(GObject *object)
 
     duplicate->axes_visible = setup->axes_visible;
     duplicate->labels_visible = setup->labels_visible;
+    duplicate->fmscale_visible = setup->fmscale_visible;
 
     duplicate->rotation_x = setup->rotation_x;
     duplicate->rotation_y = setup->rotation_y;

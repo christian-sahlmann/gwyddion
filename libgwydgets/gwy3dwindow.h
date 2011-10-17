@@ -68,7 +68,7 @@ struct _Gwy3DWindow {
 
     GdkWindow *resize_grip;
 
-    GtkWidget *widget2;
+    GtkWidget *dataov_menu;
     GtkWidget *widget3;
     GtkWidget *widget4;
     GtkWidget *widget5;
@@ -101,6 +101,8 @@ void         gwy_3d_window_add_small_toolbar_button(Gwy3DWindow *gwy3dwindow,
                                                     const gchar *tooltip,
                                                     GCallback callback,
                                                     gpointer cbdata);
+void         gwy_3d_window_set_overlay_chooser     (Gwy3DWindow *gwy3dwindow,
+                                                    GtkWidget *chooser);
 void         gwy_3d_window_class_set_tooltips      (GtkTooltips *tips);
 GtkTooltips* gwy_3d_window_class_get_tooltips      (void);
 
