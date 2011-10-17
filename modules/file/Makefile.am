@@ -55,6 +55,7 @@ file_LTLIBRARIES = \
 	hitachi-sem.la \
 	igorfile.la \
 	intematix.la \
+	iso28600.la \
 	jeol.la \
 	jpkscan.la \
 	lextfile.la \
@@ -176,6 +177,7 @@ hitachi_afm_la_SOURCES   = hitachi-afm.c
 hitachi_sem_la_SOURCES   = hitachi-sem.c
 igorfile_la_SOURCES      = igorfile.c
 intematix_la_SOURCES     = intematix.c gwytiff.h
+iso28600_la_SOURCES      = iso28600.c
 jeol_la_SOURCES          = jeol.c
 jpkscan_la_SOURCES       = jpkscan.c jpk.h gwytiff.h
 lextfile_la_SOURCES      = lextfile.c gwytiff.h
