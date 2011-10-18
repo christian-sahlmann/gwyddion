@@ -15,10 +15,15 @@ Libraries:
 - libgwyapp: Possible crash due to wrong freeing of GBookmarkFile was fixed.
 - libgwyapp: File chooser can plane- and/or row-level previewed data.
 - libgwyapp: Critical warning/crash in file merging was fixed.
+- libgwyprocess: Kaiser 2.5 FFT window was fixed to avoid returning NaNs at
+                 certain transform sizes (due to rounding errors).
 
 Modules:
 - Code V INT (new): Imports Code V INT grid interferograms.
 - Zeiss (new): Imports Carl Zeiss SEM scans (TIFF).
+- Hitachi SEM (new): Import Hitachi S-3700 and S-4800 SEM data.
+- ISO28600 (new): Imports and exports ISO 28600:2011 SPM data transfer
+  format.
 - 1D FFT filter: Correct X-axis units of Fourier modulus are displayed.
 - Level Grains: The sign of extracted background was corrected.
 - LEXT: Crashing on systems lacking memrchr(), namely MS Windows, was fixed.
@@ -29,6 +34,9 @@ Modules:
 - SDFile: Extra fields after the data are made available in metadata.
 - Statistical functions tool: Height distribution can use masking.
 - Roughness tool: The resulting curves are no longer automatically levelled.
+- Unisoku: Import of files containing NUL characters in the header was fixed.
+- Pattern synthesis: Real values of parameters are displayed immediately
+  after a pattern type switch.
 
 Other:
 - Compatibility with gcc 4.6 and autoconf 2.68 was improved.
@@ -68,7 +76,7 @@ Modules:
   was corrected (bun introduced in 2.24).
 - NT-MDT: Slowness of MDA spectra loading was corrected, MDA frames are
   numbered similarly to other channels.
-- All synthesis: Critical warning/crash upon clicking on Change units and the
+- All syntheses: Critical warning/crash upon clicking on Change units and the
   current units were unset was fixed.
 - Pixmap: Colourful images can be imported as separate R, G, B channels and
   also as Luma.
@@ -166,11 +174,11 @@ Modules:
 - Statistical functions: Modified to display calibration data if present.
 - DOS spectrum: Calculates absolute value of (dI/dU)/(I/U) and does not
   removing the contact potential.
-- Object Synthesis: Object heights can be truncated.
-- Pattern Synthesis: Range calculations were corrected, removing problems with
+- Object synthesis: Object heights can be truncated.
+- Pattern synthesis: Range calculations were corrected, removing problems with
   pattern occasionaly ending prematurely.  Patterns with the same random seed
   will not be pixel-for-pixel identical to pre-2.23, just statistically.
-- Pattern Synthesis: New patern type, two-dimensional grid of holes, was added.
+- Pattern synthesis: New patern type, two-dimensional grid of holes, was added.
 - 2D FFT filter: It is possible to zoom in the central area of the Fourier
   space editor.  A Fill button was added.  Asymmetrical masking for odd-sized
   fields was corrected.
@@ -213,14 +221,14 @@ Libraries:
 
 Modules:
 - Anfatec (new): Anfatec data file import.
-- Pattern Synthesis (new): Creates regular patterns such as steps of ridges.
-- Noise Synthesis (new): Generates uncorrelated point noise.
-- Line Noise Synthesis (new): Generates line noise (steps or scars).
+- Pattern synthesis (new): Creates regular patterns such as steps of ridges.
+- Noise synthesis (new): Generates uncorrelated point noise.
+- Line noise synthesis (new): Generates line noise (steps or scars).
 - Particle synthesis (new): Generate (modify) surfaces by particle
   deposition using a simple dynamic model.
-- Object Synthesis: Objects can be placed onto an existing surface, two
+- Object synthesis: Objects can be placed onto an existing surface, two
   new shapes (diamond and Gaussian) were added, other small improvements.
-- Spectral Synthesis: Generated data can be added to an existing surface.
+- Spectral synthesis: Generated data can be added to an existing surface.
 - Mask Editor tool: New editting tools were added: paintbrush, eraser,
   and bucket filling and unfilling.
 - Statistical functions tool: Radially averaged ACF was added.
@@ -372,7 +380,7 @@ Modules:
 - Pixmap export: It is possible to export data as 16bit greyscale images (at
   present for TIFF, PNG and PNM).
 - ASCII export: It is possible to set precision of exported values.
-- Object Synthesis: Cone, box and tent shapes were added.
+- Object synthesis: Cone, box and tent shapes were added.
 - Mark With: Marking result sometimes not corresponding to selected options
   was fixed.
 
@@ -400,8 +408,8 @@ Modules:
 - RHK-SM4 (new): Imports RHK Technology SM4 files.
 - IGOR (new): Imports IGOR Pro binary waves (highly experimental).
 - Nanonics (new): Imports Nanonics NAN files (highly experimental).
-- FFT Synthesis (new): Generates random surfaces by spectral synthesis.
-- Object Synthesis (new): Generates random surfaces by object placement.
+- FFT synthesis (new): Generates random surfaces by spectral synthesis.
+- Object synthesis (new): Generates random surfaces by object placement.
 - Arithmetic: New quantities bx1, by1, bx2, ..., by5 represent the local x-
   and y-derivatives.
 - Arithmetic: History of previously used expressions is remembered.
