@@ -33,13 +33,14 @@
  * [FILE-MAGIC-USERGUIDE]
  * ISO 28600:2011 SPM data transfer format
  * .spm
- * Read
+ * Read Export
  **/
 
 #include "config.h"
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <glib/gstdio.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwyutils.h>
@@ -80,15 +81,20 @@ typedef union {
     } unit;
 } ISO28600FieldValue;
 
-static gboolean      module_register       (void);
-static gint          iso28600_detect        (const GwyFileDetectInfo *fileinfo,
-                                            gboolean only_name);
-static GwyContainer* iso28600_load          (const gchar *filename,
-                                            GwyRunType mode,
-                                            GError **error);
+static gboolean            module_register     (void);
+static gint                iso28600_detect     (const GwyFileDetectInfo *fileinfo,
+                                                gboolean only_name);
+static GwyContainer*       iso28600_load       (const gchar *filename,
+                                                GwyRunType mode,
+                                                GError **error);
+static gboolean            iso28600_export     (GwyContainer *data,
+                                                const gchar *filename,
+                                                GwyRunType mode,
+                                                GError **error);
 static ISO28600FieldValue* iso28600_load_header(gchar **buffer,
                                                 GError **error);
-static void iso28600_free_header(ISO28600FieldValue *header);
+static void                iso28600_free_header(ISO28600FieldValue *header);
+static gchar* convert_unit(GwySIUnit *unit);
 
 /* The enum numbers are line numbers from the norm.  The real line numbers
  * are 0-based and thus one smaller.  Some lines, e.g. "Label line" are
@@ -428,7 +434,7 @@ header_fields[] = {
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    N_("Imports ISO 28600:2011 SPM data transfer format."),
+    N_("Imports and exports ISO 28600:2011 SPM data transfer format."),
     "Yeti <yeti@gwyddion.net>",
     "0.1",
     "David Nečas (Yeti)",
@@ -448,7 +454,7 @@ module_register(void)
                            (GwyFileDetectFunc)&iso28600_detect,
                            (GwyFileLoadFunc)&iso28600_load,
                            NULL,
-                           NULL);
+                           (GwyFileSaveFunc)&iso28600_export);
 
     return TRUE;
 }
@@ -587,6 +593,256 @@ iso28600_free_header(ISO28600FieldValue *header)
         }
         g_free(header);
     }
+}
+
+static gboolean
+iso28600_export(GwyContainer *container,
+                const gchar *filename,
+                G_GNUC_UNUSED GwyRunType mode,
+                GError **error)
+{
+    static const gchar header_template[] =
+    "ISO/TC 201 SPM data transfer format\n"
+    "general information\n"
+    "\n"
+    "\n"
+    "\n"
+    "\n"
+    "Created by an image processing software.  Bogus acquisition parameters.\n"
+    "MAP_SC\n"
+    "-1\n"
+    "-1\n"
+    "-1\n"
+    "-1\n"
+    "-1\n"
+    "-1\n"
+    "-1\n"
+    "scan information\n"
+    "REGULAR MAPPING\n"
+    "XYZ closed-loop scanner\n"
+    "sample XYZ scan\n"
+    "X\n"
+    "left to right\n"
+    "Y\n"
+    "top to bottom\n"
+    "%u\n"  /* XRes */
+    "%u\n"  /* YRes */
+    "%s\n"  /* XUnit */
+    "%s\n"  /* YUnit */
+    "%s\n"  /* XReal */
+    "%s\n"  /* YReal */
+    "%s\n"  /* XUnit */
+    "%s\n"  /* YUnit */
+    "%s\n"  /* XOffset */
+    "%s\n"  /* YOffset */
+    "0\n"
+    "\n"
+    "\n"
+    "\n"
+    "\n"
+    "\n"
+    "sample biased\n"
+    "\n"
+    "0\n"
+    "\n"
+    "\n"
+    "\n"
+    "\n"
+    "\n"
+    "environment description\n"
+    "software\n"
+    "\n"
+    "\n"
+    "\n"
+    "\n"
+    "probe description\n"
+    "\n"
+    "\n"
+    "\n"
+    "\n"
+    "\n"
+    "0\n"
+    "0\n"
+    "0\n"
+    "\n"
+    "sample description\n"
+    "%s\n"  /* Title */
+    "\n"
+    "\n"
+    "single-channel mapping description\n"
+    "%s\n"  /* Title */
+    "%s\n"  /* ZUnit */
+    "\n"
+    "spectroscopy description\n"
+    "\n"
+    "\n"
+    "\n"
+    "\n"
+    "\n"
+    "\n"
+    "\n"
+    "\n"
+    "\n"
+    "0\n"
+    "\n"
+    "\n"
+    "\n"
+    "\n"
+    "data treatment description\n"
+    "post-treated data\n"
+    "\n"
+    "\n"
+    "\n"
+    "\n"
+    "multi-channel mapping description\n"
+    "\n"
+    "\n"
+    "\n"
+    "\n"
+    "\n"
+    "\n"
+    "\n"
+    "\n"
+    "\n"
+    "\n"
+    "\n"
+    "\n"
+    "\n"
+    "\n"
+    "\n"
+    "\n"
+    "\n"
+    "\n"
+    "\n"
+    "\n"
+    "\n"
+    "\n"
+    "\n"
+    "\n"
+    "\n"
+    "\n"
+    "\n"
+    "\n"
+    "\n"
+    "\n"
+    "\n"
+    "\n"
+    "\n"
+    "\n"
+    "end of header\n";
+
+    gchar xreal[32], yreal[32], xoff[32], yoff[32];
+    gchar *unitxy = NULL, *unitz = NULL, *title = NULL;
+    GwyDataField *dfield;
+    const gdouble *d;
+    guint xres, yres, i, j, n;
+    gint id;
+    gboolean ok = FALSE;
+    FILE *fh;
+
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
+                                     GWY_APP_DATA_FIELD_ID, &id,
+                                     0);
+    if (!dfield) {
+        err_NO_CHANNEL_EXPORT(error);
+        return FALSE;
+    }
+
+    /* Both kind of EOLs are fine so write Unix EOLs everywhere. */
+    if (!(fh = g_fopen(filename, "wb"))) {
+        err_OPEN_WRITE(error);
+        return FALSE;
+    }
+
+    d = gwy_data_field_get_data_const(dfield);
+    xres = gwy_data_field_get_xres(dfield);
+    yres = gwy_data_field_get_yres(dfield);
+    unitxy = convert_unit(gwy_data_field_get_si_unit_xy(dfield));
+    unitz = convert_unit(gwy_data_field_get_si_unit_z(dfield));
+
+    title = gwy_app_get_data_field_title(container, id);
+    n = strlen(title);
+    for (i = 0; i < n; i++) {
+        if ((guchar)title[i] & 0x80)
+            break;
+    }
+    if (i < n) {
+        g_free(title);
+        title = g_strdup("Not representable in ASCII. Ask the committee to "
+                         "fix the standard to permit UTF-8.");
+    }
+
+    g_ascii_formatd(xreal, sizeof(xreal), "%.8g",
+                    gwy_data_field_get_xreal(dfield));
+    g_ascii_formatd(yreal, sizeof(yreal), "%.8g",
+                    gwy_data_field_get_yreal(dfield));
+    g_ascii_formatd(xoff, sizeof(xoff), "%.8g",
+                    gwy_data_field_get_xoffset(dfield));
+    g_ascii_formatd(yoff, sizeof(yoff), "%.8g",
+                    gwy_data_field_get_yoffset(dfield));
+
+    if (fprintf(fh, header_template,
+                xres, yres,
+                unitxy, unitxy, xreal, yreal,
+                unitxy, unitxy, xoff, yoff,
+                title, title,
+                unitz) < 0) {
+        err_WRITE(error);
+        goto fail;
+    }
+
+    for (i = 0; i < yres; i++) {
+        for (j = 0; j < xres; j++, d++) {
+            g_ascii_formatd(xreal, sizeof(xreal), "%.8g", *d);
+            if (fwrite(xreal, strlen(xreal), 1, fh) != 1) {
+                err_WRITE(error);
+                goto fail;
+            }
+            if (fputc('\n', fh) == (int)EOF) {
+                err_WRITE(error);
+                goto fail;
+            }
+        }
+    }
+
+    if (fprintf(fh, "end of experiment\n") < 0) {
+        err_WRITE(error);
+        goto fail;
+    }
+
+    ok = TRUE;
+
+fail:
+    fclose(fh);
+    g_free(title);
+    g_free(unitxy);
+    g_free(unitz);
+
+    return ok;
+}
+
+static gchar*
+convert_unit(GwySIUnit *unit)
+{
+    gchar *str = gwy_si_unit_get_string(unit, GWY_SI_UNIT_FORMAT_PLAIN);
+    const gchar *convstr;
+
+    /* Ignore non-base units altogether because we never produce them. */
+    if (gwy_stramong(str, "A", "C", "eV", "Hz", "K", "m", "m/s", "N", "N/m",
+                     "Pa", "s", "V", NULL))
+        return str;
+
+    if (gwy_strequal(str, "deg"))
+        convstr = "degree";
+    else if (gwy_strequal(str, "cps"))
+        convstr = "c/s";
+    else if (gwy_strequal(str, ""))
+        convstr = "d";
+    else
+        convstr = "n";
+
+    g_free(str);
+    return g_strdup(convstr);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
