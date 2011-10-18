@@ -68,17 +68,72 @@ typedef enum {
     ISO28600_INTEGERS,
     ISO28600_REAL_NUMS,
     ISO28600_UNITS,
-    ISO28600_TEXTS,
+    ISO28600_TEXT_LIST,
 } ISO28600FieldType;
+
+typedef enum {
+    ISO28600_EXPERIMENT_UNKNOWN,
+    ISO28600_EXPERIMENT_MAP_SC,
+    ISO28600_EXPERIMENT_MAP_MC,
+    ISO28600_EXPERIMENT_SPEC_SC,
+    ISO28600_EXPERIMENT_SPEC_MC,
+} ISO28600ExperimentMode;
+
+typedef enum {
+    ISO28600_SCAN_UNKNOWN,
+    ISO28600_SCAN_REGULAR_MAPPING,
+    ISO28600_SCAN_IRREGULAR_MAPPING,
+} ISO28600ScanMode;
+
+typedef enum {
+    ISO28600_SCANNING_SYSTEM_UNKNOWN,
+    ISO28600_SCANNING_SYSTEM_OPEN_LOOP,
+    ISO28600_SCANNING_SYSTEM_XY_CLOSED_LOOP,
+    ISO28600_SCANNING_SYSTEM_XYZ_CLOSED_LOOP,
+} ISO28600ScanningSystemType;
+
+typedef enum {
+    ISO28600_SCANNER_UNKNOWN,
+    ISO28600_SCANNER_SAMPLE_XYZ,
+    ISO28600_SCANNER_PROBE_XYZ,
+    ISO28600_SCANNER_SAMPLE_XY_PROBE_Z,
+    ISO28600_SCANNER_SAMPLE_Z_PROBE_XY,
+} ISO28600ScannerType;
+
+typedef enum {
+    ISO28600_AXIS_UNKNOWN,
+    ISO28600_AXIS_X,
+    ISO28600_AXIS_Y,
+} ISO28600AxisType;
+
+typedef enum {
+    ISO28600_BIAS_VOLTAGE_CONTACT_UNKNOWN,
+    ISO28600_BIAS_VOLTAGE_CONTACT_SAMPLE,
+    ISO28600_BIAS_VOLTAGE_CONTACT_TIP,
+} ISO28600BiasVoltageContactType;
+
+typedef enum {
+    ISO28600_SPECTROSCOPY_SCAN_UNKNOWN,
+    ISO28600_SPECTROSCOPY_SCAN_REGULAR,
+    ISO28600_SPECTROSCOPY_SCAN_IRREGULAR,
+} ISO28600SpectroscopyScanMode;
+
+typedef enum {
+    ISO28600_DATA_TREATMENT_UNKNOWNS,
+    ISO28600_DATA_TREATMENT_RAW,
+    ISO28600_DATA_TREATMENT_PRE_TREATED,
+    ISO28600_DATA_TREATMENT_POST_TREATED,
+} ISO28600DataTreatmentType;
 
 typedef union {
     gint i;
     gdouble d;
     const gchar *s;
-    struct {
-        GwySIUnit *unit;
-        gint power10;
-    } unit;
+    struct { const gchar *str; gint value; } enumerated;
+    struct { GwySIUnit *unit; gint power10; } unit;
+    struct { const gchar **items; guint n; } text_list;
+    struct { gint *items; guint n; } int_list;
+    struct { gdouble *items; guint n; } real_list;
 } ISO28600FieldValue;
 
 static gboolean            module_register     (void);
@@ -94,7 +149,17 @@ static gboolean            iso28600_export     (GwyContainer *data,
 static ISO28600FieldValue* iso28600_load_header(gchar **buffer,
                                                 GError **error);
 static void                iso28600_free_header(ISO28600FieldValue *header);
-static gchar* convert_unit(GwySIUnit *unit);
+static gchar*              convert_unit        (GwySIUnit *unit);
+static void                build_unit          (const gchar *str,
+                                                ISO28600FieldValue *value);
+static void                build_enum          (const gchar *str,
+                                                guint lineno,
+                                                ISO28600FieldValue *value);
+static gchar**             split_line_in_place (gchar *line,
+                                                gchar delimiter,
+                                                gboolean nonempty,
+                                                gboolean strip,
+                                                guint *count);
 
 /* The enum numbers are line numbers from the norm.  The real line numbers
  * are 0-based and thus one smaller.  Some lines, e.g. "Label line" are
@@ -158,10 +223,10 @@ static const ISO28600HeaderField header_fields[] = {
     { "Bias voltage contact",                        40,  ISO28600_ENUM,      },
     { "Bias voltage",                                41,  ISO28600_REAL_NUM,  },
     { "Number of set items",                         42,  ISO28600_INTEGER,   },
-    { "Set parameters",                              43,  ISO28600_TEXTS,     },
+    { "Set parameters",                              43,  ISO28600_TEXT_LIST, },
     { "Units of set parameters",                     44,  ISO28600_UNITS,     },
     { "Values of set parameters",                    45,  ISO28600_REAL_NUMS, },
-    { "Calibration comments for set parameters",     46,  ISO28600_TEXTS,     },
+    { "Calibration comments for set parameters",     46,  ISO28600_TEXT_LIST, },
     { "Calibrations for set parameters",             47,  ISO28600_REAL_NUMS, },
     { "environment description",                     48,  ISO28600_FIXED,     },
     { "Environment mode",                            49,  ISO28600_TEXT_LINE, },
@@ -198,7 +263,7 @@ static const ISO28600HeaderField header_fields[] = {
     { "Calibration constant for abscissa",           80,  ISO28600_REAL_NUM,  },
     { "Number of points in abscissa",                81,  ISO28600_INTEGER,   },
     { "Number of ordinate items",                    82,  ISO28600_INTEGER,   },
-    { "Ordinate labels",                             83,  ISO28600_TEXTS,     },
+    { "Ordinate labels",                             83,  ISO28600_TEXT_LIST, },
     { "Ordinate units",                              84,  ISO28600_UNITS,     },
     { "Calibration constants for ordinates",         85,  ISO28600_REAL_NUMS, },
     { "Comment (spectroscopy)",                      86,  ISO28600_TEXT_LINE, },
@@ -342,10 +407,10 @@ header_fields[] = {
     { 744, 40, ISO28600_ENUM },
     { 765, 41, ISO28600_REAL_NUM },
     { 778, 42, ISO28600_INTEGER },
-    { 798, 43, ISO28600_TEXTS },
+    { 798, 43, ISO28600_TEXT_LIST },
     { 813, 44, ISO28600_UNITS },
     { 837, 45, ISO28600_REAL_NUMS },
-    { 862, 46, ISO28600_TEXTS },
+    { 862, 46, ISO28600_TEXT_LIST },
     { 902, 47, ISO28600_REAL_NUMS },
     { 934, 48, ISO28600_FIXED },
     { 958, 49, ISO28600_TEXT_LINE },
@@ -382,7 +447,7 @@ header_fields[] = {
     { 1662, 80, ISO28600_REAL_NUM },
     { 1696, 81, ISO28600_INTEGER },
     { 1725, 82, ISO28600_INTEGER },
-    { 1750, 83, ISO28600_TEXTS },
+    { 1750, 83, ISO28600_TEXT_LIST },
     { 1766, 84, ISO28600_UNITS },
     { 1781, 85, ISO28600_REAL_NUMS },
     { 1817, 86, ISO28600_TEXT_LINE },
@@ -520,26 +585,18 @@ fail:
     return container;
 }
 
-static void
-build_unit(const gchar *str,
-           ISO28600FieldValue *value)
-{
-    if (gwy_stramong(str, "d", "n", NULL))
-        str = NULL;
-
-    value->unit.unit = gwy_si_unit_new_parse(str, &value->unit.power10);
-}
-
 static ISO28600FieldValue*
 iso28600_load_header(gchar **buffer,
                      GError **error)
 {
     ISO28600FieldValue *header = g_new0(ISO28600FieldValue,
                                         G_N_ELEMENTS(header_fields));
-    guint i;
+    guint i, j;
 
     for (i = 0; i < G_N_ELEMENTS(header_fields); i++) {
+        ISO28600FieldValue *hi = header + i;
         const gchar *name = header_fields_name + header_fields[i].name;
+        ISO28600FieldType type = header_fields[i].type;
         gchar *line;
 
         if (!(line = gwy_str_next_line(buffer))) {
@@ -550,7 +607,7 @@ iso28600_load_header(gchar **buffer,
         }
         g_strstrip(line);
 
-        if (header_fields[i].type == ISO28600_FIXED) {
+        if (type == ISO28600_FIXED) {
             if (!gwy_strequal(line, name)) {
                 g_set_error(error, GWY_MODULE_FILE_ERROR,
                             GWY_MODULE_FILE_ERROR_DATA,
@@ -558,16 +615,42 @@ iso28600_load_header(gchar **buffer,
                             i+1, name);
                 goto fail;
             }
-            header[i].s = line;
+            hi->s = line;
         }
-        else if (header_fields[i].type == ISO28600_INTEGER)
-            header[i].i = atoi(line);
-        else if (header_fields[i].type == ISO28600_REAL_NUM)
-            header[i].d = g_ascii_strtod(line, NULL);
-        else if (header_fields[i].type == ISO28600_UNIT)
+        else if (type == ISO28600_INTEGER)
+            hi->i = atoi(line);
+        else if (type == ISO28600_REAL_NUM)
+            hi->d = g_ascii_strtod(line, NULL);
+        else if (type == ISO28600_UNIT)
             build_unit(line, header + i);
-        else if (header_fields[i].type == ISO28600_TEXT_LINE)
-            header[i].s = line;
+        else if (type == ISO28600_TEXT_LINE || type == ISO28600_RESERVED)
+            hi->s = line;
+        else if (type == ISO28600_TEXT_LIST || type == ISO28600_INTEGERS
+                 || type == ISO28600_REAL_NUMS || type == ISO28600_UNITS) {
+            guint n;
+            gchar **items = split_line_in_place(line, ',', FALSE, TRUE, &n);
+
+            if (type == ISO28600_INTEGERS) {
+                hi->int_list.items = g_new(gint, n);
+                hi->int_list.n = n;
+                for (j = 0; j < n; j++)
+                    hi->int_list.items[j] = atoi(items[j]);
+                g_free(items);
+            }
+            else if (type == ISO28600_REAL_NUMS) {
+                hi->real_list.items = g_new(gdouble, n);
+                hi->real_list.n = n;
+                for (j = 0; j < n; j++)
+                    hi->real_list.items[j] = g_ascii_strtod(items[j], NULL);
+                g_free(items);
+            }
+            else {
+                hi->text_list.items = (const gchar**)items;
+                hi->text_list.n = n;
+            }
+        }
+        else if (type == ISO28600_ENUM)
+            build_enum(line, i+1, header + i);
         else {
             g_warning("Unimplemented type: %u.", header_fields[i].type);
             header[i].s = line;
@@ -582,6 +665,135 @@ fail:
 }
 
 static void
+build_unit(const gchar *str,
+           ISO28600FieldValue *value)
+{
+    if (gwy_stramong(str, "d", "n", NULL))
+        str = NULL;
+
+    value->unit.unit = gwy_si_unit_new_parse(str, &value->unit.power10);
+}
+
+static gchar**
+split_line_in_place(gchar *line,
+                    gchar delimiter,
+                    gboolean nonempty,
+                    gboolean strip,
+                    guint *count)
+{
+    gchar **items;
+    guint i, j, n = 1;
+
+    for (i = 0; line[i]; i++) {
+        if (line[i] == delimiter)
+            n++;
+    }
+    items = g_new(gchar*, n+1);
+    items[0] = line;
+    j = 1;
+    for (i = 0; line[i]; i++) {
+        if (line[i] == delimiter) {
+            line[i] = '\0';
+            items[j++] = line+1;
+        }
+    }
+    g_assert(j == n);
+    items[n] = NULL;
+
+    if (strip) {
+        for (i = 0; i < n; i++)
+            g_strstrip(items[i]);
+    }
+
+    if (nonempty) {
+        for (i = j = 0; i < n; i++) {
+            if (*(items[i]))
+                items[j++] = items[i];
+        }
+        items[j] = NULL;
+        n = j;
+    }
+
+    if (count)
+        *count = n;
+
+    return items;
+}
+
+static void
+build_enum(const gchar *str,
+           guint lineno,
+           ISO28600FieldValue *value)
+{
+    value->enumerated.str = str;
+    value->enumerated.value = 0;
+
+    if (lineno == 8) {
+        if (gwy_strequal(str, "MAP_SC"))
+            value->enumerated.value = ISO28600_EXPERIMENT_MAP_SC;
+        else if (gwy_strequal(str, "MAP_MC"))
+            value->enumerated.value = ISO28600_EXPERIMENT_MAP_MC;
+        else if (gwy_strequal(str, "SPEC_SC"))
+            value->enumerated.value = ISO28600_EXPERIMENT_SPEC_SC;
+        else if (gwy_strequal(str, "SPEC_MC"))
+            value->enumerated.value = ISO28600_EXPERIMENT_SPEC_MC;
+    }
+    else if (lineno == 17) {
+        if (gwy_strequal(str, "REGULAR MAPPING"))
+            value->enumerated.value = ISO28600_SCAN_REGULAR_MAPPING;
+        else if (gwy_strequal(str, "IRREGULAR MAPPING"))
+            value->enumerated.value = ISO28600_SCAN_IRREGULAR_MAPPING;
+    }
+    else if (lineno == 18) {
+        if (gwy_strequal(str, "open-loop scanner"))
+            value->enumerated.value = ISO28600_SCANNING_SYSTEM_OPEN_LOOP;
+        else if (gwy_strequal(str, "XY closed-loop scanner"))
+            value->enumerated.value = ISO28600_SCANNING_SYSTEM_XY_CLOSED_LOOP;
+        else if (gwy_strequal(str, "XYZ closed-loop scanner"))
+            value->enumerated.value = ISO28600_SCANNING_SYSTEM_XYZ_CLOSED_LOOP;
+    }
+    else if (lineno == 19) {
+        if (gwy_strequal(str, "sample XYZ scan"))
+            value->enumerated.value = ISO28600_SCANNER_SAMPLE_XYZ;
+        else if (gwy_strequal(str, "probe XYZ scan"))
+            value->enumerated.value = ISO28600_SCANNER_PROBE_XYZ;
+        else if (gwy_strequal(str, "sample XY scan and probe Z scan"))
+            value->enumerated.value = ISO28600_SCANNER_SAMPLE_XY_PROBE_Z;
+        else if (gwy_strequal(str, "sample Z scan and probe XY scan"))
+            value->enumerated.value = ISO28600_SCANNER_SAMPLE_Z_PROBE_XY;
+    }
+    else if (lineno == 20 || lineno == 22) {
+        if (gwy_strequal(str, "X"))
+            value->enumerated.value = ISO28600_AXIS_X;
+        else if (gwy_strequal(str, "Y"))
+            value->enumerated.value = ISO28600_AXIS_Y;
+    }
+    else if (lineno == 40) {
+        if (gwy_strequal(str, "sample biased"))
+            value->enumerated.value = ISO28600_BIAS_VOLTAGE_CONTACT_SAMPLE;
+        else if (gwy_strequal(str, "tip biased"))
+            value->enumerated.value = ISO28600_BIAS_VOLTAGE_CONTACT_TIP;
+    }
+    else if (lineno == 74) {
+        if (gwy_strequal(str, "REGULAR"))
+            value->enumerated.value = ISO28600_SPECTROSCOPY_SCAN_REGULAR;
+        else if (gwy_strequal(str, "IRREGULAR"))
+            value->enumerated.value = ISO28600_SPECTROSCOPY_SCAN_IRREGULAR;
+    }
+    else if (lineno == 88) {
+        if (gwy_strequal(str, "raw data"))
+            value->enumerated.value = ISO28600_DATA_TREATMENT_RAW;
+        else if (gwy_strequal(str, "pre-treated data"))
+            value->enumerated.value = ISO28600_DATA_TREATMENT_PRE_TREATED;
+        else if (gwy_strequal(str, "post-treated data"))
+            value->enumerated.value = ISO28600_DATA_TREATMENT_POST_TREATED;
+    }
+    else {
+        g_assert_not_reached();
+    }
+}
+
+static void
 iso28600_free_header(ISO28600FieldValue *header)
 {
     guint i;
@@ -590,6 +802,14 @@ iso28600_free_header(ISO28600FieldValue *header)
         for (i = 0; i < G_N_ELEMENTS(header_fields); i++) {
             if (header_fields[i].type == ISO28600_UNIT)
                 gwy_object_unref(header[i].unit.unit);
+            else if (header_fields[i].type == ISO28600_TEXT_LIST)
+                g_free(header[i].text_list.items);
+            else if (header_fields[i].type == ISO28600_INTEGERS)
+                g_free(header[i].int_list.items);
+            else if (header_fields[i].type == ISO28600_REAL_NUMS)
+                g_free(header[i].real_list.items);
+            else if (header_fields[i].type == ISO28600_UNITS)
+                g_free(header[i].text_list.items);
         }
         g_free(header);
     }
@@ -601,7 +821,7 @@ iso28600_export(GwyContainer *container,
                 G_GNUC_UNUSED GwyRunType mode,
                 GError **error)
 {
-    static const gchar header_template[] =
+    static const gchar header_template[] = /* {{{ */
     "ISO/TC 201 SPM data transfer format\n"
     "general information\n"
     "\n"
@@ -729,7 +949,7 @@ iso28600_export(GwyContainer *container,
     "\n"
     "\n"
     "\n"
-    "end of header\n";
+    "end of header\n"; /* }}} */
 
     gchar xreal[32], yreal[32], xoff[32], yoff[32];
     gchar *unitxy = NULL, *unitz = NULL, *title = NULL;
