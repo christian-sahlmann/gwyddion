@@ -32,6 +32,7 @@ Modules:
 - Dumb: Builds on big-endian architectures.
 - SDFile: Letter case of header fields is ignored.
 - SDFile: Extra fields after the data are made available in metadata.
+- WIP: Swapped x and y axes were corrected.
 - Statistical functions tool: Height distribution can use masking.
 - Roughness tool: The resulting curves are no longer automatically levelled.
 - Unisoku: Import of files containing NUL characters in the header was fixed.
