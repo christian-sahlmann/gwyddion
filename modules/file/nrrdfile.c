@@ -1010,7 +1010,7 @@ fail:
                     (guint)(nitems-i), (guint)nitems);
     else
         g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                    _("Gargbage after data sample #%u."), (guint)(nitems-i));
+                    _("Garbage after data sample #%u."), (guint)(nitems-i));
 
     g_free(decoded);
     return NULL;
