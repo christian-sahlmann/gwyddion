@@ -57,6 +57,8 @@
 
 #define EOD_MAGIC "end of experiment"
 
+enum { MAX_CHANNELS = 8 };
+
 typedef enum {
     ISO28600_FIXED,
     ISO28600_RESERVED,
@@ -71,6 +73,7 @@ typedef enum {
     ISO28600_TEXT_LIST,
 } ISO28600FieldType;
 
+/* The value 0 always corresponds to unknown. */
 typedef enum {
     ISO28600_EXPERIMENT_UNKNOWN,
     ISO28600_EXPERIMENT_MAP_SC,
@@ -149,6 +152,13 @@ static gboolean            iso28600_export     (GwyContainer *data,
 static ISO28600FieldValue* iso28600_load_header(gchar **buffer,
                                                 GError **error);
 static void                iso28600_free_header(ISO28600FieldValue *header);
+static GwyContainer* load_channels(ISO28600FieldValue *header,
+                                   gchar **p,
+              ISO28600ExperimentMode experiment,
+              guint nchannels,
+              guint xres, guint yres,
+              gdouble xreal, gdouble yreal,
+              GError **error);
 static gchar*              convert_unit        (GwySIUnit *unit);
 static void                build_unit          (const gchar *str,
                                                 ISO28600FieldValue *value);
@@ -543,14 +553,12 @@ iso28600_load(const gchar *filename,
               G_GNUC_UNUSED GwyRunType mode,
               GError **error)
 {
-    GwyContainer *container = NULL, *meta;
+    GwyContainer *container = NULL;
     ISO28600FieldValue *header = NULL;
-    GwyDataField *dfield = NULL;
+    ISO28600ExperimentMode experiment;
     gchar *p, *buffer = NULL;
     gsize size;
     GError *err = NULL;
-    guint i;
-    gdouble *data;
 
     if (!g_file_get_contents(filename, &buffer, &size, &err)) {
         err_GET_FILE_CONTENTS(error, &err);
@@ -561,26 +569,139 @@ iso28600_load(const gchar *filename,
     if (!(header = iso28600_load_header(&p, error)))
         goto fail;
 
-    /*
-    dfield = gwy_data_field_new(hxres, hyres, hxres*dx, hyres*dx, FALSE);
-    gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_xy(dfield), "m");
+    experiment = header[7].enumerated.value;
+    if (experiment == ISO28600_EXPERIMENT_MAP_SC
+        || experiment == ISO28600_EXPERIMENT_MAP_MC) {
+        guint xres, yres, nchannels;
+        gdouble xreal, yreal;
 
+        if (header[16].enumerated.value != ISO28600_SCAN_REGULAR_MAPPING) {
+            g_set_error(error, GWY_MODULE_FILE_ERROR,
+                        GWY_MODULE_FILE_ERROR_DATA,
+                        _("Only regular mappings are implemented but "
+                          "file has mapping type ‘%s’."),
+                        header[16].enumerated.str);
+            goto fail;
+        }
+        xres = header[23].i;
+        yres = header[24].i;
+        if (err_DIMENSION(error, xres) || err_DIMENSION(error, yres))
+            goto fail;
 
-    container = gwy_container_new();
-    gwy_container_set_object(container, gwy_app_get_data_key_for_id(0), dfield);
-    g_object_unref(dfield);
+        xreal = header[27].d;
+        yreal = header[28].d;
+        if (!((xreal = fabs(xreal)) > 0)) {
+            g_warning("Real x size is 0.0, fixing to 1.0");
+            xreal = 1.0;
+        }
+        if (!((yreal = fabs(yreal)) > 0)) {
+            g_warning("Real y size is 0.0, fixing to 1.0");
+            yreal = 1.0;
+        }
+        xreal *= pow10(header[25].unit.power10);
+        yreal *= pow10(header[26].unit.power10);
+        if (!gwy_si_unit_equal(header[25].unit.unit, header[26].unit.unit))
+            g_warning("X and Y units differ, using X");
 
-    meta = gwy_container_new();
-    g_hash_table_foreach(hash, store_meta, meta);
-    gwy_container_set_object_by_name(container, "/0/meta", meta);
-    g_object_unref(meta);
-    */
+        nchannels = 1;
+        if (experiment == ISO28600_EXPERIMENT_MAP_MC) {
+            nchannels = header[93].i;
+            if (nchannels < 1 || nchannels > MAX_CHANNELS) {
+                err_INVALID(error, header_fields_name + header_fields[93].name);
+                goto fail;
+            }
+        }
 
-    err_NO_DATA(error);
+        container = load_channels(header, &p,
+                                  experiment, nchannels,
+                                  xres, yres, xreal, yreal,
+                                  error);
+    }
+    else {
+        err_NO_DATA(error);
+    }
 
 fail:
     iso28600_free_header(header);
     g_free(buffer);
+
+    return container;
+}
+
+static GwyContainer*
+load_channels(ISO28600FieldValue *header,
+              gchar **p,
+              ISO28600ExperimentMode experiment,
+              guint nchannels,
+              guint xres, guint yres,
+              gdouble xreal, gdouble yreal,
+              GError **error)
+{
+    GwyContainer *container = NULL;
+    GwyDataField *fields[MAX_CHANNELS];
+    gdouble *datas[MAX_CHANNELS];
+    gdouble powers10[MAX_CHANNELS];
+    gchar *line, *end;
+    guint id, k;
+
+    for (id = 0; id < nchannels; id++) {
+        GwySIUnit *unit;
+
+        fields[id] = gwy_data_field_new(xres, yres, xreal, yreal, FALSE);
+        datas[id] = gwy_data_field_get_data(fields[id]);
+        unit = gwy_data_field_get_si_unit_xy(fields[id]);
+        gwy_serializable_clone(G_OBJECT(header[25].unit.unit), G_OBJECT(unit));
+        unit = gwy_data_field_get_si_unit_z(fields[id]);
+        if (experiment == ISO28600_EXPERIMENT_MAP_SC) {
+            gwy_serializable_clone(G_OBJECT(header[69].unit.unit),
+                                   G_OBJECT(unit));
+            powers10[id] = pow10(header[69].unit.power10);
+        }
+        else {
+            gwy_serializable_clone(G_OBJECT(header[95 + 3*id].unit.unit),
+                                   G_OBJECT(unit));
+            powers10[id] = pow10(header[95 + 3*id].unit.power10);
+        }
+    }
+
+    for (line = gwy_str_next_line(p), k = 0;
+         k < xres*yres;
+         line = gwy_str_next_line(p), k++) {
+        if (!line) {
+            g_set_error(error, GWY_MODULE_FILE_ERROR,
+                        GWY_MODULE_FILE_ERROR_DATA,
+                        _("End of file reached when reading sample #%d of %d"),
+                        k, xres*yres);
+            goto fail;
+        }
+        for (id = 0; id < nchannels; id++) {
+            datas[id][k] = powers10[id]*g_ascii_strtod(line, &end);
+            if (line == end) {
+                g_set_error(error, GWY_MODULE_FILE_ERROR,
+                            GWY_MODULE_FILE_ERROR_DATA,
+                            _("Malformed data encountered when reading sample "
+                              "#%d of %d"),
+                            k, xres*yres);
+                goto fail;
+            }
+            line = end;
+        }
+    }
+    if (!line || !gwy_strequal(line, EOD_MAGIC)) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Missing end-of-data marker."));
+        goto fail;
+    }
+
+    container = gwy_container_new();
+    for (id = 0; id < nchannels; id++) {
+        GQuark quark = gwy_app_get_data_key_for_id(id);
+        gwy_container_set_object(container, quark, fields[id]);
+    }
+
+fail:
+    for (id = 0; id < nchannels; id++)
+        g_object_unref(fields[id]);
 
     return container;
 }
