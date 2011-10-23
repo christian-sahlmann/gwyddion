@@ -152,13 +152,21 @@ static gboolean            iso28600_export     (GwyContainer *data,
 static ISO28600FieldValue* iso28600_load_header(gchar **buffer,
                                                 GError **error);
 static void                iso28600_free_header(ISO28600FieldValue *header);
-static GwyContainer* load_channels(ISO28600FieldValue *header,
-                                   gchar **p,
-              ISO28600ExperimentMode experiment,
-              guint nchannels,
-              guint xres, guint yres,
-              gdouble xreal, gdouble yreal,
-              GError **error);
+static GwyContainer*       load_channels       (ISO28600FieldValue *header,
+                                                gchar **p,
+                                                ISO28600ExperimentMode experiment,
+                                                guint nchannels,
+                                                guint xres,
+                                                guint yres,
+                                                gdouble xreal,
+                                                gdouble yreal,
+                                                GError **error);
+static GwyContainer*       load_spectra_graphs (ISO28600FieldValue *header,
+                                                gchar **p,
+                                                ISO28600SpectroscopyScanMode smode,
+                                                guint nord,
+                                                guint npts,
+                                                GError **error);
 static gchar*              convert_unit        (GwySIUnit *unit);
 static void                build_unit          (const gchar *str,
                                                 ISO28600FieldValue *value);
@@ -170,6 +178,8 @@ static gchar**             split_line_in_place (gchar *line,
                                                 gboolean nonempty,
                                                 gboolean strip,
                                                 guint *count);
+
+#define field_name(i) (header_fields_name + header_fields[i].name)
 
 /* The enum numbers are line numbers from the norm.  The real line numbers
  * are 0-based and thus one smaller.  Some lines, e.g. "Label line" are
@@ -607,7 +617,7 @@ iso28600_load(const gchar *filename,
         if (experiment == ISO28600_EXPERIMENT_MAP_MC) {
             nchannels = header[93].i;
             if (nchannels < 1 || nchannels > MAX_CHANNELS) {
-                err_INVALID(error, header_fields_name + header_fields[93].name);
+                err_INVALID(error, field_name(93));
                 goto fail;
             }
         }
@@ -616,6 +626,56 @@ iso28600_load(const gchar *filename,
                                   experiment, nchannels,
                                   xres, yres, xreal, yreal,
                                   error);
+    }
+    if (experiment == ISO28600_EXPERIMENT_SPEC_SC
+        || experiment == ISO28600_EXPERIMENT_SPEC_MC) {
+        ISO28600SpectroscopyScanMode smode;
+        guint npts, nord;
+
+        if (!(smode = header[73].enumerated.value)) {
+            err_INVALID(error, field_name(73));
+            goto fail;
+        }
+
+        npts = header[80].i;
+        if (err_DIMENSION(error, npts))
+            goto fail;
+
+        nord = header[81].i;
+        if (nord < 1) {
+            err_INVALID(error, field_name(81));
+            goto fail;
+        }
+
+        if (header[82].real_list.n && header[82].text_list.n != nord) {
+            g_set_error(error, GWY_MODULE_FILE_ERROR,
+                        GWY_MODULE_FILE_ERROR_DATA, \
+                        _("List ‘%s’ has %u items which differs from "
+                          "the number %u given by ‘%s’."),
+                        field_name(82), header[82].text_list.n,
+                        nord, field_name(81));
+            goto fail;
+        }
+        if (header[83].real_list.n && header[83].text_list.n != nord) {
+            g_set_error(error, GWY_MODULE_FILE_ERROR,
+                        GWY_MODULE_FILE_ERROR_DATA, \
+                        _("List ‘%s’ has %u items which differs from "
+                          "the number %u given by ‘%s’."),
+                        field_name(83), header[83].text_list.n,
+                        nord, field_name(81));
+            goto fail;
+        }
+        if (header[84].real_list.n && header[84].real_list.n != nord) {
+            g_set_error(error, GWY_MODULE_FILE_ERROR,
+                        GWY_MODULE_FILE_ERROR_DATA, \
+                        _("List ‘%s’ has %u items which differs from "
+                          "the number %u given by ‘%s’."),
+                        field_name(84), header[84].text_list.n,
+                        nord, field_name(81));
+            goto fail;
+        }
+
+        container = load_spectra_graphs(header, &p, smode, nord, npts, error);
     }
     else {
         err_NO_DATA(error);
@@ -706,6 +766,117 @@ fail:
     return container;
 }
 
+/* XXX: The data format for spectroscopy is not well described so I estimate
+ * it is how I would do it. */
+static GwyContainer*
+load_spectra_graphs(ISO28600FieldValue *header,
+                    gchar **p,
+                    ISO28600SpectroscopyScanMode smode,
+                    guint nord,
+                    guint npts,
+                    GError **error)
+{
+    GwyContainer *container = NULL;
+    GwySIUnit **units;
+    gdouble *data, *powers10;
+    gchar *line, *end;
+    guint id, k, from;
+
+    /* For an irregular scan, the ordinates are preceeded by abscissa values.
+     * At least, I suppose. */
+    units = g_new(GwySIUnit*, nord + 1);
+    powers10 = g_new(gdouble, nord + 1);
+    units[0] = g_object_ref(header[75].unit.unit);
+    powers10[0] = pow10(header[75].unit.power10);
+    from = (smode == ISO28600_SPECTROSCOPY_SCAN_REGULAR) ? 1 : 0;
+    for (id = 0; id < nord; id++) {
+        if (header[83].text_list.n) {
+            gint power10;
+            units[id+1] = gwy_si_unit_new_parse(header[83].text_list.items[id],
+                                                &power10);
+            powers10[id+1] = pow10(power10);
+        }
+        else {
+            units[id+1] = gwy_si_unit_new(NULL);
+            powers10[id+1] = 1.0;
+        }
+    }
+
+    data = g_new(gdouble, (nord + 1)*npts);
+    if (smode == ISO28600_SPECTROSCOPY_SCAN_REGULAR) {
+        gdouble q = powers10[0] * header[78].d;
+        gdouble x0 = powers10[0] * header[76].d;
+
+        for (k = 0; k < npts; k++)
+            data[k] = q*k + x0;
+    }
+    for (line = gwy_str_next_line(p), k = 0;
+         k < npts;
+         line = gwy_str_next_line(p), k++) {
+        if (!line) {
+            g_set_error(error, GWY_MODULE_FILE_ERROR,
+                        GWY_MODULE_FILE_ERROR_DATA,
+                        _("End of file reached when reading sample #%d of %d"),
+                        k, npts);
+            goto fail;
+        }
+        for (id = from; id < nord + 1; id++) {
+            data[id*npts + k] = powers10[id]*g_ascii_strtod(line, &end);
+            if (line == end) {
+                g_set_error(error, GWY_MODULE_FILE_ERROR,
+                            GWY_MODULE_FILE_ERROR_DATA,
+                            _("Malformed data encountered when reading sample "
+                              "#%d of %d"),
+                            k, npts);
+                goto fail;
+            }
+            line = end;
+        }
+    }
+    if (!line || !gwy_strequal(line, EOD_MAGIC)) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Missing end-of-data marker."));
+        goto fail;
+    }
+
+    container = gwy_container_new();
+    for (id = 1; id <= nord; id++) {
+        GwyGraphModel *gmodel = gwy_graph_model_new();
+        GwyGraphCurveModel *gcmodel = gwy_graph_curve_model_new();
+        const gchar *label = "";
+
+        gwy_graph_curve_model_set_data(gcmodel, data, data + id*npts, npts);
+        if (header[82].text_list.n)
+            label = header[82].text_list.items[id-1];
+
+        g_object_set(gcmodel,
+                     "mode", GWY_GRAPH_CURVE_LINE,
+                     "description", label,
+                     NULL);
+        gwy_graph_model_add_curve(gmodel, gcmodel);
+        g_object_unref(gcmodel);
+
+        g_object_set(gmodel,
+                     "si-unit-x", units[0],
+                     "si-unit-y", units[id],
+                     "title", header[72].s,
+                     "axis-label-left", label,
+                     "axis-label-bottom", header[74].s,
+                     NULL);
+
+        gwy_container_set_object(container, gwy_app_get_graph_key_for_id(id),
+                                 gmodel);
+        g_object_unref(gmodel);
+    }
+
+fail:
+    g_free(data);
+    g_free(units);
+    g_free(powers10);
+
+    return container;
+}
+
 static ISO28600FieldValue*
 iso28600_load_header(gchar **buffer,
                      GError **error)
@@ -716,7 +887,7 @@ iso28600_load_header(gchar **buffer,
 
     for (i = 0; i < G_N_ELEMENTS(header_fields); i++) {
         ISO28600FieldValue *hi = header + i;
-        const gchar *name = header_fields_name + header_fields[i].name;
+        const gchar *name = field_name(i);
         ISO28600FieldType type = header_fields[i].type;
         gchar *line;
 
