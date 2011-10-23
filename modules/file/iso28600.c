@@ -139,45 +139,50 @@ typedef union {
     struct { gdouble *items; guint n; } real_list;
 } ISO28600FieldValue;
 
-static gboolean            module_register     (void);
-static gint                iso28600_detect     (const GwyFileDetectInfo *fileinfo,
-                                                gboolean only_name);
-static GwyContainer*       iso28600_load       (const gchar *filename,
-                                                GwyRunType mode,
-                                                GError **error);
-static gboolean            iso28600_export     (GwyContainer *data,
-                                                const gchar *filename,
-                                                GwyRunType mode,
-                                                GError **error);
-static ISO28600FieldValue* iso28600_load_header(gchar **buffer,
-                                                GError **error);
-static void                iso28600_free_header(ISO28600FieldValue *header);
-static GwyContainer*       load_channels       (ISO28600FieldValue *header,
-                                                gchar **p,
-                                                ISO28600ExperimentMode experiment,
-                                                guint nchannels,
-                                                guint xres,
-                                                guint yres,
-                                                gdouble xreal,
-                                                gdouble yreal,
-                                                GError **error);
-static GwyContainer*       load_spectra_graphs (ISO28600FieldValue *header,
-                                                gchar **p,
-                                                ISO28600SpectroscopyScanMode smode,
-                                                guint nord,
-                                                guint npts,
-                                                GError **error);
-static gchar*              convert_unit        (GwySIUnit *unit);
-static void                build_unit          (const gchar *str,
-                                                ISO28600FieldValue *value);
-static void                build_enum          (const gchar *str,
-                                                guint lineno,
-                                                ISO28600FieldValue *value);
-static gchar**             split_line_in_place (gchar *line,
-                                                gchar delimiter,
-                                                gboolean nonempty,
-                                                gboolean strip,
-                                                guint *count);
+static gboolean            module_register    (void);
+static gint                iso28600_detect    (const GwyFileDetectInfo *fileinfo,
+                                               gboolean only_name);
+static GwyContainer*       iso28600_load      (const gchar *filename,
+                                               GwyRunType mode,
+                                               GError **error);
+static gboolean            iso28600_export    (GwyContainer *data,
+                                               const gchar *filename,
+                                               GwyRunType mode,
+                                               GError **error);
+static ISO28600FieldValue* load_header        (gchar **buffer,
+                                               gchar **strings,
+                                               GError **error);
+static void                free_header        (ISO28600FieldValue *header);
+static GwyContainer*       load_channels      (ISO28600FieldValue *header,
+                                               gchar **strings,
+                                               gchar **p,
+                                               ISO28600ExperimentMode experiment,
+                                               guint nchannels,
+                                               guint xres,
+                                               guint yres,
+                                               gdouble xreal,
+                                               gdouble yreal,
+                                               GError **error);
+static GwyContainer*       load_spectra_graphs(ISO28600FieldValue *header,
+                                               gchar **p,
+                                               ISO28600SpectroscopyScanMode smode,
+                                               guint nord,
+                                               guint npts,
+                                               GError **error);
+static GwyContainer*       get_meta           (ISO28600FieldValue *header,
+                                               gchar **strings,
+                                               guint id);
+static gchar*              convert_unit       (GwySIUnit *unit);
+static void                build_unit         (const gchar *str,
+                                               ISO28600FieldValue *value);
+static void                build_enum         (const gchar *str,
+                                               guint lineno,
+                                               ISO28600FieldValue *value);
+static gchar**             split_line_in_place(gchar *line,
+                                               gchar delimiter,
+                                               gboolean nonempty,
+                                               gboolean strip,
+                                               guint *count);
 
 #define field_name(i) (header_fields_name + header_fields[i].name)
 
@@ -567,8 +572,10 @@ iso28600_load(const gchar *filename,
     ISO28600FieldValue *header = NULL;
     ISO28600ExperimentMode experiment;
     gchar *p, *buffer = NULL;
-    gsize size;
+    gchar **strings = NULL;
     GError *err = NULL;
+    gsize size;
+    guint i;
 
     if (!g_file_get_contents(filename, &buffer, &size, &err)) {
         err_GET_FILE_CONTENTS(error, &err);
@@ -576,7 +583,8 @@ iso28600_load(const gchar *filename,
     }
 
     p = buffer;
-    if (!(header = iso28600_load_header(&p, error)))
+    strings = g_new0(gchar*, G_N_ELEMENTS(header_fields));
+    if (!(header = load_header(&p, strings, error)))
         goto fail;
 
     experiment = header[7].enumerated.value;
@@ -622,7 +630,7 @@ iso28600_load(const gchar *filename,
             }
         }
 
-        container = load_channels(header, &p,
+        container = load_channels(header, strings, &p,
                                   experiment, nchannels,
                                   xres, yres, xreal, yreal,
                                   error);
@@ -682,7 +690,12 @@ iso28600_load(const gchar *filename,
     }
 
 fail:
-    iso28600_free_header(header);
+    if (strings) {
+        for (i = 0; i < G_N_ELEMENTS(header_fields); i++)
+            g_free(strings[i]);
+        g_free(strings);
+    }
+    free_header(header);
     g_free(buffer);
 
     return container;
@@ -690,6 +703,7 @@ fail:
 
 static GwyContainer*
 load_channels(ISO28600FieldValue *header,
+              gchar **strings,
               gchar **p,
               ISO28600ExperimentMode experiment,
               guint nchannels,
@@ -755,8 +769,32 @@ load_channels(ISO28600FieldValue *header,
 
     container = gwy_container_new();
     for (id = 0; id < nchannels; id++) {
+        GwyContainer *meta;
+        const gchar *title;
         GQuark quark = gwy_app_get_data_key_for_id(id);
+
         gwy_container_set_object(container, quark, fields[id]);
+
+        meta = get_meta(header, strings, id);
+        if (meta) {
+            gchar key[40];
+
+            g_snprintf(key, sizeof(key), "/%d/meta", id);
+            gwy_container_set_object_by_name(container, key, meta);
+            g_object_unref(meta);
+        }
+
+        if (experiment == ISO28600_EXPERIMENT_MAP_SC)
+            title = header[68].s;
+        else
+            title = header[94 + 3*id].s;
+
+        if (strlen(title)) {
+            gchar key[40];
+
+            g_snprintf(key, sizeof(key), "/%d/data/title", id);
+            gwy_container_set_string_by_name(container, key, g_strdup(title));
+        }
     }
 
 fail:
@@ -877,9 +915,102 @@ fail:
     return container;
 }
 
+static GwyContainer*
+get_meta(ISO28600FieldValue *header,
+         gchar **strings,
+         guint id)
+{
+    static const guint fields[] = {
+        2, 3, 4, 5, 6, 17, 18, 19, 20, 21, 22, 38, 39, 42, 43, 44, 45, 46, 52,
+        54, 55, 58, 62, 64, 65, 66, 70, 79, 84, 85, 87, 88, 89, 90, 91,
+    };
+    static const guint fields_with_units[] = {
+        35, 34, 37, 36,
+    };
+    static const GwyEnum fields_without_units[] = {
+        { "deg", 33 }, { "V", 40 }, { "K", 49 }, { "Pa", 50 }, { "%", 51 },
+        { "N/m", 56 }, { "Hz", 57 }, { "deg", 59 }, { "deg", 60 },
+        { "deg", 61 }, 
+    };
+    gint year, month, day, hour, minute, second, offset;
+    GwyContainer *meta = gwy_container_new();
+    guint k;
+
+    for (k = 0; k < G_N_ELEMENTS(fields); k++) {
+        guint i = fields[k];
+
+        if (((header_fields[i].type == ISO28600_TEXT_LINE
+              || header_fields[i].type == ISO28600_REAL_NUMS
+              || header_fields[i].type == ISO28600_UNITS
+              || header_fields[i].type == ISO28600_TEXT_LIST
+              || header_fields[i].type == ISO28600_ENUM)
+             && strlen(strings[i]))
+            || (header_fields[i].type == ISO28600_INTEGER
+                && header[i].i)
+            || (header_fields[i].type == ISO28600_REAL_NUM
+                && header[i].d))
+            gwy_container_set_string_by_name(meta, field_name(i),
+                                             g_strdup(strings[i]));
+    }
+
+    for (k = 0; k < G_N_ELEMENTS(fields_with_units)/2; k++) {
+        guint i = fields_with_units[2*k],
+              j = fields_with_units[2*k + 1];
+
+        if (header[i].d)
+            gwy_container_set_string_by_name(meta, field_name(i),
+                                             g_strconcat(strings[i], " ",
+                                                         strings[j], NULL));
+    }
+
+    for (k = 0; k < G_N_ELEMENTS(fields_without_units); k++) {
+        const gchar *units = fields_without_units[k].name;
+        guint i = fields_without_units[k].value;
+
+        if (header[i].d)
+            gwy_container_set_string_by_name(meta, field_name(i),
+                                             g_strconcat(strings[i], " ",
+                                                         units, NULL));
+    }
+
+    year = header[8].i;
+    month = header[9].i;
+    day = header[10].i;
+    hour = header[11].i;
+    minute = header[12].i;
+    second = header[13].i;
+    offset = header[14].i;
+    if (year >= 0 && month >= 0 && day >= 0
+        && hour >= 0 && minute >= 0 && second >= 0) {
+        gchar *value;
+
+        if (offset)
+            value = g_strdup_printf("%04u-%02u-%02u %02u:%02u:%02u (+%u)",
+                                    year, month, day, hour, minute, second,
+                                    offset);
+        else
+            value = g_strdup_printf("%04u-%02u-%02u %02u:%02u:%02u",
+                                    year, month, day, hour, minute, second);
+        gwy_container_set_string_by_name(meta, "Date", value);
+    }
+
+    if (strlen(strings[96 + 3*id])) {
+        gwy_container_set_string_by_name(meta, "Comment",
+                                         g_strdup(strings[96 + 3*id]));
+    }
+
+    if (!gwy_container_get_n_items(meta)) {
+        g_object_unref(meta);
+        meta = NULL;
+    }
+
+    return meta;
+}
+
 static ISO28600FieldValue*
-iso28600_load_header(gchar **buffer,
-                     GError **error)
+load_header(gchar **buffer,
+            gchar **strings,
+            GError **error)
 {
     ISO28600FieldValue *header = g_new0(ISO28600FieldValue,
                                         G_N_ELEMENTS(header_fields));
@@ -898,6 +1029,7 @@ iso28600_load_header(gchar **buffer,
             goto fail;
         }
         g_strstrip(line);
+        strings[i] = g_strdup(line);
 
         if (type == ISO28600_FIXED) {
             if (!gwy_strequal(line, name)) {
@@ -952,7 +1084,7 @@ iso28600_load_header(gchar **buffer,
     return header;
 
 fail:
-    iso28600_free_header(header);
+    free_header(header);
     return NULL;
 }
 
@@ -1086,7 +1218,7 @@ build_enum(const gchar *str,
 }
 
 static void
-iso28600_free_header(ISO28600FieldValue *header)
+free_header(ISO28600FieldValue *header)
 {
     guint i;
 
