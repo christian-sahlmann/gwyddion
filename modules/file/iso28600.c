@@ -33,7 +33,8 @@
  * [FILE-MAGIC-USERGUIDE]
  * ISO 28600:2011 SPM data transfer format
  * .spm
- * Read Export
+ * Read Export SPS:Limited[1]
+ * [1] Spectra curves are imported as graphs, positional information is lost.
  **/
 
 #include "config.h"
