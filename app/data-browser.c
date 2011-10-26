@@ -115,6 +115,11 @@ typedef struct {
 } GwyApp3DAssociation;
 
 typedef struct {
+    GObject *object;
+    gint id;
+} GwyAppDataAssociation;
+
+typedef struct {
     GwyAppDataWatchFunc function;
     gpointer user_data;
     gulong id;
@@ -142,6 +147,7 @@ struct _GwyAppDataProxy {
     GwyContainer *container;
     GwyAppDataList lists[NPAGES];
     GList *associated3d;
+    GList *associated_mask;
 };
 
 static GwyAppDataBrowser* gwy_app_get_data_browser        (void);
@@ -173,10 +179,14 @@ static gboolean gwy_app_data_proxy_channel_set_visible(GwyAppDataProxy *proxy,
 static gboolean gwy_app_data_proxy_graph_set_visible(GwyAppDataProxy *proxy,
                                                      GtkTreeIter *iter,
                                                      gboolean visible);
-static GList*   gwy_app_data_proxy_find_3d  (GwyAppDataProxy *proxy,
-                                             Gwy3DWindow *window3d);
-static GList*   gwy_app_data_proxy_get_3d   (GwyAppDataProxy *proxy,
-                                             gint id);
+static GwyAppDataAssociation* gwy_app_data_assoc_find   (GList **assoclist,
+                                                         GObject *object);
+static GwyAppDataAssociation* gwy_app_data_assoc_get    (GList **assoclist,
+                                                         gint id);
+static GList* gwy_app_data_proxy_find_3d(GwyAppDataProxy *proxy,
+                                         Gwy3DWindow *window3d);
+static GList* gwy_app_data_proxy_get_3d (GwyAppDataProxy *proxy,
+                                         gint id);
 static void     gwy_app_data_browser_copy_object(GwyAppDataProxy *srcproxy,
                                                  guint pageno,
                                                  GtkTreeModel *model,
@@ -706,6 +716,123 @@ gwy_app_data_proxy_reconnect_channel(GwyAppDataProxy *proxy,
                                       GWY_DATA_WATCH_EVENT_CHANGED);
 }
 
+static void
+gwy_app_data_proxy_mask_changed(GObject *mask,
+                                GwyAppDataProxy *proxy)
+{
+    GwyAppKeyType type;
+    GtkTreeIter iter;
+    GQuark quark;
+    gint id;
+
+    gwy_debug("proxy=%p mask=%p", proxy, mask);
+    quark = GPOINTER_TO_UINT(g_object_get_qdata(mask, own_key_quark));
+    g_return_if_fail(quark);
+    id = _gwy_app_analyse_data_key(g_quark_to_string(quark), &type, NULL);
+    g_return_if_fail(id >= 0 && type == KEY_IS_MASK);
+
+    if (!gwy_app_data_proxy_find_object(proxy->lists[PAGE_CHANNELS].store, id,
+                                        &iter))
+        return;
+    gtk_list_store_set(proxy->lists[PAGE_CHANNELS].store, &iter,
+                       MODEL_TIMESTAMP, gwy_get_timestamp(),
+                       -1);
+    gwy_app_data_browser_notify_watch(channel_watchers, proxy->container, id,
+                                      GWY_DATA_WATCH_EVENT_CHANGED);
+}
+
+static void
+gwy_app_data_proxy_connect_mask(GwyAppDataProxy *proxy,
+                                gint id,
+                                GObject *object)
+{
+    GwyAppDataAssociation *assoc;
+    GtkTreeIter iter;
+    gchar key[24];
+    GQuark quark;
+
+    g_snprintf(key, sizeof(key), "/%d/mask", id);
+    gwy_debug("%p: %d in %p", object, id, proxy->container);
+    quark = g_quark_from_string(key);
+    g_object_set_qdata(object, container_quark, proxy->container);
+    g_object_set_qdata(object, own_key_quark, GUINT_TO_POINTER(quark));
+
+    g_object_ref(object);
+    g_signal_connect(object, "data-changed",
+                     G_CALLBACK(gwy_app_data_proxy_mask_changed), proxy);
+    assoc = g_slice_new(GwyAppDataAssociation);
+    assoc->object = object;
+    assoc->id = id;
+    proxy->associated_mask = g_list_prepend(proxy->associated_mask, assoc);
+
+    if (!gwy_app_data_proxy_find_object(proxy->lists[PAGE_CHANNELS].store, id,
+                                        &iter))
+        return;
+    gtk_list_store_set(proxy->lists[PAGE_CHANNELS].store, &iter,
+                       MODEL_TIMESTAMP, gwy_get_timestamp(),
+                       -1);
+    gwy_app_data_browser_notify_watch(channel_watchers, proxy->container, id,
+                                      GWY_DATA_WATCH_EVENT_CHANGED);
+}
+
+static void
+gwy_app_data_proxy_disconnect_mask(GwyAppDataProxy *proxy,
+                                   gint id,
+                                   GObject *object)
+{
+    GwyAppDataAssociation *assoc;
+    GList *item;
+    GtkTreeIter iter;
+
+    gwy_debug("%p: from %p", object, proxy->container);
+    assoc = gwy_app_data_assoc_find(&proxy->associated_mask, object);
+    g_return_if_fail(assoc);
+    g_object_set_qdata(object, container_quark, NULL);
+    g_object_set_qdata(object, own_key_quark, NULL);
+    g_signal_handlers_disconnect_by_func(object,
+                                         gwy_app_data_proxy_mask_changed,
+                                         proxy);
+    item = proxy->associated_mask;
+    proxy->associated_mask = g_list_remove_link(proxy->associated_mask, item);
+    g_slice_free(GwyAppDataAssociation, assoc);
+    g_list_free_1(item);
+    g_object_unref(object);
+
+    if (!gwy_app_data_proxy_find_object(proxy->lists[PAGE_CHANNELS].store, id,
+                                        &iter))
+        return;
+    gtk_list_store_set(proxy->lists[PAGE_CHANNELS].store, &iter,
+                       MODEL_TIMESTAMP, gwy_get_timestamp(),
+                       -1);
+    gwy_app_data_browser_notify_watch(channel_watchers, proxy->container, id,
+                                      GWY_DATA_WATCH_EVENT_CHANGED);
+}
+
+static void
+gwy_app_data_proxy_reconnect_mask(GwyAppDataProxy *proxy,
+                                  gint id,
+                                  GObject *object)
+{
+    GwyAppDataAssociation *assoc;
+    GObject *old;
+
+    gwy_debug("%p: %d in %p", object, id, proxy->container);
+    assoc = gwy_app_data_assoc_get(&proxy->associated_mask, id);
+    g_return_if_fail(assoc);
+    old = G_OBJECT(assoc->object);
+    g_object_ref(object);
+    g_signal_handlers_disconnect_by_func(old,
+                                         gwy_app_data_proxy_mask_changed,
+                                         proxy);
+    gwy_app_data_proxy_switch_object_data(proxy, old, object);
+    assoc->object = object;
+    g_signal_connect(object, "data-changed",
+                     G_CALLBACK(gwy_app_data_proxy_mask_changed), proxy);
+    g_object_unref(old);
+    gwy_app_data_browser_notify_watch(channel_watchers, proxy->container, id,
+                                      GWY_DATA_WATCH_EVENT_CHANGED);
+}
+
 /**
  * gwy_app_data_proxy_graph_changed:
  * @graph: The graph model representing a graph.
@@ -992,11 +1119,11 @@ gwy_app_data_proxy_scan_data(gpointer key,
         break;
 
         case KEY_IS_MASK:
-        /* FIXME */
         gwy_debug("Found mask %d (%s)", i, strkey);
         g_return_if_fail(G_VALUE_HOLDS_OBJECT(gvalue));
         object = g_value_get_object(gvalue);
         g_return_if_fail(GWY_IS_DATA_FIELD(object));
+        gwy_app_data_proxy_connect_mask(proxy, i, object);
         break;
 
         case KEY_IS_SHOW:
@@ -1215,23 +1342,28 @@ gwy_app_data_proxy_item_changed(GwyContainer *data,
         gwy_container_gis_object(data, quark, &object);
         pageno = PAGE_CHANNELS;
         list = &proxy->lists[pageno];
+        found = !!gwy_app_data_assoc_get(&proxy->associated_mask, id);
+        if (object && !found)
+            gwy_app_data_proxy_connect_mask(proxy, id, object);
+        else if (!object && found)
+            gwy_app_data_proxy_disconnect_mask(proxy, id, object);
+        else
+            gwy_app_data_proxy_reconnect_mask(proxy, id, object);
+
         found = gwy_app_data_proxy_find_object(list->store, id, &iter);
         if (found) {
-            gwy_list_store_row_changed(proxy->lists[PAGE_CHANNELS].store,
-                                       &iter, NULL, -1);
             gtk_tree_model_get(GTK_TREE_MODEL(list->store), &iter,
                                MODEL_WIDGET, &data_view,
                                -1);
         }
+        else
+            pageno = -1;  /* Prevent thumbnail update */
         /* XXX: This is not a good place to do that, DataProxy should be
          * non-GUI */
         if (data_view) {
             gwy_app_data_browser_sync_mask(data, quark, data_view);
             g_object_unref(data_view);
         }
-        /* Prevent thumbnail update */
-        if (!found)
-            pageno = -1;
         break;
 
         case KEY_IS_CALDATA:
@@ -1372,6 +1504,26 @@ gwy_app_data_proxy_watch_remove_all(GList *watchers,
     }
 }
 
+static void
+gwy_app_data_assoc_finalize_list(GList *list,
+                                 GwyAppDataProxy *proxy,
+                                 gpointer func_to_disconnect)
+{
+    GList *l;
+
+    for (l = list; l; l = g_list_next(l)) {
+        GwyAppDataAssociation *assoc = (GwyAppDataAssociation*)l->data;
+        GObject *object = assoc->object;
+
+        g_object_set_qdata(object, container_quark, NULL);
+        g_object_set_qdata(object, own_key_quark, NULL);
+        g_signal_handlers_disconnect_by_func(object, func_to_disconnect, proxy);
+        g_object_unref(object);
+        g_slice_free(GwyAppDataAssociation, assoc);
+    }
+    g_list_free(list);
+}
+
 /**
  * gwy_app_data_proxy_finalize:
  * @user_data: A data proxy.
@@ -1456,6 +1608,10 @@ gwy_app_data_proxy_maybe_finalize(GwyAppDataProxy *proxy)
         && gwy_app_data_proxy_visible_count(proxy) == 0) {
         gwy_app_data_proxy_destroy_all_3d(proxy);
         gwy_app_data_proxy_queue_finalize(proxy);
+        gwy_app_data_assoc_finalize_list(proxy->associated_mask,
+                                         proxy,
+                                         &gwy_app_data_proxy_mask_changed);
+        proxy->associated_mask = NULL;
     }
 }
 
@@ -2524,6 +2680,46 @@ gwy_app_data_browser_construct_channels(GwyAppDataBrowser *browser)
                                            GDK_ACTION_COPY);
 
     return retval;
+}
+
+/* Find an object in a list of #GwyAppDataAssociation items, making the
+ * returned item the new list head. Return %NULL if nothing is found. */
+static GwyAppDataAssociation*
+gwy_app_data_assoc_find(GList **assoclist, GObject *object)
+{
+    GList *l;
+
+    for (l = *assoclist; l; l = g_list_next(l)) {
+        GwyAppDataAssociation *assoc = (GwyAppDataAssociation*)l->data;
+
+        if (assoc->object == object) {
+            *assoclist = g_list_remove_link(*assoclist, l);
+            *assoclist = g_list_concat(l, *assoclist);
+            return assoc;
+        }
+    }
+
+    return NULL;
+}
+
+/* Find an id in a list of #GwyAppDataAssociation items, making the
+ * returned item the new list head. Return %NULL if nothing is found. */
+static GwyAppDataAssociation*
+gwy_app_data_assoc_get(GList **assoclist, gint id)
+{
+    GList *l;
+
+    for (l = *assoclist; l; l = g_list_next(l)) {
+        GwyAppDataAssociation *assoc = (GwyAppDataAssociation*)l->data;
+
+        if (assoc->id == id) {
+            *assoclist = g_list_remove_link(*assoclist, l);
+            *assoclist = g_list_concat(l, *assoclist);
+            return assoc;
+        }
+    }
+
+    return NULL;
 }
 
 /**************************************************************************
