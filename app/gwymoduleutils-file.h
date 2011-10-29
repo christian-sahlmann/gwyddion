@@ -366,11 +366,8 @@ GHashTable* gwy_text_header_parse      (gchar *header,
                                         gpointer user_data,
                                         GError **error);
 
-const gchar*
-gwy_text_header_context_get_section(const GwyTextHeaderContext *context);
-
-guint
-gwy_text_header_context_get_lineno(const GwyTextHeaderContext *context);
+const gchar* gwy_text_header_context_get_section(const GwyTextHeaderContext *context);
+guint gwy_text_header_context_get_lineno(const GwyTextHeaderContext *context);
 
 G_END_DECLS
 
