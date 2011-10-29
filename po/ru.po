@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2011-10-19 03:58+0200\n"
-"PO-Revision-Date: 2011-10-19 13:00+0300\n"
+"POT-Creation-Date: 2011-10-29 03:58+0200\n"
+"PO-Revision-Date: 2011-10-29 15:31+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "Language: \n"
@@ -123,11 +123,11 @@ msgstr "vdW: параболоид"
 
 #: libgwyddion/gwyinventory.c:1310
 #: libgwydgets/gwygraphwindow.c:611
-#: app/data-browser.c:1538
-#: app/data-browser.c:2288
-#: app/data-browser.c:3069
-#: app/data-browser.c:3219
-#: app/data-browser.c:5126
+#: app/data-browser.c:1694
+#: app/data-browser.c:2444
+#: app/data-browser.c:3265
+#: app/data-browser.c:3415
+#: app/data-browser.c:5322
 #: app/resource-editor.c:366
 #: modules/process/convolution_filter.c:700
 msgid "Untitled"
@@ -1450,39 +1450,39 @@ msgstr "Не удалось сохранить трёхмерный вид в `%
 msgid "Export 3D View"
 msgstr "Экспортировать трёхмерный вид"
 
-#: app/data-browser.c:3768
+#: app/data-browser.c:3964
 msgid "Extract to a new file"
 msgstr "Извлечь в новый файл"
 
-#: app/data-browser.c:3769
+#: app/data-browser.c:3965
 msgid "Duplicate"
 msgstr "Сделать копию"
 
-#: app/data-browser.c:3770
+#: app/data-browser.c:3966
 msgid "Delete"
 msgstr "Удалить"
 
-#: app/data-browser.c:3815
+#: app/data-browser.c:4011
 msgid "Data Browser"
 msgstr "Просмотр данных"
 
-#: app/data-browser.c:3838
+#: app/data-browser.c:4034
 msgid "Close file"
 msgstr "Закрыть файл"
 
-#: app/data-browser.c:3851
+#: app/data-browser.c:4047
 msgid "Channels"
 msgstr "Каналы"
 
-#: app/data-browser.c:3865
+#: app/data-browser.c:4061
 msgid "Graphs"
 msgstr "Графики"
 
-#: app/data-browser.c:3879
+#: app/data-browser.c:4075
 msgid "Spectra"
 msgstr "Спектры"
 
-#: app/data-browser.c:5164
+#: app/data-browser.c:5360
 #, c-format
 msgid "Unknown channel %d"
 msgstr "Неизвестный канал %d"
@@ -2804,7 +2804,7 @@ msgstr "Файлы DME GDEF (.gdf)"
 #: modules/file/gdeffile.c:169
 #: modules/file/gdeffile.c:193
 #: modules/file/gsffile.c:152
-#: modules/file/iso28600.c:605
+#: modules/file/iso28600.c:1029
 #: modules/file/pt3file.c:481
 #: modules/file/pt3file.c:583
 msgid "File header is truncated."
@@ -3224,15 +3224,46 @@ msgstr "Набор тегов параметров неполон."
 msgid "image depth"
 msgstr "глубина изображения"
 
-#: modules/file/iso28600.c:502
+#: modules/file/iso28600.c:528
 msgid "Imports and exports ISO 28600:2011 SPM data transfer format."
 msgstr "Импортирует и экспортирует формат передачи данных СЗМ ISO 28600:2011"
 
-#: modules/file/iso28600.c:518
+#: modules/file/iso28600.c:544
 msgid "ISO 28600:2011 SPM data transfer files (.spm)"
 msgstr "Файлы передачи данных СЗМ ISO 28600:2011 (.spm)"
 
-#: modules/file/iso28600.c:614
+#: modules/file/iso28600.c:600
+#, c-format
+msgid "Only regular mappings are implemented but file has mapping type ‘%s’."
+msgstr "Реализованы только правильные отображения, а этот файл содержит тип отображения ‘%s’."
+
+#: modules/file/iso28600.c:662
+#: modules/file/iso28600.c:671
+#: modules/file/iso28600.c:680
+#, c-format
+msgid "List ‘%s’ has %u items which differs from the number %u given by ‘%s’."
+msgstr "Список ‘%s’ содержит %u элементов, что отличается от числа %u заданного ‘%s’."
+
+#: modules/file/iso28600.c:748
+#: modules/file/iso28600.c:858
+#: modules/file/sdfile.c:843
+#: modules/file/sdfile.c:860
+#, c-format
+msgid "End of file reached when reading sample #%d of %d"
+msgstr "Достигнут конец файла при чтении значения #%d из %d"
+
+#: modules/file/iso28600.c:757
+#: modules/file/iso28600.c:867
+#, c-format
+msgid "Malformed data encountered when reading sample #%d of %d"
+msgstr "При чтении значения  #%d of %d получены искаженные данные"
+
+#: modules/file/iso28600.c:767
+#: modules/file/iso28600.c:877
+msgid "Missing end-of-data marker."
+msgstr "Отсутствует маркер конца данных end-of-data."
+
+#: modules/file/iso28600.c:1039
 #, c-format
 msgid "Line %u does not contain mandatory label ‘%s’."
 msgstr "Строка %u не содержит обязательной метки ‘%s’."
@@ -3622,6 +3653,7 @@ msgid "Cannot parse `Scan size' field."
 msgstr "Не удаётся распознать поле `Scan size'."
 
 #: modules/file/nanoscope.c:1003
+#: modules/file/nrrdfile.c:1013
 #, c-format
 msgid "Garbage after data sample #%u."
 msgstr "Мусор после элемента данных #%u."
@@ -3719,11 +3751,6 @@ msgstr "Шестнадцатеричные данные содержат мен�
 #, c-format
 msgid "Text data contains less values (%u) than corresponds to the sizes (%u)."
 msgstr "Текстовые данные содержат меньше значений (%u) чем нужно в соответствии с размерами (%u)."
-
-#: modules/file/nrrdfile.c:1013
-#, c-format
-msgid "Gargbage after data sample #%u."
-msgstr "Мусор после элемента данных #%u."
 
 #: modules/file/nrrdfile.c:1062
 msgid "Field byteskip cannot be -1 for text encodings."
@@ -4805,12 +4832,6 @@ msgstr "Достигнут конец файла при поиске поля `%
 #, c-format
 msgid "Invalid line found when looking for `%s' field."
 msgstr "Неправильная строка найдена при поиске поля `%s'."
-
-#: modules/file/sdfile.c:843
-#: modules/file/sdfile.c:860
-#, c-format
-msgid "End of file reached when reading sample #%d of %d"
-msgstr "Достигнут конец файла при чтении значения #%d из %d"
 
 #: modules/file/seiko.c:82
 msgid "Imports Seiko XQB, XQD and XQT files."
