@@ -658,7 +658,7 @@ iso28600_load(const gchar *filename,
 
         if (header[82].real_list.n && header[82].text_list.n != nord) {
             g_set_error(error, GWY_MODULE_FILE_ERROR,
-                        GWY_MODULE_FILE_ERROR_DATA, \
+                        GWY_MODULE_FILE_ERROR_DATA,
                         _("List ‘%s’ has %u items which differs from "
                           "the number %u given by ‘%s’."),
                         field_name(82), header[82].text_list.n,
@@ -667,7 +667,7 @@ iso28600_load(const gchar *filename,
         }
         if (header[83].real_list.n && header[83].text_list.n != nord) {
             g_set_error(error, GWY_MODULE_FILE_ERROR,
-                        GWY_MODULE_FILE_ERROR_DATA, \
+                        GWY_MODULE_FILE_ERROR_DATA,
                         _("List ‘%s’ has %u items which differs from "
                           "the number %u given by ‘%s’."),
                         field_name(83), header[83].text_list.n,
@@ -676,7 +676,7 @@ iso28600_load(const gchar *filename,
         }
         if (header[84].real_list.n && header[84].real_list.n != nord) {
             g_set_error(error, GWY_MODULE_FILE_ERROR,
-                        GWY_MODULE_FILE_ERROR_DATA, \
+                        GWY_MODULE_FILE_ERROR_DATA,
                         _("List ‘%s’ has %u items which differs from "
                           "the number %u given by ‘%s’."),
                         field_name(84), header[84].text_list.n,
