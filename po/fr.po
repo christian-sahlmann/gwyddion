@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: French localization\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2011-10-19 03:58+0200\n"
-"PO-Revision-Date: 2011-10-19 20:38+0100\n"
+"POT-Creation-Date: 2011-10-29 03:58+0200\n"
+"PO-Revision-Date: 2011-11-01 20:17+0100\n"
 "Last-Translator: François RIGUET <francheu@caramail.com>\n"
 "Language-Team: François RIGUET <francheu@caramail.com>\n"
 "Language: \n"
@@ -123,11 +123,11 @@ msgstr "vdW : parabole"
 
 #: libgwyddion/gwyinventory.c:1310
 #: libgwydgets/gwygraphwindow.c:611
-#: app/data-browser.c:1538
-#: app/data-browser.c:2288
-#: app/data-browser.c:3069
-#: app/data-browser.c:3219
-#: app/data-browser.c:5126
+#: app/data-browser.c:1694
+#: app/data-browser.c:2444
+#: app/data-browser.c:3265
+#: app/data-browser.c:3415
+#: app/data-browser.c:5322
 #: app/resource-editor.c:366
 #: modules/process/convolution_filter.c:700
 msgid "Untitled"
@@ -797,7 +797,7 @@ msgstr "_Gradient"
 
 #: libgwydgets/gwy3dwindow.c:836
 msgid "_Overlay"
-msgstr ""
+msgstr "Superp_osition"
 
 #: libgwydgets/gwy3dwindow.c:894
 msgid "_Material:"
@@ -1448,39 +1448,39 @@ msgstr "L'enregistrement de la vue 3D `%s' a échoué"
 msgid "Export 3D View"
 msgstr "Exporter la vue 3D"
 
-#: app/data-browser.c:3768
+#: app/data-browser.c:3964
 msgid "Extract to a new file"
 msgstr "Extraire en tant que nouveau fichier"
 
-#: app/data-browser.c:3769
+#: app/data-browser.c:3965
 msgid "Duplicate"
 msgstr "Dupliquer"
 
-#: app/data-browser.c:3770
+#: app/data-browser.c:3966
 msgid "Delete"
 msgstr "Supprimer"
 
-#: app/data-browser.c:3815
+#: app/data-browser.c:4011
 msgid "Data Browser"
 msgstr "Navigateur de Données"
 
-#: app/data-browser.c:3838
+#: app/data-browser.c:4034
 msgid "Close file"
 msgstr "Fermer le fichier"
 
-#: app/data-browser.c:3851
+#: app/data-browser.c:4047
 msgid "Channels"
 msgstr "Canaux"
 
-#: app/data-browser.c:3865
+#: app/data-browser.c:4061
 msgid "Graphs"
 msgstr "Graphes"
 
-#: app/data-browser.c:3879
+#: app/data-browser.c:4075
 msgid "Spectra"
 msgstr "Spectres"
 
-#: app/data-browser.c:5164
+#: app/data-browser.c:5360
 #, c-format
 msgid "Unknown channel %d"
 msgstr "Canal inconnu %d"
@@ -2802,7 +2802,7 @@ msgstr "DME GDEF (.gdf)"
 #: modules/file/gdeffile.c:169
 #: modules/file/gdeffile.c:193
 #: modules/file/gsffile.c:152
-#: modules/file/iso28600.c:605
+#: modules/file/iso28600.c:1029
 #: modules/file/pt3file.c:481
 #: modules/file/pt3file.c:583
 msgid "File header is truncated."
@@ -3222,15 +3222,46 @@ msgstr "L'ensemble des paramètres de balise est incomplet."
 msgid "image depth"
 msgstr "profondeur d'image"
 
-#: modules/file/iso28600.c:502
+#: modules/file/iso28600.c:528
 msgid "Imports and exports ISO 28600:2011 SPM data transfer format."
 msgstr "Importe et exporte les fichiers de transfert de données SPM au format ISO 28600:2011."
 
-#: modules/file/iso28600.c:518
+#: modules/file/iso28600.c:544
 msgid "ISO 28600:2011 SPM data transfer files (.spm)"
 msgstr "ISO 28600:2011 SPM (.spm)"
 
-#: modules/file/iso28600.c:614
+#: modules/file/iso28600.c:600
+#, c-format
+msgid "Only regular mappings are implemented but file has mapping type ‘%s’."
+msgstr "Seuls les cartographies régulières sont implémentées alors que le fichier a une cartographie de type ‘%s’."
+
+#: modules/file/iso28600.c:662
+#: modules/file/iso28600.c:671
+#: modules/file/iso28600.c:680
+#, c-format
+msgid "List ‘%s’ has %u items which differs from the number %u given by ‘%s’."
+msgstr "La liste ‘%s’ contient %u éléments, ce qui est différent du nombre %u donnée par ‘%s’."
+
+#: modules/file/iso28600.c:748
+#: modules/file/iso28600.c:858
+#: modules/file/sdfile.c:843
+#: modules/file/sdfile.c:860
+#, c-format
+msgid "End of file reached when reading sample #%d of %d"
+msgstr "Fin du fichier atteinte lors de la lecture de l'échantillon #%d sur %d"
+
+#: modules/file/iso28600.c:757
+#: modules/file/iso28600.c:867
+#, c-format
+msgid "Malformed data encountered when reading sample #%d of %d"
+msgstr "Données mal mises en forme lors de la lecture de l'échantillon #%d de %d"
+
+#: modules/file/iso28600.c:767
+#: modules/file/iso28600.c:877
+msgid "Missing end-of-data marker."
+msgstr "Marqueur de fin de données manquant."
+
+#: modules/file/iso28600.c:1039
 #, c-format
 msgid "Line %u does not contain mandatory label ‘%s’."
 msgstr "La ligne %u ne contient le label obligatoire ‘%s’."
@@ -3620,6 +3651,7 @@ msgid "Cannot parse `Scan size' field."
 msgstr "Impossible d'analyser le champ `Scan size'."
 
 #: modules/file/nanoscope.c:1003
+#: modules/file/nrrdfile.c:1013
 #, c-format
 msgid "Garbage after data sample #%u."
 msgstr "Données erronées après l'échantillon #%u."
@@ -3717,11 +3749,6 @@ msgstr "Les données hexadécimales contiennent moins de valeurs (%u) que celles
 #, c-format
 msgid "Text data contains less values (%u) than corresponds to the sizes (%u)."
 msgstr "Les données texte contiennent moins de valeurs (%u) que celles correspondant aux tailles (%u)."
-
-#: modules/file/nrrdfile.c:1013
-#, c-format
-msgid "Gargbage after data sample #%u."
-msgstr "Données erronées après l'échantillon #%u."
 
 #: modules/file/nrrdfile.c:1062
 msgid "Field byteskip cannot be -1 for text encodings."
@@ -4802,12 +4829,6 @@ msgstr "Fin du fichier attainte lors de la recherche u champ `%s'."
 msgid "Invalid line found when looking for `%s' field."
 msgstr "Ligne invalide trouvée lors de la recherche du champ `%s'."
 
-#: modules/file/sdfile.c:843
-#: modules/file/sdfile.c:860
-#, c-format
-msgid "End of file reached when reading sample #%d of %d"
-msgstr "Fin du fichier atteinte lors de la lecture de l'échantillon #%d sur %d"
-
 #: modules/file/seiko.c:82
 msgid "Imports Seiko XQB, XQD and XQT files."
 msgstr "Importe les fichiers Seiko XQB, XQD et XQT."
@@ -5606,7 +5627,7 @@ msgstr "Calcule la distribution bi-dimensionnelle des angles, i.e. la projection
 
 #: modules/process/angle_dist.c:114
 msgid "/_Statistics/An_gle Distribution..."
-msgstr "/_Statistics/Distribution an_gulaire..."
+msgstr "/_Statistiques/Distribution an_gulaire..."
 
 #: modules/process/angle_dist.c:118
 msgid "Calculate two-dimensional angle distribution"
@@ -6646,7 +6667,7 @@ msgstr "_Couverture :"
 #: modules/process/deposit_synth.c:478
 #, fuzzy
 msgid "_Revise:"
-msgstr "Supprimer :"
+msgstr "_Réviser :"
 
 #: modules/process/deposit_synth.c:705
 #: modules/process/synth.h:518
@@ -10748,6 +10769,8 @@ msgstr ""
 "Inclinaison θ:      %s\n"
 "Inclinaison φ:      %s\n"
 
+#~ msgid "Gargbage after data sample #%u."
+#~ msgstr "Données erronées après l'échantillon #%u."
 #~ msgid "Pixmap image import must be run as interactive."
 #~ msgstr "L'import d'image doit se faire de manière interactive."
 
