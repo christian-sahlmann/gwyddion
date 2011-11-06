@@ -23,9 +23,9 @@ def get_data_fields(container):
    """
    l = []
    for key in container.keys():
-      obj = container.get_object(key)
-      if isinstance(obj, gwy.DataField):
-         l.append(obj)
+      x = container.get_value(key)
+      if type(x) is gwy.DataField:
+         l.append(x)
 
    return l
 
@@ -39,9 +39,9 @@ def get_data_fields_dir(container):
    """
    d = {}
    for key in container.keys_by_name():
-      obj = container.get_object_by_name(key)
-      if isinstance(obj, gwy.DataField):
-         d[key] = obj
+      x = container.get_value_by_name(key)
+      if type(x) is gwy.DataField:
+         d[key] = x
 
    return d
 
