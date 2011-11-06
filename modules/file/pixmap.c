@@ -2249,9 +2249,7 @@ static GdkPixbuf*
 pixmap_draw_presentational(GwyContainer *data,
                            PixmapSaveArgs *args)
 {
-    GtkWidget *data_window;
     GwyPixmapLayer *layer;
-    GtkWidget *coloraxis;
     GdkPixbuf *pixbuf, *datapixbuf, *tmpixbuf;
     GdkPixbuf *hrpixbuf = NULL, *vrpixbuf = NULL, *scalepixbuf = NULL;
     GwySIUnit *siunit_xy, *siunit_z;
@@ -2286,7 +2284,6 @@ pixmap_draw_presentational(GwyContainer *data,
         return pixbuf;
     }
 
-    data_window = gtk_widget_get_toplevel(GTK_WIDGET(args->data_view));
     g_return_val_if_fail(gwy_data_view_get_data(args->data_view) == data, NULL);
     layer = gwy_data_view_get_base_layer(args->data_view);
     g_return_val_if_fail(GWY_IS_LAYER_BASIC(layer), NULL);
@@ -2372,9 +2369,7 @@ pixmap_draw_presentational(GwyContainer *data,
             siunit_z = gwy_si_unit_new(NULL);
         else
             siunit_z = gwy_data_field_get_si_unit_z(args->dfield);
-        coloraxis
-            = gwy_data_window_get_color_axis(GWY_DATA_WINDOW(data_window));
-        gwy_color_axis_get_range(GWY_COLOR_AXIS(coloraxis), &min, &max);
+        gwy_layer_basic_get_range(GWY_LAYER_BASIC(layer), &min, &max);
         scalepixbuf = fmscale(zheight + 2*lw, min, max, fontzoom, siunit_z);
         inverted = min > max;
         scw = gdk_pixbuf_get_width(scalepixbuf);
