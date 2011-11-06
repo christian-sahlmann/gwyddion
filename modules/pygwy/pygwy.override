@@ -430,7 +430,7 @@ static int _map_gwy_container_ass_subscript(PyGObject *cont, PyObject *key, PyOb
    if (!PyString_Check(key))
    {
         PyErr_SetString(PyExc_TypeError, "Expected key to be a string.");
-	return -1;
+        return -1;
    }
 
    name = PyString_AsString(key);
@@ -443,7 +443,7 @@ static int _map_gwy_container_ass_subscript(PyGObject *cont, PyObject *key, PyOb
      {
         return -1;
      };
-     g_value_init(&val,g_type);
+     g_value_init(&val, G_TYPE_FUNDAMENTAL(g_type));
      pyg_value_from_pyobject(&val,v);
      gwy_container_set_value_by_name((GWY_CONTAINER(cont->obj)), name, &val, NULL);
    }
@@ -622,7 +622,7 @@ _wrap_gwy_container_set_value_by_name(PyGObject *self, PyObject *args, PyObject 
    {
       return NULL;
    };
-   g_value_init(&val,g_type);
+   g_value_init(&val, G_TYPE_FUNDAMENTAL(g_type));
    pyg_value_from_pyobject(&val,v);
    gwy_container_set_value_by_name((GWY_CONTAINER(self->obj)), name, &val, NULL);
 
