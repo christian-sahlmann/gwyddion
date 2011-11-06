@@ -165,7 +165,7 @@ static GwyModuleInfo module_info = {
     N_("Imports Veeco (Digital Instruments) Nanoscope data files, "
        "version 3 or newer."),
     "Yeti <yeti@gwyddion.net>",
-    "0.27",
+    "0.28",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -1097,6 +1097,7 @@ read_hash(gchar **buffer,
         do {
             colon++;
         } while (g_ascii_isspace(*colon));
+        g_strchomp(line);
         value = parse_value(line, colon);
         if (value)
             g_hash_table_insert(hash, line, value);
