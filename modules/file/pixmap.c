@@ -330,6 +330,9 @@ static void              pixmap_load_load_args     (GwyContainer *container,
 static void              pixmap_load_save_args     (GwyContainer *container,
                                                     PixmapLoadArgs *args);
 static void              pixmap_load_sanitize_args (PixmapLoadArgs *args);
+static gchar*            scalebar_auto_length      (gdouble real,
+                                                    GwySIUnit *siunit,
+                                                    gdouble *p);
 
 static const GwyEnum value_map_types[] = {
     { N_("All channels"), PIXMAP_MAP_ALL,   },
@@ -444,7 +447,7 @@ static GwyModuleInfo module_info = {
        "PNG, JPEG, TIFF, PPM, BMP, TARGA. "
        "Import support relies on GDK and thus may be installation-dependent."),
     "Yeti <yeti@gwyddion.net>",
-    "7.15",
+    "7.16",
     "David Nečas (Yeti)",
     "2004-2011",
 };
@@ -2177,6 +2180,7 @@ pixmap_draw_pixbuf(GwyContainer *data,
     settings = gwy_app_settings_get();
     pixmap_save_load_args(settings, &args);
     args.supports_16bit = supports_16bit;
+    args.inset_length = NULL;
     gwy_app_data_browser_get_current(GWY_APP_DATA_VIEW, &args.data_view,
                                      GWY_APP_DATA_FIELD, &args.dfield,
                                      0);
@@ -2309,6 +2313,11 @@ pixmap_draw_presentational(GwyContainer *data,
     if (args->xytype == PIXMAP_SCALEBAR) {
         GdkPixbuf *sbpixbuf;
         gint sbw, sbh, sbx, sby;
+        if (!args->inset_length) {
+            args->inset_length = scalebar_auto_length
+                                       (gwy_data_field_get_xreal(args->dfield),
+                                        siunit_xy, NULL);
+        }
 
         sbpixbuf = scalebar(zwidth, args->inset_length,
                             gwy_data_field_get_xreal(args->dfield),
