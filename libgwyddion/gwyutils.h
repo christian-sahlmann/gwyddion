@@ -63,6 +63,9 @@ gint         gwy_strdiffpos            (const gchar *s1,
 gboolean     gwy_strisident            (const gchar *s,
                                         const gchar *more,
                                         const gchar *startmore);
+gboolean     gwy_ascii_strcase_equal   (gconstpointer v1,
+                                        gconstpointer v2);
+guint        gwy_ascii_strcase_hash    (gconstpointer v);
 guint        gwy_stramong              (const gchar *str,
                                         ...);
 gpointer     gwy_memmem                (gconstpointer haystack,

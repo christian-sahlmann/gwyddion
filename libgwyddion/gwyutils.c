@@ -43,6 +43,8 @@ G_WIN32_DLLMAIN_FOR_DLL_NAME(static, dll_name);
 #include <CoreFoundation/CoreFoundation.h>
 #endif
 
+#define TOLOWER(c) ((c) >= 'A' && (c) <= 'Z' ? (c) - 'A' + 'a' : (c))
+
 static GHashTable *mapped_files = NULL;
 
 /**
@@ -258,6 +260,60 @@ gwy_strisident(const gchar *s,
     }
 
     return TRUE;
+}
+
+/**
+ * gwy_ascii_strcase_equal:
+ * @v1: String key.
+ * @v2: String key to compare with @v1.
+ *
+ * Compares two strings for equality, ignoring case.
+ *
+ * The case folding is performed only on ASCII characters.
+ *
+ * This function is intended to be passed to g_hash_table_new() as
+ * @key_equal_func, namely in conjuction with gwy_ascii_strcase_hash() hashing
+ * function.
+ *
+ * Returns: %TRUE if the two string keys match, ignoring case.
+ */
+gboolean
+gwy_ascii_strcase_equal(gconstpointer v1,
+                        gconstpointer v2)
+{
+    const gchar *s1 = (const gchar*)v1, *s2 = (const gchar*)v2;
+
+    while (*s1 && *s2) {
+        if (TOLOWER(*s1) != TOLOWER(*s2))
+            return FALSE;
+        s1++, s2++;
+    }
+    return !*s1 && !*s2;
+}
+
+/**
+ * gwy_ascii_strcase_hash:
+ * @v: String key.
+ *
+ * Converts a string to a hash value, ignoring case.
+ *
+ * The case folding is performed only on ASCII characters.
+ *
+ * This function is intended to be passed to g_hash_table_new() as @hash_func,
+ * namely in conjuction with gwy_ascii_strcase_equal() comparison function.
+ *
+ * Returns: The hash value corresponding to the key @v.
+ */
+guint
+gwy_ascii_strcase_hash(gconstpointer v)
+{
+    const signed char *p;
+    guint32 h = 5381;
+
+    for (p = v; *p != '\0'; p++)
+        h = (h << 5) + h + TOLOWER(*p);
+
+    return h;
 }
 
 /**
