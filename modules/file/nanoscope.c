@@ -1071,7 +1071,8 @@ read_hash(gchar **buffer,
         return NULL;
     }
 
-    hash = g_hash_table_new_full(g_str_hash, g_str_equal,
+    hash = g_hash_table_new_full(gwy_ascii_strcase_hash,
+                                 gwy_ascii_strcase_equal,
                                  NULL, g_free);
     g_hash_table_insert(hash, "#self", g_strdup(line + 2));    /* self */
     gwy_debug("hash table <%s>", line + 2);
