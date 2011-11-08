@@ -101,6 +101,7 @@ typedef enum {
     RHK_OBJECT_THUMBNAIL          = 14,
     RHK_OBJECT_PRM_HEADER         = 15,
     RHK_OBJECT_THUMBNAIL_HEADER   = 16,
+    RHK_OBJECT_API_INFO           = 17,
     /* Our types */
     RHK_OBJECT_FILE_HEADER        = -42,
     RHK_OBJECT_PAGE_INDEX         = -43,
@@ -515,6 +516,10 @@ rhk_sm4_load(const gchar *filename,
 
             imageid++;
         }
+        else if (pi->data_type == RHK_DATA_LINE) {
+            gwy_debug("page_type %u", page->page_type);
+            gwy_debug("line_type %u", page->line_type);
+        }
     }
 
     if (!imageid)
@@ -833,6 +838,7 @@ rhk_sm4_describe_object(RHKObjectType type)
         { "Thumbnail",        RHK_OBJECT_THUMBNAIL,          },
         { "PRMHeader",        RHK_OBJECT_PRM_HEADER,         },
         { "ThumbnailHeader",  RHK_OBJECT_THUMBNAIL_HEADER,   },
+        { "APIInfo",          RHK_OBJECT_API_INFO,           },
         /* Our types */
         { "FileHeader",       RHK_OBJECT_FILE_HEADER,        },
         { "PageIndex",        RHK_OBJECT_PAGE_INDEX,         },
