@@ -722,7 +722,11 @@ get_physical_scale(GHashTable *hash,
         }
         else {
             siunit = gwy_si_unit_new_parse(sval->hard_value_units, &q);
-            siunit2 = gwy_si_unit_new("V");
+            if (val->hard_value_units && *val->hard_value_units) {
+                siunit2 = gwy_si_unit_new(val->hard_value_units);
+            }
+            else
+                siunit2 = gwy_si_unit_new("V");
             gwy_si_unit_multiply(siunit, siunit2, siunit);
             gwy_debug("Scale1 = %g V/LSB", val->hard_value);
             gwy_debug("Scale2 = %g %s",
