@@ -1128,14 +1128,6 @@ read_hash(gchar **buffer,
         g_hash_table_insert(hash, "Number of lines", val);
     }
 
-    /* Fix random stuff in MultiMode V (and possibly other) files */
-    if ((value = g_hash_table_lookup(hash, "Scan Size"))
-        && !g_hash_table_lookup(hash, "Scan size")) {
-        g_hash_table_insert(hash, "Scan size",
-                            g_memdup(value, sizeof(NanoscopeValue)));
-        g_hash_table_remove(hash, "Scan Size");
-    }
-
     return hash;
 
 fail:
