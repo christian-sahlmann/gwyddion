@@ -70,7 +70,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Code V interferogram files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.1",
+    "0.2",
     "David Nečas (Yeti)",
     "2011",
 };
@@ -115,24 +115,24 @@ int_detect(const GwyFileDetectInfo *fileinfo,
 }
 
 static gchar**
-split_line_in_place(gchar *line,
-                    gchar delim)
+split_line_in_place(gchar *line)
 {
     gchar **strs;
     guint i, n = 0;
 
     for (i = 0; line[i]; i++) {
-        if ((!i || line[i-1] == delim) && (line[i] && line[i] != delim))
+        if ((!i || g_ascii_isspace(line[i-1]))
+            && (line[i] && !g_ascii_isspace(line[i])))
             n++;
     }
 
     strs = g_new(gchar*, n+1);
     n = 0;
     for (i = 0; line[i]; i++) {
-        if ((!i || line[i-1] == delim || !line[i-1])
-            && (line[i] && line[i] != delim))
+        if ((!i || g_ascii_isspace(line[i-1]) || !line[i-1])
+            && (line[i] && !g_ascii_isspace(line[i])))
             strs[n++] = line + i;
-        else if (i && line[i] == delim && line[i-1] != delim)
+        else if (i && g_ascii_isspace(line[i]) && !g_ascii_isspace(line[i-1]))
             line[i] = '\0';
     }
     strs[n] = NULL;
@@ -190,7 +190,7 @@ int_load(const gchar *filename,
     }
     gwy_debug("comment <%s>", comment);
 
-    fields = split_line_in_place(line, ' ');
+    fields = split_line_in_place(line);
     if (!fields
         || g_strv_length(fields) < 8
         || !gwy_strequal(fields[0], "GRD")
