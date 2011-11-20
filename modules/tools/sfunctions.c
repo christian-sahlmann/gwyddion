@@ -157,7 +157,7 @@ static GwyModuleInfo module_info = {
        "functions (height distribution, correlations, PSDF, Minkowski "
        "functionals) of selected part of data."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "2.9",
+    "2.10",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -930,8 +930,8 @@ gwy_tool_sfunctions_update_curve(GwyToolSFunctions *tool)
 
 
     gwy_graph_curve_model_set_data_from_dataline(gcmodel, tool->line, 0, 0);
-    title = gwy_enum_to_string(tool->args.output_type,
-                               sf_types, G_N_ELEMENTS(sf_types));
+    title = gettext(gwy_enum_to_string(tool->args.output_type,
+                                       sf_types, G_N_ELEMENTS(sf_types)));
 
     g_object_set(gcmodel, "description", title, NULL);
 

@@ -124,7 +124,7 @@ static GwyModuleInfo module_info = {
     N_("Row/column statistical function tool, mean values, medians, maxima, "
        "minima, RMS, ..., of rows or columns."),
     "Yeti <yeti@gwyddion.net>",
-    "1.3",
+    "1.4",
     "David Nečas (Yeti) & Petr Klapetek",
     "2006",
 };
@@ -328,7 +328,7 @@ gwy_tool_line_stats_init_dialog(GwyToolLineStats *tool)
                             tool->args.output_type, TRUE);
     gtk_label_set_mnemonic_widget(GTK_LABEL(label), tool->output_type);
     gtk_box_pack_start(GTK_BOX(hbox2), tool->output_type, FALSE, FALSE, 0);
-    
+
     /* Average */
     hbox2 = gtk_hbox_new(FALSE, 8);
     gtk_container_set_border_width(GTK_CONTAINER(hbox2), 4);
@@ -601,19 +601,19 @@ gwy_tool_line_stats_update_curve(GwyToolLineStats *tool)
         gcmodel = gwy_graph_model_get_curve(tool->gmodel, 0);
 
     gwy_graph_curve_model_set_data_from_dataline(gcmodel, tool->line, 0, 0);
-    title = gwy_enum_to_string(tool->args.output_type,
-                               sf_types, G_N_ELEMENTS(sf_types));
+    title = gettext(gwy_enum_to_string(tool->args.output_type,
+                                       sf_types, G_N_ELEMENTS(sf_types)));
     g_object_set(gcmodel, "description", title, NULL);
     g_object_set(tool->gmodel, "title", title, NULL);
     gwy_graph_model_set_units_from_data_line(tool->gmodel, tool->line);
 
     siunit = gwy_data_line_get_si_unit_y(tool->line);
-    format = gwy_si_unit_get_format(siunit, GWY_SI_UNIT_FORMAT_MARKUP, 
+    format = gwy_si_unit_get_format(siunit, GWY_SI_UNIT_FORMAT_MARKUP,
                                     gwy_data_line_get_avg(tool->line), NULL);
-    g_snprintf(result, sizeof(result), "(%.4g ± %.4g) %s",  
+    g_snprintf(result, sizeof(result), "(%.4g ± %.4g) %s",
                gwy_data_line_get_avg(tool->line)/format->magnitude,
                gwy_data_line_get_rms(tool->line)/format->magnitude,
-               format->units);    
+               format->units);
     gtk_label_set_markup(GTK_LABEL(tool->average_label), result);
 }
 
