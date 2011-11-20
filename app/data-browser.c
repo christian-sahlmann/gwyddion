@@ -777,16 +777,17 @@ gwy_app_data_proxy_connect_mask(GwyAppDataProxy *proxy,
 
 static void
 gwy_app_data_proxy_disconnect_mask(GwyAppDataProxy *proxy,
-                                   gint id,
-                                   GObject *object)
+                                   gint id)
 {
     GwyAppDataAssociation *assoc;
     GList *item;
     GtkTreeIter iter;
+    GObject *object;
 
-    gwy_debug("%p: from %p", object, proxy->container);
-    assoc = gwy_app_data_assoc_find(&proxy->associated_mask, object);
+    gwy_debug("%u: from %p", id, proxy->container);
+    assoc = gwy_app_data_assoc_get(&proxy->associated_mask, id);
     g_return_if_fail(assoc);
+    object = assoc->object;
     g_object_set_qdata(object, container_quark, NULL);
     g_object_set_qdata(object, own_key_quark, NULL);
     g_signal_handlers_disconnect_by_func(object,
@@ -1346,7 +1347,7 @@ gwy_app_data_proxy_item_changed(GwyContainer *data,
         if (object && !found)
             gwy_app_data_proxy_connect_mask(proxy, id, object);
         else if (!object && found)
-            gwy_app_data_proxy_disconnect_mask(proxy, id, object);
+            gwy_app_data_proxy_disconnect_mask(proxy, id);
         else
             gwy_app_data_proxy_reconnect_mask(proxy, id, object);
 
@@ -2684,6 +2685,7 @@ gwy_app_data_browser_construct_channels(GwyAppDataBrowser *browser)
 
 /* Find an object in a list of #GwyAppDataAssociation items, making the
  * returned item the new list head. Return %NULL if nothing is found. */
+G_GNUC_UNUSED
 static GwyAppDataAssociation*
 gwy_app_data_assoc_find(GList **assoclist, GObject *object)
 {
