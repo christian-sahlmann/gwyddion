@@ -69,7 +69,7 @@ static gboolean         pygwy_file_save_run   (GwyContainer *data,
                                                GError **error,
                                                const gchar *name);
 static GwyContainer*    pygwy_file_load_run   (const gchar *filename,
-                                               G_GNUC_UNUSED GwyRunType mode,
+                                               GwyRunType mode,
                                                GError **error,
                                                const gchar *name);
 static gint             pygwy_file_detect_run (const GwyFileDetectInfo
@@ -869,11 +869,23 @@ pygwy_file_save_run(GwyContainer *data,
     py_filename = Py_BuildValue("s", filename);
     PyDict_SetItemString(d, "filename", py_filename);
 
-    // import and execute the 'save' method
+    // import and execute the 'save' method. maintain backward compatibility,
+    // the 'save()' function might not support the 'mode' argument
     cmd = g_strdup_printf("import %s\n"
-                          "result = %s.save(data, filename)",
+                          "import inspect\n"
+                          "import gwy\n"
+                          "func = %s.save\n"
+                          "mode = gwy.%s\n"
+                          "args, varargs, keywords, defaults = "
+                              "inspect.getargspec(func)\n"
+                          "if len(args) == 2:\n"
+                          "    result = func(data, filename)\n"
+                          "else:\n"
+                          "    result = func(data, filename, mode)\n",
                           info->name,
-                          info->name);
+                          info->name,
+                          (mode == GWY_RUN_INTERACTIVE)
+                              ? "RUN_INTERACTIVE" : "RUN_NONINTERACTIVE");
     pygwy_run_string(cmd, Py_file_input, d, d);
     g_free(cmd);
     // get result
@@ -898,7 +910,7 @@ pygwy_file_save_run(GwyContainer *data,
 
 static GwyContainer*
 pygwy_file_load_run(const gchar *filename,
-                    G_GNUC_UNUSED GwyRunType mode,
+                    GwyRunType mode,
                     GError **error,
                     const gchar *name)
 {
@@ -939,11 +951,24 @@ pygwy_file_load_run(const gchar *filename,
     if (!o)
         goto error;
     PyDict_SetItemString(d, "filename", o);
+    // maintain backward compatibility, the 'load()' function might not
+    // support the 'mode' argument
     cmd = g_strdup_printf("import %s\n"
-                          "result = %s.load(filename)\n"
+                          "import inspect\n"
+                          "import gwy\n"
+                          "func = %s.load\n"
+                          "mode = gwy.%s\n"
+                          "args, varargs, keywords, defaults = "
+                              "inspect.getargspec(func)\n"
+                          "if len(args) == 1:\n"
+                          "    result = func(filename)\n"
+                          "else:\n"
+                          "    result = func(filename, mode)\n"
                           "print result",
                           info->name,
-                          info->name);
+                          info->name,
+                          (mode == GWY_RUN_INTERACTIVE)
+                              ? "RUN_INTERACTIVE" : "RUN_NONINTERACTIVE");
     pygwy_run_string(cmd, Py_file_input, d, d);
     g_free(cmd);
     py_res = PyDict_GetItemString(d, "result");
