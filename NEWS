@@ -15,6 +15,7 @@ Libraries:
 - libgwyapp: Possible crash due to wrong freeing of GBookmarkFile was fixed.
 - libgwyapp: File chooser can plane- and/or row-level previewed data.
 - libgwyapp: Critical warning/crash in file merging was fixed.
+- libgwyapp: Data browser updates the thumbnail also when the mask changes.
 - libgwyprocess: Kaiser 2.5 FFT window was fixed to avoid returning NaNs at
                  certain transform sizes (due to rounding errors).
 - libgwyddion: New functions for case-insensitive string hashing.
@@ -50,6 +51,7 @@ Other:
 - Compatibility with gcc 4.6 and autoconf 2.68 was improved.
 - The thumbnailer permits specifying the channel used to create the thumbnail
   (if run manually).
+- Drag'n'drop should work on Win32 again.
 
 
 2.25 (2011-06-06)
