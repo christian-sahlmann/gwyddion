@@ -129,13 +129,13 @@ typedef struct {
     PixmapOutput ztype;
     GwyRGBA inset_color;
     InsetPosType inset_pos;
-    gchar *inset_length;
     gboolean draw_mask;
     gboolean draw_selection;
     gdouble font_size;
     gboolean scale_font;
     guint grayscale;
     /* Interface only */
+    gchar *inset_length;
     GwyDataView *data_view;
     GwyDataField *dfield;
     gboolean supports_16bit;
@@ -261,9 +261,9 @@ static GwyPixbuf*        pixmap_draw_pixbuf        (GwyContainer *data,
                                                     gboolean supports_16bit,
                                                     GwyRunType mode,
                                                     GError **error);
-static GdkPixbuf*       pixmap_draw_presentational(GwyContainer *data,
-                                                   PixmapSaveArgs *args);
-static GwyPixbuf*       pixmap_draw_heightfield(PixmapSaveArgs *args);
+static GdkPixbuf*        pixmap_draw_presentational(GwyContainer *data,
+                                                    PixmapSaveArgs *args);
+static GwyPixbuf*        pixmap_draw_heightfield   (PixmapSaveArgs *args);
 static gboolean          pixmap_save_dialog        (GwyContainer *data,
                                                     PixmapSaveArgs *args,
                                                     const gchar *name);
@@ -428,11 +428,10 @@ static GSList *pixmap_formats = NULL;
 static const PixmapSaveArgs pixmap_save_defaults = {
     1.0, PIXMAP_RULERS, PIXMAP_FMSCALE,
     { 1.0, 1.0, 1.0, 1.0 }, INSET_POS_BOTTOM_RIGHT,
-    "",  /* invalid value, causes the automatic length to be used */
     TRUE, TRUE, FONT_SIZE, TRUE,
     0,
     /* Interface only */
-    NULL, NULL, FALSE, 0, 0, FALSE,
+    NULL, NULL, NULL, FALSE, 0, 0, FALSE,
 };
 
 static const PixmapLoadArgs pixmap_load_defaults = {
@@ -447,7 +446,7 @@ static GwyModuleInfo module_info = {
        "PNG, JPEG, TIFF, PPM, BMP, TARGA. "
        "Import support relies on GDK and thus may be installation-dependent."),
     "Yeti <yeti@gwyddion.net>",
-    "7.16",
+    "7.17",
     "David Nečas (Yeti)",
     "2004-2011",
 };
@@ -2173,14 +2172,15 @@ pixmap_draw_pixbuf(GwyContainer *data,
 {
     GwyPixbuf *pixbuf;
     GwyContainer *settings;
+    GwySIUnit *siunit_xy;
     PixmapSaveArgs args;
     const gchar *key;
+    gdouble xreal;
     gchar *buf;
 
     settings = gwy_app_settings_get();
     pixmap_save_load_args(settings, &args);
     args.supports_16bit = supports_16bit;
-    args.inset_length = NULL;
     gwy_app_data_browser_get_current(GWY_APP_DATA_VIEW, &args.data_view,
                                      GWY_APP_DATA_FIELD, &args.dfield,
                                      0);
@@ -2199,6 +2199,9 @@ pixmap_draw_pixbuf(GwyContainer *data,
     gwy_container_gis_boolean_by_name(data, buf, &args.realsquare);
     g_free(buf);
 
+    xreal = gwy_data_field_get_xreal(args.dfield);
+    siunit_xy = gwy_data_field_get_si_unit_xy(args.dfield);
+    args.inset_length = scalebar_auto_length(xreal, siunit_xy, NULL);
     if (mode == GWY_RUN_INTERACTIVE
         && !pixmap_save_dialog(data, &args, format_name)) {
         pixmap_save_save_args(settings, &args);
@@ -2310,11 +2313,6 @@ pixmap_draw_presentational(GwyContainer *data,
     if (args->xytype == PIXMAP_SCALEBAR) {
         GdkPixbuf *sbpixbuf;
         gint sbw, sbh, sbx, sby;
-        if (!args->inset_length) {
-            args->inset_length = scalebar_auto_length
-                                       (gwy_data_field_get_xreal(args->dfield),
-                                        siunit_xy, NULL);
-        }
 
         sbpixbuf = scalebar(zwidth, args->inset_length,
                             gwy_data_field_get_xreal(args->dfield),
@@ -2797,6 +2795,7 @@ static void
 inset_length_changed(GtkEntry *entry,
                      PixmapSaveControls *controls)
 {
+    PixmapSaveArgs *args = controls->args;
     gdouble xreal, length;
     gint power10;
     GwySIUnit *siunit, *siunitxy;
@@ -2804,28 +2803,28 @@ inset_length_changed(GtkEntry *entry,
     const gchar *text;
     gchar *end;
 
-    dfield = controls->args->dfield;
+    dfield = args->dfield;
     text = gtk_entry_get_text(entry);
     length = g_strtod(text, &end);
     siunit = gwy_si_unit_new_parse(end, &power10);
     length *= pow10(power10);
     xreal = gwy_data_field_get_xreal(dfield);
-    g_free(controls->args->inset_length);
+    g_free(args->inset_length);
+    args->inset_length = NULL;
     siunitxy = gwy_data_field_get_si_unit_xy(dfield);
     if (gwy_si_unit_equal(siunit, siunitxy)
         && length > 0.1*xreal
         && length < 0.8*xreal) {
         /* XXX: We should check markup validity here. */
-        controls->args->inset_length = g_strdup(text);
+        args->inset_length = g_strdup(text);
     }
     else {
-        controls->args->inset_length = scalebar_auto_length(xreal, siunitxy,
-                                                            NULL);
-        gtk_entry_set_text(entry, controls->args->inset_length);
+        args->inset_length = scalebar_auto_length(xreal, siunitxy, NULL);
+        gtk_entry_set_text(entry, args->inset_length);
     }
 
     g_object_unref(siunit);
-    if (controls->in_update || controls->args->xytype != PIXMAP_SCALEBAR)
+    if (controls->in_update || args->xytype != PIXMAP_SCALEBAR)
         return;
 
     save_update_preview(controls);
@@ -2835,8 +2834,7 @@ static void
 inset_length_set_auto(PixmapSaveControls *controls)
 {
     /* Setting an invalid value causes reset to default. */
-    gtk_entry_set_text(GTK_ENTRY(controls->inset_length),
-                       pixmap_save_defaults.inset_length);
+    gtk_entry_set_text(GTK_ENTRY(controls->inset_length), "");
     gtk_widget_activate(controls->inset_length);
 }
 
@@ -3138,7 +3136,6 @@ pixmap_save_dialog(GwyContainer *data,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
     controls.inset_length = gtk_entry_new();
-    /* XXX XXX XXX: double-check args.inset_length lifetime rules! */
     gtk_entry_set_width_chars(GTK_ENTRY(controls.inset_length), 8);
     gtk_entry_set_text(GTK_ENTRY(controls.inset_length),
                        controls.args->inset_length);
@@ -3742,7 +3739,6 @@ static const gchar draw_selection_key[] = "/module/pixmap/draw_selection";
 static const gchar font_size_key[]      = "/module/pixmap/font_size";
 static const gchar grayscale_key[]      = "/module/pixmap/grayscale";
 static const gchar inset_color_key[]    = "/module/pixmap/inset_color";
-static const gchar inset_length_key[]   = "/module/pixmap/inset_length";
 static const gchar inset_pos_key[]      = "/module/pixmap/inset_pos";
 static const gchar scale_font_key[]     = "/module/pixmap/scale_font";
 static const gchar xytype_key[]         = "/module/pixmap/xytype";
@@ -3784,10 +3780,7 @@ pixmap_save_load_args(GwyContainer *container,
                                       &args->scale_font);
     gwy_container_gis_double_by_name(container, font_size_key,
                                      &args->font_size);
-    gwy_container_gis_string_by_name(container, inset_length_key,
-                                     (const guchar**)&args->inset_length);
     gwy_container_gis_int32_by_name(container, grayscale_key, &args->grayscale);
-    args->inset_length = g_strdup(args->inset_length);
     pixmap_save_sanitize_args(args);
 }
 
