@@ -17,6 +17,7 @@ Libraries:
 - libgwyapp: Critical warning/crash in file merging was fixed.
 - libgwyprocess: Kaiser 2.5 FFT window was fixed to avoid returning NaNs at
                  certain transform sizes (due to rounding errors).
+- libgwyddion: New functions for case-insensitive string hashing.
 
 Modules:
 - Code V INT (new): Imports Code V INT grid interferograms.
@@ -28,6 +29,9 @@ Modules:
 - Level Grains: The sign of extracted background was corrected.
 - LEXT: Crashing on systems lacking memrchr(), namely MS Windows, was fixed.
 - Graph export ASCII: Can export floating point numbers in POSIX format.
+- Pixmap: Scalebar are drawn (with the default length) even when the module
+  is used non-interactively.
+- Pixmap: Critical warning/crash ‘assertion text!=NULL failed’ was fixed.
 - Nanoscope: Import of files with non-1:1 pixels was improved.
 - Dumb: Builds on big-endian architectures.
 - SDFile: Letter case of header fields is ignored.
@@ -38,6 +42,9 @@ Modules:
 - Unisoku: Import of files containing NUL characters in the header was fixed.
 - Pattern synthesis: Real values of parameters are displayed immediately
   after a pattern type switch.
+- Pygwy: Values are stored to GwyContainer as fundamental GObject types so they
+  can be actually serialised.
+- Pygwy: Load and save module functions can take an optional run mode argument.
 
 Other:
 - Compatibility with gcc 4.6 and autoconf 2.68 was improved.
