@@ -73,7 +73,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports WSF ASCII files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.1",
+    "0.2",
     "David Nečas (Yeti)",
     "2011",
 };
@@ -199,13 +199,27 @@ wsf_load(const gchar *filename,
     value = p = header_end;
     for (i = 0; i < xres*yres; i++) {
         data[i] = q*g_ascii_strtod(value, &p);
+        if (p == value && (!*p || g_ascii_isspace(*p))) {
+            g_set_error(error, GWY_MODULE_FILE_ERROR,
+                        GWY_MODULE_FILE_ERROR_DATA,
+                        _("End of file reached when reading sample #%d of %d"),
+                        i, xres*yres);
+            goto fail;
+        }
+        if (p == value) {
+            g_set_error(error, GWY_MODULE_FILE_ERROR,
+                        GWY_MODULE_FILE_ERROR_DATA,
+                        _("Malformed data encountered when reading sample "
+                          "#%d of %d"),
+                        i, xres*yres);
+            goto fail;
+        }
         value = p;
     }
 
     container = gwy_container_new();
 
     gwy_container_set_object(container, gwy_app_get_data_key_for_id(0), dfield);
-    g_object_unref(dfield);
 
     gwy_container_set_string_by_name(container, "/0/data/title",
                                      g_strdup(title));
@@ -216,6 +230,7 @@ wsf_load(const gchar *filename,
     }
 
 fail:
+    gwy_object_unref(dfield);
     g_free(header);
     g_free(buffer);
     g_hash_table_destroy(hash);

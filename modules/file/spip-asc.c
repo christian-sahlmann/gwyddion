@@ -74,7 +74,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports SPIP ASC files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.2",
+    "0.3",
     "David Nečas (Yeti)",
     "2009",
 };
@@ -217,6 +217,21 @@ asc_load(const gchar *filename,
     value = p;
     for (i = 0; i < xres*yres; i++) {
         data[i] = q*g_ascii_strtod(value, &p);
+        if (p == value && (!*p || g_ascii_isspace(*p))) {
+            g_set_error(error, GWY_MODULE_FILE_ERROR,
+                        GWY_MODULE_FILE_ERROR_DATA,
+                        _("End of file reached when reading sample #%d of %d"),
+                        i, xres*yres);
+            goto fail;
+        }
+        if (p == value) {
+            g_set_error(error, GWY_MODULE_FILE_ERROR,
+                        GWY_MODULE_FILE_ERROR_DATA,
+                        _("Malformed data encountered when reading sample "
+                          "#%d of %d"),
+                        i, xres*yres);
+            goto fail;
+        }
         value = p;
     }
 
@@ -235,7 +250,6 @@ asc_load(const gchar *filename,
     container = gwy_container_new();
 
     gwy_container_set_object(container, gwy_app_get_data_key_for_id(0), dfield);
-    g_object_unref(dfield);
 
     if (mfield) {
         gwy_container_set_object(container, gwy_app_get_mask_key_for_id(0),
@@ -244,6 +258,7 @@ asc_load(const gchar *filename,
     }
 
 fail:
+    gwy_object_unref(dfield);
     g_free(buffer);
     if (hash)
         g_hash_table_destroy(hash);
