@@ -26,6 +26,8 @@ Modules:
 - Hitachi SEM (new): Import Hitachi S-3700 and S-4800 SEM data.
 - ISO28600 (new): Imports and exports ISO 28600:2011 SPM data transfer
   format.
+- Alicona (new): Imports Alicona Imaging Al3D files.
+- WITec ASCII (new): Imports WITec ASCII export files.
 - 1D FFT filter: Correct X-axis units of Fourier modulus are displayed.
 - Level Grains: The sign of extracted background was corrected.
 - LEXT: Crashing on systems lacking memrchr(), namely MS Windows, was fixed.
