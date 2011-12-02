@@ -88,7 +88,8 @@ static GwyContainer* al3d_load       (const gchar *filename,
 static GwyDataField* read_depth_image(const Al3DFile *afile,
                                       guint xres, guint yres,
                                       gdouble dx, gdouble dy,
-                                      const guchar *buffer);
+                                      const guchar *buffer,
+                                      GwyDataField **badmask);
 static gboolean      al3d_load_header(Al3DFile *afile,
                                       const guchar *buffer,
                                       gsize size,
@@ -160,7 +161,6 @@ al3d_load(const gchar *filename,
     gdouble dx, dy;
     gint xres, yres, offset;
     guint id = 0;
-    gdouble *data, *mdata;
 
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
         err_GET_FILE_CONTENTS(error, &err);
@@ -193,6 +193,7 @@ al3d_load(const gchar *filename,
     container = gwy_container_new();
 
     if (read_int_tag(&afile, "DepthImageOffset", &offset, NULL)) {
+        GwyDataField *badmask = NULL;
         guint rowstride = (xres*sizeof(gfloat) + 7)/8*8;
 
         if (offset < MAGIC_SIZE + COMMENT_SIZE + (TAG_SIZE + 2)*afile.ntags
@@ -201,9 +202,16 @@ al3d_load(const gchar *filename,
             goto fail;
         }
 
-        field = read_depth_image(&afile, xres, yres, dx, dy, buffer + offset);
+        field = read_depth_image(&afile, xres, yres, dx, dy, buffer + offset,
+                                 &badmask);
         gwy_container_set_object(container, gwy_app_get_data_key_for_id(id),
                                  field);
+        if (badmask) {
+            gwy_app_channel_remove_bad_data(field, badmask);
+            gwy_container_set_object(container, gwy_app_get_mask_key_for_id(id),
+                                     badmask);
+            g_object_unref(badmask);
+        }
         g_object_unref(field);
         id++;
     }
@@ -285,12 +293,16 @@ static GwyDataField*
 read_depth_image(const Al3DFile *afile,
                  guint xres, guint yres,
                  gdouble dx, gdouble dy,
-                 const guchar *buffer)
+                 const guchar *buffer,
+                 GwyDataField **badmask)
 {
-    GwyDataField *field;
+    GwyDataField *field, *mask = NULL;
     guint rowstride = (xres*sizeof(gfloat) + 7)/8*8;
-    gdouble *d;
+    gdouble *d, *m = NULL;
     guint i, j;
+    gdouble invalid_value = 0.0/0.0;
+
+    read_float_tag(afile, "InvalidPixelValue", &invalid_value, NULL);
 
     field = gwy_data_field_new(xres, yres, dx*xres, dy*yres, FALSE);
     gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_xy(field), "m");
@@ -300,9 +312,21 @@ read_depth_image(const Al3DFile *afile,
     for (i = 0; i < yres; i++) {
         const guchar *p = buffer + i*rowstride;
 
-        for (j = 0; j < xres; j++, d++)
+        for (j = 0; j < xres; j++, d++, m++) {
             *d = gwy_get_gfloat_le(&p);
+            if (*d == invalid_value) {
+                if (!mask) {
+                    mask = gwy_data_field_new_alike(field, FALSE);
+                    gwy_data_field_fill(mask, 1.0);
+                    m = mask->data + i*xres + j;
+                }
+                *d = 0.0;
+                *m = 0.0;
+            }
+        }
     }
+
+    *badmask = mask;
 
     return field;
 }
