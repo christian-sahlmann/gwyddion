@@ -1519,7 +1519,7 @@ gwy_3d_window_view_clicked(GtkWidget *gwy3dwindow,
 {
     Gwy3DVisualization visual;
     Gwy3DSetup *setup;
-    GtkWidget *menu, *item;
+    GtkWidget *menu, *item, *item2;
 
     if (event->button != 3)
         return FALSE;
@@ -1531,6 +1531,16 @@ gwy_3d_window_view_clicked(GtkWidget *gwy3dwindow,
                                  gwy3dwindow);
         item = gtk_menu_item_new_with_mnemonic(_("S_witch to Lighting Mode"));
         visual = GWY_3D_VISUALIZATION_LIGHTING;
+        g_object_set_data(G_OBJECT(item), "display-mode", GINT_TO_POINTER(visual));
+        g_signal_connect(item, "activate",
+                         G_CALLBACK(gwy_3d_window_visual_selected), gwy3dwindow);
+        gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
+        item2 = gtk_menu_item_new_with_mnemonic(_("S_witch to Overlay Mode"));
+        visual = GWY_3D_VISUALIZATION_OVERLAY;
+        g_object_set_data(G_OBJECT(item2), "display-mode", GINT_TO_POINTER(visual));
+        g_signal_connect(item2, "activate",
+                         G_CALLBACK(gwy_3d_window_visual_selected), gwy3dwindow);
+        gtk_menu_shell_append(GTK_MENU_SHELL(menu), item2);
         break;
 
 
@@ -1539,23 +1549,44 @@ gwy_3d_window_view_clicked(GtkWidget *gwy3dwindow,
                                     gwy3dwindow);
         item = gtk_menu_item_new_with_mnemonic(_("S_witch to Color Gradient Mode"));
         visual = GWY_3D_VISUALIZATION_GRADIENT;
+        g_object_set_data(G_OBJECT(item), "display-mode", GINT_TO_POINTER(visual));
+        g_signal_connect(item, "activate",
+                         G_CALLBACK(gwy_3d_window_visual_selected), gwy3dwindow);
+        gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
+        item2 = gtk_menu_item_new_with_mnemonic(_("S_witch to Overlay Mode"));
+        visual = GWY_3D_VISUALIZATION_OVERLAY;
+        g_object_set_data(G_OBJECT(item2), "display-mode", GINT_TO_POINTER(visual));
+        g_signal_connect(item2, "activate",
+                         G_CALLBACK(gwy_3d_window_visual_selected), gwy3dwindow);
+        gtk_menu_shell_append(GTK_MENU_SHELL(menu), item2);            
+        break;
+
+        case GWY_3D_VISUALIZATION_OVERLAY:
+        menu = gtk_menu_new();
+        g_object_set(menu, "reserve-toggle-size", 0, NULL);
+        item = gtk_menu_item_new_with_mnemonic(_("S_witch to Color Gradient Mode"));
+        visual = GWY_3D_VISUALIZATION_GRADIENT;
+        g_object_set_data(G_OBJECT(item), "display-mode", GINT_TO_POINTER(visual));
+        g_signal_connect(item, "activate",
+                         G_CALLBACK(gwy_3d_window_visual_selected), gwy3dwindow);
+        gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
+        item2 = gtk_menu_item_new_with_mnemonic(_("S_witch to Overlay Mode"));
+        visual = GWY_3D_VISUALIZATION_OVERLAY;
+        g_object_set_data(G_OBJECT(item2), "display-mode", GINT_TO_POINTER(visual));
+        g_signal_connect(item2, "activate",
+                         G_CALLBACK(gwy_3d_window_visual_selected), gwy3dwindow);
+        gtk_menu_shell_append(GTK_MENU_SHELL(menu), item2);            
         break;
 
         default:
         g_return_val_if_reached(FALSE);
         break;
     }
-    gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
-    g_object_set_data(G_OBJECT(item), "display-mode", GINT_TO_POINTER(visual));
-    g_signal_connect(item, "activate",
-                     G_CALLBACK(gwy_3d_window_visual_selected), gwy3dwindow);
-
     gtk_widget_show_all(menu);
     gtk_menu_popup(GTK_MENU(menu), NULL, NULL, NULL, NULL,
                    event->button, event->time);
     g_signal_connect(menu, "selection-done",
                      G_CALLBACK(gtk_widget_destroy), NULL);
-
     return FALSE;
 }
 

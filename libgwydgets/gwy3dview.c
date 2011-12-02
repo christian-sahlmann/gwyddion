@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
-
+#define DEBUG 1
 #include "config.h"
 #include <string.h>
 #include <stdlib.h>
@@ -99,11 +99,8 @@ enum {
     PROP_MOVEMENT,
     PROP_REDUCED_SIZE,
     PROP_DATA_KEY,
-    PROP_DATA2_KEY,
     PROP_SETUP_PREFIX,
     PROP_GRADIENT_KEY,
-    PROP_RANGE_TYPE_SUFFIX,
-    PROP_MIN_MAX_SUFFIX,
     PROP_MATERIAL_KEY,
     PROP_LAST
 };
@@ -146,7 +143,6 @@ static void     gwy_3d_view_data_item_changed    (Gwy3DView *gwy3dview);
 static void     gwy_3d_view_data_field_connect   (Gwy3DView *gwy3dview);
 static void     gwy_3d_view_data_field_disconnect(Gwy3DView *gwy3dview);
 static void     gwy_3d_view_data_field_changed   (Gwy3DView *gwy3dview);
-static void     gwy_3d_view_data2_item_changed    (Gwy3DView *gwy3dview);
 static void     gwy_3d_view_setup_item_changed   (Gwy3DView *gwy3dview);
 static void     gwy_3d_view_ensure_setup         (Gwy3DView *gwy3dview);
 static void     gwy_3d_view_setup_connect        (Gwy3DView *gwy3dview);
@@ -184,7 +180,7 @@ static gboolean gwy_3d_view_motion_notify        (GtkWidget *widget,
                                                   GdkEventMotion *event);
 static void     gwy_3d_make_list                 (Gwy3DView *gwy3D,
                                                   GwyDataField *dfield,
-                                                  GwyLayerBasic *ovlay,
+                                                  GwyPixmapLayer **ovlays,
                                                   gint shape);
 static void     gwy_3d_draw_axes                 (Gwy3DView *gwy3dview,
                                                   gint width,
@@ -209,7 +205,6 @@ static gint     gwy_3d_draw_fmscaletex           (Gwy3DView *view);
 static void     gwy_3d_view_class_make_list_pool (Gwy3DListPool *pool);
 static void     gwy_3d_view_assign_lists         (Gwy3DView *gwy3dview);
 static void     gwy_3d_view_release_lists        (Gwy3DView *gwy3dview);
-static void     gwy_3d_view_update_ovlay         (Gwy3DView *gwy3dview);
 static void     gwy_3d_view_timeout_update       (Gwy3DView *gwy3dview);
 
 /* Must match Gwy3DViewLabel */
@@ -285,14 +280,6 @@ gwy_3d_view_class_init(Gwy3DViewClass *klass)
 
     g_object_class_install_property
         (gobject_class,
-         PROP_DATA2_KEY,
-         g_param_spec_string("data2-key",
-                             "Data2 key",
-                             "Key identifying overlay data field key in container",
-                             NULL, G_PARAM_READWRITE));
-
-    g_object_class_install_property
-        (gobject_class,
          PROP_DATA_KEY,
          g_param_spec_string("data-key",
                              "Data key",
@@ -318,23 +305,6 @@ gwy_3d_view_class_init(Gwy3DViewClass *klass)
 
     g_object_class_install_property
         (gobject_class,
-         PROP_RANGE_TYPE_SUFFIX,
-         g_param_spec_string("range-type-suffix",
-                             "Range type suffix",
-                             "Suffix identifying range type in container",
-                             NULL, G_PARAM_READWRITE));
-
-    g_object_class_install_property
-        (gobject_class,
-         PROP_MIN_MAX_SUFFIX,
-         g_param_spec_string("min-max-suffix",
-                             "Min, max suffix",
-                             "Key suffix identifying fixed range minimum and "
-                             "maximum in container",
-                             NULL, G_PARAM_READWRITE));
-
-    g_object_class_install_property
-        (gobject_class,
          PROP_MATERIAL_KEY,
          g_param_spec_string("material-key",
                              "Material key",
@@ -349,36 +319,26 @@ gwy_3d_view_init(Gwy3DView *gwy3dview)
     gwy3dview->view_scale_min = 0.5;
     gwy3dview->movement       = GWY_3D_MOVEMENT_NONE;
     gwy3dview->reduced_size   = 96;
+    gwy3dview->ovlays         = NULL;
 
     gwy3dview->variables = g_hash_table_new_full(g_str_hash, g_str_equal,
                                                  NULL, g_free);
 
     gwy3dview->labels = g_new0(Gwy3DLabel*, GWY_3D_VIEW_NLABELS);
     gwy3dview->label_ids = g_new0(gulong, GWY_3D_VIEW_NLABELS);
-
-    gwy3dview->ovlay = GWY_LAYER_BASIC(gwy_layer_basic_new());
-    g_object_ref(gwy3dview->ovlay);
-    gwy3dview->ovlay_updated_id
-        = g_signal_connect_swapped(gwy3dview->ovlay,
-                                   "updated",
-                                   G_CALLBACK(gwy_3d_view_timeout_update),
-                                   gwy3dview);
-
 }
 
 static void
 gwy_3d_view_destroy(GtkObject *object)
 {
     Gwy3DView *gwy3dview;
+    guint i;
 
     gwy3dview = GWY_3D_VIEW(object);
 
     gwy_signal_handler_disconnect(gwy3dview->data, gwy3dview->data_item_id);
-    gwy_signal_handler_disconnect(gwy3dview->data, gwy3dview->data2_item_id);
     gwy_signal_handler_disconnect(gwy3dview->data, gwy3dview->gradient_item_id);
     gwy_signal_handler_disconnect(gwy3dview->data, gwy3dview->material_item_id);
-    gwy_signal_handler_disconnect(gwy3dview->ovlay,
-                                  gwy3dview->ovlay_updated_id);
 
     gwy_3d_view_setup_disconnect(gwy3dview);
     gwy_3d_view_data_field_disconnect(gwy3dview);
@@ -392,9 +352,16 @@ gwy_3d_view_destroy(GtkObject *object)
     gwy_object_unref(gwy3dview->downsampled);
     gwy_object_unref(gwy3dview->data);
 
-    if ( gwy3dview->ovlay )
-        gwy_data_view_layer_unplugged(GWY_DATA_VIEW_LAYER(gwy3dview->ovlay));
-    gwy_object_unref(gwy3dview->ovlay);
+    if ( gwy3dview->ovlays ) {
+        for( i = 0; i < gwy3dview->novlays; i++ ) {
+            gwy_signal_handler_disconnect(gwy3dview->ovlays[i],
+                                          gwy3dview->ovlay_updated_id[i]);
+            gwy_data_view_layer_unplugged(GWY_DATA_VIEW_LAYER(gwy3dview->ovlays[i]));
+            gwy_object_unref(gwy3dview->ovlays[i]);
+        };
+        g_free(gwy3dview->ovlays);
+        gwy3dview->ovlays = NULL;
+    };
 
     GTK_OBJECT_CLASS(gwy_3d_view_parent_class)->destroy(object);
 }
@@ -408,8 +375,6 @@ gwy_3d_view_finalize(GObject *object)
 
     g_free(gwy3dview->labels);
     g_free(gwy3dview->label_ids);
-    g_free(gwy3dview->range_type_suffix);
-    g_free(gwy3dview->min_max_suffix);
 
     g_hash_table_destroy(gwy3dview->variables);
 
@@ -437,24 +402,12 @@ gwy_3d_view_set_property(GObject *object,
         gwy_3d_view_set_data_key(view, g_value_get_string(value));
         break;
 
-        case PROP_DATA2_KEY:
-        gwy_3d_view_set_data2_key(view, g_value_get_string(value));
-        break;
-
         case PROP_SETUP_PREFIX:
         gwy_3d_view_set_setup_prefix(view, g_value_get_string(value));
         break;
 
         case PROP_GRADIENT_KEY:
         gwy_3d_view_set_gradient_key(view, g_value_get_string(value));
-        break;
-
-        case PROP_RANGE_TYPE_SUFFIX:
-        gwy_3d_view_set_range_type_suffix(view, g_value_get_string(value));
-        break;
-
-        case PROP_MIN_MAX_SUFFIX:
-        gwy_3d_view_set_min_max_suffix(view, g_value_get_string(value));
         break;
 
         case PROP_MATERIAL_KEY:
@@ -488,24 +441,12 @@ gwy_3d_view_get_property(GObject*object,
         g_value_set_static_string(value, g_quark_to_string(view->data_key));
         break;
 
-        case PROP_DATA2_KEY:
-        g_value_set_static_string(value, g_quark_to_string(view->data2_key));
-        break;
-
         case PROP_SETUP_PREFIX:
         g_value_set_static_string(value, g_quark_to_string(view->setup_key));
         break;
 
         case PROP_GRADIENT_KEY:
         g_value_set_static_string(value, g_quark_to_string(view->gradient_key));
-        break;
-
-        case PROP_RANGE_TYPE_SUFFIX:
-        g_value_set_static_string(value, view->range_type_suffix);
-        break;
-
-        case PROP_MIN_MAX_SUFFIX:
-        g_value_set_static_string(value, view->min_max_suffix);
         break;
 
         case PROP_MATERIAL_KEY:
@@ -553,8 +494,6 @@ gwy_3d_view_new(GwyContainer *data)
     GdkGLConfig *glconfig;
     GtkWidget *widget;
     Gwy3DView *gwy3dview;
-    GwyDataViewLayer *dvl;
-
 
     g_return_val_if_fail(GWY_IS_CONTAINER(data), NULL);
     glconfig = gwy_widgets_get_gl_config();
@@ -566,10 +505,6 @@ gwy_3d_view_new(GwyContainer *data)
     widget = GTK_WIDGET(gwy3dview);
 
     gwy3dview->data = data;
-    dvl = GWY_DATA_VIEW_LAYER(gwy3dview->ovlay);
-    dvl->data = data;
-    /*    gwy_data_view_layer_plugged(dvl); */
-    g_object_ref(data);
 
     if (!gtk_widget_set_gl_capability(GTK_WIDGET(gwy3dview),
                                       glconfig,
@@ -751,84 +686,35 @@ gwy_3d_view_data_field_changed(Gwy3DView *gwy3dview)
     gwy_3d_view_update_lists(gwy3dview);
 }
 
-/**
- * gwy_3d_view_set_data2_key:
- * @gwy3dview: A 3D data view widget.
- * @key: Container string key identifying the data field to overlay.
- *
- * Sets the container key identifying the data field to overlay in a 3D view.
- **/
 void
-gwy_3d_view_set_data2_key(Gwy3DView *gwy3dview,
-                          const gchar *key)
+gwy_3d_view_set_ovlay(Gwy3DView *gwy3dview,
+                      GwyPixmapLayer** ovlays,
+                      guint novlays)
 {
-    GQuark quark;
+    gint i = 0;
 
-    g_return_if_fail(GWY_IS_3D_VIEW(gwy3dview));
-    gwy_debug("%p <%s>", gwy3dview, key);
-
-    quark = key ? g_quark_from_string(key) : 0;
-    if (gwy3dview->data2_key == quark)
-        return;
-
-    gwy_signal_handler_disconnect(gwy3dview->data, gwy3dview->data2_item_id);
-
-    gwy3dview->data2_key = quark;
-
-    gwy_3d_view_container_connect(gwy3dview, key,
-                                  &gwy3dview->data2_item_id,
-                                  G_CALLBACK(gwy_3d_view_data2_item_changed));
-    g_object_notify(G_OBJECT(gwy3dview), "data2-key");
-
-    gwy_3d_view_data2_item_changed(gwy3dview);
+    if (gwy3dview->ovlays) {
+        for (i = 0; i < gwy3dview->novlays; i++) {
+            gwy_data_view_layer_unplugged(GWY_DATA_VIEW_LAYER(gwy3dview->ovlays[i]));
+            gwy_object_unref(gwy3dview->ovlays[i]);
+        };
+        g_free(gwy3dview->ovlays);
+    };
+    
+    gwy3dview->ovlays = g_new(GwyPixmapLayer*, novlays);
+    gwy3dview->ovlay_updated_id = g_new(guint, novlays);
+    gwy3dview->novlays = novlays;
+    for (i = 0; i<novlays; i++) {
+        gwy3dview->ovlays[i] = ovlays[i];
+        g_object_ref(gwy3dview->ovlays[i]);
+        gwy3dview->ovlay_updated_id[i]
+            = g_signal_connect_swapped(gwy3dview->ovlays[i],
+                                       "updated",
+                                       G_CALLBACK(gwy_3d_view_timeout_update),
+                                       gwy3dview);
+    };
+    gwy_3d_view_update_lists(gwy3dview);
 }
-
-/**
- * gwy_3d_view_get_data2_key:
- * @gwy3dview: A 3D data view widget.
- *
- * Gets the container key identifying the data field to overlay in a 3D view.
- *
- * Returns: The string key, or %NULL if it isn't set.
- **/
-const gchar*
-gwy_3d_view_get_data2_key(Gwy3DView *gwy3dview)
-{
-    g_return_val_if_fail(GWY_IS_3D_VIEW(gwy3dview), NULL);
-    return g_quark_to_string(gwy3dview->data2_key);
-};
-
-void
-gwy_3d_view_set_data2_ref(Gwy3DView *gwy3dview, const guchar* name)
-{
-    g_return_if_fail(GWY_IS_3D_VIEW(gwy3dview));
-
-    if (gwy3dview->data2_key)
-        gwy_container_set_string(gwy3dview->data, gwy3dview->data2_key,
-                                 g_strdup(name));
-};
-
-GQuark
-gwy_3d_view_get_data2_ref(Gwy3DView *gwy3dview)
-{
-    const guchar* key;
-
-    g_return_val_if_fail(GWY_IS_3D_VIEW(gwy3dview), 0);
-    if (!gwy3dview->data2_key
-        || !gwy_container_gis_string(gwy3dview->data,
-                                     gwy3dview->data2_key,
-                                     &key))
-        return gwy3dview->data_key;
-
-    return g_quark_from_string(key);
-};
-
-
-static void
-gwy_3d_view_data2_item_changed(Gwy3DView *gwy3dview)
-{
-    gwy_3d_view_update_ovlay(gwy3dview);
-};
 
 /**
  * gwy_3d_view_get_setup_prefix:
@@ -1046,9 +932,10 @@ gwy_3d_view_set_gradient_key(Gwy3DView *gwy3dview,
     quark = key ? g_quark_from_string(key) : 0;
     if (gwy3dview->gradient_key == quark)
         return;
-
-
-    gwy_layer_basic_set_gradient_key(gwy3dview->ovlay, key);
+    
+    if (gwy3dview->ovlays && gwy3dview->ovlays[0])
+        gwy_layer_basic_set_gradient_key(GWY_LAYER_BASIC(gwy3dview->ovlays[0]),
+                                         key);
 
     gwy_signal_handler_disconnect(gwy3dview->data, gwy3dview->gradient_item_id);
     gwy_3d_view_gradient_disconnect(gwy3dview);
@@ -1103,79 +990,6 @@ gwy_3d_view_gradient_changed(Gwy3DView *gwy3dview)
     gwy3dview->changed |= GWY_3D_GRADIENT;
     if (gwy3dview->setup->visualization == GWY_3D_VISUALIZATION_GRADIENT || gwy3dview->setup->visualization == GWY_3D_VISUALIZATION_OVERLAY)
         gwy_3d_view_update_lists(gwy3dview);
-}
-
-/**
- * gwy_3d_view_get_range_type_suffix:
- * @gwy3dview: A 3D data view widget.
- *
- * Gets the suffix identifying the range type used to visualize
- * data in a 3D view.
- *
- * Returns: The string key, or %NULL if it isn't set.
- **/
-const gchar*
-gwy_3d_view_get_range_type_suffix(Gwy3DView *gwy3dview)
-{
-    g_return_val_if_fail(GWY_IS_3D_VIEW(gwy3dview), NULL);
-    return gwy3dview->range_type_suffix;
-}
-
-/**
- * gwy_3d_view_set_range_type_suffix:
- * @gwy3dview: A 3D data view widget.
- * @key: suffix string identifying the range type to use for
- *       gradient visualization mode.
- *
- * Sets the suffix identifying the range type to use to visualize
- * data in a 3D view.
- **/
-void
-gwy_3d_view_set_range_type_suffix(Gwy3DView *gwy3dview,
-                             const gchar *key)
-{
-    g_return_if_fail(GWY_IS_3D_VIEW(gwy3dview));
-    gwy_debug("%p <%s>", gwy3dview, key);
-    gwy3dview->range_type_suffix = g_strdup(key);
-    gwy_3d_view_update_ovlay(gwy3dview);
-    g_object_notify(G_OBJECT(gwy3dview), "range-type-suffix");
-}
-
-/**
- * gwy_3d_view_get_min_max_suffix:
- * @gwy3dview: A 3D data view widget.
- *
- * Gets the container key identifying the colour gradient used to visualize
- * data in a 3D view.
- *
- * Returns: The string key, or %NULL if it isn't set.
- **/
-const gchar*
-gwy_3d_view_get_min_max_suffix(Gwy3DView *gwy3dview)
-{
-    g_return_val_if_fail(GWY_IS_3D_VIEW(gwy3dview), NULL);
-    return gwy3dview->min_max_suffix;
-}
-
-/**
- * gwy_3d_view_set_min_max_suffix:
- * @gwy3dview: A 3D data view widget.
- * @key: Container string key identifying the color gradient to use for
- *       gradient visualization mode.
- *
- * Sets the container key identifying the color gradient to use to visualize
- * data in a 3D view.
- **/
-void
-gwy_3d_view_set_min_max_suffix(Gwy3DView *gwy3dview,
-                                const gchar *key)
-{
-    g_return_if_fail(GWY_IS_3D_VIEW(gwy3dview));
-    gwy_debug("%p <%s>", gwy3dview, key);
-
-    gwy3dview->min_max_suffix = g_strdup(key);
-    gwy_3d_view_update_ovlay(gwy3dview);
-    g_object_notify(G_OBJECT(gwy3dview), "min-max-suffix");
 }
 
 /**
@@ -1279,16 +1093,16 @@ gwy_3d_view_update_lists(Gwy3DView *gwy3dview)
 
     gwy_3d_view_downsample_data(gwy3dview);
 
-    gwy_3d_make_list(gwy3dview, gwy3dview->downsampled, gwy3dview->ovlay, GWY_3D_SHAPE_REDUCED);
-    gwy_3d_make_list(gwy3dview, gwy3dview->data_field, gwy3dview->ovlay, GWY_3D_SHAPE_FULL);
+    gwy_3d_make_list(gwy3dview, gwy3dview->downsampled, gwy3dview->ovlays, GWY_3D_SHAPE_REDUCED);
+    gwy_3d_make_list(gwy3dview, gwy3dview->data_field, gwy3dview->ovlays, GWY_3D_SHAPE_FULL);
     gwy_3d_view_timeout_start(gwy3dview, TRUE);
 }
 
 static gboolean gwy_3d_view_update_timer(gpointer user_data)
 {
     Gwy3DView *gwy3dview = (Gwy3DView*)user_data;
-    gwy_3d_make_list(gwy3dview, gwy3dview->downsampled, gwy3dview->ovlay,GWY_3D_SHAPE_REDUCED);
-    gwy_3d_make_list(gwy3dview, gwy3dview->data_field, gwy3dview->ovlay, GWY_3D_SHAPE_FULL);
+    gwy_3d_make_list(gwy3dview, gwy3dview->downsampled, gwy3dview->ovlays,GWY_3D_SHAPE_REDUCED);
+    gwy_3d_make_list(gwy3dview, gwy3dview->data_field, gwy3dview->ovlays, GWY_3D_SHAPE_FULL);
     gwy_3d_view_timeout_start(gwy3dview, TRUE);
     return FALSE;
 };
@@ -1590,36 +1404,6 @@ gwy_3d_view_set_scale_range(Gwy3DView *gwy3dview,
 }
 
 /******************************************************************************/
-static void
-gwy_3d_view_update_ovlay(Gwy3DView *gwy3dview)
-{
-    gchar key[48];
-    gint s;
-    s = g_strlcpy(key,
-                  g_quark_to_string(gwy_3d_view_get_data2_ref(gwy3dview)),
-                  sizeof(key));
-
-    gwy_pixmap_layer_set_data_key(GWY_PIXMAP_LAYER(gwy3dview->ovlay),key);
-    s=s-4;
-
-    key[s]='\0';
-    if ( gwy3dview->range_type_suffix ) {
-        g_strlcat(key,gwy3dview->range_type_suffix,sizeof(key));
-        gwy_layer_basic_set_range_type_key(gwy3dview->ovlay,key);
-            gwy_debug("%s",key);
-        key[s] = '\0';
-    };
-
-    if ( gwy3dview->min_max_suffix ) {
-        g_strlcat(key,gwy3dview->min_max_suffix,sizeof(key));
-        gwy_layer_basic_set_min_max_key(gwy3dview->ovlay,key);
-    };
-    gwy_debug("%s",key);
-};
-
-
-
-
 static void
 gwy_3d_view_timeout_start(Gwy3DView *gwy3dview,
                           gboolean invalidate_now)
@@ -2180,7 +1964,7 @@ gwy_3d_make_normals(GwyDataField *dfield,
 static void
 gwy_3d_make_list(Gwy3DView *gwy3dview,
                  GwyDataField *dfield,
-                 GwyLayerBasic* ovlay,
+                 GwyPixmapLayer** ovlays,
                  gint shape)
 {
     gint i, j, xres, yres,rowstride;
@@ -2214,14 +1998,26 @@ gwy_3d_make_list(Gwy3DView *gwy3dview,
 
     gwy_3d_calculate_pixel_sizes(dfield, &dx, &dy);
     res = MAX(xres*dx, yres*dy);
-    if ( gwy3dview->setup->visualization == GWY_3D_VISUALIZATION_OVERLAY ) {
-        pixbuf = gwy_pixmap_layer_paint(GWY_PIXMAP_LAYER(ovlay));
-        if ( gdk_pixbuf_get_width(pixbuf) != xres
-             || gdk_pixbuf_get_height(pixbuf) != yres ) {
-            pixbuf = gdk_pixbuf_scale_simple(pixbuf,xres,yres,
-                                             GDK_INTERP_BILINEAR);
-            freepixbuf = TRUE;
-        }
+    if ( gwy3dview->setup->visualization == GWY_3D_VISUALIZATION_OVERLAY 
+         && gwy3dview->ovlays ) {
+        gint i;
+        GdkPixbuf* lpb;
+        pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, 0, 8, xres,yres);
+        gdk_pixbuf_fill(pixbuf, 0x00000000);
+        gwy_debug("lays");
+        for ( i = 0; i < gwy3dview->novlays; i++ ) {
+            if (ovlays[i]) {
+                gwy_debug("lay");
+                lpb = gwy_pixmap_layer_paint(ovlays[i]);
+                gdk_pixbuf_composite(lpb,pixbuf,
+                                     0,0,xres,yres,
+                                     0,0,
+                                     (gdouble)xres/gdk_pixbuf_get_width(lpb),
+                                     (gdouble)yres/gdk_pixbuf_get_height(lpb),
+                                     GDK_INTERP_TILES,0xff);
+            };
+        };
+        freepixbuf = TRUE;
     }
     else {
         pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, 0, 8, xres,yres);
@@ -2631,8 +2427,8 @@ gwy_3d_view_realize_gl(Gwy3DView *gwy3dview)
 
     /* Shape display lists */
     gwy_3d_view_assign_lists(gwy3dview);
-    gwy_3d_make_list(gwy3dview, gwy3dview->data_field, gwy3dview->ovlay, GWY_3D_SHAPE_FULL);
-    gwy_3d_make_list(gwy3dview, gwy3dview->downsampled, gwy3dview->ovlay, GWY_3D_SHAPE_REDUCED);
+    gwy_3d_make_list(gwy3dview, gwy3dview->data_field, gwy3dview->ovlays, GWY_3D_SHAPE_FULL);
+    gwy_3d_make_list(gwy3dview, gwy3dview->downsampled, gwy3dview->ovlays, GWY_3D_SHAPE_REDUCED);
 
     gdk_gl_drawable_gl_end(gldrawable);
     /*** OpenGL END ***/
@@ -3081,9 +2877,13 @@ static gint gwy_3d_draw_fmscaletex(Gwy3DView *view)
 
   glTranslatef(width,0,0);
 
-  if (view->setup->visualization == GWY_3D_VISUALIZATION_OVERLAY) {
-      gwy_layer_basic_get_range(view->ovlay,&min,&max);
-      noticks = gwy_layer_basic_get_range_type(view->ovlay)
+  if (view->setup->visualization == GWY_3D_VISUALIZATION_OVERLAY
+      && view->ovlays
+      && view->ovlays[0]) {
+      gwy_layer_basic_get_range(GWY_LAYER_BASIC(view->ovlays[0]),
+                                &min,&max);
+      noticks = 
+          gwy_layer_basic_get_range_type(GWY_LAYER_BASIC(view->ovlays[0]))
           == GWY_LAYER_BASIC_RANGE_ADAPT;
   }
   else {

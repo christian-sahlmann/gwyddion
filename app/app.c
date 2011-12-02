@@ -17,7 +17,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
-
+#define DEBUG 1
 #include "config.h"
 #include <string.h>
 #include <stdarg.h>
@@ -74,8 +74,11 @@ static void       gwy_app_save_3d_export              (GtkWidget *dialog,
                                                        gint response,
                                                        Gwy3DWindow *gwy3dwindow);
 static void       gwy_app_3d_window_add_overlay_menu  (Gwy3DWindow *gwy3dwindow);
-static void       gwy_app_3d_window_set_data2         (GwyDataChooser *chooser,
+static void       gwy_app_3d_window_update_chooser    (GtkWidget *chooser,
                                                        Gwy3DWindow *gwy3dwindow);
+static void       gwy_app_3d_window_set_data2         (Gwy3DWindow *gwy3dwindow,
+                                                       gint id,
+                                                       gboolean mask);
 static gboolean   gwy_app_3d_window_data2_filter      (GwyContainer *data2,
                                                        gint id2,
                                                        gpointer user_data);
@@ -812,20 +815,28 @@ _gwy_app_3d_window_setup(Gwy3DWindow *window3d)
 static void
 gwy_app_3d_window_add_overlay_menu(Gwy3DWindow *gwy3dwindow)
 {
-    GtkWidget *menu;
+    GtkWidget *menu, *lay;
     Gwy3DView *view;
-    GQuark data2_ref;
+    GQuark data2_ref = 0;
     gint* ids, *nids;
     gint activeid = -1;
+    const guchar *key;
+    gchar refkey[40];
 
     view = GWY_3D_VIEW(gwy_3d_window_get_3d_view(gwy3dwindow));
+    lay = gtk_hbox_new(FALSE,5);
     menu = gwy_data_chooser_new_channels();
-
+    
     gwy_data_chooser_set_filter(GWY_DATA_CHOOSER(menu),
                                 gwy_app_3d_window_data2_filter, view, NULL);
 
     ids = gwy_app_data_browser_get_data_ids(view->data);
-    data2_ref = gwy_3d_view_get_data2_ref(view);
+    g_strlcpy(refkey,
+              g_quark_to_string(view->data_key),
+              4);
+    g_strlcat(refkey, "3d/data2ref", sizeof(refkey));
+    if( gwy_container_gis_string_by_name(view->data,refkey, &key) )
+        data2_ref = g_quark_from_string(key);
 
     for (nids = ids; *nids != -1; nids++) {
         if (gwy_app_get_data_key_for_id(*nids) == data2_ref) {
@@ -840,27 +851,103 @@ gwy_app_3d_window_add_overlay_menu(Gwy3DWindow *gwy3dwindow)
     g_free(ids);
 
     gwy_data_chooser_set_active(GWY_DATA_CHOOSER(menu), view->data, activeid);
-    g_signal_connect(menu, "changed",
-                     G_CALLBACK(gwy_app_3d_window_set_data2), gwy3dwindow);
+    gwy_app_3d_window_set_data2(gwy3dwindow, activeid, FALSE);
 
-    gwy_3d_window_set_overlay_chooser(gwy3dwindow, menu);
+    g_signal_connect(menu, "changed",
+                     G_CALLBACK(gwy_app_3d_window_update_chooser), gwy3dwindow);
+    
+    gtk_box_pack_start(GTK_BOX(lay),menu,FALSE,FALSE,0);
+    g_object_set_data(G_OBJECT(lay),"c",menu);
+
+    menu = gtk_check_button_new_with_mnemonic("U_se mask not data");
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(menu),FALSE);
+    g_signal_connect(menu, "toggled",
+                     G_CALLBACK(gwy_app_3d_window_update_chooser),
+                     gwy3dwindow);
+    gtk_box_pack_start(GTK_BOX(lay),menu,FALSE,FALSE,0);
+    g_object_set_data(G_OBJECT(lay),"m",menu);
+
+    gwy_3d_window_set_overlay_chooser(gwy3dwindow, lay);
 }
 
 static void
-gwy_app_3d_window_set_data2(GwyDataChooser *chooser,
-                            Gwy3DWindow *gwy3dwindow)
+gwy_app_3d_window_set_data2(Gwy3DWindow *gwy3dwindow,
+                            gint id,
+                            gboolean mask)
 {
-    gint id;
-    GQuark key;
     Gwy3DView *view;
+    GQuark key;
+    GwyPixmapLayer *ovplay[2];
+    GwyDataViewLayer* dvl;
     const guchar* name;
 
+
+
     view = GWY_3D_VIEW(gwy_3d_window_get_3d_view(gwy3dwindow));
-    gwy_data_chooser_get_active(chooser, &id);
+
     key = gwy_app_get_data_key_for_id(id);
     name = g_quark_to_string(key);
 
-    gwy_3d_view_set_data2_ref(view, name);
+    ovplay[0] = gwy_layer_basic_new();
+    /* Plug */
+    /*    gwy_data_view_layer_plugged(dvl); */
+    dvl = GWY_DATA_VIEW_LAYER(ovplay[0]);
+    dvl->data = view->data;
+    g_object_ref(dvl->data);
+
+    gwy_pixmap_layer_set_data_key(ovplay[0],name);
+    gwy_layer_basic_set_gradient_key(GWY_LAYER_BASIC(ovplay[0]),
+                                     gwy_3d_view_get_gradient_key(view));
+
+    if (mask) {
+        key = gwy_app_get_mask_key_for_id(id);
+        name = g_quark_to_string(key);
+        ovplay[1] = gwy_layer_mask_new();
+        dvl = GWY_DATA_VIEW_LAYER(ovplay[1]);
+        dvl->data = view->data;
+        g_object_ref(dvl->data);
+        gwy_pixmap_layer_set_data_key(ovplay[1],name);
+        gwy_layer_mask_set_color_key(GWY_LAYER_MASK(ovplay[1]),
+                                     name);
+        gwy_3d_view_set_ovlay(view, ovplay, 2);
+    }
+    else 
+        gwy_3d_view_set_ovlay(view, ovplay, 1);
+        
+};
+
+static void
+gwy_app_3d_window_update_chooser(GtkWidget *chooser,
+                                 Gwy3DWindow *gwy3dwindow)
+{
+    gint id;
+    gboolean mask = FALSE;
+    GtkWidget *temp;
+    guchar refkey[40];
+    const guchar *name;
+    GQuark key;
+    Gwy3DView *view;
+
+    temp = g_object_get_data(G_OBJECT(gwy3dwindow->dataov_menu),"m");
+
+
+    mask = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(temp));
+    temp = g_object_get_data(G_OBJECT(gwy3dwindow->dataov_menu),"c");
+
+    gwy_data_chooser_get_active(GWY_DATA_CHOOSER(temp), &id);
+    key = gwy_app_get_data_key_for_id(id);
+    name = g_quark_to_string(key);
+
+    view = GWY_3D_VIEW(gwy_3d_window_get_3d_view(gwy3dwindow));    
+    key = gwy_app_get_data_key_for_id(id);
+    name = g_quark_to_string(key);
+    g_strlcpy(refkey,
+              g_quark_to_string(view->data_key),
+              4);
+    g_strlcat(refkey, "3d/data2ref", sizeof(refkey));
+    gwy_container_set_string_by_name(view->data,refkey,g_strdup(name));
+
+    gwy_app_3d_window_set_data2(gwy3dwindow,id,mask);    
 }
 
 static gboolean

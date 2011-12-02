@@ -69,9 +69,9 @@ struct _Gwy3DView {
     gulong data_item_id;
 
     /* Unused, intended for future color !~ height visualization */
-    GwyLayerBasic *ovlay;
+    GwyPixmapLayer **ovlays;
     GQuark data2_key;
-    gulong data2_id;
+    gulong novlays;
     gulong data2_item_id;
  
     GwyGradient *gradient;
@@ -113,10 +113,10 @@ struct _Gwy3DView {
     gboolean b_reserved4;
 
     guint     timeout2_id;
-    guint     ovlay_updated_id;
+    guint     *ovlay_updated_id;
 
-    gchar*  min_max_suffix;
-    gchar*  range_type_suffix;
+    gpointer p_reserved2;
+    gpointer p_reserved3;
     gpointer p_reserved4;
 };
 
@@ -142,20 +142,11 @@ void              gwy_3d_view_set_setup_prefix  (Gwy3DView *gwy3dview,
 const gchar*      gwy_3d_view_get_data_key      (Gwy3DView *gwy3dview);
 void              gwy_3d_view_set_data_key      (Gwy3DView *gwy3dview,
                                                  const gchar *key);
-const gchar*      gwy_3d_view_get_data2_key      (Gwy3DView *gwy3dview);
-void              gwy_3d_view_set_data2_key      (Gwy3DView *gwy3dview,
-                                                 const gchar *key);
-void              gwy_3d_view_set_data2_ref      (Gwy3DView *gwy3dview,
-                                                 const guchar* name);
-GQuark            gwy_3d_view_get_data2_ref      (Gwy3DView *gwy3dview);
+void              gwy_3d_view_set_ovlay         (Gwy3DView *gwy3dview,
+                                                 GwyPixmapLayer** ovlays,
+                                                 guint novlays);
 const gchar*      gwy_3d_view_get_gradient_key  (Gwy3DView *gwy3dview);
 void              gwy_3d_view_set_gradient_key  (Gwy3DView *gwy3dview,
-                                                 const gchar *key);
-const gchar*      gwy_3d_view_get_range_type_suffix  (Gwy3DView *gwy3dview);
-void              gwy_3d_view_set_range_type_suffix  (Gwy3DView *gwy3dview,
-                                                 const gchar *key);
-const gchar*      gwy_3d_view_get_min_max_suffix  (Gwy3DView *gwy3dview);
-void              gwy_3d_view_set_min_max_suffix  (Gwy3DView *gwy3dview,
                                                  const gchar *key);
 const gchar*      gwy_3d_view_get_material_key  (Gwy3DView *gwy3dview);
 void              gwy_3d_view_set_material_key  (Gwy3DView *gwy3dview,

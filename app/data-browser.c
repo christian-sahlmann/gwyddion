@@ -2871,10 +2871,10 @@ gwy_app_data_browser_create_3d(G_GNUC_UNUSED GwyAppDataBrowser *browser,
     g_strlcat(key, "data", sizeof(key));
     gwy_3d_view_set_data_key(GWY_3D_VIEW(view3d), key);
 
-    key[len] = '\0';
+    /* key[len] = '\0';
     g_strlcat(key, "3d/data2ref", sizeof(key));
     gwy_3d_view_set_data2_key(GWY_3D_VIEW(view3d), key);
-
+    */
     key[len] = '\0';
     g_strlcat(key, "3d/palette", sizeof(key));
     gwy_3d_view_set_gradient_key(GWY_3D_VIEW(view3d), key);
@@ -2882,9 +2882,6 @@ gwy_app_data_browser_create_3d(G_GNUC_UNUSED GwyAppDataBrowser *browser,
     key[len] = '\0';
     g_strlcat(key, "3d/material", sizeof(key));
     gwy_3d_view_set_material_key(GWY_3D_VIEW(view3d), key);
-
-    gwy_3d_view_set_range_type_suffix(GWY_3D_VIEW(view3d), "base/range-type");
-    gwy_3d_view_set_min_max_suffix(GWY_3D_VIEW(view3d), "base");
 
     window3d = gwy_3d_window_new(GWY_3D_VIEW(view3d));
 
