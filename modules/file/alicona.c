@@ -60,6 +60,7 @@ enum {
     TAG_SIZE = KEY_SIZE + VALUE_SIZE + CRLF_SIZE,
     COMMENT_SIZE = 256,
     MIN_HEADER_SIZE = MAGIC_SIZE + 2*TAG_SIZE + COMMENT_SIZE,
+    ICON_SIZE = 68400,
 };
 
 typedef struct {
@@ -71,41 +72,66 @@ typedef struct {
 typedef struct {
     const Al3DTag *version;
     const Al3DTag *counter;
-    guint ntags;
     const Al3DTag *tags;
     const gchar *comment;
     const guchar *icon_data;
     const guchar *depth_data;
     const guchar *texture_data;
+    /* Cached parsed values. */
+    guint ntags;
+    guint xres;
+    guint yres;
+    guint nplanes;
+    gdouble dx;
+    gdouble dy;
+    guint iconoffset;
+    guint textureoffset;
+    guint depthoffset;
 } Al3DFile;
 
-static gboolean      module_register (void);
-static gint          al3d_detect     (const GwyFileDetectInfo *fileinfo,
-                                      gboolean only_name);
-static GwyContainer* al3d_load       (const gchar *filename,
-                                      GwyRunType mode,
-                                      GError **error);
-static GwyDataField* read_depth_image(const Al3DFile *afile,
-                                      guint xres, guint yres,
-                                      gdouble dx, gdouble dy,
-                                      const guchar *buffer,
-                                      GwyDataField **badmask);
-static gboolean      al3d_load_header(Al3DFile *afile,
-                                      const guchar *buffer,
-                                      gsize size,
-                                      GError **error);
-static gboolean      read_int_tag    (const Al3DFile *afile,
-                                      const gchar *name,
-                                      gint *retval,
-                                      GError **error);
-static gboolean      read_float_tag  (const Al3DFile *afile,
-                                      const gchar *name,
-                                      gdouble *retval,
-                                      GError **error);
-static gboolean      read_string_tag (const Al3DFile *afile,
-                                      const gchar *name,
-                                      const gchar **retval,
-                                      GError **error);
+static gboolean       module_register   (void);
+static gint           al3d_detect       (const GwyFileDetectInfo *fileinfo,
+                                         gboolean only_name);
+static GwyContainer*  al3d_load         (const gchar *filename,
+                                         GwyRunType mode,
+                                         GError **error);
+static void           set_title         (GwyContainer *container,
+                                         guint id,
+                                         const gchar *name,
+                                         gint component);
+static gchar*         texture_lo_ptr    (const Al3DTag *tag);
+static gchar*         texture_ptr       (const Al3DTag *tag);
+static GwyDataField*  read_depth_image  (const Al3DFile *afile,
+                                         const guchar *buffer,
+                                         GwyDataField **badmask);
+static GwyDataField*  read_hi_lo_texture(const Al3DFile *afile,
+                                         const Al3DTag *hitag,
+                                         const Al3DTag *lotag,
+                                         const guchar *buffer,
+                                         GError **error);
+static GwyDataField*  read_texture      (const Al3DFile *afile,
+                                         const Al3DTag *tag,
+                                         const guchar *buffer,
+                                         GError **error);
+static gboolean       al3d_load_header  (Al3DFile *afile,
+                                         const guchar *buffer,
+                                         gsize size,
+                                         GError **error);
+static const Al3DTag* find_tag          (const Al3DFile *afile,
+                                         const gchar *name,
+                                         GError **error);
+static gboolean       read_uint_tag     (const Al3DFile *afile,
+                                         const gchar *name,
+                                         guint *retval,
+                                         GError **error);
+static gboolean       read_float_tag    (const Al3DFile *afile,
+                                         const gchar *name,
+                                         gdouble *retval,
+                                         GError **error);
+static gboolean       read_string_tag   (const Al3DFile *afile,
+                                         const gchar *name,
+                                         const gchar **retval,
+                                         GError **error);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -155,12 +181,11 @@ al3d_load(const gchar *filename,
     GwyDataField *field = NULL, *mfield = NULL;
     Al3DFile afile;
     guchar *buffer = NULL;
-    const gchar *unit, *title;
+    const gchar *title;
+    guint firstfreepos;
     gsize size;
     GError *err = NULL;
-    gdouble dx, dy;
-    gint xres, yres, offset;
-    guint id = 0;
+    guint i, id = 0;
 
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
         err_GET_FILE_CONTENTS(error, &err);
@@ -170,40 +195,77 @@ al3d_load(const gchar *filename,
     if (!al3d_load_header(&afile, buffer, size, error))
         goto fail;
 
-    if (!read_int_tag(&afile, "Cols", &xres, error)
-        || !read_int_tag(&afile, "Rows", &yres, error))
+    if (!read_uint_tag(&afile, "Cols", &afile.xres, error)
+        || !read_uint_tag(&afile, "Rows", &afile.yres, error))
         goto fail;
 
-    if (err_DIMENSION(error, xres) || err_DIMENSION(error, yres))
+    if (err_DIMENSION(error, afile.xres) || err_DIMENSION(error, afile.yres))
         goto fail;
 
-    if (!read_float_tag(&afile, "PixelSizeXMeter", &dx, error)
-        || !read_float_tag(&afile, "PixelSizeYMeter", &dy, error))
+    if (!read_float_tag(&afile, "PixelSizeXMeter", &afile.dx, error)
+        || !read_float_tag(&afile, "PixelSizeYMeter", &afile.dy, error))
         goto fail;
 
-    if (!((dx = fabs(dx)) > 0)) {
+    if (!((afile.dx = fabs(afile.dx)) > 0)) {
         g_warning("Real x step is 0.0, fixing to 1.0");
-        dx = 1.0/xres;
+        afile.dx = 1.0/afile.xres;
     }
-    if (!((dy = fabs(dy)) > 0)) {
+    if (!((afile.dy = fabs(afile.dy)) > 0)) {
         g_warning("Real y step is 0.0, fixing to 1.0");
-        dy = 1.0/yres;
+        afile.dy = 1.0/afile.yres;
+    }
+
+    firstfreepos = MAGIC_SIZE + (TAG_SIZE + 2)*afile.ntags + COMMENT_SIZE;
+    read_uint_tag(&afile, "IconOffset", &afile.iconoffset, NULL);
+    if (afile.iconoffset) {
+        if (afile.iconoffset < firstfreepos
+            || size < firstfreepos + ICON_SIZE
+            || afile.iconoffset > size - ICON_SIZE) {
+            err_INVALID(error, "IconOffset");
+            goto fail;
+        }
+        firstfreepos += ICON_SIZE;
+    }
+
+    read_uint_tag(&afile, "DepthImageOffset", &afile.depthoffset, NULL);
+    if (afile.depthoffset) {
+        guint rowstride = (afile.xres*sizeof(gfloat) + 7)/8*8;
+        guint imagesize = afile.yres*rowstride;
+        if (afile.depthoffset < firstfreepos
+            || size < firstfreepos + imagesize
+            || afile.depthoffset > size - imagesize) {
+            err_INVALID(error, "DepthImageOffset");
+            goto fail;
+        }
+        firstfreepos += imagesize;
+    }
+
+    read_uint_tag(&afile, "NumberOfPlanes", &afile.nplanes, NULL);
+    read_uint_tag(&afile, "TextureImageOffset", &afile.textureoffset, NULL);
+    if (afile.nplanes && afile.textureoffset) {
+        guint rowstride = (afile.xres + 7)/8*8;
+        guint planesize = afile.yres*rowstride;
+        if (afile.textureoffset < firstfreepos
+            || size < firstfreepos + planesize*afile.nplanes
+            || afile.textureoffset > size - planesize*afile.nplanes) {
+            err_INVALID(error, "TextureImageOffset");
+            goto fail;
+        }
+        firstfreepos += planesize*afile.nplanes;
+    }
+
+    if (firstfreepos
+        == MAGIC_SIZE + (TAG_SIZE + 2)*afile.ntags + COMMENT_SIZE) {
+        err_NO_DATA(error);
+        goto fail;
     }
 
     container = gwy_container_new();
 
-    if (read_int_tag(&afile, "DepthImageOffset", &offset, NULL)) {
+    if (afile.depthoffset) {
         GwyDataField *badmask = NULL;
-        guint rowstride = (xres*sizeof(gfloat) + 7)/8*8;
 
-        if (offset < MAGIC_SIZE + COMMENT_SIZE + (TAG_SIZE + 2)*afile.ntags
-            || offset > size - xres*rowstride) {
-            err_INVALID(error, "DepthImageOffset");
-            goto fail;
-        }
-
-        field = read_depth_image(&afile, xres, yres, dx, dy, buffer + offset,
-                                 &badmask);
+        field = read_depth_image(&afile, buffer, &badmask);
         gwy_container_set_object(container, gwy_app_get_data_key_for_id(id),
                                  field);
         if (badmask) {
@@ -213,71 +275,56 @@ al3d_load(const gchar *filename,
             g_object_unref(badmask);
         }
         g_object_unref(field);
+        set_title(container, id, "Depth", -1);
         id++;
     }
 
-#if 0
-    yreal = 1.0;
-    xreal = x_scale*yreal;
-    dfield = gwy_data_field_new(xres, yres, xreal, yreal, TRUE);
+    for (i = 0; i < afile.ntags; i++) {
+        const Al3DTag *tag = afile.tags + i;
+        gchar *name;
 
+        if ((name = texture_lo_ptr(tag))) {
+            gchar *hikey = gwy_strreplace(tag->key, "LoPtr", "HiPtr", 1);
+            const Al3DTag *hitag = find_tag(&afile, hikey, NULL);
+            g_free(hikey);
 
-    gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_z(dfield), unit);
+            gwy_debug("loptr tag <%s> (%s) = %s", tag->key, name, tag->value);
+            field = read_hi_lo_texture(&afile, hitag, tag, buffer, &err);
+            if (!field) {
+                g_warning("%s", err->message);
+                g_clear_error(&err);
+                g_free(name);
+                continue;
+            }
+            gwy_container_set_object(container, gwy_app_get_data_key_for_id(id),
+                                     field);
+            set_title(container, id, name, -1);
+            g_free(name);
+            id++;
+        }
+        else if ((name = texture_ptr(tag))) {
+            gchar **planes = g_strsplit(tag->value, ";", 0);
+            guint nplanes = g_strv_length(planes);
+            guint j;
 
-    mfield = gwy_data_field_new_alike(dfield, TRUE);
-    data = gwy_data_field_get_data(dfield);
-    mdata = gwy_data_field_get_data(mfield);
-
-    for (i = 0; i < xres*yres; i++, p = end) {
-        gint value = strtol(p, &end, 10);
-
-        if (value != no_data_value && (type != CODEV_INT_INTENSITY_FILTER
-                                       || value >= 0)) {
-            mdata[i] = 1.0;
-            data[i] = q*value;
+            gwy_debug("ptr tag <%s> (%s) = %s", tag->key, name, tag->value);
+            for (j = 0; planes[j]; j++) {
+                field = read_texture(&afile, tag, buffer, &err);
+                if (!field) {
+                    g_warning("%s", err->message);
+                    g_clear_error(&err);
+                    continue;
+                }
+                gwy_container_set_object(container,
+                                         gwy_app_get_data_key_for_id(id),
+                                         field);
+                set_title(container, id, name, nplanes > 1 ? j : -1);
+                id++;
+            }
+            g_strfreev(planes);
+            g_free(name);
         }
     }
-
-    if (!gwy_app_channel_remove_bad_data(dfield, mfield))
-        gwy_object_unref(mfield);
-
-    container = gwy_container_new();
-
-    /*
-    gwy_data_field_invert(dfield, TRUE, FALSE, FALSE);
-    from F. Riguet : apparently no flip is needed (the raw data import module
-    gives the correct orientation without further flipping)
-    */
-    gwy_container_set_object(container, gwy_app_get_data_key_for_id(0), dfield);
-    g_object_unref(dfield);
-    gwy_app_channel_check_nonsquare(container, 0);
-
-    gwy_container_set_string_by_name(container, "/0/data/title",
-                                     g_strdup(title));
-
-    if (mfield) {
-        /*
-        gwy_data_field_invert(mfield, FALSE, TRUE, FALSE);
-        */
-        gwy_container_set_object(container, gwy_app_get_mask_key_for_id(0),
-                                 mfield);
-        g_object_unref(mfield);
-    }
-
-    meta = gwy_container_new();
-
-    gwy_container_set_string_by_name(meta, "Comment", g_strdup(comment));
-    gwy_container_set_string_by_name(meta, "Interpolation",
-                                     g_strdup(nearest_neighbour
-                                              ? "NNB" : "Linear"));
-    gwy_container_set_string_by_name(meta, "Wavelength",
-                                     g_strdup_printf("%g μm", wavelength));
-
-    gwy_container_set_object_by_name(container, "/0/meta", meta);
-    g_object_unref(meta);
-#endif
-
-    err_NO_DATA(error);
 
 fail:
     gwy_file_abandon_contents(buffer, size, NULL);
@@ -289,28 +336,77 @@ fail:
     return container;
 }
 
+static void
+set_title(GwyContainer *container,
+          guint id,
+          const gchar *name,
+          gint component)
+{
+    gchar *title;
+    gchar key[32];
+
+    g_snprintf(key, sizeof(key), "/%u/data/title", id);
+    if (component == -1)
+        title = g_strdup(name);
+    else if (component == 0)
+        title = g_strdup_printf("%s (R)", name);
+    else if (component == 1)
+        title = g_strdup_printf("%s (G)", name);
+    else if (component == 2)
+        title = g_strdup_printf("%s (B)", name);
+    else
+        title = g_strdup_printf("%s (%u)", name, component);
+
+    gwy_container_set_string_by_name(container, key, title);
+}
+
+static gchar*
+texture_lo_ptr(const Al3DTag *tag)
+{
+    const gchar *p = strstr(tag->key, "LoPtr");
+
+    if (!p || p == tag->key)
+        return NULL;
+
+    return gwy_strreplace(tag->key, "LoPtr", "", 1);
+}
+
+static gchar*
+texture_ptr(const Al3DTag *tag)
+{
+    const gchar *p = strstr(tag->key, "Ptr");
+
+    if (!p || p == tag->key)
+        return NULL;
+
+    if (strstr(tag->key, "LoPtr") || strstr(tag->key, "HiPtr"))
+        return NULL;
+
+    return gwy_strreplace(tag->key, "Ptr", "", 1);
+}
+
 static GwyDataField*
 read_depth_image(const Al3DFile *afile,
-                 guint xres, guint yres,
-                 gdouble dx, gdouble dy,
                  const guchar *buffer,
                  GwyDataField **badmask)
 {
     GwyDataField *field, *mask = NULL;
-    guint rowstride = (xres*sizeof(gfloat) + 7)/8*8;
+    guint rowstride = (afile->xres*sizeof(gfloat) + 7)/8*8;
     gdouble *d, *m = NULL;
     guint i, j;
     gdouble invalid_value = 0.0/0.0;
+    guint xres = afile->xres, yres = afile->yres;
 
     read_float_tag(afile, "InvalidPixelValue", &invalid_value, NULL);
 
-    field = gwy_data_field_new(xres, yres, dx*xres, dy*yres, FALSE);
+    field = gwy_data_field_new(xres, yres, afile->dx*xres, afile->dy*yres,
+                               FALSE);
     gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_xy(field), "m");
     gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_z(field), "m");
 
     d = field->data;
     for (i = 0; i < yres; i++) {
-        const guchar *p = buffer + i*rowstride;
+        const guchar *p = buffer + afile->depthoffset + i*rowstride;
 
         for (j = 0; j < xres; j++, d++, m++) {
             *d = gwy_get_gfloat_le(&p);
@@ -327,6 +423,94 @@ read_depth_image(const Al3DFile *afile,
     }
 
     *badmask = mask;
+
+    return field;
+}
+
+static gboolean
+check_plane_no(const Al3DFile *afile,
+               const gchar *key,
+               guint planeno,
+               GError **error)
+{
+    if (planeno < afile->nplanes)
+        return TRUE;
+
+    g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                _("Invalid plane number %u in tag ‘%s’."),
+                planeno, key);
+    return FALSE;
+}
+
+static GwyDataField*
+read_hi_lo_texture(const Al3DFile *afile,
+                   const Al3DTag *hitag,
+                   const Al3DTag *lotag,
+                   const guchar *buffer,
+                   GError **error)
+{
+    GwyDataField *field;
+    guint xres = afile->xres, yres = afile->yres;
+    guint rowstride = (afile->xres + 7)/8*8;
+    guint hiplaneno = (guint)atoi(hitag->value);
+    guint loplaneno = (guint)atoi(lotag->value);
+    guint planesize = yres*rowstride;
+    gdouble *d;
+    guint i, j;
+
+    if (!check_plane_no(afile, hitag->key, hiplaneno, error)
+        || !check_plane_no(afile, lotag->key, loplaneno, error))
+        return NULL;
+
+    field = gwy_data_field_new(xres, yres, afile->dx*xres, afile->dy*yres,
+                               FALSE);
+    gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_xy(field), "m");
+
+    d = field->data;
+
+    for (i = 0; i < yres; i++) {
+        const guchar *phi = (buffer + afile->textureoffset
+                             + hiplaneno*planesize + i*rowstride);
+        const guchar *plo = (buffer + afile->textureoffset
+                             + loplaneno*planesize + i*rowstride);
+
+        for (j = 0; j < xres; j++, d++, plo++, phi++)
+            *d = (*plo | ((guint)*phi << 8))/65536.0;
+    }
+
+    return field;
+}
+
+static GwyDataField*
+read_texture(const Al3DFile *afile,
+             const Al3DTag *tag,
+             const guchar *buffer,
+             GError **error)
+{
+    GwyDataField *field;
+    guint xres = afile->xres, yres = afile->yres;
+    guint rowstride = (afile->xres + 7)/8*8;
+    guint planeno = (guint)atoi(tag->value);
+    guint planesize = yres*rowstride;
+    gdouble *d;
+    guint i, j;
+
+    if (!check_plane_no(afile, tag->key, planeno, error))
+        return NULL;
+
+    field = gwy_data_field_new(xres, yres, afile->dx*xres, afile->dy*yres,
+                               FALSE);
+    gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_xy(field), "m");
+
+    d = field->data;
+
+    for (i = 0; i < yres; i++) {
+        const guchar *p = (buffer + afile->textureoffset
+                           + planeno*planesize + i*rowstride);
+
+        for (j = 0; j < xres; j++, d++, p++)
+            *d = *p/256.0;
+    }
 
     return field;
 }
@@ -473,17 +657,17 @@ find_tag(const Al3DFile *afile,
 }
 
 static gboolean
-read_int_tag(const Al3DFile *afile,
-             const gchar *name,
-             gint *retval,
-             GError **error)
+read_uint_tag(const Al3DFile *afile,
+              const gchar *name,
+              guint *retval,
+              GError **error)
 {
     const Al3DTag *tag;
 
     if (!(tag = find_tag(afile, name, error)))
         return FALSE;
 
-    *retval = atoi(tag->value);
+    *retval = (guint)atol(tag->value);
     return TRUE;
 }
 
