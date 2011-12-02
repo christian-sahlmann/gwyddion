@@ -29,6 +29,7 @@ filedir = $(pkglibdir)/modules/file
 
 file_LTLIBRARIES = \
 	aistfile.la \
+	alicona.la \
 	ambfile.la \
 	anfatec.la \
 	apefile.la \
@@ -152,6 +153,7 @@ module_libadd = \
 endif
 
 aistfile_la_SOURCES      = aistfile.c
+alicona_la_SOURCES       = alicona.c
 ambfile_la_SOURCES       = ambfile.c
 anfatec_la_SOURCES       = anfatec.c
 apefile_la_SOURCES       = apefile.c
