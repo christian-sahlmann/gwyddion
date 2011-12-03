@@ -35,7 +35,7 @@
  * .al3d
  * Read
  **/
-#define DEBUG 1
+
 #include "config.h"
 #include <string.h>
 #include <stdlib.h>
@@ -99,6 +99,9 @@ static void           set_title         (GwyContainer *container,
                                          guint id,
                                          const gchar *name,
                                          gint component);
+static void           add_meta          (GwyContainer *container,
+                                         guint id,
+                                         const Al3DFile *afile);
 static gchar*         texture_lo_ptr    (const Al3DTag *tag);
 static gchar*         texture_ptr       (const Al3DTag *tag);
 static GwyDataField*  read_depth_image  (const Al3DFile *afile,
@@ -127,10 +130,6 @@ static gboolean       read_uint_tag     (const Al3DFile *afile,
 static gboolean       read_float_tag    (const Al3DFile *afile,
                                          const gchar *name,
                                          gdouble *retval,
-                                         GError **error);
-static gboolean       read_string_tag   (const Al3DFile *afile,
-                                         const gchar *name,
-                                         const gchar **retval,
                                          GError **error);
 
 static GwyModuleInfo module_info = {
@@ -177,11 +176,10 @@ al3d_load(const gchar *filename,
          G_GNUC_UNUSED GwyRunType mode,
          GError **error)
 {
-    GwyContainer *container = NULL, *meta;
-    GwyDataField *field = NULL, *mfield = NULL;
+    GwyContainer *container = NULL;
+    GwyDataField *field = NULL;
     Al3DFile afile;
     guchar *buffer = NULL;
-    const gchar *title;
     guint firstfreepos;
     gsize size;
     GError *err = NULL;
@@ -276,6 +274,7 @@ al3d_load(const gchar *filename,
         }
         g_object_unref(field);
         set_title(container, id, "Depth", -1);
+        add_meta(container, id, &afile);
         id++;
     }
 
@@ -299,6 +298,7 @@ al3d_load(const gchar *filename,
             gwy_container_set_object(container, gwy_app_get_data_key_for_id(id),
                                      field);
             set_title(container, id, name, -1);
+            add_meta(container, id, &afile);
             g_free(name);
             id++;
         }
@@ -319,6 +319,7 @@ al3d_load(const gchar *filename,
                                          gwy_app_get_data_key_for_id(id),
                                          field);
                 set_title(container, id, name, nplanes > 1 ? j : -1);
+                add_meta(container, id, &afile);
                 id++;
             }
             g_strfreev(planes);
@@ -358,6 +359,37 @@ set_title(GwyContainer *container,
         title = g_strdup_printf("%s (%u)", name, component);
 
     gwy_container_set_string_by_name(container, key, title);
+}
+
+static void
+add_meta(GwyContainer *container,
+         guint id,
+         const Al3DFile *afile)
+{
+    GwyContainer *meta = gwy_container_new();
+    gchar key[32];
+    guint i;
+
+    gwy_container_set_string_by_name(meta, afile->version->key,
+                                     g_strdup(afile->version->value));
+    for (i = 0; i < afile->ntags; i++) {
+        const Al3DTag *tag = afile->tags + i;
+
+        if (gwy_stramong(tag->key,
+                         "DirSpacer", "PlaceHolder",
+                         "Cols", "Rows", "NumberOfPlanes", "ImageCode",
+                         "PixelSizeXMeter", "PixelSizeYMeter",
+                         "InvalidPixelValue", NULL)
+            || strstr(tag->key, "Ptr")
+            || g_str_has_suffix(tag->key, "Offset"))
+            continue;
+
+        gwy_container_set_string_by_name(meta, tag->key, g_strdup(tag->value));
+    }
+
+    g_snprintf(key, sizeof(key), "/%u/meta", id);
+    gwy_container_set_object_by_name(container, key, meta);
+    g_object_unref(meta);
 }
 
 static gchar*
@@ -683,21 +715,6 @@ read_float_tag(const Al3DFile *afile,
         return FALSE;
 
     *retval = g_ascii_strtod(tag->value, NULL);
-    return TRUE;
-}
-
-static gboolean
-read_string_tag(const Al3DFile *afile,
-                const gchar *name,
-                const gchar **retval,
-                GError **error)
-{
-    const Al3DTag *tag;
-
-    if (!(tag = find_tag(afile, name, error)))
-        return FALSE;
-
-    *retval = tag->value;
     return TRUE;
 }
 
