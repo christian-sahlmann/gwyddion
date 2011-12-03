@@ -387,6 +387,13 @@ add_meta(GwyContainer *container,
         gwy_container_set_string_by_name(meta, tag->key, g_strdup(tag->value));
     }
 
+    if (strlen(afile->comment)) {
+        gchar *p = g_convert(afile->comment, strlen(afile->comment),
+                             "UTF-8", "ISO-8859-1", NULL, NULL, NULL);
+        if (p)
+            gwy_container_set_string_by_name(meta, "Comment", p);
+    }
+
     g_snprintf(key, sizeof(key), "/%u/meta", id);
     gwy_container_set_object_by_name(container, key, meta);
     g_object_unref(meta);
