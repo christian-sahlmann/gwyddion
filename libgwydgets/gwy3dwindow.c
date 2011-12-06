@@ -957,6 +957,22 @@ gwy_3d_window_build_visual_tab(Gwy3DWindow *window)
     return vbox;
 }
 
+/**
+ * gwy_3d_window_set_overlay_chooser:
+ * @gwy3dwindow: A 3D data view window.
+ * @chooser: Overlay chooser widget.
+ *
+ * Sets the overlay chooser widget of a 3D window.
+ *
+ * Once set, the overlay chooser widget cannot be changed.
+ *
+ * The 3D window does not use the provided widget in any way, it just places
+ * it in an appropriate place in the user interface.  It is expected that the
+ * caller will perform gwy_app_3d_window_set_data2() upon selection of data
+ * in the chooser.
+ *
+ * Since: 2.26
+ **/
 void
 gwy_3d_window_set_overlay_chooser(Gwy3DWindow *gwy3dwindow,
                                   GtkWidget *chooser)
