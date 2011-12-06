@@ -41,6 +41,10 @@ void gwy_data_field_correct_average           (GwyDataField *data_field,
 void gwy_data_field_mask_outliers             (GwyDataField *data_field,
                                                GwyDataField *mask_field,
                                                gdouble thresh);
+void gwy_data_field_mask_outliers2            (GwyDataField *data_field,
+                                               GwyDataField *mask_field,
+                                               gdouble thresh_low,
+                                               gdouble thresh_high);
 void gwy_data_field_distort                   (GwyDataField *source,
                                                GwyDataField *dest,
                                                GwyCoordTransform2DFunc invtrans,

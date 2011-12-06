@@ -268,30 +268,54 @@ gwy_data_field_correct_laplace_iteration(GwyDataField *data_field,
  * Creates mask of data that are above or below @thresh*sigma from average
  * height.
  *
- * Sigma denotes root-mean square deviation
- * of heights. This criterium corresponds
- * to usual Gaussian distribution outliers detection for @thresh = 3.
+ * Sigma denotes root-mean square deviation of heights. This criterium
+ * corresponds to the usual Gaussian distribution outliers detection if
+ * @thresh is 3.
  **/
 void
 gwy_data_field_mask_outliers(GwyDataField *data_field,
                              GwyDataField *mask_field,
                              gdouble thresh)
 {
-    gdouble avg;
-    gdouble criterium;
-    gint i;
+    gwy_data_field_mask_outliers2(data_field, mask_field, thresh, thresh);
+}
 
-    avg = gwy_data_field_get_avg(data_field);
-    criterium = gwy_data_field_get_rms(data_field) * thresh;
+/**
+ * gwy_data_field_mask_outliers2:
+ * @data_field: A data field.
+ * @mask_field: A data field to be filled with mask.
+ * @thresh_low: Lower threshold value.
+ * @thresh_high: Upper threshold value.
+ *
+ * Creates mask of data that are above or below multiples of rms from average
+ * height.
+ *
+ * Data that are below @mean-@thresh_low*@sigma or above
+ * @mean+@thresh_high*@sigma are marked as outliers, where @sigma denotes the
+ * root-mean square deviation of heights.
+ *
+ * Since: 2.26
+ **/
+void
+gwy_data_field_mask_outliers2(GwyDataField *data_field,
+                              GwyDataField *mask_field,
+                              gdouble thresh_low,
+                              gdouble thresh_high)
+{
+     gdouble avg, val;
+     gdouble criterium_low, criterium_high;
+     gint i;
 
-    for (i = 0; i < (data_field->xres * data_field->yres); i++) {
-        if (fabs(data_field->data[i] - avg) > criterium)
-            mask_field->data[i] = 1;
-        else
-            mask_field->data[i] = 0;
-    }
+     avg = gwy_data_field_get_avg(data_field);
+     criterium_low = -gwy_data_field_get_rms(data_field) * thresh_low;
+     criterium_high = gwy_data_field_get_rms(data_field) * thresh_high;
 
-    gwy_data_field_invalidate(mask_field);
+     for (i = 0; i < (data_field->xres * data_field->yres); i++) {
+         val = data_field->data[i] - avg;
+         mask_field->data[i] = (val < criterium_low || val > criterium_high);
+     }
+
+     gwy_data_field_invalidate(mask_field);
 }
 
 /**
