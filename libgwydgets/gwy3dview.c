@@ -686,12 +686,24 @@ gwy_3d_view_data_field_changed(Gwy3DView *gwy3dview)
     gwy_3d_view_update_lists(gwy3dview);
 }
 
+/**
+ * gwy_3d_view_set_ovlay:
+ * @gwy3dview: A 3D data view widget.
+ * @ovlays: List of @novlays pixmap layers usable as overlays.
+ * @novlays: Number of items in @ovlays.
+ *
+ * Sets overlays for a 3D view.
+ *
+ * Since: 2.26
+ **/
 void
 gwy_3d_view_set_ovlay(Gwy3DView *gwy3dview,
                       GwyPixmapLayer** ovlays,
                       guint novlays)
 {
     gint i = 0;
+
+    g_return_if_fail(GWY_IS_3D_VIEW(gwy3dview));
 
     if (gwy3dview->ovlays) {
         for (i = 0; i < gwy3dview->novlays; i++) {
@@ -700,7 +712,7 @@ gwy_3d_view_set_ovlay(Gwy3DView *gwy3dview,
         };
         g_free(gwy3dview->ovlays);
     };
-    
+
     gwy3dview->ovlays = g_new(GwyPixmapLayer*, novlays);
     gwy3dview->ovlay_updated_id = g_new(guint, novlays);
     gwy3dview->novlays = novlays;
@@ -932,7 +944,7 @@ gwy_3d_view_set_gradient_key(Gwy3DView *gwy3dview,
     quark = key ? g_quark_from_string(key) : 0;
     if (gwy3dview->gradient_key == quark)
         return;
-    
+
     if (gwy3dview->ovlays && gwy3dview->ovlays[0])
         gwy_layer_basic_set_gradient_key(GWY_LAYER_BASIC(gwy3dview->ovlays[0]),
                                          key);
@@ -1998,7 +2010,7 @@ gwy_3d_make_list(Gwy3DView *gwy3dview,
 
     gwy_3d_calculate_pixel_sizes(dfield, &dx, &dy);
     res = MAX(xres*dx, yres*dy);
-    if ( gwy3dview->setup->visualization == GWY_3D_VISUALIZATION_OVERLAY 
+    if ( gwy3dview->setup->visualization == GWY_3D_VISUALIZATION_OVERLAY
          && gwy3dview->ovlays ) {
         gint l;
         GdkPixbuf* lpb;
@@ -2106,22 +2118,23 @@ static int gwy_3d_util_project(GLdouble x,
 {
     GLdouble temp[4];
     // Matrix-Vector-Product
-    temp[0]=mpM[0]*x+mpM[4]*y+mpM[8]*z+mpM[12];
-    temp[1]=mpM[1]*x+mpM[5]*y+mpM[9]*z+mpM[13];
-    temp[2]=mpM[2]*x+mpM[6]*y+mpM[10]*z+mpM[14];
-    temp[3]=mpM[3]*x+mpM[7]*y+mpM[11]*z+mpM[15];
+    temp[0] = mpM[0]*x+mpM[4]*y+mpM[8]*z+mpM[12];
+    temp[1] = mpM[1]*x+mpM[5]*y+mpM[9]*z+mpM[13];
+    temp[2] = mpM[2]*x+mpM[6]*y+mpM[10]*z+mpM[14];
+    temp[3] = mpM[3]*x+mpM[7]*y+mpM[11]*z+mpM[15];
 
-    if (temp[3] == 0.0) return(GL_FALSE);
+    if (temp[3] == 0.0)
+        return GL_FALSE;
 
     temp[0] /= temp[3];
     temp[1] /= temp[3];
     temp[2] /= temp[3];
 
-    *wx=(0.5*temp[0]+0.5)*vpMatrix[2]+vpMatrix[0];
-    *wy=(0.5*temp[1]+0.5)*vpMatrix[3]+vpMatrix[1];
-    *wz=0.5*temp[2]+0.5;
+    *wx = (0.5*temp[0]+0.5)*vpMatrix[2]+vpMatrix[0];
+    *wy = (0.5*temp[1]+0.5)*vpMatrix[3]+vpMatrix[1];
+    *wz = 0.5*temp[2]+0.5;
 
-    return(GL_TRUE);
+    return GL_TRUE;
 }
 
 static inline int uppow2(int x)
@@ -2244,7 +2257,7 @@ gwy_3d_draw_axes(Gwy3DView *widget,gint width,gint height)
                  rotA,rotB;
         GLint vpM[4];
 
-        sx=sy=sz=tx=ty=tz=ux=uy=uz=vx=vy=vz=0;
+        sx = sy = sz = tx = ty = tz = ux = uy = uz = vx = vy = vz = 0;
 
         view_size = MIN(width,height);
         size = (gint)(sqrt(view_size)*0.8);
@@ -2260,10 +2273,10 @@ gwy_3d_draw_axes(Gwy3DView *widget,gint width,gint height)
 
         gwy_3d_util_project(Ax,Ay,-0.0f,mpM,vpM,&sx,&sy,&sz);
         gwy_3d_util_project(Bx,By,-0.0f,mpM,vpM,&tx,&ty,&tz);
-        rotA=atan2((ty-sy),(tx-sx));
+        rotA = atan2((ty-sy),(tx-sx));
 
         gwy_3d_util_project(Cx,Cy,-0.0f,mpM,vpM,&sx,&sy,&sz);
-        rotB=G_PI/2.-atan2((sx-tx),(sy-ty));
+        rotB = G_PI/2.-atan2((sx-tx),(sy-ty));
 
         gwy_3d_util_project((Ax+Bx)/2 - (Cx-Bx)*0.1,
                             (Ay+By)/2 - (Cy-By)*0.1,
@@ -2368,12 +2381,12 @@ gwy_3d_draw_light_position(Gwy3DView *widget)
     glRotatef(-widget->setup->light_phi * RAD_2_DEG, 0.0f, 1.0f, 0.0f);
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     glBegin(GL_QUAD_STRIP);
-        for (i = -180; i <= 180; i += 5) {
-            GLfloat x = cos(i * DEG_2_RAD) * G_SQRT2;
-            GLfloat z = sin(i * DEG_2_RAD) * G_SQRT2;
-            glVertex3f(x,  0.05f, z);
-            glVertex3f(x, -0.05f, z);
-        }
+    for (i = -180; i <= 180; i += 5) {
+        GLfloat x = cos(i * DEG_2_RAD) * G_SQRT2;
+        GLfloat z = sin(i * DEG_2_RAD) * G_SQRT2;
+        glVertex3f(x,  0.05f, z);
+        glVertex3f(x, -0.05f, z);
+    }
     glEnd();
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     glBegin(GL_LINE_STRIP);
@@ -2519,10 +2532,10 @@ gwy_3d_view_render_string(gdouble size,
     cairo_set_source_rgba(cr, 0.0, 0.0, 0.0, 1.0);
     pango_layout_set_markup(clayout, text, -1);
     pango_layout_get_pixel_size(clayout,&px,&py);
-    *width=px;
-    *height=py;
-    px=uppow2(px);
-    py=uppow2(py);
+    *width = px;
+    *height = py;
+    px = uppow2(px);
+    py = uppow2(py);
 
     g_free(alpha);
     cairo_destroy(cr);
@@ -2547,8 +2560,9 @@ gwy_3d_view_render_string(gdouble size,
     return alpha;
 }
 
-static GLuint gwy_3d_cairo_to_tex(guchar* image,
-                                  gint width, gint height, gint stride)
+static GLuint
+gwy_3d_cairo_to_tex(guchar* image,
+                    gint width, gint height, gint stride)
 {
     GLint w2=uppow2(width),h2=uppow2(height);
     GLuint t[1];
@@ -2564,14 +2578,15 @@ static GLuint gwy_3d_cairo_to_tex(guchar* image,
     return t[0];
 };
 
-static void gwy_3d_draw_ctex(GLuint t,
-                             gint hjust, gint vjust,
-                             gint width, gint height)
+static void
+gwy_3d_draw_ctex(GLuint t,
+                 gint hjust, gint vjust,
+                 gint width, gint height)
 {
-    GLfloat w2=uppow2(width),h2=uppow2(height);
-    GLfloat wt=width/w2,ht=height/h2;
-    GLfloat ho=-(hjust)*width/2;
-    GLfloat vo=(int)(vjust-2)*height/2;
+    GLfloat w2 = uppow2(width), h2 = uppow2(height);
+    GLfloat wt = width/w2, ht = height/h2;
+    GLfloat ho = -(hjust)*width/2;
+    GLfloat vo = (int)(vjust-2)*height/2;
 
     glBindTexture(GL_TEXTURE_2D,t);
 
@@ -2585,15 +2600,16 @@ static void gwy_3d_draw_ctex(GLuint t,
     glBindTexture(GL_TEXTURE_2D,0);
 };
 
-static void gwy_3d_texture_text(Gwy3DView     *gwy3dview,
-                                Gwy3DViewLabel id,
-                                GLfloat        raster_x,
-                                GLfloat        raster_y,
-                                GLfloat        raster_z,
-                                GLfloat        rot,
-                                guint          size,
-                                gint           vjustify,
-                                gint           hjustify)
+static void
+gwy_3d_texture_text(Gwy3DView     *gwy3dview,
+                    Gwy3DViewLabel id,
+                    GLfloat        raster_x,
+                    GLfloat        raster_y,
+                    GLfloat        raster_z,
+                    GLfloat        rot,
+                    guint          size,
+                    gint           vjustify,
+                    gint           hjustify)
 {
     GLuint tex = 0;
     Gwy3DLabel *label;
@@ -2622,16 +2638,18 @@ static void gwy_3d_texture_text(Gwy3DView     *gwy3dview,
     g_free(img);
 }
 
-static void gwy_gradient_to_cairo_pattern(cairo_pattern_t* pattern, GwyGradient* gradient)
+static void
+gwy_gradient_to_cairo_pattern(cairo_pattern_t* pattern, GwyGradient* gradient)
 {
     GwyGradientPoint gp;
-    gint i=0,npoints = gwy_gradient_get_npoints(gradient);
-    for(i=0;i<npoints;i++) {
+    gint i = 0, npoints = gwy_gradient_get_npoints(gradient);
+    for (i = 0; i < npoints; i++) {
         gp=gwy_gradient_get_point(gradient,i);
-        cairo_pattern_add_color_stop_rgba(pattern,gp.x,gp.color.r,gp.color.g,gp.color.b,gp.color.a);
+        cairo_pattern_add_color_stop_rgba(pattern, gp.x,
+                                          gp.color.r, gp.color.g, gp.color.b,
+                                          gp.color.a);
     };
 };
-
 
 static void
 gwy_3d_format_layout(PangoLayout *layout,
@@ -2661,7 +2679,8 @@ gwy_3d_format_layout(PangoLayout *layout,
 
 /* auxilliary function to compute decimal points from tickdist */
 static gint
-gwy_3d_step_to_prec(gdouble d) {
+gwy_3d_step_to_prec(gdouble d)
+{
     gdouble resd = log10(7.5)-log10(d);
     if (resd != resd)
         return 1;
@@ -2675,17 +2694,18 @@ gwy_3d_step_to_prec(gdouble d) {
 static void
 gwy_3d_pango_cairo_show_layout_vcentered(cairo_t* cr, PangoLayout* layout)
 {
-  int lw,lh;
-  gdouble ch;
-  pango_layout_get_size(layout,&lw,&lh);
-  ch = (double) (lh)/PANGO_SCALE;
-  cairo_rel_move_to(cr,0,-ch/2.);
-  pango_cairo_show_layout(cr,layout);
+    int lw, lh;
+    gdouble ch;
+    pango_layout_get_size(layout, &lw, &lh);
+    ch = (double)(lh)/PANGO_SCALE;
+    cairo_rel_move_to(cr, 0, -ch/2.0);
+    pango_cairo_show_layout(cr, layout);
 };
 
-static cairo_t* gwy_cairo_create_cairo_context (gint width,
-                                                gint height,
-                                                cairo_surface_t **surf)
+static cairo_t*
+gwy_cairo_create_cairo_context(gint width,
+                               gint height,
+                               cairo_surface_t **surf)
 {
     cairo_t* cr;
 
@@ -2697,15 +2717,16 @@ static cairo_t* gwy_cairo_create_cairo_context (gint width,
     return cr;
 }
 
-static cairo_surface_t* gwy_3d_fmscaletex(gint height,
-                            gdouble bot,
-                            gdouble top,
-                            gint fsize,
-                            GwySIUnit *siunit,
-                            GwyGradient* gradient,
-                            gboolean inverted,
-                            gint* rw, gint* rh,
-                            gboolean noticks)
+static cairo_surface_t*
+gwy_3d_fmscaletex(gint height,
+                  gdouble bot,
+                  gdouble top,
+                  gint fsize,
+                  GwySIUnit *siunit,
+                  GwyGradient* gradient,
+                  gboolean inverted,
+                  gint* rw, gint* rh,
+                  gboolean noticks)
 {
     PangoLayout *layout;
     cairo_t* cr;
@@ -2717,14 +2738,14 @@ static cairo_surface_t* gwy_3d_fmscaletex(gint height,
     gint tick, width, lw, layw1, layw2, layh;
     gint units_width, label_height, mintickdist, prec = 1;
     gboolean do_draw = TRUE;
-    gint size,fmw,l;
+    gint size, fmw, l;
     cairo_pattern_t* pattern;
     gdouble zoom;
 
     s = g_string_new(NULL);
-    cr = gwy_cairo_create_cairo_context(1,1,&surf);
+    cr = gwy_cairo_create_cairo_context(1, 1, &surf);
     layout = gwy_3d_prepare_layout(cr, fsize);
-    zoom=0.8/12.*(float) fsize;
+    zoom = 0.8/12.0*(float)fsize;
 
     x_max = MAX(fabs(bot), fabs(top));
     format = gwy_si_unit_get_format(siunit, GWY_SI_UNIT_FORMAT_VFMARKUP,
@@ -2776,13 +2797,12 @@ static cairo_surface_t* gwy_3d_fmscaletex(gint height,
     cairo_destroy(cr);
 
     cr = gwy_cairo_create_cairo_context(uppow2(width), uppow2(height), &surf);
-    *rw=width;
-    *rh=height;
+    *rw = width;
+    *rh = height;
     pango_cairo_update_layout(cr,layout);
     cairo_set_line_width(cr,lw);
 
-    gwy_3d_format_layout(layout, s, "%.*f",
-                  prec, bot/format->magnitude);
+    gwy_3d_format_layout(layout, s, "%.*f", prec, bot/format->magnitude);
 
     cairo_translate(cr,fmw+2, height - label_height+0.5);
     cairo_move_to(cr,0,0);
@@ -2790,24 +2810,24 @@ static cairo_surface_t* gwy_3d_fmscaletex(gint height,
     cairo_stroke(cr);
     cairo_move_to(cr,tick+2*zoom,0);
     gwy_3d_pango_cairo_show_layout_vcentered(cr,layout);
-    if ( !noticks ) {
-        if( (x-bot)*scale < label_height )
+    if (!noticks) {
+        if ((x-bot)*scale < label_height)
             {
-                x+=tickdist;
+                x += tickdist;
                 //cairo_translate(cr,0,-tickdist*scale);
             };
 
         cairo_translate(cr,0,-(x-bot)*scale);
 
-        for(x=x;x<=max;x+=tickdist) {
-            cairo_move_to(cr,0,0);
-            cairo_rel_line_to(cr,tick,0);
+        for (x = x;x <= max; x += tickdist) {
+            cairo_move_to(cr, 0,0);
+            cairo_rel_line_to(cr, tick, 0);
             cairo_stroke(cr);
-            cairo_move_to(cr,tick+2*zoom,0);
+            cairo_move_to(cr, tick+2*zoom, 0);
             gwy_3d_format_layout(layout, s, "%.*f",
                                  prec, x/format->magnitude);
-            gwy_3d_pango_cairo_show_layout_vcentered(cr,layout);
-            cairo_translate(cr,0,-tickdist*scale);
+            gwy_3d_pango_cairo_show_layout_vcentered(cr, layout);
+            cairo_translate(cr, 0, -tickdist*scale);
         };
     };
 
@@ -2865,7 +2885,8 @@ static cairo_surface_t* gwy_3d_fmscaletex(gint height,
     return surf;
 }
 
-static gint gwy_3d_draw_fmscaletex(Gwy3DView *view)
+static gint
+gwy_3d_draw_fmscaletex(Gwy3DView *view)
 {
   gint height = GTK_WIDGET(view)->allocation.height;
   gint width = GTK_WIDGET(view)->allocation.width;
@@ -2881,7 +2902,7 @@ static gint gwy_3d_draw_fmscaletex(Gwy3DView *view)
       && view->ovlays[0]) {
       gwy_layer_basic_get_range(GWY_LAYER_BASIC(view->ovlays[0]),
                                 &min,&max);
-      noticks = 
+      noticks =
           gwy_layer_basic_get_range_type(GWY_LAYER_BASIC(view->ovlays[0]))
           == GWY_LAYER_BASIC_RANGE_ADAPT;
   }
@@ -3030,6 +3051,14 @@ gwy_3d_view_get_setup_prefix(G_GNUC_UNUSED Gwy3DView *gwy3dview)
 void
 gwy_3d_view_set_setup_prefix(G_GNUC_UNUSED Gwy3DView *gwy3dview,
                              G_GNUC_UNUSED const gchar *key)
+{
+    g_critical("OpenGL support was not compiled in.");
+}
+
+void
+gwy_3d_view_set_ovlay(G_GNUC_UNUSED Gwy3DView *gwy3dview,
+                      G_GNUC_UNUSED GwyPixmapLayer** ovlays,
+                      GwyPixmapLayer guint novlays)
 {
     g_critical("OpenGL support was not compiled in.");
 }
