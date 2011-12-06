@@ -113,9 +113,9 @@ struct _Gwy3DView {
     gboolean b_reserved4;
 
     guint     timeout2_id;
-    guint     *ovlay_updated_id;
+    gint      i_reserved2;
 
-    gpointer p_reserved2;
+    guint     *ovlay_updated_id;
     gpointer p_reserved3;
     gpointer p_reserved4;
 };
