@@ -276,6 +276,8 @@ gwy_strisident(const gchar *s,
  * function.
  *
  * Returns: %TRUE if the two string keys match, ignoring case.
+ *
+ * Since: 2.26
  */
 gboolean
 gwy_ascii_strcase_equal(gconstpointer v1,
@@ -303,6 +305,8 @@ gwy_ascii_strcase_equal(gconstpointer v1,
  * namely in conjuction with gwy_ascii_strcase_equal() comparison function.
  *
  * Returns: The hash value corresponding to the key @v.
+ *
+ * Since: 2.26
  */
 guint
 gwy_ascii_strcase_hash(gconstpointer v)
