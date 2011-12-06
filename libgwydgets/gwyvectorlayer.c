@@ -521,7 +521,7 @@ gwy_vector_layer_set_selection_key(GwyVectorLayer *layer,
     gwy_vector_layer_selection_disconnect(layer);
     layer->selection_key = quark;
     gwy_vector_layer_selection_connect(layer);
-    gwy_vector_layer_container_connect(layer, key);
+    gwy_vector_layer_container_connect(layer, g_quark_to_string(quark));
 
     /* XXX: copied from pixmap layer */
     g_object_notify(G_OBJECT(layer), "selection-key");

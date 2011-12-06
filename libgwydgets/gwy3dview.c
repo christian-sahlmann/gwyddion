@@ -622,7 +622,7 @@ gwy_3d_view_set_data_key(Gwy3DView *gwy3dview,
     gwy_3d_view_data_field_disconnect(gwy3dview);
     gwy3dview->data_key = quark;
     gwy_3d_view_data_field_connect(gwy3dview);
-    gwy_3d_view_container_connect(gwy3dview, key,
+    gwy_3d_view_container_connect(gwy3dview, g_quark_to_string(quark),
                                   &gwy3dview->data_item_id,
                                   G_CALLBACK(gwy_3d_view_data_item_changed));
     g_object_notify(G_OBJECT(gwy3dview), "data-key");
@@ -759,7 +759,7 @@ gwy_3d_view_set_setup_prefix(Gwy3DView *gwy3dview,
     gwy3dview->setup_key = quark;
     gwy_3d_view_ensure_setup(gwy3dview);
     gwy_3d_view_setup_connect(gwy3dview);
-    gwy_3d_view_container_connect(gwy3dview, key,
+    gwy_3d_view_container_connect(gwy3dview, g_quark_to_string(quark),
                                   &gwy3dview->setup_item_id,
                                   G_CALLBACK(gwy_3d_view_setup_item_changed));
 
@@ -942,7 +942,7 @@ gwy_3d_view_set_gradient_key(Gwy3DView *gwy3dview,
     gwy3dview->gradient_key = quark;
     gwy_3d_view_gradient_connect(gwy3dview);
     gwy_3d_view_container_connect
-                               (gwy3dview, key,
+                               (gwy3dview, g_quark_to_string(quark),
                                 &gwy3dview->gradient_item_id,
                                 G_CALLBACK(gwy_3d_view_gradient_item_changed));
     g_object_notify(G_OBJECT(gwy3dview), "gradient-key");
@@ -1035,7 +1035,7 @@ gwy_3d_view_set_material_key(Gwy3DView *gwy3dview,
     gwy3dview->material_key = quark;
     gwy_3d_view_material_connect(gwy3dview);
     gwy_3d_view_container_connect
-                            (gwy3dview, key,
+                            (gwy3dview, g_quark_to_string(quark),
                              &gwy3dview->material_item_id,
                              G_CALLBACK(gwy_3d_view_material_item_changed));
     g_object_notify(G_OBJECT(gwy3dview), "material-key");

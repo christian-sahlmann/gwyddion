@@ -474,7 +474,7 @@ gwy_layer_basic_set_gradient_key(GwyLayerBasic *basic_layer,
     basic_layer->gradient_key = quark;
     gwy_layer_basic_gradient_connect(basic_layer);
     gwy_layer_basic_container_connect
-                            (basic_layer, key,
+                            (basic_layer, g_quark_to_string(quark),
                              &basic_layer->gradient_item_id,
                              G_CALLBACK(gwy_layer_basic_gradient_item_changed));
 
@@ -524,7 +524,8 @@ gwy_layer_basic_set_range_type_key(GwyLayerBasic *basic_layer,
     basic_layer->range_type_key = q;
     if (q)
         gwy_layer_basic_container_connect
-                               (basic_layer, key, &basic_layer->range_type_id,
+                               (basic_layer, g_quark_to_string(q),
+                                &basic_layer->range_type_id,
                                 G_CALLBACK(gwy_layer_basic_range_type_changed));
     gwy_layer_basic_reconnect_fixed(basic_layer);
 
@@ -742,7 +743,7 @@ gwy_layer_basic_set_presentation_key(GwyLayerBasic *basic_layer,
     gwy_layer_basic_show_field_disconnect(basic_layer);
     basic_layer->show_key = quark;
     gwy_layer_basic_show_field_connect(basic_layer);
-    gwy_layer_basic_container_connect(basic_layer, key,
+    gwy_layer_basic_container_connect(basic_layer, g_quark_to_string(quark),
                                       &basic_layer->show_item_id,
                                       G_CALLBACK(gwy_layer_basic_item_changed));
     presentation_switched ^= !!basic_layer->show_field;

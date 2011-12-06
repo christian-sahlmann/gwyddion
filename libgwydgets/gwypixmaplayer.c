@@ -326,7 +326,7 @@ gwy_pixmap_layer_set_data_key(GwyPixmapLayer *pixmap_layer,
     gwy_pixmap_layer_data_field_disconnect(pixmap_layer);
     pixmap_layer->data_key = quark;
     gwy_pixmap_layer_data_field_connect(pixmap_layer);
-    gwy_pixmap_layer_container_connect(pixmap_layer, key);
+    gwy_pixmap_layer_container_connect(pixmap_layer, g_quark_to_string(quark));
 
     pixmap_layer->wants_repaint = TRUE;
     g_object_notify(G_OBJECT(pixmap_layer), "data-key");
