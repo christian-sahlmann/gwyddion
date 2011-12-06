@@ -17,7 +17,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
-#define DEBUG 1
+
 #include "config.h"
 #include <string.h>
 #include <stdarg.h>
@@ -74,8 +74,7 @@ static void       gwy_app_save_3d_export              (GtkWidget *dialog,
                                                        gint response,
                                                        Gwy3DWindow *gwy3dwindow);
 static void       gwy_app_3d_window_add_overlay_menu  (Gwy3DWindow *gwy3dwindow);
-static void       gwy_app_3d_window_update_chooser    (GtkWidget *chooser,
-                                                       Gwy3DWindow *gwy3dwindow);
+static void       gwy_app_3d_window_update_chooser    (Gwy3DWindow *gwy3dwindow);
 static void       gwy_app_3d_window_set_data2         (Gwy3DWindow *gwy3dwindow,
                                                        gint id,
                                                        gboolean mask);
@@ -853,7 +852,7 @@ gwy_app_3d_window_add_overlay_menu(Gwy3DWindow *gwy3dwindow)
     gwy_data_chooser_set_active(GWY_DATA_CHOOSER(menu), view->data, activeid);
     gwy_app_3d_window_set_data2(gwy3dwindow, activeid, FALSE);
 
-    g_signal_connect(menu, "changed",
+    g_signal_connect_swapped(menu, "changed",
                      G_CALLBACK(gwy_app_3d_window_update_chooser), gwy3dwindow);
     
     gtk_box_pack_start(GTK_BOX(lay),menu,FALSE,FALSE,0);
@@ -861,7 +860,7 @@ gwy_app_3d_window_add_overlay_menu(Gwy3DWindow *gwy3dwindow)
 
     menu = gtk_check_button_new_with_mnemonic("U_se mask not data");
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(menu),FALSE);
-    g_signal_connect(menu, "toggled",
+    g_signal_connect_swapped(menu, "toggled",
                      G_CALLBACK(gwy_app_3d_window_update_chooser),
                      gwy3dwindow);
     gtk_box_pack_start(GTK_BOX(lay),menu,FALSE,FALSE,0);
@@ -879,14 +878,13 @@ gwy_app_3d_window_set_data2(Gwy3DWindow *gwy3dwindow,
     GQuark key;
     GwyPixmapLayer *ovplay[2];
     GwyDataViewLayer* dvl;
-    const guchar* name;
+    guchar name[48];
 
 
 
     view = GWY_3D_VIEW(gwy_3d_window_get_3d_view(gwy3dwindow));
 
     key = gwy_app_get_data_key_for_id(id);
-    name = g_quark_to_string(key);
 
     ovplay[0] = gwy_layer_basic_new();
     /* Plug */
@@ -894,21 +892,26 @@ gwy_app_3d_window_set_data2(Gwy3DWindow *gwy3dwindow,
     dvl = GWY_DATA_VIEW_LAYER(ovplay[0]);
     dvl->data = view->data;
     g_object_ref(dvl->data);
-
-    gwy_pixmap_layer_set_data_key(ovplay[0],name);
+    
+    gwy_pixmap_layer_set_data_key(ovplay[0],g_quark_to_string(key));
     gwy_layer_basic_set_gradient_key(GWY_LAYER_BASIC(ovplay[0]),
                                      gwy_3d_view_get_gradient_key(view));
+    g_snprintf(name,sizeof(name),"/%d/base", id);
+    gwy_layer_basic_set_min_max_key(GWY_LAYER_BASIC(ovplay[0]),
+                                    name);
+    g_snprintf(name,sizeof(name),"/%d/base/range-type", id);
+    gwy_layer_basic_set_range_type_key(GWY_LAYER_BASIC(ovplay[0]),
+                                    name);
 
     if (mask) {
         key = gwy_app_get_mask_key_for_id(id);
-        name = g_quark_to_string(key);
         ovplay[1] = gwy_layer_mask_new();
         dvl = GWY_DATA_VIEW_LAYER(ovplay[1]);
         dvl->data = view->data;
         g_object_ref(dvl->data);
-        gwy_pixmap_layer_set_data_key(ovplay[1],name);
+        gwy_pixmap_layer_set_data_key(ovplay[1],g_quark_to_string(key));
         gwy_layer_mask_set_color_key(GWY_LAYER_MASK(ovplay[1]),
-                                     name);
+                                     g_quark_to_string(key));
         gwy_3d_view_set_ovlay(view, ovplay, 2);
     }
     else 
@@ -917,8 +920,7 @@ gwy_app_3d_window_set_data2(Gwy3DWindow *gwy3dwindow,
 };
 
 static void
-gwy_app_3d_window_update_chooser(GtkWidget *chooser,
-                                 Gwy3DWindow *gwy3dwindow)
+gwy_app_3d_window_update_chooser(Gwy3DWindow *gwy3dwindow)
 {
     gint id;
     gboolean mask = FALSE;

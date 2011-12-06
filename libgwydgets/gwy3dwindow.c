@@ -1570,8 +1570,8 @@ gwy_3d_window_view_clicked(GtkWidget *gwy3dwindow,
         g_signal_connect(item, "activate",
                          G_CALLBACK(gwy_3d_window_visual_selected), gwy3dwindow);
         gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
-        item2 = gtk_menu_item_new_with_mnemonic(_("S_witch to Overlay Mode"));
-        visual = GWY_3D_VISUALIZATION_OVERLAY;
+        item2 = gtk_menu_item_new_with_mnemonic(_("S_witch to Lighting Mode"));
+        visual = GWY_3D_VISUALIZATION_LIGHTING;
         g_object_set_data(G_OBJECT(item2), "display-mode", GINT_TO_POINTER(visual));
         g_signal_connect(item2, "activate",
                          G_CALLBACK(gwy_3d_window_visual_selected), gwy3dwindow);

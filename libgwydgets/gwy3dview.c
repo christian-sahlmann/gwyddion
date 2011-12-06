@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
-#define DEBUG 1
+
 #include "config.h"
 #include <string.h>
 #include <stdlib.h>
@@ -1624,7 +1624,7 @@ gwy_3d_view_expose(GtkWidget *widget,
         glDisable(GL_LIGHTING);
 
         sw = gwy_3d_draw_fmscaletex(gwy3dview);
-        gwy_debug("%d %f",sw,w);
+        gwy_debug("Scale width: %d",sw);
 
         glDisable(GL_TEXTURE_2D);
         glEnable(GL_DEPTH_TEST);
@@ -1731,7 +1731,7 @@ gwy_3d_view_motion_notify(GtkWidget *widget,
     gwy3dview->mouse_begin_x = ex;
     gwy3dview->mouse_begin_y = ey;
 
-    gwy_debug("motion event: (%lf, %lf), shape=%d",
+    gwy_debug("motion event: (%d, %d), shape=%d",
               ex, ey, gwy3dview->shape_current);
 
     if (mods & GDK_BUTTON1_MASK) {
@@ -2000,21 +2000,21 @@ gwy_3d_make_list(Gwy3DView *gwy3dview,
     res = MAX(xres*dx, yres*dy);
     if ( gwy3dview->setup->visualization == GWY_3D_VISUALIZATION_OVERLAY 
          && gwy3dview->ovlays ) {
-        gint i;
+        gint l;
         GdkPixbuf* lpb;
         pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, 0, 8, xres,yres);
         gdk_pixbuf_fill(pixbuf, 0x00000000);
-        gwy_debug("lays");
-        for ( i = 0; i < gwy3dview->novlays; i++ ) {
-            if (ovlays[i]) {
-                gwy_debug("lay");
-                lpb = gwy_pixmap_layer_paint(ovlays[i]);
-                gdk_pixbuf_composite(lpb,pixbuf,
-                                     0,0,xres,yres,
-                                     0,0,
-                                     (gdouble)xres/gdk_pixbuf_get_width(lpb),
-                                     (gdouble)yres/gdk_pixbuf_get_height(lpb),
-                                     GDK_INTERP_TILES,0xff);
+
+        for ( l = 0; l < gwy3dview->novlays; l++ ) {
+            if (ovlays[l]) {
+                lpb = gwy_pixmap_layer_paint(ovlays[l]);
+                if (lpb)
+                    gdk_pixbuf_composite(lpb,pixbuf,
+                                         0,0,xres,yres,
+                                         0,0,
+                                         (gdouble)xres/gdk_pixbuf_get_width(lpb),
+                                         (gdouble)yres/gdk_pixbuf_get_height(lpb),
+                                         GDK_INTERP_TILES,0xff);
             };
         };
         freepixbuf = TRUE;
@@ -2628,7 +2628,6 @@ static void gwy_gradient_to_cairo_pattern(cairo_pattern_t* pattern, GwyGradient*
     gint i=0,npoints = gwy_gradient_get_npoints(gradient);
     for(i=0;i<npoints;i++) {
         gp=gwy_gradient_get_point(gradient,i);
-        gwy_debug("%f %f %f %f",gp.x,gp.color.r,gp.color.g,gp.color.b,gp.color.a);
         cairo_pattern_add_color_stop_rgba(pattern,gp.x,gp.color.r,gp.color.g,gp.color.b,gp.color.a);
     };
 };
@@ -2899,8 +2898,6 @@ static gint gwy_3d_draw_fmscaletex(Gwy3DView *view)
                            view->gradient,
                            FALSE,
                            &width,&height,noticks);
-
-  gwy_debug("%d %d",width,height);
 
   gwy_3d_cairo_to_tex(cairo_image_surface_get_data(surf),
                       width,
