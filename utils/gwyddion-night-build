@@ -183,16 +183,16 @@ function make_dists() {
   rm -f .releaseme
 
   make dist
-  if test -s $pkgname-$version.tar.bz2; then
+  if test -s $pkgname-$version.tar.xz; then
     if which rpmbuild >&/dev/null; then
       TAR_OPTIONS=--wildcards CCACHE_DISABLE=1\
-          rpmbuild -ta --with kde4-thumbnailer --clean $pkgname-$version.tar.bz2 \
+          rpmbuild -ta --with kde4-thumbnailer --clean $pkgname-$version.tar.xz \
         && touch .releaseme
     else
       echo "rpmbuild not available" 1>&2
       touch .releaseme
     fi
-    mv $pkgname-$version.tar.bz2 $pkgname-head.tar.bz2
+    mv $pkgname-$version.tar.xz $pkgname-head.tar.xz
     mv $pkgname-$version.tar.gz $pkgname-head.tar.gz
   fi
 }

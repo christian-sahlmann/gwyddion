@@ -25,7 +25,7 @@ Summary:        MinGW Windows Gwyddion libraries
 Group:          Development/Libraries
 License:        GPLv2+
 URL:            @PACKAGE_URL@
-Source0:        http://gwyddion.net/download/%{version}/gwyddion-%{version}.tar.bz2
+Source0:        http://gwyddion.net/download/%{version}/gwyddion-%{version}.tar.xz
 Patch0:         gwyddion-2.22-build-only-libs.patch
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
