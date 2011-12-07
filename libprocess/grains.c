@@ -1492,7 +1492,7 @@ gwy_data_field_grains_get_quantities(GwyDataField *data_field,
                 imx = (i > 0) ? ix-xres : ix;
                 ipx = (i < yres-1) ? ix+xres : ix;
                 jm = (j > 0) ? j-1 : j;
-                jp = (j < yres-1) ? j+1 : j;
+                jp = (j < xres-1) ? j+1 : j;
 
                 c = (d[ix + j] + d[ix + jm] + d[imx + jm] + d[imx + j])/2.0;
                 p[gno] += square_area2w_1c(d[ix + j], d[ix + jm],
@@ -1723,7 +1723,7 @@ gwy_data_field_grains_get_quantities(GwyDataField *data_field,
                 imx = (i > 0) ? ix-xres : ix;
                 ipx = (i < yres-1) ? ix+xres : ix;
                 jm = (j > 0) ? j-1 : j;
-                jp = (j < yres-1) ? j+1 : j;
+                jp = (j < xres-1) ? j+1 : j;
 
                 v = (52.0*d[ix + j] + 10.0*(d[imx + j] + d[ix + jm]
                                             + d[ix + jp] + d[ipx + j])
