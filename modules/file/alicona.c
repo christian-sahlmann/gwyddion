@@ -592,6 +592,8 @@ check_tag(const Al3DTag *tag,
                     tag->key);
         return FALSE;
     }
+    if (gwy_stramong(tag->key, "DirSpacer", "PlaceHolder", NULL))
+        return TRUE;
     for (i = strlen(tag->value); i < VALUE_SIZE-1; i++) {
         if (tag->value[i]) {
             g_set_error(error, GWY_MODULE_FILE_ERROR,
