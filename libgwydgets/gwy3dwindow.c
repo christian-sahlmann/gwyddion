@@ -197,20 +197,20 @@ gwy_3d_window_destroy(GtkObject *object)
 
         setup = gwy_3d_view_get_setup(GWY_3D_VIEW(gwy3dwindow->gwy3dview));
         g_signal_handlers_disconnect_matched(setup,
-                                             G_SIGNAL_MATCH_FUNC
-                                             | G_SIGNAL_MATCH_DATA,
-                                             0, 0, NULL,
-                                             gwy_3d_window_visualization_changed,
-                                             gwy3dwindow);
+                                     G_SIGNAL_MATCH_FUNC
+                                     | G_SIGNAL_MATCH_DATA,
+                                     0, 0, NULL,
+                                     gwy_3d_window_visualization_changed,
+                                     gwy3dwindow);
 
         while (gwy3dwindow->setup_adjustments) {
             adj = GTK_ADJUSTMENT(gwy3dwindow->setup_adjustments->data);
             g_signal_handlers_disconnect_matched(setup,
-                                                 G_SIGNAL_MATCH_FUNC
-                                                 | G_SIGNAL_MATCH_DATA,
-                                                 0, 0, NULL,
-                                                 gwy_3d_window_adj_setup_changed,
-                                                 adj);
+                                         G_SIGNAL_MATCH_FUNC
+                                         | G_SIGNAL_MATCH_DATA,
+                                         0, 0, NULL,
+                                         gwy_3d_window_adj_setup_changed,
+                                         adj);
             gwy3dwindow->setup_adjustments
                 = g_slist_remove(gwy3dwindow->setup_adjustments, adj);
         }
@@ -524,7 +524,7 @@ gwy_3d_window_pack_buttons(Gwy3DWindow *gwy3dwindow,
         g_object_set(button, "draw-indicator", FALSE, NULL);
         gtk_container_add(GTK_CONTAINER(button),
                           gtk_image_new_from_stock(buttons[i].stock_id,
-                                                   GTK_ICON_SIZE_LARGE_TOOLBAR));
+                                               GTK_ICON_SIZE_LARGE_TOOLBAR));
         g_signal_connect_swapped(button, "clicked",
                                  G_CALLBACK(gwy_3d_window_set_mode),
                                  GINT_TO_POINTER(buttons[i].mode));
@@ -870,9 +870,9 @@ gwy_3d_window_build_visual_tab(Gwy3DWindow *window)
 
     window->visual_mode_group
         = gwy_radio_buttons_create(display_modes, G_N_ELEMENTS(display_modes),
-                                   G_CALLBACK(gwy_3d_window_display_mode_changed),
-                                   window,
-                                   setup->visualization);
+                               G_CALLBACK(gwy_3d_window_display_mode_changed),
+                               window,
+                               setup->visualization);
 
     gtk_table_attach(GTK_TABLE(table),
                      GTK_WIDGET(window->visual_mode_group->data),
@@ -1008,7 +1008,7 @@ gwy_3d_window_set_overlay_chooser(Gwy3DWindow *gwy3dwindow,
     view = GWY_3D_VIEW(gwy3dwindow->gwy3dview);
     setup = gwy_3d_view_get_setup(view);
     gtk_widget_set_sensitive(chooser,
-                             setup->visualization == GWY_3D_VISUALIZATION_OVERLAY);
+                         setup->visualization == GWY_3D_VISUALIZATION_OVERLAY);
 }
 
 static GtkWidget*
@@ -1450,14 +1450,15 @@ gwy_3d_window_set_visualization(Gwy3DWindow *window,
     else
         is_overlay  = TRUE;
 
-    gtk_widget_set_sensitive(window->material_menu, is_material );
-    gtk_widget_set_sensitive(window->material_label, is_material );
-    gtk_widget_set_sensitive(window->gradient_menu, is_gradient || is_overlay );
-    gtk_widget_set_sensitive(window->lights_spin1, is_material || is_overlay );
-    gtk_widget_set_sensitive(window->lights_spin2, is_material || is_overlay );
-    gtk_widget_set_sensitive(window->buttons[GWY_3D_MOVEMENT_LIGHT], is_material || is_overlay );
+    gtk_widget_set_sensitive(window->material_menu, is_material);
+    gtk_widget_set_sensitive(window->material_label, is_material);
+    gtk_widget_set_sensitive(window->gradient_menu, is_gradient || is_overlay);
+    gtk_widget_set_sensitive(window->lights_spin1, is_material || is_overlay);
+    gtk_widget_set_sensitive(window->lights_spin2, is_material || is_overlay);
+    gtk_widget_set_sensitive(window->buttons[GWY_3D_MOVEMENT_LIGHT],
+                             is_material || is_overlay);
     gtk_widget_set_sensitive(window->buttons[N_BUTTONS + GWY_3D_MOVEMENT_LIGHT],
-                             is_material || is_overlay );
+                             is_material || is_overlay);
 
     gtk_widget_set_sensitive(window->dataov_menu, is_overlay);
 
@@ -1547,15 +1548,19 @@ gwy_3d_window_view_clicked(GtkWidget *gwy3dwindow,
                                  gwy3dwindow);
         item = gtk_menu_item_new_with_mnemonic(_("S_witch to Lighting Mode"));
         visual = GWY_3D_VISUALIZATION_LIGHTING;
-        g_object_set_data(G_OBJECT(item), "display-mode", GINT_TO_POINTER(visual));
+        g_object_set_data(G_OBJECT(item), "display-mode",
+                          GINT_TO_POINTER(visual));
         g_signal_connect(item, "activate",
-                         G_CALLBACK(gwy_3d_window_visual_selected), gwy3dwindow);
+                         G_CALLBACK(gwy_3d_window_visual_selected),
+                         gwy3dwindow);
         gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
         item2 = gtk_menu_item_new_with_mnemonic(_("S_witch to Overlay Mode"));
         visual = GWY_3D_VISUALIZATION_OVERLAY;
-        g_object_set_data(G_OBJECT(item2), "display-mode", GINT_TO_POINTER(visual));
+        g_object_set_data(G_OBJECT(item2), "display-mode",
+                          GINT_TO_POINTER(visual));
         g_signal_connect(item2, "activate",
-                         G_CALLBACK(gwy_3d_window_visual_selected), gwy3dwindow);
+                         G_CALLBACK(gwy_3d_window_visual_selected),
+                         gwy3dwindow);
         gtk_menu_shell_append(GTK_MENU_SHELL(menu), item2);
         break;
 
@@ -1565,16 +1570,20 @@ gwy_3d_window_view_clicked(GtkWidget *gwy3dwindow,
                                     gwy3dwindow);
         item = gtk_menu_item_new_with_mnemonic(_("S_witch to Color Gradient Mode"));
         visual = GWY_3D_VISUALIZATION_GRADIENT;
-        g_object_set_data(G_OBJECT(item), "display-mode", GINT_TO_POINTER(visual));
+        g_object_set_data(G_OBJECT(item), "display-mode",
+                          GINT_TO_POINTER(visual));
         g_signal_connect(item, "activate",
-                         G_CALLBACK(gwy_3d_window_visual_selected), gwy3dwindow);
+                         G_CALLBACK(gwy_3d_window_visual_selected),
+                         gwy3dwindow);
         gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
         item2 = gtk_menu_item_new_with_mnemonic(_("S_witch to Overlay Mode"));
         visual = GWY_3D_VISUALIZATION_OVERLAY;
-        g_object_set_data(G_OBJECT(item2), "display-mode", GINT_TO_POINTER(visual));
+        g_object_set_data(G_OBJECT(item2), "display-mode",
+                          GINT_TO_POINTER(visual));
         g_signal_connect(item2, "activate",
-                         G_CALLBACK(gwy_3d_window_visual_selected), gwy3dwindow);
-        gtk_menu_shell_append(GTK_MENU_SHELL(menu), item2);            
+                         G_CALLBACK(gwy_3d_window_visual_selected),
+                         gwy3dwindow);
+        gtk_menu_shell_append(GTK_MENU_SHELL(menu), item2);
         break;
 
         case GWY_3D_VISUALIZATION_OVERLAY:
@@ -1583,16 +1592,20 @@ gwy_3d_window_view_clicked(GtkWidget *gwy3dwindow,
         g_object_set(menu, "reserve-toggle-size", 0, NULL);
         item = gtk_menu_item_new_with_mnemonic(_("S_witch to Color Gradient Mode"));
         visual = GWY_3D_VISUALIZATION_GRADIENT;
-        g_object_set_data(G_OBJECT(item), "display-mode", GINT_TO_POINTER(visual));
+        g_object_set_data(G_OBJECT(item), "display-mode",
+                          GINT_TO_POINTER(visual));
         g_signal_connect(item, "activate",
-                         G_CALLBACK(gwy_3d_window_visual_selected), gwy3dwindow);
+                         G_CALLBACK(gwy_3d_window_visual_selected),
+                         gwy3dwindow);
         gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
         item2 = gtk_menu_item_new_with_mnemonic(_("S_witch to Lighting Mode"));
         visual = GWY_3D_VISUALIZATION_LIGHTING;
-        g_object_set_data(G_OBJECT(item2), "display-mode", GINT_TO_POINTER(visual));
+        g_object_set_data(G_OBJECT(item2), "display-mode",
+                          GINT_TO_POINTER(visual));
         g_signal_connect(item2, "activate",
-                         G_CALLBACK(gwy_3d_window_visual_selected), gwy3dwindow);
-        gtk_menu_shell_append(GTK_MENU_SHELL(menu), item2);            
+                         G_CALLBACK(gwy_3d_window_visual_selected),
+                         gwy3dwindow);
+        gtk_menu_shell_append(GTK_MENU_SHELL(menu), item2);
         break;
 
         default:

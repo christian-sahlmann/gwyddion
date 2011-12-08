@@ -186,7 +186,8 @@ static void     gwy_3d_draw_axes                 (Gwy3DView *gwy3dview,
                                                   gint width,
                                                   gint height);
 static void     gwy_3d_draw_light_position       (Gwy3DView *gwy3dview);
-static void     gwy_3d_set_projection            (Gwy3DView *gwy3dview, GLfloat aspect);
+static void     gwy_3d_set_projection            (Gwy3DView *gwy3dview,
+                                                  GLfloat aspect);
 static void     gwy_3d_view_update_labels        (Gwy3DView *gwy3dview);
 static void     gwy_3d_view_label_changed        (Gwy3DView *gwy3dview);
 static void     gwy_3d_view_timeout_start        (Gwy3DView *gwy3dview,
@@ -352,8 +353,9 @@ gwy_3d_view_destroy(GtkObject *object)
     gwy_object_unref(gwy3dview->downsampled);
     gwy_object_unref(gwy3dview->data);
 
-    if ( gwy3dview->ovlays ) {
-        for( i = 0; i < gwy3dview->novlays; i++ ) {
+    /* free overlays and disconnect them */
+    if (gwy3dview->ovlays) {
+        for (i = 0; i < gwy3dview->novlays; i++) {
             gwy_signal_handler_disconnect(gwy3dview->ovlays[i],
                                           gwy3dview->ovlay_updated_id[i]);
             gwy_data_view_layer_unplugged(GWY_DATA_VIEW_LAYER(gwy3dview->ovlays[i]));
@@ -716,7 +718,7 @@ gwy_3d_view_set_ovlay(Gwy3DView *gwy3dview,
     gwy3dview->ovlays = g_new(GwyPixmapLayer*, novlays);
     gwy3dview->ovlay_updated_id = g_new(guint, novlays);
     gwy3dview->novlays = novlays;
-    for (i = 0; i<novlays; i++) {
+    for (i = 0; i < novlays; i++) {
         gwy3dview->ovlays[i] = ovlays[i];
         g_object_ref(gwy3dview->ovlays[i]);
         gwy3dview->ovlay_updated_id[i]
@@ -1000,7 +1002,8 @@ static void
 gwy_3d_view_gradient_changed(Gwy3DView *gwy3dview)
 {
     gwy3dview->changed |= GWY_3D_GRADIENT;
-    if (gwy3dview->setup->visualization == GWY_3D_VISUALIZATION_GRADIENT || gwy3dview->setup->visualization == GWY_3D_VISUALIZATION_OVERLAY)
+    if (gwy3dview->setup->visualization == GWY_3D_VISUALIZATION_GRADIENT
+        || gwy3dview->setup->visualization == GWY_3D_VISUALIZATION_OVERLAY)
         gwy_3d_view_update_lists(gwy3dview);
 }
 
@@ -1105,16 +1108,26 @@ gwy_3d_view_update_lists(Gwy3DView *gwy3dview)
 
     gwy_3d_view_downsample_data(gwy3dview);
 
-    gwy_3d_make_list(gwy3dview, gwy3dview->downsampled, gwy3dview->ovlays, GWY_3D_SHAPE_REDUCED);
-    gwy_3d_make_list(gwy3dview, gwy3dview->data_field, gwy3dview->ovlays, GWY_3D_SHAPE_FULL);
+    gwy_3d_make_list(gwy3dview, gwy3dview->downsampled,
+                     gwy3dview->ovlays,
+                     GWY_3D_SHAPE_REDUCED);
+    gwy_3d_make_list(gwy3dview, gwy3dview->data_field,
+                     gwy3dview->ovlays,
+                     GWY_3D_SHAPE_FULL);
     gwy_3d_view_timeout_start(gwy3dview, TRUE);
 }
 
 static gboolean gwy_3d_view_update_timer(gpointer user_data)
 {
     Gwy3DView *gwy3dview = (Gwy3DView*)user_data;
-    gwy_3d_make_list(gwy3dview, gwy3dview->downsampled, gwy3dview->ovlays,GWY_3D_SHAPE_REDUCED);
-    gwy_3d_make_list(gwy3dview, gwy3dview->data_field, gwy3dview->ovlays, GWY_3D_SHAPE_FULL);
+    gwy_3d_make_list(gwy3dview,
+                     gwy3dview->downsampled,
+                     gwy3dview->ovlays,
+                     GWY_3D_SHAPE_REDUCED);
+    gwy_3d_make_list(gwy3dview,
+                     gwy3dview->data_field,
+                     gwy3dview->ovlays,
+                     GWY_3D_SHAPE_FULL);
     gwy_3d_view_timeout_start(gwy3dview, TRUE);
     return FALSE;
 };
@@ -1623,10 +1636,11 @@ gwy_3d_view_expose(GtkWidget *widget,
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glViewport(0, 0, w, h);
-    if (gwy3dview->setup->fmscale_visible && gwy3dview->setup->visualization != GWY_3D_VISUALIZATION_LIGHTING) {
+    if (gwy3dview->setup->fmscale_visible
+        && gwy3dview->setup->visualization != GWY_3D_VISUALIZATION_LIGHTING) {
         glMatrixMode(GL_PROJECTION);
         glLoadIdentity();
-        glOrtho(0,w,0,h,-1,1);
+        glOrtho(0, w, 0, h, -1, 1);
 
         glMatrixMode(GL_MODELVIEW);
         glLoadIdentity();
@@ -1636,7 +1650,7 @@ gwy_3d_view_expose(GtkWidget *widget,
         glDisable(GL_LIGHTING);
 
         sw = gwy_3d_draw_fmscaletex(gwy3dview);
-        gwy_debug("Scale width: %d",sw);
+        gwy_debug("Scale width: %d", sw);
 
         glDisable(GL_TEXTURE_2D);
         glEnable(GL_DEPTH_TEST);
@@ -1646,7 +1660,7 @@ gwy_3d_view_expose(GtkWidget *widget,
     glLoadIdentity();
 
     /* View transformation. */
-    gwy_3d_set_projection(gwy3dview,(w-sw)/h);
+    gwy_3d_set_projection(gwy3dview, (w-sw)/h);
     glTranslatef(0.0, 0.0, -10.0);
     glScalef(gwy3dview->setup->scale,
              gwy3dview->setup->scale,
@@ -1692,7 +1706,7 @@ gwy_3d_view_expose(GtkWidget *widget,
 
     glCallList(gwy3dview->shape_list_base + gwy3dview->shape_current);
     if (gwy3dview->setup->axes_visible)
-        gwy_3d_draw_axes(gwy3dview,w-sw,h);
+        gwy_3d_draw_axes(gwy3dview, w-sw, h);
 
     if (gwy3dview->movement == GWY_3D_MOVEMENT_LIGHT
         && gwy3dview->shape_current == GWY_3D_SHAPE_REDUCED)
@@ -1979,7 +1993,7 @@ gwy_3d_make_list(Gwy3DView *gwy3dview,
                  GwyPixmapLayer** ovlays,
                  gint shape)
 {
-    gint i, j, xres, yres,rowstride;
+    gint i, j, xres, yres, rowstride;
     gdouble data_min, data_max, res;
     GLfloat dx, dy;
     Gwy3DVector *normals;
@@ -2010,30 +2024,30 @@ gwy_3d_make_list(Gwy3DView *gwy3dview,
 
     gwy_3d_calculate_pixel_sizes(dfield, &dx, &dy);
     res = MAX(xres*dx, yres*dy);
-    if ( gwy3dview->setup->visualization == GWY_3D_VISUALIZATION_OVERLAY
-         && gwy3dview->ovlays ) {
+    if (gwy3dview->setup->visualization == GWY_3D_VISUALIZATION_OVERLAY
+         && gwy3dview->ovlays) {
         gint l;
         GdkPixbuf* lpb;
-        pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, 0, 8, xres,yres);
+        pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, 0, 8, xres, yres);
         gdk_pixbuf_fill(pixbuf, 0x00000000);
 
-        for ( l = 0; l < gwy3dview->novlays; l++ ) {
+        for (l = 0; l < gwy3dview->novlays; l++) {
             if (ovlays[l]) {
                 lpb = gwy_pixmap_layer_paint(ovlays[l]);
                 if (lpb)
-                    gdk_pixbuf_composite(lpb,pixbuf,
-                                         0,0,xres,yres,
-                                         0,0,
-                                         (gdouble)xres/gdk_pixbuf_get_width(lpb),
-                                         (gdouble)yres/gdk_pixbuf_get_height(lpb),
-                                         GDK_INTERP_TILES,0xff);
+                    gdk_pixbuf_composite(lpb, pixbuf,
+                                     0, 0, xres, yres,
+                                     0, 0,
+                                     (gdouble)xres/gdk_pixbuf_get_width(lpb),
+                                     (gdouble)yres/gdk_pixbuf_get_height(lpb),
+                                     GDK_INTERP_TILES, 0xff);
             };
         };
         freepixbuf = TRUE;
     }
     else {
-        pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, 0, 8, xres,yres);
-        gwy_pixbuf_draw_data_field(pixbuf,dfield,grad);
+        pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, 0, 8, xres, yres);
+        gwy_pixbuf_draw_data_field(pixbuf, dfield, grad);
         freepixbuf = TRUE;
     };
 
@@ -2062,12 +2076,16 @@ gwy_3d_make_list(Gwy3DView *gwy3dview,
             glNormal3d(normals[j*xres+i].x,
                        normals[j*xres+i].y,
                        normals[j*xres+i].z);
-            glColor3d((GLfloat) *(a2)/255. , (GLfloat) *(a2+1)/255., (GLfloat) *(a2+2)/255.);
+            glColor3d((GLfloat) *(a2)/255.,
+                      (GLfloat) *(a2+1)/255.,
+                      (GLfloat) *(a2+2)/255.);
             glVertex3d(i*dx, j*dy, a);
             glNormal3d(normals[(j+1)*xres+i].x,
                        normals[(j+1)*xres+i].y,
                        normals[(j+1)*xres+i].z);
-            glColor3d((GLfloat) *(b2)/255., (GLfloat) *(b2+1)/255., (GLfloat) *(b2+2)/255.);
+            glColor3d((GLfloat) *(b2)/255.,
+                      (GLfloat) *(b2+1)/255.,
+                      (GLfloat) *(b2+2)/255.);
             glVertex3d(i*dx, (j+1)*dy, b);
         }
         glEnd();
@@ -2076,10 +2094,18 @@ gwy_3d_make_list(Gwy3DView *gwy3dview,
     glPopMatrix();
     glEndList();
 
-    if ( freepixbuf )
+    if (freepixbuf)
         g_object_unref(pixbuf);
 }
 
+/*
+ * gwy_3d_util_mult_matrix:
+ * @a, @b: matrices to multiply
+ * @mpMatrix: result
+ *
+ * multiplies the matrices
+ *
+*/
 static void gwy_3d_util_mult_matrix(const GLdouble a[16],
                                     const GLdouble b[16],
                                     GLdouble mpMatrix[16])
@@ -2088,25 +2114,30 @@ static void gwy_3d_util_mult_matrix(const GLdouble a[16],
 
     for (i = 0; i < 4; i++) {
         for (j = 0; j < 4; j++) {
-            mpMatrix[i*4+j] =
-                a[i*4+0]*b[0*4+j] +
-                a[i*4+1]*b[1*4+j] +
-                a[i*4+2]*b[2*4+j] +
-                a[i*4+3]*b[3*4+j];
+            mpMatrix[i*4+j]
+                = a[i*4+0]*b[0*4+j]
+                + a[i*4+1]*b[1*4+j]
+                + a[i*4+2]*b[2*4+j]
+                + a[i*4+3]*b[3*4+j];
         }
     }
 };
 
+/* mpMatrix is the current model-projection-matrix */
 static void gwy_3d_util_get_mpmatrix(GLdouble mpMatrix[16])
 {
     GLdouble mM[16], pM[16];
-    glGetDoublev(GL_MODELVIEW_MATRIX,mM);
-    glGetDoublev(GL_PROJECTION_MATRIX,pM);
+    glGetDoublev(GL_MODELVIEW_MATRIX, mM);
+    glGetDoublev(GL_PROJECTION_MATRIX, pM);
 
-    gwy_3d_util_mult_matrix(mM,pM,mpMatrix);
+    gwy_3d_util_mult_matrix(mM, pM, mpMatrix);
 };
 
 
+/* wx,wy,wz denote the pont x,y,z will result
+ * in under the model-projection-matrix mpM
+ * and the viewport vpMatrix
+*/
 static int gwy_3d_util_project(GLdouble x,
                                GLdouble y,
                                GLdouble z,
@@ -2117,7 +2148,7 @@ static int gwy_3d_util_project(GLdouble x,
                                GLdouble* wz)
 {
     GLdouble temp[4];
-    // Matrix-Vector-Product
+    /* Matrix-Vector-Product */
     temp[0] = mpM[0]*x+mpM[4]*y+mpM[8]*z+mpM[12];
     temp[1] = mpM[1]*x+mpM[5]*y+mpM[9]*z+mpM[13];
     temp[2] = mpM[2]*x+mpM[6]*y+mpM[10]*z+mpM[14];
@@ -2151,7 +2182,7 @@ static inline int uppow2(int x)
 };
 
 static void
-gwy_3d_draw_axes(Gwy3DView *widget,gint width,gint height)
+gwy_3d_draw_axes(Gwy3DView *widget, gint width, gint height)
 {
     GLfloat dx, dy, rx, Ax, Ay, Bx, By, Cx, Cy;
     gdouble data_min, data_max;
@@ -2217,19 +2248,19 @@ gwy_3d_draw_axes(Gwy3DView *widget,gint width,gint height)
     glEnd();
     glBegin(GL_LINES);
         glVertex3f(Ax, Ay, 0.0f);
-        glVertex3f(Ax - (Cx-Bx)*0.02, Ay - (Cy-By)*0.02, 0.0f );
+        glVertex3f(Ax - (Cx-Bx)*0.02, Ay - (Cy-By)*0.02, 0.0f);
         glVertex3f((Ax+Bx)/2, (Ay+By)/2, 0.0f);
         glVertex3f((Ax+Bx)/2 - (Cx-Bx)*0.02,
-                   (Ay+By)/2 - (Cy-By)*0.02, 0.0f );
-        glVertex3f(Bx , By, 0.0f);
-        glVertex3f(Bx - (Cx-Bx)*0.02, By - (Cy-By)*0.02, 0.0f );
+                   (Ay+By)/2 - (Cy-By)*0.02, 0.0f);
         glVertex3f(Bx, By, 0.0f);
-        glVertex3f(Bx - (Ax-Bx)*0.02, By - (Ay-By)*0.02, 0.0f );
+        glVertex3f(Bx - (Cx-Bx)*0.02, By - (Cy-By)*0.02, 0.0f);
+        glVertex3f(Bx, By, 0.0f);
+        glVertex3f(Bx - (Ax-Bx)*0.02, By - (Ay-By)*0.02, 0.0f);
         glVertex3f((Cx+Bx)/2, (Cy+By)/2, 0.0f);
         glVertex3f((Cx+Bx)/2 - (Ax-Bx)*0.02,
-                   (Cy+By)/2 - (Ay-By)*0.02, 0.0f );
-        glVertex3f(Cx , Cy, 0.0f);
-        glVertex3f(Cx - (Ax-Bx)*0.02, Cy - (Ay-By)*0.02, 0.0f );
+                   (Cy+By)/2 - (Ay-By)*0.02, 0.0f);
+        glVertex3f(Cx, Cy, 0.0f);
+        glVertex3f(Cx - (Ax-Bx)*0.02, Cy - (Ay-By)*0.02, 0.0f);
     glEnd();
 
     glBegin(GL_LINES);
@@ -2254,53 +2285,53 @@ gwy_3d_draw_axes(Gwy3DView *widget,gint width,gint height)
                  tx, ty, tz,
                  ux, uy, uz,
                  vx, vy, vz,
-                 rotA,rotB;
+                 rotA, rotB;
         GLint vpM[4];
 
         sx = sy = sz = tx = ty = tz = ux = uy = uz = vx = vy = vz = 0;
 
-        view_size = MIN(width,height);
+        view_size = MIN(width, height);
         size = (gint)(sqrt(view_size)*0.8);
 
 
         gwy_3d_util_get_mpmatrix(mpM);
-        glGetDoublev(GL_MODELVIEW_MATRIX,mM);
-        glGetDoublev(GL_PROJECTION_MATRIX,pM);
+        glGetDoublev(GL_MODELVIEW_MATRIX, mM);
+        glGetDoublev(GL_PROJECTION_MATRIX, pM);
 
-        glGetIntegerv(GL_VIEWPORT,vpM);
+        glGetIntegerv(GL_VIEWPORT, vpM);
 
         glColor3f(1.0, 1.0, 1.0);
 
-        gwy_3d_util_project(Ax,Ay,-0.0f,mpM,vpM,&sx,&sy,&sz);
-        gwy_3d_util_project(Bx,By,-0.0f,mpM,vpM,&tx,&ty,&tz);
-        rotA = atan2((ty-sy),(tx-sx));
+        gwy_3d_util_project(Ax, Ay, -0.0f, mpM, vpM, &sx, &sy, &sz);
+        gwy_3d_util_project(Bx, By, -0.0f, mpM, vpM, &tx, &ty, &tz);
+        rotA = atan2((ty-sy), (tx-sx));
 
-        gwy_3d_util_project(Cx,Cy,-0.0f,mpM,vpM,&sx,&sy,&sz);
-        rotB = G_PI/2.-atan2((sx-tx),(sy-ty));
+        gwy_3d_util_project(Cx, Cy, -0.0f, mpM, vpM, &sx, &sy, &sz);
+        rotB = G_PI/2.-atan2((sx-tx), (sy-ty));
 
         gwy_3d_util_project((Ax+Bx)/2 - (Cx-Bx)*0.1,
                             (Ay+By)/2 - (Cy-By)*0.1,
                             -0.0f,
-                            mpM,vpM,&sx,&sy,&sz);
+                            mpM, vpM, &sx, &sy, &sz);
         gwy_3d_util_project((Bx+Cx)/2 - (Ax-Bx)*0.1,
                             (By+Cy)/2 - (Ay-By)*0.1,
                             -0.0f,
-                            mpM,vpM,&tx,&ty,&tz);
+                            mpM, vpM, &tx, &ty, &tz);
         gwy_3d_util_project(Cx - (Ax-Bx)*0.1,
                             Cy - (Ay-By)*0.1,
                             0.0f,
-                            mpM,vpM,&ux,&uy,&uz);
+                            mpM, vpM, &ux, &uy, &uz);
         gwy_3d_util_project(Cx - (Ax-Bx)*0.1,
                             Cy - (Ay-By)*0.1,
                             data_max-data_min,
-                            mpM,vpM,&vx,&vy,&vz);
+                            mpM, vpM, &vx, &vy, &vz);
 
 
         /* setup 2d */
         glMatrixMode(GL_PROJECTION);
         glPushMatrix();
         glLoadIdentity();
-        glOrtho(0,width,0,height,-1,1);
+        glOrtho(0, width, 0, height, -1, 1);
 
         glMatrixMode(GL_MODELVIEW);
         glPushMatrix();
@@ -2311,24 +2342,24 @@ gwy_3d_draw_axes(Gwy3DView *widget,gint width,gint height)
         glDisable(GL_LIGHTING);
 
         glEnable(GL_BLEND);
-        glBlendFunc(GL_ONE,GL_ONE_MINUS_SRC_ALPHA);
+        glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
         gwy_3d_texture_text(widget, yfirst ? GWY_3D_VIEW_LABEL_Y
                                            : GWY_3D_VIEW_LABEL_X,
-                            sx,sy,sz,rotA,
+                            sx, sy, sz, rotA,
                             size, 1, 1);
 
         gwy_3d_texture_text(widget, yfirst ? GWY_3D_VIEW_LABEL_X
                                            : GWY_3D_VIEW_LABEL_Y,
-                            tx,ty,tz,rotB,
+                            tx, ty, tz, rotB,
                             size, 1, 1);
 
         gwy_3d_texture_text(widget, GWY_3D_VIEW_LABEL_MAX,
-                            vx,vy,vz,0,
+                            vx, vy, vz, 0,
                             size, 1, 0);
 
         gwy_3d_texture_text(widget, GWY_3D_VIEW_LABEL_MIN,
-                            ux,uy,uz,0,
+                            ux, uy, uz, 0,
                             size, 1, 0);
 
         /* unset 2d */
@@ -2440,8 +2471,14 @@ gwy_3d_view_realize_gl(Gwy3DView *gwy3dview)
 
     /* Shape display lists */
     gwy_3d_view_assign_lists(gwy3dview);
-    gwy_3d_make_list(gwy3dview, gwy3dview->data_field, gwy3dview->ovlays, GWY_3D_SHAPE_FULL);
-    gwy_3d_make_list(gwy3dview, gwy3dview->downsampled, gwy3dview->ovlays, GWY_3D_SHAPE_REDUCED);
+    gwy_3d_make_list(gwy3dview,
+                     gwy3dview->data_field,
+                     gwy3dview->ovlays,
+                     GWY_3D_SHAPE_FULL);
+    gwy_3d_make_list(gwy3dview,
+                     gwy3dview->downsampled,
+                     gwy3dview->ovlays,
+                     GWY_3D_SHAPE_REDUCED);
 
     gdk_gl_drawable_gl_end(gldrawable);
     /*** OpenGL END ***/
@@ -2461,14 +2498,14 @@ gwy_3d_set_projection(Gwy3DView *gwy3dview, GLfloat aspect)
             case GWY_3D_PROJECTION_ORTHOGRAPHIC:
             glOrtho(-aspect * GWY_3D_ORTHO_CORRECTION,
                      aspect * GWY_3D_ORTHO_CORRECTION,
-                     -1.0   * GWY_3D_ORTHO_CORRECTION /* * deformation_z*/,
-                      1.0   * GWY_3D_ORTHO_CORRECTION /* * deformation_z*/,
+                     -1.0   * GWY_3D_ORTHO_CORRECTION, /* * deformation_z*/
+                      1.0   * GWY_3D_ORTHO_CORRECTION, /* * deformation_z*/
                       5.0,
                       60.0);
             break;
 
             case GWY_3D_PROJECTION_PERSPECTIVE:
-            glFrustum(-aspect, aspect, -1.0 , 1.0, 5.0, 60.0);
+            glFrustum(-aspect, aspect, -1.0, 1.0, 5.0, 60.0);
             break;
         }
     }
@@ -2476,10 +2513,10 @@ gwy_3d_set_projection(Gwy3DView *gwy3dview, GLfloat aspect)
         aspect = 1./aspect;
         switch (gwy3dview->setup->projection) {
             case GWY_3D_PROJECTION_ORTHOGRAPHIC:
-            glOrtho( -1.0   * GWY_3D_ORTHO_CORRECTION,
-                      1.0   * GWY_3D_ORTHO_CORRECTION,
-                    -aspect * GWY_3D_ORTHO_CORRECTION /* * deformation_z*/,
-                     aspect * GWY_3D_ORTHO_CORRECTION /* * deformation_z*/,
+            glOrtho(-1.0   * GWY_3D_ORTHO_CORRECTION,
+                     1.0   * GWY_3D_ORTHO_CORRECTION,
+                    -aspect * GWY_3D_ORTHO_CORRECTION, /* * deformation_z*/
+                     aspect * GWY_3D_ORTHO_CORRECTION, /* * deformation_z*/
                       5.0,
                       60.0);
             break;
@@ -2499,7 +2536,6 @@ gwy_3d_prepare_layout(cairo_t* cr, gdouble zoom)
     PangoLayout *layout;
 
     layout = pango_cairo_create_layout(cr);
-    // L: get from gtk widget
     fontdesc = pango_font_description_from_string("Helvetica 12");
     pango_font_description_set_size(fontdesc, GWY_ROUND(0.8*PANGO_SCALE*zoom));
     pango_layout_set_font_description(layout, fontdesc);
@@ -2517,21 +2553,21 @@ gwy_3d_view_render_string(gdouble size,
 {
     PangoLayout *clayout;
     gint wstride;
-    gint px,py;
+    gint px, py;
     cairo_t *cr;
     cairo_surface_t *surface;
     guchar *alpha;
 
-    wstride = cairo_format_stride_for_width (CAIRO_FORMAT_ARGB32, 1);
+    wstride = cairo_format_stride_for_width(CAIRO_FORMAT_ARGB32, 1);
     alpha = g_new(guchar, wstride);
     surface = cairo_image_surface_create_for_data(alpha, CAIRO_FORMAT_ARGB32,
                                                   1, 1, wstride);
     cr = cairo_create(surface);
-    clayout = gwy_3d_prepare_layout(cr,size);
+    clayout = gwy_3d_prepare_layout(cr, size);
 
     cairo_set_source_rgba(cr, 0.0, 0.0, 0.0, 1.0);
     pango_layout_set_markup(clayout, text, -1);
-    pango_layout_get_pixel_size(clayout,&px,&py);
+    pango_layout_get_pixel_size(clayout, &px, &py);
     *width = px;
     *height = py;
     px = uppow2(px);
@@ -2540,17 +2576,17 @@ gwy_3d_view_render_string(gdouble size,
     g_free(alpha);
     cairo_destroy(cr);
 
-    wstride = cairo_format_stride_for_width (CAIRO_FORMAT_ARGB32, px);
-    alpha = g_new0(guchar,wstride*py);
+    wstride = cairo_format_stride_for_width(CAIRO_FORMAT_ARGB32, px);
+    alpha = g_new0(guchar, wstride*py);
     surface = cairo_image_surface_create_for_data(alpha, CAIRO_FORMAT_ARGB32,
                                                   px, py, wstride);
     cr = cairo_create(surface);
     cairo_set_source_rgba(cr, 0.0, 0.0, 0.0, 1.0);
-    pango_cairo_update_layout(cr,clayout);
+    pango_cairo_update_layout(cr, clayout);
     pango_layout_set_markup(clayout, text, -1);
     pango_cairo_show_layout(cr, clayout);
 
-    gwy_debug("c-layout size: %d %d stride %d", *width, *height,wstride);
+    gwy_debug("c-layout size: %d %d stride %d", *width, *height, wstride);
     *stride = wstride;
 
     g_object_unref(clayout);
@@ -2560,24 +2596,27 @@ gwy_3d_view_render_string(gdouble size,
     return alpha;
 }
 
+/* image to opengl-texture */
 static GLuint
 gwy_3d_cairo_to_tex(guchar* image,
                     gint width, gint height, gint stride)
 {
-    GLint w2=uppow2(width),h2=uppow2(height);
+    GLint w2 = uppow2(width), h2 = uppow2(height);
     GLuint t[1];
 
-    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,GL_LINEAR);
-    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT );
-    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT );
-    glPixelStorei(GL_UNPACK_ROW_LENGTH,stride/4);
-    glPixelStorei(GL_UNPACK_ALIGNMENT,4);
-    glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA,w2,h2,0,GL_BGRA,GL_UNSIGNED_BYTE,image);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glPixelStorei(GL_UNPACK_ROW_LENGTH, stride/4);
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w2, h2,
+                 0, GL_BGRA, GL_UNSIGNED_BYTE, image);
 
     return t[0];
 };
 
+/* puts textured rectangle t into view */
 static void
 gwy_3d_draw_ctex(GLuint t,
                  gint hjust, gint vjust,
@@ -2588,18 +2627,19 @@ gwy_3d_draw_ctex(GLuint t,
     GLfloat ho = -(hjust)*width/2;
     GLfloat vo = (int)(vjust-2)*height/2;
 
-    glBindTexture(GL_TEXTURE_2D,t);
+    glBindTexture(GL_TEXTURE_2D, t);
 
     glBegin(GL_QUADS);
-    glTexCoord2f(0,ht) ; glVertex2f(ho,vo);
-    glTexCoord2f(0,0); glVertex2f(ho,vo+height);
-    glTexCoord2f(wt,0) ; glVertex2f(ho+width,vo+height);
-    glTexCoord2f(wt,ht); glVertex2f(ho+width,vo);
+    glTexCoord2f(0, ht) ; glVertex2f(ho, vo);
+    glTexCoord2f(0, 0); glVertex2f(ho, vo+height);
+    glTexCoord2f(wt, 0); glVertex2f(ho+width, vo+height);
+    glTexCoord2f(wt, ht); glVertex2f(ho+width, vo);
     glEnd();
 
-    glBindTexture(GL_TEXTURE_2D,0);
+    glBindTexture(GL_TEXTURE_2D, 0);
 };
 
+/* draws text using a texture */
 static void
 gwy_3d_texture_text(Gwy3DView     *gwy3dview,
                     Gwy3DViewLabel id,
@@ -2628,29 +2668,31 @@ gwy_3d_texture_text(Gwy3DView     *gwy3dview,
                                     text, &width, &height, &stride);
     g_free(text);
 
-    gwy_3d_cairo_to_tex(img,width,height,stride);
+    gwy_3d_cairo_to_tex(img, width, height, stride);
     glPushMatrix();
-    glTranslatef(raster_x+displacement_x,raster_y+displacement_y,raster_z);
-    glRotatef(rot*180./G_PI,0,0,1);
-    gwy_3d_draw_ctex(tex,hjustify,vjustify,width,height);
+    glTranslatef(raster_x+displacement_x, raster_y+displacement_y, raster_z);
+    glRotatef(rot*180./G_PI, 0, 0, 1);
+    gwy_3d_draw_ctex(tex, hjustify, vjustify, width, height);
     glPopMatrix();
 
     g_free(img);
 }
 
+/* converts GwyGradient in gradient to cairo_pattern_t in pattern */
 static void
 gwy_gradient_to_cairo_pattern(cairo_pattern_t* pattern, GwyGradient* gradient)
 {
     GwyGradientPoint gp;
     gint i = 0, npoints = gwy_gradient_get_npoints(gradient);
     for (i = 0; i < npoints; i++) {
-        gp=gwy_gradient_get_point(gradient,i);
+        gp = gwy_gradient_get_point(gradient, i);
         cairo_pattern_add_color_stop_rgba(pattern, gp.x,
                                           gp.color.r, gp.color.g, gp.color.b,
                                           gp.color.a);
     };
 };
 
+/* puts string into PangoLayout, printf style */
 static void
 gwy_3d_format_layout(PangoLayout *layout,
               GString* string,
@@ -2691,6 +2733,7 @@ gwy_3d_step_to_prec(gdouble d)
     return (gint) floor(resd);
 }
 
+/* prints layout onto cairo context, vertically centered */
 static void
 gwy_3d_pango_cairo_show_layout_vcentered(cairo_t* cr, PangoLayout* layout)
 {
@@ -2702,6 +2745,7 @@ gwy_3d_pango_cairo_show_layout_vcentered(cairo_t* cr, PangoLayout* layout)
     pango_cairo_show_layout(cr, layout);
 };
 
+/* init cario context */
 static cairo_t*
 gwy_cairo_create_cairo_context(gint width,
                                gint height,
@@ -2709,14 +2753,15 @@ gwy_cairo_create_cairo_context(gint width,
 {
     cairo_t* cr;
 
-    *surf = cairo_image_surface_create(CAIRO_FORMAT_ARGB32,width,height);
+    *surf = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width, height);
     cr = cairo_create(*surf);
-    cairo_set_source_rgba(cr,1,1,1,1);
+    cairo_set_source_rgba(cr, 1, 1, 1, 1);
     cairo_paint(cr);
-    cairo_set_source_rgb(cr,0,0,0);
+    cairo_set_source_rgb(cr, 0, 0, 0);
     return cr;
 }
 
+/* renders false color bar into returned surface */
 static cairo_surface_t*
 gwy_3d_fmscaletex(gint height,
                   gdouble bot,
@@ -2751,7 +2796,7 @@ gwy_3d_fmscaletex(gint height,
     format = gwy_si_unit_get_format(siunit, GWY_SI_UNIT_FORMAT_VFMARKUP,
                                     x_max, NULL);
     gwy_3d_format_layout(layout, s, " %s", format->units);
-    pango_layout_get_pixel_size(layout,&units_width,&label_height);
+    pango_layout_get_pixel_size(layout, &units_width, &label_height);
     size = height - label_height*2;
     mintickdist = label_height*1.5; /* mintickdist is in pixels; tickdist is in
                                      * meters or whichever basic unit */
@@ -2759,7 +2804,7 @@ gwy_3d_fmscaletex(gint height,
     /* Don't attempt to draw anything if rounding errors are too large or
      * scale calculation can overflow */
     x = top - bot;
-    max = MAX(fabs(bot), fabs(top));
+    max = MAX(fabs(bot),  fabs(top));
     if (x < 1e-15*max || x <= 1e4*G_MINDOUBLE || max >= 1e-4*G_MAXDOUBLE)
         do_draw = FALSE;
     scale = size/(top - bot);
@@ -2782,12 +2827,12 @@ gwy_3d_fmscaletex(gint height,
 
     gwy_3d_format_layout(layout, s, "%.*f %s",
                   prec, top/format->magnitude, format->units);
-    pango_layout_get_pixel_size(layout,&layw1,&layh);
+    pango_layout_get_pixel_size(layout, &layw1, &layh);
     gwy_3d_format_layout(layout, s, "%.*f %s",
                   prec, bot/format->magnitude, format->units);
-    pango_layout_get_pixel_size(layout,&layw2,&layh);
+    pango_layout_get_pixel_size(layout, &layw2, &layh);
 
-    l = MAX(layw1,layw2);
+    l = MAX(layw1, layw2);
     tick = zoom*GWY_3D_TICK_LENGTH; /* physical tick length */
     lw = 1;/* line width */
     fmw = 18*zoom;
@@ -2799,28 +2844,27 @@ gwy_3d_fmscaletex(gint height,
     cr = gwy_cairo_create_cairo_context(uppow2(width), uppow2(height), &surf);
     *rw = width;
     *rh = height;
-    pango_cairo_update_layout(cr,layout);
-    cairo_set_line_width(cr,lw);
+    pango_cairo_update_layout(cr, layout);
+    cairo_set_line_width(cr, lw);
 
     gwy_3d_format_layout(layout, s, "%.*f", prec, bot/format->magnitude);
 
-    cairo_translate(cr,fmw+2, height - label_height+0.5);
-    cairo_move_to(cr,0,0);
-    cairo_rel_line_to(cr,tick,0);
+    cairo_translate(cr, fmw+2, height - label_height+0.5);
+    cairo_move_to(cr, 0, 0);
+    cairo_rel_line_to(cr, tick, 0);
     cairo_stroke(cr);
-    cairo_move_to(cr,tick+2*zoom,0);
-    gwy_3d_pango_cairo_show_layout_vcentered(cr,layout);
+    cairo_move_to(cr, tick+2*zoom, 0);
+    gwy_3d_pango_cairo_show_layout_vcentered(cr, layout);
     if (!noticks) {
-        if ((x-bot)*scale < label_height)
-            {
-                x += tickdist;
-                //cairo_translate(cr,0,-tickdist*scale);
-            };
+        if ((x-bot)*scale < label_height) {
+            x += tickdist;
+            /* cairo_translate(cr, 0, -tickdist*scale); */
+        };
 
-        cairo_translate(cr,0,-(x-bot)*scale);
+        cairo_translate(cr, 0, -(x-bot)*scale);
 
         for (x = x;x <= max; x += tickdist) {
-            cairo_move_to(cr, 0,0);
+            cairo_move_to(cr, 0, 0);
             cairo_rel_line_to(cr, tick, 0);
             cairo_stroke(cr);
             cairo_move_to(cr, tick+2*zoom, 0);
@@ -2832,30 +2876,30 @@ gwy_3d_fmscaletex(gint height,
     };
 
     cairo_identity_matrix(cr);
-    cairo_translate(cr,fmw+2,label_height+0.5);
-    cairo_move_to(cr,0,0);
-    cairo_rel_line_to(cr,tick,0);
+    cairo_translate(cr, fmw+2, label_height+0.5);
+    cairo_move_to(cr, 0, 0);
+    cairo_rel_line_to(cr, tick, 0);
     cairo_stroke(cr);
-    cairo_move_to(cr,tick+2*zoom,0);
+    cairo_move_to(cr, tick+2*zoom, 0);
     gwy_3d_format_layout(layout, s, "%.*f %s",
                   prec, top/format->magnitude, format->units);
-    gwy_3d_pango_cairo_show_layout_vcentered(cr,layout);
+    gwy_3d_pango_cairo_show_layout_vcentered(cr, layout);
 
     cairo_identity_matrix(cr);
 
-    cairo_translate(cr,1.5,label_height+0.5);
+    cairo_translate(cr, 1.5, label_height+0.5);
     if (inverted)
-      pattern = cairo_pattern_create_linear(0,0,0,size);
+      pattern = cairo_pattern_create_linear(0, 0, 0, size);
     else
-      pattern = cairo_pattern_create_linear(0,size,0,0);
-    gwy_gradient_to_cairo_pattern(pattern,gradient);
-    cairo_set_source(cr,pattern);
-    cairo_rectangle(cr,0,0,fmw,size);
+      pattern = cairo_pattern_create_linear(0, size, 0, 0);
+    gwy_gradient_to_cairo_pattern(pattern, gradient);
+    cairo_set_source(cr, pattern);
+    cairo_rectangle(cr, 0, 0, fmw, size);
     cairo_fill(cr);
     cairo_pattern_destroy(pattern);
 
-    cairo_set_source_rgba(cr,0,0,0,1);
-    cairo_rectangle(cr,0, 0,fmw,size);
+    cairo_set_source_rgba(cr, 0, 0, 0, 1);
+    cairo_rectangle(cr, 0,  0, fmw, size);
     cairo_stroke(cr);
     /*    samples = gwy_gradient_get_samples(gradient, &nsamples);
     pixels = cairo_image_surface_get_data(surf);
@@ -2885,6 +2929,7 @@ gwy_3d_fmscaletex(gint height,
     return surf;
 }
 
+/* draws a false color bar */
 static gint
 gwy_3d_draw_fmscaletex(Gwy3DView *view)
 {
@@ -2892,22 +2937,22 @@ gwy_3d_draw_fmscaletex(Gwy3DView *view)
   gint width = GTK_WIDGET(view)->allocation.width;
   gint size = (gint)(sqrt(MIN(width, height))*0.8);
   cairo_surface_t* surf;
-  gdouble min,max;
+  gdouble min, max;
   gboolean noticks;
 
-  glTranslatef(width,0,0);
+  glTranslatef(width, 0, 0);
 
   if (view->setup->visualization == GWY_3D_VISUALIZATION_OVERLAY
       && view->ovlays
       && view->ovlays[0]) {
       gwy_layer_basic_get_range(GWY_LAYER_BASIC(view->ovlays[0]),
-                                &min,&max);
-      noticks =
-          gwy_layer_basic_get_range_type(GWY_LAYER_BASIC(view->ovlays[0]))
+                                &min, &max);
+      noticks
+          = gwy_layer_basic_get_range_type(GWY_LAYER_BASIC(view->ovlays[0]))
           == GWY_LAYER_BASIC_RANGE_ADAPT;
   }
   else {
-      gwy_data_field_get_min_max(view->data_field,&min,&max);
+      gwy_data_field_get_min_max(view->data_field, &min, &max);
       noticks = FALSE;
   };
 
@@ -2918,16 +2963,15 @@ gwy_3d_draw_fmscaletex(Gwy3DView *view)
                            gwy_data_field_get_si_unit_z(view->data_field),
                            view->gradient,
                            FALSE,
-                           &width,&height,noticks);
+                           &width, &height, noticks);
 
   gwy_3d_cairo_to_tex(cairo_image_surface_get_data(surf),
                       width,
                       height,
-                      cairo_image_surface_get_stride(surf)
-                      );
+                      cairo_image_surface_get_stride(surf));
 
 
-  gwy_3d_draw_ctex(0,2,2,width,height);
+  gwy_3d_draw_ctex(0, 2, 2, width, height);
   cairo_surface_destroy(surf);
 
   return width;

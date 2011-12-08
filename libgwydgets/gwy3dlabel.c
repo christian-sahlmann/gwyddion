@@ -573,7 +573,8 @@ gwy_3d_label_reset(Gwy3DLabel *label)
         label->delta_y = defval;
         g_object_notify(object, "delta-y");
     }
-    if (label->rotation != (defval = PSPEC("rotation", DOUBLE)->default_value)) {
+    if (label->rotation
+        != (defval = PSPEC("rotation", DOUBLE)->default_value)) {
         label->rotation = defval;
         g_object_notify(object, "rotation");
     }

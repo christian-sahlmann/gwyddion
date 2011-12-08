@@ -73,7 +73,7 @@ struct _Gwy3DView {
     GQuark data2_key;
     gulong novlays;
     gulong data2_item_id;
- 
+
     GwyGradient *gradient;
     GQuark gradient_key;
     gulong gradient_id;
