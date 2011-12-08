@@ -858,7 +858,7 @@ gwy_app_3d_window_add_overlay_menu(Gwy3DWindow *gwy3dwindow)
     gtk_box_pack_start(GTK_BOX(lay),menu,FALSE,FALSE,0);
     g_object_set_data(G_OBJECT(lay),"c",menu);
 
-    menu = gtk_check_button_new_with_mnemonic("U_se mask not data");
+    menu = gtk_check_button_new_with_mnemonic(_("_Show mask"));
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(menu),FALSE);
     g_signal_connect_swapped(menu, "toggled",
                      G_CALLBACK(gwy_app_3d_window_update_chooser),

@@ -1578,7 +1578,8 @@ gwy_3d_window_view_clicked(GtkWidget *gwy3dwindow,
         break;
 
         case GWY_3D_VISUALIZATION_OVERLAY:
-        menu = gtk_menu_new();
+        menu = gwy_menu_gradient(G_CALLBACK(gwy_3d_window_gradient_selected),
+                                 gwy3dwindow);
         g_object_set(menu, "reserve-toggle-size", 0, NULL);
         item = gtk_menu_item_new_with_mnemonic(_("S_witch to Color Gradient Mode"));
         visual = GWY_3D_VISUALIZATION_GRADIENT;
