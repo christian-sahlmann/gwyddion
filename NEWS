@@ -1,6 +1,6 @@
 2.26 (0000-00-00)
 Application:
-- Translations updated: Czech, French, Russian, Spanish.
+- Translations updated: Czech, French, Italian, Russian, Spanish.
 - Keyboard shortucts can be modified by pointing to the menu item and pressing
   the new shortcut (after enabling this in the Edit menu).
 
@@ -20,6 +20,9 @@ Libraries:
 - libgwyprocess: Kaiser 2.5 FFT window was fixed to avoid returning NaNs at
                  certain transform sizes (due to rounding errors).
 - libgwyddion: New functions for case-insensitive string hashing.
+- libgwyprocess: New function for asymmetrical outlier marking.
+- libgwyprocess: Bug affecting calculation surface areas and volumes of grains
+  on the lower edge of a non-square image was fixed.
 
 Modules:
 - Code V INT (new): Imports Code V INT grid interferograms.
@@ -55,6 +58,7 @@ Other:
 - The thumbnailer permits specifying the channel used to create the thumbnail
   (if run manually).
 - Drag'n'drop should work on Win32 again.
+- Bzip2-compressed source code tarballs were replaced with xz-compressed.
 
 
 2.25 (2011-06-06)
