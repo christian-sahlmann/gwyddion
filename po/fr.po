@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: French localization\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2011-12-06 03:58+0100\n"
-"PO-Revision-Date: 2011-12-06 20:49+0100\n"
+"POT-Creation-Date: 2011-12-09 03:58+0100\n"
+"PO-Revision-Date: 2011-12-10 13:07+0100\n"
 "Last-Translator: François RIGUET <francheu@caramail.com>\n"
 "Language-Team: François RIGUET <francheu@caramail.com>\n"
 "Language: \n"
@@ -811,58 +811,58 @@ msgstr "Angle _lumière φ :"
 msgid "L_ight θ:"
 msgstr "Angle lum_ière θ :"
 
-#: libgwydgets/gwy3dwindow.c:1002
+#: libgwydgets/gwy3dwindow.c:1018
 msgid "X-axis"
 msgstr "Axe X"
 
-#: libgwydgets/gwy3dwindow.c:1003
+#: libgwydgets/gwy3dwindow.c:1019
 msgid "Y-axis"
 msgstr "Axe Y"
 
-#: libgwydgets/gwy3dwindow.c:1004
+#: libgwydgets/gwy3dwindow.c:1020
 msgid "Minimum z value"
 msgstr "Valeur Z minimale"
 
-#: libgwydgets/gwy3dwindow.c:1005
+#: libgwydgets/gwy3dwindow.c:1021
 msgid "Maximum z value"
 msgstr "Valeur Z maximale"
 
-#: libgwydgets/gwy3dwindow.c:1028
+#: libgwydgets/gwy3dwindow.c:1044
 msgid "_Label:"
 msgstr "_Label :"
 
-#: libgwydgets/gwy3dwindow.c:1033
+#: libgwydgets/gwy3dwindow.c:1049
 msgid "_Text:"
 msgstr "_Texte :"
 
-#: libgwydgets/gwy3dwindow.c:1053
+#: libgwydgets/gwy3dwindow.c:1069
 msgid "Move label"
 msgstr "Déplacer le label"
 
-#: libgwydgets/gwy3dwindow.c:1062
+#: libgwydgets/gwy3dwindow.c:1078
 msgid "_Horizontally:"
 msgstr "_Horizontalement :"
 
-#: libgwydgets/gwy3dwindow.c:1072
+#: libgwydgets/gwy3dwindow.c:1088
 msgid "_Vertically:"
 msgstr "_Verticalement :"
 
-#: libgwydgets/gwy3dwindow.c:1080
+#: libgwydgets/gwy3dwindow.c:1096
 msgid "Scale size _automatically"
 msgstr "Mise à l'échelle _automatique"
 
-#: libgwydgets/gwy3dwindow.c:1092
+#: libgwydgets/gwy3dwindow.c:1108
 #: modules/tools/filter.c:252
 msgid "Si_ze:"
 msgstr "Taille :"
 
-#: libgwydgets/gwy3dwindow.c:1092
+#: libgwydgets/gwy3dwindow.c:1108
 #: modules/process/cwt.c:148
 #: modules/process/hough.c:208
 msgid "pixels"
 msgstr "pixels"
 
-#: libgwydgets/gwy3dwindow.c:1100
+#: libgwydgets/gwy3dwindow.c:1116
 #: modules/file/hdrimage.cc:2149
 #: modules/file/pixmap.c:1018
 #: modules/file/pixmap.c:2914
@@ -910,18 +910,18 @@ msgstr "pixels"
 msgid "_Reset"
 msgstr "_Remise à zéro"
 
-#: libgwydgets/gwy3dwindow.c:1532
+#: libgwydgets/gwy3dwindow.c:1549
+#: libgwydgets/gwy3dwindow.c:1601
 msgid "S_witch to Lighting Mode"
 msgstr "Passer au mode éclairage"
 
-#: libgwydgets/gwy3dwindow.c:1538
-#: libgwydgets/gwy3dwindow.c:1556
-#: libgwydgets/gwy3dwindow.c:1573
+#: libgwydgets/gwy3dwindow.c:1557
+#: libgwydgets/gwy3dwindow.c:1579
 msgid "S_witch to Overlay Mode"
 msgstr "Pa_sser au mode superposition"
 
-#: libgwydgets/gwy3dwindow.c:1550
-#: libgwydgets/gwy3dwindow.c:1567
+#: libgwydgets/gwy3dwindow.c:1571
+#: libgwydgets/gwy3dwindow.c:1593
 msgid "S_witch to Color Gradient Mode"
 msgstr "Passer au mode gradient de couleur"
 
@@ -1402,7 +1402,7 @@ msgstr "Contrôle à distance"
 msgid "Python Scripting Interface"
 msgstr "Interface de script Python"
 
-#: app/app.c:256
+#: app/app.c:255
 #, c-format
 msgid ""
 "Some data are unsaved:\n"
@@ -1413,45 +1413,49 @@ msgstr ""
 "%s\n"
 "Souhaitez-vous vraiment quitter ?"
 
-#: app/app.c:400
+#: app/app.c:399
 msgid "Mask _Color..."
 msgstr "_Couleur du masque..."
 
-#: app/app.c:416
+#: app/app.c:415
 msgid "Zoom _1:1"
 msgstr "Zoom _1:1"
 
-#: app/app.c:613
+#: app/app.c:612
 msgid "Pi_xelwise Square"
 msgstr "Pi_xels carrés"
 
-#: app/app.c:623
+#: app/app.c:622
 msgid "_Physically Square"
 msgstr "_Pixels réels"
 
-#: app/app.c:792
+#: app/app.c:791
 msgid "verb|Save"
 msgstr "Enregistrer"
 
-#: app/app.c:795
-#: app/app.c:799
+#: app/app.c:794
+#: app/app.c:798
 msgid "Save 3D view to an image"
 msgstr "Exporter la vue 3D en image"
 
-#: app/app.c:805
+#: app/app.c:804
 msgid "Set as Default"
 msgstr "Enregistrer comme défaut"
 
-#: app/app.c:807
+#: app/app.c:806
 msgid "Set the current view setup as the default"
 msgstr "Enregistre la configuration comme défaut"
 
-#: app/app.c:1016
+#: app/app.c:863
+msgid "_Show mask"
+msgstr "Afficher le ma_sque"
+
+#: app/app.c:1025
 #, c-format
 msgid "Saving of 3D view to `%s' failed"
 msgstr "L'enregistrement de la vue 3D `%s' a échoué"
 
-#: app/app.c:1060
+#: app/app.c:1069
 msgid "Export 3D View"
 msgstr "Exporter la vue 3D"
 
@@ -2422,7 +2426,7 @@ msgstr "Numéro de plan %u invalide dans la balise ‘%s’."
 
 #: modules/file/alicona.c:566
 msgid "Header tag key is not nul-terminated."
-msgstr ""
+msgstr "La balise d'en-tête ne se termine pas par le caractère nul."
 
 #: modules/file/alicona.c:571
 msgid "Header tag key is empty."
@@ -2431,24 +2435,24 @@ msgstr "La balise d'en-tête est vide."
 #: modules/file/alicona.c:578
 #, c-format
 msgid "Header tag ‘%s’ key is not nul-padded."
-msgstr ""
+msgstr "La balise d'en-tête ‘%s’ ne se termine pas par des caractères nuls."
 
 #: modules/file/alicona.c:585
 #, c-format
 msgid "Header tag ‘%s’ lacks CRLF terminator."
-msgstr ""
+msgstr "Il manque le terminateur CRLF à la balise d'en-tête ‘%s’."
 
 #: modules/file/alicona.c:591
 #, c-format
 msgid "Header tag ‘%s’ value is not nul-terminated."
-msgstr ""
+msgstr "La valeur de la balise d'en-tête ‘%s’ ne se termine pas par le caractère nul."
 
-#: modules/file/alicona.c:599
+#: modules/file/alicona.c:601
 #, c-format
 msgid "Header tag ‘%s’ value is not nul-padded."
-msgstr ""
+msgstr "La valeur de balise d'en-tête ‘%s’ ne se termine pas par des caractères nuls."
 
-#: modules/file/alicona.c:650
+#: modules/file/alicona.c:652
 #: modules/file/gdeffile.c:169
 #: modules/file/gdeffile.c:193
 #: modules/file/gsffile.c:152
@@ -2458,14 +2462,13 @@ msgstr ""
 msgid "File header is truncated."
 msgstr "L'en-tête de fichier est tronqué."
 
-#: modules/file/alicona.c:665
+#: modules/file/alicona.c:667
 msgid "Comment lacks CRLF termination."
 msgstr "Les commentaires ne terminent pas par CRLF."
 
-#: modules/file/alicona.c:670
-#, fuzzy
+#: modules/file/alicona.c:672
 msgid "Comment is not nul-terminated."
-msgstr "Le mode de mesure T2 n'est pas implémenté."
+msgstr "Le commentaire ne se termine pas par le caractère nul."
 
 #: modules/file/ambfile.c:74
 msgid "Imports Ambios AMB data files."
@@ -8098,9 +8101,8 @@ msgid "Above"
 msgstr "Au-dessus"
 
 #: modules/process/indent_analyze.c:279
-#, fuzzy
 msgid "Below"
-msgstr "Sous"
+msgstr "En-dessous"
 
 #: modules/process/indent_analyze.c:280
 msgid "Plane"
