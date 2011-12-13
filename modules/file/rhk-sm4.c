@@ -17,7 +17,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
-
+#define DEBUG 1
 /**
  * [FILE-MAGIC-FREEDESKTOP]
  * <mime-type type="application/x-rhk-sm4-spm">
@@ -215,6 +215,12 @@ typedef enum {
     RHK_STRING_NSTRINGS
 } RHKStringType;
 
+typedef enum {
+    RHK_DRIFT_DISABLED = 0,
+    RHK_DRIFT_EACH_SPECTRA = 1,
+    RHK_DRIFT_EACH_LOCATION = 2
+} RHKDriftOptionType;
+
 typedef struct {
     RHKObjectType type;
     guint offset;
@@ -277,6 +283,24 @@ typedef struct {
 } RHKPageIndex;
 
 typedef struct {
+    guint64 start_time;
+    RHKDriftOptionType drift_opt;
+    guint nstrings;
+    /* and then @nstrings rhk_strings follow but we do not know how to read
+     * that. */
+} RHKSpecDriftHeader;
+
+typedef struct {
+    gdouble ftime;
+    gdouble xcoord;
+    gdouble ycoord;
+    gdouble dx;
+    gdouble dy;
+    gdouble cumulative_dx;
+    gdouble cumulative_dy;
+} RHKSpecInfo;
+
+typedef struct {
     guint page_count;
     guint object_count;
     guint object_field_size;
@@ -315,6 +339,9 @@ static gboolean      rhk_sm4_read_page_data        (RHKPage *page,
 static gboolean      rhk_sm4_read_string_data      (RHKPage *page,
                                                     const RHKObject *obj,
                                                     guint count,
+                                                    const guchar *buffer);
+static gboolean      rhk_sm4_read_spec_info        (RHKSpecInfo *spec_info,
+                                                    const RHKObject *obj,
                                                     const guchar *buffer);
 static RHKObject*    rhk_sm4_read_objects          (const guchar *buffer,
                                                     const guchar *p,
@@ -517,8 +544,26 @@ rhk_sm4_load(const gchar *filename,
             imageid++;
         }
         else if (pi->data_type == RHK_DATA_LINE) {
+            RHKSpecDriftHeader drift_header;
+            RHKSpecInfo spec_info;
+            gboolean have_header = FALSE, have_info = FALSE;
+
             gwy_debug("page_type %u", page->page_type);
             gwy_debug("line_type %u", page->line_type);
+            gwy_debug("page_sizes %u %u", page->x_size, page->y_size);
+            /* Page may contain drift header */
+            if ((obj = rhk_sm4_find_object(page->objects, page->object_count,
+                                           RHK_OBJECT_SPEC_DRIFT_HEADER,
+                                           RHK_OBJECT_PAGE_HEADER, NULL))) {
+                gwy_debug("got spec drift header of size %u", obj->size);
+            }
+            if ((obj = rhk_sm4_find_object(page->objects, page->object_count,
+                                           RHK_OBJECT_SPEC_DRIFT_DATA,
+                                           RHK_OBJECT_PAGE_HEADER, NULL))
+                && rhk_sm4_read_spec_info(&spec_info, obj, buffer)) {
+                gwy_debug("spec_info OK");
+                have_info = TRUE;
+            }
         }
     }
 
@@ -754,6 +799,24 @@ rhk_sm4_read_string_data(RHKPage *page,
         }
     }
 
+    return TRUE;
+}
+
+static gboolean
+rhk_sm4_read_spec_info(RHKSpecInfo *spec_info,
+                       const RHKObject *obj,
+                       const guchar *buffer)
+{
+    if (obj->size < 28)
+        return FALSE;
+
+    spec_info->ftime = gwy_get_gfloat_le(&buffer);
+    spec_info->xcoord = gwy_get_gfloat_le(&buffer);
+    spec_info->ycoord = gwy_get_gfloat_le(&buffer);
+    spec_info->dx = gwy_get_gfloat_le(&buffer);
+    spec_info->dy = gwy_get_gfloat_le(&buffer);
+    spec_info->cumulative_dx = gwy_get_gfloat_le(&buffer);
+    spec_info->cumulative_dy = gwy_get_gfloat_le(&buffer);
     return TRUE;
 }
 
