@@ -1042,17 +1042,21 @@ rhk_sm4_page_to_graph_model(const RHKPage *page)
     pdata = (const gint32*)page->data;
     xdata = g_new(gdouble, res);
     ydata = g_new(gdouble, res);
+    name = page->strings[RHK_STRING_LABEL];
     for (i = 0; i < ncurves; i++) {
         gcmodel = gwy_graph_curve_model_new();
         for (j = 0; j < res; j++) {
-            xdata[j] = j;
-            ydata[j] = GINT32_FROM_LE(pdata[i*res + j]);
+            xdata[j] = j*page->x_scale + page->x_offset;
+            ydata[j] = (GINT32_FROM_LE(pdata[i*res + j])*page->z_scale
+                        + page->z_offset);
         }
         gwy_graph_curve_model_set_data(gcmodel, xdata, ydata, res);
         g_object_set(gcmodel,
                      "mode", GWY_GRAPH_CURVE_LINE,
                      "color", gwy_graph_get_preset_color(i),
                      NULL);
+        if (name)
+            g_object_set(gcmodel, "description", name, NULL);
         gwy_graph_model_add_curve(gmodel, gcmodel);
         g_object_unref(gcmodel);
     }
@@ -1068,7 +1072,7 @@ rhk_sm4_page_to_graph_model(const RHKPage *page)
     g_object_set(gmodel, "si-unit-y", siunit, NULL);
     g_object_unref(siunit);
 
-    if ((name = page->strings[RHK_STRING_LABEL]))
+    if (name)
         g_object_set(gmodel, "title", name, NULL);
 
     return gmodel;
