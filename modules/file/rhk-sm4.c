@@ -340,6 +340,9 @@ static gboolean      rhk_sm4_read_string_data      (RHKPage *page,
                                                     const RHKObject *obj,
                                                     guint count,
                                                     const guchar *buffer);
+static gboolean      rhk_sm4_read_drift_header     (RHKSpecDriftHeader *drift_header,
+                                                    const RHKObject *obj,
+                                                    const guchar *buffer);
 static gboolean      rhk_sm4_read_spec_info        (RHKSpecInfo *spec_info,
                                                     const RHKObject *obj,
                                                     const guchar *buffer);
@@ -357,6 +360,7 @@ static RHKObject*    rhk_sm4_find_object           (RHKObject *objects,
 static const gchar*  rhk_sm4_describe_object       (RHKObjectType type);
 static void          rhk_sm4_free                  (RHKFile *rhkfile);
 static GwyDataField* rhk_sm4_page_to_data_field    (const RHKPage *page);
+static GwyGraphModel* rhk_sm4_page_to_graph_model  (const RHKPage *page);
 static GwyContainer* rhk_sm4_get_metadata          (const RHKPageIndex *pi,
                                                     const RHKPage *page);
 
@@ -421,7 +425,7 @@ rhk_sm4_load(const gchar *filename,
     GError *err = NULL;
     const guchar *p;
     GString *key = NULL;
-    guint i, imageid = 0;
+    guint i, imageid = 0, graphid = 0;
 
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
         err_GET_FILE_CONTENTS(error, &err);
@@ -544,6 +548,7 @@ rhk_sm4_load(const gchar *filename,
             imageid++;
         }
         else if (pi->data_type == RHK_DATA_LINE) {
+            GwyGraphModel *gmodel;
             RHKSpecDriftHeader drift_header;
             RHKSpecInfo spec_info;
             gboolean have_header = FALSE, have_info = FALSE;
@@ -554,8 +559,10 @@ rhk_sm4_load(const gchar *filename,
             /* Page may contain drift header */
             if ((obj = rhk_sm4_find_object(page->objects, page->object_count,
                                            RHK_OBJECT_SPEC_DRIFT_HEADER,
-                                           RHK_OBJECT_PAGE_HEADER, NULL))) {
-                gwy_debug("got spec drift header of size %u", obj->size);
+                                           RHK_OBJECT_PAGE_HEADER, NULL))
+                && rhk_sm4_read_drift_header(&drift_header, obj, buffer)) {
+                gwy_debug("drift_header OK");
+                have_header = TRUE;
             }
             if ((obj = rhk_sm4_find_object(page->objects, page->object_count,
                                            RHK_OBJECT_SPEC_DRIFT_DATA,
@@ -564,16 +571,26 @@ rhk_sm4_load(const gchar *filename,
                 gwy_debug("spec_info OK");
                 have_info = TRUE;
             }
+            /* FIXME: RHK_STRING_PLL_PRO_STATUS may contain interesting
+             * metadata.  But we have not place where to put it. */
+
+            if ((gmodel = rhk_sm4_page_to_graph_model(page))) {
+                graphid++;
+                gwy_container_set_object(container,
+                                         gwy_app_get_graph_key_for_id(graphid),
+                                         gmodel);
+                g_object_unref(gmodel);
+            }
         }
     }
 
-    if (!imageid)
+    if (!imageid && !graphid)
         err_NO_DATA(error);
 
 fail:
     gwy_file_abandon_contents(buffer, size, NULL);
     rhk_sm4_free(&rhkfile);
-    if (!imageid) {
+    if (!imageid && !graphid) {
         gwy_object_unref(container);
     }
     if (key)
@@ -803,6 +820,21 @@ rhk_sm4_read_string_data(RHKPage *page,
 }
 
 static gboolean
+rhk_sm4_read_drift_header(RHKSpecDriftHeader *drift_header,
+                          const RHKObject *obj,
+                          const guchar *buffer)
+{
+    if (obj->size < 16)
+        return FALSE;
+
+    drift_header->start_time = gwy_get_guint64_le(&buffer);
+    drift_header->drift_opt = gwy_get_gint16_le(&buffer);
+    drift_header->nstrings = gwy_get_guint16_le(&buffer);
+    /* TODO: Read the strings. */
+    return TRUE;
+}
+
+static gboolean
 rhk_sm4_read_spec_info(RHKSpecInfo *spec_info,
                        const RHKObject *obj,
                        const guchar *buffer)
@@ -990,6 +1022,56 @@ rhk_sm4_page_to_data_field(const RHKPage *page)
     gwy_si_unit_set_from_string(siunit, unit);
 
     return dfield;
+}
+
+static GwyGraphModel*
+rhk_sm4_page_to_graph_model(const RHKPage *page)
+{
+    GwyGraphModel *gmodel;
+    GwyGraphCurveModel *gcmodel;
+    GwySIUnit *siunit;
+    const gint32 *pdata;
+    const gchar *name;
+    gint res, ncurves, i, j;
+    gdouble *xdata, *ydata;
+
+    res = page->x_size;
+    ncurves = page->y_size;
+
+    gmodel = gwy_graph_model_new();
+    pdata = (const gint32*)page->data;
+    xdata = g_new(gdouble, res);
+    ydata = g_new(gdouble, res);
+    for (i = 0; i < ncurves; i++) {
+        gcmodel = gwy_graph_curve_model_new();
+        for (j = 0; j < res; j++) {
+            xdata[j] = j;
+            ydata[j] = GINT32_FROM_LE(pdata[i*res + j]);
+        }
+        gwy_graph_curve_model_set_data(gcmodel, xdata, ydata, res);
+        g_object_set(gcmodel,
+                     "mode", GWY_GRAPH_CURVE_LINE,
+                     "color", gwy_graph_get_preset_color(i),
+                     NULL);
+        gwy_graph_model_add_curve(gmodel, gcmodel);
+        g_object_unref(gcmodel);
+    }
+    g_free(ydata);
+    g_free(xdata);
+
+    /* Units */
+    siunit = gwy_si_unit_new(page->strings[RHK_STRING_X_UNITS]);
+    g_object_set(gmodel, "si-unit-x", siunit, NULL);
+    g_object_unref(siunit);
+
+    siunit = gwy_si_unit_new(page->strings[RHK_STRING_Z_UNITS]);
+    g_object_set(gmodel, "si-unit-y", siunit, NULL);
+    g_object_unref(siunit);
+
+    if ((name = page->strings[RHK_STRING_LABEL]))
+        g_object_set(gmodel, "title", name, NULL);
+
+    return gmodel;
 }
 
 static void
