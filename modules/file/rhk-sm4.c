@@ -293,8 +293,8 @@ typedef struct {
 
 typedef struct {
     gdouble ftime;
-    gdouble xcoord;
-    gdouble ycoord;
+    gdouble x_coord;
+    gdouble y_coord;
     gdouble dx;
     gdouble dy;
     gdouble cumulative_dx;
@@ -552,7 +552,7 @@ rhk_sm4_load(const gchar *filename,
             GwyGraphModel *gmodel;
             RHKSpecDriftHeader drift_header;
             RHKSpecInfo spec_info;
-            gboolean have_header = FALSE, have_info = FALSE;
+            G_GNUC_UNUSED gboolean have_header = FALSE, have_info = FALSE;
 
             gwy_debug("page_type %u", page->page_type);
             gwy_debug("line_type %u", page->line_type);
@@ -703,6 +703,7 @@ rhk_sm4_read_page_header(RHKPage *page,
     page->line_type = gwy_get_guint32_le(&p);
     page->x_coord = gwy_get_gint32_le(&p);
     page->y_coord = gwy_get_gint32_le(&p);
+    gwy_debug("x_coord = %u, y_coord = %u", page->x_coord, page->y_coord);
     page->x_size = gwy_get_guint32_le(&p);
     page->y_size = gwy_get_guint32_le(&p);
     gwy_debug("x_size = %u, y_size = %u", page->x_size, page->y_size);
@@ -727,11 +728,13 @@ rhk_sm4_read_page_header(RHKPage *page,
     gwy_debug("x,y,z_scale = %g %g %g",
               page->x_scale, page->y_scale, page->z_scale);
     /* Use negated positive conditions to catch NaNs */
-    if (!((page->x_scale = fabs(page->x_scale)) > 0)) {
+    /* Must not take the absolute value here, spectra may have valid negative
+     * scales. */
+    if (!(page->x_scale != 0)) {
         g_warning("Real x scale is 0.0, fixing to 1.0");
         page->x_scale = 1.0;
     }
-    if (!((page->y_scale = fabs(page->y_scale)) > 0)) {
+    if (!(page->y_scale != 0)) {
         g_warning("Real y scale is 0.0, fixing to 1.0");
         page->y_scale = 1.0;
     }
@@ -825,31 +828,37 @@ rhk_sm4_read_drift_header(RHKSpecDriftHeader *drift_header,
                           const RHKObject *obj,
                           const guchar *buffer)
 {
+    const guchar *p = buffer + obj->offset;
+
     if (obj->size < 16)
         return FALSE;
 
-    drift_header->start_time = gwy_get_guint64_le(&buffer);
-    drift_header->drift_opt = gwy_get_gint16_le(&buffer);
-    drift_header->nstrings = gwy_get_guint16_le(&buffer);
+    drift_header->start_time = gwy_get_guint64_le(&p);
+    drift_header->drift_opt = gwy_get_gint16_le(&p);
+    drift_header->nstrings = gwy_get_guint16_le(&p);
     /* TODO: Read the strings. */
     return TRUE;
 }
 
+// FIXME: In fact, there is an yres-long array of SpecInfo.
 static gboolean
 rhk_sm4_read_spec_info(RHKSpecInfo *spec_info,
                        const RHKObject *obj,
                        const guchar *buffer)
 {
+    const guchar *p = buffer + obj->offset;
+
     if (obj->size < 28)
         return FALSE;
 
-    spec_info->ftime = gwy_get_gfloat_le(&buffer);
-    spec_info->xcoord = gwy_get_gfloat_le(&buffer);
-    spec_info->ycoord = gwy_get_gfloat_le(&buffer);
-    spec_info->dx = gwy_get_gfloat_le(&buffer);
-    spec_info->dy = gwy_get_gfloat_le(&buffer);
-    spec_info->cumulative_dx = gwy_get_gfloat_le(&buffer);
-    spec_info->cumulative_dy = gwy_get_gfloat_le(&buffer);
+    spec_info->ftime = gwy_get_gfloat_le(&p);
+    spec_info->x_coord = gwy_get_gfloat_le(&p);
+    spec_info->y_coord = gwy_get_gfloat_le(&p);
+    gwy_debug("x_coord = %g, y_coord = %g", spec_info->x_coord, spec_info->y_coord);
+    spec_info->dx = gwy_get_gfloat_le(&p);
+    spec_info->dy = gwy_get_gfloat_le(&p);
+    spec_info->cumulative_dx = gwy_get_gfloat_le(&p);
+    spec_info->cumulative_dy = gwy_get_gfloat_le(&p);
     return TRUE;
 }
 
@@ -981,7 +990,8 @@ rhk_sm4_page_to_data_field(const RHKPage *page)
     xres = page->x_size;
     yres = page->y_size;
     dfield = gwy_data_field_new(xres, yres,
-                                xres*page->x_scale, yres*page->y_scale,
+                                xres*fabs(page->x_scale),
+                                yres*fabs(page->y_scale),
                                 FALSE);
     data = gwy_data_field_get_data(dfield);
     pdata = (const gint32*)page->data;
