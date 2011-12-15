@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: French localization\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
 "POT-Creation-Date: 2011-12-09 03:58+0100\n"
-"PO-Revision-Date: 2011-12-10 13:07+0100\n"
+"PO-Revision-Date: 2011-12-15 22:00+0100\n"
 "Last-Translator: François RIGUET <francheu@caramail.com>\n"
 "Language-Team: François RIGUET <francheu@caramail.com>\n"
 "Language: \n"
@@ -1473,7 +1473,7 @@ msgstr "Supprimer"
 
 #: app/data-browser.c:4010
 msgid "Data Browser"
-msgstr "Navigateur de Données"
+msgstr "Navigateur de données"
 
 #: app/data-browser.c:4033
 msgid "Close file"
@@ -2249,15 +2249,15 @@ msgstr "_Métadonnées"
 
 #: app/toolbox.c:664
 msgid "/Show _Data Browser"
-msgstr "/Navigateur de _Données"
+msgstr "/Navigateur de _données"
 
 #: app/toolbox.c:672
 msgid "/_Metadata Browser"
-msgstr "/Navigateur de Méta-données"
+msgstr "/Navigateur de méta-données"
 
 #: app/toolbox.c:680
 msgid "/Module _Browser"
-msgstr "/Navigateur de Modules"
+msgstr "/Navigateur de modules"
 
 #: app/toolbox.c:695
 msgid "/_Tip of the Day"
@@ -5819,7 +5819,7 @@ msgstr "Moyennage de structure similaires par auto-corrélation"
 
 #: modules/process/averaging.c:71
 msgid "/_Correct Data/_Correlation averaging..."
-msgstr "/_Correction des Données/Moyennage par _corrélation..."
+msgstr "/_Correction des données/Moyennage par _corrélation..."
 
 #: modules/process/averaging.c:75
 msgid "Averaging of similar structures"
@@ -5839,7 +5839,7 @@ msgstr "Opérations basiques : renversement, inversion de valeur, et rotation pa
 
 #: modules/process/basicops.c:70
 msgid "/_Basic Operations/_Invert Value"
-msgstr "/Opérations _Basiques/_Inverser les valeurs"
+msgstr "/Opérations _basiques/_Inverser les valeurs"
 
 #: modules/process/basicops.c:74
 msgid "Invert values about mean"
@@ -5847,7 +5847,7 @@ msgstr "inverser les valeurs par rapport à la moyenne"
 
 #: modules/process/basicops.c:77
 msgid "/_Basic Operations/Flip _Horizontally"
-msgstr "/Opérations _Basiques/Renverser _horizontalement"
+msgstr "/Opérations _basiques/Renverser _horizontalement"
 
 #: modules/process/basicops.c:81
 msgid "Flip data horizontally"
@@ -5855,7 +5855,7 @@ msgstr "Renverser horizontalement"
 
 #: modules/process/basicops.c:84
 msgid "/_Basic Operations/Flip _Vertically"
-msgstr "/Opérations _Basiques/Renverser _verticalement"
+msgstr "/Opérations _basiques/Renverser _verticalement"
 
 #: modules/process/basicops.c:88
 msgid "Flip data vertically"
@@ -5863,7 +5863,7 @@ msgstr "Renverser verticalement"
 
 #: modules/process/basicops.c:91
 msgid "/_Basic Operations/Flip _Both"
-msgstr "/Opérations _Basiques/Renverser horizontalement et verticalement"
+msgstr "/Opérations _basiques/Renverser horizontalement et verticalement"
 
 #: modules/process/basicops.c:95
 msgid "Flip data both horizontally and vertically"
@@ -5871,7 +5871,7 @@ msgstr "Renverser les données horizontalement et verticalement"
 
 #: modules/process/basicops.c:98
 msgid "/_Basic Operations/Rotate C_lockwise"
-msgstr "/Opérations _Basiques/Rotation sens indirect"
+msgstr "/Opérations _basiques/Rotation sens indirect"
 
 #: modules/process/basicops.c:102
 msgid "Rotate data 90 degrees clockwise"
@@ -5879,7 +5879,7 @@ msgstr "Tourner les données de 90 degrés dans le sens indirect"
 
 #: modules/process/basicops.c:105
 msgid "/_Basic Operations/Rotate _Counterclockwise"
-msgstr "/Opérations _Basiques/Rotation sens dire_ct"
+msgstr "/Opérations _basiques/Rotation sens dire_ct"
 
 #: modules/process/basicops.c:109
 msgid "Rotate data 90 degrees counterclockwise"
@@ -5887,7 +5887,7 @@ msgstr "Tourner les données de 90 degrés dans le sens direct"
 
 #: modules/process/basicops.c:112
 msgid "/_Basic Operations/S_quare Samples"
-msgstr "/Opérations _Basiques/Echantillons carrés"
+msgstr "/Opérations _basiques/Echantillons carrés"
 
 #: modules/process/basicops.c:116
 msgid "Resample data with non-1:1 aspect ratio to square samples"
@@ -5895,7 +5895,7 @@ msgstr "Ré-échantillonne les données ayant des dimensions différentes de 1:1
 
 #: modules/process/basicops.c:120
 msgid "/_Basic Operations/_Null Offsets"
-msgstr "/Opérations _Basiques/Supprimer l'offset"
+msgstr "/Opérations _basiques/Supprimer l'offset"
 
 #: modules/process/basicops.c:124
 msgid "Null horizontall offsets, moving the origin to the upper left corner"
@@ -6324,7 +6324,7 @@ msgstr "Recalibre les dimensions latérales ou la valeur d'échelle."
 
 #: modules/process/calibrate.c:159
 msgid "/_Basic Operations/_Dimensions and Units..."
-msgstr "/Opérations _Basiques/_Dimensions et unités..."
+msgstr "/Opérations _basiques/_Dimensions et unités..."
 
 #: modules/process/calibrate.c:163
 msgid "Change physical dimensions, units or value scale"
@@ -6697,7 +6697,7 @@ msgstr "CWT bi-dimensionnelle (Transformée en ondelettes continue)"
 
 #: modules/process/cwt.c:77
 msgid "/_Integral Transforms/2D _CWT..."
-msgstr "/Transformées/Ondelettes - continue (_CWT 2D)..."
+msgstr "/Transformées/Ondelettes - transformée continue (_CWT 2D)..."
 
 #: modules/process/cwt.c:81
 msgid "Compute continuous wavelet transform"
@@ -6790,7 +6790,7 @@ msgstr "Evalue et/ou corrige la dérive thermique dans l'axe rapide de scan"
 
 #: modules/process/drift.c:169
 msgid "/_Correct Data/Compensate _Drift..."
-msgstr "/_Correction des Données/Compenser la _dérive..."
+msgstr "/_Correction des données/Compenser la _dérive..."
 
 #: modules/process/drift.c:173
 msgid "Evaluate/correct thermal drift in fast scan axis"
@@ -6864,7 +6864,7 @@ msgstr "DWT bi-dimensionnelle (Transformée en ondelettes discrète)"
 
 #: modules/process/dwt.c:85
 msgid "/_Integral Transforms/2D _DWT..."
-msgstr "/Transformées/Ondelettes - discrète (_DWT 2D)..."
+msgstr "/Transformées/Ondelettes - transformée discrète (_DWT 2D)..."
 
 #: modules/process/dwt.c:89
 msgid "Compute Discrete Wavelet Transform"
@@ -7036,7 +7036,7 @@ msgstr "Convoluer par le Laplacien d'une Gaussienne (LoG)"
 
 #: modules/process/edge.c:705
 msgid "Detected st_ep"
-msgstr "Pas dét_ecté"
+msgstr "Saut dét_ecté"
 
 #: modules/process/facet-level.c:67
 msgid "Automatic facet-orientation based levelling. Levels data to make facets point up."
@@ -7068,7 +7068,7 @@ msgstr "Visualise, marque et mesure l'orientation des facettes."
 
 #: modules/process/facet_analysis.c:175
 msgid "/_Statistics/Facet _Analysis..."
-msgstr "/_Statistiques/_Analyse des Facettes..."
+msgstr "/_Statistiques/_Analyse des facettes..."
 
 #: modules/process/facet_analysis.c:179
 msgid "Mark areas by 2D slope"
@@ -7177,7 +7177,7 @@ msgstr "Filtrage FFT"
 
 #: modules/process/fft_filter_1d.c:141
 msgid "/_Correct Data/1D _FFT Filtering..."
-msgstr "/_Correction des Données/Filtrage _FFT 1D..."
+msgstr "/_Correction des données/Filtrage _FFT 1D..."
 
 #: modules/process/fft_filter_1d.c:145
 msgid "1D FFT Filtering"
@@ -7226,7 +7226,7 @@ msgstr "Filtrage FFT 2D"
 
 #: modules/process/fft_filter_2d.c:183
 msgid "/_Correct Data/_2D FFT Filtering..."
-msgstr "/_Correction des Données/Filtrage FFT _2D..."
+msgstr "/_Correction des données/Filtrage FFT _2D..."
 
 #: modules/process/fft_filter_2d.c:187
 msgid "Two-dimensional FFT filtering"
@@ -7598,7 +7598,7 @@ msgstr "Supprime les données sous le masque à l'aide d'une interpolation fract
 
 #: modules/process/fraccor.c:51
 msgid "/_Correct Data/_Fractal Correction"
-msgstr "/_Correction des Données/Correction _fractale"
+msgstr "/_Correction des données/Correction _fractale"
 
 #: modules/process/fraccor.c:55
 msgid "Interpolate data under mask with fractal interpolation"
@@ -8355,7 +8355,7 @@ msgstr "Supprime les données sous le masque en les interpolant par un Laplacien
 
 #: modules/process/laplace.c:55
 msgid "/_Correct Data/_Remove Data Under Mask"
-msgstr "/_Correction des Données/Supp_rimer les données sous le masque"
+msgstr "/_Correction des données/Supp_rimer les données sous le masque"
 
 #: modules/process/laplace.c:59
 msgid "Interpolate data under mask by solution of Laplace equation"
@@ -8454,7 +8454,7 @@ msgstr "Corrige les défauts des lignes (algorithmes expérimentaux)."
 
 #: modules/process/linecorrect.c:78
 msgid "/_Correct Data/M_odus Line Correction"
-msgstr "/_Correction des Données/Correction des lignes par valeur d_ominante"
+msgstr "/_Correction des données/Correction des lignes par valeur d_ominante"
 
 #: modules/process/linecorrect.c:82
 msgid "Correct lines by matching height modus"
@@ -8462,7 +8462,7 @@ msgstr "Corriger les lignes par correpondance des valeurs dominantes de hauteur"
 
 #: modules/process/linecorrect.c:85
 msgid "/_Correct Data/M_edian Line Correction"
-msgstr "/_Correction des Données/Correction des lignes par médiane"
+msgstr "/_Correction des données/Correction des lignes par médiane"
 
 #: modules/process/linecorrect.c:89
 msgid "Correct lines by matching height median"
@@ -8470,7 +8470,7 @@ msgstr "Corriger les lignes en faisant correspondre la hauteur médiane"
 
 #: modules/process/linecorrect.c:92
 msgid "/_Correct Data/Median Di_fference Line Correction"
-msgstr "/_Correction des Données/Correction des lignes par di_fférence médiane"
+msgstr "/_Correction des données/Correction des lignes par di_fférence médiane"
 
 #: modules/process/linecorrect.c:96
 msgid "Correct lines by zeroing median of differences between neighbor lines"
@@ -8478,7 +8478,7 @@ msgstr "Corrige les lignes en annulant la médiane des différences entre deux l
 
 #: modules/process/linecorrect.c:100
 msgid "/_Correct Data/Ma_tch Line Correction"
-msgstr "/_Correction des Données/Correc_tion des lignes par correspondance"
+msgstr "/_Correction des données/Correc_tion des lignes par correspondance"
 
 #: modules/process/linecorrect.c:104
 msgid "Correct lines by matching flat segments"
@@ -8486,7 +8486,7 @@ msgstr "Corriger les lignes en faisant correspondre les segments plats"
 
 #: modules/process/linecorrect.c:107
 msgid "/_Correct Data/Ste_p Line Correction"
-msgstr "/_Correction des Données/Correction des sauts dans les lignes"
+msgstr "/_Correction des données/Correction des sauts dans les lignes"
 
 #: modules/process/linecorrect.c:111
 msgid "Correct steps in lines"
@@ -9028,7 +9028,7 @@ msgstr "Crée un masque des points aberrants."
 
 #: modules/process/outliers.c:52
 msgid "/_Correct Data/Mask of _Outliers"
-msgstr "/_Correction des Données/Masquer les p_oints aberrants"
+msgstr "/_Correction des données/Masquer les p_oints aberrants"
 
 #: modules/process/outliers.c:56
 msgid "Mark data farther than 3σ from mean value"
@@ -9111,7 +9111,7 @@ msgstr "Applique une distorsion polynômiale dans le plan horizontal."
 
 #: modules/process/polydistort.c:154
 msgid "/_Correct Data/Pol_ynomial Distortion..."
-msgstr "/_Correction des Données/Distorsion pol_ynomiale..."
+msgstr "/_Correction des données/Distorsion pol_ynomiale..."
 
 #: modules/process/polydistort.c:158
 msgid "Apllies polynomial distortion in the horizontal plane"
@@ -9246,7 +9246,7 @@ msgstr "Pivote les données par un angle quelconque."
 
 #: modules/process/rotate.c:100
 msgid "/_Basic Operations/Rotate by _Angle..."
-msgstr "/Opérations _Basiques/Rotation..."
+msgstr "/Opérations _basiques/Rotation..."
 
 #: modules/process/rotate.c:104
 msgid "Rotate by arbitrary angle"
@@ -9274,7 +9274,7 @@ msgstr "Met les données à l'échelle selon un facteur quelconque."
 
 #: modules/process/scale.c:105
 msgid "/_Basic Operations/_Scale..."
-msgstr "/Opérations _Basiques/Echelle..."
+msgstr "/Opérations _basiques/Echelle..."
 
 #: modules/process/scale.c:109
 msgid "Scale data"
@@ -9310,7 +9310,7 @@ msgstr "Marque et/ou supprime les défauts linéaires (artefacts linéaires hori
 
 #: modules/process/scars.c:138
 msgid "/_Correct Data/M_ark Scars..."
-msgstr "/_Correction des Données/M_arquer les défauts linéaires..."
+msgstr "/_Correction des données/M_arquer les défauts linéaires..."
 
 #: modules/process/scars.c:142
 msgid "Mark horizontal scars (strokes)"
@@ -9318,7 +9318,7 @@ msgstr "Marquer les défauts horizontales (traits)"
 
 #: modules/process/scars.c:145
 msgid "/_Correct Data/Remove _Scars"
-msgstr "/_Correction des Données/_Supprimer les défauts linéaires"
+msgstr "/_Correction des données/_Supprimer les défauts linéaires"
 
 #: modules/process/scars.c:149
 msgid "Correct horizontal scars (strokes)"
@@ -9537,7 +9537,7 @@ msgstr "Limiter la plage de données en utilisant des seuils haut/bas."
 
 #: modules/process/threshold.c:137
 msgid "/_Basic Operations/Li_mit range..."
-msgstr "/Opérations _Basiques/Li_miter la plage..."
+msgstr "/Opérations _basiques/Li_miter la plage..."
 
 #: modules/process/threshold.c:141
 msgid "Limit data range"
@@ -9581,7 +9581,7 @@ msgstr "Incline l'image."
 
 #: modules/process/tilt.c:87
 msgid "/_Basic Operations/_Tilt..."
-msgstr "/Opérations _Basiques/Inclinaison..."
+msgstr "/Opérations _basiques/Inclinaison..."
 
 #: modules/process/tilt.c:91
 msgid "Tilt by specified amount"
@@ -9767,7 +9767,7 @@ msgstr "Rotation des données pour rendre parallèles aux axes x ou y des direct
 
 #: modules/process/unrotate.c:103
 msgid "/_Correct Data/_Unrotate..."
-msgstr "/_Correction des Données/Dérotation..."
+msgstr "/_Correction des données/Dérotation..."
 
 #: modules/process/unrotate.c:107
 msgid "Automatically correct rotation in horizontal plane"
@@ -10762,11 +10762,11 @@ msgstr "Médiane :"
 
 #: modules/tools/stats.c:325
 msgid "Ra (Sa):"
-msgstr "Ra :"
+msgstr "Ra (Sa) :"
 
 #: modules/tools/stats.c:326
 msgid "Rms (Sq):"
-msgstr "RMS (Rq) :"
+msgstr "RMS (Sq) :"
 
 #: modules/tools/stats.c:327
 msgid "Skew:"
