@@ -3102,7 +3102,7 @@ gwy_3d_view_set_setup_prefix(G_GNUC_UNUSED Gwy3DView *gwy3dview,
 void
 gwy_3d_view_set_ovlay(G_GNUC_UNUSED Gwy3DView *gwy3dview,
                       G_GNUC_UNUSED GwyPixmapLayer** ovlays,
-                      GwyPixmapLayer guint novlays)
+                      G_GNUC_UNUSED guint novlays)
 {
     g_critical("OpenGL support was not compiled in.");
 }
