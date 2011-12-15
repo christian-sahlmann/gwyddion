@@ -3,10 +3,10 @@ msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
 "POT-Creation-Date: 2011-12-03 11:10+0100\n"
-"PO-Revision-Date: \n"
+"PO-Revision-Date: 2011-12-15 11:46+0100\n"
 "Last-Translator: Andres <andresmp@gmail.com>\n"
 "Language-Team: the gwyiddion team <es@li.com>\n"
-"Language: \n"
+"Language: es\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -425,7 +425,7 @@ msgstr "Triangular"
 
 #: libprocess/gwyprocessenums.c:81
 msgid "symmetry|Square"
-msgstr "simetría |Cuadrado"
+msgstr "Cuadrado"
 
 #: libprocess/gwyprocessenums.c:82
 msgid "Rhombic"
@@ -556,7 +556,7 @@ msgstr ""
 
 #: libprocess/gwyprocessenums.c:263
 msgid "correlation|Normal"
-msgstr "correlación|Normal"
+msgstr "Normal"
 
 #: libprocess/gwyprocessenums.c:264
 msgid "FFT"
@@ -676,7 +676,7 @@ msgstr "Esconder controles completos"
 
 #: libgwydgets/gwy3dwindow.c:639
 msgid "3dcontrols|Basic"
-msgstr "controles3d|Basico"
+msgstr "Basico"
 
 #: libgwydgets/gwy3dwindow.c:644
 msgid "Light & Material"
@@ -8572,7 +8572,7 @@ msgstr ""
 
 #: modules/process/merge.c:135
 msgid "merge-mode|None"
-msgstr "modo-fusión|Ninguno"
+msgstr "Ninguno"
 
 #: modules/process/merge.c:139
 msgid "First operand"
