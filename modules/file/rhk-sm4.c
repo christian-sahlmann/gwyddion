@@ -34,7 +34,8 @@
  * [FILE-MAGIC-USERGUIDE]
  * RHK Instruments SM4
  * .sm4
- * Read
+ * Read SPS:Limited[1]
+ * [1] Spectra curves are imported as graphs, positional information is lost.
  **/
 
 #include "config.h"
