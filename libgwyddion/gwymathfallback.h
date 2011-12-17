@@ -37,6 +37,8 @@ _GWY_STATIC_INLINE double gwy_math_fallback_hypot(double x, double y);
 _GWY_STATIC_INLINE double gwy_math_fallback_acosh(double x);
 _GWY_STATIC_INLINE double gwy_math_fallback_asinh(double x);
 _GWY_STATIC_INLINE double gwy_math_fallback_atanh(double x);
+_GWY_STATIC_INLINE double gwy_math_fallback_isinf(double x);
+_GWY_STATIC_INLINE double gwy_math_fallback_isnan(double x);
 
 #undef _GWY_STATIC_INLINE
 
