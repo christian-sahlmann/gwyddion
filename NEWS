@@ -32,6 +32,7 @@ Modules:
   format.
 - Alicona (new): Imports Alicona Imaging Al3D files.
 - WITec ASCII (new): Imports WITec ASCII export files.
+- RHK SM4: Support for spectra reading was added (as graphs).
 - 1D FFT filter: Correct X-axis units of Fourier modulus are displayed.
 - Level Grains: The sign of extracted background was corrected.
 - LEXT: Crashing on systems lacking memrchr(), namely MS Windows, was fixed.
