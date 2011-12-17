@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2011-12-03 11:10+0100\n"
+"POT-Creation-Date: 2011-12-17 10:50+0100\n"
 "PO-Revision-Date: 2011-12-15 11:46+0100\n"
 "Last-Translator: Andres <andresmp@gmail.com>\n"
 "Language-Team: the gwyiddion team <es@li.com>\n"
@@ -760,56 +760,56 @@ msgstr ""
 msgid "L_ight θ:"
 msgstr ""
 
-#: libgwydgets/gwy3dwindow.c:1002
+#: libgwydgets/gwy3dwindow.c:1018
 msgid "X-axis"
 msgstr ""
 
-#: libgwydgets/gwy3dwindow.c:1003
+#: libgwydgets/gwy3dwindow.c:1019
 msgid "Y-axis"
 msgstr ""
 
-#: libgwydgets/gwy3dwindow.c:1004
+#: libgwydgets/gwy3dwindow.c:1020
 msgid "Minimum z value"
 msgstr ""
 
-#: libgwydgets/gwy3dwindow.c:1005
+#: libgwydgets/gwy3dwindow.c:1021
 msgid "Maximum z value"
 msgstr ""
 
-#: libgwydgets/gwy3dwindow.c:1028
+#: libgwydgets/gwy3dwindow.c:1044
 msgid "_Label:"
 msgstr ""
 
-#: libgwydgets/gwy3dwindow.c:1033
+#: libgwydgets/gwy3dwindow.c:1049
 msgid "_Text:"
 msgstr ""
 
-#: libgwydgets/gwy3dwindow.c:1053
+#: libgwydgets/gwy3dwindow.c:1069
 msgid "Move label"
 msgstr ""
 
-#: libgwydgets/gwy3dwindow.c:1062
+#: libgwydgets/gwy3dwindow.c:1078
 msgid "_Horizontally:"
 msgstr ""
 
-#: libgwydgets/gwy3dwindow.c:1072
+#: libgwydgets/gwy3dwindow.c:1088
 msgid "_Vertically:"
 msgstr ""
 
-#: libgwydgets/gwy3dwindow.c:1080
+#: libgwydgets/gwy3dwindow.c:1096
 msgid "Scale size _automatically"
 msgstr ""
 
-#: libgwydgets/gwy3dwindow.c:1092 modules/tools/filter.c:252
+#: libgwydgets/gwy3dwindow.c:1108 modules/tools/filter.c:252
 msgid "Si_ze:"
 msgstr ""
 
-#: libgwydgets/gwy3dwindow.c:1092 modules/process/cwt.c:148
+#: libgwydgets/gwy3dwindow.c:1108 modules/process/cwt.c:148
 #: modules/process/hough.c:208
 msgid "pixels"
 msgstr ""
 
-#: libgwydgets/gwy3dwindow.c:1100 modules/file/hdrimage.cc:2149
+#: libgwydgets/gwy3dwindow.c:1116 modules/file/hdrimage.cc:2149
 #: modules/file/pixmap.c:1018 modules/file/pixmap.c:2914
 #: modules/file/rawfile.c:398 modules/process/angle_dist.c:170
 #: modules/process/calcoefs_new.c:347 modules/process/calibrate.c:296
@@ -835,16 +835,15 @@ msgstr ""
 msgid "_Reset"
 msgstr ""
 
-#: libgwydgets/gwy3dwindow.c:1532
+#: libgwydgets/gwy3dwindow.c:1549 libgwydgets/gwy3dwindow.c:1601
 msgid "S_witch to Lighting Mode"
 msgstr ""
 
-#: libgwydgets/gwy3dwindow.c:1538 libgwydgets/gwy3dwindow.c:1556
-#: libgwydgets/gwy3dwindow.c:1573
+#: libgwydgets/gwy3dwindow.c:1557 libgwydgets/gwy3dwindow.c:1579
 msgid "S_witch to Overlay Mode"
 msgstr ""
 
-#: libgwydgets/gwy3dwindow.c:1550 libgwydgets/gwy3dwindow.c:1567
+#: libgwydgets/gwy3dwindow.c:1571 libgwydgets/gwy3dwindow.c:1593
 msgid "S_witch to Color Gradient Mode"
 msgstr ""
 
@@ -1314,7 +1313,7 @@ msgstr ""
 msgid "Python Scripting Interface"
 msgstr ""
 
-#: app/app.c:256
+#: app/app.c:255
 #, c-format
 msgid ""
 "Some data are unsaved:\n"
@@ -1322,45 +1321,49 @@ msgid ""
 "Really quit?"
 msgstr ""
 
-#: app/app.c:400
+#: app/app.c:399
 msgid "Mask _Color..."
 msgstr ""
 
-#: app/app.c:416
+#: app/app.c:415
 msgid "Zoom _1:1"
 msgstr ""
 
-#: app/app.c:613
+#: app/app.c:612
 msgid "Pi_xelwise Square"
 msgstr ""
 
-#: app/app.c:623
+#: app/app.c:622
 msgid "_Physically Square"
 msgstr ""
 
-#: app/app.c:792
+#: app/app.c:791
 #, fuzzy
 msgid "verb|Save"
 msgstr "Guardar"
 
-#: app/app.c:795 app/app.c:799
+#: app/app.c:794 app/app.c:798
 msgid "Save 3D view to an image"
 msgstr "Guardar vista 3D a una imagen"
 
-#: app/app.c:805
+#: app/app.c:804
 msgid "Set as Default"
 msgstr ""
 
-#: app/app.c:807
+#: app/app.c:806
 msgid "Set the current view setup as the default"
 msgstr "Usar configuración de vista actual  como el defecto"
 
-#: app/app.c:1016
+#: app/app.c:863
+msgid "_Show mask"
+msgstr ""
+
+#: app/app.c:1025
 #, c-format
 msgid "Saving of 3D view to `%s' failed"
 msgstr ""
 
-#: app/app.c:1060
+#: app/app.c:1069
 msgid "Export 3D View"
 msgstr "Exportar la vista 3D"
 
@@ -2414,59 +2417,59 @@ msgstr ""
 msgid "AIST-NT files (.aist)"
 msgstr ""
 
-#: modules/file/alicona.c:139
+#: modules/file/alicona.c:138
 msgid "Imports Alicona Imaging AL3D files."
 msgstr ""
 
-#: modules/file/alicona.c:152
+#: modules/file/alicona.c:151
 msgid "Alicona Imaging AL3D files (.al3d)"
 msgstr ""
 
-#: modules/file/alicona.c:440
+#: modules/file/alicona.c:479
 #, c-format
 msgid "Invalid plane number %u in tag ‘%s’."
 msgstr ""
 
-#: modules/file/alicona.c:527
+#: modules/file/alicona.c:566
 msgid "Header tag key is not nul-terminated."
 msgstr ""
 
-#: modules/file/alicona.c:532
+#: modules/file/alicona.c:571
 msgid "Header tag key is empty."
 msgstr ""
 
-#: modules/file/alicona.c:539
+#: modules/file/alicona.c:578
 #, c-format
 msgid "Header tag ‘%s’ key is not nul-padded."
 msgstr ""
 
-#: modules/file/alicona.c:546
+#: modules/file/alicona.c:585
 #, c-format
 msgid "Header tag ‘%s’ lacks CRLF terminator."
 msgstr ""
 
-#: modules/file/alicona.c:552
+#: modules/file/alicona.c:591
 #, c-format
 msgid "Header tag ‘%s’ value is not nul-terminated."
 msgstr ""
 
-#: modules/file/alicona.c:560
+#: modules/file/alicona.c:601
 #, c-format
 msgid "Header tag ‘%s’ value is not nul-padded."
 msgstr ""
 
-#: modules/file/alicona.c:611 modules/file/gdeffile.c:169
+#: modules/file/alicona.c:652 modules/file/gdeffile.c:169
 #: modules/file/gdeffile.c:193 modules/file/gsffile.c:152
 #: modules/file/iso28600.c:1029 modules/file/pt3file.c:481
 #: modules/file/pt3file.c:583
 msgid "File header is truncated."
 msgstr ""
 
-#: modules/file/alicona.c:626
+#: modules/file/alicona.c:667
 msgid "Comment lacks CRLF termination."
 msgstr ""
 
-#: modules/file/alicona.c:631
+#: modules/file/alicona.c:672
 msgid "Comment is not nul-terminated."
 msgstr ""
 
@@ -4671,30 +4674,30 @@ msgstr ""
 msgid "Unknown line %d"
 msgstr ""
 
-#: modules/file/rhk-sm4.c:339
+#: modules/file/rhk-sm4.c:371
 msgid "Imports RHK Technology SM4 data files."
 msgstr ""
 
-#: modules/file/rhk-sm4.c:359
+#: modules/file/rhk-sm4.c:391
 msgid "RHK SM4 files (.sm4)"
 msgstr ""
 
-#: modules/file/rhk-sm4.c:544
+#: modules/file/rhk-sm4.c:603
 #, c-format
 msgid "Object %s is truncated."
 msgstr ""
 
-#: modules/file/rhk-sm4.c:772
+#: modules/file/rhk-sm4.c:886
 #, c-format
 msgid "Object list in %s is truncated."
 msgstr ""
 
-#: modules/file/rhk-sm4.c:789
+#: modules/file/rhk-sm4.c:903
 #, c-format
 msgid "Object of type %s is truncated."
 msgstr ""
 
-#: modules/file/rhk-sm4.c:814
+#: modules/file/rhk-sm4.c:928
 #, c-format
 msgid "Cannot find object %s in %s."
 msgstr ""

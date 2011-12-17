@@ -12,7 +12,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: it\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2011-12-05 03:58+0100\n"
+"POT-Creation-Date: 2011-12-17 10:50+0100\n"
 "PO-Revision-Date: 2011-12-05 21:48+0100\n"
 "Last-Translator: \n"
 "Language-Team: Italian <kde-i18n-it@kde.org>\n"
@@ -124,20 +124,14 @@ msgstr "vdW: cilindro"
 msgid "vdW: paraboloid"
 msgstr "vdW: paraboloide"
 
-#: libgwyddion/gwyinventory.c:1310
-#: libgwydgets/gwygraphwindow.c:611
-#: app/data-browser.c:1695
-#: app/data-browser.c:2445
-#: app/data-browser.c:3264
-#: app/data-browser.c:3414
-#: app/data-browser.c:5321
-#: app/resource-editor.c:366
+#: libgwyddion/gwyinventory.c:1310 libgwydgets/gwygraphwindow.c:611
+#: app/data-browser.c:1695 app/data-browser.c:2445 app/data-browser.c:3264
+#: app/data-browser.c:3414 app/data-browser.c:5321 app/resource-editor.c:366
 #: modules/process/convolution_filter.c:700
 msgid "Untitled"
 msgstr "Senza titolo "
 
-#: libgwyddion/gwynlfitpreset.c:1189
-#: libprocess/gwyprocessenums.c:100
+#: libgwyddion/gwynlfitpreset.c:1189 libprocess/gwyprocessenums.c:100
 msgid "Gaussian"
 msgstr "Gaussiana"
 
@@ -213,8 +207,7 @@ msgstr "Sinc"
 msgid "Edge height (right)"
 msgstr "Altezza bordo (destra)"
 
-#: libprocess/cdline.c:538
-#: libprocess/cdline.c:547
+#: libprocess/cdline.c:538 libprocess/cdline.c:547
 msgid "Edge"
 msgstr "Bordo"
 
@@ -226,10 +219,8 @@ msgstr "Altezza bordo (sinistra)"
 msgid "Step height (positive)"
 msgstr "Altezza step (positiva)"
 
-#: libprocess/cdline.c:556
-#: libprocess/cdline.c:565
-#: libgwydgets/gwydgetenums.c:47
-#: modules/process/hough.c:166
+#: libprocess/cdline.c:556 libprocess/cdline.c:565
+#: libgwydgets/gwydgetenums.c:47 modules/process/hough.c:166
 msgid "Line"
 msgstr "Linea"
 
@@ -241,10 +232,8 @@ msgstr "Altezza step (negativa)"
 msgid "Circle (down)"
 msgstr "Cerchio (inferiore)"
 
-#: libprocess/cdline.c:574
-#: libprocess/cdline.c:583
-#: libgwydgets/gwygraphareadialog.c:533
-#: modules/process/hough.c:167
+#: libprocess/cdline.c:574 libprocess/cdline.c:583
+#: libgwydgets/gwygraphareadialog.c:533 modules/process/hough.c:167
 msgid "Circle"
 msgstr "Cerchio "
 
@@ -256,13 +245,11 @@ msgstr "Cerchio (superiore)"
 msgid "Grain number"
 msgstr "Numero grani"
 
-#: libprocess/gwygrainvalue.c:71
-#: modules/process/curvature.c:122
+#: libprocess/gwygrainvalue.c:71 modules/process/curvature.c:122
 msgid "Center x position"
 msgstr "Centra posizione X "
 
-#: libprocess/gwygrainvalue.c:80
-#: modules/process/curvature.c:123
+#: libprocess/gwygrainvalue.c:80 modules/process/curvature.c:123
 msgid "Center y position"
 msgstr "Centra posizione Y"
 
@@ -274,13 +261,11 @@ msgstr "Valore minimo"
 msgid "Maximum value"
 msgstr "Valore massimo"
 
-#: libprocess/gwygrainvalue.c:107
-#: modules/tools/filter.c:205
+#: libprocess/gwygrainvalue.c:107 modules/tools/filter.c:205
 msgid "Mean value"
 msgstr "Valore medio"
 
-#: libprocess/gwygrainvalue.c:116
-#: modules/tools/filter.c:206
+#: libprocess/gwygrainvalue.c:116 modules/tools/filter.c:206
 msgid "Median value"
 msgstr "Valore mediano"
 
@@ -350,13 +335,11 @@ msgstr "Dimensione legame massimo"
 msgid "Maximum bounding direction"
 msgstr "Direzione legame massimo"
 
-#: libprocess/gwygrainvalue.c:266
-#: modules/tools/readvalue.c:307
+#: libprocess/gwygrainvalue.c:266 modules/tools/readvalue.c:307
 msgid "Inclination θ"
 msgstr "Inclinazione θ"
 
-#: libprocess/gwygrainvalue.c:275
-#: modules/tools/readvalue.c:317
+#: libprocess/gwygrainvalue.c:275 modules/tools/readvalue.c:317
 msgid "Inclination φ"
 msgstr "Inclinazione φ"
 
@@ -392,15 +375,12 @@ msgstr "Angolo curvatura 2"
 msgid "Id"
 msgstr "Id"
 
-#: libprocess/gwygrainvalue.c:982
-#: modules/tools/readvalue.c:239
+#: libprocess/gwygrainvalue.c:982 modules/tools/readvalue.c:239
 msgid "Position"
 msgstr "Posizione"
 
-#: libprocess/gwygrainvalue.c:983
-#: app/meta.c:305
-#: modules/process/curvature.c:743
-#: modules/tools/level3.c:461
+#: libprocess/gwygrainvalue.c:983 app/meta.c:305
+#: modules/process/curvature.c:743 modules/tools/level3.c:461
 #: modules/tools/readvalue.c:274
 msgid "Value"
 msgstr "Valore"
@@ -417,16 +397,13 @@ msgstr "Volume"
 msgid "Boundary"
 msgstr "Confine"
 
-#: libprocess/gwygrainvalue.c:987
-#: modules/process/pat_synth.c:866
-#: modules/process/pat_synth.c:1167
-#: modules/process/pat_synth.c:1502
+#: libprocess/gwygrainvalue.c:987 modules/process/pat_synth.c:866
+#: modules/process/pat_synth.c:1167 modules/process/pat_synth.c:1502
 #: modules/tools/linestats.c:156
 msgid "Slope"
 msgstr "Pendenza"
 
-#: libprocess/gwygrainvalue.c:988
-#: modules/process/curvature.c:600
+#: libprocess/gwygrainvalue.c:988 modules/process/curvature.c:600
 msgid "Curvature"
 msgstr "Curvatura"
 
@@ -476,8 +453,7 @@ msgstr "Hat"
 msgid "Horizontal"
 msgstr "Orizzontale"
 
-#: libprocess/gwyprocessenums.c:126
-#: modules/process/convolution_filter.c:437
+#: libprocess/gwyprocessenums.c:126 modules/process/convolution_filter.c:437
 msgid "Vertical"
 msgstr "Verticale"
 
@@ -518,13 +494,11 @@ msgid "Scale and space adaptive"
 msgstr "Scala e spazio adattati"
 
 #. TRANSLATORS: Interpolation type (AKA nearest neighbour)
-#: libprocess/gwyprocessenums.c:206
-#: modules/file/rawxyz.c:682
+#: libprocess/gwyprocessenums.c:206 modules/file/rawxyz.c:682
 msgid "Round"
 msgstr "Esatta"
 
-#: libprocess/gwyprocessenums.c:207
-#: modules/file/rawxyz.c:683
+#: libprocess/gwyprocessenums.c:207 modules/file/rawxyz.c:683
 msgid "Linear"
 msgstr "Lineare"
 
@@ -612,13 +586,11 @@ msgstr "Includi solo area maschera"
 msgid "Use entire image (ignore mask)"
 msgstr "Usa immagine intera (ignora maschera)"
 
-#: libprocess/morph_lib.c:169
-#: libprocess/morph_lib.c:461
+#: libprocess/morph_lib.c:169 libprocess/morph_lib.c:461
 msgid "Dilation"
 msgstr "Espansione"
 
-#: libprocess/morph_lib.c:235
-#: libprocess/morph_lib.c:528
+#: libprocess/morph_lib.c:235 libprocess/morph_lib.c:528
 msgid "Erosion"
 msgstr "Erosione"
 
@@ -626,14 +598,12 @@ msgstr "Erosione"
 msgid "Certainty map"
 msgstr "Mappa di certezza"
 
-#: libprocess/morph_lib.c:616
-#: libprocess/morph_lib.c:763
+#: libprocess/morph_lib.c:616 libprocess/morph_lib.c:763
 #, c-format
 msgid "Iterating estimate (iteration %d)"
 msgstr "Stima Iterativa (Iterazione %d)"
 
-#: libprocess/morph_lib.c:625
-#: libprocess/morph_lib.c:784
+#: libprocess/morph_lib.c:625 libprocess/morph_lib.c:784
 #, c-format
 msgid "One image location produced refinement"
 msgid_plural "%d image locations produced refinement"
@@ -655,9 +625,7 @@ msgstr[1] "Trovati %d massimi locali interni"
 msgid "Pyramide"
 msgstr "Piramide"
 
-#: libprocess/tip.c:229
-#: libprocess/tip.c:236
-#: libprocess/tip.c:243
+#: libprocess/tip.c:229 libprocess/tip.c:236 libprocess/tip.c:243
 msgid "Pyramidal"
 msgstr "Piramidale"
 
@@ -677,9 +645,7 @@ msgstr "Funzione Delta"
 msgid "Analytical"
 msgstr "Analitico"
 
-#: libprocess/tip.c:773
-#: libprocess/tip.c:801
-#: libprocess/tip.c:850
+#: libprocess/tip.c:773 libprocess/tip.c:801 libprocess/tip.c:850
 #: libprocess/tip.c:877
 msgid "Converting fields"
 msgstr "Conversione campi"
@@ -728,41 +694,29 @@ msgstr "Illuminazione e materiali"
 msgid "Labels"
 msgstr "Etichette"
 
-#: libgwydgets/gwy3dwindow.c:762
-#: modules/process/facet_analysis.c:356
-#: modules/process/facet_analysis.c:372
-#: modules/process/shade.c:251
+#: libgwydgets/gwy3dwindow.c:762 modules/process/facet_analysis.c:356
+#: modules/process/facet_analysis.c:372 modules/process/shade.c:251
 #: modules/process/tilt.c:218
 msgid "φ:"
 msgstr "φ:"
 
-#: libgwydgets/gwy3dwindow.c:762
-#: libgwydgets/gwy3dwindow.c:768
-#: libgwydgets/gwy3dwindow.c:917
-#: libgwydgets/gwy3dwindow.c:925
-#: modules/process/facet_analysis.c:400
-#: modules/process/indent_analyze.c:460
-#: modules/process/rotate.c:284
-#: modules/process/shade.c:243
-#: modules/process/shade.c:251
-#: modules/process/tilt.c:206
-#: modules/process/tilt.c:218
-#: modules/process/tip_model.c:234
-#: modules/process/tip_model.c:240
-#: modules/process/unrotate.c:344
+#: libgwydgets/gwy3dwindow.c:762 libgwydgets/gwy3dwindow.c:768
+#: libgwydgets/gwy3dwindow.c:917 libgwydgets/gwy3dwindow.c:925
+#: modules/process/facet_analysis.c:400 modules/process/indent_analyze.c:460
+#: modules/process/rotate.c:284 modules/process/shade.c:243
+#: modules/process/shade.c:251 modules/process/tilt.c:206
+#: modules/process/tilt.c:218 modules/process/tip_model.c:234
+#: modules/process/tip_model.c:240 modules/process/unrotate.c:344
 msgid "deg"
 msgstr "°gra"
 
-#: libgwydgets/gwy3dwindow.c:768
-#: modules/process/facet_analysis.c:355
-#: modules/process/facet_analysis.c:371
-#: modules/process/shade.c:243
+#: libgwydgets/gwy3dwindow.c:768 modules/process/facet_analysis.c:355
+#: modules/process/facet_analysis.c:371 modules/process/shade.c:243
 #: modules/process/tilt.c:206
 msgid "θ:"
 msgstr "θ:"
 
-#: libgwydgets/gwy3dwindow.c:773
-#: modules/process/cwt.c:148
+#: libgwydgets/gwy3dwindow.c:773 modules/process/cwt.c:148
 msgid "_Scale:"
 msgstr "_Scala:"
 
@@ -814,117 +768,90 @@ msgstr "_Luce φ:"
 msgid "L_ight θ:"
 msgstr "L_uce θ:"
 
-#: libgwydgets/gwy3dwindow.c:1002
+#: libgwydgets/gwy3dwindow.c:1018
 msgid "X-axis"
 msgstr "asse X"
 
-#: libgwydgets/gwy3dwindow.c:1003
+#: libgwydgets/gwy3dwindow.c:1019
 msgid "Y-axis"
 msgstr "asse Y"
 
-#: libgwydgets/gwy3dwindow.c:1004
+#: libgwydgets/gwy3dwindow.c:1020
 msgid "Minimum z value"
 msgstr "Valore minimo z"
 
-#: libgwydgets/gwy3dwindow.c:1005
+#: libgwydgets/gwy3dwindow.c:1021
 msgid "Maximum z value"
 msgstr "Valore massimo z"
 
-#: libgwydgets/gwy3dwindow.c:1028
+#: libgwydgets/gwy3dwindow.c:1044
 msgid "_Label:"
 msgstr "_Etichetta:"
 
-#: libgwydgets/gwy3dwindow.c:1033
+#: libgwydgets/gwy3dwindow.c:1049
 msgid "_Text:"
 msgstr "_Testo:"
 
-#: libgwydgets/gwy3dwindow.c:1053
+#: libgwydgets/gwy3dwindow.c:1069
 msgid "Move label"
 msgstr "Sposta etichetta"
 
-#: libgwydgets/gwy3dwindow.c:1062
+#: libgwydgets/gwy3dwindow.c:1078
 msgid "_Horizontally:"
 msgstr "_Orizzontale:"
 
-#: libgwydgets/gwy3dwindow.c:1072
+#: libgwydgets/gwy3dwindow.c:1088
 msgid "_Vertically:"
 msgstr "_Verticale:"
 
-#: libgwydgets/gwy3dwindow.c:1080
+#: libgwydgets/gwy3dwindow.c:1096
 msgid "Scale size _automatically"
 msgstr "Ridimensiona _automaticamente"
 
-#: libgwydgets/gwy3dwindow.c:1092
-#: modules/tools/filter.c:252
+#: libgwydgets/gwy3dwindow.c:1108 modules/tools/filter.c:252
 msgid "Si_ze:"
 msgstr "Dimensione:"
 
-#: libgwydgets/gwy3dwindow.c:1092
-#: modules/process/cwt.c:148
+#: libgwydgets/gwy3dwindow.c:1108 modules/process/cwt.c:148
 #: modules/process/hough.c:208
 msgid "pixels"
 msgstr "pixel"
 
-#: libgwydgets/gwy3dwindow.c:1100
-#: modules/file/hdrimage.cc:2149
-#: modules/file/pixmap.c:1018
-#: modules/file/pixmap.c:2914
-#: modules/file/rawfile.c:398
-#: modules/process/angle_dist.c:170
-#: modules/process/calcoefs_new.c:347
-#: modules/process/calibrate.c:296
-#: modules/process/col_synth.c:299
-#: modules/process/curvature.c:602
-#: modules/process/cwt.c:132
-#: modules/process/deposit_synth.c:359
-#: modules/process/drift.c:230
-#: modules/process/dwt.c:164
-#: modules/process/dwtanisotropy.c:183
-#: modules/process/edge.c:633
-#: modules/process/facet-level.c:283
-#: modules/process/facet_analysis.c:273
-#: modules/process/fft.c:272
-#: modules/process/fft_filter_2d.c:440
-#: modules/process/fft_synth.c:330
-#: modules/process/fractal.c:206
-#: modules/process/grain_edge.c:217
-#: modules/process/grain_mark.c:262
-#: modules/process/grain_rem_threshold.c:224
-#: modules/process/grain_wshed.c:182
-#: modules/process/hough.c:175
-#: modules/process/level.c:253
-#: modules/process/lno_synth.c:436
-#: modules/process/local_contrast.c:126
-#: modules/process/median-bg.c:176
-#: modules/process/noise_synth.c:347
-#: modules/process/obj_synth.c:432
-#: modules/process/pat_synth.c:402
-#: modules/process/polydistort.c:219
-#: modules/process/polylevel.c:376
-#: modules/process/rotate.c:264
-#: modules/process/scale.c:193
-#: modules/process/scars.c:469
-#: modules/process/shade.c:214
-#: modules/process/slope_dist.c:201
-#: modules/process/sphere-revolve.c:215
-#: modules/process/tilt.c:156
-#: modules/process/tip_model.c:170
+#: libgwydgets/gwy3dwindow.c:1116 modules/file/hdrimage.cc:2149
+#: modules/file/pixmap.c:1018 modules/file/pixmap.c:2914
+#: modules/file/rawfile.c:398 modules/process/angle_dist.c:170
+#: modules/process/calcoefs_new.c:347 modules/process/calibrate.c:296
+#: modules/process/col_synth.c:299 modules/process/curvature.c:602
+#: modules/process/cwt.c:132 modules/process/deposit_synth.c:359
+#: modules/process/drift.c:230 modules/process/dwt.c:164
+#: modules/process/dwtanisotropy.c:183 modules/process/edge.c:633
+#: modules/process/facet-level.c:283 modules/process/facet_analysis.c:273
+#: modules/process/fft.c:272 modules/process/fft_filter_2d.c:440
+#: modules/process/fft_synth.c:330 modules/process/fractal.c:206
+#: modules/process/grain_edge.c:217 modules/process/grain_mark.c:262
+#: modules/process/grain_rem_threshold.c:224 modules/process/grain_wshed.c:182
+#: modules/process/hough.c:175 modules/process/level.c:253
+#: modules/process/lno_synth.c:436 modules/process/local_contrast.c:126
+#: modules/process/median-bg.c:176 modules/process/noise_synth.c:347
+#: modules/process/obj_synth.c:432 modules/process/pat_synth.c:402
+#: modules/process/polydistort.c:219 modules/process/polylevel.c:376
+#: modules/process/rotate.c:264 modules/process/scale.c:193
+#: modules/process/scars.c:469 modules/process/shade.c:214
+#: modules/process/slope_dist.c:201 modules/process/sphere-revolve.c:215
+#: modules/process/tilt.c:156 modules/process/tip_model.c:170
 #: modules/process/unrotate.c:226
 msgid "_Reset"
 msgstr "_Ripristina"
 
-#: libgwydgets/gwy3dwindow.c:1532
+#: libgwydgets/gwy3dwindow.c:1549 libgwydgets/gwy3dwindow.c:1601
 msgid "S_witch to Lighting Mode"
 msgstr "Visualizzazione Illuminazione"
 
-#: libgwydgets/gwy3dwindow.c:1538
-#: libgwydgets/gwy3dwindow.c:1556
-#: libgwydgets/gwy3dwindow.c:1573
+#: libgwydgets/gwy3dwindow.c:1557 libgwydgets/gwy3dwindow.c:1579
 msgid "S_witch to Overlay Mode"
 msgstr "S_postamento in modalità Overlay"
 
-#: libgwydgets/gwy3dwindow.c:1550
-#: libgwydgets/gwy3dwindow.c:1567
+#: libgwydgets/gwy3dwindow.c:1571 libgwydgets/gwy3dwindow.c:1593
 msgid "S_witch to Color Gradient Mode"
 msgstr "Visualizzazione Gradiente di Colore"
 
@@ -932,13 +859,11 @@ msgstr "Visualizzazione Gradiente di Colore"
 msgid "Axis Properties"
 msgstr "Proprietà asse"
 
-#: libgwydgets/gwyaxisdialog.c:100
-#: libgwydgets/gwygraphlabeldialog.c:62
+#: libgwydgets/gwyaxisdialog.c:100 libgwydgets/gwygraphlabeldialog.c:62
 msgid "Label Properties"
 msgstr "Proprietà etichetta"
 
-#: libgwydgets/gwyaxisdialog.c:184
-#: libgwydgets/gwygraphareadialog.c:173
+#: libgwydgets/gwyaxisdialog.c:184 libgwydgets/gwygraphareadialog.c:173
 msgid "Label Text"
 msgstr "Testo Etichetta"
 
@@ -947,8 +872,7 @@ msgstr "Testo Etichetta"
 msgid "More..."
 msgstr "Altri..."
 
-#: libgwydgets/gwydatawindow.c:903
-#: libgwydgets/gwyoptionmenus.c:827
+#: libgwydgets/gwydatawindow.c:903 libgwydgets/gwyoptionmenus.c:827
 msgid "Choose Color Gradient"
 msgstr "Scelta Gradiente Colore"
 
@@ -956,8 +880,7 @@ msgstr "Scelta Gradiente Colore"
 msgid "Hidden"
 msgstr "Nascosto"
 
-#: libgwydgets/gwydgetenums.c:46
-#: libgwydgets/gwygraphwindowmeasuredialog.c:577
+#: libgwydgets/gwydgetenums.c:46 libgwydgets/gwygraphwindowmeasuredialog.c:577
 #: modules/tools/selectionmanager.c:218
 msgid "Points"
 msgstr "Punti"
@@ -974,8 +897,7 @@ msgstr "Cambia colore maschera"
 msgid "Quantity"
 msgstr "Quantità"
 
-#: libgwydgets/gwygrainvaluemenu.c:193
-#: libgwydgets/gwygrainvaluemenu.c:206
+#: libgwydgets/gwygrainvaluemenu.c:193 libgwydgets/gwygrainvaluemenu.c:206
 #: modules/process/curvature.c:734
 msgid "Symbol"
 msgstr "Simbolo"
@@ -1120,13 +1042,11 @@ msgstr "Spessore cornice:"
 msgid "_Reversed layout"
 msgstr "Disposizione invertita"
 
-#: libgwydgets/gwygraphwindow.c:151
-#: app/toolbox.c:108
+#: libgwydgets/gwygraphwindow.c:151 app/toolbox.c:108
 msgid "Graph"
 msgstr "Grafico"
 
-#: libgwydgets/gwygraphwindow.c:158
-#: modules/file/hdrimage.cc:470
+#: libgwydgets/gwygraphwindow.c:158 modules/file/hdrimage.cc:470
 #: modules/process/fit_2d.c:678
 msgid "Data"
 msgstr "Dati"
@@ -1164,19 +1084,15 @@ msgid "Points anywhere"
 msgstr "Punta in una direzione qualunque"
 
 #: libgwydgets/gwygraphwindowmeasuredialog.c:395
-#: libgwydgets/gwygraphwindowmeasuredialog.c:585
-#: modules/tools/linestats.c:155
+#: libgwydgets/gwygraphwindowmeasuredialog.c:585 modules/tools/linestats.c:155
 #: modules/tools/roughness.c:523
 msgid "Length"
 msgstr "Lunghezza"
 
 #: libgwydgets/gwygraphwindowmeasuredialog.c:399
-#: libgwydgets/gwygraphwindowmeasuredialog.c:593
-#: app/gwyplaintool.c:1021
-#: modules/process/obj_synth.c:567
-#: modules/process/pat_synth.c:883
-#: modules/process/pat_synth.c:1184
-#: modules/process/pat_synth.c:1519
+#: libgwydgets/gwygraphwindowmeasuredialog.c:593 app/gwyplaintool.c:1021
+#: modules/process/obj_synth.c:567 modules/process/pat_synth.c:883
+#: modules/process/pat_synth.c:1184 modules/process/pat_synth.c:1519
 msgid "Height"
 msgstr "Altezza"
 
@@ -1202,9 +1118,7 @@ msgstr "Angolo"
 msgid "Preferred"
 msgstr "Preferiti"
 
-#: libgwydgets/gwyoptionmenus.c:469
-#: app/meta.c:304
-#: modules/file/rawfile.c:957
+#: libgwydgets/gwyoptionmenus.c:469 app/meta.c:304 modules/file/rawfile.c:957
 #: modules/process/convolution_filter.c:547
 #: modules/tools/selectionmanager.c:289
 msgid "Name"
@@ -1242,14 +1156,12 @@ msgstr "Apice"
 msgid "A_dd symbol"
 msgstr "A_ggiungi simbolo"
 
-#: libgwydgets/gwyscitext.c:273
-#: modules/file/rawfile.c:527
+#: libgwydgets/gwyscitext.c:273 modules/file/rawfile.c:527
 #: modules/file/rawxyz.c:422
 msgid "Preview"
 msgstr "Anteprima"
 
-#: libgwymodule/gwymodule-file.c:535
-#: modules/file/err.h:40
+#: libgwymodule/gwymodule-file.c:535 modules/file/err.h:40
 #: modules/file/pixmap.c:734
 #, c-format
 msgid "Cannot open file for reading: %s."
@@ -1283,8 +1195,7 @@ msgstr "Autore"
 msgid "Name-Version:"
 msgstr "Nome-Versione:"
 
-#: libgwymodule/gwymodulebrowser.c:246
-#: libgwymodule/gwymodulebrowser.c:269
+#: libgwymodule/gwymodulebrowser.c:246 libgwymodule/gwymodulebrowser.c:269
 #: modules/process/grain_dist.c:699
 msgid "File:"
 msgstr "File:"
@@ -1345,8 +1256,17 @@ msgstr "Licenza"
 
 #: app/about.c:140
 #, c-format
-msgid "%s is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version. For full license text see file COPYING included in the source tarball."
-msgstr "%s è un software libero; può essere ridistribuito e/o modificato sotto i termini della GNU-GPL come pubblicata dalla Free Software Foundation versione 2 o (a scelta) ogni versione successiva. Per il testo completo della licenza vedi il file COPYING incluso nel pacchetto sorgente"
+msgid ""
+"%s is free software; you can redistribute it and/or modify it under the "
+"terms of the GNU General Public License as published by the Free Software "
+"Foundation; either version 2 of the License, or (at your option) any later "
+"version. For full license text see file COPYING included in the source "
+"tarball."
+msgstr ""
+"%s è un software libero; può essere ridistribuito e/o modificato sotto i "
+"termini della GNU-GPL come pubblicata dalla Free Software Foundation "
+"versione 2 o (a scelta) ogni versione successiva. Per il testo completo "
+"della licenza vedi il file COPYING incluso nel pacchetto sorgente"
 
 #: app/about.c:163
 msgid "Features"
@@ -1362,21 +1282,18 @@ msgstr "Traduttori"
 
 #: app/about.c:227
 msgid "Development is supported by the Czech Metrology Institute: "
-msgstr "Lo sviluppo del programma e' sostenuto dall'Istituto di Metrologia Ceco:"
+msgstr ""
+"Lo sviluppo del programma e' sostenuto dall'Istituto di Metrologia Ceco:"
 
-#: app/about.c:254
-#: app/about.c:257
+#: app/about.c:254 app/about.c:257
 msgid "OpenGL 3D View"
 msgstr "Vista 3D Open GL"
 
-#: app/about.c:258
-#: app/about.c:272
-#: app/about.c:292
+#: app/about.c:258 app/about.c:272 app/about.c:292
 msgid "not available\n"
 msgstr "non disponibile\n"
 
-#: app/about.c:263
-#: app/about.c:266
+#: app/about.c:263 app/about.c:266
 msgid "Fast Fourier Transform"
 msgstr "Trasformata di Fourier"
 
@@ -1400,12 +1317,11 @@ msgstr "LibUnique\n"
 msgid "Remote Control"
 msgstr "Controllo Remoto"
 
-#: app/about.c:287
-#: app/about.c:291
+#: app/about.c:287 app/about.c:291
 msgid "Python Scripting Interface"
 msgstr "Interfaccia di Scripting Python"
 
-#: app/app.c:256
+#: app/app.c:255
 #, c-format
 msgid ""
 "Some data are unsaved:\n"
@@ -1416,45 +1332,49 @@ msgstr ""
 "%s\n"
 "Uscire ugualmente?"
 
-#: app/app.c:400
+#: app/app.c:399
 msgid "Mask _Color..."
 msgstr "Colore_Maschera..."
 
-#: app/app.c:416
+#: app/app.c:415
 msgid "Zoom _1:1"
 msgstr "Ingrandimento _1:1"
 
-#: app/app.c:613
+#: app/app.c:612
 msgid "Pi_xelwise Square"
 msgstr "Dimensioni pixel quadrati"
 
-#: app/app.c:623
+#: app/app.c:622
 msgid "_Physically Square"
 msgstr "Dimensioni reali quadrate"
 
-#: app/app.c:792
+#: app/app.c:791
 msgid "verb|Save"
 msgstr "verbo|Salva"
 
-#: app/app.c:795
-#: app/app.c:799
+#: app/app.c:794 app/app.c:798
 msgid "Save 3D view to an image"
 msgstr "Salva vista 3D come immagine"
 
-#: app/app.c:805
+#: app/app.c:804
 msgid "Set as Default"
 msgstr "Salva come predefinito"
 
-#: app/app.c:807
+#: app/app.c:806
 msgid "Set the current view setup as the default"
 msgstr "Salva la vista corrente come predefinita"
 
-#: app/app.c:1016
+#: app/app.c:863
+#, fuzzy
+msgid "_Show mask"
+msgstr "Mostra _assi"
+
+#: app/app.c:1025
 #, c-format
 msgid "Saving of 3D view to `%s' failed"
 msgstr "Salvataggio di vista 3D come `%s' fallito"
 
-#: app/app.c:1060
+#: app/app.c:1069
 msgid "Export 3D View"
 msgstr "Esporta vista 3D"
 
@@ -1495,8 +1415,7 @@ msgstr "Spettri"
 msgid "Unknown channel %d"
 msgstr "Canale sconosciuto %d"
 
-#: app/datachooser.c:200
-#: app/datachooser.c:402
+#: app/datachooser.c:200 app/datachooser.c:402
 msgid "channel|None"
 msgstr "canale|Nessuno"
 
@@ -1511,9 +1430,11 @@ msgid ""
 "\n"
 "%s\n"
 "\n"
-"is incomplete due to the lack of documentation, testing files and/or people willing to help with the testing.\n"
+"is incomplete due to the lack of documentation, testing files and/or people "
+"willing to help with the testing.\n"
 "\n"
-"If you want to help to improve the import please contact the author of module %s-%s:\n"
+"If you want to help to improve the import please contact the author of "
+"module %s-%s:\n"
 "\n"
 "%s"
 msgstr ""
@@ -1521,9 +1442,11 @@ msgstr ""
 "\n"
 "%s\n"
 "\n"
-"e' incompleto a causa di mancanza di documentazione, file da utilizzare per i test e/o persone disponibili ad aiutare con il testing.\n"
+"e' incompleto a causa di mancanza di documentazione, file da utilizzare per "
+"i test e/o persone disponibili ad aiutare con il testing.\n"
 "\n"
-"Se volete aiutare a migliorare l'importazione contattate l'autore del modulo %s-%s:\n"
+"Se volete aiutare a migliorare l'importazione contattate l'autore del modulo "
+"%s-%s:\n"
 "\n"
 "%s"
 
@@ -1532,8 +1455,7 @@ msgstr ""
 msgid "Opening of `%s' failed"
 msgstr "Apertura di `%s' fallita"
 
-#: app/file.c:285
-#: app/file.c:505
+#: app/file.c:285 app/file.c:505
 #, c-format
 msgid "Full file path: %s."
 msgstr "Percorso completo file: %s"
@@ -1547,13 +1469,11 @@ msgstr "Caricato usando: %s."
 msgid "Merge File"
 msgstr "Fondi file"
 
-#: app/file.c:364
-#: app/gwyappfilechooser.c:227
+#: app/file.c:364 app/gwyappfilechooser.c:227
 msgid "Open File"
 msgstr "Apri File"
 
-#: app/file.c:499
-#: app/gwymoduleutils.c:192
+#: app/file.c:499 app/gwymoduleutils.c:192
 #, c-format
 msgid "Saving of `%s' failed"
 msgstr "Salvataggio di `%s' fallito"
@@ -1570,8 +1490,11 @@ msgstr "File `%s esistente. Sostituire?"
 
 #: app/file.c:653
 #, c-format
-msgid "The file already exists in `%s'.  Replacing it will overwrite its contents."
-msgstr "Il file già esiste in `%s'. La sua sostituzione ne sovrascriverà il contenuto."
+msgid ""
+"The file already exists in `%s'.  Replacing it will overwrite its contents."
+msgstr ""
+"Il file già esiste in `%s'. La sua sostituzione ne sovrascriverà il "
+"contenuto."
 
 #: app/file.c:656
 msgid "Replace File?"
@@ -1742,11 +1665,13 @@ msgstr "Impossibile leggere le preferenze."
 msgid ""
 "Settings file `%s' cannot be read: %s\n"
 "\n"
-"To prevent loss of saved settings no attempt to update it will be made until it is repaired or removed."
+"To prevent loss of saved settings no attempt to update it will be made until "
+"it is repaired or removed."
 msgstr ""
 "Non è stato possibile leggere il file delle preferenze `%s': %s\n"
 "\n"
-"Per evitare la perdita di preferenze salvate non verrà fatto alcun tentativo di aggiornamento fino a che il file non sarà riparato o rimosso."
+"Per evitare la perdita di preferenze salvate non verrà fatto alcun tentativo "
+"di aggiornamento fino a che il file non sarà riparato o rimosso."
 
 #: app/gwymoduleutils-file.c:424
 #, c-format
@@ -1786,11 +1711,11 @@ msgstr "La chiave alla linea %u dell'intestazione è vuota."
 #: app/gwymoduleutils-file.c:570
 #, c-format
 msgid "Header suddenly ended at line %u; end of header marker is missing"
-msgstr "Intestazione interrotta improvvisamente alla linea %u. Manca il marker di fine intestazione."
+msgstr ""
+"Intestazione interrotta improvvisamente alla linea %u. Manca il marker di "
+"fine intestazione."
 
-#: app/gwymoduleutils.c:197
-#: app/settings.c:130
-#: app/settings.c:141
+#: app/gwymoduleutils.c:197 app/settings.c:130 app/settings.c:141
 #: modules/file/err.h:61
 #, c-format
 msgid "Cannot write to file: %s."
@@ -1802,8 +1727,12 @@ msgstr "<big><b>Mudulo di livello mancante</b></big>"
 
 #: app/gwyplaintool.c:575
 #, c-format
-msgid "This tool requires layer of type %s to work, which does not seem to be installed.  Please check your installation."
-msgstr "Questo strumento necessita di un layer di tipo  %s , che non sembra essere installato. Controllare l'installazione."
+msgid ""
+"This tool requires layer of type %s to work, which does not seem to be "
+"installed.  Please check your installation."
+msgstr ""
+"Questo strumento necessita di un layer di tipo  %s , che non sembra essere "
+"installato. Controllare l'installazione."
 
 #: app/gwyplaintool.c:791
 msgid "Clear selected objects"
@@ -1814,12 +1743,9 @@ msgstr "Cancella oggetti selezionati"
 msgid "Origin"
 msgstr "Origine"
 
-#: app/gwyplaintool.c:1014
-#: modules/file/rawfile.c:959
-#: modules/process/col_synth.c:393
-#: modules/process/convolution_filter.c:358
-#: modules/process/convolution_filter.c:562
-#: modules/process/obj_synth.c:537
+#: app/gwyplaintool.c:1014 modules/file/rawfile.c:959
+#: modules/process/col_synth.c:393 modules/process/convolution_filter.c:358
+#: modules/process/convolution_filter.c:562 modules/process/obj_synth.c:537
 #: modules/process/pat_synth.c:1485
 msgid "Size"
 msgstr "Dimensioni"
@@ -1836,13 +1762,11 @@ msgstr "verbo|Nascondi"
 msgid "Hide tool dialog (Esc)"
 msgstr "Nascondi dialogo strumenti (Esc)"
 
-#: app/menu.c:558
-#: app/toolbox.c:615
+#: app/menu.c:558 app/toolbox.c:615
 msgid "_Data Process"
 msgstr "_Elaborazione Dati"
 
-#: app/menu.c:600
-#: app/toolbox.c:618
+#: app/menu.c:600 app/toolbox.c:618
 msgid "_Graph"
 msgstr "_Grafico"
 
@@ -1874,8 +1798,7 @@ msgstr "_Salva"
 msgid "_New"
 msgstr "Nuovo"
 
-#: app/meta.c:148
-#: modules/file/rawfile.c:1026
+#: app/meta.c:148 modules/file/rawfile.c:1026
 msgid "_Delete"
 msgstr "_Elimina"
 
@@ -1900,18 +1823,15 @@ msgstr "Salva Metadata"
 msgid "Edit selected item"
 msgstr "Modifica oggetto selezionato"
 
-#: app/resource-editor.c:140
-#: modules/process/convolution_filter.c:512
+#: app/resource-editor.c:140 modules/process/convolution_filter.c:512
 msgid "Create a new item"
 msgstr "Crea nuovo oggetto"
 
-#: app/resource-editor.c:146
-#: modules/process/convolution_filter.c:517
+#: app/resource-editor.c:146 modules/process/convolution_filter.c:517
 msgid "Create a new item based on selected one"
 msgstr "Crea nuovo oggetto basato su selezione"
 
-#: app/resource-editor.c:152
-#: modules/process/convolution_filter.c:522
+#: app/resource-editor.c:152 modules/process/convolution_filter.c:522
 msgid "Delete selected item"
 msgstr "Cancella oggetto selezionato"
 
@@ -1919,14 +1839,12 @@ msgstr "Cancella oggetto selezionato"
 msgid "Set selected item as default"
 msgstr "Salva oggetto selezionato come predefinito"
 
-#: app/settings.c:123
-#: modules/file/err.h:54
+#: app/settings.c:123 modules/file/err.h:54
 #, c-format
 msgid "Cannot open file for writing: %s."
 msgstr "Il file non può essere aperto in scrittura:%s."
 
-#: app/settings.c:180
-#: modules/file/err.h:32
+#: app/settings.c:180 modules/file/err.h:32
 #, c-format
 msgid "Cannot read file contents: %s"
 msgstr "Impossibile leggere il contenuto del file: %s"
@@ -1967,88 +1885,161 @@ msgid " is free software released under GNU GPL."
 msgstr " è un software libero rilasciato sotto GNU GPL."
 
 #: app/tips.c:51
-msgid "Holding Shift restritcs directions of selected lines to multiples of 15°."
-msgstr "Mantenere premuto il tasto shift permette di incrementare la direzione delle rette selezionate solo di multipli di 15°"
+msgid ""
+"Holding Shift restritcs directions of selected lines to multiples of 15°."
+msgstr ""
+"Mantenere premuto il tasto shift permette di incrementare la direzione delle "
+"rette selezionate solo di multipli di 15°"
 
 #: app/tips.c:56
-msgid "Holding Shift restritcs shapes of selected rectangles to perfect squares."
-msgstr "Mantenere premuto il tasto shift permette la selezione unicamente di quadrati perfetti"
+msgid ""
+"Holding Shift restritcs shapes of selected rectangles to perfect squares."
+msgstr ""
+"Mantenere premuto il tasto shift permette la selezione unicamente di "
+"quadrati perfetti"
 
 #: app/tips.c:61
 msgid "Holding Shift restritcs shapes of selected ellipses to perfect circles."
-msgstr "Mantenere premuto il tasto shift permette la selezione ellittica di cerchi perfetti"
+msgstr ""
+"Mantenere premuto il tasto shift permette la selezione ellittica di cerchi "
+"perfetti"
 
 #: app/tips.c:66
-msgid "If multiple regions are selected on a graph, e.g. in 1D FFT Filtering, individual regions can be deleted by clicking on them with the right mouse button."
-msgstr "Se regioni multiple sono selezionate su un grafico (es. filtering 1D FFT), aree singole possono essere cancellate applicando il tasto destro su di esse."
+msgid ""
+"If multiple regions are selected on a graph, e.g. in 1D FFT Filtering, "
+"individual regions can be deleted by clicking on them with the right mouse "
+"button."
+msgstr ""
+"Se regioni multiple sono selezionate su un grafico (es. filtering 1D FFT), "
+"aree singole possono essere cancellate applicando il tasto destro su di esse."
 
 #: app/tips.c:72
-msgid "Data presentations created by functions in Data Process → Presentation do not change the underlying data.  All subsequent operations still apply to the underlying data."
-msgstr "Le prentazioni dati create dalle funzioni del menu' Elaborazione Dati→ Presentazione non modificano i dati sottostanti. Tutte le operazioni successive vengono applicate ai dati sottostanti."
+msgid ""
+"Data presentations created by functions in Data Process → Presentation do "
+"not change the underlying data.  All subsequent operations still apply to "
+"the underlying data."
+msgstr ""
+"Le prentazioni dati create dalle funzioni del menu' Elaborazione Dati→ "
+"Presentazione non modificano i dati sottostanti. Tutte le operazioni "
+"successive vengono applicate ai dati sottostanti."
 
 #: app/tips.c:78
-msgid "Menus can be torn off by clicking the dashed line near the top for quick access to a subset of functions."
-msgstr "I menù possono essere staccati premendo la linea tratteggiata superiore per un accesso rapido ad una sotto raccolta di funzioni"
+msgid ""
+"Menus can be torn off by clicking the dashed line near the top for quick "
+"access to a subset of functions."
+msgstr ""
+"I menù possono essere staccati premendo la linea tratteggiata superiore per "
+"un accesso rapido ad una sotto raccolta di funzioni"
 
 #: app/tips.c:84
-msgid "When Gwyddion is run with a directory argument it opens a file open dialog showing this directory."
+msgid ""
+"When Gwyddion is run with a directory argument it opens a file open dialog "
+"showing this directory."
 msgstr ""
 
 #: app/tips.c:89
-msgid "File → Open Recent → Document History opens a browser of recently loaded files with the possibility to search them by name."
-msgstr "File → Apri Recenti → Cronologia apre un navigatore che mostra gli ultimi file caricati nel quale è permessa la ricerca per nome"
+msgid ""
+"File → Open Recent → Document History opens a browser of recently loaded "
+"files with the possibility to search them by name."
+msgstr ""
+"File → Apri Recenti → Cronologia apre un navigatore che mostra gli ultimi "
+"file caricati nel quale è permessa la ricerca per nome"
 
 #: app/tips.c:95
-msgid "Automatic import of unrecognized files as raw data can be enabled/disabled in the Raw file import dialog."
-msgstr "L'importazione automatica di file non riconosciuti come dati grezzi può' essere abilitata/disabilitata nella finestra di dialogo Importazione file Grezzi"
+msgid ""
+"Automatic import of unrecognized files as raw data can be enabled/disabled "
+"in the Raw file import dialog."
+msgstr ""
+"L'importazione automatica di file non riconosciuti come dati grezzi può' "
+"essere abilitata/disabilitata nella finestra di dialogo Importazione file "
+"Grezzi"
 
 #: app/tips.c:100
-msgid "To export the image of a channel to a pixmap graphic format (PNG, TIFF, JPEG, ...) just save it as this format with File → Save As."
-msgstr "Per esportare l'immagine di un canale in un file grafico pixmap (PNG, TIFF, JPEG, ...) basta semplicemente salvare nel formato da File → Salva Come"
+msgid ""
+"To export the image of a channel to a pixmap graphic format (PNG, TIFF, "
+"JPEG, ...) just save it as this format with File → Save As."
+msgstr ""
+"Per esportare l'immagine di un canale in un file grafico pixmap (PNG, TIFF, "
+"JPEG, ...) basta semplicemente salvare nel formato da File → Salva Come"
 
 #: app/tips.c:106
 msgid "File → Merge imports all data from selected file to the current file."
-msgstr "File → Fondi importa tutti i dati dai file selezionati nel file attuale"
+msgstr ""
+"File → Fondi importa tutti i dati dai file selezionati nel file attuale"
 
 #: app/tips.c:112
-msgid "Your favorite false color gradient can be set as default in the gradient editor: Edit → Color Gradients.  The default gradient is shown in bold face."
-msgstr "Il tuo gradiente a falsi colori preferito può essere assegnato come predefinito con l'editor dei gradienti: Modifica →  Gradienti Colore. Il gradiente colore predefinito è mostrato in grassetto"
+msgid ""
+"Your favorite false color gradient can be set as default in the gradient "
+"editor: Edit → Color Gradients.  The default gradient is shown in bold face."
+msgstr ""
+"Il tuo gradiente a falsi colori preferito può essere assegnato come "
+"predefinito con l'editor dei gradienti: Modifica →  Gradienti Colore. Il "
+"gradiente colore predefinito è mostrato in grassetto"
 
 #: app/tips.c:118
-msgid "Your favorite GL material can be set as default in the material editor: Edit → GL Materials.  The default material is shown in bold face."
-msgstr "Il materiale GL preferito può essere assegnato come predefinito nell'editor dei materiali: Modifica→ Materiali GL. Il materiale predefinito è mostrato in grassetto."
+msgid ""
+"Your favorite GL material can be set as default in the material editor: Edit "
+"→ GL Materials.  The default material is shown in bold face."
+msgstr ""
+"Il materiale GL preferito può essere assegnato come predefinito nell'editor "
+"dei materiali: Modifica→ Materiali GL. Il materiale predefinito è mostrato "
+"in grassetto."
 
 #: app/tips.c:124
-msgid "Edit → Default Mask Color sets the default mask color.  This color is used when a mask is created on data that have not had a mask before."
-msgstr "Modifica → La maschera colore predefinita assegna il colore maschera predefinito. Questo colore è usato nel creare maschera su dati su cui non è stata creata una maschera in precedenza."
+msgid ""
+"Edit → Default Mask Color sets the default mask color.  This color is used "
+"when a mask is created on data that have not had a mask before."
+msgstr ""
+"Modifica → La maschera colore predefinita assegna il colore maschera "
+"predefinito. Questo colore è usato nel creare maschera su dati su cui non è "
+"stata creata una maschera in precedenza."
 
 #: app/tips.c:130
 msgid "Each channel has its own metadata."
 msgstr "Ogni canale ha i suoi metadati."
 
 #: app/tips.c:134
-msgid "Meta → Metadata Browser displays metadata (auxiliary information) of channels and allows editting or exporting to a text file."
-msgstr "Meta → Il navigatore dei metadati mostra informazioni aggiuntive dei canali e permette di modificarli o esportarli in un file di testo."
+msgid ""
+"Meta → Metadata Browser displays metadata (auxiliary information) of "
+"channels and allows editting or exporting to a text file."
+msgstr ""
+"Meta → Il navigatore dei metadati mostra informazioni aggiuntive dei canali "
+"e permette di modificarli o esportarli in un file di testo."
 
 #: app/tips.c:140
-msgid "Curves can be copied to other (compatible) graphs by dragging them from Curves tab to the graph window."
-msgstr "Le curve possono essere copiate in altri grafici (compatibili) trascinandole dalla linguetta delle curve nella finestra dei grafici"
+msgid ""
+"Curves can be copied to other (compatible) graphs by dragging them from "
+"Curves tab to the graph window."
+msgstr ""
+"Le curve possono essere copiate in altri grafici (compatibili) trascinandole "
+"dalla linguetta delle curve nella finestra dei grafici"
 
 #: app/tips.c:145
 msgid "Graph curve properties can be edited by clicking on the curve."
-msgstr "Le proprietà della curva nel grafico possono essere modificate selezionando la curva"
+msgstr ""
+"Le proprietà della curva nel grafico possono essere modificate selezionando "
+"la curva"
 
 #: app/tips.c:149
 msgid "Graph axis labels can be edited after by clicking on the label."
-msgstr "Le etichette degli assi del grafico possono essere modificate selezionando l'etichetta."
+msgstr ""
+"Le etichette degli assi del grafico possono essere modificate selezionando "
+"l'etichetta."
 
 #: app/tips.c:153
-msgid "Graph key (legend) properties can be edited by double-clicking on the legend."
-msgstr "Le proprietà della leggenda possono essere modificate con un doppio click sulla legenda stessa."
+msgid ""
+"Graph key (legend) properties can be edited by double-clicking on the legend."
+msgstr ""
+"Le proprietà della leggenda possono essere modificate con un doppio click "
+"sulla legenda stessa."
 
 #: app/tips.c:158
-msgid "Curves can be deleted from graphs by selecting the curve in Curves tab and pressing Delete."
-msgstr "Le curve possono essere eliminate dai grafici selezionandole nella linguetta delle curve e premendo il tasto Canc."
+msgid ""
+"Curves can be deleted from graphs by selecting the curve in Curves tab and "
+"pressing Delete."
+msgstr ""
+"Le curve possono essere eliminate dai grafici selezionandole nella linguetta "
+"delle curve e premendo il tasto Canc."
 
 #: app/tips.c:164
 msgid "Key ‛+’ or ‛=’ zooms in a data window."
@@ -2063,76 +2054,143 @@ msgid "Key ‛Z’ resets data window zoom to 1:1."
 msgstr "Il tasto 'Z' riporta la finestra dati alle proporzioni 1:1"
 
 #: app/tips.c:176
-msgid "Data with different <i>x</i> and <i>y</i> measures can be displayed either with pixel-wise or realistic aspect ratio.  The menu in data window top left corner enables to switch between these two modes."
-msgstr "Dati con dimensioni differenti <i>x</i> e <i>y</i> possono essere visualizzati con rapporti dimensionali reali o pixel-wise. Il menù nell'angolo superiore sinistro della finestra dati permette di spostarsi da una modalità all'altra."
+msgid ""
+"Data with different <i>x</i> and <i>y</i> measures can be displayed either "
+"with pixel-wise or realistic aspect ratio.  The menu in data window top left "
+"corner enables to switch between these two modes."
+msgstr ""
+"Dati con dimensioni differenti <i>x</i> e <i>y</i> possono essere "
+"visualizzati con rapporti dimensionali reali o pixel-wise. Il menù "
+"nell'angolo superiore sinistro della finestra dati permette di spostarsi da "
+"una modalità all'altra."
 
 #: app/tips.c:183
-msgid "Clicking on a false color scale with the right mouse button brings a false color gradient selector."
-msgstr "Premere con il tasto destro sulla scala falsi colori fa apparire il selettore gradiente colore."
+msgid ""
+"Clicking on a false color scale with the right mouse button brings a false "
+"color gradient selector."
+msgstr ""
+"Premere con il tasto destro sulla scala falsi colori fa apparire il "
+"selettore gradiente colore."
 
 #: app/tips.c:189
-msgid "Clicking on a 3D view with the right mouse button brings a GL material or false color gradient selector."
-msgstr "Premere con il tasto destro su una vista 3D fa apparire il selettore falsi colori o materiali GL."
+msgid ""
+"Clicking on a 3D view with the right mouse button brings a GL material or "
+"false color gradient selector."
+msgstr ""
+"Premere con il tasto destro su una vista 3D fa apparire il selettore falsi "
+"colori o materiali GL."
 
 #: app/tips.c:194
-msgid "3D view transformation modes can be selected with keys: R (rotate), S (scale), V (value scale) and L (light source)."
-msgstr "I modi della vista 3D possono essere selezionati con i tasti: R (ruota), S (scala), V (scala valori) and L (sorgente luce)."
+msgid ""
+"3D view transformation modes can be selected with keys: R (rotate), S "
+"(scale), V (value scale) and L (light source)."
+msgstr ""
+"I modi della vista 3D possono essere selezionati con i tasti: R (ruota), S "
+"(scala), V (scala valori) and L (sorgente luce)."
 
 #: app/tips.c:200
-msgid "Pressing Ctrl-C copies the image of a channel, graph or 3D view to the clipboard."
+msgid ""
+"Pressing Ctrl-C copies the image of a channel, graph or 3D view to the "
+"clipboard."
 msgstr "Ctrl-C copia l'immagine di un canale, grafico o vista 3D negli appunti"
 
 #: app/tips.c:205
-msgid "Dragging channels or graphs from Data Browser to a window copies them to the corresponding file."
-msgstr "Trascinare i canali o i grafici del navigatore dati in una finestra li copia nel file corrispondente."
+msgid ""
+"Dragging channels or graphs from Data Browser to a window copies them to the "
+"corresponding file."
+msgstr ""
+"Trascinare i canali o i grafici del navigatore dati in una finestra li copia "
+"nel file corrispondente."
 
 #: app/tips.c:210
 msgid "Meta → Show Data Browser brings back a closed Data Browser."
-msgstr "Meta → Mostra Navigatore Dati riapre una finestra del navigatore chiusa"
+msgstr ""
+"Meta → Mostra Navigatore Dati riapre una finestra del navigatore chiusa"
 
 #: app/tips.c:214
-msgid "Channels and graphs can be renamed by double-clicking on their name in Data Browser."
-msgstr "I canali ed i grafici possono essere rinominati con un doppio click sul loro nome nel Navigatore Dati"
+msgid ""
+"Channels and graphs can be renamed by double-clicking on their name in Data "
+"Browser."
+msgstr ""
+"I canali ed i grafici possono essere rinominati con un doppio click sul loro "
+"nome nel Navigatore Dati"
 
 #: app/tips.c:220
-msgid "Facet Level offers to use/exclude the masked area if a mask is present on the data."
-msgstr "Facet Level permette di utilizzare/escludere un'area sotto una maschera se questa è presente"
+msgid ""
+"Facet Level offers to use/exclude the masked area if a mask is present on "
+"the data."
+msgstr ""
+"Facet Level permette di utilizzare/escludere un'area sotto una maschera se "
+"questa è presente"
 
 #: app/tips.c:225
-msgid "Plane Level offers to use/exclude the masked area if a mask is present on the data."
-msgstr "Livella piani offre la possibilità di includere/escludere una area con maschera se presente"
+msgid ""
+"Plane Level offers to use/exclude the masked area if a mask is present on "
+"the data."
+msgstr ""
+"Livella piani offre la possibilità di includere/escludere una area con "
+"maschera se presente"
 
 #: app/tips.c:230
-msgid "Data Arithmetic works as a scientific calculator, just type an arithmetic expression."
-msgstr "Aritmetica Dati funziona come una calcolatrice scientifica, basta digitare una espressione aritmetica"
+msgid ""
+"Data Arithmetic works as a scientific calculator, just type an arithmetic "
+"expression."
+msgstr ""
+"Aritmetica Dati funziona come una calcolatrice scientifica, basta digitare "
+"una espressione aritmetica"
 
 #: app/tips.c:235
-msgid "Facet Level can often level data with large features that make impossible to use standard plane levelling.  It levels the surface by making normals of flat areas point upwards."
-msgstr "Facet Level puo' spesso livellare dati con caratteristiche di grandi dimensioni al contrario del livellamento piano. Livella la superficie disponendo verticalmente le normali di superfici piane"
+msgid ""
+"Facet Level can often level data with large features that make impossible to "
+"use standard plane levelling.  It levels the surface by making normals of "
+"flat areas point upwards."
+msgstr ""
+"Facet Level puo' spesso livellare dati con caratteristiche di grandi "
+"dimensioni al contrario del livellamento piano. Livella la superficie "
+"disponendo verticalmente le normali di superfici piane"
 
 #: app/tips.c:241
-msgid "Too small grains can be filtered out with Remove by Threshold grain function."
-msgstr "Grani troppo piccoli possono essere eliminati con la funzione Rimuovi grani per soglia"
+msgid ""
+"Too small grains can be filtered out with Remove by Threshold grain function."
+msgstr ""
+"Grani troppo piccoli possono essere eliminati con la funzione Rimuovi grani "
+"per soglia"
 
 #: app/tips.c:246
-msgid "Data Process → Presentation → Edge Detection → Step is a fine step detector with a good dynamic range"
-msgstr "Elaborazione Dati → Presentazione → Determinazione Bordo → Step è un rivelatore fine di step con un buon intervallo dinamico"
+msgid ""
+"Data Process → Presentation → Edge Detection → Step is a fine step detector "
+"with a good dynamic range"
+msgstr ""
+"Elaborazione Dati → Presentazione → Determinazione Bordo → Step è un "
+"rivelatore fine di step con un buon intervallo dinamico"
 
 #: app/tips.c:251
-msgid "Data Process → Basic Operations → Recalibrate changes scales, offsets and even lateral and value units."
-msgstr "Elaborazione Dati → Operazioni Base → Ricalibrazione cambia la scala, le dimensioni ed anche le unità laterali e dei valori"
+msgid ""
+"Data Process → Basic Operations → Recalibrate changes scales, offsets and "
+"even lateral and value units."
+msgstr ""
+"Elaborazione Dati → Operazioni Base → Ricalibrazione cambia la scala, le "
+"dimensioni ed anche le unità laterali e dei valori"
 
 #: app/tips.c:256
-msgid "Grains or other areas of interest are marked with masks.  Many functions then can do something interesting with the masked areas."
-msgstr "Grani o altre aree di interesse sono segnalate da maschere. Molte funzioni possono agire in modo interessante sulle aree mascherate"
+msgid ""
+"Grains or other areas of interest are marked with masks.  Many functions "
+"then can do something interesting with the masked areas."
+msgstr ""
+"Grani o altre aree di interesse sono segnalate da maschere. Molte funzioni "
+"possono agire in modo interessante sulle aree mascherate"
 
 #: app/tips.c:262
-msgid "Remove Scars in the toolbox runs with the settings last used in Mark Scars."
-msgstr "Lo strumento Rimuovi Danni agisce con i parametri utilizzati per ultimi da Segna Danni"
+msgid ""
+"Remove Scars in the toolbox runs with the settings last used in Mark Scars."
+msgstr ""
+"Lo strumento Rimuovi Danni agisce con i parametri utilizzati per ultimi da "
+"Segna Danni"
 
 #: app/tips.c:268
 msgid "Graph → Critical Dimension measures steps on extracted profile graphs."
-msgstr "Grafico → Dimensioni Critiche misura step su profili estratti dal grafico"
+msgstr ""
+"Grafico → Dimensioni Critiche misura step su profili estratti dal grafico"
 
 #: app/tips.c:274
 msgid "Pressing Esc hides tool windows."
@@ -2143,52 +2201,105 @@ msgid "Read Value tool displays also the local facet normal."
 msgstr "Leggi Valore mostra anche la normale al facet locale"
 
 #: app/tips.c:282
-msgid "Read Value tool can shift data to make <i>z</i>=0 plane pass through the selected point."
-msgstr "Lo strumento Leggi valore può' spostare i dati per far passare il piano  <i>z</i>=0 per un punto selezionato"
+msgid ""
+"Read Value tool can shift data to make <i>z</i>=0 plane pass through the "
+"selected point."
+msgstr ""
+"Lo strumento Leggi valore può' spostare i dati per far passare il piano  "
+"<i>z</i>=0 per un punto selezionato"
 
 #: app/tips.c:287
-msgid "Individual lines can be deleted in Distance tool by selecting them in the list and pressing Delete."
-msgstr "Linee singole possono essere cancellate nello strumento Distanze selezionandole dalla lista e premendo Canc"
+msgid ""
+"Individual lines can be deleted in Distance tool by selecting them in the "
+"list and pressing Delete."
+msgstr ""
+"Linee singole possono essere cancellate nello strumento Distanze "
+"selezionandole dalla lista e premendo Canc"
 
 #: app/tips.c:292
-msgid "Individual lines can be deleted in Profiles tool by selecting them in the list and pressing Delete."
-msgstr "Linee singole possono essere cancellate nello strumento Profili selezionandole dalla lista e premendo Canc"
+msgid ""
+"Individual lines can be deleted in Profiles tool by selecting them in the "
+"list and pressing Delete."
+msgstr ""
+"Linee singole possono essere cancellate nello strumento Profili "
+"selezionandole dalla lista e premendo Canc"
 
 #: app/tips.c:297
-msgid "Spectroscopy tool displays point spectroscopy data and extracts them to standalone graphs that can be subsequently analysed for instance with Graph → Fit FD Curve."
-msgstr "Lo strumento Spettroscopia mostra punti dati spettroscopici e li estrae in grafici a parte che possono essere successivamente analizzati con Grafici→  Adatta Curva FD"
+msgid ""
+"Spectroscopy tool displays point spectroscopy data and extracts them to "
+"standalone graphs that can be subsequently analysed for instance with Graph "
+"→ Fit FD Curve."
+msgstr ""
+"Lo strumento Spettroscopia mostra punti dati spettroscopici e li estrae in "
+"grafici a parte che possono essere successivamente analizzati con Grafici→  "
+"Adatta Curva FD"
 
 #: app/tips.c:303
-msgid "Statistical Quantities tool allows limiting the area of interest by a mask, rectangular selection or the intersection of both."
-msgstr "Lo strumento Quantità Statistiche permette di limitare l'area di interessa con una maschera, una selezione rettangolare o l'intersezione di entrambe."
+msgid ""
+"Statistical Quantities tool allows limiting the area of interest by a mask, "
+"rectangular selection or the intersection of both."
+msgstr ""
+"Lo strumento Quantità Statistiche permette di limitare l'area di interessa "
+"con una maschera, una selezione rettangolare o l'intersezione di entrambe."
 
 #: app/tips.c:308
-msgid "Beside height and angle distributions, Statistical Functions tool calculates also correlation functions, power spectrum density (PSDF) and some more exotic functions."
-msgstr "Al di là della distribuzioni delle altezze e degli angoli lo strumento Funzioni Statistiche  calcola anche funzioni di correlazione, densità di potenza di spettro (PSDF) ed altre funzioni particolari"
+msgid ""
+"Beside height and angle distributions, Statistical Functions tool calculates "
+"also correlation functions, power spectrum density (PSDF) and some more "
+"exotic functions."
+msgstr ""
+"Al di là della distribuzioni delle altezze e degli angoli lo strumento "
+"Funzioni Statistiche  calcola anche funzioni di correlazione, densità di "
+"potenza di spettro (PSDF) ed altre funzioni particolari"
 
 #: app/tips.c:314
-msgid "Path Level tool levels misaligned rows by lining them up along manually selected lines.  If there are no large features automatic Median Line Correction usually works well."
-msgstr "Lo strumento Path Level livella le righe disallineate allineandole a linee selezionate manualmente. Se non vi sono caratteristiche evidenti la Correzione lungo la Linea Mediana di solito dà buoni risultati"
+msgid ""
+"Path Level tool levels misaligned rows by lining them up along manually "
+"selected lines.  If there are no large features automatic Median Line "
+"Correction usually works well."
+msgstr ""
+"Lo strumento Path Level livella le righe disallineate allineandole a linee "
+"selezionate manualmente. Se non vi sono caratteristiche evidenti la "
+"Correzione lungo la Linea Mediana di solito dà buoni risultati"
 
 #: app/tips.c:320
-msgid "Grain Measure tool is great for examining individual grains.  Overall grain statistics are available in Data Processing → Grains."
-msgstr "Lo strumento Misura Grani è ideale per esaminare grani individuali. Statistiche generali sui grani sono disponibili in Elaborazione Dati → Grani"
+msgid ""
+"Grain Measure tool is great for examining individual grains.  Overall grain "
+"statistics are available in Data Processing → Grains."
+msgstr ""
+"Lo strumento Misura Grani è ideale per esaminare grani individuali. "
+"Statistiche generali sui grani sono disponibili in Elaborazione Dati → Grani"
 
 #: app/tips.c:326
 msgid "Mask Editor tool can create, edit, invert, grow and shrink masks."
-msgstr "Lo strumento Modifica Maschere può' creare, modificare, ingrandire e rimpicciolire maschere"
+msgstr ""
+"Lo strumento Modifica Maschere può' creare, modificare, ingrandire e "
+"rimpicciolire maschere"
 
 #: app/tips.c:330
-msgid "Color Range tool offers several false color scale mapping modes and can make any of them the default mode."
-msgstr "Lo strumento Intervallo Colore offre differenti modalità di visualizzazioni in gamme falsi colori e può scegliere ciascuna di loro come modalità predefinita"
+msgid ""
+"Color Range tool offers several false color scale mapping modes and can make "
+"any of them the default mode."
+msgstr ""
+"Lo strumento Intervallo Colore offre differenti modalità di visualizzazioni "
+"in gamme falsi colori e può scegliere ciascuna di loro come modalità "
+"predefinita"
 
 #: app/tips.c:335
-msgid "Dragging selections from Selections Manager tool to a data window copies the selection to the target data."
-msgstr "Trascinando le selezioni da Gestione Selezioni ad una finestra dati, copia la selezione nei dati in oggetto"
+msgid ""
+"Dragging selections from Selections Manager tool to a data window copies the "
+"selection to the target data."
+msgstr ""
+"Trascinando le selezioni da Gestione Selezioni ad una finestra dati, copia "
+"la selezione nei dati in oggetto"
 
 #: app/tips.c:341
-msgid "Gwyddion User Guide explains in detail many of the methods and algorithms implemented in Gwyddion."
-msgstr "La guida utente di Gwyddio spiega in dettaglio molti dei metodi e degli algoritmi implementati"
+msgid ""
+"Gwyddion User Guide explains in detail many of the methods and algorithms "
+"implemented in Gwyddion."
+msgstr ""
+"La guida utente di Gwyddio spiega in dettaglio molti dei metodi e degli "
+"algoritmi implementati"
 
 #: app/tips.c:346
 msgid "Gwyddion is a son of Math."
@@ -2327,21 +2438,23 @@ msgid "OpenGL was disabled with a command-line option."
 msgstr "OpenGL è stato disabilitato con opzione da linea di comando"
 
 #: app/toolbox.c:1179
-msgid "Initialization of OpenGL failed.  Check output of <tt>glxinfo</tt> and warning messages printed to console during Gwyddion startup."
-msgstr "Inizializzazione OpenGL fallita. Controllare l'otput di <tt>glxinfo</tt> ed eventuali messaggi di errore stampati sulla console all'avvio di Gwyddion."
+msgid ""
+"Initialization of OpenGL failed.  Check output of <tt>glxinfo</tt> and "
+"warning messages printed to console during Gwyddion startup."
+msgstr ""
+"Inizializzazione OpenGL fallita. Controllare l'otput di <tt>glxinfo</tt> ed "
+"eventuali messaggi di errore stampati sulla console all'avvio di Gwyddion."
 
 #: app/toolbox.c:1186
 msgid "This version of Gwyddion was built without OpenGL support."
 msgstr "Questa versione di Gwyddion non ha il supporto OpenGL."
 
-#: app/validate.c:109
-#: app/validate.c:130
+#: app/validate.c:109 app/validate.c:130
 #, c-format
 msgid "byte at position %d"
 msgstr "byte in posizione %d"
 
-#: app/validate.c:156
-#: app/validate.c:169
+#: app/validate.c:156 app/validate.c:169
 #, c-format
 msgid "%s instead of %s"
 msgstr "%s invece di %s"
@@ -2446,26 +2559,23 @@ msgstr ""
 msgid "Header tag ‘%s’ value is not nul-terminated."
 msgstr ""
 
-#: modules/file/alicona.c:599
+#: modules/file/alicona.c:601
 #, c-format
 msgid "Header tag ‘%s’ value is not nul-padded."
 msgstr ""
 
-#: modules/file/alicona.c:650
-#: modules/file/gdeffile.c:169
-#: modules/file/gdeffile.c:193
-#: modules/file/gsffile.c:152
-#: modules/file/iso28600.c:1029
-#: modules/file/pt3file.c:481
+#: modules/file/alicona.c:652 modules/file/gdeffile.c:169
+#: modules/file/gdeffile.c:193 modules/file/gsffile.c:152
+#: modules/file/iso28600.c:1029 modules/file/pt3file.c:481
 #: modules/file/pt3file.c:583
 msgid "File header is truncated."
 msgstr "Intestazione del file tronca"
 
-#: modules/file/alicona.c:665
+#: modules/file/alicona.c:667
 msgid "Comment lacks CRLF termination."
 msgstr "Il commento è mancante della termazione  CRLF "
 
-#: modules/file/alicona.c:670
+#: modules/file/alicona.c:672
 msgid "Comment is not nul-terminated."
 msgstr ""
 
@@ -2525,13 +2635,11 @@ msgstr "Matrice dati ASCII (.txt)"
 msgid "Channel:"
 msgstr "Canale:"
 
-#: modules/file/asciiexport.c:191
-#: modules/file/asciiexport.c:206
+#: modules/file/asciiexport.c:191 modules/file/asciiexport.c:206
 msgid "Width:"
 msgstr "Larghezza:"
 
-#: modules/file/asciiexport.c:198
-#: modules/file/asciiexport.c:210
+#: modules/file/asciiexport.c:198 modules/file/asciiexport.c:210
 msgid "Height:"
 msgstr "Altezza:"
 
@@ -2539,23 +2647,16 @@ msgstr "Altezza:"
 msgid "Value units:"
 msgstr "unità valore:"
 
-#: modules/file/asciiexport.c:262
-#: modules/graph/graph_export_ascii.c:111
+#: modules/file/asciiexport.c:262 modules/graph/graph_export_ascii.c:111
 msgid "Export Text"
 msgstr "Esporta Testo"
 
-#: modules/file/asciiexport.c:273
-#: modules/file/pixmap.c:3003
-#: modules/file/rawfile.c:720
-#: modules/file/rawxyz.c:670
-#: modules/process/fft_filter_1d.c:296
-#: modules/process/grain_dist.c:285
-#: modules/process/grain_edge.c:270
-#: modules/process/grain_mark.c:344
-#: modules/process/grain_rem_threshold.c:324
-#: modules/process/grain_wshed.c:278
-#: modules/tools/spotremove.c:319
-#: modules/tools/stats.c:375
+#: modules/file/asciiexport.c:273 modules/file/pixmap.c:3003
+#: modules/file/rawfile.c:720 modules/file/rawxyz.c:670
+#: modules/process/fft_filter_1d.c:296 modules/process/grain_dist.c:285
+#: modules/process/grain_edge.c:270 modules/process/grain_mark.c:344
+#: modules/process/grain_rem_threshold.c:324 modules/process/grain_wshed.c:278
+#: modules/tools/spotremove.c:319 modules/tools/stats.c:375
 msgid "Options"
 msgstr "Opzioni"
 
@@ -2563,8 +2664,7 @@ msgstr "Opzioni"
 msgid "Use _dot as decimal separator"
 msgstr "Utilizza il punto come separatore _decimale"
 
-#: modules/file/asciiexport.c:283
-#: modules/process/grain_dist.c:296
+#: modules/file/asciiexport.c:283 modules/process/grain_dist.c:296
 msgid "Add _informational comment header"
 msgstr "Aggiungi _intestazione commento"
 
@@ -2635,10 +2735,8 @@ msgstr "Importa immagini esportate come Burleigh text/bin"
 msgid "Burleigh exported data (.txt, .bin)"
 msgstr "Dati esportati Burleigh (.txt, .bin)"
 
-#: modules/file/burleigh_exp.c:225
-#: modules/file/burleigh_exp.c:266
-#: modules/file/nanoscope.c:1098
-#: modules/file/omicron.c:395
+#: modules/file/burleigh_exp.c:225 modules/file/burleigh_exp.c:266
+#: modules/file/nanoscope.c:1098 modules/file/omicron.c:395
 #: modules/file/shimadzu.c:404
 msgid "Missing colon in header line."
 msgstr "\":\" mancanti nel file intestazione."
@@ -2664,11 +2762,12 @@ msgstr "file Createc (.dat)"
 msgid "Neither `%s' nor `%s' header field found."
 msgstr "Campi intestazione  `%s' o `%s' non trovati."
 
-#: modules/file/createc.c:520
-#: modules/file/matfile.c:596
+#: modules/file/createc.c:520 modules/file/matfile.c:596
 #, c-format
 msgid "zlib initialization failed with error %d, cannot decompress data."
-msgstr "Inizializzazione di zlib fallita con errore %d, impossibile decomprimere i dati."
+msgstr ""
+"Inizializzazione di zlib fallita con errore %d, impossibile decomprimere i "
+"dati."
 
 #: modules/file/createc.c:534
 #, c-format
@@ -2689,7 +2788,8 @@ msgstr "File Benyuan CSM  (.csm)"
 
 #: modules/file/csmfile.c:182
 msgid "Header image width field does not match BMP width."
-msgstr "Campo larghezza intestazione immagine non corrispondente a larghezza BMP"
+msgstr ""
+"Campo larghezza intestazione immagine non corrispondente a larghezza BMP"
 
 #: modules/file/csmfile.c:195
 msgid "Header image height field does not match BMP height."
@@ -2721,33 +2821,27 @@ msgstr "Legge ed esporta file dumb dump Gwyddion."
 msgid "Gwyddion dumb dump files (.dump)"
 msgstr "Gwyddion dumb dump (.dump)"
 
-#: modules/file/dumbfile.c:160
-#: modules/plugin-proxy.c:1254
+#: modules/file/dumbfile.c:160 modules/plugin-proxy.c:1254
 msgid "End of file reached when value was expected."
 msgstr "Termine file raggiunto invece di valore aspettato."
 
-#: modules/file/dumbfile.c:189
-#: modules/plugin-proxy.c:1283
+#: modules/file/dumbfile.c:189 modules/plugin-proxy.c:1283
 msgid "Missing data field width."
 msgstr "Campo dati larghezza mancante."
 
-#: modules/file/dumbfile.c:202
-#: modules/plugin-proxy.c:1296
+#: modules/file/dumbfile.c:202 modules/plugin-proxy.c:1296
 msgid "Missing data field height."
 msgstr "Campo dati altezza mancante."
 
-#: modules/file/dumbfile.c:232
-#: modules/plugin-proxy.c:1326
+#: modules/file/dumbfile.c:232 modules/plugin-proxy.c:1326
 msgid "Data field dimensions are not positive numbers."
 msgstr "Dimensioni campo dati non positive."
 
-#: modules/file/dumbfile.c:273
-#: modules/plugin-proxy.c:1367
+#: modules/file/dumbfile.c:273 modules/plugin-proxy.c:1367
 msgid "End of file reached inside a data field."
 msgstr "Termine file raggiunto all'interno di un campo dati."
 
-#: modules/file/dumbfile.c:294
-#: modules/plugin-proxy.c:1388
+#: modules/file/dumbfile.c:294 modules/plugin-proxy.c:1388
 msgid "Missing end of data field marker."
 msgstr "Marker termine campo dati mancante."
 
@@ -2761,10 +2855,11 @@ msgstr "File ECS (.img)"
 
 #: modules/file/ecsfile.c:174
 msgid "Scan size header field overlaps with data."
-msgstr "Il campo di intestazione delle dimensioni della scansione si sovrappone ai dati"
+msgstr ""
+"Il campo di intestazione delle dimensioni della scansione si sovrappone ai "
+"dati"
 
-#: modules/file/err.h:47
-#: modules/file/nrrdfile.c:706
+#: modules/file/err.h:47 modules/file/nrrdfile.c:706
 #: modules/file/nrrdfile.c:751
 #, c-format
 msgid "Cannot read from file: %s."
@@ -2781,13 +2876,21 @@ msgstr "Il file è troppo piccolo per essere un file di tipo dato"
 
 #: modules/file/err.h:84
 #, c-format
-msgid "File is not a %s file, it is seriously damaged, or it is of an unknown format version."
-msgstr "Il file o non è di tipo %s o è danneggiato o è nel formato di una versione sconosciuta"
+msgid ""
+"File is not a %s file, it is seriously damaged, or it is of an unknown "
+"format version."
+msgstr ""
+"Il file o non è di tipo %s o è danneggiato o è nel formato di una versione "
+"sconosciuta"
 
 #: modules/file/err.h:95
 #, c-format
-msgid "Expected data size calculated from file headers is %u bytes, but the real size is %u bytes."
-msgstr "Dimensione file aspettata dall'intestazione del file è %u bytes, ma la dimensione reale è %u bytes"
+msgid ""
+"Expected data size calculated from file headers is %u bytes, but the real "
+"size is %u bytes."
+msgstr ""
+"Dimensione file aspettata dall'intestazione del file è %u bytes, ma la "
+"dimensione reale è %u bytes"
 
 #: modules/file/err.h:108
 #, c-format
@@ -2796,8 +2899,12 @@ msgstr "Dimensione campo %d non valida."
 
 #: modules/file/err.h:116
 #, c-format
-msgid "The number of bits per sample %d is invalid or unsupported for this file type."
-msgstr "Il numero di bit per campione %d non è valido o non supportato per questo tipo di file."
+msgid ""
+"The number of bits per sample %d is invalid or unsupported for this file "
+"type."
+msgstr ""
+"Il numero di bit per campione %d non è valido o non supportato per questo "
+"tipo di file."
 
 #: modules/file/err.h:126
 #, c-format
@@ -2847,8 +2954,7 @@ msgstr "File Nanosurf (.ezd, .nid)"
 msgid "Garbage before first header section."
 msgstr "Dati invalidi prima della prima sezione dell'intestazione."
 
-#: modules/file/ezdfile.c:312
-#: modules/file/nanoscope-ii.c:251
+#: modules/file/ezdfile.c:312 modules/file/nanoscope-ii.c:251
 msgid "Malformed header line (missing =)."
 msgstr "Linea intestazione mal definita (mancante =)"
 
@@ -2917,11 +3023,11 @@ msgstr "Deserializzazione dati fallita."
 
 #: modules/file/gwyfile.c:172
 #, c-format
-msgid "Data deserialization succeeded, but resulted in an unexpected object %s."
+msgid ""
+"Data deserialization succeeded, but resulted in an unexpected object %s."
 msgstr "Deserializzazione dati riuscita, oggetto risultante %s inaspettato."
 
-#: modules/file/gwytiff.h:220
-#: modules/file/gwytiff.h:230
+#: modules/file/gwytiff.h:220 modules/file/gwytiff.h:230
 #, c-format
 msgid "TIFF directory %u ended unexpectedly."
 msgstr "Cartella TIFF %u terminata inaspettatamente"
@@ -2930,10 +3036,8 @@ msgstr "Cartella TIFF %u terminata inaspettatamente"
 msgid "Invalid tag data positions were found."
 msgstr "Trovate posizioni tag data non valide"
 
-#: modules/file/gwytiff.h:683
-#: modules/file/gwytiff.h:690
-#: modules/file/gwytiff.h:786
-#: modules/file/gwytiff.h:802
+#: modules/file/gwytiff.h:683 modules/file/gwytiff.h:690
+#: modules/file/gwytiff.h:786 modules/file/gwytiff.h:802
 #, c-format
 msgid "Required tag %u was not found."
 msgstr "Etichetta %u richiesta, non trovata."
@@ -2956,10 +3060,8 @@ msgstr "Configurazione planare %u non supportata."
 msgid "Unsupported sample format"
 msgstr "Formato campione non supportato"
 
-#: modules/file/gwytiff.h:828
-#: modules/file/matfile.c:275
-#: modules/file/matfile.c:297
-#: modules/file/psia.c:342
+#: modules/file/gwytiff.h:828 modules/file/matfile.c:275
+#: modules/file/matfile.c:297 modules/file/psia.c:342
 msgid "File is truncated."
 msgstr "File troncato"
 
@@ -2988,8 +3090,12 @@ msgid "HDF data with `native' type is not supported."
 msgstr "Dati HDF di tipo nativo non supportati."
 
 #: modules/file/hdrimage.cc:273
-msgid "Imports 16bit grayscale PPM, PNG and TIFF images, imports and exports OpenEXR images (if available)."
-msgstr "Importa immagini 16bit grayscale PPM, PNG and TIFF, importa ed esporta immgini OpenEXR (se disponibili)."
+msgid ""
+"Imports 16bit grayscale PPM, PNG and TIFF images, imports and exports "
+"OpenEXR images (if available)."
+msgstr ""
+"Importa immagini 16bit grayscale PPM, PNG and TIFF, importa ed esporta "
+"immgini OpenEXR (se disponibili)."
 
 #: modules/file/hdrimage.cc:288
 msgid "OpenEXR images (.exr)"
@@ -3040,13 +3146,11 @@ msgstr "Scala _Z :"
 msgid "Representable"
 msgstr "Rappresentabile"
 
-#: modules/file/hdrimage.cc:478
-#: modules/tools/stats.c:322
+#: modules/file/hdrimage.cc:478 modules/tools/stats.c:322
 msgid "Minimum:"
 msgstr "Minimo:"
 
-#: modules/file/hdrimage.cc:494
-#: modules/tools/stats.c:323
+#: modules/file/hdrimage.cc:494 modules/tools/stats.c:323
 msgid "Maximum:"
 msgstr "Massimo:"
 
@@ -3064,50 +3168,40 @@ msgstr "Caricamento immagine EXR fallito, errore liblmf: %s"
 msgid "OpenEXR data type %u is invalid or unsupported."
 msgstr "Il tipo dati OpenEXR %u non è valido o non è supportato."
 
-#: modules/file/hdrimage.cc:1404
-#: modules/file/hdrimage.cc:1413
-#: modules/file/pixmap.c:1519
-#: modules/file/pixmap.c:1529
+#: modules/file/hdrimage.cc:1404 modules/file/hdrimage.cc:1413
+#: modules/file/pixmap.c:1519 modules/file/pixmap.c:1529
 #, c-format
 msgid "libpng initialization error (in %s)"
 msgstr "errore inizializzazione libpng (in %s)"
 
-#: modules/file/hdrimage.cc:1422
-#: modules/file/pixmap.c:1589
+#: modules/file/hdrimage.cc:1422 modules/file/pixmap.c:1589
 msgid "libpng error occured"
 msgstr "Errore libpng"
 
 #. TRANSLATORS: Dialog title; %s is PNG, TIFF, ...
-#: modules/file/hdrimage.cc:2146
-#: modules/file/pixmap.c:1015
+#: modules/file/hdrimage.cc:2146 modules/file/pixmap.c:1015
 #, c-format
 msgid "Import %s"
 msgstr "Importa %s"
 
-#: modules/file/hdrimage.cc:2173
-#: modules/file/pixmap.c:1042
+#: modules/file/hdrimage.cc:2173 modules/file/pixmap.c:1042
 msgid "Image Information"
 msgstr "Informazioni immagine"
 
-#: modules/file/hdrimage.cc:2182
-#: modules/file/pixmap.c:1049
+#: modules/file/hdrimage.cc:2182 modules/file/pixmap.c:1049
 msgid "Horizontal size:"
 msgstr "Dimensione orizzontale:"
 
-#: modules/file/hdrimage.cc:2182
-#: modules/file/hdrimage.cc:2188
-#: modules/file/pixmap.c:1049
-#: modules/file/pixmap.c:1055
+#: modules/file/hdrimage.cc:2182 modules/file/hdrimage.cc:2188
+#: modules/file/pixmap.c:1049 modules/file/pixmap.c:1055
 msgid "px"
 msgstr "px"
 
-#: modules/file/hdrimage.cc:2188
-#: modules/file/pixmap.c:1055
+#: modules/file/hdrimage.cc:2188 modules/file/pixmap.c:1055
 msgid "Vertical size:"
 msgstr "Dimensione verticale:"
 
-#: modules/file/hdrimage.cc:2193
-#: modules/file/pixmap.c:1060
+#: modules/file/hdrimage.cc:2193 modules/file/pixmap.c:1060
 msgid "Channels:"
 msgstr "Canali:"
 
@@ -3115,83 +3209,57 @@ msgstr "Canali:"
 msgid "Pages:"
 msgstr "Pagine:"
 
-#: modules/file/hdrimage.cc:2226
-#: modules/file/pixmap.c:1091
-#: modules/file/rawfile.c:623
-#: modules/file/rawxyz.c:569
+#: modules/file/hdrimage.cc:2226 modules/file/pixmap.c:1091
+#: modules/file/rawfile.c:623 modules/file/rawxyz.c:569
 #: modules/process/dimensions.h:465
 msgid "Physical Dimensions"
 msgstr "Dimensioni fisiche"
 
-#: modules/file/hdrimage.cc:2240
-#: modules/file/pixmap.c:1101
-#: modules/file/pixmap.c:2960
-#: modules/file/rawfile.c:632
-#: modules/process/crosscor.c:197
-#: modules/process/deposit_synth.c:458
-#: modules/process/dimensions.h:471
-#: modules/process/tip_blind.c:265
+#: modules/file/hdrimage.cc:2240 modules/file/pixmap.c:1101
+#: modules/file/pixmap.c:2960 modules/file/rawfile.c:632
+#: modules/process/crosscor.c:197 modules/process/deposit_synth.c:458
+#: modules/process/dimensions.h:471 modules/process/tip_blind.c:265
 msgid "_Width:"
 msgstr "Larghezza:"
 
-#: modules/file/hdrimage.cc:2266
-#: modules/file/hdrimage.cc:2331
-#: modules/file/pixmap.c:1123
-#: modules/file/pixmap.c:1178
-#: modules/file/rawfile.c:655
-#: modules/file/rawfile.c:711
-#: modules/process/calcoefs_new.c:384
-#: modules/process/calcoefs_new.c:451
-#: modules/process/calcoefs_simple.c:390
-#: modules/process/calcoefs_simple.c:457
-#: modules/process/calcoefs_view.c:528
-#: modules/process/calcoefs_view.c:566
-#: modules/process/calibrate.c:339
-#: modules/process/calibrate.c:420
+#: modules/file/hdrimage.cc:2266 modules/file/hdrimage.cc:2331
+#: modules/file/pixmap.c:1123 modules/file/pixmap.c:1178
+#: modules/file/rawfile.c:655 modules/file/rawfile.c:711
+#: modules/process/calcoefs_new.c:384 modules/process/calcoefs_new.c:451
+#: modules/process/calcoefs_simple.c:390 modules/process/calcoefs_simple.c:457
+#: modules/process/calcoefs_view.c:528 modules/process/calcoefs_view.c:566
+#: modules/process/calibrate.c:339 modules/process/calibrate.c:420
 #: modules/process/dimensions.h:159
 msgid "verb|Change"
 msgstr "verbo|Cambia"
 
-#: modules/file/hdrimage.cc:2281
-#: modules/file/pixmap.c:1136
-#: modules/file/rawfile.c:668
-#: modules/process/crosscor.c:203
+#: modules/file/hdrimage.cc:2281 modules/file/pixmap.c:1136
+#: modules/file/rawfile.c:668 modules/process/crosscor.c:203
 #: modules/process/dimensions.h:475
 msgid "H_eight:"
 msgstr "Altezza:"
 
-#: modules/file/hdrimage.cc:2290
-#: modules/file/pixmap.c:1143
-#: modules/file/rawfile.c:675
-#: modules/file/rawxyz.c:550
+#: modules/file/hdrimage.cc:2290 modules/file/pixmap.c:1143
+#: modules/file/rawfile.c:675 modules/file/rawxyz.c:550
 msgid "Identical _measures"
 msgstr "Misure Identiche"
 
-#: modules/file/hdrimage.cc:2304
-#: modules/file/pixmap.c:1155
+#: modules/file/hdrimage.cc:2304 modules/file/pixmap.c:1155
 #: modules/file/rawfile.c:687
 msgid "_Z-scale (per sample unit):"
 msgstr "_Scala Z (per unità di campione):"
 
-#: modules/file/hdrimage.cc:2493
-#: modules/file/pixmap.c:1405
-#: modules/file/rawfile.c:1326
-#: modules/process/calcoefs_new.c:776
-#: modules/process/calcoefs_simple.c:1189
-#: modules/process/calcoefs_view.c:1393
-#: modules/process/calibrate.c:816
-#: modules/process/dimensions.h:193
+#: modules/file/hdrimage.cc:2493 modules/file/pixmap.c:1405
+#: modules/file/rawfile.c:1326 modules/process/calcoefs_new.c:776
+#: modules/process/calcoefs_simple.c:1189 modules/process/calcoefs_view.c:1393
+#: modules/process/calibrate.c:816 modules/process/dimensions.h:193
 msgid "Change Units"
 msgstr "Cambia unità"
 
-#: modules/file/hdrimage.cc:2507
-#: modules/file/pixmap.c:1419
-#: modules/file/rawfile.c:1340
-#: modules/process/calcoefs_new.c:789
-#: modules/process/calcoefs_simple.c:1202
-#: modules/process/calcoefs_view.c:1406
-#: modules/process/calibrate.c:830
-#: modules/process/dimensions.h:206
+#: modules/file/hdrimage.cc:2507 modules/file/pixmap.c:1419
+#: modules/file/rawfile.c:1340 modules/process/calcoefs_new.c:789
+#: modules/process/calcoefs_simple.c:1202 modules/process/calcoefs_view.c:1406
+#: modules/process/calibrate.c:830 modules/process/dimensions.h:206
 msgid "New _units:"
 msgstr "Nuove unità:"
 
@@ -3220,8 +3288,7 @@ msgstr "Importa file dati Hitachi S-3700 e S-4800 SEM"
 msgid "Hitachi SEM files (.txt + image)"
 msgstr "File Hitachi  SEM (.txt + image)"
 
-#: modules/file/hitachi-sem.c:158
-#: modules/file/unisoku.c:227
+#: modules/file/hitachi-sem.c:158 modules/file/unisoku.c:227
 msgid "No corresponding data file was found for header file."
 msgstr "File dati corrispondente al file intestazione non trovato."
 
@@ -3233,7 +3300,9 @@ msgstr "Impossibile caricare l'immagine: %s."
 #: modules/file/hitachi-sem.c:180
 #, c-format
 msgid "Field DataSize %ux%u does not match image dimensions %ux%u."
-msgstr "Il campo dimensione datii %ux%u non corrisponde alle dimensioni dell'immagine (%u×%u)."
+msgstr ""
+"Il campo dimensione datii %ux%u non corrisponde alle dimensioni "
+"dell'immagine (%u×%u)."
 
 #: modules/file/igorfile.c:198
 msgid "Imports Igor binary waves (.ibw)."
@@ -3260,7 +3329,8 @@ msgstr "Numero di punti dati %u  non corrisponde alla risoluzione %u×%u×%u."
 #: modules/file/igorfile.c:318
 #, c-format
 msgid "Data size %u does not match the number of data points %u×%u."
-msgstr "La grandezza dei dati %u non corrisponde al numero di punti dati %u×%u."
+msgstr ""
+"La grandezza dei dati %u non corrisponde al numero di punti dati %u×%u."
 
 #: modules/file/igorfile.c:356
 msgid "Cannot read channel labels."
@@ -3295,35 +3365,29 @@ msgstr "File trasferimento dati SPM ISO 28600:2011 "
 msgid "Only regular mappings are implemented but file has mapping type ‘%s’."
 msgstr ""
 
-#: modules/file/iso28600.c:662
-#: modules/file/iso28600.c:671
+#: modules/file/iso28600.c:662 modules/file/iso28600.c:671
 #: modules/file/iso28600.c:680
 #, c-format
 msgid "List ‘%s’ has %u items which differs from the number %u given by ‘%s’."
-msgstr "La lista ‘%s’ ha %u termini che differiscono dal numero %u dato da ‘%s’."
+msgstr ""
+"La lista ‘%s’ ha %u termini che differiscono dal numero %u dato da ‘%s’."
 
-#: modules/file/iso28600.c:748
-#: modules/file/iso28600.c:858
-#: modules/file/sdfile.c:843
-#: modules/file/sdfile.c:860
-#: modules/file/spip-asc.c:223
-#: modules/file/witec-asc.c:216
+#: modules/file/iso28600.c:748 modules/file/iso28600.c:858
+#: modules/file/sdfile.c:843 modules/file/sdfile.c:860
+#: modules/file/spip-asc.c:223 modules/file/witec-asc.c:216
 #: modules/file/wsffile.c:205
 #, c-format
 msgid "End of file reached when reading sample #%d of %d"
 msgstr "Termine file raggiunto durante lettura campione #%d di %d"
 
-#: modules/file/iso28600.c:757
-#: modules/file/iso28600.c:867
-#: modules/file/spip-asc.c:230
-#: modules/file/witec-asc.c:223
+#: modules/file/iso28600.c:757 modules/file/iso28600.c:867
+#: modules/file/spip-asc.c:230 modules/file/witec-asc.c:223
 #: modules/file/wsffile.c:212
 #, c-format
 msgid "Malformed data encountered when reading sample #%d of %d"
 msgstr "Dati corrotti trovati durante lettura campione #%d di %d"
 
-#: modules/file/iso28600.c:767
-#: modules/file/iso28600.c:877
+#: modules/file/iso28600.c:767 modules/file/iso28600.c:877
 msgid "Missing end-of-data marker."
 msgstr "Marker termine campo dati mancante."
 
@@ -3368,8 +3432,7 @@ msgstr "Olympus LEXT OLS4000 (.lext)"
 msgid "Top-level element is not ‘TiffTagDescData’."
 msgstr "L'elemento superiore non è  ‘TiffTagDescData’."
 
-#: modules/file/lextfile.c:257
-#: modules/file/nanoscan.c:273
+#: modules/file/lextfile.c:257 modules/file/nanoscan.c:273
 #, c-format
 msgid "XML parsing failed: %s"
 msgstr "Parsing XML fallito: %s"
@@ -3382,8 +3445,7 @@ msgstr "Importa file dati  MapVue (.map)."
 msgid "MapVue files (.map)"
 msgstr "File MapVue (.map)"
 
-#: modules/file/mapvue.c:544
-#: modules/file/mapvue.c:574
+#: modules/file/mapvue.c:544 modules/file/mapvue.c:574
 #, c-format
 msgid "Required tag %u or %u was not found."
 msgstr "Etichetta richiesta %u o %u non trovata"
@@ -3400,26 +3462,28 @@ msgstr "Dimensione ta g%u attesa è %u bytes, ma la dimensione reale è %u bytes
 #: modules/file/mapvue.c:811
 #, c-format
 msgid "Tag %u size is %u bytes, which is not enough to hold the tag marker."
-msgstr "La dimensione dell'etichetta %u è %u bytes, non sufficienti a contenere il marker"
+msgstr ""
+"La dimensione dell'etichetta %u è %u bytes, non sufficienti a contenere il "
+"marker"
 
-#: modules/file/mapvue.c:822
-#: modules/file/mapvue.c:835
+#: modules/file/mapvue.c:822 modules/file/mapvue.c:835
 #, c-format
-msgid "Tag %u size is %u bytes, which is not enough to hold the tag marker and size."
-msgstr "La dimensione dell'etichetta %u è %u bytes, non sufficienti a contenere il marker e le dimensioni"
+msgid ""
+"Tag %u size is %u bytes, which is not enough to hold the tag marker and size."
+msgstr ""
+"La dimensione dell'etichetta %u è %u bytes, non sufficienti a contenere il "
+"marker e le dimensioni"
 
 #: modules/file/mapvue.c:846
 #, c-format
 msgid "Tag marker is missing on an unknown tag %u."
 msgstr "marker dell'etichetta mancante o etichetta %u sconosciuta"
 
-#: modules/file/mapvue.c:865
-#: modules/file/mapvue.c:875
+#: modules/file/mapvue.c:865 modules/file/mapvue.c:875
 msgid "Character array does not fit into the file."
 msgstr "L'insieme dei caratteri non entra nel file"
 
-#: modules/file/mapvue.c:892
-#: modules/file/mapvue.c:903
+#: modules/file/mapvue.c:892 modules/file/mapvue.c:903
 #: modules/file/mapvue.c:913
 msgid "Fiducial record does not fit into the file."
 msgstr "L'intervallo di fiducia non si adatta al file"
@@ -3427,7 +3491,8 @@ msgstr "L'intervallo di fiducia non si adatta al file"
 #: modules/file/mapvue.c:1137
 #, c-format
 msgid "Tag %u size is %u which is not sufficient to hold its content."
-msgstr "La dimensione dell'etichetta %u  è  %u . Non sufficiente per il suo contenuto"
+msgstr ""
+"La dimensione dell'etichetta %u  è  %u . Non sufficiente per il suo contenuto"
 
 #: modules/file/matfile.c:222
 msgid "Imports Matlab MAT files v5."
@@ -3481,7 +3546,8 @@ msgstr "File testo MicroProf FRT (.txt)"
 
 #: modules/file/microprof.c:422
 msgid "File contains less than XSize*YSize data points."
-msgstr "Il file contiene un numero di punti dati minore di dimensioneX*dimensioneY"
+msgstr ""
+"Il file contiene un numero di punti dati minore di dimensioneX*dimensioneY"
 
 #: modules/file/miffile.c:194
 msgid "Imports DME MIF data files."
@@ -3516,8 +3582,7 @@ msgstr "dimensione blocco file informazione non valida"
 msgid "Unique id record is too short."
 msgstr "Registro id unica troppo corto"
 
-#: modules/file/miffile.c:680
-#: modules/file/mulfile.c:294
+#: modules/file/miffile.c:680 modules/file/mulfile.c:294
 msgid "Image data are outside the file."
 msgstr "Dati immagine esterni al file"
 
@@ -3544,10 +3609,11 @@ msgstr "File Aarhus MUL(.mul)"
 #: modules/file/mulfile.c:285
 #, c-format
 msgid "Image number in the label %u does not match the number %u in the index."
-msgstr "Il numero dell'immagine nell'etichetta %u non corrisponde al numero %u nell'indice."
+msgstr ""
+"Il numero dell'immagine nell'etichetta %u non corrisponde al numero %u "
+"nell'indice."
 
-#: modules/file/mulfile.c:344
-#: modules/file/mulfile.c:353
+#: modules/file/mulfile.c:344 modules/file/mulfile.c:353
 #, c-format
 msgid "Label string length %u is larger than 20."
 msgstr "Lunghezza stringa etichetta %u maggiore di 20."
@@ -3560,13 +3626,11 @@ msgstr "Importa file dati Nanoeducator"
 msgid "Nanoeducator files (.mspm, .spm, .stm)"
 msgstr "File Nanoeducator (.mspm, .spm, .stm)"
 
-#: modules/file/nanoeducator.c:352
-#: modules/file/unisoku.c:288
+#: modules/file/nanoeducator.c:352 modules/file/unisoku.c:288
 msgid "format version"
 msgstr "Versione formato"
 
-#: modules/file/nanoeducator.c:380
-#: modules/file/nanoeducator.c:417
+#: modules/file/nanoeducator.c:380 modules/file/nanoeducator.c:417
 #: modules/file/nanoeducator.c:521
 msgid "Image data starts past the end of file."
 msgstr "dati immagine iniziano oltre la fine del file"
@@ -3575,10 +3639,8 @@ msgstr "dati immagine iniziano oltre la fine del file"
 msgid "Spectra data starts past the end of file."
 msgstr "dati degli spettri iniziano oltre la fine del file"
 
-#: modules/file/nanoeducator.c:626
-#: modules/file/opdfile.c:268
-#: modules/file/sensofar.c:256
-#: modules/file/witec-asc.c:154
+#: modules/file/nanoeducator.c:626 modules/file/opdfile.c:268
+#: modules/file/sensofar.c:256 modules/file/witec-asc.c:154
 msgid "File header is truncated"
 msgstr "Intestazione del file troncata"
 
@@ -3586,8 +3648,7 @@ msgstr "Intestazione del file troncata"
 msgid "Parameter header is truncated"
 msgstr "Header parametro troncato."
 
-#: modules/file/nanoeducator.c:910
-#: modules/process/curvature.c:442
+#: modules/file/nanoeducator.c:910 modules/process/curvature.c:442
 #: modules/tools/profile.c:805
 #, c-format
 msgid "Profile %d"
@@ -3613,8 +3674,7 @@ msgstr "Importa file dati Nanonics NAN "
 msgid "Nanonics files (.nan)"
 msgstr "File Nanonics (.nan)"
 
-#: modules/file/nanonics.c:167
-#: modules/file/nanonics.c:403
+#: modules/file/nanonics.c:167 modules/file/nanonics.c:403
 #, c-format
 msgid "Expected header end marker ‘%s’ was not found."
 msgstr "Marker atteso di fine intestazione  ‘%s’ non trovato"
@@ -3622,10 +3682,10 @@ msgstr "Marker atteso di fine intestazione  ‘%s’ non trovato"
 #: modules/file/nanonics.c:194
 #, c-format
 msgid "HeaderLength %u differs from actual header length %u"
-msgstr "LunghezzaIntestazione %u differisce dalla reale lunghezza intestazione %u"
+msgstr ""
+"LunghezzaIntestazione %u differisce dalla reale lunghezza intestazione %u"
 
-#: modules/file/nanonics.c:328
-#: modules/file/witec-asc.c:160
+#: modules/file/nanonics.c:328 modules/file/witec-asc.c:160
 #, c-format
 msgid "Expected header start marker ‘%s’ but found ‘%s’."
 msgstr "Marcatore inizio intestazione aspettato  ‘%s’. Trovato ‘%s’."
@@ -3638,8 +3698,7 @@ msgstr "Importa file dati Nanonis SXM."
 msgid "Nanonis SXM files (.sxm)"
 msgstr "File Nanonis SXM (.sxm)"
 
-#: modules/file/nanonis.c:163
-#: modules/file/omicron.c:499
+#: modules/file/nanonis.c:163 modules/file/omicron.c:499
 #: modules/file/unisoku.c:265
 msgid "File header ended unexpectedly."
 msgstr "Intestazione file terminata inaspettatamente."
@@ -3678,8 +3737,7 @@ msgstr "File NanoScan XML (.xml)"
 msgid "Top-level element is not ‘scan’."
 msgstr "Elemento superiore non  ‘scan’."
 
-#: modules/file/nanoscan.c:901
-#: modules/file/nanoscan.c:909
+#: modules/file/nanoscan.c:901 modules/file/nanoscan.c:909
 msgid "Wrong size of Base64 encoded data."
 msgstr "Dimensione sbagliata di dati codificati Base64"
 
@@ -3692,8 +3750,11 @@ msgid "Nanoscope II files"
 msgstr "File Nanoscope II"
 
 #: modules/file/nanoscope.c:165
-msgid "Imports Veeco (Digital Instruments) Nanoscope data files, version 3 or newer."
-msgstr "Importa file dati Veeco (Digital Instruments) Nanoscope versione 3 or successive."
+msgid ""
+"Imports Veeco (Digital Instruments) Nanoscope data files, version 3 or newer."
+msgstr ""
+"Importa file dati Veeco (Digital Instruments) Nanoscope versione 3 or "
+"successive."
 
 #: modules/file/nanoscope.c:179
 msgid "Nanoscope III files"
@@ -3705,21 +3766,28 @@ msgstr "File non di tipo Nanoscope o di sottotipo sconosciuto."
 
 #: modules/file/nanoscope.c:250
 msgid ""
-"File has been damaged by change of line endings, resulting in corruption of the binary part of the file.\n"
+"File has been damaged by change of line endings, resulting in corruption of "
+"the binary part of the file.\n"
 "\n"
-"Typically, this occurs if the file is treated as text when sent by e-mail uncompressed, sent by FTP in ascii mode (use binary), compressed by ‘Send to compressed folder’ in some versions of MS Windows, or any other file transfer that attempts to store text platform-independently."
+"Typically, this occurs if the file is treated as text when sent by e-mail "
+"uncompressed, sent by FTP in ascii mode (use binary), compressed by ‘Send to "
+"compressed folder’ in some versions of MS Windows, or any other file "
+"transfer that attempts to store text platform-independently."
 msgstr ""
-"File danneggiato dalla modifica termine riga. Il risultato è la corruzione della parte binaria del file.\n"
+"File danneggiato dalla modifica termine riga. Il risultato è la corruzione "
+"della parte binaria del file.\n"
 "\n"
-" Di solito questo accade se il file è trattato come testo se mandato non compresso per posta elettronica, trasferito via FTP in ascii mode (use binary) , compresso con lo strumento integrato di compressione in alcune versioni di MS Windows o ogni altro modo di trasferimento file che cerchi di salvare il testo indipendentemente dalla piattaforma."
+" Di solito questo accade se il file è trattato come testo se mandato non "
+"compresso per posta elettronica, trasferito via FTP in ascii mode (use "
+"binary) , compresso con lo strumento integrato di compressione in alcune "
+"versioni di MS Windows o ogni altro modo di trasferimento file che cerchi di "
+"salvare il testo indipendentemente dalla piattaforma."
 
-#: modules/file/nanoscope.c:521
-#: modules/file/nanoscope.c:537
+#: modules/file/nanoscope.c:521 modules/file/nanoscope.c:537
 msgid "Cannot parse `Scan size' field."
 msgstr "Parse impossibile delle dimensioni campo scansione."
 
-#: modules/file/nanoscope.c:1007
-#: modules/file/nrrdfile.c:1013
+#: modules/file/nanoscope.c:1007 modules/file/nrrdfile.c:1013
 #, c-format
 msgid "Garbage after data sample #%u."
 msgstr "Dati invalidi dopo dati campione #%u."
@@ -3766,7 +3834,8 @@ msgstr ""
 #: modules/file/netcdf.c:597
 #, c-format
 msgid "Array `%s' has non-zero number of elements in spite of being absent."
-msgstr "L'array `%s' ha un numero non nullo di elementi invece di essere assente."
+msgstr ""
+"L'array `%s' ha un numero non nullo di elementi invece di essere assente."
 
 #: modules/file/netcdf.c:656
 msgid "More than one record dimension found."
@@ -3811,12 +3880,14 @@ msgstr "Impossibile decomprimere dati bzip2. Supporto Bzip2 non incluso"
 #: modules/file/nrrdfile.c:895
 #, c-format
 msgid "Hex data contains less values (%u) than corresponds to the sizes (%u)."
-msgstr "Dati Hex contenenti valori (%u) inferiori a misure corrispondenti (%u)."
+msgstr ""
+"Dati Hex contenenti valori (%u) inferiori a misure corrispondenti (%u)."
 
 #: modules/file/nrrdfile.c:1008
 #, c-format
 msgid "Text data contains less values (%u) than corresponds to the sizes (%u)."
-msgstr "Dati testo contenenti valori (%u) inferiori a misure corrispondenti (%u)."
+msgstr ""
+"Dati testo contenenti valori (%u) inferiori a misure corrispondenti (%u)."
 
 #: modules/file/nrrdfile.c:1062
 msgid "Field byteskip cannot be -1 for text encodings."
@@ -4035,8 +4106,15 @@ msgid "Apple icon (.icns)"
 msgstr "Icona Apple (.icns)"
 
 #: modules/file/pixmap.c:444
-msgid "Renders data into pixmap images and imports data from pixmap images. It supports the following image formats for export: PNG, JPEG, TIFF, PPM, BMP, TARGA. Import support relies on GDK and thus may be installation-dependent."
-msgstr "Effettua rendering dati come immagini pixmap ed importa dati da immagini pixmap. Supporta l'esportazione neiseguenti formati immagine: PNG, JPEG, TIFF, PPM, BMP, TARGA. L'importazione si basa su GDK per cui potrebbe dipendere dal tipo di installazione."
+msgid ""
+"Renders data into pixmap images and imports data from pixmap images. It "
+"supports the following image formats for export: PNG, JPEG, TIFF, PPM, BMP, "
+"TARGA. Import support relies on GDK and thus may be installation-dependent."
+msgstr ""
+"Effettua rendering dati come immagini pixmap ed importa dati da immagini "
+"pixmap. Supporta l'esportazione neiseguenti formati immagine: PNG, JPEG, "
+"TIFF, PPM, BMP, TARGA. L'importazione si basa su GDK per cui potrebbe "
+"dipendere dal tipo di installazione."
 
 #: modules/file/pixmap.c:728
 #, c-format
@@ -4048,15 +4126,17 @@ msgstr "Pixmap non ha un file tipo registrato `%s'."
 msgid "Cannot get pixbuf loader: %s."
 msgstr ""
 
-#: modules/file/pixmap.c:754
-#: modules/file/pixmap.c:766
+#: modules/file/pixmap.c:754 modules/file/pixmap.c:766
 #, c-format
 msgid "Pixbuf loader refused data: %s."
 msgstr ""
 
 #: modules/file/pixmap.c:1188
-msgid "Warning: Colorful images cannot be reliably mapped to meaningful values."
-msgstr "Attenzione: Immagini molto colorate non possono essere convertite in modo affidabile ad una mappatura che abbia valori significativi"
+msgid ""
+"Warning: Colorful images cannot be reliably mapped to meaningful values."
+msgstr ""
+"Attenzione: Immagini molto colorate non possono essere convertite in modo "
+"affidabile ad una mappatura che abbia valori significativi"
 
 #: modules/file/pixmap.c:1207
 msgid "verb|Use"
@@ -4066,8 +4146,7 @@ msgstr "verbo|Usa"
 msgid "as data"
 msgstr "come dati"
 
-#: modules/file/pixmap.c:1676
-#: modules/file/pixmap.c:1704
+#: modules/file/pixmap.c:1676 modules/file/pixmap.c:1704
 #, c-format
 msgid "Pixbuf save failed: %s."
 msgstr "Salvataggio pixbuf fallito: %s."
@@ -4078,7 +4157,9 @@ msgstr "Immagine troppo grande per essere salvata come TARGA."
 
 #: modules/file/pixmap.c:2194
 msgid "Data must be displayed in a window for pixmap export."
-msgstr "I dati devono essere mostrati in una finestra per esssere esportati come pixmap"
+msgstr ""
+"I dati devono essere mostrati in una finestra per esssere esportati come "
+"pixmap"
 
 #: modules/file/pixmap.c:2852
 msgid "Change Inset Color"
@@ -4097,14 +4178,10 @@ msgstr "Ridimensionamento"
 msgid "_Zoom:"
 msgstr "Ingrandisci:"
 
-#: modules/file/pixmap.c:2969
-#: modules/process/col_synth.c:400
-#: modules/process/grain_mark.c:309
-#: modules/process/grain_rem_threshold.c:280
-#: modules/process/obj_synth.c:573
-#: modules/process/pat_synth.c:889
-#: modules/process/pat_synth.c:1190
-#: modules/process/pat_synth.c:1525
+#: modules/file/pixmap.c:2969 modules/process/col_synth.c:400
+#: modules/process/grain_mark.c:309 modules/process/grain_rem_threshold.c:280
+#: modules/process/obj_synth.c:573 modules/process/pat_synth.c:889
+#: modules/process/pat_synth.c:1190 modules/process/pat_synth.c:1525
 #: modules/process/tip_blind.c:272
 msgid "_Height:"
 msgstr "Altezza:"
@@ -4137,8 +4214,7 @@ msgstr "Esporta come 1_6 bit grayscale"
 msgid "Lateral Scale"
 msgstr "Scala laterale"
 
-#: modules/file/pixmap.c:3069
-#: modules/file/pixmap.c:3164
+#: modules/file/pixmap.c:3069 modules/file/pixmap.c:3164
 msgid "ruler|_None"
 msgstr "righello|_Nessuno"
 
@@ -4154,8 +4230,7 @@ msgstr "barra scala _incorporata"
 msgid "Color:"
 msgstr "Colore:"
 
-#: modules/file/pixmap.c:3092
-#: modules/process/immerse.c:323
+#: modules/file/pixmap.c:3092 modules/process/immerse.c:323
 msgid "Position:"
 msgstr "Posizione:"
 
@@ -4179,8 +4254,7 @@ msgstr "Sopra"
 msgid "bottom"
 msgstr "sotto"
 
-#: modules/file/pixmap.c:3133
-#: modules/process/lno_synth.c:1066
+#: modules/file/pixmap.c:3133 modules/process/lno_synth.c:1066
 msgid "_Length:"
 msgstr "_Lunghezza:"
 
@@ -4255,8 +4329,7 @@ msgstr "Solo i file immagine PI E710 e KDT180-100-Im sono implementati"
 msgid "Measurement mode must be 2 or 3; %u is invalid."
 msgstr "La modalità di misura deve essere 2 o 3 ; %u non valida"
 
-#: modules/file/pt3file.c:539
-#: modules/file/pt3file.c:551
+#: modules/file/pt3file.c:539 modules/file/pt3file.c:551
 msgid "Only area imaging files are supported."
 msgstr "Sono supportati solo file imaging di superficie"
 
@@ -4284,8 +4357,12 @@ msgid "Quesant files (.afm)"
 msgstr "file Quesant (.afm)"
 
 #: modules/file/rawfile.c:229
-msgid "Imports raw data files, both ASCII and binary, according to user-specified format."
-msgstr "Importa file dati raw, ASCII o binari, secondo un formato specificato dall'utente"
+msgid ""
+"Imports raw data files, both ASCII and binary, according to user-specified "
+"format."
+msgstr ""
+"Importa file dati raw, ASCII o binari, secondo un formato specificato "
+"dall'utente"
 
 #: modules/file/rawfile.c:250
 msgid "User-specified"
@@ -4351,32 +4428,21 @@ msgstr "Informazioni"
 msgid "Data Format"
 msgstr "Formato dati"
 
-#: modules/file/rawfile.c:436
-#: modules/process/convolution_filter.c:288
+#: modules/file/rawfile.c:436 modules/process/convolution_filter.c:288
 msgid "Presets"
 msgstr "Predefiniti"
 
-#: modules/file/rawfile.c:541
-#: modules/file/rawxyz.c:436
-#: modules/process/arithmetic.c:227
-#: modules/process/calcoefs_view.c:332
+#: modules/file/rawfile.c:541 modules/file/rawxyz.c:436
+#: modules/process/arithmetic.c:227 modules/process/calcoefs_view.c:332
 #: modules/process/convolution_filter.c:243
-#: modules/process/deposit_synth.c:683
-#: modules/process/drift.c:227
-#: modules/process/edge.c:630
-#: modules/process/fft_filter_1d.c:197
-#: modules/process/grain_edge.c:214
-#: modules/process/grain_mark.c:259
-#: modules/process/grain_rem_threshold.c:221
-#: modules/process/grain_wshed.c:179
-#: modules/process/mark_with.c:211
-#: modules/process/polydistort.c:214
-#: modules/process/scars.c:466
-#: modules/process/synth.h:479
-#: modules/process/tip_model.c:167
-#: modules/tools/linestats.c:420
-#: modules/tools/sfunctions.c:475
-#: modules/tools/stats.c:432
+#: modules/process/deposit_synth.c:683 modules/process/drift.c:227
+#: modules/process/edge.c:630 modules/process/fft_filter_1d.c:197
+#: modules/process/grain_edge.c:214 modules/process/grain_mark.c:259
+#: modules/process/grain_rem_threshold.c:221 modules/process/grain_wshed.c:179
+#: modules/process/mark_with.c:211 modules/process/polydistort.c:214
+#: modules/process/scars.c:466 modules/process/synth.h:479
+#: modules/process/tip_model.c:167 modules/tools/linestats.c:420
+#: modules/tools/sfunctions.c:475 modules/tools/stats.c:432
 msgid "_Update"
 msgstr "_Aggiorna"
 
@@ -4384,26 +4450,22 @@ msgstr "_Aggiorna"
 msgid "<b>File</b>"
 msgstr "<b>File</b>"
 
-#: modules/file/rawfile.c:600
-#: modules/file/rawxyz.c:516
+#: modules/file/rawfile.c:600 modules/file/rawxyz.c:516
 #: modules/process/dimensions.h:443
 msgid "Resolution"
 msgstr "Risoluzione"
 
-#: modules/file/rawfile.c:605
-#: modules/file/rawxyz.c:520
+#: modules/file/rawfile.c:605 modules/file/rawxyz.c:520
 #: modules/process/dimensions.h:449
 msgid "_Horizontal size:"
 msgstr "Dimensione orizzontale:"
 
-#: modules/file/rawfile.c:612
-#: modules/file/rawxyz.c:535
+#: modules/file/rawfile.c:612 modules/file/rawxyz.c:535
 #: modules/process/dimensions.h:452
 msgid "_Vertical size:"
 msgstr "Dimensione verticale:"
 
-#: modules/file/rawfile.c:617
-#: modules/file/rawxyz.c:605
+#: modules/file/rawfile.c:617 modules/file/rawxyz.c:605
 msgid "S_quare sample"
 msgstr "Campione quadrato"
 
@@ -4471,8 +4533,7 @@ msgstr "bytes"
 msgid "_Sample size:"
 msgstr "Dimensioni campione:"
 
-#: modules/file/rawfile.c:846
-#: modules/file/rawfile.c:854
+#: modules/file/rawfile.c:846 modules/file/rawfile.c:854
 #: modules/file/rawfile.c:862
 msgid "bits"
 msgstr "bits"
@@ -4531,8 +4592,7 @@ msgstr "informazioni"
 msgid "Preset l_ist"
 msgstr "Elenco predefinito"
 
-#: modules/file/rawfile.c:1008
-#: modules/process/calcoefs_load.c:216
+#: modules/file/rawfile.c:1008 modules/process/calcoefs_load.c:216
 msgid "verb|_Load"
 msgstr "verbo|_Carica"
 
@@ -4552,10 +4612,12 @@ msgstr "Nome predefinito:"
 #, c-format
 msgid ""
 "<b>Too short file</b>\n"
-"The format would require %u bytes long file (at least), but the length of `%s' is only %u bytes."
+"The format would require %u bytes long file (at least), but the length of `"
+"%s' is only %u bytes."
 msgstr ""
 "<b>File troppo piccolo</b>\n"
-"Il formato richiederebbe un file lungo almeno %u bytes ma la lunghezza di %s'è solo %u bytes."
+"Il formato richiederebbe un file lungo almeno %u bytes ma la lunghezza di "
+"%s'è solo %u bytes."
 
 #: modules/file/rawfile.c:1138
 #, c-format
@@ -4579,7 +4641,8 @@ msgstr "Non abbastanza linee (%d) per l'offset (%d)"
 #: modules/file/rawfile.c:2125
 #, c-format
 msgid "Expected whitespace to skip more fields in row %u, got `%.16s'"
-msgstr "Mi aspettavo uno spazio per saltare più campi in fila  %u, ottenuto `%.16s'"
+msgstr ""
+"Mi aspettavo uno spazio per saltare più campi in fila  %u, ottenuto `%.16s'"
 
 #: modules/file/rawfile.c:2139
 #, c-format
@@ -4591,8 +4654,7 @@ msgstr "Mi aspettavo `%c' per saltare più campi in fila  %u, ottenuto `%.16s'"
 msgid "Expected `%s' to skip more fields in row %u, got `%.16s'"
 msgstr "Mi aspettavo `%s' per saltare più campi in fila  %u, ottenuto `%.16s'"
 
-#: modules/file/rawfile.c:2170
-#: modules/file/rawfile.c:2184
+#: modules/file/rawfile.c:2170 modules/file/rawfile.c:2184
 #: modules/file/rawfile.c:2210
 #, c-format
 msgid "Garbage `%.16s' in row %u, column %u"
@@ -4601,12 +4663,14 @@ msgstr "Dati invalidi`%.16s' nella riga %u, colonna %u"
 #: modules/file/rawfile.c:2196
 #, c-format
 msgid "Expected delimiter `%c' after data in row %u, column %u, got `%c'"
-msgstr "Delimitatore aspettato`%c' dopo dati in fila %u, colonna %u, ottenuto`%c'"
+msgstr ""
+"Delimitatore aspettato`%c' dopo dati in fila %u, colonna %u, ottenuto`%c'"
 
 #: modules/file/rawfile.c:2222
 #, c-format
 msgid "Expected delimiter `%s' after data in row %u, column %u, got `%.16s'"
-msgstr "Delimitatore aspettato`%s' dopo dati in fila %u, colonna %u, ottenuto`%.16s'"
+msgstr ""
+"Delimitatore aspettato`%s' dopo dati in fila %u, colonna %u, ottenuto`%.16s'"
 
 #: modules/file/rawgraph.c:98
 msgid "Imports simple text files as graph curves."
@@ -4680,27 +4744,18 @@ msgstr "Intervallo _Y:"
 msgid "_Lateral units:"
 msgstr "Unità laterale:"
 
-#: modules/file/rawxyz.c:641
-#: modules/process/dimensions.h:492
+#: modules/file/rawxyz.c:641 modules/process/dimensions.h:492
 msgid "_Value units:"
 msgstr "unità _Valore:"
 
-#: modules/file/rawxyz.c:674
-#: modules/process/drift.c:291
-#: modules/process/dwt.c:204
-#: modules/process/dwtanisotropy.c:201
-#: modules/process/fft_filter_1d.c:329
-#: modules/process/fft_profile.c:298
-#: modules/process/fractal.c:228
-#: modules/process/nanoindent_adjust.c:228
-#: modules/process/polydistort.c:268
-#: modules/process/rotate.c:293
-#: modules/process/scale.c:248
-#: modules/process/unrotate.c:282
-#: modules/tools/linestats.c:400
-#: modules/tools/profile.c:443
-#: modules/tools/roughness.c:869
-#: modules/tools/sfunctions.c:430
+#: modules/file/rawxyz.c:674 modules/process/drift.c:291
+#: modules/process/dwt.c:204 modules/process/dwtanisotropy.c:201
+#: modules/process/fft_filter_1d.c:329 modules/process/fft_profile.c:298
+#: modules/process/fractal.c:228 modules/process/nanoindent_adjust.c:228
+#: modules/process/polydistort.c:268 modules/process/rotate.c:293
+#: modules/process/scale.c:248 modules/process/unrotate.c:282
+#: modules/tools/linestats.c:400 modules/tools/profile.c:443
+#: modules/tools/roughness.c:869 modules/tools/sfunctions.c:430
 msgid "_Interpolation type:"
 msgstr "Tipo di interpolazione:"
 
@@ -4708,23 +4763,19 @@ msgstr "Tipo di interpolazione:"
 msgid "Field"
 msgstr "Campo"
 
-#: modules/file/rawxyz.c:691
-#: modules/process/polydistort.c:284
+#: modules/file/rawxyz.c:691 modules/process/polydistort.c:284
 msgid "_Exterior type:"
 msgstr "Tipo _Esteriore:"
 
-#: modules/file/rawxyz.c:699
-#: modules/process/polydistort.c:277
+#: modules/file/rawxyz.c:699 modules/process/polydistort.c:277
 msgid "exterior|Border"
 msgstr "esterno|Bordo"
 
-#: modules/file/rawxyz.c:701
-#: modules/process/polydistort.c:279
+#: modules/file/rawxyz.c:701 modules/process/polydistort.c:279
 msgid "exterior|Mirror"
 msgstr "esterno|Specchio"
 
-#: modules/file/rawxyz.c:703
-#: modules/process/polydistort.c:281
+#: modules/file/rawxyz.c:703 modules/process/polydistort.c:281
 msgid "exterior|Periodic"
 msgstr "esteriore|Periodico"
 
@@ -4760,8 +4811,7 @@ msgstr "Importa file dati SPM3 RHK Technology"
 msgid "RHK SM3 files (.sm3)"
 msgstr "File RHK SPM3 (.sm3)"
 
-#: modules/file/rhk-sm3.c:328
-#: modules/file/rhk-sm3.c:341
+#: modules/file/rhk-sm3.c:328 modules/file/rhk-sm3.c:341
 msgid "End of file reached in page header."
 msgstr "Termine file raggiunto nell'intestazione della pagina."
 
@@ -4787,30 +4837,30 @@ msgstr "Termine file raggiunto nei dati colore."
 msgid "Unknown line %d"
 msgstr "Linea %d sconosciuta"
 
-#: modules/file/rhk-sm4.c:339
+#: modules/file/rhk-sm4.c:371
 msgid "Imports RHK Technology SM4 data files."
 msgstr "Importa file dati SM4 RHK Technology"
 
-#: modules/file/rhk-sm4.c:359
+#: modules/file/rhk-sm4.c:391
 msgid "RHK SM4 files (.sm4)"
 msgstr "File RHK SM4 (.sm4)"
 
-#: modules/file/rhk-sm4.c:544
+#: modules/file/rhk-sm4.c:603
 #, c-format
 msgid "Object %s is truncated."
 msgstr "Oggetto %s troncato"
 
-#: modules/file/rhk-sm4.c:772
+#: modules/file/rhk-sm4.c:886
 #, c-format
 msgid "Object list in %s is truncated."
 msgstr "Lista oggetti in %s troncata"
 
-#: modules/file/rhk-sm4.c:789
+#: modules/file/rhk-sm4.c:903
 #, c-format
 msgid "Object of type %s is truncated."
 msgstr "Oggetto di tipo %s troncato"
 
-#: modules/file/rhk-sm4.c:814
+#: modules/file/rhk-sm4.c:928
 #, c-format
 msgid "Cannot find object %s in %s."
 msgstr "Impossibile trovare oggetto %s in %s."
@@ -4906,8 +4956,12 @@ msgid "Seiko files (.xqb, .xqd, .xqt)"
 msgstr "File Seiko (.xqb, .xqd, .xqt) "
 
 #: modules/file/seiko.c:239
-msgid "Cannot determine scan dimensions; it seems non-square with an unknown side ratio."
-msgstr "Impossibile determinare le dimensioni della scansione; sembra non essere quadrata con un rapporto tra i lati sconosciuto"
+msgid ""
+"Cannot determine scan dimensions; it seems non-square with an unknown side "
+"ratio."
+msgstr ""
+"Impossibile determinare le dimensioni della scansione; sembra non essere "
+"quadrata con un rapporto tra i lati sconosciuto"
 
 #: modules/file/sensofar.c:200
 msgid "Imports Sensofar PLu file format, version 2000 or newer."
@@ -4917,8 +4971,7 @@ msgstr "importa formato file Sensofar PLu versione 2000 o superiori"
 msgid "Sensofar PLu files (.plu)"
 msgstr "File Sensofar PLu (.plu)"
 
-#: modules/file/sensofar.c:488
-#: modules/file/sensofar.c:502
+#: modules/file/sensofar.c:488 modules/file/sensofar.c:502
 msgid "Profile"
 msgstr "Profilo"
 
@@ -4975,8 +5028,7 @@ msgstr "Informazioni parametro troppo brevi."
 msgid "Unexpected image block."
 msgstr "Blocco immagine inaspettato."
 
-#: modules/file/sis.c:994
-#: modules/file/sis.c:1025
+#: modules/file/sis.c:994 modules/file/sis.c:1025
 msgid "End of file reached in image block."
 msgstr "Termine file raggiunto in blocco immagine."
 
@@ -5150,8 +5202,12 @@ msgid "resolution"
 msgstr "risoluzione"
 
 #: modules/file/unisoku.c:321
-msgid "Missing or invalid some integers heaven knows what they mean but that should be here."
-msgstr "Mancante o non valido. Alcuni interi, il diavolo sa cosa significhino ma dovrebbero essere qui (N.d.T: traduzione testuale)"
+msgid ""
+"Missing or invalid some integers heaven knows what they mean but that should "
+"be here."
+msgstr ""
+"Mancante o non valido. Alcuni interi, il diavolo sa cosa significhino ma "
+"dovrebbero essere qui (N.d.T: traduzione testuale)"
 
 #: modules/file/unisoku.c:335
 msgid "x scale parameters"
@@ -5246,56 +5302,42 @@ msgstr "/_Dimensioni .Critiche .."
 msgid "Fit critical dimension"
 msgstr "Adatta dimensione critica"
 
-#: modules/graph/graph_cd.c:210
-#: modules/graph/graph_fit.c:254
+#: modules/graph/graph_cd.c:210 modules/graph/graph_fit.c:254
 msgid "Fit Graph"
 msgstr "Adatta Grafico"
 
-#: modules/graph/graph_cd.c:214
-#: modules/graph/graph_fdfit.c:253
-#: modules/graph/graph_fit.c:258
-#: modules/process/fit_2d.c:239
+#: modules/graph/graph_cd.c:214 modules/graph/graph_fdfit.c:253
+#: modules/graph/graph_fit.c:258 modules/process/fit_2d.c:239
 msgid "verb|_Fit"
 msgstr "verbo|_Adatta"
 
-#: modules/graph/graph_cd.c:236
-#: modules/graph/graph_cut.c:162
-#: modules/graph/graph_fdfit.c:279
-#: modules/graph/graph_fit.c:284
+#: modules/graph/graph_cd.c:236 modules/graph/graph_cut.c:162
+#: modules/graph/graph_fdfit.c:279 modules/graph/graph_fit.c:284
 msgid "_Graph curve:"
 msgstr "_Curva Grafico"
 
-#: modules/graph/graph_cd.c:250
-#: modules/graph/graph_fdfit.c:293
+#: modules/graph/graph_cd.c:250 modules/graph/graph_fdfit.c:293
 #: modules/graph/graph_fit.c:298
 msgid "F_unction:"
 msgstr "F_unzione:"
 
-#: modules/graph/graph_cd.c:279
-#: modules/graph/graph_fdfit.c:334
-#: modules/graph/graph_fit.c:334
-#: modules/process/curvature.c:726
+#: modules/graph/graph_cd.c:279 modules/graph/graph_fdfit.c:334
+#: modules/graph/graph_fit.c:334 modules/process/curvature.c:726
 msgid "Parameter"
 msgstr "Parametro"
 
-#: modules/graph/graph_cd.c:281
-#: modules/graph/graph_fdfit.c:336
-#: modules/graph/graph_fit.c:336
-#: modules/process/fit_2d.c:335
+#: modules/graph/graph_cd.c:281 modules/graph/graph_fdfit.c:336
+#: modules/graph/graph_fit.c:336 modules/process/fit_2d.c:335
 msgid "Error"
 msgstr "Errore"
 
-#: modules/graph/graph_cd.c:293
-#: modules/graph/graph_cut.c:192
-#: modules/graph/graph_fdfit.c:388
-#: modules/graph/graph_fit.c:388
+#: modules/graph/graph_cd.c:293 modules/graph/graph_cut.c:192
+#: modules/graph/graph_fdfit.c:388 modules/graph/graph_fit.c:388
 msgid "Range:"
 msgstr "Intervallo:"
 
-#: modules/graph/graph_cd.c:304
-#: modules/graph/graph_cut.c:203
-#: modules/graph/graph_fdfit.c:399
-#: modules/graph/graph_fit.c:399
+#: modules/graph/graph_cd.c:304 modules/graph/graph_cut.c:203
+#: modules/graph/graph_fdfit.c:399 modules/graph/graph_fit.c:399
 msgid "range|to"
 msgstr "fino a"
 
@@ -5303,78 +5345,63 @@ msgstr "fino a"
 msgid "_Draw whole circle"
 msgstr "_Disegna cerchio"
 
-#: modules/graph/graph_cd.c:374
-#: modules/graph/graph_fdfit.c:483
-#: modules/graph/graph_fit.c:493
-#: modules/process/fit_2d.c:932
+#: modules/graph/graph_cd.c:374 modules/graph/graph_fdfit.c:483
+#: modules/graph/graph_fit.c:493 modules/process/fit_2d.c:932
 msgid "Save Fit Report"
 msgstr "Salva il Fit Report"
 
-#: modules/graph/graph_cd.c:511
-#: modules/graph/graph_cd.c:1115
-#: modules/graph/graph_fdfit.c:691
-#: modules/graph/graph_fit.c:715
+#: modules/graph/graph_cd.c:511 modules/graph/graph_cd.c:1115
+#: modules/graph/graph_fdfit.c:691 modules/graph/graph_fit.c:715
 msgid "Fit"
 msgstr "Adatta"
 
-#: modules/graph/graph_cd.c:537
-#: modules/graph/graph_fdfit.c:731
+#: modules/graph/graph_cd.c:537 modules/graph/graph_fdfit.c:731
 #: modules/graph/graph_fit.c:755
 msgid "It is necessary to select more data points than free fit parameters"
-msgstr "E' necessario selezionare un numero di dati maggiore dei parametri di fit libero."
+msgstr ""
+"E' necessario selezionare un numero di dati maggiore dei parametri di fit "
+"libero."
 
-#: modules/graph/graph_cd.c:692
-#: modules/graph/graph_fdfit.c:780
-#: modules/graph/graph_fit.c:804
-#: modules/tools/grainmeasure.c:215
-#: modules/tools/readvalue.c:576
-#: modules/tools/readvalue.c:577
-#: modules/tools/roughness.c:957
-#: modules/tools/stats.c:661
-#: modules/tools/stats.c:672
-#: modules/tools/stats.c:673
-#: modules/tools/stats.c:1050
-#: modules/tools/stats.c:1057
+#: modules/graph/graph_cd.c:692 modules/graph/graph_fdfit.c:780
+#: modules/graph/graph_fit.c:804 modules/tools/grainmeasure.c:215
+#: modules/tools/readvalue.c:576 modules/tools/readvalue.c:577
+#: modules/tools/roughness.c:957 modules/tools/stats.c:661
+#: modules/tools/stats.c:672 modules/tools/stats.c:673
+#: modules/tools/stats.c:1050 modules/tools/stats.c:1057
 #: modules/tools/stats.c:1059
 msgid "N.A."
 msgstr "N.A."
 
-#: modules/graph/graph_cd.c:1001
-#: modules/graph/graph_fdfit.c:1365
+#: modules/graph/graph_cd.c:1001 modules/graph/graph_fdfit.c:1365
 #: modules/graph/graph_fit.c:1408
 msgid "===== Fit Results ====="
 msgstr "===== Risultati del Fit ====="
 
-#: modules/graph/graph_cd.c:1005
-#: modules/graph/graph_fdfit.c:1369
+#: modules/graph/graph_cd.c:1005 modules/graph/graph_fdfit.c:1369
 #: modules/graph/graph_fit.c:1412
 #, c-format
 msgid "Data:             %s\n"
 msgstr "Dati:             %s\n"
 
-#: modules/graph/graph_cd.c:1008
-#: modules/graph/graph_fdfit.c:1372
+#: modules/graph/graph_cd.c:1008 modules/graph/graph_fdfit.c:1372
 #: modules/graph/graph_fit.c:1415
 #, c-format
 msgid "Number of points: %d of %d\n"
 msgstr "Numero di punti: %d di %d\n"
 
-#: modules/graph/graph_cd.c:1012
-#: modules/graph/graph_fdfit.c:1376
+#: modules/graph/graph_cd.c:1012 modules/graph/graph_fdfit.c:1376
 #: modules/graph/graph_fit.c:1419
 #, c-format
 msgid "X range:          %.*f to %.*f %s\n"
 msgstr "Intervallo X :          da %.*f a %.*f %s\n"
 
-#: modules/graph/graph_cd.c:1018
-#: modules/graph/graph_fdfit.c:1382
+#: modules/graph/graph_cd.c:1018 modules/graph/graph_fdfit.c:1382
 #: modules/graph/graph_fit.c:1425
 #, c-format
 msgid "Fitted function:  %s\n"
 msgstr "Funzione adattata:  %s\n"
 
-#: modules/graph/graph_cd.c:1021
-#: modules/graph/graph_fdfit.c:1385
+#: modules/graph/graph_cd.c:1021 modules/graph/graph_fdfit.c:1385
 #: modules/graph/graph_fit.c:1428
 msgid "Results\n"
 msgstr "Risultati\n"
@@ -5505,70 +5532,58 @@ msgstr "Adatta una curva forza-distanza"
 msgid "Fit FD Curve"
 msgstr "Fit Curva FD..."
 
-#: modules/graph/graph_fdfit.c:257
-#: modules/graph/graph_fit.c:262
+#: modules/graph/graph_fdfit.c:257 modules/graph/graph_fit.c:262
 #: modules/process/fit_2d.c:241
 msgid "verb|_Estimate"
 msgstr "verbo|_Stima"
 
-#: modules/graph/graph_fdfit.c:259
-#: modules/graph/graph_fit.c:264
+#: modules/graph/graph_fdfit.c:259 modules/graph/graph_fit.c:264
 #: modules/process/fit_2d.c:243
 msgid "_Plot Inits"
 msgstr "_Metti in grafico inits"
 
-#: modules/graph/graph_fdfit.c:332
-#: modules/graph/graph_fit.c:332
+#: modules/graph/graph_fdfit.c:332 modules/graph/graph_fit.c:332
 #: modules/process/fit_2d.c:339
 msgid "Fix"
 msgstr "Fissa"
 
-#: modules/graph/graph_fdfit.c:338
-#: modules/graph/graph_fit.c:338
+#: modules/graph/graph_fdfit.c:338 modules/graph/graph_fit.c:338
 #: modules/process/fit_2d.c:326
 msgid "Initial"
 msgstr "Iniziale"
 
-#: modules/graph/graph_fdfit.c:349
-#: modules/graph/graph_fit.c:349
+#: modules/graph/graph_fdfit.c:349 modules/graph/graph_fit.c:349
 #: modules/process/fit_2d.c:411
 msgid "χ<sup>2</sup> result:"
 msgstr "χ<sup>2</sup> risulta:"
 
-#: modules/graph/graph_fdfit.c:365
-#: modules/graph/graph_fit.c:365
+#: modules/graph/graph_fdfit.c:365 modules/graph/graph_fit.c:365
 #: modules/process/fit_2d.c:394
 msgid "Correlation Matrix"
 msgstr "Matrice di Correlazione"
 
-#: modules/graph/graph_fdfit.c:420
-#: modules/graph/graph_fit.c:430
+#: modules/graph/graph_fdfit.c:420 modules/graph/graph_fit.c:430
 msgid "Instant:"
 msgstr "Istante:"
 
-#: modules/graph/graph_fdfit.c:423
-#: modules/graph/graph_fit.c:433
+#: modules/graph/graph_fdfit.c:423 modules/graph/graph_fit.c:433
 msgid "e_stimate"
 msgstr "Stima"
 
-#: modules/graph/graph_fdfit.c:430
-#: modules/graph/graph_fit.c:440
+#: modules/graph/graph_fdfit.c:430 modules/graph/graph_fit.c:440
 msgid "p_lot"
 msgstr "grafico"
 
-#: modules/graph/graph_fdfit.c:690
-#: modules/graph/graph_fit.c:714
+#: modules/graph/graph_fdfit.c:690 modules/graph/graph_fit.c:714
 msgid "Estimate"
 msgstr "Stima"
 
-#: modules/graph/graph_fdfit.c:1412
-#: modules/graph/graph_fit.c:1455
+#: modules/graph/graph_fdfit.c:1412 modules/graph/graph_fit.c:1455
 #, c-format
 msgid "Residual sum:   %g\n"
 msgstr "Somma residuale:   %g\n"
 
-#: modules/graph/graph_fdfit.c:1415
-#: modules/graph/graph_fit.c:1458
+#: modules/graph/graph_fdfit.c:1415 modules/graph/graph_fit.c:1458
 msgid "Correlation matrix\n"
 msgstr "Matrice di correlazione\n"
 
@@ -5613,16 +5628,25 @@ msgid "Layer allowing selection of arbitrary straight lines."
 msgstr "Permette la selezione di linee rette orientate arbitrariamente"
 
 #: modules/layer/point.c:141
-msgid "Layer allowing selection of several points, displayed as crosses or inivisible."
-msgstr "Permette la selezione di punti differenti mostrati come sezioni o invisibili."
+msgid ""
+"Layer allowing selection of several points, displayed as crosses or "
+"inivisible."
+msgstr ""
+"Permette la selezione di punti differenti mostrati come sezioni o invisibili."
 
 #: modules/layer/rectangle.c:143
 msgid "Layer allowing selection of rectangular areas."
 msgstr "Permette la selezione di aree rettangolari"
 
 #: modules/plugin-proxy.c:144
-msgid "Plug-in proxy is a module capable of querying, registering, and running external programs (plug-ins) on data pretending they are data processing or file loading/saving modules."
-msgstr "Il plug-in proxy è un modulo capace di interrogare registrare e avviare programmi esterni (plug in) sui dati come se fossero moduli di elaborazione dati o di caricamento/salvataggio file."
+msgid ""
+"Plug-in proxy is a module capable of querying, registering, and running "
+"external programs (plug-ins) on data pretending they are data processing or "
+"file loading/saving modules."
+msgstr ""
+"Il plug-in proxy è un modulo capace di interrogare registrare e avviare "
+"programmi esterni (plug in) sui dati come se fossero moduli di elaborazione "
+"dati o di caricamento/salvataggio file."
 
 #: modules/plugin-proxy.c:462
 msgid "/_Plug-Ins"
@@ -5633,8 +5657,7 @@ msgstr "/_Plug-In"
 msgid "Run plug-in %s"
 msgstr "Esegui plug-in %s"
 
-#: modules/plugin-proxy.c:736
-#: modules/plugin-proxy.c:837
+#: modules/plugin-proxy.c:736 modules/plugin-proxy.c:837
 msgid "Plugin-proxy must be run as interactive."
 msgstr "Il Plugin-proxy deve essere eseguito in modo interattivo."
 
@@ -5648,14 +5671,12 @@ msgstr "Il Plug-in `%s' non implementa il caricamento file."
 msgid "Cannot read temporary file: %s."
 msgstr "Impossibile leggere file temporaneo: %s. "
 
-#: modules/plugin-proxy.c:767
-#: modules/plugin-proxy.c:862
+#: modules/plugin-proxy.c:767 modules/plugin-proxy.c:862
 #, c-format
 msgid "Cannot execute plug-in `%s': %s."
 msgstr "Impossibile eseguire il plug-in `%s': %s."
 
-#: modules/plugin-proxy.c:776
-#: modules/plugin-proxy.c:871
+#: modules/plugin-proxy.c:776 modules/plugin-proxy.c:871
 #, c-format
 msgid "Plug-in `%s' returned non-zero exit status: %d."
 msgstr "Plug-in `%s' ha rimandato un valore di uscita diverso da zero: %d."
@@ -5670,8 +5691,7 @@ msgstr "Il Plug-in `%s' non ha rimandato dati significativi."
 msgid "Plug-in `%s' does not implement file saving."
 msgstr "Il Plug-in `%s' non implementa il salvataggio file."
 
-#: modules/plugin-proxy.c:1203
-#: modules/plugin-proxy.c:1212
+#: modules/plugin-proxy.c:1203 modules/plugin-proxy.c:1212
 #, c-format
 msgid "Cannot create a temporary file: %s."
 msgstr "Impossibile creare file temporaneo: %s."
@@ -5698,8 +5718,12 @@ msgid "2D ACF"
 msgstr "2D ACF"
 
 #: modules/process/angle_dist.c:99
-msgid "Calculates two-dimensional distribution of angles, that is projections of slopes to all directions."
-msgstr "Calcola distribuzione di angoli bidimensionale, proiezione delle pendenze in tutte le direzioni"
+msgid ""
+"Calculates two-dimensional distribution of angles, that is projections of "
+"slopes to all directions."
+msgstr ""
+"Calcola distribuzione di angoli bidimensionale, proiezione delle pendenze in "
+"tutte le direzioni"
 
 #: modules/process/angle_dist.c:114
 msgid "/_Statistics/An_gle Distribution..."
@@ -5721,28 +5745,23 @@ msgstr "Distribuzione angolare"
 msgid "Angle Distribution"
 msgstr "Distribuzione Angolare"
 
-#: modules/process/angle_dist.c:186
-#: modules/process/slope_dist.c:238
+#: modules/process/angle_dist.c:186 modules/process/slope_dist.c:238
 msgid "Output _size:"
 msgstr "Dimensione output:"
 
-#: modules/process/angle_dist.c:191
-#: modules/process/grain_wshed.c:232
+#: modules/process/angle_dist.c:191 modules/process/grain_wshed.c:232
 msgid "_Number of steps:"
 msgstr "_Numero step:"
 
-#: modules/process/angle_dist.c:196
-#: modules/process/slope_dist.c:243
+#: modules/process/angle_dist.c:196 modules/process/slope_dist.c:243
 msgid "_Logarithmic value scale"
 msgstr "_Scala di valore logaritmica"
 
-#: modules/process/angle_dist.c:202
-#: modules/process/slope_dist.c:249
+#: modules/process/angle_dist.c:202 modules/process/slope_dist.c:249
 msgid "Use local plane _fitting"
 msgstr "Uso plane _fitting locale"
 
-#: modules/process/angle_dist.c:211
-#: modules/process/slope_dist.c:258
+#: modules/process/angle_dist.c:211 modules/process/slope_dist.c:258
 msgid "_Plane size:"
 msgstr "Dimensioni piano:"
 
@@ -5758,8 +5777,7 @@ msgstr "/Dati _Multipli/_Aritmetica..."
 msgid "Arithmetic operations on data"
 msgstr "Operazioni aritmetiche sui dati"
 
-#: modules/process/arithmetic.c:196
-#: modules/process/superresolution.c:353
+#: modules/process/arithmetic.c:196 modules/process/superresolution.c:353
 msgid "Calculated"
 msgstr "Calcolato"
 
@@ -5775,8 +5793,7 @@ msgstr "_Espressione:"
 msgid "Operands"
 msgstr "Operandi"
 
-#: modules/process/arithmetic.c:299
-#: modules/process/dimensions.h:481
+#: modules/process/arithmetic.c:299 modules/process/dimensions.h:481
 msgid "Units"
 msgstr "Unità"
 
@@ -5797,18 +5814,15 @@ msgstr "Specificare esplicitamente unità risultato"
 msgid "Expression contains unknown identifiers"
 msgstr "L'espressione contiene identificatori sconosciuti"
 
-#: modules/process/arithmetic.c:565
-#: modules/process/superresolution.c:304
+#: modules/process/arithmetic.c:565 modules/process/superresolution.c:304
 msgid "Pixel dimensions differ"
 msgstr "Le dimensioni in pixel differiscono"
 
-#: modules/process/arithmetic.c:567
-#: modules/process/superresolution.c:306
+#: modules/process/arithmetic.c:567 modules/process/superresolution.c:306
 msgid "Lateral dimensions are different physical quantities"
 msgstr "Le dimensioni laterali sono quantità fisiche differenti"
 
-#: modules/process/arithmetic.c:570
-#: modules/process/superresolution.c:309
+#: modules/process/arithmetic.c:570 modules/process/superresolution.c:309
 msgid "Physical dimensions differ"
 msgstr "Le dimensioni fisiche differiscono"
 
@@ -5833,8 +5847,12 @@ msgid "Select area of interest"
 msgstr "Selezionare area di interesse"
 
 #: modules/process/basicops.c:55
-msgid "Basic operations like flipping, value inversion, and rotation by multiples of 90 degrees."
-msgstr "Operazioni base quali, capovolgimento, inversione valori e rotazione per multipli di 90 gradi"
+msgid ""
+"Basic operations like flipping, value inversion, and rotation by multiples "
+"of 90 degrees."
+msgstr ""
+"Operazioni base quali, capovolgimento, inversione valori e rotazione per "
+"multipli di 90 gradi"
 
 #: modules/process/basicops.c:70
 msgid "/_Basic Operations/_Invert Value"
@@ -5898,7 +5916,8 @@ msgstr "/Operazioni Base/Offset nulli"
 
 #: modules/process/basicops.c:124
 msgid "Null horizontall offsets, moving the origin to the upper left corner"
-msgstr "Offset orizzontali nulli, spostamento origine nell'angolo superiore sinistro"
+msgstr ""
+"Offset orizzontali nulli, spostamento origine nell'angolo superiore sinistro"
 
 #: modules/process/calcoefs_load.c:79
 msgid "Load calibration data from text file"
@@ -5917,8 +5936,7 @@ msgstr "Carica dati calibrazione da un file di testo."
 msgid "Error loading file: %s\n"
 msgstr "Errore nel caricare il file: %s\n"
 
-#: modules/process/calcoefs_load.c:173
-#: modules/process/calcoefs_new.c:309
+#: modules/process/calcoefs_load.c:173 modules/process/calcoefs_new.c:309
 #, c-format
 msgid "Cannot save preset: %s"
 msgstr "Impossibile salvare il preimpostato: %s"
@@ -5927,8 +5945,7 @@ msgstr "Impossibile salvare il preimpostato: %s"
 msgid "Load Calibration Data"
 msgstr "Carica Dati Calibrazione"
 
-#: modules/process/calcoefs_load.c:228
-#: modules/process/calcoefs_new.c:566
+#: modules/process/calcoefs_load.c:228 modules/process/calcoefs_new.c:566
 #: modules/process/calcoefs_simple.c:474
 msgid "Calibration name:"
 msgstr "Nome Calibrazione:"
@@ -5937,21 +5954,18 @@ msgstr "Nome Calibrazione:"
 msgid "No data loaded"
 msgstr "nessun dato caricato"
 
-#: modules/process/calcoefs_load.c:267
-#: modules/process/calcoefs_new.c:635
+#: modules/process/calcoefs_load.c:267 modules/process/calcoefs_new.c:635
 #: modules/process/calcoefs_simple.c:538
 #, c-format
 msgid "Calibration '%s' already exists"
 msgstr "Calibrazione `%s già esistente. "
 
-#: modules/process/calcoefs_load.c:269
-#: modules/process/calcoefs_new.c:637
+#: modules/process/calcoefs_load.c:269 modules/process/calcoefs_new.c:637
 #: modules/process/calcoefs_simple.c:540
 msgid "Overwrite"
 msgstr "Sovrascrivi"
 
-#: modules/process/calcoefs_load.c:270
-#: modules/process/calcoefs_new.c:638
+#: modules/process/calcoefs_load.c:270 modules/process/calcoefs_new.c:638
 #: modules/process/calcoefs_simple.c:541
 msgid "Append"
 msgstr "Aggiungi"
@@ -6054,8 +6068,7 @@ msgstr ""
 msgid "Simple Error Map"
 msgstr "Mappa Errore Semplice"
 
-#: modules/process/calcoefs_simple.c:342
-#: modules/process/calcoefs_stage.c:149
+#: modules/process/calcoefs_simple.c:342 modules/process/calcoefs_stage.c:149
 #: modules/process/superresolution.c:159
 msgid "Operands:"
 msgstr "Operandi:"
@@ -6064,19 +6077,16 @@ msgstr "Operandi:"
 msgid "Grating image"
 msgstr ""
 
-#: modules/process/calcoefs_simple.c:349
-#: modules/tools/crop.c:394
+#: modules/process/calcoefs_simple.c:349 modules/tools/crop.c:394
 msgid "Detail"
 msgstr "Dettaglio"
 
-#: modules/process/calcoefs_simple.c:370
-#: modules/process/calcoefs_view.c:508
+#: modules/process/calcoefs_simple.c:370 modules/process/calcoefs_view.c:508
 #: modules/process/calibrate.c:367
 msgid "_X offset:"
 msgstr "_X offset:"
 
-#: modules/process/calcoefs_simple.c:397
-#: modules/process/calcoefs_view.c:534
+#: modules/process/calcoefs_simple.c:397 modules/process/calcoefs_view.c:534
 #: modules/process/calibrate.c:380
 msgid "_Y offset:"
 msgstr "_Y offset:"
@@ -6089,8 +6099,7 @@ msgstr "_periodo X:"
 msgid "Y p_eriod:"
 msgstr "p_eriodo Y:"
 
-#: modules/process/calcoefs_simple.c:437
-#: modules/process/calcoefs_view.c:546
+#: modules/process/calcoefs_simple.c:437 modules/process/calcoefs_view.c:546
 msgid "_Z offset:"
 msgstr "_Z offset:"
 
@@ -6119,20 +6128,15 @@ msgstr "Trovati %d oggetti"
 msgid "Search cancelled"
 msgstr "Ricerca cancellata"
 
-#: modules/process/calcoefs_simple.c:630
-#: modules/process/grain_wshed.c:501
-#: modules/process/maskcor.c:327
-#: modules/process/mcrop.c:326
-#: modules/process/merge.c:683
-#: modules/process/tip_blind.c:559
+#: modules/process/calcoefs_simple.c:630 modules/process/grain_wshed.c:501
+#: modules/process/maskcor.c:327 modules/process/mcrop.c:326
+#: modules/process/merge.c:683 modules/process/tip_blind.c:559
 #: modules/process/tipops.c:307
 msgid "Initializing"
 msgstr "Inizializzazione"
 
-#: modules/process/calcoefs_simple.c:632
-#: modules/process/maskcor.c:329
-#: modules/process/mcrop.c:328
-#: modules/process/merge.c:685
+#: modules/process/calcoefs_simple.c:632 modules/process/maskcor.c:329
+#: modules/process/mcrop.c:328 modules/process/merge.c:685
 msgid "Correlating"
 msgstr "Correlazione"
 
@@ -6208,16 +6212,11 @@ msgstr "Interpolazione:"
 msgid "Crop to actual data"
 msgstr "Taglia dati effettivi"
 
-#: modules/process/calcoefs_view.c:584
-#: modules/process/deposit_synth.c:687
-#: modules/process/edge.c:711
-#: modules/process/fft_filter_1d.c:334
-#: modules/process/grain_edge.c:286
-#: modules/process/grain_mark.c:377
-#: modules/process/grain_rem_threshold.c:357
-#: modules/process/mark_with.c:356
-#: modules/process/polydistort.c:337
-#: modules/process/scars.c:575
+#: modules/process/calcoefs_view.c:584 modules/process/deposit_synth.c:687
+#: modules/process/edge.c:711 modules/process/fft_filter_1d.c:334
+#: modules/process/grain_edge.c:286 modules/process/grain_mark.c:377
+#: modules/process/grain_rem_threshold.c:357 modules/process/mark_with.c:356
+#: modules/process/polydistort.c:337 modules/process/scars.c:575
 #: modules/process/synth.h:483
 msgid "I_nstant updates"
 msgstr "_Aggiornamento immediato"
@@ -6263,33 +6262,27 @@ msgstr ""
 msgid "Triangulation..."
 msgstr "Triangolazione.."
 
-#: modules/process/calcoefs_view.c:1133
-#: modules/tools/profile.c:1096
+#: modules/process/calcoefs_view.c:1133 modules/tools/profile.c:1096
 msgid "X correction"
 msgstr "correzione X:"
 
-#: modules/process/calcoefs_view.c:1134
-#: modules/tools/profile.c:1097
+#: modules/process/calcoefs_view.c:1134 modules/tools/profile.c:1097
 msgid "Y correction"
 msgstr "correzione Y:"
 
-#: modules/process/calcoefs_view.c:1135
-#: modules/tools/profile.c:1098
+#: modules/process/calcoefs_view.c:1135 modules/tools/profile.c:1098
 msgid "Z correction"
 msgstr "correzione Z:"
 
-#: modules/process/calcoefs_view.c:1136
-#: modules/tools/profile.c:1099
+#: modules/process/calcoefs_view.c:1136 modules/tools/profile.c:1099
 msgid "X uncertainty"
 msgstr "Incertezza X"
 
-#: modules/process/calcoefs_view.c:1137
-#: modules/tools/profile.c:1100
+#: modules/process/calcoefs_view.c:1137 modules/tools/profile.c:1100
 msgid "Y uncertainty"
 msgstr "Incertezza Y"
 
-#: modules/process/calcoefs_view.c:1138
-#: modules/tools/profile.c:1101
+#: modules/process/calcoefs_view.c:1138 modules/tools/profile.c:1101
 msgid "Z uncertainty"
 msgstr "Incertezza Z"
 
@@ -6319,7 +6312,8 @@ msgstr "Delaunay"
 
 #: modules/process/calibrate.c:145
 msgid "Recalibrates scan lateral dimensions or value range."
-msgstr "Ricalibra le dimensioni o l'intervallo di valori delle scansioni laterali."
+msgstr ""
+"Ricalibra le dimensioni o l'intervallo di valori delle scansioni laterali."
 
 #: modules/process/calibrate.c:159
 msgid "/_Basic Operations/_Dimensions and Units..."
@@ -6393,16 +6387,11 @@ msgstr ""
 msgid "Generate columnar surface"
 msgstr "Generazione superficie colonnare"
 
-#: modules/process/col_synth.c:273
-#: modules/process/deposit_synth.c:315
-#: modules/process/deposit_synth.c:327
-#: modules/process/deposit_synth.c:548
-#: modules/process/deposit_synth.c:560
-#: modules/process/fft_synth.c:304
-#: modules/process/lno_synth.c:410
-#: modules/process/noise_synth.c:322
-#: modules/process/obj_synth.c:404
-#: modules/process/pat_synth.c:374
+#: modules/process/col_synth.c:273 modules/process/deposit_synth.c:315
+#: modules/process/deposit_synth.c:327 modules/process/deposit_synth.c:548
+#: modules/process/deposit_synth.c:560 modules/process/fft_synth.c:304
+#: modules/process/lno_synth.c:410 modules/process/noise_synth.c:322
+#: modules/process/obj_synth.c:404 modules/process/pat_synth.c:374
 msgid "Generated"
 msgstr "Generato"
 
@@ -6410,22 +6399,16 @@ msgstr "Generato"
 msgid "Grow Columnar Surface"
 msgstr ""
 
-#: modules/process/col_synth.c:364
-#: modules/process/deposit_synth.c:432
-#: modules/process/fft_synth.c:395
-#: modules/process/lno_synth.c:501
-#: modules/process/noise_synth.c:413
-#: modules/process/obj_synth.c:497
+#: modules/process/col_synth.c:364 modules/process/deposit_synth.c:432
+#: modules/process/fft_synth.c:395 modules/process/lno_synth.c:501
+#: modules/process/noise_synth.c:413 modules/process/obj_synth.c:497
 #: modules/process/pat_synth.c:467
 msgid "Dimensions"
 msgstr "Dimensioni"
 
-#: modules/process/col_synth.c:375
-#: modules/process/deposit_synth.c:442
-#: modules/process/fft_synth.c:406
-#: modules/process/lno_synth.c:512
-#: modules/process/noise_synth.c:424
-#: modules/process/obj_synth.c:508
+#: modules/process/col_synth.c:375 modules/process/deposit_synth.c:442
+#: modules/process/fft_synth.c:406 modules/process/lno_synth.c:512
+#: modules/process/noise_synth.c:424 modules/process/obj_synth.c:508
 #: modules/process/pat_synth.c:479
 msgid "Generator"
 msgstr "Generatore"
@@ -6434,16 +6417,13 @@ msgstr "Generatore"
 msgid "_Source:"
 msgstr "_Sorgente:"
 
-#: modules/process/col_synth.c:386
-#: modules/process/lno_synth.c:1054
+#: modules/process/col_synth.c:386 modules/process/lno_synth.c:1054
 #: modules/process/obj_synth.c:519
 msgid "Co_verage:"
 msgstr "Co_pertura:"
 
-#: modules/process/col_synth.c:404
-#: modules/process/fft_synth.c:415
-#: modules/process/lno_synth.c:548
-#: modules/process/noise_synth.c:456
+#: modules/process/col_synth.c:404 modules/process/fft_synth.c:415
+#: modules/process/lno_synth.c:548 modules/process/noise_synth.c:456
 #: modules/process/obj_synth.c:577
 msgid "_Like Current Channel"
 msgstr ""
@@ -6484,8 +6464,7 @@ msgstr "Filtro di convoluzione generale"
 msgid "Convolution Filter"
 msgstr "Filtro di Convoluzione"
 
-#: modules/process/convolution_filter.c:282
-#: modules/tools/filter.c:136
+#: modules/process/convolution_filter.c:282 modules/tools/filter.c:136
 #: modules/tools/filter.c:237
 msgid "Filter"
 msgstr "Filtro"
@@ -6562,8 +6541,7 @@ msgstr "Distanza X"
 msgid "Y Distance"
 msgstr "Distanza Y"
 
-#: modules/process/crosscor.c:236
-#: modules/process/fft.c:299
+#: modules/process/crosscor.c:236 modules/process/fft.c:299
 #: modules/process/maskcor.c:175
 msgid "Output _type:"
 msgstr "Tipo Output:"
@@ -6572,16 +6550,13 @@ msgstr "Tipo Output:"
 msgid "Add _low score results mask"
 msgstr "Aggiungi maschera risultati a bassa incidenza"
 
-#: modules/process/crosscor.c:253
-#: modules/process/grain_wshed.c:249
+#: modules/process/crosscor.c:253 modules/process/grain_wshed.c:249
 #: modules/process/maskcor.c:187
 msgid "T_hreshold:"
 msgstr "Soglia:"
 
-#: modules/process/crosscor.c:410
-#: modules/process/nanoindent_adjust.c:322
-#: modules/process/superresolution.c:418
-#: modules/process/superresolution.c:506
+#: modules/process/crosscor.c:410 modules/process/nanoindent_adjust.c:322
+#: modules/process/superresolution.c:418 modules/process/superresolution.c:506
 msgid "Initializing..."
 msgstr "Inizializzazione...."
 
@@ -6638,8 +6613,11 @@ msgid "Calculate overall curvature"
 msgstr "Calcolo curvatura globale"
 
 #: modules/process/curvature.c:202
-msgid "Curvature: Lateral dimensions and value must be the same physical quantity."
-msgstr "Curvatura: Le dimensioni laterali ed il valore devono avere le stesse dimensioni fisiche"
+msgid ""
+"Curvature: Lateral dimensions and value must be the same physical quantity."
+msgstr ""
+"Curvatura: Le dimensioni laterali ed il valore devono avere le stesse "
+"dimensioni fisiche"
 
 #: modules/process/curvature.c:433
 msgid "Curvature Sections"
@@ -6657,27 +6635,20 @@ msgstr "Regola selezione"
 msgid "_Plot graph"
 msgstr "_Traccia grafico"
 
-#: modules/process/curvature.c:684
-#: modules/process/facet-level.c:297
-#: modules/process/level.c:267
-#: modules/process/polylevel.c:495
-#: modules/tools/sfunctions.c:457
-#: modules/tools/stats.c:362
+#: modules/process/curvature.c:684 modules/process/facet-level.c:297
+#: modules/process/level.c:267 modules/process/polylevel.c:495
+#: modules/tools/sfunctions.c:457 modules/tools/stats.c:362
 msgid "Masking Mode"
 msgstr "Modalità Maschera"
 
-#: modules/process/curvature.c:754
-#: modules/process/grain_dist.c:827
-#: modules/tools/distance.c:227
-#: modules/tools/roughness.c:824
+#: modules/process/curvature.c:754 modules/process/grain_dist.c:827
+#: modules/tools/distance.c:227 modules/tools/roughness.c:824
 #: modules/tools/stats.c:423
 msgid "Save table to a file"
 msgstr "Salva tabella in file"
 
-#: modules/process/curvature.c:759
-#: modules/process/grain_dist.c:832
-#: modules/tools/distance.c:232
-#: modules/tools/roughness.c:829
+#: modules/process/curvature.c:759 modules/process/grain_dist.c:832
+#: modules/tools/distance.c:232 modules/tools/roughness.c:829
 #: modules/tools/stats.c:428
 msgid "Copy table to clipboard"
 msgstr "Copia tabella negli appunti"
@@ -6710,8 +6681,7 @@ msgstr "CWT"
 msgid "2D CWT"
 msgstr "2D CWT"
 
-#: modules/process/cwt.c:155
-#: modules/process/dwt.c:183
+#: modules/process/cwt.c:155 modules/process/dwt.c:183
 #: modules/process/dwtanisotropy.c:208
 msgid "_Wavelet type:"
 msgstr "Tipo _Wavelet:"
@@ -6744,13 +6714,11 @@ msgstr "_Copertura:"
 msgid "_Revise:"
 msgstr "_Revisione:"
 
-#: modules/process/deposit_synth.c:705
-#: modules/process/synth.h:518
+#: modules/process/deposit_synth.c:705 modules/process/synth.h:518
 msgid "R_andom seed:"
 msgstr "Seme casuale:"
 
-#: modules/process/deposit_synth.c:711
-#: modules/process/synth.h:524
+#: modules/process/deposit_synth.c:711 modules/process/synth.h:524
 msgid "seed|_New"
 msgstr "Seme|_Nuovo"
 
@@ -6830,12 +6798,9 @@ msgstr "Dati Corretti"
 msgid "Drift _lines"
 msgstr "Linee deriva"
 
-#: modules/process/drift.c:349
-#: modules/process/facet_analysis.c:411
-#: modules/process/grain_edge.c:279
-#: modules/process/grain_mark.c:370
-#: modules/process/grain_rem_threshold.c:350
-#: modules/process/grain_wshed.c:296
+#: modules/process/drift.c:349 modules/process/facet_analysis.c:411
+#: modules/process/grain_edge.c:279 modules/process/grain_mark.c:370
+#: modules/process/grain_rem_threshold.c:350 modules/process/grain_wshed.c:296
 #: modules/process/scars.c:568
 msgid "_Mask color:"
 msgstr "Colore _Maschera:"
@@ -6868,8 +6833,7 @@ msgstr "/_Trasformate Integrali/2D _DWT..."
 msgid "Compute Discrete Wavelet Transform"
 msgstr "Calcolo Discrete Wavelet Transform "
 
-#: modules/process/dwt.c:118
-#: modules/process/dwtanisotropy.c:130
+#: modules/process/dwt.c:118 modules/process/dwtanisotropy.c:130
 #, c-format
 msgid "%s: Data must be square."
 msgstr "%s: I Dati devono essere quadrati"
@@ -6893,7 +6857,8 @@ msgstr ""
 
 #: modules/process/dwtanisotropy.c:78
 msgid "2D DWT anisotropy detection based on X/Y components ratio."
-msgstr "Determinazione di anisotropia 2D DWT basata sul rapporto X/Y dei componenti"
+msgstr ""
+"Determinazione di anisotropia 2D DWT basata sul rapporto X/Y dei componenti"
 
 #: modules/process/dwtanisotropy.c:92
 msgid "/_Integral Transforms/DWT _Anisotropy..."
@@ -6920,8 +6885,12 @@ msgid "Low level exclude limit:"
 msgstr "Limite di esclusione inferiore:"
 
 #: modules/process/edge.c:147
-msgid "Several edge detection methods (Laplacian of Gaussian, Canny, and some experimental), creates presentation."
-msgstr "Alcuni metodi di individuazione dei bordi (Laplaciano di Gauss, Canny,altri sperimentali), crea presentazioni."
+msgid ""
+"Several edge detection methods (Laplacian of Gaussian, Canny, and some "
+"experimental), creates presentation."
+msgstr ""
+"Alcuni metodi di individuazione dei bordi (Laplaciano di Gauss, Canny,altri "
+"sperimentali), crea presentazioni."
 
 #: modules/process/edge.c:162
 msgid "/_Presentation/_Edge Detection/_Laplacian of Gaussian"
@@ -6953,7 +6922,8 @@ msgstr "/_Presentazione/_Determinazione Bordi/RMS _Bordo"
 
 #: modules/process/edge.c:189
 msgid "Local RMS value based step detection with postprocessing"
-msgstr "Determinazione step bordi basata su valore RSM locale con postprocessing"
+msgstr ""
+"Determinazione step bordi basata su valore RSM locale con postprocessing"
 
 #: modules/process/edge.c:193
 msgid "/_Presentation/_Edge Detection/Local _Nonlinearity"
@@ -7023,8 +6993,7 @@ msgstr "NRMS"
 msgid "verb|Display"
 msgstr "verbo|Mostra"
 
-#: modules/process/edge.c:703
-#: modules/process/fft_filter_2d.c:394
+#: modules/process/edge.c:703 modules/process/fft_filter_2d.c:394
 msgid "Original _image"
 msgstr "Immagine originale"
 
@@ -7037,8 +7006,12 @@ msgid "Detected st_ep"
 msgstr "Passi determinati"
 
 #: modules/process/facet-level.c:67
-msgid "Automatic facet-orientation based levelling. Levels data to make facets point up."
-msgstr "Livellamento automatico basato sull'orientamento delle facce. Livella i dati per esporre le facce verso l'alto."
+msgid ""
+"Automatic facet-orientation based levelling. Levels data to make facets "
+"point up."
+msgstr ""
+"Livellamento automatico basato sull'orientamento delle facce. Livella i dati "
+"per esporre le facce verso l'alto."
 
 #: modules/process/facet-level.c:82
 msgid "/_Level/_Facet Level"
@@ -7049,8 +7022,11 @@ msgid "Level data to make facets point upward"
 msgstr "Livella i dati orientando le facce verso l'alto"
 
 #: modules/process/facet-level.c:120
-msgid "Facet level: Lateral dimensions and value must be the same physical quantity."
-msgstr "Facet Level: Le dimensioni laterali ed il valore devono avere le stesse dimensioni fisiche"
+msgid ""
+"Facet level: Lateral dimensions and value must be the same physical quantity."
+msgstr ""
+"Facet Level: Le dimensioni laterali ed il valore devono avere le stesse "
+"dimensioni fisiche"
 
 #: modules/process/facet-level.c:132
 msgid "Facet Level"
@@ -7102,8 +7078,12 @@ msgid "_Tolerance:"
 msgstr "_Tolleranza:"
 
 #: modules/process/facet_analysis.c:420
-msgid "Warning: Lateral and value units differ. Angles are not physically meaningful."
-msgstr "Avvertenza: Le unità dei valori e laterali sono differenti. Gli angoli non hanno significato fisico."
+msgid ""
+"Warning: Lateral and value units differ. Angles are not physically "
+"meaningful."
+msgstr ""
+"Avvertenza: Le unità dei valori e laterali sono differenti. Gli angoli non "
+"hanno significato fisico."
 
 #: modules/process/fft.c:90
 msgid "Two-dimensional FFT (Fast Fourier Transform)."
@@ -7217,8 +7197,7 @@ msgstr "_Tipo Filtro:"
 msgid "1D FFT Filtered Data"
 msgstr "Dati filtrati 1D FFT"
 
-#: modules/process/fft_filter_2d.c:169
-#: modules/process/fft_filter_2d.c:439
+#: modules/process/fft_filter_2d.c:169 modules/process/fft_filter_2d.c:439
 msgid "2D FFT Filtering"
 msgstr "Filtro 2D FFT"
 
@@ -7234,8 +7213,7 @@ msgstr "Filtro FFT bidimensionale"
 msgid "Filtered Data"
 msgstr "Dati filtrati"
 
-#: modules/process/fft_filter_2d.c:315
-#: modules/process/fit_2d.c:680
+#: modules/process/fft_filter_2d.c:315 modules/process/fit_2d.c:680
 msgid "Difference"
 msgstr "Differenza"
 
@@ -7291,13 +7269,11 @@ msgstr "Maschera Filtro"
 msgid "_Undo"
 msgstr "_Annulla"
 
-#: modules/process/fft_filter_2d.c:529
-#: modules/tools/maskedit.c:548
+#: modules/process/fft_filter_2d.c:529 modules/tools/maskedit.c:548
 msgid "_Remove"
 msgstr "_Rimuovi"
 
-#: modules/process/fft_filter_2d.c:537
-#: modules/tools/maskedit.c:556
+#: modules/process/fft_filter_2d.c:537 modules/tools/maskedit.c:556
 msgid "_Fill"
 msgstr "_Riempimento"
 
@@ -7321,8 +7297,7 @@ msgstr "Ingrandisci:"
 msgid "Output Options"
 msgstr "Opzioni Output"
 
-#: modules/process/fft_filter_2d.c:621
-#: modules/process/slope_dist.c:216
+#: modules/process/fft_filter_2d.c:621 modules/process/slope_dist.c:216
 msgid "Output type:"
 msgstr "Tipo Output: "
 
@@ -7359,8 +7334,11 @@ msgid "Force shapes to center around the origin"
 msgstr "Forza le forme a centrarsi attorno all'origine"
 
 #: modules/process/fft_profile.c:119
-msgid "Reads radial sections of two-dimensional power spectrum density function."
-msgstr "Legge sezioni radiali della funzione di densità di potenza di spettro bidimensionale"
+msgid ""
+"Reads radial sections of two-dimensional power spectrum density function."
+msgstr ""
+"Legge sezioni radiali della funzione di densità di potenza di spettro "
+"bidimensionale"
 
 #: modules/process/fft_profile.c:134
 msgid "/_Statistics/_PSDF Section..."
@@ -7378,10 +7356,8 @@ msgstr "Sezione radiale PSDF"
 msgid "PSDF Section"
 msgstr "Sezione PSDF"
 
-#: modules/process/fft_profile.c:272
-#: modules/process/grain_dist.c:313
-#: modules/tools/linestats.c:375
-#: modules/tools/profile.c:415
+#: modules/process/fft_profile.c:272 modules/process/grain_dist.c:313
+#: modules/tools/linestats.c:375 modules/tools/profile.c:415
 #: modules/tools/sfunctions.c:405
 msgid "_Fix res.:"
 msgstr "_Fix res.:"
@@ -7411,8 +7387,7 @@ msgstr "Generazione superfici tramite sintesi spettrale"
 msgid "Spectral Synthesis"
 msgstr "Sintesi Spettrale"
 
-#: modules/process/fft_synth.c:411
-#: modules/process/lno_synth.c:544
+#: modules/process/fft_synth.c:411 modules/process/lno_synth.c:544
 #: modules/process/noise_synth.c:452
 msgid "_RMS:"
 msgstr "_RMS:"
@@ -7469,32 +7444,27 @@ msgstr "Tipo funzione:"
 msgid "Preview type:"
 msgstr "Tipo Anteprima:"
 
-#: modules/process/fit_2d.c:330
-#: modules/process/fractal.c:283
+#: modules/process/fit_2d.c:330 modules/process/fractal.c:283
 #: modules/process/mark_with.c:259
 msgid "Result"
 msgstr "Risultati"
 
-#: modules/process/fit_2d.c:508
-#: modules/process/fit_2d.c:1007
+#: modules/process/fit_2d.c:508 modules/process/fit_2d.c:1007
 #: modules/process/fit_2d.c:1084
 msgid "Radius"
 msgstr "Raggio "
 
-#: modules/process/fit_2d.c:509
-#: modules/process/fit_2d.c:1009
+#: modules/process/fit_2d.c:509 modules/process/fit_2d.c:1009
 #: modules/process/fit_2d.c:1086
 msgid "X center"
 msgstr "Centro delle X"
 
-#: modules/process/fit_2d.c:510
-#: modules/process/fit_2d.c:1011
+#: modules/process/fit_2d.c:510 modules/process/fit_2d.c:1011
 #: modules/process/fit_2d.c:1088
 msgid "Y center"
 msgstr "Centro delle Y"
 
-#: modules/process/fit_2d.c:511
-#: modules/process/fit_2d.c:1013
+#: modules/process/fit_2d.c:511 modules/process/fit_2d.c:1013
 #: modules/process/fit_2d.c:1090
 msgid "Z center"
 msgstr "Centro delle Z"
@@ -7619,8 +7589,12 @@ msgid "Power spectrum"
 msgstr "Spettro di potenza"
 
 #: modules/process/fractal.c:146
-msgid "Calculates fractal dimension using several methods (partitioning, box counting, triangulation, power spectrum)."
-msgstr "Calcola dimensione frattale usando metodi differenti (partizionamento, box counting, triangolazione, potere spettrale)"
+msgid ""
+"Calculates fractal dimension using several methods (partitioning, box "
+"counting, triangulation, power spectrum)."
+msgstr ""
+"Calcola dimensione frattale usando metodi differenti (partizionamento, box "
+"counting, triangolazione, potere spettrale)"
 
 #: modules/process/fractal.c:161
 msgid "/_Statistics/_Fractal Dimension..."
@@ -7650,8 +7624,7 @@ msgstr "Area di Fit"
 msgid "From:"
 msgstr "Da:"
 
-#: modules/process/fractal.c:270
-#: modules/process/fractal.c:517
+#: modules/process/fractal.c:270 modules/process/fractal.c:517
 #: modules/process/fractal.c:541
 msgid "minimum"
 msgstr "minimo"
@@ -7660,8 +7633,7 @@ msgstr "minimo"
 msgid "To:"
 msgstr "A:"
 
-#: modules/process/fractal.c:273
-#: modules/process/fractal.c:518
+#: modules/process/fractal.c:273 modules/process/fractal.c:518
 #: modules/process/fractal.c:542
 msgid "maximum"
 msgstr "massimo"
@@ -7727,8 +7699,12 @@ msgid "Correlate grain characteristics"
 msgstr "Correlazione caratteristiche grani"
 
 #: modules/process/grain_cross.c:134
-msgid "Grain correlation: Lateral dimensions and value must be the same physical quantity for the selected grain properties."
-msgstr "Correlazione grani: Le dimensioni ed il valore laterale devono avere le stesse dimensioni fisiche per le caratteristiche grani selezionate"
+msgid ""
+"Grain correlation: Lateral dimensions and value must be the same physical "
+"quantity for the selected grain properties."
+msgstr ""
+"Correlazione grani: Le dimensioni ed il valore laterale devono avere le "
+"stesse dimensioni fisiche per le caratteristiche grani selezionate"
 
 #: modules/process/grain_cross.c:240
 msgid "Grain Correlations"
@@ -7790,8 +7766,7 @@ msgstr "Salva Statistiche Grani"
 msgid "Data channel:"
 msgstr "Canale dati:   "
 
-#: modules/process/grain_dist.c:734
-#: modules/process/grain_dist.c:806
+#: modules/process/grain_dist.c:734 modules/process/grain_dist.c:806
 msgid "Grain Statistics"
 msgstr "Statistiche Grani"
 
@@ -7867,8 +7842,7 @@ msgstr "Segna grani per soglia"
 msgid "Mark Grains by Threshold"
 msgstr "Segna Grani per Soglia"
 
-#: modules/process/grain_mark.c:305
-#: modules/process/grain_rem_threshold.c:274
+#: modules/process/grain_mark.c:305 modules/process/grain_rem_threshold.c:274
 msgid "Threshold by"
 msgstr "Soglia:"
 
@@ -7880,8 +7854,7 @@ msgstr "_Pendenza:"
 msgid "_Curvature:"
 msgstr "_Curvatura:"
 
-#: modules/process/grain_mark.c:348
-#: modules/process/grain_rem_threshold.c:328
+#: modules/process/grain_mark.c:348 modules/process/grain_rem_threshold.c:328
 #: modules/process/grain_wshed.c:282
 msgid "_Invert height"
 msgstr "_Inverti altezza"
@@ -8020,7 +7993,8 @@ msgstr "_Migliora"
 
 #: modules/process/immerse.c:249
 msgid "Improve detail position by correlation search in neighborhood"
-msgstr "Migliora posizione dettaglio con ricerca di correlazione nelle vicinanze."
+msgstr ""
+"Migliora posizione dettaglio con ricerca di correlazione nelle vicinanze."
 
 #: modules/process/immerse.c:318
 msgid "_Detail image:"
@@ -8348,8 +8322,11 @@ msgid "Indentation - Outer Pile-Up\n"
 msgstr "Indentazione - Outer Pile-Up\n"
 
 #: modules/process/laplace.c:40
-msgid "Removes data under mask, interpolating them with Laplace equation solution."
-msgstr "Rimuove i dati selezionati interpolandoli con la soluzione dell'equazione di Laplace."
+msgid ""
+"Removes data under mask, interpolating them with Laplace equation solution."
+msgstr ""
+"Rimuove i dati selezionati interpolandoli con la soluzione dell'equazione di "
+"Laplace."
 
 #: modules/process/laplace.c:55
 msgid "/_Correct Data/_Remove Data Under Mask"
@@ -8357,15 +8334,21 @@ msgstr "/_Correzione Dati/_Rimozione dati sotto la maschera"
 
 #: modules/process/laplace.c:59
 msgid "Interpolate data under mask by solution of Laplace equation"
-msgstr "Interpolazione dati sotto la maschera attraverso soluzione dell'equazione di Laplace"
+msgstr ""
+"Interpolazione dati sotto la maschera attraverso soluzione dell'equazione di "
+"Laplace"
 
 #: modules/process/laplace.c:85
 msgid "Laplace correction"
 msgstr "Correzione di Laplace"
 
 #: modules/process/level.c:78
-msgid "Levels data by simple plane subtraction or by rotation, and fixes minimal or mean value to zero."
-msgstr "Livella i dati per semplice sottrazione di piani o per rotazione e fissa il valore minimo o medio a zero."
+msgid ""
+"Levels data by simple plane subtraction or by rotation, and fixes minimal or "
+"mean value to zero."
+msgstr ""
+"Livella i dati per semplice sottrazione di piani o per rotazione e fissa il "
+"valore minimo o medio a zero."
 
 #: modules/process/level.c:93
 msgid "/_Level/Plane _Level"
@@ -8408,7 +8391,9 @@ msgid "Level Rotate"
 msgstr "Ruota Livello"
 
 #: modules/process/level_grains.c:83
-msgid "Levels individual grains, interpolating the shifts between using Laplacian interpolation."
+msgid ""
+"Levels individual grains, interpolating the shifts between using Laplacian "
+"interpolation."
 msgstr "Livella grani individuali, utilizzando l'interpolazione di Laplace."
 
 #: modules/process/level_grains.c:98
@@ -8416,17 +8401,18 @@ msgid "/_Grains/_Level Grains..."
 msgstr "/_Grani/_Livella Grani..."
 
 #: modules/process/level_grains.c:102
-msgid "Level individual grains, interpolating the shifts between using Laplacian interpolation"
-msgstr "Livella grani individuali, con interpolazione Laplaciana degli spostamenti"
+msgid ""
+"Level individual grains, interpolating the shifts between using Laplacian "
+"interpolation"
+msgstr ""
+"Livella grani individuali, con interpolazione Laplaciana degli spostamenti"
 
 #: modules/process/level_grains.c:177
 msgid "Laplace interpolation..."
 msgstr "Interpolazione di Laplace"
 
-#: modules/process/level_grains.c:224
-#: modules/process/median-bg.c:163
-#: modules/process/polylevel.c:296
-#: modules/process/polylevel.c:421
+#: modules/process/level_grains.c:224 modules/process/median-bg.c:163
+#: modules/process/polylevel.c:296 modules/process/polylevel.c:421
 #: modules/process/sphere-revolve.c:197
 msgid "Background"
 msgstr "Sottofondo"
@@ -8439,10 +8425,8 @@ msgstr "Livella grani"
 msgid "Quantity to level:"
 msgstr "Quantità da livellare:"
 
-#: modules/process/level_grains.c:269
-#: modules/process/median-bg.c:213
-#: modules/process/polylevel.c:486
-#: modules/process/sphere-revolve.c:260
+#: modules/process/level_grains.c:269 modules/process/median-bg.c:213
+#: modules/process/polylevel.c:486 modules/process/sphere-revolve.c:260
 msgid "E_xtract background"
 msgstr "E_strai Sottofondo"
 
@@ -8490,28 +8474,23 @@ msgstr "/_Correzione Dati/ Correzione Ste_p Line  "
 msgid "Correct steps in lines"
 msgstr "Correzione step nelle linee "
 
-#: modules/process/lno_synth.c:249
-#: modules/process/noise_synth.c:183
+#: modules/process/lno_synth.c:249 modules/process/noise_synth.c:183
 msgid "distribution|Gaussian"
 msgstr "distribuzione|Gaussiana"
 
-#: modules/process/lno_synth.c:255
-#: modules/process/noise_synth.c:189
+#: modules/process/lno_synth.c:255 modules/process/noise_synth.c:189
 msgid "distribution|Exponential"
 msgstr "distribuzione|Esponenziale"
 
-#: modules/process/lno_synth.c:261
-#: modules/process/noise_synth.c:195
+#: modules/process/lno_synth.c:261 modules/process/noise_synth.c:195
 msgid "distribution|Uniform"
 msgstr "distribuzione|Uniforme"
 
-#: modules/process/lno_synth.c:267
-#: modules/process/noise_synth.c:201
+#: modules/process/lno_synth.c:267 modules/process/noise_synth.c:201
 msgid "distribution|Triangular"
 msgstr "distribuzione|Triangolare"
 
-#: modules/process/lno_synth.c:274
-#: modules/process/pat_synth.c:232
+#: modules/process/lno_synth.c:274 modules/process/pat_synth.c:232
 msgid "Steps"
 msgstr "Steps"
 
@@ -8539,28 +8518,23 @@ msgstr "Linea di fondo"
 msgid "Distribution"
 msgstr "Distribuzione"
 
-#: modules/process/lno_synth.c:520
-#: modules/process/noise_synth.c:428
+#: modules/process/lno_synth.c:520 modules/process/noise_synth.c:428
 msgid "_Distribution:"
 msgstr "_Distribuzione"
 
-#: modules/process/lno_synth.c:525
-#: modules/process/noise_synth.c:433
+#: modules/process/lno_synth.c:525 modules/process/noise_synth.c:433
 msgid "Direction:"
 msgstr "Direzione:"
 
-#: modules/process/lno_synth.c:534
-#: modules/process/noise_synth.c:442
+#: modules/process/lno_synth.c:534 modules/process/noise_synth.c:442
 msgid "S_ymmetrical"
 msgstr "Simmetrico"
 
-#: modules/process/lno_synth.c:535
-#: modules/process/noise_synth.c:443
+#: modules/process/lno_synth.c:535 modules/process/noise_synth.c:443
 msgid "One-sided _positive"
 msgstr ""
 
-#: modules/process/lno_synth.c:536
-#: modules/process/noise_synth.c:444
+#: modules/process/lno_synth.c:536 modules/process/noise_synth.c:444
 msgid "One-sided _negative"
 msgstr ""
 
@@ -8708,8 +8682,7 @@ msgstr "Oggetti segnati"
 msgid "Correlation maxima"
 msgstr "Correlazione massima"
 
-#: modules/process/maskcor.c:173
-#: modules/process/maskcor.c:361
+#: modules/process/maskcor.c:173 modules/process/maskcor.c:361
 msgid "Correlation score"
 msgstr "Percentuale di Correlazione "
 
@@ -8789,13 +8762,11 @@ msgstr "Livellamento mediano"
 msgid "Median Level"
 msgstr "Livella Mediano"
 
-#: modules/process/median-bg.c:195
-#: modules/process/sphere-revolve.c:234
+#: modules/process/median-bg.c:195 modules/process/sphere-revolve.c:234
 msgid "Real _radius:"
 msgstr "Raggio _reale:"
 
-#: modules/process/median-bg.c:205
-#: modules/process/sphere-revolve.c:244
+#: modules/process/median-bg.c:205 modules/process/sphere-revolve.c:244
 msgid "_Pixel radius:"
 msgstr "_Pixel raggio:"
 
@@ -8908,8 +8879,11 @@ msgid "E_xtrapolate result data out of measured range"
 msgstr "E_strapola i dati risultanti al di fuori dell'intervallo di misura"
 
 #: modules/process/nanoindent_adjust.c:294
-msgid "Tip has different range/resolution ratio than image. Tip will be resampled."
-msgstr "La punta ha un rapporto range/risoluzione differente dall'immagine e verrà ricampionata"
+msgid ""
+"Tip has different range/resolution ratio than image. Tip will be resampled."
+msgstr ""
+"La punta ha un rapporto range/risoluzione differente dall'immagine e verrà "
+"ricampionata"
 
 #: modules/process/nanoindent_adjust.c:333
 msgid "Immersed detail data"
@@ -8999,8 +8973,7 @@ msgstr "Forma:"
 msgid "obj."
 msgstr "obj."
 
-#: modules/process/obj_synth.c:543
-#: modules/process/pat_synth.c:1493
+#: modules/process/obj_synth.c:543 modules/process/pat_synth.c:1493
 msgid "_Size:"
 msgstr "Dimensione:"
 
@@ -9042,7 +9015,8 @@ msgstr "Buchi"
 
 #: modules/process/pat_synth.c:240
 msgid "Generates surfaces representing simple patterns (steps, ridges, ...)."
-msgstr "Generazione superfici rappresentanti semplici schemi (scalini, creste...)."
+msgstr ""
+"Generazione superfici rappresentanti semplici schemi (scalini, creste...)."
 
 #: modules/process/pat_synth.c:255
 msgid "/S_ynthetic/_Pattern..."
@@ -9072,8 +9046,7 @@ msgstr "Piatto"
 msgid "_Flat width:"
 msgstr ""
 
-#: modules/process/pat_synth.c:874
-#: modules/process/pat_synth.c:1175
+#: modules/process/pat_synth.c:874 modules/process/pat_synth.c:1175
 #: modules/process/pat_synth.c:1510
 msgid "_Slope width:"
 msgstr "Larghezza _Pendenza:"
@@ -9094,8 +9067,7 @@ msgstr ""
 msgid "Flat _bottom width:"
 msgstr ""
 
-#: modules/process/pat_synth.c:1468
-#: modules/tools/distance.c:130
+#: modules/process/pat_synth.c:1468 modules/tools/distance.c:130
 msgid "Distance"
 msgstr "Distanza"
 
@@ -9119,10 +9091,8 @@ msgstr "Applica distorsione polinomiale nel piano orizzontale"
 msgid "Distort by Polynomial"
 msgstr "Distorsione polinomiale"
 
-#: modules/process/polydistort.c:276
-#: modules/tools/filter.c:208
-#: modules/tools/icolorange.c:385
-#: modules/tools/linestats.c:153
+#: modules/process/polydistort.c:276 modules/tools/filter.c:208
+#: modules/tools/icolorange.c:385 modules/tools/linestats.c:153
 msgid "Minimum"
 msgstr "Minimo"
 
@@ -9350,8 +9320,7 @@ msgstr "Lunghezza minima:"
 msgid "_Hard threshold:"
 msgstr "Soglia dura:"
 
-#: modules/process/scars.c:530
-#: modules/process/scars.c:537
+#: modules/process/scars.c:530 modules/process/scars.c:537
 #: modules/process/threshold.c:354
 msgid "RMS"
 msgstr "RMS"
@@ -9385,8 +9354,12 @@ msgid "_Mix:"
 msgstr "_Mescola:"
 
 #: modules/process/slope_dist.c:107
-msgid "Calculates one- or two-dimensional distribution of slopes or graph of their angular distribution."
-msgstr "Calcola distribuzione di pendenze in due dimensioni o grafici della loro distribuzione angolare"
+msgid ""
+"Calculates one- or two-dimensional distribution of slopes or graph of their "
+"angular distribution."
+msgstr ""
+"Calcola distribuzione di pendenze in due dimensioni o grafici della loro "
+"distribuzione angolare"
 
 #: modules/process/slope_dist.c:122
 msgid "/_Statistics/_Slope Distribution..."
@@ -9420,8 +9393,7 @@ msgstr "Distribuzione Pendenza"
 msgid "Angular Slope Distribution"
 msgstr "Distribuzione pendenza angolare"
 
-#: modules/process/slope_dist.c:441
-#: modules/process/tilt.c:174
+#: modules/process/slope_dist.c:441 modules/process/tilt.c:174
 msgid "Slopes"
 msgstr "_Pendenza:"
 
@@ -9435,7 +9407,8 @@ msgstr "Inclinazioni"
 
 #: modules/process/sphere-revolve.c:95
 msgid "Subtracts background by arc or sphere revolution."
-msgstr "Sottrae sottofondo ottenuto dalla rivoluzione di un arco o di una sfera"
+msgstr ""
+"Sottrae sottofondo ottenuto dalla rivoluzione di un arco o di una sfera"
 
 #: modules/process/sphere-revolve.c:111
 msgid "/_Level/Revolve _Arc..."
@@ -9445,14 +9418,12 @@ msgstr "/_Livella/Ruota _Arco..."
 msgid "Level data by arc revolution"
 msgstr "Livella dati per rivoluzione arco"
 
-#: modules/process/sphere-revolve.c:204
-#: modules/tools/polynom.c:209
+#: modules/process/sphere-revolve.c:204 modules/tools/polynom.c:209
 #: modules/tools/sfunctions.c:338
 msgid "_Horizontal direction"
 msgstr "Direzione orizzontale"
 
-#: modules/process/sphere-revolve.c:205
-#: modules/tools/polynom.c:210
+#: modules/process/sphere-revolve.c:205 modules/tools/polynom.c:210
 #: modules/tools/sfunctions.c:339
 msgid "_Vertical direction"
 msgstr "Direzione verticale"
@@ -9466,8 +9437,10 @@ msgid "Revolve Arc"
 msgstr "Ruota Arco"
 
 #: modules/process/superresolution.c:87
-msgid "Simple supres operations with two data fields (or a data field and a scalar)."
-msgstr "Semplici operazioni con due campi dati (o un campo dati ed uno scalare)"
+msgid ""
+"Simple supres operations with two data fields (or a data field and a scalar)."
+msgstr ""
+"Semplici operazioni con due campi dati (o un campo dati ed uno scalare)"
 
 #: modules/process/superresolution.c:102
 msgid "/M_ultidata/_Super-resolution..."
@@ -9699,8 +9672,12 @@ msgid "Tip resolution: %d × %d pixels"
 msgstr "Risoluzione punta: %d × %d pixels"
 
 #: modules/process/tipops.c:65
-msgid "Tip operations: dilation (convolution), erosion (reconstruction) and certainty map."
-msgstr "Operazioni punta: espansione (convoluzione); erosione (ricostruzione) e mappa di certezza"
+msgid ""
+"Tip operations: dilation (convolution), erosion (reconstruction) and "
+"certainty map."
+msgstr ""
+"Operazioni punta: espansione (convoluzione); erosione (ricostruzione) e "
+"mappa di certezza"
 
 #: modules/process/tipops.c:80
 msgid "/_Tip/_Dilation..."
@@ -9760,8 +9737,10 @@ msgid "Surface reconstruction"
 msgstr "Ricostruzione superficie"
 
 #: modules/process/unrotate.c:88
-msgid "Rotates data to make characteristic directions parallel with x or y axis."
-msgstr "Ruota i dati per allineare la direzione caratteristica con l'asse X o Y"
+msgid ""
+"Rotates data to make characteristic directions parallel with x or y axis."
+msgstr ""
+"Ruota i dati per allineare la direzione caratteristica con l'asse X o Y"
 
 #: modules/process/unrotate.c:103
 msgid "/_Correct Data/_Unrotate..."
@@ -9885,8 +9864,12 @@ msgid "Save Table"
 msgstr "Salva tavola"
 
 #: modules/tools/filter.c:98
-msgid "Filter tool, processes selected part of data with a filter (conservative denoise, mean, median. Kuwahara, minimum, maximum)."
-msgstr "Strumento filtro, fltra i dati selezionati con differenti criteri (conservative denoise, mean, median. Kuwahara, minimum, maximum)."
+msgid ""
+"Filter tool, processes selected part of data with a filter (conservative "
+"denoise, mean, median. Kuwahara, minimum, maximum)."
+msgstr ""
+"Strumento filtro, fltra i dati selezionati con differenti criteri "
+"(conservative denoise, mean, median. Kuwahara, minimum, maximum)."
 
 #: modules/tools/filter.c:137
 msgid "Basic filters: mean, median, denoise, …"
@@ -9896,8 +9879,7 @@ msgstr "Filtri base: medio, mediano, denoise, ...."
 msgid "Conservative denoise"
 msgstr "Denoise conservativo"
 
-#: modules/tools/filter.c:209
-#: modules/tools/icolorange.c:396
+#: modules/tools/filter.c:209 modules/tools/icolorange.c:396
 #: modules/tools/linestats.c:154
 msgid "Maximum"
 msgstr "Massimo"
@@ -9914,14 +9896,17 @@ msgstr "Dechecker"
 msgid "filter|Gaussian"
 msgstr "filtro|Gaussiana"
 
-#: modules/tools/filter.c:247
-#: modules/tools/polynom.c:245
+#: modules/tools/filter.c:247 modules/tools/polynom.c:245
 msgid "_Type:"
 msgstr "_Tipo:"
 
 #: modules/tools/grainmeasure.c:91
-msgid "Grain measurement tool, calculates characteristics of selected countinous parts of mask."
-msgstr "Strumento di misura grani, calcola le caratteristiche di maschere continue selezionate."
+msgid ""
+"Grain measurement tool, calculates characteristics of selected countinous "
+"parts of mask."
+msgstr ""
+"Strumento di misura grani, calcola le caratteristiche di maschere continue "
+"selezionate."
 
 #: modules/tools/grainmeasure.c:123
 msgid "Grain Measure"
@@ -9931,10 +9916,12 @@ msgstr "Misura grani"
 msgid "Measure individual grains (continuous parts of mask)"
 msgstr "Misura grani singoli (parti continue di maschera)"
 
-#: modules/tools/grainremover.c:97
-#: modules/tools/selectionmanager.c:110
-msgid "Grain removal tool, removes continuous parts of mask and/or underlying data."
-msgstr "Strumento rimozione grani, rimuove parti continue di maschera e/o dati sottostanti."
+#: modules/tools/grainremover.c:97 modules/tools/selectionmanager.c:110
+msgid ""
+"Grain removal tool, removes continuous parts of mask and/or underlying data."
+msgstr ""
+"Strumento rimozione grani, rimuove parti continue di maschera e/o dati "
+"sottostanti."
 
 #: modules/tools/grainremover.c:106
 msgid "_Mask"
@@ -9948,8 +9935,7 @@ msgstr "_Dati"
 msgid "_Both"
 msgstr "Entrambi"
 
-#: modules/tools/grainremover.c:112
-#: modules/tools/spotremove.c:268
+#: modules/tools/grainremover.c:112 modules/tools/spotremove.c:268
 msgid "Laplace solver"
 msgstr "Risolutore Laplaciano"
 
@@ -9969,14 +9955,18 @@ msgstr "Rimozione grani singoli (parti continue di maschera)"
 msgid "Remove:"
 msgstr "Rimuovi:"
 
-#: modules/tools/grainremover.c:224
-#: modules/tools/spotremove.c:323
+#: modules/tools/grainremover.c:224 modules/tools/spotremove.c:323
 msgid "_Interpolation method:"
 msgstr "_Metodo di interpolazione:"
 
 #: modules/tools/icolorange.c:120
-msgid "Interactive color range tool, allows selecting the data range false color scale should map to, either on data or on height distribution histogram."
-msgstr "Strumento intervallo colore interattivo, permette di selezionare l'intervallo dati a cui deve riferirsi la scala cromatica di riferimento, per i dati o per l'altezza dell'istogramma di distribuzione."
+msgid ""
+"Interactive color range tool, allows selecting the data range false color "
+"scale should map to, either on data or on height distribution histogram."
+msgstr ""
+"Strumento intervallo colore interattivo, permette di selezionare "
+"l'intervallo dati a cui deve riferirsi la scala cromatica di riferimento, "
+"per i dati o per l'altezza dell'istogramma di distribuzione."
 
 #: modules/tools/icolorange.c:151
 msgid "Color Range"
@@ -10027,8 +10017,12 @@ msgid "Full"
 msgstr "Completo"
 
 #: modules/tools/level3.c:104
-msgid "Three-point level tool, levels data by subtracting a plane fitted through three selected points."
-msgstr "Strumento livella su tre punti, livella i dati sottraendo un piano passante per tre punti dati."
+msgid ""
+"Three-point level tool, levels data by subtracting a plane fitted through "
+"three selected points."
+msgstr ""
+"Strumento livella su tre punti, livella i dati sottraendo un piano passante "
+"per tre punti dati."
 
 #: modules/tools/level3.c:141
 msgid "Three Point Level"
@@ -10038,8 +10032,7 @@ msgstr "Livella su tre punti"
 msgid "Level data by fitting a plane through three points"
 msgstr "Livella dati adattando a piano passante per tre punti"
 
-#: modules/tools/level3.c:244
-#: modules/tools/readvalue.c:338
+#: modules/tools/level3.c:244 modules/tools/readvalue.c:338
 msgid "_Averaging radius:"
 msgstr "Media raggio:"
 
@@ -10052,8 +10045,12 @@ msgid "Set plane to _zero"
 msgstr "Fissa piano zero"
 
 #: modules/tools/linestats.c:124
-msgid "Row/column statistical function tool, mean values, medians, maxima, minima, RMS, ..., of rows or columns."
-msgstr "Strumento funzione statistica Riga/Colonna, valori medi, mediani, massimi, minimi, RMS,..., di righe e colonne"
+msgid ""
+"Row/column statistical function tool, mean values, medians, maxima, minima, "
+"RMS, ..., of rows or columns."
+msgstr ""
+"Strumento funzione statistica Riga/Colonna, valori medi, mediani, massimi, "
+"minimi, RMS,..., di righe e colonne"
 
 #: modules/tools/linestats.c:151
 msgid "Mean"
@@ -10087,8 +10084,7 @@ msgstr "Rt"
 msgid "Skew"
 msgstr "Skew"
 
-#: modules/tools/linestats.c:163
-#: modules/tools/roughness.c:393
+#: modules/tools/linestats.c:163 modules/tools/roughness.c:393
 msgid "Kurtosis"
 msgstr "curtosi"
 
@@ -10116,22 +10112,21 @@ msgstr "_Quantità:"
 msgid "Average:"
 msgstr "Media:"
 
-#: modules/tools/linestats.c:346
-#: modules/tools/profile.c:388
-#: modules/tools/sfunctions.c:376
-#: modules/tools/spectro.c:306
+#: modules/tools/linestats.c:346 modules/tools/profile.c:388
+#: modules/tools/sfunctions.c:376 modules/tools/spectro.c:306
 msgid "<b>Options</b>"
 msgstr "<b>Opzioni</b>"
 
-#: modules/tools/linestats.c:362
-#: modules/tools/sfunctions.c:392
+#: modules/tools/linestats.c:362 modules/tools/sfunctions.c:392
 #: modules/tools/stats.c:381
 msgid "_Instant updates"
 msgstr "_Aggiornamento immediato"
 
 #: modules/tools/maskedit.c:159
 msgid "Mask editor tool, allows interactive modification of parts of the mask."
-msgstr "Strumento modifica maschere, permette la modifica interattiva di parti della maschera."
+msgstr ""
+"Strumento modifica maschere, permette la modifica interattiva di parti della "
+"maschera."
 
 #: modules/tools/maskedit.c:213
 msgid "Mask Editor"
@@ -10251,7 +10246,9 @@ msgstr "Evita il fondersi dei grani per crescita"
 
 #: modules/tools/pathlevel.c:109
 msgid "Path level tool, performs row leveling along on user-set lines."
-msgstr "Strumento livella su percorso, livella righe dati su linee assegnate dall'utente."
+msgstr ""
+"Strumento livella su percorso, livella righe dati su linee assegnate "
+"dall'utente."
 
 #: modules/tools/pathlevel.c:142
 msgid "Path Level"
@@ -10261,15 +10258,18 @@ msgstr "Livella su percorso"
 msgid "Level rows using intersections with given lines"
 msgstr "Livella righe dati usando intersezioni con linee assegnate"
 
-#: modules/tools/pathlevel.c:258
-#: modules/tools/profile.c:405
+#: modules/tools/pathlevel.c:258 modules/tools/profile.c:405
 #: modules/tools/roughness.c:859
 msgid "_Thickness:"
 msgstr "_Spessore:"
 
 #: modules/tools/polynom.c:92
-msgid "Polynomial line level tool, fits polynomials to X or Y profiles and subtracts them."
-msgstr "Strumento livella linee polinomiale. Adatta polinomi ai profili X o Y e li sottrae ad essi"
+msgid ""
+"Polynomial line level tool, fits polynomials to X or Y profiles and "
+"subtracts them."
+msgstr ""
+"Strumento livella linee polinomiale. Adatta polinomi ai profili X o Y e li "
+"sottrae ad essi"
 
 #: modules/tools/polynom.c:128
 msgid "Polynomial"
@@ -10311,8 +10311,7 @@ msgstr "(altrimenti verrà utilizzata per il fitting)"
 msgid "Profile tool, creates profile graphs from selected lines."
 msgstr "Strumento profilo, crea grafico del profilo da linee selezionate."
 
-#: modules/tools/profile.c:226
-#: modules/tools/profile.c:496
+#: modules/tools/profile.c:226 modules/tools/profile.c:496
 msgid "Profiles"
 msgstr "Profili"
 
@@ -10428,8 +10427,7 @@ msgstr "Massima profondità di valle rugosita'"
 msgid "Maximum roughness peak height"
 msgstr "Altezza picco massima rugosità"
 
-#: modules/tools/roughness.c:329
-#: modules/tools/roughness.c:377
+#: modules/tools/roughness.c:329 modules/tools/roughness.c:377
 msgid "Average maximum height of the roughness"
 msgstr "Media altezza massima rugosità"
 
@@ -10441,8 +10439,7 @@ msgstr "Media profondità di valle massima della rugosità"
 msgid "Average maximum roughness peak height"
 msgstr "Altezza media picco massima rugosità"
 
-#: modules/tools/roughness.c:353
-#: modules/tools/roughness.c:361
+#: modules/tools/roughness.c:353 modules/tools/roughness.c:361
 msgid "Average third highest peak to third lowest valley height"
 msgstr "altezza media tra il terzo picco più alto e la terza valle più bassa"
 
@@ -10506,8 +10503,7 @@ msgstr "Rapporto lunghezza profilo"
 msgid "Calculate surface profile parameters."
 msgstr "Calcolo parametri profilo superficie."
 
-#: modules/tools/roughness.c:655
-#: modules/tools/roughness.c:784
+#: modules/tools/roughness.c:655 modules/tools/roughness.c:784
 #: modules/tools/roughness.c:1383
 msgid "Roughness"
 msgstr "Rugosità"
@@ -10516,13 +10512,11 @@ msgstr "Rugosità"
 msgid "Calculate roughness parameters"
 msgstr "Calcolo parametri rugosità."
 
-#: modules/tools/roughness.c:782
-#: modules/tools/roughness.c:1381
+#: modules/tools/roughness.c:782 modules/tools/roughness.c:1381
 msgid "Texture"
 msgstr "Struttura"
 
-#: modules/tools/roughness.c:783
-#: modules/tools/roughness.c:1382
+#: modules/tools/roughness.c:783 modules/tools/roughness.c:1382
 msgid "Waviness"
 msgstr "Ondulazione"
 
@@ -10534,8 +10528,7 @@ msgstr "ADF"
 msgid "BRC"
 msgstr "BRC"
 
-#: modules/tools/roughness.c:787
-#: modules/tools/roughness.c:1386
+#: modules/tools/roughness.c:787 modules/tools/roughness.c:1386
 msgid "Peak Count"
 msgstr "Conta picchi"
 
@@ -10567,14 +10560,12 @@ msgstr "Salva parametri rugosità."
 msgid "Roughness Parameters"
 msgstr "Parametri Rugosità"
 
-#: modules/tools/roughness.c:2041
-#: modules/tools/stats.c:999
+#: modules/tools/roughness.c:2041 modules/tools/stats.c:999
 #, c-format
 msgid "File:              %s\n"
 msgstr "File:              %s\n"
 
-#: modules/tools/roughness.c:2045
-#: modules/tools/stats.c:1003
+#: modules/tools/roughness.c:2045 modules/tools/stats.c:1003
 #, c-format
 msgid "Data channel:      %s\n"
 msgstr "Canale dati:      %s\n"
@@ -10625,8 +10616,14 @@ msgid "to _all files"
 msgstr ""
 
 #: modules/tools/sfunctions.c:156
-msgid "Statistical function tool, calculates one-dimensional statistical functions (height distribution, correlations, PSDF, Minkowski functionals) of selected part of data."
-msgstr "Strumento funzioni statistiche. Calcola le funzioni statistiche unidimensionali (distribuzione delle altezze, correlazioni, PSDF, funzioni di Minkowski) di una parte selezionata di dati."
+msgid ""
+"Statistical function tool, calculates one-dimensional statistical functions "
+"(height distribution, correlations, PSDF, Minkowski functionals) of selected "
+"part of data."
+msgstr ""
+"Strumento funzioni statistiche. Calcola le funzioni statistiche "
+"unidimensionali (distribuzione delle altezze, correlazioni, PSDF, funzioni "
+"di Minkowski) di una parte selezionata di dati."
 
 #: modules/tools/sfunctions.c:188
 msgid "Height distribution"
@@ -10713,8 +10710,12 @@ msgid "Spectroscopy"
 msgstr "Spettroscopia"
 
 #: modules/tools/spotremove.c:151
-msgid "Spot removal tool, interpolates small parts of data (displayed on a zoomed view) using selected algorithm."
-msgstr "Strumento rimozione macchie, interpola piccoli intervalli dati (mostrati in una vista ingrandita) utilizzando l'algoritmo selezionato."
+msgid ""
+"Spot removal tool, interpolates small parts of data (displayed on a zoomed "
+"view) using selected algorithm."
+msgstr ""
+"Strumento rimozione macchie, interpola piccoli intervalli dati (mostrati in "
+"una vista ingrandita) utilizzando l'algoritmo selezionato."
 
 #: modules/tools/spotremove.c:194
 msgid "Remove Spots"
@@ -10740,8 +10741,7 @@ msgstr "Interpolazione frattale"
 msgid "Statistics tool."
 msgstr "Strumenti statistici"
 
-#: modules/tools/stats.c:217
-#: modules/tools/stats.c:993
+#: modules/tools/stats.c:217 modules/tools/stats.c:993
 msgid "Statistical Quantities"
 msgstr "Quantità statistiche"
 
@@ -10844,70 +10844,100 @@ msgstr ""
 
 #~ msgid "Gargbage after data sample #%u."
 #~ msgstr "Dati invalidi dopo dati campione #%u."
+
 #~ msgid "Pixmap image import must be run as interactive."
 #~ msgstr ""
 #~ "L'importazione di immagini Pixmap deve essere lanciata in modo "
 #~ "interattivo."
+
 #~ msgid "_Width"
 #~ msgstr "Larghezza"
+
 #~ msgid "H_eight"
 #~ msgstr "Altezza"
+
 #~ msgid "None"
 #~ msgstr "Nessuno"
+
 #~ msgid "Basic"
 #~ msgstr "Basilare"
+
 #~ msgid "noun|Square"
 #~ msgstr "Quadrato"
+
 #~ msgid "Solid"
 #~ msgstr "Solido"
+
 #~ msgid "Dash"
 #~ msgstr "Trattino"
+
 #~ msgid "Use"
 #~ msgstr "Uso"
+
 #~ msgid "Border"
 #~ msgstr "Limite"
+
 #~ msgid "Mirror"
 #~ msgstr "Specchio"
+
 #~ msgid "noun|Fit"
 #~ msgstr "adatta"
+
 #~ msgid "noun|Estimate"
 #~ msgstr "Stima"
 
 #, fuzzy
 #~ msgid "Error loading file: %s"
 #~ msgstr "Parsing XML fallito: %s"
+
 #~ msgid "Even"
 #~ msgstr "Pari"
+
 #~ msgid "Odd"
 #~ msgstr "Dispari"
+
 #~ msgid "noun|Normal"
 #~ msgstr "Normale"
+
 #~ msgid "Bellow"
 #~ msgstr "Bellow"
+
 #~ msgid "Right"
 #~ msgstr "Destra"
+
 #~ msgid "Left"
 #~ msgstr "Sinistra"
+
 #~ msgid "Simple AFM data recalibration"
 #~ msgstr "Semplice ricalibrazione dati AFM"
+
 #~ msgid "i_nstant updates"
 #~ msgstr "Aggiornamento _immediato"
+
 #~ msgid "Filtered Image"
 #~ msgstr "Immagine filtrata"
+
 #~ msgid "Draw a new inclusive circle marker"
 #~ msgstr "Disegna un nuovo segnale circolare inclusivo"
+
 #~ msgid "Draw a new inclusive rectangle marker"
 #~ msgstr "Disegna un nuovo segnale rettangolare inclusivo"
+
 #~ msgid "Draw a new exclusive circle marker"
 #~ msgstr "Disegna un nuovo segnale circolare esclusivo"
+
 #~ msgid "Draw a new exclusive rectangle marker"
 #~ msgstr "Disegna un nuovo segnale rettangolare esclusivo"
+
 #~ msgid "Removes the entire filter mask"
 #~ msgstr "Rimuove intera maschera filtro"
+
 #~ msgid "Ra:"
 #~ msgstr "Ra:"
+
 #~ msgid "Rms:"
 #~ msgstr "Rms:"
+
 #~ msgid "/_Basic Operations/_Recalibrate..."
 #~ msgstr "/Operazioni _Base/_Ricalibra..."
 
@@ -10930,38 +10960,53 @@ msgstr ""
 #, fuzzy
 #~ msgid "Thresholds"
 #~ msgstr "Soglia"
+
 #~ msgid "Export"
 #~ msgstr "Esporta"
 
 #, fuzzy
 #~ msgid "Single point spectroscopy (SPS) is not supported."
 #~ msgstr "Formato file versione  %.1f  non supportato."
+
 #~ msgid "data samples"
 #~ msgstr "Dati campione"
+
 #~ msgid "Missing end of file header marker."
 #~ msgstr "Marker termine intestazione file mancante."
+
 #~ msgid "_Exclude region under mask"
 #~ msgstr "_Escudi area sottostante maschera"
+
 #~ msgid "Use _mask"
 #~ msgstr "Usa _maschera"
+
 #~ msgid "Exclude region _outside mask"
 #~ msgstr "Escludi area esterna maschera"
+
 #~ msgid "Sens"
 #~ msgstr "Sens"
+
 #~ msgid "Dem"
 #~ msgstr "Dem"
+
 #~ msgid "L-R"
 #~ msgstr "L-R"
+
 #~ msgid "/Simulat_e/_Spectral Synthesis..."
 #~ msgstr "/Simulazion_e/_Sintesi Spettrale..."
+
 #~ msgid "Measure:"
 #~ msgstr "Misura:"
+
 #~ msgid "_New Seed"
 #~ msgstr "_Nuovo Seme"
+
 #~ msgid "Correlation lengt_h:"
 #~ msgstr "lunghezza Correlazione:"
+
 #~ msgid "JPK scan"
 #~ msgstr "Scansione JPK"
+
 #~ msgid ""
 #~ "LibTIFF too old!\n"
 #~ "\n"
@@ -10970,24 +11015,32 @@ msgstr ""
 #~ "LibTIFF troppo vecchia!!\n"
 #~ "\n"
 #~ "Libreria in uso %s. Aggiornate a libtiff versione %d.%d o successsiva."
+
 #~ msgid "TIFFOpen() function failed."
 #~ msgstr "Funzione TIFFOpen() fallita."
+
 #~ msgid "TIFFWriteScanline() function failed."
 #~ msgstr "Funzione TIFFWriteScanline() fallita"
 
 #, fuzzy
 #~ msgid "M_inimum:"
 #~ msgstr "Minimo:"
+
 #~ msgid "/_Mask/_Attach Mask..."
 #~ msgstr "/_Maschere/_Allega Maschera..."
+
 #~ msgid "Attach mask from another data field"
 #~ msgstr "Allega maschera da un altro campo dati"
+
 #~ msgid "Attach Mask"
 #~ msgstr "Allega maschera"
+
 #~ msgid "Attach mask _from:"
 #~ msgstr "Allega maschera da:"
+
 #~ msgid "Output"
 #~ msgstr "Output"
+
 #~ msgid "Plane Fit Mode"
 #~ msgstr "Adattamento Planare"
 
@@ -10997,4 +11050,3 @@ msgstr ""
 #~ "(data))."
 #~ msgstr ""
 #~ "Importa file dati omicron (file divisi .par + .tf*, .tb*, .sf*, .sb*)."
-

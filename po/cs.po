@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2011-12-03 11:10+0100\n"
+"POT-Creation-Date: 2011-12-17 10:50+0100\n"
 "PO-Revision-Date: 2011-12-03 19:12+0100\n"
 "Last-Translator: Petr Klapetek <klapetek@gwyddion.net>\n"
 "Language-Team: Czech\n"
@@ -760,56 +760,56 @@ msgstr "φ _světla:"
 msgid "L_ight θ:"
 msgstr "θ s_větla:"
 
-#: libgwydgets/gwy3dwindow.c:1002
+#: libgwydgets/gwy3dwindow.c:1018
 msgid "X-axis"
 msgstr "X-ová osa"
 
-#: libgwydgets/gwy3dwindow.c:1003
+#: libgwydgets/gwy3dwindow.c:1019
 msgid "Y-axis"
 msgstr "Y-ová osa"
 
-#: libgwydgets/gwy3dwindow.c:1004
+#: libgwydgets/gwy3dwindow.c:1020
 msgid "Minimum z value"
 msgstr "Nejmenší hodnota z"
 
-#: libgwydgets/gwy3dwindow.c:1005
+#: libgwydgets/gwy3dwindow.c:1021
 msgid "Maximum z value"
 msgstr "Největší hodnota z"
 
-#: libgwydgets/gwy3dwindow.c:1028
+#: libgwydgets/gwy3dwindow.c:1044
 msgid "_Label:"
 msgstr "Pop_isek:"
 
-#: libgwydgets/gwy3dwindow.c:1033
+#: libgwydgets/gwy3dwindow.c:1049
 msgid "_Text:"
 msgstr "_Text:"
 
-#: libgwydgets/gwy3dwindow.c:1053
+#: libgwydgets/gwy3dwindow.c:1069
 msgid "Move label"
 msgstr "Posuň popisek"
 
-#: libgwydgets/gwy3dwindow.c:1062
+#: libgwydgets/gwy3dwindow.c:1078
 msgid "_Horizontally:"
 msgstr "_Vodorovně:"
 
-#: libgwydgets/gwy3dwindow.c:1072
+#: libgwydgets/gwy3dwindow.c:1088
 msgid "_Vertically:"
 msgstr "_Svisle:"
 
-#: libgwydgets/gwy3dwindow.c:1080
+#: libgwydgets/gwy3dwindow.c:1096
 msgid "Scale size _automatically"
 msgstr "_Automaticky uprav velikost"
 
-#: libgwydgets/gwy3dwindow.c:1092 modules/tools/filter.c:252
+#: libgwydgets/gwy3dwindow.c:1108 modules/tools/filter.c:252
 msgid "Si_ze:"
 msgstr "Veli_kost:"
 
-#: libgwydgets/gwy3dwindow.c:1092 modules/process/cwt.c:148
+#: libgwydgets/gwy3dwindow.c:1108 modules/process/cwt.c:148
 #: modules/process/hough.c:208
 msgid "pixels"
 msgstr "pixelů"
 
-#: libgwydgets/gwy3dwindow.c:1100 modules/file/hdrimage.cc:2149
+#: libgwydgets/gwy3dwindow.c:1116 modules/file/hdrimage.cc:2149
 #: modules/file/pixmap.c:1018 modules/file/pixmap.c:2914
 #: modules/file/rawfile.c:398 modules/process/angle_dist.c:170
 #: modules/process/calcoefs_new.c:347 modules/process/calibrate.c:296
@@ -835,16 +835,15 @@ msgstr "pixelů"
 msgid "_Reset"
 msgstr "_Obnovit"
 
-#: libgwydgets/gwy3dwindow.c:1532
+#: libgwydgets/gwy3dwindow.c:1549 libgwydgets/gwy3dwindow.c:1601
 msgid "S_witch to Lighting Mode"
 msgstr "_Přepni na osvětlení"
 
-#: libgwydgets/gwy3dwindow.c:1538 libgwydgets/gwy3dwindow.c:1556
-#: libgwydgets/gwy3dwindow.c:1573
+#: libgwydgets/gwy3dwindow.c:1557 libgwydgets/gwy3dwindow.c:1579
 msgid "S_witch to Overlay Mode"
 msgstr "_Přepni na překrytí"
 
-#: libgwydgets/gwy3dwindow.c:1550 libgwydgets/gwy3dwindow.c:1567
+#: libgwydgets/gwy3dwindow.c:1571 libgwydgets/gwy3dwindow.c:1593
 msgid "S_witch to Color Gradient Mode"
 msgstr "_Přepni na barevný gradient"
 
@@ -1314,7 +1313,7 @@ msgstr "Dálkové ovládání"
 msgid "Python Scripting Interface"
 msgstr "Rozhraní pro skriptování v Pythonu"
 
-#: app/app.c:256
+#: app/app.c:255
 #, c-format
 msgid ""
 "Some data are unsaved:\n"
@@ -1325,44 +1324,49 @@ msgstr ""
 "%s\n"
 "Opravdu skončit?"
 
-#: app/app.c:400
+#: app/app.c:399
 msgid "Mask _Color..."
 msgstr "_Barva masky..."
 
-#: app/app.c:416
+#: app/app.c:415
 msgid "Zoom _1:1"
 msgstr "Zvětšit _1:1"
 
-#: app/app.c:613
+#: app/app.c:612
 msgid "Pi_xelwise Square"
 msgstr "Čtvercové pi_xely"
 
-#: app/app.c:623
+#: app/app.c:622
 msgid "_Physically Square"
 msgstr "_Fyzicky čtvercový"
 
-#: app/app.c:792
+#: app/app.c:791
 msgid "verb|Save"
 msgstr "Uložit"
 
-#: app/app.c:795 app/app.c:799
+#: app/app.c:794 app/app.c:798
 msgid "Save 3D view to an image"
 msgstr "Exportovat trojrozměrný pohled do obrázku"
 
-#: app/app.c:805
+#: app/app.c:804
 msgid "Set as Default"
 msgstr "Nastavit výchozí"
 
-#: app/app.c:807
+#: app/app.c:806
 msgid "Set the current view setup as the default"
 msgstr "Nastavit současné uspořádání pohledu jako výchozí"
 
-#: app/app.c:1016
+#: app/app.c:863
+#, fuzzy
+msgid "_Show mask"
+msgstr "Zobrazuj _osy"
+
+#: app/app.c:1025
 #, c-format
 msgid "Saving of 3D view to `%s' failed"
 msgstr "Uložení 3D pohledu do ‚%s‘ se nezdařilo"
 
-#: app/app.c:1060
+#: app/app.c:1069
 msgid "Export 3D View"
 msgstr "Exportovat trojrozměrný pohled"
 
@@ -2490,59 +2494,59 @@ msgstr "Načítá datové soubory AIST-NT."
 msgid "AIST-NT files (.aist)"
 msgstr "AIST-NT soubory (.aist)"
 
-#: modules/file/alicona.c:139
+#: modules/file/alicona.c:138
 msgid "Imports Alicona Imaging AL3D files."
 msgstr "Načítá datové soubory AL3D Alicona Imaging."
 
-#: modules/file/alicona.c:152
+#: modules/file/alicona.c:151
 msgid "Alicona Imaging AL3D files (.al3d)"
 msgstr "AL3D soubory Alicona Imaging (.al3d)"
 
-#: modules/file/alicona.c:440
+#: modules/file/alicona.c:479
 #, c-format
 msgid "Invalid plane number %u in tag ‘%s’."
 msgstr "Neplatné číslo roviny %u v tagu ‚%s‘."
 
-#: modules/file/alicona.c:527
+#: modules/file/alicona.c:566
 msgid "Header tag key is not nul-terminated."
 msgstr "Klíč tagu v hlavičce není ukončen nulovým znakem."
 
-#: modules/file/alicona.c:532
+#: modules/file/alicona.c:571
 msgid "Header tag key is empty."
 msgstr "Klíč tagu v hlavičce je prázdný."
 
-#: modules/file/alicona.c:539
+#: modules/file/alicona.c:578
 #, c-format
 msgid "Header tag ‘%s’ key is not nul-padded."
 msgstr "Klíč tagu ‚%s‘ v hlavičce není doplněn nulami."
 
-#: modules/file/alicona.c:546
+#: modules/file/alicona.c:585
 #, c-format
 msgid "Header tag ‘%s’ lacks CRLF terminator."
 msgstr "Klíči tagu ‚%s‘ v hlavičce schází ukončení CRLF."
 
-#: modules/file/alicona.c:552
+#: modules/file/alicona.c:591
 #, c-format
 msgid "Header tag ‘%s’ value is not nul-terminated."
 msgstr "Hodnota tagu ‚%s‘ v hlavičce není ukončna nulovým znakem."
 
-#: modules/file/alicona.c:560
+#: modules/file/alicona.c:601
 #, c-format
 msgid "Header tag ‘%s’ value is not nul-padded."
 msgstr "Hodnota tagu ‚%s‘ v hlavičce není doplněna nulami."
 
-#: modules/file/alicona.c:611 modules/file/gdeffile.c:169
+#: modules/file/alicona.c:652 modules/file/gdeffile.c:169
 #: modules/file/gdeffile.c:193 modules/file/gsffile.c:152
 #: modules/file/iso28600.c:1029 modules/file/pt3file.c:481
 #: modules/file/pt3file.c:583
 msgid "File header is truncated."
 msgstr "Hlavička souboru je uříznutá."
 
-#: modules/file/alicona.c:626
+#: modules/file/alicona.c:667
 msgid "Comment lacks CRLF termination."
 msgstr "Komentáři schází ukončení CRLF."
 
-#: modules/file/alicona.c:631
+#: modules/file/alicona.c:672
 msgid "Comment is not nul-terminated."
 msgstr "Komentář není ukončen nulovým znakem."
 
@@ -3256,10 +3260,12 @@ msgid "No corresponding data file was found for header file."
 msgstr "K hlavičkovému souboru nebyl nalezen odpovídající datový soubor."
 
 #: modules/file/hitachi-sem.c:164
+#, c-format
 msgid "Cannot load image: %s"
 msgstr "Nelze načíst obrázek: %s."
 
 #: modules/file/hitachi-sem.c:180
+#, c-format
 msgid "Field DataSize %ux%u does not match image dimensions %ux%u."
 msgstr "Položka DataSize %ux%u neodpovídá rozměrům obrázku %u×%u."
 
@@ -3329,8 +3335,7 @@ msgstr ""
 #: modules/file/iso28600.c:680
 #, c-format
 msgid "List ‘%s’ has %u items which differs from the number %u given by ‘%s’."
-msgstr ""
-"Seznam ‚%s‘ má %u položek, což se liší od počtu %u daného ‚%s‘."
+msgstr "Seznam ‚%s‘ má %u položek, což se liší od počtu %u daného ‚%s‘."
 
 #: modules/file/iso28600.c:748 modules/file/iso28600.c:858
 #: modules/file/sdfile.c:843 modules/file/sdfile.c:860
@@ -3343,6 +3348,7 @@ msgstr "Soubor skončil při čtení vzorku č. %d z %d."
 #: modules/file/iso28600.c:757 modules/file/iso28600.c:867
 #: modules/file/spip-asc.c:230 modules/file/witec-asc.c:223
 #: modules/file/wsffile.c:212
+#, c-format
 msgid "Malformed data encountered when reading sample #%d of %d"
 msgstr "Při čtení vzorku č. %d z %d se narazilo na vadná data."
 
@@ -4794,30 +4800,30 @@ msgstr "Soubor skončil v datech barev."
 msgid "Unknown line %d"
 msgstr "Neznámá čára %d"
 
-#: modules/file/rhk-sm4.c:339
+#: modules/file/rhk-sm4.c:371
 msgid "Imports RHK Technology SM4 data files."
 msgstr "Načítá datové soubory RHK Technology typu SM4."
 
-#: modules/file/rhk-sm4.c:359
+#: modules/file/rhk-sm4.c:391
 msgid "RHK SM4 files (.sm4)"
 msgstr "RHK SM4 soubory (.sm4)"
 
-#: modules/file/rhk-sm4.c:544
+#: modules/file/rhk-sm4.c:603
 #, c-format
 msgid "Object %s is truncated."
 msgstr "Objekt %s je uříznutý."
 
-#: modules/file/rhk-sm4.c:772
+#: modules/file/rhk-sm4.c:886
 #, c-format
 msgid "Object list in %s is truncated."
 msgstr "Seznam objektů v %s je uříznutý."
 
-#: modules/file/rhk-sm4.c:789
+#: modules/file/rhk-sm4.c:903
 #, c-format
 msgid "Object of type %s is truncated."
 msgstr "Objekty typu %s je uříznutý."
 
-#: modules/file/rhk-sm4.c:814
+#: modules/file/rhk-sm4.c:928
 #, c-format
 msgid "Cannot find object %s in %s."
 msgstr "Nelze nalézt objekt %s v %s."
