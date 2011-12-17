@@ -21,12 +21,15 @@ Release checklist:
   filtering of non-released modules)
 - generate stable API docs for gwyddion.net (using gwyddion.net-doc-build SVN
   module) and upload them
+  docbase=$HOME/Projects/Gwyddion/gwyddion/devel-docs ./gendoc.sh
 - tag SVN:
   svn copy https://gwyddion.svn.sourceforge.net/svnroot/gwyddion/trunk/gwyddion https://gwyddion.svn.sourceforge.net/svnroot/gwyddion/tags/gwyddion-0.0
 - build and upload packages
 - sign packages and upload signatures
+  DISPLAY= gpg2 -u yeti@gwyddion.net -b gwyddion-2.26.tar.gz
 - update gwyddion main page
-- publish files on Freshmeat, GnomeFiles, SourceForge
+- publish files on Freshmeat, SourceForge
+  rsync --progress -e ssh gwyddion-2.26.tar.xz yeti-dn,gwyddion@frs.sourceforge.net:/home/frs/project/g/gw/gwyddion/gwyddion/2.26/
 - send e-mail to the mailing lists
 - update the list of supported file formats on gwyddion.net and in the user
   guide (at least occasionally)
