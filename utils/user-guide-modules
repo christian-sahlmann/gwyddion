@@ -1,6 +1,8 @@
 # vim: set ts=28 :
 acf2d	statistical-analysis	autocorrelation-2d
 aistfile	managing-files
+alicona	managing-files
+ambfile	managing-files
 anfatec	managing-files
 angle_dist	statistical-analysis	angle-distribution
 apefile	managing-files
@@ -11,36 +13,39 @@ attocube	managing-files
 axis	selections
 basicops	basic-operations	modules-basic
 bcrfile	managing-files
+burleigh	managing-files
 burleigh_bii	managing-files
 burleigh_exp	managing-files
-burleigh	managing-files
 calcoefs_load	caldata
 calcoefs_new	caldata
 calcoefs_simple	caldata
 calcoefs_stage	caldata
 calcoefs_view	caldata
 calibrate	basic-operations	dimensions-and-units
+codevfile	managing-files
 convolution_filter	filters-presentations	convolution-filter
 createc	managing-files
 crop	basic-operations	crop
 crosscor	multidata	cross-correlation
+csmfile	managing-files
 curvature	leveling	curvature
 cwt	integral-transforms	cwt
 deposit_synth	synthetic
 distance	basic-operations	distance
 dmefile	managing-files
 drift	edit-extended	drift-compensation
-dwtanisotropy	integral-transforms	dwt
+dumbfile	managing-files
 dwt	integral-transforms	dwt
+dwtanisotropy	integral-transforms	dwt
 ecsfile	managing-files
 edge	filters-presentations	edge
 ellipse	selections
 ezdfile	managing-files
-facet_analysis	statistical-analysis	facet-analysis
 facet-level	leveling-and-background	facet-level
+facet_analysis	statistical-analysis	facet-analysis
+fft	integral-transforms	fft
 fft_filter_1d	edit-extended	fft-filter-1d
 fft_filter_2d	edit-extended	fft-filter-2d
-fft	integral-transforms	fft
 fft_profile	integral-transforms
 fft_synth	synthetic	spectral-synthetis
 filter	filters-presentations	basic-filters
@@ -51,11 +56,12 @@ gdeffile	managing-files
 gradient	filters-presentations	gradient
 grain_cross	grain-analysis	grain-correlation
 grain_dist	grain-analysis	grain-distributions
+grain_edge	grain-analysis
 grain_mark	grain-analysis	grain-threshold
-grainmeasure	grain-analysis	grain-measure
-grainremover	editing-correction
 grain_rem_threshold	grain-analysis	grain-remove-threshold
 grain_wshed	grain-analysis	grain-watershed
+grainmeasure	grain-analysis	grain-measure
+grainremover	editing-correction
 graph_cd	graph-processing	graph-critical-dimension
 graph_cut	graph-processing
 graph_dos_spectrum	graph-processing	graph-dos-spectrum
@@ -69,21 +75,24 @@ graph_stats	graph-processing
 gsffile	gsf
 gwyfile	managing-files
 hdf4file	managing-files
+hdrimage	managing-files
 hitachi-afm	managing-files
+hitachi-sem	managing-files
 hough	integral-transforms
 icolorange	color-map	color-range
 igorfile	managing-files
 immerse	multidata-immerse	immerse
 intematix	managing-files
+iso28600	managing-files
 jeol	managing-files
 jpkscan	managing-files
 laplace	editing-correction	remove-data-under-mask
+level	leveling-and-background	plane-level
 level3	leveling-and-background	three-point-level
 level_grains	grain-analysis	grain-level
-level	leveling-and-background	plane-level
 lextfile	managing-files
-linecorrect	editing-correction	line-correction
 line	selections
+linecorrect	editing-correction	line-correction
 linestats	statistical-analysis	line-stats
 lno_synth	synthetic	line-noise-synthetis
 local_contrast	filters-presentations	local-contrast
@@ -105,21 +114,22 @@ nanoeducator	managing-files
 nanonics	managing-files
 nanonis	managing-files
 nanoscan	managing-files
-nanoscope-ii	managing-files
 nanoscope	managing-files
+nanoscope-ii	managing-files
 nanotop	managing-files
 netcdf	managing-files
 noise_synth	synthetic	noise-synthetis
+nrrdfile	managing-files
 nt-mdt	managing-files
 obj_synth	synthetic	object-synthetis
 ols	managing-files
-omicronflat	managing-files
 omicron	managing-files
+omicronflat	managing-files
 omicronmatrix	managing-files
 opdfile	managing-files
 outliers	editing-correction	mask-of-outliers
-pathlevel	leveling-and-background	path-level
 pat_synth	synthetic	pattern-synthetis
+pathlevel	leveling-and-background	path-level
 pixmap	managing-files
 pltfile	managing-files
 plugin-proxy	plugins
@@ -160,9 +170,9 @@ slope_dist	statistical-analysis	slope-distribution
 spectro	single-point-spectra
 sphere-revolve	leveling-and-background	revolve-arc
 spip-asc	managing-files
-spmlabf	managing-files
-spmlab	managing-files
 spml	managing-files
+spmlab	managing-files
+spmlabf	managing-files
 spotremove	editing-correction	remove-spots
 stats	statistical-analysis	stat-quantities
 stmprg	managing-files
@@ -176,11 +186,8 @@ tipops	tip-convolution-artefacts	tip-operations
 unisoku	managing-files
 unrotate	editing-correction	unrotate
 wipfile	managing-files
+witec-asc	managing-files
 witfile	managing-files
 wsffile	managing-files
 wsxmfile	managing-files
-ambfile	managing-files
-csmfile	managing-files
-dumbfile	managing-files
-hdrimage	managing-files
-nrrdfile	managing-files
+zeiss	managing-files
