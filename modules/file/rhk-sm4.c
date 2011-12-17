@@ -1,6 +1,6 @@
 /*
  *  $Id$
- *  Copyright (C) 2009 David Necas (Yeti).
+ *  Copyright (C) 2009,2011 David Necas (Yeti).
  *  E-mail: yeti@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -17,7 +17,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
-#define DEBUG 1
+
 /**
  * [FILE-MAGIC-FREEDESKTOP]
  * <mime-type type="application/x-rhk-sm4-spm">
@@ -312,65 +312,65 @@ typedef struct {
     RHKPageIndex *page_indices;
 } RHKFile;
 
-static gboolean      module_register               (void);
-static gint          rhk_sm4_detect                (const GwyFileDetectInfo *fileinfo,
-                                                    gboolean only_name);
-static GwyContainer* rhk_sm4_load                  (const gchar *filename,
-                                                    GwyRunType mode,
-                                                    GError **error);
-static gboolean      rhk_sm4_read_page_index_header(RHKPageIndexHeader *header,
-                                                    const RHKObject *obj,
-                                                    const guchar *buffer,
-                                                    gsize size,
-                                                    GError **error);
-static gboolean      rhk_sm4_read_page_index       (RHKPageIndex *header,
-                                                    const RHKObject *obj,
-                                                    const guchar *buffer,
-                                                    gsize size,
-                                                    GError **error);
-static gboolean      rhk_sm4_read_page_header      (RHKPage *page,
-                                                    const RHKObject *obj,
-                                                    const guchar *buffer,
-                                                    gsize size,
-                                                    GError **error);
-static gboolean      rhk_sm4_read_page_data        (RHKPage *page,
-                                                    const RHKObject *obj,
-                                                    const guchar *buffer,
-                                                    GError **error);
-static gboolean      rhk_sm4_read_string_data      (RHKPage *page,
-                                                    const RHKObject *obj,
-                                                    guint count,
-                                                    const guchar *buffer);
-static gboolean      rhk_sm4_read_drift_header     (RHKSpecDriftHeader *drift_header,
-                                                    const RHKObject *obj,
-                                                    const guchar *buffer);
-static gboolean      rhk_sm4_read_spec_info        (RHKSpecInfo *spec_info,
-                                                    const RHKObject *obj,
-                                                    const guchar *buffer);
-static RHKObject*    rhk_sm4_read_objects          (const guchar *buffer,
-                                                    const guchar *p,
-                                                    gsize size,
-                                                    guint count,
-                                                    RHKObjectType intype,
-                                                    GError **error);
-static RHKObject*    rhk_sm4_find_object           (RHKObject *objects,
-                                                    guint count,
-                                                    RHKObjectType type,
-                                                    RHKObjectType parenttype,
-                                                    GError **error);
-static const gchar*  rhk_sm4_describe_object       (RHKObjectType type);
-static void          rhk_sm4_free                  (RHKFile *rhkfile);
-static GwyDataField* rhk_sm4_page_to_data_field    (const RHKPage *page);
-static GwyGraphModel* rhk_sm4_page_to_graph_model  (const RHKPage *page);
-static GwyContainer* rhk_sm4_get_metadata          (const RHKPageIndex *pi,
-                                                    const RHKPage *page);
+static gboolean            module_register               (void);
+static gint                rhk_sm4_detect                (const GwyFileDetectInfo *fileinfo,
+                                                          gboolean only_name);
+static GwyContainer*       rhk_sm4_load                  (const gchar *filename,
+                                                          GwyRunType mode,
+                                                          GError **error);
+static gboolean            rhk_sm4_read_page_index_header(RHKPageIndexHeader *header,
+                                                          const RHKObject *obj,
+                                                          const guchar *buffer,
+                                                          gsize size,
+                                                          GError **error);
+static gboolean            rhk_sm4_read_page_index       (RHKPageIndex *header,
+                                                          const RHKObject *obj,
+                                                          const guchar *buffer,
+                                                          gsize size,
+                                                          GError **error);
+static gboolean            rhk_sm4_read_page_header      (RHKPage *page,
+                                                          const RHKObject *obj,
+                                                          const guchar *buffer,
+                                                          gsize size,
+                                                          GError **error);
+static gboolean            rhk_sm4_read_page_data        (RHKPage *page,
+                                                          const RHKObject *obj,
+                                                          const guchar *buffer,
+                                                          GError **error);
+static gboolean            rhk_sm4_read_string_data      (RHKPage *page,
+                                                          const RHKObject *obj,
+                                                          guint count,
+                                                          const guchar *buffer);
+static RHKSpecDriftHeader* rhk_sm4_read_drift_header     (const RHKObject *obj,
+                                                          const guchar *buffer);
+static RHKSpecInfo*        rhk_sm4_read_spec_info        (const RHKObject *obj,
+                                                          const guchar *buffer,
+                                                          gsize size,
+                                                          guint nspec);
+static RHKObject*          rhk_sm4_read_objects          (const guchar *buffer,
+                                                          const guchar *p,
+                                                          gsize size,
+                                                          guint count,
+                                                          RHKObjectType intype,
+                                                          GError **error);
+static RHKObject*          rhk_sm4_find_object           (RHKObject *objects,
+                                                          guint count,
+                                                          RHKObjectType type,
+                                                          RHKObjectType parenttype,
+                                                          GError **error);
+static const gchar*        rhk_sm4_describe_object       (RHKObjectType type);
+static void                rhk_sm4_free                  (RHKFile *rhkfile);
+static GwyDataField*       rhk_sm4_page_to_data_field    (const RHKPage *page);
+static GwyGraphModel*      rhk_sm4_page_to_graph_model   (const RHKPage *page);
+static GwyContainer*       rhk_sm4_get_metadata          (const RHKPageIndex *pi,
+                                                          const RHKPage *page);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Imports RHK Technology SM4 data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.1",
+    "0.2",
     "David Nečas (Yeti)",
     "2009",
 };
@@ -550,9 +550,8 @@ rhk_sm4_load(const gchar *filename,
         }
         else if (pi->data_type == RHK_DATA_LINE) {
             GwyGraphModel *gmodel;
-            RHKSpecDriftHeader drift_header;
-            RHKSpecInfo spec_info;
-            G_GNUC_UNUSED gboolean have_header = FALSE, have_info = FALSE;
+            RHKSpecDriftHeader *drift_header = NULL;
+            RHKSpecInfo *spec_infos = NULL;
 
             gwy_debug("page_type %u", page->page_type);
             gwy_debug("line_type %u", page->line_type);
@@ -560,20 +559,15 @@ rhk_sm4_load(const gchar *filename,
             /* Page may contain drift header */
             if ((obj = rhk_sm4_find_object(page->objects, page->object_count,
                                            RHK_OBJECT_SPEC_DRIFT_HEADER,
-                                           RHK_OBJECT_PAGE_HEADER, NULL))
-                && rhk_sm4_read_drift_header(&drift_header, obj, buffer)) {
-                gwy_debug("drift_header OK");
-                have_header = TRUE;
-            }
+                                           RHK_OBJECT_PAGE_HEADER, NULL)))
+                drift_header = rhk_sm4_read_drift_header(obj, buffer);
             if ((obj = rhk_sm4_find_object(page->objects, page->object_count,
                                            RHK_OBJECT_SPEC_DRIFT_DATA,
-                                           RHK_OBJECT_PAGE_HEADER, NULL))
-                && rhk_sm4_read_spec_info(&spec_info, obj, buffer)) {
-                gwy_debug("spec_info OK");
-                have_info = TRUE;
-            }
+                                           RHK_OBJECT_PAGE_HEADER, NULL)))
+                spec_infos = rhk_sm4_read_spec_info(obj, buffer, size,
+                                                    page->y_size);
             /* FIXME: RHK_STRING_PLL_PRO_STATUS may contain interesting
-             * metadata.  But we have not place where to put it. */
+             * metadata.  But we have no place where to put it. */
 
             if ((gmodel = rhk_sm4_page_to_graph_model(page))) {
                 graphid++;
@@ -582,6 +576,8 @@ rhk_sm4_load(const gchar *filename,
                                          gmodel);
                 g_object_unref(gmodel);
             }
+            g_free(spec_infos);
+            g_free(drift_header);
         }
     }
 
@@ -823,43 +819,56 @@ rhk_sm4_read_string_data(RHKPage *page,
     return TRUE;
 }
 
-static gboolean
-rhk_sm4_read_drift_header(RHKSpecDriftHeader *drift_header,
-                          const RHKObject *obj,
+static RHKSpecDriftHeader*
+rhk_sm4_read_drift_header(const RHKObject *obj,
                           const guchar *buffer)
 {
+    RHKSpecDriftHeader *drift_header = NULL;
     const guchar *p = buffer + obj->offset;
 
     if (obj->size < 16)
-        return FALSE;
+        return drift_header;
 
+    drift_header = g_new0(RHKSpecDriftHeader, 1);
     drift_header->start_time = gwy_get_guint64_le(&p);
     drift_header->drift_opt = gwy_get_gint16_le(&p);
     drift_header->nstrings = gwy_get_guint16_le(&p);
     /* TODO: Read the strings. */
-    return TRUE;
+
+    return drift_header;
 }
 
-// FIXME: In fact, there is an yres-long array of SpecInfo.
-static gboolean
-rhk_sm4_read_spec_info(RHKSpecInfo *spec_info,
-                       const RHKObject *obj,
-                       const guchar *buffer)
+static RHKSpecInfo*
+rhk_sm4_read_spec_info(const RHKObject *obj,
+                       const guchar *buffer,
+                       gsize size,
+                       guint nspec)
 {
+    enum { SPEC_INFO_SIZE = 28 };
+
     const guchar *p = buffer + obj->offset;
+    RHKSpecInfo *spec_infos = NULL;
+    guint i;
 
-    if (obj->size < 28)
-        return FALSE;
+    if (obj->size != SPEC_INFO_SIZE)
+        return spec_infos;
+    if (obj->offset + nspec*SPEC_INFO_SIZE >= size)
+        return spec_infos;
 
-    spec_info->ftime = gwy_get_gfloat_le(&p);
-    spec_info->x_coord = gwy_get_gfloat_le(&p);
-    spec_info->y_coord = gwy_get_gfloat_le(&p);
-    gwy_debug("x_coord = %g, y_coord = %g", spec_info->x_coord, spec_info->y_coord);
-    spec_info->dx = gwy_get_gfloat_le(&p);
-    spec_info->dy = gwy_get_gfloat_le(&p);
-    spec_info->cumulative_dx = gwy_get_gfloat_le(&p);
-    spec_info->cumulative_dy = gwy_get_gfloat_le(&p);
-    return TRUE;
+    spec_infos = g_new(RHKSpecInfo, nspec);
+    for (i = 0; i < nspec; i++) {
+        RHKSpecInfo *spec_info = spec_infos + i;
+        spec_info->ftime = gwy_get_gfloat_le(&p);
+        spec_info->x_coord = gwy_get_gfloat_le(&p);
+        spec_info->y_coord = gwy_get_gfloat_le(&p);
+        gwy_debug("[%u] x_coord = %g, y_coord = %g",
+                  i, spec_info->x_coord, spec_info->y_coord);
+        spec_info->dx = gwy_get_gfloat_le(&p);
+        spec_info->dy = gwy_get_gfloat_le(&p);
+        spec_info->cumulative_dx = gwy_get_gfloat_le(&p);
+        spec_info->cumulative_dy = gwy_get_gfloat_le(&p);
+    }
+    return spec_infos;
 }
 
 /* FIXME: Some of the objects read are of type 0 and size 0, but maybe
