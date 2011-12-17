@@ -47,7 +47,7 @@
       <xsl:if test="count(child::userguide) > 0">
         <xsl:text> (</xsl:text>
         <a>
-          <xsl:attribute name="href">http://gwyddion.net/documentation/user-guide/<xsl:value-of select="userguide"/></xsl:attribute>
+          <xsl:attribute name="href">http://gwyddion.net/documentation/user-guide-en/<xsl:value-of select="userguide"/></xsl:attribute>
           <xsl:text>User guide</xsl:text>
         </a>
         <xsl:text>)</xsl:text>
