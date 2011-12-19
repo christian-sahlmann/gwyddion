@@ -412,7 +412,7 @@ setup_logging(void)
         "GLib", "GLib-GObject", "GLib-GIO", "GModule", "GThread",
         "GdkPixbuf", "Gdk", "Gtk",
         "GdkGLExt", "GtkGLExt",
-        "Pango",
+        "Pango", "Unique",
         "Gwyddion", "GwyProcess", "GwyDraw", "Gwydgets", "GwyModule", "GwyApp",
         "Module", NULL
     };
