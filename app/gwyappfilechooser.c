@@ -673,7 +673,7 @@ gwy_app_file_chooser_add_preview(GwyAppFileChooser *chooser)
                                       &setting);
     button = gtk_toggle_button_new();
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(button), setting);
-    gtk_widget_set_can_focus(button, FALSE);
+    GTK_WIDGET_UNSET_FLAGS(button, GTK_CAN_FOCUS);
     gtk_button_set_relief(GTK_BUTTON(button), GTK_RELIEF_NONE);
     gtk_tooltips_set_tip(tips, button,
                          _("Plane-level previewed data"), NULL);
@@ -689,7 +689,7 @@ gwy_app_file_chooser_add_preview(GwyAppFileChooser *chooser)
                                       &setting);
     button = gtk_toggle_button_new();
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(button), setting);
-    gtk_widget_set_can_focus(button, FALSE);
+    GTK_WIDGET_UNSET_FLAGS(button, GTK_CAN_FOCUS);
     gtk_button_set_relief(GTK_BUTTON(button), GTK_RELIEF_NONE);
     gtk_tooltips_set_tip(tips, button,
                          _("Row-level previewed data"), NULL);
