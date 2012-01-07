@@ -1,3 +1,8 @@
+2.27 (0000-00-00)
+Modules:
+- Pixmap: The font used for labels can be changed.
+
+
 2.26 (2011-12-17)
 Application:
 - Translations updated: Czech, French, Italian, Russian, Spanish.

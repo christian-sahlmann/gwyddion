@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2004-2011 David Necas (Yeti).
+ *  Copyright (C) 2004-2012 David Necas (Yeti).
  *  E-mail: yeti@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -131,6 +131,7 @@ typedef struct {
     InsetPosType inset_pos;
     gboolean draw_mask;
     gboolean draw_selection;
+    gchar *font;
     gdouble font_size;
     gboolean scale_font;
     guint grayscale;
@@ -178,6 +179,7 @@ typedef struct {
     GtkObject *zoom;
     GtkObject *width;
     GtkObject *height;
+    GtkWidget *font;
     GtkWidget *font_size;
     GtkWidget *image;
     GtkWidget *draw_mask;
@@ -296,29 +298,34 @@ static GdkPixbuf*        hruler                    (gint size,
                                                     gdouble real,
                                                     gdouble zoom,
                                                     gdouble offset,
+                                                    const gchar *font,
                                                     GwySIUnit *siunit);
 static GdkPixbuf*        vruler                    (gint size,
                                                     gint extra,
                                                     gdouble real,
                                                     gdouble zoom,
                                                     gdouble offset,
+                                                    const gchar *font,
                                                     GwySIUnit *siunit);
 static gint              gwy_pixmap_step_to_prec   (gdouble d);
 static GdkPixbuf*        fmscale                   (gint size,
                                                     gdouble bot,
                                                     gdouble top,
                                                     gdouble zoom,
+                                                    const gchar *font,
                                                     GwySIUnit *siunit);
 static GdkPixbuf*        scalebar                  (gint size,
                                                     const gchar *length,
                                                     gdouble real,
                                                     gdouble zoom,
-                                                    const GwyRGBA *color);
+                                                    const GwyRGBA *color,
+                                                    const gchar *font);
 static GdkDrawable*      prepare_drawable          (gint width,
                                                     gint height,
                                                     gint lw,
                                                     GdkGC **gc);
-static PangoLayout*      prepare_layout            (gdouble zoom);
+static PangoLayout*      prepare_layout            (gdouble zoom,
+                                                    const gchar *font);
 static PixmapFormatInfo* find_format               (const gchar *name);
 static void              pixmap_save_load_args     (GwyContainer *container,
                                                     PixmapSaveArgs *args);
@@ -428,7 +435,7 @@ static GSList *pixmap_formats = NULL;
 static const PixmapSaveArgs pixmap_save_defaults = {
     1.0, PIXMAP_RULERS, PIXMAP_FMSCALE,
     { 1.0, 1.0, 1.0, 1.0 }, INSET_POS_BOTTOM_RIGHT,
-    TRUE, TRUE, FONT_SIZE, TRUE,
+    TRUE, TRUE, "Helvetica", FONT_SIZE, TRUE,
     0,
     /* Interface only */
     NULL, NULL, NULL, FALSE, 0, 0, FALSE,
@@ -446,9 +453,9 @@ static GwyModuleInfo module_info = {
        "PNG, JPEG, TIFF, PPM, BMP, TARGA. "
        "Import support relies on GDK and thus may be installation-dependent."),
     "Yeti <yeti@gwyddion.net>",
-    "7.17",
+    "7.18",
     "David Nečas (Yeti)",
-    "2004-2011",
+    "2004-2012",
 };
 
 GWY_MODULE_QUERY(module_info)
@@ -2186,13 +2193,15 @@ pixmap_draw_pixbuf(GwyContainer *data,
                                      0);
     if (!args.dfield) {
         err_NO_CHANNEL_EXPORT(error);
+        g_free(args.font);
         return FALSE;
     }
     if (!args.data_view) {
         g_set_error(error, GWY_MODULE_FILE_ERROR,
                     GWY_MODULE_FILE_ERROR_SPECIFIC,
                     _("Data must be displayed in a window for pixmap export."));
-
+        g_free(args.font);
+        return FALSE;
     }
     key = gwy_data_view_get_data_prefix(args.data_view);
     buf = g_strconcat(key, "/realsquare", NULL);
@@ -2207,11 +2216,13 @@ pixmap_draw_pixbuf(GwyContainer *data,
         pixmap_save_save_args(settings, &args);
         err_CANCELLED(error);
         g_free(args.inset_length);
-        return NULL;
+        g_free(args.font);
+        return FALSE;
     }
     pixbuf = pixmap_draw(data, &args);
     pixmap_save_save_args(settings, &args);
     g_free(args.inset_length);
+    g_free(args.font);
 
     return pixbuf;
 }
@@ -2316,7 +2327,7 @@ pixmap_draw_presentational(GwyContainer *data,
 
         sbpixbuf = scalebar(zwidth, args->inset_length,
                             gwy_data_field_get_xreal(args->dfield),
-                            fontzoom, &args->inset_color);
+                            fontzoom, &args->inset_color, args->font);
         sbw = gdk_pixbuf_get_width(sbpixbuf);
         sbh = gdk_pixbuf_get_height(sbpixbuf);
 
@@ -2349,12 +2360,12 @@ pixmap_draw_presentational(GwyContainer *data,
         hrpixbuf = hruler(zwidth + 2*lw, border,
                           gwy_data_field_get_xreal(args->dfield),
                           fontzoom, gwy_data_field_get_xoffset(args->dfield),
-                          siunit_xy);
+                          args->font, siunit_xy);
         hrh = gdk_pixbuf_get_height(hrpixbuf);
         vrpixbuf = vruler(zheight + 2*lw, border,
                           gwy_data_field_get_yreal(args->dfield),
                           fontzoom, gwy_data_field_get_yoffset(args->dfield),
-                          siunit_xy);
+                          args->font, siunit_xy);
         vrw = gdk_pixbuf_get_width(vrpixbuf);
     }
     else {
@@ -2368,7 +2379,8 @@ pixmap_draw_presentational(GwyContainer *data,
         else
             siunit_z = gwy_data_field_get_si_unit_z(args->dfield);
         gwy_layer_basic_get_range(GWY_LAYER_BASIC(layer), &min, &max);
-        scalepixbuf = fmscale(zheight + 2*lw, min, max, fontzoom, siunit_z);
+        scalepixbuf = fmscale(zheight + 2*lw, min, max, fontzoom, args->font,
+                              siunit_z);
         inverted = min > max;
         scw = gdk_pixbuf_get_width(scalepixbuf);
         if (has_presentation)
@@ -2682,6 +2694,61 @@ height_changed(GtkAdjustment *adj,
 }
 
 static void
+font_changed(GtkFontButton *button,
+             PixmapSaveControls *controls)
+{
+    PixmapSaveArgs *args = controls->args;
+    GtkAdjustment *adj;
+    const gchar *full_font = gtk_font_button_get_font_name(button);
+    const gchar *size_pos = strrchr(full_font, ' ');
+    gchar *end;
+    gdouble size;
+
+    if (!size_pos) {
+        g_warning("Cannot parse font description `%s' into name and size.",
+                  full_font);
+        return;
+    }
+    size = g_ascii_strtod(size_pos+1, &end);
+    if (end == size_pos+1) {
+        g_warning("Cannot parse font description `%s' into name and size.",
+                  full_font);
+        return;
+    }
+
+    g_free(args->font);
+    args->font = g_strndup(full_font, size_pos-full_font);
+
+    if (!args->scale_font) {
+        adj = gtk_spin_button_get_adjustment(GTK_SPIN_BUTTON(controls->font_size));
+        controls->in_update = TRUE;
+        gtk_adjustment_set_value(adj, size);
+        controls->in_update = FALSE;
+    }
+
+    if (args->xytype != PIXMAP_NONE || args->ztype != PIXMAP_NONE)
+        save_update_preview(controls);
+}
+
+static void
+update_selected_font(PixmapSaveControls *controls)
+{
+    PixmapSaveArgs *args = controls->args;
+    gchar *full_font;
+    gdouble font_size;
+
+    if (args->scale_font)
+        font_size = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->zoom))
+                    * FONT_SIZE;
+    else
+        font_size = args->font_size;
+
+    full_font = g_strdup_printf("%s %g", controls->args->font, font_size);
+    gtk_font_button_set_font_name(GTK_FONT_BUTTON(controls->font), full_font);
+    g_free(full_font);
+}
+
+static void
 scale_font_changed(GtkToggleButton *check,
                    PixmapSaveControls *controls)
 {
@@ -2698,6 +2765,8 @@ scale_font_changed(GtkToggleButton *check,
                                   zoom*FONT_SIZE);
         controls->in_update = FALSE;
     }
+    update_selected_font(controls);
+
     if (controls->args->xytype != PIXMAP_NONE
         || controls->args->ztype != PIXMAP_NONE)
         save_update_preview(controls);
@@ -2714,6 +2783,7 @@ font_size_changed(GtkAdjustment *adj,
             && controls->args->ztype == PIXMAP_NONE))
         return;
 
+    update_selected_font(controls);
     save_update_preview(controls);
 }
 
@@ -2931,7 +3001,7 @@ pixmap_save_dialog(GwyContainer *data,
     vbox = gtk_vbox_new(FALSE, 8);
     gtk_box_pack_start(GTK_BOX(hbox), vbox, FALSE, FALSE, 0);
 
-    table = GTK_TABLE(gtk_table_new(12, 3, FALSE));
+    table = GTK_TABLE(gtk_table_new(13, 3, FALSE));
     gtk_table_set_row_spacings(table, 2);
     gtk_table_set_col_spacings(table, 6);
     gtk_box_pack_start(GTK_BOX(vbox), GTK_WIDGET(table), FALSE, FALSE, 0);
@@ -2972,6 +3042,20 @@ pixmap_save_dialog(GwyContainer *data,
     g_signal_connect(controls.height, "value-changed",
                      G_CALLBACK(height_changed), &controls);
     gtk_table_set_row_spacing(table, row, 8);
+    row++;
+
+    label = gtk_label_new(_("Font:"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(table, label,
+                     0, 1, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+
+    controls.font = gtk_font_button_new();
+    gtk_font_button_set_show_size(GTK_FONT_BUTTON(controls.font), FALSE);
+    gtk_font_button_set_use_font(GTK_FONT_BUTTON(controls.font), TRUE);
+    gtk_table_attach(table, controls.font,
+                     1, 2, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    g_signal_connect(controls.font, "font-set",
+                     G_CALLBACK(font_changed), &controls);
     row++;
 
     controls.scale_font
@@ -3184,6 +3268,7 @@ pixmap_save_dialog(GwyContainer *data,
     args->zoom = PREVIEW_SIZE/(gdouble)MAX(args->xres, args->yres);
     gtk_widget_activate(controls.inset_length);
     save_update_preview(&controls);
+    update_selected_font(&controls);
     controls.in_update = FALSE;
 
     gtk_widget_show_all(dialog);
@@ -3275,6 +3360,7 @@ hruler(gint size,
        gdouble real,
        gdouble zoom,
        gdouble offset,
+       const gchar *font,
        GwySIUnit *siunit)
 {
     PangoRectangle logical1, logical2;
@@ -3290,7 +3376,7 @@ hruler(gint size,
     gboolean units_placed;
 
     s = g_string_new(NULL);
-    layout = prepare_layout(zoom);
+    layout = prepare_layout(zoom, font);
 
     format = gwy_si_unit_get_format_with_resolution(siunit,
                                                     GWY_SI_UNIT_FORMAT_VFMARKUP,
@@ -3364,6 +3450,7 @@ vruler(gint size,
        gdouble real,
        gdouble zoom,
        gdouble offset,
+       const gchar *font,
        GwySIUnit *siunit)
 {
     PangoRectangle logical1, logical2;
@@ -3378,7 +3465,7 @@ vruler(gint size,
     gint tick, width, lw;
 
     s = g_string_new(NULL);
-    layout = prepare_layout(zoom);
+    layout = prepare_layout(zoom, font);
 
     format = gwy_si_unit_get_format_with_resolution(siunit,
                                                     GWY_SI_UNIT_FORMAT_VFMARKUP,
@@ -3463,6 +3550,7 @@ fmscale(gint size,
         gdouble bot,
         gdouble top,
         gdouble zoom,
+        const gchar *font,
         GwySIUnit *siunit)
 {
     PangoRectangle logical1, logical2;
@@ -3478,7 +3566,7 @@ fmscale(gint size,
     gint units_width, label_height, mintickdist, prec = 1, pos, bool_draw = 1;
 
     s = g_string_new(NULL);
-    layout = prepare_layout(zoom);
+    layout = prepare_layout(zoom, font);
 
     x_max = MAX(fabs(bot), fabs(top));
     format = gwy_si_unit_get_format(siunit, GWY_SI_UNIT_FORMAT_VFMARKUP,
@@ -3579,7 +3667,8 @@ scalebar(gint size,
          const gchar *length,
          gdouble real,
          gdouble zoom,
-         const GwyRGBA *color)
+         const GwyRGBA *color,
+         const gchar *font)
 {
     guchar color_bytes[3];
     PangoRectangle logical;
@@ -3595,7 +3684,7 @@ scalebar(gint size,
     guchar *pixels;
     gdouble p;
 
-    layout = prepare_layout(zoom);
+    layout = prepare_layout(zoom, font);
 
     s = g_string_new(NULL);
     p = g_strtod(length, &end);
@@ -3697,14 +3786,17 @@ prepare_drawable(gint width,
 }
 
 static PangoLayout*
-prepare_layout(gdouble zoom)
+prepare_layout(gdouble zoom, const gchar *font)
 {
     PangoContext *context;
     PangoFontDescription *fontdesc;
     PangoLayout *layout;
+    gchar *full_font;
 
     context = gdk_pango_context_get();
-    fontdesc = pango_font_description_from_string("Helvetica 12");
+    full_font = g_strconcat(font, " 12", NULL);
+    fontdesc = pango_font_description_from_string(full_font);
+    g_free(full_font);
     pango_font_description_set_size(fontdesc, 12*PANGO_SCALE*zoom);
     pango_context_set_font_description(context, fontdesc);
     layout = pango_layout_new(context);
@@ -3736,6 +3828,7 @@ find_format(const gchar *name)
 
 static const gchar draw_mask_key[]      = "/module/pixmap/draw_mask";
 static const gchar draw_selection_key[] = "/module/pixmap/draw_selection";
+static const gchar font_key[]           = "/module/pixmap/font";
 static const gchar font_size_key[]      = "/module/pixmap/font_size";
 static const gchar grayscale_key[]      = "/module/pixmap/grayscale";
 static const gchar inset_color_key[]    = "/module/pixmap/inset_color";
@@ -3776,11 +3869,16 @@ pixmap_save_load_args(GwyContainer *container,
                                       &args->draw_mask);
     gwy_container_gis_boolean_by_name(container, draw_selection_key,
                                       &args->draw_selection);
+    gwy_container_gis_string_by_name(container, font_key,
+                                     (const guchar**)&args->font);
     gwy_container_gis_boolean_by_name(container, scale_font_key,
                                       &args->scale_font);
     gwy_container_gis_double_by_name(container, font_size_key,
                                      &args->font_size);
     gwy_container_gis_int32_by_name(container, grayscale_key, &args->grayscale);
+
+    args->font = g_strdup(args->font);
+
     pixmap_save_sanitize_args(args);
 }
 
@@ -3797,6 +3895,8 @@ pixmap_save_save_args(GwyContainer *container,
                                       args->draw_mask);
     gwy_container_set_boolean_by_name(container, draw_selection_key,
                                       args->draw_selection);
+    gwy_container_set_string_by_name(container, font_key,
+                                     g_strdup(args->font));
     gwy_container_set_boolean_by_name(container, scale_font_key,
                                       args->scale_font);
     gwy_container_set_double_by_name(container, font_size_key, args->font_size);
