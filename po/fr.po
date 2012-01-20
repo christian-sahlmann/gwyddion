@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: French localization\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
 "POT-Creation-Date: 2011-12-17 10:50+0100\n"
-"PO-Revision-Date: 2011-12-15 22:00+0100\n"
+"PO-Revision-Date: 2011-12-18 20:48+0100\n"
 "Last-Translator: François RIGUET <francheu@caramail.com>\n"
 "Language-Team: François RIGUET <francheu@caramail.com>\n"
 "Language: \n"
@@ -350,7 +350,7 @@ msgstr "Position y du centre de courbure"
 
 #: libprocess/gwygrainvalue.c:302
 msgid "Curvature center z value"
-msgstr "Valeur z du centre de courure"
+msgstr "Valeur z du centre de courbure"
 
 #: libprocess/gwygrainvalue.c:311
 msgid "Curvature 1"
@@ -370,7 +370,7 @@ msgstr "Angle de courbure 2"
 
 #: libprocess/gwygrainvalue.c:981
 msgid "Id"
-msgstr "Identification"
+msgstr "Identifiant"
 
 #: libprocess/gwygrainvalue.c:982 modules/tools/readvalue.c:239
 msgid "Position"
@@ -391,6 +391,7 @@ msgid "Volume"
 msgstr "Volume"
 
 #: libprocess/gwygrainvalue.c:986
+#, fuzzy
 msgid "Boundary"
 msgstr "Dimensions"
 
@@ -537,7 +538,7 @@ msgstr "Blackmann"
 
 #: libprocess/gwyprocessenums.c:248
 msgid "Lanzcos"
-msgstr "Lanzcos"
+msgstr "Lanczos"
 
 #: libprocess/gwyprocessenums.c:249
 msgid "Welch"
@@ -1253,6 +1254,10 @@ msgstr "Licence"
 
 #: app/about.c:140
 #, c-format
+<<<<<<< .mine
+msgid "%s is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version. For full license text see file COPYING included in the source tarball."
+msgstr "%s est un logiciel libre ; vous pouvez le distribuer et/ou le modifier selon les termes de la licence GNU/GPL telle que publiée par la Free Software Foundation ; soit selon la version 2 de cette licence, ou (à votre choix) toute version ultérieure. Pour obtenir le texte complet de la licence reportez vous au fichier COPYING inclus dans le code source."
+=======
 msgid ""
 "%s is free software; you can redistribute it and/or modify it under the "
 "terms of the GNU General Public License as published by the Free Software "
@@ -1265,6 +1270,7 @@ msgstr ""
 "Foundation ; soit selon la version 2 de cette licence, ou (à votre choix) "
 "toute version ultérieure. Pour obtenir le text complet de la licence "
 "reportez vous au fichier COPYING inclus dans le code source."
+>>>>>>> .r13286
 
 #: app/about.c:163
 msgid "Features"
@@ -1877,7 +1883,7 @@ msgstr "Démarrage"
 
 #: app/splash.c:697
 msgid " is free software released under GNU GPL."
-msgstr " est un logiciel libre développé sous la license GNU GPL."
+msgstr " est un logiciel libre développé sous la licence GNU GPL."
 
 #: app/tips.c:51
 msgid ""
