@@ -37,7 +37,7 @@
  * [FILE-MAGIC-USERGUIDE]
  * oldmda
  * .sxml .dat
- * Read SPS
+ * Read
  **/
 
 #include <string.h>
