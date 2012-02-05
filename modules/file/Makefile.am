@@ -80,6 +80,7 @@ file_LTLIBRARIES = \
 	omicron.la \
 	omicronflat.la \
 	omicronmatrix.la \
+	oldmda.la \
 	ols.la \
 	opdfile.la \
 	pixmap.la \
@@ -200,6 +201,7 @@ nanotop_la_SOURCES       = nanotop.c
 netcdf_la_SOURCES        = netcdf.c
 nrrdfile_la_SOURCES      = nrrdfile.c
 nt_mdt_la_SOURCES        = nt-mdt.c
+oldmda_la_SOURCES        = oldmda.c
 ols_la_SOURCES           = ols.c gwytiff.h
 omicron_la_SOURCES       = omicron.c
 omicronflat_la_SOURCES   = omicronflat.c

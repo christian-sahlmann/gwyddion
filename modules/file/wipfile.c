@@ -938,7 +938,7 @@ static GwyDataField * wip_read_image(GNode *node)
 
     // Reading actual data
     /* FIXME: data is stored in strange way in TDImage, so it is more
-     * simple to swap X and Y axis here to read them correctly */
+     * simple to swap X and Y axes here to read them correctly */
     dfield = gwy_data_field_new(header->sizey, header->sizex,
                           header->sizey * pow(10.0, power10xy) * yscale,
                           header->sizex * pow(10.0, power10xy) * xscale,
@@ -1007,7 +1007,7 @@ static GwyDataField * wip_read_image(GNode *node)
     }
 
     if (mirrory || mirrorx) {
-        gwy_data_field_invert(dfield, mirrorx, mirrorx, FALSE);
+        gwy_data_field_invert(dfield, mirrory, mirrorx, FALSE);
     }
 
     return dfield;
