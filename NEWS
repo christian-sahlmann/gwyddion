@@ -1,6 +1,8 @@
 2.27 (0000-00-00)
 Modules:
+- Old MDA (new): Imports NT-MDT old MDA spectra data.
 - Pixmap: The font used for labels can be changed.
+- Nanoscope: Images defined in "Image list" header section are loaded now.
 
 
 2.26 (2011-12-17)
