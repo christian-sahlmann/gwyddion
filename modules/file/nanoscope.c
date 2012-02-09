@@ -165,7 +165,7 @@ static GwyModuleInfo module_info = {
     N_("Imports Veeco (Digital Instruments) Nanoscope data files, "
        "version 3 or newer."),
     "Yeti <yeti@gwyddion.net>",
-    "0.28",
+    "0.29",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -304,7 +304,7 @@ nanoscope_load(const gchar *filename,
         }
         if (!gwy_stramong(self, "Ciao image list", "AFM image list",
                           "STM image list", "NCAFM image list",
-                          "Ciao force image list", NULL))
+                          "Ciao force image list", "Image list", NULL))
             continue;
 
         if (file_type == NANOSCOPE_FILE_TYPE_FORCE_BIN) {
