@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: French localization\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2012-01-20 03:58+0100\n"
-"PO-Revision-Date: 2012-01-20 21:47+0100\n"
+"POT-Creation-Date: 2012-02-10 03:58+0100\n"
+"PO-Revision-Date: 2012-02-10 19:28+0100\n"
 "Last-Translator: François RIGUET <francheu@caramail.com>\n"
 "Language-Team: François RIGUET <francheu@caramail.com>\n"
 "Language: \n"
@@ -1841,7 +1841,7 @@ msgstr "Masquer la fenêtre outil (Echap)"
 #: app/menu.c:558
 #: app/toolbox.c:615
 msgid "_Data Process"
-msgstr "Traitement des _Données"
+msgstr "Traitement des _données"
 
 #: app/menu.c:600
 #: app/toolbox.c:618
@@ -2214,7 +2214,7 @@ msgstr "Vue"
 
 #: app/toolbox.c:108
 msgid "Data Process"
-msgstr "Traitement des Données"
+msgstr "Traitement des données"
 
 #: app/toolbox.c:108
 msgid "Tools"
@@ -3223,6 +3223,7 @@ msgid "Hitachi SEM files (.txt + image)"
 msgstr "Hitachi SEM (.txt + image)"
 
 #: modules/file/hitachi-sem.c:158
+#: modules/file/oldmda.c:240
 #: modules/file/unisoku.c:227
 msgid "No corresponding data file was found for header file."
 msgstr "Aucun fichier de données correspondant n'a été trouvé dans le fichier d'en-tête."
@@ -3881,6 +3882,27 @@ msgstr "La trame #%u est trop courte pour l'en-tête des données scannées."
 #: modules/file/nt-mdt.c:2465
 msgid "Raman Image"
 msgstr "Image Raman"
+
+#: modules/file/oldmda.c:144
+msgid "Imports old NTMDT MDA Spectra files."
+msgstr "Importe les anciens fichiers de spectres MDA NT-MDT."
+
+#: modules/file/oldmda.c:157
+msgid "NTMDT old MDA Spectra data (.sxml .dat)"
+msgstr "NT-MDT ancien format de spectres MDA (.sxml .dat)"
+
+#: modules/file/oldmda.c:231
+msgid "Incorrect number of axes in parameter file."
+msgstr "Le nombre d'axes dans le fichier de paramètres est incorrect."
+
+#: modules/file/oldmda.c:246
+#, c-format
+msgid "Cannot load data file: %s"
+msgstr "Impossible de charger le fichier de données : %s"
+
+#: modules/file/oldmda.c:254
+msgid "Data file too small."
+msgstr "Le fichier de données est trop petit."
 
 #: modules/file/ols.c:66
 msgid "Imports OLS data files."
