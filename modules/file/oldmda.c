@@ -91,7 +91,7 @@ typedef struct {
     guint           arraysize;
     guint           datacellmemsize;
     guint           res;
-    gdouble         *data;
+    GArray          *xdata;
     gchar           *dataname;
     GArray          *axes;
     gint            numaxes;
@@ -104,7 +104,7 @@ typedef struct {
     gdouble       xreal;
     gdouble       yreal;
     guint         res;
-    gdouble      *xdata;
+    GArray       *xdata;
     GwyContainer *data;
 }OldMDAFile;
 
@@ -193,7 +193,6 @@ oldmda_load(const gchar *filename,
     GMarkupParser parser = { start_element, end_element, parse_text, NULL, NULL };
     GMarkupParseContext *context;
     gsize size, size2;
-    gdouble xdata[1024];
     MDAXMLParams params;
     GError *err = NULL;
 
@@ -211,7 +210,7 @@ oldmda_load(const gchar *filename,
     }
     g_free(head);
 
-    params.data = xdata;
+    params.xdata = g_array_new(FALSE, TRUE, sizeof(gdouble));
     params.numaxes = 0;
     params.axes = g_array_new(FALSE, FALSE, sizeof(MDAAxis));
     params.flag = MDA_XML_NONE;
@@ -283,6 +282,7 @@ oldmda_free(MDAXMLParams *par)
         g_array_free(par->axes, TRUE);
     }
 
+    g_array_free(par->xdata, TRUE);
     g_free(par->dataname);
 }
 
@@ -291,7 +291,7 @@ oldmda_read_params(MDAXMLParams *par, OldMDAFile *mdafile)
 {
     MDAAxis axis;
     mdafile->res = par->res;
-    mdafile->xdata = par->data;
+    mdafile->xdata = par->xdata;
     axis = g_array_index(par->axes, MDAAxis, 1);
     mdafile->xres = axis.maxindex - axis.minindex + 1;
     if (mdafile->xres < 1)
@@ -312,11 +312,13 @@ static void oldmda_read_data(OldMDAFile *mdafile, const gchar *buffer)
 {
     GwyDataField *dfield;
     gdouble *zdata;
-    gdouble yspectra [1024];
+    gdouble yvalue;
+    GArray *yspectra;
     gint i, j, k;
     const guchar *p;
 
     p = buffer;
+    yspectra = g_array_new(FALSE, TRUE, sizeof(gdouble));
     dfield = gwy_data_field_new(mdafile->xres, mdafile->yres,
                                 mdafile->xreal, mdafile->yreal,
                                 TRUE);
@@ -326,9 +328,10 @@ static void oldmda_read_data(OldMDAFile *mdafile, const gchar *buffer)
         for (j = 0; j < mdafile->xres; j++) {
             *zdata = 0.0;
             for (k = 0; k < mdafile->res; k++) {
-                yspectra[k] = (gdouble)gwy_get_gint32_le(&p);
-                if (yspectra[k] > *zdata)
-                    *zdata = yspectra[k];
+                yvalue = (gdouble)gwy_get_gint32_le(&p);
+                g_array_append_val(yspectra, yvalue);
+                if (yvalue > *zdata)
+                    *zdata = yvalue;
             }
             zdata++;
         }
@@ -336,6 +339,7 @@ static void oldmda_read_data(OldMDAFile *mdafile, const gchar *buffer)
     gwy_container_set_object_by_name(mdafile->data, "/0/data", dfield);
     gwy_container_set_string_by_name(mdafile->data, "/0/data/title",
                                          g_strdup("Image"));
+    g_array_free(yspectra, TRUE);
     g_object_unref(dfield);
 }
 
@@ -508,11 +512,10 @@ parse_text(G_GNUC_UNUSED GMarkupParseContext *context,
             /* Error */
         }
         else {
-            params->res = params->res > 1024 ? 1024 : params->res;
             for (i = 0; i < params->res; i++) {
                 val = g_ascii_strtod(g_strdelimit(line, ",.", '.'), &line);
                 line += 2; /* skip ". " between values */
-                params->data[i] = val;
+                g_array_append_val(params->xdata,val);
             }
         }
     }
