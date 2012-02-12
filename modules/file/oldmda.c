@@ -105,6 +105,8 @@ typedef struct {
     gdouble       yreal;
     guint         res;
     GArray       *xdata;
+    GwySIUnit    *siunitxy;
+    gint          power10xy;
     GwyContainer *data;
 }OldMDAFile;
 
@@ -293,19 +295,26 @@ oldmda_read_params(MDAXMLParams *par, OldMDAFile *mdafile)
     mdafile->res = par->res;
     mdafile->xdata = par->xdata;
     axis = g_array_index(par->axes, MDAAxis, 1);
+    if (axis.unitname)
+        mdafile->siunitxy = gwy_si_unit_new_parse(axis.unitname,
+                                                 &mdafile->power10xy);
+    else
+        mdafile->siunitxy = gwy_si_unit_new("");
     mdafile->xres = axis.maxindex - axis.minindex + 1;
     if (mdafile->xres < 1)
         mdafile->xres = 1;
     if (axis.scale <= 0.0)
         axis.scale = 1.0;
-    mdafile->xreal = axis.scale*mdafile->xres;
+    mdafile->xreal = axis.scale * mdafile->xres 
+				   * pow(10.0, mdafile->power10xy);
     axis = g_array_index(par->axes, MDAAxis, 2);
     mdafile->yres = axis.maxindex - axis.minindex + 1;
     if (mdafile->yres < 1)
         mdafile->yres = 1;
     if (axis.scale <= 0.0)
         axis.scale = 1.0;
-    mdafile->yreal = axis.scale*mdafile->yres;
+    mdafile->yreal = axis.scale * mdafile->yres 
+				   * pow(10.0, mdafile->power10xy);
 }
 
 static void oldmda_read_data(OldMDAFile *mdafile, const gchar *buffer)
@@ -335,11 +344,14 @@ static void oldmda_read_data(OldMDAFile *mdafile, const gchar *buffer)
             }
             zdata++;
         }
+        
+	gwy_data_field_set_si_unit_xy(dfield, mdafile->siunitxy);
     gwy_data_field_invert(dfield, TRUE, FALSE, FALSE);
     gwy_container_set_object_by_name(mdafile->data, "/0/data", dfield);
     gwy_container_set_string_by_name(mdafile->data, "/0/data/title",
-                                         g_strdup("Image"));
+                                     g_strdup("Image"));
     g_array_free(yspectra, TRUE);
+    g_object_unref(mdafile->siunitxy);    
     g_object_unref(dfield);
 }
 
