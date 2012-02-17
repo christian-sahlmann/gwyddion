@@ -26,6 +26,7 @@
 #include <libgwyddion/gwyutils.h>
 #include <libgwyddion/gwydebugobjects.h>
 #include <libprocess/gwycalibration.h>
+#include "gwyprocessinternal.h"
 
 static void         gwy_calibration_finalize       (GObject *object);
 static gpointer     gwy_calibration_copy           (gpointer);
