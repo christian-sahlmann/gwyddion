@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: French localization\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
 "POT-Creation-Date: 2012-02-10 03:58+0100\n"
-"PO-Revision-Date: 2012-02-10 19:28+0100\n"
+"PO-Revision-Date: 2012-02-18 15:13+0100\n"
 "Last-Translator: François RIGUET <francheu@caramail.com>\n"
 "Language-Team: François RIGUET <francheu@caramail.com>\n"
 "Language: \n"
@@ -283,11 +283,11 @@ msgstr "Médiane"
 
 #: libprocess/gwygrainvalue.c:125
 msgid "Minimum value on boundary"
-msgstr "Valeur minimale sur le contour"
+msgstr "Minimum du bord"
 
 #: libprocess/gwygrainvalue.c:134
 msgid "Maximum value on boundary"
-msgstr "Valeur maximale sur le contour"
+msgstr "Maximum du bord"
 
 #: libprocess/gwygrainvalue.c:143
 msgid "Projected area"
@@ -411,9 +411,8 @@ msgid "Volume"
 msgstr "Volume"
 
 #: libprocess/gwygrainvalue.c:986
-#, fuzzy
 msgid "Boundary"
-msgstr "Dimensions"
+msgstr "Bord"
 
 #: libprocess/gwygrainvalue.c:987
 #: modules/process/pat_synth.c:866
@@ -7826,7 +7825,7 @@ msgstr "Statistiques des grains"
 
 #: modules/process/grain_dist.c:746
 msgid "Number of grains:"
-msgstr "Numéro du grain :"
+msgstr "Nombre de grains :"
 
 #: modules/process/grain_dist.c:755
 msgid "Total projected area (abs.):"
