@@ -78,6 +78,17 @@ static const StartupTip tips[] = {
         N_("Menus can be torn off by clicking the dashed line near the top "
            "for quick access to a subset of functions."),
     },
+    {
+        GTK_STOCK_EXECUTE,
+        N_("Pressing Ctrl-F runs the last used data processing function with "
+           "with the same parameters on the current data."),
+    },
+    {
+        GTK_STOCK_EXECUTE,
+        N_("Pressing Ctrl-Shift-F re-shows the parameter dialog of the last "
+           "used data processing function (or executes it immediately if it "
+           "has no parameters)."),
+    },
     /* Files */
     {
         GTK_STOCK_OPEN,
