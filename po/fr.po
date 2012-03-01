@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: French localization\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
 "POT-Creation-Date: 2012-03-01 03:58+0100\n"
-"PO-Revision-Date: 2012-03-01 23:13+0100\n"
+"PO-Revision-Date: 2012-03-01 23:33+0100\n"
 "Last-Translator: François RIGUET <francheu@caramail.com>\n"
 "Language-Team: François RIGUET <francheu@caramail.com>\n"
 "Language: \n"
@@ -9571,15 +9571,15 @@ msgstr "Limiter la plage de données en utilisant des seuils haut/bas."
 
 #: modules/process/threshold.c:137
 msgid "/_Basic Operations/Li_mit range..."
-msgstr "/Opérations _basiques/Li_miter la plage..."
+msgstr "/Opérations _basiques/Li_miter la plage des valeurs..."
 
 #: modules/process/threshold.c:141
 msgid "Limit data range"
-msgstr "Limiter la plages de données"
+msgstr "Limiter la plage des valeurs des données"
 
 #: modules/process/threshold.c:250
 msgid "Limit Range"
-msgstr "Limiter la plages de données"
+msgstr "Limiter la plages des valeurs"
 
 #: modules/process/threshold.c:296
 msgid "Specify _thresholds"
