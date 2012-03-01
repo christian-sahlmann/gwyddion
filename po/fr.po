@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: French localization\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2012-02-10 03:58+0100\n"
-"PO-Revision-Date: 2012-02-18 15:13+0100\n"
+"POT-Creation-Date: 2012-03-01 03:58+0100\n"
+"PO-Revision-Date: 2012-03-01 23:13+0100\n"
 "Last-Translator: François RIGUET <francheu@caramail.com>\n"
 "Language-Team: François RIGUET <francheu@caramail.com>\n"
 "Language: \n"
@@ -1991,219 +1991,227 @@ msgstr "Les présentations des données créées par les fonctions Traitement de
 msgid "Menus can be torn off by clicking the dashed line near the top for quick access to a subset of functions."
 msgstr "Les menus peuvent être détachés en cliquant sur la ligne pointillée en haut de ceux-ci, cela donne un accès rapide à sous-ensemble de fonctions."
 
-#: app/tips.c:84
+#: app/tips.c:83
+msgid "Pressing Ctrl-F runs the last used data processing function with with the same parameters on the current data."
+msgstr "Ctrl+F lance sur les données courantes la dernière fonction utilisée en appliquant les mêmes paramètres."
+
+#: app/tips.c:88
+msgid "Pressing Ctrl-Shift-F re-shows the parameter dialog of the last used data processing function (or executes it immediately if it has no parameters)."
+msgstr "Ctrl+Maj+F remontre la fenêtre de dialogue de la dernière fonction utilisée (ou l'exécute si celle-ci n'a pas de paramètres)."
+
+#: app/tips.c:95
 msgid "When Gwyddion is run with a directory argument it opens a file open dialog showing this directory."
 msgstr "Lorsque Gwyddion est lancé avec un dossier en argument, la fenêtre Ouvrir apparaît sur ce dossier."
 
-#: app/tips.c:89
+#: app/tips.c:100
 msgid "File → Open Recent → Document History opens a browser of recently loaded files with the possibility to search them by name."
 msgstr "Fichier → Ouvrir un fichier récent → Historique ouvre un navigateur des fichiers récemment ouverts avec la possibilité de faire une recherche par nom."
 
-#: app/tips.c:95
+#: app/tips.c:106
 msgid "Automatic import of unrecognized files as raw data can be enabled/disabled in the Raw file import dialog."
 msgstr "L'import automatique des fichiers non reconnus peut être activé/désactivé dans la boîte de dialogue d'import des fichiers texte brut."
 
-#: app/tips.c:100
+#: app/tips.c:111
 msgid "To export the image of a channel to a pixmap graphic format (PNG, TIFF, JPEG, ...) just save it as this format with File → Save As."
 msgstr "Pour exporter l'image d'un canal vers un format graphique(PNG, TIFF, JPEG...) sauvez la sous le format désiré avec Fichier → Enregistrer sous..."
 
-#: app/tips.c:106
+#: app/tips.c:117
 msgid "File → Merge imports all data from selected file to the current file."
 msgstr "Fichier→ Fusionner importe toute les données du fichier sélectionné vers le fichier courant."
 
-#: app/tips.c:112
+#: app/tips.c:123
 msgid "Your favorite false color gradient can be set as default in the gradient editor: Edit → Color Gradients.  The default gradient is shown in bold face."
 msgstr "Votre gradient favori peut être réglé par défaut dans l'éditeur de gradient : Editer → Gradients.  Le gradient par défaut est affiché en gras."
 
-#: app/tips.c:118
+#: app/tips.c:129
 msgid "Your favorite GL material can be set as default in the material editor: Edit → GL Materials.  The default material is shown in bold face."
 msgstr "Votre matériau GL favori peut être réglé par défaut dans l'éditeur de matériau : Editer → Matériau GL.  Le matériau par défaut est affiché en gras."
 
-#: app/tips.c:124
+#: app/tips.c:135
 msgid "Edit → Default Mask Color sets the default mask color.  This color is used when a mask is created on data that have not had a mask before."
 msgstr "Editer → Couleur de Masque par Défaut permet de choisir la couleur de masque. Cette couleur est utilisée lorsqu'un masque est créé sur des données sur lesquelles aucun masque n'est appliqué."
 
-#: app/tips.c:130
+#: app/tips.c:141
 msgid "Each channel has its own metadata."
 msgstr "Chaque canal possède ses propres métadonnées."
 
-#: app/tips.c:134
+#: app/tips.c:145
 msgid "Meta → Metadata Browser displays metadata (auxiliary information) of channels and allows editting or exporting to a text file."
 msgstr "Métadonnées → Navigateur de Méta-données affiche les méta-données (informations auxiliaires) sur les canaux et permet de les éditer ou les exporter vers un fichier texte."
 
-#: app/tips.c:140
+#: app/tips.c:151
 msgid "Curves can be copied to other (compatible) graphs by dragging them from Curves tab to the graph window."
 msgstr "Les courbes peuvent être copiées vers d'autres graphes (compatibles) en les transportant de l'onglet Courbes vers la fenêtre graphes."
 
-#: app/tips.c:145
+#: app/tips.c:156
 msgid "Graph curve properties can be edited by clicking on the curve."
 msgstr "Les propriétés des courbes d'un graphique peuvent être éditées en cliquant sur les courbes."
 
-#: app/tips.c:149
+#: app/tips.c:160
 msgid "Graph axis labels can be edited after by clicking on the label."
 msgstr "Les labels des axes des graphiques peuvent être édités en cliquant dessus."
 
-#: app/tips.c:153
+#: app/tips.c:164
 msgid "Graph key (legend) properties can be edited by double-clicking on the legend."
 msgstr "Les légendes des graphiques peuvent être éditées en double-cliquant dessus."
 
-#: app/tips.c:158
+#: app/tips.c:169
 msgid "Curves can be deleted from graphs by selecting the curve in Curves tab and pressing Delete."
 msgstr "Les courbes peuvent être supprimées d'un graphe en les sélectionnant dans l'onglet Courbes puis en en pressant la touche Suppr."
 
-#: app/tips.c:164
+#: app/tips.c:175
 msgid "Key ‛+’ or ‛=’ zooms in a data window."
 msgstr "La touche ‛+’ ou ‛=’ zoome la fenêtre de données."
 
-#: app/tips.c:168
+#: app/tips.c:179
 msgid "Key ‛-’ (minus) zooms out a data window."
 msgstr "La touche ‛-’ (moins) dézoome la fenêtre de données."
 
-#: app/tips.c:172
+#: app/tips.c:183
 msgid "Key ‛Z’ resets data window zoom to 1:1."
 msgstr "La touche ‛Z’ remet le zoom de la fenêtre à 1:1."
 
-#: app/tips.c:176
+#: app/tips.c:187
 msgid "Data with different <i>x</i> and <i>y</i> measures can be displayed either with pixel-wise or realistic aspect ratio.  The menu in data window top left corner enables to switch between these two modes."
 msgstr "Les données ayant des mesures <i>x</i> et <i>y</i> différentes peuvent être affichées avec un rapport d'aspect 1:1 ou avec le rapport d'aspect réel. Le menu en haut à gauche de la fenêtre de données permet de basculer entre ces deux modes s'affichage."
 
-#: app/tips.c:183
+#: app/tips.c:194
 msgid "Clicking on a false color scale with the right mouse button brings a false color gradient selector."
 msgstr "Un clic droit sur l'échelle de fausses couleurs fera apparaître le selecteur de gradients."
 
-#: app/tips.c:189
+#: app/tips.c:200
 msgid "Clicking on a 3D view with the right mouse button brings a GL material or false color gradient selector."
 msgstr "Un clic droit sur la vue 3D fera apparaître le selecteur de matériaux GL ou de gradients."
 
-#: app/tips.c:194
+#: app/tips.c:205
 msgid "3D view transformation modes can be selected with keys: R (rotate), S (scale), V (value scale) and L (light source)."
 msgstr "Les modes d'action de la vue 3D peuvent être contrôlées au clavier : R (rotation), S (échelle), V (échelle des valeurs) et L (source de lumière)."
 
-#: app/tips.c:200
+#: app/tips.c:211
 msgid "Pressing Ctrl-C copies the image of a channel, graph or 3D view to the clipboard."
 msgstr "Presser Ctrl-C permet de copier l'image d'un canal, d'un graphe ou d'une vue 3D vers le presse papier."
 
-#: app/tips.c:205
+#: app/tips.c:216
 msgid "Dragging channels or graphs from Data Browser to a window copies them to the corresponding file."
 msgstr "Déplacer des canaux ou des graphes du Navigateur de Données vers une fenêtre permet de créer une copie dans le fichier correspondant."
 
-#: app/tips.c:210
+#: app/tips.c:221
 msgid "Meta → Show Data Browser brings back a closed Data Browser."
 msgstr "Métadonnées → Navigateur de Données réaffiche le navigateur s'il est fermé."
 
-#: app/tips.c:214
+#: app/tips.c:225
 msgid "Channels and graphs can be renamed by double-clicking on their name in Data Browser."
 msgstr "Les canaux et graphiques peuvent être renommés en double-cliquant sur leur nom dans le Navigateur de Données."
 
-#: app/tips.c:220
+#: app/tips.c:231
 msgid "Facet Level offers to use/exclude the masked area if a mask is present on the data."
 msgstr "La Mise à Niveau des Facettes permet d'utiliser ou d'exclure la zone masquée s'il y en a une sur les données."
 
-#: app/tips.c:225
+#: app/tips.c:236
 msgid "Plane Level offers to use/exclude the masked area if a mask is present on the data."
 msgstr "Niveau Plan permet d'utiliser ou exclure la zone masquée si un masque est présent dans les données."
 
-#: app/tips.c:230
+#: app/tips.c:241
 msgid "Data Arithmetic works as a scientific calculator, just type an arithmetic expression."
 msgstr "Multidonnées / Arithmétique... fonctionne comme une calculette scientifique, tapez juste une expression mathématique."
 
-#: app/tips.c:235
+#: app/tips.c:246
 msgid "Facet Level can often level data with large features that make impossible to use standard plane levelling.  It levels the surface by making normals of flat areas point upwards."
 msgstr "La Mise à Niveau des Facettes permet souvent de mettre à niveau les données ayant des structures larges qui rendent impossible une mise à niveau standard par plan. Elle met à niveau la surface de façon à ce que les normales des zones planes pointent vers le haut."
 
-#: app/tips.c:241
+#: app/tips.c:252
 msgid "Too small grains can be filtered out with Remove by Threshold grain function."
 msgstr "Des grains trop petits peuvent être filtrés en utiliant la fonction Supprimer par Seuillage."
 
-#: app/tips.c:246
+#: app/tips.c:257
 msgid "Data Process → Presentation → Edge Detection → Step is a fine step detector with a good dynamic range"
 msgstr "Traitement des Données → Présentation → Détection → Saut permet une détection fine des sauts sur une grande dynamique."
 
-#: app/tips.c:251
+#: app/tips.c:262
 msgid "Data Process → Basic Operations → Recalibrate changes scales, offsets and even lateral and value units."
 msgstr "Traitement des Données → Opérations Basiques → Recalibrer permet de changer les échelles, décaler et égaliser les unités latérales et d'échelle."
 
-#: app/tips.c:256
+#: app/tips.c:267
 msgid "Grains or other areas of interest are marked with masks.  Many functions then can do something interesting with the masked areas."
 msgstr "Les grains ou d'autres zones d'intérêt peuvent être marquées par un masque. Plusieurs fonctions peuvent exploiter ces zones masquées."
 
-#: app/tips.c:262
+#: app/tips.c:273
 msgid "Remove Scars in the toolbox runs with the settings last used in Mark Scars."
 msgstr "L'outil Supprimer les Défauts Linéaires dans la barre d'outils se lance avec les réglages utilisés avec Marquer les Défauts Linéaires."
 
-#: app/tips.c:268
+#: app/tips.c:279
 msgid "Graph → Critical Dimension measures steps on extracted profile graphs."
 msgstr "Graphique → Dimension Critique permet de mesurer les sauts sur des profils extraits."
 
-#: app/tips.c:274
+#: app/tips.c:285
 msgid "Pressing Esc hides tool windows."
 msgstr "La touche Echap permet de masquer la fenêtre outils."
 
-#: app/tips.c:278
+#: app/tips.c:289
 msgid "Read Value tool displays also the local facet normal."
 msgstr "L'outil Lire la Valeur affiche aussi la normale locale de la facette."
 
-#: app/tips.c:282
+#: app/tips.c:293
 msgid "Read Value tool can shift data to make <i>z</i>=0 plane pass through the selected point."
 msgstr "L'outil Lire la Valeur permet de décaler les données de manière à ce que le plan <i>z</i>=0 passe par le point sélectionné."
 
-#: app/tips.c:287
+#: app/tips.c:298
 msgid "Individual lines can be deleted in Distance tool by selecting them in the list and pressing Delete."
 msgstr "Des lignes individuelles peuvent être supprimées dans l'outil Distance en les sélectionnant puis en pressant la touche Suppr."
 
-#: app/tips.c:292
+#: app/tips.c:303
 msgid "Individual lines can be deleted in Profiles tool by selecting them in the list and pressing Delete."
 msgstr "Des lignes individuelles peuvent être supprimées dans l'outil Profils en les sélectionnant puis en pressant la touche Suppr."
 
-#: app/tips.c:297
+#: app/tips.c:308
 msgid "Spectroscopy tool displays point spectroscopy data and extracts them to standalone graphs that can be subsequently analysed for instance with Graph → Fit FD Curve."
 msgstr "L'outil Spectroscopie affiche les données de spectroscopie ponctuelleet les extraits vers des graphes qui peuvent être analysés ultérieurement, par exmeple avec Graphe → Ajuster la courbe FD."
 
-#: app/tips.c:303
+#: app/tips.c:314
 msgid "Statistical Quantities tool allows limiting the area of interest by a mask, rectangular selection or the intersection of both."
 msgstr "L'outil Statistiques permet de limiter la zone d'intérêt par un masque, une sélection rectangulaire ou l'intersection des deux."
 
-#: app/tips.c:308
+#: app/tips.c:319
 msgid "Beside height and angle distributions, Statistical Functions tool calculates also correlation functions, power spectrum density (PSDF) and some more exotic functions."
 msgstr "En plus des distributions de hauteur et d'angle, l'outil Fonctions Statistiques calcule aussi les fonctions de corrélation, les densités spectrales de puissance (PSDF) ainsi que quelques fonctions exotiques."
 
-#: app/tips.c:314
+#: app/tips.c:325
 msgid "Path Level tool levels misaligned rows by lining them up along manually selected lines.  If there are no large features automatic Median Line Correction usually works well."
 msgstr "L'outil Mise à Niveau par Chemin ré-aligne les lignes selon des lignes sélectionnés manuellement. La Correction des Lignes par Médiane fait en général l'affaire s'il n'y a pas de gros motifs."
 
-#: app/tips.c:320
+#: app/tips.c:331
 msgid "Grain Measure tool is great for examining individual grains.  Overall grain statistics are available in Data Processing → Grains."
 msgstr "L'outil Mesure de Grain est idéal pour examiner des grains individuellement. Les statistiques globales des grains sont accessibles via Traitement des Données → Grains."
 
-#: app/tips.c:326
+#: app/tips.c:337
 msgid "Mask Editor tool can create, edit, invert, grow and shrink masks."
 msgstr "L'Editeur de Masque permet de créer, éditer, inverser, dilater ou éroder les masques."
 
-#: app/tips.c:330
+#: app/tips.c:341
 msgid "Color Range tool offers several false color scale mapping modes and can make any of them the default mode."
 msgstr "L'outil Visualisation des Couleurs propose différents types d'échelle d'affichage en fausses couleurs, permet d'en sélectionner une par défaut."
 
-#: app/tips.c:335
+#: app/tips.c:346
 msgid "Dragging selections from Selections Manager tool to a data window copies the selection to the target data."
 msgstr "Glisser des sélections depuis le Gestionnaire de Sélections vers une fenêtre de données permet de copier ces sélections vers les données souhaitées."
 
-#: app/tips.c:341
+#: app/tips.c:352
 msgid "Gwyddion User Guide explains in detail many of the methods and algorithms implemented in Gwyddion."
 msgstr "Le Guide Utilisateur explique en détails les méthodes et algorithmes implémentés dans Gwyddion."
 
-#: app/tips.c:346
+#: app/tips.c:357
 msgid "Gwyddion is a son of Math."
 msgstr "Gwyddion est un des fils de Math."
 
-#: app/tips.c:393
+#: app/tips.c:404
 msgid "Gwyddion Tip of the Day"
 msgstr "Astuce Gwyddion du jour"
 
-#: app/tips.c:406
+#: app/tips.c:417
 msgid "_Previous Tip"
 msgstr "Astuce _précédente"
 
-#: app/tips.c:412
+#: app/tips.c:423
 msgid "_Next Tip"
 msgstr "Astuce suiva_nte"
 
@@ -3222,7 +3230,7 @@ msgid "Hitachi SEM files (.txt + image)"
 msgstr "Hitachi SEM (.txt + image)"
 
 #: modules/file/hitachi-sem.c:158
-#: modules/file/oldmda.c:240
+#: modules/file/oldmda.c:241
 #: modules/file/unisoku.c:227
 msgid "No corresponding data file was found for header file."
 msgstr "Aucun fichier de données correspondant n'a été trouvé dans le fichier d'en-tête."
@@ -3882,24 +3890,24 @@ msgstr "La trame #%u est trop courte pour l'en-tête des données scannées."
 msgid "Raman Image"
 msgstr "Image Raman"
 
-#: modules/file/oldmda.c:144
+#: modules/file/oldmda.c:146
 msgid "Imports old NTMDT MDA Spectra files."
 msgstr "Importe les anciens fichiers de spectres MDA NT-MDT."
 
-#: modules/file/oldmda.c:157
+#: modules/file/oldmda.c:159
 msgid "NTMDT old MDA Spectra data (.sxml .dat)"
 msgstr "NT-MDT ancien format de spectres MDA (.sxml .dat)"
 
-#: modules/file/oldmda.c:231
+#: modules/file/oldmda.c:232
 msgid "Incorrect number of axes in parameter file."
 msgstr "Le nombre d'axes dans le fichier de paramètres est incorrect."
 
-#: modules/file/oldmda.c:246
+#: modules/file/oldmda.c:247
 #, c-format
 msgid "Cannot load data file: %s"
 msgstr "Impossible de charger le fichier de données : %s"
 
-#: modules/file/oldmda.c:254
+#: modules/file/oldmda.c:255
 msgid "Data file too small."
 msgstr "Le fichier de données est trop petit."
 
@@ -10109,7 +10117,7 @@ msgstr "Rz"
 
 #: modules/tools/linestats.c:161
 msgid "Rt"
-msgstr "Ret"
+msgstr "Rt"
 
 #: modules/tools/linestats.c:162
 msgid "Skew"
