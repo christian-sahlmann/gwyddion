@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: French localization\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
 "POT-Creation-Date: 2012-03-01 03:58+0100\n"
-"PO-Revision-Date: 2012-03-01 23:33+0100\n"
+"PO-Revision-Date: 2012-03-03 16:24+0100\n"
 "Last-Translator: François RIGUET <francheu@caramail.com>\n"
 "Language-Team: François RIGUET <francheu@caramail.com>\n"
 "Language: \n"
@@ -208,20 +208,20 @@ msgstr "Sinus cardinal"
 
 #: libprocess/cdline.c:537
 msgid "Edge height (right)"
-msgstr "Hauteur de bord (droite)"
+msgstr "Hauteur de marche (droite)"
 
 #: libprocess/cdline.c:538
 #: libprocess/cdline.c:547
 msgid "Edge"
-msgstr "Bord"
+msgstr "Marche"
 
 #: libprocess/cdline.c:546
 msgid "Edge height (left)"
-msgstr "Hauteur de bord (gauche)"
+msgstr "Hauteur de marche (gauche)"
 
 #: libprocess/cdline.c:555
 msgid "Step height (positive)"
-msgstr "Hauteur de marche (positive)"
+msgstr "Hauteur de porte (positive)"
 
 #: libprocess/cdline.c:556
 #: libprocess/cdline.c:565
@@ -232,7 +232,7 @@ msgstr "Ligne"
 
 #: libprocess/cdline.c:564
 msgid "Step height (negative)"
-msgstr "Hauteur de marche (négative)"
+msgstr "Hauteur de porte (négative)"
 
 #: libprocess/cdline.c:573
 msgid "Circle (down)"
@@ -9141,7 +9141,7 @@ msgstr "_Distance :"
 
 #: modules/process/polydistort.c:140
 msgid "Apllies polynomial distortion in the horizontal plane."
-msgstr "Applique une distorsion polynômiale dans le plan horizontal."
+msgstr "Applique une distorsion polynomiale dans le plan horizontal."
 
 #: modules/process/polydistort.c:154
 msgid "/_Correct Data/Pol_ynomial Distortion..."
@@ -9149,11 +9149,11 @@ msgstr "/_Correction des données/Distorsion pol_ynomiale..."
 
 #: modules/process/polydistort.c:158
 msgid "Apllies polynomial distortion in the horizontal plane"
-msgstr "Applique une distorsion polynômiale dans le plan horizontal"
+msgstr "Applique une distorsion polynomiale dans le plan horizontal"
 
 #: modules/process/polydistort.c:211
 msgid "Distort by Polynomial"
-msgstr "Distorsion polynômiale"
+msgstr "Distorsion polynomiale"
 
 #: modules/process/polydistort.c:276
 #: modules/tools/filter.c:208
@@ -9188,15 +9188,15 @@ msgstr "Distordu"
 
 #: modules/process/polylevel.c:117
 msgid "Subtracts polynomial background."
-msgstr "Soustrait l'arrière-plan polynômial."
+msgstr "Soustrait l'arrière-plan polynomial."
 
 #: modules/process/polylevel.c:131
 msgid "/_Level/_Polynomial Background..."
-msgstr "/Niveau/Arrière-plan _polynômial..."
+msgstr "/Niveau/Arrière-plan _polynomial..."
 
 #: modules/process/polylevel.c:135
 msgid "Remove polynomial background"
-msgstr "Supprimer l'arrière-plan polynômial"
+msgstr "Supprimer l'arrière-plan polynomial"
 
 #: modules/process/polylevel.c:361
 msgid "Independent degrees"
@@ -9208,7 +9208,7 @@ msgstr "Degré total limité"
 
 #: modules/process/polylevel.c:374
 msgid "Remove Polynomial Background"
-msgstr "Supprimer l'arrière-plan polynômial"
+msgstr "Supprimer l'arrière-plan polynomial"
 
 #: modules/process/polylevel.c:416
 msgid "Leveled data"
@@ -9446,7 +9446,7 @@ msgstr "_Graphe directionnel (φ) "
 
 #: modules/process/slope_dist.c:192
 msgid "_Inclination (θ) graph"
-msgstr "Graphe d'_inclinaison (θ) graph"
+msgstr "Graphe d'_inclinaison (θ)"
 
 #: modules/process/slope_dist.c:200
 msgid "Slope Distribution"
@@ -10305,7 +10305,7 @@ msgstr "Epaisseur :"
 
 #: modules/tools/polynom.c:92
 msgid "Polynomial line level tool, fits polynomials to X or Y profiles and subtracts them."
-msgstr "Outil niveau polynômial, ajuste un polynôme à des profils X ou Y et le soustrait."
+msgstr "Outil niveau polynomial, ajuste un polynôme à des profils X ou Y et le soustrait."
 
 #: modules/tools/polynom.c:128
 msgid "Polynomial"
