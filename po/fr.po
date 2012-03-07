@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: French localization\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
 "POT-Creation-Date: 2012-03-01 03:58+0100\n"
-"PO-Revision-Date: 2012-03-03 16:24+0100\n"
+"PO-Revision-Date: 2012-03-07 23:12+0100\n"
 "Last-Translator: François RIGUET <francheu@caramail.com>\n"
 "Language-Team: François RIGUET <francheu@caramail.com>\n"
 "Language: \n"
@@ -10741,7 +10741,6 @@ msgid "_Separate spectra"
 msgstr "_Spectres séparés"
 
 #: modules/tools/spectro.c:332
-#, fuzzy
 msgid "_Average spectra"
 msgstr "Moyenner les spectres"
 
