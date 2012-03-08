@@ -214,7 +214,8 @@ static GwyDataField *
 averaging_do(GwyContainer *data, GwySelection *selected)
 {
     gdouble area[4];
-    GwyDataField *dfield, *kernel, *correlation_score, *result;
+    GwyDataField *dfield, *kernel, *correlation_score;
+    GwyDataField *result, *res_kernel;
     gint xtop, ytop, xbottom, ybottom;
     GArray *maxima;
     GwyMaximum maximum;
@@ -235,9 +236,13 @@ averaging_do(GwyContainer *data, GwySelection *selected)
     correlation_score = gwy_data_field_new_alike(dfield, FALSE);
     gwy_data_field_correlate(dfield, kernel, correlation_score,
                              GWY_CORRELATION_NORMAL);
+    gwy_data_field_filter_gaussian(correlation_score,
+                                   2.0/(2.0*sqrt(2.0*G_LN2)));
     maxima = g_array_new(FALSE, TRUE, sizeof(GwyMaximum));
     find_local_maxima(correlation_score, maxima);
-    result = gwy_data_field_new_alike(kernel, TRUE);
+    g_object_unref(correlation_score);
+
+    res_kernel = gwy_data_field_new_alike(kernel, TRUE);
     width = gwy_data_field_get_xres(kernel);
     height = gwy_data_field_get_yres(kernel);
     for (i = 0; i < maxima->len; i++) {
@@ -247,16 +252,26 @@ averaging_do(GwyContainer *data, GwySelection *selected)
         kernel = gwy_data_field_area_extract(dfield, xtop, ytop,
                                              width, height);
         gwy_data_field_multiply(kernel, maximum.zvalue);
-        gwy_data_field_sum_fields(result, result, kernel);
+        gwy_data_field_sum_fields(res_kernel, res_kernel, kernel);
         divider += maximum.zvalue;
     }
-    if (divider == 0.0)
+    if (divider <= 0.0)
         divider = 1.0;
-    gwy_data_field_multiply(result, 1.0 / divider);
+    gwy_data_field_multiply(res_kernel, 1.0 / divider);
+    g_object_unref(kernel);
+
+    result = gwy_data_field_new_alike(dfield, FALSE);
+    gwy_data_field_copy(dfield, result, TRUE);
+    for (i = 0; i < maxima->len; i++) {
+        maximum = g_array_index(maxima, GwyMaximum, i);
+        xtop = maximum.col - width / 2;
+        ytop = maximum.row - height / 2;
+        gwy_data_field_area_copy(res_kernel, result, 0, 0,
+                                 width, height, xtop, ytop);
+    }
 
     g_array_free(maxima, TRUE);
-    g_object_unref(kernel);
-    g_object_unref(correlation_score);
+    g_object_unref(res_kernel);
 
     return result;
 }
