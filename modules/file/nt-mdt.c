@@ -17,7 +17,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
-/* TODO: some metadata, ... */
+/* TODO: some metadata, Raman MDA images, ... */
 
 /**
  * [FILE-MAGIC-FREEDESKTOP]
@@ -752,8 +752,7 @@ mdt_load(const gchar *filename,
             if (sdframe->title) {
                 g_string_append(key, "/title");
                 gwy_container_set_string_by_name(data, key->str,
-                        g_strdup_printf("%.*s (%u)",
-                                        sdframe->title_len,
+                        g_strdup_printf("%s (%u)",
                                         sdframe->title, i+1));
             }
             else
@@ -1127,7 +1126,8 @@ mdt_scanned_data_vars(const guchar *p,
         frame->title_len = gwy_get_guint32_le(&p);
         if (frame->title_len
             && (guint)(frame_size - (p - fstart)) >= frame->title_len) {
-            frame->title = p;
+            frame->title = g_convert((const gchar*)p, frame->title_len,
+                                    "UTF-8", "cp1251", NULL, NULL, NULL);
             p += frame->title_len;
             gwy_debug("title = <%.*s>", frame->title_len, frame->title);
         }
