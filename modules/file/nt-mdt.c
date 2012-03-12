@@ -752,8 +752,9 @@ mdt_load(const gchar *filename,
             if (sdframe->title) {
                 g_string_append(key, "/title");
                 gwy_container_set_string_by_name(data, key->str,
-                        g_strdup_printf("%s (%u)",
+                                        g_strdup_printf("%s (%u)",
                                         sdframe->title, i+1));
+                g_free((gpointer)sdframe->title);
             }
             else
                 gwy_app_channel_title_fall_back(data, n);
@@ -780,9 +781,9 @@ mdt_load(const gchar *filename,
                 if (mdaframe->title) {
                     g_string_append(key, "/title");
                     gwy_container_set_string_by_name(data, key->str,
-                            g_strdup_printf("%.*s (%u)",
-                                            mdaframe->title_len,
+                                            g_strdup_printf("%s (%u)",
                                             mdaframe->title, i+1));
+                    g_free((gpointer)mdaframe->title);
                 }
                 else
                     gwy_app_channel_title_fall_back(data, n);
@@ -809,9 +810,9 @@ mdt_load(const gchar *filename,
                 if (mdaframe->title) {
                     g_string_append(key, "/title");
                     gwy_container_set_string_by_name(data, key->str,
-                            g_strdup_printf("%.*s (%u)",
-                                            mdaframe->title_len,
+                                            g_strdup_printf("%s (%u)",
                                             mdaframe->title, i+1));
+                    g_free((gpointer)mdaframe->title);
                 }
                 else
                     gwy_app_channel_title_fall_back(data, n);
@@ -1266,7 +1267,8 @@ mdt_mda_vars(const guchar *p,
     frame->title_len = NameSize;
 
     if (NameSize && (guint)(frame_size - (p - fstart)) >= NameSize) {
-        frame->title = p;
+        frame->title = g_convert((const gchar*)p, frame->title_len,
+                                 "UTF-8", "cp1251", NULL, NULL, NULL);		
         p += NameSize;
     }
     else
@@ -1517,7 +1519,7 @@ static GwyGraphModel* extract_scanned_spectrum (MDTScannedDataFrame *dataframe,
     gint power10x, power10z;
     const gint16 *p;
     const gchar *unit;
-    gchar *framename;
+    gchar *framename, *utfname;
 
     unit = gwy_flat_enum_to_string(dataframe->x_scale.unit,
                                    G_N_ELEMENTS(mdt_units),
@@ -1534,10 +1536,13 @@ static GwyGraphModel* extract_scanned_spectrum (MDTScannedDataFrame *dataframe,
     siunitz = gwy_si_unit_new_parse(unit, &power10z);
     zscale = pow10(power10z)*dataframe->z_scale.step;
 
-    if (dataframe->title_len && dataframe->title)
-        framename = g_strdup_printf("%.*s (%u)",
-                                    dataframe->title_len,
-                                    dataframe->title, number);
+    if (dataframe->title_len && dataframe->title) {
+        utfname = g_convert(dataframe->title,
+                            dataframe->title_len,
+                            "UTF-8", "cp1251", NULL, NULL, NULL);
+        framename = g_strdup_printf("%s (%u)", utfname, number);
+        g_free(utfname);
+    }
     else
         framename = g_strdup_printf("Unknown spectrum (%d)", number);
 
@@ -1591,7 +1596,7 @@ static GwySpectra* extract_sps_curve (MDTScannedDataFrame *dataframe,
     gint power10x, power10z, power10coordxy;
     const guchar *p;
     const gchar *unit;
-    gchar *framename;
+    gchar *framename, *utfname;
     MDTDotsHeader coordheader;
     MDTDotsData  *coordinates;
 
@@ -1674,10 +1679,13 @@ static GwySpectra* extract_sps_curve (MDTScannedDataFrame *dataframe,
                     coordinates[i_p].coordy*pow10(power10coordxy));
     }
 
-    if (dataframe->title_len && dataframe->title)
-        framename = g_strdup_printf("%.*s (%u)",
-                                    dataframe->title_len,
-                                    dataframe->title, number);
+    if (dataframe->title_len && dataframe->title) {
+        utfname = g_convert(dataframe->title,
+                            dataframe->title_len,
+                            "UTF-8", "cp1251", NULL, NULL, NULL);
+        framename = g_strdup_printf("%s (%u)", utfname, number);
+        g_free(utfname);
+    }
     else
         framename = g_strdup_printf("Unknown spectrum (%d)", number);
     gwy_spectra_set_title(spectra, framename);
@@ -1907,10 +1915,10 @@ extract_mda_spectrum(MDTMDAFrame *dataframe, guint number)
     MDTXMLParams params;
     GError *err = NULL;
 
-    if (dataframe->title_len && dataframe->title)
-        framename = g_strdup_printf("%.*s (%u)",
-                                    dataframe->title_len,
+    if (dataframe->title_len && dataframe->title) {
+        framename = g_strdup_printf("%s (%u)",
                                     dataframe->title, number);
+    }
     else
         framename = g_strdup_printf("Unknown spectrum (%d)", number);
 
