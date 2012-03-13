@@ -818,7 +818,8 @@ gwy_si_unit_parse(GwySIUnit *siunit,
         else if ((buf->str[0] == '\305' && !buf->str[1])
                  || gwy_strequal(buf->str, "Å")
                  || gwy_strequal(buf->str, "AA")
-                 || gwy_strequal(buf->str, "Ang"))
+                 || gwy_strequal(buf->str, "Ang")
+                 || gwy_strequal(buf->str, "Angstrom"))
             g_string_assign(buf, "Å");
         else if (gwy_strequal(buf->str, "micro m"))
             g_string_assign(buf, "µm");
