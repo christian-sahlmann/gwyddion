@@ -1268,7 +1268,7 @@ mdt_mda_vars(const guchar *p,
 
     if (NameSize && (guint)(frame_size - (p - fstart)) >= NameSize) {
         frame->title = g_convert((const gchar*)p, frame->title_len,
-                                 "UTF-8", "cp1251", NULL, NULL, NULL);		
+                                 "UTF-8", "cp1251", NULL, NULL, NULL);
         p += NameSize;
     }
     else
@@ -1519,8 +1519,7 @@ static GwyGraphModel* extract_scanned_spectrum (MDTScannedDataFrame *dataframe,
     gint power10x, power10z;
     const gint16 *p;
     const gchar *unit;
-    gchar *framename, *utfname;
-
+    gchar *framename;
     unit = gwy_flat_enum_to_string(dataframe->x_scale.unit,
                                    G_N_ELEMENTS(mdt_units),
                                    mdt_units, mdt_units_name);
@@ -1537,11 +1536,7 @@ static GwyGraphModel* extract_scanned_spectrum (MDTScannedDataFrame *dataframe,
     zscale = pow10(power10z)*dataframe->z_scale.step;
 
     if (dataframe->title_len && dataframe->title) {
-        utfname = g_convert(dataframe->title,
-                            dataframe->title_len,
-                            "UTF-8", "cp1251", NULL, NULL, NULL);
-        framename = g_strdup_printf("%s (%u)", utfname, number);
-        g_free(utfname);
+        framename = g_strdup_printf("%s (%u)", dataframe->title, number);
     }
     else
         framename = g_strdup_printf("Unknown spectrum (%d)", number);
@@ -1596,7 +1591,7 @@ static GwySpectra* extract_sps_curve (MDTScannedDataFrame *dataframe,
     gint power10x, power10z, power10coordxy;
     const guchar *p;
     const gchar *unit;
-    gchar *framename, *utfname;
+    gchar *framename;
     MDTDotsHeader coordheader;
     MDTDotsData  *coordinates;
 
@@ -1680,11 +1675,7 @@ static GwySpectra* extract_sps_curve (MDTScannedDataFrame *dataframe,
     }
 
     if (dataframe->title_len && dataframe->title) {
-        utfname = g_convert(dataframe->title,
-                            dataframe->title_len,
-                            "UTF-8", "cp1251", NULL, NULL, NULL);
-        framename = g_strdup_printf("%s (%u)", utfname, number);
-        g_free(utfname);
+        framename = g_strdup_printf("%s (%u)", dataframe->title, number);
     }
     else
         framename = g_strdup_printf("Unknown spectrum (%d)", number);
