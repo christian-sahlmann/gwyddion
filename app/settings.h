@@ -22,7 +22,7 @@
 #define __GWY_APP_SETTINGS_H__
 
 #include <libgwyddion/gwycontainer.h>
-#include <glib/gerror.h>
+#include <glib.h>
 
 G_BEGIN_DECLS
 

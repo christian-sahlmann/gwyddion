@@ -20,8 +20,6 @@
 
 #include "config.h"
 #include <string.h>
-#include <glib-object.h>
-#include <glib/gutils.h>
 
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwyutils.h>

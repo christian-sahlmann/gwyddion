@@ -21,7 +21,7 @@
 #ifndef __GWY_PROCESS_ENUMS_H__
 #define __GWY_PROCESS_ENUMS_H__
 
-#include <glib/gmacros.h>
+#include <glib.h>
 #include <libgwyddion/gwyenum.h>
 
 G_BEGIN_DECLS

@@ -21,7 +21,7 @@
 #define __GWY_FILE_ERR_H__
 
 #include <errno.h>
-#include <glib/gutils.h>
+#include <glib.h>
 #include <libgwymodule/gwymodule-file.h>
 
 /* I/O Errors */

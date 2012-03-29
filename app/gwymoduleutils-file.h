@@ -22,7 +22,7 @@
 #define __GWY_MODULEUTILS_FILE_H__
 
 #include <string.h>
-#include <glib/gutils.h>
+#include <glib.h>
 #include <libgwyddion/gwycontainer.h>
 #include <libprocess/datafield.h>
 

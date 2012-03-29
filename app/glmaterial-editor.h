@@ -21,7 +21,7 @@
 #ifndef __GWY_APP_GL_MATERIAL_EDITOR_H__
 #define __GWY_APP_GL_MATERIAL_EDITOR_H__
 
-#include <glib/gmacros.h>
+#include <glib.h>
 
 G_BEGIN_DECLS
 

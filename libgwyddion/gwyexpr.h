@@ -21,7 +21,7 @@
 #ifndef __GWY_EXPR_H__
 #define __GWY_EXPR_H__
 
-#include <glib/gerror.h>
+#include <glib.h>
 
 G_BEGIN_DECLS
 
