@@ -143,7 +143,7 @@ static const StartupTip tips[] = {
     {
         GTK_STOCK_INDEX,
         N_("Meta → Metadata Browser displays metadata (auxiliary information) "
-           "of channels and allows editting or exporting to a text file."),
+           "of channels and allows editing or exporting to a text file."),
     },
     /* 1D Views */
     {
