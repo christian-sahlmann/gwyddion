@@ -672,7 +672,6 @@ gwy_data_field_area_2dfft_real(GwyDataField *rin,
                                GwyTransformDirection direction,
                                gboolean preserverms, gint level)
 {
-    gint j, k;
     GwyDataField *rbuf, *ibuf;
     gdouble *out_rdata, *out_idata;
     gdouble rmsa = 0.0, rmsb;
@@ -686,10 +685,7 @@ gwy_data_field_area_2dfft_real(GwyDataField *rin,
                      && row + height <= rin->yres);
 
     gwy_data_field_resample(rout, width, height, GWY_INTERPOLATION_NONE);
-    out_rdata = rout->data;
-
     gwy_data_field_resample(iout, width, height, GWY_INTERPOLATION_NONE);
-    out_idata = iout->data;
 
     rbuf = gwy_data_field_area_extract(rin, col, row, width, height);
     gwy_data_field_2dfft_prepare(rbuf, level, windowing, preserverms, &rmsa);
@@ -699,14 +695,15 @@ gwy_data_field_area_2dfft_real(GwyDataField *rin,
     gwy_data_field_2dfft_real_do(rbuf, ibuf, rout, iout, direction);
 
     if (preserverms) {
+        gint k;
+
         /* Ignore coefficient [0,0] */
+        out_rdata = rout->data;
+        out_idata = iout->data;
         rmsb = -(out_rdata[0]*out_rdata[0] + out_idata[0]*out_idata[0]);
-        for (j = 0; j < height; j++) {
-            for (k = 0; k < width; k++)
-                rmsb += (out_rdata[j*width + k]*out_rdata[j*width + k]
-                         + out_idata[j*width + k]*out_idata[j*width + k]);
-        }
-        rmsb = sqrt(rmsb)/(width*height);
+        for (k = height*width; k; k--, out_rdata++, out_idata++)
+            rmsb += (*out_rdata)*(*out_rdata) + (*out_idata)*(*out_idata);
+        rmsb = sqrt(rmsb/(width*height));
         if (rmsb > 0.0) {
             gwy_data_field_multiply(rout, rmsa/rmsb);
             gwy_data_field_multiply(iout, rmsa/rmsb);
