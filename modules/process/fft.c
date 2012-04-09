@@ -152,7 +152,6 @@ fft(GwyContainer *data, GwyRunType run)
         for (i = xres*yres; i; i--, dd++) {
             s += (*dd)*(*dd);
         }
-        g_printerr("DATA %g\n", s);
     }
 
     gwy_data_field_2dfft(dfield, NULL,
@@ -251,7 +250,6 @@ set_dfield_modulus(GwyDataField *re, GwyDataField *im, GwyDataField *target)
         *data = hypot(*datare, *dataim);
         s += (*data)*(*data);
     }
-    g_printerr("MODULUS %g\n", s);
 }
 
 static void
