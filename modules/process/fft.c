@@ -44,42 +44,47 @@ typedef enum {
 
 typedef struct {
     gboolean zeromean;
+    gboolean preserverms;
     GwyWindowingType window;
     GwyFFTOutputType out;
 } FFTArgs;
 
 typedef struct {
     GtkWidget *zeromean;
+    GtkWidget *preserverms;
     GtkWidget *window;
     GtkWidget *out;
 } FFTControls;
 
-static gboolean module_register    (void);
-static void     fft                (GwyContainer *data,
-                                    GwyRunType run);
-static void     fft_create_output  (GwyContainer *data,
-                                    GwyDataField *dfield,
-                                    const gchar *window_name);
-static void     fft_postprocess    (GwyDataField *dfield);
-static gboolean fft_dialog         (FFTArgs *args);
-static void     zeromean_changed_cb(GtkToggleButton *button,
-                                    FFTArgs *args);
-static void     fft_dialog_update  (FFTControls *controls,
-                                    FFTArgs *args);
-static void     set_dfield_modulus (GwyDataField *re,
-                                    GwyDataField *im,
-                                    GwyDataField *target);
-static void     set_dfield_phase   (GwyDataField *re,
-                                    GwyDataField *im,
-                                    GwyDataField *target);
-static void     fft_load_args      (GwyContainer *container,
-                                    FFTArgs *args);
-static void     fft_save_args      (GwyContainer *container,
-                                    FFTArgs *args);
-static void     fft_sanitize_args  (FFTArgs *args);
+static gboolean module_register       (void);
+static void     fft                   (GwyContainer *data,
+                                       GwyRunType run);
+static void     fft_create_output     (GwyContainer *data,
+                                       GwyDataField *dfield,
+                                       const gchar *window_name);
+static void     fft_postprocess       (GwyDataField *dfield);
+static gboolean fft_dialog            (FFTArgs *args);
+static void     zeromean_changed_cb   (GtkToggleButton *button,
+                                       FFTArgs *args);
+static void     preserverms_changed_cb(GtkToggleButton *button,
+                                       FFTArgs *args);
+static void     fft_dialog_update     (FFTControls *controls,
+                                       FFTArgs *args);
+static void     set_dfield_modulus    (GwyDataField *re,
+                                       GwyDataField *im,
+                                       GwyDataField *target);
+static void     set_dfield_phase      (GwyDataField *re,
+                                       GwyDataField *im,
+                                       GwyDataField *target);
+static void     fft_load_args         (GwyContainer *container,
+                                       FFTArgs *args);
+static void     fft_save_args         (GwyContainer *container,
+                                       FFTArgs *args);
+static void     fft_sanitize_args     (FFTArgs *args);
 
 static const FFTArgs fft_defaults = {
     TRUE,
+    FALSE,
     GWY_WINDOWING_HANN,
     GWY_FFT_OUTPUT_MOD,
 };
@@ -89,7 +94,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Two-dimensional FFT (Fast Fourier Transform)."),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.9",
+    "1.10",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -136,12 +141,26 @@ fft(GwyContainer *data, GwyRunType run)
     raout = gwy_data_field_new_alike(dfield, FALSE);
     ipout = gwy_data_field_new_alike(dfield, FALSE);
 
+    {
+        gint xres, yres, i;
+        gdouble s = 0.0;
+        const gdouble *dd;
+
+        xres = gwy_data_field_get_xres(dfield);
+        yres = gwy_data_field_get_yres(dfield);
+        dd = gwy_data_field_get_data_const(dfield);
+        for (i = xres*yres; i; i--, dd++) {
+            s += (*dd)*(*dd);
+        }
+        g_printerr("DATA %g\n", s);
+    }
+
     gwy_data_field_2dfft(dfield, NULL,
                          raout, ipout,
                          args.window,
                          GWY_TRANSFORM_DIRECTION_FORWARD,
                          GWY_INTERPOLATION_LINEAR,  /* ignored */
-                         FALSE,
+                         args.preserverms,
                          args.zeromean ? 1 : 0);
 
     fft_postprocess(raout);
@@ -221,14 +240,18 @@ set_dfield_modulus(GwyDataField *re, GwyDataField *im, GwyDataField *target)
     const gdouble *datare, *dataim;
     gdouble *data;
     gint xres, yres, i;
+    gdouble s = 0.0;
 
     xres = gwy_data_field_get_xres(re);
     yres = gwy_data_field_get_yres(re);
     datare = gwy_data_field_get_data_const(re);
     dataim = gwy_data_field_get_data_const(im);
     data = gwy_data_field_get_data(target);
-    for (i = xres*yres; i; i--, datare++, dataim++, data++)
+    for (i = xres*yres; i; i--, datare++, dataim++, data++) {
         *data = hypot(*datare, *dataim);
+        s += (*data)*(*data);
+    }
+    g_printerr("MODULUS %g\n", s);
 }
 
 static void
@@ -276,7 +299,7 @@ fft_dialog(FFTArgs *args)
     gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
 
-    table = gtk_table_new(3, 4, FALSE);
+    table = gtk_table_new(4, 4, FALSE);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
@@ -309,6 +332,17 @@ fft_dialog(FFTArgs *args)
                                  args->zeromean);
     g_signal_connect(controls.zeromean, "toggled",
                      G_CALLBACK(zeromean_changed_cb), args);
+    row++;
+
+    controls.preserverms
+        = gtk_check_button_new_with_mnemonic(_("_Preserve RMS"));
+    gtk_table_attach(GTK_TABLE(table), controls.preserverms,
+                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.preserverms),
+                                 args->preserverms);
+    g_signal_connect(controls.preserverms, "toggled",
+                     G_CALLBACK(preserverms_changed_cb), args);
+    row++;
 
     gtk_widget_show_all(dialog);
     do {
@@ -347,8 +381,14 @@ zeromean_changed_cb(GtkToggleButton *button, FFTArgs *args)
 }
 
 static void
+preserverms_changed_cb(GtkToggleButton *button, FFTArgs *args)
+{
+    args->preserverms = gtk_toggle_button_get_active(button);
+}
+
+static void
 fft_dialog_update(FFTControls *controls,
-                     FFTArgs *args)
+                  FFTArgs *args)
 {
     gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->out),
                                   args->out);
@@ -356,14 +396,16 @@ fft_dialog_update(FFTControls *controls,
                                   args->window);
 }
 
-static const gchar zeromean_key[] = "/module/fft/zeromean";
-static const gchar window_key[]   = "/module/fft/window";
-static const gchar out_key[]      = "/module/fft/out";
+static const gchar zeromean_key[]    = "/module/fft/zeromean";
+static const gchar preserverms_key[] = "/module/fft/preserverms";
+static const gchar window_key[]      = "/module/fft/window";
+static const gchar out_key[]         = "/module/fft/out";
 
 static void
 fft_sanitize_args(FFTArgs *args)
 {
     args->zeromean = !!args->zeromean;
+    args->preserverms = !!args->preserverms;
     args->window = gwy_enum_sanitize_value(args->window,
                                            GWY_TYPE_WINDOWING_TYPE);
     args->out = MIN(args->out, GWY_FFT_OUTPUT_PHASE);
@@ -376,6 +418,8 @@ fft_load_args(GwyContainer *container,
     *args = fft_defaults;
 
     gwy_container_gis_boolean_by_name(container, zeromean_key, &args->zeromean);
+    gwy_container_gis_boolean_by_name(container, preserverms_key,
+                                      &args->preserverms);
     gwy_container_gis_enum_by_name(container, window_key, &args->window);
     gwy_container_gis_enum_by_name(container, out_key, &args->out);
     fft_sanitize_args(args);
@@ -386,6 +430,8 @@ fft_save_args(GwyContainer *container,
               FFTArgs *args)
 {
     gwy_container_set_boolean_by_name(container, zeromean_key, args->zeromean);
+    gwy_container_set_boolean_by_name(container, preserverms_key,
+                                      args->preserverms);
     gwy_container_set_enum_by_name(container, window_key, args->window);
     gwy_container_set_enum_by_name(container, out_key, args->out);
 }
