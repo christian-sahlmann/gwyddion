@@ -141,19 +141,6 @@ fft(GwyContainer *data, GwyRunType run)
     raout = gwy_data_field_new_alike(dfield, FALSE);
     ipout = gwy_data_field_new_alike(dfield, FALSE);
 
-    {
-        gint xres, yres, i;
-        gdouble s = 0.0;
-        const gdouble *dd;
-
-        xres = gwy_data_field_get_xres(dfield);
-        yres = gwy_data_field_get_yres(dfield);
-        dd = gwy_data_field_get_data_const(dfield);
-        for (i = xres*yres; i; i--, dd++) {
-            s += (*dd)*(*dd);
-        }
-    }
-
     gwy_data_field_2dfft(dfield, NULL,
                          raout, ipout,
                          args.window,
@@ -239,17 +226,14 @@ set_dfield_modulus(GwyDataField *re, GwyDataField *im, GwyDataField *target)
     const gdouble *datare, *dataim;
     gdouble *data;
     gint xres, yres, i;
-    gdouble s = 0.0;
 
     xres = gwy_data_field_get_xres(re);
     yres = gwy_data_field_get_yres(re);
     datare = gwy_data_field_get_data_const(re);
     dataim = gwy_data_field_get_data_const(im);
     data = gwy_data_field_get_data(target);
-    for (i = xres*yres; i; i--, datare++, dataim++, data++) {
+    for (i = xres*yres; i; i--, datare++, dataim++, data++)
         *data = hypot(*datare, *dataim);
-        s += (*data)*(*data);
-    }
 }
 
 static void
