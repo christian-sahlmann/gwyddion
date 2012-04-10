@@ -1,7 +1,7 @@
 # @(#) $Id$
 
-# When libXML2 is disabled, put the sources to EXTRA_DIST to include them in
-# make dist.
+# If libXML2 is disabled, put the dependent sources to EXTRA_DIST to include
+# them in make dist.
 if HAVE_XML2
 if HAVE_ZLIB
 spml_module = spml.la
@@ -15,8 +15,8 @@ spml_module =
 spml_sources = spml.c
 endif
 
-# When libz is disabled, put the sources to EXTRA_DIST to include them in
-# make dist.
+# If libz is disabled, put the dependent sources to EXTRA_DIST to include them
+# in make dist.
 #if HAVE_ZLIB
 #matfile_module = matfile.la
 #matfile_sources =
@@ -24,6 +24,16 @@ endif
 matfile_module =
 matfile_sources = matfile.c
 #endif
+
+# If minizip is disabled, put the dependent sources to EXTRA_DIST to include
+# them in make dist.
+if HAVE_MINIZIP
+nanoobserver_module = nanoobserver.la
+nanoobserver_sources =
+else
+nanoobserver_module =
+nanoobserver_sources = nanoobserver.c
+endif
 
 filedir = $(pkglibdir)/modules/file
 
@@ -70,6 +80,7 @@ file_LTLIBRARIES = \
 	nanoeducator.la \
 	nanonics.la \
 	nanonis.la \
+	$(nanoobserver_module) \
 	nanoscan.la \
 	nanoscope-ii.la \
 	nanoscope.la \
@@ -241,7 +252,7 @@ wsffile_la_SOURCES       = wsffile.c
 wsxmfile_la_SOURCES      = wsxmfile.c
 zeiss_la_SOURCES         = zeiss.c
 
-# They compile also without.
+# These compile also without.
 createc_la_LIBADD        = @ZLIB@
 nrrdfile_la_LIBADD       = @ZLIB@ @BZIP2@
 pixmap_la_LIBADD         = @PNG_LIBS@
@@ -249,6 +260,7 @@ pixmap_la_CFLAGS         = $(AM_CFLAGS) @PNG_CFLAGS@
 hdrimage_la_LIBADD       = @EXR_LIBS@ @PNG_LIBS@
 hdrimage_la_CXXFLAGS     = $(AM_CXXFLAGS) @PNG_CFLAGS@ @EXR_CFLAGS@
 
+# These require the respective libraries.
 if HAVE_XML2
 if HAVE_ZLIB
 spml_la_SOURCES          = spml.c spml-utils.h
@@ -260,6 +272,12 @@ endif
 if HAVE_ZLIB
 #matfile_la_SOURCES       = matfile.c
 #matfile_la_LIBADD        = @ZLIB@
+endif
+
+if HAVE_MINIZIP
+nanoobserver_la_SOURCES  = nanoobserver.c
+nanoobserver_la_CFLAGS   = $(AM_CFLAGS) @MINIZIP_CFLAGS@
+nanoobserver_la_LIBADD   = @MINIZIP_LIBS@
 endif
 
 clean-local:
