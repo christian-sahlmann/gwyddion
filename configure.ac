@@ -497,6 +497,16 @@ AM_CONDITIONAL([HAVE_BZIP2],[test x$enable_bzip2 != xno && test -n "$BZIP2"])
 AC_SUBST(BZIP2)
 
 #############################################################################
+# minizip
+# Optional.  Used to load the crazy zip-compressed-bunch-of-XML formats.
+enable_minizip=yes
+PKG_CHECK_MODULES(MINIZIP, [minizip],
+                  [AC_DEFINE(HAVE_MINIZIP,1,
+                            [Define if we have the minizip package.])],
+                  [enable_minizip=no])
+AM_CONDITIONAL([HAVE_MINIZIP],[test x$enable_minizip != xno])
+
+#############################################################################
 # PNG
 # Optional.  Only directly used for 16bit greyscale PNG pixmap import/export.
 enable_png=yes
