@@ -93,33 +93,37 @@ static gint
 nao_detect(const GwyFileDetectInfo *fileinfo,
            gboolean only_name)
 {
+    gboolean have_streams = FALSE, have_measure = FALSE;
     GSList *filelist = NULL, *l;
 
     if (only_name)
         return g_str_has_suffix(fileinfo->name_lowercase, EXTENSION) ? 15 : 0;
 
     /* Generic ZIP file. */
-    g_printerr("GENERIC ZIP\n");
     if (fileinfo->file_size < MAGIC_SIZE
         || memcmp(fileinfo->head, MAGIC, MAGIC_SIZE) != 0)
         return 0;
 
     /* It contains directory Scan so this should be somewehre near the begining
      * of the file. */
-    g_printerr("Scan/PK\n");
     if (!gwy_memmem(fileinfo->head, fileinfo->buffer_len, MAGIC1, MAGIC1_SIZE))
         return 0;
 
     /* We have to realy look inside. */
-    g_printerr("FILELIST\n");
     if (!(filelist = nao_file_list(fileinfo->name)))
         return 0;
 
     for (l = filelist; l; l = g_slist_next(l)) {
-        g_printerr("<%s>\n", (gchar*)l->data);
+        if (gwy_strequal(l->data, "Scan/Streams.xml")
+            || gwy_strequal(l->data, "Scan\\Streams.xml"))
+            have_streams = TRUE;
+        if (gwy_strequal(l->data, "Scan/Measure.xml")
+            || gwy_strequal(l->data, "Scan\\Measure.xml"))
+            have_measure = TRUE;
     }
+    free_string_list(filelist);
 
-    return 100;
+    return have_streams && have_measure ? 100 : 0;
 }
 
 static GwyContainer*
