@@ -207,9 +207,10 @@ nao_streams_start_element(G_GNUC_UNUSED GMarkupParseContext *context,
                           const gchar **attribute_names,
                           const gchar **attribute_values,
                           gpointer user_data,
-                          GError **error)
+                          G_GNUC_UNUSED GError **error)
 {
     NAOFile *naofile = (NAOFile*)user_data;
+    guint i;
     gchar *path;
 
     g_string_append_c(naofile->path, '/');
@@ -217,15 +218,60 @@ nao_streams_start_element(G_GNUC_UNUSED GMarkupParseContext *context,
     path = naofile->path->str;
 
     if (gwy_strequal(path, "/MeasureStream/Resolution")) {
+        gboolean seen_width = FALSE, seen_height = FALSE;
         gwy_debug("Resolution");
-        naofile->have_resolution = TRUE;
+        for (i = 0; attribute_names[i]; i++) {
+            if (gwy_strequal(attribute_names[i], "Width")) {
+                naofile->xres = atoi(attribute_values[i]);
+                seen_width = TRUE;
+            }
+            else if (gwy_strequal(attribute_names[i], "Height")) {
+                naofile->yres = atoi(attribute_values[i]);
+                seen_height = TRUE;
+            }
+        }
+        if (seen_width && seen_height) {
+            gwy_debug("Resolution %u %u", naofile->xres, naofile->yres);
+            naofile->have_resolution = TRUE;
+        }
     }
+
     if (gwy_strequal(path, "/MeasureStream/Size")) {
+        gboolean seen_width = FALSE, seen_height = FALSE;
         gwy_debug("Size");
-        naofile->have_size = TRUE;
+        for (i = 0; attribute_names[i]; i++) {
+            if (gwy_strequal(attribute_names[i], "Width")) {
+                naofile->xreal = g_ascii_strtod(attribute_values[i], NULL);
+                seen_width = TRUE;
+            }
+            else if (gwy_strequal(attribute_names[i], "Height")) {
+                naofile->yreal = g_ascii_strtod(attribute_values[i], NULL);
+                seen_height = TRUE;
+            }
+        }
+        if (seen_width && seen_height) {
+            gwy_debug("Size %g %g", naofile->xreal, naofile->yreal);
+            naofile->have_size = TRUE;
+        }
     }
+
     if (gwy_strequal(path, "/MeasureStream/Channels/Stream")) {
+        const gchar *name = NULL, *unit = NULL;
         gwy_debug("Stream");
+        for (i = 0; attribute_names[i]; i++) {
+            if (gwy_strequal(attribute_names[i], "ID"))
+                name = attribute_values[i];
+            else if (gwy_strequal(attribute_names[i], "Unit"))
+                unit = attribute_values[i];
+        }
+        if (name && unit) {
+            gwy_debug("Adding stream %s [%s]", name, unit);
+            naofile->streams = g_renew(NAOStream, naofile->streams,
+                                       naofile->nstreams+1);
+            naofile->streams[naofile->nstreams].name = g_strdup(name);
+            naofile->streams[naofile->nstreams].units = g_strdup(unit);
+            naofile->nstreams++;
+        }
     }
 }
 
@@ -233,7 +279,7 @@ static void
 nao_streams_end_element(G_GNUC_UNUSED GMarkupParseContext *context,
                         const gchar *element_name,
                         gpointer user_data,
-                        GError **error)
+                        G_GNUC_UNUSED GError **error)
 {
     NAOFile *naofile = (NAOFile*)user_data;
     guint n = strlen(element_name), len = naofile->path->len;
