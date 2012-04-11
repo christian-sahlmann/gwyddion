@@ -37,6 +37,8 @@ BuildRequires: findutils
 BuildRequires: libXmu-devel
 BuildRequires: pygtk2-devel
 BuildRequires: gtksourceview2-devel
+# minizip would be nice to require everywhere but it does not seem available.
+BuildRequires: minizip-devel
 %define fftw3 fftw
 %define fftw3devel fftw-devel
 %define kde4libs kdelibs
