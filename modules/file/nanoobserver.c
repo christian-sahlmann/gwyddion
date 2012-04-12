@@ -32,7 +32,7 @@
  * .nao
  * Read
  **/
-#define DEBUG 1
+
 #include "config.h"
 #include <string.h>
 #include <stdlib.h>
@@ -55,6 +55,12 @@
 #define MAGIC1_SIZE (sizeof(MAGIC1)-1)
 #define BLOODY_UTF8_BOM "\xef\xbb\xbf"
 #define EXTENSION ".nao"
+
+typedef enum {
+    DIR_BAD,
+    DIR_FORWARD,
+    DIR_BACKWARD,
+} NAODirection;
 
 typedef struct {
     gchar *name;
@@ -80,10 +86,14 @@ static gint          nao_detect          (const GwyFileDetectInfo *fileinfo,
 static GwyContainer* nao_load            (const gchar *filename,
                                           GwyRunType mode,
                                           GError **error);
+static GwyDataField* nao_read_field      (unzFile *zipfile,
+                                          NAOFile *naofile,
+                                          guint id);
 static gboolean      nao_parse_streams   (unzFile *zipfile,
                                           NAOFile *naofile,
                                           GError **error);
 static guchar*       nao_get_file_content(unzFile *zipfile,
+                                          gsize *contentsize,
                                           GError **error);
 static gboolean      nao_set_error       (gint status,
                                           GError **error);
@@ -156,6 +166,8 @@ nao_load(const gchar *filename,
     GwyContainer *container = NULL;
     NAOFile naofile;
     unzFile zipfile;
+    NAODirection dir;
+    guint id, channelno = 0;
     gint status;
 
     zipfile = unzOpen(filename);
@@ -170,6 +182,7 @@ nao_load(const gchar *filename,
     if (!nao_parse_streams(zipfile, &naofile, error))
         goto fail;
 
+    container = gwy_container_new();
     status = unzGoToFirstFile(zipfile);
     while (status == UNZ_OK) {
         gchar filename_buf[PATH_MAX+1];
@@ -177,15 +190,115 @@ nao_load(const gchar *filename,
                                   NULL, 0, NULL, 0) != UNZ_OK) {
             goto fail;
         }
-        /* TODO: Figure out whether it is a stream and read it. */
+        if (g_str_has_prefix(filename_buf, "Scan/Data/")) {
+            const gchar *dataname = filename_buf + strlen("Scan/Data/");
+            dir = DIR_BAD;
+
+            gwy_debug("dataname <%s>", dataname);
+            for (id = 0; id < naofile.nstreams; id++) {
+                guint len = strlen(naofile.streams[id].name);
+                if (strncmp(dataname, naofile.streams[id].name, len) == 0) {
+                    if (gwy_strequal(dataname + len, "_Left.dat"))
+                        dir = DIR_FORWARD;
+                    else if (gwy_strequal(dataname + len, "_Right.dat"))
+                        dir = DIR_BACKWARD;
+                }
+                if (dir != DIR_BAD)
+                    break;
+            }
+            if (dir != DIR_BAD) {
+                GwyDataField *field = nao_read_field(zipfile, &naofile, id);
+                if (field) {
+                    GQuark key = gwy_app_get_data_key_for_id(channelno);
+                    gchar *strkey, *title;
+
+                    gwy_container_set_object(container, key, field);
+                    g_object_unref(field);
+
+                    strkey = g_strdup_printf("/%u/data/title", channelno);
+                    title = g_strdup_printf("%s %s",
+                                            naofile.streams[id].name,
+                                            dir == DIR_FORWARD ? "Left" : "Right");
+                    gwy_container_set_string_by_name(container, strkey, title);
+                    g_free(strkey);
+                    channelno++;
+                }
+            }
+
+        }
         status = unzGoToNextFile(zipfile);
     }
 
 fail:
     unzClose(zipfile);
     nao_file_free(&naofile);
-    err_NO_DATA(error);
+    if (!channelno) {
+        gwy_object_unref(container);
+        err_NO_DATA(error);
+    }
+
     return container;
+}
+
+static GwyDataField*
+nao_read_field(unzFile *zipfile, NAOFile *naofile, guint id)
+{
+    gsize size, expected_size;
+    guint width, height, nscanlines, i, j;
+    guchar *buffer = nao_get_file_content(zipfile, &size, NULL);
+    const guchar *p = buffer;
+    GwyDataField *field;
+    const gchar *unit = NULL;
+    gdouble *data;
+
+    if (!buffer)
+        return NULL;
+
+    if (size < 3*4 + 4 + 4) {
+        g_warning("Too short data file (%lu bytes).", (gulong)size);
+        g_free(buffer);
+        return NULL;
+    }
+
+    width = gwy_get_guint32_le(&p);
+    height = gwy_get_guint32_le(&p);
+    nscanlines = gwy_get_guint32_le(&p);
+    gwy_debug("[%u] %u %u %u", id, width, height, nscanlines);
+
+    expected_size = 3*4 + 4*nscanlines*(width + 1);
+    if (size != expected_size) {
+        g_warning("Data file size %lu does not match expected %lu.",
+                  (gulong)size, (gulong)expected_size);
+        g_free(buffer);
+        return NULL;
+    }
+
+    field = gwy_data_field_new(width, nscanlines,
+                               naofile->xreal,
+                               naofile->yreal*nscanlines/naofile->yres,
+                               TRUE);
+    data = gwy_data_field_get_data(field);
+
+    for (i = 0; i < nscanlines; i++) {
+        guint lineno = gwy_get_guint32_le(&p);
+        gdouble *d;
+
+        lineno = MIN(lineno, nscanlines-1);
+        d = data + (nscanlines-1 - lineno)*width;
+        for (j = width; j; j--)
+            *(d++) = gwy_get_gfloat_le(&p);
+    }
+
+    g_free(buffer);
+
+    if (gwy_strequal(naofile->streams[id].units, "Meter"))
+        unit = "m";
+    else if (gwy_strequal(naofile->streams[id].units, "Volt"))
+        unit = "V";
+    gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_z(field), unit);
+    gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_xy(field), "m");
+
+    return field;
 }
 
 static void
@@ -300,7 +413,7 @@ nao_parse_streams(unzFile *zipfile,
         return FALSE;
     }
 
-    content = nao_get_file_content(zipfile, error);
+    content = nao_get_file_content(zipfile, NULL, error);
     if (!content)
         return FALSE;
 
@@ -341,7 +454,7 @@ fail:
 }
 
 static guchar*
-nao_get_file_content(unzFile *zipfile, GError **error)
+nao_get_file_content(unzFile *zipfile, gsize *contentsize, GError **error)
 {
     unz_file_info fileinfo;
     guchar *buffer;
@@ -376,6 +489,8 @@ nao_get_file_content(unzFile *zipfile, GError **error)
     unzCloseCurrentFile(zipfile);
 
     buffer[size] = '\0';
+    if (contentsize)
+        *contentsize = size;
     return buffer;
 }
 
