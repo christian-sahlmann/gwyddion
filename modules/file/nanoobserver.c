@@ -74,6 +74,7 @@ typedef struct {
     gdouble yreal;
     guint nstreams;
     NAOStream *streams;
+    GHashTable *hash;
     /* Workspace */
     gboolean have_resolution;
     gboolean have_size;
@@ -86,6 +87,9 @@ static gint          nao_detect          (const GwyFileDetectInfo *fileinfo,
 static GwyContainer* nao_load            (const gchar *filename,
                                           GwyRunType mode,
                                           GError **error);
+static void          add_meta            (gpointer hkey,
+                                          gpointer hvalue,
+                                          gpointer user_data);
 static GwyDataField* nao_read_field      (unzFile *zipfile,
                                           NAOFile *naofile,
                                           guint id);
@@ -162,7 +166,7 @@ nao_load(const gchar *filename,
          G_GNUC_UNUSED GwyRunType mode,
          GError **error)
 {
-    GwyContainer *container = NULL;
+    GwyContainer *container = NULL, *meta = NULL;
     NAOFile naofile;
     unzFile zipfile;
     NAODirection dir;
@@ -182,6 +186,11 @@ nao_load(const gchar *filename,
         goto fail;
 
     container = gwy_container_new();
+    if (g_hash_table_size(naofile.hash)) {
+        meta = gwy_container_new();
+        g_hash_table_foreach(naofile.hash, &add_meta, meta);
+    }
+
     status = unzGoToFirstFile(zipfile);
     while (status == UNZ_OK) {
         gchar filename_buf[PATH_MAX+1];
@@ -220,6 +229,19 @@ nao_load(const gchar *filename,
                                             dir == DIR_FORWARD ? "Left" : "Right");
                     gwy_container_set_string_by_name(container, strkey, title);
                     g_free(strkey);
+
+                    if (meta) {
+                        GwyContainer *thismeta;
+
+                        strkey = g_strdup_printf("/%u/meta", channelno);
+                        thismeta = GWY_CONTAINER(gwy_serializable_duplicate
+                                                             (G_OBJECT(meta)));
+                        gwy_container_set_object_by_name(container, strkey,
+                                                         thismeta);
+                        g_object_unref(thismeta);
+                        g_free(strkey);
+                    }
+
                     channelno++;
                 }
             }
@@ -231,12 +253,20 @@ nao_load(const gchar *filename,
 fail:
     unzClose(zipfile);
     nao_file_free(&naofile);
+    gwy_object_unref(meta);
     if (!channelno) {
         gwy_object_unref(container);
         err_NO_DATA(error);
     }
 
     return container;
+}
+
+static void
+add_meta(gpointer hkey, gpointer hvalue, gpointer user_data)
+{
+    gwy_container_set_string_by_name(GWY_CONTAINER(user_data),
+                                     (gchar*)hkey, g_strdup((gchar*)hvalue));
 }
 
 static GwyDataField*
@@ -247,7 +277,6 @@ nao_read_field(unzFile *zipfile, NAOFile *naofile, guint id)
     guchar *buffer = nao_get_file_content(zipfile, &size, NULL);
     const guchar *p = buffer;
     GwyDataField *field;
-    const gchar *unit = NULL;
     gdouble *data;
 
     if (!buffer)
@@ -290,11 +319,10 @@ nao_read_field(unzFile *zipfile, NAOFile *naofile, guint id)
 
     g_free(buffer);
 
-    if (gwy_strequal(naofile->streams[id].units, "Meter"))
-        unit = "m";
-    else if (gwy_strequal(naofile->streams[id].units, "Volt"))
-        unit = "V";
-    gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_z(field), unit);
+    /* Older versions of the format had human-readable units there but we
+     * disregard these. */
+    gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_z(field),
+                                naofile->streams[id].units);
     gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_xy(field), "m");
 
     return field;
@@ -355,7 +383,7 @@ nao_streams_end_element(G_GNUC_UNUSED GMarkupParseContext *context,
 static void
 nao_streams_text(G_GNUC_UNUSED GMarkupParseContext *context,
                  const gchar *text,
-                 G_GNUC_UNUSED gsize text_len,
+                 gsize text_len,
                  gpointer user_data,
                  G_GNUC_UNUSED GError **error)
 {
@@ -363,22 +391,33 @@ nao_streams_text(G_GNUC_UNUSED GMarkupParseContext *context,
     gchar *path = naofile->path->str;
 
     if (gwy_strequal(path, "/Measure/Parameters/Resolution")) {
+        gchar *s = g_strndup(text, text_len);
         gwy_debug("Resolution");
-        if (sscanf(text, "%u, %u", &naofile->xres, &naofile->yres) == 2
+        if (sscanf(s, "%u, %u", &naofile->xres, &naofile->yres) == 2
             && !err_DIMENSION(NULL, naofile->xres)
             && !err_DIMENSION(NULL, naofile->yres))
             naofile->have_resolution = TRUE;
+        g_free(s);
     }
-
-    if (gwy_strequal(path, "/Measure/Parameters/Size")) {
-        gchar *end;
+    else if (gwy_strequal(path, "/Measure/Parameters/Size")) {
+        gchar *end, *s = g_strndup(text, text_len);
         gwy_debug("Size");
-        if ((naofile->xreal = g_ascii_strtod(text, &end)) > 0.0
+        if ((naofile->xreal = g_ascii_strtod(s, &end)) > 0.0
             && *end == ','
             && (naofile->yreal = g_ascii_strtod(end+1, NULL)) > 0.0)
             naofile->have_size = TRUE;
+        g_free(s);
     }
-
+    else if (g_str_has_prefix(path, "/Measure/Parameters/")) {
+        gchar *name = g_strdup(path + strlen("/Measure/Parameters/"));
+        gchar *value = g_strndup(text, text_len);
+        g_strdelimit(name, "/", ' ');
+        g_strstrip(value);
+        if (strlen(value))
+            g_hash_table_replace(naofile->hash, name, value);
+        else
+            g_free(value);
+    }
 }
 
 static gboolean
@@ -414,6 +453,9 @@ nao_parse_measure(unzFile *zipfile,
 
     if (!naofile->path)
         naofile->path = g_string_new(NULL);
+    if (!naofile->hash)
+        naofile->hash = g_hash_table_new_full(g_str_hash, g_str_equal,
+                                              g_free, g_free);
 
     context = g_markup_parse_context_new(&parser, 0, naofile, NULL);
     if (!g_markup_parse_context_parse(context, s, -1, error))
@@ -518,6 +560,10 @@ nao_file_free(NAOFile *naofile)
     for (i = 0; i < naofile->nstreams; i++) {
         g_free(naofile->streams[i].name);
         g_free(naofile->streams[i].units);
+    }
+    if (naofile->hash) {
+        g_hash_table_destroy(naofile->hash);
+        naofile->hash = NULL;
     }
     if (naofile->path) {
         g_string_free(naofile->path, TRUE);
