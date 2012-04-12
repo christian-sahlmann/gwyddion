@@ -88,8 +88,6 @@ static guchar*       nao_get_file_content(unzFile *zipfile,
 static gboolean      nao_set_error       (gint status,
                                           GError **error);
 static void          nao_file_free       (NAOFile *naofile);
-static GSList*       nao_file_list       (const gchar *filename);
-static void          free_string_list    (GSList *list);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -120,8 +118,7 @@ static gint
 nao_detect(const GwyFileDetectInfo *fileinfo,
            gboolean only_name)
 {
-    gboolean have_streams = FALSE, have_measure = FALSE;
-    GSList *filelist = NULL, *l;
+    unzFile zipfile;
 
     if (only_name)
         return g_str_has_suffix(fileinfo->name_lowercase, EXTENSION) ? 15 : 0;
@@ -137,20 +134,18 @@ nao_detect(const GwyFileDetectInfo *fileinfo,
         return 0;
 
     /* We have to realy look inside. */
-    if (!(filelist = nao_file_list(fileinfo->name)))
+    if (!(zipfile = unzOpen(fileinfo->name)))
         return 0;
 
-    for (l = filelist; l; l = g_slist_next(l)) {
-        if (gwy_stramong(l->data, "Scan/Streams.xml", "Scan\\Streams.xml",
-                         NULL))
-            have_streams = TRUE;
-        if (gwy_stramong(l->data, "Scan/Measure.xml", "Scan\\Measure.xml",
-                         NULL))
-            have_measure = TRUE;
+    if (unzLocateFile(zipfile, "Scan/Streams.xml", 1) != UNZ_OK
+        || unzLocateFile(zipfile, "Scan/Measure.xml", 1) != UNZ_OK) {
+        unzClose(zipfile);
+        return 0;
     }
-    free_string_list(filelist);
 
-    return have_streams && have_measure ? 100 : 0;
+    unzClose(zipfile);
+
+    return 100;
 }
 
 static GwyContainer*
@@ -161,7 +156,6 @@ nao_load(const gchar *filename,
     GwyContainer *container = NULL;
     NAOFile naofile;
     unzFile zipfile;
-    gboolean seen_streams = FALSE;
     gint status;
 
     zipfile = unzOpen(filename);
@@ -173,6 +167,9 @@ nao_load(const gchar *filename,
     }
 
     gwy_clear(&naofile, 1);
+    if (!nao_parse_streams(zipfile, &naofile, error))
+        goto fail;
+
     status = unzGoToFirstFile(zipfile);
     while (status == UNZ_OK) {
         gchar filename_buf[PATH_MAX+1];
@@ -180,17 +177,7 @@ nao_load(const gchar *filename,
                                   NULL, 0, NULL, 0) != UNZ_OK) {
             goto fail;
         }
-        if (gwy_stramong(filename_buf, "Scan/Streams.xml", "Scan\\Streams.xml",
-                         NULL)) {
-            if (seen_streams)
-                g_warning("Multiple Scan/Streams.xml found.  "
-                          "Ignoring all except the first.");
-            else {
-                if (!nao_parse_streams(zipfile, &naofile, error))
-                    goto fail;
-                seen_streams = TRUE;
-            }
-        }
+        /* TODO: Figure out whether it is a stream and read it. */
         status = unzGoToNextFile(zipfile);
     }
 
@@ -307,6 +294,12 @@ nao_parse_streams(unzFile *zipfile,
     guchar *content = NULL, *s;
     gboolean ok = FALSE;
 
+    if (unzLocateFile(zipfile, "Scan/Streams.xml", 1) != UNZ_OK) {
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_IO,
+                    _("File Scan/Streams.xml is missing in the zip file."));
+        return FALSE;
+    }
+
     content = nao_get_file_content(zipfile, error);
     if (!content)
         return FALSE;
@@ -407,7 +400,7 @@ nao_set_error(gint status, GError **error)
         errstr = _("CRC error");
 
     g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_IO,
-                _("Minizip error while reading the file: %s."),
+                _("Minizip error while reading the zip file: %s."),
                 errstr);
     return FALSE;
 }
@@ -426,46 +419,6 @@ nao_file_free(NAOFile *naofile)
         naofile->path = NULL;
     }
     g_free(naofile->streams);
-}
-
-static GSList*
-nao_file_list(const gchar *filename)
-{
-    GSList *filelist = NULL;
-    unzFile zipfile;
-    gint status;
-
-    zipfile = unzOpen(filename);
-    if (!zipfile)
-        return NULL;
-
-    status = unzGoToFirstFile(zipfile);
-    while (status == UNZ_OK) {
-        gchar filename_buf[PATH_MAX+1];
-        if (unzGetCurrentFileInfo(zipfile, NULL, filename_buf, PATH_MAX,
-                                  NULL, 0, NULL, 0) != UNZ_OK) {
-            free_string_list(filelist);
-            filelist = NULL;
-            goto fail;
-        }
-        filelist = g_slist_prepend(filelist, g_strdup(filename_buf));
-        status = unzGoToNextFile(zipfile);
-    }
-    filelist = g_slist_reverse(filelist);
-
-fail:
-    unzClose(zipfile);
-    return filelist;
-}
-
-static void
-free_string_list(GSList *list)
-{
-    GSList *l;
-
-    for (l = list; l; l = g_slist_next(l))
-        g_free(l->data);
-    g_slist_free(list);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
