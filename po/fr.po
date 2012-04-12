@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: French localization\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2012-03-01 03:58+0100\n"
-"PO-Revision-Date: 2012-03-07 23:12+0100\n"
+"POT-Creation-Date: 2012-04-12 03:58+0200\n"
+"PO-Revision-Date: 2012-04-12 20:21+0100\n"
 "Last-Translator: François RIGUET <francheu@caramail.com>\n"
 "Language-Team: François RIGUET <francheu@caramail.com>\n"
 "Language: \n"
@@ -880,7 +880,7 @@ msgstr "pixels"
 #: modules/process/edge.c:633
 #: modules/process/facet-level.c:283
 #: modules/process/facet_analysis.c:273
-#: modules/process/fft.c:272
+#: modules/process/fft.c:277
 #: modules/process/fft_filter_2d.c:440
 #: modules/process/fft_synth.c:330
 #: modules/process/fractal.c:206
@@ -2036,8 +2036,8 @@ msgid "Each channel has its own metadata."
 msgstr "Chaque canal possède ses propres métadonnées."
 
 #: app/tips.c:145
-msgid "Meta → Metadata Browser displays metadata (auxiliary information) of channels and allows editting or exporting to a text file."
-msgstr "Métadonnées → Navigateur de Méta-données affiche les méta-données (informations auxiliaires) sur les canaux et permet de les éditer ou les exporter vers un fichier texte."
+msgid "Meta → Metadata Browser displays metadata (auxiliary information) of channels and allows editing or exporting to a text file."
+msgstr "Métadonnées → Navigateur de méta-données affiche les méta-données (informations auxiliaires) sur les canaux et permet de les éditer ou les exporter vers un fichier texte."
 
 #: app/tips.c:151
 msgid "Curves can be copied to other (compatible) graphs by dragging them from Curves tab to the graph window."
@@ -3676,6 +3676,52 @@ msgstr "L'en-tête se termine avec une table Multipass-Config."
 msgid "Missing data start marker \\x1a\\x04."
 msgstr "Marqueur de début de données \\x1a\\x04 absent."
 
+#: modules/file/nanoobserver.c:97
+msgid "Reads NanoObserver .nao files."
+msgstr "Importe les fichiers NanoObserver (.nao)"
+
+#: modules/file/nanoobserver.c:110
+msgid "NanoObserver data (.nao)"
+msgstr "NanoObserver (.nao)"
+
+#: modules/file/nanoobserver.c:171
+msgid "Minizip cannot open the file as a ZIP file."
+msgstr "Minizip n'arrive pas à ouvrir le fichier en tant que fichier ZIP."
+
+#: modules/file/nanoobserver.c:392
+msgid "Unknown error"
+msgstr "Erreur inconnue"
+
+#: modules/file/nanoobserver.c:397
+msgid "End of file"
+msgstr "Fin de fichier"
+
+#: modules/file/nanoobserver.c:399
+msgid "End of list of files"
+msgstr "Fin de la liste des fichiers"
+
+#: modules/file/nanoobserver.c:401
+msgid "Parameter error"
+msgstr "Erreur de paramètre"
+
+#: modules/file/nanoobserver.c:403
+msgid "Bad zip file"
+msgstr "Fichier zip erroné"
+
+#: modules/file/nanoobserver.c:405
+msgid "Internal error"
+msgstr "Erreur interne"
+
+#: modules/file/nanoobserver.c:407
+#, fuzzy
+msgid "CRC error"
+msgstr "Erreur CRC"
+
+#: modules/file/nanoobserver.c:410
+#, c-format
+msgid "Minizip error while reading the file: %s."
+msgstr "Erreur de Minizip lors de la lecture du fichier : %s."
+
 #: modules/file/nanoscan.c:195
 msgid "Imports NanoScan XML files."
 msgstr "Importe les fichiers NanoScan XML."
@@ -3871,22 +3917,22 @@ msgstr "la trame est trop courte pour le mode trame."
 msgid "Frame is too short for dots or data."
 msgstr "la trame est trop courte pour des points ou des données."
 
-#: modules/file/nt-mdt.c:1367
+#: modules/file/nt-mdt.c:1369
 #, c-format
 msgid "End of file reached in frame header #%u."
 msgstr "Fin du fichier atteinte dans l'en-tête #%u."
 
-#: modules/file/nt-mdt.c:1375
+#: modules/file/nt-mdt.c:1377
 #, c-format
 msgid "End of file reached in frame data #%u."
 msgstr "Fin du fichier atteinte dans les données #%u."
 
-#: modules/file/nt-mdt.c:1410
+#: modules/file/nt-mdt.c:1412
 #, c-format
 msgid "Frame #%u is too short for scanned data header."
 msgstr "La trame #%u est trop courte pour l'en-tête des données scannées."
 
-#: modules/file/nt-mdt.c:2465
+#: modules/file/nt-mdt.c:2464
 msgid "Raman Image"
 msgstr "Image Raman"
 
@@ -6598,7 +6644,7 @@ msgid "Y Distance"
 msgstr "Distance Y"
 
 #: modules/process/crosscor.c:236
-#: modules/process/fft.c:299
+#: modules/process/fft.c:304
 #: modules/process/maskcor.c:175
 msgid "Output _type:"
 msgstr "_Type de sortie :"
@@ -7141,69 +7187,73 @@ msgstr "_Tolérance :"
 msgid "Warning: Lateral and value units differ. Angles are not physically meaningful."
 msgstr "Attention : les unités latérales et de hauteur diffèrent. Les angles sont physiquement incorrects."
 
-#: modules/process/fft.c:90
+#: modules/process/fft.c:95
 msgid "Two-dimensional FFT (Fast Fourier Transform)."
 msgstr "FFT bi-dimensionnelle (transformée de Fourier rapide)"
 
-#: modules/process/fft.c:104
+#: modules/process/fft.c:109
 msgid "/_Integral Transforms/2D _FFT..."
 msgstr "/Transformées/Fourier (_FFT 2D)..."
 
-#: modules/process/fft.c:108
+#: modules/process/fft.c:113
 msgid "Compute Fast Fourier Transform"
 msgstr "Calculer la transformée de Fourier rapide (FFT)"
 
-#: modules/process/fft.c:152
+#: modules/process/fft.c:157
 msgid "FFT Real"
 msgstr "FFT Partie réelle"
 
-#: modules/process/fft.c:155
+#: modules/process/fft.c:160
 msgid "FFT Imag"
 msgstr "FFT Partie Imaginaire"
 
-#: modules/process/fft.c:160
+#: modules/process/fft.c:165
 msgid "FFT Modulus"
 msgstr "FFT Module"
 
-#: modules/process/fft.c:166
+#: modules/process/fft.c:171
 msgid "FFT Phase"
 msgstr "FFT Phase"
 
-#: modules/process/fft.c:260
+#: modules/process/fft.c:265
 msgid "Real + Imaginary"
 msgstr "Parties Réelle + Imaginaire"
 
-#: modules/process/fft.c:261
+#: modules/process/fft.c:266
 msgid "Modulus + Phase"
 msgstr "Module + Phase"
 
-#: modules/process/fft.c:262
+#: modules/process/fft.c:267
 msgid "Real"
 msgstr "Réelle"
 
-#: modules/process/fft.c:263
+#: modules/process/fft.c:268
 msgid "Imaginary"
 msgstr "Imaginaire"
 
-#: modules/process/fft.c:264
+#: modules/process/fft.c:269
 msgid "Modulus"
 msgstr "Module"
 
-#: modules/process/fft.c:265
+#: modules/process/fft.c:270
 msgid "Phase"
 msgstr "Phase"
 
-#: modules/process/fft.c:271
+#: modules/process/fft.c:276
 msgid "2D FFT"
 msgstr "FFT 2D"
 
-#: modules/process/fft.c:291
+#: modules/process/fft.c:296
 msgid "_Windowing type:"
 msgstr "Type de fenêtre d'apodisation :"
 
-#: modules/process/fft.c:304
+#: modules/process/fft.c:309
 msgid "Subtract mean _value beforehand"
 msgstr "Soustraire d'abord la _valeur moyenne"
+
+#: modules/process/fft.c:320
+msgid "_Preserve RMS"
+msgstr "Conserver le RMS"
 
 #: modules/process/fft_filter_1d.c:127
 msgid "FFT filtering"
@@ -10910,8 +10960,6 @@ msgstr ""
 #~ msgstr "Ajustement"
 #~ msgid "noun|Estimate"
 #~ msgstr "Estimation"
-#~ msgid "Error loading file: %s"
-#~ msgstr "Erreur lors du chargement du fichier : %s"
 #~ msgid "Even"
 #~ msgstr "Pair"
 #~ msgid "Odd"
