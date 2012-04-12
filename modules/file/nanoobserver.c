@@ -32,7 +32,7 @@
  * .nao
  * Read
  **/
-
+#define DEBUG 1
 #include "config.h"
 #include <string.h>
 #include <stdlib.h>
@@ -51,7 +51,7 @@
 
 #define MAGIC "PK\x03\x04"
 #define MAGIC_SIZE (sizeof(MAGIC)-1)
-#define MAGIC1 "Scan/PK\x03\x04"
+#define MAGIC1 "Scan/Measure.xml"
 #define MAGIC1_SIZE (sizeof(MAGIC1)-1)
 #define BLOODY_UTF8_BOM "\xef\xbb\xbf"
 #define EXTENSION ".nao"
@@ -89,7 +89,7 @@ static GwyContainer* nao_load            (const gchar *filename,
 static GwyDataField* nao_read_field      (unzFile *zipfile,
                                           NAOFile *naofile,
                                           guint id);
-static gboolean      nao_parse_streams   (unzFile *zipfile,
+static gboolean      nao_parse_measure   (unzFile *zipfile,
                                           NAOFile *naofile,
                                           GError **error);
 static guchar*       nao_get_file_content(unzFile *zipfile,
@@ -147,8 +147,7 @@ nao_detect(const GwyFileDetectInfo *fileinfo,
     if (!(zipfile = unzOpen(fileinfo->name)))
         return 0;
 
-    if (unzLocateFile(zipfile, "Scan/Streams.xml", 1) != UNZ_OK
-        || unzLocateFile(zipfile, "Scan/Measure.xml", 1) != UNZ_OK) {
+    if (unzLocateFile(zipfile, "Scan/Measure.xml", 1) != UNZ_OK) {
         unzClose(zipfile);
         return 0;
     }
@@ -179,7 +178,7 @@ nao_load(const gchar *filename,
     }
 
     gwy_clear(&naofile, 1);
-    if (!nao_parse_streams(zipfile, &naofile, error))
+    if (!nao_parse_measure(zipfile, &naofile, error))
         goto fail;
 
     container = gwy_container_new();
@@ -317,49 +316,11 @@ nao_streams_start_element(G_GNUC_UNUSED GMarkupParseContext *context,
     g_string_append(naofile->path, element_name);
     path = naofile->path->str;
 
-    if (gwy_strequal(path, "/MeasureStream/Resolution")) {
-        gboolean seen_width = FALSE, seen_height = FALSE;
-        gwy_debug("Resolution");
-        for (i = 0; attribute_names[i]; i++) {
-            if (gwy_strequal(attribute_names[i], "Width")) {
-                naofile->xres = atoi(attribute_values[i]);
-                seen_width = TRUE;
-            }
-            else if (gwy_strequal(attribute_names[i], "Height")) {
-                naofile->yres = atoi(attribute_values[i]);
-                seen_height = TRUE;
-            }
-        }
-        if (seen_width && seen_height) {
-            gwy_debug("Resolution %u %u", naofile->xres, naofile->yres);
-            naofile->have_resolution = TRUE;
-        }
-    }
-
-    if (gwy_strequal(path, "/MeasureStream/Size")) {
-        gboolean seen_width = FALSE, seen_height = FALSE;
-        gwy_debug("Size");
-        for (i = 0; attribute_names[i]; i++) {
-            if (gwy_strequal(attribute_names[i], "Width")) {
-                naofile->xreal = g_ascii_strtod(attribute_values[i], NULL);
-                seen_width = TRUE;
-            }
-            else if (gwy_strequal(attribute_names[i], "Height")) {
-                naofile->yreal = g_ascii_strtod(attribute_values[i], NULL);
-                seen_height = TRUE;
-            }
-        }
-        if (seen_width && seen_height) {
-            gwy_debug("Size %g %g", naofile->xreal, naofile->yreal);
-            naofile->have_size = TRUE;
-        }
-    }
-
-    if (gwy_strequal(path, "/MeasureStream/Channels/Stream")) {
+    if (gwy_strequal(path, "/Measure/Streams/Stream")) {
         const gchar *name = NULL, *unit = NULL;
         gwy_debug("Stream");
         for (i = 0; attribute_names[i]; i++) {
-            if (gwy_strequal(attribute_names[i], "ID"))
+            if (gwy_strequal(attribute_names[i], "Id"))
                 name = attribute_values[i];
             else if (gwy_strequal(attribute_names[i], "Unit"))
                 unit = attribute_values[i];
@@ -391,15 +352,44 @@ nao_streams_end_element(G_GNUC_UNUSED GMarkupParseContext *context,
     g_string_set_size(naofile->path, len-1 - n);
 }
 
+static void
+nao_streams_text(G_GNUC_UNUSED GMarkupParseContext *context,
+                 const gchar *text,
+                 G_GNUC_UNUSED gsize text_len,
+                 gpointer user_data,
+                 G_GNUC_UNUSED GError **error)
+{
+    NAOFile *naofile = (NAOFile*)user_data;
+    gchar *path = naofile->path->str;
+
+    if (gwy_strequal(path, "/Measure/Parameters/Resolution")) {
+        gwy_debug("Resolution");
+        if (sscanf(text, "%u, %u", &naofile->xres, &naofile->yres) == 2
+            && !err_DIMENSION(NULL, naofile->xres)
+            && !err_DIMENSION(NULL, naofile->yres))
+            naofile->have_resolution = TRUE;
+    }
+
+    if (gwy_strequal(path, "/Measure/Parameters/Size")) {
+        gchar *end;
+        gwy_debug("Size");
+        if ((naofile->xreal = g_ascii_strtod(text, &end)) > 0.0
+            && *end == ','
+            && (naofile->yreal = g_ascii_strtod(end+1, NULL)) > 0.0)
+            naofile->have_size = TRUE;
+    }
+
+}
+
 static gboolean
-nao_parse_streams(unzFile *zipfile,
+nao_parse_measure(unzFile *zipfile,
                   NAOFile *naofile,
                   GError **error)
 {
     GMarkupParser parser = {
         &nao_streams_start_element,
         &nao_streams_end_element,
-        NULL,
+        &nao_streams_text,
         NULL,
         NULL,
     };
@@ -407,9 +397,9 @@ nao_parse_streams(unzFile *zipfile,
     guchar *content = NULL, *s;
     gboolean ok = FALSE;
 
-    if (unzLocateFile(zipfile, "Scan/Streams.xml", 1) != UNZ_OK) {
+    if (unzLocateFile(zipfile, "Scan/Measure.xml", 1) != UNZ_OK) {
         g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_IO,
-                    _("File Scan/Streams.xml is missing in the zip file."));
+                    _("File Scan/Measure.xml is missing in the zip file."));
         return FALSE;
     }
 
