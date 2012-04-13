@@ -4,9 +4,10 @@ Library:
 
 Modules:
 - Old MDA (new): Imports NT-MDT old MDA spectra data.
+- NanoObserver (new): Imports NanoObserver NAO files.
 - Pixmap: The font used for labels can be changed.
 - Nanoscope: Images defined in "Image list" header section are loaded now.
-- FFT: Option to preserve RMS was added.
+- 2D FFT: An option to preserve RMS was added.
 
 Other:
 - Compatibility with GLib 2.32 was corrected.
