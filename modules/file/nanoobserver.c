@@ -191,9 +191,12 @@ nao_load(const gchar *filename,
         g_hash_table_foreach(naofile.hash, &add_meta, meta);
     }
 
+    gwy_debug("calling unzGoToFirstFile()");
     status = unzGoToFirstFile(zipfile);
     while (status == UNZ_OK) {
         gchar filename_buf[PATH_MAX+1];
+
+        gwy_debug("calling unzGetCurrentFileInfo()");
         if (unzGetCurrentFileInfo(zipfile, NULL, filename_buf, PATH_MAX,
                                   NULL, 0, NULL, 0) != UNZ_OK) {
             goto fail;
@@ -247,10 +250,12 @@ nao_load(const gchar *filename,
             }
 
         }
+        gwy_debug("calling unzGoToFirstFile()");
         status = unzGoToNextFile(zipfile);
     }
 
 fail:
+    gwy_debug("calling unzClose()");
     unzClose(zipfile);
     nao_file_free(&naofile);
     gwy_object_unref(meta);
@@ -436,6 +441,7 @@ nao_parse_measure(unzFile *zipfile,
     guchar *content = NULL, *s;
     gboolean ok = FALSE;
 
+    gwy_debug("calling unzLocateFile() to find Scan/Measure.xml");
     if (unzLocateFile(zipfile, "Scan/Measure.xml", 1) != UNZ_OK) {
         g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_IO,
                     _("File Scan/Measure.xml is missing in the zip file."));
@@ -494,6 +500,7 @@ nao_get_file_content(unzFile *zipfile, gsize *contentsize, GError **error)
     glong readbytes;
     gint status;
 
+    gwy_debug("calling unzGetCurrentFileInfo() to figure out buffer size");
     status = unzGetCurrentFileInfo(zipfile, &fileinfo,
                                    NULL, 0,
                                    NULL, 0,
@@ -503,6 +510,7 @@ nao_get_file_content(unzFile *zipfile, gsize *contentsize, GError **error)
         return NULL;
     }
 
+    gwy_debug("calling unzGetCurrentFileInfo()");
     status = unzOpenCurrentFile(zipfile);
     if (status != UNZ_OK) {
         nao_set_error(status, error);
@@ -511,6 +519,7 @@ nao_get_file_content(unzFile *zipfile, gsize *contentsize, GError **error)
 
     size = fileinfo.uncompressed_size;
     buffer = g_new(guchar, size + 1);
+    gwy_debug("calling unzReadCurrentFile()");
     readbytes = unzReadCurrentFile(zipfile, buffer, size);
     if (readbytes != size) {
         nao_set_error(status, error);
@@ -518,6 +527,7 @@ nao_get_file_content(unzFile *zipfile, gsize *contentsize, GError **error)
         g_free(buffer);
         return NULL;
     }
+    gwy_debug("calling unzCloseCurrentFile()");
     unzCloseCurrentFile(zipfile);
 
     buffer[size] = '\0';
