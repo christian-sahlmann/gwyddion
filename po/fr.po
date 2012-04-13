@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: French localization\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2012-04-12 03:58+0200\n"
-"PO-Revision-Date: 2012-04-12 20:21+0100\n"
+"POT-Creation-Date: 2012-04-13 03:58+0200\n"
+"PO-Revision-Date: 2012-04-13 21:09+0100\n"
 "Last-Translator: François RIGUET <francheu@caramail.com>\n"
 "Language-Team: François RIGUET <francheu@caramail.com>\n"
 "Language: \n"
@@ -3676,51 +3676,55 @@ msgstr "L'en-tête se termine avec une table Multipass-Config."
 msgid "Missing data start marker \\x1a\\x04."
 msgstr "Marqueur de début de données \\x1a\\x04 absent."
 
-#: modules/file/nanoobserver.c:97
+#: modules/file/nanoobserver.c:109
 msgid "Reads NanoObserver .nao files."
 msgstr "Importe les fichiers NanoObserver (.nao)"
 
-#: modules/file/nanoobserver.c:110
+#: modules/file/nanoobserver.c:122
 msgid "NanoObserver data (.nao)"
 msgstr "NanoObserver (.nao)"
 
-#: modules/file/nanoobserver.c:171
+#: modules/file/nanoobserver.c:180
 msgid "Minizip cannot open the file as a ZIP file."
 msgstr "Minizip n'arrive pas à ouvrir le fichier en tant que fichier ZIP."
 
-#: modules/file/nanoobserver.c:392
+#: modules/file/nanoobserver.c:441
+msgid "File Scan/Measure.xml is missing in the zip file."
+msgstr "Le fichier Scan/Measure.xml est manquant dans le fichier zip."
+
+#: modules/file/nanoobserver.c:532
 msgid "Unknown error"
 msgstr "Erreur inconnue"
 
-#: modules/file/nanoobserver.c:397
+#: modules/file/nanoobserver.c:537
 msgid "End of file"
 msgstr "Fin de fichier"
 
-#: modules/file/nanoobserver.c:399
+#: modules/file/nanoobserver.c:539
 msgid "End of list of files"
 msgstr "Fin de la liste des fichiers"
 
-#: modules/file/nanoobserver.c:401
+#: modules/file/nanoobserver.c:541
 msgid "Parameter error"
 msgstr "Erreur de paramètre"
 
-#: modules/file/nanoobserver.c:403
+#: modules/file/nanoobserver.c:543
 msgid "Bad zip file"
 msgstr "Fichier zip erroné"
 
-#: modules/file/nanoobserver.c:405
+#: modules/file/nanoobserver.c:545
 msgid "Internal error"
 msgstr "Erreur interne"
 
-#: modules/file/nanoobserver.c:407
+#: modules/file/nanoobserver.c:547
 #, fuzzy
 msgid "CRC error"
 msgstr "Erreur CRC"
 
-#: modules/file/nanoobserver.c:410
+#: modules/file/nanoobserver.c:550
 #, c-format
-msgid "Minizip error while reading the file: %s."
-msgstr "Erreur de Minizip lors de la lecture du fichier : %s."
+msgid "Minizip error while reading the zip file: %s."
+msgstr "Erreur de Minizip lors de la lecture du fichier zip : %s."
 
 #: modules/file/nanoscan.c:195
 msgid "Imports NanoScan XML files."
