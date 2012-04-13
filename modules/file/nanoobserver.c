@@ -32,7 +32,7 @@
  * .nao
  * Read
  **/
-#define DEBUG 1
+
 #include "config.h"
 #include <string.h>
 #include <stdlib.h>
@@ -194,10 +194,13 @@ nao_load(const gchar *filename,
     gwy_debug("calling unzGoToFirstFile()");
     status = unzGoToFirstFile(zipfile);
     while (status == UNZ_OK) {
+        unz_file_info fileinfo;
         gchar filename_buf[PATH_MAX+1];
 
+        /* NB: We do not need @fileinfo for anything but at least some versions
+         * of minizip seem to require it whatever the other arguments are. */
         gwy_debug("calling unzGetCurrentFileInfo()");
-        if (unzGetCurrentFileInfo(zipfile, NULL, filename_buf, PATH_MAX,
+        if (unzGetCurrentFileInfo(zipfile, &fileinfo, filename_buf, PATH_MAX,
                                   NULL, 0, NULL, 0) != UNZ_OK) {
             goto fail;
         }
