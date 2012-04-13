@@ -774,8 +774,8 @@ fix_unit_name(GString *str)
             if (l < ll)
                 break;
             if (g_ascii_strncasecmp(s, name, ll) == 0
-                && (l == ll || (l+1 == ll
-                                && g_ascii_tolower(s[ll]) == 's'))) {
+                && (l == ll
+                    || (l == ll+1 && g_ascii_tolower(s[ll]) == 's'))) {
                 g_string_assign(str, long_name->symbol);
                 break;
             }
@@ -899,7 +899,7 @@ gwy_si_unit_parse(GwySIUnit *siunit,
                may_split_prefix = FALSE;
         }
 
-        if (may_split_prefix && buf->len > 1) {
+        if (may_split_prefix) {
             for (i = 0; i < G_N_ELEMENTS(SI_prefixes); i++) {
                 const gchar *pfx = SI_prefixes[i].prefix;
 
