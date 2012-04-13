@@ -113,6 +113,7 @@ mulfile	managing-files
 nanoeducator	managing-files
 nanonics	managing-files
 nanonis	managing-files
+nanoobserver	managing-files
 nanoscan	managing-files
 nanoscope	managing-files
 nanoscope-ii	managing-files
@@ -122,6 +123,7 @@ noise_synth	synthetic	noise-synthetis
 nrrdfile	managing-files
 nt-mdt	managing-files
 obj_synth	synthetic	object-synthetis
+oldmda	managing-files
 ols	managing-files
 omicron	managing-files
 omicronflat	managing-files
