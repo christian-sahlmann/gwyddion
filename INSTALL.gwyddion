@@ -66,13 +66,18 @@ Optional, for SPML file support:
 - LibXML2, including development files
   http://xmlsoft.org/
 
-Optional, for compressed Createc, NRRD and Matlab MAT5 file support:
+Optional, for compressed Createc, NRRD and Matlab MAT5 (once implemented) file
+support:
 - zlib, including development files
   http://www.gzip.org/zlib/
 
 Optional, for compressed NRRD file support:
 - libbz2, including development files
   http://www.bzip.org/
+
+Optional, for NanoObserver NAO file support:
+- minizip, including development files
+  http://www.gzip.org/zlib/
 
 Optional, for alternative `remote control' backend:
 - LibXmu (a part of X11, though packaged separately since Xorg 7.0), including
@@ -110,7 +115,7 @@ ease packaging, it is automatically disabled when DESTDIR is non-empty.
 
 ===[ 2. Cross compilation for MS Windows ]===================================
 
-
+See the user guide.
 
 ===[ 3. From sources -- Mac OS X ]===========================================
 
