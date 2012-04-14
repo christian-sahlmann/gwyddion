@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2012-02-26 03:58+0100\n"
-"PO-Revision-Date: 2012-02-26 10:28+0300\n"
+"POT-Creation-Date: 2012-04-14 03:58+0200\n"
+"PO-Revision-Date: 2012-04-14 09:08+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "Language: \n"
@@ -882,7 +882,7 @@ msgstr "точек"
 #: modules/process/edge.c:633
 #: modules/process/facet-level.c:283
 #: modules/process/facet_analysis.c:273
-#: modules/process/fft.c:272
+#: modules/process/fft.c:277
 #: modules/process/fft_filter_2d.c:440
 #: modules/process/fft_synth.c:330
 #: modules/process/fractal.c:206
@@ -2038,7 +2038,7 @@ msgid "Each channel has its own metadata."
 msgstr "У каждого канала есть свои метаданные."
 
 #: app/tips.c:145
-msgid "Meta → Metadata Browser displays metadata (auxiliary information) of channels and allows editting or exporting to a text file."
+msgid "Meta → Metadata Browser displays metadata (auxiliary information) of channels and allows editing or exporting to a text file."
 msgstr "Мета → Просмотр метаданных показывает метаданные (вспомогательную информацию) каналов и позволяет их редактировать или экспортировать в текстовый файл."
 
 #: app/tips.c:151
@@ -3678,6 +3678,55 @@ msgstr "Заголовок закончился внутри таблицы Mult
 msgid "Missing data start marker \\x1a\\x04."
 msgstr "Отсутствует маркер начала данных \\x1a\\x04."
 
+#: modules/file/nanoobserver.c:109
+msgid "Reads NanoObserver .nao files."
+msgstr "Читает файлы NanoObserver .nao."
+
+#: modules/file/nanoobserver.c:122
+msgid "NanoObserver data (.nao)"
+msgstr "Данные NanoObserver (.nao)"
+
+#: modules/file/nanoobserver.c:180
+msgid "Minizip cannot open the file as a ZIP file."
+msgstr "Minizip не может открыть файл как архив ZIP."
+
+#: modules/file/nanoobserver.c:450
+msgid "File Scan/Measure.xml is missing in the zip file."
+msgstr "Файл Scan/Measure.xml отсутствует в zip-архиве."
+
+#: modules/file/nanoobserver.c:545
+msgid "Unknown error"
+msgstr "Неизвестная ошибка"
+
+#: modules/file/nanoobserver.c:550
+msgid "End of file"
+msgstr "Конец файла"
+
+#: modules/file/nanoobserver.c:552
+msgid "End of list of files"
+msgstr "Конец списка файлов"
+
+#: modules/file/nanoobserver.c:554
+msgid "Parameter error"
+msgstr "Ошибка параметра"
+
+#: modules/file/nanoobserver.c:556
+msgid "Bad zip file"
+msgstr "Плохой файл zip"
+
+#: modules/file/nanoobserver.c:558
+msgid "Internal error"
+msgstr "Внутренняя ошибка"
+
+#: modules/file/nanoobserver.c:560
+msgid "CRC error"
+msgstr "Ошибка контрольной суммы"
+
+#: modules/file/nanoobserver.c:563
+#, c-format
+msgid "Minizip error while reading the zip file: %s."
+msgstr "Ошибка minizip при чтении zip-файла: %s."
+
 #: modules/file/nanoscan.c:195
 msgid "Imports NanoScan XML files."
 msgstr "Импортирует файлы данных NanoScan XML."
@@ -3873,22 +3922,22 @@ msgstr "Фрейм слишком короткий для режима фрей�
 msgid "Frame is too short for dots or data."
 msgstr "Фрейм слишком короткий для точек или данных."
 
-#: modules/file/nt-mdt.c:1367
+#: modules/file/nt-mdt.c:1369
 #, c-format
 msgid "End of file reached in frame header #%u."
 msgstr "Достигнут конец файла в заголовке фрейма #%u."
 
-#: modules/file/nt-mdt.c:1375
+#: modules/file/nt-mdt.c:1377
 #, c-format
 msgid "End of file reached in frame data #%u."
 msgstr "Достигнут конец файла в данных фрейма #%u."
 
-#: modules/file/nt-mdt.c:1410
+#: modules/file/nt-mdt.c:1412
 #, c-format
 msgid "Frame #%u is too short for scanned data header."
 msgstr "Фрейм #%u слишком короткий чтобы быть заголовком сканированных данных."
 
-#: modules/file/nt-mdt.c:2465
+#: modules/file/nt-mdt.c:2464
 msgid "Raman Image"
 msgstr "Изображение комбинационного рассеяния"
 
@@ -6603,7 +6652,7 @@ msgid "Y Distance"
 msgstr "Расстояние по Y"
 
 #: modules/process/crosscor.c:236
-#: modules/process/fft.c:299
+#: modules/process/fft.c:304
 #: modules/process/maskcor.c:175
 msgid "Output _type:"
 msgstr "Тип в_ывода:"
@@ -7145,69 +7194,73 @@ msgstr "_Допуск"
 msgid "Warning: Lateral and value units differ. Angles are not physically meaningful."
 msgstr "Предупреждение: Единицы измерения горизонтальных размеров и значений различаются. Углы не имеют физического смысла."
 
-#: modules/process/fft.c:90
+#: modules/process/fft.c:95
 msgid "Two-dimensional FFT (Fast Fourier Transform)."
 msgstr "Двумерное БПФ (быстрое преобразование Фурье)."
 
-#: modules/process/fft.c:104
+#: modules/process/fft.c:109
 msgid "/_Integral Transforms/2D _FFT..."
 msgstr "/_Интегральные преобразования/2D _БПФ..."
 
-#: modules/process/fft.c:108
+#: modules/process/fft.c:113
 msgid "Compute Fast Fourier Transform"
 msgstr "Вычислить быстрое преобразование Фурье"
 
-#: modules/process/fft.c:152
+#: modules/process/fft.c:157
 msgid "FFT Real"
 msgstr "Действительная часть БПФ"
 
-#: modules/process/fft.c:155
+#: modules/process/fft.c:160
 msgid "FFT Imag"
 msgstr "Мнимая часть БПФ"
 
-#: modules/process/fft.c:160
+#: modules/process/fft.c:165
 msgid "FFT Modulus"
 msgstr "Абсолютное значение БПФ"
 
-#: modules/process/fft.c:166
+#: modules/process/fft.c:171
 msgid "FFT Phase"
 msgstr "Фаза БПФ"
 
-#: modules/process/fft.c:260
+#: modules/process/fft.c:265
 msgid "Real + Imaginary"
 msgstr "Действительное + Мнимое"
 
-#: modules/process/fft.c:261
+#: modules/process/fft.c:266
 msgid "Modulus + Phase"
 msgstr "Абсолютная величина + Фаза"
 
-#: modules/process/fft.c:262
+#: modules/process/fft.c:267
 msgid "Real"
 msgstr "Действительное"
 
-#: modules/process/fft.c:263
+#: modules/process/fft.c:268
 msgid "Imaginary"
 msgstr "Мнимое"
 
-#: modules/process/fft.c:264
+#: modules/process/fft.c:269
 msgid "Modulus"
 msgstr "Абсолютная величина: "
 
-#: modules/process/fft.c:265
+#: modules/process/fft.c:270
 msgid "Phase"
 msgstr "Фаза"
 
-#: modules/process/fft.c:271
+#: modules/process/fft.c:276
 msgid "2D FFT"
 msgstr "Двумерное БПФ"
 
-#: modules/process/fft.c:291
+#: modules/process/fft.c:296
 msgid "_Windowing type:"
 msgstr "Тип о_кна:"
 
-#: modules/process/fft.c:304
+#: modules/process/fft.c:309
 msgid "Subtract mean _value beforehand"
 msgstr "Сначала вычесть среднее _значение"
+
+#: modules/process/fft.c:320
+msgid "_Preserve RMS"
+msgstr "Со_хранять среднеквадратичное отклонение"
 
 #: modules/process/fft_filter_1d.c:127
 msgid "FFT filtering"
