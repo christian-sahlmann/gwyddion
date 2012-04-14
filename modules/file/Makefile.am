@@ -136,8 +136,7 @@ noinst_HEADERS = \
 # Put sources that are for some reason disabled yet present in svn checkouts
 # here.  This makes them distributed and translations of their messages are
 # kept.  If we remove them completely, various bits can get lost.
-disabled_sources = \
-	wipfile.c
+disabled_sources =
 
 EXTRA_DIST = \
 	$(disabled_sources) \
