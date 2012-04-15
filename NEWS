@@ -1,5 +1,9 @@
-2.27 (0000-00-00)
+2.26.20120413 (0000-00-00)
+Application:
+- Translations updated: Czech, French, Russian.
+
 Library:
+- libgwyddion: Parsing of units was improved to recognise some full names.
 - libgwyprocess: Broken preserverms in 2D FFT was fixed.
 
 Modules:
