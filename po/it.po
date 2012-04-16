@@ -12,7 +12,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: it\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2011-12-17 10:50+0100\n"
+"POT-Creation-Date: 2012-04-13 13:32+0200\n"
 "PO-Revision-Date: 2011-12-05 21:48+0100\n"
 "Last-Translator: \n"
 "Language-Team: Italian <kde-i18n-it@kde.org>\n"
@@ -818,7 +818,7 @@ msgid "pixels"
 msgstr "pixel"
 
 #: libgwydgets/gwy3dwindow.c:1116 modules/file/hdrimage.cc:2149
-#: modules/file/pixmap.c:1018 modules/file/pixmap.c:2914
+#: modules/file/pixmap.c:1025 modules/file/pixmap.c:2984
 #: modules/file/rawfile.c:398 modules/process/angle_dist.c:170
 #: modules/process/calcoefs_new.c:347 modules/process/calibrate.c:296
 #: modules/process/col_synth.c:299 modules/process/curvature.c:602
@@ -826,7 +826,7 @@ msgstr "pixel"
 #: modules/process/drift.c:230 modules/process/dwt.c:164
 #: modules/process/dwtanisotropy.c:183 modules/process/edge.c:633
 #: modules/process/facet-level.c:283 modules/process/facet_analysis.c:273
-#: modules/process/fft.c:272 modules/process/fft_filter_2d.c:440
+#: modules/process/fft.c:277 modules/process/fft_filter_2d.c:440
 #: modules/process/fft_synth.c:330 modules/process/fractal.c:206
 #: modules/process/grain_edge.c:217 modules/process/grain_mark.c:262
 #: modules/process/grain_rem_threshold.c:224 modules/process/grain_wshed.c:182
@@ -1162,7 +1162,7 @@ msgid "Preview"
 msgstr "Anteprima"
 
 #: libgwymodule/gwymodule-file.c:535 modules/file/err.h:40
-#: modules/file/pixmap.c:734
+#: modules/file/pixmap.c:741
 #, c-format
 msgid "Cannot open file for reading: %s."
 msgstr "Non è possibile aprire il file in lettura: %s."
@@ -1931,13 +1931,25 @@ msgstr ""
 "I menù possono essere staccati premendo la linea tratteggiata superiore per "
 "un accesso rapido ad una sotto raccolta di funzioni"
 
-#: app/tips.c:84
+#: app/tips.c:83
+msgid ""
+"Pressing Ctrl-F runs the last used data processing function with with the "
+"same parameters on the current data."
+msgstr ""
+
+#: app/tips.c:88
+msgid ""
+"Pressing Ctrl-Shift-F re-shows the parameter dialog of the last used data "
+"processing function (or executes it immediately if it has no parameters)."
+msgstr ""
+
+#: app/tips.c:95
 msgid ""
 "When Gwyddion is run with a directory argument it opens a file open dialog "
 "showing this directory."
 msgstr ""
 
-#: app/tips.c:89
+#: app/tips.c:100
 msgid ""
 "File → Open Recent → Document History opens a browser of recently loaded "
 "files with the possibility to search them by name."
@@ -1945,7 +1957,7 @@ msgstr ""
 "File → Apri Recenti → Cronologia apre un navigatore che mostra gli ultimi "
 "file caricati nel quale è permessa la ricerca per nome"
 
-#: app/tips.c:95
+#: app/tips.c:106
 msgid ""
 "Automatic import of unrecognized files as raw data can be enabled/disabled "
 "in the Raw file import dialog."
@@ -1954,7 +1966,7 @@ msgstr ""
 "essere abilitata/disabilitata nella finestra di dialogo Importazione file "
 "Grezzi"
 
-#: app/tips.c:100
+#: app/tips.c:111
 msgid ""
 "To export the image of a channel to a pixmap graphic format (PNG, TIFF, "
 "JPEG, ...) just save it as this format with File → Save As."
@@ -1962,12 +1974,12 @@ msgstr ""
 "Per esportare l'immagine di un canale in un file grafico pixmap (PNG, TIFF, "
 "JPEG, ...) basta semplicemente salvare nel formato da File → Salva Come"
 
-#: app/tips.c:106
+#: app/tips.c:117
 msgid "File → Merge imports all data from selected file to the current file."
 msgstr ""
 "File → Fondi importa tutti i dati dai file selezionati nel file attuale"
 
-#: app/tips.c:112
+#: app/tips.c:123
 msgid ""
 "Your favorite false color gradient can be set as default in the gradient "
 "editor: Edit → Color Gradients.  The default gradient is shown in bold face."
@@ -1976,7 +1988,7 @@ msgstr ""
 "predefinito con l'editor dei gradienti: Modifica →  Gradienti Colore. Il "
 "gradiente colore predefinito è mostrato in grassetto"
 
-#: app/tips.c:118
+#: app/tips.c:129
 msgid ""
 "Your favorite GL material can be set as default in the material editor: Edit "
 "→ GL Materials.  The default material is shown in bold face."
@@ -1985,7 +1997,7 @@ msgstr ""
 "dei materiali: Modifica→ Materiali GL. Il materiale predefinito è mostrato "
 "in grassetto."
 
-#: app/tips.c:124
+#: app/tips.c:135
 msgid ""
 "Edit → Default Mask Color sets the default mask color.  This color is used "
 "when a mask is created on data that have not had a mask before."
@@ -1994,19 +2006,20 @@ msgstr ""
 "predefinito. Questo colore è usato nel creare maschera su dati su cui non è "
 "stata creata una maschera in precedenza."
 
-#: app/tips.c:130
+#: app/tips.c:141
 msgid "Each channel has its own metadata."
 msgstr "Ogni canale ha i suoi metadati."
 
-#: app/tips.c:134
+#: app/tips.c:145
+#, fuzzy
 msgid ""
 "Meta → Metadata Browser displays metadata (auxiliary information) of "
-"channels and allows editting or exporting to a text file."
+"channels and allows editing or exporting to a text file."
 msgstr ""
 "Meta → Il navigatore dei metadati mostra informazioni aggiuntive dei canali "
 "e permette di modificarli o esportarli in un file di testo."
 
-#: app/tips.c:140
+#: app/tips.c:151
 msgid ""
 "Curves can be copied to other (compatible) graphs by dragging them from "
 "Curves tab to the graph window."
@@ -2014,26 +2027,26 @@ msgstr ""
 "Le curve possono essere copiate in altri grafici (compatibili) trascinandole "
 "dalla linguetta delle curve nella finestra dei grafici"
 
-#: app/tips.c:145
+#: app/tips.c:156
 msgid "Graph curve properties can be edited by clicking on the curve."
 msgstr ""
 "Le proprietà della curva nel grafico possono essere modificate selezionando "
 "la curva"
 
-#: app/tips.c:149
+#: app/tips.c:160
 msgid "Graph axis labels can be edited after by clicking on the label."
 msgstr ""
 "Le etichette degli assi del grafico possono essere modificate selezionando "
 "l'etichetta."
 
-#: app/tips.c:153
+#: app/tips.c:164
 msgid ""
 "Graph key (legend) properties can be edited by double-clicking on the legend."
 msgstr ""
 "Le proprietà della leggenda possono essere modificate con un doppio click "
 "sulla legenda stessa."
 
-#: app/tips.c:158
+#: app/tips.c:169
 msgid ""
 "Curves can be deleted from graphs by selecting the curve in Curves tab and "
 "pressing Delete."
@@ -2041,19 +2054,19 @@ msgstr ""
 "Le curve possono essere eliminate dai grafici selezionandole nella linguetta "
 "delle curve e premendo il tasto Canc."
 
-#: app/tips.c:164
+#: app/tips.c:175
 msgid "Key ‛+’ or ‛=’ zooms in a data window."
 msgstr "I tasti  ‛+’ o ‛=’ ingrandiscono una finestra dati"
 
-#: app/tips.c:168
+#: app/tips.c:179
 msgid "Key ‛-’ (minus) zooms out a data window."
 msgstr "I tasti  ‛-’ o ‛=’ rimpiccioliscono una finestra dati"
 
-#: app/tips.c:172
+#: app/tips.c:183
 msgid "Key ‛Z’ resets data window zoom to 1:1."
 msgstr "Il tasto 'Z' riporta la finestra dati alle proporzioni 1:1"
 
-#: app/tips.c:176
+#: app/tips.c:187
 msgid ""
 "Data with different <i>x</i> and <i>y</i> measures can be displayed either "
 "with pixel-wise or realistic aspect ratio.  The menu in data window top left "
@@ -2064,7 +2077,7 @@ msgstr ""
 "nell'angolo superiore sinistro della finestra dati permette di spostarsi da "
 "una modalità all'altra."
 
-#: app/tips.c:183
+#: app/tips.c:194
 msgid ""
 "Clicking on a false color scale with the right mouse button brings a false "
 "color gradient selector."
@@ -2072,7 +2085,7 @@ msgstr ""
 "Premere con il tasto destro sulla scala falsi colori fa apparire il "
 "selettore gradiente colore."
 
-#: app/tips.c:189
+#: app/tips.c:200
 msgid ""
 "Clicking on a 3D view with the right mouse button brings a GL material or "
 "false color gradient selector."
@@ -2080,7 +2093,7 @@ msgstr ""
 "Premere con il tasto destro su una vista 3D fa apparire il selettore falsi "
 "colori o materiali GL."
 
-#: app/tips.c:194
+#: app/tips.c:205
 msgid ""
 "3D view transformation modes can be selected with keys: R (rotate), S "
 "(scale), V (value scale) and L (light source)."
@@ -2088,13 +2101,13 @@ msgstr ""
 "I modi della vista 3D possono essere selezionati con i tasti: R (ruota), S "
 "(scala), V (scala valori) and L (sorgente luce)."
 
-#: app/tips.c:200
+#: app/tips.c:211
 msgid ""
 "Pressing Ctrl-C copies the image of a channel, graph or 3D view to the "
 "clipboard."
 msgstr "Ctrl-C copia l'immagine di un canale, grafico o vista 3D negli appunti"
 
-#: app/tips.c:205
+#: app/tips.c:216
 msgid ""
 "Dragging channels or graphs from Data Browser to a window copies them to the "
 "corresponding file."
@@ -2102,12 +2115,12 @@ msgstr ""
 "Trascinare i canali o i grafici del navigatore dati in una finestra li copia "
 "nel file corrispondente."
 
-#: app/tips.c:210
+#: app/tips.c:221
 msgid "Meta → Show Data Browser brings back a closed Data Browser."
 msgstr ""
 "Meta → Mostra Navigatore Dati riapre una finestra del navigatore chiusa"
 
-#: app/tips.c:214
+#: app/tips.c:225
 msgid ""
 "Channels and graphs can be renamed by double-clicking on their name in Data "
 "Browser."
@@ -2115,7 +2128,7 @@ msgstr ""
 "I canali ed i grafici possono essere rinominati con un doppio click sul loro "
 "nome nel Navigatore Dati"
 
-#: app/tips.c:220
+#: app/tips.c:231
 msgid ""
 "Facet Level offers to use/exclude the masked area if a mask is present on "
 "the data."
@@ -2123,7 +2136,7 @@ msgstr ""
 "Facet Level permette di utilizzare/escludere un'area sotto una maschera se "
 "questa è presente"
 
-#: app/tips.c:225
+#: app/tips.c:236
 msgid ""
 "Plane Level offers to use/exclude the masked area if a mask is present on "
 "the data."
@@ -2131,7 +2144,7 @@ msgstr ""
 "Livella piani offre la possibilità di includere/escludere una area con "
 "maschera se presente"
 
-#: app/tips.c:230
+#: app/tips.c:241
 msgid ""
 "Data Arithmetic works as a scientific calculator, just type an arithmetic "
 "expression."
@@ -2139,7 +2152,7 @@ msgstr ""
 "Aritmetica Dati funziona come una calcolatrice scientifica, basta digitare "
 "una espressione aritmetica"
 
-#: app/tips.c:235
+#: app/tips.c:246
 msgid ""
 "Facet Level can often level data with large features that make impossible to "
 "use standard plane levelling.  It levels the surface by making normals of "
@@ -2149,14 +2162,14 @@ msgstr ""
 "dimensioni al contrario del livellamento piano. Livella la superficie "
 "disponendo verticalmente le normali di superfici piane"
 
-#: app/tips.c:241
+#: app/tips.c:252
 msgid ""
 "Too small grains can be filtered out with Remove by Threshold grain function."
 msgstr ""
 "Grani troppo piccoli possono essere eliminati con la funzione Rimuovi grani "
 "per soglia"
 
-#: app/tips.c:246
+#: app/tips.c:257
 msgid ""
 "Data Process → Presentation → Edge Detection → Step is a fine step detector "
 "with a good dynamic range"
@@ -2164,7 +2177,7 @@ msgstr ""
 "Elaborazione Dati → Presentazione → Determinazione Bordo → Step è un "
 "rivelatore fine di step con un buon intervallo dinamico"
 
-#: app/tips.c:251
+#: app/tips.c:262
 msgid ""
 "Data Process → Basic Operations → Recalibrate changes scales, offsets and "
 "even lateral and value units."
@@ -2172,7 +2185,7 @@ msgstr ""
 "Elaborazione Dati → Operazioni Base → Ricalibrazione cambia la scala, le "
 "dimensioni ed anche le unità laterali e dei valori"
 
-#: app/tips.c:256
+#: app/tips.c:267
 msgid ""
 "Grains or other areas of interest are marked with masks.  Many functions "
 "then can do something interesting with the masked areas."
@@ -2180,27 +2193,27 @@ msgstr ""
 "Grani o altre aree di interesse sono segnalate da maschere. Molte funzioni "
 "possono agire in modo interessante sulle aree mascherate"
 
-#: app/tips.c:262
+#: app/tips.c:273
 msgid ""
 "Remove Scars in the toolbox runs with the settings last used in Mark Scars."
 msgstr ""
 "Lo strumento Rimuovi Danni agisce con i parametri utilizzati per ultimi da "
 "Segna Danni"
 
-#: app/tips.c:268
+#: app/tips.c:279
 msgid "Graph → Critical Dimension measures steps on extracted profile graphs."
 msgstr ""
 "Grafico → Dimensioni Critiche misura step su profili estratti dal grafico"
 
-#: app/tips.c:274
+#: app/tips.c:285
 msgid "Pressing Esc hides tool windows."
 msgstr "Esc nasconde la finestra strumenti"
 
-#: app/tips.c:278
+#: app/tips.c:289
 msgid "Read Value tool displays also the local facet normal."
 msgstr "Leggi Valore mostra anche la normale al facet locale"
 
-#: app/tips.c:282
+#: app/tips.c:293
 msgid ""
 "Read Value tool can shift data to make <i>z</i>=0 plane pass through the "
 "selected point."
@@ -2208,7 +2221,7 @@ msgstr ""
 "Lo strumento Leggi valore può' spostare i dati per far passare il piano  "
 "<i>z</i>=0 per un punto selezionato"
 
-#: app/tips.c:287
+#: app/tips.c:298
 msgid ""
 "Individual lines can be deleted in Distance tool by selecting them in the "
 "list and pressing Delete."
@@ -2216,7 +2229,7 @@ msgstr ""
 "Linee singole possono essere cancellate nello strumento Distanze "
 "selezionandole dalla lista e premendo Canc"
 
-#: app/tips.c:292
+#: app/tips.c:303
 msgid ""
 "Individual lines can be deleted in Profiles tool by selecting them in the "
 "list and pressing Delete."
@@ -2224,7 +2237,7 @@ msgstr ""
 "Linee singole possono essere cancellate nello strumento Profili "
 "selezionandole dalla lista e premendo Canc"
 
-#: app/tips.c:297
+#: app/tips.c:308
 msgid ""
 "Spectroscopy tool displays point spectroscopy data and extracts them to "
 "standalone graphs that can be subsequently analysed for instance with Graph "
@@ -2234,7 +2247,7 @@ msgstr ""
 "grafici a parte che possono essere successivamente analizzati con Grafici→  "
 "Adatta Curva FD"
 
-#: app/tips.c:303
+#: app/tips.c:314
 msgid ""
 "Statistical Quantities tool allows limiting the area of interest by a mask, "
 "rectangular selection or the intersection of both."
@@ -2242,7 +2255,7 @@ msgstr ""
 "Lo strumento Quantità Statistiche permette di limitare l'area di interessa "
 "con una maschera, una selezione rettangolare o l'intersezione di entrambe."
 
-#: app/tips.c:308
+#: app/tips.c:319
 msgid ""
 "Beside height and angle distributions, Statistical Functions tool calculates "
 "also correlation functions, power spectrum density (PSDF) and some more "
@@ -2252,7 +2265,7 @@ msgstr ""
 "Funzioni Statistiche  calcola anche funzioni di correlazione, densità di "
 "potenza di spettro (PSDF) ed altre funzioni particolari"
 
-#: app/tips.c:314
+#: app/tips.c:325
 msgid ""
 "Path Level tool levels misaligned rows by lining them up along manually "
 "selected lines.  If there are no large features automatic Median Line "
@@ -2262,7 +2275,7 @@ msgstr ""
 "selezionate manualmente. Se non vi sono caratteristiche evidenti la "
 "Correzione lungo la Linea Mediana di solito dà buoni risultati"
 
-#: app/tips.c:320
+#: app/tips.c:331
 msgid ""
 "Grain Measure tool is great for examining individual grains.  Overall grain "
 "statistics are available in Data Processing → Grains."
@@ -2270,13 +2283,13 @@ msgstr ""
 "Lo strumento Misura Grani è ideale per esaminare grani individuali. "
 "Statistiche generali sui grani sono disponibili in Elaborazione Dati → Grani"
 
-#: app/tips.c:326
+#: app/tips.c:337
 msgid "Mask Editor tool can create, edit, invert, grow and shrink masks."
 msgstr ""
 "Lo strumento Modifica Maschere può' creare, modificare, ingrandire e "
 "rimpicciolire maschere"
 
-#: app/tips.c:330
+#: app/tips.c:341
 msgid ""
 "Color Range tool offers several false color scale mapping modes and can make "
 "any of them the default mode."
@@ -2285,7 +2298,7 @@ msgstr ""
 "in gamme falsi colori e può scegliere ciascuna di loro come modalità "
 "predefinita"
 
-#: app/tips.c:335
+#: app/tips.c:346
 msgid ""
 "Dragging selections from Selections Manager tool to a data window copies the "
 "selection to the target data."
@@ -2293,7 +2306,7 @@ msgstr ""
 "Trascinando le selezioni da Gestione Selezioni ad una finestra dati, copia "
 "la selezione nei dati in oggetto"
 
-#: app/tips.c:341
+#: app/tips.c:352
 msgid ""
 "Gwyddion User Guide explains in detail many of the methods and algorithms "
 "implemented in Gwyddion."
@@ -2301,19 +2314,19 @@ msgstr ""
 "La guida utente di Gwyddio spiega in dettaglio molti dei metodi e degli "
 "algoritmi implementati"
 
-#: app/tips.c:346
+#: app/tips.c:357
 msgid "Gwyddion is a son of Math."
 msgstr "Gwyddion è un figlio della Matematica"
 
-#: app/tips.c:393
+#: app/tips.c:404
 msgid "Gwyddion Tip of the Day"
 msgstr "Gwyddion Consiglio del giorno"
 
-#: app/tips.c:406
+#: app/tips.c:417
 msgid "_Previous Tip"
 msgstr "Suggerimento _Precedente"
 
-#: app/tips.c:412
+#: app/tips.c:423
 msgid "_Next Tip"
 msgstr "_Suggerimento Successivo"
 
@@ -2651,7 +2664,7 @@ msgstr "unità valore:"
 msgid "Export Text"
 msgstr "Esporta Testo"
 
-#: modules/file/asciiexport.c:273 modules/file/pixmap.c:3003
+#: modules/file/asciiexport.c:273 modules/file/pixmap.c:3087
 #: modules/file/rawfile.c:720 modules/file/rawxyz.c:670
 #: modules/process/fft_filter_1d.c:296 modules/process/grain_dist.c:285
 #: modules/process/grain_edge.c:270 modules/process/grain_mark.c:344
@@ -3169,39 +3182,39 @@ msgid "OpenEXR data type %u is invalid or unsupported."
 msgstr "Il tipo dati OpenEXR %u non è valido o non è supportato."
 
 #: modules/file/hdrimage.cc:1404 modules/file/hdrimage.cc:1413
-#: modules/file/pixmap.c:1519 modules/file/pixmap.c:1529
+#: modules/file/pixmap.c:1526 modules/file/pixmap.c:1536
 #, c-format
 msgid "libpng initialization error (in %s)"
 msgstr "errore inizializzazione libpng (in %s)"
 
-#: modules/file/hdrimage.cc:1422 modules/file/pixmap.c:1589
+#: modules/file/hdrimage.cc:1422 modules/file/pixmap.c:1596
 msgid "libpng error occured"
 msgstr "Errore libpng"
 
 #. TRANSLATORS: Dialog title; %s is PNG, TIFF, ...
-#: modules/file/hdrimage.cc:2146 modules/file/pixmap.c:1015
+#: modules/file/hdrimage.cc:2146 modules/file/pixmap.c:1022
 #, c-format
 msgid "Import %s"
 msgstr "Importa %s"
 
-#: modules/file/hdrimage.cc:2173 modules/file/pixmap.c:1042
+#: modules/file/hdrimage.cc:2173 modules/file/pixmap.c:1049
 msgid "Image Information"
 msgstr "Informazioni immagine"
 
-#: modules/file/hdrimage.cc:2182 modules/file/pixmap.c:1049
+#: modules/file/hdrimage.cc:2182 modules/file/pixmap.c:1056
 msgid "Horizontal size:"
 msgstr "Dimensione orizzontale:"
 
 #: modules/file/hdrimage.cc:2182 modules/file/hdrimage.cc:2188
-#: modules/file/pixmap.c:1049 modules/file/pixmap.c:1055
+#: modules/file/pixmap.c:1056 modules/file/pixmap.c:1062
 msgid "px"
 msgstr "px"
 
-#: modules/file/hdrimage.cc:2188 modules/file/pixmap.c:1055
+#: modules/file/hdrimage.cc:2188 modules/file/pixmap.c:1062
 msgid "Vertical size:"
 msgstr "Dimensione verticale:"
 
-#: modules/file/hdrimage.cc:2193 modules/file/pixmap.c:1060
+#: modules/file/hdrimage.cc:2193 modules/file/pixmap.c:1067
 msgid "Channels:"
 msgstr "Canali:"
 
@@ -3209,21 +3222,21 @@ msgstr "Canali:"
 msgid "Pages:"
 msgstr "Pagine:"
 
-#: modules/file/hdrimage.cc:2226 modules/file/pixmap.c:1091
+#: modules/file/hdrimage.cc:2226 modules/file/pixmap.c:1098
 #: modules/file/rawfile.c:623 modules/file/rawxyz.c:569
 #: modules/process/dimensions.h:465
 msgid "Physical Dimensions"
 msgstr "Dimensioni fisiche"
 
-#: modules/file/hdrimage.cc:2240 modules/file/pixmap.c:1101
-#: modules/file/pixmap.c:2960 modules/file/rawfile.c:632
+#: modules/file/hdrimage.cc:2240 modules/file/pixmap.c:1108
+#: modules/file/pixmap.c:3030 modules/file/rawfile.c:632
 #: modules/process/crosscor.c:197 modules/process/deposit_synth.c:458
 #: modules/process/dimensions.h:471 modules/process/tip_blind.c:265
 msgid "_Width:"
 msgstr "Larghezza:"
 
 #: modules/file/hdrimage.cc:2266 modules/file/hdrimage.cc:2331
-#: modules/file/pixmap.c:1123 modules/file/pixmap.c:1178
+#: modules/file/pixmap.c:1130 modules/file/pixmap.c:1185
 #: modules/file/rawfile.c:655 modules/file/rawfile.c:711
 #: modules/process/calcoefs_new.c:384 modules/process/calcoefs_new.c:451
 #: modules/process/calcoefs_simple.c:390 modules/process/calcoefs_simple.c:457
@@ -3233,30 +3246,30 @@ msgstr "Larghezza:"
 msgid "verb|Change"
 msgstr "verbo|Cambia"
 
-#: modules/file/hdrimage.cc:2281 modules/file/pixmap.c:1136
+#: modules/file/hdrimage.cc:2281 modules/file/pixmap.c:1143
 #: modules/file/rawfile.c:668 modules/process/crosscor.c:203
 #: modules/process/dimensions.h:475
 msgid "H_eight:"
 msgstr "Altezza:"
 
-#: modules/file/hdrimage.cc:2290 modules/file/pixmap.c:1143
+#: modules/file/hdrimage.cc:2290 modules/file/pixmap.c:1150
 #: modules/file/rawfile.c:675 modules/file/rawxyz.c:550
 msgid "Identical _measures"
 msgstr "Misure Identiche"
 
-#: modules/file/hdrimage.cc:2304 modules/file/pixmap.c:1155
+#: modules/file/hdrimage.cc:2304 modules/file/pixmap.c:1162
 #: modules/file/rawfile.c:687
 msgid "_Z-scale (per sample unit):"
 msgstr "_Scala Z (per unità di campione):"
 
-#: modules/file/hdrimage.cc:2493 modules/file/pixmap.c:1405
+#: modules/file/hdrimage.cc:2493 modules/file/pixmap.c:1412
 #: modules/file/rawfile.c:1326 modules/process/calcoefs_new.c:776
 #: modules/process/calcoefs_simple.c:1189 modules/process/calcoefs_view.c:1393
 #: modules/process/calibrate.c:816 modules/process/dimensions.h:193
 msgid "Change Units"
 msgstr "Cambia unità"
 
-#: modules/file/hdrimage.cc:2507 modules/file/pixmap.c:1419
+#: modules/file/hdrimage.cc:2507 modules/file/pixmap.c:1426
 #: modules/file/rawfile.c:1340 modules/process/calcoefs_new.c:789
 #: modules/process/calcoefs_simple.c:1202 modules/process/calcoefs_view.c:1406
 #: modules/process/calibrate.c:830 modules/process/dimensions.h:206
@@ -3288,7 +3301,8 @@ msgstr "Importa file dati Hitachi S-3700 e S-4800 SEM"
 msgid "Hitachi SEM files (.txt + image)"
 msgstr "File Hitachi  SEM (.txt + image)"
 
-#: modules/file/hitachi-sem.c:158 modules/file/unisoku.c:227
+#: modules/file/hitachi-sem.c:158 modules/file/oldmda.c:241
+#: modules/file/unisoku.c:227
 msgid "No corresponding data file was found for header file."
 msgstr "File dati corrispondente al file intestazione non trovato."
 
@@ -3725,6 +3739,59 @@ msgstr "Intestazione terminata con tabella Multipass-Config."
 msgid "Missing data start marker \\x1a\\x04."
 msgstr "Indicatore inizio dati \\x1a\\x04 mancante  "
 
+#: modules/file/nanoobserver.c:109
+msgid "Reads NanoObserver .nao files."
+msgstr ""
+
+#: modules/file/nanoobserver.c:122
+msgid "NanoObserver data (.nao)"
+msgstr ""
+
+#: modules/file/nanoobserver.c:180
+msgid "Minizip cannot open the file as a ZIP file."
+msgstr ""
+
+#: modules/file/nanoobserver.c:450
+msgid "File Scan/Measure.xml is missing in the zip file."
+msgstr ""
+
+#: modules/file/nanoobserver.c:545
+#, fuzzy
+msgid "Unknown error"
+msgstr "Linea %d sconosciuta"
+
+#: modules/file/nanoobserver.c:550
+msgid "End of file"
+msgstr ""
+
+#: modules/file/nanoobserver.c:552
+msgid "End of list of files"
+msgstr ""
+
+#: modules/file/nanoobserver.c:554
+#, fuzzy
+msgid "Parameter error"
+msgstr "Parametro"
+
+#: modules/file/nanoobserver.c:556
+#, fuzzy
+msgid "Bad zip file"
+msgstr "File Shimadzu"
+
+#: modules/file/nanoobserver.c:558
+msgid "Internal error"
+msgstr ""
+
+#: modules/file/nanoobserver.c:560
+#, fuzzy
+msgid "CRC error"
+msgstr "errore X %d"
+
+#: modules/file/nanoobserver.c:563
+#, c-format
+msgid "Minizip error while reading the zip file: %s."
+msgstr ""
+
 #: modules/file/nanoscan.c:195
 msgid "Imports NanoScan XML files."
 msgstr "Importa file dati  NanoScan XML "
@@ -3932,24 +3999,47 @@ msgstr "Frame troppo corta per modalità frame"
 msgid "Frame is too short for dots or data."
 msgstr "Frame troppo corta per punti o dati."
 
-#: modules/file/nt-mdt.c:1367
+#: modules/file/nt-mdt.c:1369
 #, c-format
 msgid "End of file reached in frame header #%u."
 msgstr "Termine file raggiunto nell'intestazione frame  #%u."
 
-#: modules/file/nt-mdt.c:1375
+#: modules/file/nt-mdt.c:1377
 #, c-format
 msgid "End of file reached in frame data #%u."
 msgstr "Termine file raggiunto in dati frame #%u."
 
-#: modules/file/nt-mdt.c:1410
+#: modules/file/nt-mdt.c:1412
 #, c-format
 msgid "Frame #%u is too short for scanned data header."
 msgstr "Frame #%u troppo corto per intestazione dati scansionati."
 
-#: modules/file/nt-mdt.c:2465
+#: modules/file/nt-mdt.c:2464
 msgid "Raman Image"
 msgstr "Immagine Raman"
+
+#: modules/file/oldmda.c:146
+#, fuzzy
+msgid "Imports old NTMDT MDA Spectra files."
+msgstr "Importa file dati NT-MDT."
+
+#: modules/file/oldmda.c:159
+msgid "NTMDT old MDA Spectra data (.sxml .dat)"
+msgstr ""
+
+#: modules/file/oldmda.c:232
+#, fuzzy
+msgid "Incorrect number of axes in parameter file."
+msgstr "Impossibile trovare il file parametro corrispondente"
+
+#: modules/file/oldmda.c:247
+#, fuzzy, c-format
+msgid "Cannot load data file: %s"
+msgstr "Impossibile caricare l'immagine: %s."
+
+#: modules/file/oldmda.c:255
+msgid "Data file too small."
+msgstr ""
 
 #: modules/file/ols.c:66
 msgid "Imports OLS data files."
@@ -4025,87 +4115,87 @@ msgstr "Trovate cartelle annidate"
 msgid "Truncated data in block %s"
 msgstr "Dati troncati nel blocco  %s"
 
-#: modules/file/pixmap.c:338
+#: modules/file/pixmap.c:345
 msgid "All channels"
 msgstr "Tutti i canali"
 
-#: modules/file/pixmap.c:339
+#: modules/file/pixmap.c:346
 msgid "Red"
 msgstr "Rosso"
 
-#: modules/file/pixmap.c:340
+#: modules/file/pixmap.c:347
 msgid "Green"
 msgstr "Verde"
 
-#: modules/file/pixmap.c:341
+#: modules/file/pixmap.c:348
 msgid "Blue"
 msgstr "Blu"
 
-#: modules/file/pixmap.c:342
+#: modules/file/pixmap.c:349
 msgid "Value (max)"
 msgstr "Valore (max)"
 
-#: modules/file/pixmap.c:343
+#: modules/file/pixmap.c:350
 msgid "RGB sum"
 msgstr "Somma RGB"
 
-#: modules/file/pixmap.c:344
+#: modules/file/pixmap.c:351
 msgid "Luma"
 msgstr "Luma"
 
-#: modules/file/pixmap.c:345
+#: modules/file/pixmap.c:352
 msgid "Alpha"
 msgstr "Alpha"
 
-#: modules/file/pixmap.c:357
+#: modules/file/pixmap.c:364
 msgid "Portable Network Graphics (.png)"
 msgstr "Portable Network Graphics (.png)"
 
-#: modules/file/pixmap.c:363
+#: modules/file/pixmap.c:370
 msgid "JPEG (.jpeg,.jpg)"
 msgstr "JPEG (.jpeg,.jpg)"
 
-#: modules/file/pixmap.c:369
+#: modules/file/pixmap.c:376
 msgid "TIFF (.tiff,.tif)"
 msgstr "TIFF (.tiff,.tif)"
 
-#: modules/file/pixmap.c:375
+#: modules/file/pixmap.c:382
 msgid "Portable Pixmap (.ppm,.pnm)"
 msgstr "Portable Pixmap (.ppm,.pnm)"
 
-#: modules/file/pixmap.c:381
+#: modules/file/pixmap.c:388
 msgid "Windows or OS2 Bitmap (.bmp)"
 msgstr "Windows or OS2 Bitmap (.bmp)"
 
-#: modules/file/pixmap.c:387
+#: modules/file/pixmap.c:394
 msgid "TARGA (.tga,.targa)"
 msgstr "TARGA (.tga,.targa)"
 
-#: modules/file/pixmap.c:400
+#: modules/file/pixmap.c:407
 msgid "Graphics Interchange Format (.gif)"
 msgstr "Graphics Interchange Format (.gif)"
 
-#: modules/file/pixmap.c:404
+#: modules/file/pixmap.c:411
 msgid "JPEG 2000 (.jpx)"
 msgstr "JPEG 2000 (.jpx)"
 
-#: modules/file/pixmap.c:408
+#: modules/file/pixmap.c:415
 msgid "PCX (.pcx)"
 msgstr "PCX (.pcx)"
 
-#: modules/file/pixmap.c:412
+#: modules/file/pixmap.c:419
 msgid "X Pixmap (.xpm)"
 msgstr "X Pixmap (.xpm)"
 
-#: modules/file/pixmap.c:416
+#: modules/file/pixmap.c:423
 msgid "Sun raster image (.ras)"
 msgstr "Immagine Sun raster (.ras)"
 
-#: modules/file/pixmap.c:420
+#: modules/file/pixmap.c:427
 msgid "Apple icon (.icns)"
 msgstr "Icona Apple (.icns)"
 
-#: modules/file/pixmap.c:444
+#: modules/file/pixmap.c:451
 msgid ""
 "Renders data into pixmap images and imports data from pixmap images. It "
 "supports the following image formats for export: PNG, JPEG, TIFF, PPM, BMP, "
@@ -4116,69 +4206,69 @@ msgstr ""
 "TIFF, PPM, BMP, TARGA. L'importazione si basa su GDK per cui potrebbe "
 "dipendere dal tipo di installazione."
 
-#: modules/file/pixmap.c:728
+#: modules/file/pixmap.c:735
 #, c-format
 msgid "Pixmap has not registered file type `%s'."
 msgstr "Pixmap non ha un file tipo registrato `%s'."
 
-#: modules/file/pixmap.c:742
+#: modules/file/pixmap.c:749
 #, c-format
 msgid "Cannot get pixbuf loader: %s."
 msgstr ""
 
-#: modules/file/pixmap.c:754 modules/file/pixmap.c:766
+#: modules/file/pixmap.c:761 modules/file/pixmap.c:773
 #, c-format
 msgid "Pixbuf loader refused data: %s."
 msgstr ""
 
-#: modules/file/pixmap.c:1188
+#: modules/file/pixmap.c:1195
 msgid ""
 "Warning: Colorful images cannot be reliably mapped to meaningful values."
 msgstr ""
 "Attenzione: Immagini molto colorate non possono essere convertite in modo "
 "affidabile ad una mappatura che abbia valori significativi"
 
-#: modules/file/pixmap.c:1207
+#: modules/file/pixmap.c:1214
 msgid "verb|Use"
 msgstr "verbo|Usa"
 
-#: modules/file/pixmap.c:1207
+#: modules/file/pixmap.c:1214
 msgid "as data"
 msgstr "come dati"
 
-#: modules/file/pixmap.c:1676 modules/file/pixmap.c:1704
+#: modules/file/pixmap.c:1683 modules/file/pixmap.c:1711
 #, c-format
 msgid "Pixbuf save failed: %s."
 msgstr "Salvataggio pixbuf fallito: %s."
 
-#: modules/file/pixmap.c:2114
+#: modules/file/pixmap.c:2121
 msgid "Image is too large to be stored as TARGA."
 msgstr "Immagine troppo grande per essere salvata come TARGA."
 
-#: modules/file/pixmap.c:2194
+#: modules/file/pixmap.c:2202
 msgid "Data must be displayed in a window for pixmap export."
 msgstr ""
 "I dati devono essere mostrati in una finestra per esssere esportati come "
 "pixmap"
 
-#: modules/file/pixmap.c:2852
+#: modules/file/pixmap.c:2922
 msgid "Change Inset Color"
 msgstr "Cambia colore "
 
-#: modules/file/pixmap.c:2911
+#: modules/file/pixmap.c:2981
 #, c-format
 msgid "Export %s"
 msgstr "Esporta %s"
 
-#: modules/file/pixmap.c:2942
+#: modules/file/pixmap.c:3012
 msgid "Scaling"
 msgstr "Ridimensionamento"
 
-#: modules/file/pixmap.c:2951
+#: modules/file/pixmap.c:3021
 msgid "_Zoom:"
 msgstr "Ingrandisci:"
 
-#: modules/file/pixmap.c:2969 modules/process/col_synth.c:400
+#: modules/file/pixmap.c:3039 modules/process/col_synth.c:400
 #: modules/process/grain_mark.c:309 modules/process/grain_rem_threshold.c:280
 #: modules/process/obj_synth.c:573 modules/process/pat_synth.c:889
 #: modules/process/pat_synth.c:1190 modules/process/pat_synth.c:1525
@@ -4186,87 +4276,92 @@ msgstr "Ingrandisci:"
 msgid "_Height:"
 msgstr "Altezza:"
 
-#: modules/file/pixmap.c:2978
+#: modules/file/pixmap.c:3047
+#, fuzzy
+msgid "Font:"
+msgstr "_Dimensione carattere:"
+
+#: modules/file/pixmap.c:3062
 msgid "Scale text _proportionally"
 msgstr "Scala testo _in proporzione"
 
-#: modules/file/pixmap.c:2993
+#: modules/file/pixmap.c:3077
 msgid "_Font size:"
 msgstr "_Dimensione carattere:"
 
-#: modules/file/pixmap.c:3007
+#: modules/file/pixmap.c:3091
 msgid "Draw _mask"
 msgstr "Disegna _Maschera"
 
-#: modules/file/pixmap.c:3016
+#: modules/file/pixmap.c:3100
 msgid "Draw _selection"
 msgstr "Disegna _selezione"
 
-#: modules/file/pixmap.c:3032
+#: modules/file/pixmap.c:3116
 msgid "Grayscale Mode"
 msgstr "Modalità Tonalità di Grigi (Grayscale)"
 
-#: modules/file/pixmap.c:3036
+#: modules/file/pixmap.c:3120
 msgid "Export as 1_6 bit grayscale"
 msgstr "Esporta come 1_6 bit grayscale"
 
-#: modules/file/pixmap.c:3062
+#: modules/file/pixmap.c:3146
 msgid "Lateral Scale"
 msgstr "Scala laterale"
 
-#: modules/file/pixmap.c:3069 modules/file/pixmap.c:3164
+#: modules/file/pixmap.c:3153 modules/file/pixmap.c:3248
 msgid "ruler|_None"
 msgstr "righello|_Nessuno"
 
-#: modules/file/pixmap.c:3070
+#: modules/file/pixmap.c:3154
 msgid "_Rulers"
 msgstr "_Righelli"
 
-#: modules/file/pixmap.c:3071
+#: modules/file/pixmap.c:3155
 msgid "_Inset scale bar"
 msgstr "barra scala _incorporata"
 
-#: modules/file/pixmap.c:3076
+#: modules/file/pixmap.c:3160
 msgid "Color:"
 msgstr "Colore:"
 
-#: modules/file/pixmap.c:3092 modules/process/immerse.c:323
+#: modules/file/pixmap.c:3176 modules/process/immerse.c:323
 msgid "Position:"
 msgstr "Posizione:"
 
-#: modules/file/pixmap.c:3097
+#: modules/file/pixmap.c:3181
 msgid "left"
 msgstr "Sinistra"
 
-#: modules/file/pixmap.c:3101
+#: modules/file/pixmap.c:3185
 msgid "center"
 msgstr "Centro"
 
-#: modules/file/pixmap.c:3105
+#: modules/file/pixmap.c:3189
 msgid "right"
 msgstr "Destra"
 
-#: modules/file/pixmap.c:3110
+#: modules/file/pixmap.c:3194
 msgid "top"
 msgstr "Sopra"
 
-#: modules/file/pixmap.c:3122
+#: modules/file/pixmap.c:3206
 msgid "bottom"
 msgstr "sotto"
 
-#: modules/file/pixmap.c:3133 modules/process/lno_synth.c:1066
+#: modules/file/pixmap.c:3217 modules/process/lno_synth.c:1066
 msgid "_Length:"
 msgstr "_Lunghezza:"
 
-#: modules/file/pixmap.c:3149
+#: modules/file/pixmap.c:3233
 msgid "_Auto"
 msgstr "_Auto"
 
-#: modules/file/pixmap.c:3157
+#: modules/file/pixmap.c:3241
 msgid "Value Scale"
 msgstr "Scala valore"
 
-#: modules/file/pixmap.c:3165
+#: modules/file/pixmap.c:3249
 msgid "_False color ruler"
 msgstr "Righello _Falsi colori"
 
@@ -6541,7 +6636,7 @@ msgstr "Distanza X"
 msgid "Y Distance"
 msgstr "Distanza Y"
 
-#: modules/process/crosscor.c:236 modules/process/fft.c:299
+#: modules/process/crosscor.c:236 modules/process/fft.c:304
 #: modules/process/maskcor.c:175
 msgid "Output _type:"
 msgstr "Tipo Output:"
@@ -7085,69 +7180,73 @@ msgstr ""
 "Avvertenza: Le unità dei valori e laterali sono differenti. Gli angoli non "
 "hanno significato fisico."
 
-#: modules/process/fft.c:90
+#: modules/process/fft.c:95
 msgid "Two-dimensional FFT (Fast Fourier Transform)."
 msgstr "FFT (Fast Fourier Transform) in due dimensioni"
 
-#: modules/process/fft.c:104
+#: modules/process/fft.c:109
 msgid "/_Integral Transforms/2D _FFT..."
 msgstr "/Trasformate Integrali/2D _FFT..."
 
-#: modules/process/fft.c:108
+#: modules/process/fft.c:113
 msgid "Compute Fast Fourier Transform"
 msgstr "Calcolo FFT"
 
-#: modules/process/fft.c:152
+#: modules/process/fft.c:157
 msgid "FFT Real"
 msgstr "FFT Reale"
 
-#: modules/process/fft.c:155
+#: modules/process/fft.c:160
 msgid "FFT Imag"
 msgstr "FFT Immag"
 
-#: modules/process/fft.c:160
+#: modules/process/fft.c:165
 msgid "FFT Modulus"
 msgstr "FFT Modulo"
 
-#: modules/process/fft.c:166
+#: modules/process/fft.c:171
 msgid "FFT Phase"
 msgstr "FFT Fase"
 
-#: modules/process/fft.c:260
+#: modules/process/fft.c:265
 msgid "Real + Imaginary"
 msgstr "Reale + Immaginario"
 
-#: modules/process/fft.c:261
+#: modules/process/fft.c:266
 msgid "Modulus + Phase"
 msgstr "Modulo + Fase"
 
-#: modules/process/fft.c:262
+#: modules/process/fft.c:267
 msgid "Real"
 msgstr "Reale"
 
-#: modules/process/fft.c:263
+#: modules/process/fft.c:268
 msgid "Imaginary"
 msgstr "Immaginario"
 
-#: modules/process/fft.c:264
+#: modules/process/fft.c:269
 msgid "Modulus"
 msgstr "Modulo"
 
-#: modules/process/fft.c:265
+#: modules/process/fft.c:270
 msgid "Phase"
 msgstr "Fase"
 
-#: modules/process/fft.c:271
+#: modules/process/fft.c:276
 msgid "2D FFT"
 msgstr "2D FFT"
 
-#: modules/process/fft.c:291
+#: modules/process/fft.c:296
 msgid "_Windowing type:"
 msgstr "Tipo finestra:"
 
-#: modules/process/fft.c:304
+#: modules/process/fft.c:309
 msgid "Subtract mean _value beforehand"
 msgstr "Sottrazione preliminare valore medio "
+
+#: modules/process/fft.c:320
+msgid "_Preserve RMS"
+msgstr ""
 
 #: modules/process/fft_filter_1d.c:127
 msgid "FFT filtering"

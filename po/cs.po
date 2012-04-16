@@ -3986,6 +3986,7 @@ msgid "Incorrect number of axes in parameter file."
 msgstr "Špatný počet os v souboru s parametry."
 
 #: modules/file/oldmda.c:247
+#, c-format
 msgid "Cannot load data file: %s"
 msgstr "Nelze načíst datový soubor: %s."
 
