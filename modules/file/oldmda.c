@@ -35,7 +35,7 @@
 
 /**
  * [FILE-MAGIC-USERGUIDE]
- * oldmda
+ * NT-MDT old MDA
  * .sxml .dat
  * Read
  **/

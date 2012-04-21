@@ -30,9 +30,13 @@ matfile_sources = matfile.c
 if HAVE_MINIZIP
 nanoobserver_module = nanoobserver.la
 nanoobserver_sources =
+nanoscantech_module = nanoscantech.la
+nanoscantech_sources =
 else
 nanoobserver_module =
 nanoobserver_sources = nanoobserver.c
+nanoscantech_module =
+nanoscantech_sources = nanoscantech.c
 endif
 
 filedir = $(pkglibdir)/modules/file
@@ -82,6 +86,7 @@ file_LTLIBRARIES = \
 	nanonis.la \
 	$(nanoobserver_module) \
 	nanoscan.la \
+	$(nanoscantech_module) \
 	nanoscope-ii.la \
 	nanoscope.la \
 	nanotop.la \
@@ -277,6 +282,10 @@ if HAVE_MINIZIP
 nanoobserver_la_SOURCES  = nanoobserver.c
 nanoobserver_la_CFLAGS   = $(AM_CFLAGS) @MINIZIP_CFLAGS@
 nanoobserver_la_LIBADD   = @MINIZIP_LIBS@
+
+nanoscantech_la_SOURCES  = nanoscantech.c
+nanoscantech_la_CFLAGS   = $(AM_CFLAGS) @MINIZIP_CFLAGS@
+nanoscantech_la_LIBADD   = @MINIZIP_LIBS@
 endif
 
 clean-local:
