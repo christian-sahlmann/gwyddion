@@ -134,7 +134,7 @@ nst_load(const gchar *filename,
          G_GNUC_UNUSED GwyRunType mode,
          GError **error)
 {
-    GwyContainer *container = NULL, *meta = NULL;
+    GwyContainer *container = NULL;
     GwyDataField *dfield;
     GwyGraphModel *gmodel;
     unzFile zipfile;
