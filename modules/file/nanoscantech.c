@@ -30,7 +30,7 @@
  * [FILE-MAGIC-USERGUIDE]
  * NanoScanTech
  * .nstdat
- * Read
+ * Read SPS
  **/
 
 #include "config.h"
@@ -55,19 +55,21 @@
 #define MAGIC1_SIZE (sizeof(MAGIC1)-1)
 #define EXTENSION ".nstdat"
 
-static gboolean      module_register     (void);
-static gint          nst_detect          (const GwyFileDetectInfo *fileinfo,
-                                          gboolean only_name);
-static GwyContainer* nst_load            (const gchar *filename,
-                                          GwyRunType mode,
-                                          GError **error);
-static GwyDataField *nst_read_3d         (const gchar *buffer,
-                                          gchar **title);
-static guchar*       nst_get_file_content(unzFile *zipfile,
-                                          gsize *contentsize,
-                                          GError **error);
-static gboolean      nst_set_error       (gint status,
-                                          GError **error);
+static gboolean       module_register     (void);
+static gint           nst_detect          (const GwyFileDetectInfo *fileinfo,
+                                           gboolean only_name);
+static GwyContainer*  nst_load            (const gchar *filename,
+                                           GwyRunType mode,
+                                           GError **error);
+static GwyDataField*  nst_read_3d         (const gchar *buffer,
+                                           gchar **title);
+static GwyGraphModel* nst_read_2d         (const gchar *buffer,
+                                           guint channel);
+static guchar*        nst_get_file_content(unzFile *zipfile,
+                                           gsize *contentsize,
+                                           GError **error);
+static gboolean       nst_set_error       (gint status,
+                                           GError **error);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -134,8 +136,9 @@ nst_load(const gchar *filename,
 {
     GwyContainer *container = NULL, *meta = NULL;
     GwyDataField *dfield;
+    GwyGraphModel *gmodel;
     unzFile zipfile;
-    guint id, channelno = 0;
+    guint channelno = 0;
     gint status;
     gchar *buffer, *line, *p, *title, *strkey;
     gchar *titlestr = NULL;
@@ -192,6 +195,15 @@ nst_load(const gchar *filename,
             }
             else if (gwy_strequal(line, "2d")) {
                 gwy_debug("2d: %d\n", channelno);
+                gmodel = nst_read_2d(p, channelno);
+                if (gmodel) {
+                    strkey = g_strdup_printf("/0/graph/graph/%d",
+                                             channelno+1);
+                    gwy_container_set_object_by_name(container, strkey,
+                                                     gmodel);
+                    g_object_unref(gmodel);
+                    g_free(strkey);
+                }
             }
 
             g_free(buffer);
@@ -305,6 +317,120 @@ static GwyDataField *nst_read_3d(const gchar *buffer, gchar **title)
 
     g_array_free(dataarray, TRUE);
     return dfield;
+}
+
+static GwyGraphModel* nst_read_2d(const gchar *buffer, guint channel)
+{
+    GwyGraphCurveModel *spectra;
+    GwyGraphModel *gmodel;
+    GwySIUnit *siunitx = NULL, *siunity = NULL;
+    gchar *p, *line;
+    gchar **lineparts;
+    gdouble *xdata, *ydata, x, y;
+    GArray *xarray, *yarray;
+    guint i, numpoints = 0, power10x = 1, power10y = 1;
+    gchar *framename = NULL, *title = NULL;
+
+    p = (gchar *)buffer;
+    gmodel = gwy_graph_model_new();
+    while ((line = gwy_str_next_line(&p))) {
+        if (g_str_has_prefix(line, "Loved")) {
+            numpoints = 0;
+            xarray = g_array_new(FALSE, TRUE, sizeof(gdouble));
+            yarray = g_array_new(FALSE, TRUE, sizeof(gdouble));
+            while ((line = gwy_str_next_line(&p))&&
+                   (!gwy_strequal(line, "[EndOfItem]"))) {
+                                lineparts = g_strsplit(line, " ", 3);
+                lineparts = g_strsplit(line, " ", 2);
+                x = g_ascii_strtod(lineparts[0], NULL);
+                g_array_append_val(xarray, x);
+                y = g_ascii_strtod(lineparts[1], NULL);
+                g_array_append_val(yarray, y);
+                g_strfreev(lineparts);
+                numpoints++;
+            }
+
+            if (numpoints) {
+                xdata = (gdouble *)g_malloc(numpoints * sizeof(gdouble));
+                ydata = (gdouble *)g_malloc(numpoints * sizeof(gdouble));
+
+                for (i = 0; i < numpoints; i++) {
+                    xdata[i] = g_array_index(xarray, gdouble, i)
+                               * pow10(power10x);
+                    ydata[i] = g_array_index(yarray, gdouble, i)
+                               * pow10(power10y);
+                }
+
+                spectra = gwy_graph_curve_model_new();
+                if (!framename) {
+                    framename = g_strdup_printf("Unknown spectrum");
+                }
+                g_object_set(spectra,
+                             "description", framename,
+                             "mode", GWY_GRAPH_CURVE_LINE,
+                             NULL);
+                gwy_graph_curve_model_set_data(spectra,
+                                               xdata, ydata, numpoints);
+                gwy_graph_model_add_curve(gmodel, spectra);
+
+                g_object_unref(spectra);
+                g_free(xdata);
+                g_free(ydata);
+            }
+            g_array_free(xarray, TRUE);
+            g_array_free(yarray, TRUE);
+        }
+        else if (g_str_has_prefix(line, "Name")) {
+            lineparts = g_strsplit(line, " ", 2);
+            if (framename)
+                g_free(framename);
+            framename = g_strdup(lineparts[1]);
+            g_strfreev(lineparts);
+        }
+        else if (g_str_has_prefix(line, "XCUnit")) {
+            lineparts = g_strsplit(line, " ", 3);
+            siunitx = gwy_si_unit_new_parse(lineparts[1], &power10x);
+            x = atoi(lineparts[2]);
+            if (x != 0)
+                power10x *= x;
+            g_strfreev(lineparts);
+        }
+        else if (g_str_has_prefix(line, "YCUnit")) {
+            lineparts = g_strsplit(line, " ", 3);
+            siunity = gwy_si_unit_new_parse(lineparts[1], &power10y);
+            y = atoi(lineparts[2]);
+            if (y != 0)
+                power10y *= y;
+            g_strfreev(lineparts);
+        }
+    }
+
+    if(!framename)
+        title = g_strdup_printf("Graph %u", channel);
+    else {
+        title = g_strdup_printf("%s (%u)", framename, channel);
+        g_free(framename);
+    }
+    g_object_set(gmodel,
+                 "title", title,
+                 NULL);
+    g_free(title);
+
+    if (siunitx) {
+        g_object_set(gmodel,
+                     "si-unit-x", siunitx,
+                     NULL);
+        g_object_unref(siunitx);
+    }
+
+    if (siunity) {
+        g_object_set(gmodel,
+                     "si-unit-y", siunity,
+                     NULL);
+        g_object_unref(siunity);
+    }
+
+    return gmodel;
 }
 
 static guchar*
