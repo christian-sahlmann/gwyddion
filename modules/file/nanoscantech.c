@@ -153,8 +153,8 @@ nst_load(const gchar *filename,
         unz_file_info fileinfo;
         gchar filename_buf[PATH_MAX+1];
 
-        if (unzGetCurrentFileInfo(zipfile, &fileinfo, filename_buf, PATH_MAX,
-                                  NULL, 0, NULL, 0) != UNZ_OK) {
+        if (unzGetCurrentFileInfo(zipfile, &fileinfo, filename_buf,
+                                  PATH_MAX, NULL, 0, NULL, 0) != UNZ_OK) {
             goto fail;
         }
         if (g_str_has_suffix(filename_buf, ".lsdlsd")) {
@@ -200,14 +200,17 @@ static GwyDataField *nst_read_3d(const gchar *buffer)
     gchar *p, *line;
     gchar **lineparts;
     gint x, y, xmax = 0, ymax = 0, i, j;
+    gint power10xy = 1, power10z = 1;
     gdouble *data, z;
+    gdouble xscale = 1.0, yscale =1.0;
+    gdouble xoffset = 0.0, yoffset = 0.0;
     GArray *dataarray;
 
-    p = buffer;
+    p = (gchar *)buffer;
     dataarray = g_array_new(FALSE, TRUE, sizeof(gdouble));
-    while (line = gwy_str_next_line(&p)) {
+    while ((line = gwy_str_next_line(&p))) {
         if (gwy_strequal(line, "[BeginOfItem]")) {
-            while (line = gwy_str_next_line(&p)) {
+            while ((line = gwy_str_next_line(&p))) {
                 lineparts = g_strsplit(line, " ", 3);
                 x = atoi(lineparts[0]);
                 y = atoi(lineparts[1]);
@@ -220,16 +223,61 @@ static GwyDataField *nst_read_3d(const gchar *buffer)
                 g_strfreev(lineparts);
             }
             gwy_debug("xmax = %d, ymax =  %d\n", xmax+1, ymax+1);
-            dfield = gwy_data_field_new(xmax+1, ymax+1, 1.0, 1.0, TRUE);
             break;
         }
-
+        else if (g_str_has_prefix(line, "XCUnit")) {
+            lineparts = g_strsplit(line, " ", 3);
+            siunitxy = gwy_si_unit_new_parse(lineparts[1], &power10xy);
+            x = atoi(lineparts[2]);
+            if (x != 0)
+                power10xy *= x;
+            g_strfreev(lineparts);
+        }
+        else if (g_str_has_prefix(line, "ZCUnit")) {
+            lineparts = g_strsplit(line, " ", 3);
+            siunitz = gwy_si_unit_new_parse(lineparts[1], &power10z);
+            z = atoi(lineparts[2]);
+            if (z != 0)
+                power10z *= x;
+            g_strfreev(lineparts);
+        }
+        else if (g_str_has_prefix(line, "PlotsXLimits")) {
+            lineparts = g_strsplit(line, " ", 3);
+            xoffset = g_ascii_strtod(lineparts[1], FALSE);
+            xscale = g_ascii_strtod(lineparts[2], FALSE) - xoffset;
+            g_strfreev(lineparts);
+        }
+        else if (g_str_has_prefix(line, "PlotsYLimits")) {
+            lineparts = g_strsplit(line, " ", 3);
+            yoffset = g_ascii_strtod(lineparts[1], FALSE);
+            yscale = g_ascii_strtod(lineparts[2], FALSE) - yoffset;
+            g_strfreev(lineparts);
+        }
     }
+
+    if (xscale <= 0.0)
+        xscale = 1.0;
+    if (yscale <= 0.0)
+        yscale = 1.0;
+    dfield = gwy_data_field_new(xmax+1, ymax+1,
+                                xscale*pow10(power10xy),
+                                yscale*pow10(power10xy), TRUE);
+    gwy_data_field_set_xoffset (dfield, xoffset*pow10(power10xy));
+    gwy_data_field_set_yoffset (dfield, yoffset*pow10(power10xy));
     if (dfield) {
         data = gwy_data_field_get_data(dfield);
         for(j = 0; j <= ymax; j++)
             for (i = 0; i <= xmax; i++)
-                *(data++) = g_array_index(dataarray, gdouble, j*(xmax+1)+i);
+                *(data++) = g_array_index(dataarray,
+                                          gdouble, j*(xmax+1)+i);
+    }
+    if (siunitxy) {
+        gwy_data_field_set_si_unit_xy (dfield, siunitxy);
+        g_object_unref(siunitxy);
+    }
+    if (siunitz) {
+        gwy_data_field_set_si_unit_z (dfield, siunitz);
+        g_object_unref(siunitz);
     }
 
     g_array_free(dataarray, TRUE);
