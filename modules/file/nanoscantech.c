@@ -61,7 +61,8 @@ static gint          nst_detect          (const GwyFileDetectInfo *fileinfo,
 static GwyContainer* nst_load            (const gchar *filename,
                                           GwyRunType mode,
                                           GError **error);
-static GwyDataField *nst_read_3d         (const gchar *buffer);
+static GwyDataField *nst_read_3d         (const gchar *buffer,
+                                          gchar **title);
 static guchar*       nst_get_file_content(unzFile *zipfile,
                                           gsize *contentsize,
                                           GError **error);
@@ -136,7 +137,8 @@ nst_load(const gchar *filename,
     unzFile zipfile;
     guint id, channelno = 0;
     gint status;
-    gchar *buffer, *line, *p;
+    gchar *buffer, *line, *p, *title, *strkey;
+    gchar *titlestr = NULL;
     gsize size;
 
     zipfile = unzOpen(filename);
@@ -164,13 +166,28 @@ nst_load(const gchar *filename,
             line = gwy_str_next_line(&p);
             g_strstrip(line);
             if (gwy_strequal(line, "3d")) {
-                gwy_debug("3d: %d\n", channelno);
-                dfield = nst_read_3d(p);
+                gwy_debug("3d: %u\n", channelno);
+                dfield = nst_read_3d(p, &titlestr);
                 if (dfield) {
                     GQuark key = gwy_app_get_data_key_for_id(channelno);
 
                     gwy_container_set_object(container, key, dfield);
                     g_object_unref(dfield);
+
+                    strkey = g_strdup_printf("/%u/data/title",
+                                             channelno);
+                    if (!titlestr)
+                        title = g_strdup_printf("Channel %u",
+                                                channelno);
+                    else
+                        title = g_strdup_printf("%s (%u)",
+                                                titlestr, channelno);
+                    gwy_container_set_string_by_name(container, strkey,
+                                                     title);
+                    g_free(strkey);
+                }
+                if (titlestr) {
+                    g_free(titlestr);
                 }
             }
             else if (gwy_strequal(line, "2d")) {
@@ -193,7 +210,7 @@ fail:
     return container;
 }
 
-static GwyDataField *nst_read_3d(const gchar *buffer)
+static GwyDataField *nst_read_3d(const gchar *buffer, gchar **title)
 {
     GwyDataField *dfield = NULL;
     GwySIUnit *siunitxy, *siunitz;
@@ -238,7 +255,7 @@ static GwyDataField *nst_read_3d(const gchar *buffer)
             siunitz = gwy_si_unit_new_parse(lineparts[1], &power10z);
             z = atoi(lineparts[2]);
             if (z != 0)
-                power10z *= x;
+                power10z *= z;
             g_strfreev(lineparts);
         }
         else if (g_str_has_prefix(line, "PlotsXLimits")) {
@@ -251,6 +268,11 @@ static GwyDataField *nst_read_3d(const gchar *buffer)
             lineparts = g_strsplit(line, " ", 3);
             yoffset = g_ascii_strtod(lineparts[1], FALSE);
             yscale = g_ascii_strtod(lineparts[2], FALSE) - yoffset;
+            g_strfreev(lineparts);
+        }
+        else if (g_str_has_prefix(line, "Name")) {
+            lineparts = g_strsplit(line, " ", 2);
+            *title = g_strdup(lineparts[1]);
             g_strfreev(lineparts);
         }
     }
@@ -269,7 +291,8 @@ static GwyDataField *nst_read_3d(const gchar *buffer)
         for(j = 0; j <= ymax; j++)
             for (i = 0; i <= xmax; i++)
                 *(data++) = g_array_index(dataarray,
-                                          gdouble, j*(xmax+1)+i);
+                                          gdouble, j*(xmax+1)+i)*
+                                          pow10(power10z);
     }
     if (siunitxy) {
         gwy_data_field_set_si_unit_xy (dfield, siunitxy);
@@ -354,3 +377,5 @@ nst_set_error(gint status, GError **error)
                 errstr);
     return FALSE;
 }
+
+/* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
