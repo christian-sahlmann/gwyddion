@@ -262,6 +262,9 @@ static gdouble       wip_pixel_to_lambda       (gint i,
                                        WIPSpectralTransform *transform);
 static GwyGraphModel*
                      wip_read_graph            (GNode *node);
+static void          wip_flip_xy               (GwyDataField *source,
+                                                GwyDataField *dest,
+                                                gboolean minor);
 static GwyDataField *
                      wip_read_image            (GNode *node);
 static GwyDataField *
@@ -854,13 +857,43 @@ static GwyGraphModel * wip_read_graph(GNode *node)
     return gmodel;
 }
 
+static void
+wip_flip_xy(GwyDataField *source, GwyDataField *dest, gboolean minor)
+{
+    gint xres, yres, i, j;
+    gdouble *dd;
+    const gdouble *sd;
+
+    xres = gwy_data_field_get_xres(source);
+    yres = gwy_data_field_get_yres(source);
+    gwy_data_field_resample(dest, yres, xres, GWY_INTERPOLATION_NONE);
+    sd = gwy_data_field_get_data_const(source);
+    dd = gwy_data_field_get_data(dest);
+    if (minor) {
+        for (i = 0; i < xres; i++) {
+            for (j = 0; j < yres; j++) {
+                dd[i*yres + j] = sd[j*xres + (xres - 1 - i)];
+            }
+        }
+    }
+    else {
+        for (i = 0; i < xres; i++) {
+            for (j = 0; j < yres; j++) {
+                dd[i*yres + (yres - 1 - j)] = sd[j*xres + i];
+            }
+        }
+    }
+    gwy_data_field_set_xreal(dest, gwy_data_field_get_yreal(source));
+    gwy_data_field_set_yreal(dest, gwy_data_field_get_xreal(source));
+}
+
 static GwyDataField * wip_read_image(GNode *node)
 {
     WIPImage *header;
     WIPAxis *zaxis;
     WIPSpaceTransform *xyaxis;
     WIPIdNode *idnode;
-    GwyDataField *dfield;
+    GwyDataField *dfield, *dfield2;
     GwySIUnit *siunitxy, *siunitz;
     gdouble *data;
     gdouble xscale, yscale, zscale;
@@ -937,17 +970,14 @@ static GwyDataField * wip_read_image(GNode *node)
     g_free(idnode);
 
     // Reading actual data
-    /* FIXME: data is stored in strange way in TDImage, so it is more
-     * simple to swap X and Y axes here to read them correctly */
-    dfield = gwy_data_field_new(header->sizey, header->sizex,
+    /* data is stored in strange way in TDImage, so it is more
+     * simple to swap X and Y axes here to read them correctly
+     * and rotate datafield in the end of procedure */
+    dfield2 = gwy_data_field_new(header->sizey, header->sizex,
                           header->sizey * pow(10.0, power10xy) * yscale,
                           header->sizex * pow(10.0, power10xy) * xscale,
                           FALSE);
-    data = gwy_data_field_get_data(dfield);
-    gwy_data_field_set_si_unit_z(dfield, siunitz);
-    gwy_data_field_set_si_unit_xy(dfield, siunitxy);
-    g_object_unref(siunitz);
-    g_object_unref(siunitxy);
+    data = gwy_data_field_get_data(dfield2);
 
     zscale = pow(10.0, power10z);
     if (zscale == 0.0)
@@ -1006,8 +1036,20 @@ static GwyDataField * wip_read_image(GNode *node)
             g_warning("Wrong datatype");
     }
 
-    if (mirrory || mirrorx) {
-        gwy_data_field_invert(dfield, mirrory, mirrorx, FALSE);
+    dfield = gwy_data_field_new(header->sizex, header->sizey,
+                          header->sizex * pow(10.0, power10xy) * xscale,
+                          header->sizey * pow(10.0, power10xy) * yscale,
+                          FALSE);
+    wip_flip_xy(dfield2, dfield, FALSE);
+    g_object_unref(dfield2);
+
+    gwy_data_field_set_si_unit_z(dfield, siunitz);
+    gwy_data_field_set_si_unit_xy(dfield, siunitxy);
+    g_object_unref(siunitz);
+    g_object_unref(siunitxy);
+
+    if (mirrorx || mirrory) {
+        gwy_data_field_invert(dfield, mirrorx, mirrory, FALSE);
     }
 
     return dfield;
