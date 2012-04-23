@@ -74,9 +74,9 @@ static gboolean       nst_set_error       (gint status,
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    N_("Reads NanoScanTech .nstdat files."),
+    N_("Imports NanoScanTech .nstdat files."),
     "Daniil Bratashov (dn2010@gmail.com)",
-    "0.1",
+    "0.2",
     "David Nečas (Yeti), Daniil Bratashov (dn2010)",
     "2012",
 };

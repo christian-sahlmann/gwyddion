@@ -277,7 +277,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports WItec Project data files."),
     "dn2010 <dn2010@gmail.com>",
-    "0.2",
+    "0.3",
     "David Nečas (Yeti) & Petr Klapetek & Daniil Bratashov",
     "2010",
 };
