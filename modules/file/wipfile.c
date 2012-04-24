@@ -263,8 +263,7 @@ static gdouble       wip_pixel_to_lambda       (gint i,
 static GwyGraphModel*
                      wip_read_graph            (GNode *node);
 static void          wip_flip_xy               (GwyDataField *source,
-                                                GwyDataField *dest,
-                                                gboolean minor);
+                                                GwyDataField *dest);
 static GwyDataField *
                      wip_read_image            (GNode *node);
 static GwyDataField *
@@ -857,8 +856,7 @@ static GwyGraphModel * wip_read_graph(GNode *node)
     return gmodel;
 }
 
-static void
-wip_flip_xy(GwyDataField *source, GwyDataField *dest, gboolean minor)
+static void wip_flip_xy(GwyDataField *source, GwyDataField *dest)
 {
     gint xres, yres, i, j;
     gdouble *dd;
@@ -869,20 +867,13 @@ wip_flip_xy(GwyDataField *source, GwyDataField *dest, gboolean minor)
     gwy_data_field_resample(dest, yres, xres, GWY_INTERPOLATION_NONE);
     sd = gwy_data_field_get_data_const(source);
     dd = gwy_data_field_get_data(dest);
-    if (minor) {
-        for (i = 0; i < xres; i++) {
-            for (j = 0; j < yres; j++) {
-                dd[i*yres + j] = sd[j*xres + (xres - 1 - i)];
-            }
+    
+    for (i = 0; i < xres; i++) {
+		for (j = 0; j < yres; j++) {
+			dd[i*yres + (yres - 1 - j)] = sd[j*xres + i];
         }
     }
-    else {
-        for (i = 0; i < xres; i++) {
-            for (j = 0; j < yres; j++) {
-                dd[i*yres + (yres - 1 - j)] = sd[j*xres + i];
-            }
-        }
-    }
+
     gwy_data_field_set_xreal(dest, gwy_data_field_get_yreal(source));
     gwy_data_field_set_yreal(dest, gwy_data_field_get_xreal(source));
 }
@@ -1040,7 +1031,7 @@ static GwyDataField * wip_read_image(GNode *node)
                           header->sizex * pow(10.0, power10xy) * xscale,
                           header->sizey * pow(10.0, power10xy) * yscale,
                           FALSE);
-    wip_flip_xy(dfield2, dfield, FALSE);
+    wip_flip_xy(dfield2, dfield);
     g_object_unref(dfield2);
 
     gwy_data_field_set_si_unit_z(dfield, siunitz);
