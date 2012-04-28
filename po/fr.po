@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: French localization\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2012-04-23 03:58+0200\n"
-"PO-Revision-Date: 2012-04-23 22:35+0100\n"
+"POT-Creation-Date: 2012-04-28 03:58+0200\n"
+"PO-Revision-Date: 2012-04-28 15:41+0100\n"
 "Last-Translator: François RIGUET <francheu@caramail.com>\n"
 "Language-Team: François RIGUET <francheu@caramail.com>\n"
 "Language: \n"
@@ -3752,8 +3752,8 @@ msgid "Wrong size of Base64 encoded data."
 msgstr "Les données codées en base 64 n'ont pas la bonne dimension."
 
 #: modules/file/nanoscantech.c:77
-msgid "Reads NanoScanTech .nstdat files."
-msgstr "Importe les fichiers NanoScanTech (.nstdat)"
+msgid "Imports NanoScanTech .nstdat files."
+msgstr "Importe les fichiers NanoScanTech"
 
 #: modules/file/nanoscantech.c:90
 msgid "NanoScanTech data (.nstdat)"
@@ -5270,11 +5270,11 @@ msgstr "paramètres d'échelle z"
 msgid "data type parameters"
 msgstr "paramètres de type de données"
 
-#: modules/file/wipfile.c:275
+#: modules/file/wipfile.c:277
 msgid "Imports WItec Project data files."
 msgstr "Importe les fichiers WITec Project."
 
-#: modules/file/wipfile.c:288
+#: modules/file/wipfile.c:290
 msgid "WItec Project files (.wip)"
 msgstr "WITec Project (.wip)"
 
@@ -5672,6 +5672,18 @@ msgstr "Somme résiduelle :   %g\n"
 #: modules/graph/graph_fit.c:1458
 msgid "Correlation matrix\n"
 msgstr "Matrice de corrélation\n"
+
+#: modules/graph/graph_filter.c:38
+msgid "Remove graph noise by filtering."
+msgstr "Supprimer le bruit d'un graphe par  filtrage."
+
+#: modules/graph/graph_filter.c:52
+msgid "/_Filter"
+msgstr "/_Filtre"
+
+#: modules/graph/graph_filter.c:55
+msgid "Remove noise from graph curves"
+msgstr "Supprimer le bruit présent dans des courbes"
 
 #: modules/graph/graph_fit.c:173
 msgid "Fit graph with function"
