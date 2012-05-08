@@ -7,9 +7,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: French localization\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2012-04-28 03:58+0200\n"
-"PO-Revision-Date: 2012-04-28 15:41+0100\n"
-"Last-Translator: François RIGUET <francheu@caramail.com>\n"
+"POT-Creation-Date: 2012-05-08 03:59+0200\n"
+"PO-Revision-Date: 2012-05-08 10:51+0100\n"
+"Last-Translator: François RIGUET <francois.riguet@gmx.fr>\n"
 "Language-Team: François RIGUET <francheu@caramail.com>\n"
 "Language: \n"
 "MIME-Version: 1.0\n"
@@ -889,6 +889,7 @@ msgstr "pixels"
 #: modules/process/grain_rem_threshold.c:224
 #: modules/process/grain_wshed.c:182
 #: modules/process/hough.c:175
+#: modules/process/latsim.c:158
 #: modules/process/level.c:253
 #: modules/process/lno_synth.c:436
 #: modules/process/local_contrast.c:126
@@ -896,6 +897,7 @@ msgstr "pixels"
 #: modules/process/noise_synth.c:347
 #: modules/process/obj_synth.c:432
 #: modules/process/pat_synth.c:402
+#: modules/process/pid.c:196
 #: modules/process/polydistort.c:219
 #: modules/process/polylevel.c:376
 #: modules/process/rotate.c:264
@@ -8481,6 +8483,44 @@ msgstr "Interpole les données sous le masque à l'aide de l'équation de Laplac
 msgid "Laplace correction"
 msgstr "Correction de Laplace"
 
+#: modules/process/latsim.c:74
+msgid "Lateral force simulator"
+msgstr "SImulateur de force latérale"
+
+#: modules/process/latsim.c:88
+msgid "/_Tip/_Lateral force..."
+msgstr "/Sonde/Force _latérale..."
+
+#: modules/process/latsim.c:92
+msgid "Simulate topograpy artefacts in lateral force channels"
+msgstr "Simuler des artefacts de surface pour les canaux de mesure à force latérale"
+
+#: modules/process/latsim.c:134
+#, fuzzy
+msgid "Fw lateral force "
+msgstr "Echelle latérale"
+
+#: modules/process/latsim.c:142
+#, fuzzy
+msgid "Rev lateral force"
+msgstr "Conserver les offsets latéraux"
+
+#: modules/process/latsim.c:157
+msgid "Lateral force simulation"
+msgstr "Simulation de force latérale"
+
+#: modules/process/latsim.c:174
+msgid "_Friction coef.:"
+msgstr "Coefficient de _friction :"
+
+#: modules/process/latsim.c:180
+msgid "_Normal force:"
+msgstr "Force _normale :"
+
+#: modules/process/latsim.c:186
+msgid "_Adhesion force:"
+msgstr "Force d'_adhésion : "
+
 #: modules/process/level.c:78
 msgid "Levels data by simple plane subtraction or by rotation, and fixes minimal or mean value to zero."
 msgstr "Met à niveau les données par soustraction d'un plan ou par rotation, et fixe le minimum ou la moyenne à zéro."
@@ -9221,6 +9261,81 @@ msgstr "Distance"
 msgid "_Distance:"
 msgstr "_Distance :"
 
+#: modules/process/pid.c:94
+msgid "A simple PID simulator"
+msgstr ""
+
+#: modules/process/pid.c:108
+msgid "/_Tip/_PID simulation..."
+msgstr "/Sonde/SImulation _PID..."
+
+#: modules/process/pid.c:112
+msgid "Simulate PID effects on measurement"
+msgstr ""
+
+#: modules/process/pid.c:157
+#, fuzzy
+msgid "PID FW result"
+msgstr "Résultat de l'ajustement"
+
+#: modules/process/pid.c:165
+msgid "PID FW max. force"
+msgstr ""
+
+#: modules/process/pid.c:173
+#, fuzzy
+msgid "PID REV result"
+msgstr "Résultat"
+
+#: modules/process/pid.c:181
+msgid "PID REV max. force"
+msgstr ""
+
+#: modules/process/pid.c:195
+msgid "PID simulation"
+msgstr "Simulation PID"
+
+#: modules/process/pid.c:212
+msgid "_Proportional:"
+msgstr "_Proportionnel :"
+
+#: modules/process/pid.c:218
+msgid "_Integral:"
+msgstr ""
+
+#: modules/process/pid.c:224
+#, fuzzy
+msgid "_Integration steps:"
+msgstr "Type d'interpolation :"
+
+#: modules/process/pid.c:231
+msgid "_Derivative:"
+msgstr "_Dérivée :"
+
+#: modules/process/pid.c:238
+msgid "PID/scan speed _ratio:"
+msgstr "Rapport de vitesse PID/scan :"
+
+#: modules/process/pid.c:250
+msgid "Force strength:"
+msgstr ""
+
+#: modules/process/pid.c:256
+msgid "Force setpoint:"
+msgstr ""
+
+#: modules/process/pid.c:334
+msgid "Starting..."
+msgstr "Démarrage..."
+
+#: modules/process/pid.c:358
+msgid "Scanning..."
+msgstr ""
+
+#: modules/process/pid.c:392
+msgid "Computation diverged, try to change parameters"
+msgstr "Le calcul diverge, essayez de modifier les paramètres"
+
 #: modules/process/polydistort.c:140
 msgid "Apllies polynomial distortion in the horizontal plane."
 msgstr "Applique une distorsion polynomiale dans le plan horizontal."
@@ -9908,6 +10023,30 @@ msgstr "Hypothèse :"
 #: modules/process/unrotate.c:267
 msgid "Correction:"
 msgstr "Correction :"
+
+#: modules/process/xydenoise.c:69
+msgid "Denoises measurement on basis of two orthogonal scans."
+msgstr "Débruitage basé sur deux mesures orthogonales."
+
+#: modules/process/xydenoise.c:83
+msgid "/M_ultidata/_XY denoise..."
+msgstr "/M_ultidonnées/Débruitage _XY..."
+
+#: modules/process/xydenoise.c:87
+msgid "Denoises horizontal/vertical measurement."
+msgstr "Débruitage de mesures horizontales et verticales."
+
+#: modules/process/xydenoise.c:120
+msgid "XY Denoising"
+msgstr "Débruitage XY"
+
+#: modules/process/xydenoise.c:142
+msgid "Second direction:"
+msgstr "Seconde direction :"
+
+#: modules/process/xydenoise.c:289
+msgid "Denoised"
+msgstr "Débruité"
 
 #: modules/pygwy/pygwy-console.c:53
 msgid "/Pygwy Console"
@@ -10962,151 +11101,220 @@ msgstr ""
 
 #~ msgid "Gargbage after data sample #%u."
 #~ msgstr "Données erronées après l'échantillon #%u."
+
 #~ msgid "Pixmap image import must be run as interactive."
 #~ msgstr "L'import d'image doit se faire de manière interactive."
 
 #, fuzzy
 #~ msgid "Decompression of encoded data failed with error %d."
 #~ msgstr "La décompression des données a échoué avec l'erreur %d."
+
 #~ msgid "_Width"
 #~ msgstr "Largeur"
+
 #~ msgid "H_eight"
 #~ msgstr "Haut_eur"
+
 #~ msgid "None"
 #~ msgstr "Aucun"
+
 #~ msgid "Basic"
 #~ msgstr "Basique"
+
 #~ msgid "noun|Square"
 #~ msgstr "Carré"
+
 #~ msgid "Solid"
 #~ msgstr "Solide"
+
 #~ msgid "Dash"
 #~ msgstr "Pointillé"
+
 #~ msgid "Use"
 #~ msgstr "Utiliser"
+
 #~ msgid "Border"
 #~ msgstr "Bord"
+
 #~ msgid "Mirror"
 #~ msgstr "Miroir"
+
 #~ msgid "noun|Fit"
 #~ msgstr "Ajustement"
+
 #~ msgid "noun|Estimate"
 #~ msgstr "Estimation"
+
 #~ msgid "Even"
 #~ msgstr "Pair"
+
 #~ msgid "Odd"
 #~ msgstr "Impair"
+
 #~ msgid "noun|Normal"
 #~ msgstr "Normale"
+
 #~ msgid "Bellow"
 #~ msgstr "Sous"
+
 #~ msgid "Right"
 #~ msgstr "Droite"
+
 #~ msgid "Left"
 #~ msgstr "Gauche"
+
 #~ msgid "_Filtered image"
 #~ msgstr "Image Filtrée"
+
 #~ msgid "Filtered Image"
 #~ msgstr "Image filtrée"
+
 #~ msgid "Draw a new inclusive circle marker"
 #~ msgstr "Dessiner un nouveau marqueur circulaire inclusif"
+
 #~ msgid "Draw a new inclusive rectangle marker"
 #~ msgstr "Dessiner un nouveau marqueur rectangulaire inclusif"
+
 #~ msgid "Draw a new exclusive circle marker"
 #~ msgstr "Dessiner un nouveau marqueur circulaire exclusif"
+
 #~ msgid "Draw a new exclusive rectangle marker"
 #~ msgstr "Dessiner un nouveau marqueur rectangulaire exclusif"
+
 #~ msgid "Removes the entire filter mask"
 #~ msgstr "Supprimer complètement le masque filtre"
+
 #~ msgid "Simple AFM data recalibration"
 #~ msgstr "Calibration basique de données AFM"
+
 #~ msgid "i_nstant updates"
 #~ msgstr "i_nstant updates"
+
 #~ msgid "Ra:"
 #~ msgstr "Ra :"
+
 #~ msgid "Rms:"
 #~ msgstr "Rms :"
+
 #~ msgid "_Export uncertainties"
 #~ msgstr "_Exporter les incertitudes"
+
 #~ msgid "Recalibrate data"
 #~ msgstr "Recalibrer les données"
+
 #~ msgid "Calibrate"
 #~ msgstr "Calibrer"
+
 #~ msgid "/_Basic Operations/_Recalibrate..."
 #~ msgstr "/Opérations _Basiques/_Recalibrer..."
+
 #~ msgid "Simulate spherical particle deposition."
 #~ msgstr "Simuler un dépôt de particules sphériques."
+
 #~ msgid "/_Synthetic/_Deposit particles..."
 #~ msgstr "/S_ynthèse/Dépôt de particule_s..."
+
 #~ msgid "Deposit spherical particles"
 #~ msgstr "Dépôt de particules sphériques"
+
 #~ msgid "_Start"
 #~ msgstr "Début"
+
 #~ msgid "Deposition parameters:"
 #~ msgstr "Paramètres de dépôt :"
+
 #~ msgid "_Size"
 #~ msgstr "Taille"
+
 #~ msgid "Particles"
 #~ msgstr "Particules"
+
 #~ msgid "_size:"
 #~ msgstr "hauteur :"
+
 #~ msgid "_width:"
 #~ msgstr "largeur :"
+
 #~ msgid "Coverage:"
 #~ msgstr "Couverture :"
+
 #~ msgid "/_Basic Operations/Threshol_d..."
 #~ msgstr "/Opérations _Basiques/Seuil..."
+
 #~ msgid "Thresholds"
 #~ msgstr "Seuils"
+
 #~ msgid "Paintbrush"
 #~ msgstr "Pinceau"
+
 #~ msgid "Uniform"
 #~ msgstr "Uniforme"
+
 #~ msgid "Ideal Geometry"
 #~ msgstr "Géométrie idéale"
 
 #, fuzzy
 #~ msgid "Pitch:"
 #~ msgstr "Pas :"
+
 #~ msgid "Constant current tunnel spectroscopy (CITS) is not supported."
 #~ msgstr ""
 #~ "La spectroscopie à courant tunnel constant (CITS) n'est pas supportée."
+
 #~ msgid "Single point spectroscopy (SPS) is not supported."
 #~ msgstr "La specroscopie ponctuelle (SPS) n'est pas supportée."
+
 #~ msgid "Export"
 #~ msgstr "Exporter"
+
 #~ msgid "data samples"
 #~ msgstr "Echantillons de données"
+
 #~ msgid "_Exclude region under mask"
 #~ msgstr "_Exclure la région sous le masque"
+
 #~ msgid "Use _mask"
 #~ msgstr "Utiliser le _masque"
+
 #~ msgid "Section ‛%s’ ended with ‛%s’."
 #~ msgstr "La section ‛%s’ se termine par ‛%s’."
+
 #~ msgid "Missing end of file header marker."
 #~ msgstr "Marqueur de fin d'en-tête manquant."
+
 #~ msgid "Exclude region _outside mask"
 #~ msgstr "Exclure la région en deh_ors du masque"
+
 #~ msgid "Shape"
 #~ msgstr "Forme"
+
 #~ msgid "Smoothing After Each Layer"
 #~ msgstr "Adoucir après chaque couche"
+
 #~ msgid "_New Seed"
 #~ msgstr "_Nouvelle racine"
+
 #~ msgid "Dem"
 #~ msgstr "Dem"
+
 #~ msgid "L-R"
 #~ msgstr "L-R"
+
 #~ msgid "Correlation lengt_h:"
 #~ msgstr "Longueur de corrélation :"
+
 #~ msgid "/Simulat_e/_Spectral Synthesis..."
 #~ msgstr "/Simul_er/_Synthèse Spectrale..."
+
 #~ msgid "Measure:"
 #~ msgstr "Mesure :"
+
 #~ msgid "File is truncated"
 #~ msgstr "Le fichier est tronqué"
+
 #~ msgid "JPK scan"
 #~ msgstr "Scan JPK"
+
 #~ msgid ""
 #~ "LibTIFF too old!\n"
 #~ "\n"
@@ -11116,24 +11324,32 @@ msgstr ""
 #~ "\n"
 #~ "Vous utilisez %s. Mettez à jour libtiff à la version %d.%d or plus récent "
 #~ "s'il vous plaît."
+
 #~ msgid "TIFFOpen() function failed."
 #~ msgstr "La fonction TIFFOpen() a échoué."
+
 #~ msgid "TIFFWriteScanline() function failed."
 #~ msgstr "La fonction TIFFWriteScanline() a échoué."
 
 #, fuzzy
 #~ msgid "M_inimum:"
 #~ msgstr "Minimum :"
+
 #~ msgid "/_Mask/_Attach Mask..."
 #~ msgstr "/_Masque/_Attacher un masque..."
+
 #~ msgid "Attach mask from another data field"
 #~ msgstr "Attache un masque à partir d'autres données"
+
 #~ msgid "Attach Mask"
 #~ msgstr "Attacher un masque"
+
 #~ msgid "Attach mask _from:"
 #~ msgstr "Attacher un masque à partir de :"
+
 #~ msgid "Output"
 #~ msgstr "Sortie"
+
 #~ msgid "File too small (less than %d bytes). Header is not complete."
 #~ msgstr ""
 #~ "Le fichier est trop petit (moins de %d octets). L'en-tête est imcomplet."
@@ -11145,4 +11361,3 @@ msgstr ""
 #, fuzzy
 #~ msgid "pygwy_console"
 #~ msgstr "Console Pygwy"
-
