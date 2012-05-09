@@ -363,7 +363,7 @@ static GwyDataField* tia_read_2d(const guchar *p, gsize size)
 {
     GwyDataField *dfield = NULL;
     TIA2DData *fielddata;
-    gint i;
+    gint i, n;
     gdouble *data;
 	
     fielddata = g_new0(TIA2DData, 1);
@@ -376,7 +376,7 @@ static GwyDataField* tia_read_2d(const guchar *p, gsize size)
     fielddata->datatype            = (TIADataType)gwy_get_guint16_le(&p);
     fielddata->arraylengthx        = gwy_get_guint32_le(&p);
     fielddata->arraylengthy        = gwy_get_guint32_le(&p);
-    fielddata->data = p;
+    fielddata->data = (gchar *)p;
 
 	gwy_debug("nx=%i ny=%i type=%i", fielddata->arraylengthx,
 									 fielddata->arraylengthy,
@@ -385,9 +385,72 @@ static GwyDataField* tia_read_2d(const guchar *p, gsize size)
 	dfield = gwy_data_field_new(fielddata->arraylengthx,
 								fielddata->arraylengthy,
 								1.0, 1.0, TRUE);
-	data = gwy_data_field_get_data(dfield);						
-	for(i = 0; i < fielddata->arraylengthx * fielddata->arraylengthx; i++) {
-		data[i] = gwy_get_guint16_le(&p);
+    if (dfield) {								
+		data = gwy_data_field_get_data(dfield);
+		n = fielddata->arraylengthx * fielddata->arraylengthy;
+		switch (fielddata->datatype) {
+		    case TIA_DATA_UINT8:
+		    { 						
+				for(i = 0; i < n; i++) 
+					*(data++) = *(p++);
+			}
+			break;
+			case TIA_DATA_UINT16:
+		    {
+				const guint16 *tp = (const guint16 *)p; 
+										
+				for(i = 0; i < n; i++) 
+					*(data++) = GUINT16_FROM_LE(*(tp++));
+			}
+			break;
+			case TIA_DATA_UINT32:
+		    {
+				const guint32 *tp = (const guint32 *)p; 
+										
+				for(i = 0; i < n; i++) 
+					*(data++) = GUINT32_FROM_LE(*(tp++));
+			}
+			break;
+		    case TIA_DATA_INT8:
+		    {
+				const gchar *tp = (const gchar *)p;
+				 						
+				for(i = 0; i < n; i++) 
+					*(data++) = *(tp++);
+			}
+			break;
+			case TIA_DATA_INT16:
+		    {
+				const gint16 *tp = (const gint16 *)p; 
+										
+				for(i = 0; i < n; i++) 
+					*(data++) = GINT16_FROM_LE(*(tp++));
+			}
+			break;
+			case TIA_DATA_INT32:
+		    {
+				const gint32 *tp = (const gint32 *)p; 
+										
+				for(i = 0; i < n; i++) 
+					*(data++) = GINT32_FROM_LE(*(tp++));
+			}
+			break;
+			case TIA_DATA_FLOAT:
+			{
+				for(i = 0; i < n; i++)
+					*(data++) = gwy_get_gfloat_le(&p);
+			}
+			break;	
+			case TIA_DATA_DOUBLE:
+			{
+				for(i = 0; i < n; i++)
+					*(data++) = gwy_get_gdouble_le(&p);
+			}
+			break;
+			default:
+			g_assert_not_reached();
+			break;											
+		}
 	}
 
     g_free(fielddata);
