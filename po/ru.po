@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2012-04-29 03:58+0200\n"
-"PO-Revision-Date: 2012-04-29 17:22+0300\n"
+"POT-Creation-Date: 2012-05-09 03:58+0200\n"
+"PO-Revision-Date: 2012-05-09 22:56+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "Language: \n"
@@ -891,13 +891,16 @@ msgstr "точек"
 #: modules/process/grain_rem_threshold.c:224
 #: modules/process/grain_wshed.c:182
 #: modules/process/hough.c:175
+#: modules/process/latsim.c:158
 #: modules/process/level.c:253
 #: modules/process/lno_synth.c:436
 #: modules/process/local_contrast.c:126
 #: modules/process/median-bg.c:176
+#: modules/process/neural.c:208
 #: modules/process/noise_synth.c:347
 #: modules/process/obj_synth.c:432
 #: modules/process/pat_synth.c:402
+#: modules/process/pid.c:196
 #: modules/process/polydistort.c:219
 #: modules/process/polylevel.c:376
 #: modules/process/rotate.c:264
@@ -6173,6 +6176,7 @@ msgstr "Простая карта ошибок"
 
 #: modules/process/calcoefs_simple.c:342
 #: modules/process/calcoefs_stage.c:149
+#: modules/process/neural.c:225
 #: modules/process/superresolution.c:159
 msgid "Operands:"
 msgstr "Операнды:"
@@ -8485,6 +8489,42 @@ msgstr "Интерполировать данные под маской реше
 msgid "Laplace correction"
 msgstr "Лапласова коррекция"
 
+#: modules/process/latsim.c:74
+msgid "Lateral force simulator"
+msgstr "Симулятор латеральных сил"
+
+#: modules/process/latsim.c:88
+msgid "/_Tip/_Lateral force..."
+msgstr "/_Зонд/_Латеральная сила..."
+
+#: modules/process/latsim.c:92
+msgid "Simulate topograpy artefacts in lateral force channels"
+msgstr "Моделирует артефакты топографии в каналах измерения латеральных сил"
+
+#: modules/process/latsim.c:134
+msgid "Fw lateral force "
+msgstr "Лат. сила на прямом ходе"
+
+#: modules/process/latsim.c:142
+msgid "Rev lateral force"
+msgstr "Лат. сила на обратном ходе"
+
+#: modules/process/latsim.c:157
+msgid "Lateral force simulation"
+msgstr "Модель латеральных сил"
+
+#: modules/process/latsim.c:174
+msgid "_Friction coef.:"
+msgstr "Коэффициент _трения:"
+
+#: modules/process/latsim.c:180
+msgid "_Normal force:"
+msgstr "_Сила вдоль нормали:"
+
+#: modules/process/latsim.c:186
+msgid "_Adhesion force:"
+msgstr "Сила _адгезии:"
+
 #: modules/process/level.c:78
 msgid "Levels data by simple plane subtraction or by rotation, and fixes minimal or mean value to zero."
 msgstr "Выравнивает данные простым вычетом плоскости или вращением и устанавливает минимальное или среднее значение в нуль."
@@ -9037,6 +9077,75 @@ msgstr "Зонд имеет другое отношение диапазон/р�
 msgid "Immersed detail data"
 msgstr "Данные встроенного изображения с лучшим разрешением"
 
+#: modules/process/neural.c:147
+msgid "Neural network SPM data processing"
+msgstr "Обработка данных СЗМ на основе нейросетей"
+
+#: modules/process/neural.c:161
+msgid "/M_ultidata/_Neural network..."
+msgstr "/М_ножественные данные/_Нейросеть..."
+
+#: modules/process/neural.c:165
+msgid "Neural network AFM data processing"
+msgstr "Обработка данных АСМ на основе нейросетей"
+
+#: modules/process/neural.c:207
+msgid "Neural network"
+msgstr "Нейросеть"
+
+#: modules/process/neural.c:233
+msgid "Training model:"
+msgstr "Модель обучения:"
+
+#: modules/process/neural.c:240
+msgid "Training signal:"
+msgstr "Сигнал обучения:"
+
+#: modules/process/neural.c:247
+msgid "Result model:"
+msgstr "Модель результата:"
+
+#: modules/process/neural.c:254
+msgid "Window width:"
+msgstr "Ширина окна:"
+
+#: modules/process/neural.c:260
+msgid "Window height:"
+msgstr "Высота окна:"
+
+#: modules/process/neural.c:266
+msgid "Training steps:"
+msgstr "Шагов тренировки:"
+
+#: modules/process/neural.c:272
+msgid "Hidden nodes:"
+msgstr "Скрытые узлы:"
+
+#: modules/process/neural.c:364
+msgid "Data not compatible"
+msgstr "данные несовместимы"
+
+#: modules/process/neural.c:389
+#: modules/process/pid.c:334
+msgid "Starting..."
+msgstr "Запускается..."
+
+#: modules/process/neural.c:491
+msgid "Evaluated signal"
+msgstr "Рассчитанный сигнал"
+
+#: modules/process/neural.c:497
+msgid "Training error"
+msgstr "Ошибка обучения"
+
+#: modules/process/neural.c:498
+msgid "error"
+msgstr "ошибка"
+
+#: modules/process/neural.c:504
+msgid "NN training error"
+msgstr "Ошибка обучения нейросети"
+
 #: modules/process/noise_synth.c:210
 msgid "Generates uncorrelated random noise."
 msgstr "Создаёт некоррелированный случайный шум."
@@ -9224,6 +9333,74 @@ msgstr "Расстояние"
 #: modules/process/pat_synth.c:1476
 msgid "_Distance:"
 msgstr "Р_асстояние:"
+
+#: modules/process/pid.c:94
+msgid "A simple PID simulator"
+msgstr "Простой симулятор ПИД"
+
+#: modules/process/pid.c:108
+msgid "/_Tip/_PID simulation..."
+msgstr "/_Зонд/Модель _ПИД..."
+
+#: modules/process/pid.c:112
+msgid "Simulate PID effects on measurement"
+msgstr "Симулировать влияние ПИД на измерения"
+
+#: modules/process/pid.c:157
+msgid "PID FW result"
+msgstr "Прямой результат ПИД"
+
+#: modules/process/pid.c:165
+msgid "PID FW max. force"
+msgstr "Макс. прямая сила ПИД"
+
+#: modules/process/pid.c:173
+msgid "PID REV result"
+msgstr "Обр. результат ПИД"
+
+#: modules/process/pid.c:181
+msgid "PID REV max. force"
+msgstr "Макс. обр. сила ПИД"
+
+#: modules/process/pid.c:195
+msgid "PID simulation"
+msgstr "Симуляция ПИД"
+
+#: modules/process/pid.c:212
+msgid "_Proportional:"
+msgstr "_Пропорциональный:"
+
+#: modules/process/pid.c:218
+msgid "_Integral:"
+msgstr "_Интеграл:"
+
+#: modules/process/pid.c:224
+msgid "_Integration steps:"
+msgstr "Шагов _интегрирования:"
+
+#: modules/process/pid.c:231
+msgid "_Derivative:"
+msgstr "_Производная:"
+
+#: modules/process/pid.c:238
+msgid "PID/scan speed _ratio:"
+msgstr "_Отн. ПИД/скорость сканирования:"
+
+#: modules/process/pid.c:250
+msgid "Force strength:"
+msgstr "Величина силы:"
+
+#: modules/process/pid.c:256
+msgid "Force setpoint:"
+msgstr "заданное значение силы:"
+
+#: modules/process/pid.c:358
+msgid "Scanning..."
+msgstr "Сканирование..."
+
+#: modules/process/pid.c:392
+msgid "Computation diverged, try to change parameters"
+msgstr "Расчёт расходится, попробуйте изменить параметры"
 
 #: modules/process/polydistort.c:140
 msgid "Apllies polynomial distortion in the horizontal plane."
@@ -9912,6 +10089,30 @@ msgstr "_Предполагаемая:"
 #: modules/process/unrotate.c:267
 msgid "Correction:"
 msgstr "Поправка:"
+
+#: modules/process/xydenoise.c:69
+msgid "Denoises measurement on basis of two orthogonal scans."
+msgstr "Удаляет шум измерения на основе двух сканов в перпендикулярных направлениях."
+
+#: modules/process/xydenoise.c:83
+msgid "/M_ultidata/_XY denoise..."
+msgstr "/М_ножественные данные/_Удаление шума XY..."
+
+#: modules/process/xydenoise.c:87
+msgid "Denoises horizontal/vertical measurement."
+msgstr "Удаляет шум горизонтального/вертикального измерения."
+
+#: modules/process/xydenoise.c:120
+msgid "XY Denoising"
+msgstr "Удаление шума XY"
+
+#: modules/process/xydenoise.c:142
+msgid "Second direction:"
+msgstr "Второе направление:"
+
+#: modules/process/xydenoise.c:289
+msgid "Denoised"
+msgstr "Без шума"
 
 #: modules/pygwy/pygwy-console.c:53
 msgid "/Pygwy Console"
