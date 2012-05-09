@@ -42,8 +42,6 @@
  * Read
  **/
 
-#define DEBUG
-
 #include "config.h"
 #include <string.h>
 #include <stdio.h>
@@ -147,14 +145,20 @@ typedef struct {
     gchar      *data;
 } TIA2DData;
 
-static gboolean      module_register (void);
-static gint          tia_detect      (const GwyFileDetectInfo *fileinfo,
-                                      gboolean only_name);
-static GwyContainer* tia_load        (const gchar *filename,
-                                      GwyRunType mode,
-                                      GError **error);
-static GwyDataField* tia_read_2d     (const guchar *p,
-                                      gsize size);
+static gboolean      module_register   (void);
+static gint          tia_detect        (const GwyFileDetectInfo *fileinfo,
+                                        gboolean only_name);
+static GwyContainer* tia_load          (const gchar *filename,
+                                        GwyRunType mode,
+                                        GError **error);
+static void          tia_load_header   (const guchar *p,
+                                        TIAHeader *header);
+static gboolean      tia_check_header  (TIAHeader *header, gsize size);
+static gboolean      tia_load_dimarray (const guchar *p,
+                                        TIADimensionArray *dimarray,
+                                        gsize size);
+static GwyDataField* tia_read_2d       (const guchar *p,
+                                        gsize size);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -432,7 +436,7 @@ static GwyDataField* tia_read_2d(const guchar *p, gsize size)
             case TIA_DATA_UINT8:
             {
                 for(i = 0; i < n; i++)
-                    *(data++) = *(p++);
+                    *(data++) = (*(p++)) / (gdouble)G_MAXUINT8;
             }
             break;
             case TIA_DATA_UINT16:
@@ -440,7 +444,8 @@ static GwyDataField* tia_read_2d(const guchar *p, gsize size)
                 const guint16 *tp = (const guint16 *)p;
 
                 for(i = 0; i < n; i++)
-                    *(data++) = GUINT16_FROM_LE(*(tp++));
+                    *(data++) = GUINT16_FROM_LE(*(tp++))
+                                                 / (gdouble)G_MAXUINT16;
             }
             break;
             case TIA_DATA_UINT32:
@@ -448,7 +453,8 @@ static GwyDataField* tia_read_2d(const guchar *p, gsize size)
                 const guint32 *tp = (const guint32 *)p;
 
                 for(i = 0; i < n; i++)
-                    *(data++) = GUINT32_FROM_LE(*(tp++));
+                    *(data++) = GUINT32_FROM_LE(*(tp++))
+                                                 / (gdouble)G_MAXUINT32;
             }
             break;
             case TIA_DATA_INT8:
@@ -456,7 +462,7 @@ static GwyDataField* tia_read_2d(const guchar *p, gsize size)
                 const gchar *tp = (const gchar *)p;
 
                 for(i = 0; i < n; i++)
-                    *(data++) = *(tp++);
+                    *(data++) = (*(tp++)) / (gdouble)G_MAXINT8;
             }
             break;
             case TIA_DATA_INT16:
@@ -464,7 +470,8 @@ static GwyDataField* tia_read_2d(const guchar *p, gsize size)
                 const gint16 *tp = (const gint16 *)p;
 
                 for(i = 0; i < n; i++)
-                    *(data++) = GINT16_FROM_LE(*(tp++));
+                    *(data++) = GINT16_FROM_LE(*(tp++))
+                                                  / (gdouble)G_MAXINT16;
             }
             break;
             case TIA_DATA_INT32:
@@ -472,7 +479,8 @@ static GwyDataField* tia_read_2d(const guchar *p, gsize size)
                 const gint32 *tp = (const gint32 *)p;
 
                 for(i = 0; i < n; i++)
-                    *(data++) = GINT32_FROM_LE(*(tp++));
+                    *(data++) = GINT32_FROM_LE(*(tp++))
+                                                  / (gdouble)G_MAXINT32;
             }
             break;
             case TIA_DATA_FLOAT:
