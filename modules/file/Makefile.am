@@ -59,6 +59,7 @@ file_LTLIBRARIES = \
 	createc.la \
 	csmfile.la \
 	dmefile.la \
+	dm3file.la \
 	dumbfile.la \
 	ecsfile.la \
 	ezdfile.la \
@@ -180,6 +181,7 @@ createc_la_SOURCES       = createc.c
 codevfile_la_SOURCES     = codevfile.c
 csmfile_la_SOURCES       = csmfile.c
 dmefile_la_SOURCES       = dmefile.c
+dm3file_la_SOURCES       = dm3file.c
 dumbfile_la_SOURCES      = dumbfile.c
 ecsfile_la_SOURCES       = ecsfile.c
 ezdfile_la_SOURCES       = ezdfile.c
