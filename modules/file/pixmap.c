@@ -40,6 +40,11 @@
 
 #ifdef HAVE_PNG
 #include <png.h>
+#ifdef HAVE_ZLIB
+#include <zlib.h>
+#else
+#define Z_BEST_COMPRESSION 9
+#endif
 #endif
 
 #include <libgwyddion/gwymacros.h>
