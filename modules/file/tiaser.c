@@ -86,7 +86,8 @@ typedef enum {
     TIA_TAG_TIME    = 0x4152,
     TIA_TAG_TIMEPOS = 0x4142,
     TIA_HEADER_SIZE = 3 * 2 + 6 * 4,
-    TIA_DIM_SIZE    = 4 * 4 + 2 * 8
+    TIA_DIM_SIZE    = 4 * 4 + 2 * 8,
+    TIA_2D_SIZE     = 50,
 } TIAConsts;
 
 typedef struct {
@@ -224,6 +225,23 @@ static void tia_load_header(const guchar *p, TIAHeader *header)
               header->numberdimensions);
 }
 
+static gboolean tia_check_header(TIAHeader *header, gsize size)
+{
+    if ((header->byteorder != TIA_ES_LE)
+     || (header->seriesid != TIA_ES_MAGIC)
+     || (header->seriesversion != TIA_ES_VERSION)
+    || ((header->datatypeid != TIA_1D_DATA)
+     && (header->datatypeid != TIA_2D_DATA))
+    || ((header->tagtypeid != TIA_TAG_TIME)
+     && (header->tagtypeid != TIA_TAG_TIMEPOS))
+     || (header->totalnumberelements < header->validnumberelements)
+     || (header->offsetarrayoffset >= size)
+     || (size-header->offsetarrayoffset < 8 * header->totalnumberelements))
+        return FALSE;
+
+    return TRUE;
+}
+
 static gboolean
 tia_load_dimarray(const guchar *p, TIADimensionArray *dimarray, gsize size)
 {
@@ -238,9 +256,17 @@ tia_load_dimarray(const guchar *p, TIADimensionArray *dimarray, gsize size)
               dimarray->calibrationelement);
 
     dimarray->descriptionlength  = gwy_get_guint32_le(&p);
+    if (dimarray->descriptionlength >= size - TIA_HEADER_SIZE
+                                            - TIA_DIM_SIZE) {
+        return FALSE;
+    }
     dimarray->description = g_strndup(p, dimarray->descriptionlength);
     p += dimarray->descriptionlength;
     dimarray->unitslength  = gwy_get_guint32_le(&p);
+    if (dimarray->unitslength + dimarray->descriptionlength >= size
+                                     - TIA_HEADER_SIZE - TIA_DIM_SIZE) {
+        return FALSE;
+    }
     dimarray->units = g_strndup(p, dimarray->unitslength);
     p += dimarray->unitslength;
     gwy_debug("descr = \"%s\" units=\"%s\"",
@@ -250,13 +276,9 @@ tia_load_dimarray(const guchar *p, TIADimensionArray *dimarray, gsize size)
     return TRUE;
 }
 
-static gboolean tia_check_header(TIAHeader *header, gsize size)
-{
-    return TRUE;
-}
-
 static GwyContainer*
-tia_load(const gchar *filename, GwyRunType mode, GError **error)
+tia_load(const gchar *filename,
+         G_GNUC_UNUSED GwyRunType mode, GError **error)
 {
     GwyContainer *container = NULL;
     guchar *buffer;
@@ -313,7 +335,7 @@ tia_load(const gchar *filename, GwyRunType mode, GError **error)
     if (header->datatypeid == TIA_2D_DATA)
         for (i = 0; i < header->validnumberelements; i++) {
             offset = g_array_index(dataoffsets, gint32, i);
-            if (offset > size) {
+            if ((offset > size)||(size-offset < 50)) {
                 gwy_debug("Attempt to read after EOF");
             }
             else {
@@ -325,15 +347,14 @@ tia_load(const gchar *filename, GwyRunType mode, GError **error)
                     g_object_unref(dfield);
 
                     strkey = g_strdup_printf("/%u/data/title", i);
-					gwy_container_set_string_by_name(container,
-					                                 strkey,
-                                                     g_strdup("TEM"));                    
+                    gwy_container_set_string_by_name(container,
+                                                     strkey,
+                                                     g_strdup("TEM"));
                     g_free(strkey);
                 }
             }
         }
 
-fail3:
     g_array_free(dataoffsets, TRUE);
     g_array_free(tagoffsets, TRUE);
     g_free(dimarray->description);
@@ -358,6 +379,7 @@ static GwyDataField* tia_read_2d(const guchar *p, gsize size)
     gint i, n;
     gdouble *data;
     gdouble xoffset, yoffset;
+    gint tia_datasizes[11] = {0, 1, 1, 2, 2, 4, 4, 4, 8, 8, 16};
 
     fielddata = g_new0(TIA2DData, 1);
     fielddata->calibrationoffsetx  = gwy_get_gdouble_le(&p);
@@ -370,6 +392,13 @@ static GwyDataField* tia_read_2d(const guchar *p, gsize size)
     fielddata->arraylengthx        = gwy_get_guint32_le(&p);
     fielddata->arraylengthy        = gwy_get_guint32_le(&p);
     fielddata->data = (gchar *)p;
+
+    if ((fielddata->datatype < TIA_DATA_UINT8)
+     || (fielddata->datatype > TIA_DATA_DOUBLE)
+     || (size < 50 + fielddata->arraylengthx * fielddata->arraylengthy
+              * tia_datasizes[fielddata->datatype])) {
+        goto fail_2d;
+    }
 
     gwy_debug("X: caloffset=%G caldelta=%G calelem=%i",
               fielddata->calibrationoffsetx,
@@ -388,15 +417,15 @@ static GwyDataField* tia_read_2d(const guchar *p, gsize size)
                  fielddata->arraylengthx*fielddata->calibrationdeltax,
                  fielddata->arraylengthy*fielddata->calibrationdeltay,
                  TRUE);
-	xoffset = fielddata->calibrationoffsetx 
-	    - fielddata->calibrationdeltax * fielddata->calibrationelementx;
-	yoffset = fielddata->calibrationoffsety 
-	    - fielddata->calibrationdeltay * fielddata->calibrationelementy;	    
+    xoffset = fielddata->calibrationoffsetx
+        - fielddata->calibrationdeltax * fielddata->calibrationelementx;
+    yoffset = fielddata->calibrationoffsety
+        - fielddata->calibrationdeltay * fielddata->calibrationelementy;
     if (dfield) {
-		gwy_data_field_set_xoffset (dfield, xoffset);
-		gwy_data_field_set_yoffset (dfield, yoffset);
-		gwy_si_unit_set_from_string(
-		                    gwy_data_field_get_si_unit_xy(dfield), "m"); 
+        gwy_data_field_set_xoffset (dfield, xoffset);
+        gwy_data_field_set_yoffset (dfield, yoffset);
+        gwy_si_unit_set_from_string(
+                            gwy_data_field_get_si_unit_xy(dfield), "m");
         data = gwy_data_field_get_data(dfield);
         n = fielddata->arraylengthx * fielddata->arraylengthy;
         switch (fielddata->datatype) {
@@ -464,6 +493,7 @@ static GwyDataField* tia_read_2d(const guchar *p, gsize size)
         }
     }
 
+    fail_2d:
     g_free(fielddata);
     return dfield;
 }
