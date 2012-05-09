@@ -1,5 +1,12 @@
 # @(#) $Id$
 
+# Put sources that are for some reason disabled yet present in svn checkouts
+# here.  This makes them distributed and translations of their messages are
+# kept.  If we remove them completely, various bits can get lost.
+disabled_sources = \
+	nanoindent_adjust.c \
+	superresolution.c
+
 processdir = $(pkglibdir)/modules/process
 
 process_LTLIBRARIES = \
@@ -77,13 +84,6 @@ process_LTLIBRARIES = \
 	tipops.la \
 	unrotate.la \
         xydenoise.la
-
-# Put sources that are for some reason disabled yet present in svn checkouts
-# here.  This makes them distributed and translations of their messages are
-# kept.  If we remove them completely, various bits can get lost.
-disabled_sources = \
-	nanoindent_adjust.c \
-	superresolution.c
 
 EXTRA_DIST = \
 	$(disabled_sources)

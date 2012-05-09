@@ -1,18 +1,22 @@
 # @(#) $Id$
 
+# Put sources that are for some reason disabled yet present in svn checkouts
+# here.  This makes them distributed and translations of their messages are
+# kept.  If we remove them completely, various bits can get lost.
+disabled_sources =
+
 # If libXML2 is disabled, put the dependent sources to EXTRA_DIST to include
 # them in make dist.
 if HAVE_XML2
 if HAVE_ZLIB
 spml_module = spml.la
-spml_sources =
 else
 spml_module =
-spml_sources = spml.c
+disabled_sources += spml.c
 endif
 else
 spml_module =
-spml_sources = spml.c
+disabled_sources += spml.c
 endif
 
 # If libz is disabled, put the dependent sources to EXTRA_DIST to include them
@@ -22,21 +26,18 @@ endif
 #matfile_sources =
 #else
 matfile_module =
-matfile_sources = matfile.c
+disabled_sources += matfile.c
 #endif
 
 # If minizip is disabled, put the dependent sources to EXTRA_DIST to include
 # them in make dist.
 if HAVE_MINIZIP
 nanoobserver_module = nanoobserver.la
-nanoobserver_sources =
 nanoscantech_module = nanoscantech.la
-nanoscantech_sources =
 else
 nanoobserver_module =
-nanoobserver_sources = nanoobserver.c
 nanoscantech_module =
-nanoscantech_sources = nanoscantech.c
+disabled_sources += nanoobserver.c nanoscantech.c
 endif
 
 filedir = $(pkglibdir)/modules/file
@@ -139,15 +140,9 @@ noinst_HEADERS = \
 	err.h \
 	get.h
 
-# Put sources that are for some reason disabled yet present in svn checkouts
-# here.  This makes them distributed and translations of their messages are
-# kept.  If we remove them completely, various bits can get lost.
-disabled_sources =
-
 EXTRA_DIST = \
 	$(disabled_sources) \
-	1CHECKLIST \
-	$(spml_sources)
+	1CHECKLIST
 
 if OS_WIN32
 no_undefined = -no-undefined
