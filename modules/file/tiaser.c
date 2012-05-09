@@ -324,19 +324,11 @@ tia_load(const gchar *filename, GwyRunType mode, GError **error)
                     gwy_container_set_object(container, key, dfield);
                     g_object_unref(dfield);
 
-                    /*
-                    strkey = g_strdup_printf("/%u/data/title",
-                                             i);
-                    if (!titlestr)
-                        title = g_strdup_printf("Channel %u",
-                                                channelno);
-                    else
-                        title = g_strdup_printf("%s (%u)",
-                                                titlestr, channelno);
-                    gwy_container_set_string_by_name(container, strkey,
-                                                     title);
+                    strkey = g_strdup_printf("/%u/data/title", i);
+					gwy_container_set_string_by_name(container,
+					                                 strkey,
+                                                     g_strdup("TEM"));                    
                     g_free(strkey);
-                    */
                 }
             }
         }
@@ -365,7 +357,8 @@ static GwyDataField* tia_read_2d(const guchar *p, gsize size)
     TIA2DData *fielddata;
     gint i, n;
     gdouble *data;
-	
+    gdouble xoffset, yoffset;
+
     fielddata = g_new0(TIA2DData, 1);
     fielddata->calibrationoffsetx  = gwy_get_gdouble_le(&p);
     fielddata->calibrationdeltax   = gwy_get_gdouble_le(&p);
@@ -378,80 +371,98 @@ static GwyDataField* tia_read_2d(const guchar *p, gsize size)
     fielddata->arraylengthy        = gwy_get_guint32_le(&p);
     fielddata->data = (gchar *)p;
 
-	gwy_debug("nx=%i ny=%i type=%i", fielddata->arraylengthx,
-									 fielddata->arraylengthy,
-									 fielddata->datatype);
-	
-	dfield = gwy_data_field_new(fielddata->arraylengthx,
-								fielddata->arraylengthy,
-								1.0, 1.0, TRUE);
-    if (dfield) {								
-		data = gwy_data_field_get_data(dfield);
-		n = fielddata->arraylengthx * fielddata->arraylengthy;
-		switch (fielddata->datatype) {
-		    case TIA_DATA_UINT8:
-		    { 						
-				for(i = 0; i < n; i++) 
-					*(data++) = *(p++);
-			}
-			break;
-			case TIA_DATA_UINT16:
-		    {
-				const guint16 *tp = (const guint16 *)p; 
-										
-				for(i = 0; i < n; i++) 
-					*(data++) = GUINT16_FROM_LE(*(tp++));
-			}
-			break;
-			case TIA_DATA_UINT32:
-		    {
-				const guint32 *tp = (const guint32 *)p; 
-										
-				for(i = 0; i < n; i++) 
-					*(data++) = GUINT32_FROM_LE(*(tp++));
-			}
-			break;
-		    case TIA_DATA_INT8:
-		    {
-				const gchar *tp = (const gchar *)p;
-				 						
-				for(i = 0; i < n; i++) 
-					*(data++) = *(tp++);
-			}
-			break;
-			case TIA_DATA_INT16:
-		    {
-				const gint16 *tp = (const gint16 *)p; 
-										
-				for(i = 0; i < n; i++) 
-					*(data++) = GINT16_FROM_LE(*(tp++));
-			}
-			break;
-			case TIA_DATA_INT32:
-		    {
-				const gint32 *tp = (const gint32 *)p; 
-										
-				for(i = 0; i < n; i++) 
-					*(data++) = GINT32_FROM_LE(*(tp++));
-			}
-			break;
-			case TIA_DATA_FLOAT:
-			{
-				for(i = 0; i < n; i++)
-					*(data++) = gwy_get_gfloat_le(&p);
-			}
-			break;	
-			case TIA_DATA_DOUBLE:
-			{
-				for(i = 0; i < n; i++)
-					*(data++) = gwy_get_gdouble_le(&p);
-			}
-			break;
-			default:
-			g_assert_not_reached();
-			break;											
-		}
-	}
+    gwy_debug("X: caloffset=%G caldelta=%G calelem=%i",
+              fielddata->calibrationoffsetx,
+              fielddata->calibrationdeltax,
+              fielddata->calibrationelementx);
+    gwy_debug("Y: caloffset=%G caldelta=%G calelem=%i",
+              fielddata->calibrationoffsety,
+              fielddata->calibrationdeltay,
+              fielddata->calibrationelementy);
+    gwy_debug("nx=%i ny=%i type=%i", fielddata->arraylengthx,
+                                     fielddata->arraylengthy,
+                                     fielddata->datatype);
+
+    dfield = gwy_data_field_new(fielddata->arraylengthx,
+                 fielddata->arraylengthy,
+                 fielddata->arraylengthx*fielddata->calibrationdeltax,
+                 fielddata->arraylengthy*fielddata->calibrationdeltay,
+                 TRUE);
+	xoffset = fielddata->calibrationoffsetx 
+	    - fielddata->calibrationdeltax * fielddata->calibrationelementx;
+	yoffset = fielddata->calibrationoffsety 
+	    - fielddata->calibrationdeltay * fielddata->calibrationelementy;	    
+    if (dfield) {
+		gwy_data_field_set_xoffset (dfield, xoffset);
+		gwy_data_field_set_yoffset (dfield, yoffset);
+		gwy_si_unit_set_from_string(
+		                    gwy_data_field_get_si_unit_xy(dfield), "m"); 
+        data = gwy_data_field_get_data(dfield);
+        n = fielddata->arraylengthx * fielddata->arraylengthy;
+        switch (fielddata->datatype) {
+            case TIA_DATA_UINT8:
+            {
+                for(i = 0; i < n; i++)
+                    *(data++) = *(p++);
+            }
+            break;
+            case TIA_DATA_UINT16:
+            {
+                const guint16 *tp = (const guint16 *)p;
+
+                for(i = 0; i < n; i++)
+                    *(data++) = GUINT16_FROM_LE(*(tp++));
+            }
+            break;
+            case TIA_DATA_UINT32:
+            {
+                const guint32 *tp = (const guint32 *)p;
+
+                for(i = 0; i < n; i++)
+                    *(data++) = GUINT32_FROM_LE(*(tp++));
+            }
+            break;
+            case TIA_DATA_INT8:
+            {
+                const gchar *tp = (const gchar *)p;
+
+                for(i = 0; i < n; i++)
+                    *(data++) = *(tp++);
+            }
+            break;
+            case TIA_DATA_INT16:
+            {
+                const gint16 *tp = (const gint16 *)p;
+
+                for(i = 0; i < n; i++)
+                    *(data++) = GINT16_FROM_LE(*(tp++));
+            }
+            break;
+            case TIA_DATA_INT32:
+            {
+                const gint32 *tp = (const gint32 *)p;
+
+                for(i = 0; i < n; i++)
+                    *(data++) = GINT32_FROM_LE(*(tp++));
+            }
+            break;
+            case TIA_DATA_FLOAT:
+            {
+                for(i = 0; i < n; i++)
+                    *(data++) = gwy_get_gfloat_le(&p);
+            }
+            break;
+            case TIA_DATA_DOUBLE:
+            {
+                for(i = 0; i < n; i++)
+                    *(data++) = gwy_get_gdouble_le(&p);
+            }
+            break;
+            default:
+            g_assert_not_reached();
+            break;
+        }
+    }
 
     g_free(fielddata);
     return dfield;
