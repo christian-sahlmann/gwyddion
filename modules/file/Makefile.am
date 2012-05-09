@@ -126,6 +126,7 @@ file_LTLIBRARIES = \
 	stmprg.la \
 	stpfile.la \
 	surffile.la \
+	tiaser.la \
 	unisoku.la \
 	wipfile.la \
 	witec-asc.la \
@@ -248,6 +249,7 @@ spmlabf_la_SOURCES       = spmlabf.c
 stmprg_la_SOURCES        = stmprg.c
 stpfile_la_SOURCES       = stpfile.c
 surffile_la_SOURCES      = surffile.c
+tiaser_la_SOURCES        = tiaser.c
 unisoku_la_SOURCES       = unisoku.c
 wipfile_la_SOURCES       = wipfile.c
 witfile_la_SOURCES       = witfile.c
