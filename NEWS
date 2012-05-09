@@ -2,6 +2,9 @@
 Modules:
 - Nanoscantech (new): Imports NanoScanTech .nstdat files.
 
+Other:
+- Compatibility with libpng 1.5 was corrected.
+
 
 2.27 (2012-04-16)
 Application:
