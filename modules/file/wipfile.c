@@ -19,12 +19,7 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-/* Warning: spectroscopy xaxis is slightly wrong (less than 1 nm near
- * edges), gamma seems to be some angle (it is near angle between
- * incident and diffracted light) and not taken into account.
- *
- * I need an example of AFM data to implement reading of datafields.
- *
+/*
  * There should be some generic infrastructure for N*M arrays of
  * spectroscopy data, same for this, NTMDT and some other formats.
  *
@@ -145,7 +140,7 @@ typedef struct {
     gdouble  polynom [3]; /* polynomial coeffs. should be zeros */
     gdouble  nc; /* central pixel number */
     gdouble  lambdac; /* central pixel lambda in nm */
-    gdouble  gamma; /* FIXME: don't know what is it */
+    gdouble  gamma; /* angle between incident and diffracted light */
     gdouble  delta; /* CCD inclination */
     gdouble  m; /* diffraction order */
     gdouble  d; /* 1e6/lines per mm */
@@ -707,26 +702,35 @@ static GwyDataField * wip_read_bmp(const guchar *bmpdata,
     return dfield;
 }
 
+/* spectral transform from here:
+ * http://www.horiba.com/us/en/scientific/products/optics-tutorial/wavelength-pixel-position/
+ */
 static gdouble wip_pixel_to_lambda(gint i,
                                    WIPSpectralTransform *transform)
 {
-    gdouble lambda, x, a2, alpha, alpha0;
+    gdouble lambda, alpha, betac, hc, lh, hi, betah, betai;
 
-    if ((transform->lambdac/transform->d) < 0.0
-     || (transform->lambdac/transform->d) > 1.0)
+    if ((transform->d == 0.0) || (transform->m == 0.0)
+     || (cos(transform->gamma / 2.0) == 0.0)
+     || (transform->lambdac * transform->m / transform->d / 2.0
+       / cos(transform->gamma / 2.0) > 1.0)
+     || (transform->lambdac * transform->m / transform->d / 2.0
+       / cos(transform->gamma / 2.0) < -1.0))
         return i;
-    alpha0 = asin(transform->lambdac * transform->m / transform->d);
-    x = (i - transform->nc + 1) * transform->x;
-    a2 = transform->f * transform->f + x * x
-       - 2 * transform->f * x * cos(M_PI/2.0 + transform->delta);
-    if ((a2 < 0.0) || (x/sqrt(a2)*sin(M_PI/2 + transform->delta)) > 1)
+    alpha = asin(transform->lambdac * transform->m / transform->d / 2.0
+               / cos(transform->gamma / 2.0)) - transform->gamma / 2.0;
+    betac = transform->gamma + alpha;
+    hc = transform->f * sin(transform->delta);
+    lh = transform->f * cos(transform->delta);
+    hi = transform->x * (transform->nc - i) + hc;
+    betah = betac + transform->delta;
+    if (lh == 0.0)
         return i;
-    alpha = asin(x / sqrt(a2) * sin(M_PI/2 + transform->delta));
-    lambda = transform->d / transform->m * sin(alpha0 + alpha);
+    betai = betah - atan(hi / lh);
+    lambda = transform->d / transform->m * (sin(alpha) + sin(betai));
 
     return lambda;
 }
-
 static GwyGraphModel * wip_read_graph(GNode *node)
 {
     WIPGraph *header;
@@ -867,10 +871,10 @@ static void wip_flip_xy(GwyDataField *source, GwyDataField *dest)
     gwy_data_field_resample(dest, yres, xres, GWY_INTERPOLATION_NONE);
     sd = gwy_data_field_get_data_const(source);
     dd = gwy_data_field_get_data(dest);
-    
+
     for (i = 0; i < xres; i++) {
-		for (j = 0; j < yres; j++) {
-			dd[i*yres + (yres - 1 - j)] = sd[j*xres + i];
+        for (j = 0; j < yres; j++) {
+            dd[i*yres + (yres - 1 - j)] = sd[j*xres + i];
         }
     }
 
