@@ -91,6 +91,7 @@ struct _DM3TagEntry {
     gchar *label;
     DM3TagGroup *group;
     DM3TagType *type;
+    DM3TagEntry *parent;
 };
 
 struct _DM3TagGroup {
@@ -117,18 +118,23 @@ static gboolean      dm3_read_header(DM3File *dm3file,
                                      const guchar **p,
                                      gsize *size,
                                      GError **error);
-static DM3TagGroup*  dm3_read_group (const guchar **p,
-                                     gsize *size,
-                                     GError **error);
-static gboolean      dm3_read_entry (DM3TagEntry *entry,
+static DM3TagGroup*  dm3_read_group (DM3TagEntry *parent,
                                      const guchar **p,
                                      gsize *size,
                                      GError **error);
-static DM3TagType*   dm3_read_type  (const guchar **p,
+static gboolean      dm3_read_entry (DM3TagEntry *parent,
+                                     DM3TagEntry *entry,
+                                     const guchar **p,
                                      gsize *size,
                                      GError **error);
-static guint         dm3_type_size  (const guint *types,
+static DM3TagType*   dm3_read_type  (DM3TagEntry *parent,
+                                     const guchar **p,
+                                     gsize *size,
+                                     GError **error);
+static guint         dm3_type_size  (DM3TagEntry *parent,
+                                     const guint *types,
                                      guint *n,
+                                     guint level,
                                      GError **error);
 static void          dm3_free_group (DM3TagGroup *group);
 
@@ -208,7 +214,7 @@ dm3_load(const gchar *filename,
     if (!dm3_read_header(&dm3file, &p, &remaining, error))
         goto fail;
 
-    if (!(dm3file.group = dm3_read_group(&p, &remaining, error)))
+    if (!(dm3file.group = dm3_read_group(NULL, &p, &remaining, error)))
         goto fail;
 
 
@@ -250,51 +256,111 @@ dm3_read_header(DM3File *dm3file,
     return TRUE;
 }
 
+static guint
+dm3_entry_depth(const DM3TagEntry *entry)
+{
+    guint depth = 0;
+
+    while (entry) {
+        entry = entry->parent;
+        depth++;
+    }
+    return depth;
+}
+
+static gchar*
+format_path(const DM3TagEntry *entry)
+{
+    GPtrArray *path = g_ptr_array_new();
+    gchar *retval;
+    guint i;
+
+    while (entry) {
+        g_ptr_array_add(path, entry->label);
+        entry = entry->parent;
+    }
+
+    for (i = 0; i < path->len/2; i++)
+        GWY_SWAP(gpointer,
+                 g_ptr_array_index(path, i),
+                 g_ptr_array_index(path, path->len-1 - i));
+    g_ptr_array_add(path, NULL);
+
+    retval = g_strjoinv("/", (gchar**)path->pdata);
+    g_ptr_array_free(path, TRUE);
+
+    return retval;
+}
+
+static guint
+err_INVALID_TAG(const DM3TagEntry *entry, GError **error)
+{
+    if (error) {
+        gchar *path = format_path(entry);
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("Invalid tag type definition in entry ‘%s’."), path);
+        g_free(path);
+    }
+    return G_MAXUINT;
+}
+
+static gpointer
+err_TRUNCATED(const DM3TagEntry *entry, GError **error)
+{
+    if (error) {
+        gchar *path = format_path(entry);
+        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    _("File is truncated in entry ‘%s’."), path);
+        g_free(path);
+    }
+    return NULL;
+}
+
 static DM3TagGroup*
-dm3_read_group(const guchar **p, gsize *size,
+dm3_read_group(DM3TagEntry *parent,
+               const guchar **p, gsize *size,
                GError **error)
 {
     DM3TagGroup *group = NULL;
     guint i;
 
-    if (*size < TAG_GROUP_MIN_SIZE) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                    _("File is truncated."));
-        return NULL;
-    }
+    if (*size < TAG_GROUP_MIN_SIZE)
+        return err_TRUNCATED(parent, error);
 
     group = g_new(DM3TagGroup, 1);
     group->is_sorted = *((*p)++);
     group->is_open = *((*p)++);
     group->ntags = gwy_get_guint32_be(p);
     *size -= TAG_GROUP_MIN_SIZE;
-    gwy_debug("Entering a group of %u tags (%u, %u)",
+    gwy_debug("[%u] Entering a group of %u tags (%u, %u)",
+              dm3_entry_depth(parent),
               group->ntags, group->is_sorted, group->is_open);
 
     group->entries = g_new0(DM3TagEntry, group->ntags);
     for (i = 0; i < group->ntags; i++) {
-        gwy_debug("Reading entry #%u", i);
-        if (!dm3_read_entry(group->entries + i, p, size, error)) {
+        gwy_debug("[%u] Reading entry #%u", dm3_entry_depth(parent), i);
+        if (!dm3_read_entry(parent, group->entries + i, p, size, error)) {
             dm3_free_group(group);
             return NULL;
         }
     }
 
-    gwy_debug("All %u tags read", group->ntags);
+    gwy_debug("[%u] Leaving group of %u tags read",
+              dm3_entry_depth(parent), group->ntags);
 
     return group;
 }
 
 static gboolean
-dm3_read_entry(DM3TagEntry *entry,
+dm3_read_entry(DM3TagEntry *parent,
+               DM3TagEntry *entry,
                const guchar **p, gsize *size,
                GError **error)
 {
     guint kind, lab_len;
 
     if (*size < TAG_ENTRY_MIN_SIZE) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                    _("File is truncated."));
+        err_TRUNCATED(entry, error);
         return FALSE;
     }
 
@@ -305,54 +371,52 @@ dm3_read_entry(DM3TagEntry *entry,
         return FALSE;
     }
 
+    entry->parent = parent;
     entry->is_group = (kind == 20);
     lab_len = gwy_get_guint16_be(p);
     *size -= TAG_ENTRY_MIN_SIZE;
-    gwy_debug("Entry is %s", entry->is_group ? "group" : "type");
+    gwy_debug("[%u] Entry is %s",
+              dm3_entry_depth(entry), entry->is_group ? "group" : "type");
 
     if (*size < lab_len) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                    _("File is truncated."));
+        err_TRUNCATED(entry, error);
         return FALSE;
     }
 
     entry->label = g_strndup(*p, lab_len);
-    gwy_debug("Entry label <%s>", entry->label);
+    gwy_debug("[%u] Entry label <%s>", dm3_entry_depth(entry), entry->label);
+#ifdef DEBUG
+    {
+        gchar *path = format_path(entry);
+        gwy_debug("[%u] Full path <%s>", dm3_entry_depth(entry), path);
+        g_free(path);
+    }
+#endif
     *p += lab_len;
     *size -= lab_len;
 
     if (entry->is_group) {
-        if (!(entry->group = dm3_read_group(p, size, error)))
+        if (!(entry->group = dm3_read_group(entry, p, size, error)))
             return FALSE;
     }
     else {
-        if (!(entry->type = dm3_read_type(p, size, error)))
+        if (!(entry->type = dm3_read_type(entry, p, size, error)))
             return FALSE;
     }
 
     return TRUE;
 }
 
-static guint
-err_INVALID_TAG(GError **error)
-{
-    g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                _("Invalid tag type definition."));
-    return G_MAXUINT;
-}
-
 static DM3TagType*
-dm3_read_type(const guchar **p, gsize *size,
+dm3_read_type(DM3TagEntry *parent,
+              const guchar **p, gsize *size,
               GError **error)
 {
     DM3TagType *type = NULL;
     guint i, marker, consumed_ntypes;
 
-    if (*size < TAG_TYPE_MIN_SIZE) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                    _("File is truncated."));
-        return NULL;
-    }
+    if (*size < TAG_TYPE_MIN_SIZE)
+        return err_TRUNCATED(parent, error);
 
     marker = gwy_get_guint32_be(p);
     if (marker != TAG_TYPE_MARKER) {
@@ -364,45 +428,53 @@ dm3_read_type(const guchar **p, gsize *size,
     type = g_new(DM3TagType, 1);
     type->ntypes = gwy_get_guint32_be(p);
     *size -= TAG_TYPE_MIN_SIZE;
-    gwy_debug("Entering a type of %u items", type->ntypes);
+    gwy_debug("[%u] Entering a typespec of %u items",
+              dm3_entry_depth(parent), type->ntypes);
 
     if (*size < sizeof(guint32)*type->ntypes) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                    _("File is truncated."));
         g_free(type);
-        return NULL;
+        return err_TRUNCATED(parent, error);
     }
 
     type->types = g_new0(guint, type->ntypes);
     for (i = 0; i < type->ntypes; i++) {
         type->types[i] = gwy_get_guint32_be(p);
         *size -= sizeof(guint32);
-        gwy_debug("Type #%u is %u", i, type->types[i]);
+        gwy_debug("[%u] Typespec #%u is %u",
+                  dm3_entry_depth(parent), i, type->types[i]);
     }
-    gwy_debug("All %u items read", type->ntypes);
+    gwy_debug("[%u] Leaving a typespec of %u items",
+              dm3_entry_depth(parent), type->ntypes);
 
     consumed_ntypes = type->ntypes;
-    if ((type->typesize = dm3_type_size(type->types, &consumed_ntypes, error))
-        == G_MAXUINT) {
-        g_free(type->types);
-        g_free(type);
-        return NULL;
-    }
+    if ((type->typesize = dm3_type_size(parent, type->types, &consumed_ntypes,
+                                        0, error)) == G_MAXUINT)
+        goto fail;
     if (consumed_ntypes != 0) {
-        err_INVALID_TAG(error);
-        g_free(type->types);
-        g_free(type);
-        return NULL;
+        err_INVALID_TAG(parent, error);
+        goto fail;
     }
 
+    gwy_debug("[%u] Type size: %u", dm3_entry_depth(parent), type->typesize);
+    if (*size < type->typesize) {
+        err_TRUNCATED(parent, error);
+        goto fail;
+    }
     type->data = p;
     *p += type->typesize;
 
     return type;
+
+fail:
+    g_free(type->types);
+    g_free(type);
+    return NULL;
 }
 
 static guint
-dm3_type_size(const guint *types, guint *n,
+dm3_type_size(DM3TagEntry *parent,
+              const guint *types, guint *n,
+              guint level,
               GError **error)
 {
     static const guint atomic_type_sizes[] = {
@@ -411,83 +483,91 @@ dm3_type_size(const guint *types, guint *n,
     guint primary_type;
 
     if (!*n)
-        return err_INVALID_TAG(error);
+        return err_INVALID_TAG(parent, error);
 
     primary_type = types[0];
     if (primary_type < G_N_ELEMENTS(atomic_type_sizes)
         && atomic_type_sizes[primary_type]) {
-        gwy_debug("Known atomic type %u", primary_type);
+        gwy_debug("<%u> Known atomic type %u", level, primary_type);
         if (*n < 1)
-            return err_INVALID_TAG(error);
+            return err_INVALID_TAG(parent, error);
         *n -= 1;
         if (!atomic_type_sizes[primary_type])
-            return err_INVALID_TAG(error);
+            return err_INVALID_TAG(parent, error);
         return atomic_type_sizes[primary_type];
     }
 
     if (primary_type == DM3_STRING) {
-        gwy_debug("string type");
+        gwy_debug("<%u> string type", level);
         if (*n < 2)
-            return err_INVALID_TAG(error);
+            return err_INVALID_TAG(parent, error);
         *n -= 2;
         /* The second item is the length, presumably in characters (2byte) */
-        gwy_debug("string length %u", types[1]);
+        gwy_debug("<%u> string length %u",
+                  level, types[1]);
         return 2*types[1];
     }
 
     if (primary_type == DM3_ARRAY) {
         guint item_size, oldn;
 
-        gwy_debug("array type");
+        gwy_debug("<%u> array type", level);
         if (*n < 3)
-            return err_INVALID_TAG(error);
+            return err_INVALID_TAG(parent, error);
         *n -= 1;
         types += 1;
         oldn = *n;
-        gwy_debug("recusring to figure out item type");
-        if ((item_size = dm3_type_size(types, n, error)) == G_MAXUINT)
+        gwy_debug("<%u> recusring to figure out item type",
+                  level);
+        if ((item_size = dm3_type_size(parent, types, n,
+                                       level+1, error)) == G_MAXUINT)
             return G_MAXUINT;
-        gwy_debug("item type found");
+        gwy_debug("<%u> item type found", level);
         types += oldn - *n;
         if (*n < 1)
-            return err_INVALID_TAG(error);
-        gwy_debug("array length %u", types[0]);
+            return err_INVALID_TAG(parent, error);
+        gwy_debug("<%u> array length %u",
+                  level, types[0]);
         *n -= 1;
-        return types[0];
+        return types[0]*item_size;
     }
 
     if (primary_type == DM3_STRUCT) {
         guint structsize = 0, namelength, fieldnamelength, nfields, i;
 
-        gwy_debug("struct type");
+        gwy_debug("<%u> struct type", level);
         if (*n < 3)
-            return err_INVALID_TAG(error);
+            return err_INVALID_TAG(parent, error);
 
         namelength = types[1];
         nfields = types[2];
         types += 3;
         *n -= 3;
-        gwy_debug("namelength: %u, nfields: %u", namelength, nfields);
+        gwy_debug("<%u> namelength: %u, nfields: %u",
+                  level, namelength, nfields);
         structsize = namelength;
 
         for (i = 0; i < nfields; i++) {
             guint oldn, field_size;
 
-            gwy_debug("struct field #%u", i);
+            gwy_debug("<%u> struct field #%u", level, i);
             if (*n < 2)
-                return err_INVALID_TAG(error);
+                return err_INVALID_TAG(parent, error);
             fieldnamelength = types[0];
             types += 1;
             *n -= 1;
             oldn = *n;
             structsize += fieldnamelength;
-            gwy_debug("recusring to figure out field type");
-            if ((field_size = dm3_type_size(types, n, error)) == G_MAXUINT)
+            gwy_debug("<%u> recusring to figure out field type",
+                      level);
+            if ((field_size = dm3_type_size(parent, types, n,
+                                            level+1, error)) == G_MAXUINT)
                 return G_MAXUINT;
-            gwy_debug("field type found");
+            gwy_debug("<%u> field type found", level);
             types += oldn - *n;
             structsize += field_size;
         }
+        gwy_debug("<%u> all struct fields read", level);
         return structsize;
     }
 
