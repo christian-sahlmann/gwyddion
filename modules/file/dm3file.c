@@ -128,7 +128,7 @@ static DM3TagType*   dm3_read_type  (const guchar **p,
                                      gsize *size,
                                      GError **error);
 static guint         dm3_type_size  (const guint *types,
-                                     guint n,
+                                     guint *n,
                                      GError **error);
 static void          dm3_free_group (DM3TagGroup *group);
 
@@ -333,12 +333,20 @@ dm3_read_entry(DM3TagEntry *entry,
     return TRUE;
 }
 
+static guint
+err_INVALID_TAG(GError **error)
+{
+    g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                _("Invalid tag type definition."));
+    return G_MAXUINT;
+}
+
 static DM3TagType*
 dm3_read_type(const guchar **p, gsize *size,
               GError **error)
 {
     DM3TagType *type = NULL;
-    guint i, marker;
+    guint i, marker, consumed_ntypes;
 
     if (*size < TAG_TYPE_MIN_SIZE) {
         g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
@@ -373,17 +381,28 @@ dm3_read_type(const guchar **p, gsize *size,
     }
     gwy_debug("All %u items read", type->ntypes);
 
-    if (!(type->typesize = dm3_type_size(type->types, type->ntypes, error))) {
+    consumed_ntypes = type->ntypes;
+    if ((type->typesize = dm3_type_size(type->types, &consumed_ntypes, error))
+        == G_MAXUINT) {
+        g_free(type->types);
+        g_free(type);
+        return NULL;
+    }
+    if (consumed_ntypes != 0) {
+        err_INVALID_TAG(error);
         g_free(type->types);
         g_free(type);
         return NULL;
     }
 
+    type->data = p;
+    *p += type->typesize;
+
     return type;
 }
 
 static guint
-dm3_type_size(const guint *types, guint n,
+dm3_type_size(const guint *types, guint *n,
               GError **error)
 {
     static const guint atomic_type_sizes[] = {
@@ -391,44 +410,90 @@ dm3_type_size(const guint *types, guint n,
     };
     guint primary_type;
 
-    if (!n) {
-        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                    _("Invalid tag type definition."));
-        return 0;
-    }
+    if (!*n)
+        return err_INVALID_TAG(error);
 
     primary_type = types[0];
     if (primary_type < G_N_ELEMENTS(atomic_type_sizes)
         && atomic_type_sizes[primary_type]) {
         gwy_debug("Known atomic type %u", primary_type);
-        if (n != 1) {
-            g_set_error(error, GWY_MODULE_FILE_ERROR,
-                        GWY_MODULE_FILE_ERROR_DATA,
-                        _("Invalid tag type definition."));
-            return 0;
-        }
+        if (*n < 1)
+            return err_INVALID_TAG(error);
+        *n -= 1;
+        if (!atomic_type_sizes[primary_type])
+            return err_INVALID_TAG(error);
         return atomic_type_sizes[primary_type];
     }
 
     if (primary_type == DM3_STRING) {
-        /* n == 2 */
         gwy_debug("string type");
-    }
-    else if (primary_type == DM3_ARRAY) {
-        gwy_debug("array type");
-        /* TODO: recurse */
-    }
-    else if (primary_type == DM3_STRUCT) {
-        gwy_debug("struct type");
-        /* TODO: recurse */
-    }
-    else {
-        g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
-                    _("Invalid or unsupported tag type %u."), primary_type);
-        return 0;
+        if (*n < 2)
+            return err_INVALID_TAG(error);
+        *n -= 2;
+        /* The second item is the length, presumably in characters (2byte) */
+        gwy_debug("string length %u", types[1]);
+        return 2*types[1];
     }
 
-    return 0;
+    if (primary_type == DM3_ARRAY) {
+        guint item_size, oldn;
+
+        gwy_debug("array type");
+        if (*n < 3)
+            return err_INVALID_TAG(error);
+        *n -= 1;
+        types += 1;
+        oldn = *n;
+        gwy_debug("recusring to figure out item type");
+        if ((item_size = dm3_type_size(types, n, error)) == G_MAXUINT)
+            return G_MAXUINT;
+        gwy_debug("item type found");
+        types += oldn - *n;
+        if (*n < 1)
+            return err_INVALID_TAG(error);
+        gwy_debug("array length %u", types[0]);
+        *n -= 1;
+        return types[0];
+    }
+
+    if (primary_type == DM3_STRUCT) {
+        guint structsize = 0, namelength, fieldnamelength, nfields, i;
+
+        gwy_debug("struct type");
+        if (*n < 3)
+            return err_INVALID_TAG(error);
+
+        namelength = types[1];
+        nfields = types[2];
+        types += 3;
+        *n -= 3;
+        gwy_debug("namelength: %u, nfields: %u", namelength, nfields);
+        structsize = namelength;
+
+        for (i = 0; i < nfields; i++) {
+            guint oldn, field_size;
+
+            gwy_debug("struct field #%u", i);
+            if (*n < 2)
+                return err_INVALID_TAG(error);
+            fieldnamelength = types[0];
+            types += 1;
+            *n -= 1;
+            oldn = *n;
+            structsize += fieldnamelength;
+            gwy_debug("recusring to figure out field type");
+            if ((field_size = dm3_type_size(types, n, error)) == G_MAXUINT)
+                return G_MAXUINT;
+            gwy_debug("field type found");
+            types += oldn - *n;
+            structsize += field_size;
+        }
+        return structsize;
+    }
+
+    g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                _("Invalid or unsupported tag type %u."), primary_type);
+    return G_MAXUINT;
 }
 
 static void
