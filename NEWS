@@ -1,6 +1,9 @@
 2.28 (0000-00-00)
 Modules:
 - Nanoscantech (new): Imports NanoScanTech .nstdat files.
+- TIA SER (new): Imports FEI Tecnai imaging and analysis .ser files.
+- WIP: fixed spectral transformation for Raman data and really fixed 
+  swapped XY axes in datafields.
 
 Other:
 - Compatibility with libpng 1.5 was corrected.
