@@ -4,6 +4,10 @@ Modules:
 - TIA SER (new): Imports FEI Tecnai imaging and analysis .ser files.
 - WIP: fixed spectral transformation for Raman data and really fixed 
   swapped XY axes in datafields.
+- added module for simple simulation of PID loop effects during scanning
+- added module for simulation of lateral force from topography channel
+- added module for neural network data processing
+- added module for data denoising based on horizontal and vertical scans
 
 Other:
 - Compatibility with libpng 1.5 was corrected.
