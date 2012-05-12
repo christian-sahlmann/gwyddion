@@ -149,43 +149,63 @@ struct _DM3File {
     GHashTable *hash;
 };
 
-static gboolean      module_register   (void);
-static gint          dm3_detect        (const GwyFileDetectInfo *fileinfo,
-                                        gboolean only_name);
-static GwyContainer* dm3_load          (const gchar *filename,
-                                        GwyRunType mode,
-                                        GError **error);
-static DM3TagType*   dm3_get_leaf_entry(DM3File *dm3file,
-                                        const guint *typespec,
-                                        guint typespeclen,
-                                        const gchar *keyfmt,
-                                        ...);
-static gboolean      dm3_read_header   (DM3File *dm3file,
-                                        const guchar **p,
-                                        gsize *size,
-                                        GError **error);
-static void          dm3_build_hash    (GHashTable *hash,
-                                        const DM3TagEntry *entry);
-static DM3TagGroup*  dm3_read_group    (DM3TagEntry *parent,
-                                        const guchar **p,
-                                        gsize *size,
-                                        GError **error);
-static gboolean      dm3_read_entry    (DM3TagEntry *parent,
-                                        DM3TagEntry *entry,
-                                        guint idx,
-                                        const guchar **p,
-                                        gsize *size,
-                                        GError **error);
-static DM3TagType*   dm3_read_type     (DM3TagEntry *parent,
-                                        const guchar **p,
-                                        gsize *size,
-                                        GError **error);
-static guint         dm3_type_size     (DM3TagEntry *parent,
-                                        const guint *types,
-                                        guint *n,
-                                        guint level,
-                                        GError **error);
-static void          dm3_free_group    (DM3TagGroup *group);
+static gboolean      module_register       (void);
+static gint          dm3_detect            (const GwyFileDetectInfo *fileinfo,
+                                            gboolean only_name);
+static GwyContainer* dm3_load              (const gchar *filename,
+                                            GwyRunType mode,
+                                            GError **error);
+static gboolean      dm3_get_uint          (DM3File *dm3file,
+                                            guint *value,
+                                            const gchar *keyfmt,
+                                            ...);
+static gboolean      dm3_get_int           (DM3File *dm3file,
+                                            gint *value,
+                                            const gchar *keyfmt,
+                                            ...);
+static gboolean      dm3_get_float         (DM3File *dm3file,
+                                            gdouble *value,
+                                            const gchar *keyfmt,
+                                            ...);
+static gboolean      dm3_get_string        (DM3File *dm3file,
+                                            gchar **value,
+                                            const gchar *keyfmt,
+                                            ...);
+static DM3TagType*   dm3_get_leaf_entry    (DM3File *dm3file,
+                                            const guint *typespec,
+                                            guint typespeclen,
+                                            const gchar *keyfmt,
+                                            ...);
+static DM3TagType*   dm3_get_leaf_entry_lit(DM3File *dm3file,
+                                            const guint *typespec,
+                                            guint typespeclen,
+                                            const gchar *key);
+static gboolean      dm3_read_header       (DM3File *dm3file,
+                                            const guchar **p,
+                                            gsize *size,
+                                            GError **error);
+static void          dm3_build_hash        (GHashTable *hash,
+                                            const DM3TagEntry *entry);
+static DM3TagGroup*  dm3_read_group        (DM3TagEntry *parent,
+                                            const guchar **p,
+                                            gsize *size,
+                                            GError **error);
+static gboolean      dm3_read_entry        (DM3TagEntry *parent,
+                                            DM3TagEntry *entry,
+                                            guint idx,
+                                            const guchar **p,
+                                            gsize *size,
+                                            GError **error);
+static DM3TagType*   dm3_read_type         (DM3TagEntry *parent,
+                                            const guchar **p,
+                                            gsize *size,
+                                            GError **error);
+static guint         dm3_type_size         (DM3TagEntry *parent,
+                                            const guint *types,
+                                            guint *n,
+                                            guint level,
+                                            GError **error);
+static void          dm3_free_group        (DM3TagGroup *group);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -246,13 +266,22 @@ dm3_load(const gchar *filename,
          G_GNUC_UNUSED GwyRunType mode,
          GError **error)
 {
+    static const gchar res_fmt[]
+        = "/ImageList/#%u/ImageData/Dimensions/#%u";
+    static const gchar real_fmt[]
+        = "/ImageList/#%u/ImageData/Calibrations/Dimension/#%u/Scale";
+    static const gchar off_fmt[]
+        = "/ImageList/#%u/ImageData/Calibrations/Dimension/#%u/Origin";
+    static const gchar unit_fmt[]
+        = "/ImageList/#%u/ImageData/Calibrations/Dimension/#%u/Units";
+
     GwyContainer *container = NULL;
     DM3File dm3file;
     guchar *buffer = NULL;
     const guchar *p;
     gsize remaining, size = 0;
     GError *err = NULL;
-    guint id;
+    guint i;
 
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
         err_GET_FILE_CONTENTS(error, &err);
@@ -274,25 +303,29 @@ dm3_load(const gchar *filename,
     dm3file.hash = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
     dm3_build_hash(dm3file.hash, &dm3file.root_entry);
 
-    for (id = 0; ; id++) {
+    for (i = 0; ; i++) {
+        gdouble xreal, yreal, xoff, yoff;
         guint xres, yres;
-        guint typespec[1];
-        DM3TagType *type;
+        gchar *xunit = NULL, *yunit = NULL;
 
-        typespec[0] = DM3_ULONG;
-        if (!(type = dm3_get_leaf_entry(&dm3file, typespec, 1,
-                                        "/ImageList/#%u/ImageData/Dimensions/#0",
-                                        id)))
+        if (!dm3_get_uint(&dm3file, &xres, res_fmt, i, 0)
+            || !dm3_get_uint(&dm3file, &yres, res_fmt, i, 1)
+            || !dm3_get_float(&dm3file, &xreal, real_fmt, i, 0)
+            || !dm3_get_float(&dm3file, &yreal, real_fmt, i, 1)
+            || !dm3_get_float(&dm3file, &xoff, off_fmt, i, 0)
+            || !dm3_get_float(&dm3file, &yoff, off_fmt, i, 1)
+            || !dm3_get_string(&dm3file, &xunit, unit_fmt, i, 0)
+            || !dm3_get_string(&dm3file, &yunit, unit_fmt, i, 1)) {
+            g_free(xunit);
+            g_free(yunit);
             break;
-        p = type->data;
-        xres = gwy_get_guint32_be(&p);
+        }
 
-        if (!(type = dm3_get_leaf_entry(&dm3file, typespec, 1,
-                                        "/ImageList/#%u/ImageData/Dimensions/#1",
-                                        id)))
-            break;
-        p = type->data;
-        yres = gwy_get_guint32_be(&p);
+        gwy_debug("image #%u: xres %u, yres %u xreal %g [%s] yreal %g [%s]",
+                  i, xres, yres, xreal, xunit, yreal, yunit);
+
+        g_free(xunit);
+        g_free(yunit);
     }
 
     err_NO_DATA(error);
@@ -308,6 +341,164 @@ fail:
     return container;
 }
 
+static gboolean
+dm3_get_uint(DM3File *dm3file,
+             guint *value,
+             const gchar *keyfmt,
+             ...)
+{
+    DM3TagType *type;
+    gchar *key;
+    va_list ap;
+    const guchar *p;
+    gboolean ok = FALSE;
+
+    va_start(ap, keyfmt);
+    key = g_strdup_vprintf(keyfmt, ap);
+    va_end(ap);
+    type = dm3_get_leaf_entry_lit(dm3file, NULL, 0, key);
+    g_free(key);
+
+    if (type && type->ntypes == 1) {
+        p = (const guchar*)type->data;
+        if (type->types[0] == DM3_USHORT) {
+            if (dm3file->little_endian)
+                *value = gwy_get_guint16_le(&p);
+            else
+                *value = gwy_get_guint16_be(&p);
+            ok = TRUE;
+        }
+        else if (type->types[0] == DM3_ULONG) {
+            if (dm3file->little_endian)
+                *value = gwy_get_guint32_le(&p);
+            else
+                *value = gwy_get_guint32_be(&p);
+            ok = TRUE;
+        }
+        else if (type->types[0] == DM3_OCTET) {
+            *value = *p;
+            ok = TRUE;
+        }
+    }
+
+    return ok;
+}
+
+static gboolean
+dm3_get_int(DM3File *dm3file,
+            gint *value,
+            const gchar *keyfmt,
+            ...)
+{
+    DM3TagType *type;
+    gchar *key;
+    va_list ap;
+    const guchar *p;
+    gboolean ok = FALSE;
+
+    va_start(ap, keyfmt);
+    key = g_strdup_vprintf(keyfmt, ap);
+    va_end(ap);
+    type = dm3_get_leaf_entry_lit(dm3file, NULL, 0, key);
+    g_free(key);
+
+    if (type && type->ntypes == 1) {
+        p = (const guchar*)type->data;
+        if (type->types[0] == DM3_SHORT) {
+            if (dm3file->little_endian)
+                *value = gwy_get_gint16_le(&p);
+            else
+                *value = gwy_get_gint16_be(&p);
+            ok = TRUE;
+        }
+        else if (type->types[0] == DM3_LONG) {
+            if (dm3file->little_endian)
+                *value = gwy_get_gint32_le(&p);
+            else
+                *value = gwy_get_gint32_be(&p);
+            ok = TRUE;
+        }
+        else if (type->types[0] == DM3_CHAR) {
+            *value = *p;
+            ok = TRUE;
+        }
+    }
+
+    return ok;
+}
+
+static gboolean
+dm3_get_float(DM3File *dm3file,
+              gdouble *value,
+              const gchar *keyfmt,
+              ...)
+{
+    DM3TagType *type;
+    gchar *key;
+    va_list ap;
+    const guchar *p;
+    gboolean ok = FALSE;
+
+    va_start(ap, keyfmt);
+    key = g_strdup_vprintf(keyfmt, ap);
+    va_end(ap);
+    type = dm3_get_leaf_entry_lit(dm3file, NULL, 0, key);
+    g_free(key);
+
+    if (type && type->ntypes == 1) {
+        p = (const guchar*)type->data;
+        if (type->types[0] == DM3_FLOAT) {
+            if (dm3file->little_endian)
+                *value = gwy_get_gfloat_le(&p);
+            else
+                *value = gwy_get_gfloat_be(&p);
+            ok = TRUE;
+        }
+        else if (type->types[0] == DM3_DOUBLE) {
+            if (dm3file->little_endian)
+                *value = gwy_get_gdouble_le(&p);
+            else
+                *value = gwy_get_gdouble_be(&p);
+            ok = TRUE;
+        }
+    }
+
+    return ok;
+}
+
+static gboolean
+dm3_get_string(DM3File *dm3file,
+               gchar **value,
+               const gchar *keyfmt,
+               ...)
+{
+    const gchar *encoding = dm3file->little_endian ? "UTF-16LE" : "UTF16-BE";
+    DM3TagType *type;
+    gchar *key;
+    va_list ap;
+
+    *value = NULL;
+
+    va_start(ap, keyfmt);
+    key = g_strdup_vprintf(keyfmt, ap);
+    va_end(ap);
+    type = dm3_get_leaf_entry_lit(dm3file, NULL, 0, key);
+    g_free(key);
+
+    if (!type)
+        return FALSE;
+
+    if (type->ntypes == 2 && type->types[0] == DM3_STRING)
+        *value = g_convert(type->data, 2*type->types[1], "UTF-8", encoding,
+                           NULL, NULL, NULL);
+    else if (type->ntypes == 3 && type->types[0] == DM3_ARRAY
+             && type->types[1] == DM3_USHORT)
+        *value = g_convert(type->data, 2*type->types[2], "UTF-8", encoding,
+                           NULL, NULL, NULL);
+
+    return !!*value;
+}
+
 static DM3TagType*
 dm3_get_leaf_entry(DM3File *dm3file,
                    const guint *typespec,
@@ -318,15 +509,28 @@ dm3_get_leaf_entry(DM3File *dm3file,
     DM3TagType *type;
     va_list ap;
     gchar *key;
-    guint i;
 
     va_start(ap, keyfmt);
     key = g_strdup_vprintf(keyfmt, ap);
     va_end(ap);
 
+    type = dm3_get_leaf_entry_lit(dm3file, typespec, typespeclen, key);
+    g_free(key);
+
+    return type;
+}
+
+static DM3TagType*
+dm3_get_leaf_entry_lit(DM3File *dm3file,
+                       const guint *typespec,
+                       guint typespeclen,
+                       const gchar *key)
+{
+    DM3TagType *type;
+    guint i;
+
     gwy_debug("looking for <%s>", key);
     type = g_hash_table_lookup(dm3file->hash, key);
-    g_free(key);
 
     if (!type) {
         gwy_debug("not found");
@@ -334,12 +538,13 @@ dm3_get_leaf_entry(DM3File *dm3file,
     }
 
     if (!typespec) {
-        gwy_debug("found, not specific type requested");
+        gwy_debug("found, not specific type requested, considering OK");
         return type;
     }
 
     if (type->ntypes != typespeclen) {
-        gwy_debug("found, wrong typespec length");
+        gwy_debug("found, wrong typespec length (%u instead of %u)",
+                  type->ntypes, typespeclen);
         return NULL;
     }
 
@@ -609,7 +814,7 @@ dm3_read_type(DM3TagEntry *parent,
         err_TRUNCATED(parent, error);
         goto fail;
     }
-    type->data = p;
+    type->data = *p;
     *p += type->typesize;
 
     return type;
