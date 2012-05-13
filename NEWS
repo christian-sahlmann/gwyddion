@@ -2,6 +2,8 @@
 Modules:
 - Nanoscantech (new): Imports NanoScanTech .nstdat files.
 - TIA SER (new): Imports FEI Tecnai imaging and analysis .ser files.
+- DM3 (new): Imports Digital Micrograph DM3 TEM images (only greyscale data at
+  present).
 - PID (new): Simple simulation of PID loop effects during scanning.
 - Lateral force (new): Simulation of lateral force from topography channel.
 - Neural network (new): Neural network data processing.
