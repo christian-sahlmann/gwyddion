@@ -58,6 +58,13 @@ enum {
     TAG_TYPE_MARKER = 0x25252525u,
 };
 
+typedef enum {
+    DM3_IMG_OK = 0,
+    DM3_IMG_SKIP = 1,
+    DM3_IMG_NOT_FOUND = 2,
+    DM3_IMG_ERROR = 3,
+} DM3ImgResult;
+
 enum {
     DM3_SHORT   = 2,
     DM3_LONG    = 3,
@@ -154,6 +161,11 @@ static gint          dm3_detect            (const GwyFileDetectInfo *fileinfo,
                                             gboolean only_name);
 static GwyContainer* dm3_load              (const gchar *filename,
                                             GwyRunType mode,
+                                            GError **error);
+static DM3ImgResult  dm3_read_image        (DM3File *dm3file,
+                                            GwyContainer *container,
+                                            guint i,
+                                            guint *id,
                                             GError **error);
 static gboolean      dm3_get_uint          (DM3File *dm3file,
                                             guint *value,
@@ -266,22 +278,14 @@ dm3_load(const gchar *filename,
          G_GNUC_UNUSED GwyRunType mode,
          GError **error)
 {
-    static const gchar res_fmt[]
-        = "/ImageList/#%u/ImageData/Dimensions/#%u";
-    static const gchar real_fmt[]
-        = "/ImageList/#%u/ImageData/Calibrations/Dimension/#%u/Scale";
-    static const gchar off_fmt[]
-        = "/ImageList/#%u/ImageData/Calibrations/Dimension/#%u/Origin";
-    static const gchar unit_fmt[]
-        = "/ImageList/#%u/ImageData/Calibrations/Dimension/#%u/Units";
-
     GwyContainer *container = NULL;
     DM3File dm3file;
+    DM3ImgResult status;
     guchar *buffer = NULL;
     const guchar *p;
     gsize remaining, size = 0;
     GError *err = NULL;
-    guint i;
+    guint i = 0, id = 0;
 
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
         err_GET_FILE_CONTENTS(error, &err);
@@ -303,32 +307,19 @@ dm3_load(const gchar *filename,
     dm3file.hash = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
     dm3_build_hash(dm3file.hash, &dm3file.root_entry);
 
-    for (i = 0; ; i++) {
-        gdouble xreal, yreal, xoff, yoff;
-        guint xres, yres;
-        gchar *xunit = NULL, *yunit = NULL;
+    container = gwy_container_new();
+    do {
+        status = dm3_read_image(&dm3file, container, i, &id, error);
+        i++;
+    } while (status == DM3_IMG_OK || status == DM3_IMG_SKIP);
 
-        if (!dm3_get_uint(&dm3file, &xres, res_fmt, i, 0)
-            || !dm3_get_uint(&dm3file, &yres, res_fmt, i, 1)
-            || !dm3_get_float(&dm3file, &xreal, real_fmt, i, 0)
-            || !dm3_get_float(&dm3file, &yreal, real_fmt, i, 1)
-            || !dm3_get_float(&dm3file, &xoff, off_fmt, i, 0)
-            || !dm3_get_float(&dm3file, &yoff, off_fmt, i, 1)
-            || !dm3_get_string(&dm3file, &xunit, unit_fmt, i, 0)
-            || !dm3_get_string(&dm3file, &yunit, unit_fmt, i, 1)) {
-            g_free(xunit);
-            g_free(yunit);
-            break;
-        }
-
-        gwy_debug("image #%u: xres %u, yres %u xreal %g [%s] yreal %g [%s]",
-                  i, xres, yres, xreal, xunit, yreal, yunit);
-
-        g_free(xunit);
-        g_free(yunit);
+    if (status == DM3_IMG_NOT_FOUND && !id) {
+        gwy_object_unref(container);
+        err_NO_DATA(error);
     }
-
-    err_NO_DATA(error);
+    else if (status == DM3_IMG_ERROR) {
+        gwy_object_unref(container);
+    }
 
 fail:
     dm3_free_group(dm3file.root_entry.group);
@@ -339,6 +330,142 @@ fail:
     gwy_file_abandon_contents(buffer, size, NULL);
 
     return container;
+}
+
+static DM3ImgResult
+dm3_read_image(DM3File *dm3file,
+               GwyContainer *container,
+               guint i,
+               guint *id,
+               GError **error)
+{
+    static const gchar res_fmt[]
+        = "/ImageList/#%u/ImageData/Dimensions/#%u";
+    static const gchar img_fmt[]
+        = "/ImageList/#%u/ImageData/%s";
+    static const gchar real_fmt[]
+        = "/ImageList/#%u/ImageData/Calibrations/Dimension/#%u/Scale";
+    static const gchar off_fmt[]
+        = "/ImageList/#%u/ImageData/Calibrations/Dimension/#%u/Origin";
+    static const gchar unit_fmt[]
+        = "/ImageList/#%u/ImageData/Calibrations/Dimension/#%u/Units";
+
+    DM3DataType datatype;
+    DM3TagType *type;
+    DM3ImgResult retval = DM3_IMG_NOT_FOUND;
+    GwyByteOrder byteorder = (dm3file->little_endian
+                              ? GWY_BYTE_ORDER_LITTLE_ENDIAN
+                              : GWY_BYTE_ORDER_BIG_ENDIAN);
+    GwyRawDataType rawdatatype;
+    gdouble xreal, yreal, xoff, yoff;
+    guint xres, yres, pixeldepth, itemsize;
+    gchar *xunit = NULL, *yunit = NULL;
+    gdouble scale = 1.0;
+    GQuark key;
+    GwySIUnit *unit;
+    gint power10;
+    GwyDataField *field = NULL;
+
+    if (!dm3_get_uint(dm3file, &xres, res_fmt, i, 0)
+        || !dm3_get_uint(dm3file, &yres, res_fmt, i, 1)
+        || !dm3_get_float(dm3file, &xreal, real_fmt, i, 0)
+        || !dm3_get_float(dm3file, &yreal, real_fmt, i, 1)
+        || !dm3_get_float(dm3file, &xoff, off_fmt, i, 0)
+        || !dm3_get_float(dm3file, &yoff, off_fmt, i, 1)
+        || !dm3_get_string(dm3file, &xunit, unit_fmt, i, 0)
+        || !dm3_get_string(dm3file, &yunit, unit_fmt, i, 1)
+        || !dm3_get_uint(dm3file, &datatype, img_fmt, i, "DataType")
+        || !dm3_get_uint(dm3file, &pixeldepth, img_fmt, i, "PixelDepth"))
+        goto fail;
+
+    gwy_debug("image #%u: xres %u, yres %u xreal %g [%s] yreal %g [%s], "
+              "datatype %u",
+              i, xres, yres, xreal, xunit, yreal, yunit, datatype);
+
+    if (!(type = dm3_get_leaf_entry(dm3file, NULL, 0, img_fmt, i, "Data")))
+        goto fail;
+
+    retval = DM3_IMG_SKIP;
+    if (type->ntypes != 3 || type->types[0] != DM3_ARRAY) {
+        gwy_debug("type is not a simple array");
+        goto fail;
+    }
+
+    if (datatype == DM3_DATA_UNSIGNED_INT8) {
+        rawdatatype = GWY_RAW_DATA_UINT8;
+        scale = 1.0/255.0;
+    }
+    else if (datatype == DM3_DATA_SIGNED_INT8) {
+        rawdatatype = GWY_RAW_DATA_SINT8;
+        scale = 1.0/128.0;
+    }
+    else if (datatype == DM3_DATA_UNSIGNED_INT16) {
+        rawdatatype = GWY_RAW_DATA_UINT16;
+        scale = 1.0/65535.0;
+    }
+    else if (datatype == DM3_DATA_SIGNED_INT16) {
+        rawdatatype = GWY_RAW_DATA_SINT16;
+        scale = 1.0/32768.0;
+    }
+    else if (datatype == DM3_DATA_UNSIGNED_INT32) {
+        rawdatatype = GWY_RAW_DATA_UINT32;
+        scale = 1.0/4294967295.0;
+    }
+    else if (datatype == DM3_DATA_SIGNED_INT32) {
+        rawdatatype = GWY_RAW_DATA_SINT32;
+        scale = 1.0/2147483648.0;
+    }
+    else if (datatype == DM3_DATA_UNSIGNED_INT64) {
+        rawdatatype = GWY_RAW_DATA_UINT64;
+        scale = 1.0/18446744073709551615.0;
+    }
+    else if (datatype == DM3_DATA_SIGNED_INT64) {
+        rawdatatype = GWY_RAW_DATA_SINT64;
+        scale = 1.0/9223372036854775808.0;
+    }
+    else if (datatype == DM3_DATA_REAL4)
+        rawdatatype = GWY_RAW_DATA_FLOAT;
+    else if (datatype == DM3_DATA_REAL8)
+        rawdatatype = GWY_RAW_DATA_DOUBLE;
+    else {
+        gwy_debug("type is not implemented");
+        goto fail;
+    }
+
+    itemsize = gwy_raw_data_size(rawdatatype);
+    gwy_debug("gwy raw data type %u (item size %u)", rawdatatype, itemsize);
+    if (err_SIZE_MISMATCH(error, itemsize*xres*yres, type->typesize, TRUE)) {
+        retval = DM3_IMG_ERROR;
+        goto fail;
+    }
+
+    unit = gwy_si_unit_new_parse(yunit, &power10);
+    yreal *= pow10(power10);
+    yoff *= pow10(power10);
+    g_object_unref(unit);
+
+    unit = gwy_si_unit_new_parse(xunit, &power10);
+    xreal *= pow10(power10);
+    xoff *= pow10(power10);
+
+    field = gwy_data_field_new(xres, yres, xreal*xres, yreal*yres, FALSE);
+    gwy_data_field_set_si_unit_xy(field, unit);
+    g_object_unref(unit);
+
+    gwy_convert_raw_data(type->data, xres*yres, 1, rawdatatype, byteorder,
+                         gwy_data_field_get_data(field), scale, 0.0);
+
+    key = gwy_app_get_data_key_for_id(*id);
+    (*id)++;
+    gwy_container_set_object(container, key, field);
+    g_object_unref(field);
+    retval = DM3_IMG_OK;
+
+fail:
+    g_free(xunit);
+    g_free(yunit);
+
+    return retval;
 }
 
 static gboolean
