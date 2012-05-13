@@ -33,7 +33,7 @@
  * Read
  **/
 
-#define DEBUG 1
+
 #include "config.h"
 #include <string.h>
 #include <stdlib.h>
@@ -341,14 +341,12 @@ dm3_read_image(DM3File *dm3file,
 {
     static const gchar res_fmt[]
         = "/ImageList/#%u/ImageData/Dimensions/#%u";
+    static const gchar name_fmt[]
+        = "/ImageList/#%u/Name";
     static const gchar img_fmt[]
         = "/ImageList/#%u/ImageData/%s";
-    static const gchar real_fmt[]
-        = "/ImageList/#%u/ImageData/Calibrations/Dimension/#%u/Scale";
-    static const gchar off_fmt[]
-        = "/ImageList/#%u/ImageData/Calibrations/Dimension/#%u/Origin";
-    static const gchar unit_fmt[]
-        = "/ImageList/#%u/ImageData/Calibrations/Dimension/#%u/Units";
+    static const gchar calib_fmt[]
+        = "/ImageList/#%u/ImageData/Calibrations/Dimension/#%u/%s";
 
     DM3DataType datatype;
     DM3TagType *type;
@@ -359,21 +357,21 @@ dm3_read_image(DM3File *dm3file,
     GwyRawDataType rawdatatype;
     gdouble xreal, yreal, xoff, yoff;
     guint xres, yres, pixeldepth, itemsize;
-    gchar *xunit = NULL, *yunit = NULL;
+    gchar *xunit = NULL, *yunit = NULL, *title = NULL, *key;
     gdouble scale = 1.0;
-    GQuark key;
+    GQuark quark;
     GwySIUnit *unit;
     gint power10;
     GwyDataField *field = NULL;
 
     if (!dm3_get_uint(dm3file, &xres, res_fmt, i, 0)
         || !dm3_get_uint(dm3file, &yres, res_fmt, i, 1)
-        || !dm3_get_float(dm3file, &xreal, real_fmt, i, 0)
-        || !dm3_get_float(dm3file, &yreal, real_fmt, i, 1)
-        || !dm3_get_float(dm3file, &xoff, off_fmt, i, 0)
-        || !dm3_get_float(dm3file, &yoff, off_fmt, i, 1)
-        || !dm3_get_string(dm3file, &xunit, unit_fmt, i, 0)
-        || !dm3_get_string(dm3file, &yunit, unit_fmt, i, 1)
+        || !dm3_get_float(dm3file, &xreal, calib_fmt, i, 0, "Scale")
+        || !dm3_get_float(dm3file, &yreal, calib_fmt, i, 1, "Scale")
+        || !dm3_get_float(dm3file, &xoff, calib_fmt, i, 0, "Origin")
+        || !dm3_get_float(dm3file, &yoff, calib_fmt, i, 1, "Origin")
+        || !dm3_get_string(dm3file, &xunit, calib_fmt, i, 0, "Units")
+        || !dm3_get_string(dm3file, &yunit, calib_fmt, i, 1, "Units")
         || !dm3_get_uint(dm3file, &datatype, img_fmt, i, "DataType")
         || !dm3_get_uint(dm3file, &pixeldepth, img_fmt, i, "PixelDepth"))
         goto fail;
@@ -455,11 +453,19 @@ dm3_read_image(DM3File *dm3file,
     gwy_convert_raw_data(type->data, xres*yres, 1, rawdatatype, byteorder,
                          gwy_data_field_get_data(field), scale, 0.0);
 
-    key = gwy_app_get_data_key_for_id(*id);
-    (*id)++;
-    gwy_container_set_object(container, key, field);
+    quark = gwy_app_get_data_key_for_id(*id);
+    gwy_container_set_object(container, quark, field);
     g_object_unref(field);
+
+    if (dm3_get_string(dm3file, &title, name_fmt, i)) {
+        key = g_strdup_printf("/%u/data/title", *id);
+        gwy_container_set_string_by_name(container, key, title);
+        g_free(key);
+        title = NULL;
+    }
+
     retval = DM3_IMG_OK;
+    (*id)++;
 
 fail:
     g_free(xunit);
@@ -468,6 +474,7 @@ fail:
     return retval;
 }
 
+G_GNUC_UNUSED
 static gboolean
 dm3_get_uint(DM3File *dm3file,
              guint *value,
@@ -511,6 +518,7 @@ dm3_get_uint(DM3File *dm3file,
     return ok;
 }
 
+G_GNUC_UNUSED
 static gboolean
 dm3_get_int(DM3File *dm3file,
             gint *value,
@@ -554,6 +562,7 @@ dm3_get_int(DM3File *dm3file,
     return ok;
 }
 
+G_GNUC_UNUSED
 static gboolean
 dm3_get_float(DM3File *dm3file,
               gdouble *value,
@@ -593,6 +602,7 @@ dm3_get_float(DM3File *dm3file,
     return ok;
 }
 
+G_GNUC_UNUSED
 static gboolean
 dm3_get_string(DM3File *dm3file,
                gchar **value,
@@ -713,6 +723,7 @@ dm3_read_header(DM3File *dm3file,
     return TRUE;
 }
 
+#ifdef DEBUG
 static guint
 dm3_entry_depth(const DM3TagEntry *entry)
 {
@@ -724,6 +735,7 @@ dm3_entry_depth(const DM3TagEntry *entry)
     }
     return depth;
 }
+#endif
 
 static gchar*
 format_path(const DM3TagEntry *entry)
