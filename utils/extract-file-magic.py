@@ -84,7 +84,7 @@ mclasses = {
     <primary>supported formats</primary>
   </indexterm>
   <tgroup cols='6' align='left'>
-    <?dblatex XXXccc?>
+    <?dblatex XXlccc?>
     <thead>
       <row>
         <entry>File Format</entry>
