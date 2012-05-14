@@ -32,8 +32,10 @@ curvature	leveling	curvature
 cwt	integral-transforms	cwt
 deposit_synth	synthetic
 distance	basic-operations	distance
+dm3file	managing-files
 dmefile	managing-files
 drift	edit-extended	drift-compensation
+drift	edit-extended	xy-denoise
 dumbfile	managing-files
 dwt	integral-transforms	dwt
 dwtanisotropy	integral-transforms	dwt
@@ -115,6 +117,7 @@ nanonics	managing-files
 nanonis	managing-files
 nanoobserver	managing-files
 nanoscan	managing-files
+nanoscantech	managing-files
 nanoscope	managing-files
 nanoscope-ii	managing-files
 nanotop	managing-files
@@ -181,6 +184,7 @@ stmprg	managing-files
 stpfile	managing-files
 surffile	managing-files
 threshold	basic-operations	limit-range
+tiaser	managing-files
 tilt	leveling-and-background
 tip_blind	tip-convolution-artefacts	tip-blind-estimate
 tip_model	tip-convolution-artefacts	tip-model
