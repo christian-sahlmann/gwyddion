@@ -19,13 +19,17 @@ def format_userguide(module, body):
     # in source code and the text that should go to the user guide).
     def register_note(footnotes, note):
         key, text = note.group('note'), note.group('text').strip()
-        for fnkey, fntext in footnotes.items():
+        for fnkey, entry in footnotes.items():
+            fntext, label = entry
             if text == fntext:
-                fmttext = '<footnoteref linkend="%s"/>' % fnkey
+                fmttext = '<footnoteref linkend="%s" label="%s"/>' \
+                          % (fnkey, label)
                 return key, fmttext
         fnkey = 'table-file-formats-fn%d' % (len(footnotes) + 1)
-        fmttext = '<footnote id="%s"><para>%s</para></footnote>' % (fnkey, text)
-        footnotes[fnkey] = text
+        label = chr(ord('a') + len(footnotes))
+        fmttext = '<footnote id="%s" label="%s"><para>%s</para></footnote>' \
+                  % (fnkey, label, text)
+        footnotes[fnkey] = (text, label)
         return key, fmttext
 
     def fmtsup(supported, noterefs, what):
