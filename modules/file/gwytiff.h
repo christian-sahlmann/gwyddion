@@ -722,7 +722,7 @@ gwy_tiff_get_image_reader(const GwyTIFF *tiff,
     g_free(bps);
 
     /* The TIFF specs say this is required, but it seems to default to
-     * MAXINT.  Setting more reasonably to RowsPerStrip = ImageLength achieves
+     * MAXINT.  Setting more reasonably RowsPerStrip = ImageLength achieves
      * the same ends. */
     if (!gwy_tiff_get_uint(tiff, dirno, GWY_TIFFTAG_ROWS_PER_STRIP,
                            &reader.strip_rows))
@@ -761,11 +761,12 @@ gwy_tiff_get_image_reader(const GwyTIFF *tiff,
         return NULL;
     }
 
-    /* Seen in Carl Zeiss SEM files. */
-    if (reader.strip_rows == (guint)-1)
+    /* Apparently in Zeiss SEM files, RowsPerStrip can be *anything* larger
+     * than the imager height. */
+    if (reader.strip_rows > reader.height)
         reader.strip_rows = reader.height;
 
-    if (reader.strip_rows == 0 || reader.strip_rows > reader.height) {
+    if (reader.strip_rows == 0) {
         err_INVALID(error, "RowsPerStrip");
         return NULL;
     }
