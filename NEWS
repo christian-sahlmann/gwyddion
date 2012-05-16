@@ -13,6 +13,7 @@ Modules:
 - XY denoise (new): Data denoising based on horizontal and vertical scans.
 - WIP: Spectral transformation for Raman data was fixed and swapped XY axes in
   datafields were really fixed.
+- Zeiss: Files without key-value pairs in tag 34118 are recognised and loaded.
 
 Other:
 - Compatibility with libpng 1.5 was corrected.
