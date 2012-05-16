@@ -38,6 +38,7 @@
 #define MAGIC_SIZE (sizeof(MAGIC) - 1)
 
 #define MAGIC_COMMENT "\r\nAP_PIXEL_SIZE\r\n"
+#define SOMEWHAT_LESS_MAGIC_COMMENT "0\r\n0\r\n0\r\n"
 
 enum {
     ZEISS_HEADER_TAG = 34118,
@@ -61,9 +62,9 @@ static GwyModuleInfo module_info = {
     module_register,
     N_("Imports Carl Zeiss SEM images."),
     "Yeti <yeti@gwyddion.net>",
-    "0.1",
+    "0.2",
     "David Nečas (Yeti)",
-    "201",
+    "2011",
 };
 
 GWY_MODULE_QUERY(module_info)
@@ -98,9 +99,12 @@ zeiss_detect(const GwyFileDetectInfo *fileinfo, gboolean only_name)
 
     /* Use GwyTIFF for detection to avoid problems with fragile libtiff. */
     if ((tiff = gwy_tiff_load(fileinfo->name, NULL))
-        && gwy_tiff_get_string0(tiff, ZEISS_HEADER_TAG, &comment)
-        && strstr(comment, MAGIC_COMMENT))
-        score = 100;
+        && gwy_tiff_get_string0(tiff, ZEISS_HEADER_TAG, &comment)) {
+        if (strstr(comment, MAGIC_COMMENT))
+            score = 100;
+        else if (g_str_has_prefix(comment, SOMEWHAT_LESS_MAGIC_COMMENT))
+            score = 85;
+    }
 
     g_free(comment);
     if (tiff)
@@ -138,20 +142,35 @@ zeiss_load_tiff(const GwyTIFF *tiff, GError **error)
     gint i, power10;
     gchar *value, *end, *comment = NULL;
     gdouble *data;
+    gboolean new_file;
     double factor, dx;
 
     /* Comment with parameters is common for all data fields */
-    if (!gwy_tiff_get_string0(tiff, ZEISS_HEADER_TAG, &comment)
-        || !strstr(comment, MAGIC_COMMENT)) {
+    if (!gwy_tiff_get_string0(tiff, ZEISS_HEADER_TAG, &comment)) {
+        err_FILE_TYPE(error, "Carl Zeiss SEM");
+        goto fail;
+    }
+
+    if (strstr(comment, MAGIC_COMMENT))
+        new_file = TRUE;
+    else if (g_str_has_prefix(comment, SOMEWHAT_LESS_MAGIC_COMMENT))
+        new_file = FALSE;
+    else {
         err_FILE_TYPE(error, "Carl Zeiss SEM");
         goto fail;
     }
 
     /* Read the comment header. */
-    hash = parse_comment(comment);
-    if (!(value = g_hash_table_lookup(hash, "Pixel Size"))) {
-        err_MISSING_FIELD(error, "Pixel Size");
-        goto fail;
+    if (new_file) {
+        hash = parse_comment(comment);
+        if (!(value = g_hash_table_lookup(hash, "Pixel Size"))) {
+            err_MISSING_FIELD(error, "Pixel Size");
+            goto fail;
+        }
+    }
+    else {
+        /* The first thing is the pixel size, apparently. */
+        value = comment + strlen(SOMEWHAT_LESS_MAGIC_COMMENT);
     }
 
     dx = g_ascii_strtod(value, &end);
@@ -161,6 +180,8 @@ zeiss_load_tiff(const GwyTIFF *tiff, GError **error)
         g_warning("Real pixel size is 0.0, fixing to 1.0");
         dx = 1.0;
     }
+    if (!new_file)
+        end = "m";
 
     /* Request a reader, this ensures dimensions and stuff are defined. */
     if (!(reader = gwy_tiff_get_image_reader(tiff, 0, 1, error)))
@@ -186,11 +207,13 @@ zeiss_load_tiff(const GwyTIFF *tiff, GError **error)
     gwy_container_set_string_by_name(container, "/0/data/title",
                                      g_strdup("Secondary electron count"));
 
-    meta = gwy_container_new();
-    g_hash_table_foreach(hash, add_meta, meta);
-    if (gwy_container_get_n_items(meta))
-        gwy_container_set_object_by_name(container, "/0/meta", meta);
-    g_object_unref(meta);
+    if (new_file) {
+        meta = gwy_container_new();
+        g_hash_table_foreach(hash, add_meta, meta);
+        if (gwy_container_get_n_items(meta))
+            gwy_container_set_object_by_name(container, "/0/meta", meta);
+        g_object_unref(meta);
+    }
 
 fail:
     if (hash)
