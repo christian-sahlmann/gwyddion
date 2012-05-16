@@ -347,6 +347,8 @@ dm3_read_image(DM3File *dm3file,
     static const gchar calib_fmt[]
         = "/ImageList/#%u/ImageData/Calibrations/Dimension/#%u/%s";
 
+    static const gchar *rgb_channels[] = { "R", "G", "B", "Alpha" };
+
     DM3DataType datatype;
     DM3TagType *type;
     DM3ImgResult retval = DM3_IMG_NOT_FOUND;
@@ -361,6 +363,8 @@ dm3_read_image(DM3File *dm3file,
     GQuark quark;
     GwySIUnit *unit;
     gint power10;
+    guint nfields = 1, stride = 1, j;
+    gboolean is_rgb = FALSE;
     GwyDataField *field = NULL;
 
     if (!dm3_get_uint(dm3file, &xres, res_fmt, i, 0)
@@ -430,6 +434,16 @@ dm3_read_image(DM3File *dm3file,
     else if (datatype == DM3_DATA_REAL8
              || (datatype == DM3_DATA_PACKED && type->types[1] == DM3_DOUBLE))
         rawdatatype = GWY_RAW_DATA_DOUBLE;
+    /* XXX: This is apparently used only for previews which the user unlikely
+     * wants imported as four additional channels.
+    else if (datatype == DM3_DATA_RGBA_UINT8_3 && type->types[1] == DM3_LONG) {
+        is_rgb = TRUE;
+        nfields = 4;
+        stride = 4;
+        rawdatatype = GWY_RAW_DATA_UINT8;
+        scale = 1.0/255.0;
+    }
+    */
     else {
         gwy_debug("type is not implemented");
         goto fail;
@@ -437,7 +451,8 @@ dm3_read_image(DM3File *dm3file,
 
     itemsize = gwy_raw_data_size(rawdatatype);
     gwy_debug("gwy raw data type %u (item size %u)", rawdatatype, itemsize);
-    if (err_SIZE_MISMATCH(error, itemsize*xres*yres, type->typesize, TRUE)) {
+    if (err_SIZE_MISMATCH(error, itemsize*xres*yres*stride, type->typesize,
+                          TRUE)) {
         retval = DM3_IMG_ERROR;
         goto fail;
     }
@@ -454,26 +469,43 @@ dm3_read_image(DM3File *dm3file,
     xreal *= pow10(power10);
     xoff *= pow10(power10);
 
-    field = gwy_data_field_new(xres, yres, xreal*xres, yreal*yres, FALSE);
-    gwy_data_field_set_si_unit_xy(field, unit);
+    for (j = 0; j < nfields; j++) {
+        field = gwy_data_field_new(xres, yres, xreal*xres, yreal*yres, FALSE);
+        gwy_data_field_set_si_unit_xy(field, unit);
+        gwy_serializable_clone(G_OBJECT(unit),
+                               G_OBJECT(gwy_data_field_get_si_unit_xy(field)));
+
+        gwy_convert_raw_data((const guchar*)type->data + itemsize*j,
+                             xres*yres, stride, rawdatatype, byteorder,
+                             gwy_data_field_get_data(field), scale, 0.0);
+
+        quark = gwy_app_get_data_key_for_id(*id);
+        gwy_container_set_object(container, quark, field);
+        g_object_unref(field);
+
+        title = NULL;
+        if (dm3_get_string(dm3file, &title, name_fmt, i)) {
+            if (is_rgb) {
+                gchar *s = g_strdup_printf("%s [%s]", title, rgb_channels[j]);
+                g_free(title);
+                title = s;
+            }
+        }
+        else if (is_rgb)
+            title = g_strdup_printf("%s [%s]", title, rgb_channels[j]);
+
+        if (title) {
+            key = g_strdup_printf("/%u/data/title", *id);
+            gwy_container_set_string_by_name(container, key, title);
+            g_free(key);
+            title = NULL;
+        }
+
+        (*id)++;
+    }
     g_object_unref(unit);
 
-    gwy_convert_raw_data(type->data, xres*yres, 1, rawdatatype, byteorder,
-                         gwy_data_field_get_data(field), scale, 0.0);
-
-    quark = gwy_app_get_data_key_for_id(*id);
-    gwy_container_set_object(container, quark, field);
-    g_object_unref(field);
-
-    if (dm3_get_string(dm3file, &title, name_fmt, i)) {
-        key = g_strdup_printf("/%u/data/title", *id);
-        gwy_container_set_string_by_name(container, key, title);
-        g_free(key);
-        title = NULL;
-    }
-
     retval = DM3_IMG_OK;
-    (*id)++;
 
 fail:
     g_free(xunit);
