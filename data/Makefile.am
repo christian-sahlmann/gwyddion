@@ -11,6 +11,7 @@ SUBDIRS = \
 pkgconfigdatadir = $(libdir)/pkgconfig
 gwyddionappdir = $(datadir)/applications
 gwyddionmimedir = $(datadir)/mime/packages
+thumbnailerdir = $(datadir)/thumbnailers
 schemadir = $(GCONF_SCHEMA_FILE_DIR)
 
 docsrc = $(top_builddir)/devel-docs
@@ -20,6 +21,7 @@ gwyddion_vim_cfg = $(abs_srcdir)/gwyddion-cfg.py
 pkgconfigdata_DATA = gwyddion.pc
 gwyddionapp_DATA = gwyddion.desktop
 gwyddionmime_DATA = gwyddion.xml
+thumbnailer_DATA = gwyddion.thumbnailer
 man1_MANS = gwyddion.1
 if GCONF_SCHEMAS_INSTALL
 schema_DATA = gwyddion-thumbnailer.schemas
@@ -31,6 +33,7 @@ EXTRA_DIST = \
 	gwyddion.nsit.in \
 	gwyddion.pc.in \
 	gwyddion.spec.in \
+	gwyddion.thumbnailer.in \
 	gwyddion-cfg.py \
 	gwyddion.vim \
 	gwyddion.1 \
@@ -50,7 +53,8 @@ gwyddion_vim_sources = \
 file_magic_sources = $(top_srcdir)/modules/file/*.c
 
 CLEANFILES = \
-	gwyddion-thumbnailer.schemas
+	gwyddion-thumbnailer.schemas \
+	gwyddion.thumbnailer
 
 MAINTAINERCLEANFILES = \
 	gwyddion.vim \
@@ -101,6 +105,13 @@ gwyddion.desktop: gwyddion.desktop.in $(srcdir)/gwyddion.xml Makefile
 	&& $(SED) -e "s#@MIME_TYPE_LIST@#$$x#" \
 	  -e 's#[@]datadir[@]#$(datadir)#' \
 	  <gwyddion.desktop.in >gwyddion.desktop
+
+# Generate gwyddion.thumbnailer from gwyddion.xml to keep the file format list
+# in sync.
+gwyddion.thumbnailer: gwyddion.thumbnailer.in $(srcdir)/gwyddion.xml
+	$(AM_V_GEN)x=`$(SED) -e '/^<mime-type/ s/.*<mime-type type="\(.*\)">.*/\1;/' -e t -e d <$(srcdir)/gwyddion.xml | tr -d '\n'` \
+	&& $(SED) -e "s#@MIME_TYPE_LIST@#$$x#" \
+	  <gwyddion.thumbnailer.in >gwyddion.thumbnailer
 
 # Desktop file installation
 # FIXME: Maybe not according to current standards

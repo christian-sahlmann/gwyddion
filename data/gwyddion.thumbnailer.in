@@ -1,0 +1,5 @@
+[Thumbnailer Entry]
+TryExec=gwyddion-thumbnailer
+Exec=gwyddion-thumbnailer gnome2 %s %i %o
+MimeType=@MIME_TYPE_LIST@
+# vim: set ft=desktop :
