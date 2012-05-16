@@ -33,7 +33,6 @@
  * Read
  **/
 
-
 #include "config.h"
 #include <string.h>
 #include <stdlib.h>
@@ -397,19 +396,23 @@ dm3_read_image(DM3File *dm3file,
         rawdatatype = GWY_RAW_DATA_SINT8;
         scale = 1.0/128.0;
     }
-    else if (datatype == DM3_DATA_UNSIGNED_INT16) {
+    else if (datatype == DM3_DATA_UNSIGNED_INT16
+             || (datatype == DM3_DATA_PACKED && type->types[1] == DM3_USHORT)) {
         rawdatatype = GWY_RAW_DATA_UINT16;
         scale = 1.0/65535.0;
     }
-    else if (datatype == DM3_DATA_SIGNED_INT16) {
+    else if (datatype == DM3_DATA_SIGNED_INT16
+             || (datatype == DM3_DATA_PACKED && type->types[1] == DM3_SHORT)) {
         rawdatatype = GWY_RAW_DATA_SINT16;
         scale = 1.0/32768.0;
     }
-    else if (datatype == DM3_DATA_UNSIGNED_INT32) {
+    else if (datatype == DM3_DATA_UNSIGNED_INT32
+             || (datatype == DM3_DATA_PACKED && type->types[1] == DM3_ULONG)) {
         rawdatatype = GWY_RAW_DATA_UINT32;
         scale = 1.0/4294967295.0;
     }
-    else if (datatype == DM3_DATA_SIGNED_INT32) {
+    else if (datatype == DM3_DATA_SIGNED_INT32
+             || (datatype == DM3_DATA_PACKED && type->types[1] == DM3_LONG)) {
         rawdatatype = GWY_RAW_DATA_SINT32;
         scale = 1.0/2147483648.0;
     }
@@ -421,9 +424,11 @@ dm3_read_image(DM3File *dm3file,
         rawdatatype = GWY_RAW_DATA_SINT64;
         scale = 1.0/9223372036854775808.0;
     }
-    else if (datatype == DM3_DATA_REAL4)
+    else if (datatype == DM3_DATA_REAL4
+             || (datatype == DM3_DATA_PACKED && type->types[1] == DM3_FLOAT))
         rawdatatype = GWY_RAW_DATA_FLOAT;
-    else if (datatype == DM3_DATA_REAL8)
+    else if (datatype == DM3_DATA_REAL8
+             || (datatype == DM3_DATA_PACKED && type->types[1] == DM3_DOUBLE))
         rawdatatype = GWY_RAW_DATA_DOUBLE;
     else {
         gwy_debug("type is not implemented");
@@ -436,6 +441,9 @@ dm3_read_image(DM3File *dm3file,
         retval = DM3_IMG_ERROR;
         goto fail;
     }
+
+    if (!gwy_strequal(yunit, xunit))
+        g_warning("X and Y units differ, using X");
 
     unit = gwy_si_unit_new_parse(yunit, &power10);
     yreal *= pow10(power10);
