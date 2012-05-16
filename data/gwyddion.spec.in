@@ -275,6 +275,7 @@ fi
 %{_libdir}/*.so.*
 %{_datadir}/applications/%{name}.desktop
 %{_datadir}/mime/packages/%{name}.xml
+%{_datadir}/thumbnailers/%{name}.thumbnailer
 
 
 %files devel
