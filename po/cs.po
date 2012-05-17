@@ -8445,44 +8445,39 @@ msgstr "Laplaceovská korekce"
 
 #: modules/process/latsim.c:74
 msgid "Lateral force simulator"
-msgstr ""
+msgstr "Simulace laterálních sil"
 
 #: modules/process/latsim.c:88
-#, fuzzy
 msgid "/_Tip/_Lateral force..."
-msgstr "/_Hrot SPM/K_onvoluce hrotu..."
+msgstr "/_Hrot SPM/_Laterální síly..."
 
 #: modules/process/latsim.c:92
 msgid "Simulate topograpy artefacts in lateral force channels"
-msgstr ""
+msgstr "Simulace topografických artefaktů v kanálu laterální síly"
 
 #: modules/process/latsim.c:134
-#, fuzzy
 msgid "Fw lateral force "
-msgstr "Příčná škála"
+msgstr "Laterální síla (FW)"
 
 #: modules/process/latsim.c:142
-#, fuzzy
 msgid "Rev lateral force"
-msgstr "_Zachovat podélné posunutí"
+msgstr "Laterální síla (REV)"
 
 #: modules/process/latsim.c:157
 msgid "Lateral force simulation"
-msgstr ""
+msgstr "Simulace laterálních sil"
 
 #: modules/process/latsim.c:174
-#, fuzzy
 msgid "_Friction coef.:"
-msgstr "Tření nebo fáze"
+msgstr "Koe_ficient tření:"
 
 #: modules/process/latsim.c:180
-#, fuzzy
 msgid "_Normal force:"
-msgstr "Normála"
+msgstr "_Normálová síla:"
 
 #: modules/process/latsim.c:186
 msgid "_Adhesion force:"
-msgstr ""
+msgstr "_Adheze:"
 
 #: modules/process/level.c:78
 msgid ""
@@ -9031,82 +9026,71 @@ msgstr "Zapuštěný detail"
 
 #: modules/process/neural.c:147
 msgid "Neural network SPM data processing"
-msgstr ""
+msgstr "Zpracování dat pomocí neuronové sítě"
 
 #: modules/process/neural.c:161
-#, fuzzy
 msgid "/M_ultidata/_Neural network..."
 msgstr "/M_ultidata/_Sloučení..."
 
 #: modules/process/neural.c:165
 msgid "Neural network AFM data processing"
-msgstr ""
+msgstr "Zpracování dat pomocí neuronové sítě"
 
 #: modules/process/neural.c:207
 msgid "Neural network"
-msgstr ""
+msgstr "Neuronová síť"
 
 #: modules/process/neural.c:233
-#, fuzzy
 msgid "Training model:"
-msgstr "Mód prokládání"
+msgstr "Módel pro trénink:"
 
 #: modules/process/neural.c:240
-#, fuzzy
 msgid "Training signal:"
-msgstr "Nesmyslný konec výrazu"
+msgstr "Signál pro trénink:"
 
 #: modules/process/neural.c:247
-#, fuzzy
 msgid "Result model:"
-msgstr "Škálování výsledku"
+msgstr "Model pro vyhodnocení:"
 
 #: modules/process/neural.c:254
-#, fuzzy
 msgid "Window width:"
-msgstr "Velikost okna"
+msgstr "Šířka okna:"
 
 #: modules/process/neural.c:260
-#, fuzzy
 msgid "Window height:"
-msgstr "Nová _výška:"
+msgstr "Výška okna:"
 
 #: modules/process/neural.c:266
 msgid "Training steps:"
-msgstr ""
+msgstr "Kroků tréninku:"
 
 #: modules/process/neural.c:272
-#, fuzzy
 msgid "Hidden nodes:"
-msgstr "Skrytý"
+msgstr "Skryté uzly:"
 
 #: modules/process/neural.c:364
-#, fuzzy
 msgid "Data not compatible"
-msgstr "Formát dat"
+msgstr "Nekompatibilní data"
 
 #: modules/process/neural.c:389 modules/process/pid.c:334
-#, fuzzy
 msgid "Starting..."
-msgstr "Spouštím "
+msgstr "Spouštím..."
 
 #: modules/process/neural.c:491
 msgid "Evaluated signal"
-msgstr ""
+msgstr "Vyhodnocený signál"
 
 #: modules/process/neural.c:497
-#, fuzzy
 msgid "Training error"
-msgstr "Nesmyslný konec výrazu"
+msgstr "Chyba při tréninku"
 
 #: modules/process/neural.c:498
-#, fuzzy
 msgid "error"
 msgstr "Chyba"
 
 #: modules/process/neural.c:504
 msgid "NN training error"
-msgstr ""
+msgstr "Chyba při tréninku NN"
 
 #: modules/process/noise_synth.c:210
 msgid "Generates uncorrelated random noise."
@@ -9295,78 +9279,71 @@ msgstr "_Vzdálenost:"
 
 #: modules/process/pid.c:94
 msgid "A simple PID simulator"
-msgstr ""
+msgstr "Simulace PID smyčky"
 
 #: modules/process/pid.c:108
-#, fuzzy
 msgid "/_Tip/_PID simulation..."
-msgstr "/_Hrot SPM/K_onvoluce hrotu..."
+msgstr "/_Hrot SPM/Simulace _PID smyčky..."
 
 #: modules/process/pid.c:112
 msgid "Simulate PID effects on measurement"
-msgstr ""
+msgstr "Simuluje vliv PID smyčky na měření"
 
 #: modules/process/pid.c:157
-#, fuzzy
 msgid "PID FW result"
-msgstr "Výsledek fitování"
+msgstr "Výsledek PID (FW)"
 
 #: modules/process/pid.c:165
 msgid "PID FW max. force"
-msgstr ""
+msgstr "Max. síla PID (FW)"
 
 #: modules/process/pid.c:173
-#, fuzzy
 msgid "PID REV result"
-msgstr "Výsledek"
+msgstr "Výsledek PID (REV)"
 
 #: modules/process/pid.c:181
 msgid "PID REV max. force"
-msgstr ""
+msgstr "Max. síla ID (REV)"
 
 #: modules/process/pid.c:195
-#, fuzzy
 msgid "PID simulation"
-msgstr "Konvoluce"
+msgstr "Simulace PID smyčky"
 
 #: modules/process/pid.c:212
-#, fuzzy
 msgid "_Proportional:"
-msgstr "_proporcionální"
+msgstr "_proporcionální:"
 
 #: modules/process/pid.c:218
 msgid "_Integral:"
-msgstr ""
+msgstr "_Integrální:"
 
 #: modules/process/pid.c:224
-#, fuzzy
 msgid "_Integration steps:"
-msgstr "Typ _interpolace:"
+msgstr "Kroků _integrace:"
 
 #: modules/process/pid.c:231
-#, fuzzy
 msgid "_Derivative:"
-msgstr "Negativné"
+msgstr "_Derivační:"
 
 #: modules/process/pid.c:238
 msgid "PID/scan speed _ratio:"
-msgstr ""
+msgstr "Pomě_r smyčka/rychlost:"
 
 #: modules/process/pid.c:250
 msgid "Force strength:"
-msgstr ""
+msgstr "Síla:"
 
 #: modules/process/pid.c:256
 msgid "Force setpoint:"
-msgstr ""
+msgstr "Setpoint:"
 
 #: modules/process/pid.c:358
 msgid "Scanning..."
-msgstr ""
+msgstr "Skenuji..."
 
 #: modules/process/pid.c:392
 msgid "Computation diverged, try to change parameters"
-msgstr ""
+msgstr "Výpočet divergoval, zkuste jiné parametry"
 
 #: modules/process/polydistort.c:140
 msgid "Apllies polynomial distortion in the horizontal plane."
@@ -10063,26 +10040,25 @@ msgid "Denoises measurement on basis of two orthogonal scans."
 msgstr ""
 
 #: modules/process/xydenoise.c:83
-#, fuzzy
 msgid "/M_ultidata/_XY denoise..."
-msgstr "/M_ultidata/_Sloučení..."
+msgstr "/M_ultidata/_XY odšumění..."
 
 #: modules/process/xydenoise.c:87
 msgid "Denoises horizontal/vertical measurement."
-msgstr ""
+msgstr "Odšumí data z horizontálního a vertikálního snímku"
 
 #: modules/process/xydenoise.c:120
 msgid "XY Denoising"
-msgstr ""
+msgstr "XY odšumění"
 
 #: modules/process/xydenoise.c:142
 #, fuzzy
 msgid "Second direction:"
-msgstr "_Svislý směr"
+msgstr "_Druhý směr"
 
 #: modules/process/xydenoise.c:289
 msgid "Denoised"
-msgstr ""
+msgstr "Odšuměná data"
 
 #: modules/pygwy/pygwy-console.c:53
 msgid "/Pygwy Console"
