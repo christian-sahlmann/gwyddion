@@ -137,6 +137,30 @@ AC_MSG_RESULT([$os_darwin])
 AM_CONDITIONAL([OS_DARWIN],[test "$os_darwin" = "yes"])
 
 #############################################################################
+# Home installation.
+# If a user installs Gwyddion into a subdirectory of home, various XDG stuff
+# will not end up where it is useful.  Try to put it there.
+AC_ARG_ENABLE(home-installation,
+              AC_HELP_STRING([--enable-home-installation],
+                             [Install desktop integration files into your home]),
+                             [],
+                             [enable_home_installation=no])
+AM_CONDITIONAL([HOME_INSTALLATION],[test "x$enable_home_installation" = xyes])
+if test "x$enable_home_installation" = xyes; then
+  xdg_target=home
+else
+  xdg_target=prefix
+fi
+
+# Do not set the actual XDG variable here!  It influences things.  Set *_DIR.
+if test "x$XDG_DATA_HOME" = x; then
+  XDG_DATA_HOME_DIR="$HOME/.local/share"
+else
+  XDG_DATA_HOME_DIR="$XDG_DATA_HOME"
+fi
+AC_SUBST(XDG_DATA_HOME_DIR)
+
+#############################################################################
 # Module symbol resolution.
 # We try not to link modules with libraries and let symbols resolve through
 # app, because it means faster app startup and much faster compilation.  But
@@ -776,6 +800,7 @@ echo "  Python interface (pygwy):          $enable_pygwy$PYGWY_WARN"
 if test x$enable_pygwy = xyes; then
   echo "  Pygwy console syntax highlighting: $enable_gtksourceview$GTKSOURCEVIEW_WARN"
 fi
+echo "  Desktop integration files go to:   $xdg_target"
 echo "================================================================="
 
 # vim: set ts=2 sw=2 et :
