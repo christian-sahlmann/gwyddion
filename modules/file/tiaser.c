@@ -42,8 +42,6 @@
  * Read
  **/
 
-#define DEBUG 1
-
 #include "config.h"
 #include <string.h>
 #include <stdio.h>
@@ -422,6 +420,7 @@ static GwyDataField* tia_read_2d(const guchar *p, gsize size)
      || (fielddata->datatype > TIA_DATA_DOUBLE)
      || (size < 50 + fielddata->arraylengthx * fielddata->arraylengthy
               * tia_datasizes[fielddata->datatype])) {
+		gwy_debug("Unsupported datatype");
         goto fail_2d;
     }
 
