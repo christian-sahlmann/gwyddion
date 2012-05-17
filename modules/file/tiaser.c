@@ -42,6 +42,8 @@
  * Read
  **/
 
+#define DEBUG 1
+
 #include "config.h"
 #include <string.h>
 #include <stdio.h>
@@ -109,7 +111,7 @@ typedef struct {
     gchar  *description;
     gint32  unitslength;
     gchar  *units;
-} TIADimensionArray;
+} TIADimension;
 
 typedef struct {
     gint16  tagtypeid;
@@ -155,7 +157,7 @@ static void          tia_load_header   (const guchar *p,
                                         TIAHeader *header);
 static gboolean      tia_check_header  (TIAHeader *header, gsize size);
 static gboolean      tia_load_dimarray (const guchar *p,
-                                        TIADimensionArray *dimarray,
+                                        TIADimension *dimarray,
                                         gsize size);
 static GwyDataField* tia_read_2d       (const guchar *p,
                                         gsize size);
@@ -247,7 +249,7 @@ static gboolean tia_check_header(TIAHeader *header, gsize size)
 }
 
 static gboolean
-tia_load_dimarray(const guchar *p, TIADimensionArray *dimarray, gsize size)
+tia_load_dimarray(const guchar *p, TIADimension *dimarray, gsize size)
 {
     dimarray->numelements        = gwy_get_guint32_le(&p);
     dimarray->calibrationoffset  = gwy_get_gdouble_le(&p);
@@ -260,17 +262,21 @@ tia_load_dimarray(const guchar *p, TIADimensionArray *dimarray, gsize size)
               dimarray->calibrationelement);
 
     dimarray->descriptionlength  = gwy_get_guint32_le(&p);
+
     if (dimarray->descriptionlength >= size - TIA_HEADER_SIZE
                                             - TIA_DIM_SIZE) {
         return FALSE;
     }
+
     dimarray->description = g_strndup(p, dimarray->descriptionlength);
     p += dimarray->descriptionlength;
     dimarray->unitslength  = gwy_get_guint32_le(&p);
+
     if (dimarray->unitslength + dimarray->descriptionlength >= size
                                      - TIA_HEADER_SIZE - TIA_DIM_SIZE) {
         return FALSE;
     }
+
     dimarray->units = g_strndup(p, dimarray->unitslength);
     p += dimarray->unitslength;
     gwy_debug("descr = \"%s\" units=\"%s\"",
@@ -290,10 +296,10 @@ tia_load(const gchar *filename,
     GError *err = NULL;
     const guchar *p;
     TIAHeader *header;
-    TIADimensionArray *dimarray;
-    GArray *dataoffsets, *tagoffsets;
+    TIADimension *dimension;
+    GArray *dimarray, *dataoffsets, *tagoffsets;
     GwyDataField *dfield;
-    gint i, offset;
+    gint i, j, offset, dimarraylength, dimarraysize = 0;
     gchar *strkey;
 
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
@@ -315,13 +321,28 @@ tia_load(const gchar *filename,
     }
     p += TIA_HEADER_SIZE;
 
-    dimarray = g_new0(TIADimensionArray, 1);
-    if(!tia_load_dimarray(p, dimarray, size - TIA_HEADER_SIZE)) {
-        err_FILE_TYPE(error, "FEI TIA");
-        goto fail2;
+    dimarraylength = header->numberdimensions;
+    dimarray = g_array_sized_new(FALSE, TRUE, sizeof(TIADimension),
+                                                        dimarraylength);
+    for (i = 0; i < dimarraylength; i++) {
+		p += dimarraysize;
+        dimension = g_new0(TIADimension, 1);
+        if(!tia_load_dimarray(p, dimension, size - TIA_HEADER_SIZE
+                                                      - dimarraysize)) {
+            err_FILE_TYPE(error, "FEI TIA");
+            g_free(dimension);
+            for (j = 0; j < i; j++) {
+                dimension = &g_array_index (dimarray, TIADimension, j);
+                g_free(dimension->description);
+                g_free(dimension->units);
+            }
+            goto fail2;
+        }
+        dimarraysize += TIA_DIM_SIZE
+                + dimension->descriptionlength + dimension->unitslength;
+        g_array_append_val(dimarray, *dimension);
+        g_free(dimension);
     }
-    p += TIA_DIM_SIZE
-       + dimarray->descriptionlength + dimarray->unitslength;
 
     p = buffer+header->offsetarrayoffset;
     dataoffsets = g_array_new(FALSE, TRUE, sizeof(gint32));
@@ -358,13 +379,13 @@ tia_load(const gchar *filename,
                 }
             }
         }
+    else if (header->datatypeid == TIA_1D_DATA) {
+    }
 
     g_array_free(dataoffsets, TRUE);
     g_array_free(tagoffsets, TRUE);
-    g_free(dimarray->description);
-    g_free(dimarray->units);
-    g_free(dimarray);
 fail2:
+    g_array_free(dimarray, TRUE);
     g_free(header);
 fail:
     gwy_file_abandon_contents(buffer, size, NULL);
