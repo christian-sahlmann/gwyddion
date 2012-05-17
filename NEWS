@@ -1,6 +1,6 @@
 2.28 (0000-00-00)
 Application:
-- Translations updated: French, Russian.
+- Translations updated: Czech, French, Russian.
 
 Modules:
 - Nanoscantech (new): Imports NanoScanTech .nstdat files.
