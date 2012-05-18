@@ -9,10 +9,20 @@ SUBDIRS = \
 	gradients
 
 pkgconfigdatadir = $(libdir)/pkgconfig
+
+if HOME_INSTALLATION
+gwyddionappdir = $(XDG_DATA_HOME_DIR)/applications
+gwyddionmimedir = $(XDG_DATA_HOME_DIR)/mime/packages
+thumbnailerdir = $(XDG_DATA_HOME_DIR)/thumbnailers
+schemadir = $(HOME)/.gconf/schemas
+GCONF_SCHEMA_CONFIG_SOURCE_REAL = xml:readwrite:$(HOME)/.gconf
+else
 gwyddionappdir = $(datadir)/applications
 gwyddionmimedir = $(datadir)/mime/packages
 thumbnailerdir = $(datadir)/thumbnailers
 schemadir = $(GCONF_SCHEMA_FILE_DIR)
+GCONF_SCHEMA_CONFIG_SOURCE_REAL = $(GCONF_SCHEMA_CONFIG_SOURCE)
+endif
 
 docsrc = $(top_builddir)/devel-docs
 vim_syn_gen = $(abs_top_srcdir)/utils/vim-syn-gen.py
@@ -124,7 +134,7 @@ if DESKTOP_FILE_UPDATE
 endif
 if GCONF_SCHEMAS_INSTALL
 	if test -z "$(DESTDIR)" -a -z "$(DISABLE_GCONF_SCHEMAS_INSTALL)"; then \
-	  GCONF_CONFIG_SOURCE=$(GCONF_SCHEMA_CONFIG_SOURCE) \
+	  GCONF_CONFIG_SOURCE=$(GCONF_SCHEMA_CONFIG_SOURCE_REAL) \
 	    $(GCONFTOOL) --makefile-install-rule $(schema_DATA); \
 	fi
 endif
@@ -138,7 +148,7 @@ if DESKTOP_FILE_UPDATE
 endif
 if GCONF_SCHEMAS_INSTALL
 	if test -z "$(DESTDIR)" -a -n "$(DISABLE_GCONF_SCHEMAS_INSTALL)"; then \
-	  GCONF_CONFIG_SOURCE=$(GCONF_SCHEMA_CONFIG_SOURCE) \
+	  GCONF_CONFIG_SOURCE=$(GCONF_SCHEMA_CONFIG_SOURCE_REAL) \
 	    $(GCONFTOOL) --makefile-uninstall-rule $(schema_DATA); \
 	fi
 endif
