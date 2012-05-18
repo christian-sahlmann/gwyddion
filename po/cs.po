@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2012-05-16 03:58+0200\n"
+"POT-Creation-Date: 2012-05-18 11:44+0200\n"
 "PO-Revision-Date: 2012-05-16 23:43+0200\n"
 "Last-Translator: Petr Klapetek <klapetek@gwyddion.net>\n"
 "Language-Team: Czech\n"
@@ -2779,34 +2779,34 @@ msgstr "Pole šířky obrázku v hlavičce neodpovídá šířce bitmapy"
 msgid "Header image height field does not match BMP height."
 msgstr "Pole výšky obrázku v hlavičce neodpovídá výšce bitmapy"
 
-#: modules/file/dm3file.c:225
+#: modules/file/dm3file.c:224
 msgid "Reads Digital Micrograph DM3 files."
 msgstr "Načítá datové soubory DM3 Digital Micrograph."
 
-#: modules/file/dm3file.c:238
+#: modules/file/dm3file.c:237
 msgid "Digital Micrograph DM3 TEM data (.dm3)"
 msgstr "Digital Micrograph DM3 TEM data (.dm3)"
 
-#: modules/file/dm3file.c:790
+#: modules/file/dm3file.c:830
 #, c-format
 msgid "Invalid tag type definition in entry ‘%s’."
 msgstr "Neplatná definice typu tagu v položce ‚%s‘."
 
-#: modules/file/dm3file.c:802
+#: modules/file/dm3file.c:842
 #, c-format
 msgid "File is truncated in entry ‘%s’."
 msgstr "Soubor je uříznutý v položce ‚%s‘."
 
-#: modules/file/dm3file.c:860
+#: modules/file/dm3file.c:900
 msgid "Tag entry type is neither group nor data."
 msgstr "Typ tagu položky není ani skupina ani data."
 
-#: modules/file/dm3file.c:917
+#: modules/file/dm3file.c:957
 #, c-format
 msgid "Tag type does not start with marker ‘%s’."
 msgstr "Typ tagu nezačíná povinnou značkou ‚%s‘."
 
-#: modules/file/dm3file.c:1068
+#: modules/file/dm3file.c:1108
 #, c-format
 msgid "Invalid or unsupported tag type %u."
 msgstr "Neznámý nebo nepodporovaný typ tagu %u."
@@ -3052,7 +3052,7 @@ msgid "Invalid tag data positions were found."
 msgstr "Vyskytly se neplatné posice dat tagů."
 
 #: modules/file/gwytiff.h:683 modules/file/gwytiff.h:690
-#: modules/file/gwytiff.h:786 modules/file/gwytiff.h:802
+#: modules/file/gwytiff.h:787 modules/file/gwytiff.h:803
 #, c-format
 msgid "Required tag %u was not found."
 msgstr "Nebyl nalezen nezbytný tag %u."
@@ -3075,7 +3075,7 @@ msgstr "Planární konfigurace %u není podporována."
 msgid "Unsupported sample format"
 msgstr "Nepodporovaný formát vzorku"
 
-#: modules/file/gwytiff.h:828 modules/file/matfile.c:275
+#: modules/file/gwytiff.h:829 modules/file/matfile.c:275
 #: modules/file/matfile.c:297 modules/file/psia.c:342
 msgid "File is truncated."
 msgstr "Soubor je uříznutý."
@@ -5382,11 +5382,11 @@ msgstr "počet řádků"
 msgid "Unknown data type `%s'."
 msgstr "Neznámý typ dat: ‚%s‘."
 
-#: modules/file/zeiss.c:62
+#: modules/file/zeiss.c:63
 msgid "Imports Carl Zeiss SEM images."
 msgstr "Načítá SEM obrázky Carl Zeiss."
 
-#: modules/file/zeiss.c:75
+#: modules/file/zeiss.c:76
 msgid "Carl Zeiss SEM scans (.tif)"
 msgstr "Carl Zeiss SEM obrázky (.tif)"
 
