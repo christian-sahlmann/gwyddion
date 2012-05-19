@@ -39,7 +39,7 @@
  * [FILE-MAGIC-USERGUIDE]
  * FEI Tecnai imaging and analysis (former Emispec) data
  * .ser
- * Read
+ * Read SPS
  **/
 
 #include "config.h"
@@ -76,17 +76,18 @@ typedef enum {
 } TIADataType;
 
 typedef enum {
-    TIA_ES_LE       = 0x4949,
-    TIA_ES_MAGIC    = 0x0197,
-    TIA_ES_VERSION  = 0x0210,
-    TIA_1D_DATA     = 0x4120,
-    TIA_2D_DATA     = 0x4122,
-    TIA_TAG_TIME    = 0x4152,
-    TIA_TAG_TIMEPOS = 0x4142,
-    TIA_HEADER_SIZE = 3 * 2 + 6 * 4,
-    TIA_DIM_SIZE    = 4 * 4 + 2 * 8,
-    TIA_2D_SIZE     = 50,
-    TIA_1D_SIZE     = 26,
+    TIA_ES_LE        = 0x4949,
+    TIA_ES_MAGIC     = 0x0197,
+    TIA_ES_VERSION   = 0x0210,
+    TIA_1D_DATA      = 0x4120,
+    TIA_2D_DATA      = 0x4122,
+    TIA_TAG_TIME     = 0x4152,
+    TIA_TAG_TIMEPOS  = 0x4142,
+    TIA_HEADER_SIZE  = 3 * 2 + 6 * 4,
+    TIA_DIM_SIZE     = 4 * 4 + 2 * 8,
+    TIA_2D_SIZE      = 50,
+    TIA_1D_SIZE      = 26,
+    TIA_TIMEPOS_SIZE = 22,
 } TIAConsts;
 
 typedef struct {
@@ -159,7 +160,7 @@ static gboolean      tia_check_header      (TIAHeader *header,
 static gboolean      tia_load_dimarray     (const guchar *p,
                                             TIADimension *dimarray,
                                             gsize size);
-static GwyDataField* tia_read_2d           (const guchar *p,
+static GwyDataField *tia_read_2d           (const guchar *p,
                                             gsize size);
 static gdouble       tia_dataline_to_value (GwyDataLine *dline);
 static GwyDataLine  *tia_read_1d_dataline  (const guchar *p,
@@ -307,7 +308,6 @@ tia_load(const gchar *filename,
     gint i, j, offset, dimarraylength, dimarraysize = 0;
     gint xres, yres;
     gdouble xreal, xoffset, yreal, yoffset, value, *data;
-    GwySIUnit siunitxy;
     gchar *strkey;
 
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
@@ -400,13 +400,28 @@ tia_load(const gchar *filename,
         }
         dimension = &g_array_index(dimarray, TIADimension, 0);
         xres = dimension->numelements;
+        xreal = dimension->numelements * dimension->calibrationdelta;
+        xoffset = dimension->calibrationoffset
+          - dimension->calibrationdelta * dimension->calibrationelement;
         dimension = &g_array_index(dimarray, TIADimension, 1);
         yres = dimension->numelements;
-        dfield = gwy_data_field_new(xres, yres, 1.0, 1.0, TRUE);
-        if (!dfield) {
+        yreal = dimension->numelements * dimension->calibrationdelta;
+        yoffset = dimension->calibrationoffset
+          - dimension->calibrationdelta * dimension->calibrationelement;
+        dfield = gwy_data_field_new(xres, yres, xreal, yreal, TRUE);
+        spectra = gwy_spectra_new();
+        if (!dfield || !spectra) {
             goto tagoffsets_fail;
         }
+        gwy_data_field_set_xoffset (dfield, xoffset);
+        gwy_data_field_set_yoffset (dfield, yoffset);
+        gwy_si_unit_set_from_string(
+                            gwy_data_field_get_si_unit_xy(dfield), "m");
+        gwy_si_unit_set_from_string(
+                              gwy_spectra_get_si_unit_xy(spectra), "m");
+        gwy_spectra_set_title(spectra, "TEM Spectroscopy");
         data = gwy_data_field_get_data(dfield);
+
         for (i = 0; i < header->validnumberelements; i++) {
             offset = g_array_index(dataoffsets, gint32, i);
             if ((offset > size)||(size-offset < TIA_1D_SIZE)) {
@@ -415,8 +430,13 @@ tia_load(const gchar *filename,
             }
             dline = tia_read_1d_dataline(buffer + offset, size - offset);
             if(dline) {
+                xreal = gwy_data_field_jtor(dfield, i % xres + 0.5);
+                yreal = gwy_data_field_itor(dfield,
+                                           (gint)(i / xres) + 0.5);
                 value = tia_dataline_to_value(dline);
                 *(data++) = value;
+                gwy_spectra_add_spectrum(spectra, dline,
+                                         xreal, yreal);
             }
             else break;
             g_object_unref(dline);
@@ -429,9 +449,16 @@ tia_load(const gchar *filename,
 
             strkey = g_strdup_printf("/%u/data/title", 0);
             gwy_container_set_string_by_name(container,
-                                             strkey,
-                                             g_strdup("TEM Spectroscopy"));
+                                          strkey,
+                                          g_strdup("TEM Spectroscopy"));
             g_free(strkey);
+        }
+        if (spectra) {
+            strkey = g_strdup_printf("/sps/%d", 0);
+            gwy_container_set_object_by_name(container,
+                                             strkey, spectra);
+            g_free(strkey);
+            g_object_unref(spectra);
         }
     }
 
@@ -589,8 +616,8 @@ static gdouble tia_dataline_to_value(GwyDataLine *dline)
     gdouble value, *data;
     gint i, n;
 
-    n = gwy_data_line_get_res (dline);
-    data =  gwy_data_line_get_data_const(dline);
+    n = gwy_data_line_get_res(dline);
+    data = (gdouble *)gwy_data_line_get_data_const(dline);
     value = *(data);
     for (i = 0; i < n; i++, data++)
         if(*data > value)
