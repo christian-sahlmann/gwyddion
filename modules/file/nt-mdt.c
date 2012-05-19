@@ -401,7 +401,7 @@ static gboolean       mdt_real_load         (const guchar *buffer,
                                              guint size,
                                              MDTFile *mdtfile,
                                              GError **error);
-static GwyDataField*  extract_scanned_data  (MDTScannedDataFrame *dataframe);
+static GwyDataField*  extract_scanned_data (MDTScannedDataFrame *dataframe);
 static GwyGraphModel* extract_scanned_spectrum (MDTScannedDataFrame *dataframe,
                                                 guint number);
 static GwySpectra*    extract_sps_curve     (MDTScannedDataFrame *dataframe,
@@ -409,24 +409,24 @@ static GwySpectra*    extract_sps_curve     (MDTScannedDataFrame *dataframe,
 static GwyDataField*  extract_mda_data      (MDTMDAFrame *dataframe);
 static GwyGraphModel* extract_mda_spectrum  (MDTMDAFrame *dataframe,
                                              guint number);
-static GwyDataField * extract_raman_image   (MDTMDAFrame *dataframe,
+static GwyDataField*  extract_raman_image   (MDTMDAFrame *dataframe,
                                              GwyRunType mode);
 
-static void          start_element       (GMarkupParseContext *context,
-                                          const gchar *element_name,
-                                          const gchar **attribute_names,
-                                          const gchar **attribute_values,
-                                          gpointer user_data,
-                                          GError **error);
-static void          end_element         (GMarkupParseContext *context,
-                                          const gchar *element_name,
-                                          gpointer user_data,
-                                          GError **error);
-static void          parse_text          (GMarkupParseContext *context,
-                                          const gchar *text,
-                                          gsize text_len,
-                                          gpointer user_data,
-                                          GError **error);
+static void           start_element    (GMarkupParseContext *context,
+                                        const gchar *element_name,
+                                        const gchar **attribute_names,
+                                        const gchar **attribute_values,
+                                        gpointer user_data,
+                                        GError **error);
+static void           end_element      (GMarkupParseContext *context,
+                                        const gchar *element_name,
+                                        gpointer user_data,
+                                        GError **error);
+static void           parse_text       (GMarkupParseContext *context,
+                                        const gchar *text,
+                                        gsize text_len,
+                                        gpointer user_data,
+                                        GError **error);
 
 #ifdef DEBUG
 static const GwyEnum frame_types[] = {

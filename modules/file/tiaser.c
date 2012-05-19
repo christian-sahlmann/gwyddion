@@ -86,6 +86,7 @@ typedef enum {
     TIA_HEADER_SIZE = 3 * 2 + 6 * 4,
     TIA_DIM_SIZE    = 4 * 4 + 2 * 8,
     TIA_2D_SIZE     = 50,
+    TIA_1D_SIZE     = 26,
 } TIAConsts;
 
 typedef struct {
@@ -145,27 +146,31 @@ typedef struct {
     gchar      *data;
 } TIA2DData;
 
-static gboolean      module_register   (void);
-static gint          tia_detect        (const GwyFileDetectInfo *fileinfo,
-                                        gboolean only_name);
-static GwyContainer* tia_load          (const gchar *filename,
-                                        GwyRunType mode,
-                                        GError **error);
-static void          tia_load_header   (const guchar *p,
-                                        TIAHeader *header);
-static gboolean      tia_check_header  (TIAHeader *header, gsize size);
-static gboolean      tia_load_dimarray (const guchar *p,
-                                        TIADimension *dimarray,
-                                        gsize size);
-static GwyDataField* tia_read_2d       (const guchar *p,
-                                        gsize size);
+static gboolean      module_register       (void);
+static gint          tia_detect            (const GwyFileDetectInfo *fileinfo,
+                                            gboolean only_name);
+static GwyContainer* tia_load              (const gchar *filename,
+                                            GwyRunType mode,
+                                            GError **error);
+static void          tia_load_header       (const guchar *p,
+                                            TIAHeader *header);
+static gboolean      tia_check_header      (TIAHeader *header,
+                                            gsize size);
+static gboolean      tia_load_dimarray     (const guchar *p,
+                                            TIADimension *dimarray,
+                                            gsize size);
+static GwyDataField* tia_read_2d           (const guchar *p,
+                                            gsize size);
+static gdouble       tia_dataline_to_value (GwyDataLine *dline);
+static GwyDataLine  *tia_read_1d_dataline  (const guchar *p,
+                                            gsize size);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Imports FEI Tecnai imaging and analysis (former Emispec) files."),
     "dn2010 <dn2010@gmail.com>",
-    "0.1",
+    "0.2",
     "David Nečas (Yeti), Daniil Bratashov (dn2010)",
     "2012",
 };
@@ -297,7 +302,12 @@ tia_load(const gchar *filename,
     TIADimension *dimension;
     GArray *dimarray, *dataoffsets, *tagoffsets;
     GwyDataField *dfield;
+    GwySpectra *spectra;
+    GwyDataLine *dline;
     gint i, j, offset, dimarraylength, dimarraysize = 0;
+    gint xres, yres;
+    gdouble xreal, xoffset, yreal, yoffset, value, *data;
+    GwySIUnit siunitxy;
     gchar *strkey;
 
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
@@ -323,7 +333,7 @@ tia_load(const gchar *filename,
     dimarray = g_array_sized_new(FALSE, TRUE, sizeof(TIADimension),
                                                         dimarraylength);
     for (i = 0; i < dimarraylength; i++) {
-		p += dimarraysize;
+        p += dimarraysize;
         dimension = g_new0(TIADimension, 1);
         if(!tia_load_dimarray(p, dimension, size - TIA_HEADER_SIZE
                                                       - dimarraysize)) {
@@ -347,18 +357,24 @@ tia_load(const gchar *filename,
     for (i = 0; i < header->totalnumberelements; i++) {
         offset = gwy_get_guint32_le(&p);
         g_array_append_val(dataoffsets, offset);
+        if (offset > size) {
+            goto dataoffsets_fail;
+        }
     }
     tagoffsets = g_array_new(FALSE, TRUE, sizeof(gint32));
     for (i = 0; i < header->totalnumberelements; i++) {
         offset = gwy_get_guint32_le(&p);
         g_array_append_val(tagoffsets, offset);
+        if (offset > size) {
+            goto tagoffsets_fail;
+        }
     }
 
     container = gwy_container_new();
     if (header->datatypeid == TIA_2D_DATA)
         for (i = 0; i < header->validnumberelements; i++) {
             offset = g_array_index(dataoffsets, gint32, i);
-            if ((offset > size)||(size-offset < 50)) {
+            if ((offset > size)||(size-offset < TIA_2D_SIZE)) {
                 gwy_debug("Attempt to read after EOF");
             }
             else {
@@ -378,10 +394,51 @@ tia_load(const gchar *filename,
             }
         }
     else if (header->datatypeid == TIA_1D_DATA) {
+        if (dimarray->len != 2) {
+            gwy_debug("Wrong dimensions number");
+            goto tagoffsets_fail;
+        }
+        dimension = &g_array_index(dimarray, TIADimension, 0);
+        xres = dimension->numelements;
+        dimension = &g_array_index(dimarray, TIADimension, 1);
+        yres = dimension->numelements;
+        dfield = gwy_data_field_new(xres, yres, 1.0, 1.0, TRUE);
+        if (!dfield) {
+            goto tagoffsets_fail;
+        }
+        data = gwy_data_field_get_data(dfield);
+        for (i = 0; i < header->validnumberelements; i++) {
+            offset = g_array_index(dataoffsets, gint32, i);
+            if ((offset > size)||(size-offset < TIA_1D_SIZE)) {
+                gwy_debug("Attempt to read after EOF");
+                goto tagoffsets_fail;
+            }
+            dline = tia_read_1d_dataline(buffer + offset, size - offset);
+            if(dline) {
+                value = tia_dataline_to_value(dline);
+                *(data++) = value;
+            }
+            else break;
+            g_object_unref(dline);
+        }
+        if (dfield) {
+            GQuark key = gwy_app_get_data_key_for_id(0);
+
+            gwy_container_set_object(container, key, dfield);
+            g_object_unref(dfield);
+
+            strkey = g_strdup_printf("/%u/data/title", 0);
+            gwy_container_set_string_by_name(container,
+                                             strkey,
+                                             g_strdup("TEM Spectroscopy"));
+            g_free(strkey);
+        }
     }
 
-    g_array_free(dataoffsets, TRUE);
+tagoffsets_fail:
     g_array_free(tagoffsets, TRUE);
+dataoffsets_fail:
+    g_array_free(dataoffsets, TRUE);
 fail2:
     g_array_free(dimarray, TRUE);
     g_free(header);
@@ -420,7 +477,7 @@ static GwyDataField* tia_read_2d(const guchar *p, gsize size)
      || (fielddata->datatype > TIA_DATA_DOUBLE)
      || (size < 50 + fielddata->arraylengthx * fielddata->arraylengthy
               * tia_datasizes[fielddata->datatype])) {
-		gwy_debug("Unsupported datatype");
+        gwy_debug("Unsupported datatype");
         goto fail_2d;
     }
 
@@ -524,6 +581,132 @@ static GwyDataField* tia_read_2d(const guchar *p, gsize size)
     fail_2d:
     g_free(fielddata);
     return dfield;
+}
+
+/* simple max calculation */
+static gdouble tia_dataline_to_value(GwyDataLine *dline)
+{
+    gdouble value, *data;
+    gint i, n;
+
+    n = gwy_data_line_get_res (dline);
+    data =  gwy_data_line_get_data_const(dline);
+    value = *(data);
+    for (i = 0; i < n; i++, data++)
+        if(*data > value)
+            value = *data;
+
+    return value;
+}
+
+static GwyDataLine *tia_read_1d_dataline(const guchar *p, gsize size)
+{
+    TIA1DData *spectradata;
+    GwyDataLine *dline = NULL;
+    gint i, n;
+    gdouble *data;
+    gint tia_datasizes[11] = {0, 1, 1, 2, 2, 4, 4, 4, 8, 8, 16};
+
+    spectradata = g_new0(TIA1DData, 1);
+    spectradata->calibrationoffset  = gwy_get_gdouble_le(&p);
+    spectradata->calibrationdelta   = gwy_get_gdouble_le(&p);
+    spectradata->calibrationelement = gwy_get_guint32_le(&p);
+    spectradata->datatype           = (TIADataType)gwy_get_guint16_le(&p);
+    spectradata->arraylength        = gwy_get_guint32_le(&p);
+    spectradata->data               = (gchar *)p;
+
+    if ((spectradata->datatype < TIA_DATA_UINT8)
+     || (spectradata->datatype > TIA_DATA_DOUBLE)
+     || (size < 50 + spectradata->arraylength
+                              * tia_datasizes[spectradata->datatype])) {
+        gwy_debug("Unsupported datatype");
+        goto fail_1d;
+    }
+
+    dline = gwy_data_line_new(spectradata->arraylength,
+               spectradata->arraylength * spectradata->calibrationdelta,
+               TRUE);
+    if (!dline) {
+        gwy_debug("Failed to create dataline");
+        goto fail_1d;
+    }
+
+    gwy_data_line_set_offset(dline, spectradata->calibrationoffset
+     - spectradata->calibrationdelta * spectradata->calibrationelement);
+    data = gwy_data_line_get_data(dline);
+
+    n = spectradata->arraylength;
+    switch (spectradata->datatype) {
+        case TIA_DATA_UINT8:
+        {
+            for(i = 0; i < n; i++)
+                *(data++) = (*(p++)) / (gdouble)G_MAXUINT8;
+        }
+        break;
+        case TIA_DATA_UINT16:
+        {
+            const guint16 *tp = (const guint16 *)p;
+
+            for(i = 0; i < n; i++)
+                *(data++) = GUINT16_FROM_LE(*(tp++))
+                                             / (gdouble)G_MAXUINT16;
+        }
+        break;
+        case TIA_DATA_UINT32:
+        {
+            const guint32 *tp = (const guint32 *)p;
+
+            for(i = 0; i < n; i++)
+                *(data++) = GUINT32_FROM_LE(*(tp++))
+                                             / (gdouble)G_MAXUINT32;
+        }
+        break;
+        case TIA_DATA_INT8:
+        {
+            const gchar *tp = (const gchar *)p;
+
+            for(i = 0; i < n; i++)
+                *(data++) = (*(tp++)) / (gdouble)G_MAXINT8;
+        }
+        break;
+        case TIA_DATA_INT16:
+        {
+            const gint16 *tp = (const gint16 *)p;
+
+            for(i = 0; i < n; i++)
+                *(data++) = GINT16_FROM_LE(*(tp++))
+                                              / (gdouble)G_MAXINT16;
+        }
+        break;
+        case TIA_DATA_INT32:
+        {
+            const gint32 *tp = (const gint32 *)p;
+
+            for(i = 0; i < n; i++)
+                *(data++) = GINT32_FROM_LE(*(tp++))
+                                              / (gdouble)G_MAXINT32;
+        }
+        break;
+        case TIA_DATA_FLOAT:
+        {
+            for(i = 0; i < n; i++)
+                *(data++) = gwy_get_gfloat_le(&p);
+        }
+        break;
+        case TIA_DATA_DOUBLE:
+        {
+            for(i = 0; i < n; i++)
+                *(data++) = gwy_get_gdouble_le(&p);
+        }
+        break;
+        default:
+        g_assert_not_reached();
+        break;
+    }
+
+    fail_1d:
+    g_free(spectradata);
+    return dline;
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
