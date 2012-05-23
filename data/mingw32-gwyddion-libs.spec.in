@@ -64,6 +64,7 @@ MinGW Windows Gwyddion libraries.
 
 %build
 %{_mingw32_configure} --enable-shared --disable-static --disable-gtk-doc \
+  --without-libiconv-prefix --without-libintl-prefix \
   --disable-schemas-install --disable-desktop-file-update --disable-pygwy \
   --without-pascal --without-perl --without-python --without-ruby \
   --without-kde4-thumbnailer
@@ -114,6 +115,10 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Wed May 23 2012 Yeti <yeti@gwyddion.net> - 2.28-1
+- Prevent looking for libiconv and libintl in prefix, fixes some scary libtool
+  warnings
+
 * Thu Jan 27 2011 Yeti <yeti@gwyddion.net> - 2.22-1
 - Updated to build on openSUSE
 
