@@ -225,7 +225,7 @@ fail:
 static GwyDataField *nst_read_3d(const gchar *buffer, gchar **title)
 {
     GwyDataField *dfield = NULL;
-    GwySIUnit *siunitxy, *siunitz;
+    GwySIUnit *siunitxy = NULL, *siunitz = NULL;
     gchar *p, *line;
     gchar **lineparts;
     gint x, y, xmax = 0, ymax = 0, i, j;

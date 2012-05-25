@@ -344,7 +344,7 @@ tia_load(const gchar *filename,
                 g_free(dimension->description);
                 g_free(dimension->units);
             }
-            goto fail2;
+            goto fail3;
         }
         dimarraysize += TIA_DIM_SIZE
                 + dimension->descriptionlength + dimension->unitslength;
@@ -466,8 +466,9 @@ tagoffsets_fail:
     g_array_free(tagoffsets, TRUE);
 dataoffsets_fail:
     g_array_free(dataoffsets, TRUE);
-fail2:
+fail3:
     g_array_free(dimarray, TRUE);
+fail2:    
     g_free(header);
 fail:
     gwy_file_abandon_contents(buffer, size, NULL);

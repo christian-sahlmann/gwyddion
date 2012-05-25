@@ -1235,8 +1235,8 @@ mdt_mda_vars(const guchar *p,
              G_GNUC_UNUSED GError **error)
 {
 
-    guint headSize, totLen, NameSize, CommSize, ViewInfoSize, SpecSize;
-    G_GNUC_UNUSED guint SourceInfoSize, VarSize, DataSize, StructLen, CellSize;
+    guint headSize, NameSize, CommSize, ViewInfoSize, SpecSize;
+    G_GNUC_UNUSED guint totLen, SourceInfoSize, VarSize, DataSize, StructLen, CellSize;
     G_GNUC_UNUSED guint64 num;
     const guchar *recordPointer = p;
     const guchar *structPointer;
@@ -1584,7 +1584,7 @@ static GwySpectra* extract_sps_curve (MDTScannedDataFrame *dataframe,
     GwySpectra *spectra;
     GwyDataLine *dline;
     GwySIUnit *siunitx, *siunitz, *siunitcoordxy;
-    guint i, i_p, res, numpoints;
+    guint i, i_p, numpoints;
     gdouble *ydata = NULL;
     G_GNUC_UNUSED gdouble xreal, zscale;
     gdouble deltax;
@@ -1611,7 +1611,6 @@ static GwySpectra* extract_sps_curve (MDTScannedDataFrame *dataframe,
     zscale = pow10(power10z)*dataframe->z_scale.step;
 
     p = dataframe->dots;
-    res = dataframe->fm_xres;
     numpoints = dataframe->fm_ndots;
 
     /* reading coordheader */
