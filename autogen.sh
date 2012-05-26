@@ -21,7 +21,7 @@ GETTEXTIZE=${GETTEXTIZE:-$gettextize}
 get_version() {
   local v
   local v2
-  v=`$1 --version </dev/null 2>&1 | sed -e '2,$ d' -e 's/ *([^()]*)$//' -e 's/.* \(.*\)/\1/' -e 's/-p[0-9]*//'`
+  v=`$1 --version </dev/null | sed -e '2,$ d' -e 's/ *([^()]*)$//' -e 's/.* \(.*\)/\1/' -e 's/-p[0-9]*//'`
   v2=${v#*.}
   echo ${v%%.*}.${v2%%.*}
 }
