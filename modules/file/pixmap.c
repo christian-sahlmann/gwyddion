@@ -3356,6 +3356,8 @@ pixmap_save_dialog(GwyContainer *data,
             inset_length_set_auto(&controls);
             args->draw_mask = pixmap_save_defaults.draw_mask;
             args->draw_selection = pixmap_save_defaults.draw_selection;
+            args->inset_draw_ticks = pixmap_save_defaults.inset_draw_ticks;
+            args->inset_draw_label = pixmap_save_defaults.inset_draw_label;
             gtk_adjustment_set_value(GTK_ADJUSTMENT(controls.zoom), args->zoom);
             args->zoom = PREVIEW_SIZE/(gdouble)MAX(args->xres, args->yres);
             gwy_radio_buttons_set_current(controls.xytypes, args->xytype);
@@ -3761,6 +3763,8 @@ scalebar(gint size,
 
     if (draw_label)
         format_layout(layout, &logical, s, "%s", length);
+    else
+        gwy_clear(&logical, 1);
 
     lw = ZOOM2LW(zoom);
     tick = draw_ticks ? zoom*TICK_LENGTH : lw;
