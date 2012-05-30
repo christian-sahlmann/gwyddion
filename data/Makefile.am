@@ -48,7 +48,6 @@ EXTRA_DIST = \
 	gwyddion.vim \
 	gwyddion.1 \
 	mingw32-gwyddion-libs.spec.in \
-	mingw32-gwyddion-libs.spec \
 	thumbnailer-schemas.xsl \
 	$(gwyddionmime_DATA)
 
