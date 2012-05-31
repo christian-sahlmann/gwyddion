@@ -144,7 +144,7 @@ static GwyModuleInfo module_info = {
     N_("Evaluates distribution of grains (continuous parts of mask)."),
     "Petr Klapetek <petr@klapetek.cz>, Sven Neumann <neumann@jpk.com>, "
         "Yeti <yeti@gwyddion.net>",
-    "3.8",
+    "3.9",
     "David Nečas (Yeti) & Petr Klapetek & Sven Neumann",
     "2003",
 };
@@ -675,7 +675,7 @@ grain_stat(GwyContainer *data, GwyRunType run)
     GwySIUnit *siunit, *siunit2;
     GwySIValueFormat *vf;
     gint xres, yres, ngrains;
-    gdouble total_area, area, size, vol_0, vol_min, vol_laplace, v;
+    gdouble total_area, area, size, vol_0, vol_min, vol_laplace, bound_len, v;
     gdouble *values = NULL;
     gint *grains;
     GString *str;
@@ -728,6 +728,8 @@ grain_stat(GwyContainer *data, GwyRunType run)
                                      GWY_GRAIN_VALUE_VOLUME_MIN);
     vol_laplace = grains_get_total_value(dfield, ngrains, grains, &values,
                                          GWY_GRAIN_VALUE_VOLUME_LAPLACE);
+    bound_len = grains_get_total_value(dfield, ngrains, grains, &values,
+                                       GWY_GRAIN_VALUE_FLAT_BOUNDARY_LENGTH);
     g_free(values);
     g_free(grains);
 
@@ -736,7 +738,7 @@ grain_stat(GwyContainer *data, GwyRunType run)
                                          NULL);
     gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
 
-    table = gtk_table_new(9, 2, FALSE);
+    table = gtk_table_new(10, 2, FALSE);
     gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox), table);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     row = 0;
@@ -790,6 +792,12 @@ grain_stat(GwyContainer *data, GwyRunType run)
     gwy_si_unit_get_format(siunit2, GWY_SI_UNIT_FORMAT_VFMARKUP, v, vf);
     g_string_printf(str, "%.*f %s", vf->precision, v/vf->magnitude, vf->units);
     add_report_row(GTK_TABLE(table), &row, _("Total grain volume (laplacian):"),
+                   str->str, report);
+
+    v = bound_len;
+    gwy_si_unit_get_format(siunit, GWY_SI_UNIT_FORMAT_VFMARKUP, v, vf);
+    g_string_printf(str, "%.*f %s", vf->precision, v/vf->magnitude, vf->units);
+    add_report_row(GTK_TABLE(table), &row, _("Total projected boundary length:"),
                    str->str, report);
 
     gwy_si_unit_value_format_free(vf);
