@@ -52,6 +52,7 @@
 #include <libgwydgets/gwydataview.h>
 #include <libgwydgets/gwygraph.h>
 #include <libgwydgets/gwylayer-basic.h>
+#include <libgwydgets/gwydgets.h>
 #include <app/gwymoduleutils-file.h>
 
 
@@ -236,6 +237,12 @@ typedef enum {
     MDT_XML_UNITS            = 2,
     MDT_XML_DATAARRAY        = -1
 } MDTXMLParamType;
+
+typedef enum {
+    MDT_IMAGE_MAX,
+    MDT_IMAGE_MAXPOS,
+    MDT_IMAGE_AVG
+} MDTImageType;
 
 enum {
     FILE_HEADER_SIZE      = 32,
@@ -2368,7 +2375,7 @@ static GwyDataField *extract_raman_image_maxpos(MDTMDAFrame *dataframe)
 
     MDTMDACalibration *xAxis = &dataframe->dimensions[0],
                       *yAxis = &dataframe->dimensions[1],
-                      *zAxis = &dataframe->mesurands[0];
+                      *zAxis = &dataframe->mesurands[1]; // spectral x
 
     if (xAxis->unit && xAxis->unitLen) {
         unit = g_strndup(xAxis->unit, xAxis->unitLen);
@@ -2434,7 +2441,7 @@ static GwyDataField *extract_raman_image_maxpos(MDTMDAFrame *dataframe)
                     kposition = k;
                 }
             }
-            *(data++) = xspectra[kposition];
+            *(data++) = xspectra[kposition] * zscale;
         }
     }
     return dfield;
@@ -2537,10 +2544,17 @@ extract_raman_image(MDTMDAFrame *dataframe, GwyRunType mode)
     GwyContainer *container;
     GwyDataField *dfield;
     GwyPixmapLayer *player;
+    gint output, response;
 
-    dfield = extract_raman_image_avg(dataframe);
+    static const GwyEnum imagetype[] = {
+        { N_("Maximum"),       MDT_IMAGE_MAX },
+        { N_("Max. position"), MDT_IMAGE_MAXPOS },
+        { N_("Average"),       MDT_IMAGE_AVG },
+    };
 
     if (mode != GWY_RUN_INTERACTIVE) {
+		dfield = extract_raman_image_max(dataframe);
+		
         return dfield;
     }
 
@@ -2560,12 +2574,14 @@ extract_raman_image(MDTMDAFrame *dataframe, GwyRunType mode)
     vbox = gtk_vbox_new(FALSE, 0);
     gtk_box_pack_start(GTK_BOX(hbox), vbox, FALSE, FALSE, 0);
 
-    combobox = gtk_combo_box_text_new  ();
+    combobox 
+            = gwy_enum_combo_box_new(imagetype, G_N_ELEMENTS(imagetype),
+                              G_CALLBACK(gwy_enum_combo_box_update_int),
+                              &output, output, TRUE);
+    gwy_enum_combo_box_set_active(combobox, MDT_IMAGE_MAX);
     gtk_box_pack_start(GTK_BOX(vbox), combobox, FALSE, FALSE, 0);
-    gtk_combo_box_text_append_text (combobox, _("Maximum"));
-    gtk_combo_box_text_append_text (combobox, _("Maximum position"));
-    gtk_combo_box_text_append_text (combobox, _("Average"));
 
+	/*
     container = gwy_container_new();
     gwy_container_set_object_by_name(container, "/0/data", dfield);
     dataview = gwy_data_view_new(container);
@@ -2580,8 +2596,46 @@ extract_raman_image(MDTMDAFrame *dataframe, GwyRunType mode)
     gtk_box_pack_start(GTK_BOX(vbox), dataview, FALSE, FALSE, 0);
 
     gwy_container_set_object_by_name(container, "/0/data", dfield);
+    */
 
     gtk_widget_show_all(dialog);
+    do {
+        response = gtk_dialog_run(GTK_DIALOG(dialog));
+        switch (response) {
+            case GTK_RESPONSE_CANCEL:
+            case GTK_RESPONSE_DELETE_EVENT:
+            gtk_widget_destroy(dialog);
+            case GTK_RESPONSE_NONE:
+            return FALSE;
+            break;
+
+            case GTK_RESPONSE_OK:
+            break;
+
+            default:
+            g_assert_not_reached();
+            break;
+        }
+    } while (response != GTK_RESPONSE_OK);
+    gtk_widget_destroy(dialog);
+    
+    switch (output) {
+		case MDT_IMAGE_MAX:
+			dfield = extract_raman_image_max(dataframe);
+		break;
+		
+		case MDT_IMAGE_MAXPOS:
+			dfield = extract_raman_image_maxpos(dataframe);
+		break;
+
+		case MDT_IMAGE_AVG:
+			dfield = extract_raman_image_avg(dataframe);
+		break;
+
+        default:
+            g_assert_not_reached();
+        break;
+	}
 
     return dfield;
 }
