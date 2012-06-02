@@ -105,6 +105,14 @@ function check_coding_style() {
 }
 
 
+function check_deps_versions() {
+  # Keep the `GENERATED' string quoted to prevent match here
+  grep -r --include '*.[ch]' -L ' This is a 'GENERATED' file\>' . \
+    | xargs gtkdoc-depscan \
+    | ./utils/check-dep-versions.py
+}
+
+
 function check_symbols() {
   # Note this need build_documentation() to pass
 
@@ -228,6 +236,7 @@ else
   call install_to_tmp
   call check_headers
   call check_symbols
+  call check_deps_versions
   call check_desktop
   call check_coding_style
   call make_dists
