@@ -141,7 +141,6 @@ do_level(GwyContainer *data,
     GwyDataField *dfield;
     GwyDataField *mfield;
     LevelArgs args;
-    gboolean ok;
     gdouble c, bx, by;
     GQuark quark;
 
@@ -154,21 +153,24 @@ do_level(GwyContainer *data,
 
     level_load_args(gwy_app_settings_get(), &args);
     if (run != GWY_RUN_IMMEDIATE && mfield) {
-        ok = level_dialog(&args, dialog_title);
+        gboolean ok = level_dialog(&args, dialog_title);
         level_save_args(gwy_app_settings_get(), &args);
         if (!ok)
             return;
     }
     if (!mfield)
         args.masking = GWY_MASK_IGNORE;
-
     if (args.masking == GWY_MASK_IGNORE)
         mfield = NULL;
-    if (mfield)
-        mfield = gwy_data_field_duplicate(mfield);
-    if (mfield && args.masking == GWY_MASK_EXCLUDE) {
-        gwy_data_field_multiply(mfield, -1.0);
-        gwy_data_field_add(mfield, 1.0);
+
+    if (mfield) {
+        if (args.masking == GWY_MASK_EXCLUDE) {
+            mfield = gwy_data_field_duplicate(mfield);
+            gwy_data_field_multiply(mfield, -1.0);
+            gwy_data_field_add(mfield, 1.0);
+        }
+        else
+            g_object_ref(mfield);
     }
 
     gwy_app_undo_qcheckpoint(data, quark, NULL);
