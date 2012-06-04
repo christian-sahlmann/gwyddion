@@ -822,21 +822,23 @@ mdt_load(const gchar *filename,
             }
             else if (mdaframe->nDimensions == 3 && mdaframe->nMesurands == 3) {
                 /* raman images */
-                dfield = extract_raman_image(mdaframe, mode);
-                g_string_printf(key, "/%d/data", n);
-                gwy_container_set_object_by_name(data, key->str, dfield);
-                g_object_unref(dfield);
-                if (mdaframe->title) {
-                    g_string_append(key, "/title");
-                    gwy_container_set_string_by_name(data, key->str,
+                if (dfield = extract_raman_image(mdaframe, mode)) {
+                    g_string_printf(key, "/%d/data", n);
+                    gwy_container_set_object_by_name(data, key->str,
+                                                     dfield);
+                    g_object_unref(dfield);
+                    if (mdaframe->title) {
+                        g_string_append(key, "/title");
+                        gwy_container_set_string_by_name(data, key->str,
                                             g_strdup_printf("%s (%u)",
                                             mdaframe->title, i+1));
-                    g_free((gpointer)mdaframe->title);
-                }
-                else
-                    gwy_app_channel_title_fall_back(data, n);
+                        g_free((gpointer)mdaframe->title);
+                    }
+                    else
+                        gwy_app_channel_title_fall_back(data, n);
 
-                n++;
+                    n++;
+                }
             }
         }
         else if (mdtfile.frames[i].type == MDT_FRAME_SPECTROSCOPY) {
@@ -2661,9 +2663,10 @@ extract_raman_image(MDTMDAFrame *dataframe, GwyRunType mode)
         switch (response) {
             case GTK_RESPONSE_CANCEL:
             case GTK_RESPONSE_DELETE_EVENT:
-            gtk_widget_destroy(dialog);
+                gtk_widget_destroy(dialog);
             case GTK_RESPONSE_NONE:
-            return FALSE;
+                g_object_unref(controls.mydata);
+                return NULL;
             break;
 
             case GTK_RESPONSE_OK:
