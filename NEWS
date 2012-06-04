@@ -3,6 +3,7 @@ Modules:
 - Pixmap: Scalebar ticks and label can be enabled/disabled.
 - Grain statistics: Displays total projected boundary length.
 - Median line correction: Masking is supported.
+- TIA SER: Spectral data import is supported.
 
 
 2.28 (2012-05-18)
