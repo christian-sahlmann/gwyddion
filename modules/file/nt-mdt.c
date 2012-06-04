@@ -55,7 +55,6 @@
 #include <libgwydgets/gwydgets.h>
 #include <app/gwymoduleutils-file.h>
 
-
 #include <glib.h>
 #include <glib/gprintf.h>
 
@@ -397,6 +396,13 @@ typedef struct {
     gint forward_size;
     gint backward_size;
 } MDTDotsData;
+
+typedef struct {
+    GwyContainer    *mydata;
+    GtkWidget       *view;
+    GtkWidget       *combobox;
+    gint             output;
+} MDTControlsType;
 
 static gboolean       module_register       (void);
 static gint           mdt_detect            (const GwyFileDetectInfo *fileinfo,
@@ -2453,7 +2459,7 @@ static GwyDataField *extract_raman_image_avg (MDTMDAFrame *dataframe)
     const guchar *p, *px;
     guint i, j, k;
     gdouble xspectra[1024], yspectra[1024];
-    gdouble y, summa = 0.0, maxposition;
+    gdouble y, sum;
     GwyDataField *dfield;
     gdouble *data;
     gdouble xreal, yreal, zscale;
@@ -2512,7 +2518,6 @@ static GwyDataField *extract_raman_image_avg (MDTMDAFrame *dataframe)
 
     data = gwy_data_field_get_data(dfield);
 
-    summa = 0.0;
     p = (guchar *)dataframe->image;
     px = p + 1024*xsize*ysize*sizeof(gfloat);
     for (k = 0; k < 1024; k++) {
@@ -2521,30 +2526,74 @@ static GwyDataField *extract_raman_image_avg (MDTMDAFrame *dataframe)
 
     for (i = 0; i < ysize; i++) {
         for (j = 0; j < xsize; j++) {
-            summa = 0.0;
+            sum = 0.0;
             for (k = 0; k < 1024; k++) {
                 y = (gdouble)gwy_get_gfloat_le(&p);
                 y *= zscale;
-                summa += y;
+                sum += y;
             }
-            *(data++) = summa / 1024.0;
+            *(data++) = sum / 1024.0;
         }
     }
 
     return dfield;
 }
 
+static void
+set_layer_channel(GwyPixmapLayer *layer, gint channel)
+{
+    gchar data_key[30];
+    gchar grad_key[30];
+    gchar mm_key[30];
+    gchar range_key[30];
+
+    g_snprintf(data_key, sizeof(data_key), "/%i/data", channel);
+    g_snprintf(grad_key, sizeof(grad_key), "/%i/base/palette", channel);
+    g_snprintf(mm_key, sizeof(mm_key), "/%i/base", channel);
+    g_snprintf(range_key, sizeof(range_key), "/%i/base/range-type", channel);
+
+    gwy_pixmap_layer_set_data_key(layer, data_key);
+    gwy_layer_basic_set_gradient_key(GWY_LAYER_BASIC(layer), grad_key);
+    gwy_layer_basic_set_min_max_key(GWY_LAYER_BASIC(layer), mm_key);
+    gwy_layer_basic_set_range_type_key(GWY_LAYER_BASIC(layer), range_key);
+}
+
+static void
+combobox_changed_cb(GtkWidget *combobox, MDTControlsType *controls)
+{
+    GwyPixmapLayer *layer;
+
+    controls->output = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combobox));
+    layer = gwy_data_view_get_base_layer(GWY_DATA_VIEW(controls->view));
+
+    switch (controls->output) {
+        case MDT_IMAGE_MAX:
+            set_layer_channel(layer, 0);
+        break;
+
+        case MDT_IMAGE_MAXPOS:
+            set_layer_channel(layer, 1);
+        break;
+
+        case MDT_IMAGE_AVG:
+            set_layer_channel(layer, 2);
+        break;
+
+        default:
+            g_assert_not_reached();
+        break;
+    }
+}
+
 static GwyDataField *
 extract_raman_image(MDTMDAFrame *dataframe, GwyRunType mode)
 {
-    GtkWidget *dialog, *combobox, *hbox, *vbox;
-    GwyDataView *dataview;
-    GwyLayerBasic *layer;
-    GwyGraph *graph;
-    GwyContainer *container;
+    GtkWidget *dialog, *hbox, *vbox;
+    MDTControlsType controls;
+    GwyPixmapLayer *layer;
     GwyDataField *dfield;
-    GwyPixmapLayer *player;
-    gint output, response;
+    GwyDataField *maxfield, *maxposfield, *avgfield;
+    gint response;
 
     static const GwyEnum imagetype[] = {
         { N_("Maximum"),       MDT_IMAGE_MAX },
@@ -2553,12 +2602,12 @@ extract_raman_image(MDTMDAFrame *dataframe, GwyRunType mode)
     };
 
     if (mode != GWY_RUN_INTERACTIVE) {
-		dfield = extract_raman_image_max(dataframe);
-		
-        return dfield;
+        maxfield = extract_raman_image_max(dataframe);
+
+        return maxfield;
     }
 
-    dialog = gtk_dialog_new_with_buttons(_("Raman Image"),
+    dialog = gtk_dialog_new_with_buttons(_("Raman Image Import"),
                                          NULL, 0,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
@@ -2574,29 +2623,37 @@ extract_raman_image(MDTMDAFrame *dataframe, GwyRunType mode)
     vbox = gtk_vbox_new(FALSE, 0);
     gtk_box_pack_start(GTK_BOX(hbox), vbox, FALSE, FALSE, 0);
 
-    combobox 
+    controls.output = MDT_IMAGE_MAX;
+    controls.combobox
             = gwy_enum_combo_box_new(imagetype, G_N_ELEMENTS(imagetype),
-                              G_CALLBACK(gwy_enum_combo_box_update_int),
-                              &output, output, TRUE);
-    gwy_enum_combo_box_set_active(combobox, MDT_IMAGE_MAX);
-    gtk_box_pack_start(GTK_BOX(vbox), combobox, FALSE, FALSE, 0);
+                                     G_CALLBACK(combobox_changed_cb),
+                                     &controls, controls.output, TRUE);
+    gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls.combobox),
+                                  controls.output);
+    gtk_box_pack_start(GTK_BOX(vbox), controls.combobox,
+                       FALSE, FALSE, 0);
 
-	/*
-    container = gwy_container_new();
-    gwy_container_set_object_by_name(container, "/0/data", dfield);
-    dataview = gwy_data_view_new(container);
-    gwy_data_view_set_data_prefix(GWY_DATA_VIEW(dataview), "/0/data");
+    controls.mydata = gwy_container_new();
+    maxfield = extract_raman_image_max(dataframe);
+    gwy_container_set_object_by_name(controls.mydata,
+                                     "/0/data", maxfield);
+    g_object_unref(maxfield);
+    maxposfield = extract_raman_image_maxpos(dataframe);
+    gwy_container_set_object_by_name(controls.mydata,
+                                     "/1/data", maxposfield);
+    g_object_unref(maxposfield);
+    avgfield = extract_raman_image_avg(dataframe);
+    gwy_container_set_object_by_name(controls.mydata,
+                                     "/2/data", avgfield);
+    g_object_unref(avgfield);
+
+    controls.view = gwy_data_view_new(controls.mydata);
     layer = gwy_layer_basic_new();
-    g_object_set(layer,
-                 "data-key", "/0/data",
-                 "gradient-key", "/0/base/palette",
-                 NULL);
-    gwy_data_view_set_base_layer(GWY_DATA_VIEW(dataview), layer);
-
-    gtk_box_pack_start(GTK_BOX(vbox), dataview, FALSE, FALSE, 0);
-
-    gwy_container_set_object_by_name(container, "/0/data", dfield);
-    */
+    set_layer_channel(layer, 0);
+    gwy_data_view_set_data_prefix(GWY_DATA_VIEW(controls.view),
+                                  "/0/data");
+    gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view), layer);
+    gtk_box_pack_start(GTK_BOX(vbox), controls.view, FALSE, FALSE, 0);
 
     gtk_widget_show_all(dialog);
     do {
@@ -2618,24 +2675,25 @@ extract_raman_image(MDTMDAFrame *dataframe, GwyRunType mode)
         }
     } while (response != GTK_RESPONSE_OK);
     gtk_widget_destroy(dialog);
-    
-    switch (output) {
-		case MDT_IMAGE_MAX:
-			dfield = extract_raman_image_max(dataframe);
-		break;
-		
-		case MDT_IMAGE_MAXPOS:
-			dfield = extract_raman_image_maxpos(dataframe);
-		break;
+    g_object_unref(controls.mydata);
 
-		case MDT_IMAGE_AVG:
-			dfield = extract_raman_image_avg(dataframe);
-		break;
+    switch (controls.output) {
+        case MDT_IMAGE_MAX:
+            dfield = extract_raman_image_max(dataframe);
+        break;
+
+        case MDT_IMAGE_MAXPOS:
+            dfield = extract_raman_image_maxpos(dataframe);
+        break;
+
+        case MDT_IMAGE_AVG:
+            dfield = extract_raman_image_avg(dataframe);
+        break;
 
         default:
             g_assert_not_reached();
         break;
-	}
+    }
 
     return dfield;
 }
