@@ -24,8 +24,11 @@
 #include <libprocess/arithmetic.h>
 #include <libprocess/filters.h>
 #include <libprocess/linestats.h>
+#include <libprocess/stats.h>
 #include <libgwymodule/gwymodule-process.h>
 #include <libgwydgets/gwystock.h>
+#include <libgwydgets/gwyradiobuttons.h>
+#include <libgwydgets/gwydgetutils.h>
 #include <app/gwyapp.h>
 
 #define LINECORR_RUN_MODES GWY_RUN_IMMEDIATE
@@ -38,11 +41,28 @@ typedef struct {
     guint n;
 } MedianLineData;
 
+typedef struct {
+    GwyMaskingType masking;
+} LineCorrectArgs;
+
+typedef struct {
+    LineCorrectArgs *args;
+    GSList *masking;
+} LineCorrectControls;
+
 static gboolean module_register                    (void);
 static void     line_correct_modus                 (GwyContainer *data,
                                                     GwyRunType run);
 static void     line_correct_median                (GwyContainer *data,
                                                     GwyRunType run);
+static gboolean line_correct_dialog                (LineCorrectArgs *args,
+                                                    const gchar *title);
+static void     masking_changed                    (GtkToggleButton *button,
+                                                    LineCorrectControls *controls);
+static void     line_correct_median_load_args      (GwyContainer *container,
+                                                    LineCorrectArgs *args);
+static void     line_correct_median_save_args      (GwyContainer *container,
+                                                    LineCorrectArgs *args);
 static void     line_correct_median_difference     (GwyContainer *data,
                                                     GwyRunType run);
 static void     line_correct_match                 (GwyContainer *data,
@@ -58,12 +78,16 @@ static void     gwy_data_field_absdiff_line_correct(GwyDataField *dfield);
 static gdouble  sum_of_abs_diff                    (gdouble shift,
                                                     gpointer data);
 
+static const LineCorrectArgs line_correct_defaults = {
+    GWY_MASK_EXCLUDE
+};
+
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Corrects line defects (mostly experimental algorithms)."),
     "Yeti <yeti@gwyddion.net>, Luke Somers <lsomers@sas.upenn.edu>",
-    "1.7",
+    "1.8",
     "David Nečas (Yeti) & Petr Klapetek & Luke Somers",
     "2004",
 };
@@ -84,7 +108,7 @@ module_register(void)
                               (GwyProcessFunc)&line_correct_median,
                               N_("/_Correct Data/M_edian Line Correction"),
                               GWY_STOCK_LINE_LEVEL,
-                              LINECORR_RUN_MODES,
+                              GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE,
                               GWY_MENU_FLAG_DATA,
                               N_("Correct lines by matching height median"));
     gwy_process_func_register("line_correct_median_difference",
@@ -154,39 +178,180 @@ line_correct_modus(GwyContainer *data, GwyRunType run)
 static void
 line_correct_median(GwyContainer *data, GwyRunType run)
 {
-    GwyDataField *dfield;
+    GwyDataField *dfield, *mfield;
     GwyDataLine *line, *modi;
+    LineCorrectArgs args;
     gint xres, yres, i;
     GQuark dquark;
-    gdouble median;
+    const gdouble *d, *m;
+    gdouble median, total_median;
 
-    g_return_if_fail(run & LINECORR_RUN_MODES);
+    g_return_if_fail(run & (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE));
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
+                                     GWY_APP_MASK_FIELD, &mfield,
                                      GWY_APP_DATA_FIELD_KEY, &dquark,
                                      0);
     g_return_if_fail(dfield && dquark);
-    gwy_app_undo_qcheckpointv(data, 1, &dquark);
+
+    line_correct_median_load_args(gwy_app_settings_get(), &args);
+    if (run != GWY_RUN_IMMEDIATE && mfield) {
+        gboolean ok = line_correct_dialog(&args, _("Median Line Correction"));
+        line_correct_median_save_args(gwy_app_settings_get(), &args);
+        if (!ok)
+            return;
+    }
+    if (!mfield)
+        args.masking = GWY_MASK_IGNORE;
+    if (args.masking == GWY_MASK_IGNORE)
+        mfield = NULL;
 
     xres = gwy_data_field_get_xres(dfield);
-    line = gwy_data_line_new(xres, 1.0, FALSE);
     yres = gwy_data_field_get_yres(dfield);
+    total_median = gwy_data_field_area_get_median_mask(dfield, mfield,
+                                                       args.masking,
+                                                       0, 0, xres, yres);
+
+    gwy_app_undo_qcheckpointv(data, 1, &dquark);
+
+    d = gwy_data_field_get_data_const(dfield);
+    m = mfield ? gwy_data_field_get_data_const(mfield) : NULL;
+    line = gwy_data_line_new(xres, 1.0, FALSE);
     modi = gwy_data_line_new(yres, 1.0, FALSE);
 
-    for (i = 0; i < yres; i++) {
-        gwy_data_field_get_row(dfield, line, i);
-        median = gwy_math_median(xres, gwy_data_line_get_data(line));
-        gwy_data_line_set_val(modi, i, median);
+    if (mfield) {
+        for (i = 0; i < yres; i++) {
+            const gdouble *row = d + i*xres, *mrow = m + i*xres;
+            gdouble *buf = gwy_data_line_get_data(line);
+            gint count = 0, j;
+
+            if (args.masking == GWY_MASK_INCLUDE) {
+                for (j = 0; j < xres; j++) {
+                    if (mrow[j] > 0.0)
+                        buf[count++] = row[j];
+                }
+            }
+            else {
+                for (j = 0; j < xres; j++) {
+                    if (mrow[j] < 1.0)
+                        buf[count++] = row[j];
+                }
+            }
+
+            median = count ? gwy_math_median(count, buf) : total_median;
+            gwy_data_line_set_val(modi, i, median);
+        }
     }
-    median = gwy_data_line_get_median(modi);
+    else {
+        for (i = 0; i < yres; i++) {
+            gwy_data_field_get_row(dfield, line, i);
+            median = gwy_math_median(xres, gwy_data_line_get_data(line));
+            gwy_data_line_set_val(modi, i, median);
+        }
+    }
 
     for (i = 0; i < yres; i++) {
         gwy_data_field_area_add(dfield, 0, i, xres, 1,
-                                median - gwy_data_line_get_val(modi, i));
+                                total_median - gwy_data_line_get_val(modi, i));
     }
 
     g_object_unref(modi);
     g_object_unref(line);
     gwy_data_field_data_changed(dfield);
+}
+
+static gboolean
+line_correct_dialog(LineCorrectArgs *args,
+                    const gchar *title)
+{
+    enum { RESPONSE_RESET = 1 };
+    GtkWidget *dialog, *label, *table;
+    gint row, response;
+    LineCorrectControls controls;
+
+    controls.args = args;
+
+    dialog = gtk_dialog_new_with_buttons(title, NULL, 0,
+                                         _("_Reset"), RESPONSE_RESET,
+                                         GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
+                                         GTK_STOCK_OK, GTK_RESPONSE_OK,
+                                         NULL);
+    gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
+    gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
+
+    table = gtk_table_new(12, 3, FALSE);
+    gtk_table_set_row_spacings(GTK_TABLE(table), 2);
+    gtk_table_set_col_spacings(GTK_TABLE(table), 6);
+    gtk_container_set_border_width(GTK_CONTAINER(table), 4);
+    gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox), table);
+    row = 0;
+
+    label = gwy_label_new_header(_("Masking Mode"));
+    gtk_table_attach(GTK_TABLE(table), label,
+                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    row++;
+
+    controls.masking = gwy_radio_buttons_create(gwy_masking_type_get_enum(), -1,
+                                                G_CALLBACK(masking_changed),
+                                                &controls, args->masking);
+    row = gwy_radio_buttons_attach_to_table(controls.masking, GTK_TABLE(table),
+                                            3, row);
+
+    gtk_widget_show_all(dialog);
+    do {
+        response = gtk_dialog_run(GTK_DIALOG(dialog));
+        switch (response) {
+            case GTK_RESPONSE_CANCEL:
+            case GTK_RESPONSE_DELETE_EVENT:
+            gtk_widget_destroy(dialog);
+
+            case GTK_RESPONSE_NONE:
+            return FALSE;
+            break;
+
+            case GTK_RESPONSE_OK:
+            break;
+
+            case RESPONSE_RESET:
+            *args = line_correct_defaults;
+            gwy_radio_buttons_set_current(controls.masking, args->masking);
+            break;
+
+            default:
+            g_assert_not_reached();
+            break;
+        }
+    } while (response != GTK_RESPONSE_OK);
+
+    gtk_widget_destroy(dialog);
+
+    return TRUE;
+}
+
+static void
+masking_changed(GtkToggleButton *button, LineCorrectControls *controls)
+{
+    if (!gtk_toggle_button_get_active(button))
+        return;
+
+    controls->args->masking = gwy_radio_buttons_get_current(controls->masking);
+}
+
+static const gchar masking_key[] = "/module/line_correct_median/mode";
+
+static void
+line_correct_median_load_args(GwyContainer *container, LineCorrectArgs *args)
+{
+    *args = line_correct_defaults;
+
+    gwy_container_gis_enum_by_name(container, masking_key,
+                                   &args->masking);
+}
+
+static void
+line_correct_median_save_args(GwyContainer *container, LineCorrectArgs *args)
+{
+    gwy_container_set_enum_by_name(container, masking_key,
+                                   args->masking);
 }
 
 static void
