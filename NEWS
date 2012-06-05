@@ -1,9 +1,13 @@
 2.29 (0000-00-00)
+Libraries:
+- libgwyprocess: New function to calculate grain-wise rms.
+
 Modules:
 - Pixmap: Scalebar ticks and label can be enabled/disabled.
 - Grain statistics: Displays total projected boundary length.
 - Median line correction: Masking is supported.
 - TIA SER: Spectral data import is supported.
+- Statistical quantities: New quantity was added: grain-wise rms.
 
 
 2.28 (2012-05-18)
