@@ -833,9 +833,6 @@ gwy_data_field_area_get_rms_mask(GwyDataField *dfield,
     const gdouble *datapos, *mpos;
     guint nn;
 
-    if (width == 0 || height == 0)
-        return rms;
-
     g_return_val_if_fail(GWY_IS_DATA_FIELD(dfield), rms);
     g_return_val_if_fail(!mask || (GWY_IS_DATA_FIELD(mask)
                                    && mask->xres == dfield->xres
@@ -902,6 +899,123 @@ gwy_data_field_area_get_rms_mask(GwyDataField *dfield,
 
     nn = width*height;
     rms = sqrt(fabs(sum2 - sum*sum/nn)/nn);
+
+    return rms;
+}
+
+/**
+ * gwy_data_field_area_get_grainwise_rms:
+ * @data_field: A data field.
+ * @mask: Mask specifying which values to take into account/exclude, or %NULL.
+ * @mode: Masking mode to use.  See the introduction for description of
+ *        masking modes.
+ * @col: Upper-left column coordinate.
+ * @row: Upper-left row coordinate.
+ * @width: Area width (number of columns).
+ * @height: Area height (number of rows).
+ *
+ * Computes grain-wise root mean square value of deviations of a rectangular
+ * part of a data field.
+ *
+ * Grain-wise means that the mean value is determined for each grain (i.e.
+ * cotinguous part of the mask or inverted mask) separately and the deviations
+ * are calculated from these mean values.
+ *
+ * Returns: The root mean square value of deviations from the mean value.
+ *
+ * Since: 2.29
+ **/
+gdouble
+gwy_data_field_area_get_grainwise_rms(GwyDataField *dfield,
+                                      GwyDataField *mask,
+                                      GwyMaskingType mode,
+                                      gint col,
+                                      gint row,
+                                      gint width,
+                                      gint height)
+{
+    GwyDataField *grainmask;
+    gint *grains, *size, *g;
+    gint i, j, n;
+    gint xres, yres, ngrains;
+    gdouble *m;
+    const gdouble *datapos;
+    gdouble rms = 0.0;
+
+    g_return_val_if_fail(GWY_IS_DATA_FIELD(dfield), rms);
+    xres = dfield->xres;
+    yres = dfield->yres;
+    g_return_val_if_fail(!mask || (GWY_IS_DATA_FIELD(mask)
+                                   && mask->xres == xres
+                                   && mask->yres == yres),
+                         rms);
+    g_return_val_if_fail(col >= 0 && row >= 0
+                         && width >= 0 && height >= 0
+                         && col + width <= xres
+                         && row + height <= yres,
+                         rms);
+    if (!width || !height)
+        return rms;
+
+    if (!mask || mode == GWY_MASK_IGNORE)
+        return gwy_data_field_area_get_rms_mask(dfield, NULL,
+                                                GWY_MASK_IGNORE,
+                                                col, row, width, height);
+
+    if (mode == GWY_MASK_INCLUDE) {
+        if (col == 0 && row == 0 && width == xres && height == yres)
+            grainmask = (GwyDataField*)g_object_ref(mask);
+        else
+            grainmask = gwy_data_field_area_extract(mask,
+                                                    col, row, width, height);
+    }
+    else {
+        grainmask = gwy_data_field_area_extract(mask, col, row, width, height);
+        gwy_data_field_multiply(grainmask, -1.0);
+        gwy_data_field_add(grainmask, 1.0);
+    }
+
+    grains = g_new0(gint, width*height);
+    ngrains = gwy_data_field_number_grains(grainmask, grains);
+    if (!ngrains) {
+        g_free(grains);
+        g_object_unref(grainmask);
+        return rms;
+    }
+
+    m = g_new0(gdouble, ngrains+1);
+    size = g_new0(gint, ngrains+1);
+    datapos = dfield->data + row*xres + col;
+    g = grains;
+    for (i = 0; i < height; i++) {
+        for (j = 0; j < width; j++, g++) {
+            m[*g] += datapos[i*xres + j];
+            size[*g]++;
+        }
+    }
+
+    n = 0;
+    for (i = 1; i <= ngrains; i++) {
+        m[i] /= size[i];
+        n += size[i];
+    }
+
+    g = grains;
+    rms = 0.0;
+    for (i = 0; i < height; i++) {
+        for (j = 0; j < width; j++, g++) {
+            if (*g) {
+                gdouble d = datapos[i*xres + j] - m[*g];
+                rms += d*d;
+            }
+        }
+    }
+    rms = sqrt(rms/n);
+
+    g_free(size);
+    g_free(m);
+    g_free(grains);
+    g_object_unref(grainmask);
 
     return rms;
 }

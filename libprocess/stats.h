@@ -96,6 +96,13 @@ gdouble gwy_data_field_area_get_rms_mask    (GwyDataField *data_field,
                                              gint row,
                                              gint width,
                                              gint height);
+gdouble gwy_data_field_area_get_grainwise_rms(GwyDataField *data_field,
+                                              GwyDataField *mask,
+                                              GwyMaskingType mode,
+                                              gint col,
+                                              gint row,
+                                              gint width,
+                                              gint height);
 #ifndef GWY_DISABLE_DEPRECATED
 gdouble gwy_data_field_area_get_sum         (GwyDataField *data_field,
                                              GwyDataField *mask,
