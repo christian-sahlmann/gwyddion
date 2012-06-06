@@ -54,6 +54,7 @@
 #include <libgwydgets/gwylayer-basic.h>
 #include <libgwydgets/gwydgets.h>
 #include <app/gwymoduleutils-file.h>
+#include <app/gwymoduleutils.h>
 
 #include <glib.h>
 #include <glib/gprintf.h>
@@ -77,6 +78,10 @@
 #else
 #define TREAT_CDATA_AS_TEXT 0
 #endif
+
+enum {
+    PREVIEW_SIZE = 200
+};
 
 typedef enum {
     MDT_FRAME_SCANNED      = 0,
@@ -431,6 +436,8 @@ static GwyDataField*  extract_raman_image   (MDTMDAFrame *dataframe,
 static GwyDataField*  extract_raman_image_max    (MDTMDAFrame *dataframe);
 static GwyDataField*  extract_raman_image_avg    (MDTMDAFrame *dataframe);
 static GwyDataField*  extract_raman_image_maxpos (MDTMDAFrame *dataframe);
+static GwyGraphModel* extract_raman_image_spectrum (MDTMDAFrame *dataframe,
+                                                    gint x, gint y);
 static void           start_element    (GMarkupParseContext *context,
                                         const gchar *element_name,
                                         const gchar **attribute_names,
@@ -822,7 +829,7 @@ mdt_load(const gchar *filename,
             }
             else if (mdaframe->nDimensions == 3 && mdaframe->nMesurands == 3) {
                 /* raman images */
-                if (dfield = extract_raman_image(mdaframe, mode)) {
+                if ((dfield = extract_raman_image(mdaframe, mode))) {
                     g_string_printf(key, "/%d/data", n);
                     gwy_container_set_object_by_name(data, key->str,
                                                      dfield);
@@ -1527,8 +1534,8 @@ extract_scanned_data(MDTScannedDataFrame *dataframe)
     return dfield;
 }
 
-static GwyGraphModel* extract_scanned_spectrum (MDTScannedDataFrame *dataframe,
-                                                guint number)
+static GwyGraphModel*
+extract_scanned_spectrum (MDTScannedDataFrame *dataframe, guint number)
 {
     GwyGraphCurveModel *spectra;
     GwyGraphModel *gmodel;
@@ -1934,12 +1941,12 @@ extract_mda_spectrum(MDTMDAFrame *dataframe, guint number)
         framename = g_strdup_printf("Unknown spectrum (%d)", number);
 
     if (dataframe->nDimensions) {
-        xAxis = &dataframe->dimensions[0],
-              yAxis = &dataframe->mesurands[0];
+        xAxis = &dataframe->dimensions[0];
+        yAxis = &dataframe->mesurands[0];
     }
     else {
-        xAxis = &dataframe->mesurands[0],
-              yAxis = &dataframe->mesurands[1];
+        xAxis = &dataframe->mesurands[0];
+        yAxis = &dataframe->mesurands[1];
     }
 
     if (xAxis->unit && xAxis->unitLen) {
@@ -2541,6 +2548,91 @@ static GwyDataField *extract_raman_image_avg (MDTMDAFrame *dataframe)
     return dfield;
 }
 
+static GwyGraphModel *
+extract_raman_image_spectrum(MDTMDAFrame *dataframe, gint x, gint y)
+{
+    GwyGraphCurveModel *spectrum;
+    GwyGraphModel *gmodel;
+    gint power10x, power10y;
+    GwySIUnit *siunitx, *siunity;
+    const guchar *p, *px;
+    const gchar *cunit;
+    gchar *unit;
+    gint i, res = 1024, xsize, ysize;
+    MDTMDACalibration *xAxis, *yAxis;
+    gdouble xdata[1024], ydata[1024];
+    gdouble xscale, yscale;
+
+    xsize = (dataframe->dimensions[0].maxIndex
+           - dataframe->dimensions[0].minIndex + 1);
+    ysize = (dataframe->dimensions[1].maxIndex
+           - dataframe->dimensions[1].minIndex + 1);
+
+    xAxis = &dataframe->mesurands[1];
+    yAxis = &dataframe->dimensions[2];
+
+    if (xAxis->unit && xAxis->unitLen) {
+        unit = g_strndup(xAxis->unit, xAxis->unitLen);
+        siunitx = gwy_si_unit_new_parse(unit, &power10x);
+        g_free(unit);
+    }
+    else {
+        cunit = gwy_flat_enum_to_string(unitCodeForSiCode(xAxis->siUnit),
+                                        G_N_ELEMENTS(mdt_units),
+                                        mdt_units, mdt_units_name);
+        siunitx = gwy_si_unit_new_parse(cunit, &power10x);
+    }
+    gwy_debug("x unit power %d", power10x);
+
+    if (yAxis->unit && yAxis->unitLen) {
+        unit = g_strndup(yAxis->unit, yAxis->unitLen);
+        siunity = gwy_si_unit_new_parse(unit, &power10y);
+        g_free(unit);
+    }
+    else {
+        cunit = gwy_flat_enum_to_string(unitCodeForSiCode(yAxis->siUnit),
+                                        G_N_ELEMENTS(mdt_units),
+                                        mdt_units, mdt_units_name);
+        siunity = gwy_si_unit_new_parse(cunit, &power10y);
+    }
+    gwy_debug("y unit power %d", power10y);
+
+    xscale = pow10(power10x) * xAxis->scale;
+    yscale = pow10(power10y) * yAxis->scale;
+
+    p = (guchar *)dataframe->image;
+
+    px = p + 1024*xsize*ysize*sizeof(gfloat);
+    for (i = 0; i < 1024; i++) {
+        xdata[i] = (gdouble)gwy_get_gfloat_le(&px) * xscale;
+    }
+
+    p += 1024*(y*xsize+x);
+    for (i = 0; i < 1024; i++) {
+        ydata[i] = (gdouble)gwy_get_gfloat_le(&p) * yscale;
+    }
+
+    spectrum = gwy_graph_curve_model_new();
+    g_object_set(spectrum,
+                 "description", "",
+                 "mode", GWY_GRAPH_CURVE_LINE,
+                 NULL);
+    gwy_graph_curve_model_set_data(spectrum, xdata, ydata, res);
+
+    gmodel = gwy_graph_model_new();
+    g_object_set(gmodel,
+                 "title", _("Profiles"),
+                 "si-unit-x", siunitx,
+                 "si-unit-y", siunity,
+                 NULL);
+    gwy_graph_model_add_curve(gmodel, spectrum);
+    g_object_unref(spectrum);
+    g_object_unref(siunitx);
+    g_object_unref(siunity);
+
+    return gmodel;
+}
+
 static void
 set_layer_channel(GwyPixmapLayer *layer, gint channel)
 {
@@ -2590,11 +2682,12 @@ combobox_changed_cb(GtkWidget *combobox, MDTControlsType *controls)
 static GwyDataField *
 extract_raman_image(MDTMDAFrame *dataframe, GwyRunType mode)
 {
-    GtkWidget *dialog, *hbox, *vbox;
+    GtkWidget *dialog, *hbox, *vbox, *graph;
     MDTControlsType controls;
     GwyPixmapLayer *layer;
     GwyDataField *dfield;
     GwyDataField *maxfield, *maxposfield, *avgfield;
+    GwyGraphModel *gmodel;
     gint response;
 
     static const GwyEnum imagetype[] = {
@@ -2655,7 +2748,16 @@ extract_raman_image(MDTMDAFrame *dataframe, GwyRunType mode)
     gwy_data_view_set_data_prefix(GWY_DATA_VIEW(controls.view),
                                   "/0/data");
     gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view), layer);
+    gwy_set_data_preview_size(GWY_DATA_VIEW(controls.view),
+                              PREVIEW_SIZE);
     gtk_box_pack_start(GTK_BOX(vbox), controls.view, FALSE, FALSE, 0);
+
+    gmodel = extract_raman_image_spectrum(dataframe, 0, 0);
+    graph = gwy_graph_new(gmodel);
+    gwy_graph_enable_user_input(GWY_GRAPH(graph), FALSE);
+    gtk_widget_set_size_request(graph, 300, 200);
+    g_object_set(gmodel, "label-visible", FALSE, NULL);
+    gtk_box_pack_start(GTK_BOX(hbox), graph, TRUE, TRUE, 2);
 
     gtk_widget_show_all(dialog);
     do {
