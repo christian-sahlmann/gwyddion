@@ -85,7 +85,7 @@ reload_libraries(void)
 {
     static const gchar *const gwyddion_libs[] = {
         "libgwyddion2", "libgwyprocess2", "libgwydraw2", "libgwydgets2",
-        "libgwymodule2", "libgwyapp2x",
+        "libgwymodule2", "libgwyapp2",
     };
     guint i;
 
