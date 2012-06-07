@@ -56,6 +56,8 @@ Anna Campbellova <acampbellova@cmi.cz>
     Uncertainties of quantities calculated from calibrated data.
 Lennart Fricke <pge08aqw@studserv.uni-leipzig.de>
     3D view and pygwy improvements.
+Jozef Vesely <vesely@gjh.sk>
+    Standalone python gwy module.
 
 
 === Translators ===

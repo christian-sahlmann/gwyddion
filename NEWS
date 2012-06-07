@@ -9,6 +9,9 @@ Modules:
 - TIA SER: Spectral data import is supported.
 - Statistical quantities: New quantity was added: grain-wise rms.
 
+Other:
+- Standalone python gwy module is available (experimental).
+
 
 2.28 (2012-05-18)
 Application:
