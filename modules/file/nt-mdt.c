@@ -389,24 +389,30 @@ typedef struct {
 } MDTXMLParams;
 
 typedef struct {
-    gint headersize;
-    gint coordsize;
-    gint version;
+    gint    headersize;
+    gint    coordsize;
+    gint    version;
     MDTUnit xyunits;
 } MDTDotsHeader;
 
 typedef struct {
     gfloat coordx;
     gfloat coordy;
-    gint forward_size;
-    gint backward_size;
+    gint   forward_size;
+    gint   backward_size;
 } MDTDotsData;
 
 typedef struct {
     GwyContainer    *mydata;
     GtkWidget       *view;
+    GtkWidget       *graph;
     GtkWidget       *combobox;
+    GwySelection    *selection;
+    GwyGraphModel   *gmodel;
+    MDTMDAFrame     *dataframe;
     gint             output;
+    gint             xc, yc;
+    gint             xres, yres;
 } MDTControlsType;
 
 static gboolean       module_register       (void);
@@ -2607,7 +2613,7 @@ extract_raman_image_spectrum(MDTMDAFrame *dataframe, gint x, gint y)
         xdata[i] = (gdouble)gwy_get_gfloat_le(&px) * xscale;
     }
 
-    p += 1024*(y*xsize+x);
+    p += 1024*(y*xsize+x)*sizeof(gfloat);
     for (i = 0; i < 1024; i++) {
         ydata[i] = (gdouble)gwy_get_gfloat_le(&p) * yscale;
     }
@@ -2679,15 +2685,37 @@ combobox_changed_cb(GtkWidget *combobox, MDTControlsType *controls)
     }
 }
 
+static gboolean
+mdt_image_view_button_press(G_GNUC_UNUSED GtkWidget *view,
+                            GdkEventButton *event,
+                            MDTControlsType *controls)
+{
+    GwyGraphModel *gmodel;
+
+    if (event->button != 1)
+        return FALSE;
+
+    controls->xc = event->x * (gdouble)controls->xres / PREVIEW_SIZE;
+    controls->yc = event->y * (gdouble)controls->xres / PREVIEW_SIZE;
+    gmodel = extract_raman_image_spectrum(controls->dataframe,
+                                          controls->xc,
+                                          controls->yc);
+    gwy_graph_set_model (GWY_GRAPH(controls->graph), gmodel);
+    g_object_unref(controls->gmodel);
+    controls->gmodel = gmodel;
+
+    return TRUE;
+}
+
 static GwyDataField *
 extract_raman_image(MDTMDAFrame *dataframe, GwyRunType mode)
 {
-    GtkWidget *dialog, *hbox, *vbox, *graph;
+    GtkWidget *dialog, *hbox, *vbox;
     MDTControlsType controls;
     GwyPixmapLayer *layer;
+    // GwyVectorLayer *vlayer;
     GwyDataField *dfield;
     GwyDataField *maxfield, *maxposfield, *avgfield;
-    GwyGraphModel *gmodel;
     gint response;
 
     static const GwyEnum imagetype[] = {
@@ -2718,6 +2746,7 @@ extract_raman_image(MDTMDAFrame *dataframe, GwyRunType mode)
     vbox = gtk_vbox_new(FALSE, 0);
     gtk_box_pack_start(GTK_BOX(hbox), vbox, FALSE, FALSE, 0);
 
+    controls.dataframe = dataframe;
     controls.output = MDT_IMAGE_MAX;
     controls.combobox
             = gwy_enum_combo_box_new(imagetype, G_N_ELEMENTS(imagetype),
@@ -2730,6 +2759,8 @@ extract_raman_image(MDTMDAFrame *dataframe, GwyRunType mode)
 
     controls.mydata = gwy_container_new();
     maxfield = extract_raman_image_max(dataframe);
+    controls.xres = gwy_data_field_get_xres(maxfield);
+    controls.yres = gwy_data_field_get_yres(maxfield);
     gwy_container_set_object_by_name(controls.mydata,
                                      "/0/data", maxfield);
     g_object_unref(maxfield);
@@ -2750,14 +2781,28 @@ extract_raman_image(MDTMDAFrame *dataframe, GwyRunType mode)
     gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view), layer);
     gwy_set_data_preview_size(GWY_DATA_VIEW(controls.view),
                               PREVIEW_SIZE);
+    /*
+    vlayer = g_object_new(g_type_from_name("GwyLayerPoint"), NULL);
+    gwy_vector_layer_set_selection_key(vlayer, "/0/select/line");
+    gwy_vector_layer_set_editable(vlayer, FALSE);
+    gwy_data_view_set_top_layer(GWY_DATA_VIEW(controls.view),
+                                GWY_VECTOR_LAYER(vlayer));
+    controls.selection = gwy_vector_layer_ensure_selection(vlayer);
+    */
+
+    g_signal_connect(controls.view, "button-press-event",
+                     G_CALLBACK(mdt_image_view_button_press), &controls);
+
     gtk_box_pack_start(GTK_BOX(vbox), controls.view, FALSE, FALSE, 0);
 
-    gmodel = extract_raman_image_spectrum(dataframe, 0, 0);
-    graph = gwy_graph_new(gmodel);
-    gwy_graph_enable_user_input(GWY_GRAPH(graph), FALSE);
-    gtk_widget_set_size_request(graph, 300, 200);
-    g_object_set(gmodel, "label-visible", FALSE, NULL);
-    gtk_box_pack_start(GTK_BOX(hbox), graph, TRUE, TRUE, 2);
+    controls.xc = 0;
+    controls.yc = 0;
+    controls.gmodel = extract_raman_image_spectrum(dataframe, 0, 0);
+    controls.graph = gwy_graph_new(controls.gmodel);
+    gwy_graph_enable_user_input(GWY_GRAPH(controls.graph), FALSE);
+    gtk_widget_set_size_request(controls.graph, 300, 200);
+    g_object_set(controls.gmodel, "label-visible", FALSE, NULL);
+    gtk_box_pack_start(GTK_BOX(hbox), controls.graph, TRUE, TRUE, 2);
 
     gtk_widget_show_all(dialog);
     do {
