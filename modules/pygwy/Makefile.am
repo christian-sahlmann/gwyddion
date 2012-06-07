@@ -1,6 +1,7 @@
 # @(#) $Id$
 
 moduledir = $(pkglibdir)/modules
+pygwyutildir = $(pkgdatadir)/pygwy
 
 PYGWY_H_FILES = \
 	$(top_srcdir)/libprocess/arithmetic.h \
@@ -132,44 +133,49 @@ PYGWY_H_FILES = \
 	$(top_srcdir)/libgwydgets/gwystock.h \
 	$(top_srcdir)/libgwydgets/gwyvectorlayer.h \
 	$(top_srcdir)/libgwydgets/gwyvruler.h \
-   wrap_calls.h	
+   wrap_calls.h
 
-#	$(top_srcdir)/app/gwytool.h 
-#	$(top_srcdir)/libgwyddion/gwydebugobjects.h 
-#	$(top_srcdir)/libdraw/gwydrawenums.h 
+#	$(top_srcdir)/app/gwytool.h
+#	$(top_srcdir)/libgwyddion/gwydebugobjects.h
+#	$(top_srcdir)/libdraw/gwydrawenums.h
 
-#	$(top_srcdir)/libgwymodule/gwymodule-file.h 
-#	$(top_srcdir)/libgwymodule/gwymoduleenums.h 
+#	$(top_srcdir)/libgwymodule/gwymodule-file.h
+#	$(top_srcdir)/libgwymodule/gwymoduleenums.h
 
-#	$(top_srcdir)/libgwyddion/gwysiunit.h 
-#	$(top_srcdir)/libgwyddion/gwyenum.h 
-#	$(top_srcdir)/libgwyddion/gwyresource.h 
-#	$(top_srcdir)/libgwyddion/gwycontainer.h 
-#	$(top_srcdir)/app/data-browser.h 
-#	$(top_srcdir)/app/undo.h 
+#	$(top_srcdir)/libgwyddion/gwysiunit.h
+#	$(top_srcdir)/libgwyddion/gwyenum.h
+#	$(top_srcdir)/libgwyddion/gwyresource.h
+#	$(top_srcdir)/libgwyddion/gwycontainer.h
+#	$(top_srcdir)/app/data-browser.h
+#	$(top_srcdir)/app/undo.h
 
 
+disabled_sources =
 
 if ENABLE_PYGWY
 pygwy_module = pygwy.la
+gwy_pymodule = gwy.la
 pygwy_sources =
+gwy_sources =
 
-pygwyutildir = $(pkgdatadir)/pygwy
 pygwyutil_DATA = \
 	gwyutils.py
 
 else
-pygwyutildir = 
-pygwyutil_DATA = 
+pygwyutil_DATA =
 pygwy_module =
-pygwy_sources = pygwy.c pygwy-console.c wrap_calls.c
+gwy_pymodule =
+disabled_sources += pygwy.c gwy.c pygwy-console.c wrap_calls.c
 endif
 
 module_LTLIBRARIES = \
 	$(pygwy_module)
 
+python_LTLIBRARIES = \
+	$(gwy_pymodule)
+
 EXTRA_DIST = \
-	$(pygwy_sources) \
+	$(disabled_sources) \
 	$(pygwyutil_DATA) \
 	README.pygwy \
 	pygwy.override \
@@ -223,10 +229,21 @@ pygwywrap.c: $(srcdir)/pygwy-codegen.py pygwy.defs $(srcdir)/pygwy.override
 	  | sed -e 's/^void$$/static void/' -e 's/pygwy\.c/pygwywrap\.c/' \
 	        -e '1s#.*#/* This is a 'GENERATED' file */#' >pygwywrap.c
 
-gwy.py: pygwy.defs pygwywrap.c 
+gwy.py: pygwy.defs pygwywrap.c
 	$(PYTHON) ./pygwy-generate-doc.py --codegendir $(PYGTK_CODEGENDIR) >gwy.py
 pygwy-doc: gwy.py
 	$(EPYDOC) -v -o pygwy-doc gwy.py gwyutils.py
+
+gwy_la_SOURCES = gwy.c wrap_calls.c
+gwy_la_CFLAGS = @COMMON_CFLAGS@ @WARNING_NOUNUSED_PAR@ $(PYTHON_INCLUDES) $(PYGTK_CFLAGS)
+gwy_la_LIBADD = \
+	$(top_builddir)/app/libgwyapp2.la \
+	$(top_builddir)/libdraw/libgwydraw2.la \
+	$(top_builddir)/libgwyddion/libgwyddion2.la \
+	$(top_builddir)/libgwydgets/libgwydgets2.la \
+	$(top_builddir)/libgwymodule/libgwymodule2.la \
+	$(top_builddir)/libprocess/libgwyprocess2.la \
+	$(PYTHON_LIBS) $(PYGTK_LIBS) @GTK_LIBS@
 endif
 
 CLEANFILES = gwy.py gwy.pyc gwy.pyo
@@ -235,4 +252,4 @@ DISTCLEANFILES = pygwy.defs pygwywrap.c
 
 clean-local:
 	rm -f core.* *~
-	rm -rf pygwy-doc/	
+	rm -rf pygwy-doc/
