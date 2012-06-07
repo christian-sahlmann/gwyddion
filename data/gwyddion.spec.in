@@ -26,7 +26,6 @@ BuildRequires: pango-devel >= 1.10
 BuildRequires: gtkglext-devel
 BuildRequires: libxml2-devel
 BuildRequires: zlib-devel
-BuildRequires: python-devel >= 2.2
 BuildRequires: ruby >= 1.8
 BuildRequires: gettext
 BuildRequires: desktop-file-utils >= 0.9
@@ -41,6 +40,7 @@ BuildRequires: gtksourceview2-devel
 BuildRequires: minizip-devel
 %define fftw3 fftw
 %define fftw3devel fftw-devel
+%define python2devel python2-devel
 %define kde4libs kdelibs
 %define configureopts %{nil}
 %endif
@@ -77,6 +77,12 @@ BuildRequires: gtksourceview-devel
 %define fftw3devel fftw-devel
 %endif
 
+# Ditto for the python development package.
+%define python2undefined %{?python2devel:0}%{!?python2devel:1}
+%if %{python2undefined}
+%define python2devel python-devel
+%endif
+
 %if %{enable_kde4_thumbnailer}
 BuildRequires: %{kde4libs}-devel >= 4.0
 %endif
@@ -86,6 +92,7 @@ BuildRequires: %{fftw3devel} >= 3.0
 %else
 BuildRequires: %{fftw3devel} >= 3.1
 %endif
+BuildRequires: %{python2devel} >= 2.2
 # Fedora guarantees these two, other may not
 BuildRequires: perl >= 5.005
 BuildRequires: sed
@@ -273,10 +280,10 @@ fi
 %dir %{pkglibdir}/modules
 %dir %{pkglibdir}
 %{_libdir}/*.so.*
+%{python_sitearch}/gwy.so
 %{_datadir}/applications/%{name}.desktop
 %{_datadir}/mime/packages/%{name}.xml
 %{_datadir}/thumbnailers/%{name}.thumbnailer
-
 
 %files devel
 %defattr(-,root,root)
