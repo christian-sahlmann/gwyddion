@@ -171,7 +171,7 @@ endif
 module_LTLIBRARIES = \
 	$(pygwy_module)
 
-python_LTLIBRARIES = \
+pyexec_LTLIBRARIES = \
 	$(gwy_pymodule)
 
 EXTRA_DIST = \
