@@ -52,7 +52,7 @@
 
 #include "err.h"
 
-#define MAGIC "Omicron SPM Control"
+#define MAGIC "Parameter file for SPM data."
 #define MAGIC_SIZE (sizeof(MAGIC)-1)
 
 #define EXTENSION_HEADER ".par"
@@ -148,7 +148,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Omicron data files (two-part .par + .tf*, .tb*, .sf*, .sb*)."),
     "Yeti <yeti@gwyddion.net>",
-    "0.8",
+    "0.9",
     "David Nečas (Yeti) & Petr Klapetek & Markus Pristovsek",
     "2006",
 };
@@ -172,22 +172,24 @@ static gint
 omicron_detect(const GwyFileDetectInfo *fileinfo,
                gboolean only_name)
 {
-    guint i;
+    const gchar *p = fileinfo->head;
 
     if (only_name)
         return g_str_has_suffix(fileinfo->name_lowercase, EXTENSION_HEADER)
                ? 15 : 0;
 
     /* Quick check to skip most non-matching files */
-    if (fileinfo->buffer_len < 100
-        || fileinfo->head[0] != ';')
+    if (fileinfo->buffer_len < 100)
         return 0;
 
-    for (i = 1; i + MAGIC_SIZE+1 < fileinfo->buffer_len; i++) {
-        if (fileinfo->head[i] != ';' && !g_ascii_isspace(fileinfo->head[i]))
-            break;
-    }
-    if (memcmp(fileinfo->head + i, MAGIC, MAGIC_SIZE) == 0)
+    p = fileinfo->head;
+    if (*p != ';' || !(p = strchr(p+1, ';')) || !(p = strchr(p+1, ';')))
+        return 0;
+
+    do {
+        p++;
+    } while (g_ascii_isspace(*p));
+    if (memcmp(p, MAGIC, MAGIC_SIZE) == 0)
         return 100;
 
     return 0;
