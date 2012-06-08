@@ -2576,7 +2576,7 @@ extract_raman_image_spectrum(MDTMDAFrame *dataframe, gint x, gint y)
            - dataframe->dimensions[1].minIndex + 1);
 
     xAxis = &dataframe->mesurands[1];
-    yAxis = &dataframe->dimensions[2];
+    yAxis = &dataframe->mesurands[0];
 
     if (xAxis->unit && xAxis->unitLen) {
         unit = g_strndup(xAxis->unit, xAxis->unitLen);
