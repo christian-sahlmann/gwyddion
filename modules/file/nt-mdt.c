@@ -414,6 +414,7 @@ typedef struct {
     gint             xc, yc;
     gint             xres, yres;
     gint             numpoints;
+    gint             number;
 } MDTControlsType;
 
 static gboolean       module_register       (void);
@@ -438,13 +439,15 @@ static GwySpectra*    extract_sps_curve     (MDTScannedDataFrame *dataframe,
 static GwyDataField*  extract_mda_data      (MDTMDAFrame *dataframe);
 static GwyGraphModel* extract_mda_spectrum  (MDTMDAFrame *dataframe,
                                              guint number);
-static GwyDataField*  extract_raman_image   (MDTMDAFrame *dataframe,
+static GwyContainer*  extract_raman_image   (MDTMDAFrame *dataframe,
+                                             guint number,
                                              GwyRunType mode);
 static GwyDataField*  extract_raman_image_max    (MDTMDAFrame *dataframe);
 static GwyDataField*  extract_raman_image_avg    (MDTMDAFrame *dataframe);
 static GwyDataField*  extract_raman_image_maxpos (MDTMDAFrame *dataframe);
 static GwyGraphModel* extract_raman_image_spectrum (MDTMDAFrame *dataframe,
-                                                    gint x, gint y);
+                                                    gint x, gint y,
+                                                    gint number);
 static void           start_element    (GMarkupParseContext *context,
                                         const gchar *element_name,
                                         const gchar **attribute_names,
@@ -690,7 +693,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports NT-MDT data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.15",
+    "0.16",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -753,10 +756,10 @@ mdt_load(const gchar *filename,
     gsize size;
     GError *err = NULL;
     GwyDataField *dfield = NULL;
-    GwyContainer *meta, *data = NULL;
+    GwyContainer *meta, *data = NULL, *image = NULL;
     MDTFile mdtfile;
     GString *key;
-    guint n, i;
+    guint n, i, j, numpoints;
 
     gwy_debug("");
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
@@ -790,9 +793,9 @@ mdt_load(const gchar *filename,
                 g_free((gpointer)sdframe->title);
             }
             else
-                gwy_app_channel_title_fall_back(data, n);
+                gwy_app_channel_title_fall_back(data, i);
 
-            meta = mdt_get_metadata(&mdtfile, n);
+            meta = mdt_get_metadata(&mdtfile, i);
             mdt_add_frame_metadata(sdframe, meta);
             g_string_printf(key, "/%d/meta", n);
             gwy_container_set_object_by_name(data, key->str, meta);
@@ -836,7 +839,10 @@ mdt_load(const gchar *filename,
             }
             else if (mdaframe->nDimensions == 3 && mdaframe->nMesurands == 3) {
                 /* raman images */
-                if ((dfield = extract_raman_image(mdaframe, mode))) {
+                if ((image = extract_raman_image(mdaframe, i+1, mode))) {
+                    dfield = gwy_container_get_object_by_name(image,
+                                                             "/0/data");
+                    g_object_ref(dfield);
                     g_string_printf(key, "/%d/data", n);
                     gwy_container_set_object_by_name(data, key->str,
                                                      dfield);
@@ -852,6 +858,22 @@ mdt_load(const gchar *filename,
                         gwy_app_channel_title_fall_back(data, n);
 
                     n++;
+                    numpoints = gwy_container_get_int32_by_name(image,
+                                                          "/numpoints");
+                    for (j = 0; j < numpoints; j++) {
+                        GwyGraphModel *gmodel;
+
+                        g_string_printf(key, "/%d/spectrum", j);
+                        gmodel = gwy_container_get_object_by_name(image,
+                                                              key->str);
+                        g_object_ref(gmodel);
+                        g_string_printf(key, "/0/graph/graph/%d", n+1);
+                        gwy_container_set_object_by_name(data,
+                                                      key->str, gmodel);
+                        g_object_unref(gmodel);
+                        n++;
+                    }
+                    g_object_unref(image);
                 }
             }
         }
@@ -2294,9 +2316,11 @@ extract_mda_spectrum(MDTMDAFrame *dataframe, guint number)
 static GwyDataField *extract_raman_image_max(MDTMDAFrame *dataframe)
 {
     guint xsize, ysize;
-    const guchar *p, *px;
+    const guchar *p;
+    // const guchar *px;
     guint i, j, k;
-    gdouble xspectra[1024], yspectra[1024];
+    // gdouble xspectra[1024]; currently unused
+    // gdouble yspectra[1024];
     gdouble y, ymax;
     GwyDataField *dfield;
     gdouble *data;
@@ -2358,11 +2382,12 @@ static GwyDataField *extract_raman_image_max(MDTMDAFrame *dataframe)
 
     ymax = 0.0;
     p = (guchar *)dataframe->image;
+    /*
     px = p + 1024*xsize*ysize*sizeof(gfloat);
     for (k = 0; k < 1024; k++) {
             xspectra[k] = (gdouble)gwy_get_gfloat_le(&px);
         }
-
+    */
     for (i = 0; i < ysize; i++) {
         for (j = 0; j < xsize; j++) {
             ymax = 0.0;
@@ -2371,7 +2396,7 @@ static GwyDataField *extract_raman_image_max(MDTMDAFrame *dataframe)
                 y *= zscale;
                 if (y > ymax)
                     ymax = y;
-                yspectra[k] = y;
+                // yspectra[k] = y;
             }
             *(data++) = ymax;
         }
@@ -2385,7 +2410,8 @@ static GwyDataField *extract_raman_image_maxpos(MDTMDAFrame *dataframe)
     guint xsize, ysize;
     const guchar *p, *px;
     guint i, j, k, kposition;
-    gdouble xspectra[1024], yspectra[1024];
+    gdouble xspectra[1024];
+    // gdouble yspectra[1024];
     gdouble y;
     GwyDataField *dfield;
     gdouble *data;
@@ -2472,9 +2498,10 @@ static GwyDataField *extract_raman_image_maxpos(MDTMDAFrame *dataframe)
 static GwyDataField *extract_raman_image_avg (MDTMDAFrame *dataframe)
 {
     guint xsize, ysize;
-    const guchar *p, *px;
+    const guchar *p;
+    // const guchar *px;
     guint i, j, k;
-    gdouble xspectra[1024], yspectra[1024];
+    // gdouble xspectra[1024], yspectra[1024];
     gdouble y, sum;
     GwyDataField *dfield;
     gdouble *data;
@@ -2535,10 +2562,12 @@ static GwyDataField *extract_raman_image_avg (MDTMDAFrame *dataframe)
     data = gwy_data_field_get_data(dfield);
 
     p = (guchar *)dataframe->image;
+    /*
     px = p + 1024*xsize*ysize*sizeof(gfloat);
     for (k = 0; k < 1024; k++) {
-            xspectra[k] = (gdouble)gwy_get_gfloat_le(&px);
-        }
+        xspectra[k] = (gdouble)gwy_get_gfloat_le(&px);
+    }
+    */
 
     for (i = 0; i < ysize; i++) {
         for (j = 0; j < xsize; j++) {
@@ -2556,7 +2585,7 @@ static GwyDataField *extract_raman_image_avg (MDTMDAFrame *dataframe)
 }
 
 static GwyGraphModel *
-extract_raman_image_spectrum(MDTMDAFrame *dataframe, gint x, gint y)
+extract_raman_image_spectrum(MDTMDAFrame *dataframe, gint x, gint y, gint number)
 {
     GwyGraphCurveModel *spectrum;
     GwyGraphModel *gmodel;
@@ -2569,6 +2598,7 @@ extract_raman_image_spectrum(MDTMDAFrame *dataframe, gint x, gint y)
     MDTMDACalibration *xAxis, *yAxis;
     gdouble xdata[1024], ydata[1024];
     gdouble xscale, yscale;
+    gchar *framename;
 
     xsize = (dataframe->dimensions[0].maxIndex
            - dataframe->dimensions[0].minIndex + 1);
@@ -2604,6 +2634,13 @@ extract_raman_image_spectrum(MDTMDAFrame *dataframe, gint x, gint y)
     }
     gwy_debug("y unit power %d", power10y);
 
+    if (dataframe->title_len && dataframe->title) {
+        framename = g_strdup_printf("%s (%u)",
+                                    dataframe->title, number);
+    }
+    else
+        framename = g_strdup_printf("Unknown spectrum (%d)", number);
+
     xscale = pow10(power10x) * xAxis->scale;
     yscale = pow10(power10y) * yAxis->scale;
 
@@ -2621,14 +2658,14 @@ extract_raman_image_spectrum(MDTMDAFrame *dataframe, gint x, gint y)
 
     spectrum = gwy_graph_curve_model_new();
     g_object_set(spectrum,
-                 "description", "",
+                 "description", framename,
                  "mode", GWY_GRAPH_CURVE_LINE,
                  NULL);
     gwy_graph_curve_model_set_data(spectrum, xdata, ydata, res);
 
     gmodel = gwy_graph_model_new();
     g_object_set(gmodel,
-                 "title", _("Profiles"),
+                 "title", framename,
                  "si-unit-x", siunitx,
                  "si-unit-y", siunity,
                  NULL);
@@ -2636,6 +2673,7 @@ extract_raman_image_spectrum(MDTMDAFrame *dataframe, gint x, gint y)
     g_object_unref(spectrum);
     g_object_unref(siunitx);
     g_object_unref(siunity);
+    g_free(framename);
 
     return gmodel;
 }
@@ -2697,7 +2735,8 @@ mdt_image_view_mousemotion(G_GNUC_UNUSED GtkWidget *view,
     controls->yc = event->y * (gdouble)controls->xres / PREVIEW_SIZE;
     gmodel = extract_raman_image_spectrum(controls->dataframe,
                                           controls->xc,
-                                          controls->yc);
+                                          controls->yc,
+                                          controls->number);
     gwy_graph_set_model (GWY_GRAPH(controls->graph), gmodel);
     g_object_unref(controls->gmodel);
     controls->gmodel = gmodel;
@@ -2730,11 +2769,13 @@ mdt_image_view_button_press(G_GNUC_UNUSED GtkWidget *view,
     return TRUE;
 }
 
-static GwyDataField *
-extract_raman_image(MDTMDAFrame *dataframe, GwyRunType mode)
+static GwyContainer *
+extract_raman_image(MDTMDAFrame *dataframe,
+                    guint number, GwyRunType mode)
 {
     GtkWidget *dialog, *hbox, *vbox;
     MDTControlsType controls;
+    GwyContainer *result;
     GwyPixmapLayer *layer;
     GwyVectorLayer *vlayer;
     GwyDataField *dfield;
@@ -2742,7 +2783,9 @@ extract_raman_image(MDTMDAFrame *dataframe, GwyRunType mode)
     GwyDataField *maxfield, *maxposfield, *avgfield;
     gint i, response;
     gdouble seldata[2];
+    GString *key;
     gint x, y;
+
 
     static const GwyEnum imagetype[] = {
         { N_("Maximum"),       MDT_IMAGE_MAX },
@@ -2750,10 +2793,14 @@ extract_raman_image(MDTMDAFrame *dataframe, GwyRunType mode)
         { N_("Average"),       MDT_IMAGE_AVG },
     };
 
+    result = gwy_container_new();
     if (mode != GWY_RUN_INTERACTIVE) {
         maxfield = extract_raman_image_max(dataframe);
+        gwy_container_set_object_by_name(result,
+                                         "/0/data", maxfield);
+        g_object_unref(maxfield);
 
-        return maxfield;
+        return result;
     }
 
     dialog = gtk_dialog_new_with_buttons(_("Raman Image Import"),
@@ -2773,6 +2820,7 @@ extract_raman_image(MDTMDAFrame *dataframe, GwyRunType mode)
     gtk_box_pack_start(GTK_BOX(hbox), vbox, FALSE, FALSE, 0);
 
     controls.dataframe = dataframe;
+    controls.number = number;
     controls.output = MDT_IMAGE_MAX;
     controls.combobox
             = gwy_enum_combo_box_new(imagetype, G_N_ELEMENTS(imagetype),
@@ -2827,7 +2875,8 @@ extract_raman_image(MDTMDAFrame *dataframe, GwyRunType mode)
 
     controls.xc = 0;
     controls.yc = 0;
-    controls.gmodel = extract_raman_image_spectrum(dataframe, 0, 0);
+    controls.gmodel = extract_raman_image_spectrum(dataframe, 0, 0,
+                                                   number);
     controls.graph = gwy_graph_new(controls.gmodel);
     gwy_graph_enable_user_input(GWY_GRAPH(controls.graph), FALSE);
     gtk_widget_set_size_request(controls.graph, 300, 200);
@@ -2874,19 +2923,29 @@ extract_raman_image(MDTMDAFrame *dataframe, GwyRunType mode)
             g_assert_not_reached();
         break;
     }
+    gwy_container_set_object_by_name(result, "/0/data", dfield);
+    g_object_unref(dfield);
 
+    gwy_container_set_int32_by_name(result, "/numpoints",
+                                    controls.numpoints);
+
+    key = g_string_new(NULL);
     if (controls.numpoints) {
         for (i = 0; i < controls.numpoints; i++) {
             gwy_selection_get_object(controls.selection, i, seldata);
             x = gwy_data_field_rtoj(dfield, seldata[0]);
             y = gwy_data_field_rtoi(dfield, seldata[1]);
-            gmodel = extract_raman_image_spectrum(dataframe, x, y);
+            gmodel = extract_raman_image_spectrum(dataframe, x, y,
+                                                  number);
+            g_string_printf(key, "/%d/spectrum", i);
+            gwy_container_set_object_by_name(result, key->str, gmodel);
             g_object_unref(gmodel);
         }
     }
+    g_string_free(key, TRUE);
     gwy_selection_clear(controls.selection);
 
-    return dfield;
+    return result;
 }
 
 static void
