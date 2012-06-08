@@ -410,9 +410,10 @@ typedef struct {
     GwySelection    *selection;
     GwyGraphModel   *gmodel;
     MDTMDAFrame     *dataframe;
-    gint             output;
+    MDTImageType     output;
     gint             xc, yc;
     gint             xres, yres;
+    gint             numpoints;
 } MDTControlsType;
 
 static gboolean       module_register       (void);
@@ -2686,14 +2687,11 @@ combobox_changed_cb(GtkWidget *combobox, MDTControlsType *controls)
 }
 
 static gboolean
-mdt_image_view_button_press(G_GNUC_UNUSED GtkWidget *view,
-                            GdkEventButton *event,
-                            MDTControlsType *controls)
+mdt_image_view_mousemotion(G_GNUC_UNUSED GtkWidget *view,
+                           GdkEventMotion *event,
+                           MDTControlsType *controls)
 {
     GwyGraphModel *gmodel;
-
-    if (event->button != 1)
-        return FALSE;
 
     controls->xc = event->x * (gdouble)controls->xres / PREVIEW_SIZE;
     controls->yc = event->y * (gdouble)controls->xres / PREVIEW_SIZE;
@@ -2707,16 +2705,44 @@ mdt_image_view_button_press(G_GNUC_UNUSED GtkWidget *view,
     return TRUE;
 }
 
+static gboolean
+mdt_image_view_button_press(G_GNUC_UNUSED GtkWidget *view,
+                            GdkEventButton *event,
+                            MDTControlsType *controls)
+{
+    GwyDataField *dfield;
+    gdouble seldata[2];
+
+    if (event->button != 1)
+        return FALSE;
+
+    dfield = gwy_container_get_object_by_name(controls->mydata,
+                                              "/0/data");
+    controls->xc = event->x * (gdouble)controls->xres / PREVIEW_SIZE;
+    seldata[0] = gwy_data_field_jtor(dfield, controls->xc);
+    controls->yc = event->y * (gdouble)controls->xres / PREVIEW_SIZE;
+    seldata[1] = gwy_data_field_itor(dfield, controls->yc);
+    if(!gwy_selection_is_full(controls->selection)) {
+        controls->numpoints++;
+        gwy_selection_set_object(controls->selection, -1, seldata);
+    }
+
+    return TRUE;
+}
+
 static GwyDataField *
 extract_raman_image(MDTMDAFrame *dataframe, GwyRunType mode)
 {
     GtkWidget *dialog, *hbox, *vbox;
     MDTControlsType controls;
     GwyPixmapLayer *layer;
-    // GwyVectorLayer *vlayer;
+    GwyVectorLayer *vlayer;
     GwyDataField *dfield;
+    GwyGraphModel *gmodel;
     GwyDataField *maxfield, *maxposfield, *avgfield;
-    gint response;
+    gint i, response;
+    gdouble seldata[2];
+    gint x, y;
 
     static const GwyEnum imagetype[] = {
         { N_("Maximum"),       MDT_IMAGE_MAX },
@@ -2781,17 +2807,21 @@ extract_raman_image(MDTMDAFrame *dataframe, GwyRunType mode)
     gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view), layer);
     gwy_set_data_preview_size(GWY_DATA_VIEW(controls.view),
                               PREVIEW_SIZE);
-    /*
+
     vlayer = g_object_new(g_type_from_name("GwyLayerPoint"), NULL);
     gwy_vector_layer_set_selection_key(vlayer, "/0/select/line");
     gwy_vector_layer_set_editable(vlayer, FALSE);
     gwy_data_view_set_top_layer(GWY_DATA_VIEW(controls.view),
                                 GWY_VECTOR_LAYER(vlayer));
     controls.selection = gwy_vector_layer_ensure_selection(vlayer);
-    */
+    g_object_ref(controls.selection);
+    gwy_selection_set_max_objects(controls.selection, 1024);
+    controls.numpoints = 0;
 
     g_signal_connect(controls.view, "button-press-event",
-                     G_CALLBACK(mdt_image_view_button_press), &controls);
+                    G_CALLBACK(mdt_image_view_button_press), &controls);
+    g_signal_connect(controls.view, "motion-notify-event",
+                     G_CALLBACK(mdt_image_view_mousemotion), &controls);
 
     gtk_box_pack_start(GTK_BOX(vbox), controls.view, FALSE, FALSE, 0);
 
@@ -2844,6 +2874,17 @@ extract_raman_image(MDTMDAFrame *dataframe, GwyRunType mode)
             g_assert_not_reached();
         break;
     }
+
+    if (controls.numpoints) {
+        for (i = 0; i < controls.numpoints; i++) {
+            gwy_selection_get_object(controls.selection, i, seldata);
+            x = gwy_data_field_rtoj(dfield, seldata[0]);
+            y = gwy_data_field_rtoi(dfield, seldata[1]);
+            gmodel = extract_raman_image_spectrum(dataframe, x, y);
+            g_object_unref(gmodel);
+        }
+    }
+    gwy_selection_clear(controls.selection);
 
     return dfield;
 }
