@@ -858,8 +858,9 @@ mdt_load(const gchar *filename,
                         gwy_app_channel_title_fall_back(data, n);
 
                     n++;
-                    numpoints = gwy_container_get_int32_by_name(image,
-                                                          "/numpoints");
+                    numpoints = 0;
+                    gwy_container_gis_int32_by_name(image, "/numpoints",
+													&numpoints);
                     for (j = 0; j < numpoints; j++) {
                         GwyGraphModel *gmodel;
 
@@ -2725,7 +2726,7 @@ combobox_changed_cb(GtkWidget *combobox, MDTControlsType *controls)
 }
 
 static gboolean
-mdt_image_view_mousemotion(G_GNUC_UNUSED GtkWidget *view,
+mdt_image_view_mousemotion_cb(G_GNUC_UNUSED GtkWidget *view,
                            GdkEventMotion *event,
                            MDTControlsType *controls)
 {
@@ -2745,7 +2746,7 @@ mdt_image_view_mousemotion(G_GNUC_UNUSED GtkWidget *view,
 }
 
 static gboolean
-mdt_image_view_button_press(G_GNUC_UNUSED GtkWidget *view,
+mdt_image_view_button_press_cb(G_GNUC_UNUSED GtkWidget *view,
                             GdkEventButton *event,
                             MDTControlsType *controls)
 {
@@ -2867,9 +2868,9 @@ extract_raman_image(MDTMDAFrame *dataframe,
     controls.numpoints = 0;
 
     g_signal_connect(controls.view, "button-press-event",
-                    G_CALLBACK(mdt_image_view_button_press), &controls);
+                 G_CALLBACK(mdt_image_view_button_press_cb), &controls);
     g_signal_connect(controls.view, "motion-notify-event",
-                     G_CALLBACK(mdt_image_view_mousemotion), &controls);
+                  G_CALLBACK(mdt_image_view_mousemotion_cb), &controls);
 
     gtk_box_pack_start(GTK_BOX(vbox), controls.view, FALSE, FALSE, 0);
 
