@@ -109,6 +109,7 @@ G_BEGIN_DECLS
 #define GWY_STOCK_PATH_LEVEL            "gwy_path_level"
 #define GWY_STOCK_POINTER_MEASURE       "gwy_pointer_measure"
 #define GWY_STOCK_POLYNOM               "gwy_polynom"
+#define GWY_STOCK_POLYNOM_LEVEL         "gwy_polynom_level"
 #define GWY_STOCK_PROFILE               "gwy_profile"
 #define GWY_STOCK_REMOVE_UNDER_MASK     "gwy_remove_under_mask"
 #define GWY_STOCK_ROTATE                "gwy_rotate"

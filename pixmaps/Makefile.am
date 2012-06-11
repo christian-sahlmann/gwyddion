@@ -8,6 +8,7 @@ icondatadir = $(datadir)/icons/hicolor/48x48/apps
 # Since 2.7: color_range_auto color_range_full color_range_fixed
 # Since 2.7: color_range_adaptive mask_line
 # Since 2.22: mask_fill_draw mask_fill_erase mask_paint_draw mask_paint_erase
+# Since 2.29: polynom_level
 
 # If you add new stock icons here, add them to a `Since' line above and run
 # ./utils/stockgen.py from the top-level directory to update source code
@@ -103,6 +104,7 @@ pixmapdata_DATA = \
 	gwy_path_level-24.png \
 	gwy_pointer_measure-24.png \
 	gwy_polynom-24.png \
+	gwy_polynom_level-24.png \
 	gwy_profile-24.png \
 	gwy_remove_under_mask-24.png \
 	gwy_rotate-24.png \

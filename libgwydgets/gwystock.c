@@ -891,6 +891,15 @@ free_the_icon_factory(void)
  **/
 
 /**
+ * GWY_STOCK_POLYNOM_LEVEL:
+ *
+ * The "Polynom-Level" stock icon.
+ * <inlinegraphic fileref="gwy_polynom_level-24.png" format="PNG"/>
+ *
+ * Since: 2.29
+ **/
+
+/**
  * GWY_STOCK_PROFILE:
  *
  * The "Profile" stock icon.
