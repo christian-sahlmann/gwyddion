@@ -411,7 +411,7 @@ render_column(GtkCellLayout *column,
                     gtk_tree_model_get(combomodel, &comboiter,
                                        COMBO_COLUMN_NAME, &s,
                                        -1);
-                    g_object_set(renderer, "text", s, NULL);
+                    g_object_set(renderer, "text", gwy_sgettext(s), NULL);
                     g_free(s);
                 }
                 else if (GTK_IS_CELL_RENDERER_PIXBUF(renderer)) {
