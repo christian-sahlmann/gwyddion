@@ -3929,8 +3929,8 @@ pixmap_save_sanitize_args(PixmapSaveArgs *args)
     args->draw_mask = !!args->draw_mask;
     args->draw_selection = !!args->draw_selection;
     args->scale_font = !!args->scale_font;
-    args->scale_font = !!args->inset_draw_ticks;
-    args->scale_font = !!args->inset_draw_label;
+    args->inset_draw_ticks = !!args->inset_draw_ticks;
+    args->inset_draw_label = !!args->inset_draw_label;
     args->font_size = CLAMP(args->font_size, 1.2, 120.0);
     args->grayscale = (args->grayscale == 16) ? 16 : 0;
 }
