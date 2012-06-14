@@ -860,7 +860,7 @@ mdt_load(const gchar *filename,
                     n++;
                     numpoints = 0;
                     gwy_container_gis_int32_by_name(image, "/numpoints",
-													&numpoints);
+                                                    &numpoints);
                     for (j = 0; j < numpoints; j++) {
                         GwyGraphModel *gmodel;
 
@@ -2759,9 +2759,9 @@ mdt_image_view_button_press_cb(G_GNUC_UNUSED GtkWidget *view,
     dfield = gwy_container_get_object_by_name(controls->mydata,
                                               "/0/data");
     controls->xc = event->x * (gdouble)controls->xres / PREVIEW_SIZE;
-    seldata[0] = gwy_data_field_jtor(dfield, controls->xc);
+    seldata[0] = gwy_data_field_jtor(dfield, controls->xc + 0.5);
     controls->yc = event->y * (gdouble)controls->xres / PREVIEW_SIZE;
-    seldata[1] = gwy_data_field_itor(dfield, controls->yc);
+    seldata[1] = gwy_data_field_itor(dfield, controls->yc + 0.5);
     if(!gwy_selection_is_full(controls->selection)) {
         controls->numpoints++;
         gwy_selection_set_object(controls->selection, -1, seldata);

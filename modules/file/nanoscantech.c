@@ -205,6 +205,10 @@ nst_load(const gchar *filename,
                     g_free(strkey);
                 }
             }
+            else if (gwy_strequal(line, "4d")) {
+                /* Raman images */
+                gwy_debug("4d: %u\n", channelno);
+            }
 
             g_free(buffer);
             channelno++;
