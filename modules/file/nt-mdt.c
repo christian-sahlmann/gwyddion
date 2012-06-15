@@ -847,6 +847,7 @@ mdt_load(const gchar *filename,
                     gwy_container_set_object_by_name(data, key->str,
                                                      dfield);
                     g_object_unref(dfield);
+
                     if (mdaframe->title) {
                         g_string_append(key, "/title");
                         gwy_container_set_string_by_name(data, key->str,
@@ -861,6 +862,7 @@ mdt_load(const gchar *filename,
                     numpoints = 0;
                     gwy_container_gis_int32_by_name(image, "/numpoints",
                                                     &numpoints);
+
                     for (j = 0; j < numpoints; j++) {
                         GwyGraphModel *gmodel;
 
@@ -2858,7 +2860,7 @@ extract_raman_image(MDTMDAFrame *dataframe,
                               PREVIEW_SIZE);
 
     vlayer = g_object_new(g_type_from_name("GwyLayerPoint"), NULL);
-    gwy_vector_layer_set_selection_key(vlayer, "/0/select/line");
+    gwy_vector_layer_set_selection_key(vlayer, "/0/select/pointer");
     gwy_vector_layer_set_editable(vlayer, FALSE);
     gwy_data_view_set_top_layer(GWY_DATA_VIEW(controls.view),
                                 GWY_VECTOR_LAYER(vlayer));
