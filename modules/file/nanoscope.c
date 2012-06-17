@@ -113,8 +113,8 @@ static GwyContainer*   nanoscope_load         (const gchar *filename,
 static GwyDataField*   hash_to_data_field     (GHashTable *hash,
                                                GHashTable *scannerlist,
                                                GHashTable *scanlist,
+                                               GHashTable *contrlist,
                                                NanoscopeFileType file_type,
-                                               gboolean has_version,
                                                guint bufsize,
                                                gchar *buffer,
                                                gint gxres,
@@ -147,7 +147,7 @@ static void            get_scan_list_res      (GHashTable *hash,
 static GwySIUnit*      get_physical_scale     (GHashTable *hash,
                                                GHashTable *scannerlist,
                                                GHashTable *scanlist,
-                                               gboolean has_version,
+                                               GHashTable *contrlist,
                                                gdouble *scale,
                                                GError **error);
 static GwySIUnit*      get_tuna_physical_scale(GHashTable *hash,
@@ -165,7 +165,7 @@ static GwyModuleInfo module_info = {
     N_("Imports Veeco (Digital Instruments) Nanoscope data files, "
        "version 3 or newer."),
     "Yeti <yeti@gwyddion.net>",
-    "0.29",
+    "0.30",
     "David Nečas (Yeti) & Petr Klapetek",
     "2004",
 };
@@ -217,10 +217,11 @@ nanoscope_load(const gchar *filename,
     NanoscopeFileType file_type;
     NanoscopeData *ndata;
     NanoscopeValue *val;
-    GHashTable *hash, *scannerlist = NULL, *scanlist = NULL, *forcelist = NULL;
+    GHashTable *hash, *scannerlist = NULL, *scanlist = NULL, *forcelist = NULL,
+               *contrlist = NULL;
     GList *l, *list = NULL;
     gint i, xres = 0, yres = 0;
-    gboolean ok, has_version = FALSE;
+    gboolean ok;
 
     if (!g_file_get_contents(filename, &buffer, &size, &err)) {
         err_GET_FILE_CONTENTS(error, &err);
@@ -289,8 +290,10 @@ nanoscope_load(const gchar *filename,
             continue;
         }
         if (gwy_strequal(self, "File list")) {
-            has_version = !!g_hash_table_lookup(hash, "Version");
-            gwy_debug("has Version: %d", has_version);
+            continue;
+        }
+        if (gwy_strequal(self, "Controller list")) {
+            contrlist = hash;
             continue;
         }
         if (gwy_stramong(self, "Ciao scan list", "Afm list", "Stm list",
@@ -317,7 +320,8 @@ nanoscope_load(const gchar *filename,
         }
         else {
             ndata->data_field = hash_to_data_field(hash, scannerlist, scanlist,
-                                                   file_type, has_version,
+                                                   contrlist,
+                                                   file_type,
                                                    size, buffer,
                                                    xres, yres,
                                                    &p, error);
@@ -478,8 +482,8 @@ static GwyDataField*
 hash_to_data_field(GHashTable *hash,
                    GHashTable *scannerlist,
                    GHashTable *scanlist,
+                   GHashTable *contrlist,
                    NanoscopeFileType file_type,
-                   gboolean has_version,
                    guint bufsize,
                    gchar *buffer,
                    gint gxres,
@@ -614,8 +618,7 @@ hash_to_data_field(GHashTable *hash,
     }
 
     q = 1.0;
-    unitz = get_physical_scale(hash, scannerlist, scanlist, has_version,
-                               &q, error);
+    unitz = get_physical_scale(hash, scannerlist, scanlist, contrlist, &q, error);
     if (!unitz)
         return NULL;
 
@@ -651,11 +654,18 @@ hash_to_data_field(GHashTable *hash,
     return dfield;
 }
 
+#define CHECK_AND_APPLY(op, hash, key)                     \
+        if (!(val = g_hash_table_lookup((hash), (key)))) { \
+            err_MISSING_FIELD(error, (key));               \
+            return NULL;                                   \
+        }                                                  \
+        *scale op val->hard_value
+
 static GwySIUnit*
 get_physical_scale(GHashTable *hash,
                    GHashTable *scannerlist,
                    GHashTable *scanlist,
-                   gboolean has_version,
+                   GHashTable *contrlist,
                    gdouble *scale,
                    GError **error)
 {
@@ -664,91 +674,111 @@ get_physical_scale(GHashTable *hash,
     gchar *key;
     gint q;
 
-    /* Very old style scales (files without Version field) */
-    if (!has_version) {
-        if (!(val = g_hash_table_lookup(hash, "Z magnify image"))) {
-            err_MISSING_FIELD(error, "Z magnify image");
-            return NULL;
-        }
-
-        /* TODO: Luminescence */
-        siunit = gwy_si_unit_new("m");
-        /* According to Markus, the units are 1/100 nm, but his scale
-         * calculation is raw/655.36 [nm].  We have the factor 1/65536 applied
-         * automatically, that gives 1e-7 [m].  Whatever. */
-        *scale = 1e-7 * val->hard_value;
-        return siunit;
-    }
-
-    /* XXX: This is a damned heuristics.  For some value types we try to guess
-     * a different quantity scale to look up. */
-    if (!(val = g_hash_table_lookup(hash, "@2:Z scale"))) {
-        if (!(val = g_hash_table_lookup(hash, "Z scale"))) {
-            err_MISSING_FIELD(error, "Z scale");
-            return NULL;
-        }
-
+    /* version = 4.2 */
+    if ((val = g_hash_table_lookup(hash, "Z scale"))) {
         /* Old style scales */
         gwy_debug("Old-style scale, using hard units %g %s",
                   val->hard_value, val->hard_value_units);
         siunit = gwy_si_unit_new_parse(val->hard_value_units, &q);
         *scale = val->hard_value * pow10(q);
         return siunit;
+
     }
+    /* version >= 4.3 */
+    else if ((val = g_hash_table_lookup(hash, "@2:Z scale"))) {
+        /* Resolve reference to a soft scale */
+        if (val->soft_scale) {
+            key = g_strdup_printf("@%s", val->soft_scale);
 
-    /* Resolve reference to a soft scale */
-    if (val->soft_scale) {
-        key = g_strdup_printf("@%s", val->soft_scale);
+            if (!(sval = g_hash_table_lookup(scannerlist, key))
+                && (!scanlist
+                    || !(sval = g_hash_table_lookup(scanlist, key)))) {
+                g_warning("`%s' not found", key);
+                g_free(key);
+                /* XXX */
+                *scale = val->hard_value;
+                return gwy_si_unit_new("");
+            }
 
-        if (!(sval = g_hash_table_lookup(scannerlist, key))
-            && (!scanlist || !(sval = g_hash_table_lookup(scanlist, key)))) {
-            g_warning("`%s' not found", key);
+            *scale = val->hard_value*sval->hard_value;
+            gwy_debug("Hard-value scale %g (%g * %g)",
+                      *scale, val->hard_value, sval->hard_value);
+
+            if (!sval->hard_value_units || !*sval->hard_value_units) {
+                gwy_debug("No hard value units");
+                if (gwy_strequal(val->soft_scale, "Sens. Phase"))
+                    siunit = gwy_si_unit_new("deg");
+                else
+                    siunit = gwy_si_unit_new("V");
+            }
+            else {
+                siunit = gwy_si_unit_new_parse(sval->hard_value_units, &q);
+                if (val->hard_value_units && *val->hard_value_units) {
+                    siunit2 = gwy_si_unit_new(val->hard_value_units);
+                }
+                else
+                    siunit2 = gwy_si_unit_new("V");
+                gwy_si_unit_multiply(siunit, siunit2, siunit);
+                gwy_debug("Scale1 = %g V/LSB", val->hard_value);
+                gwy_debug("Scale2 = %g %s",
+                          sval->hard_value, sval->hard_value_units);
+                *scale *= pow10(q);
+                gwy_debug("Total scale = %g %s/LSB",
+                          *scale,
+                          gwy_si_unit_get_string(siunit,
+                                                 GWY_SI_UNIT_FORMAT_PLAIN));
+                g_object_unref(siunit2);
+            }
             g_free(key);
-            /* XXX */
-            *scale = val->hard_value;
-            return gwy_si_unit_new("");
-        }
-
-        *scale = val->hard_value*sval->hard_value;
-        gwy_debug("Hard-value scale %g (%g * %g)",
-                  *scale, val->hard_value, sval->hard_value);
-
-        if (!sval->hard_value_units || !*sval->hard_value_units) {
-            gwy_debug("No hard value units");
-            if (gwy_strequal(val->soft_scale, "Sens. Phase"))
-                siunit = gwy_si_unit_new("deg");
-            else
-                siunit = gwy_si_unit_new("V");
         }
         else {
-            siunit = gwy_si_unit_new_parse(sval->hard_value_units, &q);
-            if (val->hard_value_units && *val->hard_value_units) {
-                siunit2 = gwy_si_unit_new(val->hard_value_units);
-            }
-            else
-                siunit2 = gwy_si_unit_new("V");
-            gwy_si_unit_multiply(siunit, siunit2, siunit);
-            gwy_debug("Scale1 = %g V/LSB", val->hard_value);
-            gwy_debug("Scale2 = %g %s",
-                      sval->hard_value, sval->hard_value_units);
-            *scale *= pow10(q);
-            gwy_debug("Total scale = %g %s/LSB",
-                    *scale, gwy_si_unit_get_string(siunit,
-                                                    GWY_SI_UNIT_FORMAT_PLAIN));
-            g_object_unref(siunit2);
+            /* We have '@2:Z scale' but the reference to soft scale is missing,
+             * the quantity is something in the hard units (seen for Potential). */
+            gwy_debug("No soft scale, using hard units %g %s",
+                      val->hard_value, val->hard_value_units);
+            siunit = gwy_si_unit_new_parse(val->hard_value_units, &q);
+            *scale = val->hard_value * pow10(q);
         }
-        g_free(key);
+        return siunit;
     }
-    else {
-        /* We have '@2:Z scale' but the reference to soft scale is missing,
-         * the quantity is something in the hard units (seen for Potential). */
-        gwy_debug("No soft scale, using hard units %g %s",
-                  val->hard_value, val->hard_value_units);
-        siunit = gwy_si_unit_new_parse(val->hard_value_units, &q);
-        *scale = val->hard_value * pow10(q);
-    }
+    else  { /* no version */
+        if (!(val = g_hash_table_lookup(hash, "Image data"))) {
+             err_MISSING_FIELD(error, "Image data");
+             return NULL;
+        }
 
-    return siunit;
+        if ( gwy_strequal(val->hard_value_str, "Deflection")) {
+            siunit = gwy_si_unit_new("m"); /* always? */
+            *scale = 1e-9 * 2.0/65536.0;
+            CHECK_AND_APPLY(*=, hash, "Z scale defl");
+            CHECK_AND_APPLY(*=, contrlist, "In1 max");
+            CHECK_AND_APPLY(*=, scannerlist, "In sensitivity");
+            CHECK_AND_APPLY(/=, scanlist, "Detect sens.");
+            return siunit;
+
+/* "Z scale ampl" needs to be verified */
+#if 0
+        } else if ( gwy_strequal(val->hard_value_str, "Amplitude")){
+            siunit = gwy_si_unit_new("m"); /* always? */
+            *scale = 1e-9 * 2.0/65536.0;
+            CHECK_AND_APPLY(*=, hash, "Z scale ampl");
+            CHECK_AND_APPLY(*=, contrlist, "In1 max");
+            CHECK_AND_APPLY(*=, scannerlist, "In sensitivity");
+            CHECK_AND_APPLY(/=, scanlist, "Detect sens.");
+            return siunit;
+#endif
+        }
+        else if ( gwy_strequal(val->hard_value_str, "Height")) {
+            siunit = gwy_si_unit_new("m");
+            *scale = 1e-9 * 2.0/65536.0;
+            CHECK_AND_APPLY(*=, hash, "Z scale height");
+            CHECK_AND_APPLY(*=, contrlist, "Z max");
+            CHECK_AND_APPLY(*=, scannerlist, "Z sensitivity");
+            return siunit;
+        }
+
+        return NULL;
+    }
 }
 
 static GwyGraphModel*
