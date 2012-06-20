@@ -59,7 +59,8 @@ gwy_radio_buttons_create_real(const GwyEnum *entries,
     for (i = nentries-1; i >= 0; i--) {
         if (translate)
             button = gtk_radio_button_new_with_mnemonic_from_widget
-                                (GTK_RADIO_BUTTON(button), _(entries[i].name));
+                                (GTK_RADIO_BUTTON(button),
+                                 gwy_sgettext(entries[i].name));
         else
             button = gtk_radio_button_new_with_mnemonic_from_widget
                                    (GTK_RADIO_BUTTON(button), entries[i].name);
