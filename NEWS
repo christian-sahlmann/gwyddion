@@ -8,9 +8,14 @@ Modules:
 - Median line correction: Masking is supported.
 - TIA SER: Spectral data import is supported.
 - Statistical quantities: New quantity was added: grain-wise rms.
+- Omicron: Files created by SPIP are recognised and loaded.
+- Nanoscope: Support for old files without @2:Z scale was improved.
+- Object synthesis: A bug causing Critical warning/crash during generation of
+  non-square data was fixed.
 
 Other:
 - Standalone python gwy module is available (experimental).
+- Several icons were improved.
 
 
 2.28 (2012-05-18)
