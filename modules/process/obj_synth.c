@@ -281,7 +281,7 @@ static const ObjSynthFeature features[] = {
     { OBJ_SYNTH_THATCH,   N_("Thatches"),     &create_thatch,   &getcov_thatch,   },
     { OBJ_SYNTH_TENT,     N_("Tents"),        &create_tent,     &getcov_tent,     },
     { OBJ_SYNTH_GAUSSIAN, N_("Gaussians"),    &create_gaussian, &getcov_gaussian, },
-    { OBJ_SYNTH_DOUGHNUT, N_("Dougnuts"),     &create_doughnut, &getcov_doughnut, },
+    { OBJ_SYNTH_DOUGHNUT, N_("Doughnuts"),    &create_doughnut, &getcov_doughnut, },
 };
 
 static GwyModuleInfo module_info = {
@@ -289,7 +289,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Generates randomly patterned surfaces by placing objects."),
     "Yeti <yeti@gwyddion.net>",
-    "1.3",
+    "1.4",
     "David Nečas (Yeti)",
     "2009",
 };
@@ -945,8 +945,8 @@ object_synth_iter(GwyDataField *surface,
         gdouble *p;
 
         id = g_rand_int_range(rngset->rng[RNG_ID], 0, ncells - k);
-        i = indices[id]/nycells;
-        j = indices[id] % nycells;
+        i = indices[id]/nxcells;
+        j = indices[id] % nxcells;
         indices[id] = indices[ncells-1 - k];
 
         size = args->size;
