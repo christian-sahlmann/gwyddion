@@ -853,15 +853,21 @@ gwy_file_get_data_info(GwyContainer *data,
     FileTypeInfo *fti;
 
     fti = gwy_file_type_info_get(data, FALSE);
-    if (!fti)
-        return FALSE;
+    if (fti) {
+        if (name)
+            *name = g_quark_to_string(fti->name);
+        if (filename_sys)
+            *filename_sys = fti->filename_sys;
+
+        return TRUE;
+    }
 
     if (name)
-        *name = g_quark_to_string(fti->name);
+        *name = NULL;
     if (filename_sys)
-        *filename_sys = fti->filename_sys;
+        *filename_sys = NULL;
 
-    return TRUE;
+    return FALSE;
 }
 
 /**
