@@ -1,6 +1,10 @@
 2.29 (0000-00-00)
 Libraries:
 - libgwyprocess: New function to calculate grain-wise rms.
+- libgwymodule: gwy_file_get_data_info() sets its arguments to NULL if no file
+  info is found, fixing a possible crash if newly generated data are saved.
+- libgwyapp: Recent file names are compared canonicalized, fixing repetition
+  of the same file in document history on MS Windows.
 
 Modules:
 - Pixmap: Scalebar ticks and label can be enabled/disabled.
