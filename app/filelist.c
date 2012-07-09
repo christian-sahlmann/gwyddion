@@ -916,23 +916,26 @@ gwy_app_recent_file_find(const gchar *filename_utf8,
 {
     GtkTreeIter iter;
     GwyRecentFile *rf;
+    gchar *filename_canon = gwy_canonicalize_path(filename_utf8);
 
     if (gtk_tree_model_get_iter_first(GTK_TREE_MODEL(gcontrols.store), &iter)) {
         do {
             gtk_tree_model_get(GTK_TREE_MODEL(gcontrols.store), &iter,
                                FILELIST_RAW, &rf,
                                -1);
-            if (gwy_strequal(filename_utf8, rf->file_utf8)) {
+            if (gwy_strequal(filename_canon, rf->file_utf8)) {
                 if (piter)
                     *piter = iter;
                 if (prf)
                     *prf = rf;
 
+                g_free(filename_canon);
                 return TRUE;
             }
         } while (gtk_tree_model_iter_next(GTK_TREE_MODEL(gcontrols.store),
                                           &iter));
     }
+    g_free(filename_canon);
 
     return FALSE;
 }
