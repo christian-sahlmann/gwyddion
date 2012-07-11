@@ -234,9 +234,13 @@ if test "x$enable_pygwy" != xno; then
 fi
 
 if test "x$enable_pygwy" != xno; then
-  AC_CHECK_LIB(python$PYTHON_VERSION, PyRun_String,
-               [PYTHON_LIBS=-lpython$PYTHON_VERSION],
-               [enable_pygwy=no; PYGWY_WARN=" (needs libpython$PYTHON_VERSION)"],
+  libpython=python$PYTHON_VERSION
+  if test "x$os_win32" = xyes; then
+    libpython=`echo $libpython | sed 's%\\.%%'`
+  fi
+  AC_CHECK_LIB($libpython, PyRun_String,
+               [PYTHON_LIBS=-l$libpython],
+               [enable_pygwy=no; PYGWY_WARN=" (needs lib$libpython)"],
                [$PYTHON_SYSCFG_LDFLAGS $PYTHON_SYSCFG_LINKFORSHARED])
   AC_SUBST(PYTHON_LIBS)
 fi
