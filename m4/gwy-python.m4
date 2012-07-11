@@ -15,6 +15,11 @@ AC_DEFUN([GWY_PYTHON_SYSCFG_VAR],
 AC_REQUIRE([AM_PATH_PYTHON])dnl
 AC_SUBST([PYTHON_SYSCFG_$1])
 AC_MSG_CHECKING([for python build option $1])
+if test -n "PYTHON_SYSCFG_$1"; then
+  AC_MSG_RESULT([$PYTHON_SYSCFG_$1])
+  export PYTHON_SYSCFG_$1
+  $2
+else
 cat >conftest.py <<\_______EOF
 import sys, distutils.sysconfig
 x = sys.argv[[1]].strip()
@@ -39,5 +44,6 @@ else
   $3
 fi
 rm -f conftest.py conftest.err conftest.file
+fi
 ])
 
