@@ -64,7 +64,7 @@ MinGW Windows Gwyddion libraries.
 
 %build
 %{_mingw32_configure} --enable-shared --disable-static --disable-gtk-doc \
-  --without-libiconv-prefix --without-libintl-prefix \
+  --without-libiconv-prefix --without-libintl-prefix --without-x \
   --disable-schemas-install --disable-desktop-file-update --disable-pygwy \
   --without-pascal --without-perl --without-python --without-ruby \
   --without-kde4-thumbnailer
