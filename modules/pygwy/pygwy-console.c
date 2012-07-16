@@ -32,9 +32,6 @@
 #include <gtksourceview/gtksourcelanguagemanager.h>
 #endif
 
-extern gchar pygwy_plugin_dir_name[];
-
-static PygwyConsoleSetup *s_console_setup = NULL;
 static void       pygwy_on_console_save_as_file      (GtkToolButton *btn, gpointer user_data);
 static void       pygwy_console_run                  (GwyContainer *data,
                                                       GwyRunType run,
@@ -44,6 +41,10 @@ static void             pygwy_on_console_command_execute(GtkEntry *entry,
 static gboolean         pygwy_on_console_close(GtkWidget *widget,
                                                GdkEvent *event,
                                                gpointer user_data);
+
+extern gchar pygwy_plugin_dir_name[];
+
+static PygwyConsoleSetup *s_console_setup = NULL;
 
 void
 pygwy_register_console()

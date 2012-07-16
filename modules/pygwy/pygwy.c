@@ -42,6 +42,13 @@ static void       pygwy_create_py_list_of_containers (GwyContainer *data, gpoint
 #include "pygwy-console.h"
 #line 43 "pygwy.c"
 
+#ifdef G_OS_WIN32
+#include <windows.h>
+#include <winreg.h>
+#define python_version "2.7"
+#define python_key "Software\\Python\\PythonCore\\" python_version "\\InstallPath"
+#endif
+
 typedef struct {
     gchar *name;
     gchar *filename;
@@ -57,6 +64,7 @@ typedef enum {
 const gchar pygwy_plugin_dir_name[] = "pygwy";
 
 static gboolean         module_register       (void);
+static gboolean         check_pygtk_availability(void);
 static void             pygwy_proc_run        (GwyContainer *data,
                                                GwyRunType run,
                                                const gchar *name);
@@ -91,7 +99,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Pygwy, the Gwyddion Python wrapper."),
     "Jan Hořák <xhorak@gmail.com>",
-    "0.1",
+    "0.2",
     "Jan Hořák",
     "2007"
 };
@@ -101,8 +109,77 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(void)
 {
+    if (!check_pygtk_availability())
+        return;
+
     pygwy_register_plugins();
     pygwy_register_console();
+    return TRUE;
+}
+
+/* If python or pygtk is not available it crashes or worse.  Try to figure out
+ * whether it is a good idea to register the module function or not. */
+static gboolean
+check_pygtk_availability(void)
+{
+#ifdef G_OS_WIN32
+    gchar pythondir[256];
+    DWORD size = sizeof(pythondir)-1;
+    HKEY reg_key;
+    gchar *filename;
+    gboolean ok = FALSE;
+
+    gwy_clear(pythondir, sizeof(pythondir));
+    if (RegOpenKeyEx(HKEY_CURRENT_USER, TEXT(python_key), 0, KEY_READ,
+                     &reg_key) == ERROR_SUCCESS) {
+        if (RegQueryValueEx(reg_key, NULL, NULL, NULL, pythondir, &size) == ERROR_SUCCESS) {
+            ok = TRUE;
+        }
+        RegCloseKey(reg_key);
+    }
+    if (!ok
+        && RegOpenKeyEx(HKEY_LOCAL_MACHINE, TEXT(python_key), 0, KEY_READ,
+                        &reg_key) == ERROR_SUCCESS) {
+        if (RegQueryValueEx(reg_key, NULL, NULL, NULL,
+                            pythondir, &size) == ERROR_SUCCESS)
+            ok = TRUE;
+        RegCloseKey(reg_key);
+    }
+
+    if (!ok) {
+        g_message("Cannot get %s registry key, assuming no python 2.7.",
+                  python_key);
+        return FALSE;
+    }
+
+    filename = g_build_filename(pythondir, "Lib", "site-packages", "gtk-2.0",
+                                "gobject", "__init__.py", NULL);
+    if (!g_file_test(filename, G_FILE_TEST_IS_REGULAR)) {
+        g_message("File %s is not present, assuming no pygobject.", filename);
+        g_free(filename);
+        return FALSE;
+    }
+    g_free(filename);
+
+    filename = g_build_filename(pythondir, "Lib", "site-packages", "gtk-2.0",
+                                "gtk", "__init__.py", NULL);
+    if (!g_file_test(filename, G_FILE_TEST_IS_REGULAR)) {
+        g_message("File %s is not present, assuming no pygtk.", filename);
+        g_free(filename);
+        return FALSE;
+    }
+    g_free(filename);
+
+    filename = g_build_filename(pythondir, "Lib", "site-packages", "cairo",
+                                "__init__.py", NULL);
+    if (!g_file_test(filename, G_FILE_TEST_IS_REGULAR)) {
+        g_message("File %s is not present, assuming no pycairo.", filename);
+        g_free(filename);
+        return FALSE;
+    }
+    g_free(filename);
+#endif
+
     return TRUE;
 }
 
