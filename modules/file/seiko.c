@@ -81,7 +81,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Seiko XQB, XQD and XQT files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.6",
+    "0.7",
     "David Nečas (Yeti) & Markus Pristovsek",
     "2006",
 };
@@ -223,14 +223,26 @@ read_data_field(const guchar *buffer,
     alpha = xreal/yreal;
     n = (endfile - datastart)/2;
     xres = (int)sqrt(n/alpha + 0.1);
-    yres = (int)sqrt(n*alpha + 0.1);
+    yres = n/xres;
     gwy_debug("1st try: xres: %d, yres: %d, size: %u vs. %u",
               xres, yres, 2*xres*yres, endfile - datastart);
     if (2*xres*yres != endfile - datastart) {
-        /* Try square then */
+        xres += 1;
+        yres = n/xres;
+        gwy_debug("2nd try: xres: %d, yres: %d, size: %u vs. %u",
+                  xres, yres, 2*xres*yres, endfile - datastart);
+    }
+    if (2*xres*yres != endfile - datastart) {
+        xres += 2;
+        yres = n/xres;
+        gwy_debug("3rd try: xres: %d, yres: %d, size: %u vs. %u",
+                  xres, yres, 2*xres*yres, endfile - datastart);
+    }
+    if (2*xres*yres != endfile - datastart) {
+        /* Square */
         if (fabs(alpha - 1.0) > 1e-3)
             xres = yres = (int)sqrt(n + 0.1);
-        gwy_debug("2nd try: xres: %d, yres: %d, size: %u vs. %u",
+        gwy_debug("4th try: xres: %d, yres: %d, size: %u vs. %u",
                   xres, yres, 2*xres*yres, endfile - datastart);
     }
     if (2*xres*yres != endfile - datastart) {
