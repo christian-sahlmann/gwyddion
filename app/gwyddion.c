@@ -42,6 +42,7 @@
 #define LOG_TO_FILE_DEFAULT TRUE
 #include <windows.h>
 #include <winreg.h>
+#define gwyddion_key "Software\\Gwyddion\\2.0"
 #else
 #define LOG_TO_FILE_DEFAULT FALSE
 #endif
@@ -466,22 +467,25 @@ static void
 setup_locale_from_win32_registry(void)
 {
 #ifdef G_OS_WIN32
-    gchar locale[64];
-    DWORD size = sizeof(locale);
+    gchar locale[65];
+    DWORD size = sizeof(locale)-1;
     HKEY reg_key;
 
-    if (RegOpenKeyEx(HKEY_CURRENT_USER, TEXT("Software\\Gwyddion\\2.0"),
+    gwy_clear(locale, sizeof(locale));
+    if (RegOpenKeyEx(HKEY_CURRENT_USER, TEXT(gwyddion_key),
                      0, KEY_READ, &reg_key) == ERROR_SUCCESS) {
-        if (RegQueryValueEx(reg_key, TEXT("Locale"), NULL, NULL, locale, &size) == ERROR_SUCCESS){
+        if (RegQueryValueEx(reg_key, TEXT("Locale"), NULL, NULL,
+                            locale, &size) == ERROR_SUCCESS) {
             g_setenv("LANG", locale, TRUE);
             RegCloseKey(reg_key);
             return;
         }
         RegCloseKey(reg_key);
     }
-    if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, TEXT("Software\\Gwyddion\\2.0"),
+    if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, TEXT(gwyddion_key),
                      0, KEY_READ, &reg_key) == ERROR_SUCCESS) {
-        if (RegQueryValueEx(reg_key, TEXT("Locale"), NULL, NULL, locale, &size) == ERROR_SUCCESS)
+        if (RegQueryValueEx(reg_key, TEXT("Locale"), NULL, NULL,
+                            locale, &size) == ERROR_SUCCESS)
             g_setenv("LANG", locale, TRUE);
         RegCloseKey(reg_key);
     }
