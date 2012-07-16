@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: French localization\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
 "POT-Creation-Date: 2012-06-10 03:58+0200\n"
-"PO-Revision-Date: 2012-06-13 00:06+0100\n"
+"PO-Revision-Date: 2012-07-10 20:07+0100\n"
 "Last-Translator: François RIGUET <francheu@caramail.com>\n"
 "Language-Team: François RIGUET <francheu@caramail.com>\n"
 "Language: \n"
@@ -4342,7 +4342,7 @@ msgstr "_Auto"
 
 #: modules/file/pixmap.c:3281
 msgid "Draw _ticks"
-msgstr "Dessiner les marques"
+msgstr "Afficher les gradua_tions"
 
 #: modules/file/pixmap.c:3291
 msgid "Draw _label"
