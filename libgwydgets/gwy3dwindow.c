@@ -778,7 +778,7 @@ gwy_3d_window_build_basic_tab(Gwy3DWindow *window)
                                        FALSE);
     spin = gwy_table_attach_spinbutton(table, row++,
                                        _("_Value scale:"), NULL, adj);
-    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 3);
+    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 5);
 
     button = gtk_button_new_with_mnemonic(_("Make _1:1"));
     gtk_table_attach(GTK_TABLE(table), button,
