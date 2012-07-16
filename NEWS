@@ -16,8 +16,12 @@ Modules:
 - Nanoscope: Support for old files without @2:Z scale was improved.
 - Object synthesis: A bug causing Critical warning/crash during generation of
   non-square data was fixed.
+- Seiko: The guesswork involved in loading of non-square files was somewhat
+  improved.
 
 Other:
+- Pygwy is packaged in the Win32 installer (it requires separate Python and
+  PyGTK installation though).
 - Standalone python gwy module is available (experimental).
 - Several icons were improved.
 
