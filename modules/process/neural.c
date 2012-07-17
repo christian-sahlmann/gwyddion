@@ -372,7 +372,7 @@ neural_do(NeuralArgs *args)
     gdouble sfactor, sshift;
     gdouble *dresult, *input, *output, eo=0, eh=0;
     const gdouble *dtmodel, *drmodel, *dtsignal;
-    gint xres, yres, col, row, newid, n, height, width, irow, icol;
+    gint xres, yres, col, row, newid, n, height, width, irow;
     GwyNN *nn;
 
     data = args->tmodel.data;
@@ -459,7 +459,8 @@ neural_do(NeuralArgs *args)
             gwy_nn_feed_forward(nn);
             dresult[row*xres + col] = nn->output[1]/sfactor + sshift;
         }
-        if (!gwy_app_wait_set_fraction((gdouble)row/(gdouble)yres)) {
+        if (row % 32 == 31
+            && !gwy_app_wait_set_fraction((gdouble)row/(gdouble)yres)) {
             gwy_nn_free(nn);
             g_free(input);
             g_free(output);
