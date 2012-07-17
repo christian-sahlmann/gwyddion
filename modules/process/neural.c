@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003,2004 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2012 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -150,7 +150,7 @@ module_register(void)
 {
     gwy_process_func_register("neural",
                               (GwyProcessFunc)&neural,
-                              N_("/M_ultidata/_Neural network..."),
+                              N_("/M_ultidata/_Neural Network..."),
                               NULL,
                               NEURAL_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
@@ -194,7 +194,7 @@ neural_dialog(NeuralArgs *args)
 
     controls.args = args;
 
-    dialog = gtk_dialog_new_with_buttons(_("Neural network"), NULL, 0,
+    dialog = gtk_dialog_new_with_buttons(_("Neural Network"), NULL, 0,
                                          _("_Reset"), RESPONSE_RESET,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          NULL);
@@ -212,66 +212,64 @@ neural_dialog(NeuralArgs *args)
     gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table, TRUE, TRUE, 4);
     row = 0;
 
-    label = gtk_label_new(_("Operands:"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    label = gwy_label_new_header(_("Operands"));
     gtk_table_attach(GTK_TABLE(table), label, 0, 2, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
     controls.tmodel = gwy_data_chooser_new_channels();
     g_object_set_data(G_OBJECT(controls.tmodel), "dialog", dialog);
-    gwy_table_attach_hscale(table, row, _("Training model:"), NULL,
+    gwy_table_attach_hscale(table, row, _("Training _model:"), NULL,
                             GTK_OBJECT(controls.tmodel), GWY_HSCALE_WIDGET);
-    gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
     row++;
 
     controls.tsignal = gwy_data_chooser_new_channels();
     g_object_set_data(G_OBJECT(controls.tsignal), "dialog", dialog);
-    gwy_table_attach_hscale(table, row, _("Training signal:"), NULL,
+    gwy_table_attach_hscale(table, row, _("Training _signal:"), NULL,
                             GTK_OBJECT(controls.tsignal), GWY_HSCALE_WIDGET);
-    gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
     row++;
 
     controls.rmodel = gwy_data_chooser_new_channels();
     g_object_set_data(G_OBJECT(controls.rmodel), "dialog", dialog);
-    gwy_table_attach_hscale(table, row, _("Result model:"), NULL,
+    gwy_table_attach_hscale(table, row, _("Res_ult model:"), NULL,
                             GTK_OBJECT(controls.rmodel), GWY_HSCALE_WIDGET);
     gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
     row++;
 
+    label = gwy_label_new_header(_("Parameters"));
+    gtk_table_attach(GTK_TABLE(table), label, 0, 2, row, row+1,
+                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    row++;
 
     controls.width = gtk_adjustment_new(args->width, 1, 100, 1, 10, 0);
-    spin = gwy_table_attach_spinbutton(table, row, _("Window width:"), "px",
+    spin = gwy_table_attach_spinbutton(table, row, _("Window _width:"), "px",
                                        controls.width);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 0);
     row++;
 
     controls.height = gtk_adjustment_new(args->height, 1, 100, 1, 10, 0);
-    spin = gwy_table_attach_spinbutton(table, row, _("Window height:"), "px",
+    spin = gwy_table_attach_spinbutton(table, row, _("Window h_eight:"), "px",
                                        controls.height);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 0);
     row++;
 
     controls.trainsteps = gtk_adjustment_new(args->trainsteps, 1, 100000, 1, 10, 0);
-    spin = gwy_table_attach_spinbutton(table, row, _("Training steps:"), "",
+    spin = gwy_table_attach_spinbutton(table, row, _("_Training steps:"), "",
                                        controls.trainsteps);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 0);
     row++;
 
     controls.hidden = gtk_adjustment_new(args->hidden, 1, 20, 1, 10, 0);
-    spin = gwy_table_attach_spinbutton(table, row, _("Hidden nodes:"), "",
+    spin = gwy_table_attach_spinbutton(table, row, _("_Hidden nodes:"), "",
                                        controls.hidden);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 0);
     row++;
 
-    controls.message = gtk_label_new((" "));
+    controls.message = gtk_label_new("");
     gtk_misc_set_alignment(GTK_MISC(controls.message), 0.0, 0.5);
     gtk_table_attach(GTK_TABLE(table), controls.message, 0, 2, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
-
-
-    gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
 
     g_signal_connect(controls.rmodel, "changed",
                      G_CALLBACK(neural_data_cb), &controls);
@@ -281,7 +279,6 @@ neural_dialog(NeuralArgs *args)
                      G_CALLBACK(neural_data_cb), &controls);
 
     neural_data_cb(GWY_DATA_CHOOSER(controls.rmodel), &controls);
-
 
     gtk_widget_show_all(dialog);
     do {
