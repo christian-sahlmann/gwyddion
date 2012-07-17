@@ -19,6 +19,7 @@
  */
 
 #include "config.h"
+//#include <stdlib.h>
 #include <string.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
@@ -414,6 +415,7 @@ neural_do(NeuralArgs *args)
 
     /*perform training*/
     gwy_app_wait_set_message("Training...");
+    //system("date +'%s.%N'");
     for (n=0; n<args->trainsteps; n++) {
         for (row=(height/2); row<(yres-height/2); row++) {
             for (col=(width/2); col<(xres-width/2); col++) {
@@ -438,6 +440,7 @@ neural_do(NeuralArgs *args)
         }
         gwy_data_line_set_val(errors, n, eo+eh);
     }
+    //system("date +'%s.%N'");
 
     gwy_app_wait_set_message("Evaluating...");
     gwy_app_wait_set_fraction(0.0);
@@ -567,25 +570,33 @@ layer_forward(gdouble *input, gdouble *output, const gdouble *weight,
     input[0] = 1.0; // XXX: Can't we just do this only once?  It would permit
                     // making input const.
     for (j = 1; j < nout; j++) {
+        const gdouble *p = input;
+        const gdouble *w = weight + j*nin;
         gdouble sum = 0.0;
-        for (k = 0; k < nin; k++)
-            sum += weight[k*nout + j]*input[k];
+
+        for (k = nin; k; k--, p++, w++)
+            sum += (*w)*(*p);
         output[j] = sigma(sum);
     }
 }
 
 static void
 adjust_weights(gdouble *delta, gint ndelta, gdouble *data, gint ndata,
-               gdouble *w, gdouble *oldw, gdouble eta, gdouble momentum)
+               gdouble *weight, gdouble *oldw, gdouble eta, gdouble momentum)
 {
     gint j, k;
 
     data[0] = 1.0;
     for (j = 1; j < ndelta; j++) {
-        for (k = 0; k < ndata; k++) {
-            gdouble new_dw = eta*delta[j]*data[k] + momentum*oldw[k*ndelta + j];
-            w[k*ndelta + j] += new_dw;
-            oldw[k*ndelta + j] = new_dw;
+        gdouble edeltaj = eta*delta[j];
+        const gdouble *p = data;
+        gdouble *q = weight + j*ndata;
+        gdouble *ow = oldw + j*ndata;
+
+        for (k = ndata; k; k--, p++, ow++, q++) {
+            gdouble new_dw = edeltaj*(*p) + momentum*(*ow);
+            *q += new_dw;
+            *ow = new_dw;
         }
     }
 }
@@ -616,11 +627,13 @@ hidden_error(const gdouble *hidden, gint nhidden, gdouble *dhidden,
     gdouble errsum = 0.0;
 
     for (j = 1; j < nhidden; j++) {
+        const gdouble *p = doutput + 1;
+        const gdouble *q = whidden + (nhidden + j);
         gdouble h = hidden[j];
         gdouble sum = 0.0;
 
-        for (k = 1; k < noutput; k++)
-            sum += doutput[k]*whidden[j*noutput + k];
+        for (k = noutput-1; k; k--, p++, q += nhidden)
+            sum += (*p)*(*q);
 
         dhidden[j] = h*(1.0 - h)*sum;
         errsum += fabs(dhidden[j]);
