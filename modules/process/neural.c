@@ -19,7 +19,6 @@
  */
 
 #include "config.h"
-#include <stdlib.h>
 #include <string.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
@@ -324,12 +323,15 @@ neural_data_cb(G_GNUC_UNUSED GwyDataChooser *chooser,
     GQuark quark;
 
     args = controls->args;
-    args->tmodel.data = gwy_data_chooser_get_active(GWY_DATA_CHOOSER(controls->tmodel),
-                                                        &args->tmodel.id);
-    args->rmodel.data = gwy_data_chooser_get_active(GWY_DATA_CHOOSER(controls->rmodel),
-                                                        &args->rmodel.id);
-    args->tsignal.data = gwy_data_chooser_get_active(GWY_DATA_CHOOSER(controls->tsignal),
-                                                     &args->tsignal.id);
+    args->tmodel.data
+        = gwy_data_chooser_get_active(GWY_DATA_CHOOSER(controls->tmodel),
+                                      &args->tmodel.id);
+    args->rmodel.data
+        = gwy_data_chooser_get_active(GWY_DATA_CHOOSER(controls->rmodel),
+                                      &args->rmodel.id);
+    args->tsignal.data
+        = gwy_data_chooser_get_active(GWY_DATA_CHOOSER(controls->tsignal),
+                                      &args->tsignal.id);
 
     quark = gwy_app_get_data_key_for_id(args->tmodel.id);
     tf = GWY_DATA_FIELD(gwy_container_get_object(args->tmodel.data, quark));
@@ -338,24 +340,24 @@ neural_data_cb(G_GNUC_UNUSED GwyDataChooser *chooser,
     quark = gwy_app_get_data_key_for_id(args->tsignal.id);
     sf = GWY_DATA_FIELD(gwy_container_get_object(args->tsignal.data, quark));
 
-
-    if (gwy_data_field_check_compatibility(tf, rf,
-         GWY_DATA_COMPATIBILITY_RES
-         | GWY_DATA_COMPATIBILITY_REAL
-         | GWY_DATA_COMPATIBILITY_LATERAL)==0 &&
-        gwy_data_field_check_compatibility(tf, sf,
-         GWY_DATA_COMPATIBILITY_RES
-         | GWY_DATA_COMPATIBILITY_REAL
-         | GWY_DATA_COMPATIBILITY_LATERAL) == 0)
-    {
-        gtk_label_set_text(GTK_LABEL(controls->message), " ");
+    if (!gwy_data_field_check_compatibility
+                                (tf, sf,
+                                 GWY_DATA_COMPATIBILITY_RES
+                                 | GWY_DATA_COMPATIBILITY_REAL
+                                 | GWY_DATA_COMPATIBILITY_LATERAL)
+        && !gwy_data_field_check_compatibility
+                                (tf, rf,
+                                 GWY_DATA_COMPATIBILITY_MEASURE
+                                 | GWY_DATA_COMPATIBILITY_LATERAL
+                                 | GWY_DATA_COMPATIBILITY_VALUE)) {
+        gtk_label_set_text(GTK_LABEL(controls->message), "");
         gtk_widget_set_sensitive(controls->ok, TRUE);
     }
     else {
-        gtk_label_set_text(GTK_LABEL(controls->message), _("Data not compatible"));
+        gtk_label_set_text(GTK_LABEL(controls->message),
+                           _("Data not compatible"));
         gtk_widget_set_sensitive(controls->ok, FALSE);
     }
-
 }
 
 static void
@@ -389,8 +391,6 @@ neural_do(NeuralArgs *args)
     quark = gwy_app_get_data_key_for_id(args->rmodel.id);
     rmodel = GWY_DATA_FIELD(gwy_container_get_object(data, quark));
 
-    xres = gwy_data_field_get_xres(tmodel);
-    yres = gwy_data_field_get_yres(tmodel);
     width = args->width;
     height = args->height;
 
@@ -401,18 +401,15 @@ neural_do(NeuralArgs *args)
     sshift = gwy_data_field_get_min(tsignal);
     sfactor = 1.0/(gwy_data_field_get_max(tsignal)-sshift);
 
-    result = gwy_data_field_new_alike(tsignal, FALSE);
-    gwy_data_field_fill(result, gwy_data_field_get_avg(tsignal));
-    dresult = gwy_data_field_get_data(result);
-
     /*perform training*/
-    gwy_app_wait_set_message("Training...");
+    gwy_app_wait_set_message(_("Training..."));
     scaled = gwy_data_field_duplicate(tmodel);
     gwy_data_field_normalize(scaled);
+    xres = gwy_data_field_get_xres(scaled);
+    yres = gwy_data_field_get_yres(scaled);
     dtmodel = gwy_data_field_get_data_const(scaled);
 
-    system("date +'%s.%N'");
-    for (n=0; n < args->trainsteps; n++) {
+    for (n = 0; n < args->trainsteps; n++) {
         for (row = height/2; row < yres - height/2; row++) {
             for (col = width/2; col < xres - width/2; col++) {
                 for (irow = 0; irow < height; irow++) {
@@ -429,21 +426,27 @@ neural_do(NeuralArgs *args)
             gwy_nn_free(nn);
             g_free(input);
             g_free(output);
-            g_object_unref(result);
             g_object_unref(scaled);
             gwy_object_unref(errors);
             return;
         }
         gwy_data_line_set_val(errors, n, eo+eh);
     }
-    system("date +'%s.%N'");
     g_object_unref(scaled);
 
-    gwy_app_wait_set_message("Evaluating...");
+    gwy_app_wait_set_message(_("Evaluating..."));
     gwy_app_wait_set_fraction(0.0);
     scaled = gwy_data_field_duplicate(rmodel);
     gwy_data_field_normalize(scaled);
+    xres = gwy_data_field_get_xres(scaled);
+    yres = gwy_data_field_get_yres(scaled);
     drmodel = gwy_data_field_get_data_const(scaled);
+
+    result = gwy_data_field_new_alike(rmodel, FALSE);
+    gwy_serializable_clone(G_OBJECT(gwy_data_field_get_si_unit_z(tsignal)),
+                           G_OBJECT(gwy_data_field_get_si_unit_z(result)));
+    gwy_data_field_fill(result, gwy_data_field_get_avg(tsignal));
+    dresult = gwy_data_field_get_data(result);
 
     for (row = height/2; row < yres-height/2; row++) {
         for (col = width/2; col < xres-width/2; col++) {
@@ -454,11 +457,7 @@ neural_do(NeuralArgs *args)
                        width*sizeof(gdouble));
             }
             gwy_nn_feed_forward(nn);
-            /* FIXME: This is a terrible way of boundary data handling. */
-            for (irow = 0; irow < height; irow++) {
-                for (icol = 0; icol < width; icol++)
-                    dresult[row*xres + col] = nn->output[1]/sfactor + sshift;
-            }
+            dresult[row*xres + col] = nn->output[1]/sfactor + sshift;
         }
         if (!gwy_app_wait_set_fraction((gdouble)row/(gdouble)yres)) {
             gwy_nn_free(nn);
@@ -496,8 +495,6 @@ neural_do(NeuralArgs *args)
     gwy_app_data_browser_add_graph_model(gmodel, data, TRUE);
     gwy_object_unref(gmodel);
     gwy_object_unref(errors);
-
-
 }
 
 static GwyNN*
@@ -527,7 +524,6 @@ gwy_nn_alloc(gint ninput, gint nhidden, gint noutput)
     nn->wphidden = g_new0(gdouble, nn->nhidden * nn->noutput);
 
     rng = g_rand_new();
-    g_rand_set_seed(rng, 1);
 
     for (i = nn->ninput * nn->nhidden, p = nn->winput; i; i--, p++)
         *p = (2.0*g_rand_double(rng) - 1)*0.1;
