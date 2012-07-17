@@ -19,13 +19,14 @@
  */
 
 #include "config.h"
-//#include <stdlib.h>
+#include <stdlib.h>
 #include <string.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwyexpr.h>
 #include <libprocess/datafield.h>
+#include <libprocess/filters.h>
 #include <libprocess/arithmetic.h>
 #include <libprocess/stats.h>
 #include <libgwydgets/gwystock.h>
@@ -120,9 +121,7 @@ static void     neural_dialog_update(NeuralControls *controls,
 static GwyNN*   gwy_nn_alloc        (gint input,
                                      gint hidden,
                                      gint output);
-static void     gwy_nn_feed_forward (GwyNN* nn,
-                                     const gdouble *input,
-                                     gdouble *output);
+static void     gwy_nn_feed_forward (GwyNN* nn);
 static void     layer_forward       (gdouble *input,
                                      gdouble *output,
                                      const gdouble *weight,
@@ -132,19 +131,15 @@ static void     gwy_nn_train_step   (GwyNN *nn,
                                      gdouble eta,
                                      gdouble momentum,
                                      gdouble *err_o,
-                                     gdouble *err_h,
-                                     const gdouble *input,
-                                     const gdouble *target);
+                                     gdouble *err_h);
 static void     gwy_nn_free         (GwyNN *nn);
-
-static const gchar default_expression[] = "d1 - d2";
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Neural network SPM data processing"),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.0",
+    "1.1",
     "David Nečas (Yeti) & Petr Klapetek",
     "2012",
 };
@@ -368,19 +363,19 @@ neural_do(NeuralArgs *args)
 {
     GwyContainer *data;
     GQuark quark;
-    GwyDataField *tmodel, *rmodel, *tsignal, *result;
+    GwyDataField *tmodel, *rmodel, *tsignal, *result, *scaled;
     GwyDataLine *errors;
     GwyGraphModel *gmodel;
     GwyGraphCurveModel *gcmodel;
-    gdouble mfactor, sfactor, mshift, sshift;
-    gdouble *dtmodel, *drmodel, *dtsignal, *dresult, *input, *output, eo=0, eh=0;
+    gdouble sfactor, sshift;
+    gdouble *dresult, *input, *output, eo=0, eh=0;
+    const gdouble *dtmodel, *drmodel, *dtsignal;
     gint xres, yres, col, row, newid, n, height, width, irow, icol;
     GwyNN *nn;
 
     data = args->tmodel.data;
     quark = gwy_app_get_data_key_for_id(args->tmodel.id);
     tmodel = GWY_DATA_FIELD(gwy_container_get_object(data, quark));
-    dtmodel = gwy_data_field_get_data(tmodel);
 
     gwy_app_wait_start(gwy_app_find_window_for_channel(data, args->tmodel.id),
                        _("Starting..."));
@@ -388,12 +383,11 @@ neural_do(NeuralArgs *args)
     data = args->tsignal.data;
     quark = gwy_app_get_data_key_for_id(args->tsignal.id);
     tsignal = GWY_DATA_FIELD(gwy_container_get_object(data, quark));
-    dtsignal = gwy_data_field_get_data(tsignal);
+    dtsignal = gwy_data_field_get_data_const(tsignal);
 
     data = args->rmodel.data;
     quark = gwy_app_get_data_key_for_id(args->rmodel.id);
     rmodel = GWY_DATA_FIELD(gwy_container_get_object(data, quark));
-    drmodel = gwy_data_field_get_data(rmodel);
 
     xres = gwy_data_field_get_xres(tmodel);
     yres = gwy_data_field_get_yres(tmodel);
@@ -404,9 +398,7 @@ neural_do(NeuralArgs *args)
     input = g_new(gdouble, height*width);
     output = g_new(gdouble, 1); //preserve for generality
     errors = gwy_data_line_new(args->trainsteps, args->trainsteps, TRUE);
-    mshift = gwy_data_field_get_min(tmodel);
     sshift = gwy_data_field_get_min(tsignal);
-    mfactor = 1.0/(gwy_data_field_get_max(tmodel)-mshift);
     sfactor = 1.0/(gwy_data_field_get_max(tsignal)-sshift);
 
     result = gwy_data_field_new_alike(tsignal, FALSE);
@@ -415,19 +407,22 @@ neural_do(NeuralArgs *args)
 
     /*perform training*/
     gwy_app_wait_set_message("Training...");
-    //system("date +'%s.%N'");
-    for (n=0; n<args->trainsteps; n++) {
-        for (row=(height/2); row<(yres-height/2); row++) {
-            for (col=(width/2); col<(xres-width/2); col++) {
-                for (irow = 0; irow<height; irow++) {
-                    for (icol = 0; icol<width; icol++) {
-                        input[irow*width + icol] = mfactor*(dtmodel[(row+irow-width/2)*xres + (col+icol-height/2)] - mshift);
-                    }
-                }
-                output[0] = sfactor*(dtsignal[row*xres + col] - sshift);
-                gwy_nn_train_step(nn, 0.3, 0.3,
-                                    &eo, &eh, input, output);
+    scaled = gwy_data_field_duplicate(tmodel);
+    gwy_data_field_normalize(scaled);
+    dtmodel = gwy_data_field_get_data_const(scaled);
 
+    system("date +'%s.%N'");
+    for (n=0; n < args->trainsteps; n++) {
+        for (row = height/2; row < yres - height/2; row++) {
+            for (col = width/2; col < xres - width/2; col++) {
+                for (irow = 0; irow < height; irow++) {
+                    memcpy(nn->input + (irow*width + 1),
+                           dtmodel + ((row + irow - height/2)*xres
+                                      + col - width/2),
+                           width*sizeof(gdouble));
+                }
+                nn->target[1] = sfactor*(dtsignal[row*xres + col] - sshift);
+                gwy_nn_train_step(nn, 0.3, 0.3, &eo, &eh);
             }
         }
         if (!gwy_app_wait_set_fraction((gdouble)n/(gdouble)args->trainsteps)) {
@@ -435,47 +430,47 @@ neural_do(NeuralArgs *args)
             g_free(input);
             g_free(output);
             g_object_unref(result);
+            g_object_unref(scaled);
             gwy_object_unref(errors);
             return;
         }
         gwy_data_line_set_val(errors, n, eo+eh);
     }
-    //system("date +'%s.%N'");
+    system("date +'%s.%N'");
+    g_object_unref(scaled);
 
     gwy_app_wait_set_message("Evaluating...");
     gwy_app_wait_set_fraction(0.0);
-    for (row=(height/2); row<(yres-height/2); row++)
-    {
-        for (col=(width/2); col<(xres-width/2); col++)
-        {
-            for (irow = 0; irow<height; irow++)
-            {
-                for (icol = 0; icol<width; icol++)
-                {
-                    input[irow*width + icol] = mfactor*(drmodel[(row+irow-width/2)*xres + (col+icol-height/2)] - mshift);
-                }
+    scaled = gwy_data_field_duplicate(rmodel);
+    gwy_data_field_normalize(scaled);
+    drmodel = gwy_data_field_get_data_const(scaled);
+
+    for (row = height/2; row < yres-height/2; row++) {
+        for (col = width/2; col < xres-width/2; col++) {
+            for (irow = 0; irow < height; irow++) {
+                memcpy(nn->input + (irow*width + 1),
+                       drmodel + ((row + irow - height/2)*xres
+                                  + col - width/2),
+                       width*sizeof(gdouble));
             }
-
-            gwy_nn_feed_forward(nn, input, output);
-
-            for (irow = 0; irow<height; irow++)
-            {
-                for (icol = 0; icol<width; icol++)
-                {
-                    dresult[row*xres + col] = output[0]/sfactor + sshift;
-                }
+            gwy_nn_feed_forward(nn);
+            /* FIXME: This is a terrible way of boundary data handling. */
+            for (irow = 0; irow < height; irow++) {
+                for (icol = 0; icol < width; icol++)
+                    dresult[row*xres + col] = nn->output[1]/sfactor + sshift;
             }
         }
-        if (!gwy_app_wait_set_fraction((gdouble)row/(gdouble)yres))
-        {
+        if (!gwy_app_wait_set_fraction((gdouble)row/(gdouble)yres)) {
             gwy_nn_free(nn);
             g_free(input);
             g_free(output);
             g_object_unref(result);
+            g_object_unref(scaled);
             gwy_object_unref(errors);
             return;
         }
-     }
+    }
+    g_object_unref(scaled);
 
     gwy_app_wait_finish();
 
@@ -551,14 +546,12 @@ sigma(gdouble x)
 }
 
 static void
-gwy_nn_feed_forward(GwyNN* nn, const gdouble *input, gdouble *output)
+gwy_nn_feed_forward(GwyNN* nn)
 {
-    memcpy(nn->input+1, input, (nn->ninput-1)*sizeof(gdouble));
     layer_forward(nn->input, nn->hidden, nn->winput,
                   nn->ninput, nn->nhidden);
     layer_forward(nn->hidden, nn->output, nn->whidden,
                   nn->nhidden, nn->noutput);
-    memcpy(output, nn->output+1, (nn->noutput-1)*sizeof(gdouble));
 }
 
 static void
@@ -643,14 +636,8 @@ hidden_error(const gdouble *hidden, gint nhidden, gdouble *dhidden,
 
 static void
 gwy_nn_train_step(GwyNN *nn, gdouble eta, gdouble momentum,
-                  gdouble *err_o, gdouble *err_h,
-                  const gdouble *input, const gdouble *target)
+                  gdouble *err_o, gdouble *err_h)
 {
-    gint i;
-
-    for (i=0; i<(nn->ninput-1); i++) nn->input[i+1]=input[i];
-    for (i=0; i<(nn->noutput-1); i++) nn->target[i+1]=target[i];
-
     layer_forward(nn->input, nn->hidden, nn->winput, nn->ninput, nn->nhidden);
     layer_forward(nn->hidden, nn->output, nn->whidden, nn->nhidden, nn->noutput);
 
