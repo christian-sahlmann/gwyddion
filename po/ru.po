@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2012-06-09 03:58+0200\n"
-"PO-Revision-Date: 2012-06-09 14:20+0300\n"
+"POT-Creation-Date: 2012-07-17 03:58+0200\n"
+"PO-Revision-Date: 2012-07-17 09:57+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "Language: \n"
@@ -1700,51 +1700,51 @@ msgstr "…"
 msgid "Cannot preview"
 msgstr "Нельзя просмотреть."
 
-#: app/gwyddion.c:132
+#: app/gwyddion.c:133
 msgid "Loading document history"
 msgstr "Загружается список предыдущих документов"
 
-#: app/gwyddion.c:137
+#: app/gwyddion.c:138
 msgid "Registering "
 msgstr "Регистрируем"
 
-#: app/gwyddion.c:138
+#: app/gwyddion.c:139
 msgid "stock items"
 msgstr "основные элементы"
 
-#: app/gwyddion.c:142
+#: app/gwyddion.c:143
 msgid "color gradients"
 msgstr "Цветовые градиенты"
 
-#: app/gwyddion.c:144
+#: app/gwyddion.c:145
 msgid "GL materials"
 msgstr "Материалы GL"
 
-#: app/gwyddion.c:146
+#: app/gwyddion.c:147
 msgid "grain quantities"
 msgstr "величины зёрен"
 
-#: app/gwyddion.c:148
+#: app/gwyddion.c:149
 msgid "calibrations"
 msgstr "калибровки"
 
-#: app/gwyddion.c:153
+#: app/gwyddion.c:154
 msgid "Loading settings"
 msgstr "Загрузка настроек"
 
-#: app/gwyddion.c:160
+#: app/gwyddion.c:161
 msgid "Registering modules"
 msgstr "Регистрация модулей"
 
-#: app/gwyddion.c:182
+#: app/gwyddion.c:183
 msgid "Initializing GUI"
 msgstr "Инициализируется графический интерфейс"
 
-#: app/gwyddion.c:391
+#: app/gwyddion.c:392
 msgid "Could not read settings."
 msgstr "Не удается считать настройки"
 
-#: app/gwyddion.c:394
+#: app/gwyddion.c:395
 #, c-format
 msgid ""
 "Settings file `%s' cannot be read: %s\n"
@@ -2652,7 +2652,7 @@ msgstr "Экспортированные данные Burleigh (.txt, .bin)"
 
 #: modules/file/burleigh_exp.c:225
 #: modules/file/burleigh_exp.c:266
-#: modules/file/nanoscope.c:1098
+#: modules/file/nanoscope.c:1128
 #: modules/file/omicron.c:397
 #: modules/file/shimadzu.c:404
 msgid "Missing colon in header line."
@@ -3732,42 +3732,42 @@ msgid "File Scan/Measure.xml is missing in the zip file."
 msgstr "Файл Scan/Measure.xml отсутствует в zip-архиве."
 
 #: modules/file/nanoobserver.c:545
-#: modules/file/nanoscantech.c:484
+#: modules/file/nanoscantech.c:488
 msgid "Unknown error"
 msgstr "Неизвестная ошибка"
 
 #: modules/file/nanoobserver.c:550
-#: modules/file/nanoscantech.c:489
+#: modules/file/nanoscantech.c:493
 msgid "End of file"
 msgstr "Конец файла"
 
 #: modules/file/nanoobserver.c:552
-#: modules/file/nanoscantech.c:491
+#: modules/file/nanoscantech.c:495
 msgid "End of list of files"
 msgstr "Конец списка файлов"
 
 #: modules/file/nanoobserver.c:554
-#: modules/file/nanoscantech.c:493
+#: modules/file/nanoscantech.c:497
 msgid "Parameter error"
 msgstr "Ошибка параметра"
 
 #: modules/file/nanoobserver.c:556
-#: modules/file/nanoscantech.c:495
+#: modules/file/nanoscantech.c:499
 msgid "Bad zip file"
 msgstr "Плохой файл zip"
 
 #: modules/file/nanoobserver.c:558
-#: modules/file/nanoscantech.c:497
+#: modules/file/nanoscantech.c:501
 msgid "Internal error"
 msgstr "Внутренняя ошибка"
 
 #: modules/file/nanoobserver.c:560
-#: modules/file/nanoscantech.c:499
+#: modules/file/nanoscantech.c:503
 msgid "CRC error"
 msgstr "Ошибка контрольной суммы"
 
 #: modules/file/nanoobserver.c:563
-#: modules/file/nanoscantech.c:502
+#: modules/file/nanoscantech.c:506
 #, c-format
 msgid "Minizip error while reading the zip file: %s."
 msgstr "Ошибка minizip при чтении zip-файла: %s."
@@ -3813,11 +3813,11 @@ msgstr "Импортирует файлы данных Veeco (Digital Instrument
 msgid "Nanoscope III files"
 msgstr "Файлы Nanoscope III"
 
-#: modules/file/nanoscope.c:243
+#: modules/file/nanoscope.c:244
 msgid "File is not a Nanoscope file, or it is a unknown subtype."
 msgstr "Файл не является файлом Nanoscope или неизвестного подтипа."
 
-#: modules/file/nanoscope.c:250
+#: modules/file/nanoscope.c:251
 msgid ""
 "File has been damaged by change of line endings, resulting in corruption of the binary part of the file.\n"
 "\n"
@@ -3827,18 +3827,18 @@ msgstr ""
 "\n"
 "Обычно это происходит если файл был воспринят как текст при передаче по электронной почте в несжатом виде, по FTP в ASCII-режиме (используйте binary), сжат с помощью команды 'Послать в сжатую папку' в некоторых версиях MS Windows, или при других способах передачи файла, которые используют платформо-независимое сохранение текста."
 
-#: modules/file/nanoscope.c:521
-#: modules/file/nanoscope.c:537
+#: modules/file/nanoscope.c:525
+#: modules/file/nanoscope.c:541
 msgid "Cannot parse `Scan size' field."
 msgstr "Не удаётся распознать поле `Scan size'."
 
-#: modules/file/nanoscope.c:1007
+#: modules/file/nanoscope.c:1037
 #: modules/file/nrrdfile.c:1013
 #, c-format
 msgid "Garbage after data sample #%u."
 msgstr "Мусор после элемента данных #%u."
 
-#: modules/file/nanoscope.c:1088
+#: modules/file/nanoscope.c:1118
 msgid "Truncated header line."
 msgstr "Обрезанная строка заголовка."
 
@@ -3967,45 +3967,45 @@ msgstr "Импорт файлов данных NT-MDT"
 msgid "NT-MDT files (.mdt)"
 msgstr "Файлы NT-MDT (.mdt)"
 
-#: modules/file/nt-mdt.c:1153
+#: modules/file/nt-mdt.c:1156
 msgid "Frame is too short for Frame Mode."
 msgstr "Фрейм слишком короткий для режима фреймов."
 
-#: modules/file/nt-mdt.c:1167
+#: modules/file/nt-mdt.c:1170
 msgid "Frame is too short for dots or data."
 msgstr "Фрейм слишком короткий для точек или данных."
 
-#: modules/file/nt-mdt.c:1426
+#: modules/file/nt-mdt.c:1429
 #, c-format
 msgid "End of file reached in frame header #%u."
 msgstr "Достигнут конец файла в заголовке фрейма #%u."
 
-#: modules/file/nt-mdt.c:1434
+#: modules/file/nt-mdt.c:1437
 #, c-format
 msgid "End of file reached in frame data #%u."
 msgstr "Достигнут конец файла в данных фрейма #%u."
 
-#: modules/file/nt-mdt.c:1469
+#: modules/file/nt-mdt.c:1472
 #, c-format
 msgid "Frame #%u is too short for scanned data header."
 msgstr "Фрейм #%u слишком короткий чтобы быть заголовком сканированных данных."
 
-#: modules/file/nt-mdt.c:2791
+#: modules/file/nt-mdt.c:2794
 #: modules/tools/filter.c:209
 #: modules/tools/icolorange.c:396
 #: modules/tools/linestats.c:154
 msgid "Maximum"
 msgstr "Максимум"
 
-#: modules/file/nt-mdt.c:2792
+#: modules/file/nt-mdt.c:2795
 msgid "Max. position"
 msgstr "Положение максимума"
 
-#: modules/file/nt-mdt.c:2793
+#: modules/file/nt-mdt.c:2796
 msgid "Average"
 msgstr "Среднее"
 
-#: modules/file/nt-mdt.c:2806
+#: modules/file/nt-mdt.c:2809
 msgid "Raman Image Import"
 msgstr "Импорт изображений КР"
 
@@ -5069,7 +5069,7 @@ msgstr "Импортирует файлы Seiko XQB, XQD и XQT."
 msgid "Seiko files (.xqb, .xqd, .xqt)"
 msgstr "Файлы Seiko (.xqb, .xqd, .xqt)"
 
-#: modules/file/seiko.c:239
+#: modules/file/seiko.c:251
 msgid "Cannot determine scan dimensions; it seems non-square with an unknown side ratio."
 msgstr "Не удаётся определить размеры скана; он по видимому не квадратный с неизвестным соотношением сторон."
 
@@ -9276,7 +9276,7 @@ msgid "Gaussians"
 msgstr "Гауссианы"
 
 #: modules/process/obj_synth.c:284
-msgid "Dougnuts"
+msgid "Doughnuts"
 msgstr "Бублики"
 
 #: modules/process/obj_synth.c:290
@@ -10187,59 +10187,59 @@ msgstr "Второе направление:"
 msgid "Denoised"
 msgstr "Без шума"
 
-#: modules/pygwy/pygwy-console.c:53
+#: modules/pygwy/pygwy-console.c:54
 msgid "/Pygwy Console"
 msgstr "/Консоль Pygwy"
 
-#: modules/pygwy/pygwy-console.c:57
+#: modules/pygwy/pygwy-console.c:58
 msgid "Python wrapper console"
 msgstr "Командная строка оболочки Python"
 
-#: modules/pygwy/pygwy-console.c:155
+#: modules/pygwy/pygwy-console.c:156
 msgid ">>> Running file content of below textfield\n"
 msgstr ">>> Запускается содержимое файла из нижнего текстового поля\n"
 
-#: modules/pygwy/pygwy-console.c:180
+#: modules/pygwy/pygwy-console.c:181
 msgid "Open Python script"
 msgstr "Открыть скрипт Python"
 
-#: modules/pygwy/pygwy-console.c:244
+#: modules/pygwy/pygwy-console.c:245
 msgid "Save Script as"
 msgstr "Сохранить скрипт как"
 
-#: modules/pygwy/pygwy-console.c:283
+#: modules/pygwy/pygwy-console.c:284
 msgid "Pygwy Console"
 msgstr "Консоль Pygwy"
 
-#: modules/pygwy/pygwy-console.c:295
+#: modules/pygwy/pygwy-console.c:296
 msgid "Open script in Python language (Ctrl-O)"
 msgstr "Открыть скрипт на языке Python (Ctrl-O)"
 
-#: modules/pygwy/pygwy-console.c:297
+#: modules/pygwy/pygwy-console.c:298
 msgid "Save script (Ctrl-S)"
 msgstr "Сохранить сценарий (Ctrl-S)"
 
-#: modules/pygwy/pygwy-console.c:299
+#: modules/pygwy/pygwy-console.c:300
 msgid "Execute script (Ctrl-E)"
 msgstr "Выполнить сценарий (Ctrl-E)"
 
-#: modules/pygwy/pygwy-console.c:377
+#: modules/pygwy/pygwy-console.c:378
 msgid "Command"
 msgstr "Команда"
 
-#: pygwy.c:91
+#: pygwy.c:99
 msgid "Pygwy, the Gwyddion Python wrapper."
 msgstr "Pygwy, оболочка Python в Gwyddion."
 
-#: pygwy.c:443
+#: pygwy.c:520
 msgid "Function written in Python"
 msgstr "Функция на языке Python"
 
-#: pygwy.c:489
+#: pygwy.c:566
 msgid "Graph function written in Python"
 msgstr "Графическая функция на языке Python"
 
-#: pygwy.c:899
+#: pygwy.c:976
 #, c-format
 msgid ""
 "Pygwy plugin: %s (%s)\n"
