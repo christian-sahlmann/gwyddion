@@ -500,10 +500,6 @@ if test x$enable_zlib != xno && test -z "$ZLIB"; then
 fi
 if test x$enable_zlib != xno && test -n "$ZLIB"; then
   AC_DEFINE(HAVE_ZLIB,1,[Define if we have the ZLIB library.])
-else
-  enable_spml=no
-  ZLIB_WARN=" (needs zlib)"
-  SPML_WARN=" (needs zlib)"
 fi
 AM_CONDITIONAL([HAVE_ZLIB],[test x$enable_zlib != xno && test -n "$ZLIB"])
 AC_SUBST(ZLIB)
@@ -557,16 +553,16 @@ PKG_CHECK_MODULES(EXR, [OpenEXR],
 AM_CONDITIONAL([HAVE_EXR],[test x$enable_exr != xno])
 
 #############################################################################
-# SPML importer
-# Only if you want to have support for spml importer compiled
-GWY_WITH([spml],,[SPML importer (libxml2 required)])
-if test "x$enable_spml" != "xno"; then
+# LibXML2.
+# Optional, for SPML importer.
+GWY_WITH([libxml2],,[build with libxml2 support])
+if test "x$enable_libxml2" != "xno"; then
   PKG_CHECK_MODULES(XML2, [libxml-2.0 >= 2.6],
                     [AC_DEFINE(HAVE_XML2,1,
                                [Define if we have the libxml2 package.])],
-                     enable_spml=no; SPML_WARN=" (needs libxml2)")
+                     enable_libxml2=no)
 fi
-AM_CONDITIONAL([HAVE_XML2],[test x$enable_spml != xno])
+AM_CONDITIONAL([HAVE_XML2],[test x$enable_libxml2 != xno])
 
 #############################################################################
 # libunique
@@ -796,8 +792,6 @@ AC_OUTPUT
 
 echo "================================================================="
 echo "Configuration:"
-echo "  SMPL:                              $enable_spml$SPML_WARN"
-#echo "  Matlab MAT5:                       $enable_zlib$ZLIB_WARN"
 echo "  FFTW3:                             $enable_fftw3$FFTW3_WARN"
 echo "  OpenGL 3D widgets:                 $enable_gl$GL_WARN"
 echo "  Remote control:                    $remote_backend"
