@@ -1,5 +1,5 @@
 /*
- *  @(#) $Id: neural.c 8929 2008-12-31 13:40:16Z yeti-dn $
+ *  @(#) $Id$
  *  Copyright (C) 2003,2004 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
