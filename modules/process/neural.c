@@ -19,6 +19,7 @@
  */
 
 #include "config.h"
+#include <string.h>
 #include <gtk/gtk.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
@@ -68,11 +69,10 @@ typedef struct {
     gdouble *doutput;
     gdouble *target;
 
-    gdouble **whidden;
-    gdouble **winput;
-    gdouble **wphidden;
-    gdouble **wpinput;
-
+    gdouble *whidden;
+    gdouble *winput;
+    gdouble *wphidden;
+    gdouble *wpinput;
 } GwyNN;
 
 typedef struct {
@@ -100,44 +100,41 @@ static const NeuralArgs neural_defaults = {
 };
 
 
-static gboolean     module_register           (void);
-static void         neural                (GwyContainer *data,
-                                               GwyRunType run);
-static gboolean     neural_dialog         (NeuralArgs *args);
-static void         neural_data_cb        (GwyDataChooser *chooser,
-                                               NeuralControls *controls);
-static void         neural_do             (NeuralArgs *args);
-static void         neural_sanitize_args  (NeuralArgs *args);
-static void         neural_load_args      (GwyContainer *container,
-                                           NeuralArgs *args);
-static void         neural_save_args      (GwyContainer *container,
-                                           NeuralArgs *args);
-static void         neural_values_update  (NeuralControls *controls,
-                                           NeuralArgs *args);
-static void         neural_dialog_update  (NeuralControls *controls,
-                                           NeuralArgs *args);
-static GwyNN*       gwy_nn_alloc          (gint input, 
-                                           gint hidden,
-                                           gint output);
-static void         gwy_nn_feed_forward   (GwyNN* nn, 
-                                           gdouble *input, 
-                                           gdouble *output);
-
-static void         layer_forward         (gdouble *input, 
-                                           gdouble *output, 
-                                           gdouble **weight, 
-                                           gint nin, 
-                                           gint nout);
-
-static void         gwy_nn_train_step     (GwyNN *nn, 
-                                           gdouble eta, 
-                                           gdouble momentum, 
-                                           gdouble *err_o, 
-                                           gdouble *err_h, 
-                                           gdouble *input, 
-                                           gdouble *target);
-
-static void         gwy_nn_free           (GwyNN *nn);
+static gboolean module_register     (void);
+static void     neural              (GwyContainer *data,
+                                     GwyRunType run);
+static gboolean neural_dialog       (NeuralArgs *args);
+static void     neural_data_cb      (GwyDataChooser *chooser,
+                                     NeuralControls *controls);
+static void     neural_do           (NeuralArgs *args);
+static void     neural_sanitize_args(NeuralArgs *args);
+static void     neural_load_args    (GwyContainer *container,
+                                     NeuralArgs *args);
+static void     neural_save_args    (GwyContainer *container,
+                                     NeuralArgs *args);
+static void     neural_values_update(NeuralControls *controls,
+                                     NeuralArgs *args);
+static void     neural_dialog_update(NeuralControls *controls,
+                                     NeuralArgs *args);
+static GwyNN*   gwy_nn_alloc        (gint input,
+                                     gint hidden,
+                                     gint output);
+static void     gwy_nn_feed_forward (GwyNN* nn,
+                                     const gdouble *input,
+                                     gdouble *output);
+static void     layer_forward       (gdouble *input,
+                                     gdouble *output,
+                                     const gdouble *weight,
+                                     gint nin,
+                                     gint nout);
+static void     gwy_nn_train_step   (GwyNN *nn,
+                                     gdouble eta,
+                                     gdouble momentum,
+                                     gdouble *err_o,
+                                     gdouble *err_h,
+                                     const gdouble *input,
+                                     const gdouble *target);
+static void     gwy_nn_free         (GwyNN *nn);
 
 static const gchar default_expression[] = "d1 - d2";
 
@@ -178,8 +175,8 @@ neural(GwyContainer *data, GwyRunType run)
 
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_ID, &id, 0);
 
-    neural_load_args(gwy_app_settings_get(), &args);
     settings = gwy_app_settings_get();
+    neural_load_args(settings, &args);
     args.tmodel.data = data;
     args.tmodel.id = id;
     args.rmodel.data = data;
@@ -187,11 +184,9 @@ neural(GwyContainer *data, GwyRunType run)
     args.tsignal.data = data;
     args.tsignal.id = id;
 
-
-    if (neural_dialog(&args)) {
+    if (neural_dialog(&args))
         neural_do(&args);
-        neural_save_args(gwy_app_settings_get(), &args);
-    }
+    neural_save_args(settings, &args);
 }
 
 static gboolean
@@ -286,7 +281,7 @@ neural_dialog(NeuralArgs *args)
     g_signal_connect(controls.rmodel, "changed",
                      G_CALLBACK(neural_data_cb), &controls);
     g_signal_connect(controls.tmodel, "changed",
-                     G_CALLBACK(neural_data_cb), &controls); 
+                     G_CALLBACK(neural_data_cb), &controls);
     g_signal_connect(controls.tsignal, "changed",
                      G_CALLBACK(neural_data_cb), &controls);
 
@@ -351,7 +346,7 @@ neural_data_cb(G_GNUC_UNUSED GwyDataChooser *chooser,
     if (gwy_data_field_check_compatibility(tf, rf,
          GWY_DATA_COMPATIBILITY_RES
          | GWY_DATA_COMPATIBILITY_REAL
-         | GWY_DATA_COMPATIBILITY_LATERAL)==0 && 
+         | GWY_DATA_COMPATIBILITY_LATERAL)==0 &&
         gwy_data_field_check_compatibility(tf, sf,
          GWY_DATA_COMPATIBILITY_RES
          | GWY_DATA_COMPATIBILITY_REAL
@@ -386,7 +381,8 @@ neural_do(NeuralArgs *args)
     tmodel = GWY_DATA_FIELD(gwy_container_get_object(data, quark));
     dtmodel = gwy_data_field_get_data(tmodel);
 
-    gwy_app_wait_start(gwy_app_find_window_for_channel(data, args->tmodel.id), _("Starting..."));
+    gwy_app_wait_start(gwy_app_find_window_for_channel(data, args->tmodel.id),
+                       _("Starting..."));
 
     data = args->tsignal.data;
     quark = gwy_app_get_data_key_for_id(args->tsignal.id);
@@ -403,7 +399,7 @@ neural_do(NeuralArgs *args)
     width = args->width;
     height = args->height;
 
-    nn = gwy_nn_alloc(height*width, args->hidden, 1); 
+    nn = gwy_nn_alloc(height*width, args->hidden, 1);
     input = g_new(gdouble, height*width);
     output = g_new(gdouble, 1); //preserve for generality
     errors = gwy_data_line_new(args->trainsteps, args->trainsteps, TRUE);
@@ -418,27 +414,21 @@ neural_do(NeuralArgs *args)
 
     /*perform training*/
     gwy_app_wait_set_message("Training...");
-    for (n=0; n<args->trainsteps; n++)
-    {
-        for (row=(height/2); row<(yres-height/2); row++)
-        {
-            for (col=(width/2); col<(xres-width/2); col++)
-            {
-                for (irow = 0; irow<height; irow++)
-                {
-                    for (icol = 0; icol<width; icol++)
-                    {
-                        input[irow*width + icol] = mfactor*(dtmodel[(row+irow-width/2)*xres + (col+icol-height/2)] - mshift); 
+    for (n=0; n<args->trainsteps; n++) {
+        for (row=(height/2); row<(yres-height/2); row++) {
+            for (col=(width/2); col<(xres-width/2); col++) {
+                for (irow = 0; irow<height; irow++) {
+                    for (icol = 0; icol<width; icol++) {
+                        input[irow*width + icol] = mfactor*(dtmodel[(row+irow-width/2)*xres + (col+icol-height/2)] - mshift);
                     }
-                }        
+                }
                 output[0] = sfactor*(dtsignal[row*xres + col] - sshift);
                 gwy_nn_train_step(nn, 0.3, 0.3,
-                                    &eo, &eh, input, output); 
+                                    &eo, &eh, input, output);
 
             }
         }
-        if (!gwy_app_wait_set_fraction((gdouble)n/(gdouble)args->trainsteps))
-        {
+        if (!gwy_app_wait_set_fraction((gdouble)n/(gdouble)args->trainsteps)) {
             gwy_nn_free(nn);
             g_free(input);
             g_free(output);
@@ -459,9 +449,9 @@ neural_do(NeuralArgs *args)
             {
                 for (icol = 0; icol<width; icol++)
                 {
-                    input[irow*width + icol] = mfactor*(drmodel[(row+irow-width/2)*xres + (col+icol-height/2)] - mshift); 
+                    input[irow*width + icol] = mfactor*(drmodel[(row+irow-width/2)*xres + (col+icol-height/2)] - mshift);
                 }
-            }        
+            }
 
             gwy_nn_feed_forward(nn, input, output);
 
@@ -471,7 +461,7 @@ neural_do(NeuralArgs *args)
                 {
                     dresult[row*xres + col] = output[0]/sfactor + sshift;
                 }
-            }        
+            }
         }
         if (!gwy_app_wait_set_fraction((gdouble)row/(gdouble)yres))
         {
@@ -512,16 +502,18 @@ neural_do(NeuralArgs *args)
 
 }
 
-static GwyNN*       
-gwy_nn_alloc(gint input, gint hidden, gint output)
+static GwyNN*
+gwy_nn_alloc(gint ninput, gint nhidden, gint noutput)
 {
-    gint i, j;
     GwyNN *nn = (GwyNN*)g_malloc(sizeof(GwyNN));
+    gint i;
+    gdouble *p;
     GRand *rng;
 
-    nn->ninput = input+1;
-    nn->nhidden = hidden+1;
-    nn->noutput = output+1;
+    /* Add the constant input signal neurons. */
+    nn->ninput = ninput + 1;
+    nn->nhidden = nhidden + 1;
+    nn->noutput = noutput + 1;
 
     nn->input = g_new0(gdouble, nn->ninput);
     nn->hidden = g_new0(gdouble, nn->nhidden);
@@ -530,132 +522,116 @@ gwy_nn_alloc(gint input, gint hidden, gint output)
     nn->doutput = g_new0(gdouble, nn->noutput);
     nn->target = g_new0(gdouble, nn->noutput);
 
-    nn->winput = g_new(gdouble *, nn->ninput);
-    nn->wpinput = g_new(gdouble *, nn->ninput);
-    for (i=0; i<nn->ninput; i++)
-    {
-        nn->winput[i] = (gdouble*)g_new(gdouble, nn->nhidden);
-        nn->wpinput[i] = (gdouble*)g_new0(gdouble, nn->nhidden);
-    }
+    nn->winput = g_new(gdouble, nn->ninput * nn->nhidden);
+    nn->wpinput = g_new0(gdouble, nn->ninput * nn->nhidden);
 
-    nn->whidden = g_new(gdouble *, nn->nhidden);
-    nn->wphidden = g_new(gdouble *, nn->nhidden);
-    for (i=0; i<nn->nhidden; i++)
-    {
-        nn->whidden[i] = (gdouble*)g_new(gdouble, nn->noutput);
-        nn->wphidden[i] = (gdouble*)g_new0(gdouble, nn->noutput);
-    }
+    nn->whidden = g_new(gdouble, nn->nhidden * nn->noutput);
+    nn->wphidden = g_new0(gdouble, nn->nhidden * nn->noutput);
 
     rng = g_rand_new();
     g_rand_set_seed(rng, 1);
 
-    for (i=0; i<nn->ninput; i++)
-    {
-        for (j=0; j<nn->nhidden; j++) nn->winput[i][j] = (2.0*g_rand_double(rng) - 1)*0.1;
-    }
-    for (i=0; i<nn->nhidden; i++)
-    {
-        for (j=0; j<nn->noutput; j++) nn->whidden[i][j] = (2.0*g_rand_double(rng) - 1)*0.1;
-    }
+    for (i = nn->ninput * nn->nhidden, p = nn->winput; i; i--, p++)
+        *p = (2.0*g_rand_double(rng) - 1)*0.1;
+    for (i = nn->nhidden * nn->noutput, p = nn->whidden; i; i--, p++)
+        *p = (2.0*g_rand_double(rng) - 1)*0.1;
 
     g_rand_free(rng);
+
     return nn;
 }
 
-static inline gdouble 
+static inline gdouble
 sigma(gdouble x)
 {
-    return (1.0/(1.0+exp(-x)));
-}
-
-static void 
-gwy_nn_feed_forward(GwyNN* nn, gdouble *input, gdouble *output)
-{
-    gint i;
-    for (i=0; i<(nn->ninput-1); i++) nn->input[i+1] = input[i];
-
-    layer_forward(nn->input, nn->hidden, nn->winput, nn->ninput, nn->nhidden);
-    layer_forward(nn->hidden, nn->output, nn->whidden, nn->nhidden, nn->noutput);
-
-    for (i=0; i<(nn->noutput-1); i++) output[i] = nn->output[i+1];
+    return (1.0/(1.0 + exp(-x)));
 }
 
 static void
-layer_forward(gdouble *input, gdouble *output, gdouble **weight, gint nin, gint nout)
+gwy_nn_feed_forward(GwyNN* nn, const gdouble *input, gdouble *output)
+{
+    memcpy(nn->input+1, input, (nn->ninput-1)*sizeof(gdouble));
+    layer_forward(nn->input, nn->hidden, nn->winput,
+                  nn->ninput, nn->nhidden);
+    layer_forward(nn->hidden, nn->output, nn->whidden,
+                  nn->nhidden, nn->noutput);
+    memcpy(output, nn->output+1, (nn->noutput-1)*sizeof(gdouble));
+}
+
+static void
+layer_forward(gdouble *input, gdouble *output, const gdouble *weight,
+              gint nin, gint nout)
 {
     gint j, k;
-    gdouble sum;
-    
-    input[0] = 1.0;
-    for (j=1; j<nout; j++)
-    {
-        sum=0.0;
-        for (k=0; k<nin; k++)
-        {
-            sum+=weight[k][j]*input[k];
-        }
-        output[j]=sigma(sum);
+
+    input[0] = 1.0; // XXX: Can't we just do this only once?  It would permit
+                    // making input const.
+    for (j = 1; j < nout; j++) {
+        gdouble sum = 0.0;
+        for (k = 0; k < nin; k++)
+            sum += weight[k*nout + j]*input[k];
+        output[j] = sigma(sum);
     }
 }
 
 static void
 adjust_weights(gdouble *delta, gint ndelta, gdouble *data, gint ndata,
-               gdouble **w, gdouble **oldw, gdouble eta, gdouble momentum)
+               gdouble *w, gdouble *oldw, gdouble eta, gdouble momentum)
 {
-    gdouble new_dw;
     gint j, k;
 
-    data[0]=1.0;
-    for (j=1; j<ndelta; j++)
-    {
-        for (k=0; k<ndata; k++)
-        {
-            new_dw=((eta*delta[j]*data[k])+(momentum*oldw[k][j]));
-            w[k][j]+=new_dw;
-            oldw[k][j]=new_dw;
+    data[0] = 1.0;
+    for (j = 1; j < ndelta; j++) {
+        for (k = 0; k < ndata; k++) {
+            gdouble new_dw = eta*delta[j]*data[k] + momentum*oldw[k*ndelta + j];
+            w[k*ndelta + j] += new_dw;
+            oldw[k*ndelta + j] = new_dw;
         }
     }
 }
 
-static
-gdouble output_error(gdouble *output, gint noutput, gdouble *target, gdouble *doutput)
+static gdouble
+output_error(const gdouble *output, gint noutput, const gdouble *target,
+             gdouble *doutput)
 {
     gint j;
-    gdouble out, tar, errsum;
+    gdouble errsum = 0.0;
 
-    errsum = 0.0;
-    for (j=1; j<noutput; j++)
-    {
-        out=output[j];
-        tar=target[j];
-        doutput[j]=out*(1.0-out)*(tar-out);
-        errsum+=fabs(doutput[j]);
+    for (j = 1; j < noutput; j++) {
+        gdouble out = output[j];
+        gdouble tgt = target[j];
+
+        doutput[j] = out*(1.0 - out)*(tgt - out);
+        errsum += fabs(doutput[j]);
     }
+
     return errsum;
 }
 
 static gdouble
-hidden_error(gdouble *hidden, gint nhidden, gdouble *dhidden, gdouble *doutput, gint noutput, gdouble **whidden)
+hidden_error(const gdouble *hidden, gint nhidden, gdouble *dhidden,
+             const gdouble *doutput, gint noutput, const gdouble *whidden)
 {
     gint j, k;
-    gdouble h, sum, errsum;
+    gdouble errsum = 0.0;
 
-    errsum=0.0;
-    for (j=1; j<nhidden; j++)
-    {
-        h=hidden[j];
-        sum=0.0;
-        for (k=1; k<noutput; k++)
-            sum += doutput[k]*whidden[j][k];
+    for (j = 1; j < nhidden; j++) {
+        gdouble h = hidden[j];
+        gdouble sum = 0.0;
 
-        dhidden[j]=h*(1.0-h)*sum;
-        errsum+=fabs(dhidden[j]);
+        for (k = 1; k < noutput; k++)
+            sum += doutput[k]*whidden[j*noutput + k];
+
+        dhidden[j] = h*(1.0 - h)*sum;
+        errsum += fabs(dhidden[j]);
     }
     return errsum;
 }
 
 static void
-gwy_nn_train_step(GwyNN *nn, gdouble eta, gdouble momentum, gdouble *err_o, gdouble *err_h, gdouble *input, gdouble *target)
+gwy_nn_train_step(GwyNN *nn, gdouble eta, gdouble momentum,
+                  gdouble *err_o, gdouble *err_h,
+                  const gdouble *input, const gdouble *target)
 {
     gint i;
 
@@ -665,50 +641,35 @@ gwy_nn_train_step(GwyNN *nn, gdouble eta, gdouble momentum, gdouble *err_o, gdou
     layer_forward(nn->input, nn->hidden, nn->winput, nn->ninput, nn->nhidden);
     layer_forward(nn->hidden, nn->output, nn->whidden, nn->nhidden, nn->noutput);
 
-    *err_o=output_error(nn->output, nn->noutput, nn->target, nn->doutput);
-    *err_h=hidden_error(nn->hidden, nn->nhidden, nn->dhidden, nn->doutput, nn->noutput, nn->whidden);
+    *err_o = output_error(nn->output, nn->noutput, nn->target, nn->doutput);
+    *err_h = hidden_error(nn->hidden, nn->nhidden, nn->dhidden,
+                          nn->doutput, nn->noutput, nn->whidden);
 
-    adjust_weights(nn->doutput, nn->noutput, nn->hidden, nn->nhidden, nn->whidden, nn->wphidden, eta, momentum);
-    adjust_weights(nn->dhidden, nn->nhidden, nn->input, nn->ninput, nn->winput, nn->wpinput, eta, momentum);
-
+    adjust_weights(nn->doutput, nn->noutput, nn->hidden, nn->nhidden,
+                   nn->whidden, nn->wphidden, eta, momentum);
+    adjust_weights(nn->dhidden, nn->nhidden, nn->input, nn->ninput,
+                   nn->winput, nn->wpinput, eta, momentum);
 }
 
 static void
 gwy_nn_free(GwyNN *nn)
 {
-    gint i;
-    
     g_free(nn->input);
     g_free(nn->hidden);
     g_free(nn->dhidden);
     g_free(nn->output);
     g_free(nn->doutput);
     g_free(nn->target);
-
-    for (i=0; i<nn->ninput; i++)
-    {
-        g_free(nn->winput[i]);
-        g_free(nn->wpinput[i]);
-    }
     g_free(nn->winput);
     g_free(nn->wpinput);
-
-    for (i=0; i<nn->nhidden; i++)
-    {
-        g_free(nn->whidden[i]);
-        g_free(nn->wphidden[i]);
-    }
     g_free(nn->whidden);
     g_free(nn->wphidden);
-
 }
-
 
 static void
 neural_dialog_update(NeuralControls *controls,
-                                    NeuralArgs *args)
+                     NeuralArgs *args)
 {
-
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->width),
                              args->width);
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->height),
@@ -717,29 +678,23 @@ neural_dialog_update(NeuralControls *controls,
                              args->trainsteps);
     gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->hidden),
                              args->hidden);
-
 }
 
 static void
 neural_values_update(NeuralControls *controls,
-                                    NeuralArgs *args)
+                     NeuralArgs *args)
 {
-    args->width
-                = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->width));
-    args->height
-                = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->height));
+    args->width = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->width));
+    args->height = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->height));
     args->trainsteps
-                = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->trainsteps));
-    args->hidden
-                = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->hidden));
-
+        = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->trainsteps));
+    args->hidden = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->hidden));
 }
 
-
-static const gchar width_key[]    = "/module/neural/width";
-static const gchar height_key[]    = "/module/neural/height";
-static const gchar trainsteps_key[]    = "/module/neural/trainsteps";
-static const gchar hidden_key[]    = "/module/neural/hidden";
+static const gchar width_key[]      = "/module/neural/width";
+static const gchar height_key[]     = "/module/neural/height";
+static const gchar trainsteps_key[] = "/module/neural/trainsteps";
+static const gchar hidden_key[]     = "/module/neural/hidden";
 
 static void
 neural_sanitize_args(NeuralArgs *args)
