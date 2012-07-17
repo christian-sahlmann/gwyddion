@@ -60,7 +60,9 @@ gwyddion_vim_sources = \
 	$(docsrc)/libgwymodule/libgwymodule-decl.txt \
 	$(docsrc)/libgwyprocess/libgwyprocess-decl.txt
 
-file_magic_sources = $(top_srcdir)/modules/file/*.c
+file_magic_sources = \
+	$(top_srcdir)/modules/file/*.c \
+	$(top_srcdir)/modules/file/*.cc
 
 CLEANFILES = \
 	gwyddion-thumbnailer.schemas \
