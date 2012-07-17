@@ -779,6 +779,7 @@ _______EOF
 ])
 
 if test "$os_darwin" = yes; then
+  AC_MSG_NOTICE([fixing msgmerge to work on Darwin])
   # Make msgmerge work on Darwin.  See
   # http://subcommanderblog.wordpress.com/2009/05/16/msgmerge-on-macosx-and-no-such-file-or-directory/
   AC_CONFIG_COMMANDS([osx-chmod],
@@ -790,11 +791,54 @@ fi
 
 AC_OUTPUT
 
+enabled_formats=
+disabled_formats=
+
+if test "x$enable_minizip" != xno; then
+  enabled_formats="$enabled_formats, NanoObserver, NanoScanTech"
+else
+  disabled_formats="$disabled_formats, NanoObserver, NanoScanTech"
+fi
+
+if test "x$enable_exr" != xno; then
+  enabled_formats="$enabled_formats, OpenEXR"
+else
+  disabled_formats="$disabled_formats, OpenEXR"
+fi
+
+if test "x$enable_zlib" != xno; then
+  enabled_formats="$enabled_formats, Createc zlib compression, NRRD zlib compression"
+  if test "x$enable_libxml2" != xno; then
+    enabled_formats="$enabled_formats, SPML"
+  else
+    disabled_formats="$disabled_formats, SPML"
+  fi
+else
+  disabled_formats="$disabled_formats, SPML, Createc zlib compression, NRRD zlib compression"
+fi
+
+if test "x$enable_bzip2" != xno; then
+  enabled_formats="$enabled_formats, NRRD bzip2 compression"
+else
+  disabled_formats="$disabled_formats, NRRD bzip2 compression"
+fi
+
+if test "x$enable_png" != xno; then
+  enabled_formats="$enabled_formats, high-depth PNG"
+else
+  disabled_formats="$disabled_formats, high-depth PNG"
+fi
+
+enabled_formats=`echo "$enabled_formats" | sed 's/^, //'`
+disabled_formats=`echo "$disabled_formats" | sed 's/^, //'`
+
 echo "================================================================="
 echo "Configuration:"
 echo "  FFTW3:                             $enable_fftw3$FFTW3_WARN"
 echo "  OpenGL 3D widgets:                 $enable_gl$GL_WARN"
 echo "  Remote control:                    $remote_backend"
+echo "  Optional file formats included:    $enabled_formats"
+echo "  Optional file formats excluded:    $disabled_formats"
 echo "  Thumbnailers to build:             $THUMBNAILERS"
 echo "  Python interface (pygwy):          $enable_pygwy$PYGWY_WARN"
 if test x$enable_pygwy = xyes; then
