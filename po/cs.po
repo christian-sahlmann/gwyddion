@@ -3,8 +3,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2012-07-16 03:58+0200\n"
-"PO-Revision-Date: 2012-07-16 14:27+0200\n"
+"POT-Creation-Date: 2012-07-18 03:58+0200\n"
+"PO-Revision-Date: 2012-07-18 11:48+0200\n"
 "Last-Translator: Petr Klapetek <klapetek@gwyddion.net>\n"
 "Language-Team: Czech\n"
 "Language: cs\n"
@@ -825,7 +825,7 @@ msgstr "pixelů"
 #: modules/process/hough.c:175 modules/process/latsim.c:158
 #: modules/process/level.c:255 modules/process/linecorrect.c:274
 #: modules/process/lno_synth.c:436 modules/process/local_contrast.c:126
-#: modules/process/median-bg.c:176 modules/process/neural.c:208
+#: modules/process/median-bg.c:176 modules/process/neural.c:198
 #: modules/process/noise_synth.c:347 modules/process/obj_synth.c:432
 #: modules/process/pat_synth.c:402 modules/process/pid.c:196
 #: modules/process/polydistort.c:219 modules/process/polylevel.c:376
@@ -1606,51 +1606,51 @@ msgstr "…"
 msgid "Cannot preview"
 msgstr "Náhled není možný"
 
-#: app/gwyddion.c:132
+#: app/gwyddion.c:133
 msgid "Loading document history"
 msgstr "Načítám historii dokumentů"
 
-#: app/gwyddion.c:137
+#: app/gwyddion.c:138
 msgid "Registering "
 msgstr "Registruji "
 
-#: app/gwyddion.c:138
+#: app/gwyddion.c:139
 msgid "stock items"
 msgstr "standardní ikony"
 
-#: app/gwyddion.c:142
+#: app/gwyddion.c:143
 msgid "color gradients"
 msgstr "barevné gradienty"
 
-#: app/gwyddion.c:144
+#: app/gwyddion.c:145
 msgid "GL materials"
 msgstr "GL materiály"
 
-#: app/gwyddion.c:146
+#: app/gwyddion.c:147
 msgid "grain quantities"
 msgstr "zrnové veličiny"
 
-#: app/gwyddion.c:148
+#: app/gwyddion.c:149
 msgid "calibrations"
 msgstr "kalibrace"
 
-#: app/gwyddion.c:153
+#: app/gwyddion.c:154
 msgid "Loading settings"
 msgstr "Načítám nastavení"
 
-#: app/gwyddion.c:160
+#: app/gwyddion.c:161
 msgid "Registering modules"
 msgstr "Registruji moduly"
 
-#: app/gwyddion.c:182
+#: app/gwyddion.c:183
 msgid "Initializing GUI"
 msgstr "Inicializuji GUI"
 
-#: app/gwyddion.c:391
+#: app/gwyddion.c:392
 msgid "Could not read settings."
 msgstr "Nezdařilo se přečíst nastavení."
 
-#: app/gwyddion.c:394
+#: app/gwyddion.c:395
 #, c-format
 msgid ""
 "Settings file `%s' cannot be read: %s\n"
@@ -5071,7 +5071,7 @@ msgstr "Načítá XQD, XQD a XQT soubory Seiko."
 msgid "Seiko files (.xqb, .xqd, .xqt)"
 msgstr "Seiko soubory (.xqb, .xqd, .xqt)"
 
-#: modules/file/seiko.c:239
+#: modules/file/seiko.c:251
 msgid ""
 "Cannot determine scan dimensions; it seems non-square with an unknown side "
 "ratio."
@@ -5922,7 +5922,7 @@ msgstr "Aritmetika"
 msgid "_Expression:"
 msgstr "_Výraz:"
 
-#: modules/process/arithmetic.c:294
+#: modules/process/arithmetic.c:294 modules/process/neural.c:215
 msgid "Operands"
 msgstr "Operandy"
 
@@ -6201,7 +6201,7 @@ msgid "Simple Error Map"
 msgstr "Jednoduchá mapa chyb"
 
 #: modules/process/calcoefs_simple.c:342 modules/process/calcoefs_stage.c:149
-#: modules/process/neural.c:225 modules/process/superresolution.c:159
+#: modules/process/superresolution.c:159
 msgid "Operands:"
 msgstr "O_perandy:"
 
@@ -9057,71 +9057,83 @@ msgstr "Hrot má jiný poměr rozlišení ku reálné velikosti. Bude převzorko
 msgid "Immersed detail data"
 msgstr "Zapuštěný detail"
 
-#: modules/process/neural.c:147
+#: modules/process/neural.c:139
 msgid "Neural network SPM data processing"
 msgstr "Zpracování dat pomocí neuronové sítě"
 
-#: modules/process/neural.c:161
-msgid "/M_ultidata/_Neural network..."
-msgstr "/M_ultidata/_Sloučení..."
+#: modules/process/neural.c:153
+msgid "/M_ultidata/_Neural Network..."
+msgstr "/M_ultidata/_Neuronová síť..."
 
-#: modules/process/neural.c:165
+#: modules/process/neural.c:157
 msgid "Neural network AFM data processing"
 msgstr "Zpracování dat pomocí neuronové sítě"
 
-#: modules/process/neural.c:207
-msgid "Neural network"
+#: modules/process/neural.c:197
+msgid "Neural Network"
 msgstr "Neuronová síť"
 
-#: modules/process/neural.c:233
-msgid "Training model:"
-msgstr "Model pro trénink:"
+#: modules/process/neural.c:222
+msgid "Training _model:"
+msgstr "_Model pro trénink:"
 
-#: modules/process/neural.c:240
-msgid "Training signal:"
-msgstr "Signál pro trénink:"
+#: modules/process/neural.c:228
+msgid "Training _signal:"
+msgstr "_Signál pro trénink:"
 
-#: modules/process/neural.c:247
-msgid "Result model:"
-msgstr "Model pro vyhodnocení:"
+#: modules/process/neural.c:234
+msgid "Res_ult model:"
+msgstr "Model pro v_yhodnocení:"
 
-#: modules/process/neural.c:254
-msgid "Window width:"
-msgstr "Šířka okna:"
+#: modules/process/neural.c:239 modules/tools/stats.c:401
+msgid "Parameters"
+msgstr "Parametry"
 
-#: modules/process/neural.c:260
-msgid "Window height:"
-msgstr "Výška okna:"
+#: modules/process/neural.c:245
+msgid "Window _width:"
+msgstr "Šířka ok_na:"
 
-#: modules/process/neural.c:266
-msgid "Training steps:"
-msgstr "Kroků tréninku:"
+#: modules/process/neural.c:251
+msgid "Window h_eight:"
+msgstr "_Výška okna:"
 
-#: modules/process/neural.c:272
-msgid "Hidden nodes:"
-msgstr "Skryté uzly:"
+#: modules/process/neural.c:257
+msgid "_Training steps:"
+msgstr "_Kroků tréninku:"
 
-#: modules/process/neural.c:364
+#: modules/process/neural.c:263
+msgid "_Hidden nodes:"
+msgstr "Skryté _uzly:"
+
+#: modules/process/neural.c:355
 msgid "Data not compatible"
 msgstr "Nekompatibilní data"
 
-#: modules/process/neural.c:389 modules/process/pid.c:334
+#: modules/process/neural.c:380 modules/process/pid.c:334
 msgid "Starting..."
 msgstr "Spouštím..."
 
-#: modules/process/neural.c:491
+#: modules/process/neural.c:402
+msgid "Training..."
+msgstr "Trénování..."
+
+#: modules/process/neural.c:434
+msgid "Evaluating..."
+msgstr "Vyhodnocení..."
+
+#: modules/process/neural.c:476
 msgid "Evaluated signal"
 msgstr "Vyhodnocený signál"
 
-#: modules/process/neural.c:497
+#: modules/process/neural.c:482
 msgid "Training error"
 msgstr "Chyba při tréninku"
 
-#: modules/process/neural.c:498
+#: modules/process/neural.c:483
 msgid "error"
 msgstr "Chyba"
 
-#: modules/process/neural.c:504
+#: modules/process/neural.c:489
 msgid "NN training error"
 msgstr "Chyba při tréninku NN"
 
@@ -10092,59 +10104,59 @@ msgstr "Druhý směr:"
 msgid "Denoised"
 msgstr "Odšuměná data"
 
-#: modules/pygwy/pygwy-console.c:53
+#: modules/pygwy/pygwy-console.c:54
 msgid "/Pygwy Console"
 msgstr "/Konsola pygwy"
 
-#: modules/pygwy/pygwy-console.c:57
+#: modules/pygwy/pygwy-console.c:58
 msgid "Python wrapper console"
 msgstr "Konzola rozhraní Pythonu"
 
-#: modules/pygwy/pygwy-console.c:155
+#: modules/pygwy/pygwy-console.c:156
 msgid ">>> Running file content of below textfield\n"
 msgstr ">>> Spouštím obsah textového pole\n"
 
-#: modules/pygwy/pygwy-console.c:180
+#: modules/pygwy/pygwy-console.c:181
 msgid "Open Python script"
 msgstr "Otevřít skript v Pythonu"
 
-#: modules/pygwy/pygwy-console.c:244
+#: modules/pygwy/pygwy-console.c:245
 msgid "Save Script as"
 msgstr "Uložit skript jako"
 
-#: modules/pygwy/pygwy-console.c:283
+#: modules/pygwy/pygwy-console.c:284
 msgid "Pygwy Console"
 msgstr "Konsola pygwy"
 
-#: modules/pygwy/pygwy-console.c:295
+#: modules/pygwy/pygwy-console.c:296
 msgid "Open script in Python language (Ctrl-O)"
 msgstr "Otevřít skript v jazyce Python (Ctrl-O)"
 
-#: modules/pygwy/pygwy-console.c:297
+#: modules/pygwy/pygwy-console.c:298
 msgid "Save script (Ctrl-S)"
 msgstr "Uložit skript (Ctrl-S)"
 
-#: modules/pygwy/pygwy-console.c:299
+#: modules/pygwy/pygwy-console.c:300
 msgid "Execute script (Ctrl-E)"
 msgstr "Spustit skript (Ctrl-E)"
 
-#: modules/pygwy/pygwy-console.c:377
+#: modules/pygwy/pygwy-console.c:378
 msgid "Command"
 msgstr "Příkaz"
 
-#: pygwy.c:91
+#: pygwy.c:99
 msgid "Pygwy, the Gwyddion Python wrapper."
 msgstr "Pygwy, pythonní rozhraní ke Gwyddionu."
 
-#: pygwy.c:443
+#: pygwy.c:520
 msgid "Function written in Python"
 msgstr "Funkce napsaná v Pythonu"
 
-#: pygwy.c:489
+#: pygwy.c:566
 msgid "Graph function written in Python"
 msgstr "Grafová funkce napsaná v Pythonu"
 
-#: pygwy.c:899
+#: pygwy.c:976
 #, c-format
 msgid ""
 "Pygwy plugin: %s (%s)\n"
@@ -11106,10 +11118,6 @@ msgstr "θ sklonu:"
 #: modules/tools/stats.c:335
 msgid "Inclination φ:"
 msgstr "φ sklonu:"
-
-#: modules/tools/stats.c:401
-msgid "Parameters"
-msgstr "Parametry"
 
 #: modules/tools/stats.c:932
 msgid "Save Statistical Quantities"
