@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: French localization\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2012-06-10 03:58+0200\n"
-"PO-Revision-Date: 2012-07-10 20:07+0100\n"
+"POT-Creation-Date: 2012-07-18 03:58+0200\n"
+"PO-Revision-Date: 2012-07-18 20:18+0100\n"
 "Last-Translator: François RIGUET <francheu@caramail.com>\n"
 "Language-Team: François RIGUET <francheu@caramail.com>\n"
 "Language: \n"
@@ -895,7 +895,7 @@ msgstr "pixels"
 #: modules/process/lno_synth.c:436
 #: modules/process/local_contrast.c:126
 #: modules/process/median-bg.c:176
-#: modules/process/neural.c:208
+#: modules/process/neural.c:198
 #: modules/process/noise_synth.c:347
 #: modules/process/obj_synth.c:432
 #: modules/process/pat_synth.c:402
@@ -1698,51 +1698,51 @@ msgstr "…"
 msgid "Cannot preview"
 msgstr "Impossible de prévisualiser"
 
-#: app/gwyddion.c:132
+#: app/gwyddion.c:133
 msgid "Loading document history"
 msgstr "Chargement de l'historique des documents"
 
-#: app/gwyddion.c:137
+#: app/gwyddion.c:138
 msgid "Registering "
 msgstr "Enregistrement "
 
-#: app/gwyddion.c:138
+#: app/gwyddion.c:139
 msgid "stock items"
 msgstr "éléments stockés"
 
-#: app/gwyddion.c:142
+#: app/gwyddion.c:143
 msgid "color gradients"
 msgstr "gradients"
 
-#: app/gwyddion.c:144
+#: app/gwyddion.c:145
 msgid "GL materials"
 msgstr "Matériaux GL"
 
-#: app/gwyddion.c:146
+#: app/gwyddion.c:147
 msgid "grain quantities"
 msgstr "quantité de grains"
 
-#: app/gwyddion.c:148
+#: app/gwyddion.c:149
 msgid "calibrations"
 msgstr "calibrations"
 
-#: app/gwyddion.c:153
+#: app/gwyddion.c:154
 msgid "Loading settings"
 msgstr "Chargement des réglages"
 
-#: app/gwyddion.c:160
+#: app/gwyddion.c:161
 msgid "Registering modules"
 msgstr "Enregistrement des modules"
 
-#: app/gwyddion.c:182
+#: app/gwyddion.c:183
 msgid "Initializing GUI"
 msgstr "Initialisation de l'interface graphique"
 
-#: app/gwyddion.c:391
+#: app/gwyddion.c:392
 msgid "Could not read settings."
 msgstr "Impossible de lire les réglages."
 
-#: app/gwyddion.c:394
+#: app/gwyddion.c:395
 #, c-format
 msgid ""
 "Settings file `%s' cannot be read: %s\n"
@@ -2650,7 +2650,7 @@ msgstr "Burleigh données exportées (.txt, .bin)"
 
 #: modules/file/burleigh_exp.c:225
 #: modules/file/burleigh_exp.c:266
-#: modules/file/nanoscope.c:1098
+#: modules/file/nanoscope.c:1128
 #: modules/file/omicron.c:397
 #: modules/file/shimadzu.c:404
 msgid "Missing colon in header line."
@@ -3730,42 +3730,42 @@ msgid "File Scan/Measure.xml is missing in the zip file."
 msgstr "Le fichier Scan/Measure.xml est manquant dans le fichier zip."
 
 #: modules/file/nanoobserver.c:545
-#: modules/file/nanoscantech.c:484
+#: modules/file/nanoscantech.c:488
 msgid "Unknown error"
 msgstr "Erreur inconnue"
 
 #: modules/file/nanoobserver.c:550
-#: modules/file/nanoscantech.c:489
+#: modules/file/nanoscantech.c:493
 msgid "End of file"
 msgstr "Fin de fichier"
 
 #: modules/file/nanoobserver.c:552
-#: modules/file/nanoscantech.c:491
+#: modules/file/nanoscantech.c:495
 msgid "End of list of files"
 msgstr "Fin de la liste des fichiers"
 
 #: modules/file/nanoobserver.c:554
-#: modules/file/nanoscantech.c:493
+#: modules/file/nanoscantech.c:497
 msgid "Parameter error"
 msgstr "Erreur de paramètre"
 
 #: modules/file/nanoobserver.c:556
-#: modules/file/nanoscantech.c:495
+#: modules/file/nanoscantech.c:499
 msgid "Bad zip file"
 msgstr "Fichier zip erroné"
 
 #: modules/file/nanoobserver.c:558
-#: modules/file/nanoscantech.c:497
+#: modules/file/nanoscantech.c:501
 msgid "Internal error"
 msgstr "Erreur interne"
 
 #: modules/file/nanoobserver.c:560
-#: modules/file/nanoscantech.c:499
+#: modules/file/nanoscantech.c:503
 msgid "CRC error"
 msgstr "Erreur CRC"
 
 #: modules/file/nanoobserver.c:563
-#: modules/file/nanoscantech.c:502
+#: modules/file/nanoscantech.c:506
 #, c-format
 msgid "Minizip error while reading the zip file: %s."
 msgstr "Erreur de Minizip lors de la lecture du fichier zip : %s."
@@ -3811,11 +3811,11 @@ msgstr "Importe les fichiers Veeco (Digital Instruments) Nanoscope, version 3 ou
 msgid "Nanoscope III files"
 msgstr "Nanoscope III"
 
-#: modules/file/nanoscope.c:243
+#: modules/file/nanoscope.c:244
 msgid "File is not a Nanoscope file, or it is a unknown subtype."
 msgstr "Le fichier n'est pas un fichier Nanoscope, ou est d'un sous-type inconnu."
 
-#: modules/file/nanoscope.c:250
+#: modules/file/nanoscope.c:251
 msgid ""
 "File has been damaged by change of line endings, resulting in corruption of the binary part of the file.\n"
 "\n"
@@ -3825,18 +3825,18 @@ msgstr ""
 "\n"
 "Cela arrive typiquement lorsque le fichier est traité comme du texte lors d'un envoi incompressé par e-mail, un transfert FTP en mode ascii (uilisez le binaire), compressé avec ‘Envoyer vers un dossier compressé’ dans certaines versions de MS Windows, ou tout autre transfert de fichier qui essaie d'enregistrer en texte indépendamment de la plateforme."
 
-#: modules/file/nanoscope.c:521
-#: modules/file/nanoscope.c:537
+#: modules/file/nanoscope.c:525
+#: modules/file/nanoscope.c:541
 msgid "Cannot parse `Scan size' field."
 msgstr "Impossible d'analyser le champ `Scan size'."
 
-#: modules/file/nanoscope.c:1007
+#: modules/file/nanoscope.c:1037
 #: modules/file/nrrdfile.c:1013
 #, c-format
 msgid "Garbage after data sample #%u."
 msgstr "Données erronées après l'échantillon #%u."
 
-#: modules/file/nanoscope.c:1088
+#: modules/file/nanoscope.c:1118
 msgid "Truncated header line."
 msgstr "Ligne d'en-tête tronquée."
 
@@ -3965,45 +3965,45 @@ msgstr "Importe les fichiers NT-MDT."
 msgid "NT-MDT files (.mdt)"
 msgstr "NT-MDT (.mdt)"
 
-#: modules/file/nt-mdt.c:1154
+#: modules/file/nt-mdt.c:1156
 msgid "Frame is too short for Frame Mode."
 msgstr "la trame est trop courte pour le mode trame."
 
-#: modules/file/nt-mdt.c:1168
+#: modules/file/nt-mdt.c:1170
 msgid "Frame is too short for dots or data."
 msgstr "la trame est trop courte pour des points ou des données."
 
-#: modules/file/nt-mdt.c:1427
+#: modules/file/nt-mdt.c:1429
 #, c-format
 msgid "End of file reached in frame header #%u."
 msgstr "Fin du fichier atteinte dans l'en-tête #%u."
 
-#: modules/file/nt-mdt.c:1435
+#: modules/file/nt-mdt.c:1437
 #, c-format
 msgid "End of file reached in frame data #%u."
 msgstr "Fin du fichier atteinte dans les données #%u."
 
-#: modules/file/nt-mdt.c:1470
+#: modules/file/nt-mdt.c:1472
 #, c-format
 msgid "Frame #%u is too short for scanned data header."
 msgstr "La trame #%u est trop courte pour l'en-tête des données scannées."
 
-#: modules/file/nt-mdt.c:2792
+#: modules/file/nt-mdt.c:2794
 #: modules/tools/filter.c:209
 #: modules/tools/icolorange.c:396
 #: modules/tools/linestats.c:154
 msgid "Maximum"
 msgstr "Maximum"
 
-#: modules/file/nt-mdt.c:2793
+#: modules/file/nt-mdt.c:2795
 msgid "Max. position"
 msgstr "Position max"
 
-#: modules/file/nt-mdt.c:2794
+#: modules/file/nt-mdt.c:2796
 msgid "Average"
 msgstr "Moyenne"
 
-#: modules/file/nt-mdt.c:2807
+#: modules/file/nt-mdt.c:2809
 msgid "Raman Image Import"
 msgstr "Import d'image Raman"
 
@@ -5065,7 +5065,7 @@ msgstr "Importe les fichiers Seiko XQB, XQD et XQT."
 msgid "Seiko files (.xqb, .xqd, .xqt)"
 msgstr "Seiko (.xqb, .xqd, .xqt)"
 
-#: modules/file/seiko.c:239
+#: modules/file/seiko.c:251
 msgid "Cannot determine scan dimensions; it seems non-square with an unknown side ratio."
 msgstr "Il est Impossible de déterminer les dimensions du scan ; il semble rectangulaire avec un rapport d'aspect inconnu."
 
@@ -5952,6 +5952,7 @@ msgid "_Expression:"
 msgstr "_Expression :"
 
 #: modules/process/arithmetic.c:294
+#: modules/process/neural.c:215
 msgid "Operands"
 msgstr "Opérandes"
 
@@ -6236,7 +6237,6 @@ msgstr "Carte d'erreur basique"
 
 #: modules/process/calcoefs_simple.c:342
 #: modules/process/calcoefs_stage.c:149
-#: modules/process/neural.c:225
 #: modules/process/superresolution.c:159
 msgid "Operands:"
 msgstr "Opérandes :"
@@ -9145,72 +9145,85 @@ msgstr "La sonde a un rapport plage/résolution différent de l'image. La sonde 
 msgid "Immersed detail data"
 msgstr "Données du détail incrusté"
 
-#: modules/process/neural.c:147
+#: modules/process/neural.c:139
 msgid "Neural network SPM data processing"
 msgstr "Réseau neuronal de traitement de données SPM"
 
-#: modules/process/neural.c:161
-msgid "/M_ultidata/_Neural network..."
+#: modules/process/neural.c:153
+msgid "/M_ultidata/_Neural Network..."
 msgstr "/M_ultidonnées/Réseau _neuronal..."
 
-#: modules/process/neural.c:165
+#: modules/process/neural.c:157
 msgid "Neural network AFM data processing"
 msgstr "Réseau neuronal de traitement de données AFM"
 
-#: modules/process/neural.c:207
-msgid "Neural network"
+#: modules/process/neural.c:197
+msgid "Neural Network"
 msgstr "Réseau neuronal"
 
-#: modules/process/neural.c:233
-msgid "Training model:"
-msgstr "Modèle d'apprentissage : "
+#: modules/process/neural.c:222
+msgid "Training _model:"
+msgstr "_Modèle d'apprentissage : "
 
-#: modules/process/neural.c:240
-msgid "Training signal:"
-msgstr "Signald'apprentissage : "
+#: modules/process/neural.c:228
+msgid "Training _signal:"
+msgstr "_Signald'apprentissage : "
 
-#: modules/process/neural.c:247
-msgid "Result model:"
-msgstr "Modèle résultant : "
+#: modules/process/neural.c:234
+msgid "Res_ult model:"
+msgstr "Modèle rés_ultant : "
 
-#: modules/process/neural.c:254
-msgid "Window width:"
+#: modules/process/neural.c:239
+#: modules/tools/stats.c:401
+msgid "Parameters"
+msgstr "Paramètres"
+
+#: modules/process/neural.c:245
+msgid "Window _width:"
 msgstr "Largeur de fenêtre :"
 
-#: modules/process/neural.c:260
-msgid "Window height:"
+#: modules/process/neural.c:251
+msgid "Window h_eight:"
 msgstr "Hauteur de fenêtre :"
 
-#: modules/process/neural.c:266
-msgid "Training steps:"
-msgstr "Étapes d'apprentissage : "
+#: modules/process/neural.c:257
+msgid "_Training steps:"
+msgstr "Étapes d'appren_tissage : "
 
-#: modules/process/neural.c:272
-msgid "Hidden nodes:"
-msgstr "Noeuds cachés : "
+#: modules/process/neural.c:263
+msgid "_Hidden nodes:"
+msgstr "Noeuds cac_hés : "
 
-#: modules/process/neural.c:364
+#: modules/process/neural.c:355
 msgid "Data not compatible"
 msgstr "Données non compatibles"
 
-#: modules/process/neural.c:389
+#: modules/process/neural.c:380
 #: modules/process/pid.c:334
 msgid "Starting..."
 msgstr "Démarrage..."
 
-#: modules/process/neural.c:491
+#: modules/process/neural.c:402
+msgid "Training..."
+msgstr "Apprentissage..."
+
+#: modules/process/neural.c:434
+msgid "Evaluating..."
+msgstr "Evaluation..."
+
+#: modules/process/neural.c:476
 msgid "Evaluated signal"
 msgstr "Signal évalué"
 
-#: modules/process/neural.c:497
+#: modules/process/neural.c:482
 msgid "Training error"
 msgstr "Erreur d'apprentissage"
 
-#: modules/process/neural.c:498
+#: modules/process/neural.c:483
 msgid "error"
 msgstr "Erreur"
 
-#: modules/process/neural.c:504
+#: modules/process/neural.c:489
 msgid "NN training error"
 msgstr "Erreur d'apprentissage du réseau neuronal"
 
@@ -9271,7 +9284,7 @@ msgid "Gaussians"
 msgstr "Gaussiennes"
 
 #: modules/process/obj_synth.c:284
-msgid "Dougnuts"
+msgid "Doughnuts"
 msgstr "Beignets"
 
 #: modules/process/obj_synth.c:290
@@ -10182,59 +10195,59 @@ msgstr "Seconde direction :"
 msgid "Denoised"
 msgstr "Débruité"
 
-#: modules/pygwy/pygwy-console.c:53
+#: modules/pygwy/pygwy-console.c:54
 msgid "/Pygwy Console"
 msgstr "/Console Pygwy"
 
-#: modules/pygwy/pygwy-console.c:57
+#: modules/pygwy/pygwy-console.c:58
 msgid "Python wrapper console"
 msgstr "Console Python"
 
-#: modules/pygwy/pygwy-console.c:155
+#: modules/pygwy/pygwy-console.c:156
 msgid ">>> Running file content of below textfield\n"
 msgstr ">>> Lancer du contenu du fichier à partir du texte\n"
 
-#: modules/pygwy/pygwy-console.c:180
+#: modules/pygwy/pygwy-console.c:181
 msgid "Open Python script"
 msgstr "Ouvrir un script Python"
 
-#: modules/pygwy/pygwy-console.c:244
+#: modules/pygwy/pygwy-console.c:245
 msgid "Save Script as"
 msgstr "Sauver le script sous"
 
-#: modules/pygwy/pygwy-console.c:283
+#: modules/pygwy/pygwy-console.c:284
 msgid "Pygwy Console"
 msgstr "Console Pygwy"
 
-#: modules/pygwy/pygwy-console.c:295
+#: modules/pygwy/pygwy-console.c:296
 msgid "Open script in Python language (Ctrl-O)"
 msgstr "Ouvrir un script Python (Ctrl-O)"
 
-#: modules/pygwy/pygwy-console.c:297
+#: modules/pygwy/pygwy-console.c:298
 msgid "Save script (Ctrl-S)"
 msgstr "Sauver le script (Ctrl-S)"
 
-#: modules/pygwy/pygwy-console.c:299
+#: modules/pygwy/pygwy-console.c:300
 msgid "Execute script (Ctrl-E)"
 msgstr "Exécuter le script (Ctrl-E)"
 
-#: modules/pygwy/pygwy-console.c:377
+#: modules/pygwy/pygwy-console.c:378
 msgid "Command"
 msgstr "Commande "
 
-#: pygwy.c:91
+#: pygwy.c:99
 msgid "Pygwy, the Gwyddion Python wrapper."
 msgstr "Pygwy, l'interface Python pour Gwyddion"
 
-#: pygwy.c:443
+#: pygwy.c:520
 msgid "Function written in Python"
 msgstr "Fonction écrite en Python"
 
-#: pygwy.c:489
+#: pygwy.c:566
 msgid "Graph function written in Python"
 msgstr "Fonction graphique écrite en Python"
 
-#: pygwy.c:899
+#: pygwy.c:976
 #, c-format
 msgid ""
 "Pygwy plugin: %s (%s)\n"
@@ -11177,10 +11190,6 @@ msgstr "Inclinaison θ :"
 #: modules/tools/stats.c:335
 msgid "Inclination φ:"
 msgstr "Inclinaison φ :"
-
-#: modules/tools/stats.c:401
-msgid "Parameters"
-msgstr "Paramètres"
 
 #: modules/tools/stats.c:932
 msgid "Save Statistical Quantities"
