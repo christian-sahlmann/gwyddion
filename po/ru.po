@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2012-07-17 03:58+0200\n"
-"PO-Revision-Date: 2012-07-17 09:57+0300\n"
+"POT-Creation-Date: 2012-07-18 03:58+0200\n"
+"PO-Revision-Date: 2012-07-18 08:49+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "Language: \n"
@@ -897,7 +897,7 @@ msgstr "точек"
 #: modules/process/lno_synth.c:436
 #: modules/process/local_contrast.c:126
 #: modules/process/median-bg.c:176
-#: modules/process/neural.c:208
+#: modules/process/neural.c:198
 #: modules/process/noise_synth.c:347
 #: modules/process/obj_synth.c:432
 #: modules/process/pat_synth.c:402
@@ -5956,6 +5956,7 @@ msgid "_Expression:"
 msgstr "_Выражение:"
 
 #: modules/process/arithmetic.c:294
+#: modules/process/neural.c:215
 msgid "Operands"
 msgstr "Операнды"
 
@@ -6240,7 +6241,6 @@ msgstr "Простая карта ошибок"
 
 #: modules/process/calcoefs_simple.c:342
 #: modules/process/calcoefs_stage.c:149
-#: modules/process/neural.c:225
 #: modules/process/superresolution.c:159
 msgid "Operands:"
 msgstr "Операнды:"
@@ -9150,72 +9150,85 @@ msgstr "Зонд имеет другое отношение диапазон/р�
 msgid "Immersed detail data"
 msgstr "Данные встроенного изображения с лучшим разрешением"
 
-#: modules/process/neural.c:147
+#: modules/process/neural.c:139
 msgid "Neural network SPM data processing"
 msgstr "Обработка данных СЗМ на основе нейросетей"
 
-#: modules/process/neural.c:161
-msgid "/M_ultidata/_Neural network..."
+#: modules/process/neural.c:153
+msgid "/M_ultidata/_Neural Network..."
 msgstr "/М_ножественные данные/_Нейросеть..."
 
-#: modules/process/neural.c:165
+#: modules/process/neural.c:157
 msgid "Neural network AFM data processing"
 msgstr "Обработка данных АСМ на основе нейросетей"
 
-#: modules/process/neural.c:207
-msgid "Neural network"
+#: modules/process/neural.c:197
+msgid "Neural Network"
 msgstr "Нейросеть"
 
-#: modules/process/neural.c:233
-msgid "Training model:"
-msgstr "Модель обучения:"
+#: modules/process/neural.c:222
+msgid "Training _model:"
+msgstr "_Модель обучения:"
 
-#: modules/process/neural.c:240
-msgid "Training signal:"
-msgstr "Сигнал обучения:"
+#: modules/process/neural.c:228
+msgid "Training _signal:"
+msgstr "_Сигнал обучения:"
 
-#: modules/process/neural.c:247
-msgid "Result model:"
-msgstr "Модель результата:"
+#: modules/process/neural.c:234
+msgid "Res_ult model:"
+msgstr "Модель рез_ультата:"
 
-#: modules/process/neural.c:254
-msgid "Window width:"
-msgstr "Ширина окна:"
+#: modules/process/neural.c:239
+#: modules/tools/stats.c:401
+msgid "Parameters"
+msgstr "Параметры"
 
-#: modules/process/neural.c:260
-msgid "Window height:"
-msgstr "Высота окна:"
+#: modules/process/neural.c:245
+msgid "Window _width:"
+msgstr "_Ширина окна:"
 
-#: modules/process/neural.c:266
-msgid "Training steps:"
-msgstr "Шагов тренировки:"
+#: modules/process/neural.c:251
+msgid "Window h_eight:"
+msgstr "_Высота окна:"
 
-#: modules/process/neural.c:272
-msgid "Hidden nodes:"
-msgstr "Скрытые узлы:"
+#: modules/process/neural.c:257
+msgid "_Training steps:"
+msgstr "Шагов _тренировки:"
 
-#: modules/process/neural.c:364
+#: modules/process/neural.c:263
+msgid "_Hidden nodes:"
+msgstr "Скр_ытые узлы:"
+
+#: modules/process/neural.c:355
 msgid "Data not compatible"
 msgstr "данные несовместимы"
 
-#: modules/process/neural.c:389
+#: modules/process/neural.c:380
 #: modules/process/pid.c:334
 msgid "Starting..."
 msgstr "Запускается..."
 
-#: modules/process/neural.c:491
+#: modules/process/neural.c:402
+msgid "Training..."
+msgstr "Тренировка..."
+
+#: modules/process/neural.c:434
+msgid "Evaluating..."
+msgstr "Расчёт..."
+
+#: modules/process/neural.c:476
 msgid "Evaluated signal"
 msgstr "Рассчитанный сигнал"
 
-#: modules/process/neural.c:497
+#: modules/process/neural.c:482
 msgid "Training error"
 msgstr "Ошибка обучения"
 
-#: modules/process/neural.c:498
+#: modules/process/neural.c:483
 msgid "error"
 msgstr "ошибка"
 
-#: modules/process/neural.c:504
+#: modules/process/neural.c:489
 msgid "NN training error"
 msgstr "Ошибка обучения нейросети"
 
@@ -11182,10 +11195,6 @@ msgstr "Наклон θ:"
 #: modules/tools/stats.c:335
 msgid "Inclination φ:"
 msgstr "Наклон φ:"
-
-#: modules/tools/stats.c:401
-msgid "Parameters"
-msgstr "Параметры"
 
 #: modules/tools/stats.c:932
 msgid "Save Statistical Quantities"
