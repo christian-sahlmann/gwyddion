@@ -121,11 +121,11 @@ static GwyNN*   gwy_nn_alloc        (gint input,
                                      gint hidden,
                                      gint output);
 static void     gwy_nn_feed_forward (GwyNN* nn);
-static void     layer_forward       (gdouble *input,
+static void     layer_forward       (const gdouble *input,
                                      gdouble *output,
                                      const gdouble *weight,
-                                     gint nin,
-                                     gint nout);
+                                     guint nin,
+                                     guint nout);
 static void     gwy_nn_train_step   (GwyNN *nn,
                                      gdouble eta,
                                      gdouble momentum,
@@ -366,8 +366,8 @@ neural_do(NeuralArgs *args)
     GwyDataLine *errors;
     GwyGraphModel *gmodel;
     GwyGraphCurveModel *gcmodel;
-    gdouble sfactor, sshift;
-    gdouble *dresult, *input, *output, eo=0, eh=0;
+    gdouble sfactor, sshift, eo = 0.0, eh = 0.0;
+    gdouble *dresult;
     const gdouble *dtmodel, *drmodel, *dtsignal;
     gint xres, yres, col, row, newid, n, height, width, irow;
     GwyNN *nn;
@@ -392,8 +392,6 @@ neural_do(NeuralArgs *args)
     height = args->height;
 
     nn = gwy_nn_alloc(height*width, args->hidden, 1);
-    input = g_new(gdouble, height*width);
-    output = g_new(gdouble, 1); //preserve for generality
     errors = gwy_data_line_new(args->trainsteps, args->trainsteps, TRUE);
     sshift = gwy_data_field_get_min(tsignal);
     sfactor = 1.0/(gwy_data_field_get_max(tsignal)-sshift);
@@ -410,19 +408,17 @@ neural_do(NeuralArgs *args)
         for (row = height/2; row < yres - height/2; row++) {
             for (col = width/2; col < xres - width/2; col++) {
                 for (irow = 0; irow < height; irow++) {
-                    memcpy(nn->input + (irow*width + 1),
+                    memcpy(nn->input + irow*width,
                            dtmodel + ((row + irow - height/2)*xres
                                       + col - width/2),
                            width*sizeof(gdouble));
                 }
-                nn->target[1] = sfactor*(dtsignal[row*xres + col] - sshift);
+                nn->target[0] = sfactor*(dtsignal[row*xres + col] - sshift);
                 gwy_nn_train_step(nn, 0.3, 0.3, &eo, &eh);
             }
         }
         if (!gwy_app_wait_set_fraction((gdouble)n/(gdouble)args->trainsteps)) {
             gwy_nn_free(nn);
-            g_free(input);
-            g_free(output);
             g_object_unref(scaled);
             gwy_object_unref(errors);
             return;
@@ -448,19 +444,17 @@ neural_do(NeuralArgs *args)
     for (row = height/2; row < yres-height/2; row++) {
         for (col = width/2; col < xres-width/2; col++) {
             for (irow = 0; irow < height; irow++) {
-                memcpy(nn->input + (irow*width + 1),
+                memcpy(nn->input + irow*width,
                        drmodel + ((row + irow - height/2)*xres
                                   + col - width/2),
                        width*sizeof(gdouble));
             }
             gwy_nn_feed_forward(nn);
-            dresult[row*xres + col] = nn->output[1]/sfactor + sshift;
+            dresult[row*xres + col] = nn->output[0]/sfactor + sshift;
         }
         if (row % 32 == 31
             && !gwy_app_wait_set_fraction((gdouble)row/(gdouble)yres)) {
             gwy_nn_free(nn);
-            g_free(input);
-            g_free(output);
             g_object_unref(result);
             g_object_unref(scaled);
             gwy_object_unref(errors);
@@ -503,10 +497,9 @@ gwy_nn_alloc(gint ninput, gint nhidden, gint noutput)
     gdouble *p;
     GRand *rng;
 
-    /* Add the constant input signal neurons. */
-    nn->ninput = ninput + 1;
-    nn->nhidden = nhidden + 1;
-    nn->noutput = noutput + 1;
+    nn->ninput = ninput;
+    nn->nhidden = nhidden;
+    nn->noutput = noutput;
 
     nn->input = g_new0(gdouble, nn->ninput);
     nn->hidden = g_new0(gdouble, nn->nhidden);
@@ -515,17 +508,19 @@ gwy_nn_alloc(gint ninput, gint nhidden, gint noutput)
     nn->doutput = g_new0(gdouble, nn->noutput);
     nn->target = g_new0(gdouble, nn->noutput);
 
-    nn->winput = g_new(gdouble, nn->ninput * nn->nhidden);
-    nn->wpinput = g_new0(gdouble, nn->ninput * nn->nhidden);
+    /* Add weights for the constant input signal neurons. */
+    nn->winput = g_new(gdouble, (nn->ninput + 1)*nn->nhidden);
+    nn->wpinput = g_new0(gdouble, (nn->ninput + 1)*nn->nhidden);
 
-    nn->whidden = g_new(gdouble, nn->nhidden * nn->noutput);
-    nn->wphidden = g_new0(gdouble, nn->nhidden * nn->noutput);
+    nn->whidden = g_new(gdouble, (nn->nhidden + 1)*nn->noutput);
+    nn->wphidden = g_new0(gdouble, (nn->nhidden + 1)*nn->noutput);
 
     rng = g_rand_new();
+    g_rand_set_seed(rng, 1);
 
-    for (i = nn->ninput * nn->nhidden, p = nn->winput; i; i--, p++)
+    for (i = (nn->ninput + 1)*nn->nhidden, p = nn->winput; i; i--, p++)
         *p = (2.0*g_rand_double(rng) - 1)*0.1;
-    for (i = nn->nhidden * nn->noutput, p = nn->whidden; i; i--, p++)
+    for (i = (nn->nhidden + 1)*nn->noutput, p = nn->whidden; i; i--, p++)
         *p = (2.0*g_rand_double(rng) - 1)*0.1;
 
     g_rand_free(rng);
@@ -549,53 +544,54 @@ gwy_nn_feed_forward(GwyNN* nn)
 }
 
 static void
-layer_forward(gdouble *input, gdouble *output, const gdouble *weight,
-              gint nin, gint nout)
+layer_forward(const gdouble *input, gdouble *output, const gdouble *weight,
+              guint nin, guint nout)
 {
-    gint j, k;
+    guint j, k;
 
-    input[0] = 1.0; // XXX: Can't we just do this only once?  It would permit
-                    // making input const.
-    for (j = 1; j < nout; j++) {
+    for (j = nout; j; j--, output++) {
         const gdouble *p = input;
-        const gdouble *w = weight + j*nin;
-        gdouble sum = 0.0;
-
-        for (k = nin; k; k--, p++, w++)
-            sum += (*w)*(*p);
-        output[j] = sigma(sum);
+        /* Initialise with the constant signal neuron. */
+        gdouble sum = *weight;
+        weight++;
+        for (k = nin; k; k--, p++, weight++)
+            sum += (*weight)*(*p);
+        *output = sigma(sum);
     }
 }
 
 static void
-adjust_weights(gdouble *delta, gint ndelta, gdouble *data, gint ndata,
+adjust_weights(gdouble *delta, guint ndelta, const gdouble *data, guint ndata,
                gdouble *weight, gdouble *oldw, gdouble eta, gdouble momentum)
 {
-    gint j, k;
+    guint j, k;
 
-    data[0] = 1.0;
-    for (j = 1; j < ndelta; j++) {
-        gdouble edeltaj = eta*delta[j];
+    for (j = ndelta; j; j--, delta++) {
+        gdouble edeltaj = eta*(*delta);
         const gdouble *p = data;
-        gdouble *q = weight + j*ndata;
-        gdouble *ow = oldw + j*ndata;
+        /* The constant signal neuron first. */
+        gdouble new_dw = edeltaj + momentum*(*oldw);
+        *weight += new_dw;
+        *oldw = new_dw;
+        weight++;
+        oldw++;
 
-        for (k = ndata; k; k--, p++, ow++, q++) {
-            gdouble new_dw = edeltaj*(*p) + momentum*(*ow);
-            *q += new_dw;
-            *ow = new_dw;
+        for (k = ndata; k; k--, p++, oldw++, weight++) {
+            new_dw = edeltaj*(*p) + momentum*(*oldw);
+            *weight += new_dw;
+            *oldw = new_dw;
         }
     }
 }
 
 static gdouble
-output_error(const gdouble *output, gint noutput, const gdouble *target,
+output_error(const gdouble *output, guint noutput, const gdouble *target,
              gdouble *doutput)
 {
-    gint j;
+    guint j;
     gdouble errsum = 0.0;
 
-    for (j = 1; j < noutput; j++) {
+    for (j = 0; j < noutput; j++) {
         gdouble out = output[j];
         gdouble tgt = target[j];
 
@@ -607,19 +603,19 @@ output_error(const gdouble *output, gint noutput, const gdouble *target,
 }
 
 static gdouble
-hidden_error(const gdouble *hidden, gint nhidden, gdouble *dhidden,
-             const gdouble *doutput, gint noutput, const gdouble *whidden)
+hidden_error(const gdouble *hidden, guint nhidden, gdouble *dhidden,
+             const gdouble *doutput, guint noutput, const gdouble *whidden)
 {
-    gint j, k;
+    guint j, k;
     gdouble errsum = 0.0;
 
-    for (j = 1; j < nhidden; j++) {
-        const gdouble *p = doutput + 1;
-        const gdouble *q = whidden + (nhidden + j);
+    for (j = 0; j < nhidden; j++) {
+        const gdouble *p = doutput;
+        const gdouble *q = whidden + (j + 1);
         gdouble h = hidden[j];
         gdouble sum = 0.0;
 
-        for (k = noutput-1; k; k--, p++, q += nhidden)
+        for (k = noutput; k; k--, p++, q += nhidden+1)
             sum += (*p)*(*q);
 
         dhidden[j] = h*(1.0 - h)*sum;
