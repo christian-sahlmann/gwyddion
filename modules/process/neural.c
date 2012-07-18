@@ -117,9 +117,14 @@ static void     neural_values_update(NeuralControls *controls,
                                      NeuralArgs *args);
 static void     neural_dialog_update(NeuralControls *controls,
                                      NeuralArgs *args);
+static void     shuffle             (guint *a,
+                                     guint n,
+                                     GRand *rng);
 static GwyNN*   gwy_nn_alloc        (gint input,
                                      gint hidden,
                                      gint output);
+static void     gwy_nn_randomize    (GwyNN *nn,
+                                     GRand *rng);
 static void     gwy_nn_feed_forward (GwyNN* nn);
 static void     layer_forward       (const gdouble *input,
                                      gdouble *output,
@@ -313,7 +318,7 @@ neural_dialog(NeuralArgs *args)
 
 static void
 neural_data_cb(G_GNUC_UNUSED GwyDataChooser *chooser,
-                   NeuralControls *controls)
+               NeuralControls *controls)
 {
     NeuralArgs *args;
     GwyDataField *tf, *rf, *sf;
@@ -369,12 +374,15 @@ neural_do(NeuralArgs *args)
     gdouble sfactor, sshift, eo = 0.0, eh = 0.0;
     gdouble *dresult;
     const gdouble *dtmodel, *drmodel, *dtsignal;
-    gint xres, yres, col, row, newid, n, height, width, irow;
+    gint xres, yres, col, row, newid, n, height, width, irow, k;
+    guint *indices;
+    GRand *rng;
     GwyNN *nn;
 
     data = args->tmodel.data;
     quark = gwy_app_get_data_key_for_id(args->tmodel.id);
     tmodel = GWY_DATA_FIELD(gwy_container_get_object(data, quark));
+    rng = g_rand_new();
 
     gwy_app_wait_start(gwy_app_find_window_for_channel(data, args->tmodel.id),
                        _("Starting..."));
@@ -392,6 +400,7 @@ neural_do(NeuralArgs *args)
     height = args->height;
 
     nn = gwy_nn_alloc(height*width, args->hidden, 1);
+    gwy_nn_randomize(nn, rng);
     errors = gwy_data_line_new(args->trainsteps, args->trainsteps, TRUE);
     sshift = gwy_data_field_get_min(tsignal);
     sfactor = 1.0/(gwy_data_field_get_max(tsignal)-sshift);
@@ -404,27 +413,39 @@ neural_do(NeuralArgs *args)
     yres = gwy_data_field_get_yres(scaled);
     dtmodel = gwy_data_field_get_data_const(scaled);
 
+    indices = g_new(guint, (xres - width)*(yres - height));
+    k = 0;
+    for (row = height/2; row < yres + height/2 - height; row++) {
+        for (col = width/2; col < xres + width/2 - width; col++)
+            indices[k++] = (row - height/2)*xres + col - width/2;
+    }
+    g_assert(k == (xres - width)*(yres - height));
+
     for (n = 0; n < args->trainsteps; n++) {
-        for (row = height/2; row < yres - height/2; row++) {
-            for (col = width/2; col < xres - width/2; col++) {
-                for (irow = 0; irow < height; irow++) {
-                    memcpy(nn->input + irow*width,
-                           dtmodel + ((row + irow - height/2)*xres
-                                      + col - width/2),
-                           width*sizeof(gdouble));
-                }
-                nn->target[0] = sfactor*(dtsignal[row*xres + col] - sshift);
-                gwy_nn_train_step(nn, 0.3, 0.3, &eo, &eh);
+        /* FIXME: Randomisation leads to weird spiky NN error curves. */
+        /* shuffle(indices, (xres - width)*(yres - height), rng); */
+        for (k = 0; k < (xres - width)*(yres - height); k++) {
+            for (irow = 0; irow < height; irow++) {
+                memcpy(nn->input + irow*width,
+                       dtmodel + indices[k] + irow*xres,
+                       width*sizeof(gdouble));
             }
+            nn->target[0] = sfactor*(dtsignal[indices[k]
+                                              + height/2*xres + width/2]
+                                              - sshift);
+            gwy_nn_train_step(nn, 0.3, 0.3, &eo, &eh);
         }
         if (!gwy_app_wait_set_fraction((gdouble)n/(gdouble)args->trainsteps)) {
             gwy_nn_free(nn);
+            g_rand_free(rng);
             g_object_unref(scaled);
+            g_free(indices);
             gwy_object_unref(errors);
             return;
         }
-        gwy_data_line_set_val(errors, n, eo+eh);
+        gwy_data_line_set_val(errors, n, eo + eh);
     }
+    g_free(indices);
     g_object_unref(scaled);
 
     gwy_app_wait_set_message(_("Evaluating..."));
@@ -441,8 +462,8 @@ neural_do(NeuralArgs *args)
     gwy_data_field_fill(result, gwy_data_field_get_avg(tsignal));
     dresult = gwy_data_field_get_data(result);
 
-    for (row = height/2; row < yres-height/2; row++) {
-        for (col = width/2; col < xres-width/2; col++) {
+    for (row = height/2; row < yres + height/2 - height; row++) {
+        for (col = width/2; col < xres + width/2 - width; col++) {
             for (irow = 0; irow < height; irow++) {
                 memcpy(nn->input + irow*width,
                        drmodel + ((row + irow - height/2)*xres
@@ -455,6 +476,7 @@ neural_do(NeuralArgs *args)
         if (row % 32 == 31
             && !gwy_app_wait_set_fraction((gdouble)row/(gdouble)yres)) {
             gwy_nn_free(nn);
+            g_rand_free(rng);
             g_object_unref(result);
             g_object_unref(scaled);
             gwy_object_unref(errors);
@@ -462,6 +484,7 @@ neural_do(NeuralArgs *args)
         }
     }
     g_object_unref(scaled);
+    g_rand_free(rng);
 
     gwy_app_wait_finish();
 
@@ -489,13 +512,27 @@ neural_do(NeuralArgs *args)
     gwy_object_unref(errors);
 }
 
+static void
+shuffle(guint *a, guint n, GRand *rng)
+{
+    guint i;
+
+    for (i = 0; i < n; i++) {
+        guint j = g_rand_int_range(rng, i, n);
+        GWY_SWAP(guint, a[i], a[j]);
+    }
+}
+
+static inline gdouble
+sigma(gdouble x)
+{
+    return (1.0/(1.0 + exp(-x)));
+}
+
 static GwyNN*
 gwy_nn_alloc(gint ninput, gint nhidden, gint noutput)
 {
     GwyNN *nn = (GwyNN*)g_malloc(sizeof(GwyNN));
-    gint i;
-    gdouble *p;
-    GRand *rng;
 
     nn->ninput = ninput;
     nn->nhidden = nhidden;
@@ -509,29 +546,25 @@ gwy_nn_alloc(gint ninput, gint nhidden, gint noutput)
     nn->target = g_new0(gdouble, nn->noutput);
 
     /* Add weights for the constant input signal neurons. */
-    nn->winput = g_new(gdouble, (nn->ninput + 1)*nn->nhidden);
+    nn->winput = g_new0(gdouble, (nn->ninput + 1)*nn->nhidden);
     nn->wpinput = g_new0(gdouble, (nn->ninput + 1)*nn->nhidden);
 
-    nn->whidden = g_new(gdouble, (nn->nhidden + 1)*nn->noutput);
+    nn->whidden = g_new0(gdouble, (nn->nhidden + 1)*nn->noutput);
     nn->wphidden = g_new0(gdouble, (nn->nhidden + 1)*nn->noutput);
 
-    rng = g_rand_new();
-    g_rand_set_seed(rng, 1);
+    return nn;
+}
+
+static void
+gwy_nn_randomize(GwyNN *nn, GRand *rng)
+{
+    gint i;
+    gdouble *p;
 
     for (i = (nn->ninput + 1)*nn->nhidden, p = nn->winput; i; i--, p++)
         *p = (2.0*g_rand_double(rng) - 1)*0.1;
     for (i = (nn->nhidden + 1)*nn->noutput, p = nn->whidden; i; i--, p++)
         *p = (2.0*g_rand_double(rng) - 1)*0.1;
-
-    g_rand_free(rng);
-
-    return nn;
-}
-
-static inline gdouble
-sigma(gdouble x)
-{
-    return (1.0/(1.0 + exp(-x)));
 }
 
 static void
