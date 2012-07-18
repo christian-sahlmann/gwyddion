@@ -1,4 +1,7 @@
 2.29 (0000-00-00)
+Application:
+- Translations updated: Czech, French, Russian.
+
 Libraries:
 - libgwyprocess: New function to calculate grain-wise rms.
 - libgwymodule: gwy_file_get_data_info() sets its arguments to NULL if no file
@@ -14,10 +17,12 @@ Modules:
 - Statistical quantities: New quantity was added: grain-wise rms.
 - Omicron: Files created by SPIP are recognised and loaded.
 - Nanoscope: Support for old files without @2:Z scale was improved.
-- Object synthesis: A bug causing Critical warning/crash during generation of
-  non-square data was fixed.
+- Object synthesis: A bug causing Critical warning/crash during the generation
+  of non-square data was fixed.
 - Seiko: The guesswork involved in loading of non-square files was somewhat
   improved.
+- Neural network: Result model size can differ from source, miscallaneous small
+  improvements.
 
 Other:
 - Pygwy is packaged in the Win32 installer (it requires separate Python and
