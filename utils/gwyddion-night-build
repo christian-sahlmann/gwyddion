@@ -2,7 +2,7 @@
 # @(#) $Id$
 disabled=
 pkgname=gwyddion
-basever=2.28
+basever=2.29
 projectdir=$PWD
 logdir=$projectdir/../buildlog
 installprefix=$HOME/opt/gwyddion
