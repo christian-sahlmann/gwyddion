@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2012-07-18 03:58+0200\n"
+"POT-Creation-Date: 2012-07-19 22:14+0200\n"
 "PO-Revision-Date: 2012-07-18 11:48+0200\n"
 "Last-Translator: Petr Klapetek <klapetek@gwyddion.net>\n"
 "Language-Team: Czech\n"
@@ -825,7 +825,7 @@ msgstr "pixelů"
 #: modules/process/hough.c:175 modules/process/latsim.c:158
 #: modules/process/level.c:255 modules/process/linecorrect.c:274
 #: modules/process/lno_synth.c:436 modules/process/local_contrast.c:126
-#: modules/process/median-bg.c:176 modules/process/neural.c:198
+#: modules/process/median-bg.c:176 modules/process/neural.c:203
 #: modules/process/noise_synth.c:347 modules/process/obj_synth.c:432
 #: modules/process/pat_synth.c:402 modules/process/pid.c:196
 #: modules/process/polydistort.c:219 modules/process/polylevel.c:376
@@ -5922,7 +5922,7 @@ msgstr "Aritmetika"
 msgid "_Expression:"
 msgstr "_Výraz:"
 
-#: modules/process/arithmetic.c:294 modules/process/neural.c:215
+#: modules/process/arithmetic.c:294 modules/process/neural.c:220
 msgid "Operands"
 msgstr "Operandy"
 
@@ -9057,83 +9057,83 @@ msgstr "Hrot má jiný poměr rozlišení ku reálné velikosti. Bude převzorko
 msgid "Immersed detail data"
 msgstr "Zapuštěný detail"
 
-#: modules/process/neural.c:139
+#: modules/process/neural.c:144
 msgid "Neural network SPM data processing"
 msgstr "Zpracování dat pomocí neuronové sítě"
 
-#: modules/process/neural.c:153
+#: modules/process/neural.c:158
 msgid "/M_ultidata/_Neural Network..."
 msgstr "/M_ultidata/_Neuronová síť..."
 
-#: modules/process/neural.c:157
+#: modules/process/neural.c:162
 msgid "Neural network AFM data processing"
 msgstr "Zpracování dat pomocí neuronové sítě"
 
-#: modules/process/neural.c:197
+#: modules/process/neural.c:202
 msgid "Neural Network"
 msgstr "Neuronová síť"
 
-#: modules/process/neural.c:222
+#: modules/process/neural.c:227
 msgid "Training _model:"
 msgstr "_Model pro trénink:"
 
-#: modules/process/neural.c:228
+#: modules/process/neural.c:233
 msgid "Training _signal:"
 msgstr "_Signál pro trénink:"
 
-#: modules/process/neural.c:234
+#: modules/process/neural.c:239
 msgid "Res_ult model:"
 msgstr "Model pro v_yhodnocení:"
 
-#: modules/process/neural.c:239 modules/tools/stats.c:401
+#: modules/process/neural.c:244 modules/tools/stats.c:401
 msgid "Parameters"
 msgstr "Parametry"
 
-#: modules/process/neural.c:245
+#: modules/process/neural.c:250
 msgid "Window _width:"
 msgstr "Šířka ok_na:"
 
-#: modules/process/neural.c:251
+#: modules/process/neural.c:256
 msgid "Window h_eight:"
 msgstr "_Výška okna:"
 
-#: modules/process/neural.c:257
+#: modules/process/neural.c:262
 msgid "_Training steps:"
 msgstr "_Kroků tréninku:"
 
-#: modules/process/neural.c:263
+#: modules/process/neural.c:268
 msgid "_Hidden nodes:"
 msgstr "Skryté _uzly:"
 
-#: modules/process/neural.c:355
+#: modules/process/neural.c:360
 msgid "Data not compatible"
 msgstr "Nekompatibilní data"
 
-#: modules/process/neural.c:380 modules/process/pid.c:334
+#: modules/process/neural.c:388 modules/process/pid.c:334
 msgid "Starting..."
 msgstr "Spouštím..."
 
-#: modules/process/neural.c:402
+#: modules/process/neural.c:409
 msgid "Training..."
 msgstr "Trénování..."
 
-#: modules/process/neural.c:434
+#: modules/process/neural.c:451
 msgid "Evaluating..."
 msgstr "Vyhodnocení..."
 
-#: modules/process/neural.c:476
+#: modules/process/neural.c:493
 msgid "Evaluated signal"
 msgstr "Vyhodnocený signál"
 
-#: modules/process/neural.c:482
+#: modules/process/neural.c:499
 msgid "Training error"
 msgstr "Chyba při tréninku"
 
-#: modules/process/neural.c:483
+#: modules/process/neural.c:500
 msgid "error"
 msgstr "Chyba"
 
-#: modules/process/neural.c:489
+#: modules/process/neural.c:506
 msgid "NN training error"
 msgstr "Chyba při tréninku NN"
 
