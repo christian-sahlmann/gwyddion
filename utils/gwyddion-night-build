@@ -142,10 +142,12 @@ function check_symbols() {
 
   # Extra symbols in modules
   find modules -path \*.libs/\*.so | while read mod; do
-    m=$(basename $mod .so)
-    nm $mod \
-      | sed -re 's/^[0-9a-f]+ T +([A-Za-z0-9_]+)$/Evil symbol ('$m'): \1/;t;d' \
-      | grep -Ev ' _(fini|init|gwy_module_query)$' 1>&2
+    if nm "$mod" | grep -q -s '\<gwy_module_query\>'; then
+        m=$(basename $mod .so)
+        nm $mod \
+          | sed -re 's/^[0-9a-f]+ T +([A-Za-z0-9_]+)$/Evil symbol ('$m'): \1/;t;d' \
+          | grep -Ev ' _(fini|init|gwy_module_query)$' 1>&2
+    fi
   done
 }
 
