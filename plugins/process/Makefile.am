@@ -84,7 +84,7 @@ EXTRA_DIST = \
 	$(cpp_plugins_sources) \
 	$(all_rgis)
 
-PASCAL_FLAGS = -Mdelphi -l- -Sh -WC -O2 -Xc -XX
+PASCAL_FLAGS = -Mdelphi -l- -Sh -O2 -Xc -XX
 
 clean-local:
 	rm -f core.* *~ *.ppu
