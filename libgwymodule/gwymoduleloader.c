@@ -25,6 +25,13 @@
 
 #include "gwymoduleinternal.h"
 
+#ifdef G_OS_WIN32
+#include <windows.h>
+#include <winreg.h>
+#define python_version "2.7"
+#define python_key "Software\\Python\\PythonCore\\" python_version "\\InstallPath"
+#endif
+
 #undef GWY_MODULE_PEDANTIC_CHECK
 
 typedef struct {
@@ -32,20 +39,20 @@ typedef struct {
     gpointer data;
 } GwyModuleForeachData;
 
-static void     gwy_load_modules_in_dir  (GDir *gdir,
-                                          const gchar *dirname,
-                                          GHashTable *mods);
-static gboolean gwy_module_pedantic_check(_GwyModuleInfoInternal *iinfo);
-static void     gwy_module_get_rid_of    (const gchar *modname);
-static void     gwy_module_init          (void);
-static const GwyModuleInfo*
-gwy_module_do_register_module(const gchar *modulename,
-                              GHashTable *mods,
-                              GError **error);
-static void     gwy_module_register_fail (GError *myerr,
-                                          GError **error,
-                                          const gchar *modname,
-                                          const gchar *filename);
+static gboolean             check_python_availability    (void);
+static void                 gwy_load_modules_in_dir      (GDir *gdir,
+                                                          const gchar *dirname,
+                                                          GHashTable *mods);
+static gboolean             gwy_module_pedantic_check    (_GwyModuleInfoInternal *iinfo);
+static void                 gwy_module_get_rid_of        (const gchar *modname);
+static void                 gwy_module_init              (void);
+static const GwyModuleInfo* gwy_module_do_register_module(const gchar *modulename,
+                                                          GHashTable *mods,
+                                                          GError **error);
+static void                 gwy_module_register_fail     (GError *myerr,
+                                                          GError **error,
+                                                          const gchar *modname,
+                                                          const gchar *filename);
 
 static GHashTable *modules = NULL;
 static GHashTable *failures = NULL;
@@ -299,6 +306,14 @@ gwy_module_do_register_module(const gchar *filename,
         return NULL;
     }
 
+    if (gwy_strequal(modname, "pygwy") && !check_python_availability()) {
+        g_set_error(&err, GWY_MODULE_ERROR, GWY_MODULE_ERROR_OPEN,
+                    "Avoiding to register pygwy if Python is unavailable.");
+        gwy_module_register_fail(err, error, modname, filename);
+        g_free(modname);
+        return NULL;
+    }
+
     gwy_debug("Trying to load module `%s' from file `%s'.", modname, filename);
     mod = g_module_open(filename, G_MODULE_BIND_LAZY);
 
@@ -397,6 +412,45 @@ gwy_module_do_register_module(const gchar *filename,
     currenly_registered_module = NULL;
 
     return ok ? mod_info : NULL;
+}
+
+/* XXX: If python is not available loading pygwy can pop up weird boxes.  Fix
+ * it here. */
+static gboolean
+check_python_availability(void)
+{
+#ifdef G_OS_WIN32
+    gchar pythondir[256];
+    DWORD size = sizeof(pythondir)-1;
+    HKEY reg_key;
+    gchar *filename;
+    gboolean ok = FALSE;
+
+    gwy_clear(pythondir, sizeof(pythondir));
+    if (RegOpenKeyEx(HKEY_CURRENT_USER, TEXT(python_key), 0, KEY_READ,
+                     &reg_key) == ERROR_SUCCESS) {
+        if (RegQueryValueEx(reg_key, NULL, NULL, NULL, pythondir, &size) == ERROR_SUCCESS) {
+            ok = TRUE;
+        }
+        RegCloseKey(reg_key);
+    }
+    if (!ok
+        && RegOpenKeyEx(HKEY_LOCAL_MACHINE, TEXT(python_key), 0, KEY_READ,
+                        &reg_key) == ERROR_SUCCESS) {
+        if (RegQueryValueEx(reg_key, NULL, NULL, NULL,
+                            pythondir, &size) == ERROR_SUCCESS)
+            ok = TRUE;
+        RegCloseKey(reg_key);
+    }
+
+    if (!ok) {
+        g_message("Cannot get %s registry key, assuming no python 2.7.",
+                  python_key);
+        return FALSE;
+    }
+#endif
+
+    return TRUE;
 }
 
 #ifdef G_OS_WIN32
