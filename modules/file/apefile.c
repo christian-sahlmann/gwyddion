@@ -379,20 +379,64 @@ apefile_load(const gchar *filename,
         g_object_unref(apefile.data[n]);
 
         g_snprintf(key, sizeof(key), "/%d/data/title", n);
-        title = gwy_enuml_to_string(i,
-                                    "Height",   APE_HEIGHT,
-                                    "Height-R", APE_HEIGHT_R,
-                                    "NSOM",     APE_NSOM,
-                                    "NSOM-R",   APE_NSOM_R,
-                                    "Error",    APE_ERROR,
-                                    "Error-R",  APE_ERROR_R,
-                                    "NSOM2",    APE_NSOM2,
-                                    "NSOM2-R",  APE_NSOM2_R,
-                                    "Aux1",     APE_AUX1,
-                                    "Aux2",     APE_AUX2,
-                                    "Aux1-R",   APE_AUX1_R,
-                                    "Aux2-R",   APE_AUX2_R,
-                                    NULL);
+
+        /*
+         * Channel labelling based on SPM Mode
+         */
+        switch(apefile.spm_mode) {
+            case SPM_MODE_SNOM:
+            title = gwy_enuml_to_string(i,
+                                        "Height",   APE_HEIGHT,
+                                        "Height-R", APE_HEIGHT_R,
+                                        "NSOM",     APE_NSOM,
+                                        "NSOM-R",   APE_NSOM_R,
+                                        "Error",    APE_ERROR,
+                                        "Error-R",  APE_ERROR_R,
+                                        "NSOM2",    APE_NSOM2,
+                                        "NSOM2-R",  APE_NSOM2_R,
+                                        "Lateral",     APE_AUX1,
+                                        "Z-Z0",     APE_AUX2,
+                                        "Lateral-R",   APE_AUX1_R,
+                                        "Z-Z0-R",   APE_AUX2_R,
+                                        NULL);
+            break;
+
+            case SPM_MODE_AFM_NONCONTACT:
+            case SPM_MODE_AFM_CONTACT:
+            case SPM_MODE_PHASE_DETECT_AFM:
+            title = gwy_enuml_to_string(i,
+                                        "Height",   APE_HEIGHT,
+                                        "Height-R", APE_HEIGHT_R,
+                                        "IN1",     APE_NSOM,
+                                        "IN1-R",   APE_NSOM_R,
+                                        "Error",    APE_ERROR,
+                                        "Error-R",  APE_ERROR_R,
+                                        "IN2",    APE_NSOM2,
+                                        "IN2-R",  APE_NSOM2_R,
+                                        "Lateral",     APE_AUX1,
+                                        "Z-Z0",     APE_AUX2,
+                                        "Lateral-R",   APE_AUX1_R,
+                                        "Z-Z0-R",   APE_AUX2_R,
+                                        NULL);
+            break;
+
+            default:
+            title = gwy_enuml_to_string(i,
+                                        "Height",   APE_HEIGHT,
+                                        "Height-R", APE_HEIGHT_R,
+                                        "IN1",     APE_NSOM,
+                                        "IN1-R",   APE_NSOM_R,
+                                        "Error",    APE_ERROR,
+                                        "Error-R",  APE_ERROR_R,
+                                        "IN2",    APE_NSOM2,
+                                        "IN2-R",  APE_NSOM2_R,
+                                        "Aux1",     APE_AUX1,
+                                        "Z-Z0",     APE_AUX2,
+                                        "Aux1-R",   APE_AUX1_R,
+                                        "Z-Z0-R",   APE_AUX2_R,
+                                        NULL);
+            break;
+        }
         if (title && *title)
             gwy_container_set_string_by_name(container, key, g_strdup(title));
 
