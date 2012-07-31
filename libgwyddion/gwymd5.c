@@ -186,8 +186,7 @@ gwy_md5_final(GwyMD5Context *ctx,
     byte_reverse((guint32*)ctx->in, 14);
 
     /* Append length in bits and transform */
-    ((guint32*)ctx->in)[14] = ctx->bits[0];
-    ((guint32*)ctx->in)[15] = ctx->bits[1];
+    memcpy((guint32*)ctx->in + 14, ctx->bits, 2*sizeof(guint32));
 
     gwy_md5_transform(ctx->buf, (guint32*)ctx->in);
     byte_reverse(ctx->buf, 4);
