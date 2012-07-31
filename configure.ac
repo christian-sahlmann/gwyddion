@@ -277,18 +277,11 @@ GWY_WITH([ruby],,[Install Ruby modules and plug-ins])
 AC_PATH_PROGS(RUBY,ruby,:)
 if test "$RUBY" != :; then
   AC_MSG_CHECKING([if ruby version >= 1.8])
-  if $RUBY -e ["
-require 'rbconfig'
-c = Config::CONFIG
-if c['MAJOR'] > '1' || c['MAJOR'] == '1' && c['MINOR'] >= '8'
-  exit 0
-end
-exit 1"]; then
-    ruby_version_ok=yes
-  else
-    ruby_version_ok=no
-    RUBY=:
-  fi
+  rbversion=`$RUBY --version | awk '{print $2}'`
+  AS_VERSION_COMPARE($rbversion, [1.8],
+    [ruby_version_ok=no; RUBY=:],
+    [ruby_version_ok=yes],
+    [ruby_version_ok=yes])
   AC_MSG_RESULT([$ruby_version_ok])
 fi
 AM_CONDITIONAL([HAVE_RUBY], [test "$RUBY" != : -a "$enable_ruby" != no])
