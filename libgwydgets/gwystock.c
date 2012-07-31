@@ -38,7 +38,6 @@ static void           register_icon_set_list_cb(const gchar *id,
 static GtkIconSource* file_to_icon_source      (const gchar *path,
                                                 const gchar *filename,
                                                 gchar **id);
-static void           free_the_icon_factory    (void);
 
 static GtkIconFactory *the_icon_factory = NULL;
 
@@ -70,7 +69,6 @@ gwy_stock_register_stock_items(void)
     g_free(pixmap_paths[0]);
     g_free(pixmap_paths[1]);
     gtk_icon_factory_add_default(the_icon_factory);
-    g_atexit(free_the_icon_factory);
 }
 
 static void
@@ -257,12 +255,6 @@ file_to_icon_source(const gchar *path,
     }
 
     return icon_source;
-}
-
-static void
-free_the_icon_factory(void)
-{
-    gwy_object_unref(the_icon_factory);
 }
 
 /************************** Documentation ****************************/
