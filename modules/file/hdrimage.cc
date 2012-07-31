@@ -1678,7 +1678,7 @@ read_pgm_head(const gchar *buffer, gsize len, guint *headersize,
 
         while (TRUE) {
             /* Skip whitespace */
-            while ((p - buffer) < len && g_ascii_isspace(*p))
+            while ((gsize)(p - buffer) < len && g_ascii_isspace(*p))
                 p++;
             if (p == buffer)
                 return BAD_FILE;
@@ -1688,7 +1688,7 @@ read_pgm_head(const gchar *buffer, gsize len, guint *headersize,
                 break;
 
             seen_comments = TRUE;
-            while ((p - buffer) < len && *p != '\n' && *p != '\r')
+            while ((gsize)(p - buffer) < len && *p != '\n' && *p != '\r')
                 p++;
             if (p == buffer)
                 return BAD_FILE;
@@ -1698,7 +1698,7 @@ read_pgm_head(const gchar *buffer, gsize len, guint *headersize,
         if (!g_ascii_isdigit(*p))
             return BAD_FILE;
         q = p;
-        while ((p - buffer) < len && g_ascii_isdigit(*p))
+        while ((gsize)(p - buffer) < len && g_ascii_isdigit(*p))
             p++;
         if (p == buffer)
             return BAD_FILE;
