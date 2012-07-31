@@ -43,6 +43,10 @@ G_WIN32_DLLMAIN_FOR_DLL_NAME(static, dll_name);
 #include <CoreFoundation/CoreFoundation.h>
 #endif
 
+#if (GLIB_CHECK_VERSION(2, 22, 0))
+#define g_mapped_file_free g_mapped_file_unref
+#endif
+
 #define TOLOWER(c) ((c) >= 'A' && (c) <= 'Z' ? (c) - 'A' + 'a' : (c))
 
 static GHashTable *mapped_files = NULL;
