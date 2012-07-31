@@ -33,7 +33,6 @@ typedef struct {
 } DebugObjectInfo;
 
 static gboolean debug_objects_enabled = FALSE;
-static GMemChunk *debug_objects_chunk = NULL;
 static GTimer *debug_objects_timer = NULL;
 static GList *debug_objects = NULL;
 static gsize id = 0;
@@ -90,14 +89,10 @@ gwy_debug_objects_creation_detailed(GObject *object,
         return;
 
     if (!id) {
-        g_assert(!debug_objects_chunk
-                 && !debug_objects_timer
-                 && !debug_objects);
-        debug_objects_chunk = g_mem_chunk_create(DebugObjectInfo, 256,
-                                                 G_ALLOC_ONLY);
+        g_assert(!debug_objects_timer && !debug_objects);
         debug_objects_timer = g_timer_new();
     }
-    info = g_chunk_new(DebugObjectInfo, debug_objects_chunk);
+    info = g_slice_new(DebugObjectInfo);
     info->id = ++id;
     info->type = G_TYPE_FROM_INSTANCE(object);
     info->address = object;
@@ -170,13 +165,12 @@ gwy_debug_objects_clear(void)
         if (info->destroy_time < 0.0)
             g_object_weak_unref(info->address, &debug_objects_set_time,
                                 &info->destroy_time);
+        g_slice_free(DebugObjectInfo, info);
     }
-    g_mem_chunk_destroy(debug_objects_chunk);
     g_list_free(debug_objects);
     g_timer_destroy(debug_objects_timer);
 
     id = 0;
-    debug_objects_chunk = NULL;
     debug_objects = NULL;
     debug_objects_timer = NULL;
 }

@@ -115,7 +115,6 @@ struct _GwyExpr {
     GPtrArray *identifiers;    /* variable names */
     const gdouble *variables;    /* user-filled variable values */
     /* Tokens */
-    GMemChunk *token_chunk;
     GwyExprToken *tokens;
     GwyExprToken *reservoir;    /* deleted tokens accumulate here */
     /* Compiled RPN representation */
@@ -654,7 +653,7 @@ gwy_expr_token_new0(GwyExpr *expr)
     GwyExprToken *token;
 
     if (G_UNLIKELY(!expr->reservoir))
-        return g_chunk_new0(GwyExprToken, expr->token_chunk);
+        return g_slice_new0(GwyExprToken);
 
     token = expr->reservoir;
     expr->reservoir = token->next;
@@ -1335,11 +1334,7 @@ gwy_expr_new(void)
         table_sanity_checked = TRUE;
     }
 
-    expr = g_new0(GwyExpr, 1);
-    expr->token_chunk = g_mem_chunk_new("GwyExprToken",
-                                        sizeof(GwyExprToken),
-                                        32*sizeof(GwyExprToken),
-                                        G_ALLOC_ONLY);
+    expr = g_slice_new0(GwyExpr);
 
     /* We could also put constants into scanner's symbol table, but then
      * we have to tell them apart when we get some symbol from scanner. */
@@ -1360,7 +1355,7 @@ void
 gwy_expr_free(GwyExpr *expr)
 {
     gwy_expr_token_list_delete(expr, expr->tokens);
-    g_mem_chunk_destroy(expr->token_chunk);
+    g_slice_free_chain(GwyExprToken, expr->reservoir, next);
     if (expr->identifiers)
        g_ptr_array_free(expr->identifiers, TRUE);
     if (expr->scanner)
@@ -1370,7 +1365,7 @@ gwy_expr_free(GwyExpr *expr)
     g_string_free(expr->expr, TRUE);
     g_free(expr->input);
     g_free(expr->stack);
-    g_free(expr);
+    g_slice_free(GwyExpr, expr);
 }
 
 /**
