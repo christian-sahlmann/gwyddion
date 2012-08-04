@@ -790,7 +790,7 @@ gwy_tool_roughness_init_dialog(GwyToolRoughness *tool)
     GtkDialog *dialog;
     GtkSizeGroup *sizegroup;
     GtkWidget *dialog_vbox, *hbox, *vbox_left, *vbox_right, *table;
-    GtkWidget *scwin, *treeview;
+    GtkWidget *scwin, *treeview, *spin;
     GwyAxis *axis;
     gint row;
 
@@ -847,9 +847,10 @@ gwy_tool_roughness_init_dialog(GwyToolRoughness *tool)
 
     /* cut-off */
     tool->cutoff = gtk_adjustment_new(tool->args.cutoff,
-                                      0.0, 0.3, 0.01, 0.05, 0);
-    gwy_table_attach_hscale(table, row, _("C_ut-off:"), NULL,
-                            tool->cutoff, GWY_HSCALE_DEFAULT);
+                                      0.0, 0.3, 0.001, 0.1, 0);
+    spin = gwy_table_attach_hscale(table, row, _("C_ut-off:"), NULL,
+                                   tool->cutoff, GWY_HSCALE_DEFAULT);
+    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 4);
     g_signal_connect(tool->cutoff, "value-changed",
                      G_CALLBACK(gwy_tool_roughness_cutoff_changed), tool);
     row++;
