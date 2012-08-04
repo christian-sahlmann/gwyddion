@@ -1,0 +1,159 @@
+# @(#) $Id$
+%{?mingw_package_header}
+
+Name:           mingw32-gwyddion-libs
+Version:        @PACKAGE_VERSION@
+Release:        1%{?dist}
+Summary:        MinGW Windows Gwyddion libraries
+
+Group:          Development/Libraries
+License:        GPLv2+
+URL:            @PACKAGE_URL@
+Source0:        http://gwyddion.net/download/%{version}/gwyddion-%{version}.tar.xz
+Patch0:         gwyddion-2.22-build-only-libs.patch
+
+BuildArch:      noarch
+
+BuildRequires:  mingw32-filesystem >= 95
+BuildRequires:  mingw64-filesystem >= 95
+BuildRequires:  mingw32-gcc
+BuildRequires:  mingw64-gcc
+BuildRequires:  mingw32-binutils
+BuildRequires:  mingw64-binutils
+BuildRequires:  mingw32-dlfcn
+BuildRequires:  mingw64-dlfcn
+BuildRequires:  mingw32-fftw
+BuildRequires:  mingw64-fftw
+BuildRequires:  mingw32-gtk2 >= 2.8
+BuildRequires:  mingw64-gtk2 >= 2.8
+BuildRequires:  mingw32-atk
+BuildRequires:  mingw64-atk
+BuildRequires:  mingw32-glib2
+BuildRequires:  mingw64-glib2
+BuildRequires:  mingw32-libxml2
+BuildRequires:  mingw64-libxml2
+BuildRequires:  mingw32-gtkglext
+BuildRequires:  mingw64-gtkglext
+
+# Native one for msgfmt
+BuildRequires:  gettext
+# Native one for glib-genmarshal and glib-mkenums
+BuildRequires:  glib2-devel
+BuildRequires:  intltool
+
+
+%description
+Gwyddion is a modular SPM (Scanning Probe Microsopy) data visualization and
+analysis tool written with Gtk+.
+
+This package contains MinGW Windows Gwyddion libraries.
+
+%package -n     mingw32-gwyddion-libs
+Summary:        MinGW Windows Gwyddion libraries
+
+%description -n mingw32-gwyddion-libs
+Gwyddion is a modular SPM (Scanning Probe Microsopy) data visualization and
+analysis tool written with Gtk+.
+
+This package contains MinGW Windows Gwyddion libraries.
+
+%package -n     mingw64-gwyddion-libs
+Summary:        MinGW Windows Gwyddion libraries
+
+%description -n mingw64-gwyddion-libs
+Gwyddion is a modular SPM (Scanning Probe Microsopy) data visualization and
+analysis tool written with Gtk+.
+
+This package contains MinGW Windows Gwyddion libraries.
+
+
+%{?mingw_debug_package}
+
+
+%prep
+%setup -q -n gwyddion-%{version}
+%patch0 -p1 -b .onlylibs
+
+
+%build
+%{mingw_configure} --enable-shared --disable-static --disable-gtk-doc \
+  --without-libiconv-prefix --without-libintl-prefix --without-x \
+  --disable-schemas-install --disable-desktop-file-update --disable-pygwy \
+  --without-pascal --without-perl --without-python --without-ruby \
+  --without-kde4-thumbnailer
+
+%{mingw_make} %{?_smp_mflags}
+
+
+%install
+%{mingw_make_install} DESTDIR=$RPM_BUILD_ROOT
+
+# Manually copy gwyddion.pc as we no longer descend into data
+install -D -m 644 build_mingw32/data/gwyddion.pc ${RPM_BUILD_ROOT}%{mingw32_libdir}/pkgconfig/gwyddion.pc
+install -D -m 644 build_mingw64/data/gwyddion.pc ${RPM_BUILD_ROOT}%{mingw64_libdir}/pkgconfig/gwyddion.pc
+
+# Remove stuff not necessary for cross-compilation of Gwyddion apps and modules
+rm -rf ${RPM_BUILD_ROOT}%{mingw32_bindir}/*.exe
+rm -rf ${RPM_BUILD_ROOT}%{mingw64_bindir}/*.exe
+rm -f ${RPM_BUILD_ROOT}%{mingw32_datadir}/gwyddion/ui/toolbox.xml
+rm -f ${RPM_BUILD_ROOT}%{mingw64_datadir}/gwyddion/ui/toolbox.xml
+
+# Remove .la files
+rm $RPM_BUILD_ROOT%{mingw32_libdir}/*.la
+rm $RPM_BUILD_ROOT%{mingw64_libdir}/*.la
+
+
+%files -n mingw32-gwyddion-libs
+%doc COPYING
+%{mingw32_bindir}/libgwyddion2-0.dll
+%{mingw32_bindir}/libgwyprocess2-0.dll
+%{mingw32_bindir}/libgwydraw2-0.dll
+%{mingw32_bindir}/libgwydgets2-0.dll
+%{mingw32_bindir}/libgwymodule2-0.dll
+%{mingw32_bindir}/libgwyapp2-0.dll
+%{mingw32_includedir}/gwyddion
+%{mingw32_libdir}/libgwyddion2.dll.a
+%{mingw32_libdir}/libgwyprocess2.dll.a
+%{mingw32_libdir}/libgwydraw2.dll.a
+%{mingw32_libdir}/libgwydgets2.dll.a
+%{mingw32_libdir}/libgwymodule2.dll.a
+%{mingw32_libdir}/libgwyapp2.dll.a
+%{mingw32_libdir}/gwyddion/include/gwyconfig.h
+%{mingw32_libdir}/pkgconfig/gwyddion.pc
+
+%files -n mingw64-gwyddion-libs
+%doc COPYING
+%{mingw64_bindir}/libgwyddion2-0.dll
+%{mingw64_bindir}/libgwyprocess2-0.dll
+%{mingw64_bindir}/libgwydraw2-0.dll
+%{mingw64_bindir}/libgwydgets2-0.dll
+%{mingw64_bindir}/libgwymodule2-0.dll
+%{mingw64_bindir}/libgwyapp2-0.dll
+%{mingw64_includedir}/gwyddion
+%{mingw64_libdir}/libgwyddion2.dll.a
+%{mingw64_libdir}/libgwyprocess2.dll.a
+%{mingw64_libdir}/libgwydraw2.dll.a
+%{mingw64_libdir}/libgwydgets2.dll.a
+%{mingw64_libdir}/libgwymodule2.dll.a
+%{mingw64_libdir}/libgwyapp2.dll.a
+%{mingw64_libdir}/gwyddion/include/gwyconfig.h
+%{mingw64_libdir}/pkgconfig/gwyddion.pc
+
+
+%changelog
+* Sat Aug  4 2012 Yeti <yeti@gwyddion.net> - 2.29-1
+- Update to F17 mingw-w64 toolchain and RPM macros
+- Build Win64 package
+- Added explict cross-pkg-config dependencies, seem needed
+- Do not package libtool .la files
+- Removed openSUSE support, don't know how to mix it with the new Fedora toolchain
+
+* Wed May 23 2012 Yeti <yeti@gwyddion.net> - 2.28-1
+- Prevent looking for libiconv and libintl in prefix, fixes some scary libtool
+  warnings
+
+* Thu Jan 27 2011 Yeti <yeti@gwyddion.net> - 2.22-1
+- Updated to build on openSUSE
+
+* Tue Dec 2 2010 Yeti <yeti@gwyddion.net> - 2.21-1
+- Created

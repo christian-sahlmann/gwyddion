@@ -47,7 +47,7 @@ EXTRA_DIST = \
 	gwyddion-cfg.py \
 	gwyddion.vim \
 	gwyddion.1 \
-	mingw32-gwyddion-libs.spec.in \
+	mingw-gwyddion-libs.spec.in \
 	thumbnailer-schemas.xsl \
 	$(gwyddionmime_DATA)
 

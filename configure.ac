@@ -59,7 +59,7 @@ AC_CONFIG_FILES(\
   gwyddion.spec:data/gwyddion.spec.in \
   data/gwyddion.pc \
   data/gwyddion.nsit \
-  data/mingw32-gwyddion-libs.spec
+  data/mingw-gwyddion-libs.spec
 )
 AC_CONFIG_HEADER(config.h)
 
