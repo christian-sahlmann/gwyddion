@@ -33,12 +33,6 @@
  */
 #include <libgwyddion/gwyversion.h>
 
-#ifdef G_OS_WIN32
-#include <windows.h>
-
-G_WIN32_DLLMAIN_FOR_DLL_NAME(static, dll_name);
-#endif
-
 #ifdef __APPLE__
 #include <CoreFoundation/CoreFoundation.h>
 #endif
@@ -48,6 +42,26 @@ G_WIN32_DLLMAIN_FOR_DLL_NAME(static, dll_name);
 #endif
 
 #define TOLOWER(c) ((c) >= 'A' && (c) <= 'Z' ? (c) - 'A' + 'a' : (c))
+
+#ifdef G_OS_WIN32
+#include <windows.h>
+
+#if (GLIB_CHECK_VERSION(2, 16, 0))
+static HMODULE dll_handle;
+
+BOOL WINAPI
+DllMain (HINSTANCE hinstDLL,
+         DWORD     fdwReason,
+         LPVOID    lpvReserved)
+{
+    if (fdwReason == DLL_PROCESS_ATTACH)
+        dll_handle = (HMODULE)hinstDLL;
+    return TRUE;
+}
+#else
+G_WIN32_DLLMAIN_FOR_DLL_NAME(static, dll_name);
+#endif
+#endif
 
 static GHashTable *mapped_files = NULL;
 
@@ -720,7 +734,11 @@ gwy_find_self_dir(const gchar *dirname)
     const gchar *base;
 
     if (!topdir)
+#if (GLIB_CHECK_VERSION(2, 16, 0))
+        topdir = g_win32_get_package_installation_directory_of_module(dll_handle);
+#else
         topdir = g_win32_get_package_installation_directory(NULL, dll_name);
+#endif
 
     for (i = 0; i < G_N_ELEMENTS(paths); i++) {
         if (!gwy_strequal(dirname, paths[i].id))
