@@ -592,58 +592,60 @@ GWY_WITH([kde4-thumbnailer],
          [KDE4 thumbnail creator module],
          [no])
 
-# Find kde4-config.
-AC_ARG_VAR([KDE4_CONFIG],[path to kde4-config utility])
-if test "x$ac_cv_env_KDE4_CONFIG_set" != xset; then
-  AC_PATH_TOOL([KDE4_CONFIG],[kde4-config])
-fi
-if test "x$KDE4_CONFIG" = x; then
-  enable_kde4_thumbnailer=no
-else
-  # XXX: This leaves lots to desire.  What if someone installs Gwyddion to
-  # home?  Let her at least overrride KDE4_MODULE_DIR
-  KDE4_MODULE_DIR=`$KDE4_CONFIG --install module`
-  KDE4_PREFIX=`$KDE4_CONFIG --prefix`
-  KDE4_LIBSUFFIX=`$KDE4_CONFIG --libsuffix`
-  QT4_PREFIX=`$KDE4_CONFIG --qt-prefix`
-  QT4_LIBDIR=`$KDE4_CONFIG --qt-libraries`
-fi
-
-AC_LANG_PUSH([C++])
-KDE4_ORIG_LIBS="$LIBS"
-KDE4_ORIG_LDFLAGS="$LDFLAGS"
-KDE4_ORIG_CPPFLAGS="$CPPFLAGS"
-KDE4_CPPFLAGS="-I$KDE4_PREFIX/include/kde4 -I$QT4_PREFIX/include"
-KDE4_LDFLAGS="-L$KDE4_PREFIX/lib$KDE4_LIBSUFFIX -L$QT4_LIBDIR"
-KDE4_LIBS="-lQtCore -lQtGui"
-CPPFLAGS="$CPPFLAGS $KDE4_CPPFLAGS"
-LDFLAGS="$LDFLAGS $KDE4_LDFLAGS"
-LIBS="$LIBS $KDE4_LIBS"
-
-# Try to link with QtCore and QtGui.
 if test "x$enable_kde4_thumbnailer" != xno; then
-  AC_MSG_CHECKING([for qVersion in $KDE4_LIBS])
+  # Find kde4-config.
+  AC_ARG_VAR([KDE4_CONFIG],[path to kde4-config utility])
+  if test "x$ac_cv_env_KDE4_CONFIG_set" != xset; then
+    AC_PATH_TOOL([KDE4_CONFIG],[kde4-config])
+  fi
+  if test "x$KDE4_CONFIG" = x; then
+    enable_kde4_thumbnailer=no
+  else
+    # XXX: This leaves lots to desire.  What if someone installs Gwyddion to
+    # home?  Let her at least overrride KDE4_MODULE_DIR
+    KDE4_MODULE_DIR=`$KDE4_CONFIG --install module`
+    KDE4_PREFIX=`$KDE4_CONFIG --prefix`
+    KDE4_LIBSUFFIX=`$KDE4_CONFIG --libsuffix`
+    QT4_PREFIX=`$KDE4_CONFIG --qt-prefix`
+    QT4_LIBDIR=`$KDE4_CONFIG --qt-libraries`
+  fi
+
+  AC_LANG_PUSH([C++])
+  KDE4_ORIG_LIBS="$LIBS"
+  KDE4_ORIG_LDFLAGS="$LDFLAGS"
+  KDE4_ORIG_CPPFLAGS="$CPPFLAGS"
+  KDE4_CPPFLAGS="-I$KDE4_PREFIX/include/kde4 -I$QT4_PREFIX/include"
+  KDE4_LDFLAGS="-L$KDE4_PREFIX/lib$KDE4_LIBSUFFIX -L$QT4_LIBDIR"
+  KDE4_LIBS="-lQtCore -lQtGui"
+  CPPFLAGS="$CPPFLAGS $KDE4_CPPFLAGS"
+  LDFLAGS="$LDFLAGS $KDE4_LDFLAGS"
   LIBS="$LIBS $KDE4_LIBS"
-  AC_LINK_IFELSE([AC_LANG_SOURCE([char qVersion(void); int main(void){ return qVersion(); }])],
-                 [:],[enable_kde4_thumbnailer=no])
-  AC_MSG_RESULT([$enable_kde4_thumbnailer])
-fi
 
-# Try to compile with the corresponding headers.
-if test "x$enable_kde4_thumbnailer" != xno; then
-  AC_CHECK_HEADER([QtCore/qstring.h],[:],[enable_kde4_thumbnailer=no])
-fi
-if test "x$enable_kde4_thumbnailer" != xno; then
-  AC_CHECK_HEADER([QtGui/qimage.h],[:],[enable_kde4_thumbnailer=no])
-fi
-if test "x$enable_kde4_thumbnailer" != xno; then
-  AC_CHECK_HEADER([kio/thumbcreator.h],[:],[enable_kde4_thumbnailer=no])
-fi
+  # Try to link with QtCore and QtGui.
+  if test "x$enable_kde4_thumbnailer" != xno; then
+    AC_MSG_CHECKING([for qVersion in $KDE4_LIBS])
+    LIBS="$LIBS $KDE4_LIBS"
+    AC_LINK_IFELSE([AC_LANG_SOURCE([char qVersion(void); int main(void){ return qVersion(); }])],
+                   [:],[enable_kde4_thumbnailer=no])
+    AC_MSG_RESULT([$enable_kde4_thumbnailer])
+  fi
 
-CPPFLAGS="$KDE4_ORIG_CPPFLAGS"
-LDFLAGS="$KDE4_ORIG_LDFLAGS"
-LIBS="$KDE4_ORIG_LIBS"
-AC_LANG_POP([C++])
+  # Try to compile with the corresponding headers.
+  if test "x$enable_kde4_thumbnailer" != xno; then
+    AC_CHECK_HEADER([QtCore/qstring.h],[:],[enable_kde4_thumbnailer=no])
+  fi
+  if test "x$enable_kde4_thumbnailer" != xno; then
+    AC_CHECK_HEADER([QtGui/qimage.h],[:],[enable_kde4_thumbnailer=no])
+  fi
+  if test "x$enable_kde4_thumbnailer" != xno; then
+    AC_CHECK_HEADER([kio/thumbcreator.h],[:],[enable_kde4_thumbnailer=no])
+  fi
+
+  CPPFLAGS="$KDE4_ORIG_CPPFLAGS"
+  LDFLAGS="$KDE4_ORIG_LDFLAGS"
+  LIBS="$KDE4_ORIG_LIBS"
+  AC_LANG_POP([C++])
+fi
 
 AM_CONDITIONAL([KDE4_THUMBNAILER],[test "x$enable_kde4_thumbnailer" != xno])
 if test "x$enable_kde4_thumbnailer" != xno; then
