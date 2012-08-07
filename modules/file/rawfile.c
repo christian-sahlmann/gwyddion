@@ -1030,6 +1030,7 @@ rawfile_dialog_preset_page(RawFileArgs *args,
                              G_CALLBACK(preset_delete_cb), controls);
 
     table = gtk_table_new(1, 3, FALSE);
+    gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_box_pack_start(GTK_BOX(vbox), table, FALSE, FALSE, 4);
     row = 0;
 
