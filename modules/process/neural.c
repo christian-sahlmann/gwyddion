@@ -31,10 +31,16 @@
 #include <libprocess/arithmetic.h>
 #include <libprocess/stats.h>
 #include <libgwydgets/gwystock.h>
-#include <libgwymodule/gwymodule-process.h>
-#include <app/gwyapp.h>
+#include <libgwydgets/gwydataview.h>
+#include <libgwydgets/gwylayer-basic.h>
+#include <libgwydgets/gwyradiobuttons.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <libgwydgets/gwycombobox.h>
+#include <libgwydgets/gwygraph.h>
+#include <libgwydgets/gwyinventorystore.h>
+#include <libgwymodule/gwymodule-process.h>
+#include <app/gwyapp.h>
+#include <app/gwymoduleutils.h>
 
 #include "neuraldata.h"
 
@@ -89,6 +95,9 @@ typedef struct {
     GtkObject *trainsteps;
     GtkObject *width;
     GtkObject *height;
+    GtkObject *inpowerxy;
+    GtkObject *inpowerz;
+    GtkWidget *outunits;
     GtkWidget *message;
     GtkWidget *ok;
 } NeuralControls;
@@ -108,7 +117,7 @@ static gboolean module_register     (void);
 static void     neural              (GwyContainer *data,
                                      GwyRunType run);
 static gboolean neural_dialog       (NeuralArgs *args);
-static void     neural_data_cb      (GwyDataChooser *chooser,
+static void     neural_data      (GwyDataChooser *chooser,
                                      NeuralControls *controls);
 static void     neural_do           (NeuralArgs *args);
 static void     neural_sanitize_args(NeuralArgs *args);
@@ -143,12 +152,29 @@ static void     gwy_nn_free         (GwyNN *nn);
 
 
 enum {
-    PREVIEW_SIZE = 400,
+    PREVIEW_SIZE = 360,
+};
+
+typedef enum {
+    PREVIEW_MODEL,
+    PREVIEW_SIGNAL,
+    PREVIEW_RESULT,
+    PREVIEW_DIFFERENCE,
+} PreviewType;
+
+enum {
+    NETWORK_NAME = 0,
+    NETWORK_SIZE,
+    NETWORK_HIDDEN,
+    NETWORK_LAST
 };
 
 typedef struct {
+    NeuralNetworkData p;
     GwyDataObjectId tmodel;
     GwyDataObjectId tsignal;
+    guint trainsteps;
+    PreviewType preview_type;
 } NeuralTrainArgs;
 
 typedef struct {
@@ -156,16 +182,31 @@ typedef struct {
     GwyContainer *mydata;
     GtkWidget *dialog;
     GtkWidget *ok;
+    GtkWidget *view;
+    GwyPixmapLayer *layer;
+    GtkWidget *errgraph;
     /* Training */
     GtkWidget *tmodel;
     GtkWidget *tsignal;
     GtkObject *trainsteps;
+    GtkWidget *train;
+    GtkWidget *reinit;
+    GSList *preview_group;
+    GtkWidget *message;
     /* Network props */
-    GtkObject *hidden;
+    GtkObject *nhidden;
     GtkObject *width;
     GtkObject *height;
-    GtkWidget *message;
+    GtkObject *inpowerxy;
+    GtkObject *inpowerz;
+    GtkWidget *outunits;
     /* Network list */
+    GtkWidget *networklist;
+    GtkWidget *load;
+    GtkWidget *save;
+    GtkWidget *rename;
+    GtkWidget *delete;
+    GtkWidget *networkname;
 } NeuralTrainControls;
 
 static void     neural_train              (GwyContainer *data,
@@ -176,14 +217,27 @@ static void     neural_train_load_args    (GwyContainer *container,
                                            NeuralTrainArgs *args);
 static void     neural_train_save_args    (GwyContainer *container,
                                            NeuralTrainArgs *args);
+static void     preview_type_changed      (GtkToggleButton *button,
+                                           NeuralTrainControls *controls);
+static void     set_layer_channel         (GwyPixmapLayer *layer,
+                                           gint channel);
+static void     network_load              (NeuralTrainControls *controls);
+static void     network_store             (NeuralTrainControls *controls);
+static void     network_delete            (NeuralTrainControls *controls);
+static void     network_rename            (NeuralTrainControls *controls);
+static void     network_selected          (NeuralTrainControls *controls);
 
+static guint trainsteps_default = 1000;
+static guint nhidden_default = 7;
+static guint width_default = 9;
+static guint height_default = 9;
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
     N_("Neural network SPM data processing"),
     "Petr Klapetek <klapetek@gwyddion.net>",
-    "1.1",
+    "2.0",
     "David Nečas (Yeti) & Petr Klapetek",
     "2012",
 };
@@ -193,6 +247,9 @@ GWY_MODULE_QUERY(module_info)
 static gboolean
 module_register(void)
 {
+    static gint types_initialized = 0;
+    GwyResourceClass *klass;
+
     gwy_process_func_register("neural",
                               (GwyProcessFunc)&neural,
                               N_("/M_ultidata/_Neural Network..."),
@@ -200,6 +257,14 @@ module_register(void)
                               NEURAL_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
                               N_("Neural network AFM data processing"));
+
+    if (!types_initialized) {
+        types_initialized += gwy_neural_network_get_type();
+        klass = g_type_class_ref(GWY_TYPE_NEURAL_NETWORK);
+        gwy_resource_class_load(klass);
+        gwy_resource_class_mkdir(klass);
+        g_type_class_unref(klass);
+    }
 
     gwy_process_func_register("neural_train",
                               (GwyProcessFunc)&neural_train,
@@ -326,13 +391,13 @@ neural_dialog(NeuralArgs *args)
     row++;
 
     g_signal_connect(controls.rmodel, "changed",
-                     G_CALLBACK(neural_data_cb), &controls);
+                     G_CALLBACK(neural_data), &controls);
     g_signal_connect(controls.tmodel, "changed",
-                     G_CALLBACK(neural_data_cb), &controls);
+                     G_CALLBACK(neural_data), &controls);
     g_signal_connect(controls.tsignal, "changed",
-                     G_CALLBACK(neural_data_cb), &controls);
+                     G_CALLBACK(neural_data), &controls);
 
-    neural_data_cb(GWY_DATA_CHOOSER(controls.rmodel), &controls);
+    neural_data(GWY_DATA_CHOOSER(controls.rmodel), &controls);
 
     gtk_widget_show_all(dialog);
     do {
@@ -366,7 +431,7 @@ neural_dialog(NeuralArgs *args)
 }
 
 static void
-neural_data_cb(G_GNUC_UNUSED GwyDataChooser *chooser,
+neural_data(G_GNUC_UNUSED GwyDataChooser *chooser,
                NeuralControls *controls)
 {
     NeuralArgs *args;
@@ -880,19 +945,67 @@ setup_container(GwyContainer *mydata,
                             0);
 }
 
+static void
+network_cell_renderer(G_GNUC_UNUSED GtkTreeViewColumn *column,
+                      GtkCellRenderer *cell,
+                      GtkTreeModel *model,
+                      GtkTreeIter *piter,
+                      gpointer data)
+{
+    GwyNeuralNetwork *network;
+    gulong id;
+    gchar *s;
+
+    id = GPOINTER_TO_UINT(data);
+    g_assert(id < NETWORK_LAST);
+    gtk_tree_model_get(model, piter, 0, &network, -1);
+    switch (id) {
+        case NETWORK_NAME:
+        g_object_set(cell, "text", gwy_resource_get_name(GWY_RESOURCE(network)),
+                     NULL);
+        break;
+
+        case NETWORK_SIZE:
+        s = g_strdup_printf("%u×%u", network->data.width, network->data.height);
+        g_object_set(cell, "text", s, NULL);
+        g_free(s);
+        break;
+
+        case NETWORK_HIDDEN:
+        s = g_strdup_printf("%u", network->data.nhidden);
+        g_object_set(cell, "text", s, NULL);
+        g_free(s);
+        break;
+
+        default:
+        g_assert_not_reached();
+        break;
+    }
+}
+
 static gboolean
 neural_train_dialog(NeuralTrainArgs *args)
 {
+    enum { RESPONSE_RESET = 1 };
+    static const GwyEnum columns[] = {
+        { N_("Name"),   NETWORK_NAME,   },
+        { N_("Size"),   NETWORK_SIZE,   },
+        { N_("Hidden"), NETWORK_HIDDEN, },
+    };
+
     NeuralTrainControls controls;
     GwyContainer *mydata;
-    GwyDataField *tmodel, *tsignal, *result, *diff;
-    GtkWidget *dialog, *table, *label, *spin, *hbox;
-    guint row, response;
-    enum { RESPONSE_RESET = 1 };
+    GtkWidget *dialog, *table, *label, *spin, *hbox, *bbox, *vbox, *notebook,
+              *scroll, *button;
+    GwyInventoryStore *store;
+    GtkTreeSelection *tselect;
+    GtkCellRenderer *renderer;
+    GtkTreeViewColumn *column;
+    guint row, response, i;
 
     controls.args = args;
 
-    controls.mydata = gwy_container_new();
+    controls.mydata = mydata = gwy_container_new();
     setup_container(mydata, args);
 
     dialog = gtk_dialog_new_with_buttons(_("Neural Network Training"), NULL, 0,
@@ -906,84 +1019,233 @@ neural_train_dialog(NeuralTrainArgs *args)
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
 
     hbox = gtk_hbox_new(FALSE, 0);
-    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table, TRUE, TRUE, 4);
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), hbox, TRUE, TRUE, 4);
 
+    vbox = gtk_vbox_new(FALSE, 4);
+    gtk_box_pack_start(GTK_BOX(hbox), vbox, TRUE, TRUE, 4);
 
-    /*
-    table = gtk_table_new(10, 2, FALSE);
+    controls.view = gwy_data_view_new(mydata);
+    controls.layer = gwy_layer_basic_new();
+    set_layer_channel(controls.layer, 0);
+    gwy_data_view_set_data_prefix(GWY_DATA_VIEW(controls.view), "/0/data");
+    gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.view), controls.layer);
+    gwy_set_data_preview_size(GWY_DATA_VIEW(controls.view), PREVIEW_SIZE);
+    gtk_box_pack_start(GTK_BOX(vbox), controls.view, FALSE, FALSE, 0);
+
+    controls.errgraph = gwy_graph_new(gwy_graph_model_new());
+    gtk_widget_set_size_request(controls.errgraph, 0, 200);
+    gtk_box_pack_start(GTK_BOX(vbox), controls.errgraph, TRUE, TRUE, 0);
+
+    notebook = gtk_notebook_new();
+    gtk_box_pack_start(GTK_BOX(hbox), notebook, TRUE, TRUE, 4);
+
+    /* Training */
+    table = gtk_table_new(10, 4, FALSE);
+    gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
-    gtk_container_set_border_width(GTK_CONTAINER(table), 4);
-    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table, TRUE, TRUE, 4);
+    gtk_notebook_append_page(GTK_NOTEBOOK(notebook), table,
+                             gtk_label_new("Training"));
     row = 0;
 
-    label = gwy_label_new_header(_("Operands"));
-    gtk_table_attach(GTK_TABLE(table), label, 0, 2, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
-    row++;
-
     controls.tmodel = gwy_data_chooser_new_channels();
-    g_object_set_data(G_OBJECT(controls.tmodel), "dialog", dialog);
-    gwy_table_attach_hscale(table, row, _("Training _model:"), NULL,
+    gwy_table_attach_hscale(table, row, _("_Model:"), NULL,
                             GTK_OBJECT(controls.tmodel), GWY_HSCALE_WIDGET);
+    gwy_data_chooser_set_active(GWY_DATA_CHOOSER(controls.tmodel),
+                                args->tmodel.data, args->tmodel.id);
     row++;
 
     controls.tsignal = gwy_data_chooser_new_channels();
-    g_object_set_data(G_OBJECT(controls.tsignal), "dialog", dialog);
-    gwy_table_attach_hscale(table, row, _("Training _signal:"), NULL,
+    gwy_table_attach_hscale(table, row, _("_Signal:"), NULL,
                             GTK_OBJECT(controls.tsignal), GWY_HSCALE_WIDGET);
+    gwy_data_chooser_set_active(GWY_DATA_CHOOSER(controls.tsignal),
+                                args->tsignal.data, args->tsignal.id);
     row++;
 
-    controls.rmodel = gwy_data_chooser_new_channels();
-    g_object_set_data(G_OBJECT(controls.rmodel), "dialog", dialog);
-    gwy_table_attach_hscale(table, row, _("Res_ult model:"), NULL,
-                            GTK_OBJECT(controls.rmodel), GWY_HSCALE_WIDGET);
-    gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
+    controls.trainsteps = gtk_adjustment_new(args->trainsteps,
+                                             1, 10000, 1, 100, 0);
+    gwy_table_attach_hscale(table, row, _("Training ste_ps:"), NULL,
+                            GTK_OBJECT(controls.trainsteps), GWY_HSCALE_SQRT);
     row++;
 
-    label = gwy_label_new_header(_("Parameters"));
+    gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
+    label = gtk_label_new(_("Preview:"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), label,
+                     0, 2, row, row+1, GTK_FILL, 0, 0, 0);
+    row++;
+
+    controls.preview_group
+        = gwy_radio_buttons_createl(G_CALLBACK(preview_type_changed),
+                                    &controls,
+                                    args->preview_type,
+                                    _("Model"), PREVIEW_MODEL,
+                                    _("Signal"), PREVIEW_SIGNAL,
+                                    _("Result"), PREVIEW_RESULT,
+                                    _("Difference"), PREVIEW_DIFFERENCE,
+                                    NULL);
+    row = gwy_radio_buttons_attach_to_table(controls.preview_group,
+                                            GTK_TABLE(table), 3, row);
+
+    gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
+    bbox = gtk_hbutton_box_new();
+    gtk_button_box_set_layout(GTK_BUTTON_BOX(bbox), GTK_BUTTONBOX_START);
+    gtk_table_attach(GTK_TABLE(table), bbox,
+                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+
+    controls.train = gtk_button_new_with_mnemonic(_("_Train"));
+    gtk_container_add(GTK_CONTAINER(bbox), controls.train);
+
+    controls.reinit = gtk_button_new_with_mnemonic(_("Re_initialize"));
+    gtk_container_add(GTK_CONTAINER(bbox), controls.reinit);
+    row++;
+
+    controls.message = gtk_label_new("Here comes the message...");
+    gtk_misc_set_alignment(GTK_MISC(controls.message), 0.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), controls.message,
+                     0, 2, row, row+1, GTK_FILL, 0, 0, 0);
+    row++;
+
+    /* Parameters */
+    table = gtk_table_new(8, 3, FALSE);
+    gtk_container_set_border_width(GTK_CONTAINER(table), 4);
+    gtk_table_set_row_spacings(GTK_TABLE(table), 2);
+    gtk_table_set_col_spacings(GTK_TABLE(table), 6);
+    gtk_notebook_append_page(GTK_NOTEBOOK(notebook), table,
+                             gtk_label_new("Parameters"));
+    row = 0;
+
+    label = gwy_label_new_header(_("Network"));
     gtk_table_attach(GTK_TABLE(table), label, 0, 2, row, row+1,
                      GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
-    controls.width = gtk_adjustment_new(args->width, 1, 100, 1, 10, 0);
+    controls.width = gtk_adjustment_new(args->p.width, 1, 100, 1, 10, 0);
     spin = gwy_table_attach_spinbutton(table, row, _("Window _width:"), "px",
                                        controls.width);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 0);
     row++;
 
-    controls.height = gtk_adjustment_new(args->height, 1, 100, 1, 10, 0);
+    controls.height = gtk_adjustment_new(args->p.height, 1, 100, 1, 10, 0);
     spin = gwy_table_attach_spinbutton(table, row, _("Window h_eight:"), "px",
                                        controls.height);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 0);
     row++;
 
-    controls.trainsteps = gtk_adjustment_new(args->trainsteps, 1, 100000, 1, 10, 0);
-    spin = gwy_table_attach_spinbutton(table, row, _("_Training steps:"), "",
-                                       controls.trainsteps);
+    controls.nhidden = gtk_adjustment_new(args->p.nhidden, 1, 30, 1, 10, 0);
+    spin = gwy_table_attach_spinbutton(table, row, _("_Hidden nodes:"), NULL,
+                                       controls.nhidden);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 0);
     row++;
 
-    controls.hidden = gtk_adjustment_new(args->hidden, 1, 20, 1, 10, 0);
-    spin = gwy_table_attach_spinbutton(table, row, _("_Hidden nodes:"), "",
-                                       controls.hidden);
-    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 0);
+    gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
+    label = gwy_label_new_header(_("Result Units"));
+    gtk_table_attach(GTK_TABLE(table), label,
+                     0, 2, row, row+1, GTK_FILL, 0, 0, 0);
     row++;
 
-    controls.message = gtk_label_new("");
-    gtk_misc_set_alignment(GTK_MISC(controls.message), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), controls.message, 0, 2, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    controls.inpowerxy = gtk_adjustment_new(args->p.inpowerxy,
+                                            -12, 12, 1, 10, 0);
+    spin = gwy_table_attach_spinbutton(table, row, _("Power of source _XY:"),
+                                       NULL, controls.inpowerxy);
     row++;
 
-    g_signal_connect(controls.rmodel, "changed",
-                     G_CALLBACK(neural_data_cb), &controls);
-    g_signal_connect(controls.tmodel, "changed",
-                     G_CALLBACK(neural_data_cb), &controls);
-    g_signal_connect(controls.tsignal, "changed",
-                     G_CALLBACK(neural_data_cb), &controls);
+    controls.inpowerz = gtk_adjustment_new(args->p.inpowerz,
+                                            -12, 12, 1, 10, 0);
+    spin = gwy_table_attach_spinbutton(table, row, _("Power of source _Z:"),
+                                       NULL, controls.inpowerz);
+    row++;
 
-    neural_data_cb(GWY_DATA_CHOOSER(controls.rmodel), &controls);
+    controls.outunits = gtk_entry_new();
+    gtk_entry_set_text(GTK_ENTRY(controls.outunits), args->p.outunits);
+    gwy_table_attach_row(table, row, _("_Fixed units:"), NULL,
+                         controls.outunits);
+    row++;
+
+    /* Networks */
+    vbox = gtk_vbox_new(FALSE, 0);
+    gtk_container_set_border_width(GTK_CONTAINER(vbox), 4);
+    gtk_notebook_append_page(GTK_NOTEBOOK(notebook), vbox,
+                             gtk_label_new(_("Networks")));
+
+    store = gwy_inventory_store_new(gwy_neural_networks());
+    controls.networklist = gtk_tree_view_new_with_model(GTK_TREE_MODEL(store));
+    gtk_tree_view_set_rules_hint(GTK_TREE_VIEW(controls.networklist), TRUE);
+    g_object_unref(store);
+
+    for (i = 0; i < G_N_ELEMENTS(columns); i++) {
+        renderer = gtk_cell_renderer_text_new();
+        column = gtk_tree_view_column_new_with_attributes(_(columns[i].name),
+                                                          renderer,
+                                                          NULL);
+        gtk_tree_view_column_set_cell_data_func
+                                         (column, renderer,
+                                          network_cell_renderer,
+                                          GUINT_TO_POINTER(columns[i].value),
+                                          NULL);  /* destroy notify */
+        gtk_tree_view_append_column(GTK_TREE_VIEW(controls.networklist),
+                                    column);
+    }
+
+    scroll = gtk_scrolled_window_new(NULL, NULL);
+    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scroll),
+                                   GTK_POLICY_NEVER, GTK_POLICY_ALWAYS);
+    gtk_container_add(GTK_CONTAINER(scroll), controls.networklist);
+    gtk_box_pack_start(GTK_BOX(vbox), scroll, TRUE, TRUE, 0);
+
+    bbox = gtk_hbutton_box_new();
+    gtk_button_box_set_layout(GTK_BUTTON_BOX(bbox), GTK_BUTTONBOX_START);
+    gtk_box_pack_start(GTK_BOX(vbox), bbox, FALSE, FALSE, 0);
+
+    button = gtk_button_new_with_mnemonic(gwy_sgettext("verb|_Load"));
+    controls.load = button;
+    gtk_container_add(GTK_CONTAINER(bbox), button);
+    g_signal_connect_swapped(button, "clicked",
+                             G_CALLBACK(network_load), &controls);
+
+    button = gtk_button_new_with_mnemonic(gwy_sgettext("verb|_Store"));
+    controls.save = button;
+    gtk_container_add(GTK_CONTAINER(bbox), button);
+    g_signal_connect_swapped(button, "clicked",
+                             G_CALLBACK(network_store), &controls);
+
+    button = gtk_button_new_with_mnemonic(_("_Rename"));
+    controls.rename = button;
+    gtk_container_add(GTK_CONTAINER(bbox), button);
+    g_signal_connect_swapped(button, "clicked",
+                             G_CALLBACK(network_rename), &controls);
+
+    button = gtk_button_new_with_mnemonic(_("_Delete"));
+    controls.delete = button;
+    gtk_container_add(GTK_CONTAINER(bbox), button);
+    g_signal_connect_swapped(button, "clicked",
+                             G_CALLBACK(network_delete), &controls);
+
+    table = gtk_table_new(1, 3, FALSE);
+    gtk_table_set_col_spacings(GTK_TABLE(table), 6);
+    gtk_box_pack_start(GTK_BOX(vbox), table, FALSE, FALSE, 4);
+    row = 0;
+
+    controls.networkname = gtk_entry_new();
+    /* FIXME: gtk_entry_set_text(GTK_ENTRY(controls.networkname), args->network->str); */
+    gwy_table_attach_row(table, row, _("Preset _name:"), "",
+                         controls.networkname);
+    gtk_entry_set_max_length(GTK_ENTRY(controls.networkname), 40);
+    row++;
+
+    tselect = gtk_tree_view_get_selection(GTK_TREE_VIEW(controls.networklist));
+    gtk_tree_selection_set_mode(tselect, GTK_SELECTION_SINGLE);
+    g_signal_connect_swapped(tselect, "changed",
+                             G_CALLBACK(network_selected), &controls);
+    /* FIXME:
+    if (gwy_inventory_store_get_iter(store, args->network->str, &iter))
+        gtk_tree_selection_select_iter(tselect, &iter);
+    else {
+        gtk_widget_set_sensitive(controls.load, FALSE);
+        gtk_widget_set_sensitive(controls.delete, FALSE);
+        gtk_widget_set_sensitive(controls.rename, FALSE);
+    }
+    */
 
     gtk_widget_show_all(dialog);
     do {
@@ -997,12 +1259,12 @@ neural_train_dialog(NeuralTrainArgs *args)
             break;
 
             case GTK_RESPONSE_OK:
-            neural_values_update(&controls, args);
+            //neural_values_update(&controls, args);
             break;
 
             case RESPONSE_RESET:
-            *args = neural_defaults;
-            neural_dialog_update(&controls, args);
+            //*args = neural_defaults;
+            //neural_dialog_update(&controls, args);
             break;
 
             default:
@@ -1010,7 +1272,6 @@ neural_train_dialog(NeuralTrainArgs *args)
             break;
         }
     } while (response != GTK_RESPONSE_OK);
-    */
 
     gtk_widget_destroy(dialog);
 
@@ -1018,8 +1279,86 @@ neural_train_dialog(NeuralTrainArgs *args)
 }
 
 static void
+preview_type_changed(GtkToggleButton *button,
+                     NeuralTrainControls *controls)
+{
+}
+
+static void
+network_load(NeuralTrainControls *controls)
+{
+}
+
+static void
+network_store(NeuralTrainControls *controls)
+{
+}
+
+static void
+network_delete(NeuralTrainControls *controls)
+{
+}
+
+static void
+network_rename(NeuralTrainControls *controls)
+{
+}
+
+static void
+network_selected(NeuralTrainControls *controls)
+{
+    GwyNeuralNetwork *network;
+    GtkTreeModel *store;
+    GtkTreeSelection *tselect;
+    GtkTreeIter iter;
+    const gchar *name;
+
+    tselect = gtk_tree_view_get_selection(GTK_TREE_VIEW(controls->networklist));
+    g_return_if_fail(tselect);
+    if (!gtk_tree_selection_get_selected(tselect, &store, &iter)) {
+        /* FIXME: g_string_assign(controls->args->network, ""); */
+        gtk_widget_set_sensitive(controls->load, FALSE);
+        gtk_widget_set_sensitive(controls->delete, FALSE);
+        gtk_widget_set_sensitive(controls->rename, FALSE);
+        gwy_debug("Nothing is selected");
+        return;
+    }
+
+    gtk_tree_model_get(store, &iter, 0, &network, -1);
+    name = gwy_resource_get_name(GWY_RESOURCE(network));
+    gtk_entry_set_text(GTK_ENTRY(controls->networkname), name);
+    /* FIXME: g_string_assign(controls->args->network, name); */
+
+    gtk_widget_set_sensitive(controls->load, TRUE);
+    gtk_widget_set_sensitive(controls->delete, TRUE);
+    gtk_widget_set_sensitive(controls->rename, TRUE);
+}
+
+static void
+set_layer_channel(GwyPixmapLayer *layer, gint channel)
+{
+    gchar data_key[30];
+    gchar grad_key[30];
+    gchar mm_key[30];
+    gchar range_key[30];
+
+    g_snprintf(data_key, sizeof(data_key), "/%i/data", channel);
+    g_snprintf(grad_key, sizeof(grad_key), "/%i/base/palette", channel);
+    g_snprintf(mm_key, sizeof(mm_key), "/%i/base", channel);
+    g_snprintf(range_key, sizeof(range_key), "/%i/base/range-type", channel);
+
+    gwy_pixmap_layer_set_data_key(layer, data_key);
+    gwy_layer_basic_set_gradient_key(GWY_LAYER_BASIC(layer), grad_key);
+    gwy_layer_basic_set_min_max_key(GWY_LAYER_BASIC(layer), mm_key);
+    gwy_layer_basic_set_range_type_key(GWY_LAYER_BASIC(layer), range_key);
+}
+
+//static const gchar trainsteps_key[] = "/module/neural/trainsteps";
+
+static void
 neural_train_sanitize_args(NeuralTrainArgs *args)
 {
+    args->trainsteps = MIN(args->trainsteps, 10000);
 }
 
 static void
@@ -1027,13 +1366,24 @@ neural_train_load_args(GwyContainer *container,
                        NeuralTrainArgs *args)
 {
     gwy_clear(args, 1);
+    args->preview_type = PREVIEW_MODEL;
+    args->trainsteps = trainsteps_default;
+
+    gwy_container_gis_int32_by_name(container, trainsteps_key,
+                                    &args->trainsteps);
     neural_train_sanitize_args(args);
+    /* FIXME: Must (a) load the current neural network, if any, (b) load some
+     * kind of __default network resource (c) create a default network.
+     * Also must free all the stuff somewhere. */
+    args->p.outunits = g_strdup("");
 }
 
 static void
 neural_train_save_args(GwyContainer *container,
                        NeuralTrainArgs *args)
 {
+    gwy_container_set_int32_by_name(container, trainsteps_key,
+                                    args->trainsteps);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */

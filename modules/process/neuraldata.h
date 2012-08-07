@@ -1,7 +1,7 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003,2004 David Necas (Yeti), Petr Klapetek.
- *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
+ *  Copyright (C) 2012 David Necas (Yeti).
+ *  E-mail: yeti@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -41,11 +41,11 @@ typedef struct {
     guint inpowerxy;
     guint inpowerz;
     gchar *outunits;
-} GwyNeuralNetworkData;
+} NeuralNetworkData;
 
 struct _GwyNeuralNetwork {
     GwyResource parent_instance;
-    GwyNeuralNetworkData data;
+    NeuralNetworkData data;
 
     /* forward feed data */
     gdouble *input;
@@ -64,26 +64,25 @@ struct _GwyNeuralNetworkClass {
     GwyResourceClass parent_class;
 };
 
-static GType       gwy_neural_network_get_type (void) G_GNUC_CONST;
-static void        gwy_neural_network_finalize (GObject *object);
-static void gwy_neural_network_use(GwyResource *resource);
-static void gwy_neural_network_release(GwyResource *resource);
-static GwyNeuralNetwork* gwy_neural_network_new(const gchar *name,
-                                              const GwyNeuralNetworkData *data,
-                                              gboolean is_const);
-static void           gwy_neural_network_dump  (GwyResource *resource,
-                                                 GString *str);
-static GwyResource*   gwy_neural_network_parse (const gchar *text,
-                                                 gboolean is_const);
-static void gwy_neural_network_data_resize(GwyNeuralNetworkData *nndata);
-static void gwy_neural_network_data_init(GwyNeuralNetworkData *nndata,
-                             GRand *rng);
-static void gwy_neural_network_data_copy(const GwyNeuralNetworkData *src,
-                             GwyNeuralNetworkData *dest);
-static void gwy_neural_network_data_free(GwyNeuralNetworkData *nndata);
+static GType             gwy_neural_network_get_type(void)                          G_GNUC_CONST;
+static void              gwy_neural_network_finalize(GObject *object);
+static void              gwy_neural_network_use     (GwyResource *resource);
+static void              gwy_neural_network_release (GwyResource *resource);
+static GwyNeuralNetwork* gwy_neural_network_new     (const gchar *name,
+                                                     const NeuralNetworkData *data,
+                                                     gboolean is_const);
+static void              gwy_neural_network_dump    (GwyResource *resource,
+                                                     GString *str);
+static GwyResource*      gwy_neural_network_parse   (const gchar *text,
+                                                     gboolean is_const);
+static void              neural_network_data_resize (NeuralNetworkData *nndata);
+static void              neural_network_data_init   (NeuralNetworkData *nndata,
+                                                     GRand *rng);
+static void              neural_network_data_copy   (const NeuralNetworkData *src,
+                                                     NeuralNetworkData *dest);
+static void              neural_network_data_free   (NeuralNetworkData *nndata);
 
-
-static const GwyNeuralNetworkData neuralnetworkdata_default = {
+static const NeuralNetworkData neuralnetworkdata_default = {
     1, 11, 11, 7, 1,  /* sizes */
     NULL, NULL,       /* weights */
     0, 1, NULL,       /* units */
@@ -117,16 +116,16 @@ gwy_neural_network_init(GwyNeuralNetwork *nn)
 {
     gwy_debug_objects_creation(G_OBJECT(nn));
     nn->data = neuralnetworkdata_default;
-    gwy_neural_network_data_resize(&nn->data);
+    neural_network_data_resize(&nn->data);
 }
 
 static void
 gwy_neural_network_resize(GwyNeuralNetwork *nn)
 {
-    GwyNeuralNetworkData *nndata = &nn->data;
+    NeuralNetworkData *nndata = &nn->data;
     guint ninput = nndata->width * nndata->height;
 
-    /* Must be called separately: gwy_neural_network_data_resize(nndata); */
+    /* Must be called separately: neural_network_data_resize(nndata); */
 
     nn->input = g_renew(gdouble, nn->input, ninput);
     nn->hidden = g_renew(gdouble, nn->hidden, nndata->nhidden);
@@ -152,7 +151,7 @@ gwy_neural_network_finalize(GObject *object)
     GwyNeuralNetwork *nn;
 
     nn = GWY_NEURAL_NETWORK(object);
-    gwy_neural_network_data_free(&nn->data);
+    neural_network_data_free(&nn->data);
 
     G_OBJECT_CLASS(gwy_neural_network_parent_class)->finalize(object);
 }
@@ -182,7 +181,7 @@ gwy_neural_network_release(GwyResource *resource)
 
 static GwyNeuralNetwork*
 gwy_neural_network_new(const gchar *name,
-                       const GwyNeuralNetworkData *data,
+                       const NeuralNetworkData *data,
                        gboolean is_const)
 {
     GwyNeuralNetwork *nn;
@@ -190,7 +189,7 @@ gwy_neural_network_new(const gchar *name,
     nn = g_object_new(GWY_TYPE_NEURAL_NETWORK,
                       "is-const", is_const,
                       NULL);
-    gwy_neural_network_data_copy(data, &nn->data);
+    neural_network_data_copy(data, &nn->data);
     g_string_assign(GWY_RESOURCE(nn)->name, name);
     /* New non-const resources start as modified */
     GWY_RESOURCE(nn)->is_modified = !is_const;
@@ -219,7 +218,7 @@ gwy_neural_network_dump(GwyResource *resource,
                         GString *str)
 {
     GwyNeuralNetwork *nn;
-    GwyNeuralNetworkData *nndata;
+    NeuralNetworkData *nndata;
     gchar *outunits;
     guint ninput;
 
@@ -271,7 +270,7 @@ static GwyResource*
 gwy_neural_network_parse(const gchar *text,
                          gboolean is_const)
 {
-    GwyNeuralNetworkData nndata;
+    NeuralNetworkData nndata;
     GwyNeuralNetwork *nn = NULL;
     GwyNeuralNetworkClass *klass;
     gchar *str, *p, *line, *key, *value;
@@ -281,7 +280,7 @@ gwy_neural_network_parse(const gchar *text,
     klass = g_type_class_peek(GWY_TYPE_NEURAL_NETWORK);
     g_return_val_if_fail(klass, NULL);
 
-    gwy_neural_network_data_init(&nndata, NULL);
+    neural_network_data_init(&nndata, NULL);
     p = str = g_strdup(text);
     while ((line = gwy_str_next_line(&p))) {
         g_strstrip(line);
@@ -356,7 +355,7 @@ gwy_neural_network_parse(const gchar *text,
     GWY_RESOURCE(nn)->is_modified = FALSE;
     /* FIXME: gwy_neural_network_data_sanitize(&nn->data); */
     g_free(str);
-    gwy_neural_network_data_free(&nndata);
+    neural_network_data_free(&nndata);
 
     return (GwyResource*)nn;
 }
@@ -369,7 +368,7 @@ gwy_neural_networks(void)
 }
 
 static void
-gwy_neural_network_data_resize(GwyNeuralNetworkData *nndata)
+neural_network_data_resize(NeuralNetworkData *nndata)
 {
     guint ninput = nndata->width * nndata->height;
 
@@ -377,12 +376,12 @@ gwy_neural_network_data_resize(GwyNeuralNetworkData *nndata)
                              (ninput + 1)*nndata->nhidden);
     nndata->whidden = g_renew(gdouble, nndata->whidden,
                               (nndata->nhidden + 1)*nndata->noutput);
-    gwy_neural_network_data_init(nndata, NULL);
+    neural_network_data_init(nndata, NULL);
 }
 
 static void
-gwy_neural_network_data_init(GwyNeuralNetworkData *nndata,
-                             GRand *rng)
+neural_network_data_init(NeuralNetworkData *nndata,
+                         GRand *rng)
 {
     GRand *myrng = rng ? rng : g_rand_new();
     guint ninput = nndata->width * nndata->height, i;
@@ -405,12 +404,12 @@ gwy_neural_network_data_init(GwyNeuralNetworkData *nndata,
 }
 
 static void
-gwy_neural_network_data_copy(const GwyNeuralNetworkData *src,
-                             GwyNeuralNetworkData *dest)
+neural_network_data_copy(const NeuralNetworkData *src,
+                         NeuralNetworkData *dest)
 {
     guint ninput = src->width * src->height;
 
-    g_return_if_fail(src != (const GwyNeuralNetworkData*)dest);
+    g_return_if_fail(src != (const NeuralNetworkData*)dest);
     g_free(dest->outunits);
     g_free(dest->winput);
     g_free(dest->whidden);
@@ -423,7 +422,7 @@ gwy_neural_network_data_copy(const GwyNeuralNetworkData *src,
 }
 
 static void
-gwy_neural_network_data_free(GwyNeuralNetworkData *nndata)
+neural_network_data_free(NeuralNetworkData *nndata)
 {
     g_free(nndata->winput);
     g_free(nndata->whidden);
