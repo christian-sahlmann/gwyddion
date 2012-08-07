@@ -964,22 +964,16 @@ rawfile_dialog_preset_page(RawFileArgs *args,
     GtkCellRenderer *renderer;
     GtkTreeViewColumn *column;
     GtkTreeIter iter;
-    GtkWidget *vbox, *label, *table, *button, *scroll, *bbox;
+    GtkWidget *vbox, *table, *button, *scroll, *bbox;
     guint i, row;
 
-    row = 0;
     vbox = gtk_vbox_new(FALSE, 0);   /* to prevent notebook expanding tables */
     gtk_container_set_border_width(GTK_CONTAINER(vbox), 6);
-
-    label = gtk_label_new_with_mnemonic(_("Preset l_ist"));
-    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
-    gtk_box_pack_start(GTK_BOX(vbox), label, FALSE, FALSE, 0);
 
     store = gwy_inventory_store_new(gwy_raw_file_presets());
     controls->presetlist = gtk_tree_view_new_with_model(GTK_TREE_MODEL(store));
     gtk_tree_view_set_rules_hint(GTK_TREE_VIEW(controls->presetlist), TRUE);
     g_object_unref(store);
-    gtk_label_set_mnemonic_widget(GTK_LABEL(label), controls->presetlist);
 
     for (i = 0; i < G_N_ELEMENTS(columns); i++) {
         renderer = gtk_cell_renderer_text_new();
