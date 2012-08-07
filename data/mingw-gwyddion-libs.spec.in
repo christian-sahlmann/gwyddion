@@ -34,6 +34,8 @@ BuildRequires:  mingw32-libxml2
 BuildRequires:  mingw64-libxml2
 BuildRequires:  mingw32-gtkglext
 BuildRequires:  mingw64-gtkglext
+BuildRequires:  mingw32-pkg-config
+BuildRequires:  mingw64-pkg-config
 
 # Native one for msgfmt
 BuildRequires:  gettext
