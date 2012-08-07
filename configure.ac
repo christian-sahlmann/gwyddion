@@ -661,9 +661,9 @@ AC_SUBST(KDE4_LIBS)
 # Check for header files.
 AC_MSG_CHECKING([for anyone actually reading this nonsense])
 AC_MSG_RESULT([no])
-AC_CHECK_HEADERS( \
-  stdbool.h \
-  time.h)
+AC_CHECK_HEADERS([stdbool.h])
+AC_CHECK_HEADERS([GL/glext.h], [], [],
+[[#include <GL/gl.h>]])
 
 #############################################################################
 # Check for typedefs, structures, and compiler characteristics.

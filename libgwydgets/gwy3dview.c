@@ -44,6 +44,9 @@
 #include <OpenGL/gl.h>
 #else
 #include <GL/gl.h>
+#ifdef HAVE_GL_GLEXT_H
+#include <GL/glext.h>
+#endif
 #endif
 #endif
 
