@@ -64,6 +64,8 @@
 
 #include "err.h"
 
+#define Angstrom (1e-10)
+
 enum {
     HEADER_SIZE = 16384,
 };
@@ -110,7 +112,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Createc data files."),
     "Rok Zitko <rok.zitko@ijs.si>",
-    "0.11",
+    "0.12",
     "Rok Zitko, David Nečas (Yeti)",
     "2004",
 };
@@ -321,23 +323,31 @@ hash_to_data_field(GHashTable *hash,
     if (err_SIZE_MISMATCH(error, offset + bpp*xres*yres, size, FALSE))
         goto fail;
 
-    HASH_INT2("Delta X", "Delta X / Delta X [Dac]", ti1, error);
-    HASH_INT2("GainX", "GainX / GainX", ti2, error);
-    HASH_DOUBLE("Xpiezoconst", td, error); /* lowcase p, why? */
-    xreal = xres * ti1; /* dacs */
-    xreal *= 20.0/65536.0 * ti2; /* voltage per dac */
-    xreal *= td * 1.0e-10; /* piezoconstant [A/V] */
+    if ((s = g_hash_table_lookup(hash, "Length x[A]")))
+        xreal = Angstrom * createc_atof(s);
+    else {
+        HASH_INT2("Delta X", "Delta X / Delta X [Dac]", ti1, error);
+        HASH_INT2("GainX", "GainX / GainX", ti2, error);
+        HASH_DOUBLE("Xpiezoconst", td, error); /* lowcase p, why? */
+        xreal = xres * ti1; /* dacs */
+        xreal *= 20.0/65536.0 * ti2; /* voltage per dac */
+        xreal *= Angstrom * td; /* piezoconstant [A/V] */
+    }
     if (!(xreal = fabs(xreal))) {
         g_warning("Real x size is 0.0, fixing to 1.0");
         xreal = 1.0;
     }
 
-    HASH_INT2("Delta Y", "Delta Y / Delta Y [Dac]", ti1, error);
-    HASH_INT2("GainY", "GainY / GainY", ti2, error);
-    HASH_DOUBLE("YPiezoconst", td, error); /* upcase P */
-    yreal = yres * ti1;
-    yreal *= 20.0/65536.0 * ti2;
-    yreal *= td * 1.0e-10;
+    if ((s = g_hash_table_lookup(hash, "Length y[A]")))
+        yreal = Angstrom * createc_atof(s);
+    else {
+        HASH_INT2("Delta Y", "Delta Y / Delta Y [Dac]", ti1, error);
+        HASH_INT2("GainY", "GainY / GainY", ti2, error);
+        HASH_DOUBLE("YPiezoconst", td, error); /* upcase P */
+        yreal = yres * ti1;
+        yreal *= 20.0/65536.0 * ti2;
+        yreal *= Angstrom * td;
+    }
     if (!(yreal = fabs(yreal))) {
         g_warning("Real y size is 0.0, fixing to 1.0");
         yreal = 1.0;
