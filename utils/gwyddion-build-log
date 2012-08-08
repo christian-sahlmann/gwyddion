@@ -72,6 +72,11 @@ cat >install_to_tmp.ignore <<':'
 ':'
 :
 
+cat >check_deps_versions.ignore <<':'
+^./libgwyddion/gwyutils.c:[0-9]\+: glib-2.16 required for g_win32_get_package_installation_directory_of_module
+':'
+:
+
 function printerr() {
   f=$1
   shift
