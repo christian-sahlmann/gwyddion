@@ -495,7 +495,7 @@ render_symmetry(G_GNUC_UNUSED GtkTreeViewColumn *column,
     else
         sym = preset->vsym;
     str = gwy_enum_to_string(sym, symmetries, G_N_ELEMENTS(symmetries));
-    g_object_set(renderer, "text", str, NULL);
+    g_object_set(renderer, "text", gwy_sgettext(str), NULL);
 }
 
 static GtkWidget*
