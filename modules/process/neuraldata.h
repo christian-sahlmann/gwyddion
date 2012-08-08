@@ -18,6 +18,8 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+#define GWY_NEURAL_NETWORK_UNTITLED "__untitled__"
+
 #define GWY_TYPE_NEURAL_NETWORK             (gwy_neural_network_get_type())
 #define GWY_NEURAL_NETWORK(obj)             (G_TYPE_CHECK_INSTANCE_CAST((obj), GWY_TYPE_NEURAL_NETWORK, GwyNeuralNetwork))
 #define GWY_NEURAL_NETWORK_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST((klass), GWY_TYPE_NEURAL_NETWORK, GwyNeuralNetworkClass))
@@ -202,7 +204,9 @@ gwy_neural_network_write_weights(const gdouble *weights,
                                  guint n,
                                  GString *str)
 {
+    guint len = str->len;
     g_string_set_size(str, str->len + (G_ASCII_DTOSTR_BUF_SIZE + 1)*n);
+    g_string_truncate(str, len);
 
     while (n--) {
         gchar buf[G_ASCII_DTOSTR_BUF_SIZE];
@@ -280,7 +284,8 @@ gwy_neural_network_parse(const gchar *text,
     klass = g_type_class_peek(GWY_TYPE_NEURAL_NETWORK);
     g_return_val_if_fail(klass, NULL);
 
-    neural_network_data_init(&nndata, NULL);
+    nndata = neuralnetworkdata_default;
+    nndata.outunits = g_strdup("");
     p = str = g_strdup(text);
     while ((line = gwy_str_next_line(&p))) {
         g_strstrip(line);
@@ -291,6 +296,7 @@ gwy_neural_network_parse(const gchar *text,
         if (g_ascii_isdigit(key[0]) || key[0] == '-' || key[0] == '+') {
             if (layer == 0) {
                 guint ninput = nndata.width * nndata.height;
+                neural_network_data_resize(&nndata);
                 gwy_neural_network_read_weights(nndata.winput,
                                                 (ninput + 1)*nndata.nhidden,
                                                 line);
@@ -367,6 +373,19 @@ gwy_neural_networks(void)
                                         (GWY_TYPE_NEURAL_NETWORK))->inventory;
 }
 
+static GwyNeuralNetwork*
+gwy_neural_networks_create_untitled(void)
+{
+    NeuralNetworkData nndata = neuralnetworkdata_default;
+    GwyNeuralNetwork *nn;
+
+    neural_network_data_resize(&nndata);
+    nndata.outunits = g_strdup("");
+    nn = gwy_neural_network_new(GWY_NEURAL_NETWORK_UNTITLED, &nndata, FALSE);
+    neural_network_data_free(&nndata);
+    return nn;
+}
+
 static void
 neural_network_data_resize(NeuralNetworkData *nndata)
 {
@@ -387,8 +406,6 @@ neural_network_data_init(NeuralNetworkData *nndata,
     guint ninput = nndata->width * nndata->height, i;
     gdouble *p;
 
-    gwy_clear(nndata, 1);
-
     for (i = (ninput + 1)*nndata->nhidden, p = nndata->winput; i; i--, p++)
         *p = (2.0*g_rand_double(myrng) - 1.0)*0.1;
 
@@ -399,8 +416,6 @@ neural_network_data_init(NeuralNetworkData *nndata,
 
     if (rng)
         g_rand_free(rng);
-
-    nndata->outunits = g_strdup("");
 }
 
 static void
