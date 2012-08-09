@@ -2,7 +2,7 @@
  *  @(#) $Id$
  *  Copyright (C) 2004 Rok Zitko.
  *  E-mail: rok.zitko@ijs.si.
- *  Copyright (C) 2009 David Necas (Yeti).
+ *  Copyright (C) 2009,2012 David Necas (Yeti).
  *  E-mail: yeti@gwyddion.net.
  *
  *  Based on nanoscope.c, Copyright (C) 2004 David Necas (Yeti), Petr Klapetek.
@@ -78,6 +78,11 @@ typedef enum {
     CREATEC_2Z,
 } CreatecVersion;
 
+typedef enum {
+    CHANNEL_TOPOGRAPHY = 1,
+    CHANNEL_CURRENT = 2,
+} CreatecChannelFlags;
+
 static gboolean       module_register       (void);
 static gint           createc_detect        (const GwyFileDetectInfo *fileinfo,
                                              gboolean only_name);
@@ -90,7 +95,10 @@ static GwyDataField*  hash_to_data_field    (GHashTable *hash,
                                              gint version,
                                              const gchar *buffer,
                                              gsize size,
+                                             gsize *offset,
                                              GError **error);
+static gsize          first_channel_offset  (gint version);
+static guint          channel_bpp           (gint version);
 static void           read_binary_data      (gint n,
                                              gdouble *data,
                                              const gchar *buffer,
@@ -100,6 +108,7 @@ static gchar*         unpack_compressed_data(const guchar *buffer,
                                              gsize size,
                                              gsize imagesize,
                                              gsize *datasize,
+                                             gsize *consumedbytes,
                                              GError **error);
 
 static const GwyEnum versions[] = {
@@ -146,87 +155,6 @@ createc_detect(const GwyFileDetectInfo *fileinfo,
     return 0;
 }
 
-static GwyContainer*
-createc_load(const gchar *filename,
-             G_GNUC_UNUSED GwyRunType mode,
-             GError **error)
-{
-    GwyContainer *meta, *container = NULL;
-    guchar *buffer = NULL;
-    gchar *p, *head;
-    gsize size = 0;
-    guint len;
-    GError *err = NULL;
-    GwyTextHeaderParser parser;
-    GHashTable *hash = NULL;
-    GwyDataField *dfield;
-    CreatecVersion version;
-
-    if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
-        err_GET_FILE_CONTENTS(error, &err);
-        return NULL;
-    }
-    if (!(version = createc_get_version(buffer, size))) {
-        err_FILE_TYPE(error, "Createc");
-        gwy_file_abandon_contents(buffer, size, NULL);
-        return NULL;
-    }
-
-    head = g_memdup(buffer, HEADER_SIZE + 1);
-    head[HEADER_SIZE] = '\0';
-    len = strlen(gwy_enum_to_string(version, versions, G_N_ELEMENTS(versions)));
-    for (p = head + len; g_ascii_isspace(*p); p++)
-        ;
-
-    /* Lots of lines contain just an equal sign, make them comments. */
-    gwy_clear(&parser, 1);
-    parser.comment_prefix = "=";
-    parser.key_value_separator = "=";
-    hash = gwy_text_header_parse(p, &parser, NULL, NULL);
-
-    dfield = hash_to_data_field(hash, version, buffer, size, error);
-
-    if (dfield) {
-        container = gwy_container_new();
-        gwy_container_set_object_by_name(container, "/0/data", dfield);
-        g_object_unref(dfield);
-
-        gwy_app_channel_title_fall_back(container, 0);
-
-        meta = createc_get_metadata(hash);
-        if (meta)
-            gwy_container_set_object_by_name(container, "/0/meta", meta);
-        g_object_unref(meta);
-    }
-
-    /* Must not free earlier, it holds the hash's strings */
-    g_free(head);
-    if (hash)
-        g_hash_table_destroy(hash);
-    gwy_file_abandon_contents(buffer, size, NULL);
-
-    return container;
-}
-
-static CreatecVersion
-createc_get_version(const gchar *buffer,
-                    gsize size)
-{
-    guint i, len;
-
-    for (i = 0; i < G_N_ELEMENTS(versions); i++) {
-        len = strlen(versions[i].name);
-        if (size > len && memcmp(versions[i].name, buffer, len) == 0) {
-            gwy_debug("header=%s, version=%u",
-                      versions[i].name, versions[i].value);
-            return versions[i].value;
-        }
-    }
-    gwy_debug("header=%.*s, no version matched",
-              (int)strlen(versions[0].name), buffer);
-    return CREATEC_NONE;
-}
-
 #define createc_atof(x) g_ascii_strtod(x, NULL)
 
 /* Macros to extract integer/double variables in hash_to_data_field() */
@@ -259,20 +187,135 @@ createc_get_version(const gchar *buffer,
 #define HASH_DOUBLE2(key1, key2, var, err) HASH_GET2(key1, key2, var, createc_atof, err)
 #define HASH_STRING2(key1, key2, var, err) HASH_GET2(key1, key2, var, /* */, err)
 
+static GwyContainer*
+createc_load(const gchar *filename,
+             G_GNUC_UNUSED GwyRunType mode,
+             GError **error)
+{
+    GwyContainer *meta, *container = NULL;
+    guchar *buffer = NULL;
+    gchar *p, *head;
+    gsize size = 0, offset;
+    guint len, nchannels;
+    GError *err = NULL;
+    const gchar *s; /* for HASH_GET macros */
+    GwyTextHeaderParser parser;
+    GHashTable *hash = NULL;
+    GwyDataField *dfield;
+    CreatecVersion version;
+
+    if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
+        err_GET_FILE_CONTENTS(error, &err);
+        return NULL;
+    }
+    if (!(version = createc_get_version(buffer, size))) {
+        err_FILE_TYPE(error, "Createc");
+        gwy_file_abandon_contents(buffer, size, NULL);
+        return NULL;
+    }
+
+    head = g_memdup(buffer, HEADER_SIZE + 1);
+    head[HEADER_SIZE] = '\0';
+    len = strlen(gwy_enum_to_string(version, versions, G_N_ELEMENTS(versions)));
+    for (p = head + len; g_ascii_isspace(*p); p++)
+        ;
+
+    /* Lots of lines contain just an equal sign, make them comments. */
+    gwy_clear(&parser, 1);
+    parser.comment_prefix = "=";
+    parser.key_value_separator = "=";
+    hash = gwy_text_header_parse(p, &parser, NULL, NULL);
+
+    offset = first_channel_offset(version);
+    if (size < offset) {
+        err_TOO_SHORT(error);
+        goto fail;
+    }
+
+    HASH_INT2("Channels", "Channels / Channels", nchannels, error);
+    gwy_debug("nchannels: %u", nchannels);
+
+    dfield = hash_to_data_field(hash, version, buffer, size, &offset, error);
+
+    if (dfield) {
+        container = gwy_container_new();
+        gwy_container_set_object_by_name(container, "/0/data", dfield);
+        g_object_unref(dfield);
+
+        gwy_app_channel_title_fall_back(container, 0);
+
+        meta = createc_get_metadata(hash);
+        if (meta)
+            gwy_container_set_object_by_name(container, "/0/meta", meta);
+        g_object_unref(meta);
+    }
+
+    /* Must not free earlier, it holds the hash's strings */
+fail:
+    g_free(head);
+    if (hash)
+        g_hash_table_destroy(hash);
+    gwy_file_abandon_contents(buffer, size, NULL);
+
+    return container;
+}
+
+static CreatecVersion
+createc_get_version(const gchar *buffer,
+                    gsize size)
+{
+    guint i, len;
+
+    for (i = 0; i < G_N_ELEMENTS(versions); i++) {
+        len = strlen(versions[i].name);
+        if (size > len && memcmp(versions[i].name, buffer, len) == 0) {
+            gwy_debug("header=%s, version=%u",
+                      versions[i].name, versions[i].value);
+            return versions[i].value;
+        }
+    }
+    gwy_debug("header=%.*s, no version matched",
+              (int)strlen(versions[0].name), buffer);
+    return CREATEC_NONE;
+}
+
+static gsize
+first_channel_offset(gint version)
+{
+    if (version == CREATEC_1)
+        return 16384 + 2; /* header + 2 unused bytes */
+    if (version == CREATEC_2)
+        return 16384 + 4; /* header + 4 unused bytes */
+    if (version == CREATEC_2Z)
+        return 16384; /* header */
+    g_return_val_if_reached(16384);
+}
+
+static guint
+channel_bpp(gint version)
+{
+    if (version == CREATEC_1)
+        return 2;
+    if (version == CREATEC_2 || version == CREATEC_2Z)
+        return 4;
+    g_return_val_if_reached(4);
+}
+
 static GwyDataField*
 hash_to_data_field(GHashTable *hash,
                    gint version,
                    const gchar *buffer,
                    gsize size,
+                   gsize *offset,
                    GError **error)
 {
     GwyDataField *dfield = NULL;
     GwySIUnit *unit;
     const gchar *s; /* for HASH_GET macros */
-    gint xres, yres, bpp, offset;
+    guint xres, yres, bpp;
     gchar *imagedata = NULL;
-    gsize datasize;
-    gdouble xreal, yreal, q = 1.0, zres = 0.0;
+    gsize datasize, myoffset;
+    gdouble xreal, yreal, q;
     gboolean is_current;
     gdouble *data;
     gint ti1, ti2; /* temporary storage */
@@ -281,27 +324,7 @@ hash_to_data_field(GHashTable *hash,
     if (!hash)
         return NULL;
 
-    if (version == CREATEC_1) {
-        bpp = 2;
-        offset = 16384 + 2; /* header + 2 unused bytes */
-    }
-    else if (version == CREATEC_2) {
-        bpp = 4;
-        offset = 16384 + 4; /* header + 4 unused bytes */
-    }
-    else if (version == CREATEC_2Z) {
-        bpp = 4;
-        offset = 16384; /* header */
-    }
-    else {
-        g_return_val_if_reached(NULL);
-    }
-
-    if (size < offset) {
-        err_TOO_SHORT(error);
-        return NULL;
-    }
-
+    bpp = channel_bpp(version);
     is_current = FALSE;
 
     HASH_INT2("Num.X", "Num.X / Num.X", xres, error);
@@ -310,18 +333,27 @@ hash_to_data_field(GHashTable *hash,
         return NULL;
 
     if (version == CREATEC_2Z) {
-        if (!(imagedata = unpack_compressed_data(buffer + offset, size - offset,
+        gsize consumedbytes;
+
+        if (!(imagedata = unpack_compressed_data(buffer + *offset,
+                                                 size - *offset,
                                                  bpp*xres*yres,
-                                                 &datasize, error)))
+                                                 &datasize, &consumedbytes,
+                                                 error)))
             return NULL;
 
         /* Point buffer to the decompressed data. */
         buffer = imagedata;
         size = datasize;
-        offset = 4;   /* the usual 4 unused bytes */
+        myoffset = 4;   /* the usual 4 unused bytes */
+        *offset += consumedbytes;
+    }
+    else {
+        myoffset = *offset;
+        *offset += bpp*xres*yres;
     }
 
-    if (err_SIZE_MISMATCH(error, offset + bpp*xres*yres, size, FALSE))
+    if (err_SIZE_MISMATCH(error, myoffset + bpp*xres*yres, size, FALSE))
         goto fail;
 
     if ((s = g_hash_table_lookup(hash, "Length x[A]")))
@@ -354,9 +386,6 @@ hash_to_data_field(GHashTable *hash,
         yreal = 1.0;
     }
 
-    if ((s = g_hash_table_lookup(hash, "FIXME FIXME Dacto[A]z"))) {
-        zres = Angstrom * createc_atof(s);
-    }
     else {
         HASH_INT2("GainZ", "GainZ / GainZ", ti2, error);
         HASH_DOUBLE("ZPiezoconst", td, error); /* upcase P */
@@ -364,17 +393,14 @@ hash_to_data_field(GHashTable *hash,
         q *= 20.0/65536.0 * ti2; /* voltage per dac */
         q *= Angstrom * td; /* piezoconstant [A/V] */
     }
+    /* FIXME: */
+    if (!is_current)
+        q = 103.0/30.0 * 1e-4 * Angstrom;
 
     dfield = gwy_data_field_new(xres, yres, xreal, yreal, FALSE);
     data = gwy_data_field_get_data(dfield);
-    read_binary_data(xres*yres, data, buffer + offset, bpp);
-
-    /*
-    if (zres)
-        gwy_data_field_multiply(dfield, zres);
-    else
-    */
-        gwy_data_field_multiply(dfield, q);
+    read_binary_data(xres*yres, data, buffer + myoffset, bpp);
+    gwy_data_field_multiply(dfield, q);
 
     unit = gwy_si_unit_new("m");
     gwy_data_field_set_si_unit_xy(dfield, unit);
@@ -764,17 +790,16 @@ zinflate_into(z_stream *zbuf,
     return retval;
 }
 
+/* Channels are compressed one by one so always decompress one. */
 static gchar*
 unpack_compressed_data(const guchar *buffer,
                        gsize size,
                        gsize imagesize,
                        gsize *datasize,
+                       gsize *consumedbytes,
                        GError **error)
 {
-    gsize compressed_size = size - HEADER_SIZE;
-    /* Estimate how many data fields we might decompress */
-    guint ndata = compressed_size/imagesize + 1;
-    gsize expected_size = ndata*imagesize + 4;  /* 4 unused bytes, as usual */
+    gsize expected_size = imagesize + 4;  /* 4 unused bytes, as usual */
     z_stream zbuf; /* decompression stream */
     GByteArray *output;
     gboolean ok;
@@ -782,9 +807,9 @@ unpack_compressed_data(const guchar *buffer,
     gwy_debug("Expecting to decompress %u data fields", ndata);
     output = g_byte_array_sized_new(expected_size);
     g_byte_array_set_size(output, expected_size);
-    ok = zinflate_into(&zbuf, Z_SYNC_FLUSH, compressed_size, buffer,
-                       output, error);
+    ok = zinflate_into(&zbuf, Z_SYNC_FLUSH, size, buffer, output, error);
     *datasize = output->len;
+    *consumedbytes = zbuf.total_in;
 
     return g_byte_array_free(output, !ok);
 }
@@ -794,9 +819,11 @@ unpack_compressed_data(G_GNUC_UNUSED const guchar *buffer,
                        G_GNUC_UNUSED gsize size,
                        G_GNUC_UNUSED gsize imagesize,
                        gsize *datasize,
+                       gsize *consumedbytes,
                        GError **error)
 {
     *datasize = 0;
+    *consumedbytes = size;
     g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_SPECIFIC,
                 _("Cannot decompress compressed data.  Zlib support was "
                   "not built in."));
