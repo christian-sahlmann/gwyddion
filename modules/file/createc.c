@@ -62,6 +62,7 @@
 #include <libprocess/filters.h>
 #include <libgwymodule/gwymodule-file.h>
 #include <app/gwymoduleutils-file.h>
+#include <app/data-browser.h>
 
 #include "err.h"
 
@@ -196,7 +197,7 @@ createc_load(const gchar *filename,
     guchar *buffer = NULL;
     gchar *p, *head;
     gsize size = 0, offset;
-    guint len, nchannels;
+    guint len, nchannels, id;
     GError *err = NULL;
     const gchar *s; /* for HASH_GET macros */
     GwyTextHeaderParser parser;
@@ -235,23 +236,33 @@ createc_load(const gchar *filename,
     HASH_INT2("Channels", "Channels / Channels", nchannels, error);
     gwy_debug("nchannels: %u", nchannels);
 
-    dfield = hash_to_data_field(hash, version, buffer, size, &offset, error);
+    //channelbit = 1;
+    for (id = 0; id < nchannels; id++) {
+        dfield = hash_to_data_field(hash, version, buffer, size, &offset,
+                                    error);
+        if (!dfield)
+            break;
 
-    if (dfield) {
-        container = gwy_container_new();
-        gwy_container_set_object_by_name(container, "/0/data", dfield);
+        if (!container)
+            container = gwy_container_new();
+
+        gwy_container_set_object(container,
+                                 gwy_app_get_data_key_for_id(id), dfield);
         g_object_unref(dfield);
 
-        gwy_app_channel_title_fall_back(container, 0);
+        gwy_app_channel_title_fall_back(container, id);
 
         meta = createc_get_metadata(hash);
-        if (meta)
+        if (meta) {
+            gchar *key = g_strdup_printf("/%u/meta", id);
             gwy_container_set_object_by_name(container, "/0/meta", meta);
-        g_object_unref(meta);
+            g_free(key);
+            g_object_unref(meta);
+        }
     }
 
-    /* Must not free earlier, it holds the hash's strings */
 fail:
+    /* Must not free earlier, it holds the hash's strings */
     g_free(head);
     if (hash)
         g_hash_table_destroy(hash);
@@ -790,7 +801,8 @@ zinflate_into(z_stream *zbuf,
     return retval;
 }
 
-/* Channels are compressed one by one so always decompress one. */
+/* Channels are compressed one by one so always decompress one.
+ * XXX: This seems to be wrong.  Channels may be compressed together. */
 static gchar*
 unpack_compressed_data(const guchar *buffer,
                        gsize size,
