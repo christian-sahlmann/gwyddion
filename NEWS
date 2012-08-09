@@ -1,3 +1,14 @@
+2.30 (0000-00-00)
+Modules:
+- APE file: Channel labelling for various modes was corrected.
+- Createc: Dimensions and values of imported data was corrected, all channels
+  are imported now.
+
+Other:
+- Compatibility with newer version of GLib that deprecate various things was
+  improved.
+
+
 2.29 (2012-07-20)
 Application:
 - Translations updated: Czech, French, Russian.
