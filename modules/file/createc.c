@@ -109,7 +109,6 @@ static gchar*         unpack_compressed_data(const guchar *buffer,
                                              gsize size,
                                              gsize imagesize,
                                              gsize *datasize,
-                                             gsize *consumedbytes,
                                              GError **error);
 
 static const GwyEnum versions[] = {
@@ -194,9 +193,9 @@ createc_load(const gchar *filename,
              GError **error)
 {
     GwyContainer *meta, *container = NULL;
-    guchar *buffer = NULL;
+    guchar *buffer = NULL, *zbuffer = NULL, *imagedata;
     gchar *p, *head;
-    gsize size = 0, offset;
+    gsize size = 0, datasize = 0, offset;
     guint len, nchannels, id;
     GError *err = NULL;
     const gchar *s; /* for HASH_GET macros */
@@ -236,9 +235,30 @@ createc_load(const gchar *filename,
     HASH_INT2("Channels", "Channels / Channels", nchannels, error);
     gwy_debug("nchannels: %u", nchannels);
 
+    if (version == CREATEC_2Z) {
+        guint bpp = channel_bpp(version);
+        guint xres, yres;
+
+        HASH_INT2("Num.X", "Num.X / Num.X", xres, error);
+        HASH_INT2("Num.Y", "Num.Y / Num.Y", yres, error);
+
+        if (!(zbuffer = unpack_compressed_data(buffer + offset,
+                                               size - offset,
+                                               nchannels*bpp*xres*yres,
+                                               &datasize, error)))
+            goto fail;
+
+        imagedata = zbuffer;
+        offset = 4;   /* the usual 4 unused bytes */
+    }
+    else {
+        imagedata = buffer;
+        datasize = size;
+    }
+
     //channelbit = 1;
     for (id = 0; id < nchannels; id++) {
-        dfield = hash_to_data_field(hash, version, buffer, size, &offset,
+        dfield = hash_to_data_field(hash, version, imagedata, datasize, &offset,
                                     error);
         if (!dfield)
             break;
@@ -264,6 +284,7 @@ createc_load(const gchar *filename,
 fail:
     /* Must not free earlier, it holds the hash's strings */
     g_free(head);
+    g_free(zbuffer);
     if (hash)
         g_hash_table_destroy(hash);
     gwy_file_abandon_contents(buffer, size, NULL);
@@ -325,7 +346,6 @@ hash_to_data_field(GHashTable *hash,
     const gchar *s; /* for HASH_GET macros */
     guint xres, yres, bpp;
     gchar *imagedata = NULL;
-    gsize datasize, myoffset;
     gdouble xreal, yreal, q;
     gboolean is_current;
     gdouble *data;
@@ -343,28 +363,7 @@ hash_to_data_field(GHashTable *hash,
     if (err_DIMENSION(error, xres) || err_DIMENSION(error, yres))
         return NULL;
 
-    if (version == CREATEC_2Z) {
-        gsize consumedbytes;
-
-        if (!(imagedata = unpack_compressed_data(buffer + *offset,
-                                                 size - *offset,
-                                                 bpp*xres*yres,
-                                                 &datasize, &consumedbytes,
-                                                 error)))
-            return NULL;
-
-        /* Point buffer to the decompressed data. */
-        buffer = imagedata;
-        size = datasize;
-        myoffset = 4;   /* the usual 4 unused bytes */
-        *offset += consumedbytes;
-    }
-    else {
-        myoffset = *offset;
-        *offset += bpp*xres*yres;
-    }
-
-    if (err_SIZE_MISMATCH(error, myoffset + bpp*xres*yres, size, FALSE))
+    if (err_SIZE_MISMATCH(error, *offset + bpp*xres*yres, size, FALSE))
         goto fail;
 
     if ((s = g_hash_table_lookup(hash, "Length x[A]")))
@@ -410,7 +409,8 @@ hash_to_data_field(GHashTable *hash,
 
     dfield = gwy_data_field_new(xres, yres, xreal, yreal, FALSE);
     data = gwy_data_field_get_data(dfield);
-    read_binary_data(xres*yres, data, buffer + myoffset, bpp);
+    read_binary_data(xres*yres, data, buffer + *offset, bpp);
+    *offset += bpp*xres*yres;
     gwy_data_field_multiply(dfield, q);
 
     unit = gwy_si_unit_new("m");
@@ -801,14 +801,11 @@ zinflate_into(z_stream *zbuf,
     return retval;
 }
 
-/* Channels are compressed one by one so always decompress one.
- * XXX: This seems to be wrong.  Channels may be compressed together. */
 static gchar*
 unpack_compressed_data(const guchar *buffer,
                        gsize size,
                        gsize imagesize,
                        gsize *datasize,
-                       gsize *consumedbytes,
                        GError **error)
 {
     gsize expected_size = imagesize + 4;  /* 4 unused bytes, as usual */
@@ -821,7 +818,6 @@ unpack_compressed_data(const guchar *buffer,
     g_byte_array_set_size(output, expected_size);
     ok = zinflate_into(&zbuf, Z_SYNC_FLUSH, size, buffer, output, error);
     *datasize = output->len;
-    *consumedbytes = zbuf.total_in;
 
     return g_byte_array_free(output, !ok);
 }
@@ -831,11 +827,9 @@ unpack_compressed_data(G_GNUC_UNUSED const guchar *buffer,
                        G_GNUC_UNUSED gsize size,
                        G_GNUC_UNUSED gsize imagesize,
                        gsize *datasize,
-                       gsize *consumedbytes,
                        GError **error)
 {
     *datasize = 0;
-    *consumedbytes = size;
     g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_SPECIFIC,
                 _("Cannot decompress compressed data.  Zlib support was "
                   "not built in."));
