@@ -94,6 +94,7 @@ static CreatecVersion createc_get_version   (const gchar *buffer,
                                              gsize size);
 static GwyDataField*  hash_to_data_field    (GHashTable *hash,
                                              gint version,
+                                             guint channelbit,
                                              const gchar *buffer,
                                              gsize size,
                                              gsize *offset,
@@ -196,7 +197,7 @@ createc_load(const gchar *filename,
     guchar *buffer = NULL, *zbuffer = NULL, *imagedata;
     gchar *p, *head;
     gsize size = 0, datasize = 0, offset;
-    guint len, nchannels, id;
+    guint len, nchannels, id, channelbit, channelselect;
     GError *err = NULL;
     const gchar *s; /* for HASH_GET macros */
     GwyTextHeaderParser parser;
@@ -256,13 +257,23 @@ createc_load(const gchar *filename,
         datasize = size;
     }
 
-    //channelbit = 1;
+    channelbit = 1;
+    channelselect = 0;
+    if ((s = g_hash_table_lookup(hash, "Channelselectval / Channelselectval")))
+        channelselect = atoi(s);
+
     for (id = 0; id < nchannels; id++) {
-        dfield = hash_to_data_field(hash, version, imagedata, datasize, &offset,
-                                    error);
+        while (channelselect && channelbit && !(channelbit & channelselect))
+            channelbit <<= 1;
+        if (!channelselect || !channelbit)
+            channelbit = 1;
+
+        dfield = hash_to_data_field(hash, version, channelbit,
+                                    imagedata, datasize, &offset, error);
         if (!dfield)
             break;
 
+        channelbit <<= 1;
         if (!container)
             container = gwy_container_new();
 
@@ -336,6 +347,7 @@ channel_bpp(gint version)
 static GwyDataField*
 hash_to_data_field(GHashTable *hash,
                    gint version,
+                   guint channelbit,
                    const gchar *buffer,
                    gsize size,
                    gsize *offset,
@@ -346,8 +358,7 @@ hash_to_data_field(GHashTable *hash,
     const gchar *s; /* for HASH_GET macros */
     guint xres, yres, bpp;
     gchar *imagedata = NULL;
-    gdouble xreal, yreal, q;
-    gboolean is_current;
+    gdouble xreal, yreal, q = 1.0;
     gdouble *data;
     gint ti1, ti2; /* temporary storage */
     gdouble td; /* temporary storage */
@@ -356,7 +367,6 @@ hash_to_data_field(GHashTable *hash,
         return NULL;
 
     bpp = channel_bpp(version);
-    is_current = FALSE;
 
     HASH_INT2("Num.X", "Num.X / Num.X", xres, error);
     HASH_INT2("Num.Y", "Num.Y / Num.Y", yres, error);
@@ -404,7 +414,7 @@ hash_to_data_field(GHashTable *hash,
         q *= Angstrom * td; /* piezoconstant [A/V] */
     }
     /* FIXME: */
-    if (!is_current)
+    if (channelbit & CHANNEL_TOPOGRAPHY)
         q = 103.0/30.0 * 1e-4 * Angstrom;
 
     dfield = gwy_data_field_new(xres, yres, xreal, yreal, FALSE);
@@ -413,13 +423,16 @@ hash_to_data_field(GHashTable *hash,
     *offset += bpp*xres*yres;
     gwy_data_field_multiply(dfield, q);
 
-    unit = gwy_si_unit_new("m");
-    gwy_data_field_set_si_unit_xy(dfield, unit);
-    g_object_unref(unit);
+    unit = gwy_data_field_get_si_unit_xy(dfield);
+    gwy_si_unit_set_from_string(unit, "m");
 
-    unit = gwy_si_unit_new(is_current ? "A" : "m");
-    gwy_data_field_set_si_unit_z(dfield, unit);
-    g_object_unref(unit);
+    unit = gwy_data_field_get_si_unit_z(dfield);
+    if (channelbit & CHANNEL_TOPOGRAPHY)
+        gwy_si_unit_set_from_string(unit, "m");
+    else if (channelbit & CHANNEL_CURRENT)
+        gwy_si_unit_set_from_string(unit, "A");
+    else
+        gwy_si_unit_set_from_string(unit, "V");
 
 fail:
     g_free(imagedata);
