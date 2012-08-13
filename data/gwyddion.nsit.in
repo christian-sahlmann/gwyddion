@@ -235,7 +235,9 @@ Section "Gwyddion (required)"
     GwyExpandFiles "share\gwyddion\ui\toolbox.xml"
     GwyExpandFiles "share\themes\*\*\gtkrc"
     GwyExpandFiles "share\gtksourceview-2.0\language-specs\python.lang"
+    GwyExpandFiles "share\gtksourceview-2.0\language-specs\*.rng"
     GwyExpandFiles "share\gtksourceview-2.0\styles\*.xml"
+    GwyExpandFiles "share\gtksourceview-2.0\styles\*.rng"
 # The following generated part is updated by running utils/update-langs.py
 # @@@ GENERATED LANG NSIS-MO BEGIN @@@
     GwyExpandFiles "share\locale\en\LC_MESSAGES\*.mo"
