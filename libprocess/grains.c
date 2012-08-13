@@ -58,6 +58,12 @@ typedef struct {
     GwyDataField *mark_dfield;
 } GwyWatershedState;
 
+typedef struct {
+    gdouble r;
+    gdouble sina;
+    gdouble cosa;
+} VertexRelation;
+
 static gboolean step_by_one                  (GwyDataField *data_field,
                                               gint *rcol,
                                               gint *rrow);
@@ -907,6 +913,177 @@ grain_minimum_bound(GArray *vertices,
             *vy = vy1;
         }
     }
+}
+
+static void
+count_sides(const guint *grains,
+            guint xres, guint yres,
+            guint *count,
+            guint ngrains)
+{
+    guint i, j, k;
+
+    gwy_clear(count, ngrains + 1);
+    k = 0;
+    for (i = 0; i < yres; i++) {
+        for (j = 0; j < xres; j++, k++) {
+            guint c, g = grains[k];
+
+            if (!g)
+                continue;
+
+            c = count[k];
+            if (!i || !grains[k - xres])
+                c++;
+            if (!j || !grains[k - 1])
+                c++;
+            if (j == xres-1 || !grains[k + 1])
+                c++;
+            if (i == yres-1 || !grains[k + xres])
+                c++;
+            count[k] = c;
+        }
+    }
+}
+
+/* Since we use *two* vertices per edge vertices[] must have space for twice
+ * as much elements as we got from count_sides().
+ * Array vertices[] will be filled with integral coordinates of the vertices
+ * in double-resolution grid, i.e. the original pixel vertices will have
+ * even coordinates. */
+static void
+gather_vertices(const guint *grains,
+                guint xres, guint yres,
+                guint *vertices,
+                guint *vpos)
+{
+    guint i, j, k;
+
+    k = 0;
+    for (i = 0; i < yres; i++) {
+        for (j = 0; j < xres; j++, k++) {
+            guint g = grains[k];
+            guint vp;
+
+            if (!g)
+                continue;
+
+            vp = vpos[g];
+            if (!i || !grains[k - xres]) {
+                vertices[vp++] = i*(2*xres) + 2*j;
+                vertices[vp++] = i*(2*xres) + 2*j + 1;
+            }
+            if (!j || !grains[k - 1]) {
+                vertices[vp++] = i*(2*xres) + xres + 2*j;
+                vertices[vp++] = i*(2*xres) + 2*xres + 2*j;
+            }
+            if (j == xres-1 || !grains[k + 1]) {
+                vertices[vp++] = i*(2*xres) + 2*j + 2;
+                vertices[vp++] = i*(2*xres) + xres + 2*j + 2;
+            }
+            if (i == yres-1 || !grains[k + xres]) {
+                vertices[vp++] = i*(2*xres) + 2*xres + 2*j + 1;
+                vertices[vp++] = i*(2*xres) + 2*xres + 2*j + 2;
+            }
+            vpos[g] = vp;
+        }
+    }
+}
+
+/* Call with q = sqrt(dx/dy), then the aspect ratio is good and pixel area
+ * is equal to 1. */
+static void
+calculate_vertex_relations(const guint *vertices,
+                           guint nvertices,
+                           guint xres,
+                           gdouble q,
+                           VertexRelation *vrel)
+{
+    guint i, j;
+
+    for (i = 0; i < nvertices; i++) {
+        gdouble ix = (vertices[i] % (2*xres))*q;
+        gdouble iy = (vertices[i]/(2*xres))/q;
+
+        for (j = 0; j < nvertices; j++) {
+            gdouble dx = (vertices[j] % (2*xres))*q - ix;
+            gdouble dy = (vertices[j]/(2*xres))/q - iy;
+            gdouble r = hypot(dx, dy);
+
+            vrel[i*nvertices + j].r = r;
+            vrel[i*nvertices + j].cosa = dx/r;
+            vrel[i*nvertices + j].sina = dy/r;
+        }
+    }
+}
+
+/* cx, cy should be the centre-of-mass coordinates, in the same squeezed pixel
+ * coordinates as vrel[] uses, or generally coordinates of something the
+ * circle should be close to in case we have multiple circles of the same
+ * size. */
+static void
+maximum_fitting_circle_est(const VertexRelation *vrel,
+                           const guint *vertices,
+                           guint nvertices,
+                           guint xres,
+                           gdouble q,
+                           gdouble cx, gdouble cy,
+                           gdouble *R, gdouble *x, gdouble *y)
+{
+    gdouble bestR2 = 0.0, bestP2 = HUGE_VAL, bestx = cx, besty = cy;
+    guint i, j, k, l;
+
+    for (i = 0; i < nvertices; i++) {
+        const VertexRelation *base = vrel + i*nvertices;
+        gdouble ax = (vertices[i] % (2*xres))*q;
+        gdouble ay = (vertices[i]/(2*xres))/q;
+        double basex = ax - cx, basey = ay - cy;
+        for (j = 0; j < nvertices; j++) {
+            const VertexRelation *u = base + j;
+            for (k = 0; k < nvertices; k++) {
+                const VertexRelation *v = base + k;
+                gdouble det = u->cosa*v->sina - u->sina*v->cosa;
+                gdouble rhox, rhoy, R2, P2, sx, sy;
+                gboolean ok = TRUE;
+
+                if (det < 1.0e-8)
+                    continue;
+
+                rhox = (u->r*v->sina - v->r*u->sina)/(2.0*det);
+                rhoy = (v->r*u->cosa - u->r*v->cosa)/(2.0*det);
+                R2 = rhox*rhox + rhoy*rhoy;
+                if (R2 + 1.0e-8 < bestR2)
+                    continue;
+
+                sx = rhox + basex;
+                sy = rhoy + basey;
+                P2 = sx*sx + sy*sy;
+                if (P2 > bestP2)
+                    continue;
+
+                for (l = 0; l < nvertices; l++) {
+                    const VertexRelation *w = base + l;
+                    gdouble s = rhox*w->cosa + rhoy*w->sina;
+                    gdouble t = w->r*(2.0*s - w->r);
+
+                    if (t > 1.0e-8) {
+                        ok = FALSE;
+                        break;
+                    }
+                }
+                if (ok) {
+                    bestR2 = R2;
+                    bestP2 = P2;
+                    bestx = sx;
+                    besty = sy;
+                }
+            }
+        }
+    }
+
+    *R = sqrt(bestR2);
+    *x = bestx;
+    *y = besty;
 }
 
 static gdouble
