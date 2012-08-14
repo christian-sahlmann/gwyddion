@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2009 David Necas (Yeti).
+ *  Copyright (C) 2009,2012 David Necas (Yeti).
  *  E-mail: yeti@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -44,9 +44,12 @@ enum {
 #define GWY_TOOL_SELECTION_MANAGER_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GWY_TYPE_TOOL_SELECTION_MANAGER, GwyToolSelectionManagerClass))
 
 enum {
+    NLAYERTYPES = 5
+};
+
+enum {
     MODEL_ID,
     MODEL_OBJECT,
-    MODEL_WIDGET,
     MODEL_N_COLUMNS
 };
 
@@ -67,6 +70,7 @@ struct _GwyToolSelectionManager {
     GwyPlainTool parent_instance;
 
     ToolArgs args;
+    gboolean in_setup;
 
     GtkListStore *model;
     GtkWidget *treeview;
@@ -74,7 +78,8 @@ struct _GwyToolSelectionManager {
     GtkWidget *distribute;
 
     /* potential class data */
-    GType layer_type_point;
+    GType layer_types[NLAYERTYPES];
+    GType selection_types[NLAYERTYPES];
 };
 
 struct _GwyToolSelectionManagerClass {
@@ -101,8 +106,9 @@ static gboolean gwy_tool_selection_manager_delete       (GwyToolSelectionManager
 static void gwy_tool_selection_manager_distribute       (GwyToolSelectionManager *tool);
 static void gwy_tool_selection_manager_distribute_one   (GwyContainer *container,
                                                          DistributeData *distdata);
-
-static const gchar mode_key[]   = "/module/selectionmanager/allfiles";
+static void gwy_tool_selection_manager_setup_layer      (GwyToolSelectionManager *tool,
+                                                         guint current,
+                                                         GQuark quark);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -110,10 +116,20 @@ static GwyModuleInfo module_info = {
     N_("Grain removal tool, removes continuous parts of mask and/or "
        "underlying data."),
     "Yeti <yeti@gwyddion.net>",
-    "1.0",
+    "1.1",
     "David Nečas (Yeti)",
     "2009",
 };
+
+static const gchar *const layer_types[NLAYERTYPES] = {
+    "GwyLayerAxis",
+    "GwyLayerEllipse",
+    "GwyLayerLine",
+    "GwyLayerPoint",
+    "GwyLayerRectangle",
+};
+
+static const gchar mode_key[]   = "/module/selectionmanager/allfiles";
 
 static const ToolArgs default_args = {
     FALSE,
@@ -168,18 +184,42 @@ gwy_tool_selection_manager_finalize(GObject *object)
 static void
 gwy_tool_selection_manager_init(GwyToolSelectionManager *tool)
 {
+    GwyPlainTool *plain_tool;
     GwyContainer *settings;
+    GtkTreeSelection *selection;
+    guint i;
 
+    plain_tool = GWY_PLAIN_TOOL(tool);
+
+    for (i = 0; i < NLAYERTYPES; i++) {
+        GwyVectorLayerClass *klass;
+        GType type;
+
+        type = gwy_plain_tool_check_layer_type(plain_tool, layer_types[i]);
+        if (!type)
+            return;
+
+        tool->layer_types[i] = type;
+        klass = g_type_class_ref(type);
+        tool->selection_types[i]
+            = gwy_vector_layer_class_get_selection_type(klass);
+        g_type_class_unref(klass);
+    }
     settings = gwy_app_settings_get();
+    tool->in_setup = TRUE;
     tool->args = default_args;
     gwy_container_gis_boolean_by_name(settings, mode_key, &tool->args.allfiles);
 
     tool->model = gtk_list_store_new(MODEL_N_COLUMNS,
-                                     G_TYPE_INT, G_TYPE_OBJECT, G_TYPE_OBJECT);
+                                     G_TYPE_INT, G_TYPE_OBJECT);
     g_object_set_data(G_OBJECT(tool->model), page_id_key,
                       GUINT_TO_POINTER(PAGE_NOPAGE+1));
 
     gwy_tool_selection_manager_init_dialog(tool);
+    tool->in_setup = FALSE;
+
+    selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(tool->treeview));
+    gwy_tool_selection_manager_selection_changed(tool, selection);
 }
 
 static void
@@ -348,7 +388,6 @@ add_selection(gpointer hkey, gpointer hvalue, gpointer data)
     gtk_list_store_insert_with_values(tool->model, &iter, G_MAXINT,
                                       MODEL_ID, quark,
                                       MODEL_OBJECT, sel,
-                                      MODEL_WIDGET, NULL, /* FIXME */
                                       -1);
 }
 
@@ -358,6 +397,7 @@ gwy_tool_selection_manager_data_switched(GwyTool *gwytool,
 {
     GwyPlainTool *plain_tool;
     GwyToolSelectionManager *tool;
+    GtkTreeSelection *selection;
     gboolean ignore;
 
     plain_tool = GWY_PLAIN_TOOL(gwytool);
@@ -374,14 +414,17 @@ gwy_tool_selection_manager_data_switched(GwyTool *gwytool,
     /* FIXME: This is very naive because the tool cannot react to selections
      * changed by something else.  Hopefully only other tools do such things
      * -- and then we get a chance to re-read the selection list.  */
+    gtk_list_store_clear(tool->model);
     if (data_view) {
-        gtk_list_store_clear(tool->model);
-        gwy_container_foreach(plain_tool->container,
-                              g_strdup_printf("/%d/select", plain_tool->id),
+        gchar *basekey = g_strdup_printf("/%d/select", plain_tool->id);
+        gwy_container_foreach(plain_tool->container, basekey,
                               (GHFunc)&add_selection,
                               tool);
-        /* XXX: In normal tools, we set up the layer here. */
+        g_free(basekey);
     }
+
+    selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(tool->treeview));
+    gwy_tool_selection_manager_selection_changed(tool, selection);
 }
 
 static void
@@ -423,9 +466,37 @@ static void
 gwy_tool_selection_manager_selection_changed(GwyToolSelectionManager *tool,
                                              GtkTreeSelection *selection)
 {
-    gint selrows = gtk_tree_selection_count_selected_rows(selection);
+    GtkTreeIter iter;
+    gboolean is_selected = gtk_tree_selection_get_selected(selection,
+                                                           NULL, &iter);
+    guint current = G_MAXUINT;
+    GQuark quark = 0;
 
-    gtk_widget_set_sensitive(tool->distribute, selrows > 0);
+    gtk_widget_set_sensitive(tool->distribute, is_selected);
+
+    if (tool->in_setup)
+        return;
+
+    if (is_selected) {
+        GwySelection *sel;
+        GType type;
+        guint i;
+
+        gtk_tree_model_get(GTK_TREE_MODEL(tool->model), &iter,
+                           MODEL_OBJECT, &sel,
+                           MODEL_ID, &quark,
+                           -1);
+        type = G_OBJECT_TYPE(sel);
+        for (i = 0; i < NLAYERTYPES; i++) {
+            if (type == tool->selection_types[i]) {
+                current = i;
+                break;
+            }
+        }
+        g_object_unref(sel);
+    }
+
+    gwy_tool_selection_manager_setup_layer(tool, current, quark);
 }
 
 static void
@@ -553,6 +624,32 @@ gwy_tool_selection_manager_distribute_one(GwyContainer *container,
     }
     g_string_free(str, TRUE);
     g_free(ids);
+}
+
+static void
+gwy_tool_selection_manager_setup_layer(GwyToolSelectionManager *tool,
+                                       guint current,
+                                       GQuark quark)
+{
+    GwyPlainTool *plain_tool;
+    const gchar *s;
+
+    plain_tool = GWY_PLAIN_TOOL(tool);
+    if (!plain_tool->data_view || current >= NLAYERTYPES || !quark)
+        return;
+
+    s = g_quark_to_string(quark);
+    g_return_if_fail(s);
+    s = strrchr(s, GWY_CONTAINER_PATHSEP);
+    g_return_if_fail(s);
+
+    gwy_plain_tool_connect_selection(plain_tool,
+                                     tool->layer_types[current], s+1);
+    gwy_object_set_or_reset(plain_tool->layer,
+                            tool->layer_types[current],
+                            "editable", TRUE,
+                            "focus", -1,
+                            NULL);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
