@@ -955,6 +955,7 @@ gather_vertices(const guint *grains,
                 guint *vertices,
                 guint *vpos)
 {
+    guint stride = 2*xres + 1;  /* +1 because the right edge can also appear */
     guint i, j, k;
 
     k = 0;
@@ -968,20 +969,20 @@ gather_vertices(const guint *grains,
 
             vp = vpos[g];
             if (!i || !grains[k - xres]) {
-                vertices[vp++] = i*(2*xres) + 2*j;
-                vertices[vp++] = i*(2*xres) + 2*j + 1;
+                vertices[vp++] = i*stride + 2*j;
+                vertices[vp++] = i*stride + 2*j + 1;
             }
             if (!j || !grains[k - 1]) {
-                vertices[vp++] = i*(2*xres) + xres + 2*j;
-                vertices[vp++] = i*(2*xres) + 2*xres + 2*j;
+                vertices[vp++] = i*stride + stride + 2*j;
+                vertices[vp++] = i*stride + 2*stride + 2*j;
             }
             if (j == xres-1 || !grains[k + 1]) {
-                vertices[vp++] = i*(2*xres) + 2*j + 2;
-                vertices[vp++] = i*(2*xres) + xres + 2*j + 2;
+                vertices[vp++] = i*stride + 2*j + 2;
+                vertices[vp++] = i*stride + stride + 2*j + 2;
             }
             if (i == yres-1 || !grains[k + xres]) {
-                vertices[vp++] = i*(2*xres) + 2*xres + 2*j + 1;
-                vertices[vp++] = i*(2*xres) + 2*xres + 2*j + 2;
+                vertices[vp++] = i*stride + 2*stride + 2*j + 1;
+                vertices[vp++] = i*stride + 2*stride + 2*j + 2;
             }
             vpos[g] = vp;
         }
@@ -989,7 +990,7 @@ gather_vertices(const guint *grains,
 }
 
 /* Call with q = sqrt(dx/dy), then the aspect ratio is good and pixel area
- * is equal to 1. */
+ * is equal to 4. */
 static void
 calculate_vertex_relations(const guint *vertices,
                            guint nvertices,
@@ -997,15 +998,16 @@ calculate_vertex_relations(const guint *vertices,
                            gdouble q,
                            VertexRelation *vrel)
 {
+    guint stride = 2*xres + 1;  /* +1 because the right edge can also appear */
     guint i, j;
 
     for (i = 0; i < nvertices; i++) {
-        gdouble ix = (vertices[i] % (2*xres))*q;
-        gdouble iy = (vertices[i]/(2*xres))/q;
+        gdouble ix = (vertices[i] % stride)*q;
+        gdouble iy = (vertices[i]/stride)/q;
 
         for (j = 0; j < nvertices; j++) {
-            gdouble dx = (vertices[j] % (2*xres))*q - ix;
-            gdouble dy = (vertices[j]/(2*xres))/q - iy;
+            gdouble dx = (vertices[j] % stride)*q - ix;
+            gdouble dy = (vertices[j]/stride)/q - iy;
             gdouble r = hypot(dx, dy);
 
             vrel[i*nvertices + j].r = r;
@@ -1028,13 +1030,14 @@ maximum_fitting_circle_est(const VertexRelation *vrel,
                            gdouble cx, gdouble cy,
                            gdouble *R, gdouble *x, gdouble *y)
 {
+    guint stride = 2*xres + 1;  /* +1 because the right edge can also appear */
     gdouble bestR2 = 0.0, bestP2 = HUGE_VAL, bestx = cx, besty = cy;
     guint i, j, k, l;
 
     for (i = 0; i < nvertices; i++) {
         const VertexRelation *base = vrel + i*nvertices;
-        gdouble ax = (vertices[i] % (2*xres))*q;
-        gdouble ay = (vertices[i]/(2*xres))/q;
+        gdouble ax = (vertices[i] % stride)*q;
+        gdouble ay = (vertices[i]/stride)/q;
         double basex = ax - cx, basey = ay - cy;
         for (j = 0; j < nvertices; j++) {
             const VertexRelation *u = base + j;
@@ -1872,6 +1875,63 @@ gwy_data_field_grains_get_quantities(GwyDataField *data_field,
         /* Finalize */
         g_array_free(vertices, TRUE);
     }
+    /* XXX: This must go before GWY_GRAIN_VALUE_CENTER_X and
+     * GWY_GRAIN_VALUE_CENTER_Y because we want them as pixel quantities. */
+    if (quantity_data[GWY_GRAIN_VALUE_INSCRIBED_DISC_R]
+        || quantity_data[GWY_GRAIN_VALUE_INSCRIBED_DISC_X]
+        || quantity_data[GWY_GRAIN_VALUE_INSCRIBED_DISC_Y]) {
+        gdouble *inscdr = quantity_data[GWY_GRAIN_VALUE_INSCRIBED_DISC_R];
+        gdouble *inscdx = quantity_data[GWY_GRAIN_VALUE_INSCRIBED_DISC_X];
+        gdouble *inscdy = quantity_data[GWY_GRAIN_VALUE_INSCRIBED_DISC_Y];
+        guint *counts = g_new0(guint, ngrains + 2);
+        guint *vertices;
+        VertexRelation *vrel;
+        guint nv = 0, vmax = 0;
+
+        /* Find start positions in the vertex list. */
+        count_sides(grains, xres, yres, counts);
+        counts[0] = 0;
+        for (gno = 1; gno <= ngrains; gno++) {
+            counts[gno] = 2*counts[gno];
+            if (counts[gno] > vmax)
+                vmax = counts[gno];
+        }
+        for (gno = 1; gno <= ngrains; gno++)
+            counts[gno] += counts[gno-1];
+        nv = counts[ngrains];
+        for (gno = ngrains; gno; gno--)
+            counts[gno] = counts[gno-1];
+        /* This is used to simplify @n in calculate_vertex_relations(). */
+        counts[ngrains+1] = nv;
+
+        /* Gather vertices of all grains. */
+        vertices = g_new(guint, nv);
+        vrel = g_new(VertexRelation, vmax*vmax);
+        gather_vertices(grains, xres, yres, vertices, counts);
+        for (gno = ngrains; gno; gno--)
+            counts[gno] = counts[gno-1];
+
+        for (gno = 1; gno <= ngrains; gno++) {
+            guint n = counts[gno+1] - counts[gno];
+            gdouble q = sqrt(qh/qv);
+            /* Transform the centre to squeezed double-pixel coordinates. */
+            gdouble cx = (2.0*xvalue[gno] + 1.0)*q;
+            gdouble cy = (2.0*yvalue[gno] + 1.0)/q;
+            gdouble x, y, R;
+
+            calculate_vertex_relations(vertices + counts[gno], n, xres, q,
+                                       vrel);
+            maximum_fitting_circle_est(vrel, vertices, n, xres, q, cx, cy,
+                                       &x, &y, &R);
+
+            if (inscdr)
+                inscdr[gno] = 0.5*R*qgeom;
+            if (inscdx)
+                inscdx[gno] = 0.5*x*qgeom + data_field->xoff;
+            if (inscdy)
+                inscdy[gno] = 0.5*y*qgeom + data_field->yoff;
+        }
+    }
     if ((p = quantity_data[GWY_GRAIN_VALUE_CENTER_X])) {
         for (gno = 0; gno <= ngrains; gno++)
             p[gno] = qh*(p[gno] + 0.5) + data_field->xoff;
@@ -2065,60 +2125,6 @@ gwy_data_field_grains_get_quantities(GwyDataField *data_field,
             if (pz)
                 pz[gno] = a[6];
         }
-    }
-    if (quantity_data[GWY_GRAIN_VALUE_INSCRIBED_DISC_R]
-        || quantity_data[GWY_GRAIN_VALUE_INSCRIBED_DISC_X]
-        || quantity_data[GWY_GRAIN_VALUE_INSCRIBED_DISC_Y]) {
-        /* TODO */
-        guint *counts = g_new0(guint, ngrains + 2);
-        guint *vertices;
-        VertexRelation *vrel;
-        guint nv = 0, vmax = 0;
-
-        /* Find start positions in the vertex list. */
-        count_sides(grains, xres, yres, counts);
-        counts[0] = 0;
-        for (gno = 1; gno <= ngrains; gno++) {
-            counts[gno] = 2*counts[gno];
-            if (counts[gno] > vmax)
-                vmax = counts[gno];
-        }
-        for (gno = 1; gno <= ngrains; gno++)
-            counts[gno] += counts[gno-1];
-        nv = counts[ngrains];
-        for (gno = ngrains; gno; gno--)
-            counts[gno] = counts[gno-1];
-        /* This is used to simplify calculate_vertex_relations(). */
-        counts[ngrains+1] = nv;
-
-        /* Gather vertices of all grains. */
-        vertices = g_new(guint, nv);
-        vrel = g_new(VertexRelation, vmax*vmax);
-        gather_vertices(grains, xres, yres, vertices, counts);
-        for (gno = ngrains; gno; gno--)
-            counts[gno] = counts[gno-1];
-
-        for (gno = 1; gno <= ngrains; gno++) {
-            guint n = counts[gno+1] - counts[gno];
-            gdouble q = sqrt(qh/qv);
-            /* TODO: calculate cx, cy from CENTRE_{X,Y}! */
-            gdouble cx = 0, cy = 0, x, y, R;
-
-            calculate_vertex_relations(vertices + counts[gno], n, xres, q,
-                                       vrel);
-            maximum_fitting_circle_est(vrel, vertices, n, xres, q, cx, cy,
-                                       &x, &y, &R);
-        }
-
-        if (quantity_data[GWY_GRAIN_VALUE_INSCRIBED_DISC_R])
-            gwy_clear(quantity_data[GWY_GRAIN_VALUE_INSCRIBED_DISC_R],
-                      ngrains+1);
-        if (quantity_data[GWY_GRAIN_VALUE_INSCRIBED_DISC_X])
-            gwy_clear(quantity_data[GWY_GRAIN_VALUE_INSCRIBED_DISC_X],
-                      ngrains+1);
-        if (quantity_data[GWY_GRAIN_VALUE_INSCRIBED_DISC_Y])
-            gwy_clear(quantity_data[GWY_GRAIN_VALUE_INSCRIBED_DISC_Y],
-                      ngrains+1);
     }
 
     /* Copy quantity values to all other instances of the same quantity in

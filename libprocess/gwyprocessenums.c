@@ -382,10 +382,10 @@ gwy_masking_type_get_enum(void)
  *                                       bounding size (arbitrary one if the
  *                                       maximum is not unique).
  * @GWY_GRAIN_VALUE_CENTER_X: Grain centre horizontal position,
- *                            i.e. the mean value of its pixel x-coordinates.
+ *                            i.e. the mean value of its physical x-coordinates.
  *                            (Since: 2.7)
  * @GWY_GRAIN_VALUE_CENTER_Y: Grain centre vertical position,
- *                            i.e. the mean value of its pixel y-coordinates.
+ *                            i.e. the mean value of its physical y-coordinates.
  *                            (Since: 2.7)
  * @GWY_GRAIN_VALUE_VOLUME_0: Grain volume calculated with grain basis at
  *                            z=0 (therefore it is just an integral it can be
