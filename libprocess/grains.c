@@ -918,12 +918,10 @@ grain_minimum_bound(GArray *vertices,
 static void
 count_sides(const guint *grains,
             guint xres, guint yres,
-            guint *count,
-            guint ngrains)
+            guint *count)
 {
     guint i, j, k;
 
-    gwy_clear(count, ngrains + 1);
     k = 0;
     for (i = 0; i < yres; i++) {
         for (j = 0; j < xres; j++, k++) {
@@ -2072,6 +2070,46 @@ gwy_data_field_grains_get_quantities(GwyDataField *data_field,
         || quantity_data[GWY_GRAIN_VALUE_INSCRIBED_DISC_X]
         || quantity_data[GWY_GRAIN_VALUE_INSCRIBED_DISC_Y]) {
         /* TODO */
+        guint *counts = g_new0(guint, ngrains + 2);
+        guint *vertices;
+        VertexRelation *vrel;
+        guint nv = 0, vmax = 0;
+
+        /* Find start positions in the vertex list. */
+        count_sides(grains, xres, yres, counts);
+        counts[0] = 0;
+        for (gno = 1; gno <= ngrains; gno++) {
+            counts[gno] = 2*counts[gno];
+            if (counts[gno] > vmax)
+                vmax = counts[gno];
+        }
+        for (gno = 1; gno <= ngrains; gno++)
+            counts[gno] += counts[gno-1];
+        nv = counts[ngrains];
+        for (gno = ngrains; gno; gno--)
+            counts[gno] = counts[gno-1];
+        /* This is used to simplify calculate_vertex_relations(). */
+        counts[ngrains+1] = nv;
+
+        /* Gather vertices of all grains. */
+        vertices = g_new(guint, nv);
+        vrel = g_new(VertexRelation, vmax*vmax);
+        gather_vertices(grains, xres, yres, vertices, counts);
+        for (gno = ngrains; gno; gno--)
+            counts[gno] = counts[gno-1];
+
+        for (gno = 1; gno <= ngrains; gno++) {
+            guint n = counts[gno+1] - counts[gno];
+            gdouble q = sqrt(qh/qv);
+            /* TODO: calculate cx, cy from CENTRE_{X,Y}! */
+            gdouble cx = 0, cy = 0, x, y, R;
+
+            calculate_vertex_relations(vertices + counts[gno], n, xres, q,
+                                       vrel);
+            maximum_fitting_circle_est(vrel, vertices, n, xres, q, cx, cy,
+                                       &x, &y, &R);
+        }
+
         if (quantity_data[GWY_GRAIN_VALUE_INSCRIBED_DISC_R])
             gwy_clear(quantity_data[GWY_GRAIN_VALUE_INSCRIBED_DISC_R],
                       ngrains+1);
