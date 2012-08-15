@@ -437,6 +437,12 @@ gwy_masking_type_get_enum(void)
  *                                    radius.  If the grain is flat or too
  *                                    small the angle is reported as π/2.
  *                                    (Since: 2.22)
+ * @GWY_GRAIN_VALUE_INSCRIBED_DISC_R: Approximate radius of maximum disc
+ *                                    that fits inside the grain (Since: 2.30)
+ * @GWY_GRAIN_VALUE_INSCRIBED_DISC_X: Real X-coordinate of the centre of the
+ *                                    maximum inscribed disc. (Since: 2.30)
+ * @GWY_GRAIN_VALUE_INSCRIBED_DISC_Y: Real Y-coordinate of the centre of the
+ *                                    maximum inscribed disc. (Since: 2.30)
  *
  * Grain quantity to request from gwy_data_field_grains_get_distribution()
  * and similar functions.

@@ -263,6 +263,33 @@ grain_values[] = {
         }
     },
     {
+        N_("Maximum inscribed disc radius"),
+        GWY_GRAIN_VALUE_INSCRIBED_DISC_R,
+        {
+            GWY_GRAIN_VALUE_GROUP_BOUNDARY,
+            "<i>R</i><sub>i</sub>", "R_i", NULL,
+            1, 0, 0, 0,
+        }
+    },
+    {
+        N_("Maximum inscribed disc centre x position"),
+        GWY_GRAIN_VALUE_INSCRIBED_DISC_X,
+        {
+            GWY_GRAIN_VALUE_GROUP_BOUNDARY,
+            "<i>x</i><sub>i</sub>", "x_i", NULL,
+            1, 0, 0, 0,
+        }
+    },
+    {
+        N_("Maximum inscribed disc centre y position"),
+        GWY_GRAIN_VALUE_INSCRIBED_DISC_Y,
+        {
+            GWY_GRAIN_VALUE_GROUP_BOUNDARY,
+            "<i>y</i><sub>i</sub>", "y_i", NULL,
+            1, 0, 0, 0,
+        }
+    },
+    {
         N_("Inclination θ"),
         GWY_GRAIN_VALUE_SLOPE_THETA,
         {

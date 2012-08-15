@@ -1478,7 +1478,7 @@ gwy_data_field_grains_get_quantities(GwyDataField *data_field,
                                      const gint *grains)
 {
     /* The number of built-in quantities. */
-    enum { NQ = 34 };
+    enum { NQ = 37 };
     enum {
         NEED_SIZES = 1 << 0,
         NEED_BOUNDPOS = 1 << 1,
@@ -1486,8 +1486,9 @@ gwy_data_field_grains_get_quantities(GwyDataField *data_field,
         NEED_MAX = 1 << 3,
         NEED_XVALUE = (1 << 4) | NEED_SIZES,
         NEED_YVALUE = (1 << 5) | NEED_SIZES,
+        NEED_CENTRE = NEED_XVALUE | NEED_YVALUE,
         NEED_ZVALUE = (1 << 6) | NEED_SIZES,
-        NEED_LINEAR = (1 << 7) | NEED_ZVALUE | NEED_XVALUE | NEED_YVALUE,
+        NEED_LINEAR = (1 << 7) | NEED_ZVALUE | NEED_CENTRE,
         NEED_QUADRATIC = (1 << 8) | NEED_LINEAR,
         INVALID = G_MAXUINT
     };
@@ -1526,6 +1527,9 @@ gwy_data_field_grains_get_quantities(GwyDataField *data_field,
         NEED_QUADRATIC,               /* curvature invrad 2 */
         NEED_QUADRATIC,               /* curvature direction 1 */
         NEED_QUADRATIC,               /* curvature direction 2 */
+        NEED_CENTRE,                  /* inscribed disc radius */
+        NEED_CENTRE,                  /* inscribed disc centre x */
+        NEED_CENTRE,                  /* inscribed disc centre y */
     };
 
     gdouble *quantity_data[NQ];
@@ -2064,6 +2068,20 @@ gwy_data_field_grains_get_quantities(GwyDataField *data_field,
                 pz[gno] = a[6];
         }
     }
+    if (quantity_data[GWY_GRAIN_VALUE_INSCRIBED_DISC_R]
+        || quantity_data[GWY_GRAIN_VALUE_INSCRIBED_DISC_X]
+        || quantity_data[GWY_GRAIN_VALUE_INSCRIBED_DISC_Y]) {
+        /* TODO */
+        if (quantity_data[GWY_GRAIN_VALUE_INSCRIBED_DISC_R])
+            gwy_clear(quantity_data[GWY_GRAIN_VALUE_INSCRIBED_DISC_R],
+                      ngrains+1);
+        if (quantity_data[GWY_GRAIN_VALUE_INSCRIBED_DISC_X])
+            gwy_clear(quantity_data[GWY_GRAIN_VALUE_INSCRIBED_DISC_X],
+                      ngrains+1);
+        if (quantity_data[GWY_GRAIN_VALUE_INSCRIBED_DISC_Y])
+            gwy_clear(quantity_data[GWY_GRAIN_VALUE_INSCRIBED_DISC_Y],
+                      ngrains+1);
+    }
 
     /* Copy quantity values to all other instances of the same quantity in
      * @values. */
@@ -2128,7 +2146,10 @@ gwy_grain_quantity_needs_same_units(GwyGrainQuantity quantity)
                          | (ONE << GWY_GRAIN_VALUE_CURVATURE_CENTER_Y)
                          | (ONE << GWY_GRAIN_VALUE_CURVATURE_CENTER_Z)
                          | (ONE << GWY_GRAIN_VALUE_CURVATURE_ANGLE1)
-                         | (ONE << GWY_GRAIN_VALUE_CURVATURE_ANGLE2)),
+                         | (ONE << GWY_GRAIN_VALUE_CURVATURE_ANGLE2)
+                         | (ONE << GWY_GRAIN_VALUE_INSCRIBED_DISC_R)
+                         | (ONE << GWY_GRAIN_VALUE_INSCRIBED_DISC_X)
+                         | (ONE << GWY_GRAIN_VALUE_INSCRIBED_DISC_Y)),
         same_units = ((ONE << GWY_GRAIN_VALUE_SLOPE_THETA)
                       | (ONE << GWY_GRAIN_VALUE_SURFACE_AREA)
                       | (ONE << GWY_GRAIN_VALUE_CURVATURE1)
@@ -2173,7 +2194,10 @@ gwy_grain_quantity_get_units(GwyGrainQuantity quantity,
                        | (ONE << GWY_GRAIN_VALUE_CENTER_X)
                        | (ONE << GWY_GRAIN_VALUE_CENTER_Y)
                        | (ONE << GWY_GRAIN_VALUE_CURVATURE_CENTER_X)
-                       | (ONE << GWY_GRAIN_VALUE_CURVATURE_CENTER_Y)),
+                       | (ONE << GWY_GRAIN_VALUE_CURVATURE_CENTER_Y)
+                       | (ONE << GWY_GRAIN_VALUE_INSCRIBED_DISC_R)
+                       | (ONE << GWY_GRAIN_VALUE_INSCRIBED_DISC_X)
+                       | (ONE << GWY_GRAIN_VALUE_INSCRIBED_DISC_Y)),
         icoord_units = ((ONE << GWY_GRAIN_VALUE_CURVATURE1)
                        | (ONE << GWY_GRAIN_VALUE_CURVATURE2)),
         value_units = ((ONE << GWY_GRAIN_VALUE_MAXIMUM)
