@@ -930,7 +930,7 @@ count_sides(const guint *grains,
             if (!g)
                 continue;
 
-            c = count[k];
+            c = count[g];
             if (!i || !grains[k - xres])
                 c++;
             if (!j || !grains[k - 1])
@@ -939,7 +939,7 @@ count_sides(const guint *grains,
                 c++;
             if (i == yres-1 || !grains[k + xres])
                 c++;
-            count[k] = c;
+            count[g] = c;
         }
     }
 }
@@ -1041,12 +1041,16 @@ maximum_fitting_circle_est(const VertexRelation *vrel,
         double basex = ax - cx, basey = ay - cy;
         for (j = 0; j < nvertices; j++) {
             const VertexRelation *u = base + j;
+            if (j == i)
+                continue;
             for (k = 0; k < nvertices; k++) {
                 const VertexRelation *v = base + k;
                 gdouble det = u->cosa*v->sina - u->sina*v->cosa;
                 gdouble rhox, rhoy, R2, P2, sx, sy;
                 gboolean ok = TRUE;
 
+                if (k == j || k == i)
+                    continue;
                 if (det < 1.0e-8)
                     continue;
 
@@ -1899,6 +1903,7 @@ gwy_data_field_grains_get_quantities(GwyDataField *data_field,
         for (gno = 1; gno <= ngrains; gno++)
             counts[gno] += counts[gno-1];
         nv = counts[ngrains];
+        g_printerr("vmax=%u, nv=%u (ng=%u)\n", vmax, nv, ngrains);
         for (gno = ngrains; gno; gno--)
             counts[gno] = counts[gno-1];
         /* This is used to simplify @n in calculate_vertex_relations(). */
@@ -1919,10 +1924,11 @@ gwy_data_field_grains_get_quantities(GwyDataField *data_field,
             gdouble cy = (2.0*yvalue[gno] + 1.0)/q;
             gdouble x, y, R;
 
+            g_printerr("[%u] %u\n", gno, n);
             calculate_vertex_relations(vertices + counts[gno], n, xres, q,
                                        vrel);
             maximum_fitting_circle_est(vrel, vertices, n, xres, q, cx, cy,
-                                       &x, &y, &R);
+                                       &R, &x, &y);
 
             if (inscdr)
                 inscdr[gno] = 0.5*R*qgeom;
@@ -1931,6 +1937,9 @@ gwy_data_field_grains_get_quantities(GwyDataField *data_field,
             if (inscdy)
                 inscdy[gno] = 0.5*y*qgeom + data_field->yoff;
         }
+        g_free(counts);
+        g_free(vertices);
+        g_free(vrel);
     }
     if ((p = quantity_data[GWY_GRAIN_VALUE_CENTER_X])) {
         for (gno = 0; gno <= ngrains; gno++)
