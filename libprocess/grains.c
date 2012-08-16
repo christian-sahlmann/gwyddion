@@ -40,6 +40,12 @@ typedef struct {
     gint j;
 } GridPoint;
 
+typedef struct {
+    guint size;
+    guint len;
+    GridPoint *points;
+} PixelQueue;
+
 /* Watershed iterator */
 typedef struct {
     GwyComputationState cs;
@@ -909,33 +915,151 @@ grain_minimum_bound(GArray *vertices,
     }
 }
 
-static void
-count_sides(const guint *grains,
-            guint xres, guint yres,
-            guint *count)
+static inline void
+pixel_queue_add(PixelQueue *queue,
+                gint i, gint j)
 {
-    guint i, j, k;
+    if (G_UNLIKELY(queue->len == queue->size)) {
+        queue->size = MAX(2*queue->size, 16);
+        queue->points = g_renew(GridPoint, queue->points, queue->size);
+    }
 
+    queue->points[queue->len].i = i;
+    queue->points[queue->len].j = j;
+    queue->len++;
+}
+
+/* Gather all double-scaled boundary vertices in @vertices and simultaneously
+ * init @queue with all Von Neumann-neighbourhood boundary pixels. */
+static void
+init_erosion(guint *grain,
+             gint width, gint height,
+             PixelQueue *queue,
+             PixelQueue *vertices)
+{
+    gint i, j, k;
+
+    queue->len = vertices->len = 0;
     k = 0;
-    for (i = 0; i < yres; i++) {
-        for (j = 0; j < xres; j++, k++) {
-            guint c, g = grains[k];
+    for (i = 0; i < height; i++) {
+        for (j = 0; j < width; j++, k++) {
+            gboolean enqueue = FALSE;
 
-            if (!g)
+            if (!grain[k])
                 continue;
 
-            c = count[g];
-            if (!i || !grains[k - xres])
-                c++;
-            if (!j || !grains[k - 1])
-                c++;
-            if (j == xres-1 || !grains[k + 1])
-                c++;
-            if (i == yres-1 || !grains[k + xres])
-                c++;
-            count[g] = c;
+            if (!i || !grain[k - width]) {
+                pixel_queue_add(vertices, 2*i, 2*j + 1);
+                pixel_queue_add(vertices, 2*i, 2*j + 2);
+                enqueue = TRUE;
+            }
+            if (!j || !grain[k - 1]) {
+                pixel_queue_add(vertices, 2*i, 2*j);
+                pixel_queue_add(vertices, 2*i + 1, 2*j);
+                enqueue = TRUE;
+            }
+            if (j == width-1 || !grain[k + 1]) {
+                pixel_queue_add(vertices, 2*i + 1, 2*j + 2);
+                pixel_queue_add(vertices, 2*i + 2, 2*j + 2);
+                enqueue = TRUE;
+            }
+            if (i == height-1 || !grain[k + width]) {
+                pixel_queue_add(vertices, 2*i + 2, 2*j);
+                pixel_queue_add(vertices, 2*i + 2, 2*j + 1);
+                enqueue = TRUE;
+            }
+
+            if (enqueue) {
+                grain[k] = 1;
+                pixel_queue_add(queue, i, j);
+            }
         }
     }
+}
+
+static gboolean
+erode_4(guint *grain,
+        gint width, gint height,
+        guint id,
+        const PixelQueue *inqueue,
+        PixelQueue *outqueue)
+{
+    const GridPoint *ipt = inqueue->points;
+    guint m;
+
+    outqueue->len = 0;
+    for (m = inqueue->len; m; m--, ipt++) {
+        gint i = ipt->i, j = ipt->j, k = i*width + j;
+
+        if (i && grain[k - width] == G_MAXUINT) {
+            grain[k - width] = id+1;
+            pixel_queue_add(outqueue, i-1, j);
+        }
+        if (j && grain[k - 1] == G_MAXUINT) {
+            grain[k - 1] = id+1;
+            pixel_queue_add(outqueue, i, j-1);
+        }
+        if (j < width-1 && grain[k + 1] == G_MAXUINT) {
+            grain[k + 1] = id+1;
+            pixel_queue_add(outqueue, i, j+1);
+        }
+        if (i < height-1 && grain[k + width] == G_MAXUINT) {
+            grain[k + width] = id+1;
+            pixel_queue_add(outqueue, i+1, j);
+        }
+    }
+
+    return outqueue->len;
+}
+
+static gboolean
+erode_8(guint *grain,
+        gint width, gint height,
+        guint id,
+        const PixelQueue *inqueue,
+        PixelQueue *outqueue)
+{
+    const GridPoint *ipt = inqueue->points;
+    guint m;
+
+    outqueue->len = 0;
+    for (m = inqueue->len; m; m--, ipt++) {
+        gint i = ipt->i, j = ipt->j, k = i*width + j;
+        if (i && j && grain[k - width - 1] == G_MAXUINT) {
+            grain[k - width - 1] = id+1;
+            pixel_queue_add(outqueue, i-1, j-1);
+        }
+        if (i && grain[k - width] == G_MAXUINT) {
+            grain[k - width] = id+1;
+            pixel_queue_add(outqueue, i-1, j);
+        }
+        if (i && j < width-1 && grain[k - width + 1] == G_MAXUINT) {
+            grain[k - width + 1] = id+1;
+            pixel_queue_add(outqueue, i-1, j+1);
+        }
+        if (j && grain[k - 1] == G_MAXUINT) {
+            grain[k - 1] = id+1;
+            pixel_queue_add(outqueue, i, j-1);
+        }
+        if (j < width-1 && grain[k + 1] == G_MAXUINT) {
+            grain[k + 1] = id+1;
+            pixel_queue_add(outqueue, i, j+1);
+        }
+        if (i < height-1 && j && grain[k + width - 1] == G_MAXUINT) {
+            grain[k + width - 1] = id+1;
+            pixel_queue_add(outqueue, i+1, j-1);
+        }
+        if (i < height-1 && grain[k + width] == G_MAXUINT) {
+            grain[k + width] = id+1;
+            pixel_queue_add(outqueue, i+1, j);
+        }
+        if (i < height-1 && j < width-1 && grain[k + width + 1] == G_MAXUINT) {
+            grain[k + width + 1] = id+1;
+            pixel_queue_add(outqueue, i+1, j+1);
+        }
+    }
+
+    return outqueue->len;
 }
 
 static gdouble
@@ -1734,9 +1858,70 @@ gwy_data_field_grains_get_quantities(GwyDataField *data_field,
         gdouble *inscdr = quantity_data[GWY_GRAIN_VALUE_INSCRIBED_DISC_R];
         gdouble *inscdx = quantity_data[GWY_GRAIN_VALUE_INSCRIBED_DISC_X];
         gdouble *inscdy = quantity_data[GWY_GRAIN_VALUE_INSCRIBED_DISC_Y];
-        guint *counts = g_new0(guint, ngrains + 2);
+        gint *bbox;
+        guint *grain = NULL;
+        guint grainsize = 0;
+        PixelQueue vertices = { 0, 0, NULL };
+        PixelQueue *inqueue = g_new0(PixelQueue, 1);
+        PixelQueue *outqueue = g_new0(PixelQueue, 1);
 
-        count_sides(grains, xres, yres, counts);
+        bbox = gwy_data_field_get_grain_bounding_boxes(data_field,
+                                                       ngrains, grains, NULL);
+
+        /*
+         * For each grain:
+         *    Extract it, find all boundary pixels.
+         *    Use (octagnoal) erosion to find disc centre candidate(s).
+         *    For each candidate:
+         *       Find maximum disc that fits with this centre.
+         *       By expanding/moving try to find a larger disc until we cannot
+         *       improve it.
+         */
+        for (gno = 1; gno <= ngrains; gno++) {
+            gint col = bbox[4*gno], row = bbox[4*gno + 1],
+                 w = bbox[4*gno + 2], h = bbox[4*gno + 3];
+
+            if ((guint)(w*h) > grainsize) {
+                g_free(grain);
+                grainsize = w*h;
+                grain = g_new(guint, grainsize);
+            }
+
+            for (i = 0; i < h; i++) {
+                for (j = 0; j < w; j++) {
+                    k = (i + row)*xres + j + col;
+                    grain[i*w + j] = (grains[k] == gno) ? G_MAXUINT : 0;
+                }
+            }
+
+            init_erosion(grain, w, h, inqueue, &vertices);
+            i = 1;
+            while (TRUE) {
+                if (!erode_8(grain, w, h, i, inqueue, outqueue))
+                    break;
+                GWY_SWAP(PixelQueue*, inqueue, outqueue);
+                i++;
+
+                if (!erode_4(grain, w, h, i, inqueue, outqueue))
+                    break;
+                GWY_SWAP(PixelQueue*, inqueue, outqueue);
+                i++;
+            }
+            /* Now inqueue is always non-empty. */
+            /* TODO */
+            g_printerr("[%d] %d\n", gno, i);
+#if 0
+            for (i = 0; i < h; i++) {
+                for (j = 0; j < w; j++) {
+                    if (!grain[i*w + j])
+                        g_printerr("..");
+                    else
+                        g_printerr("%02u", grain[i*w + j]);
+                    g_printerr("%c", j == w-1 ? '\n' : ' ');
+                }
+            }
+#endif
+        }
 
         if (inscdr)
             gwy_clear(inscdr, ngrains + 1);
@@ -1745,7 +1930,13 @@ gwy_data_field_grains_get_quantities(GwyDataField *data_field,
         if (inscdy)
             gwy_clear(inscdy, ngrains + 1);
 
-        g_free(counts);
+        g_free(bbox);
+        g_free(grain);
+        g_free(vertices.points);
+        g_free(inqueue->points);
+        g_free(outqueue->points);
+        g_free(inqueue);
+        g_free(outqueue);
     }
     if ((p = quantity_data[GWY_GRAIN_VALUE_CENTER_X])) {
         for (gno = 0; gno <= ngrains; gno++)
