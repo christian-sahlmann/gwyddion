@@ -51,6 +51,7 @@ typedef struct {
     gdouble height;
     gboolean is_height;
     gboolean is_area;
+    gboolean border;
     gboolean update;
     gboolean computed;
     GwyMergeType merge_type;
@@ -66,6 +67,7 @@ typedef struct {
     GtkWidget *value_height;
     GwySIValueFormat *format_height;
     GtkObject *threshold_area;
+    GtkWidget *border;
     GtkWidget *merge;
     GtkWidget *color_button;
     GtkWidget *update;
@@ -125,6 +127,7 @@ static const RemoveArgs remove_defaults = {
     50,
     TRUE,
     FALSE,
+    FALSE,
     TRUE,
     FALSE,
     GWY_MERGE_UNION,
@@ -135,7 +138,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Removes grains by thresholding (height, size)."),
     "Petr Klapetek <petr@klapetek.cz>",
-    "1.14",
+    "1.15",
     "David Nečas (Yeti) & Petr Klapetek",
     "2003",
 };
@@ -264,7 +267,7 @@ remove_dialog(RemoveArgs *args,
 
     gtk_box_pack_start(GTK_BOX(hbox), controls.view, FALSE, FALSE, 4);
 
-    table = gtk_table_new(9, 4, FALSE);
+    table = gtk_table_new(10, 4, FALSE);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
@@ -331,6 +334,17 @@ remove_dialog(RemoveArgs *args,
     gtk_table_attach(GTK_TABLE(table), controls.inverted,
                      0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     g_signal_connect_swapped(controls.inverted, "toggled",
+                             G_CALLBACK(remove_invalidate), &controls);
+    row++;
+
+    controls.border
+        = gtk_check_button_new_with_mnemonic(_("Remove grains "
+                                               "_touching image borders"));
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.border),
+                                 args->border);
+    gtk_table_attach(GTK_TABLE(table), controls.border,
+                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    g_signal_connect_swapped(controls.border, "toggled",
                              G_CALLBACK(remove_invalidate), &controls);
     row++;
 
@@ -454,6 +468,8 @@ remove_dialog_update_controls(RemoveControls *controls,
                                  args->is_height);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->is_area),
                                  args->is_area);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->border),
+                                 args->border);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->update),
                                  args->update);
     gwy_enum_combo_box_set_active(GTK_COMBO_BOX(controls->merge),
@@ -474,6 +490,8 @@ remove_dialog_update_values(RemoveControls *controls,
         = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->threshold_height));
     args->area
         = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->threshold_area));
+    args->border
+        = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->border));
     args->update
         = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->update));
     args->merge_type
@@ -604,6 +622,9 @@ mask_process(GwyDataField *dfield,
         g_object_unref(output_field_a);
         g_object_unref(output_field_b);
     }
+
+    if (args->border)
+        gwy_data_field_grains_remove_touching_border(maskfield);
 }
 
 /* FIXME: this is *very* inefficient, should be streamlined like other grain
@@ -630,6 +651,7 @@ static const gchar inverted_key[]  = "/module/grain_rem_threshold/inverted";
 static const gchar isheight_key[]  = "/module/grain_rem_threshold/isheight";
 static const gchar isarea_key[]    = "/module/grain_rem_threshold/isarea";
 static const gchar update_key[]    = "/module/grain_rem_threshold/update";
+static const gchar border_key[]    = "/module/grain_rem_threshold/border";
 static const gchar height_key[]    = "/module/grain_rem_threshold/height";
 static const gchar area_key[]      = "/module/grain_rem_threshold/area";
 static const gchar mergetype_key[] = "/module/grain_rem_threshold/mergetype";
@@ -641,6 +663,7 @@ remove_sanitize_args(RemoveArgs *args)
     args->is_height = !!args->is_height;
     args->is_area = !!args->is_area;
     args->update = !!args->update;
+    args->border = !!args->border;
     args->height = CLAMP(args->height, 0.0, 100.0);
     args->area = CLAMP(args->area, 0.0, 100.0);
     args->merge_type = MIN(args->merge_type, GWY_MERGE_INTERSECTION);
@@ -657,6 +680,7 @@ remove_load_args(GwyContainer *container,
                                       &args->is_height);
     gwy_container_gis_boolean_by_name(container, isarea_key, &args->is_area);
     gwy_container_gis_boolean_by_name(container, update_key, &args->update);
+    gwy_container_gis_boolean_by_name(container, border_key, &args->border);
     gwy_container_gis_double_by_name(container, height_key, &args->height);
     gwy_container_gis_double_by_name(container, area_key, &args->area);
     gwy_container_gis_enum_by_name(container, mergetype_key,
@@ -672,6 +696,7 @@ remove_save_args(GwyContainer *container,
     gwy_container_set_boolean_by_name(container, isheight_key, args->is_height);
     gwy_container_set_boolean_by_name(container, isarea_key, args->is_area);
     gwy_container_set_boolean_by_name(container, update_key, args->update);
+    gwy_container_set_boolean_by_name(container, border_key, args->border);
     gwy_container_set_double_by_name(container, height_key, args->height);
     gwy_container_set_double_by_name(container, area_key, args->area);
     gwy_container_set_enum_by_name(container, mergetype_key, args->merge_type);
