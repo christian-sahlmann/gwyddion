@@ -986,8 +986,87 @@ pixel_queue_add(PixelQueue *queue,
     queue->len++;
 }
 
-/* Gather all double-scaled boundary vertices in @vertices and simultaneously
- * init @queue with all Von Neumann-neighbourhood boundary pixels. */
+static guint*
+grain_maybe_realloc(guint *grain, guint w, guint h, guint *grainsize)
+{
+    if (w*h > *grainsize) {
+        g_free(grain);
+        *grainsize = w*h;
+        grain = g_new(guint, *grainsize);
+    }
+    return grain;
+}
+
+static guint*
+extract_upsampled_square_pixel_grain(const guint *grains, guint xres, guint gno,
+                                     const gint *bbox,
+                                     guint *grain, guint *grainsize,
+                                     guint *widthup, guint *heightup,
+                                     gdouble dx, gdouble dy)
+{
+    gint col = bbox[0], row = bbox[1], w = bbox[2], h = bbox[3];
+    guint w2 = 2*w, h2 = 2*h;
+    guint i, j;
+
+    /* Do not bother with nearly square pixels and upsample also 2×2. */
+    if (fabs(log(dy/dx)) < 0.05) {
+        grain = grain_maybe_realloc(grain, w2, h2, grainsize);
+        for (i = 0; i < h; i++) {
+            guint k2 = w2*(2*i);
+            guint k = (i + row)*xres + col;
+            for (j = 0; j < w; j++, k++, k2 += 2) {
+                guint v = (grains[k] == gno) ? G_MAXUINT : 0;
+                grain[k2] = v;
+                grain[k2+1] = v;
+                grain[k2 + w2] = v;
+                grain[k2 + w2+1] = v;
+            }
+        }
+    }
+    else if (dy < dx) {
+        /* Horizontal upsampling, precalculate index map to use in each row. */
+        guint *indices;
+        w2 = GWY_ROUND(dx/dy*w2);
+        grain = grain_maybe_realloc(grain, w2, h2, grainsize);
+        indices = g_new(guint, w2);
+        for (j = 0; j < w2; j++) {
+            gint jj = GWY_ROUND(j*dy/dx);
+            indices[j] = CLAMP(jj, 0, (gint)w-1);
+        }
+        for (i = 0; i < h; i++) {
+            guint k = (i + row)*xres + col;
+            guint k2 = w2*(2*i);
+            for (j = 0; j < w2; j++) {
+                guint v = (grains[k + indices[j]] == gno) ? G_MAXUINT : 0;
+                grain[k2 + j] = v;
+                grain[k2 + w2 + j] = v;
+            }
+        }
+        g_free(indices);
+    }
+    else {
+        /* Vertical upsampling, rows are 2× scaled copies but uneven. */
+        h2 = GWY_ROUND(dy/dx*h2);
+        grain = grain_maybe_realloc(grain, w2, h2, grainsize);
+        for (i = 0; i < h2; i++) {
+            guint k, k2 = i*w2;
+            gint ii = GWY_ROUND(i*dx/dy);
+            ii = CLAMP(ii, 0, (gint)h-1);
+            k = (ii + row)*xres + col;
+            for (j = 0; j < w; j++) {
+                guint v = (grains[k + j] == gno) ? G_MAXUINT : 0;
+                grain[k2 + 2*j] = v;
+                grain[k2 + 2*j + 1] = v;
+            }
+        }
+    }
+
+    *widthup = w2;
+    *heightup = h2;
+    return grain;
+}
+
+/* Init @queue with all Von Neumann-neighbourhood boundary pixels. */
 static void
 init_erosion(guint *grain,
              gint width, gint height,
@@ -999,8 +1078,6 @@ init_erosion(guint *grain,
     k = 0;
     for (i = 0; i < height; i++) {
         for (j = 0; j < width; j++, k++) {
-            gboolean enqueue = FALSE;
-
             if (!grain[k])
                 continue;
 
@@ -1915,31 +1992,23 @@ gwy_data_field_grains_get_quantities(GwyDataField *data_field,
          *       improve it.
          */
         for (gno = 1; gno <= ngrains; gno++) {
-            gint col = bbox[4*gno], row = bbox[4*gno + 1],
-                 w = bbox[4*gno + 2], h = bbox[4*gno + 3];
+            guint width, height;
 
-            if ((guint)(w*h) > grainsize) {
-                g_free(grain);
-                grainsize = w*h;
-                grain = g_new(guint, grainsize);
-            }
+            grain = extract_upsampled_square_pixel_grain(grains, xres, gno,
+                                                         bbox + 4*gno,
+                                                         grain, &grainsize,
+                                                         &width, &height,
+                                                         qh, qv);
 
-            for (i = 0; i < h; i++) {
-                for (j = 0; j < w; j++) {
-                    k = (i + row)*xres + j + col;
-                    grain[i*w + j] = (grains[k] == gno) ? G_MAXUINT : 0;
-                }
-            }
-
-            init_erosion(grain, w, h, inqueue);
+            init_erosion(grain, width, height, inqueue);
             i = 1;
             while (TRUE) {
-                if (!erode_8(grain, w, h, i, inqueue, outqueue))
+                if (!erode_8(grain, width, height, i, inqueue, outqueue))
                     break;
                 GWY_SWAP(PixelQueue*, inqueue, outqueue);
                 i++;
 
-                if (!erode_4(grain, w, h, i, inqueue, outqueue))
+                if (!erode_4(grain, width, height, i, inqueue, outqueue))
                     break;
                 GWY_SWAP(PixelQueue*, inqueue, outqueue);
                 i++;
@@ -1948,13 +2017,13 @@ gwy_data_field_grains_get_quantities(GwyDataField *data_field,
             /* TODO */
             g_printerr("[%d] %d\n", gno, i);
 #if 0
-            for (i = 0; i < h; i++) {
-                for (j = 0; j < w; j++) {
-                    if (!grain[i*w + j])
+            for (i = 0; i < height; i++) {
+                for (j = 0; j < width; j++) {
+                    if (!grain[i*width + j])
                         g_printerr("..");
                     else
-                        g_printerr("%02u", grain[i*w + j]);
-                    g_printerr("%c", j == w-1 ? '\n' : ' ');
+                        g_printerr("%02u", grain[i*width + j]);
+                    g_printerr("%c", j == width-1 ? '\n' : ' ');
                 }
             }
 #endif
