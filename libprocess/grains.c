@@ -991,12 +991,11 @@ pixel_queue_add(PixelQueue *queue,
 static void
 init_erosion(guint *grain,
              gint width, gint height,
-             PixelQueue *queue,
-             PixelQueue *vertices)
+             PixelQueue *queue)
 {
     gint i, j, k;
 
-    queue->len = vertices->len = 0;
+    queue->len = 0;
     k = 0;
     for (i = 0; i < height; i++) {
         for (j = 0; j < width; j++, k++) {
@@ -1005,28 +1004,10 @@ init_erosion(guint *grain,
             if (!grain[k])
                 continue;
 
-            if (!i || !grain[k - width]) {
-                pixel_queue_add(vertices, 2*i, 2*j + 1);
-                pixel_queue_add(vertices, 2*i, 2*j + 2);
-                enqueue = TRUE;
-            }
-            if (!j || !grain[k - 1]) {
-                pixel_queue_add(vertices, 2*i, 2*j);
-                pixel_queue_add(vertices, 2*i + 1, 2*j);
-                enqueue = TRUE;
-            }
-            if (j == width-1 || !grain[k + 1]) {
-                pixel_queue_add(vertices, 2*i + 1, 2*j + 2);
-                pixel_queue_add(vertices, 2*i + 2, 2*j + 2);
-                enqueue = TRUE;
-            }
-            if (i == height-1 || !grain[k + width]) {
-                pixel_queue_add(vertices, 2*i + 2, 2*j);
-                pixel_queue_add(vertices, 2*i + 2, 2*j + 1);
-                enqueue = TRUE;
-            }
-
-            if (enqueue) {
+            if (!i || !grain[k - width]
+                || !j || !grain[k - 1]
+                || j == width-1 || !grain[k + 1]
+                || i == height-1 || !grain[k + width]) {
                 grain[k] = 1;
                 pixel_queue_add(queue, i, j);
             }
@@ -1918,7 +1899,6 @@ gwy_data_field_grains_get_quantities(GwyDataField *data_field,
         gint *bbox;
         guint *grain = NULL;
         guint grainsize = 0;
-        PixelQueue vertices = { 0, 0, NULL };
         PixelQueue *inqueue = g_new0(PixelQueue, 1);
         PixelQueue *outqueue = g_new0(PixelQueue, 1);
 
@@ -1951,7 +1931,7 @@ gwy_data_field_grains_get_quantities(GwyDataField *data_field,
                 }
             }
 
-            init_erosion(grain, w, h, inqueue, &vertices);
+            init_erosion(grain, w, h, inqueue);
             i = 1;
             while (TRUE) {
                 if (!erode_8(grain, w, h, i, inqueue, outqueue))
@@ -1989,7 +1969,6 @@ gwy_data_field_grains_get_quantities(GwyDataField *data_field,
 
         g_free(bbox);
         g_free(grain);
-        g_free(vertices.points);
         g_free(inqueue->points);
         g_free(outqueue->points);
         g_free(inqueue);
