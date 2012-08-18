@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003-2012 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -55,6 +55,7 @@ void gwy_data_field_grains_remove_by_height(GwyDataField *data_field,
                                             GwyDataField *grain_field,
                                             gdouble threshval,
                                             gboolean below);
+void gwy_data_field_grains_remove_touching_border(GwyDataField *grain_field);
 
 GwyComputationState* gwy_data_field_grains_watershed_init(GwyDataField *data_field,
                                                           GwyDataField *grain_field,

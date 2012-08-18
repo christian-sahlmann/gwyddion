@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003-2012 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -517,7 +517,7 @@ gwy_data_field_grains_extract_grain(GwyDataField *grain_field,
  * @grain_field: Field of marked grains (mask).
  * @size: Grain area threshold, in square pixels.
  *
- * Removes all grain below specified area.
+ * Removes all grains below specified area.
  **/
 void
 gwy_data_field_grains_remove_by_size(GwyDataField *grain_field,
@@ -541,6 +541,7 @@ gwy_data_field_grains_remove_by_size(GwyDataField *grain_field,
     grain_size = g_new0(gint, ngrains + 1);
     for (i = 0; i < xres*yres; i++)
         grain_size[grains[i]]++;
+    /* Avoid some no-op work below. */
     grain_size[0] = size;
 
     /* remove grains */
@@ -608,6 +609,8 @@ gwy_data_field_grains_remove_by_height(GwyDataField *data_field,
                 grain_kill[grains[i]] = TRUE;
         }
     }
+    /* Avoid some no-op work below. */
+    grain_kill[0] = FALSE;
 
     /* remove them */
     for (i = 0; i < xres*yres; i++) {
@@ -623,6 +626,60 @@ gwy_data_field_grains_remove_by_height(GwyDataField *data_field,
 
     g_free(grains);
     g_free(grain_kill);
+}
+
+/**
+ * gwy_data_field_grains_remove_touching_border:
+ * @grain_field: Field of marked grains (mask).
+ *
+ * Removes all grains that touch field borders.
+ *
+ * Since: 2.30
+ **/
+void
+gwy_data_field_grains_remove_touching_border(GwyDataField *grain_field)
+{
+    gint i, xres, yres, ngrains;
+    gdouble *data;
+    gint *grains;
+    gboolean *touching;
+
+    g_return_if_fail(GWY_IS_DATA_FIELD(grain_field));
+
+    xres = grain_field->xres;
+    yres = grain_field->yres;
+    data = grain_field->data;
+
+    grains = g_new0(gint, xres*yres);
+    ngrains = gwy_data_field_number_grains(grain_field, grains);
+
+    /* Remember grains that touch any border. */
+    touching = g_new0(gboolean, ngrains + 1);
+    for (i = 0; i < xres; i++)
+        touching[grains[i]] = TRUE;
+    for (i = 1; i < yres-1; i++) {
+        touching[grains[i*xres]] = TRUE;
+        touching[grains[i*xres + xres-1]] = TRUE;
+    }
+    for (i = 0; i < xres; i++)
+        touching[grains[(yres-1)*xres + i]] = TRUE;
+    /* Avoid some no-op work below. */
+    touching[0] = FALSE;
+
+    /* Remove grains. */
+    for (i = 0; i < xres*yres; i++) {
+        if (touching[grains[i]])
+            data[i] = 0;
+    }
+    for (i = 1; i <= ngrains; i++) {
+        if (touching[i]) {
+            gwy_data_field_invalidate(grain_field);
+            break;
+        }
+    }
+
+    g_free(grains);
+    g_free(touching);
 }
 
 /**
