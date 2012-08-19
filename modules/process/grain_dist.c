@@ -1,6 +1,6 @@
 /*
  *  @(#) $Id$
- *  Copyright (C) 2003-2008 David Necas (Yeti), Petr Klapetek.
+ *  Copyright (C) 2003-2012 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -35,6 +35,7 @@
 
 #define DIST_RUN_MODES GWY_RUN_INTERACTIVE
 #define STAT_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
+#define INSCRIBE_RUN_MODES GWY_RUN_IMMEDIATE
 
 enum {
     MIN_RESOLUTION = 4,
@@ -98,35 +99,37 @@ typedef struct {
     gboolean add_comment;
 } GrainDistExportData;
 
-static gboolean module_register                 (void);
-static void grain_dist                          (GwyContainer *data,
-                                                 GwyRunType run);
-static void grain_stat                          (GwyContainer *data,
-                                                 GwyRunType run);
-static GtkWidget* grain_stats_add_aux_button    (GtkWidget *hbox,
-                                                 const gchar *stock_id,
-                                                 const gchar *tooltip);
-static void grain_dist_dialog                   (GrainDistArgs *args,
-                                                 GwyContainer *data,
-                                                 GwyDataField *dfield,
-                                                 GwyDataField *mfield);
-static void mode_changed_cb                     (GtkToggleButton *button,
-                                                 GrainDistControls *controls);
-static void selected_changed_cb                 (GrainDistControls *controls);
-static void grain_dist_dialog_update_values     (GrainDistControls *controls,
-                                                 GrainDistArgs *args);
-static void grain_dist_dialog_update_sensitivity(GrainDistControls *controls,
-                                                 GrainDistArgs *args);
-static void grain_dist_run                      (GrainDistArgs *args,
-                                                 GwyContainer *data,
-                                                 GwyDataField *dfield,
-                                                 GwyDataField *mfield);
-static gchar* grain_dist_export_create          (gpointer user_data,
-                                                 gssize *data_len);
-static void grain_dist_load_args                (GwyContainer *container,
-                                                 GrainDistArgs *args);
-static void grain_dist_save_args                (GwyContainer *container,
-                                                 GrainDistArgs *args);
+static gboolean   module_register                     (void);
+static void       grain_inscribe_discs                (GwyContainer *data,
+                                                       GwyRunType run);
+static void       grain_dist                          (GwyContainer *data,
+                                                       GwyRunType run);
+static void       grain_stat                          (GwyContainer *data,
+                                                       GwyRunType run);
+static GtkWidget* grain_stats_add_aux_button          (GtkWidget *hbox,
+                                                       const gchar *stock_id,
+                                                       const gchar *tooltip);
+static void       grain_dist_dialog                   (GrainDistArgs *args,
+                                                       GwyContainer *data,
+                                                       GwyDataField *dfield,
+                                                       GwyDataField *mfield);
+static void       mode_changed_cb                     (GtkToggleButton *button,
+                                                       GrainDistControls *controls);
+static void       selected_changed_cb                 (GrainDistControls *controls);
+static void       grain_dist_dialog_update_values     (GrainDistControls *controls,
+                                                       GrainDistArgs *args);
+static void       grain_dist_dialog_update_sensitivity(GrainDistControls *controls,
+                                                       GrainDistArgs *args);
+static void       grain_dist_run                      (GrainDistArgs *args,
+                                                       GwyContainer *data,
+                                                       GwyDataField *dfield,
+                                                       GwyDataField *mfield);
+static gchar*     grain_dist_export_create            (gpointer user_data,
+                                                       gssize *data_len);
+static void       grain_dist_load_args                (GwyContainer *container,
+                                                       GrainDistArgs *args);
+static void       grain_dist_save_args                (GwyContainer *container,
+                                                       GrainDistArgs *args);
 
 static const GrainDistArgs grain_dist_defaults = {
     MODE_GRAPH,
@@ -144,7 +147,7 @@ static GwyModuleInfo module_info = {
     N_("Evaluates distribution of grains (continuous parts of mask)."),
     "Petr Klapetek <petr@klapetek.cz>, Sven Neumann <neumann@jpk.com>, "
         "Yeti <yeti@gwyddion.net>",
-    "3.9",
+    "3.10",
     "David Nečas (Yeti) & Petr Klapetek & Sven Neumann",
     "2003",
 };
@@ -176,6 +179,14 @@ module_register(void)
                               STAT_RUN_MODES,
                               GWY_MENU_FLAG_DATA | GWY_MENU_FLAG_DATA_MASK,
                               N_("Simple grain statistics"));
+    gwy_process_func_register("grain_inscribe_discs",
+                              (GwyProcessFunc)&grain_inscribe_discs,
+                              N_("/_Grains/Select _Inscribed Discs"),
+                              NULL,
+                              INSCRIBE_RUN_MODES,
+                              GWY_MENU_FLAG_DATA | GWY_MENU_FLAG_DATA_MASK,
+                              N_("Create a selection visualising discs "
+                                 "incribed into grains"));
 
     return TRUE;
 }
@@ -907,6 +918,81 @@ grain_dist_save_args(GwyContainer *container,
     gwy_container_set_int32_by_name(container, resolution_key,
                                     args->resolution);
     gwy_container_set_enum_by_name(container, mode_key, args->mode);
+}
+
+static GwySelection*
+create_selection(const gchar *typename,
+                 guint *ngrains)
+{
+    GParamSpecInt *pspec;
+    GObjectClass *klass;
+    GType type;
+
+    type = g_type_from_name(typename);
+    g_return_val_if_fail(type, NULL);
+
+    klass = g_type_class_ref(type);
+    pspec = (GParamSpecInt*)g_object_class_find_property(klass, "max-objects");
+    g_return_val_if_fail(G_IS_PARAM_SPEC_INT(pspec), NULL);
+
+    if ((gint)*ngrains > pspec->maximum) {
+        g_warning("Too many grains for %s, only first %d will be shown.",
+                  typename, pspec->maximum);
+        *ngrains = pspec->maximum;
+    }
+    return g_object_new(type, "max-objects", *ngrains, NULL);
+}
+
+/* FIXME: It would be nice to have something like that also for minimum and
+ * maximum bounding dimensions. */
+static void
+grain_inscribe_discs(GwyContainer *data, GwyRunType run)
+{
+    static const GwyGrainQuantity quantities[] = {
+        GWY_GRAIN_VALUE_INSCRIBED_DISC_R,
+        GWY_GRAIN_VALUE_INSCRIBED_DISC_X,
+        GWY_GRAIN_VALUE_INSCRIBED_DISC_Y,
+    };
+
+    GwyDataField *dfield, *mfield;
+    GwySelection *selection;
+    guint ngrains, i;
+    gint *grains;
+    gdouble *inscd;
+    gdouble *values[3];
+    gchar *key;
+    gint id;
+
+    g_return_if_fail(run & INSCRIBE_RUN_MODES);
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
+                                     GWY_APP_MASK_FIELD, &mfield,
+                                     GWY_APP_DATA_FIELD_ID, &id,
+                                     0);
+
+    grains = g_new0(gint, mfield->xres * mfield->yres);
+    ngrains = gwy_data_field_number_grains(mfield, grains);
+    inscd = g_new(gdouble, 3*(ngrains + 1));
+    for (i = 0; i < 3; i++)
+        values[0] = inscd + i*(ngrains + 1);
+
+    gwy_data_field_grains_get_quantities(dfield, values, quantities, 3,
+                                         ngrains, grains);
+
+    selection = create_selection("GwySelectionEllipse", &ngrains);
+    for (i = 1; i <= ngrains; i++) {
+        gdouble r = inscd[i],
+                x = inscd[(ngrains + 1) + i],
+                y = inscd[2*(ngrains + 1) + i];
+        gdouble xy[4] = { r - x, r - y, r + x, r + y };
+        gwy_selection_set_object(selection, i-1, xy);
+    }
+
+    key = g_strdup_printf("/%d/select/ellipse", id);
+    gwy_container_set_object_by_name(data, key, selection);
+    g_object_unref(selection);
+
+    g_free(grains);
+    g_free(inscd);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
