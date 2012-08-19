@@ -46,6 +46,13 @@ typedef struct {
     GridPoint *points;
 } PixelQueue;
 
+typedef struct {
+    gdouble x;
+    gdouble y;
+    gdouble R2;
+    guint size;   /* For candidate sorting. */
+} InscribedDisc;
+
 /* Watershed iterator */
 typedef struct {
     GwyComputationState cs;
@@ -1028,7 +1035,7 @@ extract_upsampled_square_pixel_grain(const guint *grains, guint xres, guint gno,
         guint *indices;
         w2 = GWY_ROUND(dx/dy*w2);
         grain = grain_maybe_realloc(grain, w2, h2, grainsize);
-        indices = g_new(guint, w2);
+        indices = (guint*)g_slice_alloc(w2*sizeof(guint));
         for (j = 0; j < w2; j++) {
             gint jj = GWY_ROUND(j*dy/dx);
             indices[j] = CLAMP(jj, 0, (gint)w-1);
@@ -1042,7 +1049,7 @@ extract_upsampled_square_pixel_grain(const guint *grains, guint xres, guint gno,
                 grain[k2 + w2 + j] = v;
             }
         }
-        g_free(indices);
+        g_slice_free1(w2*sizeof(guint), indices);
     }
     else {
         /* Vertical upsampling, rows are 2× scaled copies but uneven. */
@@ -1175,6 +1182,82 @@ erode_8(guint *grain,
     }
 
     return outqueue->len;
+}
+
+static gint
+compare_candidates(gconstpointer a,
+                   gconstpointer b)
+{
+    const InscribedDisc *da = (const InscribedDisc*)a;
+    const InscribedDisc *db = (const InscribedDisc*)b;
+
+    if (da->size < db->size)
+        return -1;
+    if (da->size > db->size)
+        return 1;
+
+    if (da->R2 < db->R2)
+        return -1;
+    if (da->R2 > db->R2)
+        return 1;
+
+    return 0;
+}
+
+static void
+find_disc_centre_candidates(GArray *candidates,
+                            PixelQueue *inqueue,
+                            gdouble dx, gdouble dy,
+                            gdouble centrex, gdouble centrey)
+{
+    guint m, n, start, end;
+
+    /* Grain numbering for sparse areas, we reorder inqueue to contiguous
+     * blocks, each getting the area number in candareas[]. */
+    start = 0;
+    end = 1;
+    g_array_set_size(candidates, 0);
+    for (m = 0; m < inqueue->len; m++) {
+        GridPoint *mpt = inqueue->points + m;
+        guint i = mpt->i, j = mpt->j;
+
+        for (n = end; n < inqueue->len; n++) {
+            GridPoint *npt = inqueue->points + n;
+            guint ii = npt->i, jj = npt->j;
+
+            if ((ii == i && (jj == j+1 || jj+1 == j))
+                || (jj == j && (ii == i+1 || ii+1 == i))) {
+                if (n != end)
+                    GWY_SWAP(GridPoint, inqueue->points[end], *npt);
+                end++;
+            }
+        }
+
+        if (end == m+1 || end == inqueue->len) {
+            InscribedDisc cand = { 0.0, 0.0, 0.0, 0 };
+
+            for (n = start; n < end; n++) {
+                const GridPoint *npt = inqueue->points + n;
+
+                cand.x += npt->j;
+                cand.y += npt->i;
+                cand.size++;
+            }
+            cand.x = (cand.x/cand.size + 0.5)*dx;
+            cand.y = (cand.y/cand.size + 0.5)*dy;
+            /* Use R2 temporarily for distance from the entire grain centre;
+             * this is only for sorting below. */
+            cand.R2 = ((cand.x - centrex)*(cand.x - centrex)
+                        + (cand.y - centrey)*(cand.y - centrey));
+            g_array_append_val(candidates, cand);
+            if (end == inqueue->len)
+                break;
+            start = end;
+            end++;
+        }
+    }
+
+    g_array_sort(candidates, &compare_candidates);
 }
 
 static gdouble
@@ -1976,9 +2059,13 @@ gwy_data_field_grains_get_quantities(GwyDataField *data_field,
         gint *bbox;
         guint *grain = NULL;
         guint grainsize = 0;
-        PixelQueue *inqueue = g_new0(PixelQueue, 1);
-        PixelQueue *outqueue = g_new0(PixelQueue, 1);
+        PixelQueue *inqueue = g_slice_new0(PixelQueue);
+        PixelQueue *outqueue = g_slice_new0(PixelQueue);
+        GArray *candidates = g_array_new(FALSE, FALSE, sizeof(InscribedDisc));
+        InscribedDisc *cand;
 
+        /* FIXME: BBoxes are used for more than one grain quantity, make them
+         * a common aux. */
         bbox = gwy_data_field_get_grain_bounding_boxes(data_field,
                                                        ngrains, grains, NULL);
 
@@ -1992,30 +2079,40 @@ gwy_data_field_grains_get_quantities(GwyDataField *data_field,
          *       improve it.
          */
         for (gno = 1; gno <= ngrains; gno++) {
-            guint width, height;
+            guint width, height, dist;
+            gdouble dx, dy, centrex, centrey;
 
+            /* TODO: if bbox width or height is 1, calculate the disc
+             * directly. */
+
+            /* Upsampling twice combined with octagonal erosion has the nice
+             * property that we get candidate pixels in places such as corners
+             * or junctions of one-pixel thin lines. */
             grain = extract_upsampled_square_pixel_grain(grains, xres, gno,
                                                          bbox + 4*gno,
                                                          grain, &grainsize,
                                                          &width, &height,
                                                          qh, qv);
+            /* Upsampled pixel size in squeezed pixel coordinates.  Normally
+             * equal to 1/2. */
+            dx = bbox[4*gno + 2]*(qh/qgeom)/width;
+            dy = bbox[4*gno + 3]*(qv/qgeom)/height;
 
             init_erosion(grain, width, height, inqueue);
-            i = 1;
+            dist = 1;
             while (TRUE) {
-                if (!erode_8(grain, width, height, i, inqueue, outqueue))
+                if (!erode_8(grain, width, height, dist, inqueue, outqueue))
                     break;
                 GWY_SWAP(PixelQueue*, inqueue, outqueue);
-                i++;
+                dist++;
 
-                if (!erode_4(grain, width, height, i, inqueue, outqueue))
+                if (!erode_4(grain, width, height, dist, inqueue, outqueue))
                     break;
                 GWY_SWAP(PixelQueue*, inqueue, outqueue);
-                i++;
+                dist++;
             }
-            /* Now inqueue is always non-empty. */
-            /* TODO */
-            g_printerr("[%d] %d\n", gno, i);
+            /* Now inqueue is always non-empty and contains max-distance
+             * pixels of the upscaled grain. */
 #if 0
             for (i = 0; i < height; i++) {
                 for (j = 0; j < width; j++) {
@@ -2027,21 +2124,34 @@ gwy_data_field_grains_get_quantities(GwyDataField *data_field,
                 }
             }
 #endif
-        }
+            /* Grain centre in squeezed pixel coordinates within the bbox. */
+            centrex = (xvalue[gno] + 0.5)*(qh/qgeom);
+            centrey = (yvalue[gno] + 0.5)*(qv/qgeom);
+            find_disc_centre_candidates(candidates, inqueue, dx, dy,
+                                        centrex, centrey);
+            cand = &g_array_index(candidates, InscribedDisc, 0);
+            g_printerr("[%d] %d, %u, %u (%g, %g)\n",
+                       gno, dist, inqueue->len, candidates->len, cand->x, cand->y);
 
-        if (inscdr)
-            gwy_clear(inscdr, ngrains + 1);
-        if (inscdx)
-            gwy_clear(inscdx, ngrains + 1);
-        if (inscdy)
-            gwy_clear(inscdy, ngrains + 1);
+            cand->R2 = dist*dist*dx*qgeom*dy*qgeom;
+            cand->x = cand->x*qgeom + qh*bbox[4*gno] + data_field->xoff;
+            cand->y = cand->y*qgeom + qv*bbox[4*gno + 1] + data_field->yoff;
+
+            if (inscdr)
+                inscdr[gno] = sqrt(cand->R2);
+            if (inscdx)
+                inscdx[gno] = cand->x;
+            if (inscdy)
+                inscdy[gno] = cand->y;
+        }
 
         g_free(bbox);
         g_free(grain);
         g_free(inqueue->points);
         g_free(outqueue->points);
-        g_free(inqueue);
-        g_free(outqueue);
+        g_slice_free(PixelQueue, inqueue);
+        g_slice_free(PixelQueue, outqueue);
+        g_array_free(candidates, TRUE);
     }
     if ((p = quantity_data[GWY_GRAIN_VALUE_CENTER_X])) {
         for (gno = 0; gno <= ngrains; gno++)
