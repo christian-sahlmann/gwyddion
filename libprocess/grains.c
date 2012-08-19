@@ -992,6 +992,28 @@ grain_minimum_bound(GArray *vertices,
     }
 }
 
+static gdouble
+grain_convex_hull_area(GArray *vertices, gdouble dx, gdouble dy)
+{
+    const GridPoint *a = &g_array_index(vertices, GridPoint, 0),
+                    *b = &g_array_index(vertices, GridPoint, 1),
+                    *c = &g_array_index(vertices, GridPoint, 2);
+    gdouble s = 0.0;
+    guint i;
+
+    g_return_val_if_fail(vertices->len >= 4, 0.0);
+
+    for (i = 2; i < vertices->len - 1; i++) {
+        gdouble bx = b->j - a->j, by = b->i - a->i,
+                cx = c->j - a->j, cy = c->i - a->i;
+        s += 0.5*(bx*cy - by*cx);
+        b = c;
+        c++;
+    }
+
+    return dx*dy*s;
+}
+
 static inline void
 pixel_queue_add(PixelQueue *queue,
                 gint i, gint j)
@@ -1819,7 +1841,7 @@ gwy_data_field_grains_get_quantities(GwyDataField *data_field,
                                      const gint *grains)
 {
     /* The number of built-in quantities. */
-    enum { NQ = 37 };
+    enum { NQ = 38 };
     enum {
         NEED_SIZES = 1 << 0,
         NEED_BOUNDPOS = 1 << 1,
@@ -1871,6 +1893,7 @@ gwy_data_field_grains_get_quantities(GwyDataField *data_field,
         NEED_CENTRE,                  /* inscribed disc radius */
         NEED_CENTRE,                  /* inscribed disc centre x */
         NEED_CENTRE,                  /* inscribed disc centre y */
+        NEED_BOUNDPOS,                /* convex hull area */
     };
 
     gdouble *quantity_data[NQ];
@@ -2174,11 +2197,13 @@ gwy_data_field_grains_get_quantities(GwyDataField *data_field,
     if (quantity_data[GWY_GRAIN_VALUE_MINIMUM_BOUND_SIZE]
         || quantity_data[GWY_GRAIN_VALUE_MINIMUM_BOUND_ANGLE]
         || quantity_data[GWY_GRAIN_VALUE_MAXIMUM_BOUND_SIZE]
-        || quantity_data[GWY_GRAIN_VALUE_MAXIMUM_BOUND_ANGLE]) {
+        || quantity_data[GWY_GRAIN_VALUE_MAXIMUM_BOUND_ANGLE]
+        || quantity_data[GWY_GRAIN_VALUE_CONVEX_HULL_AREA]) {
         gdouble *psmin = quantity_data[GWY_GRAIN_VALUE_MINIMUM_BOUND_SIZE];
         gdouble *psmax = quantity_data[GWY_GRAIN_VALUE_MAXIMUM_BOUND_SIZE];
         gdouble *pamin = quantity_data[GWY_GRAIN_VALUE_MINIMUM_BOUND_ANGLE];
         gdouble *pamax = quantity_data[GWY_GRAIN_VALUE_MAXIMUM_BOUND_ANGLE];
+        gdouble *achull = quantity_data[GWY_GRAIN_VALUE_CONVEX_HULL_AREA];
         GArray *vertices;
 
         /* Find the complete convex hulls */
@@ -2210,6 +2235,9 @@ gwy_data_field_grains_get_quantities(GwyDataField *data_field,
                     else if (pamax[gno] > G_PI/2.0)
                         pamax[gno] -= G_PI;
                 }
+            }
+            if (achull) {
+                achull[gno] = grain_convex_hull_area(vertices, qh, qv);
             }
         }
         /* Finalize */
@@ -2607,7 +2635,8 @@ gwy_grain_quantity_needs_same_units(GwyGrainQuantity quantity)
                          | (ONE << GWY_GRAIN_VALUE_CURVATURE_ANGLE2)
                          | (ONE << GWY_GRAIN_VALUE_INSCRIBED_DISC_R)
                          | (ONE << GWY_GRAIN_VALUE_INSCRIBED_DISC_X)
-                         | (ONE << GWY_GRAIN_VALUE_INSCRIBED_DISC_Y)),
+                         | (ONE << GWY_GRAIN_VALUE_INSCRIBED_DISC_Y)
+                         | (ONE << GWY_GRAIN_VALUE_CONVEX_HULL_AREA)),
         same_units = ((ONE << GWY_GRAIN_VALUE_SLOPE_THETA)
                       | (ONE << GWY_GRAIN_VALUE_SURFACE_AREA)
                       | (ONE << GWY_GRAIN_VALUE_CURVATURE1)
@@ -2665,7 +2694,8 @@ gwy_grain_quantity_get_units(GwyGrainQuantity quantity,
                        | (ONE << GWY_GRAIN_VALUE_CURVATURE_CENTER_Z)),
         area_units = ((ONE << GWY_GRAIN_VALUE_PROJECTED_AREA)
                       | (ONE << GWY_GRAIN_VALUE_HALF_HEIGHT_AREA)
-                      | (ONE << GWY_GRAIN_VALUE_SURFACE_AREA)),
+                      | (ONE << GWY_GRAIN_VALUE_SURFACE_AREA)
+                      | (ONE << GWY_GRAIN_VALUE_CONVEX_HULL_AREA)),
         volume_units = ((ONE << GWY_GRAIN_VALUE_VOLUME_0)
                         | (ONE << GWY_GRAIN_VALUE_VOLUME_MIN)
                         | (ONE << GWY_GRAIN_VALUE_VOLUME_LAPLACE)),

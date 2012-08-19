@@ -187,6 +187,7 @@ typedef enum {
     GWY_GRAIN_VALUE_INSCRIBED_DISC_R     = 34,
     GWY_GRAIN_VALUE_INSCRIBED_DISC_X     = 35,
     GWY_GRAIN_VALUE_INSCRIBED_DISC_Y     = 36,
+    GWY_GRAIN_VALUE_CONVEX_HULL_AREA     = 37,
 } GwyGrainQuantity;
 
 typedef enum {

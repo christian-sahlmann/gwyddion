@@ -290,6 +290,15 @@ grain_values[] = {
         }
     },
     {
+        N_("Area of convex hull"),
+        GWY_GRAIN_VALUE_CONVEX_HULL_AREA,
+        {
+            GWY_GRAIN_VALUE_GROUP_AREA,
+            "<i>A</i><sub>c</sub>", "A_c", NULL,
+            2, 0, 0, 0,
+        }
+    },
+    {
         N_("Inclination θ"),
         GWY_GRAIN_VALUE_SLOPE_THETA,
         {
