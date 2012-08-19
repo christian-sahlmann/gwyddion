@@ -2220,9 +2220,24 @@ gwy_data_field_grains_get_quantities(GwyDataField *data_field,
         for (gno = 1; gno <= ngrains; gno++) {
             guint width, height, dist;
             gdouble dx, dy, centrex, centrey;
+            gdouble w = bbox[4*gno + 2], h = bbox[4*gno + 3];
+            gdouble xoff = qh*bbox[4*gno] + data_field->xoff,
+                    yoff = qv*bbox[4*gno + 1] + data_field->yoff;
 
-            /* TODO: if bbox width or height is 1, calculate the disc
-             * directly. */
+            /* If the grain is rectangular, calculate the disc directly.
+             * Large rectangular grains are rare but the point is to catch
+             * grains with width of height of 1 here. */
+            if (sizes[gno] == w*h) {
+                w *= 0.5*qh;
+                h *= 0.5*qv;
+                if (inscdr)
+                    inscdr[gno] = 0.999*MIN(w, h);
+                if (inscdx)
+                    inscdx[gno] = w + xoff;
+                if (inscdy)
+                    inscdy[gno] = h + yoff;
+                continue;
+            }
 
             /* Upsampling twice combined with octagonal erosion has the nice
              * property that we get candidate pixels in places such as corners
@@ -2234,8 +2249,8 @@ gwy_data_field_grains_get_quantities(GwyDataField *data_field,
                                                          qh, qv);
             /* Upsampled pixel size in squeezed pixel coordinates.  Normally
              * equal to 1/2. */
-            dx = bbox[4*gno + 2]*(qh/qgeom)/width;
-            dy = bbox[4*gno + 3]*(qv/qgeom)/height;
+            dx = w*(qh/qgeom)/width;
+            dy = h*(qv/qgeom)/height;
             /* Grain centre in squeezed pixel coordinates within the bbox. */
             centrex = (xvalue[gno] + 0.5)*(qh/qgeom);
             centrey = (yvalue[gno] + 0.5)*(qv/qgeom);
@@ -2275,8 +2290,8 @@ gwy_data_field_grains_get_quantities(GwyDataField *data_field,
                 r2 = maximize_disc_radius(cand, &edges);
                 /* TODO: Try to improve it. */
                 cand->R2 = r2 * qgeom*qgeom;
-                cand->x = cand->x*qgeom + qh*bbox[4*gno] + data_field->xoff;
-                cand->y = cand->y*qgeom + qv*bbox[4*gno + 1] + data_field->yoff;
+                cand->x = cand->x*qgeom + xoff;
+                cand->y = cand->y*qgeom + yoff;
             }
 
             if (inscdr)
