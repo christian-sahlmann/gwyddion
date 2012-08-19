@@ -117,7 +117,7 @@ gwy_selection_class_init(GwySelectionClass *klass)
          g_param_spec_uint("max-objects",
                            "Max. objects",
                            "Maximum number of objects that can be selected",
-                           0, 1024, 1, G_PARAM_READWRITE));
+                           0, 65536, 1, G_PARAM_READWRITE));
 
     /**
      * GwySelection::changed:
