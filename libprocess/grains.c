@@ -47,6 +47,19 @@ typedef struct {
 } PixelQueue;
 
 typedef struct {
+    gdouble xa;
+    gdouble ya;
+    gdouble xb;
+    gdouble yb;
+} Edge;
+
+typedef struct {
+    guint size;
+    guint len;
+    Edge *edges;
+} EdgeQueue;
+
+typedef struct {
     gdouble x;
     gdouble y;
     gdouble R2;
@@ -1260,6 +1273,131 @@ find_disc_centre_candidates(GArray *candidates,
     g_array_sort(candidates, &compare_candidates);
 }
 
+static inline void
+edge_list_add(EdgeQueue *queue,
+              gdouble xa, gdouble ya,
+              gdouble xb, gdouble yb)
+{
+    if (G_UNLIKELY(queue->len == queue->size)) {
+        queue->size = MAX(2*queue->size, 16);
+        queue->edges = g_renew(Edge, queue->edges, queue->size);
+    }
+
+    queue->edges[queue->len].xa = xa;
+    queue->edges[queue->len].ya = ya;
+    queue->edges[queue->len].xb = xb;
+    queue->edges[queue->len].yb = yb;
+    queue->len++;
+}
+
+static void
+find_all_edges(EdgeQueue *edges,
+               const gint *grains, guint xres,
+               guint gno, const gint *bbox,
+               gdouble dx, gdouble dy)
+{
+    guint col = bbox[0], row = bbox[1], w = bbox[2], h = bbox[3];
+    guint i, j;
+    guint *vertices;
+
+    edges->len = 0;
+
+    vertices = g_slice_alloc((w + 1)*sizeof(guint));
+    for (j = 0; j <= w; j++)
+        vertices[j] = G_MAXUINT;
+
+    for (i = 0; i <= h; i++) {
+        guint k = (i + row)*xres + col;
+        guint vertex = G_MAXUINT;
+
+        for (j = 0; j <= w; j++, k++) {
+            /*
+             * 1 2
+             * 3 4
+             */
+            guint g0 = i && j && grains[k - xres - 1] == gno;
+            guint g1 = i && j < w && grains[k - xres] == gno;
+            guint g2 = i < h && j && grains[k - 1] == gno;
+            guint g3 = i < h && j < w && grains[k] == gno;
+            guint g = g0 | (g1 << 1) | (g2 << 2) | (g3 << 3);
+
+            if (g == 8 || g == 7) {
+                g_assert(vertices[j] == G_MAXUINT);
+                g_assert(vertex == G_MAXUINT);
+                vertex = j;
+                vertices[j] = i;
+            }
+            else if (g == 2 || g == 13) {
+                g_assert(vertices[j] != G_MAXUINT);
+                g_assert(vertex == G_MAXUINT);
+                edge_list_add(edges, dx*j, dy*vertices[j], dx*j, dy*i);
+                vertex = j;
+                vertices[j] = G_MAXUINT;
+            }
+            else if (g == 4 || g == 11) {
+                g_assert(vertices[j] == G_MAXUINT);
+                g_assert(vertex != G_MAXUINT);
+                edge_list_add(edges, dx*vertex, dy*i, dx*j, dy*i);
+                vertex = G_MAXUINT;
+                vertices[j] = i;
+            }
+            else if (g == 1 || g == 14) {
+                g_assert(vertices[j] != G_MAXUINT);
+                g_assert(vertex != G_MAXUINT);
+                edge_list_add(edges, vertex, i, j, i);
+                edge_list_add(edges, dx*j, dy*vertices[j], dx*j, dy*i);
+                vertex = G_MAXUINT;
+                vertices[j] = G_MAXUINT;
+            }
+            else if (g == 6 || g == 9) {
+                g_assert(vertices[j] != G_MAXUINT);
+                g_assert(vertex != G_MAXUINT);
+                edge_list_add(edges, dx*vertex, dy*i, dx*j, dy*i);
+                edge_list_add(edges, dx*j, dy*vertices[j], dx*j, dy*i);
+                vertex = j;
+                vertices[j] = i;
+            }
+        }
+        g_assert(vertex == G_MAXUINT);
+    }
+    for (j = 0; j <= w; j++) {
+        g_assert(vertices[j] == G_MAXUINT);
+    }
+
+    g_slice_free1((w + 1)*sizeof(guint), vertices);
+}
+
+static gdouble
+maximize_disc_radius(InscribedDisc *disc, const EdgeQueue *edges)
+{
+    gdouble x = disc->x, y = disc->y, r2best = HUGE_VAL;
+    guint i;
+
+    for (i = 0; i < edges->len; i++) {
+        const Edge *edge = edges->edges + i;
+        gdouble rax = edge->xa - x, ray = edge->ya - y,
+                rbx = edge->xb - x, rby = edge->yb - y,
+                deltax = edge->xb - edge->xa, deltay = edge->yb - edge->ya;
+        gdouble ca = -(deltax*rax + deltay*ray),
+                cb = deltax*rbx + deltay*rby;
+        gdouble r2;
+
+        if (ca <= 0.0)
+            r2 = rax*rax + ray*ray;
+        else if (cb <= 0.0)
+            r2 = rbx*rbx + rby*rby;
+        else {
+            gdouble tx = cb*rax + ca*rbx, ty = cb*ray + ca*rby, D = ca + cb;
+            r2 = (tx*tx + ty*ty)/(D*D);
+        }
+
+        if (r2 < r2best)
+            r2best = r2;
+    }
+
+    return r2best;
+}
+
 static gdouble
 grain_volume_laplace(GwyDataField *data_field,
                      const gint *grains,
@@ -2062,6 +2200,7 @@ gwy_data_field_grains_get_quantities(GwyDataField *data_field,
         PixelQueue *inqueue = g_slice_new0(PixelQueue);
         PixelQueue *outqueue = g_slice_new0(PixelQueue);
         GArray *candidates = g_array_new(FALSE, FALSE, sizeof(InscribedDisc));
+        EdgeQueue edges = { 0, 0, NULL };
         InscribedDisc *cand;
 
         /* FIXME: BBoxes are used for more than one grain quantity, make them
@@ -2097,6 +2236,9 @@ gwy_data_field_grains_get_quantities(GwyDataField *data_field,
              * equal to 1/2. */
             dx = bbox[4*gno + 2]*(qh/qgeom)/width;
             dy = bbox[4*gno + 3]*(qv/qgeom)/height;
+            /* Grain centre in squeezed pixel coordinates within the bbox. */
+            centrex = (xvalue[gno] + 0.5)*(qh/qgeom);
+            centrey = (yvalue[gno] + 0.5)*(qv/qgeom);
 
             init_erosion(grain, width, height, inqueue);
             dist = 1;
@@ -2113,29 +2255,29 @@ gwy_data_field_grains_get_quantities(GwyDataField *data_field,
             }
             /* Now inqueue is always non-empty and contains max-distance
              * pixels of the upscaled grain. */
-#if 0
-            for (i = 0; i < height; i++) {
-                for (j = 0; j < width; j++) {
-                    if (!grain[i*width + j])
-                        g_printerr("..");
-                    else
-                        g_printerr("%02u", grain[i*width + j]);
-                    g_printerr("%c", j == width-1 ? '\n' : ' ');
-                }
-            }
-#endif
-            /* Grain centre in squeezed pixel coordinates within the bbox. */
-            centrex = (xvalue[gno] + 0.5)*(qh/qgeom);
-            centrey = (yvalue[gno] + 0.5)*(qv/qgeom);
             find_disc_centre_candidates(candidates, inqueue, dx, dy,
                                         centrex, centrey);
-            cand = &g_array_index(candidates, InscribedDisc, 0);
-            g_printerr("[%d] %d, %u, %u (%g, %g)\n",
-                       gno, dist, inqueue->len, candidates->len, cand->x, cand->y);
 
-            cand->R2 = dist*dist*dx*qgeom*dy*qgeom;
-            cand->x = cand->x*qgeom + qh*bbox[4*gno] + data_field->xoff;
-            cand->y = cand->y*qgeom + qv*bbox[4*gno + 1] + data_field->yoff;
+            /* TODO: Try more candidates. */
+            for (i = 0; i < 1; i++) {
+                gdouble r2;
+
+                cand = &g_array_index(candidates, InscribedDisc, i);
+                /*
+                g_printerr("[%d:%u] %d, %u, %u (%g, %g)\n",
+                           gno, i, dist, inqueue->len, candidates->len,
+                           cand->x, cand->y);
+                           */
+
+                find_all_edges(&edges, grains, xres, gno, bbox + 4*gno,
+                               qh/qgeom, qv/qgeom);
+
+                r2 = maximize_disc_radius(cand, &edges);
+                /* TODO: Try to improve it. */
+                cand->R2 = r2 * qgeom*qgeom;
+                cand->x = cand->x*qgeom + qh*bbox[4*gno] + data_field->xoff;
+                cand->y = cand->y*qgeom + qv*bbox[4*gno + 1] + data_field->yoff;
+            }
 
             if (inscdr)
                 inscdr[gno] = sqrt(cand->R2);
@@ -2151,6 +2293,7 @@ gwy_data_field_grains_get_quantities(GwyDataField *data_field,
         g_free(outqueue->points);
         g_slice_free(PixelQueue, inqueue);
         g_slice_free(PixelQueue, outqueue);
+        g_free(edges.edges);
         g_array_free(candidates, TRUE);
     }
     if ((p = quantity_data[GWY_GRAIN_VALUE_CENTER_X])) {
