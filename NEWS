@@ -1,6 +1,11 @@
 2.30 (0000-00-00)
+Application:
+- Translations updated: French, Russian.
+
 Libraries:
 - libgwyprocess: A new function to remove grains touching image borders.
+- libgwyprocess: New grain quantities: Radius and position of maximum
+  inscribed disc, area of grain convex hull.
 
 Modules:
 - APE file: Channel labelling for various modes was corrected.
@@ -8,10 +13,13 @@ Modules:
   are imported now.
 - Selection manager tool: Chosen selection is shown in the data window.
 - Remove Grain by Threshold: Can also remove grains touching image borders.
+- Grain Statistics: Select Inscribed Discs creates circular selections
+  visualising the maximum inscribed disc for each grain.
 
 Other:
 - Compatibility with newer version of GLib that deprecate various things was
   improved.
+- Win32 executables are built using MinGW-W64 cross-compiler.
 
 
 2.29 (2012-07-20)
