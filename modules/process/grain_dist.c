@@ -933,7 +933,7 @@ create_selection(const gchar *typename,
 
     klass = g_type_class_ref(type);
     pspec = (GParamSpecInt*)g_object_class_find_property(klass, "max-objects");
-    g_return_val_if_fail(G_IS_PARAM_SPEC_INT(pspec), NULL);
+    g_return_val_if_fail(G_IS_PARAM_SPEC_UINT(pspec), NULL);
 
     if ((gint)*ngrains > pspec->maximum) {
         g_warning("Too many grains for %s, only first %d will be shown.",
@@ -973,17 +973,15 @@ grain_inscribe_discs(GwyContainer *data, GwyRunType run)
     ngrains = gwy_data_field_number_grains(mfield, grains);
     inscd = g_new(gdouble, 3*(ngrains + 1));
     for (i = 0; i < 3; i++)
-        values[0] = inscd + i*(ngrains + 1);
+        values[i] = inscd + i*(ngrains + 1);
 
     gwy_data_field_grains_get_quantities(dfield, values, quantities, 3,
                                          ngrains, grains);
 
     selection = create_selection("GwySelectionEllipse", &ngrains);
     for (i = 1; i <= ngrains; i++) {
-        gdouble r = inscd[i],
-                x = inscd[(ngrains + 1) + i],
-                y = inscd[2*(ngrains + 1) + i];
-        gdouble xy[4] = { r - x, r - y, r + x, r + y };
+        gdouble r = values[0][i], x = values[1][i], y = values[2][i];
+        gdouble xy[4] = { x - r, y - r, x + r, y + r };
         gwy_selection_set_object(selection, i-1, xy);
     }
 
