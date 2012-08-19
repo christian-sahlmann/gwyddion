@@ -2260,6 +2260,7 @@ gwy_data_field_grains_get_quantities(GwyDataField *data_field,
             gdouble w = bbox[4*gno + 2], h = bbox[4*gno + 3];
             gdouble xoff = qh*bbox[4*gno] + data_field->xoff,
                     yoff = qv*bbox[4*gno + 1] + data_field->yoff;
+            guint ncand;
 
             /* If the grain is rectangular, calculate the disc directly.
              * Large rectangular grains are rare but the point is to catch
@@ -2310,31 +2311,29 @@ gwy_data_field_grains_get_quantities(GwyDataField *data_field,
             find_disc_centre_candidates(candidates, inqueue, dx, dy,
                                         centrex, centrey);
 
-            /* TODO: Try more candidates. */
-            for (i = 0; i < 1; i++) {
+            /* Try a few first candidates for the inscribed disc centre. */
+            ncand = MIN(5, candidates->len);
+            for (i = 0; i < ncand; i++) {
                 cand = &g_array_index(candidates, InscribedDisc, i);
-                /*
-                g_printerr("[%d:%u] %d, %u, %u (%g, %g)\n",
-                           gno, i, dist, inqueue->len, candidates->len,
-                           cand->x, cand->y);
-                           */
-
                 find_all_edges(&edges, grains, xres, gno, bbox + 4*gno,
                                qh/qgeom, qv/qgeom);
 
                 cand->R2 = maximize_disc_radius(cand, &edges);
                 improve_inscribed_disc(cand, &edges, directions, NDIRECTIONS);
-                cand->R2 *= qarea;
-                cand->x = cand->x*qgeom + xoff;
-                cand->y = cand->y*qgeom + yoff;
+            }
+
+            cand = &g_array_index(candidates, InscribedDisc, 0);
+            for (i = 1; i < ncand; i++) {
+                if (g_array_index(candidates, InscribedDisc, i).R2 > cand->R2)
+                    cand = &g_array_index(candidates, InscribedDisc, i);
             }
 
             if (inscdr)
-                inscdr[gno] = sqrt(cand->R2);
+                inscdr[gno] = sqrt(cand->R2 * qarea);
             if (inscdx)
-                inscdx[gno] = cand->x;
+                inscdx[gno] = cand->x*qgeom + xoff;
             if (inscdy)
-                inscdy[gno] = cand->y;
+                inscdy[gno] = cand->y*qgeom + yoff;
         }
 
         g_free(bbox);
