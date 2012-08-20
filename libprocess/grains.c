@@ -1014,6 +1014,33 @@ grain_convex_hull_area(GArray *vertices, gdouble dx, gdouble dy)
     return dx*dy*s;
 }
 
+static void
+grain_convex_hull_centre(GArray *vertices,
+                         gdouble dx, gdouble dy,
+                         gdouble *centrex, gdouble *centrey)
+{
+    const GridPoint *a = &g_array_index(vertices, GridPoint, 0),
+                    *b = &g_array_index(vertices, GridPoint, 1),
+                    *c = &g_array_index(vertices, GridPoint, 2);
+    gdouble s = 0.0, xc = 0.0, yc = 0.0;
+    guint i;
+
+    g_return_if_fail(vertices->len >= 4);
+
+    for (i = 2; i < vertices->len - 1; i++) {
+        gdouble bx = b->j - a->j, by = b->i - a->i,
+                cx = c->j - a->j, cy = c->i - a->i;
+        gdouble s1 = bx*cy - by*cx;
+        xc += s1*(a->j + b->j + c->j);
+        yc += s1*(a->i + b->i + c->i);
+        s += s1;
+        b = c;
+        c++;
+    }
+    *centrex = dx*xc/(3.0*s);
+    *centrey = dy*yc/(3.0*s);
+}
+
 static inline void
 pixel_queue_add(PixelQueue *queue,
                 gint i, gint j)
