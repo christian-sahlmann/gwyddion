@@ -116,6 +116,23 @@ static gint     gwy_data_field_fill_one_grain(gint xres,
                                               gint *listv,
                                               gint *listh);
 
+enum { NDIRECTIONS = 12 };
+
+static const gdouble shift_directions[NDIRECTIONS*2] = {
+    1.0, 0.0,
+    0.9914448613738104, 0.1305261922200516,
+    0.9659258262890683, 0.2588190451025207,
+    0.9238795325112867, 0.3826834323650898,
+    0.8660254037844387, 0.5,
+    0.7933533402912352, 0.6087614290087207,
+    0.7071067811865476, 0.7071067811865475,
+    0.6087614290087207, 0.7933533402912352,
+    0.5,                0.8660254037844386,
+    0.3826834323650898, 0.9238795325112867,
+    0.2588190451025207, 0.9659258262890683,
+    0.1305261922200517, 0.9914448613738104,
+};
+
 /**
  * gwy_data_field_grains_mark_height:
  * @data_field: Data to be used for marking.
@@ -1448,22 +1465,40 @@ maximize_disc_radius(InscribedDisc *disc, const EdgeQueue *edges)
 }
 
 static void
-improve_inscribed_disc(InscribedDisc *disc, const EdgeQueue *edges,
-                       const gdouble *directions, guint ndirections)
+improve_inscribed_disc(InscribedDisc *disc, const EdgeQueue *edges)
 {
-    gdouble eps = 0.5, improvement = 0.0;
-    guint i;
+    gdouble eps = 0.5, improvement;
 
-    while (eps > 1e-3 || improvement > 1e-3) {
+    do {
         InscribedDisc best = *disc;
+        guint i;
 
         improvement = 0.0;
-        for (i = 0; i < ndirections; i++) {
-            InscribedDisc cand = *disc;
-            cand.x += eps*directions[2*i];
-            cand.y += eps*directions[2*i + 1];
-            cand.R2 = maximize_disc_radius(&cand, edges);
-            if (cand.R2 > best.R2)
+        for (i = 0; i < NDIRECTIONS; i++) {
+            InscribedDisc cand;
+            gdouble sx = eps*shift_directions[2*i],
+                    sy = eps*shift_directions[2*i + 1];
+
+            cand.size = disc->size;
+
+            cand.x = disc->x + sx;
+            cand.y = disc->y + sy;
+            if ((cand.R2 = maximize_disc_radius(&cand, edges)) > best.R2)
+                best = cand;
+
+            cand.x = disc->x - sy;
+            cand.y = disc->y + sx;
+            if ((cand.R2 = maximize_disc_radius(&cand, edges)) > best.R2)
+                best = cand;
+
+            cand.x = disc->x - sx;
+            cand.y = disc->y - sy;
+            if ((cand.R2 = maximize_disc_radius(&cand, edges)) > best.R2)
+                best = cand;
+
+            cand.x = disc->x + sy;
+            cand.y = disc->y - sx;
+            if ((cand.R2 = maximize_disc_radius(&cand, edges)) > best.R2)
                 best = cand;
         }
         if (best.R2 > disc->R2) {
@@ -1473,7 +1508,7 @@ improve_inscribed_disc(InscribedDisc *disc, const EdgeQueue *edges,
         else {
             eps *= 0.5;
         }
-    }
+    } while (eps > 1e-3 || improvement > 1e-3);
 }
 
 static gdouble
@@ -2275,7 +2310,6 @@ gwy_data_field_grains_get_quantities(GwyDataField *data_field,
     if (quantity_data[GWY_GRAIN_VALUE_INSCRIBED_DISC_R]
         || quantity_data[GWY_GRAIN_VALUE_INSCRIBED_DISC_X]
         || quantity_data[GWY_GRAIN_VALUE_INSCRIBED_DISC_Y]) {
-        enum { NDIRECTIONS = 48 };
         gdouble *inscdr = quantity_data[GWY_GRAIN_VALUE_INSCRIBED_DISC_R];
         gdouble *inscdx = quantity_data[GWY_GRAIN_VALUE_INSCRIBED_DISC_X];
         gdouble *inscdy = quantity_data[GWY_GRAIN_VALUE_INSCRIBED_DISC_Y];
@@ -2287,13 +2321,6 @@ gwy_data_field_grains_get_quantities(GwyDataField *data_field,
         GArray *candidates = g_array_new(FALSE, FALSE, sizeof(InscribedDisc));
         EdgeQueue edges = { 0, 0, NULL };
         InscribedDisc *cand;
-        gdouble *directions = g_slice_alloc(2*NDIRECTIONS*sizeof(gdouble));
-
-        for (i = 0; i < NDIRECTIONS; i++) {
-            gdouble x = i/(NDIRECTIONS - 1.0);
-            directions[2*i] = cos(2*M_PI*x);
-            directions[2*i + 1] = sin(2*M_PI*x);
-        }
 
         /* FIXME: BBoxes are used for more than one grain quantity, make them
          * a common aux. */
@@ -2374,7 +2401,7 @@ gwy_data_field_grains_get_quantities(GwyDataField *data_field,
                                qh/qgeom, qv/qgeom);
 
                 cand->R2 = maximize_disc_radius(cand, &edges);
-                improve_inscribed_disc(cand, &edges, directions, NDIRECTIONS);
+                improve_inscribed_disc(cand, &edges);
             }
 
             cand = &g_array_index(candidates, InscribedDisc, 0);
@@ -2399,7 +2426,6 @@ gwy_data_field_grains_get_quantities(GwyDataField *data_field,
         g_slice_free(PixelQueue, outqueue);
         g_free(edges.edges);
         g_array_free(candidates, TRUE);
-        g_slice_free1(2*NDIRECTIONS*sizeof(gdouble), directions);
     }
     if ((p = quantity_data[GWY_GRAIN_VALUE_CENTER_X])) {
         for (gno = 0; gno <= ngrains; gno++)
