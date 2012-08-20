@@ -281,7 +281,7 @@ grain_values[] = {
         }
     },
     {
-        N_("Maximum inscribed disc centre x position"),
+        N_("Maximum inscribed disc center x position"),
         GWY_GRAIN_VALUE_INSCRIBED_DISC_X,
         {
             GWY_GRAIN_VALUE_GROUP_BOUNDARY,
@@ -290,7 +290,7 @@ grain_values[] = {
         }
     },
     {
-        N_("Maximum inscribed disc centre y position"),
+        N_("Maximum inscribed disc center y position"),
         GWY_GRAIN_VALUE_INSCRIBED_DISC_Y,
         {
             GWY_GRAIN_VALUE_GROUP_BOUNDARY,
@@ -308,7 +308,7 @@ grain_values[] = {
         }
     },
     {
-        N_("Minimum circumcircle centre x position"),
+        N_("Minimum circumcircle center x position"),
         GWY_GRAIN_VALUE_CIRCUMCIRCLE_X,
         {
             GWY_GRAIN_VALUE_GROUP_BOUNDARY,
@@ -317,7 +317,7 @@ grain_values[] = {
         }
     },
     {
-        N_("Minimum circumcircle centre y position"),
+        N_("Minimum circumcircle center y position"),
         GWY_GRAIN_VALUE_CIRCUMCIRCLE_Y,
         {
             GWY_GRAIN_VALUE_GROUP_BOUNDARY,
