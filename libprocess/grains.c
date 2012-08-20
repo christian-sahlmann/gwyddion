@@ -1059,30 +1059,31 @@ grain_convex_hull_centre(GArray *vertices,
 }
 
 static gdouble
-minimize_circle_radius(InscribedDisc *circle, const GridPoint *v, guint n,
+minimize_circle_radius(InscribedDisc *circle, GArray *vertices,
                        gdouble dx, gdouble dy)
 {
+    const GridPoint *v = (const GridPoint*)vertices->data;
     gdouble x = circle->x, y = circle->y, r2best = 0.0;
-    guint i;
+    guint n = vertices->len;
 
-    for (i = 0; i < n; i++) {
+    while (n--) {
         gdouble deltax = dx*v->j - x, deltay = dy*v->i - y;
         gdouble r2 = deltax*deltax + deltay*deltay;
 
         if (r2 > r2best)
             r2best = r2;
+
+        v++;
     }
 
     return r2best;
 }
 
 static void
-improve_circumscribed_circle(InscribedDisc *circle, GArray *array,
+improve_circumscribed_circle(InscribedDisc *circle, GArray *vertices,
                              gdouble dx, gdouble dy)
 {
-    const GridPoint *v = (const GridPoint*)array->data;
-    guint n = array->len - 1;    /* The first point is repeated as last. */
-    gdouble eps = 0.5, improvement, qgeom = sqrt(dx*dy);
+    gdouble eps = 1.0, improvement, qgeom = sqrt(dx*dy);
 
     do {
         InscribedDisc best = *circle;
@@ -1098,22 +1099,26 @@ improve_circumscribed_circle(InscribedDisc *circle, GArray *array,
 
             cand.x = circle->x + sx;
             cand.y = circle->y + sy;
-            if ((cand.R2 = minimize_circle_radius(&cand, v, n, dx, dy)) > best.R2)
+            if ((cand.R2 = minimize_circle_radius(&cand, vertices, dx, dy))
+                < best.R2)
                 best = cand;
 
             cand.x = circle->x - sy;
             cand.y = circle->y + sx;
-            if ((cand.R2 = minimize_circle_radius(&cand, v, n, dx, dy)) > best.R2)
+            if ((cand.R2 = minimize_circle_radius(&cand, vertices, dx, dy))
+                < best.R2)
                 best = cand;
 
             cand.x = circle->x - sx;
             cand.y = circle->y - sy;
-            if ((cand.R2 = minimize_circle_radius(&cand, v, n, dx, dy)) > best.R2)
+            if ((cand.R2 = minimize_circle_radius(&cand, vertices, dx, dy))
+                < best.R2)
                 best = cand;
 
             cand.x = circle->x + sy;
             cand.y = circle->y - sx;
-            if ((cand.R2 = minimize_circle_radius(&cand, v, n, dx, dy)) > best.R2)
+            if ((cand.R2 = minimize_circle_radius(&cand, vertices, dx, dy))
+                < best.R2)
                 best = cand;
         }
         if (best.R2 < circle->R2) {
@@ -1533,9 +1538,9 @@ maximize_disc_radius(InscribedDisc *disc, const EdgeQueue *edges)
 }
 
 static void
-improve_inscribed_disc(InscribedDisc *disc, const EdgeQueue *edges)
+improve_inscribed_disc(InscribedDisc *disc, const EdgeQueue *edges, guint dist)
 {
-    gdouble eps = 0.5, improvement;
+    gdouble eps = 0.5 + 0.25*(dist > 4) + 0.25*(dist > 16), improvement;
 
     do {
         InscribedDisc best = *disc;
@@ -2383,9 +2388,7 @@ gwy_data_field_grains_get_quantities(GwyDataField *data_field,
 
                 grain_convex_hull_centre(vertices, qh, qv,
                                          &circle.x, &circle.y);
-                circle.R2 = minimize_circle_radius(&circle,
-                                                   (GridPoint*)vertices->data,
-                                                   vertices->len,
+                circle.R2 = minimize_circle_radius(&circle, vertices,
                                                    qh, qv);
                 improve_circumscribed_circle(&circle, vertices, qh, qv);
 
@@ -2496,7 +2499,7 @@ gwy_data_field_grains_get_quantities(GwyDataField *data_field,
                                qh/qgeom, qv/qgeom);
 
                 cand->R2 = maximize_disc_radius(cand, &edges);
-                improve_inscribed_disc(cand, &edges);
+                improve_inscribed_disc(cand, &edges, dist);
             }
 
             cand = &g_array_index(candidates, InscribedDisc, 0);
