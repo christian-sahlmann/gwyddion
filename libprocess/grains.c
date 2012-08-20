@@ -1020,7 +1020,7 @@ grain_convex_hull_area(GArray *vertices, gdouble dx, gdouble dy)
 
     g_return_val_if_fail(vertices->len >= 4, 0.0);
 
-    for (i = 2; i < vertices->len - 1; i++) {
+    for (i = 2; i < vertices->len; i++) {
         gdouble bx = b->j - a->j, by = b->i - a->i,
                 cx = c->j - a->j, cy = c->i - a->i;
         s += 0.5*(bx*cy - by*cx);
@@ -1044,7 +1044,7 @@ grain_convex_hull_centre(GArray *vertices,
 
     g_return_if_fail(vertices->len >= 4);
 
-    for (i = 2; i < vertices->len - 1; i++) {
+    for (i = 2; i < vertices->len; i++) {
         gdouble bx = b->j - a->j, by = b->i - a->i,
                 cx = c->j - a->j, cy = c->i - a->i;
         gdouble s1 = bx*cy - by*cx;
@@ -1054,8 +1054,76 @@ grain_convex_hull_centre(GArray *vertices,
         b = c;
         c++;
     }
-    *centrex = dx*xc/(3.0*s);
-    *centrey = dy*yc/(3.0*s);
+    *centrex = xc*dx/(3.0*s);
+    *centrey = yc*dy/(3.0*s);
+}
+
+static gdouble
+minimize_circle_radius(InscribedDisc *circle, const GridPoint *v, guint n,
+                       gdouble dx, gdouble dy)
+{
+    gdouble x = circle->x, y = circle->y, r2best = 0.0;
+    guint i;
+
+    for (i = 0; i < n; i++) {
+        gdouble deltax = dx*v->j - x, deltay = dy*v->i - y;
+        gdouble r2 = deltax*deltax + deltay*deltay;
+
+        if (r2 > r2best)
+            r2best = r2;
+    }
+
+    return r2best;
+}
+
+static void
+improve_circumscribed_circle(InscribedDisc *circle, GArray *array,
+                             gdouble dx, gdouble dy)
+{
+    const GridPoint *v = (const GridPoint*)array->data;
+    guint n = array->len - 1;    /* The first point is repeated as last. */
+    gdouble eps = 0.5, improvement, qgeom = sqrt(dx*dy);
+
+    do {
+        InscribedDisc best = *circle;
+        guint i;
+
+        improvement = 0.0;
+        for (i = 0; i < NDIRECTIONS; i++) {
+            InscribedDisc cand;
+            gdouble sx = eps*qgeom*shift_directions[2*i],
+                    sy = eps*qgeom*shift_directions[2*i + 1];
+
+            cand.size = circle->size;
+
+            cand.x = circle->x + sx;
+            cand.y = circle->y + sy;
+            if ((cand.R2 = minimize_circle_radius(&cand, v, n, dx, dy)) > best.R2)
+                best = cand;
+
+            cand.x = circle->x - sy;
+            cand.y = circle->y + sx;
+            if ((cand.R2 = minimize_circle_radius(&cand, v, n, dx, dy)) > best.R2)
+                best = cand;
+
+            cand.x = circle->x - sx;
+            cand.y = circle->y - sy;
+            if ((cand.R2 = minimize_circle_radius(&cand, v, n, dx, dy)) > best.R2)
+                best = cand;
+
+            cand.x = circle->x + sy;
+            cand.y = circle->y - sx;
+            if ((cand.R2 = minimize_circle_radius(&cand, v, n, dx, dy)) > best.R2)
+                best = cand;
+        }
+        if (best.R2 < circle->R2) {
+            improvement = (best.R2 - circle->R2)/(dx*dy);
+            *circle = best;
+        }
+        else {
+            eps *= 0.5;
+        }
+    } while (eps > 1e-3 || improvement > 1e-3);
 }
 
 static inline void
@@ -1903,7 +1971,7 @@ gwy_data_field_grains_get_quantities(GwyDataField *data_field,
                                      const gint *grains)
 {
     /* The number of built-in quantities. */
-    enum { NQ = 38 };
+    enum { NQ = 41 };
     enum {
         NEED_SIZES = 1 << 0,
         NEED_BOUNDPOS = 1 << 1,
@@ -1956,6 +2024,9 @@ gwy_data_field_grains_get_quantities(GwyDataField *data_field,
         NEED_CENTRE,                  /* inscribed disc centre x */
         NEED_CENTRE,                  /* inscribed disc centre y */
         NEED_BOUNDPOS,                /* convex hull area */
+        NEED_BOUNDPOS,                /* circumcircle radius */
+        NEED_BOUNDPOS,                /* circumcircle centre x */
+        NEED_BOUNDPOS,                /* circumcircle centre y */
     };
 
     gdouble *quantity_data[NQ];
@@ -2260,12 +2331,18 @@ gwy_data_field_grains_get_quantities(GwyDataField *data_field,
         || quantity_data[GWY_GRAIN_VALUE_MINIMUM_BOUND_ANGLE]
         || quantity_data[GWY_GRAIN_VALUE_MAXIMUM_BOUND_SIZE]
         || quantity_data[GWY_GRAIN_VALUE_MAXIMUM_BOUND_ANGLE]
-        || quantity_data[GWY_GRAIN_VALUE_CONVEX_HULL_AREA]) {
+        || quantity_data[GWY_GRAIN_VALUE_CONVEX_HULL_AREA]
+        || quantity_data[GWY_GRAIN_VALUE_CIRCUMCIRCLE_R]
+        || quantity_data[GWY_GRAIN_VALUE_CIRCUMCIRCLE_X]
+        || quantity_data[GWY_GRAIN_VALUE_CIRCUMCIRCLE_Y]) {
         gdouble *psmin = quantity_data[GWY_GRAIN_VALUE_MINIMUM_BOUND_SIZE];
         gdouble *psmax = quantity_data[GWY_GRAIN_VALUE_MAXIMUM_BOUND_SIZE];
         gdouble *pamin = quantity_data[GWY_GRAIN_VALUE_MINIMUM_BOUND_ANGLE];
         gdouble *pamax = quantity_data[GWY_GRAIN_VALUE_MAXIMUM_BOUND_ANGLE];
         gdouble *achull = quantity_data[GWY_GRAIN_VALUE_CONVEX_HULL_AREA];
+        gdouble *circcr = quantity_data[GWY_GRAIN_VALUE_CIRCUMCIRCLE_R];
+        gdouble *circcx = quantity_data[GWY_GRAIN_VALUE_CIRCUMCIRCLE_X];
+        gdouble *circcy = quantity_data[GWY_GRAIN_VALUE_CIRCUMCIRCLE_Y];
         GArray *vertices;
 
         /* Find the complete convex hulls */
@@ -2300,6 +2377,24 @@ gwy_data_field_grains_get_quantities(GwyDataField *data_field,
             }
             if (achull) {
                 achull[gno] = grain_convex_hull_area(vertices, qh, qv);
+            }
+            if (circcr || circcx || circcy) {
+                InscribedDisc circle = { 0.0, 0.0, 0.0, 0 };
+
+                grain_convex_hull_centre(vertices, qh, qv,
+                                         &circle.x, &circle.y);
+                circle.R2 = minimize_circle_radius(&circle,
+                                                   (GridPoint*)vertices->data,
+                                                   vertices->len,
+                                                   qh, qv);
+                improve_circumscribed_circle(&circle, vertices, qh, qv);
+
+                if (circcr)
+                    circcr[gno] = sqrt(circle.R2);
+                if (circcx)
+                    circcx[gno] = circle.x + data_field->xoff;
+                if (circcy)
+                    circcy[gno] = circle.y + data_field->yoff;
             }
         }
         /* Finalize */
@@ -2689,7 +2784,10 @@ gwy_grain_quantity_needs_same_units(GwyGrainQuantity quantity)
                          | (ONE << GWY_GRAIN_VALUE_INSCRIBED_DISC_R)
                          | (ONE << GWY_GRAIN_VALUE_INSCRIBED_DISC_X)
                          | (ONE << GWY_GRAIN_VALUE_INSCRIBED_DISC_Y)
-                         | (ONE << GWY_GRAIN_VALUE_CONVEX_HULL_AREA)),
+                         | (ONE << GWY_GRAIN_VALUE_CONVEX_HULL_AREA)
+                         | (ONE << GWY_GRAIN_VALUE_CIRCUMCIRCLE_R)
+                         | (ONE << GWY_GRAIN_VALUE_CIRCUMCIRCLE_X)
+                         | (ONE << GWY_GRAIN_VALUE_CIRCUMCIRCLE_Y)),
         same_units = ((ONE << GWY_GRAIN_VALUE_SLOPE_THETA)
                       | (ONE << GWY_GRAIN_VALUE_SURFACE_AREA)
                       | (ONE << GWY_GRAIN_VALUE_CURVATURE1)
@@ -2737,7 +2835,10 @@ gwy_grain_quantity_get_units(GwyGrainQuantity quantity,
                        | (ONE << GWY_GRAIN_VALUE_CURVATURE_CENTER_Y)
                        | (ONE << GWY_GRAIN_VALUE_INSCRIBED_DISC_R)
                        | (ONE << GWY_GRAIN_VALUE_INSCRIBED_DISC_X)
-                       | (ONE << GWY_GRAIN_VALUE_INSCRIBED_DISC_Y)),
+                       | (ONE << GWY_GRAIN_VALUE_INSCRIBED_DISC_Y)
+                       | (ONE << GWY_GRAIN_VALUE_CIRCUMCIRCLE_R)
+                       | (ONE << GWY_GRAIN_VALUE_CIRCUMCIRCLE_X)
+                       | (ONE << GWY_GRAIN_VALUE_CIRCUMCIRCLE_Y)),
         icoord_units = ((ONE << GWY_GRAIN_VALUE_CURVATURE1)
                        | (ONE << GWY_GRAIN_VALUE_CURVATURE2)),
         value_units = ((ONE << GWY_GRAIN_VALUE_MAXIMUM)

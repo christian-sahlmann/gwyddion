@@ -185,6 +185,15 @@ grain_values[] = {
         }
     },
     {
+        N_("Area of convex hull"),
+        GWY_GRAIN_VALUE_CONVEX_HULL_AREA,
+        {
+            GWY_GRAIN_VALUE_GROUP_AREA,
+            "<i>A</i><sub>c</sub>", "A_c", NULL,
+            2, 0, 0, 0,
+        }
+    },
+    {
         /* TRANSLATORS: Grain volume calculated using basis (foot) set to
          * zero. */
         N_("Zero basis volume"),
@@ -290,12 +299,30 @@ grain_values[] = {
         }
     },
     {
-        N_("Area of convex hull"),
-        GWY_GRAIN_VALUE_CONVEX_HULL_AREA,
+        N_("Minimum circumcircle radius"),
+        GWY_GRAIN_VALUE_CIRCUMCIRCLE_R,
         {
-            GWY_GRAIN_VALUE_GROUP_AREA,
-            "<i>A</i><sub>c</sub>", "A_c", NULL,
-            2, 0, 0, 0,
+            GWY_GRAIN_VALUE_GROUP_BOUNDARY,
+            "<i>R</i><sub>e</sub>", "R_e", NULL,
+            1, 0, 0, 0,
+        }
+    },
+    {
+        N_("Minimum circumcircle centre x position"),
+        GWY_GRAIN_VALUE_CIRCUMCIRCLE_X,
+        {
+            GWY_GRAIN_VALUE_GROUP_BOUNDARY,
+            "<i>x</i><sub>e</sub>", "x_e", NULL,
+            1, 0, 0, 0,
+        }
+    },
+    {
+        N_("Minimum circumcircle centre y position"),
+        GWY_GRAIN_VALUE_CIRCUMCIRCLE_Y,
+        {
+            GWY_GRAIN_VALUE_GROUP_BOUNDARY,
+            "<i>y</i><sub>e</sub>", "y_e", NULL,
+            1, 0, 0, 0,
         }
     },
     {
