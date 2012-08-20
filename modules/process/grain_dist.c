@@ -100,11 +100,13 @@ typedef struct {
 } GrainDistExportData;
 
 static gboolean   module_register                     (void);
-static void       grain_inscribe_discs                (GwyContainer *data,
-                                                       GwyRunType run);
 static void       grain_dist                          (GwyContainer *data,
                                                        GwyRunType run);
 static void       grain_stat                          (GwyContainer *data,
+                                                       GwyRunType run);
+static void       grain_inscribe_discs                (GwyContainer *data,
+                                                       GwyRunType run);
+static void       grain_exscribe_circles              (GwyContainer *data,
                                                        GwyRunType run);
 static GtkWidget* grain_stats_add_aux_button          (GtkWidget *hbox,
                                                        const gchar *stock_id,
@@ -187,6 +189,14 @@ module_register(void)
                               GWY_MENU_FLAG_DATA | GWY_MENU_FLAG_DATA_MASK,
                               N_("Create a selection visualising discs "
                                  "incribed into grains"));
+    gwy_process_func_register("grain_exscribe_circles",
+                              (GwyProcessFunc)&grain_exscribe_circles,
+                              N_("/_Grains/Select _Excscribed Circles"),
+                              NULL,
+                              INSCRIBE_RUN_MODES,
+                              GWY_MENU_FLAG_DATA | GWY_MENU_FLAG_DATA_MASK,
+                              N_("Create a selection visualising grain "
+                                 "circumcircles"));
 
     return TRUE;
 }
@@ -991,6 +1001,54 @@ grain_inscribe_discs(GwyContainer *data, GwyRunType run)
 
     g_free(grains);
     g_free(inscd);
+}
+
+static void
+grain_exscribe_circles(GwyContainer *data, GwyRunType run)
+{
+    static const GwyGrainQuantity quantities[] = {
+        GWY_GRAIN_VALUE_CIRCUMCIRCLE_R,
+        GWY_GRAIN_VALUE_CIRCUMCIRCLE_X,
+        GWY_GRAIN_VALUE_CIRCUMCIRCLE_Y,
+    };
+
+    GwyDataField *dfield, *mfield;
+    GwySelection *selection;
+    guint ngrains, i;
+    gint *grains;
+    gdouble *circc;
+    gdouble *values[3];
+    gchar *key;
+    gint id;
+
+    g_return_if_fail(run & INSCRIBE_RUN_MODES);
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
+                                     GWY_APP_MASK_FIELD, &mfield,
+                                     GWY_APP_DATA_FIELD_ID, &id,
+                                     0);
+
+    grains = g_new0(gint, mfield->xres * mfield->yres);
+    ngrains = gwy_data_field_number_grains(mfield, grains);
+    circc = g_new(gdouble, 3*(ngrains + 1));
+    for (i = 0; i < 3; i++)
+        values[i] = circc + i*(ngrains + 1);
+
+    gwy_data_field_grains_get_quantities(dfield, values, quantities, 3,
+                                         ngrains, grains);
+
+    selection = create_selection("GwySelectionEllipse", &ngrains);
+    for (i = 1; i <= ngrains; i++) {
+        gdouble r = values[0][i], x = values[1][i], y = values[2][i];
+        gdouble xy[4] = { x - r, y - r, x + r, y + r };
+        gwy_selection_set_object(selection, i-1, xy);
+    }
+
+    key = g_strdup_printf("/%d/select/ellipse", id);
+    gwy_container_set_object_by_name(data, key, selection);
+    g_object_unref(selection);
+
+    g_free(grains);
+    g_free(circc);
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
