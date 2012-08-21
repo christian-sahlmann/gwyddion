@@ -2528,13 +2528,13 @@ gwy_data_field_grains_get_quantities(GwyDataField *data_field,
              * pixels of the upscaled grain. */
             find_disc_centre_candidates(candidates, inqueue, dx, dy,
                                         centrex, centrey);
+            find_all_edges(&edges, grains, xres, gno, bbox + 4*gno,
+                           qh/qgeom, qv/qgeom);
 
             /* Try a few first candidates for the inscribed disc centre. */
             ncand = MIN(7, candidates->len);
             for (i = 0; i < ncand; i++) {
                 cand = &g_array_index(candidates, InscribedDisc, i);
-                find_all_edges(&edges, grains, xres, gno, bbox + 4*gno,
-                               qh/qgeom, qv/qgeom);
                 improve_inscribed_disc(cand, &edges, dist);
             }
 
