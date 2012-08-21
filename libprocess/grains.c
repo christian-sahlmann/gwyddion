@@ -51,6 +51,7 @@ typedef struct {
     gdouble ya;
     gdouble xb;
     gdouble yb;
+    gdouble r2;
 } Edge;
 
 typedef struct {
@@ -1507,44 +1508,65 @@ find_all_edges(EdgeQueue *edges,
 }
 
 static gdouble
-maximize_disc_radius(InscribedDisc *disc, const EdgeQueue *edges)
+maximize_disc_radius(InscribedDisc *disc, Edge *edges, guint n)
 {
     gdouble x = disc->x, y = disc->y, r2best = HUGE_VAL;
-    guint i;
 
-    for (i = 0; i < edges->len; i++) {
-        const Edge *edge = edges->edges + i;
-        gdouble rax = edge->xa - x, ray = edge->ya - y,
-                rbx = edge->xb - x, rby = edge->yb - y,
-                deltax = edge->xb - edge->xa, deltay = edge->yb - edge->ya;
+    while (n--) {
+        gdouble rax = edges->xa - x, ray = edges->ya - y,
+                rbx = edges->xb - x, rby = edges->yb - y,
+                deltax = edges->xb - edges->xa, deltay = edges->yb - edges->ya;
         gdouble ca = -(deltax*rax + deltay*ray),
                 cb = deltax*rbx + deltay*rby;
-        gdouble r2;
 
         if (ca <= 0.0)
-            r2 = rax*rax + ray*ray;
+            edges->r2 = rax*rax + ray*ray;
         else if (cb <= 0.0)
-            r2 = rbx*rbx + rby*rby;
+            edges->r2 = rbx*rbx + rby*rby;
         else {
             gdouble tx = cb*rax + ca*rbx, ty = cb*ray + ca*rby, D = ca + cb;
-            r2 = (tx*tx + ty*ty)/(D*D);
+            edges->r2 = (tx*tx + ty*ty)/(D*D);
         }
 
-        if (r2 < r2best)
-            r2best = r2;
+        if (edges->r2 < r2best)
+            r2best = edges->r2;
+        edges++;
     }
 
     return r2best;
 }
 
+static guint
+filter_relevant_edges(EdgeQueue *edges, gdouble r2, gdouble eps)
+{
+    Edge *edge = edges->edges, *enear = edges->edges;
+    gdouble limit = sqrt(r2) + 4.0*eps + 0.5;
+    guint i;
+
+    limit *= limit;
+    for (i = edges->len; i; i--, edge++) {
+        if (edge->r2 <= limit) {
+            if (edge != enear)
+                GWY_SWAP(Edge, *edge, *enear);
+            enear++;
+        }
+    }
+
+    return enear - edges->edges;
+}
+
 static void
-improve_inscribed_disc(InscribedDisc *disc, const EdgeQueue *edges, guint dist)
+improve_inscribed_disc(InscribedDisc *disc, EdgeQueue *edges, guint dist)
 {
     gdouble eps = 0.5 + 0.25*(dist > 4) + 0.25*(dist > 16), improvement;
 
     do {
-        InscribedDisc best = *disc;
-        guint i;
+        InscribedDisc best;
+        guint i, nr;
+
+        disc->R2 = maximize_disc_radius(disc, edges->edges, edges->len);
+        best = *disc;
+        nr = filter_relevant_edges(edges, best.R2, eps);
 
         improvement = 0.0;
         for (i = 0; i < NDIRECTIONS; i++) {
@@ -1556,26 +1578,31 @@ improve_inscribed_disc(InscribedDisc *disc, const EdgeQueue *edges, guint dist)
 
             cand.x = disc->x + sx;
             cand.y = disc->y + sy;
-            if ((cand.R2 = maximize_disc_radius(&cand, edges)) > best.R2)
+            if ((cand.R2 = maximize_disc_radius(&cand, edges->edges, nr))
+                > best.R2)
                 best = cand;
 
             cand.x = disc->x - sy;
             cand.y = disc->y + sx;
-            if ((cand.R2 = maximize_disc_radius(&cand, edges)) > best.R2)
+            if ((cand.R2 = maximize_disc_radius(&cand, edges->edges, nr))
+                > best.R2)
                 best = cand;
 
             cand.x = disc->x - sx;
             cand.y = disc->y - sy;
-            if ((cand.R2 = maximize_disc_radius(&cand, edges)) > best.R2)
+            if ((cand.R2 = maximize_disc_radius(&cand, edges->edges, nr))
+                > best.R2)
                 best = cand;
 
             cand.x = disc->x + sy;
             cand.y = disc->y - sx;
-            if ((cand.R2 = maximize_disc_radius(&cand, edges)) > best.R2)
+            if ((cand.R2 = maximize_disc_radius(&cand, edges->edges, nr))
+                > best.R2)
                 best = cand;
         }
+
         if (best.R2 > disc->R2) {
-            improvement = best.R2 - disc->R2;
+            improvement = sqrt(best.R2) - sqrt(disc->R2);
             *disc = best;
         }
         else {
@@ -2503,13 +2530,11 @@ gwy_data_field_grains_get_quantities(GwyDataField *data_field,
                                         centrex, centrey);
 
             /* Try a few first candidates for the inscribed disc centre. */
-            ncand = MIN(5, candidates->len);
+            ncand = MIN(7, candidates->len);
             for (i = 0; i < ncand; i++) {
                 cand = &g_array_index(candidates, InscribedDisc, i);
                 find_all_edges(&edges, grains, xres, gno, bbox + 4*gno,
                                qh/qgeom, qv/qgeom);
-
-                cand->R2 = maximize_disc_radius(cand, &edges);
                 improve_inscribed_disc(cand, &edges, dist);
             }
 
