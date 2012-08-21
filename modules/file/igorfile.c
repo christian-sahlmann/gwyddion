@@ -197,7 +197,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Igor binary waves (.ibw)."),
     "Yeti <yeti@gwyddion.net>",
-    "0.5",
+    "0.6",
     "David Nečas (Yeti)",
     "2009",
 };
@@ -349,9 +349,9 @@ igor_load(const gchar *filename,
         p += igorfile.header.dim_labels_size[i];
 
     /* FIXME: The labels are mandatory only in Asylum Research files. */
-    nlabels=igorfile.header.dim_labels_size[2]/(MAX_WAVE_NAME5+1);
+    nlabels = igorfile.header.dim_labels_size[2]/(MAX_WAVE_NAME5+1);
     expected_size = (MAX_WAVE_NAME5 + 1)*(nlabels);
-    if ( (p - buffer) + expected_size > size ) {
+    if ((p - buffer) + expected_size > size ) {
         g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
                     _("Cannot read channel labels."));
         goto fail;
@@ -360,18 +360,20 @@ igor_load(const gchar *filename,
     p += igorfile.header.dim_labels_size[2];
 
     if (igorfile.meta) {
-        igorfile.channel_info = g_new(AsylumChannelInfo, igorfile.nchannels);
+        igorfile.channel_info = g_new0(AsylumChannelInfo, igorfile.nchannels);
         for (i = 0; i < igorfile.nchannels; i++) {
             AsylumChannelInfo *chinfo = igorfile.channel_info + i;
             const gchar *title = g_ptr_array_index(igorfile.titles, i+1);
 
-            chinfo->name = canonicalize_title(title);
-            g_snprintf(key, sizeof(key), "%sUnit", chinfo->name);
-            value = g_hash_table_lookup(igorfile.meta, key);
-            if (value)
-                chinfo->units = value;
-            else
-                chinfo->units = channel_title_to_units(chinfo->name);
+            if (title) {
+                chinfo->name = canonicalize_title(title);
+                g_snprintf(key, sizeof(key), "%sUnit", chinfo->name);
+                value = g_hash_table_lookup(igorfile.meta, key);
+                if (value)
+                    chinfo->units = value;
+                else
+                    chinfo->units = channel_title_to_units(chinfo->name);
+            }
         }
     }
 
@@ -395,7 +397,7 @@ igor_load(const gchar *filename,
             gwy_container_set_object_by_name(container, key, meta);
         }
 
-        if(title) {
+        if (title) {
             g_snprintf(key, sizeof(key), "/%d/data/title", chid);
             gwy_container_set_string_by_name(container, key, g_strdup(title));
         }
@@ -867,7 +869,8 @@ gather_channel_meta(gpointer hkey,
     if (!*value)
         return;
     for (i = 0; i < igorfile->nchannels; i++) {
-        if (g_str_has_prefix(key, igorfile->channel_info[i].name))
+        if (igorfile->channel_info[i].name
+            && g_str_has_prefix(key, igorfile->channel_info[i].name))
             return;
     }
     for (i = 0; igorfile->ignore_prefixes[i]; i++) {
