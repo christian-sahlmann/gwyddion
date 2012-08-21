@@ -110,7 +110,7 @@ static gboolean
 module_register(void)
 {
     if (!check_pygtk_availability())
-        return;
+        return FALSE;
 
     pygwy_register_plugins();
     pygwy_register_console();
