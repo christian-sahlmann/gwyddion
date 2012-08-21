@@ -1189,7 +1189,7 @@ extract_upsampled_square_pixel_grain(const guint *grains, guint xres, guint gno,
         grain = grain_maybe_realloc(grain, w2, h2, grainsize);
         indices = (guint*)g_slice_alloc(w2*sizeof(guint));
         for (j = 0; j < w2; j++) {
-            gint jj = GWY_ROUND(j*dy/dx);
+            gint jj = GWY_ROUND(0.5*j*dy/dx);
             indices[j] = CLAMP(jj, 0, (gint)w-1);
         }
         for (i = 0; i < h; i++) {
@@ -1209,7 +1209,7 @@ extract_upsampled_square_pixel_grain(const guint *grains, guint xres, guint gno,
         grain = grain_maybe_realloc(grain, w2, h2, grainsize);
         for (i = 0; i < h2; i++) {
             guint k, k2 = i*w2;
-            gint ii = GWY_ROUND(i*dx/dy);
+            gint ii = GWY_ROUND(0.5*i*dx/dy);
             ii = CLAMP(ii, 0, (gint)h-1);
             k = (ii + row)*xres + col;
             for (j = 0; j < w; j++) {
@@ -1483,7 +1483,7 @@ find_all_edges(EdgeQueue *edges,
             else if (g == 1 || g == 14) {
                 g_assert(vertices[j] != G_MAXUINT);
                 g_assert(vertex != G_MAXUINT);
-                edge_list_add(edges, vertex, i, j, i);
+                edge_list_add(edges, dx*vertex, dy*i, dx*j, dy*i);
                 edge_list_add(edges, dx*j, dy*vertices[j], dx*j, dy*i);
                 vertex = G_MAXUINT;
                 vertices[j] = G_MAXUINT;
@@ -2437,7 +2437,7 @@ gwy_data_field_grains_get_quantities(GwyDataField *data_field,
         for (gno = 1; gno <= ngrains; gno++) {
             guint width, height, dist;
             gdouble dx, dy, centrex, centrey;
-            gdouble w = bbox[4*gno + 2], h = bbox[4*gno + 3];
+            guint w = bbox[4*gno + 2], h = bbox[4*gno + 3];
             gdouble xoff = qh*bbox[4*gno] + data_field->xoff,
                     yoff = qv*bbox[4*gno + 1] + data_field->yoff;
             guint ncand;
@@ -2446,14 +2446,14 @@ gwy_data_field_grains_get_quantities(GwyDataField *data_field,
              * Large rectangular grains are rare but the point is to catch
              * grains with width of height of 1 here. */
             if (sizes[gno] == w*h) {
-                w *= 0.5*qh;
-                h *= 0.5*qv;
+                dx = 0.5*w*qh;
+                dy = 0.5*h*qv;
                 if (inscdr)
-                    inscdr[gno] = 0.999*MIN(w, h);
+                    inscdr[gno] = 0.999*MIN(dx, dy);
                 if (inscdx)
-                    inscdx[gno] = w + xoff;
+                    inscdx[gno] = dx + xoff;
                 if (inscdy)
-                    inscdy[gno] = h + yoff;
+                    inscdy[gno] = dy + yoff;
                 continue;
             }
 
@@ -2465,8 +2465,8 @@ gwy_data_field_grains_get_quantities(GwyDataField *data_field,
                                                          grain, &grainsize,
                                                          &width, &height,
                                                          qh, qv);
-            /* Upsampled pixel size in squeezed pixel coordinates.  Normally
-             * equal to 1/2. */
+            /* Size of upsamples pixel in original pixel coordinates.  Normally
+             * equal to 1/2 and always approximately 1:1. */
             dx = w*(qh/qgeom)/width;
             dy = h*(qv/qgeom)/height;
             /* Grain centre in squeezed pixel coordinates within the bbox. */
@@ -2486,6 +2486,17 @@ gwy_data_field_grains_get_quantities(GwyDataField *data_field,
                 GWY_SWAP(PixelQueue*, inqueue, outqueue);
                 dist++;
             }
+#if 0
+            for (i = 0; i < height; i++) {
+                for (j = 0; j < width; j++) {
+                    if (!grain[i*width + j])
+                        g_printerr("..");
+                    else
+                        g_printerr("%02u", grain[i*width + j]);
+                    g_printerr("%c", j == width-1 ? '\n' : ' ');
+                }
+            }
+#endif
             /* Now inqueue is always non-empty and contains max-distance
              * pixels of the upscaled grain. */
             find_disc_centre_candidates(candidates, inqueue, dx, dy,
