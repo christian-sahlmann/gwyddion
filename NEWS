@@ -6,11 +6,14 @@ Libraries:
 - libgwyprocess: A new function to remove grains touching image borders.
 - libgwyprocess: New grain quantities: Radius and position of maximum
   inscribed disc and minimum excscribed circle, area of grain convex hull.
+- libgwyapp: Critical warning/crash if the last visible channel of a file is
+  deleted and this channel has a mask.
 
 Modules:
 - APE file: Channel labelling for various modes was corrected.
 - Createc: Dimensions and values of imported data was corrected, all channels
   are imported now.
+- IGOR file: Crash on files that contain no channel titles was fixed.
 - Selection manager tool: Chosen selection is shown in the data window.
 - Remove Grain by Threshold: Can also remove grains touching image borders.
 - Grain Statistics: Select Inscribed Discs and Select Excscribed Circles
