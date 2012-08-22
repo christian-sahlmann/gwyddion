@@ -326,6 +326,15 @@ grain_values[] = {
         }
     },
     {
+        N_("Mean radius"),
+        GWY_GRAIN_VALUE_MEAN_RADIUS,
+        {
+            GWY_GRAIN_VALUE_GROUP_BOUNDARY,
+            "<i>R</i><sub>m</sub>", "R_m", NULL,
+            1, 0, 0, 0,
+        }
+    },
+    {
         N_("Inclination θ"),
         GWY_GRAIN_VALUE_SLOPE_THETA,
         {

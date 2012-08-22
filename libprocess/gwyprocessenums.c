@@ -451,6 +451,10 @@ gwy_masking_type_get_enum(void)
  *                                  minimum circumcircle. (Since: 2.30)
  * @GWY_GRAIN_VALUE_CIRCUMCIRCLE_Y: Real Y-coordinate of the centre of the
  *                                  minimum circumcircle. (Since: 2.30)
+ * @GWY_GRAIN_VALUE_MEAN_RADIUS: Mean distance from boundary to the grain
+ *                               centre as defined by
+ *                               @GWY_GRAIN_VALUE_CENTER_X and
+ *                               @GWY_GRAIN_VALUE_CENTER_Y. (Since: 2.30)
  *
  * Grain quantity to request from gwy_data_field_grains_get_distribution()
  * and similar functions.

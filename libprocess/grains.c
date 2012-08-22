@@ -2003,7 +2003,7 @@ gwy_data_field_grains_get_quantities(GwyDataField *data_field,
                                      const gint *grains)
 {
     /* The number of built-in quantities. */
-    enum { NQ = 41 };
+    enum { NQ = 42 };
     enum {
         NEED_SIZES = 1 << 0,
         NEED_BOUNDPOS = 1 << 1,
@@ -2060,6 +2060,7 @@ gwy_data_field_grains_get_quantities(GwyDataField *data_field,
         NEED_BOUNDPOS,                /* circumcircle radius */
         NEED_BOUNDPOS,                /* circumcircle centre x */
         NEED_BOUNDPOS,                /* circumcircle centre y */
+        NEED_CENTRE,                  /* mean radius */
     };
 
     gdouble *quantity_data[NQ];
@@ -2132,7 +2133,7 @@ gwy_data_field_grains_get_quantities(GwyDataField *data_field,
             for (gno = 0; gno <= ngrains; gno++)
                 boundpos[gno] = -1;
         }
-        if ((need & NEED_BBOX) && !boundpos) {
+        if ((need & NEED_BBOX) && !bbox) {
             bbox = gwy_data_field_get_grain_bounding_boxes(data_field,
                                                            ngrains, grains,
                                                            NULL);
@@ -2561,6 +2562,49 @@ gwy_data_field_grains_get_quantities(GwyDataField *data_field,
         g_free(edges.edges);
         g_array_free(candidates, TRUE);
     }
+    /* XXX: This must go before GWY_GRAIN_VALUE_CENTER_X and
+     * GWY_GRAIN_VALUE_CENTER_Y because we want them as pixel quantities. */
+    if ((p = quantity_data[GWY_GRAIN_VALUE_MEAN_RADIUS])) {
+        guint *blen = g_new0(guint, ngrains + 1);
+
+        k = 0;
+        for (i = 0; i < yres; i++) {
+            for (j = 0; j < xres; j++, k++) {
+                gdouble xc, yc;
+
+                if (!(gno = grains[k]))
+                    continue;
+
+                xc = xvalue[gno];
+                yc = yvalue[gno];
+                if (!i || !grains[k - xres]) {
+                    p[gno] += hypot(qh*(j+0.5 - xc), qv*(i - yc));
+                    p[gno] += hypot(qh*(j+1 - xc), qv*(i - yc));
+                    blen[gno] += 2;
+                }
+                if (!j || !grains[k-1]) {
+                    p[gno] += hypot(qh*(j - xc), qv*(i - yc));
+                    p[gno] += hypot(qh*(j - xc), qv*(i+0.5 - yc));
+                    blen[gno] += 2;
+                }
+                if (j == xres-1 || !grains[k+1]) {
+                    p[gno] += hypot(qh*(j+1 - xc), qv*(i+0.5 - yc));
+                    p[gno] += hypot(qh*(j+1 - xc), qv*(i+1 - yc));
+                    blen[gno] += 2;
+                }
+                if (i == yres-1 || !grains[k + xres]) {
+                    p[gno] += hypot(qh*(j - xc), qv*(i+1 - yc));
+                    p[gno] += hypot(qh*(j+0.5 - xc), qv*(i+1 - yc));
+                    blen[gno] += 2;
+                }
+            }
+        }
+
+        for (gno = 1; gno <= ngrains; gno++)
+            p[gno] /= blen[gno];
+
+        g_free(blen);
+    }
     if ((p = quantity_data[GWY_GRAIN_VALUE_CENTER_X])) {
         for (gno = 0; gno <= ngrains; gno++)
             p[gno] = qh*(p[gno] + 0.5) + data_field->xoff;
@@ -2815,7 +2859,8 @@ gwy_grain_quantity_needs_same_units(GwyGrainQuantity quantity)
                          | (ONE << GWY_GRAIN_VALUE_CONVEX_HULL_AREA)
                          | (ONE << GWY_GRAIN_VALUE_CIRCUMCIRCLE_R)
                          | (ONE << GWY_GRAIN_VALUE_CIRCUMCIRCLE_X)
-                         | (ONE << GWY_GRAIN_VALUE_CIRCUMCIRCLE_Y)),
+                         | (ONE << GWY_GRAIN_VALUE_CIRCUMCIRCLE_Y)
+                         | (ONE << GWY_GRAIN_VALUE_MEAN_RADIUS)),
         same_units = ((ONE << GWY_GRAIN_VALUE_SLOPE_THETA)
                       | (ONE << GWY_GRAIN_VALUE_SURFACE_AREA)
                       | (ONE << GWY_GRAIN_VALUE_CURVATURE1)
@@ -2866,7 +2911,8 @@ gwy_grain_quantity_get_units(GwyGrainQuantity quantity,
                        | (ONE << GWY_GRAIN_VALUE_INSCRIBED_DISC_Y)
                        | (ONE << GWY_GRAIN_VALUE_CIRCUMCIRCLE_R)
                        | (ONE << GWY_GRAIN_VALUE_CIRCUMCIRCLE_X)
-                       | (ONE << GWY_GRAIN_VALUE_CIRCUMCIRCLE_Y)),
+                       | (ONE << GWY_GRAIN_VALUE_CIRCUMCIRCLE_Y)
+                       | (ONE << GWY_GRAIN_VALUE_MEAN_RADIUS)),
         icoord_units = ((ONE << GWY_GRAIN_VALUE_CURVATURE1)
                        | (ONE << GWY_GRAIN_VALUE_CURVATURE2)),
         value_units = ((ONE << GWY_GRAIN_VALUE_MAXIMUM)

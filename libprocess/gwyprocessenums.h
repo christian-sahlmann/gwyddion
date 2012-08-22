@@ -191,6 +191,7 @@ typedef enum {
     GWY_GRAIN_VALUE_CIRCUMCIRCLE_R       = 38,
     GWY_GRAIN_VALUE_CIRCUMCIRCLE_X       = 39,
     GWY_GRAIN_VALUE_CIRCUMCIRCLE_Y       = 40,
+    GWY_GRAIN_VALUE_MEAN_RADIUS          = 41,
 } GwyGrainQuantity;
 
 typedef enum {
