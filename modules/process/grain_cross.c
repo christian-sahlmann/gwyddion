@@ -29,8 +29,7 @@
 #include <libgwymodule/gwymodule-process.h>
 #include <app/gwyapp.h>
 
-#define DIST_RUN_MODES GWY_RUN_INTERACTIVE
-#define STAT_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
+#define CROSS_RUN_MODES (GWY_RUN_IMMEDIATE | GWY_RUN_INTERACTIVE)
 
 typedef struct {
     const gchar *abscissa;
@@ -75,7 +74,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Plots one grain quantity as a function of another."),
     "Yeti <yeti@gwyddion.net>",
-    "1.0",
+    "1.1",
     "David Nečas",
     "2007",
 };
@@ -89,7 +88,7 @@ module_register(void)
                               (GwyProcessFunc)&grain_cross,
                               N_("/_Grains/_Correlate..."),
                               GWY_STOCK_GRAINS_GRAPH,
-                              STAT_RUN_MODES,
+                              CROSS_RUN_MODES,
                               GWY_MENU_FLAG_DATA | GWY_MENU_FLAG_DATA_MASK,
                               N_("Correlate grain characteristics"));
 
@@ -105,7 +104,7 @@ grain_cross(GwyContainer *data, GwyRunType run)
     GwyDataField *mfield;
     gint id;
 
-    g_return_if_fail(run & DIST_RUN_MODES);
+    g_return_if_fail(run & CROSS_RUN_MODES);
     grain_cross_load_args(gwy_app_settings_get(), &args);
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
                                      GWY_APP_DATA_FIELD_ID, &id,
