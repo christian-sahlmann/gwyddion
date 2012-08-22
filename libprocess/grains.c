@@ -2015,6 +2015,7 @@ gwy_data_field_grains_get_quantities(GwyDataField *data_field,
         NEED_ZVALUE = (1 << 6) | NEED_SIZES,
         NEED_LINEAR = (1 << 7) | NEED_ZVALUE | NEED_CENTRE,
         NEED_QUADRATIC = (1 << 8) | NEED_LINEAR,
+        NEED_BBOX = (1 << 9),
         INVALID = G_MAXUINT
     };
     static const guint need_aux[NQ] = {
@@ -2038,7 +2039,7 @@ gwy_data_field_grains_get_quantities(GwyDataField *data_field,
         NEED_YVALUE,                  /* centre y */
         0,                            /* volume, 0-based */
         NEED_MIN,                     /* volume, min-based */
-        0,                            /* volume, Laplace-based */
+        NEED_BBOX | NEED_SIZES,       /* volume, Laplace-based */
         INVALID,
         INVALID,
         NEED_LINEAR,                  /* slope theta */
@@ -2052,9 +2053,9 @@ gwy_data_field_grains_get_quantities(GwyDataField *data_field,
         NEED_QUADRATIC,               /* curvature invrad 2 */
         NEED_QUADRATIC,               /* curvature direction 1 */
         NEED_QUADRATIC,               /* curvature direction 2 */
-        NEED_CENTRE,                  /* inscribed disc radius */
-        NEED_CENTRE,                  /* inscribed disc centre x */
-        NEED_CENTRE,                  /* inscribed disc centre y */
+        NEED_CENTRE | NEED_BBOX,      /* inscribed disc radius */
+        NEED_CENTRE | NEED_BBOX,      /* inscribed disc centre x */
+        NEED_CENTRE | NEED_BBOX,      /* inscribed disc centre y */
         NEED_BOUNDPOS,                /* convex hull area */
         NEED_BOUNDPOS,                /* circumcircle radius */
         NEED_BOUNDPOS,                /* circumcircle centre x */
@@ -2065,7 +2066,7 @@ gwy_data_field_grains_get_quantities(GwyDataField *data_field,
     gboolean seen[NQ];
     GList *l, *buffers = NULL;
     guint *sizes = NULL;
-    gint *boundpos = NULL;
+    gint *boundpos = NULL, *bbox = NULL;
     gdouble *xvalue = NULL, *yvalue = NULL, *zvalue = NULL,
             *min = NULL, *max = NULL,
             *linear = NULL, *quadratic = NULL;
@@ -2130,6 +2131,12 @@ gwy_data_field_grains_get_quantities(GwyDataField *data_field,
             buffers = g_list_prepend(buffers, boundpos);
             for (gno = 0; gno <= ngrains; gno++)
                 boundpos[gno] = -1;
+        }
+        if ((need & NEED_BBOX) && !boundpos) {
+            bbox = gwy_data_field_get_grain_bounding_boxes(data_field,
+                                                           ngrains, grains,
+                                                           NULL);
+            buffers = g_list_prepend(buffers, bbox);
         }
         /* Floating point data that coincide with some quantity.  An array
          * is allocated only if the corresponding quantity is not requested.
@@ -2438,7 +2445,6 @@ gwy_data_field_grains_get_quantities(GwyDataField *data_field,
         gdouble *inscdr = quantity_data[GWY_GRAIN_VALUE_INSCRIBED_DISC_R];
         gdouble *inscdx = quantity_data[GWY_GRAIN_VALUE_INSCRIBED_DISC_X];
         gdouble *inscdy = quantity_data[GWY_GRAIN_VALUE_INSCRIBED_DISC_Y];
-        gint *bbox;
         guint *grain = NULL;
         guint grainsize = 0;
         PixelQueue *inqueue = g_slice_new0(PixelQueue);
@@ -2446,11 +2452,6 @@ gwy_data_field_grains_get_quantities(GwyDataField *data_field,
         GArray *candidates = g_array_new(FALSE, FALSE, sizeof(InscribedDisc));
         EdgeQueue edges = { 0, 0, NULL };
         InscribedDisc *cand;
-
-        /* FIXME: BBoxes are used for more than one grain quantity, make them
-         * a common aux. */
-        bbox = gwy_data_field_get_grain_bounding_boxes(data_field,
-                                                       ngrains, grains, NULL);
 
         /*
          * For each grain:
@@ -2552,7 +2553,6 @@ gwy_data_field_grains_get_quantities(GwyDataField *data_field,
                 inscdy[gno] = cand->y*qgeom + yoff;
         }
 
-        g_free(bbox);
         g_free(grain);
         g_free(inqueue->points);
         g_free(outqueue->points);
@@ -2615,26 +2615,15 @@ gwy_data_field_grains_get_quantities(GwyDataField *data_field,
         }
     }
     if ((p = quantity_data[GWY_GRAIN_VALUE_VOLUME_LAPLACE])) {
-        gint *bbox;
-
         gwy_clear(p, ngrains + 1);
-        /* Fail gracefully when there is one big `grain' over all data.
-         * FIXME: Is this correct?  The grain can touch all sides but still
-         * have an exterior. */
-        bbox = gwy_data_field_get_grain_bounding_boxes(data_field,
-                                                       ngrains, grains, NULL);
-        if (ngrains == 1
-            && (bbox[4] == 0 && bbox[5] == 0
-                && bbox[6] == xres && bbox[7] == yres)) {
-            g_warning("Cannot interpolate from exterior of the grain when it "
-                      "has no exterior.");
-        }
+        /* Fail gracefully when there is one big `grain' over all data. */
+        if (ngrains == 1 && sizes[1] == xres*yres)
+            p[1] = 0.0;
         else {
             for (gno = 1; gno <= ngrains; gno++)
                 p[gno] = qarea/96.0*grain_volume_laplace(data_field, grains,
                                                          gno, bbox + 4*gno);
         }
-        g_free(bbox);
     }
     if (quantity_data[GWY_GRAIN_VALUE_SLOPE_THETA]
         || quantity_data[GWY_GRAIN_VALUE_SLOPE_PHI]) {
@@ -3364,7 +3353,7 @@ gwy_data_field_number_grains(GwyDataField *mask_field,
  * Find bounding boxes of all grains.
  *
  * Returns: Either %bboxes (if it was not %NULL), or a newly allocated array
- *          of size 4@ngrains.
+ *          of size 4(@ngrains + 1).
  *
  * Since: 2.3
  **/
