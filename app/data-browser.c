@@ -1284,7 +1284,7 @@ gwy_app_data_proxy_item_changed(GwyContainer *data,
             gwy_app_data_proxy_connect_channel(proxy, id, &iter, object);
         else if (!object && found)
             gwy_app_data_proxy_disconnect_channel(proxy, &iter);
-        else {
+        else if (object && found) {
             gwy_app_data_proxy_reconnect_channel(proxy, &iter, object);
             gwy_list_store_row_changed(list->store, &iter, NULL, -1);
         }
@@ -1307,7 +1307,7 @@ gwy_app_data_proxy_item_changed(GwyContainer *data,
             gwy_app_data_proxy_connect_graph(proxy, id, &iter, object);
         else if (!object && found)
             gwy_app_data_proxy_disconnect_graph(proxy, &iter);
-        else {
+        else if (object && found) {
             gwy_app_data_proxy_reconnect_graph(proxy, &iter, object);
             gwy_list_store_row_changed(list->store, &iter, NULL, -1);
         }
@@ -1330,7 +1330,7 @@ gwy_app_data_proxy_item_changed(GwyContainer *data,
             gwy_app_data_proxy_connect_spectra(proxy, id, &iter, object);
         else if (!object && found)
             gwy_app_data_proxy_disconnect_spectra(proxy, &iter);
-        else {
+        else if (object && found) {
             gwy_app_data_proxy_reconnect_spectra(proxy, &iter, object);
             gwy_list_store_row_changed(list->store, &iter, NULL, -1);
         }
@@ -1348,7 +1348,7 @@ gwy_app_data_proxy_item_changed(GwyContainer *data,
             gwy_app_data_proxy_connect_mask(proxy, id, object);
         else if (!object && found)
             gwy_app_data_proxy_disconnect_mask(proxy, id);
-        else
+        else if (object && found)
             gwy_app_data_proxy_reconnect_mask(proxy, id, object);
 
         found = gwy_app_data_proxy_find_object(list->store, id, &iter);
