@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2012-08-11 03:58+0200\n"
-"PO-Revision-Date: 2012-08-12 17:40+0300\n"
+"POT-Creation-Date: 2012-08-23 03:58+0200\n"
+"PO-Revision-Date: 2012-08-23 22:07+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "Language: \n"
@@ -309,92 +309,124 @@ msgstr "Радиус эквивалентного диска"
 msgid "Area above half-height"
 msgstr "Площадь выше половинной высоты"
 
+#: libprocess/gwygrainvalue.c:188
+msgid "Area of convex hull"
+msgstr "Площадь выпуклой оболочки"
+
 #. TRANSLATORS: Grain volume calculated using basis (foot) set to
 #. * zero.
-#: libprocess/gwygrainvalue.c:190
+#: libprocess/gwygrainvalue.c:199
 msgid "Zero basis volume"
 msgstr "Объём между нулевой плоскостью и поверхностью"
 
 #. TRANSLATORS: Grain volume calculated using basis (foot) set to the
 #. * grain minimum.
-#: libprocess/gwygrainvalue.c:201
+#: libprocess/gwygrainvalue.c:210
 msgid "Grain minimum basis volume"
 msgstr "Объём между поверхностью и плоскостью, проходящей через минимум зерна"
 
 #. TRANSLATORS: Grain volume calculated using basis (foot) set to the
 #. * Laplacian background.
-#: libprocess/gwygrainvalue.c:212
+#: libprocess/gwygrainvalue.c:221
 msgid "Laplacian background basis volume"
 msgstr "Объём между поверхностью и фоном, вычисленным по Лапласу"
 
-#: libprocess/gwygrainvalue.c:221
+#: libprocess/gwygrainvalue.c:230
 msgid "Projected boundary length"
 msgstr "Длина границы проекции"
 
-#: libprocess/gwygrainvalue.c:230
+#: libprocess/gwygrainvalue.c:239
 msgid "Minimum bounding size"
 msgstr "Минимальный ограничивающий размер"
 
-#: libprocess/gwygrainvalue.c:239
+#: libprocess/gwygrainvalue.c:248
 msgid "Minimum bounding direction"
 msgstr "Направление минимального ограничивающего размера"
 
-#: libprocess/gwygrainvalue.c:248
+#: libprocess/gwygrainvalue.c:257
 msgid "Maximum bounding size"
 msgstr "Максимальный ограничивающий размер"
 
-#: libprocess/gwygrainvalue.c:257
+#: libprocess/gwygrainvalue.c:266
 msgid "Maximum bounding direction"
 msgstr "Направление максимального ограничивающего размера"
 
-#: libprocess/gwygrainvalue.c:266
+#: libprocess/gwygrainvalue.c:275
+msgid "Maximum inscribed disc radius"
+msgstr "Максимальный радиус вписанного диска"
+
+#: libprocess/gwygrainvalue.c:284
+msgid "Maximum inscribed disc center x position"
+msgstr "Положение центра по x максимального вписанного диска"
+
+#: libprocess/gwygrainvalue.c:293
+msgid "Maximum inscribed disc center y position"
+msgstr "Положение центра по y максимального вписанного диска"
+
+#: libprocess/gwygrainvalue.c:302
+msgid "Minimum circumcircle radius"
+msgstr "Минимальный радиус описанной окружности"
+
+#: libprocess/gwygrainvalue.c:311
+msgid "Minimum circumcircle center x position"
+msgstr "Положение центра по x минимальной описанной окружности"
+
+#: libprocess/gwygrainvalue.c:320
+msgid "Minimum circumcircle center y position"
+msgstr "Положение центра по y минимальной описанной окружности"
+
+#: libprocess/gwygrainvalue.c:329
+msgid "Mean radius"
+msgstr "Средний радиус"
+
+#: libprocess/gwygrainvalue.c:338
 #: modules/tools/readvalue.c:307
 msgid "Inclination θ"
 msgstr "Наклон θ"
 
-#: libprocess/gwygrainvalue.c:275
+#: libprocess/gwygrainvalue.c:347
 #: modules/tools/readvalue.c:317
 msgid "Inclination φ"
 msgstr "Наклон φ"
 
-#: libprocess/gwygrainvalue.c:284
+#: libprocess/gwygrainvalue.c:356
 msgid "Curvature center x position"
 msgstr "Положение центра кривизны по x"
 
-#: libprocess/gwygrainvalue.c:293
+#: libprocess/gwygrainvalue.c:365
 msgid "Curvature center y position"
 msgstr "Положение центра кривизны по y"
 
-#: libprocess/gwygrainvalue.c:302
+#: libprocess/gwygrainvalue.c:374
 msgid "Curvature center z value"
 msgstr "Значение центра кривизны по z"
 
-#: libprocess/gwygrainvalue.c:311
+#: libprocess/gwygrainvalue.c:383
 msgid "Curvature 1"
 msgstr "Кривизна 1"
 
-#: libprocess/gwygrainvalue.c:320
+#: libprocess/gwygrainvalue.c:392
 msgid "Curvature 2"
 msgstr "Кривизна 2"
 
-#: libprocess/gwygrainvalue.c:329
+#: libprocess/gwygrainvalue.c:401
 msgid "Curvature angle 1"
 msgstr "Угол кривизны 1"
 
-#: libprocess/gwygrainvalue.c:338
+#: libprocess/gwygrainvalue.c:410
 msgid "Curvature angle 2"
 msgstr "Угол кривизны 2"
 
-#: libprocess/gwygrainvalue.c:981
+#: libprocess/gwygrainvalue.c:1053
 msgid "Id"
 msgstr "Идентификатор"
 
-#: libprocess/gwygrainvalue.c:982
+#: libprocess/gwygrainvalue.c:1054
 #: modules/tools/readvalue.c:239
 msgid "Position"
 msgstr "Позиция"
 
-#: libprocess/gwygrainvalue.c:983
+#: libprocess/gwygrainvalue.c:1055
 #: app/meta.c:305
 #: modules/process/curvature.c:743
 #: modules/tools/level3.c:461
@@ -402,19 +434,19 @@ msgstr "Позиция"
 msgid "Value"
 msgstr "Значение"
 
-#: libprocess/gwygrainvalue.c:984
+#: libprocess/gwygrainvalue.c:1056
 msgid "Area"
 msgstr "Площадь"
 
-#: libprocess/gwygrainvalue.c:985
+#: libprocess/gwygrainvalue.c:1057
 msgid "Volume"
 msgstr "Объём"
 
-#: libprocess/gwygrainvalue.c:986
+#: libprocess/gwygrainvalue.c:1058
 msgid "Boundary"
 msgstr "Граница"
 
-#: libprocess/gwygrainvalue.c:987
+#: libprocess/gwygrainvalue.c:1059
 #: modules/process/pat_synth.c:866
 #: modules/process/pat_synth.c:1167
 #: modules/process/pat_synth.c:1502
@@ -422,12 +454,12 @@ msgstr "Граница"
 msgid "Slope"
 msgstr "Уклон"
 
-#: libprocess/gwygrainvalue.c:988
+#: libprocess/gwygrainvalue.c:1060
 #: modules/process/curvature.c:600
 msgid "Curvature"
 msgstr "Кривизна"
 
-#: libprocess/gwygrainvalue.c:992
+#: libprocess/gwygrainvalue.c:1064
 msgid "User"
 msgstr "Пользовательские"
 
@@ -888,7 +920,7 @@ msgstr "точек"
 #: modules/process/fractal.c:206
 #: modules/process/grain_edge.c:217
 #: modules/process/grain_mark.c:262
-#: modules/process/grain_rem_threshold.c:224
+#: modules/process/grain_rem_threshold.c:227
 #: modules/process/grain_wshed.c:182
 #: modules/process/hough.c:175
 #: modules/process/latsim.c:158
@@ -962,7 +994,7 @@ msgstr "Скрытый"
 
 #: libgwydgets/gwydgetenums.c:46
 #: libgwydgets/gwygraphwindowmeasuredialog.c:577
-#: modules/tools/selectionmanager.c:218
+#: modules/tools/selectionmanager.c:258
 msgid "Points"
 msgstr "Точки"
 
@@ -1211,7 +1243,7 @@ msgstr "Предпочтительное"
 #: modules/file/rawfile.c:957
 #: modules/process/convolution_filter.c:547
 #: modules/process/neural.c:996
-#: modules/tools/selectionmanager.c:289
+#: modules/tools/selectionmanager.c:329
 msgid "Name"
 msgstr "Имя"
 
@@ -1290,7 +1322,7 @@ msgstr "Название и версия:"
 
 #: libgwymodule/gwymodulebrowser.c:246
 #: libgwymodule/gwymodulebrowser.c:269
-#: modules/process/grain_dist.c:699
+#: modules/process/grain_dist.c:720
 msgid "File:"
 msgstr "Файл:"
 
@@ -2568,10 +2600,10 @@ msgstr "Экспортировать текст"
 #: modules/file/rawfile.c:720
 #: modules/file/rawxyz.c:670
 #: modules/process/fft_filter_1d.c:296
-#: modules/process/grain_dist.c:285
+#: modules/process/grain_dist.c:306
 #: modules/process/grain_edge.c:270
 #: modules/process/grain_mark.c:344
-#: modules/process/grain_rem_threshold.c:324
+#: modules/process/grain_rem_threshold.c:327
 #: modules/process/grain_wshed.c:278
 #: modules/tools/spotremove.c:319
 #: modules/tools/stats.c:378
@@ -2583,7 +2615,7 @@ msgid "Use _dot as decimal separator"
 msgstr "Использовать точку как _десятичный разделитель"
 
 #: modules/file/asciiexport.c:283
-#: modules/process/grain_dist.c:296
+#: modules/process/grain_dist.c:317
 msgid "Add _informational comment header"
 msgstr "Добавить _информационный заголовок-комментарий"
 
@@ -4254,7 +4286,7 @@ msgstr "_Увеличение:"
 #: modules/file/pixmap.c:3079
 #: modules/process/col_synth.c:400
 #: modules/process/grain_mark.c:309
-#: modules/process/grain_rem_threshold.c:280
+#: modules/process/grain_rem_threshold.c:283
 #: modules/process/obj_synth.c:573
 #: modules/process/pat_synth.c:889
 #: modules/process/pat_synth.c:1190
@@ -4533,7 +4565,7 @@ msgstr "Предустановки"
 #: modules/process/fft_filter_1d.c:197
 #: modules/process/grain_edge.c:214
 #: modules/process/grain_mark.c:259
-#: modules/process/grain_rem_threshold.c:221
+#: modules/process/grain_rem_threshold.c:224
 #: modules/process/grain_wshed.c:179
 #: modules/process/mark_with.c:211
 #: modules/process/polydistort.c:214
@@ -6404,7 +6436,7 @@ msgstr "Обрезать до действительных данных"
 #: modules/process/fft_filter_1d.c:334
 #: modules/process/grain_edge.c:286
 #: modules/process/grain_mark.c:377
-#: modules/process/grain_rem_threshold.c:357
+#: modules/process/grain_rem_threshold.c:371
 #: modules/process/mark_with.c:356
 #: modules/process/polydistort.c:337
 #: modules/process/scars.c:575
@@ -6858,7 +6890,7 @@ msgid "Masking Mode"
 msgstr "Режим использования маски"
 
 #: modules/process/curvature.c:754
-#: modules/process/grain_dist.c:835
+#: modules/process/grain_dist.c:856
 #: modules/tools/distance.c:227
 #: modules/tools/roughness.c:824
 #: modules/tools/stats.c:426
@@ -6866,7 +6898,7 @@ msgid "Save table to a file"
 msgstr "Сохранить таблицу в файл"
 
 #: modules/process/curvature.c:759
-#: modules/process/grain_dist.c:840
+#: modules/process/grain_dist.c:861
 #: modules/tools/distance.c:232
 #: modules/tools/roughness.c:829
 #: modules/tools/stats.c:431
@@ -7025,7 +7057,7 @@ msgstr "_Линии дрейфа"
 #: modules/process/facet_analysis.c:411
 #: modules/process/grain_edge.c:279
 #: modules/process/grain_mark.c:370
-#: modules/process/grain_rem_threshold.c:350
+#: modules/process/grain_rem_threshold.c:364
 #: modules/process/grain_wshed.c:296
 #: modules/process/scars.c:568
 msgid "_Mask color:"
@@ -7575,7 +7607,7 @@ msgid "PSDF Section"
 msgstr "Сечение ФСПМ"
 
 #: modules/process/fft_profile.c:272
-#: modules/process/grain_dist.c:313
+#: modules/process/grain_dist.c:334
 #: modules/tools/linestats.c:375
 #: modules/tools/profile.c:415
 #: modules/tools/sfunctions.c:405
@@ -7911,120 +7943,136 @@ msgstr "/_Презентация/_Градиент/_Азимут"
 msgid "Local slope azimuth presentation"
 msgstr "Презентация азимута локального наклона"
 
-#: modules/process/grain_cross.c:76
+#: modules/process/grain_cross.c:75
 msgid "Plots one grain quantity as a function of another."
 msgstr "Строит график одного из свойств зёрен как функции от другого."
 
-#: modules/process/grain_cross.c:90
+#: modules/process/grain_cross.c:89
 msgid "/_Grains/_Correlate..."
 msgstr "/Зёрн_а/_Коррелировать..."
 
-#: modules/process/grain_cross.c:94
+#: modules/process/grain_cross.c:93
 msgid "Correlate grain characteristics"
 msgstr "Коррелировать характеристики зёрен"
 
-#: modules/process/grain_cross.c:134
+#: modules/process/grain_cross.c:133
 msgid "Grain correlation: Lateral dimensions and value must be the same physical quantity for the selected grain properties."
 msgstr "Корреляция зёрен: пространственные единицы измерения и значения должны быть одной физической величиной для выбранных свойств зёрен."
 
-#: modules/process/grain_cross.c:240
+#: modules/process/grain_cross.c:239
 msgid "Grain Correlations"
 msgstr "Корреляции зёрен"
 
-#: modules/process/grain_cross.c:256
+#: modules/process/grain_cross.c:255
 msgid "_Abscissa"
 msgstr "_Абсцисса"
 
-#: modules/process/grain_cross.c:260
+#: modules/process/grain_cross.c:259
 msgid "O_rdinate"
 msgstr "О_рдината"
 
-#: modules/process/grain_dist.c:144
+#: modules/process/grain_dist.c:149
 msgid "Evaluates distribution of grains (continuous parts of mask)."
 msgstr "Оценивает распределение зёрен (непрерывных частей маски)."
 
-#: modules/process/grain_dist.c:166
+#: modules/process/grain_dist.c:171
 msgid "/_Grains/_Distributions..."
 msgstr "/Зёрн_а/_Распределения..."
 
-#: modules/process/grain_dist.c:170
+#: modules/process/grain_dist.c:175
 msgid "Distributions of various grain characteristics"
 msgstr "Распределения различных характеристик зерна"
 
-#: modules/process/grain_dist.c:174
+#: modules/process/grain_dist.c:179
 msgid "/_Grains/S_tatistics..."
 msgstr "/Зёрн_а/_Статистика..."
 
-#: modules/process/grain_dist.c:178
+#: modules/process/grain_dist.c:183
 msgid "Simple grain statistics"
 msgstr "Простая статистика зёрен"
 
-#: modules/process/grain_dist.c:217
+#: modules/process/grain_dist.c:186
+msgid "/_Grains/Select _Inscribed Discs"
+msgstr "/_Зёрна/Выбрать вписанные _диски"
+
+#: modules/process/grain_dist.c:190
+msgid "Create a selection visualising discs incribed into grains"
+msgstr "Создать выделенную область, показывающую вписанные в зёрна диски"
+
+#: modules/process/grain_dist.c:194
+msgid "/_Grains/Select _Excscribed Circles"
+msgstr "/_Зёрна/Выбрать о_писанные окружности"
+
+#: modules/process/grain_dist.c:198
+msgid "Create a selection visualising grain circumcircles"
+msgstr "Создать выделенную область, показывающую описанные вокруг зёрен окружности"
+
+#: modules/process/grain_dist.c:238
 msgid "_Export raw data"
 msgstr "_Экспортировать необработанные данные"
 
-#: modules/process/grain_dist.c:218
+#: modules/process/grain_dist.c:239
 msgid "Plot _graphs"
 msgstr "Строить _графики"
 
-#: modules/process/grain_dist.c:233
+#: modules/process/grain_dist.c:254
 msgid "Grain Distributions"
 msgstr "Распределения зёрен"
 
-#: modules/process/grain_dist.c:479
+#: modules/process/grain_dist.c:500
 msgid "count"
 msgstr "число"
 
-#: modules/process/grain_dist.c:547
+#: modules/process/grain_dist.c:568
 msgid "Export Raw Grain Values"
 msgstr "Экспортировать необработанные значения зёрен"
 
-#: modules/process/grain_dist.c:654
+#: modules/process/grain_dist.c:675
 msgid "Save Grain Statistics"
 msgstr "Сохранить статистику зёрен"
 
-#: modules/process/grain_dist.c:705
+#: modules/process/grain_dist.c:726
 msgid "Data channel:"
 msgstr "Канал данных:"
 
-#: modules/process/grain_dist.c:736
-#: modules/process/grain_dist.c:814
+#: modules/process/grain_dist.c:757
+#: modules/process/grain_dist.c:835
 msgid "Grain Statistics"
 msgstr "Статистика зёрен"
 
-#: modules/process/grain_dist.c:748
+#: modules/process/grain_dist.c:769
 msgid "Number of grains:"
 msgstr "Число зёрен:"
 
-#: modules/process/grain_dist.c:757
+#: modules/process/grain_dist.c:778
 msgid "Total projected area (abs.):"
 msgstr "Общая площадь проекции (абс.):"
 
-#: modules/process/grain_dist.c:761
+#: modules/process/grain_dist.c:782
 msgid "Total projected area (rel.):"
 msgstr "Общая площадь проекции (отн.):"
 
-#: modules/process/grain_dist.c:767
+#: modules/process/grain_dist.c:788
 msgid "Mean grain area:"
 msgstr "Средняя площадь зерна:"
 
-#: modules/process/grain_dist.c:773
+#: modules/process/grain_dist.c:794
 msgid "Mean grain size:"
 msgstr "Средний размер зерна:"
 
-#: modules/process/grain_dist.c:782
+#: modules/process/grain_dist.c:803
 msgid "Total grain volume (zero):"
 msgstr "Общий объём зерна (нуль):"
 
-#: modules/process/grain_dist.c:788
+#: modules/process/grain_dist.c:809
 msgid "Total grain volume (minimum):"
 msgstr "Общий объём зерна (минимум):"
 
-#: modules/process/grain_dist.c:794
+#: modules/process/grain_dist.c:815
 msgid "Total grain volume (laplacian):"
 msgstr "Общий объём зерна (по Лапласу):"
 
-#: modules/process/grain_dist.c:800
+#: modules/process/grain_dist.c:821
 msgid "Total projected boundary length:"
 msgstr "Общая длина проекции границы:"
 
@@ -8069,7 +8117,7 @@ msgid "Mark Grains by Threshold"
 msgstr "Пометить зёрна по пороговому значению"
 
 #: modules/process/grain_mark.c:305
-#: modules/process/grain_rem_threshold.c:274
+#: modules/process/grain_rem_threshold.c:277
 msgid "Threshold by"
 msgstr "Пороговое значение"
 
@@ -8082,7 +8130,7 @@ msgid "_Curvature:"
 msgstr "_Кривизна:"
 
 #: modules/process/grain_mark.c:348
-#: modules/process/grain_rem_threshold.c:328
+#: modules/process/grain_rem_threshold.c:331
 #: modules/process/grain_wshed.c:282
 msgid "_Invert height"
 msgstr "_Инвертировать высоту"
@@ -8091,27 +8139,31 @@ msgstr "_Инвертировать высоту"
 msgid "Mer_ge mode:"
 msgstr "_Метод слияния:"
 
-#: modules/process/grain_rem_threshold.c:136
+#: modules/process/grain_rem_threshold.c:139
 msgid "Removes grains by thresholding (height, size)."
 msgstr "Удаляет зёрна по порогу (высоты, размера)."
 
-#: modules/process/grain_rem_threshold.c:150
+#: modules/process/grain_rem_threshold.c:153
 msgid "/_Grains/_Remove by Threshold..."
 msgstr "/Зёрн_а/_Удалить по порогу..."
 
-#: modules/process/grain_rem_threshold.c:154
+#: modules/process/grain_rem_threshold.c:157
 msgid "Remove grains by threshold"
 msgstr "Удалить зёрна по порогу"
 
-#: modules/process/grain_rem_threshold.c:218
+#: modules/process/grain_rem_threshold.c:221
 msgid "Remove Grains by Threshold"
 msgstr "Удалить зёрна по порогу"
 
-#: modules/process/grain_rem_threshold.c:313
+#: modules/process/grain_rem_threshold.c:316
 msgid "_Area:"
 msgstr "_Площадь:"
 
 #: modules/process/grain_rem_threshold.c:341
+msgid "Remove grains _touching image borders"
+msgstr "Удалить зёрна, _касающиеся границ изображения"
+
+#: modules/process/grain_rem_threshold.c:355
 msgid "_Selection mode:"
 msgstr "_Режим выделения:"
 
@@ -10409,7 +10461,7 @@ msgid "Measure individual grains (continuous parts of mask)"
 msgstr "Измерять отдельные зёрна (непрерывные части маски)"
 
 #: modules/tools/grainremover.c:97
-#: modules/tools/selectionmanager.c:110
+#: modules/tools/selectionmanager.c:116
 msgid "Grain removal tool, removes continuous parts of mask and/or underlying data."
 msgstr "Инструмент удаления зёрен, удаляет непрерывные части маски и/или данные под ними."
 
@@ -11065,39 +11117,39 @@ msgstr ""
 "Выбранная линия:     из (%s, %s) в (%s, %s) пикселей\n"
 "                   из (%s, %s) в (%s, %s) %s\n"
 
-#: modules/tools/selectionmanager.c:144
+#: modules/tools/selectionmanager.c:160
 msgid "Selection Manager"
-msgstr "Менеджер выделенного"
+msgstr "Менеджер выделенных областей"
 
-#: modules/tools/selectionmanager.c:145
+#: modules/tools/selectionmanager.c:161
 msgid "Display and copy selections"
 msgstr "Отображает и копирует выделенные области"
 
-#: modules/tools/selectionmanager.c:215
+#: modules/tools/selectionmanager.c:255
 msgid "Horiz./vert. lines"
 msgstr "Гориз./Верт. линии"
 
-#: modules/tools/selectionmanager.c:216
+#: modules/tools/selectionmanager.c:256
 msgid "Ellipses"
 msgstr "Эллипсы"
 
-#: modules/tools/selectionmanager.c:217
+#: modules/tools/selectionmanager.c:257
 msgid "Lines"
 msgstr "Линии"
 
-#: modules/tools/selectionmanager.c:219
+#: modules/tools/selectionmanager.c:259
 msgid "Rectangles"
 msgstr "Прямоугольники"
 
-#: modules/tools/selectionmanager.c:305
+#: modules/tools/selectionmanager.c:345
 msgid "Objects"
 msgstr "Объекты"
 
-#: modules/tools/selectionmanager.c:315
+#: modules/tools/selectionmanager.c:355
 msgid "_Distribute"
 msgstr "_Распространить"
 
-#: modules/tools/selectionmanager.c:324
+#: modules/tools/selectionmanager.c:364
 msgid "to _all files"
 msgstr "на _все файлы"
 
