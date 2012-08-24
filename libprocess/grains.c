@@ -1462,46 +1462,32 @@ find_all_edges(EdgeQueue *edges,
             guint g = g0 | (g1 << 1) | (g2 << 2) | (g3 << 3);
 
             if (g == 8 || g == 7) {
-                g_assert(vertices[j] == G_MAXUINT);
-                g_assert(vertex == G_MAXUINT);
                 vertex = j;
                 vertices[j] = i;
             }
             else if (g == 2 || g == 13) {
-                g_assert(vertices[j] != G_MAXUINT);
-                g_assert(vertex == G_MAXUINT);
                 edge_list_add(edges, dx*j, dy*vertices[j], dx*j, dy*i);
                 vertex = j;
                 vertices[j] = G_MAXUINT;
             }
             else if (g == 4 || g == 11) {
-                g_assert(vertices[j] == G_MAXUINT);
-                g_assert(vertex != G_MAXUINT);
                 edge_list_add(edges, dx*vertex, dy*i, dx*j, dy*i);
                 vertex = G_MAXUINT;
                 vertices[j] = i;
             }
             else if (g == 1 || g == 14) {
-                g_assert(vertices[j] != G_MAXUINT);
-                g_assert(vertex != G_MAXUINT);
                 edge_list_add(edges, dx*vertex, dy*i, dx*j, dy*i);
                 edge_list_add(edges, dx*j, dy*vertices[j], dx*j, dy*i);
                 vertex = G_MAXUINT;
                 vertices[j] = G_MAXUINT;
             }
             else if (g == 6 || g == 9) {
-                g_assert(vertices[j] != G_MAXUINT);
-                g_assert(vertex != G_MAXUINT);
                 edge_list_add(edges, dx*vertex, dy*i, dx*j, dy*i);
                 edge_list_add(edges, dx*j, dy*vertices[j], dx*j, dy*i);
                 vertex = j;
                 vertices[j] = i;
             }
         }
-        g_assert(vertex == G_MAXUINT);
-    }
-    for (j = 0; j <= w; j++) {
-        g_assert(vertices[j] == G_MAXUINT);
     }
 
     g_slice_free1((w + 1)*sizeof(guint), vertices);
