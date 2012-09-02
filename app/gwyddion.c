@@ -17,7 +17,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
-
+#define DEBUG 1
 #include "config.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -500,6 +500,9 @@ open_command_line_files(gint n, gchar **args)
 
     /* FIXME: cwd is in GLib encoding. And args? */
     cwd = g_get_current_dir();
+#ifdef DEBUG
+    gwy_debug("current dir: <%s>", g_strescape(cwd, ""));
+#endif
     for (p = args; n; p++, n--) {
         if (g_path_is_absolute(*p))
             filename = g_strdup(*p);
@@ -509,8 +512,12 @@ open_command_line_files(gint n, gchar **args)
             gwy_app_set_current_directory(filename);
             gwy_app_file_open();
         }
-        else
+        else {
+#ifdef DEBUG
+            gwy_debug("calling gwy_app_file_load() with <%s>", g_strescape(filename, ""));
+#endif
             gwy_app_file_load(NULL, filename, NULL);
+        }
         g_free(filename);
     }
     g_free(cwd);

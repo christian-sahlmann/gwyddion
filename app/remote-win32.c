@@ -17,7 +17,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
-
+#define DEBUG 1
 #include "config.h"
 #include "gwyddion.h"
 #include <libgwyddion/gwymacros.h>
@@ -136,6 +136,9 @@ gwy_remote_open_files(GwyRemote *remote,
     pDropFiles->fNC = FALSE;
 
     cwd = g_get_current_dir();
+#ifdef DEBUG
+    gwy_debug("current dir: <%s>", g_strescape(cwd, ""));
+#endif
     for (i = 0; i < argc; ++i) {
         // file location must be absolute
         if (g_path_is_absolute(argv[i])) {
@@ -144,6 +147,10 @@ gwy_remote_open_files(GwyRemote *remote,
         else {
             fullFilename = g_build_filename(cwd, argv[i], NULL);
         }
+#ifdef DEBUG
+        gwy_debug("argv[%d]: <%s>", i, g_strescape(argv[i], ""));
+        gwy_debug("fullFilename[%d]: <%s>", i, g_strescape(fullFilename, ""));
+#endif
         strcpy(((LPSTR)(pDropFiles) + iCurBytePos), fullFilename);
         // Move the current position beyond the file name copied.
         // +1 for including the NULL terminator
