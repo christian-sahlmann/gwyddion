@@ -1481,7 +1481,7 @@ gwy_app_data_proxy_item_changed(GwyContainer *data,
             list = &proxy->lists[pageno];
             found = gwy_app_data_proxy_find_object(list->store, id, &iter);
             if (found) {
-                gboolean visible;
+                gboolean visible = FALSE;
                 gwy_container_gis_boolean(data, quark, &visible);
                 gwy_app_data_proxy_channel_set_visible(proxy, &iter, visible);
             }
@@ -1495,7 +1495,7 @@ gwy_app_data_proxy_item_changed(GwyContainer *data,
             list = &proxy->lists[pageno];
             found = gwy_app_data_proxy_find_object(list->store, id, &iter);
             if (found) {
-                gboolean visible;
+                gboolean visible = FALSE;
                 gwy_container_gis_boolean(data, quark, &visible);
                 gwy_app_data_proxy_graph_set_visible(proxy, &iter, visible);
             }
