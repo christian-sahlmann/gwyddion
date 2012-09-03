@@ -492,11 +492,26 @@ setup_locale_from_win32_registry(void)
 #endif
 }
 
+static gchar*
+fix_win32_commandline_arg(gchar *p)
+{
+#ifndef G_OS_WIN32
+    const gchar **charsets;
+
+    if (!g_get_filename_charsets(&charsets)) {
+        gchar *q;
+        if ((q = g_convert(p, -1, "UTF-8", charsets[0], NULL, NULL, NULL)))
+            return q;
+    }
+#endif
+    return g_strdup(p);
+}
+
 static void
 open_command_line_files(gint n, gchar **args)
 {
     gchar **p;
-    gchar *cwd, *filename;
+    gchar *cwd, *filename, *q;
 
     /* FIXME: cwd is in GLib encoding. And args? */
     cwd = g_get_current_dir();
@@ -504,10 +519,16 @@ open_command_line_files(gint n, gchar **args)
     gwy_debug("current dir: <%s>", g_strescape(cwd, ""));
 #endif
     for (p = args; n; p++, n--) {
-        if (g_path_is_absolute(*p))
-            filename = g_strdup(*p);
+        q = fix_win32_commandline_arg(*p);
+#ifdef DEBUG
+        gwy_debug("argv: <%s>", g_strescape(*p, ""));
+        gwy_debug("converted: <%s>", g_strescape(q, ""));
+#endif
+        if (g_path_is_absolute(q))
+            filename = g_strdup(q);
         else
-            filename = g_build_filename(cwd, *p, NULL);
+            filename = g_build_filename(cwd, q, NULL);
+
         if (g_file_test(filename, G_FILE_TEST_IS_DIR)) {
             gwy_app_set_current_directory(filename);
             gwy_app_file_open();
@@ -518,6 +539,7 @@ open_command_line_files(gint n, gchar **args)
 #endif
             gwy_app_file_load(NULL, filename, NULL);
         }
+        g_free(q);
         g_free(filename);
     }
     g_free(cwd);
