@@ -143,6 +143,7 @@ struct _GwyAppDataProxy {
     guint finalize_id;
     gint untitled_no;
     gboolean keep_invisible;
+    gboolean resetting_visibility;
     struct _GwyAppDataBrowser *parent;
     GwyContainer *container;
     GwyAppDataList lists[NPAGES];
@@ -1470,6 +1471,34 @@ gwy_app_data_proxy_item_changed(GwyContainer *data,
         }
         else {
             /* Prevent thumbnail update */
+            pageno = -1;
+        }
+        break;
+
+        case KEY_IS_DATA_VISIBLE:
+        if (!proxy->resetting_visibility) {
+            pageno = PAGE_CHANNELS;
+            list = &proxy->lists[pageno];
+            found = gwy_app_data_proxy_find_object(list->store, id, &iter);
+            if (found) {
+                gboolean visible;
+                gwy_container_gis_boolean(data, quark, &visible);
+                gwy_app_data_proxy_channel_set_visible(proxy, &iter, visible);
+            }
+            pageno = -1;
+        }
+        break;
+
+        case KEY_IS_GRAPH_VISIBLE:
+        if (!proxy->resetting_visibility) {
+            pageno = PAGE_GRAPHS;
+            list = &proxy->lists[pageno];
+            found = gwy_app_data_proxy_find_object(list->store, id, &iter);
+            if (found) {
+                gboolean visible;
+                gwy_container_gis_boolean(data, quark, &visible);
+                gwy_app_data_proxy_graph_set_visible(proxy, &iter, visible);
+            }
             pageno = -1;
         }
         break;
@@ -4507,6 +4536,7 @@ gwy_app_data_list_reconstruct_visibility(GwyAppDataProxy *proxy,
     gchar key[48];
     gboolean visible;
 
+    proxy->resetting_visibility = TRUE;
     model = GTK_TREE_MODEL(list->store);
     if (gtk_tree_model_get_iter_first(model, &iter)) {
         do {
@@ -4520,6 +4550,7 @@ gwy_app_data_list_reconstruct_visibility(GwyAppDataProxy *proxy,
             g_object_unref(object);
         } while (gtk_tree_model_iter_next(model, &iter));
     }
+    proxy->resetting_visibility = FALSE;
 }
 
 /**
@@ -4588,7 +4619,9 @@ gwy_app_data_browser_reset_visibility(GwyContainer *data,
             if (!gtk_tree_model_get_iter_first(model, &iter))
                 continue;
 
+            proxy->resetting_visibility = TRUE;
             set_visible[i](proxy, &iter, TRUE);
+            proxy->resetting_visibility = FALSE;
         }
 
         return FALSE;
@@ -4603,11 +4636,13 @@ gwy_app_data_browser_reset_visibility(GwyContainer *data,
         return FALSE;
     }
 
+    proxy->resetting_visibility = TRUE;
     for (i = 0; i < NPAGES; i++) {
         if (set_visible[i])
             gwy_app_data_list_reset_visibility(proxy, &proxy->lists[i],
                                                set_visible[i], visible);
     }
+    proxy->resetting_visibility = FALSE;
 
     return visible && gwy_app_data_proxy_visible_count(proxy);
 }
@@ -4983,8 +5018,10 @@ gwy_app_data_browser_merge(GwyContainer *container)
 
     /* Perform the transfer */
     map[NPAGES] = (GHashTable*)proxy->container;
+    proxy->resetting_visibility = TRUE;
     gwy_container_foreach(container, NULL, gwy_app_data_merge_copy_1, &map[0]);
     gwy_container_foreach(container, NULL, gwy_app_data_merge_copy_2, &map[0]);
+    proxy->resetting_visibility = FALSE;
     gwy_app_data_browser_reset_visibility(proxy->container,
                                           GWY_VISIBILITY_RESET_RESTORE);
 }
