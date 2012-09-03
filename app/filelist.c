@@ -1124,7 +1124,7 @@ gwy_app_recent_file_try_load_thumbnail(GwyRecentFile *rf)
     GdkPixbuf *pixbuf;
     gint width, height;
     const gchar *option;
-    struct stat st;
+    GStatBuf st;
     gdouble scale;
 
     gwy_debug("<%s>", rf->thumb_sys);
@@ -1183,7 +1183,7 @@ gwy_app_recent_file_try_load_thumbnail(GwyRecentFile *rf)
     if ((option = gdk_pixbuf_get_option(pixbuf, KEY_THUMB_GWY_GRAPHS)))
         rf->image_graphs = atoi(option);
 
-    if (stat(rf->file_sys, &st) == 0) {
+    if (g_stat(rf->file_sys, &st) == 0) {
         rf->file_state = FILE_STATE_OK;
         rf->file_mtime = st.st_mtime;
         if (rf->thumb_mtime != rf->file_mtime)
@@ -1234,7 +1234,7 @@ gwy_recent_file_update_thumbnail(GwyRecentFile *rf,
 {
     GwyDataField *dfield;
     GdkPixbuf *pixbuf;
-    struct stat st;
+    GStatBuf st;
     gchar *fnm;
     GwySIUnit *siunit;
     GwySIValueFormat *vf;
@@ -1270,7 +1270,7 @@ gwy_recent_file_update_thumbnail(GwyRecentFile *rf,
         return;
     }
 
-    if (stat(rf->file_sys, &st) != 0) {
+    if (g_stat(rf->file_sys, &st) != 0) {
         g_warning("File <%s> was just loaded or saved, but it doesn't seem to "
                   "exist any more: %s",
                   rf->file_utf8, g_strerror(errno));
