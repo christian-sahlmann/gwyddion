@@ -2082,7 +2082,9 @@ gwy_app_data_browser_channel_deleted(GwyDataWindow *data_window)
         return TRUE;
     }
 
+    proxy->resetting_visibility = TRUE;
     gwy_app_data_proxy_channel_set_visible(proxy, &iter, FALSE);
+    proxy->resetting_visibility = FALSE;
     gwy_app_data_proxy_maybe_finalize(proxy);
 
     return TRUE;
@@ -2581,7 +2583,9 @@ gwy_app_data_browser_channel_toggled(GtkCellRendererToggle *renderer,
     gtk_tree_path_free(path);
 
     active = gtk_cell_renderer_toggle_get_active(renderer);
+    proxy->resetting_visibility = TRUE;
     toggled = gwy_app_data_proxy_channel_set_visible(proxy, &iter, !active);
+    proxy->resetting_visibility = FALSE;
     g_assert(toggled);
 
     gwy_app_data_proxy_maybe_finalize(proxy);
@@ -3109,7 +3113,9 @@ gwy_app_data_browser_graph_deleted(GwyGraphWindow *graph_window)
         return TRUE;
     }
 
+    proxy->resetting_visibility = TRUE;
     gwy_app_data_proxy_graph_set_visible(proxy, &iter, FALSE);
+    proxy->resetting_visibility = FALSE;
     gwy_app_data_proxy_maybe_finalize(proxy);
 
     return TRUE;
@@ -3258,7 +3264,9 @@ gwy_app_data_browser_graph_toggled(GtkCellRendererToggle *renderer,
     gtk_tree_path_free(path);
 
     active = gtk_cell_renderer_toggle_get_active(renderer);
+    proxy->resetting_visibility = TRUE;
     toggled = gwy_app_data_proxy_graph_set_visible(proxy, &iter, !active);
+    proxy->resetting_visibility = FALSE;
     g_assert(toggled);
 
     gwy_app_data_proxy_maybe_finalize(proxy);
@@ -3679,11 +3687,15 @@ gwy_app_data_browser_delete_object(GwyAppDataProxy *proxy,
         g_object_unref(widget);
         switch (pageno) {
             case PAGE_CHANNELS:
+            proxy->resetting_visibility = TRUE;
             gwy_app_data_proxy_channel_set_visible(proxy, iter, FALSE);
+            proxy->resetting_visibility = FALSE;
             break;
 
             case PAGE_GRAPHS:
+            proxy->resetting_visibility = TRUE;
             gwy_app_data_proxy_graph_set_visible(proxy, iter, FALSE);
+            proxy->resetting_visibility = FALSE;
             break;
 
             case PAGE_SPECTRA:
@@ -5114,7 +5126,9 @@ gwy_app_data_browser_add_data_field(GwyDataField *dfield,
 
     if (showit && !gui_disabled) {
         gwy_app_data_proxy_find_object(list->store, list->last, &iter);
+        proxy->resetting_visibility = TRUE;
         gwy_app_data_proxy_channel_set_visible(proxy, &iter, TRUE);
+        proxy->resetting_visibility = FALSE;
     }
 
     return list->last;
@@ -5163,7 +5177,9 @@ gwy_app_data_browser_add_graph_model(GwyGraphModel *gmodel,
 
     if (showit && !gui_disabled) {
         gwy_app_data_proxy_find_object(list->store, list->last, &iter);
+        proxy->resetting_visibility = TRUE;
         gwy_app_data_proxy_graph_set_visible(proxy, &iter, TRUE);
+        proxy->resetting_visibility = FALSE;
     }
 
     return list->last;
