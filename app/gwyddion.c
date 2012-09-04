@@ -495,7 +495,7 @@ setup_locale_from_win32_registry(void)
 static gchar*
 fix_win32_commandline_arg(gchar *p)
 {
-#ifndef G_OS_WIN32
+#ifdef G_OS_WIN32
     const gchar **charsets;
 
     if (!g_get_filename_charsets(&charsets)) {
