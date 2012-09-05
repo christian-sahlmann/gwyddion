@@ -496,15 +496,28 @@ static gchar*
 fix_win32_commandline_arg(gchar *p)
 {
 #ifdef G_OS_WIN32
-    const gchar **charsets;
+    int buflen, n = strlen(p);
+    gchar *q;
+    wchar_t *w;
 
-    if (!g_get_filename_charsets(&charsets)) {
-        gchar *q;
-        if ((q = g_convert(p, -1, "UTF-8", charsets[0], NULL, NULL, NULL)))
-            return q;
+    if (!(buflen = MultiByteToWideChar(CP_ACP, 0, p, n, NULL, 0)))
+        return g_strdup(p);
+    w = g_new(wchar_t, buflen+1);
+    if (!MultiByteToWideChar(CP_ACP, 0, p, n, w, buflen+1)) {
+        /* XXX: This should not really happen. */
+        g_free(w);
+        return g_strdup(p);
     }
-#endif
+    w[buflen] = 0;
+    if (!(q = g_utf16_to_utf8((const gunichar2*)w, buflen, NULL, NULL, NULL))) {
+        g_free(w);
+        return g_strdup(p);
+    }
+    g_free(w);
+    return q;
+#else
     return g_strdup(p);
+#endif
 }
 
 static void
@@ -513,7 +526,6 @@ open_command_line_files(gint n, gchar **args)
     gchar **p;
     gchar *cwd, *filename, *q;
 
-    /* FIXME: cwd is in GLib encoding. And args? */
     cwd = g_get_current_dir();
 #ifdef DEBUG
     gwy_debug("current dir: <%s>", g_strescape(cwd, ""));
