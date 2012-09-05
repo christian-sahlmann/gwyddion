@@ -1,6 +1,7 @@
 2.30 (0000-00-00)
 Application:
 - Translations updated: French, Russian.
+- Handling of files with non-ASCII characters in names on Win32 was improved.
 
 Libraries:
 - libgwyprocess: A new function to remove grains touching image borders.
@@ -9,6 +10,8 @@ Libraries:
   mean radius.
 - libgwyapp: Critical warning/crash if the last visible channel of a file is
   deleted and this channel has a mask.
+- libgwyapp: Setting a channel or graph visibility key in a container
+  actually shows or hides the corresponding data.
 
 Modules:
 - APE file: Channel labelling for various modes was corrected.
