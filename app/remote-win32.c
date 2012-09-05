@@ -43,7 +43,7 @@ gwy_remote_setup(GtkWidget *toolbox)
     hwnd = GDK_WINDOW_HWND(toolbox->window);
     // Create property and set it to 1
     SetProp(hwnd, GWY_TOOLBOX_WM_ROLE, (HANDLE)1);
-    gwy_debug("SetProp to hWnd %d\n", hwnd);
+    gwy_debug("SetProp to hWnd %d\n", (gint)hwnd);
 }
 
 void
@@ -55,7 +55,7 @@ gwy_remote_finalize(GtkWidget *toolbox)
     hwnd = GDK_WINDOW_HWND(gtk_widget_get_root_window(toolbox));
     // Remove properties
     RemoveProp(hwnd, GWY_TOOLBOX_WM_ROLE);
-    gwy_debug("RemoveProp to hWnd %d\n", hwnd);
+    gwy_debug("RemoveProp to hWnd %d\n", (gint)hwnd);
 }
 
 static BOOL CALLBACK
@@ -81,7 +81,7 @@ gwy_remote_get(void)
     EnumWindows(FindGwyddionWindow, (LPARAM)&hwnd);
     if (hwnd != 0) {
         /* window found */
-        gwy_debug("Drop window found, hwnd: %d", hwnd);
+        gwy_debug("Drop window found, hwnd: %d", (gint)hwnd);
         remote->winid = (GdkNativeWindow)hwnd;
         return remote;
     }
