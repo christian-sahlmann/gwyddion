@@ -17,7 +17,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
-#define DEBUG 1
+
 #include "config.h"
 #include <stdarg.h>
 #include <stdlib.h>
@@ -971,9 +971,6 @@ toolbox_dnd_open_files(gpointer user_data)
 
     for (i = 0; i < files->len; i++) {
         filename = (gchar*)g_ptr_array_index(files, i);
-#ifdef DEBUG
-        gwy_debug("calling gwy_app_file_load() with <%s>", g_strescape(filename, ""));
-#endif
         gwy_app_file_load(NULL, filename, NULL);
         g_free(filename);
     }
@@ -1003,9 +1000,6 @@ toolbox_dnd_data_received(G_GNUC_UNUSED GtkWidget *widget,
         return;
     }
 
-#ifdef DEBUG
-    gwy_debug("file list (compactified): <%s>", (gchar*)data->data);
-#endif
     text = g_strdelimit(g_strdup((gchar*)data->data), "\r\n", '\n');
     file_list = g_strsplit(text, "\n", 0);
     g_free(text);
