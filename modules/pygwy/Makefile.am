@@ -244,6 +244,14 @@ gwy_la_LIBADD = \
 	$(top_builddir)/libgwymodule/libgwymodule2.la \
 	$(top_builddir)/libprocess/libgwyprocess2.la \
 	$(PYTHON_LIBS) $(PYGTK_LIBS) @GTK_LIBS@
+
+if OS_WIN32
+install-exec-hook:
+	cp "$(DESTDIR)$(pyexecdir)/gwy.dll" "$(DESTDIR)$(bindir)/gwy.pyd"
+
+uninstall-hook:
+	rm -f "$(DESTDIR)$(bindir)/gwy.pyd"
+endif
 endif
 
 CLEANFILES = gwy.py gwy.pyc gwy.pyo
