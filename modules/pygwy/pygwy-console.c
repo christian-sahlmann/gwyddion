@@ -176,6 +176,7 @@ pygwy_on_console_open_file(GtkToolButton *btn, gpointer user_data)
    GtkFileFilter *filter = gtk_file_filter_new();
    GtkTextBuffer *console_file_buf;
    gtk_file_filter_add_mime_type(filter, "text/x-python");
+   gtk_file_filter_add_pattern(filter, "*.py");
 
    file_chooser
        = gtk_file_chooser_dialog_new(_("Open Python script"),
