@@ -1,4 +1,5 @@
 /*
+ *  @(#) $Id$
  *  Copyright (C) 2008 Jan Horak
  *  E-mail: xhorak@gmail.com
  *
