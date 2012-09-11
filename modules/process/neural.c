@@ -181,6 +181,7 @@ typedef struct {
 typedef struct {
     NeuralTrainArgs *args;
     gboolean in_update;
+    gboolean calculated;
     GwyContainer *mydata;
     GtkWidget *dialog;
     GtkWidget *ok;
@@ -222,6 +223,20 @@ static gboolean network_is_visible          (GtkTreeModel *model,
                                              gpointer user_data);
 static void     preview_type_changed        (GtkToggleButton *button,
                                              NeuralTrainControls *controls);
+static void     width_changed               (NeuralTrainControls *controls,
+                                             GtkAdjustment *adj);
+static void     height_changed              (NeuralTrainControls *controls,
+                                             GtkAdjustment *adj);
+static void     nhidden_changed             (NeuralTrainControls *controls,
+                                             GtkAdjustment *adj);
+static void     inpowerxy_changed           (NeuralTrainControls *controls,
+                                             GtkAdjustment *adj);
+static void     inpowerz_changed            (NeuralTrainControls *controls,
+                                             GtkAdjustment *adj);
+static void     outunits_changed            (NeuralTrainControls *controls,
+                                             GtkEntry *entry);
+static void     reinit_network              (NeuralTrainControls *controls);
+static void     train_network               (NeuralTrainControls *controls);
 static void     set_layer_channel           (GwyPixmapLayer *layer,
                                              gint channel);
 static void     network_load                (NeuralTrainControls *controls);
@@ -995,7 +1010,6 @@ network_cell_renderer(G_GNUC_UNUSED GtkTreeViewColumn *column,
 static gboolean
 neural_train_dialog(NeuralTrainArgs *args)
 {
-    enum { RESPONSE_RESET = 1 };
     static const GwyEnum columns[] = {
         { N_("Name"),   NETWORK_NAME,   },
         { N_("Size"),   NETWORK_SIZE,   },
@@ -1015,6 +1029,7 @@ neural_train_dialog(NeuralTrainArgs *args)
 
     controls.args = args;
     controls.in_update = TRUE;
+    controls.calculated = FALSE;
 
     controls.mydata = mydata = gwy_container_new();
     setup_container(mydata, args);
@@ -1113,9 +1128,13 @@ neural_train_dialog(NeuralTrainArgs *args)
 
     controls.train = gtk_button_new_with_mnemonic(_("_Train"));
     gtk_container_add(GTK_CONTAINER(bbox), controls.train);
+    g_signal_connect_swapped(controls.train, "clicked",
+                             G_CALLBACK(train_network), &controls);
 
     controls.reinit = gtk_button_new_with_mnemonic(_("Re_initialize"));
     gtk_container_add(GTK_CONTAINER(bbox), controls.reinit);
+    g_signal_connect_swapped(controls.reinit, "clicked",
+                             G_CALLBACK(reinit_network), &controls);
     row++;
 
     controls.message = gtk_label_new("Here comes the message...");
@@ -1142,18 +1161,24 @@ neural_train_dialog(NeuralTrainArgs *args)
     spin = gwy_table_attach_spinbutton(table, row, _("Window _width:"), "px",
                                        controls.width);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 0);
+    g_signal_connect_swapped(controls.width, "value-changed",
+                             G_CALLBACK(width_changed), &controls);
     row++;
 
     controls.height = gtk_adjustment_new(nndata->height, 1, 100, 1, 10, 0);
     spin = gwy_table_attach_spinbutton(table, row, _("Window h_eight:"), "px",
                                        controls.height);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 0);
+    g_signal_connect_swapped(controls.height, "value-changed",
+                             G_CALLBACK(height_changed), &controls);
     row++;
 
     controls.nhidden = gtk_adjustment_new(nndata->nhidden, 1, 30, 1, 10, 0);
     spin = gwy_table_attach_spinbutton(table, row, _("_Hidden nodes:"), NULL,
                                        controls.nhidden);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 0);
+    g_signal_connect_swapped(controls.nhidden, "value-changed",
+                             G_CALLBACK(nhidden_changed), &controls);
     row++;
 
     gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
@@ -1166,18 +1191,24 @@ neural_train_dialog(NeuralTrainArgs *args)
                                             -12, 12, 1, 10, 0);
     spin = gwy_table_attach_spinbutton(table, row, _("Power of source _XY:"),
                                        NULL, controls.inpowerxy);
+    g_signal_connect_swapped(controls.inpowerxy, "value-changed",
+                             G_CALLBACK(inpowerxy_changed), &controls);
     row++;
 
     controls.inpowerz = gtk_adjustment_new(nndata->inpowerz,
                                             -12, 12, 1, 10, 0);
     spin = gwy_table_attach_spinbutton(table, row, _("Power of source _Z:"),
                                        NULL, controls.inpowerz);
+    g_signal_connect_swapped(controls.inpowerz, "value-changed",
+                             G_CALLBACK(inpowerz_changed), &controls);
     row++;
 
     controls.outunits = gtk_entry_new();
     gtk_entry_set_text(GTK_ENTRY(controls.outunits), nndata->outunits);
     gwy_table_attach_row(table, row, _("_Fixed units:"), NULL,
                          controls.outunits);
+    g_signal_connect_swapped(controls.outunits, "changed",
+                             G_CALLBACK(outunits_changed), &controls);
     row++;
 
     /* Networks */
@@ -1286,12 +1317,7 @@ neural_train_dialog(NeuralTrainArgs *args)
             break;
 
             case GTK_RESPONSE_OK:
-            //neural_values_update(&controls, args);
-            break;
-
-            case RESPONSE_RESET:
-            //*args = neural_defaults;
-            //neural_dialog_update(&controls, args);
+            g_printerr("Create graph?");
             break;
 
             default:
@@ -1344,6 +1370,83 @@ preview_type_changed(G_GNUC_UNUSED GtkToggleButton *button,
 {
     g_printerr("Changing preview to %d\n",
                gwy_radio_buttons_get_current(controls->preview_group));
+}
+
+static void
+width_changed(NeuralTrainControls *controls, GtkAdjustment *adj)
+{
+    NeuralNetworkData *nndata = &controls->args->nn->data;
+    if (controls->in_update)
+        return;
+    nndata->width = gwy_adjustment_get_int(adj);
+    neural_network_data_resize(nndata);
+    controls->calculated = FALSE;
+}
+
+static void
+height_changed(NeuralTrainControls *controls, GtkAdjustment *adj)
+{
+    NeuralNetworkData *nndata = &controls->args->nn->data;
+    if (controls->in_update)
+        return;
+    nndata->height = gwy_adjustment_get_int(adj);
+    neural_network_data_resize(nndata);
+    controls->calculated = FALSE;
+}
+
+static void
+nhidden_changed(NeuralTrainControls *controls, GtkAdjustment *adj)
+{
+    NeuralNetworkData *nndata = &controls->args->nn->data;
+    if (controls->in_update)
+        return;
+    nndata->nhidden = gwy_adjustment_get_int(adj);
+    neural_network_data_resize(nndata);
+    controls->calculated = FALSE;
+}
+
+static void
+inpowerxy_changed(NeuralTrainControls *controls, GtkAdjustment *adj)
+{
+    NeuralNetworkData *nndata = &controls->args->nn->data;
+    if (controls->in_update)
+        return;
+    nndata->inpowerxy = gwy_adjustment_get_int(adj);
+}
+
+static void
+inpowerz_changed(NeuralTrainControls *controls, GtkAdjustment *adj)
+{
+    NeuralNetworkData *nndata = &controls->args->nn->data;
+    if (controls->in_update)
+        return;
+    nndata->inpowerz = gwy_adjustment_get_int(adj);
+}
+
+static void
+outunits_changed(NeuralTrainControls *controls, GtkEntry *entry)
+{
+    NeuralNetworkData *nndata = &controls->args->nn->data;
+    if (controls->in_update)
+        return;
+    g_free(nndata->outunits);
+    nndata->outunits = g_strdup(gtk_entry_get_text(entry));
+}
+
+static void
+reinit_network(NeuralTrainControls *controls)
+{
+    NeuralNetworkData *nndata = &controls->args->nn->data;
+    neural_network_data_init(nndata, NULL);
+    controls->calculated = FALSE;
+}
+
+static void
+train_network(NeuralTrainControls *controls)
+{
+    NeuralNetworkData *nndata = &controls->args->nn->data;
+    g_printerr("Training network...\n");
+    controls->calculated = TRUE;
 }
 
 static void
@@ -1610,6 +1713,7 @@ neural_train_save_args(GwyContainer *settings,
     gwy_container_set_int32_by_name(settings, trainsteps_key,
                                     args->trainsteps);
     gwy_container_set_string_by_name(settings, name_key, g_strdup(name));
+    gwy_neural_network_save(args->nn);
 }
 
 static gboolean
