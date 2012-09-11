@@ -444,4 +444,126 @@ neural_network_data_free(NeuralNetworkData *nndata)
     g_free(nndata->outunits);
 }
 
+static inline gdouble
+neural_sigma(gdouble x)
+{
+    return (1.0/(1.0 + exp(-x)));
+}
+
+static void
+layer_forward(const gdouble *input, gdouble *output, const gdouble *weight,
+              guint nin, guint nout)
+{
+    guint j, k;
+
+    for (j = nout; j; j--, output++) {
+        const gdouble *p = input;
+        /* Initialise with the constant signal neuron. */
+        gdouble sum = *weight;
+        weight++;
+        for (k = nin; k; k--, p++, weight++)
+            sum += (*weight)*(*p);
+        *output = neural_sigma(sum);
+    }
+}
+
+static void
+adjust_weights(gdouble *delta, guint ndelta, const gdouble *data, guint ndata,
+               gdouble *weight, gdouble *oldw, gdouble eta, gdouble momentum)
+{
+    guint j, k;
+
+    for (j = ndelta; j; j--, delta++) {
+        gdouble edeltaj = eta*(*delta);
+        const gdouble *p = data;
+        /* The constant signal neuron first. */
+        gdouble new_dw = edeltaj + momentum*(*oldw);
+        *weight += new_dw;
+        *oldw = new_dw;
+        weight++;
+        oldw++;
+
+        for (k = ndata; k; k--, p++, oldw++, weight++) {
+            new_dw = edeltaj*(*p) + momentum*(*oldw);
+            *weight += new_dw;
+            *oldw = new_dw;
+        }
+    }
+}
+
+static gdouble
+output_error(const gdouble *output, guint noutput, const gdouble *target,
+             gdouble *doutput)
+{
+    guint j;
+    gdouble errsum = 0.0;
+
+    for (j = 0; j < noutput; j++) {
+        gdouble out = output[j];
+        gdouble tgt = target[j];
+
+        doutput[j] = out*(1.0 - out)*(tgt - out);
+        errsum += fabs(doutput[j]);
+    }
+
+    return errsum;
+}
+
+static gdouble
+hidden_error(const gdouble *hidden, guint nhidden, gdouble *dhidden,
+             const gdouble *doutput, guint noutput, const gdouble *whidden)
+{
+    guint j, k;
+    gdouble errsum = 0.0;
+
+    for (j = 0; j < nhidden; j++) {
+        const gdouble *p = doutput;
+        const gdouble *q = whidden + (j + 1);
+        gdouble h = hidden[j];
+        gdouble sum = 0.0;
+
+        for (k = noutput; k; k--, p++, q += nhidden+1)
+            sum += (*p)*(*q);
+
+        dhidden[j] = h*(1.0 - h)*sum;
+        errsum += fabs(dhidden[j]);
+    }
+    return errsum;
+}
+
+static void
+gwy_neural_network_train_step(GwyNeuralNetwork *nn,
+                              gdouble eta, gdouble momentum,
+                              gdouble *err_o, gdouble *err_h)
+{
+    NeuralNetworkData *nndata = &nn->data;
+    guint ninput = nndata->width * nndata->height;
+
+    layer_forward(nn->input, nn->hidden,
+                  nndata->winput, ninput, nndata->nhidden);
+    layer_forward(nn->hidden, nn->output,
+                  nndata->whidden, nndata->nhidden, nndata->noutput);
+
+    *err_o = output_error(nn->output, nndata->noutput, nn->target, nn->doutput);
+    *err_h = hidden_error(nn->hidden, nndata->nhidden, nn->dhidden,
+                          nn->doutput, nndata->noutput, nndata->whidden);
+
+    adjust_weights(nn->doutput, nndata->noutput, nn->hidden, nndata->nhidden,
+                   nndata->whidden, nn->wphidden, eta, momentum);
+    adjust_weights(nn->dhidden, nndata->nhidden, nn->input, ninput,
+                   nndata->winput, nn->wpinput, eta, momentum);
+}
+
+static void
+gwy_neural_network_forward_feed(GwyNeuralNetwork *nn)
+{
+    NeuralNetworkData *nndata = &nn->data;
+    guint ninput = nndata->width * nndata->height;
+
+    layer_forward(nn->input, nn->hidden, nndata->winput,
+                  ninput, nndata->nhidden);
+    layer_forward(nn->hidden, nn->output, nndata->whidden,
+                  nndata->nhidden, nndata->noutput);
+}
+
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
