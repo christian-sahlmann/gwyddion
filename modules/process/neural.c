@@ -187,6 +187,7 @@ typedef struct {
     GtkWidget *view;
     GwyPixmapLayer *layer;
     GtkWidget *errgraph;
+    GwyGraphModel *gmodel;
     /* Training */
     GtkWidget *tmodel;
     GtkWidget *tsignal;
@@ -228,6 +229,9 @@ static void     network_store               (NeuralTrainControls *controls);
 static void     network_delete              (NeuralTrainControls *controls);
 static void     network_rename              (NeuralTrainControls *controls);
 static void     network_selected            (NeuralTrainControls *controls);
+static gboolean network_validate_name       (NeuralTrainControls *controls,
+                                             const gchar *name,
+                                             gboolean show_warning);
 static void     neural_train_sanitize_args  (NeuralTrainArgs *args);
 static void     neural_train_load_args      (GwyContainer *container,
                                              NeuralTrainArgs *args);
@@ -1040,7 +1044,13 @@ neural_train_dialog(NeuralTrainArgs *args)
     gwy_set_data_preview_size(GWY_DATA_VIEW(controls.view), PREVIEW_SIZE);
     gtk_box_pack_start(GTK_BOX(vbox), controls.view, FALSE, FALSE, 0);
 
-    controls.errgraph = gwy_graph_new(gwy_graph_model_new());
+    controls.gmodel = gwy_graph_model_new();
+    g_object_set(controls.gmodel,
+                 "title", _("Training error"),
+                 "axis-label-left", _("error"),
+                 "axis-label-bottom", "n",
+                 NULL);
+    controls.errgraph = gwy_graph_new(controls.gmodel);
     gtk_widget_set_size_request(controls.errgraph, 0, 200);
     gtk_box_pack_start(GTK_BOX(vbox), controls.errgraph, TRUE, TRUE, 0);
 
@@ -1271,6 +1281,7 @@ neural_train_dialog(NeuralTrainArgs *args)
             case GTK_RESPONSE_DELETE_EVENT:
             gtk_widget_destroy(dialog);
             case GTK_RESPONSE_NONE:
+            g_object_unref(controls.gmodel);
             return FALSE;
             break;
 
@@ -1290,6 +1301,7 @@ neural_train_dialog(NeuralTrainArgs *args)
     } while (response != GTK_RESPONSE_OK);
 
     gtk_widget_destroy(dialog);
+    g_object_unref(controls.gmodel);
 
     return TRUE;
 }
@@ -1327,29 +1339,155 @@ network_is_visible(GtkTreeModel *model,
 }
 
 static void
-preview_type_changed(GtkToggleButton *button,
+preview_type_changed(G_GNUC_UNUSED GtkToggleButton *button,
                      NeuralTrainControls *controls)
 {
+    g_printerr("Changing preview to %d\n",
+               gwy_radio_buttons_get_current(controls->preview_group));
 }
 
 static void
 network_load(NeuralTrainControls *controls)
 {
+    GwyNeuralNetwork *network;
+    NeuralNetworkData *nndata;
+    GtkTreeModel *store;
+    GtkTreeSelection *tselect;
+    GtkTreeIter iter;
+
+    tselect = gtk_tree_view_get_selection(GTK_TREE_VIEW(controls->networklist));
+    if (!gtk_tree_selection_get_selected(tselect, &store, &iter))
+        return;
+
+    gtk_tree_model_get(store, &iter, 0, &network, -1);
+    nndata = &controls->args->nn->data;
+    neural_network_data_copy(&network->data, nndata);
+    neural_train_update_controls(controls);
 }
 
 static void
 network_store(NeuralTrainControls *controls)
 {
+    GwyNeuralNetwork *network;
+    NeuralNetworkData *nndata;
+    GtkTreeModelFilter *filter;
+    GtkTreeModel *model, *imodel;
+    GtkTreeSelection *tselect;
+    GtkTreeIter iter, iiter;
+    const gchar *name;
+    gchar *filename;
+    GString *str;
+    FILE *fh;
+
+    nndata = &controls->args->nn->data;
+    //update_dialog_values(controls);
+    name = gtk_entry_get_text(GTK_ENTRY(controls->networkname));
+    if (!network_validate_name(controls, name, TRUE))
+        return;
+    gwy_debug("Now I'm saving `%s'", name);
+    network = gwy_inventory_get_item(gwy_neural_networks(), name);
+    if (!network) {
+        gwy_debug("Appending `%s'", name);
+        network = gwy_neural_network_new(name, nndata, FALSE);
+        gwy_inventory_insert_item(gwy_neural_networks(), network);
+        g_object_unref(network);
+    }
+    else {
+        gwy_debug("Setting `%s'", name);
+        neural_network_data_copy(nndata, &network->data);
+        gwy_resource_data_changed(GWY_RESOURCE(network));
+    }
+
+    filename = gwy_resource_build_filename(GWY_RESOURCE(network));
+    fh = g_fopen(filename, "w");
+    if (!fh) {
+        g_warning("Cannot save network: %s", filename);
+        g_free(filename);
+        return;
+    }
+    g_free(filename);
+
+    str = gwy_resource_dump(GWY_RESOURCE(network));
+    fwrite(str->str, 1, str->len, fh);
+    fclose(fh);
+    g_string_free(str, TRUE);
+
+    gwy_resource_data_saved(GWY_RESOURCE(network));
+
+    model = gtk_tree_view_get_model(GTK_TREE_VIEW(controls->networklist));
+    tselect = gtk_tree_view_get_selection(GTK_TREE_VIEW(controls->networklist));
+    filter = GTK_TREE_MODEL_FILTER(model);
+    imodel = gtk_tree_model_filter_get_model(filter);
+    gwy_inventory_store_get_iter(GWY_INVENTORY_STORE(imodel), name, &iiter);
+    gtk_tree_model_filter_convert_child_iter_to_iter(filter, &iter, &iiter);
+    gtk_tree_selection_select_iter(tselect, &iter);
 }
 
 static void
 network_delete(NeuralTrainControls *controls)
 {
+    GwyNeuralNetwork *network;
+    GtkTreeModel *model;
+    GtkTreeSelection *tselect;
+    GtkTreeIter iter;
+    gchar *filename;
+    const gchar *name;
+
+    tselect = gtk_tree_view_get_selection(GTK_TREE_VIEW(controls->networklist));
+    if (!gtk_tree_selection_get_selected(tselect, &model, &iter))
+        return;
+
+    gtk_tree_model_get(model, &iter, 0, &network, -1);
+    name = gwy_resource_get_name(GWY_RESOURCE(network));
+    filename = gwy_resource_build_filename(GWY_RESOURCE(network));
+    if (g_remove(filename))
+        g_warning("Cannot remove preset %s", filename);
+    g_free(filename);
+    gwy_inventory_delete_item(gwy_neural_networks(), name);
 }
 
 static void
 network_rename(NeuralTrainControls *controls)
 {
+    GwyNeuralNetwork *network;
+    GtkTreeModelFilter *filter;
+    GwyInventory *inventory;
+    GtkTreeModel *model, *imodel;
+    GtkTreeSelection *tselect;
+    GtkTreeIter iter, iiter;
+    const gchar *newname, *oldname;
+    gchar *oldfilename, *newfilename;
+
+    tselect = gtk_tree_view_get_selection(GTK_TREE_VIEW(controls->networklist));
+    if (!gtk_tree_selection_get_selected(tselect, &model, &iter))
+        return;
+
+    inventory = gwy_neural_networks();
+    gtk_tree_model_get(model, &iter, 0, &network, -1);
+    oldname = gwy_resource_get_name(GWY_RESOURCE(network));
+    newname = gtk_entry_get_text(GTK_ENTRY(controls->networkname));
+    if (gwy_strequal(newname, oldname)
+        || !network_validate_name(controls, newname, TRUE)
+        || gwy_inventory_get_item(inventory, newname))
+        return;
+
+    gwy_debug("Now I will rename `%s' to `%s'", oldname, newname);
+
+    oldfilename = gwy_resource_build_filename(GWY_RESOURCE(network));
+    gwy_inventory_rename_item(inventory, oldname, newname);
+    newfilename = gwy_resource_build_filename(GWY_RESOURCE(network));
+    if (g_rename(oldfilename, newfilename) != 0) {
+        g_warning("Cannot rename network %s to %s", oldfilename, newfilename);
+        gwy_inventory_rename_item(inventory, newname, oldname);
+    }
+    g_free(oldfilename);
+    g_free(newfilename);
+
+    filter = GTK_TREE_MODEL_FILTER(model);
+    imodel = gtk_tree_model_filter_get_model(filter);
+    gwy_inventory_store_get_iter(GWY_INVENTORY_STORE(imodel), newname, &iiter);
+    gtk_tree_model_filter_convert_child_iter_to_iter(filter, &iter, &iiter);
+    gtk_tree_selection_select_iter(tselect, &iter);
 }
 
 static void
@@ -1380,6 +1518,34 @@ network_selected(NeuralTrainControls *controls)
     gtk_widget_set_sensitive(controls->load, TRUE);
     gtk_widget_set_sensitive(controls->delete, TRUE);
     gtk_widget_set_sensitive(controls->rename, TRUE);
+}
+
+static gboolean
+network_validate_name(NeuralTrainControls *controls,
+                      const gchar *name,
+                      gboolean show_warning)
+{
+    GtkWidget *dialog, *parent;
+
+    if (*name && !strchr(name, '/'))
+        return TRUE;
+    if (!show_warning)
+        return FALSE;
+
+    parent = controls->dialog;
+    dialog = gtk_message_dialog_new(GTK_WINDOW(parent),
+                                    GTK_DIALOG_MODAL
+                                        | GTK_DIALOG_DESTROY_WITH_PARENT,
+                                    GTK_MESSAGE_INFO,
+                                    GTK_BUTTONS_CLOSE,
+                                    _("The name `%s' is invalid."),
+                                    name);
+    gtk_window_set_modal(GTK_WINDOW(parent), FALSE);  /* Bug #66 workaround. */
+    gtk_dialog_run(GTK_DIALOG(dialog));
+    gtk_widget_destroy(dialog);
+    gtk_window_set_modal(GTK_WINDOW(parent), TRUE);  /* Bug #66 workaround. */
+
+    return FALSE;
 }
 
 static void
