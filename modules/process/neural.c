@@ -1039,6 +1039,10 @@ neural_train_dialog(NeuralTrainArgs *args)
                                     NULL);
     row = gwy_radio_buttons_attach_to_table(controls.preview_group,
                                             GTK_TABLE(table), 3, row);
+    gtk_widget_set_sensitive(gwy_radio_buttons_find(group, PREVIEW_RESULT),
+                             FALSE);
+    gtk_widget_set_sensitive(gwy_radio_buttons_find(group, PREVIEW_DIFFERENCE),
+                             FALSE);
 
     gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
     bbox = gtk_hbutton_box_new();
@@ -1280,9 +1284,6 @@ preview_type_changed(G_GNUC_UNUSED GtkToggleButton *button,
 {
     GSList *group;
 
-    g_printerr("Changing preview to %d\n",
-               gwy_radio_buttons_get_current(controls->preview_group));
-
     group = controls->preview_group;
     set_layer_channel(controls->layer, gwy_radio_buttons_get_current(group));
 }
@@ -1310,7 +1311,6 @@ train_data_changed(NeuralTrainControls *controls,
     quark = gwy_app_get_data_key_for_id(args->tsignal.id);
     signal = GWY_DATA_FIELD(gwy_container_get_object(args->tsignal.data, quark));
 
-    g_printerr("model %p, signal %p\n", model, signal);
     ok = !gwy_data_field_check_compatibility(model, signal,
                                              GWY_DATA_COMPATIBILITY_RES
                                              | GWY_DATA_COMPATIBILITY_REAL
@@ -1845,7 +1845,6 @@ neural_train_load_args(GwyContainer *settings,
         return;
 
     args->nn = gwy_neural_networks_create_untitled();
-    g_printerr("%u %u %u\n", args->nn->data.width, args->nn->data.height, args->nn->data.nhidden);
     gwy_neural_network_save(args->nn);
 }
 
@@ -1877,7 +1876,6 @@ gwy_neural_network_save(GwyNeuralNetwork *nn)
     }
 
     filename = gwy_resource_build_filename(resource);
-    g_printerr("Saving <%s>\n", filename);
     fh = g_fopen(filename, "w");
     if (!fh) {
         /* FIXME: GUIze this */
