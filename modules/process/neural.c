@@ -221,6 +221,8 @@ static void     preview_type_changed        (GtkToggleButton *button,
                                              NeuralTrainControls *controls);
 static void     train_data_changed          (NeuralTrainControls *controls,
                                              GwyDataChooser *chooser);
+static void     train_steps_changed         (NeuralTrainControls *controls,
+                                             GtkAdjustment *adj);
 static void     width_changed               (NeuralTrainControls *controls,
                                              GtkAdjustment *adj);
 static void     height_changed              (NeuralTrainControls *controls,
@@ -938,6 +940,7 @@ neural_train_dialog(NeuralTrainArgs *args)
     GtkTreeSelection *tselect;
     GtkCellRenderer *renderer;
     GtkTreeViewColumn *column;
+    GSList *group;
     guint row, response, i;
 
     controls.args = args;
@@ -1019,6 +1022,8 @@ neural_train_dialog(NeuralTrainArgs *args)
                                              1, 10000, 1, 100, 0);
     gwy_table_attach_hscale(table, row, _("Training ste_ps:"), NULL,
                             GTK_OBJECT(controls.trainsteps), GWY_HSCALE_SQRT);
+    g_signal_connect_swapped(controls.trainsteps, "value-changed",
+                             G_CALLBACK(train_steps_changed), &controls);
     row++;
 
     gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
@@ -1039,6 +1044,7 @@ neural_train_dialog(NeuralTrainArgs *args)
                                     NULL);
     row = gwy_radio_buttons_attach_to_table(controls.preview_group,
                                             GTK_TABLE(table), 3, row);
+    group = controls.preview_group;
     gtk_widget_set_sensitive(gwy_radio_buttons_find(group, PREVIEW_RESULT),
                              FALSE);
     gtk_widget_set_sensitive(gwy_radio_buttons_find(group, PREVIEW_DIFFERENCE),
@@ -1338,6 +1344,14 @@ train_data_changed(NeuralTrainControls *controls,
                              FALSE);
     gtk_widget_set_sensitive(gwy_radio_buttons_find(group, PREVIEW_DIFFERENCE),
                              FALSE);
+}
+
+static void
+train_steps_changed(NeuralTrainControls *controls, GtkAdjustment *adj)
+{
+    if (controls->in_update)
+        return;
+    controls->args->trainsteps = gwy_adjustment_get_int(adj);
 }
 
 static void
