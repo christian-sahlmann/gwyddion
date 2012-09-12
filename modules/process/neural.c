@@ -1444,10 +1444,12 @@ evaluate_do(GwyNeuralNetwork *nn,
 {
     NeuralNetworkData *nndata = &nn->data;
     GwyDataField *scaled;
+    GwySIUnit *unit;
     guint width = nndata->width, height = nndata->height, xres, yres;
     guint col, row, irow;
     const gdouble *drmodel;
     gdouble *dresult;
+    gdouble avg;
     gboolean ok = FALSE;
 
     gwy_app_wait_set_message(_("Evaluating..."));
@@ -1458,11 +1460,6 @@ evaluate_do(GwyNeuralNetwork *nn,
     xres = gwy_data_field_get_xres(scaled);
     yres = gwy_data_field_get_yres(scaled);
     drmodel = gwy_data_field_get_data_const(scaled);
-
-    //gwy_data_field_fill(result, gwy_data_field_get_avg(tsignal));
-    // FIXME: We may not have tsignal available!  May need to fill with the
-    // average from this very evaluation afterwards.
-    gwy_data_field_fill(result, 0.0);
     dresult = gwy_data_field_get_data(result);
 
     for (row = height/2; row < yres + height/2 - height; row++) {
@@ -1480,7 +1477,29 @@ evaluate_do(GwyNeuralNetwork *nn,
             goto fail;
     }
     ok = TRUE;
-    // TODO: Must set units on @result.
+    unit = gwy_data_field_get_si_unit_z(result);
+    gwy_si_unit_set_from_string(unit, nndata->outunits);
+    gwy_si_unit_power_multiply(unit, 1, unit,
+                               nndata->inpowerxy,
+                               gwy_data_field_get_si_unit_xy(model));
+    gwy_si_unit_power_multiply(unit, 1, unit,
+                               nndata->inpowerz,
+                               gwy_data_field_get_si_unit_z(model));
+
+    /* Fill the borders with the average of result. */
+    avg = gwy_data_field_area_get_avg_mask(result, NULL, GWY_MASK_IGNORE,
+                                           width/2, height/2,
+                                           xres - width, yres - height);
+    gwy_data_field_area_fill(result, 0, 0, xres, height/2, avg);
+    gwy_data_field_area_fill(result, 0, height/2, width/2, yres - height, avg);
+    gwy_data_field_area_fill(result,
+                             xres + width/2 - width, height/2,
+                             width - width/2, yres - height,
+                             avg);
+    gwy_data_field_area_fill(result,
+                             0, yres + height/2 - height,
+                             xres, height - height/2,
+                             avg);
 
 fail:
     g_object_unref(scaled);
