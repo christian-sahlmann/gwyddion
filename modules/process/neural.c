@@ -177,6 +177,7 @@ typedef struct {
     NeuralTrainArgs *args;
     gboolean in_update;
     gboolean calculated;
+    gboolean compatible;
     GwyContainer *mydata;
     GtkWidget *dialog;
     GtkWidget *ok;
@@ -218,7 +219,8 @@ static gboolean network_is_visible          (GtkTreeModel *model,
                                              gpointer user_data);
 static void     preview_type_changed        (GtkToggleButton *button,
                                              NeuralTrainControls *controls);
-static void     train_data_changed          (NeuralTrainControls *controls);
+static void     train_data_changed          (NeuralTrainControls *controls,
+                                             GwyDataChooser *chooser);
 static void     width_changed               (NeuralTrainControls *controls,
                                              GtkAdjustment *adj);
 static void     height_changed              (NeuralTrainControls *controls,
@@ -940,6 +942,7 @@ neural_train_dialog(NeuralTrainArgs *args)
     controls.args = args;
     controls.in_update = TRUE;
     controls.calculated = FALSE;
+    controls.compatible = TRUE;
 
     controls.mydata = mydata = gwy_container_new();
     setup_container(mydata, args);
@@ -996,6 +999,7 @@ neural_train_dialog(NeuralTrainArgs *args)
                             GTK_OBJECT(controls.tmodel), GWY_HSCALE_WIDGET);
     gwy_data_chooser_set_active(GWY_DATA_CHOOSER(controls.tmodel),
                                 args->tmodel.data, args->tmodel.id);
+    g_object_set_data(G_OBJECT(controls.tmodel), "id", (gpointer)"model");
     g_signal_connect_swapped(controls.tmodel, "changed",
                              G_CALLBACK(train_data_changed), &controls);
     row++;
@@ -1005,6 +1009,7 @@ neural_train_dialog(NeuralTrainArgs *args)
                             GTK_OBJECT(controls.tsignal), GWY_HSCALE_WIDGET);
     gwy_data_chooser_set_active(GWY_DATA_CHOOSER(controls.tsignal),
                                 args->tsignal.data, args->tsignal.id);
+    g_object_set_data(G_OBJECT(controls.tsignal), "id", (gpointer)"signal");
     g_signal_connect_swapped(controls.tsignal, "changed",
                              G_CALLBACK(train_data_changed), &controls);
     row++;
@@ -1277,13 +1282,16 @@ preview_type_changed(G_GNUC_UNUSED GtkToggleButton *button,
 }
 
 static void
-train_data_changed(NeuralTrainControls *controls)
+train_data_changed(NeuralTrainControls *controls,
+                   GwyDataChooser *chooser)
 {
     NeuralTrainArgs *args = controls->args;
     GwyDataChooser *tmodel_chooser = GWY_DATA_CHOOSER(controls->tmodel),
                    *tsignal_chooser = GWY_DATA_CHOOSER(controls->tsignal);
     GwyDataField *model, *signal;
+    const gchar *id;
     gboolean ok;
+    GSList *group;
     GQuark quark;
 
     args->tmodel.data
@@ -1304,6 +1312,25 @@ train_data_changed(NeuralTrainControls *controls)
                        ok ? "" : _("Model and signal are not compatible."));
     gtk_widget_set_sensitive(controls->train, ok);
     gtk_widget_set_sensitive(controls->ok, ok);
+
+    controls->calculated = FALSE;
+    controls->compatible = ok;
+    setup_container(controls->mydata, controls->args);
+
+    id = (const gchar*)g_object_get_data(G_OBJECT(chooser), "id");
+    group = controls->preview_group;
+    if (gwy_strequal(id, "model"))
+        gwy_radio_buttons_set_current(group, PREVIEW_MODEL);
+    else if (gwy_strequal(id, "signal"))
+        gwy_radio_buttons_set_current(group, PREVIEW_SIGNAL);
+    else {
+        g_critical("Chooser lacks id");
+    }
+
+    gtk_widget_set_sensitive(gwy_radio_buttons_find(group, PREVIEW_RESULT),
+                             FALSE);
+    gtk_widget_set_sensitive(gwy_radio_buttons_find(group, PREVIEW_SIGNAL),
+                             FALSE);
 }
 
 static void
@@ -1512,27 +1539,28 @@ train_network(NeuralTrainControls *controls)
     NeuralTrainArgs *args = controls->args;
     GwyNeuralNetwork *nn = args->nn;
     GwyContainer *data;
-    GQuark quark;
-    GwyDataField *tmodel, *tsignal, *result;
+    GwyDataField *tmodel, *tsignal, *result, *diff;
     GwyDataLine *errors;
     GwyGraphModel *gmodel;
     GwyGraphCurveModel *gcmodel;
     gdouble sfactor, sshift;
+    GSList *group;
     gboolean ok;
 
     gwy_app_wait_start(GTK_WINDOW(controls->dialog), _("Starting..."));
 
-    quark = gwy_app_get_data_key_for_id(args->tmodel.id);
-    tmodel = GWY_DATA_FIELD(gwy_container_get_object(args->tmodel.data, quark));
-
-    quark = gwy_app_get_data_key_for_id(args->tsignal.id);
-    tsignal = GWY_DATA_FIELD(gwy_container_get_object(args->tsignal.data, quark));
+    tmodel = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
+                                                             "/0/data"));
+    tsignal = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
+                                                              "/1/data"));
+    result = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
+                                                             "/2/data"));
+    diff = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
+                                                           "/3/data"));
 
     errors = gwy_data_line_new(args->trainsteps, args->trainsteps, TRUE);
     sshift = gwy_data_field_get_min(tsignal);
     sfactor = 1.0/(gwy_data_field_get_max(tsignal) - sshift);
-
-    result = gwy_data_field_new_alike(tsignal, FALSE);
 
     gwy_neural_network_use(GWY_RESOURCE(nn));
     ok = (train_do(nn, errors, tmodel, tsignal, sfactor, sshift,
@@ -1573,6 +1601,12 @@ train_network(NeuralTrainControls *controls)
                                                */
 
     controls->calculated = TRUE;
+
+    group = controls->preview_group;
+    gtk_widget_set_sensitive(gwy_radio_buttons_find(group, PREVIEW_RESULT),
+                             FALSE);
+    gtk_widget_set_sensitive(gwy_radio_buttons_find(group, PREVIEW_SIGNAL),
+                             FALSE);
 }
 
 static void
