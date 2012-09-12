@@ -836,11 +836,12 @@ setup_container(GwyContainer *mydata,
                 NeuralTrainArgs *args)
 {
     GwyDataField *tmodel, *tsignal, *result, *diff;
+    GQuark quark;
 
-    tmodel = gwy_container_get_object(args->tmodel.data,
-                                      gwy_app_get_data_key_for_id(args->tmodel.id));
-    tsignal = gwy_container_get_object(args->tsignal.data,
-                                       gwy_app_get_data_key_for_id(args->tsignal.id));
+    quark = gwy_app_get_data_key_for_id(args->tmodel.id);
+    tmodel = gwy_container_get_object(args->tmodel.data, quark);
+    quark = gwy_app_get_data_key_for_id(args->tsignal.id);
+    tsignal = gwy_container_get_object(args->tsignal.data, quark);
     result = gwy_data_field_new_alike(tsignal, TRUE);
     diff = gwy_data_field_new_alike(tsignal, TRUE);
 
@@ -1277,8 +1278,13 @@ static void
 preview_type_changed(G_GNUC_UNUSED GtkToggleButton *button,
                      NeuralTrainControls *controls)
 {
+    GSList *group;
+
     g_printerr("Changing preview to %d\n",
                gwy_radio_buttons_get_current(controls->preview_group));
+
+    group = controls->preview_group;
+    set_layer_channel(controls->layer, gwy_radio_buttons_get_current(group));
 }
 
 static void
@@ -1304,6 +1310,7 @@ train_data_changed(NeuralTrainControls *controls,
     quark = gwy_app_get_data_key_for_id(args->tsignal.id);
     signal = GWY_DATA_FIELD(gwy_container_get_object(args->tsignal.data, quark));
 
+    g_printerr("model %p, signal %p\n", model, signal);
     ok = !gwy_data_field_check_compatibility(model, signal,
                                              GWY_DATA_COMPATIBILITY_RES
                                              | GWY_DATA_COMPATIBILITY_REAL
@@ -1329,7 +1336,7 @@ train_data_changed(NeuralTrainControls *controls,
 
     gtk_widget_set_sensitive(gwy_radio_buttons_find(group, PREVIEW_RESULT),
                              FALSE);
-    gtk_widget_set_sensitive(gwy_radio_buttons_find(group, PREVIEW_SIGNAL),
+    gtk_widget_set_sensitive(gwy_radio_buttons_find(group, PREVIEW_DIFFERENCE),
                              FALSE);
 }
 
@@ -1341,6 +1348,7 @@ width_changed(NeuralTrainControls *controls, GtkAdjustment *adj)
         return;
     nndata->width = gwy_adjustment_get_int(adj);
     neural_network_data_resize(nndata);
+    GWY_RESOURCE(controls->args->nn)->is_modified = TRUE;
     controls->calculated = FALSE;
 }
 
@@ -1352,6 +1360,7 @@ height_changed(NeuralTrainControls *controls, GtkAdjustment *adj)
         return;
     nndata->height = gwy_adjustment_get_int(adj);
     neural_network_data_resize(nndata);
+    GWY_RESOURCE(controls->args->nn)->is_modified = TRUE;
     controls->calculated = FALSE;
 }
 
@@ -1363,6 +1372,7 @@ nhidden_changed(NeuralTrainControls *controls, GtkAdjustment *adj)
         return;
     nndata->nhidden = gwy_adjustment_get_int(adj);
     neural_network_data_resize(nndata);
+    GWY_RESOURCE(controls->args->nn)->is_modified = TRUE;
     controls->calculated = FALSE;
 }
 
@@ -1373,6 +1383,7 @@ inpowerxy_changed(NeuralTrainControls *controls, GtkAdjustment *adj)
     if (controls->in_update)
         return;
     nndata->inpowerxy = gwy_adjustment_get_int(adj);
+    GWY_RESOURCE(controls->args->nn)->is_modified = TRUE;
 }
 
 static void
@@ -1382,6 +1393,7 @@ inpowerz_changed(NeuralTrainControls *controls, GtkAdjustment *adj)
     if (controls->in_update)
         return;
     nndata->inpowerz = gwy_adjustment_get_int(adj);
+    GWY_RESOURCE(controls->args->nn)->is_modified = TRUE;
 }
 
 static void
@@ -1392,6 +1404,7 @@ outunits_changed(NeuralTrainControls *controls, GtkEntry *entry)
         return;
     g_free(nndata->outunits);
     nndata->outunits = g_strdup(gtk_entry_get_text(entry));
+    GWY_RESOURCE(controls->args->nn)->is_modified = TRUE;
 }
 
 static void
@@ -1400,6 +1413,7 @@ reinit_network(NeuralTrainControls *controls)
     NeuralNetworkData *nndata = &controls->args->nn->data;
     neural_network_data_init(nndata, NULL);
     controls->calculated = FALSE;
+    GWY_RESOURCE(controls->args->nn)->is_modified = TRUE;
 }
 
 static gboolean
@@ -1506,12 +1520,14 @@ evaluate_do(GwyNeuralNetwork *nn,
     ok = TRUE;
     unit = gwy_data_field_get_si_unit_z(result);
     gwy_si_unit_set_from_string(unit, nndata->outunits);
-    gwy_si_unit_power_multiply(unit, 1, unit,
+    gwy_si_unit_power_multiply(unit, 1,
+                               gwy_data_field_get_si_unit_xy(model),
                                nndata->inpowerxy,
-                               gwy_data_field_get_si_unit_xy(model));
-    gwy_si_unit_power_multiply(unit, 1, unit,
+                               unit);
+    gwy_si_unit_power_multiply(unit, 1,
+                               gwy_data_field_get_si_unit_z(model),
                                nndata->inpowerz,
-                               gwy_data_field_get_si_unit_z(model));
+                               unit);
 
     /* Fill the borders with the average of result. */
     avg = gwy_data_field_area_get_avg_mask(result, NULL, GWY_MASK_IGNORE,
@@ -1538,10 +1554,8 @@ train_network(NeuralTrainControls *controls)
 {
     NeuralTrainArgs *args = controls->args;
     GwyNeuralNetwork *nn = args->nn;
-    GwyContainer *data;
     GwyDataField *tmodel, *tsignal, *result, *diff;
     GwyDataLine *errors;
-    GwyGraphModel *gmodel;
     GwyGraphCurveModel *gcmodel;
     gdouble sfactor, sshift;
     GSList *group;
@@ -1567,46 +1581,38 @@ train_network(NeuralTrainControls *controls)
                    args->trainsteps)
           && evaluate_do(nn, tmodel, result, sfactor, sshift));
     gwy_neural_network_release(GWY_RESOURCE(nn));
+    GWY_RESOURCE(nn)->is_modified = TRUE;
 
     gwy_app_wait_finish();
 
+    /* FIXME: Should we return the neural network to the original state when
+     * the training is cancelled? */
     if (!ok) {
-        // XXX: Free stuf...
+        g_object_unref(errors);
         return;
     }
 
-    /* XXX XXX XXX
-    newid = gwy_app_data_browser_add_data_field(result, data, TRUE);
-    g_object_unref(result);
-    gwy_app_set_data_field_title(data, newid, _("Evaluated signal"));
-    gwy_app_sync_data_items(data, data, args->tmodel.id, newid, FALSE,
-                                               GWY_DATA_ITEM_GRADIENT, 0);
+    gwy_data_field_min_of_fields(diff, result, tsignal);
+    gwy_data_field_data_changed(result);
+    gwy_data_field_data_changed(diff);
 
-    gmodel = gwy_graph_model_new();
-    g_object_set(gmodel,
-                 "title", _("Training error"),
-                 "axis-label-left", _("error"),
-                 "axis-label-bottom", "n",
-                 NULL);
-
-    gcmodel = gwy_graph_curve_model_new();
+    if (gwy_graph_model_get_n_curves(controls->gmodel))
+        gcmodel = gwy_graph_model_get_curve(controls->gmodel, 0);
+    else {
+        gcmodel = gwy_graph_curve_model_new();
+        g_object_set(gcmodel, "description", _("NN training error"), NULL);
+        gwy_graph_model_add_curve(controls->gmodel, gcmodel);
+        g_object_unref(gcmodel);
+    }
     gwy_graph_curve_model_set_data_from_dataline(gcmodel, errors, -1, -1);
-    g_object_set(gcmodel, "description", _("NN training error"), NULL);
-    gwy_graph_model_add_curve(gmodel, gcmodel);
-    gwy_object_unref(gcmodel);
-
-    gwy_app_data_browser_add_graph_model(gmodel, data, TRUE);
-    gwy_object_unref(gmodel);
     gwy_object_unref(errors);
-                                               */
 
     controls->calculated = TRUE;
-
     group = controls->preview_group;
     gtk_widget_set_sensitive(gwy_radio_buttons_find(group, PREVIEW_RESULT),
-                             FALSE);
-    gtk_widget_set_sensitive(gwy_radio_buttons_find(group, PREVIEW_SIGNAL),
-                             FALSE);
+                             TRUE);
+    gtk_widget_set_sensitive(gwy_radio_buttons_find(group, PREVIEW_DIFFERENCE),
+                             TRUE);
 }
 
 static void
@@ -1871,6 +1877,7 @@ gwy_neural_network_save(GwyNeuralNetwork *nn)
     }
 
     filename = gwy_resource_build_filename(resource);
+    g_printerr("Saving <%s>\n", filename);
     fh = g_fopen(filename, "w");
     if (!fh) {
         /* FIXME: GUIze this */
