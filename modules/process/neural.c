@@ -1019,7 +1019,7 @@ neural_train_dialog(NeuralTrainArgs *args)
     row++;
 
     controls.trainsteps = gtk_adjustment_new(args->trainsteps,
-                                             1, 10000, 1, 100, 0);
+                                             0, 10000, 1, 100, 0);
     gwy_table_attach_hscale(table, row, _("Training ste_ps:"), NULL,
                             GTK_OBJECT(controls.trainsteps), GWY_HSCALE_SQRT);
     g_signal_connect_swapped(controls.trainsteps, "value-changed",
