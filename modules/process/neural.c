@@ -45,106 +45,13 @@
 
 #include "neuraldata.h"
 
-#define NEURAL_RUN_MODES GWY_RUN_INTERACTIVE
-
-enum {
-    NEURAL_OK   = 0,
-    NEURAL_DATA = 1,
-    NEURAL_EXPR = 2
-};
+#define NEURAL_TRAIN_RUN_MODES GWY_RUN_INTERACTIVE
+#define NEURAL_APPLY_RUN_MODES GWY_RUN_INTERACTIVE
 
 typedef struct {
     GwyContainer *data;
     gint id;
 } GwyDataObjectId;
-
-typedef struct {
-    GwyDataObjectId tmodel;
-    GwyDataObjectId tsignal;
-    GwyDataObjectId rmodel;
-    gint hidden;
-    gint trainsteps;
-    gint width;
-    gint height;
-} NeuralArgs;
-
-typedef struct {
-    gdouble *input;
-    gint ninput;
-    gdouble *hidden;
-    gint nhidden;
-    gdouble *output;
-    gint noutput;
-
-    gdouble *dhidden;
-    gdouble *doutput;
-    gdouble *target;
-
-    gdouble *whidden;
-    gdouble *winput;
-    gdouble *wphidden;
-    gdouble *wpinput;
-} GwyNN;
-
-typedef struct {
-    NeuralArgs *args;
-    GtkWidget *dialog;
-    GtkWidget *tmodel;
-    GtkWidget *tsignal;
-    GtkWidget *rmodel;
-    GtkObject *hidden;
-    GtkObject *trainsteps;
-    GtkObject *width;
-    GtkObject *height;
-    GtkObject *inpowerxy;
-    GtkObject *inpowerz;
-    GtkWidget *outunits;
-    GtkWidget *message;
-    GtkWidget *ok;
-} NeuralControls;
-
-static const NeuralArgs neural_defaults = {
-    { NULL, -1 },
-    { NULL, -1 },
-    { NULL, -1 },
-    7,
-    1000,
-    20,
-    20,
-};
-
-
-static gboolean module_register     (void);
-static void     neural              (GwyContainer *data,
-                                     GwyRunType run);
-static gboolean neural_dialog       (NeuralArgs *args);
-static void     neural_data      (GwyDataChooser *chooser,
-                                     NeuralControls *controls);
-static void     neural_do           (NeuralArgs *args);
-static void     neural_sanitize_args(NeuralArgs *args);
-static void     neural_load_args    (GwyContainer *settings,
-                                     NeuralArgs *args);
-static void     neural_save_args    (GwyContainer *settings,
-                                     NeuralArgs *args);
-static void     neural_values_update(NeuralControls *controls,
-                                     NeuralArgs *args);
-static void     neural_dialog_update(NeuralControls *controls,
-                                     NeuralArgs *args);
-static void     shuffle             (guint *a,
-                                     guint n,
-                                     GRand *rng);
-static GwyNN*   gwy_nn_alloc        (gint input,
-                                     gint hidden,
-                                     gint output);
-static void     gwy_nn_randomize    (GwyNN *nn,
-                                     GRand *rng);
-static void     gwy_nn_feed_forward (GwyNN* nn);
-static void     gwy_nn_train_step   (GwyNN *nn,
-                                     gdouble eta,
-                                     gdouble momentum,
-                                     gdouble *err_o,
-                                     gdouble *err_h);
-static void     gwy_nn_free         (GwyNN *nn);
 
 
 enum {
@@ -180,7 +87,6 @@ typedef struct {
     gboolean compatible;
     GwyContainer *mydata;
     GtkWidget *dialog;
-    GtkWidget *ok;
     GtkWidget *view;
     GwyPixmapLayer *layer;
     GtkWidget *errgraph;
@@ -210,9 +116,38 @@ typedef struct {
     GtkWidget *networkname;
 } NeuralTrainControls;
 
+typedef struct {
+    gchar *name;
+} NeuralApplyArgs;
+
+typedef struct {
+    NeuralApplyArgs *args;
+    GtkWidget *dialog;
+    GwyInventoryStore *store;
+    GtkWidget *networklist;
+} NeuralApplyControls;
+
+static gboolean module_register             (void);
+static void     shuffle                     (guint *a,
+                                             guint n,
+                                             GRand *rng);
 static void     neural_train                (GwyContainer *data,
                                              GwyRunType run);
+static void     neural_apply                (GwyContainer *data,
+                                             GwyRunType run);
 static gboolean neural_train_dialog         (NeuralTrainArgs *args);
+static gboolean neural_apply_dialog         (NeuralApplyArgs *args,
+                                             GwyDataField *dfield);
+static void     neural_apply_do             (NeuralApplyArgs *args,
+                                             GwyContainer *data,
+                                             GwyDataField *dfield,
+                                             GQuark dquark,
+                                             gint id);
+static gboolean can_select_network          (GtkTreeSelection *selection,
+                                             GtkTreeModel *model,
+                                             GtkTreePath *path,
+                                             gboolean path_currently_selected,
+                                             gpointer data);
 static void     neural_train_update_controls(NeuralTrainControls *controls);
 static gboolean network_is_visible          (GtkTreeModel *model,
                                              GtkTreeIter *iter,
@@ -252,6 +187,11 @@ static void     neural_train_load_args      (GwyContainer *container,
                                              NeuralTrainArgs *args);
 static void     neural_train_save_args      (GwyContainer *container,
                                              NeuralTrainArgs *args);
+static void     neural_apply_sanitize_args  (NeuralApplyArgs *args);
+static void     neural_apply_load_args      (GwyContainer *container,
+                                             NeuralApplyArgs *args);
+static void     neural_apply_save_args      (GwyContainer *container,
+                                             NeuralApplyArgs *args);
 static gboolean gwy_neural_network_save     (GwyNeuralNetwork *nn);
 
 static guint trainsteps_default = 1000;
@@ -274,14 +214,7 @@ module_register(void)
     static gint types_initialized = 0;
     GwyResourceClass *klass;
 
-    gwy_process_func_register("neural",
-                              (GwyProcessFunc)&neural,
-                              N_("/M_ultidata/_Neural Network..."),
-                              NULL,
-                              NEURAL_RUN_MODES,
-                              GWY_MENU_FLAG_DATA,
-                              N_("Neural network AFM data processing"));
-
+    /* FIXME: Load the resources on demand? */
     if (!types_initialized) {
         types_initialized += gwy_neural_network_get_type();
         klass = g_type_class_ref(GWY_TYPE_NEURAL_NETWORK);
@@ -294,212 +227,23 @@ module_register(void)
                               (GwyProcessFunc)&neural_train,
                               N_("/M_ultidata/Neural Network _Training..."),
                               NULL,
-                              NEURAL_RUN_MODES,
+                              NEURAL_TRAIN_RUN_MODES,
                               GWY_MENU_FLAG_DATA,
                               N_("Train a neural network for image "
                                  "processing"));
+    gwy_process_func_register("neural_apply",
+                              (GwyProcessFunc)&neural_apply,
+                              N_("/M_ultidata/Apply _Neural Network..."),
+                              NULL,
+                              NEURAL_APPLY_RUN_MODES,
+                              GWY_MENU_FLAG_DATA,
+                              N_("Process data using a trained "
+                                 "neural network"));
 
     return TRUE;
 }
 
-void
-neural(GwyContainer *data, GwyRunType run)
-{
-    NeuralArgs args;
-    GwyContainer *settings;
-    gint id;
-
-    g_return_if_fail(run & NEURAL_RUN_MODES);
-
-    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_ID, &id, 0);
-
-    settings = gwy_app_settings_get();
-    neural_load_args(settings, &args);
-    args.tmodel.data = data;
-    args.tmodel.id = id;
-    args.rmodel.data = data;
-    args.rmodel.id = id;
-    args.tsignal.data = data;
-    args.tsignal.id = id;
-
-    if (neural_dialog(&args))
-        neural_do(&args);
-    neural_save_args(settings, &args);
-}
-
-static gboolean
-neural_dialog(NeuralArgs *args)
-{
-    NeuralControls controls;
-    GtkWidget *dialog, *table, *label, *spin;
-    guint row, response;
-    enum { RESPONSE_RESET = 1 };
-
-    controls.args = args;
-
-    dialog = gtk_dialog_new_with_buttons(_("Neural Network"), NULL, 0,
-                                         _("_Reset"), RESPONSE_RESET,
-                                         GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-                                         NULL);
-    controls.ok = gtk_dialog_add_button(GTK_DIALOG(dialog),
-                                      GTK_STOCK_OK, GTK_RESPONSE_OK);
-
-    controls.dialog = dialog;
-    gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
-    gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
-
-    table = gtk_table_new(10, 2, FALSE);
-    gtk_table_set_row_spacings(GTK_TABLE(table), 2);
-    gtk_table_set_col_spacings(GTK_TABLE(table), 6);
-    gtk_container_set_border_width(GTK_CONTAINER(table), 4);
-    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), table, TRUE, TRUE, 4);
-    row = 0;
-
-    label = gwy_label_new_header(_("Operands"));
-    gtk_table_attach(GTK_TABLE(table), label, 0, 2, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
-    row++;
-
-    controls.tmodel = gwy_data_chooser_new_channels();
-    g_object_set_data(G_OBJECT(controls.tmodel), "dialog", dialog);
-    gwy_table_attach_hscale(table, row, _("Training _model:"), NULL,
-                            GTK_OBJECT(controls.tmodel), GWY_HSCALE_WIDGET);
-    row++;
-
-    controls.tsignal = gwy_data_chooser_new_channels();
-    g_object_set_data(G_OBJECT(controls.tsignal), "dialog", dialog);
-    gwy_table_attach_hscale(table, row, _("Training _signal:"), NULL,
-                            GTK_OBJECT(controls.tsignal), GWY_HSCALE_WIDGET);
-    row++;
-
-    controls.rmodel = gwy_data_chooser_new_channels();
-    g_object_set_data(G_OBJECT(controls.rmodel), "dialog", dialog);
-    gwy_table_attach_hscale(table, row, _("Res_ult model:"), NULL,
-                            GTK_OBJECT(controls.rmodel), GWY_HSCALE_WIDGET);
-    gtk_table_set_row_spacing(GTK_TABLE(table), row, 8);
-    row++;
-
-    label = gwy_label_new_header(_("Parameters"));
-    gtk_table_attach(GTK_TABLE(table), label, 0, 2, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
-    row++;
-
-    controls.width = gtk_adjustment_new(args->width, 1, 100, 1, 10, 0);
-    spin = gwy_table_attach_spinbutton(table, row, _("Window _width:"), "px",
-                                       controls.width);
-    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 0);
-    row++;
-
-    controls.height = gtk_adjustment_new(args->height, 1, 100, 1, 10, 0);
-    spin = gwy_table_attach_spinbutton(table, row, _("Window h_eight:"), "px",
-                                       controls.height);
-    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 0);
-    row++;
-
-    controls.trainsteps = gtk_adjustment_new(args->trainsteps, 1, 100000, 1, 10, 0);
-    spin = gwy_table_attach_spinbutton(table, row, _("_Training steps:"), "",
-                                       controls.trainsteps);
-    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 0);
-    row++;
-
-    controls.hidden = gtk_adjustment_new(args->hidden, 1, 20, 1, 10, 0);
-    spin = gwy_table_attach_spinbutton(table, row, _("_Hidden nodes:"), "",
-                                       controls.hidden);
-    gtk_spin_button_set_digits(GTK_SPIN_BUTTON(spin), 0);
-    row++;
-
-    controls.message = gtk_label_new("");
-    gtk_misc_set_alignment(GTK_MISC(controls.message), 0.0, 0.5);
-    gtk_table_attach(GTK_TABLE(table), controls.message, 0, 2, row, row+1,
-                     GTK_EXPAND | GTK_FILL, 0, 0, 0);
-    row++;
-
-    g_signal_connect(controls.rmodel, "changed",
-                     G_CALLBACK(neural_data), &controls);
-    g_signal_connect(controls.tmodel, "changed",
-                     G_CALLBACK(neural_data), &controls);
-    g_signal_connect(controls.tsignal, "changed",
-                     G_CALLBACK(neural_data), &controls);
-
-    neural_data(GWY_DATA_CHOOSER(controls.rmodel), &controls);
-
-    gtk_widget_show_all(dialog);
-    do {
-        response = gtk_dialog_run(GTK_DIALOG(dialog));
-        switch (response) {
-            case GTK_RESPONSE_CANCEL:
-            case GTK_RESPONSE_DELETE_EVENT:
-            gtk_widget_destroy(dialog);
-            case GTK_RESPONSE_NONE:
-            return FALSE;
-            break;
-
-            case GTK_RESPONSE_OK:
-            neural_values_update(&controls, args);
-            break;
-
-            case RESPONSE_RESET:
-            *args = neural_defaults;
-            neural_dialog_update(&controls, args);
-            break;
-
-            default:
-            g_assert_not_reached();
-            break;
-        }
-    } while (response != GTK_RESPONSE_OK);
-
-    gtk_widget_destroy(dialog);
-
-    return TRUE;
-}
-
-static void
-neural_data(G_GNUC_UNUSED GwyDataChooser *chooser,
-               NeuralControls *controls)
-{
-    NeuralArgs *args;
-    GwyDataField *tf, *rf, *sf;
-    GQuark quark;
-
-    args = controls->args;
-    args->tmodel.data
-        = gwy_data_chooser_get_active(GWY_DATA_CHOOSER(controls->tmodel),
-                                      &args->tmodel.id);
-    args->rmodel.data
-        = gwy_data_chooser_get_active(GWY_DATA_CHOOSER(controls->rmodel),
-                                      &args->rmodel.id);
-    args->tsignal.data
-        = gwy_data_chooser_get_active(GWY_DATA_CHOOSER(controls->tsignal),
-                                      &args->tsignal.id);
-
-    quark = gwy_app_get_data_key_for_id(args->tmodel.id);
-    tf = GWY_DATA_FIELD(gwy_container_get_object(args->tmodel.data, quark));
-    quark = gwy_app_get_data_key_for_id(args->rmodel.id);
-    rf = GWY_DATA_FIELD(gwy_container_get_object(args->rmodel.data, quark));
-    quark = gwy_app_get_data_key_for_id(args->tsignal.id);
-    sf = GWY_DATA_FIELD(gwy_container_get_object(args->tsignal.data, quark));
-
-    if (!gwy_data_field_check_compatibility
-                                (tf, sf,
-                                 GWY_DATA_COMPATIBILITY_RES
-                                 | GWY_DATA_COMPATIBILITY_REAL
-                                 | GWY_DATA_COMPATIBILITY_LATERAL)
-        && !gwy_data_field_check_compatibility
-                                (tf, rf,
-                                 GWY_DATA_COMPATIBILITY_MEASURE
-                                 | GWY_DATA_COMPATIBILITY_LATERAL
-                                 | GWY_DATA_COMPATIBILITY_VALUE)) {
-        gtk_label_set_text(GTK_LABEL(controls->message), "");
-        gtk_widget_set_sensitive(controls->ok, TRUE);
-    }
-    else {
-        gtk_label_set_text(GTK_LABEL(controls->message),
-                           _("Data not compatible"));
-        gtk_widget_set_sensitive(controls->ok, FALSE);
-    }
-}
-
+#if 0
 static void
 neural_do(NeuralArgs *args)
 {
@@ -649,6 +393,7 @@ neural_do(NeuralArgs *args)
     gwy_object_unref(gmodel);
     gwy_object_unref(errors);
 }
+#endif
 
 static void
 shuffle(guint *a, guint n, GRand *rng)
@@ -661,155 +406,6 @@ shuffle(guint *a, guint n, GRand *rng)
     }
 }
 
-static GwyNN*
-gwy_nn_alloc(gint ninput, gint nhidden, gint noutput)
-{
-    GwyNN *nn = (GwyNN*)g_malloc(sizeof(GwyNN));
-
-    nn->ninput = ninput;
-    nn->nhidden = nhidden;
-    nn->noutput = noutput;
-
-    nn->input = g_new0(gdouble, nn->ninput);
-    nn->hidden = g_new0(gdouble, nn->nhidden);
-    nn->dhidden = g_new0(gdouble, nn->nhidden);
-    nn->output = g_new0(gdouble, nn->noutput);
-    nn->doutput = g_new0(gdouble, nn->noutput);
-    nn->target = g_new0(gdouble, nn->noutput);
-
-    /* Add weights for the constant input signal neurons. */
-    nn->winput = g_new0(gdouble, (nn->ninput + 1)*nn->nhidden);
-    nn->wpinput = g_new0(gdouble, (nn->ninput + 1)*nn->nhidden);
-
-    nn->whidden = g_new0(gdouble, (nn->nhidden + 1)*nn->noutput);
-    nn->wphidden = g_new0(gdouble, (nn->nhidden + 1)*nn->noutput);
-
-    return nn;
-}
-
-static void
-gwy_nn_randomize(GwyNN *nn, GRand *rng)
-{
-    gint i;
-    gdouble *p;
-
-    for (i = (nn->ninput + 1)*nn->nhidden, p = nn->winput; i; i--, p++)
-        *p = (2.0*g_rand_double(rng) - 1)*0.1;
-    for (i = (nn->nhidden + 1)*nn->noutput, p = nn->whidden; i; i--, p++)
-        *p = (2.0*g_rand_double(rng) - 1)*0.1;
-}
-
-static void
-gwy_nn_feed_forward(GwyNN* nn)
-{
-    layer_forward(nn->input, nn->hidden, nn->winput,
-                  nn->ninput, nn->nhidden);
-    layer_forward(nn->hidden, nn->output, nn->whidden,
-                  nn->nhidden, nn->noutput);
-}
-
-static void
-gwy_nn_train_step(GwyNN *nn, gdouble eta, gdouble momentum,
-                  gdouble *err_o, gdouble *err_h)
-{
-    layer_forward(nn->input, nn->hidden, nn->winput, nn->ninput, nn->nhidden);
-    layer_forward(nn->hidden, nn->output, nn->whidden, nn->nhidden, nn->noutput);
-
-    *err_o = output_error(nn->output, nn->noutput, nn->target, nn->doutput);
-    *err_h = hidden_error(nn->hidden, nn->nhidden, nn->dhidden,
-                          nn->doutput, nn->noutput, nn->whidden);
-
-    adjust_weights(nn->doutput, nn->noutput, nn->hidden, nn->nhidden,
-                   nn->whidden, nn->wphidden, eta, momentum);
-    adjust_weights(nn->dhidden, nn->nhidden, nn->input, nn->ninput,
-                   nn->winput, nn->wpinput, eta, momentum);
-}
-
-static void
-gwy_nn_free(GwyNN *nn)
-{
-    g_free(nn->input);
-    g_free(nn->hidden);
-    g_free(nn->dhidden);
-    g_free(nn->output);
-    g_free(nn->doutput);
-    g_free(nn->target);
-    g_free(nn->winput);
-    g_free(nn->wpinput);
-    g_free(nn->whidden);
-    g_free(nn->wphidden);
-}
-
-static void
-neural_dialog_update(NeuralControls *controls,
-                     NeuralArgs *args)
-{
-    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->width),
-                             args->width);
-    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->height),
-                             args->height);
-    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->trainsteps),
-                             args->trainsteps);
-    gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->hidden),
-                             args->hidden);
-}
-
-static void
-neural_values_update(NeuralControls *controls,
-                     NeuralArgs *args)
-{
-    args->width = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->width));
-    args->height = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->height));
-    args->trainsteps
-        = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->trainsteps));
-    args->hidden = gtk_adjustment_get_value(GTK_ADJUSTMENT(controls->hidden));
-}
-
-static const gchar width_key[]      = "/module/neural/width";
-static const gchar height_key[]     = "/module/neural/height";
-static const gchar trainsteps_key[] = "/module/neural/trainsteps";
-static const gchar hidden_key[]     = "/module/neural/hidden";
-
-static void
-neural_sanitize_args(NeuralArgs *args)
-{
-    args->width = CLAMP(args->width, 1, 1000);
-    args->height = CLAMP(args->height, 1, 1000);
-    args->trainsteps = CLAMP(args->trainsteps, 1, 100000);
-    args->hidden = CLAMP(args->hidden, 1, 1000);
-}
-
-static void
-neural_load_args(GwyContainer *container,
-                 NeuralArgs *args)
-{
-    *args = neural_defaults;
-
-    gwy_container_gis_int32_by_name(container, width_key, &args->width);
-    gwy_container_gis_int32_by_name(container, height_key, &args->height);
-    gwy_container_gis_int32_by_name(container, trainsteps_key, &args->trainsteps);
-    gwy_container_gis_int32_by_name(container, hidden_key, &args->hidden);
-
-    neural_sanitize_args(args);
-}
-
-static void
-neural_save_args(GwyContainer *container,
-                 NeuralArgs *args)
-{
-    gwy_container_set_int32_by_name(container, width_key, args->width);
-    gwy_container_set_int32_by_name(container, height_key, args->height);
-    gwy_container_set_int32_by_name(container, trainsteps_key, args->trainsteps);
-    gwy_container_set_int32_by_name(container, hidden_key, args->hidden);
-}
-
-/**************************************************************************
- *
- * New module
- *
- **************************************************************************/
-
-
 void
 neural_train(GwyContainer *data, GwyRunType run)
 {
@@ -817,8 +413,7 @@ neural_train(GwyContainer *data, GwyRunType run)
     GwyContainer *settings;
     gint id;
 
-    g_return_if_fail(run & NEURAL_RUN_MODES);
-
+    g_return_if_fail(run & NEURAL_TRAIN_RUN_MODES);
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_ID, &id, 0);
 
     settings = gwy_app_settings_get();
@@ -830,6 +425,37 @@ neural_train(GwyContainer *data, GwyRunType run)
 
     neural_train_dialog(&args);
     neural_train_save_args(settings, &args);
+}
+
+void
+neural_apply(GwyContainer *data, GwyRunType run)
+{
+    NeuralApplyArgs args;
+    GwyContainer *settings;
+    GwyDataField *dfield;
+    GQuark dquark;
+    gint id;
+    gboolean ok;
+
+    g_return_if_fail(run & NEURAL_APPLY_RUN_MODES);
+    gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD_KEY, &dquark,
+                                     GWY_APP_DATA_FIELD_ID, &id,
+                                     GWY_APP_DATA_FIELD, &dfield,
+                                     0);
+    g_return_if_fail(dfield && dquark);
+
+    settings = gwy_app_settings_get();
+    neural_apply_load_args(settings, &args);
+    if (run == GWY_RUN_INTERACTIVE) {
+        ok = neural_apply_dialog(&args, dfield);
+        neural_apply_save_args(settings, &args);
+        if (!ok) {
+            g_free(args.name);
+            return;
+        }
+    }
+    neural_apply_do(&args, data, dfield, dquark, id);
+    g_free(args.name);
 }
 
 /* This assumes model and singal are compatible! */
@@ -893,6 +519,7 @@ network_cell_renderer(G_GNUC_UNUSED GtkTreeViewColumn *column,
 {
     GwyNeuralNetwork *network;
     gulong id;
+    const gchar *name;
     gchar *s;
 
     id = GPOINTER_TO_UINT(data);
@@ -900,8 +527,11 @@ network_cell_renderer(G_GNUC_UNUSED GtkTreeViewColumn *column,
     gtk_tree_model_get(model, piter, 0, &network, -1);
     switch (id) {
         case NETWORK_NAME:
-        g_object_set(cell, "text", gwy_resource_get_name(GWY_RESOURCE(network)),
-                     NULL);
+        name = gwy_resource_get_name(GWY_RESOURCE(network));
+        if (gwy_strequal(name, GWY_NEURAL_NETWORK_UNTITLED))
+            /* TRANSLATORS: Unnamed neural network that is in training. */
+            name = _("In training");
+        g_object_set(cell, "text", name, NULL);
         break;
 
         case NETWORK_SIZE:
@@ -922,8 +552,9 @@ network_cell_renderer(G_GNUC_UNUSED GtkTreeViewColumn *column,
     }
 }
 
-static gboolean
-neural_train_dialog(NeuralTrainArgs *args)
+static GtkWidget*
+create_network_list(GtkTreeModel *model,
+                    GtkWidget **scroll)
 {
     static const GwyEnum columns[] = {
         { N_("Name"),   NETWORK_NAME,   },
@@ -931,6 +562,38 @@ neural_train_dialog(NeuralTrainArgs *args)
         { N_("Hidden"), NETWORK_HIDDEN, },
     };
 
+    GtkCellRenderer *renderer;
+    GtkTreeViewColumn *column;
+    GtkWidget *networklist;
+    guint i;
+
+    networklist = gtk_tree_view_new_with_model(model);
+    gtk_tree_view_set_rules_hint(GTK_TREE_VIEW(networklist), TRUE);
+
+    for (i = 0; i < G_N_ELEMENTS(columns); i++) {
+        renderer = gtk_cell_renderer_text_new();
+        column = gtk_tree_view_column_new_with_attributes(_(columns[i].name),
+                                                          renderer,
+                                                          NULL);
+        gtk_tree_view_column_set_cell_data_func
+                                         (column, renderer,
+                                          network_cell_renderer,
+                                          GUINT_TO_POINTER(columns[i].value),
+                                          NULL);  /* destroy notify */
+        gtk_tree_view_append_column(GTK_TREE_VIEW(networklist), column);
+    }
+
+    *scroll = gtk_scrolled_window_new(NULL, NULL);
+    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(*scroll),
+                                   GTK_POLICY_NEVER, GTK_POLICY_ALWAYS);
+    gtk_container_add(GTK_CONTAINER(*scroll), networklist);
+
+    return networklist;
+}
+
+static gboolean
+neural_train_dialog(NeuralTrainArgs *args)
+{
     NeuralTrainControls controls;
     NeuralNetworkData *nndata;
     GwyContainer *mydata;
@@ -938,10 +601,8 @@ neural_train_dialog(NeuralTrainArgs *args)
               *scroll, *button;
     GtkTreeModel *filtermodel;
     GtkTreeSelection *tselect;
-    GtkCellRenderer *renderer;
-    GtkTreeViewColumn *column;
     GSList *group;
-    guint row, response, i;
+    guint row, response;
 
     controls.args = args;
     controls.in_update = TRUE;
@@ -954,10 +615,8 @@ neural_train_dialog(NeuralTrainArgs *args)
 
     dialog = gtk_dialog_new_with_buttons(_("Neural Network Training"), NULL, 0,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
+                                         GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);
-    controls.ok = gtk_dialog_add_button(GTK_DIALOG(dialog),
-                                        GTK_STOCK_OK, GTK_RESPONSE_OK);
-
     controls.dialog = dialog;
     gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
@@ -1154,28 +813,8 @@ neural_train_dialog(NeuralTrainArgs *args)
     gtk_tree_model_filter_set_visible_func(GTK_TREE_MODEL_FILTER(filtermodel),
                                            &network_is_visible,
                                            NULL, NULL);
-    controls.networklist = gtk_tree_view_new_with_model(filtermodel);
+    controls.networklist = create_network_list(filtermodel, &scroll);
     g_object_unref(filtermodel);
-    gtk_tree_view_set_rules_hint(GTK_TREE_VIEW(controls.networklist), TRUE);
-
-    for (i = 0; i < G_N_ELEMENTS(columns); i++) {
-        renderer = gtk_cell_renderer_text_new();
-        column = gtk_tree_view_column_new_with_attributes(_(columns[i].name),
-                                                          renderer,
-                                                          NULL);
-        gtk_tree_view_column_set_cell_data_func
-                                         (column, renderer,
-                                          network_cell_renderer,
-                                          GUINT_TO_POINTER(columns[i].value),
-                                          NULL);  /* destroy notify */
-        gtk_tree_view_append_column(GTK_TREE_VIEW(controls.networklist),
-                                    column);
-    }
-
-    scroll = gtk_scrolled_window_new(NULL, NULL);
-    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scroll),
-                                   GTK_POLICY_NEVER, GTK_POLICY_ALWAYS);
-    gtk_container_add(GTK_CONTAINER(scroll), controls.networklist);
     gtk_box_pack_start(GTK_BOX(vbox), scroll, TRUE, TRUE, 0);
 
     bbox = gtk_hbutton_box_new();
@@ -1252,6 +891,85 @@ neural_train_dialog(NeuralTrainArgs *args)
     return TRUE;
 }
 
+static gboolean
+neural_apply_dialog(NeuralApplyArgs *args,
+                    GwyDataField *dfield)
+{
+    NeuralApplyControls controls;
+    GtkWidget *dialog, *scroll;
+    GtkTreeSelection *tselect;
+    guint response;
+
+    controls.args = args;
+
+    dialog = gtk_dialog_new_with_buttons(_("Neural Network Training"), NULL, 0,
+                                         GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
+                                         GTK_STOCK_OK, GTK_RESPONSE_OK,
+                                         NULL);
+    controls.dialog = dialog;
+    gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
+    gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
+    gtk_window_set_default_size(GTK_WINDOW(dialog), -1, 320);
+
+    controls.store = gwy_inventory_store_new(gwy_neural_networks());
+    controls.networklist = create_network_list(GTK_TREE_MODEL(controls.store),
+                                               &scroll);
+    g_object_unref(controls.store);
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), scroll,
+                       TRUE, TRUE, 0);
+
+    tselect = gtk_tree_view_get_selection(GTK_TREE_VIEW(controls.networklist));
+    gtk_tree_selection_set_select_function(tselect, can_select_network,
+                                           dfield, NULL);
+    gtk_tree_selection_set_mode(tselect, GTK_SELECTION_BROWSE);
+    if (!gtk_tree_selection_get_selected(tselect, NULL, NULL))
+        gtk_dialog_set_response_sensitive(GTK_DIALOG(controls.dialog),
+                                          GTK_RESPONSE_OK, FALSE);
+
+    gtk_widget_show_all(dialog);
+    do {
+        response = gtk_dialog_run(GTK_DIALOG(dialog));
+        switch (response) {
+            case GTK_RESPONSE_CANCEL:
+            case GTK_RESPONSE_DELETE_EVENT:
+            gtk_widget_destroy(dialog);
+            case GTK_RESPONSE_NONE:
+            return FALSE;
+            break;
+
+            case GTK_RESPONSE_OK:
+            break;
+
+            default:
+            g_assert_not_reached();
+            break;
+        }
+    } while (response != GTK_RESPONSE_OK);
+
+    gtk_widget_destroy(dialog);
+
+    return TRUE;
+}
+
+static gboolean
+can_select_network(G_GNUC_UNUSED GtkTreeSelection *selection,
+                   GtkTreeModel *model,
+                   GtkTreePath *path,
+                   G_GNUC_UNUSED gboolean path_currently_selected,
+                   gpointer data)
+{
+    GwyDataField *dfield = (GwyDataField*)data;
+    GwyNeuralNetwork *network;
+    GtkTreeIter iter;
+
+    if (!gtk_tree_model_get_iter(model, &iter, path))
+        return FALSE;
+
+    gtk_tree_model_get(model, &iter, 0, &network, -1);
+    return (gwy_data_field_get_xres(dfield) > network->data.width
+            && gwy_data_field_get_yres(dfield) > network->data.height);
+}
+
 static void
 neural_train_update_controls(NeuralTrainControls *controls)
 {
@@ -1299,10 +1017,11 @@ train_data_changed(NeuralTrainControls *controls,
                    GwyDataChooser *chooser)
 {
     NeuralTrainArgs *args = controls->args;
+    NeuralNetworkData *nndata = &args->nn->data;
     GwyDataChooser *tmodel_chooser = GWY_DATA_CHOOSER(controls->tmodel),
                    *tsignal_chooser = GWY_DATA_CHOOSER(controls->tsignal);
-    GwyDataField *model, *signal;
-    const gchar *id;
+    GwyDataField *tmodel, *tsignal;
+    const gchar *id, *message = "";
     gboolean ok;
     GSList *group;
     GQuark quark;
@@ -1313,18 +1032,30 @@ train_data_changed(NeuralTrainControls *controls,
         = gwy_data_chooser_get_active(tsignal_chooser, &args->tsignal.id);
 
     quark = gwy_app_get_data_key_for_id(args->tmodel.id);
-    model = GWY_DATA_FIELD(gwy_container_get_object(args->tmodel.data, quark));
+    tmodel = GWY_DATA_FIELD(gwy_container_get_object(args->tmodel.data, quark));
     quark = gwy_app_get_data_key_for_id(args->tsignal.id);
-    signal = GWY_DATA_FIELD(gwy_container_get_object(args->tsignal.data, quark));
+    tsignal = GWY_DATA_FIELD(gwy_container_get_object(args->tsignal.data, quark));
 
-    ok = !gwy_data_field_check_compatibility(model, signal,
+    ok = !gwy_data_field_check_compatibility(tmodel, tsignal,
                                              GWY_DATA_COMPATIBILITY_RES
                                              | GWY_DATA_COMPATIBILITY_REAL
                                              | GWY_DATA_COMPATIBILITY_LATERAL);
-    gtk_label_set_text(GTK_LABEL(controls->message),
-                       ok ? "" : _("Model and signal are not compatible."));
+    if (!ok)
+        message = _("Model and signal are not compatible.");
+
+    if (ok) {
+        if (gwy_data_field_get_xres(tmodel) <= nndata->width
+            || gwy_data_field_get_yres(tmodel) <= nndata->height
+            || gwy_data_field_get_xres(tsignal) <= nndata->width
+            || gwy_data_field_get_yres(tsignal) <= nndata->height) {
+            ok = FALSE;
+            message = _("A field dimension is too small for chosen window "
+                        "size.");
+        }
+    }
+
+    gtk_label_set_text(GTK_LABEL(controls->message), message);
     gtk_widget_set_sensitive(controls->train, ok);
-    gtk_widget_set_sensitive(controls->ok, ok);
 
     controls->calculated = FALSE;
     controls->compatible = ok;
@@ -1571,6 +1302,7 @@ train_network(NeuralTrainControls *controls)
     GwyDataField *tmodel, *tsignal, *result, *diff;
     GwyDataLine *errors;
     GwyGraphCurveModel *gcmodel;
+    NeuralNetworkData backup;
     gdouble sfactor, sshift;
     GSList *group;
     gboolean ok;
@@ -1590,17 +1322,21 @@ train_network(NeuralTrainControls *controls)
     sshift = gwy_data_field_get_min(tsignal);
     sfactor = 1.0/(gwy_data_field_get_max(tsignal) - sshift);
 
+    gwy_clear(&backup, 1);
+    neural_network_data_copy(&nn->data, &backup);
+
     gwy_neural_network_use(GWY_RESOURCE(nn));
     ok = (train_do(nn, errors, tmodel, tsignal, sfactor, sshift,
                    args->trainsteps)
           && evaluate_do(nn, tmodel, result, sfactor, sshift));
     gwy_neural_network_release(GWY_RESOURCE(nn));
-    GWY_RESOURCE(nn)->is_modified = TRUE;
 
     gwy_app_wait_finish();
 
-    /* FIXME: Should we return the neural network to the original state when
-     * the training is cancelled? */
+    if (!ok)
+        neural_network_data_copy(&backup, &nn->data);
+    neural_network_data_free(&backup);
+
     if (!ok) {
         g_object_unref(errors);
         return;
@@ -1619,14 +1355,25 @@ train_network(NeuralTrainControls *controls)
         g_object_unref(gcmodel);
     }
     gwy_graph_curve_model_set_data_from_dataline(gcmodel, errors, -1, -1);
-    gwy_object_unref(errors);
+    g_object_unref(errors);
 
+    GWY_RESOURCE(nn)->is_modified = TRUE;
     controls->calculated = TRUE;
     group = controls->preview_group;
     gtk_widget_set_sensitive(gwy_radio_buttons_find(group, PREVIEW_RESULT),
                              TRUE);
     gtk_widget_set_sensitive(gwy_radio_buttons_find(group, PREVIEW_DIFFERENCE),
                              TRUE);
+}
+
+static void
+neural_apply_do(NeuralApplyArgs *args,
+                GwyContainer *data,
+                GwyDataField *dfield,
+                GQuark dquark,
+                gint id)
+{
+    // TODO
 }
 
 static void
@@ -1677,6 +1424,7 @@ network_store(NeuralTrainControls *controls)
         neural_network_data_copy(nndata, &network->data);
         gwy_resource_data_changed(GWY_RESOURCE(network));
     }
+    GWY_RESOURCE(network)->is_modified = TRUE;
     gwy_neural_network_save(network);
 
     model = gtk_tree_view_get_model(GTK_TREE_VIEW(controls->networklist));
@@ -1831,7 +1579,8 @@ set_layer_channel(GwyPixmapLayer *layer, gint channel)
     gwy_layer_basic_set_range_type_key(GWY_LAYER_BASIC(layer), range_key);
 }
 
-//static const gchar trainsteps_key[] = "/module/neural/trainsteps";
+static const gchar trainsteps_key[] = "/module/neural/trainsteps";
+static const gchar name_key[] = "/module/neural/name";
 
 static void
 neural_train_sanitize_args(NeuralTrainArgs *args)
@@ -1843,7 +1592,6 @@ static void
 neural_train_load_args(GwyContainer *settings,
                        NeuralTrainArgs *args)
 {
-    GwyInventory *inventory;
     const guchar *name = GWY_NEURAL_NETWORK_UNTITLED;
 
     gwy_clear(args, 1);
@@ -1854,8 +1602,7 @@ neural_train_load_args(GwyContainer *settings,
                                     &args->trainsteps);
     neural_train_sanitize_args(args);
 
-    inventory = gwy_neural_networks();
-    if ((args->nn = gwy_inventory_get_item(inventory, name)))
+    if ((args->nn = gwy_inventory_get_item(gwy_neural_networks(), name)))
         return;
 
     args->nn = gwy_neural_networks_create_untitled();
@@ -1869,6 +1616,34 @@ neural_train_save_args(GwyContainer *settings,
     gwy_container_set_int32_by_name(settings, trainsteps_key,
                                     args->trainsteps);
     gwy_neural_network_save(args->nn);
+}
+
+static void
+neural_apply_sanitize_args(NeuralApplyArgs *args)
+{
+    if (!gwy_inventory_get_item(gwy_neural_networks(), args->name)) {
+        g_free(args->name);
+        args->name = g_strdup(GWY_NEURAL_NETWORK_UNTITLED);
+    }
+}
+
+static void
+neural_apply_load_args(GwyContainer *settings,
+                       NeuralApplyArgs *args)
+{
+    args->name = GWY_NEURAL_NETWORK_UNTITLED;
+    gwy_container_gis_string_by_name(settings, name_key,
+                                     (const guchar**)&args->name);
+    args->name = g_strdup(args->name);
+    neural_apply_sanitize_args(args);
+}
+
+static void
+neural_apply_save_args(GwyContainer *settings,
+                       NeuralApplyArgs *args)
+{
+    gwy_container_set_string_by_name(settings, name_key,
+                                     g_strdup(args->name));
 }
 
 static gboolean
