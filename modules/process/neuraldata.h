@@ -43,6 +43,11 @@ typedef struct {
     guint inpowerxy;
     guint inpowerz;
     gchar *outunits;
+
+    gdouble infactor;
+    gdouble inshift;
+    gdouble outfactor;
+    gdouble outshift;
 } NeuralNetworkData;
 
 struct _GwyNeuralNetwork {
@@ -85,9 +90,10 @@ static void              neural_network_data_copy   (const NeuralNetworkData *sr
 static void              neural_network_data_free   (NeuralNetworkData *nndata);
 
 static const NeuralNetworkData neuralnetworkdata_default = {
-    1, 11, 11, 7, 1,  /* sizes */
-    NULL, NULL,       /* weights */
-    0, 1, NULL,       /* units */
+    1, 11, 11, 7, 1,     /* sizes */
+    NULL, NULL,          /* weights */
+    0, 1, NULL,          /* units */
+    1.0, 0.0, 1.0, 0.0,  /* scaling */
 };
 
 G_DEFINE_TYPE(GwyNeuralNetwork, gwy_neural_network, GWY_TYPE_RESOURCE)
@@ -223,6 +229,8 @@ gwy_neural_network_dump(GwyResource *resource,
 {
     GwyNeuralNetwork *nn;
     NeuralNetworkData *nndata;
+    gchar infactor[G_ASCII_DTOSTR_BUF_SIZE], inshift[G_ASCII_DTOSTR_BUF_SIZE],
+          outfactor[G_ASCII_DTOSTR_BUF_SIZE], outshift[G_ASCII_DTOSTR_BUF_SIZE];
     gchar *outunits;
     guint ninput;
 
@@ -231,6 +239,11 @@ gwy_neural_network_dump(GwyResource *resource,
     nndata = &nn->data;
     ninput = nndata->width * nndata->height;
     outunits = g_strescape(nndata->outunits, NULL);
+
+    g_ascii_dtostr(infactor, sizeof(infactor), nndata->infactor);
+    g_ascii_dtostr(inshift, sizeof(inshift), nndata->inshift);
+    g_ascii_dtostr(outfactor, sizeof(outfactor), nndata->outfactor);
+    g_ascii_dtostr(outshift, sizeof(outshift), nndata->outshift);
 
     /* Information */
     g_string_append_printf(str,
@@ -241,11 +254,15 @@ gwy_neural_network_dump(GwyResource *resource,
                            "noutput %u\n"
                            "xyunitpower %u\n"
                            "zunitpower %u\n"
-                           "outunits \"%s\"\n",
+                           "outunits \"%s\"\n"
+                           "infactor %s\n"
+                           "inshift %s\n"
+                           "outfactor %s\n"
+                           "outshift %s\n",
                            nndata->width, nndata->height,
                            nndata->nlayers, nndata->nhidden, nndata->noutput,
-                           nndata->inpowerxy, nndata->inpowerz,
-                           outunits);
+                           nndata->inpowerxy, nndata->inpowerz, outunits,
+                           infactor, inshift, outfactor, outshift);
     g_free(outunits);
 
     gwy_neural_network_write_weights(nndata->winput,
@@ -353,6 +370,14 @@ gwy_neural_network_parse(const gchar *text,
                 nndata.outunits = g_strcompress(value);
             }
         }
+        else if (gwy_strequal(key, "infactor"))
+            nndata.infactor = g_ascii_strtod(value, NULL);
+        else if (gwy_strequal(key, "inshift"))
+            nndata.inshift = g_ascii_strtod(value, NULL);
+        else if (gwy_strequal(key, "outfactor"))
+            nndata.outfactor = g_ascii_strtod(value, NULL);
+        else if (gwy_strequal(key, "outshift"))
+            nndata.outshift = g_ascii_strtod(value, NULL);
         else
             g_warning("Unknown field `%s'.", key);
     }

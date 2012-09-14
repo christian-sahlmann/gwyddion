@@ -242,158 +242,6 @@ module_register(void)
     return TRUE;
 }
 
-#if 0
-static void
-neural_do(NeuralArgs *args)
-{
-    GwyContainer *data;
-    GQuark quark;
-    GwyDataField *tmodel, *rmodel, *tsignal, *result, *scaled;
-    GwyDataLine *errors;
-    GwyGraphModel *gmodel;
-    GwyGraphCurveModel *gcmodel;
-    gdouble sfactor, sshift, eo = 0.0, eh = 0.0;
-    gdouble *dresult;
-    const gdouble *dtmodel, *drmodel, *dtsignal;
-    gint xres, yres, col, row, newid, n, height, width, irow, k;
-    guint *indices;
-    GRand *rng;
-    GwyNN *nn;
-
-    data = args->tmodel.data;
-    quark = gwy_app_get_data_key_for_id(args->tmodel.id);
-    tmodel = GWY_DATA_FIELD(gwy_container_get_object(data, quark));
-    rng = g_rand_new();
-
-    gwy_app_wait_start(gwy_app_find_window_for_channel(data, args->tmodel.id),
-                       _("Starting..."));
-
-    data = args->tsignal.data;
-    quark = gwy_app_get_data_key_for_id(args->tsignal.id);
-    tsignal = GWY_DATA_FIELD(gwy_container_get_object(data, quark));
-    dtsignal = gwy_data_field_get_data_const(tsignal);
-
-    data = args->rmodel.data;
-    quark = gwy_app_get_data_key_for_id(args->rmodel.id);
-    rmodel = GWY_DATA_FIELD(gwy_container_get_object(data, quark));
-
-    width = args->width;
-    height = args->height;
-
-    nn = gwy_nn_alloc(height*width, args->hidden, 1);
-    gwy_nn_randomize(nn, rng);
-    errors = gwy_data_line_new(args->trainsteps, args->trainsteps, TRUE);
-    sshift = gwy_data_field_get_min(tsignal);
-    sfactor = 1.0/(gwy_data_field_get_max(tsignal)-sshift);
-
-    /*perform training*/
-    gwy_app_wait_set_message(_("Training..."));
-    scaled = gwy_data_field_duplicate(tmodel);
-    gwy_data_field_normalize(scaled);
-    xres = gwy_data_field_get_xres(scaled);
-    yres = gwy_data_field_get_yres(scaled);
-    dtmodel = gwy_data_field_get_data_const(scaled);
-
-    indices = g_new(guint, (xres - width)*(yres - height));
-    k = 0;
-    for (row = height/2; row < yres + height/2 - height; row++) {
-        for (col = width/2; col < xres + width/2 - width; col++)
-            indices[k++] = (row - height/2)*xres + col - width/2;
-    }
-    g_assert(k == (xres - width)*(yres - height));
-
-    for (n = 0; n < args->trainsteps; n++) {
-        /* FIXME: Randomisation leads to weird spiky NN error curves. */
-        /* shuffle(indices, (xres - width)*(yres - height), rng); */
-        for (k = 0; k < (xres - width)*(yres - height); k++) {
-            for (irow = 0; irow < height; irow++) {
-                memcpy(nn->input + irow*width,
-                       dtmodel + indices[k] + irow*xres,
-                       width*sizeof(gdouble));
-            }
-            nn->target[0] = sfactor*(dtsignal[indices[k]
-                                              + height/2*xres + width/2]
-                                              - sshift);
-            gwy_nn_train_step(nn, 0.3, 0.3, &eo, &eh);
-        }
-        if (!gwy_app_wait_set_fraction((gdouble)n/(gdouble)args->trainsteps)) {
-            gwy_nn_free(nn);
-            g_rand_free(rng);
-            g_object_unref(scaled);
-            g_free(indices);
-            gwy_object_unref(errors);
-            return;
-        }
-        gwy_data_line_set_val(errors, n, eo + eh);
-    }
-    g_free(indices);
-    g_object_unref(scaled);
-
-    gwy_app_wait_set_message(_("Evaluating..."));
-    gwy_app_wait_set_fraction(0.0);
-    scaled = gwy_data_field_duplicate(rmodel);
-    gwy_data_field_normalize(scaled);
-    xres = gwy_data_field_get_xres(scaled);
-    yres = gwy_data_field_get_yres(scaled);
-    drmodel = gwy_data_field_get_data_const(scaled);
-
-    result = gwy_data_field_new_alike(rmodel, FALSE);
-    gwy_serializable_clone(G_OBJECT(gwy_data_field_get_si_unit_z(tsignal)),
-                           G_OBJECT(gwy_data_field_get_si_unit_z(result)));
-    gwy_data_field_fill(result, gwy_data_field_get_avg(tsignal));
-    dresult = gwy_data_field_get_data(result);
-
-    for (row = height/2; row < yres + height/2 - height; row++) {
-        for (col = width/2; col < xres + width/2 - width; col++) {
-            for (irow = 0; irow < height; irow++) {
-                memcpy(nn->input + irow*width,
-                       drmodel + ((row + irow - height/2)*xres
-                                  + col - width/2),
-                       width*sizeof(gdouble));
-            }
-            gwy_nn_feed_forward(nn);
-            dresult[row*xres + col] = nn->output[0]/sfactor + sshift;
-        }
-        if (row % 32 == 31
-            && !gwy_app_wait_set_fraction((gdouble)row/(gdouble)yres)) {
-            gwy_nn_free(nn);
-            g_rand_free(rng);
-            g_object_unref(result);
-            g_object_unref(scaled);
-            gwy_object_unref(errors);
-            return;
-        }
-    }
-    g_object_unref(scaled);
-    g_rand_free(rng);
-
-    gwy_app_wait_finish();
-
-    newid = gwy_app_data_browser_add_data_field(result, data, TRUE);
-    g_object_unref(result);
-    gwy_app_set_data_field_title(data, newid, _("Evaluated signal"));
-    gwy_app_sync_data_items(data, data, args->tmodel.id, newid, FALSE,
-                                               GWY_DATA_ITEM_GRADIENT, 0);
-
-    gmodel = gwy_graph_model_new();
-    g_object_set(gmodel,
-                 "title", _("Training error"),
-                 "axis-label-left", _("error"),
-                 "axis-label-bottom", "n",
-                 NULL);
-
-    gcmodel = gwy_graph_curve_model_new();
-    gwy_graph_curve_model_set_data_from_dataline(gcmodel, errors, -1, -1);
-    g_object_set(gcmodel, "description", _("NN training error"), NULL);
-    gwy_graph_model_add_curve(gmodel, gcmodel);
-    gwy_object_unref(gcmodel);
-
-    gwy_app_data_browser_add_graph_model(gmodel, data, TRUE);
-    gwy_object_unref(gmodel);
-    gwy_object_unref(errors);
-}
-#endif
-
 static void
 shuffle(guint *a, guint n, GRand *rng)
 {
@@ -1179,6 +1027,11 @@ train_do(GwyNeuralNetwork *nn, GwyDataLine *errors,
 
     gwy_app_wait_set_message(_("Training..."));
     gwy_app_wait_set_fraction(0.0);
+
+    nndata->outfactor = sfactor;
+    nndata->outshift = sshift;
+    nndata->inshift = gwy_data_field_get_min(model);
+    nndata->infactor = 1.0/(gwy_data_field_get_max(model) - nndata->inshift);
 
     scaled = gwy_data_field_duplicate(model);
     gwy_data_field_normalize(scaled);
