@@ -141,7 +141,6 @@ static gboolean neural_apply_dialog         (NeuralApplyArgs *args,
 static void     neural_apply_do             (NeuralApplyArgs *args,
                                              GwyContainer *data,
                                              GwyDataField *dfield,
-                                             GQuark dquark,
                                              gint id);
 static gboolean can_select_network          (GtkTreeSelection *selection,
                                              GtkTreeModel *model,
@@ -454,7 +453,7 @@ neural_apply(GwyContainer *data, GwyRunType run)
             return;
         }
     }
-    neural_apply_do(&args, data, dfield, dquark, id);
+    neural_apply_do(&args, data, dfield, id);
     g_free(args.name);
 }
 
@@ -529,7 +528,7 @@ network_cell_renderer(G_GNUC_UNUSED GtkTreeViewColumn *column,
         case NETWORK_NAME:
         name = gwy_resource_get_name(GWY_RESOURCE(network));
         if (gwy_strequal(name, GWY_NEURAL_NETWORK_UNTITLED))
-            /* TRANSLATORS: Unnamed neural network that is in training. */
+            /* TRANSLATORS: Unnamed neural network that is/was in training. */
             name = _("In training");
         g_object_set(cell, "text", name, NULL);
         break;
@@ -922,11 +921,12 @@ neural_apply_dialog(NeuralApplyArgs *args,
     gtk_tree_selection_set_select_function(tselect, can_select_network,
                                            dfield, NULL);
     gtk_tree_selection_set_mode(tselect, GTK_SELECTION_BROWSE);
+
+    gtk_widget_show_all(dialog);
     if (!gtk_tree_selection_get_selected(tselect, NULL, NULL))
         gtk_dialog_set_response_sensitive(GTK_DIALOG(controls.dialog),
                                           GTK_RESPONSE_OK, FALSE);
 
-    gtk_widget_show_all(dialog);
     do {
         response = gtk_dialog_run(GTK_DIALOG(dialog));
         switch (response) {
@@ -1294,6 +1294,22 @@ fail:
     return ok;
 }
 
+static gdouble
+calculate_mean_error(GwyDataField *dfield)
+{
+    guint xres, yres, k;
+    const gdouble *data;
+    gdouble s = 0.0;
+
+    xres = gwy_data_field_get_xres(dfield);
+    yres = gwy_data_field_get_yres(dfield);
+    data = gwy_data_field_get_data_const(dfield);
+    for (k = xres*yres; k; k--, data++)
+        s += fabs(*data);
+
+    return s/(xres*yres);
+}
+
 static void
 train_network(NeuralTrainControls *controls)
 {
@@ -1303,8 +1319,10 @@ train_network(NeuralTrainControls *controls)
     GwyDataLine *errors;
     GwyGraphCurveModel *gcmodel;
     NeuralNetworkData backup;
+    GwySIValueFormat *vf;
     gdouble sfactor, sshift;
     GSList *group;
+    gchar *s;
     gboolean ok;
 
     gwy_app_wait_start(GTK_WINDOW(controls->dialog), _("Starting..."));
@@ -1325,11 +1343,11 @@ train_network(NeuralTrainControls *controls)
     gwy_clear(&backup, 1);
     neural_network_data_copy(&nn->data, &backup);
 
-    gwy_neural_network_use(GWY_RESOURCE(nn));
+    gwy_resource_use(GWY_RESOURCE(nn));
     ok = (train_do(nn, errors, tmodel, tsignal, sfactor, sshift,
                    args->trainsteps)
           && evaluate_do(nn, tmodel, result, sfactor, sshift));
-    gwy_neural_network_release(GWY_RESOURCE(nn));
+    gwy_resource_release(GWY_RESOURCE(nn));
 
     gwy_app_wait_finish();
 
@@ -1338,6 +1356,8 @@ train_network(NeuralTrainControls *controls)
     neural_network_data_free(&backup);
 
     if (!ok) {
+        gtk_label_set_text(GTK_LABEL(controls->message),
+                           _("Training was canceled."));
         g_object_unref(errors);
         return;
     }
@@ -1345,6 +1365,16 @@ train_network(NeuralTrainControls *controls)
     gwy_data_field_min_of_fields(diff, result, tsignal);
     gwy_data_field_data_changed(result);
     gwy_data_field_data_changed(diff);
+
+    vf = gwy_data_field_get_value_format_z(diff, GWY_SI_UNIT_FORMAT_VFMARKUP,
+                                           NULL);
+    s = g_strdup_printf(_("Mean difference: %.*f %s"),
+                        vf->precision,
+                        calculate_mean_error(diff)/vf->magnitude,
+                        vf->units);
+    gwy_si_unit_value_format_free(vf);
+    gtk_label_set_markup(GTK_LABEL(controls->message), s);
+    g_free(s);
 
     if (gwy_graph_model_get_n_curves(controls->gmodel))
         gcmodel = gwy_graph_model_get_curve(controls->gmodel, 0);
@@ -1370,10 +1400,33 @@ static void
 neural_apply_do(NeuralApplyArgs *args,
                 GwyContainer *data,
                 GwyDataField *dfield,
-                GQuark dquark,
                 gint id)
 {
-    // TODO
+    GwyNeuralNetwork *network;
+    GwyDataField *result;
+    gboolean ok;
+
+    gwy_app_wait_start(gwy_app_find_window_for_channel(data, id),
+                       _("Evaluating..."));
+
+    network = gwy_inventory_get_item(gwy_neural_networks(), args->name);
+    g_assert(network);
+
+    gwy_resource_use(GWY_RESOURCE(network));
+    result = gwy_data_field_new_alike(dfield, TRUE);
+    // FIXME: scaling factors
+    ok = evaluate_do(network, dfield, result, 1.0, 0.0);
+    gwy_resource_release(GWY_RESOURCE(network));
+
+    gwy_app_wait_finish();
+
+    if (ok) {
+        gint newid = gwy_app_data_browser_add_data_field(result, data, TRUE);
+        gwy_app_set_data_field_title(data, newid, _("Evaluated signal"));
+        gwy_app_sync_data_items(data, data, id, newid, FALSE,
+                                GWY_DATA_ITEM_GRADIENT, 0);
+    }
+    g_object_unref(result);
 }
 
 static void
