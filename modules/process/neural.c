@@ -1025,6 +1025,10 @@ train_do(GwyNeuralNetwork *nn, GwyDataLine *errors,
     gdouble eo = 0.0, eh = 0.0;
     gboolean ok = FALSE;
 
+    /* Not only optimisation, also prevents changing scaling parameters. */
+    if (!trainsteps)
+        return TRUE;
+
     gwy_app_wait_set_message(_("Training..."));
     gwy_app_wait_set_fraction(0.0);
 
