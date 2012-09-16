@@ -118,6 +118,7 @@ typedef struct {
 
 typedef struct {
     gchar *name;
+    gboolean scale_output;
 } NeuralApplyArgs;
 
 typedef struct {
@@ -125,6 +126,7 @@ typedef struct {
     GtkWidget *dialog;
     GwyInventoryStore *store;
     GtkWidget *networklist;
+    GtkWidget *scale_output;
 } NeuralApplyControls;
 
 static gboolean module_register             (void);
@@ -177,7 +179,10 @@ static void     network_load                (NeuralTrainControls *controls);
 static void     network_store               (NeuralTrainControls *controls);
 static void     network_delete              (NeuralTrainControls *controls);
 static void     network_rename              (NeuralTrainControls *controls);
-static void     network_selected            (NeuralTrainControls *controls);
+static void     network_train_selected      (NeuralTrainControls *controls);
+static void     network_apply_selected      (NeuralApplyControls *controls);
+static void     scale_output_changed        (NeuralApplyControls *controls,
+                                             GtkToggleButton *button);
 static gboolean network_validate_name       (NeuralTrainControls *controls,
                                              const gchar *name,
                                              gboolean show_warning);
@@ -240,17 +245,6 @@ module_register(void)
                                  "neural network"));
 
     return TRUE;
-}
-
-static void
-shuffle(guint *a, guint n, GRand *rng)
-{
-    guint i;
-
-    for (i = 0; i < n; i++) {
-        guint j = g_rand_int_range(rng, i, n);
-        GWY_SWAP(guint, a[i], a[j]);
-    }
 }
 
 void
@@ -706,7 +700,7 @@ neural_train_dialog(NeuralTrainArgs *args)
     tselect = gtk_tree_view_get_selection(GTK_TREE_VIEW(controls.networklist));
     gtk_tree_selection_set_mode(tselect, GTK_SELECTION_SINGLE);
     g_signal_connect_swapped(tselect, "changed",
-                             G_CALLBACK(network_selected), &controls);
+                             G_CALLBACK(network_train_selected), &controls);
     neural_train_update_controls(&controls);
     controls.in_update = FALSE;
 
@@ -743,7 +737,7 @@ neural_apply_dialog(NeuralApplyArgs *args,
                     GwyDataField *dfield)
 {
     NeuralApplyControls controls;
-    GtkWidget *dialog, *scroll;
+    GtkWidget *dialog, *scroll, *check;
     GtkTreeSelection *tselect;
     guint response;
 
@@ -769,6 +763,16 @@ neural_apply_dialog(NeuralApplyArgs *args,
     gtk_tree_selection_set_select_function(tselect, can_select_network,
                                            dfield, NULL);
     gtk_tree_selection_set_mode(tselect, GTK_SELECTION_BROWSE);
+    g_signal_connect_swapped(tselect, "changed",
+                             G_CALLBACK(network_apply_selected), &controls);
+
+    check = gtk_check_button_new_with_mnemonic(_("_Scale proportionally "
+                                                 "to input"));
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(check), args->scale_output);
+    gtk_box_pack_start(GTK_BOX(GTK_DIALOG(dialog)->vbox), check,
+                       FALSE, FALSE, 2);
+    g_signal_connect_swapped(check, "toggled",
+                             G_CALLBACK(scale_output_changed), &controls);
 
     gtk_widget_show_all(dialog);
     if (!gtk_tree_selection_get_selected(tselect, NULL, NULL))
@@ -1009,6 +1013,27 @@ reinit_network(NeuralTrainControls *controls)
     GWY_RESOURCE(controls->args->nn)->is_modified = TRUE;
 }
 
+static void
+shuffle(guint *a, guint n, GRand *rng)
+{
+    guint i;
+
+    for (i = 0; i < n; i++) {
+        guint j = g_rand_int_range(rng, i, n);
+        GWY_SWAP(guint, a[i], a[j]);
+    }
+}
+
+static void
+calculate_scaling(GwyDataField *field, gdouble *factor, gdouble *shift)
+{
+    gdouble min, max;
+
+    gwy_data_field_get_min_max(field, &min, &max);
+    *shift = min;
+    *factor = 1.0/(max - *shift);
+}
+
 static gboolean
 train_do(GwyNeuralNetwork *nn, GwyDataLine *errors,
          GwyDataField *model, GwyDataField *signal,
@@ -1034,8 +1059,7 @@ train_do(GwyNeuralNetwork *nn, GwyDataLine *errors,
 
     nndata->outfactor = sfactor;
     nndata->outshift = sshift;
-    nndata->inshift = gwy_data_field_get_min(model);
-    nndata->infactor = 1.0/(gwy_data_field_get_max(model) - nndata->inshift);
+    calculate_scaling(model, &nndata->infactor, &nndata->inshift);
 
     scaled = gwy_data_field_duplicate(model);
     gwy_data_field_normalize(scaled);
@@ -1194,8 +1218,7 @@ train_network(NeuralTrainControls *controls)
                                                            "/3/data"));
 
     errors = gwy_data_line_new(args->trainsteps, args->trainsteps, TRUE);
-    sshift = gwy_data_field_get_min(tsignal);
-    sfactor = 1.0/(gwy_data_field_get_max(tsignal) - sshift);
+    calculate_scaling(tsignal, &sfactor, &sshift);
 
     gwy_clear(&backup, 1);
     neural_network_data_copy(&nn->data, &backup);
@@ -1260,6 +1283,8 @@ neural_apply_do(NeuralApplyArgs *args,
                 gint id)
 {
     GwyNeuralNetwork *network;
+    NeuralNetworkData *nndata;
+    gdouble factor, shift;
     GwyDataField *result;
     gboolean ok;
 
@@ -1268,11 +1293,18 @@ neural_apply_do(NeuralApplyArgs *args,
 
     network = gwy_inventory_get_item(gwy_neural_networks(), args->name);
     g_assert(network);
+    nndata = &network->data;
 
     gwy_resource_use(GWY_RESOURCE(network));
     result = gwy_data_field_new_alike(dfield, TRUE);
-    // FIXME: scaling factors
-    ok = evaluate_do(network, dfield, result, 1.0, 0.0);
+    factor = nndata->outfactor;
+    shift = nndata->outshift;
+    if (args->scale_output) {
+        gdouble ifactor, ishift;
+        calculate_scaling(dfield, &ifactor, &ishift);
+        factor /= ifactor/nndata->infactor;
+    }
+    ok = evaluate_do(network, dfield, result, factor, shift);
     gwy_resource_release(GWY_RESOURCE(network));
 
     gwy_app_wait_finish();
@@ -1414,7 +1446,7 @@ network_rename(NeuralTrainControls *controls)
 }
 
 static void
-network_selected(NeuralTrainControls *controls)
+network_train_selected(NeuralTrainControls *controls)
 {
     GwyNeuralNetwork *network;
     GtkTreeModel *store;
@@ -1440,6 +1472,31 @@ network_selected(NeuralTrainControls *controls)
     gtk_widget_set_sensitive(controls->load, TRUE);
     gtk_widget_set_sensitive(controls->delete, TRUE);
     gtk_widget_set_sensitive(controls->rename, TRUE);
+}
+
+static void
+network_apply_selected(NeuralApplyControls *controls)
+{
+    GwyNeuralNetwork *network;
+    GtkTreeModel *store;
+    GtkTreeSelection *tselect;
+    GtkTreeIter iter;
+    gchar *name;
+
+    tselect = gtk_tree_view_get_selection(GTK_TREE_VIEW(controls->networklist));
+    if (gtk_tree_selection_get_selected(tselect, &store, &iter)) {
+        gtk_tree_model_get(store, &iter, 0, &network, -1);
+        name = g_strdup(gwy_resource_get_name(GWY_RESOURCE(network)));
+        g_free(controls->args->name);
+        controls->args->name = name;
+    }
+}
+
+static void
+scale_output_changed(NeuralApplyControls *controls,
+                     GtkToggleButton *button)
+{
+    controls->args->scale_output = gtk_toggle_button_get_active(button);
 }
 
 static gboolean
@@ -1489,8 +1546,9 @@ set_layer_channel(GwyPixmapLayer *layer, gint channel)
     gwy_layer_basic_set_range_type_key(GWY_LAYER_BASIC(layer), range_key);
 }
 
-static const gchar trainsteps_key[] = "/module/neural/trainsteps";
-static const gchar name_key[] = "/module/neural/name";
+static const gchar trainsteps_key[]   = "/module/neural/trainsteps";
+static const gchar name_key[]         = "/module/neural/name";
+static const gchar scale_output_key[] = "/module/neural/scale_output";
 
 static void
 neural_train_sanitize_args(NeuralTrainArgs *args)
@@ -1535,6 +1593,7 @@ neural_apply_sanitize_args(NeuralApplyArgs *args)
         g_free(args->name);
         args->name = g_strdup(GWY_NEURAL_NETWORK_UNTITLED);
     }
+    args->scale_output = !!args->scale_output;
 }
 
 static void
@@ -1544,6 +1603,8 @@ neural_apply_load_args(GwyContainer *settings,
     args->name = GWY_NEURAL_NETWORK_UNTITLED;
     gwy_container_gis_string_by_name(settings, name_key,
                                      (const guchar**)&args->name);
+    gwy_container_gis_boolean_by_name(settings, scale_output_key,
+                                      &args->scale_output);
     args->name = g_strdup(args->name);
     neural_apply_sanitize_args(args);
 }
@@ -1554,6 +1615,8 @@ neural_apply_save_args(GwyContainer *settings,
 {
     gwy_container_set_string_by_name(settings, name_key,
                                      g_strdup(args->name));
+    gwy_container_set_boolean_by_name(settings, scale_output_key,
+                                      args->scale_output);
 }
 
 static gboolean
