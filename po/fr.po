@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: French localization\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2012-09-11 03:58+0200\n"
-"PO-Revision-Date: 2012-09-11 21:38+0100\n"
+"POT-Creation-Date: 2012-09-16 03:58+0200\n"
+"PO-Revision-Date: 2012-09-16 13:52+0100\n"
 "Last-Translator: François RIGUET <francheu@caramail.com>\n"
 "Language-Team: François RIGUET <francheu@caramail.com>\n"
 "Language: \n"
@@ -927,7 +927,6 @@ msgstr "pixels"
 #: modules/process/lno_synth.c:436
 #: modules/process/local_contrast.c:126
 #: modules/process/median-bg.c:176
-#: modules/process/neural.c:322
 #: modules/process/noise_synth.c:347
 #: modules/process/obj_synth.c:432
 #: modules/process/pat_synth.c:402
@@ -986,7 +985,7 @@ msgid "Choose Color Gradient"
 msgstr "Choisir le gradient"
 
 #: libgwydgets/gwydgetenums.c:45
-#: modules/process/neural.c:998
+#: modules/process/neural.c:409
 msgid "Hidden"
 msgstr "Caché"
 
@@ -1240,7 +1239,7 @@ msgstr "Préféré."
 #: app/meta.c:304
 #: modules/file/rawfile.c:957
 #: modules/process/convolution_filter.c:547
-#: modules/process/neural.c:996
+#: modules/process/neural.c:407
 #: modules/tools/selectionmanager.c:329
 msgid "Name"
 msgstr "Nom"
@@ -1858,7 +1857,7 @@ msgstr "Origine"
 #: modules/process/col_synth.c:393
 #: modules/process/convolution_filter.c:358
 #: modules/process/convolution_filter.c:562
-#: modules/process/neural.c:997
+#: modules/process/neural.c:408
 #: modules/process/obj_synth.c:537
 #: modules/process/pat_synth.c:1485
 msgid "Size"
@@ -1916,7 +1915,7 @@ msgstr "_Nouveau"
 
 #: app/meta.c:148
 #: modules/file/rawfile.c:1020
-#: modules/process/neural.c:1232
+#: modules/process/neural.c:689
 msgid "_Delete"
 msgstr "Supprimer"
 
@@ -4725,22 +4724,22 @@ msgstr "Info"
 
 #: modules/file/rawfile.c:1002
 #: modules/process/calcoefs_load.c:216
-#: modules/process/neural.c:1214
+#: modules/process/neural.c:671
 msgid "verb|_Load"
 msgstr "Charger"
 
 #: modules/file/rawfile.c:1008
-#: modules/process/neural.c:1220
+#: modules/process/neural.c:677
 msgid "verb|_Store"
 msgstr "Enregi_strer"
 
 #: modules/file/rawfile.c:1014
-#: modules/process/neural.c:1226
+#: modules/process/neural.c:683
 msgid "_Rename"
 msgstr "_Renommer"
 
 #: modules/file/rawfile.c:1033
-#: modules/process/neural.c:1245
+#: modules/process/neural.c:701
 msgid "Preset _name:"
 msgstr "_Nom du préréglage :"
 
@@ -4763,6 +4762,7 @@ msgstr ""
 "Le contenu de `%s' ne correspond pas au format : %s."
 
 #: modules/file/rawfile.c:1612
+#: modules/process/neural.c:1463
 #, c-format
 msgid "The name `%s' is invalid."
 msgstr "Le nom `%s' est invalide."
@@ -5988,7 +5988,6 @@ msgid "_Expression:"
 msgstr "_Expression :"
 
 #: modules/process/arithmetic.c:294
-#: modules/process/neural.c:339
 msgid "Operands"
 msgstr "Opérandes"
 
@@ -7458,7 +7457,7 @@ msgstr "Données filtrées"
 
 #: modules/process/fft_filter_2d.c:315
 #: modules/process/fit_2d.c:680
-#: modules/process/neural.c:1093
+#: modules/process/neural.c:549
 msgid "Difference"
 msgstr "Différence"
 
@@ -7695,7 +7694,7 @@ msgstr "Type de prévisualisation :"
 #: modules/process/fit_2d.c:330
 #: modules/process/fractal.c:283
 #: modules/process/mark_with.c:259
-#: modules/process/neural.c:1092
+#: modules/process/neural.c:548
 msgid "Result"
 msgstr "Résultat"
 
@@ -9203,160 +9202,153 @@ msgstr "La sonde a un rapport plage/résolution différent de l'image. La sonde 
 msgid "Immersed detail data"
 msgstr "Données du détail incrusté"
 
-#: modules/process/neural.c:243
+#: modules/process/neural.c:201
 msgid "Neural network SPM data processing"
 msgstr "Réseau neuronal de traitement de données SPM"
 
-#: modules/process/neural.c:260
-msgid "/M_ultidata/_Neural Network..."
-msgstr "/M_ultidonnées/Réseau _neuronal..."
-
-#: modules/process/neural.c:264
-msgid "Neural network AFM data processing"
-msgstr "Réseau neuronal de traitement de données AFM"
-
-#: modules/process/neural.c:276
+#: modules/process/neural.c:227
 msgid "/M_ultidata/Neural Network _Training..."
 msgstr "/M_ultidonnées/Appren_tissage du réseau neuronal..."
 
-#: modules/process/neural.c:280
+#: modules/process/neural.c:231
 msgid "Train a neural network for image processing"
 msgstr "Apprentissage du réseau neuronal pour le traitement d'image"
 
-#: modules/process/neural.c:321
-msgid "Neural Network"
-msgstr "Réseau neuronal"
+#: modules/process/neural.c:235
+msgid "/M_ultidata/Apply _Neural Network..."
+msgstr "/M_ultidonnées/Appliquer un réseau _neuronal..."
 
-#: modules/process/neural.c:346
-msgid "Training _model:"
-msgstr "_Modèle d'apprentissage : "
+#: modules/process/neural.c:239
+msgid "Process data using a trained neural network"
+msgstr "Traiter les données par apprentissage d'un réseau neuronal"
 
-#: modules/process/neural.c:352
-msgid "Training _signal:"
-msgstr "_Signald'apprentissage : "
+#. TRANSLATORS: Unnamed neural network that is/was in training.
+#: modules/process/neural.c:380
+msgid "In training"
+msgstr "Apprentissage en cours"
 
-#: modules/process/neural.c:358
-msgid "Res_ult model:"
-msgstr "Modèle rés_ultant : "
-
-#: modules/process/neural.c:363
-#: modules/tools/stats.c:401
-msgid "Parameters"
-msgstr "Paramètres"
-
-#: modules/process/neural.c:369
-#: modules/process/neural.c:1132
-msgid "Window _width:"
-msgstr "Largeur de fenêtre :"
-
-#: modules/process/neural.c:375
-#: modules/process/neural.c:1138
-msgid "Window h_eight:"
-msgstr "Hauteur de fenêtre :"
-
-#: modules/process/neural.c:381
-msgid "_Training steps:"
-msgstr "Étapes d'appren_tissage : "
-
-#: modules/process/neural.c:387
-#: modules/process/neural.c:1144
-msgid "_Hidden nodes:"
-msgstr "Noeuds cac_hés : "
-
-#: modules/process/neural.c:479
-msgid "Data not compatible"
-msgstr "Données non compatibles"
-
-#: modules/process/neural.c:507
-#: modules/process/pid.c:334
-msgid "Starting..."
-msgstr "Démarrage..."
-
-#: modules/process/neural.c:528
-msgid "Training..."
-msgstr "Apprentissage..."
-
-#: modules/process/neural.c:570
-msgid "Evaluating..."
-msgstr "Evaluation..."
-
-#: modules/process/neural.c:612
-msgid "Evaluated signal"
-msgstr "Signal évalué"
-
-#: modules/process/neural.c:618
-msgid "Training error"
-msgstr "Erreur d'apprentissage"
-
-#: modules/process/neural.c:619
-msgid "error"
-msgstr "Erreur"
-
-#: modules/process/neural.c:625
-msgid "NN training error"
-msgstr "Erreur d'apprentissage du réseau neuronal"
-
-#: modules/process/neural.c:1019
+#: modules/process/neural.c:463
+#: modules/process/neural.c:752
 msgid "Neural Network Training"
 msgstr "Apprentissage du réseau neuronal"
 
-#: modules/process/neural.c:1060
+#: modules/process/neural.c:487
+msgid "Training error"
+msgstr "Erreur d'apprentissage"
+
+#: modules/process/neural.c:488
+msgid "error"
+msgstr "Erreur"
+
+#: modules/process/neural.c:508
 msgid "_Model:"
 msgstr "_Modèle :"
 
-#: modules/process/neural.c:1067
+#: modules/process/neural.c:518
 msgid "_Signal:"
 msgstr "_Signal :"
 
-#: modules/process/neural.c:1075
+#: modules/process/neural.c:529
 msgid "Training ste_ps:"
 msgstr "Étapes d'a_pprentissage : "
 
-#: modules/process/neural.c:1080
+#: modules/process/neural.c:536
 #: modules/process/polydistort.c:296
 msgid "Preview:"
 msgstr "Previsualisation :"
 
-#: modules/process/neural.c:1090
+#: modules/process/neural.c:546
 msgid "Model"
 msgstr "Modèle"
 
-#: modules/process/neural.c:1091
+#: modules/process/neural.c:547
 msgid "Signal"
 msgstr "Signal"
 
-#: modules/process/neural.c:1104
+#: modules/process/neural.c:565
 msgid "_Train"
 msgstr "Appren_tissage"
 
-#: modules/process/neural.c:1107
+#: modules/process/neural.c:570
 msgid "Re_initialize"
 msgstr "Réinitialiser"
 
-#: modules/process/neural.c:1126
+#: modules/process/neural.c:591
 msgid "Network"
 msgstr "Réseau"
 
-#: modules/process/neural.c:1150
+#: modules/process/neural.c:597
+msgid "Window _width:"
+msgstr "Largeur de fenêtre :"
+
+#: modules/process/neural.c:605
+msgid "Window h_eight:"
+msgstr "Hauteur de fenêtre :"
+
+#: modules/process/neural.c:613
+msgid "_Hidden nodes:"
+msgstr "Noeuds cac_hés : "
+
+#: modules/process/neural.c:621
 msgid "Result Units"
 msgstr "Unités du résultat"
 
-#: modules/process/neural.c:1157
+#: modules/process/neural.c:628
 msgid "Power of source _XY:"
 msgstr "Puissance de la source _XY :"
 
-#: modules/process/neural.c:1163
+#: modules/process/neural.c:636
 msgid "Power of source _Z:"
 msgstr "Puissance de la source _Z :"
 
-#: modules/process/neural.c:1169
+#: modules/process/neural.c:644
 #, fuzzy
 msgid "_Fixed units:"
 msgstr "Unités fixes :"
 
-#: modules/process/neural.c:1177
+#: modules/process/neural.c:654
 msgid "Networks"
 msgstr "Réseaux"
+
+#: modules/process/neural.c:892
+msgid "Model and signal are not compatible."
+msgstr "Le modèle et le signal ne sont pas compatibles."
+
+#: modules/process/neural.c:900
+#, fuzzy
+msgid "A field dimension is too small for chosen window size."
+msgstr "Une des dimensions de champ est trop petite par rapport à la taille de fenêtre."
+
+#: modules/process/neural.c:1032
+msgid "Training..."
+msgstr "Apprentissage..."
+
+#: modules/process/neural.c:1098
+#: modules/process/neural.c:1267
+msgid "Evaluating..."
+msgstr "Evaluation..."
+
+#: modules/process/neural.c:1185
+#: modules/process/pid.c:334
+msgid "Starting..."
+msgstr "Démarrage..."
+
+#: modules/process/neural.c:1217
+msgid "Training was canceled."
+msgstr "L'apprentissage a été annulé."
+
+#: modules/process/neural.c:1228
+#, c-format
+msgid "Mean difference: %.*f %s"
+msgstr "Différence moyenne : %.*f %s"
+
+#: modules/process/neural.c:1240
+msgid "NN training error"
+msgstr "Erreur d'apprentissage du réseau neuronal"
+
+#: modules/process/neural.c:1282
+msgid "Evaluated signal"
+msgstr "Signal évalué"
 
 #: modules/process/noise_synth.c:210
 msgid "Generates uncorrelated random noise."
@@ -9583,8 +9575,9 @@ msgid "_Proportional:"
 msgstr "_Proportionnel :"
 
 #: modules/process/pid.c:218
+#, fuzzy
 msgid "_Integral:"
-msgstr ""
+msgstr "_Intégration :"
 
 #: modules/process/pid.c:224
 msgid "_Integration steps:"
@@ -11318,6 +11311,10 @@ msgstr "Inclinaison θ :"
 msgid "Inclination φ:"
 msgstr "Inclinaison φ :"
 
+#: modules/tools/stats.c:401
+msgid "Parameters"
+msgstr "Paramètres"
+
 #: modules/tools/stats.c:932
 msgid "Save Statistical Quantities"
 msgstr "Enregistrer les statistiques"
@@ -11368,6 +11365,21 @@ msgstr ""
 "Surface projetée :  %s\n"
 "Inclinaison θ :      %s\n"
 "Inclinaison φ :      %s\n"
+
+#~ msgid "Neural network AFM data processing"
+#~ msgstr "Réseau neuronal de traitement de données AFM"
+
+#~ msgid "Neural Network"
+#~ msgstr "Réseau neuronal"
+
+#~ msgid "Training _model:"
+#~ msgstr "_Modèle d'apprentissage : "
+
+#~ msgid "Res_ult model:"
+#~ msgstr "Modèle rés_ultant : "
+
+#~ msgid "_Training steps:"
+#~ msgstr "Étapes d'appren_tissage : "
 
 #~ msgid "Preset l_ist"
 #~ msgstr "Liste des préréglages"
