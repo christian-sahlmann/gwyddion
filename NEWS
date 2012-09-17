@@ -14,6 +14,9 @@ Libraries:
   actually shows or hides the corresponding data.
 
 Modules:
+- Neural network: Split to two functions: training and application.  Networks
+  can be saved, trained on multiple data (sequentially), training signal can
+  be masked, units of the output can be specified.
 - APE file: Channel labelling for various modes was corrected.
 - Createc: Dimensions and values of imported data was corrected, all channels
   are imported now.
