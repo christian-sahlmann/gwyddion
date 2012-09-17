@@ -200,6 +200,11 @@ static gboolean gwy_neural_network_save     (GwyNeuralNetwork *nn);
 
 static guint trainsteps_default = 1000;
 
+static const NeuralApplyArgs neural_apply_defaults = {
+    NULL,
+    FALSE
+};
+
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
@@ -1600,6 +1605,7 @@ static void
 neural_apply_load_args(GwyContainer *settings,
                        NeuralApplyArgs *args)
 {
+    *args = neural_apply_defaults;
     args->name = GWY_NEURAL_NETWORK_UNTITLED;
     gwy_container_gis_string_by_name(settings, name_key,
                                      (const guchar**)&args->name);
