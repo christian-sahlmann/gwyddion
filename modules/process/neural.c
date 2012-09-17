@@ -447,6 +447,7 @@ neural_train_dialog(NeuralTrainArgs *args)
               *scroll, *button;
     GtkTreeModel *filtermodel;
     GtkTreeSelection *tselect;
+    GwyGraphCurveModel *gcmodel;
     GSList *group;
     guint row, response;
 
@@ -490,6 +491,11 @@ neural_train_dialog(NeuralTrainArgs *args)
     controls.errgraph = gwy_graph_new(controls.gmodel);
     gtk_widget_set_size_request(controls.errgraph, 0, 200);
     gtk_box_pack_start(GTK_BOX(vbox), controls.errgraph, TRUE, TRUE, 0);
+
+    gcmodel = gwy_graph_curve_model_new();
+    g_object_set(gcmodel, "description", _("NN training error"), NULL);
+    gwy_graph_model_add_curve(controls.gmodel, gcmodel);
+    g_object_unref(gcmodel);
 
     notebook = gtk_notebook_new();
     gtk_box_pack_start(GTK_BOX(hbox), notebook, TRUE, TRUE, 4);
@@ -1040,7 +1046,7 @@ calculate_scaling(GwyDataField *field, gdouble *factor, gdouble *shift)
 }
 
 static gboolean
-train_do(GwyNeuralNetwork *nn, GwyDataLine *errors,
+train_do(GwyNeuralNetwork *nn, GwyDataLine *errors, GwyGraphCurveModel *gcmodel,
          GwyDataField *model, GwyDataField *signal,
          gdouble sfactor, gdouble sshift,
          guint trainsteps)
@@ -1052,15 +1058,18 @@ train_do(GwyNeuralNetwork *nn, GwyDataLine *errors,
     guint *indices;
     const gdouble *dtmodel;
     gdouble *dtsignal;
-    gdouble eo = 0.0, eh = 0.0;
+    GTimer *timer;
+    gdouble eo = 0.0, eh = 0.0, lasttime = 0.0;
     gboolean ok = FALSE;
 
     /* Not only optimisation, also prevents changing scaling parameters. */
     if (!trainsteps)
         return TRUE;
 
+    gwy_graph_curve_model_set_data_from_dataline(gcmodel, errors, 0, 1);
     gwy_app_wait_set_message(_("Training..."));
     gwy_app_wait_set_fraction(0.0);
+    timer = g_timer_new();
 
     nndata->outfactor = sfactor;
     nndata->outshift = sshift;
@@ -1096,9 +1105,14 @@ train_do(GwyNeuralNetwork *nn, GwyDataLine *errors,
                                               - sshift);
             gwy_neural_network_train_step(nn, 0.3, 0.3, &eo, &eh);
         }
-        if (!gwy_app_wait_set_fraction((gdouble)n/trainsteps))
-            goto fail;
         gwy_data_line_set_val(errors, n, eo + eh);
+        if (g_timer_elapsed(timer, NULL) - lasttime >= 0.2) {
+            gwy_graph_curve_model_set_data_from_dataline(gcmodel, errors,
+                                                         0, n+1);
+            if (!gwy_app_wait_set_fraction((gdouble)n/trainsteps))
+                goto fail;
+            lasttime = g_timer_elapsed(timer, NULL);
+        }
     }
     ok = TRUE;
 
@@ -1223,13 +1237,14 @@ train_network(NeuralTrainControls *controls)
                                                            "/3/data"));
 
     errors = gwy_data_line_new(args->trainsteps, args->trainsteps, TRUE);
+    gcmodel = gwy_graph_model_get_curve(controls->gmodel, 0);
     calculate_scaling(tsignal, &sfactor, &sshift);
 
     gwy_clear(&backup, 1);
     neural_network_data_copy(&nn->data, &backup);
 
     gwy_resource_use(GWY_RESOURCE(nn));
-    ok = (train_do(nn, errors, tmodel, tsignal, sfactor, sshift,
+    ok = (train_do(nn, errors, gcmodel, tmodel, tsignal, sfactor, sshift,
                    args->trainsteps)
           && evaluate_do(nn, tmodel, result, sfactor, sshift));
     gwy_resource_release(GWY_RESOURCE(nn));
@@ -1239,11 +1254,11 @@ train_network(NeuralTrainControls *controls)
     if (!ok)
         neural_network_data_copy(&backup, &nn->data);
     neural_network_data_free(&backup);
+    g_object_unref(errors);
 
     if (!ok) {
         gtk_label_set_text(GTK_LABEL(controls->message),
                            _("Training was canceled."));
-        g_object_unref(errors);
         return;
     }
 
@@ -1260,17 +1275,6 @@ train_network(NeuralTrainControls *controls)
     gwy_si_unit_value_format_free(vf);
     gtk_label_set_markup(GTK_LABEL(controls->message), s);
     g_free(s);
-
-    if (gwy_graph_model_get_n_curves(controls->gmodel))
-        gcmodel = gwy_graph_model_get_curve(controls->gmodel, 0);
-    else {
-        gcmodel = gwy_graph_curve_model_new();
-        g_object_set(gcmodel, "description", _("NN training error"), NULL);
-        gwy_graph_model_add_curve(controls->gmodel, gcmodel);
-        g_object_unref(gcmodel);
-    }
-    gwy_graph_curve_model_set_data_from_dataline(gcmodel, errors, -1, -1);
-    g_object_unref(errors);
 
     GWY_RESOURCE(nn)->is_modified = TRUE;
     controls->calculated = TRUE;
