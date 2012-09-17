@@ -77,6 +77,7 @@ typedef struct {
     GwyDataObjectId tmodel;
     GwyDataObjectId tsignal;
     guint trainsteps;
+    GwyMaskingType masking;
     PreviewType preview_type;
 } NeuralTrainArgs;
 
@@ -99,6 +100,8 @@ typedef struct {
     GtkWidget *reinit;
     GSList *preview_group;
     GtkWidget *message;
+    GtkWidget *masking_label;
+    GSList *masking_group;
     /* Network props */
     GtkObject *nhidden;
     GtkObject *width;
@@ -159,6 +162,8 @@ static void     train_data_changed          (NeuralTrainControls *controls,
                                              GwyDataChooser *chooser);
 static void     train_steps_changed         (NeuralTrainControls *controls,
                                              GtkAdjustment *adj);
+static void     masking_changed             (GtkToggleButton *button,
+                                             NeuralTrainControls *controls);
 static void     width_changed               (NeuralTrainControls *controls,
                                              GtkAdjustment *adj);
 static void     height_changed              (NeuralTrainControls *controls,
@@ -199,6 +204,7 @@ static void     neural_apply_save_args      (GwyContainer *container,
 static gboolean gwy_neural_network_save     (GwyNeuralNetwork *nn);
 
 static guint trainsteps_default = 1000;
+static GwyMaskingType masking_default = GWY_MASK_IGNORE;
 
 static const NeuralApplyArgs neural_apply_defaults = {
     NULL,
@@ -501,7 +507,7 @@ neural_train_dialog(NeuralTrainArgs *args)
     gtk_box_pack_start(GTK_BOX(hbox), notebook, TRUE, TRUE, 4);
 
     /* Training */
-    table = gtk_table_new(10, 4, FALSE);
+    table = gtk_table_new(14, 4, FALSE);
     gtk_container_set_border_width(GTK_CONTAINER(table), 4);
     gtk_table_set_row_spacings(GTK_TABLE(table), 2);
     gtk_table_set_col_spacings(GTK_TABLE(table), 6);
@@ -544,18 +550,16 @@ neural_train_dialog(NeuralTrainArgs *args)
                      0, 2, row, row+1, GTK_FILL, 0, 0, 0);
     row++;
 
-    controls.preview_group
-        = gwy_radio_buttons_createl(G_CALLBACK(preview_type_changed),
-                                    &controls,
-                                    args->preview_type,
-                                    _("Model"), PREVIEW_MODEL,
-                                    _("Signal"), PREVIEW_SIGNAL,
-                                    _("Result"), PREVIEW_RESULT,
-                                    _("Difference"), PREVIEW_DIFFERENCE,
-                                    NULL);
-    row = gwy_radio_buttons_attach_to_table(controls.preview_group,
-                                            GTK_TABLE(table), 3, row);
-    group = controls.preview_group;
+    group = gwy_radio_buttons_createl(G_CALLBACK(preview_type_changed),
+                                      &controls,
+                                      args->preview_type,
+                                      _("Model"), PREVIEW_MODEL,
+                                      _("Signal"), PREVIEW_SIGNAL,
+                                      _("Result"), PREVIEW_RESULT,
+                                      _("Difference"), PREVIEW_DIFFERENCE,
+                                      NULL);
+    controls.preview_group = group;
+    row = gwy_radio_buttons_attach_to_table(group, GTK_TABLE(table), 3, row);
     gtk_widget_set_sensitive(gwy_radio_buttons_find(group, PREVIEW_RESULT),
                              FALSE);
     gtk_widget_set_sensitive(gwy_radio_buttons_find(group, PREVIEW_DIFFERENCE),
@@ -583,6 +587,18 @@ neural_train_dialog(NeuralTrainArgs *args)
     gtk_table_attach(GTK_TABLE(table), controls.message,
                      0, 2, row, row+1, GTK_FILL, 0, 0, 0);
     row++;
+
+    gtk_table_set_row_spacing(GTK_TABLE(table), row-1, 8);
+    controls.masking_label = label = gwy_label_new_header(_("Masking Mode"));
+    gtk_table_attach(GTK_TABLE(table), label,
+                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    row++;
+
+    group = gwy_radio_buttons_create(gwy_masking_type_get_enum(), -1,
+                                     G_CALLBACK(masking_changed),
+                                     &controls, args->masking);
+    controls.masking_group = group;
+    row = gwy_radio_buttons_attach_to_table(group, GTK_TABLE(table), 3, row);
 
     /* Parameters */
     table = gtk_table_new(8, 3, FALSE);
@@ -713,6 +729,7 @@ neural_train_dialog(NeuralTrainArgs *args)
     g_signal_connect_swapped(tselect, "changed",
                              G_CALLBACK(network_train_selected), &controls);
     neural_train_update_controls(&controls);
+    train_data_changed(&controls, GWY_DATA_CHOOSER(controls.tsignal));
     controls.in_update = FALSE;
 
     gtk_widget_show_all(dialog);
@@ -728,7 +745,7 @@ neural_train_dialog(NeuralTrainArgs *args)
             break;
 
             case GTK_RESPONSE_OK:
-            g_printerr("Create graph if trained?\n");
+            // FIXME: Do something here?
             break;
 
             default:
@@ -754,7 +771,7 @@ neural_apply_dialog(NeuralApplyArgs *args,
 
     controls.args = args;
 
-    dialog = gtk_dialog_new_with_buttons(_("Neural Network Training"), NULL, 0,
+    dialog = gtk_dialog_new_with_buttons(_("Apply Neural Network"), NULL, 0,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);
@@ -938,6 +955,16 @@ train_data_changed(NeuralTrainControls *controls,
                              FALSE);
     gtk_widget_set_sensitive(gwy_radio_buttons_find(group, PREVIEW_DIFFERENCE),
                              FALSE);
+
+    if (gwy_strequal(id, "signal")) {
+        GSList *l;
+
+        quark = gwy_app_get_mask_key_for_id(args->tsignal.id);
+        ok = gwy_container_contains(args->tsignal.data, quark);
+        gtk_widget_set_sensitive(controls->masking_label, ok);
+        for (l = controls->masking_group; l; l = g_slist_next(l))
+            gtk_widget_set_sensitive(GTK_WIDGET(l->data), ok);
+    }
 }
 
 static void
@@ -946,6 +973,14 @@ train_steps_changed(NeuralTrainControls *controls, GtkAdjustment *adj)
     if (controls->in_update)
         return;
     controls->args->trainsteps = gwy_adjustment_get_int(adj);
+}
+
+static void
+masking_changed(G_GNUC_UNUSED GtkToggleButton *button,
+                NeuralTrainControls *controls)
+{
+    NeuralTrainArgs *args = controls->args;
+    args->masking = gwy_radio_buttons_get_current(controls->masking_group);
 }
 
 static void
@@ -1024,7 +1059,7 @@ reinit_network(NeuralTrainControls *controls)
     GWY_RESOURCE(controls->args->nn)->is_modified = TRUE;
 }
 
-static void
+G_GNUC_UNUSED static void
 shuffle(guint *a, guint n, GRand *rng)
 {
     guint i;
@@ -1047,16 +1082,16 @@ calculate_scaling(GwyDataField *field, gdouble *factor, gdouble *shift)
 
 static gboolean
 train_do(GwyNeuralNetwork *nn, GwyDataLine *errors, GwyGraphCurveModel *gcmodel,
-         GwyDataField *model, GwyDataField *signal,
-         gdouble sfactor, gdouble sshift,
+         GwyDataField *model, GwyDataField *signal, GwyDataField *mask,
+         GwyMaskingType masking, gdouble sfactor, gdouble sshift,
          guint trainsteps)
 {
     NeuralNetworkData *nndata = &nn->data;
     GwyDataField *scaled;
     guint width = nndata->width, height = nndata->height, xres, yres;
-    guint n, k, irow, col, row;
+    guint n, k, npixels, irow, col, row;
     guint *indices;
-    const gdouble *dtmodel;
+    const gdouble *dtmodel, *dtmask = NULL;
     gdouble *dtsignal;
     GTimer *timer;
     gdouble eo = 0.0, eh = 0.0, lasttime = 0.0;
@@ -1081,20 +1116,30 @@ train_do(GwyNeuralNetwork *nn, GwyDataLine *errors, GwyGraphCurveModel *gcmodel,
     yres = gwy_data_field_get_yres(scaled);
     dtmodel = gwy_data_field_get_data_const(scaled);
     dtsignal = gwy_data_field_get_data(signal);
+    if (masking != GWY_MASK_IGNORE && mask)
+        dtmask = gwy_data_field_get_data_const(mask);
+    else
+        masking = GWY_MASK_IGNORE;
 
     indices = g_new(guint, (xres - width)*(yres - height));
-    k = 0;
+    npixels = 0;
     for (row = height/2; row < yres + height/2 - height; row++) {
-        for (col = width/2; col < xres + width/2 - width; col++)
-            indices[k++] = (row - height/2)*xres + col - width/2;
+        for (col = width/2; col < xres + width/2 - width; col++) {
+            if (!dtmask
+                || (masking == GWY_MASK_INCLUDE
+                    && dtmask[row*xres + col] >= 1.0)
+                || (masking == GWY_MASK_EXCLUDE
+                    && dtmask[row*xres + col] <= 0.0))
+                indices[npixels++] = (row - height/2)*xres + col - width/2;
+        }
     }
-    g_assert(k == (xres - width)*(yres - height));
+    g_assert(dtmask || npixels == (xres - width)*(yres - height));
 
     for (n = 0; n < trainsteps; n++) {
         /* FIXME: Randomisation leads to weird spiky NN error curves. */
         /* shuffle(indices, (xres - width)*(yres - height), rng); even though
          * it may improve convergence. */
-        for (k = 0; k < (xres - width)*(yres - height); k++) {
+        for (k = 0; k < npixels; k++) {
             for (irow = 0; irow < height; irow++) {
                 memcpy(nn->input + irow*width,
                        dtmodel + indices[k] + irow*xres,
@@ -1215,12 +1260,13 @@ train_network(NeuralTrainControls *controls)
 {
     NeuralTrainArgs *args = controls->args;
     GwyNeuralNetwork *nn = args->nn;
-    GwyDataField *tmodel, *tsignal, *result, *diff;
+    GwyDataField *tmodel, *tsignal, *result, *diff, *mask = NULL;
     GwyDataLine *errors;
     GwyGraphCurveModel *gcmodel;
     NeuralNetworkData backup;
     GwySIValueFormat *vf;
     gdouble sfactor, sshift;
+    GQuark quark;
     GSList *group;
     gchar *s;
     gboolean ok;
@@ -1236,6 +1282,9 @@ train_network(NeuralTrainControls *controls)
     diff = GWY_DATA_FIELD(gwy_container_get_object_by_name(controls->mydata,
                                                            "/3/data"));
 
+    quark = gwy_app_get_mask_key_for_id(args->tsignal.id);
+    gwy_container_gis_object(args->tsignal.data, quark, &mask);
+
     errors = gwy_data_line_new(args->trainsteps, args->trainsteps, TRUE);
     gcmodel = gwy_graph_model_get_curve(controls->gmodel, 0);
     calculate_scaling(tsignal, &sfactor, &sshift);
@@ -1244,8 +1293,8 @@ train_network(NeuralTrainControls *controls)
     neural_network_data_copy(&nn->data, &backup);
 
     gwy_resource_use(GWY_RESOURCE(nn));
-    ok = (train_do(nn, errors, gcmodel, tmodel, tsignal, sfactor, sshift,
-                   args->trainsteps)
+    ok = (train_do(nn, errors, gcmodel, tmodel, tsignal, mask, args->masking,
+                   sfactor, sshift, args->trainsteps)
           && evaluate_do(nn, tmodel, result, sfactor, sshift));
     gwy_resource_release(GWY_RESOURCE(nn));
 
@@ -1556,6 +1605,7 @@ set_layer_channel(GwyPixmapLayer *layer, gint channel)
 }
 
 static const gchar trainsteps_key[]   = "/module/neural/trainsteps";
+static const gchar masking_key[]      = "/module/neural/masking";
 static const gchar name_key[]         = "/module/neural/name";
 static const gchar scale_output_key[] = "/module/neural/scale_output";
 
@@ -1563,6 +1613,7 @@ static void
 neural_train_sanitize_args(NeuralTrainArgs *args)
 {
     args->trainsteps = MIN(args->trainsteps, 10000);
+    args->masking = MIN(args->masking, GWY_MASK_INCLUDE);
 }
 
 static void
@@ -1574,9 +1625,12 @@ neural_train_load_args(GwyContainer *settings,
     gwy_clear(args, 1);
     args->preview_type = PREVIEW_MODEL;
     args->trainsteps = trainsteps_default;
+    args->masking = masking_default;
 
     gwy_container_gis_int32_by_name(settings, trainsteps_key,
                                     &args->trainsteps);
+    gwy_container_gis_enum_by_name(settings, masking_key,
+                                   &args->masking);
     neural_train_sanitize_args(args);
 
     if ((args->nn = gwy_inventory_get_item(gwy_neural_networks(), name)))
@@ -1592,6 +1646,8 @@ neural_train_save_args(GwyContainer *settings,
 {
     gwy_container_set_int32_by_name(settings, trainsteps_key,
                                     args->trainsteps);
+    gwy_container_set_enum_by_name(settings, masking_key,
+                                   args->masking);
     gwy_neural_network_save(args->nn);
 }
 
