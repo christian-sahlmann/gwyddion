@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2012-08-23 03:58+0200\n"
-"PO-Revision-Date: 2012-08-23 22:07+0300\n"
+"POT-Creation-Date: 2012-09-18 03:59+0200\n"
+"PO-Revision-Date: 2012-09-18 07:56+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "Language: \n"
@@ -123,11 +123,11 @@ msgstr "vdW: параболоид"
 
 #: libgwyddion/gwyinventory.c:1310
 #: libgwydgets/gwygraphwindow.c:611
-#: app/data-browser.c:1695
-#: app/data-browser.c:2445
-#: app/data-browser.c:3264
-#: app/data-browser.c:3414
-#: app/data-browser.c:5321
+#: app/data-browser.c:1724
+#: app/data-browser.c:2476
+#: app/data-browser.c:3301
+#: app/data-browser.c:3451
+#: app/data-browser.c:5374
 #: app/resource-editor.c:366
 #: modules/process/convolution_filter.c:700
 msgid "Untitled"
@@ -929,7 +929,6 @@ msgstr "точек"
 #: modules/process/lno_synth.c:436
 #: modules/process/local_contrast.c:126
 #: modules/process/median-bg.c:176
-#: modules/process/neural.c:322
 #: modules/process/noise_synth.c:347
 #: modules/process/obj_synth.c:432
 #: modules/process/pat_synth.c:402
@@ -988,7 +987,7 @@ msgid "Choose Color Gradient"
 msgstr "Выбор градиента"
 
 #: libgwydgets/gwydgetenums.c:45
-#: modules/process/neural.c:998
+#: modules/process/neural.c:414
 msgid "Hidden"
 msgstr "Скрытый"
 
@@ -1242,7 +1241,7 @@ msgstr "Предпочтительное"
 #: app/meta.c:304
 #: modules/file/rawfile.c:957
 #: modules/process/convolution_filter.c:547
-#: modules/process/neural.c:996
+#: modules/process/neural.c:412
 #: modules/tools/selectionmanager.c:329
 msgid "Name"
 msgstr "Имя"
@@ -1499,39 +1498,39 @@ msgstr "Не удалось сохранить трёхмерный вид в `%
 msgid "Export 3D View"
 msgstr "Экспортировать трёхмерный вид"
 
-#: app/data-browser.c:3963
+#: app/data-browser.c:4004
 msgid "Extract to a new file"
 msgstr "Извлечь в новый файл"
 
-#: app/data-browser.c:3964
+#: app/data-browser.c:4005
 msgid "Duplicate"
 msgstr "Сделать копию"
 
-#: app/data-browser.c:3965
+#: app/data-browser.c:4006
 msgid "Delete"
 msgstr "Удалить"
 
-#: app/data-browser.c:4010
+#: app/data-browser.c:4051
 msgid "Data Browser"
 msgstr "Просмотр данных"
 
-#: app/data-browser.c:4033
+#: app/data-browser.c:4074
 msgid "Close file"
 msgstr "Закрыть файл"
 
-#: app/data-browser.c:4046
+#: app/data-browser.c:4087
 msgid "Channels"
 msgstr "Каналы"
 
-#: app/data-browser.c:4060
+#: app/data-browser.c:4101
 msgid "Graphs"
 msgstr "Графики"
 
-#: app/data-browser.c:4074
+#: app/data-browser.c:4115
 msgid "Spectra"
 msgstr "Спектры"
 
-#: app/data-browser.c:5359
+#: app/data-browser.c:5412
 #, c-format
 msgid "Unknown channel %d"
 msgstr "Неизвестный канал %d"
@@ -1860,7 +1859,7 @@ msgstr "Начальная точка"
 #: modules/process/col_synth.c:393
 #: modules/process/convolution_filter.c:358
 #: modules/process/convolution_filter.c:562
-#: modules/process/neural.c:997
+#: modules/process/neural.c:413
 #: modules/process/obj_synth.c:537
 #: modules/process/pat_synth.c:1485
 msgid "Size"
@@ -1918,7 +1917,7 @@ msgstr "Новый _элемент"
 
 #: app/meta.c:148
 #: modules/file/rawfile.c:1020
-#: modules/process/neural.c:1232
+#: modules/process/neural.c:710
 msgid "_Delete"
 msgstr "_Удалить"
 
@@ -4729,22 +4728,22 @@ msgstr "Информация"
 
 #: modules/file/rawfile.c:1002
 #: modules/process/calcoefs_load.c:216
-#: modules/process/neural.c:1214
+#: modules/process/neural.c:692
 msgid "verb|_Load"
 msgstr "_Загрузить"
 
 #: modules/file/rawfile.c:1008
-#: modules/process/neural.c:1220
+#: modules/process/neural.c:698
 msgid "verb|_Store"
 msgstr "Со_хранить"
 
 #: modules/file/rawfile.c:1014
-#: modules/process/neural.c:1226
+#: modules/process/neural.c:704
 msgid "_Rename"
 msgstr "_Переименовать"
 
 #: modules/file/rawfile.c:1033
-#: modules/process/neural.c:1245
+#: modules/process/neural.c:722
 msgid "Preset _name:"
 msgstr "_Название предустановки:"
 
@@ -4767,6 +4766,7 @@ msgstr ""
 "Содержимое `%s' не соответствует формату: %s."
 
 #: modules/file/rawfile.c:1612
+#: modules/process/neural.c:1578
 #, c-format
 msgid "The name `%s' is invalid."
 msgstr "Имя `%s' неверно."
@@ -5992,7 +5992,6 @@ msgid "_Expression:"
 msgstr "_Выражение:"
 
 #: modules/process/arithmetic.c:294
-#: modules/process/neural.c:339
 msgid "Operands"
 msgstr "Операнды"
 
@@ -6883,6 +6882,7 @@ msgstr "Строить _график"
 #: modules/process/facet-level.c:297
 #: modules/process/level.c:269
 #: modules/process/linecorrect.c:288
+#: modules/process/neural.c:592
 #: modules/process/polylevel.c:495
 #: modules/tools/sfunctions.c:457
 #: modules/tools/stats.c:365
@@ -7463,7 +7463,7 @@ msgstr "Отфильтрованные данные"
 
 #: modules/process/fft_filter_2d.c:315
 #: modules/process/fit_2d.c:680
-#: modules/process/neural.c:1093
+#: modules/process/neural.c:559
 msgid "Difference"
 msgstr "Разница"
 
@@ -7700,7 +7700,7 @@ msgstr "Тип предпросмотра:"
 #: modules/process/fit_2d.c:330
 #: modules/process/fractal.c:283
 #: modules/process/mark_with.c:259
-#: modules/process/neural.c:1092
+#: modules/process/neural.c:558
 msgid "Result"
 msgstr "Результат"
 
@@ -9208,159 +9208,158 @@ msgstr "Зонд имеет другое отношение диапазон/р�
 msgid "Immersed detail data"
 msgstr "Данные встроенного изображения с лучшим разрешением"
 
-#: modules/process/neural.c:243
+#: modules/process/neural.c:217
 msgid "Neural network SPM data processing"
 msgstr "Обработка данных СЗМ на основе нейросетей"
 
-#: modules/process/neural.c:260
-msgid "/M_ultidata/_Neural Network..."
-msgstr "/М_ножественные данные/_Нейросеть..."
-
-#: modules/process/neural.c:264
-msgid "Neural network AFM data processing"
-msgstr "Обработка данных АСМ на основе нейросетей"
-
-#: modules/process/neural.c:276
+#: modules/process/neural.c:243
 msgid "/M_ultidata/Neural Network _Training..."
 msgstr "/М_ножественные данные/О_бучение Нейросети..."
 
-#: modules/process/neural.c:280
+#: modules/process/neural.c:247
 msgid "Train a neural network for image processing"
 msgstr "Обучить нейросеть для обработки изображений"
 
-#: modules/process/neural.c:321
-msgid "Neural Network"
-msgstr "Нейросеть"
+#: modules/process/neural.c:251
+msgid "/M_ultidata/Apply _Neural Network..."
+msgstr "/М_ножественные данные/Применить _Нейросеть..."
 
-#: modules/process/neural.c:346
-msgid "Training _model:"
-msgstr "_Модель обучения:"
+#: modules/process/neural.c:255
+msgid "Process data using a trained neural network"
+msgstr "Обработка данных используя обученную нейросеть"
 
-#: modules/process/neural.c:352
-msgid "Training _signal:"
-msgstr "_Сигнал обучения:"
+#. TRANSLATORS: Unnamed neural network that is/was in training.
+#: modules/process/neural.c:385
+msgid "In training"
+msgstr "Обучается"
 
-#: modules/process/neural.c:358
-msgid "Res_ult model:"
-msgstr "Модель рез_ультата:"
-
-#: modules/process/neural.c:363
-#: modules/tools/stats.c:401
-msgid "Parameters"
-msgstr "Параметры"
-
-#: modules/process/neural.c:369
-#: modules/process/neural.c:1132
-msgid "Window _width:"
-msgstr "_Ширина окна:"
-
-#: modules/process/neural.c:375
-#: modules/process/neural.c:1138
-msgid "Window h_eight:"
-msgstr "_Высота окна:"
-
-#: modules/process/neural.c:381
-msgid "_Training steps:"
-msgstr "Шагов _тренировки:"
-
-#: modules/process/neural.c:387
-#: modules/process/neural.c:1144
-msgid "_Hidden nodes:"
-msgstr "Скр_ытые узлы:"
-
-#: modules/process/neural.c:479
-msgid "Data not compatible"
-msgstr "данные несовместимы"
-
-#: modules/process/neural.c:507
-#: modules/process/pid.c:334
-msgid "Starting..."
-msgstr "Запускается..."
-
-#: modules/process/neural.c:528
-msgid "Training..."
-msgstr "Тренировка..."
-
-#: modules/process/neural.c:570
-msgid "Evaluating..."
-msgstr "Расчёт..."
-
-#: modules/process/neural.c:612
-msgid "Evaluated signal"
-msgstr "Рассчитанный сигнал"
-
-#: modules/process/neural.c:618
-msgid "Training error"
-msgstr "Ошибка обучения"
-
-#: modules/process/neural.c:619
-msgid "error"
-msgstr "ошибка"
-
-#: modules/process/neural.c:625
-msgid "NN training error"
-msgstr "Ошибка обучения нейросети"
-
-#: modules/process/neural.c:1019
+#: modules/process/neural.c:469
 msgid "Neural Network Training"
 msgstr "Обучение Нейросети"
 
-#: modules/process/neural.c:1060
+#: modules/process/neural.c:493
+msgid "Training error"
+msgstr "Ошибка обучения"
+
+#: modules/process/neural.c:494
+msgid "error"
+msgstr "ошибка"
+
+#: modules/process/neural.c:502
+msgid "NN training error"
+msgstr "Ошибка обучения нейросети"
+
+#: modules/process/neural.c:519
 msgid "_Model:"
 msgstr "_Модель:"
 
-#: modules/process/neural.c:1067
+#: modules/process/neural.c:529
 msgid "_Signal:"
 msgstr "_Сигнал:"
 
-#: modules/process/neural.c:1075
+#: modules/process/neural.c:540
 msgid "Training ste_ps:"
 msgstr "Шагов _тренировки:"
 
-#: modules/process/neural.c:1080
+#: modules/process/neural.c:547
 #: modules/process/polydistort.c:296
 msgid "Preview:"
 msgstr "Предпросмотр:"
 
-#: modules/process/neural.c:1090
+#: modules/process/neural.c:556
 msgid "Model"
 msgstr "Модель"
 
-#: modules/process/neural.c:1091
+#: modules/process/neural.c:557
 msgid "Signal"
 msgstr "Сигнал"
 
-#: modules/process/neural.c:1104
+#: modules/process/neural.c:574
 msgid "_Train"
 msgstr "О_бучение"
 
-#: modules/process/neural.c:1107
+#: modules/process/neural.c:579
 msgid "Re_initialize"
 msgstr "Пере_инициализация"
 
-#: modules/process/neural.c:1126
+#: modules/process/neural.c:612
 msgid "Network"
 msgstr "Сеть"
 
-#: modules/process/neural.c:1150
+#: modules/process/neural.c:618
+msgid "Window _width:"
+msgstr "_Ширина окна:"
+
+#: modules/process/neural.c:626
+msgid "Window h_eight:"
+msgstr "_Высота окна:"
+
+#: modules/process/neural.c:634
+msgid "_Hidden nodes:"
+msgstr "Скр_ытые узлы:"
+
+#: modules/process/neural.c:642
 msgid "Result Units"
 msgstr "Единицы результата"
 
-#: modules/process/neural.c:1157
+#: modules/process/neural.c:649
 msgid "Power of source _XY:"
 msgstr "Степень _XY источника:"
 
-#: modules/process/neural.c:1163
+#: modules/process/neural.c:657
 msgid "Power of source _Z:"
 msgstr "Степень _Z источника:"
 
-#: modules/process/neural.c:1169
+#: modules/process/neural.c:665
 msgid "_Fixed units:"
 msgstr "_Заданные единицы:"
 
-#: modules/process/neural.c:1177
+#: modules/process/neural.c:675
 msgid "Networks"
 msgstr "Сети"
+
+#: modules/process/neural.c:774
+msgid "Apply Neural Network"
+msgstr "Применить нейросеть"
+
+#: modules/process/neural.c:797
+msgid "_Scale proportionally to input"
+msgstr "_Масштабировать пропорционально входным данным"
+
+#: modules/process/neural.c:924
+msgid "Model and signal are not compatible."
+msgstr "Модель и сигнал несовместимы."
+
+#: modules/process/neural.c:932
+msgid "A field dimension is too small for chosen window size."
+msgstr "Размер поля слишком мал для выбранного размера окна."
+
+#: modules/process/neural.c:1105
+msgid "Training..."
+msgstr "Тренировка..."
+
+#: modules/process/neural.c:1186
+#: modules/process/neural.c:1350
+msgid "Evaluating..."
+msgstr "Расчёт..."
+
+#: modules/process/neural.c:1274
+#: modules/process/pid.c:334
+msgid "Starting..."
+msgstr "Запускается..."
+
+#: modules/process/neural.c:1310
+msgid "Training was canceled."
+msgstr "Обучение было отменено."
+
+#: modules/process/neural.c:1320
+#, c-format
+msgid "Mean difference: %.*f %s"
+msgstr "Среднее различие: %.*f %s"
+
+#: modules/process/neural.c:1372
+msgid "Evaluated signal"
+msgstr "Рассчитанный сигнал"
 
 #: modules/process/noise_synth.c:210
 msgid "Generates uncorrelated random noise."
@@ -10326,43 +10325,43 @@ msgstr "Второе направление:"
 msgid "Denoised"
 msgstr "Без шума"
 
-#: modules/pygwy/pygwy-console.c:54
+#: modules/pygwy/pygwy-console.c:55
 msgid "/Pygwy Console"
 msgstr "/Консоль Pygwy"
 
-#: modules/pygwy/pygwy-console.c:58
+#: modules/pygwy/pygwy-console.c:59
 msgid "Python wrapper console"
 msgstr "Командная строка оболочки Python"
 
-#: modules/pygwy/pygwy-console.c:156
+#: modules/pygwy/pygwy-console.c:157
 msgid ">>> Running file content of below textfield\n"
 msgstr ">>> Запускается содержимое файла из нижнего текстового поля\n"
 
-#: modules/pygwy/pygwy-console.c:181
+#: modules/pygwy/pygwy-console.c:183
 msgid "Open Python script"
 msgstr "Открыть скрипт Python"
 
-#: modules/pygwy/pygwy-console.c:245
+#: modules/pygwy/pygwy-console.c:247
 msgid "Save Script as"
 msgstr "Сохранить скрипт как"
 
-#: modules/pygwy/pygwy-console.c:284
+#: modules/pygwy/pygwy-console.c:286
 msgid "Pygwy Console"
 msgstr "Консоль Pygwy"
 
-#: modules/pygwy/pygwy-console.c:296
+#: modules/pygwy/pygwy-console.c:298
 msgid "Open script in Python language (Ctrl-O)"
 msgstr "Открыть скрипт на языке Python (Ctrl-O)"
 
-#: modules/pygwy/pygwy-console.c:298
+#: modules/pygwy/pygwy-console.c:300
 msgid "Save script (Ctrl-S)"
 msgstr "Сохранить сценарий (Ctrl-S)"
 
-#: modules/pygwy/pygwy-console.c:300
+#: modules/pygwy/pygwy-console.c:302
 msgid "Execute script (Ctrl-E)"
 msgstr "Выполнить сценарий (Ctrl-E)"
 
-#: modules/pygwy/pygwy-console.c:378
+#: modules/pygwy/pygwy-console.c:380
 msgid "Command"
 msgstr "Команда"
 
@@ -11322,6 +11321,10 @@ msgstr "Наклон θ:"
 msgid "Inclination φ:"
 msgstr "Наклон φ:"
 
+#: modules/tools/stats.c:401
+msgid "Parameters"
+msgstr "Параметры"
+
 #: modules/tools/stats.c:932
 msgid "Save Statistical Quantities"
 msgstr "Сохранять статистические величины"
@@ -11373,3 +11376,14 @@ msgstr ""
 "Наклон θ:     %s\n"
 "Наклон φ:     %s\n"
 
+#~ msgid "Neural network AFM data processing"
+#~ msgstr "Обработка данных АСМ на основе нейросетей"
+
+#~ msgid "Training _model:"
+#~ msgstr "_Модель обучения:"
+
+#~ msgid "Res_ult model:"
+#~ msgstr "Модель рез_ультата:"
+
+#~ msgid "_Training steps:"
+#~ msgstr "Шагов _тренировки:"
