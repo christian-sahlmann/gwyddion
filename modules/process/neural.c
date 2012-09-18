@@ -571,7 +571,7 @@ neural_train_dialog(NeuralTrainArgs *args)
     gtk_table_attach(GTK_TABLE(table), bbox,
                      0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
 
-    controls.train = gtk_button_new_with_mnemonic(_("_Train"));
+    controls.train = gtk_button_new_with_mnemonic(gwy_sgettext("verb|_Train"));
     gtk_container_add(GTK_CONTAINER(bbox), controls.train);
     g_signal_connect_swapped(controls.train, "clicked",
                              G_CALLBACK(train_network), &controls);
