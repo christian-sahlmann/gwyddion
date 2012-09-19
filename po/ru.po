@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2012-09-18 03:59+0200\n"
-"PO-Revision-Date: 2012-09-18 07:56+0300\n"
+"POT-Creation-Date: 2012-09-19 03:58+0200\n"
+"PO-Revision-Date: 2012-09-19 07:27+0300\n"
 "Last-Translator: Daniil Bratashov <dn2010@gmail.com>\n"
 "Language-Team: russian <ru@li.org>\n"
 "Language: \n"
@@ -9275,7 +9275,7 @@ msgid "Signal"
 msgstr "Сигнал"
 
 #: modules/process/neural.c:574
-msgid "_Train"
+msgid "verb|_Train"
 msgstr "О_бучение"
 
 #: modules/process/neural.c:579
