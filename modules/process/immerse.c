@@ -237,7 +237,6 @@ immerse_dialog(ImmerseArgs *args)
     controls.dialog = gtk_dialog_new_with_buttons(_("Immerse Detail"),
                                                   NULL, 0, NULL);
     dialog = GTK_DIALOG(controls.dialog);
-    gtk_dialog_set_has_separator(dialog, FALSE);
     button = gtk_dialog_add_button(dialog,
                                    _("_Locate"), IMMERSE_RESPONSE_LOCATE);
     gtk_tooltips_set_tip(tooltips, button,

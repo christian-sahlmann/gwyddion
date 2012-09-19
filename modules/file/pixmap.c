@@ -1038,7 +1038,6 @@ pixmap_load_dialog(PixmapLoadArgs *args,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);
     controls.dialog = dialog;
-    gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
     g_free(title);
 
@@ -2935,7 +2934,6 @@ select_inset_color(GwyColorButton *button,
 
     dialog = gtk_color_selection_dialog_new(_("Change Inset Color"));
     if (gtk_major_version == 2 && gtk_minor_version < 10)
-        gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
 
     selector = GTK_COLOR_SELECTION_DIALOG(dialog)->colorsel;
     gtk_color_selection_set_current_color(GTK_COLOR_SELECTION(selector),
@@ -3025,7 +3023,6 @@ pixmap_save_dialog(GwyContainer *data,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);
-    gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
     g_free(title);
     controls.dialog = dialog;

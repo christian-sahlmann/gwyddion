@@ -107,7 +107,6 @@ gwy_tool_init(GwyTool *tool,
     klass = GWY_TOOL_CLASS(g_class);
     gwy_debug("%s", klass->title);
     tool->dialog = gtk_dialog_new();
-    gtk_dialog_set_has_separator(GTK_DIALOG(tool->dialog), FALSE);
 
     window = GTK_WINDOW(tool->dialog);
     gtk_window_set_title(window, gettext(klass->title));

@@ -62,7 +62,6 @@ _gwy_graph_label_dialog_init(GwyGraphLabelDialog *dialog)
     gtk_window_set_title(GTK_WINDOW(dialog), _("Label Properties"));
     gtk_dialog_add_button(GTK_DIALOG(dialog),
                           GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE);
-    gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_CLOSE);
 
     table = gtk_table_new(2, 4, FALSE);

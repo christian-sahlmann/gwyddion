@@ -209,7 +209,6 @@ fit_dialog(FitArgs *args)
 
     dialog = gtk_dialog_new_with_buttons(_("Fit Graph"), NULL, 0, NULL);
     controls.dialog = dialog;
-    gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
     gtk_dialog_add_action_widget(GTK_DIALOG(dialog),
                                  gwy_stock_like_button_new(gwy_sgettext("verb|_Fit"),
                                                            GTK_STOCK_EXECUTE),

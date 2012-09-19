@@ -94,7 +94,6 @@ _gwy_graph_area_dialog_init(GwyGraphAreaDialog *dialog)
     gint row;
 
     gtk_window_set_title(GTK_WINDOW(dialog), _("Curve Properties"));
-    gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
     gtk_dialog_add_button(GTK_DIALOG(dialog),
                           GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_CLOSE);
@@ -385,7 +384,6 @@ color_change_cb(G_GNUC_UNUSED GtkWidget *color_button,
     dialog->old_color = cmodel->color;
 
     if (gtk_major_version == 2 && gtk_minor_version < 10)
-        gtk_dialog_set_has_separator(GTK_DIALOG(selector), FALSE);
     colorsel = GTK_COLOR_SELECTION_DIALOG(selector)->colorsel;
     g_signal_connect(selector, "response",
                      G_CALLBACK(colorsel_response_cb), dialog);

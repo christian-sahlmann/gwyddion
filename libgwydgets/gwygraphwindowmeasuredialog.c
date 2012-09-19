@@ -525,7 +525,6 @@ _gwy_graph_window_measure_dialog_new(GwyGraph *graph)
 
     dialog = GWY_GRAPH_WINDOW_MEASURE_DIALOG(g_object_new(GWY_TYPE_GRAPH_WINDOW_MEASURE_DIALOG, NULL));
     gtk_window_set_title(GTK_WINDOW(dialog), _("Measure Distances"));
-    gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
 
     dialog->graph = GTK_WIDGET(graph);
     gmodel = gwy_graph_get_model(graph);

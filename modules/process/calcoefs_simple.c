@@ -329,7 +329,6 @@ simple_dialog(SimpleArgs *args, GwyDataField *dfield)
     controls.button_ok = gtk_dialog_add_button(GTK_DIALOG(dialog),
                                                GTK_STOCK_OK, GTK_RESPONSE_OK);
 
-    gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
 
     table = gtk_table_new(4 + NARGS, 2, FALSE);

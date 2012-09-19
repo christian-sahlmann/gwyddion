@@ -210,7 +210,6 @@ cload_dialog(CLoadArgs *args,
                                          NULL);
     controls.okbutton = gtk_dialog_add_button(GTK_DIALOG(dialog), GTK_STOCK_OK, GTK_RESPONSE_OK);
     controls.dialog = dialog;
-    gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
 
     gtk_dialog_add_action_widget(GTK_DIALOG(dialog),
                                  gwy_stock_like_button_new(N_("verb|_Load"),

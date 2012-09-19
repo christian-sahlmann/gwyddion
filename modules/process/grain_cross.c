@@ -241,7 +241,6 @@ grain_cross_dialog(GrainCrossArgs *args,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);
     controls.dialog = GTK_DIALOG(dialog);
-    gtk_dialog_set_has_separator(controls.dialog, FALSE);
     gtk_dialog_set_default_response(controls.dialog, GTK_RESPONSE_OK);
     gtk_window_set_default_size(GTK_WINDOW(dialog), 440, 520);
 

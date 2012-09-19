@@ -192,7 +192,6 @@ prof_dialog(ProfArgs *args,
                                                   GTK_RESPONSE_OK,
                                                   NULL);
     dialog = GTK_DIALOG(controls.dialog);
-    gtk_dialog_set_has_separator(dialog, FALSE);
     gtk_dialog_set_default_response(dialog, GTK_RESPONSE_OK);
     gtk_dialog_set_response_sensitive(dialog, GTK_RESPONSE_OK, FALSE);
 

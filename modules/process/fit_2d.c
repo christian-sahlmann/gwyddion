@@ -244,7 +244,6 @@ fit_2d_dialog(Fit2DArgs *args,
                                          GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                          GTK_STOCK_OK, GTK_RESPONSE_OK,
                                          NULL);
-    gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
     controls.dialog = dialog;
 
@@ -970,7 +969,6 @@ create_results_window(Fit2DControls *controls, Fit2DArgs *args)
                                          GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE,
                                          NULL);
     gtk_dialog_set_default_response(GTK_DIALOG(window), GTK_RESPONSE_CLOSE);
-    gtk_dialog_set_has_separator(GTK_DIALOG(window), FALSE);
 
     table = gtk_table_new(9, 2, FALSE);
     gtk_container_set_border_width(GTK_CONTAINER(table), 6);

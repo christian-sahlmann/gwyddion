@@ -259,7 +259,6 @@ grain_dist_dialog(GrainDistArgs *args,
                                                     GTK_RESPONSE_CANCEL,
                                                     NULL));
     controls.ok = gtk_dialog_add_button(dialog, GTK_STOCK_OK, GTK_RESPONSE_OK);
-    gtk_dialog_set_has_separator(dialog, FALSE);
     gtk_dialog_set_default_response(dialog, GTK_RESPONSE_OK);
     gtk_window_set_default_size(GTK_WINDOW(dialog), -1, 520);
 
@@ -757,7 +756,6 @@ grain_stat(GwyContainer *data, GwyRunType run)
     dialog = gtk_dialog_new_with_buttons(_("Grain Statistics"), NULL, 0,
                                          GTK_STOCK_CLOSE, GTK_RESPONSE_CLOSE,
                                          NULL);
-    gtk_dialog_set_has_separator(GTK_DIALOG(dialog), FALSE);
 
     table = gtk_table_new(10, 2, FALSE);
     gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox), table);
