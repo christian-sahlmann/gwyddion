@@ -48,7 +48,7 @@ AM_CPPFLAGS = -I$(top_srcdir) -DG_LOG_DOMAIN=\"GwyDraw\"
 # Any iface change    C++: 0:   A
 # Adding ifaces       C:   R:   A++
 # Changing ifaces     C:   R:   0
-libversion = -version-info 1:0:1
+libversion = -version-info 1:1:1
 #libversion = -release @LIBRARY_RELEASE@
 libgwydraw2_la_LDFLAGS = @GTK_LIBS@ @BASIC_LIBS@ -export-dynamic $(no_undefined) $(export_symbols) $(libversion)
 libgwydraw2_la_LIBADD = $(libgwydraw_libadd)
