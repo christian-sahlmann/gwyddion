@@ -3,8 +3,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Gwyddion\n"
 "Report-Msgid-Bugs-To: yeti@gwyddion.net\n"
-"POT-Creation-Date: 2012-09-18 03:59+0200\n"
-"PO-Revision-Date: 2012-09-18 10:08+0200\n"
+"POT-Creation-Date: 2012-09-19 03:58+0200\n"
+"PO-Revision-Date: 2012-09-19 19:59+0200\n"
 "Last-Translator: Petr Klapetek <klapetek@gwyddion.net>\n"
 "Language-Team: Czech\n"
 "Language: cs\n"
@@ -9249,7 +9249,7 @@ msgstr "_Signál pro trénink:"
 
 #: modules/process/neural.c:1320
 msgid "Mean difference: %.*f %s"
-msgstr "Rozdíl max-min"
+msgstr "Průměrný rozdíl: %.*f %s"
 
 #: modules/process/neural.c:1372
 msgid "Evaluated signal"
