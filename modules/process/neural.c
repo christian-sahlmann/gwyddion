@@ -718,7 +718,7 @@ neural_train_dialog(NeuralTrainArgs *args)
     row = 0;
 
     controls.networkname = gtk_entry_new();
-    gwy_table_attach_row(table, row, _("Preset _name:"), "",
+    gwy_table_attach_row(table, row, _("Network _name:"), "",
                          controls.networkname);
     gtk_entry_set_max_length(GTK_ENTRY(controls.networkname), 40);
     row++;
