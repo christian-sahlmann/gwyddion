@@ -122,6 +122,7 @@ nanoscope	managing-files
 nanoscope-ii	managing-files
 nanotop	managing-files
 netcdf	managing-files
+neural	multidata	neural-network
 noise_synth	synthetic	noise-synthetis
 nrrdfile	managing-files
 nt-mdt	managing-files
