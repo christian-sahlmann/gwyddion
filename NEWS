@@ -1,6 +1,6 @@
 2.30 (2012-09-21)
 Application:
-- Translations updated: French, Russian.
+- Translations updated: Czech, French, Russian.
 - Handling of files with non-ASCII characters in names on Win32 was improved.
 
 Libraries:
