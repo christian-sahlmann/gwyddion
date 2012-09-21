@@ -1,4 +1,4 @@
-2.30 (0000-00-00)
+2.30 (2012-09-21)
 Application:
 - Translations updated: French, Russian.
 - Handling of files with non-ASCII characters in names on Win32 was improved.
