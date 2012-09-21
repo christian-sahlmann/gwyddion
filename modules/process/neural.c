@@ -949,6 +949,7 @@ train_data_changed(NeuralTrainControls *controls,
         g_critical("Chooser lacks id");
     }
 
+    gwy_set_data_preview_size(GWY_DATA_VIEW(controls->view), PREVIEW_SIZE);
     gtk_widget_set_sensitive(gwy_radio_buttons_find(group, PREVIEW_RESULT),
                              FALSE);
     gtk_widget_set_sensitive(gwy_radio_buttons_find(group, PREVIEW_DIFFERENCE),
