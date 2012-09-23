@@ -332,6 +332,7 @@ if test "$GCC" = yes; then
   GWY_PROG_CC_OPTION([WNO_POINTER_SIGN],[-Wno-pointer-sign],,)
   GWY_PROG_CC_OPTION([WNO_UNUSED_PAR],[-Wno-unused-parameter],,)
   GWY_PROG_CC_OPTION([ERR_IFD],[-Werror-implicit-function-declaration],,)
+  GWY_PROG_CC_OPTION([ERR_RET],[-Werror=return-type],,)
   # FIXME: We would like an error, but gcc can't make one w/o -std, which is
   # too much.
   GWY_PROG_CC_OPTION([WMIXED_DECL],[-Wdeclaration-after-statement],,)
@@ -343,7 +344,7 @@ if test "$GCC" = yes; then
   # -Wstrict-protoypes makes gtkitemfactory.h noisy, but they have a
   #    comment there they can't fix it due to compatibility
   # -Wwrite-strings because it makes all struct initializations very noisy
-  WARNING_CFLAGS="-Wall -W -Wshadow -Wpointer-arith -Wno-sign-compare -Wundef $PROG_CC_ERR_IFD $PROG_CC_WNO_SYS_HEADERS $PROG_CC_WNO_POINTER_SIGN $PROG_CC_WNO_EMPTY_FMT $PROG_CC_WMIXED_DECL $PROG_CC_WREDUNDANT_DECLS"
+  WARNING_CFLAGS="-Wall -W -Wshadow -Wpointer-arith -Wno-sign-compare -Wundef $PROG_CC_ERR_IFD $PROG_CC_ERR_RET $PROG_CC_WNO_SYS_HEADERS $PROG_CC_WNO_POINTER_SIGN $PROG_CC_WNO_EMPTY_FMT $PROG_CC_WMIXED_DECL $PROG_CC_WREDUNDANT_DECLS"
   WARNING_NOUNUSED_PAR="$PROG_CC_WNO_UNUSED_PAR"
   PREMISE_CFLAGS="$PROG_CC_FNO_TRAP_MATH $PROG_CC_FNO_MATH_ERRNO $FEXCESS_PRECISION_FAST"
 fi
