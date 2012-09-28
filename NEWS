@@ -1,3 +1,9 @@
+2.31 (0000-00-00)
+Other:
+- Compatibility with GLib older than 2.26, accidentaly broken in 2.30, was
+  restored.
+
+
 2.30 (2012-09-21)
 Application:
 - Translations updated: Czech, French, Russian.
