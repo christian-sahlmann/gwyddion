@@ -71,6 +71,11 @@
 #define KEY_THUMB_GWY_IMAGES "tEXt::Thumb::X-Gwyddion::Images"
 #define KEY_THUMB_GWY_GRAPHS "tEXt::Thumb::X-Gwyddion::Graphs"
 
+/* Being compatible with various version of GLib requires creativity... */
+#if (!GLIB_CHECK_VERSION(2, 26, 0))
+#define GStatBuf struct stat
+#endif
+
 enum {
     THUMB_SIZE = 60,
     TMS_NORMAL_THUMB_SIZE = 128
