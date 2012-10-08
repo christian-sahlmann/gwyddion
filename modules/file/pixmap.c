@@ -2933,8 +2933,6 @@ select_inset_color(GwyColorButton *button,
     gwy_rgba_to_gdk_color(&controls->args->inset_color, &gdkcolor);
 
     dialog = gtk_color_selection_dialog_new(_("Change Inset Color"));
-    if (gtk_major_version == 2 && gtk_minor_version < 10)
-
     selector = GTK_COLOR_SELECTION_DIALOG(dialog)->colorsel;
     gtk_color_selection_set_current_color(GTK_COLOR_SELECTION(selector),
                                           &gdkcolor);

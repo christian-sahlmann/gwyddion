@@ -383,7 +383,6 @@ color_change_cb(G_GNUC_UNUSED GtkWidget *color_button,
     dialog->color_dialog = selector;
     dialog->old_color = cmodel->color;
 
-    if (gtk_major_version == 2 && gtk_minor_version < 10)
     colorsel = GTK_COLOR_SELECTION_DIALOG(selector)->colorsel;
     g_signal_connect(selector, "response",
                      G_CALLBACK(colorsel_response_cb), dialog);

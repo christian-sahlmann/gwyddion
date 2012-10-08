@@ -561,7 +561,6 @@ gwy_mask_color_selector_run(const gchar *dialog_title,
     dialog = gtk_color_selection_dialog_new(dialog_title
                                             ? dialog_title
                                             : _("Change Mask Color"));
-    if (gtk_major_version == 2 && gtk_minor_version < 10)
     selector = GTK_COLOR_SELECTION_DIALOG(dialog)->colorsel;
     gtk_color_selection_set_current_color(GTK_COLOR_SELECTION(selector),
                                           &gdkcolor);
