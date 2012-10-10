@@ -19,6 +19,20 @@ spml_module =
 disabled_sources += spml.c
 endif
 
+# If libXML2 is disabled, put the dependent sources to EXTRA_DIST to include
+# them in make dist.
+if HAVE_XML2
+if HAVE_MINIZIP
+apedaxfile_module = apedaxfile.la
+else
+apedaxfile_module =
+disabled_sources += apedaxfile.c
+endif
+else
+apedaxfile_module =
+disabled_sources += apedaxfile.c
+endif
+
 # If libz is disabled, put the dependent sources to EXTRA_DIST to include them
 # in make dist.
 #if HAVE_ZLIB
@@ -48,6 +62,7 @@ file_LTLIBRARIES = \
 	ambfile.la \
 	anfatec.la \
 	apefile.la \
+	$(apedaxfile_module) \
 	asciiexport.la \
 	assing-afm.la \
 	attocube.la \
@@ -269,6 +284,15 @@ if HAVE_ZLIB
 spml_la_SOURCES          = spml.c spml-utils.h
 spml_la_CFLAGS           = $(AM_CFLAGS) @XML2_CFLAGS@
 spml_la_LIBADD           = @XML2_LIBS@ @ZLIB@
+endif
+endif
+
+# These require the respective libraries.
+if HAVE_XML2
+if HAVE_MINIZIP
+apedaxfile_la_SOURCES    = apedaxfile.c
+apedaxfile_la_CFLAGS     = $(AM_CFLAGS) @XML2_CFLAGS@ @MINIZIP_CFLAGS@
+apedaxfile_la_LIBADD     = @XML2_LIBS@ @MINIZIP_LIBS@
 endif
 endif
 
