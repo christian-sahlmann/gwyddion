@@ -49,7 +49,7 @@
  * TODO: find out why if using xmlFree instead of xmlMemFree
  *       Gwyddion doesn't load the module
  */
-#define xFree xmlMemFree
+#define xFree xmlFree
 
 #define EXTENSION ".dax"
 #define MAGIC "PK\x03\x04"
