@@ -58,6 +58,8 @@ Lennart Fricke <pge08aqw@studserv.uni-leipzig.de>
     3D view and pygwy improvements.
 Jozef Veselý <vesely@gjh.sk>
     Standalone python gwy module, old Nanoscope import improvements.
+Gianfranco Gallizia <gianfranco.gallizia@aperesearch.com>
+    APE DAX import module.
 
 
 === Translators ===
