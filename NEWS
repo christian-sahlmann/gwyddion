@@ -1,4 +1,7 @@
 2.31 (0000-00-00)
+Modules:
+- APE DAX (new): Imports APE Research DAX files.
+
 Other:
 - Compatibility with GLib older than 2.26, accidentaly broken in 2.30, was
   restored.
