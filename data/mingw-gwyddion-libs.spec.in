@@ -1,7 +1,7 @@
 # @(#) $Id$
 %{?mingw_package_header}
 
-Name:           mingw32-gwyddion-libs
+Name:           mingw-gwyddion-libs
 Version:        @PACKAGE_VERSION@
 Release:        1%{?dist}
 Summary:        MinGW Windows Gwyddion libraries
@@ -91,8 +91,8 @@ This package contains MinGW Windows Gwyddion libraries.
 %{mingw_make_install} DESTDIR=$RPM_BUILD_ROOT
 
 # Manually copy gwyddion.pc as we no longer descend into data
-install -D -m 644 build_mingw32/data/gwyddion.pc ${RPM_BUILD_ROOT}%{mingw32_libdir}/pkgconfig/gwyddion.pc
-install -D -m 644 build_mingw64/data/gwyddion.pc ${RPM_BUILD_ROOT}%{mingw64_libdir}/pkgconfig/gwyddion.pc
+install -D -m 644 build_win32/data/gwyddion.pc ${RPM_BUILD_ROOT}%{mingw32_libdir}/pkgconfig/gwyddion.pc
+install -D -m 644 build_win64/data/gwyddion.pc ${RPM_BUILD_ROOT}%{mingw64_libdir}/pkgconfig/gwyddion.pc
 
 # Remove stuff not necessary for cross-compilation of Gwyddion apps and modules
 rm -rf ${RPM_BUILD_ROOT}%{mingw32_bindir}/*.exe
