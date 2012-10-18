@@ -48,13 +48,13 @@
 #include <GL/glext.h>
 #endif
 #endif
-#endif
 
 #ifndef GL_BGRA
 #ifdef GL_BGRA_EXT
 #define GL_BGRA GL_BGRA_EXT
 #else
 #error FIXME: GL_BGRA is not available, should work around it.
+#endif
 #endif
 #endif
 
