@@ -667,7 +667,7 @@ gwy_ruler_draw_ticks(GwyRuler *ruler)
             step /= base;
             while (step <= 0.5) {
                 base /= 10.0;
-                step += 10.0;
+                step *= 10.0;
             }
             while (step > 5.0) {
                 base *= 10.0;
