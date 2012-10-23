@@ -1459,7 +1459,7 @@ gwy_data_field_area_dh(GwyDataField *data_field,
         for (i = 0; i < height; i++) {
             mrow = mask->data + (i + row)*mask->xres + col;
             for (j = 0; j < width; j++) {
-                if (mrow[i])
+                if (mrow[j])
                     nn++;
             }
         }
