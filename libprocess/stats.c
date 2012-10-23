@@ -1474,7 +1474,7 @@ gwy_data_field_area_dh(GwyDataField *data_field,
 
     gwy_data_line_resample(target_line, nstats, GWY_INTERPOLATION_NONE);
     gwy_data_line_clear(target_line);
-    gwy_data_field_area_get_min_max(data_field, mask,
+    gwy_data_field_area_get_min_max(data_field, nn ? mask : NULL,
                                     col, row, width, height,
                                     &min, &max);
 
@@ -1532,7 +1532,7 @@ gwy_data_field_area_dh(GwyDataField *data_field,
     }
 
     /* Normalize integral to 1 */
-    gwy_data_line_multiply(target_line, nstats/(max - min)/nn);
+    gwy_data_line_multiply(target_line, nstats/(max - min)/MAX(nn, 1));
 }
 
 /**
