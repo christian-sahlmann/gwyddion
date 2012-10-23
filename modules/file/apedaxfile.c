@@ -178,7 +178,7 @@ apedax_load(const gchar *filename,
     unzFile uFile;
     unz_file_info uFileInfo;
     guchar *buffer;
-    guint size = 0;
+    gsize size = 0;
     APEDAX_ScanSize scanSize;
 
     scanSize.XRes = 0;
@@ -573,8 +573,8 @@ apedax_get_channels_data(unzFile uFile,
     gint power10 = 0;
     gdouble scaleFactor = 1.0;
     GwySIUnit *zUnit;
-    gchar *zUnitString;
-    gchar *binFileName;
+    gchar *zUnitString = NULL;
+    gchar *binFileName = NULL;
     GwyDataField *dfield;
     GwyContainer *tmp;
 
