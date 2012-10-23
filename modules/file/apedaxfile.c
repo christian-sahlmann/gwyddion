@@ -1,5 +1,5 @@
 /*
- *  Gwyddion
+ *  $Id$
  *  Copyright (C) 2005 David Necas (Yeti), Petr Klapetek.
  *  E-mail: yeti@gwyddion.net, klapetek@gwyddion.net.
  *
