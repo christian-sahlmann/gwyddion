@@ -25,6 +25,8 @@
  *   <magic priority="80">
  *     <match type="string" offset="0" value="SPIZ000AFM"/>
  *     <match type="string" offset="0" value="SPIZ000DFM"/>
+ *     <match type="string" offset="0" value="NPXZ000AFM"/>
+ *     <match type="string" offset="0" value="NPXZ000DFM"/>
  *   </magic>
  *   <glob pattern="*.xqb"/>
  *   <glob pattern="*.XQB"/>
@@ -56,6 +58,8 @@
 
 #define MAGIC1 "SPIZ000AFM"
 #define MAGIC2 "SPIZ000DFM"
+#define MAGIC3 "NPXZ000AFM"
+#define MAGIC4 "NPXZ000DFM"
 #define MAGIC_SIZE (sizeof(MAGIC1)-1)
 
 #define EXTENSION1 ".xqb"
@@ -81,7 +85,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Seiko XQB, XQD and XQT files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.7",
+    "0.8",
     "David Nečas (Yeti) & Markus Pristovsek",
     "2006",
 };
@@ -118,7 +122,9 @@ seiko_detect(const GwyFileDetectInfo *fileinfo,
     if (fileinfo->buffer_len > MAGIC_SIZE
         && fileinfo->file_size >= HEADER_SIZE + 2
         && (memcmp(fileinfo->head, MAGIC1, MAGIC_SIZE) == 0
-            || memcmp(fileinfo->head, MAGIC2, MAGIC_SIZE) == 0))
+            || memcmp(fileinfo->head, MAGIC2, MAGIC_SIZE) == 0
+            || memcmp(fileinfo->head, MAGIC3, MAGIC_SIZE) == 0
+            || memcmp(fileinfo->head, MAGIC4, MAGIC_SIZE) == 0))
         score = 100;
 
     return score;
@@ -151,7 +157,9 @@ seiko_load(const gchar *filename,
     }
 
     if (memcmp(buffer, MAGIC1, MAGIC_SIZE) != 0
-        && memcmp(buffer, MAGIC2, MAGIC_SIZE) != 0) {
+        && memcmp(buffer, MAGIC2, MAGIC_SIZE) != 0
+        && memcmp(buffer, MAGIC3, MAGIC_SIZE) != 0
+        && memcmp(buffer, MAGIC4, MAGIC_SIZE) != 0) {
         err_FILE_TYPE(error, "Seiko");
         gwy_file_abandon_contents(buffer, size, NULL);
         return NULL;
