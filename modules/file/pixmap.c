@@ -27,7 +27,7 @@
  * [2] Usually lossy, intended for presentational purposes.  16bit grayscale
  * export is possible to PNG, TIFF and PNM.
  **/
-
+#define DEBUG 1
 #include "config.h"
 #include <string.h>
 #include <errno.h>
@@ -488,6 +488,7 @@ module_register(void)
 
         /* Ignore all vector formats */
         fmtname = gdk_pixbuf_format_get_name(pixbuf_format);
+        gwy_debug("Found format %s", fmtname);
         if (gdk_pixbuf_format_is_scalable(pixbuf_format)) {
             gwy_debug("Ignoring scalable GdkPixbuf format %s.", fmtname);
             continue;
@@ -593,6 +594,8 @@ pixmap_detect(const GwyFileDetectInfo *fileinfo,
     gchar **extensions;
     guint ext;
 
+    gwy_debug("Running detection for file type %s", name);
+
     format_info = find_format(name);
     g_return_val_if_fail(format_info, 0);
 
@@ -632,9 +635,11 @@ pixmap_detect(const GwyFileDetectInfo *fileinfo,
             return 0;
     }
     else if (gwy_strequal(name, "tiff")) {
+        gwy_debug("Checking TIFF header");
         if (memcmp(fileinfo->head, "MM\x00\x2a", 4) != 0
             && memcmp(fileinfo->head, "II\x2a\x00", 4) != 0)
         return 0;
+        gwy_debug("TIFF header OK (type %.2s)", fileinfo->head);
     }
     else if (gwy_strequal(name, "jpeg")) {
         if (memcmp(fileinfo->head, "\xff\xd8", 2) != 0)
@@ -681,7 +686,9 @@ pixmap_detect(const GwyFileDetectInfo *fileinfo,
         score = 60;
     }
 
+    gwy_debug("Creating a loader for type %s", name);
     loader = gdk_pixbuf_loader_new_with_type(name, NULL);
+    gwy_debug("Loader for type %s: %p", name, loader);
     if (!loader)
         return 0;
 
@@ -690,8 +697,11 @@ pixmap_detect(const GwyFileDetectInfo *fileinfo,
      * just accept it's a TIFF and hope some other loader of a TIFF-based
      * format will claim this with a higher score. */
     if (gwy_strequal(name, "tiff")) {
+        gwy_debug("Avoiding feeding data to TIFF loader, calling gdk_pixbuf_loader_close().");
         gdk_pixbuf_loader_close(loader, NULL);
+        gwy_debug("Unreferencing the TIFF loader");
         g_object_unref(loader);
+        gwy_debug("Returning score %d for TIFF", score - 10);
         return score - 10;
     }
 
@@ -753,6 +763,7 @@ pixmap_load(const gchar *filename,
         return NULL;
     }
 
+    gwy_debug("Creating a loader for type %s", name);
     loader = gdk_pixbuf_loader_new_with_type(name, &err);
     if (!loader) {
         g_set_error(error, GWY_MODULE_FILE_ERROR,
@@ -763,6 +774,7 @@ pixmap_load(const gchar *filename,
         return NULL;
     }
 
+    gwy_debug("Reading file content.");
     do {
         n = fread(pixmap_buf, 1, buffer_length, fh);
         gwy_debug("loaded %u bytes", n);
@@ -778,6 +790,7 @@ pixmap_load(const gchar *filename,
     } while (n == buffer_length);
     fclose(fh);
 
+    gwy_debug("Closing the loader.");
     if (!gdk_pixbuf_loader_close(loader, &err)) {
         g_set_error(error, GWY_MODULE_FILE_ERROR,
                     GWY_MODULE_FILE_ERROR_DATA,
@@ -787,9 +800,12 @@ pixmap_load(const gchar *filename,
         return NULL;
     }
 
+    gwy_debug("Trying to get the pixbuf.");
     pixbuf = gdk_pixbuf_loader_get_pixbuf(loader);
+    gwy_debug("Pixbuf is: %p.", pixbuf);
     g_assert(pixbuf);
     g_object_ref(pixbuf);
+    gwy_debug("Finalizing loader.");
     g_object_unref(loader);
 
     settings = gwy_app_settings_get();
