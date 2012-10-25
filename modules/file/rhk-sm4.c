@@ -37,7 +37,7 @@
  * Read SPS:Limited[1]
  * [1] Spectra curves are imported as graphs, positional information is lost.
  **/
-
+#define DEBUG 1
 #include "config.h"
 #include <string.h>
 #include <libgwyddion/gwymacros.h>
@@ -82,6 +82,7 @@ typedef enum {
     RHK_DATA_TEXT           = 4,
     RHK_DATA_ANNOTATED_TEXT = 5,
     RHK_DATA_SEQUENTIAL     = 6,    /* Only in RHKPageIndex */
+    RHK_DATA_MOVIE          = 7,    /* New in R9, cannot import it anyway. */
 } RHKDataType;
 
 typedef enum {
@@ -186,6 +187,7 @@ typedef enum {
     RHK_LINE_GXY                            = 20,
     RHK_LINE_ELECTROCHEMISTRY               = 21,
     RHK_LINE_DISCRETE_SPECTROSCOPY          = 22,
+    RHK_LINE_DSCOPE_DATALOGGING             = 23,
 } RHKLineType;
 
 typedef enum {
@@ -370,7 +372,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports RHK Technology SM4 data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.2",
+    "0.3",
     "David Nečas (Yeti)",
     "2009",
 };
