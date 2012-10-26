@@ -464,7 +464,7 @@ static GwyModuleInfo module_info = {
        "PNG, JPEG, TIFF, PPM, BMP, TARGA. "
        "Import support relies on GDK and thus may be installation-dependent."),
     "Yeti <yeti@gwyddion.net>",
-    "7.19",
+    "7.20",
     "David Nečas (Yeti)",
     "2004-2012",
 };
