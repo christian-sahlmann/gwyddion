@@ -638,7 +638,7 @@ pixmap_detect(const GwyFileDetectInfo *fileinfo,
         gwy_debug("Checking TIFF header");
         if (memcmp(fileinfo->head, "MM\x00\x2a", 4) != 0
             && memcmp(fileinfo->head, "II\x2a\x00", 4) != 0)
-        return 0;
+            return 0;
         gwy_debug("TIFF header OK (type %.2s)", fileinfo->head);
     }
     else if (gwy_strequal(name, "jpeg")) {
