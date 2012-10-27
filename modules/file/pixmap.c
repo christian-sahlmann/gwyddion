@@ -27,7 +27,7 @@
  * [2] Usually lossy, intended for presentational purposes.  16bit grayscale
  * export is possible to PNG, TIFF and PNM.
  **/
-#define DEBUG 1
+
 #include "config.h"
 #include <string.h>
 #include <errno.h>
