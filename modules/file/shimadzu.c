@@ -258,7 +258,7 @@ read_binary_data(const gchar *buffer,
         const gint16 *d16 = (const gint16*)(buffer + HEADER_SIZE);
 
         for (i = 0; i < xres*yres; i++)
-            d[i] = zscale*GINT16_FROM_LE(d16[i]) + zoff;
+            d[i] = zscale*GUINT16_FROM_LE(d16[i]) + zoff;
     }
     else if (data_type == SHIMADZU_FLOAT) {
         const guchar *p = buffer + HEADER_SIZE;
