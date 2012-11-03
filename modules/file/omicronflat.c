@@ -156,7 +156,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Omicron flat files."),
     "fbianco  < francois.bianco@unige.ch > ",
-    "0.2",
+    "0.3",
     "François Bianco",
     "2010",
 };
@@ -903,8 +903,30 @@ omicronflat_read2dimage(GwyContainer *container, GwyContainer *metainfo,
             ind_tup -= 2*xres;
         }
     }
+    else if (!xmirrored && ymirrored) {
+        gwy_debug("Only y axis mirrored");
+        for (i = 0; i < yres; ++i) {
+            // Trace Up
+            data = g_ptr_array_index(data_arr, 0);
+            for (j = 0; j < xres && n < navail; ++j) {
+                data[ind_tup] = fac * (gwy_get_gint32_le(fp)-offset);
+                ++ind_tup;
+                ++n;
+            }
+            ind_tup -= 2*xres;
+        }
+        for (i = 0; i < yres; ++i) {
+            // Trace Down
+            data = g_ptr_array_index(data_arr, 1);
+            for (j = 0; j < xres && n < navail; ++j) {
+                data[ind_tdown] = fac * (gwy_get_gint32_le(fp)-offset);
+                ++ind_tdown;
+                ++n;
+            }
+        }
+    }
     else {
-        gwy_debug("Either both or only y axis mirrored");
+        gwy_debug("Both axes mirrored");
         for (i = 0; i < yres; ++i) {
             // Trace Up
             data = g_ptr_array_index(data_arr, 0);
@@ -952,31 +974,27 @@ omicronflat_read2dimage(GwyContainer *container, GwyContainer *metainfo,
     gwy_debug("Topography data successfully read.");
 
     dfield = g_ptr_array_index(dfield_arr, 0);
-    gwy_container_set_object_by_name(container, "/0/data",
-                                     dfield);
+    gwy_container_set_object_by_name(container, "/0/data", dfield);
     gwy_container_set_string_by_name(container, "/0/data/title",
-                                     (guchar*)g_strdup("Trace Up"));
+                                     g_strdup("Trace Up"));
 
     if (xmirrored) {
         dfield = g_ptr_array_index(dfield_arr, 1);
-        gwy_container_set_object_by_name(container, "/1/data",
-                                         dfield);
+        gwy_container_set_object_by_name(container, "/1/data", dfield);
         gwy_container_set_string_by_name(container, "/1/data/title",
-                                         (guchar*)g_strdup("reTrace Up"));
+                                         g_strdup("reTrace Up"));
     }
     if (ymirrored) {
-        dfield = g_ptr_array_index(dfield_arr, 2);
-        gwy_container_set_object_by_name(container, "/2/data",
-                                         dfield);
+        dfield = g_ptr_array_index(dfield_arr, xmirrored ? 2 : 1);
+        gwy_container_set_object_by_name(container, "/2/data", dfield);
         gwy_container_set_string_by_name(container, "/2/data/title",
-                                         (guchar*)g_strdup("Trace down"));
+                                         g_strdup("Trace down"));
     }
     if (xmirrored && ymirrored) {
         dfield = g_ptr_array_index(dfield_arr, 3);
-        gwy_container_set_object_by_name(container, "/3/data",
-                                         dfield);
+        gwy_container_set_object_by_name(container, "/3/data", dfield);
         gwy_container_set_string_by_name(container, "/3/data/title",
-                                         (guchar*)g_strdup("reTrace down"));
+                                         g_strdup("reTrace down"));
     }
 
     g_ptr_array_free(data_arr, TRUE);
