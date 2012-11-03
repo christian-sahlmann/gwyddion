@@ -103,45 +103,53 @@
       && 2 == gwy_container_get_int32_by_name(metainfo, "/channel/dataView/view/0/type"))
 
 
-static gboolean      module_register    (void);
-static gint          omicronflat_detect (const GwyFileDetectInfo *fileinfo,
-                                        gboolean only_name);
-static guchar*       omicronflat_readstring(const guchar **fp, const gsize fp_end,
-                                        GError **error);
-static void          omicronflat_readmetainfo(GwyContainer *metainfo,
-                                        const guchar **fp, const gsize fp_end,
-                                        GError **error);
-static void          omicronflat_readmetadata(GwyContainer *metadata,
-                                        const guchar **fp, const gsize fp_end,
-                                        GError **error);
+static gboolean      module_register             (void);
+static gint          omicronflat_detect          (const GwyFileDetectInfo *fileinfo,
+                                                  gboolean only_name);
+static guchar*       omicronflat_readstring      (const guchar **fp,
+                                                  const gsize fp_end,
+                                                  GError **error);
+static void          omicronflat_readmetainfo    (GwyContainer *metainfo,
+                                                  const guchar **fp,
+                                                  const gsize fp_end,
+                                                  GError **error);
+static void          omicronflat_readmetadata    (GwyContainer *metadata,
+                                                  const guchar **fp,
+                                                  const gsize fp_end,
+                                                  GError **error);
 static void          omicronflat_getscalingfactor(GwyContainer *metainfo,
-                                        gdouble* fac, gdouble* offset);
-static void          omicronflat_read2dimage(GwyContainer *container,
-                                        GwyContainer *metainfo,
-                                        const guchar **fp, const gsize fp_end,
-                                        GError **error);
-static void          omicronflat_readcits(GwyContainer *container,
-                                        GwyContainer *metainfo,
-                                        const guchar **fp, const gsize fp_end,
-                                        GError **error);
-static void          omicronflat_readsps(GwyContainer *container,
-                                        GwyContainer *metainfo,
-                                        const guchar **fp, const gsize fp_end,
-                                        GError **error);
+                                                  gdouble* fac,
+                                                  gdouble* offset);
+static void          omicronflat_read2dimage     (GwyContainer *container,
+                                                  GwyContainer *metainfo,
+                                                  const guchar **fp,
+                                                  const gsize fp_end,
+                                                  GError **error);
+static void          omicronflat_readcits        (GwyContainer *container,
+                                                  GwyContainer *metainfo,
+                                                  const guchar **fp,
+                                                  const gsize fp_end,
+                                                  GError **error);
+static void          omicronflat_readsps         (GwyContainer *container,
+                                                  GwyContainer *metainfo,
+                                                  const guchar **fp,
+                                                  const gsize fp_end,
+                                                  GError **error);
 #ifdef omicronflat_todo
-static void          omicronflat_readforcedist(GwyContainer *container,
-                                        GwyContainer *metainfo,
-                                        const guchar **fp, const gsize fp_end,
-                                        GError **error);
-static void          omicronflat_readtimevarying(GwyContainer *container,
-                                        GwyContainer *metainfo,
-                                        const guchar **fp, const gsize fp_end,
-                                        GError **error);
+static void          omicronflat_readforcedist   (GwyContainer *container,
+                                                  GwyContainer *metainfo,
+                                                  const guchar **fp,
+                                                  const gsize fp_end,
+                                                  GError **error);
+static void          omicronflat_readtimevarying (GwyContainer *container,
+                                                  GwyContainer *metainfo,
+                                                  const guchar **fp,
+                                                  const gsize fp_end,
+                                                  GError **error);
 #endif
-static GwyContainer* omicronflat_load   (const gchar *filename,
-                                        G_GNUC_UNUSED GwyRunType mode,
-                                        GError **error);
-
+static GwyContainer* omicronflat_load            (const gchar *filename,
+                                                  GwyRunType mode,
+                                                  GError **error);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
@@ -246,7 +254,7 @@ omicronflat_readmetainfo(GwyContainer *metainfo, const guchar** fp,
     gchar creation_time[40];
     struct tm* sdate = NULL;
 
-    guint32 i,j,k,max,max2,max3;
+    guint32 i, j, k, max, max2, max3;
     gdouble val;
 
     if (fp_end < (gsize)*fp + 4) {
@@ -499,7 +507,7 @@ omicronflat_readmetadata(GwyContainer *metadata, const guchar** fp,
 {
     GError* tmperr = NULL;
 
-    guint32 i,max,j,max2;
+    guint32 i, max, j, max2;
     gchar key[100];
     gchar val[30];
 
@@ -527,7 +535,7 @@ omicronflat_readmetadata(GwyContainer *metadata, const guchar** fp,
         gwy_container_set_double_by_name(metadata, key, gwy_get_gdouble_le(fp));
 
         g_snprintf(key, sizeof(key), "Offset:%i:y", i);
-        gwy_container_set_double_by_name(metadata, key,gwy_get_gdouble_le(fp));
+        gwy_container_set_double_by_name(metadata, key, gwy_get_gdouble_le(fp));
     }
 
     // Experiment informations
@@ -736,15 +744,16 @@ omicronflat_getscalingfactor(GwyContainer *metainfo,
 {
     // Get correct scaling factor
     //   - TFF_LINEAR1D
-    if (0 == strcmp((gchar*)gwy_container_get_string_by_name(
-       metainfo, "/tff/name"), TFF_LINEAR1D_NAME)) {
+    if (gwy_strequal(gwy_container_get_string_by_name(metainfo, "/tff/name"),
+                     TFF_LINEAR1D_NAME)) {
         gwy_debug("TransferFunctionType is linear1d");
-        *fac = 1. / gwy_container_get_double_by_name(metainfo, "/tff/Factor");
+        *fac = 1.0 / gwy_container_get_double_by_name(metainfo, "/tff/Factor");
         *offset = gwy_container_get_double_by_name(metainfo, "/tff/Offset");
     }
     //   - TFF_MULTILINEAR1D
-    else if (0 == strcmp((gchar*)gwy_container_get_string_by_name(
-            metainfo, "/tff/name"), TFF_MULTILINEAR1D_NAME)) {
+    else if (gwy_strequal(gwy_container_get_string_by_name(metainfo,
+                                                           "/tff/name"),
+                          TFF_MULTILINEAR1D_NAME)) {
         gwy_debug("TransferFunctionType is multilinear1d");
         *offset = gwy_container_get_double_by_name(metainfo, "/tff/Offset");
 
@@ -759,8 +768,8 @@ omicronflat_getscalingfactor(GwyContainer *metainfo,
         // setting factor and offset to 1.0 and 0.0 to obtain unscaled data
         g_warning("Unknown transfer function, "
                   "importing raw data without scaling.");
-        *fac = 1.;
-        *offset = 0.;
+        *fac = 1.0;
+        *offset = 0.0;
     }
 
     return;
@@ -792,8 +801,8 @@ omicronflat_read2dimage(GwyContainer *container, GwyContainer *metainfo,
     GwyDataField* dfield = NULL;
     gdouble *data = NULL;
 
-    nexpect = gwy_container_get_int32_by_name(metainfo,"brickletSize");
-    navail = gwy_container_get_int32_by_name(metainfo,"dataItemSize");
+    nexpect = gwy_container_get_int32_by_name(metainfo, "brickletSize");
+    navail = gwy_container_get_int32_by_name(metainfo, "dataItemSize");
 
     if (navail > nexpect) {
         err_FILE_TYPE(error, "Omicron Flat");
@@ -844,11 +853,11 @@ omicronflat_read2dimage(GwyContainer *container, GwyContainer *metainfo,
                                     width, height, TRUE);
         data = gwy_data_field_get_data(dfield);
         gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_xy(dfield),
-                                            (gchar*)unit_xy);
+                                    unit_xy);
         gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_z(dfield),
-                                            (gchar*)unit_z);
-        g_ptr_array_add(dfield_arr,dfield);
-        g_ptr_array_add(data_arr,data);
+                                    unit_z);
+        g_ptr_array_add(dfield_arr, dfield);
+        g_ptr_array_add(data_arr, data);
     }
 
     ind_tup = xres * (yres-1);
@@ -880,16 +889,14 @@ omicronflat_read2dimage(GwyContainer *container, GwyContainer *metainfo,
             // Trace Up
             data = g_ptr_array_index(data_arr, 0);
             for (j = 0; j < xres && n < navail; ++j) {
-                data[ind_tup] =
-                        fac * (gwy_get_gint32_le(fp)-offset);
+                data[ind_tup] = fac * (gwy_get_gint32_le(fp)-offset);
                 ++ind_tup;
                 ++n;
             }
             // Retrace Up
             data = g_ptr_array_index(data_arr, 1);
             for (j = 0; j < xres && n < navail; ++j) {
-                data[ind_retup] =
-                        fac * (gwy_get_gint32_le(fp)-offset);
+                data[ind_retup] = fac * (gwy_get_gint32_le(fp)-offset);
                 --ind_retup;
                 ++n;
             }
@@ -902,16 +909,14 @@ omicronflat_read2dimage(GwyContainer *container, GwyContainer *metainfo,
             // Trace Up
             data = g_ptr_array_index(data_arr, 0);
             for (j = 0; j < xres && n < navail; ++j) {
-                data[ind_tup] =
-                        fac * (gwy_get_gint32_le(fp)-offset);
+                data[ind_tup] = fac * (gwy_get_gint32_le(fp)-offset);
                 ++ind_tup;
                 ++n;
             }
             // Retrace Up
             data = g_ptr_array_index(data_arr, 1);
             for (j = 0; j < xres && n < navail; ++j) {
-                data[ind_retup] =
-                        fac * (gwy_get_gint32_le(fp)-offset);
+                data[ind_retup] = fac * (gwy_get_gint32_le(fp)-offset);
                 --ind_retup;
                 ++n;
             }
@@ -921,16 +926,14 @@ omicronflat_read2dimage(GwyContainer *container, GwyContainer *metainfo,
             // Trace Down
             data = g_ptr_array_index(data_arr, 2);
             for (j = 0; j < xres && n < navail; ++j) {
-                data[ind_tdown] =
-                        fac * (gwy_get_gint32_le(fp)-offset);
+                data[ind_tdown] = fac * (gwy_get_gint32_le(fp)-offset);
                 ++ind_tdown;
                 ++n;
             }
             // Retrace Down
             data = g_ptr_array_index(data_arr, 3);
             for (j = 0; j < xres && n < navail; ++j) {
-                data[ind_retdown] =
-                        fac * (gwy_get_gint32_le(fp)-offset);
+                data[ind_retdown] = fac * (gwy_get_gint32_le(fp)-offset);
                 --ind_retdown;
                 ++n;
             }
@@ -941,8 +944,8 @@ omicronflat_read2dimage(GwyContainer *container, GwyContainer *metainfo,
     // check if all data were read correctly
     if (n != navail) {
         err_FILE_TYPE(error, "Omicron Flat");
-        g_ptr_array_free(data_arr,TRUE);
-        g_ptr_array_free(dfield_arr,TRUE);
+        g_ptr_array_free(data_arr, TRUE);
+        g_ptr_array_free(dfield_arr, TRUE);
         return;
     }
 
@@ -950,34 +953,34 @@ omicronflat_read2dimage(GwyContainer *container, GwyContainer *metainfo,
 
     dfield = g_ptr_array_index(dfield_arr, 0);
     gwy_container_set_object_by_name(container, "/0/data",
-                                        dfield);
+                                     dfield);
     gwy_container_set_string_by_name(container, "/0/data/title",
-                                        (guchar*)g_strdup("Trace Up"));
+                                     (guchar*)g_strdup("Trace Up"));
 
     if (xmirrored) {
         dfield = g_ptr_array_index(dfield_arr, 1);
         gwy_container_set_object_by_name(container, "/1/data",
-                                            dfield);
+                                         dfield);
         gwy_container_set_string_by_name(container, "/1/data/title",
-                                            (guchar*)g_strdup("reTrace Up"));
+                                         (guchar*)g_strdup("reTrace Up"));
     }
     if (ymirrored) {
         dfield = g_ptr_array_index(dfield_arr, 2);
         gwy_container_set_object_by_name(container, "/2/data",
-                                            dfield);
+                                         dfield);
         gwy_container_set_string_by_name(container, "/2/data/title",
-                                            (guchar*)g_strdup("Trace down"));
+                                         (guchar*)g_strdup("Trace down"));
     }
     if (xmirrored && ymirrored) {
         dfield = g_ptr_array_index(dfield_arr, 3);
         gwy_container_set_object_by_name(container, "/3/data",
-                                            dfield);
+                                         dfield);
         gwy_container_set_string_by_name(container, "/3/data/title",
-                                            (guchar*)g_strdup("reTrace down"));
+                                         (guchar*)g_strdup("reTrace down"));
     }
 
-    g_ptr_array_free(data_arr,TRUE);
-    g_ptr_array_free(dfield_arr,TRUE);
+    g_ptr_array_free(data_arr, TRUE);
+    g_ptr_array_free(dfield_arr, TRUE);
 
     return;
 }
@@ -1015,8 +1018,8 @@ omicronflat_readcits(GwyContainer *container, GwyContainer *metainfo,
 
     gwy_debug("File is planes form a volume CITS data cube ");
 
-    nexpect = gwy_container_get_int32_by_name(metainfo,"brickletSize");
-    navail = gwy_container_get_int32_by_name(metainfo,"dataItemSize");
+    nexpect = gwy_container_get_int32_by_name(metainfo, "brickletSize");
+    navail = gwy_container_get_int32_by_name(metainfo, "dataItemSize");
 
     if (navail > nexpect) {
         err_FILE_TYPE(error, "Omicron Flat");
@@ -1040,7 +1043,7 @@ omicronflat_readcits(GwyContainer *container, GwyContainer *metainfo,
     xstep = gwy_container_get_int32_by_name(metainfo, "/axis/0/table/0/interval/0/step");
     xres = (xstop - xstart) / xstep + 1;
 
-    if (gwy_container_get_int32_by_name(metainfo,"/axis/0/table/0/intervalCount") == 2)
+    if (gwy_container_get_int32_by_name(metainfo, "/axis/0/table/0/intervalCount") == 2)
         xspecmir = TRUE;
 
     ystart = gwy_container_get_int32_by_name(metainfo, "/axis/0/table/1/interval/0/start");
@@ -1048,7 +1051,7 @@ omicronflat_readcits(GwyContainer *container, GwyContainer *metainfo,
     ystep = gwy_container_get_int32_by_name(metainfo, "/axis/0/table/1/interval/0/step");
     yres = (ystop - ystart)/ystep + 1;
 
-    if (gwy_container_get_int32_by_name(metainfo,"/axis/0/table/1/intervalCount") == 2)
+    if (gwy_container_get_int32_by_name(metainfo, "/axis/0/table/1/intervalCount") == 2)
         yspecmir = TRUE;
 
     zres = gwy_container_get_int32_by_name(metainfo, "/axis/0/clockCount") / (zmirrored+1);
@@ -1089,11 +1092,11 @@ omicronflat_readcits(GwyContainer *container, GwyContainer *metainfo,
                                     width, height, TRUE);
         data = gwy_data_field_get_data(dfield);
         gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_xy(dfield),
-                                            (gchar*)unit_xy);
+                                    unit_xy);
         gwy_si_unit_set_from_string(gwy_data_field_get_si_unit_z(dfield),
-                                            (gchar*)unit_z);
-        g_ptr_array_add(dfield_arr,dfield);
-        g_ptr_array_add(data_arr,data);
+                                    unit_z);
+        g_ptr_array_add(dfield_arr, dfield);
+        g_ptr_array_add(data_arr, data);
     }
 
     ind_tup = xres * (yres-1);
@@ -1111,7 +1114,7 @@ omicronflat_readcits(GwyContainer *container, GwyContainer *metainfo,
             for (cntx = 0; cntx < xres; ++cntx) {
                 // Trace Up
                 for(cntz = 0; cntz < zmax && n < navail; ++cntz) {
-                    data = g_ptr_array_index(data_arr,cntz);
+                    data = g_ptr_array_index(data_arr, cntz);
                     data[ind_tup] =  fac * (gwy_get_gint32_le(fp)-offset);
                     ++n;
                 }
@@ -1127,7 +1130,7 @@ omicronflat_readcits(GwyContainer *container, GwyContainer *metainfo,
             for (cntx = 0; cntx < xres; ++cntx) {
                 // Trace Up
                 for(cntz = 0; cntz < zmax && n < navail; ++cntz){
-                    data = g_ptr_array_index(data_arr,cntz);
+                    data = g_ptr_array_index(data_arr, cntz);
                     data[ind_tup] =  fac * (gwy_get_gint32_le(fp)-offset);
                     ++n;
                 }
@@ -1136,7 +1139,7 @@ omicronflat_readcits(GwyContainer *container, GwyContainer *metainfo,
             for (cntx = 0; cntx < xres; ++cntx) {
                 // Retrace Up
                 for(cntz = 0; cntz < zmax && n < navail; ++cntz){
-                    data = g_ptr_array_index(data_arr,cntz+zmax);
+                    data = g_ptr_array_index(data_arr, cntz+zmax);
                     data[ind_retup] =  fac * (gwy_get_gint32_le(fp)-offset);
                     ++n;
                 }
@@ -1152,7 +1155,7 @@ omicronflat_readcits(GwyContainer *container, GwyContainer *metainfo,
             for (cntx = 0; cntx < xres; ++cntx) {
                 // Trace Up
                 for(cntz = 0; cntz < zmax && n < navail; ++cntz) {
-                    data = g_ptr_array_index(data_arr,cntz);
+                    data = g_ptr_array_index(data_arr, cntz);
                     data[ind_tup] =  fac * (gwy_get_gint32_le(fp)-offset);
                     ++n;
                 }
@@ -1164,7 +1167,7 @@ omicronflat_readcits(GwyContainer *container, GwyContainer *metainfo,
             for (cntx = 0; cntx < xres; ++cntx) {
                 // Trace Down
                 for(cntz = 0; cntz < zmax && n < navail; ++cntz){
-                    data = g_ptr_array_index(data_arr,cntz+zmax);
+                    data = g_ptr_array_index(data_arr, cntz+zmax);
                     data[ind_tdown] =  fac * (gwy_get_gint32_le(fp)-offset);
                     ++n;
                 }
@@ -1179,7 +1182,7 @@ omicronflat_readcits(GwyContainer *container, GwyContainer *metainfo,
             for (cntx = 0; cntx < xres; ++cntx) {
                 // Trace Up
                 for(cntz = 0; cntz < zmax && n < navail; ++cntz) {
-                    data = g_ptr_array_index(data_arr,cntz);
+                    data = g_ptr_array_index(data_arr, cntz);
                     data[ind_tup] =  fac * (gwy_get_gint32_le(fp)-offset);
                     ++n;
                 }
@@ -1188,7 +1191,7 @@ omicronflat_readcits(GwyContainer *container, GwyContainer *metainfo,
             for (cntx = 0; cntx < xres; ++cntx) {
                 // Retrace Up
                 for(cntz = 0; cntz < zmax && n < navail; ++cntz){
-                    data = g_ptr_array_index(data_arr,cntz+zmax);
+                    data = g_ptr_array_index(data_arr, cntz+zmax);
                     data[ind_retup] =  fac * (gwy_get_gint32_le(fp)-offset);
                     ++n;
                 }
@@ -1200,7 +1203,7 @@ omicronflat_readcits(GwyContainer *container, GwyContainer *metainfo,
             for (cntx = 0; cntx < xres; ++cntx) {
                 // Trace Down
                 for(cntz = 0; cntz < zmax && n < navail; ++cntz){
-                    data = g_ptr_array_index(data_arr,cntz+zmax*2);
+                    data = g_ptr_array_index(data_arr, cntz+zmax*2);
                     data[ind_tdown] =  fac * (gwy_get_gint32_le(fp)-offset);
                     ++n;
                 }
@@ -1209,7 +1212,7 @@ omicronflat_readcits(GwyContainer *container, GwyContainer *metainfo,
             for (cntx = 0; cntx < xres; ++cntx) {
                 // Retrace Down
                 for(cntz = 0; cntz < zmax && n < navail; ++cntz){
-                    data = g_ptr_array_index(data_arr,cntz+zmax*3);
+                    data = g_ptr_array_index(data_arr, cntz+zmax*3);
                     data[ind_retdown] =  fac * (gwy_get_gint32_le(fp)-offset);
                     ++n;
                 }
@@ -1222,8 +1225,8 @@ omicronflat_readcits(GwyContainer *container, GwyContainer *metainfo,
     // check if all data were read correctly
     if (n != navail) {
         err_FILE_TYPE(error, "Omicron Flat");
-        g_ptr_array_free(data_arr,TRUE);
-        g_ptr_array_free(dfield_arr,TRUE);
+        g_ptr_array_free(data_arr, TRUE);
+        g_ptr_array_free(dfield_arr, TRUE);
         return;
     }
 
@@ -1232,50 +1235,50 @@ omicronflat_readcits(GwyContainer *container, GwyContainer *metainfo,
     zmax = zmax/(zmirrored+1); // actuall number of point in spectroscopy curves
 
     for (i = 0; i < zmax; ++i) {
-        dfield = g_ptr_array_index(dfield_arr,i);
+        dfield = g_ptr_array_index(dfield_arr, i);
         g_snprintf(key, sizeof(key), "/%i/data", i);
         gwy_container_set_object_by_name(container, key, dfield);
 
         g_snprintf(val, sizeof(val), "Trace Up, %3.5g V", zstart+zinc*i);
         g_snprintf(key, sizeof(key), "/%i/data/title", i);
-        gwy_container_set_string_by_name(container, key,(guchar*)g_strdup(val));
+        gwy_container_set_string_by_name(container, key, g_strdup(val));
     }
     m = 1;
     if (zmirrored) {
         n = zmax;
         for (i = zmax; i < zmax*2; ++i) {
-            dfield = g_ptr_array_index(dfield_arr,i);
+            dfield = g_ptr_array_index(dfield_arr, i);
             g_snprintf(key, sizeof(key), "/%i/data", i);
             gwy_container_set_object_by_name(container, key, dfield);
 
             g_snprintf(val, sizeof(val), "Trace Up Mirrored, %3.5g V", zstart+zinc*n--);
             g_snprintf(key, sizeof(key), "/%i/data/title", i);
-            gwy_container_set_string_by_name(container, key,(guchar*)g_strdup(val));
+            gwy_container_set_string_by_name(container, key, g_strdup(val));
         }
         ++m;
     }
     if (xspecmir) {
         n = 0;
         for (i = zmax*m; i < zmax * (m+1); ++i) {
-            dfield = g_ptr_array_index(dfield_arr,i);
+            dfield = g_ptr_array_index(dfield_arr, i);
             g_snprintf(key, sizeof(key), "/%i/data", i);
             gwy_container_set_object_by_name(container, key, dfield);
 
             g_snprintf(val, sizeof(val), "reTrace Up, %3.5g V", zstart+zinc*n++);
             g_snprintf(key, sizeof(key), "/%i/data/title", i);
-            gwy_container_set_string_by_name(container, key,(guchar*)g_strdup(val));
+            gwy_container_set_string_by_name(container, key, g_strdup(val));
         }
         ++m;
         if (zmirrored) {
             n = zmax;
             for (i = zmax*m; i < zmax * (m+1); ++i) {
-                dfield = g_ptr_array_index(dfield_arr,i);
+                dfield = g_ptr_array_index(dfield_arr, i);
                 g_snprintf(key, sizeof(key), "/%i/data", i);
                 gwy_container_set_object_by_name(container, key, dfield);
 
                 g_snprintf(val, sizeof(val), "reTrace Up Mirrored, %3.5g V", zstart+zinc*n--);
                 g_snprintf(key, sizeof(key), "/%i/data/title", i);
-                gwy_container_set_string_by_name(container, key,(guchar*)g_strdup(val));
+                gwy_container_set_string_by_name(container, key, g_strdup(val));
             }
             ++m;
         }
@@ -1283,50 +1286,50 @@ omicronflat_readcits(GwyContainer *container, GwyContainer *metainfo,
     if (yspecmir) {
         n = 0;
         for (i = zmax*m; i < zmax * (m+1); ++i) {
-            dfield = g_ptr_array_index(dfield_arr,i);
+            dfield = g_ptr_array_index(dfield_arr, i);
             g_snprintf(key, sizeof(key), "/%i/data", i);
             gwy_container_set_object_by_name(container, key, dfield);
 
             g_snprintf(val, sizeof(val), "Trace Down, %3.5g V", zstart+zinc*n++);
             g_snprintf(key, sizeof(key), "/%i/data/title", i);
-            gwy_container_set_string_by_name(container, key,(guchar*)g_strdup(val));
+            gwy_container_set_string_by_name(container, key, g_strdup(val));
         }
         ++m;
         if (zmirrored) {
             n = zmax;
             for (i = zmax*m; i < zmax * (m+1); ++i) {
-                dfield = g_ptr_array_index(dfield_arr,i);
+                dfield = g_ptr_array_index(dfield_arr, i);
                 g_snprintf(key, sizeof(key), "/%i/data", i);
                 gwy_container_set_object_by_name(container, key, dfield);
 
                 g_snprintf(val, sizeof(val), "Trace Down Mirrored, %3.5g V", zstart+zinc*n--);
                 g_snprintf(key, sizeof(key), "/%i/data/title", i);
-                gwy_container_set_string_by_name(container, key,(guchar*)g_strdup(val));
+                gwy_container_set_string_by_name(container, key, g_strdup(val));
             }
             ++m;
         }
         if (xspecmir) {
             n = 0;
             for (i = zmax*m; i < zmax * (m+1); ++i) {
-                dfield = g_ptr_array_index(dfield_arr,i);
+                dfield = g_ptr_array_index(dfield_arr, i);
                 g_snprintf(key, sizeof(key), "/%i/data", i);
                 gwy_container_set_object_by_name(container, key, dfield);
 
                 g_snprintf(val, sizeof(val), "reTrace Down, %3.5g V", zstart+zinc*n++);
                 g_snprintf(key, sizeof(key), "/%i/data/title", i);
-                gwy_container_set_string_by_name(container, key,(guchar*)g_strdup(val));
+                gwy_container_set_string_by_name(container, key, g_strdup(val));
             }
             ++m;
             if (zmirrored) {
                 n = zmax;
                 for (i = zmax*m; i < zmax * (m+1); ++i) {
-                    dfield = g_ptr_array_index(dfield_arr,i);
+                    dfield = g_ptr_array_index(dfield_arr, i);
                     g_snprintf(key, sizeof(key), "/%i/data", i);
                     gwy_container_set_object_by_name(container, key, dfield);
 
                     g_snprintf(val, sizeof(val), "reTrace Down Mirrored, %3.5g V", zstart+zinc*n--);
                     g_snprintf(key, sizeof(key), "/%i/data/title", i);
-                    gwy_container_set_string_by_name(container, key,(guchar*)g_strdup(val));
+                    gwy_container_set_string_by_name(container, key, g_strdup(val));
                 }
                 ++m;
             }
@@ -1335,8 +1338,8 @@ omicronflat_readcits(GwyContainer *container, GwyContainer *metainfo,
 
     gwy_debug("CITS inserted to container successfully.");
 
-    g_ptr_array_free(data_arr,TRUE);
-    g_ptr_array_free(dfield_arr,TRUE);
+    g_ptr_array_free(data_arr, TRUE);
+    g_ptr_array_free(dfield_arr, TRUE);
 
     return;
 }
@@ -1370,8 +1373,8 @@ omicronflat_readsps(GwyContainer *container, GwyContainer *metainfo,
 
     gwy_debug("File is spectroscopy curves (SPS) ");
 
-    nexpect = gwy_container_get_int32_by_name(metainfo,"brickletSize");
-    navail = gwy_container_get_int32_by_name(metainfo,"dataItemSize");
+    nexpect = gwy_container_get_int32_by_name(metainfo, "brickletSize");
+    navail = gwy_container_get_int32_by_name(metainfo, "dataItemSize");
 
     if (navail > nexpect) {
         err_FILE_TYPE(error, "Omicron Flat");
@@ -1418,7 +1421,7 @@ omicronflat_readsps(GwyContainer *container, GwyContainer *metainfo,
         dline = gwy_data_line_new(length, width, TRUE);
         gwy_data_line_set_si_unit_x(dline, unitx);
         gwy_data_line_set_si_unit_y(dline, unity);
-        gwy_data_line_set_offset(dline,spec_offset);
+        gwy_data_line_set_offset(dline, spec_offset);
         data = gwy_data_line_get_data(dline);
 
         for (j = 0; j < length && n < navail; ++j) {
@@ -1594,10 +1597,12 @@ omicronflat_load(const gchar *filename, G_GNUC_UNUSED GwyRunType mode, GError **
 #endif
 
     // copy usefull metainfo in metadata
-    gwy_container_set_string_by_name(metadata,"Info:creation_time",
-            (guchar*)g_strdup(gwy_container_get_string_by_name(metainfo,"creation_time")));
-    gwy_container_set_string_by_name(metadata,"Info:comment",
-            (guchar*)g_strdup(gwy_container_get_string_by_name(metainfo,"comment")));
+    gwy_container_set_string_by_name
+        (metadata, "Info:creation_time",
+         g_strdup(gwy_container_get_string_by_name(metainfo, "creation_time")));
+    gwy_container_set_string_by_name
+        (metadata, "Info:comment",
+         g_strdup(gwy_container_get_string_by_name(metainfo, "comment")));
 
     gwy_container_set_object_by_name(container, "/0/meta", metadata);
 
