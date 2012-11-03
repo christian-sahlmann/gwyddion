@@ -31,10 +31,10 @@
 /**
  * [FILE-MAGIC-USERGUIDE]
  * Shimadzu
- * <!--FIXME-->
+ * .sph .spp .001 .002 etc.
  * Read
  **/
-
+#define DEBUG
 #include "config.h"
 #include <string.h>
 #include <stdlib.h>
@@ -57,7 +57,7 @@ typedef enum {
     SHIMADZU_FLOAT = 4
 } ShimadzuDataType;
 
-#define MAGIC "Shimadzu SPM File Format Version 2."
+#define MAGIC "Shimadzu SPM File Format Version "
 #define MAGIC_SIZE (sizeof(MAGIC)-1)
 
 static gboolean      module_register      (void);
@@ -94,9 +94,9 @@ static GwyContainer* shimadzu_get_metadata(GHashTable *hash);
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    N_("Imports Shimadzu SPM data files, version 2."),
+    N_("Imports Shimadzu SPM data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.3",
+    "0.4",
     "David Nečas (Yeti)",
     "2007",
 };
@@ -340,15 +340,18 @@ read_hash(gchar *buffer,
     } next_is;
     GHashTable *hash;
     gchar *p, *line, *value;
+    GString *key;
 
     *text_data_start = 0;
     p = buffer;
-    hash = g_hash_table_new(g_str_hash, g_str_equal);
+    hash = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
     line = gwy_str_next_line(&p);
+    key = g_string_new(NULL);
 
-    g_hash_table_insert(hash, "Version", line + MAGIC_SIZE-2);
+    g_hash_table_insert(hash, g_strdup("Version"), line + MAGIC_SIZE);
     next_is = WHATEVER;
     while ((line = gwy_str_next_line(&p))) {
+        guint len;
         gchar *rb;
 
         if (line[0] == '/')
@@ -367,6 +370,8 @@ read_hash(gchar *buffer,
             line++;
             g_strstrip(line);
             gwy_debug("section %s", line);
+            g_string_assign(key, line);
+            g_string_append(key, "::");
             if (gwy_strequal(line, "PROCESS PROFILE")) {
                 next_is = PROCESS_PROFILE;
                 continue;
@@ -386,12 +391,12 @@ read_hash(gchar *buffer,
         }
 
         if (next_is == PROCESS_PROFILE) {
-            g_hash_table_insert(hash, "ProcessProfile", line);
+            g_hash_table_insert(hash, g_strdup("ProcessProfile"), line);
             next_is = WHATEVER;
             continue;
         }
         if (next_is == COMMENT) {
-            g_hash_table_insert(hash, "Comment", line);
+            g_hash_table_insert(hash, g_strdup("Comment"), line);
             next_is = WHATEVER;
             continue;
         }
@@ -409,20 +414,23 @@ read_hash(gchar *buffer,
         value++;
         g_strstrip(line);
         g_strstrip(value);
-        gwy_debug("%s = %s", line, value);
-        g_hash_table_insert(hash, line, value);
+        len = key->len;
+        g_string_append(key, line);
+        gwy_debug("%s = %s", key->str, value);
+        g_hash_table_replace(hash, g_strdup(key->str), value);
+        g_string_truncate(key, len);
     }
 
     if (*text_data_start) {
         g_strstrip(line);
         if (!g_str_has_prefix(line, "Unit(") || !g_str_has_suffix(line, ")")) {
             g_warning("Cannot parse DATA unit: %s", line);
-            g_hash_table_insert(hash, "DATA Unit", "1");
+            g_hash_table_insert(hash, g_strdup("DATA Unit"), "1");
         }
         else {
             line += strlen("Unit(");
             line[strlen(line)-1] = '\0';
-            g_hash_table_insert(hash, "DATA Unit", line);
+            g_hash_table_insert(hash, g_strdup("DATA Unit"), line);
         }
     }
 
@@ -446,21 +454,25 @@ get_scales(GHashTable *hash,
 
     /* Dimensions are mandatory. */
     if (!require_keys(hash, error,
-                      "PixelsX", "PixelsY", "PixelsZ",
-                      "SizeX", "SizeY", "SizeZ",
+                      "SCANNING PARAMS::PixelsX",
+                      "SCANNING PARAMS::PixelsY",
+                      "SCANNING PARAMS::PixelsZ",
+                      "SCANNING PARAMS::SizeX",
+                      "SCANNING PARAMS::SizeY",
+                      "SCANNING PARAMS::SizeZ",
                       NULL))
         return FALSE;
 
-    *xres = atoi(g_hash_table_lookup(hash, "PixelsX"));
+    *xres = atoi(g_hash_table_lookup(hash, "SCANNING PARAMS::PixelsX"));
     if (err_DIMENSION(error, *xres))
         return FALSE;
-    *yres = atoi(g_hash_table_lookup(hash, "PixelsY"));
+    *yres = atoi(g_hash_table_lookup(hash, "SCANNING PARAMS::PixelsY"));
     if (err_DIMENSION(error, *yres))
         return FALSE;
 
     unit = gwy_si_unit_new(NULL);
 
-    p = g_hash_table_lookup(hash, "SizeX");
+    p = g_hash_table_lookup(hash, "SCANNING PARAMS::SizeX");
     *xreal = fabs(g_ascii_strtod(p, &p));
     if (!*xreal) {
         g_warning("Real x size is 0.0, fixing to 1.0");
@@ -469,7 +481,7 @@ get_scales(GHashTable *hash,
     gwy_si_unit_set_from_string_parse(si_unit_xy, p, &power10);
     *xreal *= pow10(power10);
 
-    p = g_hash_table_lookup(hash, "SizeY");
+    p = g_hash_table_lookup(hash, "SCANNING PARAMS::SizeY");
     *yreal = fabs(g_ascii_strtod(p, &p));
     if (!*yreal) {
         g_warning("Real y size is 0.0, fixing to 1.0");
@@ -481,19 +493,19 @@ get_scales(GHashTable *hash,
         g_warning("X and Y units differ, using X");
     }
 
-    zp = atoi(g_hash_table_lookup(hash, "PixelsZ"));
+    zp = atoi(g_hash_table_lookup(hash, "SCANNING PARAMS::PixelsZ"));
     if (!zp) {
         g_warning("Z pixels is 0, fixing to 1");
         zp = 1;
     }
-    p = g_hash_table_lookup(hash, "SizeZ");
+    p = g_hash_table_lookup(hash, "SCANNING PARAMS::SizeZ");
     *zscale = g_ascii_strtod(p, &p);
     gwy_si_unit_set_from_string_parse(si_unit_z, p, &power10);
     *zscale *= pow10(power10)/zp;
 
     /* Offsets are optional. */
     *xoff = 0.0;
-    if ((p = g_hash_table_lookup(hash, "OffsetX"))) {
+    if ((p = g_hash_table_lookup(hash, "SCANNING PARAMS::OffsetX"))) {
         *xoff = g_ascii_strtod(p, &p);
         gwy_si_unit_set_from_string_parse(unit, p, &power10);
         if (gwy_si_unit_equal(unit, si_unit_xy))
@@ -505,7 +517,7 @@ get_scales(GHashTable *hash,
     }
 
     *yoff = 0.0;
-    if ((p = g_hash_table_lookup(hash, "OffsetY"))) {
+    if ((p = g_hash_table_lookup(hash, "SCANNING PARAMS::OffsetY"))) {
         *yoff = g_ascii_strtod(p, &p);
         gwy_si_unit_set_from_string_parse(unit, p, &power10);
         if (gwy_si_unit_equal(unit, si_unit_xy))
@@ -517,7 +529,7 @@ get_scales(GHashTable *hash,
     }
 
     *zoff = 0.0;
-    if ((p = g_hash_table_lookup(hash, "OffsetZ"))) {
+    if ((p = g_hash_table_lookup(hash, "SCANNING PARAMS::OffsetZ"))) {
         *zoff = g_ascii_strtod(p, &p);
         gwy_si_unit_set_from_string_parse(unit, p, &power10);
         if (gwy_si_unit_equal(unit, si_unit_z))
@@ -533,31 +545,23 @@ get_scales(GHashTable *hash,
     return TRUE;
 }
 
-/* FIXME: This is rough, we should fix/special-case some values.
- * Avoid Name and Microscope, apparently contain crap. */
+static void
+add_metadata(gpointer hkey,
+             gpointer hvalue,
+             gpointer user_data)
+{
+    const gchar *key = (const gchar*)hkey, *value = (const gchar*)hvalue;
+    GwyContainer *meta = (GwyContainer*)user_data;
+
+    if (g_utf8_validate(key, -1, NULL) && g_utf8_validate(value, -1, NULL))
+        gwy_container_set_string_by_name(meta, key, g_strdup(value));
+}
+
 static GwyContainer*
 shimadzu_get_metadata(GHashTable *hash)
 {
-    static const gchar keys[] =
-        "DataName\0GroupName\0CurrentRange\0Angle\0Rate\0Comment\0"
-        "Direction\0OperatingPoint\0IntegralGain\0ProportionalGain\0"
-        "SamplingFrequency\0Mode\0Channel\0Version\0ProcessProfile\0"
-        "VoltageRangeX\0VoltageRangeY\0VoltageRangeZ\0"
-        "MaxRangeX\0MaxRangeY\0MaxRangeZ\0"
-        "SensitivityX\0SensitivityY\0SensitivityZ\0"
-        "SizeGainX\0SizeGainY\0SizeGainZ\0";
-
-    GwyContainer *meta;
-    const gchar *k, *v;
-
-    meta = gwy_container_new();
-
-    for (k = keys; *k; k += strlen(k)+1) {
-        v = g_hash_table_lookup(hash, k);
-        if (v && *v)
-            gwy_container_set_string_by_name(meta, k, g_strdup(v));
-    }
-
+    GwyContainer *meta = gwy_container_new();
+    g_hash_table_foreach(hash, add_metadata, meta);
     return meta;
 }
 
