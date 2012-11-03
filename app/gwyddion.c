@@ -98,6 +98,9 @@ main(int argc, char *argv[])
     GTimer *timer;
 
     sneaking_thread_init();
+    // If I print a debugging messages that's because some wants to see it
+    // you idiots.
+    g_setenv("G_MESSAGES_DEBUG", "all", TRUE);
     timer = g_timer_new();
     gwy_app_check_version();
 
