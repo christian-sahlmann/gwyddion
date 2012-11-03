@@ -451,6 +451,7 @@ get_scales(GHashTable *hash,
     GwySIUnit *unit;
     gint power10, zp;
     gchar *p;
+    gboolean has_unit = FALSE;
 
     /* Dimensions are mandatory. */
     if (!require_keys(hash, error,
@@ -502,6 +503,15 @@ get_scales(GHashTable *hash,
     *zscale = g_ascii_strtod(p, &p);
     gwy_si_unit_set_from_string_parse(si_unit_z, p, &power10);
     *zscale *= pow10(power10)/zp;
+    /* XXX: Version may have UNIT section.  Not sure how to use it. This seems
+     * wrong. */
+    if ((p = g_hash_table_lookup(hash, "UNIT::Unit"))) {
+        has_unit = TRUE;
+        gwy_si_unit_set_from_string_parse(si_unit_z, p, &power10);
+        *zscale *= pow10(power10);
+        if ((p = g_hash_table_lookup(hash, "UNIT::Conv")))
+            *zscale *= g_ascii_strtod(p, NULL);
+    }
 
     /* Offsets are optional. */
     *xoff = 0.0;
@@ -529,14 +539,18 @@ get_scales(GHashTable *hash,
     }
 
     *zoff = 0.0;
-    if ((p = g_hash_table_lookup(hash, "SCANNING PARAMS::OffsetZ"))) {
-        *zoff = g_ascii_strtod(p, &p);
-        gwy_si_unit_set_from_string_parse(unit, p, &power10);
-        if (gwy_si_unit_equal(unit, si_unit_z))
-            *zoff *= pow10(power10);
-        else {
-            g_warning("Z offset units differ from Z size units, ignoring.");
-            *zoff = 0.0;
+    // Don't know what to do with the offset when UNIT section is present.
+    // It seems to be always 0 in wrong units, so skip it.
+    if (!has_unit) {
+        if ((p = g_hash_table_lookup(hash, "SCANNING PARAMS::OffsetZ"))) {
+            *zoff = g_ascii_strtod(p, &p);
+            gwy_si_unit_set_from_string_parse(unit, p, &power10);
+            if (gwy_si_unit_equal(unit, si_unit_z))
+                *zoff *= pow10(power10);
+            else {
+                g_warning("Z offset units differ from Z size units, ignoring.");
+                *zoff = 0.0;
+            }
         }
     }
 
