@@ -145,6 +145,7 @@ seiko_load(const gchar *filename,
     gsize size = 0;
     GError *err = NULL;
     GwyDataField *dfield = NULL;
+    gchar *comment;
 
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
         err_GET_FILE_CONTENTS(error, &err);
@@ -174,9 +175,15 @@ seiko_load(const gchar *filename,
     container = gwy_container_new();
     gwy_container_set_object_by_name(container, "/0/data", dfield);
     g_object_unref(dfield);
-    gwy_container_set_string_by_name(container, "/0/data/title",
-                                     g_strndup(buffer + COMMENT_OFFSET,
-                                               COMMENT_SIZE));
+    comment = g_strndup(buffer + COMMENT_OFFSET, COMMENT_SIZE);
+    g_strstrip(comment);
+    if (strlen(comment))
+        gwy_container_set_string_by_name(container, "/0/data/title", comment);
+    else {
+        g_free(comment);
+        gwy_app_channel_title_fall_back(container, 0);
+    }
+
     gwy_app_channel_check_nonsquare(container, 0);
 
     gwy_file_abandon_contents(buffer, size, NULL);
