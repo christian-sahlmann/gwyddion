@@ -133,7 +133,7 @@ if DESKTOP_FILE_UPDATE
 		test -d $(gwyddionappdir) || $(MKDIR_P) $(gwyddionappdir); \
 		$(UPDATE_DESKTOP_DATABASE) $(gwyddionappdir); \
 		test -d $(gwyddionmimedir) || $(MKDIR_P) $(gwyddionmimedir); \
-		$(UPDATE_MIME_DATABASE) $(gwyddionmimedir); \
+		$(UPDATE_MIME_DATABASE) `dirname $(gwyddionmimedir)`; \
 	fi
 endif
 if GCONF_SCHEMAS_INSTALL
@@ -147,7 +147,7 @@ uninstall-hook:
 if DESKTOP_FILE_UPDATE
 	if test -z "$(DESTDIR)"; then \
 		$(UPDATE_DESKTOP_DATABASE) $(gwyddionappdir); \
-		$(UPDATE_MIME_DATABASE) $(gwyddionmimedir); \
+		$(UPDATE_MIME_DATABASE) `dirname $(gwyddionmimedir)`; \
 	fi
 endif
 if GCONF_SCHEMAS_INSTALL
