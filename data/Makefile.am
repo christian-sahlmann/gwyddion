@@ -130,7 +130,9 @@ gwyddion.thumbnailer: gwyddion.thumbnailer.in $(srcdir)/gwyddion.xml
 install-data-hook:
 if DESKTOP_FILE_UPDATE
 	if test -z "$(DESTDIR)"; then \
+		test -d $(gwyddionappdir) || $(MKDIR_P) $(gwyddionappdir); \
 		$(UPDATE_DESKTOP_DATABASE) $(gwyddionappdir); \
+		test -d $(gwyddionmimedir) || $(MKDIR_P) $(gwyddionmimedir); \
 		$(UPDATE_MIME_DATABASE) $(gwyddionmimedir); \
 	fi
 endif
