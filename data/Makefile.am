@@ -130,8 +130,8 @@ gwyddion.thumbnailer: gwyddion.thumbnailer.in $(srcdir)/gwyddion.xml
 install-data-hook:
 if DESKTOP_FILE_UPDATE
 	if test -z "$(DESTDIR)"; then \
-		$(UPDATE_DESKTOP_DATABASE) $(DESTDIR)$(datadir)/applications; \
-		$(UPDATE_MIME_DATABASE) $(DESTDIR)$(datadir)/mime; \
+		$(UPDATE_DESKTOP_DATABASE) $(gwyddionappdir); \
+		$(UPDATE_MIME_DATABASE) $(gwyddionmimedir); \
 	fi
 endif
 if GCONF_SCHEMAS_INSTALL
@@ -144,8 +144,8 @@ endif
 uninstall-hook:
 if DESKTOP_FILE_UPDATE
 	if test -z "$(DESTDIR)"; then \
-		$(UPDATE_DESKTOP_DATABASE) $(DESTDIR)$(datadir)/applications; \
-		$(UPDATE_MIME_DATABASE) $(DESTDIR)$(datadir)/mime; \
+		$(UPDATE_DESKTOP_DATABASE) $(gwyddionappdir); \
+		$(UPDATE_MIME_DATABASE) $(gwyddionmimedir); \
 	fi
 endif
 if GCONF_SCHEMAS_INSTALL
