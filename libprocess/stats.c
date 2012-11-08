@@ -2425,7 +2425,7 @@ gwy_data_field_area_rpsdf(GwyDataField *data_field,
     }
     r = xreal*yreal/(4*G_PI*G_PI*width*height);  /* 2D PSDF */
     r *= target_line->real/size;  /* target_line discretization */
-    r *= 2*G_PI/(width*height);  /* FIXME FIXME FIXME: random number */
+    r *= 2*G_PI;  /* Circular normalisation */
     /* Leave out the zeroth item which is always zero and prevents
      * logarithmization by moving everything one item to the left */
     for (i = 0; i < size-1; i++) {
