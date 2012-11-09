@@ -5,6 +5,8 @@ Libraries:
   distribution if the area contains no data due to masking.
 - libgwyprocess: gwy_data_field_area_dh() returns a reasonable empty
   distribution if the area contains no data due to masking.
+- libgwyprocess: Radial PSDF normalisation was corrected to be really
+  sampling-independent and correspond to the formula in user guide.
 
 Modules:
 - APE DAX (new): Imports APE Research DAX files.
@@ -13,11 +15,14 @@ Modules:
             though only topography channels may work correctly.
 - Omicron flat: Crash while reading files with up and down traces but no
                 retrace was fixed.
+- Pixmap: Manual font size range was extended.
 
 Other:
 - Crash on Win32 while loading TIFF images was hopefully fixed.
 - Compatibility with GLib older than 2.26, accidentaly broken in 2.30, was
   restored.
+- Desktop files in correct locations are updated with
+  --enable-home-installation configure option.
 
 
 2.30 (2012-09-21)
