@@ -3122,8 +3122,8 @@ pixmap_save_dialog(GwyContainer *data,
     if (args->scale_font)
         args->font_size = FONT_SIZE*args->zoom;
     adj = gtk_adjustment_new(args->font_size,
-                             FONT_SIZE*minzoom, FONT_SIZE*maxzoom,
-                             0.1, 1.0, 0);
+                             0.5*FONT_SIZE*minzoom, 20.0*FONT_SIZE*maxzoom,
+                             1.0, 10.0, 0);
     controls.font_size = gwy_table_attach_spinbutton(GTK_WIDGET(table), row,
                                                      _("_Font size:"), NULL,
                                                      adj);
