@@ -29,9 +29,27 @@
  **/
 
 /**
+ * [FILE-MAGIC-FREEDESKTOP]
+ * <mime-type type="application/x-shimadzu-spm-asc">
+ *   <comment>Shimadzu SPM ASCII data</comment>
+ *   <magic priority="80">
+ *     <match type="string" offset="0" value="ASCII:"/>
+ *     <match type="string" offset="8:9" value="Shimadzu SPM File Format"/>
+ *   </magic>
+ * </mime-type>
+ **/
+
+/**
  * [FILE-MAGIC-USERGUIDE]
  * Shimadzu
  * .sph .spp .001 .002 etc.
+ * Read
+ **/
+
+/**
+ * [FILE-MAGIC-USERGUIDE]
+ * Shimadzu ASCII
+ * .txt
  * Read
  **/
 
@@ -60,6 +78,9 @@ typedef enum {
 #define MAGIC "Shimadzu SPM File Format Version "
 #define MAGIC_SIZE (sizeof(MAGIC)-1)
 
+#define MAGIC_ASCII "ASCII:"
+#define MAGIC_ASCII_SIZE (sizeof(MAGIC_ASCII)-1)
+
 static gboolean      module_register      (void);
 static gint          shimadzu_detect      (const GwyFileDetectInfo *fileinfo,
                                            gboolean only_name);
@@ -78,6 +99,7 @@ static GHashTable*   read_hash            (gchar *buffer,
                                            gint *text_data_start,
                                            GError **error);
 static gboolean      get_scales           (GHashTable *hash,
+                                           gboolean is_text,
                                            gint *xres,
                                            gint *yres,
                                            gdouble *xreal,
@@ -96,7 +118,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports Shimadzu SPM data files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.4",
+    "0.5",
     "David Nečas (Yeti)",
     "2007",
 };
@@ -130,6 +152,16 @@ shimadzu_detect(const GwyFileDetectInfo *fileinfo,
         && memcmp(fileinfo->head, MAGIC, MAGIC_SIZE) == 0)
         score = 100;
 
+    /* Version 4 text files start with the ASCII magic prefix. */
+    if (score == 0
+        && fileinfo->buffer_len >= MAGIC_SIZE + MAGIC_ASCII_SIZE + 3
+        && memcmp(fileinfo->head, MAGIC_ASCII, MAGIC_ASCII_SIZE) == 0
+        && (memcmp(fileinfo->head + MAGIC_ASCII_SIZE+1,
+                   MAGIC, MAGIC_SIZE) == 0
+            || memcmp(fileinfo->head + MAGIC_ASCII_SIZE+2,
+                      MAGIC, MAGIC_SIZE) == 0))
+        score = 100;
+
     return score;
 }
 
@@ -156,7 +188,12 @@ shimadzu_load(const gchar *filename,
         err_TOO_SHORT(error);
         return NULL;
     }
-    if (memcmp(buffer, MAGIC, MAGIC_SIZE) != 0) {
+    if (memcmp(buffer, MAGIC, MAGIC_SIZE) != 0
+        && !(memcmp(buffer, MAGIC_ASCII, MAGIC_ASCII_SIZE) == 0
+             && (memcmp(buffer + MAGIC_ASCII_SIZE+1,
+                        MAGIC, MAGIC_SIZE) == 0
+                 || memcmp(buffer + MAGIC_ASCII_SIZE+2,
+                           MAGIC, MAGIC_SIZE) == 0))) {
         err_FILE_TYPE(error, "Shimadzu");
         g_free(buffer);
         return NULL;
@@ -180,8 +217,6 @@ shimadzu_load(const gchar *filename,
     if (ok) {
         GQuark quark;
         const gchar *title;
-
-        gwy_data_field_invert(dfield, TRUE, FALSE, FALSE);
 
         container = gwy_container_new();
         quark = gwy_app_get_data_key_for_id(0);
@@ -239,7 +274,8 @@ read_binary_data(const gchar *buffer,
     unitxy = gwy_si_unit_new(NULL);
     unitz = gwy_si_unit_new(NULL);
 
-    if (!get_scales(hash, &xres, &yres, &xreal, &yreal, &xoff, &yoff, unitxy,
+    if (!get_scales(hash, FALSE,
+                    &xres, &yres, &xreal, &yreal, &xoff, &yoff, unitxy,
                     &zscale, &zoff, unitz, error))
         goto fail;
 
@@ -270,6 +306,8 @@ read_binary_data(const gchar *buffer,
         g_assert_not_reached();
     }
 
+    gwy_data_field_invert(dfield, TRUE, FALSE, FALSE);
+
 fail:
     g_object_unref(unitxy);
     g_object_unref(unitz);
@@ -293,7 +331,8 @@ read_text_data(const gchar *buffer,
     unitxy = gwy_si_unit_new(NULL);
     unitz = gwy_si_unit_new(NULL);
 
-    if (!get_scales(hash, &xres, &yres, &xreal, &yreal, &xoff, &yoff, unitxy,
+    if (!get_scales(hash, TRUE,
+                    &xres, &yres, &xreal, &yreal, &xoff, &yoff, unitxy,
                     &zscale, &zoff, unitz, error))
         goto fail;
 
@@ -346,6 +385,10 @@ read_hash(gchar *buffer,
     p = buffer;
     hash = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
     line = gwy_str_next_line(&p);
+    /* Version 4 text data. */
+    if (gwy_strequal(line, MAGIC_ASCII))
+        line = gwy_str_next_line(&p);
+
     key = g_string_new(NULL);
 
     g_hash_table_insert(hash, g_strdup("Version"), line + MAGIC_SIZE);
@@ -439,6 +482,7 @@ read_hash(gchar *buffer,
 
 static gboolean
 get_scales(GHashTable *hash,
+           gboolean is_text,
            gint *xres, gint *yres,
            gdouble *xreal, gdouble *yreal,
            gdouble *xoff, gdouble *yoff,
@@ -505,8 +549,8 @@ get_scales(GHashTable *hash,
     gwy_si_unit_set_from_string_parse(si_unit_z, p, &power10);
     *zscale *= pow10(power10)/zp;
     /* XXX: Version 4 can have UNIT section that takes precedence.  The Conv
-     * factor may not be enough.  Apparently, phase needs subtracting 180 deg
-     * because data are unsinged. */
+     * factor may not be enough.  Apparently, binary phase data need
+     * subtracting 180 deg because data are unsinged.  Bite me. */
     if ((p = g_hash_table_lookup(hash, "UNIT::Unit"))) {
         const gchar *s = g_hash_table_lookup(hash, "UNIT::Name");
         has_unit = TRUE;
@@ -515,7 +559,7 @@ get_scales(GHashTable *hash,
         if ((p = g_hash_table_lookup(hash, "UNIT::Conv")))
             *zscale *= g_ascii_strtod(p, NULL);
 
-        if (gwy_strequal(s, "Phase"))
+        if (!is_text && gwy_strequal(s, "Phase"))
             *zoff = -180.0;
     }
 
