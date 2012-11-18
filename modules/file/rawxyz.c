@@ -942,14 +942,15 @@ preview(RawXYZControls *controls)
     args->xres = PREVIEW_SIZE*xres/MAX(xres, yres);
     args->yres = PREVIEW_SIZE*yres/MAX(xres, yres);
     dfield = rawxyz_do(controls->rfile, args, &error);
+    /* Regular grids are always created at full size. */
+    if (dfield)
+        gwy_data_field_resample(dfield, args->xres, args->yres,
+                                GWY_INTERPOLATION_KEY);
     pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, 8,
                             args->xres, args->yres);
     args->xres = xres;
     args->yres = yres;
     if (dfield) {
-        /* Regular grids are always created at full size. */
-        gwy_data_field_resample(dfield, args->xres, args->yres,
-                                GWY_INTERPOLATION_KEY);
         triangulation_info(controls);
         gwy_pixbuf_draw_data_field(pixbuf, dfield, controls->gradient);
         g_object_unref(dfield);
