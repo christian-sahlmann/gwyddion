@@ -1667,8 +1667,8 @@ check_regular_grid(RawXYZFile *rfile)
                          rfile->points->len-1);
     xstep = rfile->xstep = (pt2->x - pt1->x)/(xres - 1);
     ystep = rfile->ystep = (pt2->y - pt1->y)/(yres - 1);
-    xeps = 0.001*fabs(xstep);
-    yeps = 0.001*fabs(ystep);
+    xeps = 0.05*fabs(xstep);
+    yeps = 0.05*fabs(ystep);
 
     if (rfile->regular == RAW_XYZ_REGULAR_X) {
         for (i = 0; i < yres; i++) {
