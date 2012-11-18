@@ -1467,9 +1467,11 @@ triangulator_new_from_pointlist(const PointList *pointlist)
 static void
 triangulator_free(Triangulator *triangulator)
 {
-    g_free(triangulator->blocks);
-    g_free(triangulator->neighbours);
-    g_free(triangulator);
+    if (triangulator) {
+        g_free(triangulator->blocks);
+        g_free(triangulator->neighbours);
+        g_free(triangulator);
+    }
 }
 
 static Triangulator*
