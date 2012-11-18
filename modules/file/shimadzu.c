@@ -33,8 +33,9 @@
  * <mime-type type="application/x-shimadzu-spm-asc">
  *   <comment>Shimadzu SPM ASCII data</comment>
  *   <magic priority="80">
- *     <match type="string" offset="0" value="ASCII:"/>
- *     <match type="string" offset="8:9" value="Shimadzu SPM File Format"/>
+ *     <match type="string" offset="0" value="ASCII:">
+ *       <match type="string" offset="8:9" value="Shimadzu SPM File Format"/>
+ *     </match>
  *   </magic>
  * </mime-type>
  **/
