@@ -34,7 +34,7 @@
  * .sph .spp .001 .002 etc.
  * Read
  **/
-#define DEBUG
+
 #include "config.h"
 #include <string.h>
 #include <stdlib.h>
@@ -501,16 +501,22 @@ get_scales(GHashTable *hash,
     }
     p = g_hash_table_lookup(hash, "SCANNING PARAMS::SizeZ");
     *zscale = g_ascii_strtod(p, &p);
+    *zoff = 0.0;
     gwy_si_unit_set_from_string_parse(si_unit_z, p, &power10);
     *zscale *= pow10(power10)/zp;
-    /* XXX: Version may have UNIT section.  Not sure how to use it. This seems
-     * wrong. */
+    /* XXX: Version 4 can have UNIT section that takes precedence.  The Conv
+     * factor may not be enough.  Apparently, phase needs subtracting 180 deg
+     * because data are unsinged. */
     if ((p = g_hash_table_lookup(hash, "UNIT::Unit"))) {
+        const gchar *s = g_hash_table_lookup(hash, "UNIT::Name");
         has_unit = TRUE;
         gwy_si_unit_set_from_string_parse(si_unit_z, p, &power10);
         *zscale *= pow10(power10);
         if ((p = g_hash_table_lookup(hash, "UNIT::Conv")))
             *zscale *= g_ascii_strtod(p, NULL);
+
+        if (gwy_strequal(s, "Phase"))
+            *zoff = -180.0;
     }
 
     /* Offsets are optional. */
@@ -538,7 +544,6 @@ get_scales(GHashTable *hash,
         }
     }
 
-    *zoff = 0.0;
     // Don't know what to do with the offset when UNIT section is present.
     // It seems to be always 0 in wrong units, so skip it.
     if (!has_unit) {
