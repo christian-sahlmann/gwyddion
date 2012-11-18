@@ -7,15 +7,18 @@ Libraries:
   distribution if the area contains no data due to masking.
 - libgwyprocess: Radial PSDF normalisation was corrected to be really
   sampling-independent and correspond to the formula in user guide.
+- libgwyprocess: Double-free error if the initial Delaunay triangulation step
+  fails was corrected.
 
 Modules:
 - APE DAX (new): Imports APE Research DAX files.
 - Seiko: Files starting ‘NPXZ000AFM’ are recognised and imported.
-- Shimadzu: Files of different version than 2 are recoginised and loaded
-            though only topography channels may work correctly.
+- Shimadzu: Files of different version than 2 are recognised and loaded.
 - Omicron flat: Crash while reading files with up and down traces but no
                 retrace was fixed.
 - Pixmap: Manual font size range was extended.
+- Raw XYZ: Tolerance for ‘regular grid’ (which is not triangulated) was
+  increased to 5% of pixel size to help people with poorly rounded data.
 
 Other:
 - Crash on Win32 while loading TIFF images was hopefully fixed.
