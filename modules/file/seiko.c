@@ -34,13 +34,15 @@
  *   <glob pattern="*.XQD"/>
  *   <glob pattern="*.xqt"/>
  *   <glob pattern="*.XQT"/>
+ *   <glob pattern="*.xqp"/>
+ *   <glob pattern="*.XQP"/>
  * </mime-type>
  **/
 
 /**
  * [FILE-MAGIC-USERGUIDE]
  * Seiko SII
- * .xqb .xqd .xqt
+ * .xqb .xqd .xqt .xqp
  * Read
  **/
 
@@ -65,10 +67,16 @@
 #define EXTENSION1 ".xqb"
 #define EXTENSION2 ".xqd"
 #define EXTENSION3 ".xqt"
+#define EXTENSION4 ".xqp"
 
 #define Nanometer 1e-9
 
 enum { HEADER_SIZE = 2944 };
+
+typedef enum {
+    SEIKO_TOPOGRAPHY = 0,
+    SEIKO_PHASE      = 1,
+} SeikoDataType;
 
 static gboolean      module_register   (void);
 static gint          seiko_detect      (const GwyFileDetectInfo *fileinfo,
@@ -78,14 +86,15 @@ static GwyContainer* seiko_load        (const gchar *filename,
                                         GError **error);
 static GwyDataField* read_data_field   (const guchar *buffer,
                                         guint size,
+                                        SeikoDataType datatype,
                                         GError **error);
 
 static GwyModuleInfo module_info = {
     GWY_MODULE_ABI_VERSION,
     &module_register,
-    N_("Imports Seiko XQB, XQD and XQT files."),
+    N_("Imports Seiko XQB, XQD, XQT and XQP files."),
     "Yeti <yeti@gwyddion.net>",
-    "0.8",
+    "0.9",
     "David Nečas (Yeti) & Markus Pristovsek",
     "2006",
 };
@@ -96,7 +105,7 @@ static gboolean
 module_register(void)
 {
     gwy_file_func_register("seiko",
-                           N_("Seiko files (.xqb, .xqd, .xqt)"),
+                           N_("Seiko files (.xqb, .xqd, .xqt, .xqp)"),
                            (GwyFileDetectFunc)&seiko_detect,
                            (GwyFileLoadFunc)&seiko_load,
                            NULL,
@@ -114,7 +123,8 @@ seiko_detect(const GwyFileDetectInfo *fileinfo,
     if (only_name) {
         if (g_str_has_suffix(fileinfo->name_lowercase, EXTENSION1)
             || g_str_has_suffix(fileinfo->name_lowercase, EXTENSION2)
-            || g_str_has_suffix(fileinfo->name_lowercase, EXTENSION3))
+            || g_str_has_suffix(fileinfo->name_lowercase, EXTENSION3)
+            || g_str_has_suffix(fileinfo->name_lowercase, EXTENSION4))
             return 20;
         return 0;
     }
@@ -145,6 +155,7 @@ seiko_load(const gchar *filename,
     gsize size = 0;
     GError *err = NULL;
     GwyDataField *dfield = NULL;
+    SeikoDataType datatype = SEIKO_TOPOGRAPHY;
     gchar *comment;
 
     if (!gwy_file_get_contents(filename, &buffer, &size, &err)) {
@@ -166,7 +177,13 @@ seiko_load(const gchar *filename,
         return NULL;
     }
 
-    dfield = read_data_field(buffer, size, error);
+    /* FIXME: I was not able to reverse-engineer what identifies the type.
+     * May need a large set of files.  */
+    if (g_str_has_suffix(filename, ".xqp")
+        || g_str_has_suffix(filename, ".XQP"))
+        datatype = SEIKO_PHASE;
+
+    dfield = read_data_field(buffer, size, datatype, error);
     if (!dfield) {
         gwy_file_abandon_contents(buffer, size, NULL);
         return NULL;
@@ -194,6 +211,7 @@ seiko_load(const gchar *filename,
 static GwyDataField*
 read_data_field(const guchar *buffer,
                 guint size,
+                SeikoDataType datatype,
                 GError **error)
 {
     enum {
@@ -204,14 +222,12 @@ read_data_field(const guchar *buffer,
         YSCALE_OFFSET = 0xa0,
         ZSCALE_OFFSET = 0xa8,
     };
-    gint xres, yres, i, j;
+    gint xres, yres;
     G_GNUC_UNUSED guint version;
     guint n, endfile, datastart;
     gdouble xreal, yreal, q, alpha;
     GwyDataField *dfield;
     GwySIUnit *siunit;
-    gdouble *data, *row;
-    const gint16 *pdata;
     const guchar *p;
 
     p = buffer + VERSION_OFFSET;
@@ -231,9 +247,11 @@ read_data_field(const guchar *buffer,
     p = buffer + YSCALE_OFFSET;
     yreal = gwy_get_gdouble_le(&p) * Nanometer;
     p = buffer + ZSCALE_OFFSET;
-    q = gwy_get_gdouble_le(&p) * Nanometer;
+    q = gwy_get_gdouble_le(&p);
+    if (datatype == SEIKO_TOPOGRAPHY)
+        q *= Nanometer;
     gwy_debug("xscale: %g, yscale: %g, zreal: %g",
-              xreal/Nanometer, yreal/Nanometer, q/Nanometer);
+              xreal/Nanometer, yreal/Nanometer, q);
 
     alpha = xreal/yreal;
     n = (endfile - datastart)/2;
@@ -272,19 +290,18 @@ read_data_field(const guchar *buffer,
     yreal *= yres;
 
     dfield = gwy_data_field_new(xres, yres, xreal, yreal, FALSE);
-    data = gwy_data_field_get_data(dfield);
-    pdata = (const gint16*)(buffer + HEADER_SIZE);
-    for (i = 0; i < yres; i++) {
-        row = data + i*xres;
-        for (j = 0; j < xres; j++)
-            row[j] = GUINT16_FROM_LE(pdata[i*xres + j])*q;
-    }
-
+    gwy_convert_raw_data(buffer + HEADER_SIZE, xres*yres, 1,
+                         GWY_RAW_DATA_UINT16, G_LITTLE_ENDIAN,
+                         gwy_data_field_get_data(dfield), q, 0.0);
     siunit = gwy_si_unit_new("m");
     gwy_data_field_set_si_unit_xy(dfield, siunit);
     g_object_unref(siunit);
 
-    siunit = gwy_si_unit_new("m");
+    if (datatype == SEIKO_PHASE)
+        siunit = gwy_si_unit_new("deg");
+    else
+        siunit = gwy_si_unit_new("m");
+
     gwy_data_field_set_si_unit_z(dfield, siunit);
     g_object_unref(siunit);
 
