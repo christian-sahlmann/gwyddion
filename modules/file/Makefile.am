@@ -145,6 +145,7 @@ file_LTLIBRARIES = \
 	surffile.la \
 	tiaser.la \
 	unisoku.la \
+	vtkfile.la \
 	wipfile.la \
 	witec-asc.la \
 	witfile.la \
@@ -263,6 +264,7 @@ stpfile_la_SOURCES       = stpfile.c
 surffile_la_SOURCES      = surffile.c
 tiaser_la_SOURCES        = tiaser.c
 unisoku_la_SOURCES       = unisoku.c
+vtkfile_la_SOURCES       = vtkfile.c
 wipfile_la_SOURCES       = wipfile.c
 witfile_la_SOURCES       = witfile.c
 witec_asc_la_SOURCES     = witec-asc.c
