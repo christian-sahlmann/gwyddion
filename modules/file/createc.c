@@ -406,6 +406,9 @@ hash_to_data_field(GHashTable *hash,
         yreal = 1.0;
     }
 
+    if ((s = g_hash_table_lookup(hash, "Dacto[A]z"))) {
+        zres = Angstrom * createc_atof(s);
+    }
     else {
         HASH_INT2("GainZ", "GainZ / GainZ", ti2, error);
         HASH_DOUBLE("ZPiezoconst", td, error); /* upcase P */
