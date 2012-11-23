@@ -36,7 +36,7 @@
  * Read SPS:Limited[1]
  * [1] Spectra curves are imported as graphs, positional information is lost.
  **/
-
+#define DEBUG 1
 #include "config.h"
 #include <errno.h>
 #include <string.h>
@@ -796,6 +796,7 @@ hash_to_curve(GHashTable *hash,
     GwyGraphModel *gmodel;
     GwyGraphCurveModel *gcmodel;
     GwySIUnit *unitz, *unitx;
+    const gchar *ramp_channel;
     gchar *end;
     gint xres, bpp, offset, size;
     gdouble xreal, xoff, q;
@@ -806,14 +807,15 @@ hash_to_curve(GHashTable *hash,
                       NULL))
         return NULL;
 
-    if (!require_keys(forcelist, error,
-                      "@4:Ramp Begin DC Sample Bias",
-                      "@4:Ramp End DC Sample Bias",
-                      NULL))
-        return NULL;
-
     if (!require_keys(scanlist, error, "Scan size", NULL))
         return NULL;
+
+    if (!require_keys(forcelist, error, "@4:Ramp channel", NULL))
+        return NULL;
+
+    val = g_hash_table_lookup(forcelist, "@4:Ramp channel");
+    ramp_channel = val->hard_value_str;
+    gwy_debug("Ramp channel: %s", ramp_channel);
 
     val = g_hash_table_lookup(hash, "Samps/line");
     xres = GWY_ROUND(val->hard_value);
@@ -822,13 +824,25 @@ hash_to_curve(GHashTable *hash,
     bpp = val ? GWY_ROUND(val->hard_value) : 2;
 
     /* scan size */
-    val = g_hash_table_lookup(forcelist, "@4:Ramp End DC Sample Bias");
-    xreal = g_ascii_strtod(val->hard_value_str, &end);
-    val = g_hash_table_lookup(forcelist, "@4:Ramp Begin DC Sample Bias");
-    xoff = g_ascii_strtod(val->hard_value_str, &end);
-    xreal -= xoff;
-    /* XXX: This is gross.  But anyway we only read I-V... */
-    unitx = gwy_si_unit_new("V");
+    if (gwy_strequal(ramp_channel, "\"DC Sample Bias\"")) {
+        val = g_hash_table_lookup(forcelist, "@4:Ramp End DC Sample Bias");
+        xreal = g_ascii_strtod(val->hard_value_str, &end);
+        val = g_hash_table_lookup(forcelist, "@4:Ramp Begin DC Sample Bias");
+        xoff = g_ascii_strtod(val->hard_value_str, &end);
+        xreal -= xoff;
+        unitx = gwy_si_unit_new("V");
+    }
+    else if (gwy_strequal(ramp_channel, "\"Z\"")) {
+        val = g_hash_table_lookup(forcelist, "@4:Ramp size Zsweep");
+        xreal = g_ascii_strtod(val->hard_value_str, &end);
+        val = g_hash_table_lookup(forcelist, "@4:Ramp offset Zsweep");
+        xoff = g_ascii_strtod(val->hard_value_str, &end);
+        unitx = gwy_si_unit_new("m");
+    }
+    else {
+        err_UNSUPPORTED(error, "@4:Ramp channel");
+        return NULL;
+    }
 
     offset = size = 0;
     if (file_type == NANOSCOPE_FILE_TYPE_FORCE_BIN) {
@@ -890,6 +904,7 @@ hash_to_curve(GHashTable *hash,
         return NULL;
 
     gmodel = gwy_graph_model_new();
+    // TODO: Spectrum type
     g_object_set(gmodel,
                  "title", "I-V spectrum",
                  "axis-label-bottom", "voltage",
