@@ -79,6 +79,11 @@ typedef enum {
     NANOSCOPE_VALUE_SELECT
 } NanoscopeValueType;
 
+typedef enum {
+    NANOSCOPE_SPECTRA_IV,
+    NANOSCOPE_SPECTRA_FZ,
+} NanoscopeSpectraType;
+
 /*
  * Old-style record is
  * \Foo: HardValue (HardScale)
@@ -124,6 +129,7 @@ static GwyDataField*   hash_to_data_field     (GHashTable *hash,
 static GwyGraphModel*  hash_to_curve          (GHashTable *hash,
                                                GHashTable *forcelist,
                                                GHashTable *scanlist,
+                                               GHashTable *scannerlist,
                                                NanoscopeFileType file_type,
                                                guint bufsize,
                                                gchar *buffer,
@@ -150,9 +156,16 @@ static GwySIUnit*      get_physical_scale     (GHashTable *hash,
                                                GHashTable *contrlist,
                                                gdouble *scale,
                                                GError **error);
-static GwySIUnit*      get_tuna_physical_scale(GHashTable *hash,
+static GwySIUnit*      get_spec_ordinate_scale(GHashTable *hash,
                                                GHashTable *scanlist,
                                                gdouble *scale,
+                                               GError **error);
+static GwySIUnit*      get_spec_abscissa_scale(GHashTable *forcelist,
+                                               GHashTable *scannerlist,
+                                               GHashTable *scanlist,
+                                               gdouble *xreal,
+                                               gdouble *xoff,
+                                               NanoscopeSpectraType *spectype,
                                                GError **error);
 static GwyContainer*   nanoscope_get_metadata (GHashTable *hash,
                                                GList *list);
@@ -312,6 +325,7 @@ nanoscope_load(const gchar *filename,
 
         if (file_type == NANOSCOPE_FILE_TYPE_FORCE_BIN) {
             ndata->graph_model = hash_to_curve(hash, forcelist, scanlist,
+                                               scannerlist,
                                                file_type,
                                                size, buffer,
                                                xres,
@@ -356,18 +370,9 @@ nanoscope_load(const gchar *filename,
                 else if ((val = g_hash_table_lookup(ndata->hash, "Image data")))
                     name = val->hard_value_str;
 
-                if (name) {
-                    gsize nlen = strlen(name);
-
-                    /* Unquote name if it's quoted. */
-                    if (name[0] == '"' && name[nlen-1] == '"')
-                        gwy_container_set_string_by_name(container, key,
-                                                         g_strndup(name+1,
-                                                                   nlen-2));
-                    else
-                        gwy_container_set_string_by_name(container, key,
-                                                         g_strdup(name));
-                }
+                if (name)
+                    gwy_container_set_string_by_name(container, key,
+                                                     g_strdup(name));
 
                 meta = nanoscope_get_metadata(ndata->hash, list);
                 g_snprintf(key, sizeof(key), "/%d/meta", i);
@@ -747,7 +752,7 @@ get_physical_scale(GHashTable *hash,
              return NULL;
         }
 
-        if ( gwy_strequal(val->hard_value_str, "Deflection")) {
+        if (gwy_strequal(val->hard_value_str, "Deflection")) {
             siunit = gwy_si_unit_new("m"); /* always? */
             *scale = 1e-9 * 2.0/65536.0;
             CHECK_AND_APPLY(*=, hash, "Z scale defl");
@@ -768,7 +773,7 @@ get_physical_scale(GHashTable *hash,
             return siunit;
 #endif
         }
-        else if ( gwy_strequal(val->hard_value_str, "Height")) {
+        else if (gwy_strequal(val->hard_value_str, "Height")) {
             siunit = gwy_si_unit_new("m");
             *scale = 1e-9 * 2.0/65536.0;
             CHECK_AND_APPLY(*=, hash, "Z scale height");
@@ -785,6 +790,7 @@ static GwyGraphModel*
 hash_to_curve(GHashTable *hash,
               GHashTable *forcelist,
               GHashTable *scanlist,
+              GHashTable *scannerlist,
               NanoscopeFileType file_type,
               guint bufsize,
               gchar *buffer,
@@ -792,30 +798,29 @@ hash_to_curve(GHashTable *hash,
               GError **error)
 {
     NanoscopeValue *val;
+    NanoscopeSpectraType spectype;
     GwyDataLine *dline;
     GwyGraphModel *gmodel;
     GwyGraphCurveModel *gcmodel;
     GwySIUnit *unitz, *unitx;
-    const gchar *ramp_channel;
-    gchar *end;
     gint xres, bpp, offset, size;
-    gdouble xreal, xoff, q;
+    gdouble xreal, xoff, q = 1.0;
     gdouble *data;
     gboolean size_ok, use_global;
 
-    if (!require_keys(hash, error, "Samps/line", "Data offset", "Data length",
+    if (!require_keys(hash, error,
+                      "Samps/line", "Data offset", "Data length",
+                      "@4:Image Data",
                       NULL))
         return NULL;
 
     if (!require_keys(scanlist, error, "Scan size", NULL))
         return NULL;
 
-    if (!require_keys(forcelist, error, "@4:Ramp channel", NULL))
+    if (!(unitx = get_spec_abscissa_scale(forcelist, scannerlist, scanlist,
+                                          &xreal, &xoff, &spectype,
+                                          error)))
         return NULL;
-
-    val = g_hash_table_lookup(forcelist, "@4:Ramp channel");
-    ramp_channel = val->hard_value_str;
-    gwy_debug("Ramp channel: %s", ramp_channel);
 
     val = g_hash_table_lookup(hash, "Samps/line");
     xres = GWY_ROUND(val->hard_value);
@@ -824,25 +829,6 @@ hash_to_curve(GHashTable *hash,
     bpp = val ? GWY_ROUND(val->hard_value) : 2;
 
     /* scan size */
-    if (gwy_strequal(ramp_channel, "\"DC Sample Bias\"")) {
-        val = g_hash_table_lookup(forcelist, "@4:Ramp End DC Sample Bias");
-        xreal = g_ascii_strtod(val->hard_value_str, &end);
-        val = g_hash_table_lookup(forcelist, "@4:Ramp Begin DC Sample Bias");
-        xoff = g_ascii_strtod(val->hard_value_str, &end);
-        xreal -= xoff;
-        unitx = gwy_si_unit_new("V");
-    }
-    else if (gwy_strequal(ramp_channel, "\"Z\"")) {
-        val = g_hash_table_lookup(forcelist, "@4:Ramp size Zsweep");
-        xreal = g_ascii_strtod(val->hard_value_str, &end);
-        val = g_hash_table_lookup(forcelist, "@4:Ramp offset Zsweep");
-        xoff = g_ascii_strtod(val->hard_value_str, &end);
-        unitx = gwy_si_unit_new("m");
-    }
-    else {
-        err_UNSUPPORTED(error, "@4:Ramp channel");
-        return NULL;
-    }
 
     offset = size = 0;
     if (file_type == NANOSCOPE_FILE_TYPE_FORCE_BIN) {
@@ -898,18 +884,26 @@ hash_to_curve(GHashTable *hash,
         }
     }
 
-    q = 1.0;
-    unitz = get_tuna_physical_scale(hash, scanlist, &q, error);
-    if (!unitz)
+    if (!(unitz = get_spec_ordinate_scale(hash, scanlist, &q, error)))
         return NULL;
 
     gmodel = gwy_graph_model_new();
-    // TODO: Spectrum type
-    g_object_set(gmodel,
-                 "title", "I-V spectrum",
-                 "axis-label-bottom", "voltage",
-                 "axis-label-left", "current",
-                 NULL);
+    // TODO: Spectrum type.
+    val = g_hash_table_lookup(hash, "@4:Image Data");
+    if (spectype == NANOSCOPE_SPECTRA_IV) {
+        g_object_set(gmodel,
+                     "title", "I-V spectrum",
+                     "axis-label-bottom", "Voltage",
+                     "axis-label-left", val->hard_value_str,
+                     NULL);
+    }
+    else if (spectype == NANOSCOPE_SPECTRA_FZ) {
+        g_object_set(gmodel,
+                     "title", "F-Z spectrum",
+                     "axis-label-bottom", "Distance",
+                     "axis-label-left", val->hard_value_str,
+                     NULL);
+    }
 
     dline = gwy_data_line_new(xres, xreal, FALSE);
     gwy_data_line_set_offset(dline, xoff);
@@ -974,7 +968,7 @@ hash_to_curve(GHashTable *hash,
  */
 
 static GwySIUnit*
-get_tuna_physical_scale(GHashTable *hash,
+get_spec_ordinate_scale(GHashTable *hash,
                         GHashTable *scanlist,
                         gdouble *scale,
                         GError **error)
@@ -1022,6 +1016,115 @@ get_tuna_physical_scale(GHashTable *hash,
         siunit = gwy_si_unit_new_parse(val->hard_value_units, &q);
         *scale = val->hard_value * pow10(q);
     }
+
+    return siunit;
+}
+
+static GwySIUnit*
+get_spec_abscissa_scale(GHashTable *forcelist,
+                        GHashTable *scannerlist,
+                        GHashTable *scanlist,
+                        gdouble *xreal,
+                        gdouble *xoff,
+                        NanoscopeSpectraType *spectype,
+                        GError **error)
+{
+    GwySIUnit *siunit, *siunit2;
+    NanoscopeValue *val, *rval, *sval;
+    gdouble scale = 1.0;
+    gchar *key, *end;
+    gint q;
+
+    if (!(val = g_hash_table_lookup(forcelist, "@4:Ramp channel"))) {
+        err_MISSING_FIELD(error, "Ramp channel");
+        return NULL;
+    }
+
+    if (!val->hard_value_str) {
+        err_INVALID(error, "Ramp channel");
+        return NULL;
+    }
+
+    g_printerr("<%s>\n", val->hard_value_str);
+    if (gwy_strequal(val->hard_value_str, "DC Sample Bias"))
+        *spectype = NANOSCOPE_SPECTRA_IV;
+    else if (gwy_strequal(val->hard_value_str, "Z"))
+        *spectype = NANOSCOPE_SPECTRA_FZ;
+    else {
+        err_UNSUPPORTED(error, "Ramp channel");
+        return NULL;
+    }
+
+    if (*spectype == NANOSCOPE_SPECTRA_IV) {
+        if (!require_keys(forcelist, error,
+                          "@4:Ramp End DC Sample Bias",
+                          "@4:Ramp Begin DC Sample Bias",
+                          NULL))
+            return NULL;
+        rval = g_hash_table_lookup(forcelist, "@4:Ramp End DC Sample Bias");
+        *xreal = g_ascii_strtod(rval->hard_value_str, &end);
+        rval = g_hash_table_lookup(forcelist, "@4:Ramp Begin DC Sample Bias");
+        *xoff = g_ascii_strtod(rval->hard_value_str, &end);
+        *xreal -= *xoff;
+    }
+    else if (*spectype == NANOSCOPE_SPECTRA_FZ) {
+        if (!require_keys(forcelist, error,
+                          "@4:Ramp size Zsweep",
+                          "@4:Ramp offset Zsweep",
+                          NULL))
+            return NULL;
+        rval = g_hash_table_lookup(forcelist, "@4:Ramp size Zsweep");
+        *xreal = g_ascii_strtod(rval->hard_value_str, &end);
+        rval = g_hash_table_lookup(forcelist, "@4:Ramp offset Zsweep");
+        *xoff = g_ascii_strtod(rval->hard_value_str, &end);
+    }
+    else {
+        g_assert_not_reached();
+        return NULL;
+    }
+
+    /* Resolve reference to a soft scale */
+    if (rval->soft_scale) {
+        key = g_strdup_printf("@%s", rval->soft_scale);
+        if (scannerlist && (sval = g_hash_table_lookup(scannerlist, key))) {
+            gwy_debug("Found %s in scannerlist", key);
+        }
+        else if (scanlist && (sval = g_hash_table_lookup(scanlist, key))) {
+            gwy_debug("Found %s in scanlist", key);
+        }
+        else {
+            g_warning("`%s' not found", key);
+            g_free(key);
+            /* XXX */
+            scale = rval->hard_value;
+            return gwy_si_unit_new("");
+        }
+
+        scale = rval->hard_value*sval->hard_value;
+
+        siunit = gwy_si_unit_new_parse(sval->hard_value_units, &q);
+        siunit2 = gwy_si_unit_new("V");
+        gwy_si_unit_multiply(siunit, siunit2, siunit);
+        gwy_debug("Scale1 = %g V/LSB", rval->hard_value);
+        gwy_debug("Scale2 = %g %s",
+                  sval->hard_value, sval->hard_value_units);
+        scale *= pow10(q);
+        gwy_debug("Total scale = %g %s/LSB",
+                  scale, gwy_si_unit_get_string(siunit,
+                                                GWY_SI_UNIT_FORMAT_PLAIN));
+        g_object_unref(siunit2);
+        g_free(key);
+    }
+    else {
+        /* FIXME: Is this possible for spectra too? */
+        /* We have '@4:Z scale' but the reference to soft scale is missing,
+         * the quantity is something in the hard units (seen for Potential). */
+        siunit = gwy_si_unit_new_parse(rval->hard_value_units, &q);
+        scale = rval->hard_value * pow10(q);
+    }
+
+    *xreal *= scale;
+    *xoff *= scale;
 
     return siunit;
 }
@@ -1186,6 +1289,7 @@ parse_value(const gchar *key, gchar *line)
 {
     NanoscopeValue *val;
     gchar *p, *q;
+    guint len;
 
     val = g_new0(NanoscopeValue, 1);
 
@@ -1305,6 +1409,11 @@ parse_value(const gchar *key, gchar *line)
     switch (val->type) {
         case NANOSCOPE_VALUE_SELECT:
         val->hard_value_str = line;
+        len = strlen(line);
+        if (line[0] == '"' && line[len-1] == '"') {
+            line[len-1] = '\0';
+            val->hard_value_str++;
+        }
         break;
 
         case NANOSCOPE_VALUE_SCALE:
