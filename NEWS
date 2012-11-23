@@ -12,10 +12,12 @@ Libraries:
 
 Modules:
 - APE DAX (new): Imports APE Research DAX files.
-- Seiko: Files starting ‘NPXZ000AFM’ are recognised and imported.
+- Seiko: Files starting ‘NPXZ000AFM’ are recognised and imported.  XQP phase
+         files should be read with a correct value scale and units.
 - Shimadzu: Files of different version than 2 are recognised and loaded.
 - Omicron flat: Crash while reading files with up and down traces but no
                 retrace was fixed.
+- Createc: Conversion of raw data to physical values was corrected.
 - Pixmap: Manual font size range was extended.
 - Raw XYZ: Tolerance for ‘regular grid’ (which is not triangulated) was
   increased to 5% of pixel size to help people with poorly rounded data.
