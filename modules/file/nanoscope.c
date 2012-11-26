@@ -36,7 +36,7 @@
  * Read SPS:Limited[1]
  * [1] Spectra curves are imported as graphs, positional information is lost.
  **/
-#define DEBUG 1
+
 #include "config.h"
 #include <errno.h>
 #include <string.h>
@@ -160,7 +160,8 @@ static GwySIUnit*      get_spec_ordinate_scale(GHashTable *hash,
                                                GHashTable *scanlist,
                                                gdouble *scale,
                                                GError **error);
-static GwySIUnit*      get_spec_abscissa_scale(GHashTable *forcelist,
+static GwySIUnit*      get_spec_abscissa_scale(GHashTable *hash,
+                                               GHashTable *forcelist,
                                                GHashTable *scannerlist,
                                                GHashTable *scanlist,
                                                gdouble *xreal,
@@ -817,7 +818,8 @@ hash_to_curve(GHashTable *hash,
     if (!require_keys(scanlist, error, "Scan size", NULL))
         return NULL;
 
-    if (!(unitx = get_spec_abscissa_scale(forcelist, scannerlist, scanlist,
+    if (!(unitx = get_spec_abscissa_scale(hash, forcelist,
+                                          scannerlist, scanlist,
                                           &xreal, &xoff, &spectype,
                                           error)))
         return NULL;
@@ -920,6 +922,8 @@ hash_to_curve(GHashTable *hash,
             g_object_unref(gmodel);
             return NULL;
         }
+        if (spectype == NANOSCOPE_SPECTRA_FZ)
+            gwy_data_line_invert(dline, TRUE, FALSE);
         gwy_data_line_multiply(dline, q);
         gcmodel = gwy_graph_curve_model_new();
         gwy_graph_curve_model_set_data_from_dataline(gcmodel, dline, 0, 0);
@@ -937,6 +941,8 @@ hash_to_curve(GHashTable *hash,
             g_object_unref(gmodel);
             return NULL;
         }
+        if (spectype == NANOSCOPE_SPECTRA_FZ)
+            gwy_data_line_invert(dline, TRUE, FALSE);
         gwy_data_line_multiply(dline, q);
         gcmodel = gwy_graph_curve_model_new();
         g_object_set(gcmodel,
@@ -996,6 +1002,7 @@ get_spec_ordinate_scale(GHashTable *hash,
 
         *scale = val->hard_value*sval->hard_value;
 
+        gwy_debug("Hard scale units: %s", val->hard_scale_units);
         siunit = gwy_si_unit_new_parse(sval->hard_value_units, &q);
         siunit2 = gwy_si_unit_new("V");
         gwy_si_unit_multiply(siunit, siunit2, siunit);
@@ -1008,6 +1015,9 @@ get_spec_ordinate_scale(GHashTable *hash,
                                                  GWY_SI_UNIT_FORMAT_PLAIN));
         g_object_unref(siunit2);
         g_free(key);
+
+        if (g_str_has_prefix(val->hard_scale_units, "log("))
+            gwy_si_unit_set_from_string(siunit, "");
     }
     else {
         /* FIXME: Is this possible for I-V too? */
@@ -1021,7 +1031,8 @@ get_spec_ordinate_scale(GHashTable *hash,
 }
 
 static GwySIUnit*
-get_spec_abscissa_scale(GHashTable *forcelist,
+get_spec_abscissa_scale(GHashTable *hash,
+                        GHashTable *forcelist,
                         GHashTable *scannerlist,
                         GHashTable *scanlist,
                         gdouble *xreal,
@@ -1045,7 +1056,6 @@ get_spec_abscissa_scale(GHashTable *forcelist,
         return NULL;
     }
 
-    g_printerr("<%s>\n", val->hard_value_str);
     if (gwy_strequal(val->hard_value_str, "DC Sample Bias"))
         *spectype = NANOSCOPE_SPECTRA_IV;
     else if (gwy_strequal(val->hard_value_str, "Z"))
@@ -1068,20 +1078,20 @@ get_spec_abscissa_scale(GHashTable *forcelist,
         *xreal -= *xoff;
     }
     else if (*spectype == NANOSCOPE_SPECTRA_FZ) {
-        if (!require_keys(forcelist, error,
-                          "@4:Ramp size Zsweep",
-                          "@4:Ramp offset Zsweep",
+        if (!require_keys(hash, error,
+                          "@4:Ramp size",
+                          "Samps/line",
                           NULL))
             return NULL;
-        rval = g_hash_table_lookup(forcelist, "@4:Ramp size Zsweep");
+        rval = g_hash_table_lookup(hash, "@4:Ramp size");
         *xreal = g_ascii_strtod(rval->hard_value_str, &end);
-        rval = g_hash_table_lookup(forcelist, "@4:Ramp offset Zsweep");
-        *xoff = g_ascii_strtod(rval->hard_value_str, &end);
+        *xoff = 0.0;
     }
     else {
         g_assert_not_reached();
         return NULL;
     }
+    gwy_debug("Hard ramp size: %g", *xreal);
 
     /* Resolve reference to a soft scale */
     if (rval->soft_scale) {
@@ -1100,7 +1110,7 @@ get_spec_abscissa_scale(GHashTable *forcelist,
             return gwy_si_unit_new("");
         }
 
-        scale = rval->hard_value*sval->hard_value;
+        scale = sval->hard_value;
 
         siunit = gwy_si_unit_new_parse(sval->hard_value_units, &q);
         siunit2 = gwy_si_unit_new("V");
