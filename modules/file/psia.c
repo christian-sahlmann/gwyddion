@@ -454,41 +454,24 @@ psia_read_data_field(GwyDataField *dfield,
                      gdouble z_scale,
                      gdouble z0)
 {
-    gint i, j, xres, yres;
-    gdouble *data, *d;
+    GwyRawDataType rawdatatype;
+    gint xres, yres;
+
+    if (data_type == PSIA_DATA_INT16)
+        rawdatatype = GWY_RAW_DATA_SINT16;
+    else if (data_type == PSIA_DATA_INT32)
+        rawdatatype = GWY_RAW_DATA_SINT32;
+    else if (data_type == PSIA_DATA_FLOAT)
+        rawdatatype = GWY_RAW_DATA_FLOAT;
+    else
+        g_return_if_reached();
 
     xres = gwy_data_field_get_xres(dfield);
     yres = gwy_data_field_get_yres(dfield);
-    data = gwy_data_field_get_data(dfield);
-
-    if (data_type == PSIA_DATA_INT16) {
-        const gint16 *p16 = (const gint16*)p;
-
-        for (i = 0; i < yres; i++) {
-            d = data + (yres-1 - i)*xres;
-            for (j = 0; j < xres; j++)
-                d[j] = q*(GINT16_FROM_LE(p16[i*xres + j])*z_scale + z0);
-        }
-    }
-    else if (data_type == PSIA_DATA_INT32) {
-        const gint32 *p32 = (const gint32*)p;
-
-        for (i = 0; i < yres; i++) {
-            d = data + (yres-1 - i)*xres;
-            for (j = 0; j < xres; j++)
-                d[j] = q*(GINT32_FROM_LE(p32[i*xres + j])*z_scale + z0);
-        }
-    }
-    else if (data_type == PSIA_DATA_FLOAT) {
-        for (i = 0; i < yres; i++) {
-            d = data + (yres-1 - i)*xres;
-            for (j = 0; j < xres; j++)
-                d[j] = q*(gwy_get_gfloat_le(&p)*z_scale + z0);
-        }
-    }
-    else {
-        g_return_if_reached();
-    }
+    gwy_convert_raw_data(p, xres*yres, 1, rawdatatype,
+                         GWY_BYTE_ORDER_LITTLE_ENDIAN,
+                         gwy_data_field_get_data(dfield),
+                         q*z_scale, q*z0);
 }
 
 static guint
@@ -642,10 +625,10 @@ psia_read_spectro_header(const guchar *p,
     header->npoints = gwy_get_gint32_le(&p);
     gwy_debug("res: %d, npoints: %d", header->res, header->npoints);
     header->driving_source_index  = gwy_get_gint32_le(&p);
-    header->forward_period  = gwy_get_gfloat_le(&p);
-    header->backward_period  = gwy_get_gfloat_le(&p);
-    header->forward_speed  = gwy_get_gfloat_le(&p);
-    header->backward_speed  = gwy_get_gfloat_le(&p);
+    header->forward_period = gwy_get_gfloat_le(&p);
+    header->backward_period = gwy_get_gfloat_le(&p);
+    header->forward_speed = gwy_get_gfloat_le(&p);
+    header->backward_speed = gwy_get_gfloat_le(&p);
     header->volume_image = gwy_get_guint32_le(&p);
     gwy_debug("volume_image: %d", header->volume_image);
     for (i = 0; i < PSIA_MAX_SPECTRO_CHANNEL; i++)
