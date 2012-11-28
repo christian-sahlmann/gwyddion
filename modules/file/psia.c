@@ -24,7 +24,7 @@
  * .tiff, .tif
  * Read
  **/
-
+#define DEBUG 1
 #include "config.h"
 #include <string.h>
 #include <stdio.h>
@@ -32,6 +32,7 @@
 #include <libgwyddion/gwymath.h>
 #include <libgwyddion/gwyutils.h>
 #include <libprocess/stats.h>
+#include <libprocess/spectra.h>
 #include <libgwymodule/gwymodule-file.h>
 #include <app/gwymoduleutils-file.h>
 
@@ -197,6 +198,7 @@ typedef struct {
     gdouble time_after_reset;
     gdouble time_before_light_on;
     gdouble time_light_duration;
+    gint reserved[30];
 } PSIASpectroscopyHeader;
 
 static gboolean      module_register         (void);
@@ -225,6 +227,10 @@ static gboolean      psia_read_spectro_header(const guchar *p,
                                               guint version,
                                               PSIASpectroscopyHeader *header,
                                               GError **error);
+static void          psia_read_spectra       (GwyContainer *container,
+                                              GwyTIFF *tiff,
+                                              PSIADataType data_type,
+                                              guint version);
 static gchar*        psia_wchar_to_utf8      (const guchar **src,
                                               guint len);
 static GwyContainer* psia_get_metadata       (PSIAImageHeader *header,
@@ -306,7 +312,6 @@ psia_load_tiff(GwyTIFF *tiff, GError **error)
 {
     const GwyTIFFEntry *entry;
     PSIAImageHeader header;
-    PSIASpectroscopyHeader specheader;
     GwyContainer *container = NULL;
     GwyContainer *meta = NULL;
     GwyDataField *dfield;
@@ -324,6 +329,7 @@ psia_load_tiff(GwyTIFF *tiff, GError **error)
         err_FILE_TYPE(error, "Park Systems");
         return NULL;
     }
+    gwy_debug("version: %x", version);
 
     /* Data */
     entry = gwy_tiff_find_tag(tiff, 0, PSIA_TIFFTAG_Data);
@@ -414,13 +420,7 @@ psia_load_tiff(GwyTIFF *tiff, GError **error)
 
     psia_free_image_header(&header);
 
-    if ((entry = gwy_tiff_find_tag(tiff, 0, PSIA_TIFFTAG_SpectroscopyHeader))) {
-        gwy_debug("Found SpectroscopyHeader");
-        p = entry->value;
-        psia_read_spectro_header(tiff->data + tiff->get_guint32(&p),
-                                 entry->count, version, &specheader, error);
-        psia_free_spectro_header(&specheader);
-    }
+    psia_read_spectra(container, tiff, header.data_type, version);
 
     return container;
 }
@@ -599,7 +599,9 @@ psia_read_spectro_header(const guchar *p,
 
     gwy_clear(header, 1);
 
-    if (size < 536) {
+    gwy_debug("size: %lu", (gulong)size);
+    if ((version == PSIA_VERSION1 && size < 936)
+        || (version == PSIA_VERSION2 && size < 1118)) {
         g_set_error(error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
                     _("Spectroscopy header is too short (only %lu bytes)."),
                     (gulong)size);
@@ -669,8 +671,148 @@ psia_read_spectro_header(const guchar *p,
     header->time_after_reset = gwy_get_gfloat_le(&p);
     header->time_before_light_on = gwy_get_gfloat_le(&p);
     header->time_light_duration = gwy_get_gfloat_le(&p);
+    memcpy(header->reserved, p, 30*sizeof(gint));
+    p += 30;
 
     return TRUE;
+}
+
+static void
+psia_read_spectra(GwyContainer *container,
+                  GwyTIFF *tiff,
+                  PSIADataType data_type,
+                  guint version)
+{
+    PSIASpectroscopyHeader specheader;
+    const guchar *p;
+    const GwyTIFFEntry *entry;
+    guint res, bps, npoints, nsources, data_len, driving_source_index, ipt, i;
+    GwySpectra **spectra = NULL;
+    GwyDataLine **lines = NULL;
+    /* The API does not know non-fatal failures so just dump spectra loading
+     * errors to stderr. */
+    GError *error = NULL;
+    GwyRawDataType rawdatatype;
+
+    if (data_type == PSIA_DATA_INT16)
+        rawdatatype = GWY_RAW_DATA_SINT16;
+    else if (data_type == PSIA_DATA_INT32)
+        rawdatatype = GWY_RAW_DATA_SINT32;
+    else if (data_type == PSIA_DATA_FLOAT)
+        rawdatatype = GWY_RAW_DATA_FLOAT;
+    else
+        g_return_if_reached();
+    bps = gwy_raw_data_size(rawdatatype);
+
+    if (!(entry = gwy_tiff_find_tag(tiff, 0, PSIA_TIFFTAG_SpectroscopyHeader)))
+        return;
+
+    gwy_debug("Found SpectroscopyHeader");
+    p = entry->value;
+    if (!psia_read_spectro_header(tiff->data + tiff->get_guint32(&p),
+                                  entry->count, version, &specheader, &error)) {
+        g_warning("%s", error->message);
+        g_clear_error(&error);
+        return;
+    }
+
+    if (!(entry = gwy_tiff_find_tag(tiff, 0, PSIA_TIFFTAG_SpectroscopyData)))
+        goto fail;
+    gwy_debug("Found SpectroscopyData");
+    p = entry->value;
+    i = tiff->get_guint32(&p);
+    p = tiff->data + i;
+    data_len = entry->count;
+    gwy_debug("data_len = %u", data_len);
+
+    res = specheader.res;
+    npoints = specheader.npoints;
+    nsources = specheader.spect_sources;
+    if (nsources < 2 || !npoints || !res)
+        goto fail;
+
+    if (err_SIZE_MISMATCH(&error, bps*res*npoints*nsources, data_len, TRUE))
+        goto fail;
+
+    if (nsources > PSIA_MAX_SPECTRO_CHANNEL) {
+        g_set_error(&error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    "Number of spectrum sources %u is larger than %u.",
+                    nsources, PSIA_MAX_SPECTRO_CHANNEL);
+        goto fail;
+    }
+
+    driving_source_index = specheader.driving_source_index;
+    gwy_debug("driving_source_index = %u", driving_source_index);
+    if (driving_source_index > nsources) {
+        g_set_error(&error, GWY_MODULE_FILE_ERROR, GWY_MODULE_FILE_ERROR_DATA,
+                    "Driving source index is larger "
+                    "than the number of sources.");
+        goto fail;
+    }
+
+    gwy_debug("use_extended_header: %d", specheader.use_extended_header);
+    gwy_debug("%g %g :: %g %g", specheader.xreal, specheader.yreal, specheader.xoff, specheader.yoff);
+
+    // XXX: This is wrong; each spectrum, as read here, actually should be
+    // two curves, forward and back.
+    spectra = g_new0(GwySpectra*, nsources);
+    lines = g_new0(GwyDataLine*, nsources);
+    for (i = 0; i < nsources; i++) {
+        const PSIASpectroscopyChannel *channel = specheader.channel + i;
+
+        if (i == driving_source_index)
+            continue;
+
+        spectra[i] = gwy_spectra_new();
+        gwy_si_unit_set_from_string(gwy_spectra_get_si_unit_xy(spectra[i]),
+                                    "m");
+        gwy_spectra_set_title(spectra[i], channel->source_name);
+    }
+
+    for (ipt = 0; ipt < npoints; ipt++) {
+        gdouble off, real;
+        for (i = 0; i < nsources; i++) {
+            lines[i] = gwy_data_line_new(res, 1.0, FALSE);
+            /* FIXME: What are the scaling factors? */
+            gwy_convert_raw_data(p + bps*res*nsources*ipt + i*res*bps,
+                                 res, 1, rawdatatype,
+                                 GWY_BYTE_ORDER_LITTLE_ENDIAN,
+                                 gwy_data_line_get_data(lines[i]), 1.0, 0.0);
+        }
+        off = lines[driving_source_index]->data[0];
+        real = lines[driving_source_index]->data[res-1] - off;
+        for (i = 0; i < nsources; i++) {
+            const PSIASpectroscopyChannel *channel = specheader.channel + i;
+            // TODO: Set units
+            if (i != driving_source_index) {
+                gwy_data_line_set_real(lines[i], real);
+                gwy_data_line_set_offset(lines[i], off);
+                gwy_spectra_add_spectrum(spectra[i], lines[i], 0.0, 0.0);
+            }
+            g_object_unref(lines[i]);
+        }
+    }
+
+    for (i = 0; i < nsources; i++) {
+        gchar *strkey;
+
+        if (!spectra[i])
+            continue;
+
+        strkey = g_strdup_printf("/sps/%d", i);
+        gwy_container_set_object_by_name(container, strkey, spectra[i]);
+        g_free(strkey);
+        g_object_unref(spectra[i]);
+    }
+    g_free(spectra);
+    g_free(lines);
+
+fail:
+    if (error) {
+        g_warning("%s", error->message);
+        g_clear_error(&error);
+    }
+    psia_free_spectro_header(&specheader);
 }
 
 static gchar*
