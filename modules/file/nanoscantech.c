@@ -17,6 +17,12 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+/*
+ * TODO: assuming cp1251 as 8bit encoding for scan names, no conversion
+ * from russian unit names into SI units, raman scans (4d) slicing
+ * not implemented
+ */
+
 /**
  * [FILE-MAGIC-FREEDESKTOP]
  * <mime-type type="application/x-nanoscantech-spm">
@@ -290,7 +296,8 @@ static GwyDataField *nst_read_3d(const gchar *buffer, gchar **title)
         }
         else if (g_str_has_prefix(line, "Name")) {
             lineparts = g_strsplit(line, " ", 2);
-            *title = g_strdup(lineparts[1]);
+            *title = g_convert(lineparts[1], -1, "UTF-8", "cp1251",
+                               NULL, NULL, NULL);
             g_strfreev(lineparts);
         }
         else if (g_str_has_prefix(line, "Attributes")) {
@@ -303,7 +310,9 @@ static GwyDataField *nst_read_3d(const gchar *buffer, gchar **title)
             while (lineparts[linecur]) {
                 if (g_str_has_prefix(lineparts[linecur], "Name")) {
                     if (((*title) == NULL) && (lineparts[linecur+1]))
-                        *title = g_strdup(lineparts[linecur+1]);
+                        *title = g_convert(lineparts[linecur+1],
+                                           -1, "UTF-8", "cp1251",
+                                           NULL, NULL, NULL);
                 }
                 linecur++;
             }
@@ -407,7 +416,8 @@ static GwyGraphModel* nst_read_2d(const gchar *buffer, guint channel)
             lineparts = g_strsplit(line, " ", 2);
             if (framename)
                 g_free(framename);
-            framename = g_strdup(lineparts[1]);
+            framename = g_convert(lineparts[1], -1, "UTF-8", "cp1251",
+                                  NULL, NULL, NULL);
             g_strfreev(lineparts);
         }
         else if (g_str_has_prefix(line, "XCUnit")) {
@@ -436,7 +446,9 @@ static GwyGraphModel* nst_read_2d(const gchar *buffer, guint channel)
             while (lineparts[linecur]) {
                 if (g_str_has_prefix(lineparts[linecur], "Name")) {
                     if ((!framename) && (lineparts[linecur+1]))
-                        framename = g_strdup(lineparts[linecur+1]);
+                        framename = g_convert(lineparts[linecur+1],
+                                              -1, "UTF-8", "cp1251",
+                                              NULL, NULL, NULL);
                 }
                 linecur++;
             }
