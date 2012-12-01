@@ -76,7 +76,7 @@ static GwyModuleInfo module_info = {
     &module_register,
     N_("Imports NanoScanTech .nstdat files."),
     "Daniil Bratashov (dn2010@gmail.com)",
-    "0.2",
+    "0.3",
     "David Nečas (Yeti), Daniil Bratashov (dn2010)",
     "2012",
 };
@@ -170,6 +170,7 @@ nst_load(const gchar *filename,
             g_strstrip(line);
             if (gwy_strequal(line, "3d")) {
                 gwy_debug("3d: %u\n", channelno);
+                titlestr = NULL;
                 dfield = nst_read_3d(p, &titlestr);
                 if (dfield) {
                     GQuark key = gwy_app_get_data_key_for_id(channelno);
@@ -230,7 +231,7 @@ static GwyDataField *nst_read_3d(const gchar *buffer, gchar **title)
 {
     GwyDataField *dfield = NULL;
     GwySIUnit *siunitxy = NULL, *siunitz = NULL;
-    gchar *p, *line;
+    gchar *p, *line, *attributes;
     gchar **lineparts;
     gint x, y, xmax = 0, ymax = 0, i, j;
     gint power10xy = 1, power10z = 1;
@@ -238,6 +239,7 @@ static GwyDataField *nst_read_3d(const gchar *buffer, gchar **title)
     gdouble xscale = 1.0, yscale =1.0;
     gdouble xoffset = 0.0, yoffset = 0.0;
     GArray *dataarray;
+    gint linecur;
 
     p = (gchar *)buffer;
     dataarray = g_array_new(FALSE, TRUE, sizeof(gdouble));
@@ -291,6 +293,22 @@ static GwyDataField *nst_read_3d(const gchar *buffer, gchar **title)
             *title = g_strdup(lineparts[1]);
             g_strfreev(lineparts);
         }
+        else if (g_str_has_prefix(line, "Attributes")) {
+            lineparts = g_strsplit(line, " ", 2);
+            attributes = g_strdup(lineparts[1]);
+            g_strfreev(lineparts);
+            lineparts = g_strsplit(attributes, "*_*|^_^", 1024);
+            g_free(attributes);
+            linecur = 0;
+            while (lineparts[linecur]) {
+                if (g_str_has_prefix(lineparts[linecur], "Name")) {
+                    if (((*title) == NULL) && (lineparts[linecur+1]))
+                        *title = g_strdup(lineparts[linecur+1]);
+                }
+                linecur++;
+            }
+            g_strfreev(lineparts);
+        }
     }
 
     if (xscale <= 0.0)
@@ -330,10 +348,11 @@ static GwyGraphModel* nst_read_2d(const gchar *buffer, guint channel)
     GwySIUnit *siunitx = NULL, *siunity = NULL;
     gchar *p, *line;
     gchar **lineparts;
+    gint linecur;
     gdouble *xdata, *ydata, x, y;
     GArray *xarray, *yarray;
     guint i, numpoints = 0, power10x = 1, power10y = 1;
-    gchar *framename = NULL, *title = NULL;
+    gchar *framename = NULL, *title = NULL, *attributes = NULL;
 
     p = (gchar *)buffer;
     gmodel = gwy_graph_model_new();
@@ -405,6 +424,22 @@ static GwyGraphModel* nst_read_2d(const gchar *buffer, guint channel)
             y = atoi(lineparts[2]);
             if (y != 0)
                 power10y *= y;
+            g_strfreev(lineparts);
+        }
+        else if (g_str_has_prefix(line, "Attributes")) {
+            lineparts = g_strsplit(line, " ", 2);
+            attributes = g_strdup(lineparts[1]);
+            g_strfreev(lineparts);
+            lineparts = g_strsplit(attributes, "*_*|^_^", 1024);
+            g_free(attributes);
+            linecur = 0;
+            while (lineparts[linecur]) {
+                if (g_str_has_prefix(lineparts[linecur], "Name")) {
+                    if ((!framename) && (lineparts[linecur+1]))
+                        framename = g_strdup(lineparts[linecur+1]);
+                }
+                linecur++;
+            }
             g_strfreev(lineparts);
         }
     }
