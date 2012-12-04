@@ -18,9 +18,8 @@
  */
 
 /*
- * TODO: assuming cp1251 as 8bit encoding for scan names, no conversion
- * from russian unit names into SI units, raman scans (4d) slicing
- * not implemented
+ * TODO: assuming cp1251 as 8bit encoding,
+ * Raman scans (4d) slicing not implemented
  */
 
 /**
@@ -237,7 +236,7 @@ static GwyDataField *nst_read_3d(const gchar *buffer, gchar **title)
 {
     GwyDataField *dfield = NULL;
     GwySIUnit *siunitxy = NULL, *siunitz = NULL;
-    gchar *p, *line, *attributes;
+    gchar *p, *line, *attributes, *unit;
     gchar **lineparts;
     gint x, y, xmax = 0, ymax = 0, i, j;
     gint power10xy = 1, power10z = 1;
@@ -268,7 +267,10 @@ static GwyDataField *nst_read_3d(const gchar *buffer, gchar **title)
         }
         else if (g_str_has_prefix(line, "XCUnit")) {
             lineparts = g_strsplit(line, " ", 3);
-            siunitxy = gwy_si_unit_new_parse(lineparts[1], &power10xy);
+            unit = g_convert(lineparts[1], -1, "UTF-8", "cp1251",
+                             NULL, NULL, NULL);
+            siunitxy = gwy_si_unit_new_parse(unit, &power10xy);
+            g_free(unit);
             x = atoi(lineparts[2]);
             if (x != 0)
                 power10xy *= x;
@@ -276,7 +278,10 @@ static GwyDataField *nst_read_3d(const gchar *buffer, gchar **title)
         }
         else if (g_str_has_prefix(line, "ZCUnit")) {
             lineparts = g_strsplit(line, " ", 3);
-            siunitz = gwy_si_unit_new_parse(lineparts[1], &power10z);
+            unit = g_convert(lineparts[1], -1, "UTF-8", "cp1251",
+                             NULL, NULL, NULL);
+            siunitz = gwy_si_unit_new_parse(unit, &power10z);
+            g_free(unit);
             z = atoi(lineparts[2]);
             if (z != 0)
                 power10z *= z;
@@ -317,6 +322,10 @@ static GwyDataField *nst_read_3d(const gchar *buffer, gchar **title)
                 linecur++;
             }
             g_strfreev(lineparts);
+            if (name)
+                g_free(name);
+            if (value)
+                g_free(value);
         }
     }
 
@@ -355,7 +364,7 @@ static GwyGraphModel* nst_read_2d(const gchar *buffer, guint channel)
     GwyGraphCurveModel *spectra;
     GwyGraphModel *gmodel;
     GwySIUnit *siunitx = NULL, *siunity = NULL;
-    gchar *p, *line;
+    gchar *p, *line, *unit;
     gchar **lineparts;
     gint linecur;
     gdouble *xdata, *ydata, x, y;
@@ -422,7 +431,10 @@ static GwyGraphModel* nst_read_2d(const gchar *buffer, guint channel)
         }
         else if (g_str_has_prefix(line, "XCUnit")) {
             lineparts = g_strsplit(line, " ", 3);
-            siunitx = gwy_si_unit_new_parse(lineparts[1], &power10x);
+            unit = g_convert(lineparts[1], -1, "UTF-8", "cp1251",
+                             NULL, NULL, NULL);
+            siunitx = gwy_si_unit_new_parse(unit, &power10x);
+            g_free(unit);
             x = atoi(lineparts[2]);
             if (x != 0)
                 power10x *= x;
@@ -430,7 +442,10 @@ static GwyGraphModel* nst_read_2d(const gchar *buffer, guint channel)
         }
         else if (g_str_has_prefix(line, "YCUnit")) {
             lineparts = g_strsplit(line, " ", 3);
-            siunity = gwy_si_unit_new_parse(lineparts[1], &power10y);
+            unit = g_convert(lineparts[1], -1, "UTF-8", "cp1251",
+                             NULL, NULL, NULL);
+            siunity = gwy_si_unit_new_parse(unit, &power10y);
+            g_free(unit);
             y = atoi(lineparts[2]);
             if (y != 0)
                 power10y *= y;
