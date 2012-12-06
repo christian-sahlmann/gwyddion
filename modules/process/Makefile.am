@@ -15,6 +15,7 @@ process_LTLIBRARIES = \
 	arithmetic.la \
 	averaging.la \
 	basicops.la \
+        brickshow.la \
 	calcoefs_load.la \
 	calcoefs_new.la \
 	calcoefs_simple.la \
@@ -112,6 +113,7 @@ angle_dist_la_SOURCES          = angle_dist.c
 arithmetic_la_SOURCES          = arithmetic.c
 averaging_la_SOURCES           = averaging.c
 basicops_la_SOURCES            = basicops.c
+brickshow_la_SOURCES           = brickshow.c
 calcoefs_new_la_SOURCES        = calcoefs_new.c
 calcoefs_load_la_SOURCES       = calcoefs_load.c
 calcoefs_simple_la_SOURCES     = calcoefs_simple.c
