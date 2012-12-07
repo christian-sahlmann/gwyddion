@@ -12,6 +12,8 @@ Libraries:
 
 Modules:
 - APE DAX (new): Imports APE Research DAX files.
+- VTK export (new): Exports fields as VTK structured grid files.
+- Extend (new): Extends a field by adding borders using several methods.
 - Seiko: Files starting ‘NPXZ000AFM’ are recognised and imported.  XQP phase
          files should be read with a correct value scale and units.
 - Shimadzu: Files of different version than 2 are recognised and loaded.
