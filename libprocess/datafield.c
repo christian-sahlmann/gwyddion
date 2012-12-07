@@ -424,6 +424,8 @@ gwy_data_field_clone_real(GObject *source, GObject *copy)
     clone->yres = data_field->yres;
 
     gwy_data_field_copy(data_field, clone, TRUE);
+    clone->xoff = data_field->xoff;
+    clone->yoff = data_field->yoff;
 }
 
 /**
