@@ -23,10 +23,11 @@
 
 #include "config.h"
 #include <stdlib.h>
+#include <string.h>
 #include <libgwyddion/gwymacros.h>
 #include <libgwyddion/gwymath.h>
 #include <gtk/gtk.h>
-#include <libprocess/level.h>
+#include <libprocess/stats.h>
 #include <libgwydgets/gwydgetutils.h>
 #include <libgwydgets/gwycombobox.h>
 #include <libgwymodule/gwymodule-process.h>
@@ -89,6 +90,15 @@ static void     extend_load_args    (GwyContainer *container,
                                      ExtendArgs *args);
 static void     extend_save_args    (GwyContainer *container,
                                      ExtendArgs *args);
+static void     extend_field        (GwyDataField *field,
+                                     GwyDataField *target,
+                                     guint left,
+                                     guint right,
+                                     guint up,
+                                     guint down,
+                                     GwyExteriorType exterior,
+                                     gdouble fill_value,
+                                     gboolean keep_offsets);
 
 static const ExtendArgs extend_defaults = {
     0, 0, 0, 0,
@@ -125,14 +135,16 @@ module_register(void)
 static void
 extend(GwyContainer *data, GwyRunType run)
 {
-    GwyDataField *dfield;
+    GwyDataField *dfield, *result;
     GQuark quark;
     ExtendArgs args;
     gboolean ok;
+    gint oldid;
 
     g_return_if_fail(run & EXTEND_RUN_MODES);
     gwy_app_data_browser_get_current(GWY_APP_DATA_FIELD, &dfield,
                                      GWY_APP_DATA_FIELD_KEY, &quark,
+                                     GWY_APP_DATA_FIELD_ID, &oldid,
                                      0);
     g_return_if_fail(dfield);
 
@@ -145,11 +157,31 @@ extend(GwyContainer *data, GwyRunType run)
             return;
     }
 
-    gwy_app_undo_qcheckpointv(data, 1, &quark);
+    result = gwy_data_field_new(1, 1, 1.0, 1.0, FALSE);
+    if (!args.new_channel)
+        gwy_app_undo_qcheckpointv(data, 1, &quark);
 
-    /* TODO: Actually do something. */
+    extend_field(dfield, result,
+                 args.left, args.right, args.up, args.down,
+                 args.exterior, gwy_data_field_get_avg(dfield),
+                 args.keep_offsets);
 
-    gwy_data_field_data_changed(dfield);
+    if (!args.new_channel) {
+        gwy_serializable_clone(G_OBJECT(result), G_OBJECT(dfield));
+        gwy_data_field_data_changed(dfield);
+    }
+    else {
+        gint newid = gwy_app_data_browser_add_data_field(result, data, TRUE);
+        gwy_app_sync_data_items(data, data, oldid, newid, FALSE,
+                                GWY_DATA_ITEM_GRADIENT,
+                                GWY_DATA_ITEM_MASK_COLOR,
+                                GWY_DATA_ITEM_RANGE,
+                                GWY_DATA_ITEM_REAL_SQUARE,
+                                GWY_DATA_ITEM_SELECTIONS,
+                                0);
+        gwy_app_set_data_field_title(data, newid, _("Extended"));
+    }
+    g_object_unref(result);
 }
 
 static gboolean
@@ -325,11 +357,11 @@ up_changed(GtkAdjustment *adj,
            ExtendControls *controls)
 {
     ExtendArgs *args = controls->args;
+    args->up = gwy_adjustment_get_int(adj);
     if (controls->in_update)
         return;
 
     controls->last_active = 0;
-    args->up = gtk_adjustment_get_value(adj);
     if (controls->is_symmetrical) {
         controls->in_update = TRUE;
         gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->down), args->up);
@@ -344,11 +376,11 @@ down_changed(GtkAdjustment *adj,
              ExtendControls *controls)
 {
     ExtendArgs *args = controls->args;
+    args->down = gwy_adjustment_get_int(adj);
     if (controls->in_update)
         return;
 
     controls->last_active = 1;
-    args->down = gtk_adjustment_get_value(adj);
     if (controls->is_symmetrical) {
         controls->in_update = TRUE;
         gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->up), args->down);
@@ -363,11 +395,11 @@ left_changed(GtkAdjustment *adj,
              ExtendControls *controls)
 {
     ExtendArgs *args = controls->args;
+    args->left = gwy_adjustment_get_int(adj);
     if (controls->in_update)
         return;
 
     controls->last_active = 2;
-    args->left = gtk_adjustment_get_value(adj);
     if (controls->is_symmetrical) {
         controls->in_update = TRUE;
         gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->up), args->left);
@@ -382,11 +414,11 @@ right_changed(GtkAdjustment *adj,
               ExtendControls *controls)
 {
     ExtendArgs *args = controls->args;
+    args->right = gwy_adjustment_get_int(adj);
     if (controls->in_update)
         return;
 
     controls->last_active = 3;
-    args->right = gtk_adjustment_get_value(adj);
     if (controls->is_symmetrical) {
         controls->in_update = TRUE;
         gtk_adjustment_set_value(GTK_ADJUSTMENT(controls->up), args->right);
@@ -497,6 +529,345 @@ extend_save_args(GwyContainer *container,
                                       args->keep_offsets);
     gwy_container_set_boolean_by_name(container, new_channel_key,
                                       args->new_channel);
+}
+
+/* code ported from libgwy3 */
+
+#define gwy_assign(dest, source, n) \
+    memcpy((dest), (source), (n)*sizeof((dest)[0]))
+
+typedef void (*RowExtendFunc)(const gdouble *in,
+                              gdouble *out,
+                              guint pos,
+                              guint width,
+                              guint res,
+                              guint extend_left,
+                              guint extend_right,
+                              gdouble value);
+
+typedef void (*RectExtendFunc)(const gdouble *in,
+                               guint inrowstride,
+                               gdouble *out,
+                               guint outrowstride,
+                               guint xpos,
+                               guint ypos,
+                               guint width,
+                               guint height,
+                               guint xres,
+                               guint yres,
+                               guint extend_left,
+                               guint extend_right,
+                               guint extend_up,
+                               guint extend_down,
+                               gdouble value);
+
+static inline void
+fill_block(gdouble *data, guint len, gdouble value)
+{
+    while (len--)
+        *(data++) = value;
+}
+
+static inline void
+row_extend_base(const gdouble *in, gdouble *out,
+                guint *pos, guint *width, guint res,
+                guint *extend_left, guint *extend_right)
+{
+    guint e2r, e2l;
+
+    // Expand the ROI to the right as far as possible
+    e2r = MIN(*extend_right, res - (*pos + *width));
+    *width += e2r;
+    *extend_right -= e2r;
+
+    // Expand the ROI to the left as far as possible
+    e2l = MIN(*extend_left, *pos);
+    *width += e2l;
+    *extend_left -= e2l;
+    *pos -= e2l;
+
+    // Direct copy of the ROI
+    gwy_assign(out + *extend_left, in + *pos, *width);
+}
+
+static void
+row_extend_mirror(const gdouble *in, gdouble *out,
+                  guint pos, guint width, guint res,
+                  guint extend_left, guint extend_right,
+                  G_GNUC_UNUSED gdouble value)
+{
+    guint res2 = 2*res, k0, j;
+    gdouble *out2;
+    row_extend_base(in, out, &pos, &width, res, &extend_left, &extend_right);
+    // Forward-extend
+    out2 = out + extend_left + width;
+    for (j = 0; j < extend_right; j++, out2++) {
+        guint k = (pos + width + j) % res2;
+        *out2 = (k < res) ? in[k] : in[res2-1 - k];
+    }
+    // Backward-extend
+    k0 = (extend_left/res2 + 1)*res2;
+    out2 = out + extend_left-1;
+    for (j = 1; j <= extend_left; j++, out2--) {
+        guint k = (k0 + pos - j) % res2;
+        *out2 = (k < res) ? in[k] : in[res2-1 - k];
+    }
+}
+
+static void
+row_extend_periodic(const gdouble *in, gdouble *out,
+                    guint pos, guint width, guint res,
+                    guint extend_left, guint extend_right,
+                    G_GNUC_UNUSED gdouble value)
+{
+    guint k0, j;
+    gdouble *out2;
+    row_extend_base(in, out, &pos, &width, res, &extend_left, &extend_right);
+    // Forward-extend
+    out2 = out + extend_left + width;
+    for (j = 0; j < extend_right; j++, out2++) {
+        guint k = (pos + width + j) % res;
+        *out2 = in[k];
+    }
+    // Backward-extend
+    k0 = (extend_left/res + 1)*res;
+    out2 = out + extend_left-1;
+    for (j = 1; j <= extend_left; j++, out2--) {
+        guint k = (k0 + pos - j) % res;
+        *out2 = in[k];
+    }
+}
+
+static void
+row_extend_border(const gdouble *in, gdouble *out,
+                  guint pos, guint width, guint res,
+                  guint extend_left, guint extend_right,
+                  G_GNUC_UNUSED gdouble value)
+{
+    row_extend_base(in, out, &pos, &width, res, &extend_left, &extend_right);
+    // Forward-extend
+    fill_block(out + extend_left + width, extend_right, in[res-1]);
+    // Backward-extend
+    fill_block(out, extend_left, in[0]);
+}
+
+static void
+row_extend_fill(const gdouble *in, gdouble *out,
+                guint pos, guint width, guint res,
+                guint extend_left, guint extend_right,
+                gdouble value)
+{
+    row_extend_base(in, out, &pos, &width, res, &extend_left, &extend_right);
+    // Forward-extend
+    fill_block(out + extend_left + width, extend_right, value);
+    // Backward-extend
+    fill_block(out, extend_left, value);
+}
+static inline void
+rect_extend_base(const gdouble *in, guint inrowstride,
+                 gdouble *out, guint outrowstride,
+                 guint xpos, guint *ypos,
+                 guint width, guint *height,
+                 guint xres, guint yres,
+                 guint extend_left, guint extend_right,
+                 guint *extend_up, guint *extend_down,
+                 RowExtendFunc extend_row, gdouble fill_value)
+{
+    guint e2r, e2l, i;
+    // Expand the ROI down as far as possible
+    e2r = MIN(*extend_down, yres - (*ypos + *height));
+    *height += e2r;
+    *extend_down -= e2r;
+
+    // Expand the ROI up as far as possible
+    e2l = MIN(*extend_up, *ypos);
+    *height += e2l;
+    *extend_up -= e2l;
+    *ypos -= e2l;
+
+    // Row-wise extension within the vertical range of the ROI
+    for (i = 0; i < *height; i++)
+        extend_row(in + (*ypos + i)*inrowstride,
+                   out + (*extend_up + i)*outrowstride,
+                   xpos, width, xres, extend_left, extend_right, fill_value);
+}
+
+static void
+rect_extend_mirror(const gdouble *in, guint inrowstride,
+                   gdouble *out, guint outrowstride,
+                   guint xpos, guint ypos,
+                   guint width, guint height,
+                   guint xres, guint yres,
+                   guint extend_left, guint extend_right,
+                   guint extend_up, guint extend_down,
+                   G_GNUC_UNUSED gdouble value)
+{
+    guint yres2, i, k0;
+    gdouble *out2;
+    rect_extend_base(in, inrowstride, out, outrowstride,
+                     xpos, &ypos, width, &height, xres, yres,
+                     extend_left, extend_right, &extend_up, &extend_down,
+                     &row_extend_mirror, value);
+    // Forward-extend
+    yres2 = 2*yres;
+    out2 = out + outrowstride*(extend_up + height);
+    for (i = 0; i < extend_down; i++, out2 += outrowstride) {
+        guint k = (ypos + height + i) % yres2;
+        if (k >= yres)
+            k = yres2-1 - k;
+        row_extend_mirror(in + k*inrowstride, out2,
+                          xpos, width, xres, extend_left, extend_right, value);
+    }
+    // Backward-extend
+    k0 = (extend_up/yres2 + 1)*yres2;
+    out2 = out + outrowstride*(extend_up - 1);
+    for (i = 1; i <= extend_up; i++, out2 -= outrowstride) {
+        guint k = (k0 + ypos - i) % yres2;
+        if (k >= yres)
+            k = yres2-1 - k;
+        row_extend_mirror(in + k*inrowstride, out2,
+                          xpos, width, xres, extend_left, extend_right, value);
+    }
+}
+
+static void
+rect_extend_periodic(const gdouble *in, guint inrowstride,
+                     gdouble *out, guint outrowstride,
+                     guint xpos, guint ypos,
+                     guint width, guint height,
+                     guint xres, guint yres,
+                     guint extend_left, guint extend_right,
+                     guint extend_up, guint extend_down,
+                     G_GNUC_UNUSED gdouble value)
+{
+    guint i, k0;
+    gdouble *out2;
+    rect_extend_base(in, inrowstride, out, outrowstride,
+                     xpos, &ypos, width, &height, xres, yres,
+                     extend_left, extend_right, &extend_up, &extend_down,
+                     &row_extend_periodic, value);
+    // Forward-extend
+    out2 = out + outrowstride*(extend_up + height);
+    for (i = 0; i < extend_down; i++, out2 += outrowstride) {
+        guint k = (ypos + height + i) % yres;
+        row_extend_periodic(in + k*inrowstride, out2,
+                            xpos, width, xres, extend_left, extend_right, value);
+    }
+    // Backward-extend
+    k0 = (extend_up/yres + 1)*yres;
+    out2 = out + outrowstride*(extend_up - 1);
+    for (i = 1; i <= extend_up; i++, out2 -= outrowstride) {
+        guint k = (k0 + ypos - i) % yres;
+        row_extend_periodic(in + k*inrowstride, out2,
+                            xpos, width, xres, extend_left, extend_right, value);
+    }
+}
+
+static void
+rect_extend_border(const gdouble *in, guint inrowstride,
+                   gdouble *out, guint outrowstride,
+                   guint xpos, guint ypos,
+                   guint width, guint height,
+                   guint xres, guint yres,
+                   guint extend_left, guint extend_right,
+                   guint extend_up, guint extend_down,
+                   G_GNUC_UNUSED gdouble value)
+{
+    guint i;
+    gdouble *out2;
+    rect_extend_base(in, inrowstride, out, outrowstride,
+                     xpos, &ypos, width, &height, xres, yres,
+                     extend_left, extend_right, &extend_up, &extend_down,
+                     &row_extend_border, value);
+    // Forward-extend
+    out2 = out + outrowstride*(extend_up + height);
+    for (i = 0; i < extend_down; i++, out2 += outrowstride)
+        row_extend_border(in + (yres-1)*inrowstride, out2,
+                          xpos, width, xres, extend_left, extend_right, value);
+    // Backward-extend
+    out2 = out + outrowstride*(extend_up - 1);
+    for (i = 1; i <= extend_up; i++, out2 -= outrowstride)
+        row_extend_border(in, out2,
+                          xpos, width, xres, extend_left, extend_right, value);
+}
+
+static void
+rect_extend_fill(const gdouble *in, guint inrowstride,
+                 gdouble *out, guint outrowstride,
+                 guint xpos, guint ypos,
+                 guint width, guint height,
+                 guint xres, guint yres,
+                 guint extend_left, guint extend_right,
+                 guint extend_up, guint extend_down,
+                 gdouble value)
+{
+    guint i;
+    gdouble *out2;
+    rect_extend_base(in, inrowstride, out, outrowstride,
+                     xpos, &ypos, width, &height, xres, yres,
+                     extend_left, extend_right, &extend_up, &extend_down,
+                     &row_extend_fill, value);
+    // Forward-extend
+    out2 = out + outrowstride*(extend_up + height);
+    for (i = 0; i < extend_down; i++, out2 += outrowstride)
+        fill_block(out2, extend_left + width + extend_right, value);
+    // Backward-extend
+    out2 = out + outrowstride*(extend_up - 1);
+    for (i = 1; i <= extend_up; i++, out2 -= outrowstride)
+        fill_block(out2, extend_left + width + extend_right, value);
+}
+
+static RectExtendFunc
+get_rect_extend_func(GwyExteriorType exterior)
+{
+    if (exterior == GWY_EXTERIOR_FIXED_VALUE)
+        return &rect_extend_fill;
+    if (exterior == GWY_EXTERIOR_BORDER_EXTEND)
+        return &rect_extend_border;
+    if (exterior == GWY_EXTERIOR_MIRROR_EXTEND)
+        return &rect_extend_mirror;
+    if (exterior == GWY_EXTERIOR_PERIODIC)
+        return &rect_extend_periodic;
+    g_return_val_if_reached(NULL);
+}
+
+static void
+extend_field(GwyDataField *field,
+             GwyDataField *target,
+             guint left, guint right,
+             guint up, guint down,
+             GwyExteriorType exterior,
+             gdouble fill_value,
+             gboolean keep_offsets)
+{
+    guint col = 0, row = 0, width = field->xres, height = field->yres;
+    gdouble dx, dy;
+
+    RectExtendFunc extend_rect = get_rect_extend_func(exterior);
+    if (!extend_rect)
+        return;
+
+    gwy_data_field_resample(target, width + left + right, height + up + down,
+                            GWY_INTERPOLATION_NONE);
+    extend_rect(field->data, field->xres, target->data, target->xres,
+                col, row, width, height, field->xres, field->yres,
+                left, right, up, down, fill_value);
+
+    dx = field->xreal/field->xres, dy = field->yreal/field->yres;
+    gwy_data_field_set_xreal(target, (width + left + right)*dx);
+    gwy_data_field_set_yreal(target, (height + up + down)*dy);
+    if (keep_offsets) {
+        gwy_data_field_set_xoffset(target, field->xoff + col*dx - left*dx);
+        gwy_data_field_set_yoffset(target, field->yoff + row*dy - up*dy);
+    }
+    else {
+        gwy_data_field_set_xoffset(target, 0.0);
+        gwy_data_field_set_yoffset(target, 0.0);
+    }
+    gwy_serializable_clone(G_OBJECT(gwy_data_field_get_si_unit_xy(field)),
+                           G_OBJECT(gwy_data_field_get_si_unit_xy(target)));
+    gwy_serializable_clone(G_OBJECT(gwy_data_field_get_si_unit_z(field)),
+                           G_OBJECT(gwy_data_field_get_si_unit_z(target)));
 }
 
 /* vim: set cin et ts=4 sw=4 cino=>1s,e0,n0,f0,{0,}0,^0,\:1s,=0,g1s,h0,t0,+1s,c3,(0,u0 : */
