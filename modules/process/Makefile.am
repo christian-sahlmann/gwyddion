@@ -15,7 +15,7 @@ process_LTLIBRARIES = \
 	arithmetic.la \
 	averaging.la \
 	basicops.la \
-        brickshow.la \
+	brickshow.la \
 	calcoefs_load.la \
 	calcoefs_new.la \
 	calcoefs_simple.la \
@@ -30,6 +30,7 @@ process_LTLIBRARIES = \
 	dwt.la \
 	dwtanisotropy.la \
 	edge.la \
+	extend.la \
 	facet-level.la \
 	facet_analysis.la \
 	fft.la \
@@ -84,7 +85,7 @@ process_LTLIBRARIES = \
 	tip_model.la \
 	tipops.la \
 	unrotate.la \
-        xydenoise.la
+	xydenoise.la
 
 EXTRA_DIST = \
 	$(disabled_sources)
@@ -129,6 +130,7 @@ drift_la_SOURCES               = drift.c
 dwt_la_SOURCES                 = dwt.c
 dwtanisotropy_la_SOURCES       = dwtanisotropy.c
 edge_la_SOURCES                = edge.c
+extend_la_SOURCES              = extend.c
 facet_analysis_la_SOURCES      = facet_analysis.c
 facet_level_la_SOURCES         = facet-level.c
 fft_filter_1d_la_SOURCES       = fft_filter_1d.c
