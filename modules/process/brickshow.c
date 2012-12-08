@@ -45,6 +45,12 @@ typedef enum {
     PROJ_DIRZ = 5,
 } GwyDirType;
 
+typedef enum {
+    GRAPH_DIRX = 0,
+    GRAPH_DIRY = 1,
+    GRAPH_DIRZ = 2,
+} GwyGDirType;
+
 enum {
     PREVIEW_SIZE = 400,
     MAX_LENGTH = 1024
@@ -58,6 +64,7 @@ enum {
 
 typedef struct {
     GwyDirType type;
+    GwyGDirType gtype;
     gdouble xpos;
     gdouble ypos;
     gdouble zpos;
@@ -68,13 +75,17 @@ typedef struct {
 typedef struct {
     BrickshowArgs *args;
     GtkWidget *type;
+    GtkWidget *gtype;
     GtkWidget *dialog;
     GtkWidget *view;
+    GtkWidget *gview;
     GtkWidget *info;
+    GtkWidget *ginfo;
     GtkObject *xpos;
     GtkObject *ypos;
     GtkObject *zpos;
     GtkWidget *update;
+    GtkWidget *gupdate;
     GtkWidget *drawarea;
     GwyContainer *mydata;
     GwyContainer *data;
@@ -98,6 +109,8 @@ static void     brickshow_load_data               (BrickshowControls *controls,
                                                     BrickshowArgs *args);
 static void     brickshow_invalidate                   (BrickshowControls *controls);
 static void     update_change_cb                   (BrickshowControls *controls);
+static void     gupdate_change_cb                   (BrickshowControls *controls);
+
 static void     preview                            (BrickshowControls *controls,
                                                     BrickshowArgs *args);
 static void     brickshow_load_args               (GwyContainer *container,
@@ -106,6 +119,8 @@ static void     brickshow_save_args               (GwyContainer *container,
                                                     BrickshowArgs *args);
 static void     type_changed_cb               (GtkWidget *combo, 
                                                    BrickshowControls *controls);
+static void     gtype_changed_cb               (GtkWidget *combo, 
+                                                   BrickshowControls *controls);
 static void     page_switched                      (BrickshowControls *controls,
                                                     GtkNotebookPage *page,
                                                     gint pagenum);
@@ -113,6 +128,7 @@ static void     page_switched                      (BrickshowControls *controls,
 
 static const BrickshowArgs brickshow_defaults = {
     CUT_DIRX,
+    GRAPH_DIRX,
     50,
     50,
     50,
@@ -176,6 +192,12 @@ brickshow_dialog(BrickshowArgs *args,
         { N_("Y direction sum"), PROJ_DIRY, },
         { N_("Z direction sum"), PROJ_DIRZ, },
     };
+    static const GwyEnum gtypes[] = {
+        { N_("X direction"), GRAPH_DIRX, },
+        { N_("Y direction"), GRAPH_DIRY, },
+        { N_("Z direction"), GRAPH_DIRZ, },
+    };
+  
     GtkWidget *dialog, *table, *hbox, *label, *notebook, *msgdialog;
     GwyDataField *dfield;
     BrickshowControls controls;
@@ -316,8 +338,79 @@ brickshow_dialog(BrickshowArgs *args,
                      0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
     row++;
 
+    /////////////////////////////  graphs page ///////////////////////////////////////
 
-    /////////////////////////////  projections page ///////////////////////////////////////
+    hbox = gtk_hbox_new(FALSE, 2);
+    gtk_notebook_append_page(GTK_NOTEBOOK(notebook),
+                               hbox,
+                               gtk_label_new(_("Graphs")));
+
+    dfield = gwy_data_field_new(PREVIEW_SIZE, PREVIEW_SIZE, 
+                                PREVIEW_SIZE, PREVIEW_SIZE, 
+                                TRUE);
+    gwy_container_set_object_by_name(controls.mydata, "/1/data", dfield);
+
+    if (data) gwy_app_sync_data_items(data, controls.mydata, id, 1, FALSE,
+                            GWY_DATA_ITEM_PALETTE,
+                            0);
+
+
+    controls.gview = gwy_data_view_new(controls.mydata);
+    layer = gwy_layer_basic_new();
+    g_object_set(layer,
+                 "data-key", "/1/data",
+                 "gradient-key", "/1/base/palette",
+                 NULL);
+    gwy_data_view_set_data_prefix(GWY_DATA_VIEW(controls.gview), "/1/data");
+    gwy_data_view_set_base_layer(GWY_DATA_VIEW(controls.gview), layer);
+    zoomval = PREVIEW_SIZE/(gdouble)MAX(gwy_data_field_get_xres(dfield),
+                                        gwy_data_field_get_yres(dfield));
+    gwy_data_view_set_zoom(GWY_DATA_VIEW(controls.gview), zoomval);
+
+    gtk_box_pack_start(GTK_BOX(hbox), controls.gview, FALSE, FALSE, 4);
+
+    table = gtk_table_new(11, 4, FALSE);
+    gtk_table_set_row_spacings(GTK_TABLE(table), 2);
+    gtk_table_set_col_spacings(GTK_TABLE(table), 6);
+    gtk_container_set_border_width(GTK_CONTAINER(table), 4);
+    gtk_box_pack_start(GTK_BOX(hbox), table, TRUE, TRUE, 4);
+    row = 0;
+
+    
+    label = gtk_label_new(_("Graph cut direction:"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), label,
+                     0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    row++;
+
+    controls.gtype
+        = gwy_enum_combo_box_new(gtypes, G_N_ELEMENTS(gtypes),
+                                 G_CALLBACK(gtype_changed_cb), &controls,
+                                 args->gtype, TRUE);
+    gwy_table_attach_hscale(table, row, _("Show mode:"), NULL,
+                            GTK_OBJECT(controls.gtype), GWY_HSCALE_WIDGET);
+    gtype_changed_cb(controls.gtype, &controls);
+    row++;
+
+
+    controls.gupdate = gtk_check_button_new_with_mnemonic(_("I_nstant updates"));
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls.gupdate),
+                                 args->update);
+    gtk_table_attach(GTK_TABLE(table), controls.gupdate,
+                     0, 3, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    g_signal_connect_swapped(controls.gupdate, "toggled",
+                             G_CALLBACK(gupdate_change_cb), &controls);
+    row++;
+
+    controls.ginfo = gtk_label_new(_("No data loaded"));
+    gtk_misc_set_alignment(GTK_MISC(controls.ginfo), 0.0, 0.5);
+    gtk_table_attach(GTK_TABLE(table), controls.ginfo,
+                     0, 4, row, row+1, GTK_EXPAND | GTK_FILL, 0, 0, 0);
+    row++;
+
+
+
+    /////////////////////////////  3D page ///////////////////////////////////////
 
     hbox = gtk_hbox_new(FALSE, 2);
     gtk_notebook_append_page(GTK_NOTEBOOK(notebook),
@@ -463,7 +556,6 @@ page_switched(BrickshowControls *controls,
 
 }
 
-
 static void
 type_changed_cb(GtkWidget *combo, BrickshowControls *controls)
 {
@@ -493,6 +585,14 @@ type_changed_cb(GtkWidget *combo, BrickshowControls *controls)
         gwy_table_hscale_set_sensitive(controls->zpos, FALSE);
         break;
     }
+    brickshow_invalidate(controls);
+
+}
+
+static void
+gtype_changed_cb(GtkWidget *combo, BrickshowControls *controls)
+{
+    controls->args->type = gwy_enum_combo_box_get_active(GTK_COMBO_BOX(combo));
     brickshow_invalidate(controls);
 
 }
@@ -546,6 +646,25 @@ update_change_cb(BrickshowControls *controls)
 {
     controls->args->update
             = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->update));
+
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->gupdate), controls->args->update);
+
+    gtk_dialog_set_response_sensitive(GTK_DIALOG(controls->dialog),
+                                      RESPONSE_PREVIEW,
+                                      !controls->args->update);
+
+    if (controls->args->update)
+        brickshow_invalidate(controls);
+}
+
+static void
+gupdate_change_cb(BrickshowControls *controls)
+{
+    controls->args->update
+            = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(controls->gupdate));
+
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(controls->update), controls->args->update);
+
 
     gtk_dialog_set_response_sensitive(GTK_DIALOG(controls->dialog),
                                       RESPONSE_PREVIEW,
@@ -643,6 +762,7 @@ preview(BrickshowControls *controls,
 
     if (args->active_page == 0) {
 
+
         if (args->type == CUT_DIRX) {
             gwy_brick_extract_plane(controls->brick, dfield,
                                     (gint)(args->xpos/100.0*(gwy_brick_get_xres(controls->brick)-1)), 
@@ -720,6 +840,7 @@ static const gchar xpos_key[]       = "/module/brickshow/xpos";
 static const gchar ypos_key[]       = "/module/brickshow/ypos";
 static const gchar zpos_key[]       = "/module/brickshow/zpos";
 static const gchar type_key[]    = "/module/brickshow/dirtype";
+static const gchar gtype_key[]    = "/module/brickshow/dirgtype";
 static const gchar update_key[] = "/module/brickshow/update";
 
 static void
@@ -729,6 +850,7 @@ brickshow_sanitize_args(BrickshowArgs *args)
     args->ypos = CLAMP(args->ypos, 0, 100);
     args->zpos = CLAMP(args->zpos, 0, 100);
     args->type = MIN(args->type, PROJ_DIRZ);
+    args->gtype = MIN(args->gtype, GRAPH_DIRZ);
     args->update = !!args->update;
 }
 
@@ -739,6 +861,7 @@ brickshow_load_args(GwyContainer *container,
     *args = brickshow_defaults;
 
     gwy_container_gis_enum_by_name(container, type_key, &args->type);
+    gwy_container_gis_enum_by_name(container, gtype_key, &args->gtype);
     gwy_container_gis_double_by_name(container, xpos_key, &args->xpos);
     gwy_container_gis_double_by_name(container, ypos_key, &args->ypos);
     gwy_container_gis_double_by_name(container, zpos_key, &args->zpos);
@@ -751,6 +874,7 @@ brickshow_save_args(GwyContainer *container,
                      BrickshowArgs *args)
 {
     gwy_container_set_enum_by_name(container, type_key, args->type);
+    gwy_container_set_enum_by_name(container, gtype_key, args->gtype);
     gwy_container_set_double_by_name(container, xpos_key, args->xpos);
     gwy_container_set_double_by_name(container, ypos_key, args->ypos);
     gwy_container_set_double_by_name(container, zpos_key, args->zpos);
