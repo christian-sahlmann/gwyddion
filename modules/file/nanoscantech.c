@@ -322,10 +322,6 @@ static GwyDataField *nst_read_3d(const gchar *buffer, gchar **title)
                 linecur++;
             }
             g_strfreev(lineparts);
-            if (name)
-                g_free(name);
-            if (value)
-                g_free(value);
         }
     }
 
