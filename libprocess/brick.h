@@ -234,6 +234,15 @@ void           gwy_brick_sum_plane(const GwyBrick *brick,
                                        gint depth,
                                        gboolean keep_offsets);
 
+void           gwy_brick_extract_line(const GwyBrick *brick,
+                                       GwyDataLine *target,
+                                       gint istart, 
+                                       gint jstart,
+                                       gint kstart,
+                                       gint iend,
+                                       gint jend,
+                                       gint kend,
+                                       gboolean keep_offsets);
 
 
 G_END_DECLS

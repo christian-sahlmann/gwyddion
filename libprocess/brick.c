@@ -29,6 +29,7 @@
 #include <libgwyddion/gwydebugobjects.h>
 #include <libprocess/brick.h>
 #include <libprocess/interpolation.h>
+#include <stdlib.h>
 
 #define GWY_BRICK_TYPE_NAME "GwyBrick"
 
@@ -1503,7 +1504,7 @@ gwy_brick_multiply(GwyBrick *brick,
  * @width: pixel width of extracted plane. If @width is -1, the yz plane will be extracted.
  * @height: pixel height of extracted plane.  If @height is -1, the xz plane will be extracted
  * @depth: pixel depth of extacted plane. If @depth is -1, the xy plane will be extracted
- * @value: Value to multiply data brick with.
+ * @keep_offsets: keep the physical offsets in extracted field.
  *
  * Extract a plane (GwyDataField) from the brick. One value of set (@width, @height, @depth) needs
  * to be -1, determining the plane orientation.
@@ -1601,7 +1602,7 @@ gwy_brick_extract_plane(const GwyBrick *brick,
  * @width: pixel width of summed plane. If @width is -1, the yz planes will be summed.
  * @height: pixel height of summed plane.  If @height is -1, the xz planes will be summed
  * @depth: pixel depth of extacted plane. If @depth is -1, the xy planes will be summed
- * @value: Value to multiply data brick with.
+ * @keep_offsets: keep the physical offsets in extracted field.
  *
  * Sums planes in certain direction and extract the result (GwyDataField). One value of set (@width, @height, @depth) needs
  * to be -1, determining the plane orientation. In contrast to gwy_brick_extract_plane, the appropriate start coordinate
@@ -1694,6 +1695,104 @@ gwy_brick_sum_plane(const GwyBrick *brick,
 
     
 }
+
+/**
+ * gwy_brick_extract_line:
+ * @brick: A data brick.
+ * @target: Dataline to be filled by extracted line. It will be resampled if necessary.
+ * @istart: column where to start (pixel coordinates). 
+ * @jstart: row where to start (pixel coordinates). 
+ * @kstart: level where to start (pixel coordinates).
+ * @iend: column where to start (pixel coordinates). 
+ * @jend: row where to start (pixel coordinates). 
+ * @kend: level where to start (pixel coordinates).
+ * @keep_offsets: keep physical offsets in extracted line
+ *
+ * Extract a line (GwyDataField) from the brick. Only line orientations parallel to coordinate
+ * axes are supported now, i.e. two of the start coordinates need to be same as end ones. 
+ * 
+ **/
+
+void           
+gwy_brick_extract_line(const GwyBrick *brick, GwyDataLine *target,
+                       gint istart, gint jstart, gint kstart,
+                       gint iend, gint jend, gint kend,
+                       gboolean keep_offsets)
+{
+    gint col, row, lev;
+    gdouble *bdata, *ddata;
+
+    g_return_if_fail(GWY_IS_BRICK(brick));
+
+
+    g_return_if_fail(istart>=0 && istart<brick->xres &&
+                     jstart>=0 && jstart<brick->yres &&
+                     kstart>=0 && kstart<brick->zres &&
+                     iend>=0 && iend<brick->xres &&
+                     jend>=0 && jend<brick->yres &&
+                     kend>=0 && kend<brick->zres);
+
+    bdata = brick->data;
+    ddata = gwy_data_line_get_data(target);
+
+
+    if ((jstart == jend) && (kstart == kend))
+    {
+        gwy_data_line_resample(target, abs(iend-istart), GWY_INTERPOLATION_NONE);
+       
+        row = jstart;
+        lev = kstart;
+        if (iend>=istart)
+            for (col = 0; col<(iend-istart); col++)
+            {
+                ddata[col] = bdata[col + istart + brick->xres*(row) + brick->xres*brick->yres*(lev)];
+            }
+        else
+            for (col = 0; col<(istart-iend); col++)
+            {
+                ddata[col] = bdata[iend - col - 1 + brick->xres*(row) + brick->xres*brick->yres*(lev)];
+            }
+    }
+
+    if ((istart == iend) && (kstart == kend))
+    {
+        gwy_data_line_resample(target, abs(jend-jstart), GWY_INTERPOLATION_NONE);
+        
+        col = istart;
+        lev = kstart;
+        if (jend>=jstart)
+            for (row = 0; row<(jend-jstart); row++)
+            {
+                ddata[row] = bdata[col + brick->xres*(row + jstart) + brick->xres*brick->yres*(lev)];
+            }
+        else
+            for (row = 0; row<(jstart-jend); row++)
+            {
+                ddata[row] = bdata[col + brick->xres*(jstart - row - 1) + brick->xres*brick->yres*(lev)];
+            }
+    }
+
+    if ((istart == iend) && (jstart == jend))
+    {
+        gwy_data_line_resample(target, abs(kend-kstart), GWY_INTERPOLATION_NONE);
+        
+        col = istart;
+        row = jstart;
+        if (kend>=kstart)
+            for (lev = 0; lev<(kend-kstart); lev++)
+            {
+                ddata[lev] = bdata[col + brick->xres*(row) + brick->xres*brick->yres*(lev + kstart)];
+            }
+        else
+            for (lev = 0; lev<(kstart-kend); lev++)
+            {
+                ddata[lev] = bdata[col + brick->xres*(row) + brick->xres*brick->yres*(kend - lev - 1)];
+            }
+    }
+
+
+}
+
 
 
 /************************** Documentation ****************************/
